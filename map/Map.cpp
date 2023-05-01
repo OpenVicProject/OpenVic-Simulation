@@ -159,6 +159,18 @@ Province* Map::get_province_at(size_t x, size_t y) {
 	return get_province_by_index(idx);
 }
 
+void Map::set_selected_province(index_t index) {
+	selected_province = index <= get_province_count() ? index : NULL_INDEX;
+}
+
+index_t Map::get_selected_province_index() const {
+	return selected_province;
+}
+
+Province const* Map::get_selected_province() const {
+	return get_province_by_index(get_selected_province_index());
+}
+
 Region* Map::get_region_by_identifier(std::string const& identifier) {
 	return regions.get_item_by_identifier(identifier);
 }

@@ -67,16 +67,24 @@ std::vector<Province::adjacency_t> const& Province::get_adjacencies() const {
 	return adjacencies;
 }
 
-bool Province::has_adjacent(Province const* other) {
-
-	for (auto adj: adjacencies) {
+bool Province::has_adjacent(Province const* other) const {
+	for (adjacency_t const& adj: adjacencies) {
 		if (adj.adj_province == other) {
 			return true;
 		}
 	}
-
 	return false;
+}
 
+size_t Province::get_adjacent_index(Province const* other) const {
+	size_t i;
+	for (i = 0; i < adjacencies.size(); ++i)
+		if (adjacencies[i].adj_province == other) break;
+	return i;
+}
+
+size_t Province::get_adjacent_province_count() const {
+	return adjacencies.size();
 }
 
 std::string Province::to_string() const {

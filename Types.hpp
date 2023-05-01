@@ -16,8 +16,14 @@ namespace OpenVic2 {
 	 * should be allowed.
 	 */
 	static constexpr colour_t NULL_COLOUR = 0, MAX_COLOUR_RGB = 0xFFFFFF;
-	constexpr colour_t to_alpha_value(float a) {
-		return static_cast<colour_t>(std::clamp(a, 0.0f, 1.0f) * 255.0f) << 24;
+	constexpr colour_t float_to_colour_byte(float f, float min = 0.0f, float max = 1.0f) {
+		return static_cast<colour_t>(std::clamp(min + f * (max - min), min, max) * 255.0f);
+	}
+	constexpr colour_t fraction_to_colour_byte(int n, int d, float min = 0.0f, float max = 1.0f) {
+		return float_to_colour_byte(static_cast<float>(n) / static_cast<float>(d), min, max);
+	}
+	constexpr colour_t float_to_alpha_value(float a) {
+		return float_to_colour_byte(a) << 24;
 	}
 
 	using index_t = uint16_t;

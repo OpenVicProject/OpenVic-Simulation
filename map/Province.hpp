@@ -43,7 +43,10 @@ namespace OpenVic2 {
 		return_t expand_building(std::string const& building_type_identifier);
 		return_t add_adjacency(adjacency_t const& new_adjacency);
 		std::vector<adjacency_t> const& get_adjacencies() const;
-		bool has_adjacent(Province const* other);
+		bool has_adjacent(Province const* other) const;
+		// Will return get_adjacent_province_count()+1 if other is not adjacent to this province
+		size_t get_adjacent_index(Province const* other) const;
+		size_t get_adjacent_province_count() const;
 		std::string to_string() const;
 
 		void update_state(Date const& today);

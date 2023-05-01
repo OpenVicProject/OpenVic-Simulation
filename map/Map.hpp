@@ -46,6 +46,7 @@ namespace OpenVic2 {
 		size_t width = 0, height = 0;
 		std::vector<shape_pixel_t> province_shape_image;
 		colour_index_map_t colour_index_map;
+		index_t selected_province = NULL_INDEX;
 
 		index_t get_index_from_colour(colour_t colour) const;
 	public:
@@ -65,6 +66,9 @@ namespace OpenVic2 {
 		Province const* get_province_by_identifier(std::string const& identifier) const;
 		index_t get_province_index_at(size_t x, size_t y) const;
 		Province* get_province_at(size_t x, size_t y);
+		void set_selected_province(index_t index);
+		index_t get_selected_province_index() const;
+		Province const* get_selected_province() const;
 
 		Region* get_region_by_identifier(std::string const& identifier);
 		Region const* get_region_by_identifier(std::string const& identifier) const;
