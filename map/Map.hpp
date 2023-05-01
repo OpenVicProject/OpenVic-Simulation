@@ -64,6 +64,7 @@ namespace OpenVic2 {
 		Province* get_province_by_identifier(std::string const& identifier);
 		Province const* get_province_by_identifier(std::string const& identifier) const;
 		index_t get_province_index_at(size_t x, size_t y) const;
+		Province* get_province_at(size_t x, size_t y);
 
 		Region* get_region_by_identifier(std::string const& identifier);
 		Region const* get_region_by_identifier(std::string const& identifier) const;
@@ -82,6 +83,7 @@ namespace OpenVic2 {
 		static constexpr size_t MAPMODE_COLOUR_SIZE = 4;
 		return_t generate_mapmode_colours(Mapmode::index_t index, uint8_t* target) const;
 
+		void generate_province_adjacencies();
 		return_t generate_province_buildings(BuildingManager const& manager);
 
 		void update_state(Date const& today);

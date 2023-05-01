@@ -50,6 +50,35 @@ return_t Province::expand_building(std::string const& building_type_identifier) 
 	return building->expand();
 }
 
+return_t Province::add_adjacency(adjacency_t const& new_adjacency) {
+	size_t presize = adjacencies.size(); // Store the size of the adj before the push back
+	adjacencies.push_back(new_adjacency);
+
+	// push_back has a strong exception guarantee where it will never throw an exception
+	// The vector will just not be updated with the new element
+	if (adjacencies.size() == presize) {
+		return FAILURE;
+	} else {
+		return SUCCESS;
+	}
+}
+
+std::vector<Province::adjacency_t> const& Province::get_adjacencies() const {
+	return adjacencies;
+}
+
+bool Province::has_adjacent(Province const* other) {
+
+	for (auto adj: adjacencies) {
+		if (adj.adj_province == other) {
+			return true;
+		}
+	}
+
+	return false;
+
+}
+
 std::string Province::to_string() const {
 	std::stringstream stream;
 	stream << "(#" << std::to_string(index) << ", " << get_identifier() << ", 0x" << colour_to_hex_string() << ")";

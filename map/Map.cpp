@@ -154,6 +154,11 @@ index_t Map::get_province_index_at(size_t x, size_t y) const {
 	return NULL_INDEX;
 }
 
+Province* Map::get_province_at(size_t x, size_t y) {
+	index_t idx = get_province_index_at(x, y);
+	return get_province_by_index(idx);
+}
+
 Region* Map::get_region_by_identifier(std::string const& identifier) {
 	return regions.get_item_by_identifier(identifier);
 }
@@ -312,6 +317,37 @@ return_t Map::generate_mapmode_colours(Mapmode::index_t index, uint8_t* target) 
 		*target++ = (colour >> 24) & 0xFF;
 	}
 	return SUCCESS;
+}
+
+void Map::generate_province_adjacencies() {
+	for (size_t pixel_idx = 0; pixel_idx < province_shape_image.size(); ++pixel_idx) {
+		size_t x = pixel_idx % width;
+		size_t y = pixel_idx / width;
+
+		Province* current = get_province_at(x, y);
+		Province* right_neighbour = get_province_at(x + 1, y);
+		Province* down_neighbour = get_province_at(x, y + 1);
+
+		if (right_neighbour != nullptr && current != right_neighbour) {
+			if (!current->has_adjacent(right_neighbour)) {
+				Province::adjacency_t curr_to_neigh { right_neighbour, 1 };
+				Province::adjacency_t neigh_to_curr { current, 1 };
+
+				current->add_adjacency(curr_to_neigh);
+				right_neighbour->add_adjacency(neigh_to_curr);
+			}
+		}
+
+		if (down_neighbour != nullptr && current != down_neighbour) {
+			if (!current->has_adjacent(down_neighbour)) {
+				Province::adjacency_t curr_to_neigh { down_neighbour, 1 };
+				Province::adjacency_t neigh_to_curr { current, 1 };
+
+				current->add_adjacency(curr_to_neigh);
+				right_neighbour->add_adjacency(neigh_to_curr);
+			}
+		}
+	}
 }
 
 return_t Map::generate_province_buildings(BuildingManager const& manager) {

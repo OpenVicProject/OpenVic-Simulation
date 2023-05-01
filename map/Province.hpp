@@ -13,6 +13,12 @@ namespace OpenVic2 {
 		friend struct Map;
 
 		using life_rating_t = int8_t;
+		using distance_t = uint32_t;
+
+		struct adjacency_t {
+			Province* adj_province;
+			distance_t adj_distance;
+		};
 
 	private:
 		const index_t index;
@@ -20,6 +26,7 @@ namespace OpenVic2 {
 		bool water = false;
 		life_rating_t life_rating = 0;
 		IdentifierRegistry<Building> buildings;
+		std::vector<adjacency_t> adjacencies;
 
 		Province(index_t new_index, std::string const& new_identifier, colour_t new_colour);
 	public:
@@ -34,6 +41,9 @@ namespace OpenVic2 {
 		void reset_buildings();
 		std::vector<Building> const& get_buildings() const;
 		return_t expand_building(std::string const& building_type_identifier);
+		return_t add_adjacency(adjacency_t const& new_adjacency);
+		std::vector<adjacency_t> const& get_adjacencies() const;
+		bool has_adjacent(Province const* other);
 		std::string to_string() const;
 
 		void update_state(Date const& today);
