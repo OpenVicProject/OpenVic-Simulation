@@ -10,6 +10,7 @@ namespace OpenVic2 {
 		Map map;
 		BuildingManager building_manager;
 		GameAdvancementHook clock;
+		time_t session_start; /* SS-54, as well as allowing time-tracking */
 	private:
 		Date today;
 		state_updated_func_t state_updated;
