@@ -28,6 +28,7 @@ void GameManager::tick() {
 }
 
 return_t GameManager::setup() {
+	session_start = time(nullptr);
 	clock.reset();
 	today = { 1836 };
 	set_needs_update();
