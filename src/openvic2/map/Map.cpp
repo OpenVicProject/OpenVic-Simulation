@@ -4,6 +4,7 @@
 #include <unordered_set>
 
 #include "../Logger.hpp"
+#include "../economy/Good.hpp"
 
 using namespace OpenVic2;
 
@@ -95,7 +96,7 @@ return_t Map::add_region(std::string const& identifier, std::vector<std::string>
 					else
 						Logger::error("Province ", province_identifier, " is already part of an unknown region with index ", other_region_index);
 					ret = FAILURE;
-				} else new_region.provinces.insert(province);
+				} else new_region.provinces.push_back(province);
 			}
 		} else {
 			Logger::error("Invalid province identifier ", province_identifier);
@@ -152,6 +153,18 @@ index_t Map::get_index_from_colour(colour_t colour) const {
 index_t Map::get_province_index_at(size_t x, size_t y) const {
 	if (x < width && y < height) return province_shape_image[x + y * width].index;
 	return NULL_INDEX;
+}
+
+void Map::set_selected_province(index_t index) {
+	selected_province = index <= get_province_count() ? index : NULL_INDEX;
+}
+
+index_t Map::get_selected_province_index() const {
+	return selected_province;
+}
+
+Province const* Map::get_selected_province() const {
+	return get_province_by_index(get_selected_province_index());
 }
 
 Region* Map::get_region_by_identifier(std::string const& identifier) {
@@ -306,18 +319,21 @@ return_t Map::generate_mapmode_colours(Mapmode::index_t index, uint8_t* target) 
 		*target++ = 0;
 	for (Province const& province : provinces.get_items()) {
 		const colour_t colour = mapmode->get_colour(*this, province);
-		*target++ = (colour >> 16) & 0xFF;
-		*target++ = (colour >> 8) & 0xFF;
-		*target++ = colour & 0xFF;
-		*target++ = (colour >> 24) & 0xFF;
+		*target++ = (colour >> 16) & FULL_COLOUR;
+		*target++ = (colour >> 8) & FULL_COLOUR;
+		*target++ = colour & FULL_COLOUR;
+		*target++ = (colour >> 24) & FULL_COLOUR;
 	}
 	return SUCCESS;
 }
 
-return_t Map::generate_province_buildings(BuildingManager const& manager) {
+return_t Map::setup(GoodManager const& good_manager, BuildingManager const& building_manager) {
 	return_t ret = SUCCESS;
-	for (Province& province : provinces.get_items())
-		if (manager.generate_province_buildings(province) != SUCCESS) ret = FAILURE;
+	for (Province& province : provinces.get_items()) {
+		if (!province.is_water()) // Set all land provinces to have an RGO based on their index to test them
+			province.rgo = good_manager.get_good_by_index(province.get_index() % good_manager.get_good_count());
+		if (building_manager.generate_province_buildings(province) != SUCCESS) ret = FAILURE;
+	}
 	return ret;
 }
 

@@ -14,8 +14,8 @@ std::string const& HasIdentifier::get_identifier() const {
 	return identifier;
 }
 
-HasColour::HasColour(colour_t const new_colour) : colour(new_colour) {
-	assert(colour != NULL_COLOUR && colour <= MAX_COLOUR_RGB);
+HasColour::HasColour(colour_t const new_colour, bool can_be_null) : colour(new_colour) {
+	assert((can_be_null || colour != NULL_COLOUR) && colour <= MAX_COLOUR_RGB);
 }
 
 colour_t HasColour::get_colour() const { return colour; }

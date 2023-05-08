@@ -31,8 +31,10 @@ return_t GameManager::setup() {
 	session_start = time(nullptr);
 	clock.reset();
 	today = { 1836 };
+	good_manager.reset_to_defaults();
+	return_t ret = map.setup(good_manager, building_manager);
 	set_needs_update();
-	return map.generate_province_buildings(building_manager);
+	return ret;
 }
 
 Date const& GameManager::get_today() const {

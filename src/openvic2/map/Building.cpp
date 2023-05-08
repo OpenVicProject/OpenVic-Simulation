@@ -76,7 +76,7 @@ void Building::tick(Date const& today) {
 
 BuildingType::BuildingType(std::string const& new_identifier, Building::level_t new_max_level, Timespan new_build_time) :
 	HasIdentifier{ new_identifier }, max_level{ new_max_level }, build_time{ new_build_time } {
-	assert(new_max_level >= 0);
+	assert(max_level >= 0);
 	assert(build_time >= 0);
 }
 
@@ -115,8 +115,13 @@ BuildingType const* BuildingManager::get_building_type_by_identifier(std::string
 }
 
 return_t BuildingManager::generate_province_buildings(Province& province) const {
-	return_t ret = SUCCESS;
 	province.reset_buildings();
+	if (!building_types.is_locked()) {
+		Logger::error("Cannot generate buildings until building types are locked!");
+		return FAILURE;
+	}
+	if (province.is_water()) return SUCCESS;
+	return_t ret = SUCCESS;
 	for (BuildingType const& type : building_types.get_items())
 		if (province.add_building(type) != SUCCESS) ret = FAILURE;
 	province.lock_buildings();
