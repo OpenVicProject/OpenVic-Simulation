@@ -5,9 +5,10 @@
 namespace OpenVic2 {
 	struct Map;
 	struct Region;
+	struct Good;
 
 	/* REQUIREMENTS:
-	 * MAP-5, MAP-8, MAP-43, MAP-47
+	 * MAP-5, MAP-7, MAP-8, MAP-43, MAP-47
 	 */
 	struct Province : HasIdentifier, HasColour {
 		friend struct Map;
@@ -20,6 +21,8 @@ namespace OpenVic2 {
 		bool water = false;
 		life_rating_t life_rating = 0;
 		IdentifierRegistry<Building> buildings;
+		// TODO - change this into a factory-like structure
+		Good const* rgo = nullptr;
 
 		Province(index_t new_index, std::string const& new_identifier, colour_t new_colour);
 	public:
@@ -32,8 +35,10 @@ namespace OpenVic2 {
 		return_t add_building(BuildingType const& type);
 		void lock_buildings();
 		void reset_buildings();
+		Building const* get_building_by_identifier(std::string const& identifier) const;
 		std::vector<Building> const& get_buildings() const;
 		return_t expand_building(std::string const& building_type_identifier);
+		Good const* get_rgo() const;
 		std::string to_string() const;
 
 		void update_state(Date const& today);

@@ -12,13 +12,13 @@ bool ProvinceSet::contains_province(Province const* province) const {
 	return province && std::find(provinces.begin(), provinces.end(), province) != provinces.end();
 }
 
-std::set<Province*> const& ProvinceSet::get_provinces() const {
+std::vector<Province*> const& ProvinceSet::get_provinces() const {
 	return provinces;
 }
 
 Region::Region(std::string const& new_identifier) : HasIdentifier{ new_identifier } {}
 
 colour_t Region::get_colour() const {
-	if (provinces.empty()) return 0xFF0000;
-	return (*provinces.cbegin())->get_colour();
+	if (provinces.empty()) return FULL_COLOUR << 16;
+	return provinces.front()->get_colour();
 }

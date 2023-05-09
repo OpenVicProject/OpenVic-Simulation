@@ -15,9 +15,15 @@ namespace OpenVic2 {
 	 * When colour_t is used in a purely graphical context, NULL_COLOUR
 	 * should be allowed.
 	 */
-	static constexpr colour_t NULL_COLOUR = 0, MAX_COLOUR_RGB = 0xFFFFFF;
-	constexpr colour_t to_alpha_value(float a) {
-		return static_cast<colour_t>(std::clamp(a, 0.0f, 1.0f) * 255.0f) << 24;
+	static constexpr colour_t NULL_COLOUR = 0, FULL_COLOUR = 0xFF, MAX_COLOUR_RGB = 0xFFFFFF;
+	constexpr colour_t float_to_colour_byte(float f, float min = 0.0f, float max = 1.0f) {
+		return static_cast<colour_t>(std::clamp(min + f * (max - min), min, max) * 255.0f);
+	}
+	constexpr colour_t fraction_to_colour_byte(int n, int d, float min = 0.0f, float max = 1.0f) {
+		return float_to_colour_byte(static_cast<float>(n) / static_cast<float>(d), min, max);
+	}
+	constexpr colour_t float_to_alpha_value(float a) {
+		return float_to_colour_byte(a) << 24;
 	}
 
 	using index_t = uint16_t;
@@ -25,6 +31,7 @@ namespace OpenVic2 {
 
 	// TODO: price_t must be changed to a fixed-point numeric type before multiplayer
 	using price_t = double;
+	static constexpr price_t NULL_PRICE = 0.0;
 	using return_t = bool;
 
 	// This mirrors godot::Error, where `OK = 0` and `FAILED = 1`.
@@ -54,7 +61,7 @@ namespace OpenVic2 {
 	class HasColour {
 		const colour_t colour;
 	protected:
-		HasColour(colour_t const new_colour);
+		HasColour(colour_t const new_colour, bool can_be_null = false);
 	public:
 		HasColour(HasColour const&) = delete;
 		HasColour(HasColour&&) = default;

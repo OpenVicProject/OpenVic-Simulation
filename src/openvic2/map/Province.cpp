@@ -9,7 +9,6 @@ using namespace OpenVic2;
 Province::Province(index_t new_index, std::string const& new_identifier, colour_t new_colour) :
 	HasIdentifier{ new_identifier }, HasColour{ new_colour }, index{ new_index }, buildings{ "buildings" } {
 	assert(index != NULL_INDEX);
-	assert(new_colour != NULL_COLOUR);
 }
 
 index_t Province::get_index() const {
@@ -40,6 +39,10 @@ void Province::reset_buildings() {
 	buildings.reset();
 }
 
+Building const* Province::get_building_by_identifier(std::string const& identifier) const {
+	return buildings.get_item_by_identifier(identifier);
+}
+
 std::vector<Building> const& Province::get_buildings() const {
 	return buildings.get_items();
 }
@@ -48,6 +51,10 @@ return_t Province::expand_building(std::string const& building_type_identifier) 
 	Building* building = buildings.get_item_by_identifier(building_type_identifier);
 	if (building == nullptr) return FAILURE;
 	return building->expand();
+}
+
+Good const* Province::get_rgo() const {
+	return rgo;
 }
 
 std::string Province::to_string() const {
