@@ -1,6 +1,6 @@
 #include "GameAdvancementHook.hpp"
 
-using namespace OpenVic2;
+using namespace OpenVic;
 
 const std::vector<std::chrono::milliseconds> GameAdvancementHook::GAME_SPEEDS = {
 	std::chrono::milliseconds{ 4000 },

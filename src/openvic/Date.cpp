@@ -5,7 +5,7 @@
 
 #include "Logger.hpp"
 
-using namespace OpenVic2;
+using namespace OpenVic;
 
 Timespan::Timespan(day_t value) : days{value} {}
 
@@ -57,7 +57,7 @@ Timespan::operator std::string() const {
 	return std::to_string(days);
 }
 
-std::ostream& OpenVic2::operator<<(std::ostream& out, Timespan timespan) {
+std::ostream& operator<<(std::ostream& out, Timespan timespan) {
 	return out << static_cast<std::string>(timespan);
 }
 
@@ -128,7 +128,7 @@ Date::operator std::string() const {
 	return ss.str();
 }
 
-std::ostream& OpenVic2::operator<<(std::ostream& out, Date date) {
+std::ostream& operator<<(std::ostream& out, Date date) {
 	return out << (int) date.getYear() << '.' << (int) date.getMonth() << '.' << (int) date.getDay();
 }
 

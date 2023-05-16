@@ -4,7 +4,7 @@
 #include "map/Map.hpp"
 #include "economy/Good.hpp"
 
-namespace OpenVic2 {
+namespace OpenVic {
 	struct GameManager {
 		using state_updated_func_t = std::function<void()>;
 

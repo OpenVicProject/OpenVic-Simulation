@@ -6,7 +6,7 @@
 #include "../Logger.hpp"
 #include "../economy/Good.hpp"
 
-using namespace OpenVic2;
+using namespace OpenVic;
 
 Mapmode::Mapmode(index_t new_index, std::string const& new_identifier, colour_func_t new_colour_func)
 	: HasIdentifier{ new_identifier }, index{ new_index }, colour_func{ new_colour_func } {

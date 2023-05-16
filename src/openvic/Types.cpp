@@ -4,7 +4,7 @@
 #include <sstream>
 #include <iomanip>
 
-using namespace OpenVic2;
+using namespace OpenVic;
 
 HasIdentifier::HasIdentifier(std::string const& new_identifier) : identifier{ new_identifier } {
 	assert(!identifier.empty());
@@ -20,7 +20,7 @@ HasColour::HasColour(colour_t const new_colour, bool can_be_null) : colour(new_c
 
 colour_t HasColour::get_colour() const { return colour; }
 
-std::string OpenVic2::HasColour::colour_to_hex_string(colour_t const colour) {
+std::string HasColour::colour_to_hex_string(colour_t const colour) {
 	std::ostringstream stream;
 	stream << std::hex << std::setfill('0') << std::setw(6) << colour;
 	return stream.str();

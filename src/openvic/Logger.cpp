@@ -2,7 +2,7 @@
 
 #include <iostream>
 
-using namespace OpenVic2;
+using namespace OpenVic;
 
 Logger::log_func_t Logger::info_func = [](std::string&& str) { std::cout << str; };
 Logger::log_func_t Logger::error_func = [](std::string&& str) { std::cerr << str; };

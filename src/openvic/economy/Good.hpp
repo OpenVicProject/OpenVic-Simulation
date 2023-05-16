@@ -2,7 +2,7 @@
 
 #include "../Types.hpp"
 
-namespace OpenVic2 {
+namespace OpenVic {
 	struct GoodManager;
 
 	/* ECON-3 , ECON-4 , ECON-5 , ECON-6 , ECON-7 , ECON-8 , ECON-9 , ECON-10, ECON-11, ECON-12, ECON-13, ECON-14,

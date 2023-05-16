@@ -4,7 +4,7 @@
 #include <string>
 #include <ostream>
 
-namespace OpenVic2 {
+namespace OpenVic {
 	// A relative period between points in time, measured in days
 	struct Timespan {
 		using day_t = int64_t;

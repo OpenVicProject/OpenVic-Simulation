@@ -5,7 +5,7 @@
 #include "../Types.hpp"
 #include "../Date.hpp"
 
-namespace OpenVic2 {
+namespace OpenVic {
 	struct Province;
 	struct BuildingType;
 
