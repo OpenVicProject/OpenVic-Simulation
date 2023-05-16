@@ -33,7 +33,7 @@ namespace OpenVic {
 		explicit operator double() const;
 		explicit operator std::string() const;
 	};
-	std::ostream& operator<< (std::ostream& out, Timespan timespan);
+	std::ostream& operator<<(std::ostream& out, Timespan const& timespan);
 
 	// Represents an in-game date
 	// Note: Current implementation does not account for leap-years, or dates before Year 0
@@ -79,5 +79,5 @@ namespace OpenVic {
 		// Parsed from string of the form YYYY.MM.DD
 		static Date from_string(std::string const& date);
 	};
-	std::ostream& operator<< (std::ostream& out, Date date);
+	std::ostream& operator<<(std::ostream& out, Date const& date);
 }
