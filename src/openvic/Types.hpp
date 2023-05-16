@@ -7,7 +7,7 @@
 
 #include "Logger.hpp"
 
-namespace OpenVic2 {
+namespace OpenVic {
 	// Represents a 24-bit RGB integer OR a 32-bit ARGB integer
 	using colour_t = uint32_t;
 	/* When colour_t is used as an identifier, NULL_COLOUR is disallowed

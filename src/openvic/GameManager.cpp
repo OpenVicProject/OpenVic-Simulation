@@ -2,7 +2,7 @@
 
 #include "Logger.hpp"
 
-using namespace OpenVic2;
+using namespace OpenVic;
 
 GameManager::GameManager(state_updated_func_t state_updated_callback)
 	: clock{ [this]() { tick(); }, [this]() { update_state(); } }, state_updated{ state_updated_callback } {}

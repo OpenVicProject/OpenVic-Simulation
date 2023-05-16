@@ -5,7 +5,7 @@
 #include "../Logger.hpp"
 #include "Province.hpp"
 
-using namespace OpenVic2;
+using namespace OpenVic;
 
 Building::Building(BuildingType const& new_type) : HasIdentifier{ new_type.get_identifier() }, type{ new_type } {}
 

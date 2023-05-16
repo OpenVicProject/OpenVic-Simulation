@@ -4,7 +4,7 @@
 #include <sstream>
 #include <iomanip>
 
-using namespace OpenVic2;
+using namespace OpenVic;
 
 Province::Province(index_t new_index, std::string const& new_identifier, colour_t new_colour) :
 	HasIdentifier{ new_identifier }, HasColour{ new_colour }, index{ new_index }, buildings{ "buildings" } {

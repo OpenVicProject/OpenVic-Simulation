@@ -2,7 +2,7 @@
 
 #include "Building.hpp"
 
-namespace OpenVic2 {
+namespace OpenVic {
 	struct Map;
 	struct Region;
 	struct Good;

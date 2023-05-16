@@ -4,7 +4,7 @@
 #include <functional>
 #include <vector>
 
-namespace OpenVic2 {
+namespace OpenVic {
 	//Conditionally advances game with provided behaviour
 	//Class governs game speed and pause state
 	class GameAdvancementHook {

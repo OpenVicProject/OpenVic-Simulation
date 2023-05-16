@@ -2,7 +2,7 @@
 
 #include <cassert>
 
-using namespace OpenVic2;
+using namespace OpenVic;
 
 size_t ProvinceSet::get_province_count() const {
 	return provinces.size();

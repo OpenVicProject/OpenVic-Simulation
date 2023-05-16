@@ -6,7 +6,7 @@
 #include <source_location>
 #endif
 
-namespace OpenVic2 {
+namespace OpenVic {
 
 	#ifndef __cpp_lib_source_location
 	#include <string>
@@ -37,7 +37,7 @@ namespace OpenVic2 {
 		#ifdef __cpp_lib_source_location
 		using source_location = std::source_location;
 		#else
-		using source_location = OpenVic2::source_location;
+		using source_location = OpenVic::source_location;
 		#endif
 
 		static log_func_t info_func, error_func;

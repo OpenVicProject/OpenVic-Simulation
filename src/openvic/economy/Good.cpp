@@ -2,7 +2,7 @@
 
 #include <cassert>
 
-using namespace OpenVic2;
+using namespace OpenVic;
 
 Good::Good(std::string const& new_identifier, std::string const& new_category, colour_t new_colour, price_t new_base_price,
 	bool new_default_available, bool new_tradeable, bool new_currency, bool new_overseas_maintenance)

@@ -4,7 +4,7 @@
 
 #include "Region.hpp"
 
-namespace OpenVic2 {
+namespace OpenVic {
 
 	struct Mapmode : HasIdentifier {
 		friend struct Map;

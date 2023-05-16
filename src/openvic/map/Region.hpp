@@ -2,7 +2,7 @@
 
 #include "Province.hpp"
 
-namespace OpenVic2 {
+namespace OpenVic {
 
 	struct ProvinceSet {
 	protected:
