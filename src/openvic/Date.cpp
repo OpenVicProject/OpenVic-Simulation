@@ -57,7 +57,7 @@ Timespan::operator std::string() const {
 	return std::to_string(days);
 }
 
-std::ostream& operator<<(std::ostream& out, Timespan timespan) {
+std::ostream& OpenVic::operator<<(std::ostream& out, Timespan const& timespan) {
 	return out << static_cast<std::string>(timespan);
 }
 
@@ -128,7 +128,7 @@ Date::operator std::string() const {
 	return ss.str();
 }
 
-std::ostream& operator<<(std::ostream& out, Date date) {
+std::ostream& OpenVic::operator<<(std::ostream& out, Date const& date) {
 	return out << (int) date.getYear() << '.' << (int) date.getMonth() << '.' << (int) date.getDay();
 }
 
