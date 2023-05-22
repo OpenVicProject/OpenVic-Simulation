@@ -1,8 +1,8 @@
 #pragma once
 
 #include "GameAdvancementHook.hpp"
-#include "map/Map.hpp"
 #include "economy/Good.hpp"
+#include "map/Map.hpp"
 
 namespace OpenVic {
 	struct GameManager {
@@ -12,6 +12,7 @@ namespace OpenVic {
 		BuildingManager building_manager;
 		GoodManager good_manager;
 		GameAdvancementHook clock;
+
 	private:
 		time_t session_start; /* SS-54, as well as allowing time-tracking */
 		Date today;
@@ -21,6 +22,7 @@ namespace OpenVic {
 		void set_needs_update();
 		void update_state();
 		void tick();
+
 	public:
 		GameManager(state_updated_func_t state_updated_callback);
 

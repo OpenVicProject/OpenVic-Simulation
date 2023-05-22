@@ -5,25 +5,27 @@
 #include <vector>
 
 namespace OpenVic {
-	//Conditionally advances game with provided behaviour
-	//Class governs game speed and pause state
+	// Conditionally advances game with provided behaviour
+	// Class governs game speed and pause state
 	class GameAdvancementHook {
-		public:
+	public:
 		using AdvancementFunction = std::function<void()>;
 		using RefreshFunction = std::function<void()>;
 		using speed_t = int8_t;
 
-		//Minimum number of miliseconds before the simulation advances
+		// Minimum number of miliseconds before the simulation advances
 		static const std::vector<std::chrono::milliseconds> GAME_SPEEDS;
 
-		private:
-		std::chrono::time_point<std::chrono::high_resolution_clock> lastPolledTime;
-		//A function pointer that advances the simulation, intended to be a capturing lambda or something similar. May need to be reworked later
+	private:
+		using time_point_t = std::chrono::time_point<std::chrono::high_resolution_clock>;
+
+		time_point_t lastPolledTime;
+		// A function pointer that advances the simulation, intended to be a capturing lambda or something similar. May need to be reworked later
 		AdvancementFunction triggerFunction;
 		RefreshFunction refreshFunction;
 		speed_t currentSpeed;
 
-		public:
+	public:
 		bool isPaused;
 
 		GameAdvancementHook(AdvancementFunction tickFunction, RefreshFunction updateFunction, bool startPaused = true, speed_t startingSpeed = 0);

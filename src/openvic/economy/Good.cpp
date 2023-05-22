@@ -6,9 +6,14 @@ using namespace OpenVic;
 
 Good::Good(std::string const& new_identifier, std::string const& new_category, colour_t new_colour, price_t new_base_price,
 	bool new_default_available, bool new_tradeable, bool new_currency, bool new_overseas_maintenance)
-	: HasIdentifier{ new_identifier }, HasColour{ new_colour, true }, category{ new_category }, base_price{ new_base_price },
-		default_available{ new_default_available }, tradeable{ new_tradeable }, currency{ new_currency },
-		overseas_maintenance{ new_overseas_maintenance } {
+	: HasIdentifier { new_identifier },
+	  HasColour { new_colour, true },
+	  category { new_category },
+	  base_price { new_base_price },
+	  default_available { new_default_available },
+	  tradeable { new_tradeable },
+	  currency { new_currency },
+	  overseas_maintenance { new_overseas_maintenance } {
 	assert(base_price > NULL_PRICE);
 }
 
@@ -37,7 +42,7 @@ void Good::reset_to_defaults() {
 	price = base_price;
 }
 
-GoodManager::GoodManager() : goods{ "goods" } {}
+GoodManager::GoodManager() : goods { "goods" } {}
 
 return_t GoodManager::add_good(std::string const& identifier, std::string const& category, colour_t colour,
 	price_t base_price, bool default_available, bool tradeable, bool currency, bool overseas_maintenance) {
@@ -76,4 +81,3 @@ size_t GoodManager::get_good_count() const {
 std::vector<Good> const& GoodManager::get_goods() const {
 	return goods.get_items();
 }
-
