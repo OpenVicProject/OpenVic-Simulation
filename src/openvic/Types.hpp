@@ -5,7 +5,7 @@
 #include <map>
 #include <vector>
 
-#include "Logger.hpp"
+#include "utility/Logger.hpp"
 
 namespace OpenVic {
 	// Represents a 24-bit RGB integer OR a 32-bit ARGB integer

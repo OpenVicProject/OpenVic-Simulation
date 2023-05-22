@@ -1,6 +1,6 @@
 #include "GameManager.hpp"
 
-#include "Logger.hpp"
+#include "utility/Logger.hpp"
 
 using namespace OpenVic;
 

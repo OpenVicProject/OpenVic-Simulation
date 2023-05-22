@@ -19,6 +19,8 @@ namespace OpenVic {
 		Mapmode(index_t new_index, std::string const& new_identifier, colour_func_t new_colour_func);
 
 	public:
+		static const Mapmode ERROR_MAPMODE;
+
 		index_t get_index() const;
 		colour_t get_colour(Map const& map, Province const& province) const;
 	};

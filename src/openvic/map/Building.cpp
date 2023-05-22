@@ -2,7 +2,7 @@
 
 #include <cassert>
 
-#include "../Logger.hpp"
+#include "../utility/Logger.hpp"
 #include "Province.hpp"
 
 using namespace OpenVic;

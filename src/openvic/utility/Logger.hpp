@@ -40,8 +40,6 @@ namespace OpenVic {
 		using source_location = OpenVic::source_location;
 #endif
 
-		static log_func_t info_func, error_func;
-
 		static char const* get_filename(char const* filepath);
 
 		template<typename... Ts>
@@ -58,28 +56,25 @@ namespace OpenVic {
 			}
 		};
 
-	public:
-		static void set_info_func(log_func_t log_func);
-		static void set_error_func(log_func_t log_func);
+#define LOG_FUNC(name)																			\
+	private:																					\
+		static log_func_t name##_func;															\
+	public:																						\
+		static void set_##name##_func(log_func_t log_func) {									\
+			name##_func = log_func;																\
+		}																						\
+		template <typename... Ts>																\
+		struct name {																			\
+			name(Ts&&... ts, source_location const& location = source_location::current()) {	\
+				log<Ts...>{ name##_func, std::forward<Ts>(ts)..., location };					\
+			}																					\
+		};																						\
+		template <typename... Ts>																\
+		name(Ts&&...) -> name<Ts...>;
 
-		template<typename... Ts>
-		struct info {
-			info(Ts&&... ts, source_location const& location = source_location::current()) {
-				log<Ts...> { info_func, std::forward<Ts>(ts)..., location };
-			}
-		};
+		LOG_FUNC(info)
+		LOG_FUNC(error)
 
-		template<typename... Ts>
-		info(Ts&&...) -> info<Ts...>;
-
-		template<typename... Ts>
-		struct error {
-			error(Ts&&... ts, source_location const& location = source_location::current()) {
-				log<Ts...> { error_func, std::forward<Ts>(ts)..., location };
-			}
-		};
-
-		template<typename... Ts>
-		error(Ts&&...) -> error<Ts...>;
+#undef LOG_FUNC
 	};
 }

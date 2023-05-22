@@ -3,7 +3,7 @@
 #include <algorithm>
 #include <cctype>
 
-#include "Logger.hpp"
+#include "utility/Logger.hpp"
 
 using namespace OpenVic;
 
@@ -139,17 +139,17 @@ Date Date::from_string(std::string const& date) {
 
 	size_t first_pos = 0;
 	while (first_pos < date.length() && std::isdigit(date[first_pos++]));
-	year = atoi(date.substr(0, first_pos).c_str());
+	year = stoi(date.substr(0, first_pos));
 	if (first_pos < date.length()) {
 		if (date[first_pos] == '.') {
 			size_t second_pos = first_pos + 1;
 			while (second_pos < date.length() && std::isdigit(date[second_pos++]));
-			month = atoi(date.substr(first_pos, second_pos - first_pos).c_str());
+			month = stoi(date.substr(first_pos, second_pos - first_pos));
 			if (second_pos < date.length()) {
 				if (date[second_pos] == '.') {
 					size_t third_pos = second_pos + 1;
 					while (third_pos < date.length() && std::isdigit(date[third_pos++]));
-					day = atoi(date.substr(second_pos, third_pos - second_pos).c_str());
+					day = stoi(date.substr(second_pos, third_pos - second_pos));
 					if (third_pos < date.length())
 						Logger::error("Unexpected string \"", date.substr(third_pos), "\" at the end of date ", date);
 				} else Logger::error("Unexpected character \"", date[second_pos], "\" in date ", date);
