@@ -7,6 +7,7 @@ namespace OpenVic {
 	struct ProvinceSet {
 	protected:
 		std::vector<Province*> provinces;
+
 	public:
 		size_t get_province_count() const;
 		bool contains_province(Province const* province) const;
@@ -18,8 +19,10 @@ namespace OpenVic {
 	 */
 	struct Region : HasIdentifier, ProvinceSet {
 		friend struct Map;
+
 	private:
 		Region(std::string const& new_identifier);
+
 	public:
 		Region(Region&&) = default;
 

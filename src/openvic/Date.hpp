@@ -1,15 +1,17 @@
 #pragma once
 
 #include <cstdint>
-#include <string>
 #include <ostream>
+#include <string>
 
 namespace OpenVic {
 	// A relative period between points in time, measured in days
 	struct Timespan {
 		using day_t = int64_t;
+
 	private:
 		day_t days;
+
 	public:
 		Timespan(day_t value = 0);
 
@@ -46,11 +48,13 @@ namespace OpenVic {
 		static constexpr Timespan::day_t DAYS_IN_YEAR = 365;
 		static constexpr Timespan::day_t DAYS_IN_MONTH[MONTHS_IN_YEAR] = { 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 };
 		static constexpr Timespan::day_t DAYS_UP_TO_MONTH[MONTHS_IN_YEAR] = { 0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334 };
+
 	private:
 		// Number of days since Jan 1st, Year 0
 		Timespan timespan;
 
 		static Timespan _dateToTimespan(year_t year, month_t month, day_t day);
+
 	public:
 		// The Timespan is considered to be the number of days since Jan 1st, Year 0
 		Date(Timespan total_days);

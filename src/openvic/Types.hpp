@@ -1,11 +1,11 @@
 #pragma once
 
-#include <vector>
-#include <cstdint>
 #include <algorithm>
+#include <cstdint>
 #include <map>
+#include <vector>
 
-#include "Logger.hpp"
+#include "utility/Logger.hpp"
 
 namespace OpenVic {
 	// Represents a 24-bit RGB integer OR a 32-bit ARGB integer
@@ -44,8 +44,10 @@ namespace OpenVic {
 	 */
 	class HasIdentifier {
 		const std::string identifier;
+
 	protected:
 		HasIdentifier(std::string const& new_identifier);
+
 	public:
 		HasIdentifier(HasIdentifier const&) = delete;
 		HasIdentifier(HasIdentifier&&) = default;
@@ -60,8 +62,10 @@ namespace OpenVic {
 	 */
 	class HasColour {
 		const colour_t colour;
+
 	protected:
 		HasColour(colour_t const new_colour, bool can_be_null = false);
+
 	public:
 		HasColour(HasColour const&) = delete;
 		HasColour(HasColour&&) = default;
@@ -87,6 +91,7 @@ namespace OpenVic {
 		std::vector<T> items;
 		bool locked = false;
 		identifier_index_map_t identifier_index_map;
+
 	public:
 		IdentifierRegistry(std::string const& new_name) : name(new_name) {}
 		return_t add_item(T&& item) {

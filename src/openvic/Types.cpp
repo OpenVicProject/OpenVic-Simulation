@@ -1,12 +1,12 @@
 #include "Types.hpp"
 
 #include <cassert>
-#include <sstream>
 #include <iomanip>
+#include <sstream>
 
 using namespace OpenVic;
 
-HasIdentifier::HasIdentifier(std::string const& new_identifier) : identifier{ new_identifier } {
+HasIdentifier::HasIdentifier(std::string const& new_identifier) : identifier { new_identifier } {
 	assert(!identifier.empty());
 }
 

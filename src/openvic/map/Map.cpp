@@ -3,15 +3,19 @@
 #include <cassert>
 #include <unordered_set>
 
-#include "../Logger.hpp"
 #include "../economy/Good.hpp"
+#include "../utility/Logger.hpp"
 
 using namespace OpenVic;
 
 Mapmode::Mapmode(index_t new_index, std::string const& new_identifier, colour_func_t new_colour_func)
-	: HasIdentifier{ new_identifier }, index{ new_index }, colour_func{ new_colour_func } {
+	: HasIdentifier { new_identifier },
+	  index { new_index },
+	  colour_func { new_colour_func } {
 	assert(colour_func != nullptr);
 }
+
+const Mapmode Mapmode::ERROR_MAPMODE { 0, "mapmode_error", [](Map const& map, Province const& province) -> colour_t { return 0xFFFF0000; } };
 
 Mapmode::index_t Mapmode::get_index() const {
 	return index;
@@ -21,7 +25,9 @@ colour_t Mapmode::get_colour(Map const& map, Province const& province) const {
 	return colour_func ? colour_func(map, province) : NULL_COLOUR;
 }
 
-Map::Map() : provinces{ "provinces" }, regions{ "regions" }, mapmodes{ "mapmodes" } {}
+Map::Map() : provinces { "provinces" },
+			 regions { "regions" },
+			 mapmodes { "mapmodes" } {}
 
 return_t Map::add_province(std::string const& identifier, colour_t colour) {
 	if (provinces.get_item_count() >= MAX_INDEX) {
@@ -36,7 +42,7 @@ return_t Map::add_province(std::string const& identifier, colour_t colour) {
 		Logger::error("Invalid province colour: ", Province::colour_to_hex_string(colour));
 		return FAILURE;
 	}
-	Province new_province{ static_cast<index_t>(provinces.get_item_count() + 1), identifier, colour };
+	Province new_province { static_cast<index_t>(provinces.get_item_count() + 1), identifier, colour };
 	const index_t index = get_index_from_colour(colour);
 	if (index != NULL_INDEX) {
 		Logger::error("Duplicate province colours: ", get_province_by_index(index)->to_string(), " and ", new_province.to_string());
@@ -79,7 +85,7 @@ return_t Map::add_region(std::string const& identifier, std::vector<std::string>
 		Logger::error("Invalid region identifier - empty!");
 		return FAILURE;
 	}
-	Region new_region{ identifier };
+	Region new_region { identifier };
 	return_t ret = SUCCESS;
 	for (std::string const& province_identifier : province_identifiers) {
 		Province* province = get_province_by_identifier(province_identifier);
@@ -176,7 +182,8 @@ Region const* Map::get_region_by_identifier(std::string const& identifier) const
 }
 
 static colour_t colour_at(uint8_t const* colour_data, int32_t idx) {
-	return (colour_data[idx * 3] << 16) | (colour_data[idx * 3 + 1] << 8) | colour_data[idx * 3 + 2];
+	idx *= 3;
+	return (colour_data[idx] << 16) | (colour_data[idx + 1] << 8) | colour_data[idx + 2];
 }
 
 return_t Map::generate_province_shape_image(size_t new_width, size_t new_height, uint8_t const* colour_data,
@@ -309,10 +316,17 @@ return_t Map::generate_mapmode_colours(Mapmode::index_t index, uint8_t* target) 
 		Logger::error("Mapmode colour target pointer is null!");
 		return FAILURE;
 	}
+	return_t ret = SUCCESS;
 	Mapmode const* mapmode = mapmodes.get_item_by_index(index);
 	if (mapmode == nullptr) {
-		Logger::error("Invalid mapmode index: ", index);
-		return FAILURE;
+		// Not an error if mapmodes haven't yet been loaded,
+		// e.g. if we want to allocate the province colour
+		// texture before mapmodes are loaded.
+		if (!(mapmodes.get_item_count() == 0 && index == 0)) {
+			Logger::error("Invalid mapmode index: ", index);
+			ret = FAILURE;
+		}
+		mapmode = &Mapmode::ERROR_MAPMODE;
 	}
 	// Skip past Province::NULL_INDEX
 	for (size_t i = 0; i < MAPMODE_COLOUR_SIZE; ++i)
@@ -324,13 +338,14 @@ return_t Map::generate_mapmode_colours(Mapmode::index_t index, uint8_t* target) 
 		*target++ = colour & FULL_COLOUR;
 		*target++ = (colour >> 24) & FULL_COLOUR;
 	}
-	return SUCCESS;
+	return ret;
 }
 
 return_t Map::setup(GoodManager const& good_manager, BuildingManager const& building_manager) {
 	return_t ret = SUCCESS;
 	for (Province& province : provinces.get_items()) {
-		if (!province.is_water()) // Set all land provinces to have an RGO based on their index to test them
+		// Set all land provinces to have an RGO based on their index to test them
+		if (!province.is_water() && good_manager.get_good_count() > 0)
 			province.rgo = good_manager.get_good_by_index(province.get_index() % good_manager.get_good_count());
 		if (building_manager.generate_province_buildings(province) != SUCCESS) ret = FAILURE;
 	}

@@ -3,15 +3,19 @@
 using namespace OpenVic;
 
 const std::vector<std::chrono::milliseconds> GameAdvancementHook::GAME_SPEEDS = {
-	std::chrono::milliseconds{ 4000 },
-	std::chrono::milliseconds{ 3000 },
-	std::chrono::milliseconds{ 2000 },
-	std::chrono::milliseconds{ 1000 },
-	std::chrono::milliseconds{ 100 },
-	std::chrono::milliseconds{ 1 } };
+	std::chrono::milliseconds { 4000 },
+	std::chrono::milliseconds { 3000 },
+	std::chrono::milliseconds { 2000 },
+	std::chrono::milliseconds { 1000 },
+	std::chrono::milliseconds { 100 },
+	std::chrono::milliseconds { 1 }
+};
 
-GameAdvancementHook::GameAdvancementHook(AdvancementFunction tickFunction, RefreshFunction updateFunction, bool startPaused, speed_t startingSpeed)
-	: triggerFunction{ tickFunction }, refreshFunction{ updateFunction }, isPaused{ startPaused } {
+GameAdvancementHook::GameAdvancementHook(AdvancementFunction tickFunction,
+	RefreshFunction updateFunction, bool startPaused, speed_t startingSpeed)
+	: triggerFunction { tickFunction },
+	  refreshFunction { updateFunction },
+	  isPaused { startPaused } {
 	lastPolledTime = std::chrono::high_resolution_clock::now();
 	setSimulationSpeed(startingSpeed);
 }
@@ -57,7 +61,7 @@ GameAdvancementHook& GameAdvancementHook::operator--() {
 
 void GameAdvancementHook::conditionallyAdvanceGame() {
 	if (!isPaused) {
-		std::chrono::time_point<std::chrono::high_resolution_clock> currentTime = std::chrono::high_resolution_clock::now();
+		time_point_t currentTime = std::chrono::high_resolution_clock::now();
 		if (std::chrono::duration_cast<std::chrono::milliseconds>(currentTime - lastPolledTime) >= GAME_SPEEDS[currentSpeed]) {
 			lastPolledTime = currentTime;
 			if (triggerFunction) triggerFunction();

@@ -1,13 +1,16 @@
 #include "Province.hpp"
 
 #include <cassert>
-#include <sstream>
 #include <iomanip>
+#include <sstream>
 
 using namespace OpenVic;
 
-Province::Province(index_t new_index, std::string const& new_identifier, colour_t new_colour) :
-	HasIdentifier{ new_identifier }, HasColour{ new_colour }, index{ new_index }, buildings{ "buildings" } {
+Province::Province(index_t new_index, std::string const& new_identifier, colour_t new_colour)
+	: HasIdentifier { new_identifier },
+	  HasColour { new_colour },
+	  index { new_index },
+	  buildings { "buildings" } {
 	assert(index != NULL_INDEX);
 }
 
@@ -66,7 +69,6 @@ std::string Province::to_string() const {
 void Province::update_state(Date const& today) {
 	for (Building& building : buildings.get_items())
 		building.update_state(today);
-
 }
 
 void Province::tick(Date const& today) {

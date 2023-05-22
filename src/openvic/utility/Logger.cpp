@@ -16,11 +16,3 @@ char const* Logger::get_filename(char const* filepath) {
 	}
 	return last_slash;
 }
-
-void Logger::set_info_func(log_func_t log_func) {
-	info_func = log_func;
-}
-
-void Logger::set_error_func(log_func_t log_func) {
-	error_func = log_func;
-}
