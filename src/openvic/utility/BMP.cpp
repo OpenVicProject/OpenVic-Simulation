@@ -1,5 +1,6 @@
 #include "BMP.hpp"
 
+#include <cstring>
 #include <set>
 
 #include "Logger.hpp"
