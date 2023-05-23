@@ -1,6 +1,7 @@
 #pragma once
 
 #include <functional>
+#include <queue>
 #include <sstream>
 #ifdef __cpp_lib_source_location
 #include <source_location>
@@ -33,6 +34,7 @@ namespace OpenVic {
 
 	class Logger {
 		using log_func_t = std::function<void(std::string&&)>;
+		using log_queue_t = std::queue<std::string>;
 
 #ifdef __cpp_lib_source_location
 		using source_location = std::source_location;
@@ -44,14 +46,18 @@ namespace OpenVic {
 
 		template<typename... Ts>
 		struct log {
-			log(log_func_t log_func, Ts&&... ts, source_location const& location) {
+			log(log_func_t log_func, log_queue_t& log_queue, Ts&&... ts, source_location const& location) {
+				std::stringstream stream;
+				stream << "\n" << get_filename(location.file_name()) << "("
+						<< location.line() << ") `" << location.function_name() << "`: ";
+				((stream << std::forward<Ts>(ts)), ...);
+				stream << std::endl;
+				log_queue.push(stream.str());
 				if (log_func) {
-					std::stringstream stream;
-					stream << "\n" << get_filename(location.file_name()) << "("
-						   << location.line() << ") `" << location.function_name() << "`: ";
-					((stream << std::forward<Ts>(ts)), ...);
-					stream << std::endl;
-					log_func(stream.str());
+					do {
+						log_func(std::move(log_queue.front()));
+						log_queue.pop();
+					} while (!log_queue.empty());
 				}
 			}
 		};
@@ -59,6 +65,7 @@ namespace OpenVic {
 #define LOG_FUNC(name)																			\
 	private:																					\
 		static log_func_t name##_func;															\
+		static log_queue_t name##_queue;														\
 	public:																						\
 		static void set_##name##_func(log_func_t log_func) {									\
 			name##_func = log_func;																\
@@ -66,7 +73,7 @@ namespace OpenVic {
 		template <typename... Ts>																\
 		struct name {																			\
 			name(Ts&&... ts, source_location const& location = source_location::current()) {	\
-				log<Ts...>{ name##_func, std::forward<Ts>(ts)..., location };					\
+				log<Ts...>{ name##_func, name##_queue, std::forward<Ts>(ts)..., location };		\
 			}																					\
 		};																						\
 		template <typename... Ts>																\

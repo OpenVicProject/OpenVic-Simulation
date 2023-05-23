@@ -46,14 +46,17 @@ namespace OpenVic {
 
 		static constexpr Timespan::day_t MONTHS_IN_YEAR = 12;
 		static constexpr Timespan::day_t DAYS_IN_YEAR = 365;
-		static constexpr Timespan::day_t DAYS_IN_MONTH[MONTHS_IN_YEAR] = { 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 };
-		static constexpr Timespan::day_t DAYS_UP_TO_MONTH[MONTHS_IN_YEAR] = { 0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334 };
+		static constexpr Timespan::day_t DAYS_IN_MONTH[MONTHS_IN_YEAR] { 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 };
+		static Timespan::day_t const* DAYS_UP_TO_MONTH;
+		static month_t const* MONTH_FROM_DAY_IN_YEAR;
 
 	private:
 		// Number of days since Jan 1st, Year 0
 		Timespan timespan;
 
 		static Timespan _dateToTimespan(year_t year, month_t month, day_t day);
+		static Timespan::day_t const* generate_days_up_to_month();
+		static month_t const* generate_month_from_day_in_year();
 
 	public:
 		// The Timespan is considered to be the number of days since Jan 1st, Year 0

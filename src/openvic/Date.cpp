@@ -1,6 +1,7 @@
 #include "Date.hpp"
 
 #include <algorithm>
+#include <cassert>
 #include <cctype>
 
 #include "utility/Logger.hpp"
@@ -67,6 +68,30 @@ Timespan Date::_dateToTimespan(year_t year, month_t month, day_t day) {
 	return year * DAYS_IN_YEAR + DAYS_UP_TO_MONTH[month - 1] + day - 1;
 }
 
+Timespan::day_t const* Date::DAYS_UP_TO_MONTH = generate_days_up_to_month();
+
+Timespan::day_t const* Date::generate_days_up_to_month() {
+	static Timespan::day_t days_up_to_month[MONTHS_IN_YEAR];
+	Timespan::day_t days = 0;
+	for (int month = 0; month < MONTHS_IN_YEAR;
+		days_up_to_month[month] = days, days += DAYS_IN_MONTH[month++]);
+	assert(days == DAYS_IN_YEAR);
+	return days_up_to_month;
+}
+
+Date::month_t const* Date::MONTH_FROM_DAY_IN_YEAR = generate_month_from_day_in_year();
+
+Date::month_t const* Date::generate_month_from_day_in_year() {
+	static month_t month_from_day_in_year[DAYS_IN_YEAR];
+	Timespan::day_t days_left = 0;
+	for (int day = 0, month = 0; day < DAYS_IN_YEAR;
+		days_left = (days_left > 0 ? days_left : DAYS_IN_MONTH[month++]) - 1,
+		month_from_day_in_year[day++] = month);
+	assert(days_left == 0);
+	assert(month_from_day_in_year[DAYS_IN_YEAR - 1] == MONTHS_IN_YEAR);
+	return month_from_day_in_year;
+}
+
 Date::Date(Timespan total_days) : timespan { total_days } {
 	if (timespan < 0) {
 		Logger::error("Invalid timespan for date: ", timespan, " (cannot be negative)");
@@ -81,12 +106,11 @@ Date::year_t Date::getYear() const {
 }
 
 Date::month_t Date::getMonth() const {
-	return ((static_cast<Timespan::day_t>(timespan) % DAYS_IN_YEAR) / 32) + 1;
+	return MONTH_FROM_DAY_IN_YEAR[static_cast<Timespan::day_t>(timespan) % DAYS_IN_YEAR];
 }
 
 Date::day_t Date::getDay() const {
-	const Timespan::day_t days_in_year = static_cast<Timespan::day_t>(timespan) % DAYS_IN_YEAR;
-	return days_in_year - DAYS_UP_TO_MONTH[days_in_year / 32] + 1;
+	return (static_cast<Timespan::day_t>(timespan) % DAYS_IN_YEAR) - DAYS_UP_TO_MONTH[getMonth() - 1] + 1;
 }
 
 bool Date::operator<(Date other) const { return timespan < other.timespan; };
@@ -128,7 +152,7 @@ Date::operator std::string() const {
 }
 
 std::ostream& OpenVic::operator<<(std::ostream& out, Date const& date) {
-	return out << (int)date.getYear() << '.' << (int)date.getMonth() << '.' << (int)date.getDay();
+	return out << static_cast<int>(date.getYear()) << '.' << static_cast<int>(date.getMonth()) << '.' << static_cast<int>(date.getDay());
 }
 
 // Parsed from string of the form YYYY.MM.DD
