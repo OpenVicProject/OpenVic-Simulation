@@ -4,8 +4,10 @@
 
 using namespace OpenVic;
 
-Logger::log_func_t Logger::info_func = [](std::string&& str) { std::cout << str; };
-Logger::log_func_t Logger::error_func = [](std::string&& str) { std::cerr << str; };
+Logger::log_func_t Logger::info_func {};
+Logger::log_queue_t Logger::info_queue {};
+Logger::log_func_t Logger::error_func {};
+Logger::log_queue_t Logger::error_queue {};
 
 char const* Logger::get_filename(char const* filepath) {
 	if (filepath == nullptr) return nullptr;
