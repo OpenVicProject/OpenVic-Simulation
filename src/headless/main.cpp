@@ -1,8 +1,8 @@
 #ifdef OPENVIC_HEADLESS_SIM
 #include <iostream>
 #include <string>
-#include "src/openvic/Simulation.hpp"
-#include "src/openvic/dataloader/Dataloader.hpp"
+#include "openvic/Simulation.hpp"
+#include "openvic/dataloader/Dataloader.hpp"
 
 
 int main() {
