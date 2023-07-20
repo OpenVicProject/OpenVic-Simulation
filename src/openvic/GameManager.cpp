@@ -21,6 +21,9 @@ void GameManager::update_state() {
 	}
 }
 
+/* REQUIREMENTS:
+ * SS-98, SS-101
+ */
 void GameManager::tick() {
 	today++;
 	Logger::info("Tick: ", today);
