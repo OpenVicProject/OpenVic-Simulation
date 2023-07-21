@@ -100,11 +100,11 @@ return_t BuildingManager::add_building_type(std::string const& identifier, Build
 		return FAILURE;
 	}
 	if (max_level < 0) {
-		Logger::error("Invalid building type max level: ", max_level);
+		Logger::error("Invalid building type max level for ", identifier, ": ", max_level);
 		return FAILURE;
 	}
 	if (build_time < 0) {
-		Logger::error("Invalid building type build time: ", build_time);
+		Logger::error("Invalid building type build time for ", identifier, ": ", build_time);
 		return FAILURE;
 	}
 	return building_types.add_item({ identifier, max_level, build_time });

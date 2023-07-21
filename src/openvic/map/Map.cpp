@@ -39,7 +39,7 @@ return_t Map::add_province(std::string const& identifier, colour_t colour) {
 		return FAILURE;
 	}
 	if (colour == NULL_COLOUR || colour > MAX_COLOUR_RGB) {
-		Logger::error("Invalid province colour: ", Province::colour_to_hex_string(colour));
+		Logger::error("Invalid province colour for ", identifier, ": ", Province::colour_to_hex_string(colour));
 		return FAILURE;
 	}
 	Province new_province { static_cast<index_t>(provinces.get_item_count() + 1), identifier, colour };
@@ -91,26 +91,26 @@ return_t Map::add_region(std::string const& identifier, std::vector<std::string>
 		Province* province = get_province_by_identifier(province_identifier);
 		if (province != nullptr) {
 			if (new_region.contains_province(province)) {
-				Logger::error("Duplicate province identifier ", province_identifier);
+				Logger::error("Duplicate province identifier ", province_identifier, " in region ", identifier);
 				ret = FAILURE;
 			} else {
 				size_t other_region_index = reinterpret_cast<size_t>(province->get_region());
 				if (other_region_index != 0) {
 					other_region_index--;
 					if (other_region_index < regions.get_item_count())
-						Logger::error("Province ", province_identifier, " is already part of ", regions.get_item_by_index(other_region_index)->get_identifier());
+						Logger::error("Cannot add province ", province_identifier, " to region ", identifier, " - it is already part of ", regions.get_item_by_index(other_region_index)->get_identifier());
 					else
-						Logger::error("Province ", province_identifier, " is already part of an unknown region with index ", other_region_index);
+						Logger::error("Cannot add province ", province_identifier, " to region ", identifier, " - it is already part of an unknown region with index ", other_region_index);
 					ret = FAILURE;
 				} else new_region.provinces.push_back(province);
 			}
 		} else {
-			Logger::error("Invalid province identifier ", province_identifier);
+			Logger::error("Invalid province identifier ", province_identifier, " for region ", identifier);
 			ret = FAILURE;
 		}
 	}
 	if (!new_region.get_province_count()) {
-		Logger::error("No valid provinces in region's list");
+		Logger::error("No valid provinces in list for ", identifier);
 		return FAILURE;
 	}
 
