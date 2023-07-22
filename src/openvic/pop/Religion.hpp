@@ -48,7 +48,7 @@ namespace OpenVic {
 		void lock_religion_groups();
 		ReligionGroup const* get_religion_group_by_identifier(std::string const& identifier) const;
 		return_t add_religion(ReligionGroup const* group, std::string const& identifier, colour_t colour, Religion::icon_t icon, bool pagan);
-		void lock_religion();
+		void lock_religions();
 		Religion const* get_religion_by_identifier(std::string const& identifier) const;
 	};
 }

@@ -6,13 +6,20 @@
 
 using namespace OpenVic;
 
-Pop::Pop(PopType const& new_type, Religion const& new_religion)
-	: type { new_type }, religion { new_religion }, size { 1 } {
+Pop::Pop(PopType const& new_type, Culture const& new_culture, Religion const& new_religion)
+	: type { new_type },
+	  culture { new_culture },
+	  religion { new_religion },
+	  size { 1 } {
 	assert(size > 0);
 }
 
 PopType const& Pop::get_type() const {
 	return type;
+}
+
+Culture const& Pop::get_culture() const {
+	return culture;
 }
 
 Religion const& Pop::get_religion() const {
@@ -23,7 +30,8 @@ Pop::pop_size_t Pop::get_size() const {
 	return size;
 }
 
-PopType::PopType(std::string const& new_identifier, colour_t new_colour, strata_t new_strata, sprite_t new_sprite,
+PopType::PopType(std::string const& new_identifier, colour_t new_colour,
+	strata_t new_strata, sprite_t new_sprite,
 	Pop::pop_size_t new_max_size, Pop::pop_size_t new_merge_max_size,
 	bool new_state_capital_only, bool new_demote_migrant, bool new_is_artisan)
 	: HasIdentifier { new_identifier },

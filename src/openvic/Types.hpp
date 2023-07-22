@@ -64,7 +64,7 @@ namespace OpenVic {
 		const colour_t colour;
 
 	protected:
-		HasColour(colour_t const new_colour, bool can_be_null = false);
+		HasColour(colour_t const new_colour, bool can_be_null);
 
 	public:
 		HasColour(HasColour const&) = delete;

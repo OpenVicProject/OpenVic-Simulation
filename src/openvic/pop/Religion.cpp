@@ -34,7 +34,7 @@ ReligionManager::ReligionManager()
 
 return_t ReligionManager::add_religion_group(std::string const& identifier) {
 	if (identifier.empty()) {
-		Logger::error("Invalid relgion group identifier - empty!");
+		Logger::error("Invalid religion group identifier - empty!");
 		return FAILURE;
 	}
 	return religion_groups.add_item({ identifier });
@@ -72,7 +72,7 @@ return_t ReligionManager::add_religion(ReligionGroup const* group, std::string c
 	return religions.add_item({ *group, identifier, colour, icon, pagan });
 }
 
-void ReligionManager::lock_religion() {
+void ReligionManager::lock_religions() {
 	religions.lock();
 }
 

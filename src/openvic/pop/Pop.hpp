@@ -5,6 +5,7 @@
 namespace OpenVic {
 
 	struct PopType;
+	struct Culture;
 	struct Religion;
 
 	/* REQUIREMENTS:
@@ -16,10 +17,11 @@ namespace OpenVic {
 
 	private:
 		PopType const& type;
+		Culture const& culture;
 		Religion const& religion;
 		pop_size_t size;
 
-		Pop(PopType const& new_type, Religion const& new_religion);
+		Pop(PopType const& new_type, Culture const& new_culture, Religion const& new_religion);
 
 	public:
 		Pop(Pop const&) = delete;
@@ -28,6 +30,7 @@ namespace OpenVic {
 		Pop& operator=(Pop&&) = delete;
 
 		PopType const& get_type() const;
+		Culture const& get_culture() const;
 		Religion const& get_religion() const;
 		pop_size_t get_size() const;
 	};
