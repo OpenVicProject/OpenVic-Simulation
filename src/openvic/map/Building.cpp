@@ -127,7 +127,7 @@ return_t BuildingManager::generate_province_buildings(Province& province) const 
 	if (province.is_water()) return SUCCESS;
 	return_t ret = SUCCESS;
 	for (BuildingType const& type : building_types.get_items())
-		if (province.add_building(type) != SUCCESS) ret = FAILURE;
+		if (province.add_building({ type }) != SUCCESS) ret = FAILURE;
 	province.lock_buildings();
 	return ret;
 }

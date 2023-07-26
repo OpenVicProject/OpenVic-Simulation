@@ -2,15 +2,16 @@
 
 #include <cassert>
 
+#include "../map/Province.hpp"
 #include "../utility/Logger.hpp"
 
 using namespace OpenVic;
 
-Pop::Pop(PopType const& new_type, Culture const& new_culture, Religion const& new_religion)
+Pop::Pop(PopType const& new_type, Culture const& new_culture, Religion const& new_religion, pop_size_t new_size)
 	: type { new_type },
 	  culture { new_culture },
 	  religion { new_religion },
-	  size { 1 } {
+	  size { new_size } {
 	assert(size > 0);
 }
 
@@ -33,7 +34,7 @@ Pop::pop_size_t Pop::get_size() const {
 PopType::PopType(std::string const& new_identifier, colour_t new_colour,
 	strata_t new_strata, sprite_t new_sprite,
 	Pop::pop_size_t new_max_size, Pop::pop_size_t new_merge_max_size,
-	bool new_state_capital_only, bool new_demote_migrant, bool new_is_artisan)
+	bool new_state_capital_only, bool new_demote_migrant, bool new_is_artisan, bool new_is_slave)
 	: HasIdentifier { new_identifier },
 	  HasColour { new_colour, true },
 	  strata { new_strata },
@@ -42,7 +43,8 @@ PopType::PopType(std::string const& new_identifier, colour_t new_colour,
 	  merge_max_size { new_merge_max_size },
 	  state_capital_only { new_state_capital_only },
 	  demote_migrant { new_demote_migrant },
-	  is_artisan { new_is_artisan } {
+	  is_artisan { new_is_artisan },
+	  is_slave { new_is_slave } {
 	assert(sprite > 0);
 	assert(max_size > 0);
 	assert(merge_max_size > 0);
@@ -72,9 +74,35 @@ bool PopType::get_is_artisan() const {
 	return is_artisan;
 }
 
-PopTypeManager::PopTypeManager() : pop_types { "pop types" } {}
+bool PopType::get_is_slave() const {
+	return is_slave;
+}
 
-return_t PopTypeManager::add_pop_type(std::string const& identifier, colour_t colour, PopType::strata_t strata, PopType::sprite_t sprite, Pop::pop_size_t max_size, Pop::pop_size_t merge_max_size, bool state_capital_only, bool demote_migrant, bool is_artisan) {
+PopManager::PopManager() : pop_types { "pop types" } {
+	culture_manager.add_graphical_culture_type("test_graphical_culture_type");
+	culture_manager.lock_graphical_culture_types();
+
+	culture_manager.add_culture_group("test_culture_group", culture_manager.get_graphical_culture_type_by_identifier("test_graphical_culture_type"));
+	culture_manager.lock_culture_groups();
+
+	culture_manager.add_culture("test_culture", 0x0000FF, culture_manager.get_culture_group_by_identifier("test_culture_group"),
+		{ "john" }, { "smith" });
+	culture_manager.lock_cultures();
+
+	religion_manager.add_religion_group("test_religion_group");
+	religion_manager.lock_religion_groups();
+
+	religion_manager.add_religion("test_religion", 0xFF0000, religion_manager.get_religion_group_by_identifier("test_religion_group"), 1, false);
+	religion_manager.lock_religions();
+
+	add_pop_type("test_pop_type_poor", 0xFF0000, PopType::strata_t::POOR, 1, 1, 1, false, false, false, false);
+	add_pop_type("test_pop_type_middle", 0x00FF00, PopType::strata_t::MIDDLE, 1, 1, 1, false, false, false, false);
+	add_pop_type("test_pop_type_rich", 0x0000FF, PopType::strata_t::RICH, 1, 1, 1, false, false, false, false);
+	lock_pop_types();
+}
+
+return_t PopManager::add_pop_type(std::string const& identifier, colour_t colour, PopType::strata_t strata, PopType::sprite_t sprite,
+	Pop::pop_size_t max_size, Pop::pop_size_t merge_max_size, bool state_capital_only, bool demote_migrant, bool is_artisan, bool is_slave) {
 	if (identifier.empty()) {
 		Logger::error("Invalid pop type identifier - empty!");
 		return FAILURE;
@@ -95,13 +123,28 @@ return_t PopTypeManager::add_pop_type(std::string const& identifier, colour_t co
 		Logger::error("Invalid pop type merge max size for ", identifier, ": ", merge_max_size);
 		return FAILURE;
 	}
-	return pop_types.add_item({ identifier, colour, strata, sprite, max_size, merge_max_size, state_capital_only, demote_migrant, is_artisan });
+	return pop_types.add_item({ identifier, colour, strata, sprite, max_size, merge_max_size, state_capital_only, demote_migrant, is_artisan, is_slave });
 }
 
-void PopTypeManager::lock_pop_types() {
+void PopManager::lock_pop_types() {
 	pop_types.lock();
 }
 
-PopType const* PopTypeManager::get_pop_type_by_identifier(std::string const& identifier) const {
+PopType const* PopManager::get_pop_type_by_identifier(std::string const& identifier) const {
 	return pop_types.get_item_by_identifier(identifier);
+}
+
+void PopManager::generate_test_pops(Province& province) const {
+	if (pop_types.is_locked()) {
+		static PopType const& type_poor = *get_pop_type_by_identifier("test_pop_type_poor");
+		static PopType const& type_middle = *get_pop_type_by_identifier("test_pop_type_middle");
+		static PopType const& type_rich = *get_pop_type_by_identifier("test_pop_type_rich");
+		static Culture const& culture = *culture_manager.get_culture_by_identifier("test_culture");
+		static Religion const& religion = *religion_manager.get_religion_by_identifier("test_religion");
+		province.add_pop({ type_poor, culture, religion, static_cast<Pop::pop_size_t>(province.get_index() * province.get_index() * province.get_index()) * 1000 });
+		province.add_pop({ type_middle, culture, religion, static_cast<Pop::pop_size_t>(province.get_index() * province.get_index()) * 1000 });
+		province.add_pop({ type_rich, culture, religion, static_cast<Pop::pop_size_t>(province.get_index()) * 1000 });
+	} else {
+		Logger::error("Cannot generate pops before pop types registry is locked!");
+	}
 }

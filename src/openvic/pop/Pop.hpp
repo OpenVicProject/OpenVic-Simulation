@@ -1,17 +1,19 @@
 #pragma once
 
 #include "../Types.hpp"
+#include "Culture.hpp"
+#include "Religion.hpp"
 
 namespace OpenVic {
 
+	struct PopManager;
 	struct PopType;
-	struct Culture;
-	struct Religion;
 
 	/* REQUIREMENTS:
-	 * POP-18, POP-19, POP-21
+	 * POP-18, POP-19, POP-20, POP-21
 	 */
 	struct Pop {
+		friend struct PopManager;
 
 		using pop_size_t = uint32_t;
 
@@ -21,7 +23,7 @@ namespace OpenVic {
 		Religion const& religion;
 		pop_size_t size;
 
-		Pop(PopType const& new_type, Culture const& new_culture, Religion const& new_religion);
+		Pop(PopType const& new_type, Culture const& new_culture, Religion const& new_religion, pop_size_t new_size);
 
 	public:
 		Pop(Pop const&) = delete;
@@ -35,13 +37,11 @@ namespace OpenVic {
 		pop_size_t get_size() const;
 	};
 
-	struct PopTypeManager;
-
 	/* REQUIREMENTS:
 	 * POP-26
 	 */
 	struct PopType : HasIdentifier, HasColour {
-		friend struct PopTypeManager;
+		friend struct PopManager;
 
 		using sprite_t = uint8_t;
 
@@ -53,11 +53,12 @@ namespace OpenVic {
 		} strata;
 		const sprite_t sprite;
 		const Pop::pop_size_t max_size, merge_max_size;
-		const bool state_capital_only, demote_migrant, is_artisan;
+		const bool state_capital_only, demote_migrant, is_artisan, is_slave;
 
 		// TODO - rebel composition, life/everyday/luxury needs, country and province migration targets, promote_to targets, ideologies and issues
 
-		PopType(std::string const& new_identifier, colour_t new_colour, strata_t new_strata, sprite_t new_sprite, Pop::pop_size_t new_max_size, Pop::pop_size_t new_merge_max_size, bool new_state_capital_only, bool new_demote_migrant, bool new_is_artisan);
+		PopType(std::string const& new_identifier, colour_t new_colour, strata_t new_strata, sprite_t new_sprite, Pop::pop_size_t new_max_size, Pop::pop_size_t new_merge_max_size,
+			bool new_state_capital_only, bool new_demote_migrant, bool new_is_artisan, bool new_is_slave);
 
 	public:
 		PopType(PopType&&) = default;
@@ -68,17 +69,26 @@ namespace OpenVic {
 		bool get_state_capital_only() const;
 		bool get_demote_migrant() const;
 		bool get_is_artisan() const;
+		bool get_is_slave() const;
 	};
 
-	struct PopTypeManager {
+	struct Province;
+
+	struct PopManager {
 	private:
 		IdentifierRegistry<PopType> pop_types;
+		CultureManager culture_manager;
+		ReligionManager religion_manager;
 
 	public:
-		PopTypeManager();
+		PopManager();
 
-		return_t add_pop_type(std::string const& identifier, colour_t new_colour, PopType::strata_t new_strata, PopType::sprite_t new_sprite, Pop::pop_size_t new_max_size, Pop::pop_size_t new_merge_max_size, bool new_state_capital_only, bool new_demote_migrant, bool new_is_artisan);
+		return_t add_pop_type(std::string const& identifier, colour_t new_colour, PopType::strata_t strata, PopType::sprite_t sprite,
+			Pop::pop_size_t max_size, Pop::pop_size_t merge_max_size, bool state_capital_only, bool demote_migrant,
+			bool is_artisan, bool is_slave);
 		void lock_pop_types();
 		PopType const* get_pop_type_by_identifier(std::string const& identifier) const;
+
+		void generate_test_pops(Province& province) const;
 	};
 }

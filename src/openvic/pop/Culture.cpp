@@ -49,7 +49,7 @@ GraphicalCultureType const* CultureManager::get_graphical_culture_type_by_identi
 	return graphical_culture_types.get_item_by_identifier(identifier);
 }
 
-return_t CultureManager::add_culture_group(std::string const& identifier, GraphicalCultureType const& graphical_culture_type) {
+return_t CultureManager::add_culture_group(std::string const& identifier, GraphicalCultureType const* graphical_culture_type) {
 	if (!graphical_culture_types.is_locked()) {
 		Logger::error("Cannot register culture groups until graphical culture types are locked!");
 		return FAILURE;
@@ -58,7 +58,11 @@ return_t CultureManager::add_culture_group(std::string const& identifier, Graphi
 		Logger::error("Invalid culture group identifier - empty!");
 		return FAILURE;
 	}
-	return culture_groups.add_item({ identifier, graphical_culture_type });
+	if (graphical_culture_type == nullptr) {
+		Logger::error("Null graphical culture type for ", identifier);
+		return FAILURE;
+	}
+	return culture_groups.add_item({ identifier, *graphical_culture_type });
 }
 
 void CultureManager::lock_culture_groups() {
@@ -69,7 +73,7 @@ CultureGroup const* CultureManager::get_culture_group_by_identifier(std::string 
 	return culture_groups.get_item_by_identifier(identifier);
 }
 
-return_t CultureManager::add_culture(CultureGroup const* group, std::string const& identifier, colour_t colour, Culture::name_list_t const& first_names, Culture::name_list_t const& last_names) {
+return_t CultureManager::add_culture(std::string const& identifier, colour_t colour, CultureGroup const* group, Culture::name_list_t const& first_names, Culture::name_list_t const& last_names) {
 	if (!culture_groups.is_locked()) {
 		Logger::error("Cannot register cultures until culture groups are locked!");
 		return FAILURE;

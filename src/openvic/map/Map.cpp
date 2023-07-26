@@ -341,13 +341,37 @@ return_t Map::generate_mapmode_colours(Mapmode::index_t index, uint8_t* target) 
 	return ret;
 }
 
-return_t Map::setup(GoodManager const& good_manager, BuildingManager const& building_manager) {
+void Map::update_highest_province_population() {
+	highest_province_population = 0;
+	for (Province const& province : provinces.get_items()) {
+		highest_province_population = std::max(highest_province_population, province.get_total_population());
+	}
+}
+
+Pop::pop_size_t Map::get_highest_province_population() const {
+	return highest_province_population;
+}
+
+void Map::update_total_map_population() {
+	total_map_population = 0;
+	for (Province const& province : provinces.get_items()) {
+		total_map_population += province.get_total_population();
+	}
+}
+
+Pop::pop_size_t Map::get_total_map_population() const {
+	return total_map_population;
+}
+
+return_t Map::setup(GoodManager const& good_manager, BuildingManager const& building_manager, PopManager const& pop_manager) {
 	return_t ret = SUCCESS;
 	for (Province& province : provinces.get_items()) {
 		// Set all land provinces to have an RGO based on their index to test them
 		if (!province.is_water() && good_manager.get_good_count() > 0)
 			province.rgo = good_manager.get_good_by_index(province.get_index() % good_manager.get_good_count());
 		if (building_manager.generate_province_buildings(province) != SUCCESS) ret = FAILURE;
+		// Add some pops to the province (for testing purposes)
+		pop_manager.generate_test_pops(province);
 	}
 	return ret;
 }
@@ -355,6 +379,8 @@ return_t Map::setup(GoodManager const& good_manager, BuildingManager const& buil
 void Map::update_state(Date const& today) {
 	for (Province& province : provinces.get_items())
 		province.update_state(today);
+	update_highest_province_population();
+	update_total_map_population();
 }
 
 void Map::tick(Date const& today) {

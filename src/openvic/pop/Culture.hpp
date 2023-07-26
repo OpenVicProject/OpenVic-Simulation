@@ -63,10 +63,10 @@ namespace OpenVic {
 		return_t add_graphical_culture_type(std::string const& identifier);
 		void lock_graphical_culture_types();
 		GraphicalCultureType const* get_graphical_culture_type_by_identifier(std::string const& identifier) const;
-		return_t add_culture_group(std::string const& identifier, GraphicalCultureType const& new_graphical_culture_type);
+		return_t add_culture_group(std::string const& identifier, GraphicalCultureType const* new_graphical_culture_type);
 		void lock_culture_groups();
 		CultureGroup const* get_culture_group_by_identifier(std::string const& identifier) const;
-		return_t add_culture(CultureGroup const* group, std::string const& identifier, colour_t colour, Culture::name_list_t const& first_names, Culture::name_list_t const& last_names);
+		return_t add_culture(std::string const& identifier, colour_t colour, CultureGroup const* group, Culture::name_list_t const& first_names, Culture::name_list_t const& last_names);
 		void lock_cultures();
 		Culture const* get_culture_by_identifier(std::string const& identifier) const;
 	};

@@ -54,6 +54,8 @@ namespace OpenVic {
 		colour_index_map_t colour_index_map;
 		index_t selected_province = NULL_INDEX;
 
+		Pop::pop_size_t highest_province_population, total_map_population;
+
 		index_t get_index_from_colour(colour_t colour) const;
 
 	public:
@@ -93,7 +95,12 @@ namespace OpenVic {
 		static constexpr size_t MAPMODE_COLOUR_SIZE = 4;
 		return_t generate_mapmode_colours(Mapmode::index_t index, uint8_t* target) const;
 
-		return_t setup(GoodManager const& good_manager, BuildingManager const& building_manager);
+		return_t setup(GoodManager const& good_manager, BuildingManager const& building_manager, PopManager const& pop_manager);
+
+		void update_highest_province_population();
+		Pop::pop_size_t get_highest_province_population() const;
+		void update_total_map_population();
+		Pop::pop_size_t get_total_map_population() const;
 
 		void update_state(Date const& today);
 		void tick(Date const& today);

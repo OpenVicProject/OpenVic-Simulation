@@ -48,7 +48,7 @@ ReligionGroup const* ReligionManager::get_religion_group_by_identifier(std::stri
 	return religion_groups.get_item_by_identifier(identifier);
 }
 
-return_t ReligionManager::add_religion(ReligionGroup const* group, std::string const& identifier, colour_t colour, Religion::icon_t icon, bool pagan) {
+return_t ReligionManager::add_religion(std::string const& identifier, colour_t colour, ReligionGroup const* group, Religion::icon_t icon, bool pagan) {
 	if (!religion_groups.is_locked()) {
 		Logger::error("Cannot register religions until religion groups are locked!");
 		return FAILURE;
