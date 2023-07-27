@@ -6,7 +6,8 @@
 #include "../Types.hpp"
 
 namespace OpenVic {
-	struct Province;
+
+	struct BuildingManager;
 	struct BuildingType;
 
 	/* REQUIREMENTS:
@@ -15,7 +16,7 @@ namespace OpenVic {
 	 * MAP-13, MAP-78, MAP-79
 	 */
 	struct Building : HasIdentifier {
-		friend struct Province;
+		friend struct BuildingManager;
 
 		using level_t = int8_t;
 
@@ -52,8 +53,6 @@ namespace OpenVic {
 		void tick(Date const& today);
 	};
 
-	struct BuildingManager;
-
 	struct BuildingType : HasIdentifier {
 		friend struct BuildingManager;
 
@@ -69,6 +68,8 @@ namespace OpenVic {
 		Building::level_t get_max_level() const;
 		Timespan get_build_time() const;
 	};
+
+	struct Province;
 
 	struct BuildingManager {
 	private:

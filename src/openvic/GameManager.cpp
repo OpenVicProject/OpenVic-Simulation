@@ -36,7 +36,7 @@ return_t GameManager::setup() {
 	clock.reset();
 	today = { 1836 };
 	good_manager.reset_to_defaults();
-	return_t ret = map.setup(good_manager, building_manager);
+	return_t ret = map.setup(good_manager, building_manager, pop_manager);
 	set_needs_update();
 	return ret;
 }

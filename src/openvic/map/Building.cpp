@@ -100,11 +100,11 @@ return_t BuildingManager::add_building_type(std::string const& identifier, Build
 		return FAILURE;
 	}
 	if (max_level < 0) {
-		Logger::error("Invalid building type max level: ", max_level);
+		Logger::error("Invalid building type max level for ", identifier, ": ", max_level);
 		return FAILURE;
 	}
 	if (build_time < 0) {
-		Logger::error("Invalid building type build time: ", build_time);
+		Logger::error("Invalid building type build time for ", identifier, ": ", build_time);
 		return FAILURE;
 	}
 	return building_types.add_item({ identifier, max_level, build_time });
@@ -127,7 +127,7 @@ return_t BuildingManager::generate_province_buildings(Province& province) const 
 	if (province.is_water()) return SUCCESS;
 	return_t ret = SUCCESS;
 	for (BuildingType const& type : building_types.get_items())
-		if (province.add_building(type) != SUCCESS) ret = FAILURE;
+		if (province.add_building({ type }) != SUCCESS) ret = FAILURE;
 	province.lock_buildings();
 	return ret;
 }

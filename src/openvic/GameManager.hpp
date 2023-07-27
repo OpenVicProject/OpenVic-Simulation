@@ -11,6 +11,7 @@ namespace OpenVic {
 		Map map;
 		BuildingManager building_manager;
 		GoodManager good_manager;
+		PopManager pop_manager;
 		GameAdvancementHook clock;
 
 	private:

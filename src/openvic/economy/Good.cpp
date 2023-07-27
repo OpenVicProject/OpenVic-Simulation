@@ -50,8 +50,12 @@ return_t GoodManager::add_good(std::string const& identifier, std::string const&
 		Logger::error("Invalid good identifier - empty!");
 		return FAILURE;
 	}
+	if (colour > MAX_COLOUR_RGB) {
+		Logger::error("Invalid good colour for ", identifier, ": ", Good::colour_to_hex_string(colour));
+		return FAILURE;
+	}
 	if (category.empty()) {
-		Logger::error("Invalid good category - empty!");
+		Logger::error("Invalid good category for ", identifier, ": empty!");
 		return FAILURE;
 	}
 	if (base_price <= NULL_PRICE) {

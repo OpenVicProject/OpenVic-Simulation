@@ -39,7 +39,7 @@ return_t Map::add_province(std::string const& identifier, colour_t colour) {
 		return FAILURE;
 	}
 	if (colour == NULL_COLOUR || colour > MAX_COLOUR_RGB) {
-		Logger::error("Invalid province colour: ", Province::colour_to_hex_string(colour));
+		Logger::error("Invalid province colour for ", identifier, ": ", Province::colour_to_hex_string(colour));
 		return FAILURE;
 	}
 	Province new_province { static_cast<index_t>(provinces.get_item_count() + 1), identifier, colour };
@@ -91,26 +91,26 @@ return_t Map::add_region(std::string const& identifier, std::vector<std::string>
 		Province* province = get_province_by_identifier(province_identifier);
 		if (province != nullptr) {
 			if (new_region.contains_province(province)) {
-				Logger::error("Duplicate province identifier ", province_identifier);
+				Logger::error("Duplicate province identifier ", province_identifier, " in region ", identifier);
 				ret = FAILURE;
 			} else {
 				size_t other_region_index = reinterpret_cast<size_t>(province->get_region());
 				if (other_region_index != 0) {
 					other_region_index--;
 					if (other_region_index < regions.get_item_count())
-						Logger::error("Province ", province_identifier, " is already part of ", regions.get_item_by_index(other_region_index)->get_identifier());
+						Logger::error("Cannot add province ", province_identifier, " to region ", identifier, " - it is already part of ", regions.get_item_by_index(other_region_index)->get_identifier());
 					else
-						Logger::error("Province ", province_identifier, " is already part of an unknown region with index ", other_region_index);
+						Logger::error("Cannot add province ", province_identifier, " to region ", identifier, " - it is already part of an unknown region with index ", other_region_index);
 					ret = FAILURE;
 				} else new_region.provinces.push_back(province);
 			}
 		} else {
-			Logger::error("Invalid province identifier ", province_identifier);
+			Logger::error("Invalid province identifier ", province_identifier, " for region ", identifier);
 			ret = FAILURE;
 		}
 	}
 	if (!new_region.get_province_count()) {
-		Logger::error("No valid provinces in region's list");
+		Logger::error("No valid provinces in list for ", identifier);
 		return FAILURE;
 	}
 
@@ -341,13 +341,37 @@ return_t Map::generate_mapmode_colours(Mapmode::index_t index, uint8_t* target) 
 	return ret;
 }
 
-return_t Map::setup(GoodManager const& good_manager, BuildingManager const& building_manager) {
+void Map::update_highest_province_population() {
+	highest_province_population = 0;
+	for (Province const& province : provinces.get_items()) {
+		highest_province_population = std::max(highest_province_population, province.get_total_population());
+	}
+}
+
+Pop::pop_size_t Map::get_highest_province_population() const {
+	return highest_province_population;
+}
+
+void Map::update_total_map_population() {
+	total_map_population = 0;
+	for (Province const& province : provinces.get_items()) {
+		total_map_population += province.get_total_population();
+	}
+}
+
+Pop::pop_size_t Map::get_total_map_population() const {
+	return total_map_population;
+}
+
+return_t Map::setup(GoodManager const& good_manager, BuildingManager const& building_manager, PopManager const& pop_manager) {
 	return_t ret = SUCCESS;
 	for (Province& province : provinces.get_items()) {
 		// Set all land provinces to have an RGO based on their index to test them
 		if (!province.is_water() && good_manager.get_good_count() > 0)
 			province.rgo = good_manager.get_good_by_index(province.get_index() % good_manager.get_good_count());
 		if (building_manager.generate_province_buildings(province) != SUCCESS) ret = FAILURE;
+		// Add some pops to the province (for testing purposes)
+		pop_manager.generate_test_pops(province);
 	}
 	return ret;
 }
@@ -355,6 +379,8 @@ return_t Map::setup(GoodManager const& good_manager, BuildingManager const& buil
 void Map::update_state(Date const& today) {
 	for (Province& province : provinces.get_items())
 		province.update_state(today);
+	update_highest_province_population();
+	update_total_map_population();
 }
 
 void Map::tick(Date const& today) {

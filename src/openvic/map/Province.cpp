@@ -8,7 +8,7 @@ using namespace OpenVic;
 
 Province::Province(index_t new_index, std::string const& new_identifier, colour_t new_colour)
 	: HasIdentifier { new_identifier },
-	  HasColour { new_colour },
+	  HasColour { new_colour, false },
 	  index { new_index },
 	  buildings { "buildings" } {
 	assert(index != NULL_INDEX);
@@ -30,8 +30,8 @@ Province::life_rating_t Province::get_life_rating() const {
 	return life_rating;
 }
 
-return_t Province::add_building(BuildingType const& type) {
-	return buildings.add_item({ type });
+return_t Province::add_building(Building&& building) {
+	return buildings.add_item(std::move(building));
 }
 
 void Province::lock_buildings() {
@@ -66,9 +66,28 @@ std::string Province::to_string() const {
 	return stream.str();
 }
 
+void Province::add_pop(Pop&& pop) {
+	pops.push_back(std::move(pop));
+}
+
+/* REQUIREMENTS:
+ * MAP-65
+ */
+void Province::update_total_population() {
+	total_population = 0;
+	for (Pop const& pop : pops) {
+		total_population += pop.get_size();
+	}
+}
+
+Pop::pop_size_t Province::get_total_population() const {
+	return total_population;
+}
+
 void Province::update_state(Date const& today) {
 	for (Building& building : buildings.get_items())
 		building.update_state(today);
+	update_total_population();
 }
 
 void Province::tick(Date const& today) {
