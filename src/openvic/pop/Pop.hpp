@@ -40,7 +40,7 @@ namespace OpenVic {
 	/* REQUIREMENTS:
 	 * POP-26
 	 */
-	struct PopType : HasIdentifier, HasColour {
+	struct PopType : HasIdentifierAndColour {
 		friend struct PopManager;
 
 		using sprite_t = uint8_t;

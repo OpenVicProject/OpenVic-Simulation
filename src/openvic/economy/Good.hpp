@@ -6,7 +6,7 @@ namespace OpenVic {
 	struct GoodManager;
 
 	/* REQUIREMENTS:
-	 * 
+	 *
 	 * ECON-3 , ECON-4 , ECON-5 , ECON-6 , ECON-7 , ECON-8 , ECON-9 , ECON-10, ECON-11, ECON-12, ECON-13, ECON-14,
 	 * ECON-15, ECON-16, ECON-17, ECON-18, ECON-19, ECON-20, ECON-21, ECON-22, ECON-23, ECON-24, ECON-25, ECON-26,
 	 * ECON-27, ECON-28, ECON-29, ECON-30, ECON-31, ECON-32, ECON-33, ECON-34, ECON-35, ECON-36, ECON-37, ECON-38,
@@ -17,7 +17,7 @@ namespace OpenVic {
 	 * ECON-238, ECON-239, ECON-240, ECON-241, ECON-242, ECON-243, ECON-244, ECON-245, ECON-246, ECON-247, ECON-248, ECON-249,
 	 * ECON-250, ECON-251, ECON-252, ECON-253, ECON-254, ECON-255, ECON-256, ECON-257, ECON-258, ECON-259, ECON-260, ECON-261
 	 */
-	struct Good : HasIdentifier, HasColour {
+	struct Good : HasIdentifierAndColour {
 		friend struct GoodManager;
 
 	private:

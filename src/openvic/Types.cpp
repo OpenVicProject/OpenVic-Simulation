@@ -29,3 +29,8 @@ std::string HasColour::colour_to_hex_string(colour_t const colour) {
 std::string HasColour::colour_to_hex_string() const {
 	return colour_to_hex_string(colour);
 }
+
+HasIdentifierAndColour::HasIdentifierAndColour(std::string const& new_identifier,
+	const colour_t new_colour, bool can_be_null)
+	: HasIdentifier { new_identifier },
+	  HasColour { new_colour, can_be_null } {}

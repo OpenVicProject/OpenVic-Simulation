@@ -32,7 +32,7 @@ namespace OpenVic {
 		GraphicalCultureType const& get_unit_graphical_culture_type() const;
 	};
 
-	struct Culture : HasIdentifier, HasColour {
+	struct Culture : HasIdentifierAndColour {
 		friend struct CultureManager;
 
 		using name_list_t = std::vector<std::string>;

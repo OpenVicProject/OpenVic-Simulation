@@ -9,8 +9,7 @@ ReligionGroup::ReligionGroup(std::string const& new_identifier) : HasIdentifier 
 Religion::Religion(ReligionGroup const& new_group, std::string const& new_identifier,
 	colour_t new_colour, icon_t new_icon, bool new_pagan)
 	: group { new_group },
-	  HasIdentifier { new_identifier },
-	  HasColour { new_colour, true },
+	  HasIdentifierAndColour { new_identifier, new_colour, true },
 	  icon { new_icon },
 	  pagan { new_pagan } {
 	assert(icon > 0);

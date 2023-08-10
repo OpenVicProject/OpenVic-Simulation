@@ -35,8 +35,7 @@ PopType::PopType(std::string const& new_identifier, colour_t new_colour,
 	strata_t new_strata, sprite_t new_sprite,
 	Pop::pop_size_t new_max_size, Pop::pop_size_t new_merge_max_size,
 	bool new_state_capital_only, bool new_demote_migrant, bool new_is_artisan, bool new_is_slave)
-	: HasIdentifier { new_identifier },
-	  HasColour { new_colour, true },
+	: HasIdentifierAndColour { new_identifier, new_colour, true },
 	  strata { new_strata },
 	  sprite { new_sprite },
 	  max_size { new_max_size },
@@ -141,8 +140,8 @@ void PopManager::generate_test_pops(Province& province) const {
 		static PopType const& type_rich = *get_pop_type_by_identifier("test_pop_type_rich");
 		static Culture const& culture = *culture_manager.get_culture_by_identifier("test_culture");
 		static Religion const& religion = *religion_manager.get_religion_by_identifier("test_religion");
-		province.add_pop({ type_poor, culture, religion, static_cast<Pop::pop_size_t>(province.get_index() * province.get_index() * province.get_index()) * 1000 });
-		province.add_pop({ type_middle, culture, religion, static_cast<Pop::pop_size_t>(province.get_index() * province.get_index()) * 1000 });
+		province.add_pop({ type_poor, culture, religion, static_cast<Pop::pop_size_t>(province.get_index() * province.get_index()) * 100 });
+		province.add_pop({ type_middle, culture, religion, static_cast<Pop::pop_size_t>(province.get_index() * province.get_index()) * 50 });
 		province.add_pop({ type_rich, culture, religion, static_cast<Pop::pop_size_t>(province.get_index()) * 1000 });
 	} else {
 		Logger::error("Cannot generate pops before pop types registry is locked!");

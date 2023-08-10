@@ -16,7 +16,7 @@ namespace OpenVic {
 		ReligionGroup(ReligionGroup&&) = default;
 	};
 
-	struct Religion : HasIdentifier, HasColour {
+	struct Religion : HasIdentifierAndColour {
 		friend struct ReligionManager;
 
 		using icon_t = uint8_t;

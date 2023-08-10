@@ -11,7 +11,7 @@ namespace OpenVic {
 	/* REQUIREMENTS:
 	 * MAP-5, MAP-7, MAP-8, MAP-43, MAP-47
 	 */
-	struct Province : HasIdentifier, HasColour {
+	struct Province : HasIdentifierAndColour {
 		friend struct Map;
 
 		using life_rating_t = int8_t;
@@ -27,6 +27,7 @@ namespace OpenVic {
 
 		std::vector<Pop> pops;
 		Pop::pop_size_t total_population;
+		distribution_t pop_types, cultures;
 
 		Province(index_t new_index, std::string const& new_identifier, colour_t new_colour);
 
@@ -47,8 +48,11 @@ namespace OpenVic {
 		std::string to_string() const;
 
 		void add_pop(Pop&& pop);
-		void update_total_population();
+		void clear_pops();
 		Pop::pop_size_t get_total_population() const;
+		distribution_t const& get_pop_type_distribution() const;
+		distribution_t const& get_culture_distribution() const;
+		void update_pops();
 
 		void update_state(Date const& today);
 		void tick(Date const& today);
