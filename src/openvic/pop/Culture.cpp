@@ -18,8 +18,7 @@ GraphicalCultureType const& CultureGroup::get_unit_graphical_culture_type() cons
 Culture::Culture(CultureGroup const& new_group, std::string const& new_identifier,
 	colour_t new_colour, name_list_t const& new_first_names, name_list_t const& new_last_names)
 	: group { new_group },
-	  HasIdentifier { new_identifier },
-	  HasColour { new_colour, true },
+	  HasIdentifierAndColour { new_identifier, new_colour, true },
 	  first_names { new_first_names },
 	  last_names { new_last_names } {
 }

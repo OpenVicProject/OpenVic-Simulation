@@ -366,12 +366,14 @@ Pop::pop_size_t Map::get_total_map_population() const {
 return_t Map::setup(GoodManager const& good_manager, BuildingManager const& building_manager, PopManager const& pop_manager) {
 	return_t ret = SUCCESS;
 	for (Province& province : provinces.get_items()) {
+		province.clear_pops();
 		// Set all land provinces to have an RGO based on their index to test them
 		if (!province.is_water() && good_manager.get_good_count() > 0)
 			province.rgo = good_manager.get_good_by_index(province.get_index() % good_manager.get_good_count());
 		if (building_manager.generate_province_buildings(province) != SUCCESS) ret = FAILURE;
 		// Add some pops to the province (for testing purposes)
-		pop_manager.generate_test_pops(province);
+		if (!province.is_water())
+			pop_manager.generate_test_pops(province);
 	}
 	return ret;
 }

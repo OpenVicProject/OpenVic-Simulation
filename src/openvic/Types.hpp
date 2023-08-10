@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <cstdint>
 #include <map>
+#include <unordered_map>
 #include <vector>
 
 #include "utility/Logger.hpp"
@@ -24,6 +25,9 @@ namespace OpenVic {
 	}
 	constexpr colour_t float_to_alpha_value(float a) {
 		return float_to_colour_byte(a) << 24;
+	}
+	constexpr float colour_byte_to_float(colour_t colour) {
+		return std::clamp(static_cast<float>(colour) / 255.0f, 0.0f, 1.0f);
 	}
 
 	using index_t = uint16_t;
@@ -58,13 +62,13 @@ namespace OpenVic {
 	};
 
 	/*
-	 * Base class for objects with associated colour information
+	 * Base class for objects with associated colour information.
 	 */
 	class HasColour {
 		const colour_t colour;
 
 	protected:
-		HasColour(colour_t const new_colour, bool can_be_null);
+		HasColour(const colour_t new_colour, bool can_be_null);
 
 	public:
 		HasColour(HasColour const&) = delete;
@@ -76,6 +80,23 @@ namespace OpenVic {
 		std::string colour_to_hex_string() const;
 		static std::string colour_to_hex_string(colour_t const colour);
 	};
+
+	/*
+	 * Base class for objects with a unique string identifier
+	 * and associated colour information.
+	 */
+	class HasIdentifierAndColour : public HasIdentifier, public HasColour {
+	protected:
+		HasIdentifierAndColour(std::string const& new_identifier, const colour_t new_colour, bool can_be_null);
+
+	public:
+		HasIdentifierAndColour(HasIdentifierAndColour const&) = delete;
+		HasIdentifierAndColour(HasIdentifierAndColour&&) = default;
+		HasIdentifierAndColour& operator=(HasIdentifierAndColour const&) = delete;
+		HasIdentifierAndColour& operator=(HasIdentifierAndColour&&) = delete;
+	};
+
+	using distribution_t = std::unordered_map<HasIdentifierAndColour const*, float>;
 
 	/*
 	 * Template for a list of objects with unique string identifiers that can

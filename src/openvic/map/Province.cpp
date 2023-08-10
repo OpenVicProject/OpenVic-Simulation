@@ -7,8 +7,7 @@
 using namespace OpenVic;
 
 Province::Province(index_t new_index, std::string const& new_identifier, colour_t new_colour)
-	: HasIdentifier { new_identifier },
-	  HasColour { new_colour, false },
+	: HasIdentifierAndColour { new_identifier, new_colour, false },
 	  index { new_index },
 	  buildings { "buildings" } {
 	assert(index != NULL_INDEX);
@@ -67,27 +66,47 @@ std::string Province::to_string() const {
 }
 
 void Province::add_pop(Pop&& pop) {
-	pops.push_back(std::move(pop));
+	if (is_water()) {
+		Logger::error("Trying to add pop to water province ", get_identifier());
+	} else {
+		pops.push_back(std::move(pop));
+	}
 }
 
-/* REQUIREMENTS:
- * MAP-65
- */
-void Province::update_total_population() {
-	total_population = 0;
-	for (Pop const& pop : pops) {
-		total_population += pop.get_size();
-	}
+void Province::clear_pops() {
+	pops.clear();
 }
 
 Pop::pop_size_t Province::get_total_population() const {
 	return total_population;
 }
 
+distribution_t const& Province::get_pop_type_distribution() const {
+	return pop_types;
+}
+
+distribution_t const& Province::get_culture_distribution() const {
+	return cultures;
+}
+
+/* REQUIREMENTS:
+ * MAP-65
+ */
+void Province::update_pops() {
+	total_population = 0;
+	pop_types.clear();
+	cultures.clear();
+	for (Pop const& pop : pops) {
+		total_population += pop.get_size();
+		pop_types[&pop.get_type()] += pop.get_size();
+		cultures[&pop.get_culture()] += pop.get_size();
+	}
+}
+
 void Province::update_state(Date const& today) {
 	for (Building& building : buildings.get_items())
 		building.update_state(today);
-	update_total_population();
+	update_pops();
 }
 
 void Province::tick(Date const& today) {

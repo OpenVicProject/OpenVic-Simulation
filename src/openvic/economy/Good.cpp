@@ -6,8 +6,7 @@ using namespace OpenVic;
 
 Good::Good(std::string const& new_identifier, std::string const& new_category, colour_t new_colour, price_t new_base_price,
 	bool new_default_available, bool new_tradeable, bool new_currency, bool new_overseas_maintenance)
-	: HasIdentifier { new_identifier },
-	  HasColour { new_colour, true },
+	: HasIdentifierAndColour { new_identifier, new_colour, true },
 	  category { new_category },
 	  base_price { new_base_price },
 	  default_available { new_default_available },
