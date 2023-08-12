@@ -57,7 +57,7 @@ namespace OpenVic {
 
 		// TODO - rebel composition, life/everyday/luxury needs, country and province migration targets, promote_to targets, ideologies and issues
 
-		PopType(std::string const& new_identifier, colour_t new_colour, strata_t new_strata, sprite_t new_sprite, Pop::pop_size_t new_max_size, Pop::pop_size_t new_merge_max_size,
+		PopType(const std::string_view new_identifier, colour_t new_colour, strata_t new_strata, sprite_t new_sprite, Pop::pop_size_t new_max_size, Pop::pop_size_t new_merge_max_size,
 			bool new_state_capital_only, bool new_demote_migrant, bool new_is_artisan, bool new_is_slave);
 
 	public:
@@ -83,11 +83,11 @@ namespace OpenVic {
 	public:
 		PopManager();
 
-		return_t add_pop_type(std::string const& identifier, colour_t new_colour, PopType::strata_t strata, PopType::sprite_t sprite,
+		return_t add_pop_type(const std::string_view identifier, colour_t new_colour, PopType::strata_t strata, PopType::sprite_t sprite,
 			Pop::pop_size_t max_size, Pop::pop_size_t merge_max_size, bool state_capital_only, bool demote_migrant,
 			bool is_artisan, bool is_slave);
 		void lock_pop_types();
-		PopType const* get_pop_type_by_identifier(std::string const& identifier) const;
+		PopType const* get_pop_type_by_identifier(const std::string_view identifier) const;
 
 		void generate_test_pops(Province& province) const;
 	};

@@ -27,7 +27,7 @@ namespace OpenVic {
 		const bool default_available, tradeable, currency, overseas_maintenance;
 		bool available;
 
-		Good(std::string const& new_identifier, std::string const& new_category, colour_t new_colour, price_t new_base_price,
+		Good(const std::string_view new_identifier, colour_t new_colour, const std::string_view new_category, price_t new_base_price,
 			bool new_default_available, bool new_tradeable, bool new_currency, bool new_overseas_maintenance);
 
 	public:
@@ -48,12 +48,13 @@ namespace OpenVic {
 	public:
 		GoodManager();
 
-		return_t add_good(std::string const& identifier, std::string const& category, colour_t colour, price_t base_price,
+		return_t add_good(const std::string_view identifier, colour_t colour, const std::string_view category, price_t base_price,
 			bool default_available, bool tradeable, bool currency, bool overseas_maintenance);
 		void lock_goods();
 		void reset_to_defaults();
 
 		Good const* get_good_by_index(size_t index) const;
+		Good const* get_good_by_identifier(const std::string_view identifier) const;
 		size_t get_good_count() const;
 		std::vector<Good> const& get_goods() const;
 	};

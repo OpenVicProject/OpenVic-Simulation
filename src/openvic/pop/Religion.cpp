@@ -4,12 +4,12 @@
 
 using namespace OpenVic;
 
-ReligionGroup::ReligionGroup(std::string const& new_identifier) : HasIdentifier { new_identifier } {}
+ReligionGroup::ReligionGroup(const std::string_view new_identifier) : HasIdentifier { new_identifier } {}
 
-Religion::Religion(ReligionGroup const& new_group, std::string const& new_identifier,
-	colour_t new_colour, icon_t new_icon, bool new_pagan)
-	: group { new_group },
-	  HasIdentifierAndColour { new_identifier, new_colour, true },
+Religion::Religion(const std::string_view new_identifier, colour_t new_colour,
+	ReligionGroup const& new_group, icon_t new_icon, bool new_pagan)
+	: HasIdentifierAndColour { new_identifier, new_colour, true },
+	  group { new_group },
 	  icon { new_icon },
 	  pagan { new_pagan } {
 	assert(icon > 0);
@@ -31,7 +31,7 @@ ReligionManager::ReligionManager()
 	: religion_groups { "religion groups" },
 	  religions { "religions" } {}
 
-return_t ReligionManager::add_religion_group(std::string const& identifier) {
+return_t ReligionManager::add_religion_group(const std::string_view identifier) {
 	if (identifier.empty()) {
 		Logger::error("Invalid religion group identifier - empty!");
 		return FAILURE;
@@ -43,11 +43,11 @@ void ReligionManager::lock_religion_groups() {
 	religion_groups.lock();
 }
 
-ReligionGroup const* ReligionManager::get_religion_group_by_identifier(std::string const& identifier) const {
+ReligionGroup const* ReligionManager::get_religion_group_by_identifier(const std::string_view identifier) const {
 	return religion_groups.get_item_by_identifier(identifier);
 }
 
-return_t ReligionManager::add_religion(std::string const& identifier, colour_t colour, ReligionGroup const* group, Religion::icon_t icon, bool pagan) {
+return_t ReligionManager::add_religion(const std::string_view identifier, colour_t colour, ReligionGroup const* group, Religion::icon_t icon, bool pagan) {
 	if (!religion_groups.is_locked()) {
 		Logger::error("Cannot register religions until religion groups are locked!");
 		return FAILURE;
@@ -68,13 +68,13 @@ return_t ReligionManager::add_religion(std::string const& identifier, colour_t c
 		Logger::error("Invalid religion icon for ", identifier, ": ", icon);
 		return FAILURE;
 	}
-	return religions.add_item({ *group, identifier, colour, icon, pagan });
+	return religions.add_item({ identifier, colour, *group, icon, pagan });
 }
 
 void ReligionManager::lock_religions() {
 	religions.lock();
 }
 
-Religion const* ReligionManager::get_religion_by_identifier(std::string const& identifier) const {
+Religion const* ReligionManager::get_religion_by_identifier(const std::string_view identifier) const {
 	return religions.get_item_by_identifier(identifier);
 }

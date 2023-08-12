@@ -84,7 +84,7 @@ namespace OpenVic {
 
 		explicit operator std::string() const;
 		// Parsed from string of the form YYYY.MM.DD
-		static Date from_string(std::string const& date);
+		static Date from_string(const std::string_view date);
 	};
 	std::ostream& operator<<(std::ostream& out, Date const& date);
 }

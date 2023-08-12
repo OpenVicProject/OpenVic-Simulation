@@ -7,8 +7,13 @@ namespace OpenVic {
 	struct ProvinceSet {
 	protected:
 		std::vector<Province*> provinces;
+		bool locked = false;
 
 	public:
+		return_t add_province(Province* province);
+		void lock(bool log = false);
+		bool is_locked() const;
+		void reset();
 		size_t get_province_count() const;
 		bool contains_province(Province const* province) const;
 		std::vector<Province*> const& get_provinces() const;
@@ -21,7 +26,7 @@ namespace OpenVic {
 		friend struct Map;
 
 	private:
-		Region(std::string const& new_identifier);
+		Region(const std::string_view new_identifier);
 
 	public:
 		Region(Region&&) = default;

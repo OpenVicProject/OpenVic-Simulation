@@ -6,7 +6,7 @@
 
 using namespace OpenVic;
 
-Province::Province(index_t new_index, std::string const& new_identifier, colour_t new_colour)
+Province::Province(const std::string_view new_identifier, colour_t new_colour, index_t new_index)
 	: HasIdentifierAndColour { new_identifier, new_colour, false },
 	  index { new_index },
 	  buildings { "buildings" } {
@@ -41,7 +41,7 @@ void Province::reset_buildings() {
 	buildings.reset();
 }
 
-Building const* Province::get_building_by_identifier(std::string const& identifier) const {
+Building const* Province::get_building_by_identifier(const std::string_view identifier) const {
 	return buildings.get_item_by_identifier(identifier);
 }
 
@@ -49,7 +49,7 @@ std::vector<Building> const& Province::get_buildings() const {
 	return buildings.get_items();
 }
 
-return_t Province::expand_building(std::string const& building_type_identifier) {
+return_t Province::expand_building(const std::string_view building_type_identifier) {
 	Building* building = buildings.get_item_by_identifier(building_type_identifier);
 	if (building == nullptr) return FAILURE;
 	return building->expand();
