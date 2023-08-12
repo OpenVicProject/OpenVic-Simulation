@@ -30,6 +30,6 @@ namespace OpenVic {
 		return_t setup();
 
 		Date const& get_today() const;
-		return_t expand_building(index_t province_index, std::string const& building_type_identifier);
+		return_t expand_building(index_t province_index, const std::string_view building_type_identifier);
 	};
 }

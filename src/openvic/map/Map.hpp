@@ -16,7 +16,7 @@ namespace OpenVic {
 		const index_t index;
 		const colour_func_t colour_func;
 
-		Mapmode(index_t new_index, std::string const& new_identifier, colour_func_t new_colour_func);
+		Mapmode(const std::string_view new_identifier, index_t new_index, colour_func_t new_colour_func);
 
 	public:
 		static const Mapmode ERROR_MAPMODE;
@@ -46,8 +46,7 @@ namespace OpenVic {
 		IdentifierRegistry<Province> provinces;
 		IdentifierRegistry<Region> regions;
 		IdentifierRegistry<Mapmode> mapmodes;
-		bool water_provinces_locked = false;
-		size_t water_province_count = 0;
+		ProvinceSet water_provinces;
 
 		size_t width = 0, height = 0;
 		std::vector<shape_pixel_t> province_shape_image;
@@ -61,37 +60,37 @@ namespace OpenVic {
 	public:
 		Map();
 
-		return_t add_province(std::string const& identifier, colour_t colour);
+		return_t add_province(const std::string_view identifier, colour_t colour);
 		void lock_provinces();
-		return_t set_water_province(std::string const& identifier);
+		return_t set_water_province(const std::string_view identifier);
 		void lock_water_provinces();
-		return_t add_region(std::string const& identifier, std::vector<std::string> const& province_identifiers);
+		return_t add_region(const std::string_view identifier, std::vector<std::string_view> const& province_identifiers);
 		void lock_regions();
 
 		size_t get_province_count() const;
 		Province* get_province_by_index(index_t index);
 		Province const* get_province_by_index(index_t index) const;
-		Province* get_province_by_identifier(std::string const& identifier);
-		Province const* get_province_by_identifier(std::string const& identifier) const;
+		Province* get_province_by_identifier(const std::string_view identifier);
+		Province const* get_province_by_identifier(const std::string_view identifier) const;
 		index_t get_province_index_at(size_t x, size_t y) const;
 		void set_selected_province(index_t index);
 		index_t get_selected_province_index() const;
 		Province const* get_selected_province() const;
 
-		Region* get_region_by_identifier(std::string const& identifier);
-		Region const* get_region_by_identifier(std::string const& identifier) const;
+		Region* get_region_by_identifier(const std::string_view identifier);
+		Region const* get_region_by_identifier(const std::string_view identifier) const;
 
 		return_t generate_province_shape_image(size_t new_width, size_t new_height, uint8_t const* colour_data,
-			uint8_t const* terrain_data, terrain_variant_map_t const& terrain_variant_map);
+			uint8_t const* terrain_data, terrain_variant_map_t const& terrain_variant_map, bool detailed_errors);
 		size_t get_width() const;
 		size_t get_height() const;
 		std::vector<shape_pixel_t> const& get_province_shape_image() const;
 
-		return_t add_mapmode(std::string const& identifier, Mapmode::colour_func_t colour_func);
+		return_t add_mapmode(const std::string_view identifier, Mapmode::colour_func_t colour_func);
 		void lock_mapmodes();
 		size_t get_mapmode_count() const;
 		Mapmode const* get_mapmode_by_index(Mapmode::index_t index) const;
-		Mapmode const* get_mapmode_by_identifier(std::string const& identifier) const;
+		Mapmode const* get_mapmode_by_identifier(const std::string_view identifier) const;
 		static constexpr size_t MAPMODE_COLOUR_SIZE = 4;
 		return_t generate_mapmode_colours(Mapmode::index_t index, uint8_t* target) const;
 

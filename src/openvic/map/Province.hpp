@@ -29,7 +29,7 @@ namespace OpenVic {
 		Pop::pop_size_t total_population;
 		distribution_t pop_types, cultures;
 
-		Province(index_t new_index, std::string const& new_identifier, colour_t new_colour);
+		Province(const std::string_view new_identifier, colour_t new_colour, index_t new_index);
 
 	public:
 		Province(Province&&) = default;
@@ -41,9 +41,9 @@ namespace OpenVic {
 		return_t add_building(Building&& building);
 		void lock_buildings();
 		void reset_buildings();
-		Building const* get_building_by_identifier(std::string const& identifier) const;
+		Building const* get_building_by_identifier(const std::string_view identifier) const;
 		std::vector<Building> const& get_buildings() const;
-		return_t expand_building(std::string const& building_type_identifier);
+		return_t expand_building(const std::string_view building_type_identifier);
 		Good const* get_rgo() const;
 		std::string to_string() const;
 

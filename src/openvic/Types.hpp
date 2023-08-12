@@ -50,7 +50,7 @@ namespace OpenVic {
 		const std::string identifier;
 
 	protected:
-		HasIdentifier(std::string const& new_identifier);
+		HasIdentifier(const std::string_view new_identifier);
 
 	public:
 		HasIdentifier(HasIdentifier const&) = delete;
@@ -87,7 +87,7 @@ namespace OpenVic {
 	 */
 	class HasIdentifierAndColour : public HasIdentifier, public HasColour {
 	protected:
-		HasIdentifierAndColour(std::string const& new_identifier, const colour_t new_colour, bool can_be_null);
+		HasIdentifierAndColour(const std::string_view new_identifier, const colour_t new_colour, bool can_be_null);
 
 	public:
 		HasIdentifierAndColour(HasIdentifierAndColour const&) = delete;
@@ -106,7 +106,7 @@ namespace OpenVic {
 	 */
 	template<class T, typename std::enable_if<std::is_base_of<HasIdentifier, T>::value>::type* = nullptr>
 	class IdentifierRegistry {
-		using identifier_index_map_t = std::map<std::string, size_t>;
+		using identifier_index_map_t = std::map<std::string, size_t, std::less<void>>;
 
 		const std::string name;
 		std::vector<T> items;
@@ -114,7 +114,7 @@ namespace OpenVic {
 		identifier_index_map_t identifier_index_map;
 
 	public:
-		IdentifierRegistry(std::string const& new_name) : name(new_name) {}
+		IdentifierRegistry(const std::string_view new_name) : name { new_name } {}
 		return_t add_item(T&& item) {
 			if (locked) {
 				Logger::error("Cannot add item to the ", name, " registry - locked!");
@@ -148,12 +148,12 @@ namespace OpenVic {
 		size_t get_item_count() const {
 			return items.size();
 		}
-		T* get_item_by_identifier(std::string const& identifier) {
+		T* get_item_by_identifier(const std::string_view identifier) {
 			const identifier_index_map_t::const_iterator it = identifier_index_map.find(identifier);
 			if (it != identifier_index_map.end()) return &items[it->second];
 			return nullptr;
 		}
-		T const* get_item_by_identifier(std::string const& identifier) const {
+		T const* get_item_by_identifier(const std::string_view identifier) const {
 			const identifier_index_map_t::const_iterator it = identifier_index_map.find(identifier);
 			if (it != identifier_index_map.end()) return &items[it->second];
 			return nullptr;

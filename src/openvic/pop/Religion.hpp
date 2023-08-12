@@ -10,7 +10,7 @@ namespace OpenVic {
 		friend struct ReligionManager;
 
 	private:
-		ReligionGroup(std::string const& new_identifier);
+		ReligionGroup(const std::string_view new_identifier);
 
 	public:
 		ReligionGroup(ReligionGroup&&) = default;
@@ -26,7 +26,7 @@ namespace OpenVic {
 		const icon_t icon;
 		const bool pagan;
 
-		Religion(ReligionGroup const& new_group, std::string const& new_identifier, colour_t new_colour, icon_t new_icon, bool new_pagan);
+		Religion(const std::string_view new_identifier, colour_t new_colour, ReligionGroup const& new_group, icon_t new_icon, bool new_pagan);
 
 	public:
 		Religion(Religion&&) = default;
@@ -44,11 +44,11 @@ namespace OpenVic {
 	public:
 		ReligionManager();
 
-		return_t add_religion_group(std::string const& identifier);
+		return_t add_religion_group(const std::string_view identifier);
 		void lock_religion_groups();
-		ReligionGroup const* get_religion_group_by_identifier(std::string const& identifier) const;
-		return_t add_religion(std::string const& identifier, colour_t colour, ReligionGroup const* group, Religion::icon_t icon, bool pagan);
+		ReligionGroup const* get_religion_group_by_identifier(const std::string_view identifier) const;
+		return_t add_religion(const std::string_view identifier, colour_t colour, ReligionGroup const* group, Religion::icon_t icon, bool pagan);
 		void lock_religions();
-		Religion const* get_religion_by_identifier(std::string const& identifier) const;
+		Religion const* get_religion_by_identifier(const std::string_view identifier) const;
 	};
 }

@@ -10,7 +10,7 @@ namespace OpenVic {
 		friend struct CultureManager;
 
 	private:
-		GraphicalCultureType(std::string const& new_identifier);
+		GraphicalCultureType(const std::string_view new_identifier);
 
 	public:
 		GraphicalCultureType(GraphicalCultureType&&) = default;
@@ -24,7 +24,7 @@ namespace OpenVic {
 
 		// TODO - leader type, union tag
 
-		CultureGroup(std::string const& new_identifier, GraphicalCultureType const& new_unit_graphical_culture_type);
+		CultureGroup(const std::string_view new_identifier, GraphicalCultureType const& new_unit_graphical_culture_type);
 
 	public:
 		CultureGroup(CultureGroup&&) = default;
@@ -43,7 +43,7 @@ namespace OpenVic {
 
 		// TODO - radicalism, primary tag
 
-		Culture(CultureGroup const& new_group, std::string const& new_identifier, colour_t new_colour, name_list_t const& new_first_names, name_list_t const& new_last_names);
+		Culture(const std::string_view new_identifier, colour_t new_colour, CultureGroup const& new_group, name_list_t const& new_first_names, name_list_t const& new_last_names);
 
 	public:
 		Culture(Culture&&) = default;
@@ -60,14 +60,14 @@ namespace OpenVic {
 	public:
 		CultureManager();
 
-		return_t add_graphical_culture_type(std::string const& identifier);
+		return_t add_graphical_culture_type(const std::string_view identifier);
 		void lock_graphical_culture_types();
-		GraphicalCultureType const* get_graphical_culture_type_by_identifier(std::string const& identifier) const;
-		return_t add_culture_group(std::string const& identifier, GraphicalCultureType const* new_graphical_culture_type);
+		GraphicalCultureType const* get_graphical_culture_type_by_identifier(const std::string_view identifier) const;
+		return_t add_culture_group(const std::string_view identifier, GraphicalCultureType const* new_graphical_culture_type);
 		void lock_culture_groups();
-		CultureGroup const* get_culture_group_by_identifier(std::string const& identifier) const;
-		return_t add_culture(std::string const& identifier, colour_t colour, CultureGroup const* group, Culture::name_list_t const& first_names, Culture::name_list_t const& last_names);
+		CultureGroup const* get_culture_group_by_identifier(const std::string_view identifier) const;
+		return_t add_culture(const std::string_view identifier, colour_t colour, CultureGroup const* group, Culture::name_list_t const& first_names, Culture::name_list_t const& last_names);
 		void lock_cultures();
-		Culture const* get_culture_by_identifier(std::string const& identifier) const;
+		Culture const* get_culture_by_identifier(const std::string_view identifier) const;
 	};
 }

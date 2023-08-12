@@ -4,7 +4,7 @@
 
 using namespace OpenVic;
 
-Good::Good(std::string const& new_identifier, std::string const& new_category, colour_t new_colour, price_t new_base_price,
+Good::Good(const std::string_view new_identifier, colour_t new_colour, const std::string_view new_category, price_t new_base_price,
 	bool new_default_available, bool new_tradeable, bool new_currency, bool new_overseas_maintenance)
 	: HasIdentifierAndColour { new_identifier, new_colour, true },
 	  category { new_category },
@@ -43,7 +43,7 @@ void Good::reset_to_defaults() {
 
 GoodManager::GoodManager() : goods { "goods" } {}
 
-return_t GoodManager::add_good(std::string const& identifier, std::string const& category, colour_t colour,
+return_t GoodManager::add_good(const std::string_view identifier, colour_t colour, const std::string_view category,
 	price_t base_price, bool default_available, bool tradeable, bool currency, bool overseas_maintenance) {
 	if (identifier.empty()) {
 		Logger::error("Invalid good identifier - empty!");
@@ -61,7 +61,7 @@ return_t GoodManager::add_good(std::string const& identifier, std::string const&
 		Logger::error("Invalid base price for ", identifier, ": ", base_price);
 		return FAILURE;
 	}
-	return goods.add_item({ identifier, category, colour, base_price, default_available, tradeable, currency, overseas_maintenance });
+	return goods.add_item({ identifier, colour, category, base_price, default_available, tradeable, currency, overseas_maintenance });
 }
 
 void GoodManager::lock_goods() {
@@ -75,6 +75,10 @@ void GoodManager::reset_to_defaults() {
 
 Good const* GoodManager::get_good_by_index(size_t index) const {
 	return goods.get_item_by_index(index);
+}
+
+Good const* GoodManager::get_good_by_identifier(const std::string_view identifier) const {
+	return goods.get_item_by_identifier(identifier);
 }
 
 size_t GoodManager::get_good_count() const {

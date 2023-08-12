@@ -4,9 +4,9 @@
 
 using namespace OpenVic;
 
-GraphicalCultureType::GraphicalCultureType(std::string const& new_identifier) : HasIdentifier { new_identifier } {}
+GraphicalCultureType::GraphicalCultureType(const std::string_view new_identifier) : HasIdentifier { new_identifier } {}
 
-CultureGroup::CultureGroup(std::string const& new_identifier,
+CultureGroup::CultureGroup(const std::string_view new_identifier,
 	GraphicalCultureType const& new_unit_graphical_culture_type)
 	: HasIdentifier { new_identifier },
 	  unit_graphical_culture_type { new_unit_graphical_culture_type } {}
@@ -15,10 +15,10 @@ GraphicalCultureType const& CultureGroup::get_unit_graphical_culture_type() cons
 	return unit_graphical_culture_type;
 }
 
-Culture::Culture(CultureGroup const& new_group, std::string const& new_identifier,
-	colour_t new_colour, name_list_t const& new_first_names, name_list_t const& new_last_names)
-	: group { new_group },
-	  HasIdentifierAndColour { new_identifier, new_colour, true },
+Culture::Culture(const std::string_view new_identifier, colour_t new_colour, CultureGroup const& new_group,
+	name_list_t const& new_first_names, name_list_t const& new_last_names)
+	: HasIdentifierAndColour { new_identifier, new_colour, true },
+	  group { new_group },
 	  first_names { new_first_names },
 	  last_names { new_last_names } {
 }
@@ -32,7 +32,7 @@ CultureManager::CultureManager()
 	  culture_groups { "culture groups" },
 	  cultures { "cultures" } {}
 
-return_t CultureManager::add_graphical_culture_type(std::string const& identifier) {
+return_t CultureManager::add_graphical_culture_type(const std::string_view identifier) {
 	if (identifier.empty()) {
 		Logger::error("Invalid culture group identifier - empty!");
 		return FAILURE;
@@ -44,11 +44,11 @@ void CultureManager::lock_graphical_culture_types() {
 	graphical_culture_types.lock();
 }
 
-GraphicalCultureType const* CultureManager::get_graphical_culture_type_by_identifier(std::string const& identifier) const {
+GraphicalCultureType const* CultureManager::get_graphical_culture_type_by_identifier(const std::string_view identifier) const {
 	return graphical_culture_types.get_item_by_identifier(identifier);
 }
 
-return_t CultureManager::add_culture_group(std::string const& identifier, GraphicalCultureType const* graphical_culture_type) {
+return_t CultureManager::add_culture_group(const std::string_view identifier, GraphicalCultureType const* graphical_culture_type) {
 	if (!graphical_culture_types.is_locked()) {
 		Logger::error("Cannot register culture groups until graphical culture types are locked!");
 		return FAILURE;
@@ -68,11 +68,11 @@ void CultureManager::lock_culture_groups() {
 	culture_groups.lock();
 }
 
-CultureGroup const* CultureManager::get_culture_group_by_identifier(std::string const& identifier) const {
+CultureGroup const* CultureManager::get_culture_group_by_identifier(const std::string_view identifier) const {
 	return culture_groups.get_item_by_identifier(identifier);
 }
 
-return_t CultureManager::add_culture(std::string const& identifier, colour_t colour, CultureGroup const* group, Culture::name_list_t const& first_names, Culture::name_list_t const& last_names) {
+return_t CultureManager::add_culture(const std::string_view identifier, colour_t colour, CultureGroup const* group, Culture::name_list_t const& first_names, Culture::name_list_t const& last_names) {
 	if (!culture_groups.is_locked()) {
 		Logger::error("Cannot register cultures until culture groups are locked!");
 		return FAILURE;
@@ -90,13 +90,13 @@ return_t CultureManager::add_culture(std::string const& identifier, colour_t col
 		return FAILURE;
 	}
 	// TODO - name list sanatisation?
-	return cultures.add_item({ *group, identifier, colour, first_names, last_names });
+	return cultures.add_item({ identifier, colour, *group, first_names, last_names });
 }
 
 void CultureManager::lock_cultures() {
 	cultures.lock();
 }
 
-Culture const* CultureManager::get_culture_by_identifier(std::string const& identifier) const {
+Culture const* CultureManager::get_culture_by_identifier(const std::string_view identifier) const {
 	return cultures.get_item_by_identifier(identifier);
 }
