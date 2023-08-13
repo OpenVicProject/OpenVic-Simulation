@@ -170,7 +170,7 @@ index_t Map::get_province_index_at(size_t x, size_t y) const {
 }
 
 void Map::set_selected_province(index_t index) {
-	if (index < get_province_count()) {
+	if (index > get_province_count()) {
 		Logger::error("Trying to set selected province to an invalid index ", index, " (max index is ", get_province_count(), ")");
 		selected_province = NULL_INDEX;
 	} else {
@@ -185,7 +185,6 @@ index_t Map::get_selected_province_index() const {
 Province const* Map::get_selected_province() const {
 	return get_province_by_index(get_selected_province_index());
 }
-
 
 Region* Map::get_region_by_identifier(const std::string_view identifier) {
 	return regions.get_item_by_identifier(identifier);
