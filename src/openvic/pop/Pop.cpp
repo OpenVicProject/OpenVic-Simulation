@@ -39,17 +39,18 @@ Pop::pop_size_t PopType::get_num_demoted() const {
 	return num_demoted;
 }
 
-Pop::pop_size_t PopType::get_num_migrated() const {
+Pop::pop_signed_size_t PopType::get_num_migrated() const {
 	return num_migrated;
 }
 
-Pop::pop_size_t PopType::get_pop_daily_change() const {
-	return PopType::get_num_promoted() - (PopType::get_num_demoted() + PopType::get_num_migrated());
+Pop::pop_signed_size_t PopType::get_pop_daily_change() const {
+	//Converting to int32 from u_int32
+	return static_cast<int32_t>(PopType::get_num_promoted()) - (static_cast<int32_t>(PopType::get_num_demoted()) + PopType::get_num_migrated());
 }
 
 PopType::PopType(const std::string_view new_identifier, colour_t new_colour,
 	strata_t new_strata, sprite_t new_sprite,
-	Pop::pop_size_t new_max_size, Pop::pop_size_t new_merge_max_size, Pop::pop_size_t new_num_promoted, Pop::pop_size_t new_num_demoted, Pop::pop_size_t new_num_migrated,
+	Pop::pop_size_t new_max_size, Pop::pop_size_t new_merge_max_size, Pop::pop_size_t new_num_promoted, Pop::pop_size_t new_num_demoted, Pop::pop_signed_size_t new_num_migrated,
 	bool new_state_capital_only, bool new_demote_migrant, bool new_is_artisan, bool new_is_slave)
 	: HasIdentifierAndColour { new_identifier, new_colour, true },
 	  strata { new_strata },
@@ -133,7 +134,7 @@ PopManager::PopManager() : pop_types { "pop types" } {
 }
 
 return_t PopManager::add_pop_type(const std::string_view identifier, colour_t colour, PopType::strata_t strata, PopType::sprite_t sprite,
-	Pop::pop_size_t max_size, Pop::pop_size_t merge_max_size, Pop::pop_size_t num_promoted, Pop::pop_size_t num_demoted, Pop::pop_size_t num_migrated, bool state_capital_only, bool demote_migrant, bool is_artisan, bool is_slave) {
+	Pop::pop_size_t max_size, Pop::pop_size_t merge_max_size, Pop::pop_size_t num_promoted, Pop::pop_size_t num_demoted, Pop::pop_signed_size_t num_migrated, bool state_capital_only, bool demote_migrant, bool is_artisan, bool is_slave) {
 	if (identifier.empty()) {
 		Logger::error("Invalid pop type identifier - empty!");
 		return FAILURE;
