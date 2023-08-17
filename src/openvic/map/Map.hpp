@@ -36,12 +36,12 @@ namespace OpenVic {
 
 #pragma pack(push, 1)
 		struct shape_pixel_t {
-			index_t index;
+			Province::index_t index;
 			terrain_t terrain;
 		};
 #pragma pack(pop)
 	private:
-		using colour_index_map_t = std::map<colour_t, index_t>;
+		using colour_index_map_t = std::map<colour_t, Province::index_t>;
 
 		IdentifierRegistry<Province> provinces;
 		IdentifierRegistry<Region> regions;
@@ -51,11 +51,11 @@ namespace OpenVic {
 		size_t width = 0, height = 0;
 		std::vector<shape_pixel_t> province_shape_image;
 		colour_index_map_t colour_index_map;
-		index_t selected_province = NULL_INDEX;
+		Province::index_t selected_province = Province::NULL_INDEX;
 
 		Pop::pop_size_t highest_province_population, total_map_population;
 
-		index_t get_index_from_colour(colour_t colour) const;
+		Province::index_t get_index_from_colour(colour_t colour) const;
 
 	public:
 		Map();
@@ -68,13 +68,13 @@ namespace OpenVic {
 		void lock_regions();
 
 		size_t get_province_count() const;
-		Province* get_province_by_index(index_t index);
-		Province const* get_province_by_index(index_t index) const;
+		Province* get_province_by_index(Province::index_t index);
+		Province const* get_province_by_index(Province::index_t index) const;
 		Province* get_province_by_identifier(const std::string_view identifier);
 		Province const* get_province_by_identifier(const std::string_view identifier) const;
-		index_t get_province_index_at(size_t x, size_t y) const;
-		void set_selected_province(index_t index);
-		index_t get_selected_province_index() const;
+		Province::index_t get_province_index_at(size_t x, size_t y) const;
+		void set_selected_province(Province::index_t index);
+		Province::index_t get_selected_province_index() const;
 		Province const* get_selected_province() const;
 
 		Region* get_region_by_identifier(const std::string_view identifier);

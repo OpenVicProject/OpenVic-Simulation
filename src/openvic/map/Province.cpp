@@ -13,7 +13,7 @@ Province::Province(const std::string_view new_identifier, colour_t new_colour, i
 	assert(index != NULL_INDEX);
 }
 
-index_t Province::get_index() const {
+Province::index_t Province::get_index() const {
 	return index;
 }
 

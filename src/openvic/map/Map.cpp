@@ -31,8 +31,8 @@ Map::Map() : provinces { "provinces" },
 			 mapmodes { "mapmodes" } {}
 
 return_t Map::add_province(const std::string_view identifier, colour_t colour) {
-	if (provinces.get_item_count() >= MAX_INDEX) {
-		Logger::error("The map's province list is full - there can be at most ", MAX_INDEX, " provinces");
+	if (provinces.get_item_count() >= Province::MAX_INDEX) {
+		Logger::error("The map's province list is full - there can be at most ", Province::MAX_INDEX, " provinces");
 		return FAILURE;
 	}
 	if (identifier.empty()) {
@@ -43,9 +43,9 @@ return_t Map::add_province(const std::string_view identifier, colour_t colour) {
 		Logger::error("Invalid province colour for ", identifier, ": ", Province::colour_to_hex_string(colour));
 		return FAILURE;
 	}
-	Province new_province { identifier, colour, static_cast<index_t>(provinces.get_item_count() + 1) };
-	const index_t index = get_index_from_colour(colour);
-	if (index != NULL_INDEX) {
+	Province new_province { identifier, colour, static_cast<Province::index_t>(provinces.get_item_count() + 1) };
+	const Province::index_t index = get_index_from_colour(colour);
+	if (index != Province::NULL_INDEX) {
 		Logger::error("Duplicate province colours: ", get_province_by_index(index)->to_string(), " and ", new_province.to_string());
 		return FAILURE;
 	}
@@ -142,12 +142,12 @@ size_t Map::get_province_count() const {
 	return provinces.get_item_count();
 }
 
-Province* Map::get_province_by_index(index_t index) {
-	return index != NULL_INDEX ? provinces.get_item_by_index(index - 1) : nullptr;
+Province* Map::get_province_by_index(Province::index_t index) {
+	return index != Province::NULL_INDEX ? provinces.get_item_by_index(index - 1) : nullptr;
 }
 
-Province const* Map::get_province_by_index(index_t index) const {
-	return index != NULL_INDEX ? provinces.get_item_by_index(index - 1) : nullptr;
+Province const* Map::get_province_by_index(Province::index_t index) const {
+	return index != Province::NULL_INDEX ? provinces.get_item_by_index(index - 1) : nullptr;
 }
 
 Province* Map::get_province_by_identifier(const std::string_view identifier) {
@@ -158,27 +158,27 @@ Province const* Map::get_province_by_identifier(const std::string_view identifie
 	return provinces.get_item_by_identifier(identifier);
 }
 
-index_t Map::get_index_from_colour(colour_t colour) const {
+Province::index_t Map::get_index_from_colour(colour_t colour) const {
 	const colour_index_map_t::const_iterator it = colour_index_map.find(colour);
 	if (it != colour_index_map.end()) return it->second;
-	return NULL_INDEX;
+	return Province::NULL_INDEX;
 }
 
-index_t Map::get_province_index_at(size_t x, size_t y) const {
+Province::index_t Map::get_province_index_at(size_t x, size_t y) const {
 	if (x < width && y < height) return province_shape_image[x + y * width].index;
-	return NULL_INDEX;
+	return Province::NULL_INDEX;
 }
 
-void Map::set_selected_province(index_t index) {
+void Map::set_selected_province(Province::index_t index) {
 	if (index > get_province_count()) {
 		Logger::error("Trying to set selected province to an invalid index ", index, " (max index is ", get_province_count(), ")");
-		selected_province = NULL_INDEX;
+		selected_province = Province::NULL_INDEX;
 	} else {
 		selected_province = index;
 	}
 }
 
-index_t Map::get_selected_province_index() const {
+Province::index_t Map::get_selected_province_index() const {
 	return selected_province;
 }
 
@@ -262,8 +262,8 @@ return_t Map::generate_province_shape_image(size_t new_width, size_t new_height,
 					continue;
 				}
 			}
-			const index_t index = get_index_from_colour(province_colour);
-			if (index != NULL_INDEX) {
+			const Province::index_t index = get_index_from_colour(province_colour);
+			if (index != Province::NULL_INDEX) {
 				province_checklist[index - 1] = true;
 				province_shape_image[idx].index = index;
 				continue;
@@ -275,7 +275,7 @@ return_t Map::generate_province_shape_image(size_t new_width, size_t new_height,
 						" at (", x, ", ", y, ")");
 				}
 			}
-			province_shape_image[idx].index = NULL_INDEX;
+			province_shape_image[idx].index = Province::NULL_INDEX;
 		}
 	}
 	if (!unrecognised_province_colours.empty()) {

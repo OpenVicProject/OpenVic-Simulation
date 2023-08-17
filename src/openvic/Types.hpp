@@ -30,9 +30,6 @@ namespace OpenVic {
 		return std::clamp(static_cast<float>(colour) / 255.0f, 0.0f, 1.0f);
 	}
 
-	using index_t = uint16_t;
-	static constexpr index_t NULL_INDEX = 0, MAX_INDEX = 0xFFFF;
-
 	// TODO: price_t must be changed to a fixed-point numeric type before multiplayer
 	using price_t = double;
 	static constexpr price_t NULL_PRICE = 0.0;

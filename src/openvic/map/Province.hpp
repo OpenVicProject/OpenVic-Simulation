@@ -14,7 +14,10 @@ namespace OpenVic {
 	struct Province : HasIdentifierAndColour {
 		friend struct Map;
 
+		using index_t = uint16_t;
 		using life_rating_t = int8_t;
+
+		static constexpr index_t NULL_INDEX = 0, MAX_INDEX = (1 << (8 * sizeof(index_t))) - 1;
 
 	private:
 		const index_t index;
