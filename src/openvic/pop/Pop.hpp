@@ -23,7 +23,7 @@ namespace OpenVic {
 		Religion const& religion;
 		pop_size_t size, num_migrated, num_promoted, num_demoted, num_migrated;
 
-		Pop(PopType const& new_type, Culture const& new_culture, Religion const& new_religion, pop_size_t new_size,pop_size_t new_num_promoted, pop_size_t new_num_demoted, pop_size_t new_num_migrated);
+		Pop(PopType const& new_type, Culture const& new_culture, Religion const& new_religion, pop_size_t new_size);
 
 	public:
 		Pop(Pop const&) = delete;

@@ -7,14 +7,11 @@
 
 using namespace OpenVic;
 
-Pop::Pop(PopType const& new_type, Culture const& new_culture, Religion const& new_religion, pop_size_t new_size, Pop::pop_size_t new_num_promoted, Pop::pop_size_t new_num_demoted, Pop::pop_size_t new_num_migrated)
+Pop::Pop(PopType const& new_type, Culture const& new_culture, Religion const& new_religion, pop_size_t new_size)
 	: type { new_type },
 	  culture { new_culture },
 	  religion { new_religion },
-	  size { new_size },
-	  num_promoted { new_num_promoted},
-	  num_demoted {new_num_demoted},
-	  num_migrated {new_num_migrated} {
+	  size { new_size } {
 	assert(size > 0);
 }
 
@@ -108,9 +105,6 @@ static const std::string test_religion = "test_religion";
 static const std::string test_pop_type_poor = "test_pop_type_poor";
 static const std::string test_pop_type_middle = "test_pop_type_middle";
 static const std::string test_pop_type_rich = "test_pop_type_rich";
-static const Pop::pop_size_t test_pop_promoted = 0;
-static const Pop::pop_size_t test_pop_demoted = 0;
-static const Pop::pop_size_t test_pop_migrated = 0;
 
 
 PopManager::PopManager() : pop_types { "pop types" } {
@@ -176,13 +170,10 @@ void PopManager::generate_test_pops(Province& province) const {
 		static PopType const& type_rich = *get_pop_type_by_identifier(test_pop_type_rich);
 		static Culture const& culture = *culture_manager.get_culture_by_identifier(test_culture);
 		static Religion const& religion = *religion_manager.get_religion_by_identifier(test_religion);
-		static Pop::pop_size_t const& num_promoted = test_pop_promoted;
-		static Pop::pop_size_t const& num_demoted = test_pop_demoted;
-		static Pop::pop_size_t const& num_migrated = test_pop_migrated;
 
-		province.add_pop({ type_poor, culture, religion, static_cast<Pop::pop_size_t>(province.get_index() * province.get_index()) * 100 ,num_promoted, num_demoted, num_migrated });
-		province.add_pop({ type_middle, culture, religion, static_cast<Pop::pop_size_t>(province.get_index() * province.get_index()) * 50, num_promoted, num_demoted, num_migrated });
-		province.add_pop({ type_rich, culture, religion, static_cast<Pop::pop_size_t>(province.get_index()) * 1000, num_promoted, num_demoted, num_migrated });
+		province.add_pop({ type_poor, culture, religion, static_cast<Pop::pop_size_t>(province.get_index() * province.get_index()) * 100 });
+		province.add_pop({ type_middle, culture, religion, static_cast<Pop::pop_size_t>(province.get_index() * province.get_index()) * 50 });
+		province.add_pop({ type_rich, culture, religion, static_cast<Pop::pop_size_t>(province.get_index()) * 1000 });
 	} else {
 		Logger::error("Cannot generate pops before pop types registry is locked!");
 	}
