@@ -15,13 +15,13 @@ namespace OpenVic {
 	struct Pop {
 		friend struct PopManager;
 
-		using pop_size_t = uint32_t;
+		using pop_size_t = int64_t;
 
 	private:
 		PopType const& type;
 		Culture const& culture;
 		Religion const& religion;
-		pop_size_t size;
+		pop_size_t size, num_migrated, num_promoted, num_demoted, num_migrated;
 
 		Pop(PopType const& new_type, Culture const& new_culture, Religion const& new_religion, pop_size_t new_size);
 
@@ -35,6 +35,10 @@ namespace OpenVic {
 		Culture const& get_culture() const;
 		Religion const& get_religion() const;
 		pop_size_t get_size() const;
+		pop_size_t get_num_promoted() const;
+		pop_size_t get_num_demoted() const;
+		pop_size_t get_num_migrated() const;
+		pop_size_t get_pop_daily_change() const;
 	};
 
 	/* REQUIREMENTS:
@@ -63,6 +67,7 @@ namespace OpenVic {
 	public:
 		PopType(PopType&&) = default;
 
+		strata_t get_strata() const;
 		sprite_t get_sprite() const;
 		Pop::pop_size_t get_max_size() const;
 		Pop::pop_size_t get_merge_max_size() const;

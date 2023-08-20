@@ -31,6 +31,22 @@ Pop::pop_size_t Pop::get_size() const {
 	return size;
 }
 
+Pop::pop_size_t Pop::get_num_promoted() const {
+	return num_promoted;
+}
+
+Pop::pop_size_t Pop::get_num_demoted() const {
+	return num_demoted;
+}
+
+Pop::pop_size_t Pop::get_num_migrated() const {
+	return num_migrated;
+}
+
+Pop::pop_size_t Pop::get_pop_daily_change() const {
+	return Pop::get_num_promoted() - (Pop::get_num_demoted() + Pop::get_num_migrated());
+}
+
 PopType::PopType(const std::string_view new_identifier, colour_t new_colour,
 	strata_t new_strata, sprite_t new_sprite,
 	Pop::pop_size_t new_max_size, Pop::pop_size_t new_merge_max_size,
@@ -51,6 +67,10 @@ PopType::PopType(const std::string_view new_identifier, colour_t new_colour,
 
 PopType::sprite_t PopType::get_sprite() const {
 	return sprite;
+}
+
+PopType::strata_t PopType::get_strata() const {
+	return strata;
 }
 
 Pop::pop_size_t PopType::get_max_size() const {
@@ -85,6 +105,7 @@ static const std::string test_religion = "test_religion";
 static const std::string test_pop_type_poor = "test_pop_type_poor";
 static const std::string test_pop_type_middle = "test_pop_type_middle";
 static const std::string test_pop_type_rich = "test_pop_type_rich";
+
 
 PopManager::PopManager() : pop_types { "pop types" } {
 	culture_manager.add_graphical_culture_type(test_graphical_culture_type);
@@ -149,6 +170,7 @@ void PopManager::generate_test_pops(Province& province) const {
 		static PopType const& type_rich = *get_pop_type_by_identifier(test_pop_type_rich);
 		static Culture const& culture = *culture_manager.get_culture_by_identifier(test_culture);
 		static Religion const& religion = *religion_manager.get_religion_by_identifier(test_religion);
+
 		province.add_pop({ type_poor, culture, religion, static_cast<Pop::pop_size_t>(province.get_index() * province.get_index()) * 100 });
 		province.add_pop({ type_middle, culture, religion, static_cast<Pop::pop_size_t>(province.get_index() * province.get_index()) * 50 });
 		province.add_pop({ type_rich, culture, religion, static_cast<Pop::pop_size_t>(province.get_index()) * 1000 });
