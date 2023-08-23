@@ -1,8 +1,7 @@
 #pragma once
 
-#include "../Types.hpp"
-#include "Culture.hpp"
-#include "Religion.hpp"
+#include "openvic/pop/Culture.hpp"
+#include "openvic/pop/Religion.hpp"
 
 namespace OpenVic {
 
@@ -21,7 +20,7 @@ namespace OpenVic {
 		PopType const& type;
 		Culture const& culture;
 		Religion const& religion;
-		pop_size_t size, num_migrated, num_promoted, num_demoted, num_migrated;
+		pop_size_t size, num_promoted, num_demoted, num_migrated;
 
 		Pop(PopType const& new_type, Culture const& new_culture, Religion const& new_religion, pop_size_t new_size);
 
@@ -82,10 +81,11 @@ namespace OpenVic {
 	struct PopManager {
 	private:
 		IdentifierRegistry<PopType> pop_types;
+
+	public:
 		CultureManager culture_manager;
 		ReligionManager religion_manager;
 
-	public:
 		PopManager();
 
 		return_t add_pop_type(const std::string_view identifier, colour_t new_colour, PopType::strata_t strata, PopType::sprite_t sprite,
@@ -94,6 +94,6 @@ namespace OpenVic {
 		void lock_pop_types();
 		PopType const* get_pop_type_by_identifier(const std::string_view identifier) const;
 
-		void generate_test_pops(Province& province) const;
+		return_t load_pop_into_province(Province& province, ast::NodeCPtr root) const;
 	};
 }

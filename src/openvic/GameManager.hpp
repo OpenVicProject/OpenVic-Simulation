@@ -1,8 +1,8 @@
 #pragma once
 
-#include "GameAdvancementHook.hpp"
-#include "economy/Good.hpp"
-#include "map/Map.hpp"
+#include "openvic/GameAdvancementHook.hpp"
+#include "openvic/economy/Good.hpp"
+#include "openvic/map/Map.hpp"
 
 namespace OpenVic {
 	struct GameManager {
@@ -31,5 +31,10 @@ namespace OpenVic {
 
 		Date const& get_today() const;
 		return_t expand_building(Province::index_t province_index, const std::string_view building_type_identifier);
+
+		/* Hardcoded data for defining things for which parsing from files has
+		 * not been implemented, currently mapmodes and building types.
+		 */
+		return_t load_hardcoded_defines();
 	};
 }

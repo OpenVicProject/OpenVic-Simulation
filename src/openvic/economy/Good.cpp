@@ -20,11 +20,11 @@ std::string const& Good::get_category() const {
 	return category;
 }
 
-price_t Good::get_base_price() const {
+Good::price_t Good::get_base_price() const {
 	return base_price;
 }
 
-price_t Good::get_price() const {
+Good::price_t Good::get_price() const {
 	return price;
 }
 
@@ -44,7 +44,7 @@ void Good::reset_to_defaults() {
 GoodManager::GoodManager() : goods { "goods" } {}
 
 return_t GoodManager::add_good(const std::string_view identifier, colour_t colour, const std::string_view category,
-	price_t base_price, bool default_available, bool tradeable, bool currency, bool overseas_maintenance) {
+	Good::price_t base_price, bool default_available, bool tradeable, bool currency, bool overseas_maintenance) {
 	if (identifier.empty()) {
 		Logger::error("Invalid good identifier - empty!");
 		return FAILURE;
@@ -57,7 +57,7 @@ return_t GoodManager::add_good(const std::string_view identifier, colour_t colou
 		Logger::error("Invalid good category for ", identifier, ": empty!");
 		return FAILURE;
 	}
-	if (base_price <= NULL_PRICE) {
+	if (base_price <= Good::NULL_PRICE) {
 		Logger::error("Invalid base price for ", identifier, ": ", base_price);
 		return FAILURE;
 	}

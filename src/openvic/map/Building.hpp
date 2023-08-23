@@ -2,8 +2,8 @@
 
 #include <vector>
 
-#include "../Date.hpp"
-#include "../Types.hpp"
+#include "openvic/types/Date.hpp"
+#include "openvic/types/IdentifierRegistry.hpp"
 
 namespace OpenVic {
 

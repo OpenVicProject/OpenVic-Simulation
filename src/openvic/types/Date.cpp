@@ -5,7 +5,7 @@
 #include <cctype>
 #include <charconv>
 
-#include "utility/Logger.hpp"
+#include "openvic/utility/Logger.hpp"
 
 using namespace OpenVic;
 
@@ -157,7 +157,8 @@ std::ostream& OpenVic::operator<<(std::ostream& out, Date const& date) {
 }
 
 // Parsed from string of the form YYYY.MM.DD
-Date Date::from_string(const std::string_view date) {
+Date Date::from_string(const std::string_view date, bool* successful) {
+	if (successful != nullptr) *successful = true;
 	size_t first_pos = 0;
 	while (first_pos < date.length() && std::isdigit(date[first_pos])) {
 		first_pos++;
@@ -165,6 +166,7 @@ Date Date::from_string(const std::string_view date) {
 
 	if (first_pos == 0) {
 		Logger::error("Failed to find year digits in date: ", date);
+		if (successful != nullptr) *successful = false;
 		return {};
 	}
 
@@ -174,6 +176,7 @@ Date Date::from_string(const std::string_view date) {
 	std::from_chars_result result = std::from_chars(start, end, val);
 	if (result.ec != std::errc{} || result.ptr != end || val < 0 || val >= 1 << (8 * sizeof(year_t))) {
 		Logger::error("Failed to read year: ", date);
+		if (successful != nullptr) *successful = false;
 		return {};
 	}
 	year_t year = val;
@@ -187,12 +190,14 @@ Date Date::from_string(const std::string_view date) {
 			}
 			if (first_pos == second_pos) {
 				Logger::error("Failed to find month digits in date: ", date);
+				if (successful != nullptr) *successful = false;
 			} else {
 				start = date.data() + first_pos;
 				end = date.data() + second_pos;
 				result = std::from_chars(start, end, val);
 				if (result.ec != std::errc{} || result.ptr != end || val < 1 || val > MONTHS_IN_YEAR) {
 					Logger::error("Failed to read month: ", date);
+					if (successful != nullptr) *successful = false;
 				} else {
 					month = val;
 					if (second_pos < date.length()) {
@@ -203,24 +208,33 @@ Date Date::from_string(const std::string_view date) {
 							}
 							if (second_pos == third_pos) {
 								Logger::error("Failed to find day digits in date: ", date);
+								if (successful != nullptr) *successful = false;
 							} else {
 								start = date.data() + second_pos;
 								end = date.data() + third_pos;
 								result = std::from_chars(start, end, val);
 								if (result.ec != std::errc{} || result.ptr != end || val < 1 || val > DAYS_IN_MONTH[month - 1]) {
 									Logger::error("Failed to read day: ", date);
+									if (successful != nullptr) *successful = false;
 								} else {
 									day = val;
 									if (third_pos < date.length()) {
 										Logger::error("Unexpected string \"", date.substr(third_pos), "\" at the end of date ", date);
+										if (successful != nullptr) *successful = false;
 									}
 								}
 							}
-						} else Logger::error("Unexpected character \"", date[second_pos], "\" in month of date ", date);
+						} else {
+							Logger::error("Unexpected character \"", date[second_pos], "\" in month of date ", date);
+							if (successful != nullptr) *successful = false;
+						}
 					}
 				}
 			}
-		} else Logger::error("Unexpected character \"", date[first_pos], "\" in year of date ", date);
+		} else {
+			Logger::error("Unexpected character \"", date[first_pos], "\" in year of date ", date);
+			if (successful != nullptr) *successful = false;
+		}
 	}
 	return _dateToTimespan(year, month, day);
 };

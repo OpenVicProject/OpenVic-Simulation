@@ -1,6 +1,10 @@
 #pragma once
 
-#include "../Types.hpp"
+#include <cstdio>
+#include <vector>
+
+#include "openvic/types/Colour.hpp"
+#include "openvic/types/Return.hpp"
 
 namespace OpenVic {
 	class BMP {

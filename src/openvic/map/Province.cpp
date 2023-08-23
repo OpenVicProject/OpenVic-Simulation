@@ -65,11 +65,13 @@ std::string Province::to_string() const {
 	return stream.str();
 }
 
-void Province::add_pop(Pop&& pop) {
-	if (is_water()) {
-		Logger::error("Trying to add pop to water province ", get_identifier());
-	} else {
+return_t Province::add_pop(Pop&& pop) {
+	if (!is_water()) {
 		pops.push_back(std::move(pop));
+		return SUCCESS;
+	} else {
+		Logger::error("Trying to add pop to water province ", get_identifier());
+		return FAILURE;
 	}
 }
 

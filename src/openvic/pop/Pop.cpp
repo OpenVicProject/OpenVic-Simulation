@@ -2,8 +2,9 @@
 
 #include <cassert>
 
-#include "../map/Province.hpp"
-#include "../utility/Logger.hpp"
+#include "openvic/dataloader/NodeTools.hpp"
+#include "openvic/map/Province.hpp"
+#include "openvic/utility/Logger.hpp"
 
 using namespace OpenVic;
 
@@ -106,18 +107,7 @@ static const std::string test_pop_type_poor = "test_pop_type_poor";
 static const std::string test_pop_type_middle = "test_pop_type_middle";
 static const std::string test_pop_type_rich = "test_pop_type_rich";
 
-
 PopManager::PopManager() : pop_types { "pop types" } {
-	culture_manager.add_graphical_culture_type(test_graphical_culture_type);
-	culture_manager.lock_graphical_culture_types();
-
-	culture_manager.add_culture_group(test_culture_group, culture_manager.get_graphical_culture_type_by_identifier(test_graphical_culture_type));
-	culture_manager.lock_culture_groups();
-
-	culture_manager.add_culture(test_culture, 0x0000FF, culture_manager.get_culture_group_by_identifier(test_culture_group),
-		{ "john" }, { "smith" });
-	culture_manager.lock_cultures();
-
 	religion_manager.add_religion_group(test_religion_group);
 	religion_manager.lock_religion_groups();
 
@@ -163,18 +153,45 @@ PopType const* PopManager::get_pop_type_by_identifier(const std::string_view ide
 	return pop_types.get_item_by_identifier(identifier);
 }
 
-void PopManager::generate_test_pops(Province& province) const {
-	if (pop_types.is_locked()) {
-		static PopType const& type_poor = *get_pop_type_by_identifier(test_pop_type_poor);
-		static PopType const& type_middle = *get_pop_type_by_identifier(test_pop_type_middle);
-		static PopType const& type_rich = *get_pop_type_by_identifier(test_pop_type_rich);
-		static Culture const& culture = *culture_manager.get_culture_by_identifier(test_culture);
-		static Religion const& religion = *religion_manager.get_religion_by_identifier(test_religion);
+return_t PopManager::load_pop_into_province(Province& province, ast::NodeCPtr root) const {
+	static PopType const* type = get_pop_type_by_identifier("test_pop_type_poor");
+	Culture const* culture = nullptr;
+	static Religion const* religion = religion_manager.get_religion_by_identifier("test_religion");
+	Pop::pop_size_t size = 0;
 
-		province.add_pop({ type_poor, culture, religion, static_cast<Pop::pop_size_t>(province.get_index() * province.get_index()) * 100 });
-		province.add_pop({ type_middle, culture, religion, static_cast<Pop::pop_size_t>(province.get_index() * province.get_index()) * 50 });
-		province.add_pop({ type_rich, culture, religion, static_cast<Pop::pop_size_t>(province.get_index()) * 1000 });
+	return_t ret = NodeTools::expect_assign(root, [this, &culture, &size](std::string_view, ast::NodeCPtr pop_node) -> return_t {
+		return NodeTools::expect_dictionary_keys(pop_node, {
+			{ "culture", { true, false, [this, &culture](ast::NodeCPtr node) -> return_t {
+				return NodeTools::expect_identifier(node, [&culture, this](std::string_view identifier) -> return_t {
+					culture = culture_manager.get_culture_by_identifier(identifier);
+					if (culture != nullptr) return SUCCESS;
+					Logger::error("Invalid pop culture: ", identifier);
+					return FAILURE;
+				});
+			} } },
+			{ "religion", { true, false, NodeTools::success_callback } },
+			{ "size", { true, false, [&size](ast::NodeCPtr node) -> return_t {
+				return NodeTools::expect_uint(node, [&size](uint64_t val) -> return_t {
+					if (val > 0) {
+						size = val;
+						return SUCCESS;
+					} else {
+						Logger::error("Invalid pop size: ", val, " (setting to 1 instead)");
+						size = 1;
+						return FAILURE;
+					}
+				});
+			} } },
+			{ "militancy", { false, false, NodeTools::success_callback } },
+			{ "rebel_type", { false, false, NodeTools::success_callback } }
+		});
+	});
+
+	if (type != nullptr && culture != nullptr && religion != nullptr && size > 0) {
+		if (province.add_pop({ *type, *culture, *religion, size }) != SUCCESS) ret = FAILURE;
 	} else {
-		Logger::error("Cannot generate pops before pop types registry is locked!");
+		Logger::error("Some pop arguments are missing: type = ", type, ", culture = ", culture, ", religion = ", religion, ", size = ", size);
+		ret = FAILURE;
 	}
+	return ret;
 }

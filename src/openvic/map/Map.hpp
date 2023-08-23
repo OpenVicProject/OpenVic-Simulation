@@ -2,7 +2,7 @@
 
 #include <functional>
 
-#include "Region.hpp"
+#include "openvic/map/Region.hpp"
 
 namespace OpenVic {
 
@@ -20,6 +20,8 @@ namespace OpenVic {
 
 	public:
 		static const Mapmode ERROR_MAPMODE;
+
+		Mapmode(Mapmode&&) = default;
 
 		index_t get_index() const;
 		colour_t get_colour(Map const& map, Province const& province) const;

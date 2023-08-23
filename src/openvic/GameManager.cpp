@@ -1,6 +1,6 @@
 #include "GameManager.hpp"
 
-#include "utility/Logger.hpp"
+#include "openvic/utility/Logger.hpp"
 
 using namespace OpenVic;
 
@@ -50,4 +50,87 @@ return_t GameManager::expand_building(Province::index_t province_index, const st
 	Province* province = map.get_province_by_index(province_index);
 	if (province == nullptr) return FAILURE;
 	return province->expand_building(building_type_identifier);
+}
+
+return_t GameManager::load_hardcoded_defines() {
+	return_t ret = SUCCESS;
+
+	static constexpr colour_t LOW_ALPHA_VALUE = float_to_alpha_value(0.4f);
+	static constexpr colour_t HIGH_ALPHA_VALUE = float_to_alpha_value(0.7f);
+	using mapmode_t = std::pair<std::string, Mapmode::colour_func_t>;
+	const std::vector<mapmode_t> mapmodes {
+		{ "mapmode_terrain",
+			[](Map const&, Province const& province) -> colour_t {
+				return LOW_ALPHA_VALUE | (province.is_water() ? 0x4287F5 : 0x0D7017);
+			} },
+		{ "mapmode_province",
+			[](Map const&, Province const& province) -> colour_t {
+				return HIGH_ALPHA_VALUE | province.get_colour();
+			} },
+		{ "mapmode_region",
+			[](Map const&, Province const& province) -> colour_t {
+				Region const* region = province.get_region();
+				if (region != nullptr) return HIGH_ALPHA_VALUE | region->get_colour();
+				return NULL_COLOUR;
+			} },
+		{ "mapmode_index",
+			[](Map const& map, Province const& province) -> colour_t {
+				const colour_t f = fraction_to_colour_byte(province.get_index(), map.get_province_count() + 1);
+				return HIGH_ALPHA_VALUE | (f << 16) | (f << 8) | f;
+			} },
+		{ "mapmode_rgo",
+			[](Map const& map, Province const& province) -> colour_t {
+				Good const* rgo = province.get_rgo();
+				if (rgo != nullptr) return HIGH_ALPHA_VALUE | rgo->get_colour();
+				return NULL_COLOUR;
+			} },
+		{ "mapmode_infrastructure",
+			[](Map const& map, Province const& province) -> colour_t {
+				Building const* railroad = province.get_building_by_identifier("building_railroad");
+				if (railroad != nullptr) {
+					colour_t val = fraction_to_colour_byte(railroad->get_level(), railroad->get_type().get_max_level() + 1, 0.5f, 1.0f);
+					switch (railroad->get_expansion_state()) {
+						case Building::ExpansionState::CannotExpand: val <<= 16; break;
+						case Building::ExpansionState::CanExpand: break;
+						default: val <<= 8; break;
+					}
+					return HIGH_ALPHA_VALUE | val;
+				}
+				return NULL_COLOUR;
+			} },
+		{ "mapmode_population",
+			[](Map const& map, Province const& province) -> colour_t {
+				return HIGH_ALPHA_VALUE | (fraction_to_colour_byte(province.get_total_population(), map.get_highest_province_population() + 1, 0.1f, 1.0f) << 8);
+			} },
+		{ "mapmode_culture",
+			// TODO - use std::max_element and maybe change distribution_t to be an ordered std::map
+			[](Map const& map, Province const& province) -> colour_t {
+				distribution_t const& cultures = province.get_culture_distribution();
+				if (!cultures.empty()) {
+					// This breaks if replaced with distribution_t::value_type, something
+					// about operator=(volatile const&) being deleted.
+					std::pair<HasIdentifierAndColour const*, float> culture = *cultures.begin();
+					for (distribution_t::value_type const p : cultures) {
+						if (p.second > culture.second) culture = p;
+					}
+					return HIGH_ALPHA_VALUE | culture.first->get_colour();
+				}
+				return NULL_COLOUR;
+			} }
+	};
+	for (mapmode_t const& mapmode : mapmodes)
+		if (map.add_mapmode(mapmode.first, mapmode.second) != SUCCESS)
+			ret = FAILURE;
+	map.lock_mapmodes();
+
+	using building_type_t = std::tuple<std::string, Building::level_t, Timespan>;
+	const std::vector<building_type_t> building_types {
+		{ "building_fort", 4, 8 }, { "building_naval_base", 6, 15 }, { "building_railroad", 5, 10 }
+	};
+	for (building_type_t const& type : building_types)
+		if (building_manager.add_building_type(std::get<0>(type), std::get<1>(type), std::get<2>(type)) != SUCCESS)
+			ret = FAILURE;
+	building_manager.lock_building_types();
+
+	return ret;
 }

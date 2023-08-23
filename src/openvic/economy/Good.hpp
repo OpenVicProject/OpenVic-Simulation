@@ -1,6 +1,7 @@
 #pragma once
 
-#include "../Types.hpp"
+#include "openvic/types/IdentifierRegistry.hpp"
+#include "openvic/types/fixed_point/FP.hpp"
 
 namespace OpenVic {
 	struct GoodManager;
@@ -19,6 +20,9 @@ namespace OpenVic {
 	 */
 	struct Good : HasIdentifierAndColour {
 		friend struct GoodManager;
+
+		using price_t = FP;
+		static constexpr price_t NULL_PRICE = FP::_0();
 
 	private:
 		const std::string category;
@@ -48,7 +52,7 @@ namespace OpenVic {
 	public:
 		GoodManager();
 
-		return_t add_good(const std::string_view identifier, colour_t colour, const std::string_view category, price_t base_price,
+		return_t add_good(const std::string_view identifier, colour_t colour, const std::string_view category, Good::price_t base_price,
 			bool default_available, bool tradeable, bool currency, bool overseas_maintenance);
 		void lock_goods();
 		void reset_to_defaults();

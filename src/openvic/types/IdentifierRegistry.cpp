@@ -1,4 +1,4 @@
-#include "Types.hpp"
+#include "IdentifierRegistry.hpp"
 
 #include <cassert>
 #include <iomanip>

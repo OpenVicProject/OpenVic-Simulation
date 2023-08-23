@@ -3,8 +3,8 @@
 #include <cassert>
 #include <unordered_set>
 
-#include "../economy/Good.hpp"
-#include "../utility/Logger.hpp"
+#include "openvic/economy/Good.hpp"
+#include "openvic/utility/Logger.hpp"
 
 using namespace OpenVic;
 
@@ -403,9 +403,6 @@ return_t Map::setup(GoodManager const& good_manager, BuildingManager const& buil
 		if (!province.is_water() && good_manager.get_good_count() > 0)
 			province.rgo = good_manager.get_good_by_index(province.get_index() % good_manager.get_good_count());
 		if (building_manager.generate_province_buildings(province) != SUCCESS) ret = FAILURE;
-		// Add some pops to the province (for testing purposes)
-		if (!province.is_water())
-			pop_manager.generate_test_pops(province);
 	}
 	return ret;
 }

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Province.hpp"
+#include "openvic/map/Province.hpp"
 
 namespace OpenVic {
 

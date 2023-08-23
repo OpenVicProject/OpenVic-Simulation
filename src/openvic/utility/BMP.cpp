@@ -3,7 +3,7 @@
 #include <cstring>
 #include <set>
 
-#include "Logger.hpp"
+#include "openvic/utility/Logger.hpp"
 
 using namespace OpenVic;
 

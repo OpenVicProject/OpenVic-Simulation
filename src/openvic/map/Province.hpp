@@ -1,7 +1,7 @@
 #pragma once
 
-#include "../pop/Pop.hpp"
-#include "Building.hpp"
+#include "openvic/pop/Pop.hpp"
+#include "openvic/map/Building.hpp"
 
 namespace OpenVic {
 	struct Map;
@@ -50,7 +50,7 @@ namespace OpenVic {
 		Good const* get_rgo() const;
 		std::string to_string() const;
 
-		void add_pop(Pop&& pop);
+		return_t add_pop(Pop&& pop);
 		void clear_pops();
 		Pop::pop_size_t get_total_population() const;
 		distribution_t const& get_pop_type_distribution() const;

@@ -1,7 +1,5 @@
 #include "Region.hpp"
 
-#include <cassert>
-
 using namespace OpenVic;
 
 return_t ProvinceSet::add_province(Province* province) {

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../Types.hpp"
+#include "openvic/types/IdentifierRegistry.hpp"
 
 namespace OpenVic {
 
