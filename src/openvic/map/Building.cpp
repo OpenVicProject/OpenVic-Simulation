@@ -2,8 +2,8 @@
 
 #include <cassert>
 
-#include "openvic/utility/Logger.hpp"
 #include "openvic/map/Province.hpp"
+#include "openvic/utility/Logger.hpp"
 
 using namespace OpenVic;
 

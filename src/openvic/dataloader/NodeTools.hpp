@@ -2,12 +2,12 @@
 
 #include <map>
 
-#include <openvic-dataloader/v2script/AbstractSyntaxTree.hpp>
-
 #include "openvic/types/Colour.hpp"
-#include "openvic/types/Return.hpp"
 #include "openvic/types/Date.hpp"
+#include "openvic/types/Return.hpp"
 #include "openvic/types/fixed_point/FP.hpp"
+
+#include <openvic-dataloader/v2script/AbstractSyntaxTree.hpp>
 
 namespace OpenVic {
 	namespace ast = ovdl::v2script::ast;
@@ -27,7 +27,24 @@ namespace OpenVic {
 		return_t expect_colour(ast::NodeCPtr node, std::function<return_t(colour_t)> callback);
 		return_t expect_date(ast::NodeCPtr node, std::function<return_t(Date)> callback);
 		return_t expect_assign(ast::NodeCPtr node, std::function<return_t(std::string_view, ast::NodeCPtr)> callback);
-		return_t expect_list(ast::NodeCPtr node, std::function<return_t(ast::NodeCPtr)> callback, size_t length = 0, bool file_node = false);
+
+		static const std::function<size_t(size_t)> default_length_callback = [](size_t size) -> size_t { return size; };
+
+		template<typename T> requires requires(T& t) {
+			{ t.size() } -> std::same_as<size_t>;
+			t.reserve( size_t {} );
+		}
+		std::function<size_t(size_t)> reserve_length_callback(T& t) {
+			return [&t](size_t size) -> size_t {
+				t.reserve(t.size() + size);
+				return size;
+			};
+		}
+
+		return_t expect_list_and_length(ast::NodeCPtr node, std::function<size_t(size_t)> length_callback, std::function<return_t(ast::NodeCPtr)> callback, bool file_node = false);
+		return_t expect_list_of_length(ast::NodeCPtr node, std::function<return_t(ast::NodeCPtr)> callback, size_t length, bool file_node = false);
+		return_t expect_list(ast::NodeCPtr node, std::function<return_t(ast::NodeCPtr)> callback, bool file_node = false);
+		return_t expect_dictionary_and_length(ast::NodeCPtr node, std::function<size_t(size_t)> length_callback, std::function<return_t(std::string_view, ast::NodeCPtr)> callback, bool file_node = false);
 		return_t expect_dictionary(ast::NodeCPtr node, std::function<return_t(std::string_view, ast::NodeCPtr)> callback, bool file_node = false);
 
 		static const std::function<return_t(ast::NodeCPtr)> success_callback = [](ast::NodeCPtr) -> return_t { return SUCCESS; };

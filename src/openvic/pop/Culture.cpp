@@ -101,11 +101,13 @@ Culture const* CultureManager::get_culture_by_identifier(const std::string_view 
 }
 
 return_t CultureManager::load_graphical_culture_type_file(ast::NodeCPtr root) {
-	const return_t ret = NodeTools::expect_list(root, [this](ast::NodeCPtr node) -> return_t {
-		return NodeTools::expect_identifier(node, [this](std::string_view identifier) -> return_t {
-			return add_graphical_culture_type(identifier);
-		});
-	}, 0, true);
+	const return_t ret = NodeTools::expect_list_and_length(root,
+		NodeTools::reserve_length_callback(graphical_culture_types),
+		[this](ast::NodeCPtr node) -> return_t {
+			return NodeTools::expect_identifier(node, [this](std::string_view identifier) -> return_t {
+				return add_graphical_culture_type(identifier);
+			});
+		}, true);
 	lock_graphical_culture_types();
 	return ret;
 }
@@ -156,21 +158,25 @@ return_t CultureManager::load_culture_file(ast::NodeCPtr root) {
 		return NodeTools::expect_dictionary(culture_group_value, [this, culture_group](std::string_view key, ast::NodeCPtr value) -> return_t {
 			if (key == "leader" || key == "unit" || key == "union" || key == "is_overseas") return SUCCESS;
 
-			colour_t colour = NULL_COLOUR;	
+			colour_t colour = NULL_COLOUR;
 			Culture::name_list_t first_names, last_names;
 
-			static const std::function<return_t(Culture::name_list_t&, ast::NodeCPtr)> read_name_list = [](Culture::name_list_t& names, ast::NodeCPtr node) -> return_t {
-				return NodeTools::expect_list(node, [&names](ast::NodeCPtr val) -> return_t {
-					return NodeTools::expect_identifier_or_string(val, [&names](std::string_view str) -> return_t {
-						if (!str.empty()) {
-							names.push_back(std::string { str });
-							return SUCCESS;
+			static const std::function<return_t(Culture::name_list_t&, ast::NodeCPtr)> read_name_list =
+				[](Culture::name_list_t& names, ast::NodeCPtr node) -> return_t {
+					return NodeTools::expect_list_and_length(node,
+						NodeTools::reserve_length_callback(names),
+						[&names](ast::NodeCPtr val) -> return_t {
+							return NodeTools::expect_identifier_or_string(val, [&names](std::string_view str) -> return_t {
+								if (!str.empty()) {
+									names.push_back(std::string { str });
+									return SUCCESS;
+								}
+								Logger::error("Empty identifier or string");
+								return FAILURE;
+							});
 						}
-						Logger::error("Empty identifier or string");
-						return FAILURE;
-					});
-				});
-			};
+					);
+				};
 
 			return_t ret = NodeTools::expect_dictionary_keys(value, {
 				{ "color", { true, false, [&colour](ast::NodeCPtr node) -> return_t {

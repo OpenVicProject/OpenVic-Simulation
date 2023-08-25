@@ -35,3 +35,11 @@ HasIdentifierAndColour::HasIdentifierAndColour(const std::string_view new_identi
 	const colour_t new_colour, bool can_be_null)
 	: HasIdentifier { new_identifier },
 	  HasColour { new_colour, can_be_null } {}
+
+distribution_t::value_type OpenVic::get_largest_item(distribution_t const& dist) {
+	const distribution_t::const_iterator result = std::max_element(dist.begin(), dist.end(),
+		[](distribution_t::value_type a, distribution_t::value_type b) -> bool {
+			return a.second < b.second;
+		});
+	return result != dist.end() ? *result : distribution_t::value_type { nullptr, -1.0f };
+}

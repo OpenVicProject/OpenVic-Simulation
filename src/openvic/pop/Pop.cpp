@@ -98,27 +98,7 @@ bool PopType::get_is_slave() const {
 	return is_slave;
 }
 
-static const std::string test_graphical_culture_type = "test_graphical_culture_type";
-static const std::string test_culture_group = "test_culture_group";
-static const std::string test_culture = "test_culture";
-static const std::string test_religion_group = "test_religion_group";
-static const std::string test_religion = "test_religion";
-static const std::string test_pop_type_poor = "test_pop_type_poor";
-static const std::string test_pop_type_middle = "test_pop_type_middle";
-static const std::string test_pop_type_rich = "test_pop_type_rich";
-
-PopManager::PopManager() : pop_types { "pop types" } {
-	religion_manager.add_religion_group(test_religion_group);
-	religion_manager.lock_religion_groups();
-
-	religion_manager.add_religion(test_religion, 0xFF0000, religion_manager.get_religion_group_by_identifier(test_religion_group), 1, false);
-	religion_manager.lock_religions();
-
-	add_pop_type(test_pop_type_poor, 0xFF0000, PopType::strata_t::POOR, 1, 1, 1, false, false, false, false);
-	add_pop_type(test_pop_type_middle, 0x00FF00, PopType::strata_t::MIDDLE, 1, 1, 1, false, false, false, false);
-	add_pop_type(test_pop_type_rich, 0x0000FF, PopType::strata_t::RICH, 1, 1, 1, false, false, false, false);
-	lock_pop_types();
-}
+PopManager::PopManager() : pop_types { "pop types" } {}
 
 return_t PopManager::add_pop_type(const std::string_view identifier, colour_t colour, PopType::strata_t strata, PopType::sprite_t sprite,
 	Pop::pop_size_t max_size, Pop::pop_size_t merge_max_size, bool state_capital_only, bool demote_migrant, bool is_artisan, bool is_slave) {
@@ -153,8 +133,17 @@ PopType const* PopManager::get_pop_type_by_identifier(const std::string_view ide
 	return pop_types.get_item_by_identifier(identifier);
 }
 
+return_t PopManager::load_pop_type_file(std::filesystem::path const& path, ast::NodeCPtr root) {
+
+	// TODO - pop type loading
+
+	if (pop_types.empty())
+		return add_pop_type("test_pop_type", 0xFF0000, PopType::strata_t::POOR, 1, 1, 1, false, false, false, false);
+	return SUCCESS;
+}
+
 return_t PopManager::load_pop_into_province(Province& province, ast::NodeCPtr root) const {
-	static PopType const* type = get_pop_type_by_identifier("test_pop_type_poor");
+	static PopType const* type = get_pop_type_by_identifier("test_pop_type");
 	Culture const* culture = nullptr;
 	static Religion const* religion = religion_manager.get_religion_by_identifier("test_religion");
 	Pop::pop_size_t size = 0;
@@ -176,8 +165,7 @@ return_t PopManager::load_pop_into_province(Province& province, ast::NodeCPtr ro
 						size = val;
 						return SUCCESS;
 					} else {
-						Logger::error("Invalid pop size: ", val, " (setting to 1 instead)");
-						size = 1;
+						Logger::error("Invalid pop size: ", val);
 						return FAILURE;
 					}
 				});
@@ -190,7 +178,7 @@ return_t PopManager::load_pop_into_province(Province& province, ast::NodeCPtr ro
 	if (type != nullptr && culture != nullptr && religion != nullptr && size > 0) {
 		if (province.add_pop({ *type, *culture, *religion, size }) != SUCCESS) ret = FAILURE;
 	} else {
-		Logger::error("Some pop arguments are missing: type = ", type, ", culture = ", culture, ", religion = ", religion, ", size = ", size);
+		Logger::error("Some pop arguments are invalid: type = ", type, ", culture = ", culture, ", religion = ", religion, ", size = ", size);
 		ret = FAILURE;
 	}
 	return ret;

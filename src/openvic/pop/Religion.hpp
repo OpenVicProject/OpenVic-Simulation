@@ -1,6 +1,7 @@
 #pragma once
 
 #include "openvic/types/IdentifierRegistry.hpp"
+#include "openvic/dataloader/NodeTools.hpp"
 
 namespace OpenVic {
 
@@ -50,5 +51,7 @@ namespace OpenVic {
 		return_t add_religion(const std::string_view identifier, colour_t colour, ReligionGroup const* group, Religion::icon_t icon, bool pagan);
 		void lock_religions();
 		Religion const* get_religion_by_identifier(const std::string_view identifier) const;
+
+		return_t load_religion_file(ast::NodeCPtr root);
 	};
 }

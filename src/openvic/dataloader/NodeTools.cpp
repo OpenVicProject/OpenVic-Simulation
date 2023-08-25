@@ -66,11 +66,9 @@ return_t NodeTools::expect_bool(ast::NodeCPtr node, std::function<return_t(bool)
 
 return_t NodeTools::expect_int(ast::NodeCPtr node, std::function<return_t(int64_t)> callback) {
 	return expect_identifier(node, [callback](std::string_view identifier) -> return_t {
-		int64_t val;
-		char const* const start = identifier.data();
-		char const* const end = start + identifier.size();
-		const std::from_chars_result result = std::from_chars(start, end, val);
-		if (result.ec == std::errc{} && result.ptr == end) {
+		bool successful = false;
+		const int64_t val = StringUtils::string_to_int64(identifier, &successful, 10);
+		if (successful) {
 			return callback(val);
 		}
 		Logger::error("Invalid int identifier text: ", identifier);
@@ -80,10 +78,9 @@ return_t NodeTools::expect_int(ast::NodeCPtr node, std::function<return_t(int64_
 
 return_t NodeTools::expect_uint(ast::NodeCPtr node, std::function<return_t(uint64_t)> callback) {
 	return expect_identifier(node, [callback](std::string_view identifier) -> return_t {
-		uint64_t val;
-		char const* identifier_end = identifier.data() + identifier.size();
-		const std::from_chars_result result = std::from_chars(identifier.data(), identifier_end, val);
-		if (result.ec == std::errc{} && result.ptr == identifier_end) {
+		bool successful = false;
+		const uint64_t val = StringUtils::string_to_uint64(identifier, &successful, 10);
+		if (successful) {
 			return callback(val);
 		}
 		Logger::error("Invalid uint identifier text: ", identifier);
@@ -94,7 +91,7 @@ return_t NodeTools::expect_uint(ast::NodeCPtr node, std::function<return_t(uint6
 return_t NodeTools::expect_fixed_point(ast::NodeCPtr node, std::function<return_t(FP)> callback) {
 	return expect_identifier(node, [callback](std::string_view identifier) -> return_t {
 		bool successful = false;
-		FP val = FP::parse(identifier.data(), identifier.length(), &successful);
+		const FP val = FP::parse(identifier.data(), identifier.length(), &successful);
 		if (successful) {
 			return callback(val);
 		}
@@ -106,7 +103,7 @@ return_t NodeTools::expect_fixed_point(ast::NodeCPtr node, std::function<return_
 return_t NodeTools::expect_colour(ast::NodeCPtr node, std::function<return_t(colour_t)> callback) {
 	colour_t col = NULL_COLOUR;
 	uint32_t components = 0;
-	return_t ret = expect_list(node, std::bind(expect_fixed_point, std::placeholders::_1,
+	return_t ret = expect_list_of_length(node, std::bind(expect_fixed_point, std::placeholders::_1,
 		[&col, &components](FP val) -> return_t {
 			return_t ret = SUCCESS;
 			if (val < 0 || val > 255) {
@@ -127,7 +124,7 @@ return_t NodeTools::expect_colour(ast::NodeCPtr node, std::function<return_t(col
 return_t NodeTools::expect_date(ast::NodeCPtr node, std::function<return_t(Date)> callback) {
 	return expect_identifier(node, [callback](std::string_view identifier) -> return_t {
 		bool successful = false;
-		Date date = Date::from_string(identifier, &successful);
+		const Date date = Date::from_string(identifier, &successful);
 		if (successful) {
 			return callback(date);
 		}
@@ -142,16 +139,16 @@ return_t NodeTools::expect_assign(ast::NodeCPtr node, std::function<return_t(std
 	});
 }
 
-return_t NodeTools::expect_list(ast::NodeCPtr node, std::function<return_t(ast::NodeCPtr)> callback, size_t length, bool file_node) {
-	const std::function<return_t(std::vector<ast::NodeUPtr> const&)> list_func = [length, callback](std::vector<ast::NodeUPtr> const& list) -> return_t {
+return_t NodeTools::expect_list_and_length(ast::NodeCPtr node, std::function<size_t(size_t)> length_callback, std::function<return_t(ast::NodeCPtr)> callback, bool file_node) {
+	const std::function<return_t(std::vector<ast::NodeUPtr> const&)> list_func = [length_callback, callback](std::vector<ast::NodeUPtr> const& list) -> return_t {
 		return_t ret = SUCCESS;
-		size_t size = list.size();
-		if (length > 0 && size != length) {
-			Logger::error("List length ", size, " does not match expected length ", length);
+		size_t size = length_callback(list.size());
+		if (size > list.size()) {
+			Logger::error("Trying to read more values than the list contains: ", size, " > ", list.size());
+			size = list.size();
 			ret = FAILURE;
-			if (length < size) size = length;
 		}
-		std::for_each(list.begin(), list.begin() + size, [callback, &ret](ast::NodeUPtr const& sub_node) {
+		std::for_each(list.begin(), list.begin() + size, [callback, &ret](ast::NodeUPtr const& sub_node) -> void {
 			if (callback(sub_node.get()) != SUCCESS) ret = FAILURE;
 		});
 		return ret;
@@ -167,13 +164,34 @@ return_t NodeTools::expect_list(ast::NodeCPtr node, std::function<return_t(ast::
 	}
 }
 
-return_t NodeTools::expect_dictionary(ast::NodeCPtr node, std::function<return_t(const std::string_view, ast::NodeCPtr)> callback, bool file_node) {
-	return expect_list(node, std::bind(expect_assign, std::placeholders::_1, callback), 0, file_node);
+return_t NodeTools::expect_list_of_length(ast::NodeCPtr node, std::function<return_t(ast::NodeCPtr)> callback, size_t length, bool file_node) {
+	return_t ret = SUCCESS;
+	if (expect_list_and_length(node, [length, &ret](size_t size) -> size_t {
+		if (size != length) {
+			Logger::error("List length ", size, " does not match expected length ", length);
+			ret = FAILURE;
+			if (length < size) return length;
+		}
+		return size;
+	}, callback, file_node) != SUCCESS) ret = FAILURE;
+	return ret;
+}
+
+return_t NodeTools::expect_list(ast::NodeCPtr node, std::function<return_t(ast::NodeCPtr)> callback, bool file_node) {
+	return expect_list_and_length(node, default_length_callback, callback, file_node);
+}
+
+return_t NodeTools::expect_dictionary_and_length(ast::NodeCPtr node, std::function<size_t(size_t)> length_callback, std::function<return_t(std::string_view, ast::NodeCPtr)> callback, bool file_node) {
+	return expect_list_and_length(node, length_callback, std::bind(expect_assign, std::placeholders::_1, callback), file_node);
+}
+
+return_t NodeTools::expect_dictionary(ast::NodeCPtr node, std::function<return_t(std::string_view, ast::NodeCPtr)> callback, bool file_node) {
+	return expect_dictionary_and_length(node, default_length_callback, callback, file_node);
 }
 
 return_t NodeTools::expect_dictionary_keys(ast::NodeCPtr node, dictionary_key_map_t const& keys, bool allow_other_keys, bool file_node) {
 	std::map<std::string, size_t, std::less<void>> key_count;
-	return_t ret = expect_dictionary(node, [keys, allow_other_keys, &key_count](const std::string_view key, ast::NodeCPtr value) -> return_t {
+	return_t ret = expect_dictionary(node, [keys, allow_other_keys, &key_count](std::string_view key, ast::NodeCPtr value) -> return_t {
 		const dictionary_key_map_t::const_iterator it = keys.find(key);
 		if (it == keys.end()) {
 			if (allow_other_keys) return SUCCESS;

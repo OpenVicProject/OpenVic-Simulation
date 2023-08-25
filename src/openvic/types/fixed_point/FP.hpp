@@ -1,16 +1,17 @@
 #pragma once
 
-#include <cstdint>
-#include <cstdlib>
 #include <cerrno>
 #include <cmath>
+#include <cstdint>
+#include <cstdlib>
 #include <limits>
-#include <cstring>
+#include <string_view>
+
+#include "openvic/utility/Logger.hpp"
+#include "openvic/utility/NumberUtils.hpp"
+#include "openvic/utility/StringUtils.hpp"
 
 #include "FPLUT.hpp"
-#include "openvic/utility/FloatUtils.hpp"
-#include "openvic/utility/StringUtils.hpp"
-#include "openvic/utility/Logger.hpp"
 
 namespace OpenVic {
 	struct FP {
@@ -41,7 +42,7 @@ namespace OpenVic {
 
 		static constexpr FP _0() {
 			return 0;
-		}	
+		}
 
 		static constexpr FP _1() {
 			return 1;
@@ -195,13 +196,17 @@ namespace OpenVic {
 			return static_cast<int64_t>(178145LL);
 		}
 
-		constexpr FP abs() const {
-			return value >= 0 ? value : -value;
+		constexpr bool is_negative() const {
+			return value < 0;
 		}
 
-		// Not including sign, so -1.1 -> 0.1
+		constexpr FP abs() const {
+			return !is_negative() ? value : -value;
+		}
+
+		// Doesn't account for sign, so -n.abc -> 1 - 0.abc
 		constexpr FP get_frac() const {
-			return abs().value & ((1 << FPLUT::PRECISION) - 1);
+			return value & (FPLUT::ONE - 1);
 		}
 
 		constexpr int64_t to_int64_t() const {
@@ -217,33 +222,35 @@ namespace OpenVic {
 		}
 
 		constexpr int32_t to_int32_t() const {
-			return static_cast<int32_t>(value >> FPLUT::PRECISION);
+			return static_cast<int32_t>(to_int64_t());
 		}
 
 		constexpr float to_float() const {
-			return value / 65536.0F;
+			return value / static_cast<float>(FPLUT::ONE);
 		}
 
 		constexpr float to_float_rounded() const {
-			return static_cast<float>(FloatUtils::round_to_int64((value / 65536.0F) * 100000.0F)) / 100000.0F;
+			return static_cast<float>(NumberUtils::round_to_int64((value / static_cast<float>(FPLUT::ONE)) * 100000.0f)) / 100000.0f;
 		}
 
-		constexpr float to_double() const {
-			return value / 65536.0;
+		constexpr double to_double() const {
+			return value / static_cast<double>(FPLUT::ONE);
 		}
 
 		constexpr float to_double_rounded() const {
-			return FloatUtils::round_to_int64((value / 65536.0) * 100000.0) / 100000.0;
+			return NumberUtils::round_to_int64((value / static_cast<double>(FPLUT::ONE)) * 100000.0) / 100000.0;
 		}
 
 		std::string to_string() const {
-			std::string str = std::to_string(to_int64_t()) + ".";
-			FP frac_part = get_frac();
+			FP val = abs();
+			std::string str = std::to_string(val.to_int64_t()) + ".";
+			if (is_negative()) str = "-" + str;
+			val = val.get_frac();
 			do {
-				frac_part.value *= 10;
-				str += std::to_string(frac_part.to_int64_t());
-				frac_part = frac_part.get_frac();
-			} while (frac_part > 0);
+				val *= 10;
+				str.push_back('0' + static_cast<char>(val.to_int64_t()));
+				val = val.get_frac();
+			} while (val > 0);
 			return str;
 		}
 
@@ -258,7 +265,7 @@ namespace OpenVic {
 		}
 
 		// Deterministic
-		static constexpr FP parse(const char* str, const char* end, bool *successful = nullptr) {
+		static constexpr FP parse(char const* str, char const* const end, bool* successful = nullptr) {
 			if (successful != nullptr) *successful = false;
 
 			if (str == nullptr || str >= end) {
@@ -273,7 +280,7 @@ namespace OpenVic {
 				if (str == end) return _0();
 			}
 
-			const char* dot_pointer = str;
+			char const* dot_pointer = str;
 			while (*dot_pointer != '.' && ++dot_pointer != end);
 
 			if (dot_pointer == str && dot_pointer + 1 == end) {
@@ -287,22 +294,26 @@ namespace OpenVic {
 			if (dot_pointer != str) {
 				// Non-empty integer part
 				bool int_successful = false;
-				result += parse_integer(str, dot_pointer,  &int_successful);
+				result += parse_integer(str, dot_pointer, &int_successful);
 				if (!int_successful && successful != nullptr) *successful = false;
 			}
 
 			if (dot_pointer + 1 < end) {
 				// Non-empty fractional part
 				bool frac_successful = false;
-				result += parse_fraction(dot_pointer + 1, end,  &frac_successful);
+				result += parse_fraction(dot_pointer + 1, end, &frac_successful);
 				if (!frac_successful && successful != nullptr) *successful = false;
 			}
 
 			return negative ? -result : result;
 		}
 
-		static constexpr FP parse(const char* str, size_t length, bool *successful = nullptr) {
+		static constexpr FP parse(char const* str, size_t length, bool* successful = nullptr) {
 			return parse(str, str + length, successful);
+		}
+
+		static FP parse(const std::string_view str, bool* successful = nullptr) {
+			return parse(str.data(), str.length(), successful);
 		}
 
 		// Not Deterministic
@@ -311,7 +322,7 @@ namespace OpenVic {
 		}
 
 		// Not Deterministic
-		static FP parse_unsafe(const char* value) {
+		static FP parse_unsafe(char const* value) {
 			char* endpointer;
 			double double_value = std::strtod(value, &endpointer);
 
@@ -325,7 +336,7 @@ namespace OpenVic {
 		}
 
 		constexpr operator int32_t() const {
-			return to_int32_t(); 
+			return to_int32_t();
 		}
 
 		constexpr operator int64_t() const {
@@ -344,218 +355,225 @@ namespace OpenVic {
 			return to_string();
 		}
 
-		friend std::ostream& operator<<(std::ostream& stream, const FP& obj) {
+		friend std::ostream& operator<<(std::ostream& stream, FP const& obj) {
 			return stream << obj.to_string();
 		}
 
-		constexpr friend FP operator-(const FP& obj) {
+		constexpr friend FP operator-(FP const& obj) {
 			return -obj.value;
 		}
 
-		constexpr friend FP operator+(const FP& obj) {
+		constexpr friend FP operator+(FP const& obj) {
 			return +obj.value;
 		}
 
-		constexpr friend FP operator+(const FP& lhs, const FP& rhs) {
+		constexpr friend FP operator+(FP const& lhs, FP const& rhs) {
 			return lhs.value + rhs.value;
 		}
 
-		constexpr friend FP operator+(const FP& lhs, const int32_t& rhs) {
+		constexpr friend FP operator+(FP const& lhs, int32_t const& rhs) {
 			return lhs.value + (static_cast<int64_t>(rhs) << FPLUT::PRECISION);
 		}
 
-		constexpr friend FP operator+(const int32_t& lhs, const FP& rhs) {
+		constexpr friend FP operator+(int32_t const& lhs, FP const& rhs) {
 			return (static_cast<int64_t>(lhs) << FPLUT::PRECISION) + rhs.value;
 		}
 
-		constexpr FP operator+=(const FP& obj) {
+		constexpr FP operator+=(FP const& obj) {
 			value += obj.value;
 			return *this;
 		}
 
-		constexpr FP operator+=(const int32_t& obj) {
+		constexpr FP operator+=(int32_t const& obj) {
 			value += (static_cast<int64_t>(obj) << FPLUT::PRECISION);
 			return *this;
 		}
 
-		constexpr friend FP operator-(const FP& lhs, const FP& rhs) {
+		constexpr friend FP operator-(FP const& lhs, FP const& rhs) {
 			return lhs.value - rhs.value;
 		}
 
-		constexpr friend FP operator-(const FP& lhs, const int32_t& rhs) {
+		constexpr friend FP operator-(FP const& lhs, int32_t const& rhs) {
 			return lhs.value - (static_cast<int64_t>(rhs) << FPLUT::PRECISION);
 		}
 
-		constexpr friend FP operator-(const int32_t& lhs, const FP& rhs) {
+		constexpr friend FP operator-(int32_t const& lhs, FP const& rhs) {
 			return (static_cast<int64_t>(lhs) << FPLUT::PRECISION) - rhs.value;
 		}
 
-		constexpr FP operator-=(const FP& obj) {
+		constexpr FP operator-=(FP const& obj) {
 			value -= obj.value;
 			return *this;
 		}
 
-		constexpr FP operator-=(const int32_t& obj) {
+		constexpr FP operator-=(int32_t const& obj) {
 			value -= (static_cast<int64_t>(obj) << FPLUT::PRECISION);
 			return *this;
 		}
 
-		constexpr friend FP operator*(const FP& lhs, const FP& rhs) {
+		constexpr friend FP operator*(FP const& lhs, FP const& rhs) {
 			return lhs.value * rhs.value >> FPLUT::PRECISION;
 		}
 
-		constexpr friend FP operator*(const FP& lhs, const int32_t& rhs) {
+		constexpr friend FP operator*(FP const& lhs, int32_t const& rhs) {
 			return lhs.value * rhs;
 		}
 
-		constexpr friend FP operator*(const int32_t& lhs, const FP& rhs) {
+		constexpr friend FP operator*(int32_t const& lhs, FP const& rhs) {
 			return lhs * rhs.value;
 		}
 
-		constexpr FP operator*=(const FP& obj) {
+		constexpr FP operator*=(FP const& obj) {
 			value *= obj.value >> FPLUT::PRECISION;
 			return *this;
 		}
 
-		constexpr FP operator*=(const int32_t& obj) {
+		constexpr FP operator*=(int32_t const& obj) {
 			value *= obj;
 			return *this;
 		}
 
-		constexpr friend FP operator/(const FP& lhs, const FP& rhs) {
-			return (lhs.value  << FPLUT::PRECISION) / rhs.value;
+		constexpr friend FP operator/(FP const& lhs, FP const& rhs) {
+			return (lhs.value << FPLUT::PRECISION) / rhs.value;
 		}
 
-		constexpr friend FP operator/(const FP& lhs, const int32_t& rhs) {
+		constexpr friend FP operator/(FP const& lhs, int32_t const& rhs) {
 			return lhs.value / rhs;
 		}
 
-		constexpr friend FP operator/(const int32_t& lhs, const FP& rhs) {
-			return (static_cast<int64_t>(lhs) << (2 / FPLUT::PRECISION)) / rhs.value;
+		constexpr friend FP operator/(int32_t const& lhs, FP const& rhs) {
+			return (static_cast<int64_t>(lhs) << (2 * FPLUT::PRECISION)) / rhs.value;
 		}
 
-		constexpr FP operator/=(const FP& obj) {
+		constexpr FP operator/=(FP const& obj) {
 			value = (value << FPLUT::PRECISION) / obj.value;
 			return *this;
 		}
 
-		constexpr FP operator/=(const int32_t& obj) {
+		constexpr FP operator/=(int32_t const& obj) {
 			value /= obj;
 			return *this;
 		}
 
-		constexpr friend FP operator%(const FP& lhs, const FP& rhs) {
+		constexpr friend FP operator%(FP const& lhs, FP const& rhs) {
 			return lhs.value % rhs.value;
 		}
 
-		constexpr friend FP operator%(const FP& lhs, const int32_t& rhs) {
+		constexpr friend FP operator%(FP const& lhs, int32_t const& rhs) {
 			return lhs.value % (static_cast<int64_t>(rhs) << FPLUT::PRECISION);
 		}
 
-		constexpr friend FP operator%(const int32_t& lhs, const FP& rhs) {
+		constexpr friend FP operator%(int32_t const& lhs, FP const& rhs) {
 			return (static_cast<int64_t>(lhs) << FPLUT::PRECISION) % rhs.value;
 		}
 
-		constexpr FP operator%=(const FP& obj) {
+		constexpr FP operator%=(FP const& obj) {
 			value %= obj.value;
 			return *this;
 		}
 
-		constexpr FP operator%=(const int32_t& obj) {
+		constexpr FP operator%=(int32_t const& obj) {
 			value %= (static_cast<int64_t>(obj) << FPLUT::PRECISION);
 			return *this;
 		}
 
-		constexpr friend bool operator<(const FP& lhs, const FP& rhs) {
+		constexpr friend bool operator<(FP const& lhs, FP const& rhs) {
 			return lhs.value < rhs.value;
 		}
 
-		constexpr friend bool operator<(const FP& lhs, const int32_t& rhs) {
+		constexpr friend bool operator<(FP const& lhs, int32_t const& rhs) {
 			return lhs.value < static_cast<int64_t>(rhs) << FPLUT::PRECISION;
 		}
 
-		constexpr friend bool operator<(const int32_t& lhs, const FP& rhs) {
+		constexpr friend bool operator<(int32_t const& lhs, FP const& rhs) {
 			return static_cast<int64_t>(lhs) << FPLUT::PRECISION < rhs.value;
 		}
 
-		constexpr friend bool operator<=(const FP& lhs, const FP& rhs) {
+		constexpr friend bool operator<=(FP const& lhs, FP const& rhs) {
 			return lhs.value <= rhs.value;
 		}
 
-		constexpr friend bool operator<=(const FP& lhs, const int32_t& rhs) {
+		constexpr friend bool operator<=(FP const& lhs, int32_t const& rhs) {
 			return lhs.value <= static_cast<int64_t>(rhs) << FPLUT::PRECISION;
 		}
 
-		constexpr friend bool operator<=(const int32_t& lhs, const FP& rhs) {
+		constexpr friend bool operator<=(int32_t const& lhs, FP const& rhs) {
 			return static_cast<int64_t>(lhs) << FPLUT::PRECISION <= rhs.value;
 		}
 
-		constexpr friend bool operator>(const FP& lhs, const FP& rhs) {
+		constexpr friend bool operator>(FP const& lhs, FP const& rhs) {
 			return lhs.value > rhs.value;
 		}
 
-		constexpr friend bool operator>(const FP& lhs, const int32_t& rhs) {
+		constexpr friend bool operator>(FP const& lhs, int32_t const& rhs) {
 			return lhs.value > static_cast<int64_t>(rhs) << FPLUT::PRECISION;
 		}
 
-		constexpr friend bool operator>(const int32_t& lhs, const FP& rhs) {
+		constexpr friend bool operator>(int32_t const& lhs, FP const& rhs) {
 			return static_cast<int64_t>(lhs) << FPLUT::PRECISION > rhs.value;
 		}
 
-		constexpr friend bool operator>=(const FP& lhs, const FP& rhs) {
+		constexpr friend bool operator>=(FP const& lhs, FP const& rhs) {
 			return lhs.value >= rhs.value;
 		}
 
-		constexpr friend bool operator>=(const FP& lhs, const int32_t& rhs) {
+		constexpr friend bool operator>=(FP const& lhs, int32_t const& rhs) {
 			return lhs.value >= static_cast<int64_t>(rhs) << FPLUT::PRECISION;
 		}
 
-		constexpr friend bool operator>=(const int32_t& lhs, const FP& rhs) {
+		constexpr friend bool operator>=(int32_t const& lhs, FP const& rhs) {
 			return static_cast<int64_t>(lhs) << FPLUT::PRECISION >= rhs.value;
 		}
 
-		constexpr friend bool operator==(const FP& lhs, const FP& rhs) {
+		constexpr friend bool operator==(FP const& lhs, FP const& rhs) {
 			return lhs.value == rhs.value;
 		}
 
-		constexpr friend bool operator==(const FP& lhs, const int32_t& rhs) {
+		constexpr friend bool operator==(FP const& lhs, int32_t const& rhs) {
 			return lhs.value == static_cast<int64_t>(rhs) << FPLUT::PRECISION;
 		}
 
-		constexpr friend bool operator==(const int32_t& lhs, const FP& rhs) {
+		constexpr friend bool operator==(int32_t const& lhs, FP const& rhs) {
 			return static_cast<int64_t>(lhs) << FPLUT::PRECISION == rhs.value;
 		}
 
-		constexpr friend bool operator!=(const FP& lhs, const FP& rhs) {
+		constexpr friend bool operator!=(FP const& lhs, FP const& rhs) {
 			return lhs.value != rhs.value;
 		}
 
-		constexpr friend bool operator!=(const FP& lhs, const int32_t& rhs) {
+		constexpr friend bool operator!=(FP const& lhs, int32_t const& rhs) {
 			return lhs.value != static_cast<int64_t>(rhs) << FPLUT::PRECISION;
 		}
 
-		constexpr friend bool operator!=(const int32_t& lhs, const FP& rhs) {
+		constexpr friend bool operator!=(int32_t const& lhs, FP const& rhs) {
 			return static_cast<int64_t>(lhs) << FPLUT::PRECISION != rhs.value;
 		}
-
 
 	private:
 		int64_t value;
 
-		static constexpr FP parse_integer(const char* str, const char* end, bool* successful) {
+		static constexpr FP parse_integer(char const* str, char const* const end, bool* successful) {
 			int64_t parsed_value = StringUtils::string_to_int64(str, end, successful, 10);
 			return parse(parsed_value);
 		}
 
-		static constexpr FP parse_fraction(const char* str, const char* end, bool* successful) {
-			constexpr size_t READ_SIZE = 5;
-			if (str + READ_SIZE < end) {
-				Logger::error("Fixed point fraction parse will only use the first ", READ_SIZE,
-					" characters of ", std::string_view { str, static_cast<size_t>(end - str) });
-				end = str + READ_SIZE;
+		static constexpr FP parse_fraction(char const* str, char const* end, bool* successful) {
+			char const* const read_end = str + FPLUT::PRECISION;
+			if (read_end < end) end = read_end;
+			uint64_t parsed_value = StringUtils::string_to_uint64(str, end, successful, 10);
+			while (end++ < read_end) {
+				parsed_value *= 10;
 			}
-			int64_t parsed_value = StringUtils::string_to_int64(str, end, successful, 10);
-			return parse_raw(parsed_value * 65536 / 100000);
+			uint64_t decimal = NumberUtils::pow(static_cast<uint64_t>(10), FPLUT::PRECISION);
+			int64_t ret = 0;
+			for (int i = FPLUT::PRECISION - 1; i >= 0; --i) {
+				decimal >>= 1;
+				if (parsed_value > decimal) {
+					parsed_value -= decimal;
+					ret |= 1 << i;
+				}
+			}
+			return ret;
 		}
 	};
 

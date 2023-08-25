@@ -1,5 +1,7 @@
 #pragma once
 
+#include <filesystem>
+
 #include "openvic/pop/Culture.hpp"
 #include "openvic/pop/Religion.hpp"
 
@@ -94,6 +96,7 @@ namespace OpenVic {
 		void lock_pop_types();
 		PopType const* get_pop_type_by_identifier(const std::string_view identifier) const;
 
+		return_t load_pop_type_file(std::filesystem::path const& path, ast::NodeCPtr root);
 		return_t load_pop_into_province(Province& province, ast::NodeCPtr root) const;
 	};
 }
