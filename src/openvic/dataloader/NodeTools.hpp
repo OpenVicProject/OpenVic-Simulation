@@ -2,12 +2,12 @@
 
 #include <map>
 
-#include <openvic-dataloader/v2script/AbstractSyntaxTree.hpp>
-
 #include "openvic/types/Colour.hpp"
-#include "openvic/types/Return.hpp"
 #include "openvic/types/Date.hpp"
+#include "openvic/types/Return.hpp"
 #include "openvic/types/fixed_point/FP.hpp"
+
+#include <openvic-dataloader/v2script/AbstractSyntaxTree.hpp>
 
 namespace OpenVic {
 	namespace ast = ovdl::v2script::ast;

@@ -78,3 +78,15 @@ void ReligionManager::lock_religions() {
 Religion const* ReligionManager::get_religion_by_identifier(const std::string_view identifier) const {
 	return religions.get_item_by_identifier(identifier);
 }
+
+return_t ReligionManager::load_religion_file(ast::NodeCPtr root) {
+
+	// TODO - religion loading
+
+	return_t ret = add_religion_group("test_religion_group");
+	lock_religion_groups();
+	if (add_religion("test_religion", 0xFF0000, get_religion_group_by_identifier("test_religion_group"), 1, false) != SUCCESS)
+		ret = FAILURE;
+	lock_religions();
+	return ret;
+}

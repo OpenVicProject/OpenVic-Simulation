@@ -1,7 +1,7 @@
 #pragma once
 
-#include "openvic/types/IdentifierRegistry.hpp"
 #include "openvic/dataloader/NodeTools.hpp"
+#include "openvic/types/IdentifierRegistry.hpp"
 
 namespace OpenVic {
 
@@ -72,7 +72,7 @@ namespace OpenVic {
 		void lock_cultures();
 		Culture const* get_culture_by_identifier(const std::string_view identifier) const;
 
-		return_t load_graphical_culture_type_file(ast::NodeCPtr node);
-		return_t load_culture_file(ast::NodeCPtr node);
+		return_t load_graphical_culture_type_file(ast::NodeCPtr root);
+		return_t load_culture_file(ast::NodeCPtr root);
 	};
 }

@@ -2,15 +2,15 @@
 #include <limits>
 
 namespace OpenVic::StringUtils {
-	/* The constexpr function 'string_to_int64' will convert a string into a int64 integer value.
-		* The function takes four parameters: the input string (as a pair of pointers marking the start and
-		* end of the string), a bool pointer for reporting success, and the base for numerical conversion.
-		* The base parameter defaults to 10 (decimal), but it can be any value between 2 and 36. If the base
-		* given is 0, it will be set to 16 if the string starts with "0x" or "0X", otherwise 8 if the string
-		* still starts with "0", otherwise 10. The success bool pointer parameter is used to report whether
-		* or not conversion was successful. It can be nullptr if this information is not needed.
-		*/
-	constexpr int64_t string_to_int64(char const* str, const char* end, bool* successful, int base = 10) {
+	/* The constexpr function 'string_to_uint64' will convert a string into a uint64_t integer value.
+	 * The function takes four parameters: the input string (as a pair of pointers marking the start and
+	 * end of the string), a bool pointer for reporting success, and the base for numerical conversion.
+	 * The base parameter defaults to 10 (decimal), but it can be any value between 2 and 36. If the base
+	 * given is 0, it will be set to 16 if the string starts with "0x" or "0X", otherwise 8 if the string
+	 * still starts with "0", otherwise 10. The success bool pointer parameter is used to report whether
+	 * or not conversion was successful. It can be nullptr if this information is not needed.
+	 */
+	constexpr uint64_t string_to_uint64(char const* str, const char* end, bool* successful = nullptr, int base = 10) {
 		if (successful != nullptr) *successful = false;
 
 		// Base value should be between 2 and 36. If it's not, return 0 as an invalid case.
@@ -18,24 +18,14 @@ namespace OpenVic::StringUtils {
 			return 0;
 
 		// The result of the conversion will be stored in this variable.
-		int64_t result = 0;
-		// This flag will be set if the number is negative.
-		bool is_negative = false;
-
-		// Check if there is a sign character.
-		if (*str == '+' || *str == '-') {
-			if (*str == '-')
-				is_negative = true;
-			++str;
-			if (str == end) return 0;
-		}
+		uint64_t result = 0;
 
 		// If base is zero, base is determined by the string prefix.
 		if (base == 0) {
 			if (*str == '0') {
 				if (str + 1 != end && (str[1] == 'x' || str[1] == 'X')) {
 					base = 16; // Hexadecimal.
-					str += 2;  // Skip '0x' or '0X'
+					str += 2; // Skip '0x' or '0X'
 					if (str == end) return 0;
 				} else {
 					base = 8; // Octal.
@@ -69,15 +59,15 @@ namespace OpenVic::StringUtils {
 			}
 
 			// Check for overflow on multiplication
-			if (result > std::numeric_limits<int64_t>::max() / base) {
-				return is_negative ? std::numeric_limits<int64_t>::min() : std::numeric_limits<int64_t>::max();
+			if (result > std::numeric_limits<uint64_t>::max() / base) {
+				return std::numeric_limits<uint64_t>::max();
 			}
 
 			result *= base;
 
 			// Check for overflow on addition
-			if (result > std::numeric_limits<int64_t>::max() - digit) {
-				return is_negative ? std::numeric_limits<int64_t>::min() : std::numeric_limits<int64_t>::max();
+			if (result > std::numeric_limits<uint64_t>::max() - digit) {
+				return std::numeric_limits<uint64_t>::max();
 			}
 
 			result += digit;
@@ -87,7 +77,42 @@ namespace OpenVic::StringUtils {
 		// set *successful to true (if not it is already false).
 		if (successful != nullptr && str == end) *successful = true;
 
-		// Return the result. If the number was negative, the result is negated.
-		return is_negative ? -result : result;
+		return result;
+	}
+
+	constexpr uint64_t string_to_uint64(char const* str, size_t length, bool* successful = nullptr, int base = 10) {
+		return string_to_uint64(str, str + length, successful, base);
+	}
+
+	constexpr int64_t string_to_int64(char const* str, const char* end, bool* successful = nullptr, int base = 10) {
+		if (successful != nullptr) *successful = false;
+
+		if (str == nullptr || end <= str) return 0;
+
+		// This flag will be set if the number is negative.
+		bool is_negative = false;
+
+		// Check if there is a sign character.
+		if (*str == '+' || *str == '-') {
+			if (*str == '-')
+				is_negative = true;
+			++str;
+			if (str == end) return 0;
+		}
+
+		const uint64_t result = string_to_uint64(str, end, successful, base);
+		if (!is_negative) {
+			if (result >= std::numeric_limits<int64_t>::max())
+				return std::numeric_limits<int64_t>::max();
+			return result;
+		} else {
+			if (result > std::numeric_limits<int64_t>::max())
+				return std::numeric_limits<int64_t>::min();
+			return -result;
+		}
+	}
+
+	constexpr int64_t string_to_int64(char const* str, size_t length, bool* successful = nullptr, int base = 10) {
+		return string_to_int64(str, str + length, successful, base);
 	}
 }

@@ -1,7 +1,7 @@
 #pragma once
 
-#include "openvic/pop/Pop.hpp"
 #include "openvic/map/Building.hpp"
+#include "openvic/pop/Pop.hpp"
 
 namespace OpenVic {
 	struct Map;

@@ -66,11 +66,9 @@ return_t NodeTools::expect_bool(ast::NodeCPtr node, std::function<return_t(bool)
 
 return_t NodeTools::expect_int(ast::NodeCPtr node, std::function<return_t(int64_t)> callback) {
 	return expect_identifier(node, [callback](std::string_view identifier) -> return_t {
-		int64_t val;
-		char const* const start = identifier.data();
-		char const* const end = start + identifier.size();
-		const std::from_chars_result result = std::from_chars(start, end, val);
-		if (result.ec == std::errc{} && result.ptr == end) {
+		bool successful = false;
+		const int64_t val = StringUtils::string_to_int64(identifier.data(), identifier.length(), &successful, 10);
+		if (successful) {
 			return callback(val);
 		}
 		Logger::error("Invalid int identifier text: ", identifier);
@@ -80,10 +78,9 @@ return_t NodeTools::expect_int(ast::NodeCPtr node, std::function<return_t(int64_
 
 return_t NodeTools::expect_uint(ast::NodeCPtr node, std::function<return_t(uint64_t)> callback) {
 	return expect_identifier(node, [callback](std::string_view identifier) -> return_t {
-		uint64_t val;
-		char const* identifier_end = identifier.data() + identifier.size();
-		const std::from_chars_result result = std::from_chars(identifier.data(), identifier_end, val);
-		if (result.ec == std::errc{} && result.ptr == identifier_end) {
+		bool successful = false;
+		const uint64_t val = StringUtils::string_to_uint64(identifier.data(), identifier.length(), &successful, 10);
+		if (successful) {
 			return callback(val);
 		}
 		Logger::error("Invalid uint identifier text: ", identifier);
@@ -94,7 +91,7 @@ return_t NodeTools::expect_uint(ast::NodeCPtr node, std::function<return_t(uint6
 return_t NodeTools::expect_fixed_point(ast::NodeCPtr node, std::function<return_t(FP)> callback) {
 	return expect_identifier(node, [callback](std::string_view identifier) -> return_t {
 		bool successful = false;
-		FP val = FP::parse(identifier.data(), identifier.length(), &successful);
+		const FP val = FP::parse(identifier.data(), identifier.length(), &successful);
 		if (successful) {
 			return callback(val);
 		}
@@ -127,7 +124,7 @@ return_t NodeTools::expect_colour(ast::NodeCPtr node, std::function<return_t(col
 return_t NodeTools::expect_date(ast::NodeCPtr node, std::function<return_t(Date)> callback) {
 	return expect_identifier(node, [callback](std::string_view identifier) -> return_t {
 		bool successful = false;
-		Date date = Date::from_string(identifier, &successful);
+		const Date date = Date::from_string(identifier, &successful);
 		if (successful) {
 			return callback(date);
 		}

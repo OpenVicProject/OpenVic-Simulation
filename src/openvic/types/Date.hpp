@@ -33,6 +33,7 @@ namespace OpenVic {
 
 		explicit operator day_t() const;
 		explicit operator double() const;
+		std::string to_string() const;
 		explicit operator std::string() const;
 	};
 	std::ostream& operator<<(std::ostream& out, Timespan const& timespan);
@@ -82,6 +83,7 @@ namespace OpenVic {
 		Date& operator++();
 		Date operator++(int);
 
+		std::string to_string() const;
 		explicit operator std::string() const;
 		// Parsed from string of the form YYYY.MM.DD
 		static Date from_string(const std::string_view date, bool* successful = nullptr);

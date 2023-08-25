@@ -6,6 +6,7 @@
 #include <charconv>
 
 #include "openvic/utility/Logger.hpp"
+#include "openvic/utility/StringUtils.hpp"
 
 using namespace OpenVic;
 
@@ -55,12 +56,16 @@ Timespan::operator double() const {
 	return days;
 }
 
-Timespan::operator std::string() const {
+std::string Timespan::to_string() const {
 	return std::to_string(days);
 }
 
+Timespan::operator std::string() const {
+	return to_string();
+}
+
 std::ostream& OpenVic::operator<<(std::ostream& out, Timespan const& timespan) {
-	return out << static_cast<std::string>(timespan);
+	return out << timespan.to_string();
 }
 
 Timespan Date::_dateToTimespan(year_t year, month_t month, day_t day) {
@@ -146,10 +151,14 @@ Date Date::operator++(int) {
 	return old;
 }
 
-Date::operator std::string() const {
+std::string Date::to_string() const {
 	std::stringstream ss;
 	ss << *this;
 	return ss.str();
+}
+
+Date::operator std::string() const {
+	return to_string();
 }
 
 std::ostream& OpenVic::operator<<(std::ostream& out, Date const& date) {
@@ -170,11 +179,9 @@ Date Date::from_string(const std::string_view date, bool* successful) {
 		return {};
 	}
 
-	int val = 0;
-	char const* start = date.data();
-	char const* end = start + first_pos;
-	std::from_chars_result result = std::from_chars(start, end, val);
-	if (result.ec != std::errc{} || result.ptr != end || val < 0 || val >= 1 << (8 * sizeof(year_t))) {
+	bool sub_successful = false;
+	uint64_t val = StringUtils::string_to_uint64(date.data(), first_pos, &sub_successful, 10);
+	if (!sub_successful || val >= 1 << (8 * sizeof(year_t))) {
 		Logger::error("Failed to read year: ", date);
 		if (successful != nullptr) *successful = false;
 		return {};
@@ -188,14 +195,13 @@ Date Date::from_string(const std::string_view date, bool* successful) {
 			while (second_pos < date.length() && std::isdigit(date[second_pos])) {
 				second_pos++;
 			}
-			if (first_pos == second_pos) {
+			if (first_pos >= second_pos) {
 				Logger::error("Failed to find month digits in date: ", date);
 				if (successful != nullptr) *successful = false;
 			} else {
-				start = date.data() + first_pos;
-				end = date.data() + second_pos;
-				result = std::from_chars(start, end, val);
-				if (result.ec != std::errc{} || result.ptr != end || val < 1 || val > MONTHS_IN_YEAR) {
+				sub_successful = false;
+				val = StringUtils::string_to_uint64(date.data() + first_pos, second_pos - first_pos, &sub_successful, 10);
+				if (!sub_successful || val < 1 || val > MONTHS_IN_YEAR) {
 					Logger::error("Failed to read month: ", date);
 					if (successful != nullptr) *successful = false;
 				} else {
@@ -206,14 +212,13 @@ Date Date::from_string(const std::string_view date, bool* successful) {
 							while (third_pos < date.length() && std::isdigit(date[third_pos])) {
 								third_pos++;
 							}
-							if (second_pos == third_pos) {
+							if (second_pos >= third_pos) {
 								Logger::error("Failed to find day digits in date: ", date);
 								if (successful != nullptr) *successful = false;
 							} else {
-								start = date.data() + second_pos;
-								end = date.data() + third_pos;
-								result = std::from_chars(start, end, val);
-								if (result.ec != std::errc{} || result.ptr != end || val < 1 || val > DAYS_IN_MONTH[month - 1]) {
+								sub_successful = false;
+								val = StringUtils::string_to_uint64(date.data() + second_pos, third_pos - second_pos, &sub_successful);
+								if (!sub_successful || val < 1 || val > DAYS_IN_MONTH[month - 1]) {
 									Logger::error("Failed to read day: ", date);
 									if (successful != nullptr) *successful = false;
 								} else {

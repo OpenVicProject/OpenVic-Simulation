@@ -116,6 +116,9 @@ namespace OpenVic {
 		size_t get_item_count() const {
 			return items.size();
 		}
+		bool empty() const {
+			return items.empty();
+		}
 		T* get_item_by_identifier(const std::string_view identifier) {
 			const identifier_index_map_t::const_iterator it = identifier_index_map.find(identifier);
 			if (it != identifier_index_map.end()) return &items[it->second];

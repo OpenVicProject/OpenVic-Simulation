@@ -156,7 +156,7 @@ return_t CultureManager::load_culture_file(ast::NodeCPtr root) {
 		return NodeTools::expect_dictionary(culture_group_value, [this, culture_group](std::string_view key, ast::NodeCPtr value) -> return_t {
 			if (key == "leader" || key == "unit" || key == "union" || key == "is_overseas") return SUCCESS;
 
-			colour_t colour = NULL_COLOUR;	
+			colour_t colour = NULL_COLOUR;
 			Culture::name_list_t first_names, last_names;
 
 			static const std::function<return_t(Culture::name_list_t&, ast::NodeCPtr)> read_name_list = [](Culture::name_list_t& names, ast::NodeCPtr node) -> return_t {
