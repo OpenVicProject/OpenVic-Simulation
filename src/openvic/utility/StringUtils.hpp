@@ -1,5 +1,6 @@
 #include <cstdint>
 #include <limits>
+#include <string_view>
 
 namespace OpenVic::StringUtils {
 	/* The constexpr function 'string_to_uint64' will convert a string into a uint64_t integer value.
@@ -10,7 +11,7 @@ namespace OpenVic::StringUtils {
 	 * still starts with "0", otherwise 10. The success bool pointer parameter is used to report whether
 	 * or not conversion was successful. It can be nullptr if this information is not needed.
 	 */
-	constexpr uint64_t string_to_uint64(char const* str, const char* end, bool* successful = nullptr, int base = 10) {
+	constexpr uint64_t string_to_uint64(char const* str, const char* const end, bool* successful = nullptr, int base = 10) {
 		if (successful != nullptr) *successful = false;
 
 		// Base value should be between 2 and 36. If it's not, return 0 as an invalid case.
@@ -84,7 +85,11 @@ namespace OpenVic::StringUtils {
 		return string_to_uint64(str, str + length, successful, base);
 	}
 
-	constexpr int64_t string_to_int64(char const* str, const char* end, bool* successful = nullptr, int base = 10) {
+	inline uint64_t string_to_uint64(const std::string_view str, bool* successful = nullptr, int base = 10) {
+		return string_to_uint64(str.data(), str.length(), successful, base);
+	}
+
+	constexpr int64_t string_to_int64(char const* str, const char* const end, bool* successful = nullptr, int base = 10) {
 		if (successful != nullptr) *successful = false;
 
 		if (str == nullptr || end <= str) return 0;
@@ -114,5 +119,9 @@ namespace OpenVic::StringUtils {
 
 	constexpr int64_t string_to_int64(char const* str, size_t length, bool* successful = nullptr, int base = 10) {
 		return string_to_int64(str, str + length, successful, base);
+	}
+
+	inline int64_t string_to_int64(const std::string_view str, bool* successful = nullptr, int base = 10) {
+		return string_to_int64(str.data(), str.length(), successful, base);
 	}
 }

@@ -265,7 +265,7 @@ namespace OpenVic {
 		}
 
 		// Deterministic
-		static constexpr FP parse(char const* str, char const* end, bool* successful = nullptr) {
+		static constexpr FP parse(char const* str, char const* const end, bool* successful = nullptr) {
 			if (successful != nullptr) *successful = false;
 
 			if (str == nullptr || str >= end) {
@@ -552,7 +552,7 @@ namespace OpenVic {
 	private:
 		int64_t value;
 
-		static constexpr FP parse_integer(char const* str, char const* end, bool* successful) {
+		static constexpr FP parse_integer(char const* str, char const* const end, bool* successful) {
 			int64_t parsed_value = StringUtils::string_to_int64(str, end, successful, 10);
 			return parse(parsed_value);
 		}

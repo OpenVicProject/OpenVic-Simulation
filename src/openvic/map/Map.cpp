@@ -31,7 +31,7 @@ Map::Map() : provinces { "provinces" },
 			 mapmodes { "mapmodes" } {}
 
 return_t Map::add_province(const std::string_view identifier, colour_t colour) {
-	if (provinces.get_item_count() >= Province::MAX_INDEX) {
+	if (provinces.size() >= Province::MAX_INDEX) {
 		Logger::error("The map's province list is full - there can be at most ", Province::MAX_INDEX, " provinces");
 		return FAILURE;
 	}
@@ -43,7 +43,7 @@ return_t Map::add_province(const std::string_view identifier, colour_t colour) {
 		Logger::error("Invalid province colour for ", identifier, ": ", Province::colour_to_hex_string(colour));
 		return FAILURE;
 	}
-	Province new_province { identifier, colour, static_cast<Province::index_t>(provinces.get_item_count() + 1) };
+	Province new_province { identifier, colour, static_cast<Province::index_t>(provinces.size() + 1) };
 	const Province::index_t index = get_index_from_colour(colour);
 	if (index != Province::NULL_INDEX) {
 		Logger::error("Duplicate province colours: ", get_province_by_index(index)->to_string(), " and ", new_province.to_string());
@@ -101,7 +101,7 @@ return_t Map::add_region(const std::string_view identifier, std::vector<std::str
 				size_t other_region_index = reinterpret_cast<size_t>(province->get_region());
 				if (other_region_index != 0) {
 					other_region_index--;
-					if (other_region_index < regions.get_item_count())
+					if (other_region_index < regions.size())
 						Logger::error("Cannot add province ", province_identifier, " to region ", identifier, " - it is already part of ", regions.get_item_by_index(other_region_index)->get_identifier());
 					else
 						Logger::error("Cannot add province ", province_identifier, " to region ", identifier, " - it is already part of an unknown region with index ", other_region_index);
@@ -124,7 +124,7 @@ return_t Map::add_region(const std::string_view identifier, std::vector<std::str
 
 	// Used to detect provinces listed in multiple regions, will
 	// be corrected once regions is stable (i.e. lock_regions).
-	Region* tmp_region_index = reinterpret_cast<Region*>(regions.get_item_count());
+	Region* tmp_region_index = reinterpret_cast<Region*>(regions.size());
 	for (Province* province : new_region.get_provinces())
 		province->region = tmp_region_index;
 	if (regions.add_item(std::move(new_region)) != SUCCESS) ret = FAILURE;
@@ -139,7 +139,7 @@ void Map::lock_regions() {
 }
 
 size_t Map::get_province_count() const {
-	return provinces.get_item_count();
+	return provinces.size();
 }
 
 Province* Map::get_province_by_index(Province::index_t index) {
@@ -225,7 +225,7 @@ return_t Map::generate_province_shape_image(size_t new_width, size_t new_height,
 	height = new_height;
 	province_shape_image.resize(width * height);
 
-	std::vector<bool> province_checklist(provinces.get_item_count());
+	std::vector<bool> province_checklist(provinces.size());
 	return_t ret = SUCCESS;
 	std::unordered_set<colour_t> unrecognised_province_colours, unrecognised_terrain_colours;
 
@@ -324,7 +324,7 @@ return_t Map::add_mapmode(const std::string_view identifier, Mapmode::colour_fun
 		Logger::error("Mapmode colour function is null for identifier: ", identifier);
 		return FAILURE;
 	}
-	return mapmodes.add_item({ identifier, mapmodes.get_item_count(), colour_func });
+	return mapmodes.add_item({ identifier, mapmodes.size(), colour_func });
 }
 
 void Map::lock_mapmodes() {
@@ -332,7 +332,7 @@ void Map::lock_mapmodes() {
 }
 
 size_t Map::get_mapmode_count() const {
-	return mapmodes.get_item_count();
+	return mapmodes.size();
 }
 
 Mapmode const* Map::get_mapmode_by_index(size_t index) const {
@@ -354,7 +354,7 @@ return_t Map::generate_mapmode_colours(Mapmode::index_t index, uint8_t* target) 
 		// Not an error if mapmodes haven't yet been loaded,
 		// e.g. if we want to allocate the province colour
 		// texture before mapmodes are loaded.
-		if (!(mapmodes.get_item_count() == 0 && index == 0)) {
+		if (!(mapmodes.size() == 0 && index == 0)) {
 			Logger::error("Invalid mapmode index: ", index);
 			ret = FAILURE;
 		}

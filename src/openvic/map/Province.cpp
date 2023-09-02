@@ -91,6 +91,10 @@ distribution_t const& Province::get_culture_distribution() const {
 	return cultures;
 }
 
+distribution_t const& Province::get_religion_distribution() const {
+	return religions;
+}
+
 /* REQUIREMENTS:
  * MAP-65
  */
@@ -98,10 +102,12 @@ void Province::update_pops() {
 	total_population = 0;
 	pop_types.clear();
 	cultures.clear();
+	religions.clear();
 	for (Pop const& pop : pops) {
 		total_population += pop.get_size();
 		pop_types[&pop.get_type()] += pop.get_size();
 		cultures[&pop.get_culture()] += pop.get_size();
+		religions[&pop.get_religion()] += pop.get_size();
 	}
 }
 

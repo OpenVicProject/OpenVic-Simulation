@@ -51,6 +51,8 @@ namespace OpenVic {
 		static Timespan::day_t const* DAYS_UP_TO_MONTH;
 		static month_t const* MONTH_FROM_DAY_IN_YEAR;
 
+		static constexpr char SEPARATOR_CHARACTER = '.';
+
 	private:
 		// Number of days since Jan 1st, Year 0
 		Timespan timespan;
@@ -86,7 +88,9 @@ namespace OpenVic {
 		std::string to_string() const;
 		explicit operator std::string() const;
 		// Parsed from string of the form YYYY.MM.DD
-		static Date from_string(const std::string_view date, bool* successful = nullptr);
+		static Date from_string(char const* str, char const* end, bool* successful = nullptr);
+		static Date from_string(char const* str, size_t length, bool* successful = nullptr);
+		static Date from_string(const std::string_view str, bool* successful = nullptr);
 	};
 	std::ostream& operator<<(std::ostream& out, Date const& date);
 }

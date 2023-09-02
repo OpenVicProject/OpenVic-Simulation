@@ -165,8 +165,7 @@ return_t PopManager::load_pop_into_province(Province& province, ast::NodeCPtr ro
 						size = val;
 						return SUCCESS;
 					} else {
-						Logger::error("Invalid pop size: ", val, " (setting to 1 instead)");
-						size = 1;
+						Logger::error("Invalid pop size: ", val);
 						return FAILURE;
 					}
 				});
@@ -179,7 +178,7 @@ return_t PopManager::load_pop_into_province(Province& province, ast::NodeCPtr ro
 	if (type != nullptr && culture != nullptr && religion != nullptr && size > 0) {
 		if (province.add_pop({ *type, *culture, *religion, size }) != SUCCESS) ret = FAILURE;
 	} else {
-		Logger::error("Some pop arguments are missing: type = ", type, ", culture = ", culture, ", religion = ", religion, ", size = ", size);
+		Logger::error("Some pop arguments are invalid: type = ", type, ", culture = ", culture, ", religion = ", religion, ", size = ", size);
 		ret = FAILURE;
 	}
 	return ret;

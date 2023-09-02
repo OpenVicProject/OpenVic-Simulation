@@ -1,10 +1,10 @@
 #include "Dataloader.hpp"
 
-#include "openvic//GameManager.hpp"
-#include "openvic/dataloader/NodeTools.hpp"
+#include "openvic/GameManager.hpp"
 #include "openvic/utility/Logger.hpp"
 
 #include <openvic-dataloader/detail/CallbackOStream.hpp>
+#include <openvic-dataloader/v2script/Parser.hpp>
 
 using namespace OpenVic;
 using namespace ovdl::v2script;
@@ -92,7 +92,7 @@ return_t Dataloader::apply_to_files_in_dir(std::filesystem::path const& path,
 	return ret;
 }
 
-static Parser parse_defines(std::filesystem::path const& path) {
+Parser Dataloader::parse_defines(std::filesystem::path const& path) {
 	Parser parser;
 	std::string buffer;
 	auto error_log_stream = ovdl::detail::CallbackStream {
@@ -112,8 +112,8 @@ static Parser parse_defines(std::filesystem::path const& path) {
 		Logger::error("Parser load errors:\n\n", buffer, "\n");
 		buffer.clear();
 	}
-	if (parser.has_fatal_error() || parser.has_error() || parser.has_warning()) {
-		Logger::error("Parser warnings/errors while loading ", path);
+	if (parser.has_fatal_error() || parser.has_error()) {
+		Logger::error("Parser errors while loading ", path);
 		return parser;
 	}
 	parser.simple_parse();
@@ -121,13 +121,30 @@ static Parser parse_defines(std::filesystem::path const& path) {
 		Logger::error("Parser parse errors:\n\n", buffer, "\n");
 		buffer.clear();
 	}
-	if (parser.has_fatal_error() || parser.has_error() || parser.has_warning()) {
-		Logger::error("Parser warnings/errors while parsing ", path);
+	if (parser.has_fatal_error() || parser.has_error()) {
+		Logger::error("Parser errors while parsing ", path);
 	}
 	return parser;
 }
 
+Parser Dataloader::parse_defines_lookup(std::filesystem::path const& path) const {
+	return parse_defines(lookup_file(path));
+}
+
+return_t Dataloader::_load_pop_types(PopManager& pop_manager, std::filesystem::path const& pop_type_directory) const {
+	return_t ret = SUCCESS;
+	if (apply_to_files_in_dir(pop_type_directory, [&pop_manager](std::filesystem::path const& file) -> return_t {
+		return pop_manager.load_pop_type_file(file, parse_defines(file).get_file_node());
+	}) != SUCCESS) {
+		Logger::error("Failed to load pop types!");
+		ret = FAILURE;
+	}
+	pop_manager.lock_pop_types();
+	return ret;
+}
+
 return_t Dataloader::load_defines(GameManager& game_manager) const {
+	static const std::filesystem::path good_file = "common/goods.txt";
 	static const std::filesystem::path pop_type_directory = "poptypes";
 	static const std::filesystem::path graphical_culture_type_file = "common/graphicalculturetype.txt";
 	static const std::filesystem::path culture_file = "common/cultures.txt";
@@ -135,25 +152,23 @@ return_t Dataloader::load_defines(GameManager& game_manager) const {
 
 	return_t ret = SUCCESS;
 
-	if (apply_to_files_in_dir(pop_type_directory, [&game_manager](std::filesystem::path const& file) -> return_t {
-		return game_manager.pop_manager.load_pop_type_file(file, parse_defines(file).get_file_node());
-	}) != SUCCESS) {
+	if (game_manager.good_manager.load_good_file(parse_defines_lookup(good_file).get_file_node()) != SUCCESS) {
+		Logger::error("Failed to load goods!");
+		ret = FAILURE;
+	}
+	if (_load_pop_types(game_manager.pop_manager, pop_type_directory) != SUCCESS) {
 		Logger::error("Failed to load pop types!");
 		ret = FAILURE;
 	}
-	game_manager.pop_manager.lock_pop_types();
-	if (game_manager.pop_manager.culture_manager.load_graphical_culture_type_file(parse_defines(
-		lookup_file(graphical_culture_type_file)).get_file_node()) != SUCCESS) {
+	if (game_manager.pop_manager.culture_manager.load_graphical_culture_type_file(parse_defines_lookup(graphical_culture_type_file).get_file_node()) != SUCCESS) {
 		Logger::error("Failed to load graphical culture types!");
 		ret = FAILURE;
 	}
-	if (game_manager.pop_manager.culture_manager.load_culture_file(parse_defines(
-		lookup_file(culture_file)).get_file_node()) != SUCCESS) {
+	if (game_manager.pop_manager.culture_manager.load_culture_file(parse_defines_lookup(culture_file).get_file_node()) != SUCCESS) {
 		Logger::error("Failed to load cultures!");
 		ret = FAILURE;
 	}
-	if (game_manager.pop_manager.religion_manager.load_religion_file(parse_defines(
-		lookup_file(religion_file)).get_file_node()) != SUCCESS) {
+	if (game_manager.pop_manager.religion_manager.load_religion_file(parse_defines_lookup(religion_file).get_file_node()) != SUCCESS) {
 		Logger::error("Failed to load religions!");
 		ret = FAILURE;
 	}

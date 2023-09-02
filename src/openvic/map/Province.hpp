@@ -30,7 +30,7 @@ namespace OpenVic {
 
 		std::vector<Pop> pops;
 		Pop::pop_size_t total_population;
-		distribution_t pop_types, cultures;
+		distribution_t pop_types, cultures, religions;
 
 		Province(const std::string_view new_identifier, colour_t new_colour, index_t new_index);
 
@@ -55,6 +55,7 @@ namespace OpenVic {
 		Pop::pop_size_t get_total_population() const;
 		distribution_t const& get_pop_type_distribution() const;
 		distribution_t const& get_culture_distribution() const;
+		distribution_t const& get_religion_distribution() const;
 		void update_pops();
 
 		void update_state(Date const& today);

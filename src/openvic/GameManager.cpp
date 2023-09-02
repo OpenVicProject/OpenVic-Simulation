@@ -103,19 +103,14 @@ return_t GameManager::load_hardcoded_defines() {
 				return HIGH_ALPHA_VALUE | (fraction_to_colour_byte(province.get_total_population(), map.get_highest_province_population() + 1, 0.1f, 1.0f) << 8);
 			} },
 		{ "mapmode_culture",
-			// TODO - use std::max_element and maybe change distribution_t to be an ordered std::map
 			[](Map const& map, Province const& province) -> colour_t {
-				distribution_t const& cultures = province.get_culture_distribution();
-				if (!cultures.empty()) {
-					// This breaks if replaced with distribution_t::value_type, something
-					// about operator=(volatile const&) being deleted.
-					std::pair<HasIdentifierAndColour const*, float> culture = *cultures.begin();
-					for (distribution_t::value_type const p : cultures) {
-						if (p.second > culture.second) culture = p;
-					}
-					return HIGH_ALPHA_VALUE | culture.first->get_colour();
-				}
-				return NULL_COLOUR;
+				HasIdentifierAndColour const* largest = get_largest_item(province.get_culture_distribution()).first;
+				return largest != nullptr ? HIGH_ALPHA_VALUE | largest->get_colour() : NULL_COLOUR;
+			} },
+		{ "mapmode_religion",
+			[](Map const& map, Province const& province) -> colour_t {
+				HasIdentifierAndColour const* largest = get_largest_item(province.get_religion_distribution()).first;
+				return largest != nullptr ? HIGH_ALPHA_VALUE | largest->get_colour() : NULL_COLOUR;
 			} }
 	};
 	for (mapmode_t const& mapmode : mapmodes)

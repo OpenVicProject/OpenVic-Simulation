@@ -64,7 +64,9 @@ namespace OpenVic {
 		HasIdentifierAndColour& operator=(HasIdentifierAndColour&&) = delete;
 	};
 
-	using distribution_t = std::unordered_map<HasIdentifierAndColour const*, float>;
+	using distribution_t = std::map<HasIdentifierAndColour const*, float>;
+
+	distribution_t::value_type get_largest_item(distribution_t const& dist);
 
 	/*
 	 * Template for a list of objects with unique string identifiers that can
@@ -102,7 +104,7 @@ namespace OpenVic {
 				Logger::error("Failed to lock ", name, " registry - already locked!");
 			} else {
 				locked = true;
-				if (log) Logger::info("Locked ", name, " registry after registering ", get_item_count(), " items");
+				if (log) Logger::info("Locked ", name, " registry after registering ", size(), " items");
 			}
 		}
 		bool is_locked() const {
@@ -113,11 +115,18 @@ namespace OpenVic {
 			items.clear();
 			locked = false;
 		}
-		size_t get_item_count() const {
+		size_t size() const {
 			return items.size();
 		}
 		bool empty() const {
 			return items.empty();
+		}
+		void reserve(size_t size) {
+			if (locked) {
+				Logger::error("Failed to reserve space for ", size, " items in ", name, " registry - already locked!");
+			} else {
+				items.reserve(size);
+			}
 		}
 		T* get_item_by_identifier(const std::string_view identifier) {
 			const identifier_index_map_t::const_iterator it = identifier_index_map.find(identifier);

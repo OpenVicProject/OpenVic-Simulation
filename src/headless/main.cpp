@@ -7,7 +7,7 @@
 using namespace OpenVic;
 
 static char const* get_program_name(char const* name) {
-	static char const* const missing_name = "<program>";
+	static constexpr char const* missing_name = "<program>";
 	if (name == nullptr) return missing_name;
 	char const* last_separator = name;
 	while (*name != '\0') {
@@ -69,6 +69,8 @@ int main(int argc, char const* argv[]) {
 	const return_t ret = headless_load(roots);
 
 	std::cout << "!!! HEADLESS SIMULATION END !!!" << std::endl;
+
+	std::cout << "\nLoad returned: " << (ret == SUCCESS ? "SUCCESS" : "FAILURE") << std::endl;
 
 	return ret == SUCCESS ? 0 : -1;
 }
