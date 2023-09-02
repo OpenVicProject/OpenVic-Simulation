@@ -8,6 +8,26 @@ GameManager::GameManager(state_updated_func_t state_updated_callback)
 	: clock { [this]() { tick(); }, [this]() { update_state(); } },
 	  state_updated { state_updated_callback } {}
 
+Map* GameManager::get_map() {
+	return &map;
+}
+
+BuildingManager* GameManager::get_building_manager() {
+	return &building_manager;
+}
+
+GoodManager* GameManager::get_good_manager() {
+	return &good_manager;
+}
+
+PopManager* GameManager::get_pop_manager() {
+	return &pop_manager;
+}
+
+GameAdvancementHook* GameManager::get_game_advancement_hook() {
+	return &clock;
+}
+
 void GameManager::set_needs_update() {
 	needs_update = true;
 }
@@ -61,7 +81,7 @@ return_t GameManager::load_hardcoded_defines() {
 	const std::vector<mapmode_t> mapmodes {
 		{ "mapmode_terrain",
 			[](Map const&, Province const& province) -> colour_t {
-				return LOW_ALPHA_VALUE | (province.is_water() ? 0x4287F5 : 0x0D7017);
+				return LOW_ALPHA_VALUE | (province.is_water() ? 0x4287F5 : 0x0D7017);	// Comment what colours these actually are 
 			} },
 		{ "mapmode_province",
 			[](Map const&, Province const& province) -> colour_t {
@@ -120,7 +140,7 @@ return_t GameManager::load_hardcoded_defines() {
 
 	using building_type_t = std::tuple<std::string, Building::level_t, Timespan>;
 	const std::vector<building_type_t> building_types {
-		{ "building_fort", 4, 8 }, { "building_naval_base", 6, 15 }, { "building_railroad", 5, 10 }
+		{ "building_fort", 4, 8 }, { "building_naval_base", 6, 15 }, { "building_railroad", 5, 10 }	// Move this to building.hpp
 	};
 	for (building_type_t const& type : building_types)
 		if (building_manager.add_building_type(std::get<0>(type), std::get<1>(type), std::get<2>(type)) != SUCCESS)

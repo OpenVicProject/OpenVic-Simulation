@@ -1,4 +1,12 @@
+#pragma once
 
-class TestScript {
+namespace OpenVic {
 
-};
+	class TestScript {
+
+		public:
+		TestScript() {
+
+		}
+	};
+}

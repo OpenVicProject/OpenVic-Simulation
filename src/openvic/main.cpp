@@ -1,8 +1,10 @@
 #ifdef OPENVIC_SIM_HEADLESS
 
+#pragma once
 #include <openvic/GameManager.hpp>
 #include <openvic/dataloader/Dataloader.hpp>
 #include <openvic/utility/Logger.hpp>
+#include <openvic/testing/Testing.hpp>
 
 using namespace OpenVic;
 
@@ -43,6 +45,9 @@ static return_t headless_load(std::vector<std::filesystem::path> const& roots) {
 		Logger::error("Failed to load hardcoded defines!");
 		ret = FAILURE;
 	}
+
+	Testing testing = Testing(&game_manager);
+	std::cout << std::endl << "Testing loaded" << std::endl << std::endl;
 
 	return ret;
 }
