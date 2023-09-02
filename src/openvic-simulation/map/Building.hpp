@@ -1,5 +1,6 @@
 #pragma once
 
+#include <string_view>
 #include <vector>
 
 #include "openvic-simulation/types/Date.hpp"
@@ -73,7 +74,7 @@ namespace OpenVic {
 
 	struct BuildingManager {
 	private:
-		IdentifierRegistry<BuildingType> building_types;
+		IdentifierRegistry<BuildingType> building_types;	// TODO: This needs a getter
 
 	public:
 		BuildingManager();

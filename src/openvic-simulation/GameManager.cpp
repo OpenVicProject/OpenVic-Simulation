@@ -10,6 +10,26 @@ GameManager::GameManager(state_updated_func_t state_updated_callback)
 	  clock { [this]() { tick(); }, [this]() { update_state(); } },
 	  state_updated { state_updated_callback } {}
 
+Map* GameManager::get_map() {
+	return &map;
+}
+
+BuildingManager* GameManager::get_building_manager() {
+	return &building_manager;
+}
+
+GoodManager* GameManager::get_good_manager() {
+	return &good_manager;
+}
+
+PopManager* GameManager::get_pop_manager() {
+	return &pop_manager;
+}
+
+GameAdvancementHook* GameManager::get_game_advancement_hook() {
+	return &clock;
+}
+
 void GameManager::set_needs_update() {
 	needs_update = true;
 }
@@ -123,7 +143,7 @@ bool GameManager::load_hardcoded_defines() {
 
 	using building_type_t = std::tuple<std::string, Building::level_t, Timespan>;
 	const std::vector<building_type_t> building_types {
-		{ "building_fort", 4, 8 }, { "building_naval_base", 6, 15 }, { "building_railroad", 5, 10 }
+		{ "building_fort", 4, 8 }, { "building_naval_base", 6, 15 }, { "building_railroad", 5, 10 }	// Move this to building.hpp
 	};
 	for (building_type_t const& type : building_types)
 		ret &= building_manager.add_building_type(std::get<0>(type), std::get<1>(type), std::get<2>(type));
