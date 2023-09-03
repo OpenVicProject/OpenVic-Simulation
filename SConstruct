@@ -232,27 +232,6 @@ env.Append(CPPPATH=[[env.Dir(p) for p in [source_path, include_path]]])
 sources = GlobRecursive("*.cpp", [source_path])
 env.simulation_sources = sources
 
-from glob import glob
-from pathlib import Path
-def remove_extension(file : str):
-    if file.find(".") == -1: return file
-    return file[:file.rindex(".")]
-
-found_one = False
-for path in [source_path]:
-    for obj_file in [file[:-len(".obj")] for file in glob(path + "*.obj", recursive=True)]:
-        found = False
-        for source_file in sources:
-            if remove_extension(str(source_file)) == obj_file:
-                found = True
-                break
-        if not found:
-            if not found_one:
-                found_one = True
-                print("Unassociated intermediate files found...")
-            print("Removing "+obj_file+".obj")
-            os.remove(obj_file+".obj")
-
 suffix = ".{}.{}".format(env["platform"], env["target"])
 if env.dev_build:
     suffix += ".dev"
