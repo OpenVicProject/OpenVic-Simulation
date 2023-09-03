@@ -284,12 +284,13 @@ env["PROGSUFFIX"] = suffix + env["PROGSUFFIX"]
 if env["build_ovsim_headless"]:
     headless_name = "openvic-simulation"
     headless_env = env.Clone()
-    headless_path = ["src/openvic"]
+    headless_path = ["src/headless"]
     headless_env.Append(CPPDEFINES=["OPENVIC_SIM_HEADLESS"])
     headless_env.Append(CPPPATH=[headless_env.Dir(headless_path)])
     headless_env.headless_sources = GlobRecursive("*.cpp", headless_path)
-    #...
-    source=headless_env.headless_sources,
+    if not env["build_ovsim_library"]:
+        headless_env.headless_sources += sources
+    headless_env.headless_sources,
     headless_program = headless_env.Program(
         target=os.path.join(BINDIR, headless_name),
         source=headless_env.headless_sources,
