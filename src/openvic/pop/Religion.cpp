@@ -81,12 +81,46 @@ Religion const* ReligionManager::get_religion_by_identifier(const std::string_vi
 
 return_t ReligionManager::load_religion_file(ast::NodeCPtr root) {
 
-	// TODO - religion loading
-
-	return_t ret = add_religion_group("test_religion_group");
+	return_t ret = NodeTools::expect_dictionary(root, [this](std::string_view key, ast::NodeCPtr value) -> return_t {
+		return_t ret = NodeTools::expect_dictionary_keys(value, {}, true);
+		if (add_religion_group(key) != SUCCESS) ret = FAILURE;
+		return ret;
+	}, true);
 	lock_religion_groups();
-	if (add_religion("test_religion", 0xFF0000, get_religion_group_by_identifier("test_religion_group"), 1, false) != SUCCESS)
-		ret = FAILURE;
+
+	if (NodeTools::expect_dictionary(root, [this](std::string_view religion_group_key, ast::NodeCPtr religion_group_value) -> return_t {
+
+		ReligionGroup const* religion_group = get_religion_group_by_identifier(religion_group_key);
+
+		return NodeTools::expect_dictionary(religion_group_value, [this, religion_group](std::string_view key, ast::NodeCPtr value) -> return_t {
+			colour_t colour = NULL_COLOUR;
+			Religion::icon_t icon = 0;
+			bool pagan = true;
+
+			return_t ret = NodeTools::expect_dictionary_keys(value, {
+				{ "icon", { true, false, [&icon](ast::NodeCPtr node) -> return_t {
+					return NodeTools::expect_int(node, [&icon](Religion::icon_t val) -> return_t {
+						icon = val;
+						return SUCCESS;
+					});
+				} } },
+				{ "color", { true, false, [&colour](ast::NodeCPtr node) -> return_t {
+					return NodeTools::expect_colour(node, [&colour](colour_t val) -> return_t {
+						colour = val;
+						return SUCCESS;
+					});
+				} } },
+				{ "pagan", { false, false, [&pagan](ast::NodeCPtr node) -> return_t {
+				return NodeTools::expect_bool(node, [&pagan](bool val) -> return_t {
+					pagan = val;
+					return SUCCESS;
+				});
+			} } }
+			});
+			if (add_religion(key, colour, religion_group, icon, pagan) != SUCCESS) ret = FAILURE;
+			return ret;
+		});
+	}, true) != SUCCESS) ret = FAILURE;
 	lock_religions();
 	return ret;
 }

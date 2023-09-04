@@ -145,10 +145,10 @@ return_t PopManager::load_pop_type_file(std::filesystem::path const& path, ast::
 return_t PopManager::load_pop_into_province(Province& province, ast::NodeCPtr root) const {
 	static PopType const* type = get_pop_type_by_identifier("test_pop_type");
 	Culture const* culture = nullptr;
-	static Religion const* religion = religion_manager.get_religion_by_identifier("test_religion");
+	Religion const* religion = nullptr;
 	Pop::pop_size_t size = 0;
 
-	return_t ret = NodeTools::expect_assign(root, [this, &culture, &size](std::string_view, ast::NodeCPtr pop_node) -> return_t {
+	return_t ret = NodeTools::expect_assign(root, [this, &culture, &religion, &size](std::string_view, ast::NodeCPtr pop_node) -> return_t {
 		return NodeTools::expect_dictionary_keys(pop_node, {
 			{ "culture", { true, false, [this, &culture](ast::NodeCPtr node) -> return_t {
 				return NodeTools::expect_identifier(node, [&culture, this](std::string_view identifier) -> return_t {
@@ -158,7 +158,14 @@ return_t PopManager::load_pop_into_province(Province& province, ast::NodeCPtr ro
 					return FAILURE;
 				});
 			} } },
-			{ "religion", { true, false, NodeTools::success_callback } },
+			{ "religion", { true, false, [this, &religion](ast::NodeCPtr node) -> return_t {
+				return NodeTools::expect_identifier(node, [&religion, this](std::string_view identifier) -> return_t {
+					religion = religion_manager.get_religion_by_identifier(identifier);
+					if (religion != nullptr) return SUCCESS;
+					Logger::error("Invalid pop religion: ", identifier);
+					return FAILURE;
+				});
+			} } },
 			{ "size", { true, false, [&size](ast::NodeCPtr node) -> return_t {
 				return NodeTools::expect_uint(node, [&size](uint64_t val) -> return_t {
 					if (val > 0) {
