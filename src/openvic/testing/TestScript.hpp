@@ -23,10 +23,11 @@ namespace OpenVic {
 		std::vector<Requirement> get_requirements();
 		Requirement get_requirement_at_index(int index);
 		Requirement get_requirement_by_id(std::string id);
+		std::vector<Requirement> get_passed_requirements();
+		std::vector<Requirement> get_failed_requirements();
 
 		// Setters
 		void set_requirements(std::vector<Requirement> in_requirements);
 		void add_requirement(Requirement req);
-
 	};
 }
