@@ -95,6 +95,8 @@ namespace OpenVic {
 			bool is_artisan, bool is_slave);
 		void lock_pop_types();
 		PopType const* get_pop_type_by_identifier(const std::string_view identifier) const;
+		size_t get_pop_type_count() const;
+		std::vector<PopType> const& get_pop_types() const;
 
 		return_t load_pop_type_file(std::filesystem::path const& path, ast::NodeCPtr root);
 		return_t load_pop_into_province(Province& province, ast::NodeCPtr root) const;

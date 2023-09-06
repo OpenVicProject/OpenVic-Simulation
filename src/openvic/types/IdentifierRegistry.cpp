@@ -1,8 +1,6 @@
 #include "IdentifierRegistry.hpp"
 
 #include <cassert>
-#include <iomanip>
-#include <sstream>
 
 using namespace OpenVic;
 
@@ -21,14 +19,8 @@ HasColour::HasColour(colour_t const new_colour, bool can_be_null) : colour(new_c
 
 colour_t HasColour::get_colour() const { return colour; }
 
-std::string HasColour::colour_to_hex_string(colour_t const colour) {
-	std::ostringstream stream;
-	stream << std::hex << std::setfill('0') << std::setw(6) << colour;
-	return stream.str();
-}
-
 std::string HasColour::colour_to_hex_string() const {
-	return colour_to_hex_string(colour);
+	return OpenVic::colour_to_hex_string(colour);
 }
 
 HasIdentifierAndColour::HasIdentifierAndColour(const std::string_view new_identifier,

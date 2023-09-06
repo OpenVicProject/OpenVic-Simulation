@@ -2,6 +2,9 @@
 
 #include <algorithm>
 #include <cstdint>
+#include <iomanip>
+#include <sstream>
+#include <string>
 
 namespace OpenVic {
 	// Represents a 24-bit RGB integer OR a 32-bit ARGB integer
@@ -23,5 +26,11 @@ namespace OpenVic {
 	}
 	constexpr float colour_byte_to_float(colour_t colour) {
 		return std::clamp(static_cast<float>(colour) / 255.0f, 0.0f, 1.0f);
+	}
+
+	inline std::string colour_to_hex_string(colour_t colour) {
+		std::ostringstream stream;
+		stream << std::hex << std::setfill('0') << std::setw(6) << colour;
+		return stream.str();
 	}
 }

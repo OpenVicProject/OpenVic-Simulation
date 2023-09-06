@@ -45,13 +45,17 @@ namespace OpenVic {
 		void lock_buildings();
 		void reset_buildings();
 		Building const* get_building_by_identifier(const std::string_view identifier) const;
+		size_t get_building_count() const;
 		std::vector<Building> const& get_buildings() const;
 		return_t expand_building(const std::string_view building_type_identifier);
 		Good const* get_rgo() const;
 		std::string to_string() const;
 
+		return_t load_pop_list(PopManager const& pop_manager, ast::NodeCPtr root);
 		return_t add_pop(Pop&& pop);
 		void clear_pops();
+		size_t get_pop_count() const;
+		std::vector<Pop> const& get_pops() const;
 		Pop::pop_size_t get_total_population() const;
 		distribution_t const& get_pop_type_distribution() const;
 		distribution_t const& get_culture_distribution() const;

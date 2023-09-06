@@ -1,22 +1,21 @@
 #pragma once
 
 #include <filesystem>
+#include <functional>
+#include <vector>
 
 #include "openvic/types/Return.hpp"
-
-#include "openvic-dataloader/v2script/Parser.hpp"
 
 namespace OpenVic {
 	struct GameManager;
 	struct PopManager;
+	struct Map;
 
 	class Dataloader {
 		std::vector<std::filesystem::path> roots;
 
-		static ovdl::v2script::Parser parse_defines(std::filesystem::path const& path);
-		ovdl::v2script::Parser parse_defines_lookup(std::filesystem::path const& path) const;
-
 		return_t _load_pop_types(PopManager& pop_manager, std::filesystem::path const& pop_type_directory) const;
+		return_t _load_map_dir(Map& map, std::filesystem::path const& map_directory) const;
 
 	public:
 		Dataloader() = default;

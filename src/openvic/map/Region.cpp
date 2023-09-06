@@ -24,7 +24,7 @@ void ProvinceSet::lock(bool log) {
 		Logger::error("Failed to lock province set - already locked!");
 	} else {
 		locked = true;
-		if (log) Logger::info("Locked province set with ", get_province_count(), " provinces");
+		if (log) Logger::info("Locked province set with ", size(), " provinces");
 	}
 }
 
@@ -37,8 +37,16 @@ void ProvinceSet::reset() {
 	locked = false;
 }
 
-size_t ProvinceSet::get_province_count() const {
+size_t ProvinceSet::size() const {
 	return provinces.size();
+}
+
+void ProvinceSet::reserve(size_t size) {
+	if (locked) {
+		Logger::error("Failed to reserve space for ", size, " items in province set - already locked!");
+	} else {
+		provinces.reserve(size);
+	}
 }
 
 bool ProvinceSet::contains_province(Province const* province) const {

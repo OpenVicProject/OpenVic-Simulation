@@ -3,6 +3,7 @@
 #include <cassert>
 
 using namespace OpenVic;
+using namespace OpenVic::NodeTools;
 
 ReligionGroup::ReligionGroup(const std::string_view new_identifier) : HasIdentifier { new_identifier } {}
 
@@ -47,6 +48,14 @@ ReligionGroup const* ReligionManager::get_religion_group_by_identifier(const std
 	return religion_groups.get_item_by_identifier(identifier);
 }
 
+size_t ReligionManager::get_religion_group_count() const {
+	return religion_groups.size(); 
+}
+
+std::vector<ReligionGroup> const& ReligionManager::get_religion_groups() const {
+	return religion_groups.get_items();
+}
+
 return_t ReligionManager::add_religion(const std::string_view identifier, colour_t colour, ReligionGroup const* group, Religion::icon_t icon, bool pagan) {
 	if (!religion_groups.is_locked()) {
 		Logger::error("Cannot register religions until religion groups are locked!");
@@ -61,7 +70,7 @@ return_t ReligionManager::add_religion(const std::string_view identifier, colour
 		return FAILURE;
 	}
 	if (colour > MAX_COLOUR_RGB) {
-		Logger::error("Invalid religion colour for ", identifier, ": ", Religion::colour_to_hex_string(colour));
+		Logger::error("Invalid religion colour for ", identifier, ": ", colour_to_hex_string(colour));
 		return FAILURE;
 	}
 	if (icon <= 0) {
@@ -79,48 +88,55 @@ Religion const* ReligionManager::get_religion_by_identifier(const std::string_vi
 	return religions.get_item_by_identifier(identifier);
 }
 
+size_t ReligionManager::get_religion_count() const {
+	return religions.size(); 
+}
+
+std::vector<Religion> const& ReligionManager::get_religions() const {
+	return religions.get_items();
+}
+
 return_t ReligionManager::load_religion_file(ast::NodeCPtr root) {
 
-	return_t ret = NodeTools::expect_dictionary(root, [this](std::string_view key, ast::NodeCPtr value) -> return_t {
-		return_t ret = NodeTools::expect_dictionary_keys(value, {}, true);
-		if (add_religion_group(key) != SUCCESS) ret = FAILURE;
-		return ret;
-	}, true);
-	lock_religion_groups();
-
-	if (NodeTools::expect_dictionary(root, [this](std::string_view religion_group_key, ast::NodeCPtr religion_group_value) -> return_t {
-
-		ReligionGroup const* religion_group = get_religion_group_by_identifier(religion_group_key);
-
-		return NodeTools::expect_dictionary(religion_group_value, [this, religion_group](std::string_view key, ast::NodeCPtr value) -> return_t {
-			colour_t colour = NULL_COLOUR;
-			Religion::icon_t icon = 0;
-			bool pagan = true;
-
-			return_t ret = NodeTools::expect_dictionary_keys(value, {
-				{ "icon", { true, false, [&icon](ast::NodeCPtr node) -> return_t {
-					return NodeTools::expect_int(node, [&icon](Religion::icon_t val) -> return_t {
-						icon = val;
-						return SUCCESS;
-					});
-				} } },
-				{ "color", { true, false, [&colour](ast::NodeCPtr node) -> return_t {
-					return NodeTools::expect_colour(node, [&colour](colour_t val) -> return_t {
-						colour = val;
-						return SUCCESS;
-					});
-				} } },
-				{ "pagan", { false, false, [&pagan](ast::NodeCPtr node) -> return_t {
-				return NodeTools::expect_bool(node, [&pagan](bool val) -> return_t {
-					pagan = val;
-					return SUCCESS;
-				});
-			} } }
-			});
-			if (add_religion(key, colour, religion_group, icon, pagan) != SUCCESS) ret = FAILURE;
+	size_t total_expected_religions = 0;
+	return_t ret = expect_dictionary_reserve_length(
+		religion_groups,
+		[this, &total_expected_religions](std::string_view key, ast::NodeCPtr value) -> return_t {
+			return_t ret = expect_list_and_length(
+				[&total_expected_religions](size_t size) -> size_t {
+					total_expected_religions += size;
+					return 0;
+				},
+				success_callback
+			)(value);
+			if (add_religion_group(key) != SUCCESS) ret = FAILURE;
 			return ret;
-		});
-	}, true) != SUCCESS) ret = FAILURE;
+		}
+	)(root);
+	lock_religion_groups();
+	religions.reserve(religions.size() + total_expected_religions);
+	if (expect_dictionary(
+		[this](std::string_view religion_group_key, ast::NodeCPtr religion_group_value) -> return_t {
+
+			ReligionGroup const* religion_group = get_religion_group_by_identifier(religion_group_key);
+
+			return expect_dictionary(
+				[this, religion_group](std::string_view key, ast::NodeCPtr value) -> return_t {
+					colour_t colour = NULL_COLOUR;
+					Religion::icon_t icon = 0;
+					bool pagan = false;
+
+					return_t ret = expect_dictionary_keys(
+						"icon", ONE_EXACTLY, expect_uint(assign_variable_callback_uint("religion icon", icon)),
+						"color", ONE_EXACTLY, expect_colour(assign_variable_callback(colour)),
+						"pagan", ZERO_OR_ONE, expect_bool(assign_variable_callback(pagan))
+					)(value);
+					if (add_religion(key, colour, religion_group, icon, pagan) != SUCCESS) ret = FAILURE;
+					return ret;
+				}
+			)(religion_group_value);
+		}
+	)(root) != SUCCESS) ret = FAILURE;
 	lock_religions();
 	return ret;
 }

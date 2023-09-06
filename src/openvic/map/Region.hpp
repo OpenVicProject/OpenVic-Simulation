@@ -14,7 +14,8 @@ namespace OpenVic {
 		void lock(bool log = false);
 		bool is_locked() const;
 		void reset();
-		size_t get_province_count() const;
+		size_t size() const;
+		void reserve(size_t size);
 		bool contains_province(Province const* province) const;
 		std::vector<Province*> const& get_provinces() const;
 	};

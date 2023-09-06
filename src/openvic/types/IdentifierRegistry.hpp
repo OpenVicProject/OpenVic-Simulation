@@ -1,7 +1,6 @@
 #pragma once
 
 #include <map>
-#include <unordered_map>
 #include <vector>
 
 #include "openvic/types/Colour.hpp"
@@ -46,7 +45,6 @@ namespace OpenVic {
 
 		colour_t get_colour() const;
 		std::string colour_to_hex_string() const;
-		static std::string colour_to_hex_string(colour_t const colour);
 	};
 
 	/*
@@ -74,7 +72,8 @@ namespace OpenVic {
 	 * the type of object that the registry will store, and the second part ensures
 	 * that HasIdentifier is a base class of T.
 	 */
-	template<class T, typename std::enable_if<std::is_base_of<HasIdentifier, T>::value>::type* = nullptr>
+	template<typename T>
+	requires(std::derived_from<T, HasIdentifier>)
 	class IdentifierRegistry {
 		using identifier_index_map_t = std::map<std::string, size_t, std::less<void>>;
 

@@ -7,6 +7,7 @@
 #include "openvic/utility/Logger.hpp"
 
 using namespace OpenVic;
+using namespace OpenVic::NodeTools;
 
 Pop::Pop(PopType const& new_type, Culture const& new_culture, Religion const& new_religion, pop_size_t new_size)
 	: type { new_type },
@@ -107,7 +108,7 @@ return_t PopManager::add_pop_type(const std::string_view identifier, colour_t co
 		return FAILURE;
 	}
 	if (colour > MAX_COLOUR_RGB) {
-		Logger::error("Invalid pop type colour for ", identifier, ": ", PopType::colour_to_hex_string(colour));
+		Logger::error("Invalid pop type colour for ", identifier, ": ", colour_to_hex_string(colour));
 		return FAILURE;
 	}
 	if (sprite <= 0) {
@@ -133,6 +134,14 @@ PopType const* PopManager::get_pop_type_by_identifier(const std::string_view ide
 	return pop_types.get_item_by_identifier(identifier);
 }
 
+size_t PopManager::get_pop_type_count() const {
+	return pop_types.size(); 
+}
+
+std::vector<PopType> const& PopManager::get_pop_types() const {
+	return pop_types.get_items();
+}
+
 return_t PopManager::load_pop_type_file(std::filesystem::path const& path, ast::NodeCPtr root) {
 
 	// TODO - pop type loading
@@ -148,39 +157,33 @@ return_t PopManager::load_pop_into_province(Province& province, ast::NodeCPtr ro
 	Religion const* religion = nullptr;
 	Pop::pop_size_t size = 0;
 
-	return_t ret = NodeTools::expect_assign(root, [this, &culture, &religion, &size](std::string_view, ast::NodeCPtr pop_node) -> return_t {
-		return NodeTools::expect_dictionary_keys(pop_node, {
-			{ "culture", { true, false, [this, &culture](ast::NodeCPtr node) -> return_t {
-				return NodeTools::expect_identifier(node, [&culture, this](std::string_view identifier) -> return_t {
-					culture = culture_manager.get_culture_by_identifier(identifier);
-					if (culture != nullptr) return SUCCESS;
-					Logger::error("Invalid pop culture: ", identifier);
-					return FAILURE;
-				});
-			} } },
-			{ "religion", { true, false, [this, &religion](ast::NodeCPtr node) -> return_t {
-				return NodeTools::expect_identifier(node, [&religion, this](std::string_view identifier) -> return_t {
-					religion = religion_manager.get_religion_by_identifier(identifier);
-					if (religion != nullptr) return SUCCESS;
-					Logger::error("Invalid pop religion: ", identifier);
-					return FAILURE;
-				});
-			} } },
-			{ "size", { true, false, [&size](ast::NodeCPtr node) -> return_t {
-				return NodeTools::expect_uint(node, [&size](uint64_t val) -> return_t {
-					if (val > 0) {
-						size = val;
-						return SUCCESS;
-					} else {
-						Logger::error("Invalid pop size: ", val);
-						return FAILURE;
-					}
-				});
-			} } },
-			{ "militancy", { false, false, NodeTools::success_callback } },
-			{ "rebel_type", { false, false, NodeTools::success_callback } }
-		});
-	});
+	return_t ret = expect_assign(
+		[this, &culture, &religion, &size](std::string_view, ast::NodeCPtr pop_node) -> return_t {
+			return expect_dictionary_keys(
+				"culture", ONE_EXACTLY,
+					expect_identifier(
+						[&culture, this](std::string_view identifier) -> return_t {
+							culture = culture_manager.get_culture_by_identifier(identifier);
+							if (culture != nullptr) return SUCCESS;
+							Logger::error("Invalid pop culture: ", identifier);
+							return FAILURE;
+						}
+					),
+				"religion", ONE_EXACTLY,
+					expect_identifier(
+						[&religion, this](std::string_view identifier) -> return_t {
+							religion = religion_manager.get_religion_by_identifier(identifier);
+							if (religion != nullptr) return SUCCESS;
+							Logger::error("Invalid pop religion: ", identifier);
+							return FAILURE;
+						}
+					),
+				"size", ONE_EXACTLY, expect_uint(assign_variable_callback_uint("pop size", size)),
+				"militancy", ZERO_OR_ONE, success_callback,
+				"rebel_type", ZERO_OR_ONE, success_callback
+			)(pop_node);
+		}
+	)(root);
 
 	if (type != nullptr && culture != nullptr && religion != nullptr && size > 0) {
 		if (province.add_pop({ *type, *culture, *religion, size }) != SUCCESS) ret = FAILURE;

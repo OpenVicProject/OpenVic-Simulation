@@ -3,18 +3,19 @@
 #include <cassert>
 
 using namespace OpenVic;
+using namespace OpenVic::NodeTools;
 
 GoodCategory::GoodCategory(const std::string_view new_identifier) : HasIdentifier { new_identifier } {}
 
 Good::Good(const std::string_view new_identifier, colour_t new_colour, GoodCategory const& new_category, price_t new_base_price,
-	bool new_default_available, bool new_tradeable, bool new_currency, bool new_overseas_maintenance)
+	bool new_available_from_start, bool new_tradeable, bool new_money, bool new_overseas_penalty)
 	: HasIdentifierAndColour { new_identifier, new_colour, true },
 	  category { new_category },
 	  base_price { new_base_price },
-	  default_available { new_default_available },
+	  available_from_start { new_available_from_start },
 	  tradeable { new_tradeable },
-	  currency { new_currency },
-	  overseas_maintenance { new_overseas_maintenance } {
+	  money { new_money },
+	  overseas_penalty { new_overseas_penalty } {
 	assert(base_price > NULL_PRICE);
 }
 
@@ -30,16 +31,28 @@ Good::price_t Good::get_price() const {
 	return price;
 }
 
-bool Good::is_default_available() const {
-	return default_available;
+bool Good::get_available_from_start() const {
+	return available_from_start;
 }
 
-bool Good::is_available() const {
+bool Good::get_available() const {
 	return available;
 }
 
+bool Good::get_tradeable() const {
+	return tradeable;
+}
+
+bool Good::get_money() const {
+	return money;
+}
+
+bool Good::get_overseas_penalty() {
+	return overseas_penalty;
+}
+
 void Good::reset_to_defaults() {
-	available = default_available;
+	available = available_from_start;
 	price = base_price;
 }
 
@@ -61,14 +74,22 @@ GoodCategory const* GoodManager::get_good_category_by_identifier(const std::stri
 	return good_categories.get_item_by_identifier(identifier);
 }
 
+size_t GoodManager::get_good_category_count() const {
+	return good_categories.size();
+}
+
+std::vector<GoodCategory> const& GoodManager::get_good_categories() const {
+	return good_categories.get_items();
+}
+
 return_t GoodManager::add_good(const std::string_view identifier, colour_t colour, GoodCategory const* category,
-	Good::price_t base_price, bool default_available, bool tradeable, bool currency, bool overseas_maintenance) {
+	Good::price_t base_price, bool available_from_start, bool tradeable, bool money, bool overseas_penalty) {
 	if (identifier.empty()) {
 		Logger::error("Invalid good identifier - empty!");
 		return FAILURE;
 	}
 	if (colour > MAX_COLOUR_RGB) {
-		Logger::error("Invalid good colour for ", identifier, ": ", Good::colour_to_hex_string(colour));
+		Logger::error("Invalid good colour for ", identifier, ": ", colour_to_hex_string(colour));
 		return FAILURE;
 	}
 	if (category == nullptr) {
@@ -79,7 +100,7 @@ return_t GoodManager::add_good(const std::string_view identifier, colour_t colou
 		Logger::error("Invalid base price for ", identifier, ": ", base_price);
 		return FAILURE;
 	}
-	return goods.add_item({ identifier, colour, *category, base_price, default_available, tradeable, currency, overseas_maintenance });
+	return goods.add_item({ identifier, colour, *category, base_price, available_from_start, tradeable, money, overseas_penalty });
 }
 
 void GoodManager::lock_goods() {
@@ -108,67 +129,50 @@ void GoodManager::reset_to_defaults() {
 }
 
 return_t GoodManager::load_good_file(ast::NodeCPtr root) {
-    return_t ret = NodeTools::expect_dictionary(root, [this](std::string_view key, ast::NodeCPtr value) -> return_t {
-        return add_good_category(key);
-    }, true);
-    lock_good_categories();
-    if (NodeTools::expect_dictionary(root, [this](std::string_view good_category_key,
-                                                  ast::NodeCPtr good_category_value) -> return_t {
+	size_t total_expected_goods = 0;
+	return_t ret = expect_dictionary_reserve_length(
+		good_categories,
+		[this, &total_expected_goods](std::string_view key, ast::NodeCPtr value) -> return_t {
+			return_t ret = expect_list_and_length(
+				[&total_expected_goods](size_t size) -> size_t {
+					total_expected_goods += size;
+					return 0;
+				},
+				success_callback
+			)(value);
+			if (add_good_category(key) != SUCCESS) ret = FAILURE;
+			return ret;
+		}
+	)(root);
+	lock_good_categories();
+	goods.reserve(goods.size() + total_expected_goods);
+	if (expect_dictionary(
+		[this](std::string_view good_category_key, ast::NodeCPtr good_category_value) -> return_t {
+			GoodCategory const* good_category = get_good_category_by_identifier(good_category_key);
 
-        GoodCategory const *good_category = get_good_category_by_identifier(good_category_key);
+			return expect_dictionary(
+				[this, good_category](std::string_view key, ast::NodeCPtr value) -> return_t {
+					colour_t colour = NULL_COLOUR;
+					Good::price_t base_price;
+					bool available_from_start, tradeable = true;
+					bool money, overseas_penalty = false;
 
-        return NodeTools::expect_dictionary(good_category_value, [this, good_category](std::string_view key,
-                                                                                       ast::NodeCPtr value) -> return_t {
-            colour_t colour = NULL_COLOUR;
-            Good::price_t base_price;
-            bool default_available, tradeable = true;
-            bool currency, overseas_maintenance = false;
-
-            return_t ret = NodeTools::expect_dictionary_keys(value, {
-                    {"color",                {true,  false, [&colour](ast::NodeCPtr node) -> return_t {
-                        return NodeTools::expect_colour(node, [&colour](colour_t val) -> return_t {
-                            colour = val;
-                            return SUCCESS;
-                        });
-                    }}},
-                    {"cost",                 {true,  false, [&base_price](ast::NodeCPtr node) -> return_t {
-                        return NodeTools::expect_fixed_point(node, [&base_price](Good::price_t val) -> return_t {
-                            base_price = val;
-                            return SUCCESS;
-                        });
-                    }}},
-                    {"available_from_start", {false, false, [&default_available](ast::NodeCPtr node) -> return_t {
-                        return NodeTools::expect_bool(node, [&default_available](bool val) -> return_t {
-                            default_available = val;
-                            return SUCCESS;
-                        });
-                    }}},
-                    {"tradeable",            {false, false, [&tradeable](ast::NodeCPtr node) -> return_t {
-                        return NodeTools::expect_bool(node, [&tradeable](bool val) -> return_t {
-                            tradeable = val;
-                            return SUCCESS;
-                        });
-                    }}},
-                    {"money",                {false, false, [&currency](ast::NodeCPtr node) -> return_t {
-                        return NodeTools::expect_bool(node, [&currency](bool val) -> return_t {
-                            currency = val;
-                            return SUCCESS;
-                        });
-                    }}},
-                    {"overseas_penalty",     {false, false, [&overseas_maintenance](ast::NodeCPtr node) -> return_t {
-                        return NodeTools::expect_bool(node, [&overseas_maintenance](bool val) -> return_t {
-                            overseas_maintenance = val;
-                            return SUCCESS;
-                        });
-                    }}},
-            });
-            if (add_good(key, colour, good_category, base_price, default_available, tradeable, currency,
-                         overseas_maintenance) != SUCCESS)
-                ret = FAILURE;
-            return ret;
-        });
-    }, true) != SUCCESS)
-        ret = FAILURE;
-    lock_goods();
-    return ret;
+					return_t ret = expect_dictionary_keys(
+						"color", ONE_EXACTLY, expect_colour(assign_variable_callback(colour)),
+						"cost", ONE_EXACTLY, expect_fixed_point(assign_variable_callback(base_price)),
+						"available_from_start", ZERO_OR_ONE, expect_bool(assign_variable_callback(available_from_start)),
+						"tradeable", ZERO_OR_ONE, expect_bool(assign_variable_callback(tradeable)),
+						"money", ZERO_OR_ONE, expect_bool(assign_variable_callback(money)),
+						"overseas_penalty", ZERO_OR_ONE, expect_bool(assign_variable_callback(overseas_penalty))
+					)(value);
+					if (add_good(key, colour, good_category, base_price, available_from_start, tradeable, money, overseas_penalty) != SUCCESS)
+						ret = FAILURE;
+					return ret;
+				}
+			)(good_category_value);
+		}
+	)(root) != SUCCESS)
+		ret = FAILURE;
+	lock_goods();
+	return ret;
 }

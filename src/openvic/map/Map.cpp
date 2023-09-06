@@ -31,8 +31,8 @@ Map::Map() : provinces { "provinces" },
 			 mapmodes { "mapmodes" } {}
 
 return_t Map::add_province(const std::string_view identifier, colour_t colour) {
-	if (provinces.size() >= Province::MAX_INDEX) {
-		Logger::error("The map's province list is full - there can be at most ", Province::MAX_INDEX, " provinces");
+	if (provinces.size() >= max_provinces) {
+		Logger::error("The map's province list is full - maximum number of provinces is ", max_provinces, " (this can be at most ", Province::MAX_INDEX, ")");
 		return FAILURE;
 	}
 	if (identifier.empty()) {
@@ -40,7 +40,7 @@ return_t Map::add_province(const std::string_view identifier, colour_t colour) {
 		return FAILURE;
 	}
 	if (colour == NULL_COLOUR || colour > MAX_COLOUR_RGB) {
-		Logger::error("Invalid province colour for ", identifier, ": ", Province::colour_to_hex_string(colour));
+		Logger::error("Invalid province colour for ", identifier, ": ", colour_to_hex_string(colour));
 		return FAILURE;
 	}
 	Province new_province { identifier, colour, static_cast<Province::index_t>(provinces.size() + 1) };
@@ -79,9 +79,20 @@ return_t Map::set_water_province(const std::string_view identifier) {
 	return SUCCESS;
 }
 
+return_t Map::set_water_province_list(std::vector<std::string_view> const& list) {
+	return_t ret = SUCCESS;
+	water_provinces.reserve(water_provinces.size() + list.size());
+	for (std::string_view const& identifier : list) {
+		if (set_water_province(identifier) != SUCCESS) {
+			ret = FAILURE;
+		}
+	}
+	return ret;
+}
+
 void Map::lock_water_provinces() {
 	water_provinces.lock();
-	Logger::info("Locked water provinces after registering ", water_provinces.get_province_count());
+	Logger::info("Locked water provinces after registering ", water_provinces.size());
 }
 
 return_t Map::add_region(const std::string_view identifier, std::vector<std::string_view> const& province_identifiers) {
@@ -117,7 +128,7 @@ return_t Map::add_region(const std::string_view identifier, std::vector<std::str
 		}
 	}
 	new_region.lock();
-	if (!new_region.get_province_count()) {
+	if (!new_region.size()) {
 		Logger::error("No valid provinces in list for ", identifier);
 		return FAILURE;
 	}
@@ -140,6 +151,10 @@ void Map::lock_regions() {
 
 size_t Map::get_province_count() const {
 	return provinces.size();
+}
+
+std::vector<Province> const& Map::get_provinces() const {
+	return provinces.get_items();
 }
 
 Province* Map::get_province_by_index(Province::index_t index) {
@@ -169,6 +184,23 @@ Province::index_t Map::get_province_index_at(size_t x, size_t y) const {
 	return Province::NULL_INDEX;
 }
 
+return_t Map::set_max_provinces(Province::index_t new_max_provinces) {
+	if (new_max_provinces <= Province::NULL_INDEX) {
+		Logger::error("Trying to set max province count to an invalid value ", new_max_provinces, " (must be greater than ", Province::NULL_INDEX, ")");
+		return FAILURE;
+	}
+	if (!provinces.empty() || provinces.is_locked()) {
+		Logger::error("Trying to set max province count to ", new_max_provinces, " after provinces have already been added and/or locked");
+		return FAILURE;
+	}
+	max_provinces = new_max_provinces;
+	return SUCCESS;
+}
+
+Province::index_t Map::get_max_provinces() const {
+	return max_provinces;
+}
+
 void Map::set_selected_province(Province::index_t index) {
 	if (index > get_province_count()) {
 		Logger::error("Trying to set selected province to an invalid index ", index, " (max index is ", get_province_count(), ")");
@@ -192,6 +224,14 @@ Region* Map::get_region_by_identifier(const std::string_view identifier) {
 
 Region const* Map::get_region_by_identifier(const std::string_view identifier) const {
 	return regions.get_item_by_identifier(identifier);
+}
+
+size_t Map::get_region_count() const {
+	return regions.size();
+}
+
+std::vector<Region> const& Map::get_regions() const {
+	return regions.get_items();
 }
 
 static colour_t colour_at(uint8_t const* colour_data, int32_t idx) {
@@ -240,7 +280,7 @@ return_t Map::generate_province_shape_image(size_t new_width, size_t new_height,
 				if (unrecognised_terrain_colours.find(terrain_colour) == unrecognised_terrain_colours.end()) {
 					unrecognised_terrain_colours.insert(terrain_colour);
 					if (detailed_errors) {
-						Logger::error("Unrecognised terrain colour ", Province::colour_to_hex_string(terrain_colour),
+						Logger::error("Unrecognised terrain colour ", colour_to_hex_string(terrain_colour),
 							" at (", x, ", ", y, ")");
 					}
 				}
@@ -271,7 +311,7 @@ return_t Map::generate_province_shape_image(size_t new_width, size_t new_height,
 			if (unrecognised_province_colours.find(province_colour) == unrecognised_province_colours.end()) {
 				unrecognised_province_colours.insert(province_colour);
 				if (detailed_errors) {
-					Logger::error("Unrecognised province colour ", Province::colour_to_hex_string(province_colour),
+					Logger::error("Unrecognised province colour ", colour_to_hex_string(province_colour),
 						" at (", x, ", ", y, ")");
 				}
 			}
@@ -333,6 +373,10 @@ void Map::lock_mapmodes() {
 
 size_t Map::get_mapmode_count() const {
 	return mapmodes.size();
+}
+
+std::vector<Mapmode> const& Map::get_mapmodes() const {
+	return mapmodes.get_items();
 }
 
 Mapmode const* Map::get_mapmode_by_index(size_t index) const {
@@ -417,4 +461,71 @@ void Map::update_state(Date const& today) {
 void Map::tick(Date const& today) {
 	for (Province& province : provinces.get_items())
 		province.tick(today);
+}
+
+using namespace ovdl::csv;
+
+static return_t validate_province_definitions_header(LineObject const& header) {
+	static const std::vector<std::string> standard_header { "province", "red", "green", "blue" };
+	for (size_t i = 0; i < standard_header.size(); ++i) {
+		const std::string_view val = header.get_value_for(i);
+		if (i == 0 && val.empty()) break;
+		if (val != standard_header[i]) return FAILURE;
+	}
+	return SUCCESS;
+}
+
+static return_t parse_province_colour(colour_t& colour, std::array<std::string_view, 3> components) {
+	return_t ret = SUCCESS;
+	colour = NULL_COLOUR;
+	for (std::string_view& c : components) {
+		colour <<= 8;
+		if (c.ends_with('.')) c.remove_suffix(1);
+		bool successful = false;
+		uint64_t val = StringUtils::string_to_uint64(c, &successful, 10);
+		if (successful && val <= 255) {
+			colour |= val;
+		} else {
+			ret = FAILURE;
+		}
+	}
+	return ret;
+}
+
+return_t Map::load_province_definitions(std::vector<LineObject> const& lines) {
+	if (lines.empty()) {
+		Logger::error("No header or entries in province definition file!");
+		return FAILURE;
+	}
+	{
+		LineObject const& header = lines.front();
+		if (validate_province_definitions_header(header) != SUCCESS) {
+			Logger::error("Non-standard province definition file header - make sure this is not a province definition: ", header);
+		}
+	}
+	if (lines.size() <= 1) {
+		Logger::error("No entries in province definition file!");
+		return FAILURE;
+	}
+	provinces.reserve(lines.size() - 1);
+	return_t ret = SUCCESS;
+	std::for_each(lines.begin() + 1, lines.end(),
+		[this, &ret](LineObject const& line) -> void {
+			const std::string_view identifier = line.get_value_for(0);
+			if (!identifier.empty()) {
+				colour_t colour;
+				if (parse_province_colour(colour, {
+					line.get_value_for(1),
+					line.get_value_for(2),
+					line.get_value_for(3)
+				}) != SUCCESS) {
+					Logger::error("Error reading colour in province definition: ", line);
+					ret = FAILURE;
+				}
+				if (add_province(identifier, colour) != SUCCESS) ret = FAILURE;
+			}
+		}
+	);
+	lock_provinces();
+	return ret;
 }

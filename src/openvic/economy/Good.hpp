@@ -38,11 +38,11 @@ namespace OpenVic {
 		GoodCategory const& category;
 		const price_t base_price;
 		price_t price;
-		const bool default_available, tradeable, currency, overseas_maintenance;
+		const bool available_from_start, tradeable, money, overseas_penalty;
 		bool available;
 
 		Good(const std::string_view new_identifier, colour_t new_colour, GoodCategory const& new_category, price_t new_base_price,
-			bool new_default_available, bool new_tradeable, bool new_currency, bool new_overseas_maintenance);
+			bool new_available_from_start, bool new_tradeable, bool new_money, bool new_overseas_penalty);
 
 	public:
 		Good(Good&&) = default;
@@ -50,8 +50,11 @@ namespace OpenVic {
 		GoodCategory const& get_category() const;
 		price_t get_base_price() const;
 		price_t get_price() const;
-		bool is_default_available() const;
-		bool is_available() const;
+		bool get_available_from_start() const;
+		bool get_available() const;
+		bool get_tradeable() const;
+		bool get_money() const;
+		bool get_overseas_penalty();
 		void reset_to_defaults();
 	};
 
@@ -66,9 +69,11 @@ namespace OpenVic {
 		return_t add_good_category(const std::string_view identifier);
 		void lock_good_categories();
 		GoodCategory const* get_good_category_by_identifier(const std::string_view identifier) const;
+		size_t get_good_category_count() const;
+		std::vector<GoodCategory> const& get_good_categories() const;
 
 		return_t add_good(const std::string_view identifier, colour_t colour, GoodCategory const* category, Good::price_t base_price,
-			bool default_available, bool tradeable, bool currency, bool overseas_maintenance);
+			bool available_from_start, bool tradeable, bool money, bool overseas_penalty);
 		void lock_goods();
 		Good const* get_good_by_index(size_t index) const;
 		Good const* get_good_by_identifier(const std::string_view identifier) const;

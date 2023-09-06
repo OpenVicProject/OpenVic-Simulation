@@ -5,6 +5,7 @@
 #include <sstream>
 
 using namespace OpenVic;
+using namespace OpenVic::NodeTools;
 
 Province::Province(const std::string_view new_identifier, colour_t new_colour, index_t new_index)
 	: HasIdentifierAndColour { new_identifier, new_colour, false },
@@ -45,6 +46,10 @@ Building const* Province::get_building_by_identifier(const std::string_view iden
 	return buildings.get_item_by_identifier(identifier);
 }
 
+size_t Province::get_building_count() const {
+	return buildings.size();
+}
+
 std::vector<Building> const& Province::get_buildings() const {
 	return buildings.get_items();
 }
@@ -65,6 +70,15 @@ std::string Province::to_string() const {
 	return stream.str();
 }
 
+return_t Province::load_pop_list(PopManager const& pop_manager, ast::NodeCPtr root) {
+	return expect_list_reserve_length(
+		pops,
+		[this, &pop_manager](ast::NodeCPtr pop_node) -> return_t {
+			return pop_manager.load_pop_into_province(*this, pop_node);
+		}
+	)(root);
+}
+
 return_t Province::add_pop(Pop&& pop) {
 	if (!is_water()) {
 		pops.push_back(std::move(pop));
@@ -77,6 +91,14 @@ return_t Province::add_pop(Pop&& pop) {
 
 void Province::clear_pops() {
 	pops.clear();
+}
+
+size_t Province::get_pop_count() const {
+	return pops.size();
+}
+
+std::vector<Pop> const& Province::get_pops() const {
+	return pops;
 }
 
 Pop::pop_size_t Province::get_total_population() const {
