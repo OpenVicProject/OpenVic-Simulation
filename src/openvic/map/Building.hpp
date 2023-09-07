@@ -48,7 +48,7 @@ namespace OpenVic {
 		Date const& get_end_date() const;
 		float get_expansion_progress() const;
 
-		return_t expand();
+		bool expand();
 		void update_state(Date const& today);
 		void tick(Date const& today);
 	};
@@ -78,9 +78,9 @@ namespace OpenVic {
 	public:
 		BuildingManager();
 
-		return_t add_building_type(const std::string_view identifier, Building::level_t max_level, Timespan build_time);
+		bool add_building_type(const std::string_view identifier, Building::level_t max_level, Timespan build_time);
 		void lock_building_types();
 		BuildingType const* get_building_type_by_identifier(const std::string_view identifier) const;
-		return_t generate_province_buildings(Province& province) const;
+		bool generate_province_buildings(Province& province) const;
 	};
 }

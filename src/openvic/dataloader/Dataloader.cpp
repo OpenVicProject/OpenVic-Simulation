@@ -11,12 +11,12 @@ using namespace OpenVic;
 using namespace OpenVic::NodeTools;
 using namespace ovdl;
 
-return_t Dataloader::set_roots(std::vector<std::filesystem::path> new_roots) {
+bool Dataloader::set_roots(std::vector<std::filesystem::path> new_roots) {
 	if (!roots.empty()) {
 		Logger::error("Overriding existing dataloader roots!");
 		roots.clear();
 	}
-	return_t ret = SUCCESS;
+	bool ret = true;
 	for (std::reverse_iterator<std::vector<std::filesystem::path>::const_iterator> it = new_roots.crbegin(); it != new_roots.crend(); ++it) {
 		if (std::find(roots.begin(), roots.end(), *it) == roots.end()) {
 			if (std::filesystem::is_directory(*it)) {
@@ -24,16 +24,16 @@ return_t Dataloader::set_roots(std::vector<std::filesystem::path> new_roots) {
 				roots.push_back(*it);
 			} else {
 				Logger::error("Invalid dataloader root (must be an existing directory): ", *it);
-				ret = FAILURE;
+				ret = false;
 			}
 		} else {
 			Logger::error("Duplicate dataloader root: ", *it);
-			ret = FAILURE;
+			ret = false;
 		}
 	}
 	if (roots.empty()) {
 		Logger::error("Dataloader has no roots after attempting to add ", new_roots.size());
-		ret = FAILURE;
+		ret = false;
 	}
 	return ret;
 }
@@ -81,15 +81,13 @@ std::vector<std::filesystem::path> Dataloader::lookup_files_in_dir(std::filesyst
 	return ret;
 }
 
-return_t Dataloader::apply_to_files_in_dir(std::filesystem::path const& path,
-	std::function<return_t(std::filesystem::path const&)> callback,
+bool Dataloader::apply_to_files_in_dir(std::filesystem::path const& path,
+	std::function<bool(std::filesystem::path const&)> callback,
 	std::filesystem::path const* extension) const {
 
-	return_t ret = SUCCESS;
+	bool ret = true;
 	for (std::filesystem::path const& file : lookup_files_in_dir(path, extension)) {
-		if (callback(file) != SUCCESS) {
-			ret = FAILURE;
-		}
+		ret &= callback(file);
 	}
 	return ret;
 }
@@ -140,21 +138,20 @@ static csv::Windows1252Parser _parse_csv(std::filesystem::path const& path) {
 	return _run_ovdl_parser<csv::Windows1252Parser, &csv::Windows1252Parser::parse_csv>(path);
 }
 
-return_t Dataloader::_load_pop_types(PopManager& pop_manager, std::filesystem::path const& pop_type_directory) const {
-	return_t ret = SUCCESS;
-	if (apply_to_files_in_dir(pop_type_directory,
-		[&pop_manager](std::filesystem::path const& file) -> return_t {
+bool Dataloader::_load_pop_types(PopManager& pop_manager, std::filesystem::path const& pop_type_directory) const {
+	const bool ret = apply_to_files_in_dir(pop_type_directory,
+		[&pop_manager](std::filesystem::path const& file) -> bool {
 			return pop_manager.load_pop_type_file(file, _parse_defines(file).get_file_node());
 		}
-	) != SUCCESS) {
+	);
+	if (!ret) {
 		Logger::error("Failed to load pop types!");
-		ret = FAILURE;
 	}
 	pop_manager.lock_pop_types();
 	return ret;
 }
 
-return_t Dataloader::_load_map_dir(Map& map, std::filesystem::path const& map_directory) const {
+bool Dataloader::_load_map_dir(Map& map, std::filesystem::path const& map_directory) const {
 	static const std::filesystem::path defaults_filename = "default.map";
 	static const std::string default_definitions = "definition.csv";
 	static const std::string default_provinces = "provinces.bmp";
@@ -182,24 +179,24 @@ return_t Dataloader::_load_map_dir(Map& map, std::filesystem::path const& map_di
 	APPLY_TO_MAP_PATHS(MAP_PATH_VAR)
 #undef MAP_PATH_VAR
 
-	return_t ret = expect_dictionary_keys(
+	bool ret = expect_dictionary_keys(
 		"max_provinces", ONE_EXACTLY,
 			expect_uint(
-				[&map](uint64_t val) -> return_t {
+				[&map](uint64_t val) -> bool {
 					if (Province::NULL_INDEX < val && val <= Province::MAX_INDEX) {
 						return map.set_max_provinces(val);
 					}
 					Logger::error("Invalid max province count ", val, " (out of valid range ", Province::NULL_INDEX, " < max_provinces <= ", Province::MAX_INDEX, ")");
-					return FAILURE;
+					return false;
 				}
 			),
 		"sea_starts", ONE_EXACTLY,
 			expect_list_reserve_length(
 				water_province_identifiers,
 				expect_identifier(
-					[&water_province_identifiers](std::string_view identifier) -> return_t {
+					[&water_province_identifiers](std::string_view identifier) -> bool {
 						water_province_identifiers.push_back(identifier);
-						return SUCCESS;
+						return true;
 					}
 				)
 			),
@@ -217,25 +214,25 @@ return_t Dataloader::_load_map_dir(Map& map, std::filesystem::path const& map_di
 		"border_cutoff", ZERO_OR_ONE, success_callback
 	)(parser.get_file_node());
 
-	if (ret != SUCCESS) {
+	if (!ret) {
 		Logger::error("Failed to load map default file!");
 	}
 
-	if (map.load_province_definitions(_parse_csv(lookup_file(map_directory / definitions)).get_lines()) != SUCCESS) {
+	if (!map.load_province_definitions(_parse_csv(lookup_file(map_directory / definitions)).get_lines())) {
 		Logger::error("Failed to load province definitions file!");
-		ret = FAILURE;
+		ret = false;
 	}
 
-	if (map.set_water_province_list(water_province_identifiers) != SUCCESS) {
+	if (!map.set_water_province_list(water_province_identifiers)) {
 		Logger::error("Failed to set water provinces!");
-		ret = FAILURE;
+		ret = false;
 	}
 	map.lock_water_provinces();
 
 	return ret;
 }
 
-return_t Dataloader::load_defines(GameManager& game_manager) const {
+bool Dataloader::load_defines(GameManager& game_manager) const {
 	static const std::filesystem::path good_file = "common/goods.txt";
 	static const std::filesystem::path pop_type_directory = "poptypes";
 	static const std::filesystem::path graphical_culture_type_file = "common/graphicalculturetype.txt";
@@ -243,45 +240,45 @@ return_t Dataloader::load_defines(GameManager& game_manager) const {
 	static const std::filesystem::path religion_file = "common/religion.txt";
 	static const std::filesystem::path map_directory = "map";
 
-	return_t ret = SUCCESS;
+	bool ret = true;
 
-	if (game_manager.good_manager.load_good_file(_parse_defines(lookup_file(good_file)).get_file_node()) != SUCCESS) {
+	if (!game_manager.good_manager.load_good_file(_parse_defines(lookup_file(good_file)).get_file_node())) {
 		Logger::error("Failed to load goods!");
-		ret = FAILURE;
+		ret = false;
 	}
-	if (_load_pop_types(game_manager.pop_manager, pop_type_directory) != SUCCESS) {
+	if (!_load_pop_types(game_manager.pop_manager, pop_type_directory)) {
 		Logger::error("Failed to load pop types!");
-		ret = FAILURE;
+		ret = false;
 	}
-	if (game_manager.pop_manager.culture_manager.load_graphical_culture_type_file(_parse_defines(lookup_file(graphical_culture_type_file)).get_file_node()) != SUCCESS) {
+	if (!game_manager.pop_manager.culture_manager.load_graphical_culture_type_file(_parse_defines(lookup_file(graphical_culture_type_file)).get_file_node())) {
 		Logger::error("Failed to load graphical culture types!");
-		ret = FAILURE;
+		ret = false;
 	}
-	if (game_manager.pop_manager.culture_manager.load_culture_file(_parse_defines(lookup_file(culture_file)).get_file_node()) != SUCCESS) {
+	if (!game_manager.pop_manager.culture_manager.load_culture_file(_parse_defines(lookup_file(culture_file)).get_file_node())) {
 		Logger::error("Failed to load cultures!");
-		ret = FAILURE;
+		ret = false;
 	}
-	if (game_manager.pop_manager.religion_manager.load_religion_file(_parse_defines(lookup_file(religion_file)).get_file_node()) != SUCCESS) {
+	if (!game_manager.pop_manager.religion_manager.load_religion_file(_parse_defines(lookup_file(religion_file)).get_file_node())) {
 		Logger::error("Failed to load religions!");
-		ret = FAILURE;
+		ret = false;
 	}
-	if (_load_map_dir(game_manager.map, map_directory) != SUCCESS) {
+	if (!_load_map_dir(game_manager.map, map_directory)) {
 		Logger::error("Failed to load map!");
-		ret = FAILURE;
+		ret = false;
 	}
 
 	return ret;
 }
 
-return_t Dataloader::load_pop_history(GameManager& game_manager, std::filesystem::path const& path) const {
+bool Dataloader::load_pop_history(GameManager& game_manager, std::filesystem::path const& path) const {
 	return apply_to_files_in_dir(path,
-		[&game_manager](std::filesystem::path const& file) -> return_t {
+		[&game_manager](std::filesystem::path const& file) -> bool {
 			return expect_dictionary(
-				[&game_manager](std::string_view province_key, ast::NodeCPtr province_node) -> return_t {
+				[&game_manager](std::string_view province_key, ast::NodeCPtr province_node) -> bool {
 					Province* province = game_manager.map.get_province_by_identifier(province_key);
 					if (province == nullptr) {
 						Logger::error("Invalid province id: ", province_key);
-						return FAILURE;
+						return false;
 					}
 					return province->load_pop_list(game_manager.pop_manager, province_node);
 				}

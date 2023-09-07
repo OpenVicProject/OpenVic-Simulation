@@ -31,12 +31,12 @@ void GameManager::tick() {
 	set_needs_update();
 }
 
-return_t GameManager::setup() {
+bool GameManager::setup() {
 	session_start = time(nullptr);
 	clock.reset();
 	today = { 1836 };
 	good_manager.reset_to_defaults();
-	return_t ret = map.setup(good_manager, building_manager, pop_manager);
+	bool ret = map.setup(good_manager, building_manager, pop_manager);
 	set_needs_update();
 	return ret;
 }
@@ -45,15 +45,18 @@ Date const& GameManager::get_today() const {
 	return today;
 }
 
-return_t GameManager::expand_building(Province::index_t province_index, const std::string_view building_type_identifier) {
+bool GameManager::expand_building(Province::index_t province_index, const std::string_view building_type_identifier) {
 	set_needs_update();
 	Province* province = map.get_province_by_index(province_index);
-	if (province == nullptr) return FAILURE;
+	if (province == nullptr) {
+		Logger::error("Invalid province index ", province_index, " while trying to expand building ", building_type_identifier);
+		return false;
+	}
 	return province->expand_building(building_type_identifier);
 }
 
-return_t GameManager::load_hardcoded_defines() {
-	return_t ret = SUCCESS;
+bool GameManager::load_hardcoded_defines() {
+	bool ret = true;
 
 	static constexpr colour_t LOW_ALPHA_VALUE = float_to_alpha_value(0.4f);
 	static constexpr colour_t HIGH_ALPHA_VALUE = float_to_alpha_value(0.7f);
@@ -114,8 +117,7 @@ return_t GameManager::load_hardcoded_defines() {
 			} }
 	};
 	for (mapmode_t const& mapmode : mapmodes)
-		if (map.add_mapmode(mapmode.first, mapmode.second) != SUCCESS)
-			ret = FAILURE;
+		ret &= map.add_mapmode(mapmode.first, mapmode.second);
 	map.lock_mapmodes();
 
 	using building_type_t = std::tuple<std::string, Building::level_t, Timespan>;
@@ -123,8 +125,7 @@ return_t GameManager::load_hardcoded_defines() {
 		{ "building_fort", 4, 8 }, { "building_naval_base", 6, 15 }, { "building_railroad", 5, 10 }
 	};
 	for (building_type_t const& type : building_types)
-		if (building_manager.add_building_type(std::get<0>(type), std::get<1>(type), std::get<2>(type)) != SUCCESS)
-			ret = FAILURE;
+		ret &= building_manager.add_building_type(std::get<0>(type), std::get<1>(type), std::get<2>(type));
 	building_manager.lock_building_types();
 
 	return ret;

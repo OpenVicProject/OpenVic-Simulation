@@ -65,12 +65,12 @@ namespace OpenVic {
 	public:
 		Map();
 
-		return_t add_province(const std::string_view identifier, colour_t colour);
+		bool add_province(const std::string_view identifier, colour_t colour);
 		void lock_provinces();
-		return_t set_water_province(const std::string_view identifier);
-		return_t set_water_province_list(std::vector<std::string_view> const& list);
+		bool set_water_province(const std::string_view identifier);
+		bool set_water_province_list(std::vector<std::string_view> const& list);
 		void lock_water_provinces();
-		return_t add_region(const std::string_view identifier, std::vector<std::string_view> const& province_identifiers);
+		bool add_region(const std::string_view identifier, std::vector<std::string_view> const& province_identifiers);
 		void lock_regions();
 
 		size_t get_province_count() const;
@@ -80,7 +80,7 @@ namespace OpenVic {
 		Province* get_province_by_identifier(const std::string_view identifier);
 		Province const* get_province_by_identifier(const std::string_view identifier) const;
 		Province::index_t get_province_index_at(size_t x, size_t y) const;
-		return_t set_max_provinces(Province::index_t new_max_provinces);
+		bool set_max_provinces(Province::index_t new_max_provinces);
 		Province::index_t get_max_provinces() const;
 		void set_selected_province(Province::index_t index);
 		Province::index_t get_selected_province_index() const;
@@ -91,22 +91,22 @@ namespace OpenVic {
 		size_t get_region_count() const;
 		std::vector<Region> const& get_regions() const;
 
-		return_t generate_province_shape_image(size_t new_width, size_t new_height, uint8_t const* colour_data,
+		bool generate_province_shape_image(size_t new_width, size_t new_height, uint8_t const* colour_data,
 			uint8_t const* terrain_data, terrain_variant_map_t const& terrain_variant_map, bool detailed_errors);
 		size_t get_width() const;
 		size_t get_height() const;
 		std::vector<shape_pixel_t> const& get_province_shape_image() const;
 
-		return_t add_mapmode(const std::string_view identifier, Mapmode::colour_func_t colour_func);
+		bool add_mapmode(const std::string_view identifier, Mapmode::colour_func_t colour_func);
 		void lock_mapmodes();
 		size_t get_mapmode_count() const;
 		std::vector<Mapmode> const& get_mapmodes() const;
 		Mapmode const* get_mapmode_by_index(Mapmode::index_t index) const;
 		Mapmode const* get_mapmode_by_identifier(const std::string_view identifier) const;
 		static constexpr size_t MAPMODE_COLOUR_SIZE = 4;
-		return_t generate_mapmode_colours(Mapmode::index_t index, uint8_t* target) const;
+		bool generate_mapmode_colours(Mapmode::index_t index, uint8_t* target) const;
 
-		return_t setup(GoodManager const& good_manager, BuildingManager const& building_manager, PopManager const& pop_manager);
+		bool setup(GoodManager const& good_manager, BuildingManager const& building_manager, PopManager const& pop_manager);
 
 		void update_highest_province_population();
 		Pop::pop_size_t get_highest_province_population() const;
@@ -116,6 +116,6 @@ namespace OpenVic {
 		void update_state(Date const& today);
 		void tick(Date const& today);
 
-		return_t load_province_definitions(std::vector<ovdl::csv::LineObject> const& lines);
+		bool load_province_definitions(std::vector<ovdl::csv::LineObject> const& lines);
 	};
 }

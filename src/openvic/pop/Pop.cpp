@@ -101,27 +101,27 @@ bool PopType::get_is_slave() const {
 
 PopManager::PopManager() : pop_types { "pop types" } {}
 
-return_t PopManager::add_pop_type(const std::string_view identifier, colour_t colour, PopType::strata_t strata, PopType::sprite_t sprite,
+bool PopManager::add_pop_type(const std::string_view identifier, colour_t colour, PopType::strata_t strata, PopType::sprite_t sprite,
 	Pop::pop_size_t max_size, Pop::pop_size_t merge_max_size, bool state_capital_only, bool demote_migrant, bool is_artisan, bool is_slave) {
 	if (identifier.empty()) {
 		Logger::error("Invalid pop type identifier - empty!");
-		return FAILURE;
+		return false;
 	}
 	if (colour > MAX_COLOUR_RGB) {
 		Logger::error("Invalid pop type colour for ", identifier, ": ", colour_to_hex_string(colour));
-		return FAILURE;
+		return false;
 	}
 	if (sprite <= 0) {
 		Logger::error("Invalid pop type sprite index for ", identifier, ": ", sprite);
-		return FAILURE;
+		return false;
 	}
 	if (max_size <= 0) {
 		Logger::error("Invalid pop type max size for ", identifier, ": ", max_size);
-		return FAILURE;
+		return false;
 	}
 	if (merge_max_size <= 0) {
 		Logger::error("Invalid pop type merge max size for ", identifier, ": ", merge_max_size);
-		return FAILURE;
+		return false;
 	}
 	return pop_types.add_item({ identifier, colour, strata, sprite, max_size, merge_max_size, state_capital_only, demote_migrant, is_artisan, is_slave });
 }
@@ -142,40 +142,40 @@ std::vector<PopType> const& PopManager::get_pop_types() const {
 	return pop_types.get_items();
 }
 
-return_t PopManager::load_pop_type_file(std::filesystem::path const& path, ast::NodeCPtr root) {
+bool PopManager::load_pop_type_file(std::filesystem::path const& path, ast::NodeCPtr root) {
 
 	// TODO - pop type loading
 
 	if (pop_types.empty())
 		return add_pop_type("test_pop_type", 0xFF0000, PopType::strata_t::POOR, 1, 1, 1, false, false, false, false);
-	return SUCCESS;
+	return true;
 }
 
-return_t PopManager::load_pop_into_province(Province& province, ast::NodeCPtr root) const {
+bool PopManager::load_pop_into_province(Province& province, ast::NodeCPtr root) const {
 	static PopType const* type = get_pop_type_by_identifier("test_pop_type");
 	Culture const* culture = nullptr;
 	Religion const* religion = nullptr;
 	Pop::pop_size_t size = 0;
 
-	return_t ret = expect_assign(
-		[this, &culture, &religion, &size](std::string_view, ast::NodeCPtr pop_node) -> return_t {
+	bool ret = expect_assign(
+		[this, &culture, &religion, &size](std::string_view, ast::NodeCPtr pop_node) -> bool {
 			return expect_dictionary_keys(
 				"culture", ONE_EXACTLY,
 					expect_identifier(
-						[&culture, this](std::string_view identifier) -> return_t {
+						[&culture, this](std::string_view identifier) -> bool {
 							culture = culture_manager.get_culture_by_identifier(identifier);
-							if (culture != nullptr) return SUCCESS;
+							if (culture != nullptr) return true;
 							Logger::error("Invalid pop culture: ", identifier);
-							return FAILURE;
+							return false;
 						}
 					),
 				"religion", ONE_EXACTLY,
 					expect_identifier(
-						[&religion, this](std::string_view identifier) -> return_t {
+						[&religion, this](std::string_view identifier) -> bool {
 							religion = religion_manager.get_religion_by_identifier(identifier);
-							if (religion != nullptr) return SUCCESS;
+							if (religion != nullptr) return true;
 							Logger::error("Invalid pop religion: ", identifier);
-							return FAILURE;
+							return false;
 						}
 					),
 				"size", ONE_EXACTLY, expect_uint(assign_variable_callback_uint("pop size", size)),
@@ -186,10 +186,10 @@ return_t PopManager::load_pop_into_province(Province& province, ast::NodeCPtr ro
 	)(root);
 
 	if (type != nullptr && culture != nullptr && religion != nullptr && size > 0) {
-		if (province.add_pop({ *type, *culture, *religion, size }) != SUCCESS) ret = FAILURE;
+		ret &= province.add_pop({ *type, *culture, *religion, size });
 	} else {
 		Logger::error("Some pop arguments are invalid: type = ", type, ", culture = ", culture, ", religion = ", religion, ", size = ", size);
-		ret = FAILURE;
+		ret = false;
 	}
 	return ret;
 }

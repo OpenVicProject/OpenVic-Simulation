@@ -58,10 +58,10 @@ void Good::reset_to_defaults() {
 
 GoodManager::GoodManager() : good_categories { "good categories" }, goods { "goods" } {}
 
-return_t GoodManager::add_good_category(const std::string_view identifier) {
+bool GoodManager::add_good_category(const std::string_view identifier) {
 	if (identifier.empty()) {
 		Logger::error("Invalid good category identifier - empty!");
-		return FAILURE;
+		return false;
 	}
 	return good_categories.add_item({ identifier });
 }
@@ -82,23 +82,23 @@ std::vector<GoodCategory> const& GoodManager::get_good_categories() const {
 	return good_categories.get_items();
 }
 
-return_t GoodManager::add_good(const std::string_view identifier, colour_t colour, GoodCategory const* category,
+bool GoodManager::add_good(const std::string_view identifier, colour_t colour, GoodCategory const* category,
 	Good::price_t base_price, bool available_from_start, bool tradeable, bool money, bool overseas_penalty) {
 	if (identifier.empty()) {
 		Logger::error("Invalid good identifier - empty!");
-		return FAILURE;
+		return false;
 	}
 	if (colour > MAX_COLOUR_RGB) {
 		Logger::error("Invalid good colour for ", identifier, ": ", colour_to_hex_string(colour));
-		return FAILURE;
+		return false;
 	}
 	if (category == nullptr) {
 		Logger::error("Invalid good category for ", identifier, ": null");
-		return FAILURE;
+		return false;
 	}
 	if (base_price <= Good::NULL_PRICE) {
 		Logger::error("Invalid base price for ", identifier, ": ", base_price);
-		return FAILURE;
+		return false;
 	}
 	return goods.add_item({ identifier, colour, *category, base_price, available_from_start, tradeable, money, overseas_penalty });
 }
@@ -128,36 +128,36 @@ void GoodManager::reset_to_defaults() {
 		good.reset_to_defaults();
 }
 
-return_t GoodManager::load_good_file(ast::NodeCPtr root) {
+bool GoodManager::load_good_file(ast::NodeCPtr root) {
 	size_t total_expected_goods = 0;
-	return_t ret = expect_dictionary_reserve_length(
+	bool ret = expect_dictionary_reserve_length(
 		good_categories,
-		[this, &total_expected_goods](std::string_view key, ast::NodeCPtr value) -> return_t {
-			return_t ret = expect_list_and_length(
+		[this, &total_expected_goods](std::string_view key, ast::NodeCPtr value) -> bool {
+			bool ret = expect_list_and_length(
 				[&total_expected_goods](size_t size) -> size_t {
 					total_expected_goods += size;
 					return 0;
 				},
 				success_callback
 			)(value);
-			if (add_good_category(key) != SUCCESS) ret = FAILURE;
+			ret &= add_good_category(key);
 			return ret;
 		}
 	)(root);
 	lock_good_categories();
 	goods.reserve(goods.size() + total_expected_goods);
-	if (expect_dictionary(
-		[this](std::string_view good_category_key, ast::NodeCPtr good_category_value) -> return_t {
+	ret &= expect_dictionary(
+		[this](std::string_view good_category_key, ast::NodeCPtr good_category_value) -> bool {
 			GoodCategory const* good_category = get_good_category_by_identifier(good_category_key);
 
 			return expect_dictionary(
-				[this, good_category](std::string_view key, ast::NodeCPtr value) -> return_t {
+				[this, good_category](std::string_view key, ast::NodeCPtr value) -> bool {
 					colour_t colour = NULL_COLOUR;
 					Good::price_t base_price;
 					bool available_from_start, tradeable = true;
 					bool money, overseas_penalty = false;
 
-					return_t ret = expect_dictionary_keys(
+					bool ret = expect_dictionary_keys(
 						"color", ONE_EXACTLY, expect_colour(assign_variable_callback(colour)),
 						"cost", ONE_EXACTLY, expect_fixed_point(assign_variable_callback(base_price)),
 						"available_from_start", ZERO_OR_ONE, expect_bool(assign_variable_callback(available_from_start)),
@@ -165,14 +165,12 @@ return_t GoodManager::load_good_file(ast::NodeCPtr root) {
 						"money", ZERO_OR_ONE, expect_bool(assign_variable_callback(money)),
 						"overseas_penalty", ZERO_OR_ONE, expect_bool(assign_variable_callback(overseas_penalty))
 					)(value);
-					if (add_good(key, colour, good_category, base_price, available_from_start, tradeable, money, overseas_penalty) != SUCCESS)
-						ret = FAILURE;
+					ret &= add_good(key, colour, good_category, base_price, available_from_start, tradeable, money, overseas_penalty);
 					return ret;
 				}
 			)(good_category_value);
 		}
-	)(root) != SUCCESS)
-		ret = FAILURE;
+	)(root);
 	lock_goods();
 	return ret;
 }

@@ -30,7 +30,7 @@ Province::life_rating_t Province::get_life_rating() const {
 	return life_rating;
 }
 
-return_t Province::add_building(Building&& building) {
+bool Province::add_building(Building&& building) {
 	return buildings.add_item(std::move(building));
 }
 
@@ -54,9 +54,9 @@ std::vector<Building> const& Province::get_buildings() const {
 	return buildings.get_items();
 }
 
-return_t Province::expand_building(const std::string_view building_type_identifier) {
+bool Province::expand_building(const std::string_view building_type_identifier) {
 	Building* building = buildings.get_item_by_identifier(building_type_identifier);
-	if (building == nullptr) return FAILURE;
+	if (building == nullptr) return false;
 	return building->expand();
 }
 
@@ -70,22 +70,22 @@ std::string Province::to_string() const {
 	return stream.str();
 }
 
-return_t Province::load_pop_list(PopManager const& pop_manager, ast::NodeCPtr root) {
+bool Province::load_pop_list(PopManager const& pop_manager, ast::NodeCPtr root) {
 	return expect_list_reserve_length(
 		pops,
-		[this, &pop_manager](ast::NodeCPtr pop_node) -> return_t {
+		[this, &pop_manager](ast::NodeCPtr pop_node) -> bool {
 			return pop_manager.load_pop_into_province(*this, pop_node);
 		}
 	)(root);
 }
 
-return_t Province::add_pop(Pop&& pop) {
+bool Province::add_pop(Pop&& pop) {
 	if (!is_water()) {
 		pops.push_back(std::move(pop));
-		return SUCCESS;
+		return true;
 	} else {
 		Logger::error("Trying to add pop to water province ", get_identifier());
-		return FAILURE;
+		return false;
 	}
 }
 

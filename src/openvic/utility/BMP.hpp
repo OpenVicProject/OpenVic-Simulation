@@ -4,7 +4,6 @@
 #include <vector>
 
 #include "openvic/types/Colour.hpp"
-#include "openvic/types/Return.hpp"
 
 namespace OpenVic {
 	class BMP {
@@ -41,9 +40,9 @@ namespace OpenVic {
 		BMP() = default;
 		~BMP();
 
-		return_t open(char const* filepath);
-		return_t read_header();
-		return_t read_palette();
+		bool open(char const* filepath);
+		bool read_header();
+		bool read_palette();
 		void close();
 		void reset();
 

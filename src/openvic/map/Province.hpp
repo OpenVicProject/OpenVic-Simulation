@@ -41,18 +41,18 @@ namespace OpenVic {
 		Region* get_region() const;
 		bool is_water() const;
 		life_rating_t get_life_rating() const;
-		return_t add_building(Building&& building);
+		bool add_building(Building&& building);
 		void lock_buildings();
 		void reset_buildings();
 		Building const* get_building_by_identifier(const std::string_view identifier) const;
 		size_t get_building_count() const;
 		std::vector<Building> const& get_buildings() const;
-		return_t expand_building(const std::string_view building_type_identifier);
+		bool expand_building(const std::string_view building_type_identifier);
 		Good const* get_rgo() const;
 		std::string to_string() const;
 
-		return_t load_pop_list(PopManager const& pop_manager, ast::NodeCPtr root);
-		return_t add_pop(Pop&& pop);
+		bool load_pop_list(PopManager const& pop_manager, ast::NodeCPtr root);
+		bool add_pop(Pop&& pop);
 		void clear_pops();
 		size_t get_pop_count() const;
 		std::vector<Pop> const& get_pops() const;

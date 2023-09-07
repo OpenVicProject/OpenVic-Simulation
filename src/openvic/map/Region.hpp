@@ -10,10 +10,11 @@ namespace OpenVic {
 		bool locked = false;
 
 	public:
-		return_t add_province(Province* province);
+		bool add_province(Province* province);
 		void lock(bool log = false);
 		bool is_locked() const;
 		void reset();
+		bool empty() const;
 		size_t size() const;
 		void reserve(size_t size);
 		bool contains_province(Province const* province) const;

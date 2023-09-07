@@ -65,25 +65,25 @@ namespace OpenVic {
 	public:
 		CultureManager();
 
-		return_t add_graphical_culture_type(const std::string_view identifier);
+		bool add_graphical_culture_type(const std::string_view identifier);
 		void lock_graphical_culture_types();
 		GraphicalCultureType const* get_graphical_culture_type_by_identifier(const std::string_view identifier) const;
 		size_t get_graphical_culture_type_count() const;
 		std::vector<GraphicalCultureType> const& get_graphical_culture_types() const;
 
-		return_t add_culture_group(const std::string_view identifier, const std::string_view leader, GraphicalCultureType const* new_graphical_culture_type, bool is_overseas);
+		bool add_culture_group(const std::string_view identifier, const std::string_view leader, GraphicalCultureType const* new_graphical_culture_type, bool is_overseas);
 		void lock_culture_groups();
 		CultureGroup const* get_culture_group_by_identifier(const std::string_view identifier) const;
 		size_t get_culture_group_count() const;
 		std::vector<CultureGroup> const& get_culture_groups() const;
 
-		return_t add_culture(const std::string_view identifier, colour_t colour, CultureGroup const* group, std::vector<std::string> const& first_names, std::vector<std::string> const& last_names);
+		bool add_culture(const std::string_view identifier, colour_t colour, CultureGroup const* group, std::vector<std::string> const& first_names, std::vector<std::string> const& last_names);
 		void lock_cultures();
 		Culture const* get_culture_by_identifier(const std::string_view identifier) const;
 		size_t get_culture_count() const;
 		std::vector<Culture> const& get_cultures() const;
 
-		return_t load_graphical_culture_type_file(ast::NodeCPtr root);
-		return_t load_culture_file(ast::NodeCPtr root);
+		bool load_graphical_culture_type_file(ast::NodeCPtr root);
+		bool load_culture_file(ast::NodeCPtr root);
 	};
 }

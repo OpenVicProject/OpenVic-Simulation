@@ -4,7 +4,6 @@
 #include <vector>
 
 #include "openvic/types/Colour.hpp"
-#include "openvic/types/Return.hpp"
 #include "openvic/utility/Logger.hpp"
 
 namespace OpenVic {
@@ -84,19 +83,19 @@ namespace OpenVic {
 
 	public:
 		IdentifierRegistry(const std::string_view new_name) : name { new_name } {}
-		return_t add_item(T&& item) {
+		bool add_item(T&& item) {
 			if (locked) {
 				Logger::error("Cannot add item to the ", name, " registry - locked!");
-				return FAILURE;
+				return false;
 			}
 			T const* old_item = get_item_by_identifier(item.get_identifier());
 			if (old_item != nullptr) {
 				Logger::error("Cannot add item to the ", name, " registry - an item with the identifier \"", item.get_identifier(), "\" already exists!");
-				return FAILURE;
+				return false;
 			}
 			identifier_index_map[item.get_identifier()] = items.size();
 			items.push_back(std::move(item));
-			return SUCCESS;
+			return true;
 		}
 		void lock(bool log = true) {
 			if (locked) {

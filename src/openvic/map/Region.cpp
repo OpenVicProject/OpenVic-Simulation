@@ -2,21 +2,21 @@
 
 using namespace OpenVic;
 
-return_t ProvinceSet::add_province(Province* province) {
+bool ProvinceSet::add_province(Province* province) {
 	if (locked) {
 		Logger::error("Cannot add province to province set - locked!");
-		return FAILURE;
+		return false;
 	}
 	if (province == nullptr) {
 		Logger::error("Cannot add province to province set - null province!");
-		return FAILURE;
+		return false;
 	}
 	if (contains_province(province)) {
 		Logger::error("Cannot add province ", province->get_identifier(), " to province set - already in the set!");
-		return FAILURE;
+		return false;
 	}
 	provinces.push_back(province);
-	return SUCCESS;
+	return true;
 }
 
 void ProvinceSet::lock(bool log) {
@@ -35,6 +35,10 @@ bool ProvinceSet::is_locked() const {
 void ProvinceSet::reset() {
 	provinces.clear();
 	locked = false;
+}
+
+bool ProvinceSet::empty() const {
+	return provinces.empty();
 }
 
 size_t ProvinceSet::size() const {

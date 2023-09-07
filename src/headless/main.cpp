@@ -20,8 +20,8 @@ static char const* get_program_name(char const* name) {
 	return last_separator;
 }
 
-static return_t headless_load(std::vector<std::filesystem::path> const& roots) {
-	return_t ret = SUCCESS;
+static bool headless_load(std::vector<std::filesystem::path> const& roots) {
+	bool ret = true;
 
 	Logger::set_info_func([](std::string&& str) { std::cout << str; });
 	Logger::set_error_func([](std::string&& str) { std::cerr << str; });
@@ -31,17 +31,17 @@ static return_t headless_load(std::vector<std::filesystem::path> const& roots) {
 	} };
 	Dataloader dataloader;
 
-	if (dataloader.set_roots(roots) != SUCCESS) {
+	if (!dataloader.set_roots(roots)) {
 		Logger::error("Failed to set dataloader roots!");
-		ret = FAILURE;
+		ret = false;
 	}
-	if (dataloader.load_defines(game_manager) != SUCCESS) {
+	if (!dataloader.load_defines(game_manager)) {
 		Logger::error("Failed to load defines!");
-		ret = FAILURE;
+		ret = false;
 	}
-	if (game_manager.load_hardcoded_defines() != SUCCESS) {
+	if (!game_manager.load_hardcoded_defines()) {
 		Logger::error("Failed to load hardcoded defines!");
-		ret = FAILURE;
+		ret = false;
 	}
 
 	return ret;
@@ -66,12 +66,12 @@ int main(int argc, char const* argv[]) {
 
 	std::cout << "!!! HEADLESS SIMULATION START !!!" << std::endl;
 
-	const return_t ret = headless_load(roots);
+	const bool ret = headless_load(roots);
 
 	std::cout << "!!! HEADLESS SIMULATION END !!!" << std::endl;
 
-	std::cout << "\nLoad returned: " << (ret == SUCCESS ? "SUCCESS" : "FAILURE") << std::endl;
+	std::cout << "\nLoad returned: " << (ret ? "true" : "false") << std::endl;
 
-	return ret == SUCCESS ? 0 : -1;
+	return ret ? 0 : -1;
 }
 #endif

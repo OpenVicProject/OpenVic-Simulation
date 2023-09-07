@@ -66,13 +66,13 @@ namespace OpenVic {
 	public:
 		GoodManager();
 
-		return_t add_good_category(const std::string_view identifier);
+		bool add_good_category(const std::string_view identifier);
 		void lock_good_categories();
 		GoodCategory const* get_good_category_by_identifier(const std::string_view identifier) const;
 		size_t get_good_category_count() const;
 		std::vector<GoodCategory> const& get_good_categories() const;
 
-		return_t add_good(const std::string_view identifier, colour_t colour, GoodCategory const* category, Good::price_t base_price,
+		bool add_good(const std::string_view identifier, colour_t colour, GoodCategory const* category, Good::price_t base_price,
 			bool available_from_start, bool tradeable, bool money, bool overseas_penalty);
 		void lock_goods();
 		Good const* get_good_by_index(size_t index) const;
@@ -81,6 +81,6 @@ namespace OpenVic {
 		std::vector<Good> const& get_goods() const;
 
 		void reset_to_defaults();
-		return_t load_good_file(ast::NodeCPtr root);
+		bool load_good_file(ast::NodeCPtr root);
 	};
 }

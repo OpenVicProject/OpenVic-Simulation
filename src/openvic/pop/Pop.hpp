@@ -90,7 +90,7 @@ namespace OpenVic {
 
 		PopManager();
 
-		return_t add_pop_type(const std::string_view identifier, colour_t new_colour, PopType::strata_t strata, PopType::sprite_t sprite,
+		bool add_pop_type(const std::string_view identifier, colour_t new_colour, PopType::strata_t strata, PopType::sprite_t sprite,
 			Pop::pop_size_t max_size, Pop::pop_size_t merge_max_size, bool state_capital_only, bool demote_migrant,
 			bool is_artisan, bool is_slave);
 		void lock_pop_types();
@@ -98,7 +98,7 @@ namespace OpenVic {
 		size_t get_pop_type_count() const;
 		std::vector<PopType> const& get_pop_types() const;
 
-		return_t load_pop_type_file(std::filesystem::path const& path, ast::NodeCPtr root);
-		return_t load_pop_into_province(Province& province, ast::NodeCPtr root) const;
+		bool load_pop_type_file(std::filesystem::path const& path, ast::NodeCPtr root);
+		bool load_pop_into_province(Province& province, ast::NodeCPtr root) const;
 	};
 }

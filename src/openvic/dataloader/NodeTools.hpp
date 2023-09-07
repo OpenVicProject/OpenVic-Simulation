@@ -4,7 +4,6 @@
 
 #include "openvic/types/Colour.hpp"
 #include "openvic/types/Date.hpp"
-#include "openvic/types/Return.hpp"
 #include "openvic/types/fixed_point/FP.hpp"
 
 #include <openvic-dataloader/v2script/AbstractSyntaxTree.hpp>
@@ -14,20 +13,20 @@ namespace OpenVic {
 
 	namespace NodeTools {
 
-		using node_callback_t = std::function<return_t(ast::NodeCPtr)>;
-		constexpr return_t success_callback(ast::NodeCPtr) { return SUCCESS; }
+		using node_callback_t = std::function<bool(ast::NodeCPtr)>;
+		constexpr bool success_callback(ast::NodeCPtr) { return true; }
 
-		using key_value_callback_t = std::function<return_t(std::string_view, ast::NodeCPtr)>;
+		using key_value_callback_t = std::function<bool(std::string_view, ast::NodeCPtr)>;
 
-		node_callback_t expect_identifier(std::function<return_t(std::string_view)> callback);
-		node_callback_t expect_string(std::function<return_t(std::string_view)> callback);
-		node_callback_t expect_identifier_or_string(std::function<return_t(std::string_view)> callback);
-		node_callback_t expect_bool(std::function<return_t(bool)> callback);
-		node_callback_t expect_int(std::function<return_t(int64_t)> callback);
-		node_callback_t expect_uint(std::function<return_t(uint64_t)> callback);
-		node_callback_t expect_fixed_point(std::function<return_t(FP)> callback);
-		node_callback_t expect_colour(std::function<return_t(colour_t)> callback);
-		node_callback_t expect_date(std::function<return_t(Date)> callback);
+		node_callback_t expect_identifier(std::function<bool(std::string_view)> callback);
+		node_callback_t expect_string(std::function<bool(std::string_view)> callback);
+		node_callback_t expect_identifier_or_string(std::function<bool(std::string_view)> callback);
+		node_callback_t expect_bool(std::function<bool(bool)> callback);
+		node_callback_t expect_int(std::function<bool(int64_t)> callback);
+		node_callback_t expect_uint(std::function<bool(uint64_t)> callback);
+		node_callback_t expect_fixed_point(std::function<bool(FP)> callback);
+		node_callback_t expect_colour(std::function<bool(colour_t)> callback);
+		node_callback_t expect_date(std::function<bool(Date)> callback);
 		node_callback_t expect_assign(key_value_callback_t callback);
 
 		using length_callback_t = std::function<size_t(size_t)>;
@@ -124,38 +123,38 @@ namespace OpenVic {
 		node_callback_t name_list_callback(std::vector<std::string>& list);
 
 		template<typename T>
-		std::function<return_t(T)> assign_variable_callback(T& var) {
-			return [&var](T val) -> return_t {
+		std::function<bool(T)> assign_variable_callback(T& var) {
+			return [&var](T val) -> bool {
 				var = val;
-				return SUCCESS;
+				return true;
 			};
 		}
 
 		template<typename T>
 		requires(std::integral<T>)
-		std::function<return_t(uint64_t)> assign_variable_callback_uint(const std::string_view name, T& var) {
-			return [&var, name](uint64_t val) -> return_t {
+		std::function<bool(uint64_t)> assign_variable_callback_uint(const std::string_view name, T& var) {
+			return [&var, name](uint64_t val) -> bool {
 				if (val <= std::numeric_limits<T>::max()) {
 					var = val;
-					return SUCCESS;
+					return true;
 				}
 				Logger::error("Invalid ", name, ": ", val, " (valid range: [0, ", static_cast<uint64_t>(std::numeric_limits<T>::max()), "])");
-				return FAILURE;
+				return false;
 			};
 		}
 
 		template<typename T>
 		requires(std::integral<T>)
-		std::function<return_t(int64_t)> assign_variable_callback_int(const std::string_view name, T& var) {
-			return [&var, name](int64_t val) -> return_t {
+		std::function<bool(int64_t)> assign_variable_callback_int(const std::string_view name, T& var) {
+			return [&var, name](int64_t val) -> bool {
 				if (std::numeric_limits<T>::lowest() <= val && val <= std::numeric_limits<T>::max()) {
 					var = val;
-					return SUCCESS;
+					return true;
 				}
 				Logger::error("Invalid ", name, ": ", val, " (valid range: [",
 					static_cast<int64_t>(std::numeric_limits<T>::lowest()), ", ",
 					static_cast<uint64_t>(std::numeric_limits<T>::max()), "])");
-				return FAILURE;
+				return false;
 			};
 		}
 	}

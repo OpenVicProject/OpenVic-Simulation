@@ -27,14 +27,14 @@ namespace OpenVic {
 	public:
 		GameManager(state_updated_func_t state_updated_callback);
 
-		return_t setup();
+		bool setup();
 
 		Date const& get_today() const;
-		return_t expand_building(Province::index_t province_index, const std::string_view building_type_identifier);
+		bool expand_building(Province::index_t province_index, const std::string_view building_type_identifier);
 
 		/* Hardcoded data for defining things for which parsing from files has
 		 * not been implemented, currently mapmodes and building types.
 		 */
-		return_t load_hardcoded_defines();
+		bool load_hardcoded_defines();
 	};
 }

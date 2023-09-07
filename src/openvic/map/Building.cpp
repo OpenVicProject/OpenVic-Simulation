@@ -39,13 +39,13 @@ float Building::get_expansion_progress() const {
 	return expansion_progress;
 }
 
-return_t Building::expand() {
+bool Building::expand() {
 	if (expansion_state == ExpansionState::CanExpand) {
 		expansion_state = ExpansionState::Preparing;
 		expansion_progress = 0.0f;
-		return SUCCESS;
+		return true;
 	}
-	return FAILURE;
+	return false;
 }
 
 /* REQUIREMENTS:
@@ -94,18 +94,18 @@ Timespan BuildingType::get_build_time() const {
 
 BuildingManager::BuildingManager() : building_types { "building types" } {}
 
-return_t BuildingManager::add_building_type(const std::string_view identifier, Building::level_t max_level, Timespan build_time) {
+bool BuildingManager::add_building_type(const std::string_view identifier, Building::level_t max_level, Timespan build_time) {
 	if (identifier.empty()) {
 		Logger::error("Invalid building type identifier - empty!");
-		return FAILURE;
+		return false;
 	}
 	if (max_level < 0) {
 		Logger::error("Invalid building type max level for ", identifier, ": ", max_level);
-		return FAILURE;
+		return false;
 	}
 	if (build_time < 0) {
 		Logger::error("Invalid building type build time for ", identifier, ": ", build_time);
-		return FAILURE;
+		return false;
 	}
 	return building_types.add_item({ identifier, max_level, build_time });
 }
@@ -118,18 +118,16 @@ BuildingType const* BuildingManager::get_building_type_by_identifier(const std::
 	return building_types.get_item_by_identifier(identifier);
 }
 
-return_t BuildingManager::generate_province_buildings(Province& province) const {
+bool BuildingManager::generate_province_buildings(Province& province) const {
 	province.reset_buildings();
 	if (!building_types.is_locked()) {
 		Logger::error("Cannot generate buildings until building types are locked!");
-		return FAILURE;
+		return false;
 	}
-	return_t ret = SUCCESS;
+	bool ret = true;
 	if (!province.is_water()) {
 		for (BuildingType const& type : building_types.get_items()) {
-			if (province.add_building({ type }) != SUCCESS) {
-				ret = FAILURE;
-			}
+			ret &= province.add_building({ type });
 		}
 	}
 	province.lock_buildings();
