@@ -1,8 +1,6 @@
-#ifdef OPENVIC_SIM_HEADLESS
-
-#include <openvic/GameManager.hpp>
-#include <openvic/dataloader/Dataloader.hpp>
-#include <openvic/utility/Logger.hpp>
+#include <openvic-simulation/GameManager.hpp>
+#include <openvic-simulation/dataloader/Dataloader.hpp>
+#include <openvic-simulation/utility/Logger.hpp>
 
 using namespace OpenVic;
 
@@ -70,8 +68,7 @@ int main(int argc, char const* argv[]) {
 
 	std::cout << "!!! HEADLESS SIMULATION END !!!" << std::endl;
 
-	std::cout << "\nLoad returned: " << (ret ? "true" : "false") << std::endl;
+	std::cout << "\nLoad returned: " << (ret ? "SUCCESS" : "FAILURE") << std::endl;
 
 	return ret ? 0 : -1;
 }
-#endif

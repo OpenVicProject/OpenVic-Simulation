@@ -226,7 +226,7 @@ env.openvic_simulation = {}
 # - LINKFLAGS are for linking flags
 
 # Tweak this if you want to use different folders, or more folders, to store your source code in.
-source_path = "src/openvic"
+source_path = "src/openvic-simulation"
 include_path = "src"
 env.Append(CPPPATH=[[env.Dir(p) for p in [source_path, include_path]]])
 sources = GlobRecursive("*.cpp", [source_path])
