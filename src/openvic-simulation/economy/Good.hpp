@@ -1,7 +1,7 @@
 #pragma once
 
-#include "openvic-simulation/types/IdentifierRegistry.hpp"
 #include "openvic-simulation/dataloader/NodeTools.hpp"
+#include "openvic-simulation/types/IdentifierRegistry.hpp"
 
 namespace OpenVic {
 	struct GoodManager;

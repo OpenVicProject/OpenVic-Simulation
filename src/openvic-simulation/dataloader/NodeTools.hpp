@@ -2,11 +2,11 @@
 
 #include <map>
 
+#include <openvic-dataloader/v2script/AbstractSyntaxTree.hpp>
+
 #include "openvic-simulation/types/Colour.hpp"
 #include "openvic-simulation/types/Date.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
-
-#include <openvic-dataloader/v2script/AbstractSyntaxTree.hpp>
 
 namespace OpenVic {
 	namespace ast = ovdl::v2script::ast;
@@ -56,7 +56,7 @@ namespace OpenVic {
 			size_t count;
 
 			dictionary_entry_t(expected_count_t new_expected_count, node_callback_t new_callback)
-			: expected_count { new_expected_count }, callback { new_callback }, count { 0 } {}
+				: expected_count { new_expected_count }, callback { new_callback }, count { 0 } {}
 
 			constexpr bool must_appear() const {
 				return static_cast<uint8_t>(expected_count) & static_cast<uint8_t>(expected_count_t::_MUST_APPEAR);
@@ -106,7 +106,7 @@ namespace OpenVic {
 		template<typename T>
 		concept Reservable = requires(T& t) {
 			{ t.size() } -> std::same_as<size_t>;
-			t.reserve( size_t {} );
+			t.reserve(size_t {});
 		};
 		template<Reservable T>
 		node_callback_t expect_list_reserve_length(T& t, node_callback_t callback) {

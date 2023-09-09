@@ -102,7 +102,7 @@ distribution_t const& Province::get_religion_distribution() const {
 }
 
 /* REQUIREMENTS:
- * MAP-65
+ * MAP-65, MAP-68, MAP-70, MAP-234
  */
 void Province::update_pops() {
 	total_population = 0;

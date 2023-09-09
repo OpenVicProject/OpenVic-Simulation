@@ -14,6 +14,7 @@ namespace OpenVic {
 	class Dataloader {
 	public:
 		using path_vector_t = std::vector<fs::path>;
+
 	private:
 		path_vector_t roots;
 
@@ -28,10 +29,8 @@ namespace OpenVic {
 
 		fs::path lookup_file(fs::path const& path) const;
 		static const fs::path TXT;
-		path_vector_t lookup_files_in_dir(fs::path const& path,
-			fs::path const* extension = &TXT) const;
-		bool apply_to_files_in_dir(fs::path const& path,
-			std::function<bool(fs::path const&)> callback,
+		path_vector_t lookup_files_in_dir(fs::path const& path, fs::path const* extension = &TXT) const;
+		bool apply_to_files_in_dir(fs::path const& path, std::function<bool(fs::path const&)> callback,
 			fs::path const* extension = &TXT) const;
 
 		bool load_defines(GameManager& game_manager) const;

@@ -52,7 +52,8 @@ int main(int argc, char const* argv[]) {
 		// TODO - non-Windows default paths
 		static const fs::path default_path = "C:/Program Files (x86)/Steam/steamapps/common/Victoria 2";
 
-		std::cout << "Usage: " << get_program_name(argc > 0 ? argv[0] : nullptr) << " <base defines dir> [[mod defines dir]+]\n"
+		std::cout
+			<< "Usage: " << get_program_name(argc > 0 ? argv[0] : nullptr) << " <base defines dir> [[mod defines dir]+]\n"
 			<< "Requires defines path(s) as arguments, starting with the base defines and continuing with mods.\n"
 			<< "(Paths with spaces need to be enclosed in \"quotes\").\n"
 			<< "Defaulting to " << default_path << std::endl;

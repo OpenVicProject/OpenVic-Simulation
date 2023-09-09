@@ -10,6 +10,7 @@ namespace OpenVic {
 
 	/* REQUIREMENTS:
 	 * MAP-5, MAP-7, MAP-8, MAP-43, MAP-47
+	 * POP-22
 	 */
 	struct Province : HasIdentifierAndColour {
 		friend struct Map;

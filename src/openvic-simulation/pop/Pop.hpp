@@ -41,7 +41,7 @@ namespace OpenVic {
 	};
 
 	/* REQUIREMENTS:
-	 * POP-26
+	 * POP-15, POP-16, POP-17, POP-26
 	 */
 	struct PopType : HasIdentifierAndColour {
 		friend struct PopManager;

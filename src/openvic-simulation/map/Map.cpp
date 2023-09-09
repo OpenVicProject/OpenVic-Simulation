@@ -490,11 +490,9 @@ bool Map::load_province_definitions(std::vector<LineObject> const& lines) {
 			const std::string_view identifier = line.get_value_for(0);
 			if (!identifier.empty()) {
 				colour_t colour;
-				if (!parse_province_colour(colour, {
-					line.get_value_for(1),
-					line.get_value_for(2),
-					line.get_value_for(3)
-				})) {
+				if (!parse_province_colour(colour,
+					{ line.get_value_for(1), line.get_value_for(2), line.get_value_for(3) }
+				)) {
 					Logger::error("Error reading colour in province definition: ", line);
 					ret = false;
 				}

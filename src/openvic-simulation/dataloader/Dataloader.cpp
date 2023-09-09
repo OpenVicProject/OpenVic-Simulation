@@ -1,11 +1,11 @@
 #include "Dataloader.hpp"
 
-#include "openvic-simulation/GameManager.hpp"
-#include "openvic-simulation/utility/Logger.hpp"
-
 #include <openvic-dataloader/csv/Parser.hpp>
 #include <openvic-dataloader/detail/CallbackOStream.hpp>
 #include <openvic-dataloader/v2script/Parser.hpp>
+
+#include "openvic-simulation/GameManager.hpp"
+#include "openvic-simulation/utility/Logger.hpp"
 
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;
@@ -51,8 +51,7 @@ fs::path Dataloader::lookup_file(fs::path const& path) const {
 
 const fs::path Dataloader::TXT = ".txt";
 
-static bool contains_file_with_name(Dataloader::path_vector_t const& paths,
-	fs::path const& name) {
+static bool contains_file_with_name(Dataloader::path_vector_t const& paths, fs::path const& name) {
 
 	for (fs::path const& path : paths) {
 		if (path.filename() == name) return true;
@@ -60,8 +59,7 @@ static bool contains_file_with_name(Dataloader::path_vector_t const& paths,
 	return false;
 }
 
-Dataloader::path_vector_t Dataloader::lookup_files_in_dir(fs::path const& path,
-	fs::path const* extension) const {
+Dataloader::path_vector_t Dataloader::lookup_files_in_dir(fs::path const& path, fs::path const* extension) const {
 
 	path_vector_t ret;
 	for (fs::path const& root : roots) {
@@ -81,9 +79,7 @@ Dataloader::path_vector_t Dataloader::lookup_files_in_dir(fs::path const& path,
 	return ret;
 }
 
-bool Dataloader::apply_to_files_in_dir(fs::path const& path,
-	std::function<bool(fs::path const&)> callback,
-	fs::path const* extension) const {
+bool Dataloader::apply_to_files_in_dir(fs::path const& path, std::function<bool(fs::path const&)> callback, fs::path const* extension) const {
 
 	bool ret = true;
 	for (fs::path const& file : lookup_files_in_dir(path, extension)) {
@@ -92,7 +88,7 @@ bool Dataloader::apply_to_files_in_dir(fs::path const& path,
 	return ret;
 }
 
-template<std::derived_from<detail::BasicParser> Parser, bool(Parser::*parse_func)()>
+template<std::derived_from<detail::BasicParser> Parser, bool (Parser::*parse_func)()>
 static Parser _run_ovdl_parser(fs::path const& path) {
 	Parser parser;
 	std::string buffer;
@@ -105,7 +101,8 @@ static Parser _run_ovdl_parser(fs::path const& path) {
 				Logger::error("Invalid input to parser error log callback: ", s, " / ", n, " / ", user_data);
 				return 0;
 			}
-		}, &buffer
+		},
+		&buffer
 	};
 	parser.set_error_log_to(error_log_stream);
 	parser.load_from_file(path);
@@ -181,25 +178,26 @@ bool Dataloader::_load_map_dir(Map& map, fs::path const& map_directory) const {
 
 	bool ret = expect_dictionary_keys(
 		"max_provinces", ONE_EXACTLY,
-			expect_uint(
-				[&map](uint64_t val) -> bool {
-					if (Province::NULL_INDEX < val && val <= Province::MAX_INDEX) {
-						return map.set_max_provinces(val);
-					}
-					Logger::error("Invalid max province count ", val, " (out of valid range ", Province::NULL_INDEX, " < max_provinces <= ", Province::MAX_INDEX, ")");
-					return false;
+		expect_uint(
+			[&map](uint64_t val) -> bool {
+				if (Province::NULL_INDEX < val && val <= Province::MAX_INDEX) {
+					return map.set_max_provinces(val);
 				}
-			),
+				Logger::error("Invalid max province count ", val, " (out of valid range ",
+					Province::NULL_INDEX, " < max_provinces <= ", Province::MAX_INDEX, ")");
+				return false;
+			}
+		),
 		"sea_starts", ONE_EXACTLY,
-			expect_list_reserve_length(
-				water_province_identifiers,
-				expect_identifier(
-					[&water_province_identifiers](std::string_view identifier) -> bool {
-						water_province_identifiers.push_back(identifier);
-						return true;
-					}
-				)
-			),
+		expect_list_reserve_length(
+			water_province_identifiers,
+			expect_identifier(
+				[&water_province_identifiers](std::string_view identifier) -> bool {
+					water_province_identifiers.push_back(identifier);
+					return true;
+				}
+			)
+		),
 
 #define MAP_PATH_DICT_ENTRY(X) \
 		#X, ONE_EXACTLY, expect_string(assign_variable_callback(X)),

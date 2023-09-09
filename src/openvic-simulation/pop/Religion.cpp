@@ -64,8 +64,11 @@ bool ReligionManager::add_religion(const std::string_view identifier, colour_t c
 	return religions.add_item({ identifier, colour, *group, icon, pagan });
 }
 
+/* REQUIREMENTS:
+ * POP-286, POP-287, POP-288, POP-289, POP-290, POP-291, POP-292,
+ * POP-293, POP-294, POP-295, POP-296, POP-297, POP-298, POP-299
+ */
 bool ReligionManager::load_religion_file(ast::NodeCPtr root) {
-
 	size_t total_expected_religions = 0;
 	bool ret = expect_dictionary_reserve_length(
 		religion_groups,
@@ -85,7 +88,6 @@ bool ReligionManager::load_religion_file(ast::NodeCPtr root) {
 	religions.reserve(religions.size() + total_expected_religions);
 	ret &= expect_dictionary(
 		[this](std::string_view religion_group_key, ast::NodeCPtr religion_group_value) -> bool {
-
 			ReligionGroup const* religion_group = get_religion_group_by_identifier(religion_group_key);
 
 			return expect_dictionary(
