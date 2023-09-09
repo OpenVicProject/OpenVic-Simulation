@@ -126,7 +126,7 @@ bool PopManager::add_pop_type(const std::string_view identifier, colour_t colour
 	return pop_types.add_item({ identifier, colour, strata, sprite, max_size, merge_max_size, state_capital_only, demote_migrant, is_artisan, is_slave });
 }
 
-bool PopManager::load_pop_type_file(std::filesystem::path const& path, ast::NodeCPtr root) {
+bool PopManager::load_pop_type_file(const std::string_view filestem, ast::NodeCPtr root) {
 
 	// TODO - pop type loading
 
@@ -135,29 +135,24 @@ bool PopManager::load_pop_type_file(std::filesystem::path const& path, ast::Node
 	return true;
 }
 
-bool PopManager::load_pop_into_province(Province& province, ast::NodeCPtr root) const {
+bool PopManager::load_pop_into_province(Province& province, const std::string_view pop_type_identifier, ast::NodeCPtr pop_node) const {
 	static PopType const* type = get_pop_type_by_identifier("test_pop_type");
 	Culture const* culture = nullptr;
 	Religion const* religion = nullptr;
 	Pop::pop_size_t size = 0;
 
-	bool ret = expect_assign(
-		[this, &culture, &religion, &size](std::string_view, ast::NodeCPtr pop_node) -> bool {
-			return expect_dictionary_keys(
-				"culture", ONE_EXACTLY, culture_manager.expect_culture(culture),
-				"religion", ONE_EXACTLY, religion_manager.expect_religion(religion),
-				"size", ONE_EXACTLY, expect_uint(assign_variable_callback_uint("pop size", size)),
-				"militancy", ZERO_OR_ONE, success_callback,
-				"rebel_type", ZERO_OR_ONE, success_callback
-			)(pop_node);
-		}
-	)(root);
+	bool ret = expect_dictionary_keys(
+		"culture", ONE_EXACTLY, culture_manager.expect_culture(culture),
+		"religion", ONE_EXACTLY, religion_manager.expect_religion(religion),
+		"size", ONE_EXACTLY, expect_uint(assign_variable_callback_uint("pop size", size)),
+		"militancy", ZERO_OR_ONE, success_callback,
+		"rebel_type", ZERO_OR_ONE, success_callback
+	)(pop_node);
 
 	if (type != nullptr && culture != nullptr && religion != nullptr && size > 0) {
 		ret &= province.add_pop({ *type, *culture, *religion, size });
 	} else {
-		Logger::error("Some pop arguments are invalid: type = ", type, ", culture = ", culture, ", religion = ", religion, ", size = ", size);
-		ret = false;
+		Logger::warning("Some pop arguments are invalid: province = ", province, ", type = ", type, ", culture = ", culture, ", religion = ", religion, ", size = ", size);
 	}
 	return ret;
 }

@@ -18,10 +18,11 @@ static char const* get_program_name(char const* name) {
 	return last_separator;
 }
 
-static bool headless_load(std::vector<std::filesystem::path> const& roots) {
+static bool headless_load(Dataloader::path_vector_t const& roots) {
 	bool ret = true;
 
 	Logger::set_info_func([](std::string&& str) { std::cout << str; });
+	Logger::set_warning_func([](std::string&& str) { std::cerr << str; });
 	Logger::set_error_func([](std::string&& str) { std::cerr << str; });
 
 	GameManager game_manager { []() {
@@ -46,10 +47,10 @@ static bool headless_load(std::vector<std::filesystem::path> const& roots) {
 }
 
 int main(int argc, char const* argv[]) {
-	std::vector<std::filesystem::path> roots;
+	Dataloader::path_vector_t roots;
 	if (argc < 2) {
 		// TODO - non-Windows default paths
-		static const std::filesystem::path default_path = "C:/Program Files (x86)/Steam/steamapps/common/Victoria 2";
+		static const fs::path default_path = "C:/Program Files (x86)/Steam/steamapps/common/Victoria 2";
 
 		std::cout << "Usage: " << get_program_name(argc > 0 ? argv[0] : nullptr) << " <base defines dir> [[mod defines dir]+]\n"
 			<< "Requires defines path(s) as arguments, starting with the base defines and continuing with mods.\n"

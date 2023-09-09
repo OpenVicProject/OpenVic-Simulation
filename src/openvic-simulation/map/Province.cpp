@@ -55,10 +55,10 @@ std::string Province::to_string() const {
 }
 
 bool Province::load_pop_list(PopManager const& pop_manager, ast::NodeCPtr root) {
-	return expect_list_reserve_length(
+	return expect_dictionary_reserve_length(
 		pops,
-		[this, &pop_manager](ast::NodeCPtr pop_node) -> bool {
-			return pop_manager.load_pop_into_province(*this, pop_node);
+		[this, &pop_manager](std::string_view pop_type_identifier, ast::NodeCPtr pop_node) -> bool {
+			return pop_manager.load_pop_into_province(*this, pop_type_identifier, pop_node);
 		}
 	)(root);
 }

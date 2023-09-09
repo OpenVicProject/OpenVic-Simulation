@@ -13,12 +13,11 @@ void GameManager::set_needs_update() {
 }
 
 void GameManager::update_state() {
-	if (needs_update) {
-		Logger::info("Update: ", today);
-		map.update_state(today);
-		if (state_updated) state_updated();
-		needs_update = false;
-	}
+	if (!needs_update) return;
+	Logger::info("Update: ", today);
+	map.update_state(today);
+	if (state_updated) state_updated();
+	needs_update = false;
 }
 
 /* REQUIREMENTS:

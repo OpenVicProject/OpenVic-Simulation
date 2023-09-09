@@ -6,6 +6,8 @@ using namespace OpenVic;
 
 Logger::log_func_t Logger::info_func {};
 Logger::log_queue_t Logger::info_queue {};
+Logger::log_func_t Logger::warning_func {};
+Logger::log_queue_t Logger::warning_queue {};
 Logger::log_func_t Logger::error_func {};
 Logger::log_queue_t Logger::error_queue {};
 

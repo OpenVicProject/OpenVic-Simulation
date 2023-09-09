@@ -13,6 +13,14 @@ std::string const& HasIdentifier::get_identifier() const {
 	return identifier;
 }
 
+std::ostream& OpenVic::operator<<(std::ostream& stream, HasIdentifier const& obj) {
+	return stream << obj.get_identifier();
+}
+
+std::ostream& OpenVic::operator<<(std::ostream& stream, HasIdentifier const* obj) {
+	return obj != nullptr ? stream << *obj : stream << "<NULL>";
+}
+
 HasColour::HasColour(colour_t const new_colour, bool can_be_null) : colour(new_colour) {
 	assert((can_be_null || colour != NULL_COLOUR) && colour <= MAX_COLOUR_RGB);
 }

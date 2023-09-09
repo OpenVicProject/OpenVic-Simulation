@@ -11,15 +11,15 @@ using namespace OpenVic;
 using namespace OpenVic::NodeTools;
 using namespace ovdl;
 
-bool Dataloader::set_roots(std::vector<std::filesystem::path> new_roots) {
+bool Dataloader::set_roots(path_vector_t new_roots) {
 	if (!roots.empty()) {
 		Logger::error("Overriding existing dataloader roots!");
 		roots.clear();
 	}
 	bool ret = true;
-	for (std::reverse_iterator<std::vector<std::filesystem::path>::const_iterator> it = new_roots.crbegin(); it != new_roots.crend(); ++it) {
+	for (std::reverse_iterator<path_vector_t::const_iterator> it = new_roots.crbegin(); it != new_roots.crend(); ++it) {
 		if (std::find(roots.begin(), roots.end(), *it) == roots.end()) {
-			if (std::filesystem::is_directory(*it)) {
+			if (fs::is_directory(*it)) {
 				Logger::info("Adding dataloader root: ", *it);
 				roots.push_back(*it);
 			} else {
@@ -38,10 +38,10 @@ bool Dataloader::set_roots(std::vector<std::filesystem::path> new_roots) {
 	return ret;
 }
 
-std::filesystem::path Dataloader::lookup_file(std::filesystem::path const& path) const {
-	for (std::filesystem::path const& root : roots) {
-		const std::filesystem::path composed = root / path;
-		if (std::filesystem::is_regular_file(composed)) {
+fs::path Dataloader::lookup_file(fs::path const& path) const {
+	for (fs::path const& root : roots) {
+		const fs::path composed = root / path;
+		if (fs::is_regular_file(composed)) {
 			return composed;
 		}
 	}
@@ -49,27 +49,27 @@ std::filesystem::path Dataloader::lookup_file(std::filesystem::path const& path)
 	return {};
 }
 
-const std::filesystem::path Dataloader::TXT = ".txt";
+const fs::path Dataloader::TXT = ".txt";
 
-static bool contains_file_with_name(std::vector<std::filesystem::path> const& paths,
-	std::filesystem::path const& name) {
+static bool contains_file_with_name(Dataloader::path_vector_t const& paths,
+	fs::path const& name) {
 
-	for (std::filesystem::path const& path : paths) {
+	for (fs::path const& path : paths) {
 		if (path.filename() == name) return true;
 	}
 	return false;
 }
 
-std::vector<std::filesystem::path> Dataloader::lookup_files_in_dir(std::filesystem::path const& path,
-	std::filesystem::path const* extension) const {
+Dataloader::path_vector_t Dataloader::lookup_files_in_dir(fs::path const& path,
+	fs::path const* extension) const {
 
-	std::vector<std::filesystem::path> ret;
-	for (std::filesystem::path const& root : roots) {
-		const std::filesystem::path composed = root / path;
+	path_vector_t ret;
+	for (fs::path const& root : roots) {
+		const fs::path composed = root / path;
 		std::error_code ec;
-		for (std::filesystem::directory_entry const& entry : std::filesystem::directory_iterator { composed, ec }) {
+		for (fs::directory_entry const& entry : fs::directory_iterator { composed, ec }) {
 			if (entry.is_regular_file()) {
-				const std::filesystem::path file = entry;
+				const fs::path file = entry;
 				if (extension == nullptr || file.extension() == *extension) {
 					if (!contains_file_with_name(ret, file.filename())) {
 						ret.push_back(file);
@@ -81,19 +81,19 @@ std::vector<std::filesystem::path> Dataloader::lookup_files_in_dir(std::filesyst
 	return ret;
 }
 
-bool Dataloader::apply_to_files_in_dir(std::filesystem::path const& path,
-	std::function<bool(std::filesystem::path const&)> callback,
-	std::filesystem::path const* extension) const {
+bool Dataloader::apply_to_files_in_dir(fs::path const& path,
+	std::function<bool(fs::path const&)> callback,
+	fs::path const* extension) const {
 
 	bool ret = true;
-	for (std::filesystem::path const& file : lookup_files_in_dir(path, extension)) {
+	for (fs::path const& file : lookup_files_in_dir(path, extension)) {
 		ret &= callback(file);
 	}
 	return ret;
 }
 
 template<std::derived_from<detail::BasicParser> Parser, bool(Parser::*parse_func)()>
-static Parser _run_ovdl_parser(std::filesystem::path const& path) {
+static Parser _run_ovdl_parser(fs::path const& path) {
 	Parser parser;
 	std::string buffer;
 	auto error_log_stream = ovdl::detail::CallbackStream {
@@ -130,18 +130,18 @@ static Parser _run_ovdl_parser(std::filesystem::path const& path) {
 	return parser;
 }
 
-static v2script::Parser _parse_defines(std::filesystem::path const& path) {
+static v2script::Parser _parse_defines(fs::path const& path) {
 	return _run_ovdl_parser<v2script::Parser, &v2script::Parser::simple_parse>(path);
 }
 
-static csv::Windows1252Parser _parse_csv(std::filesystem::path const& path) {
+static csv::Windows1252Parser _parse_csv(fs::path const& path) {
 	return _run_ovdl_parser<csv::Windows1252Parser, &csv::Windows1252Parser::parse_csv>(path);
 }
 
-bool Dataloader::_load_pop_types(PopManager& pop_manager, std::filesystem::path const& pop_type_directory) const {
+bool Dataloader::_load_pop_types(PopManager& pop_manager, fs::path const& pop_type_directory) const {
 	const bool ret = apply_to_files_in_dir(pop_type_directory,
-		[&pop_manager](std::filesystem::path const& file) -> bool {
-			return pop_manager.load_pop_type_file(file, _parse_defines(file).get_file_node());
+		[&pop_manager](fs::path const& file) -> bool {
+			return pop_manager.load_pop_type_file(file.stem().string(), _parse_defines(file).get_file_node());
 		}
 	);
 	if (!ret) {
@@ -151,8 +151,8 @@ bool Dataloader::_load_pop_types(PopManager& pop_manager, std::filesystem::path 
 	return ret;
 }
 
-bool Dataloader::_load_map_dir(Map& map, std::filesystem::path const& map_directory) const {
-	static const std::filesystem::path defaults_filename = "default.map";
+bool Dataloader::_load_map_dir(Map& map, fs::path const& map_directory) const {
+	static const fs::path defaults_filename = "default.map";
 	static const std::string default_definitions = "definition.csv";
 	static const std::string default_provinces = "provinces.bmp";
 	static const std::string default_positions = "positions.txt";
@@ -233,12 +233,12 @@ bool Dataloader::_load_map_dir(Map& map, std::filesystem::path const& map_direct
 }
 
 bool Dataloader::load_defines(GameManager& game_manager) const {
-	static const std::filesystem::path good_file = "common/goods.txt";
-	static const std::filesystem::path pop_type_directory = "poptypes";
-	static const std::filesystem::path graphical_culture_type_file = "common/graphicalculturetype.txt";
-	static const std::filesystem::path culture_file = "common/cultures.txt";
-	static const std::filesystem::path religion_file = "common/religion.txt";
-	static const std::filesystem::path map_directory = "map";
+	static const fs::path good_file = "common/goods.txt";
+	static const fs::path pop_type_directory = "poptypes";
+	static const fs::path graphical_culture_type_file = "common/graphicalculturetype.txt";
+	static const fs::path culture_file = "common/cultures.txt";
+	static const fs::path religion_file = "common/religion.txt";
+	static const fs::path map_directory = "map";
 
 	bool ret = true;
 
@@ -270,9 +270,9 @@ bool Dataloader::load_defines(GameManager& game_manager) const {
 	return ret;
 }
 
-bool Dataloader::load_pop_history(GameManager& game_manager, std::filesystem::path const& path) const {
+bool Dataloader::load_pop_history(GameManager& game_manager, fs::path const& path) const {
 	return apply_to_files_in_dir(path,
-		[&game_manager](std::filesystem::path const& file) -> bool {
+		[&game_manager](fs::path const& file) -> bool {
 			return expect_dictionary(
 				[&game_manager](std::string_view province_key, ast::NodeCPtr province_node) -> bool {
 					Province* province = game_manager.map.get_province_by_identifier(province_key);

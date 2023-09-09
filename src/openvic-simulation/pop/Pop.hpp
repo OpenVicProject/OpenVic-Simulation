@@ -1,7 +1,5 @@
 #pragma once
 
-#include <filesystem>
-
 #include "openvic-simulation/pop/Culture.hpp"
 #include "openvic-simulation/pop/Religion.hpp"
 
@@ -95,7 +93,7 @@ namespace OpenVic {
 			bool is_artisan, bool is_slave);
 		IDENTIFIER_REGISTRY_ACCESSORS(PopType, pop_type)
 
-		bool load_pop_type_file(std::filesystem::path const& path, ast::NodeCPtr root);
-		bool load_pop_into_province(Province& province, ast::NodeCPtr root) const;
+		bool load_pop_type_file(const std::string_view filestem, ast::NodeCPtr root);
+		bool load_pop_into_province(Province& province, const std::string_view pop_type_identifier, ast::NodeCPtr pop_node) const;
 	};
 }

@@ -80,6 +80,7 @@ namespace OpenVic {
 		name(Ts&&...) -> name<Ts...>;
 
 		LOG_FUNC(info)
+		LOG_FUNC(warning)
 		LOG_FUNC(error)
 
 #undef LOG_FUNC

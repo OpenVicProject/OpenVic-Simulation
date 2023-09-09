@@ -27,6 +27,9 @@ namespace OpenVic {
 		std::string const& get_identifier() const;
 	};
 
+	std::ostream& operator<<(std::ostream& stream, HasIdentifier const& obj);
+	std::ostream& operator<<(std::ostream& stream, HasIdentifier const* obj);
+
 	/*
 	 * Base class for objects with associated colour information.
 	 */

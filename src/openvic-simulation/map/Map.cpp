@@ -68,8 +68,8 @@ bool Map::set_water_province(const std::string_view identifier) {
 		return false;
 	}
 	if (province->is_water()) {
-		Logger::error("Province ", identifier, " is already a water province!");
-		return false;
+		Logger::warning("Province ", identifier, " is already a water province!");
+		return true;
 	}
 	if (!water_provinces.add_province(province)) {
 		Logger::error("Failed to add province ", identifier, " to water province set!");
@@ -278,7 +278,7 @@ bool Map::generate_province_shape_image(size_t new_width, size_t new_height, uin
 				if (unrecognised_terrain_colours.find(terrain_colour) == unrecognised_terrain_colours.end()) {
 					unrecognised_terrain_colours.insert(terrain_colour);
 					if (detailed_errors) {
-						Logger::error("Unrecognised terrain colour ", colour_to_hex_string(terrain_colour),
+						Logger::warning("Unrecognised terrain colour ", colour_to_hex_string(terrain_colour),
 							" at (", x, ", ", y, ")");
 					}
 				}
@@ -309,7 +309,7 @@ bool Map::generate_province_shape_image(size_t new_width, size_t new_height, uin
 			if (unrecognised_province_colours.find(province_colour) == unrecognised_province_colours.end()) {
 				unrecognised_province_colours.insert(province_colour);
 				if (detailed_errors) {
-					Logger::error("Unrecognised province colour ", colour_to_hex_string(province_colour),
+					Logger::warning("Unrecognised province colour ", colour_to_hex_string(province_colour),
 						" at (", x, ", ", y, ")");
 				}
 			}
@@ -317,12 +317,10 @@ bool Map::generate_province_shape_image(size_t new_width, size_t new_height, uin
 		}
 	}
 	if (!unrecognised_province_colours.empty()) {
-		Logger::error("Province image contains ", unrecognised_province_colours.size(), " unrecognised province colours");
-		ret = false;
+		Logger::warning("Province image contains ", unrecognised_province_colours.size(), " unrecognised province colours");
 	}
 	if (!unrecognised_terrain_colours.empty()) {
-		Logger::error("Terrain image contains ", unrecognised_terrain_colours.size(), " unrecognised terrain colours");
-		ret = false;
+		Logger::warning("Terrain image contains ", unrecognised_terrain_colours.size(), " unrecognised terrain colours");
 	}
 
 	size_t missing = 0;
