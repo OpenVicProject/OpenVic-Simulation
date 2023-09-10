@@ -5,6 +5,7 @@
 #include "openvic-simulation/pop/Culture.hpp"
 #include "openvic-simulation/pop/Religion.hpp"
 #include "openvic-simulation/scripts/ConditionalWeight.hpp"
+#include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
 
 namespace OpenVic {
 
@@ -30,12 +31,18 @@ namespace OpenVic {
 		Culture const& PROPERTY(culture);
 		Religion const& PROPERTY(religion);
 		pop_size_t PROPERTY(size);
-		pop_size_t PROPERTY(num_promoted);
+
+		/* Last day's size change by source. */
+		pop_size_t PROPERTY(num_grown);
+		pop_size_t PROPERTY(num_promoted); // TODO - detailed promotion/demotion info (what to)
 		pop_size_t PROPERTY(num_demoted);
-		pop_size_t PROPERTY(num_migrated);
+		pop_size_t PROPERTY(num_migrated_internal); // TODO - detailed migration info (where to)
+		pop_size_t PROPERTY(num_migrated_external);
+		pop_size_t PROPERTY(num_migrated_colonial);
 
 		fixed_point_t PROPERTY(militancy);
 		fixed_point_t PROPERTY(consciousness);
+		fixed_point_t PROPERTY(literacy);
 		RebelType const* PROPERTY(rebel_type);
 
 		Pop(
@@ -48,8 +55,6 @@ namespace OpenVic {
 		Pop(Pop&&) = default;
 		Pop& operator=(Pop const&) = delete;
 		Pop& operator=(Pop&&) = delete;
-
-		pop_size_t get_pop_daily_change() const;
 	};
 
 	struct Strata : HasIdentifier {

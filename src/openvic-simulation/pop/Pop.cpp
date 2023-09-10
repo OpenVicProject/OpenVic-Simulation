@@ -17,14 +17,11 @@ using namespace OpenVic::NodeTools;
 Pop::Pop(
 	PopType const& new_type, Culture const& new_culture, Religion const& new_religion, pop_size_t new_size,
 	fixed_point_t new_militancy, fixed_point_t new_consciousness, RebelType const* new_rebel_type
-) : type { new_type }, culture { new_culture }, religion { new_religion }, size { new_size }, num_promoted { 0 },
-	num_demoted { 0 }, num_migrated { 0 }, militancy { new_militancy }, consciousness { new_consciousness },
+) : type { new_type }, culture { new_culture }, religion { new_religion }, size { new_size }, num_grown { 0 },
+	num_promoted { 0 }, num_demoted { 0 }, num_migrated_internal { 0 }, num_migrated_external { 0 },
+	num_migrated_colonial { 0 }, militancy { new_militancy }, consciousness { new_consciousness },
 	rebel_type { new_rebel_type } {
 	assert(size > 0);
-}
-
-Pop::pop_size_t Pop::get_pop_daily_change() const {
-	return Pop::get_num_promoted() - (Pop::get_num_demoted() + Pop::get_num_migrated());
 }
 
 Strata::Strata(std::string_view new_identifier) : HasIdentifier { new_identifier } {}
