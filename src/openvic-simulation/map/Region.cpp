@@ -2,6 +2,8 @@
 
 using namespace OpenVic;
 
+ProvinceSet::ProvinceSet(provinces_t&& new_provinces) : provinces { std::move(new_provinces) } {}
+
 bool ProvinceSet::add_province(Province* province) {
 	if (locked) {
 		Logger::error("Cannot add province to province set - locked!");
@@ -57,13 +59,20 @@ bool ProvinceSet::contains_province(Province const* province) const {
 	return province && std::find(provinces.begin(), provinces.end(), province) != provinces.end();
 }
 
-std::vector<Province*> const& ProvinceSet::get_provinces() const {
+ProvinceSet::provinces_t const& ProvinceSet::get_provinces() const {
 	return provinces;
 }
 
-Region::Region(const std::string_view new_identifier) : HasIdentifier { new_identifier } {}
+Region::Region(const std::string_view new_identifier, provinces_t&& new_provinces, bool new_meta)
+	: HasIdentifier { new_identifier }, ProvinceSet { std::move(new_provinces) }, meta { new_meta } {
+	lock();
+}
+
+bool Region::get_meta() const {
+	return meta;
+}
 
 colour_t Region::get_colour() const {
-	if (provinces.empty()) return FULL_COLOUR << 16;
-	return provinces.front()->get_colour();
+	if (empty()) return FULL_COLOUR << 16;
+	return get_provinces().front()->get_colour();
 }

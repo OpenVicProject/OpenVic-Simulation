@@ -22,7 +22,11 @@ Region* Province::get_region() const {
 	return region;
 }
 
-bool Province::is_water() const {
+bool Province::get_has_region() const {
+	return has_region;
+}
+
+bool Province::get_water() const {
 	return water;
 }
 
@@ -64,7 +68,7 @@ bool Province::load_pop_list(PopManager const& pop_manager, ast::NodeCPtr root) 
 }
 
 bool Province::add_pop(Pop&& pop) {
-	if (!is_water()) {
+	if (!get_water()) {
 		pops.push_back(std::move(pop));
 		return true;
 	} else {

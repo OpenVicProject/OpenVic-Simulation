@@ -5,11 +5,15 @@
 namespace OpenVic {
 
 	struct ProvinceSet {
-	protected:
-		std::vector<Province*> provinces;
+		using provinces_t = std::vector<Province*>;
+
+	private:
+		provinces_t provinces;
 		bool locked = false;
 
 	public:
+		ProvinceSet(provinces_t&& new_provinces = {});
+
 		bool add_province(Province* province);
 		void lock(bool log = false);
 		bool is_locked() const;
@@ -18,7 +22,7 @@ namespace OpenVic {
 		size_t size() const;
 		void reserve(size_t size);
 		bool contains_province(Province const* province) const;
-		std::vector<Province*> const& get_provinces() const;
+		provinces_t const& get_provinces() const;
 	};
 
 	/* REQUIREMENTS:
@@ -28,11 +32,18 @@ namespace OpenVic {
 		friend struct Map;
 
 	private:
-		Region(const std::string_view new_identifier);
+		/* A meta region cannot be the template for a state.
+		 * Any region containing a province already listed in a
+		 * previously defined region is considered a meta region.
+		 */
+		const bool meta;
+
+		Region(const std::string_view new_identifier, provinces_t&& new_provinces, bool new_meta);
 
 	public:
 		Region(Region&&) = default;
 
+		bool get_meta() const;
 		colour_t get_colour() const;
 	};
 }
