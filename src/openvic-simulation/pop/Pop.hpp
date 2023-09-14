@@ -9,7 +9,7 @@ namespace OpenVic {
 	struct PopType;
 
 	/* REQUIREMENTS:
-	 * POP-18, POP-19, POP-20, POP-21
+	 * POP-18, POP-19, POP-20, POP-21, POP-34, POP-35, POP-36, POP-37
 	 */
 	struct Pop {
 		friend struct PopManager;

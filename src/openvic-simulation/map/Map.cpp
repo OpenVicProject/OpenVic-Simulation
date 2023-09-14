@@ -7,6 +7,7 @@
 #include "openvic-simulation/utility/Logger.hpp"
 
 using namespace OpenVic;
+using namespace OpenVic::NodeTools;
 
 Mapmode::Mapmode(const std::string_view new_identifier, index_t new_index, colour_func_t new_colour_func)
 	: HasIdentifier { new_identifier },
@@ -501,5 +502,28 @@ bool Map::load_province_definitions(std::vector<LineObject> const& lines) {
 		}
 	);
 	lock_provinces();
+	return ret;
+}
+
+/* TODO - add support for non-state province groupings used by some mods
+ * (currently they trigger "province already in other region" errors).
+ */
+bool Map::load_region_file(ast::NodeCPtr root) {
+	const bool ret = expect_dictionary_reserve_length(
+		regions,
+		[this](std::string_view region_identifier, ast::NodeCPtr region_node) -> bool {
+			std::vector<std::string_view> province_identifiers;
+			bool ret = expect_list_reserve_length(
+				province_identifiers,
+				expect_identifier([&province_identifiers](std::string_view identifier) -> bool {
+					province_identifiers.push_back(identifier);
+					return true;
+				})
+			)(region_node);
+			ret &= add_region(region_identifier, province_identifiers);
+			return ret;
+		}
+	)(root);
+	lock_regions();
 	return ret;
 }

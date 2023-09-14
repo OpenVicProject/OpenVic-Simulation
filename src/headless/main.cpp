@@ -42,6 +42,14 @@ static bool headless_load(Dataloader::path_vector_t const& roots) {
 		Logger::error("Failed to load hardcoded defines!");
 		ret = false;
 	}
+	if (!dataloader.load_localisation_files(
+		[](std::string_view key, Dataloader::locale_t locale, std::string_view localisation) -> bool {
+			return true;
+		}
+	)) {
+		Logger::error("Failed to load localisation!");
+		ret = false;
+	}
 
 	return ret;
 }
