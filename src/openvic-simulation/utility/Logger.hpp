@@ -70,13 +70,13 @@ namespace OpenVic {
 		static void set_##name##_func(log_func_t log_func) {									\
 			name##_func = log_func;																\
 		}																						\
-		template <typename... Ts>																\
+		template<typename... Ts>																\
 		struct name {																			\
 			name(Ts&&... ts, source_location const& location = source_location::current()) {	\
 				log<Ts...>{ name##_func, name##_queue, std::forward<Ts>(ts)..., location };		\
 			}																					\
 		};																						\
-		template <typename... Ts>																\
+		template<typename... Ts>																\
 		name(Ts&&...) -> name<Ts...>;
 
 		LOG_FUNC(info)

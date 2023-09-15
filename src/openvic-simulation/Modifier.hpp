@@ -31,6 +31,7 @@ namespace OpenVic {
 
 	public:
 		ModifierValue();
+		ModifierValue(effect_map_t&& new_values);
 		ModifierValue(ModifierValue const&);
 		ModifierValue(ModifierValue&&);
 

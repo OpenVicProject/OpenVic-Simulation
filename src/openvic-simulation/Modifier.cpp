@@ -10,6 +10,7 @@ bool ModifierEffect::get_positive_good() const {
 }
 
 ModifierValue::ModifierValue() = default;
+ModifierValue::ModifierValue(effect_map_t&& new_values) : values { std::move(new_values) } {}
 ModifierValue::ModifierValue(ModifierValue const&) = default;
 ModifierValue::ModifierValue(ModifierValue&&) = default;
 
