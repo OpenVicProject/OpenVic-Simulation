@@ -53,7 +53,7 @@ PopType::PopType(const std::string_view new_identifier, colour_t new_colour,
 	strata_t new_strata, sprite_t new_sprite,
 	Pop::pop_size_t new_max_size, Pop::pop_size_t new_merge_max_size,
 	bool new_state_capital_only, bool new_demote_migrant, bool new_is_artisan, bool new_is_slave)
-	: HasIdentifierAndColour { new_identifier, new_colour, true },
+	: HasIdentifierAndColour { new_identifier, new_colour, true, false },
 	  strata { new_strata },
 	  sprite { new_sprite },
 	  max_size { new_max_size },

@@ -31,10 +31,9 @@ namespace OpenVic {
 		 * DAT-24
 		 */
 		fs::path lookup_file(fs::path const& path) const;
-		static const fs::path TXT, CSV;
-		path_vector_t lookup_files_in_dir(fs::path const& path, fs::path const* extension = &TXT) const;
-		bool apply_to_files_in_dir(fs::path const& path, std::function<bool(fs::path const&)> callback,
-			fs::path const* extension = &TXT) const;
+		path_vector_t lookup_files_in_dir(fs::path const& path, fs::path const& extension) const;
+		bool apply_to_files_in_dir(fs::path const& path, fs::path const& extension,
+			std::function<bool(fs::path const&)> callback) const;
 
 		bool load_defines(GameManager& game_manager) const;
 		bool load_pop_history(GameManager& game_manager, fs::path const& path) const;

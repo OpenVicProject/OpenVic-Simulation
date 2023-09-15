@@ -8,7 +8,7 @@ using namespace OpenVic;
 using namespace OpenVic::NodeTools;
 
 Province::Province(const std::string_view new_identifier, colour_t new_colour, index_t new_index)
-	: HasIdentifierAndColour { new_identifier, new_colour, false },
+	: HasIdentifierAndColour { new_identifier, new_colour, false, false },
 	  index { new_index },
 	  buildings { "buildings", false } {
 	assert(index != NULL_INDEX);

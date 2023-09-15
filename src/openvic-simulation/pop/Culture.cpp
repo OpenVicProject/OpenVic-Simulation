@@ -27,7 +27,7 @@ bool CultureGroup::get_is_overseas() const {
 
 Culture::Culture(const std::string_view new_identifier, colour_t new_colour, CultureGroup const& new_group,
 	std::vector<std::string> const& new_first_names, std::vector<std::string> const& new_last_names)
-	: HasIdentifierAndColour { new_identifier, new_colour, true },
+	: HasIdentifierAndColour { new_identifier, new_colour, true, false },
 	  group { new_group },
 	  first_names { new_first_names },
 	  last_names { new_last_names } {}

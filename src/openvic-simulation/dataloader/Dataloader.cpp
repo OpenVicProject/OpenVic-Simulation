@@ -49,9 +49,6 @@ fs::path Dataloader::lookup_file(fs::path const& path) const {
 	return {};
 }
 
-const fs::path Dataloader::TXT = ".txt";
-const fs::path Dataloader::CSV = ".csv";
-
 static bool contains_file_with_name(Dataloader::path_vector_t const& paths, fs::path const& name) {
 
 	for (fs::path const& path : paths) {
@@ -60,8 +57,7 @@ static bool contains_file_with_name(Dataloader::path_vector_t const& paths, fs::
 	return false;
 }
 
-Dataloader::path_vector_t Dataloader::lookup_files_in_dir(fs::path const& path, fs::path const* extension) const {
-
+Dataloader::path_vector_t Dataloader::lookup_files_in_dir(fs::path const& path, fs::path const& extension) const {
 	path_vector_t ret;
 	for (fs::path const& root : roots) {
 		const fs::path composed = root / path;
@@ -69,7 +65,7 @@ Dataloader::path_vector_t Dataloader::lookup_files_in_dir(fs::path const& path, 
 		for (fs::directory_entry const& entry : fs::directory_iterator { composed, ec }) {
 			if (entry.is_regular_file()) {
 				const fs::path file = entry;
-				if (extension == nullptr || file.extension() == *extension) {
+				if (extension.empty() || file.extension() == extension) {
 					if (!contains_file_with_name(ret, file.filename())) {
 						ret.push_back(file);
 					}
@@ -80,7 +76,7 @@ Dataloader::path_vector_t Dataloader::lookup_files_in_dir(fs::path const& path, 
 	return ret;
 }
 
-bool Dataloader::apply_to_files_in_dir(fs::path const& path, std::function<bool(fs::path const&)> callback, fs::path const* extension) const {
+bool Dataloader::apply_to_files_in_dir(fs::path const& path, fs::path const& extension, std::function<bool(fs::path const&)> callback) const {
 
 	bool ret = true;
 	for (fs::path const& file : lookup_files_in_dir(path, extension)) {
@@ -108,7 +104,7 @@ static Parser _run_ovdl_parser(fs::path const& path) {
 	parser.set_error_log_to(error_log_stream);
 	parser.load_from_file(path);
 	if (!buffer.empty()) {
-		Logger::error("Parser load errors:\n\n", buffer, "\n");
+		Logger::error("Parser load errors for ", path, ":\n\n", buffer, "\n");
 		buffer.clear();
 	}
 	if (parser.has_fatal_error() || parser.has_error()) {
@@ -116,10 +112,10 @@ static Parser _run_ovdl_parser(fs::path const& path) {
 		return parser;
 	}
 	if (!parse_func(parser)) {
-		Logger::error("Parse function returned false!");
+		Logger::error("Parse function returned false for ", path, "!");
 	}
 	if (!buffer.empty()) {
-		Logger::error("Parser parse errors:\n\n", buffer, "\n");
+		Logger::error("Parser parse errors for ", path, ":\n\n", buffer, "\n");
 		buffer.clear();
 	}
 	if (parser.has_fatal_error() || parser.has_error()) {
@@ -145,7 +141,7 @@ static csv::Windows1252Parser _parse_csv(fs::path const& path) {
 }
 
 bool Dataloader::_load_pop_types(PopManager& pop_manager, fs::path const& pop_type_directory) const {
-	const bool ret = apply_to_files_in_dir(pop_type_directory,
+	const bool ret = apply_to_files_in_dir(pop_type_directory, ".txt",
 		[&pop_manager](fs::path const& file) -> bool {
 			return pop_manager.load_pop_type_file(file.stem().string(), _parse_defines(file).get_file_node());
 		}
@@ -283,7 +279,7 @@ bool Dataloader::load_defines(GameManager& game_manager) const {
 }
 
 bool Dataloader::load_pop_history(GameManager& game_manager, fs::path const& path) const {
-	return apply_to_files_in_dir(path,
+	return apply_to_files_in_dir(path, ".txt",
 		[&game_manager](fs::path const& file) -> bool {
 			return expect_dictionary(
 				[&game_manager](std::string_view province_key, ast::NodeCPtr province_node) -> bool {
@@ -317,7 +313,9 @@ static bool _load_localisation_file(Dataloader::localisation_callback_t callback
 }
 
 bool Dataloader::load_localisation_files(localisation_callback_t callback, fs::path const& localisation_dir) {
-	return apply_to_files_in_dir(localisation_dir, [callback](fs::path path) -> bool {
-		return _load_localisation_file(callback, _parse_csv(path).get_lines());
-	}, &CSV);
+	return apply_to_files_in_dir(localisation_dir, ".csv",
+		[callback](fs::path path) -> bool {
+			return _load_localisation_file(callback, _parse_csv(path).get_lines());
+		}
+	);
 }

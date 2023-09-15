@@ -512,9 +512,6 @@ bool Map::load_province_definitions(std::vector<LineObject> const& lines) {
 	return ret;
 }
 
-/* TODO - add support for non-state province groupings used by some mods
- * (currently they trigger "province already in other region" errors).
- */
 bool Map::load_region_file(ast::NodeCPtr root) {
 	const bool ret = expect_dictionary_reserve_length(
 		regions,
