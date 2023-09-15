@@ -79,8 +79,8 @@ constexpr std::ostream& operator<<(std::ostream& stream, vec2_t<T> const& value)
 	return stream << "(" << value.x << ", " << value.y << ")";
 }
 
-template struct vec2_t<int64_t>;
-template struct vec2_t<fixed_point_t>;
+template struct OpenVic::vec2_t<int64_t>;
+template struct OpenVic::vec2_t<fixed_point_t>;
 
 static_assert(sizeof(ivec2_t) == 2 * sizeof(int64_t), "ivec2_t size does not equal the sum of its parts' sizes");
 static_assert(sizeof(fvec2_t) == 2 * sizeof(fixed_point_t), "fvec2_t size does not equal the sum of its parts' sizes");
