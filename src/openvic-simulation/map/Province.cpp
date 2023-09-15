@@ -8,7 +8,7 @@ using namespace OpenVic;
 using namespace OpenVic::NodeTools;
 
 Province::Province(const std::string_view new_identifier, colour_t new_colour, index_t new_index)
-	: HasIdentifierAndColour { new_identifier, new_colour, false },
+	: HasIdentifierAndColour { new_identifier, new_colour, false, false },
 	  index { new_index },
 	  buildings { "buildings", false } {
 	assert(index != NULL_INDEX);
@@ -22,7 +22,11 @@ Region* Province::get_region() const {
 	return region;
 }
 
-bool Province::is_water() const {
+bool Province::get_has_region() const {
+	return has_region;
+}
+
+bool Province::get_water() const {
 	return water;
 }
 
@@ -64,7 +68,7 @@ bool Province::load_pop_list(PopManager const& pop_manager, ast::NodeCPtr root) 
 }
 
 bool Province::add_pop(Pop&& pop) {
-	if (!is_water()) {
+	if (!get_water()) {
 		pops.push_back(std::move(pop));
 		return true;
 	} else {

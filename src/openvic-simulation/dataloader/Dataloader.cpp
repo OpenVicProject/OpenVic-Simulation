@@ -49,8 +49,6 @@ fs::path Dataloader::lookup_file(fs::path const& path) const {
 	return {};
 }
 
-const fs::path Dataloader::TXT = ".txt";
-
 static bool contains_file_with_name(Dataloader::path_vector_t const& paths, fs::path const& name) {
 
 	for (fs::path const& path : paths) {
@@ -59,8 +57,7 @@ static bool contains_file_with_name(Dataloader::path_vector_t const& paths, fs::
 	return false;
 }
 
-Dataloader::path_vector_t Dataloader::lookup_files_in_dir(fs::path const& path, fs::path const* extension) const {
-
+Dataloader::path_vector_t Dataloader::lookup_files_in_dir(fs::path const& path, fs::path const& extension) const {
 	path_vector_t ret;
 	for (fs::path const& root : roots) {
 		const fs::path composed = root / path;
@@ -68,7 +65,7 @@ Dataloader::path_vector_t Dataloader::lookup_files_in_dir(fs::path const& path, 
 		for (fs::directory_entry const& entry : fs::directory_iterator { composed, ec }) {
 			if (entry.is_regular_file()) {
 				const fs::path file = entry;
-				if (extension == nullptr || file.extension() == *extension) {
+				if (extension.empty() || file.extension() == extension) {
 					if (!contains_file_with_name(ret, file.filename())) {
 						ret.push_back(file);
 					}
@@ -79,7 +76,7 @@ Dataloader::path_vector_t Dataloader::lookup_files_in_dir(fs::path const& path, 
 	return ret;
 }
 
-bool Dataloader::apply_to_files_in_dir(fs::path const& path, std::function<bool(fs::path const&)> callback, fs::path const* extension) const {
+bool Dataloader::apply_to_files_in_dir(fs::path const& path, fs::path const& extension, std::function<bool(fs::path const&)> callback) const {
 
 	bool ret = true;
 	for (fs::path const& file : lookup_files_in_dir(path, extension)) {
@@ -88,11 +85,11 @@ bool Dataloader::apply_to_files_in_dir(fs::path const& path, std::function<bool(
 	return ret;
 }
 
-template<std::derived_from<detail::BasicParser> Parser, bool (Parser::*parse_func)()>
+template<std::derived_from<detail::BasicParser> Parser, bool (*parse_func)(Parser&)>
 static Parser _run_ovdl_parser(fs::path const& path) {
 	Parser parser;
 	std::string buffer;
-	auto error_log_stream = ovdl::detail::CallbackStream {
+	auto error_log_stream = detail::CallbackStream {
 		[](void const* s, std::streamsize n, void* user_data) -> std::streamsize {
 			if (s != nullptr && n > 0 && user_data != nullptr) {
 				static_cast<std::string*>(user_data)->append(static_cast<char const*>(s), n);
@@ -107,18 +104,18 @@ static Parser _run_ovdl_parser(fs::path const& path) {
 	parser.set_error_log_to(error_log_stream);
 	parser.load_from_file(path);
 	if (!buffer.empty()) {
-		Logger::error("Parser load errors:\n\n", buffer, "\n");
+		Logger::error("Parser load errors for ", path, ":\n\n", buffer, "\n");
 		buffer.clear();
 	}
 	if (parser.has_fatal_error() || parser.has_error()) {
 		Logger::error("Parser errors while loading ", path);
 		return parser;
 	}
-	if (!(parser.*parse_func)()) {
-		Logger::error("Parse function returned false!");
+	if (!parse_func(parser)) {
+		Logger::error("Parse function returned false for ", path, "!");
 	}
 	if (!buffer.empty()) {
-		Logger::error("Parser parse errors:\n\n", buffer, "\n");
+		Logger::error("Parser parse errors for ", path, ":\n\n", buffer, "\n");
 		buffer.clear();
 	}
 	if (parser.has_fatal_error() || parser.has_error()) {
@@ -127,16 +124,24 @@ static Parser _run_ovdl_parser(fs::path const& path) {
 	return parser;
 }
 
+static bool _v2script_parse(v2script::Parser& parser) {
+	return parser.simple_parse();
+}
+
 static v2script::Parser _parse_defines(fs::path const& path) {
-	return _run_ovdl_parser<v2script::Parser, &v2script::Parser::simple_parse>(path);
+	return _run_ovdl_parser<v2script::Parser, &_v2script_parse>(path);
+}
+
+static bool _csv_parse(csv::Windows1252Parser& parser) {
+	return parser.parse_csv();
 }
 
 static csv::Windows1252Parser _parse_csv(fs::path const& path) {
-	return _run_ovdl_parser<csv::Windows1252Parser, &csv::Windows1252Parser::parse_csv>(path);
+	return _run_ovdl_parser<csv::Windows1252Parser, &_csv_parse>(path);
 }
 
 bool Dataloader::_load_pop_types(PopManager& pop_manager, fs::path const& pop_type_directory) const {
-	const bool ret = apply_to_files_in_dir(pop_type_directory,
+	const bool ret = apply_to_files_in_dir(pop_type_directory, ".txt",
 		[&pop_manager](fs::path const& file) -> bool {
 			return pop_manager.load_pop_type_file(file.stem().string(), _parse_defines(file).get_file_node());
 		}
@@ -221,6 +226,11 @@ bool Dataloader::_load_map_dir(Map& map, fs::path const& map_directory) const {
 		ret = false;
 	}
 
+	if (!map.load_region_file(_parse_defines(lookup_file(map_directory / region)).get_file_node())) {
+		Logger::error("Failed to load region file!");
+		ret = false;
+	}
+
 	if (!map.set_water_province_list(water_province_identifiers)) {
 		Logger::error("Failed to set water provinces!");
 		ret = false;
@@ -269,7 +279,7 @@ bool Dataloader::load_defines(GameManager& game_manager) const {
 }
 
 bool Dataloader::load_pop_history(GameManager& game_manager, fs::path const& path) const {
-	return apply_to_files_in_dir(path,
+	return apply_to_files_in_dir(path, ".txt",
 		[&game_manager](fs::path const& file) -> bool {
 			return expect_dictionary(
 				[&game_manager](std::string_view province_key, ast::NodeCPtr province_node) -> bool {
@@ -281,6 +291,31 @@ bool Dataloader::load_pop_history(GameManager& game_manager, fs::path const& pat
 					return province->load_pop_list(game_manager.pop_manager, province_node);
 				}
 			)(_parse_defines(file).get_file_node());
+		}
+	);
+}
+
+static bool _load_localisation_file(Dataloader::localisation_callback_t callback, std::vector<csv::LineObject> const& lines) {
+	bool ret = true;
+	for (csv::LineObject const& line : lines) {
+		const std::string_view key = line.get_value_for(0);
+		if (!key.empty()) {
+			const size_t max_entry = std::min<size_t>(line.value_count() - 1, Dataloader::_LocaleCount);
+			for (size_t i = 0; i < max_entry; ++i) {
+				const std::string_view entry = line.get_value_for(i + 1);
+				if (!entry.empty()) {
+					ret &= callback(key, static_cast<Dataloader::locale_t>(i), entry);
+				}
+			}
+		}
+	}
+	return ret;
+}
+
+bool Dataloader::load_localisation_files(localisation_callback_t callback, fs::path const& localisation_dir) {
+	return apply_to_files_in_dir(localisation_dir, ".csv",
+		[callback](fs::path path) -> bool {
+			return _load_localisation_file(callback, _parse_csv(path).get_lines());
 		}
 	);
 }

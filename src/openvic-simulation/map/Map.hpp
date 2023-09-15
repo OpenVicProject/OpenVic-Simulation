@@ -113,5 +113,6 @@ namespace OpenVic {
 		void tick(Date const& today);
 
 		bool load_province_definitions(std::vector<ovdl::csv::LineObject> const& lines);
+		bool load_region_file(ast::NodeCPtr root);
 	};
 }

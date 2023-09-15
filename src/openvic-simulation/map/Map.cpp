@@ -7,6 +7,7 @@
 #include "openvic-simulation/utility/Logger.hpp"
 
 using namespace OpenVic;
+using namespace OpenVic::NodeTools;
 
 Mapmode::Mapmode(const std::string_view new_identifier, index_t new_index, colour_func_t new_colour_func)
 	: HasIdentifier { new_identifier },
@@ -67,7 +68,7 @@ bool Map::set_water_province(const std::string_view identifier) {
 		Logger::error("Unrecognised water province identifier: ", identifier);
 		return false;
 	}
-	if (province->is_water()) {
+	if (province->get_water()) {
 		Logger::warning("Province ", identifier, " is already a water province!");
 		return true;
 	}
@@ -98,53 +99,60 @@ bool Map::add_region(const std::string_view identifier, std::vector<std::string_
 		Logger::error("Invalid region identifier - empty!");
 		return false;
 	}
-	Region new_region { identifier };
-	bool ret = true;
+	Region::provinces_t provinces;
+	provinces.reserve(province_identifiers.size());
+	bool meta = false, ret = true;
 	for (const std::string_view province_identifier : province_identifiers) {
 		Province* province = get_province_by_identifier(province_identifier);
 		if (province != nullptr) {
-			if (new_region.contains_province(province)) {
+			if (std::find(provinces.begin(), provinces.end(), province) != provinces.end()) {
 				Logger::error("Duplicate province identifier ", province_identifier, " in region ", identifier);
 				ret = false;
 			} else {
-				size_t other_region_index = reinterpret_cast<size_t>(province->get_region());
-				if (other_region_index != 0) {
-					other_region_index--;
-					if (other_region_index < regions.size())
-						Logger::error("Cannot add province ", province_identifier, " to region ", identifier, " - it is already part of ", regions.get_item_by_index(other_region_index)->get_identifier());
-					else
-						Logger::error("Cannot add province ", province_identifier, " to region ", identifier, " - it is already part of an unknown region with index ", other_region_index);
-					ret = false;
-				} else if (!new_region.add_province(province)) {
-					Logger::error("Failed to add province ", province_identifier, " to region ", identifier);
-					ret = false;
+				if (province->get_has_region()) {
+					meta = true;
 				}
+				provinces.push_back(province);
 			}
 		} else {
 			Logger::error("Invalid province identifier ", province_identifier, " for region ", identifier);
 			ret = false;
 		}
 	}
-	new_region.lock();
-	if (new_region.empty()) {
-		Logger::error("No valid provinces in list for ", identifier);
-		return false;
+	if (provinces.empty()) {
+		Logger::warning("No valid provinces in list for ", identifier);
+		return ret;
 	}
 
-	// Used to detect provinces listed in multiple regions, will
-	// be corrected once regions is stable (i.e. lock_regions).
-	Region* tmp_region_index = reinterpret_cast<Region*>(regions.size());
-	for (Province* province : new_region.get_provinces())
-		province->region = tmp_region_index;
-	ret &= regions.add_item(std::move(new_region));
+	if (!meta) {
+		for (Province* province : provinces) {
+			province->has_region = true;
+		}
+	}
+	ret &= regions.add_item({ identifier, std::move(provinces), meta });
 	return ret;
 }
 
 void Map::lock_regions() {
 	regions.lock();
-	for (Region& region : regions.get_items())
-		for (Province* province : region.get_provinces())
-			province->region = &region;
+	for (Region& region : regions.get_items()) {
+		if (!region.meta) {
+			for (Province* province : region.get_provinces()) {
+				if (!province->get_has_region()) {
+					Logger::error("Province in non-meta region without has_region set: ", province->get_identifier());
+					province->has_region = true;
+				}
+				province->region = &region;
+			}
+		}
+	}
+	for (Province& province : provinces.get_items()) {
+		const bool region_null = province.get_region() == nullptr;
+		if (province.get_has_region() == region_null) {
+			Logger::error("Province has_region / region mismatch: has_region = ", province.get_has_region(), ", region = ", province.get_region());
+			province.has_region = !region_null;
+		}
+	}
 }
 
 size_t Map::get_province_count() const {
@@ -420,7 +428,7 @@ bool Map::setup(GoodManager const& good_manager, BuildingManager const& building
 	for (Province& province : provinces.get_items()) {
 		province.clear_pops();
 		// Set all land provinces to have an RGO based on their index to test them
-		if (!province.is_water() && good_manager.get_good_count() > 0)
+		if (!province.get_water() && !good_manager.get_good_count() > 0)
 			province.rgo = good_manager.get_good_by_index(province.get_index() % good_manager.get_good_count());
 		ret &= building_manager.generate_province_buildings(province);
 	}
@@ -501,5 +509,25 @@ bool Map::load_province_definitions(std::vector<LineObject> const& lines) {
 		}
 	);
 	lock_provinces();
+	return ret;
+}
+
+bool Map::load_region_file(ast::NodeCPtr root) {
+	const bool ret = expect_dictionary_reserve_length(
+		regions,
+		[this](std::string_view region_identifier, ast::NodeCPtr region_node) -> bool {
+			std::vector<std::string_view> province_identifiers;
+			bool ret = expect_list_reserve_length(
+				province_identifiers,
+				expect_identifier([&province_identifiers](std::string_view identifier) -> bool {
+					province_identifiers.push_back(identifier);
+					return true;
+				})
+			)(region_node);
+			ret &= add_region(region_identifier, province_identifiers);
+			return ret;
+		}
+	)(root);
+	lock_regions();
 	return ret;
 }

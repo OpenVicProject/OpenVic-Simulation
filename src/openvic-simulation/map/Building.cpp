@@ -117,7 +117,7 @@ bool BuildingManager::generate_province_buildings(Province& province) const {
 		return false;
 	}
 	bool ret = true;
-	if (!province.is_water()) {
+	if (!province.get_water()) {
 		for (BuildingType const& type : building_types.get_items()) {
 			ret &= province.add_building({ type });
 		}

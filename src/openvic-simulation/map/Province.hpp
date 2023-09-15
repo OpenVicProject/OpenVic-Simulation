@@ -23,7 +23,7 @@ namespace OpenVic {
 	private:
 		const index_t index;
 		Region* region = nullptr;
-		bool water = false;
+		bool has_region = false, water = false;
 		life_rating_t life_rating = 0;
 		IdentifierRegistry<Building> buildings;
 		// TODO - change this into a factory-like structure
@@ -40,7 +40,8 @@ namespace OpenVic {
 
 		index_t get_index() const;
 		Region* get_region() const;
-		bool is_water() const;
+		bool get_has_region() const;
+		bool get_water() const;
 		life_rating_t get_life_rating() const;
 		bool add_building(Building&& building);
 		IDENTIFIER_REGISTRY_ACCESSORS(Building, building)

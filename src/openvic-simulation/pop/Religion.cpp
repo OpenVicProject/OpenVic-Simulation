@@ -9,7 +9,7 @@ ReligionGroup::ReligionGroup(const std::string_view new_identifier) : HasIdentif
 
 Religion::Religion(const std::string_view new_identifier, colour_t new_colour,
 	ReligionGroup const& new_group, icon_t new_icon, bool new_pagan)
-	: HasIdentifierAndColour { new_identifier, new_colour, true },
+	: HasIdentifierAndColour { new_identifier, new_colour, true, false },
 	  group { new_group },
 	  icon { new_icon },
 	  pagan { new_pagan } {

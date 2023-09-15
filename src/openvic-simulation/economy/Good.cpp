@@ -9,7 +9,7 @@ GoodCategory::GoodCategory(const std::string_view new_identifier) : HasIdentifie
 
 Good::Good(const std::string_view new_identifier, colour_t new_colour, GoodCategory const& new_category, price_t new_base_price,
 	bool new_available_from_start, bool new_tradeable, bool new_money, bool new_overseas_penalty)
-	: HasIdentifierAndColour { new_identifier, new_colour, true },
+	: HasIdentifierAndColour { new_identifier, new_colour, true, false },
 	  category { new_category },
 	  base_price { new_base_price },
 	  available_from_start { new_available_from_start },

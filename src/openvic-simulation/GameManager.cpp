@@ -63,7 +63,7 @@ bool GameManager::load_hardcoded_defines() {
 	const std::vector<mapmode_t> mapmodes {
 		{ "mapmode_terrain",
 			[](Map const&, Province const& province) -> colour_t {
-				return LOW_ALPHA_VALUE | (province.is_water() ? 0x4287F5 : 0x0D7017);
+				return LOW_ALPHA_VALUE | (province.get_water() ? 0x4287F5 : 0x0D7017);
 			} },
 		{ "mapmode_province",
 			[](Map const&, Province const& province) -> colour_t {
