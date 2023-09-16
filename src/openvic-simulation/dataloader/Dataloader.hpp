@@ -4,6 +4,8 @@
 #include <functional>
 #include <vector>
 
+#include "openvic-simulation/dataloader/NodeTools.hpp"
+
 namespace OpenVic {
 	namespace fs = std::filesystem;
 
@@ -33,7 +35,7 @@ namespace OpenVic {
 		fs::path lookup_file(fs::path const& path) const;
 		path_vector_t lookup_files_in_dir(fs::path const& path, fs::path const& extension) const;
 		bool apply_to_files_in_dir(fs::path const& path, fs::path const& extension,
-			std::function<bool(fs::path const&)> callback) const;
+			NodeTools::callback_t<fs::path const&> callback) const;
 
 		bool load_defines(GameManager& game_manager) const;
 		bool load_pop_history(GameManager& game_manager, fs::path const& path) const;
@@ -46,7 +48,7 @@ namespace OpenVic {
 		};
 
 		/* Args: key, locale, localisation */
-		using localisation_callback_t = std::function<bool(std::string_view, locale_t, std::string_view)>;
+		using localisation_callback_t = NodeTools::callback_t<std::string_view, locale_t, std::string_view>;
 		bool load_localisation_files(localisation_callback_t callback, fs::path const& localisation_dir = "localisation");
 	};
 }

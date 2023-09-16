@@ -171,7 +171,7 @@ namespace OpenVic {
 			return items;
 		}
 
-		NodeTools::node_callback_t expect_item(T const*& ret) const {
+		NodeTools::node_callback_t expect_item_identifier(T const*& ret) const {
 			return NodeTools::expect_identifier(
 				[this, &ret](std::string_view identifier) -> bool {
 					ret = get_item_by_identifier(identifier);
@@ -193,8 +193,8 @@ namespace OpenVic {
 		return plural.size(); } \
 	std::vector<type> const& get_##plural() const { \
 		return plural.get_items(); } \
-	NodeTools::node_callback_t expect_##singular(type const*& ret) const { \
-		return plural.expect_item(ret); }
+	NodeTools::node_callback_t expect_##singular##_identifier(type const*& ret) const { \
+		return plural.expect_item_identifier(ret); }
 
 #define IDENTIFIER_REGISTRY_ACCESSORS(type, name) IDENTIFIER_REGISTRY_ACCESSORS_CUSTOM_PLURAL(type, name, name##s)
 }

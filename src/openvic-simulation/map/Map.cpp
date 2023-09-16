@@ -428,7 +428,7 @@ bool Map::setup(GoodManager const& good_manager, BuildingManager const& building
 	for (Province& province : provinces.get_items()) {
 		province.clear_pops();
 		// Set all land provinces to have an RGO based on their index to test them
-		if (!province.get_water() && !good_manager.get_good_count() > 0)
+		if (!province.get_water() && good_manager.get_good_count() > 0)
 			province.rgo = good_manager.get_good_by_index(province.get_index() % good_manager.get_good_count());
 		ret &= building_manager.generate_province_buildings(province);
 	}
@@ -476,6 +476,17 @@ static bool parse_province_colour(colour_t& colour, std::array<std::string_view,
 	return ret;
 }
 
+node_callback_t Map::expect_province_dictionary(callback_t<Province&, ast::NodeCPtr> callback) {
+	return expect_dictionary([this, callback](std::string_view key, ast::NodeCPtr value) -> bool {
+		Province* province = get_province_by_identifier(key);
+		if (province != nullptr) {
+			return callback(*province, value);
+		}
+		Logger::error("Invalid province identifier: ", key);
+		return false;
+	});
+}
+
 bool Map::load_province_definitions(std::vector<LineObject> const& lines) {
 	if (lines.empty()) {
 		Logger::error("No header or entries in province definition file!");
@@ -510,6 +521,14 @@ bool Map::load_province_definitions(std::vector<LineObject> const& lines) {
 	);
 	lock_provinces();
 	return ret;
+}
+
+bool Map::load_province_positions(ast::NodeCPtr root) {
+	return expect_province_dictionary(
+		[](Province& province, ast::NodeCPtr node) -> bool {
+			return province.load_positions(node);
+		}
+	)(root);
 }
 
 bool Map::load_region_file(ast::NodeCPtr root) {

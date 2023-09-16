@@ -1,5 +1,7 @@
 #include "Culture.hpp"
 
+#include <set>
+
 #include "openvic-simulation/dataloader/NodeTools.hpp"
 
 using namespace OpenVic;
@@ -128,7 +130,7 @@ bool CultureManager::_load_culture_group(size_t& total_expected_cultures,
 		},
 		"unit", ZERO_OR_ONE, [this, &total_expected_cultures, &unit_graphical_culture_type](ast::NodeCPtr node) -> bool {
 			total_expected_cultures--;
-			return expect_graphical_culture_type(unit_graphical_culture_type)(node);
+			return expect_graphical_culture_type_identifier(unit_graphical_culture_type)(node);
 		},
 		"union", ZERO_OR_ONE, [&total_expected_cultures](ast::NodeCPtr) -> bool {
 			total_expected_cultures--;
@@ -207,7 +209,10 @@ bool CultureManager::load_culture_file(ast::NodeCPtr root) {
 			CultureGroup const* culture_group = get_culture_group_by_identifier(culture_group_key);
 			return expect_dictionary(
 				[this, culture_group](std::string_view key, ast::NodeCPtr value) -> bool {
-					if (key == "leader" || key == "unit" || key == "union" || key == "is_overseas") return true;
+					static const std::set<std::string, std::less<void>> reserved_keys = {
+						"leader", "unit", "union", "is_overseas"
+					};
+					if (reserved_keys.find(key) != reserved_keys.end()) return true;
 					return _load_culture(culture_group, key, value);
 				}
 			)(culture_group_value);

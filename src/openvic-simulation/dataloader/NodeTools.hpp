@@ -20,6 +20,7 @@ namespace OpenVic {
 		constexpr bool success_callback(ast::NodeCPtr) { return true; }
 
 		using key_value_callback_t = callback_t<std::string_view, ast::NodeCPtr>;
+		constexpr bool key_value_success_callback(std::string_view, ast::NodeCPtr) { return true; }
 
 		node_callback_t expect_identifier(callback_t<std::string_view> callback);
 		node_callback_t expect_string(callback_t<std::string_view> callback);

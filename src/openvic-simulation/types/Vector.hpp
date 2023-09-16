@@ -27,6 +27,7 @@ namespace OpenVic {
 		constexpr friend vec2_t operator-(vec2_t const& arg);
 		constexpr friend vec2_t operator-(vec2_t const& left, vec2_t const& right);
 		constexpr vec2_t& operator-=(vec2_t const& right);
+
 		constexpr friend std::ostream& operator<<(std::ostream& stream, vec2_t const& value);
 	};
 

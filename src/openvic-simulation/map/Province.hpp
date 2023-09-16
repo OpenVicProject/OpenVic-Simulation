@@ -43,6 +43,8 @@ namespace OpenVic {
 		bool get_has_region() const;
 		bool get_water() const;
 		life_rating_t get_life_rating() const;
+		bool load_positions(ast::NodeCPtr root);
+
 		bool add_building(Building&& building);
 		IDENTIFIER_REGISTRY_ACCESSORS(Building, building)
 		void reset_buildings();
