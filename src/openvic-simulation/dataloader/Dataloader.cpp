@@ -157,7 +157,9 @@ bool Dataloader::_load_pop_types(PopManager& pop_manager, fs::path const& pop_ty
 	return ret;
 }
 
-bool Dataloader::_load_map_dir(Map& map, fs::path const& map_directory) const {
+bool Dataloader::_load_map_dir(GameManager& game_manager, fs::path const& map_directory) const {
+	Map& map = game_manager.map;
+
 	static const fs::path defaults_filename = "default.map";
 	static const std::string default_definitions = "definition.csv";
 	static const std::string default_provinces = "provinces.bmp";
@@ -230,7 +232,7 @@ bool Dataloader::_load_map_dir(Map& map, fs::path const& map_directory) const {
 		ret = false;
 	}
 
-	if (!map.load_province_positions(_parse_defines(lookup_file(map_directory / positions)).get_file_node())) {
+	if (!map.load_province_positions(game_manager.building_manager, _parse_defines(lookup_file(map_directory / positions)).get_file_node())) {
 		Logger::error("Failed to load province positions file!");
 		ret = false;
 	}
@@ -279,7 +281,7 @@ bool Dataloader::load_defines(GameManager& game_manager) const {
 		Logger::error("Failed to load religions!");
 		ret = false;
 	}
-	if (!_load_map_dir(game_manager.map, map_directory)) {
+	if (!_load_map_dir(game_manager, map_directory)) {
 		Logger::error("Failed to load map!");
 		ret = false;
 	}

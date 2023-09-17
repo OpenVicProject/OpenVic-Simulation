@@ -523,10 +523,10 @@ bool Map::load_province_definitions(std::vector<LineObject> const& lines) {
 	return ret;
 }
 
-bool Map::load_province_positions(ast::NodeCPtr root) {
+bool Map::load_province_positions(BuildingManager const& building_manager, ast::NodeCPtr root) {
 	return expect_province_dictionary(
-		[](Province& province, ast::NodeCPtr node) -> bool {
-			return province.load_positions(node);
+		[&building_manager](Province& province, ast::NodeCPtr node) -> bool {
+			return province.load_positions(building_manager, node);
 		}
 	)(root);
 }

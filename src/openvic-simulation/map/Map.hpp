@@ -114,7 +114,7 @@ namespace OpenVic {
 
 		NodeTools::node_callback_t expect_province_dictionary(NodeTools::callback_t<Province&, ast::NodeCPtr> callback);
 		bool load_province_definitions(std::vector<ovdl::csv::LineObject> const& lines);
-		bool load_province_positions(ast::NodeCPtr root);
+		bool load_province_positions(BuildingManager const& building_manager, ast::NodeCPtr root);
 		bool load_region_file(ast::NodeCPtr root);
 	};
 }

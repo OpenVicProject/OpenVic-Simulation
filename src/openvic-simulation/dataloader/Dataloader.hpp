@@ -21,7 +21,7 @@ namespace OpenVic {
 		path_vector_t roots;
 
 		bool _load_pop_types(PopManager& pop_manager, fs::path const& pop_type_directory) const;
-		bool _load_map_dir(Map& map, fs::path const& map_directory) const;
+		bool _load_map_dir(GameManager& game_manager, fs::path const& map_directory) const;
 
 	public:
 		Dataloader() = default;
