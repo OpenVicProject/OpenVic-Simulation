@@ -142,8 +142,8 @@ bool PopManager::load_pop_into_province(Province& province, const std::string_vi
 	Pop::pop_size_t size = 0;
 
 	bool ret = expect_dictionary_keys(
-		"culture", ONE_EXACTLY, culture_manager.expect_culture_identifier(culture),
-		"religion", ONE_EXACTLY, religion_manager.expect_religion_identifier(religion),
+		"culture", ONE_EXACTLY, culture_manager.expect_culture_identifier(assign_variable_callback_pointer(culture)),
+		"religion", ONE_EXACTLY, religion_manager.expect_religion_identifier(assign_variable_callback_pointer(religion)),
 		"size", ONE_EXACTLY, expect_uint(assign_variable_callback_uint("pop size", size)),
 		"militancy", ZERO_OR_ONE, success_callback,
 		"rebel_type", ZERO_OR_ONE, success_callback

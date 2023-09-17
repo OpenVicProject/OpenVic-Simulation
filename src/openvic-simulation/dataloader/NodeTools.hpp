@@ -162,5 +162,13 @@ namespace OpenVic {
 		callback_t<int64_t> assign_variable_callback_int(const std::string_view name, T& var) {
 			return _assign_variable_callback_int<int64_t>(name, var);
 		}
+
+		template<typename T>
+		callback_t<T const&> assign_variable_callback_pointer(T const*& var) {
+			return [&var](T const& val) -> bool {
+				var = &val;
+				return true;
+			};
+		}
 	}
 }

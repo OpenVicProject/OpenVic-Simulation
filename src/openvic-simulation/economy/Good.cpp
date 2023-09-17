@@ -92,7 +92,7 @@ void GoodManager::reset_to_defaults() {
 		good.reset_to_defaults();
 }
 
-bool GoodManager::load_good_file(ast::NodeCPtr root) {
+bool GoodManager::load_goods_file(ast::NodeCPtr root) {
 	size_t total_expected_goods = 0;
 	bool ret = expect_dictionary_reserve_length(
 		good_categories,

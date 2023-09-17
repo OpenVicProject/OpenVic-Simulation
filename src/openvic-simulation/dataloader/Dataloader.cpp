@@ -252,7 +252,7 @@ bool Dataloader::_load_map_dir(GameManager& game_manager, fs::path const& map_di
 }
 
 bool Dataloader::load_defines(GameManager& game_manager) const {
-	static const fs::path good_file = "common/goods.txt";
+	static const fs::path goods_file = "common/goods.txt";
 	static const fs::path pop_type_directory = "poptypes";
 	static const fs::path graphical_culture_type_file = "common/graphicalculturetype.txt";
 	static const fs::path culture_file = "common/cultures.txt";
@@ -261,7 +261,7 @@ bool Dataloader::load_defines(GameManager& game_manager) const {
 
 	bool ret = true;
 
-	if (!game_manager.good_manager.load_good_file(_parse_defines(lookup_file(good_file)).get_file_node())) {
+	if (!game_manager.good_manager.load_goods_file(_parse_defines(lookup_file(goods_file)).get_file_node())) {
 		Logger::error("Failed to load goods!");
 		ret = false;
 	}

@@ -130,7 +130,7 @@ bool CultureManager::_load_culture_group(size_t& total_expected_cultures,
 		},
 		"unit", ZERO_OR_ONE, [this, &total_expected_cultures, &unit_graphical_culture_type](ast::NodeCPtr node) -> bool {
 			total_expected_cultures--;
-			return expect_graphical_culture_type_identifier(unit_graphical_culture_type)(node);
+			return expect_graphical_culture_type_identifier(assign_variable_callback_pointer(unit_graphical_culture_type))(node);
 		},
 		"union", ZERO_OR_ONE, [&total_expected_cultures](ast::NodeCPtr) -> bool {
 			total_expected_cultures--;

@@ -74,6 +74,6 @@ namespace OpenVic {
 		IDENTIFIER_REGISTRY_ACCESSORS(Good, good)
 
 		void reset_to_defaults();
-		bool load_good_file(ast::NodeCPtr root);
+		bool load_goods_file(ast::NodeCPtr root);
 	};
 }

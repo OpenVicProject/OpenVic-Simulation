@@ -61,35 +61,29 @@ namespace OpenVic {
 		Pop::pop_size_t highest_province_population, total_map_population;
 
 		Province::index_t get_index_from_colour(colour_t colour) const;
+		bool _generate_province_adjacencies();
 
 	public:
 		Map();
 
 		bool add_province(const std::string_view identifier, colour_t colour);
-		void lock_provinces();
+		IDENTIFIER_REGISTRY_ACCESSORS(Province, province)
+		IDENTIFIER_REGISTRY_NON_CONST_ACCESSORS(Province, province)
 		bool set_water_province(const std::string_view identifier);
 		bool set_water_province_list(std::vector<std::string_view> const& list);
 		void lock_water_provinces();
 		bool add_region(const std::string_view identifier, std::vector<std::string_view> const& province_identifiers);
-		void lock_regions();
+		IDENTIFIER_REGISTRY_ACCESSORS(Region, region)
+		IDENTIFIER_REGISTRY_NON_CONST_ACCESSORS(Region, region)
 
-		size_t get_province_count() const;
-		std::vector<Province> const& get_provinces() const;
 		Province* get_province_by_index(Province::index_t index);
 		Province const* get_province_by_index(Province::index_t index) const;
-		Province* get_province_by_identifier(const std::string_view identifier);
-		Province const* get_province_by_identifier(const std::string_view identifier) const;
 		Province::index_t get_province_index_at(size_t x, size_t y) const;
 		bool set_max_provinces(Province::index_t new_max_provinces);
 		Province::index_t get_max_provinces() const;
 		void set_selected_province(Province::index_t index);
 		Province::index_t get_selected_province_index() const;
 		Province const* get_selected_province() const;
-
-		Region* get_region_by_identifier(const std::string_view identifier);
-		Region const* get_region_by_identifier(const std::string_view identifier) const;
-		size_t get_region_count() const;
-		std::vector<Region> const& get_regions() const;
 
 		bool generate_province_shape_image(size_t new_width, size_t new_height, uint8_t const* colour_data,
 			uint8_t const* terrain_data, terrain_variant_map_t const& terrain_variant_map, bool detailed_errors);
@@ -112,7 +106,6 @@ namespace OpenVic {
 		void update_state(Date const& today);
 		void tick(Date const& today);
 
-		NodeTools::node_callback_t expect_province_dictionary(NodeTools::callback_t<Province&, ast::NodeCPtr> callback);
 		bool load_province_definitions(std::vector<ovdl::csv::LineObject> const& lines);
 		bool load_province_positions(BuildingManager const& building_manager, ast::NodeCPtr root);
 		bool load_region_file(ast::NodeCPtr root);

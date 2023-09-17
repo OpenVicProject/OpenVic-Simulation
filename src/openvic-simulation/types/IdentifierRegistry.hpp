@@ -171,30 +171,72 @@ namespace OpenVic {
 			return items;
 		}
 
-		NodeTools::node_callback_t expect_item_identifier(T const*& ret) const {
+		NodeTools::node_callback_t expect_item_identifier(NodeTools::callback_t<T&> callback) {
 			return NodeTools::expect_identifier(
-				[this, &ret](std::string_view identifier) -> bool {
-					ret = get_item_by_identifier(identifier);
-					if (ret != nullptr) return true;
+				[this, callback](std::string_view identifier) -> bool {
+					T* item = get_item_by_identifier(identifier);
+					if (item != nullptr) return callback(*item);
 					Logger::error("Invalid ", name, ": ", identifier);
 					return false;
 				}
 			);
 		}
+
+		NodeTools::node_callback_t expect_item_identifier(NodeTools::callback_t<T const&> callback) const {
+			return NodeTools::expect_identifier(
+				[this, callback](std::string_view identifier) -> bool {
+					T const* item = get_item_by_identifier(identifier);
+					if (item != nullptr) return callback(*item);
+					Logger::error("Invalid ", name, ": ", identifier);
+					return false;
+				}
+			);
+		}
+
+		NodeTools::node_callback_t expect_item_dictionary(NodeTools::callback_t<T&, ast::NodeCPtr> callback) {
+			return NodeTools::expect_dictionary([this, callback](std::string_view key, ast::NodeCPtr value) -> bool {
+				T* item = get_item_by_identifier(key);
+				if (item != nullptr) {
+					return callback(*item, value);
+				}
+				Logger::error("Invalid ", name, " identifier: ", key);
+				return false;
+			});
+		}
+
+		NodeTools::node_callback_t expect_item_dictionary(NodeTools::callback_t<T const&, ast::NodeCPtr> callback) const {
+			return NodeTools::expect_dictionary([this, callback](std::string_view key, ast::NodeCPtr value) -> bool {
+				T const* item = get_item_by_identifier(key);
+				if (item != nullptr) {
+					return callback(*item, value);
+				}
+				Logger::error("Invalid ", name, " identifier: ", key);
+				return false;
+			});
+		}
 	};
 
 #define IDENTIFIER_REGISTRY_ACCESSORS_CUSTOM_PLURAL(type, singular, plural) \
 	void lock_##plural() { plural.lock(); } \
-	type const* get_##singular##_by_index(size_t index) const { \
-		return plural.get_item_by_index(index); } \
 	type const* get_##singular##_by_identifier(const std::string_view identifier) const { \
 		return plural.get_item_by_identifier(identifier); } \
 	size_t get_##singular##_count() const { \
 		return plural.size(); } \
 	std::vector<type> const& get_##plural() const { \
 		return plural.get_items(); } \
-	NodeTools::node_callback_t expect_##singular##_identifier(type const*& ret) const { \
-		return plural.expect_item_identifier(ret); }
+	NodeTools::node_callback_t expect_##singular##_identifier(NodeTools::callback_t<type const&> callback) const { \
+		return plural.expect_item_identifier(callback); } \
+	NodeTools::node_callback_t expect_##singular##_dictionary(NodeTools::callback_t<type const&, ast::NodeCPtr> callback) const { \
+		return plural.expect_item_dictionary(callback); }
+
+#define IDENTIFIER_REGISTRY_NON_CONST_ACCESSORS_CUSTOM_PLURAL(type, singular, plural) \
+	type* get_##singular##_by_identifier(const std::string_view identifier) { \
+		return plural.get_item_by_identifier(identifier); } \
+	NodeTools::node_callback_t expect_##singular##_identifier(NodeTools::callback_t<type&> callback) { \
+		return plural.expect_item_identifier(callback); } \
+	NodeTools::node_callback_t expect_##singular##_dictionary(NodeTools::callback_t<type&, ast::NodeCPtr> callback) { \
+		return plural.expect_item_dictionary(callback); }
 
 #define IDENTIFIER_REGISTRY_ACCESSORS(type, name) IDENTIFIER_REGISTRY_ACCESSORS_CUSTOM_PLURAL(type, name, name##s)
+#define IDENTIFIER_REGISTRY_NON_CONST_ACCESSORS(type, name) IDENTIFIER_REGISTRY_NON_CONST_ACCESSORS_CUSTOM_PLURAL(type, name, name##s)
 }
