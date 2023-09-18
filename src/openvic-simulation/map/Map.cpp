@@ -502,7 +502,9 @@ bool Map::load_region_file(ast::NodeCPtr root) {
 }
 
 bool Map::_generate_province_adjacencies() {
-	auto generate_adjacency = [&] (shape_pixel_t cur, int32_t x, int32_t y) {
+	bool changed = false;
+
+	auto generate_adjacency = [&] (shape_pixel_t cur, int32_t x, int32_t y) -> bool {
 		int32_t idx = x + y * width;
 		if (idx >= 0 && idx < province_shape_image.size()) {
 			shape_pixel_t neighbour_pixel = province_shape_image[idx];
@@ -516,20 +518,22 @@ bool Map::_generate_province_adjacencies() {
 				else { //TODO: distance logic and flags
 					cur_province->add_adjacency(neighbour->index, 0, 0);
 					neighbour->add_adjacency(cur_province->index, 0, 0);
+					return true;
 				}
 			}
 		}
+		return false;
 	};
 	
 	for (int32_t y = 0; y < height; ++y) {
 		for (int32_t x = 0; x < width; ++x) {
 			shape_pixel_t cur = province_shape_image[x + y * width];
-			generate_adjacency(cur, x + 1, y);
-			generate_adjacency(cur, x, y - 1);
-			generate_adjacency(cur, x - 1, y);
-			generate_adjacency(cur, x, y + 1);
+			changed |= generate_adjacency(cur, x + 1, y);
+			changed |= generate_adjacency(cur, x, y - 1);
+			changed |= generate_adjacency(cur, x - 1, y);
+			changed |= generate_adjacency(cur, x, y + 1);
 		}
 	}
 
-	return true;
+	return changed;
 }
