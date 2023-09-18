@@ -137,3 +137,28 @@ void Province::tick(Date const& today) {
 	for (Building& building : buildings.get_items())
 		building.tick(today);
 }
+
+Province::adjacency_t::adjacency_t(index_t new_provice_id, distance_t new_distance, flags_t new_flags) {
+	assert(new_provice_id != Province::NULL_INDEX);
+	province_id = new_provice_id;
+	distance = new_distance;
+	flags = new_flags;
+}
+
+bool Province::is_adjacent_to(index_t province_index) {
+	for (adjacency_t adj : adjacencies)
+		if (adj.province_id == province_index)
+			return true;
+	return false;
+}
+
+bool Province::add_adjacency(index_t province_index, distance_t distance, flags_t flags) {
+	if (is_adjacent_to(province_index))
+		return false;
+	adjacencies.push_back({ province_index, distance, flags });
+	return true;
+}
+
+std::vector<Province::adjacency_t> const& Province::get_adjacencies() const {
+	return adjacencies;
+}
