@@ -44,5 +44,5 @@ bool IdeologyManager::add_ideology(const std::string_view identifier, colour_t c
 		return false;
 	}
 
-	return ideologies.add_item({ identifier, colour, identifier, uncivilised, spawn_date });
+	return ideologies.add_item({ identifier, colour, *group, uncivilised, spawn_date });
 }
