@@ -24,11 +24,11 @@ namespace OpenVic {
 			friend struct Province;
 
 		private:
-			index_t province_id;
+			Province const* province;
 			distance_t distance;
 			flags_t flags;
 
-			adjacency_t(index_t provice_id, distance_t distance, flags_t flags);
+			adjacency_t(Province const* province, distance_t distance, flags_t flags);
 		};
 
 		static constexpr index_t NULL_INDEX = 0, MAX_INDEX = (1 << (8 * sizeof(index_t))) - 1;
@@ -81,8 +81,8 @@ namespace OpenVic {
 		void update_state(Date const& today);
 		void tick(Date const& today);
 
-		bool is_adjacent_to(index_t province_index);
-		bool add_adjacency(index_t province_index, distance_t distance, flags_t flags);
+		bool is_adjacent_to(Province const* province);
+		bool add_adjacency(Province const* province, distance_t distance, flags_t flags);
 		std::vector<adjacency_t> const& get_adjacencies() const;
 	};
 }

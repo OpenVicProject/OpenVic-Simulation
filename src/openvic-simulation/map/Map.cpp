@@ -504,9 +504,9 @@ bool Map::load_region_file(ast::NodeCPtr root) {
 bool Map::_generate_province_adjacencies() {
 	bool changed = false;
 
-	auto generate_adjacency = [&] (shape_pixel_t cur, int32_t x, int32_t y) -> bool {
-		int32_t idx = x + y * width;
-		if (idx >= 0 && idx < province_shape_image.size()) {
+	auto generate_adjacency = [&] (shape_pixel_t cur, size_t x, size_t y) -> bool {
+		if (x < width && y < height) {
+			size_t idx = x + y * width;
 			shape_pixel_t neighbour_pixel = province_shape_image[idx];
 			if (cur.index != neighbour_pixel.index) {
 				Province* cur_province = get_province_by_index(cur.index);
@@ -516,8 +516,8 @@ bool Map::_generate_province_adjacencies() {
 				else if (neighbour == nullptr)
 					Logger::error("No known province with index ", neighbour_pixel.index, ": cannot create adjacency for it!");
 				else { //TODO: distance logic and flags
-					cur_province->add_adjacency(neighbour->index, 0, 0);
-					neighbour->add_adjacency(cur_province->index, 0, 0);
+					cur_province->add_adjacency(neighbour, 0, 0);
+					neighbour->add_adjacency(cur_province, 0, 0);
 					return true;
 				}
 			}
@@ -525,12 +525,10 @@ bool Map::_generate_province_adjacencies() {
 		return false;
 	};
 	
-	for (int32_t y = 0; y < height; ++y) {
-		for (int32_t x = 0; x < width; ++x) {
+	for (size_t y = 0; y < height; ++y) {
+		for (size_t x = 0; x < width; ++x) {
 			shape_pixel_t cur = province_shape_image[x + y * width];
 			changed |= generate_adjacency(cur, x + 1, y);
-			changed |= generate_adjacency(cur, x, y - 1);
-			changed |= generate_adjacency(cur, x - 1, y);
 			changed |= generate_adjacency(cur, x, y + 1);
 		}
 	}
