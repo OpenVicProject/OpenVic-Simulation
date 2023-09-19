@@ -17,6 +17,23 @@ namespace OpenVic {
 
 		using index_t = uint16_t;
 		using life_rating_t = int8_t;
+		using distance_t = uint16_t;
+		using flags_t = uint16_t; 
+
+		struct adjacency_t {
+			friend struct Province;
+
+		private:
+			Province const* const province;
+			const distance_t distance;
+			flags_t flags;
+
+			adjacency_t(Province const* province, distance_t distance, flags_t flags);
+
+		public:
+			distance_t get_distance() const;
+			flags_t get_flags();
+		};
 
 		static constexpr index_t NULL_INDEX = 0, MAX_INDEX = (1 << (8 * sizeof(index_t))) - 1;
 
@@ -32,6 +49,8 @@ namespace OpenVic {
 		std::vector<Pop> pops;
 		Pop::pop_size_t total_population;
 		distribution_t pop_types, cultures, religions;
+
+		std::vector<adjacency_t> adjacencies;
 
 		Province(const std::string_view new_identifier, colour_t new_colour, index_t new_index);
 
@@ -65,5 +84,9 @@ namespace OpenVic {
 
 		void update_state(Date const& today);
 		void tick(Date const& today);
+
+		bool is_adjacent_to(Province const* province);
+		bool add_adjacency(Province const* province, distance_t distance, flags_t flags);
+		std::vector<adjacency_t> const& get_adjacencies() const;
 	};
 }

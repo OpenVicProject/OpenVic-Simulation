@@ -1,7 +1,9 @@
 #include "Province.hpp"
 
 #include <cassert>
+#include <cstddef>
 #include <iomanip>
+#include <iterator>
 #include <sstream>
 
 using namespace OpenVic;
@@ -136,4 +138,40 @@ void Province::update_state(Date const& today) {
 void Province::tick(Date const& today) {
 	for (Building& building : buildings.get_items())
 		building.tick(today);
+}
+
+Province::adjacency_t::adjacency_t(Province const* province, distance_t distance, flags_t flags) 
+	: province { province }, distance { distance }, flags { flags } {
+	assert(province != nullptr);
+}
+
+Province::distance_t Province::adjacency_t::get_distance() const {
+	return distance;
+}
+
+Province::flags_t Province::adjacency_t::get_flags() {
+	return flags;
+}
+
+bool Province::is_adjacent_to(Province const* province) {
+	for (adjacency_t adj : adjacencies)
+		if (adj.province == province)
+			return true;
+	return false;
+}
+
+bool Province::add_adjacency(Province const* province, distance_t distance, flags_t flags) {
+	if (province == nullptr) {
+		Logger::error("Tried to create null adjacency province for province ", get_identifier(), "!");
+		return false;
+	}
+
+	if (is_adjacent_to(province))
+		return false;
+	adjacencies.push_back({ province, distance, flags });
+	return true;
+}
+
+std::vector<Province::adjacency_t> const& Province::get_adjacencies() const {
+	return adjacencies;
 }
