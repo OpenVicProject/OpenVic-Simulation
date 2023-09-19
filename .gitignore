@@ -77,3 +77,7 @@ bin/*
 
 # JetBrains
 .idea
+
+# scons stuff
+.cache
+compile_commands.json
