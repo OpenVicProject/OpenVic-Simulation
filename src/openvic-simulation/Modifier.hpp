@@ -25,6 +25,8 @@ namespace OpenVic {
 	};
 
 	struct ModifierValue {
+		friend struct ModifierManager;
+
 		using effect_map_t = std::map<ModifierEffect const*, fixed_point_t>;
 	private:
 		effect_map_t values;
@@ -57,6 +59,7 @@ namespace OpenVic {
 		using icon_t = uint8_t;
 
 	private:
+		/* A modifier can have no icon (zero). */
 		const icon_t icon;
 
 		Modifier(const std::string_view new_identifier, ModifierValue&& new_values, icon_t new_icon);
@@ -92,5 +95,7 @@ namespace OpenVic {
 
 		bool add_modifier(const std::string_view identifier, ModifierValue&& values, Modifier::icon_t icon);
 		IDENTIFIER_REGISTRY_ACCESSORS(Modifier, modifier)
+
+		NodeTools::node_callback_t expect_modifier_value(NodeTools::callback_t<ModifierValue&&> callback) const;
 	};
 }

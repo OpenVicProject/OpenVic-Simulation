@@ -1,6 +1,7 @@
 #include "Modifier.hpp"
 
 using namespace OpenVic;
+using namespace OpenVic::NodeTools;
 
 ModifierEffect::ModifierEffect(const std::string_view new_identifier, bool new_positive_good)
 	: HasIdentifier { new_identifier }, positive_good { new_positive_good } {}
@@ -113,4 +114,24 @@ bool ModifierManager::add_modifier(const std::string_view identifier, ModifierVa
 		return false;
 	}
 	return modifiers.add_item({ identifier, std::move(values), icon });
+}
+
+node_callback_t ModifierManager::expect_modifier_value(callback_t<ModifierValue&&> callback) const {
+	return [this, callback](ast::NodeCPtr root) -> bool {
+		ModifierValue modifier;
+		bool ret = expect_dictionary(
+			[this, &modifier](std::string_view key, ast::NodeCPtr value) -> bool {
+				ModifierEffect const* effect = get_modifier_effect_by_identifier(key);
+				if (effect != nullptr) {
+					return expect_fixed_point(
+						assign_variable_callback(modifier.values[effect])
+					)(value);
+				}
+				Logger::error("Invalid modifier effect: ", key);
+				return false;
+			}
+		)(root);
+		ret &= callback(std::move(modifier));
+		return ret;
+	};
 }

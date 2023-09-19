@@ -54,10 +54,6 @@ bool Map::add_province(const std::string_view identifier, colour_t colour) {
 	return provinces.add_item(std::move(new_province));
 }
 
-void Map::lock_provinces() {
-	provinces.lock();
-}
-
 bool Map::set_water_province(const std::string_view identifier) {
 	if (water_provinces.is_locked()) {
 		Logger::error("The map's water provinces have already been locked!");
@@ -133,50 +129,12 @@ bool Map::add_region(const std::string_view identifier, std::vector<std::string_
 	return ret;
 }
 
-void Map::lock_regions() {
-	regions.lock();
-	for (Region& region : regions.get_items()) {
-		if (!region.meta) {
-			for (Province* province : region.get_provinces()) {
-				if (!province->get_has_region()) {
-					Logger::error("Province in non-meta region without has_region set: ", province->get_identifier());
-					province->has_region = true;
-				}
-				province->region = &region;
-			}
-		}
-	}
-	for (Province& province : provinces.get_items()) {
-		const bool region_null = province.get_region() == nullptr;
-		if (province.get_has_region() == region_null) {
-			Logger::error("Province has_region / region mismatch: has_region = ", province.get_has_region(), ", region = ", province.get_region());
-			province.has_region = !region_null;
-		}
-	}
-}
-
-size_t Map::get_province_count() const {
-	return provinces.size();
-}
-
-std::vector<Province> const& Map::get_provinces() const {
-	return provinces.get_items();
-}
-
 Province* Map::get_province_by_index(Province::index_t index) {
 	return index != Province::NULL_INDEX ? provinces.get_item_by_index(index - 1) : nullptr;
 }
 
 Province const* Map::get_province_by_index(Province::index_t index) const {
 	return index != Province::NULL_INDEX ? provinces.get_item_by_index(index - 1) : nullptr;
-}
-
-Province* Map::get_province_by_identifier(const std::string_view identifier) {
-	return provinces.get_item_by_identifier(identifier);
-}
-
-Province const* Map::get_province_by_identifier(const std::string_view identifier) const {
-	return provinces.get_item_by_identifier(identifier);
 }
 
 Province::index_t Map::get_index_from_colour(colour_t colour) const {
@@ -222,22 +180,6 @@ Province::index_t Map::get_selected_province_index() const {
 
 Province const* Map::get_selected_province() const {
 	return get_province_by_index(get_selected_province_index());
-}
-
-Region* Map::get_region_by_identifier(const std::string_view identifier) {
-	return regions.get_item_by_identifier(identifier);
-}
-
-Region const* Map::get_region_by_identifier(const std::string_view identifier) const {
-	return regions.get_item_by_identifier(identifier);
-}
-
-size_t Map::get_region_count() const {
-	return regions.size();
-}
-
-std::vector<Region> const& Map::get_regions() const {
-	return regions.get_items();
 }
 
 static colour_t colour_at(uint8_t const* colour_data, int32_t idx) {
@@ -344,6 +286,9 @@ bool Map::generate_province_shape_image(size_t new_width, size_t new_height, uin
 		Logger::error("Province image is missing ", missing, " province colours");
 		ret = false;
 	}
+
+	ret &= _generate_province_adjacencies();
+
 	return ret;
 }
 
@@ -427,9 +372,6 @@ bool Map::setup(GoodManager const& good_manager, BuildingManager const& building
 	bool ret = true;
 	for (Province& province : provinces.get_items()) {
 		province.clear_pops();
-		// Set all land provinces to have an RGO based on their index to test them
-		if (!province.get_water() && !good_manager.get_good_count() > 0)
-			province.rgo = good_manager.get_good_by_index(province.get_index() % good_manager.get_good_count());
 		ret &= building_manager.generate_province_buildings(province);
 	}
 	return ret;
@@ -512,6 +454,14 @@ bool Map::load_province_definitions(std::vector<LineObject> const& lines) {
 	return ret;
 }
 
+bool Map::load_province_positions(BuildingManager const& building_manager, ast::NodeCPtr root) {
+	return expect_province_dictionary(
+		[&building_manager](Province& province, ast::NodeCPtr node) -> bool {
+			return province.load_positions(building_manager, node);
+		}
+	)(root);
+}
+
 bool Map::load_region_file(ast::NodeCPtr root) {
 	const bool ret = expect_dictionary_reserve_length(
 		regions,
@@ -529,5 +479,33 @@ bool Map::load_region_file(ast::NodeCPtr root) {
 		}
 	)(root);
 	lock_regions();
+	for (Region& region : regions.get_items()) {
+		if (!region.meta) {
+			for (Province* province : region.get_provinces()) {
+				if (!province->get_has_region()) {
+					Logger::error("Province in non-meta region without has_region set: ", province->get_identifier());
+					province->has_region = true;
+				}
+				province->region = &region;
+			}
+		}
+	}
+	for (Province& province : provinces.get_items()) {
+		const bool region_null = province.get_region() == nullptr;
+		if (province.get_has_region() == region_null) {
+			Logger::error("Province has_region / region mismatch: has_region = ", province.get_has_region(), ", region = ", province.get_region());
+			province.has_region = !region_null;
+		}
+	}
 	return ret;
+}
+
+bool Map::_generate_province_adjacencies() {
+	/* TODO - generate default province adjacencies
+	 * variables available for use:
+	 * - width, height
+	 * - province_shape_image, so the index at (x,y) is:
+	 *   province_shape_image[x + y * width].index
+	 */
+	return true;
 }

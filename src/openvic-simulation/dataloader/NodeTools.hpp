@@ -6,7 +6,7 @@
 
 #include "openvic-simulation/types/Colour.hpp"
 #include "openvic-simulation/types/Date.hpp"
-#include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
+#include "openvic-simulation/types/Vector.hpp"
 
 namespace OpenVic {
 	namespace ast = ovdl::v2script::ast;
@@ -20,6 +20,7 @@ namespace OpenVic {
 		constexpr bool success_callback(ast::NodeCPtr) { return true; }
 
 		using key_value_callback_t = callback_t<std::string_view, ast::NodeCPtr>;
+		constexpr bool key_value_success_callback(std::string_view, ast::NodeCPtr) { return true; }
 
 		node_callback_t expect_identifier(callback_t<std::string_view> callback);
 		node_callback_t expect_string(callback_t<std::string_view> callback);
@@ -30,6 +31,8 @@ namespace OpenVic {
 		node_callback_t expect_fixed_point(callback_t<fixed_point_t> callback);
 		node_callback_t expect_colour(callback_t<colour_t> callback);
 		node_callback_t expect_date(callback_t<Date> callback);
+		node_callback_t expect_ivec2(callback_t<ivec2_t> callback);
+		node_callback_t expect_fvec2(callback_t<fvec2_t> callback);
 		node_callback_t expect_assign(key_value_callback_t callback);
 
 		using length_callback_t = std::function<size_t(size_t)>;
@@ -133,23 +136,10 @@ namespace OpenVic {
 			};
 		}
 
-		template<typename T>
-		requires(std::integral<T>)
-		callback_t<uint64_t> assign_variable_callback_uint(const std::string_view name, T& var) {
-			return [&var, name](uint64_t val) -> bool {
-				if (val <= std::numeric_limits<T>::max()) {
-					var = val;
-					return true;
-				}
-				Logger::error("Invalid ", name, ": ", val, " (valid range: [0, ", static_cast<uint64_t>(std::numeric_limits<T>::max()), "])");
-				return false;
-			};
-		}
-
-		template<typename T>
-		requires(std::integral<T>)
-		callback_t<int64_t> assign_variable_callback_int(const std::string_view name, T& var) {
-			return [&var, name](int64_t val) -> bool {
+		template<typename I, typename T>
+		requires(std::integral<I>, std::integral<T>)
+		callback_t<I> _assign_variable_callback_int(const std::string_view name, T& var) {
+			return [&var, name](I val) -> bool {
 				if (std::numeric_limits<T>::lowest() <= val && val <= std::numeric_limits<T>::max()) {
 					var = val;
 					return true;
@@ -158,6 +148,26 @@ namespace OpenVic {
 					static_cast<int64_t>(std::numeric_limits<T>::lowest()), ", ",
 					static_cast<uint64_t>(std::numeric_limits<T>::max()), "])");
 				return false;
+			};
+		}
+
+		template<typename T>
+		requires(std::integral<T>)
+		callback_t<uint64_t> assign_variable_callback_uint(const std::string_view name, T& var) {
+			return _assign_variable_callback_int<uint64_t>(name, var);
+		}
+
+		template<typename T>
+		requires(std::integral<T>)
+		callback_t<int64_t> assign_variable_callback_int(const std::string_view name, T& var) {
+			return _assign_variable_callback_int<int64_t>(name, var);
+		}
+
+		template<typename T>
+		callback_t<T const&> assign_variable_callback_pointer(T const*& var) {
+			return [&var](T const& val) -> bool {
+				var = &val;
+				return true;
 			};
 		}
 	}

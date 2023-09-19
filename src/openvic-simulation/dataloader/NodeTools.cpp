@@ -19,20 +19,20 @@ static node_callback_t _expect_type(callback_t<T const&> callback) {
 	};
 }
 
-template<typename T = ast::AbstractStringNode>
+template<typename T>
 requires(std::derived_from<T, ast::AbstractStringNode>)
-static callback_t<T const&> abstract_string_node_callback(callback_t<std::string_view> callback) {
+static callback_t<T const&> _abstract_string_node_callback(callback_t<std::string_view> callback) {
 	return [callback](T const& node) -> bool {
 		return callback(node._name);
 	};
 }
 
 node_callback_t NodeTools::expect_identifier(callback_t<std::string_view> callback) {
-	return _expect_type<ast::IdentifierNode>(abstract_string_node_callback<ast::IdentifierNode>(callback));
+	return _expect_type<ast::IdentifierNode>(_abstract_string_node_callback<ast::IdentifierNode>(callback));
 }
 
 node_callback_t NodeTools::expect_string(callback_t<std::string_view> callback) {
-	return _expect_type<ast::StringNode>(abstract_string_node_callback<ast::StringNode>(callback));
+	return _expect_type<ast::StringNode>(_abstract_string_node_callback<ast::StringNode>(callback));
 }
 
 node_callback_t NodeTools::expect_identifier_or_string(callback_t<std::string_view> callback) {
@@ -43,7 +43,7 @@ node_callback_t NodeTools::expect_identifier_or_string(callback_t<std::string_vi
 				cast_node = node->cast_to<ast::StringNode>();
 			}
 			if (cast_node != nullptr) {
-				return abstract_string_node_callback(callback)(*cast_node);
+				return _abstract_string_node_callback<ast::AbstractStringNode>(callback)(*cast_node);
 			}
 			Logger::error("Invalid node type ", node->get_type(), " when expecting ", ast::IdentifierNode::get_type_static(), " or ", ast::StringNode::get_type_static());
 		} else {
@@ -146,6 +146,27 @@ node_callback_t NodeTools::expect_date(callback_t<Date> callback) {
 			return false;
 		}
 	);
+}
+
+template<typename T, node_callback_t (*expect_func)(callback_t<T>)>
+node_callback_t _expect_vec2(callback_t<vec2_t<T>> callback) {
+	return [callback](ast::NodeCPtr node) -> bool {
+		vec2_t<T> vec;
+		bool ret = expect_dictionary_keys(
+			"x", ONE_EXACTLY, expect_func(assign_variable_callback(vec.x)),
+			"y", ONE_EXACTLY, expect_func(assign_variable_callback(vec.y))
+		)(node);
+		ret &= callback(vec);
+		return ret;
+	};
+}
+
+node_callback_t NodeTools::expect_ivec2(callback_t<ivec2_t> callback) {
+	return _expect_vec2<int64_t, expect_int>(callback);
+}
+
+node_callback_t NodeTools::expect_fvec2(callback_t<fvec2_t> callback) {
+	return _expect_vec2<fixed_point_t, expect_fixed_point>(callback);
 }
 
 node_callback_t NodeTools::expect_assign(key_value_callback_t callback) {

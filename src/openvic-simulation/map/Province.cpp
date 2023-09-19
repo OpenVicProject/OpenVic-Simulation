@@ -34,6 +34,12 @@ Province::life_rating_t Province::get_life_rating() const {
 	return life_rating;
 }
 
+bool Province::load_positions(BuildingManager const& building_manager, ast::NodeCPtr root) {
+	// TODO - implement province position loading
+	// (root is the dictionary after the province identifier)
+	return true;
+}
+
 bool Province::add_building(Building&& building) {
 	return buildings.add_item(std::move(building));
 }
