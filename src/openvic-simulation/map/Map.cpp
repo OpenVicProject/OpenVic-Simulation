@@ -1,7 +1,6 @@
 #include "Map.hpp"
 
 #include <cassert>
-#include <cstdint>
 #include <unordered_set>
 
 #include "openvic-simulation/economy/Good.hpp"
@@ -504,23 +503,20 @@ bool Map::load_region_file(ast::NodeCPtr root) {
 bool Map::_generate_province_adjacencies() {
 	bool changed = false;
 
-	auto generate_adjacency = [&] (shape_pixel_t cur, size_t x, size_t y) -> bool {
-		if (x < width && y < height) {
-			size_t idx = x + y * width;
-			shape_pixel_t neighbour_pixel = province_shape_image[idx];
-			if (cur.index != neighbour_pixel.index) {
-				Province* cur_province = get_province_by_index(cur.index);
-				Province* neighbour = get_province_by_index(neighbour_pixel.index);
-				if (cur_province == nullptr)
-					Logger::error("No known province with index ", cur.index, ": cannot create adjacency for it!");
-				else if (neighbour == nullptr)
-					Logger::error("No known province with index ", neighbour_pixel.index, ": cannot create adjacency for it!");
-				else { //TODO: distance logic and flags
-					cur_province->add_adjacency(neighbour, 0, 0);
-					neighbour->add_adjacency(cur_province, 0, 0);
-					return true;
-				}
-			}
+	auto generate_adjacency = [&] (shape_pixel_t cur_pixel, size_t x, size_t y) -> bool {
+		size_t idx = x + y * width;
+		shape_pixel_t neighbour_pixel = province_shape_image[idx];
+		if (cur_pixel.index != neighbour_pixel.index) {
+			Province* cur = get_province_by_index(cur_pixel.index);
+			Province* neighbour = get_province_by_index(neighbour_pixel.index);
+			if(cur != nullptr && neighbour != nullptr) {
+				cur->add_adjacency(neighbour, 0, 0);
+				neighbour->add_adjacency(cur, 0, 0);
+				return true;
+			} else Logger::error(
+				"Couldn't find province(s): current = ", cur, " (", cur_pixel.index,
+				"), neighbour = ", neighbour, " (", neighbour_pixel.index, ")"
+			);
 		}
 		return false;
 	};
@@ -528,8 +524,10 @@ bool Map::_generate_province_adjacencies() {
 	for (size_t y = 0; y < height; ++y) {
 		for (size_t x = 0; x < width; ++x) {
 			shape_pixel_t cur = province_shape_image[x + y * width];
-			changed |= generate_adjacency(cur, x + 1, y);
-			changed |= generate_adjacency(cur, x, y + 1);
+			if(x + 1 < width)
+				changed |= generate_adjacency(cur, x + 1, y);
+			if(y + 1 < height)
+				changed |= generate_adjacency(cur, x, y + 1);
 		}
 	}
 

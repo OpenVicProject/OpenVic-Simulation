@@ -24,11 +24,15 @@ namespace OpenVic {
 			friend struct Province;
 
 		private:
-			Province const* province;
-			distance_t distance;
+			Province const* const province;
+			const distance_t distance;
 			flags_t flags;
 
 			adjacency_t(Province const* province, distance_t distance, flags_t flags);
+
+		public:
+			distance_t get_distance() const;
+			flags_t get_flags();
 		};
 
 		static constexpr index_t NULL_INDEX = 0, MAX_INDEX = (1 << (8 * sizeof(index_t))) - 1;
