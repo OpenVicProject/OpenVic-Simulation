@@ -1,7 +1,7 @@
 #include "Ideology.hpp"
-#include "types/IdentifierRegistry.hpp"
 
 using namespace OpenVic;
+using namespace OpenVic::NodeTools;
 
 IdeologyGroup::IdeologyGroup(const std::string_view new_identifier) : HasIdentifier { new_identifier } {}
 
@@ -45,4 +45,52 @@ bool IdeologyManager::add_ideology(const std::string_view identifier, colour_t c
 	}
 
 	return ideologies.add_item({ identifier, colour, *group, uncivilised, spawn_date });
+}
+
+/* REQUIREMENTS:
+ * POL-9, POL-10, POL-11, POL-12, POL-13, POL-14, POL-15
+*/
+bool IdeologyManager::load_ideology_file(ast::NodeCPtr root) {
+	size_t expected_ideologies = 0;
+	bool ret = expect_dictionary_reserve_length(
+		ideology_groups,
+		[this, &expected_ideologies](std::string_view key, ast::NodeCPtr value) -> bool {
+			bool ret = expect_list_and_length(
+				[&expected_ideologies](size_t size) -> size_t {
+					expected_ideologies += size;
+					return 0;
+				},
+				success_callback
+			)(value);
+			ret &= add_ideology_group(key);
+			return ret;
+		}
+	)(root);
+	lock_ideology_groups();
+
+	ideologies.reserve(ideologies.size() + expected_ideologies);
+	ret &= expect_dictionary(
+		[this](std::string_view ideology_group_key, ast::NodeCPtr ideology_group_value) -> bool {
+			IdeologyGroup const* ideology_group = get_ideology_group_by_identifier(ideology_group_key);
+
+			return expect_dictionary(
+				[this, ideology_group](std::string_view key, ast::NodeCPtr value) -> bool {
+					colour_t colour = NULL_COLOUR;
+					bool uncivilised = true;
+					Date spawn_date;
+
+					bool ret = expect_dictionary_keys(
+						"uncivilized", ZERO_OR_ONE, expect_bool(assign_variable_callback(uncivilised)),
+						"color", ONE_EXACTLY, expect_colour(assign_variable_callback(colour)),
+						"date", ZERO_OR_ONE, expect_date(assign_variable_callback(spawn_date))
+					)(value);
+					ret &= add_ideology(key, colour, ideology_group, uncivilised, spawn_date);
+					return ret;
+				}
+			)(ideology_group_value);
+		}
+	)(root);
+	lock_ideologies();
+
+	return ret;
 }

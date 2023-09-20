@@ -2,6 +2,7 @@
 
 #include "types/Date.hpp"
 #include "types/IdentifierRegistry.hpp"
+#include "openvic-simulation/dataloader/NodeTools.hpp"
 
 namespace OpenVic {
 	struct IdeologyManager;
@@ -48,6 +49,6 @@ namespace OpenVic {
 		bool add_ideology(const std::string_view identifier, colour_t colour, IdeologyGroup const* group, bool uncivilised, Date spawn_date);
 		IDENTIFIER_REGISTRY_ACCESSORS_CUSTOM_PLURAL(Ideology, ideology, ideologies)
 
-		//TODO - loaders
+		bool load_ideology_file(ast::NodeCPtr root);
 	};
 }

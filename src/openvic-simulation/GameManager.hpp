@@ -1,8 +1,9 @@
 #pragma once
 
-#include "openvic-simulation/GameAdvancementHook.hpp"
-#include "openvic-simulation/economy/Good.hpp"
-#include "openvic-simulation/map/Map.hpp"
+#include "GameAdvancementHook.hpp"
+#include "economy/Good.hpp"
+#include "map/Map.hpp"
+#include "politics/Ideology.hpp"
 
 namespace OpenVic {
 	struct GameManager {
@@ -12,6 +13,7 @@ namespace OpenVic {
 		BuildingManager building_manager;
 		GoodManager good_manager;
 		PopManager pop_manager;
+		IdeologyManager ideology_manager;
 		GameAdvancementHook clock;
 
 	private:
