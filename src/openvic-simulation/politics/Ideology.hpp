@@ -31,6 +31,7 @@ namespace OpenVic {
 
 	public:
 		Ideology(Ideology&&) = default;
+		IdeologyGroup const& get_group() const;
 		bool is_uncivilised() const;
 		Date const& get_spawn_date() const;
 	};

@@ -9,6 +9,10 @@ Ideology::Ideology(const std::string_view new_identifier, colour_t new_colour, I
 	: HasIdentifierAndColour { new_identifier, new_colour, true, false }, group { new_group }, uncivilised { uncivilised },
 	spawn_date { spawn_date } {}
 
+IdeologyGroup const& Ideology::get_group() const {
+	return group;
+}
+
 bool Ideology::is_uncivilised() const {
 	return uncivilised;
 }
