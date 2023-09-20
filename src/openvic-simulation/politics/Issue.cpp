@@ -89,6 +89,15 @@ bool IssueManager::_load_issue(size_t& ordinal, const std::string_view identifie
 	return add_issue(identifier, group, ordinal);
 }
 
+/* REQUIREMENTS:
+ * POL-18, POL-19, POL-21, POL-22, POL-23, POL-24, POL-26, POL-27, POL-28, POL-29, POL-31, POL-32, POL-33,
+ * POL-35, POL-36, POL-37, POL-38, POL-40, POL-41, POL-43, POL-44, POL-45, POL-46, POL-48, POL-49, POL-50,
+ * POL-51, POL-52, POL-53, POL-55, POL-56, POL-57, POL-59, POL-60, POL-62, POL-63, POL-64, POL-66, POL-67,
+ * POL-68, POL-69, POL-71, POL-72, POL-73, POL-74, POL-75, POL-77, POL-78, POL-79, POL-80, POL-81, POL-83,
+ * POL-84, POL-85, POL-86, POL-87, POL-89, POL-90, POL-91, POL-92, POL-93, POL-95, POL-96, POL-97, POL-98,
+ * POL-99, POL-101, POL-102, POL-103, POL-104, POL-105, POL-107, POL-108, POL-109, POL-110, POL-111, POL-113,
+ * POL-113, POL-114, POL-115, POL-116
+*/
 bool IssueManager::load_issues_file(ast::NodeCPtr root) {
 	size_t expected_issue_groups = 0;
 	bool ret = expect_dictionary_reserve_length(issue_types, 
