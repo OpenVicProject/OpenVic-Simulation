@@ -126,21 +126,79 @@ bool PopManager::add_pop_type(const std::string_view identifier, colour_t colour
 	return pop_types.add_item({ identifier, colour, strata, sprite, max_size, merge_max_size, state_capital_only, demote_migrant, is_artisan, is_slave });
 }
 
+/* REQUIREMENTS:
+ * POP-3, POP-4, POP-5, POP-6, POP-7, POP-8, POP-9, POP-10, POP-11, POP-12, POP-13, POP-14
+ */
 bool PopManager::load_pop_type_file(const std::string_view filestem, ast::NodeCPtr root) {
-
-	// TODO - pop type loading
-
-	if (pop_types.empty())
-		return add_pop_type("test_pop_type", 0xFF0000, PopType::strata_t::POOR, 1, 1, 1, false, false, false, false);
-	return true;
+	colour_t colour;
+	PopType::strata_t strata;
+	PopType::sprite_t sprite;
+	bool state_capital_only = false, is_artisan = false, is_slave = false, demote_migrant = false;
+	Pop::pop_size_t max_size, merge_max_size;
+	bool ret = expect_dictionary_keys(
+		"sprite", ONE_EXACTLY, expect_uint(assign_variable_callback_uint("poptype sprite", sprite)),
+		"color", ONE_EXACTLY, expect_colour(assign_variable_callback(colour)),
+		"is_artisan", ZERO_OR_ONE, expect_bool(assign_variable_callback(is_artisan)),
+		"max_size", ZERO_OR_ONE, expect_uint(assign_variable_callback_uint("poptype max_size", max_size)),
+		"merge_max_size", ZERO_OR_ONE, expect_uint(assign_variable_callback_uint("poptype merge_max_size", merge_max_size)),
+		"strata", ONE_EXACTLY, expect_identifier(
+			[&strata](std::string_view identifier) -> bool {
+				using strata_map_t = std::map<std::string, PopType::strata_t, std::less<void>>;
+				static const strata_map_t strata_map = {
+					{ "poor", PopType::strata_t::POOR },
+					{ "middle", PopType::strata_t::MIDDLE },
+					{ "rich", PopType::strata_t::RICH }
+				};
+				const strata_map_t::const_iterator it = strata_map.find(identifier);
+				if (it != strata_map.end()) {
+					strata = it->second;
+					return true;
+				}
+				Logger::error("Invalid pop type strata: ", identifier);
+				return false;
+			}
+		),
+		"state_capital_only", ZERO_OR_ONE, expect_bool(assign_variable_callback(state_capital_only)),
+		"research_points", ZERO_OR_ONE, success_callback,
+		"research_optimum", ZERO_OR_ONE, success_callback,
+		"rebel", ZERO_OR_ONE, success_callback,
+		"equivalent", ZERO_OR_ONE, success_callback,
+		"leadership", ZERO_OR_ONE, success_callback,
+		"allowed_to_vote", ZERO_OR_ONE, success_callback,
+		"is_slave", ZERO_OR_ONE, expect_bool(assign_variable_callback(is_slave)),
+		"can_be_recruited", ZERO_OR_ONE, success_callback,
+		"can_reduce_consciousness", ZERO_OR_ONE, success_callback,
+		"life_needs_income", ZERO_OR_ONE, success_callback,
+		"everyday_needs_income", ZERO_OR_ONE, success_callback,
+		"luxury_needs_income", ZERO_OR_ONE, success_callback,
+		"luxury_needs", ZERO_OR_ONE, success_callback,
+		"everyday_needs", ZERO_OR_ONE, success_callback,
+		"life_needs", ZERO_OR_ONE, success_callback,
+		"country_migration_target", ZERO_OR_ONE, success_callback,
+		"migration_target", ZERO_OR_ONE, success_callback,
+		"promote_to", ZERO_OR_ONE, success_callback,
+		"ideologies", ZERO_OR_ONE, success_callback,
+		"issues", ZERO_OR_ONE, success_callback,
+		"demote_migrant", ZERO_OR_ONE, expect_bool(assign_variable_callback(demote_migrant)),
+		"administrative_efficiency", ZERO_OR_ONE, success_callback,
+		"tax_eff", ZERO_OR_ONE, success_callback,
+		"can_build", ZERO_OR_ONE, success_callback,
+		"factory", ZERO_OR_ONE, success_callback,
+		"workplace_input", ZERO_OR_ONE, success_callback,
+		"workplace_output", ZERO_OR_ONE, success_callback,
+		"starter_share", ZERO_OR_ONE, success_callback,
+		"can_work_factory", ZERO_OR_ONE, success_callback,
+		"unemployment", ZERO_OR_ONE, success_callback
+	)(root);
+	ret &= add_pop_type(filestem, colour, strata, sprite, max_size, merge_max_size, state_capital_only, demote_migrant, is_artisan, is_slave);
+	return ret;
 }
 
 bool PopManager::load_pop_into_province(Province& province, const std::string_view pop_type_identifier, ast::NodeCPtr pop_node) const {
-	static PopType const* type = get_pop_type_by_identifier("test_pop_type");
+	PopType const* type = get_pop_type_by_identifier(pop_type_identifier);
 	Culture const* culture = nullptr;
 	Religion const* religion = nullptr;
 	Pop::pop_size_t size = 0;
-
 	bool ret = expect_dictionary_keys(
 		"culture", ONE_EXACTLY, culture_manager.expect_culture_identifier(assign_variable_callback_pointer(culture)),
 		"religion", ONE_EXACTLY, religion_manager.expect_religion_identifier(assign_variable_callback_pointer(religion)),
