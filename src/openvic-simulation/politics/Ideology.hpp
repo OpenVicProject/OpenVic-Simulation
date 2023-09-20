@@ -2,7 +2,7 @@
 
 #include "types/Date.hpp"
 #include "types/IdentifierRegistry.hpp"
-#include "openvic-simulation/dataloader/NodeTools.hpp"
+#include "dataloader/NodeTools.hpp"
 
 namespace OpenVic {
 	struct IdeologyManager;

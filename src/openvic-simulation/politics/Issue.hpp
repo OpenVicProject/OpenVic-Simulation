@@ -3,6 +3,7 @@
 #include <cstddef>
 #include <string_view>
 #include "types/IdentifierRegistry.hpp"
+#include "dataloader/NodeTools.hpp"
 
 namespace OpenVic {
 	struct IssueManager;
@@ -24,7 +25,7 @@ namespace OpenVic {
 
 	private:
 		IssueType const& type;
-		const bool ordered; //next_step_only, TODO default to false
+		const bool ordered;
 
 		IssueGroup(const std::string_view new_identifier, IssueType const& new_type, bool ordered);
 	
@@ -42,7 +43,7 @@ namespace OpenVic {
 		IssueGroup const& group;
 		const size_t ordinal; //assigned by the parser to allow policy sorting
 
-		//TODO - conditions to allow, policy modifiers, policy rule changes
+		//TODO: conditions to allow, policy modifiers, policy rule changes
 
 		Issue(const std::string_view new_identifier, IssueGroup const& new_group, size_t ordinal);
 
@@ -60,6 +61,9 @@ namespace OpenVic {
 		IdentifierRegistry<IssueGroup> issue_groups;
 		IdentifierRegistry<Issue> issues;
 
+		bool _load_issue_group(size_t& expected_issues, const std::string_view identifier, IssueType const* type, ast::NodeCPtr node);
+		bool _load_issue(size_t& ordinal, const std::string_view identifier, IssueGroup const* group, ast::NodeCPtr node);
+
 	public:
 		IssueManager();
 		
@@ -72,21 +76,14 @@ namespace OpenVic {
 		bool add_issue(const std::string_view identifier, IssueGroup const* group, size_t ordinal);
 		IDENTIFIER_REGISTRY_ACCESSORS(Issue, issue)
 
-		//TODO: bool load_issues_file(ast::NodeCPtr root);
+		bool load_issues_file(ast::NodeCPtr root);
 	};
 }
 
-/* Structure is as follows:
- *  issue_type { (i.e. political_issues)
- *  	issue_group{ (i.e. slavery)
- *  		issue { (i.e. yes_slavery)
- *  			...
- *  		}
- *  	}
- *  }
- * NOTE ON PARTY ISSUES
- * Worth noting that party_issues is a special type of issue, of similar structure but used in a different way.
- * Party issues can never have an "allow" condition and they are always unordered. Even if a mod decides to add
- * them, OV2's behaviour should probably be to disregard them, as they are meaningless within the context.
- * Conversely, lists of available reforms should make it a point to ignore the "party_issues" family.
+/* A NOTE ON PARTY ISSUES
+ * It's worth noting that party_issues is a special type of issue, of similar structure but used in a different
+ * way. Party issues can never have an "allow" condition and are always unordered. Even if a mod was to specify
+ * those clauses, OV2's behaviour should be to simply disregard them, as they are meaningless to the context of
+ * party issues.
+ * Conversely, every attempt to read the list of reform types should skip over "party_issues".
 */

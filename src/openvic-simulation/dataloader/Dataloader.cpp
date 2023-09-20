@@ -258,6 +258,7 @@ bool Dataloader::load_defines(GameManager& game_manager) const {
 	static const fs::path culture_file = "common/cultures.txt";
 	static const fs::path religion_file = "common/religion.txt";
 	static const fs::path ideology_file = "common/ideologies.txt";
+	static const fs::path issues_file = "common/issues.txt";
 	static const fs::path map_directory = "map";
 
 	bool ret = true;
@@ -284,6 +285,10 @@ bool Dataloader::load_defines(GameManager& game_manager) const {
 	}
 	if (!game_manager.ideology_manager.load_ideology_file(_parse_defines(lookup_file(ideology_file)).get_file_node())) {
 		Logger::error("Failed to load ideologies!");
+		ret = false;
+	}
+	if (!game_manager.issue_manager.load_issues_file(_parse_defines(lookup_file(issues_file)).get_file_node())) {
+		Logger::error("Failed to load issues!");
 		ret = false;
 	}
 	if (!_load_map_dir(game_manager, map_directory)) {
