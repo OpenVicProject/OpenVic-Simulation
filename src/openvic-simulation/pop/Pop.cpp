@@ -126,9 +126,10 @@ bool PopManager::add_pop_type(const std::string_view identifier, colour_t colour
 	return pop_types.add_item({ identifier, colour, strata, sprite, max_size, merge_max_size, state_capital_only, demote_migrant, is_artisan, is_slave });
 }
 
+/* REQUIREMENTS:
+ * POP-3, POP-4, POP-5, POP-6, POP-7, POP-8, POP-9, POP-10, POP-11, POP-12, POP-13, POP-14
+ */
 bool PopManager::load_pop_type_file(const std::string_view filestem, ast::NodeCPtr root) {
-	size_t total_expected_pop_types = 0;
-	std::string_view str_strata;
 	colour_t colour;
 	PopType::strata_t strata;
 	PopType::sprite_t sprite;
@@ -138,9 +139,25 @@ bool PopManager::load_pop_type_file(const std::string_view filestem, ast::NodeCP
 		"sprite", ONE_EXACTLY, expect_uint(assign_variable_callback_uint("poptype sprite", sprite)),
 		"color", ONE_EXACTLY, expect_colour(assign_variable_callback(colour)),
 		"is_artisan", ZERO_OR_ONE, expect_bool(assign_variable_callback(is_artisan)),
-		"max_size", ZERO_OR_ONE, expect_uint(assign_variable_callback(max_size)),
-		"merge_max_size", ZERO_OR_ONE, expect_uint(assign_variable_callback(merge_max_size)),
-		"strata", ONE_EXACTLY, expect_identifier(assign_variable_callback(str_strata)),
+		"max_size", ZERO_OR_ONE, expect_uint(assign_variable_callback_uint("poptype max_size", max_size)),
+		"merge_max_size", ZERO_OR_ONE, expect_uint(assign_variable_callback_uint("poptype merge_max_size", merge_max_size)),
+		"strata", ONE_EXACTLY, expect_identifier(
+			[&strata](std::string_view identifier) -> bool {
+				using strata_map_t = std::map<std::string, PopType::strata_t, std::less<void>>;
+				static const strata_map_t strata_map = {
+					{ "poor", PopType::strata_t::POOR },
+					{ "middle", PopType::strata_t::MIDDLE },
+					{ "rich", PopType::strata_t::RICH }
+				};
+				const strata_map_t::const_iterator it = strata_map.find(identifier);
+				if (it != strata_map.end()) {
+					strata = it->second;
+					return true;
+				}
+				Logger::error("Invalid pop type strata: ", identifier);
+				return false;
+			}
+		),
 		"state_capital_only", ZERO_OR_ONE, expect_bool(assign_variable_callback(state_capital_only)),
 		"research_points", ZERO_OR_ONE, success_callback,
 		"research_optimum", ZERO_OR_ONE, success_callback,
@@ -172,23 +189,9 @@ bool PopManager::load_pop_type_file(const std::string_view filestem, ast::NodeCP
 		"starter_share", ZERO_OR_ONE, success_callback,
 		"can_work_factory", ZERO_OR_ONE, success_callback,
 		"unemployment", ZERO_OR_ONE, success_callback
-		)(root);
-	if (str_strata == "poor") {
-		strata = PopType::strata_t::POOR;
-	} 
-	else if (str_strata == "middle") {
-		strata = PopType::strata_t::MIDDLE;
-	} 
-	else if (str_strata == "rich") {
-		strata = PopType::strata_t::RICH;
-	} 
-	else {
-		return false;
-	}
-	PopManager::add_pop_type(filestem, colour, strata, sprite, max_size, merge_max_size, state_capital_only, demote_migrant, is_artisan, is_slave);
-	if (pop_types.empty())
-		return add_pop_type("test_pop_type", 0xFF0000, PopType::strata_t::POOR, 1, 1, 1, false, false, false, false);
-	return true;
+	)(root);
+	ret &= add_pop_type(filestem, colour, strata, sprite, max_size, merge_max_size, state_capital_only, demote_migrant, is_artisan, is_slave);
+	return ret;
 }
 
 bool PopManager::load_pop_into_province(Province& province, const std::string_view pop_type_identifier, ast::NodeCPtr pop_node) const {
