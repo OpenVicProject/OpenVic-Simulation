@@ -1,11 +1,13 @@
 #include "GameManager.hpp"
 
 #include "openvic-simulation/utility/Logger.hpp"
+#include "units/Unit.hpp"
 
 using namespace OpenVic;
 
 GameManager::GameManager(state_updated_func_t state_updated_callback)
-	: clock { [this]() { tick(); }, [this]() { update_state(); } },
+	: unit_manager { good_manager },
+	  clock { [this]() { tick(); }, [this]() { update_state(); } },
 	  state_updated { state_updated_callback } {}
 
 void GameManager::set_needs_update() {

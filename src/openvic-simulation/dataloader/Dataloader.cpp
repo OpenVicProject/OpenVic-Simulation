@@ -1,4 +1,5 @@
 #include "Dataloader.hpp"
+#include <filesystem>
 
 #include <openvic-dataloader/csv/Parser.hpp>
 #include <openvic-dataloader/detail/CallbackOStream.hpp>
@@ -6,6 +7,7 @@
 
 #include "openvic-simulation/GameManager.hpp"
 #include "openvic-simulation/utility/Logger.hpp"
+#include "units/Unit.hpp"
 
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;
@@ -150,12 +152,18 @@ bool Dataloader::_load_pop_types(PopManager& pop_manager, fs::path const& pop_ty
 			return pop_manager.load_pop_type_file(file.stem().string(), _parse_defines(file).get_file_node());
 		}
 	);
-	if (!ret) {
-		Logger::error("Failed to load pop types!");
-	}
 	pop_manager.lock_pop_types();
 	return ret;
 }
+
+bool Dataloader::_load_units(UnitManager& unit_manager, fs::path const& units_directory) const {
+	const bool ret = apply_to_files_in_dir(units_directory, ".txt",
+		[&unit_manager](fs::path const& file) -> bool {
+			return unit_manager.load_unit_file(_parse_defines(file).get_file_node());
+		}
+	);
+	unit_manager.lock_units();
+	return ret;}
 
 bool Dataloader::_load_map_dir(GameManager& game_manager, fs::path const& map_directory) const {
 	Map& map = game_manager.map;
@@ -260,6 +268,7 @@ bool Dataloader::load_defines(GameManager& game_manager) const {
 	static const fs::path ideology_file = "common/ideologies.txt";
 	static const fs::path issues_file = "common/issues.txt";
 	static const fs::path map_directory = "map";
+	static const fs::path units_directory = "units";
 
 	bool ret = true;
 
@@ -289,6 +298,10 @@ bool Dataloader::load_defines(GameManager& game_manager) const {
 	}
 	if (!game_manager.issue_manager.load_issues_file(_parse_defines(lookup_file(issues_file)).get_file_node())) {
 		Logger::error("Failed to load issues!");
+		ret = false;
+	}
+	if (!_load_units(game_manager.unit_manager, units_directory)) {
+		Logger::error("Failed to load units!");
 		ret = false;
 	}
 	if (!_load_map_dir(game_manager, map_directory)) {

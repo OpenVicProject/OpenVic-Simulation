@@ -1,10 +1,14 @@
 #pragma once
 
-#include "GameAdvancementHook.hpp"
-#include "economy/Good.hpp"
-#include "map/Map.hpp"
-#include "politics/Ideology.hpp"
-#include "politics/Issue.hpp"
+#include "openvic-simulation/GameAdvancementHook.hpp"
+#include "openvic-simulation/economy/Good.hpp"
+#include "openvic-simulation/map/Map.hpp"
+#include "openvic-simulation/politics/Ideology.hpp"
+#include "openvic-simulation/politics/Issue.hpp"
+#include "openvic-simulation/GameAdvancementHook.hpp"
+#include "openvic-simulation/economy/Good.hpp"
+#include "openvic-simulation/map/Map.hpp"
+#include "openvic-simulation/units/Unit.hpp"
 
 namespace OpenVic {
 	struct GameManager {
@@ -16,7 +20,7 @@ namespace OpenVic {
 		PopManager pop_manager;
 		IdeologyManager ideology_manager;
 		IssueManager issue_manager;
-
+		UnitManager unit_manager;
 		GameAdvancementHook clock;
 
 	private:
