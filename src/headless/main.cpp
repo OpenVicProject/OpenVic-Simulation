@@ -1,6 +1,7 @@
 #include <openvic-simulation/GameManager.hpp>
 #include <openvic-simulation/dataloader/Dataloader.hpp>
 #include <openvic-simulation/utility/Logger.hpp>
+#include <openvic-simulation/testing/Testing.hpp>
 
 using namespace OpenVic;
 
