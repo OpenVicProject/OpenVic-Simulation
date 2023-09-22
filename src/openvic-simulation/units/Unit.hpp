@@ -3,9 +3,10 @@
 #include <cstdint>
 #include <string>
 #include <string_view>
-#include "economy/Good.hpp"
-#include "types/IdentifierRegistry.hpp"
-#include "types/fixed_point/FixedPoint.hpp"
+#include "openvic-simulation/economy/Good.hpp"
+#include "openvic-simulation/types/IdentifierRegistry.hpp"
+#include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
+#include "openvic-simulation/dataloader/NodeTools.hpp"
 
 #define UNIT_PARAMS Unit::icon_t icon, Unit::sprite_t sprite, bool active, UnitType type, bool floating_flag, uint32_t priority,\
 					uint32_t max_strength, uint32_t default_organisation,uint32_t maximum_speed, fixed_point_t weighted_value, \
@@ -35,8 +36,8 @@ namespace OpenVic {
 
 	struct Unit : HasIdentifier {
 		using icon_t = uint32_t;
-		using sprite_t = std::string;
-		using sound_t = std::string;
+		using sprite_t = std::string_view;
+		using sound_t = std::string_view;
 
 	private:
 		const icon_t icon;
@@ -165,6 +166,6 @@ namespace OpenVic {
 		bool add_naval_unit(const std::string_view identifier, UnitCategory cat, UNIT_PARAMS, NAVY_PARAMS);
 		IDENTIFIER_REGISTRY_ACCESSORS(Unit, unit)
 
-		//TODO - bool load_unit_file(ast::NodeCPtr root);
+		bool load_unit_file(ast::NodeCPtr root);
 	};
 }

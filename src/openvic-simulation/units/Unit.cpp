@@ -1,17 +1,15 @@
 #include "Unit.hpp"
-#include <cstdint>
-#include <map>
-#include "types/IdentifierRegistry.hpp"
-#include "types/fixed_point/FixedPoint.hpp"
-#include <sys/types.h>
+#include "GameManager.hpp"
+#include "dataloader/NodeTools.hpp"
 
-#define SUPER_ARGS icon, sprite, active, type, floating_flag, priority, max_strength, \
+#define EXTRA_ARGS icon, sprite, active, type, floating_flag, priority, max_strength, \
 					default_organisation, maximum_speed, weighted_value, build_time, build_cost, supply_consumption, \
 					supply_cost, supply_consumption_score
-#define FOR_SUPER(cat) identifier, cat, SUPER_ARGS
+#define FOR_SUPER(cat) identifier, cat, EXTRA_ARGS
 
 
 using namespace OpenVic;
+using namespace OpenVic::NodeTools;
 
 Unit::Unit(std::string_view identifier, UnitCategory category, UNIT_PARAMS) : HasIdentifier { identifier },
 	category { category }, icon { icon }, sprite { sprite }, active { active }, type { type },
@@ -193,7 +191,7 @@ bool UnitManager::add_land_unit(const std::string_view identifier, UnitCategory 
 	}
 
 	return units.add_item(
-		LandUnit { identifier, SUPER_ARGS, reconnaisance, attack, defence, discipline, support, maneuver, siege }
+		LandUnit { identifier, EXTRA_ARGS, reconnaisance, attack, defence, discipline, support, maneuver, siege }
 	);
 }
 
@@ -205,6 +203,95 @@ bool UnitManager::add_naval_unit(const std::string_view identifier, UnitCategory
 	//TODO: check that icon and sounds exist
 
 	return units.add_item(
-		NavalUnit { identifier, SUPER_ARGS, naval_icon, sail, transport, move_sound, select_sound, colonial_points, build_overseas, min_port_level, limit_per_port, hull, gun_power, fire_range, evasion, torpedo_attack }
+		NavalUnit { identifier, EXTRA_ARGS, naval_icon, sail, transport, move_sound, select_sound, colonial_points, build_overseas, min_port_level, limit_per_port, hull, gun_power, fire_range, evasion, torpedo_attack }
 	);
+}
+
+bool UnitManager::load_unit_file(ast::NodeCPtr root) {
+	return NodeTools::expect_dictionary([this](std::string_view key, ast::NodeCPtr value) -> bool {
+		//TODO: enum parsing, or use set of strings? probably the latter
+		//TODO: need to get GameManager to access GoodsManager and call the expect_goods_map
+
+		Unit::icon_t icon;
+		UnitCategory category;
+		Unit::sprite_t sprite;
+		bool active, floating_flag;
+		UnitType type;
+		uint32_t priority, max_strength, default_organisation, maximum_speed, build_time, supply_consumption_score;
+		fixed_point_t weighted_value, supply_consumption;
+		std::map<const Good*, fixed_point_t> build_cost, supply_cost;
+
+		//shared
+		bool ret = expect_dictionary_keys(
+			"icon", ONE_EXACTLY, expect_uint(assign_variable_callback(icon)),
+			//"type", ONE_EXACTLY, expect_string(assign_variable_callback(category)),
+			"sprite", ONE_EXACTLY, expect_string(assign_variable_callback(sprite)),
+			"active", ONE_EXACTLY, expect_bool(assign_variable_callback(active)),
+			//"unit_type", ONE_EXACTLY, expect_string(assign_variable_callback(type)),
+			"floating_flag", ONE_EXACTLY, expect_bool(assign_variable_callback(floating_flag)),
+			"priority", ONE_EXACTLY, expect_uint(assign_variable_callback(priority)),
+			"max_strength", ONE_EXACTLY, expect_uint(assign_variable_callback(max_strength)),
+			"default_organisation", ONE_EXACTLY, expect_uint(assign_variable_callback(default_organisation)),
+			"maximum_speed", ONE_EXACTLY, expect_uint(assign_variable_callback(maximum_speed)),
+			"weighted_value", ONE_EXACTLY, expect_fixed_point(assign_variable_callback(weighted_value)),
+			"build_time", ONE_EXACTLY, expect_uint(assign_variable_callback(build_time)),
+			//"build_cost", ONE_EXACTLY, goods_manager.expect_goods_map(assign_variable_callback(build_cost)),
+			"supply_consumption", ONE_EXACTLY, expect_fixed_point(assign_variable_callback(supply_consumption)),
+			//"supply_cost", ONE_EXACTLY, goods_manager.expect_goods_map(assign_variable_callback(supply_cost)),
+			"supply_consumption_score", ONE_EXACTLY, expect_uint(assign_variable_callback(supply_consumption_score))
+		)(value);
+
+		if (category == UnitCategory::LAND) {
+			uint32_t reconnaisance, attack, defence, discipline, support, maneuver,  siege;
+
+			ret &= expect_dictionary_keys(
+				"reconnaisance", ONE_EXACTLY, expect_uint(assign_variable_callback(reconnaisance)),
+				"attack", ONE_EXACTLY, expect_uint(assign_variable_callback(attack)),
+				"defence", ONE_EXACTLY, expect_uint(assign_variable_callback(defence)),
+				"discipline", ONE_EXACTLY, expect_uint(assign_variable_callback(discipline)),
+				"support", ONE_EXACTLY, expect_uint(assign_variable_callback(support)),
+				"maneuver", ONE_EXACTLY, expect_uint(assign_variable_callback(maneuver)),
+				"siege", ONE_EXACTLY, expect_uint(assign_variable_callback(siege))
+			)(value);
+
+			ret &= add_land_unit(
+				key, category, EXTRA_ARGS,
+				reconnaisance, attack, defence, discipline, support, maneuver, siege
+			);
+
+			return ret;
+		} else if (category == UnitCategory::NAVAL) {
+			Unit::icon_t naval_icon;
+			bool sail = false, transport = false, build_overseas;
+			Unit::sound_t move_sound, select_sound;
+			uint32_t min_port_level, hull, gun_power, evasion, colonial_points = 0, torpedo_attack = 0; //probably?
+			int32_t limit_per_port;
+			fixed_point_t fire_range;
+
+			ret &= expect_dictionary_keys(
+				"naval_icon", ONE_EXACTLY, expect_uint(assign_variable_callback(naval_icon)),
+				"sail", ZERO_OR_ONE, expect_bool(assign_variable_callback(sail)),
+				"transport", ZERO_OR_ONE, expect_bool(assign_variable_callback(transport)),
+				"move_sound", ONE_EXACTLY, expect_string(assign_variable_callback(move_sound)),
+				"select_sound", ONE_EXACTLY, expect_string(assign_variable_callback(select_sound)),
+				"colonial_points", ZERO_OR_ONE, expect_uint(assign_variable_callback(colonial_points)),
+				"can_build_overseas", ONE_EXACTLY, expect_bool(assign_variable_callback(build_overseas)),
+				"min_port_level", ONE_EXACTLY, expect_uint(assign_variable_callback(min_port_level)),
+				"limit_per_port", ONE_EXACTLY, expect_int(assign_variable_callback(limit_per_port)),
+				"hull", ONE_EXACTLY, expect_uint(assign_variable_callback(hull)),
+				"gun_power", ONE_EXACTLY, expect_uint(assign_variable_callback(gun_power)),
+				"fire_range", ONE_EXACTLY, expect_fixed_point(assign_variable_callback(fire_range)),
+				"evasion", ONE_EXACTLY, expect_uint(assign_variable_callback(evasion)),
+				"torpedo_attack", ZERO_OR_ONE, expect_uint(assign_variable_callback(torpedo_attack))
+			)(value);
+
+			ret &= add_naval_unit(
+				key, category, EXTRA_ARGS,
+				naval_icon, sail, transport, move_sound, select_sound, colonial_points, build_overseas, min_port_level,
+				limit_per_port, hull, gun_power, fire_range, evasion, torpedo_attack
+			);
+
+			return ret;
+		} else return false;
+	})(root);
 }
