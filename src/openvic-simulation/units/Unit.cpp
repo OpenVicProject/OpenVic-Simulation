@@ -1,5 +1,4 @@
 #include "Unit.hpp"
-#include <string_view>
 
 #define UNIT_ARGS icon, sprite, active, type, floating_flag, priority, max_strength, \
 					default_organisation, maximum_speed, weighted_value, build_time, build_cost, supply_consumption, \
@@ -177,12 +176,17 @@ bool UnitManager::_check_shared_parameters(const std::string_view identifier, UN
 		return false;
 	}
 
-	//TODO check that icon and sprite exist
-
-	if (!allowed_unit_types.contains(type)) {
-		Logger::error("Invalid unit type \"", type, "\" specified!");
+	if (sprite.empty()) {
+		Logger::error("Invalid sprite identifier - empty!");
 		return false;
 	}
+
+	if (type.empty()) {
+		Logger::error("Invalid unit type - empty!");
+		return false;
+	}
+
+	//TODO check that icon and sprite exist
 
 	return true;
 }

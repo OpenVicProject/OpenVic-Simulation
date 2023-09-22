@@ -1,10 +1,8 @@
 #pragma once
 
 #include <cstdint>
-#include <set>
 #include <string>
 #include <string_view>
-#include <unordered_set>
 #include "openvic-simulation/economy/Good.hpp"
 #include "openvic-simulation/types/IdentifierRegistry.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
@@ -150,16 +148,6 @@ namespace OpenVic {
 		bool _check_shared_parameters(const std::string_view identifier, UNIT_PARAMS);
 	
 	public:
-		const std::unordered_set<std::string_view> allowed_unit_types { //TODO is this useful?
-			"infantry", //guard, infantry, irregular
-			"cavalry", //cavalry, cuirassier, dragoon, hussar, plane
-			"support", //artillery
-			"special", //engineer, tank
-			"transport", //clipper transport, steam transport
-			"light_ship", //commerce raider, cruiser, frigate
-			"big_ship" //battleship, dreadnought, ironclad, manowar, monitor
-		};
-
 		UnitManager(GoodManager& good_manager);
 
 		bool add_land_unit(const std::string_view identifier, UNIT_PARAMS, LAND_PARAMS);
