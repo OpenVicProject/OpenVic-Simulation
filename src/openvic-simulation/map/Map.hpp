@@ -39,6 +39,7 @@ namespace OpenVic {
 		using terrain_variant_map_t = std::map<colour_t, terrain_t>;
 
 #pragma pack(push, 1)
+		/* Used to represent tightly packed 3-byte integer pixel information. */
 		struct shape_pixel_t {
 			Province::index_t index;
 			terrain_t terrain;
@@ -93,6 +94,7 @@ namespace OpenVic {
 
 		bool add_mapmode(const std::string_view identifier, Mapmode::colour_func_t colour_func);
 		IDENTIFIER_REGISTRY_ACCESSORS(Mapmode, mapmode)
+		Mapmode const* get_mapmode_by_index(size_t index) const;
 		static constexpr size_t MAPMODE_COLOUR_SIZE = 4;
 		bool generate_mapmode_colours(Mapmode::index_t index, uint8_t* target) const;
 

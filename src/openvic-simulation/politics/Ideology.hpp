@@ -22,17 +22,19 @@ namespace OpenVic {
 
 	private:
 		IdeologyGroup const& group;
-		const bool uncivilised;
+		const bool uncivilised, can_reduce_militancy;
 		const Date spawn_date;
 
 		//TODO - willingness to repeal/pass reforms (and its modifiers)
 
-		Ideology(const std::string_view new_identifier, colour_t new_colour, IdeologyGroup const& new_group, bool uncivilised, Date spawn_date);
+		Ideology(const std::string_view new_identifier, colour_t new_colour, IdeologyGroup const& new_group, bool new_uncivilised, bool new_can_reduce_militancy, Date new_spawn_date);
 
 	public:
 		Ideology(Ideology&&) = default;
+
 		IdeologyGroup const& get_group() const;
 		bool is_uncivilised() const;
+		bool get_can_reduce_militancy() const;
 		Date const& get_spawn_date() const;
 	};
 
@@ -47,7 +49,7 @@ namespace OpenVic {
 		bool add_ideology_group(const std::string_view identifier);
 		IDENTIFIER_REGISTRY_ACCESSORS(IdeologyGroup, ideology_group)
 
-		bool add_ideology(const std::string_view identifier, colour_t colour, IdeologyGroup const* group, bool uncivilised, Date spawn_date);
+		bool add_ideology(const std::string_view identifier, colour_t colour, IdeologyGroup const* group, bool uncivilised, bool can_reduce_militancy, Date spawn_date);
 		IDENTIFIER_REGISTRY_ACCESSORS_CUSTOM_PLURAL(Ideology, ideology, ideologies)
 
 		bool load_ideology_file(ast::NodeCPtr root);
