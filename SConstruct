@@ -269,7 +269,6 @@ if env["build_ovsim_headless"]:
     headless_env.headless_sources = GlobRecursive("*.cpp", headless_path)
     if not env["build_ovsim_library"]:
         headless_env.headless_sources += sources
-    headless_env.headless_sources,
     headless_program = headless_env.Program(
         target=os.path.join(BINDIR, headless_name),
         source=headless_env.headless_sources,

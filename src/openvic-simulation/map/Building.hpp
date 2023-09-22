@@ -1,6 +1,5 @@
 #pragma once
 
-#include <string_view>
 #include <vector>
 
 #include "openvic-simulation/types/Date.hpp"
