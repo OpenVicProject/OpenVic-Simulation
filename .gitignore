@@ -74,3 +74,10 @@ bin/*
 
 *.translation
 !game/common/map/*.obj
+
+# JetBrains
+.idea
+
+# scons stuff
+.cache
+compile_commands.json
