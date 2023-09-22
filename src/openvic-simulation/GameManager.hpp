@@ -5,8 +5,7 @@
 #include "openvic-simulation/map/Map.hpp"
 
 namespace OpenVic {
-	class GameManager {
-	public:
+	struct GameManager {
 		using state_updated_func_t = std::function<void()>;
 
 		Map map;
