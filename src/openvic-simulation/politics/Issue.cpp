@@ -12,10 +12,10 @@ IssueGroup const& Issue::get_group() const {
 	return group;
 }
 
-ReformType::ReformType(const std::string_view new_identifier, bool uncivilised) 
+ReformType::ReformType(const std::string_view new_identifier, bool uncivilised)
 	: HasIdentifier { new_identifier }, uncivilised { uncivilised } {}
 
-ReformGroup::ReformGroup(const std::string_view identifier, ReformType const& type, bool ordered, bool administrative) 
+ReformGroup::ReformGroup(const std::string_view identifier, ReformType const& type, bool ordered, bool administrative)
 	: IssueGroup { identifier }, type { type }, ordered { ordered }, administrative { administrative } {}
 
 ReformType const& ReformGroup::get_type() const {
@@ -151,7 +151,7 @@ bool IssueManager::_load_reform(size_t& ordinal, const std::string_view identifi
 bool IssueManager::load_issues_file(ast::NodeCPtr root) {
 	size_t expected_issue_groups = 0;
 	size_t expected_reform_groups = 0;
-	bool ret = expect_dictionary_reserve_length(reform_types, 
+	bool ret = expect_dictionary_reserve_length(reform_types,
 		[this, &expected_issue_groups, &expected_reform_groups](std::string_view key, ast::NodeCPtr value) -> bool {
 			if (key == "party_issues")
 				return expect_length(add_variable_callback(expected_issue_groups))(value);

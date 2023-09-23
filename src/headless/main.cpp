@@ -1,6 +1,7 @@
 #include <openvic-simulation/GameManager.hpp>
 #include <openvic-simulation/dataloader/Dataloader.hpp>
 #include <openvic-simulation/utility/Logger.hpp>
+#include <openvic-simulation/testing/Testing.hpp>
 
 using namespace OpenVic;
 
@@ -50,6 +51,9 @@ static bool headless_load(Dataloader::path_vector_t const& roots) {
 		Logger::error("Failed to load localisation!");
 		ret = false;
 	}
+
+	Testing testing { game_manager };
+	std::cout << "\nTesting loaded\n" << std::endl;
 
 	return ret;
 }

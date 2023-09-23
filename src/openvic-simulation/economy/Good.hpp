@@ -1,8 +1,6 @@
 #pragma once
 
-#include "openvic-simulation/dataloader/NodeTools.hpp"
 #include "openvic-simulation/types/IdentifierRegistry.hpp"
-#include "openvic-dataloader/v2script/AbstractSyntaxTree.hpp"
 
 namespace OpenVic {
 	struct GoodManager;
@@ -76,7 +74,5 @@ namespace OpenVic {
 
 		void reset_to_defaults();
 		bool load_goods_file(ast::NodeCPtr root);
-
-		NodeTools::node_callback_t expect_goods_map(NodeTools::callback_t<std::map<Good const*, fixed_point_t>> cb);
 	};
 }

@@ -47,7 +47,7 @@ namespace OpenVic {
 
 	protected:
 		Unit(std::string_view identifier, std::string_view category, UNIT_PARAMS);
-	
+
 	public:
 		Unit(Unit&&) = default;
 
@@ -98,7 +98,7 @@ namespace OpenVic {
 
 	struct NavalUnit : Unit {
 		friend struct UnitManager;
-	
+
 	private:
 		const icon_t naval_icon;
 		const bool sail;
@@ -144,18 +144,17 @@ namespace OpenVic {
 
 	struct UnitManager {
 	private:
-		GoodManager& good_manager;
 		IdentifierRegistry<Unit> units;
 
 		bool _check_shared_parameters(const std::string_view identifier, UNIT_PARAMS);
-	
+
 	public:
-		UnitManager(GoodManager& good_manager);
+		UnitManager();
 
 		bool add_land_unit(const std::string_view identifier, UNIT_PARAMS, LAND_PARAMS);
 		bool add_naval_unit(const std::string_view identifier, UNIT_PARAMS, NAVY_PARAMS);
 		IDENTIFIER_REGISTRY_ACCESSORS(Unit, unit)
 
-		bool load_unit_file(ast::NodeCPtr root);
+		bool load_unit_file(GoodManager const& good_manager, ast::NodeCPtr root);
 	};
 }

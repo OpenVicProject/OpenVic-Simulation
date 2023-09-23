@@ -1,8 +1,6 @@
 #pragma once
 
-#include "types/Date.hpp"
-#include "types/IdentifierRegistry.hpp"
-#include "dataloader/NodeTools.hpp"
+#include "openvic-simulation/types/IdentifierRegistry.hpp"
 
 namespace OpenVic {
 	struct IdeologyManager;
@@ -12,7 +10,7 @@ namespace OpenVic {
 
 	private:
 		IdeologyGroup(const std::string_view new_identifier);
-	
+
 	public:
 		IdeologyGroup(IdeologyGroup&&) = default;
 	};
@@ -45,7 +43,7 @@ namespace OpenVic {
 
 	public:
 		IdeologyManager();
-		
+
 		bool add_ideology_group(const std::string_view identifier);
 		IDENTIFIER_REGISTRY_ACCESSORS(IdeologyGroup, ideology_group)
 

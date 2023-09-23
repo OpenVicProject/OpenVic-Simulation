@@ -138,6 +138,14 @@ namespace OpenVic {
 		}
 
 		template<typename T>
+		callback_t<T&&> move_variable_callback(T& var) {
+			return [&var](T&& val) -> bool {
+				var = std::move(val);
+				return true;
+			};
+		}
+
+		template<typename T>
 		requires requires(T& t) {
 			t += T {};
 		}
@@ -159,31 +167,33 @@ namespace OpenVic {
 			};
 		}
 
-		template<typename I, typename T>
-		requires(std::integral<I>, std::integral<T>)
-		callback_t<I> _assign_variable_callback_int(const std::string_view name, T& var) {
-			return [&var, name](I val) -> bool {
-				if (std::numeric_limits<T>::lowest() <= val && val <= std::numeric_limits<T>::max()) {
+		template<typename T>
+		requires(std::integral<T>)
+		callback_t<uint64_t> assign_variable_callback_uint(const std::string_view name, T& var) {
+			return [&var, name](uint64_t val) -> bool {
+				if (val <= static_cast<uint64_t>(std::numeric_limits<T>::max())) {
 					var = val;
 					return true;
 				}
-				Logger::error("Invalid ", name, ": ", val, " (valid range: [",
-					static_cast<int64_t>(std::numeric_limits<T>::lowest()), ", ",
+				Logger::error("Invalid ", name, ": ", val, " (valid range: [0, ",
 					static_cast<uint64_t>(std::numeric_limits<T>::max()), "])");
 				return false;
 			};
 		}
 
 		template<typename T>
-		requires(std::integral<T>)
-		callback_t<uint64_t> assign_variable_callback_uint(const std::string_view name, T& var) {
-			return _assign_variable_callback_int<uint64_t>(name, var);
-		}
-
-		template<typename T>
-		requires(std::integral<T>)
+		requires(std::signed_integral<T>)
 		callback_t<int64_t> assign_variable_callback_int(const std::string_view name, T& var) {
-			return _assign_variable_callback_int<int64_t>(name, var);
+			return [&var, name](int64_t val) -> bool {
+				if (static_cast<int64_t>(std::numeric_limits<T>::lowest()) <= val && val <= static_cast<int64_t>(std::numeric_limits<T>::max())) {
+					var = val;
+					return true;
+				}
+				Logger::error("Invalid ", name, ": ", val, " (valid range: [",
+					static_cast<int64_t>(std::numeric_limits<T>::lowest()), ", ",
+					static_cast<int64_t>(std::numeric_limits<T>::max()), "])");
+				return false;
+			};
 		}
 
 		template<typename T>

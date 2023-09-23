@@ -140,7 +140,7 @@ void Province::tick(Date const& today) {
 		building.tick(today);
 }
 
-Province::adjacency_t::adjacency_t(Province const* province, distance_t distance, flags_t flags) 
+Province::adjacency_t::adjacency_t(Province const* province, distance_t distance, flags_t flags)
 	: province { province }, distance { distance }, flags { flags } {
 	assert(province != nullptr);
 }

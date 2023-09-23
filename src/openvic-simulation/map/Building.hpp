@@ -73,7 +73,7 @@ namespace OpenVic {
 
 	struct BuildingManager {
 	private:
-		IdentifierRegistry<BuildingType> building_types;
+		IdentifierRegistry<BuildingType> building_types;	// TODO: This needs a getter
 
 	public:
 		BuildingManager();

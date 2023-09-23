@@ -82,11 +82,16 @@ namespace OpenVic {
 	private:
 		IdentifierRegistry<PopType> pop_types;
 
-	public:
 		CultureManager culture_manager;
 		ReligionManager religion_manager;
 
+	public:
 		PopManager();
+
+		CultureManager& get_culture_manager();
+		CultureManager const& get_culture_manager() const;
+		ReligionManager& get_religion_manager();
+		ReligionManager const& get_religion_manager() const;
 
 		bool add_pop_type(const std::string_view identifier, colour_t new_colour, PopType::strata_t strata, PopType::sprite_t sprite,
 			Pop::pop_size_t max_size, Pop::pop_size_t merge_max_size, bool state_capital_only, bool demote_migrant,

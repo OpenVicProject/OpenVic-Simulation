@@ -1,14 +1,76 @@
 #include "GameManager.hpp"
 
 #include "openvic-simulation/utility/Logger.hpp"
-#include "units/Unit.hpp"
 
 using namespace OpenVic;
 
 GameManager::GameManager(state_updated_func_t state_updated_callback)
-	: unit_manager { good_manager },
-	  clock { [this]() { tick(); }, [this]() { update_state(); } },
+	: clock { [this]() { tick(); }, [this]() { update_state(); } },
 	  state_updated { state_updated_callback } {}
+
+Map& GameManager::get_map() {
+	return map;
+}
+
+Map const& GameManager::get_map() const {
+	return map;
+}
+
+BuildingManager& GameManager::get_building_manager() {
+	return building_manager;
+}
+
+BuildingManager const& GameManager::get_building_manager() const {
+	return building_manager;
+}
+
+GoodManager& GameManager::get_good_manager() {
+	return good_manager;
+}
+
+GoodManager const& GameManager::get_good_manager() const {
+	return good_manager;
+}
+
+PopManager& GameManager::get_pop_manager() {
+	return pop_manager;
+}
+
+PopManager const& GameManager::get_pop_manager() const {
+	return pop_manager;
+}
+
+IdeologyManager& GameManager::get_ideology_manager() {
+	return ideology_manager;
+}
+
+IdeologyManager const& GameManager::get_ideology_manager() const {
+	return ideology_manager;
+}
+
+IssueManager& GameManager::get_issue_manager() {
+	return issue_manager;
+}
+
+IssueManager const& GameManager::get_issue_manager() const {
+	return issue_manager;
+}
+
+UnitManager& GameManager::get_unit_manager() {
+	return unit_manager;
+}
+
+UnitManager const& GameManager::get_unit_manager() const {
+	return unit_manager;
+}
+
+GameAdvancementHook& GameManager::get_clock() {
+	return clock;
+}
+
+GameAdvancementHook const& GameManager::get_clock() const {
+	return clock;
+}
 
 void GameManager::set_needs_update() {
 	needs_update = true;
@@ -123,7 +185,7 @@ bool GameManager::load_hardcoded_defines() {
 
 	using building_type_t = std::tuple<std::string, Building::level_t, Timespan>;
 	const std::vector<building_type_t> building_types {
-		{ "building_fort", 4, 8 }, { "building_naval_base", 6, 15 }, { "building_railroad", 5, 10 }
+		{ "building_fort", 4, 8 }, { "building_naval_base", 6, 15 }, { "building_railroad", 5, 10 }	// Move this to building.hpp
 	};
 	for (building_type_t const& type : building_types)
 		ret &= building_manager.add_building_type(std::get<0>(type), std::get<1>(type), std::get<2>(type));
