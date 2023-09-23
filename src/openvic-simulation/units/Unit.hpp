@@ -9,16 +9,16 @@
 #include "openvic-simulation/economy/Good.hpp"
 
 #define UNIT_PARAMS Unit::icon_t icon, Unit::sprite_t sprite, bool active, std::string_view type, \
-					bool floating_flag, uint32_t priority, uint32_t max_strength, uint32_t default_organisation, \
+					bool floating_flag, uint32_t priority, fixed_point_t max_strength, fixed_point_t default_organisation, \
 					fixed_point_t maximum_speed, fixed_point_t weighted_value, uint32_t build_time, \
 					std::map<const Good*, fixed_point_t> build_cost, fixed_point_t supply_consumption, \
 					std::map<const Good*, fixed_point_t> supply_cost
 #define LAND_PARAMS fixed_point_t reconnaissance, fixed_point_t attack, fixed_point_t defence, fixed_point_t discipline, \
 					fixed_point_t support, fixed_point_t maneuver, fixed_point_t siege
 #define NAVY_PARAMS Unit::icon_t naval_icon, bool sail, bool transport, bool capital, Unit::sound_t move_sound, \
-					Unit::sound_t select_sound, uint32_t colonial_points, bool build_overseas, uint32_t min_port_level, \
-					int32_t limit_per_port, uint32_t supply_consumption_score, uint32_t hull, uint32_t gun_power, \
-					fixed_point_t fire_range, fixed_point_t evasion, uint32_t torpedo_attack
+					Unit::sound_t select_sound, fixed_point_t colonial_points, bool build_overseas, uint32_t min_port_level, \
+					int32_t limit_per_port, fixed_point_t supply_consumption_score, fixed_point_t hull, fixed_point_t gun_power, \
+					fixed_point_t fire_range, fixed_point_t evasion, fixed_point_t torpedo_attack
 
 namespace OpenVic {
 	struct Unit : HasIdentifier {
@@ -35,8 +35,8 @@ namespace OpenVic {
 		const bool floating_flag;
 
 		const uint32_t priority;
-		const uint32_t max_strength;
-		const uint32_t default_organisation;
+		const fixed_point_t max_strength;
+		const fixed_point_t default_organisation;
 		const fixed_point_t maximum_speed;
 		const fixed_point_t weighted_value;
 
@@ -59,15 +59,15 @@ namespace OpenVic {
 		bool has_floating_flag() const;
 
 		uint32_t get_priority() const;
-		uint32_t get_max_strength() const;
-		uint32_t get_default_organisation() const;
+		fixed_point_t get_max_strength() const;
+		fixed_point_t get_default_organisation() const;
 		fixed_point_t get_maximum_speed() const;
 		fixed_point_t get_weighted_value() const;
 
 		uint32_t get_build_time() const;
-		std::map<const Good*, fixed_point_t> get_build_cost() const;
+		std::map<const Good*, fixed_point_t> const& get_build_cost() const;
 		fixed_point_t get_supply_consumption() const;
-		std::map<const Good*, fixed_point_t> get_supply_cost() const;
+		std::map<const Good*, fixed_point_t> const& get_supply_cost() const;
 	};
 
 	struct LandUnit : Unit {
@@ -106,17 +106,17 @@ namespace OpenVic {
 		const bool capital;
 		const sound_t move_sound;
 		const sound_t select_sound;
-		const uint32_t colonial_points;
+		const fixed_point_t colonial_points;
 		const bool build_overseas;
 		const uint32_t min_port_level;
 		const int32_t limit_per_port;
-		const uint32_t supply_consumption_score;
+		const fixed_point_t supply_consumption_score;
 
-		const uint32_t hull;
-		const uint32_t gun_power;
+		const fixed_point_t hull;
+		const fixed_point_t gun_power;
 		const fixed_point_t fire_range;
 		const fixed_point_t evasion;
-		const uint32_t torpedo_attack;
+		const fixed_point_t torpedo_attack;
 
 		NavalUnit(std::string_view identifier, UNIT_PARAMS, NAVY_PARAMS);
 
@@ -129,17 +129,17 @@ namespace OpenVic {
 		bool is_capital() const;
 		sound_t get_move_sound() const;
 		sound_t get_select_sound() const;
-		uint32_t get_colonial_points() const;
+		fixed_point_t get_colonial_points() const;
 		bool can_build_overseas() const;
 		uint32_t get_min_port_level() const;
 		int32_t get_limit_per_port() const;
-		uint32_t get_supply_consumption_score() const;
+		fixed_point_t get_supply_consumption_score() const;
 
-		uint32_t get_hull() const;
-		uint32_t get_gun_power() const;
+		fixed_point_t get_hull() const;
+		fixed_point_t get_gun_power() const;
 		fixed_point_t get_fire_range() const;
 		fixed_point_t get_evasion() const;
-		uint32_t get_torpedo_attack() const;
+		fixed_point_t get_torpedo_attack() const;
 	};
 
 	struct UnitManager {

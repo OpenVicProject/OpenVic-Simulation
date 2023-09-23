@@ -40,11 +40,11 @@ uint32_t Unit::get_priority() const {
 	return priority;
 }
 
-uint32_t Unit::get_max_strength() const {
+fixed_point_t Unit::get_max_strength() const {
 	return max_strength;
 }
 
-uint32_t Unit::get_default_organisation() const {
+fixed_point_t Unit::get_default_organisation() const {
 	return default_organisation;
 }
 
@@ -60,7 +60,7 @@ fixed_point_t Unit::get_weighted_value() const {
 	return weighted_value;
 }
 
-std::map<const Good*, fixed_point_t> Unit::get_build_cost() const {
+std::map<const Good*, fixed_point_t> const& Unit::get_build_cost() const {
 	return build_cost;
 }
 
@@ -68,7 +68,7 @@ fixed_point_t Unit::get_supply_consumption() const {
 	return supply_consumption;
 }
 
-std::map<const Good*, fixed_point_t> Unit::get_supply_cost() const {
+std::map<const Good*, fixed_point_t> const& Unit::get_supply_cost() const {
 	return supply_cost;
 }
 
@@ -130,7 +130,7 @@ NavalUnit::sound_t NavalUnit::get_select_sound() const {
 	return select_sound;
 }
 
-uint32_t NavalUnit::get_colonial_points() const {
+fixed_point_t NavalUnit::get_colonial_points() const {
 	return colonial_points;
 }
 
@@ -146,15 +146,15 @@ int32_t NavalUnit::get_limit_per_port() const {
 	return limit_per_port;
 }
 
-uint32_t NavalUnit::get_supply_consumption_score() const {
+fixed_point_t NavalUnit::get_supply_consumption_score() const {
 	return supply_consumption_score;
 }
 
-uint32_t NavalUnit::get_hull() const {
+fixed_point_t NavalUnit::get_hull() const {
 	return hull;
 }
 
-uint32_t NavalUnit::get_gun_power() const {
+fixed_point_t NavalUnit::get_gun_power() const {
 	return gun_power;
 }
 
@@ -166,11 +166,11 @@ fixed_point_t NavalUnit::get_evasion() const {
 	return evasion;
 }
 
-uint32_t NavalUnit::get_torpedo_attack() const {
+fixed_point_t NavalUnit::get_torpedo_attack() const {
 	return torpedo_attack;
 }
 
-UnitManager::UnitManager(GoodManager& good_manager) : good_manager { good_manager }, units { "units " } {};
+UnitManager::UnitManager(GoodManager& good_manager) : good_manager { good_manager }, units { "units" } {};
 
 bool UnitManager::_check_shared_parameters(const std::string_view identifier, UNIT_PARAMS) {
 	if (identifier.empty()) {
@@ -217,8 +217,8 @@ bool UnitManager::load_unit_file(ast::NodeCPtr root) {
 		std::string_view category, type;
 		Unit::sprite_t sprite;
 		bool active = true, floating_flag;
-		uint32_t priority, max_strength, default_organisation, build_time;
-		fixed_point_t maximum_speed, weighted_value, supply_consumption;
+		uint32_t priority, build_time;
+		fixed_point_t maximum_speed, max_strength, default_organisation, weighted_value, supply_consumption;
 		std::map<const Good*, fixed_point_t> build_cost, supply_cost;
 
 		//shared
@@ -230,8 +230,8 @@ bool UnitManager::load_unit_file(ast::NodeCPtr root) {
 			"unit_type", ONE_EXACTLY, expect_identifier(assign_variable_callback(type)),
 			"floating_flag", ONE_EXACTLY, expect_bool(assign_variable_callback(floating_flag)),
 			"priority", ONE_EXACTLY, expect_uint(assign_variable_callback(priority)),
-			"max_strength", ONE_EXACTLY, expect_uint(assign_variable_callback(max_strength)),
-			"default_organisation", ONE_EXACTLY, expect_uint(assign_variable_callback(default_organisation)),
+			"max_strength", ONE_EXACTLY, expect_fixed_point(assign_variable_callback(max_strength)),
+			"default_organisation", ONE_EXACTLY, expect_fixed_point(assign_variable_callback(default_organisation)),
 			"maximum_speed", ONE_EXACTLY, expect_fixed_point(assign_variable_callback(maximum_speed)),
 			"weighted_value", ONE_EXACTLY, expect_fixed_point(assign_variable_callback(weighted_value)),
 			"build_time", ONE_EXACTLY, expect_uint(assign_variable_callback(build_time)),
@@ -260,9 +260,9 @@ bool UnitManager::load_unit_file(ast::NodeCPtr root) {
 			Unit::icon_t naval_icon;
 			bool sail = false, transport = false, capital = false, build_overseas = false;
 			Unit::sound_t move_sound, select_sound; //TODO defaults for both
-			uint32_t min_port_level, supply_consumption_score, hull, gun_power, colonial_points = 0, torpedo_attack = 0;
+			uint32_t min_port_level;
 			int32_t limit_per_port;
-			fixed_point_t fire_range, evasion;
+			fixed_point_t fire_range, evasion, supply_consumption_score, hull, gun_power, colonial_points = 0, torpedo_attack = 0;
 
 			ret &= expect_dictionary_keys(ALLOW_OTHER_KEYS,
 				"naval_icon", ONE_EXACTLY, expect_uint(assign_variable_callback(naval_icon)),
@@ -271,16 +271,16 @@ bool UnitManager::load_unit_file(ast::NodeCPtr root) {
 				"capital", ZERO_OR_ONE, expect_bool(assign_variable_callback(capital)),
 				"move_sound", ZERO_OR_ONE, expect_identifier(assign_variable_callback(move_sound)),
 				"select_sound", ZERO_OR_ONE, expect_identifier(assign_variable_callback(select_sound)),
-				"colonial_points", ZERO_OR_ONE, expect_uint(assign_variable_callback(colonial_points)),
+				"colonial_points", ZERO_OR_ONE, expect_fixed_point(assign_variable_callback(colonial_points)),
 				"can_build_overseas", ZERO_OR_ONE, expect_bool(assign_variable_callback(build_overseas)),
 				"min_port_level", ONE_EXACTLY, expect_uint(assign_variable_callback(min_port_level)),
 				"limit_per_port", ONE_EXACTLY, expect_int(assign_variable_callback(limit_per_port)),
-				"supply_consumption_score", ONE_EXACTLY, expect_uint(assign_variable_callback(supply_consumption_score)),
-				"hull", ONE_EXACTLY, expect_uint(assign_variable_callback(hull)),
-				"gun_power", ONE_EXACTLY, expect_uint(assign_variable_callback(gun_power)),
+				"supply_consumption_score", ONE_EXACTLY, expect_fixed_point(assign_variable_callback(supply_consumption_score)),
+				"hull", ONE_EXACTLY, expect_fixed_point(assign_variable_callback(hull)),
+				"gun_power", ONE_EXACTLY, expect_fixed_point(assign_variable_callback(gun_power)),
 				"fire_range", ONE_EXACTLY, expect_fixed_point(assign_variable_callback(fire_range)),
 				"evasion", ONE_EXACTLY, expect_fixed_point(assign_variable_callback(evasion)),
-				"torpedo_attack", ZERO_OR_ONE, expect_uint(assign_variable_callback(torpedo_attack))
+				"torpedo_attack", ZERO_OR_ONE, expect_fixed_point(assign_variable_callback(torpedo_attack))
 			)(value);
 
 			ret &= add_naval_unit(key, UNIT_ARGS, NAVY_ARGS);
