@@ -9,6 +9,7 @@
 #include "openvic-simulation/economy/Good.hpp"
 #include "openvic-simulation/map/Map.hpp"
 #include "openvic-simulation/units/Unit.hpp"
+#include "openvic-simulation/economy/ProductionType.hpp"
 
 namespace OpenVic {
 	struct GameManager {
@@ -21,6 +22,7 @@ namespace OpenVic {
 		PopManager pop_manager;
 		IdeologyManager ideology_manager;
 		IssueManager issue_manager;
+		ProductionTypeManager production_type_manager;
 		UnitManager unit_manager;
 		GameAdvancementHook clock;
 
@@ -48,6 +50,8 @@ namespace OpenVic {
 		IdeologyManager const& get_ideology_manager() const;
 		IssueManager& get_issue_manager();
 		IssueManager const& get_issue_manager() const;
+		ProductionTypeManager& get_production_type_manager();
+		ProductionTypeManager const& get_production_type_manager() const;
 		UnitManager& get_unit_manager();
 		UnitManager const& get_unit_manager() const;
 		GameAdvancementHook& get_clock();
