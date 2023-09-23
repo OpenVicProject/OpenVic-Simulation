@@ -163,7 +163,8 @@ bool Dataloader::_load_units(UnitManager& unit_manager, fs::path const& units_di
 		}
 	);
 	unit_manager.lock_units();
-	return ret;}
+	return ret;
+}
 
 bool Dataloader::_load_map_dir(GameManager& game_manager, fs::path const& map_directory) const {
 	Map& map = game_manager.map;

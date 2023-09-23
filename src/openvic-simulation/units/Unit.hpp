@@ -1,7 +1,6 @@
 #pragma once
 
 #include <cstdint>
-#include <string>
 #include <string_view>
 #include "openvic-simulation/economy/Good.hpp"
 #include "openvic-simulation/types/IdentifierRegistry.hpp"
@@ -11,14 +10,15 @@
 
 #define UNIT_PARAMS Unit::icon_t icon, Unit::sprite_t sprite, bool active, std::string_view type, \
 					bool floating_flag, uint32_t priority, uint32_t max_strength, uint32_t default_organisation, \
-					uint32_t maximum_speed, fixed_point_t weighted_value, uint32_t build_time, \
+					fixed_point_t maximum_speed, fixed_point_t weighted_value, uint32_t build_time, \
 					std::map<const Good*, fixed_point_t> build_cost, fixed_point_t supply_consumption, \
-					std::map<const Good*, fixed_point_t> supply_cost, uint32_t supply_consumption_score
-#define LAND_PARAMS uint32_t reconnaisance, uint32_t attack, uint32_t defence, uint32_t discipline, uint32_t support, \
-					uint32_t maneuver, uint32_t siege
-#define NAVY_PARAMS Unit::icon_t naval_icon, bool sail, bool transport, Unit::sound_t move_sound, Unit::sound_t select_sound, \
-					uint32_t colonial_points, bool build_overseas, uint32_t min_port_level, int32_t limit_per_port, \
-					uint32_t hull, uint32_t gun_power, fixed_point_t fire_range, uint32_t evasion, uint32_t torpedo_attack
+					std::map<const Good*, fixed_point_t> supply_cost
+#define LAND_PARAMS fixed_point_t reconnaissance, fixed_point_t attack, fixed_point_t defence, fixed_point_t discipline, \
+					fixed_point_t support, fixed_point_t maneuver, fixed_point_t siege
+#define NAVY_PARAMS Unit::icon_t naval_icon, bool sail, bool transport, bool capital, Unit::sound_t move_sound, \
+					Unit::sound_t select_sound, uint32_t colonial_points, bool build_overseas, uint32_t min_port_level, \
+					int32_t limit_per_port, uint32_t supply_consumption_score, uint32_t hull, uint32_t gun_power, \
+					fixed_point_t fire_range, fixed_point_t evasion, uint32_t torpedo_attack
 
 namespace OpenVic {
 	struct Unit : HasIdentifier {
@@ -37,14 +37,13 @@ namespace OpenVic {
 		const uint32_t priority;
 		const uint32_t max_strength;
 		const uint32_t default_organisation;
-		const uint32_t maximum_speed;
+		const fixed_point_t maximum_speed;
 		const fixed_point_t weighted_value;
 
 		const uint32_t build_time;
 		const std::map<const Good*, fixed_point_t> build_cost;
 		const fixed_point_t supply_consumption;
 		const std::map<const Good*, fixed_point_t> supply_cost;
-		const uint32_t supply_consumption_score;
 
 	protected:
 		Unit(std::string_view identifier, std::string_view category, UNIT_PARAMS);
@@ -62,40 +61,39 @@ namespace OpenVic {
 		uint32_t get_priority() const;
 		uint32_t get_max_strength() const;
 		uint32_t get_default_organisation() const;
-		uint32_t get_maximum_speed() const;
+		fixed_point_t get_maximum_speed() const;
 		fixed_point_t get_weighted_value() const;
 
 		uint32_t get_build_time() const;
 		std::map<const Good*, fixed_point_t> get_build_cost() const;
 		fixed_point_t get_supply_consumption() const;
 		std::map<const Good*, fixed_point_t> get_supply_cost() const;
-		uint32_t get_supply_consumption_score() const;
 	};
 
 	struct LandUnit : Unit {
 		friend struct UnitManager;
 
 	private:
-		const uint32_t reconnaisance;
-		const uint32_t attack;
-		const uint32_t defence;
-		const uint32_t discipline;
-		const uint32_t support;
-		const uint32_t maneuver;
-		const uint32_t siege;
+		const fixed_point_t reconnaissance;
+		const fixed_point_t attack;
+		const fixed_point_t defence;
+		const fixed_point_t discipline;
+		const fixed_point_t support;
+		const fixed_point_t maneuver;
+		const fixed_point_t siege;
 
 		LandUnit(std::string_view identifier, UNIT_PARAMS, LAND_PARAMS);
 
 	public:
 		LandUnit(LandUnit&&) = default;
 
-		uint32_t get_reconnaisance() const;
-		uint32_t get_attack() const;
-		uint32_t get_defence() const;
-		uint32_t get_discipline() const;
-		uint32_t get_support() const;
-		uint32_t get_maneuver() const;
-		uint32_t get_siege() const;
+		fixed_point_t get_reconnaissance() const;
+		fixed_point_t get_attack() const;
+		fixed_point_t get_defence() const;
+		fixed_point_t get_discipline() const;
+		fixed_point_t get_support() const;
+		fixed_point_t get_maneuver() const;
+		fixed_point_t get_siege() const;
 	};
 
 	struct NavalUnit : Unit {
@@ -105,17 +103,19 @@ namespace OpenVic {
 		const icon_t naval_icon;
 		const bool sail;
 		const bool transport;
+		const bool capital;
 		const sound_t move_sound;
 		const sound_t select_sound;
 		const uint32_t colonial_points;
 		const bool build_overseas;
 		const uint32_t min_port_level;
 		const int32_t limit_per_port;
+		const uint32_t supply_consumption_score;
 
 		const uint32_t hull;
 		const uint32_t gun_power;
 		const fixed_point_t fire_range;
-		const uint32_t evasion;
+		const fixed_point_t evasion;
 		const uint32_t torpedo_attack;
 
 		NavalUnit(std::string_view identifier, UNIT_PARAMS, NAVY_PARAMS);
@@ -126,17 +126,19 @@ namespace OpenVic {
 		icon_t get_naval_icon() const;
 		bool can_sail() const;
 		bool is_transport() const;
+		bool is_capital() const;
 		sound_t get_move_sound() const;
 		sound_t get_select_sound() const;
 		uint32_t get_colonial_points() const;
 		bool can_build_overseas() const;
 		uint32_t get_min_port_level() const;
 		int32_t get_limit_per_port() const;
+		uint32_t get_supply_consumption_score() const;
 
 		uint32_t get_hull() const;
 		uint32_t get_gun_power() const;
 		fixed_point_t get_fire_range() const;
-		uint32_t get_evasion() const;
+		fixed_point_t get_evasion() const;
 		uint32_t get_torpedo_attack() const;
 	};
 
