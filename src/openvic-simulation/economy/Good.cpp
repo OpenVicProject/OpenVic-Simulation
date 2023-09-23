@@ -1,6 +1,11 @@
 #include "Good.hpp"
 
 #include <cassert>
+#include <map>
+#include <string_view>
+#include "dataloader/NodeTools.hpp"
+#include "openvic-dataloader/v2script/AbstractSyntaxTree.hpp"
+#include "types/fixed_point/FixedPoint.hpp"
 
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;
@@ -131,4 +136,18 @@ bool GoodManager::load_goods_file(ast::NodeCPtr root) {
 	)(root);
 	lock_goods();
 	return ret;
+}
+
+node_callback_t GoodManager::expect_goods_map(callback_t<std::map<Good const*, fixed_point_t>> cb) {
+	return [this, cb](ast::NodeCPtr node) -> bool {
+		std::map<Good const*, fixed_point_t> goods_map;
+		bool res = expect_good_dictionary([&goods_map](const Good & key, ast::NodeCPtr value) -> bool {
+			fixed_point_t good_value;
+			bool res = expect_fixed_point((assign_variable_callback(good_value)))(value);
+			goods_map.emplace(&key, good_value);
+			return res;
+		})(node); 
+		res &= cb(goods_map);
+		return res;
+	};
 }
