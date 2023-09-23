@@ -124,22 +124,10 @@ bool CultureManager::_load_culture_group(size_t& total_expected_cultures,
 			return size;
 		},
 		ALLOW_OTHER_KEYS,
-		"leader", ONE_EXACTLY, [&total_expected_cultures, &leader](ast::NodeCPtr node) -> bool {
-			total_expected_cultures--;
-			return expect_identifier(assign_variable_callback(leader))(node);
-		},
-		"unit", ZERO_OR_ONE, [this, &total_expected_cultures, &unit_graphical_culture_type](ast::NodeCPtr node) -> bool {
-			total_expected_cultures--;
-			return expect_graphical_culture_type_identifier(assign_variable_callback_pointer(unit_graphical_culture_type))(node);
-		},
-		"union", ZERO_OR_ONE, [&total_expected_cultures](ast::NodeCPtr) -> bool {
-			total_expected_cultures--;
-			return true;
-		},
-		"is_overseas", ZERO_OR_ONE, [&total_expected_cultures, &is_overseas](ast::NodeCPtr node) -> bool {
-			total_expected_cultures--;
-			return expect_bool(assign_variable_callback(is_overseas))(node);
-		}
+		"leader", ONE_EXACTLY, decrement_callback(total_expected_cultures, expect_identifier(assign_variable_callback(leader))),
+		"unit", ZERO_OR_ONE, decrement_callback(total_expected_cultures, expect_graphical_culture_type_identifier(assign_variable_callback_pointer(unit_graphical_culture_type))),
+		"union", ZERO_OR_ONE, decrement_callback(total_expected_cultures, success_callback),
+		"is_overseas", ZERO_OR_ONE, decrement_callback(total_expected_cultures, expect_bool(assign_variable_callback(is_overseas)))
 	)(culture_group_node);
 	ret &= add_culture_group(culture_group_key, leader, unit_graphical_culture_type, is_overseas);
 	return ret;

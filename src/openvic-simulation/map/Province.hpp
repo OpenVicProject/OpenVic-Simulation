@@ -18,7 +18,7 @@ namespace OpenVic {
 		using index_t = uint16_t;
 		using life_rating_t = int8_t;
 		using distance_t = uint16_t;
-		using flags_t = uint16_t; 
+		using flags_t = uint16_t;
 
 		struct adjacency_t {
 			friend struct Province;

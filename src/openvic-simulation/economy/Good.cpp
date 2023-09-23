@@ -1,6 +1,8 @@
 #include "Good.hpp"
 
 #include <cassert>
+#include <map>
+#include <string_view>
 
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;
@@ -97,13 +99,7 @@ bool GoodManager::load_goods_file(ast::NodeCPtr root) {
 	bool ret = expect_dictionary_reserve_length(
 		good_categories,
 		[this, &total_expected_goods](std::string_view key, ast::NodeCPtr value) -> bool {
-			bool ret = expect_list_and_length(
-				[&total_expected_goods](size_t size) -> size_t {
-					total_expected_goods += size;
-					return 0;
-				},
-				success_callback
-			)(value);
+			bool ret = expect_length(add_variable_callback(total_expected_goods))(value);
 			ret &= add_good_category(key);
 			return ret;
 		}

@@ -1,4 +1,5 @@
 #include "Dataloader.hpp"
+#include <filesystem>
 
 #include <openvic-dataloader/csv/Parser.hpp>
 #include <openvic-dataloader/detail/CallbackOStream.hpp>
@@ -150,15 +151,22 @@ bool Dataloader::_load_pop_types(PopManager& pop_manager, fs::path const& pop_ty
 			return pop_manager.load_pop_type_file(file.stem().string(), _parse_defines(file).get_file_node());
 		}
 	);
-	if (!ret) {
-		Logger::error("Failed to load pop types!");
-	}
 	pop_manager.lock_pop_types();
 	return ret;
 }
 
+bool Dataloader::_load_units(GameManager& game_manager, fs::path const& units_directory) const {
+	const bool ret = apply_to_files_in_dir(units_directory, ".txt",
+		[&game_manager](fs::path const& file) -> bool {
+			return game_manager.get_unit_manager().load_unit_file(game_manager.get_good_manager(), _parse_defines(file).get_file_node());
+		}
+	);
+	game_manager.get_unit_manager().lock_units();
+	return ret;
+}
+
 bool Dataloader::_load_map_dir(GameManager& game_manager, fs::path const& map_directory) const {
-	Map& map = game_manager.map;
+	Map& map = game_manager.get_map();
 
 	static const fs::path defaults_filename = "default.map";
 	static const std::string default_definitions = "definition.csv";
@@ -232,7 +240,7 @@ bool Dataloader::_load_map_dir(GameManager& game_manager, fs::path const& map_di
 		ret = false;
 	}
 
-	if (!map.load_province_positions(game_manager.building_manager, _parse_defines(lookup_file(map_directory / positions)).get_file_node())) {
+	if (!map.load_province_positions(game_manager.get_building_manager(), _parse_defines(lookup_file(map_directory / positions)).get_file_node())) {
 		Logger::error("Failed to load province positions file!");
 		ret = false;
 	}
@@ -257,28 +265,43 @@ bool Dataloader::load_defines(GameManager& game_manager) const {
 	static const fs::path graphical_culture_type_file = "common/graphicalculturetype.txt";
 	static const fs::path culture_file = "common/cultures.txt";
 	static const fs::path religion_file = "common/religion.txt";
+	static const fs::path ideology_file = "common/ideologies.txt";
+	static const fs::path issues_file = "common/issues.txt";
 	static const fs::path map_directory = "map";
+	static const fs::path units_directory = "units";
 
 	bool ret = true;
 
-	if (!game_manager.good_manager.load_goods_file(_parse_defines(lookup_file(goods_file)).get_file_node())) {
+	if (!game_manager.get_good_manager().load_goods_file(_parse_defines(lookup_file(goods_file)).get_file_node())) {
 		Logger::error("Failed to load goods!");
 		ret = false;
 	}
-	if (!_load_pop_types(game_manager.pop_manager, pop_type_directory)) {
+	if (!_load_pop_types(game_manager.get_pop_manager(), pop_type_directory)) {
 		Logger::error("Failed to load pop types!");
 		ret = false;
 	}
-	if (!game_manager.pop_manager.culture_manager.load_graphical_culture_type_file(_parse_defines(lookup_file(graphical_culture_type_file)).get_file_node())) {
+	if (!game_manager.get_pop_manager().get_culture_manager().load_graphical_culture_type_file(_parse_defines(lookup_file(graphical_culture_type_file)).get_file_node())) {
 		Logger::error("Failed to load graphical culture types!");
 		ret = false;
 	}
-	if (!game_manager.pop_manager.culture_manager.load_culture_file(_parse_defines(lookup_file(culture_file)).get_file_node())) {
+	if (!game_manager.get_pop_manager().get_culture_manager().load_culture_file(_parse_defines(lookup_file(culture_file)).get_file_node())) {
 		Logger::error("Failed to load cultures!");
 		ret = false;
 	}
-	if (!game_manager.pop_manager.religion_manager.load_religion_file(_parse_defines(lookup_file(religion_file)).get_file_node())) {
+	if (!game_manager.get_pop_manager().get_religion_manager().load_religion_file(_parse_defines(lookup_file(religion_file)).get_file_node())) {
 		Logger::error("Failed to load religions!");
+		ret = false;
+	}
+	if (!game_manager.get_ideology_manager().load_ideology_file(_parse_defines(lookup_file(ideology_file)).get_file_node())) {
+		Logger::error("Failed to load ideologies!");
+		ret = false;
+	}
+	if (!game_manager.get_issue_manager().load_issues_file(_parse_defines(lookup_file(issues_file)).get_file_node())) {
+		Logger::error("Failed to load issues!");
+		ret = false;
+	}
+	if (!_load_units(game_manager, units_directory)) {
+		Logger::error("Failed to load units!");
 		ret = false;
 	}
 	if (!_load_map_dir(game_manager, map_directory)) {
@@ -292,9 +315,9 @@ bool Dataloader::load_defines(GameManager& game_manager) const {
 bool Dataloader::load_pop_history(GameManager& game_manager, fs::path const& path) const {
 	return apply_to_files_in_dir(path, ".txt",
 		[&game_manager](fs::path const& file) -> bool {
-			return _parse_defines_callback(game_manager.map.expect_province_dictionary(
+			return _parse_defines_callback(game_manager.get_map().expect_province_dictionary(
 				[&game_manager](Province& province, ast::NodeCPtr value) -> bool {
-					return province.load_pop_list(game_manager.pop_manager, value);
+					return province.load_pop_list(game_manager.get_pop_manager(), value);
 				}
 			))(file);
 		}

@@ -8,10 +8,7 @@ namespace OpenVic {
 
 		std::vector<Requirement> requirements = std::vector<Requirement>();
 
-		public:
-		TestScript() {
-			
-		}
+	public:
 
 		// expects an overriden method that performs arbitrary code execution
 		// so that each script uniquely performs tests

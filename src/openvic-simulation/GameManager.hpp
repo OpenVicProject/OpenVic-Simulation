@@ -3,18 +3,27 @@
 #include "openvic-simulation/GameAdvancementHook.hpp"
 #include "openvic-simulation/economy/Good.hpp"
 #include "openvic-simulation/map/Map.hpp"
+#include "openvic-simulation/politics/Ideology.hpp"
+#include "openvic-simulation/politics/Issue.hpp"
+#include "openvic-simulation/GameAdvancementHook.hpp"
+#include "openvic-simulation/economy/Good.hpp"
+#include "openvic-simulation/map/Map.hpp"
+#include "openvic-simulation/units/Unit.hpp"
 
 namespace OpenVic {
 	struct GameManager {
 		using state_updated_func_t = std::function<void()>;
 
+	private:
 		Map map;
 		BuildingManager building_manager;
 		GoodManager good_manager;
 		PopManager pop_manager;
+		IdeologyManager ideology_manager;
+		IssueManager issue_manager;
+		UnitManager unit_manager;
 		GameAdvancementHook clock;
 
-	private:
 		time_t session_start; /* SS-54, as well as allowing time-tracking */
 		Date today;
 		state_updated_func_t state_updated;
@@ -31,6 +40,23 @@ namespace OpenVic {
 		GoodManager* get_good_manager();
 		PopManager* get_pop_manager();
 		GameAdvancementHook* get_game_advancement_hook();
+
+		Map& get_map();
+		Map const& get_map() const;
+		BuildingManager& get_building_manager();
+		BuildingManager const& get_building_manager() const;
+		GoodManager& get_good_manager();
+		GoodManager const& get_good_manager() const;
+		PopManager& get_pop_manager();
+		PopManager const& get_pop_manager() const;
+		IdeologyManager& get_ideology_manager();
+		IdeologyManager const& get_ideology_manager() const;
+		IssueManager& get_issue_manager();
+		IssueManager const& get_issue_manager() const;
+		UnitManager& get_unit_manager();
+		UnitManager const& get_unit_manager() const;
+		GameAdvancementHook& get_clock();
+		GameAdvancementHook const& get_clock() const;
 
 		bool setup();
 
