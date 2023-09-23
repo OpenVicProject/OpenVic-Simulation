@@ -15,7 +15,7 @@ namespace OpenVic {
 
 	protected:
 		IssueGroup(const std::string_view identifier);
-	
+
 	public:
 		IssueGroup(IssueGroup&&) = default;
 	};
@@ -46,7 +46,7 @@ namespace OpenVic {
 		//in vanilla education, military and economic reforms are hardcoded to true and the rest to false
 
 		ReformType(const std::string_view new_identifier, bool uncivilised);
-	
+
 	public:
 		ReformType(ReformType&&) = default;
 	};
@@ -61,7 +61,7 @@ namespace OpenVic {
 		const bool administrative;
 
 		ReformGroup(const std::string_view identifier, ReformType const& type, bool ordered, bool administrative);
-	
+
 	public:
 		ReformGroup(ReformGroup&&) = default;
 		ReformType const& get_type() const;
@@ -87,7 +87,7 @@ namespace OpenVic {
 		ReformType const& get_type() const;
 		size_t get_ordinal() const;
 	};
-	
+
 	//Issue manager - holds the registries
 	struct IssueManager {
 	private:
@@ -117,7 +117,7 @@ namespace OpenVic {
 
 		bool add_reform_group(const std::string_view identifier, ReformType const* type, bool ordered, bool administrative);
 		IDENTIFIER_REGISTRY_ACCESSORS(ReformGroup, reform_group)
-				
+
 		bool add_reform(const std::string_view identifier, ReformGroup const* group, size_t ordinal);
 		IDENTIFIER_REGISTRY_ACCESSORS(Reform, reform)
 

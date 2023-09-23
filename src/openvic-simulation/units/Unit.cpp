@@ -170,7 +170,7 @@ fixed_point_t NavalUnit::get_torpedo_attack() const {
 	return torpedo_attack;
 }
 
-UnitManager::UnitManager(GoodManager& good_manager) : good_manager { good_manager }, units { "units" } {};
+UnitManager::UnitManager() : units { "units" } {}
 
 bool UnitManager::_check_shared_parameters(const std::string_view identifier, UNIT_PARAMS) {
 	if (identifier.empty()) {
@@ -211,8 +211,8 @@ bool UnitManager::add_naval_unit(const std::string_view identifier, UNIT_PARAMS,
 	return units.add_item(NavalUnit { identifier, UNIT_ARGS, NAVY_ARGS });
 }
 //TODO forgot fcking capital flag for naval units
-bool UnitManager::load_unit_file(ast::NodeCPtr root) {
-	return NodeTools::expect_dictionary([this](std::string_view key, ast::NodeCPtr value) -> bool {
+bool UnitManager::load_unit_file(GoodManager const& good_manager, ast::NodeCPtr root) {
+	return NodeTools::expect_dictionary([this, &good_manager](std::string_view key, ast::NodeCPtr value) -> bool {
 		Unit::icon_t icon;
 		std::string_view category, type;
 		Unit::sprite_t sprite;
@@ -223,21 +223,21 @@ bool UnitManager::load_unit_file(ast::NodeCPtr root) {
 
 		//shared
 		bool ret = expect_dictionary_keys(ALLOW_OTHER_KEYS,
-			"icon", ONE_EXACTLY, expect_uint(assign_variable_callback(icon)),
+			"icon", ONE_EXACTLY, expect_uint(assign_variable_callback_uint("unit icon", icon)),
 			"type", ONE_EXACTLY, expect_identifier(assign_variable_callback(category)),
 			"sprite", ONE_EXACTLY, expect_identifier(assign_variable_callback(sprite)),
 			"active", ZERO_OR_ONE, expect_bool(assign_variable_callback(active)),
 			"unit_type", ONE_EXACTLY, expect_identifier(assign_variable_callback(type)),
 			"floating_flag", ONE_EXACTLY, expect_bool(assign_variable_callback(floating_flag)),
-			"priority", ONE_EXACTLY, expect_uint(assign_variable_callback(priority)),
+			"priority", ONE_EXACTLY, expect_uint(assign_variable_callback_uint("unit priority", priority)),
 			"max_strength", ONE_EXACTLY, expect_fixed_point(assign_variable_callback(max_strength)),
 			"default_organisation", ONE_EXACTLY, expect_fixed_point(assign_variable_callback(default_organisation)),
 			"maximum_speed", ONE_EXACTLY, expect_fixed_point(assign_variable_callback(maximum_speed)),
 			"weighted_value", ONE_EXACTLY, expect_fixed_point(assign_variable_callback(weighted_value)),
-			"build_time", ONE_EXACTLY, expect_uint(assign_variable_callback(build_time)),
-			"build_cost", ONE_EXACTLY, good_manager.expect_goods_map(assign_variable_callback(build_cost)),
-			"supply_consumption", ONE_EXACTLY, expect_fixed_point(assign_variable_callback(supply_consumption)),
-			"supply_cost", ONE_EXACTLY, good_manager.expect_goods_map(assign_variable_callback(supply_cost))
+			"build_time", ONE_EXACTLY, expect_uint(assign_variable_callback_uint("unit build time", build_time)),
+			"build_cost", ONE_EXACTLY, good_manager.expect_good_decimal_map(assign_variable_callback(build_cost)),
+			"supply_consumption", ONE_EXACTLY, expect_fixed_point(move_variable_callback(supply_consumption)),
+			"supply_cost", ONE_EXACTLY, good_manager.expect_good_decimal_map(move_variable_callback(supply_cost))
 		)(value);
 
 		if (category == "land") {
@@ -265,7 +265,7 @@ bool UnitManager::load_unit_file(ast::NodeCPtr root) {
 			fixed_point_t fire_range, evasion, supply_consumption_score, hull, gun_power, colonial_points = 0, torpedo_attack = 0;
 
 			ret &= expect_dictionary_keys(ALLOW_OTHER_KEYS,
-				"naval_icon", ONE_EXACTLY, expect_uint(assign_variable_callback(naval_icon)),
+				"naval_icon", ONE_EXACTLY, expect_uint(assign_variable_callback_uint("unit naval icon", naval_icon)),
 				"sail", ZERO_OR_ONE, expect_bool(assign_variable_callback(sail)),
 				"transport", ZERO_OR_ONE, expect_bool(assign_variable_callback(transport)),
 				"capital", ZERO_OR_ONE, expect_bool(assign_variable_callback(capital)),
@@ -273,8 +273,8 @@ bool UnitManager::load_unit_file(ast::NodeCPtr root) {
 				"select_sound", ZERO_OR_ONE, expect_identifier(assign_variable_callback(select_sound)),
 				"colonial_points", ZERO_OR_ONE, expect_fixed_point(assign_variable_callback(colonial_points)),
 				"can_build_overseas", ZERO_OR_ONE, expect_bool(assign_variable_callback(build_overseas)),
-				"min_port_level", ONE_EXACTLY, expect_uint(assign_variable_callback(min_port_level)),
-				"limit_per_port", ONE_EXACTLY, expect_int(assign_variable_callback(limit_per_port)),
+				"min_port_level", ONE_EXACTLY, expect_uint(assign_variable_callback_uint("unit min port level", min_port_level)),
+				"limit_per_port", ONE_EXACTLY, expect_int(assign_variable_callback_int("unit limit per port", limit_per_port)),
 				"supply_consumption_score", ONE_EXACTLY, expect_fixed_point(assign_variable_callback(supply_consumption_score)),
 				"hull", ONE_EXACTLY, expect_fixed_point(assign_variable_callback(hull)),
 				"gun_power", ONE_EXACTLY, expect_fixed_point(assign_variable_callback(gun_power)),

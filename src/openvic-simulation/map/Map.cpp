@@ -517,7 +517,7 @@ bool Map::_generate_province_adjacencies() {
 		}
 		return false;
 	};
-	
+
 	for (size_t y = 0; y < height; ++y) {
 		for (size_t x = 0; x < width; ++x) {
 			Province* cur = get_province_by_index(province_shape_image[x + y * width].index);

@@ -58,7 +58,7 @@ constexpr vec2_t<T>& vec2_t<T>::operator+=(vec2_t const& right) {
 }
 
 template<typename T>
-constexpr vec2_t<T> operator-(vec2_t<T> const& arg) { 
+constexpr vec2_t<T> operator-(vec2_t<T> const& arg) {
 	return { -arg.x, -arg.y };
 }
 

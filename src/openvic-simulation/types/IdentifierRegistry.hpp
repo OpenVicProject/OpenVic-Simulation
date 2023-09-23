@@ -214,6 +214,20 @@ namespace OpenVic {
 				return false;
 			});
 		}
+
+		NodeTools::node_callback_t expect_item_decimal_map(NodeTools::callback_t<std::map<T const*, fixed_point_t>&&> callback) const {
+			return [this, callback](ast::NodeCPtr node) -> bool {
+				std::map<T const*, fixed_point_t> map;
+				bool ret = expect_item_dictionary([&map](T const& key, ast::NodeCPtr value) -> bool {
+					fixed_point_t val;
+					const bool ret = NodeTools::expect_fixed_point(NodeTools::assign_variable_callback(val))(value);
+					map.emplace(&key, val);
+					return ret;
+				})(node);
+				ret &= callback(std::move(map));
+				return ret;
+			};
+		}
 	};
 
 #define IDENTIFIER_REGISTRY_ACCESSORS_CUSTOM_PLURAL(type, singular, plural) \
@@ -227,7 +241,9 @@ namespace OpenVic {
 	NodeTools::node_callback_t expect_##singular##_identifier(NodeTools::callback_t<type const&> callback) const { \
 		return plural.expect_item_identifier(callback); } \
 	NodeTools::node_callback_t expect_##singular##_dictionary(NodeTools::callback_t<type const&, ast::NodeCPtr> callback) const { \
-		return plural.expect_item_dictionary(callback); }
+		return plural.expect_item_dictionary(callback); } \
+	NodeTools::node_callback_t expect_##singular##_decimal_map(NodeTools::callback_t<std::map<type const*, fixed_point_t>&&> callback) const { \
+		return plural.expect_item_decimal_map(callback); }
 
 #define IDENTIFIER_REGISTRY_NON_CONST_ACCESSORS_CUSTOM_PLURAL(type, singular, plural) \
 	type* get_##singular##_by_identifier(const std::string_view identifier) { \
