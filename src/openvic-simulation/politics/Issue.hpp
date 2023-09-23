@@ -25,14 +25,15 @@ namespace OpenVic {
 
 	private:
 		IssueType const& type;
-		const bool ordered;
+		const bool ordered, administrative;
 
-		IssueGroup(const std::string_view new_identifier, IssueType const& new_type, bool ordered);
+		IssueGroup(const std::string_view new_identifier, IssueType const& new_type, bool new_ordered, bool new_administrative);
 	
 	public:
 		IssueGroup(IssueGroup&&) = default;
 		IssueType const& get_type() const;
 		bool is_ordered() const;
+		bool is_administrative() const;
 	};
 
 	//Issue type (i.e. yes_slavery)
@@ -70,7 +71,7 @@ namespace OpenVic {
 		bool add_issue_type(const std::string_view identifier);
 		IDENTIFIER_REGISTRY_ACCESSORS(IssueType, issue_type)
 
-		bool add_issue_group(const std::string_view identifier, IssueType const* type, bool ordered);
+		bool add_issue_group(const std::string_view identifier, IssueType const* type, bool ordered, bool administrative);
 		IDENTIFIER_REGISTRY_ACCESSORS(IssueGroup, issue_group)
 
 		bool add_issue(const std::string_view identifier, IssueGroup const* group, size_t ordinal);

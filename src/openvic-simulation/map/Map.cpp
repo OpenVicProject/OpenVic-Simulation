@@ -316,6 +316,10 @@ bool Map::add_mapmode(const std::string_view identifier, Mapmode::colour_func_t 
 	return mapmodes.add_item({ identifier, mapmodes.size(), colour_func });
 }
 
+Mapmode const* Map::get_mapmode_by_index(size_t index) const {
+	return mapmodes.get_item_by_index(index);
+}
+
 bool Map::generate_mapmode_colours(Mapmode::index_t index, uint8_t* target) const {
 	if (target == nullptr) {
 		Logger::error("Mapmode colour target pointer is null!");
@@ -500,34 +504,28 @@ bool Map::load_region_file(ast::NodeCPtr root) {
 	return ret;
 }
 
+/* REQUIREMENTS:
+ * MAP-19, MAP-84
+ */
 bool Map::_generate_province_adjacencies() {
 	bool changed = false;
 
-	auto generate_adjacency = [&] (shape_pixel_t cur_pixel, size_t x, size_t y) -> bool {
-		size_t idx = x + y * width;
-		shape_pixel_t neighbour_pixel = province_shape_image[idx];
-		if (cur_pixel.index != neighbour_pixel.index) {
-			Province* cur = get_province_by_index(cur_pixel.index);
-			Province* neighbour = get_province_by_index(neighbour_pixel.index);
-			if(cur != nullptr && neighbour != nullptr) {
-				cur->add_adjacency(neighbour, 0, 0);
-				neighbour->add_adjacency(cur, 0, 0);
-				return true;
-			} else Logger::error(
-				"Couldn't find province(s): current = ", cur, " (", cur_pixel.index,
-				"), neighbour = ", neighbour, " (", neighbour_pixel.index, ")"
-			);
+	auto generate_adjacency = [&](Province* cur, size_t x, size_t y) -> bool {
+		Province* neighbour = get_province_by_index(province_shape_image[x + y * width].index);
+		if (neighbour != nullptr && cur != neighbour) {
+			return cur->add_adjacency(neighbour, 0, 0) | neighbour->add_adjacency(cur, 0, 0);
 		}
 		return false;
 	};
 	
 	for (size_t y = 0; y < height; ++y) {
 		for (size_t x = 0; x < width; ++x) {
-			shape_pixel_t cur = province_shape_image[x + y * width];
-			if(x + 1 < width)
-				changed |= generate_adjacency(cur, x + 1, y);
-			if(y + 1 < height)
-				changed |= generate_adjacency(cur, x, y + 1);
+			Province* cur = get_province_by_index(province_shape_image[x + y * width].index);
+			if (cur != nullptr) {
+				changed |= generate_adjacency(cur, (x + 1) % width, y);
+				if (y + 1 < height)
+					changed |= generate_adjacency(cur, x, y + 1);
+			}
 		}
 	}
 

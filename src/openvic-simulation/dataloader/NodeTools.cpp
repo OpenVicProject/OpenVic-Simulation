@@ -220,6 +220,20 @@ node_callback_t NodeTools::expect_list(node_callback_t callback) {
 	return expect_list_and_length(default_length_callback, callback);
 }
 
+node_callback_t NodeTools::expect_length(callback_t<size_t> callback) {
+	return [callback](ast::NodeCPtr node) -> bool {
+		bool ret = true;
+		ret &= expect_list_and_length(
+			[callback, &ret](size_t size) -> size_t {
+				ret &= callback(size);
+				return 0;
+			},
+			success_callback
+		)(node);
+		return ret;
+	};
+}
+
 node_callback_t NodeTools::expect_dictionary_and_length(length_callback_t length_callback, key_value_callback_t callback) {
 	return expect_list_and_length(length_callback, expect_assign(callback));
 }

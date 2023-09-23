@@ -41,6 +41,7 @@ namespace OpenVic {
 		node_callback_t expect_list_and_length(length_callback_t length_callback, node_callback_t callback);
 		node_callback_t expect_list_of_length(size_t length, node_callback_t callback);
 		node_callback_t expect_list(node_callback_t callback);
+		node_callback_t expect_length(callback_t<size_t> callback);
 
 		node_callback_t expect_dictionary_and_length(length_callback_t length_callback, key_value_callback_t callback);
 		node_callback_t expect_dictionary(key_value_callback_t callback);
@@ -133,6 +134,28 @@ namespace OpenVic {
 			return [&var](T val) -> bool {
 				var = val;
 				return true;
+			};
+		}
+
+		template<typename T>
+		requires requires(T& t) {
+			t += T {};
+		}
+		callback_t<T> add_variable_callback(T& var) {
+			return [&var](T val) -> bool {
+				var += val;
+				return true;
+			};
+		}
+
+		template<typename T>
+		requires requires(T& t) {
+			t--;
+		}
+		node_callback_t decrement_callback(T& var, node_callback_t callback) {
+			return [&var, callback](ast::NodeCPtr node) -> bool {
+				var--;
+				return callback(node);
 			};
 		}
 

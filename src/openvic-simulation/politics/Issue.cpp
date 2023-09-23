@@ -5,8 +5,8 @@ using namespace OpenVic::NodeTools;
 
 IssueType::IssueType(const std::string_view new_identifier) : HasIdentifier { new_identifier } {}
 
-IssueGroup::IssueGroup(const std::string_view new_identifier, IssueType const& new_type, bool ordered) 
-	: HasIdentifier { new_identifier }, type { new_type }, ordered { ordered } {}
+IssueGroup::IssueGroup(const std::string_view new_identifier, IssueType const& new_type, bool new_ordered, bool new_administrative) 
+	: HasIdentifier { new_identifier }, type { new_type }, ordered { new_ordered }, administrative { new_administrative } {}
 
 IssueType const& IssueGroup::get_type() const {
 	return type;
@@ -14,6 +14,10 @@ IssueType const& IssueGroup::get_type() const {
 
 bool IssueGroup::is_ordered() const {
 	return ordered;
+}
+
+bool IssueGroup::is_administrative() const {
+	return administrative;
 }
 
 Issue::Issue(const std::string_view new_identifier, IssueGroup const& new_group, size_t ordinal)
@@ -42,7 +46,7 @@ bool IssueManager::add_issue_type(const std::string_view identifier) {
 	return issue_types.add_item({ identifier });
 }
 
-bool IssueManager::add_issue_group(const std::string_view identifier, IssueType const* type, bool ordered) {
+bool IssueManager::add_issue_group(const std::string_view identifier, IssueType const* type, bool ordered, bool administrative) {
 	if (identifier.empty()) {
 		Logger::error("Invalid issue group identifier - empty!");
 		return false;
@@ -53,7 +57,7 @@ bool IssueManager::add_issue_group(const std::string_view identifier, IssueType 
 		return false;
 	}
 
-	return issue_groups.add_item({ identifier, *type, ordered });
+	return issue_groups.add_item({ identifier, *type, ordered, administrative });
 }
 
 bool IssueManager::add_issue(const std::string_view identifier, IssueGroup const* group, size_t ordinal) {
@@ -71,17 +75,17 @@ bool IssueManager::add_issue(const std::string_view identifier, IssueGroup const
 }
 
 bool IssueManager::_load_issue_group(size_t& expected_issues, const std::string_view identifier, IssueType const* type, ast::NodeCPtr node) {
-	bool ordered = false;
-	return expect_dictionary_keys_and_length(
+	bool ordered = false, administrative = false;
+	bool ret = expect_dictionary_keys_and_length(
 		[&expected_issues](size_t size) -> size_t {
 			expected_issues += size;
 			return size;
 		}, ALLOW_OTHER_KEYS,
-		"next_step_only", ONE_EXACTLY, [&expected_issues, &ordered](ast::NodeCPtr node) -> bool {
-			expected_issues--;
-			return expect_bool(assign_variable_callback(ordered))(node);
-		}
-	)(node) && add_issue_group(identifier, type, ordered);
+		"next_step_only", ZERO_OR_ONE, decrement_callback(expected_issues, expect_bool(assign_variable_callback(ordered))),
+		"administrative", ZERO_OR_ONE, decrement_callback(expected_issues, expect_bool(assign_variable_callback(administrative)))
+	)(node);
+	ret &= add_issue_group(identifier, type, ordered, administrative);
+	return ret;
 }
 
 bool IssueManager::_load_issue(size_t& ordinal, const std::string_view identifier, IssueGroup const* group, ast::NodeCPtr node) {
@@ -102,12 +106,9 @@ bool IssueManager::load_issues_file(ast::NodeCPtr root) {
 	size_t expected_issue_groups = 0;
 	bool ret = expect_dictionary_reserve_length(issue_types, 
 		[this, &expected_issue_groups](std::string_view key, ast::NodeCPtr value) -> bool {
-			return expect_list_and_length(
-				[&expected_issue_groups](size_t size) -> size_t {
-					expected_issue_groups += size;
-					return 0;
-				}, success_callback
-			)(value) && add_issue_type(key);
+			bool ret = expect_length(add_variable_callback(expected_issue_groups))(value);
+			ret &= add_issue_type(key);
+			return ret;
 		}
 	)(root);
 	lock_issue_types();
@@ -132,7 +133,7 @@ bool IssueManager::load_issues_file(ast::NodeCPtr root) {
 			IssueGroup const* issue_group = get_issue_group_by_identifier(group_key);
 			size_t ordinal = 0;
 			return expect_dictionary([this, issue_group, &ordinal](std::string_view key, ast::NodeCPtr value) -> bool {
-				if (key == "next_step_only") return true;
+				if (key == "next_step_only" || key == "administrative") return true;
 				bool ret = _load_issue(ordinal, key, issue_group, value);
 				ordinal++;
 				return ret;

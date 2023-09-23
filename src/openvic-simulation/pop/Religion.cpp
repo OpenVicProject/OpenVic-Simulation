@@ -73,13 +73,7 @@ bool ReligionManager::load_religion_file(ast::NodeCPtr root) {
 	bool ret = expect_dictionary_reserve_length(
 		religion_groups,
 		[this, &total_expected_religions](std::string_view key, ast::NodeCPtr value) -> bool {
-			bool ret = expect_list_and_length(
-				[&total_expected_religions](size_t size) -> size_t {
-					total_expected_religions += size;
-					return 0;
-				},
-				success_callback
-			)(value);
+			bool ret = expect_length(add_variable_callback(total_expected_religions))(value);
 			ret &= add_religion_group(key);
 			return ret;
 		}
