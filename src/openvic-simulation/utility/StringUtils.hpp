@@ -26,7 +26,7 @@ namespace OpenVic::StringUtils {
 			if (*str == '0') {
 				if (str + 1 != end && (str[1] == 'x' || str[1] == 'X')) {
 					base = 16; // Hexadecimal.
-					str += 2; // Skip '0x' or '0X'
+					str += 2;  // Skip '0x' or '0X'
 					if (str == end) return 0;
 				} else {
 					base = 8; // Octal.
