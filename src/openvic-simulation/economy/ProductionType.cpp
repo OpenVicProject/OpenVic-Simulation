@@ -264,10 +264,12 @@ bool ProductionTypeManager::load_production_types_file(GoodManager& good_manager
 				}
 			}
 
-			return ret & PARSE_NODE(node) & add_production_type(
+			ret &= PARSE_NODE(node);
+			ret &= add_production_type(
 				key, owner, employees, type, workforce, input_goods, output_goods, value, 
 				bonuses, efficiency, coastal, farm, mine, good_manager
 			);
+			return ret;
 		}
 	)(root);
 

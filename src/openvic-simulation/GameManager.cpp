@@ -70,6 +70,14 @@ UnitManager const& GameManager::get_unit_manager() const {
 	return unit_manager;
 }
 
+ModifierManager& GameManager::get_modifier_manager() {
+	return modifier_manager;
+}
+
+ModifierManager const& GameManager::get_modifier_manager() const{
+	return modifier_manager;
+}
+
 GameAdvancementHook& GameManager::get_clock() {
 	return clock;
 }

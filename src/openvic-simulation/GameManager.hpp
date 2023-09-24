@@ -24,6 +24,7 @@ namespace OpenVic {
 		IssueManager issue_manager;
 		ProductionTypeManager production_type_manager;
 		UnitManager unit_manager;
+		ModifierManager modifier_manager;
 		GameAdvancementHook clock;
 
 		time_t session_start; /* SS-54, as well as allowing time-tracking */
@@ -54,6 +55,8 @@ namespace OpenVic {
 		ProductionTypeManager const& get_production_type_manager() const;
 		UnitManager& get_unit_manager();
 		UnitManager const& get_unit_manager() const;
+		ModifierManager& get_modifier_manager();
+		ModifierManager const& get_modifier_manager() const;
 		GameAdvancementHook& get_clock();
 		GameAdvancementHook const& get_clock() const;
 

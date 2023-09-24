@@ -241,6 +241,7 @@ namespace OpenVic {
 
 #define IDENTIFIER_REGISTRY_ACCESSORS_CUSTOM_PLURAL(type, singular, plural) \
 	void lock_##plural() { plural.lock(); } \
+	bool plural##_are_locked() const { return plural.is_locked(); } \
 	type const* get_##singular##_by_identifier(const std::string_view identifier) const { \
 		return plural.get_item_by_identifier(identifier); } \
 	size_t get_##singular##_count() const { \

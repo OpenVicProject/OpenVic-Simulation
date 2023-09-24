@@ -255,6 +255,21 @@ bool Dataloader::_load_map_dir(GameManager& game_manager, fs::path const& map_di
 	}
 	map.lock_water_provinces();
 
+	if (!map.get_terrain_type_manager().load_terrain_types(game_manager.get_modifier_manager(), _parse_defines(lookup_file(map_directory / terrain_definition)).get_file_node())) {
+		Logger::error("Failed to load terrain types!");
+		ret = false;
+	}
+
+	if (!map.load_map_images(lookup_file(map_directory / provinces), lookup_file(map_directory / terrain), false)) {
+		Logger::error("Failed to load map images!");
+		ret = false;
+	}
+
+	if (!map.generate_and_load_province_adjacencies(_parse_csv(lookup_file(map_directory / adjacencies)).get_lines())) {
+		Logger::error("Failed to generate and load province adjacencies!");
+		ret = false;
+	}
+
 	return ret;
 }
 
@@ -272,6 +287,10 @@ bool Dataloader::load_defines(GameManager& game_manager) const {
 
 	bool ret = true;
 
+	if (!game_manager.get_modifier_manager().setup_modifier_effects()) {
+		Logger::error("Failed to set up modifier effects!");
+		ret = false;
+	}
 	if (!game_manager.get_good_manager().load_goods_file(_parse_defines(lookup_file(goods_file)).get_file_node())) {
 		Logger::error("Failed to load goods!");
 		ret = false;

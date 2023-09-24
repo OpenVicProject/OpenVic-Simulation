@@ -11,13 +11,12 @@ BMP::~BMP() {
 	close();
 }
 
-bool BMP::open(char const* filepath) {
+bool BMP::open(fs::path const& filepath) {
 	reset();
-	errno = 0;
-	file = fopen(filepath, "rb");
-	if (file == nullptr || errno != 0) {
-		Logger::error("Failed to open BMP file \"", filepath, "\" (errno = ", errno, ")");
-		file = nullptr;
+	file.open(filepath, std::ios::binary);
+	if (file.fail()) {
+		Logger::error("Failed to open BMP file \"", filepath, "\"");
+		close();
 		return false;
 	}
 	return true;
@@ -28,15 +27,17 @@ bool BMP::read_header() {
 		Logger::error("BMP header already validated!");
 		return false;
 	}
-	if (file == nullptr) {
+	if (!file.is_open()) {
 		Logger::error("Cannot read BMP header before opening a file");
 		return false;
 	}
-	if (fseek(file, 0, SEEK_SET) != 0) {
+	file.seekg(0, std::ios::beg);
+	if (file.fail()) {
 		Logger::error("Failed to move to the beginning of the BMP file!");
 		return false;
 	}
-	if (fread(&header, sizeof(header), 1, file) != 1) {
+	file.read(reinterpret_cast<char*>(&header), sizeof(header));
+	if (file.fail()) {
 		Logger::error("Failed to read BMP header!");
 		return false;
 	}
@@ -117,7 +118,11 @@ bool BMP::read_header() {
 }
 
 bool BMP::read_palette() {
-	if (file == nullptr) {
+	if (palette_read) {
+		Logger::error("BMP palette already read!");
+		return false;
+	}
+	if (!file.is_open()) {
 		Logger::error("Cannot read BMP palette before opening a file");
 		return false;
 	}
@@ -129,24 +134,25 @@ bool BMP::read_palette() {
 		Logger::error("Cannot read BMP palette - header indicates this file doesn't have one");
 		return false;
 	}
-	if (fseek(file, sizeof(header), SEEK_SET) != 0) {
+	file.seekg(sizeof(header), std::ios::beg);
+	if (file.fail()) {
 		Logger::error("Failed to move to the palette in the BMP file!");
 		return false;
 	}
 	palette.resize(palette_size);
-	if (fread(palette.data(), palette_size * PALETTE_COLOUR_SIZE, 1, file) != 1) {
+	file.read(reinterpret_cast<char*>(palette.data()), palette_size * PALETTE_COLOUR_SIZE);
+	if (file.fail()) {
 		Logger::error("Failed to read BMP header!");
 		palette.clear();
 		return false;
 	}
-	return true;
+	palette_read = true;
+	return palette_read;
 }
 
 void BMP::close() {
-	if (file != nullptr) {
-		if (fclose(file) != 0)
-			Logger::error("Failed to close BMP!");
-		file = nullptr;
+	if (file.is_open()) {
+		file.close();
 	}
 }
 
@@ -156,8 +162,61 @@ void BMP::reset() {
 	header_validated = false;
 	palette_size = 0;
 	palette.clear();
+	pixel_data.clear();
+}
+
+int32_t BMP::get_width() const {
+	return header.width_px;
+}
+
+int32_t BMP::get_height() const {
+	return header.height_px;
+}
+
+uint16_t BMP::get_bits_per_pixel() const {
+	return header.bits_per_pixel;
 }
 
 std::vector<colour_t> const& BMP::get_palette() const {
+	if (!palette_read) {
+		Logger::warning("Trying to get BMP palette before loading");
+	}
 	return palette;
+}
+
+bool BMP::read_pixel_data() {
+	if (pixel_data_read) {
+		Logger::error("BMP pixel data already read!");
+		return false;
+	}
+	if (!file.is_open()) {
+		Logger::error("Cannot read BMP pixel data before opening a file");
+		return false;
+	}
+	if (!header_validated) {
+		Logger::error("Cannot read pixel data before BMP header is validated!");
+		return false;
+	}
+	file.seekg(header.offset, std::ios::beg);
+	if (file.fail()) {
+		Logger::error("Failed to move to the pixel data in the BMP file!");
+		return false;
+	}
+	const size_t pixel_data_size = get_width() * get_height() * header.bits_per_pixel / 8;
+	pixel_data.resize(pixel_data_size);
+	file.read(reinterpret_cast<char*>(pixel_data.data()), pixel_data_size);
+	if (file.fail()) {
+		Logger::error("Failed to read BMP pixel data!");
+		pixel_data.clear();
+		return false;
+	}
+	pixel_data_read = true;
+	return pixel_data_read;
+}
+
+std::vector<uint8_t> const& BMP::get_pixel_data() const {
+	if (!pixel_data_read) {
+		Logger::warning("Trying to get BMP pixel data before loading");
+	}
+	return pixel_data;
 }

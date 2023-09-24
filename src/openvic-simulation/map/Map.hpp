@@ -1,12 +1,15 @@
 #pragma once
 
+#include <filesystem>
 #include <functional>
 
 #include <openvic-dataloader/csv/LineObject.hpp>
 
 #include "openvic-simulation/map/Region.hpp"
+#include "openvic-simulation/map/TerrainType.hpp"
 
 namespace OpenVic {
+	namespace fs = std::filesystem;
 
 	struct Mapmode : HasIdentifier {
 		friend struct Map;
@@ -35,14 +38,12 @@ namespace OpenVic {
 	 * MAP-4
 	 */
 	struct Map {
-		using terrain_t = uint8_t;
-		using terrain_variant_map_t = std::map<colour_t, terrain_t>;
 
 #pragma pack(push, 1)
 		/* Used to represent tightly packed 3-byte integer pixel information. */
 		struct shape_pixel_t {
 			Province::index_t index;
-			terrain_t terrain;
+			TerrainTypeMapping::index_t terrain;
 		};
 #pragma pack(pop)
 	private:
@@ -52,13 +53,14 @@ namespace OpenVic {
 		IdentifierRegistry<Region> regions;
 		IdentifierRegistry<Mapmode> mapmodes;
 		ProvinceSet water_provinces;
+		TerrainTypeManager terrain_type_manager;
 
 		size_t width = 0, height = 0;
 		std::vector<shape_pixel_t> province_shape_image;
 		colour_index_map_t colour_index_map;
+
 		Province::index_t max_provinces = Province::MAX_INDEX;
 		Province::index_t selected_province = Province::NULL_INDEX;
-
 		Pop::pop_size_t highest_province_population, total_map_population;
 
 		Province::index_t get_index_from_colour(colour_t colour) const;
@@ -70,12 +72,10 @@ namespace OpenVic {
 		bool add_province(const std::string_view identifier, colour_t colour);
 		IDENTIFIER_REGISTRY_ACCESSORS(Province, province)
 		IDENTIFIER_REGISTRY_NON_CONST_ACCESSORS(Province, province)
+
 		bool set_water_province(const std::string_view identifier);
 		bool set_water_province_list(std::vector<std::string_view> const& list);
 		void lock_water_provinces();
-		bool add_region(const std::string_view identifier, std::vector<std::string_view> const& province_identifiers);
-		IDENTIFIER_REGISTRY_ACCESSORS(Region, region)
-		IDENTIFIER_REGISTRY_NON_CONST_ACCESSORS(Region, region)
 
 		Province* get_province_by_index(Province::index_t index);
 		Province const* get_province_by_index(Province::index_t index) const;
@@ -86,11 +86,15 @@ namespace OpenVic {
 		Province::index_t get_selected_province_index() const;
 		Province const* get_selected_province() const;
 
-		bool generate_province_shape_image(size_t new_width, size_t new_height, uint8_t const* colour_data,
-			uint8_t const* terrain_data, terrain_variant_map_t const& terrain_variant_map, bool detailed_errors);
 		size_t get_width() const;
 		size_t get_height() const;
 		std::vector<shape_pixel_t> const& get_province_shape_image() const;
+		TerrainTypeManager& get_terrain_type_manager();
+		TerrainTypeManager const& get_terrain_type_manager() const;
+
+		bool add_region(const std::string_view identifier, std::vector<std::string_view> const& province_identifiers);
+		IDENTIFIER_REGISTRY_ACCESSORS(Region, region)
+		IDENTIFIER_REGISTRY_NON_CONST_ACCESSORS(Region, region)
 
 		bool add_mapmode(const std::string_view identifier, Mapmode::colour_func_t colour_func);
 		IDENTIFIER_REGISTRY_ACCESSORS(Mapmode, mapmode)
@@ -111,5 +115,7 @@ namespace OpenVic {
 		bool load_province_definitions(std::vector<ovdl::csv::LineObject> const& lines);
 		bool load_province_positions(BuildingManager const& building_manager, ast::NodeCPtr root);
 		bool load_region_file(ast::NodeCPtr root);
+		bool load_map_images(fs::path const& province_path, fs::path const& terrain_path, bool detailed_errors);
+		bool generate_and_load_province_adjacencies(std::vector<ovdl::csv::LineObject> const& additional_adjacencies);
 	};
 }

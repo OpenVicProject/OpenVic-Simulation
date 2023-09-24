@@ -112,8 +112,8 @@ bool GoodManager::load_goods_file(ast::NodeCPtr root) {
 				[this, good_category](std::string_view key, ast::NodeCPtr value) -> bool {
 					colour_t colour = NULL_COLOUR;
 					Good::price_t base_price;
-					bool available_from_start, tradeable = true;
-					bool money, overseas_penalty = false;
+					bool available_from_start = true, tradeable = true;
+					bool money = false, overseas_penalty = false;
 
 					bool ret = expect_dictionary_keys(
 						"color", ONE_EXACTLY, expect_colour(assign_variable_callback(colour)),
