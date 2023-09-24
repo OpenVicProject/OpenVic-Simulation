@@ -571,7 +571,7 @@ namespace OpenVic {
 			int64_t ret = 0;
 			for (int i = PRECISION - 1; i >= 0; --i) {
 				decimal >>= 1;
-				if (parsed_value > decimal) {
+				if (parsed_value >= decimal) {
 					parsed_value -= decimal;
 					ret |= 1 << i;
 				}
