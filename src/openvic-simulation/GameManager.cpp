@@ -1,7 +1,5 @@
 #include "GameManager.hpp"
 
-#include "openvic-simulation/utility/Logger.hpp"
-
 using namespace OpenVic;
 
 GameManager::GameManager(state_updated_func_t state_updated_callback)
@@ -54,6 +52,14 @@ IssueManager& GameManager::get_issue_manager() {
 
 IssueManager const& GameManager::get_issue_manager() const {
 	return issue_manager;
+}
+
+ProductionTypeManager& GameManager::get_production_type_manager() {
+	return production_type_manager;
+}
+
+ProductionTypeManager const& GameManager::get_production_type_manager() const {
+	return production_type_manager;
 }
 
 UnitManager& GameManager::get_unit_manager() {

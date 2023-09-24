@@ -266,6 +266,7 @@ bool Dataloader::load_defines(GameManager& game_manager) const {
 	static const fs::path religion_file = "common/religion.txt";
 	static const fs::path ideology_file = "common/ideologies.txt";
 	static const fs::path issues_file = "common/issues.txt";
+	static const fs::path production_types_file = "common/production_types.txt";
 	static const fs::path map_directory = "map";
 	static const fs::path units_directory = "units";
 
@@ -297,6 +298,12 @@ bool Dataloader::load_defines(GameManager& game_manager) const {
 	}
 	if (!game_manager.get_issue_manager().load_issues_file(_parse_defines(lookup_file(issues_file)).get_file_node())) {
 		Logger::error("Failed to load issues!");
+		ret = false;
+	}
+	if (!game_manager.get_production_type_manager().load_production_types_file(
+			game_manager.get_good_manager(), game_manager.get_pop_manager(),
+			_parse_defines(lookup_file(production_types_file)).get_file_node())) {
+		Logger::error("Failed to load production types!");
 		ret = false;
 	}
 	if (!_load_units(game_manager, units_directory)) {
