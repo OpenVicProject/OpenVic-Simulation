@@ -1,4 +1,3 @@
-# pragma once
 # include <testing/TestScript.hpp>
 # include <GameManager.hpp>
 
