@@ -1,24 +1,29 @@
 #include "ProductionType.hpp"
+#include <string_view>
+#include "dataloader/NodeTools.hpp"
+#include "openvic-dataloader/v2script/AbstractSyntaxTree.hpp"
+#include "pop/Pop.hpp"
+#include "utility/Logger.hpp"
 
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;
 
-EmployedPop::EmployedPop(const PopType* pop_type, effect_t effect, fixed_point_t effect_multiplier, fixed_point_t amount)
+EmployedPop::EmployedPop(PopType const* pop_type, effect_t effect, fixed_point_t effect_multiplier, fixed_point_t amount)
 	: pop_type { pop_type }, effect { effect }, effect_multiplier { effect_multiplier }, amount { amount } {}
 
-const PopType* EmployedPop::get_pop_type() const {
+PopType const* EmployedPop::get_pop_type() {
 	return pop_type;
 }
 
-EmployedPop::effect_t EmployedPop::get_effect() const {
+EmployedPop::effect_t EmployedPop::get_effect() {
 	return effect;
 }
 
-fixed_point_t EmployedPop::get_effect_multiplier() const {
+fixed_point_t EmployedPop::get_effect_multiplier() {
 	return effect_multiplier;
 }
 
-fixed_point_t EmployedPop::get_amount() const {
+fixed_point_t EmployedPop::get_amount() {
 	return amount;
 }
 
@@ -84,7 +89,7 @@ node_callback_t ProductionTypeManager::_expect_employed_pop(GoodManager& good_ma
 		fixed_point_t effect_multiplier = 1, amount = 1;
 
 		bool res = expect_dictionary_keys(
-			"pop_type", ONE_EXACTLY, expect_identifier(assign_variable_callback(pop_type)),
+			"poptype", ONE_EXACTLY, expect_identifier(assign_variable_callback(pop_type)),
 			"effect", ONE_EXACTLY, expect_identifier(assign_variable_callback(effect)),
 			"effect_multiplier", ZERO_OR_ONE, expect_fixed_point(assign_variable_callback(effect_multiplier)),
 			"amount", ZERO_OR_ONE, expect_fixed_point(assign_variable_callback(amount))
@@ -142,7 +147,7 @@ bool ProductionTypeManager::add_production_type(ARGS(std::string_view, std::stri
 
 	const Good* output = good_manager.get_good_by_identifier(output_goods);
 	if (output == nullptr) {
-		Logger::error("Invalid output for production type ", output_goods, "!");
+		Logger::error("Invalid output ", output_goods, " for production type ", identifier, "!");
 		return false;
 	}
 
@@ -152,66 +157,93 @@ bool ProductionTypeManager::add_production_type(ARGS(std::string_view, std::stri
 	});
 }
 
+/* TODO check that these are valid and set
+"owner", ONE_EXACTLY, _expect_employed_pop(good_manager, pop_manager, move_variable_callback(owner)),
+"workforce", ONE_EXACTLY, expect_uint(assign_variable_callback(workforce)),
+"output_goods", ONE_EXACTLY, expect_identifier(assign_variable_callback(output_goods)),
+"value", ONE_EXACTLY, expect_fixed_point(assign_variable_callback(value)),
+*/
+
+#define PARSE_NODE(target_node) expect_dictionary_keys(ALLOW_OTHER_KEYS, \
+			"owner", ZERO_OR_ONE, _expect_employed_pop(good_manager, pop_manager, move_variable_callback(owner)), \
+			"employees", ZERO_OR_ONE, _expect_employed_pop_list(good_manager, pop_manager, move_variable_callback(employees)), \
+			"type", ZERO_OR_ONE, expect_identifier(assign_variable_callback(type)), \
+			"workforce", ZERO_OR_ONE, expect_uint(assign_variable_callback(workforce)), \
+			"input_goods", ZERO_OR_ONE, good_manager.expect_good_decimal_map(move_variable_callback(input_goods)), \
+			"output_goods", ZERO_OR_ONE, expect_identifier(assign_variable_callback(output_goods)), \
+			"value", ZERO_OR_ONE, expect_fixed_point(assign_variable_callback(value)), \
+			"efficiency", ZERO_OR_ONE, good_manager.expect_good_decimal_map(move_variable_callback(efficiency)), \
+			"is_coastal", ZERO_OR_ONE, expect_bool(assign_variable_callback(coastal)), \
+			"farm", ZERO_OR_ONE, expect_bool(assign_variable_callback(farm)), \
+			"mine", ZERO_OR_ONE, expect_bool(assign_variable_callback(mine)) \
+		)(target_node)
+
 bool ProductionTypeManager::load_production_types_file(GoodManager& good_manager, PopManager& pop_manager, ast::NodeCPtr root) {
 	size_t expected_types = 0;
 
 	//pass 1: find and store template identifiers
 	std::set<std::string_view> templates;
-	bool ret = expect_dictionary([this, &expected_types, &templates](std::string_view key, ast::NodeCPtr value) -> bool {
-		std::string_view template_id = "";
-		bool ret = expect_dictionary_keys(ALLOW_OTHER_KEYS,
-			"template", ZERO_OR_ONE, expect_identifier(assign_variable_callback(template_id))
-		)(value);
+	std::map<std::string_view, std::string_view> template_target_map;
+	bool ret = expect_dictionary(
+		[this, &expected_types, &templates, &template_target_map](std::string_view key, ast::NodeCPtr value) -> bool {
+			std::string_view template_id = "";
+			bool ret = expect_dictionary_keys(ALLOW_OTHER_KEYS,
+				"template", ZERO_OR_ONE, expect_identifier(assign_variable_callback(template_id))
+			)(value);
 
-		if (!template_id.empty())
-			templates.emplace(template_id);
-		else expected_types++;
+			if (!template_id.empty()) {
+				templates.emplace(template_id);
+				template_target_map.emplace(key, template_id);
+			}
 
-		return ret;
-	})(root);
+			expected_types++;
+
+			return ret;
+		}
+	)(root);
 
 	//pass 2: create and populate the template map
-	std::map<std::string_view, ast::NodeCPtr> template_map; 
-	expect_dictionary([this, &templates, &template_map](std::string_view key, ast::NodeCPtr value) -> bool {
-		if (templates.contains(key))
-			template_map.emplace(key, value);
-		return true;
-	})(root);
+	std::map<std::string_view, ast::NodeCPtr> template_node_map; 
+	expect_dictionary(
+		[this, &expected_types, &templates, &template_node_map](std::string_view key, ast::NodeCPtr value) -> bool {
+			if (templates.contains(key)) {
+				template_node_map.emplace(key, value);
+				expected_types--;
+			}
+			return true;
+		}
+	)(root);
 
 	//pass 3: actually load production types
 	production_types.reserve(production_types.size() + expected_types);
 	ret &= expect_dictionary(
-		[this, &good_manager, &pop_manager, &template_map](std::string_view key, ast::NodeCPtr node) -> bool {
-			EmployedPop* owner;
+		[this, &good_manager, &pop_manager, &template_target_map, &template_node_map](std::string_view key, ast::NodeCPtr node) -> bool {
+			if (template_node_map.contains(key))
+				return true;
+
+			EmployedPop owner;
 			std::vector<EmployedPop> employees;
-			std::string_view type;
+			std::string_view type, output_goods;
 			uint32_t workforce;
-			std::map<const Good*, fixed_point_t> input_goods;
-			std::string_view output_goods;
+			std::map<const Good*, fixed_point_t> input_goods, efficiency;
 			fixed_point_t value;
 			std::vector<Bonus> bonuses;
-			std::map<const Good*, fixed_point_t> efficiency;
-			bool coastal = false; //is_coastal
-			bool farm = false;
-			bool mine = false;
+			bool coastal = false, farm = false, mine = false;
 
-			return expect_dictionary_keys(ALLOW_OTHER_KEYS,
-				"owner", ONE_EXACTLY, _expect_employed_pop(
-					good_manager, pop_manager, move_variable_callback(*owner)),
-				"employees", ONE_EXACTLY, _expect_employed_pop_list(
-					good_manager, pop_manager, move_variable_callback(employees)),
-				"type", ONE_EXACTLY, expect_identifier(assign_variable_callback(type)),
-				"workforce", ONE_EXACTLY, expect_uint(assign_variable_callback(workforce)),
-				"input_goods", ZERO_OR_ONE, good_manager.expect_good_decimal_map(assign_variable_callback(input_goods)),
-				"output_goods_id", ONE_EXACTLY, expect_identifier(assign_variable_callback(output_goods)),
-				"value", ONE_EXACTLY, expect_fixed_point(assign_variable_callback(value)),
-				//"bonus", ONE_OR_MORE, TODO
-				"efficiency", ZERO_OR_ONE, good_manager.expect_good_decimal_map(assign_variable_callback(efficiency)),
-				"is_coastal", ZERO_OR_ONE, expect_bool(assign_variable_callback(coastal)),
-				"farm", ZERO_OR_ONE, expect_bool(assign_variable_callback(farm)),
-				"mine", ZERO_OR_ONE, expect_bool(assign_variable_callback(mine))
-			)(node) & add_production_type(
-				key, *owner, employees, type, workforce, input_goods, output_goods, value, 
+			bool ret = true;
+
+			//apply template first
+			if (template_target_map.contains(key)) {
+				std::string_view template_id = template_target_map[key];
+				if (template_node_map.contains(template_id)) {
+					ast::NodeCPtr template_node = template_node_map[template_id];
+					Logger::info("Applying template ", template_id," to ", key); //TODO temp, remove once it works
+					ret &= PARSE_NODE(template_node);
+				}
+			}
+
+			return ret & PARSE_NODE(node) & add_production_type(
+				key, owner, employees, type, workforce, input_goods, output_goods, value, 
 				bonuses, efficiency, coastal, farm, mine, good_manager
 			);
 		}

@@ -22,22 +22,24 @@ namespace OpenVic {
 		friend struct ProductionTypeManager;
 
 	private:
-		const PopType* pop_type;
-		const enum struct effect_t {
+		PopType const* pop_type; //poptype
+		enum struct effect_t {
 			INPUT,
 			OUTPUT,
 			THROUGHPUT
 		} effect;
-		const fixed_point_t effect_multiplier;
-		const fixed_point_t amount;
+		fixed_point_t effect_multiplier;
+		fixed_point_t amount;
 
-		EmployedPop(const PopType* pop_type, effect_t effect, fixed_point_t effect_multiplier, fixed_point_t amount);
+		EmployedPop(PopType const* pop_type, effect_t effect, fixed_point_t effect_multiplier, fixed_point_t amount);
 	
 	public:
-		const PopType* get_pop_type() const;
-		effect_t get_effect() const;
-		fixed_point_t get_effect_multiplier() const;
-		fixed_point_t get_amount() const;
+		EmployedPop() = default; 
+	
+		PopType const* get_pop_type();
+		effect_t get_effect();
+		fixed_point_t get_effect_multiplier();
+		fixed_point_t get_amount();
 	};
 
 	struct Bonus {
