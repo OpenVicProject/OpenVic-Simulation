@@ -3,13 +3,7 @@
 
 using namespace OpenVic;
 
-Testing::Testing(GameManager& g_manager)
-	: game_manager { g_manager },
-	  map { g_manager.get_map() },
-	  building_manager { g_manager.get_building_manager() },
-	  good_manager { g_manager.get_good_manager() },
-	  pop_manager { g_manager.get_pop_manager() },
-	  clock { g_manager.get_clock() } {
+Testing::Testing() {
 
 	// Constructor for the tests will add requirements
 	// Then execute the script
@@ -30,6 +24,12 @@ Testing::Testing(GameManager& g_manager)
 Testing::~Testing() {
 	for (TestScript* test_script : test_scripts) {
 		delete test_script;
+	}
+}
+
+void Testing::execute_all_scripts(GameManager& game_manager) {
+	for (int i = 0; i < test_scripts.size(); i++) {
+		test_scripts[i]->execute_script(game_manager);
 	}
 }
 

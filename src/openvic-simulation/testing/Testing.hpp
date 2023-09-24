@@ -16,12 +16,6 @@ namespace OpenVic {
 	class Testing {
 
 	public:
-		GameManager& game_manager;
-		Map& map;
-		BuildingManager& building_manager;
-		GoodManager& good_manager;
-		PopManager& pop_manager;
-		GameAdvancementHook& clock;
 
 		std::vector<TestScript*> test_scripts = std::vector<TestScript*>();
 
@@ -36,9 +30,10 @@ namespace OpenVic {
 		//for (const auto& good : good_manager->get_goods())
 		//	std::cout << good.get_identifier() << " price = " << good.get_base_price() << std::endl;
 
-		Testing(GameManager& g_manager);
+		Testing();
 		~Testing();
 
+		void execute_all_scripts(GameManager& game_manager);
 		void report_results();
 	};
 }

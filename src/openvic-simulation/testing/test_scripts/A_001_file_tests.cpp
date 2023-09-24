@@ -1,5 +1,6 @@
 # pragma once
 # include <testing/TestScript.hpp>
+# include <GameManager.hpp>
 
 namespace OpenVic {
 	class A_001_file_tests : public TestScript {
@@ -7,7 +8,6 @@ namespace OpenVic {
 	public:
 		A_001_file_tests() {
 			add_requirements();
-			execute_script();
 		}
 
 		void add_requirements() {
@@ -93,7 +93,7 @@ namespace OpenVic {
 			add_requirement(SND_10);
 		}
 
-		void execute_script() {
+		void execute_script(GameManager& game_manager) {
 			// FS_44
 			// The icon for the Canned Food good shall be loaded from the R/art/economy/goods folder with the filename Canned Food.png
 			// The icon for the Canned Food good has been loaded into the program

@@ -7,26 +7,6 @@ using namespace OpenVic;
 GameManager::GameManager(state_updated_func_t state_updated_callback)
 	: clock { [this]() { tick(); }, [this]() { update_state(); } },
 	  state_updated { state_updated_callback } {}
-	  
-Map* GameManager::get_map() {
-	return &map;
-}
-
-BuildingManager* GameManager::get_building_manager() {
-	return &building_manager;
-}
-
-GoodManager* GameManager::get_good_manager() {
-	return &good_manager;
-}
-
-PopManager* GameManager::get_pop_manager() {
-	return &pop_manager;
-}
-
-GameAdvancementHook* GameManager::get_game_advancement_hook() {
-	return &clock;
-}
 
 Map& GameManager::get_map() {
 	return map;

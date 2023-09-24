@@ -1,5 +1,6 @@
 # pragma once
 # include <testing/TestScript.hpp>
+# include <GameManager.hpp>
 
 namespace OpenVic {
 	class A_002_economy_tests : public TestScript {
@@ -7,7 +8,6 @@ namespace OpenVic {
 	public:
 		A_002_economy_tests() {
 			add_requirements();
-			execute_script();
 		}
 
 		void add_requirements() {
@@ -205,7 +205,7 @@ namespace OpenVic {
 			add_requirement(ECON_261);
 		}
 
-		void execute_script() {
+		void execute_script(GameManager& game_manager) {
 			// ECON_123
 			// The base price for Aeroplanes shall be 110
 			// The base price of 110 for Aeroplanes can be seen in program output data

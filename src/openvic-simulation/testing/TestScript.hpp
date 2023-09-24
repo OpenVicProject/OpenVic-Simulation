@@ -1,6 +1,7 @@
 #pragma once
 #include <testing/Requirement.hpp>
 #include <vector>
+#include <GameManager.hpp>
 
 namespace OpenVic {
 
@@ -14,7 +15,7 @@ namespace OpenVic {
 		// so that each script uniquely performs tests
 		// for both requirement adding to script and to execute code
 		virtual void add_requirements() = 0;
-		virtual void execute_script() = 0;
+		virtual void execute_script(GameManager& game_manager) = 0;
 
 		// Getters
 		std::vector<Requirement> get_requirements();
