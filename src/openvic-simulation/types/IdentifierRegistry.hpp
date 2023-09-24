@@ -171,6 +171,14 @@ namespace OpenVic {
 			return items;
 		}
 
+		std::vector<std::string_view> get_item_identifiers() const {
+			std::vector<std::string_view> identifiers;
+			identifiers.reserve(items.size());
+			for (identifier_index_map_t::value_type const& entry : identifier_index_map) {
+				identifiers.push_back(entry.first);
+			}
+		}
+
 		NodeTools::node_callback_t expect_item_identifier(NodeTools::callback_t<T&> callback) {
 			return NodeTools::expect_identifier(
 				[this, callback](std::string_view identifier) -> bool {
@@ -238,6 +246,8 @@ namespace OpenVic {
 		return plural.size(); } \
 	std::vector<type> const& get_##plural() const { \
 		return plural.get_items(); } \
+	std::vector<std::string_view> get_##singular##_identifiers() const { \
+		return plural.get_item_identifiers(); } \
 	NodeTools::node_callback_t expect_##singular##_identifier(NodeTools::callback_t<type const&> callback) const { \
 		return plural.expect_item_identifier(callback); } \
 	NodeTools::node_callback_t expect_##singular##_dictionary(NodeTools::callback_t<type const&, ast::NodeCPtr> callback) const { \

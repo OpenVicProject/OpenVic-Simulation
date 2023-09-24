@@ -1,8 +1,6 @@
 #include "Good.hpp"
 
 #include <cassert>
-#include <map>
-#include <string_view>
 
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;

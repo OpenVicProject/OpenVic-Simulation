@@ -63,8 +63,8 @@ PopType::PopType(const std::string_view new_identifier, colour_t new_colour,
 	  is_artisan { new_is_artisan },
 	  is_slave { new_is_slave } {
 	assert(sprite > 0);
-	assert(max_size > 0);
-	assert(merge_max_size > 0);
+	assert(max_size >= 0);
+	assert(merge_max_size >= 0);
 }
 
 PopType::sprite_t PopType::get_sprite() const {
@@ -131,11 +131,11 @@ bool PopManager::add_pop_type(const std::string_view identifier, colour_t colour
 		Logger::error("Invalid pop type sprite index for ", identifier, ": ", sprite);
 		return false;
 	}
-	if (max_size <= 0) {
+	if (max_size < 0) {
 		Logger::error("Invalid pop type max size for ", identifier, ": ", max_size);
 		return false;
 	}
-	if (merge_max_size <= 0) {
+	if (merge_max_size < 0) {
 		Logger::error("Invalid pop type merge max size for ", identifier, ": ", merge_max_size);
 		return false;
 	}
@@ -146,11 +146,11 @@ bool PopManager::add_pop_type(const std::string_view identifier, colour_t colour
  * POP-3, POP-4, POP-5, POP-6, POP-7, POP-8, POP-9, POP-10, POP-11, POP-12, POP-13, POP-14
  */
 bool PopManager::load_pop_type_file(const std::string_view filestem, ast::NodeCPtr root) {
-	colour_t colour;
-	PopType::strata_t strata;
-	PopType::sprite_t sprite;
+	colour_t colour = NULL_COLOUR;
+	PopType::strata_t strata = PopType::strata_t::POOR;
+	PopType::sprite_t sprite = 0;
 	bool state_capital_only = false, is_artisan = false, is_slave = false, demote_migrant = false;
-	Pop::pop_size_t max_size, merge_max_size;
+	Pop::pop_size_t max_size = 0, merge_max_size = 0;
 	bool ret = expect_dictionary_keys(
 		"sprite", ONE_EXACTLY, expect_uint(assign_variable_callback_uint("poptype sprite", sprite)),
 		"color", ONE_EXACTLY, expect_colour(assign_variable_callback(colour)),
