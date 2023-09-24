@@ -39,6 +39,22 @@ namespace OpenVic {
  				"The icon for the Wool good shall be loaded from the R/art/economy/goods folder with the filename Wool.png",
  				"The icon for the Wool good has been loaded into the program");
 			add_requirement(FS_86);
+			Requirement FS_2 = Requirement("FS_2",
+ 				"User provided data shall be saved to an 'OpenVic' folder, located following platform convention",
+ 				"User data is saved to the correct place");
+			add_requirement(FS_2);
+			Requirement FS_20 = Requirement("FS_20",
+ 				"On Windows, user provided data shall be saved by default to '%APPDATA%/OpenVic/'",
+ 				"User data is saved to the correct place");
+			add_requirement(FS_20);
+			Requirement FS_21 = Requirement("FS_21",
+ 				"On Linux, user provided data shall be saved by default to '~/.local/share/OpenVic/'",
+ 				"User data is saved to the correct place");
+			add_requirement(FS_21);
+			Requirement FS_22 = Requirement("FS_22",
+ 				"On macOS, user provided data shall be saved by default to '~/Library/Application Support/OpenVic/'",
+ 				"User data is saved to the correct place");
+			add_requirement(FS_22);
 			Requirement FS_24 = Requirement("FS_24",
  				"All .csv files in the locale folder shall contain translation keys and translations",
  				"No errant files in locale directory");
@@ -119,6 +135,30 @@ namespace OpenVic {
 			// The icon for the Wool good has been loaded into the program
 
 			// TODO: Write test steps for FS_86...
+
+			// FS_2
+			// User provided data shall be saved to an 'OpenVic' folder, located following platform convention
+			// User data is saved to the correct place
+
+			// TODO: Write test steps for FS_2...
+
+			// FS_20
+			// On Windows, user provided data shall be saved by default to '%APPDATA%/OpenVic/'
+			// User data is saved to the correct place
+
+			// TODO: Write test steps for FS_20...
+
+			// FS_21
+			// On Linux, user provided data shall be saved by default to '~/.local/share/OpenVic/'
+			// User data is saved to the correct place
+
+			// TODO: Write test steps for FS_21...
+
+			// FS_22
+			// On macOS, user provided data shall be saved by default to '~/Library/Application Support/OpenVic/'
+			// User data is saved to the correct place
+
+			// TODO: Write test steps for FS_22...
 
 			// FS_24
 			// All .csv files in the locale folder shall contain translation keys and translations
