@@ -177,6 +177,7 @@ namespace OpenVic {
 			for (identifier_index_map_t::value_type const& entry : identifier_index_map) {
 				identifiers.push_back(entry.first);
 			}
+			return identifiers;
 		}
 
 		NodeTools::node_callback_t expect_item_identifier(NodeTools::callback_t<T&> callback) {

@@ -76,6 +76,8 @@ namespace OpenVic {
 		Modifier const& modifier;
 		Date expiry_date;
 
+		ModifierInstance(Modifier const& modifier, Date expiry_date);
+
 	public:
 		Modifier const& get_modifier() const;
 		Date const& get_expiry_date() const;
