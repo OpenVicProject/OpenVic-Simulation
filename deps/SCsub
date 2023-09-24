@@ -1,0 +1,12 @@
+#!/usr/bin/env python
+
+Import("env")
+
+def build_openvic_dataloader(env):
+    ovdl_env = SConscript("openvic-dataloader/SConstruct")
+    env.Append(LIBPATH=ovdl_env.openvic_dataloader["LIBPATH"])
+    env.Prepend(LIBS=ovdl_env.openvic_dataloader["LIBS"])
+    env.Append(CPPPATH=ovdl_env.openvic_dataloader["INCPATH"])
+    env.openvic_dataloader = ovdl_env.openvic_dataloader
+
+build_openvic_dataloader(env)

@@ -1,0 +1,141 @@
+name: Builds
+
+on: [push, pull_request]
+
+env:
+  GH_BASE_BRANCH: master
+
+concurrency:
+  group: ci-${{github.actor}}-${{github.head_ref || github.run_number}}-${{github.ref}}-macos
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ${{matrix.os}}
+    name: ${{matrix.name}}
+    permissions: write-all
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - identifier: windows-debug
+            os: windows-latest
+            name: 🏁 Windows Debug
+            target: template_debug
+            platform: windows
+            arch: x86_64
+          - identifier: windows-release
+            os: windows-latest
+            name: 🏁 Windows Release
+            target: template_release
+            platform: windows
+            arch: x86_64
+          - identifier: macos-debug
+            os: macos-latest
+            name: 🍎 macOS (universal) Debug
+            target: template_debug
+            platform: macos
+            arch: universal
+          - identifier: macos-release
+            os: macos-latest
+            name: 🍎 macOS (universal) Release
+            target: template_release
+            platform: macos
+            arch: universal
+          - identifier: linux-debug
+            os: ubuntu-latest
+            name: 🐧 Linux Debug
+            runner: ubuntu-20.04
+            target: template_debug
+            platform: linux
+            arch: x86_64
+          - identifier: linux-release
+            os: ubuntu-latest
+            name: 🐧 Linux Release
+            runner: ubuntu-20.04
+            target: template_release
+            platform: linux
+            arch: x86_64
+
+    steps:
+      - name: Checkout project
+        uses: actions/checkout@v3.3.0
+        with:
+          submodules: recursive
+
+      - name: Setup build cache
+        uses: OpenVicProject/openvic-cache@master
+        with:
+          cache-name: ${{ matrix.identifier }}
+          base-branch: ${{ env.GH_BASE_BRANCH }}
+        continue-on-error: true
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.x"
+
+      - name: Set up SCons
+        shell: bash
+        run: |
+          python -c "import sys; print(sys.version)"
+          python -m pip install scons
+          scons --version
+
+      - name: Linux dependencies
+        if: ${{ matrix.platform == 'linux' }}
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -qqq build-essential pkg-config
+          g++ --version
+          sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-12 12
+          sudo update-alternatives --set g++ /usr/bin/g++-12
+          g++ --version
+
+      - name: Setup MinGW for Windows/MinGW build
+        if: ${{ matrix.platform == 'windows' }}
+        uses: OpenVicProject/mingw-cache@master
+
+      - name: Compile with SCons
+        uses: OpenVicProject/openvic-build@master
+        with:
+          platform: ${{ matrix.platform }}
+          target: ${{ matrix.target }}
+          sconsflags: arch=${{ matrix.arch }} build_ovsim_library=yes
+
+      - name: Delete compilation files
+        if: ${{ matrix.platform == 'windows' }}
+        run: |
+          Remove-Item bin/* -Include *.exp,*.pdb -Force
+
+      - name: Upload library artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: ${{ github.event.repository.name }}-library
+          path: |
+            ${{ github.workspace }}/bin/libopenvic-simulation.*
+
+      - name: Upload executable artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: ${{ github.event.repository.name }}-executable
+          path: |
+            ${{ github.workspace }}/bin/openvic-simulation.headless.*
+
+      - name: Archive Release
+        uses: thedoctor0/zip-release@0.7.1
+        with:
+          type: "zip"
+          filename: "../../../libopenvic-simulation.${{ matrix.platform }}.${{ matrix.arch }}.zip"
+          directory: "${{ github.workspace }}/bin/"
+        if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags')
+
+      - name: Create and upload asset
+        uses: ncipollo/release-action@v1
+        with:
+          allowUpdates: true
+          artifacts: "libopenvic-simulation.${{ matrix.platform }}.${{ matrix.arch }}.zip"
+          omitNameDuringUpdate: true
+          omitBodyDuringUpdate: true
+          token: ${{ secrets.GITHUB_TOKEN }}
+        if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags')
