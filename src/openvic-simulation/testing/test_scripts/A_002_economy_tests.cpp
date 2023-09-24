@@ -205,304 +205,303 @@ namespace OpenVic {
 			add_requirement(ECON_261);
 		}
 
-		void execute_script(GameManager& game_manager) {
+		void execute_script() {
 			// ECON_123
 			// The base price for Aeroplanes shall be 110
 			// The base price of 110 for Aeroplanes can be seen in program output data
 
-			check_base_price(game_manager, "aeroplanes", "110.0", "ECON_123");
+			check_base_price("aeroplanes", "110.0", "ECON_123");
 
 			// ECON_124
 			// The base price for Ammunition shall be 17.5
 			// The base price of 17.5 for Ammunition can be seen in program output data
 
-			check_base_price(game_manager, "ammunition", "17.5", "ECON_124");
+			check_base_price("ammunition", "17.5", "ECON_124");
 
 			// ECON_125
 			// The base price for Artillery shall be 60
 			// The base price of 60 for Artillery can be seen in program output data
 
-			check_base_price(game_manager, "artillery", "60.0", "ECON_125");
-
-			for (int i = 0; i < get_requirements().size(); i++) {
-				std::cout << get_requirement_at_index(i)->get_id() << " had result: " << get_requirement_at_index(i)->get_pass() << std::endl;
-			}
+			check_base_price("artillery", "60.0", "ECON_125");
 
 			// ECON_126
 			// The base price for Automobiles shall be 70
 			// The base price of 70 for Automobiles can be seen in program output data
 
-			// TODO: Write test steps for ECON_126...
+			check_base_price("automobiles", "70.0", "ECON_126");
 
 			// ECON_127
 			// The base price for Canned Food shall be 16
 			// The base price of 16 for Canned Food can be seen in program output data
 
-			// TODO: Write test steps for ECON_127...
+			check_base_price("artillery", "60.0", "ECON_125");
 
 			// ECON_128
 			// The base price for Cattle shall be 2
 			// The base price of 2 for Cattle can be seen in program output data
 
-			// TODO: Write test steps for ECON_128...
+			check_base_price("artillery", "60.0", "ECON_125");
 
 			// ECON_129
 			// The base price for Cement shall be 16
 			// The base price of 16 for Cement can be seen in program output data
 
-			// TODO: Write test steps for ECON_129...
+			check_base_price("artillery", "60.0", "ECON_125");
 
 			// ECON_130
 			// The base price for Clipper Convoys shall be 42
 			// The base price of 42 for Clipper Convoys can be seen in program output data
 
-			// TODO: Write test steps for ECON_130...
+			check_base_price("artillery", "60.0", "ECON_125");
 
 			// ECON_131
 			// The base price for Coal shall be 2.3
 			// The base price of 2.3 for Coal can be seen in program output data
 
-			// TODO: Write test steps for ECON_131...
+			check_base_price("artillery", "60.0", "ECON_125");
 
 			// ECON_132
 			// The base price for Coffee shall be 2.1
 			// The base price of 2.1 for Coffee can be seen in program output data
 
-			// TODO: Write test steps for ECON_132...
+			check_base_price("artillery", "60.0", "ECON_125");
 
 			// ECON_133
 			// The base price for Cotton shall be 2
 			// The base price of 2 for Cotton can be seen in program output data
 
-			// TODO: Write test steps for ECON_133...
+			check_base_price("artillery", "60.0", "ECON_125");
 
 			// ECON_134
 			// The base price for Dye shall be 12
 			// The base price of 12 for Dye can be seen in program output data
 
-			// TODO: Write test steps for ECON_134...
+			check_base_price("artillery", "60.0", "ECON_125");
 
 			// ECON_135
 			// The base price for Electric Gear shall be 16
 			// The base price of 16 for Electric Gear can be seen in program output data
 
-			// TODO: Write test steps for ECON_135...
+			check_base_price("artillery", "60.0", "ECON_125");
 
 			// ECON_136
 			// The base price for Explosives shall be 20
 			// The base price of 20 for Explosives can be seen in program output data
 
-			// TODO: Write test steps for ECON_136...
+			check_base_price("artillery", "60.0", "ECON_125");
 
 			// ECON_137
 			// The base price for Fabric shall be 1.8
 			// The base price of 1.8 for Fabric can be seen in program output data
 
-			// TODO: Write test steps for ECON_137...
+			check_base_price("artillery", "60.0", "ECON_125");
 
 			// ECON_138
 			// The base price for Fertilizer shall be 10
 			// The base price of 10 for Fertilizer can be seen in program output data
 
-			// TODO: Write test steps for ECON_138...
+			check_base_price("artillery", "60.0", "ECON_125");
 
 			// ECON_139
 			// The base price for Fish shall be 1.5
 			// The base price of 1.5 for Fish can be seen in program output data
 
-			// TODO: Write test steps for ECON_139...
+			check_base_price("artillery", "60.0", "ECON_125");
 
 			// ECON_140
 			// The base price for Fruit shall be 1.8
 			// The base price of 1.8 for Fruit can be seen in program output data
 
-			// TODO: Write test steps for ECON_140...
+			check_base_price("artillery", "60.0", "ECON_125");
 
 			// ECON_141
 			// The base price for Fuel shall be 25
 			// The base price of 25 for Fuel can be seen in program output data
 
-			// TODO: Write test steps for ECON_141...
+			check_base_price("artillery", "60.0", "ECON_125");
 
 			// ECON_142
 			// The base price for Furniture shall be 4.9
 			// The base price of 4.9 for Furniture can be seen in program output data
 
-			// TODO: Write test steps for ECON_142...
+			check_base_price("artillery", "60.0", "ECON_125");
 
 			// ECON_234
 			// The base price for Glass shall be 2.9
 			// The base price of 2.9 for Glass can be seen in program output data
 
-			// TODO: Write test steps for ECON_234...
+			check_base_price("artillery", "60.0", "ECON_125");
 
 			// ECON_235
 			// The base price for Grain shall be 2.2
 			// The base price of 2.2 for Grain can be seen in program output data
 
-			// TODO: Write test steps for ECON_235...
+			check_base_price("artillery", "60.0", "ECON_125");
 
 			// ECON_236
 			// The base price for Iron shall be 3.5
 			// The base price of 3.5 for Iron can be seen in program output data
 
-			// TODO: Write test steps for ECON_236...
+			check_base_price("artillery", "60.0", "ECON_125");
 
 			// ECON_237
 			// The base price for Liquor shall be 6.4
 			// The base price of 6.4 for Liquor can be seen in program output data
 
-			// TODO: Write test steps for ECON_237...
+			check_base_price("artillery", "60.0", "ECON_125");
 
 			// ECON_238
 			// The base price for Lumber shall be 1
 			// The base price of 1 for Lumber can be seen in program output data
 
-			// TODO: Write test steps for ECON_238...
+			check_base_price("artillery", "60.0", "ECON_125");
 
 			// ECON_239
 			// The base price for Luxury Clothes shall be 65
 			// The base price of 65 for Luxury Clothes can be seen in program output data
 
-			// TODO: Write test steps for ECON_239...
+			check_base_price("artillery", "60.0", "ECON_125");
 
 			// ECON_240
 			// The base price for Luxury Furniture shall be 59
 			// The base price of 59 for Luxury Furniture can be seen in program output data
 
-			// TODO: Write test steps for ECON_240...
+			check_base_price("artillery", "60.0", "ECON_125");
 
 			// ECON_241
 			// The base price for Machine Parts shall be 36.5
 			// The base price of 36.5 for Machine Parts can be seen in program output data
 
-			// TODO: Write test steps for ECON_241...
+			check_base_price("artillery", "60.0", "ECON_125");
 
 			// ECON_242
 			// The base price for Oil shall be 12
 			// The base price of 12 for Oil can be seen in program output data
 
-			// TODO: Write test steps for ECON_242...
+			check_base_price("artillery", "60.0", "ECON_125");
 
 			// ECON_243
 			// The base price for Opium shall be 3.2
 			// The base price of 3.2 for Opium can be seen in program output data
 
-			// TODO: Write test steps for ECON_243...
+			check_base_price("artillery", "60.0", "ECON_125");
 
 			// ECON_244
 			// The base price for Paper shall be 3.4
 			// The base price of 3.4 for Paper can be seen in program output data
 
-			// TODO: Write test steps for ECON_244...
+			check_base_price("artillery", "60.0", "ECON_125");
 
 			// ECON_245
 			// The base price for Precious Metal  shall be 8
 			// The base price of 8 for Precious Metal can be seen in program output data
 
-			// TODO: Write test steps for ECON_245...
+			check_base_price("artillery", "60.0", "ECON_125");
 
 			// ECON_246
 			// The base price for Radios shall be 16
 			// The base price of 16 for Radios can be seen in program output data
 
-			// TODO: Write test steps for ECON_246...
+			check_base_price("artillery", "60.0", "ECON_125");
 
 			// ECON_247
 			// The base price for Regular Clothes shall be 5.8
 			// The base price of 5.8 for Regular Clothes can be seen in program output data
 
-			// TODO: Write test steps for ECON_247...
+			check_base_price("artillery", "60.0", "ECON_125");
 
 			// ECON_248
 			// The base price for Rubber shall be 7
 			// The base price of 7 for Rubber can be seen in program output data
 
-			// TODO: Write test steps for ECON_248...
+			check_base_price("artillery", "60.0", "ECON_125");
 
 			// ECON_249
 			// The base price for Silk shall be 10
 			// The base price of 10 for Silk can be seen in program output data
 
-			// TODO: Write test steps for ECON_249...
+			check_base_price("artillery", "60.0", "ECON_125");
 
 			// ECON_250
 			// The base price for Small Arms shall be 37
 			// The base price of 37 for Small Arms can be seen in program output data
 
-			// TODO: Write test steps for ECON_250...
+			check_base_price("artillery", "60.0", "ECON_125");
 
 			// ECON_251
 			// The base price for Steamer Convoys shall be 65
 			// The base price of 65 for Steamer Convoys can be seen in program output data
 
-			// TODO: Write test steps for ECON_251...
+			check_base_price("artillery", "60.0", "ECON_125");
 
 			// ECON_252
 			// The base price for Steel shall be 4.7
 			// The base price of 4.7 for Steel can be seen in program output data
 
-			// TODO: Write test steps for ECON_252...
+			check_base_price("artillery", "60.0", "ECON_125");
 
 			// ECON_253
 			// The base price for Sulphur shall be 6
 			// The base price of 6 for Sulphur can be seen in program output data
 
-			// TODO: Write test steps for ECON_253...
+			check_base_price("artillery", "60.0", "ECON_125");
 
 			// ECON_254
 			// The base price for Tanks shall be 98
 			// The base price of 98 for Tanks can be seen in program output data
 
-			// TODO: Write test steps for ECON_254...
+			check_base_price("artillery", "60.0", "ECON_125");
 
 			// ECON_255
 			// The base price for Tea shall be 2.6
 			// The base price of 2.6 for Tea can be seen in program output data
 
-			// TODO: Write test steps for ECON_255...
+			check_base_price("artillery", "60.0", "ECON_125");
 
 			// ECON_256
 			// The base price for Telephones shall be 16
 			// The base price of 16 for Telephones can be seen in program output data
 
-			// TODO: Write test steps for ECON_256...
+			check_base_price("artillery", "60.0", "ECON_125");
 
 			// ECON_257
 			// The base price for Timber shall be 0.9
 			// The base price of 0.9 for Timber can be seen in program output data
 
-			// TODO: Write test steps for ECON_257...
+			check_base_price("artillery", "60.0", "ECON_125");
 
 			// ECON_258
 			// The base price for Tobacco shall be 1.1
 			// The base price of 1.1 for Tobacco can be seen in program output data
 
-			// TODO: Write test steps for ECON_258...
+			check_base_price("artillery", "60.0", "ECON_125");
 
 			// ECON_259
 			// The base price for Tropical Wood shall be 5.4
 			// The base price of 5.4 for Tropical Wood can be seen in program output data
 
-			// TODO: Write test steps for ECON_259...
+			check_base_price("artillery", "60.0", "ECON_125");
 
 			// ECON_260
 			// The base price for Wine shall be 9.7
 			// The base price of 9.7 for Wine can be seen in program output data
 
-			// TODO: Write test steps for ECON_260...
+			check_base_price("artillery", "60.0", "ECON_125");
 
 			// ECON_261
 			// The base price for Wool shall be 0.7
 			// The base price of 0.7 for Wool can be seen in program output data
 
-			// TODO: Write test steps for ECON_261...
+			check_base_price("artillery", "60.0", "ECON_125");
 
 		}
 
-		void check_base_price(GameManager& game_manager, std::string identifier, std::string value, std::string req_name) {
-			if (game_manager.get_good_manager().get_good_by_identifier(identifier)->get_base_price().to_string() == value) get_requirement_by_id(req_name)->set_pass(true);
-			std::cout << game_manager.get_good_manager().get_good_by_identifier(identifier)->get_base_price().to_string() << std::endl;
+		void check_base_price(std::string identifier, std::string value, std::string req_name) {
+			std::string base_price = get_game_manager()->get_good_manager().get_good_by_identifier(identifier)->get_base_price().to_string();
+			Requirement* req = get_requirement_by_id(req_name);
+			req->set_target_value(value);
+			req->set_actual_value(base_price);
+			if (base_price == value) req->set_pass(true);
 		}
 	};
 }

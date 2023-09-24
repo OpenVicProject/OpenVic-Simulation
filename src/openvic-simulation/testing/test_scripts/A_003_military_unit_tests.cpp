@@ -13,7 +13,7 @@ namespace OpenVic {
 		void add_requirements() {
 		}
 
-		void execute_script(GameManager& game_manager) {
+		void execute_script() {
 		}
 	};
 }

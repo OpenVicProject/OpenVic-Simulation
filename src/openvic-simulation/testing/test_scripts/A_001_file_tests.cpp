@@ -93,7 +93,7 @@ namespace OpenVic {
 			add_requirement(SND_10);
 		}
 
-		void execute_script(GameManager& game_manager) {
+		void execute_script() {
 			// FS_44
 			// The icon for the Canned Food good shall be loaded from the R/art/economy/goods folder with the filename Canned Food.png
 			// The icon for the Canned Food good has been loaded into the program

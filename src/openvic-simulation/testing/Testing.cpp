@@ -3,7 +3,7 @@
 
 using namespace OpenVic;
 
-Testing::Testing() {
+Testing::Testing(GameManager* game_manager) {
 
 	// Constructor for the tests will add requirements
 	// Then execute the script
@@ -19,6 +19,10 @@ Testing::Testing() {
 	test_scripts.push_back(a_005_nation_tests);
 	A_006_politics_tests* a_006_politics_tests = new A_006_politics_tests();
 	test_scripts.push_back(a_006_politics_tests);
+
+	for (int i = 0; i < test_scripts.size(); i++) {
+		test_scripts[i]->set_game_manager(game_manager);
+	}
 }
 
 Testing::~Testing() {
@@ -27,9 +31,9 @@ Testing::~Testing() {
 	}
 }
 
-void Testing::execute_all_scripts(GameManager& game_manager) {
+void Testing::execute_all_scripts() {
 	for (int i = 0; i < test_scripts.size(); i++) {
-		test_scripts[i]->execute_script(game_manager);
+		test_scripts[i]->execute_script();
 	}
 }
 

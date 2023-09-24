@@ -51,10 +51,11 @@ static bool headless_load(Dataloader::path_vector_t const& roots) {
 		Logger::error("Failed to load localisation!");
 		ret = false;
 	}
+
 	
-	Testing testing = Testing();
+	Testing testing = Testing(&game_manager);
 	std::cout << std::endl << "Testing Loaded" << std::endl << std::endl;
-	testing.execute_all_scripts(game_manager);
+	testing.execute_all_scripts();
 	std::cout << "Testing Executed" << std::endl << std::endl;
 
 	return ret;
