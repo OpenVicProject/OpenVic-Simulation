@@ -71,19 +71,14 @@ ModifierValue ModifierValue::operator-(ModifierValue const& right) const {
 	return ret -= right;
 }
 
-std::ostream& OpenVic::operator<<(std::ostream& stream, ModifierValue const& value) {
-	for (ModifierValue::effect_map_t::value_type const& effect : value.values) {
-		stream << effect.first << ": " << effect.second << "\n";
-	}
-	return stream;
-}
-
 Modifier::Modifier(const std::string_view new_identifier, ModifierValue&& new_values, icon_t new_icon)
 	: HasIdentifier { new_identifier }, ModifierValue { std::move(new_values) }, icon { new_icon } {}
 
 Modifier::icon_t Modifier::get_icon() const {
 	return icon;
 }
+
+ModifierInstance::ModifierInstance(Modifier const& modifier, Date expiry_date) : modifier { modifier }, expiry_date { expiry_date } {}
 
 Modifier const& ModifierInstance::get_modifier() const {
 	return modifier;
@@ -134,4 +129,13 @@ node_callback_t ModifierManager::expect_modifier_value(callback_t<ModifierValue&
 		ret &= callback(std::move(modifier));
 		return ret;
 	};
+}
+
+namespace OpenVic { //so the compiler shuts up
+	std::ostream& operator<<(std::ostream& stream, ModifierValue const& value) {
+		for (ModifierValue::effect_map_t::value_type const& effect : value.values) {
+			stream << effect.first << ": " << effect.second << "\n";
+		}
+		return stream;
+	}
 }

@@ -1,12 +1,6 @@
 #include "Vector.hpp"
 
-#include <ostream>
-#include <tuple>
-
 using namespace OpenVic;
-
-template<typename T>
-constexpr vec2_t<T>::vec2_t() = default;
 
 template<typename T>
 constexpr vec2_t<T>::vec2_t(T new_val) : x { new_val }, y { new_val } {}
