@@ -1,5 +1,4 @@
 #include "Dataloader.hpp"
-#include <filesystem>
 
 #include <openvic-dataloader/csv/Parser.hpp>
 #include <openvic-dataloader/detail/CallbackOStream.hpp>
