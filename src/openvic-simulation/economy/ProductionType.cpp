@@ -8,11 +8,15 @@
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;
 
-EmployedPop::EmployedPop(PopType const* pop_type, effect_t effect, fixed_point_t effect_multiplier, fixed_point_t amount)
-	: pop_type { pop_type }, effect { effect }, effect_multiplier { effect_multiplier }, amount { amount } {}
+EmployedPop::EmployedPop(PopType const* pop_type, bool artisan, effect_t effect, fixed_point_t effect_multiplier, fixed_point_t amount)
+	: pop_type { pop_type }, artisan { artisan }, effect { effect }, effect_multiplier { effect_multiplier }, amount { amount } {}
 
 PopType const* EmployedPop::get_pop_type() {
 	return pop_type;
+}
+
+bool EmployedPop::is_artisan() {
+	return artisan;
 }
 
 EmployedPop::effect_t EmployedPop::get_effect() {
@@ -43,7 +47,7 @@ ProductionType::type_t ProductionType::get_type() const {
 	return type;
 }
 
-uint32_t ProductionType::get_workforce() const {
+size_t ProductionType::get_workforce() const {
 	return workforce;
 }
 
@@ -84,7 +88,7 @@ ProductionTypeManager::ProductionTypeManager() : production_types { "production 
 node_callback_t ProductionTypeManager::_expect_employed_pop(GoodManager& good_manager, PopManager& pop_manager,
 	callback_t<EmployedPop> cb) {
 	
-	return [this, &good_manager, &pop_manager, &cb](ast::NodeCPtr node) -> bool {
+	return [this, &good_manager, &pop_manager, cb](ast::NodeCPtr node) -> bool {
 		std::string_view pop_type, effect;
 		fixed_point_t effect_multiplier = 1, amount = 1;
 
@@ -96,9 +100,14 @@ node_callback_t ProductionTypeManager::_expect_employed_pop(GoodManager& good_ma
 		)(node);
 
 		const PopType* found_pop_type = pop_manager.get_pop_type_by_identifier(pop_type);
+		bool artisan = false;
 		if (found_pop_type == nullptr) {
-			Logger::error("Found invalid pop type ", pop_type, " while parsing production types!");
-			return false;
+			if (pop_type == "artisan") {
+				artisan = true;
+			} else {
+				Logger::error("Found invalid pop type ", pop_type, " while parsing production types!");
+				return false;
+			}
 		}
 
 		EmployedPop::effect_t found_effect;
@@ -110,25 +119,30 @@ node_callback_t ProductionTypeManager::_expect_employed_pop(GoodManager& good_ma
 			return false;
 		}
 
-		return res & cb(EmployedPop { found_pop_type, found_effect, effect_multiplier, amount });
+		return res & cb(EmployedPop { found_pop_type, artisan, found_effect, effect_multiplier, amount });
 	};
 }
 
 node_callback_t ProductionTypeManager::_expect_employed_pop_list(GoodManager& good_manager, PopManager& pop_manager,
 	callback_t<std::vector<EmployedPop>> cb) {
 	
-	return [this, &good_manager, &pop_manager, &cb](ast::NodeCPtr node) -> bool {
+	return [this, &good_manager, &pop_manager, cb](ast::NodeCPtr node) -> bool {
 		std::vector<EmployedPop> employed_pops;
 		bool res = expect_list([this, &good_manager, &pop_manager, &employed_pops](ast::NodeCPtr node) -> bool {
-			EmployedPop* owner = nullptr;
-			bool res_partial = _expect_employed_pop(good_manager, pop_manager, assign_variable_callback(*owner))(node);
-			if (owner != nullptr)
-				employed_pops.push_back(*owner);
+			EmployedPop owner;
+			bool res_partial = _expect_employed_pop(good_manager, pop_manager, assign_variable_callback(owner))(node);
+			employed_pops.push_back(owner);
 			return res_partial;
 		})(node);
 		return res & cb(employed_pops);
 	};
 }
+
+#define POPTYPE_CHECK(employed_pop) \
+	if ((employed_pop.pop_type == nullptr && !employed_pop.artisan) || (employed_pop.pop_type != nullptr && employed_pop.artisan)) {\
+		Logger::error("Invalid pop type parsed for owner of production type ", identifier, "!"); \
+		return false; \
+	}
 
 bool ProductionTypeManager::add_production_type(ARGS(std::string_view, std::string_view), GoodManager& good_manager) {
 	if (identifier.empty()) {
@@ -145,6 +159,22 @@ bool ProductionTypeManager::add_production_type(ARGS(std::string_view, std::stri
 		return false;
 	}
 
+	if (workforce == 0) {
+		Logger::error("Workforce for production type ", identifier, " was 0 or unset!");
+		return false;
+	}
+
+	if (value == 0) {
+		Logger::error("Value for production type ", identifier, " was 0 or unset!");
+		return false;
+	}
+
+	POPTYPE_CHECK(owner)
+
+	for (int i = 0; i < employees.size(); i++) {
+		POPTYPE_CHECK(employees[i])
+	}
+
 	const Good* output = good_manager.get_good_by_identifier(output_goods);
 	if (output == nullptr) {
 		Logger::error("Invalid output ", output_goods, " for production type ", identifier, "!");
@@ -156,13 +186,6 @@ bool ProductionTypeManager::add_production_type(ARGS(std::string_view, std::stri
 		output, value, bonuses, efficiency, coastal, farm, mine 
 	});
 }
-
-/* TODO check that these are valid and set
-"owner", ONE_EXACTLY, _expect_employed_pop(good_manager, pop_manager, move_variable_callback(owner)),
-"workforce", ONE_EXACTLY, expect_uint(assign_variable_callback(workforce)),
-"output_goods", ONE_EXACTLY, expect_identifier(assign_variable_callback(output_goods)),
-"value", ONE_EXACTLY, expect_fixed_point(assign_variable_callback(value)),
-*/
 
 #define PARSE_NODE(target_node) expect_dictionary_keys(ALLOW_OTHER_KEYS, \
 			"owner", ZERO_OR_ONE, _expect_employed_pop(good_manager, pop_manager, move_variable_callback(owner)), \
@@ -224,9 +247,9 @@ bool ProductionTypeManager::load_production_types_file(GoodManager& good_manager
 			EmployedPop owner;
 			std::vector<EmployedPop> employees;
 			std::string_view type, output_goods;
-			uint32_t workforce;
+			size_t workforce = 0; //0 is a meaningless value -> unset
 			std::map<const Good*, fixed_point_t> input_goods, efficiency;
-			fixed_point_t value;
+			fixed_point_t value = 0; //0 is a meaningless value -> unset
 			std::vector<Bonus> bonuses;
 			bool coastal = false, farm = false, mine = false;
 
@@ -237,7 +260,6 @@ bool ProductionTypeManager::load_production_types_file(GoodManager& good_manager
 				std::string_view template_id = template_target_map[key];
 				if (template_node_map.contains(template_id)) {
 					ast::NodeCPtr template_node = template_node_map[template_id];
-					Logger::info("Applying template ", template_id," to ", key); //TODO temp, remove once it works
 					ret &= PARSE_NODE(template_node);
 				}
 			}
