@@ -7,7 +7,7 @@ namespace OpenVic {
 
 	class TestScript {
 
-		std::vector<Requirement> requirements = std::vector<Requirement>();
+		std::vector<Requirement*> requirements = std::vector<Requirement*>();
 
 	public:
 
@@ -18,14 +18,14 @@ namespace OpenVic {
 		virtual void execute_script(GameManager& game_manager) = 0;
 
 		// Getters
-		std::vector<Requirement> get_requirements();
-		Requirement get_requirement_at_index(int index);
-		Requirement get_requirement_by_id(std::string id);
-		std::vector<Requirement> get_passed_requirements();
-		std::vector<Requirement> get_failed_requirements();
+		std::vector<Requirement*> get_requirements();
+		Requirement* get_requirement_at_index(int index);
+		Requirement* get_requirement_by_id(std::string id);
+		std::vector<Requirement*> get_passed_requirements();
+		std::vector<Requirement*> get_failed_requirements();
 
 		// Setters
-		void set_requirements(std::vector<Requirement> in_requirements);
-		void add_requirement(Requirement req);
+		void set_requirements(std::vector<Requirement*> in_requirements);
+		void add_requirement(Requirement* req);
 	};
 }
