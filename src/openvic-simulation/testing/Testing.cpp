@@ -1,5 +1,7 @@
 #include <testing/Testing.hpp>
 #include <testing/TestScript.hpp>
+#include <fstream>
+#include <direct.h>
 
 using namespace OpenVic;
 
@@ -38,9 +40,21 @@ void Testing::execute_all_scripts() {
 }
 
 void Testing::report_results() {
-	for (int i = 0; i < test_scripts.size(); i++) {
+	std::ofstream test_results;
+	_mkdir("..\\src\\openvic - simulation\\testing\\test_results");
+	test_results.open("..\\src\\openvic-simulation\\testing\\test_results\\results.txt");
+	for (auto test_script : test_scripts) {
+		std::vector<OpenVic::Requirement*> reqs = test_script->get_requirements();
+		std::vector<OpenVic::Requirement*> passed_reqs = test_script->get_passed_requirements();
+		std::vector<OpenVic::Requirement*> failed_reqs = test_script->get_passed_requirements();
 
+		test_results << test_script->get_script_name() << ":" << std::endl;
+		for (auto req : reqs) {
+			test_results << req->get_id() << " ";
+		}
+		test_results << std::endl<< std::endl;
 	}
+	test_results.close();
 
 	// Create Summary File
 

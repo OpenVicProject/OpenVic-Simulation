@@ -6,6 +6,7 @@ namespace OpenVic {
 
 	public:
 		A_005_nation_tests() {
+			set_script_name("A_005_nation_tests");
 			add_requirements();
 		}
 

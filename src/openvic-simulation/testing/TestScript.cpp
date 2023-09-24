@@ -26,8 +26,10 @@ std::vector<Requirement*> TestScript::get_failed_requirements() {
 	return failed_requirements;
 }
 GameManager* TestScript::get_game_manager() { return game_manager; }
+std::string TestScript::get_script_name() { return script_name; }
 
 // Setters
 void TestScript::set_requirements(std::vector<Requirement*> in_requirements) { requirements = in_requirements; }
 void TestScript::add_requirement(Requirement* req) {	requirements.push_back(req); }
 void TestScript::set_game_manager(GameManager* in_game_manager) { game_manager = in_game_manager; }
+void TestScript::set_script_name(std::string in_script_name) { script_name = in_script_name; }

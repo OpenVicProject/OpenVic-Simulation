@@ -6,6 +6,7 @@ namespace OpenVic {
 
 	public:
 		A_006_politics_tests() {
+			set_script_name("A_006_politics_tests");
 			add_requirements();
 		}
 

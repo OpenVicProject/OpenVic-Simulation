@@ -6,6 +6,7 @@ namespace OpenVic {
 
 	public:
 		A_001_file_tests() {
+			set_script_name("A_001_file_tests");
 			add_requirements();
 		}
 

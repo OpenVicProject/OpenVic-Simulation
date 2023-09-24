@@ -9,6 +9,7 @@ namespace OpenVic {
 
 		std::vector<Requirement*> requirements = std::vector<Requirement*>();
 		GameManager* game_manager;
+		std::string script_name;
 
 	public:
 
@@ -25,10 +26,12 @@ namespace OpenVic {
 		std::vector<Requirement*> get_passed_requirements();
 		std::vector<Requirement*> get_failed_requirements();
 		GameManager* get_game_manager();
+		std::string get_script_name();
 
 		// Setters
 		void set_requirements(std::vector<Requirement*> in_requirements);
 		void add_requirement(Requirement* req);
 		void set_game_manager(GameManager* in_game_manager);
+		void set_script_name(std::string in_script_name);
 	};
 }

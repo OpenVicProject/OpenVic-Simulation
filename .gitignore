@@ -81,3 +81,4 @@ bin/*
 # scons stuff
 .cache
 compile_commands.json
+src/openvic-simulation/testing/test_results/results.txt

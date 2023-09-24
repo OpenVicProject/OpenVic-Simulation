@@ -56,6 +56,7 @@ static bool headless_load(Dataloader::path_vector_t const& roots) {
 	Testing testing = Testing(&game_manager);
 	std::cout << std::endl << "Testing Loaded" << std::endl << std::endl;
 	testing.execute_all_scripts();
+	testing.report_results();
 	std::cout << "Testing Executed" << std::endl << std::endl;
 
 	return ret;

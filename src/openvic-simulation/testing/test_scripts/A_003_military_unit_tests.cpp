@@ -6,6 +6,7 @@ namespace OpenVic {
 
 	public:
 		A_003_military_unit_tests() {
+			set_script_name("A_003_military_unit_tests");
 			add_requirements();
 		}
 
