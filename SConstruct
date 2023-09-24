@@ -19,7 +19,7 @@ opts.Add(BoolVariable("build_ovsim_headless", "Build the openvic simulation head
 
 env.FinalizeOptions()
 
-SConscript("deps/SCsub")
+SConscript("deps/SCsub", "env")
 
 env.openvic_simulation = {}
 
