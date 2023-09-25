@@ -1,13 +1,13 @@
-# pragma once
 # include <testing/TestScript.hpp>
+# include <GameManager.hpp>
 
 namespace OpenVic {
 	class A_005_nation_tests : public TestScript {
 
 	public:
 		A_005_nation_tests() {
+			set_script_name("A_005_nation_tests");
 			add_requirements();
-			execute_script();
 		}
 
 		void add_requirements() {
