@@ -3,4 +3,4 @@
 	url = https://github.com/OpenVicProject/OpenVic-Dataloader
 [submodule "scripts"]
 	path = scripts
-	url = git@github.com:OpenVicProject/scripts
+	url = https://github.com/OpenVicProject/scripts
