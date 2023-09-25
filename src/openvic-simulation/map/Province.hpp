@@ -1,5 +1,7 @@
 #pragma once
 
+#include <limits>
+
 #include "openvic-simulation/map/Building.hpp"
 #include "openvic-simulation/pop/Pop.hpp"
 
@@ -7,6 +9,8 @@ namespace OpenVic {
 	struct Map;
 	struct Region;
 	struct Good;
+	struct TerrainType;
+	struct TerrainTypeMapping;
 
 	/* REQUIREMENTS:
 	 * MAP-5, MAP-7, MAP-8, MAP-43, MAP-47
@@ -32,10 +36,10 @@ namespace OpenVic {
 
 		public:
 			distance_t get_distance() const;
-			flags_t get_flags();
+			flags_t get_flags() const;
 		};
 
-		static constexpr index_t NULL_INDEX = 0, MAX_INDEX = (1 << (8 * sizeof(index_t))) - 1;
+		static constexpr index_t NULL_INDEX = 0, MAX_INDEX = std::numeric_limits<index_t>::max();
 
 	private:
 		const index_t index;
@@ -52,6 +56,10 @@ namespace OpenVic {
 
 		std::vector<adjacency_t> adjacencies;
 
+		TerrainType const* terrain_type = nullptr;
+
+		void _set_terrain_type(TerrainType const* type);
+
 		Province(const std::string_view new_identifier, colour_t new_colour, index_t new_index);
 
 	public:
@@ -61,6 +69,7 @@ namespace OpenVic {
 		Region* get_region() const;
 		bool get_has_region() const;
 		bool get_water() const;
+		TerrainType const* get_terrain_type() const;
 		life_rating_t get_life_rating() const;
 		bool load_positions(BuildingManager const& building_manager, ast::NodeCPtr root);
 

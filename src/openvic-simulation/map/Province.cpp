@@ -6,6 +6,8 @@
 #include <iterator>
 #include <sstream>
 
+#include "openvic-simulation/map/TerrainType.hpp"
+
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;
 
@@ -30,6 +32,10 @@ bool Province::get_has_region() const {
 
 bool Province::get_water() const {
 	return water;
+}
+
+TerrainType const* Province::get_terrain_type() const {
+	return terrain_type;
 }
 
 Province::life_rating_t Province::get_life_rating() const {
@@ -149,7 +155,7 @@ Province::distance_t Province::adjacency_t::get_distance() const {
 	return distance;
 }
 
-Province::flags_t Province::adjacency_t::get_flags() {
+Province::flags_t Province::adjacency_t::get_flags() const {
 	return flags;
 }
 
@@ -174,4 +180,8 @@ bool Province::add_adjacency(Province const* province, distance_t distance, flag
 
 std::vector<Province::adjacency_t> const& Province::get_adjacencies() const {
 	return adjacencies;
+}
+
+void Province::_set_terrain_type(TerrainType const* type) {
+		terrain_type = type;
 }

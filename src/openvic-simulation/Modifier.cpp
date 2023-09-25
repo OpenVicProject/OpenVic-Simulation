@@ -15,6 +15,9 @@ ModifierValue::ModifierValue(effect_map_t&& new_values) : values { std::move(new
 ModifierValue::ModifierValue(ModifierValue const&) = default;
 ModifierValue::ModifierValue(ModifierValue&&) = default;
 
+ModifierValue& ModifierValue::operator=(ModifierValue const&) = default;
+ModifierValue& ModifierValue::operator=(ModifierValue&&) = default;
+
 void ModifierValue::trim() {
 	std::erase_if(values, [](effect_map_t::value_type const& value) -> bool {
 		return value.second == fixed_point_t::_0();
@@ -111,19 +114,39 @@ bool ModifierManager::add_modifier(const std::string_view identifier, ModifierVa
 	return modifiers.add_item({ identifier, std::move(values), icon });
 }
 
-node_callback_t ModifierManager::expect_modifier_value(callback_t<ModifierValue&&> callback) const {
-	return [this, callback](ast::NodeCPtr root) -> bool {
+bool ModifierManager::setup_modifier_effects() {
+	bool ret = true;
+
+	ret &= add_modifier_effect("movement_cost", false);
+	ret &= add_modifier_effect("farm_rgo_size", true);
+	ret &= add_modifier_effect("farm_rgo_eff", true);
+	ret &= add_modifier_effect("mine_rgo_size", true);
+	ret &= add_modifier_effect("mine_rgo_eff", true);
+	ret &= add_modifier_effect("min_build_railroad", false);
+	ret &= add_modifier_effect("supply_limit", true);
+	ret &= add_modifier_effect("combat_width", false);
+	ret &= add_modifier_effect("defence", true);
+
+	modifier_effects.lock();
+	return ret;
+}
+
+node_callback_t ModifierManager::expect_modifier_value(callback_t<ModifierValue&&> callback, key_value_callback_t default_callback) const {
+	return [this, callback, default_callback](ast::NodeCPtr root) -> bool {
 		ModifierValue modifier;
 		bool ret = expect_dictionary(
-			[this, &modifier](std::string_view key, ast::NodeCPtr value) -> bool {
+			[this, &modifier, default_callback](std::string_view key, ast::NodeCPtr value) -> bool {
 				ModifierEffect const* effect = get_modifier_effect_by_identifier(key);
 				if (effect != nullptr) {
-					return expect_fixed_point(
-						assign_variable_callback(modifier.values[effect])
-					)(value);
+					if (modifier.values.find(effect) == modifier.values.end()) {
+						return expect_fixed_point(
+							assign_variable_callback(modifier.values[effect])
+						)(value);
+					}
+					Logger::error("Duplicate modifier effect: ", key);
+					return false;
 				}
-				Logger::error("Invalid modifier effect: ", key);
-				return false;
+				return default_callback(key, value);
 			}
 		)(root);
 		ret &= callback(std::move(modifier));

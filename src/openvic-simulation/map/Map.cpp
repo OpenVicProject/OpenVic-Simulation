@@ -4,6 +4,7 @@
 #include <unordered_set>
 
 #include "openvic-simulation/economy/Good.hpp"
+#include "openvic-simulation/utility/BMP.hpp"
 #include "openvic-simulation/utility/Logger.hpp"
 
 using namespace OpenVic;
@@ -182,116 +183,6 @@ Province const* Map::get_selected_province() const {
 	return get_province_by_index(get_selected_province_index());
 }
 
-static colour_t colour_at(uint8_t const* colour_data, int32_t idx) {
-	idx *= 3;
-	return (colour_data[idx] << 16) | (colour_data[idx + 1] << 8) | colour_data[idx + 2];
-}
-
-bool Map::generate_province_shape_image(size_t new_width, size_t new_height, uint8_t const* colour_data,
-	uint8_t const* terrain_data, terrain_variant_map_t const& terrain_variant_map, bool detailed_errors) {
-	if (!province_shape_image.empty()) {
-		Logger::error("Province index image has already been generated!");
-		return false;
-	}
-	if (!provinces.is_locked()) {
-		Logger::error("Province index image cannot be generated until after provinces are locked!");
-		return false;
-	}
-	if (new_width < 1 || new_height < 1) {
-		Logger::error("Invalid province image dimensions: ", new_width, "x", new_height);
-		return false;
-	}
-	if (colour_data == nullptr) {
-		Logger::error("Province colour data pointer is null!");
-		return false;
-	}
-	if (terrain_data == nullptr) {
-		Logger::error("Province terrain data pointer is null!");
-		return false;
-	}
-	width = new_width;
-	height = new_height;
-	province_shape_image.resize(width * height);
-
-	std::vector<bool> province_checklist(provinces.size());
-	bool ret = true;
-	std::unordered_set<colour_t> unrecognised_province_colours, unrecognised_terrain_colours;
-
-	for (int32_t y = 0; y < height; ++y) {
-		for (int32_t x = 0; x < width; ++x) {
-			const int32_t idx = x + y * width;
-
-			const colour_t terrain_colour = colour_at(terrain_data, idx);
-			const terrain_variant_map_t::const_iterator it = terrain_variant_map.find(terrain_colour);
-			if (it != terrain_variant_map.end()) province_shape_image[idx].terrain = it->second;
-			else {
-				if (unrecognised_terrain_colours.find(terrain_colour) == unrecognised_terrain_colours.end()) {
-					unrecognised_terrain_colours.insert(terrain_colour);
-					if (detailed_errors) {
-						Logger::warning("Unrecognised terrain colour ", colour_to_hex_string(terrain_colour),
-							" at (", x, ", ", y, ")");
-					}
-				}
-				province_shape_image[idx].terrain = 0;
-			}
-
-			const colour_t province_colour = colour_at(colour_data, idx);
-			if (x > 0) {
-				const int32_t jdx = idx - 1;
-				if (colour_at(colour_data, jdx) == province_colour) {
-					province_shape_image[idx].index = province_shape_image[jdx].index;
-					continue;
-				}
-			}
-			if (y > 0) {
-				const int32_t jdx = idx - width;
-				if (colour_at(colour_data, jdx) == province_colour) {
-					province_shape_image[idx].index = province_shape_image[jdx].index;
-					continue;
-				}
-			}
-			const Province::index_t index = get_index_from_colour(province_colour);
-			if (index != Province::NULL_INDEX) {
-				province_checklist[index - 1] = true;
-				province_shape_image[idx].index = index;
-				continue;
-			}
-			if (unrecognised_province_colours.find(province_colour) == unrecognised_province_colours.end()) {
-				unrecognised_province_colours.insert(province_colour);
-				if (detailed_errors) {
-					Logger::warning("Unrecognised province colour ", colour_to_hex_string(province_colour),
-						" at (", x, ", ", y, ")");
-				}
-			}
-			province_shape_image[idx].index = Province::NULL_INDEX;
-		}
-	}
-	if (!unrecognised_province_colours.empty()) {
-		Logger::warning("Province image contains ", unrecognised_province_colours.size(), " unrecognised province colours");
-	}
-	if (!unrecognised_terrain_colours.empty()) {
-		Logger::warning("Terrain image contains ", unrecognised_terrain_colours.size(), " unrecognised terrain colours");
-	}
-
-	size_t missing = 0;
-	for (size_t idx = 0; idx < province_checklist.size(); ++idx) {
-		if (!province_checklist[idx]) {
-			if (detailed_errors) {
-				Logger::error("Province missing from shape image: ", provinces.get_item_by_index(idx)->to_string());
-			}
-			missing++;
-		}
-	}
-	if (missing > 0) {
-		Logger::error("Province image is missing ", missing, " province colours");
-		ret = false;
-	}
-
-	ret &= _generate_province_adjacencies();
-
-	return ret;
-}
-
 size_t Map::get_width() const {
 	return width;
 }
@@ -302,6 +193,14 @@ size_t Map::get_height() const {
 
 std::vector<Map::shape_pixel_t> const& Map::get_province_shape_image() const {
 	return province_shape_image;
+}
+
+TerrainTypeManager& Map::get_terrain_type_manager() {
+	return terrain_type_manager;
+}
+
+TerrainTypeManager const& Map::get_terrain_type_manager() const {
+	return terrain_type_manager;
 }
 
 bool Map::add_mapmode(const std::string_view identifier, Mapmode::colour_func_t colour_func) {
@@ -443,7 +342,7 @@ bool Map::load_province_definitions(std::vector<LineObject> const& lines) {
 		[this, &ret](LineObject const& line) -> void {
 			const std::string_view identifier = line.get_value_for(0);
 			if (!identifier.empty()) {
-				colour_t colour;
+				colour_t colour = NULL_COLOUR;
 				if (!parse_province_colour(colour,
 					{ line.get_value_for(1), line.get_value_for(2), line.get_value_for(3) }
 				)) {
@@ -504,6 +403,138 @@ bool Map::load_region_file(ast::NodeCPtr root) {
 	return ret;
 }
 
+static constexpr colour_t colour_at(uint8_t const* colour_data, int32_t idx) {
+	/* colour_data is filled with BGR byte triplets - to get pixel idx as a
+	 * single RGB value, multiply idx by 3 to get the index of the corresponding
+	 * triplet, then combine the bytes in reverse order. 
+	 */
+	idx *= 3;
+	return (colour_data[idx + 2] << 16) | (colour_data[idx + 1] << 8) | colour_data[idx];
+}
+
+bool Map::load_map_images(fs::path const& province_path, fs::path const& terrain_path, bool detailed_errors) {
+	if (!provinces.is_locked()) {
+		Logger::error("Province index image cannot be generated until after provinces are locked!");
+		return false;
+	}
+	if (!terrain_type_manager.terrain_type_mappings_are_locked()) {
+		Logger::error("Province index image cannot be generated until after terrain type mappings are locked!");
+		return false;
+	}
+
+	BMP province_bmp;
+	if (!(province_bmp.open(province_path) && province_bmp.read_header() && province_bmp.read_pixel_data())) {
+		Logger::error("Failed to read BMP for compatibility mode province image: ", province_path);
+		return false;
+	}
+	static constexpr uint16_t expected_province_bpp = 24;
+	if (province_bmp.get_bits_per_pixel() != expected_province_bpp) {
+		Logger::error("Invalid province BMP bits per pixel: ", province_bmp.get_bits_per_pixel(), " (expected ", expected_province_bpp, ")");
+		return false;
+	}
+
+	BMP terrain_bmp;
+	if (!(terrain_bmp.open(terrain_path) && terrain_bmp.read_header() && terrain_bmp.read_pixel_data())) {
+		Logger::error("Failed to read BMP for compatibility mode terrain image: ", terrain_path);
+		return false;
+	}
+	static constexpr uint16_t expected_terrain_bpp = 8;
+	if (terrain_bmp.get_bits_per_pixel() != expected_terrain_bpp) {
+		Logger::error("Invalid terrain BMP bits per pixel: ", terrain_bmp.get_bits_per_pixel(), " (expected ", expected_terrain_bpp, ")");
+		return false;
+	}
+
+	if (province_bmp.get_width() != terrain_bmp.get_width() || province_bmp.get_height() != terrain_bmp.get_height()) {
+		Logger::error("Mismatched province and terrain BMP dims: ", province_bmp.get_width(), "x", province_bmp.get_height(), " vs ", terrain_bmp.get_width(), "x", terrain_bmp.get_height());
+		return false;
+	}
+
+	width = province_bmp.get_width();
+	height = province_bmp.get_height();
+	province_shape_image.resize(width * height);
+
+	uint8_t const* province_data = province_bmp.get_pixel_data().data();
+	uint8_t const* terrain_data = terrain_bmp.get_pixel_data().data();
+
+	std::vector<bool> province_checklist(provinces.size());
+	std::vector<distribution_t> terrain_type_pixels_list(provinces.size());
+	bool ret = true;
+	std::unordered_set<colour_t> unrecognised_province_colours;
+
+	for (size_t y = 0; y < height; ++y) {
+		for (size_t x = 0; x < width; ++x) {
+			const size_t idx = x + y * width;
+
+			const colour_t province_colour = colour_at(province_data, idx);
+			if (x > 0) {
+				const size_t jdx = idx - 1;
+				if (colour_at(province_data, jdx) == province_colour) {
+					province_shape_image[idx].index = province_shape_image[jdx].index;
+					goto set_terrain;
+				}
+			}
+			if (y > 0) {
+				const size_t jdx = idx - width;
+				if (colour_at(province_data, jdx) == province_colour) {
+					province_shape_image[idx].index = province_shape_image[jdx].index;
+					goto set_terrain;
+				}
+			}
+			{
+				const Province::index_t index = get_index_from_colour(province_colour);
+				if (index != Province::NULL_INDEX) {
+					province_checklist[index - 1] = true;
+					province_shape_image[idx].index = index;
+					goto set_terrain;
+				}
+			}
+			if (unrecognised_province_colours.find(province_colour) == unrecognised_province_colours.end()) {
+				unrecognised_province_colours.insert(province_colour);
+				if (detailed_errors) {
+					Logger::warning("Unrecognised province colour ", colour_to_hex_string(province_colour),
+						" at (", x, ", ", y, ")");
+				}
+			}
+			province_shape_image[idx].index = Province::NULL_INDEX;
+
+		set_terrain:
+			const TerrainTypeMapping::index_t terrain = terrain_data[idx];
+			TerrainTypeMapping const* mapping = terrain_type_manager.get_terrain_type_mapping_for(terrain);
+			if (mapping != nullptr) {
+				if (province_shape_image[idx].index != Province::NULL_INDEX) {
+					terrain_type_pixels_list[province_shape_image[idx].index - 1][&mapping->get_type()]++;
+				}
+
+				province_shape_image[idx].terrain = mapping->get_has_texture() && terrain < terrain_type_manager.get_terrain_texture_limit() ? terrain + 1 : 0;
+			} else {
+				province_shape_image[idx].terrain = 0;
+			}
+		}
+	}
+
+	if (!unrecognised_province_colours.empty()) {
+		Logger::warning("Province image contains ", unrecognised_province_colours.size(), " unrecognised province colours");
+	}
+
+	size_t missing = 0;
+	for (size_t idx = 0; idx < province_checklist.size(); ++idx) {
+		Province* province = provinces.get_item_by_index(idx);
+		province->_set_terrain_type(reinterpret_cast<TerrainType const*>(get_largest_item(terrain_type_pixels_list[idx]).first));
+		if (!province_checklist[idx]) {
+			if (detailed_errors) {
+				Logger::error("Province missing from shape image: ", province->to_string());
+			}
+			missing++;
+		}
+	}
+	if (missing > 0) {
+		Logger::error("Province image is missing ", missing, " province colours");
+		ret = false;
+	}
+
+	return ret;
+}
+
 /* REQUIREMENTS:
  * MAP-19, MAP-84
  */
@@ -530,4 +561,10 @@ bool Map::_generate_province_adjacencies() {
 	}
 
 	return changed;
+}
+
+bool Map::generate_and_load_province_adjacencies(std::vector<ovdl::csv::LineObject> const& additional_adjacencies) {
+	bool ret = _generate_province_adjacencies();
+	// TODO - read additional adjacencies
+	return ret;
 }

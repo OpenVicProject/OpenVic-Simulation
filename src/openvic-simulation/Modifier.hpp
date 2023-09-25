@@ -37,6 +37,9 @@ namespace OpenVic {
 		ModifierValue(ModifierValue const&);
 		ModifierValue(ModifierValue&&);
 
+		ModifierValue& operator=(ModifierValue const&);
+		ModifierValue& operator=(ModifierValue&&);
+
 		/* Removes effect entries with a value of zero. */
 		void trim();
 		size_t get_effect_count() const;
@@ -98,6 +101,8 @@ namespace OpenVic {
 		bool add_modifier(const std::string_view identifier, ModifierValue&& values, Modifier::icon_t icon);
 		IDENTIFIER_REGISTRY_ACCESSORS(Modifier, modifier)
 
-		NodeTools::node_callback_t expect_modifier_value(NodeTools::callback_t<ModifierValue&&> callback) const;
+		bool setup_modifier_effects();
+
+		NodeTools::node_callback_t expect_modifier_value(NodeTools::callback_t<ModifierValue&&> callback, NodeTools::key_value_callback_t default_callback) const;
 	};
 }
