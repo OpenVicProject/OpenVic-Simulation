@@ -501,7 +501,6 @@ namespace OpenVic {
 			// The base price of 0.7 for Wool can be seen in program output data
 
 			check_base_price("wool", "0.7", "ECON_261");
-
 		}
 
 		void check_base_price(std::string identifier, std::string value, std::string req_name) {
@@ -510,6 +509,7 @@ namespace OpenVic {
 			req->set_target_value(value);
 			req->set_actual_value(base_price);
 			if (base_price == value) req->set_pass(true);
+			else req->set_pass(false);
 		}
 	};
 }

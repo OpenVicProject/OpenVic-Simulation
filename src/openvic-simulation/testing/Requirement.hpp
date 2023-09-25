@@ -10,6 +10,7 @@ namespace OpenVic {
 		std::string text;
 		std::string acceptance_criteria;
 		bool pass = false;	// Explicitly false to begin
+		bool tested = false;
 
 		// Initialised and used during script execution
 		std::string target_value;
@@ -28,6 +29,7 @@ namespace OpenVic {
 		std::string get_text();
 		std::string get_acceptance_criteria();
 		bool get_pass();
+		bool get_tested();
 		std::string get_target_value();
 		std::string get_actual_value();
 
@@ -36,6 +38,7 @@ namespace OpenVic {
 		void set_text(std::string in_text);
 		void set_acceptance_criteria(std::string in_acceptance_criteria);
 		void set_pass(bool in_pass);
+		void set_tested(bool in_tested);
 		void set_target_value(std::string in_target_value);
 		void set_actual_value(std::string in_actual_value);
 	};

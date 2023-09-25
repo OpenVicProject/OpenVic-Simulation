@@ -25,6 +25,7 @@ namespace OpenVic {
 		Requirement* get_requirement_by_id(std::string id);
 		std::vector<Requirement*> get_passed_requirements();
 		std::vector<Requirement*> get_failed_requirements();
+		std::vector<Requirement*> get_untested_requirements();
 		GameManager* get_game_manager();
 		std::string get_script_name();
 

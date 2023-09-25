@@ -41,17 +41,47 @@ void Testing::execute_all_scripts() {
 
 void Testing::report_results() {
 	std::ofstream test_results;
-	_mkdir("..\\src\\openvic - simulation\\testing\\test_results");
+	// _mkdir("..\\src\\openvic - simulation\\testing\\test_results"); - replace with compatible version (boost?)
 	test_results.open("..\\src\\openvic-simulation\\testing\\test_results\\results.txt");
 	for (auto test_script : test_scripts) {
 		std::vector<OpenVic::Requirement*> reqs = test_script->get_requirements();
 		std::vector<OpenVic::Requirement*> passed_reqs = test_script->get_passed_requirements();
-		std::vector<OpenVic::Requirement*> failed_reqs = test_script->get_passed_requirements();
+		std::vector<OpenVic::Requirement*> failed_reqs = test_script->get_failed_requirements();
+		std::vector<OpenVic::Requirement*> untested_reqs = test_script->get_untested_requirements();
 
 		test_results << test_script->get_script_name() << ":" << std::endl;
+		test_results << "\t" << "Requirements for Test" << std::endl;
+		test_results << "\t";
 		for (auto req : reqs) {
 			test_results << req->get_id() << " ";
 		}
+		if (reqs.size() < 1) test_results << "None";
+		test_results << std::endl << std::endl;
+
+		test_results << "\t"<< "Passed Requirements" << std::endl;
+		test_results << "\t";
+		for (auto req : passed_reqs) {
+			test_results << req->get_id() << " ";
+		}
+		if (passed_reqs.size() < 1) test_results << "None";
+		test_results << std::endl << std::endl;
+
+		test_results << "\t" << "Failed Requirements" << std::endl;
+		test_results << "\t";
+		for (auto req : failed_reqs) {
+			test_results << req->get_id() << " ";
+		}
+		if (failed_reqs.size() < 1) test_results << "None";
+		test_results << std::endl << std::endl;
+
+		test_results << "\t" << "Untested Requirements" << std::endl;
+		test_results << "\t";
+		for (auto req : untested_reqs) {
+			test_results << req->get_id() << " ";
+		}
+		if (untested_reqs.size() < 1) test_results << "None";
+		test_results << std::endl << std::endl;
+
 		test_results << std::endl<< std::endl;
 	}
 	test_results.close();
