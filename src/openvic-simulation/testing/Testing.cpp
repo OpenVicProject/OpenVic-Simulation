@@ -1,7 +1,6 @@
 #include <testing/Testing.hpp>
 #include <testing/TestScript.hpp>
 #include <fstream>
-#include <direct.h>
 
 using namespace OpenVic;
 
