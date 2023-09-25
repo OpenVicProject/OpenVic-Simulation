@@ -504,7 +504,10 @@ namespace OpenVic {
 		}
 
 		void check_base_price(std::string identifier, std::string value, std::string req_name) {
-			std::string base_price = get_game_manager()->get_good_manager().get_good_by_identifier(identifier)->get_base_price().to_string();
+			fixed_point_t base_price_fp = get_game_manager()->get_good_manager().get_good_by_identifier(identifier)->get_base_price();
+			std::stringstream ss;
+			ss << std::fixed << std::setprecision(1) << base_price_fp.to_double();
+			std::string base_price = ss.str();
 			Requirement* req = get_requirement_by_id(req_name);
 			req->set_target_value(value);
 			req->set_actual_value(base_price);
