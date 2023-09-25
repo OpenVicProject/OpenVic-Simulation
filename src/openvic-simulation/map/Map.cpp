@@ -404,6 +404,10 @@ bool Map::load_region_file(ast::NodeCPtr root) {
 }
 
 static constexpr colour_t colour_at(uint8_t const* colour_data, int32_t idx) {
+	/* colour_data is filled with BGR byte triplets - to get pixel idx as a
+	 * single RGB value, multiply idx by 3 to get the index of the corresponding
+	 * triplet, then combine the bytes in reverse order. 
+	 */
 	idx *= 3;
 	return (colour_data[idx + 2] << 16) | (colour_data[idx + 1] << 8) | colour_data[idx];
 }

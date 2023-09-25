@@ -134,10 +134,11 @@ bool GameManager::expand_building(Province::index_t province_index, const std::s
 
 static constexpr colour_t LOW_ALPHA_VALUE = float_to_alpha_value(0.4f);
 static constexpr colour_t HIGH_ALPHA_VALUE = float_to_alpha_value(0.7f);
-static constexpr colour_t LAND_COLOUR = 0x0D7017;
-static constexpr colour_t WATER_COLOUR = 0x4287F5;
 
 static colour_t default_colour(Province const& province) {
+	/* Nice looking colours to blend with the terrain textures */
+	static constexpr colour_t LAND_COLOUR = 0x0D7017;
+	static constexpr colour_t WATER_COLOUR = 0x4287F5;
 	return LOW_ALPHA_VALUE | (province.get_water() ? WATER_COLOUR : LAND_COLOUR);
 }
 
