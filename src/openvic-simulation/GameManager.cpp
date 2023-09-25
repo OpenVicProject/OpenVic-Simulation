@@ -132,16 +132,23 @@ bool GameManager::expand_building(Province::index_t province_index, const std::s
 	return province->expand_building(building_type_identifier);
 }
 
+static constexpr colour_t LOW_ALPHA_VALUE = float_to_alpha_value(0.4f);
+static constexpr colour_t HIGH_ALPHA_VALUE = float_to_alpha_value(0.7f);
+static constexpr colour_t LAND_COLOUR = 0x0D7017;
+static constexpr colour_t WATER_COLOUR = 0x4287F5;
+
+static colour_t default_colour(Province const& province) {
+	return LOW_ALPHA_VALUE | (province.get_water() ? WATER_COLOUR : LAND_COLOUR);
+}
+
 bool GameManager::load_hardcoded_defines() {
 	bool ret = true;
 
-	static constexpr colour_t LOW_ALPHA_VALUE = float_to_alpha_value(0.4f);
-	static constexpr colour_t HIGH_ALPHA_VALUE = float_to_alpha_value(0.7f);
 	using mapmode_t = std::pair<std::string, Mapmode::colour_func_t>;
 	const std::vector<mapmode_t> mapmodes {
 		{ "mapmode_terrain",
 			[](Map const&, Province const& province) -> colour_t {
-				return LOW_ALPHA_VALUE | (province.get_water() ? 0x4287F5 : 0x0D7017);
+				return default_colour(province);
 			} },
 		{ "mapmode_province",
 			[](Map const&, Province const& province) -> colour_t {
@@ -150,19 +157,22 @@ bool GameManager::load_hardcoded_defines() {
 		{ "mapmode_region",
 			[](Map const&, Province const& province) -> colour_t {
 				Region const* region = province.get_region();
-				if (region != nullptr) return HIGH_ALPHA_VALUE | region->get_colour();
-				return NULL_COLOUR;
+				return region != nullptr ? HIGH_ALPHA_VALUE | region->get_colour() : default_colour(province);
 			} },
 		{ "mapmode_index",
 			[](Map const& map, Province const& province) -> colour_t {
 				const colour_t f = fraction_to_colour_byte(province.get_index(), map.get_province_count() + 1);
 				return HIGH_ALPHA_VALUE | (f << 16) | (f << 8) | f;
 			} },
+		{ "mapmode_terrain_type",
+			[](Map const& map, Province const& province) -> colour_t {
+				TerrainType const* terrarin_type = province.get_terrain_type();
+				return terrarin_type != nullptr ? HIGH_ALPHA_VALUE | terrarin_type->get_colour() : default_colour(province);
+			} },
 		{ "mapmode_rgo",
 			[](Map const& map, Province const& province) -> colour_t {
 				Good const* rgo = province.get_rgo();
-				if (rgo != nullptr) return HIGH_ALPHA_VALUE | rgo->get_colour();
-				return NULL_COLOUR;
+				return rgo != nullptr ? HIGH_ALPHA_VALUE | rgo->get_colour() : default_colour(province);
 			} },
 		{ "mapmode_infrastructure",
 			[](Map const& map, Province const& province) -> colour_t {
@@ -176,7 +186,7 @@ bool GameManager::load_hardcoded_defines() {
 					}
 					return HIGH_ALPHA_VALUE | val;
 				}
-				return NULL_COLOUR;
+				return default_colour(province);
 			} },
 		{ "mapmode_population",
 			[](Map const& map, Province const& province) -> colour_t {
@@ -185,12 +195,12 @@ bool GameManager::load_hardcoded_defines() {
 		{ "mapmode_culture",
 			[](Map const& map, Province const& province) -> colour_t {
 				HasIdentifierAndColour const* largest = get_largest_item(province.get_culture_distribution()).first;
-				return largest != nullptr ? HIGH_ALPHA_VALUE | largest->get_colour() : NULL_COLOUR;
+				return largest != nullptr ? HIGH_ALPHA_VALUE | largest->get_colour() : default_colour(province);
 			} },
 		{ "mapmode_religion",
 			[](Map const& map, Province const& province) -> colour_t {
 				HasIdentifierAndColour const* largest = get_largest_item(province.get_religion_distribution()).first;
-				return largest != nullptr ? HIGH_ALPHA_VALUE | largest->get_colour() : NULL_COLOUR;
+				return largest != nullptr ? HIGH_ALPHA_VALUE | largest->get_colour() : default_colour(province);
 			} }
 	};
 	for (mapmode_t const& mapmode : mapmodes)

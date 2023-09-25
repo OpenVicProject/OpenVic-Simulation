@@ -190,7 +190,7 @@ Date Date::from_string(char const* const str, char const* const end, bool* succe
 
 	bool sub_successful = false;
 	uint64_t val = StringUtils::string_to_uint64(str, year_end, &sub_successful, 10);
-	if (!sub_successful || val >= 1 << (8 * sizeof(year_t))) {
+	if (!sub_successful || val > std::numeric_limits<year_t>::max()) {
 		Logger::error("Failed to read year: ", std::string_view { str, static_cast<size_t>(end - str) });
 		if (successful != nullptr) *successful = false;
 		return { year, month, day };

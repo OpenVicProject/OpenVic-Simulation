@@ -1,5 +1,7 @@
 #include "TerrainType.hpp"
 
+#include <limits>
+
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;
 
@@ -59,7 +61,19 @@ bool TerrainTypeManager::add_terrain_type_mapping(const std::string_view identif
 		Logger::error("Null terrain type for mapping ", identifier);
 		return false;
 	}
-	return terrain_type_mappings.add_item({ identifier, *type, std::move(terrain_indicies), priority, has_texture });
+	bool ret = true;
+	for (TerrainTypeMapping::index_t idx : terrain_indicies) {
+		const terrain_type_mappings_map_t::const_iterator it = terrain_type_mappings_map.find(idx);
+		if (it == terrain_type_mappings_map.end()) {
+			terrain_type_mappings_map.emplace(idx, terrain_type_mappings.size());
+		} else {
+			Logger::error("Terrain index ", static_cast<size_t>(idx), " cannot map to ", identifier,
+				" as it already maps to ", terrain_type_mappings.get_item_by_index(it->second));
+			ret = false;
+		}
+	}
+	ret &= terrain_type_mappings.add_item({ identifier, *type, std::move(terrain_indicies), priority, has_texture });
+	return ret;
 }
 
 bool TerrainTypeManager::_load_terrain_type_categories(ModifierManager const& modifier_manager, ast::NodeCPtr root) {
@@ -115,7 +129,7 @@ bool TerrainTypeManager::_load_terrain_type_mapping(std::string_view mapping_key
 		"type", ONE_EXACTLY, expect_terrain_type_identifier(assign_variable_callback_pointer(type)),
 		"color", ONE_EXACTLY, expect_list_reserve_length(terrain_indicies, expect_uint(
 			[&terrain_indicies](uint64_t val) -> bool {
-				if (val <= 1 << 8 * sizeof(TerrainTypeMapping::index_t)) {
+				if (val <= std::numeric_limits<TerrainTypeMapping::index_t>::max()) {
 					TerrainTypeMapping::index_t index = val;
 					if (std::find(terrain_indicies.begin(), terrain_indicies.end(), index) == terrain_indicies.end()) {
 						terrain_indicies.push_back(val);
@@ -139,6 +153,14 @@ bool TerrainTypeManager::_load_terrain_type_mapping(std::string_view mapping_key
 	}
 	ret &= add_terrain_type_mapping(mapping_key, type, std::move(terrain_indicies), priority, has_texture);
 	return true;
+}
+
+TerrainTypeMapping const* TerrainTypeManager::get_terrain_type_mapping_for(TerrainTypeMapping::index_t idx) const {
+	const terrain_type_mappings_map_t::const_iterator it = terrain_type_mappings_map.find(idx);
+	if (it != terrain_type_mappings_map.end()) {
+		return terrain_type_mappings.get_item_by_index(it->second);
+	}
+	return nullptr;
 }
 
 TerrainTypeMapping::index_t TerrainTypeManager::get_terrain_texture_limit() const {
