@@ -242,32 +242,49 @@ node_callback_t NodeTools::expect_dictionary(key_value_callback_t callback) {
 	return expect_dictionary_and_length(default_length_callback, callback);
 }
 
+void NodeTools::add_key_map_entry(key_map_t& key_map, const std::string_view key, dictionary_entry_t::expected_count_t expected_count, node_callback_t callback) {
+	if (key_map.find(key) == key_map.end()) {
+		key_map.emplace(key, dictionary_entry_t { expected_count, callback });
+	} else {
+		Logger::error("Duplicate expected dictionary key: ", key);
+	}
+}
+
+key_value_callback_t NodeTools::dictionary_keys_callback(key_map_t& key_map, bool allow_other_keys) {
+	return [&key_map, allow_other_keys](std::string_view key, ast::NodeCPtr value) -> bool {
+		const key_map_t::iterator it = key_map.find(key);
+		if (it == key_map.end()) {
+			if (allow_other_keys) return true;
+			Logger::error("Invalid dictionary key: ", key);
+			return false;
+		}
+		dictionary_entry_t& entry = it->second;
+		if (++entry.count > 1 && !entry.can_repeat()) {
+			Logger::error("Invalid repeat of dictionary key: ", key);
+			return false;
+		}
+		return entry.callback(value);
+	};
+}
+
+bool NodeTools::check_key_map_counts(key_map_t const& key_map) {
+	bool ret = true;
+	for (key_map_t::value_type const& key_entry : key_map) {
+		dictionary_entry_t const& entry = key_entry.second;
+		if (entry.must_appear() && entry.count < 1) {
+			Logger::error("Mandatory dictionary key not present: ", key_entry.first);
+			ret = false;
+		}
+	}
+	return ret;
+}
+
 node_callback_t NodeTools::_expect_dictionary_keys_and_length(length_callback_t length_callback, bool allow_other_keys, key_map_t&& key_map) {
 	return [length_callback, allow_other_keys, key_map = std::move(key_map)](ast::NodeCPtr node) mutable -> bool {
 		bool ret = expect_dictionary_and_length(
-			length_callback,
-			[&key_map, allow_other_keys](std::string_view key, ast::NodeCPtr value) -> bool {
-				const key_map_t::iterator it = key_map.find(key);
-				if (it == key_map.end()) {
-					if (allow_other_keys) return true;
-					Logger::error("Invalid dictionary key: ", key);
-					return false;
-				}
-				dictionary_entry_t& entry = it->second;
-				if (++entry.count > 1 && !entry.can_repeat()) {
-					Logger::error("Invalid repeat of dictionary key: ", key);
-					return false;
-				}
-				return entry.callback(value);
-			}
+			length_callback, dictionary_keys_callback(key_map, allow_other_keys)
 		)(node);
-		for (key_map_t::value_type const& key_entry : key_map) {
-			dictionary_entry_t const& entry = key_entry.second;
-			if (entry.must_appear() && entry.count < 1) {
-				Logger::error("Mandatory dictionary key not present: ", key_entry.first);
-				ret = false;
-			}
-		}
+		ret &= check_key_map_counts(key_map);
 		return ret;
 	};
 }
