@@ -24,5 +24,6 @@ namespace OpenVic {
 
 		void execute_all_scripts();
 		void report_results();
+		void report_result(std::string req_title, std::ofstream& outfile, std::vector<Requirement*> reqs);
 	};
 }
