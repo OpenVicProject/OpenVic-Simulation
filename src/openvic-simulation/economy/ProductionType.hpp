@@ -1,19 +1,15 @@
 #pragma once
 
-#include <string_view>
-#include <vector>
-#include <set>
 #include "openvic-simulation/economy/Good.hpp"
 #include "openvic-simulation/pop/Pop.hpp"
 #include "openvic-simulation/types/IdentifierRegistry.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
-#include "openvic-simulation/dataloader/NodeTools.hpp"
-#include "openvic-dataloader/v2script/AbstractSyntaxTree.hpp"
 
-#define ARGS(enum_type, output) std::string_view identifier, EmployedPop owner, std::vector<EmployedPop> employees, enum_type type, \
-								size_t workforce, std::map<const Good*, fixed_point_t> input_goods, output output_goods, \
-								fixed_point_t value, std::vector<Bonus> bonuses, std::map<const Good*, fixed_point_t> efficiency, \
-								bool coastal, bool farm, bool mine
+#define PRODUCTION_TYPE_ARGS(enum_type, output) \
+	std::string_view identifier, EmployedPop owner, std::vector<EmployedPop> employees, enum_type type, \
+	Pop::pop_size_t workforce, std::map<Good const*, fixed_point_t> input_goods, output output_goods, \
+	fixed_point_t value, std::vector<Bonus> bonuses, std::map<Good const*, fixed_point_t> efficiency, \
+	bool coastal, bool farm, bool mine
 
 namespace OpenVic {
 	struct ProductionTypeManager;
@@ -22,8 +18,8 @@ namespace OpenVic {
 		friend struct ProductionTypeManager;
 
 	private:
-		PopType const* pop_type; //poptype
-		bool artisan; //set by the parser if the magic "artisan" poptype is passed
+		PopType const* pop_type; // poptype
+		bool artisan; // set by the parser if the magic "artisan" poptype is passed
 		enum struct effect_t {
 			INPUT,
 			OUTPUT,
@@ -33,10 +29,10 @@ namespace OpenVic {
 		fixed_point_t amount;
 
 		EmployedPop(PopType const* pop_type, bool artisan, effect_t effect, fixed_point_t effect_multiplier, fixed_point_t amount);
-	
+
 	public:
-		EmployedPop() = default; 
-	
+		EmployedPop() = default;
+
 		PopType const* get_pop_type();
 		bool is_artisan();
 		effect_t get_effect();
@@ -45,7 +41,7 @@ namespace OpenVic {
 	};
 
 	struct Bonus {
-		//TODO: trigger condition(s)
+		// TODO: trigger condition(s)
 		const fixed_point_t value;
 	};
 
@@ -60,20 +56,20 @@ namespace OpenVic {
 			RGO,
 			ARTISAN
 		} type;
-		const size_t workforce;
+		const Pop::pop_size_t workforce;
 
-		const std::map<const Good*, fixed_point_t> input_goods; //farms generally lack this
-		const Good* output_goods;
+		const std::map<Good const*, fixed_point_t> input_goods; // farms generally lack this
+		Good const* output_goods;
 		const fixed_point_t value;
-		const std::vector<Bonus> bonuses; //some
+		const std::vector<Bonus> bonuses; // some
 
-		const std::map<const Good*, fixed_point_t> efficiency; //some
-		const bool coastal; //is_coastal some(false)
-		
-		const bool farm; //some (false)
-		const bool mine; //some (false)
+		const std::map<Good const*, fixed_point_t> efficiency; // some
+		const bool coastal; // is_coastal some(false)
 
-		ProductionType(ARGS(type_t, const Good*));
+		const bool farm; // some (false)
+		const bool mine; // some (false)
+
+		ProductionType(PRODUCTION_TYPE_ARGS(type_t, Good const*));
 
 	public:
 		ProductionType(ProductionType&&) = default;
@@ -81,14 +77,14 @@ namespace OpenVic {
 		EmployedPop const& get_owner() const;
 		std::vector<EmployedPop> const& get_employees() const;
 		type_t get_type() const;
-		size_t get_workforce() const;
+		Pop::pop_size_t get_workforce() const;
 
-		std::map<const Good*, fixed_point_t> const& get_input_goods();
+		std::map<Good const*, fixed_point_t> const& get_input_goods();
 		const Good* get_output_goods() const;
 		fixed_point_t get_value() const;
 		std::vector<Bonus> const& get_bonuses();
 
-		std::map<const Good*, fixed_point_t> const& get_efficiency();
+		std::map<Good const*, fixed_point_t> const& get_efficiency();
 		bool is_coastal() const;
 
 		bool is_farm() const;
@@ -99,15 +95,15 @@ namespace OpenVic {
 	private:
 		IdentifierRegistry<ProductionType> production_types;
 
-		NodeTools::node_callback_t _expect_employed_pop(GoodManager& good_manager, PopManager& pop_manager, 
+		NodeTools::node_callback_t _expect_employed_pop(GoodManager& good_manager, PopManager& pop_manager,
 			NodeTools::callback_t<EmployedPop> cb);
-		NodeTools::node_callback_t _expect_employed_pop_list(GoodManager& good_manager, PopManager& pop_manager, 
+		NodeTools::node_callback_t _expect_employed_pop_list(GoodManager& good_manager, PopManager& pop_manager,
 			NodeTools::callback_t<std::vector<EmployedPop>> cb);
-	
+
 	public:
 		ProductionTypeManager();
 
-		bool add_production_type(ARGS(std::string_view, std::string_view), GoodManager& good_manager);
+		bool add_production_type(PRODUCTION_TYPE_ARGS(std::string_view, std::string_view), GoodManager& good_manager);
 		IDENTIFIER_REGISTRY_ACCESSORS(ProductionType, production_type)
 
 		bool load_production_types_file(GoodManager& good_manager, PopManager& pop_manager, ast::NodeCPtr root);

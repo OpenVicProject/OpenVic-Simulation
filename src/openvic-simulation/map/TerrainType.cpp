@@ -82,35 +82,10 @@ bool TerrainTypeManager::_load_terrain_type_categories(ModifierManager const& mo
 			ModifierValue values;
 			colour_t colour = NULL_COLOUR;
 			bool is_water = false;
-			bool has_colour = false, has_is_water = false;
-			bool ret = modifier_manager.expect_modifier_value(move_variable_callback(values),
-				[&colour, &has_colour, &is_water, &has_is_water](std::string_view key, ast::NodeCPtr value) -> bool {
-					if (key == "color") {
-						if (!has_colour) {
-							has_colour = true;
-							return expect_colour(assign_variable_callback(colour))(value);
-						} else {
-							Logger::error("Duplicate terrain type colour key!");
-							return false;
-						}
-					} else if (key == "is_water") {
-						if (!has_is_water) {
-							has_is_water = true;
-							return expect_bool(assign_variable_callback(is_water))(value);
-						} else {
-							Logger::error("Duplicate terrain type is_water key!");
-							return false;
-						}
-					} else {
-						Logger::error("Invalid terrain type entry key: ", key);
-						return false;
-					}
-				} 
+			bool ret = modifier_manager.expect_modifier_value_and_keys(move_variable_callback(values),
+				"color", ONE_EXACTLY, expect_colour(assign_variable_callback(colour)),
+				"is_water", ZERO_OR_ONE, expect_bool(assign_variable_callback(is_water))
 			)(type_node);
-			if (!has_colour) {
-				Logger::error("Terrain type missing color key: ", type_key);
-				ret = false;
-			}
 			ret &= add_terrain_type(type_key, colour, std::move(values), is_water);
 			return ret;
 		}

@@ -92,6 +92,17 @@ namespace OpenVic {
 		IdentifierRegistry<ModifierEffect> modifier_effects;
 		IdentifierRegistry<Modifier> modifiers;
 
+		NodeTools::node_callback_t _expect_modifier_value_and_keys(NodeTools::callback_t<ModifierValue&&> modifier_callback, NodeTools::key_map_t&& key_map) const;
+
+		template<typename... Args>
+		NodeTools::node_callback_t _expect_modifier_value_and_keys(
+			NodeTools::callback_t<ModifierValue&&> modifier_callback, NodeTools::key_map_t&& key_map,
+			const std::string_view key, NodeTools::dictionary_entry_t::expected_count_t expected_count, NodeTools::node_callback_t callback,
+			Args... args) const {
+			NodeTools::add_key_map_entry(key_map, key, expected_count, callback);
+			return _expect_modifier_value_and_keys(modifier_callback, std::move(key_map), args...);
+		}
+
 	public:
 		ModifierManager();
 
@@ -103,6 +114,11 @@ namespace OpenVic {
 
 		bool setup_modifier_effects();
 
-		NodeTools::node_callback_t expect_modifier_value(NodeTools::callback_t<ModifierValue&&> callback, NodeTools::key_value_callback_t default_callback) const;
+		NodeTools::node_callback_t expect_modifier_value(NodeTools::callback_t<ModifierValue&&> modifier_callback, NodeTools::key_value_callback_t default_callback) const;
+
+		template<typename... Args>
+		NodeTools::node_callback_t expect_modifier_value_and_keys(NodeTools::callback_t<ModifierValue&&> modifier_callback, Args... args) const {
+			return _expect_modifier_value_and_keys(modifier_callback, {}, args...);
+		}
 	};
 }

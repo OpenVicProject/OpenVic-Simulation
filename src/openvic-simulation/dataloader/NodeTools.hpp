@@ -72,6 +72,10 @@ namespace OpenVic {
 		using enum dictionary_entry_t::expected_count_t;
 		using key_map_t = std::map<std::string, dictionary_entry_t, std::less<void>>;
 
+		void add_key_map_entry(key_map_t& key_map, const std::string_view key, dictionary_entry_t::expected_count_t expected_count, node_callback_t callback);
+		key_value_callback_t dictionary_keys_callback(key_map_t& key_map, bool allow_other_keys);
+		bool check_key_map_counts(key_map_t const& key_map);
+
 		constexpr struct allow_other_keys_t {} ALLOW_OTHER_KEYS;
 
 		node_callback_t _expect_dictionary_keys_and_length(length_callback_t length_callback, bool allow_other_keys, key_map_t&& key_map);
@@ -81,11 +85,7 @@ namespace OpenVic {
 			bool allow_other_keys, key_map_t&& key_map,
 			const std::string_view key, dictionary_entry_t::expected_count_t expected_count, node_callback_t callback,
 			Args... args) {
-			if (key_map.find(key) == key_map.end()) {
-				key_map.emplace(key, dictionary_entry_t { expected_count, callback });
-			} else {
-				Logger::error("Duplicate expected dictionary key: ", key);
-			}
+			add_key_map_entry(key_map, key, expected_count, callback);
 			return _expect_dictionary_keys_and_length(length_callback, allow_other_keys, std::move(key_map), args...);
 		}
 

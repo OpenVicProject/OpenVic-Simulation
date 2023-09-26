@@ -5,6 +5,7 @@
 #include <cstdint>
 #include <cstdlib>
 #include <limits>
+#include <sstream>
 #include <string_view>
 
 #include "openvic-simulation/utility/Logger.hpp"
@@ -244,17 +245,30 @@ namespace OpenVic {
 			return NumberUtils::round_to_int64((value / static_cast<double>(ONE)) * 100000.0) / 100000.0;
 		}
 
-		std::string to_string() const {
-			fixed_point_t val = abs();
-			std::string str = std::to_string(val.to_int64_t()) + ".";
-			if (is_negative()) str = "-" + str;
+		static std::ostream& print(std::ostream& stream, fixed_point_t val, size_t decimal_places = 0) {
+			if (decimal_places > 0) {
+				fixed_point_t err = fixed_point_t::_0_50();
+				for (size_t i = decimal_places; i > 0; --i) {
+					err /= 10;
+				}
+				val += err;
+			}
+			if (val.is_negative()) stream << "-";
+			val = val.abs();
+			stream << val.to_int64_t() << ".";
 			val = val.get_frac();
 			do {
 				val *= 10;
-				str.push_back('0' + static_cast<char>(val.to_int64_t()));
+				stream << static_cast<char>('0' + val.to_int64_t());
 				val = val.get_frac();
-			} while (val > 0);
-			return str;
+			} while (val > 0 && --decimal_places > 0);
+			return stream;
+		}
+
+		std::string to_string(size_t decimal_places = 0) const {
+			std::stringstream str;
+			print(str, *this, decimal_places);
+			return str.str();
 		}
 
 		// Deterministic
@@ -359,7 +373,7 @@ namespace OpenVic {
 		}
 
 		friend std::ostream& operator<<(std::ostream& stream, fixed_point_t const& obj) {
-			return stream << obj.to_string();
+			return obj.print(stream, obj);
 		}
 
 		constexpr friend fixed_point_t operator-(fixed_point_t const& obj) {
@@ -427,7 +441,8 @@ namespace OpenVic {
 		}
 
 		constexpr fixed_point_t operator*=(fixed_point_t const& obj) {
-			value *= obj.value >> PRECISION;
+			value *= obj.value;
+			value >>= PRECISION;
 			return *this;
 		}
 

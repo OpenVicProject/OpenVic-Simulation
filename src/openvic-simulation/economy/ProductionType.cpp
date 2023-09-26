@@ -1,9 +1,6 @@
 #include "ProductionType.hpp"
-#include <string_view>
-#include "dataloader/NodeTools.hpp"
-#include "openvic-dataloader/v2script/AbstractSyntaxTree.hpp"
-#include "pop/Pop.hpp"
-#include "utility/Logger.hpp"
+
+#include <set>
 
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;
@@ -31,7 +28,7 @@ fixed_point_t EmployedPop::get_amount() {
 	return amount;
 }
 
-ProductionType::ProductionType(ARGS(type_t, const Good*)) : HasIdentifier { identifier }, owner { owner },
+ProductionType::ProductionType(PRODUCTION_TYPE_ARGS(type_t, Good const*)) : HasIdentifier { identifier }, owner { owner },
 	employees { employees }, type { type }, workforce { workforce }, input_goods { input_goods }, output_goods { output_goods },
 	value { value }, bonuses { bonuses }, efficiency { efficiency }, coastal { coastal }, farm { farm }, mine { mine } {}
 
@@ -47,15 +44,15 @@ ProductionType::type_t ProductionType::get_type() const {
 	return type;
 }
 
-size_t ProductionType::get_workforce() const {
+Pop::pop_size_t ProductionType::get_workforce() const {
 	return workforce;
 }
 
-std::map<const Good*, fixed_point_t> const& ProductionType::get_input_goods() {
+std::map<Good const*, fixed_point_t> const& ProductionType::get_input_goods() {
 	return input_goods;
 }
 
-const Good* ProductionType::get_output_goods() const {
+Good const* ProductionType::get_output_goods() const {
 	return output_goods;
 }
 
@@ -67,7 +64,7 @@ std::vector<Bonus> const& ProductionType::get_bonuses() {
 	return bonuses;
 }
 
-std::map<const Good*, fixed_point_t> const& ProductionType::get_efficiency() {
+std::map<Good const*, fixed_point_t> const& ProductionType::get_efficiency() {
 	return efficiency;
 }
 
@@ -87,7 +84,7 @@ ProductionTypeManager::ProductionTypeManager() : production_types { "production 
 
 node_callback_t ProductionTypeManager::_expect_employed_pop(GoodManager& good_manager, PopManager& pop_manager,
 	callback_t<EmployedPop> cb) {
-	
+
 	return [this, &good_manager, &pop_manager, cb](ast::NodeCPtr node) -> bool {
 		std::string_view pop_type, effect;
 		fixed_point_t effect_multiplier = 1, amount = 1;
@@ -125,7 +122,7 @@ node_callback_t ProductionTypeManager::_expect_employed_pop(GoodManager& good_ma
 
 node_callback_t ProductionTypeManager::_expect_employed_pop_list(GoodManager& good_manager, PopManager& pop_manager,
 	callback_t<std::vector<EmployedPop>> cb) {
-	
+
 	return [this, &good_manager, &pop_manager, cb](ast::NodeCPtr node) -> bool {
 		std::vector<EmployedPop> employed_pops;
 		bool res = expect_list([this, &good_manager, &pop_manager, &employed_pops](ast::NodeCPtr node) -> bool {
@@ -139,12 +136,12 @@ node_callback_t ProductionTypeManager::_expect_employed_pop_list(GoodManager& go
 }
 
 #define POPTYPE_CHECK(employed_pop) \
-	if ((employed_pop.pop_type == nullptr && !employed_pop.artisan) || (employed_pop.pop_type != nullptr && employed_pop.artisan)) {\
+	if ((employed_pop.pop_type == nullptr && !employed_pop.artisan) || (employed_pop.pop_type != nullptr && employed_pop.artisan)) { \
 		Logger::error("Invalid pop type parsed for owner of production type ", identifier, "!"); \
 		return false; \
 	}
 
-bool ProductionTypeManager::add_production_type(ARGS(std::string_view, std::string_view), GoodManager& good_manager) {
+bool ProductionTypeManager::add_production_type(PRODUCTION_TYPE_ARGS(std::string_view, std::string_view), GoodManager& good_manager) {
 	if (identifier.empty()) {
 		Logger::error("Invalid production type identifier - empty!");
 		return false;
@@ -175,15 +172,15 @@ bool ProductionTypeManager::add_production_type(ARGS(std::string_view, std::stri
 		POPTYPE_CHECK(employees[i])
 	}
 
-	const Good* output = good_manager.get_good_by_identifier(output_goods);
+	Good const* output = good_manager.get_good_by_identifier(output_goods);
 	if (output == nullptr) {
 		Logger::error("Invalid output ", output_goods, " for production type ", identifier, "!");
 		return false;
 	}
 
-	return production_types.add_item({ 
+	return production_types.add_item({
 		identifier, owner, employees, type_enum, workforce, input_goods,
-		output, value, bonuses, efficiency, coastal, farm, mine 
+		output, value, bonuses, efficiency, coastal, farm, mine
 	});
 }
 
@@ -191,7 +188,7 @@ bool ProductionTypeManager::add_production_type(ARGS(std::string_view, std::stri
 			"owner", ZERO_OR_ONE, _expect_employed_pop(good_manager, pop_manager, move_variable_callback(owner)), \
 			"employees", ZERO_OR_ONE, _expect_employed_pop_list(good_manager, pop_manager, move_variable_callback(employees)), \
 			"type", ZERO_OR_ONE, expect_identifier(assign_variable_callback(type)), \
-			"workforce", ZERO_OR_ONE, expect_uint(assign_variable_callback(workforce)), \
+			"workforce", ZERO_OR_ONE, expect_uint(assign_variable_callback_uint("workforce", workforce)), \
 			"input_goods", ZERO_OR_ONE, good_manager.expect_good_decimal_map(move_variable_callback(input_goods)), \
 			"output_goods", ZERO_OR_ONE, expect_identifier(assign_variable_callback(output_goods)), \
 			"value", ZERO_OR_ONE, expect_fixed_point(assign_variable_callback(value)), \
@@ -204,7 +201,7 @@ bool ProductionTypeManager::add_production_type(ARGS(std::string_view, std::stri
 bool ProductionTypeManager::load_production_types_file(GoodManager& good_manager, PopManager& pop_manager, ast::NodeCPtr root) {
 	size_t expected_types = 0;
 
-	//pass 1: find and store template identifiers
+	// pass 1: find and store template identifiers
 	std::set<std::string_view> templates;
 	std::map<std::string_view, std::string_view> template_target_map;
 	bool ret = expect_dictionary(
@@ -225,8 +222,8 @@ bool ProductionTypeManager::load_production_types_file(GoodManager& good_manager
 		}
 	)(root);
 
-	//pass 2: create and populate the template map
-	std::map<std::string_view, ast::NodeCPtr> template_node_map; 
+	// pass 2: create and populate the template map
+	std::map<std::string_view, ast::NodeCPtr> template_node_map;
 	expect_dictionary(
 		[this, &expected_types, &templates, &template_node_map](std::string_view key, ast::NodeCPtr value) -> bool {
 			if (templates.contains(key)) {
@@ -237,7 +234,7 @@ bool ProductionTypeManager::load_production_types_file(GoodManager& good_manager
 		}
 	)(root);
 
-	//pass 3: actually load production types
+	// pass 3: actually load production types
 	production_types.reserve(production_types.size() + expected_types);
 	ret &= expect_dictionary(
 		[this, &good_manager, &pop_manager, &template_target_map, &template_node_map](std::string_view key, ast::NodeCPtr node) -> bool {
@@ -247,15 +244,15 @@ bool ProductionTypeManager::load_production_types_file(GoodManager& good_manager
 			EmployedPop owner;
 			std::vector<EmployedPop> employees;
 			std::string_view type, output_goods;
-			size_t workforce = 0; //0 is a meaningless value -> unset
-			std::map<const Good*, fixed_point_t> input_goods, efficiency;
-			fixed_point_t value = 0; //0 is a meaningless value -> unset
+			Pop::pop_size_t workforce = 0; // 0 is a meaningless value -> unset
+			std::map<Good const*, fixed_point_t> input_goods, efficiency;
+			fixed_point_t value = 0; // 0 is a meaningless value -> unset
 			std::vector<Bonus> bonuses;
 			bool coastal = false, farm = false, mine = false;
 
 			bool ret = true;
 
-			//apply template first
+			// apply template first
 			if (template_target_map.contains(key)) {
 				std::string_view template_id = template_target_map[key];
 				if (template_node_map.contains(template_id)) {
@@ -266,7 +263,7 @@ bool ProductionTypeManager::load_production_types_file(GoodManager& good_manager
 
 			ret &= PARSE_NODE(node);
 			ret &= add_production_type(
-				key, owner, employees, type, workforce, input_goods, output_goods, value, 
+				key, owner, employees, type, workforce, input_goods, output_goods, value,
 				bonuses, efficiency, coastal, farm, mine, good_manager
 			);
 			return ret;
