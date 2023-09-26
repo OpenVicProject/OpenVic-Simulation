@@ -503,16 +503,15 @@ namespace OpenVic {
 			check_base_price("wool", "0.7", "ECON_261");
 		}
 
-		void check_base_price(std::string identifier, std::string value, std::string req_name) {
+		void check_base_price(std::string identifier, std::string target_value, std::string req_name) {
+			// Get string of base_price from goods manager
 			fixed_point_t base_price_fp = get_game_manager()->get_good_manager().get_good_by_identifier(identifier)->get_base_price();
 			std::stringstream ss;
-			ss << std::fixed << std::setprecision(1) << base_price_fp.to_double();
+			ss << std::fixed << std::setprecision(1) << base_price_fp.to_double();	// Use a single digit floating point of the value
 			std::string base_price = ss.str();
-			Requirement* req = get_requirement_by_id(req_name);
-			req->set_target_value(value);
-			req->set_actual_value(base_price);
-			if (base_price == value) req->set_pass(true);
-			else req->set_pass(false);
+
+			// Perform req checks
+			pass_or_fail_req_with_actual_and_target_values(req_name, target_value, base_price);
 		}
 	};
 }
