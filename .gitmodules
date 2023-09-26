@@ -4,3 +4,6 @@
 [submodule "scripts"]
 	path = scripts
 	url = https://github.com/OpenVicProject/scripts
+[submodule "deps/lexy-vdf"]
+	path = deps/lexy-vdf
+	url = https://github.com/OpenVicProject/lexy-vdf.git
