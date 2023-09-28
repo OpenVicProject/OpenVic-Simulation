@@ -9,4 +9,12 @@ def build_openvic_dataloader(env):
     env.Append(CPPPATH=ovdl_env.openvic_dataloader["INCPATH"])
     env.openvic_dataloader = ovdl_env.openvic_dataloader
 
+def build_lexy_vdf(env):
+    lvdf_env = SConscript("lexy-vdf/SConstruct")
+    env.Append(LIBPATH=lvdf_env.lexy_vdf["LIBPATH"])
+    env.Prepend(LIBS=lvdf_env.lexy_vdf["LIBS"])
+    env.Append(CPPPATH=lvdf_env.lexy_vdf["INCPATH"])
+    env.lexy_vdf = lvdf_env.lexy_vdf
+
 build_openvic_dataloader(env)
+build_lexy_vdf(env)
