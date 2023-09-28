@@ -103,7 +103,7 @@ namespace OpenVic {
 		friend struct BuildingManager;
 
 	private:
-		BuildingType(const std::string_view new_identifier);
+		BuildingType(std::string_view new_identifier);
 
 	public:
 		BuildingType(BuildingType&&) = default;
@@ -161,7 +161,7 @@ namespace OpenVic {
 	public:
 		BuildingManager();
 
-		bool add_building_type(const std::string_view identifier);
+		bool add_building_type(std::string_view identifier);
 		IDENTIFIER_REGISTRY_ACCESSORS(BuildingType, building_type)
 
 		bool add_building(std::string_view identifier, ARGS);

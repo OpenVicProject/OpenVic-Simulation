@@ -85,7 +85,7 @@ namespace OpenVic::StringUtils {
 		return string_to_uint64(str, str + length, successful, base);
 	}
 
-	inline uint64_t string_to_uint64(const std::string_view str, bool* successful = nullptr, int base = 10) {
+	inline uint64_t string_to_uint64(std::string_view str, bool* successful = nullptr, int base = 10) {
 		return string_to_uint64(str.data(), str.length(), successful, base);
 	}
 
@@ -121,7 +121,7 @@ namespace OpenVic::StringUtils {
 		return string_to_int64(str, str + length, successful, base);
 	}
 
-	inline int64_t string_to_int64(const std::string_view str, bool* successful = nullptr, int base = 10) {
+	inline int64_t string_to_int64(std::string_view str, bool* successful = nullptr, int base = 10) {
 		return string_to_int64(str.data(), str.length(), successful, base);
 	}
 }

@@ -10,7 +10,7 @@ namespace OpenVic {
 		friend struct CultureManager;
 
 	private:
-		GraphicalCultureType(const std::string_view new_identifier);
+		GraphicalCultureType(std::string_view new_identifier);
 
 	public:
 		GraphicalCultureType(GraphicalCultureType&&) = default;
@@ -26,7 +26,7 @@ namespace OpenVic {
 
 		// TODO - union tag
 
-		CultureGroup(const std::string_view new_identifier, const std::string_view new_leader, GraphicalCultureType const& new_unit_graphical_culture_type, bool new_is_overseas);
+		CultureGroup(std::string_view new_identifier, std::string_view new_leader, GraphicalCultureType const& new_unit_graphical_culture_type, bool new_is_overseas);
 
 	public:
 		CultureGroup(CultureGroup&&) = default;
@@ -45,7 +45,7 @@ namespace OpenVic {
 
 		// TODO - radicalism, primary tag
 
-		Culture(const std::string_view new_identifier, colour_t new_colour, CultureGroup const& new_group, std::vector<std::string> const& new_first_names, std::vector<std::string> const& new_last_names);
+		Culture(std::string_view new_identifier, colour_t new_colour, CultureGroup const& new_group, std::vector<std::string> const& new_first_names, std::vector<std::string> const& new_last_names);
 
 	public:
 		Culture(Culture&&) = default;
@@ -62,19 +62,19 @@ namespace OpenVic {
 		IdentifierRegistry<Culture> cultures;
 
 		bool _load_culture_group(size_t& total_expected_cultures, GraphicalCultureType const* default_unit_graphical_culture_type,
-			const std::string_view culture_group_key, ast::NodeCPtr culture_group_node);
-		bool _load_culture(CultureGroup const* culture_group, const std::string_view culture_key, ast::NodeCPtr node);
+			std::string_view culture_group_key, ast::NodeCPtr culture_group_node);
+		bool _load_culture(CultureGroup const* culture_group, std::string_view culture_key, ast::NodeCPtr node);
 
 	public:
 		CultureManager();
 
-		bool add_graphical_culture_type(const std::string_view identifier);
+		bool add_graphical_culture_type(std::string_view identifier);
 		IDENTIFIER_REGISTRY_ACCESSORS(GraphicalCultureType, graphical_culture_type)
 
-		bool add_culture_group(const std::string_view identifier, const std::string_view leader, GraphicalCultureType const* new_graphical_culture_type, bool is_overseas);
+		bool add_culture_group(std::string_view identifier, std::string_view leader, GraphicalCultureType const* new_graphical_culture_type, bool is_overseas);
 		IDENTIFIER_REGISTRY_ACCESSORS(CultureGroup, culture_group)
 
-		bool add_culture(const std::string_view identifier, colour_t colour, CultureGroup const* group, std::vector<std::string> const& first_names, std::vector<std::string> const& last_names);
+		bool add_culture(std::string_view identifier, colour_t colour, CultureGroup const* group, std::vector<std::string> const& first_names, std::vector<std::string> const& last_names);
 		IDENTIFIER_REGISTRY_ACCESSORS(Culture, culture)
 
 		bool load_graphical_culture_type_file(ast::NodeCPtr root);

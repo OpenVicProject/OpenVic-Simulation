@@ -3,19 +3,19 @@
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;
 
-IssueGroup::IssueGroup(const std::string_view new_identifier) : HasIdentifier { new_identifier } {}
+IssueGroup::IssueGroup(std::string_view new_identifier) : HasIdentifier { new_identifier } {}
 
-Issue::Issue(const std::string_view identifier, IssueGroup const& group)
+Issue::Issue(std::string_view identifier, IssueGroup const& group)
 	: HasIdentifier { identifier }, group { group } {}
 
 IssueGroup const& Issue::get_group() const {
 	return group;
 }
 
-ReformType::ReformType(const std::string_view new_identifier, bool uncivilised)
+ReformType::ReformType(std::string_view new_identifier, bool uncivilised)
 	: HasIdentifier { new_identifier }, uncivilised { uncivilised } {}
 
-ReformGroup::ReformGroup(const std::string_view identifier, ReformType const& type, bool ordered, bool administrative)
+ReformGroup::ReformGroup(std::string_view identifier, ReformType const& type, bool ordered, bool administrative)
 	: IssueGroup { identifier }, type { type }, ordered { ordered }, administrative { administrative } {}
 
 ReformType const& ReformGroup::get_type() const {
@@ -30,7 +30,7 @@ bool ReformGroup::is_administrative() const {
 	return administrative;
 }
 
-Reform::Reform(const std::string_view identifier, ReformGroup const& group, size_t ordinal)
+Reform::Reform(std::string_view identifier, ReformGroup const& group, size_t ordinal)
 	: Issue { identifier, group }, ordinal { ordinal }, reform_group { group } {}
 
 ReformGroup const& Reform::get_reform_group() const {
@@ -48,7 +48,7 @@ size_t Reform::get_ordinal() const {
 IssueManager::IssueManager() : issue_groups { "issue groups" }, issues { "issues" },
 	reform_types { "reform types" }, reform_groups { "reform groups" }, reforms { "reforms" }  {}
 
-bool IssueManager::add_issue_group(const std::string_view identifier) {
+bool IssueManager::add_issue_group(std::string_view identifier) {
 	if (identifier.empty()) {
 		Logger::error("Invalid issue group identifier - empty!");
 		return false;
@@ -57,7 +57,7 @@ bool IssueManager::add_issue_group(const std::string_view identifier) {
 	return issue_groups.add_item({ identifier });
 }
 
-bool IssueManager::add_issue(const std::string_view identifier, IssueGroup const* group) {
+bool IssueManager::add_issue(std::string_view identifier, IssueGroup const* group) {
 	if (identifier.empty()) {
 		Logger::error("Invalid issue identifier - empty!");
 		return false;
@@ -71,7 +71,7 @@ bool IssueManager::add_issue(const std::string_view identifier, IssueGroup const
 	return issues.add_item({ identifier, *group });
 }
 
-bool IssueManager::add_reform_type(const std::string_view identifier, bool uncivilised) {
+bool IssueManager::add_reform_type(std::string_view identifier, bool uncivilised) {
 	if (identifier.empty()) {
 		Logger::error("Invalid issue type identifier - empty!");
 		return false;
@@ -80,7 +80,7 @@ bool IssueManager::add_reform_type(const std::string_view identifier, bool unciv
 	return reform_types.add_item({ identifier, uncivilised });
 }
 
-bool IssueManager::add_reform_group(const std::string_view identifier, ReformType const* type, bool ordered, bool administrative) {
+bool IssueManager::add_reform_group(std::string_view identifier, ReformType const* type, bool ordered, bool administrative) {
 	if (identifier.empty()) {
 		Logger::error("Invalid issue group identifier - empty!");
 		return false;
@@ -94,7 +94,7 @@ bool IssueManager::add_reform_group(const std::string_view identifier, ReformTyp
 	return reform_groups.add_item({ identifier, *type, ordered, administrative });
 }
 
-bool IssueManager::add_reform(const std::string_view identifier, ReformGroup const* group, size_t ordinal) {
+bool IssueManager::add_reform(std::string_view identifier, ReformGroup const* group, size_t ordinal) {
 	if (identifier.empty()) {
 		Logger::error("Invalid issue identifier - empty!");
 		return false;
@@ -108,19 +108,19 @@ bool IssueManager::add_reform(const std::string_view identifier, ReformGroup con
 	return reforms.add_item({ identifier, *group, ordinal });
 }
 
-bool IssueManager::_load_issue_group(size_t& expected_issues, const std::string_view identifier, ast::NodeCPtr node) {
+bool IssueManager::_load_issue_group(size_t& expected_issues, std::string_view identifier, ast::NodeCPtr node) {
 	return expect_length([&expected_issues](size_t size) -> size_t {
 		expected_issues += size;
 		return size;
 	})(node) & add_issue_group(identifier);
 }
 
-bool IssueManager::_load_issue(const std::string_view identifier, IssueGroup const* group, ast::NodeCPtr node) {
+bool IssueManager::_load_issue(std::string_view identifier, IssueGroup const* group, ast::NodeCPtr node) {
 	//TODO: policy modifiers, policy rule changes
 	return add_issue(identifier, group);
 }
 
-bool IssueManager::_load_reform_group(size_t& expected_reforms, const std::string_view identifier, ReformType const* type, ast::NodeCPtr node) {
+bool IssueManager::_load_reform_group(size_t& expected_reforms, std::string_view identifier, ReformType const* type, ast::NodeCPtr node) {
 	bool ordered = false, administrative = false;
 	bool ret = expect_dictionary_keys_and_length(
 		[&expected_reforms](size_t size) -> size_t {
@@ -134,7 +134,7 @@ bool IssueManager::_load_reform_group(size_t& expected_reforms, const std::strin
 	return ret;
 }
 
-bool IssueManager::_load_reform(size_t& ordinal, const std::string_view identifier, ReformGroup const* group, ast::NodeCPtr node) {
+bool IssueManager::_load_reform(size_t& ordinal, std::string_view identifier, ReformGroup const* group, ast::NodeCPtr node) {
 	//TODO: conditions to allow, policy modifiers, policy rule changes
 	return add_reform(identifier, group, ordinal);
 }

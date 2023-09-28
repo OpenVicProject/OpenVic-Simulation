@@ -5,9 +5,9 @@
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;
 
-ReligionGroup::ReligionGroup(const std::string_view new_identifier) : HasIdentifier { new_identifier } {}
+ReligionGroup::ReligionGroup(std::string_view new_identifier) : HasIdentifier { new_identifier } {}
 
-Religion::Religion(const std::string_view new_identifier, colour_t new_colour,
+Religion::Religion(std::string_view new_identifier, colour_t new_colour,
 	ReligionGroup const& new_group, icon_t new_icon, bool new_pagan)
 	: HasIdentifierAndColour { new_identifier, new_colour, true, false },
 	  group { new_group },
@@ -32,7 +32,7 @@ ReligionManager::ReligionManager()
 	: religion_groups { "religion groups" },
 	  religions { "religions" } {}
 
-bool ReligionManager::add_religion_group(const std::string_view identifier) {
+bool ReligionManager::add_religion_group(std::string_view identifier) {
 	if (identifier.empty()) {
 		Logger::error("Invalid religion group identifier - empty!");
 		return false;
@@ -40,7 +40,7 @@ bool ReligionManager::add_religion_group(const std::string_view identifier) {
 	return religion_groups.add_item({ identifier });
 }
 
-bool ReligionManager::add_religion(const std::string_view identifier, colour_t colour, ReligionGroup const* group, Religion::icon_t icon, bool pagan) {
+bool ReligionManager::add_religion(std::string_view identifier, colour_t colour, ReligionGroup const* group, Religion::icon_t icon, bool pagan) {
 	if (!religion_groups.is_locked()) {
 		Logger::error("Cannot register religions until religion groups are locked!");
 		return false;

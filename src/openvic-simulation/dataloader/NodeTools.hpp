@@ -72,7 +72,7 @@ namespace OpenVic {
 		using enum dictionary_entry_t::expected_count_t;
 		using key_map_t = std::map<std::string, dictionary_entry_t, std::less<void>>;
 
-		void add_key_map_entry(key_map_t& key_map, const std::string_view key, dictionary_entry_t::expected_count_t expected_count, node_callback_t callback);
+		void add_key_map_entry(key_map_t& key_map, std::string_view key, dictionary_entry_t::expected_count_t expected_count, node_callback_t callback);
 		key_value_callback_t dictionary_keys_callback(key_map_t& key_map, bool allow_other_keys);
 		bool check_key_map_counts(key_map_t const& key_map);
 
@@ -83,7 +83,7 @@ namespace OpenVic {
 		template<typename... Args>
 		node_callback_t _expect_dictionary_keys_and_length(length_callback_t length_callback,
 			bool allow_other_keys, key_map_t&& key_map,
-			const std::string_view key, dictionary_entry_t::expected_count_t expected_count, node_callback_t callback,
+			std::string_view key, dictionary_entry_t::expected_count_t expected_count, node_callback_t callback,
 			Args... args) {
 			add_key_map_entry(key_map, key, expected_count, callback);
 			return _expect_dictionary_keys_and_length(length_callback, allow_other_keys, std::move(key_map), args...);
@@ -91,7 +91,7 @@ namespace OpenVic {
 
 		template<typename... Args>
 		node_callback_t expect_dictionary_keys_and_length(length_callback_t length_callback,
-			const std::string_view key, dictionary_entry_t::expected_count_t expected_count, node_callback_t callback,
+			std::string_view key, dictionary_entry_t::expected_count_t expected_count, node_callback_t callback,
 			Args... args) {
 			return _expect_dictionary_keys_and_length(length_callback, false, {}, key, expected_count, callback, args...);
 		}
@@ -169,7 +169,7 @@ namespace OpenVic {
 
 		template<typename T>
 		requires(std::integral<T>)
-		callback_t<uint64_t> assign_variable_callback_uint(const std::string_view name, T& var) {
+		callback_t<uint64_t> assign_variable_callback_uint(std::string_view name, T& var) {
 			return [&var, name](uint64_t val) -> bool {
 				if (val <= static_cast<uint64_t>(std::numeric_limits<T>::max())) {
 					var = val;
@@ -183,7 +183,7 @@ namespace OpenVic {
 
 		template<typename T>
 		requires(std::signed_integral<T>)
-		callback_t<int64_t> assign_variable_callback_int(const std::string_view name, T& var) {
+		callback_t<int64_t> assign_variable_callback_int(std::string_view name, T& var) {
 			return [&var, name](int64_t val) -> bool {
 				if (static_cast<int64_t>(std::numeric_limits<T>::lowest()) <= val && val <= static_cast<int64_t>(std::numeric_limits<T>::max())) {
 					var = val;

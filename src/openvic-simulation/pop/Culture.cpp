@@ -7,9 +7,9 @@
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;
 
-GraphicalCultureType::GraphicalCultureType(const std::string_view new_identifier) : HasIdentifier { new_identifier } {}
+GraphicalCultureType::GraphicalCultureType(std::string_view new_identifier) : HasIdentifier { new_identifier } {}
 
-CultureGroup::CultureGroup(const std::string_view new_identifier, const std::string_view new_leader,
+CultureGroup::CultureGroup(std::string_view new_identifier, std::string_view new_leader,
 	GraphicalCultureType const& new_unit_graphical_culture_type, bool new_is_overseas)
 	: HasIdentifier { new_identifier }, leader { new_leader },
 	  unit_graphical_culture_type { new_unit_graphical_culture_type },
@@ -27,7 +27,7 @@ bool CultureGroup::get_is_overseas() const {
 	return is_overseas;
 }
 
-Culture::Culture(const std::string_view new_identifier, colour_t new_colour, CultureGroup const& new_group,
+Culture::Culture(std::string_view new_identifier, colour_t new_colour, CultureGroup const& new_group,
 	std::vector<std::string> const& new_first_names, std::vector<std::string> const& new_last_names)
 	: HasIdentifierAndColour { new_identifier, new_colour, true, false },
 	  group { new_group },
@@ -51,7 +51,7 @@ CultureManager::CultureManager()
 	  culture_groups { "culture groups" },
 	  cultures { "cultures" } {}
 
-bool CultureManager::add_graphical_culture_type(const std::string_view identifier) {
+bool CultureManager::add_graphical_culture_type(std::string_view identifier) {
 	if (identifier.empty()) {
 		Logger::error("Invalid culture group identifier - empty!");
 		return false;
@@ -59,7 +59,7 @@ bool CultureManager::add_graphical_culture_type(const std::string_view identifie
 	return graphical_culture_types.add_item({ identifier });
 }
 
-bool CultureManager::add_culture_group(const std::string_view identifier, const std::string_view leader, GraphicalCultureType const* graphical_culture_type, bool is_overseas) {
+bool CultureManager::add_culture_group(std::string_view identifier, std::string_view leader, GraphicalCultureType const* graphical_culture_type, bool is_overseas) {
 	if (!graphical_culture_types.is_locked()) {
 		Logger::error("Cannot register culture groups until graphical culture types are locked!");
 		return false;
@@ -79,7 +79,7 @@ bool CultureManager::add_culture_group(const std::string_view identifier, const 
 	return culture_groups.add_item({ identifier, leader, *graphical_culture_type, is_overseas });
 }
 
-bool CultureManager::add_culture(const std::string_view identifier, colour_t colour, CultureGroup const* group, std::vector<std::string> const& first_names, std::vector<std::string> const& last_names) {
+bool CultureManager::add_culture(std::string_view identifier, colour_t colour, CultureGroup const* group, std::vector<std::string> const& first_names, std::vector<std::string> const& last_names) {
 	if (!culture_groups.is_locked()) {
 		Logger::error("Cannot register cultures until culture groups are locked!");
 		return false;
@@ -112,7 +112,7 @@ bool CultureManager::load_graphical_culture_type_file(ast::NodeCPtr root) {
 
 bool CultureManager::_load_culture_group(size_t& total_expected_cultures,
 	GraphicalCultureType const* default_unit_graphical_culture_type,
-	const std::string_view culture_group_key, ast::NodeCPtr culture_group_node) {
+	std::string_view culture_group_key, ast::NodeCPtr culture_group_node) {
 
 	std::string_view leader;
 	GraphicalCultureType const* unit_graphical_culture_type = default_unit_graphical_culture_type;
@@ -134,7 +134,7 @@ bool CultureManager::_load_culture_group(size_t& total_expected_cultures,
 }
 
 bool CultureManager::_load_culture(CultureGroup const* culture_group,
-	const std::string_view culture_key, ast::NodeCPtr culture_node) {
+	std::string_view culture_key, ast::NodeCPtr culture_node) {
 
 	colour_t colour = NULL_COLOUR;
 	std::vector<std::string> first_names, last_names;

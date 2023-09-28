@@ -38,7 +38,7 @@ namespace OpenVic {
 		 */
 		const bool meta;
 
-		Region(const std::string_view new_identifier, provinces_t&& new_provinces, bool new_meta);
+		Region(std::string_view new_identifier, provinces_t&& new_provinces, bool new_meta);
 
 	public:
 		Region(Region&&) = default;

@@ -329,7 +329,7 @@ namespace OpenVic {
 			return parse(str, str + length, successful);
 		}
 
-		static fixed_point_t parse(const std::string_view str, bool* successful = nullptr) {
+		static fixed_point_t parse(std::string_view str, bool* successful = nullptr) {
 			return parse(str.data(), str.length(), successful);
 		}
 

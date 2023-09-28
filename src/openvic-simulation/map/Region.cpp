@@ -63,7 +63,7 @@ ProvinceSet::provinces_t const& ProvinceSet::get_provinces() const {
 	return provinces;
 }
 
-Region::Region(const std::string_view new_identifier, provinces_t&& new_provinces, bool new_meta)
+Region::Region(std::string_view new_identifier, provinces_t&& new_provinces, bool new_meta)
 	: HasIdentifier { new_identifier }, ProvinceSet { std::move(new_provinces) }, meta { new_meta } {
 	lock();
 }

@@ -63,7 +63,7 @@ namespace OpenVic {
 		bool setup();
 
 		Date const& get_today() const;
-		bool expand_building(Province::index_t province_index, const std::string_view building_type_identifier);
+		bool expand_building(Province::index_t province_index, std::string_view building_type_identifier);
 
 		/* Hardcoded data for defining things for which parsing from files has
 		 * not been implemented, currently mapmodes and building types.

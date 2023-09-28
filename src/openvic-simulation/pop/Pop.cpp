@@ -49,7 +49,7 @@ Pop::pop_size_t Pop::get_pop_daily_change() const {
 	return Pop::get_num_promoted() - (Pop::get_num_demoted() + Pop::get_num_migrated());
 }
 
-PopType::PopType(const std::string_view new_identifier, colour_t new_colour,
+PopType::PopType(std::string_view new_identifier, colour_t new_colour,
 	strata_t new_strata, sprite_t new_sprite,
 	Pop::pop_size_t new_max_size, Pop::pop_size_t new_merge_max_size,
 	bool new_state_capital_only, bool new_demote_migrant, bool new_is_artisan, bool new_is_slave)
@@ -117,7 +117,7 @@ ReligionManager const& PopManager::get_religion_manager() const {
 	return religion_manager;
 }
 
-bool PopManager::add_pop_type(const std::string_view identifier, colour_t colour, PopType::strata_t strata, PopType::sprite_t sprite,
+bool PopManager::add_pop_type(std::string_view identifier, colour_t colour, PopType::strata_t strata, PopType::sprite_t sprite,
 	Pop::pop_size_t max_size, Pop::pop_size_t merge_max_size, bool state_capital_only, bool demote_migrant, bool is_artisan, bool is_slave) {
 	if (identifier.empty()) {
 		Logger::error("Invalid pop type identifier - empty!");
@@ -145,7 +145,7 @@ bool PopManager::add_pop_type(const std::string_view identifier, colour_t colour
 /* REQUIREMENTS:
  * POP-3, POP-4, POP-5, POP-6, POP-7, POP-8, POP-9, POP-10, POP-11, POP-12, POP-13, POP-14
  */
-bool PopManager::load_pop_type_file(const std::string_view filestem, ast::NodeCPtr root) {
+bool PopManager::load_pop_type_file(std::string_view filestem, ast::NodeCPtr root) {
 	colour_t colour = NULL_COLOUR;
 	PopType::strata_t strata = PopType::strata_t::POOR;
 	PopType::sprite_t sprite = 0;
@@ -210,7 +210,7 @@ bool PopManager::load_pop_type_file(const std::string_view filestem, ast::NodeCP
 	return ret;
 }
 
-bool PopManager::load_pop_into_province(Province& province, const std::string_view pop_type_identifier, ast::NodeCPtr pop_node) const {
+bool PopManager::load_pop_into_province(Province& province, std::string_view pop_type_identifier, ast::NodeCPtr pop_node) const {
 	PopType const* type = get_pop_type_by_identifier(pop_type_identifier);
 	Culture const* culture = nullptr;
 	Religion const* religion = nullptr;

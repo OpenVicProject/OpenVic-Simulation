@@ -172,7 +172,7 @@ fixed_point_t NavalUnit::get_torpedo_attack() const {
 
 UnitManager::UnitManager() : units { "units" } {}
 
-bool UnitManager::_check_shared_parameters(const std::string_view identifier, UNIT_PARAMS) {
+bool UnitManager::_check_shared_parameters(std::string_view identifier, UNIT_PARAMS) {
 	if (identifier.empty()) {
 		Logger::error("Invalid religion identifier - empty!");
 		return false;
@@ -193,7 +193,7 @@ bool UnitManager::_check_shared_parameters(const std::string_view identifier, UN
 	return true;
 }
 
-bool UnitManager::add_land_unit(const std::string_view identifier, UNIT_PARAMS, LAND_PARAMS) {
+bool UnitManager::add_land_unit(std::string_view identifier, UNIT_PARAMS, LAND_PARAMS) {
 	if (!_check_shared_parameters(identifier, UNIT_ARGS)) {
 		return false;
 	}
@@ -201,7 +201,7 @@ bool UnitManager::add_land_unit(const std::string_view identifier, UNIT_PARAMS, 
 	return units.add_item(LandUnit { identifier, UNIT_ARGS, LAND_ARGS });
 }
 
-bool UnitManager::add_naval_unit(const std::string_view identifier, UNIT_PARAMS, NAVY_PARAMS) {
+bool UnitManager::add_naval_unit(std::string_view identifier, UNIT_PARAMS, NAVY_PARAMS) {
 	if (!_check_shared_parameters(identifier, UNIT_ARGS)) {
 		return false;
 	}

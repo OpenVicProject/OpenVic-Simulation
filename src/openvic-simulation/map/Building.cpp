@@ -105,7 +105,7 @@ bool Building::spawned_railway_track() const {
 	return spawn_railway_track;
 }
 
-BuildingType::BuildingType(const std::string_view new_identifier) : HasIdentifier { new_identifier } {}
+BuildingType::BuildingType(std::string_view new_identifier) : HasIdentifier { new_identifier } {}
 
 BuildingInstance::BuildingInstance(Building const& building) : HasIdentifier { building.get_identifier() }, building { building } {}
 
@@ -176,7 +176,7 @@ void BuildingInstance::tick(Date const& today) {
 
 BuildingManager::BuildingManager() : building_types { "building types" }, buildings { "buildings" } {}
 
-bool BuildingManager::add_building_type(const std::string_view identifier) {
+bool BuildingManager::add_building_type(std::string_view identifier) {
 	if (identifier.empty()) {
 		Logger::error("Invalid building type identifier - empty!");
 		return false;

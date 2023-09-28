@@ -10,7 +10,7 @@
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;
 
-Mapmode::Mapmode(const std::string_view new_identifier, index_t new_index, colour_func_t new_colour_func)
+Mapmode::Mapmode(std::string_view new_identifier, index_t new_index, colour_func_t new_colour_func)
 	: HasIdentifier { new_identifier },
 	  index { new_index },
 	  colour_func { new_colour_func } {
@@ -32,7 +32,7 @@ Map::Map() : provinces { "provinces" },
 			 regions { "regions" },
 			 mapmodes { "mapmodes" } {}
 
-bool Map::add_province(const std::string_view identifier, colour_t colour) {
+bool Map::add_province(std::string_view identifier, colour_t colour) {
 	if (provinces.size() >= max_provinces) {
 		Logger::error("The map's province list is full - maximum number of provinces is ", max_provinces, " (this can be at most ", Province::MAX_INDEX, ")");
 		return false;
@@ -55,7 +55,7 @@ bool Map::add_province(const std::string_view identifier, colour_t colour) {
 	return provinces.add_item(std::move(new_province));
 }
 
-bool Map::set_water_province(const std::string_view identifier) {
+bool Map::set_water_province(std::string_view identifier) {
 	if (water_provinces.is_locked()) {
 		Logger::error("The map's water provinces have already been locked!");
 		return false;
@@ -91,7 +91,7 @@ void Map::lock_water_provinces() {
 	Logger::info("Locked water provinces after registering ", water_provinces.size());
 }
 
-bool Map::add_region(const std::string_view identifier, std::vector<std::string_view> const& province_identifiers) {
+bool Map::add_region(std::string_view identifier, std::vector<std::string_view> const& province_identifiers) {
 	if (identifier.empty()) {
 		Logger::error("Invalid region identifier - empty!");
 		return false;
@@ -203,7 +203,7 @@ TerrainTypeManager const& Map::get_terrain_type_manager() const {
 	return terrain_type_manager;
 }
 
-bool Map::add_mapmode(const std::string_view identifier, Mapmode::colour_func_t colour_func) {
+bool Map::add_mapmode(std::string_view identifier, Mapmode::colour_func_t colour_func) {
 	if (identifier.empty()) {
 		Logger::error("Invalid mapmode identifier - empty!");
 		return false;

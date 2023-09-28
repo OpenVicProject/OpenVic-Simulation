@@ -9,7 +9,7 @@ namespace OpenVic {
 		friend struct GoodManager;
 
 	private:
-		GoodCategory(const std::string_view new_identifier);
+		GoodCategory(std::string_view new_identifier);
 
 	public:
 		GoodCategory(GoodCategory&&) = default;
@@ -40,7 +40,7 @@ namespace OpenVic {
 		const bool available_from_start, tradeable, money, overseas_penalty;
 		bool available;
 
-		Good(const std::string_view new_identifier, colour_t new_colour, GoodCategory const& new_category, price_t new_base_price,
+		Good(std::string_view new_identifier, colour_t new_colour, GoodCategory const& new_category, price_t new_base_price,
 			bool new_available_from_start, bool new_tradeable, bool new_money, bool new_overseas_penalty);
 
 	public:
@@ -65,10 +65,10 @@ namespace OpenVic {
 	public:
 		GoodManager();
 
-		bool add_good_category(const std::string_view identifier);
+		bool add_good_category(std::string_view identifier);
 		IDENTIFIER_REGISTRY_ACCESSORS_CUSTOM_PLURAL(GoodCategory, good_category, good_categories)
 
-		bool add_good(const std::string_view identifier, colour_t colour, GoodCategory const* category, Good::price_t base_price,
+		bool add_good(std::string_view identifier, colour_t colour, GoodCategory const* category, Good::price_t base_price,
 			bool available_from_start, bool tradeable, bool money, bool overseas_penalty);
 		IDENTIFIER_REGISTRY_ACCESSORS(Good, good)
 

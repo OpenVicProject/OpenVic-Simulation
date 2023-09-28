@@ -147,13 +147,13 @@ namespace OpenVic {
 	private:
 		IdentifierRegistry<Unit> units;
 
-		bool _check_shared_parameters(const std::string_view identifier, UNIT_PARAMS);
+		bool _check_shared_parameters(std::string_view identifier, UNIT_PARAMS);
 
 	public:
 		UnitManager();
 
-		bool add_land_unit(const std::string_view identifier, UNIT_PARAMS, LAND_PARAMS);
-		bool add_naval_unit(const std::string_view identifier, UNIT_PARAMS, NAVY_PARAMS);
+		bool add_land_unit(std::string_view identifier, UNIT_PARAMS, LAND_PARAMS);
+		bool add_naval_unit(std::string_view identifier, UNIT_PARAMS, NAVY_PARAMS);
 		IDENTIFIER_REGISTRY_ACCESSORS(Unit, unit)
 
 		bool load_unit_file(GoodManager const& good_manager, ast::NodeCPtr root);

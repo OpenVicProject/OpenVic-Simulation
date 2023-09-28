@@ -242,7 +242,7 @@ node_callback_t NodeTools::expect_dictionary(key_value_callback_t callback) {
 	return expect_dictionary_and_length(default_length_callback, callback);
 }
 
-void NodeTools::add_key_map_entry(key_map_t& key_map, const std::string_view key, dictionary_entry_t::expected_count_t expected_count, node_callback_t callback) {
+void NodeTools::add_key_map_entry(key_map_t& key_map, std::string_view key, dictionary_entry_t::expected_count_t expected_count, node_callback_t callback) {
 	if (key_map.find(key) == key_map.end()) {
 		key_map.emplace(key, dictionary_entry_t { expected_count, callback });
 	} else {

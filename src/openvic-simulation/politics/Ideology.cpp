@@ -3,9 +3,9 @@
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;
 
-IdeologyGroup::IdeologyGroup(const std::string_view new_identifier) : HasIdentifier { new_identifier } {}
+IdeologyGroup::IdeologyGroup(std::string_view new_identifier) : HasIdentifier { new_identifier } {}
 
-Ideology::Ideology(const std::string_view new_identifier, colour_t new_colour, IdeologyGroup const& new_group, bool new_uncivilised, bool new_can_reduce_militancy, Date new_spawn_date)
+Ideology::Ideology(std::string_view new_identifier, colour_t new_colour, IdeologyGroup const& new_group, bool new_uncivilised, bool new_can_reduce_militancy, Date new_spawn_date)
 	: HasIdentifierAndColour { new_identifier, new_colour, true, false }, group { new_group }, uncivilised { new_uncivilised },
 	can_reduce_militancy { new_can_reduce_militancy }, spawn_date { new_spawn_date } {}
 
@@ -27,7 +27,7 @@ Date const& Ideology::get_spawn_date() const {
 
 IdeologyManager::IdeologyManager() : ideology_groups { "ideology groups" }, ideologies { "ideologies" } {}
 
-bool IdeologyManager::add_ideology_group(const std::string_view identifier) {
+bool IdeologyManager::add_ideology_group(std::string_view identifier) {
 	if (identifier.empty()) {
 		Logger::error("Invalid ideology group identifier - empty!");
 		return false;
@@ -36,7 +36,7 @@ bool IdeologyManager::add_ideology_group(const std::string_view identifier) {
 	return ideology_groups.add_item({ identifier });
 }
 
-bool IdeologyManager::add_ideology(const std::string_view identifier, colour_t colour, IdeologyGroup const* group, bool uncivilised, bool can_reduce_militancy, Date spawn_date) {
+bool IdeologyManager::add_ideology(std::string_view identifier, colour_t colour, IdeologyGroup const* group, bool uncivilised, bool can_reduce_militancy, Date spawn_date) {
 	if (identifier.empty()) {
 		Logger::error("Invalid ideology identifier - empty!");
 		return false;
