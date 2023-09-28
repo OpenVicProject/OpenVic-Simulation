@@ -52,7 +52,7 @@ fixed_point_t Unit::get_maximum_speed() const {
 	return maximum_speed;
 }
 
-uint32_t Unit::get_build_time() const {
+Timespan Unit::get_build_time() const {
 	return build_time;
 }
 
@@ -210,14 +210,14 @@ bool UnitManager::add_naval_unit(const std::string_view identifier, UNIT_PARAMS,
 
 	return units.add_item(NavalUnit { identifier, UNIT_ARGS, NAVY_ARGS });
 }
-//TODO forgot fcking capital flag for naval units
+
 bool UnitManager::load_unit_file(GoodManager const& good_manager, ast::NodeCPtr root) {
 	return NodeTools::expect_dictionary([this, &good_manager](std::string_view key, ast::NodeCPtr value) -> bool {
 		Unit::icon_t icon;
 		std::string_view category, type;
 		Unit::sprite_t sprite;
 		bool active = true, floating_flag;
-		uint32_t priority, build_time;
+		uint32_t priority, build_time_days;
 		fixed_point_t maximum_speed, max_strength, default_organisation, weighted_value, supply_consumption;
 		std::map<const Good*, fixed_point_t> build_cost, supply_cost;
 
@@ -234,11 +234,13 @@ bool UnitManager::load_unit_file(GoodManager const& good_manager, ast::NodeCPtr 
 			"default_organisation", ONE_EXACTLY, expect_fixed_point(assign_variable_callback(default_organisation)),
 			"maximum_speed", ONE_EXACTLY, expect_fixed_point(assign_variable_callback(maximum_speed)),
 			"weighted_value", ONE_EXACTLY, expect_fixed_point(assign_variable_callback(weighted_value)),
-			"build_time", ONE_EXACTLY, expect_uint(assign_variable_callback_uint("unit build time", build_time)),
+			"build_time", ONE_EXACTLY, expect_uint(assign_variable_callback_uint("unit build time", build_time_days)),
 			"build_cost", ONE_EXACTLY, good_manager.expect_good_decimal_map(assign_variable_callback(build_cost)),
 			"supply_consumption", ONE_EXACTLY, expect_fixed_point(move_variable_callback(supply_consumption)),
 			"supply_cost", ONE_EXACTLY, good_manager.expect_good_decimal_map(move_variable_callback(supply_cost))
 		)(value);
+
+		Timespan build_time = { build_time_days };
 
 		if (category == "land") {
 			fixed_point_t reconnaissance, attack, defence, discipline, support, maneuver, siege;
