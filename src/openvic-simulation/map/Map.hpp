@@ -21,7 +21,7 @@ namespace OpenVic {
 		const index_t index;
 		const colour_func_t colour_func;
 
-		Mapmode(const std::string_view new_identifier, index_t new_index, colour_func_t new_colour_func);
+		Mapmode(std::string_view new_identifier, index_t new_index, colour_func_t new_colour_func);
 
 	public:
 		static const Mapmode ERROR_MAPMODE;
@@ -69,11 +69,11 @@ namespace OpenVic {
 	public:
 		Map();
 
-		bool add_province(const std::string_view identifier, colour_t colour);
+		bool add_province(std::string_view identifier, colour_t colour);
 		IDENTIFIER_REGISTRY_ACCESSORS(Province, province)
 		IDENTIFIER_REGISTRY_NON_CONST_ACCESSORS(Province, province)
 
-		bool set_water_province(const std::string_view identifier);
+		bool set_water_province(std::string_view identifier);
 		bool set_water_province_list(std::vector<std::string_view> const& list);
 		void lock_water_provinces();
 
@@ -92,11 +92,11 @@ namespace OpenVic {
 		TerrainTypeManager& get_terrain_type_manager();
 		TerrainTypeManager const& get_terrain_type_manager() const;
 
-		bool add_region(const std::string_view identifier, std::vector<std::string_view> const& province_identifiers);
+		bool add_region(std::string_view identifier, std::vector<std::string_view> const& province_identifiers);
 		IDENTIFIER_REGISTRY_ACCESSORS(Region, region)
 		IDENTIFIER_REGISTRY_NON_CONST_ACCESSORS(Region, region)
 
-		bool add_mapmode(const std::string_view identifier, Mapmode::colour_func_t colour_func);
+		bool add_mapmode(std::string_view identifier, Mapmode::colour_func_t colour_func);
 		IDENTIFIER_REGISTRY_ACCESSORS(Mapmode, mapmode)
 		Mapmode const* get_mapmode_by_index(size_t index) const;
 		static constexpr size_t MAPMODE_COLOUR_SIZE = 4;

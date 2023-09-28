@@ -16,7 +16,7 @@ namespace OpenVic {
 
 		// TODO - format/precision, e.g. 80% vs 0.8 vs 0.800, 2 vs 2.0 vs 200%
 
-		ModifierEffect(const std::string_view new_identifier, bool new_positive_good);
+		ModifierEffect(std::string_view new_identifier, bool new_positive_good);
 
 	public:
 		ModifierEffect(ModifierEffect&&) = default;
@@ -65,7 +65,7 @@ namespace OpenVic {
 		/* A modifier can have no icon (zero). */
 		const icon_t icon;
 
-		Modifier(const std::string_view new_identifier, ModifierValue&& new_values, icon_t new_icon);
+		Modifier(std::string_view new_identifier, ModifierValue&& new_values, icon_t new_icon);
 
 	public:
 		Modifier(Modifier&&) = default;
@@ -97,7 +97,7 @@ namespace OpenVic {
 		template<typename... Args>
 		NodeTools::node_callback_t _expect_modifier_value_and_keys(
 			NodeTools::callback_t<ModifierValue&&> modifier_callback, NodeTools::key_map_t&& key_map,
-			const std::string_view key, NodeTools::dictionary_entry_t::expected_count_t expected_count, NodeTools::node_callback_t callback,
+			std::string_view key, NodeTools::dictionary_entry_t::expected_count_t expected_count, NodeTools::node_callback_t callback,
 			Args... args) const {
 			NodeTools::add_key_map_entry(key_map, key, expected_count, callback);
 			return _expect_modifier_value_and_keys(modifier_callback, std::move(key_map), args...);
@@ -106,10 +106,10 @@ namespace OpenVic {
 	public:
 		ModifierManager();
 
-		bool add_modifier_effect(const std::string_view identifier, bool province_good);
+		bool add_modifier_effect(std::string_view identifier, bool province_good);
 		IDENTIFIER_REGISTRY_ACCESSORS(ModifierEffect, modifier_effect)
 
-		bool add_modifier(const std::string_view identifier, ModifierValue&& values, Modifier::icon_t icon);
+		bool add_modifier(std::string_view identifier, ModifierValue&& values, Modifier::icon_t icon);
 		IDENTIFIER_REGISTRY_ACCESSORS(Modifier, modifier)
 
 		bool setup_modifier_effects();

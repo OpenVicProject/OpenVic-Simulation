@@ -49,7 +49,7 @@ Pop::pop_size_t Pop::get_pop_daily_change() const {
 	return Pop::get_num_promoted() - (Pop::get_num_demoted() + Pop::get_num_migrated());
 }
 
-PopType::PopType(const std::string_view new_identifier, colour_t new_colour,
+PopType::PopType(std::string_view new_identifier, colour_t new_colour,
 	strata_t new_strata, sprite_t new_sprite,
 	Pop::pop_size_t new_max_size, Pop::pop_size_t new_merge_max_size,
 	bool new_state_capital_only, bool new_demote_migrant, bool new_is_artisan, bool new_is_slave)
@@ -117,7 +117,7 @@ ReligionManager const& PopManager::get_religion_manager() const {
 	return religion_manager;
 }
 
-bool PopManager::add_pop_type(const std::string_view identifier, colour_t colour, PopType::strata_t strata, PopType::sprite_t sprite,
+bool PopManager::add_pop_type(std::string_view identifier, colour_t colour, PopType::strata_t strata, PopType::sprite_t sprite,
 	Pop::pop_size_t max_size, Pop::pop_size_t merge_max_size, bool state_capital_only, bool demote_migrant, bool is_artisan, bool is_slave) {
 	if (identifier.empty()) {
 		Logger::error("Invalid pop type identifier - empty!");
@@ -145,18 +145,18 @@ bool PopManager::add_pop_type(const std::string_view identifier, colour_t colour
 /* REQUIREMENTS:
  * POP-3, POP-4, POP-5, POP-6, POP-7, POP-8, POP-9, POP-10, POP-11, POP-12, POP-13, POP-14
  */
-bool PopManager::load_pop_type_file(const std::string_view filestem, ast::NodeCPtr root) {
+bool PopManager::load_pop_type_file(std::string_view filestem, ast::NodeCPtr root) {
 	colour_t colour = NULL_COLOUR;
 	PopType::strata_t strata = PopType::strata_t::POOR;
 	PopType::sprite_t sprite = 0;
 	bool state_capital_only = false, is_artisan = false, is_slave = false, demote_migrant = false;
 	Pop::pop_size_t max_size = 0, merge_max_size = 0;
 	bool ret = expect_dictionary_keys(
-		"sprite", ONE_EXACTLY, expect_uint(assign_variable_callback_uint("poptype sprite", sprite)),
+		"sprite", ONE_EXACTLY, expect_uint(assign_variable_callback_uint(sprite)),
 		"color", ONE_EXACTLY, expect_colour(assign_variable_callback(colour)),
 		"is_artisan", ZERO_OR_ONE, expect_bool(assign_variable_callback(is_artisan)),
-		"max_size", ZERO_OR_ONE, expect_uint(assign_variable_callback_uint("poptype max_size", max_size)),
-		"merge_max_size", ZERO_OR_ONE, expect_uint(assign_variable_callback_uint("poptype merge_max_size", merge_max_size)),
+		"max_size", ZERO_OR_ONE, expect_uint(assign_variable_callback_uint(max_size)),
+		"merge_max_size", ZERO_OR_ONE, expect_uint(assign_variable_callback_uint(merge_max_size)),
 		"strata", ONE_EXACTLY, expect_identifier(
 			[&strata](std::string_view identifier) -> bool {
 				using strata_map_t = std::map<std::string, PopType::strata_t, std::less<void>>;
@@ -210,7 +210,7 @@ bool PopManager::load_pop_type_file(const std::string_view filestem, ast::NodeCP
 	return ret;
 }
 
-bool PopManager::load_pop_into_province(Province& province, const std::string_view pop_type_identifier, ast::NodeCPtr pop_node) const {
+bool PopManager::load_pop_into_province(Province& province, std::string_view pop_type_identifier, ast::NodeCPtr pop_node) const {
 	PopType const* type = get_pop_type_by_identifier(pop_type_identifier);
 	Culture const* culture = nullptr;
 	Religion const* religion = nullptr;
@@ -218,7 +218,7 @@ bool PopManager::load_pop_into_province(Province& province, const std::string_vi
 	bool ret = expect_dictionary_keys(
 		"culture", ONE_EXACTLY, culture_manager.expect_culture_identifier(assign_variable_callback_pointer(culture)),
 		"religion", ONE_EXACTLY, religion_manager.expect_religion_identifier(assign_variable_callback_pointer(religion)),
-		"size", ONE_EXACTLY, expect_uint(assign_variable_callback_uint("pop size", size)),
+		"size", ONE_EXACTLY, expect_uint(assign_variable_callback_uint(size)),
 		"militancy", ZERO_OR_ONE, success_callback,
 		"rebel_type", ZERO_OR_ONE, success_callback
 	)(pop_node);

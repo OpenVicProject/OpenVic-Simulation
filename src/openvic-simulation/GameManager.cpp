@@ -74,7 +74,7 @@ ModifierManager& GameManager::get_modifier_manager() {
 	return modifier_manager;
 }
 
-ModifierManager const& GameManager::get_modifier_manager() const{
+ModifierManager const& GameManager::get_modifier_manager() const {
 	return modifier_manager;
 }
 
@@ -122,7 +122,7 @@ Date const& GameManager::get_today() const {
 	return today;
 }
 
-bool GameManager::expand_building(Province::index_t province_index, const std::string_view building_type_identifier) {
+bool GameManager::expand_building(Province::index_t province_index, std::string_view building_type_identifier) {
 	set_needs_update();
 	Province* province = map.get_province_by_index(province_index);
 	if (province == nullptr) {

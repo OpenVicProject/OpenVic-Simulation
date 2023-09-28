@@ -5,9 +5,9 @@
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;
 
-GoodCategory::GoodCategory(const std::string_view new_identifier) : HasIdentifier { new_identifier } {}
+GoodCategory::GoodCategory(std::string_view new_identifier) : HasIdentifier { new_identifier } {}
 
-Good::Good(const std::string_view new_identifier, colour_t new_colour, GoodCategory const& new_category, price_t new_base_price,
+Good::Good(std::string_view new_identifier, colour_t new_colour, GoodCategory const& new_category, price_t new_base_price,
 	bool new_available_from_start, bool new_tradeable, bool new_money, bool new_overseas_penalty)
 	: HasIdentifierAndColour { new_identifier, new_colour, true, false },
 	  category { new_category },
@@ -58,7 +58,7 @@ void Good::reset_to_defaults() {
 
 GoodManager::GoodManager() : good_categories { "good categories" }, goods { "goods" } {}
 
-bool GoodManager::add_good_category(const std::string_view identifier) {
+bool GoodManager::add_good_category(std::string_view identifier) {
 	if (identifier.empty()) {
 		Logger::error("Invalid good category identifier - empty!");
 		return false;
@@ -66,7 +66,7 @@ bool GoodManager::add_good_category(const std::string_view identifier) {
 	return good_categories.add_item({ identifier });
 }
 
-bool GoodManager::add_good(const std::string_view identifier, colour_t colour, GoodCategory const* category,
+bool GoodManager::add_good(std::string_view identifier, colour_t colour, GoodCategory const* category,
 	Good::price_t base_price, bool available_from_start, bool tradeable, bool money, bool overseas_penalty) {
 	if (identifier.empty()) {
 		Logger::error("Invalid good identifier - empty!");

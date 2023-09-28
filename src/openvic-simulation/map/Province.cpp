@@ -3,7 +3,7 @@
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;
 
-Province::Province(const std::string_view new_identifier, colour_t new_colour, index_t new_index)
+Province::Province(std::string_view new_identifier, colour_t new_colour, index_t new_index)
 	: HasIdentifierAndColour { new_identifier, new_colour, false, false },
 	  index { new_index }, buildings { "buildings", false } {
 	assert(index != NULL_INDEX);
@@ -47,7 +47,7 @@ void Province::reset_buildings() {
 	buildings.reset();
 }
 
-bool Province::expand_building(const std::string_view building_type_identifier) {
+bool Province::expand_building(std::string_view building_type_identifier) {
 	BuildingInstance* building = buildings.get_item_by_identifier(building_type_identifier);
 	if (building == nullptr) return false;
 	return building->expand();

@@ -134,6 +134,10 @@ node_callback_t NodeTools::expect_colour(callback_t<colour_t> callback) {
 	};
 }
 
+node_callback_t NodeTools::expect_timespan(callback_t<Timespan> callback) {
+	return expect_int(callback);
+}
+
 node_callback_t NodeTools::expect_date(callback_t<Date> callback) {
 	return expect_identifier(
 		[callback](std::string_view identifier) -> bool {
@@ -234,6 +238,22 @@ node_callback_t NodeTools::expect_length(callback_t<size_t> callback) {
 	};
 }
 
+node_callback_t NodeTools::expect_key(std::string_view key, node_callback_t callback) {
+	return _expect_type<ast::AbstractListNode>(
+		[key, callback](ast::AbstractListNode const& list_node) -> bool {
+			std::vector<ast::NodeUPtr> const& list = list_node._statements;
+			for (ast::NodeUPtr const& sub_node : list_node._statements) {
+				ast::AssignNode const* assign_node = sub_node->cast_to<ast::AssignNode>();
+				if (assign_node != nullptr && assign_node->_name == key) {
+					return callback(&*assign_node->_initializer);
+				}
+			}
+			Logger::error("Failed to find expected key: ", key);
+			return false;
+		}
+	);
+}
+
 node_callback_t NodeTools::expect_dictionary_and_length(length_callback_t length_callback, key_value_callback_t callback) {
 	return expect_list_and_length(length_callback, expect_assign(callback));
 }
@@ -242,7 +262,7 @@ node_callback_t NodeTools::expect_dictionary(key_value_callback_t callback) {
 	return expect_dictionary_and_length(default_length_callback, callback);
 }
 
-void NodeTools::add_key_map_entry(key_map_t& key_map, const std::string_view key, dictionary_entry_t::expected_count_t expected_count, node_callback_t callback) {
+void NodeTools::add_key_map_entry(key_map_t& key_map, std::string_view key, dictionary_entry_t::expected_count_t expected_count, node_callback_t callback) {
 	if (key_map.find(key) == key_map.end()) {
 		key_map.emplace(key, dictionary_entry_t { expected_count, callback });
 	} else {
@@ -267,14 +287,15 @@ key_value_callback_t NodeTools::dictionary_keys_callback(key_map_t& key_map, boo
 	};
 }
 
-bool NodeTools::check_key_map_counts(key_map_t const& key_map) {
+bool NodeTools::check_key_map_counts(key_map_t& key_map) {
 	bool ret = true;
-	for (key_map_t::value_type const& key_entry : key_map) {
-		dictionary_entry_t const& entry = key_entry.second;
+	for (key_map_t::value_type& key_entry : key_map) {
+		dictionary_entry_t& entry = key_entry.second;
 		if (entry.must_appear() && entry.count < 1) {
 			Logger::error("Mandatory dictionary key not present: ", key_entry.first);
 			ret = false;
 		}
+		entry.count = 0;
 	}
 	return ret;
 }

@@ -11,7 +11,7 @@ namespace OpenVic {
 	private:
 		const bool is_water;
 
-		TerrainType(const std::string_view new_identifier, colour_t new_colour, ModifierValue&& new_values, bool new_is_water);
+		TerrainType(std::string_view new_identifier, colour_t new_colour, ModifierValue&& new_values, bool new_is_water);
 
 	public:
 		TerrainType(TerrainType&&) = default;
@@ -30,7 +30,7 @@ namespace OpenVic {
 		const index_t priority;
 		const bool has_texture;
 
-		TerrainTypeMapping(const std::string_view new_identifier, TerrainType const& new_type, std::vector<index_t>&& new_terrain_indicies, index_t new_priority, bool new_has_texture);
+		TerrainTypeMapping(std::string_view new_identifier, TerrainType const& new_type, std::vector<index_t>&& new_terrain_indicies, index_t new_priority, bool new_has_texture);
 
 	public:
 		TerrainTypeMapping(TerrainTypeMapping&&) = default;
@@ -56,10 +56,10 @@ namespace OpenVic {
 	public:
 		TerrainTypeManager();
 
-		bool add_terrain_type(const std::string_view identifier, colour_t colour, ModifierValue&& values, bool is_water);
+		bool add_terrain_type(std::string_view identifier, colour_t colour, ModifierValue&& values, bool is_water);
 		IDENTIFIER_REGISTRY_ACCESSORS(TerrainType, terrain_type)
 
-		bool add_terrain_type_mapping(const std::string_view identifier, TerrainType const* type,
+		bool add_terrain_type_mapping(std::string_view identifier, TerrainType const* type,
 			std::vector<TerrainTypeMapping::index_t>&& terrain_indicies, TerrainTypeMapping::index_t priority, bool has_texture);
 		IDENTIFIER_REGISTRY_ACCESSORS(TerrainTypeMapping, terrain_type_mapping)
 

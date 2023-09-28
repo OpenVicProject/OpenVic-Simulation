@@ -16,7 +16,7 @@ namespace OpenVic {
 		const std::string identifier;
 
 	protected:
-		HasIdentifier(const std::string_view new_identifier);
+		HasIdentifier(std::string_view new_identifier);
 
 	public:
 		HasIdentifier(HasIdentifier const&) = delete;
@@ -55,7 +55,7 @@ namespace OpenVic {
 	 */
 	class HasIdentifierAndColour : public HasIdentifier, public HasColour {
 	protected:
-		HasIdentifierAndColour(const std::string_view new_identifier, const colour_t new_colour, bool can_be_null, bool can_have_alpha);
+		HasIdentifierAndColour(std::string_view new_identifier, const colour_t new_colour, bool can_be_null, bool can_have_alpha);
 
 	public:
 		HasIdentifierAndColour(HasIdentifierAndColour const&) = delete;
@@ -86,7 +86,7 @@ namespace OpenVic {
 		identifier_index_map_t identifier_index_map;
 
 	public:
-		IdentifierRegistry(const std::string_view new_name, bool new_log_lock = true)
+		IdentifierRegistry(std::string_view new_name, bool new_log_lock = true)
 			: name { new_name }, log_lock { new_log_lock } {}
 
 		std::string const& get_name() const {
@@ -143,16 +143,20 @@ namespace OpenVic {
 			}
 		}
 
-		T* get_item_by_identifier(const std::string_view identifier) {
+		T* get_item_by_identifier(std::string_view identifier) {
 			const identifier_index_map_t::const_iterator it = identifier_index_map.find(identifier);
 			if (it != identifier_index_map.end()) return &items[it->second];
 			return nullptr;
 		}
 
-		T const* get_item_by_identifier(const std::string_view identifier) const {
+		T const* get_item_by_identifier(std::string_view identifier) const {
 			const identifier_index_map_t::const_iterator it = identifier_index_map.find(identifier);
 			if (it != identifier_index_map.end()) return &items[it->second];
 			return nullptr;
+		}
+
+		bool has_identifier(std::string_view identifier) const {
+			return get_item_by_identifier(identifier) != nullptr;
 		}
 
 		T* get_item_by_index(size_t index) {
@@ -161,6 +165,10 @@ namespace OpenVic {
 
 		T const* get_item_by_index(size_t index) const {
 			return index < items.size() ? &items[index] : nullptr;
+		}
+
+		bool has_index(size_t index) const {
+			return get_item_by_index(index) != nullptr;
 		}
 
 		std::vector<T>& get_items() {
@@ -242,8 +250,10 @@ namespace OpenVic {
 #define IDENTIFIER_REGISTRY_ACCESSORS_CUSTOM_PLURAL(type, singular, plural) \
 	void lock_##plural() { plural.lock(); } \
 	bool plural##_are_locked() const { return plural.is_locked(); } \
-	type const* get_##singular##_by_identifier(const std::string_view identifier) const { \
+	type const* get_##singular##_by_identifier(std::string_view identifier) const { \
 		return plural.get_item_by_identifier(identifier); } \
+	bool has_##singular##_identifier(std::string_view identifier) const { \
+		return plural.has_identifier(identifier); } \
 	size_t get_##singular##_count() const { \
 		return plural.size(); } \
 	std::vector<type> const& get_##plural() const { \
@@ -258,7 +268,7 @@ namespace OpenVic {
 		return plural.expect_item_decimal_map(callback); }
 
 #define IDENTIFIER_REGISTRY_NON_CONST_ACCESSORS_CUSTOM_PLURAL(type, singular, plural) \
-	type* get_##singular##_by_identifier(const std::string_view identifier) { \
+	type* get_##singular##_by_identifier(std::string_view identifier) { \
 		return plural.get_item_by_identifier(identifier); } \
 	NodeTools::node_callback_t expect_##singular##_identifier(NodeTools::callback_t<type&> callback) { \
 		return plural.expect_item_identifier(callback); } \

@@ -1,5 +1,12 @@
 #include "Dataloader.hpp"
 
+#include <openvic-dataloader/csv/Parser.hpp>
+#include <openvic-dataloader/detail/CallbackOStream.hpp>
+#include <openvic-dataloader/v2script/Parser.hpp>
+
+#include "openvic-simulation/GameManager.hpp"
+#include "openvic-simulation/utility/Logger.hpp"
+
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;
 using namespace ovdl;

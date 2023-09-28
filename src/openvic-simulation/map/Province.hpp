@@ -60,7 +60,7 @@ namespace OpenVic {
 
 		void _set_terrain_type(TerrainType const* type);
 
-		Province(const std::string_view new_identifier, colour_t new_colour, index_t new_index);
+		Province(std::string_view new_identifier, colour_t new_colour, index_t new_index);
 
 	public:
 		Province(Province&&) = default;
@@ -76,7 +76,7 @@ namespace OpenVic {
 		bool add_building(BuildingInstance&& building_instance);
 		IDENTIFIER_REGISTRY_ACCESSORS(BuildingInstance, building)
 		void reset_buildings();
-		bool expand_building(const std::string_view building_type_identifier);
+		bool expand_building(std::string_view building_type_identifier);
 		Good const* get_rgo() const;
 		std::string to_string() const;
 

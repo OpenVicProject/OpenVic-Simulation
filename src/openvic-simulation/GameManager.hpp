@@ -2,14 +2,11 @@
 
 #include "openvic-simulation/GameAdvancementHook.hpp"
 #include "openvic-simulation/economy/Good.hpp"
+#include "openvic-simulation/economy/ProductionType.hpp"
 #include "openvic-simulation/map/Map.hpp"
 #include "openvic-simulation/politics/Ideology.hpp"
 #include "openvic-simulation/politics/Issue.hpp"
-#include "openvic-simulation/GameAdvancementHook.hpp"
-#include "openvic-simulation/economy/Good.hpp"
-#include "openvic-simulation/map/Map.hpp"
 #include "openvic-simulation/units/Unit.hpp"
-#include "openvic-simulation/economy/ProductionType.hpp"
 
 namespace OpenVic {
 	struct GameManager {
@@ -63,7 +60,7 @@ namespace OpenVic {
 		bool setup();
 
 		Date const& get_today() const;
-		bool expand_building(Province::index_t province_index, const std::string_view building_type_identifier);
+		bool expand_building(Province::index_t province_index, std::string_view building_type_identifier);
 
 		/* Hardcoded data for defining things for which parsing from files has
 		 * not been implemented, currently mapmodes and building types.

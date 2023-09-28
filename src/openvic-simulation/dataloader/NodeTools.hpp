@@ -30,6 +30,7 @@ namespace OpenVic {
 		node_callback_t expect_uint(callback_t<uint64_t> callback);
 		node_callback_t expect_fixed_point(callback_t<fixed_point_t> callback);
 		node_callback_t expect_colour(callback_t<colour_t> callback);
+		node_callback_t expect_timespan(callback_t<Timespan> callback);
 		node_callback_t expect_date(callback_t<Date> callback);
 		node_callback_t expect_ivec2(callback_t<ivec2_t> callback);
 		node_callback_t expect_fvec2(callback_t<fvec2_t> callback);
@@ -42,6 +43,8 @@ namespace OpenVic {
 		node_callback_t expect_list_of_length(size_t length, node_callback_t callback);
 		node_callback_t expect_list(node_callback_t callback);
 		node_callback_t expect_length(callback_t<size_t> callback);
+
+		node_callback_t expect_key(std::string_view key, node_callback_t callback);
 
 		node_callback_t expect_dictionary_and_length(length_callback_t length_callback, key_value_callback_t callback);
 		node_callback_t expect_dictionary(key_value_callback_t callback);
@@ -72,9 +75,9 @@ namespace OpenVic {
 		using enum dictionary_entry_t::expected_count_t;
 		using key_map_t = std::map<std::string, dictionary_entry_t, std::less<void>>;
 
-		void add_key_map_entry(key_map_t& key_map, const std::string_view key, dictionary_entry_t::expected_count_t expected_count, node_callback_t callback);
+		void add_key_map_entry(key_map_t& key_map, std::string_view key, dictionary_entry_t::expected_count_t expected_count, node_callback_t callback);
 		key_value_callback_t dictionary_keys_callback(key_map_t& key_map, bool allow_other_keys);
-		bool check_key_map_counts(key_map_t const& key_map);
+		bool check_key_map_counts(key_map_t& key_map);
 
 		constexpr struct allow_other_keys_t {} ALLOW_OTHER_KEYS;
 
@@ -83,7 +86,7 @@ namespace OpenVic {
 		template<typename... Args>
 		node_callback_t _expect_dictionary_keys_and_length(length_callback_t length_callback,
 			bool allow_other_keys, key_map_t&& key_map,
-			const std::string_view key, dictionary_entry_t::expected_count_t expected_count, node_callback_t callback,
+			std::string_view key, dictionary_entry_t::expected_count_t expected_count, node_callback_t callback,
 			Args... args) {
 			add_key_map_entry(key_map, key, expected_count, callback);
 			return _expect_dictionary_keys_and_length(length_callback, allow_other_keys, std::move(key_map), args...);
@@ -91,7 +94,7 @@ namespace OpenVic {
 
 		template<typename... Args>
 		node_callback_t expect_dictionary_keys_and_length(length_callback_t length_callback,
-			const std::string_view key, dictionary_entry_t::expected_count_t expected_count, node_callback_t callback,
+			std::string_view key, dictionary_entry_t::expected_count_t expected_count, node_callback_t callback,
 			Args... args) {
 			return _expect_dictionary_keys_and_length(length_callback, false, {}, key, expected_count, callback, args...);
 		}
@@ -169,13 +172,13 @@ namespace OpenVic {
 
 		template<typename T>
 		requires(std::integral<T>)
-		callback_t<uint64_t> assign_variable_callback_uint(const std::string_view name, T& var) {
-			return [&var, name](uint64_t val) -> bool {
+		callback_t<uint64_t> assign_variable_callback_uint(T& var) {
+			return [&var](uint64_t val) -> bool {
 				if (val <= static_cast<uint64_t>(std::numeric_limits<T>::max())) {
 					var = val;
 					return true;
 				}
-				Logger::error("Invalid ", name, ": ", val, " (valid range: [0, ",
+				Logger::error("Invalid uint: ", val, " (valid range: [0, ",
 					static_cast<uint64_t>(std::numeric_limits<T>::max()), "])");
 				return false;
 			};
@@ -183,13 +186,13 @@ namespace OpenVic {
 
 		template<typename T>
 		requires(std::signed_integral<T>)
-		callback_t<int64_t> assign_variable_callback_int(const std::string_view name, T& var) {
-			return [&var, name](int64_t val) -> bool {
+		callback_t<int64_t> assign_variable_callback_int(T& var) {
+			return [&var](int64_t val) -> bool {
 				if (static_cast<int64_t>(std::numeric_limits<T>::lowest()) <= val && val <= static_cast<int64_t>(std::numeric_limits<T>::max())) {
 					var = val;
 					return true;
 				}
-				Logger::error("Invalid ", name, ": ", val, " (valid range: [",
+				Logger::error("Invalid int: ", val, " (valid range: [",
 					static_cast<int64_t>(std::numeric_limits<T>::lowest()), ", ",
 					static_cast<int64_t>(std::numeric_limits<T>::max()), "])");
 				return false;

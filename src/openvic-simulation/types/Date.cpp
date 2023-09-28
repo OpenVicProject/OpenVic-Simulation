@@ -257,6 +257,6 @@ Date Date::from_string(char const* str, size_t length, bool* successful) {
 	return from_string(str, str + length, successful);
 }
 
-Date Date::from_string(const std::string_view str, bool* successful) {
+Date Date::from_string(std::string_view str, bool* successful) {
 	return from_string(str.data(), str.length(), successful);
 }

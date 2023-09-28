@@ -3,7 +3,7 @@
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;
 
-ModifierEffect::ModifierEffect(const std::string_view new_identifier, bool new_positive_good)
+ModifierEffect::ModifierEffect(std::string_view new_identifier, bool new_positive_good)
 	: HasIdentifier { new_identifier }, positive_good { new_positive_good } {}
 
 bool ModifierEffect::get_positive_good() const {
@@ -74,7 +74,7 @@ ModifierValue ModifierValue::operator-(ModifierValue const& right) const {
 	return ret -= right;
 }
 
-Modifier::Modifier(const std::string_view new_identifier, ModifierValue&& new_values, icon_t new_icon)
+Modifier::Modifier(std::string_view new_identifier, ModifierValue&& new_values, icon_t new_icon)
 	: HasIdentifier { new_identifier }, ModifierValue { std::move(new_values) }, icon { new_icon } {}
 
 Modifier::icon_t Modifier::get_icon() const {
@@ -94,7 +94,7 @@ Date const& ModifierInstance::get_expiry_date() const {
 ModifierManager::ModifierManager()
 	: modifier_effects { "modifier effects"}, modifiers { "modifiers" } {}
 
-bool ModifierManager::add_modifier_effect(const std::string_view identifier, bool positive_good) {
+bool ModifierManager::add_modifier_effect(std::string_view identifier, bool positive_good) {
 	if (identifier.empty()) {
 		Logger::error("Invalid modifier effect identifier - empty!");
 		return false;
@@ -102,7 +102,7 @@ bool ModifierManager::add_modifier_effect(const std::string_view identifier, boo
 	return modifier_effects.add_item({ identifier, positive_good });
 }
 
-bool ModifierManager::add_modifier(const std::string_view identifier, ModifierValue&& values, Modifier::icon_t icon) {
+bool ModifierManager::add_modifier(std::string_view identifier, ModifierValue&& values, Modifier::icon_t icon) {
 	if (identifier.empty()) {
 		Logger::error("Invalid modifier effect identifier - empty!");
 		return false;

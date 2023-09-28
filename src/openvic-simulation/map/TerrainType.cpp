@@ -5,14 +5,14 @@
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;
 
-TerrainType::TerrainType(const std::string_view new_identifier, colour_t new_colour, ModifierValue&& new_values, bool new_is_water)
+TerrainType::TerrainType(std::string_view new_identifier, colour_t new_colour, ModifierValue&& new_values, bool new_is_water)
 	: HasIdentifierAndColour { new_identifier, new_colour, true, false }, ModifierValue { std::move(new_values) }, is_water { new_is_water } {}
 
 bool TerrainType::get_is_water() const {
 	return is_water;
 }
 
-TerrainTypeMapping::TerrainTypeMapping(const std::string_view new_identifier, TerrainType const& new_type,
+TerrainTypeMapping::TerrainTypeMapping(std::string_view new_identifier, TerrainType const& new_type,
 	std::vector<index_t>&& new_terrain_indicies, index_t new_priority, bool new_has_texture)
 	: HasIdentifier { new_identifier }, type { new_type }, terrain_indicies { std::move(new_terrain_indicies) },
 	  priority { new_priority }, has_texture { new_has_texture } {}
@@ -35,7 +35,7 @@ bool TerrainTypeMapping::get_has_texture() const {
 
 TerrainTypeManager::TerrainTypeManager() : terrain_types { "terrain types" }, terrain_type_mappings { "terrain type mappings" } {}
 
-bool TerrainTypeManager::add_terrain_type(const std::string_view identifier, colour_t colour, ModifierValue&& values, bool is_water) {
+bool TerrainTypeManager::add_terrain_type(std::string_view identifier, colour_t colour, ModifierValue&& values, bool is_water) {
 	if (identifier.empty()) {
 		Logger::error("Invalid terrain type identifier - empty!");
 		return false;
@@ -47,7 +47,7 @@ bool TerrainTypeManager::add_terrain_type(const std::string_view identifier, col
 	return terrain_types.add_item({ identifier, colour, std::move(values), is_water });
 }
 
-bool TerrainTypeManager::add_terrain_type_mapping(const std::string_view identifier, TerrainType const* type,
+bool TerrainTypeManager::add_terrain_type_mapping(std::string_view identifier, TerrainType const* type,
 	std::vector<TerrainTypeMapping::index_t>&& terrain_indicies, TerrainTypeMapping::index_t priority, bool has_texture) {
 	if (!terrain_types.is_locked()) {
 		Logger::error("Cannot register terrain type mappings until terrain types are locked!");
@@ -117,7 +117,7 @@ bool TerrainTypeManager::_load_terrain_type_mapping(std::string_view mapping_key
 				return false;
 			}
 		)),
-		"priority", ZERO_OR_ONE, expect_uint(assign_variable_callback_uint("terrain type mapping priority", priority)),
+		"priority", ZERO_OR_ONE, expect_uint(assign_variable_callback_uint(priority)),
 		"has_texture", ZERO_OR_ONE, expect_bool(assign_variable_callback(has_texture))
 	)(mapping_value);
 	if (has_texture) {
@@ -153,7 +153,7 @@ bool TerrainTypeManager::load_terrain_types(ModifierManager const& modifier_mana
 			if (key == "terrain") {
 				if (!terrain) {
 					terrain = true;
-					return expect_uint(assign_variable_callback_uint("terrain texture limit", terrain_texture_limit))(value);
+					return expect_uint(assign_variable_callback_uint(terrain_texture_limit))(value);
 				} else {
 					Logger::error("Duplicate terrain key!");
 					return false;

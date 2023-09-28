@@ -5,9 +5,9 @@
 #include "openvic-simulation/types/IdentifierRegistry.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
 
-#define PRODUCTION_TYPE_ARGS(enum_type, output) \
-	std::string_view identifier, EmployedPop owner, std::vector<EmployedPop> employees, enum_type type, \
-	Pop::pop_size_t workforce, std::map<Good const*, fixed_point_t> input_goods, output output_goods, \
+#define PRODUCTION_TYPE_ARGS \
+	std::string_view identifier, EmployedPop owner, std::vector<EmployedPop> employees, ProductionType::type_t type, \
+	Pop::pop_size_t workforce, std::map<Good const*, fixed_point_t> input_goods, Good const* output_goods, \
 	fixed_point_t value, std::vector<Bonus> bonuses, std::map<Good const*, fixed_point_t> efficiency, \
 	bool coastal, bool farm, bool mine
 
@@ -69,7 +69,7 @@ namespace OpenVic {
 		const bool farm;
 		const bool mine;
 
-		ProductionType(PRODUCTION_TYPE_ARGS(type_t, Good const*));
+		ProductionType(PRODUCTION_TYPE_ARGS);
 
 	public:
 		ProductionType(ProductionType&&) = default;
@@ -80,7 +80,7 @@ namespace OpenVic {
 		Pop::pop_size_t get_workforce() const;
 
 		std::map<Good const*, fixed_point_t> const& get_input_goods();
-		const Good* get_output_goods() const;
+		Good const* get_output_goods() const;
 		fixed_point_t get_value() const;
 		std::vector<Bonus> const& get_bonuses();
 
@@ -103,7 +103,7 @@ namespace OpenVic {
 	public:
 		ProductionTypeManager();
 
-		bool add_production_type(PRODUCTION_TYPE_ARGS(std::string_view, std::string_view), GoodManager& good_manager);
+		bool add_production_type(PRODUCTION_TYPE_ARGS, GoodManager& good_manager);
 		IDENTIFIER_REGISTRY_ACCESSORS(ProductionType, production_type)
 
 		bool load_production_types_file(GoodManager& good_manager, PopManager& pop_manager, ast::NodeCPtr root);
