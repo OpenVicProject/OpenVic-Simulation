@@ -40,3 +40,12 @@ void TestScript::set_requirements(std::vector<Requirement*> in_requirements) { r
 void TestScript::add_requirement(Requirement* req) {	requirements.push_back(req); }
 void TestScript::set_game_manager(GameManager* in_game_manager) { game_manager = in_game_manager; }
 void TestScript::set_script_name(std::string in_script_name) { script_name = in_script_name; }
+
+// Methods
+void TestScript::pass_or_fail_req_with_actual_and_target_values(std::string req_name, std::string target_value, std::string actual_value) {
+	Requirement* req = get_requirement_by_id(req_name);
+	req->set_target_value(target_value);
+	req->set_actual_value(actual_value);
+	if (target_value == actual_value) req->set_pass(true);
+	else req->set_pass(false);
+}

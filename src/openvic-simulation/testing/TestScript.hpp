@@ -34,5 +34,8 @@ namespace OpenVic {
 		void add_requirement(Requirement* req);
 		void set_game_manager(GameManager* in_game_manager);
 		void set_script_name(std::string in_script_name);
+
+		// Methods
+		void pass_or_fail_req_with_actual_and_target_values(std::string req_name, std::string target_value, std::string actual_value);
 	};
 }
