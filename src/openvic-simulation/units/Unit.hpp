@@ -7,10 +7,11 @@
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
 #include "openvic-simulation/dataloader/NodeTools.hpp"
 #include "openvic-simulation/economy/Good.hpp"
+#include "openvic-simulation/types/Date.hpp"
 
 #define UNIT_PARAMS Unit::icon_t icon, Unit::sprite_t sprite, bool active, std::string_view type, \
 					bool floating_flag, uint32_t priority, fixed_point_t max_strength, fixed_point_t default_organisation, \
-					fixed_point_t maximum_speed, fixed_point_t weighted_value, uint32_t build_time, \
+					fixed_point_t maximum_speed, fixed_point_t weighted_value, Timespan build_time, \
 					std::map<const Good*, fixed_point_t> build_cost, fixed_point_t supply_consumption, \
 					std::map<const Good*, fixed_point_t> supply_cost
 #define LAND_PARAMS fixed_point_t reconnaissance, fixed_point_t attack, fixed_point_t defence, fixed_point_t discipline, \
@@ -40,7 +41,7 @@ namespace OpenVic {
 		const fixed_point_t maximum_speed;
 		const fixed_point_t weighted_value;
 
-		const uint32_t build_time;
+		const Timespan build_time;
 		const std::map<const Good*, fixed_point_t> build_cost;
 		const fixed_point_t supply_consumption;
 		const std::map<const Good*, fixed_point_t> supply_cost;
@@ -64,7 +65,7 @@ namespace OpenVic {
 		fixed_point_t get_maximum_speed() const;
 		fixed_point_t get_weighted_value() const;
 
-		uint32_t get_build_time() const;
+		Timespan get_build_time() const;
 		std::map<const Good*, fixed_point_t> const& get_build_cost() const;
 		fixed_point_t get_supply_consumption() const;
 		std::map<const Good*, fixed_point_t> const& get_supply_cost() const;
