@@ -152,11 +152,11 @@ bool PopManager::load_pop_type_file(std::string_view filestem, ast::NodeCPtr roo
 	bool state_capital_only = false, is_artisan = false, is_slave = false, demote_migrant = false;
 	Pop::pop_size_t max_size = 0, merge_max_size = 0;
 	bool ret = expect_dictionary_keys(
-		"sprite", ONE_EXACTLY, expect_uint(assign_variable_callback_uint("poptype sprite", sprite)),
+		"sprite", ONE_EXACTLY, expect_uint(assign_variable_callback_uint(sprite)),
 		"color", ONE_EXACTLY, expect_colour(assign_variable_callback(colour)),
 		"is_artisan", ZERO_OR_ONE, expect_bool(assign_variable_callback(is_artisan)),
-		"max_size", ZERO_OR_ONE, expect_uint(assign_variable_callback_uint("poptype max_size", max_size)),
-		"merge_max_size", ZERO_OR_ONE, expect_uint(assign_variable_callback_uint("poptype merge_max_size", merge_max_size)),
+		"max_size", ZERO_OR_ONE, expect_uint(assign_variable_callback_uint(max_size)),
+		"merge_max_size", ZERO_OR_ONE, expect_uint(assign_variable_callback_uint(merge_max_size)),
 		"strata", ONE_EXACTLY, expect_identifier(
 			[&strata](std::string_view identifier) -> bool {
 				using strata_map_t = std::map<std::string, PopType::strata_t, std::less<void>>;
@@ -218,7 +218,7 @@ bool PopManager::load_pop_into_province(Province& province, std::string_view pop
 	bool ret = expect_dictionary_keys(
 		"culture", ONE_EXACTLY, culture_manager.expect_culture_identifier(assign_variable_callback_pointer(culture)),
 		"religion", ONE_EXACTLY, religion_manager.expect_religion_identifier(assign_variable_callback_pointer(religion)),
-		"size", ONE_EXACTLY, expect_uint(assign_variable_callback_uint("pop size", size)),
+		"size", ONE_EXACTLY, expect_uint(assign_variable_callback_uint(size)),
 		"militancy", ZERO_OR_ONE, success_callback,
 		"rebel_type", ZERO_OR_ONE, success_callback
 	)(pop_node);

@@ -155,12 +155,20 @@ namespace OpenVic {
 			return nullptr;
 		}
 
+		bool has_identifier(std::string_view identifier) const {
+			return get_item_by_identifier(identifier) != nullptr;
+		}
+
 		T* get_item_by_index(size_t index) {
 			return index < items.size() ? &items[index] : nullptr;
 		}
 
 		T const* get_item_by_index(size_t index) const {
 			return index < items.size() ? &items[index] : nullptr;
+		}
+
+		bool has_index(size_t index) const {
+			return get_item_by_index(index) != nullptr;
 		}
 
 		std::vector<T>& get_items() {
@@ -244,6 +252,8 @@ namespace OpenVic {
 	bool plural##_are_locked() const { return plural.is_locked(); } \
 	type const* get_##singular##_by_identifier(std::string_view identifier) const { \
 		return plural.get_item_by_identifier(identifier); } \
+	bool has_##singular##_identifier(std::string_view identifier) const { \
+		return plural.has_identifier(identifier); } \
 	size_t get_##singular##_count() const { \
 		return plural.size(); } \
 	std::vector<type> const& get_##plural() const { \

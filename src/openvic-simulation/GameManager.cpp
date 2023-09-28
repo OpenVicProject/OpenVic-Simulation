@@ -74,7 +74,7 @@ ModifierManager& GameManager::get_modifier_manager() {
 	return modifier_manager;
 }
 
-ModifierManager const& GameManager::get_modifier_manager() const{
+ModifierManager const& GameManager::get_modifier_manager() const {
 	return modifier_manager;
 }
 

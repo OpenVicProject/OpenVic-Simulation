@@ -117,7 +117,7 @@ bool TerrainTypeManager::_load_terrain_type_mapping(std::string_view mapping_key
 				return false;
 			}
 		)),
-		"priority", ZERO_OR_ONE, expect_uint(assign_variable_callback_uint("terrain type mapping priority", priority)),
+		"priority", ZERO_OR_ONE, expect_uint(assign_variable_callback_uint(priority)),
 		"has_texture", ZERO_OR_ONE, expect_bool(assign_variable_callback(has_texture))
 	)(mapping_value);
 	if (has_texture) {
@@ -153,7 +153,7 @@ bool TerrainTypeManager::load_terrain_types(ModifierManager const& modifier_mana
 			if (key == "terrain") {
 				if (!terrain) {
 					terrain = true;
-					return expect_uint(assign_variable_callback_uint("terrain texture limit", terrain_texture_limit))(value);
+					return expect_uint(assign_variable_callback_uint(terrain_texture_limit))(value);
 				} else {
 					Logger::error("Duplicate terrain key!");
 					return false;

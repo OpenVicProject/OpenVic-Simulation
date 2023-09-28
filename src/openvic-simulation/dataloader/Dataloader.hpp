@@ -1,15 +1,8 @@
 #pragma once
 
 #include <filesystem>
-#include <functional>
-#include <vector>
 
 #include "openvic-simulation/dataloader/NodeTools.hpp"
-#include <openvic-dataloader/csv/Parser.hpp>
-#include <openvic-dataloader/detail/CallbackOStream.hpp>
-#include <openvic-dataloader/v2script/Parser.hpp>
-#include "openvic-simulation/GameManager.hpp"
-#include "openvic-simulation/utility/Logger.hpp"
 
 namespace OpenVic {
 	namespace fs = std::filesystem;

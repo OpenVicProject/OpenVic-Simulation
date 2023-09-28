@@ -28,7 +28,7 @@ fixed_point_t EmployedPop::get_amount() {
 	return amount;
 }
 
-ProductionType::ProductionType(PRODUCTION_TYPE_ARGS(type_t, Good const*)) : HasIdentifier { identifier }, owner { owner },
+ProductionType::ProductionType(PRODUCTION_TYPE_ARGS) : HasIdentifier { identifier }, owner { owner },
 	employees { employees }, type { type }, workforce { workforce }, input_goods { input_goods }, output_goods { output_goods },
 	value { value }, bonuses { bonuses }, efficiency { efficiency }, coastal { coastal }, farm { farm }, mine { mine } {}
 
@@ -141,46 +141,36 @@ node_callback_t ProductionTypeManager::_expect_employed_pop_list(GoodManager& go
 		return false; \
 	}
 
-bool ProductionTypeManager::add_production_type(PRODUCTION_TYPE_ARGS(std::string_view, std::string_view), GoodManager& good_manager) {
+bool ProductionTypeManager::add_production_type(PRODUCTION_TYPE_ARGS, GoodManager& good_manager) {
 	if (identifier.empty()) {
 		Logger::error("Invalid production type identifier - empty!");
 		return false;
 	}
 
-	ProductionType::type_t type_enum;
-	if (type == "factory") type_enum = ProductionType::type_t::FACTORY;
-	else if (type == "rgo") type_enum = ProductionType::type_t::RGO;
-	else if (type == "artisan") type_enum = ProductionType::type_t::ARTISAN;
-	else {
-		Logger::error("Bad type ", type, " for production type ", identifier, "!");
-		return false;
-	}
-
-	if (workforce == 0) {
+	if (workforce <= 0) {
 		Logger::error("Workforce for production type ", identifier, " was 0 or unset!");
 		return false;
 	}
 
-	if (value == 0) {
+	if (value <= 0) {
 		Logger::error("Value for production type ", identifier, " was 0 or unset!");
 		return false;
 	}
 
 	POPTYPE_CHECK(owner)
 
-	for (int i = 0; i < employees.size(); i++) {
-		POPTYPE_CHECK(employees[i])
+	for (EmployedPop const& ep : employees) {
+		POPTYPE_CHECK(ep)
 	}
 
-	Good const* output = good_manager.get_good_by_identifier(output_goods);
-	if (output == nullptr) {
-		Logger::error("Invalid output ", output_goods, " for production type ", identifier, "!");
+	if (output_goods == nullptr) {
+		Logger::error("Output good for production type ", identifier, " was null!");
 		return false;
 	}
 
 	return production_types.add_item({
-		identifier, owner, employees, type_enum, workforce, input_goods,
-		output, value, bonuses, efficiency, coastal, farm, mine
+		identifier, owner, employees, type, workforce, input_goods,
+		output_goods, value, bonuses, efficiency, coastal, farm, mine
 	});
 }
 
@@ -188,9 +178,9 @@ bool ProductionTypeManager::add_production_type(PRODUCTION_TYPE_ARGS(std::string
 			"owner", ZERO_OR_ONE, _expect_employed_pop(good_manager, pop_manager, move_variable_callback(owner)), \
 			"employees", ZERO_OR_ONE, _expect_employed_pop_list(good_manager, pop_manager, move_variable_callback(employees)), \
 			"type", ZERO_OR_ONE, expect_identifier(assign_variable_callback(type)), \
-			"workforce", ZERO_OR_ONE, expect_uint(assign_variable_callback_uint("workforce", workforce)), \
+			"workforce", ZERO_OR_ONE, expect_uint(assign_variable_callback_uint(workforce)), \
 			"input_goods", ZERO_OR_ONE, good_manager.expect_good_decimal_map(move_variable_callback(input_goods)), \
-			"output_goods", ZERO_OR_ONE, expect_identifier(assign_variable_callback(output_goods)), \
+			"output_goods", ZERO_OR_ONE, good_manager.expect_good_identifier(assign_variable_callback_pointer(output_goods)), \
 			"value", ZERO_OR_ONE, expect_fixed_point(assign_variable_callback(value)), \
 			"efficiency", ZERO_OR_ONE, good_manager.expect_good_decimal_map(move_variable_callback(efficiency)), \
 			"is_coastal", ZERO_OR_ONE, expect_bool(assign_variable_callback(coastal)), \
@@ -243,7 +233,8 @@ bool ProductionTypeManager::load_production_types_file(GoodManager& good_manager
 
 			EmployedPop owner;
 			std::vector<EmployedPop> employees;
-			std::string_view type, output_goods;
+			std::string_view type;
+			Good const* output_goods = nullptr;
 			Pop::pop_size_t workforce = 0; // 0 is a meaningless value -> unset
 			std::map<Good const*, fixed_point_t> input_goods, efficiency;
 			fixed_point_t value = 0; // 0 is a meaningless value -> unset
@@ -262,8 +253,18 @@ bool ProductionTypeManager::load_production_types_file(GoodManager& good_manager
 			}
 
 			ret &= PARSE_NODE(node);
+
+			ProductionType::type_t type_enum;
+			if (type == "factory") type_enum = ProductionType::type_t::FACTORY;
+			else if (type == "rgo") type_enum = ProductionType::type_t::RGO;
+			else if (type == "artisan") type_enum = ProductionType::type_t::ARTISAN;
+			else {
+				Logger::error("Invalid production type for ", key, ": ", type);
+				ret = false;
+			}
+
 			ret &= add_production_type(
-				key, owner, employees, type, workforce, input_goods, output_goods, value,
+				key, owner, employees, type_enum, workforce, input_goods, output_goods, value,
 				bonuses, efficiency, coastal, farm, mine, good_manager
 			);
 			return ret;
