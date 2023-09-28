@@ -1,20 +1,11 @@
 #include "Province.hpp"
 
-#include <cassert>
-#include <cstddef>
-#include <iomanip>
-#include <iterator>
-#include <sstream>
-
-#include "openvic-simulation/map/TerrainType.hpp"
-
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;
 
 Province::Province(const std::string_view new_identifier, colour_t new_colour, index_t new_index)
 	: HasIdentifierAndColour { new_identifier, new_colour, false, false },
-	  index { new_index },
-	  buildings { "buildings", false } {
+	  index { new_index }, buildings { "buildings", false } {
 	assert(index != NULL_INDEX);
 }
 
@@ -48,8 +39,8 @@ bool Province::load_positions(BuildingManager const& building_manager, ast::Node
 	return true;
 }
 
-bool Province::add_building(Building&& building) {
-	return buildings.add_item(std::move(building));
+bool Province::add_building(BuildingInstance&& building_instance) {
+	return buildings.add_item(std::move(building_instance));
 }
 
 void Province::reset_buildings() {
@@ -57,7 +48,7 @@ void Province::reset_buildings() {
 }
 
 bool Province::expand_building(const std::string_view building_type_identifier) {
-	Building* building = buildings.get_item_by_identifier(building_type_identifier);
+	BuildingInstance* building = buildings.get_item_by_identifier(building_type_identifier);
 	if (building == nullptr) return false;
 	return building->expand();
 }
@@ -136,13 +127,13 @@ void Province::update_pops() {
 }
 
 void Province::update_state(Date const& today) {
-	for (Building& building : buildings.get_items())
+	for (BuildingInstance& building : buildings.get_items())
 		building.update_state(today);
 	update_pops();
 }
 
 void Province::tick(Date const& today) {
-	for (Building& building : buildings.get_items())
+	for (BuildingInstance& building : buildings.get_items())
 		building.tick(today);
 }
 

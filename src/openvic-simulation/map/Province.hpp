@@ -1,6 +1,6 @@
 #pragma once
 
-#include <limits>
+#include <cassert>
 
 #include "openvic-simulation/map/Building.hpp"
 #include "openvic-simulation/pop/Pop.hpp"
@@ -46,7 +46,7 @@ namespace OpenVic {
 		Region* region = nullptr;
 		bool has_region = false, water = false;
 		life_rating_t life_rating = 0;
-		IdentifierRegistry<Building> buildings;
+		IdentifierRegistry<BuildingInstance> buildings;
 		// TODO - change this into a factory-like structure
 		Good const* rgo = nullptr;
 
@@ -73,8 +73,8 @@ namespace OpenVic {
 		life_rating_t get_life_rating() const;
 		bool load_positions(BuildingManager const& building_manager, ast::NodeCPtr root);
 
-		bool add_building(Building&& building);
-		IDENTIFIER_REGISTRY_ACCESSORS(Building, building)
+		bool add_building(BuildingInstance&& building_instance);
+		IDENTIFIER_REGISTRY_ACCESSORS(BuildingInstance, building)
 		void reset_buildings();
 		bool expand_building(const std::string_view building_type_identifier);
 		Good const* get_rgo() const;

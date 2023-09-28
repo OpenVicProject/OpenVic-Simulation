@@ -177,12 +177,12 @@ bool GameManager::load_hardcoded_defines() {
 			} },
 		{ "mapmode_infrastructure",
 			[](Map const& map, Province const& province) -> colour_t {
-				Building const* railroad = province.get_building_by_identifier("building_railroad");
+				BuildingInstance const* railroad = province.get_building_by_identifier("building_railroad");
 				if (railroad != nullptr) {
-					colour_t val = fraction_to_colour_byte(railroad->get_level(), railroad->get_type().get_max_level() + 1, 0.5f, 1.0f);
+					colour_t val = fraction_to_colour_byte(railroad->get_current_level(), railroad->get_building().get_max_level() + 1, 0.5f, 1.0f);
 					switch (railroad->get_expansion_state()) {
-						case Building::ExpansionState::CannotExpand: val <<= 16; break;
-						case Building::ExpansionState::CanExpand: break;
+						case ExpansionState::CannotExpand: val <<= 16; break;
+						case ExpansionState::CanExpand: break;
 						default: val <<= 8; break;
 					}
 					return HIGH_ALPHA_VALUE | val;
@@ -207,14 +207,6 @@ bool GameManager::load_hardcoded_defines() {
 	for (mapmode_t const& mapmode : mapmodes)
 		ret &= map.add_mapmode(mapmode.first, mapmode.second);
 	map.lock_mapmodes();
-
-	using building_type_t = std::tuple<std::string, Building::level_t, Timespan>;
-	const std::vector<building_type_t> building_types {
-		{ "building_fort", 4, 8 }, { "building_naval_base", 6, 15 }, { "building_railroad", 5, 10 }	// Move this to building.hpp
-	};
-	for (building_type_t const& type : building_types)
-		ret &= building_manager.add_building_type(std::get<0>(type), std::get<1>(type), std::get<2>(type));
-	building_manager.lock_building_types();
 
 	return ret;
 }
