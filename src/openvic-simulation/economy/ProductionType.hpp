@@ -58,16 +58,16 @@ namespace OpenVic {
 		} type;
 		const Pop::pop_size_t workforce;
 
-		const std::map<Good const*, fixed_point_t> input_goods; // farms generally lack this
+		const std::map<Good const*, fixed_point_t> input_goods;
 		Good const* output_goods;
 		const fixed_point_t value;
-		const std::vector<Bonus> bonuses; // some
+		const std::vector<Bonus> bonuses;
 
-		const std::map<Good const*, fixed_point_t> efficiency; // some
-		const bool coastal; // is_coastal some(false)
+		const std::map<Good const*, fixed_point_t> efficiency;
+		const bool coastal; // is_coastal
 
-		const bool farm; // some (false)
-		const bool mine; // some (false)
+		const bool farm;
+		const bool mine;
 
 		ProductionType(PRODUCTION_TYPE_ARGS(type_t, Good const*));
 

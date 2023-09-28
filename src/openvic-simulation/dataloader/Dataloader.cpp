@@ -1,12 +1,5 @@
 #include "Dataloader.hpp"
 
-#include <openvic-dataloader/csv/Parser.hpp>
-#include <openvic-dataloader/detail/CallbackOStream.hpp>
-#include <openvic-dataloader/v2script/Parser.hpp>
-
-#include "openvic-simulation/GameManager.hpp"
-#include "openvic-simulation/utility/Logger.hpp"
-
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;
 using namespace ovdl;
@@ -282,6 +275,7 @@ bool Dataloader::load_defines(GameManager& game_manager) const {
 	static const fs::path ideology_file = "common/ideologies.txt";
 	static const fs::path issues_file = "common/issues.txt";
 	static const fs::path production_types_file = "common/production_types.txt";
+	static const fs::path buildings_file = "common/buildings.txt";
 	static const fs::path map_directory = "map";
 	static const fs::path units_directory = "units";
 
@@ -320,17 +314,26 @@ bool Dataloader::load_defines(GameManager& game_manager) const {
 		ret = false;
 	}
 	if (!game_manager.get_production_type_manager().load_production_types_file(
-			game_manager.get_good_manager(), game_manager.get_pop_manager(),
+			game_manager.get_good_manager(),
+			game_manager.get_pop_manager(),
 			_parse_defines(lookup_file(production_types_file)).get_file_node())) {
 		Logger::error("Failed to load production types!");
 		ret = false;
 	}
-	if (!_load_units(game_manager, units_directory)) {
-		Logger::error("Failed to load units!");
+	if (!game_manager.get_building_manager().load_buildings_file(
+		game_manager.get_good_manager(),
+		game_manager.get_production_type_manager(),
+		game_manager.get_modifier_manager(),
+		_parse_defines(lookup_file(buildings_file)).get_file_node())) {
+		Logger::error("Failed to load buildings!");
 		ret = false;
 	}
 	if (!_load_map_dir(game_manager, map_directory)) {
 		Logger::error("Failed to load map!");
+		ret = false;
+	}
+	if (!_load_units(game_manager, units_directory)) {
+		Logger::error("Failed to load units!");
 		ret = false;
 	}
 
