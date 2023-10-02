@@ -92,10 +92,6 @@ jobs:
           sudo update-alternatives --set g++ /usr/bin/g++-12
           g++ --version
 
-      - name: Setup MinGW for Windows/MinGW build
-        if: ${{ matrix.platform == 'windows' }}
-        uses: OpenVicProject/mingw-cache@master
-
       - name: Compile with SCons
         uses: OpenVicProject/openvic-build@master
         with:
