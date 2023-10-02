@@ -34,9 +34,57 @@ Province::life_rating_t Province::get_life_rating() const {
 }
 
 bool Province::load_positions(BuildingManager const& building_manager, ast::NodeCPtr root) {
-	// TODO - implement province position loading
-	// (root is the dictionary after the province identifier)
-	return true;
+	return expect_dictionary_keys(
+		"text_position", ZERO_OR_ONE, [this](ast::NodeCPtr node) -> bool {
+			return expect_fvec2(assign_variable_callback(positions.text))(node);
+		},
+		"text_rotation", ZERO_OR_ONE, [this](ast::NodeCPtr node) -> bool {
+			return expect_fixed_point(assign_variable_callback(positions.text_rotation))(node);
+		},
+		"text_scale", ZERO_OR_ONE, [this](ast::NodeCPtr node) -> bool {
+			return expect_fixed_point(assign_variable_callback(positions.text_scale))(node);
+		},
+		"unit", ZERO_OR_ONE, [this](ast::NodeCPtr node) -> bool {
+			return expect_fvec2(assign_variable_callback(positions.unit))(node);
+		},
+		"town", ZERO_OR_ONE, [this](ast::NodeCPtr node) -> bool {
+			return expect_fvec2(assign_variable_callback(positions.city))(node);
+		},
+		"city", ZERO_OR_ONE, [this](ast::NodeCPtr node) -> bool {
+			return expect_fvec2(assign_variable_callback(positions.city))(node);
+		},
+		"factory", ZERO_OR_ONE, [this](ast::NodeCPtr node) -> bool {
+			return expect_fvec2(assign_variable_callback(positions.factory))(node);
+		},
+		"building_construction", ZERO_OR_ONE, [this](ast::NodeCPtr node) -> bool {
+			return expect_fvec2(assign_variable_callback(positions.building_construction))(node);
+		},
+		"military_construction", ZERO_OR_ONE, [this](ast::NodeCPtr node) -> bool {
+			return expect_fvec2(assign_variable_callback(positions.military_construction))(node);
+		},
+		"building_position", ZERO_OR_ONE, expect_dictionary_keys(
+			"fort", ZERO_OR_ONE, [this](ast::NodeCPtr node) -> bool {
+				return expect_fvec2(assign_variable_callback(positions.fort))(node);
+			},
+			"railroad", ZERO_OR_ONE, [this](ast::NodeCPtr node) -> bool {
+				return expect_fvec2(assign_variable_callback(positions.railroad))(node);
+			},
+			"naval_base", ZERO_OR_ONE, [this](ast::NodeCPtr node) -> bool {
+				return expect_fvec2(assign_variable_callback(positions.navalbase))(node);
+			}
+		),
+		"building_rotation", ZERO_OR_ONE, expect_dictionary_keys(
+			"fort", ZERO_OR_ONE, [this](ast::NodeCPtr node) -> bool {
+				return expect_fixed_point(assign_variable_callback(positions.fort_rotation))(node);
+			},
+			"railroad", ZERO_OR_ONE, [this](ast::NodeCPtr node) -> bool {
+				return expect_fixed_point(assign_variable_callback(positions.railroad_rotation))(node);
+			},
+			"naval_base", ZERO_OR_ONE, [this](ast::NodeCPtr node) -> bool {
+				return expect_fixed_point(assign_variable_callback(positions.navalbase_rotation))(node);
+			}
+		)
+	)(root);
 }
 
 bool Province::add_building(BuildingInstance&& building_instance) {
