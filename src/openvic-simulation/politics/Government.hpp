@@ -10,7 +10,7 @@ namespace OpenVic {
         friend struct GovernmentTypeManager;
 
     private:
-        const std::vector<std::string> ideologies;
+        std::vector<std::string> ideologies;
         const bool elections, appoint_ruling_party;
         const uint16_t election_duration;
         const std::string_view flag_type_identifier;
@@ -37,6 +37,6 @@ namespace OpenVic {
         bool add_government_type(std::string_view identifier, std::vector<std::string> ideologies, bool elections, bool appoint_ruling_party, uint16_t election_duration, std::string_view flag_type);
         IDENTIFIER_REGISTRY_ACCESSORS(GovernmentType, government_type)
 
-        bool load_government_types_file(ast::NodeCPtr root);
+        bool load_government_types_file(IdeologyManager& ideology_manager, ast::NodeCPtr root);
     };
 } // namespace OpenVic 

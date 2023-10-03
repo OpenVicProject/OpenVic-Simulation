@@ -52,9 +52,9 @@ bool GovernmentTypeManager::add_government_type(std::string_view identifier, std
     return government_types.add_item({ identifier, ideologies, elections, appoint_ruling_party, election_duration, flag_type });
 }
 
-bool GovernmentTypeManager::load_government_types_file(ast::NodeCPtr root) {
+bool GovernmentTypeManager::load_government_types_file(IdeologyManager& ideology_manager, ast::NodeCPtr root) {
     bool ret = expect_dictionary(
-        [this](std::string_view government_type_identifier, ast::NodeCPtr value) -> bool {
+        [this, &ideology_manager](std::string_view government_type_identifier, ast::NodeCPtr value) -> bool {
             std::vector<std::string> ideologies;
             bool elections = false, appoint_ruling_party = false;
             uint16_t election_duration = 0;
@@ -70,14 +70,15 @@ bool GovernmentTypeManager::load_government_types_file(ast::NodeCPtr root) {
             )(value);
 
             ret &= expect_dictionary(
-                [this, ideologies](std::string_view key, ast::NodeCPtr value) -> bool {
+                [this, &ideology_manager, &ideologies](std::string_view key, ast::NodeCPtr value) -> bool {
                     static const std::set<std::string, std::less<void>> reserved_keys = {
 						"election", "duration", "appoint_ruling_party", "flagType"
 					};
                     if (reserved_keys.find(key) != reserved_keys.end()) return true;
                     return expect_assign(
-                        [this, ideologies](std::string_view ideology_key, ast::NodeCPtr value) -> bool {
-                            // TODO: grab reference to ideology and shove in vector
+                        [this, &ideology_manager, &ideologies](std::string_view ideology_key, ast::NodeCPtr value) -> bool {
+                            if (ideology_manager.get_ideology_by_identifier(ideology_key) == nullptr) { return false; }
+                            ideologies.push_back(std::string{ideology_key});
                             return true;
                         }
                     )(value);

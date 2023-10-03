@@ -318,7 +318,7 @@ bool Dataloader::load_defines(GameManager& game_manager) const {
 		Logger::error("Failed to load ideologies!");
 		ret = false;
 	}
-	if (!game_manager.get_government_type_manager().load_government_types_file(_parse_defines(lookup_file(governments_file)).get_file_node())) {
+	if (!game_manager.get_government_type_manager().load_government_types_file(game_manager.get_ideology_manager(), _parse_defines(lookup_file(governments_file)).get_file_node())) {
 		Logger::error("Failed to load government types!");
 		ret = false;
 	}
