@@ -10,6 +10,15 @@
 #include "openvic-simulation/military/MilitaryManager.hpp"
 #include "openvic-simulation/misc/Define.hpp"
 #include "openvic-simulation/politics/PoliticsManager.hpp"
+#include "openvic-simulation/pop/Pop.hpp"
+#include "openvic-simulation/tech/Technology.hpp"
+#include "utility/Getters.hpp"
+
+#define DECLARE_WITH_REF_GETTERS(Type, name) \
+	Type name; \
+public: \
+	REF_GETTERS(name) \
+private:
 
 namespace OpenVic {
 	struct GameManager {
@@ -23,6 +32,7 @@ namespace OpenVic {
 		ModifierManager PROPERTY_REF(modifier_manager);
 		PoliticsManager PROPERTY_REF(politics_manager);
 		HistoryManager PROPERTY_REF(history_manager);
+		TechnologyManager PROPERTY_REF(technology_manager);
 		PopManager PROPERTY_REF(pop_manager);
 		CountryManager PROPERTY_REF(country_manager);
 		UIManager PROPERTY_REF(ui_manager);

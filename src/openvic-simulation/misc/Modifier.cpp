@@ -185,6 +185,7 @@ bool ModifierManager::setup_modifier_effects() {
 
 	// TODO: make technology group modifiers dynamic
 	ret &= add_modifier_effect("army_tech_research_bonus", true);
+	ret &= add_modifier_effect("navy_tech_research_bonus", true);
 	ret &= add_modifier_effect("commerce_tech_research_bonus", true);
 	ret &= add_modifier_effect("culture_tech_research_bonus", true);
 	ret &= add_modifier_effect("industry_tech_research_bonus", true);

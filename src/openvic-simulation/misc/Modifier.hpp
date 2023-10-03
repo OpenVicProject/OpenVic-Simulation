@@ -72,6 +72,7 @@ namespace OpenVic {
 		/* A modifier can have no icon (zero). */
 		const icon_t PROPERTY(icon);
 
+	protected:
 		Modifier(std::string_view new_identifier, ModifierValue&& new_values, icon_t new_icon);
 
 	public:

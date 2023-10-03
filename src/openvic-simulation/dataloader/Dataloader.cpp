@@ -636,6 +636,18 @@ bool Dataloader::_load_units(UnitManager& unit_manager, GoodManager const& good_
 	return ret;
 }
 
+bool Dataloader::_load_technologies(TechnologyManager& technology_manager, ModifierManager& modifier_manager) const {
+	static constexpr std::string_view technologies_directory = "technologies";
+	bool ret = apply_to_files(
+		lookup_files_in_dir(technologies_directory, ".txt"),
+		[&technology_manager, &modifier_manager](fs::path const& file) -> bool {
+			return technology_manager.load_technologies_file(modifier_manager, parse_defines(file).get_file_node());
+		}
+	);
+	technology_manager.lock_technologies();
+	return ret;
+}
+
 bool Dataloader::_load_history(GameManager& game_manager, bool unused_history_file_warnings) const {
 
 	/* Country History */
@@ -847,6 +859,7 @@ bool Dataloader::load_defines(GameManager& game_manager) const {
 	static const std::string national_values_file = "common/nationalvalues.txt";
 	static const std::string production_types_file = "common/production_types.txt";
 	static const std::string religion_file = "common/religion.txt";
+	static const std::string technology_file = "common/technology.txt";
 	static const std::string leader_traits_file = "common/traits.txt";
 	static const std::string cb_types_file = "common/cb_types.txt";
 	static const std::string crime_modifiers_file = "common/crime.txt";
@@ -903,6 +916,15 @@ bool Dataloader::load_defines(GameManager& game_manager) const {
 		game_manager.get_military_manager().get_unit_manager(), game_manager.get_economy_manager().get_good_manager()
 	)) {
 		Logger::error("Failed to load units!");
+		ret = false;
+	}
+	if (!game_manager.get_technology_manager().load_technology_file(game_manager.get_modifier_manager(),
+		parse_defines(lookup_file(technology_file)).get_file_node())) {
+		Logger::error("Failed to load technology areas!");
+		ret = false;
+	}
+	if (!_load_technologies(game_manager.get_technology_manager(), game_manager.get_modifier_manager())) {
+		Logger::error("Failed to load technologies!");
 		ret = false;
 	}
 	if (!_load_pop_types(
