@@ -30,6 +30,14 @@ GoodManager const& GameManager::get_good_manager() const {
 	return good_manager;
 }
 
+GovernmentTypeManager& GameManager::get_government_type_manager() {
+	return government_type_manager;
+}
+
+GovernmentTypeManager const& GameManager::get_government_type_manager() const {
+	return government_type_manager;
+}
+
 PopManager& GameManager::get_pop_manager() {
 	return pop_manager;
 }
