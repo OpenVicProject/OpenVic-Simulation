@@ -54,7 +54,6 @@ namespace OpenVic {
 			fixed_point_t railroad_rotation;
 			fvec2_t navalbase;
 			fixed_point_t navalbase_rotation;
-			/* fvec2_t spawn_railway_track; treating as extraneous until proven need */
 		};
 		
 

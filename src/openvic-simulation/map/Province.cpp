@@ -82,8 +82,13 @@ bool Province::load_positions(BuildingManager const& building_manager, ast::Node
 			},
 			"naval_base", ZERO_OR_ONE, [this](ast::NodeCPtr node) -> bool {
 				return expect_fixed_point(assign_variable_callback(positions.navalbase_rotation))(node);
-			}
-		)
+			},
+			"aeroplane_factory", ZERO_OR_ONE, [](ast::NodeCPtr _) -> bool { return true; } /* see below */
+		),
+		/* the below are esoteric clausewitz leftovers that either have no impact or whose functionality is lost to time */
+		"spawn_railway_track", ZERO_OR_ONE, [](ast::NodeCPtr _) -> bool { return true; },
+		"railroad_visibility", ZERO_OR_ONE, [](ast::NodeCPtr _) -> bool { return true; },
+		"building_nudge", ZERO_OR_ONE, [](ast::NodeCPtr _) -> bool { return true; }
 	)(root);
 }
 
