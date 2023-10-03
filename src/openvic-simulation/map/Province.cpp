@@ -35,60 +35,30 @@ Province::life_rating_t Province::get_life_rating() const {
 
 bool Province::load_positions(BuildingManager const& building_manager, ast::NodeCPtr root) {
 	return expect_dictionary_keys(
-		"text_position", ZERO_OR_ONE, [this](ast::NodeCPtr node) -> bool {
-			return expect_fvec2(assign_variable_callback(positions.text))(node);
-		},
-		"text_rotation", ZERO_OR_ONE, [this](ast::NodeCPtr node) -> bool {
-			return expect_fixed_point(assign_variable_callback(positions.text_rotation))(node);
-		},
-		"text_scale", ZERO_OR_ONE, [this](ast::NodeCPtr node) -> bool {
-			return expect_fixed_point(assign_variable_callback(positions.text_scale))(node);
-		},
-		"unit", ZERO_OR_ONE, [this](ast::NodeCPtr node) -> bool {
-			return expect_fvec2(assign_variable_callback(positions.unit))(node);
-		},
-		"town", ZERO_OR_ONE, [this](ast::NodeCPtr node) -> bool {
-			return expect_fvec2(assign_variable_callback(positions.city))(node);
-		},
-		"city", ZERO_OR_ONE, [this](ast::NodeCPtr node) -> bool {
-			return expect_fvec2(assign_variable_callback(positions.city))(node);
-		},
-		"factory", ZERO_OR_ONE, [this](ast::NodeCPtr node) -> bool {
-			return expect_fvec2(assign_variable_callback(positions.factory))(node);
-		},
-		"building_construction", ZERO_OR_ONE, [this](ast::NodeCPtr node) -> bool {
-			return expect_fvec2(assign_variable_callback(positions.building_construction))(node);
-		},
-		"military_construction", ZERO_OR_ONE, [this](ast::NodeCPtr node) -> bool {
-			return expect_fvec2(assign_variable_callback(positions.military_construction))(node);
-		},
+		"text_position", ZERO_OR_ONE, expect_fvec2(assign_variable_callback(positions.text)),
+		"text_rotation", ZERO_OR_ONE, expect_fixed_point(assign_variable_callback(positions.text_rotation)),
+		"text_scale", ZERO_OR_ONE, expect_fixed_point(assign_variable_callback(positions.text_scale)),
+		"unit", ZERO_OR_ONE, expect_fvec2(assign_variable_callback(positions.unit)),
+		"town", ZERO_OR_ONE, expect_fvec2(assign_variable_callback(positions.city)),
+		"city", ZERO_OR_ONE, expect_fvec2(assign_variable_callback(positions.city)),
+		"factory", ZERO_OR_ONE, expect_fvec2(assign_variable_callback(positions.factory)),
+		"building_construction", ZERO_OR_ONE, expect_fvec2(assign_variable_callback(positions.building_construction)),
+		"military_construction", ZERO_OR_ONE, expect_fvec2(assign_variable_callback(positions.military_construction)),
 		"building_position", ZERO_OR_ONE, expect_dictionary_keys(
-			"fort", ZERO_OR_ONE, [this](ast::NodeCPtr node) -> bool {
-				return expect_fvec2(assign_variable_callback(positions.fort))(node);
-			},
-			"railroad", ZERO_OR_ONE, [this](ast::NodeCPtr node) -> bool {
-				return expect_fvec2(assign_variable_callback(positions.railroad))(node);
-			},
-			"naval_base", ZERO_OR_ONE, [this](ast::NodeCPtr node) -> bool {
-				return expect_fvec2(assign_variable_callback(positions.navalbase))(node);
-			}
+			"fort", ZERO_OR_ONE, expect_fvec2(assign_variable_callback(positions.fort)),
+			"railroad", ZERO_OR_ONE, expect_fvec2(assign_variable_callback(positions.railroad)),
+			"naval_base", ZERO_OR_ONE, expect_fvec2(assign_variable_callback(positions.navalbase))
 		),
 		"building_rotation", ZERO_OR_ONE, expect_dictionary_keys(
-			"fort", ZERO_OR_ONE, [this](ast::NodeCPtr node) -> bool {
-				return expect_fixed_point(assign_variable_callback(positions.fort_rotation))(node);
-			},
-			"railroad", ZERO_OR_ONE, [this](ast::NodeCPtr node) -> bool {
-				return expect_fixed_point(assign_variable_callback(positions.railroad_rotation))(node);
-			},
-			"naval_base", ZERO_OR_ONE, [this](ast::NodeCPtr node) -> bool {
-				return expect_fixed_point(assign_variable_callback(positions.navalbase_rotation))(node);
-			},
-			"aeroplane_factory", ZERO_OR_ONE, [](ast::NodeCPtr _) -> bool { return true; } /* see below */
+			"fort", ZERO_OR_ONE, expect_fixed_point(assign_variable_callback(positions.fort_rotation)),
+			"railroad", ZERO_OR_ONE, expect_fixed_point(assign_variable_callback(positions.railroad_rotation)),
+			"naval_base", ZERO_OR_ONE, expect_fixed_point(assign_variable_callback(positions.navalbase_rotation)),
+			"aeroplane_factory", ZERO_OR_ONE, success_callback /* see below */
 		),
 		/* the below are esoteric clausewitz leftovers that either have no impact or whose functionality is lost to time */
-		"spawn_railway_track", ZERO_OR_ONE, [](ast::NodeCPtr _) -> bool { return true; },
-		"railroad_visibility", ZERO_OR_ONE, [](ast::NodeCPtr _) -> bool { return true; },
-		"building_nudge", ZERO_OR_ONE, [](ast::NodeCPtr _) -> bool { return true; }
+		"spawn_railway_track", ZERO_OR_ONE, success_callback,
+		"railroad_visibility", ZERO_OR_ONE, success_callback,
+		"building_nudge", ZERO_OR_ONE, success_callback
 	)(root);
 }
 
