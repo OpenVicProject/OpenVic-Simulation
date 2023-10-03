@@ -39,6 +39,24 @@ namespace OpenVic {
 			flags_t get_flags() const;
 		};
 
+		struct province_positions_t {
+			fvec2_t text;
+			fixed_point_t text_rotation;
+			fixed_point_t text_scale;
+			fvec2_t unit;
+			fvec2_t city;
+			fvec2_t factory;
+			fvec2_t building_construction;
+			fvec2_t military_construction;
+			fvec2_t fort;
+			fixed_point_t fort_rotation;
+			fvec2_t railroad;
+			fixed_point_t railroad_rotation;
+			fvec2_t navalbase;
+			fixed_point_t navalbase_rotation;
+		};
+		
+
 		static constexpr index_t NULL_INDEX = 0, MAX_INDEX = std::numeric_limits<index_t>::max();
 
 	private:
@@ -55,6 +73,7 @@ namespace OpenVic {
 		distribution_t pop_types, cultures, religions;
 
 		std::vector<adjacency_t> adjacencies;
+		province_positions_t positions;
 
 		TerrainType const* terrain_type = nullptr;
 

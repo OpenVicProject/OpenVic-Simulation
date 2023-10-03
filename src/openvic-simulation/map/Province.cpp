@@ -34,9 +34,32 @@ Province::life_rating_t Province::get_life_rating() const {
 }
 
 bool Province::load_positions(BuildingManager const& building_manager, ast::NodeCPtr root) {
-	// TODO - implement province position loading
-	// (root is the dictionary after the province identifier)
-	return true;
+	return expect_dictionary_keys(
+		"text_position", ZERO_OR_ONE, expect_fvec2(assign_variable_callback(positions.text)),
+		"text_rotation", ZERO_OR_ONE, expect_fixed_point(assign_variable_callback(positions.text_rotation)),
+		"text_scale", ZERO_OR_ONE, expect_fixed_point(assign_variable_callback(positions.text_scale)),
+		"unit", ZERO_OR_ONE, expect_fvec2(assign_variable_callback(positions.unit)),
+		"town", ZERO_OR_ONE, expect_fvec2(assign_variable_callback(positions.city)),
+		"city", ZERO_OR_ONE, expect_fvec2(assign_variable_callback(positions.city)),
+		"factory", ZERO_OR_ONE, expect_fvec2(assign_variable_callback(positions.factory)),
+		"building_construction", ZERO_OR_ONE, expect_fvec2(assign_variable_callback(positions.building_construction)),
+		"military_construction", ZERO_OR_ONE, expect_fvec2(assign_variable_callback(positions.military_construction)),
+		"building_position", ZERO_OR_ONE, expect_dictionary_keys(
+			"fort", ZERO_OR_ONE, expect_fvec2(assign_variable_callback(positions.fort)),
+			"railroad", ZERO_OR_ONE, expect_fvec2(assign_variable_callback(positions.railroad)),
+			"naval_base", ZERO_OR_ONE, expect_fvec2(assign_variable_callback(positions.navalbase))
+		),
+		"building_rotation", ZERO_OR_ONE, expect_dictionary_keys(
+			"fort", ZERO_OR_ONE, expect_fixed_point(assign_variable_callback(positions.fort_rotation)),
+			"railroad", ZERO_OR_ONE, expect_fixed_point(assign_variable_callback(positions.railroad_rotation)),
+			"naval_base", ZERO_OR_ONE, expect_fixed_point(assign_variable_callback(positions.navalbase_rotation)),
+			"aeroplane_factory", ZERO_OR_ONE, success_callback /* see below */
+		),
+		/* the below are esoteric clausewitz leftovers that either have no impact or whose functionality is lost to time */
+		"spawn_railway_track", ZERO_OR_ONE, success_callback,
+		"railroad_visibility", ZERO_OR_ONE, success_callback,
+		"building_nudge", ZERO_OR_ONE, success_callback
+	)(root);
 }
 
 bool Province::add_building(BuildingInstance&& building_instance) {
