@@ -76,13 +76,9 @@ bool GovernmentTypeManager::load_government_types_file(IdeologyManager& ideology
 						"election", "duration", "appoint_ruling_party", "flagType"
 					};
                     if (reserved_keys.find(key) != reserved_keys.end()) return true;
-                    return expect_assign(
-                        [this, &ideology_manager, &ideologies](std::string_view ideology_key, ast::NodeCPtr value) -> bool {
-                            if (ideology_manager.get_ideology_by_identifier(ideology_key) == nullptr) { return false; }
-                            ideologies.push_back(std::string{ideology_key});
-                            return true;
-                        }
-                    )(value);
+                    if (ideology_manager.get_ideology_by_identifier(key) == nullptr) return false;
+                    ideologies.push_back(std::string{key});
+                    return true;
                 }
             )(value);
 
