@@ -52,6 +52,7 @@ bool GovernmentTypeManager::add_government_type(std::string_view identifier, std
     return government_types.add_item({ identifier, ideologies, elections, appoint_ruling_party, election_duration, flag_type });
 }
 
+/* REQUIREMENTS: FS-525, SIM-27 */
 bool GovernmentTypeManager::load_government_types_file(IdeologyManager& ideology_manager, ast::NodeCPtr root) {
     bool ret = expect_dictionary(
         [this, &ideology_manager](std::string_view government_type_identifier, ast::NodeCPtr value) -> bool {
