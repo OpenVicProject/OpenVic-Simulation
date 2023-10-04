@@ -274,17 +274,19 @@ bool Dataloader::_load_map_dir(GameManager& game_manager, fs::path const& map_di
 }
 
 bool Dataloader::load_defines(GameManager& game_manager) const {
-	static const fs::path goods_file = "common/goods.txt";
+	static const fs::path map_directory = "map";
 	static const fs::path pop_type_directory = "poptypes";
-	static const fs::path graphical_culture_type_file = "common/graphicalculturetype.txt";
+	static const fs::path units_directory = "units";
+
+	static const fs::path buildings_file = "common/buildings.txt";
 	static const fs::path culture_file = "common/cultures.txt";
-	static const fs::path religion_file = "common/religion.txt";
+	static const fs::path goods_file = "common/goods.txt";
+	static const fs::path governments_file = "common/governments.txt";
+	static const fs::path graphical_culture_type_file = "common/graphicalculturetype.txt";
 	static const fs::path ideology_file = "common/ideologies.txt";
 	static const fs::path issues_file = "common/issues.txt";
 	static const fs::path production_types_file = "common/production_types.txt";
-	static const fs::path buildings_file = "common/buildings.txt";
-	static const fs::path map_directory = "map";
-	static const fs::path units_directory = "units";
+	static const fs::path religion_file = "common/religion.txt";
 
 	bool ret = true;
 
@@ -314,6 +316,10 @@ bool Dataloader::load_defines(GameManager& game_manager) const {
 	}
 	if (!game_manager.get_ideology_manager().load_ideology_file(_parse_defines(lookup_file(ideology_file)).get_file_node())) {
 		Logger::error("Failed to load ideologies!");
+		ret = false;
+	}
+	if (!game_manager.get_government_type_manager().load_government_types_file(game_manager.get_ideology_manager(), _parse_defines(lookup_file(governments_file)).get_file_node())) {
+		Logger::error("Failed to load government types!");
 		ret = false;
 	}
 	if (!game_manager.get_issue_manager().load_issues_file(_parse_defines(lookup_file(issues_file)).get_file_node())) {

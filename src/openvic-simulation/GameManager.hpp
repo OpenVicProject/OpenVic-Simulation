@@ -2,6 +2,7 @@
 
 #include "openvic-simulation/GameAdvancementHook.hpp"
 #include "openvic-simulation/economy/Good.hpp"
+#include "openvic-simulation/politics/Government.hpp"
 #include "openvic-simulation/economy/ProductionType.hpp"
 #include "openvic-simulation/map/Map.hpp"
 #include "openvic-simulation/politics/Ideology.hpp"
@@ -16,6 +17,7 @@ namespace OpenVic {
 		Map map;
 		BuildingManager building_manager;
 		GoodManager good_manager;
+		GovernmentTypeManager government_type_manager;
 		PopManager pop_manager;
 		IdeologyManager ideology_manager;
 		IssueManager issue_manager;
@@ -42,6 +44,8 @@ namespace OpenVic {
 		BuildingManager const& get_building_manager() const;
 		GoodManager& get_good_manager();
 		GoodManager const& get_good_manager() const;
+		GovernmentTypeManager& get_government_type_manager();
+		GovernmentTypeManager const& get_government_type_manager() const;
 		PopManager& get_pop_manager();
 		PopManager const& get_pop_manager() const;
 		IdeologyManager& get_ideology_manager();
