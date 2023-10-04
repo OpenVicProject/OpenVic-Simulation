@@ -10,20 +10,21 @@ namespace OpenVic {
         friend struct GovernmentTypeManager;
 
     private:
-        std::vector<std::string> ideologies;
+        std::vector<Ideology const*> ideologies;
         const bool elections, appoint_ruling_party;
-        const uint16_t election_duration;
-        const std::string_view flag_type_identifier;
+        const Timespan election_duration;
+        const std::string flag_type_identifier;
 
-        GovernmentType(std::string_view new_identifier, std::vector<std::string> new_ideologies, bool new_elections, bool new_appoint_ruling_party, uint16_t new_election_duration, std::string_view new_flag_type_identifier);
+        GovernmentType(std::string_view new_identifier, std::vector<Ideology const*> new_ideologies, bool new_elections, bool new_appoint_ruling_party, Timespan new_election_duration, std::string_view new_flag_type_identifier);
 
     public:
         GovernmentType(GovernmentType&&) = default;
 
-        bool is_ideology_compatible(std::string_view ideology) const;
+        bool is_ideology_compatible(Ideology const* ideology) const;
+        std::vector<Ideology const*> const& get_ideologies() const;
         bool holds_elections() const;
         bool can_appoint_ruling_party() const;
-        uint16_t get_election_duration() const;
+        Timespan get_election_duration() const;
         std::string_view get_flag_type() const;
     };
 
@@ -34,9 +35,9 @@ namespace OpenVic {
     public:
         GovernmentTypeManager();
 
-        bool add_government_type(std::string_view identifier, std::vector<std::string> ideologies, bool elections, bool appoint_ruling_party, uint16_t election_duration, std::string_view flag_type);
+        bool add_government_type(std::string_view identifier, std::vector<Ideology const*> ideologies, bool elections, bool appoint_ruling_party, Timespan election_duration, std::string_view flag_type);
         IDENTIFIER_REGISTRY_ACCESSORS(GovernmentType, government_type)
 
-        bool load_government_types_file(IdeologyManager& ideology_manager, ast::NodeCPtr root);
+        bool load_government_types_file(IdeologyManager const& ideology_manager, ast::NodeCPtr root);
     };
 } // namespace OpenVic 
