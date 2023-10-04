@@ -1,6 +1,7 @@
 #pragma once
 
 #include <filesystem>
+#include <unordered_map>
 
 #include <openvic-dataloader/csv/Parser.hpp>
 #include <openvic-dataloader/v2script/Parser.hpp>
@@ -31,6 +32,25 @@ namespace OpenVic {
 
 		Dataloader() = default;
 
+		/// @brief Searches for the Victoria 2 install directory
+		///
+		/// @param hint_path A path to indicate a hint to assist in searching for the Victoria 2 install directory
+		///	Supports being supplied:
+		///		1. A valid Victoria 2 game directory (Victoria 2 directory that contains a v2game.exe file)
+		///		2. An Empty path: assumes a common Steam install structure per platform.
+		///			2b. If Windows, returns "HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\Paradox Interactive\Victoria 2" "path" registry value
+		///			2c. If registry value returns an empty string, performs Steam checks below
+		///		3. A path to a root Steam install. (eg: C:\Program Files(x86)\Steam, ~/.steam/steam)
+		///		4. A path to a root Steam steamapps directory. (eg: C:\Program Files(x86)\Steam\steamapps, ~/.steam/steam/steamapps)
+		///		5. A path to the root Steam libraryfolders.vdf, commonly in the root Steam steamapps directory.
+		///		6. A path to the Steam library directory that contains Victoria 2.
+		///		7. A path to a Steam library's steamapps directory that contains Victoria 2.
+		///		8. A path to a Steam library's steamapps/common directory that contains Victoria 2.
+		///		9. If any of these checks don't resolve to a valid Victoria 2 game directory when supplied a non-empty hint_path, performs empty path behavior.
+		/// @return fs::path The root directory of a valid Victoria 2 install, or an empty path.
+		///
+		static fs::path search_for_game_path(fs::path hint_path = {});
+
 		/* In reverse-load order, so base defines first and final loaded mod last */
 		bool set_roots(path_vector_t new_roots);
 
@@ -55,5 +75,19 @@ namespace OpenVic {
 		/* Args: key, locale, localisation */
 		using localisation_callback_t = NodeTools::callback_t<std::string_view, locale_t, std::string_view>;
 		bool load_localisation_files(localisation_callback_t callback, fs::path const& localisation_dir = "localisation");
+
+	private:
+		struct fshash
+		{
+			size_t operator()(const std::filesystem::path& p) const noexcept {
+				return std::filesystem::hash_value(p);
+			}
+		};
+
+		using hint_path_t = fs::path;
+		using game_path_t = fs::path;
+		inline static std::unordered_map<hint_path_t, game_path_t, fshash> _cached_paths;
 	};
 }
+
+

@@ -56,7 +56,9 @@ IncludeCategories:
     Priority: 2
   - Regex: ^<openvic-dataloader/
     Priority: 3
-  - Regex: ^"openvic-simulation/
+  - Regex: ^<lexy-vdf/
     Priority: 4
-  - Regex: .*
+  - Regex: ^"openvic-simulation/
     Priority: 5
+  - Regex: .*
+    Priority: 6
