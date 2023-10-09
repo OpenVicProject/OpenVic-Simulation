@@ -51,11 +51,17 @@ Pop::pop_size_t Pop::get_pop_daily_change() const {
 
 PopType::PopType(std::string_view new_identifier, colour_t new_colour,
 	strata_t new_strata, sprite_t new_sprite,
+	Good::good_map_t&& new_life_needs, Good::good_map_t&& new_everyday_needs,
+	Good::good_map_t&& new_luxury_needs, rebel_units_t&& new_rebel_units,
 	Pop::pop_size_t new_max_size, Pop::pop_size_t new_merge_max_size,
 	bool new_state_capital_only, bool new_demote_migrant, bool new_is_artisan, bool new_is_slave)
 	: HasIdentifierAndColour { new_identifier, new_colour, true, false },
 	  strata { new_strata },
 	  sprite { new_sprite },
+	  life_needs { std::move(new_life_needs) },
+	  everyday_needs { std::move(new_everyday_needs) },
+	  luxury_needs { std::move(new_luxury_needs) },
+	  rebel_units { std::move(new_rebel_units) },
 	  max_size { new_max_size },
 	  merge_max_size { new_merge_max_size },
 	  state_capital_only { new_state_capital_only },
@@ -69,6 +75,22 @@ PopType::PopType(std::string_view new_identifier, colour_t new_colour,
 
 PopType::sprite_t PopType::get_sprite() const {
 	return sprite;
+}
+
+Good::good_map_t const& PopType::get_life_needs() const {
+	return life_needs;
+}
+
+Good::good_map_t const& PopType::get_everyday_needs() const {
+	return everyday_needs;
+}
+
+Good::good_map_t const& PopType::get_luxury_needs() const {
+	return luxury_needs;
+}
+
+PopType::rebel_units_t const& PopType::get_rebel_units() const {
+	return rebel_units;
 }
 
 PopType::strata_t PopType::get_strata() const {
@@ -117,8 +139,10 @@ ReligionManager const& PopManager::get_religion_manager() const {
 	return religion_manager;
 }
 
-bool PopManager::add_pop_type(std::string_view identifier, colour_t colour, PopType::strata_t strata, PopType::sprite_t sprite,
-	Pop::pop_size_t max_size, Pop::pop_size_t merge_max_size, bool state_capital_only, bool demote_migrant, bool is_artisan, bool is_slave) {
+bool PopManager::add_pop_type(std::string_view identifier, colour_t colour, PopType::strata_t strata,
+	PopType::sprite_t sprite, Good::good_map_t&& life_needs, Good::good_map_t&& everyday_needs,
+	Good::good_map_t&& luxury_needs, PopType::rebel_units_t&& rebel_units, Pop::pop_size_t max_size,
+	Pop::pop_size_t merge_max_size, bool state_capital_only, bool demote_migrant, bool is_artisan, bool is_slave) {
 	if (identifier.empty()) {
 		Logger::error("Invalid pop type identifier - empty!");
 		return false;
@@ -139,13 +163,15 @@ bool PopManager::add_pop_type(std::string_view identifier, colour_t colour, PopT
 		Logger::error("Invalid pop type merge max size for ", identifier, ": ", merge_max_size);
 		return false;
 	}
-	return pop_types.add_item({ identifier, colour, strata, sprite, max_size, merge_max_size, state_capital_only, demote_migrant, is_artisan, is_slave });
+	return pop_types.add_item({ identifier, colour, strata, sprite, std::move(life_needs), std::move(everyday_needs),
+		std::move(luxury_needs), std::move(rebel_units), max_size, merge_max_size, state_capital_only, demote_migrant,
+		is_artisan, is_slave });
 }
 
 /* REQUIREMENTS:
  * POP-3, POP-4, POP-5, POP-6, POP-7, POP-8, POP-9, POP-10, POP-11, POP-12, POP-13, POP-14
  */
-bool PopManager::load_pop_type_file(std::string_view filestem, ast::NodeCPtr root) {
+bool PopManager::load_pop_type_file(std::string_view filestem, UnitManager const& unit_manager, GoodManager const& good_manager, ast::NodeCPtr root) {
 	static const string_map_t<PopType::strata_t> strata_map = {
 		{ "poor", PopType::strata_t::POOR },
 		{ "middle", PopType::strata_t::MIDDLE },
@@ -155,6 +181,8 @@ bool PopManager::load_pop_type_file(std::string_view filestem, ast::NodeCPtr roo
 	colour_t colour = NULL_COLOUR;
 	PopType::strata_t strata = PopType::strata_t::POOR;
 	PopType::sprite_t sprite = 0;
+	Good::good_map_t life_needs, everyday_needs, luxury_needs;
+	PopType::rebel_units_t rebel_units;
 	bool state_capital_only = false, is_artisan = false, is_slave = false, demote_migrant = false;
 	Pop::pop_size_t max_size = 0, merge_max_size = 0;
 	bool ret = expect_dictionary_keys(
@@ -167,7 +195,7 @@ bool PopManager::load_pop_type_file(std::string_view filestem, ast::NodeCPtr roo
 		"state_capital_only", ZERO_OR_ONE, expect_bool(assign_variable_callback(state_capital_only)),
 		"research_points", ZERO_OR_ONE, success_callback,
 		"research_optimum", ZERO_OR_ONE, success_callback,
-		"rebel", ZERO_OR_ONE, success_callback,
+		"rebel", ZERO_OR_ONE, unit_manager.expect_unit_decimal_map(move_variable_callback(rebel_units)),
 		"equivalent", ZERO_OR_ONE, success_callback,
 		"leadership", ZERO_OR_ONE, success_callback,
 		"allowed_to_vote", ZERO_OR_ONE, success_callback,
@@ -177,9 +205,9 @@ bool PopManager::load_pop_type_file(std::string_view filestem, ast::NodeCPtr roo
 		"life_needs_income", ZERO_OR_ONE, success_callback,
 		"everyday_needs_income", ZERO_OR_ONE, success_callback,
 		"luxury_needs_income", ZERO_OR_ONE, success_callback,
-		"luxury_needs", ZERO_OR_ONE, success_callback,
-		"everyday_needs", ZERO_OR_ONE, success_callback,
-		"life_needs", ZERO_OR_ONE, success_callback,
+		"luxury_needs", ZERO_OR_ONE, good_manager.expect_good_decimal_map(move_variable_callback(luxury_needs)),
+		"everyday_needs", ZERO_OR_ONE, good_manager.expect_good_decimal_map(move_variable_callback(everyday_needs)),
+		"life_needs", ZERO_OR_ONE, good_manager.expect_good_decimal_map(move_variable_callback(life_needs)),
 		"country_migration_target", ZERO_OR_ONE, success_callback,
 		"migration_target", ZERO_OR_ONE, success_callback,
 		"promote_to", ZERO_OR_ONE, success_callback,
@@ -196,7 +224,10 @@ bool PopManager::load_pop_type_file(std::string_view filestem, ast::NodeCPtr roo
 		"can_work_factory", ZERO_OR_ONE, success_callback,
 		"unemployment", ZERO_OR_ONE, success_callback
 	)(root);
-	ret &= add_pop_type(filestem, colour, strata, sprite, max_size, merge_max_size, state_capital_only, demote_migrant, is_artisan, is_slave);
+
+	ret &= add_pop_type(filestem, colour, strata, sprite, std::move(life_needs), std::move(everyday_needs),
+		std::move(luxury_needs), std::move(rebel_units), max_size, merge_max_size, state_capital_only, demote_migrant,
+		is_artisan, is_slave);
 	return ret;
 }
 

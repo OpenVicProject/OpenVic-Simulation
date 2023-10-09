@@ -452,10 +452,10 @@ csv::Windows1252Parser Dataloader::parse_csv(fs::path const& path) {
 	return _run_ovdl_parser<csv::Windows1252Parser, &_csv_parse>(path);
 }
 
-bool Dataloader::_load_pop_types(PopManager& pop_manager, fs::path const& pop_type_directory) const {
+bool Dataloader::_load_pop_types(PopManager& pop_manager, UnitManager const& unit_manager, GoodManager const& good_manager, fs::path const& pop_type_directory) const {
 	const bool ret = apply_to_files_in_dir(pop_type_directory, ".txt",
-		[&pop_manager](fs::path const& file) -> bool {
-			return pop_manager.load_pop_type_file(file.stem().string(), parse_defines(file).get_file_node());
+		[&pop_manager, &unit_manager, &good_manager](fs::path const& file) -> bool {
+			return pop_manager.load_pop_type_file(file.stem().string(), unit_manager, good_manager, parse_defines(file).get_file_node());
 		}
 	);
 	pop_manager.lock_pop_types();
@@ -609,7 +609,15 @@ bool Dataloader::load_defines(GameManager& game_manager) const {
 		Logger::error("Failed to load goods!");
 		ret = false;
 	}
-	if (!_load_pop_types(game_manager.get_pop_manager(), pop_type_directory)) {
+	if (!_load_units(game_manager.get_military_manager().get_unit_manager(),
+		game_manager.get_economy_manager().get_good_manager(), units_directory)) {
+		Logger::error("Failed to load units!");
+		ret = false;
+	}
+	if (!_load_pop_types(game_manager.get_pop_manager(),
+		game_manager.get_military_manager().get_unit_manager(),
+		game_manager.get_economy_manager().get_good_manager(),
+		pop_type_directory)) {
 		Logger::error("Failed to load pop types!");
 		ret = false;
 	}
@@ -657,11 +665,6 @@ bool Dataloader::load_defines(GameManager& game_manager) const {
 	}
 	if (!_load_map_dir(game_manager, map_directory)) {
 		Logger::error("Failed to load map!");
-		ret = false;
-	}
-	if (!_load_units(game_manager.get_military_manager().get_unit_manager(),
-		game_manager.get_economy_manager().get_good_manager(), units_directory)) {
-		Logger::error("Failed to load units!");
 		ret = false;
 	}
 	if (!game_manager.get_military_manager().get_leader_trait_manager().load_leader_traits_file(game_manager.get_modifier_manager(), parse_defines(lookup_file(leader_traits_file)).get_file_node())) {
