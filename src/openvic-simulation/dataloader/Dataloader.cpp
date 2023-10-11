@@ -472,6 +472,28 @@ bool Dataloader::_load_units(UnitManager& unit_manager, GoodManager const& good_
 	return ret;
 }
 
+bool Dataloader::_load_countries(GameManager& game_manager, fs::path const& countries_file, ast::NodeCPtr root) const {
+	bool is_dynamic = false;
+
+	bool ret = expect_dictionary(
+		[this, &game_manager, &is_dynamic, &countries_file](std::string_view key, ast::NodeCPtr value) -> bool {
+			if (key == "dynamic_tags") {
+				return expect_bool(assign_variable_callback(is_dynamic))(value);
+			}
+
+			std::string_view data_path;
+
+			if (!expect_string(assign_variable_callback(data_path))(value)) {
+				return false;
+			}
+
+			return game_manager.get_country_manager().load_country_data_file(game_manager, key, is_dynamic, Dataloader::parse_defines(lookup_file(countries_file.parent_path() / data_path)).get_file_node());
+		}
+	)(root);
+	game_manager.get_country_manager().lock_countries();
+	return ret;
+}
+
 bool Dataloader::_load_map_dir(GameManager& game_manager, fs::path const& map_directory) const {
 	Map& map = game_manager.get_map();
 
@@ -597,6 +619,7 @@ bool Dataloader::load_defines(GameManager& game_manager) const {
 	static const fs::path production_types_file = "common/production_types.txt";
 	static const fs::path religion_file = "common/religion.txt";
 	static const fs::path leader_traits_file = "common/traits.txt";
+	static const fs::path countries_file = "common/countries.txt";
 
 	bool ret = true;
 
@@ -641,6 +664,10 @@ bool Dataloader::load_defines(GameManager& game_manager) const {
 	if (!game_manager.get_politics_manager().get_issue_manager().load_issues_file(
 		parse_defines(lookup_file(issues_file)).get_file_node())) {
 		Logger::error("Failed to load issues!");
+		ret = false;
+	}
+	if (!_load_countries(game_manager, countries_file, parse_defines(lookup_file(countries_file)).get_file_node())) {
+		Logger::error("Failed to load countries!");
 		ret = false;
 	}
 	if (!game_manager.get_economy_manager().load_production_types_file(

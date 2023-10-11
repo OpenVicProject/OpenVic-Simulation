@@ -2,6 +2,7 @@
 
 #include "openvic-simulation/GameAdvancementHook.hpp"
 #include "openvic-simulation/Modifier.hpp"
+#include "openvic-simulation/country/Country.hpp"
 #include "openvic-simulation/economy/EconomyManager.hpp"
 #include "openvic-simulation/history/HistoryManager.hpp"
 #include "openvic-simulation/map/Map.hpp"
@@ -20,6 +21,7 @@ namespace OpenVic {
 		PoliticsManager politics_manager;
 		HistoryManager history_manager;
 		PopManager pop_manager;
+		CountryManager country_manager;
 		GameAdvancementHook clock;
 
 		time_t session_start; /* SS-54, as well as allowing time-tracking */
@@ -41,6 +43,7 @@ namespace OpenVic {
 		REF_GETTERS(politics_manager)
 		REF_GETTERS(history_manager)
 		REF_GETTERS(pop_manager)
+		REF_GETTERS(country_manager)
 		REF_GETTERS(clock)
 
 		bool setup();
