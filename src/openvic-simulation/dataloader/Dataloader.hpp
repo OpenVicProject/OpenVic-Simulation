@@ -29,6 +29,7 @@ namespace OpenVic {
 
 	public:
 		static ovdl::v2script::Parser parse_defines(fs::path const& path);
+		static ovdl::v2script::Parser parse_lua_defines(fs::path const& path);
 		static ovdl::csv::Windows1252Parser parse_csv(fs::path const& path);
 
 		Dataloader() = default;

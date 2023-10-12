@@ -1,13 +1,11 @@
 #pragma once
 
 #include "openvic-simulation/GameAdvancementHook.hpp"
-#include "openvic-simulation/economy/Good.hpp"
-#include "openvic-simulation/politics/Government.hpp"
-#include "openvic-simulation/economy/ProductionType.hpp"
+#include "openvic-simulation/Modifier.hpp"
+#include "openvic-simulation/economy/EconomyManager.hpp"
 #include "openvic-simulation/map/Map.hpp"
-#include "openvic-simulation/politics/Ideology.hpp"
-#include "openvic-simulation/politics/Issue.hpp"
-#include "openvic-simulation/units/Unit.hpp"
+#include "openvic-simulation/military/MilitaryManager.hpp"
+#include "openvic-simulation/politics/PoliticsManager.hpp"
 
 namespace OpenVic {
 	struct GameManager {
@@ -15,15 +13,11 @@ namespace OpenVic {
 
 	private:
 		Map map;
-		BuildingManager building_manager;
-		GoodManager good_manager;
-		GovernmentTypeManager government_type_manager;
-		PopManager pop_manager;
-		IdeologyManager ideology_manager;
-		IssueManager issue_manager;
-		ProductionTypeManager production_type_manager;
-		UnitManager unit_manager;
+		EconomyManager economy_manager;
+		MilitaryManager military_manager;
 		ModifierManager modifier_manager;
+		PoliticsManager politics_manager;
+		PopManager pop_manager;
 		GameAdvancementHook clock;
 
 		time_t session_start; /* SS-54, as well as allowing time-tracking */
@@ -38,28 +32,13 @@ namespace OpenVic {
 	public:
 		GameManager(state_updated_func_t state_updated_callback);
 
-		Map& get_map();
-		Map const& get_map() const;
-		BuildingManager& get_building_manager();
-		BuildingManager const& get_building_manager() const;
-		GoodManager& get_good_manager();
-		GoodManager const& get_good_manager() const;
-		GovernmentTypeManager& get_government_type_manager();
-		GovernmentTypeManager const& get_government_type_manager() const;
-		PopManager& get_pop_manager();
-		PopManager const& get_pop_manager() const;
-		IdeologyManager& get_ideology_manager();
-		IdeologyManager const& get_ideology_manager() const;
-		IssueManager& get_issue_manager();
-		IssueManager const& get_issue_manager() const;
-		ProductionTypeManager& get_production_type_manager();
-		ProductionTypeManager const& get_production_type_manager() const;
-		UnitManager& get_unit_manager();
-		UnitManager const& get_unit_manager() const;
-		ModifierManager& get_modifier_manager();
-		ModifierManager const& get_modifier_manager() const;
-		GameAdvancementHook& get_clock();
-		GameAdvancementHook const& get_clock() const;
+		REF_GETTERS(map)
+		REF_GETTERS(economy_manager)
+		REF_GETTERS(military_manager)
+		REF_GETTERS(modifier_manager)
+		REF_GETTERS(politics_manager)
+		REF_GETTERS(pop_manager)
+		REF_GETTERS(clock)
 
 		bool setup();
 

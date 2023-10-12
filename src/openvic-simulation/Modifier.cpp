@@ -131,7 +131,7 @@ bool ModifierManager::setup_modifier_effects() {
 	return ret;
 }
 
-node_callback_t ModifierManager::expect_modifier_value(callback_t<ModifierValue&&> modifier_callback, key_value_callback_t default_callback) const {
+node_callback_t ModifierManager::expect_modifier_value_and_default(callback_t<ModifierValue&&> modifier_callback, key_value_callback_t default_callback) const {
 	return [this, modifier_callback, default_callback](ast::NodeCPtr root) -> bool {
 		ModifierValue modifier;
 		bool ret = expect_dictionary(
@@ -154,14 +154,22 @@ node_callback_t ModifierManager::expect_modifier_value(callback_t<ModifierValue&
 	};
 }
 
-node_callback_t ModifierManager::_expect_modifier_value_and_keys(callback_t<ModifierValue&&> modifier_callback, key_map_t&& key_map) const {
+node_callback_t ModifierManager::expect_modifier_value(callback_t<ModifierValue&&> modifier_callback) const {
+	return expect_modifier_value_and_default(modifier_callback, key_value_invalid_callback);
+}
+
+node_callback_t ModifierManager::expect_modifier_value_and_key_map_and_default(callback_t<ModifierValue&&> modifier_callback, key_value_callback_t default_callback, key_map_t&& key_map) const {
 	return [this, modifier_callback, key_map = std::move(key_map)](ast::NodeCPtr node) mutable -> bool {
-		bool ret = expect_modifier_value(
+		bool ret = expect_modifier_value_and_default(
 			modifier_callback, dictionary_keys_callback(key_map, key_value_invalid_callback)
 		)(node);
 		ret &= check_key_map_counts(key_map);
 		return ret;
 	};
+}
+
+node_callback_t ModifierManager::expect_modifier_value_and_key_map(callback_t<ModifierValue&&> modifier_callback, key_map_t&& key_map) const {
+	return expect_modifier_value_and_key_map_and_default(modifier_callback, key_value_invalid_callback, std::move(key_map));
 }
 
 namespace OpenVic { //so the compiler shuts up

@@ -436,6 +436,14 @@ v2script::Parser Dataloader::parse_defines(fs::path const& path) {
 	return _run_ovdl_parser<v2script::Parser, &_v2script_parse>(path);
 }
 
+static bool _lua_parse(v2script::Parser& parser) {
+	return parser.lua_defines_parse();
+}
+
+static ovdl::v2script::Parser parse_lua_defines(fs::path const& path) {
+	return _run_ovdl_parser<v2script::Parser, &_lua_parse>(path);
+}
+
 static bool _csv_parse(csv::Windows1252Parser& parser) {
 	return parser.parse_csv();
 }
@@ -527,17 +535,20 @@ bool Dataloader::_load_map_dir(GameManager& game_manager, fs::path const& map_di
 		Logger::error("Failed to load map default file!");
 	}
 
-	if (!map.load_province_definitions(parse_csv(lookup_file(map_directory / definitions)).get_lines())) {
+	if (!map.load_province_definitions(
+		parse_csv(lookup_file(map_directory / definitions)).get_lines())) {
 		Logger::error("Failed to load province definitions file!");
 		ret = false;
 	}
 
-	if (!map.load_province_positions(game_manager.get_building_manager(), parse_defines(lookup_file(map_directory / positions)).get_file_node())) {
+	if (!map.load_province_positions(
+		game_manager.get_economy_manager().get_building_manager(), parse_defines(lookup_file(map_directory / positions)).get_file_node())) {
 		Logger::error("Failed to load province positions file!");
 		ret = false;
 	}
 
-	if (!map.load_region_file(parse_defines(lookup_file(map_directory / region)).get_file_node())) {
+	if (!map.load_region_file(
+		parse_defines(lookup_file(map_directory / region)).get_file_node())) {
 		Logger::error("Failed to load region file!");
 		ret = false;
 	}
@@ -547,17 +558,22 @@ bool Dataloader::_load_map_dir(GameManager& game_manager, fs::path const& map_di
 		ret = false;
 	}
 
-	if (!map.get_terrain_type_manager().load_terrain_types(game_manager.get_modifier_manager(), parse_defines(lookup_file(map_directory / terrain_definition)).get_file_node())) {
+	if (!map.get_terrain_type_manager().load_terrain_types(
+		game_manager.get_modifier_manager(),
+		parse_defines(lookup_file(map_directory / terrain_definition)).get_file_node())) {
 		Logger::error("Failed to load terrain types!");
 		ret = false;
 	}
 
-	if (!map.load_map_images(lookup_file(map_directory / provinces), lookup_file(map_directory / terrain), false)) {
+	if (!map.load_map_images(
+		lookup_file(map_directory / provinces),
+		lookup_file(map_directory / terrain), false)) {
 		Logger::error("Failed to load map images!");
 		ret = false;
 	}
 
-	if (!map.generate_and_load_province_adjacencies(parse_csv(lookup_file(map_directory / adjacencies)).get_lines())) {
+	if (!map.generate_and_load_province_adjacencies(
+		parse_csv(lookup_file(map_directory / adjacencies)).get_lines())) {
 		Logger::error("Failed to generate and load province adjacencies!");
 		ret = false;
 	}
@@ -586,7 +602,8 @@ bool Dataloader::load_defines(GameManager& game_manager) const {
 		Logger::error("Failed to set up modifier effects!");
 		ret = false;
 	}
-	if (!game_manager.get_good_manager().load_goods_file(parse_defines(lookup_file(goods_file)).get_file_node())) {
+	if (!game_manager.get_economy_manager().get_good_manager().load_goods_file(
+		parse_defines(lookup_file(goods_file)).get_file_node())) {
 		Logger::error("Failed to load goods!");
 		ret = false;
 	}
@@ -594,40 +611,43 @@ bool Dataloader::load_defines(GameManager& game_manager) const {
 		Logger::error("Failed to load pop types!");
 		ret = false;
 	}
-	if (!game_manager.get_pop_manager().get_culture_manager().load_graphical_culture_type_file(parse_defines(lookup_file(graphical_culture_type_file)).get_file_node())) {
+	if (!game_manager.get_pop_manager().get_culture_manager().load_graphical_culture_type_file(
+		parse_defines(lookup_file(graphical_culture_type_file)).get_file_node())) {
 		Logger::error("Failed to load graphical culture types!");
 		ret = false;
 	}
-	if (!game_manager.get_pop_manager().get_culture_manager().load_culture_file(parse_defines(lookup_file(culture_file)).get_file_node())) {
+	if (!game_manager.get_pop_manager().get_culture_manager().load_culture_file(
+		parse_defines(lookup_file(culture_file)).get_file_node())) {
 		Logger::error("Failed to load cultures!");
 		ret = false;
 	}
-	if (!game_manager.get_pop_manager().get_religion_manager().load_religion_file(parse_defines(lookup_file(religion_file)).get_file_node())) {
+	if (!game_manager.get_pop_manager().get_religion_manager().load_religion_file(
+		parse_defines(lookup_file(religion_file)).get_file_node())) {
 		Logger::error("Failed to load religions!");
 		ret = false;
 	}
-	if (!game_manager.get_ideology_manager().load_ideology_file(parse_defines(lookup_file(ideology_file)).get_file_node())) {
+	if (!game_manager.get_politics_manager().get_ideology_manager().load_ideology_file(
+		parse_defines(lookup_file(ideology_file)).get_file_node())) {
 		Logger::error("Failed to load ideologies!");
 		ret = false;
 	}
-	if (!game_manager.get_government_type_manager().load_government_types_file(game_manager.get_ideology_manager(), parse_defines(lookup_file(governments_file)).get_file_node())) {
+	if (!game_manager.get_politics_manager().load_government_types_file(
+		parse_defines(lookup_file(governments_file)).get_file_node())) {
 		Logger::error("Failed to load government types!");
 		ret = false;
 	}
-	if (!game_manager.get_issue_manager().load_issues_file(parse_defines(lookup_file(issues_file)).get_file_node())) {
+	if (!game_manager.get_politics_manager().get_issue_manager().load_issues_file(
+		parse_defines(lookup_file(issues_file)).get_file_node())) {
 		Logger::error("Failed to load issues!");
 		ret = false;
 	}
-	if (!game_manager.get_production_type_manager().load_production_types_file(
-			game_manager.get_good_manager(),
+	if (!game_manager.get_economy_manager().load_production_types_file(
 			game_manager.get_pop_manager(),
 			parse_defines(lookup_file(production_types_file)).get_file_node())) {
 		Logger::error("Failed to load production types!");
 		ret = false;
 	}
-	if (!game_manager.get_building_manager().load_buildings_file(
-		game_manager.get_good_manager(),
-		game_manager.get_production_type_manager(),
+	if (!game_manager.get_economy_manager().load_buildings_file(
 		game_manager.get_modifier_manager(),
 		parse_defines(lookup_file(buildings_file)).get_file_node())) {
 		Logger::error("Failed to load buildings!");
@@ -637,7 +657,8 @@ bool Dataloader::load_defines(GameManager& game_manager) const {
 		Logger::error("Failed to load map!");
 		ret = false;
 	}
-	if (!_load_units(game_manager.get_unit_manager(), game_manager.get_good_manager(), units_directory)) {
+	if (!_load_units(game_manager.get_military_manager().get_unit_manager(),
+		game_manager.get_economy_manager().get_good_manager(), units_directory)) {
 		Logger::error("Failed to load units!");
 		ret = false;
 	}

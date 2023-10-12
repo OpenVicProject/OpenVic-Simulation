@@ -39,4 +39,4 @@ namespace OpenVic {
 
 		bool load_government_types_file(IdeologyManager const& ideology_manager, ast::NodeCPtr root);
 	};
-} // namespace OpenVic 
+} // namespace OpenVic

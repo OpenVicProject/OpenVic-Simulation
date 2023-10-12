@@ -102,7 +102,7 @@ namespace OpenVic {
 		static constexpr size_t MAPMODE_COLOUR_SIZE = 4;
 		bool generate_mapmode_colours(Mapmode::index_t index, uint8_t* target) const;
 
-		bool setup(GoodManager const& good_manager, BuildingManager const& building_manager, PopManager const& pop_manager);
+		bool setup(BuildingManager const& building_manager, PopManager const& pop_manager);
 
 		void update_highest_province_population();
 		Pop::pop_size_t get_highest_province_population() const;

@@ -138,7 +138,7 @@ node_callback_t ProductionTypeManager::_expect_employed_pop_list(GoodManager con
 		return false; \
 	}
 
-bool ProductionTypeManager::add_production_type(PRODUCTION_TYPE_ARGS, GoodManager& good_manager) {
+bool ProductionTypeManager::add_production_type(PRODUCTION_TYPE_ARGS, GoodManager const& good_manager) {
 	if (identifier.empty()) {
 		Logger::error("Invalid production type identifier - empty!");
 		return false;
@@ -186,7 +186,7 @@ bool ProductionTypeManager::add_production_type(PRODUCTION_TYPE_ARGS, GoodManage
 			"mine", ZERO_OR_ONE, expect_bool(assign_variable_callback(mine)) \
 		)
 
-bool ProductionTypeManager::load_production_types_file(GoodManager& good_manager, PopManager& pop_manager, ast::NodeCPtr root) {
+bool ProductionTypeManager::load_production_types_file(GoodManager const& good_manager, PopManager const& pop_manager, ast::NodeCPtr root) {
 	size_t expected_types = 0;
 
 	// pass 1: find and store template identifiers

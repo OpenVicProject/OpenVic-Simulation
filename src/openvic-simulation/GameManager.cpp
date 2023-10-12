@@ -6,94 +6,6 @@ GameManager::GameManager(state_updated_func_t state_updated_callback)
 	: clock { [this]() { tick(); }, [this]() { update_state(); } },
 	  state_updated { state_updated_callback } {}
 
-Map& GameManager::get_map() {
-	return map;
-}
-
-Map const& GameManager::get_map() const {
-	return map;
-}
-
-BuildingManager& GameManager::get_building_manager() {
-	return building_manager;
-}
-
-BuildingManager const& GameManager::get_building_manager() const {
-	return building_manager;
-}
-
-GoodManager& GameManager::get_good_manager() {
-	return good_manager;
-}
-
-GoodManager const& GameManager::get_good_manager() const {
-	return good_manager;
-}
-
-GovernmentTypeManager& GameManager::get_government_type_manager() {
-	return government_type_manager;
-}
-
-GovernmentTypeManager const& GameManager::get_government_type_manager() const {
-	return government_type_manager;
-}
-
-PopManager& GameManager::get_pop_manager() {
-	return pop_manager;
-}
-
-PopManager const& GameManager::get_pop_manager() const {
-	return pop_manager;
-}
-
-IdeologyManager& GameManager::get_ideology_manager() {
-	return ideology_manager;
-}
-
-IdeologyManager const& GameManager::get_ideology_manager() const {
-	return ideology_manager;
-}
-
-IssueManager& GameManager::get_issue_manager() {
-	return issue_manager;
-}
-
-IssueManager const& GameManager::get_issue_manager() const {
-	return issue_manager;
-}
-
-ProductionTypeManager& GameManager::get_production_type_manager() {
-	return production_type_manager;
-}
-
-ProductionTypeManager const& GameManager::get_production_type_manager() const {
-	return production_type_manager;
-}
-
-UnitManager& GameManager::get_unit_manager() {
-	return unit_manager;
-}
-
-UnitManager const& GameManager::get_unit_manager() const {
-	return unit_manager;
-}
-
-ModifierManager& GameManager::get_modifier_manager() {
-	return modifier_manager;
-}
-
-ModifierManager const& GameManager::get_modifier_manager() const {
-	return modifier_manager;
-}
-
-GameAdvancementHook& GameManager::get_clock() {
-	return clock;
-}
-
-GameAdvancementHook const& GameManager::get_clock() const {
-	return clock;
-}
-
 void GameManager::set_needs_update() {
 	needs_update = true;
 }
@@ -120,8 +32,8 @@ bool GameManager::setup() {
 	session_start = time(nullptr);
 	clock.reset();
 	today = { 1836 };
-	good_manager.reset_to_defaults();
-	bool ret = map.setup(good_manager, building_manager, pop_manager);
+	economy_manager.get_good_manager().reset_to_defaults();
+	bool ret = map.setup(economy_manager.get_building_manager(), pop_manager);
 	set_needs_update();
 	return ret;
 }

@@ -103,9 +103,9 @@ namespace OpenVic {
 	public:
 		ProductionTypeManager();
 
-		bool add_production_type(PRODUCTION_TYPE_ARGS, GoodManager& good_manager);
+		bool add_production_type(PRODUCTION_TYPE_ARGS, GoodManager const& good_manager);
 		IDENTIFIER_REGISTRY_ACCESSORS(production_type)
 
-		bool load_production_types_file(GoodManager& good_manager, PopManager& pop_manager, ast::NodeCPtr root);
+		bool load_production_types_file(GoodManager const& good_manager, PopManager const& pop_manager, ast::NodeCPtr root);
 	};
 }

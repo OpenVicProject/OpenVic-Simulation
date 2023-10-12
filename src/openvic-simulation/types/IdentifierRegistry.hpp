@@ -6,6 +6,10 @@
 #include "openvic-simulation/dataloader/NodeTools.hpp"
 #include "openvic-simulation/utility/Logger.hpp"
 
+#define REF_GETTERS(var) \
+	constexpr decltype(var)& get_##var() { return var; } \
+	constexpr decltype(var) const& get_##var() const { return var; }
+
 namespace OpenVic {
 	/*
 	 * Base class for objects with a non-empty string identifier,
@@ -179,13 +183,7 @@ namespace OpenVic {
 			return get_item_by_index(index) != nullptr;
 		}
 
-		std::vector<storage_type>& get_items() {
-			return items;
-		}
-
-		std::vector<storage_type> const& get_items() const {
-			return items;
-		}
+		REF_GETTERS(items)
 
 		std::vector<std::string_view> get_item_identifiers() const {
 			std::vector<std::string_view> identifiers;

@@ -276,7 +276,7 @@ Pop::pop_size_t Map::get_total_map_population() const {
 	return total_map_population;
 }
 
-bool Map::setup(GoodManager const& good_manager, BuildingManager const& building_manager, PopManager const& pop_manager) {
+bool Map::setup(BuildingManager const& building_manager, PopManager const& pop_manager) {
 	bool ret = true;
 	for (Province& province : provinces.get_items()) {
 		province.clear_pops();

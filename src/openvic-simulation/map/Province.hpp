@@ -2,7 +2,7 @@
 
 #include <cassert>
 
-#include "openvic-simulation/map/Building.hpp"
+#include "openvic-simulation/economy/Building.hpp"
 #include "openvic-simulation/pop/Pop.hpp"
 
 namespace OpenVic {
@@ -55,7 +55,6 @@ namespace OpenVic {
 			fvec2_t navalbase;
 			fixed_point_t navalbase_rotation;
 		};
-		
 
 		static constexpr index_t NULL_INDEX = 0, MAX_INDEX = std::numeric_limits<index_t>::max();
 
