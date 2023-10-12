@@ -2,6 +2,9 @@
 
 #include <filesystem>
 
+#include <openvic-dataloader/csv/Parser.hpp>
+#include <openvic-dataloader/v2script/Parser.hpp>
+
 #include "openvic-simulation/dataloader/NodeTools.hpp"
 
 namespace OpenVic {
@@ -23,6 +26,9 @@ namespace OpenVic {
 		bool _load_map_dir(GameManager& game_manager, fs::path const& map_directory) const;
 
 	public:
+		static ovdl::v2script::Parser parse_defines(fs::path const& path);
+		static ovdl::csv::Windows1252Parser parse_csv(fs::path const& path);
+
 		Dataloader() = default;
 
 		/* In reverse-load order, so base defines first and final loaded mod last */
