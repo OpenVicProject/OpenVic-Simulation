@@ -78,11 +78,16 @@ bool Map::set_water_province(std::string_view identifier) {
 }
 
 bool Map::set_water_province_list(std::vector<std::string_view> const& list) {
+	if (water_provinces.is_locked()) {
+		Logger::error("The map's water provinces have already been locked!");
+		return false;
+	}
 	bool ret = true;
 	water_provinces.reserve(water_provinces.size() + list.size());
 	for (std::string_view const& identifier : list) {
 		ret &= set_water_province(identifier);
 	}
+	lock_water_provinces();
 	return ret;
 }
 

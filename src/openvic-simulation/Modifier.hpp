@@ -107,10 +107,10 @@ namespace OpenVic {
 		ModifierManager();
 
 		bool add_modifier_effect(std::string_view identifier, bool province_good);
-		IDENTIFIER_REGISTRY_ACCESSORS(ModifierEffect, modifier_effect)
+		IDENTIFIER_REGISTRY_ACCESSORS(modifier_effect)
 
 		bool add_modifier(std::string_view identifier, ModifierValue&& values, Modifier::icon_t icon);
-		IDENTIFIER_REGISTRY_ACCESSORS(Modifier, modifier)
+		IDENTIFIER_REGISTRY_ACCESSORS(modifier)
 
 		bool setup_modifier_effects();
 

@@ -49,7 +49,8 @@ namespace OpenVic {
 			log(log_func_t log_func, log_queue_t& log_queue, Ts&&... ts, source_location const& location) {
 				std::stringstream stream;
 				stream << "\n" << get_filename(location.file_name()) << "("
-						<< location.line() << ") `" << location.function_name() << "`: ";
+						//<< location.line() << ") `" << location.function_name() << "`: ";
+						<< location.line() << "): ";
 				((stream << std::forward<Ts>(ts)), ...);
 				stream << std::endl;
 				log_queue.push(stream.str());

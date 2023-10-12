@@ -157,7 +157,7 @@ node_callback_t ModifierManager::expect_modifier_value(callback_t<ModifierValue&
 node_callback_t ModifierManager::_expect_modifier_value_and_keys(callback_t<ModifierValue&&> modifier_callback, key_map_t&& key_map) const {
 	return [this, modifier_callback, key_map = std::move(key_map)](ast::NodeCPtr node) mutable -> bool {
 		bool ret = expect_modifier_value(
-			modifier_callback, dictionary_keys_callback(key_map, false)
+			modifier_callback, dictionary_keys_callback(key_map, key_value_invalid_callback)
 		)(node);
 		ret &= check_key_map_counts(key_map);
 		return ret;

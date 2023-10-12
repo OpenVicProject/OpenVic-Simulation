@@ -35,6 +35,10 @@ namespace OpenVic {
 		explicit operator double() const;
 		std::string to_string() const;
 		explicit operator std::string() const;
+
+		static Timespan fromYears(day_t num);
+		static Timespan fromMonths(day_t num);
+		static Timespan fromDays(day_t num);
 	};
 	std::ostream& operator<<(std::ostream& out, Timespan const& timespan);
 

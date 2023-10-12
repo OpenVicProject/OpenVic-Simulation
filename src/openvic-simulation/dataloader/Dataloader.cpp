@@ -381,7 +381,10 @@ Dataloader::path_vector_t Dataloader::lookup_files_in_dir(fs::path const& path, 
 bool Dataloader::apply_to_files_in_dir(fs::path const& path, fs::path const& extension, callback_t<fs::path const&> callback) const {
 	bool ret = true;
 	for (fs::path const& file : lookup_files_in_dir(path, extension)) {
-		ret &= callback(file);
+		if (!callback(file)) {
+			Logger::error("Callback failed for file: ", file);
+			ret = false;
+		}
 	}
 	return ret;
 }
@@ -441,12 +444,6 @@ csv::Windows1252Parser Dataloader::parse_csv(fs::path const& path) {
 	return _run_ovdl_parser<csv::Windows1252Parser, &_csv_parse>(path);
 }
 
-static callback_t<fs::path const&> _parse_defines_callback(node_callback_t callback) {
-	return [callback](fs::path const& path) -> bool {
-		return callback(Dataloader::parse_defines(path).get_file_node());
-	};
-}
-
 bool Dataloader::_load_pop_types(PopManager& pop_manager, fs::path const& pop_type_directory) const {
 	const bool ret = apply_to_files_in_dir(pop_type_directory, ".txt",
 		[&pop_manager](fs::path const& file) -> bool {
@@ -457,13 +454,13 @@ bool Dataloader::_load_pop_types(PopManager& pop_manager, fs::path const& pop_ty
 	return ret;
 }
 
-bool Dataloader::_load_units(GameManager& game_manager, fs::path const& units_directory) const {
+bool Dataloader::_load_units(UnitManager& unit_manager, GoodManager const& good_manager, fs::path const& units_directory) const {
 	const bool ret = apply_to_files_in_dir(units_directory, ".txt",
-		[&game_manager](fs::path const& file) -> bool {
-			return game_manager.get_unit_manager().load_unit_file(game_manager.get_good_manager(), parse_defines(file).get_file_node());
+		[&unit_manager, &good_manager](fs::path const& file) -> bool {
+			return unit_manager.load_unit_file(good_manager, parse_defines(file).get_file_node());
 		}
 	);
-	game_manager.get_unit_manager().lock_units();
+	unit_manager.lock_units();
 	return ret;
 }
 
@@ -499,15 +496,8 @@ bool Dataloader::_load_map_dir(GameManager& game_manager, fs::path const& map_di
 
 	bool ret = expect_dictionary_keys(
 		"max_provinces", ONE_EXACTLY,
-		expect_uint(
-			[&map](uint64_t val) -> bool {
-				if (Province::NULL_INDEX < val && val <= Province::MAX_INDEX) {
-					return map.set_max_provinces(val);
-				}
-				Logger::error("Invalid max province count ", val, " (out of valid range ",
-					Province::NULL_INDEX, " < max_provinces <= ", Province::MAX_INDEX, ")");
-				return false;
-			}
+		expect_uint<Province::index_t>(
+			std::bind(&Map::set_max_provinces, &map, std::placeholders::_1)
 		),
 		"sea_starts", ONE_EXACTLY,
 		expect_list_reserve_length(
@@ -556,7 +546,6 @@ bool Dataloader::_load_map_dir(GameManager& game_manager, fs::path const& map_di
 		Logger::error("Failed to set water provinces!");
 		ret = false;
 	}
-	map.lock_water_provinces();
 
 	if (!map.get_terrain_type_manager().load_terrain_types(game_manager.get_modifier_manager(), parse_defines(lookup_file(map_directory / terrain_definition)).get_file_node())) {
 		Logger::error("Failed to load terrain types!");
@@ -648,7 +637,7 @@ bool Dataloader::load_defines(GameManager& game_manager) const {
 		Logger::error("Failed to load map!");
 		ret = false;
 	}
-	if (!_load_units(game_manager, units_directory)) {
+	if (!_load_units(game_manager.get_unit_manager(), game_manager.get_good_manager(), units_directory)) {
 		Logger::error("Failed to load units!");
 		ret = false;
 	}
@@ -659,11 +648,11 @@ bool Dataloader::load_defines(GameManager& game_manager) const {
 bool Dataloader::load_pop_history(GameManager& game_manager, fs::path const& path) const {
 	return apply_to_files_in_dir(path, ".txt",
 		[&game_manager](fs::path const& file) -> bool {
-			return _parse_defines_callback(game_manager.get_map().expect_province_dictionary(
+			return game_manager.get_map().expect_province_dictionary(
 				[&game_manager](Province& province, ast::NodeCPtr value) -> bool {
 					return province.load_pop_list(game_manager.get_pop_manager(), value);
 				}
-			))(file);
+			)(parse_defines(file).get_file_node());
 		}
 	);
 }

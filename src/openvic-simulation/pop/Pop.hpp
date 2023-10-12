@@ -96,7 +96,7 @@ namespace OpenVic {
 		bool add_pop_type(std::string_view identifier, colour_t new_colour, PopType::strata_t strata, PopType::sprite_t sprite,
 			Pop::pop_size_t max_size, Pop::pop_size_t merge_max_size, bool state_capital_only, bool demote_migrant,
 			bool is_artisan, bool is_slave);
-		IDENTIFIER_REGISTRY_ACCESSORS(PopType, pop_type)
+		IDENTIFIER_REGISTRY_ACCESSORS(pop_type)
 
 		bool load_pop_type_file(std::string_view filestem, ast::NodeCPtr root);
 		bool load_pop_into_province(Province& province, std::string_view pop_type_identifier, ast::NodeCPtr pop_node) const;

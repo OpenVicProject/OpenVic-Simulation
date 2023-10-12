@@ -1,9 +1,12 @@
 #include "Unit.hpp"
 
+#include <set>
+
 #define UNIT_ARGS icon, sprite, active, unit_type, floating_flag, priority, max_strength, \
 					default_organisation, maximum_speed, weighted_value, build_time, build_cost, supply_consumption, \
 					supply_cost
-#define LAND_ARGS reconnaissance, attack, defence, discipline, support, maneuver, siege
+#define LAND_ARGS primary_culture, sprite_override, sprite_mount, sprite_mount_attach_node, \
+					reconnaissance, attack, defence, discipline, support, maneuver, siege
 #define NAVY_ARGS naval_icon, sail, transport, capital, move_sound, select_sound, colonial_points, build_overseas, min_port_level, \
 					limit_per_port, supply_consumption_score, hull, gun_power, fire_range, evasion, torpedo_attack
 
@@ -76,9 +79,26 @@ std::map<Good const*, fixed_point_t> const& Unit::get_supply_cost() const {
 	return supply_cost;
 }
 
-LandUnit::LandUnit(std::string_view identifier, UNIT_PARAMS, LAND_PARAMS) : Unit { identifier, type_t::LAND, UNIT_ARGS },
-	reconnaissance { reconnaissance }, attack { attack }, defence { defence }, discipline { discipline }, support { support },
-	maneuver { maneuver }, siege { siege } {}
+LandUnit::LandUnit(std::string_view identifier, UNIT_PARAMS, LAND_PARAMS)
+	: Unit { identifier, type_t::LAND, UNIT_ARGS }, primary_culture { primary_culture }, sprite_override { sprite_override },
+	sprite_mount { sprite_mount }, sprite_mount_attach_node { sprite_mount_attach_node }, reconnaissance { reconnaissance },
+	attack { attack }, defence { defence }, discipline { discipline }, support { support }, maneuver { maneuver }, siege { siege } {}
+
+bool LandUnit::get_primary_culture() const {
+	return primary_culture;
+}
+
+std::string const& LandUnit::get_sprite_override() const {
+	return sprite_override;
+}
+
+std::string const& LandUnit::get_sprite_mount() const {
+	return sprite_mount;
+}
+
+std::string const& LandUnit::get_sprite_mount_attach_node() const {
+	return sprite_mount_attach_node;
+}
 
 fixed_point_t LandUnit::get_reconnaissance() const {
 	return reconnaissance;
@@ -215,6 +235,17 @@ bool UnitManager::add_naval_unit(std::string_view identifier, UNIT_PARAMS, NAVY_
 	return units.add_item(NavalUnit { identifier, UNIT_ARGS, NAVY_ARGS });
 }
 
+static bool shared_keys_callback(std::string_view key, ast::NodeCPtr) {
+	static const std::set<std::string, std::less<void>> reserved_keys = {
+		"icon", "type", "sprite", "active", "unit_type", "floating_flag", "priority",
+		"max_strength", "default_organisation", "maximum_speed", "weighted_value",
+		"build_time", "build_cost", "supply_consumption", "supply_cost"
+	};
+	if (reserved_keys.contains(key)) return true;
+	Logger::error("Invalid key: ", key);
+	return false;
+};
+
 bool UnitManager::load_unit_file(GoodManager const& good_manager, ast::NodeCPtr root) {
 	return expect_dictionary([this, &good_manager](std::string_view key, ast::NodeCPtr value) -> bool {
 		Unit::icon_t icon = 0;
@@ -226,28 +257,36 @@ bool UnitManager::load_unit_file(GoodManager const& good_manager, ast::NodeCPtr 
 		std::map<Good const*, fixed_point_t> build_cost, supply_cost;
 
 		//shared
-		bool ret = expect_dictionary_keys(ALLOW_OTHER_KEYS,
-			"icon", ONE_EXACTLY, expect_uint(assign_variable_callback_uint(icon)),
+		bool ret = expect_dictionary_keys_and_default(
+			key_value_success_callback,
+			"icon", ONE_EXACTLY, expect_uint(assign_variable_callback(icon)),
 			"type", ONE_EXACTLY, expect_identifier(assign_variable_callback(type)),
 			"sprite", ONE_EXACTLY, expect_identifier(assign_variable_callback(sprite)),
 			"active", ZERO_OR_ONE, expect_bool(assign_variable_callback(active)),
 			"unit_type", ONE_EXACTLY, expect_identifier(assign_variable_callback(unit_type)),
 			"floating_flag", ONE_EXACTLY, expect_bool(assign_variable_callback(floating_flag)),
-			"priority", ONE_EXACTLY, expect_uint(assign_variable_callback_uint(priority)),
+			"priority", ONE_EXACTLY, expect_uint(assign_variable_callback(priority)),
 			"max_strength", ONE_EXACTLY, expect_fixed_point(assign_variable_callback(max_strength)),
 			"default_organisation", ONE_EXACTLY, expect_fixed_point(assign_variable_callback(default_organisation)),
 			"maximum_speed", ONE_EXACTLY, expect_fixed_point(assign_variable_callback(maximum_speed)),
 			"weighted_value", ONE_EXACTLY, expect_fixed_point(assign_variable_callback(weighted_value)),
-			"build_time", ONE_EXACTLY, expect_timespan(assign_variable_callback(build_time)),
+			"build_time", ONE_EXACTLY, expect_days(assign_variable_callback(build_time)),
 			"build_cost", ONE_EXACTLY, good_manager.expect_good_decimal_map(move_variable_callback(build_cost)),
 			"supply_consumption", ONE_EXACTLY, expect_fixed_point(assign_variable_callback(supply_consumption)),
 			"supply_cost", ONE_EXACTLY, good_manager.expect_good_decimal_map(move_variable_callback(supply_cost))
 		)(value);
 
 		if (type == "land") {
+			bool primary_culture = false;
+			std::string_view sprite_override, sprite_mount, sprite_mount_attach_node;
 			fixed_point_t reconnaissance = 0, attack = 0, defence = 0, discipline = 0, support = 0, maneuver = 0, siege = 0;
 
-			ret &= expect_dictionary_keys(ALLOW_OTHER_KEYS,
+			ret &= expect_dictionary_keys_and_default(
+				shared_keys_callback,
+				"primary_culture", ZERO_OR_ONE, expect_bool(assign_variable_callback(primary_culture)),
+				"sprite_override", ZERO_OR_ONE, expect_identifier(assign_variable_callback(sprite_override)),
+				"sprite_mount", ZERO_OR_ONE, expect_identifier(assign_variable_callback(sprite_mount)),
+				"sprite_mount_attach_node", ZERO_OR_ONE, expect_identifier(assign_variable_callback(sprite_mount_attach_node)),
 				"reconnaissance", ONE_EXACTLY, expect_fixed_point(assign_variable_callback(reconnaissance)),
 				"attack", ONE_EXACTLY, expect_fixed_point(assign_variable_callback(attack)),
 				"defence", ONE_EXACTLY, expect_fixed_point(assign_variable_callback(defence)),
@@ -268,8 +307,9 @@ bool UnitManager::load_unit_file(GoodManager const& good_manager, ast::NodeCPtr 
 			int32_t limit_per_port = 0;
 			fixed_point_t fire_range = 0, evasion = 0, supply_consumption_score = 0, hull = 0, gun_power = 0, colonial_points = 0, torpedo_attack = 0;
 
-			ret &= expect_dictionary_keys(ALLOW_OTHER_KEYS,
-				"naval_icon", ONE_EXACTLY, expect_uint(assign_variable_callback_uint(naval_icon)),
+			ret &= expect_dictionary_keys_and_default(
+				shared_keys_callback,
+				"naval_icon", ONE_EXACTLY, expect_uint(assign_variable_callback(naval_icon)),
 				"sail", ZERO_OR_ONE, expect_bool(assign_variable_callback(sail)),
 				"transport", ZERO_OR_ONE, expect_bool(assign_variable_callback(transport)),
 				"capital", ZERO_OR_ONE, expect_bool(assign_variable_callback(capital)),
@@ -277,8 +317,8 @@ bool UnitManager::load_unit_file(GoodManager const& good_manager, ast::NodeCPtr 
 				"select_sound", ZERO_OR_ONE, expect_identifier(assign_variable_callback(select_sound)),
 				"colonial_points", ZERO_OR_ONE, expect_fixed_point(assign_variable_callback(colonial_points)),
 				"can_build_overseas", ZERO_OR_ONE, expect_bool(assign_variable_callback(build_overseas)),
-				"min_port_level", ONE_EXACTLY, expect_uint(assign_variable_callback_uint(min_port_level)),
-				"limit_per_port", ONE_EXACTLY, expect_int(assign_variable_callback_int(limit_per_port)),
+				"min_port_level", ONE_EXACTLY, expect_uint(assign_variable_callback(min_port_level)),
+				"limit_per_port", ONE_EXACTLY, expect_int(assign_variable_callback(limit_per_port)),
 				"supply_consumption_score", ONE_EXACTLY, expect_fixed_point(assign_variable_callback(supply_consumption_score)),
 				"hull", ONE_EXACTLY, expect_fixed_point(assign_variable_callback(hull)),
 				"gun_power", ONE_EXACTLY, expect_fixed_point(assign_variable_callback(gun_power)),

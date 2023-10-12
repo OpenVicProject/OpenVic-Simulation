@@ -107,19 +107,19 @@ namespace OpenVic {
 		IssueManager();
 
 		bool add_issue_group(std::string_view identifier);
-		IDENTIFIER_REGISTRY_ACCESSORS(IssueGroup, issue_group)
+		IDENTIFIER_REGISTRY_ACCESSORS(issue_group)
 
 		bool add_issue(std::string_view identifier, IssueGroup const* group);
-		IDENTIFIER_REGISTRY_ACCESSORS(Issue, issue)
+		IDENTIFIER_REGISTRY_ACCESSORS(issue)
 
 		bool add_reform_type(std::string_view identifier, bool uncivilised);
-		IDENTIFIER_REGISTRY_ACCESSORS(ReformType, reform_type)
+		IDENTIFIER_REGISTRY_ACCESSORS(reform_type)
 
 		bool add_reform_group(std::string_view identifier, ReformType const* type, bool ordered, bool administrative);
-		IDENTIFIER_REGISTRY_ACCESSORS(ReformGroup, reform_group)
+		IDENTIFIER_REGISTRY_ACCESSORS(reform_group)
 
 		bool add_reform(std::string_view identifier, ReformGroup const* group, size_t ordinal);
-		IDENTIFIER_REGISTRY_ACCESSORS(Reform, reform)
+		IDENTIFIER_REGISTRY_ACCESSORS(reform)
 
 		bool load_issues_file(ast::NodeCPtr root);
 	};

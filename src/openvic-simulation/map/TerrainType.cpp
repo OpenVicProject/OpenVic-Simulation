@@ -49,7 +49,7 @@ bool TerrainTypeManager::add_terrain_type(std::string_view identifier, colour_t 
 
 bool TerrainTypeManager::add_terrain_type_mapping(std::string_view identifier, TerrainType const* type,
 	std::vector<TerrainTypeMapping::index_t>&& terrain_indicies, TerrainTypeMapping::index_t priority, bool has_texture) {
-	if (!terrain_types.is_locked()) {
+	if (!terrain_types_are_locked()) {
 		Logger::error("Cannot register terrain type mappings until terrain types are locked!");
 		return false;
 	}
@@ -76,48 +76,53 @@ bool TerrainTypeManager::add_terrain_type_mapping(std::string_view identifier, T
 	return ret;
 }
 
-bool TerrainTypeManager::_load_terrain_type_categories(ModifierManager const& modifier_manager, ast::NodeCPtr root) {
-	const bool ret = expect_dictionary_reserve_length(terrain_types,
-		[this, &modifier_manager](std::string_view type_key, ast::NodeCPtr type_node) -> bool {
-			ModifierValue values;
-			colour_t colour = NULL_COLOUR;
-			bool is_water = false;
-			bool ret = modifier_manager.expect_modifier_value_and_keys(move_variable_callback(values),
-				"color", ONE_EXACTLY, expect_colour(assign_variable_callback(colour)),
-				"is_water", ZERO_OR_ONE, expect_bool(assign_variable_callback(is_water))
-			)(type_node);
-			ret &= add_terrain_type(type_key, colour, std::move(values), is_water);
-			return ret;
-		}
-	)(root);
-	terrain_types.lock();
-	return ret;
+node_callback_t TerrainTypeManager::_load_terrain_type_categories(ModifierManager const& modifier_manager) {
+	return [this, &modifier_manager](ast::NodeCPtr root) -> bool {
+		const bool ret = expect_dictionary_reserve_length(terrain_types,
+			[this, &modifier_manager](std::string_view type_key, ast::NodeCPtr type_node) -> bool {
+				ModifierValue values;
+				colour_t colour = NULL_COLOUR;
+				bool is_water = false;
+				bool ret = modifier_manager.expect_modifier_value_and_keys(move_variable_callback(values),
+					"color", ONE_EXACTLY, expect_colour(assign_variable_callback(colour)),
+					"is_water", ZERO_OR_ONE, expect_bool(assign_variable_callback(is_water))
+				)(type_node);
+				ret &= add_terrain_type(type_key, colour, std::move(values), is_water);
+				return ret;
+			}
+		)(root);
+		lock_terrain_types();
+		return ret;
+	};
 }
 
 bool TerrainTypeManager::_load_terrain_type_mapping(std::string_view mapping_key, ast::NodeCPtr mapping_value) {
+	if (terrain_texture_limit <= 0) {
+		Logger::error("Cannot define terrain type mapping before terrain texture limit: ", mapping_key);
+		return false;
+	}
+	if (!terrain_types_are_locked()) {
+		Logger::error("Cannot define terrain type mapping before categories: ", mapping_key);
+		return false;
+	}
 	TerrainType const* type = nullptr;
 	std::vector<TerrainTypeMapping::index_t> terrain_indicies;
 	TerrainTypeMapping::index_t priority = 0;
 	bool has_texture = true;
 
 	bool ret = expect_dictionary_keys(
-		"type", ONE_EXACTLY, expect_terrain_type_identifier(assign_variable_callback_pointer(type)),
-		"color", ONE_EXACTLY, expect_list_reserve_length(terrain_indicies, expect_uint(
-			[&terrain_indicies](uint64_t val) -> bool {
-				if (val <= std::numeric_limits<TerrainTypeMapping::index_t>::max()) {
-					TerrainTypeMapping::index_t index = val;
-					if (std::find(terrain_indicies.begin(), terrain_indicies.end(), index) == terrain_indicies.end()) {
-						terrain_indicies.push_back(val);
-						return true;
-					}
-					Logger::error("Repeat terrain type mapping index: ", val);
-					return false;
+		"type", ONE_EXACTLY, expect_identifier(expect_terrain_type_identifier(assign_variable_callback_pointer(type))),
+		"color", ONE_EXACTLY, expect_list_reserve_length(terrain_indicies, expect_uint<TerrainTypeMapping::index_t>(
+			[&terrain_indicies](TerrainTypeMapping::index_t val) -> bool {
+				if (std::find(terrain_indicies.begin(), terrain_indicies.end(), val) == terrain_indicies.end()) {
+					terrain_indicies.push_back(val);
+					return true;
 				}
-				Logger::error("Index too big for terrain type mapping index: ", val);
+				Logger::error("Repeat terrain type mapping index: ", val);
 				return false;
 			}
 		)),
-		"priority", ZERO_OR_ONE, expect_uint(assign_variable_callback_uint(priority)),
+		"priority", ZERO_OR_ONE, expect_uint(assign_variable_callback(priority)),
 		"has_texture", ZERO_OR_ONE, expect_bool(assign_variable_callback(has_texture))
 	)(mapping_value);
 	if (has_texture) {
@@ -143,45 +148,15 @@ TerrainTypeMapping::index_t TerrainTypeManager::get_terrain_texture_limit() cons
 }
 
 bool TerrainTypeManager::load_terrain_types(ModifierManager const& modifier_manager, ast::NodeCPtr root) {
-	bool terrain = false, categories = false;
-	bool ret = expect_dictionary_and_length(
+	const bool ret = expect_dictionary_keys_and_length_and_default(
 		[this](size_t size) -> size_t {
 			terrain_type_mappings.reserve(size - 2);
 			return size;
 		},
-		[this, &terrain, &categories, &modifier_manager](std::string_view key, ast::NodeCPtr value) -> bool {
-			if (key == "terrain") {
-				if (!terrain) {
-					terrain = true;
-					return expect_uint(assign_variable_callback_uint(terrain_texture_limit))(value);
-				} else {
-					Logger::error("Duplicate terrain key!");
-					return false;
-				}
-			} else if (key == "categories") {
-				if (!categories) {
-					categories = true;
-					return _load_terrain_type_categories(modifier_manager, value);
-				} else {
-					Logger::error("Duplicate categories key!");
-					return false;
-				}
-			} else if (terrain && categories) {
-				return _load_terrain_type_mapping(key, value);
-			} else {
-				Logger::error("Cannot define terrain type mapping before terrain and categories keys: ", key);
-				return false;
-			}
-		}
+		std::bind(&TerrainTypeManager::_load_terrain_type_mapping, this, std::placeholders::_1, std::placeholders::_2),
+		"terrain", ONE_EXACTLY, expect_uint(assign_variable_callback(terrain_texture_limit)),
+		"categories", ONE_EXACTLY, _load_terrain_type_categories(modifier_manager)
 	)(root);
-	if (!terrain) {
-		Logger::error("Missing expected key: \"terrain\"");
-		ret = false;
-	}
-	if (!categories) {
-		Logger::error("Missing expected key: \"categories\"");
-		ret = false;
-	}
-	terrain_type_mappings.lock();
+	lock_terrain_type_mappings();
 	return ret;
 }

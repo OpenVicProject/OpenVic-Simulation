@@ -45,10 +45,10 @@ namespace OpenVic {
 		IdeologyManager();
 
 		bool add_ideology_group(std::string_view identifier);
-		IDENTIFIER_REGISTRY_ACCESSORS(IdeologyGroup, ideology_group)
+		IDENTIFIER_REGISTRY_ACCESSORS(ideology_group)
 
 		bool add_ideology(std::string_view identifier, colour_t colour, IdeologyGroup const* group, bool uncivilised, bool can_reduce_militancy, Date spawn_date);
-		IDENTIFIER_REGISTRY_ACCESSORS_CUSTOM_PLURAL(Ideology, ideology, ideologies)
+		IDENTIFIER_REGISTRY_ACCESSORS_CUSTOM_PLURAL(ideology, ideologies)
 
 		bool load_ideology_file(ast::NodeCPtr root);
 	};

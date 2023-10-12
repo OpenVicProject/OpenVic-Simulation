@@ -64,6 +64,19 @@ Timespan::operator std::string() const {
 	return to_string();
 }
 
+Timespan Timespan::fromYears(day_t num) {
+	 return num * Date::DAYS_IN_YEAR;
+}
+
+Timespan Timespan::fromMonths(day_t num) {
+	 return (num / Date::MONTHS_IN_YEAR) * Date::DAYS_IN_YEAR +
+	 	Date::DAYS_UP_TO_MONTH[num % Date::MONTHS_IN_YEAR];
+}
+
+Timespan Timespan::fromDays(day_t num) {
+	 return num;
+}
+
 std::ostream& OpenVic::operator<<(std::ostream& out, Timespan const& timespan) {
 	return out << timespan.to_string();
 }

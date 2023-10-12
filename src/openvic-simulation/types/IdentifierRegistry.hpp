@@ -68,42 +68,50 @@ namespace OpenVic {
 
 	distribution_t::value_type get_largest_item(distribution_t const& dist);
 
-	/*
-	 * Template for a list of objects with unique string identifiers that can
-	 * be locked to prevent any further additions. The template argument T is
-	 * the type of object that the registry will store, and the second part ensures
-	 * that HasIdentifier is a base class of T.
-	 */
 	template<typename T>
-	requires(std::derived_from<T, HasIdentifier>)
-	class IdentifierRegistry {
-		using identifier_index_map_t = std::map<std::string, size_t, std::less<void>>;
+	using get_identifier_func_t = std::string const&(T::*)(void) const;
+
+	template<typename _Base, std::derived_from<_Base> _Type, get_identifier_func_t<_Base> get_identifier,
+		typename _Storage, _Type* (*get_ptr)(_Storage&), _Type const* (*get_cptr)(_Storage const&)>
+	class UniqueKeyRegistry {
 
 		const std::string name;
 		const bool log_lock;
-		std::vector<T> items;
+		std::vector<_Storage> items;
 		bool locked = false;
-		identifier_index_map_t identifier_index_map;
+		string_map_t<size_t> identifier_index_map;
 
 	public:
-		IdentifierRegistry(std::string_view new_name, bool new_log_lock = true)
+		using value_type = _Type;
+		using storage_type = _Storage;
+
+		UniqueKeyRegistry(std::string_view new_name, bool new_log_lock = true)
 			: name { new_name }, log_lock { new_log_lock } {}
 
 		std::string const& get_name() const {
 			return name;
 		}
 
-		bool add_item(T&& item) {
+		bool add_item(storage_type&& item, bool fail_on_duplicate = true) {
 			if (locked) {
 				Logger::error("Cannot add item to the ", name, " registry - locked!");
 				return false;
 			}
-			T const* old_item = get_item_by_identifier(item.get_identifier());
+			value_type const* new_item = (*get_cptr)(item);
+			std::string const& new_identifier = (new_item->*get_identifier)();
+			value_type const* old_item = get_item_by_identifier(new_identifier);
 			if (old_item != nullptr) {
-				Logger::error("Cannot add item to the ", name, " registry - an item with the identifier \"", item.get_identifier(), "\" already exists!");
-				return false;
+#define DUPLICATE_MESSAGE "Cannot add item to the ", name, " registry - an item with the identifier \"", new_identifier, "\" already exists!"
+				if (fail_on_duplicate) {
+					Logger::error(DUPLICATE_MESSAGE);
+					return false;
+				} else {
+					Logger::warning(DUPLICATE_MESSAGE);
+					return true;
+				}
+#undef DUPLICATE_MESSAGE
 			}
-			identifier_index_map[item.get_identifier()] = items.size();
+			identifier_index_map[new_identifier] = items.size();
 			items.push_back(std::move(item));
 			return true;
 		}
@@ -143,15 +151,15 @@ namespace OpenVic {
 			}
 		}
 
-		T* get_item_by_identifier(std::string_view identifier) {
-			const identifier_index_map_t::const_iterator it = identifier_index_map.find(identifier);
-			if (it != identifier_index_map.end()) return &items[it->second];
+		value_type* get_item_by_identifier(std::string_view identifier) {
+			const typename decltype(identifier_index_map)::const_iterator it = identifier_index_map.find(identifier);
+			if (it != identifier_index_map.end()) return (*get_ptr)(items[it->second]);
 			return nullptr;
 		}
 
-		T const* get_item_by_identifier(std::string_view identifier) const {
-			const identifier_index_map_t::const_iterator it = identifier_index_map.find(identifier);
-			if (it != identifier_index_map.end()) return &items[it->second];
+		value_type const* get_item_by_identifier(std::string_view identifier) const {
+			const typename decltype(identifier_index_map)::const_iterator it = identifier_index_map.find(identifier);
+			if (it != identifier_index_map.end()) return (*get_cptr)(items[it->second]);
 			return nullptr;
 		}
 
@@ -159,11 +167,11 @@ namespace OpenVic {
 			return get_item_by_identifier(identifier) != nullptr;
 		}
 
-		T* get_item_by_index(size_t index) {
+		value_type* get_item_by_index(size_t index) {
 			return index < items.size() ? &items[index] : nullptr;
 		}
 
-		T const* get_item_by_index(size_t index) const {
+		value_type const* get_item_by_index(size_t index) const {
 			return index < items.size() ? &items[index] : nullptr;
 		}
 
@@ -171,48 +179,44 @@ namespace OpenVic {
 			return get_item_by_index(index) != nullptr;
 		}
 
-		std::vector<T>& get_items() {
+		std::vector<storage_type>& get_items() {
 			return items;
 		}
 
-		std::vector<T> const& get_items() const {
+		std::vector<storage_type> const& get_items() const {
 			return items;
 		}
 
 		std::vector<std::string_view> get_item_identifiers() const {
 			std::vector<std::string_view> identifiers;
 			identifiers.reserve(items.size());
-			for (identifier_index_map_t::value_type const& entry : identifier_index_map) {
+			for (typename decltype(identifier_index_map)::value_type const& entry : identifier_index_map) {
 				identifiers.push_back(entry.first);
 			}
 			return identifiers;
 		}
 
-		NodeTools::node_callback_t expect_item_identifier(NodeTools::callback_t<T&> callback) {
-			return NodeTools::expect_identifier(
-				[this, callback](std::string_view identifier) -> bool {
-					T* item = get_item_by_identifier(identifier);
-					if (item != nullptr) return callback(*item);
-					Logger::error("Invalid ", name, ": ", identifier);
-					return false;
-				}
-			);
+		NodeTools::callback_t<std::string_view> expect_item_identifier(NodeTools::callback_t<value_type&> callback) {
+			return [this, callback](std::string_view identifier) -> bool {
+				value_type* item = get_item_by_identifier(identifier);
+				if (item != nullptr) return callback(*item);
+				Logger::error("Invalid ", name, ": ", identifier);
+				return false;
+			};
 		}
 
-		NodeTools::node_callback_t expect_item_identifier(NodeTools::callback_t<T const&> callback) const {
-			return NodeTools::expect_identifier(
-				[this, callback](std::string_view identifier) -> bool {
-					T const* item = get_item_by_identifier(identifier);
-					if (item != nullptr) return callback(*item);
-					Logger::error("Invalid ", name, ": ", identifier);
-					return false;
-				}
-			);
+		NodeTools::callback_t<std::string_view> expect_item_identifier(NodeTools::callback_t<value_type const&> callback) const {
+			return [this, callback](std::string_view identifier) -> bool {
+				value_type const* item = get_item_by_identifier(identifier);
+				if (item != nullptr) return callback(*item);
+				Logger::error("Invalid ", name, ": ", identifier);
+				return false;
+			};
 		}
 
-		NodeTools::node_callback_t expect_item_dictionary(NodeTools::callback_t<T&, ast::NodeCPtr> callback) {
+		NodeTools::node_callback_t expect_item_dictionary(NodeTools::callback_t<value_type&, ast::NodeCPtr> callback) {
 			return NodeTools::expect_dictionary([this, callback](std::string_view key, ast::NodeCPtr value) -> bool {
-				T* item = get_item_by_identifier(key);
+				value_type* item = get_item_by_identifier(key);
 				if (item != nullptr) {
 					return callback(*item, value);
 				}
@@ -221,9 +225,9 @@ namespace OpenVic {
 			});
 		}
 
-		NodeTools::node_callback_t expect_item_dictionary(NodeTools::callback_t<T const&, ast::NodeCPtr> callback) const {
+		NodeTools::node_callback_t expect_item_dictionary(NodeTools::callback_t<value_type const&, ast::NodeCPtr> callback) const {
 			return NodeTools::expect_dictionary([this, callback](std::string_view key, ast::NodeCPtr value) -> bool {
-				T const* item = get_item_by_identifier(key);
+				value_type const* item = get_item_by_identifier(key);
 				if (item != nullptr) {
 					return callback(*item, value);
 				}
@@ -232,10 +236,10 @@ namespace OpenVic {
 			});
 		}
 
-		NodeTools::node_callback_t expect_item_decimal_map(NodeTools::callback_t<std::map<T const*, fixed_point_t>&&> callback) const {
+		NodeTools::node_callback_t expect_item_decimal_map(NodeTools::callback_t<std::map<value_type const*, fixed_point_t>&&> callback) const {
 			return [this, callback](ast::NodeCPtr node) -> bool {
-				std::map<T const*, fixed_point_t> map;
-				bool ret = expect_item_dictionary([&map](T const& key, ast::NodeCPtr value) -> bool {
+				std::map<value_type const*, fixed_point_t> map;
+				bool ret = expect_item_dictionary([&map](value_type const& key, ast::NodeCPtr value) -> bool {
 					fixed_point_t val;
 					const bool ret = NodeTools::expect_fixed_point(NodeTools::assign_variable_callback(val))(value);
 					map.emplace(&key, val);
@@ -247,34 +251,56 @@ namespace OpenVic {
 		}
 	};
 
-#define IDENTIFIER_REGISTRY_ACCESSORS_CUSTOM_PLURAL(type, singular, plural) \
+	template<typename _Base, std::derived_from<_Base> _Type, get_identifier_func_t<_Base> get_identifier>
+	using ValueRegistry = UniqueKeyRegistry<_Base, _Type, get_identifier, _Type, std::addressof<_Type>, std::addressof<const _Type>>;
+
+	template<typename _Type>
+	constexpr _Type* get_ptr(std::unique_ptr<_Type>& storage) {
+		return storage.get();
+	}
+	template<typename _Type>
+	constexpr _Type const* get_cptr(std::unique_ptr<_Type> const& storage) {
+		return storage.get();
+	}
+
+	template<typename _Base, std::derived_from<_Base> _Type, get_identifier_func_t<_Base> get_identifier>
+	using InstanceRegistry = UniqueKeyRegistry<_Base, _Type, get_identifier, std::unique_ptr<_Type>,
+		get_ptr<_Type>, get_cptr<_Type>>;
+
+	template<std::derived_from<HasIdentifier> _Type>
+	using IdentifierRegistry = ValueRegistry<HasIdentifier, _Type, &HasIdentifier::get_identifier>;
+
+	template<std::derived_from<HasIdentifier> _Type>
+	using IdentifierInstanceRegistry = InstanceRegistry<HasIdentifier, _Type, &HasIdentifier::get_identifier>;
+
+#define IDENTIFIER_REGISTRY_ACCESSORS_CUSTOM_PLURAL(singular, plural) \
 	void lock_##plural() { plural.lock(); } \
 	bool plural##_are_locked() const { return plural.is_locked(); } \
-	type const* get_##singular##_by_identifier(std::string_view identifier) const { \
+	decltype(plural)::value_type const* get_##singular##_by_identifier(std::string_view identifier) const { \
 		return plural.get_item_by_identifier(identifier); } \
 	bool has_##singular##_identifier(std::string_view identifier) const { \
 		return plural.has_identifier(identifier); } \
 	size_t get_##singular##_count() const { \
 		return plural.size(); } \
-	std::vector<type> const& get_##plural() const { \
+	std::vector<decltype(plural)::storage_type> const& get_##plural() const { \
 		return plural.get_items(); } \
 	std::vector<std::string_view> get_##singular##_identifiers() const { \
 		return plural.get_item_identifiers(); } \
-	NodeTools::node_callback_t expect_##singular##_identifier(NodeTools::callback_t<type const&> callback) const { \
+	NodeTools::callback_t<std::string_view> expect_##singular##_identifier(NodeTools::callback_t<decltype(plural)::value_type const&> callback) const { \
 		return plural.expect_item_identifier(callback); } \
-	NodeTools::node_callback_t expect_##singular##_dictionary(NodeTools::callback_t<type const&, ast::NodeCPtr> callback) const { \
+	NodeTools::node_callback_t expect_##singular##_dictionary(NodeTools::callback_t<decltype(plural)::value_type const&, ast::NodeCPtr> callback) const { \
 		return plural.expect_item_dictionary(callback); } \
-	NodeTools::node_callback_t expect_##singular##_decimal_map(NodeTools::callback_t<std::map<type const*, fixed_point_t>&&> callback) const { \
+	NodeTools::node_callback_t expect_##singular##_decimal_map(NodeTools::callback_t<std::map<decltype(plural)::value_type const*, fixed_point_t>&&> callback) const { \
 		return plural.expect_item_decimal_map(callback); }
 
-#define IDENTIFIER_REGISTRY_NON_CONST_ACCESSORS_CUSTOM_PLURAL(type, singular, plural) \
-	type* get_##singular##_by_identifier(std::string_view identifier) { \
+#define IDENTIFIER_REGISTRY_NON_CONST_ACCESSORS_CUSTOM_PLURAL(singular, plural) \
+	decltype(plural)::value_type* get_##singular##_by_identifier(std::string_view identifier) { \
 		return plural.get_item_by_identifier(identifier); } \
-	NodeTools::node_callback_t expect_##singular##_identifier(NodeTools::callback_t<type&> callback) { \
+	NodeTools::callback_t<std::string_view> expect_##singular##_identifier(NodeTools::callback_t<decltype(plural)::value_type&> callback) { \
 		return plural.expect_item_identifier(callback); } \
-	NodeTools::node_callback_t expect_##singular##_dictionary(NodeTools::callback_t<type&, ast::NodeCPtr> callback) { \
+	NodeTools::node_callback_t expect_##singular##_dictionary(NodeTools::callback_t<decltype(plural)::value_type&, ast::NodeCPtr> callback) { \
 		return plural.expect_item_dictionary(callback); }
 
-#define IDENTIFIER_REGISTRY_ACCESSORS(type, name) IDENTIFIER_REGISTRY_ACCESSORS_CUSTOM_PLURAL(type, name, name##s)
-#define IDENTIFIER_REGISTRY_NON_CONST_ACCESSORS(type, name) IDENTIFIER_REGISTRY_NON_CONST_ACCESSORS_CUSTOM_PLURAL(type, name, name##s)
+#define IDENTIFIER_REGISTRY_ACCESSORS(name) IDENTIFIER_REGISTRY_ACCESSORS_CUSTOM_PLURAL(name, name##s)
+#define IDENTIFIER_REGISTRY_NON_CONST_ACCESSORS(name) IDENTIFIER_REGISTRY_NON_CONST_ACCESSORS_CUSTOM_PLURAL(name, name##s)
 }

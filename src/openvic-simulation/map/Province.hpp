@@ -93,7 +93,7 @@ namespace OpenVic {
 		bool load_positions(BuildingManager const& building_manager, ast::NodeCPtr root);
 
 		bool add_building(BuildingInstance&& building_instance);
-		IDENTIFIER_REGISTRY_ACCESSORS(BuildingInstance, building)
+		IDENTIFIER_REGISTRY_ACCESSORS(building)
 		void reset_buildings();
 		bool expand_building(std::string_view building_type_identifier);
 		Good const* get_rgo() const;
