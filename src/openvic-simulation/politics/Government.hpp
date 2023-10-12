@@ -24,7 +24,7 @@ namespace OpenVic {
 		bool holds_elections() const;
 		bool can_appoint_ruling_party() const;
 		Timespan get_term_duration() const;
-		std::string const& get_flag_type() const;
+		std::string_view get_flag_type() const;
 	};
 
 	struct GovernmentTypeManager {

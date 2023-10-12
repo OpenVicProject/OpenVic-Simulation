@@ -27,7 +27,7 @@ Unit::type_t Unit::get_type() const {
 	return type;
 }
 
-std::string const& Unit::get_sprite() const {
+std::string_view Unit::get_sprite() const {
 	return sprite;
 }
 
@@ -35,7 +35,7 @@ bool Unit::is_active() const {
 	return active;
 }
 
-std::string const& Unit::get_unit_type() const {
+std::string_view Unit::get_unit_type() const {
 	return unit_type;
 }
 
@@ -88,15 +88,15 @@ bool LandUnit::get_primary_culture() const {
 	return primary_culture;
 }
 
-std::string const& LandUnit::get_sprite_override() const {
+std::string_view LandUnit::get_sprite_override() const {
 	return sprite_override;
 }
 
-std::string const& LandUnit::get_sprite_mount() const {
+std::string_view LandUnit::get_sprite_mount() const {
 	return sprite_mount;
 }
 
-std::string const& LandUnit::get_sprite_mount_attach_node() const {
+std::string_view LandUnit::get_sprite_mount_attach_node() const {
 	return sprite_mount_attach_node;
 }
 
@@ -146,11 +146,11 @@ bool NavalUnit::is_transport() const {
 	return transport;
 }
 
-std::string const& NavalUnit::get_move_sound() const {
+std::string_view NavalUnit::get_move_sound() const {
 	return move_sound;
 }
 
-std::string const& NavalUnit::get_select_sound() const {
+std::string_view NavalUnit::get_select_sound() const {
 	return select_sound;
 }
 

@@ -70,7 +70,7 @@ namespace OpenVic {
 		Building(Building&&) = default;
 
 		BuildingType const& get_type() const;
-		std::string const& get_on_completion() const;
+		std::string_view get_on_completion() const;
 		fixed_point_t get_completion_size() const;
 		level_t get_max_level() const;
 		std::map<Good const*, fixed_point_t> const& get_goods_cost() const;

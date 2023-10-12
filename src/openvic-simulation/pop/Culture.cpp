@@ -15,7 +15,7 @@ CultureGroup::CultureGroup(std::string_view new_identifier, std::string_view new
 	  unit_graphical_culture_type { new_unit_graphical_culture_type },
 	  is_overseas { new_is_overseas } {}
 
-std::string const& CultureGroup::get_leader() const {
+std::string_view CultureGroup::get_leader() const {
 	return leader;
 }
 

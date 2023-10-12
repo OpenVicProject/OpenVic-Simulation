@@ -31,7 +31,7 @@ namespace OpenVic {
 	public:
 		CultureGroup(CultureGroup&&) = default;
 
-		std::string const& get_leader() const;
+		std::string_view get_leader() const;
 		GraphicalCultureType const& get_unit_graphical_culture_type() const;
 		bool get_is_overseas() const;
 	};

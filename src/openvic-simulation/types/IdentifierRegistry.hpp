@@ -28,7 +28,7 @@ namespace OpenVic {
 		HasIdentifier& operator=(HasIdentifier const&) = delete;
 		HasIdentifier& operator=(HasIdentifier&&) = delete;
 
-		std::string const& get_identifier() const;
+		std::string_view get_identifier() const;
 	};
 
 	std::ostream& operator<<(std::ostream& stream, HasIdentifier const& obj);
@@ -73,7 +73,7 @@ namespace OpenVic {
 	distribution_t::value_type get_largest_item(distribution_t const& dist);
 
 	template<typename T>
-	using get_identifier_func_t = std::string const&(T::*)(void) const;
+	using get_identifier_func_t = std::string_view(T::*)(void) const;
 
 	template<typename _Base, std::derived_from<_Base> _Type, get_identifier_func_t<_Base> get_identifier,
 		typename _Storage, _Type* (*get_ptr)(_Storage&), _Type const* (*get_cptr)(_Storage const&)>
@@ -92,7 +92,7 @@ namespace OpenVic {
 		UniqueKeyRegistry(std::string_view new_name, bool new_log_lock = true)
 			: name { new_name }, log_lock { new_log_lock } {}
 
-		std::string const& get_name() const {
+		std::string_view get_name() const {
 			return name;
 		}
 
@@ -102,7 +102,7 @@ namespace OpenVic {
 				return false;
 			}
 			value_type const* new_item = (*get_cptr)(item);
-			std::string const& new_identifier = (new_item->*get_identifier)();
+			const std::string_view new_identifier = (new_item->*get_identifier)();
 			value_type const* old_item = get_item_by_identifier(new_identifier);
 			if (old_item != nullptr) {
 #define DUPLICATE_MESSAGE "Cannot add item to the ", name, " registry - an item with the identifier \"", new_identifier, "\" already exists!"
@@ -115,7 +115,7 @@ namespace OpenVic {
 				}
 #undef DUPLICATE_MESSAGE
 			}
-			identifier_index_map[new_identifier] = items.size();
+			identifier_index_map.emplace(new_identifier, items.size());
 			items.push_back(std::move(item));
 			return true;
 		}
@@ -249,8 +249,16 @@ namespace OpenVic {
 		}
 	};
 
+	template<typename T>
+	[[nodiscard]] inline constexpr T* _addressof(T& v) noexcept {
+		return std::addressof<T>(v);
+	}
+
+	template<typename T>
+	const T* _addressof(const T&&) = delete;
+
 	template<typename _Base, std::derived_from<_Base> _Type, get_identifier_func_t<_Base> get_identifier>
-	using ValueRegistry = UniqueKeyRegistry<_Base, _Type, get_identifier, _Type, std::addressof<_Type>, std::addressof<const _Type>>;
+	using ValueRegistry = UniqueKeyRegistry<_Base, _Type, get_identifier, _Type, _addressof<_Type>, _addressof<const _Type>>;
 
 	template<typename _Type>
 	constexpr _Type* get_ptr(std::unique_ptr<_Type>& storage) {

@@ -57,9 +57,9 @@ namespace OpenVic {
 
 		icon_t get_icon() const;
 		type_t get_type() const;
-		std::string const& get_sprite() const;
+		std::string_view get_sprite() const;
 		bool is_active() const;
-		std::string const& get_unit_type() const;
+		std::string_view get_unit_type() const;
 		bool has_floating_flag() const;
 
 		uint32_t get_priority() const;
@@ -94,9 +94,9 @@ namespace OpenVic {
 		LandUnit(LandUnit&&) = default;
 
 		bool get_primary_culture() const;
-		std::string const& get_sprite_override() const;
-		std::string const& get_sprite_mount() const;
-		std::string const& get_sprite_mount_attach_node() const;
+		std::string_view get_sprite_override() const;
+		std::string_view get_sprite_mount() const;
+		std::string_view get_sprite_mount_attach_node() const;
 
 		fixed_point_t get_reconnaissance() const;
 		fixed_point_t get_attack() const;
@@ -138,8 +138,8 @@ namespace OpenVic {
 		bool can_sail() const;
 		bool is_transport() const;
 		bool is_capital() const;
-		std::string const& get_move_sound() const;
-		std::string const& get_select_sound() const;
+		std::string_view get_move_sound() const;
+		std::string_view get_select_sound() const;
 		fixed_point_t get_colonial_points() const;
 		bool can_build_overseas() const;
 		uint32_t get_min_port_level() const;

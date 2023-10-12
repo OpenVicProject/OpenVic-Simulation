@@ -30,7 +30,7 @@ Timespan GovernmentType::get_term_duration() const {
 	return term_duration;
 }
 
-std::string const& GovernmentType::get_flag_type() const {
+std::string_view GovernmentType::get_flag_type() const {
 	return flag_type_identifier;
 }
 

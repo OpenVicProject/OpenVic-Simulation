@@ -17,7 +17,7 @@ BuildingType const& Building::get_type() const {
 	return type;
 }
 
-std::string const& Building::get_on_completion() const {
+std::string_view Building::get_on_completion() const {
 	return on_completion;
 }
 

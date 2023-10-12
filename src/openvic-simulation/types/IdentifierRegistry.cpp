@@ -9,7 +9,7 @@ HasIdentifier::HasIdentifier(std::string_view new_identifier)
 	assert(!identifier.empty());
 }
 
-std::string const& HasIdentifier::get_identifier() const {
+std::string_view HasIdentifier::get_identifier() const {
 	return identifier;
 }
 
