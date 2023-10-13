@@ -360,20 +360,25 @@ node_callback_t NodeTools::expect_dictionary_key_map(key_map_t key_map) {
 	return expect_dictionary_key_map_and_length_and_default(std::move(key_map), default_length_callback, key_value_invalid_callback);
 }
 
-node_callback_t NodeTools::name_list_callback(std::vector<std::string>& list) {
-	return expect_list_reserve_length(
-		list,
-		expect_identifier_or_string(
-			[&list](std::string_view str) -> bool {
-				if (!str.empty()) {
-					list.push_back(std::string { str });
-					return true;
+node_callback_t NodeTools::name_list_callback(callback_t<std::vector<std::string>&&> callback) {
+	return [callback](ast::NodeCPtr node) -> bool {
+		std::vector<std::string> list;
+		bool ret = expect_list_reserve_length(
+			list,
+			expect_identifier_or_string(
+				[&list](std::string_view str) -> bool {
+					if (!str.empty()) {
+						list.push_back(std::string { str });
+						return true;
+					}
+					Logger::error("Empty identifier or string");
+					return false;
 				}
-				Logger::error("Empty identifier or string");
-				return false;
-			}
-		)
-	);
+			)
+		)(node);
+		ret &= callback(std::move(list));
+		return ret;
+	};
 }
 
 callback_t<std::string_view> NodeTools::assign_variable_callback_string(std::string& var) {

@@ -68,9 +68,40 @@ namespace OpenVic {
 		HasIdentifierAndColour& operator=(HasIdentifierAndColour&&) = delete;
 	};
 
-	using distribution_t = std::map<HasIdentifierAndColour const*, float>;
+	template<typename T>
+	using decimal_map_t = std::map<T, fixed_point_t>;
 
-	distribution_t::value_type get_largest_item(distribution_t const& dist);
+	template<typename T>
+	constexpr typename decimal_map_t<T>::value_type get_largest_item(decimal_map_t<T> const& map) {
+		constexpr auto pred = [](typename decimal_map_t<T>::value_type a, typename decimal_map_t<T>::value_type b) -> bool {
+			return a.second < b.second;
+		};
+		const typename decimal_map_t<T>::const_iterator result = std::max_element(
+			map.begin(), map.end(), pred
+		);
+		if (result != map.end()) {
+			return *result;
+		} else {
+			return { nullptr, -1 };
+		}
+	}
+
+	using distribution_t = decimal_map_t<HasIdentifierAndColour const*>;
+
+	/* Callbacks for trying to add duplicate keys via UniqueKeyRegistry::add_item */
+	static bool duplicate_fail_callback(std::string_view registry_name, std::string_view duplicate_identifier) {
+		Logger::error("Failure adding item to the ", registry_name, " registry - an item with the identifier \"",
+			duplicate_identifier, "\" already exists!");
+		return false;
+	}
+	static bool duplicate_warning_callback(std::string_view registry_name, std::string_view duplicate_identifier) {
+		Logger::warning("Warning adding item to the ", registry_name, " registry - an item with the identifier \"",
+			duplicate_identifier, "\" already exists!");
+		return true;
+	}
+	static bool duplicate_ignore_callback(std::string_view registry_name, std::string_view duplicate_identifier) {
+		return true;
+	}
 
 	template<typename T>
 	using get_identifier_func_t = std::string_view(T::*)(void) const;
@@ -96,7 +127,7 @@ namespace OpenVic {
 			return name;
 		}
 
-		bool add_item(storage_type&& item, bool fail_on_duplicate = true) {
+		bool add_item(storage_type&& item, NodeTools::callback_t<std::string_view, std::string_view> duplicate_callback = duplicate_fail_callback) {
 			if (locked) {
 				Logger::error("Cannot add item to the ", name, " registry - locked!");
 				return false;
@@ -105,15 +136,7 @@ namespace OpenVic {
 			const std::string_view new_identifier = (new_item->*get_identifier)();
 			value_type const* old_item = get_item_by_identifier(new_identifier);
 			if (old_item != nullptr) {
-#define DUPLICATE_MESSAGE "Cannot add item to the ", name, " registry - an item with the identifier \"", new_identifier, "\" already exists!"
-				if (fail_on_duplicate) {
-					Logger::error(DUPLICATE_MESSAGE);
-					return false;
-				} else {
-					Logger::warning(DUPLICATE_MESSAGE);
-					return true;
-				}
-#undef DUPLICATE_MESSAGE
+				return duplicate_callback(name, new_identifier);
 			}
 			identifier_index_map.emplace(new_identifier, items.size());
 			items.push_back(std::move(item));
@@ -234,9 +257,9 @@ namespace OpenVic {
 			});
 		}
 
-		NodeTools::node_callback_t expect_item_decimal_map(NodeTools::callback_t<std::map<value_type const*, fixed_point_t>&&> callback) const {
+		NodeTools::node_callback_t expect_item_decimal_map(NodeTools::callback_t<decimal_map_t<value_type const*>&&> callback) const {
 			return [this, callback](ast::NodeCPtr node) -> bool {
-				std::map<value_type const*, fixed_point_t> map;
+				decimal_map_t<value_type const*> map;
 				bool ret = expect_item_dictionary([&map](value_type const& key, ast::NodeCPtr value) -> bool {
 					fixed_point_t val;
 					const bool ret = NodeTools::expect_fixed_point(NodeTools::assign_variable_callback(val))(value);
@@ -296,7 +319,7 @@ namespace OpenVic {
 		return plural.expect_item_identifier(callback); } \
 	NodeTools::node_callback_t expect_##singular##_dictionary(NodeTools::callback_t<decltype(plural)::value_type const&, ast::NodeCPtr> callback) const { \
 		return plural.expect_item_dictionary(callback); } \
-	NodeTools::node_callback_t expect_##singular##_decimal_map(NodeTools::callback_t<std::map<decltype(plural)::value_type const*, fixed_point_t>&&> callback) const { \
+	NodeTools::node_callback_t expect_##singular##_decimal_map(NodeTools::callback_t<decimal_map_t<decltype(plural)::value_type const*>&&> callback) const { \
 		return plural.expect_item_decimal_map(callback); }
 
 #define IDENTIFIER_REGISTRY_NON_CONST_ACCESSORS_CUSTOM_PLURAL(singular, plural) \

@@ -63,21 +63,21 @@ namespace OpenVic {
 			}
 		};
 
-#define LOG_FUNC(name)																			\
-	private:																					\
-		static log_func_t name##_func;															\
-		static log_queue_t name##_queue;														\
-	public:																						\
-		static void set_##name##_func(log_func_t log_func) {									\
-			name##_func = log_func;																\
-		}																						\
-		template<typename... Ts>																\
-		struct name {																			\
-			name(Ts&&... ts, source_location const& location = source_location::current()) {	\
-				log<Ts...>{ name##_func, name##_queue, std::forward<Ts>(ts)..., location };		\
-			}																					\
-		};																						\
-		template<typename... Ts>																\
+#define LOG_FUNC(name) \
+	private: \
+		static log_func_t name##_func; \
+		static log_queue_t name##_queue; \
+	public: \
+		static void set_##name##_func(log_func_t log_func) { \
+			name##_func = log_func; \
+		} \
+		template<typename... Ts> \
+		struct name { \
+			name(Ts&&... ts, source_location const& location = source_location::current()) { \
+				log<Ts...>{ name##_func, name##_queue, std::forward<Ts>(ts)..., location }; \
+			} \
+		}; \
+		template<typename... Ts> \
 		name(Ts&&...) -> name<Ts...>;
 
 		LOG_FUNC(info)

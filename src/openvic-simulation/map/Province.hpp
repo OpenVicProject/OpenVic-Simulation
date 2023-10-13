@@ -61,7 +61,7 @@ namespace OpenVic {
 	private:
 		const index_t index;
 		Region* region = nullptr;
-		bool has_region = false, water = false;
+		bool on_map = false, has_region = false, water = false;
 		life_rating_t life_rating = 0;
 		IdentifierRegistry<BuildingInstance> buildings;
 		// TODO - change this into a factory-like structure
@@ -85,6 +85,7 @@ namespace OpenVic {
 
 		index_t get_index() const;
 		Region* get_region() const;
+		bool get_on_map() const;
 		bool get_has_region() const;
 		bool get_water() const;
 		TerrainType const* get_terrain_type() const;

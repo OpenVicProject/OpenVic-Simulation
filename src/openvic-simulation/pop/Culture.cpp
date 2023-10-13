@@ -28,11 +28,11 @@ bool CultureGroup::get_is_overseas() const {
 }
 
 Culture::Culture(std::string_view new_identifier, colour_t new_colour, CultureGroup const& new_group,
-	std::vector<std::string> const& new_first_names, std::vector<std::string> const& new_last_names)
+	std::vector<std::string>&& new_first_names, std::vector<std::string>&& new_last_names)
 	: HasIdentifierAndColour { new_identifier, new_colour, true, false },
 	  group { new_group },
-	  first_names { new_first_names },
-	  last_names { new_last_names } {}
+	  first_names { std::move(new_first_names) },
+	  last_names { std::move(new_last_names) } {}
 
 CultureGroup const& Culture::get_group() const {
 	return group;
@@ -79,7 +79,7 @@ bool CultureManager::add_culture_group(std::string_view identifier, std::string_
 	return culture_groups.add_item({ identifier, leader, *graphical_culture_type, is_overseas });
 }
 
-bool CultureManager::add_culture(std::string_view identifier, colour_t colour, CultureGroup const* group, std::vector<std::string> const& first_names, std::vector<std::string> const& last_names) {
+bool CultureManager::add_culture(std::string_view identifier, colour_t colour, CultureGroup const* group, std::vector<std::string>&& first_names, std::vector<std::string>&& last_names) {
 	if (!culture_groups.is_locked()) {
 		Logger::error("Cannot register cultures until culture groups are locked!");
 		return false;
@@ -96,7 +96,7 @@ bool CultureManager::add_culture(std::string_view identifier, colour_t colour, C
 		Logger::error("Invalid culture colour for ", identifier, ": ", colour_to_hex_string(colour));
 		return false;
 	}
-	return cultures.add_item({ identifier, colour, *group, first_names, last_names });
+	return cultures.add_item({ identifier, colour, *group, std::move(first_names), std::move(last_names) });
 }
 
 bool CultureManager::load_graphical_culture_type_file(ast::NodeCPtr root) {
@@ -137,12 +137,12 @@ bool CultureManager::_load_culture(CultureGroup const* culture_group,
 
 	bool ret = expect_dictionary_keys(
 		"color", ONE_EXACTLY, expect_colour(assign_variable_callback(colour)),
-		"first_names", ONE_EXACTLY, name_list_callback(first_names),
-		"last_names", ONE_EXACTLY, name_list_callback(last_names),
+		"first_names", ONE_EXACTLY, name_list_callback(move_variable_callback(first_names)),
+		"last_names", ONE_EXACTLY, name_list_callback(move_variable_callback(last_names)),
 		"radicalism", ZERO_OR_ONE, success_callback,
 		"primary", ZERO_OR_ONE, success_callback
 	)(culture_node);
-	ret &= add_culture(culture_key, colour, culture_group, first_names, last_names);
+	ret &= add_culture(culture_key, colour, culture_group, std::move(first_names), std::move(last_names));
 	return ret;
 }
 

@@ -45,7 +45,7 @@ namespace OpenVic {
 
 		// TODO - radicalism, primary tag
 
-		Culture(std::string_view new_identifier, colour_t new_colour, CultureGroup const& new_group, std::vector<std::string> const& new_first_names, std::vector<std::string> const& new_last_names);
+		Culture(std::string_view new_identifier, colour_t new_colour, CultureGroup const& new_group, std::vector<std::string>&& new_first_names, std::vector<std::string>&& new_last_names);
 
 	public:
 		Culture(Culture&&) = default;
@@ -74,7 +74,7 @@ namespace OpenVic {
 		bool add_culture_group(std::string_view identifier, std::string_view leader, GraphicalCultureType const* new_graphical_culture_type, bool is_overseas);
 		IDENTIFIER_REGISTRY_ACCESSORS(culture_group)
 
-		bool add_culture(std::string_view identifier, colour_t colour, CultureGroup const* group, std::vector<std::string> const& first_names, std::vector<std::string> const& last_names);
+		bool add_culture(std::string_view identifier, colour_t colour, CultureGroup const* group, std::vector<std::string>&& first_names, std::vector<std::string>&& last_names);
 		IDENTIFIER_REGISTRY_ACCESSORS(culture)
 
 		bool load_graphical_culture_type_file(ast::NodeCPtr root);

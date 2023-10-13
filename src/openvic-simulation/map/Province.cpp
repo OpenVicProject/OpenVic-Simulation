@@ -17,6 +17,10 @@ Region* Province::get_region() const {
 	return region;
 }
 
+bool Province::get_on_map() const {
+	return on_map;
+}
+
 bool Province::get_has_region() const {
 	return has_region;
 }

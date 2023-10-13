@@ -123,18 +123,24 @@ namespace OpenVic {
 		key_value_callback_t dictionary_keys_callback(key_map_t& key_map, key_value_callback_t default_callback);
 		bool check_key_map_counts(key_map_t& key_map);
 
+		constexpr bool add_key_map_entries(key_map_t& key_map) { return true; }
+		template<typename... Args>
+		bool add_key_map_entries(key_map_t& key_map, std::string_view key, dictionary_entry_t::expected_count_t expected_count, node_callback_t callback, Args... args) {
+			bool ret = add_key_map_entry(key_map, key, expected_count, callback);
+			ret &= add_key_map_entries(key_map, args...);
+			return ret;
+		}
+
 		node_callback_t expect_dictionary_key_map_and_length_and_default(key_map_t key_map, length_callback_t length_callback, key_value_callback_t default_callback);
 		node_callback_t expect_dictionary_key_map_and_length(key_map_t key_map, length_callback_t length_callback);
 		node_callback_t expect_dictionary_key_map_and_default(key_map_t key_map, key_value_callback_t default_callback);
 		node_callback_t expect_dictionary_key_map(key_map_t key_map);
 
 		template<typename... Args>
-		node_callback_t expect_dictionary_key_map_and_length_and_default(key_map_t key_map, length_callback_t length_callback, key_value_callback_t default_callback,
-			std::string_view key, dictionary_entry_t::expected_count_t expected_count, node_callback_t callback,
-			Args... args) {
+		node_callback_t expect_dictionary_key_map_and_length_and_default(key_map_t key_map, length_callback_t length_callback, key_value_callback_t default_callback, Args... args) {
 			// TODO - pass return value back up (part of big key_map_t rewrite?)
-			add_key_map_entry(key_map, key, expected_count, callback);
-			return expect_dictionary_key_map_and_length_and_default(std::move(key_map), length_callback, default_callback, args...);
+			add_key_map_entries(key_map, args...);
+			return expect_dictionary_key_map_and_length_and_default(std::move(key_map), length_callback, default_callback);
 		}
 
 		template<typename... Args>
@@ -177,7 +183,7 @@ namespace OpenVic {
 			return expect_list_reserve_length(t, expect_assign(callback));
 		}
 
-		node_callback_t name_list_callback(std::vector<std::string>& list);
+		node_callback_t name_list_callback(callback_t<std::vector<std::string>&&> callback);
 
 		template<typename T>
 		callback_t<std::string_view> expect_mapped_string(string_map_t<T> const& map, callback_t<T> callback) {

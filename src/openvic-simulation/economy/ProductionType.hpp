@@ -7,9 +7,8 @@
 
 #define PRODUCTION_TYPE_ARGS \
 	std::string_view identifier, EmployedPop owner, std::vector<EmployedPop> employees, ProductionType::type_t type, \
-	Pop::pop_size_t workforce, std::map<Good const*, fixed_point_t> input_goods, Good const* output_goods, \
-	fixed_point_t value, std::vector<Bonus> bonuses, std::map<Good const*, fixed_point_t> efficiency, \
-	bool coastal, bool farm, bool mine
+	Pop::pop_size_t workforce, Good::good_map_t&& input_goods, Good const* output_goods, fixed_point_t value, \
+	std::vector<Bonus>&& bonuses, Good::good_map_t&& efficiency, bool coastal, bool farm, bool mine
 
 namespace OpenVic {
 	struct ProductionTypeManager;
@@ -17,14 +16,16 @@ namespace OpenVic {
 	struct EmployedPop {
 		friend struct ProductionTypeManager;
 
-	private:
-		PopType const* pop_type; // poptype
-		bool artisan; // set by the parser if the magic "artisan" poptype is passed
 		enum struct effect_t {
 			INPUT,
 			OUTPUT,
 			THROUGHPUT
-		} effect;
+		};
+
+	private:
+		PopType const* pop_type; // poptype
+		bool artisan; // set by the parser if the magic "artisan" poptype is passed
+		effect_t effect;
 		fixed_point_t effect_multiplier;
 		fixed_point_t amount;
 
@@ -33,11 +34,11 @@ namespace OpenVic {
 	public:
 		EmployedPop() = default;
 
-		PopType const* get_pop_type();
-		bool is_artisan();
-		effect_t get_effect();
-		fixed_point_t get_effect_multiplier();
-		fixed_point_t get_amount();
+		PopType const* get_pop_type() const;
+		bool is_artisan() const;
+		effect_t get_effect() const;
+		fixed_point_t get_effect_multiplier() const;
+		fixed_point_t get_amount() const;
 	};
 
 	struct Bonus {
@@ -58,12 +59,12 @@ namespace OpenVic {
 		} type;
 		const Pop::pop_size_t workforce;
 
-		const std::map<Good const*, fixed_point_t> input_goods;
+		const Good::good_map_t input_goods;
 		Good const* output_goods;
 		const fixed_point_t value;
 		const std::vector<Bonus> bonuses;
 
-		const std::map<Good const*, fixed_point_t> efficiency;
+		const Good::good_map_t efficiency;
 		const bool coastal; // is_coastal
 
 		const bool farm;
@@ -79,12 +80,12 @@ namespace OpenVic {
 		type_t get_type() const;
 		Pop::pop_size_t get_workforce() const;
 
-		std::map<Good const*, fixed_point_t> const& get_input_goods();
+		Good::good_map_t const& get_input_goods() const;
 		Good const* get_output_goods() const;
 		fixed_point_t get_value() const;
-		std::vector<Bonus> const& get_bonuses();
+		std::vector<Bonus> const& get_bonuses() const;
 
-		std::map<Good const*, fixed_point_t> const& get_efficiency();
+		Good::good_map_t const& get_efficiency() const;
 		bool is_coastal() const;
 
 		bool is_farm() const;
@@ -96,9 +97,9 @@ namespace OpenVic {
 		IdentifierRegistry<ProductionType> production_types;
 
 		NodeTools::node_callback_t _expect_employed_pop(GoodManager const& good_manager, PopManager const& pop_manager,
-			NodeTools::callback_t<EmployedPop> cb);
+			NodeTools::callback_t<EmployedPop&&> cb);
 		NodeTools::node_callback_t _expect_employed_pop_list(GoodManager const& good_manager, PopManager const& pop_manager,
-			NodeTools::callback_t<std::vector<EmployedPop>> cb);
+			NodeTools::callback_t<std::vector<EmployedPop>&&> cb);
 
 	public:
 		ProductionTypeManager();

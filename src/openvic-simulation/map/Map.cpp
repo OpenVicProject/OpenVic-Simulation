@@ -525,16 +525,16 @@ bool Map::load_map_images(fs::path const& province_path, fs::path const& terrain
 	for (size_t idx = 0; idx < province_checklist.size(); ++idx) {
 		Province* province = provinces.get_item_by_index(idx);
 		province->_set_terrain_type(reinterpret_cast<TerrainType const*>(get_largest_item(terrain_type_pixels_list[idx]).first));
-		if (!province_checklist[idx]) {
+		province->on_map = province_checklist[idx];
+		if (!province->on_map) {
 			if (detailed_errors) {
-				Logger::error("Province missing from shape image: ", province->to_string());
+				Logger::warning("Province missing from shape image: ", province->to_string());
 			}
 			missing++;
 		}
 	}
 	if (missing > 0) {
-		Logger::error("Province image is missing ", missing, " province colours");
-		ret = false;
+		Logger::warning("Province image is missing ", missing, " province colours");
 	}
 
 	return ret;

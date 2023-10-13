@@ -428,6 +428,28 @@ namespace OpenVic {
 			return *this;
 		}
 
+		constexpr fixed_point_t& operator++() {
+			value += ONE;
+			return *this;
+		}
+
+		constexpr fixed_point_t operator++(int) {
+			const fixed_point_t old = *this;
+			value += ONE;
+			return old;
+		}
+
+		constexpr fixed_point_t& operator--() {
+			value -= ONE;
+			return *this;
+		}
+
+		constexpr fixed_point_t operator--(int) {
+			const fixed_point_t old = *this;
+			value -= ONE;
+			return old;
+		}
+
 		constexpr friend fixed_point_t operator*(fixed_point_t const& lhs, fixed_point_t const& rhs) {
 			return lhs.value * rhs.value >> PRECISION;
 		}

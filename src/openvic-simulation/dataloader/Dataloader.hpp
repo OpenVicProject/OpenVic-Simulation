@@ -54,7 +54,7 @@ namespace OpenVic {
 		static fs::path search_for_game_path(fs::path hint_path = {});
 
 		/* In reverse-load order, so base defines first and final loaded mod last */
-		bool set_roots(path_vector_t new_roots);
+		bool set_roots(path_vector_t const& new_roots);
 
 		/* REQUIREMENTS:
 		 * DAT-24
@@ -76,7 +76,7 @@ namespace OpenVic {
 
 		/* Args: key, locale, localisation */
 		using localisation_callback_t = NodeTools::callback_t<std::string_view, locale_t, std::string_view>;
-		bool load_localisation_files(localisation_callback_t callback, fs::path const& localisation_dir = "localisation");
+		bool load_localisation_files(localisation_callback_t callback, fs::path const& localisation_dir = "localisation") const;
 
 	private:
 		struct fshash

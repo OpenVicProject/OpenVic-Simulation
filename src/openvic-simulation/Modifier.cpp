@@ -3,11 +3,15 @@
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;
 
-ModifierEffect::ModifierEffect(std::string_view new_identifier, bool new_positive_good)
-	: HasIdentifier { new_identifier }, positive_good { new_positive_good } {}
+ModifierEffect::ModifierEffect(std::string_view new_identifier, bool new_positive_good, format_t new_format)
+	: HasIdentifier { new_identifier }, positive_good { new_positive_good }, format { new_format } {}
 
 bool ModifierEffect::get_positive_good() const {
 	return positive_good;
+}
+
+ModifierEffect::format_t ModifierEffect::get_format() const {
+	return format;
 }
 
 ModifierValue::ModifierValue() = default;
@@ -94,12 +98,12 @@ Date const& ModifierInstance::get_expiry_date() const {
 ModifierManager::ModifierManager()
 	: modifier_effects { "modifier effects"}, modifiers { "modifiers" } {}
 
-bool ModifierManager::add_modifier_effect(std::string_view identifier, bool positive_good) {
+bool ModifierManager::add_modifier_effect(std::string_view identifier, bool positive_good, ModifierEffect::format_t format) {
 	if (identifier.empty()) {
 		Logger::error("Invalid modifier effect identifier - empty!");
 		return false;
 	}
-	return modifier_effects.add_item({ identifier, positive_good });
+	return modifier_effects.add_item({ identifier, positive_good, format });
 }
 
 bool ModifierManager::add_modifier(std::string_view identifier, ModifierValue&& values, Modifier::icon_t icon) {
@@ -117,16 +121,40 @@ bool ModifierManager::add_modifier(std::string_view identifier, ModifierValue&& 
 bool ModifierManager::setup_modifier_effects() {
 	bool ret = true;
 
+	using enum ModifierEffect::format_t;
+
 	ret &= add_modifier_effect("movement_cost", false);
 	ret &= add_modifier_effect("farm_rgo_size", true);
 	ret &= add_modifier_effect("farm_rgo_eff", true);
 	ret &= add_modifier_effect("mine_rgo_size", true);
 	ret &= add_modifier_effect("mine_rgo_eff", true);
-	ret &= add_modifier_effect("min_build_railroad", false);
-	ret &= add_modifier_effect("supply_limit", true);
+	ret &= add_modifier_effect("supply_limit", true, RAW_DECIMAL);
 	ret &= add_modifier_effect("combat_width", false);
-	ret &= add_modifier_effect("defence", true);
+	ret &= add_modifier_effect("defence", true, RAW_DECIMAL);
+	ret &= add_modifier_effect("local_ship_build", false);
+	ret &= add_modifier_effect("research_points_modifier", true);
+	ret &= add_modifier_effect("local_rgo_output", true);
+	ret &= add_modifier_effect("attrition", false, RAW_DECIMAL);
+	ret &= add_modifier_effect("immigrant_push", false);
+	ret &= add_modifier_effect("population_growth", true);
+	ret &= add_modifier_effect("local_RGO_throughput", true);
+	ret &= add_modifier_effect("assimilation_rate", true);
 
+	/* These should be added automatically for each Building loaded (or at least
+	 * non-factories), however currently we need modifier effects locked before we
+	 * can load buildings, so some architectural changes will be needed.
+	 */
+	ret &= add_modifier_effect("max_fort", true, ModifierEffect::format_t::INT);
+	ret &= add_modifier_effect("min_build_fort", true, ModifierEffect::format_t::INT);
+	ret &= add_modifier_effect("max_naval_base", true, ModifierEffect::format_t::INT);
+	ret &= add_modifier_effect("min_build_naval_base", true, ModifierEffect::format_t::INT);
+	ret &= add_modifier_effect("max_railroad", true, ModifierEffect::format_t::INT);
+	ret &= add_modifier_effect("min_build_railroad", true, ModifierEffect::format_t::INT);
+	ret &= add_modifier_effect("max_university", true, ModifierEffect::format_t::INT);
+	ret &= add_modifier_effect("min_build_university", true, ModifierEffect::format_t::INT);
+	ret &= add_modifier_effect("max_bank", true, ModifierEffect::format_t::INT);
+	ret &= add_modifier_effect("min_build_bank", true, ModifierEffect::format_t::INT);
+		
 	modifier_effects.lock();
 	return ret;
 }
