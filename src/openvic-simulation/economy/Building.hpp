@@ -27,7 +27,7 @@ namespace OpenVic {
 	struct Building : HasIdentifier, ModifierValue {
 		friend struct BuildingManager;
 
-		using level_t = int8_t;
+		using level_t = int16_t;
 
 	private:
 		BuildingType const& type;
@@ -70,7 +70,7 @@ namespace OpenVic {
 		Building(Building&&) = default;
 
 		BuildingType const& get_type() const;
-		std::string const& get_on_completion() const;
+		std::string_view get_on_completion() const;
 		fixed_point_t get_completion_size() const;
 		level_t get_max_level() const;
 		std::map<Good const*, fixed_point_t> const& get_goods_cost() const;
@@ -162,10 +162,10 @@ namespace OpenVic {
 		BuildingManager();
 
 		bool add_building_type(std::string_view identifier);
-		IDENTIFIER_REGISTRY_ACCESSORS(BuildingType, building_type)
+		IDENTIFIER_REGISTRY_ACCESSORS(building_type)
 
 		bool add_building(std::string_view identifier, BuildingType const* type, ARGS);
-		IDENTIFIER_REGISTRY_ACCESSORS(Building, building)
+		IDENTIFIER_REGISTRY_ACCESSORS(building)
 
 		bool load_buildings_file(GoodManager const& good_manager, ProductionTypeManager const& production_type_manager, ModifierManager const& modifier_manager, ast::NodeCPtr root);
 

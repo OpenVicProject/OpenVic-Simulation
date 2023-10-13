@@ -50,18 +50,18 @@ namespace OpenVic {
 
 		TerrainTypeMapping::index_t terrain_texture_limit = 0, terrain_texture_count = 0;
 
-		bool _load_terrain_type_categories(ModifierManager const& modifier_manager, ast::NodeCPtr root);
+		NodeTools::node_callback_t _load_terrain_type_categories(ModifierManager const& modifier_manager);
 		bool _load_terrain_type_mapping(std::string_view key, ast::NodeCPtr value);
 
 	public:
 		TerrainTypeManager();
 
 		bool add_terrain_type(std::string_view identifier, colour_t colour, ModifierValue&& values, bool is_water);
-		IDENTIFIER_REGISTRY_ACCESSORS(TerrainType, terrain_type)
+		IDENTIFIER_REGISTRY_ACCESSORS(terrain_type)
 
 		bool add_terrain_type_mapping(std::string_view identifier, TerrainType const* type,
 			std::vector<TerrainTypeMapping::index_t>&& terrain_indicies, TerrainTypeMapping::index_t priority, bool has_texture);
-		IDENTIFIER_REGISTRY_ACCESSORS(TerrainTypeMapping, terrain_type_mapping)
+		IDENTIFIER_REGISTRY_ACCESSORS(terrain_type_mapping)
 
 		TerrainTypeMapping const* get_terrain_type_mapping_for(TerrainTypeMapping::index_t idx) const;
 

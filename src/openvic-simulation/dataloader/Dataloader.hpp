@@ -13,7 +13,8 @@ namespace OpenVic {
 
 	struct GameManager;
 	struct PopManager;
-	struct Map;
+	struct UnitManager;
+	struct GoodManager;
 
 	class Dataloader {
 	public:
@@ -23,11 +24,12 @@ namespace OpenVic {
 		path_vector_t roots;
 
 		bool _load_pop_types(PopManager& pop_manager, fs::path const& pop_type_directory) const;
-		bool _load_units(GameManager& unit_manager, fs::path const& units_directory) const;
+		bool _load_units(UnitManager& unit_manager, GoodManager const& good_manager, fs::path const& units_directory) const;
 		bool _load_map_dir(GameManager& game_manager, fs::path const& map_directory) const;
 
 	public:
 		static ovdl::v2script::Parser parse_defines(fs::path const& path);
+		static ovdl::v2script::Parser parse_lua_defines(fs::path const& path);
 		static ovdl::csv::Windows1252Parser parse_csv(fs::path const& path);
 
 		Dataloader() = default;
@@ -89,5 +91,3 @@ namespace OpenVic {
 		inline static std::unordered_map<hint_path_t, game_path_t, fshash> _cached_paths;
 	};
 }
-
-

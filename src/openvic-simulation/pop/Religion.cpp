@@ -91,7 +91,7 @@ bool ReligionManager::load_religion_file(ast::NodeCPtr root) {
 					bool pagan = false;
 
 					bool ret = expect_dictionary_keys(
-						"icon", ONE_EXACTLY, expect_uint(assign_variable_callback_uint(icon)),
+						"icon", ONE_EXACTLY, expect_uint(assign_variable_callback(icon)),
 						"color", ONE_EXACTLY, expect_colour(assign_variable_callback(colour)),
 						"pagan", ZERO_OR_ONE, expect_bool(assign_variable_callback(pagan))
 					)(value);

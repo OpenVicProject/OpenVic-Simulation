@@ -70,8 +70,8 @@ namespace OpenVic {
 		Map();
 
 		bool add_province(std::string_view identifier, colour_t colour);
-		IDENTIFIER_REGISTRY_ACCESSORS(Province, province)
-		IDENTIFIER_REGISTRY_NON_CONST_ACCESSORS(Province, province)
+		IDENTIFIER_REGISTRY_ACCESSORS(province)
+		IDENTIFIER_REGISTRY_NON_CONST_ACCESSORS(province)
 
 		bool set_water_province(std::string_view identifier);
 		bool set_water_province_list(std::vector<std::string_view> const& list);
@@ -93,16 +93,16 @@ namespace OpenVic {
 		TerrainTypeManager const& get_terrain_type_manager() const;
 
 		bool add_region(std::string_view identifier, std::vector<std::string_view> const& province_identifiers);
-		IDENTIFIER_REGISTRY_ACCESSORS(Region, region)
-		IDENTIFIER_REGISTRY_NON_CONST_ACCESSORS(Region, region)
+		IDENTIFIER_REGISTRY_ACCESSORS(region)
+		IDENTIFIER_REGISTRY_NON_CONST_ACCESSORS(region)
 
 		bool add_mapmode(std::string_view identifier, Mapmode::colour_func_t colour_func);
-		IDENTIFIER_REGISTRY_ACCESSORS(Mapmode, mapmode)
+		IDENTIFIER_REGISTRY_ACCESSORS(mapmode)
 		Mapmode const* get_mapmode_by_index(size_t index) const;
 		static constexpr size_t MAPMODE_COLOUR_SIZE = 4;
 		bool generate_mapmode_colours(Mapmode::index_t index, uint8_t* target) const;
 
-		bool setup(GoodManager const& good_manager, BuildingManager const& building_manager, PopManager const& pop_manager);
+		bool setup(BuildingManager const& building_manager, PopManager const& pop_manager);
 
 		void update_highest_province_population();
 		Pop::pop_size_t get_highest_province_population() const;

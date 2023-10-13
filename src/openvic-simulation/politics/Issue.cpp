@@ -122,13 +122,10 @@ bool IssueManager::_load_issue(std::string_view identifier, IssueGroup const* gr
 
 bool IssueManager::_load_reform_group(size_t& expected_reforms, std::string_view identifier, ReformType const* type, ast::NodeCPtr node) {
 	bool ordered = false, administrative = false;
-	bool ret = expect_dictionary_keys_and_length(
-		[&expected_reforms](size_t size) -> size_t {
-			expected_reforms += size;
-			return size;
-		}, ALLOW_OTHER_KEYS,
-		"next_step_only", ZERO_OR_ONE, decrement_callback(expected_reforms, expect_bool(assign_variable_callback(ordered))),
-		"administrative", ZERO_OR_ONE, decrement_callback(expected_reforms, expect_bool(assign_variable_callback(administrative)))
+	bool ret = expect_dictionary_keys_and_default(
+		increment_callback(expected_reforms),
+		"next_step_only", ZERO_OR_ONE, expect_bool(assign_variable_callback(ordered)),
+		"administrative", ZERO_OR_ONE, expect_bool(assign_variable_callback(administrative))
 	)(node);
 	ret &= add_reform_group(identifier, type, ordered, administrative);
 	return ret;

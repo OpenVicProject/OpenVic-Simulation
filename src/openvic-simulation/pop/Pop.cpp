@@ -146,34 +146,24 @@ bool PopManager::add_pop_type(std::string_view identifier, colour_t colour, PopT
  * POP-3, POP-4, POP-5, POP-6, POP-7, POP-8, POP-9, POP-10, POP-11, POP-12, POP-13, POP-14
  */
 bool PopManager::load_pop_type_file(std::string_view filestem, ast::NodeCPtr root) {
+	static const string_map_t<PopType::strata_t> strata_map = {
+		{ "poor", PopType::strata_t::POOR },
+		{ "middle", PopType::strata_t::MIDDLE },
+		{ "rich", PopType::strata_t::RICH }
+	};
+
 	colour_t colour = NULL_COLOUR;
 	PopType::strata_t strata = PopType::strata_t::POOR;
 	PopType::sprite_t sprite = 0;
 	bool state_capital_only = false, is_artisan = false, is_slave = false, demote_migrant = false;
 	Pop::pop_size_t max_size = 0, merge_max_size = 0;
 	bool ret = expect_dictionary_keys(
-		"sprite", ONE_EXACTLY, expect_uint(assign_variable_callback_uint(sprite)),
+		"sprite", ONE_EXACTLY, expect_uint(assign_variable_callback(sprite)),
 		"color", ONE_EXACTLY, expect_colour(assign_variable_callback(colour)),
 		"is_artisan", ZERO_OR_ONE, expect_bool(assign_variable_callback(is_artisan)),
-		"max_size", ZERO_OR_ONE, expect_uint(assign_variable_callback_uint(max_size)),
-		"merge_max_size", ZERO_OR_ONE, expect_uint(assign_variable_callback_uint(merge_max_size)),
-		"strata", ONE_EXACTLY, expect_identifier(
-			[&strata](std::string_view identifier) -> bool {
-				using strata_map_t = std::map<std::string, PopType::strata_t, std::less<void>>;
-				static const strata_map_t strata_map = {
-					{ "poor", PopType::strata_t::POOR },
-					{ "middle", PopType::strata_t::MIDDLE },
-					{ "rich", PopType::strata_t::RICH }
-				};
-				const strata_map_t::const_iterator it = strata_map.find(identifier);
-				if (it != strata_map.end()) {
-					strata = it->second;
-					return true;
-				}
-				Logger::error("Invalid pop type strata: ", identifier);
-				return false;
-			}
-		),
+		"max_size", ZERO_OR_ONE, expect_uint(assign_variable_callback(max_size)),
+		"merge_max_size", ZERO_OR_ONE, expect_uint(assign_variable_callback(merge_max_size)),
+		"strata", ONE_EXACTLY, expect_identifier(expect_mapped_string(strata_map, assign_variable_callback(strata))),
 		"state_capital_only", ZERO_OR_ONE, expect_bool(assign_variable_callback(state_capital_only)),
 		"research_points", ZERO_OR_ONE, success_callback,
 		"research_optimum", ZERO_OR_ONE, success_callback,
@@ -216,9 +206,9 @@ bool PopManager::load_pop_into_province(Province& province, std::string_view pop
 	Religion const* religion = nullptr;
 	Pop::pop_size_t size = 0;
 	bool ret = expect_dictionary_keys(
-		"culture", ONE_EXACTLY, culture_manager.expect_culture_identifier(assign_variable_callback_pointer(culture)),
-		"religion", ONE_EXACTLY, religion_manager.expect_religion_identifier(assign_variable_callback_pointer(religion)),
-		"size", ONE_EXACTLY, expect_uint(assign_variable_callback_uint(size)),
+		"culture", ONE_EXACTLY, expect_identifier(culture_manager.expect_culture_identifier(assign_variable_callback_pointer(culture))),
+		"religion", ONE_EXACTLY, expect_identifier(religion_manager.expect_religion_identifier(assign_variable_callback_pointer(religion))),
+		"size", ONE_EXACTLY, expect_uint(assign_variable_callback(size)),
 		"militancy", ZERO_OR_ONE, success_callback,
 		"rebel_type", ZERO_OR_ONE, success_callback
 	)(pop_node);

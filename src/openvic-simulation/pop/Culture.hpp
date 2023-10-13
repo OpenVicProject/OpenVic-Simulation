@@ -31,7 +31,7 @@ namespace OpenVic {
 	public:
 		CultureGroup(CultureGroup&&) = default;
 
-		std::string const& get_leader() const;
+		std::string_view get_leader() const;
 		GraphicalCultureType const& get_unit_graphical_culture_type() const;
 		bool get_is_overseas() const;
 	};
@@ -69,13 +69,13 @@ namespace OpenVic {
 		CultureManager();
 
 		bool add_graphical_culture_type(std::string_view identifier);
-		IDENTIFIER_REGISTRY_ACCESSORS(GraphicalCultureType, graphical_culture_type)
+		IDENTIFIER_REGISTRY_ACCESSORS(graphical_culture_type)
 
 		bool add_culture_group(std::string_view identifier, std::string_view leader, GraphicalCultureType const* new_graphical_culture_type, bool is_overseas);
-		IDENTIFIER_REGISTRY_ACCESSORS(CultureGroup, culture_group)
+		IDENTIFIER_REGISTRY_ACCESSORS(culture_group)
 
 		bool add_culture(std::string_view identifier, colour_t colour, CultureGroup const* group, std::vector<std::string> const& first_names, std::vector<std::string> const& last_names);
-		IDENTIFIER_REGISTRY_ACCESSORS(Culture, culture)
+		IDENTIFIER_REGISTRY_ACCESSORS(culture)
 
 		bool load_graphical_culture_type_file(ast::NodeCPtr root);
 		bool load_culture_file(ast::NodeCPtr root);

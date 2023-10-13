@@ -14,8 +14,9 @@
 					fixed_point_t maximum_speed, fixed_point_t weighted_value, Timespan build_time, \
 					std::map<Good const*, fixed_point_t> build_cost, fixed_point_t supply_consumption, \
 					std::map<Good const*, fixed_point_t> supply_cost
-#define LAND_PARAMS fixed_point_t reconnaissance, fixed_point_t attack, fixed_point_t defence, fixed_point_t discipline, \
-					fixed_point_t support, fixed_point_t maneuver, fixed_point_t siege
+#define LAND_PARAMS bool primary_culture, std::string_view sprite_override, std::string_view sprite_mount, \
+					std::string_view sprite_mount_attach_node, fixed_point_t reconnaissance, fixed_point_t attack, \
+					fixed_point_t defence, fixed_point_t discipline, fixed_point_t support, fixed_point_t maneuver, fixed_point_t siege
 #define NAVY_PARAMS Unit::icon_t naval_icon, bool sail, bool transport, bool capital, std::string_view move_sound, \
 					std::string_view select_sound, fixed_point_t colonial_points, bool build_overseas, uint32_t min_port_level, \
 					int32_t limit_per_port, fixed_point_t supply_consumption_score, fixed_point_t hull, fixed_point_t gun_power, \
@@ -56,9 +57,9 @@ namespace OpenVic {
 
 		icon_t get_icon() const;
 		type_t get_type() const;
-		std::string const& get_sprite() const;
+		std::string_view get_sprite() const;
 		bool is_active() const;
-		std::string const& get_unit_type() const;
+		std::string_view get_unit_type() const;
 		bool has_floating_flag() const;
 
 		uint32_t get_priority() const;
@@ -77,6 +78,8 @@ namespace OpenVic {
 		friend struct UnitManager;
 
 	private:
+		const bool primary_culture;
+		const std::string sprite_override, sprite_mount, sprite_mount_attach_node;
 		const fixed_point_t reconnaissance;
 		const fixed_point_t attack;
 		const fixed_point_t defence;
@@ -89,6 +92,11 @@ namespace OpenVic {
 
 	public:
 		LandUnit(LandUnit&&) = default;
+
+		bool get_primary_culture() const;
+		std::string_view get_sprite_override() const;
+		std::string_view get_sprite_mount() const;
+		std::string_view get_sprite_mount_attach_node() const;
 
 		fixed_point_t get_reconnaissance() const;
 		fixed_point_t get_attack() const;
@@ -130,8 +138,8 @@ namespace OpenVic {
 		bool can_sail() const;
 		bool is_transport() const;
 		bool is_capital() const;
-		std::string const& get_move_sound() const;
-		std::string const& get_select_sound() const;
+		std::string_view get_move_sound() const;
+		std::string_view get_select_sound() const;
 		fixed_point_t get_colonial_points() const;
 		bool can_build_overseas() const;
 		uint32_t get_min_port_level() const;
@@ -156,7 +164,7 @@ namespace OpenVic {
 
 		bool add_land_unit(std::string_view identifier, UNIT_PARAMS, LAND_PARAMS);
 		bool add_naval_unit(std::string_view identifier, UNIT_PARAMS, NAVY_PARAMS);
-		IDENTIFIER_REGISTRY_ACCESSORS(Unit, unit)
+		IDENTIFIER_REGISTRY_ACCESSORS(unit)
 
 		bool load_unit_file(GoodManager const& good_manager, ast::NodeCPtr root);
 	};
