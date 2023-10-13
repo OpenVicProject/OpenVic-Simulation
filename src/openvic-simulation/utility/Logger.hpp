@@ -32,7 +32,7 @@ namespace OpenVic {
 	};
 #endif
 
-	class Logger {
+	class Logger final {
 		using log_func_t = std::function<void(std::string&&)>;
 		using log_queue_t = std::queue<std::string>;
 
@@ -42,39 +42,46 @@ namespace OpenVic {
 		using source_location = OpenVic::source_location;
 #endif
 
-		static char const* get_filename(char const* filepath);
+	public:
+		static void set_logger_funcs();
+		static char const* get_filename(char const* filepath, char const* default_path = nullptr);
+
+	private:
+		struct log_channel_t {
+			log_func_t func;
+			log_queue_t queue;
+		};
 
 		template<typename... Ts>
 		struct log {
-			log(log_func_t log_func, log_queue_t& log_queue, Ts&&... ts, source_location const& location) {
+			log(log_channel_t& log_channel, Ts&&... ts, source_location const& location) {
 				std::stringstream stream;
 				stream << "\n" << get_filename(location.file_name()) << "("
 						//<< location.line() << ") `" << location.function_name() << "`: ";
 						<< location.line() << "): ";
 				((stream << std::forward<Ts>(ts)), ...);
 				stream << std::endl;
-				log_queue.push(stream.str());
-				if (log_func) {
+				log_channel.queue.push(stream.str());
+				if (log_channel.func) {
 					do {
-						log_func(std::move(log_queue.front()));
-						log_queue.pop();
-					} while (!log_queue.empty());
+						log_channel.func(std::move(log_channel.queue.front()));
+						log_channel.queue.pop();
+					} while (!log_channel.queue.empty());
 				}
 			}
 		};
 
 #define LOG_FUNC(name) \
 	private: \
-		static log_func_t name##_func; \
-		static log_queue_t name##_queue; \
+		static inline log_channel_t name##_channel{}; \
 	public: \
-		static void set_##name##_func(log_func_t log_func) { \
-			name##_func = log_func; \
+		static inline void set_##name##_func(log_func_t log_func) { \
+			name##_channel.func = log_func; \
 		} \
 		template<typename... Ts> \
 		struct name { \
 			name(Ts&&... ts, source_location const& location = source_location::current()) { \
-				log<Ts...>{ name##_func, name##_queue, std::forward<Ts>(ts)..., location }; \
+				log<Ts...>{ name##_channel, std::forward<Ts>(ts)..., location }; \
 			} \
 		}; \
 		template<typename... Ts> \

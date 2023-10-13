@@ -5,8 +5,12 @@
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;
 
-TerrainType::TerrainType(std::string_view new_identifier, colour_t new_colour, ModifierValue&& new_values, bool new_is_water)
-	: HasIdentifierAndColour { new_identifier, new_colour, true, false }, ModifierValue { std::move(new_values) }, is_water { new_is_water } {}
+TerrainType::TerrainType(std::string_view new_identifier, colour_t new_colour, ModifierValue&& new_modifier, bool new_is_water)
+	: HasIdentifierAndColour { new_identifier, new_colour, true, false }, modifier { std::move(new_modifier) }, is_water { new_is_water } {}
+
+ModifierValue const& TerrainType::get_modifier() const {
+	return modifier;
+}
 
 bool TerrainType::get_is_water() const {
 	return is_water;

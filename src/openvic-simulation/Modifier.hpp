@@ -1,5 +1,7 @@
 #pragma once
 
+#include <set>
+
 #include "openvic-simulation/types/IdentifierRegistry.hpp"
 
 namespace OpenVic {
@@ -92,11 +94,19 @@ namespace OpenVic {
 		Date const& get_expiry_date() const;
 	};
 
+	template<typename Fn>
+	concept ModifierEffectValidator = std::predicate<Fn, ModifierEffect const&>;
+
 	struct ModifierManager {
 
 	private:
 		IdentifierRegistry<ModifierEffect> modifier_effects;
 		IdentifierRegistry<Modifier> modifiers;
+
+		/* effect_validator takes in ModifierEffect const& */
+		NodeTools::key_value_callback_t _modifier_effect_callback(ModifierValue& modifier,
+			NodeTools::key_value_callback_t default_callback,
+			ModifierEffectValidator auto effect_validator) const;
 
 	public:
 		ModifierManager();
@@ -109,8 +119,16 @@ namespace OpenVic {
 
 		bool setup_modifier_effects();
 
+		NodeTools::node_callback_t expect_validated_modifier_value_and_default(NodeTools::callback_t<ModifierValue&&> modifier_callback,
+			NodeTools::key_value_callback_t default_callback, ModifierEffectValidator auto effect_validator) const;
+		NodeTools::node_callback_t expect_validated_modifier_value(NodeTools::callback_t<ModifierValue&&> modifier_callback,
+			ModifierEffectValidator auto effect_validator) const;
+
 		NodeTools::node_callback_t expect_modifier_value_and_default(NodeTools::callback_t<ModifierValue&&> modifier_callback, NodeTools::key_value_callback_t default_callback) const;
 		NodeTools::node_callback_t expect_modifier_value(NodeTools::callback_t<ModifierValue&&> modifier_callback) const;
+
+		NodeTools::node_callback_t expect_whitelisted_modifier_value_and_default(NodeTools::callback_t<ModifierValue&&> modifier_callback, std::set<std::string, std::less<void>> const& whitelist, NodeTools::key_value_callback_t default_callback) const;
+		NodeTools::node_callback_t expect_whitelisted_modifier_value(NodeTools::callback_t<ModifierValue&&> modifier_callback, std::set<std::string, std::less<void>> const& whitelist) const;
 
 		NodeTools::node_callback_t expect_modifier_value_and_key_map_and_default(NodeTools::callback_t<ModifierValue&&> modifier_callback, NodeTools::key_value_callback_t default_callback, NodeTools::key_map_t&& key_map) const;
 		NodeTools::node_callback_t expect_modifier_value_and_key_map(NodeTools::callback_t<ModifierValue&&> modifier_callback, NodeTools::key_map_t&& key_map) const;

@@ -46,8 +46,8 @@ constexpr bool path_equals(std::string_view lhs, std::string_view rhs) {
 }
 
 template<typename LT, typename RT>
-constexpr bool filename_equals(const LT& lhs, const RT& rhs) {
-	std::string_view left, right;
+bool filename_equals(const LT& lhs, const RT& rhs) {
+	std::string left, right;
 	if constexpr (std::same_as<LT, std::filesystem::path>)
 		left = lhs.filename().string();
 	else left = lhs;

@@ -7,34 +7,15 @@
 
 using namespace OpenVic;
 
-static char const* get_program_name(char const* name) {
-	static constexpr char const* missing_name = "<program>";
-	if (name == nullptr) return missing_name;
-	char const* last_separator = name;
-	while (*name != '\0') {
-		if (*name == '/' || *name == '\\') {
-			last_separator = name + 1;
-		}
-		++name;
-	}
-	if (*last_separator == '\0') return missing_name;
-	return last_separator;
-}
-
-static void print_help(char const* program_name) {
-	std::cout
+static void print_help(std::ostream& stream, char const* program_name) {
+	stream
 		<< "Usage: " << program_name << " [-h] [-t] [-b <path>] [path]+\n"
 		<< "    -h : Print this help message and exit the program.\n"
 		<< "    -t : Run tests after loading defines.\n"
 		<< "    -b : Use the following path as the base directory (instead of searching for one).\n"
+		<< "    -s : Use the following path as a hint to search for a base directory.\n"
 		<< "Any following paths are read as mod directories, with priority starting at one above the base directory.\n"
 		<< "(Paths with spaces need to be enclosed in \"quotes\").\n";
-}
-
-static void setup_logger_funcs() {
-	Logger::set_info_func([](std::string&& str) { std::cout << str; });
-	Logger::set_warning_func([](std::string&& str) { std::cerr << str; });
-	Logger::set_error_func([](std::string&& str) { std::cerr << str; });
 }
 
 static bool headless_load(GameManager& game_manager, Dataloader const& dataloader) {
@@ -62,8 +43,6 @@ static bool headless_load(GameManager& game_manager, Dataloader const& dataloade
 
 static bool run_headless(Dataloader::path_vector_t const& roots, bool run_tests) {
 	bool ret = true;
-
-	setup_logger_funcs();
 
 	Dataloader dataloader;
 	if (!dataloader.set_roots(roots)) {
@@ -93,36 +72,51 @@ static bool run_headless(Dataloader::path_vector_t const& roots, bool run_tests)
 */
 
 int main(int argc, char const* argv[]) {
-	char const* program_name = get_program_name(argc > 0 ? argv[0] : nullptr);
+	Logger::set_logger_funcs();
 
+	char const* program_name = Logger::get_filename(argc > 0 ? argv[0] : nullptr, "<program>");
 	fs::path root;
 	bool run_tests = false;
-
 	int argn = 0;
+
+	/* Reads the next argument and converts it to a path via path_transform. If reading or converting fails, an error
+	 * message and the help text are displayed, along with returning false to signify the program should exit.
+	 */
+	const auto _read = [&root, &argn, argc, argv, program_name](std::string_view command, std::string_view path_use, auto path_transform) -> bool {
+		if (root.empty())  {
+			if (++argn < argc) {
+				char const* path = argv[argn];
+				root = path_transform(path);
+				if (!root.empty()) {
+					return true;
+				} else {
+					std::cerr << "Empty path after giving \"" << path << "\" to " << path_use << " command line argument \"" << command << "\"." << std::endl;
+				}
+			} else {
+				std::cerr << "Missing path after " << path_use << " command line argument \"" << command << "\"." << std::endl;
+			}
+		} else {
+			std::cerr << "Duplicate " << path_use << " command line argument \"-b\"." << std::endl;
+		}
+		print_help(std::cerr, program_name);
+		return false;
+	};
+
 	while (++argn < argc) {
 		char const* arg = argv[argn];
 		if (strcmp(arg, "-h") == 0) {
-			print_help(program_name);
+			print_help(std::cout, program_name);
 			return 0;
 		} else if (strcmp(arg, "-t") == 0) {
 			run_tests = true;
 		} else if (strcmp(arg, "-b") == 0) {
-			if (root.empty())  {
-				if (++argn < argc) {
-					root = argv[argn];
-					if (!root.empty()) {
-						continue;
-					} else {
-						std::cerr << "Empty path after base directory command line argument \"-b\"." << std::endl;
-					}
-				} else {
-					std::cerr << "Missing path after base directory command line argument \"-b\"." << std::endl;
-				}
-			} else {
-				std::cerr << "Duplicate base directory command line argument \"-b\"." << std::endl;
+			if (!_read("-b", "base directory", std::identity{})) {
+				return -1;
 			}
-			print_help(program_name);
-			return -1;
+		} else if (strcmp(arg, "-s") == 0) {
+			if (!_read("-s", "search hint", Dataloader::search_for_game_path)) {
+				return -1;
+			}
 		} else {
 			break;
 		}
@@ -131,7 +125,7 @@ int main(int argc, char const* argv[]) {
 		root = Dataloader::search_for_game_path();
 		if (root.empty()) {
 			std::cerr << "Search for base directory path failed!" << std::endl;
-			print_help(program_name);
+			print_help(std::cerr, program_name);
 			return -1;
 		}
 	}

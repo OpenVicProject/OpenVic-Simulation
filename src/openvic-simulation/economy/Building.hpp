@@ -32,7 +32,7 @@ namespace OpenVic {
 
 	private:
 		BuildingType const& type;
-		ModifierValue modifier;
+		const ModifierValue modifier;
 		const std::string on_completion; //probably sound played on completion
 		const fixed_point_t completion_size;
 		const level_t max_level;
