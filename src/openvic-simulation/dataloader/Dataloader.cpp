@@ -587,6 +587,7 @@ bool Dataloader::load_defines(GameManager& game_manager) const {
 	static const fs::path units_directory = "units";
 
 	static const fs::path buildings_file = "common/buildings.txt";
+	static const fs::path bookmark_file = "common/bookmarks.txt";
 	static const fs::path culture_file = "common/cultures.txt";
 	static const fs::path goods_file = "common/goods.txt";
 	static const fs::path governments_file = "common/governments.txt";
@@ -595,7 +596,7 @@ bool Dataloader::load_defines(GameManager& game_manager) const {
 	static const fs::path issues_file = "common/issues.txt";
 	static const fs::path production_types_file = "common/production_types.txt";
 	static const fs::path religion_file = "common/religion.txt";
-	static const fs::path bookmark_file = "common/bookmarks.txt";
+	static const fs::path leader_traits_file = "common/traits.txt";
 
 	bool ret = true;
 
@@ -661,6 +662,10 @@ bool Dataloader::load_defines(GameManager& game_manager) const {
 	if (!_load_units(game_manager.get_military_manager().get_unit_manager(),
 		game_manager.get_economy_manager().get_good_manager(), units_directory)) {
 		Logger::error("Failed to load units!");
+		ret = false;
+	}
+	if (!game_manager.get_military_manager().get_leader_trait_manager().load_leader_traits_file(game_manager.get_modifier_manager(), parse_defines(lookup_file(leader_traits_file)).get_file_node())) {
+		Logger::error("Failed to load leader traits!");
 		ret = false;
 	}
 	if (!game_manager.get_history_manager().load_bookmark_file(parse_defines(lookup_file(bookmark_file)).get_file_node())) {
