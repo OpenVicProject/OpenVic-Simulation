@@ -3,11 +3,15 @@
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;
 
-ModifierEffect::ModifierEffect(std::string_view new_identifier, bool new_positive_good)
-	: HasIdentifier { new_identifier }, positive_good { new_positive_good } {}
+ModifierEffect::ModifierEffect(std::string_view new_identifier, bool new_positive_good, format_t new_format)
+	: HasIdentifier { new_identifier }, positive_good { new_positive_good }, format { new_format } {}
 
 bool ModifierEffect::get_positive_good() const {
 	return positive_good;
+}
+
+ModifierEffect::format_t ModifierEffect::get_format() const {
+	return format;
 }
 
 ModifierValue::ModifierValue() = default;
@@ -94,12 +98,12 @@ Date const& ModifierInstance::get_expiry_date() const {
 ModifierManager::ModifierManager()
 	: modifier_effects { "modifier effects"}, modifiers { "modifiers" } {}
 
-bool ModifierManager::add_modifier_effect(std::string_view identifier, bool positive_good) {
+bool ModifierManager::add_modifier_effect(std::string_view identifier, bool positive_good, ModifierEffect::format_t format) {
 	if (identifier.empty()) {
 		Logger::error("Invalid modifier effect identifier - empty!");
 		return false;
 	}
-	return modifier_effects.add_item({ identifier, positive_good });
+	return modifier_effects.add_item({ identifier, positive_good, format });
 }
 
 bool ModifierManager::add_modifier(std::string_view identifier, ModifierValue&& values, Modifier::icon_t icon) {
@@ -117,45 +121,103 @@ bool ModifierManager::add_modifier(std::string_view identifier, ModifierValue&& 
 bool ModifierManager::setup_modifier_effects() {
 	bool ret = true;
 
+	using enum ModifierEffect::format_t;
+
 	ret &= add_modifier_effect("movement_cost", false);
 	ret &= add_modifier_effect("farm_rgo_size", true);
 	ret &= add_modifier_effect("farm_rgo_eff", true);
 	ret &= add_modifier_effect("mine_rgo_size", true);
 	ret &= add_modifier_effect("mine_rgo_eff", true);
-	ret &= add_modifier_effect("min_build_railroad", false);
-	ret &= add_modifier_effect("supply_limit", true);
+	ret &= add_modifier_effect("supply_limit", true, RAW_DECIMAL);
 	ret &= add_modifier_effect("combat_width", false);
-	ret &= add_modifier_effect("defence", true);
+	ret &= add_modifier_effect("defence", true, RAW_DECIMAL);
+	ret &= add_modifier_effect("local_ship_build", false);
+	ret &= add_modifier_effect("research_points_modifier", true);
+	ret &= add_modifier_effect("local_rgo_output", true);
+	ret &= add_modifier_effect("attrition", false, RAW_DECIMAL);
+	ret &= add_modifier_effect("immigrant_push", false);
+	ret &= add_modifier_effect("population_growth", true);
+	ret &= add_modifier_effect("local_RGO_throughput", true);
+	ret &= add_modifier_effect("assimilation_rate", true);
+
+	/* These should be added automatically for each Building loaded (or at least
+	 * non-factories), however currently we need modifier effects locked before we
+	 * can load buildings, so some architectural changes will be needed.
+	 */
+	ret &= add_modifier_effect("max_fort", true, ModifierEffect::format_t::INT);
+	ret &= add_modifier_effect("min_build_fort", true, ModifierEffect::format_t::INT);
+	ret &= add_modifier_effect("max_naval_base", true, ModifierEffect::format_t::INT);
+	ret &= add_modifier_effect("min_build_naval_base", true, ModifierEffect::format_t::INT);
+	ret &= add_modifier_effect("max_railroad", true, ModifierEffect::format_t::INT);
+	ret &= add_modifier_effect("min_build_railroad", true, ModifierEffect::format_t::INT);
+	ret &= add_modifier_effect("max_university", true, ModifierEffect::format_t::INT);
+	ret &= add_modifier_effect("min_build_university", true, ModifierEffect::format_t::INT);
+	ret &= add_modifier_effect("max_bank", true, ModifierEffect::format_t::INT);
+	ret &= add_modifier_effect("min_build_bank", true, ModifierEffect::format_t::INT);
 
 	modifier_effects.lock();
 	return ret;
 }
 
-node_callback_t ModifierManager::expect_modifier_value_and_default(callback_t<ModifierValue&&> modifier_callback, key_value_callback_t default_callback) const {
-	return [this, modifier_callback, default_callback](ast::NodeCPtr root) -> bool {
-		ModifierValue modifier;
-		bool ret = expect_dictionary(
-			[this, &modifier, default_callback](std::string_view key, ast::NodeCPtr value) -> bool {
-				ModifierEffect const* effect = get_modifier_effect_by_identifier(key);
-				if (effect != nullptr) {
-					if (modifier.values.find(effect) == modifier.values.end()) {
-						return expect_fixed_point(
-							assign_variable_callback(modifier.values[effect])
-						)(value);
-					}
+key_value_callback_t ModifierManager::_modifier_effect_callback(
+	ModifierValue& modifier, key_value_callback_t default_callback,
+	ModifierEffectValidator auto effect_validator) const {
+
+	return [this, &modifier, default_callback, effect_validator](std::string_view key, ast::NodeCPtr value) -> bool {
+		ModifierEffect const* effect = get_modifier_effect_by_identifier(key);
+		if (effect != nullptr) {
+			if (effect_validator(*effect)) {
+				if (modifier.values.find(effect) == modifier.values.end()) {
+					return expect_fixed_point(
+						assign_variable_callback(modifier.values[effect])
+					)(value);
+				} else {
 					Logger::error("Duplicate modifier effect: ", key);
 					return false;
 				}
-				return default_callback(key, value);
+			} else {
+				Logger::error("Failed to validate modifier effect: ", key);
+				return false;
 			}
-		)(root);
+		}
+		return default_callback(key, value);
+	};
+}
+
+node_callback_t ModifierManager::expect_validated_modifier_value_and_default(callback_t<ModifierValue&&> modifier_callback,
+	key_value_callback_t default_callback, ModifierEffectValidator auto effect_validator) const {
+	return [this, modifier_callback, default_callback, effect_validator](ast::NodeCPtr root) -> bool {
+		ModifierValue modifier;
+		bool ret = expect_dictionary(_modifier_effect_callback(modifier, default_callback, effect_validator))(root);
 		ret &= modifier_callback(std::move(modifier));
 		return ret;
 	};
 }
+node_callback_t ModifierManager::expect_validated_modifier_value(callback_t<ModifierValue&&> modifier_callback,
+	ModifierEffectValidator auto effect_validator) const {
+	return expect_validated_modifier_value_and_default(modifier_callback, key_value_invalid_callback, effect_validator);
+}
+
+node_callback_t ModifierManager::expect_modifier_value_and_default(callback_t<ModifierValue&&> modifier_callback, key_value_callback_t default_callback) const {
+	return expect_validated_modifier_value_and_default(modifier_callback, default_callback,
+		[](ModifierEffect const&) -> bool { return true; }
+	);
+}
 
 node_callback_t ModifierManager::expect_modifier_value(callback_t<ModifierValue&&> modifier_callback) const {
 	return expect_modifier_value_and_default(modifier_callback, key_value_invalid_callback);
+}
+
+node_callback_t ModifierManager::expect_whitelisted_modifier_value_and_default(callback_t<ModifierValue&&> modifier_callback, std::set<std::string, std::less<void>> const& whitelist, key_value_callback_t default_callback) const {
+	return expect_validated_modifier_value_and_default(modifier_callback, default_callback,
+		[&whitelist](ModifierEffect const& effect) -> bool {
+			return whitelist.contains(effect.get_identifier());
+		}
+	);
+}
+
+node_callback_t ModifierManager::expect_whitelisted_modifier_value(callback_t<ModifierValue&&> modifier_callback, std::set<std::string, std::less<void>> const& whitelist) const {
+	return expect_whitelisted_modifier_value_and_default(modifier_callback, whitelist, key_value_invalid_callback);
 }
 
 node_callback_t ModifierManager::expect_modifier_value_and_key_map_and_default(callback_t<ModifierValue&&> modifier_callback, key_value_callback_t default_callback, key_map_t&& key_map) const {

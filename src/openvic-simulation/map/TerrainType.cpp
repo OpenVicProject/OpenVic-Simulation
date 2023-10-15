@@ -5,8 +5,12 @@
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;
 
-TerrainType::TerrainType(std::string_view new_identifier, colour_t new_colour, ModifierValue&& new_values, bool new_is_water)
-	: HasIdentifierAndColour { new_identifier, new_colour, true, false }, ModifierValue { std::move(new_values) }, is_water { new_is_water } {}
+TerrainType::TerrainType(std::string_view new_identifier, colour_t new_colour, ModifierValue&& new_modifier, bool new_is_water)
+	: HasIdentifierAndColour { new_identifier, new_colour, true, false }, modifier { std::move(new_modifier) }, is_water { new_is_water } {}
+
+ModifierValue const& TerrainType::get_modifier() const {
+	return modifier;
+}
 
 bool TerrainType::get_is_water() const {
 	return is_water;
@@ -125,11 +129,8 @@ bool TerrainTypeManager::_load_terrain_type_mapping(std::string_view mapping_key
 		"priority", ZERO_OR_ONE, expect_uint(assign_variable_callback(priority)),
 		"has_texture", ZERO_OR_ONE, expect_bool(assign_variable_callback(has_texture))
 	)(mapping_value);
-	if (has_texture) {
-		if (++terrain_texture_count == terrain_texture_limit + 1) {
-			Logger::error("More terrain textures than limit!");
-			ret = false;
-		}
+	if (has_texture && ++terrain_texture_count == terrain_texture_limit + 1) {
+		Logger::warning("More terrain textures than limit!");
 	}
 	ret &= add_terrain_type_mapping(mapping_key, type, std::move(terrain_indicies), priority, has_texture);
 	return true;

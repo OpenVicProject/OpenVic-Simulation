@@ -9,13 +9,15 @@ namespace OpenVic {
 		friend struct TerrainTypeManager;
 
 	private:
+		const ModifierValue modifier;
 		const bool is_water;
 
-		TerrainType(std::string_view new_identifier, colour_t new_colour, ModifierValue&& new_values, bool new_is_water);
+		TerrainType(std::string_view new_identifier, colour_t new_colour, ModifierValue&& new_modifier, bool new_is_water);
 
 	public:
 		TerrainType(TerrainType&&) = default;
 
+		ModifierValue const& get_modifier() const;
 		bool get_is_water() const;
 	};
 

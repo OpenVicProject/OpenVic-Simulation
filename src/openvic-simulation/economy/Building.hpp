@@ -7,12 +7,13 @@
 #include "openvic-simulation/economy/ProductionType.hpp"
 #include "openvic-simulation/Modifier.hpp"
 
-#define ARGS std::string_view on_completion, fixed_point_t completion_size, level_t max_level, \
-				std::map<Good const*, fixed_point_t> goods_cost, fixed_point_t cost, Timespan build_time, bool visibility, bool on_map, bool default_enabled, \
-				ProductionType const* production_type, bool pop_build_factory, bool strategic_factory, bool advanced_factory, level_t fort_level, \
-				uint64_t naval_capacity, std::vector<fixed_point_t> colonial_points, bool in_province, bool one_per_state, fixed_point_t colonial_range, \
-				fixed_point_t infrastructure, fixed_point_t movement_cost, fixed_point_t local_ship_build, bool spawn_railway_track, bool sail, bool steam, \
-				bool capital, bool port, ModifierValue&& modifiers
+#define ARGS \
+	ModifierValue&& modifier, std::string_view on_completion, fixed_point_t completion_size, level_t max_level, \
+	Good::good_map_t&& goods_cost, fixed_point_t cost, Timespan build_time, bool visibility, bool on_map, bool default_enabled, \
+	ProductionType const* production_type, bool pop_build_factory, bool strategic_factory, bool advanced_factory, level_t fort_level, \
+	uint64_t naval_capacity, std::vector<fixed_point_t>&& colonial_points, bool in_province, bool one_per_state, fixed_point_t colonial_range, \
+	fixed_point_t infrastructure, bool spawn_railway_track, bool sail, bool steam, \
+	bool capital, bool port
 
 namespace OpenVic {
 
@@ -24,17 +25,18 @@ namespace OpenVic {
 	 * MAP-12, MAP-75, MAP-76
 	 * MAP-13, MAP-78, MAP-79
 	 */
-	struct Building : HasIdentifier, ModifierValue {
+	struct Building : HasIdentifier {
 		friend struct BuildingManager;
 
 		using level_t = int16_t;
 
 	private:
 		BuildingType const& type;
+		const ModifierValue modifier;
 		const std::string on_completion; //probably sound played on completion
 		const fixed_point_t completion_size;
 		const level_t max_level;
-		const std::map<Good const*, fixed_point_t> goods_cost;
+		const Good::good_map_t goods_cost;
 		const fixed_point_t cost;
 		const Timespan build_time; //time
 		const bool visibility;
@@ -55,8 +57,6 @@ namespace OpenVic {
 		const fixed_point_t colonial_range;
 
 		const fixed_point_t infrastructure;
-		const fixed_point_t movement_cost;
-		const fixed_point_t local_ship_build;
 		const bool spawn_railway_track;
 
 		const bool sail; //only in clipper shipyard
@@ -70,10 +70,11 @@ namespace OpenVic {
 		Building(Building&&) = default;
 
 		BuildingType const& get_type() const;
+		ModifierValue const& get_modifier() const;
 		std::string_view get_on_completion() const;
 		fixed_point_t get_completion_size() const;
 		level_t get_max_level() const;
-		std::map<Good const*, fixed_point_t> const& get_goods_cost() const;
+		Good::good_map_t const& get_goods_cost() const;
 		fixed_point_t get_cost() const;
 		Timespan get_build_time() const;
 		bool has_visibility() const;
@@ -94,8 +95,6 @@ namespace OpenVic {
 		fixed_point_t get_colonial_range() const;
 
 		fixed_point_t get_infrastructure() const;
-		fixed_point_t get_movement_cost() const;
-		fixed_point_t get_local_ship_build() const;
 		bool spawned_railway_track() const;
 	};
 

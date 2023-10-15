@@ -34,7 +34,7 @@ namespace OpenVic {
 	public:
 		GovernmentTypeManager();
 
-		bool add_government_type(std::string_view identifier, std::vector<Ideology const*> ideologies, bool elections, bool appoint_ruling_party, Timespan term_duration, std::string_view flag_type);
+		bool add_government_type(std::string_view identifier, std::vector<Ideology const*>&& ideologies, bool elections, bool appoint_ruling_party, Timespan term_duration, std::string_view flag_type);
 		IDENTIFIER_REGISTRY_ACCESSORS(government_type)
 
 		bool load_government_types_file(IdeologyManager const& ideology_manager, ast::NodeCPtr root);

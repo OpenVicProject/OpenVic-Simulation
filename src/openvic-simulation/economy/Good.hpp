@@ -33,6 +33,8 @@ namespace OpenVic {
 		using price_t = fixed_point_t;
 		static constexpr price_t NULL_PRICE = fixed_point_t::_0();
 
+		using good_map_t = decimal_map_t<Good const*>;
+
 	private:
 		GoodCategory const& category;
 		const price_t base_price;

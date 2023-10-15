@@ -4,19 +4,19 @@
 
 using namespace OpenVic;
 
-Logger::log_func_t Logger::info_func {};
-Logger::log_queue_t Logger::info_queue {};
-Logger::log_func_t Logger::warning_func {};
-Logger::log_queue_t Logger::warning_queue {};
-Logger::log_func_t Logger::error_func {};
-Logger::log_queue_t Logger::error_queue {};
+void Logger::set_logger_funcs() {
+	Logger::set_info_func([](std::string&& str) { std::cout << str; });
+	Logger::set_warning_func([](std::string&& str) { std::cerr << str; });
+	Logger::set_error_func([](std::string&& str) { std::cerr << str; });
+}
 
-char const* Logger::get_filename(char const* filepath) {
-	if (filepath == nullptr) return nullptr;
+char const* Logger::get_filename(char const* filepath, char const* default_path) {
+	if (filepath == nullptr) return default_path;
 	char const* last_slash = filepath;
 	while (*filepath != '\0') {
 		if (*filepath == '\\' || *filepath == '/') last_slash = filepath + 1;
 		filepath++;
 	}
+	if (*last_slash == '\0') return default_path;
 	return last_slash;
 }

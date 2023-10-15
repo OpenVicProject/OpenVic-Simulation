@@ -36,7 +36,7 @@ std::string_view GovernmentType::get_flag_type() const {
 
 GovernmentTypeManager::GovernmentTypeManager() : government_types { "government types" } {}
 
-bool GovernmentTypeManager::add_government_type(std::string_view identifier, std::vector<Ideology const*> ideologies, bool elections, bool appoint_ruling_party, Timespan term_duration, std::string_view flag_type) {
+bool GovernmentTypeManager::add_government_type(std::string_view identifier, std::vector<Ideology const*>&& ideologies, bool elections, bool appoint_ruling_party, Timespan term_duration, std::string_view flag_type) {
 	if (identifier.empty()) {
 		Logger::error("Invalid government type identifier - empty!");
 		return false;

@@ -9,18 +9,22 @@
 #include "openvic-simulation/economy/Good.hpp"
 #include "openvic-simulation/types/Date.hpp"
 
-#define UNIT_PARAMS Unit::icon_t icon, std::string_view sprite, bool active, std::string_view unit_type, \
-					bool floating_flag, uint32_t priority, fixed_point_t max_strength, fixed_point_t default_organisation, \
-					fixed_point_t maximum_speed, fixed_point_t weighted_value, Timespan build_time, \
-					std::map<Good const*, fixed_point_t> build_cost, fixed_point_t supply_consumption, \
-					std::map<Good const*, fixed_point_t> supply_cost
-#define LAND_PARAMS bool primary_culture, std::string_view sprite_override, std::string_view sprite_mount, \
-					std::string_view sprite_mount_attach_node, fixed_point_t reconnaissance, fixed_point_t attack, \
-					fixed_point_t defence, fixed_point_t discipline, fixed_point_t support, fixed_point_t maneuver, fixed_point_t siege
-#define NAVY_PARAMS Unit::icon_t naval_icon, bool sail, bool transport, bool capital, std::string_view move_sound, \
-					std::string_view select_sound, fixed_point_t colonial_points, bool build_overseas, uint32_t min_port_level, \
-					int32_t limit_per_port, fixed_point_t supply_consumption_score, fixed_point_t hull, fixed_point_t gun_power, \
-					fixed_point_t fire_range, fixed_point_t evasion, fixed_point_t torpedo_attack
+#define UNIT_PARAMS \
+	Unit::icon_t icon, std::string_view sprite, bool active, std::string_view unit_type, \
+	bool floating_flag, uint32_t priority, fixed_point_t max_strength, fixed_point_t default_organisation, \
+	fixed_point_t maximum_speed, fixed_point_t weighted_value, std::string_view move_sound, \
+	std::string_view select_sound, Timespan build_time, Good::good_map_t&& build_cost, \
+	fixed_point_t supply_consumption, Good::good_map_t&& supply_cost
+
+#define LAND_PARAMS \
+	bool primary_culture, std::string_view sprite_override, std::string_view sprite_mount, \
+	std::string_view sprite_mount_attach_node, fixed_point_t reconnaissance, fixed_point_t attack, fixed_point_t defence, \
+	fixed_point_t discipline, fixed_point_t support, fixed_point_t maneuver, fixed_point_t siege
+
+#define NAVY_PARAMS \
+	Unit::icon_t naval_icon, bool sail, bool transport, bool capital, fixed_point_t colonial_points, bool build_overseas, \
+	uint32_t min_port_level, int32_t limit_per_port, fixed_point_t supply_consumption_score, fixed_point_t hull, \
+	fixed_point_t gun_power, fixed_point_t fire_range, fixed_point_t evasion, fixed_point_t torpedo_attack
 
 namespace OpenVic {
 	struct Unit : HasIdentifier {
@@ -44,10 +48,13 @@ namespace OpenVic {
 		const fixed_point_t maximum_speed;
 		const fixed_point_t weighted_value;
 
+		const std::string move_sound;
+		const std::string select_sound;
+
 		const Timespan build_time;
-		const std::map<Good const*, fixed_point_t> build_cost;
+		const Good::good_map_t build_cost;
 		const fixed_point_t supply_consumption;
-		const std::map<Good const*, fixed_point_t> supply_cost;
+		const Good::good_map_t supply_cost;
 
 	protected:
 		Unit(std::string_view identifier, type_t type, UNIT_PARAMS);
@@ -68,10 +75,13 @@ namespace OpenVic {
 		fixed_point_t get_maximum_speed() const;
 		fixed_point_t get_weighted_value() const;
 
+		std::string_view get_move_sound() const;
+		std::string_view get_select_sound() const;
+
 		Timespan get_build_time() const;
-		std::map<Good const*, fixed_point_t> const& get_build_cost() const;
+		Good::good_map_t const& get_build_cost() const;
 		fixed_point_t get_supply_consumption() const;
-		std::map<Good const*, fixed_point_t> const& get_supply_cost() const;
+		Good::good_map_t const& get_supply_cost() const;
 	};
 
 	struct LandUnit : Unit {
@@ -115,8 +125,6 @@ namespace OpenVic {
 		const bool sail;
 		const bool transport;
 		const bool capital;
-		const std::string move_sound;
-		const std::string select_sound;
 		const fixed_point_t colonial_points;
 		const bool build_overseas;
 		const uint32_t min_port_level;
@@ -138,8 +146,6 @@ namespace OpenVic {
 		bool can_sail() const;
 		bool is_transport() const;
 		bool is_capital() const;
-		std::string_view get_move_sound() const;
-		std::string_view get_select_sound() const;
 		fixed_point_t get_colonial_points() const;
 		bool can_build_overseas() const;
 		uint32_t get_min_port_level() const;

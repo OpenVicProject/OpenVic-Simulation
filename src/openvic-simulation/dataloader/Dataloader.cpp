@@ -46,8 +46,8 @@ constexpr bool path_equals(std::string_view lhs, std::string_view rhs) {
 }
 
 template<typename LT, typename RT>
-constexpr bool filename_equals(const LT& lhs, const RT& rhs) {
-	std::string_view left, right;
+bool filename_equals(const LT& lhs, const RT& rhs) {
+	std::string left, right;
 	if constexpr (std::same_as<LT, std::filesystem::path>)
 		left = lhs.filename().string();
 	else left = lhs;
@@ -314,7 +314,7 @@ fs::path Dataloader::search_for_game_path(fs::path hint_path) {
 	return _cached_paths[hint_path] = _search_for_game_path(hint_path);
 }
 
-bool Dataloader::set_roots(path_vector_t new_roots) {
+bool Dataloader::set_roots(path_vector_t const& new_roots) {
 	if (!roots.empty()) {
 		Logger::error("Overriding existing dataloader roots!");
 		roots.clear();
@@ -700,7 +700,7 @@ static bool _load_localisation_file(Dataloader::localisation_callback_t callback
 	return ret;
 }
 
-bool Dataloader::load_localisation_files(localisation_callback_t callback, fs::path const& localisation_dir) {
+bool Dataloader::load_localisation_files(localisation_callback_t callback, fs::path const& localisation_dir) const {
 	return apply_to_files_in_dir(localisation_dir, ".csv",
 		[callback](fs::path path) -> bool {
 			return _load_localisation_file(callback, parse_csv(path).get_lines());
