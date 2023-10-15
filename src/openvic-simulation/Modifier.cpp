@@ -123,31 +123,34 @@ bool ModifierManager::setup_modifier_effects() {
 
 	using enum ModifierEffect::format_t;
 
-	/* LEADER TRAIT MODIFIERS */
-	ret &= add_modifier_effect("attack", true, INT);
-	ret &= add_modifier_effect("defence", true, INT);
-	ret &= add_modifier_effect("reliability", true, RAW_DECIMAL);
-	ret &= add_modifier_effect("morale", true);
-	ret &= add_modifier_effect("organisation", true);
-	ret &= add_modifier_effect("speed", true);
-	ret &= add_modifier_effect("reconnaissance", true);
-	ret &= add_modifier_effect("experience", true);
-	ret &= add_modifier_effect("attrition", false, RAW_DECIMAL);
-	/* MISCELLANEOUS MODIFIERS */
-	ret &= add_modifier_effect("movement_cost", false);
-	ret &= add_modifier_effect("farm_rgo_size", true);
-	ret &= add_modifier_effect("farm_rgo_eff", true);
-	ret &= add_modifier_effect("mine_rgo_size", true);
-	ret &= add_modifier_effect("mine_rgo_eff", true);
-	ret &= add_modifier_effect("supply_limit", true, RAW_DECIMAL);
-	ret &= add_modifier_effect("combat_width", false);
-	ret &= add_modifier_effect("local_ship_build", false);
-	ret &= add_modifier_effect("research_points_modifier", true);
-	ret &= add_modifier_effect("local_rgo_output", true);
-	ret &= add_modifier_effect("immigrant_push", false);
-	ret &= add_modifier_effect("population_growth", true);
-	ret &= add_modifier_effect("local_RGO_throughput", true);
+	/* Generic Modifier Effects */
 	ret &= add_modifier_effect("assimilation_rate", true);
+	ret &= add_modifier_effect("attack", true, INT);
+	ret &= add_modifier_effect("attrition", false, RAW_DECIMAL);
+	ret &= add_modifier_effect("badboy", false, RAW_DECIMAL);
+	ret &= add_modifier_effect("combat_width", false);
+	ret &= add_modifier_effect("defence", true, INT);
+	ret &= add_modifier_effect("experience", true);
+	ret &= add_modifier_effect("farm_rgo_eff", true);
+	ret &= add_modifier_effect("farm_rgo_size", true);
+	ret &= add_modifier_effect("immigrant_push", false);
+	ret &= add_modifier_effect("local_rgo_output", true);
+	ret &= add_modifier_effect("local_RGO_throughput", true);
+	ret &= add_modifier_effect("local_ship_build", false);
+	ret &= add_modifier_effect("mine_rgo_eff", true);
+	ret &= add_modifier_effect("mine_rgo_size", true);
+	ret &= add_modifier_effect("mobilisation_size", true);
+	ret &= add_modifier_effect("mobilisation_economy_impact", false);
+	ret &= add_modifier_effect("mobilisation_impact", false);
+	ret &= add_modifier_effect("morale", true);
+	ret &= add_modifier_effect("movement_cost", false);
+	ret &= add_modifier_effect("organisation", true);
+	ret &= add_modifier_effect("population_growth", true);
+	ret &= add_modifier_effect("reconnaissance", true);
+	ret &= add_modifier_effect("reliability", true, RAW_DECIMAL);
+	ret &= add_modifier_effect("research_points_modifier", true);
+	ret &= add_modifier_effect("speed", true);
+	ret &= add_modifier_effect("supply_limit", true, RAW_DECIMAL);
 
 	/* These should be added automatically for each Building loaded (or at least
 	 * non-factories), however currently we need modifier effects locked before we
