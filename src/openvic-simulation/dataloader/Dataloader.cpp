@@ -34,7 +34,7 @@ using namespace OpenVic::NodeTools;
 using namespace ovdl;
 
 // Windows and Mac by default act like case insensitive filesystems
-constexpr bool path_equals(std::string_view lhs, std::string_view rhs) {
+static constexpr bool path_equals(std::string_view lhs, std::string_view rhs) {
 #if defined(_WIN32) || (defined(__APPLE__) && defined(__MACH__))
 	constexpr auto ichar_equals = [](unsigned char l, unsigned char r) {
 		return std::tolower(l) == std::tolower(r);
@@ -46,7 +46,7 @@ constexpr bool path_equals(std::string_view lhs, std::string_view rhs) {
 }
 
 template<typename LT, typename RT>
-bool filename_equals(const LT& lhs, const RT& rhs) {
+static bool filename_equals(const LT& lhs, const RT& rhs) {
 	std::string left, right;
 	if constexpr (std::same_as<LT, std::filesystem::path>)
 		left = lhs.filename().string();
@@ -59,7 +59,7 @@ bool filename_equals(const LT& lhs, const RT& rhs) {
 	return path_equals(left, right);
 }
 
-fs::path _search_for_game_path(fs::path hint_path = {}) {
+static fs::path _search_for_game_path(fs::path hint_path = {}) {
 	// Apparently max amount of steam libraries is 8, if incorrect please correct it to the correct max amount
 	constexpr int max_amount_of_steam_libraries = 8;
 	constexpr std::string_view Victoria_2_folder = "Victoria 2";

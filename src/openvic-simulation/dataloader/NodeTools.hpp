@@ -33,7 +33,7 @@ namespace OpenVic {
 
 		node_callback_t expect_identifier(callback_t<std::string_view> callback);
 		node_callback_t expect_string(callback_t<std::string_view> callback, bool allow_empty = true);
-		node_callback_t expect_identifier_or_string(callback_t<std::string_view> callback);
+		node_callback_t expect_identifier_or_string(callback_t<std::string_view> callback, bool allow_empty = false);
 
 		node_callback_t expect_bool(callback_t<bool> callback);
 		node_callback_t expect_int_bool(callback_t<bool> callback);

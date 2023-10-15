@@ -43,15 +43,15 @@ node_callback_t NodeTools::expect_string(callback_t<std::string_view> callback, 
 	return _expect_type<ast::StringNode>(_abstract_string_node_callback<ast::StringNode>(callback, allow_empty));
 }
 
-node_callback_t NodeTools::expect_identifier_or_string(callback_t<std::string_view> callback) {
-	return [callback](ast::NodeCPtr node) -> bool {
+node_callback_t NodeTools::expect_identifier_or_string(callback_t<std::string_view> callback, bool allow_empty) {
+	return [callback, allow_empty](ast::NodeCPtr node) -> bool {
 		if (node != nullptr) {
 			ast::AbstractStringNode const* cast_node = node->cast_to<ast::IdentifierNode>();
 			if (cast_node == nullptr) {
 				cast_node = node->cast_to<ast::StringNode>();
 			}
 			if (cast_node != nullptr) {
-				return _abstract_string_node_callback<ast::AbstractStringNode>(callback, false)(*cast_node);
+				return _abstract_string_node_callback<ast::AbstractStringNode>(callback, allow_empty)(*cast_node);
 			}
 			Logger::error("Invalid node type ", node->get_type(), " when expecting ", ast::IdentifierNode::get_type_static(), " or ", ast::StringNode::get_type_static());
 		} else {
