@@ -45,17 +45,22 @@ static constexpr bool path_equals(std::string_view lhs, std::string_view rhs) {
 #endif
 }
 
-template<typename LT, typename RT>
-static bool filename_equals(const LT& lhs, const RT& rhs) {
-	std::string left, right;
-	if constexpr (std::same_as<LT, std::filesystem::path>)
-		left = lhs.filename().string();
-	else left = lhs;
+template<typename T>
+concept is_filename = std::same_as<T, std::filesystem::path> || std::convertible_to<T, std::string_view>;
 
-	if constexpr (std::same_as<RT, std::filesystem::path>)
-		right = rhs.filename().string();
-	else right = rhs;
-
+bool filename_equals(const is_filename auto& lhs, const is_filename auto& rhs) {
+	auto left = [&lhs] {
+		if constexpr (std::same_as<std::decay_t<decltype(lhs)>, std::filesystem::path>)
+			return lhs.filename().string();
+		else
+			return lhs;
+	}();
+	auto right = [&rhs] {
+		if constexpr (std::same_as<std::decay_t<decltype(rhs)>, std::filesystem::path>)
+			return rhs.filename().string();
+		else
+			return rhs;
+	}();
 	return path_equals(left, right);
 }
 
