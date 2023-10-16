@@ -4,7 +4,7 @@ using namespace OpenVic;
 using namespace OpenVic::NodeTools;
 
 template<typename T>
-static node_callback_t _expect_type(callback_t<T const&> callback) {
+static NodeCallback auto _expect_type(Callback<T const&> auto callback) {
 	return [callback](ast::NodeCPtr node) -> bool {
 		if (node != nullptr) {
 			T const* cast_node = node->cast_to<T>();
@@ -20,7 +20,7 @@ static node_callback_t _expect_type(callback_t<T const&> callback) {
 }
 
 template<std::derived_from<ast::AbstractStringNode> T>
-static callback_t<T const&> _abstract_string_node_callback(callback_t<std::string_view> callback, bool allow_empty) {
+static Callback<T const&> auto _abstract_string_node_callback(Callback<std::string_view> auto callback, bool allow_empty) {
 	return [callback, allow_empty](T const& node) -> bool {
 		if (allow_empty) {
 			return callback(node._name);
@@ -175,7 +175,7 @@ node_callback_t NodeTools::expect_days(callback_t<Timespan> callback) {
 }
 
 template<typename T, node_callback_t (*expect_func)(callback_t<T>)>
-node_callback_t _expect_vec2(callback_t<vec2_t<T>> callback) {
+NodeCallback auto _expect_vec2(Callback<vec2_t<T>> auto callback) {
 	return [callback](ast::NodeCPtr node) -> bool {
 		vec2_t<T> vec;
 		bool ret = expect_dictionary_keys(
