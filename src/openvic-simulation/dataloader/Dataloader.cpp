@@ -621,6 +621,7 @@ bool Dataloader::load_defines(GameManager& game_manager) const {
 	static const fs::path graphical_culture_type_file = "common/graphicalculturetype.txt";
 	static const fs::path ideology_file = "common/ideologies.txt";
 	static const fs::path issues_file = "common/issues.txt";
+	static const fs::path national_values_file = "common/nationalvalues.txt";
 	static const fs::path production_types_file = "common/production_types.txt";
 	static const fs::path religion_file = "common/religion.txt";
 	static const fs::path leader_traits_file = "common/traits.txt";
@@ -679,6 +680,11 @@ bool Dataloader::load_defines(GameManager& game_manager) const {
 		Logger::error("Failed to load issues!");
 		ret = false;
 	}
+	if (!game_manager.get_politics_manager().get_national_value_manager().load_national_values_file(
+		game_manager.get_modifier_manager(), parse_defines(lookup_file(national_values_file)).get_file_node())) {
+		Logger::error("Failed to load national values!");
+		ret = false;
+	}
 	if (!_load_countries(game_manager, countries_file, parse_defines(lookup_file(countries_file)).get_file_node())) {
 		Logger::error("Failed to load countries!");
 		ret = false;
@@ -699,7 +705,8 @@ bool Dataloader::load_defines(GameManager& game_manager) const {
 		Logger::error("Failed to load map!");
 		ret = false;
 	}
-	if (!game_manager.get_military_manager().get_leader_trait_manager().load_leader_traits_file(game_manager.get_modifier_manager(), parse_defines(lookup_file(leader_traits_file)).get_file_node())) {
+	if (!game_manager.get_military_manager().get_leader_trait_manager().load_leader_traits_file(
+		game_manager.get_modifier_manager(), parse_defines(lookup_file(leader_traits_file)).get_file_node())) {
 		Logger::error("Failed to load leader traits!");
 		ret = false;
 	}
