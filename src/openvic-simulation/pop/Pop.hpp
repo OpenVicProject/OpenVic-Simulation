@@ -1,5 +1,7 @@
 #pragma once
 
+#include "openvic-simulation/economy/Good.hpp"
+#include "openvic-simulation/military/Unit.hpp"
 #include "openvic-simulation/pop/Culture.hpp"
 #include "openvic-simulation/pop/Religion.hpp"
 
@@ -47,6 +49,7 @@ namespace OpenVic {
 		friend struct PopManager;
 
 		using sprite_t = uint8_t;
+		using rebel_units_t = decimal_map_t<Unit const*>;
 
 	private:
 		const enum class strata_t {
@@ -55,12 +58,16 @@ namespace OpenVic {
 			RICH
 		} strata;
 		const sprite_t sprite;
+		const Good::good_map_t life_needs, everyday_needs, luxury_needs;
+		const rebel_units_t rebel_units;
 		const Pop::pop_size_t max_size, merge_max_size;
 		const bool state_capital_only, demote_migrant, is_artisan, is_slave;
 
-		// TODO - rebel composition, life/everyday/luxury needs, country and province migration targets, promote_to targets, ideologies and issues
+		// TODO - country and province migration targets, promote_to targets, ideologies and issues
 
-		PopType(std::string_view new_identifier, colour_t new_colour, strata_t new_strata, sprite_t new_sprite, Pop::pop_size_t new_max_size, Pop::pop_size_t new_merge_max_size,
+		PopType(std::string_view new_identifier, colour_t new_colour, strata_t new_strata, sprite_t new_sprite,
+			Good::good_map_t&& new_life_needs, Good::good_map_t&& new_everyday_needs, Good::good_map_t&& new_luxury_needs,
+			rebel_units_t&& new_rebel_units, Pop::pop_size_t new_max_size, Pop::pop_size_t new_merge_max_size,
 			bool new_state_capital_only, bool new_demote_migrant, bool new_is_artisan, bool new_is_slave);
 
 	public:
@@ -68,6 +75,10 @@ namespace OpenVic {
 
 		strata_t get_strata() const;
 		sprite_t get_sprite() const;
+		Good::good_map_t const& get_life_needs() const;
+		Good::good_map_t const& get_everyday_needs() const;
+		Good::good_map_t const& get_luxury_needs() const;
+		rebel_units_t const& get_rebel_units() const;
 		Pop::pop_size_t get_max_size() const;
 		Pop::pop_size_t get_merge_max_size() const;
 		bool get_state_capital_only() const;
@@ -94,11 +105,12 @@ namespace OpenVic {
 		ReligionManager const& get_religion_manager() const;
 
 		bool add_pop_type(std::string_view identifier, colour_t new_colour, PopType::strata_t strata, PopType::sprite_t sprite,
-			Pop::pop_size_t max_size, Pop::pop_size_t merge_max_size, bool state_capital_only, bool demote_migrant,
-			bool is_artisan, bool is_slave);
+			Good::good_map_t&& life_needs, Good::good_map_t&& everyday_needs, Good::good_map_t&& luxury_needs,
+			PopType::rebel_units_t&& rebel_units, Pop::pop_size_t max_size, Pop::pop_size_t merge_max_size,
+			bool state_capital_only, bool demote_migrant, bool is_artisan, bool is_slave);
 		IDENTIFIER_REGISTRY_ACCESSORS(pop_type)
 
-		bool load_pop_type_file(std::string_view filestem, ast::NodeCPtr root);
+		bool load_pop_type_file(std::string_view filestem, UnitManager const& unit_manager, GoodManager const& good_manager, ast::NodeCPtr root);
 		bool load_pop_into_province(Province& province, std::string_view pop_type_identifier, ast::NodeCPtr pop_node) const;
 	};
 }
