@@ -81,7 +81,11 @@ const std::vector<UnitNames>& Country::get_unit_names() const {
 	return unit_names;
 }
 
-bool Country::is_dynamic_tag() const {
+const std::map<const GovernmentType*, colour_t>& Country::get_alternative_colours() const {
+	return alternative_colours;
+}
+
+const bool Country::is_dynamic_tag() const {
 	return dynamic_tag;
 }
 
@@ -181,7 +185,7 @@ bool CountryManager::load_country_data_file(GameManager& game_manager, std::stri
 
 			country_parties.push_back({ party_name, start_date, end_date, *ideology, std::move(policies) });
 
-			return ret; //
+			return ret;
 		},
 		"unit_names", ZERO_OR_ONE, expect_dictionary([&unit_names](std::string_view key, ast::NodeCPtr value) -> bool {
 			std::vector<std::string> names;

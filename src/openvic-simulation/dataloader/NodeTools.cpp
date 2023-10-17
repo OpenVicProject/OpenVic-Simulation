@@ -123,22 +123,18 @@ node_callback_t NodeTools::expect_colour(callback_t<colour_t> callback) {
 	return [callback](ast::NodeCPtr node) -> bool {
 		colour_t col = NULL_COLOUR;
 		uint32_t components = 0;
-		bool ret = expect_list_of_length(3,
-			expect_fixed_point(
-				[&col, &components](fixed_point_t val) -> bool {
-					components++;
-					col <<= 8;
-					if (val < 0 || val > 255) {
-						Logger::error("Invalid colour component: ", val);
-						return false;
-					} else {
-						if (val <= 1) val *= 255;
-						col |= val.to_int32_t();
-						return true;
-					}
-				}
-			)
-		)(node);
+		bool ret = expect_list_of_length(3, expect_fixed_point([&col, &components](fixed_point_t val) -> bool {
+											 components++;
+											 col <<= 8;
+											 if (val < 0 || val > 255) {
+												 Logger::error("Invalid colour component: ", val);
+												 return false;
+											 } else {
+												 if (val <= 1) val *= 255;
+												 col |= val.to_int32_t();
+												 return true;
+											 }
+										 }))(node);
 		ret &= callback(col << 8 * (3 - components));
 		return ret;
 	};
@@ -218,11 +214,9 @@ node_callback_t NodeTools::expect_list_and_length(length_callback_t length_callb
 				size = list.size();
 				ret = false;
 			}
-			std::for_each(list.begin(), list.begin() + size,
-				[callback, &ret](ast::NodeUPtr const& sub_node) -> void {
-					ret &= callback(sub_node.get());
-				}
-			);
+			std::for_each(list.begin(), list.begin() + size, [callback, &ret](ast::NodeUPtr const& sub_node) -> void {
+				ret &= callback(sub_node.get());
+			});
 			return ret;
 		}
 	);

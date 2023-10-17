@@ -92,9 +92,9 @@ namespace OpenVic {
 		std::string to_string() const;
 		explicit operator std::string() const;
 		// Parsed from string of the form YYYY.MM.DD
-		static Date from_string(char const* str, char const* end, bool* successful = nullptr);
-		static Date from_string(char const* str, size_t length, bool* successful = nullptr);
-		static Date from_string(std::string_view str, bool* successful = nullptr);
+		static Date from_string(char const* str, char const* end, bool* successful = nullptr, bool quiet = false);
+		static Date from_string(char const* str, size_t length, bool* successful = nullptr, bool quiet = false);
+		static Date from_string(std::string_view str, bool* successful = nullptr, bool quiet = false);
 	};
 	std::ostream& operator<<(std::ostream& out, Date const& date);
 }
