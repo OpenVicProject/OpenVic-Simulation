@@ -11,7 +11,9 @@ namespace OpenVic {
 		friend struct ModifierManager;
 
 		enum class format_t {
-			RAW_DECIMAL, PERCENTAGE_DECIMAL, INT
+			RAW_DECIMAL,
+			PERCENTAGE_DECIMAL,
+			INT
 		};
 
 	private:
@@ -36,6 +38,7 @@ namespace OpenVic {
 		friend struct ModifierManager;
 
 		using effect_map_t = decimal_map_t<ModifierEffect const*>;
+
 	private:
 		effect_map_t values;
 
@@ -104,9 +107,7 @@ namespace OpenVic {
 		IdentifierRegistry<Modifier> modifiers;
 
 		/* effect_validator takes in ModifierEffect const& */
-		NodeTools::key_value_callback_t _modifier_effect_callback(ModifierValue& modifier,
-			NodeTools::key_value_callback_t default_callback,
-			ModifierEffectValidator auto effect_validator) const;
+		NodeTools::key_value_callback_t _modifier_effect_callback(ModifierValue& modifier, NodeTools::key_value_callback_t default_callback, ModifierEffectValidator auto effect_validator) const;
 
 	public:
 		ModifierManager();
@@ -119,10 +120,8 @@ namespace OpenVic {
 
 		bool setup_modifier_effects();
 
-		NodeTools::node_callback_t expect_validated_modifier_value_and_default(NodeTools::callback_t<ModifierValue&&> modifier_callback,
-			NodeTools::key_value_callback_t default_callback, ModifierEffectValidator auto effect_validator) const;
-		NodeTools::node_callback_t expect_validated_modifier_value(NodeTools::callback_t<ModifierValue&&> modifier_callback,
-			ModifierEffectValidator auto effect_validator) const;
+		NodeTools::node_callback_t expect_validated_modifier_value_and_default(NodeTools::callback_t<ModifierValue&&> modifier_callback, NodeTools::key_value_callback_t default_callback, ModifierEffectValidator auto effect_validator) const;
+		NodeTools::node_callback_t expect_validated_modifier_value(NodeTools::callback_t<ModifierValue&&> modifier_callback, ModifierEffectValidator auto effect_validator) const;
 
 		NodeTools::node_callback_t expect_modifier_value_and_default(NodeTools::callback_t<ModifierValue&&> modifier_callback, NodeTools::key_value_callback_t default_callback) const;
 		NodeTools::node_callback_t expect_modifier_value(NodeTools::callback_t<ModifierValue&&> modifier_callback) const;
@@ -134,8 +133,7 @@ namespace OpenVic {
 		NodeTools::node_callback_t expect_modifier_value_and_key_map(NodeTools::callback_t<ModifierValue&&> modifier_callback, NodeTools::key_map_t&& key_map) const;
 
 		template<typename... Args>
-		NodeTools::node_callback_t expect_modifier_value_and_key_map_and_default(NodeTools::callback_t<ModifierValue&&> modifier_callback,
-			NodeTools::key_value_callback_t default_callback, NodeTools::key_map_t&& key_map, Args... args) const {
+		NodeTools::node_callback_t expect_modifier_value_and_key_map_and_default(NodeTools::callback_t<ModifierValue&&> modifier_callback, NodeTools::key_value_callback_t default_callback, NodeTools::key_map_t&& key_map, Args... args) const {
 			NodeTools::add_key_map_entries(key_map, args...);
 			return expect_modifier_value_and_key_map_and_default(modifier_callback, default_callback, std::move(key_map));
 		}
