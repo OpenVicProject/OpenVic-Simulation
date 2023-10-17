@@ -135,9 +135,14 @@ namespace OpenVic {
 				return false;
 			}
 			const std::string_view new_identifier = GetIdentifier(GetPointer(item));
-			value_type const* old_item = get_item_by_identifier(new_identifier);
-			if (old_item != nullptr) {
-				return duplicate_callback(name, new_identifier);
+			if (duplicate_callback &&
+				duplicate_callback.target<bool(std::string_view, std::string_view)>() == duplicate_ignore_callback) {
+				if (has_identifier(new_identifier)) return true;
+			} else {
+				value_type const* old_item = get_item_by_identifier(new_identifier);
+				if (old_item != nullptr) {
+					return duplicate_callback(name, new_identifier);
+				}
 			}
 			identifier_index_map.emplace(new_identifier, items.size());
 			items.push_back(std::move(item));
@@ -217,18 +222,17 @@ GETTERS
 #undef GETTERS
 
 		bool has_identifier(std::string_view identifier) const {
-			return get_item_by_identifier(identifier) != nullptr;
+			return identifier_index_map.contains(identifier);
 		}
 
 		bool has_index(size_t index) const {
-			return get_item_by_index(index) != nullptr;
+			return index < size();
 		}
 
 		REF_GETTERS(items)
 
 		std::vector<std::string_view> get_item_identifiers() const {
-			std::vector<std::string_view> identifiers;
-			identifiers.reserve(items.size());
+			std::vector<std::string_view> identifiers(items.size());
 			for (typename decltype(identifier_index_map)::value_type const& entry : identifier_index_map) {
 				identifiers.push_back(entry.first);
 			}
@@ -241,7 +245,7 @@ GETTERS
 				bool ret = expect_item_dictionary([&map](value_type const& key, ast::NodeCPtr value) -> bool {
 					fixed_point_t val;
 					const bool ret = NodeTools::expect_fixed_point(NodeTools::assign_variable_callback(val))(value);
-					map.emplace(&key, val);
+					map.emplace(&key, std::move(val));
 					return ret;
 				})(node);
 				ret &= callback(std::move(map));
