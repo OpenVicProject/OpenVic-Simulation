@@ -12,14 +12,14 @@ using namespace OpenVic;
 using namespace OpenVic::NodeTools;
 
 Bookmark::Bookmark(
-	std::string_view new_identifier,
+	size_t new_index,
 	std::string_view new_name,
 	std::string_view new_description,
 	Date new_date,
 	uint32_t new_initial_camera_x,
 	uint32_t new_initial_camera_y
 )
-	: HasIdentifier { new_identifier },
+	: HasIdentifier { std::to_string(new_index) },
 	  name { new_name },
 	  description { new_description },
 	  date { new_date },
@@ -50,19 +50,13 @@ uint32_t Bookmark::get_initial_camera_y() const {
 BookmarkManager::BookmarkManager() : bookmarks { "bookmarks" } {}
 
 bool BookmarkManager::add_bookmark(
-	std::string_view identifier,
 	std::string_view name,
 	std::string_view description,
 	Date date,
 	uint32_t initial_camera_x,
 	uint32_t initial_camera_y
 ) {
-	if (identifier.empty()) {
-		Logger::error("Invalid bookmark identifier - empty!");
-		return false;
-	}
-
-	return bookmarks.add_item({ identifier, name, description, date, initial_camera_x, initial_camera_y });
+	return bookmarks.add_item({ bookmarks.size(), name, description, date, initial_camera_x, initial_camera_y });
 }
 
 bool BookmarkManager::load_bookmark_file(ast::NodeCPtr root) {
@@ -85,7 +79,7 @@ bool BookmarkManager::load_bookmark_file(ast::NodeCPtr root) {
 				"cameraY", ONE_EXACTLY, expect_uint(assign_variable_callback(initial_camera_y))
 			)(value);
 
-			ret &= add_bookmark(date.to_string(), name, description, date, initial_camera_x, initial_camera_y);
+			ret &= add_bookmark(name, description, date, initial_camera_x, initial_camera_y);
 			return ret;
 		}
 	)(root);
