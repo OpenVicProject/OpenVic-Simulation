@@ -445,7 +445,7 @@ static bool _lua_parse(v2script::Parser& parser) {
 	return parser.lua_defines_parse();
 }
 
-static ovdl::v2script::Parser parse_lua_defines(fs::path const& path) {
+ovdl::v2script::Parser Dataloader::parse_lua_defines(fs::path const& path) {
 	return _run_ovdl_parser<v2script::Parser, &_lua_parse>(path);
 }
 
@@ -613,6 +613,7 @@ bool Dataloader::load_defines(GameManager& game_manager) const {
 	static const fs::path pop_type_directory = "poptypes";
 	static const fs::path units_directory = "units";
 
+	static const fs::path defines_file = "common/defines.lua";
 	static const fs::path buildings_file = "common/buildings.txt";
 	static const fs::path bookmark_file = "common/bookmarks.txt";
 	static const fs::path culture_file = "common/cultures.txt";
@@ -631,6 +632,10 @@ bool Dataloader::load_defines(GameManager& game_manager) const {
 
 	if (!game_manager.get_modifier_manager().setup_modifier_effects()) {
 		Logger::error("Failed to set up modifier effects!");
+		ret = false;
+	}
+	if (!game_manager.get_define_manager().load_defines_file(parse_lua_defines(lookup_file(defines_file)).get_file_node())) {
+		Logger::error("Failed to load defines!");
 		ret = false;
 	}
 	if (!game_manager.get_economy_manager().get_good_manager().load_goods_file(

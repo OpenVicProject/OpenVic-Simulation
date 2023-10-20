@@ -7,6 +7,7 @@
 #include "openvic-simulation/history/HistoryManager.hpp"
 #include "openvic-simulation/map/Map.hpp"
 #include "openvic-simulation/military/MilitaryManager.hpp"
+#include "openvic-simulation/misc/Define.hpp"
 #include "openvic-simulation/politics/PoliticsManager.hpp"
 
 namespace OpenVic {
@@ -15,6 +16,7 @@ namespace OpenVic {
 
 	private:
 		Map map;
+		DefineManager define_manager;
 		EconomyManager economy_manager;
 		MilitaryManager military_manager;
 		ModifierManager modifier_manager;
@@ -37,6 +39,7 @@ namespace OpenVic {
 		GameManager(state_updated_func_t state_updated_callback);
 
 		REF_GETTERS(map)
+		REF_GETTERS(define_manager)
 		REF_GETTERS(economy_manager)
 		REF_GETTERS(military_manager)
 		REF_GETTERS(modifier_manager)
