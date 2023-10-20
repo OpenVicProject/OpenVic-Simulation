@@ -4,6 +4,7 @@
 #include <cstdint>
 #include <functional>
 #include <map>
+#include <set>
 #include <type_traits>
 
 #include <openvic-dataloader/v2script/AbstractSyntaxTree.hpp>
@@ -16,9 +17,12 @@ namespace OpenVic {
 	namespace ast = ovdl::v2script::ast;
 
 	/* Template for map from strings to Ts, in which string_views can be
-	 * searched for without needing to be copied into a string, */
+	 * searched for without needing to be copied into a string */
 	template<typename T>
 	using string_map_t = std::map<std::string, T, std::less<void>>;
+
+	/* String set type supporting heterogeneous key lookup */
+	using string_set_t = std::set<std::string, std::less<void>>;
 
 	namespace NodeTools {
 

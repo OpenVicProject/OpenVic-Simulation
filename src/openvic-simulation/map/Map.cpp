@@ -200,14 +200,6 @@ std::vector<Map::shape_pixel_t> const& Map::get_province_shape_image() const {
 	return province_shape_image;
 }
 
-TerrainTypeManager& Map::get_terrain_type_manager() {
-	return terrain_type_manager;
-}
-
-TerrainTypeManager const& Map::get_terrain_type_manager() const {
-	return terrain_type_manager;
-}
-
 bool Map::add_mapmode(std::string_view identifier, Mapmode::colour_func_t colour_func) {
 	if (identifier.empty()) {
 		Logger::error("Invalid mapmode identifier - empty!");

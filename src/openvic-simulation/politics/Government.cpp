@@ -1,7 +1,5 @@
 #include "Government.hpp"
 
-#include <set>
-
 #include "openvic-simulation/GameManager.hpp"
 
 using namespace OpenVic;
@@ -77,7 +75,7 @@ bool GovernmentTypeManager::load_government_types_file(IdeologyManager const& id
 
 			ret &= expect_dictionary(
 				[this, &ideology_manager, &ideologies, government_type_identifier](std::string_view key, ast::NodeCPtr value) -> bool {
-					static const std::set<std::string, std::less<void>> reserved_keys = {
+					static const string_set_t reserved_keys = {
 						"election", "duration", "appoint_ruling_party", "flagType"
 					};
 					if (reserved_keys.find(key) != reserved_keys.end()) return true;

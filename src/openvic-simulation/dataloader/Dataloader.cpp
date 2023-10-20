@@ -48,7 +48,7 @@ static constexpr bool path_equals(std::string_view lhs, std::string_view rhs) {
 template<typename T>
 concept is_filename = std::same_as<T, std::filesystem::path> || std::convertible_to<T, std::string_view>;
 
-bool filename_equals(const is_filename auto& lhs, const is_filename auto& rhs) {
+static bool filename_equals(const is_filename auto& lhs, const is_filename auto& rhs) {
 	auto left = [&lhs] {
 		if constexpr (std::same_as<std::decay_t<decltype(lhs)>, std::filesystem::path>)
 			return lhs.filename().string();
