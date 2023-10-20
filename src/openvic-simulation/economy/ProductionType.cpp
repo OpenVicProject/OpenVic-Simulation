@@ -178,7 +178,7 @@ bool ProductionTypeManager::add_production_type(PRODUCTION_TYPE_ARGS, GoodManage
 		"type", ZERO_OR_ONE, expect_identifier(expect_mapped_string(type_map, assign_variable_callback(type))), \
 		"workforce", ZERO_OR_ONE, expect_uint(assign_variable_callback(workforce)), \
 		"input_goods", ZERO_OR_ONE, good_manager.expect_good_decimal_map(move_variable_callback(input_goods)), \
-		"output_goods", ZERO_OR_ONE, expect_identifier(good_manager.expect_good_identifier(assign_variable_callback_pointer(output_goods))), \
+		"output_goods", ZERO_OR_ONE, good_manager.expect_good_identifier(assign_variable_callback_pointer(output_goods)), \
 		"value", ZERO_OR_ONE, expect_fixed_point(assign_variable_callback(value)), \
 		"efficiency", ZERO_OR_ONE, good_manager.expect_good_decimal_map(move_variable_callback(efficiency)), \
 		"is_coastal", ZERO_OR_ONE, expect_bool(assign_variable_callback(coastal)), \

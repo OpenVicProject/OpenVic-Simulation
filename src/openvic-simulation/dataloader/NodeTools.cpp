@@ -103,18 +103,20 @@ node_callback_t NodeTools::expect_uint64(callback_t<uint64_t> callback) {
 	);
 }
 
-node_callback_t NodeTools::expect_fixed_point(callback_t<fixed_point_t> callback) {
-	return expect_identifier(
-		[callback](std::string_view identifier) -> bool {
-			bool successful = false;
-			const fixed_point_t val = fixed_point_t::parse(identifier.data(), identifier.length(), &successful);
-			if (successful) {
-				return callback(val);
-			}
-			Logger::error("Invalid fixed point identifier text: ", identifier);
-			return false;
+callback_t<std::string_view> NodeTools::expect_fixed_point_str(callback_t<fixed_point_t> callback) {
+	return [callback](std::string_view identifier) -> bool {
+		bool successful = false;
+		const fixed_point_t val = fixed_point_t::parse(identifier.data(), identifier.length(), &successful);
+		if (successful) {
+			return callback(val);
 		}
-	);
+		Logger::error("Invalid fixed point identifier text: ", identifier);
+		return false;
+	};
+}
+
+node_callback_t NodeTools::expect_fixed_point(callback_t<fixed_point_t> callback) {
+	return expect_identifier(expect_fixed_point_str(callback));
 }
 
 node_callback_t NodeTools::expect_colour(callback_t<colour_t> callback) {
@@ -142,18 +144,20 @@ node_callback_t NodeTools::expect_colour(callback_t<colour_t> callback) {
 	};
 }
 
-node_callback_t NodeTools::expect_date(callback_t<Date> callback) {
-	return expect_identifier(
-		[callback](std::string_view identifier) -> bool {
-			bool successful = false;
-			const Date date = Date::from_string(identifier, &successful);
-			if (successful) {
-				return callback(date);
-			}
-			Logger::error("Invalid date identifier text: ", identifier);
-			return false;
+callback_t<std::string_view> NodeTools::expect_date_str(callback_t<Date> callback) {
+	return [callback](std::string_view identifier) -> bool {
+		bool successful = false;
+		const Date date = Date::from_string(identifier, &successful);
+		if (successful) {
+			return callback(date);
 		}
-	);
+		Logger::error("Invalid date identifier text: ", identifier);
+		return false;
+	};
+}
+
+node_callback_t NodeTools::expect_date(callback_t<Date> callback) {
+	return expect_identifier(expect_date_str(callback));
 }
 
 node_callback_t NodeTools::expect_years(callback_t<Timespan> callback) {

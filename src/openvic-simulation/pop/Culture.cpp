@@ -119,7 +119,7 @@ bool CultureManager::_load_culture_group(size_t& total_expected_cultures,
 	bool ret = expect_dictionary_keys_and_default(
 		increment_callback(total_expected_cultures),
 		"leader", ONE_EXACTLY, expect_identifier(assign_variable_callback(leader)),
-		"unit", ZERO_OR_ONE, expect_identifier(expect_graphical_culture_type_identifier(assign_variable_callback_pointer(unit_graphical_culture_type))),
+		"unit", ZERO_OR_ONE, expect_graphical_culture_type_identifier(assign_variable_callback_pointer(unit_graphical_culture_type)),
 		"union", ZERO_OR_ONE, success_callback,
 		"is_overseas", ZERO_OR_ONE, expect_bool(assign_variable_callback(is_overseas))
 	)(culture_group_node);

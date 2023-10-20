@@ -97,9 +97,11 @@ namespace OpenVic {
 			});
 		}
 
+		callback_t<std::string_view> expect_fixed_point_str(callback_t<fixed_point_t> callback);
 		node_callback_t expect_fixed_point(callback_t<fixed_point_t> callback);
 		node_callback_t expect_colour(callback_t<colour_t> callback);
 
+		callback_t<std::string_view> expect_date_str(callback_t<Date> callback);
 		node_callback_t expect_date(callback_t<Date> callback);
 		node_callback_t expect_years(callback_t<Timespan> callback);
 		node_callback_t expect_months(callback_t<Timespan> callback);

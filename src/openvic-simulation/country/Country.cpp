@@ -131,7 +131,7 @@ bool CountryManager::load_country_data_file(GameManager& game_manager, std::stri
 	bool ret = expect_dictionary_keys_and_default(
 		[&game_manager, &alternative_colours, &name](std::string_view key, ast::NodeCPtr value) -> bool {
 			const GovernmentType* colour_gov_type;
-			bool ret = game_manager.get_politics_manager().get_government_type_manager().expect_government_type_identifier(assign_variable_callback_pointer(colour_gov_type))(key);
+			bool ret = game_manager.get_politics_manager().get_government_type_manager().expect_government_type_str(assign_variable_callback_pointer(colour_gov_type))(key);
 
 			if (!ret) return false;
 
@@ -161,7 +161,7 @@ bool CountryManager::load_country_data_file(GameManager& game_manager, std::stri
 				[&game_manager, &policies](std::string_view key, ast::NodeCPtr value) -> bool {
 					const Issue* policy;
 					bool ret = expect_identifier_or_string(
-						game_manager.get_politics_manager().get_issue_manager().expect_issue_identifier(
+						game_manager.get_politics_manager().get_issue_manager().expect_issue_str(
 							assign_variable_callback_pointer(policy)
 						)
 					)(value);
@@ -176,7 +176,7 @@ bool CountryManager::load_country_data_file(GameManager& game_manager, std::stri
 				"name", ONE_EXACTLY, expect_identifier_or_string(assign_variable_callback(party_name)),
 				"start_date", ONE_EXACTLY, expect_date(assign_variable_callback(start_date)),
 				"end_date", ONE_EXACTLY, expect_date(assign_variable_callback(end_date)),
-				"ideology", ONE_EXACTLY, expect_identifier_or_string(game_manager.get_politics_manager().get_ideology_manager().expect_ideology_identifier(assign_variable_callback_pointer(ideology)))
+				"ideology", ONE_EXACTLY, expect_identifier_or_string(game_manager.get_politics_manager().get_ideology_manager().expect_ideology_str(assign_variable_callback_pointer(ideology)))
 			)(value);
 
 			country_parties.push_back({ party_name, start_date, end_date, *ideology, std::move(policies) });
