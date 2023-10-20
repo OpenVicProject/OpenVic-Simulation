@@ -193,7 +193,7 @@ namespace OpenVic {
 		value_type _const* get_item_by_index(size_t index) _const { \
 			return index < items.size() ? &items[index] : nullptr; \
 		} \
-		NodeTools::callback_t<std::string_view> expect_item_identifier(NodeTools::callback_t<value_type _const&> callback) _const { \
+		NodeTools::callback_t<std::string_view> expect_item_str(NodeTools::callback_t<value_type _const&> callback) _const { \
 			return [this, callback](std::string_view identifier) -> bool { \
 				value_type _const* item = get_item_by_identifier(identifier); \
 				if (item != nullptr) return callback(*item); \
@@ -201,14 +201,12 @@ namespace OpenVic {
 				return false; \
 			}; \
 		} \
+		NodeTools::node_callback_t expect_item_identifier(NodeTools::callback_t<value_type _const&> callback) _const { \
+			return NodeTools::expect_identifier(expect_item_str(callback)); \
+		} \
 		NodeTools::node_callback_t expect_item_dictionary(NodeTools::callback_t<value_type _const&, ast::NodeCPtr> callback) _const { \
 			return NodeTools::expect_dictionary([this, callback](std::string_view key, ast::NodeCPtr value) -> bool { \
-				value_type _const* item = get_item_by_identifier(key); \
-				if (item != nullptr) { \
-					return callback(*item, value); \
-				} \
-				Logger::error("Invalid ", name, " identifier: ", key); \
-				return false; \
+				return expect_item_str(std::bind(callback, std::placeholders::_1, value))(key); \
 			}); \
 		}
 
@@ -309,7 +307,9 @@ GETTERS
 		return plural.get_items(); } \
 	std::vector<std::string_view> get_##singular##_identifiers() const { \
 		return plural.get_item_identifiers(); } \
-	NodeTools::callback_t<std::string_view> expect_##singular##_identifier(NodeTools::callback_t<decltype(plural)::value_type const&> callback) const { \
+	NodeTools::callback_t<std::string_view> expect_##singular##_str(NodeTools::callback_t<decltype(plural)::value_type const&> callback) const { \
+		return plural.expect_item_str(callback); } \
+	NodeTools::node_callback_t expect_##singular##_identifier(NodeTools::callback_t<decltype(plural)::value_type const&> callback) const { \
 		return plural.expect_item_identifier(callback); } \
 	NodeTools::node_callback_t expect_##singular##_dictionary(NodeTools::callback_t<decltype(plural)::value_type const&, ast::NodeCPtr> callback) const { \
 		return plural.expect_item_dictionary(callback); } \
@@ -319,7 +319,9 @@ GETTERS
 #define IDENTIFIER_REGISTRY_NON_CONST_ACCESSORS_CUSTOM_PLURAL(singular, plural) \
 	decltype(plural)::value_type* get_##singular##_by_identifier(std::string_view identifier) { \
 		return plural.get_item_by_identifier(identifier); } \
-	NodeTools::callback_t<std::string_view> expect_##singular##_identifier(NodeTools::callback_t<decltype(plural)::value_type&> callback) { \
+	NodeTools::callback_t<std::string_view> expect_##singular##_str(NodeTools::callback_t<decltype(plural)::value_type&> callback) { \
+		return plural.expect_item_str(callback); } \
+	NodeTools::node_callback_t expect_##singular##_identifier(NodeTools::callback_t<decltype(plural)::value_type&> callback) { \
 		return plural.expect_item_identifier(callback); } \
 	NodeTools::node_callback_t expect_##singular##_dictionary(NodeTools::callback_t<decltype(plural)::value_type&, ast::NodeCPtr> callback) { \
 		return plural.expect_item_dictionary(callback); }

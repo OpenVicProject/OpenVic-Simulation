@@ -227,7 +227,7 @@ bool BuildingManager::load_buildings_file(GoodManager const& good_manager, Produ
 		ModifierValue modifier;
 
 		bool ret = modifier_manager.expect_modifier_value_and_keys(move_variable_callback(modifier),
-			"type", ONE_EXACTLY, expect_identifier(expect_building_type_identifier(assign_variable_callback_pointer(type))),
+			"type", ONE_EXACTLY, expect_building_type_identifier(assign_variable_callback_pointer(type)),
 			"on_completion", ZERO_OR_ONE, expect_identifier(assign_variable_callback(on_completion)),
 			"completion_size", ZERO_OR_ONE, expect_fixed_point(assign_variable_callback(completion_size)),
 			"max_level", ONE_EXACTLY, expect_uint(assign_variable_callback(max_level)),
@@ -237,8 +237,8 @@ bool BuildingManager::load_buildings_file(GoodManager const& good_manager, Produ
 			"visibility", ONE_EXACTLY, expect_bool(assign_variable_callback(visibility)),
 			"onmap", ONE_EXACTLY, expect_bool(assign_variable_callback(on_map)),
 			"default_enabled", ZERO_OR_ONE, expect_bool(assign_variable_callback(default_enabled)),
-			"production_type", ZERO_OR_ONE, expect_identifier(production_type_manager.expect_production_type_identifier(
-				assign_variable_callback_pointer(production_type))),
+			"production_type", ZERO_OR_ONE, production_type_manager.expect_production_type_identifier(
+				assign_variable_callback_pointer(production_type)),
 			"pop_build_factory", ZERO_OR_ONE, expect_bool(assign_variable_callback(pop_build_factory)),
 			"strategic_factory", ZERO_OR_ONE, expect_bool(assign_variable_callback(strategic_factory)),
 			"advanced_factory", ZERO_OR_ONE, expect_bool(assign_variable_callback(advanced_factory)),

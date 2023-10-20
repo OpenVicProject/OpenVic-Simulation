@@ -4,6 +4,7 @@
 #include <cstdint>
 #include <functional>
 #include <map>
+#include <set>
 #include <type_traits>
 
 #include <openvic-dataloader/v2script/AbstractSyntaxTree.hpp>
@@ -16,9 +17,12 @@ namespace OpenVic {
 	namespace ast = ovdl::v2script::ast;
 
 	/* Template for map from strings to Ts, in which string_views can be
-	 * searched for without needing to be copied into a string, */
+	 * searched for without needing to be copied into a string */
 	template<typename T>
 	using string_map_t = std::map<std::string, T, std::less<void>>;
+
+	/* String set type supporting heterogeneous key lookup */
+	using string_set_t = std::set<std::string, std::less<void>>;
 
 	namespace NodeTools {
 
@@ -93,9 +97,11 @@ namespace OpenVic {
 			});
 		}
 
+		callback_t<std::string_view> expect_fixed_point_str(callback_t<fixed_point_t> callback);
 		node_callback_t expect_fixed_point(callback_t<fixed_point_t> callback);
 		node_callback_t expect_colour(callback_t<colour_t> callback);
 
+		callback_t<std::string_view> expect_date_str(callback_t<Date> callback);
 		node_callback_t expect_date(callback_t<Date> callback);
 		node_callback_t expect_years(callback_t<Timespan> callback);
 		node_callback_t expect_months(callback_t<Timespan> callback);

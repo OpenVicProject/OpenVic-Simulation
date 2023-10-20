@@ -299,13 +299,13 @@ node_callback_t ModifierManager::expect_modifier_value(callback_t<ModifierValue&
 	return expect_modifier_value_and_default(modifier_callback, key_value_invalid_callback);
 }
 
-node_callback_t ModifierManager::expect_whitelisted_modifier_value_and_default(callback_t<ModifierValue&&> modifier_callback, std::set<std::string, std::less<void>> const& whitelist, key_value_callback_t default_callback) const {
+node_callback_t ModifierManager::expect_whitelisted_modifier_value_and_default(callback_t<ModifierValue&&> modifier_callback, string_set_t const& whitelist, key_value_callback_t default_callback) const {
 	return expect_validated_modifier_value_and_default(modifier_callback, default_callback, [&whitelist](ModifierEffect const& effect) -> bool {
 		return whitelist.contains(effect.get_identifier());
 	});
 }
 
-node_callback_t ModifierManager::expect_whitelisted_modifier_value(callback_t<ModifierValue&&> modifier_callback, std::set<std::string, std::less<void>> const& whitelist) const {
+node_callback_t ModifierManager::expect_whitelisted_modifier_value(callback_t<ModifierValue&&> modifier_callback, string_set_t const& whitelist) const {
 	return expect_whitelisted_modifier_value_and_default(modifier_callback, whitelist, key_value_invalid_callback);
 }
 

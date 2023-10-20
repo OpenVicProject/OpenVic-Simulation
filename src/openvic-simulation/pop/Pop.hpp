@@ -99,10 +99,8 @@ namespace OpenVic {
 	public:
 		PopManager();
 
-		CultureManager& get_culture_manager();
-		CultureManager const& get_culture_manager() const;
-		ReligionManager& get_religion_manager();
-		ReligionManager const& get_religion_manager() const;
+		REF_GETTERS(culture_manager)
+		REF_GETTERS(religion_manager)
 
 		bool add_pop_type(std::string_view identifier, colour_t new_colour, PopType::strata_t strata, PopType::sprite_t sprite,
 			Good::good_map_t&& life_needs, Good::good_map_t&& everyday_needs, Good::good_map_t&& luxury_needs,

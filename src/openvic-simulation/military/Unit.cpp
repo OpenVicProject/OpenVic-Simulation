@@ -1,7 +1,5 @@
 #include "Unit.hpp"
 
-#include <set>
-
 #define UNIT_ARGS \
 	icon, sprite, active, unit_type, floating_flag, priority, max_strength, default_organisation, maximum_speed, \
 	weighted_value, move_sound, select_sound, build_time, std::move(build_cost), supply_consumption, std::move(supply_cost)

@@ -123,22 +123,6 @@ bool PopType::get_is_slave() const {
 
 PopManager::PopManager() : pop_types { "pop types" } {}
 
-CultureManager& PopManager::get_culture_manager() {
-	return culture_manager;
-}
-
-CultureManager const& PopManager::get_culture_manager() const {
-	return culture_manager;
-}
-
-ReligionManager& PopManager::get_religion_manager() {
-	return religion_manager;
-}
-
-ReligionManager const& PopManager::get_religion_manager() const {
-	return religion_manager;
-}
-
 bool PopManager::add_pop_type(std::string_view identifier, colour_t colour, PopType::strata_t strata,
 	PopType::sprite_t sprite, Good::good_map_t&& life_needs, Good::good_map_t&& everyday_needs,
 	Good::good_map_t&& luxury_needs, PopType::rebel_units_t&& rebel_units, Pop::pop_size_t max_size,
@@ -237,8 +221,8 @@ bool PopManager::load_pop_into_province(Province& province, std::string_view pop
 	Religion const* religion = nullptr;
 	Pop::pop_size_t size = 0;
 	bool ret = expect_dictionary_keys(
-		"culture", ONE_EXACTLY, expect_identifier(culture_manager.expect_culture_identifier(assign_variable_callback_pointer(culture))),
-		"religion", ONE_EXACTLY, expect_identifier(religion_manager.expect_religion_identifier(assign_variable_callback_pointer(religion))),
+		"culture", ONE_EXACTLY, culture_manager.expect_culture_identifier(assign_variable_callback_pointer(culture)),
+		"religion", ONE_EXACTLY, religion_manager.expect_religion_identifier(assign_variable_callback_pointer(religion)),
 		"size", ONE_EXACTLY, expect_uint(assign_variable_callback(size)),
 		"militancy", ZERO_OR_ONE, success_callback,
 		"rebel_type", ZERO_OR_ONE, success_callback

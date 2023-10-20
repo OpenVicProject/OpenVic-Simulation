@@ -115,7 +115,7 @@ bool TerrainTypeManager::_load_terrain_type_mapping(std::string_view mapping_key
 	bool has_texture = true;
 
 	bool ret = expect_dictionary_keys(
-		"type", ONE_EXACTLY, expect_identifier(expect_terrain_type_identifier(assign_variable_callback_pointer(type))),
+		"type", ONE_EXACTLY, expect_terrain_type_identifier(assign_variable_callback_pointer(type)),
 		"color", ONE_EXACTLY, expect_list_reserve_length(terrain_indicies, expect_uint<TerrainTypeMapping::index_t>(
 			[&terrain_indicies](TerrainTypeMapping::index_t val) -> bool {
 				if (std::find(terrain_indicies.begin(), terrain_indicies.end(), val) == terrain_indicies.end()) {
