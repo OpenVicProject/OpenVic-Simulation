@@ -26,7 +26,9 @@ namespace OpenVic {
 		bool _load_pop_types(PopManager& pop_manager, UnitManager const& unit_manager, GoodManager const& good_manager, fs::path const& pop_type_directory) const;
 		bool _load_units(UnitManager& unit_manager, GoodManager const& good_manager, fs::path const& units_directory) const;
 		bool _load_map_dir(GameManager& game_manager, fs::path const& map_directory) const;
-		bool _load_countries(GameManager& game_manager, fs::path const& countries_file, ast::NodeCPtr root) const;
+		bool _load_oobs(GameManager& game_manager) const;
+		bool _load_countries(GameManager& game_manager) const;
+		bool _load_history(GameManager& game_manager) const;
 
 	public:
 		static ovdl::v2script::Parser parse_defines(fs::path const& path);
@@ -62,14 +64,26 @@ namespace OpenVic {
 		 */
 		fs::path lookup_file(fs::path const& path) const;
 		path_vector_t lookup_files_in_dir(fs::path const& path, fs::path const& extension) const;
-		bool apply_to_files_in_dir(fs::path const& path, fs::path const& extension,
-			NodeTools::callback_t<fs::path const&> callback) const;
+		bool apply_to_files_in_dir(fs::path const& path, fs::path const& extension, NodeTools::callback_t<fs::path const&> callback) const;
 
 		bool load_defines(GameManager& game_manager) const;
 		bool load_pop_history(GameManager& game_manager, fs::path const& path) const;
 
 		enum locale_t : size_t {
-			English, French, German, Polish, Spanish, Italian, Swedish, Czech, Hungarian, Dutch, Portugese, Russian, Finnish, _LocaleCount
+			English,
+			French,
+			German,
+			Polish,
+			Spanish,
+			Italian,
+			Swedish,
+			Czech,
+			Hungarian,
+			Dutch,
+			Portugese,
+			Russian,
+			Finnish,
+			_LocaleCount
 		};
 		static constexpr char const* locale_names[_LocaleCount] = {
 			"en_GB", "fr_FR", "de_DE", "pl_PL", "es_ES", "it_IT", "sv_SE", "cs_CZ", "hu_HU", "nl_NL", "pt_PT", "ru_RU", "fi_FI"
@@ -80,8 +94,7 @@ namespace OpenVic {
 		bool load_localisation_files(localisation_callback_t callback, fs::path const& localisation_dir = "localisation") const;
 
 	private:
-		struct fshash
-		{
+		struct fshash {
 			size_t operator()(const std::filesystem::path& p) const noexcept {
 				return std::filesystem::hash_value(p);
 			}

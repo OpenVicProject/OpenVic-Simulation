@@ -26,17 +26,17 @@ namespace OpenVic {
 
 	namespace NodeTools {
 
-		template<typename Fn, typename Return = void, typename ...Args>
-		concept Functor = requires(Fn&& fn, Args&& ...args) {
+		template<typename Fn, typename Return = void, typename... Args>
+		concept Functor = requires(Fn&& fn, Args&&... args) {
 			{ std::invoke(std::forward<Fn>(fn), std::forward<Args>(args)...) } -> std::same_as<Return>;
 		};
 
-		template<typename Fn, typename Return = void, typename ...Args>
-		concept FunctorConvertible = requires(Fn&& fn, Args&& ...args) {
+		template<typename Fn, typename Return = void, typename... Args>
+		concept FunctorConvertible = requires(Fn&& fn, Args&&... args) {
 			{ std::invoke(std::forward<Fn>(fn), std::forward<Args>(args)...) } -> std::convertible_to<Return>;
 		};
 
-		template<typename Fn, typename ...Args>
+		template<typename Fn, typename... Args>
 		concept Callback = Functor<Fn, bool, Args...>;
 
 		template<typename Fn>
@@ -78,9 +78,7 @@ namespace OpenVic {
 					val <= static_cast<int64_t>(std::numeric_limits<T>::max())) {
 					return callback(val);
 				}
-				Logger::error("Invalid int: ", val, " (valid range: [",
-					static_cast<int64_t>(std::numeric_limits<T>::lowest()), ", ",
-					static_cast<int64_t>(std::numeric_limits<T>::max()), "])");
+				Logger::error("Invalid int: ", val, " (valid range: [", static_cast<int64_t>(std::numeric_limits<T>::lowest()), ", ", static_cast<int64_t>(std::numeric_limits<T>::max()), "])");
 				return false;
 			});
 		}
@@ -91,8 +89,7 @@ namespace OpenVic {
 				if (val <= static_cast<uint64_t>(std::numeric_limits<T>::max())) {
 					return callback(val);
 				}
-				Logger::error("Invalid uint: ", val, " (valid range: [0, ",
-					static_cast<uint64_t>(std::numeric_limits<T>::max()), "])");
+				Logger::error("Invalid uint: ", val, " (valid range: [0, ", static_cast<uint64_t>(std::numeric_limits<T>::max()), "])");
 				return false;
 			});
 		}

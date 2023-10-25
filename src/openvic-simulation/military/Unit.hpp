@@ -2,36 +2,37 @@
 
 #include <cstdint>
 #include <string_view>
-#include "openvic-simulation/economy/Good.hpp"
-#include "openvic-simulation/types/IdentifierRegistry.hpp"
-#include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
+
 #include "openvic-simulation/dataloader/NodeTools.hpp"
 #include "openvic-simulation/economy/Good.hpp"
 #include "openvic-simulation/types/Date.hpp"
+#include "openvic-simulation/types/IdentifierRegistry.hpp"
+#include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
 
 #define UNIT_PARAMS \
 	Unit::icon_t icon, std::string_view sprite, bool active, std::string_view unit_type, \
-	bool floating_flag, uint32_t priority, fixed_point_t max_strength, fixed_point_t default_organisation, \
-	fixed_point_t maximum_speed, fixed_point_t weighted_value, std::string_view move_sound, \
-	std::string_view select_sound, Timespan build_time, Good::good_map_t&& build_cost, \
-	fixed_point_t supply_consumption, Good::good_map_t&& supply_cost
+		bool floating_flag, uint32_t priority, fixed_point_t max_strength, fixed_point_t default_organisation, \
+		fixed_point_t maximum_speed, fixed_point_t weighted_value, std::string_view move_sound, \
+		std::string_view select_sound, Timespan build_time, Good::good_map_t &&build_cost, \
+		fixed_point_t supply_consumption, Good::good_map_t &&supply_cost
 
 #define LAND_PARAMS \
 	bool primary_culture, std::string_view sprite_override, std::string_view sprite_mount, \
-	std::string_view sprite_mount_attach_node, fixed_point_t reconnaissance, fixed_point_t attack, fixed_point_t defence, \
-	fixed_point_t discipline, fixed_point_t support, fixed_point_t maneuver, fixed_point_t siege
+		std::string_view sprite_mount_attach_node, fixed_point_t reconnaissance, fixed_point_t attack, fixed_point_t defence, \
+		fixed_point_t discipline, fixed_point_t support, fixed_point_t maneuver, fixed_point_t siege
 
 #define NAVY_PARAMS \
 	Unit::icon_t naval_icon, bool sail, bool transport, bool capital, fixed_point_t colonial_points, bool build_overseas, \
-	uint32_t min_port_level, int32_t limit_per_port, fixed_point_t supply_consumption_score, fixed_point_t hull, \
-	fixed_point_t gun_power, fixed_point_t fire_range, fixed_point_t evasion, fixed_point_t torpedo_attack
+		uint32_t min_port_level, int32_t limit_per_port, fixed_point_t supply_consumption_score, fixed_point_t hull, \
+		fixed_point_t gun_power, fixed_point_t fire_range, fixed_point_t evasion, fixed_point_t torpedo_attack
 
 namespace OpenVic {
 	struct Unit : HasIdentifier {
 		using icon_t = uint32_t;
 
 		enum struct type_t {
-			LAND, NAVAL
+			LAND,
+			NAVAL
 		};
 
 	private:

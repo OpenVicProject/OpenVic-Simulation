@@ -10,10 +10,14 @@
 
 #include <openvic-dataloader/v2script/AbstractSyntaxTree.hpp>
 
+#include "openvic-simulation/dataloader/Dataloader.hpp"
+#include "openvic-simulation/map/Province.hpp"
 #include "openvic-simulation/politics/Government.hpp"
 #include "openvic-simulation/politics/Ideology.hpp"
 #include "openvic-simulation/politics/Issue.hpp"
+#include "openvic-simulation/politics/NationalValue.hpp"
 #include "openvic-simulation/pop/Culture.hpp"
+#include "openvic-simulation/pop/Religion.hpp"
 #include "openvic-simulation/types/Colour.hpp"
 #include "openvic-simulation/types/Date.hpp"
 #include "openvic-simulation/types/IdentifierRegistry.hpp"
@@ -30,7 +34,7 @@ namespace OpenVic {
 		const Date start_date;
 		const Date end_date;
 		const Ideology& ideology;
-		const std::vector<const Issue*> policies;
+		const std::vector<Issue const*> policies;
 
 		CountryParty(
 			std::string_view new_name,
@@ -69,7 +73,7 @@ namespace OpenVic {
 		const GraphicalCultureType& graphical_culture;
 		const std::vector<CountryParty> parties;
 		const std::vector<UnitNames> unit_names;
-		bool dynamic_tag;
+		const bool dynamic_tag;
 		const std::map<const GovernmentType*, colour_t> alternative_colours;
 
 		Country(
@@ -78,7 +82,7 @@ namespace OpenVic {
 			const GraphicalCultureType& new_graphical_culture,
 			std::vector<CountryParty>&& new_parties,
 			std::vector<UnitNames>&& new_unit_names,
-			bool new_dynamic_tag,
+			const bool new_dynamic_tag,
 			std::map<const GovernmentType*, colour_t>&& new_alternative_colours
 		);
 
@@ -86,7 +90,7 @@ namespace OpenVic {
 		const GraphicalCultureType& get_graphical_culture() const;
 		const std::vector<CountryParty>& get_parties() const;
 		const std::vector<UnitNames>& get_unit_names() const;
-		bool is_dynamic_tag() const;
+		const bool is_dynamic_tag() const;
 		const std::map<const GovernmentType*, colour_t>& get_alternative_colours() const;
 	};
 
@@ -104,7 +108,7 @@ namespace OpenVic {
 			std::vector<CountryParty>&& parties,
 			std::vector<UnitNames>&& unit_names,
 			bool dynamic_tag,
-			std::map<const GovernmentType*, colour_t>&& new_alternative_colours
+			std::map<const GovernmentType*, colour_t>&& alternative_colours
 		);
 		IDENTIFIER_REGISTRY_ACCESSORS_CUSTOM_PLURAL(country, countries);
 
