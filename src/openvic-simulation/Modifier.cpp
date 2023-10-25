@@ -191,13 +191,14 @@ bool ModifierManager::setup_modifier_effects() {
 	ret &= add_modifier_effect("ruling_party_support", true);
 	ret &= add_modifier_effect("social_reform_desire", false);
 	ret &= add_modifier_effect("supply_consumption", false);
+	ret &= add_modifier_effect("unit_start_experience", true); // weird, naval_unit_start_experience = 15 would give a 15% boost
+	ret &= add_modifier_effect("war_exhaustion", false);
+	// TODO: make technology group modifiers dynamic
 	ret &= add_modifier_effect("army_tech_research_bonus", true);
 	ret &= add_modifier_effect("commerce_tech_research_bonus", true);
 	ret &= add_modifier_effect("culture_tech_research_bonus", true);
 	ret &= add_modifier_effect("industry_tech_research_bonus", true);
-	ret &= add_modifier_effect("naval_tech_research_bonus", true);
-	ret &= add_modifier_effect("unit_start_experience", true); // weird, naval_unit_start_experience = 15 would give a 15% boost
-	ret &= add_modifier_effect("war_exhaustion", false);
+	ret &= add_modifier_effect("navy_tech_research_bonus", true);
 
 	/* Province Modifier Effects */
 	ret &= add_modifier_effect("assimilation_rate", true);
