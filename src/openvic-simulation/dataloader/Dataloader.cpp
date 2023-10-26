@@ -529,17 +529,42 @@ bool Dataloader::_load_countries(GameManager& game_manager) const {
 
 bool Dataloader::_load_history(GameManager& game_manager) const {
 	static const fs::path country_history_directory = "history/countries";
+	static const fs::path province_history_directory = "history/provinces";
+	
 	/* Country History */
 	bool ret = apply_to_files_in_dir(country_history_directory, ".txt", [this, &game_manager](fs::path const& file) -> bool {
 		std::string tag = file.filename().string().substr(0, 3);
+
 		if (!game_manager.get_country_manager().has_country_identifier(tag)) {
 			Logger::error("Error loading history for country ", tag, ": tag not defined!");
 			return false;
 		}
 		
-		return game_manager.get_history_manager().get_country_manager().load_country_history_file(game_manager, tag, game_manager.get_define_manager().get_start_date(), parse_defines(lookup_file(file)).get_file_node());
+		return game_manager.get_history_manager().get_country_manager().load_country_history_file(game_manager, tag, parse_defines(lookup_file(file)).get_file_node());
 	});
 	game_manager.get_history_manager().get_country_manager().lock_country_histories();
+
+	/* Province History */
+	for (auto root : roots) {
+		const fs::path path = root / province_history_directory;
+		std::error_code ec;
+		for (fs::directory_entry const& entry : fs::directory_iterator { path, ec }) {
+			if (entry.is_directory()) {
+				bool ret = apply_to_files_in_dir(entry, ".txt", [this, &game_manager](fs::path const& file) -> bool {
+					std::string province_id = file.filename().string();
+					province_id = province_id.substr(0, province_id.find(" "));
+
+					if (!game_manager.get_map().has_province_identifier(province_id)) {
+						Logger::error("Error loading history for province ", province_id, ": province not defined!");
+						return false;
+					}
+
+					return game_manager.get_history_manager().get_province_manager().load_province_history_file(game_manager, province_id, parse_defines(lookup_file(file)).get_file_node());
+				});
+			}
+		}
+	}
+	game_manager.get_history_manager().get_province_manager().lock_province_histories();
 
 	return ret;
 }
