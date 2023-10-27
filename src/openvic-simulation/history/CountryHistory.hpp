@@ -79,7 +79,7 @@ namespace OpenVic {
 		std::map<Country const*, std::map<Date, CountryHistory>> country_histories;
 		bool locked = false;
 
-		inline bool _load_country_history_entry(GameManager& game_manager, std::string_view name, OpenVic::Date date, ast::NodeCPtr root);
+		inline bool _load_country_history_entry(GameManager& game_manager, std::string_view name, Date const& date, ast::NodeCPtr root);
 
 	public:
 		CountryHistoryManager() {}
@@ -114,7 +114,7 @@ namespace OpenVic {
 		/* Returns history of country at bookmark date. Return can be nullptr if an error occurs. */
 		inline CountryHistory const* get_country_history(Country const* country, Bookmark const* entry) const;
 
-		bool load_country_history_file(GameManager& game_manager, std::string_view name, Date start_date, ast::NodeCPtr root);
+		bool load_country_history_file(GameManager& game_manager, std::string_view name, ast::NodeCPtr root);
 	};
 
 } // namespace OpenVic

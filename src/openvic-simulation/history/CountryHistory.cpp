@@ -185,7 +185,7 @@ inline CountryHistory const* CountryHistoryManager::get_country_history(Country 
 	return get_country_history(country, entry->get_date());
 }
 
-inline bool CountryHistoryManager::_load_country_history_entry(GameManager& game_manager, std::string_view name, OpenVic::Date date, ast::NodeCPtr root) {
+inline bool CountryHistoryManager::_load_country_history_entry(GameManager& game_manager, std::string_view name, Date const& date, ast::NodeCPtr root) {
 	Province const* capital = nullptr;
 	Culture const* primary_culture = nullptr;
 	Religion const* religion = nullptr;
@@ -291,10 +291,10 @@ inline bool CountryHistoryManager::_load_country_history_entry(GameManager& game
 	return ret;
 }
 
-bool CountryHistoryManager::load_country_history_file(GameManager& game_manager, std::string_view name, Date start_date, ast::NodeCPtr root) {
+bool CountryHistoryManager::load_country_history_file(GameManager& game_manager, std::string_view name, ast::NodeCPtr root) {
 	if (game_manager.get_country_manager().get_country_by_identifier(name)->is_dynamic_tag()) return true; /* as far as I can tell dynamic countries are hardcoded, broken, and unused */
 
-	bool ret = _load_country_history_entry(game_manager, name, start_date, root);
+	bool ret = _load_country_history_entry(game_manager, name, game_manager.get_define_manager().get_start_date(), root);
 
 	ret &= expect_dictionary(
 		[this, &game_manager, &name](std::string_view key, ast::NodeCPtr value) -> bool {
@@ -302,8 +302,9 @@ bool CountryHistoryManager::load_country_history_file(GameManager& game_manager,
 			Date entry = Date().from_string(key, &is_date, true);
 			if (!is_date) return true;
 
-			if (entry > game_manager.get_define_manager().get_end_date()) {
-				Logger::error("History entry ", entry.to_string(), " of country ", name, " defined after defined end date ", game_manager.get_define_manager().get_end_date().to_string());
+			Date const& end_date = game_manager.get_define_manager().get_end_date();
+			if (entry > end_date) {
+				Logger::error("History entry ", entry.to_string(), " of country ", name, " defined after defined end date ", end_date.to_string());
 				return false;
 			}
 			
