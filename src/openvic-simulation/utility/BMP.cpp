@@ -91,14 +91,16 @@ bool BMP::read_header() {
 #define STR(x) #x
 	static const std::set<uint16_t> BITS_PER_PIXEL { VALID_BITS_PER_PIXEL };
 	if (!BITS_PER_PIXEL.contains(header.bits_per_pixel)) {
-		Logger::error("Invalid BMP bits per pixel: ", header.bits_per_pixel, " (must be one of " STR(VALID_BITS_PER_PIXEL) ")");
+		Logger::error("Invalid BMP bits per pixel: ", header.bits_per_pixel,
+			" (must be one of " STR(VALID_BITS_PER_PIXEL) ")");
 		header_validated = false;
 	}
 #undef VALID_BITS_PER_PIXEL
 #undef STR
 	static constexpr uint16_t PALETTE_BITS_PER_PIXEL_LIMIT = 8;
 	if (header.num_colours != 0 && header.bits_per_pixel > PALETTE_BITS_PER_PIXEL_LIMIT) {
-		Logger::error("Invalid BMP palette size: ", header.num_colours, " (should be 0 as bits per pixel is ", header.bits_per_pixel, " > 8)");
+		Logger::error("Invalid BMP palette size: ", header.num_colours,
+			" (should be 0 as bits per pixel is ", header.bits_per_pixel, " > 8)");
 		header_validated = false;
 	}
 	// TODO - validate important_colours

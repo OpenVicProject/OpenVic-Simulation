@@ -46,7 +46,7 @@ size_t Reform::get_ordinal() const {
 }
 
 IssueManager::IssueManager() : issue_groups { "issue groups" }, issues { "issues" },
-	reform_types { "reform types" }, reform_groups { "reform groups" }, reforms { "reforms" }  {}
+	reform_types { "reform types" }, reform_groups { "reform groups" }, reforms { "reforms" } {}
 
 bool IssueManager::add_issue_group(std::string_view identifier) {
 	if (identifier.empty()) {
@@ -120,7 +120,8 @@ bool IssueManager::_load_issue(std::string_view identifier, IssueGroup const* gr
 	return add_issue(identifier, group);
 }
 
-bool IssueManager::_load_reform_group(size_t& expected_reforms, std::string_view identifier, ReformType const* type, ast::NodeCPtr node) {
+bool IssueManager::_load_reform_group(size_t& expected_reforms, std::string_view identifier,
+	ReformType const* type, ast::NodeCPtr node) {
 	bool ordered = false, administrative = false;
 	bool ret = expect_dictionary_keys_and_default(
 		increment_callback(expected_reforms),

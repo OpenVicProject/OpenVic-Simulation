@@ -12,20 +12,40 @@ using namespace OpenVic;
 
 Timespan::Timespan(day_t value) : days { value } {}
 
-bool Timespan::operator<(Timespan other) const { return days < other.days; };
-bool Timespan::operator>(Timespan other) const { return days > other.days; };
-bool Timespan::operator<=(Timespan other) const { return days <= other.days; };
-bool Timespan::operator>=(Timespan other) const { return days >= other.days; };
-bool Timespan::operator==(Timespan other) const { return days == other.days; };
-bool Timespan::operator!=(Timespan other) const { return days != other.days; };
+bool Timespan::operator<(Timespan other) const {
+	return days < other.days;
+};
+bool Timespan::operator>(Timespan other) const {
+	return days > other.days;
+};
+bool Timespan::operator<=(Timespan other) const {
+	return days <= other.days;
+};
+bool Timespan::operator>=(Timespan other) const {
+	return days >= other.days;
+};
+bool Timespan::operator==(Timespan other) const {
+	return days == other.days;
+};
+bool Timespan::operator!=(Timespan other) const {
+	return days != other.days;
+};
 
-Timespan Timespan::operator+(Timespan other) const { return days + other.days; }
+Timespan Timespan::operator+(Timespan other) const {
+	return days + other.days;
+}
 
-Timespan Timespan::operator-(Timespan other) const { return days - other.days; }
+Timespan Timespan::operator-(Timespan other) const {
+	return days - other.days;
+}
 
-Timespan Timespan::operator*(day_t factor) const { return days * factor; }
+Timespan Timespan::operator*(day_t factor) const {
+	return days * factor;
+}
 
-Timespan Timespan::operator/(day_t factor) const { return days / factor; }
+Timespan Timespan::operator/(day_t factor) const {
+	return days / factor;
+}
 
 Timespan& Timespan::operator+=(Timespan other) {
 	days += other.days;
@@ -65,16 +85,16 @@ Timespan::operator std::string() const {
 }
 
 Timespan Timespan::fromYears(day_t num) {
-	 return num * Date::DAYS_IN_YEAR;
+	return num * Date::DAYS_IN_YEAR;
 }
 
 Timespan Timespan::fromMonths(day_t num) {
-	 return (num / Date::MONTHS_IN_YEAR) * Date::DAYS_IN_YEAR +
-	 	Date::DAYS_UP_TO_MONTH[num % Date::MONTHS_IN_YEAR];
+	return (num / Date::MONTHS_IN_YEAR) * Date::DAYS_IN_YEAR +
+		Date::DAYS_UP_TO_MONTH[num % Date::MONTHS_IN_YEAR];
 }
 
 Timespan Timespan::fromDays(day_t num) {
-	 return num;
+	return num;
 }
 
 std::ostream& OpenVic::operator<<(std::ostream& out, Timespan const& timespan) {
@@ -132,16 +152,32 @@ Date::day_t Date::getDay() const {
 	return (static_cast<Timespan::day_t>(timespan) % DAYS_IN_YEAR) - DAYS_UP_TO_MONTH[getMonth() - 1] + 1;
 }
 
-bool Date::operator<(Date other) const { return timespan < other.timespan; };
-bool Date::operator>(Date other) const { return timespan > other.timespan; };
-bool Date::operator<=(Date other) const { return timespan <= other.timespan; };
-bool Date::operator>=(Date other) const { return timespan >= other.timespan; };
-bool Date::operator==(Date other) const { return timespan == other.timespan; };
-bool Date::operator!=(Date other) const { return timespan != other.timespan; };
+bool Date::operator<(Date other) const {
+	return timespan < other.timespan;
+};
+bool Date::operator>(Date other) const {
+	return timespan > other.timespan;
+};
+bool Date::operator<=(Date other) const {
+	return timespan <= other.timespan;
+};
+bool Date::operator>=(Date other) const {
+	return timespan >= other.timespan;
+};
+bool Date::operator==(Date other) const {
+	return timespan == other.timespan;
+};
+bool Date::operator!=(Date other) const {
+	return timespan != other.timespan;
+};
 
-Date Date::operator+(Timespan other) const { return timespan + other; }
+Date Date::operator+(Timespan other) const {
+	return timespan + other;
+}
 
-Timespan Date::operator-(Date other) const { return timespan - other.timespan; }
+Timespan Date::operator-(Date other) const {
+	return timespan - other.timespan;
+}
 
 Date& Date::operator+=(Timespan other) {
 	timespan += other;
@@ -175,20 +211,28 @@ Date::operator std::string() const {
 }
 
 std::ostream& OpenVic::operator<<(std::ostream& out, Date const& date) {
-	return out << static_cast<int>(date.getYear()) << Date::SEPARATOR_CHARACTER << static_cast<int>(date.getMonth()) << Date::SEPARATOR_CHARACTER << static_cast<int>(date.getDay());
+	return out << static_cast<int>(date.getYear()) << Date::SEPARATOR_CHARACTER
+		<< static_cast<int>(date.getMonth()) << Date::SEPARATOR_CHARACTER << static_cast<int>(date.getDay());
 }
 
 // Parsed from string of the form YYYY.MM.DD
 Date Date::from_string(char const* const str, char const* const end, bool* successful, bool quiet) {
-	if (successful != nullptr) *successful = true;
+	if (successful != nullptr) {
+		*successful = true;
+	}
 
 	year_t year = 0;
 	month_t month = 1;
 	day_t day = 1;
 
 	if (str == nullptr || end <= str) {
-		if (!quiet) Logger::error("Invalid string start/end pointers: ", static_cast<void const*>(str), " - ", static_cast<void const*>(end));
-		if (successful != nullptr) *successful = false;
+		if (!quiet) {
+			Logger::error("Invalid string start/end pointers: ", static_cast<void const*>(str),
+				" - ", static_cast<void const*>(end));
+		}
+		if (successful != nullptr) {
+			*successful = false;
+		}
 		return { year, month, day };
 	}
 
@@ -196,16 +240,25 @@ Date Date::from_string(char const* const str, char const* const end, bool* succe
 	while (std::isdigit(*year_end) && ++year_end < end);
 
 	if (year_end <= str) {
-		if (!quiet) Logger::error("Failed to find year digits in date: ", std::string_view { str, static_cast<size_t>(end - str) });
-		if (successful != nullptr) *successful = false;
+		if (!quiet) {
+			Logger::error("Failed to find year digits in date: ",
+				std::string_view { str, static_cast<size_t>(end - str) });
+		}
+		if (successful != nullptr) {
+			*successful = false;
+		}
 		return { year, month, day };
 	}
 
 	bool sub_successful = false;
 	uint64_t val = StringUtils::string_to_uint64(str, year_end, &sub_successful, 10);
 	if (!sub_successful || val > std::numeric_limits<year_t>::max()) {
-		if (!quiet) Logger::error("Failed to read year: ", std::string_view { str, static_cast<size_t>(end - str) });
-		if (successful != nullptr) *successful = false;
+		if (!quiet) {
+			Logger::error("Failed to read year: ", std::string_view { str, static_cast<size_t>(end - str) });
+		}
+		if (successful != nullptr) {
+			*successful = false;
+		}
 		return { year, month, day };
 	}
 	year = val;
@@ -217,14 +270,24 @@ Date Date::from_string(char const* const str, char const* const end, bool* succe
 				while (std::isdigit(*month_end) && ++month_end < end);
 			}
 			if (month_start >= month_end) {
-				if (!quiet) Logger::error("Failed to find month digits in date: ", std::string_view { str, static_cast<size_t>(end - str) });
-				if (successful != nullptr) *successful = false;
+				if (!quiet) {
+					Logger::error("Failed to find month digits in date: ",
+						std::string_view { str, static_cast<size_t>(end - str) });
+				}
+				if (successful != nullptr) {
+					*successful = false;
+				}
 			} else {
 				sub_successful = false;
 				val = StringUtils::string_to_uint64(month_start, month_end, &sub_successful, 10);
 				if (!sub_successful || val < 1 || val > MONTHS_IN_YEAR) {
-					if (!quiet) Logger::error("Failed to read month: ", std::string_view { str, static_cast<size_t>(end - str) });
-					if (successful != nullptr) *successful = false;
+					if (!quiet) {
+						Logger::error("Failed to read month: ",
+							std::string_view { str, static_cast<size_t>(end - str) });
+					}
+					if (successful != nullptr) {
+						*successful = false;
+					}
 				} else {
 					month = val;
 					if (month_end < end) {
@@ -235,32 +298,60 @@ Date Date::from_string(char const* const str, char const* const end, bool* succe
 								while (std::isdigit(*day_end) && ++day_end < end);
 							}
 							if (day_start >= day_end) {
-								if (!quiet) Logger::error("Failed to find day digits in date: ", std::string_view { str, static_cast<size_t>(end - str) });
-								if (successful != nullptr) *successful = false;
+								if (!quiet) {
+									Logger::error("Failed to find day digits in date: ",
+										std::string_view { str, static_cast<size_t>(end - str) });
+								}
+								if (successful != nullptr) {
+									*successful = false;
+								}
 							} else {
 								sub_successful = false;
 								val = StringUtils::string_to_uint64(day_start, day_end, &sub_successful);
 								if (!sub_successful || val < 1 || val > DAYS_IN_MONTH[month - 1]) {
-									if (!quiet) Logger::error("Failed to read day: ", std::string_view { str, static_cast<size_t>(end - str) });
-									if (successful != nullptr) *successful = false;
+									if (!quiet) {
+										Logger::error("Failed to read day: ",
+											std::string_view { str, static_cast<size_t>(end - str) });
+									}
+									if (successful != nullptr) {
+										*successful = false;
+									}
 								} else {
 									day = val;
 									if (day_end < end) {
-										if (!quiet) Logger::error("Unexpected string \"", std::string_view { day_end, static_cast<size_t>(end - day_end) }, "\" at the end of date ", std::string_view { str, static_cast<size_t>(end - str) });
-										if (successful != nullptr) *successful = false;
+										if (!quiet) {
+											Logger::error(
+												"Unexpected string \"",
+												std::string_view { day_end, static_cast<size_t>(end - day_end) },
+												"\" at the end of date ",
+												std::string_view { str, static_cast<size_t>(end - str) });
+										}
+										if (successful != nullptr) {
+											*successful = false;
+										}
 									}
 								}
 							}
 						} else {
-							if (!quiet) Logger::error("Unexpected character \"", *month_end, "\" in month of date ", std::string_view { str, static_cast<size_t>(end - str) });
-							if (successful != nullptr) *successful = false;
+							if (!quiet) {
+								Logger::error("Unexpected character \"", *month_end, "\" in month of date ",
+									std::string_view { str, static_cast<size_t>(end - str) });
+							}
+							if (successful != nullptr) {
+								*successful = false;
+							}
 						}
 					}
 				}
 			}
 		} else {
-			if (!quiet) Logger::error("Unexpected character \"", *year_end, "\" in year of date ", std::string_view { str, static_cast<size_t>(end - str) });
-			if (successful != nullptr) *successful = false;
+			if (!quiet) {
+				Logger::error("Unexpected character \"", *year_end, "\" in year of date ",
+					std::string_view { str, static_cast<size_t>(end - str) });
+			}
+			if (successful != nullptr) {
+				*successful = false;
+			}
 		}
 	}
 	return { year, month, day };

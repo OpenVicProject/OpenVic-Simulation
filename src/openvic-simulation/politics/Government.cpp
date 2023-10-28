@@ -5,8 +5,12 @@
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;
 
-GovernmentType::GovernmentType(std::string_view new_identifier, std::vector<Ideology const*>&& new_ideologies, bool new_elections, bool new_appoint_ruling_party, Timespan new_term_duration, std::string_view new_flag_type_identifier)
-	: HasIdentifier { new_identifier }, ideologies { std::move(new_ideologies) }, elections { new_elections }, appoint_ruling_party { new_appoint_ruling_party }, term_duration { new_term_duration }, flag_type_identifier { new_flag_type_identifier } {}
+GovernmentType::GovernmentType(
+	std::string_view new_identifier, std::vector<Ideology const*>&& new_ideologies, bool new_elections,
+	bool new_appoint_ruling_party, Timespan new_term_duration, std::string_view new_flag_type_identifier
+) : HasIdentifier { new_identifier }, ideologies { std::move(new_ideologies) }, elections { new_elections },
+	appoint_ruling_party { new_appoint_ruling_party }, term_duration { new_term_duration },
+	flag_type_identifier { new_flag_type_identifier } {}
 
 bool GovernmentType::is_ideology_compatible(Ideology const* ideology) const {
 	return std::find(ideologies.begin(), ideologies.end(), ideology) != ideologies.end();
@@ -34,7 +38,8 @@ std::string_view GovernmentType::get_flag_type() const {
 
 GovernmentTypeManager::GovernmentTypeManager() : government_types { "government types" } {}
 
-bool GovernmentTypeManager::add_government_type(std::string_view identifier, std::vector<Ideology const*>&& ideologies, bool elections, bool appoint_ruling_party, Timespan term_duration, std::string_view flag_type) {
+bool GovernmentTypeManager::add_government_type(std::string_view identifier, std::vector<Ideology const*>&& ideologies,
+	bool elections, bool appoint_ruling_party, Timespan term_duration, std::string_view flag_type) {
 	if (identifier.empty()) {
 		Logger::error("Invalid government type identifier - empty!");
 		return false;

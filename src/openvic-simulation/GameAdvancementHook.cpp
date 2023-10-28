@@ -21,12 +21,13 @@ GameAdvancementHook::GameAdvancementHook(AdvancementFunction tickFunction,
 }
 
 void GameAdvancementHook::setSimulationSpeed(speed_t speed) {
-	if (speed < 0)
+	if (speed < 0) {
 		currentSpeed = 0;
-	else if (speed >= GAME_SPEEDS.size())
+	} else if (speed >= GAME_SPEEDS.size()) {
 		currentSpeed = GAME_SPEEDS.size() - 1;
-	else
+	} else {
 		currentSpeed = speed;
+	}
 }
 
 GameAdvancementHook::speed_t GameAdvancementHook::getSimulationSpeed() const {
@@ -64,10 +65,14 @@ void GameAdvancementHook::conditionallyAdvanceGame() {
 		time_point_t currentTime = std::chrono::high_resolution_clock::now();
 		if (std::chrono::duration_cast<std::chrono::milliseconds>(currentTime - lastPolledTime) >= GAME_SPEEDS[currentSpeed]) {
 			lastPolledTime = currentTime;
-			if (triggerFunction) triggerFunction();
+			if (triggerFunction) {
+				triggerFunction();
+			}
 		}
 	}
-	if (refreshFunction) refreshFunction();
+	if (refreshFunction) {
+		refreshFunction();
+	}
 }
 
 void GameAdvancementHook::reset() {

@@ -84,12 +84,14 @@ bool GoodManager::add_good(std::string_view identifier, colour_t colour, GoodCat
 		Logger::error("Invalid base price for ", identifier, ": ", base_price);
 		return false;
 	}
-	return goods.add_item({ identifier, colour, *category, base_price, available_from_start, tradeable, money, overseas_penalty });
+	return goods.add_item({ identifier, colour, *category, base_price,
+		available_from_start, tradeable, money, overseas_penalty });
 }
 
 void GoodManager::reset_to_defaults() {
-	for (Good& good : goods.get_items())
+	for (Good& good : goods.get_items()) {
 		good.reset_to_defaults();
+	}
 }
 
 bool GoodManager::load_goods_file(ast::NodeCPtr root) {
@@ -123,7 +125,8 @@ bool GoodManager::load_goods_file(ast::NodeCPtr root) {
 						"money", ZERO_OR_ONE, expect_bool(assign_variable_callback(money)),
 						"overseas_penalty", ZERO_OR_ONE, expect_bool(assign_variable_callback(overseas_penalty))
 					)(value);
-					ret &= add_good(key, colour, good_category, base_price, available_from_start, tradeable, money, overseas_penalty);
+					ret &= add_good(key, colour, good_category, base_price,
+						available_from_start, tradeable, money, overseas_penalty);
 					return ret;
 				}
 			)(good_category_value);

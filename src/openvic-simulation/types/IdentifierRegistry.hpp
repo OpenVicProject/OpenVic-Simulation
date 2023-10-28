@@ -45,10 +45,8 @@ namespace OpenVic {
 
 #define HASID_PROPERTY(NAME) \
 	const NAME; \
-\
 public: \
 	auto get_##NAME() const->decltype(get_property(NAME)) { return get_property(NAME); } \
-\
 private:
 	};
 
@@ -80,7 +78,8 @@ private:
 	 */
 	class HasIdentifierAndColour : public HasIdentifier, public HasColour {
 	protected:
-		HasIdentifierAndColour(std::string_view new_identifier, const colour_t new_colour, bool can_be_null, bool can_have_alpha);
+		HasIdentifierAndColour(std::string_view new_identifier, const colour_t new_colour,
+			bool can_be_null, bool can_have_alpha);
 
 	public:
 		HasIdentifierAndColour(HasIdentifierAndColour const&) = delete;
@@ -97,9 +96,8 @@ private:
 		constexpr auto pred = [](typename decimal_map_t<T>::value_type a, typename decimal_map_t<T>::value_type b) -> bool {
 			return a.second < b.second;
 		};
-		const typename decimal_map_t<T>::const_iterator result = std::max_element(
-			map.begin(), map.end(), pred
-		);
+		const typename decimal_map_t<T>::const_iterator result =
+			std::max_element(map.begin(), map.end(), pred);
 		if (result != map.end()) {
 			return *result;
 		} else {
@@ -111,11 +109,13 @@ private:
 
 	/* Callbacks for trying to add duplicate keys via UniqueKeyRegistry::add_item */
 	static bool duplicate_fail_callback(std::string_view registry_name, std::string_view duplicate_identifier) {
-		Logger::error("Failure adding item to the ", registry_name, " registry - an item with the identifier \"", duplicate_identifier, "\" already exists!");
+		Logger::error("Failure adding item to the ", registry_name, " registry - an item with the identifier \"",
+			duplicate_identifier, "\" already exists!");
 		return false;
 	}
 	static bool duplicate_warning_callback(std::string_view registry_name, std::string_view duplicate_identifier) {
-		Logger::warning("Warning adding item to the ", registry_name, " registry - an item with the identifier \"", duplicate_identifier, "\" already exists!");
+		Logger::warning("Warning adding item to the ", registry_name, " registry - an item with the identifier \"",
+			duplicate_identifier, "\" already exists!");
 		return true;
 	}
 	static bool duplicate_ignore_callback(std::string_view registry_name, std::string_view duplicate_identifier) {
@@ -141,14 +141,16 @@ private:
 		using value_type = _Type;
 		using storage_type = _Storage;
 
-		UniqueKeyRegistry(std::string_view new_name, bool new_log_lock = true, _GetIdentifier new_GetIdentifier = {}, _GetPointer new_GetPointer = {})
+		UniqueKeyRegistry(std::string_view new_name, bool new_log_lock = true,
+			_GetIdentifier new_GetIdentifier = {}, _GetPointer new_GetPointer = {})
 			: name { new_name }, log_lock { new_log_lock }, GetIdentifier { new_GetIdentifier }, GetPointer { new_GetPointer } {}
 
 		std::string_view get_name() const {
 			return name;
 		}
 
-		bool add_item(storage_type&& item, NodeTools::callback_t<std::string_view, std::string_view> duplicate_callback = duplicate_fail_callback) {
+		bool add_item(storage_type&& item,
+			NodeTools::callback_t<std::string_view, std::string_view> duplicate_callback = duplicate_fail_callback) {
 			if (locked) {
 				Logger::error("Cannot add item to the ", name, " registry - locked!");
 				return false;
@@ -156,7 +158,9 @@ private:
 			const std::string_view new_identifier = GetIdentifier(GetPointer(item));
 			if (duplicate_callback &&
 				duplicate_callback.target<bool(std::string_view, std::string_view)>() == duplicate_ignore_callback) {
-				if (has_identifier(new_identifier)) return true;
+				if (has_identifier(new_identifier)) {
+					return true;
+				}
 			} else {
 				value_type const* old_item = get_item_by_identifier(new_identifier);
 				if (old_item != nullptr) {
@@ -173,7 +177,9 @@ private:
 				Logger::error("Failed to lock ", name, " registry - already locked!");
 			} else {
 				locked = true;
-				if (log_lock) Logger::info("Locked ", name, " registry after registering ", size(), " items");
+				if (log_lock) {
+					Logger::info("Locked ", name, " registry after registering ", size(), " items");
+				}
 			}
 		}
 
@@ -256,7 +262,8 @@ private:
 			return identifiers;
 		}
 
-		NodeTools::node_callback_t expect_item_decimal_map(NodeTools::callback_t<decimal_map_t<value_type const*>&&> callback) const {
+		NodeTools::node_callback_t expect_item_decimal_map(
+			NodeTools::callback_t<decimal_map_t<value_type const*>&&> callback) const {
 			return [this, callback](ast::NodeCPtr node) -> bool {
 				decimal_map_t<value_type const*> map;
 				bool ret = expect_item_dictionary([&map](value_type const& key, ast::NodeCPtr value) -> bool {

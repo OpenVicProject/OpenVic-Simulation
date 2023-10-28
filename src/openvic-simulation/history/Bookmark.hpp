@@ -45,7 +45,8 @@ namespace OpenVic {
 	public:
 		BookmarkManager();
 
-		bool add_bookmark(std::string_view name, std::string_view description, Date date, uint32_t initial_camera_x, uint32_t initial_camera_y);
+		bool add_bookmark(std::string_view name, std::string_view description, Date date,
+			uint32_t initial_camera_x, uint32_t initial_camera_y);
 		IDENTIFIER_REGISTRY_ACCESSORS(bookmark);
 
 		bool load_bookmark_file(ast::NodeCPtr root);

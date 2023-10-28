@@ -108,7 +108,8 @@ namespace OpenVic {
 			bool state_capital_only, bool demote_migrant, bool is_artisan, bool is_slave);
 		IDENTIFIER_REGISTRY_ACCESSORS(pop_type)
 
-		bool load_pop_type_file(std::string_view filestem, UnitManager const& unit_manager, GoodManager const& good_manager, ast::NodeCPtr root);
+		bool load_pop_type_file(std::string_view filestem, UnitManager const& unit_manager,
+			GoodManager const& good_manager, ast::NodeCPtr root);
 		bool load_pop_into_province(Province& province, std::string_view pop_type_identifier, ast::NodeCPtr pop_node) const;
 	};
 }

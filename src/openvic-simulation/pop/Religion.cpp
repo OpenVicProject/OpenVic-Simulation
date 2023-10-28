@@ -40,7 +40,8 @@ bool ReligionManager::add_religion_group(std::string_view identifier) {
 	return religion_groups.add_item({ identifier });
 }
 
-bool ReligionManager::add_religion(std::string_view identifier, colour_t colour, ReligionGroup const* group, Religion::icon_t icon, bool pagan) {
+bool ReligionManager::add_religion(std::string_view identifier, colour_t colour,
+	ReligionGroup const* group, Religion::icon_t icon, bool pagan) {
 	if (!religion_groups.is_locked()) {
 		Logger::error("Cannot register religions until religion groups are locked!");
 		return false;

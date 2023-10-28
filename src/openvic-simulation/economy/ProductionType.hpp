@@ -96,10 +96,10 @@ namespace OpenVic {
 	private:
 		IdentifierRegistry<ProductionType> production_types;
 
-		NodeTools::node_callback_t _expect_employed_pop(GoodManager const& good_manager, PopManager const& pop_manager,
-			NodeTools::callback_t<EmployedPop&&> cb);
-		NodeTools::node_callback_t _expect_employed_pop_list(GoodManager const& good_manager, PopManager const& pop_manager,
-			NodeTools::callback_t<std::vector<EmployedPop>&&> cb);
+		NodeTools::node_callback_t _expect_employed_pop(GoodManager const& good_manager,
+			PopManager const& pop_manager, NodeTools::callback_t<EmployedPop&&> cb);
+		NodeTools::node_callback_t _expect_employed_pop_list(GoodManager const& good_manager,
+			PopManager const& pop_manager, NodeTools::callback_t<std::vector<EmployedPop>&&> cb);
 
 	public:
 		ProductionTypeManager();

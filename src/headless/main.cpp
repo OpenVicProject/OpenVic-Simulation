@@ -82,15 +82,17 @@ int main(int argc, char const* argv[]) {
 	/* Reads the next argument and converts it to a path via path_transform. If reading or converting fails, an error
 	 * message and the help text are displayed, along with returning false to signify the program should exit.
 	 */
-	const auto _read = [&root, &argn, argc, argv, program_name](std::string_view command, std::string_view path_use, auto path_transform) -> bool {
-		if (root.empty())  {
+	const auto _read = [&root, &argn, argc, argv, program_name](
+		std::string_view command, std::string_view path_use, auto path_transform) -> bool {
+		if (root.empty()) {
 			if (++argn < argc) {
 				char const* path = argv[argn];
 				root = path_transform(path);
 				if (!root.empty()) {
 					return true;
 				} else {
-					std::cerr << "Empty path after giving \"" << path << "\" to " << path_use << " command line argument \"" << command << "\"." << std::endl;
+					std::cerr << "Empty path after giving \"" << path << "\" to " << path_use
+						<< " command line argument \"" << command << "\"." << std::endl;
 				}
 			} else {
 				std::cerr << "Missing path after " << path_use << " command line argument \"" << command << "\"." << std::endl;

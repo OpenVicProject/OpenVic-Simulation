@@ -28,7 +28,8 @@ namespace OpenVic {
 	public:
 		bool isPaused;
 
-		GameAdvancementHook(AdvancementFunction tickFunction, RefreshFunction updateFunction, bool startPaused = true, speed_t startingSpeed = 0);
+		GameAdvancementHook(AdvancementFunction tickFunction, RefreshFunction updateFunction,
+			bool startPaused = true, speed_t startingSpeed = 0);
 
 		void setSimulationSpeed(speed_t speed);
 		speed_t getSimulationSpeed() const;

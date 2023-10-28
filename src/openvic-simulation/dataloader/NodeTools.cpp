@@ -53,7 +53,8 @@ node_callback_t NodeTools::expect_identifier_or_string(callback_t<std::string_vi
 			if (cast_node != nullptr) {
 				return _abstract_string_node_callback<ast::AbstractStringNode>(callback, allow_empty)(*cast_node);
 			}
-			Logger::error("Invalid node type ", node->get_type(), " when expecting ", ast::IdentifierNode::get_type_static(), " or ", ast::StringNode::get_type_static());
+			Logger::error("Invalid node type ", node->get_type(), " when expecting ",
+				ast::IdentifierNode::get_type_static(), " or ", ast::StringNode::get_type_static());
 		} else {
 			Logger::error("Null node when expecting ", ast::IdentifierNode::get_type_static(), " or ", ast::StringNode::get_type_static());
 		}
@@ -123,18 +124,22 @@ node_callback_t NodeTools::expect_colour(callback_t<colour_t> callback) {
 	return [callback](ast::NodeCPtr node) -> bool {
 		colour_t col = NULL_COLOUR;
 		uint32_t components = 0;
-		bool ret = expect_list_of_length(3, expect_fixed_point([&col, &components](fixed_point_t val) -> bool {
-											 components++;
-											 col <<= 8;
-											 if (val < 0 || val > 255) {
-												 Logger::error("Invalid colour component: ", val);
-												 return false;
-											 } else {
-												 if (val <= 1) val *= 255;
-												 col |= val.to_int32_t();
-												 return true;
-											 }
-										 }))(node);
+		bool ret = expect_list_of_length(3, expect_fixed_point(
+			[&col, &components](fixed_point_t val) -> bool {
+				components++;
+				col <<= 8;
+				if (val < 0 || val > 255) {
+					Logger::error("Invalid colour component: ", val);
+					return false;
+				} else {
+					if (val <= 1) {
+						val *= 255;
+					}
+					col |= val.to_int32_t();
+					return true;
+				}
+			}
+		))(node);
 		ret &= callback(col << 8 * (3 - components));
 		return ret;
 	};
@@ -230,7 +235,9 @@ node_callback_t NodeTools::expect_list_of_length(size_t length, node_callback_t 
 				if (size != length) {
 					Logger::error("List length ", size, " does not match expected length ", length);
 					ret = false;
-					if (length < size) return length;
+					if (length < size) {
+						return length;
+					}
 				}
 				return size;
 			},
@@ -289,7 +296,8 @@ node_callback_t NodeTools::expect_dictionary(key_value_callback_t callback) {
 	return expect_dictionary_and_length(default_length_callback, callback);
 }
 
-bool NodeTools::add_key_map_entry(key_map_t& key_map, std::string_view key, dictionary_entry_t::expected_count_t expected_count, node_callback_t callback) {
+bool NodeTools::add_key_map_entry(key_map_t& key_map, std::string_view key,
+	dictionary_entry_t::expected_count_t expected_count, node_callback_t callback) {
 	if (key_map.find(key) == key_map.end()) {
 		key_map.emplace(key, dictionary_entry_t { expected_count, callback });
 		return true;
@@ -336,7 +344,8 @@ bool NodeTools::check_key_map_counts(key_map_t& key_map) {
 	return ret;
 }
 
-node_callback_t NodeTools::expect_dictionary_key_map_and_length_and_default(key_map_t key_map, length_callback_t length_callback, key_value_callback_t default_callback) {
+node_callback_t NodeTools::expect_dictionary_key_map_and_length_and_default(key_map_t key_map,
+	length_callback_t length_callback, key_value_callback_t default_callback) {
 	return [length_callback, default_callback, key_map = std::move(key_map)](ast::NodeCPtr node) mutable -> bool {
 		bool ret = expect_dictionary_and_length(
 			length_callback, dictionary_keys_callback(key_map, default_callback)
@@ -355,7 +364,8 @@ node_callback_t NodeTools::expect_dictionary_key_map_and_default(key_map_t key_m
 }
 
 node_callback_t NodeTools::expect_dictionary_key_map(key_map_t key_map) {
-	return expect_dictionary_key_map_and_length_and_default(std::move(key_map), default_length_callback, key_value_invalid_callback);
+	return expect_dictionary_key_map_and_length_and_default(std::move(key_map),
+		default_length_callback, key_value_invalid_callback);
 }
 
 node_callback_t NodeTools::name_list_callback(callback_t<std::vector<std::string>&&> callback) {

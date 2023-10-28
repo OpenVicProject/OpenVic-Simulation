@@ -25,7 +25,9 @@ HasColour::HasColour(colour_t const new_colour, bool can_be_null, bool can_have_
 	assert((can_be_null || colour != NULL_COLOUR) && colour <= (!can_have_alpha ? MAX_COLOUR_RGB : MAX_COLOUR_ARGB));
 }
 
-colour_t HasColour::get_colour() const { return colour; }
+colour_t HasColour::get_colour() const {
+	return colour;
+}
 
 std::string HasColour::colour_to_hex_string() const {
 	return OpenVic::colour_to_hex_string(colour);

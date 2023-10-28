@@ -5,8 +5,10 @@
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;
 
-EmployedPop::EmployedPop(PopType const* pop_type, bool artisan, effect_t effect, fixed_point_t effect_multiplier, fixed_point_t amount)
-	: pop_type { pop_type }, artisan { artisan }, effect { effect }, effect_multiplier { effect_multiplier }, amount { amount } {}
+EmployedPop::EmployedPop(PopType const* pop_type, bool artisan, effect_t effect,
+	fixed_point_t effect_multiplier, fixed_point_t amount)
+	: pop_type { pop_type }, artisan { artisan }, effect { effect },
+	  effect_multiplier { effect_multiplier }, amount { amount } {}
 
 PopType const* EmployedPop::get_pop_type() const {
 	return pop_type;
@@ -186,7 +188,8 @@ bool ProductionTypeManager::add_production_type(PRODUCTION_TYPE_ARGS, GoodManage
 		"mine", ZERO_OR_ONE, expect_bool(assign_variable_callback(mine)) \
 	)
 
-bool ProductionTypeManager::load_production_types_file(GoodManager const& good_manager, PopManager const& pop_manager, ast::NodeCPtr root) {
+bool ProductionTypeManager::load_production_types_file(GoodManager const& good_manager,
+	PopManager const& pop_manager, ast::NodeCPtr root) {
 	size_t expected_types = 0;
 
 	// pass 1: find and store template identifiers
@@ -227,7 +230,8 @@ bool ProductionTypeManager::load_production_types_file(GoodManager const& good_m
 	// pass 3: actually load production types
 	production_types.reserve(production_types.size() + expected_types);
 	ret &= expect_dictionary(
-		[this, &good_manager, &pop_manager, &template_target_map, &template_node_map](std::string_view key, ast::NodeCPtr node) -> bool {
+		[this, &good_manager, &pop_manager, &template_target_map, &template_node_map](
+			std::string_view key, ast::NodeCPtr node) -> bool {
 			if (template_node_map.contains(key))
 				return true;
 

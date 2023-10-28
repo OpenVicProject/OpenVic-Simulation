@@ -253,7 +253,9 @@ namespace OpenVic {
 				}
 				val += err;
 			}
-			if (val.is_negative()) stream << "-";
+			if (val.is_negative()) {
+				stream << "-";
+			}
 			val = val.abs();
 			stream << val.to_int64_t() << ".";
 			val = val.get_frac();
@@ -283,7 +285,9 @@ namespace OpenVic {
 
 		// Deterministic
 		static constexpr fixed_point_t parse(char const* str, char const* const end, bool* successful = nullptr) {
-			if (successful != nullptr) *successful = false;
+			if (successful != nullptr) {
+				*successful = false;
+			}
 
 			if (str == nullptr || str >= end) {
 				return _0();
@@ -294,7 +298,9 @@ namespace OpenVic {
 			if (*str == '-') {
 				negative = true;
 				++str;
-				if (str == end) return _0();
+				if (str == end) {
+					return _0();
+				}
 			}
 
 			char const* dot_pointer = str;
@@ -306,20 +312,26 @@ namespace OpenVic {
 			}
 
 			fixed_point_t result = _0();
-			if (successful != nullptr) *successful = true;
+			if (successful != nullptr) {
+				*successful = true;
+			}
 
 			if (dot_pointer != str) {
 				// Non-empty integer part
 				bool int_successful = false;
 				result += parse_integer(str, dot_pointer, &int_successful);
-				if (!int_successful && successful != nullptr) *successful = false;
+				if (!int_successful && successful != nullptr) {
+					*successful = false;
+				}
 			}
 
 			if (dot_pointer + 1 < end) {
 				// Non-empty fractional part
 				bool frac_successful = false;
 				result += parse_fraction(dot_pointer + 1, end, &frac_successful);
-				if (!frac_successful && successful != nullptr) *successful = false;
+				if (!frac_successful && successful != nullptr) {
+					*successful = false;
+				}
 			}
 
 			return negative ? -result : result;
@@ -599,7 +611,9 @@ namespace OpenVic {
 
 		static constexpr fixed_point_t parse_fraction(char const* str, char const* end, bool* successful) {
 			char const* const read_end = str + PRECISION;
-			if (read_end < end) end = read_end;
+			if (read_end < end) {
+				end = read_end;
+			}
 			uint64_t parsed_value = StringUtils::string_to_uint64(str, end, successful, 10);
 			while (end++ < read_end) {
 				parsed_value *= 10;

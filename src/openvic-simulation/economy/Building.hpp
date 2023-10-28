@@ -166,7 +166,9 @@ namespace OpenVic {
 		bool add_building(std::string_view identifier, BuildingType const* type, ARGS);
 		IDENTIFIER_REGISTRY_ACCESSORS(building)
 
-		bool load_buildings_file(GoodManager const& good_manager, ProductionTypeManager const& production_type_manager, ModifierManager const& modifier_manager, ast::NodeCPtr root);
+		bool load_buildings_file(GoodManager const& good_manager,
+			ProductionTypeManager const& production_type_manager,
+			ModifierManager const& modifier_manager, ast::NodeCPtr root);
 
 		bool generate_province_buildings(Province& province) const;
 	};

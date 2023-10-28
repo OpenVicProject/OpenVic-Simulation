@@ -26,7 +26,9 @@ void ProvinceSet::lock(bool log) {
 		Logger::error("Failed to lock province set - already locked!");
 	} else {
 		locked = true;
-		if (log) Logger::info("Locked province set with ", size(), " provinces");
+		if (log) {
+			Logger::info("Locked province set with ", size(), " provinces");
+		}
 	}
 }
 
@@ -73,6 +75,8 @@ bool Region::get_meta() const {
 }
 
 colour_t Region::get_colour() const {
-	if (empty()) return FULL_COLOUR << 16;
+	if (empty()) {
+		return FULL_COLOUR << 16;
+	}
 	return get_provinces().front()->get_colour();
 }

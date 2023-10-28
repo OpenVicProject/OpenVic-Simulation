@@ -11,7 +11,9 @@
 namespace OpenVic::Windows {
 	inline std::wstring convert(std::string_view as) {
 		// deal with trivial case of empty string
-		if (as.empty()) return std::wstring();
+		if (as.empty()) {
+			return std::wstring();
+		}
 
 		// determine required length of new string
 		size_t length = ::MultiByteToWideChar(CP_UTF8, 0, as.data(), (int)as.length(), 0, 0);
@@ -28,7 +30,9 @@ namespace OpenVic::Windows {
 
 	inline std::string convert(std::wstring_view as) {
 		// deal with trivial case of empty string
-		if (as.empty()) return std::string();
+		if (as.empty()) {
+			return std::string();
+		}
 
 		// determine required length of new string
 		size_t length = ::WideCharToMultiByte(CP_UTF8, 0, as.data(), (int)as.length(), 0, 0, NULL, NULL);
@@ -51,7 +55,10 @@ namespace OpenVic::Windows {
 
 	template<typename T>
 	concept has_data = requires(T t) {
-		{ t.data() } -> std::convertible_to<const typename T::value_type*>;
+		{
+			t.data()
+		}
+		-> std::convertible_to<const typename T::value_type*>;
 	};
 
 	class RegistryKey {
@@ -61,7 +68,9 @@ namespace OpenVic::Windows {
 		}
 
 		template<either_char_type CHAR_T, either_char_type CHAR_T2>
-		RegistryKey(HKEY parent_key_handle, std::basic_string_view<CHAR_T> child_key_name, std::basic_string_view<CHAR_T2> value_name) {
+		RegistryKey(HKEY parent_key_handle,
+			std::basic_string_view<CHAR_T> child_key_name,
+			std::basic_string_view<CHAR_T2> value_name) {
 			open_key(parent_key_handle, child_key_name);
 			query_key(value_name);
 		}
@@ -80,29 +89,32 @@ namespace OpenVic::Windows {
 
 		template<either_char_type CHAR_T>
 		LSTATUS open_key(HKEY parent_key_handle, std::basic_string_view<CHAR_T> key_path) {
-			if (is_open())
+			if (is_open()) {
 				close_key();
-			if constexpr (std::is_same_v<CHAR_T, char>)
+			}
+			if constexpr (std::is_same_v<CHAR_T, char>) {
 				return RegOpenKeyExW(parent_key_handle, convert(key_path).data(), REG_NONE, KEY_READ, &_key_handle);
-			else
+			} else {
 				return RegOpenKeyExW(parent_key_handle, key_path.data(), REG_NONE, KEY_READ, &_key_handle);
+			}
 		}
 
 		bool is_predefined() const {
 			return (_key_handle == HKEY_CURRENT_USER) ||
-				   (_key_handle == HKEY_LOCAL_MACHINE) ||
-				   (_key_handle == HKEY_CLASSES_ROOT) ||
-				   (_key_handle == HKEY_CURRENT_CONFIG) ||
-				   (_key_handle == HKEY_CURRENT_USER_LOCAL_SETTINGS) ||
-				   (_key_handle == HKEY_PERFORMANCE_DATA) ||
-				   (_key_handle == HKEY_PERFORMANCE_NLSTEXT) ||
-				   (_key_handle == HKEY_PERFORMANCE_TEXT) ||
-				   (_key_handle == HKEY_USERS);
+				(_key_handle == HKEY_LOCAL_MACHINE) ||
+				(_key_handle == HKEY_CLASSES_ROOT) ||
+				(_key_handle == HKEY_CURRENT_CONFIG) ||
+				(_key_handle == HKEY_CURRENT_USER_LOCAL_SETTINGS) ||
+				(_key_handle == HKEY_PERFORMANCE_DATA) ||
+				(_key_handle == HKEY_PERFORMANCE_NLSTEXT) ||
+				(_key_handle == HKEY_PERFORMANCE_TEXT) ||
+				(_key_handle == HKEY_USERS);
 		}
 
 		LSTATUS close_key() {
-			if (!is_open() || is_predefined())
+			if (!is_open() || is_predefined()) {
 				return ERROR_SUCCESS;
+			}
 			auto result = RegCloseKey(_key_handle);
 			_key_handle = nullptr;
 			return result;
@@ -131,8 +143,9 @@ namespace OpenVic::Windows {
 			close_key();
 
 			std::size_t first_null = _value.find_first_of(L'\0');
-			if (first_null != std::string::npos)
+			if (first_null != std::string::npos) {
 				_value.resize(first_null);
+			}
 
 			return result;
 		}

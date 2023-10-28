@@ -147,15 +147,17 @@ bool PopManager::add_pop_type(std::string_view identifier, colour_t colour, PopT
 		Logger::error("Invalid pop type merge max size for ", identifier, ": ", merge_max_size);
 		return false;
 	}
-	return pop_types.add_item({ identifier, colour, strata, sprite, std::move(life_needs), std::move(everyday_needs),
-		std::move(luxury_needs), std::move(rebel_units), max_size, merge_max_size, state_capital_only, demote_migrant,
-		is_artisan, is_slave });
+	return pop_types.add_item({
+		identifier, colour, strata, sprite, std::move(life_needs), std::move(everyday_needs), std::move(luxury_needs),
+		std::move(rebel_units), max_size, merge_max_size, state_capital_only, demote_migrant, is_artisan, is_slave
+	});
 }
 
 /* REQUIREMENTS:
  * POP-3, POP-4, POP-5, POP-6, POP-7, POP-8, POP-9, POP-10, POP-11, POP-12, POP-13, POP-14
  */
-bool PopManager::load_pop_type_file(std::string_view filestem, UnitManager const& unit_manager, GoodManager const& good_manager, ast::NodeCPtr root) {
+bool PopManager::load_pop_type_file(std::string_view filestem, UnitManager const& unit_manager,
+	GoodManager const& good_manager, ast::NodeCPtr root) {
 	static const string_map_t<PopType::strata_t> strata_map = {
 		{ "poor", PopType::strata_t::POOR },
 		{ "middle", PopType::strata_t::MIDDLE },
@@ -209,13 +211,15 @@ bool PopManager::load_pop_type_file(std::string_view filestem, UnitManager const
 		"unemployment", ZERO_OR_ONE, success_callback
 	)(root);
 
-	ret &= add_pop_type(filestem, colour, strata, sprite, std::move(life_needs), std::move(everyday_needs),
-		std::move(luxury_needs), std::move(rebel_units), max_size, merge_max_size, state_capital_only, demote_migrant,
-		is_artisan, is_slave);
+	ret &= add_pop_type(
+		filestem, colour, strata, sprite, std::move(life_needs), std::move(everyday_needs), std::move(luxury_needs),
+		std::move(rebel_units), max_size, merge_max_size, state_capital_only, demote_migrant, is_artisan, is_slave
+	);
 	return ret;
 }
 
-bool PopManager::load_pop_into_province(Province& province, std::string_view pop_type_identifier, ast::NodeCPtr pop_node) const {
+bool PopManager::load_pop_into_province(Province& province, std::string_view pop_type_identifier,
+	ast::NodeCPtr pop_node) const {
 	PopType const* type = get_pop_type_by_identifier(pop_type_identifier);
 	Culture const* culture = nullptr;
 	Religion const* religion = nullptr;
@@ -231,7 +235,8 @@ bool PopManager::load_pop_into_province(Province& province, std::string_view pop
 	if (type != nullptr && culture != nullptr && religion != nullptr && size > 0) {
 		ret &= province.add_pop({ *type, *culture, *religion, size });
 	} else {
-		Logger::warning("Some pop arguments are invalid: province = ", province, ", type = ", type, ", culture = ", culture, ", religion = ", religion, ", size = ", size);
+		Logger::warning("Some pop arguments are invalid: province = ", province, ", type = ", type,
+			", culture = ", culture, ", religion = ", religion, ", size = ", size);
 	}
 	return ret;
 }

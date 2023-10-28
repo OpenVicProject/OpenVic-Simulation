@@ -24,7 +24,8 @@ ModifierValue const& LeaderTrait::get_modifiers() const {
 
 LeaderTraitManager::LeaderTraitManager() : leader_traits { "leader trait" } {}
 
-bool LeaderTraitManager::add_leader_trait(std::string_view identifier, LeaderTrait::trait_type_t type, ModifierValue&& modifiers) {
+bool LeaderTraitManager::add_leader_trait(std::string_view identifier,
+	LeaderTrait::trait_type_t type, ModifierValue&& modifiers) {
 	if (identifier.empty()) {
 		Logger::error("Invalid leader trait identifier - empty!");
 		return false;
