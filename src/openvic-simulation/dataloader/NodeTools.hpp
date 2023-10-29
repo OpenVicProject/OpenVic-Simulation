@@ -27,19 +27,13 @@ namespace OpenVic {
 	namespace NodeTools {
 
 		template<typename Fn, typename Return = void, typename... Args>
-		concept Functor = requires(Fn&& fn, Args&& ... args) {
-			{
-				std::invoke(std::forward<Fn>(fn), std::forward<Args>(args)...)
-			}
-			-> std::same_as<Return>;
+		concept Functor = requires(Fn&& fn, Args&&... args) {
+			{ std::invoke(std::forward<Fn>(fn), std::forward<Args>(args)...) } -> std::same_as<Return>;
 		};
 
 		template<typename Fn, typename Return = void, typename... Args>
-		concept FunctorConvertible = requires(Fn&& fn, Args&& ... args) {
-			{
-				std::invoke(std::forward<Fn>(fn), std::forward<Args>(args)...)
-			}
-			-> std::convertible_to<Return>;
+		concept FunctorConvertible = requires(Fn&& fn, Args&&... args) {
+			{ std::invoke(std::forward<Fn>(fn), std::forward<Args>(args)...) } -> std::convertible_to<Return>;
 		};
 
 		template<typename Fn, typename... Args>
@@ -88,7 +82,10 @@ namespace OpenVic {
 					val <= static_cast<int64_t>(std::numeric_limits<T>::max())) {
 					return callback(val);
 				}
-				Logger::error("Invalid int: ", val, " (valid range: [", static_cast<int64_t>(std::numeric_limits<T>::lowest()), ", ", static_cast<int64_t>(std::numeric_limits<T>::max()), "])");
+				Logger::error(
+					"Invalid int: ", val, " (valid range: [", static_cast<int64_t>(std::numeric_limits<T>::lowest()), ", ",
+					static_cast<int64_t>(std::numeric_limits<T>::max()), "])"
+				);
 				return false;
 			});
 		}
@@ -99,7 +96,9 @@ namespace OpenVic {
 				if (val <= static_cast<uint64_t>(std::numeric_limits<T>::max())) {
 					return callback(val);
 				}
-				Logger::error("Invalid uint: ", val, " (valid range: [0, ", static_cast<uint64_t>(std::numeric_limits<T>::max()), "])");
+				Logger::error(
+					"Invalid uint: ", val, " (valid range: [0, ", static_cast<uint64_t>(std::numeric_limits<T>::max()), "])"
+				);
 				return false;
 			});
 		}
@@ -159,8 +158,10 @@ namespace OpenVic {
 		using enum dictionary_entry_t::expected_count_t;
 		using key_map_t = string_map_t<dictionary_entry_t>;
 
-		bool add_key_map_entry(key_map_t& key_map, std::string_view key,
-			dictionary_entry_t::expected_count_t expected_count, node_callback_t callback);
+		bool add_key_map_entry(
+			key_map_t& key_map, std::string_view key, dictionary_entry_t::expected_count_t expected_count,
+			node_callback_t callback
+		);
 		bool remove_key_map_entry(key_map_t& key_map, std::string_view key);
 		key_value_callback_t dictionary_keys_callback(key_map_t& key_map, key_value_callback_t default_callback);
 		bool check_key_map_counts(key_map_t& key_map);
@@ -169,30 +170,35 @@ namespace OpenVic {
 			return true;
 		}
 		template<typename... Args>
-		bool add_key_map_entries(key_map_t& key_map, std::string_view key,
-			dictionary_entry_t::expected_count_t expected_count, NodeCallback auto callback, Args... args) {
+		bool add_key_map_entries(
+			key_map_t& key_map, std::string_view key, dictionary_entry_t::expected_count_t expected_count,
+			NodeCallback auto callback, Args... args
+		) {
 			bool ret = add_key_map_entry(key_map, key, expected_count, callback);
 			ret &= add_key_map_entries(key_map, args...);
 			return ret;
 		}
 
-		node_callback_t expect_dictionary_key_map_and_length_and_default(key_map_t key_map,
-			length_callback_t length_callback, key_value_callback_t default_callback);
+		node_callback_t expect_dictionary_key_map_and_length_and_default(
+			key_map_t key_map, length_callback_t length_callback, key_value_callback_t default_callback
+		);
 		node_callback_t expect_dictionary_key_map_and_length(key_map_t key_map, length_callback_t length_callback);
 		node_callback_t expect_dictionary_key_map_and_default(key_map_t key_map, key_value_callback_t default_callback);
 		node_callback_t expect_dictionary_key_map(key_map_t key_map);
 
 		template<typename... Args>
-		NodeCallback auto expect_dictionary_key_map_and_length_and_default(key_map_t key_map,
-			length_callback_t length_callback, key_value_callback_t default_callback, Args... args) {
+		NodeCallback auto expect_dictionary_key_map_and_length_and_default(
+			key_map_t key_map, length_callback_t length_callback, key_value_callback_t default_callback, Args... args
+		) {
 			// TODO - pass return value back up (part of big key_map_t rewrite?)
 			add_key_map_entries(key_map, args...);
 			return expect_dictionary_key_map_and_length_and_default(std::move(key_map), length_callback, default_callback);
 		}
 
 		template<typename... Args>
-		NodeCallback auto expect_dictionary_keys_and_length_and_default(LengthCallback auto length_callback,
-			KeyValueCallback auto default_callback, Args... args) {
+		NodeCallback auto expect_dictionary_keys_and_length_and_default(
+			LengthCallback auto length_callback, KeyValueCallback auto default_callback, Args... args
+		) {
 			return expect_dictionary_key_map_and_length_and_default({}, length_callback, default_callback, args...);
 		}
 
@@ -208,15 +214,14 @@ namespace OpenVic {
 
 		template<typename... Args>
 		NodeCallback auto expect_dictionary_keys(Args... args) {
-			return expect_dictionary_key_map_and_length_and_default({}, default_length_callback, key_value_invalid_callback, args...);
+			return expect_dictionary_key_map_and_length_and_default(
+				{}, default_length_callback, key_value_invalid_callback, args...
+			);
 		}
 
 		template<typename T>
 		concept Reservable = requires(T& t) {
-			{
-				t.size()
-			}
-			-> std::same_as<size_t>;
+			{ t.size() } -> std::same_as<size_t>;
 			t.reserve(size_t {});
 		};
 		template<Reservable T>
@@ -288,9 +293,7 @@ namespace OpenVic {
 		}
 
 		template<typename T>
-		requires requires(T& t) {
-			t += T {};
-		}
+		requires requires(T& t) { t += T {}; }
 		Callback<T> auto add_variable_callback(T& var) {
 			return [&var](T val) -> bool {
 				var += val;
@@ -299,9 +302,7 @@ namespace OpenVic {
 		}
 
 		template<typename T>
-		requires requires(T& t) {
-			t++;
-		}
+		requires requires(T& t) { t++; }
 		KeyValueCallback auto increment_callback(T& var) {
 			return [&var](std::string_view, ast::NodeCPtr) -> bool {
 				var++;

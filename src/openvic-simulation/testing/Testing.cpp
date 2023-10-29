@@ -1,6 +1,8 @@
-#include <testing/Testing.hpp>
-#include <testing/TestScript.hpp>
+#include "Testing.hpp"
+
 #include <fstream>
+
+#include "openvic-simulation/testing/TestScript.hpp"
 
 using namespace OpenVic;
 

@@ -5,8 +5,7 @@ using namespace OpenVic::NodeTools;
 
 IssueGroup::IssueGroup(std::string_view new_identifier) : HasIdentifier { new_identifier } {}
 
-Issue::Issue(std::string_view identifier, IssueGroup const& group)
-	: HasIdentifier { identifier }, group { group } {}
+Issue::Issue(std::string_view identifier, IssueGroup const& group) : HasIdentifier { identifier }, group { group } {}
 
 IssueGroup const& Issue::get_group() const {
 	return group;
@@ -45,8 +44,9 @@ size_t Reform::get_ordinal() const {
 	return ordinal;
 }
 
-IssueManager::IssueManager() : issue_groups { "issue groups" }, issues { "issues" },
-	reform_types { "reform types" }, reform_groups { "reform groups" }, reforms { "reforms" } {}
+IssueManager::IssueManager()
+  : issue_groups { "issue groups" }, issues { "issues" }, reform_types { "reform types" }, reform_groups { "reform groups" },
+	reforms { "reforms" } {}
 
 bool IssueManager::add_issue_group(std::string_view identifier) {
 	if (identifier.empty()) {
@@ -116,12 +116,13 @@ bool IssueManager::_load_issue_group(size_t& expected_issues, std::string_view i
 }
 
 bool IssueManager::_load_issue(std::string_view identifier, IssueGroup const* group, ast::NodeCPtr node) {
-	//TODO: policy modifiers, policy rule changes
+	// TODO: policy modifiers, policy rule changes
 	return add_issue(identifier, group);
 }
 
-bool IssueManager::_load_reform_group(size_t& expected_reforms, std::string_view identifier,
-	ReformType const* type, ast::NodeCPtr node) {
+bool IssueManager::_load_reform_group(
+	size_t& expected_reforms, std::string_view identifier, ReformType const* type, ast::NodeCPtr node
+) {
 	bool ordered = false, administrative = false;
 	bool ret = expect_dictionary_keys_and_default(
 		increment_callback(expected_reforms),
@@ -133,7 +134,7 @@ bool IssueManager::_load_reform_group(size_t& expected_reforms, std::string_view
 }
 
 bool IssueManager::_load_reform(size_t& ordinal, std::string_view identifier, ReformGroup const* group, ast::NodeCPtr node) {
-	//TODO: conditions to allow, policy modifiers, policy rule changes
+	// TODO: conditions to allow, policy modifiers, policy rule changes
 	return add_reform(identifier, group, ordinal);
 }
 
@@ -145,16 +146,18 @@ bool IssueManager::_load_reform(size_t& ordinal, std::string_view identifier, Re
  * POL-84, POL-85, POL-86, POL-87, POL-89, POL-90, POL-91, POL-92, POL-93, POL-95, POL-96, POL-97, POL-98,
  * POL-99, POL-101, POL-102, POL-103, POL-104, POL-105, POL-107, POL-108, POL-109, POL-110, POL-111, POL-113,
  * POL-113, POL-114, POL-115, POL-116
-*/
+ */
 bool IssueManager::load_issues_file(ast::NodeCPtr root) {
 	size_t expected_issue_groups = 0;
 	size_t expected_reform_groups = 0;
 	bool ret = expect_dictionary_reserve_length(reform_types,
 		[this, &expected_issue_groups, &expected_reform_groups](std::string_view key, ast::NodeCPtr value) -> bool {
-			if (key == "party_issues")
+			if (key == "party_issues") {
 				return expect_length(add_variable_callback(expected_issue_groups))(value);
-			else return expect_length(add_variable_callback(expected_reform_groups))(value) & add_reform_type(
-				key, key == "economic_reforms" || "education_reforms" || "military_reforms");
+			} else {
+				return expect_length(add_variable_callback(expected_reform_groups))(value) &
+					add_reform_type(key, key == "economic_reforms" || "education_reforms" || "military_reforms");
+			}
 		}
 	)(root);
 	lock_reform_types();
@@ -198,7 +201,9 @@ bool IssueManager::load_issues_file(ast::NodeCPtr root) {
 				ReformGroup const* reform_group = get_reform_group_by_identifier(group_key);
 				size_t ordinal = 0;
 				return expect_dictionary([this, reform_group, &ordinal](std::string_view key, ast::NodeCPtr value) -> bool {
-					if (key == "next_step_only" || key == "administrative") return true;
+					if (key == "next_step_only" || key == "administrative") {
+						return true;
+					}
 					bool ret = _load_reform(ordinal, key, reform_group, value);
 					ordinal++;
 					return ret;

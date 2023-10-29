@@ -2,8 +2,8 @@
 
 #include <openvic-simulation/GameManager.hpp>
 #include <openvic-simulation/dataloader/Dataloader.hpp>
-#include <openvic-simulation/utility/Logger.hpp>
 #include <openvic-simulation/testing/Testing.hpp>
+#include <openvic-simulation/utility/Logger.hpp>
 
 using namespace OpenVic;
 
@@ -112,7 +112,7 @@ int main(int argc, char const* argv[]) {
 		} else if (strcmp(arg, "-t") == 0) {
 			run_tests = true;
 		} else if (strcmp(arg, "-b") == 0) {
-			if (!_read("-b", "base directory", std::identity{})) {
+			if (!_read("-b", "base directory", std::identity {})) {
 				return -1;
 			}
 		} else if (strcmp(arg, "-s") == 0) {

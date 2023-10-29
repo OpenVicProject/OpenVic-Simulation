@@ -10,11 +10,10 @@
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
 
 #define UNIT_PARAMS \
-	Unit::icon_t icon, std::string_view sprite, bool active, std::string_view unit_type, \
-	bool floating_flag, uint32_t priority, fixed_point_t max_strength, fixed_point_t default_organisation, \
-	fixed_point_t maximum_speed, fixed_point_t weighted_value, std::string_view move_sound, \
-	std::string_view select_sound, Timespan build_time, Good::good_map_t &&build_cost, \
-	fixed_point_t supply_consumption, Good::good_map_t &&supply_cost
+	Unit::icon_t icon, std::string_view sprite, bool active, std::string_view unit_type, bool floating_flag, \
+	uint32_t priority, fixed_point_t max_strength, fixed_point_t default_organisation, fixed_point_t maximum_speed, \
+	fixed_point_t weighted_value, std::string_view move_sound, std::string_view select_sound, Timespan build_time, \
+	Good::good_map_t&& build_cost, fixed_point_t supply_consumption, Good::good_map_t&& supply_cost
 
 #define LAND_PARAMS \
 	bool primary_culture, std::string_view sprite_override, std::string_view sprite_mount, \
@@ -30,10 +29,7 @@ namespace OpenVic {
 	struct Unit : HasIdentifier {
 		using icon_t = uint32_t;
 
-		enum struct type_t {
-			LAND,
-			NAVAL
-		};
+		enum struct type_t { LAND, NAVAL };
 
 	private:
 		const type_t type;

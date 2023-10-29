@@ -69,8 +69,10 @@ bool BMP::read_header() {
 	// Validate sizes and dimensions
 	// TODO - image_size_bytes can be 0 for non-compressed BMPs
 	if (header.file_size != header.offset + header.image_size_bytes) {
-		Logger::error("Invalid BMP memory sizes: file size = ", header.file_size, " != ", header.offset + header.image_size_bytes,
-			" = ", header.offset, " + ", header.image_size_bytes, " = image data offset + image data size");
+		Logger::error(
+			"Invalid BMP memory sizes: file size = ", header.file_size, " != ", header.offset + header.image_size_bytes, " = ",
+			header.offset, " + ", header.image_size_bytes, " = image data offset + image data size"
+		);
 		header_validated = false;
 	}
 	// TODO - support negative widths (i.e. horizontal flip)
@@ -91,24 +93,25 @@ bool BMP::read_header() {
 #define STR(x) #x
 	static const std::set<uint16_t> BITS_PER_PIXEL { VALID_BITS_PER_PIXEL };
 	if (!BITS_PER_PIXEL.contains(header.bits_per_pixel)) {
-		Logger::error("Invalid BMP bits per pixel: ", header.bits_per_pixel,
-			" (must be one of " STR(VALID_BITS_PER_PIXEL) ")");
+		Logger::error("Invalid BMP bits per pixel: ", header.bits_per_pixel, " (must be one of " STR(VALID_BITS_PER_PIXEL) ")");
 		header_validated = false;
 	}
 #undef VALID_BITS_PER_PIXEL
 #undef STR
 	static constexpr uint16_t PALETTE_BITS_PER_PIXEL_LIMIT = 8;
 	if (header.num_colours != 0 && header.bits_per_pixel > PALETTE_BITS_PER_PIXEL_LIMIT) {
-		Logger::error("Invalid BMP palette size: ", header.num_colours,
-			" (should be 0 as bits per pixel is ", header.bits_per_pixel, " > 8)");
+		Logger::error(
+			"Invalid BMP palette size: ", header.num_colours, " (should be 0 as bits per pixel is ", header.bits_per_pixel,
+			" > 8)"
+		);
 		header_validated = false;
 	}
 	// TODO - validate important_colours
 
 	palette_size = header.bits_per_pixel > PALETTE_BITS_PER_PIXEL_LIMIT ? 0
 		// Use header.num_colours if it's greater than 0 and at most 1 << header.bits_per_pixel
-		: 0 < header.num_colours && header.num_colours - 1 >> header.bits_per_pixel == 0 ? header.num_colours
-		: 1 << header.bits_per_pixel;
+		: (0 < header.num_colours && header.num_colours - 1 >> header.bits_per_pixel == 0
+		? header.num_colours : 1 << header.bits_per_pixel);
 
 	const uint32_t expected_offset = palette_size * PALETTE_COLOUR_SIZE + sizeof(header);
 	if (header.offset != expected_offset) {

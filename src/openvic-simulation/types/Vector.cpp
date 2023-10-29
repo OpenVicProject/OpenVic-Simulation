@@ -10,7 +10,7 @@ constexpr vec2_t<T>::vec2_t(T new_x, T new_y) : x { new_x }, y { new_y } {}
 
 template<typename T>
 constexpr vec2_t<T> vec2_t<T>::abs() const {
-	return { };
+	return {};
 }
 
 template<typename T>

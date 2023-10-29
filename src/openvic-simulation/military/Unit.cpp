@@ -2,23 +2,24 @@
 
 #define UNIT_ARGS \
 	icon, sprite, active, unit_type, floating_flag, priority, max_strength, default_organisation, maximum_speed, \
-	weighted_value, move_sound, select_sound, build_time, std::move(build_cost), supply_consumption, std::move(supply_cost)
+	weighted_value, move_sound, select_sound, build_time, std::move(build_cost), supply_consumption, \
+	std::move(supply_cost)
 
 #define LAND_ARGS \
-	primary_culture, sprite_override, sprite_mount, sprite_mount_attach_node, \
-	reconnaissance, attack, defence, discipline, support, maneuver, siege
+	primary_culture, sprite_override, sprite_mount, sprite_mount_attach_node, reconnaissance, attack, defence, discipline, \
+	support, maneuver, siege
 
 #define NAVY_ARGS \
-	naval_icon, sail, transport, capital, colonial_points, build_overseas, min_port_level, \
-	limit_per_port, supply_consumption_score, hull, gun_power, fire_range, evasion, torpedo_attack
+	naval_icon, sail, transport, capital, colonial_points, build_overseas, min_port_level, limit_per_port, \
+	supply_consumption_score, hull, gun_power, fire_range, evasion, torpedo_attack
 
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;
 
 Unit::Unit(
 	std::string_view identifier, type_t type, UNIT_PARAMS
-) : HasIdentifier { identifier }, icon { icon }, type { type }, sprite { sprite }, active { active },
-	unit_type { unit_type }, floating_flag { floating_flag }, priority { priority }, max_strength { max_strength },
+) : HasIdentifier { identifier }, icon { icon }, type { type }, sprite { sprite }, active { active }, unit_type { unit_type },
+	floating_flag { floating_flag }, priority { priority }, max_strength { max_strength },
 	default_organisation { default_organisation }, maximum_speed { maximum_speed }, weighted_value { weighted_value },
 	move_sound { move_sound }, select_sound { select_sound }, build_time { build_time }, build_cost { std::move(build_cost) },
 	supply_consumption { supply_consumption }, supply_cost { std::move(supply_cost) } {}
@@ -93,10 +94,10 @@ Good::good_map_t const& Unit::get_supply_cost() const {
 
 LandUnit::LandUnit(
 	std::string_view identifier, UNIT_PARAMS, LAND_PARAMS
-) : Unit { identifier, type_t::LAND, UNIT_ARGS }, primary_culture { primary_culture },
-	sprite_override { sprite_override }, sprite_mount { sprite_mount }, sprite_mount_attach_node { sprite_mount_attach_node },
-	reconnaissance { reconnaissance }, attack { attack }, defence { defence }, discipline { discipline }, support { support },
-	maneuver { maneuver }, siege { siege } {}
+) : Unit { identifier, type_t::LAND, UNIT_ARGS }, primary_culture { primary_culture }, sprite_override { sprite_override },
+	sprite_mount { sprite_mount }, sprite_mount_attach_node { sprite_mount_attach_node }, reconnaissance { reconnaissance },
+	attack { attack }, defence { defence }, discipline { discipline }, support { support }, maneuver { maneuver },
+	siege { siege } {}
 
 bool LandUnit::get_primary_culture() const {
 	return primary_culture;
@@ -144,11 +145,11 @@ fixed_point_t LandUnit::get_siege() const {
 
 NavalUnit::NavalUnit(
 	std::string_view identifier, UNIT_PARAMS, NAVY_PARAMS
-) : Unit { identifier, type_t::NAVAL, UNIT_ARGS }, naval_icon { naval_icon }, sail { sail },
-	transport { transport }, capital { capital }, colonial_points { colonial_points },
-	build_overseas { build_overseas }, min_port_level { min_port_level }, limit_per_port { limit_per_port },
-	supply_consumption_score { supply_consumption_score }, hull { hull }, gun_power { gun_power },
-	fire_range { fire_range }, evasion { evasion }, torpedo_attack { torpedo_attack } {};
+) : Unit { identifier, type_t::NAVAL, UNIT_ARGS }, naval_icon { naval_icon }, sail { sail }, transport { transport },
+	capital { capital }, colonial_points { colonial_points }, build_overseas { build_overseas },
+	min_port_level { min_port_level }, limit_per_port { limit_per_port },
+	supply_consumption_score { supply_consumption_score }, hull { hull }, gun_power { gun_power }, fire_range { fire_range },
+	evasion { evasion }, torpedo_attack { torpedo_attack } {};
 
 NavalUnit::icon_t NavalUnit::get_naval_icon() const {
 	return naval_icon;
@@ -220,7 +221,7 @@ bool UnitManager::_check_shared_parameters(std::string_view identifier, UNIT_PAR
 		return false;
 	}
 
-	//TODO check that icon and sprite exist
+	// TODO check that icon and sprite exist
 
 	return true;
 }
@@ -238,7 +239,7 @@ bool UnitManager::add_naval_unit(std::string_view identifier, UNIT_PARAMS, NAVY_
 		return false;
 	}
 
-	//TODO: check that icon and sounds exist
+	// TODO: check that icon and sounds exist
 
 	return units.add_item(NavalUnit { identifier, UNIT_ARGS, NAVY_ARGS });
 }
@@ -256,11 +257,8 @@ bool UnitManager::load_unit_file(GoodManager const& good_manager, ast::NodeCPtr 
 		Good::good_map_t build_cost, supply_cost;
 
 		using enum Unit::type_t;
-		static const string_map_t<Unit::type_t> type_map = {
-			{ "land", LAND }, { "naval", NAVAL }
-		};
-		bool ret =
-			expect_key("type", expect_identifier(expect_mapped_string(type_map, assign_variable_callback(type))))(value);
+		static const string_map_t<Unit::type_t> type_map = { { "land", LAND }, { "naval", NAVAL } };
+		bool ret = expect_key("type", expect_identifier(expect_mapped_string(type_map, assign_variable_callback(type))))(value);
 
 		if (!ret) {
 			Logger::error("Failed to read type for unit: ", key);
@@ -268,7 +266,7 @@ bool UnitManager::load_unit_file(GoodManager const& good_manager, ast::NodeCPtr 
 		}
 
 		key_map_t key_map;
-		//shared
+		// shared
 		ret &= add_key_map_entries(key_map,
 			"icon", ONE_EXACTLY, expect_uint(assign_variable_callback(icon)),
 			"type", ONE_EXACTLY, success_callback,
@@ -347,9 +345,7 @@ bool UnitManager::load_unit_file(GoodManager const& good_manager, ast::NodeCPtr 
 
 			return ret;
 		}
-		default:
-			Logger::error("Unknown unit type for ", key, ": ", static_cast<int>(type));
-			return false;
+		default: Logger::error("Unknown unit type for ", key, ": ", static_cast<int>(type)); return false;
 		}
 	})(root);
 }

@@ -12,26 +12,13 @@ namespace OpenVic {
 	struct Define : HasIdentifier {
 		friend struct DefineManager;
 
-		enum class Type : unsigned char {
-			None,
-			Country,
-			Economy,
-			Military,
-			Diplomacy,
-			Pops,
-			Ai,
-			Graphics
-		};
+		enum class Type : unsigned char { None, Country, Economy, Military, Diplomacy, Pops, Ai, Graphics };
 
 	private:
 		std::string HASID_PROPERTY(value);
 		Type HASID_PROPERTY(type);
 
-		Define(
-			std::string_view new_identifier,
-			std::string&& new_value,
-			Type new_type
-		);
+		Define(std::string_view new_identifier, std::string&& new_value, Type new_type);
 
 	public:
 		Define(Define&&) = default;

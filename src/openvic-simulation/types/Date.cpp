@@ -89,8 +89,7 @@ Timespan Timespan::fromYears(day_t num) {
 }
 
 Timespan Timespan::fromMonths(day_t num) {
-	return (num / Date::MONTHS_IN_YEAR) * Date::DAYS_IN_YEAR +
-		Date::DAYS_UP_TO_MONTH[num % Date::MONTHS_IN_YEAR];
+	return (num / Date::MONTHS_IN_YEAR) * Date::DAYS_IN_YEAR + Date::DAYS_UP_TO_MONTH[num % Date::MONTHS_IN_YEAR];
 }
 
 Timespan Timespan::fromDays(day_t num) {
@@ -112,8 +111,11 @@ Timespan::day_t const* Date::DAYS_UP_TO_MONTH = generate_days_up_to_month();
 Timespan::day_t const* Date::generate_days_up_to_month() {
 	static Timespan::day_t days_up_to_month[MONTHS_IN_YEAR];
 	Timespan::day_t days = 0;
-	for (int month = 0; month < MONTHS_IN_YEAR;
-		days_up_to_month[month] = days, days += DAYS_IN_MONTH[month++]);
+	int month = 0;
+	while (month < MONTHS_IN_YEAR) {
+		days_up_to_month[month] = days;
+		days += DAYS_IN_MONTH[month++];
+	}
 	assert(days == DAYS_IN_YEAR);
 	return days_up_to_month;
 }
@@ -123,9 +125,11 @@ Date::month_t const* Date::MONTH_FROM_DAY_IN_YEAR = generate_month_from_day_in_y
 Date::month_t const* Date::generate_month_from_day_in_year() {
 	static month_t month_from_day_in_year[DAYS_IN_YEAR];
 	Timespan::day_t days_left = 0;
-	for (int day = 0, month = 0; day < DAYS_IN_YEAR;
-		days_left = (days_left > 0 ? days_left : DAYS_IN_MONTH[month++]) - 1,
-		month_from_day_in_year[day++] = month);
+	int day = 0, month = 0;
+	while (day < DAYS_IN_YEAR) {
+		days_left = (days_left > 0 ? days_left : DAYS_IN_MONTH[month++]) - 1;
+		month_from_day_in_year[day++] = month;
+	}
 	assert(days_left == 0);
 	assert(month_from_day_in_year[DAYS_IN_YEAR - 1] == MONTHS_IN_YEAR);
 	return month_from_day_in_year;
@@ -211,8 +215,8 @@ Date::operator std::string() const {
 }
 
 std::ostream& OpenVic::operator<<(std::ostream& out, Date const& date) {
-	return out << static_cast<int>(date.getYear()) << Date::SEPARATOR_CHARACTER
-		<< static_cast<int>(date.getMonth()) << Date::SEPARATOR_CHARACTER << static_cast<int>(date.getDay());
+	return out << static_cast<int>(date.getYear()) << Date::SEPARATOR_CHARACTER << static_cast<int>(date.getMonth())
+		<< Date::SEPARATOR_CHARACTER << static_cast<int>(date.getDay());
 }
 
 // Parsed from string of the form YYYY.MM.DD
@@ -227,8 +231,9 @@ Date Date::from_string(char const* const str, char const* const end, bool* succe
 
 	if (str == nullptr || end <= str) {
 		if (!quiet) {
-			Logger::error("Invalid string start/end pointers: ", static_cast<void const*>(str),
-				" - ", static_cast<void const*>(end));
+			Logger::error(
+				"Invalid string start/end pointers: ", static_cast<void const*>(str), " - ", static_cast<void const*>(end)
+			);
 		}
 		if (successful != nullptr) {
 			*successful = false;
@@ -237,12 +242,11 @@ Date Date::from_string(char const* const str, char const* const end, bool* succe
 	}
 
 	char const* year_end = str;
-	while (std::isdigit(*year_end) && ++year_end < end);
+	while (std::isdigit(*year_end) && ++year_end < end) {}
 
 	if (year_end <= str) {
 		if (!quiet) {
-			Logger::error("Failed to find year digits in date: ",
-				std::string_view { str, static_cast<size_t>(end - str) });
+			Logger::error("Failed to find year digits in date: ", std::string_view { str, static_cast<size_t>(end - str) });
 		}
 		if (successful != nullptr) {
 			*successful = false;
@@ -267,12 +271,13 @@ Date Date::from_string(char const* const str, char const* const end, bool* succe
 			char const* const month_start = year_end + 1;
 			char const* month_end = month_start;
 			if (month_start < end) {
-				while (std::isdigit(*month_end) && ++month_end < end);
+				while (std::isdigit(*month_end) && ++month_end < end) {}
 			}
 			if (month_start >= month_end) {
 				if (!quiet) {
-					Logger::error("Failed to find month digits in date: ",
-						std::string_view { str, static_cast<size_t>(end - str) });
+					Logger::error(
+						"Failed to find month digits in date: ", std::string_view { str, static_cast<size_t>(end - str) }
+					);
 				}
 				if (successful != nullptr) {
 					*successful = false;
@@ -282,8 +287,7 @@ Date Date::from_string(char const* const str, char const* const end, bool* succe
 				val = StringUtils::string_to_uint64(month_start, month_end, &sub_successful, 10);
 				if (!sub_successful || val < 1 || val > MONTHS_IN_YEAR) {
 					if (!quiet) {
-						Logger::error("Failed to read month: ",
-							std::string_view { str, static_cast<size_t>(end - str) });
+						Logger::error("Failed to read month: ", std::string_view { str, static_cast<size_t>(end - str) });
 					}
 					if (successful != nullptr) {
 						*successful = false;
@@ -295,12 +299,14 @@ Date Date::from_string(char const* const str, char const* const end, bool* succe
 							char const* const day_start = month_end + 1;
 							char const* day_end = day_start;
 							if (day_start < end) {
-								while (std::isdigit(*day_end) && ++day_end < end);
+								while (std::isdigit(*day_end) && ++day_end < end) {}
 							}
 							if (day_start >= day_end) {
 								if (!quiet) {
-									Logger::error("Failed to find day digits in date: ",
-										std::string_view { str, static_cast<size_t>(end - str) });
+									Logger::error(
+										"Failed to find day digits in date: ",
+										std::string_view { str, static_cast<size_t>(end - str) }
+									);
 								}
 								if (successful != nullptr) {
 									*successful = false;
@@ -310,8 +316,9 @@ Date Date::from_string(char const* const str, char const* const end, bool* succe
 								val = StringUtils::string_to_uint64(day_start, day_end, &sub_successful);
 								if (!sub_successful || val < 1 || val > DAYS_IN_MONTH[month - 1]) {
 									if (!quiet) {
-										Logger::error("Failed to read day: ",
-											std::string_view { str, static_cast<size_t>(end - str) });
+										Logger::error(
+											"Failed to read day: ", std::string_view { str, static_cast<size_t>(end - str) }
+										);
 									}
 									if (successful != nullptr) {
 										*successful = false;
@@ -324,7 +331,8 @@ Date Date::from_string(char const* const str, char const* const end, bool* succe
 												"Unexpected string \"",
 												std::string_view { day_end, static_cast<size_t>(end - day_end) },
 												"\" at the end of date ",
-												std::string_view { str, static_cast<size_t>(end - str) });
+												std::string_view { str, static_cast<size_t>(end - str) }
+											);
 										}
 										if (successful != nullptr) {
 											*successful = false;
@@ -334,8 +342,10 @@ Date Date::from_string(char const* const str, char const* const end, bool* succe
 							}
 						} else {
 							if (!quiet) {
-								Logger::error("Unexpected character \"", *month_end, "\" in month of date ",
-									std::string_view { str, static_cast<size_t>(end - str) });
+								Logger::error(
+									"Unexpected character \"", *month_end, "\" in month of date ",
+									std::string_view { str, static_cast<size_t>(end - str) }
+								);
 							}
 							if (successful != nullptr) {
 								*successful = false;
@@ -346,8 +356,10 @@ Date Date::from_string(char const* const str, char const* const end, bool* succe
 			}
 		} else {
 			if (!quiet) {
-				Logger::error("Unexpected character \"", *year_end, "\" in year of date ",
-					std::string_view { str, static_cast<size_t>(end - str) });
+				Logger::error(
+					"Unexpected character \"", *year_end, "\" in year of date ",
+					std::string_view { str, static_cast<size_t>(end - str) }
+				);
 			}
 			if (successful != nullptr) {
 				*successful = false;

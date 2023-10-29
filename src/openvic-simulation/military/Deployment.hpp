@@ -56,8 +56,10 @@ namespace OpenVic {
 		const std::vector<Navy> navies;
 		const std::vector<Leader> leaders;
 
-		Deployment(std::string_view new_path, std::vector<Army>&& new_armies,
-			std::vector<Navy>&& new_navies, std::vector<Leader>&& new_leaders);
+		Deployment(
+			std::string_view new_path, std::vector<Army>&& new_armies, std::vector<Navy>&& new_navies,
+			std::vector<Leader>&& new_leaders
+		);
 
 	public:
 		const std::vector<Army>& get_armies() const;
@@ -72,8 +74,9 @@ namespace OpenVic {
 	public:
 		DeploymentManager();
 
-		bool add_deployment(std::string_view path, std::vector<Army>&& armies,
-			std::vector<Navy>&& navies, std::vector<Leader>&& leaders);
+		bool add_deployment(
+			std::string_view path, std::vector<Army>&& armies, std::vector<Navy>&& navies, std::vector<Leader>&& leaders
+		);
 		IDENTIFIER_REGISTRY_ACCESSORS(deployment);
 
 		bool load_oob_file(GameManager& game_manager, std::string_view path, ast::NodeCPtr root);

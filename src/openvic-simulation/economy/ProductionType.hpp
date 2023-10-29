@@ -16,11 +16,7 @@ namespace OpenVic {
 	struct EmployedPop {
 		friend struct ProductionTypeManager;
 
-		enum struct effect_t {
-			INPUT,
-			OUTPUT,
-			THROUGHPUT
-		};
+		enum struct effect_t { INPUT, OUTPUT, THROUGHPUT };
 
 	private:
 		PopType const* pop_type; // poptype
@@ -29,7 +25,9 @@ namespace OpenVic {
 		fixed_point_t effect_multiplier;
 		fixed_point_t amount;
 
-		EmployedPop(PopType const* pop_type, bool artisan, effect_t effect, fixed_point_t effect_multiplier, fixed_point_t amount);
+		EmployedPop(
+			PopType const* pop_type, bool artisan, effect_t effect, fixed_point_t effect_multiplier, fixed_point_t amount
+		);
 
 	public:
 		EmployedPop() = default;
@@ -52,11 +50,7 @@ namespace OpenVic {
 	private:
 		const EmployedPop owner;
 		const std::vector<EmployedPop> employees;
-		const enum struct type_t {
-			FACTORY,
-			RGO,
-			ARTISAN
-		} type;
+		const enum struct type_t { FACTORY, RGO, ARTISAN } type;
 		const Pop::pop_size_t workforce;
 
 		const Good::good_map_t input_goods;
@@ -96,10 +90,13 @@ namespace OpenVic {
 	private:
 		IdentifierRegistry<ProductionType> production_types;
 
-		NodeTools::node_callback_t _expect_employed_pop(GoodManager const& good_manager,
-			PopManager const& pop_manager, NodeTools::callback_t<EmployedPop&&> cb);
-		NodeTools::node_callback_t _expect_employed_pop_list(GoodManager const& good_manager,
-			PopManager const& pop_manager, NodeTools::callback_t<std::vector<EmployedPop>&&> cb);
+		NodeTools::node_callback_t _expect_employed_pop(
+			GoodManager const& good_manager, PopManager const& pop_manager, NodeTools::callback_t<EmployedPop&&> cb
+		);
+		NodeTools::node_callback_t _expect_employed_pop_list(
+			GoodManager const& good_manager, PopManager const& pop_manager,
+			NodeTools::callback_t<std::vector<EmployedPop>&&> cb
+		);
 
 	public:
 		ProductionTypeManager();

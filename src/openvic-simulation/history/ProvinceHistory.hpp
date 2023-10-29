@@ -30,15 +30,9 @@ namespace OpenVic {
 		std::map<Ideology const*, uint8_t> party_loyalties;
 
 		ProvinceHistory(
-			Country const* new_owner,
-			Country const* new_controller,
-			uint8_t new_colonial,
-			bool new_slave,
-			std::vector<Country const*>&& new_cores,
-			Good const* new_rgo,
-			uint8_t new_life_rating,
-			TerrainType const* new_terrain_type,
-			std::map<Building const*, uint8_t>&& new_buildings,
+			Country const* new_owner, Country const* new_controller, uint8_t new_colonial, bool new_slave,
+			std::vector<Country const*>&& new_cores, Good const* new_rgo, uint8_t new_life_rating,
+			TerrainType const* new_terrain_type, std::map<Building const*, uint8_t>&& new_buildings,
 			std::map<Ideology const*, uint8_t>&& new_party_loyalties
 		);
 
@@ -69,19 +63,11 @@ namespace OpenVic {
 		ProvinceHistoryManager() {}
 
 		bool add_province_history_entry(
-			Province const* province,
-			Date date,
-			Country const* owner,
-			Country const* controller,
-			uint8_t colonial,
-			bool slave,
+			Province const* province, Date date, Country const* owner, Country const* controller, uint8_t colonial, bool slave,
 			std::vector<Country const*>&& cores, // additive to existing entries
 			std::vector<Country const*>&& remove_cores, // existing cores that need to be removed
-			Good const* rgo,
-			uint8_t life_rating,
-			TerrainType const* terrain_type,
-			std::map<Building const*, uint8_t>&& buildings,
-			std::map<Ideology const*, uint8_t>&& party_loyalties,
+			Good const* rgo, uint8_t life_rating, TerrainType const* terrain_type,
+			std::map<Building const*, uint8_t>&& buildings, std::map<Ideology const*, uint8_t>&& party_loyalties,
 			std::bitset<5> updates // bitmap of updated non-pointer values, top to bottom
 		);
 

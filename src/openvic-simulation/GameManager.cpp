@@ -4,13 +4,12 @@ using namespace OpenVic;
 
 GameManager::GameManager(state_updated_func_t state_updated_callback)
 	: clock {
-	[this]() {
-		tick();
-	},
-	[this]() {
-		update_state();
-	}
-}, state_updated { state_updated_callback } {}
+		[this]() {
+			tick();
+		},
+		[this]() {
+			update_state();
+	} }, state_updated { state_updated_callback } {}
 
 void GameManager::set_needs_update() {
 	needs_update = true;
@@ -56,8 +55,7 @@ bool GameManager::expand_building(Province::index_t province_index, std::string_
 	set_needs_update();
 	Province* province = map.get_province_by_index(province_index);
 	if (province == nullptr) {
-		Logger::error("Invalid province index ", province_index,
-			" while trying to expand building ", building_type_identifier);
+		Logger::error("Invalid province index ", province_index, " while trying to expand building ", building_type_identifier);
 		return false;
 	}
 	return province->expand_building(building_type_identifier);

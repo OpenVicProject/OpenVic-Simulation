@@ -92,9 +92,9 @@ namespace OpenVic {
 			Finnish,
 			_LocaleCount
 		};
-		static constexpr char const* locale_names[_LocaleCount] = {
-			"en_GB", "fr_FR", "de_DE", "pl_PL", "es_ES", "it_IT", "sv_SE", "cs_CZ", "hu_HU", "nl_NL", "pt_PT", "ru_RU", "fi_FI"
-		};
+		static constexpr char const* locale_names[_LocaleCount] = { "en_GB", "fr_FR", "de_DE", "pl_PL", "es_ES",
+																	"it_IT", "sv_SE", "cs_CZ", "hu_HU", "nl_NL",
+																	"pt_PT", "ru_RU", "fi_FI" };
 
 		/* Args: key, locale, localisation */
 		using localisation_callback_t = NodeTools::callback_t<std::string_view, locale_t, std::string_view>;

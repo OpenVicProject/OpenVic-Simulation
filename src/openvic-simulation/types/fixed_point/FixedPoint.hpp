@@ -304,7 +304,7 @@ namespace OpenVic {
 			}
 
 			char const* dot_pointer = str;
-			while (*dot_pointer != '.' && ++dot_pointer != end);
+			while (*dot_pointer != '.' && ++dot_pointer != end) {}
 
 			if (dot_pointer == str && dot_pointer + 1 == end) {
 				// Invalid: ".", "+." or "-."

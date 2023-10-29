@@ -42,8 +42,10 @@ namespace OpenVic {
 		const bool available_from_start, tradeable, money, overseas_penalty;
 		bool available;
 
-		Good(std::string_view new_identifier, colour_t new_colour, GoodCategory const& new_category, price_t new_base_price,
-			bool new_available_from_start, bool new_tradeable, bool new_money, bool new_overseas_penalty);
+		Good(
+			std::string_view new_identifier, colour_t new_colour, GoodCategory const& new_category, price_t new_base_price,
+			bool new_available_from_start, bool new_tradeable, bool new_money, bool new_overseas_penalty
+		);
 
 	public:
 		Good(Good&&) = default;
@@ -70,8 +72,10 @@ namespace OpenVic {
 		bool add_good_category(std::string_view identifier);
 		IDENTIFIER_REGISTRY_ACCESSORS_CUSTOM_PLURAL(good_category, good_categories)
 
-		bool add_good(std::string_view identifier, colour_t colour, GoodCategory const* category, Good::price_t base_price,
-			bool available_from_start, bool tradeable, bool money, bool overseas_penalty);
+		bool add_good(
+			std::string_view identifier, colour_t colour, GoodCategory const* category, Good::price_t base_price,
+			bool available_from_start, bool tradeable, bool money, bool overseas_penalty
+		);
 		IDENTIFIER_REGISTRY_ACCESSORS(good)
 
 		void reset_to_defaults();

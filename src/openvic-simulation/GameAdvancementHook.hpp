@@ -20,7 +20,8 @@ namespace OpenVic {
 		using time_point_t = std::chrono::time_point<std::chrono::high_resolution_clock>;
 
 		time_point_t lastPolledTime;
-		// A function pointer that advances the simulation, intended to be a capturing lambda or something similar. May need to be reworked later
+		// A function pointer that advances the simulation, intended to be a capturing
+		// lambda or something similar. May need to be reworked later
 		AdvancementFunction triggerFunction;
 		RefreshFunction refreshFunction;
 		speed_t currentSpeed;
@@ -28,8 +29,9 @@ namespace OpenVic {
 	public:
 		bool isPaused;
 
-		GameAdvancementHook(AdvancementFunction tickFunction, RefreshFunction updateFunction,
-			bool startPaused = true, speed_t startingSpeed = 0);
+		GameAdvancementHook(
+			AdvancementFunction tickFunction, RefreshFunction updateFunction, bool startPaused = true, speed_t startingSpeed = 0
+		);
 
 		void setSimulationSpeed(speed_t speed);
 		speed_t getSimulationSpeed() const;

@@ -55,22 +55,17 @@ namespace OpenVic::Windows {
 
 	template<typename T>
 	concept has_data = requires(T t) {
-		{
-			t.data()
-		}
-		-> std::convertible_to<const typename T::value_type*>;
+		{ t.data() } -> std::convertible_to<const typename T::value_type*>;
 	};
 
 	class RegistryKey {
 	public:
-		RegistryKey(HKEY key_handle)
-			: _key_handle(key_handle) {
-		}
+		RegistryKey(HKEY key_handle) : _key_handle(key_handle) {}
 
 		template<either_char_type CHAR_T, either_char_type CHAR_T2>
-		RegistryKey(HKEY parent_key_handle,
-			std::basic_string_view<CHAR_T> child_key_name,
-			std::basic_string_view<CHAR_T2> value_name) {
+		RegistryKey(
+			HKEY parent_key_handle, std::basic_string_view<CHAR_T> child_key_name, std::basic_string_view<CHAR_T2> value_name
+		) {
 			open_key(parent_key_handle, child_key_name);
 			query_key(value_name);
 		}
@@ -100,14 +95,10 @@ namespace OpenVic::Windows {
 		}
 
 		bool is_predefined() const {
-			return (_key_handle == HKEY_CURRENT_USER) ||
-				(_key_handle == HKEY_LOCAL_MACHINE) ||
-				(_key_handle == HKEY_CLASSES_ROOT) ||
-				(_key_handle == HKEY_CURRENT_CONFIG) ||
-				(_key_handle == HKEY_CURRENT_USER_LOCAL_SETTINGS) ||
-				(_key_handle == HKEY_PERFORMANCE_DATA) ||
-				(_key_handle == HKEY_PERFORMANCE_NLSTEXT) ||
-				(_key_handle == HKEY_PERFORMANCE_TEXT) ||
+			return (_key_handle == HKEY_CURRENT_USER) || (_key_handle == HKEY_LOCAL_MACHINE) ||
+				(_key_handle == HKEY_CLASSES_ROOT) || (_key_handle == HKEY_CURRENT_CONFIG) ||
+				(_key_handle == HKEY_CURRENT_USER_LOCAL_SETTINGS) || (_key_handle == HKEY_PERFORMANCE_DATA) ||
+				(_key_handle == HKEY_PERFORMANCE_NLSTEXT) || (_key_handle == HKEY_PERFORMANCE_TEXT) ||
 				(_key_handle == HKEY_USERS);
 		}
 
@@ -139,7 +130,9 @@ namespace OpenVic::Windows {
 				return result;
 			}
 			_value = std::wstring(data_size / sizeof(wchar_t), L'\0');
-			result = RegQueryValueExW(_key_handle, wide_value.data(), NULL, NULL, reinterpret_cast<LPBYTE>(_value.data()), &data_size);
+			result = RegQueryValueExW(
+				_key_handle, wide_value.data(), NULL, NULL, reinterpret_cast<LPBYTE>(_value.data()), &data_size
+			);
 			close_key();
 
 			std::size_t first_null = _value.find_first_of(L'\0');
@@ -156,7 +149,9 @@ namespace OpenVic::Windows {
 	};
 
 	template<either_char_type RCHAR_T, either_char_type CHAR_T, either_char_type CHAR_T2>
-	std::basic_string<RCHAR_T> ReadRegValue(HKEY root, std::basic_string_view<CHAR_T> key, std::basic_string_view<CHAR_T2> name) {
+	std::basic_string<RCHAR_T> ReadRegValue(
+		HKEY root, std::basic_string_view<CHAR_T> key, std::basic_string_view<CHAR_T2> name
+	) {
 		RegistryKey registry_key(root, key, name);
 		if constexpr (std::is_same_v<RCHAR_T, char>) {
 			return convert(registry_key.value());

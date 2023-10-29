@@ -9,11 +9,9 @@
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;
 
-Pop::Pop(PopType const& new_type, Culture const& new_culture, Religion const& new_religion, pop_size_t new_size)
-	: type { new_type },
-	  culture { new_culture },
-	  religion { new_religion },
-	  size { new_size } {
+Pop::Pop(
+	PopType const& new_type, Culture const& new_culture, Religion const& new_religion, pop_size_t new_size
+) : type { new_type }, culture { new_culture }, religion { new_religion }, size { new_size } {
 	assert(size > 0);
 }
 
@@ -49,25 +47,16 @@ Pop::pop_size_t Pop::get_pop_daily_change() const {
 	return Pop::get_num_promoted() - (Pop::get_num_demoted() + Pop::get_num_migrated());
 }
 
-PopType::PopType(std::string_view new_identifier, colour_t new_colour,
-	strata_t new_strata, sprite_t new_sprite,
-	Good::good_map_t&& new_life_needs, Good::good_map_t&& new_everyday_needs,
-	Good::good_map_t&& new_luxury_needs, rebel_units_t&& new_rebel_units,
-	Pop::pop_size_t new_max_size, Pop::pop_size_t new_merge_max_size,
-	bool new_state_capital_only, bool new_demote_migrant, bool new_is_artisan, bool new_is_slave)
-	: HasIdentifierAndColour { new_identifier, new_colour, true, false },
-	  strata { new_strata },
-	  sprite { new_sprite },
-	  life_needs { std::move(new_life_needs) },
-	  everyday_needs { std::move(new_everyday_needs) },
-	  luxury_needs { std::move(new_luxury_needs) },
-	  rebel_units { std::move(new_rebel_units) },
-	  max_size { new_max_size },
-	  merge_max_size { new_merge_max_size },
-	  state_capital_only { new_state_capital_only },
-	  demote_migrant { new_demote_migrant },
-	  is_artisan { new_is_artisan },
-	  is_slave { new_is_slave } {
+PopType::PopType(
+	std::string_view new_identifier, colour_t new_colour, strata_t new_strata, sprite_t new_sprite,
+	Good::good_map_t&& new_life_needs, Good::good_map_t&& new_everyday_needs, Good::good_map_t&& new_luxury_needs,
+	rebel_units_t&& new_rebel_units, Pop::pop_size_t new_max_size, Pop::pop_size_t new_merge_max_size,
+	bool new_state_capital_only, bool new_demote_migrant, bool new_is_artisan, bool new_is_slave
+) : HasIdentifierAndColour { new_identifier, new_colour, true, false }, strata { new_strata }, sprite { new_sprite },
+	life_needs { std::move(new_life_needs) }, everyday_needs { std::move(new_everyday_needs) },
+	luxury_needs { std::move(new_luxury_needs) }, rebel_units { std::move(new_rebel_units) }, max_size { new_max_size },
+	merge_max_size { new_merge_max_size }, state_capital_only { new_state_capital_only },
+	demote_migrant { new_demote_migrant }, is_artisan { new_is_artisan }, is_slave { new_is_slave } {
 	assert(sprite > 0);
 	assert(max_size >= 0);
 	assert(merge_max_size >= 0);
@@ -123,10 +112,12 @@ bool PopType::get_is_slave() const {
 
 PopManager::PopManager() : pop_types { "pop types" } {}
 
-bool PopManager::add_pop_type(std::string_view identifier, colour_t colour, PopType::strata_t strata,
-	PopType::sprite_t sprite, Good::good_map_t&& life_needs, Good::good_map_t&& everyday_needs,
-	Good::good_map_t&& luxury_needs, PopType::rebel_units_t&& rebel_units, Pop::pop_size_t max_size,
-	Pop::pop_size_t merge_max_size, bool state_capital_only, bool demote_migrant, bool is_artisan, bool is_slave) {
+bool PopManager::add_pop_type(
+	std::string_view identifier, colour_t colour, PopType::strata_t strata, PopType::sprite_t sprite,
+	Good::good_map_t&& life_needs, Good::good_map_t&& everyday_needs, Good::good_map_t&& luxury_needs,
+	PopType::rebel_units_t&& rebel_units, Pop::pop_size_t max_size, Pop::pop_size_t merge_max_size, bool state_capital_only,
+	bool demote_migrant, bool is_artisan, bool is_slave
+) {
 	if (identifier.empty()) {
 		Logger::error("Invalid pop type identifier - empty!");
 		return false;
@@ -148,16 +139,18 @@ bool PopManager::add_pop_type(std::string_view identifier, colour_t colour, PopT
 		return false;
 	}
 	return pop_types.add_item({
-		identifier, colour, strata, sprite, std::move(life_needs), std::move(everyday_needs), std::move(luxury_needs),
-		std::move(rebel_units), max_size, merge_max_size, state_capital_only, demote_migrant, is_artisan, is_slave
+		identifier, colour, strata, sprite, std::move(life_needs), std::move(everyday_needs),
+		std::move(luxury_needs), std::move(rebel_units), max_size, merge_max_size, state_capital_only,
+		demote_migrant, is_artisan, is_slave
 	});
 }
 
 /* REQUIREMENTS:
  * POP-3, POP-4, POP-5, POP-6, POP-7, POP-8, POP-9, POP-10, POP-11, POP-12, POP-13, POP-14
  */
-bool PopManager::load_pop_type_file(std::string_view filestem, UnitManager const& unit_manager,
-	GoodManager const& good_manager, ast::NodeCPtr root) {
+bool PopManager::load_pop_type_file(
+	std::string_view filestem, UnitManager const& unit_manager, GoodManager const& good_manager, ast::NodeCPtr root
+) {
 	static const string_map_t<PopType::strata_t> strata_map = {
 		{ "poor", PopType::strata_t::POOR },
 		{ "middle", PopType::strata_t::MIDDLE },
@@ -218,8 +211,8 @@ bool PopManager::load_pop_type_file(std::string_view filestem, UnitManager const
 	return ret;
 }
 
-bool PopManager::load_pop_into_province(Province& province, std::string_view pop_type_identifier,
-	ast::NodeCPtr pop_node) const {
+bool PopManager::load_pop_into_province(Province& province, std::string_view pop_type_identifier, ast::NodeCPtr pop_node)
+	const {
 	PopType const* type = get_pop_type_by_identifier(pop_type_identifier);
 	Culture const* culture = nullptr;
 	Religion const* religion = nullptr;
@@ -235,8 +228,10 @@ bool PopManager::load_pop_into_province(Province& province, std::string_view pop
 	if (type != nullptr && culture != nullptr && religion != nullptr && size > 0) {
 		ret &= province.add_pop({ *type, *culture, *religion, size });
 	} else {
-		Logger::warning("Some pop arguments are invalid: province = ", province, ", type = ", type,
-			", culture = ", culture, ", religion = ", religion, ", size = ", size);
+		Logger::warning(
+			"Some pop arguments are invalid: province = ", province, ", type = ", type, ", culture = ", culture,
+			", religion = ", religion, ", size = ", size
+		);
 	}
 	return ret;
 }

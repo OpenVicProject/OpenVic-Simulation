@@ -9,7 +9,7 @@ namespace OpenVic {
 		std::string id;
 		std::string text;
 		std::string acceptance_criteria;
-		bool pass = false;	// Explicitly false to begin
+		bool pass = false; // Explicitly false to begin
 		bool tested = false;
 
 		// Initialised and used during script execution
@@ -17,7 +17,6 @@ namespace OpenVic {
 		std::string actual_value;
 
 	public:
-
 		Requirement(std::string in_id, std::string in_text, std::string in_acceptance_criteria) {
 			id = in_id;
 			text = in_text;

@@ -1,7 +1,8 @@
 #pragma once
-#include <testing/Requirement.hpp>
 #include <vector>
-#include <GameManager.hpp>
+
+#include "openvic-simulation/GameManager.hpp"
+#include "openvic-simulation/testing/Requirement.hpp"
 
 namespace OpenVic {
 
@@ -12,7 +13,6 @@ namespace OpenVic {
 		std::string script_name;
 
 	public:
-
 		// expects an overriden method that performs arbitrary code execution
 		// so that each script uniquely performs tests
 		// for both requirement adding to script and to execute code
@@ -36,6 +36,8 @@ namespace OpenVic {
 		void set_script_name(std::string in_script_name);
 
 		// Methods
-		void pass_or_fail_req_with_actual_and_target_values(std::string req_name, std::string target_value, std::string actual_value);
+		void pass_or_fail_req_with_actual_and_target_values(
+			std::string req_name, std::string target_value, std::string actual_value
+		);
 	};
 }

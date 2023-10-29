@@ -3,9 +3,10 @@
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;
 
-Province::Province(std::string_view new_identifier, colour_t new_colour, index_t new_index)
-	: HasIdentifierAndColour { new_identifier, new_colour, false, false },
-	  index { new_index }, buildings { "buildings", false } {
+Province::Province(
+	std::string_view new_identifier, colour_t new_colour, index_t new_index
+) : HasIdentifierAndColour { new_identifier, new_colour, false, false }, index { new_index },
+	buildings { "buildings", false } {
 	assert(index != NULL_INDEX);
 }
 
@@ -93,8 +94,7 @@ std::string Province::to_string() const {
 }
 
 bool Province::load_pop_list(PopManager const& pop_manager, ast::NodeCPtr root) {
-	return expect_dictionary_reserve_length(
-		pops,
+	return expect_dictionary_reserve_length(pops,
 		[this, &pop_manager](std::string_view pop_type_identifier, ast::NodeCPtr pop_node) -> bool {
 			return pop_manager.load_pop_into_province(*this, pop_type_identifier, pop_node);
 		}
@@ -182,10 +182,11 @@ Province::flags_t Province::adjacency_t::get_flags() const {
 }
 
 bool Province::is_adjacent_to(Province const* province) {
-	for (adjacency_t adj : adjacencies)
+	for (adjacency_t adj : adjacencies) {
 		if (adj.province == province) {
 			return true;
 		}
+	}
 	return false;
 }
 

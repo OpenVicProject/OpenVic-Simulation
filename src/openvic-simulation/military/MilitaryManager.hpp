@@ -1,7 +1,7 @@
 #pragma once
 
-#include "openvic-simulation/military/LeaderTrait.hpp"
 #include "openvic-simulation/military/Deployment.hpp"
+#include "openvic-simulation/military/LeaderTrait.hpp"
 #include "openvic-simulation/military/Unit.hpp"
 
 namespace OpenVic {

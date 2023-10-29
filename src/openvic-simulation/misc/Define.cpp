@@ -15,14 +15,8 @@
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;
 
-Define::Define(
-	std::string_view new_identifier,
-	std::string&& new_value,
-	Type new_type
-) : HasIdentifier { new_identifier },
-	value { std::move(new_value) },
-	type { new_type } {
-}
+Define::Define(std::string_view new_identifier, std::string&& new_value, Type new_type)
+	: HasIdentifier { new_identifier }, value { std::move(new_value) }, type { new_type } {}
 
 fixed_point_t Define::get_value_as_fp() const {
 	return fixed_point_t::parse(value);
@@ -36,8 +30,7 @@ uint64_t Define::get_value_as_uint() const {
 	return std::strtoull(value.data(), nullptr, 10);
 }
 
-DefineManager::DefineManager() : defines { "defines" } {
-}
+DefineManager::DefineManager() : defines { "defines" } {}
 
 bool DefineManager::add_define(std::string_view name, std::string&& value, Define::Type type) {
 	return defines.add_item({ name, std::move(value), type }, duplicate_warning_callback);
@@ -70,8 +63,8 @@ bool DefineManager::add_date_define(std::string_view name, Date date) {
 bool DefineManager::load_defines_file(ast::NodeCPtr root) {
 	bool ret = expect_dictionary_keys(
 		"defines", ONE_EXACTLY, expect_dictionary([this](std::string_view key, ast::NodeCPtr value) -> bool {
-			if (key == "country" || key == "economy" || key == "military" || key == "diplomacy"
-				|| key == "pops" || key == "ai" || key == "graphics") {
+			if (key == "country" || key == "economy" || key == "military" || key == "diplomacy" ||
+				key == "pops" || key == "ai" || key == "graphics") {
 				return expect_dictionary([this, &key](std::string_view inner_key, ast::NodeCPtr value) -> bool {
 					std::string str_val;
 

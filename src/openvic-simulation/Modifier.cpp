@@ -89,7 +89,8 @@ Modifier::icon_t Modifier::get_icon() const {
 	return icon;
 }
 
-ModifierInstance::ModifierInstance(Modifier const& modifier, Date expiry_date) : modifier { modifier }, expiry_date { expiry_date } {}
+ModifierInstance::ModifierInstance(Modifier const& modifier, Date expiry_date)
+	: modifier { modifier }, expiry_date { expiry_date } {}
 
 Modifier const& ModifierInstance::get_modifier() const {
 	return modifier;
@@ -99,8 +100,7 @@ Date const& ModifierInstance::get_expiry_date() const {
 	return expiry_date;
 }
 
-ModifierManager::ModifierManager()
-	: modifier_effects { "modifier effects" }, modifiers { "modifiers" } {}
+ModifierManager::ModifierManager() : modifier_effects { "modifier effects" }, modifiers { "modifiers" } {}
 
 bool ModifierManager::add_modifier_effect(std::string_view identifier, bool positive_good, ModifierEffect::format_t format) {
 	if (identifier.empty()) {
@@ -150,7 +150,8 @@ bool ModifierManager::setup_modifier_effects() {
 	ret &= add_modifier_effect("influence_modifier", true);
 	ret &= add_modifier_effect("issue_change_speed", true);
 	ret &= add_modifier_effect("land_organisation", true);
-	ret &= add_modifier_effect("land_unit_start_experience", true); // weird, land_unit_start_experience = 15 would give a 15% boost
+	// weird, land_unit_start_experience = 15 would give a 15% boost
+	ret &= add_modifier_effect("land_unit_start_experience", true);
 	ret &= add_modifier_effect("leadership_modifier", true);
 	ret &= add_modifier_effect("loan_interest", false);
 	ret &= add_modifier_effect("max_loan_modifier", true);
@@ -261,8 +262,7 @@ bool ModifierManager::setup_modifier_effects() {
 }
 
 key_value_callback_t ModifierManager::_modifier_effect_callback(
-	ModifierValue& modifier, key_value_callback_t default_callback,
-	ModifierEffectValidator auto effect_validator
+	ModifierValue& modifier, key_value_callback_t default_callback, ModifierEffectValidator auto effect_validator
 ) const {
 
 	return [this, &modifier, default_callback, effect_validator](std::string_view key, ast::NodeCPtr value) -> bool {
@@ -270,9 +270,7 @@ key_value_callback_t ModifierManager::_modifier_effect_callback(
 		if (effect != nullptr) {
 			if (effect_validator(*effect)) {
 				if (modifier.values.find(effect) == modifier.values.end()) {
-					return expect_fixed_point(
-						assign_variable_callback(modifier.values[effect])
-					)(value);
+					return expect_fixed_point(assign_variable_callback(modifier.values[effect]))(value);
 				} else {
 					Logger::error("Duplicate modifier effect: ", key);
 					return false;
@@ -286,8 +284,10 @@ key_value_callback_t ModifierManager::_modifier_effect_callback(
 	};
 }
 
-node_callback_t ModifierManager::expect_validated_modifier_value_and_default(callback_t<ModifierValue&&> modifier_callback,
-	key_value_callback_t default_callback, ModifierEffectValidator auto effect_validator) const {
+node_callback_t ModifierManager::expect_validated_modifier_value_and_default(
+	callback_t<ModifierValue&&> modifier_callback, key_value_callback_t default_callback,
+	ModifierEffectValidator auto effect_validator
+) const {
 	return [this, modifier_callback, default_callback, effect_validator](ast::NodeCPtr root) -> bool {
 		ModifierValue modifier;
 		bool ret = expect_dictionary(_modifier_effect_callback(modifier, default_callback, effect_validator))(root);
@@ -295,47 +295,57 @@ node_callback_t ModifierManager::expect_validated_modifier_value_and_default(cal
 		return ret;
 	};
 }
-node_callback_t ModifierManager::expect_validated_modifier_value(callback_t<ModifierValue&&> modifier_callback,
-	ModifierEffectValidator auto effect_validator) const {
+node_callback_t ModifierManager::expect_validated_modifier_value(
+	callback_t<ModifierValue&&> modifier_callback, ModifierEffectValidator auto effect_validator
+) const {
 	return expect_validated_modifier_value_and_default(modifier_callback, key_value_invalid_callback, effect_validator);
 }
 
-node_callback_t ModifierManager::expect_modifier_value_and_default(callback_t<ModifierValue&&> modifier_callback,
-	key_value_callback_t default_callback) const {
-	return expect_validated_modifier_value_and_default(modifier_callback, default_callback,
-		[](ModifierEffect const&) -> bool { return true; });
+node_callback_t ModifierManager::expect_modifier_value_and_default(
+	callback_t<ModifierValue&&> modifier_callback, key_value_callback_t default_callback
+) const {
+	return expect_validated_modifier_value_and_default(modifier_callback, default_callback, [](ModifierEffect const&) -> bool {
+		return true;
+	});
 }
 
 node_callback_t ModifierManager::expect_modifier_value(callback_t<ModifierValue&&> modifier_callback) const {
 	return expect_modifier_value_and_default(modifier_callback, key_value_invalid_callback);
 }
 
-node_callback_t ModifierManager::expect_whitelisted_modifier_value_and_default(callback_t<ModifierValue&&> modifier_callback,
-	string_set_t const& whitelist, key_value_callback_t default_callback) const {
-	return expect_validated_modifier_value_and_default(modifier_callback,
-	default_callback, [&whitelist](ModifierEffect const& effect) -> bool {
-		return whitelist.contains(effect.get_identifier());
-	});
+node_callback_t ModifierManager::expect_whitelisted_modifier_value_and_default(
+	callback_t<ModifierValue&&> modifier_callback, string_set_t const& whitelist, key_value_callback_t default_callback
+) const {
+	return expect_validated_modifier_value_and_default(
+		modifier_callback, default_callback,
+		[&whitelist](ModifierEffect const& effect) -> bool {
+			return whitelist.contains(effect.get_identifier());
+		}
+	);
 }
 
-node_callback_t ModifierManager::expect_whitelisted_modifier_value(callback_t<ModifierValue&&> modifier_callback,
-	string_set_t const& whitelist) const {
+node_callback_t ModifierManager::expect_whitelisted_modifier_value(
+	callback_t<ModifierValue&&> modifier_callback, string_set_t const& whitelist
+) const {
 	return expect_whitelisted_modifier_value_and_default(modifier_callback, whitelist, key_value_invalid_callback);
 }
 
-node_callback_t ModifierManager::expect_modifier_value_and_key_map_and_default(callback_t<ModifierValue&&> modifier_callback,
-	key_value_callback_t default_callback, key_map_t&& key_map) const {
+node_callback_t ModifierManager::expect_modifier_value_and_key_map_and_default(
+	callback_t<ModifierValue&&> modifier_callback, key_value_callback_t default_callback, key_map_t&& key_map
+) const {
 	return [this, modifier_callback, key_map = std::move(key_map)](ast::NodeCPtr node) mutable -> bool {
 		bool ret = expect_modifier_value_and_default(
-			modifier_callback, dictionary_keys_callback(key_map, key_value_invalid_callback)
+			modifier_callback,
+			dictionary_keys_callback(key_map, key_value_invalid_callback)
 		)(node);
 		ret &= check_key_map_counts(key_map);
 		return ret;
 	};
 }
 
-node_callback_t ModifierManager::expect_modifier_value_and_key_map(callback_t<ModifierValue&&> modifier_callback,
-	key_map_t&& key_map) const {
+node_callback_t ModifierManager::expect_modifier_value_and_key_map(
+	callback_t<ModifierValue&&> modifier_callback, key_map_t&& key_map
+) const {
 	return expect_modifier_value_and_key_map_and_default(modifier_callback, key_value_invalid_callback, std::move(key_map));
 }
 

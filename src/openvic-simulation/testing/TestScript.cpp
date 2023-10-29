@@ -15,7 +15,7 @@ Requirement* TestScript::get_requirement_by_id(std::string id) {
 			return req;
 		}
 	}
-	return new Requirement("NULL", "NULL", "NULL");	// edge case of failing to find
+	return new Requirement("NULL", "NULL", "NULL"); // edge case of failing to find
 }
 std::vector<Requirement*> TestScript::get_passed_requirements() {
 	std::vector<Requirement*> passed_requirements = std::vector<Requirement*>();
@@ -66,8 +66,9 @@ void TestScript::set_script_name(std::string in_script_name) {
 }
 
 // Methods
-void TestScript::pass_or_fail_req_with_actual_and_target_values(std::string req_name, std::string target_value,
-	std::string actual_value) {
+void TestScript::pass_or_fail_req_with_actual_and_target_values(
+	std::string req_name, std::string target_value, std::string actual_value
+) {
 	Requirement* req = get_requirement_by_id(req_name);
 	req->set_target_value(target_value);
 	req->set_actual_value(actual_value);

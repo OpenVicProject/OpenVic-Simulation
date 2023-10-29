@@ -4,8 +4,7 @@
 
 using namespace OpenVic;
 
-HasIdentifier::HasIdentifier(std::string_view new_identifier)
-	: identifier { new_identifier } {
+HasIdentifier::HasIdentifier(std::string_view new_identifier) : identifier { new_identifier } {
 	assert(!identifier.empty());
 }
 
@@ -33,7 +32,6 @@ std::string HasColour::colour_to_hex_string() const {
 	return OpenVic::colour_to_hex_string(colour);
 }
 
-HasIdentifierAndColour::HasIdentifierAndColour(std::string_view new_identifier,
-	const colour_t new_colour, bool can_be_null, bool can_have_alpha)
-	: HasIdentifier { new_identifier },
-	  HasColour { new_colour, can_be_null, can_have_alpha } {}
+HasIdentifierAndColour::HasIdentifierAndColour(
+	std::string_view new_identifier, const colour_t new_colour, bool can_be_null, bool can_have_alpha
+) : HasIdentifier { new_identifier }, HasColour { new_colour, can_be_null, can_have_alpha } {}

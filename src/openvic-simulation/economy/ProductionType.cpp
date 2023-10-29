@@ -5,10 +5,10 @@
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;
 
-EmployedPop::EmployedPop(PopType const* pop_type, bool artisan, effect_t effect,
-	fixed_point_t effect_multiplier, fixed_point_t amount)
-	: pop_type { pop_type }, artisan { artisan }, effect { effect },
-	  effect_multiplier { effect_multiplier }, amount { amount } {}
+EmployedPop::EmployedPop(
+	PopType const* pop_type, bool artisan, effect_t effect, fixed_point_t effect_multiplier, fixed_point_t amount
+) : pop_type { pop_type }, artisan { artisan }, effect { effect }, effect_multiplier { effect_multiplier },
+	amount { amount } {}
 
 PopType const* EmployedPop::get_pop_type() const {
 	return pop_type;
@@ -30,9 +30,11 @@ fixed_point_t EmployedPop::get_amount() const {
 	return amount;
 }
 
-ProductionType::ProductionType(PRODUCTION_TYPE_ARGS) : HasIdentifier { identifier }, owner { owner }, employees { employees },
-	type { type }, workforce { workforce }, input_goods { std::move(input_goods) }, output_goods { output_goods },
-	value { value }, bonuses { std::move(bonuses) }, efficiency { std::move(efficiency) }, coastal { coastal }, farm { farm }, mine { mine } {}
+ProductionType::ProductionType(
+	PRODUCTION_TYPE_ARGS
+) : HasIdentifier { identifier }, owner { owner }, employees { employees }, type { type }, workforce { workforce },
+	input_goods { std::move(input_goods) }, output_goods { output_goods }, value { value }, bonuses { std::move(bonuses) },
+	efficiency { std::move(efficiency) }, coastal { coastal }, farm { farm }, mine { mine } {}
 
 EmployedPop const& ProductionType::get_owner() const {
 	return owner;
@@ -84,8 +86,9 @@ bool ProductionType::is_mine() const {
 
 ProductionTypeManager::ProductionTypeManager() : production_types { "production types" } {}
 
-node_callback_t ProductionTypeManager::_expect_employed_pop(GoodManager const& good_manager, PopManager const& pop_manager,
-	callback_t<EmployedPop&&> cb) {
+node_callback_t ProductionTypeManager::_expect_employed_pop(
+	GoodManager const& good_manager, PopManager const& pop_manager, callback_t<EmployedPop&&> cb
+) {
 
 	return [this, &good_manager, &pop_manager, cb](ast::NodeCPtr node) -> bool {
 		std::string_view pop_type;
@@ -119,8 +122,9 @@ node_callback_t ProductionTypeManager::_expect_employed_pop(GoodManager const& g
 	};
 }
 
-node_callback_t ProductionTypeManager::_expect_employed_pop_list(GoodManager const& good_manager, PopManager const& pop_manager,
-	callback_t<std::vector<EmployedPop>&&> cb) {
+node_callback_t ProductionTypeManager::_expect_employed_pop_list(
+	GoodManager const& good_manager, PopManager const& pop_manager, callback_t<std::vector<EmployedPop>&&> cb
+) {
 
 	return [this, &good_manager, &pop_manager, cb](ast::NodeCPtr node) -> bool {
 		std::vector<EmployedPop> employed_pops;
@@ -135,7 +139,8 @@ node_callback_t ProductionTypeManager::_expect_employed_pop_list(GoodManager con
 }
 
 #define POPTYPE_CHECK(employed_pop) \
-	if ((employed_pop.pop_type == nullptr && !employed_pop.artisan) || (employed_pop.pop_type != nullptr && employed_pop.artisan)) { \
+	if ((employed_pop.pop_type == nullptr && !employed_pop.artisan) || \
+		(employed_pop.pop_type != nullptr && employed_pop.artisan)) { \
 		Logger::error("Invalid pop type parsed for owner of production type ", identifier, "!"); \
 		return false; \
 	}
@@ -173,7 +178,8 @@ bool ProductionTypeManager::add_production_type(PRODUCTION_TYPE_ARGS, GoodManage
 	});
 }
 
-#define PARSE_NODE expect_dictionary_keys_and_default( \
+#define PARSE_NODE \
+	expect_dictionary_keys_and_default( \
 		key_value_success_callback, \
 		"owner", ZERO_OR_ONE, _expect_employed_pop(good_manager, pop_manager, move_variable_callback(owner)), \
 		"employees", ZERO_OR_ONE, _expect_employed_pop_list(good_manager, pop_manager, move_variable_callback(employees)), \
@@ -188,8 +194,9 @@ bool ProductionTypeManager::add_production_type(PRODUCTION_TYPE_ARGS, GoodManage
 		"mine", ZERO_OR_ONE, expect_bool(assign_variable_callback(mine)) \
 	)
 
-bool ProductionTypeManager::load_production_types_file(GoodManager const& good_manager,
-	PopManager const& pop_manager, ast::NodeCPtr root) {
+bool ProductionTypeManager::load_production_types_file(
+	GoodManager const& good_manager, PopManager const& pop_manager, ast::NodeCPtr root
+) {
 	size_t expected_types = 0;
 
 	// pass 1: find and store template identifiers
@@ -201,7 +208,8 @@ bool ProductionTypeManager::load_production_types_file(GoodManager const& good_m
 
 			std::string_view template_id = "";
 			bool found_template = false;
-			const bool ret = expect_key("template", expect_identifier(assign_variable_callback(template_id)), &found_template)(value);
+			const bool ret =
+				expect_key("template", expect_identifier(assign_variable_callback(template_id)), &found_template)(value);
 			if (found_template) {
 				if (ret) {
 					templates.emplace(template_id);
@@ -232,8 +240,9 @@ bool ProductionTypeManager::load_production_types_file(GoodManager const& good_m
 	ret &= expect_dictionary(
 		[this, &good_manager, &pop_manager, &template_target_map, &template_node_map](
 			std::string_view key, ast::NodeCPtr node) -> bool {
-			if (template_node_map.contains(key))
+			if (template_node_map.contains(key)) {
 				return true;
+			}
 
 			EmployedPop owner;
 			std::vector<EmployedPop> employees;
@@ -264,8 +273,8 @@ bool ProductionTypeManager::load_production_types_file(GoodManager const& good_m
 			ret &= PARSE_NODE(node);
 
 			ret &= add_production_type(
-				key, owner, employees, type, workforce, std::move(input_goods), output_goods, value,
-				std::move(bonuses), std::move(efficiency), coastal, farm, mine, good_manager
+				key, owner, employees, type, workforce, std::move(input_goods), output_goods, value, std::move(bonuses),
+				std::move(efficiency), coastal, farm, mine, good_manager
 			);
 			return ret;
 		}

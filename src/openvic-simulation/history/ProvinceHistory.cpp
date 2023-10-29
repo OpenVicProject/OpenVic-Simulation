@@ -7,26 +7,12 @@ using namespace OpenVic;
 using namespace OpenVic::NodeTools;
 
 ProvinceHistory::ProvinceHistory(
-	Country const* new_owner,
-	Country const* new_controller,
-	uint8_t new_colonial,
-	bool new_slave,
-	std::vector<Country const*>&& new_cores,
-	Good const* new_rgo,
-	uint8_t new_life_rating,
-	TerrainType const* new_terrain_type,
-	std::map<Building const*, uint8_t>&& new_buildings,
-	std::map<Ideology const*, uint8_t>&& new_party_loyalties
-) : owner { new_owner },
-	controller { new_controller },
-	colonial { new_colonial },
-	slave { new_slave },
-	cores { std::move(new_cores) },
-	rgo { new_rgo },
-	life_rating { new_life_rating },
-	terrain_type { new_terrain_type },
-	buildings { std::move(new_buildings) },
-	party_loyalties { std::move(new_party_loyalties) } {}
+	Country const* new_owner, Country const* new_controller, uint8_t new_colonial, bool new_slave,
+	std::vector<Country const*>&& new_cores, Good const* new_rgo, uint8_t new_life_rating, TerrainType const* new_terrain_type,
+	std::map<Building const*, uint8_t>&& new_buildings, std::map<Ideology const*, uint8_t>&& new_party_loyalties
+) : owner { new_owner }, controller { new_controller }, colonial { new_colonial }, slave { new_slave },
+	cores { std::move(new_cores) }, rgo { new_rgo }, life_rating { new_life_rating }, terrain_type { new_terrain_type },
+	buildings { std::move(new_buildings) }, party_loyalties { std::move(new_party_loyalties) } {}
 
 Country const* ProvinceHistory::get_owner() const {
 	return owner;
@@ -73,20 +59,10 @@ std::map<Ideology const*, uint8_t> const& ProvinceHistory::get_party_loyalties()
 }
 
 bool ProvinceHistoryManager::add_province_history_entry(
-	Province const* province,
-	Date date,
-	Country const* owner,
-	Country const* controller,
-	uint8_t colonial,
-	bool slave,
-	std::vector<Country const*>&& cores,
-	std::vector<Country const*>&& remove_cores,
-	Good const* rgo,
-	uint8_t life_rating,
-	TerrainType const* terrain_type,
-	std::map<Building const*, uint8_t>&& buildings,
-	std::map<Ideology const*, uint8_t>&& party_loyalties,
-	std::bitset<5> updates
+	Province const* province, Date date, Country const* owner, Country const* controller, uint8_t colonial, bool slave,
+	std::vector<Country const*>&& cores, std::vector<Country const*>&& remove_cores, Good const* rgo, uint8_t life_rating,
+	TerrainType const* terrain_type, std::map<Building const*, uint8_t>&& buildings,
+	std::map<Ideology const*, uint8_t>&& party_loyalties, std::bitset<5> updates
 ) {
 	if (locked) {
 		Logger::error("Cannot add new history entry to province history registry: locked!");
@@ -98,37 +74,49 @@ bool ProvinceHistoryManager::add_province_history_entry(
 	const auto existing_entry = province_registry.find(date);
 
 	if (existing_entry != province_registry.end()) {
-		if (owner != nullptr) existing_entry->second.owner = owner;
-		if (controller != nullptr) existing_entry->second.controller = controller;
-		if (rgo != nullptr) existing_entry->second.rgo = rgo;
-		if (terrain_type != nullptr) existing_entry->second.terrain_type = terrain_type;
-		if (updates[0]) existing_entry->second.colonial = colonial;
-		if (updates[1]) existing_entry->second.slave = slave;
-		if (updates[2]) existing_entry->second.life_rating = life_rating;
-		if (updates[3]) existing_entry->second.buildings = std::move(buildings);
-		if (updates[4]) existing_entry->second.party_loyalties = std::move(party_loyalties);
+		if (owner != nullptr) {
+			existing_entry->second.owner = owner;
+		}
+		if (controller != nullptr) {
+			existing_entry->second.controller = controller;
+		}
+		if (rgo != nullptr) {
+			existing_entry->second.rgo = rgo;
+		}
+		if (terrain_type != nullptr) {
+			existing_entry->second.terrain_type = terrain_type;
+		}
+		if (updates[0]) {
+			existing_entry->second.colonial = colonial;
+		}
+		if (updates[1]) {
+			existing_entry->second.slave = slave;
+		}
+		if (updates[2]) {
+			existing_entry->second.life_rating = life_rating;
+		}
+		if (updates[3]) {
+			existing_entry->second.buildings = std::move(buildings);
+		}
+		if (updates[4]) {
+			existing_entry->second.party_loyalties = std::move(party_loyalties);
+		}
 		// province history cores are additive
 		existing_entry->second.cores.insert(existing_entry->second.cores.end(), cores.begin(), cores.end());
 		for (const auto which : remove_cores) {
 			const auto core = std::find(cores.begin(), cores.end(), which);
 			if (core == cores.end()) {
-				Logger::error("In history of province ", province->get_identifier(),
-					" tried to remove nonexistant core of country: ", which->get_identifier(), " at date ", date.to_string());
+				Logger::error(
+					"In history of province ", province->get_identifier(), " tried to remove nonexistant core of country: ",
+					which->get_identifier(), " at date ", date.to_string()
+				);
 				return false;
 			}
 			existing_entry->second.cores.erase(core);
 		}
 	} else {
 		province_registry.emplace(date, ProvinceHistory {
-			owner,
-			controller,
-			colonial,
-			slave,
-			std::move(cores),
-			rgo,
-			life_rating,
-			terrain_type,
-			std::move(buildings),
+			owner, controller, colonial, slave, std::move(cores), rgo, life_rating, terrain_type, std::move(buildings),
 			std::move(party_loyalties)
 		});
 	}
@@ -138,8 +126,9 @@ bool ProvinceHistoryManager::add_province_history_entry(
 void ProvinceHistoryManager::lock_province_histories() {
 	for (auto const& entry : province_histories) {
 		if (entry.second.size() == 0) {
-			Logger::error("Attempted to lock province histories - province ", entry.first->get_identifier(),
-				" has no history entries!");
+			Logger::error(
+				"Attempted to lock province histories - province ", entry.first->get_identifier(), " has no history entries!"
+			);
 		}
 	}
 	Logger::info("Locked province history registry after registering ", province_histories.size(), " items");
@@ -218,7 +207,9 @@ inline bool ProvinceHistoryManager::_load_province_history_entry(
 
 			bool is_date;
 			Date().from_string(key, &is_date, true);
-			if (is_date) return true;
+			if (is_date) {
+				return true;
+			}
 
 			return key_value_invalid_callback(key, value);
 		},
@@ -304,20 +295,9 @@ inline bool ProvinceHistoryManager::_load_province_history_entry(
 	)(root);
 
 	ret &= add_province_history_entry(
-		game_manager.get_map().get_province_by_identifier(province),
-		date,
-		owner,
-		controller,
-		colonial,
-		slave,
-		std::move(cores),
-		std::move(remove_cores),
-		rgo,
-		life_rating,
-		terrain_type,
-		std::move(buildings),
-		std::move(party_loyalties),
-		updates
+		game_manager.get_map().get_province_by_identifier(province), date, owner, controller, colonial, slave,
+		std::move(cores), std::move(remove_cores), rgo, life_rating, terrain_type, std::move(buildings),
+		std::move(party_loyalties), updates
 	);
 	return ret;
 }
@@ -329,12 +309,16 @@ bool ProvinceHistoryManager::load_province_history_file(GameManager& game_manage
 		[this, &game_manager, &name](std::string_view key, ast::NodeCPtr value) -> bool {
 			bool is_date = false;
 			Date entry = Date().from_string(key, &is_date, true);
-			if (!is_date) return true;
+			if (!is_date) {
+				return true;
+			}
 
 			Date const& end_date = game_manager.get_define_manager().get_end_date();
 			if (entry > end_date) {
-				Logger::error("History entry ", entry.to_string(), " of province ", name, " defined after defined end date ",
-					end_date.to_string());
+				Logger::error(
+					"History entry ", entry.to_string(), " of province ", name, " defined after defined end date ",
+					end_date.to_string()
+				);
 				return false;
 			}
 

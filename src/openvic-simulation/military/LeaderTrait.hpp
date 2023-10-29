@@ -14,13 +14,9 @@ namespace OpenVic {
 	struct LeaderTrait : HasIdentifier {
 		friend struct LeaderTraitManager;
 
-		enum class trait_type_t {
-			PERSONALITY,
-			BACKGROUND
-		};
+		enum class trait_type_t { PERSONALITY, BACKGROUND };
 
 	private:
-
 		const trait_type_t type;
 		/*
 		 * Allowed modifiers for leaders:
@@ -51,15 +47,7 @@ namespace OpenVic {
 	private:
 		IdentifierRegistry<LeaderTrait> leader_traits;
 		inline static const string_set_t allowed_modifiers = {
-			"attack",
-			"defence",
-			"morale",
-			"organisation",
-			"reconnaissance",
-			"speed",
-			"attrition",
-			"experience",
-			"reliability"
+			"attack", "defence", "morale", "organisation", "reconnaissance", "speed", "attrition", "experience", "reliability"
 		};
 
 	public:

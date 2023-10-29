@@ -23,8 +23,9 @@ namespace OpenVic {
 		source_location(std::string f, int l, std::string n) : _file(f), _line(l), _function(n) {}
 
 	public:
-		static source_location current(std::string f = __builtin_FILE(), int l = __builtin_LINE(),
-			std::string n = __builtin_FUNCTION()) {
+		static source_location current(
+			std::string f = __builtin_FILE(), int l = __builtin_LINE(), std::string n = __builtin_FUNCTION()
+		) {
 			return source_location(f, l, n);
 		}
 
@@ -83,7 +84,7 @@ namespace OpenVic {
 
 #define LOG_FUNC(name) \
 	private: \
-		static inline log_channel_t name##_channel{}; \
+		static inline log_channel_t name##_channel {}; \
 	public: \
 		static inline void set_##name##_func(log_func_t log_func) { \
 			name##_channel.func = log_func; \
@@ -91,7 +92,7 @@ namespace OpenVic {
 		template<typename... Ts> \
 		struct name { \
 			name(Ts&&... ts, source_location const& location = source_location::current()) { \
-				log<Ts...>{ name##_channel, std::forward<Ts>(ts)..., location }; \
+				log<Ts...> { name##_channel, std::forward<Ts>(ts)..., location }; \
 			} \
 		}; \
 		template<typename... Ts> \

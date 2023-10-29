@@ -37,7 +37,7 @@ void Requirement::set_acceptance_criteria(std::string in_acceptance_criteria) {
 }
 void Requirement::set_pass(bool in_pass) {
 	pass = in_pass;
-	set_tested(true);	// Ever setting a pass condition implies it has been tested
+	set_tested(true); // Ever setting a pass condition implies it has been tested
 }
 void Requirement::set_tested(bool in_tested) {
 	tested = in_tested;

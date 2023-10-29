@@ -6,10 +6,9 @@ using namespace OpenVic;
 using namespace OpenVic::NodeTools;
 
 Deployment::Deployment(
-	std::string_view new_path, std::vector<Army>&& new_armies,
-	std::vector<Navy>&& new_navies, std::vector<Leader>&& new_leaders
-) : HasIdentifier { new_path }, armies { std::move(new_armies) },
-	navies { std::move(new_navies) }, leaders { std::move(new_leaders) } {}
+	std::string_view new_path, std::vector<Army>&& new_armies, std::vector<Navy>&& new_navies, std::vector<Leader>&& new_leaders
+) : HasIdentifier { new_path }, armies { std::move(new_armies) }, navies { std::move(new_navies) },
+	leaders { std::move(new_leaders) } {}
 
 const std::vector<Army>& Deployment::get_armies() const {
 	return armies;
@@ -25,8 +24,9 @@ const std::vector<Leader>& Deployment::get_leaders() const {
 
 DeploymentManager::DeploymentManager() : deployments { "deployments" } {}
 
-bool DeploymentManager::add_deployment(std::string_view path, std::vector<Army>&& armies,
-	std::vector<Navy>&& navies, std::vector<Leader>&& leaders) {
+bool DeploymentManager::add_deployment(
+	std::string_view path, std::vector<Army>&& armies, std::vector<Navy>&& navies, std::vector<Leader>&& leaders
+) {
 	if (path.empty()) {
 		Logger::error("Attemped to load order of battle with no path! Something is very wrong!");
 		return false;
