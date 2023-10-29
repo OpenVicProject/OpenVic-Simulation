@@ -2,6 +2,7 @@
 
 #include <map>
 #include <vector>
+#include <bitset>
 
 #include "openvic-simulation/map/Province.hpp"
 #include "openvic-simulation/map/TerrainType.hpp"
@@ -19,7 +20,9 @@ namespace OpenVic {
     private:
         Country const* owner;
         Country const* controller;
-        std::vector<Country const*> cores;
+        uint8_t colonial;
+        bool slave;
+        std::vector<Country const*> cores; // non-standard, maintains cores between entries
         Good const* rgo;
         uint8_t life_rating;
         TerrainType const* terrain_type;
@@ -29,6 +32,8 @@ namespace OpenVic {
         ProvinceHistory(
             Country const* new_owner,
             Country const* new_controller,
+            uint8_t new_colonial,
+            bool new_slave,
             std::vector<Country const*>&& new_cores,
             Good const* new_rgo,
             uint8_t new_life_rating,
@@ -40,6 +45,8 @@ namespace OpenVic {
     public:
         Country const* get_owner() const;
         Country const* get_controller() const;
+        uint8_t get_colony_status() const; // 0 = state, 1 = protectorate, 2 = colony
+        bool is_slave() const;
         const std::vector<Country const*>& get_cores() const;
         bool is_core_of(Country const* country) const;
         Good const* get_rgo() const;
@@ -64,15 +71,16 @@ namespace OpenVic {
             Date date,
             Country const* owner,
             Country const* controller,
-            std::vector<Country const*>&& cores,
+            uint8_t colonial,
+            bool slave,
+            std::vector<Country const*>&& cores, // additive to existing entries
+            std::vector<Country const*>&& remove_cores, // existing cores that need to be removed
             Good const* rgo,
             uint8_t life_rating,
             TerrainType const* terrain_type,
             std::map<Building const*, uint8_t>&& buildings,
             std::map<Ideology const*, uint8_t>&& party_loyalties,
-            bool updated_cores,
-            bool updated_buildings,
-            bool updated_loyalties
+            std::bitset<5> updates // bitmap of updated non-pointer values, top to bottom
         );
 
         void lock_province_histories();
