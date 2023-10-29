@@ -36,7 +36,7 @@ namespace OpenVic {
 		IdeologyGroup const& get_group() const;
 		bool is_uncivilised() const;
 		bool get_can_reduce_militancy() const;
-		Date const& get_spawn_date() const;
+		Date get_spawn_date() const;
 	};
 
 	struct IdeologyManager {

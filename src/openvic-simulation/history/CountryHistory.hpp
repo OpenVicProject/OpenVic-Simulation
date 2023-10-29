@@ -54,7 +54,7 @@ namespace OpenVic {
 		const std::vector<Culture const*>& get_accepted_cultures() const;
 		Religion const* get_religion() const;
 		CountryParty const* get_ruling_party() const;
-		const Date get_last_election() const;
+		Date get_last_election() const;
 		const std::map<Ideology const*, fixed_point_t>& get_upper_house() const;
 		Province const* get_capital() const;
 		GovernmentType const* get_government_type() const;
@@ -72,7 +72,7 @@ namespace OpenVic {
 		bool locked = false;
 
 		inline bool _load_country_history_entry(
-			GameManager& game_manager, std::string_view name, Date const& date, ast::NodeCPtr root
+			GameManager& game_manager, std::string_view name, Date date, ast::NodeCPtr root
 		);
 
 	public:

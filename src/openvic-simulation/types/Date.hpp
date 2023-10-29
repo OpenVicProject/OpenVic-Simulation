@@ -96,5 +96,5 @@ namespace OpenVic {
 		static Date from_string(char const* str, size_t length, bool* successful = nullptr, bool quiet = false);
 		static Date from_string(std::string_view str, bool* successful = nullptr, bool quiet = false);
 	};
-	std::ostream& operator<<(std::ostream& out, Date const& date);
+	std::ostream& operator<<(std::ostream& out, Date date);
 }

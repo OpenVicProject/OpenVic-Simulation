@@ -27,11 +27,11 @@ CountryParty::CountryParty(
 ) : HasIdentifier { new_identifier }, start_date { new_start_date }, end_date { new_end_date }, ideology { new_ideology },
 	policies { std::move(new_policies) } {}
 
-Date const& CountryParty::get_start_date() const {
+Date CountryParty::get_start_date() const {
 	return start_date;
 }
 
-Date const& CountryParty::get_end_date() const {
+Date CountryParty::get_end_date() const {
 	return end_date;
 }
 

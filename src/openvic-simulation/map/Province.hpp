@@ -110,8 +110,8 @@ namespace OpenVic {
 		distribution_t const& get_religion_distribution() const;
 		void update_pops();
 
-		void update_state(Date const& today);
-		void tick(Date const& today);
+		void update_state(Date today);
+		void tick(Date today);
 
 		bool is_adjacent_to(Province const* province);
 		bool add_adjacency(Province const* province, distance_t distance, flags_t flags);

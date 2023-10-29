@@ -176,7 +176,7 @@ inline ProvinceHistory const* ProvinceHistoryManager::get_province_history(
 }
 
 inline bool ProvinceHistoryManager::_load_province_history_entry(
-	GameManager& game_manager, std::string_view province, Date const& date, ast::NodeCPtr root
+	GameManager& game_manager, std::string_view province, Date date, ast::NodeCPtr root
 ) {
 	Country const* owner = nullptr;
 	Country const* controller = nullptr;
@@ -207,7 +207,7 @@ inline bool ProvinceHistoryManager::_load_province_history_entry(
 			}
 
 			bool is_date;
-			Date().from_string(key, &is_date, true);
+			Date::from_string(key, &is_date, true);
 			if (is_date) {
 				return true;
 			}
@@ -307,12 +307,12 @@ bool ProvinceHistoryManager::load_province_history_file(GameManager& game_manage
 	ret &= expect_dictionary(
 		[this, &game_manager, &name](std::string_view key, ast::NodeCPtr value) -> bool {
 			bool is_date = false;
-			Date entry = Date().from_string(key, &is_date, true);
+			Date entry = Date::from_string(key, &is_date, true);
 			if (!is_date) {
 				return true;
 			}
 
-			Date const& end_date = game_manager.get_define_manager().get_end_date();
+			Date end_date = game_manager.get_define_manager().get_end_date();
 			if (entry > end_date) {
 				Logger::error(
 					"History entry ", entry.to_string(), " of province ", name, " defined after defined end date ",

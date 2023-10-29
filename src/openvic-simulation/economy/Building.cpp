@@ -129,11 +129,11 @@ ExpansionState BuildingInstance::get_expansion_state() const {
 	return expansion_state;
 }
 
-Date const& BuildingInstance::get_start_date() const {
+Date BuildingInstance::get_start_date() const {
 	return start;
 }
 
-Date const& BuildingInstance::get_end_date() const {
+Date BuildingInstance::get_end_date() const {
 	return end;
 }
 
@@ -153,7 +153,7 @@ bool BuildingInstance::expand() {
 /* REQUIREMENTS:
  * MAP-71, MAP-74, MAP-77
  */
-void BuildingInstance::update_state(Date const& today) {
+void BuildingInstance::update_state(Date today) {
 	switch (expansion_state) {
 	case ExpansionState::Preparing:
 		start = today;
@@ -166,7 +166,7 @@ void BuildingInstance::update_state(Date const& today) {
 	}
 }
 
-void BuildingInstance::tick(Date const& today) {
+void BuildingInstance::tick(Date today) {
 	if (expansion_state == ExpansionState::Preparing) {
 		expansion_state = ExpansionState::Expanding;
 	}

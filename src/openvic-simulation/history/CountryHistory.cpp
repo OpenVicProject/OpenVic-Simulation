@@ -33,7 +33,7 @@ CountryParty const* CountryHistory::get_ruling_party() const {
 	return ruling_party;
 }
 
-const Date CountryHistory::get_last_election() const {
+Date CountryHistory::get_last_election() const {
 	return last_election;
 }
 
@@ -103,7 +103,7 @@ bool CountryHistoryManager::add_country_history_entry(
 		if (ruling_party != nullptr) {
 			existing_entry->second.ruling_party = ruling_party;
 		}
-		if (last_election != Date(0)) {
+		if (last_election != Date{}) {
 			existing_entry->second.last_election = last_election;
 		}
 		if (updated_upper_house) {
@@ -195,7 +195,7 @@ inline CountryHistory const* CountryHistoryManager::get_country_history(Country 
 }
 
 inline bool CountryHistoryManager::_load_country_history_entry(
-	GameManager& game_manager, std::string_view name, Date const& date, ast::NodeCPtr root
+	GameManager& game_manager, std::string_view name, Date date, ast::NodeCPtr root
 ) {
 	Province const* capital = nullptr;
 	Culture const* primary_culture = nullptr;
@@ -208,7 +208,7 @@ inline bool CountryHistoryManager::_load_country_history_entry(
 	std::map<Ideology const*, fixed_point_t> upper_house;
 	fixed_point_t plurality = -1, prestige = -1;
 	bool civilised = false;
-	Date last_election = Date(0);
+	Date last_election {};
 	Deployment const* initial_oob = nullptr;
 
 	bool updated_accepted_cultures = false, updated_upper_house = false, updated_reforms = false;
@@ -354,12 +354,12 @@ bool CountryHistoryManager::load_country_history_file(GameManager& game_manager,
 
 	ret &= expect_dictionary([this, &game_manager, &name](std::string_view key, ast::NodeCPtr value) -> bool {
 		bool is_date = false;
-		Date entry = Date().from_string(key, &is_date, true);
+		Date entry = Date::from_string(key, &is_date, true);
 		if (!is_date) {
 			return true;
 		}
 
-		Date const& end_date = game_manager.get_define_manager().get_end_date();
+		Date end_date = game_manager.get_define_manager().get_end_date();
 		if (entry > end_date) {
 			Logger::error(
 				"History entry ", entry.to_string(), " of country ", name, " defined after defined end date ",

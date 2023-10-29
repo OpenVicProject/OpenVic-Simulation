@@ -292,7 +292,7 @@ bool Map::setup(BuildingManager const& building_manager, PopManager const& pop_m
 	return ret;
 }
 
-void Map::update_state(Date const& today) {
+void Map::update_state(Date today) {
 	for (Province& province : provinces.get_items()) {
 		province.update_state(today);
 	}
@@ -300,7 +300,7 @@ void Map::update_state(Date const& today) {
 	update_total_map_population();
 }
 
-void Map::tick(Date const& today) {
+void Map::tick(Date today) {
 	for (Province& province : provinces.get_items()) {
 		province.tick(today);
 	}

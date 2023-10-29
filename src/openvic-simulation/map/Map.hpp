@@ -108,8 +108,8 @@ namespace OpenVic {
 		void update_total_map_population();
 		Pop::pop_size_t get_total_map_population() const;
 
-		void update_state(Date const& today);
-		void tick(Date const& today);
+		void update_state(Date today);
+		void tick(Date today);
 
 		bool load_province_definitions(std::vector<ovdl::csv::LineObject> const& lines);
 		bool load_province_positions(BuildingManager const& building_manager, ast::NodeCPtr root);

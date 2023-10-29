@@ -47,8 +47,8 @@ namespace OpenVic {
 	public:
 		CountryParty(CountryParty&&) = default;
 
-		const Date& get_start_date() const;
-		const Date& get_end_date() const;
+		Date get_start_date() const;
+		Date get_end_date() const;
 		Ideology const& get_ideology() const;
 		policy_map_t const& get_policies() const;
 	};

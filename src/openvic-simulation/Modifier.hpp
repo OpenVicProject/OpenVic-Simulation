@@ -93,7 +93,7 @@ namespace OpenVic {
 
 	public:
 		Modifier const& get_modifier() const;
-		Date const& get_expiry_date() const;
+		Date get_expiry_date() const;
 	};
 
 	template<typename Fn>

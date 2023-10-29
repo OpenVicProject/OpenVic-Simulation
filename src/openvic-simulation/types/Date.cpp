@@ -214,7 +214,7 @@ Date::operator std::string() const {
 	return to_string();
 }
 
-std::ostream& OpenVic::operator<<(std::ostream& out, Date const& date) {
+std::ostream& OpenVic::operator<<(std::ostream& out, Date date) {
 	return out << static_cast<int>(date.getYear()) << Date::SEPARATOR_CHARACTER << static_cast<int>(date.getMonth())
 		<< Date::SEPARATOR_CHARACTER << static_cast<int>(date.getDay());
 }

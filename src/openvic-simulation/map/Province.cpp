@@ -155,14 +155,14 @@ void Province::update_pops() {
 	}
 }
 
-void Province::update_state(Date const& today) {
+void Province::update_state(Date today) {
 	for (BuildingInstance& building : buildings.get_items()) {
 		building.update_state(today);
 	}
 	update_pops();
 }
 
-void Province::tick(Date const& today) {
+void Province::tick(Date today) {
 	for (BuildingInstance& building : buildings.get_items()) {
 		building.tick(today);
 	}

@@ -42,8 +42,8 @@ namespace OpenVic {
 		bool add_date_define(std::string_view name, Date date);
 		IDENTIFIER_REGISTRY_ACCESSORS(define);
 
-		const Date& get_start_date() const;
-		const Date& get_end_date() const;
+		Date get_start_date() const;
+		Date get_end_date() const;
 
 		bool load_defines_file(ast::NodeCPtr root);
 	};

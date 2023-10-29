@@ -25,7 +25,7 @@ std::string_view Bookmark::get_description() const {
 	return description;
 }
 
-Date const& Bookmark::get_date() const {
+Date Bookmark::get_date() const {
 	return date;
 }
 

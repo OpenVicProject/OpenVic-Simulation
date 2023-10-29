@@ -56,7 +56,7 @@ namespace OpenVic {
 		bool locked = false;
 
 		inline bool _load_province_history_entry(
-			GameManager& game_manager, std::string_view province, Date const& date, ast::NodeCPtr root
+			GameManager& game_manager, std::string_view province, Date date, ast::NodeCPtr root
 		);
 
 	public:

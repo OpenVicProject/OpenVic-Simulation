@@ -29,7 +29,7 @@ namespace OpenVic {
 
 		std::string_view get_name() const;
 		std::string_view get_description() const;
-		Date const& get_date() const;
+		Date get_date() const;
 		uint32_t get_initial_camera_x() const;
 		uint32_t get_initial_camera_y() const;
 	};

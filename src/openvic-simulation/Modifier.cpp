@@ -96,7 +96,7 @@ Modifier const& ModifierInstance::get_modifier() const {
 	return modifier;
 }
 
-Date const& ModifierInstance::get_expiry_date() const {
+Date ModifierInstance::get_expiry_date() const {
 	return expiry_date;
 }
 

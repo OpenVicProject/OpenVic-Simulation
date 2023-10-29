@@ -23,7 +23,7 @@ bool Ideology::get_can_reduce_militancy() const {
 	return can_reduce_militancy;
 }
 
-Date const& Ideology::get_spawn_date() const {
+Date Ideology::get_spawn_date() const {
 	return spawn_date;
 }
 
