@@ -6,13 +6,13 @@ using namespace OpenVic;
 
 void Logger::set_logger_funcs() {
 	Logger::set_info_func([](std::string&& str) {
-		std::cout << str;
+		std::cout << "[INFO] " << str;
 	});
 	Logger::set_warning_func([](std::string&& str) {
-		std::cerr << str;
+		std::cerr << "[WARNING] " << str;
 	});
 	Logger::set_error_func([](std::string&& str) {
-		std::cerr << str;
+		std::cerr << "[ERROR] " << str;
 	});
 }
 

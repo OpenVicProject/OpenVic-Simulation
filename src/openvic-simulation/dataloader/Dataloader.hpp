@@ -23,13 +23,10 @@ namespace OpenVic {
 	private:
 		path_vector_t roots;
 
-		bool _load_pop_types(
-			PopManager& pop_manager, UnitManager const& unit_manager, GoodManager const& good_manager
-		) const;
+		bool _load_pop_types(PopManager& pop_manager, UnitManager const& unit_manager, GoodManager const& good_manager) const;
 		bool _load_units(UnitManager& unit_manager, GoodManager const& good_manager) const;
 		bool _load_map_dir(GameManager& game_manager) const;
 		bool _load_oobs(GameManager& game_manager) const;
-		bool _load_countries(GameManager& game_manager) const;
 		bool _load_history(GameManager& game_manager) const;
 
 	public:

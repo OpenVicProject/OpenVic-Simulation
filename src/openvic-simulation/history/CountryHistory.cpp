@@ -272,7 +272,7 @@ inline bool CountryHistoryManager::_load_country_history_entry(
 				const std::vector<CountryParty>* parties =
 					&game_manager.get_country_manager().get_country_by_identifier(name)->get_parties();
 				for (auto& party : *parties) {
-					if (party.get_name() == identifier) {
+					if (party.get_identifier() == identifier) {
 						if (party.get_start_date() <= date && date <= party.get_end_date()) {
 							ruling_party = &party;
 							return true;
@@ -337,9 +337,10 @@ inline bool CountryHistoryManager::_load_country_history_entry(
 	)(root);
 
 	ret &= add_country_history_entry(
-		game_manager.get_country_manager().get_country_by_identifier(name), date, primary_culture, std::move(accepted_cultures),
-		religion, ruling_party, last_election, std::move(upper_house), capital, government_type, plurality, national_value,
-		civilised, prestige, std::move(reforms), initial_oob, updated_accepted_cultures, updated_upper_house, updated_reforms
+		game_manager.get_country_manager().get_country_by_identifier(name), date, primary_culture,
+		std::move(accepted_cultures), religion, ruling_party, last_election, std::move(upper_house), capital, government_type,
+		plurality, national_value, civilised, prestige, std::move(reforms), initial_oob, updated_accepted_cultures,
+		updated_upper_house, updated_reforms
 	);
 	return ret;
 }

@@ -534,31 +534,6 @@ bool Dataloader::_load_oobs(GameManager& game_manager) const {
 	return ret;
 }
 
-bool Dataloader::_load_countries(GameManager& game_manager) const {
-	static const fs::path countries_file = "common/countries.txt";
-
-	bool is_dynamic = false;
-
-	bool ret = expect_dictionary([this, &game_manager, &is_dynamic](std::string_view key, ast::NodeCPtr value) -> bool {
-		if (key == "dynamic_tags") {
-			return expect_bool(assign_variable_callback(is_dynamic))(value);
-		}
-
-		std::string_view data_path;
-
-		if (!expect_string(assign_variable_callback(data_path))(value)) {
-			return false;
-		}
-
-		return game_manager.get_country_manager().load_country_data_file(
-			game_manager, key, is_dynamic, parse_defines(lookup_file(countries_file.parent_path() / data_path)).get_file_node()
-		);
-	})(parse_defines(lookup_file(countries_file)).get_file_node());
-	game_manager.get_country_manager().lock_countries();
-
-	return ret;
-}
-
 bool Dataloader::_load_history(GameManager& game_manager) const {
 	static const fs::path country_history_directory = "history/countries";
 	static const fs::path province_history_directory = "history/provinces";
@@ -724,6 +699,7 @@ bool Dataloader::load_defines(GameManager& game_manager) const {
 	static const fs::path defines_file = "common/defines.lua";
 	static const fs::path buildings_file = "common/buildings.txt";
 	static const fs::path bookmark_file = "common/bookmarks.txt";
+	static const fs::path countries_file = "common/countries.txt";
 	static const fs::path culture_file = "common/cultures.txt";
 	static const fs::path goods_file = "common/goods.txt";
 	static const fs::path governments_file = "common/governments.txt";
@@ -836,7 +812,9 @@ bool Dataloader::load_defines(GameManager& game_manager) const {
 		Logger::error("Failed to load orders of battle!");
 		ret = false;
 	}
-	if (!_load_countries(game_manager)) {
+	if (!game_manager.get_country_manager().load_countries(
+		game_manager, *this, countries_file.parent_path(), parse_defines(lookup_file(countries_file)).get_file_node()
+	)) {
 		Logger::error("Failed to load countries!");
 		ret = false;
 	}

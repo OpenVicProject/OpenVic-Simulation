@@ -65,13 +65,13 @@ namespace OpenVic {
 		struct log {
 			log(log_channel_t& log_channel, Ts&&... ts, source_location const& location) {
 				std::stringstream stream;
-				stream << "\n" << get_filename(location.file_name()) << "("
+				stream << get_filename(location.file_name()) << "("
 					/* Function name removed to reduce clutter. It is already included
 					* in Godot's print functions, so this was repeating it. */
 					//<< location.line() << ") `" << location.function_name() << "`: ";
 					<< location.line() << "): ";
 				((stream << std::forward<Ts>(ts)), ...);
-				stream << std::endl;
+				stream << "\n" << std::endl;
 				log_channel.queue.push(stream.str());
 				if (log_channel.func) {
 					do {
@@ -83,20 +83,21 @@ namespace OpenVic {
 		};
 
 #define LOG_FUNC(name) \
-	private: \
-		static inline log_channel_t name##_channel {}; \
-	public: \
-		static inline void set_##name##_func(log_func_t log_func) { \
-			name##_channel.func = log_func; \
+private: \
+	static inline log_channel_t name##_channel {}; \
+\
+public: \
+	static inline void set_##name##_func(log_func_t log_func) { \
+		name##_channel.func = log_func; \
+	} \
+	template<typename... Ts> \
+	struct name { \
+		name(Ts&&... ts, source_location const& location = source_location::current()) { \
+			log<Ts...> { name##_channel, std::forward<Ts>(ts)..., location }; \
 		} \
-		template<typename... Ts> \
-		struct name { \
-			name(Ts&&... ts, source_location const& location = source_location::current()) { \
-				log<Ts...> { name##_channel, std::forward<Ts>(ts)..., location }; \
-			} \
-		}; \
-		template<typename... Ts> \
-		name(Ts&&...) -> name<Ts...>;
+	}; \
+	template<typename... Ts> \
+	name(Ts&&...) -> name<Ts...>;
 
 		LOG_FUNC(info)
 		LOG_FUNC(warning)

@@ -49,10 +49,12 @@ namespace OpenVic {
 
 #define HASID_PROPERTY(NAME) \
 	const NAME; \
+\
 public: \
-	auto get_##NAME() const->decltype(get_property(NAME)) { \
+	auto get_##NAME() const -> decltype(get_property(NAME)) { \
 		return get_property(NAME); \
 	} \
+\
 private:
 	};
 
@@ -180,9 +182,10 @@ private:
 					return duplicate_callback(name, new_identifier);
 				}
 			}
-			identifier_index_map.emplace(new_identifier, items.size());
-			items.push_back(std::move(item));
-			return true;
+			const std::pair<string_map_t<size_t>::iterator, bool> ret =
+				identifier_index_map.emplace(std::move(new_identifier), items.size());
+			items.emplace_back(std::move(item));
+			return ret.second && ret.first->second + 1 == items.size();
 		}
 
 		void lock() {
@@ -280,8 +283,9 @@ private:
 			return identifiers;
 		}
 
-		NodeTools::node_callback_t expect_item_decimal_map(NodeTools::callback_t<decimal_map_t<value_type const*>&&> callback)
-			const {
+		NodeTools::node_callback_t expect_item_decimal_map(
+			NodeTools::callback_t<decimal_map_t<value_type const*>&&> callback
+		) const {
 			return [this, callback](ast::NodeCPtr node) -> bool {
 				decimal_map_t<value_type const*> map;
 				bool ret = expect_item_dictionary([&map](value_type const& key, ast::NodeCPtr value) -> bool {
@@ -390,7 +394,9 @@ private:
 	) { \
 		return plural.expect_item_str(callback); \
 	} \
-	NodeTools::node_callback_t expect_##singular##_identifier(NodeTools::callback_t<decltype(plural)::value_type&> callback) { \
+	NodeTools::node_callback_t expect_##singular##_identifier( \
+		NodeTools::callback_t<decltype(plural)::value_type&> callback \
+	) { \
 		return plural.expect_item_identifier(callback); \
 	} \
 	NodeTools::node_callback_t expect_##singular##_dictionary( \
