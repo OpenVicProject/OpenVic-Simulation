@@ -8,7 +8,12 @@ namespace OpenVic {
 	struct ModifierEffect : HasIdentifier {
 		friend struct ModifierManager;
 
-		enum class format_t { RAW_DECIMAL, PERCENTAGE_DECIMAL, INT };
+		enum class format_t {
+			PROPORTION_DECIMAL,	/* An unscaled fraction/ratio, with 1 being "full"/"whole" */
+			PERCENTAGE_DECIMAL,	/* A fraction/ratio scaled so that 100 is "full"/"whole" */
+			RAW_DECIMAL,		/* A continuous quantity, e.g. attack strength */
+			INT					/* A discrete quantity, e.g. building count limit */
+		};
 
 	private:
 		/* If true, positive values will be green and negative values will be red.
@@ -95,9 +100,12 @@ namespace OpenVic {
 	concept ModifierEffectValidator = std::predicate<Fn, ModifierEffect const&>;
 
 	struct ModifierManager {
-
+		/* Some ModifierEffects are generated mid-load, such as max/min count modifiers for each building, so
+		 * we can't lock it until loading is over. This means we can't rely on locking for pointer stability,
+		 * so instead we use an IdentifierInstanceRegistry (using std::unique_ptr's under the hood).
+		 */
 	private:
-		IdentifierRegistry<ModifierEffect> modifier_effects;
+		IdentifierInstanceRegistry<ModifierEffect> modifier_effects;
 		IdentifierRegistry<Modifier> modifiers;
 
 		/* effect_validator takes in ModifierEffect const& */
@@ -111,7 +119,7 @@ namespace OpenVic {
 
 		bool add_modifier_effect(
 			std::string_view identifier, bool province_good,
-			ModifierEffect::format_t format = ModifierEffect::format_t::PERCENTAGE_DECIMAL
+			ModifierEffect::format_t format = ModifierEffect::format_t::PROPORTION_DECIMAL
 		);
 		IDENTIFIER_REGISTRY_ACCESSORS(modifier_effect)
 

@@ -107,7 +107,9 @@ bool ModifierManager::add_modifier_effect(std::string_view identifier, bool posi
 		Logger::error("Invalid modifier effect identifier - empty!");
 		return false;
 	}
-	return modifier_effects.add_item({ identifier, positive_good, format });
+	return modifier_effects.add_item(std::unique_ptr<ModifierEffect> {
+		new ModifierEffect { identifier, positive_good, format }
+	});
 }
 
 bool ModifierManager::add_modifier(std::string_view identifier, ModifierValue&& values, Modifier::icon_t icon) {
@@ -150,8 +152,7 @@ bool ModifierManager::setup_modifier_effects() {
 	ret &= add_modifier_effect("influence_modifier", true);
 	ret &= add_modifier_effect("issue_change_speed", true);
 	ret &= add_modifier_effect("land_organisation", true);
-	// weird, land_unit_start_experience = 15 would give a 15% boost
-	ret &= add_modifier_effect("land_unit_start_experience", true);
+	ret &= add_modifier_effect("land_unit_start_experience", true, PERCENTAGE_DECIMAL);
 	ret &= add_modifier_effect("leadership_modifier", true);
 	ret &= add_modifier_effect("loan_interest", false);
 	ret &= add_modifier_effect("max_loan_modifier", true);
@@ -172,8 +173,7 @@ bool ModifierManager::setup_modifier_effects() {
 	ret &= add_modifier_effect("mobilisation_impact", false);
 	ret &= add_modifier_effect("mobilisation_size", true);
 	ret &= add_modifier_effect("naval_organisation", true);
-	// weird, naval_unit_start_experience = 15 would give a 15% boost
-	ret &= add_modifier_effect("naval_unit_start_experience", true);
+	ret &= add_modifier_effect("naval_unit_start_experience", true, PERCENTAGE_DECIMAL);
 	ret &= add_modifier_effect("non_accepted_pop_consciousness_modifier", false, RAW_DECIMAL);
 	ret &= add_modifier_effect("non_accepted_pop_militancy_modifier", false, RAW_DECIMAL);
 	ret &= add_modifier_effect("org_regain", true);
@@ -188,7 +188,9 @@ bool ModifierManager::setup_modifier_effects() {
 	ret &= add_modifier_effect("research_points_modifier", true);
 	ret &= add_modifier_effect("research_points_on_conquer", true);
 	ret &= add_modifier_effect("rgo_output", true);
+	ret &= add_modifier_effect("RGO_output", true);
 	ret &= add_modifier_effect("rgo_throughput", true);
+	ret &= add_modifier_effect("RGO_throughput", true);
 	ret &= add_modifier_effect("rich_income_modifier", true);
 	ret &= add_modifier_effect("rich_life_needs", true);
 	ret &= add_modifier_effect("rich_everyday_needs", true);
@@ -197,9 +199,10 @@ bool ModifierManager::setup_modifier_effects() {
 	ret &= add_modifier_effect("ruling_party_support", true);
 	ret &= add_modifier_effect("social_reform_desire", false);
 	ret &= add_modifier_effect("supply_consumption", false);
-	// weird, naval_unit_start_experience = 15 would give a 15% boost
-	ret &= add_modifier_effect("unit_start_experience", true);
+	ret &= add_modifier_effect("tax_efficiency", true);
+	ret &= add_modifier_effect("unit_start_experience", true, PERCENTAGE_DECIMAL);
 	ret &= add_modifier_effect("war_exhaustion", false);
+
 	// TODO: make technology group modifiers dynamic
 	ret &= add_modifier_effect("army_tech_research_bonus", true);
 	ret &= add_modifier_effect("commerce_tech_research_bonus", true);
@@ -224,9 +227,13 @@ bool ModifierManager::setup_modifier_effects() {
 	ret &= add_modifier_effect("pop_militancy_modifier", false, RAW_DECIMAL);
 	ret &= add_modifier_effect("population_growth", true);
 	ret &= add_modifier_effect("farm_rgo_eff", true);
+	ret &= add_modifier_effect("farm_RGO_eff", true);
 	ret &= add_modifier_effect("farm_rgo_size", true);
+	ret &= add_modifier_effect("farm_RGO_size", true);
 	ret &= add_modifier_effect("mine_rgo_eff", true);
+	ret &= add_modifier_effect("mine_RGO_eff", true);
 	ret &= add_modifier_effect("mine_rgo_size", true);
+	ret &= add_modifier_effect("mine_RGO_size", true);
 	ret &= add_modifier_effect("movement_cost", false);
 	ret &= add_modifier_effect("supply_limit", true, RAW_DECIMAL);
 
@@ -242,22 +249,6 @@ bool ModifierManager::setup_modifier_effects() {
 	ret &= add_modifier_effect("reliability", true, RAW_DECIMAL);
 	ret &= add_modifier_effect("speed", true);
 
-	/* These should be added automatically for each Building loaded (or at least
-	 * non-factories), however currently we need modifier effects locked before we
-	 * can load buildings, so some architectural changes will be needed.
-	 */
-	ret &= add_modifier_effect("max_fort", true, ModifierEffect::format_t::INT);
-	ret &= add_modifier_effect("min_build_fort", true, ModifierEffect::format_t::INT);
-	ret &= add_modifier_effect("max_naval_base", true, ModifierEffect::format_t::INT);
-	ret &= add_modifier_effect("min_build_naval_base", true, ModifierEffect::format_t::INT);
-	ret &= add_modifier_effect("max_railroad", true, ModifierEffect::format_t::INT);
-	ret &= add_modifier_effect("min_build_railroad", true, ModifierEffect::format_t::INT);
-	ret &= add_modifier_effect("max_university", true, ModifierEffect::format_t::INT);
-	ret &= add_modifier_effect("min_build_university", true, ModifierEffect::format_t::INT);
-	ret &= add_modifier_effect("max_bank", true, ModifierEffect::format_t::INT);
-	ret &= add_modifier_effect("min_build_bank", true, ModifierEffect::format_t::INT);
-
-	modifier_effects.lock();
 	return ret;
 }
 

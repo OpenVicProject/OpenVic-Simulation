@@ -162,7 +162,7 @@ namespace OpenVic {
 
 		bool load_buildings_file(
 			GoodManager const& good_manager, ProductionTypeManager const& production_type_manager,
-			ModifierManager const& modifier_manager, ast::NodeCPtr root
+			ModifierManager& modifier_manager, ast::NodeCPtr root
 		);
 
 		bool generate_province_buildings(Province& province) const;
