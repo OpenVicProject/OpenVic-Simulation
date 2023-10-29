@@ -1,5 +1,5 @@
-# include <testing/TestScript.hpp>
-# include <GameManager.hpp>
+#include "openvic-simulation/GameManager.hpp"
+#include "openvic-simulation/testing/TestScript.hpp"
 
 namespace OpenVic {
 	class A_004_networking_tests : public TestScript {
@@ -10,10 +10,8 @@ namespace OpenVic {
 			add_requirements();
 		}
 
-		void add_requirements() {
-		}
+		void add_requirements() {}
 
-		void execute_script() {
-		}
+		void execute_script() {}
 	};
 }

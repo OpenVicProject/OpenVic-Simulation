@@ -1,19 +1,19 @@
 #pragma once
 
-#include "openvic-simulation/types/Date.hpp"
-#include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
-#include "openvic-simulation/types/IdentifierRegistry.hpp"
+#include "openvic-simulation/Modifier.hpp"
 #include "openvic-simulation/economy/Good.hpp"
 #include "openvic-simulation/economy/ProductionType.hpp"
-#include "openvic-simulation/Modifier.hpp"
+#include "openvic-simulation/types/Date.hpp"
+#include "openvic-simulation/types/IdentifierRegistry.hpp"
+#include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
 
 #define ARGS \
 	ModifierValue&& modifier, std::string_view on_completion, fixed_point_t completion_size, level_t max_level, \
-	Good::good_map_t&& goods_cost, fixed_point_t cost, Timespan build_time, bool visibility, bool on_map, bool default_enabled, \
-	ProductionType const* production_type, bool pop_build_factory, bool strategic_factory, bool advanced_factory, level_t fort_level, \
-	uint64_t naval_capacity, std::vector<fixed_point_t>&& colonial_points, bool in_province, bool one_per_state, fixed_point_t colonial_range, \
-	fixed_point_t infrastructure, bool spawn_railway_track, bool sail, bool steam, \
-	bool capital, bool port
+	Good::good_map_t&& goods_cost, fixed_point_t cost, Timespan build_time, bool visibility, bool on_map, \
+	bool default_enabled, ProductionType const* production_type, bool pop_build_factory, bool strategic_factory, \
+	bool advanced_factory, level_t fort_level, uint64_t naval_capacity, std::vector<fixed_point_t>&& colonial_points, \
+	bool in_province, bool one_per_state, fixed_point_t colonial_range, fixed_point_t infrastructure, \
+	bool spawn_railway_track, bool sail, bool steam, bool capital, bool port
 
 namespace OpenVic {
 
@@ -33,14 +33,14 @@ namespace OpenVic {
 	private:
 		BuildingType const& type;
 		const ModifierValue modifier;
-		const std::string on_completion; //probably sound played on completion
+		const std::string on_completion; // probably sound played on completion
 		const fixed_point_t completion_size;
 		const level_t max_level;
 		const Good::good_map_t goods_cost;
 		const fixed_point_t cost;
-		const Timespan build_time; //time
+		const Timespan build_time; // time
 		const bool visibility;
-		const bool on_map; //onmap
+		const bool on_map; // onmap
 
 		const bool default_enabled;
 		ProductionType const* production_type;
@@ -48,21 +48,21 @@ namespace OpenVic {
 		const bool strategic_factory;
 		const bool advanced_factory;
 
-		const level_t fort_level; //probably the step-per-level
+		const level_t fort_level; // probably the step-per-level
 
 		const uint64_t naval_capacity;
 		const std::vector<fixed_point_t> colonial_points;
-		const bool in_province; //province
+		const bool in_province; // province
 		const bool one_per_state;
 		const fixed_point_t colonial_range;
 
 		const fixed_point_t infrastructure;
 		const bool spawn_railway_track;
 
-		const bool sail; //only in clipper shipyard
-		const bool steam; //only in steamer shipyard
-		const bool capital; //only in naval base
-		const bool port; //only in naval base
+		const bool sail; // only in clipper shipyard
+		const bool steam; // only in steamer shipyard
+		const bool capital; // only in naval base
+		const bool port; // only in naval base
 
 		Building(std::string_view identifier, BuildingType const& type, ARGS);
 
@@ -108,14 +108,9 @@ namespace OpenVic {
 		BuildingType(BuildingType&&) = default;
 	};
 
-	enum class ExpansionState {
-		CannotExpand,
-		CanExpand,
-		Preparing,
-		Expanding
-	};
+	enum class ExpansionState { CannotExpand, CanExpand, Preparing, Expanding };
 
-	struct BuildingInstance : HasIdentifier { //used in the actual game
+	struct BuildingInstance : HasIdentifier { // used in the actual game
 		friend struct BuildingManager;
 		using level_t = Building::level_t;
 
@@ -145,13 +140,12 @@ namespace OpenVic {
 		bool expand();
 		void update_state(Date const& today);
 		void tick(Date const& today);
-
 	};
 
 	struct Province;
 
 	struct BuildingManager {
-		using level_t = Building::level_t; //this is getting ridiculous
+		using level_t = Building::level_t; // this is getting ridiculous
 
 	private:
 		IdentifierRegistry<BuildingType> building_types;
@@ -166,7 +160,10 @@ namespace OpenVic {
 		bool add_building(std::string_view identifier, BuildingType const* type, ARGS);
 		IDENTIFIER_REGISTRY_ACCESSORS(building)
 
-		bool load_buildings_file(GoodManager const& good_manager, ProductionTypeManager const& production_type_manager, ModifierManager const& modifier_manager, ast::NodeCPtr root);
+		bool load_buildings_file(
+			GoodManager const& good_manager, ProductionTypeManager const& production_type_manager,
+			ModifierManager const& modifier_manager, ast::NodeCPtr root
+		);
 
 		bool generate_province_buildings(Province& province) const;
 	};

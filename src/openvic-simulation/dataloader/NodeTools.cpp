@@ -53,54 +53,51 @@ node_callback_t NodeTools::expect_identifier_or_string(callback_t<std::string_vi
 			if (cast_node != nullptr) {
 				return _abstract_string_node_callback<ast::AbstractStringNode>(callback, allow_empty)(*cast_node);
 			}
-			Logger::error("Invalid node type ", node->get_type(), " when expecting ", ast::IdentifierNode::get_type_static(), " or ", ast::StringNode::get_type_static());
+			Logger::error(
+				"Invalid node type ", node->get_type(), " when expecting ", ast::IdentifierNode::get_type_static(), " or ",
+				ast::StringNode::get_type_static()
+			);
 		} else {
-			Logger::error("Null node when expecting ", ast::IdentifierNode::get_type_static(), " or ", ast::StringNode::get_type_static());
+			Logger::error(
+				"Null node when expecting ", ast::IdentifierNode::get_type_static(), " or ", ast::StringNode::get_type_static()
+			);
 		}
 		return false;
 	};
 }
 
 node_callback_t NodeTools::expect_bool(callback_t<bool> callback) {
-	static const string_map_t<bool> bool_map = {
-		{ "yes", true }, { "no", false }
-	};
+	static const string_map_t<bool> bool_map = { { "yes", true }, { "no", false } };
 	return expect_identifier(expect_mapped_string(bool_map, callback));
 }
 
 node_callback_t NodeTools::expect_int_bool(callback_t<bool> callback) {
-	static const string_map_t<bool> bool_map = {
-		{ "1", true }, { "0", false }
-	};
+	static const string_map_t<bool> bool_map = { { "1", true }, { "0", false } };
 	return expect_identifier(expect_mapped_string(bool_map, callback));
 }
 
 node_callback_t NodeTools::expect_int64(callback_t<int64_t> callback) {
-	return expect_identifier(
-		[callback](std::string_view identifier) -> bool {
-			bool successful = false;
-			const int64_t val = StringUtils::string_to_int64(identifier, &successful, 10);
-			if (successful) {
-				return callback(val);
-			}
-			Logger::error("Invalid int identifier text: ", identifier);
-			return false;
+	return expect_identifier([callback](std::string_view identifier) -> bool {
+		bool successful = false;
+		const int64_t val = StringUtils::string_to_int64(identifier, &successful, 10);
+		if (successful) {
+			return callback(val);
 		}
-	);
+		Logger::error("Invalid int identifier text: ", identifier);
+		return false;
+	});
 }
 
 node_callback_t NodeTools::expect_uint64(callback_t<uint64_t> callback) {
-	return expect_identifier(
-		[callback](std::string_view identifier) -> bool {
-			bool successful = false;
-			const uint64_t val = StringUtils::string_to_uint64(identifier, &successful, 10);
-			if (successful) {
-				return callback(val);
-			}
-			Logger::error("Invalid uint identifier text: ", identifier);
-			return false;
+	return expect_identifier([callback](std::string_view identifier) -> bool {
+		bool successful = false;
+		const uint64_t val = StringUtils::string_to_uint64(identifier, &successful, 10);
+		if (successful) {
+			return callback(val);
 		}
-	);
+		Logger::error("Invalid uint identifier text: ", identifier);
+		return false;
+	});
 }
 
 callback_t<std::string_view> NodeTools::expect_fixed_point_str(callback_t<fixed_point_t> callback) {
@@ -123,18 +120,22 @@ node_callback_t NodeTools::expect_colour(callback_t<colour_t> callback) {
 	return [callback](ast::NodeCPtr node) -> bool {
 		colour_t col = NULL_COLOUR;
 		uint32_t components = 0;
-		bool ret = expect_list_of_length(3, expect_fixed_point([&col, &components](fixed_point_t val) -> bool {
-											 components++;
-											 col <<= 8;
-											 if (val < 0 || val > 255) {
-												 Logger::error("Invalid colour component: ", val);
-												 return false;
-											 } else {
-												 if (val <= 1) val *= 255;
-												 col |= val.to_int32_t();
-												 return true;
-											 }
-										 }))(node);
+		bool ret = expect_list_of_length(3, expect_fixed_point(
+			[&col, &components](fixed_point_t val) -> bool {
+				components++;
+				col <<= 8;
+				if (val < 0 || val > 255) {
+					Logger::error("Invalid colour component: ", val);
+					return false;
+				} else {
+					if (val <= 1) {
+						val *= 255;
+					}
+					col |= val.to_int32_t();
+					return true;
+				}
+			}
+		))(node);
 		ret &= callback(col << 8 * (3 - components));
 		return ret;
 	};
@@ -196,30 +197,26 @@ node_callback_t NodeTools::expect_fvec2(callback_t<fvec2_t> callback) {
 }
 
 node_callback_t NodeTools::expect_assign(key_value_callback_t callback) {
-	return _expect_type<ast::AssignNode>(
-		[callback](ast::AssignNode const& assign_node) -> bool {
-			return callback(assign_node._name, assign_node._initializer.get());
-		}
-	);
+	return _expect_type<ast::AssignNode>([callback](ast::AssignNode const& assign_node) -> bool {
+		return callback(assign_node._name, assign_node._initializer.get());
+	});
 }
 
 node_callback_t NodeTools::expect_list_and_length(length_callback_t length_callback, node_callback_t callback) {
-	return _expect_type<ast::AbstractListNode>(
-		[length_callback, callback](ast::AbstractListNode const& list_node) -> bool {
-			std::vector<ast::NodeUPtr> const& list = list_node._statements;
-			bool ret = true;
-			size_t size = length_callback(list.size());
-			if (size > list.size()) {
-				Logger::error("Trying to read more values than the list contains: ", size, " > ", list.size());
-				size = list.size();
-				ret = false;
-			}
-			std::for_each(list.begin(), list.begin() + size, [callback, &ret](ast::NodeUPtr const& sub_node) -> void {
-				ret &= callback(sub_node.get());
-			});
-			return ret;
+	return _expect_type<ast::AbstractListNode>([length_callback, callback](ast::AbstractListNode const& list_node) -> bool {
+		std::vector<ast::NodeUPtr> const& list = list_node._statements;
+		bool ret = true;
+		size_t size = length_callback(list.size());
+		if (size > list.size()) {
+			Logger::error("Trying to read more values than the list contains: ", size, " > ", list.size());
+			size = list.size();
+			ret = false;
 		}
-	);
+		std::for_each(list.begin(), list.begin() + size, [callback, &ret](ast::NodeUPtr const& sub_node) -> void {
+			ret &= callback(sub_node.get());
+		});
+		return ret;
+	});
 }
 
 node_callback_t NodeTools::expect_list_of_length(size_t length, node_callback_t callback) {
@@ -230,7 +227,9 @@ node_callback_t NodeTools::expect_list_of_length(size_t length, node_callback_t 
 				if (size != length) {
 					Logger::error("List length ", size, " does not match expected length ", length);
 					ret = false;
-					if (length < size) return length;
+					if (length < size) {
+						return length;
+					}
 				}
 				return size;
 			},
@@ -259,26 +258,24 @@ node_callback_t NodeTools::expect_length(callback_t<size_t> callback) {
 }
 
 node_callback_t NodeTools::expect_key(std::string_view key, node_callback_t callback, bool* key_found) {
-	return _expect_type<ast::AbstractListNode>(
-		[key, callback, key_found](ast::AbstractListNode const& list_node) -> bool {
-			std::vector<ast::NodeUPtr> const& list = list_node._statements;
-			for (ast::NodeUPtr const& sub_node : list_node._statements) {
-				ast::AssignNode const* assign_node = sub_node->cast_to<ast::AssignNode>();
-				if (assign_node != nullptr && assign_node->_name == key) {
-					if (key_found != nullptr) {
-						*key_found = true;
-					}
-					return callback(&*assign_node->_initializer);
+	return _expect_type<ast::AbstractListNode>([key, callback, key_found](ast::AbstractListNode const& list_node) -> bool {
+		std::vector<ast::NodeUPtr> const& list = list_node._statements;
+		for (ast::NodeUPtr const& sub_node : list_node._statements) {
+			ast::AssignNode const* assign_node = sub_node->cast_to<ast::AssignNode>();
+			if (assign_node != nullptr && assign_node->_name == key) {
+				if (key_found != nullptr) {
+					*key_found = true;
 				}
+				return callback(&*assign_node->_initializer);
 			}
-			if (key_found != nullptr) {
-				*key_found = false;
-			} else {
-				Logger::error("Failed to find expected key: ", key);
-			}
-			return false;
 		}
-	);
+		if (key_found != nullptr) {
+			*key_found = false;
+		} else {
+			Logger::error("Failed to find expected key: ", key);
+		}
+		return false;
+	});
 }
 
 node_callback_t NodeTools::expect_dictionary_and_length(length_callback_t length_callback, key_value_callback_t callback) {
@@ -289,7 +286,9 @@ node_callback_t NodeTools::expect_dictionary(key_value_callback_t callback) {
 	return expect_dictionary_and_length(default_length_callback, callback);
 }
 
-bool NodeTools::add_key_map_entry(key_map_t& key_map, std::string_view key, dictionary_entry_t::expected_count_t expected_count, node_callback_t callback) {
+bool NodeTools::add_key_map_entry(
+	key_map_t& key_map, std::string_view key, dictionary_entry_t::expected_count_t expected_count, node_callback_t callback
+) {
 	if (key_map.find(key) == key_map.end()) {
 		key_map.emplace(key, dictionary_entry_t { expected_count, callback });
 		return true;
@@ -336,11 +335,11 @@ bool NodeTools::check_key_map_counts(key_map_t& key_map) {
 	return ret;
 }
 
-node_callback_t NodeTools::expect_dictionary_key_map_and_length_and_default(key_map_t key_map, length_callback_t length_callback, key_value_callback_t default_callback) {
+node_callback_t NodeTools::expect_dictionary_key_map_and_length_and_default(
+	key_map_t key_map, length_callback_t length_callback, key_value_callback_t default_callback
+) {
 	return [length_callback, default_callback, key_map = std::move(key_map)](ast::NodeCPtr node) mutable -> bool {
-		bool ret = expect_dictionary_and_length(
-			length_callback, dictionary_keys_callback(key_map, default_callback)
-		)(node);
+		bool ret = expect_dictionary_and_length(length_callback, dictionary_keys_callback(key_map, default_callback))(node);
 		ret &= check_key_map_counts(key_map);
 		return ret;
 	};
@@ -355,7 +354,9 @@ node_callback_t NodeTools::expect_dictionary_key_map_and_default(key_map_t key_m
 }
 
 node_callback_t NodeTools::expect_dictionary_key_map(key_map_t key_map) {
-	return expect_dictionary_key_map_and_length_and_default(std::move(key_map), default_length_callback, key_value_invalid_callback);
+	return expect_dictionary_key_map_and_length_and_default(
+		std::move(key_map), default_length_callback, key_value_invalid_callback
+	);
 }
 
 node_callback_t NodeTools::name_list_callback(callback_t<std::vector<std::string>&&> callback) {

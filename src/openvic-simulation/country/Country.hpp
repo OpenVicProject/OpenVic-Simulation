@@ -37,10 +37,7 @@ namespace OpenVic {
 		const std::vector<Issue const*> policies;
 
 		CountryParty(
-			std::string_view new_name,
-			Date new_start_date,
-			Date new_end_date,
-			const Ideology& new_ideology,
+			std::string_view new_name, Date new_start_date, Date new_end_date, const Ideology& new_ideology,
 			std::vector<const Issue*>&& new_policies
 		);
 
@@ -77,12 +74,8 @@ namespace OpenVic {
 		const std::map<const GovernmentType*, colour_t> alternative_colours;
 
 		Country(
-			std::string_view new_identifier,
-			colour_t new_color,
-			const GraphicalCultureType& new_graphical_culture,
-			std::vector<CountryParty>&& new_parties,
-			std::vector<UnitNames>&& new_unit_names,
-			const bool new_dynamic_tag,
+			std::string_view new_identifier, colour_t new_color, const GraphicalCultureType& new_graphical_culture,
+			std::vector<CountryParty>&& new_parties, std::vector<UnitNames>&& new_unit_names, const bool new_dynamic_tag,
 			std::map<const GovernmentType*, colour_t>&& new_alternative_colours
 		);
 
@@ -102,12 +95,8 @@ namespace OpenVic {
 		CountryManager();
 
 		bool add_country(
-			std::string_view identifier,
-			colour_t color,
-			const GraphicalCultureType& graphical_culture,
-			std::vector<CountryParty>&& parties,
-			std::vector<UnitNames>&& unit_names,
-			bool dynamic_tag,
+			std::string_view identifier, colour_t color, const GraphicalCultureType& graphical_culture,
+			std::vector<CountryParty>&& parties, std::vector<UnitNames>&& unit_names, bool dynamic_tag,
 			std::map<const GovernmentType*, colour_t>&& alternative_colours
 		);
 		IDENTIFIER_REGISTRY_ACCESSORS_CUSTOM_PLURAL(country, countries);

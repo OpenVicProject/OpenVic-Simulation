@@ -1,6 +1,8 @@
-#include <testing/Testing.hpp>
-#include <testing/TestScript.hpp>
+#include "Testing.hpp"
+
 #include <fstream>
+
+#include "openvic-simulation/testing/TestScript.hpp"
 
 using namespace OpenVic;
 
@@ -54,7 +56,7 @@ void Testing::report_results() {
 		report_result("Failed Requirements", test_results, failed_reqs);
 		report_result("Untested Requirements", test_results, untested_reqs);
 
-		test_results << std::endl<< std::endl;
+		test_results << std::endl << std::endl;
 	}
 	test_results.close();
 }
@@ -65,6 +67,8 @@ void Testing::report_result(std::string req_title, std::ofstream& outfile, std::
 	for (auto req : reqs) {
 		outfile << req->get_id() << " ";
 	}
-	if (reqs.size() < 1) outfile << "None";
+	if (reqs.size() < 1) {
+		outfile << "None";
+	}
 	outfile << std::endl << std::endl;
 }

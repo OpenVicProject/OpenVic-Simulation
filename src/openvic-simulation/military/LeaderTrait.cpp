@@ -24,7 +24,9 @@ ModifierValue const& LeaderTrait::get_modifiers() const {
 
 LeaderTraitManager::LeaderTraitManager() : leader_traits { "leader trait" } {}
 
-bool LeaderTraitManager::add_leader_trait(std::string_view identifier, LeaderTrait::trait_type_t type, ModifierValue&& modifiers) {
+bool LeaderTraitManager::add_leader_trait(
+	std::string_view identifier, LeaderTrait::trait_type_t type, ModifierValue&& modifiers
+) {
 	if (identifier.empty()) {
 		Logger::error("Invalid leader trait identifier - empty!");
 		return false;
@@ -38,7 +40,8 @@ bool LeaderTraitManager::load_leader_traits_file(ModifierManager const& modifier
 	const auto trait_callback = [this, &modifier_manager](LeaderTrait::trait_type_t type) -> key_value_callback_t {
 		return [this, &modifier_manager, type](std::string_view trait_identifier, ast::NodeCPtr value) -> bool {
 			ModifierValue modifiers;
-			bool ret = modifier_manager.expect_whitelisted_modifier_value(move_variable_callback(modifiers), allowed_modifiers)(value);
+			bool ret =
+				modifier_manager.expect_whitelisted_modifier_value(move_variable_callback(modifiers), allowed_modifiers)(value);
 			ret &= add_leader_trait(trait_identifier, type, std::move(modifiers));
 			return ret;
 		};

@@ -5,8 +5,10 @@
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;
 
-TerrainType::TerrainType(std::string_view new_identifier, colour_t new_colour, ModifierValue&& new_modifier, bool new_is_water)
-	: HasIdentifierAndColour { new_identifier, new_colour, true, false }, modifier { std::move(new_modifier) }, is_water { new_is_water } {}
+TerrainType::TerrainType(
+	std::string_view new_identifier, colour_t new_colour, ModifierValue&& new_modifier, bool new_is_water
+) : HasIdentifierAndColour { new_identifier, new_colour, true, false }, modifier { std::move(new_modifier) },
+	is_water { new_is_water } {}
 
 ModifierValue const& TerrainType::get_modifier() const {
 	return modifier;
@@ -16,10 +18,11 @@ bool TerrainType::get_is_water() const {
 	return is_water;
 }
 
-TerrainTypeMapping::TerrainTypeMapping(std::string_view new_identifier, TerrainType const& new_type,
-	std::vector<index_t>&& new_terrain_indicies, index_t new_priority, bool new_has_texture)
-	: HasIdentifier { new_identifier }, type { new_type }, terrain_indicies { std::move(new_terrain_indicies) },
-	  priority { new_priority }, has_texture { new_has_texture } {}
+TerrainTypeMapping::TerrainTypeMapping(
+	std::string_view new_identifier, TerrainType const& new_type, std::vector<index_t>&& new_terrain_indicies,
+	index_t new_priority, bool new_has_texture
+) : HasIdentifier { new_identifier }, type { new_type }, terrain_indicies { std::move(new_terrain_indicies) },
+	priority { new_priority }, has_texture { new_has_texture } {}
 
 TerrainType const& TerrainTypeMapping::get_type() const {
 	return type;
@@ -37,7 +40,8 @@ bool TerrainTypeMapping::get_has_texture() const {
 	return has_texture;
 }
 
-TerrainTypeManager::TerrainTypeManager() : terrain_types { "terrain types" }, terrain_type_mappings { "terrain type mappings" } {}
+TerrainTypeManager::TerrainTypeManager()
+	: terrain_types { "terrain types" }, terrain_type_mappings { "terrain type mappings" } {}
 
 bool TerrainTypeManager::add_terrain_type(std::string_view identifier, colour_t colour, ModifierValue&& values, bool is_water) {
 	if (identifier.empty()) {
@@ -51,8 +55,10 @@ bool TerrainTypeManager::add_terrain_type(std::string_view identifier, colour_t 
 	return terrain_types.add_item({ identifier, colour, std::move(values), is_water });
 }
 
-bool TerrainTypeManager::add_terrain_type_mapping(std::string_view identifier, TerrainType const* type,
-	std::vector<TerrainTypeMapping::index_t>&& terrain_indicies, TerrainTypeMapping::index_t priority, bool has_texture) {
+bool TerrainTypeManager::add_terrain_type_mapping(
+	std::string_view identifier, TerrainType const* type, std::vector<TerrainTypeMapping::index_t>&& terrain_indicies,
+	TerrainTypeMapping::index_t priority, bool has_texture
+) {
 	if (!terrain_types_are_locked()) {
 		Logger::error("Cannot register terrain type mappings until terrain types are locked!");
 		return false;
@@ -71,8 +77,10 @@ bool TerrainTypeManager::add_terrain_type_mapping(std::string_view identifier, T
 		if (it == terrain_type_mappings_map.end()) {
 			terrain_type_mappings_map.emplace(idx, terrain_type_mappings.size());
 		} else {
-			Logger::error("Terrain index ", static_cast<size_t>(idx), " cannot map to ", identifier,
-				" as it already maps to ", terrain_type_mappings.get_item_by_index(it->second));
+			Logger::error(
+				"Terrain index ", static_cast<size_t>(idx), " cannot map to ", identifier, " as it already maps to ",
+				terrain_type_mappings.get_item_by_index(it->second)
+			);
 			ret = false;
 		}
 	}

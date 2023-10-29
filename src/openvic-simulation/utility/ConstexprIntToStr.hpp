@@ -33,7 +33,9 @@ namespace OpenVic::ConstexprIntToStr {
 		constexpr std::size_t next_value = value / 10;
 
 		if constexpr (next_value != 0) {
-			return append_sequence(integer_to_string_sequence<next_value>(), std::integer_sequence<char, digits()[remainder]> {});
+			return append_sequence(
+				integer_to_string_sequence<next_value>(), std::integer_sequence<char, digits()[remainder]> {}
+			);
 		} else {
 			return std::integer_sequence<char, digits()[remainder]> {};
 		}

@@ -2,14 +2,14 @@
 
 #include <cstddef>
 #include <string_view>
-#include "openvic-simulation/types/IdentifierRegistry.hpp"
+
 #include "openvic-simulation/dataloader/NodeTools.hpp"
-#include "openvic-dataloader/v2script/AbstractSyntaxTree.hpp"
+#include "openvic-simulation/types/IdentifierRegistry.hpp"
 
 namespace OpenVic {
 	struct IssueManager;
 
-	//Issue group (i.e. trade_policy)
+	// Issue group (i.e. trade_policy)
 	struct IssueGroup : HasIdentifier {
 		friend struct IssueManager;
 
@@ -20,14 +20,14 @@ namespace OpenVic {
 		IssueGroup(IssueGroup&&) = default;
 	};
 
-	//Issue (i.e. protectionism)
+	// Issue (i.e. protectionism)
 	struct Issue : HasIdentifier {
 		friend struct IssueManager;
 
 	private:
 		IssueGroup const& group;
 
-		//TODO: policy modifiers, policy rule changes
+		// TODO: policy modifiers, policy rule changes
 
 	protected:
 		Issue(std::string_view identifier, IssueGroup const& group);
@@ -37,13 +37,13 @@ namespace OpenVic {
 		IssueGroup const& get_group() const;
 	};
 
-	//Reform type (i.e. political_issues)
+	// Reform type (i.e. political_issues)
 	struct ReformType : HasIdentifier {
 		friend struct IssueManager;
 
 	private:
-		bool uncivilised; //whether this group is available to non-westernised countries
-		//in vanilla education, military and economic reforms are hardcoded to true and the rest to false
+		bool uncivilised; // whether this group is available to non-westernised countries
+		// in vanilla education, military and economic reforms are hardcoded to true and the rest to false
 
 		ReformType(std::string_view new_identifier, bool uncivilised);
 
@@ -51,13 +51,13 @@ namespace OpenVic {
 		ReformType(ReformType&&) = default;
 	};
 
-	//Reform group (i.e. slavery)
+	// Reform group (i.e. slavery)
 	struct ReformGroup : IssueGroup {
 		friend struct IssueManager;
 
 	private:
 		ReformType const& type;
-		const bool ordered; //next_step_only
+		const bool ordered; // next_step_only
 		const bool administrative;
 
 		ReformGroup(std::string_view identifier, ReformType const& type, bool ordered, bool administrative);
@@ -69,17 +69,17 @@ namespace OpenVic {
 		bool is_administrative() const;
 	};
 
-	//Reform (i.e. yes_slavery)
+	// Reform (i.e. yes_slavery)
 	struct Reform : Issue {
 		friend struct IssueManager;
 
 	private:
-		ReformGroup const& reform_group; //stores an already casted reference
-		const size_t ordinal; //assigned by the parser to allow policy sorting
+		ReformGroup const& reform_group; // stores an already casted reference
+		const size_t ordinal; // assigned by the parser to allow policy sorting
 
 		Reform(std::string_view new_identifier, ReformGroup const& group, size_t ordinal);
 
-		//TODO: conditions to allow,
+		// TODO: conditions to allow,
 
 	public:
 		Reform(Reform&&) = default;
@@ -88,7 +88,7 @@ namespace OpenVic {
 		size_t get_ordinal() const;
 	};
 
-	//Issue manager - holds the registries
+	// Issue manager - holds the registries
 	struct IssueManager {
 	private:
 		IdentifierRegistry<IssueGroup> issue_groups;
@@ -99,8 +99,9 @@ namespace OpenVic {
 
 		bool _load_issue_group(size_t& expected_issues, std::string_view identifier, ast::NodeCPtr node);
 		bool _load_issue(std::string_view identifier, IssueGroup const* group, ast::NodeCPtr node);
-		bool _load_reform_group(size_t& expected_reforms, std::string_view identifier, ReformType const* type,
-			ast::NodeCPtr node);
+		bool _load_reform_group(
+			size_t& expected_reforms, std::string_view identifier, ReformType const* type, ast::NodeCPtr node
+		);
 		bool _load_reform(size_t& ordinal, std::string_view identifier, ReformGroup const* group, ast::NodeCPtr node);
 
 	public:

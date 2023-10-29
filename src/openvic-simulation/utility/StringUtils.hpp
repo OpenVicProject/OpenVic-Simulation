@@ -12,11 +12,14 @@ namespace OpenVic::StringUtils {
 	 * or not conversion was successful. It can be nullptr if this information is not needed.
 	 */
 	constexpr uint64_t string_to_uint64(char const* str, const char* const end, bool* successful = nullptr, int base = 10) {
-		if (successful != nullptr) *successful = false;
+		if (successful != nullptr) {
+			*successful = false;
+		}
 
 		// Base value should be between 2 and 36. If it's not, return 0 as an invalid case.
-		if (str == nullptr || end <= str || base < 0 || base == 1 || base > 36)
+		if (str == nullptr || end <= str || base < 0 || base == 1 || base > 36) {
 			return 0;
+		}
 
 		// The result of the conversion will be stored in this variable.
 		uint64_t result = 0;
@@ -26,8 +29,10 @@ namespace OpenVic::StringUtils {
 			if (*str == '0') {
 				if (str + 1 != end && (str[1] == 'x' || str[1] == 'X')) {
 					base = 16; // Hexadecimal.
-					str += 2;  // Skip '0x' or '0X'
-					if (str == end) return 0;
+					str += 2; // Skip '0x' or '0X'
+					if (str == end) {
+						return 0;
+					}
 				} else {
 					base = 8; // Octal.
 				}
@@ -38,7 +43,9 @@ namespace OpenVic::StringUtils {
 			// If base is 16 and string starts with '0x' or '0X', skip these characters.
 			if (*str == '0' && str + 1 != end && (str[1] == 'x' || str[1] == 'X')) {
 				str += 2;
-				if (str == end) return 0;
+				if (str == end) {
+					return 0;
+				}
 			}
 		}
 
@@ -76,7 +83,9 @@ namespace OpenVic::StringUtils {
 
 		// If successful is not null and the entire string was parsed,
 		// set *successful to true (if not it is already false).
-		if (successful != nullptr && str == end) *successful = true;
+		if (successful != nullptr && str == end) {
+			*successful = true;
+		}
 
 		return result;
 	}
@@ -90,29 +99,38 @@ namespace OpenVic::StringUtils {
 	}
 
 	constexpr int64_t string_to_int64(char const* str, const char* const end, bool* successful = nullptr, int base = 10) {
-		if (successful != nullptr) *successful = false;
+		if (successful != nullptr) {
+			*successful = false;
+		}
 
-		if (str == nullptr || end <= str) return 0;
+		if (str == nullptr || end <= str) {
+			return 0;
+		}
 
 		// This flag will be set if the number is negative.
 		bool is_negative = false;
 
 		// Check if there is a sign character.
 		if (*str == '+' || *str == '-') {
-			if (*str == '-')
+			if (*str == '-') {
 				is_negative = true;
+			}
 			++str;
-			if (str == end) return 0;
+			if (str == end) {
+				return 0;
+			}
 		}
 
 		const uint64_t result = string_to_uint64(str, end, successful, base);
 		if (!is_negative) {
-			if (result >= std::numeric_limits<int64_t>::max())
+			if (result >= std::numeric_limits<int64_t>::max()) {
 				return std::numeric_limits<int64_t>::max();
+			}
 			return result;
 		} else {
-			if (result > std::numeric_limits<int64_t>::max())
+			if (result > std::numeric_limits<int64_t>::max()) {
 				return std::numeric_limits<int64_t>::min();
+			}
 			return -result;
 		}
 	}

@@ -41,19 +41,11 @@ namespace OpenVic {
 		// TODO: starting foreign investment
 
 		CountryHistory(
-			Culture const* new_primary_culture,
-			std::vector<Culture const*>&& new_accepted_cultures,
-			Religion const* new_religion,
-			CountryParty const* new_ruling_party,
-			Date new_last_election,
-			std::map<Ideology const*, fixed_point_t>&& new_upper_house,
-			Province const* new_capital,
-			GovernmentType const* new_government_type,
-			fixed_point_t new_plurality,
-			NationalValue const* new_national_value,
-			bool new_civilised,
-			fixed_point_t new_prestige,
-			std::vector<Reform const*>&& new_reforms,
+			Culture const* new_primary_culture, std::vector<Culture const*>&& new_accepted_cultures,
+			Religion const* new_religion, CountryParty const* new_ruling_party, Date new_last_election,
+			std::map<Ideology const*, fixed_point_t>&& new_upper_house, Province const* new_capital,
+			GovernmentType const* new_government_type, fixed_point_t new_plurality, NationalValue const* new_national_value,
+			bool new_civilised, fixed_point_t new_prestige, std::vector<Reform const*>&& new_reforms,
 			Deployment const* new_inital_oob
 		);
 
@@ -79,37 +71,27 @@ namespace OpenVic {
 		std::map<Country const*, std::map<Date, CountryHistory>> country_histories;
 		bool locked = false;
 
-		inline bool _load_country_history_entry(GameManager& game_manager, std::string_view name, Date const& date, ast::NodeCPtr root);
+		inline bool _load_country_history_entry(
+			GameManager& game_manager, std::string_view name, Date const& date, ast::NodeCPtr root
+		);
 
 	public:
 		CountryHistoryManager() {}
 
 		bool add_country_history_entry(
-			Country const* country,
-			Date date,
-			Culture const* primary_culture,
-			std::vector<Culture const*>&& accepted_cultures,
-			Religion const* religion,
-			CountryParty const* ruling_party,
-			Date last_election,
-			std::map<Ideology const*, fixed_point_t>&& upper_house,
-			Province const* capital,
-			GovernmentType const* government_type,
-			fixed_point_t plurality,
-			NationalValue const* national_value,
-			bool civilised,
-			fixed_point_t prestige,
-			std::vector<Reform const*>&& reforms,
-			Deployment const* initial_oob,
-			bool updated_accepted_cultures,
-			bool updated_upper_house,
-			bool updated_reforms
+			Country const* country, Date date, Culture const* primary_culture, std::vector<Culture const*>&& accepted_cultures,
+			Religion const* religion, CountryParty const* ruling_party, Date last_election,
+			std::map<Ideology const*, fixed_point_t>&& upper_house, Province const* capital,
+			GovernmentType const* government_type, fixed_point_t plurality, NationalValue const* national_value, bool civilised,
+			fixed_point_t prestige, std::vector<Reform const*>&& reforms, Deployment const* initial_oob,
+			bool updated_accepted_cultures, bool updated_upper_house, bool updated_reforms
 		);
 
 		void lock_country_histories();
 		bool is_locked() const;
 
-		/* Returns history of country at date, if date doesn't have an entry returns closest entry before date. Return can be nullptr if an error occurs. */
+		/* Returns history of country at date, if date doesn't have an entry returns
+		 * closest entry before date. Return can be nullptr if an error occurs. */
 		CountryHistory const* get_country_history(Country const* country, Date entry) const;
 		/* Returns history of country at bookmark date. Return can be nullptr if an error occurs. */
 		inline CountryHistory const* get_country_history(Country const* country, Bookmark const* entry) const;

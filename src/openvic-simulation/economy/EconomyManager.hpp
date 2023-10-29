@@ -10,6 +10,7 @@ namespace OpenVic {
 		BuildingManager building_manager;
 		GoodManager good_manager;
 		ProductionTypeManager production_type_manager;
+
 	public:
 		REF_GETTERS(building_manager)
 		REF_GETTERS(good_manager)

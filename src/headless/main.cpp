@@ -2,8 +2,8 @@
 
 #include <openvic-simulation/GameManager.hpp>
 #include <openvic-simulation/dataloader/Dataloader.hpp>
-#include <openvic-simulation/utility/Logger.hpp>
 #include <openvic-simulation/testing/Testing.hpp>
+#include <openvic-simulation/utility/Logger.hpp>
 
 using namespace OpenVic;
 
@@ -82,15 +82,17 @@ int main(int argc, char const* argv[]) {
 	/* Reads the next argument and converts it to a path via path_transform. If reading or converting fails, an error
 	 * message and the help text are displayed, along with returning false to signify the program should exit.
 	 */
-	const auto _read = [&root, &argn, argc, argv, program_name](std::string_view command, std::string_view path_use, auto path_transform) -> bool {
-		if (root.empty())  {
+	const auto _read = [&root, &argn, argc, argv, program_name](
+		std::string_view command, std::string_view path_use, auto path_transform) -> bool {
+		if (root.empty()) {
 			if (++argn < argc) {
 				char const* path = argv[argn];
 				root = path_transform(path);
 				if (!root.empty()) {
 					return true;
 				} else {
-					std::cerr << "Empty path after giving \"" << path << "\" to " << path_use << " command line argument \"" << command << "\"." << std::endl;
+					std::cerr << "Empty path after giving \"" << path << "\" to " << path_use
+						<< " command line argument \"" << command << "\"." << std::endl;
 				}
 			} else {
 				std::cerr << "Missing path after " << path_use << " command line argument \"" << command << "\"." << std::endl;
@@ -110,7 +112,7 @@ int main(int argc, char const* argv[]) {
 		} else if (strcmp(arg, "-t") == 0) {
 			run_tests = true;
 		} else if (strcmp(arg, "-b") == 0) {
-			if (!_read("-b", "base directory", std::identity{})) {
+			if (!_read("-b", "base directory", std::identity {})) {
 				return -1;
 			}
 		} else if (strcmp(arg, "-s") == 0) {

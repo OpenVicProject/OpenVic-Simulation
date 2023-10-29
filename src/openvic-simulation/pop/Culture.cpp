@@ -7,11 +7,11 @@ using namespace OpenVic::NodeTools;
 
 GraphicalCultureType::GraphicalCultureType(std::string_view new_identifier) : HasIdentifier { new_identifier } {}
 
-CultureGroup::CultureGroup(std::string_view new_identifier, std::string_view new_leader,
-	GraphicalCultureType const& new_unit_graphical_culture_type, bool new_is_overseas)
-	: HasIdentifier { new_identifier }, leader { new_leader },
-	  unit_graphical_culture_type { new_unit_graphical_culture_type },
-	  is_overseas { new_is_overseas } {}
+CultureGroup::CultureGroup(
+	std::string_view new_identifier, std::string_view new_leader, GraphicalCultureType const& new_unit_graphical_culture_type,
+	bool new_is_overseas
+) : HasIdentifier { new_identifier }, leader { new_leader }, unit_graphical_culture_type { new_unit_graphical_culture_type },
+	is_overseas { new_is_overseas } {}
 
 std::string_view CultureGroup::get_leader() const {
 	return leader;
@@ -25,12 +25,11 @@ bool CultureGroup::get_is_overseas() const {
 	return is_overseas;
 }
 
-Culture::Culture(std::string_view new_identifier, colour_t new_colour, CultureGroup const& new_group,
-	std::vector<std::string>&& new_first_names, std::vector<std::string>&& new_last_names)
-	: HasIdentifierAndColour { new_identifier, new_colour, true, false },
-	  group { new_group },
-	  first_names { std::move(new_first_names) },
-	  last_names { std::move(new_last_names) } {}
+Culture::Culture(
+	std::string_view new_identifier, colour_t new_colour, CultureGroup const& new_group,
+	std::vector<std::string>&& new_first_names, std::vector<std::string>&& new_last_names
+) : HasIdentifierAndColour { new_identifier, new_colour, true, false }, group { new_group },
+	first_names { std::move(new_first_names) }, last_names { std::move(new_last_names) } {}
 
 CultureGroup const& Culture::get_group() const {
 	return group;
@@ -45,9 +44,7 @@ std::vector<std::string> const& Culture::get_last_names() const {
 }
 
 CultureManager::CultureManager()
-	: graphical_culture_types { "graphical culture types" },
-	  culture_groups { "culture groups" },
-	  cultures { "cultures" } {}
+	: graphical_culture_types { "graphical culture types" }, culture_groups { "culture groups" }, cultures { "cultures" } {}
 
 bool CultureManager::add_graphical_culture_type(std::string_view identifier) {
 	if (identifier.empty()) {
@@ -57,7 +54,9 @@ bool CultureManager::add_graphical_culture_type(std::string_view identifier) {
 	return graphical_culture_types.add_item({ identifier });
 }
 
-bool CultureManager::add_culture_group(std::string_view identifier, std::string_view leader, GraphicalCultureType const* graphical_culture_type, bool is_overseas) {
+bool CultureManager::add_culture_group(
+	std::string_view identifier, std::string_view leader, GraphicalCultureType const* graphical_culture_type, bool is_overseas
+) {
 	if (!graphical_culture_types.is_locked()) {
 		Logger::error("Cannot register culture groups until graphical culture types are locked!");
 		return false;
@@ -77,7 +76,10 @@ bool CultureManager::add_culture_group(std::string_view identifier, std::string_
 	return culture_groups.add_item({ identifier, leader, *graphical_culture_type, is_overseas });
 }
 
-bool CultureManager::add_culture(std::string_view identifier, colour_t colour, CultureGroup const* group, std::vector<std::string>&& first_names, std::vector<std::string>&& last_names) {
+bool CultureManager::add_culture(
+	std::string_view identifier, colour_t colour, CultureGroup const* group, std::vector<std::string>&& first_names,
+	std::vector<std::string>&& last_names
+) {
 	if (!culture_groups.is_locked()) {
 		Logger::error("Cannot register cultures until culture groups are locked!");
 		return false;
@@ -98,8 +100,7 @@ bool CultureManager::add_culture(std::string_view identifier, colour_t colour, C
 }
 
 bool CultureManager::load_graphical_culture_type_file(ast::NodeCPtr root) {
-	const bool ret = expect_list_reserve_length(
-		graphical_culture_types,
+	const bool ret = expect_list_reserve_length(graphical_culture_types,
 		expect_identifier(
 			std::bind(&CultureManager::add_graphical_culture_type, this, std::placeholders::_1)
 		)
@@ -108,9 +109,10 @@ bool CultureManager::load_graphical_culture_type_file(ast::NodeCPtr root) {
 	return ret;
 }
 
-bool CultureManager::_load_culture_group(size_t& total_expected_cultures,
-	GraphicalCultureType const* default_unit_graphical_culture_type,
-	std::string_view culture_group_key, ast::NodeCPtr culture_group_node) {
+bool CultureManager::_load_culture_group(
+	size_t& total_expected_cultures, GraphicalCultureType const* default_unit_graphical_culture_type,
+	std::string_view culture_group_key, ast::NodeCPtr culture_group_node
+) {
 
 	std::string_view leader;
 	GraphicalCultureType const* unit_graphical_culture_type = default_unit_graphical_culture_type;
@@ -119,7 +121,8 @@ bool CultureManager::_load_culture_group(size_t& total_expected_cultures,
 	bool ret = expect_dictionary_keys_and_default(
 		increment_callback(total_expected_cultures),
 		"leader", ONE_EXACTLY, expect_identifier(assign_variable_callback(leader)),
-		"unit", ZERO_OR_ONE, expect_graphical_culture_type_identifier(assign_variable_callback_pointer(unit_graphical_culture_type)),
+		"unit", ZERO_OR_ONE,
+			expect_graphical_culture_type_identifier(assign_variable_callback_pointer(unit_graphical_culture_type)),
 		"union", ZERO_OR_ONE, success_callback,
 		"is_overseas", ZERO_OR_ONE, expect_bool(assign_variable_callback(is_overseas))
 	)(culture_group_node);
@@ -127,8 +130,9 @@ bool CultureManager::_load_culture_group(size_t& total_expected_cultures,
 	return ret;
 }
 
-bool CultureManager::_load_culture(CultureGroup const* culture_group,
-	std::string_view culture_key, ast::NodeCPtr culture_node) {
+bool CultureManager::_load_culture(
+	CultureGroup const* culture_group, std::string_view culture_key, ast::NodeCPtr culture_node
+) {
 
 	colour_t colour = NULL_COLOUR;
 	std::vector<std::string> first_names, last_names;
@@ -171,35 +175,32 @@ bool CultureManager::load_culture_file(ast::NodeCPtr root) {
 	}
 
 	static const std::string default_unit_graphical_culture_type_identifier = "Generic";
-	GraphicalCultureType const* const default_unit_graphical_culture_type = get_graphical_culture_type_by_identifier(default_unit_graphical_culture_type_identifier);
+	GraphicalCultureType const* const default_unit_graphical_culture_type =
+		get_graphical_culture_type_by_identifier(default_unit_graphical_culture_type_identifier);
 	if (default_unit_graphical_culture_type == nullptr) {
 		Logger::error("Failed to find default unit graphical culture type: ", default_unit_graphical_culture_type_identifier);
 	}
 
 	size_t total_expected_cultures = 0;
-	bool ret = expect_dictionary_reserve_length(
-		culture_groups,
-		[this, default_unit_graphical_culture_type, &total_expected_cultures](std::string_view key, ast::NodeCPtr value) -> bool {
+	bool ret = expect_dictionary_reserve_length(culture_groups,
+		[this, default_unit_graphical_culture_type, &total_expected_cultures](
+			std::string_view key, ast::NodeCPtr value) -> bool {
 			return _load_culture_group(total_expected_cultures, default_unit_graphical_culture_type, key, value);
 		}
 	)(root);
 	lock_culture_groups();
 	cultures.reserve(cultures.size() + total_expected_cultures);
 
-	ret &= expect_dictionary(
-		[this](std::string_view culture_group_key, ast::NodeCPtr culture_group_value) -> bool {
-			CultureGroup const* culture_group = get_culture_group_by_identifier(culture_group_key);
-			return expect_dictionary(
-				[this, culture_group](std::string_view key, ast::NodeCPtr value) -> bool {
-					static const string_set_t reserved_keys = {
-						"leader", "unit", "union", "is_overseas"
-					};
-					if (reserved_keys.find(key) != reserved_keys.end()) return true;
-					return _load_culture(culture_group, key, value);
-				}
-			)(culture_group_value);
-		}
-	)(root);
+	ret &= expect_dictionary([this](std::string_view culture_group_key, ast::NodeCPtr culture_group_value) -> bool {
+		CultureGroup const* culture_group = get_culture_group_by_identifier(culture_group_key);
+		return expect_dictionary([this, culture_group](std::string_view key, ast::NodeCPtr value) -> bool {
+			static const string_set_t reserved_keys = { "leader", "unit", "union", "is_overseas" };
+			if (reserved_keys.find(key) != reserved_keys.end()) {
+				return true;
+			}
+			return _load_culture(culture_group, key, value);
+		})(culture_group_value);
+	})(root);
 	lock_cultures();
 	return ret;
 }

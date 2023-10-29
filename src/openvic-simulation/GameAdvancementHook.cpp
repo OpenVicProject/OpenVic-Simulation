@@ -3,30 +3,26 @@
 using namespace OpenVic;
 
 const std::vector<std::chrono::milliseconds> GameAdvancementHook::GAME_SPEEDS = {
-	std::chrono::milliseconds { 4000 },
-	std::chrono::milliseconds { 3000 },
-	std::chrono::milliseconds { 2000 },
-	std::chrono::milliseconds { 1000 },
-	std::chrono::milliseconds { 100 },
-	std::chrono::milliseconds { 1 }
+	std::chrono::milliseconds { 4000 }, std::chrono::milliseconds { 3000 }, std::chrono::milliseconds { 2000 },
+	std::chrono::milliseconds { 1000 }, std::chrono::milliseconds { 100 },	std::chrono::milliseconds { 1 }
 };
 
-GameAdvancementHook::GameAdvancementHook(AdvancementFunction tickFunction,
-	RefreshFunction updateFunction, bool startPaused, speed_t startingSpeed)
-	: triggerFunction { tickFunction },
-	  refreshFunction { updateFunction },
-	  isPaused { startPaused } {
+GameAdvancementHook::GameAdvancementHook(
+	AdvancementFunction tickFunction, RefreshFunction updateFunction, bool startPaused, speed_t startingSpeed
+)
+	: triggerFunction { tickFunction }, refreshFunction { updateFunction }, isPaused { startPaused } {
 	lastPolledTime = std::chrono::high_resolution_clock::now();
 	setSimulationSpeed(startingSpeed);
 }
 
 void GameAdvancementHook::setSimulationSpeed(speed_t speed) {
-	if (speed < 0)
+	if (speed < 0) {
 		currentSpeed = 0;
-	else if (speed >= GAME_SPEEDS.size())
+	} else if (speed >= GAME_SPEEDS.size()) {
 		currentSpeed = GAME_SPEEDS.size() - 1;
-	else
+	} else {
 		currentSpeed = speed;
+	}
 }
 
 GameAdvancementHook::speed_t GameAdvancementHook::getSimulationSpeed() const {
@@ -64,10 +60,14 @@ void GameAdvancementHook::conditionallyAdvanceGame() {
 		time_point_t currentTime = std::chrono::high_resolution_clock::now();
 		if (std::chrono::duration_cast<std::chrono::milliseconds>(currentTime - lastPolledTime) >= GAME_SPEEDS[currentSpeed]) {
 			lastPolledTime = currentTime;
-			if (triggerFunction) triggerFunction();
+			if (triggerFunction) {
+				triggerFunction();
+			}
 		}
 	}
-	if (refreshFunction) refreshFunction();
+	if (refreshFunction) {
+		refreshFunction();
+	}
 }
 
 void GameAdvancementHook::reset() {

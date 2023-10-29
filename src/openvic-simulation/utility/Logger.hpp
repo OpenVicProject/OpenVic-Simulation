@@ -20,15 +20,24 @@ namespace OpenVic {
 		int _line;
 		std::string _function;
 
-	public:
 		source_location(std::string f, int l, std::string n) : _file(f), _line(l), _function(n) {}
-		static source_location current(std::string f = __builtin_FILE(), int l = __builtin_LINE(), std::string n = __builtin_FUNCTION()) {
+
+	public:
+		static source_location current(
+			std::string f = __builtin_FILE(), int l = __builtin_LINE(), std::string n = __builtin_FUNCTION()
+		) {
 			return source_location(f, l, n);
 		}
 
-		inline char const* file_name() const { return _file.c_str(); }
-		inline int line() const { return _line; }
-		inline char const* function_name() const { return _function.c_str(); }
+		inline char const* file_name() const {
+			return _file.c_str();
+		}
+		inline int line() const {
+			return _line;
+		}
+		inline char const* function_name() const {
+			return _function.c_str();
+		}
 	};
 #endif
 
@@ -57,8 +66,10 @@ namespace OpenVic {
 			log(log_channel_t& log_channel, Ts&&... ts, source_location const& location) {
 				std::stringstream stream;
 				stream << "\n" << get_filename(location.file_name()) << "("
-						//<< location.line() << ") `" << location.function_name() << "`: ";
-						<< location.line() << "): ";
+					/* Function name removed to reduce clutter. It is already included
+					* in Godot's print functions, so this was repeating it. */
+					//<< location.line() << ") `" << location.function_name() << "`: ";
+					<< location.line() << "): ";
 				((stream << std::forward<Ts>(ts)), ...);
 				stream << std::endl;
 				log_channel.queue.push(stream.str());
@@ -73,7 +84,7 @@ namespace OpenVic {
 
 #define LOG_FUNC(name) \
 	private: \
-		static inline log_channel_t name##_channel{}; \
+		static inline log_channel_t name##_channel {}; \
 	public: \
 		static inline void set_##name##_func(log_func_t log_func) { \
 			name##_channel.func = log_func; \
@@ -81,7 +92,7 @@ namespace OpenVic {
 		template<typename... Ts> \
 		struct name { \
 			name(Ts&&... ts, source_location const& location = source_location::current()) { \
-				log<Ts...>{ name##_channel, std::forward<Ts>(ts)..., location }; \
+				log<Ts...> { name##_channel, std::forward<Ts>(ts)..., location }; \
 			} \
 		}; \
 		template<typename... Ts> \

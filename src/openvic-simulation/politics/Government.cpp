@@ -5,8 +5,12 @@
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;
 
-GovernmentType::GovernmentType(std::string_view new_identifier, std::vector<Ideology const*>&& new_ideologies, bool new_elections, bool new_appoint_ruling_party, Timespan new_term_duration, std::string_view new_flag_type_identifier)
-	: HasIdentifier { new_identifier }, ideologies { std::move(new_ideologies) }, elections { new_elections }, appoint_ruling_party { new_appoint_ruling_party }, term_duration { new_term_duration }, flag_type_identifier { new_flag_type_identifier } {}
+GovernmentType::GovernmentType(
+	std::string_view new_identifier, std::vector<Ideology const*>&& new_ideologies, bool new_elections,
+	bool new_appoint_ruling_party, Timespan new_term_duration, std::string_view new_flag_type_identifier
+) : HasIdentifier { new_identifier }, ideologies { std::move(new_ideologies) }, elections { new_elections },
+	appoint_ruling_party { new_appoint_ruling_party }, term_duration { new_term_duration },
+	flag_type_identifier { new_flag_type_identifier } {}
 
 bool GovernmentType::is_ideology_compatible(Ideology const* ideology) const {
 	return std::find(ideologies.begin(), ideologies.end(), ideology) != ideologies.end();
@@ -34,7 +38,10 @@ std::string_view GovernmentType::get_flag_type() const {
 
 GovernmentTypeManager::GovernmentTypeManager() : government_types { "government types" } {}
 
-bool GovernmentTypeManager::add_government_type(std::string_view identifier, std::vector<Ideology const*>&& ideologies, bool elections, bool appoint_ruling_party, Timespan term_duration, std::string_view flag_type) {
+bool GovernmentTypeManager::add_government_type(
+	std::string_view identifier, std::vector<Ideology const*>&& ideologies, bool elections, bool appoint_ruling_party,
+	Timespan term_duration, std::string_view flag_type
+) {
 	if (identifier.empty()) {
 		Logger::error("Invalid government type identifier - empty!");
 		return false;
@@ -50,13 +57,14 @@ bool GovernmentTypeManager::add_government_type(std::string_view identifier, std
 		return false;
 	}
 
-	return government_types.add_item({ identifier, std::move(ideologies), elections, appoint_ruling_party, term_duration, flag_type });
+	return government_types.add_item({
+		identifier, std::move(ideologies), elections, appoint_ruling_party, term_duration, flag_type
+	});
 }
 
 /* REQUIREMENTS: FS-525, SIM-27 */
 bool GovernmentTypeManager::load_government_types_file(IdeologyManager const& ideology_manager, ast::NodeCPtr root) {
-	bool ret = expect_dictionary_reserve_length(
-		government_types,
+	bool ret = expect_dictionary_reserve_length(government_types,
 		[this, &ideology_manager](std::string_view government_type_identifier, ast::NodeCPtr government_type_value) -> bool {
 			std::vector<Ideology const*> ideologies;
 			bool elections = false, appoint_ruling_party = false;
@@ -74,14 +82,18 @@ bool GovernmentTypeManager::load_government_types_file(IdeologyManager const& id
 			ideologies.reserve(total_expected_ideologies);
 
 			ret &= expect_dictionary(
-				[this, &ideology_manager, &ideologies, government_type_identifier](std::string_view key, ast::NodeCPtr value) -> bool {
-					static const string_set_t reserved_keys = {
-						"election", "duration", "appoint_ruling_party", "flagType"
-					};
-					if (reserved_keys.find(key) != reserved_keys.end()) return true;
+				[this, &ideology_manager, &ideologies, government_type_identifier](
+					std::string_view key, ast::NodeCPtr value) -> bool {
+					static const string_set_t reserved_keys = { "election", "duration", "appoint_ruling_party", "flagType" };
+					if (reserved_keys.find(key) != reserved_keys.end()) {
+						return true;
+					}
 					Ideology const* ideology = ideology_manager.get_ideology_by_identifier(key);
 					if (ideology == nullptr) {
-						Logger::error("When loading government type ", government_type_identifier, ", specified ideology ", key, " is invalid!");
+						Logger::error(
+							"When loading government type ", government_type_identifier, ", specified ideology ", key,
+							" is invalid!"
+						);
 						return false;
 					}
 					return expect_bool([&ideologies, ideology, government_type_identifier](bool val) -> bool {
@@ -90,16 +102,25 @@ bool GovernmentTypeManager::load_government_types_file(IdeologyManager const& id
 								ideologies.push_back(ideology);
 								return true;
 							}
-							Logger::error("Government type ", government_type_identifier, " marked as supporting ideology ", ideology->get_identifier());
+							Logger::error(
+								"Government type ", government_type_identifier, " marked as supporting ideology ",
+								ideology->get_identifier()
+							);
 							return false;
 						}
-						Logger::error("Government type ", government_type_identifier, " redundantly marked as not supporting ideology ", ideology->get_identifier(), " multiple times");
+						Logger::error(
+							"Government type ", government_type_identifier, " redundantly marked as not supporting ideology ",
+							ideology->get_identifier(), " multiple times"
+						);
 						return false;
 					})(value);
 				}
 			)(government_type_value);
 
-			ret &= add_government_type(government_type_identifier, std::move(ideologies), elections, appoint_ruling_party, term_duration, flag_type_identifier);
+			ret &= add_government_type(
+				government_type_identifier, std::move(ideologies), elections, appoint_ruling_party, term_duration,
+				flag_type_identifier
+			);
 			return ret;
 		}
 	)(root);

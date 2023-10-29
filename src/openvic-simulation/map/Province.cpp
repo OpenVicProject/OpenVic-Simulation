@@ -3,9 +3,10 @@
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;
 
-Province::Province(std::string_view new_identifier, colour_t new_colour, index_t new_index)
-	: HasIdentifierAndColour { new_identifier, new_colour, false, false },
-	  index { new_index }, buildings { "buildings", false } {
+Province::Province(
+	std::string_view new_identifier, colour_t new_colour, index_t new_index
+) : HasIdentifierAndColour { new_identifier, new_colour, false, false }, index { new_index },
+	buildings { "buildings", false } {
 	assert(index != NULL_INDEX);
 }
 
@@ -76,7 +77,9 @@ void Province::reset_buildings() {
 
 bool Province::expand_building(std::string_view building_type_identifier) {
 	BuildingInstance* building = buildings.get_item_by_identifier(building_type_identifier);
-	if (building == nullptr) return false;
+	if (building == nullptr) {
+		return false;
+	}
 	return building->expand();
 }
 
@@ -91,8 +94,7 @@ std::string Province::to_string() const {
 }
 
 bool Province::load_pop_list(PopManager const& pop_manager, ast::NodeCPtr root) {
-	return expect_dictionary_reserve_length(
-		pops,
+	return expect_dictionary_reserve_length(pops,
 		[this, &pop_manager](std::string_view pop_type_identifier, ast::NodeCPtr pop_node) -> bool {
 			return pop_manager.load_pop_into_province(*this, pop_type_identifier, pop_node);
 		}
@@ -154,14 +156,16 @@ void Province::update_pops() {
 }
 
 void Province::update_state(Date const& today) {
-	for (BuildingInstance& building : buildings.get_items())
+	for (BuildingInstance& building : buildings.get_items()) {
 		building.update_state(today);
+	}
 	update_pops();
 }
 
 void Province::tick(Date const& today) {
-	for (BuildingInstance& building : buildings.get_items())
+	for (BuildingInstance& building : buildings.get_items()) {
 		building.tick(today);
+	}
 }
 
 Province::adjacency_t::adjacency_t(Province const* province, distance_t distance, flags_t flags)
@@ -178,9 +182,11 @@ Province::flags_t Province::adjacency_t::get_flags() const {
 }
 
 bool Province::is_adjacent_to(Province const* province) {
-	for (adjacency_t adj : adjacencies)
-		if (adj.province == province)
+	for (adjacency_t adj : adjacencies) {
+		if (adj.province == province) {
 			return true;
+		}
+	}
 	return false;
 }
 
@@ -190,8 +196,9 @@ bool Province::add_adjacency(Province const* province, distance_t distance, flag
 		return false;
 	}
 
-	if (is_adjacent_to(province))
+	if (is_adjacent_to(province)) {
 		return false;
+	}
 	adjacencies.push_back({ province, distance, flags });
 	return true;
 }
@@ -201,5 +208,5 @@ std::vector<Province::adjacency_t> const& Province::get_adjacencies() const {
 }
 
 void Province::_set_terrain_type(TerrainType const* type) {
-		terrain_type = type;
+	terrain_type = type;
 }
