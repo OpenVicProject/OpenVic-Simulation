@@ -63,12 +63,13 @@ namespace OpenVic {
 		ProvinceHistoryManager() {}
 
 		bool add_province_history_entry(
-			Province const* province, Date date, Country const* owner, Country const* controller, uint8_t colonial, bool slave,
+			Province const* province, Date date, Country const* owner, Country const* controller,
+			std::optional<uint8_t>&& colonial, std::optional<bool>&& slave,
 			std::vector<Country const*>&& cores, // additive to existing entries
 			std::vector<Country const*>&& remove_cores, // existing cores that need to be removed
-			Good const* rgo, uint8_t life_rating, TerrainType const* terrain_type,
-			std::map<Building const*, uint8_t>&& buildings, std::map<Ideology const*, uint8_t>&& party_loyalties,
-			std::bitset<5> updates // bitmap of updated non-pointer values, top to bottom
+			Good const* rgo, std::optional<uint8_t>&& life_rating, TerrainType const* terrain_type,
+			std::optional<std::map<Building const*, uint8_t>>&& buildings,
+			std::optional<std::map<Ideology const*, uint8_t>>&& party_loyalties
 		);
 
 		void lock_province_histories();
