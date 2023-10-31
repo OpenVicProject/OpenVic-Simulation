@@ -28,7 +28,7 @@ bool CultureGroup::get_is_overseas() const {
 Culture::Culture(
 	std::string_view new_identifier, colour_t new_colour, CultureGroup const& new_group,
 	std::vector<std::string>&& new_first_names, std::vector<std::string>&& new_last_names
-) : HasIdentifierAndColour { new_identifier, new_colour, true, false }, group { new_group },
+) : HasIdentifierAndColour { new_identifier, new_colour, false, false }, group { new_group },
 	first_names { std::move(new_first_names) }, last_names { std::move(new_last_names) } {}
 
 CultureGroup const& Culture::get_group() const {
@@ -195,7 +195,7 @@ bool CultureManager::load_culture_file(ast::NodeCPtr root) {
 		CultureGroup const* culture_group = get_culture_group_by_identifier(culture_group_key);
 		return expect_dictionary([this, culture_group](std::string_view key, ast::NodeCPtr value) -> bool {
 			static const string_set_t reserved_keys = { "leader", "unit", "union", "is_overseas" };
-			if (reserved_keys.find(key) != reserved_keys.end()) {
+			if (reserved_keys.contains(key)) {
 				return true;
 			}
 			return _load_culture(culture_group, key, value);

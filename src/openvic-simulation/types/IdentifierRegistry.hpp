@@ -6,24 +6,16 @@
 #include <vector>
 
 #include "openvic-simulation/dataloader/NodeTools.hpp"
+#include "openvic-simulation/utility/Getters.hpp"
 #include "openvic-simulation/utility/Logger.hpp"
-
-#define REF_GETTERS(var) \
-	constexpr decltype(var)& get_##var() { \
-		return var; \
-	} \
-	constexpr decltype(var) const& get_##var() const { \
-		return var; \
-	}
 
 namespace OpenVic {
 	/*
-	 * Base class for objects with a non-empty string identifier,
-	 * uniquely named instances of which can be entered into an
-	 * IdentifierRegistry instance.
+	 * Base class for objects with a non-empty string identifier. Uniquely named instances of a type derived from this class
+	 * can be entered into an IdentifierRegistry instance.
 	 */
 	class HasIdentifier {
-		const std::string identifier;
+		const std::string PROPERTY(identifier);
 
 	protected:
 		HasIdentifier(std::string_view new_identifier);
@@ -33,29 +25,6 @@ namespace OpenVic {
 		HasIdentifier(HasIdentifier&&) = default;
 		HasIdentifier& operator=(HasIdentifier const&) = delete;
 		HasIdentifier& operator=(HasIdentifier&&) = delete;
-
-		std::string_view get_identifier() const;
-
-		template<typename T>
-		inline constexpr static decltype(auto) get_property(const T& property) {
-			if constexpr (std::same_as<T, std::string>) {
-				return std::string_view(property);
-			} else if constexpr (sizeof(T) <= sizeof(void*)) {
-				return T(property);
-			} else {
-				return property;
-			}
-		}
-
-#define HASID_PROPERTY(NAME) \
-	const NAME; \
-\
-public: \
-	auto get_##NAME() const -> decltype(get_property(NAME)) { \
-		return get_property(NAME); \
-	} \
-\
-private:
 	};
 
 	std::ostream& operator<<(std::ostream& stream, HasIdentifier const& obj);
@@ -65,10 +34,10 @@ private:
 	 * Base class for objects with associated colour information.
 	 */
 	class HasColour {
-		const colour_t colour;
+		const colour_t PROPERTY(colour);
 
 	protected:
-		HasColour(const colour_t new_colour, bool can_be_null, bool can_have_alpha);
+		HasColour(colour_t new_colour, bool cannot_be_null, bool can_have_alpha);
 
 	public:
 		HasColour(HasColour const&) = delete;
@@ -76,18 +45,16 @@ private:
 		HasColour& operator=(HasColour const&) = delete;
 		HasColour& operator=(HasColour&&) = delete;
 
-		colour_t get_colour() const;
 		std::string colour_to_hex_string() const;
 	};
 
 	/*
-	 * Base class for objects with a unique string identifier
-	 * and associated colour information.
+	 * Base class for objects with a unique string identifier and associated colour information.
 	 */
 	class HasIdentifierAndColour : public HasIdentifier, public HasColour {
 	protected:
 		HasIdentifierAndColour(
-			std::string_view new_identifier, const colour_t new_colour, bool can_be_null, bool can_have_alpha
+			std::string_view new_identifier, colour_t new_colour, bool cannot_be_null, bool can_have_alpha
 		);
 
 	public:

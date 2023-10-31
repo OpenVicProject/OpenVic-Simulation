@@ -24,6 +24,8 @@ namespace OpenVic {
 		using distance_t = uint16_t;
 		using flags_t = uint16_t;
 
+		enum struct colony_status_t : int8_t { STATE, PROTECTORATE, COLONY };
+
 		struct adjacency_t {
 			friend struct Province;
 
@@ -63,6 +65,7 @@ namespace OpenVic {
 		Region* region = nullptr;
 		bool on_map = false, has_region = false, water = false;
 		life_rating_t life_rating = 0;
+		colony_status_t colony_status = colony_status_t::STATE;
 		IdentifierRegistry<BuildingInstance> buildings;
 		// TODO - change this into a factory-like structure
 		Good const* rgo = nullptr;
@@ -90,6 +93,7 @@ namespace OpenVic {
 		bool get_water() const;
 		TerrainType const* get_terrain_type() const;
 		life_rating_t get_life_rating() const;
+		colony_status_t get_colony_status() const;
 		bool load_positions(BuildingManager const& building_manager, ast::NodeCPtr root);
 
 		bool add_building(BuildingInstance&& building_instance);

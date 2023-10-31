@@ -34,13 +34,18 @@ using namespace OpenVic;
 using namespace OpenVic::NodeTools;
 using namespace ovdl;
 
-// Windows and Mac by default act like case insensitive filesystems
-static constexpr bool path_equals(std::string_view lhs, std::string_view rhs) {
-#if defined(_WIN32) || (defined(__APPLE__) && defined(__MACH__))
+
+static constexpr bool path_equals_case_insensitive(std::string_view lhs, std::string_view rhs) {
 	constexpr auto ichar_equals = [](unsigned char l, unsigned char r) {
 		return std::tolower(l) == std::tolower(r);
 	};
 	return std::equal(lhs.begin(), lhs.end(), rhs.begin(), rhs.end(), ichar_equals);
+}
+
+// Windows and Mac by default act like case insensitive filesystems
+static constexpr bool path_equals(std::string_view lhs, std::string_view rhs) {
+#if defined(_WIN32) || (defined(__APPLE__) && defined(__MACH__))
+	return path_equals_case_insensitive(lhs, rhs);
 #else
 	return std::equal(lhs.begin(), lhs.end(), rhs.begin(), rhs.end());
 #endif
@@ -359,14 +364,36 @@ bool Dataloader::set_roots(path_vector_t const& new_roots) {
 	return ret;
 }
 
-fs::path Dataloader::lookup_file(fs::path const& path) const {
+fs::path Dataloader::lookup_file(fs::path const& path, bool print_error) const {
 	for (fs::path const& root : roots) {
 		const fs::path composed = root / path;
 		if (fs::is_regular_file(composed)) {
 			return composed;
 		}
 	}
-	Logger::error("Lookup for ", path, " failed!");
+	if (print_error) {
+		Logger::error("Lookup for ", path, " failed!");
+	}
+	return {};
+}
+
+fs::path Dataloader::lookup_file_case_insensitive(fs::path const& path, bool print_error) const {
+	const std::string filename = path.filename().string();
+	for (fs::path const& root : roots) {
+		const fs::path composed = root / path;
+		std::error_code ec;
+		for (fs::directory_entry const& entry : fs::directory_iterator { composed.parent_path(), ec }) {
+			if (entry.is_regular_file()) {
+				const fs::path file = entry;
+				if (path_equals_case_insensitive(file.filename().string(), filename)) {
+					return file;
+				}
+			}
+		}
+	}
+	if (print_error) {
+		Logger::error("Lookup for ", path, " failed!");
+	}
 	return {};
 }
 
@@ -398,8 +425,9 @@ Dataloader::path_vector_t Dataloader::lookup_files_in_dir(fs::path const& path, 
 	return ret;
 }
 
-bool Dataloader::apply_to_files_in_dir(fs::path const& path, fs::path const& extension, callback_t<fs::path const&> callback)
-	const {
+bool Dataloader::apply_to_files_in_dir(
+	fs::path const& path, fs::path const& extension, callback_t<fs::path const&> callback
+) const {
 	bool ret = true;
 	for (fs::path const& file : lookup_files_in_dir(path, extension)) {
 		if (!callback(file)) {
@@ -498,60 +526,36 @@ bool Dataloader::_load_units(UnitManager& unit_manager, GoodManager const& good_
 	return ret;
 }
 
-bool Dataloader::_load_oobs(GameManager& game_manager) const {
-	static const fs::path oob_directory = "history/units";
-
-	/* used for countries with no defined initial OOB */
-	game_manager.get_military_manager().get_deployment_manager().add_deployment(
-		"NULL", std::vector<Army>(), std::vector<Navy>(), std::vector<Leader>()
-	);
-
-	bool ret = apply_to_files_in_dir(oob_directory, ".txt", [&game_manager](fs::path const& file) -> bool {
-		if (file.filename() == "v2dd2.txt") {
-			return true; /* dev diary just stuck in there for no reason whatsoever */
-		}
-		return game_manager.get_military_manager().get_deployment_manager().load_oob_file(
-			game_manager, file.filename().string(), parse_defines(file).get_file_node()
-		);
-	});
-
-	/* we also load OOBs in top level subdirectories, for other start dates etc */
-	for (auto root : roots) {
-		const fs::path path = root / oob_directory;
-		std::error_code ec;
-		for (fs::directory_entry const& entry : fs::directory_iterator { path, ec }) {
-			if (entry.is_directory()) {
-				ret &= apply_to_files_in_dir(entry, ".txt", [&entry, &game_manager](fs::path const& file) -> bool {
-					return game_manager.get_military_manager().get_deployment_manager().load_oob_file(
-						game_manager, (entry.path().filename() / file.filename()).string(), parse_defines(file).get_file_node()
-					);
-				});
-			}
-		}
-	}
-
-	game_manager.get_military_manager().get_deployment_manager().lock_deployments();
-	return ret;
-}
-
 bool Dataloader::_load_history(GameManager& game_manager) const {
 	static const fs::path country_history_directory = "history/countries";
 	static const fs::path province_history_directory = "history/provinces";
 
 	/* Country History */
 	bool ret = apply_to_files_in_dir(country_history_directory, ".txt", [this, &game_manager](fs::path const& file) -> bool {
-		std::string tag = file.filename().string().substr(0, 3);
+		const std::string filename = file.stem().string();
+		// TODO - standardise rules on country idenifiers characters (probably letters + underscore) and enforce them
+		const size_t len = std::min(std::min(filename.find(" "), filename.find("-")), filename.length());
+		const std::string_view country_id { filename.data(), len };
 
-		if (!game_manager.get_country_manager().has_country_identifier(tag)) {
-			Logger::error("Error loading history for country ", tag, ": tag not defined!");
-			return false;
+		Country const* country = game_manager.get_country_manager().get_country_by_identifier(country_id);
+		if (country == nullptr) {
+			Logger::warning("Found history file for non-existent country: ", country_id);
+			return true;
 		}
 
 		return game_manager.get_history_manager().get_country_manager().load_country_history_file(
-			game_manager, tag, parse_defines(lookup_file(file)).get_file_node()
+			game_manager, *this, *country, parse_defines(lookup_file(file)).get_file_node()
 		);
 	});
 	game_manager.get_history_manager().get_country_manager().lock_country_histories();
+
+	{
+		DeploymentManager& deployment_manager = game_manager.get_military_manager().get_deployment_manager();
+		deployment_manager.lock_deployments();
+		if (deployment_manager.get_missing_oob_file_count() > 0) {
+			Logger::warning(deployment_manager.get_missing_oob_file_count(), " missing OOB files!");
+		}
+	}
 
 	/* Province History */
 	for (auto root : roots) {
@@ -560,16 +564,18 @@ bool Dataloader::_load_history(GameManager& game_manager) const {
 		for (fs::directory_entry const& entry : fs::directory_iterator { path, ec }) {
 			if (entry.is_directory()) {
 				bool ret = apply_to_files_in_dir(entry, ".txt", [this, &game_manager](fs::path const& file) -> bool {
-					std::string province_id = file.filename().string();
-					province_id = province_id.substr(0, province_id.find(" "));
+					const std::string filename = file.stem().string();
+					const size_t len = std::min(filename.find(" "), filename.length());
+					const std::string_view province_id { filename.data(), len };
 
-					if (!game_manager.get_map().has_province_identifier(province_id)) {
-						Logger::error("Error loading history for province ", province_id, ": province not defined!");
-						return false;
+					Province const* province = game_manager.get_map().get_province_by_identifier(province_id);
+					if (province == nullptr) {
+						Logger::warning("Found history file for non-existent province: ", province_id);
+						return true;
 					}
 
 					return game_manager.get_history_manager().get_province_manager().load_province_history_file(
-						game_manager, province_id, parse_defines(lookup_file(file)).get_file_node()
+						game_manager, *province, parse_defines(lookup_file(file)).get_file_node()
 					);
 				});
 			}
@@ -808,10 +814,6 @@ bool Dataloader::load_defines(GameManager& game_manager) const {
 		Logger::error("Failed to load bookmarks!");
 		ret = false;
 	}
-	if (!_load_oobs(game_manager)) {
-		Logger::error("Failed to load orders of battle!");
-		ret = false;
-	}
 	if (!game_manager.get_country_manager().load_countries(
 		game_manager, *this, countries_file.parent_path(), parse_defines(lookup_file(countries_file)).get_file_node()
 	)) {
@@ -828,10 +830,11 @@ bool Dataloader::load_defines(GameManager& game_manager) const {
 
 bool Dataloader::load_pop_history(GameManager& game_manager, fs::path const& path) const {
 	return apply_to_files_in_dir(path, ".txt", [&game_manager](fs::path const& file) -> bool {
-		return game_manager.get_map()
-			.expect_province_dictionary([&game_manager](Province& province, ast::NodeCPtr value) -> bool {
+		return game_manager.get_map().expect_province_dictionary(
+			[&game_manager](Province& province, ast::NodeCPtr value) -> bool {
 				return province.load_pop_list(game_manager.get_pop_manager(), value);
-			})(parse_defines(file).get_file_node());
+			}
+		)(parse_defines(file).get_file_node());
 	});
 }
 

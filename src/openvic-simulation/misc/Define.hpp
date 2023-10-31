@@ -15,8 +15,8 @@ namespace OpenVic {
 		enum class Type : unsigned char { None, Country, Economy, Military, Diplomacy, Pops, Ai, Graphics };
 
 	private:
-		std::string HASID_PROPERTY(value);
-		Type HASID_PROPERTY(type);
+		const std::string PROPERTY(value);
+		const Type PROPERTY(type);
 
 		Define(std::string_view new_identifier, std::string&& new_value, Type new_type);
 
@@ -40,7 +40,7 @@ namespace OpenVic {
 
 		bool add_define(std::string_view name, std::string&& value, Define::Type type);
 		bool add_date_define(std::string_view name, Date date);
-		IDENTIFIER_REGISTRY_ACCESSORS(define);
+		IDENTIFIER_REGISTRY_ACCESSORS(define)
 
 		Date get_start_date() const;
 		Date get_end_date() const;

@@ -26,7 +26,6 @@ namespace OpenVic {
 		bool _load_pop_types(PopManager& pop_manager, UnitManager const& unit_manager, GoodManager const& good_manager) const;
 		bool _load_units(UnitManager& unit_manager, GoodManager const& good_manager) const;
 		bool _load_map_dir(GameManager& game_manager) const;
-		bool _load_oobs(GameManager& game_manager) const;
 		bool _load_history(GameManager& game_manager) const;
 
 	public:
@@ -64,7 +63,8 @@ namespace OpenVic {
 		/* REQUIREMENTS:
 		 * DAT-24
 		 */
-		fs::path lookup_file(fs::path const& path) const;
+		fs::path lookup_file(fs::path const& path, bool print_error = true) const;
+		fs::path lookup_file_case_insensitive(fs::path const& path, bool print_error = true) const;
 		path_vector_t lookup_files_in_dir(fs::path const& path, fs::path const& extension) const;
 		bool apply_to_files_in_dir(
 			fs::path const& path, fs::path const& extension, NodeTools::callback_t<fs::path const&> callback
@@ -74,24 +74,13 @@ namespace OpenVic {
 		bool load_pop_history(GameManager& game_manager, fs::path const& path) const;
 
 		enum locale_t : size_t {
-			English,
-			French,
-			German,
-			Polish,
-			Spanish,
-			Italian,
-			Swedish,
-			Czech,
-			Hungarian,
-			Dutch,
-			Portugese,
-			Russian,
-			Finnish,
-			_LocaleCount
+			English, French, German, Polish, Spanish, Italian, Swedish,
+			Czech, Hungarian, Dutch, Portugese, Russian, Finnish, _LocaleCount
 		};
-		static constexpr char const* locale_names[_LocaleCount] = { "en_GB", "fr_FR", "de_DE", "pl_PL", "es_ES",
-																	"it_IT", "sv_SE", "cs_CZ", "hu_HU", "nl_NL",
-																	"pt_PT", "ru_RU", "fi_FI" };
+		static constexpr char const* locale_names[_LocaleCount] = {
+			"en_GB", "fr_FR", "de_DE", "pl_PL", "es_ES", "it_IT", "sv_SE",
+			"cs_CZ", "hu_HU", "nl_NL", "pt_PT", "ru_RU", "fi_FI"
+		};
 
 		/* Args: key, locale, localisation */
 		using localisation_callback_t = NodeTools::callback_t<std::string_view, locale_t, std::string_view>;

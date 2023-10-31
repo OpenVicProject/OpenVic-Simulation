@@ -7,9 +7,10 @@ using namespace OpenVic;
 using namespace OpenVic::NodeTools;
 
 ProvinceHistory::ProvinceHistory(
-	Country const* new_owner, Country const* new_controller, uint8_t new_colonial, bool new_slave,
-	std::vector<Country const*>&& new_cores, Good const* new_rgo, uint8_t new_life_rating, TerrainType const* new_terrain_type,
-	std::map<Building const*, uint8_t>&& new_buildings, std::map<Ideology const*, uint8_t>&& new_party_loyalties
+	Country const* new_owner, Country const* new_controller, Province::colony_status_t new_colonial, bool new_slave,
+	std::vector<Country const*>&& new_cores, Good const* new_rgo, Province::life_rating_t new_life_rating,
+	TerrainType const* new_terrain_type, building_level_map_t&& new_buildings,
+	decimal_map_t<Ideology const*>&& new_party_loyalties
 ) : owner { new_owner }, controller { new_controller }, colonial { new_colonial }, slave { new_slave },
 	cores { std::move(new_cores) }, rgo { new_rgo }, life_rating { new_life_rating }, terrain_type { new_terrain_type },
 	buildings { std::move(new_buildings) }, party_loyalties { std::move(new_party_loyalties) } {}
@@ -22,7 +23,7 @@ Country const* ProvinceHistory::get_controller() const {
 	return controller;
 }
 
-uint8_t ProvinceHistory::get_colony_status() const {
+Province::colony_status_t ProvinceHistory::get_colony_status() const {
 	return colonial;
 }
 
@@ -42,7 +43,7 @@ Good const* ProvinceHistory::get_rgo() const {
 	return rgo;
 }
 
-uint8_t ProvinceHistory::get_life_rating() const {
+Province::life_rating_t ProvinceHistory::get_life_rating() const {
 	return life_rating;
 }
 
@@ -50,20 +51,20 @@ TerrainType const* ProvinceHistory::get_terrain_type() const {
 	return terrain_type;
 }
 
-std::map<Building const*, uint8_t> const& ProvinceHistory::get_buildings() const {
+ProvinceHistory::building_level_map_t const& ProvinceHistory::get_buildings() const {
 	return buildings;
 }
 
-std::map<Ideology const*, uint8_t> const& ProvinceHistory::get_party_loyalties() const {
+decimal_map_t<Ideology const*> const& ProvinceHistory::get_party_loyalties() const {
 	return party_loyalties;
 }
 
 bool ProvinceHistoryManager::add_province_history_entry(
-	Province const* province, Date date, Country const* owner, Country const* controller, std::optional<uint8_t>&& colonial,
-	std::optional<bool>&& slave, std::vector<Country const*>&& cores, std::vector<Country const*>&& remove_cores,
-	Good const* rgo, std::optional<uint8_t>&& life_rating, TerrainType const* terrain_type,
-	std::optional<std::map<Building const*, uint8_t>>&& buildings,
-	std::optional<std::map<Ideology const*, uint8_t>>&& party_loyalties
+	Province const* province, Date date, Country const* owner, Country const* controller,
+	std::optional<Province::colony_status_t>&& colonial, std::optional<bool>&& slave, std::vector<Country const*>&& cores,
+	std::vector<Country const*>&& remove_cores, Good const* rgo, std::optional<Province::life_rating_t>&& life_rating,
+	TerrainType const* terrain_type, std::optional<ProvinceHistory::building_level_map_t>&& buildings,
+	std::optional<decimal_map_t<Ideology const*>>&& party_loyalties
 ) {
 	if (locked) {
 		Logger::error("Cannot add new history entry to province history registry: locked!");
@@ -104,7 +105,7 @@ bool ProvinceHistoryManager::add_province_history_entry(
 		}
 		// province history cores are additive
 		existing_entry->second.cores.insert(existing_entry->second.cores.end(), cores.begin(), cores.end());
-		for (const auto which : remove_cores) {
+		for (Country const* which : remove_cores) {
 			const auto core = std::find(cores.begin(), cores.end(), which);
 			if (core == cores.end()) {
 				Logger::error(
@@ -176,114 +177,109 @@ inline ProvinceHistory const* ProvinceHistoryManager::get_province_history(
 }
 
 inline bool ProvinceHistoryManager::_load_province_history_entry(
-	GameManager& game_manager, std::string_view province, Date date, ast::NodeCPtr root
+	GameManager const& game_manager, Province const& province, Date date, ast::NodeCPtr root,
+	bool is_base_entry
 ) {
+	BuildingManager const& building_manager = game_manager.get_economy_manager().get_building_manager();
+	CountryManager const& country_manager = game_manager.get_country_manager();
+	GoodManager const& good_manager = game_manager.get_economy_manager().get_good_manager();
+	IdeologyManager const& ideology_manager = game_manager.get_politics_manager().get_ideology_manager();
+	TerrainTypeManager const& terrain_type_manager = game_manager.get_map().get_terrain_type_manager();
+
 	Country const* owner = nullptr;
 	Country const* controller = nullptr;
-	std::vector<Country const*> cores;
-	std::vector<Country const*> remove_cores;
-	Good const* rgo;
-	std::optional<uint8_t> life_rating, colonial;
+	std::vector<Country const*> cores {};
+	std::vector<Country const*> remove_cores {};
+	Good const* rgo = nullptr;
+	std::optional<Province::colony_status_t> colonial;
+	std::optional<Province::life_rating_t> life_rating;
 	std::optional<bool> slave;
-	TerrainType const* terrain_type;
-	std::optional<std::map<Building const*, uint8_t>> buildings;
-	std::optional<std::map<Ideology const*, uint8_t>> party_loyalties;
+	TerrainType const* terrain_type = nullptr;
+	std::optional<ProvinceHistory::building_level_map_t> buildings;
+	std::optional<decimal_map_t<Ideology const*>> party_loyalties;
+
+	using enum Province::colony_status_t;
+	static const string_map_t<Province::colony_status_t> colony_status_map {
+		{ "0", STATE }, { "1", PROTECTORATE }, { "2", COLONY }
+	};
 
 	bool ret = expect_dictionary_keys_and_default(
-		[&game_manager, &buildings](std::string_view key, ast::NodeCPtr value) -> bool {
+		[&building_manager, &buildings, date, is_base_entry](std::string_view key, ast::NodeCPtr value) -> bool {
 			// used for province buildings like forts or railroads
-			if (game_manager.get_economy_manager().get_building_manager().has_building_identifier(key)) {
-				Building const* building;
-				uint8_t level;
-
-				bool ret = game_manager.get_economy_manager().get_building_manager()
-					.expect_building_str(assign_variable_callback_pointer(building))(key);
-				ret &= expect_uint(assign_variable_callback(level))(value);
-
-				if(!buildings.has_value())
-					buildings = decltype(buildings)::value_type {};
-				buildings->emplace(building, level);
-				return ret;
+			Building const* building = building_manager.get_building_by_identifier(key);
+			if (building != nullptr) {
+				return expect_uint<Building::level_t>([&buildings, building](Building::level_t level) -> bool {
+					if(!buildings.has_value())
+						buildings = decltype(buildings)::value_type {};
+					buildings->emplace(building, level);
+					return true;
+				})(value);
 			}
 
-			bool is_date;
-			Date::from_string(key, &is_date, true);
+			/* Date blocks are skipped here (they get their own invocation of _load_province_history_entry) */
+			bool is_date = false;
+			const Date sub_date { Date::from_string(key, &is_date, true) };
 			if (is_date) {
-				return true;
+				if (is_base_entry) {
+					return true;
+				} else {
+					Logger::error(
+						"Province history nested multiple levels deep! ", sub_date, " is inside ", date,
+						" (Any date blocks within a date block are ignored)"
+					);
+					return false;
+				}
 			}
 
 			return key_value_invalid_callback(key, value);
 		},
-		"owner", ZERO_OR_ONE, game_manager.get_country_manager()
-			.expect_country_identifier(assign_variable_callback_pointer(owner)),
-		"controller", ZERO_OR_ONE, game_manager.get_country_manager()
-			.expect_country_identifier(assign_variable_callback_pointer(controller)),
-		"add_core", ZERO_OR_MORE, [&game_manager, &cores](ast::NodeCPtr node) -> bool {
-			Country const* core;
-
-			bool ret = game_manager.get_country_manager()
-				.expect_country_identifier(assign_variable_callback_pointer(core))(node);
-			cores.push_back(core);
-			return ret;
-		},
-		"remove_core", ZERO_OR_MORE, [&game_manager, &remove_cores](ast::NodeCPtr node) -> bool {
-			Country const* remove;
-
-			bool ret = game_manager.get_country_manager()
-				.expect_country_identifier(assign_variable_callback_pointer(remove))(node);
-			remove_cores.push_back(remove);
-			return ret;
-		},
-		"colonial", ZERO_OR_ONE, expect_uint<uint8_t>([&colonial](uint8_t colony_level) -> bool {
-			colonial = colony_level;
-
-			return true;
-		}),
-		"colony", ZERO_OR_ONE, expect_uint<uint8_t>([&colonial](uint8_t colony_level) -> bool {
-			colonial = colony_level;
-
-			return true;
-		}),
-		"is_slave", ZERO_OR_ONE, expect_bool([&slave](bool is_slave) -> bool {
-			if (is_slave) {
-				slave = true;
-			} else {
-				slave = false;
+		"owner", ZERO_OR_ONE, country_manager.expect_country_identifier(assign_variable_callback_pointer(owner)),
+		"controller", ZERO_OR_ONE, country_manager.expect_country_identifier(assign_variable_callback_pointer(controller)),
+		"add_core", ZERO_OR_MORE, country_manager.expect_country_identifier(
+			[&cores](Country const& core) -> bool {
+				cores.push_back(&core);
+				return true;
 			}
+		),
+		"remove_core", ZERO_OR_MORE, country_manager.expect_country_identifier(
+			[&remove_cores](Country const& core) -> bool {
+				remove_cores.push_back(&core);
+				return true;
+			}
+		),
+		"colonial", ZERO_OR_ONE,
+			expect_identifier(expect_mapped_string(colony_status_map, assign_variable_callback(colonial))),
+		"colony", ZERO_OR_ONE, expect_identifier(expect_mapped_string(colony_status_map, assign_variable_callback(colonial))),
+		"is_slave", ZERO_OR_ONE, expect_bool(assign_variable_callback(slave)),
+		"trade_goods", ZERO_OR_ONE, good_manager.expect_good_identifier(assign_variable_callback_pointer(rgo)),
+		"life_rating", ZERO_OR_ONE, expect_uint<Province::life_rating_t>(assign_variable_callback(life_rating)),
+		"terrain", ZERO_OR_ONE, terrain_type_manager.expect_terrain_type_identifier(
+			assign_variable_callback_pointer(terrain_type)
+		),
+		"party_loyalty", ZERO_OR_MORE, [&ideology_manager, &party_loyalties](ast::NodeCPtr node) -> bool {
+			Ideology const* ideology = nullptr;
+			fixed_point_t amount = 0; // percent I do believe
 
-			return true;
-		}),
-		"trade_goods", ZERO_OR_ONE, game_manager.get_economy_manager().get_good_manager()
-			.expect_good_identifier(assign_variable_callback_pointer(rgo)),
-		"life_rating", ZERO_OR_ONE, expect_uint<uint8_t>([&life_rating](uint8_t rating) -> bool {
-			life_rating = rating;
-
-			return true;
-		}),
-		"terrain", ZERO_OR_ONE, game_manager.get_map().get_terrain_type_manager()
-			.expect_terrain_type_identifier(assign_variable_callback_pointer(terrain_type)),
-		"party_loyalty", ZERO_OR_MORE, [&game_manager, &party_loyalties](ast::NodeCPtr node) -> bool {
-			Ideology const* ideology;
-			uint8_t amount; // percent I do believe
-
-			bool ret = expect_dictionary_keys(
-				"ideology", ONE_EXACTLY, game_manager.get_politics_manager().get_ideology_manager()
-					.expect_ideology_identifier(assign_variable_callback_pointer(ideology)),
-				"loyalty_value", ONE_EXACTLY, expect_uint(assign_variable_callback(amount))
+			const bool ret = expect_dictionary_keys(
+				"ideology", ONE_EXACTLY, ideology_manager.expect_ideology_identifier(
+					assign_variable_callback_pointer(ideology)
+				),
+				"loyalty_value", ONE_EXACTLY, expect_fixed_point(assign_variable_callback(amount))
 			)(node);
 			if(!party_loyalties.has_value())
 				party_loyalties = decltype(party_loyalties)::value_type {};
 			party_loyalties->emplace(ideology, amount);
 			return ret;
 		},
-		"state_building", ZERO_OR_MORE, [&game_manager, &buildings](ast::NodeCPtr node) -> bool {
-			Building const* building;
-			uint8_t level;
+		"state_building", ZERO_OR_MORE, [&building_manager, &buildings](ast::NodeCPtr node) -> bool {
+			Building const* building = nullptr;
+			uint8_t level = 0;
 
-			bool ret = expect_dictionary_keys(
+			const bool ret = expect_dictionary_keys(
 				"level", ONE_EXACTLY, expect_uint(assign_variable_callback(level)),
-				"building", ONE_EXACTLY, game_manager.get_economy_manager().get_building_manager()
-					.expect_building_identifier(assign_variable_callback_pointer(building)),
+				"building", ONE_EXACTLY, building_manager.expect_building_identifier(
+					assign_variable_callback_pointer(building)
+				),
 				"upgrade", ZERO_OR_ONE, success_callback // doesn't appear to have an effect
 			)(node);
 			if(!buildings.has_value())
@@ -294,34 +290,37 @@ inline bool ProvinceHistoryManager::_load_province_history_entry(
 	)(root);
 
 	ret &= add_province_history_entry(
-		game_manager.get_map().get_province_by_identifier(province), date, owner, controller, std::move(colonial), std::move(slave),
-		std::move(cores), std::move(remove_cores), rgo, std::move(life_rating), terrain_type, std::move(buildings),
-		std::move(party_loyalties)
+		&province, date, owner, controller, std::move(colonial), std::move(slave), std::move(cores), std::move(remove_cores),
+		rgo, std::move(life_rating), terrain_type, std::move(buildings), std::move(party_loyalties)
 	);
 	return ret;
 }
 
-bool ProvinceHistoryManager::load_province_history_file(GameManager& game_manager, std::string_view name, ast::NodeCPtr root) {
-	bool ret = _load_province_history_entry(game_manager, name, game_manager.get_define_manager().get_start_date(), root);
+bool ProvinceHistoryManager::load_province_history_file(
+	GameManager const& game_manager, Province const& province, ast::NodeCPtr root
+) {
+	bool ret = _load_province_history_entry(
+		game_manager, province, game_manager.get_define_manager().get_start_date(), root, true
+	);
 
 	ret &= expect_dictionary(
-		[this, &game_manager, &name](std::string_view key, ast::NodeCPtr value) -> bool {
+		[this, &game_manager, &province, end_date = game_manager.get_define_manager().get_end_date()](
+			std::string_view key, ast::NodeCPtr value) -> bool {
 			bool is_date = false;
-			Date entry = Date::from_string(key, &is_date, true);
+			const Date entry = Date::from_string(key, &is_date, true);
 			if (!is_date) {
 				return true;
 			}
 
-			Date end_date = game_manager.get_define_manager().get_end_date();
 			if (entry > end_date) {
 				Logger::error(
-					"History entry ", entry.to_string(), " of province ", name, " defined after defined end date ",
-					end_date.to_string()
+					"History entry ", entry, " of province ", province.get_identifier(),
+					" defined after defined end date ", end_date
 				);
 				return false;
 			}
 
-			return _load_province_history_entry(game_manager, name, entry, value);
+			return _load_province_history_entry(game_manager, province, entry, value, false);
 		}
 	)(root);
 

@@ -45,18 +45,14 @@ CountryParty::policy_map_t const& CountryParty::get_policies() const {
 
 Country::Country(
 	std::string_view new_identifier, colour_t new_colour, GraphicalCultureType const& new_graphical_culture,
-	std::vector<CountryParty>&& new_parties, unit_names_map_t&& new_unit_names, bool new_dynamic_tag,
+	IdentifierRegistry<CountryParty>&& new_parties, unit_names_map_t&& new_unit_names, bool new_dynamic_tag,
 	government_colour_map_t&& new_alternative_colours
-) : HasIdentifierAndColour { new_identifier, new_colour, true, false }, graphical_culture { new_graphical_culture },
+) : HasIdentifierAndColour { new_identifier, new_colour, false, false }, graphical_culture { new_graphical_culture },
 	parties { std::move(new_parties) }, unit_names { std::move(new_unit_names) }, dynamic_tag { new_dynamic_tag },
 	alternative_colours { std::move(new_alternative_colours) } {}
 
 GraphicalCultureType const& Country::get_graphical_culture() const {
 	return graphical_culture;
-}
-
-std::vector<CountryParty> const& Country::get_parties() const {
-	return parties;
 }
 
 Country::unit_names_map_t const& Country::get_unit_names() const {
@@ -75,7 +71,7 @@ CountryManager::CountryManager() : countries { "countries" } {}
 
 bool CountryManager::add_country(
 	std::string_view identifier, colour_t colour, GraphicalCultureType const* graphical_culture,
-	std::vector<CountryParty>&& parties, Country::unit_names_map_t&& unit_names, bool dynamic_tag,
+	IdentifierRegistry<CountryParty>&& parties, Country::unit_names_map_t&& unit_names, bool dynamic_tag,
 	Country::government_colour_map_t&& alternative_colours
 ) {
 	if (identifier.empty()) {
@@ -122,7 +118,7 @@ bool CountryManager::load_countries(
 				[this, &game_manager, is_dynamic, &dataloader, &countries_dir, &key](std::string_view filepath) -> bool {
 					if (load_country_data_file(
 						game_manager, key, is_dynamic,
-						Dataloader::parse_defines(dataloader.lookup_file(countries_dir / filepath)).get_file_node()
+						Dataloader::parse_defines(dataloader.lookup_file_case_insensitive(countries_dir / filepath)).get_file_node()
 					)) {
 						return true;
 					}
@@ -141,7 +137,7 @@ bool CountryManager::load_countries(
 }
 
 node_callback_t CountryManager::load_country_party(
-	PoliticsManager const& politics_manager, std::vector<CountryParty>& country_parties
+	PoliticsManager const& politics_manager, IdentifierRegistry<CountryParty>& country_parties
 ) const {
 	return [&politics_manager, &country_parties](ast::NodeCPtr value) -> bool {
 		std::string_view party_name;
@@ -149,7 +145,7 @@ node_callback_t CountryManager::load_country_party(
 		Ideology const* ideology;
 		CountryParty::policy_map_t policies;
 
-		const bool ret = expect_dictionary_keys_and_default(
+		bool ret = expect_dictionary_keys_and_default(
 			[&politics_manager, &policies, &party_name](std::string_view key, ast::NodeCPtr value) -> bool {
 				return politics_manager.get_issue_manager().expect_issue_group_str(
 					[&politics_manager, &policies, value, &party_name](IssueGroup const& group) -> bool {
@@ -163,9 +159,10 @@ node_callback_t CountryManager::load_country_party(
 									policies.emplace(&group, &issue);
 									return true;
 								}
-								Logger::error("Invalid policy ", issue.get_identifier(), ", group is ",
+								// TODO - change this back to error/false once TGC no longer has this issue
+								Logger::warning("Invalid policy ", issue.get_identifier(), ", group is ",
 									issue.get_group().get_identifier(), " when ", group.get_identifier(), " was expected");
-								return false;
+								return true;
 							}
 						)(value);
 					}
@@ -178,7 +175,9 @@ node_callback_t CountryManager::load_country_party(
 				politics_manager.get_ideology_manager().expect_ideology_identifier(assign_variable_callback_pointer(ideology))
 		)(value);
 
-		country_parties.emplace_back(CountryParty { party_name, start_date, end_date, *ideology, std::move(policies) });
+		ret &= country_parties.add_item(
+			{ party_name, start_date, end_date, *ideology, std::move(policies) }, duplicate_warning_callback
+		);
 
 		return ret;
 	};
@@ -189,7 +188,7 @@ bool CountryManager::load_country_data_file(
 ) {
 	colour_t colour;
 	GraphicalCultureType const* graphical_culture;
-	std::vector<CountryParty> country_parties;
+	IdentifierRegistry<CountryParty> parties { "country parties" };
 	Country::unit_names_map_t unit_names;
 	Country::government_colour_map_t alternative_colours;
 	bool ret = expect_dictionary_keys_and_default(
@@ -214,7 +213,7 @@ bool CountryManager::load_country_data_file(
 			game_manager.get_pop_manager().get_culture_manager().expect_graphical_culture_type_identifier(
 				assign_variable_callback_pointer(graphical_culture)
 			),
-		"party", ZERO_OR_MORE, load_country_party(game_manager.get_politics_manager(), country_parties),
+		"party", ZERO_OR_MORE, load_country_party(game_manager.get_politics_manager(), parties),
 		"unit_names", ZERO_OR_ONE,
 			game_manager.get_military_manager().get_unit_manager().expect_unit_dictionary(
 				[&unit_names, &name](Unit const& unit, ast::NodeCPtr value) -> bool {
@@ -230,7 +229,7 @@ bool CountryManager::load_country_data_file(
 	)(root);
 
 	ret &= add_country(
-		name, colour, graphical_culture, std::move(country_parties), std::move(unit_names), is_dynamic,
+		name, colour, graphical_culture, std::move(parties), std::move(unit_names), is_dynamic,
 		std::move(alternative_colours)
 	);
 	return ret;

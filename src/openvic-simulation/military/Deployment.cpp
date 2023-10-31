@@ -5,22 +5,28 @@
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;
 
+Leader::Leader(
+	std::string_view new_name, Unit::type_t new_type, Date new_date, LeaderTrait const* new_personality,
+	LeaderTrait const* new_background, fixed_point_t new_prestige
+) : name { new_name }, type { new_type }, date { new_date }, personality { new_personality }, background { new_background },
+	prestige { new_prestige } {}
+
+Regiment::Regiment(std::string_view new_name, Unit const* new_type, Province const* new_home)
+	: name { new_name }, type { new_type }, home { new_home } {}
+
+Ship::Ship(std::string_view new_name, Unit const* new_type) : name { new_name }, type { new_type } {}
+
+Army::Army(std::string_view new_name, Province const* new_location, std::vector<Regiment>&& new_regiments)
+	: name { new_name }, location { new_location }, regiments { std::move(new_regiments) } {}
+
+Navy::Navy(std::string_view new_name, Province const* new_location, std::vector<Ship>&& new_ships)
+	: name { new_name }, location { new_location }, ships { std::move(new_ships) } {}
+
 Deployment::Deployment(
-	std::string_view new_path, std::vector<Army>&& new_armies, std::vector<Navy>&& new_navies, std::vector<Leader>&& new_leaders
+	std::string_view new_path, std::vector<Army>&& new_armies, std::vector<Navy>&& new_navies,
+	std::vector<Leader>&& new_leaders
 ) : HasIdentifier { new_path }, armies { std::move(new_armies) }, navies { std::move(new_navies) },
 	leaders { std::move(new_leaders) } {}
-
-const std::vector<Army>& Deployment::get_armies() const {
-	return armies;
-}
-
-const std::vector<Navy>& Deployment::get_navies() const {
-	return navies;
-}
-
-const std::vector<Leader>& Deployment::get_leaders() const {
-	return leaders;
-}
 
 DeploymentManager::DeploymentManager() : deployments { "deployments" } {}
 
@@ -31,117 +37,150 @@ bool DeploymentManager::add_deployment(
 		Logger::error("Attemped to load order of battle with no path! Something is very wrong!");
 		return false;
 	}
-	if (armies.empty() && navies.empty() && leaders.empty() && path != "NULL") {
+	if (armies.empty() && navies.empty() && leaders.empty()) {
 		Logger::warning("Loading redundant empty order of battle at ", path);
 	}
 
-	return deployments.add_item({ path, std::move(armies), std::move(navies), std::move(leaders) });
+	return deployments.add_item(
+		std::make_unique<Deployment>(std::move(path), std::move(armies), std::move(navies), std::move(leaders))
+	);
 }
 
-bool DeploymentManager::load_oob_file(GameManager& game_manager, std::string_view path, ast::NodeCPtr root) {
+bool DeploymentManager::load_oob_file(
+	GameManager const& game_manager, Dataloader const& dataloader, std::string_view history_path, Deployment const*& deployment,
+	bool fail_on_missing
+) {
+	deployment = get_deployment_by_identifier(history_path);
+	if (deployment != nullptr) {
+		return true;
+	}
+	if (missing_oob_files.contains(history_path)) {
+		return !fail_on_missing;
+	}
+	static const fs::path oob_directory = "history/units/";
+	fs::path full_path = oob_directory;
+	full_path += history_path;
+	const fs::path lookedup_path = dataloader.lookup_file(full_path, false);
+	if (lookedup_path.empty()) {
+		missing_oob_files.emplace(history_path);
+		if (fail_on_missing) {
+			Logger::warning("Could not find OOB file ", full_path, "!");
+			return false;
+		} else {
+			return true;
+		}
+	}
 	std::vector<Army> armies;
 	std::vector<Navy> navies;
 	std::vector<Leader> leaders;
-
 	bool ret = expect_dictionary_keys_and_default(
 		key_value_success_callback, // TODO: load SOI information
 		"leader", ZERO_OR_MORE, [&leaders, &game_manager](ast::NodeCPtr node) -> bool {
-			std::string_view name;
-			Unit::type_t type;
-			Date date;
-			LeaderTrait const* personality = nullptr;
-			LeaderTrait const* background = nullptr;
-			fixed_point_t prestige = 0;
+			std::string_view leader_name {};
+			Unit::type_t leader_type = Unit::type_t::LAND;
+			Date leader_date {};
+			LeaderTrait const* leader_personality = nullptr;
+			LeaderTrait const* leader_background = nullptr;
+			fixed_point_t leader_prestige = 0;
 
 			bool ret = expect_dictionary_keys(
-				"name", ONE_EXACTLY, expect_string(assign_variable_callback(name), false),
-				"date", ONE_EXACTLY, expect_identifier_or_string(expect_date_str(assign_variable_callback(date))),
-				"type", ONE_EXACTLY, expect_identifier([&type](std::string_view leader_type) -> bool {
-					if (leader_type == "land") {
-						type = Unit::type_t::LAND;
-					} else {
-						type = Unit::type_t::NAVAL;
-					}
-					return true;
-				}),
+				"name", ONE_EXACTLY, expect_string(assign_variable_callback(leader_name)),
+				"date", ONE_EXACTLY, expect_identifier_or_string(expect_date_str(assign_variable_callback(leader_date))),
+				"type", ONE_EXACTLY, expect_identifier(UnitManager::expect_type_str(assign_variable_callback(leader_type))),
 				"personality", ONE_EXACTLY, game_manager.get_military_manager().get_leader_trait_manager()
-					.expect_leader_trait_identifier(assign_variable_callback_pointer(personality)),
+					.expect_leader_trait_identifier(assign_variable_callback_pointer(leader_personality)),
 				"background", ONE_EXACTLY, game_manager.get_military_manager().get_leader_trait_manager()
-					.expect_leader_trait_identifier(assign_variable_callback_pointer(background)),
-				"prestige", ZERO_OR_ONE, expect_fixed_point(assign_variable_callback(prestige)),
+					.expect_leader_trait_identifier(assign_variable_callback_pointer(leader_background)),
+				"prestige", ZERO_OR_ONE, expect_fixed_point(assign_variable_callback(leader_prestige)),
 				"picture", ZERO_OR_ONE, success_callback
 			)(node);
 
-			if (!personality->is_personality_trait()) {
-				Logger::error("Leader ", name, " has personality ", personality->get_identifier(),
-					" which is not a personality trait!");
-				return false;
+			if (!leader_personality->is_personality_trait()) {
+				Logger::error(
+					"Leader ", leader_name, " has personality ", leader_personality->get_identifier(),
+					" which is not a personality trait!"
+				);
+				ret = false;
 			}
-			if (!background->is_background_trait()) {
-				Logger::error("Leader ", name, " has background ", background->get_identifier(),
-					" which is not a background trait!");
-				return false;
+			if (!leader_background->is_background_trait()) {
+				Logger::error(
+					"Leader ", leader_name, " has background ", leader_background->get_identifier(),
+					" which is not a background trait!"
+				);
+				ret = false;
 			}
-
-			leaders.push_back(Leader{ std::string(name), type, date, personality, background, prestige });
+			leaders.emplace_back(
+				leader_name, leader_type, leader_date, leader_personality, leader_background, leader_prestige
+			);
 			return ret;
 		},
 		"army", ZERO_OR_MORE, [&armies, &game_manager](ast::NodeCPtr node) -> bool {
-			std::string_view name;
-			Province const* location = nullptr;
-			std::vector<Regiment> regiments;
+			std::string_view army_name {};
+			Province const* army_location = nullptr;
+			std::vector<Regiment> army_regiments {};
 
-			bool ret = expect_dictionary_keys(
-				/* another paradox gem, tested in game and they don't lead the army or even show up */
-				"leader", ZERO_OR_MORE, success_callback,
-				"name", ONE_EXACTLY, expect_string(assign_variable_callback(name), false),
+			const bool ret = expect_dictionary_keys(
+				"name", ONE_EXACTLY, expect_string(assign_variable_callback(army_name)),
 				"location", ONE_EXACTLY,
-					game_manager.get_map().expect_province_identifier(assign_variable_callback_pointer(location)),
-				"regiment", ONE_OR_MORE, [&game_manager, &regiments](ast::NodeCPtr node) -> bool {
-					Regiment regiment;
-					bool ret = expect_dictionary_keys(
-						"name", ONE_EXACTLY, expect_string(assign_variable_callback_string(regiment.name), false),
+					game_manager.get_map().expect_province_identifier(assign_variable_callback_pointer(army_location)),
+				"regiment", ONE_OR_MORE, [&game_manager, &army_regiments](ast::NodeCPtr node) -> bool {
+					std::string_view regiment_name {};
+					Unit const* regiment_type = nullptr;
+					Province const* regiment_home = nullptr;
+					const bool ret = expect_dictionary_keys(
+						"name", ONE_EXACTLY, expect_string(assign_variable_callback(regiment_name)),
 						"type", ONE_EXACTLY, game_manager.get_military_manager().get_unit_manager()
-							.expect_unit_identifier(assign_variable_callback_pointer(regiment.type)),
-						"home", ONE_EXACTLY, game_manager.get_map()
-							.expect_province_identifier(assign_variable_callback_pointer(regiment.home))
+							.expect_unit_identifier(assign_variable_callback_pointer(regiment_type)),
+						"home", ZERO_OR_ONE, game_manager.get_map()
+							.expect_province_identifier(assign_variable_callback_pointer(regiment_home))
 					)(node);
-					regiments.push_back(regiment);
+					if (regiment_home == nullptr) {
+						Logger::warning("Regiment ", regiment_name, " has no home province!");
+					}
+					army_regiments.emplace_back(regiment_name, regiment_type, regiment_home);
 					return ret;
-				}
+				},
+				/* another paradox gem, tested in game and they don't lead the army or even show up */
+				"leader", ZERO_OR_MORE, success_callback
 			)(node);
-			armies.push_back(Army{ std::string(name), location, std::move(regiments) });
+			armies.emplace_back(army_name, army_location, std::move(army_regiments));
 			return ret;
 		},
 		"navy", ZERO_OR_MORE, [&navies, &game_manager](ast::NodeCPtr node) -> bool {
-			std::string_view name;
-			Province const* location = nullptr;
-			std::vector<Ship> ships;
+			std::string_view navy_name {};
+			Province const* navy_location = nullptr;
+			std::vector<Ship> navy_ships {};
 
-			bool ret = expect_dictionary_keys(
-				"name", ONE_EXACTLY, expect_string(assign_variable_callback(name), false),
+			const bool ret = expect_dictionary_keys(
+				"name", ONE_EXACTLY, expect_string(assign_variable_callback(navy_name)),
 				"location", ONE_EXACTLY,
-					game_manager.get_map().expect_province_identifier(assign_variable_callback_pointer(location)),
-				"ship", ONE_OR_MORE, [&game_manager, &ships](ast::NodeCPtr node) -> bool {
-					Ship ship;
-					bool ret = expect_dictionary_keys(
-						"name", ONE_EXACTLY, expect_string(assign_variable_callback_string(ship.name), false),
+					game_manager.get_map().expect_province_identifier(assign_variable_callback_pointer(navy_location)),
+				"ship", ONE_OR_MORE, [&game_manager, &navy_ships](ast::NodeCPtr node) -> bool {
+					std::string_view ship_name {};
+					Unit const* ship_type = nullptr;
+					const bool ret = expect_dictionary_keys(
+						"name", ONE_EXACTLY, expect_string(assign_variable_callback(ship_name)),
 						"type", ONE_EXACTLY, game_manager.get_military_manager().get_unit_manager()
-							.expect_unit_identifier(assign_variable_callback_pointer(ship.type))
+							.expect_unit_identifier(assign_variable_callback_pointer(ship_type))
 					)(node);
-					ships.push_back(ship);
+					navy_ships.emplace_back(ship_name, ship_type);
 					return ret;
 				},
+				/* another paradox gem, tested in game and they don't lead the army or even show up */
 				"leader", ZERO_OR_MORE, success_callback
 			)(node);
-			navies.push_back(Navy{ std::string(name), location, std::move(ships) });
+			navies.emplace_back(navy_name, navy_location, std::move(navy_ships));
 			return ret;
 		}
-	)(root);
-	/* need to do this for platform compatibility of identifiers */
-	std::string identifier = std::string { path };
-	std::replace(identifier.begin(), identifier.end(), '\\', '/');
-	ret &= add_deployment(identifier, std::move(armies), std::move(navies), std::move(leaders));
-
+	)(Dataloader::parse_defines(lookedup_path).get_file_node());
+	ret &= add_deployment(history_path, std::move(armies), std::move(navies), std::move(leaders));
+	deployment = get_deployment_by_identifier(history_path);
+	if (deployment == nullptr) {
+		ret = false;
+	}
 	return ret;
+}
+
+size_t DeploymentManager::get_missing_oob_file_count() const {
+	return missing_oob_files.size();
 }

@@ -28,7 +28,7 @@ namespace OpenVic {
 		Religion const* religion;
 		CountryParty const* ruling_party;
 		Date last_election;
-		std::map<Ideology const*, fixed_point_t> upper_house;
+		decimal_map_t<Ideology const*> upper_house;
 		Province const* capital;
 		GovernmentType const* government_type;
 		fixed_point_t plurality;
@@ -43,7 +43,7 @@ namespace OpenVic {
 		CountryHistory(
 			Culture const* new_primary_culture, std::vector<Culture const*>&& new_accepted_cultures,
 			Religion const* new_religion, CountryParty const* new_ruling_party, Date new_last_election,
-			std::map<Ideology const*, fixed_point_t>&& new_upper_house, Province const* new_capital,
+			decimal_map_t<Ideology const*>&& new_upper_house, Province const* new_capital,
 			GovernmentType const* new_government_type, fixed_point_t new_plurality, NationalValue const* new_national_value,
 			bool new_civilised, fixed_point_t new_prestige, std::vector<Reform const*>&& new_reforms,
 			Deployment const* new_inital_oob
@@ -51,28 +51,30 @@ namespace OpenVic {
 
 	public:
 		Culture const* get_primary_culture() const;
-		const std::vector<Culture const*>& get_accepted_cultures() const;
+		std::vector<Culture const*> const& get_accepted_cultures() const;
 		Religion const* get_religion() const;
 		CountryParty const* get_ruling_party() const;
 		Date get_last_election() const;
-		const std::map<Ideology const*, fixed_point_t>& get_upper_house() const;
+		decimal_map_t<Ideology const*> const& get_upper_house() const;
 		Province const* get_capital() const;
 		GovernmentType const* get_government_type() const;
-		const fixed_point_t get_plurality() const;
+		fixed_point_t get_plurality() const;
 		NationalValue const* get_national_value() const;
-		const bool is_civilised() const;
-		const fixed_point_t get_prestige() const;
-		const std::vector<Reform const*>& get_reforms() const;
+		bool is_civilised() const;
+		fixed_point_t get_prestige() const;
+		std::vector<Reform const*> const& get_reforms() const;
 		Deployment const* get_inital_oob() const;
 	};
 
 	struct CountryHistoryManager {
 	private:
-		std::map<Country const*, std::map<Date, CountryHistory>> country_histories;
+		using country_history_map_t = std::map<Date, CountryHistory>;
+		std::map<Country const*, country_history_map_t> country_histories;
 		bool locked = false;
 
 		inline bool _load_country_history_entry(
-			GameManager& game_manager, std::string_view name, Date date, ast::NodeCPtr root
+			GameManager& game_manager, Dataloader const& dataloader, Country const& country, Date date,
+			ast::NodeCPtr root
 		);
 
 	public:
@@ -81,10 +83,10 @@ namespace OpenVic {
 		bool add_country_history_entry(
 			Country const* country, Date date, Culture const* primary_culture, std::vector<Culture const*>&& accepted_cultures,
 			Religion const* religion, CountryParty const* ruling_party, Date last_election,
-			std::map<Ideology const*, fixed_point_t>&& upper_house, Province const* capital,
-			GovernmentType const* government_type, fixed_point_t plurality, NationalValue const* national_value, bool civilised,
-			fixed_point_t prestige, std::vector<Reform const*>&& reforms, Deployment const* initial_oob,
-			bool updated_accepted_cultures, bool updated_upper_house, bool updated_reforms
+			decimal_map_t<Ideology const*>&& upper_house, Province const* capital, GovernmentType const* government_type,
+			fixed_point_t plurality, NationalValue const* national_value, bool civilised, fixed_point_t prestige,
+			std::vector<Reform const*>&& reforms, std::optional<Deployment const*> initial_oob, bool updated_accepted_cultures,
+			bool updated_upper_house, bool updated_reforms
 		);
 
 		void lock_country_histories();
@@ -96,7 +98,9 @@ namespace OpenVic {
 		/* Returns history of country at bookmark date. Return can be nullptr if an error occurs. */
 		inline CountryHistory const* get_country_history(Country const* country, Bookmark const* entry) const;
 
-		bool load_country_history_file(GameManager& game_manager, std::string_view name, ast::NodeCPtr root);
+		bool load_country_history_file(
+			GameManager& game_manager, Dataloader const& dataloader, Country const& country, ast::NodeCPtr root
+		);
 	};
 
 } // namespace OpenVic

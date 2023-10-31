@@ -514,7 +514,7 @@ bool Map::load_map_images(fs::path const& province_path, fs::path const& terrain
 					goto set_terrain;
 				}
 			}
-			if (unrecognised_province_colours.find(province_colour) == unrecognised_province_colours.end()) {
+			if (!unrecognised_province_colours.contains(province_colour)) {
 				unrecognised_province_colours.insert(province_colour);
 				if (detailed_errors) {
 					Logger::warning(

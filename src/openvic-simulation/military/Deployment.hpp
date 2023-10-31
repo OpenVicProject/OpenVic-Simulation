@@ -15,46 +15,69 @@
 
 namespace OpenVic {
 	struct Leader {
-		std::string name;
-		const Unit::type_t type;
-		const Date date;
-		LeaderTrait const* personality;
-		LeaderTrait const* background;
-		fixed_point_t prestige;
+	private:
+		std::string        PROPERTY(name);
+		Unit::type_t       PROPERTY(type);
+		Date               PROPERTY(date);
+		LeaderTrait const* PROPERTY(personality);
+		LeaderTrait const* PROPERTY(background);
+		fixed_point_t      PROPERTY(prestige);
+
+	public:
+		Leader(
+			std::string_view new_name, Unit::type_t new_type, Date new_date, LeaderTrait const* new_personality,
+			LeaderTrait const* new_background, fixed_point_t new_prestige
+		);
 	};
 
 	struct Regiment {
-		std::string name;
-		Unit const* type;
-		Province const* home;
+	private:
+		std::string     PROPERTY(name);
+		Unit const*     PROPERTY(type);
+		Province const* PROPERTY(home);
+
+	public:
+		Regiment(std::string_view new_name, Unit const* new_type, Province const* new_home);
 	};
 
 	struct Ship {
-		std::string name;
-		Unit const* type;
+	private:
+		std::string PROPERTY(name);
+		Unit const* PROPERTY(type);
+
+	public:
+		Ship(std::string_view new_name, Unit const* new_type);
 	};
 
 	struct Army {
-		std::string name;
-		Province const* location;
-		std::vector<Regiment> regiments;
+	private:
+		std::string           PROPERTY(name);
+		Province const*       PROPERTY(location);
+		std::vector<Regiment> PROPERTY(regiments);
+
+	public:
+		Army(std::string_view new_name, Province const* new_location, std::vector<Regiment>&& new_regiments);
 	};
 
 	struct Navy {
-		std::string name;
-		Province const* location;
-		std::vector<Ship> ships;
+	private:
+		std::string       PROPERTY(name);
+		Province const*   PROPERTY(location);
+		std::vector<Ship> PROPERTY(ships);
+
+	public:
+		Navy(std::string_view new_name, Province const* new_location, std::vector<Ship>&& new_ships);
 	};
 
-	struct DeploymentManager;
-
 	struct Deployment : HasIdentifier {
-		friend struct DeploymentManager;
+		friend std::unique_ptr<Deployment> std::make_unique<Deployment>(
+			std::string_view&&, std::vector<OpenVic::Army>&&, std::vector<OpenVic::Navy>&&, std::vector<OpenVic::Leader>&&
+		);
 
 	private:
-		const std::vector<Army> armies;
-		const std::vector<Navy> navies;
-		const std::vector<Leader> leaders;
+		std::vector<Army>   PROPERTY(armies);
+		std::vector<Navy>   PROPERTY(navies);
+		std::vector<Leader> PROPERTY(leaders);
 
 		Deployment(
 			std::string_view new_path, std::vector<Army>&& new_armies, std::vector<Navy>&& new_navies,
@@ -62,14 +85,13 @@ namespace OpenVic {
 		);
 
 	public:
-		const std::vector<Army>& get_armies() const;
-		const std::vector<Navy>& get_navies() const;
-		const std::vector<Leader>& get_leaders() const;
+		Deployment(Deployment&&) = default;
 	};
 
 	struct DeploymentManager {
 	private:
-		IdentifierRegistry<Deployment> deployments;
+		IdentifierInstanceRegistry<Deployment> deployments;
+		string_set_t missing_oob_files;
 
 	public:
 		DeploymentManager();
@@ -77,8 +99,12 @@ namespace OpenVic {
 		bool add_deployment(
 			std::string_view path, std::vector<Army>&& armies, std::vector<Navy>&& navies, std::vector<Leader>&& leaders
 		);
-		IDENTIFIER_REGISTRY_ACCESSORS(deployment);
+ 		IDENTIFIER_REGISTRY_ACCESSORS(deployment)
 
-		bool load_oob_file(GameManager& game_manager, std::string_view path, ast::NodeCPtr root);
+		bool load_oob_file(
+			GameManager const& game_manager, Dataloader const& dataloader, std::string_view history_path,
+			Deployment const*& deployment, bool fail_on_missing
+		);
+		size_t get_missing_oob_file_count() const;
 	};
 } // namespace OpenVic

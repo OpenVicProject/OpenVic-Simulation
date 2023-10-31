@@ -52,7 +52,7 @@ PopType::PopType(
 	Good::good_map_t&& new_life_needs, Good::good_map_t&& new_everyday_needs, Good::good_map_t&& new_luxury_needs,
 	rebel_units_t&& new_rebel_units, Pop::pop_size_t new_max_size, Pop::pop_size_t new_merge_max_size,
 	bool new_state_capital_only, bool new_demote_migrant, bool new_is_artisan, bool new_is_slave
-) : HasIdentifierAndColour { new_identifier, new_colour, true, false }, strata { new_strata }, sprite { new_sprite },
+) : HasIdentifierAndColour { new_identifier, new_colour, false, false }, strata { new_strata }, sprite { new_sprite },
 	life_needs { std::move(new_life_needs) }, everyday_needs { std::move(new_everyday_needs) },
 	luxury_needs { std::move(new_luxury_needs) }, rebel_units { std::move(new_rebel_units) }, max_size { new_max_size },
 	merge_max_size { new_merge_max_size }, state_capital_only { new_state_capital_only },

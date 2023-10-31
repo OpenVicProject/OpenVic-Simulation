@@ -5,7 +5,7 @@ using namespace OpenVic::NodeTools;
 
 Province::Province(
 	std::string_view new_identifier, colour_t new_colour, index_t new_index
-) : HasIdentifierAndColour { new_identifier, new_colour, false, false }, index { new_index },
+) : HasIdentifierAndColour { new_identifier, new_colour, true, false }, index { new_index },
 	buildings { "buildings", false } {
 	assert(index != NULL_INDEX);
 }
@@ -36,6 +36,10 @@ TerrainType const* Province::get_terrain_type() const {
 
 Province::life_rating_t Province::get_life_rating() const {
 	return life_rating;
+}
+
+Province::colony_status_t Province::get_colony_status() const {
+	return colony_status;
 }
 
 bool Province::load_positions(BuildingManager const& building_manager, ast::NodeCPtr root) {

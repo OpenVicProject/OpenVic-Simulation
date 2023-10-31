@@ -47,7 +47,7 @@ fixed_point_t ModifierValue::get_effect(ModifierEffect const* effect, bool* succ
 }
 
 bool ModifierValue::has_effect(ModifierEffect const* effect) const {
-	return values.find(effect) != values.end();
+	return values.contains(effect);
 }
 
 ModifierValue& ModifierValue::operator+=(ModifierValue const& right) {
@@ -107,9 +107,9 @@ bool ModifierManager::add_modifier_effect(std::string_view identifier, bool posi
 		Logger::error("Invalid modifier effect identifier - empty!");
 		return false;
 	}
-	return modifier_effects.add_item(std::unique_ptr<ModifierEffect> {
-		new ModifierEffect { identifier, positive_good, format }
-	});
+	return modifier_effects.add_item(
+		std::make_unique<ModifierEffect>(std::move(identifier), std::move(positive_good), std::move(format))
+	);
 }
 
 bool ModifierManager::add_modifier(std::string_view identifier, ModifierValue&& values, Modifier::icon_t icon) {
@@ -260,7 +260,7 @@ key_value_callback_t ModifierManager::_modifier_effect_callback(
 		ModifierEffect const* effect = get_modifier_effect_by_identifier(key);
 		if (effect != nullptr) {
 			if (effect_validator(*effect)) {
-				if (modifier.values.find(effect) == modifier.values.end()) {
+				if (!modifier.values.contains(effect)) {
 					return expect_fixed_point(assign_variable_callback(modifier.values[effect]))(value);
 				} else {
 					Logger::error("Duplicate modifier effect: ", key);

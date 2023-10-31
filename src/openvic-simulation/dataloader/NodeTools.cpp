@@ -289,7 +289,7 @@ node_callback_t NodeTools::expect_dictionary(key_value_callback_t callback) {
 bool NodeTools::add_key_map_entry(
 	key_map_t& key_map, std::string_view key, dictionary_entry_t::expected_count_t expected_count, node_callback_t callback
 ) {
-	if (key_map.find(key) == key_map.end()) {
+	if (!key_map.contains(key)) {
 		key_map.emplace(key, dictionary_entry_t { expected_count, callback });
 		return true;
 	}
@@ -318,7 +318,12 @@ key_value_callback_t NodeTools::dictionary_keys_callback(key_map_t& key_map, key
 			Logger::error("Invalid repeat of dictionary key: ", key);
 			return false;
 		}
-		return entry.callback(value);
+		if (entry.callback(value)) {
+			return true;
+		} else {
+			Logger::error("Callback failed for dictionary key: ", key);
+			return false;
+		}
 	};
 }
 

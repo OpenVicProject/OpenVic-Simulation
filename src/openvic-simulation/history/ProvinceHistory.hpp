@@ -17,37 +17,39 @@ namespace OpenVic {
 	struct ProvinceHistory {
 		friend struct ProvinceHistoryManager;
 
+		using building_level_map_t = std::map<Building const*, Building::level_t>;
+
 	private:
 		Country const* owner;
 		Country const* controller;
-		uint8_t colonial;
+		Province::colony_status_t colonial;
 		bool slave;
 		std::vector<Country const*> cores; // non-standard, maintains cores between entries
 		Good const* rgo;
-		uint8_t life_rating;
+		Province::life_rating_t life_rating;
 		TerrainType const* terrain_type;
-		std::map<Building const*, uint8_t> buildings;
-		std::map<Ideology const*, uint8_t> party_loyalties;
+		building_level_map_t buildings;
+		decimal_map_t<Ideology const*> party_loyalties;
 
 		ProvinceHistory(
-			Country const* new_owner, Country const* new_controller, uint8_t new_colonial, bool new_slave,
-			std::vector<Country const*>&& new_cores, Good const* new_rgo, uint8_t new_life_rating,
-			TerrainType const* new_terrain_type, std::map<Building const*, uint8_t>&& new_buildings,
-			std::map<Ideology const*, uint8_t>&& new_party_loyalties
+			Country const* new_owner, Country const* new_controller, Province::colony_status_t new_colonial, bool new_slave,
+			std::vector<Country const*>&& new_cores, Good const* new_rgo, Province::life_rating_t new_life_rating,
+			TerrainType const* new_terrain_type, building_level_map_t&& new_buildings,
+			decimal_map_t<Ideology const*>&& new_party_loyalties
 		);
 
 	public:
 		Country const* get_owner() const;
 		Country const* get_controller() const;
-		uint8_t get_colony_status() const; // 0 = state, 1 = protectorate, 2 = colony
+		Province::colony_status_t get_colony_status() const; // 0 = state, 1 = protectorate, 2 = colony
 		bool is_slave() const;
 		std::vector<Country const*> const& get_cores() const;
 		bool is_core_of(Country const* country) const;
 		Good const* get_rgo() const;
-		uint8_t get_life_rating() const;
+		Province::life_rating_t get_life_rating() const;
 		TerrainType const* get_terrain_type() const;
-		std::map<Building const*, uint8_t> const& get_buildings() const;
-		std::map<Ideology const*, uint8_t> const& get_party_loyalties() const;
+		building_level_map_t const& get_buildings() const;
+		decimal_map_t<Ideology const*> const& get_party_loyalties() const;
 	};
 
 	struct ProvinceHistoryManager {
@@ -56,7 +58,8 @@ namespace OpenVic {
 		bool locked = false;
 
 		inline bool _load_province_history_entry(
-			GameManager& game_manager, std::string_view province, Date date, ast::NodeCPtr root
+			GameManager const& game_manager, Province const& province, Date date, ast::NodeCPtr root,
+			bool is_base_entry
 		);
 
 	public:
@@ -64,12 +67,12 @@ namespace OpenVic {
 
 		bool add_province_history_entry(
 			Province const* province, Date date, Country const* owner, Country const* controller,
-			std::optional<uint8_t>&& colonial, std::optional<bool>&& slave,
+			std::optional<Province::colony_status_t>&& colonial, std::optional<bool>&& slave,
 			std::vector<Country const*>&& cores, // additive to existing entries
 			std::vector<Country const*>&& remove_cores, // existing cores that need to be removed
-			Good const* rgo, std::optional<uint8_t>&& life_rating, TerrainType const* terrain_type,
-			std::optional<std::map<Building const*, uint8_t>>&& buildings,
-			std::optional<std::map<Ideology const*, uint8_t>>&& party_loyalties
+			Good const* rgo, std::optional<Province::life_rating_t>&& life_rating, TerrainType const* terrain_type,
+			std::optional<ProvinceHistory::building_level_map_t>&& buildings,
+			std::optional<decimal_map_t<Ideology const*>>&& party_loyalties
 		);
 
 		void lock_province_histories();
@@ -81,6 +84,8 @@ namespace OpenVic {
 		/* Returns history of province at bookmark date. Return can be nullptr if an error occurs. */
 		inline ProvinceHistory const* get_province_history(Province const* province, Bookmark const* bookmark) const;
 
-		bool load_province_history_file(GameManager& game_manager, std::string_view name, ast::NodeCPtr root);
+		bool load_province_history_file(
+			GameManager const& game_manager, Province const& province, ast::NodeCPtr root
+		);
 	};
 } // namespace OpenVic

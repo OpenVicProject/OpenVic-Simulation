@@ -5,7 +5,6 @@
 #include <string>
 #include <string_view>
 #include <type_traits>
-#include <unordered_map>
 #include <vector>
 
 #include <openvic-dataloader/v2script/AbstractSyntaxTree.hpp>
@@ -64,22 +63,23 @@ namespace OpenVic {
 		/* Not const to allow elements to be moved, otherwise a copy is forced
 		 * which causes a compile error as the copy constructor has been deleted.
 		 */
-		std::vector<CountryParty> parties;
+		IdentifierRegistry<CountryParty> parties;
 		const unit_names_map_t unit_names;
 		const bool dynamic_tag;
 		const government_colour_map_t alternative_colours;
 
 		Country(
 			std::string_view new_identifier, colour_t new_colour, GraphicalCultureType const& new_graphical_culture,
-			std::vector<CountryParty>&& new_parties, unit_names_map_t&& new_unit_names, bool new_dynamic_tag,
+			IdentifierRegistry<CountryParty>&& new_parties, unit_names_map_t&& new_unit_names, bool new_dynamic_tag,
 			government_colour_map_t&& new_alternative_colours
 		);
 
 	public:
 		Country(Country&&) = default;
 
+		IDENTIFIER_REGISTRY_ACCESSORS_CUSTOM_PLURAL(party, parties)
+
 		GraphicalCultureType const& get_graphical_culture() const;
-		std::vector<CountryParty> const& get_parties() const;
 		unit_names_map_t const& get_unit_names() const;
 		bool is_dynamic_tag() const;
 		government_colour_map_t const& get_alternative_colours() const;
@@ -90,7 +90,7 @@ namespace OpenVic {
 		IdentifierRegistry<Country> countries;
 
 		NodeTools::node_callback_t load_country_party(
-			PoliticsManager const& politics_manager, std::vector<CountryParty>& country_parties
+			PoliticsManager const& politics_manager, IdentifierRegistry<CountryParty>& country_parties
 		) const;
 
 	public:
@@ -98,10 +98,10 @@ namespace OpenVic {
 
 		bool add_country(
 			std::string_view identifier, colour_t colour, GraphicalCultureType const* graphical_culture,
-			std::vector<CountryParty>&& parties, Country::unit_names_map_t&& unit_names, bool dynamic_tag,
+			IdentifierRegistry<CountryParty>&& parties, Country::unit_names_map_t&& unit_names, bool dynamic_tag,
 			Country::government_colour_map_t&& alternative_colours
 		);
-		IDENTIFIER_REGISTRY_ACCESSORS_CUSTOM_PLURAL(country, countries);
+		IDENTIFIER_REGISTRY_ACCESSORS_CUSTOM_PLURAL(country, countries)
 
 		bool load_countries(
 			GameManager const& game_manager, Dataloader const& dataloader, fs::path const& countries_dir, ast::NodeCPtr root

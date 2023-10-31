@@ -169,6 +169,8 @@ namespace OpenVic {
 		bool add_naval_unit(std::string_view identifier, UNIT_PARAMS, NAVY_PARAMS);
 		IDENTIFIER_REGISTRY_ACCESSORS(unit)
 
+		static NodeTools::callback_t<std::string_view> expect_type_str(NodeTools::Callback<Unit::type_t> auto callback);
+
 		bool load_unit_file(GoodManager const& good_manager, ast::NodeCPtr root);
 	};
 }
