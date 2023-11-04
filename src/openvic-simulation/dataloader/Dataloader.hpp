@@ -26,7 +26,13 @@ namespace OpenVic {
 		bool _load_pop_types(PopManager& pop_manager, UnitManager const& unit_manager, GoodManager const& good_manager) const;
 		bool _load_units(UnitManager& unit_manager, GoodManager const& good_manager) const;
 		bool _load_map_dir(GameManager& game_manager) const;
-		bool _load_history(GameManager& game_manager) const;
+		bool _load_history(GameManager& game_manager, bool unused_history_file_warnings) const;
+
+		/* _DirIterator is fs::directory_iterator or fs::recursive_directory_iterator.
+		 * _Equiv is an equivalence relation with respect to which every found file shall be unique.
+		 * If a file is equivalent to the empty path then it is not included. */
+		template<typename _DirIterator, std::predicate<fs::path const&, fs::path const&> _Equiv>
+		path_vector_t _lookup_files_in_dir(std::string_view path, fs::path const& extension) const;
 
 	public:
 		static ovdl::v2script::Parser parse_defines(fs::path const& path);
@@ -63,15 +69,17 @@ namespace OpenVic {
 		/* REQUIREMENTS:
 		 * DAT-24
 		 */
-		fs::path lookup_file(fs::path const& path, bool print_error = true) const;
-		fs::path lookup_file_case_insensitive(fs::path const& path, bool print_error = true) const;
-		path_vector_t lookup_files_in_dir(fs::path const& path, fs::path const& extension) const;
-		bool apply_to_files_in_dir(
-			fs::path const& path, fs::path const& extension, NodeTools::callback_t<fs::path const&> callback
+		fs::path lookup_file(std::string_view path, bool print_error = true) const;
+		path_vector_t lookup_files_in_dir(std::string_view path, fs::path const& extension) const;
+		path_vector_t lookup_files_in_dir_recursive(std::string_view path, fs::path const& extension) const;
+		path_vector_t lookup_basic_indentifier_prefixed_files_in_dir(std::string_view path, fs::path const& extension) const;
+		path_vector_t lookup_basic_indentifier_prefixed_files_in_dir_recursive(
+			std::string_view path, fs::path const& extension
 		) const;
+		bool apply_to_files(path_vector_t const& files, NodeTools::callback_t<fs::path const&> callback) const;
 
 		bool load_defines(GameManager& game_manager) const;
-		bool load_pop_history(GameManager& game_manager, fs::path const& path) const;
+		bool load_pop_history(GameManager& game_manager, std::string_view path) const;
 
 		enum locale_t : size_t {
 			English, French, German, Polish, Spanish, Italian, Swedish,
@@ -85,7 +93,7 @@ namespace OpenVic {
 		/* Args: key, locale, localisation */
 		using localisation_callback_t = NodeTools::callback_t<std::string_view, locale_t, std::string_view>;
 		bool load_localisation_files(
-			localisation_callback_t callback, fs::path const& localisation_dir = "localisation"
+			localisation_callback_t callback, std::string_view localisation_dir = "localisation"
 		) const;
 
 	private:
@@ -97,6 +105,6 @@ namespace OpenVic {
 
 		using hint_path_t = fs::path;
 		using game_path_t = fs::path;
-		inline static std::unordered_map<hint_path_t, game_path_t, fshash> _cached_paths;
+		static inline std::unordered_map<hint_path_t, game_path_t, fshash> _cached_paths;
 	};
 }

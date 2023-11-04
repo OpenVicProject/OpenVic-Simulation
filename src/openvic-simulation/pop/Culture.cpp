@@ -174,7 +174,7 @@ bool CultureManager::load_culture_file(ast::NodeCPtr root) {
 		return false;
 	}
 
-	static const std::string default_unit_graphical_culture_type_identifier = "Generic";
+	static constexpr std::string_view default_unit_graphical_culture_type_identifier = "Generic";
 	GraphicalCultureType const* const default_unit_graphical_culture_type =
 		get_graphical_culture_type_by_identifier(default_unit_graphical_culture_type_identifier);
 	if (default_unit_graphical_culture_type == nullptr) {

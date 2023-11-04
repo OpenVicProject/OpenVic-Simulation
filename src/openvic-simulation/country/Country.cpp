@@ -78,6 +78,12 @@ bool CountryManager::add_country(
 		Logger::error("Invalid country identifier - empty!");
 		return false;
 	}
+	if (!valid_basic_identifier(identifier)) {
+		Logger::error(
+			"Invalid country identifier: ", identifier, " (can only contain alphanumeric characters and underscores)"
+		);
+		return false;
+	}
 	if (colour > MAX_COLOUR_RGB) {
 		Logger::error("Invalid country colour for ", identifier, ": ", colour_to_hex_string(colour));
 		return false;
@@ -93,14 +99,13 @@ bool CountryManager::add_country(
 	});
 }
 
-bool CountryManager::load_countries(
-	GameManager const& game_manager, Dataloader const& dataloader, fs::path const& countries_dir, ast::NodeCPtr root
-) {
+bool CountryManager::load_countries(GameManager const& game_manager, Dataloader const& dataloader, ast::NodeCPtr root) {
+	static constexpr std::string_view common_dir = "common/";
 	bool is_dynamic = false;
 
 	const bool ret = expect_dictionary_reserve_length(
 		countries,
-		[this, &game_manager, &is_dynamic, &dataloader, &countries_dir](std::string_view key, ast::NodeCPtr value) -> bool {
+		[this, &game_manager, &is_dynamic, &dataloader](std::string_view key, ast::NodeCPtr value) -> bool {
 			if (key == "dynamic_tags") {
 				return expect_bool([&is_dynamic](bool val) -> bool {
 					if (val == is_dynamic) {
@@ -115,10 +120,12 @@ bool CountryManager::load_countries(
 				})(value);
 			}
 			if (expect_string(
-				[this, &game_manager, is_dynamic, &dataloader, &countries_dir, &key](std::string_view filepath) -> bool {
+				[this, &game_manager, is_dynamic, &dataloader, &key](std::string_view filepath) -> bool {
 					if (load_country_data_file(
 						game_manager, key, is_dynamic,
-						Dataloader::parse_defines(dataloader.lookup_file_case_insensitive(countries_dir / filepath)).get_file_node()
+						Dataloader::parse_defines(
+							dataloader.lookup_file(StringUtils::append_string_views(common_dir, filepath))
+						).get_file_node()
 					)) {
 						return true;
 					}

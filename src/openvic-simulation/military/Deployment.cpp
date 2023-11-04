@@ -37,9 +37,6 @@ bool DeploymentManager::add_deployment(
 		Logger::error("Attemped to load order of battle with no path! Something is very wrong!");
 		return false;
 	}
-	if (armies.empty() && navies.empty() && leaders.empty()) {
-		Logger::warning("Loading redundant empty order of battle at ", path);
-	}
 
 	return deployments.add_item(
 		std::make_unique<Deployment>(std::move(path), std::move(armies), std::move(navies), std::move(leaders))
@@ -47,8 +44,8 @@ bool DeploymentManager::add_deployment(
 }
 
 bool DeploymentManager::load_oob_file(
-	GameManager const& game_manager, Dataloader const& dataloader, std::string_view history_path, Deployment const*& deployment,
-	bool fail_on_missing
+	GameManager const& game_manager, Dataloader const& dataloader, std::string_view history_path,
+	Deployment const*& deployment, bool fail_on_missing
 ) {
 	deployment = get_deployment_by_identifier(history_path);
 	if (deployment != nullptr) {
@@ -57,14 +54,13 @@ bool DeploymentManager::load_oob_file(
 	if (missing_oob_files.contains(history_path)) {
 		return !fail_on_missing;
 	}
-	static const fs::path oob_directory = "history/units/";
-	fs::path full_path = oob_directory;
-	full_path += history_path;
-	const fs::path lookedup_path = dataloader.lookup_file(full_path, false);
+	static constexpr std::string_view oob_directory = "history/units/";
+	const fs::path lookedup_path =
+		dataloader.lookup_file(StringUtils::append_string_views(oob_directory, history_path), false);
 	if (lookedup_path.empty()) {
 		missing_oob_files.emplace(history_path);
 		if (fail_on_missing) {
-			Logger::warning("Could not find OOB file ", full_path, "!");
+			Logger::warning("Could not find OOB file ", history_path, "!");
 			return false;
 		} else {
 			return true;

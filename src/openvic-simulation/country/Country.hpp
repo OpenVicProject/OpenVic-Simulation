@@ -103,9 +103,7 @@ namespace OpenVic {
 		);
 		IDENTIFIER_REGISTRY_ACCESSORS_CUSTOM_PLURAL(country, countries)
 
-		bool load_countries(
-			GameManager const& game_manager, Dataloader const& dataloader, fs::path const& countries_dir, ast::NodeCPtr root
-		);
+		bool load_countries(GameManager const& game_manager, Dataloader const& dataloader, ast::NodeCPtr root);
 		bool load_country_data_file(
 			GameManager const& game_manager, std::string_view name, bool is_dynamic, ast::NodeCPtr root
 		);

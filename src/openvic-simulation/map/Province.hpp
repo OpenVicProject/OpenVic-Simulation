@@ -3,6 +3,7 @@
 #include <cassert>
 
 #include "openvic-simulation/economy/Building.hpp"
+#include "openvic-simulation/politics/Ideology.hpp"
 #include "openvic-simulation/pop/Pop.hpp"
 
 namespace OpenVic {
@@ -72,7 +73,10 @@ namespace OpenVic {
 
 		std::vector<Pop> pops;
 		Pop::pop_size_t total_population;
-		distribution_t pop_types, cultures, religions;
+		decimal_map_t<PopType const*> PROPERTY(pop_type_distribution);
+		decimal_map_t<Ideology const*> PROPERTY(ideology_distribution);
+		decimal_map_t<Culture const*> PROPERTY(culture_distribution);
+		decimal_map_t<Religion const*> PROPERTY(religion_distribution);
 
 		std::vector<adjacency_t> adjacencies;
 		province_positions_t positions;
@@ -109,9 +113,6 @@ namespace OpenVic {
 		size_t get_pop_count() const;
 		std::vector<Pop> const& get_pops() const;
 		Pop::pop_size_t get_total_population() const;
-		distribution_t const& get_pop_type_distribution() const;
-		distribution_t const& get_culture_distribution() const;
-		distribution_t const& get_religion_distribution() const;
 		void update_pops();
 
 		void update_state(Date today);

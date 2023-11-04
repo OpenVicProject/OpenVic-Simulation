@@ -10,6 +10,21 @@
 #include "openvic-simulation/utility/Logger.hpp"
 
 namespace OpenVic {
+
+	constexpr bool valid_basic_identifier_char(char c) {
+		return ('A' <= c && c <= 'Z') || ('a' <= c && c <= 'z') || ('0' <= c && c <= '9') || c == '_';
+	}
+	constexpr bool valid_basic_identifier(std::string_view identifier) {
+		return std::all_of(identifier.begin(), identifier.end(), valid_basic_identifier_char);
+	}
+	constexpr std::string_view extract_basic_identifier_prefix(std::string_view identifier) {
+		size_t len = 0;
+		while (len < identifier.size() && valid_basic_identifier_char(identifier[len])) {
+			++len;
+		}
+		return { identifier.data(), len };
+	}
+
 	/*
 	 * Base class for objects with a non-empty string identifier. Uniquely named instances of a type derived from this class
 	 * can be entered into an IdentifierRegistry instance.
@@ -79,8 +94,6 @@ namespace OpenVic {
 			return { nullptr, -1 };
 		}
 	}
-
-	using distribution_t = decimal_map_t<HasIdentifierAndColour const*>;
 
 	/* Callbacks for trying to add duplicate keys via UniqueKeyRegistry::add_item */
 	static bool duplicate_fail_callback(std::string_view registry_name, std::string_view duplicate_identifier) {
@@ -192,20 +205,20 @@ namespace OpenVic {
 			}
 		}
 
-#define GETTERS \
-	value_type _const* get_item_by_identifier(std::string_view identifier) _const { \
+#define GETTERS(CONST) \
+	value_type CONST* get_item_by_identifier(std::string_view identifier) CONST { \
 		const typename decltype(identifier_index_map)::const_iterator it = identifier_index_map.find(identifier); \
 		if (it != identifier_index_map.end()) { \
 			return GetPointer(items[it->second]); \
 		} \
 		return nullptr; \
 	} \
-	value_type _const* get_item_by_index(size_t index) _const { \
+	value_type CONST* get_item_by_index(size_t index) CONST { \
 		return index < items.size() ? &items[index] : nullptr; \
 	} \
-	NodeTools::callback_t<std::string_view> expect_item_str(NodeTools::callback_t<value_type _const&> callback) _const { \
+	NodeTools::callback_t<std::string_view> expect_item_str(NodeTools::callback_t<value_type CONST&> callback) CONST { \
 		return [this, callback](std::string_view identifier) -> bool { \
-			value_type _const* item = get_item_by_identifier(identifier); \
+			value_type CONST* item = get_item_by_identifier(identifier); \
 			if (item != nullptr) { \
 				return callback(*item); \
 			} \
@@ -213,22 +226,19 @@ namespace OpenVic {
 			return false; \
 		}; \
 	} \
-	NodeTools::node_callback_t expect_item_identifier(NodeTools::callback_t<value_type _const&> callback) _const { \
+	NodeTools::node_callback_t expect_item_identifier(NodeTools::callback_t<value_type CONST&> callback) CONST { \
 		return NodeTools::expect_identifier(expect_item_str(callback)); \
 	} \
-	NodeTools::node_callback_t expect_item_dictionary(NodeTools::callback_t<value_type _const&, ast::NodeCPtr> callback) \
-		_const { \
+	NodeTools::node_callback_t expect_item_dictionary( \
+		NodeTools::callback_t<value_type CONST&, ast::NodeCPtr> callback \
+	) CONST { \
 		return NodeTools::expect_dictionary([this, callback](std::string_view key, ast::NodeCPtr value) -> bool { \
 			return expect_item_str(std::bind(callback, std::placeholders::_1, value))(key); \
 		}); \
 	}
 
-#define _const
-		GETTERS
-#undef _const
-#define _const const
-		GETTERS
-#undef _const
+		GETTERS()
+		GETTERS(const)
 
 #undef GETTERS
 

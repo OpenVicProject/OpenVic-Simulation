@@ -1,11 +1,15 @@
 #pragma once
 
 #include <functional>
+#include <iostream>
 #include <queue>
 #include <sstream>
+
 #ifdef __cpp_lib_source_location
 #include <source_location>
 #endif
+
+#include "openvic-simulation/utility/StringUtils.hpp"
 
 namespace OpenVic {
 
@@ -52,8 +56,17 @@ namespace OpenVic {
 #endif
 
 	public:
-		static void set_logger_funcs();
-		static char const* get_filename(char const* filepath, char const* default_path = nullptr);
+		static void set_logger_funcs() {
+			set_info_func([](std::string&& str) {
+				std::cout << "[INFO] " << str;
+			});
+			set_warning_func([](std::string&& str) {
+				std::cerr << "[WARNING] " << str;
+			});
+			set_error_func([](std::string&& str) {
+				std::cerr << "[ERROR] " << str;
+			});
+		}
 
 	private:
 		struct log_channel_t {
@@ -65,13 +78,13 @@ namespace OpenVic {
 		struct log {
 			log(log_channel_t& log_channel, Ts&&... ts, source_location const& location) {
 				std::stringstream stream;
-				stream << get_filename(location.file_name()) << "("
+				stream << StringUtils::get_filename(location.file_name()) << "("
 					/* Function name removed to reduce clutter. It is already included
 					* in Godot's print functions, so this was repeating it. */
 					//<< location.line() << ") `" << location.function_name() << "`: ";
 					<< location.line() << "): ";
 				((stream << std::forward<Ts>(ts)), ...);
-				stream << "\n" << std::endl;
+				stream << std::endl;
 				log_channel.queue.push(stream.str());
 				if (log_channel.func) {
 					do {

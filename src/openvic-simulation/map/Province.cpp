@@ -131,31 +131,21 @@ Pop::pop_size_t Province::get_total_population() const {
 	return total_population;
 }
 
-distribution_t const& Province::get_pop_type_distribution() const {
-	return pop_types;
-}
-
-distribution_t const& Province::get_culture_distribution() const {
-	return cultures;
-}
-
-distribution_t const& Province::get_religion_distribution() const {
-	return religions;
-}
-
 /* REQUIREMENTS:
  * MAP-65, MAP-68, MAP-70, MAP-234
  */
 void Province::update_pops() {
 	total_population = 0;
-	pop_types.clear();
-	cultures.clear();
-	religions.clear();
+	pop_type_distribution.clear();
+	ideology_distribution.clear();
+	culture_distribution.clear();
+	religion_distribution.clear();
 	for (Pop const& pop : pops) {
 		total_population += pop.get_size();
-		pop_types[&pop.get_type()] += pop.get_size();
-		cultures[&pop.get_culture()] += pop.get_size();
-		religions[&pop.get_religion()] += pop.get_size();
+		pop_type_distribution[&pop.get_type()] += pop.get_size();
+		//ideology_distribution[&pop.get_???()] += pop.get_size();
+		culture_distribution[&pop.get_culture()] += pop.get_size();
+		religion_distribution[&pop.get_religion()] += pop.get_size();
 	}
 }
 

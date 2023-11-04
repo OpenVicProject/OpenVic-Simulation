@@ -74,7 +74,7 @@ static bool run_headless(Dataloader::path_vector_t const& roots, bool run_tests)
 int main(int argc, char const* argv[]) {
 	Logger::set_logger_funcs();
 
-	char const* program_name = Logger::get_filename(argc > 0 ? argv[0] : nullptr, "<program>");
+	char const* program_name = StringUtils::get_filename(argc > 0 ? argv[0] : nullptr, "<program>");
 	fs::path root;
 	bool run_tests = false;
 	int argn = 0;

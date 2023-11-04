@@ -42,6 +42,12 @@ bool Map::add_province(std::string_view identifier, colour_t colour) {
 		Logger::error("Invalid province identifier - empty!");
 		return false;
 	}
+	if (!valid_basic_identifier(identifier)) {
+		Logger::error(
+			"Invalid province identifier: ", identifier, " (can only contain alphanumeric characters and underscores)"
+		);
+		return false;
+	}
 	if (colour == NULL_COLOUR || colour > MAX_COLOUR_RGB) {
 		Logger::error("Invalid province colour for ", identifier, ": ", colour_to_hex_string(colour));
 		return false;
@@ -483,7 +489,7 @@ bool Map::load_map_images(fs::path const& province_path, fs::path const& terrain
 	uint8_t const* terrain_data = terrain_bmp.get_pixel_data().data();
 
 	std::vector<bool> province_checklist(provinces.size());
-	std::vector<distribution_t> terrain_type_pixels_list(provinces.size());
+	std::vector<decimal_map_t<TerrainType const*>> terrain_type_pixels_list(provinces.size());
 	bool ret = true;
 	std::unordered_set<colour_t> unrecognised_province_colours;
 

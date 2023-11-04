@@ -1,4 +1,7 @@
+#pragma once
+
 #include <cstdint>
+#include <cstring>
 #include <limits>
 #include <string_view>
 
@@ -90,7 +93,7 @@ namespace OpenVic::StringUtils {
 		return result;
 	}
 
-	constexpr uint64_t string_to_uint64(char const* str, size_t length, bool* successful = nullptr, int base = 10) {
+	inline constexpr uint64_t string_to_uint64(char const* str, size_t length, bool* successful = nullptr, int base = 10) {
 		return string_to_uint64(str, str + length, successful, base);
 	}
 
@@ -135,11 +138,72 @@ namespace OpenVic::StringUtils {
 		}
 	}
 
-	constexpr int64_t string_to_int64(char const* str, size_t length, bool* successful = nullptr, int base = 10) {
+	inline constexpr int64_t string_to_int64(char const* str, size_t length, bool* successful = nullptr, int base = 10) {
 		return string_to_int64(str, str + length, successful, base);
 	}
 
 	inline int64_t string_to_int64(std::string_view str, bool* successful = nullptr, int base = 10) {
 		return string_to_int64(str.data(), str.length(), successful, base);
+	}
+
+	inline constexpr std::string_view get_filename(std::string_view path) {
+		size_t pos = path.size();
+		while (pos > 0 && path[pos - 1] != '/' && path[pos - 1] != '\\') {
+			--pos;
+		}
+		path.remove_prefix(pos);
+		return path;
+	}
+
+	inline constexpr char const* get_filename(char const* filepath, char const* default_path = nullptr) {
+		const std::string_view filename { get_filename(std::string_view { filepath }) };
+		if (!filename.empty()) {
+			return filename.data();
+		}
+		return default_path;
+	}
+
+	inline std::string make_forward_slash_path(std::string_view path) {
+		std::string ret { path };
+		std::replace(ret.begin(), ret.end(), '\\', '/');
+		for (char& c : ret) {
+			if (c == '\\') {
+				c = '/';
+			}
+		}
+		return ret;
+	}
+
+	inline constexpr std::string_view remove_leading_slashes(std::string_view path) {
+		size_t count = 0;
+		while (count < path.size() && (path[count] == '/' || path[count] == '\\')) {
+			++count;
+		}
+		path.remove_prefix(count);
+		return path;
+	}
+
+	template<typename... Args>
+	requires (std::is_same_v<std::string_view, Args> && ...)
+	inline std::string _append_string_views(Args... args) {
+		std::string ret;
+		ret.reserve((args.size() + ...));
+		(ret.append(args), ...);
+		return ret;
+	}
+
+	template<typename... Args>
+	requires (std::is_convertible_v<Args, std::string_view> && ...)
+	inline std::string append_string_views(Args... args) {
+		return _append_string_views(std::string_view { args }...);
+	}
+
+	inline constexpr std::string_view remove_extension(std::string_view path) {
+		size_t pos = path.size();
+		while (pos > 0 && path[--pos] != '.') {}
+		if (path[pos] == '.') {
+			path.remove_suffix(path.size() - pos);
+		}
+		return path;
 	}
 }

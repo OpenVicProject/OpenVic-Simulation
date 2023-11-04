@@ -46,7 +46,7 @@ namespace OpenVic {
 	struct LeaderTraitManager {
 	private:
 		IdentifierRegistry<LeaderTrait> leader_traits;
-		inline static const string_set_t allowed_modifiers = {
+		static inline const string_set_t allowed_modifiers = {
 			"attack", "defence", "morale", "organisation", "reconnaissance", "speed", "attrition", "experience", "reliability"
 		};
 
