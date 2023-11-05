@@ -639,6 +639,22 @@ bool Dataloader::_load_history(GameManager& game_manager, bool unused_history_fi
 	);
 	game_manager.get_history_manager().get_province_manager().lock_province_histories(game_manager.get_map(), false);
 
+	static constexpr std::string_view diplomacy_history_directory = "history/diplomacy";
+	ret &= apply_to_files(
+		lookup_files_in_dir(diplomacy_history_directory, ".txt"),
+		[this, &game_manager](fs::path const& file) -> bool {
+			return game_manager.get_history_manager().get_diplomacy_manager().load_diplomacy_history_file(game_manager, parse_defines(file).get_file_node());
+		}
+	);
+	static constexpr std::string_view war_history_directory = "history/wars";
+	ret &= apply_to_files(
+		lookup_files_in_dir(war_history_directory, ".txt"),
+		[this, &game_manager](fs::path const& file) -> bool {
+			return game_manager.get_history_manager().get_diplomacy_manager().load_war_history_file(game_manager, parse_defines(file).get_file_node());
+		}
+	);
+	game_manager.get_history_manager().get_diplomacy_manager().lock_diplomatic_history();
+
 	return ret;
 }
 
