@@ -778,6 +778,7 @@ bool Dataloader::load_defines(GameManager& game_manager) const {
 	static const std::string production_types_file = "common/production_types.txt";
 	static const std::string religion_file = "common/religion.txt";
 	static const std::string leader_traits_file = "common/traits.txt";
+	static const std::string cb_types_file = "common/cb_types.txt";
 
 	bool ret = true;
 
@@ -870,6 +871,10 @@ bool Dataloader::load_defines(GameManager& game_manager) const {
 		game_manager.get_modifier_manager(), parse_defines(lookup_file(leader_traits_file)).get_file_node()
 	)) {
 		Logger::error("Failed to load leader traits!");
+		ret = false;
+	}
+	if (!game_manager.get_military_manager().get_wargoal_manager().load_wargoal_file(parse_defines(lookup_file(cb_types_file)).get_file_node())) {
+		Logger::error("Failed to load wargoals!");
 		ret = false;
 	}
 	if (!game_manager.get_history_manager().load_bookmark_file(parse_defines(lookup_file(bookmark_file)).get_file_node())) {
