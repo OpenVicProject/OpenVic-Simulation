@@ -68,9 +68,7 @@ namespace OpenVic {
 	 */
 	class HasIdentifierAndColour : public HasIdentifier, public HasColour {
 	protected:
-		HasIdentifierAndColour(
-			std::string_view new_identifier, colour_t new_colour, bool cannot_be_null, bool can_have_alpha
-		);
+		HasIdentifierAndColour(std::string_view new_identifier, colour_t new_colour, bool cannot_be_null, bool can_have_alpha);
 
 	public:
 		HasIdentifierAndColour(HasIdentifierAndColour const&) = delete;
@@ -237,8 +235,16 @@ namespace OpenVic {
 		}); \
 	}
 
+#if defined(_MSC_VER)
+#pragma warning(push)
+#pragma warning(disable : 4003)
+#endif
 		GETTERS()
 		GETTERS(const)
+
+#if defined(_MSC_VER)
+#pragma warning(pop)
+#endif
 
 #undef GETTERS
 

@@ -371,9 +371,7 @@ bool Dataloader::set_roots(path_vector_t const& new_roots) {
 fs::path Dataloader::lookup_file(std::string_view path, bool print_error) const {
 #if FILESYSTEM_NEEDS_FORWARD_SLASHES
 	/* Back-slashes need to be converted into forward-slashes */
-	const std::string forward_slash_path {
-		StringUtils::make_forward_slash_path(StringUtils::remove_leading_slashes(path))
-	};
+	const std::string forward_slash_path { StringUtils::make_forward_slash_path(StringUtils::remove_leading_slashes(path)) };
 	path = forward_slash_path;
 #endif
 
@@ -417,9 +415,7 @@ template<typename _DirIterator, std::predicate<fs::path const&, fs::path const&>
 Dataloader::path_vector_t Dataloader::_lookup_files_in_dir(std::string_view path, fs::path const& extension) const {
 #if FILESYSTEM_NEEDS_FORWARD_SLASHES
 	/* Back-slashes need to be converted into forward-slashes */
-	const std::string forward_slash_path {
-		StringUtils::make_forward_slash_path(StringUtils::remove_leading_slashes(path))
-	};
+	const std::string forward_slash_path { StringUtils::make_forward_slash_path(StringUtils::remove_leading_slashes(path)) };
 	path = forward_slash_path;
 #endif
 	const fs::path filepath { path };
@@ -440,8 +436,8 @@ Dataloader::path_vector_t Dataloader::_lookup_files_in_dir(std::string_view path
 						ret.push_back(file);
 					} else if (start_of_current_root_entries <= index) {
 						Logger::warning(
-							"Files in the same directory with conflicting names: ", ret[index], " (accepted) and ",
-							file, " (rejected)"
+							"Files in the same directory with conflicting names: ", ret[index], " (accepted) and ", file,
+							" (rejected)"
 						);
 					}
 				}
@@ -641,7 +637,7 @@ bool Dataloader::_load_history(GameManager& game_manager, bool unused_history_fi
 			);
 		}
 	);
-	game_manager.get_history_manager().get_province_manager().lock_province_histories();
+	game_manager.get_history_manager().get_province_manager().lock_province_histories(game_manager.get_map(), false);
 
 	return ret;
 }
@@ -664,8 +660,7 @@ bool Dataloader::_load_map_dir(GameManager& game_manager) const {
 	static constexpr std::string_view default_region_sea = "region_sea.txt";
 	static constexpr std::string_view default_province_flag_sprite = "province_flag_sprites";
 
-	const v2script::Parser parser =
-		parse_defines(lookup_file(append_string_views(map_directory, defaults_filename)));
+	const v2script::Parser parser = parse_defines(lookup_file(append_string_views(map_directory, defaults_filename)));
 
 	std::vector<std::string_view> water_province_identifiers;
 
@@ -719,9 +714,7 @@ bool Dataloader::_load_map_dir(GameManager& game_manager) const {
 		Logger::error("Failed to load map default file!");
 	}
 
-	if (!map.load_province_definitions(
-		parse_csv(lookup_file(append_string_views(map_directory, definitions))).get_lines()
-	)) {
+	if (!map.load_province_definitions(parse_csv(lookup_file(append_string_views(map_directory, definitions))).get_lines())) {
 		Logger::error("Failed to load province definitions file!");
 		ret = false;
 	}
@@ -734,9 +727,7 @@ bool Dataloader::_load_map_dir(GameManager& game_manager) const {
 		ret = false;
 	}
 
-	if (!map.load_region_file(
-		parse_defines(lookup_file(append_string_views(map_directory, region))).get_file_node()
-	)) {
+	if (!map.load_region_file(parse_defines(lookup_file(append_string_views(map_directory, region))).get_file_node())) {
 		Logger::error("Failed to load region file!");
 		ret = false;
 	}

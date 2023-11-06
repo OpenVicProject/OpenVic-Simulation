@@ -4,6 +4,7 @@
 #include <cstdint>
 #include <functional>
 #include <map>
+#include <optional>
 #include <set>
 #include <type_traits>
 
@@ -305,6 +306,14 @@ namespace OpenVic {
 
 		template<typename T>
 		Callback<T const&> auto assign_variable_callback_pointer(T const*& var) {
+			return [&var](T const& val) -> bool {
+				var = &val;
+				return true;
+			};
+		}
+
+		template<typename T>
+		Callback<T const&> auto assign_variable_callback_pointer(std::optional<T const*>& var) {
 			return [&var](T const& val) -> bool {
 				var = &val;
 				return true;
