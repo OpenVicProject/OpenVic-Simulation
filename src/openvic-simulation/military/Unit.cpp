@@ -244,6 +244,12 @@ bool UnitManager::add_naval_unit(std::string_view identifier, UNIT_PARAMS, NAVY_
 	return units.add_item(NavalUnit { identifier, UNIT_ARGS, NAVY_ARGS });
 }
 
+callback_t<std::string_view> UnitManager::expect_type_str(Callback<Unit::type_t> auto callback) {
+	using enum Unit::type_t;
+	static const string_map_t<Unit::type_t> type_map = { { "land", LAND }, { "naval", NAVAL }, { "sea", NAVAL } };
+	return expect_mapped_string(type_map, callback);
+}
+
 bool UnitManager::load_unit_file(GoodManager const& good_manager, ast::NodeCPtr root) {
 	return expect_dictionary([this, &good_manager](std::string_view key, ast::NodeCPtr value) -> bool {
 		Unit::type_t type;
@@ -256,9 +262,7 @@ bool UnitManager::load_unit_file(GoodManager const& good_manager, ast::NodeCPtr 
 		fixed_point_t weighted_value = 0, supply_consumption = 0;
 		Good::good_map_t build_cost, supply_cost;
 
-		using enum Unit::type_t;
-		static const string_map_t<Unit::type_t> type_map = { { "land", LAND }, { "naval", NAVAL } };
-		bool ret = expect_key("type", expect_identifier(expect_mapped_string(type_map, assign_variable_callback(type))))(value);
+		bool ret = expect_key("type", expect_identifier(expect_type_str(assign_variable_callback(type))))(value);
 
 		if (!ret) {
 			Logger::error("Failed to read type for unit: ", key);
@@ -288,9 +292,9 @@ bool UnitManager::load_unit_file(GoodManager const& good_manager, ast::NodeCPtr 
 		);
 
 		switch (type) {
-		case LAND: {
+		case Unit::type_t::LAND: {
 			bool primary_culture = false;
-			std::string_view sprite_override, sprite_mount, sprite_mount_attach_node;
+			std::string_view sprite_override {}, sprite_mount {}, sprite_mount_attach_node {};
 			fixed_point_t reconnaissance = 0, attack = 0, defence = 0, discipline = 0, support = 0, maneuver = 0, siege = 0;
 
 			ret &= add_key_map_entries(key_map,
@@ -313,7 +317,7 @@ bool UnitManager::load_unit_file(GoodManager const& good_manager, ast::NodeCPtr 
 
 			return ret;
 		}
-		case NAVAL: {
+		case Unit::type_t::NAVAL: {
 			Unit::icon_t naval_icon = 0;
 			bool sail = false, transport = false, capital = false, build_overseas = false;
 			uint32_t min_port_level = 0;

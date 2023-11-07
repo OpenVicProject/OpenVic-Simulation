@@ -1,11 +1,15 @@
 #pragma once
 
 #include <functional>
+#include <iostream>
 #include <queue>
 #include <sstream>
+
 #ifdef __cpp_lib_source_location
 #include <source_location>
 #endif
+
+#include "openvic-simulation/utility/StringUtils.hpp"
 
 namespace OpenVic {
 
@@ -52,8 +56,17 @@ namespace OpenVic {
 #endif
 
 	public:
-		static void set_logger_funcs();
-		static char const* get_filename(char const* filepath, char const* default_path = nullptr);
+		static void set_logger_funcs() {
+			set_info_func([](std::string&& str) {
+				std::cout << "[INFO] " << str;
+			});
+			set_warning_func([](std::string&& str) {
+				std::cerr << "[WARNING] " << str;
+			});
+			set_error_func([](std::string&& str) {
+				std::cerr << "[ERROR] " << str;
+			});
+		}
 
 	private:
 		struct log_channel_t {
@@ -65,7 +78,7 @@ namespace OpenVic {
 		struct log {
 			log(log_channel_t& log_channel, Ts&&... ts, source_location const& location) {
 				std::stringstream stream;
-				stream << "\n" << get_filename(location.file_name()) << "("
+				stream << StringUtils::get_filename(location.file_name()) << "("
 					/* Function name removed to reduce clutter. It is already included
 					* in Godot's print functions, so this was repeating it. */
 					//<< location.line() << ") `" << location.function_name() << "`: ";
@@ -83,20 +96,21 @@ namespace OpenVic {
 		};
 
 #define LOG_FUNC(name) \
-	private: \
-		static inline log_channel_t name##_channel {}; \
-	public: \
-		static inline void set_##name##_func(log_func_t log_func) { \
-			name##_channel.func = log_func; \
+private: \
+	static inline log_channel_t name##_channel {}; \
+\
+public: \
+	static inline void set_##name##_func(log_func_t log_func) { \
+		name##_channel.func = log_func; \
+	} \
+	template<typename... Ts> \
+	struct name { \
+		name(Ts&&... ts, source_location const& location = source_location::current()) { \
+			log<Ts...> { name##_channel, std::forward<Ts>(ts)..., location }; \
 		} \
-		template<typename... Ts> \
-		struct name { \
-			name(Ts&&... ts, source_location const& location = source_location::current()) { \
-				log<Ts...> { name##_channel, std::forward<Ts>(ts)..., location }; \
-			} \
-		}; \
-		template<typename... Ts> \
-		name(Ts&&...) -> name<Ts...>;
+	}; \
+	template<typename... Ts> \
+	name(Ts&&...) -> name<Ts...>;
 
 		LOG_FUNC(info)
 		LOG_FUNC(warning)

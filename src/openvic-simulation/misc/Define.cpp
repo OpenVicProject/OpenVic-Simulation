@@ -36,11 +36,11 @@ bool DefineManager::add_define(std::string_view name, std::string&& value, Defin
 	return defines.add_item({ name, std::move(value), type }, duplicate_warning_callback);
 }
 
-const Date& DefineManager::get_start_date() const {
+Date DefineManager::get_start_date() const {
 	return *start_date;
 }
 
-const Date& DefineManager::get_end_date() const {
+Date DefineManager::get_end_date() const {
 	return *end_date;
 }
 

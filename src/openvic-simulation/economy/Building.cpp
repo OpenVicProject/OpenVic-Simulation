@@ -129,11 +129,11 @@ ExpansionState BuildingInstance::get_expansion_state() const {
 	return expansion_state;
 }
 
-Date const& BuildingInstance::get_start_date() const {
+Date BuildingInstance::get_start_date() const {
 	return start;
 }
 
-Date const& BuildingInstance::get_end_date() const {
+Date BuildingInstance::get_end_date() const {
 	return end;
 }
 
@@ -153,7 +153,7 @@ bool BuildingInstance::expand() {
 /* REQUIREMENTS:
  * MAP-71, MAP-74, MAP-77
  */
-void BuildingInstance::update_state(Date const& today) {
+void BuildingInstance::update_state(Date today) {
 	switch (expansion_state) {
 	case ExpansionState::Preparing:
 		start = today;
@@ -166,7 +166,7 @@ void BuildingInstance::update_state(Date const& today) {
 	}
 }
 
-void BuildingInstance::tick(Date const& today) {
+void BuildingInstance::tick(Date today) {
 	if (expansion_state == ExpansionState::Preparing) {
 		expansion_state = ExpansionState::Expanding;
 	}
@@ -207,8 +207,8 @@ bool BuildingManager::add_building(std::string_view identifier, BuildingType con
 }
 
 bool BuildingManager::load_buildings_file(
-	GoodManager const& good_manager, ProductionTypeManager const& production_type_manager,
-	ModifierManager const& modifier_manager, ast::NodeCPtr root
+	GoodManager const& good_manager, ProductionTypeManager const& production_type_manager, ModifierManager& modifier_manager,
+	ast::NodeCPtr root
 ) {
 	bool ret = expect_dictionary_reserve_length(buildings, [this](std::string_view, ast::NodeCPtr value) -> bool {
 		return expect_key("type", expect_identifier(
@@ -280,6 +280,17 @@ bool BuildingManager::load_buildings_file(
 		}
 	)(root);
 	lock_buildings();
+
+	for (Building const& building : buildings.get_items()) {
+		std::string max_modifier_prefix = "max_";
+		std::string min_modifier_prefix = "min_build_";
+		modifier_manager.add_modifier_effect(
+			max_modifier_prefix.append(building.get_identifier()), true, ModifierEffect::format_t::INT
+		);
+		modifier_manager.add_modifier_effect(
+			min_modifier_prefix.append(building.get_identifier()), false, ModifierEffect::format_t::INT
+		);
+	}
 
 	return ret;
 }

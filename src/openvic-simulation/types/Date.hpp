@@ -4,9 +4,11 @@
 #include <ostream>
 #include <string>
 
+#include "openvic-simulation/utility/Getters.hpp"
+
 namespace OpenVic {
 	// A relative period between points in time, measured in days
-	struct Timespan {
+	struct Timespan : ReturnByValueProperty {
 		using day_t = int64_t;
 
 	private:
@@ -44,7 +46,7 @@ namespace OpenVic {
 
 	// Represents an in-game date
 	// Note: Current implementation does not account for leap-years, or dates before Year 0
-	struct Date {
+	struct Date : ReturnByValueProperty {
 		using year_t = uint16_t;
 		using month_t = uint8_t;
 		using day_t = uint8_t;
@@ -96,5 +98,5 @@ namespace OpenVic {
 		static Date from_string(char const* str, size_t length, bool* successful = nullptr, bool quiet = false);
 		static Date from_string(std::string_view str, bool* successful = nullptr, bool quiet = false);
 	};
-	std::ostream& operator<<(std::ostream& out, Date const& date);
+	std::ostream& operator<<(std::ostream& out, Date date);
 }

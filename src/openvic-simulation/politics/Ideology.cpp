@@ -8,7 +8,7 @@ IdeologyGroup::IdeologyGroup(std::string_view new_identifier) : HasIdentifier { 
 Ideology::Ideology(
 	std::string_view new_identifier, colour_t new_colour, IdeologyGroup const& new_group, bool new_uncivilised,
 	bool new_can_reduce_militancy, Date new_spawn_date
-) : HasIdentifierAndColour { new_identifier, new_colour, true, false }, group { new_group }, uncivilised { new_uncivilised },
+) : HasIdentifierAndColour { new_identifier, new_colour, false, false }, group { new_group }, uncivilised { new_uncivilised },
 	can_reduce_militancy { new_can_reduce_militancy }, spawn_date { new_spawn_date } {}
 
 IdeologyGroup const& Ideology::get_group() const {
@@ -23,7 +23,7 @@ bool Ideology::get_can_reduce_militancy() const {
 	return can_reduce_militancy;
 }
 
-Date const& Ideology::get_spawn_date() const {
+Date Ideology::get_spawn_date() const {
 	return spawn_date;
 }
 

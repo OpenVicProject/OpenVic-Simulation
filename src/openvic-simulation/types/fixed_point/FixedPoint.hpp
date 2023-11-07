@@ -8,6 +8,7 @@
 #include <sstream>
 #include <string_view>
 
+#include "openvic-simulation/utility/Getters.hpp"
 #include "openvic-simulation/utility/Logger.hpp"
 #include "openvic-simulation/utility/NumberUtils.hpp"
 #include "openvic-simulation/utility/StringUtils.hpp"
@@ -15,7 +16,7 @@
 #include "FixedPointLUT.hpp"
 
 namespace OpenVic {
-	struct fixed_point_t {
+	struct fixed_point_t : ReturnByValueProperty {
 		static constexpr size_t SIZE = 8;
 
 		static constexpr int32_t PRECISION = FPLUT::SIN_LUT_PRECISION;

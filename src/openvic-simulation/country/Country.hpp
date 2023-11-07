@@ -5,17 +5,18 @@
 #include <string>
 #include <string_view>
 #include <type_traits>
-#include <unordered_map>
 #include <vector>
 
 #include <openvic-dataloader/v2script/AbstractSyntaxTree.hpp>
 
 #include "openvic-simulation/dataloader/Dataloader.hpp"
 #include "openvic-simulation/map/Province.hpp"
+#include "openvic-simulation/military/Unit.hpp"
 #include "openvic-simulation/politics/Government.hpp"
 #include "openvic-simulation/politics/Ideology.hpp"
 #include "openvic-simulation/politics/Issue.hpp"
 #include "openvic-simulation/politics/NationalValue.hpp"
+#include "openvic-simulation/politics/PoliticsManager.hpp"
 #include "openvic-simulation/pop/Culture.hpp"
 #include "openvic-simulation/pop/Religion.hpp"
 #include "openvic-simulation/types/Colour.hpp"
@@ -26,81 +27,85 @@ namespace OpenVic {
 	struct GameManager;
 	struct CountryManager;
 
-	struct CountryParty {
+	struct CountryParty : HasIdentifier {
 		friend struct CountryManager;
 
+		using policy_map_t = std::map<IssueGroup const*, Issue const*>;
+
 	private:
-		const std::string name;
 		const Date start_date;
 		const Date end_date;
-		const Ideology& ideology;
-		const std::vector<Issue const*> policies;
+		Ideology const& ideology;
+		const policy_map_t policies;
 
 		CountryParty(
-			std::string_view new_name, Date new_start_date, Date new_end_date, const Ideology& new_ideology,
-			std::vector<const Issue*>&& new_policies
+			std::string_view new_identifier, Date new_start_date, Date new_end_date, Ideology const& new_ideology,
+			policy_map_t&& new_policies
 		);
 
 	public:
-		std::string_view get_name() const;
-		const Date& get_start_date() const;
-		const Date& get_end_date() const;
-		const Ideology& get_ideology() const;
-		const std::vector<const Issue*>& get_policies() const;
-	};
+		CountryParty(CountryParty&&) = default;
 
-	struct UnitNames {
-		friend struct CountryManager;
-
-	private:
-		const std::string identifier;
-		const std::vector<std::string> names;
-
-		UnitNames(std::string_view new_identifier, std::vector<std::string>&& new_names);
-
-	public:
-		std::string_view get_identifier() const;
-		const std::vector<std::string>& get_names() const;
+		Date get_start_date() const;
+		Date get_end_date() const;
+		Ideology const& get_ideology() const;
+		policy_map_t const& get_policies() const;
 	};
 
 	struct Country : HasIdentifierAndColour {
 		friend struct CountryManager;
 
+		using unit_names_map_t = std::map<Unit const*, std::vector<std::string>>;
+		using government_colour_map_t = std::map<GovernmentType const*, colour_t>;
+
 	private:
-		const GraphicalCultureType& graphical_culture;
-		const std::vector<CountryParty> parties;
-		const std::vector<UnitNames> unit_names;
+		GraphicalCultureType const& graphical_culture;
+		/* Not const to allow elements to be moved, otherwise a copy is forced
+		 * which causes a compile error as the copy constructor has been deleted.
+		 */
+		IdentifierRegistry<CountryParty> parties;
+		const unit_names_map_t unit_names;
 		const bool dynamic_tag;
-		const std::map<const GovernmentType*, colour_t> alternative_colours;
+		const government_colour_map_t alternative_colours;
 
 		Country(
-			std::string_view new_identifier, colour_t new_color, const GraphicalCultureType& new_graphical_culture,
-			std::vector<CountryParty>&& new_parties, std::vector<UnitNames>&& new_unit_names, const bool new_dynamic_tag,
-			std::map<const GovernmentType*, colour_t>&& new_alternative_colours
+			std::string_view new_identifier, colour_t new_colour, GraphicalCultureType const& new_graphical_culture,
+			IdentifierRegistry<CountryParty>&& new_parties, unit_names_map_t&& new_unit_names, bool new_dynamic_tag,
+			government_colour_map_t&& new_alternative_colours
 		);
 
 	public:
-		const GraphicalCultureType& get_graphical_culture() const;
-		const std::vector<CountryParty>& get_parties() const;
-		const std::vector<UnitNames>& get_unit_names() const;
-		const bool is_dynamic_tag() const;
-		const std::map<const GovernmentType*, colour_t>& get_alternative_colours() const;
+		Country(Country&&) = default;
+
+		IDENTIFIER_REGISTRY_ACCESSORS_CUSTOM_PLURAL(party, parties)
+
+		GraphicalCultureType const& get_graphical_culture() const;
+		unit_names_map_t const& get_unit_names() const;
+		bool is_dynamic_tag() const;
+		government_colour_map_t const& get_alternative_colours() const;
 	};
 
 	struct CountryManager {
 	private:
 		IdentifierRegistry<Country> countries;
 
+		NodeTools::node_callback_t load_country_party(
+			PoliticsManager const& politics_manager, IdentifierRegistry<CountryParty>& country_parties
+		) const;
+
 	public:
 		CountryManager();
 
 		bool add_country(
-			std::string_view identifier, colour_t color, const GraphicalCultureType& graphical_culture,
-			std::vector<CountryParty>&& parties, std::vector<UnitNames>&& unit_names, bool dynamic_tag,
-			std::map<const GovernmentType*, colour_t>&& alternative_colours
+			std::string_view identifier, colour_t colour, GraphicalCultureType const* graphical_culture,
+			IdentifierRegistry<CountryParty>&& parties, Country::unit_names_map_t&& unit_names, bool dynamic_tag,
+			Country::government_colour_map_t&& alternative_colours
 		);
-		IDENTIFIER_REGISTRY_ACCESSORS_CUSTOM_PLURAL(country, countries);
+		IDENTIFIER_REGISTRY_ACCESSORS_CUSTOM_PLURAL(country, countries)
 
-		bool load_country_data_file(GameManager& game_manager, std::string_view name, bool is_dynamic, ast::NodeCPtr root);
+		bool load_countries(GameManager const& game_manager, Dataloader const& dataloader, ast::NodeCPtr root);
+		bool load_country_data_file(
+			GameManager const& game_manager, std::string_view name, bool is_dynamic, ast::NodeCPtr root
+		);
 	};
 }

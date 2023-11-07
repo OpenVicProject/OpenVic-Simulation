@@ -6,24 +6,31 @@
 #include <vector>
 
 #include "openvic-simulation/dataloader/NodeTools.hpp"
+#include "openvic-simulation/utility/Getters.hpp"
 #include "openvic-simulation/utility/Logger.hpp"
 
-#define REF_GETTERS(var) \
-	constexpr decltype(var)& get_##var() { \
-		return var; \
-	} \
-	constexpr decltype(var) const& get_##var() const { \
-		return var; \
+namespace OpenVic {
+
+	constexpr bool valid_basic_identifier_char(char c) {
+		return ('A' <= c && c <= 'Z') || ('a' <= c && c <= 'z') || ('0' <= c && c <= '9') || c == '_';
+	}
+	constexpr bool valid_basic_identifier(std::string_view identifier) {
+		return std::all_of(identifier.begin(), identifier.end(), valid_basic_identifier_char);
+	}
+	constexpr std::string_view extract_basic_identifier_prefix(std::string_view identifier) {
+		size_t len = 0;
+		while (len < identifier.size() && valid_basic_identifier_char(identifier[len])) {
+			++len;
+		}
+		return { identifier.data(), len };
 	}
 
-namespace OpenVic {
 	/*
-	 * Base class for objects with a non-empty string identifier,
-	 * uniquely named instances of which can be entered into an
-	 * IdentifierRegistry instance.
+	 * Base class for objects with a non-empty string identifier. Uniquely named instances of a type derived from this class
+	 * can be entered into an IdentifierRegistry instance.
 	 */
 	class HasIdentifier {
-		const std::string identifier;
+		const std::string PROPERTY(identifier);
 
 	protected:
 		HasIdentifier(std::string_view new_identifier);
@@ -33,27 +40,6 @@ namespace OpenVic {
 		HasIdentifier(HasIdentifier&&) = default;
 		HasIdentifier& operator=(HasIdentifier const&) = delete;
 		HasIdentifier& operator=(HasIdentifier&&) = delete;
-
-		std::string_view get_identifier() const;
-
-		template<typename T>
-		inline constexpr static decltype(auto) get_property(const T& property) {
-			if constexpr (std::same_as<T, std::string>) {
-				return std::string_view(property);
-			} else if constexpr (sizeof(T) <= sizeof(void*)) {
-				return T(property);
-			} else {
-				return property;
-			}
-		}
-
-#define HASID_PROPERTY(NAME) \
-	const NAME; \
-public: \
-	auto get_##NAME() const->decltype(get_property(NAME)) { \
-		return get_property(NAME); \
-	} \
-private:
 	};
 
 	std::ostream& operator<<(std::ostream& stream, HasIdentifier const& obj);
@@ -63,10 +49,10 @@ private:
 	 * Base class for objects with associated colour information.
 	 */
 	class HasColour {
-		const colour_t colour;
+		const colour_t PROPERTY(colour);
 
 	protected:
-		HasColour(const colour_t new_colour, bool can_be_null, bool can_have_alpha);
+		HasColour(colour_t new_colour, bool cannot_be_null, bool can_have_alpha);
 
 	public:
 		HasColour(HasColour const&) = delete;
@@ -74,19 +60,15 @@ private:
 		HasColour& operator=(HasColour const&) = delete;
 		HasColour& operator=(HasColour&&) = delete;
 
-		colour_t get_colour() const;
 		std::string colour_to_hex_string() const;
 	};
 
 	/*
-	 * Base class for objects with a unique string identifier
-	 * and associated colour information.
+	 * Base class for objects with a unique string identifier and associated colour information.
 	 */
 	class HasIdentifierAndColour : public HasIdentifier, public HasColour {
 	protected:
-		HasIdentifierAndColour(
-			std::string_view new_identifier, const colour_t new_colour, bool can_be_null, bool can_have_alpha
-		);
+		HasIdentifierAndColour(std::string_view new_identifier, colour_t new_colour, bool cannot_be_null, bool can_have_alpha);
 
 	public:
 		HasIdentifierAndColour(HasIdentifierAndColour const&) = delete;
@@ -110,8 +92,6 @@ private:
 			return { nullptr, -1 };
 		}
 	}
-
-	using distribution_t = decimal_map_t<HasIdentifierAndColour const*>;
 
 	/* Callbacks for trying to add duplicate keys via UniqueKeyRegistry::add_item */
 	static bool duplicate_fail_callback(std::string_view registry_name, std::string_view duplicate_identifier) {
@@ -180,9 +160,10 @@ private:
 					return duplicate_callback(name, new_identifier);
 				}
 			}
-			identifier_index_map.emplace(new_identifier, items.size());
-			items.push_back(std::move(item));
-			return true;
+			const std::pair<string_map_t<size_t>::iterator, bool> ret =
+				identifier_index_map.emplace(std::move(new_identifier), items.size());
+			items.emplace_back(std::move(item));
+			return ret.second && ret.first->second + 1 == items.size();
 		}
 
 		void lock() {
@@ -222,20 +203,20 @@ private:
 			}
 		}
 
-#define GETTERS \
-	value_type _const* get_item_by_identifier(std::string_view identifier) _const { \
+#define GETTERS(CONST) \
+	value_type CONST* get_item_by_identifier(std::string_view identifier) CONST { \
 		const typename decltype(identifier_index_map)::const_iterator it = identifier_index_map.find(identifier); \
 		if (it != identifier_index_map.end()) { \
 			return GetPointer(items[it->second]); \
 		} \
 		return nullptr; \
 	} \
-	value_type _const* get_item_by_index(size_t index) _const { \
+	value_type CONST* get_item_by_index(size_t index) CONST { \
 		return index < items.size() ? &items[index] : nullptr; \
 	} \
-	NodeTools::callback_t<std::string_view> expect_item_str(NodeTools::callback_t<value_type _const&> callback) _const { \
+	NodeTools::callback_t<std::string_view> expect_item_str(NodeTools::callback_t<value_type CONST&> callback) CONST { \
 		return [this, callback](std::string_view identifier) -> bool { \
-			value_type _const* item = get_item_by_identifier(identifier); \
+			value_type CONST* item = get_item_by_identifier(identifier); \
 			if (item != nullptr) { \
 				return callback(*item); \
 			} \
@@ -243,22 +224,27 @@ private:
 			return false; \
 		}; \
 	} \
-	NodeTools::node_callback_t expect_item_identifier(NodeTools::callback_t<value_type _const&> callback) _const { \
+	NodeTools::node_callback_t expect_item_identifier(NodeTools::callback_t<value_type CONST&> callback) CONST { \
 		return NodeTools::expect_identifier(expect_item_str(callback)); \
 	} \
-	NodeTools::node_callback_t expect_item_dictionary(NodeTools::callback_t<value_type _const&, ast::NodeCPtr> callback) \
-		_const { \
+	NodeTools::node_callback_t expect_item_dictionary( \
+		NodeTools::callback_t<value_type CONST&, ast::NodeCPtr> callback \
+	) CONST { \
 		return NodeTools::expect_dictionary([this, callback](std::string_view key, ast::NodeCPtr value) -> bool { \
 			return expect_item_str(std::bind(callback, std::placeholders::_1, value))(key); \
 		}); \
 	}
 
-#define _const
-		GETTERS
-#undef _const
-#define _const const
-		GETTERS
-#undef _const
+#if defined(_MSC_VER)
+#pragma warning(push)
+#pragma warning(disable : 4003)
+#endif
+		GETTERS()
+		GETTERS(const)
+
+#if defined(_MSC_VER)
+#pragma warning(pop)
+#endif
 
 #undef GETTERS
 
@@ -280,8 +266,9 @@ private:
 			return identifiers;
 		}
 
-		NodeTools::node_callback_t expect_item_decimal_map(NodeTools::callback_t<decimal_map_t<value_type const*>&&> callback)
-			const {
+		NodeTools::node_callback_t expect_item_decimal_map(
+			NodeTools::callback_t<decimal_map_t<value_type const*>&&> callback
+		) const {
 			return [this, callback](ast::NodeCPtr node) -> bool {
 				decimal_map_t<value_type const*> map;
 				bool ret = expect_item_dictionary([&map](value_type const& key, ast::NodeCPtr value) -> bool {
@@ -390,7 +377,9 @@ private:
 	) { \
 		return plural.expect_item_str(callback); \
 	} \
-	NodeTools::node_callback_t expect_##singular##_identifier(NodeTools::callback_t<decltype(plural)::value_type&> callback) { \
+	NodeTools::node_callback_t expect_##singular##_identifier( \
+		NodeTools::callback_t<decltype(plural)::value_type&> callback \
+	) { \
 		return plural.expect_item_identifier(callback); \
 	} \
 	NodeTools::node_callback_t expect_##singular##_dictionary( \

@@ -47,7 +47,7 @@ bool GameManager::setup() {
 	return ret;
 }
 
-Date const& GameManager::get_today() const {
+Date GameManager::get_today() const {
 	return today;
 }
 

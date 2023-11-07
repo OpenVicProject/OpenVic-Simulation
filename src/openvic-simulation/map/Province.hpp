@@ -3,6 +3,7 @@
 #include <cassert>
 
 #include "openvic-simulation/economy/Building.hpp"
+#include "openvic-simulation/politics/Ideology.hpp"
 #include "openvic-simulation/pop/Pop.hpp"
 
 namespace OpenVic {
@@ -23,6 +24,8 @@ namespace OpenVic {
 		using life_rating_t = int8_t;
 		using distance_t = uint16_t;
 		using flags_t = uint16_t;
+
+		enum struct colony_status_t : int8_t { STATE, PROTECTORATE, COLONY };
 
 		struct adjacency_t {
 			friend struct Province;
@@ -63,13 +66,17 @@ namespace OpenVic {
 		Region* region = nullptr;
 		bool on_map = false, has_region = false, water = false;
 		life_rating_t life_rating = 0;
+		colony_status_t colony_status = colony_status_t::STATE;
 		IdentifierRegistry<BuildingInstance> buildings;
 		// TODO - change this into a factory-like structure
 		Good const* rgo = nullptr;
 
 		std::vector<Pop> pops;
 		Pop::pop_size_t total_population;
-		distribution_t pop_types, cultures, religions;
+		decimal_map_t<PopType const*> PROPERTY(pop_type_distribution);
+		decimal_map_t<Ideology const*> PROPERTY(ideology_distribution);
+		decimal_map_t<Culture const*> PROPERTY(culture_distribution);
+		decimal_map_t<Religion const*> PROPERTY(religion_distribution);
 
 		std::vector<adjacency_t> adjacencies;
 		province_positions_t positions;
@@ -90,6 +97,7 @@ namespace OpenVic {
 		bool get_water() const;
 		TerrainType const* get_terrain_type() const;
 		life_rating_t get_life_rating() const;
+		colony_status_t get_colony_status() const;
 		bool load_positions(BuildingManager const& building_manager, ast::NodeCPtr root);
 
 		bool add_building(BuildingInstance&& building_instance);
@@ -105,13 +113,10 @@ namespace OpenVic {
 		size_t get_pop_count() const;
 		std::vector<Pop> const& get_pops() const;
 		Pop::pop_size_t get_total_population() const;
-		distribution_t const& get_pop_type_distribution() const;
-		distribution_t const& get_culture_distribution() const;
-		distribution_t const& get_religion_distribution() const;
 		void update_pops();
 
-		void update_state(Date const& today);
-		void tick(Date const& today);
+		void update_state(Date today);
+		void tick(Date today);
 
 		bool is_adjacent_to(Province const* province);
 		bool add_adjacency(Province const* province, distance_t distance, flags_t flags);

@@ -4,6 +4,7 @@
 #include <cstdint>
 #include <functional>
 #include <map>
+#include <optional>
 #include <set>
 #include <type_traits>
 
@@ -66,7 +67,7 @@ namespace OpenVic {
 		}
 
 		node_callback_t expect_identifier(callback_t<std::string_view> callback);
-		node_callback_t expect_string(callback_t<std::string_view> callback, bool allow_empty = true);
+		node_callback_t expect_string(callback_t<std::string_view> callback, bool allow_empty = false);
 		node_callback_t expect_identifier_or_string(callback_t<std::string_view> callback, bool allow_empty = false);
 
 		node_callback_t expect_bool(callback_t<bool> callback);
@@ -261,15 +262,8 @@ namespace OpenVic {
 			};
 		}
 
-		template<std::integral T>
-		callback_t<T> assign_variable_callback_cast(auto& var) {
-			return [&var](T val) -> bool {
-				var = val;
-				return true;
-			};
-		}
-
-		template<std::signed_integral T>
+		template<typename T>
+		requires std::is_integral_v<T> || std::is_enum_v<T>
 		callback_t<T> assign_variable_callback_cast(auto& var) {
 			return [&var](T val) -> bool {
 				var = val;
@@ -312,6 +306,14 @@ namespace OpenVic {
 
 		template<typename T>
 		Callback<T const&> auto assign_variable_callback_pointer(T const*& var) {
+			return [&var](T const& val) -> bool {
+				var = &val;
+				return true;
+			};
+		}
+
+		template<typename T>
+		Callback<T const&> auto assign_variable_callback_pointer(std::optional<T const*>& var) {
 			return [&var](T const& val) -> bool {
 				var = &val;
 				return true;

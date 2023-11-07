@@ -34,13 +34,22 @@ using namespace OpenVic;
 using namespace OpenVic::NodeTools;
 using namespace ovdl;
 
-// Windows and Mac by default act like case insensitive filesystems
-static constexpr bool path_equals(std::string_view lhs, std::string_view rhs) {
-#if defined(_WIN32) || (defined(__APPLE__) && defined(__MACH__))
+using StringUtils::append_string_views;
+
+#define FILESYSTEM_CASE_INSENSITIVE (defined(_WIN32) || (defined(__APPLE__) && defined(__MACH__)))
+#define FILESYSTEM_NEEDS_FORWARD_SLASHES (!defined(_WIN32))
+
+static constexpr bool path_equals_case_insensitive(std::string_view lhs, std::string_view rhs) {
 	constexpr auto ichar_equals = [](unsigned char l, unsigned char r) {
 		return std::tolower(l) == std::tolower(r);
 	};
 	return std::equal(lhs.begin(), lhs.end(), rhs.begin(), rhs.end(), ichar_equals);
+}
+
+// Windows and Mac by default act like case insensitive filesystems
+static constexpr bool path_equals(std::string_view lhs, std::string_view rhs) {
+#if FILESYSTEM_CASE_INSENSITIVE
+	return path_equals_case_insensitive(lhs, rhs);
 #else
 	return std::equal(lhs.begin(), lhs.end(), rhs.begin(), rhs.end());
 #endif
@@ -69,13 +78,13 @@ static bool filename_equals(const is_filename auto& lhs, const is_filename auto&
 
 static fs::path _search_for_game_path(fs::path hint_path = {}) {
 	// Apparently max amount of steam libraries is 8, if incorrect please correct it to the correct max amount
-	constexpr int max_amount_of_steam_libraries = 8;
-	constexpr std::string_view Victoria_2_folder = "Victoria 2";
-	constexpr std::string_view v2_game_exe = "v2game.exe";
-	constexpr std::string_view steamapps = "steamapps";
-	constexpr std::string_view libraryfolders = "libraryfolders.vdf";
-	constexpr std::string_view vic2_appmanifest = "appmanifest_42960.acf";
-	constexpr std::string_view common_folder = "common";
+	static constexpr int max_amount_of_steam_libraries = 8;
+	static constexpr std::string_view Victoria_2_folder = "Victoria 2";
+	static constexpr std::string_view v2_game_exe = "v2game.exe";
+	static constexpr std::string_view steamapps = "steamapps";
+	static constexpr std::string_view libraryfolders = "libraryfolders.vdf";
+	static constexpr std::string_view vic2_appmanifest = "appmanifest_42960.acf";
+	static constexpr std::string_view common_folder = "common";
 
 	std::error_code error_code;
 
@@ -359,37 +368,77 @@ bool Dataloader::set_roots(path_vector_t const& new_roots) {
 	return ret;
 }
 
-fs::path Dataloader::lookup_file(fs::path const& path) const {
+fs::path Dataloader::lookup_file(std::string_view path, bool print_error) const {
+#if FILESYSTEM_NEEDS_FORWARD_SLASHES
+	/* Back-slashes need to be converted into forward-slashes */
+	const std::string forward_slash_path { StringUtils::make_forward_slash_path(StringUtils::remove_leading_slashes(path)) };
+	path = forward_slash_path;
+#endif
+
+	const fs::path filepath { path };
+
+#if FILESYSTEM_CASE_INSENSITIVE
+	/* Case-insensitive filesystem */
 	for (fs::path const& root : roots) {
-		const fs::path composed = root / path;
+		const fs::path composed = root / filepath;
 		if (fs::is_regular_file(composed)) {
 			return composed;
 		}
 	}
-	Logger::error("Lookup for ", path, " failed!");
+#else
+	/* Case-sensitive filesystem */
+	const std::string_view filename = StringUtils::get_filename(path);
+	for (fs::path const& root : roots) {
+		const fs::path composed = root / filepath;
+		if (fs::is_regular_file(composed)) {
+			return composed;
+		}
+		std::error_code ec;
+		for (fs::directory_entry const& entry : fs::directory_iterator { composed.parent_path(), ec }) {
+			if (entry.is_regular_file()) {
+				const fs::path file = entry;
+				if (path_equals_case_insensitive(file.filename().string(), filename)) {
+					return file;
+				}
+			}
+		}
+	}
+#endif
+
+	if (print_error) {
+		Logger::error("Lookup for \"", path, "\" failed!");
+	}
 	return {};
 }
 
-static bool contains_file_with_name(Dataloader::path_vector_t const& paths, fs::path const& name) {
-	for (fs::path const& path : paths) {
-		if (path.filename() == name) {
-			return true;
-		}
-	}
-	return false;
-}
-
-Dataloader::path_vector_t Dataloader::lookup_files_in_dir(fs::path const& path, fs::path const& extension) const {
+template<typename _DirIterator, std::predicate<fs::path const&, fs::path const&> _Equiv>
+Dataloader::path_vector_t Dataloader::_lookup_files_in_dir(std::string_view path, fs::path const& extension) const {
+#if FILESYSTEM_NEEDS_FORWARD_SLASHES
+	/* Back-slashes need to be converted into forward-slashes */
+	const std::string forward_slash_path { StringUtils::make_forward_slash_path(StringUtils::remove_leading_slashes(path)) };
+	path = forward_slash_path;
+#endif
+	const fs::path filepath { path };
+	static constexpr _Equiv Equiv {};
 	path_vector_t ret;
+	size_t start_of_current_root_entries;
 	for (fs::path const& root : roots) {
-		const fs::path composed = root / path;
+		start_of_current_root_entries = ret.size();
+		const fs::path composed = root / filepath;
 		std::error_code ec;
-		for (fs::directory_entry const& entry : fs::directory_iterator { composed, ec }) {
+		for (fs::directory_entry const& entry : _DirIterator { composed, ec }) {
 			if (entry.is_regular_file()) {
 				const fs::path file = entry;
-				if (extension.empty() || file.extension() == extension) {
-					if (!contains_file_with_name(ret, file.filename())) {
+				if ((extension.empty() || file.extension() == extension) && !Equiv(file, {})) {
+					size_t index = 0;
+					for (; index < ret.size() && !Equiv(file, ret[index]); ++index) {}
+					if (index >= ret.size()) {
 						ret.push_back(file);
+					} else if (start_of_current_root_entries <= index) {
+						Logger::warning(
+							"Files in the same directory with conflicting names: ", ret[index], " (accepted) and ", file,
+							" (rejected)"
+						);
 					}
 				}
 			}
@@ -398,10 +447,43 @@ Dataloader::path_vector_t Dataloader::lookup_files_in_dir(fs::path const& path, 
 	return ret;
 }
 
-bool Dataloader::apply_to_files_in_dir(fs::path const& path, fs::path const& extension, callback_t<fs::path const&> callback)
-	const {
+struct EquivFilename {
+	bool operator()(fs::path const& lhs, fs::path const& rhs) const {
+		return lhs.filename() == rhs.filename();
+	}
+};
+
+Dataloader::path_vector_t Dataloader::lookup_files_in_dir(std::string_view path, fs::path const& extension) const {
+	return _lookup_files_in_dir<fs::directory_iterator, EquivFilename>(path, extension);
+}
+
+Dataloader::path_vector_t Dataloader::lookup_files_in_dir_recursive(std::string_view path, fs::path const& extension) const {
+	return _lookup_files_in_dir<fs::recursive_directory_iterator, EquivFilename>(path, extension);
+}
+
+struct EquivBasicIdentifierPrefix {
+	bool operator()(fs::path const& lhs, fs::path const& rhs) const {
+		const std::string lhs_str = lhs.stem().string();
+		const std::string rhs_str = rhs.stem().string();
+		return extract_basic_identifier_prefix(lhs_str) == extract_basic_identifier_prefix(rhs_str);
+	}
+};
+
+Dataloader::path_vector_t Dataloader::lookup_basic_indentifier_prefixed_files_in_dir(
+	std::string_view path, fs::path const& extension
+) const {
+	return _lookup_files_in_dir<fs::directory_iterator, EquivBasicIdentifierPrefix>(path, extension);
+}
+
+Dataloader::path_vector_t Dataloader::lookup_basic_indentifier_prefixed_files_in_dir_recursive(
+	std::string_view path, fs::path const& extension
+) const {
+	return _lookup_files_in_dir<fs::recursive_directory_iterator, EquivBasicIdentifierPrefix>(path, extension);
+}
+
+bool Dataloader::apply_to_files(path_vector_t const& files, callback_t<fs::path const&> callback) const {
 	bool ret = true;
-	for (fs::path const& file : lookup_files_in_dir(path, extension)) {
+	for (fs::path const& file : files) {
 		if (!callback(file)) {
 			Logger::error("Callback failed for file: ", file);
 			ret = false;
@@ -476,8 +558,9 @@ csv::Windows1252Parser Dataloader::parse_csv(fs::path const& path) {
 bool Dataloader::_load_pop_types(
 	PopManager& pop_manager, UnitManager const& unit_manager, GoodManager const& good_manager
 ) const {
-	static const fs::path pop_type_directory = "poptypes";
-	const bool ret = apply_to_files_in_dir(pop_type_directory, ".txt",
+	static constexpr std::string_view pop_type_directory = "poptypes";
+	const bool ret = apply_to_files(
+		lookup_files_in_dir(pop_type_directory, ".txt"),
 		[&pop_manager, &unit_manager, &good_manager](fs::path const& file) -> bool {
 			return pop_manager.load_pop_type_file(
 				file.stem().string(), unit_manager, good_manager, parse_defines(file).get_file_node()
@@ -489,141 +572,95 @@ bool Dataloader::_load_pop_types(
 }
 
 bool Dataloader::_load_units(UnitManager& unit_manager, GoodManager const& good_manager) const {
-	static const fs::path units_directory = "units";
-	const bool ret = apply_to_files_in_dir(units_directory, ".txt",
+	static constexpr std::string_view units_directory = "units";
+	const bool ret = apply_to_files(
+		lookup_files_in_dir(units_directory, ".txt"),
 		[&unit_manager, &good_manager](fs::path const& file) -> bool {
 			return unit_manager.load_unit_file(good_manager, parse_defines(file).get_file_node());
-		});
+		}
+	);
 	unit_manager.lock_units();
 	return ret;
 }
 
-bool Dataloader::_load_oobs(GameManager& game_manager) const {
-	static const fs::path oob_directory = "history/units";
-
-	/* used for countries with no defined initial OOB */
-	game_manager.get_military_manager().get_deployment_manager().add_deployment(
-		"NULL", std::vector<Army>(), std::vector<Navy>(), std::vector<Leader>()
-	);
-
-	bool ret = apply_to_files_in_dir(oob_directory, ".txt", [&game_manager](fs::path const& file) -> bool {
-		if (file.filename() == "v2dd2.txt") {
-			return true; /* dev diary just stuck in there for no reason whatsoever */
-		}
-		return game_manager.get_military_manager().get_deployment_manager().load_oob_file(
-			game_manager, file.filename().string(), parse_defines(file).get_file_node()
-		);
-	});
-
-	/* we also load OOBs in top level subdirectories, for other start dates etc */
-	for (auto root : roots) {
-		const fs::path path = root / oob_directory;
-		std::error_code ec;
-		for (fs::directory_entry const& entry : fs::directory_iterator { path, ec }) {
-			if (entry.is_directory()) {
-				ret &= apply_to_files_in_dir(entry, ".txt", [&entry, &game_manager](fs::path const& file) -> bool {
-					return game_manager.get_military_manager().get_deployment_manager().load_oob_file(
-						game_manager, (entry.path().filename() / file.filename()).string(), parse_defines(file).get_file_node()
-					);
-				});
-			}
-		}
-	}
-
-	game_manager.get_military_manager().get_deployment_manager().lock_deployments();
-	return ret;
-}
-
-bool Dataloader::_load_countries(GameManager& game_manager) const {
-	static const fs::path countries_file = "common/countries.txt";
-
-	bool is_dynamic = false;
-
-	bool ret = expect_dictionary([this, &game_manager, &is_dynamic](std::string_view key, ast::NodeCPtr value) -> bool {
-		if (key == "dynamic_tags") {
-			return expect_bool(assign_variable_callback(is_dynamic))(value);
-		}
-
-		std::string_view data_path;
-
-		if (!expect_string(assign_variable_callback(data_path))(value)) {
-			return false;
-		}
-
-		return game_manager.get_country_manager().load_country_data_file(
-			game_manager, key, is_dynamic, parse_defines(lookup_file(countries_file.parent_path() / data_path)).get_file_node()
-		);
-	})(parse_defines(lookup_file(countries_file)).get_file_node());
-	game_manager.get_country_manager().lock_countries();
-
-	return ret;
-}
-
-bool Dataloader::_load_history(GameManager& game_manager) const {
-	static const fs::path country_history_directory = "history/countries";
-	static const fs::path province_history_directory = "history/provinces";
+bool Dataloader::_load_history(GameManager& game_manager, bool unused_history_file_warnings) const {
 
 	/* Country History */
-	bool ret = apply_to_files_in_dir(country_history_directory, ".txt", [this, &game_manager](fs::path const& file) -> bool {
-		std::string tag = file.filename().string().substr(0, 3);
+	static constexpr std::string_view country_history_directory = "history/countries";
+	bool ret = apply_to_files(
+		lookup_basic_indentifier_prefixed_files_in_dir(country_history_directory, ".txt"),
+		[this, &game_manager, unused_history_file_warnings](fs::path const& file) -> bool {
+			const std::string filename = file.stem().string();
+			const std::string_view country_id = extract_basic_identifier_prefix(filename);
 
-		if (!game_manager.get_country_manager().has_country_identifier(tag)) {
-			Logger::error("Error loading history for country ", tag, ": tag not defined!");
-			return false;
+			Country const* country = game_manager.get_country_manager().get_country_by_identifier(country_id);
+			if (country == nullptr) {
+				if (unused_history_file_warnings) {
+					Logger::warning("Found history file for non-existent country: ", country_id);
+				}
+				return true;
+			}
+
+			return game_manager.get_history_manager().get_country_manager().load_country_history_file(
+				game_manager, *this, *country, parse_defines(file).get_file_node()
+			);
 		}
-
-		return game_manager.get_history_manager().get_country_manager().load_country_history_file(
-			game_manager, tag, parse_defines(lookup_file(file)).get_file_node()
-		);
-	});
+	);
 	game_manager.get_history_manager().get_country_manager().lock_country_histories();
 
-	/* Province History */
-	for (auto root : roots) {
-		const fs::path path = root / province_history_directory;
-		std::error_code ec;
-		for (fs::directory_entry const& entry : fs::directory_iterator { path, ec }) {
-			if (entry.is_directory()) {
-				bool ret = apply_to_files_in_dir(entry, ".txt", [this, &game_manager](fs::path const& file) -> bool {
-					std::string province_id = file.filename().string();
-					province_id = province_id.substr(0, province_id.find(" "));
-
-					if (!game_manager.get_map().has_province_identifier(province_id)) {
-						Logger::error("Error loading history for province ", province_id, ": province not defined!");
-						return false;
-					}
-
-					return game_manager.get_history_manager().get_province_manager().load_province_history_file(
-						game_manager, province_id, parse_defines(lookup_file(file)).get_file_node()
-					);
-				});
-			}
+	{
+		DeploymentManager& deployment_manager = game_manager.get_military_manager().get_deployment_manager();
+		deployment_manager.lock_deployments();
+		if (deployment_manager.get_missing_oob_file_count() > 0) {
+			Logger::warning(deployment_manager.get_missing_oob_file_count(), " missing OOB files!");
 		}
 	}
-	game_manager.get_history_manager().get_province_manager().lock_province_histories();
+
+	/* Province History */
+	static constexpr std::string_view province_history_directory = "history/provinces";
+	ret &= apply_to_files(
+		lookup_basic_indentifier_prefixed_files_in_dir_recursive(province_history_directory, ".txt"),
+		[this, &game_manager, unused_history_file_warnings](fs::path const& file) -> bool {
+			const std::string filename = file.stem().string();
+			const std::string_view province_id = extract_basic_identifier_prefix(filename);
+
+			Province const* province = game_manager.get_map().get_province_by_identifier(province_id);
+			if (province == nullptr) {
+				if (unused_history_file_warnings) {
+					Logger::warning("Found history file for non-existent province: ", province_id);
+				}
+				return true;
+			}
+
+			return game_manager.get_history_manager().get_province_manager().load_province_history_file(
+				game_manager, *province, parse_defines(file).get_file_node()
+			);
+		}
+	);
+	game_manager.get_history_manager().get_province_manager().lock_province_histories(game_manager.get_map(), false);
 
 	return ret;
 }
 
 bool Dataloader::_load_map_dir(GameManager& game_manager) const {
-	static const fs::path map_directory = "map";
+	static constexpr std::string_view map_directory = "map/";
 	Map& map = game_manager.get_map();
 
-	static const fs::path defaults_filename = "default.map";
-	static const std::string default_definitions = "definition.csv";
-	static const std::string default_provinces = "provinces.bmp";
-	static const std::string default_positions = "positions.txt";
-	static const std::string default_terrain = "terrain.bmp";
-	static const std::string default_rivers = "rivers.bmp";
-	static const std::string default_terrain_definition = "terrain.txt";
-	static const std::string default_tree_definition = "trees.txt";
-	static const std::string default_continent = "continent.txt";
-	static const std::string default_adjacencies = "adjacencies.csv";
-	static const std::string default_region = "region.txt";
-	static const std::string default_region_sea = "region_sea.txt";
-	static const std::string default_province_flag_sprite = "province_flag_sprites";
+	static constexpr std::string_view defaults_filename = "default.map";
+	static constexpr std::string_view default_definitions = "definition.csv";
+	static constexpr std::string_view default_provinces = "provinces.bmp";
+	static constexpr std::string_view default_positions = "positions.txt";
+	static constexpr std::string_view default_terrain = "terrain.bmp";
+	static constexpr std::string_view default_rivers = "rivers.bmp";
+	static constexpr std::string_view default_terrain_definition = "terrain.txt";
+	static constexpr std::string_view default_tree_definition = "trees.txt";
+	static constexpr std::string_view default_continent = "continent.txt";
+	static constexpr std::string_view default_adjacencies = "adjacencies.csv";
+	static constexpr std::string_view default_region = "region.txt";
+	static constexpr std::string_view default_region_sea = "region_sea.txt";
+	static constexpr std::string_view default_province_flag_sprite = "province_flag_sprites";
 
-	const v2script::Parser parser = parse_defines(lookup_file(map_directory / defaults_filename));
+	const v2script::Parser parser = parse_defines(lookup_file(append_string_views(map_directory, defaults_filename)));
 
 	std::vector<std::string_view> water_province_identifiers;
 
@@ -677,20 +714,20 @@ bool Dataloader::_load_map_dir(GameManager& game_manager) const {
 		Logger::error("Failed to load map default file!");
 	}
 
-	if (!map.load_province_definitions(parse_csv(lookup_file(map_directory / definitions)).get_lines())) {
+	if (!map.load_province_definitions(parse_csv(lookup_file(append_string_views(map_directory, definitions))).get_lines())) {
 		Logger::error("Failed to load province definitions file!");
 		ret = false;
 	}
 
 	if (!map.load_province_positions(
 		game_manager.get_economy_manager().get_building_manager(),
-		parse_defines(lookup_file(map_directory / positions)).get_file_node()
+		parse_defines(lookup_file(append_string_views(map_directory, positions))).get_file_node()
 	)) {
 		Logger::error("Failed to load province positions file!");
 		ret = false;
 	}
 
-	if (!map.load_region_file(parse_defines(lookup_file(map_directory / region)).get_file_node())) {
+	if (!map.load_region_file(parse_defines(lookup_file(append_string_views(map_directory, region))).get_file_node())) {
 		Logger::error("Failed to load region file!");
 		ret = false;
 	}
@@ -701,18 +738,24 @@ bool Dataloader::_load_map_dir(GameManager& game_manager) const {
 	}
 
 	if (!map.get_terrain_type_manager().load_terrain_types(
-		game_manager.get_modifier_manager(), parse_defines(lookup_file(map_directory / terrain_definition)).get_file_node()
+		game_manager.get_modifier_manager(),
+		parse_defines(lookup_file(append_string_views(map_directory, terrain_definition))).get_file_node()
 	)) {
 		Logger::error("Failed to load terrain types!");
 		ret = false;
 	}
 
-	if (!map.load_map_images(lookup_file(map_directory / provinces), lookup_file(map_directory / terrain), false)) {
+	if (!map.load_map_images(
+		lookup_file(append_string_views(map_directory, provinces)),
+		lookup_file(append_string_views(map_directory, terrain)), false
+	)) {
 		Logger::error("Failed to load map images!");
 		ret = false;
 	}
 
-	if (!map.generate_and_load_province_adjacencies(parse_csv(lookup_file(map_directory / adjacencies)).get_lines())) {
+	if (!map.generate_and_load_province_adjacencies(
+		parse_csv(lookup_file(append_string_views(map_directory, adjacencies))).get_lines()
+	)) {
 		Logger::error("Failed to generate and load province adjacencies!");
 		ret = false;
 	}
@@ -721,19 +764,20 @@ bool Dataloader::_load_map_dir(GameManager& game_manager) const {
 }
 
 bool Dataloader::load_defines(GameManager& game_manager) const {
-	static const fs::path defines_file = "common/defines.lua";
-	static const fs::path buildings_file = "common/buildings.txt";
-	static const fs::path bookmark_file = "common/bookmarks.txt";
-	static const fs::path culture_file = "common/cultures.txt";
-	static const fs::path goods_file = "common/goods.txt";
-	static const fs::path governments_file = "common/governments.txt";
-	static const fs::path graphical_culture_type_file = "common/graphicalculturetype.txt";
-	static const fs::path ideology_file = "common/ideologies.txt";
-	static const fs::path issues_file = "common/issues.txt";
-	static const fs::path national_values_file = "common/nationalvalues.txt";
-	static const fs::path production_types_file = "common/production_types.txt";
-	static const fs::path religion_file = "common/religion.txt";
-	static const fs::path leader_traits_file = "common/traits.txt";
+	static const std::string defines_file = "common/defines.lua";
+	static const std::string buildings_file = "common/buildings.txt";
+	static const std::string bookmark_file = "common/bookmarks.txt";
+	static const std::string countries_file = "common/countries.txt";
+	static const std::string culture_file = "common/cultures.txt";
+	static const std::string goods_file = "common/goods.txt";
+	static const std::string governments_file = "common/governments.txt";
+	static const std::string graphical_culture_type_file = "common/graphicalculturetype.txt";
+	static const std::string ideology_file = "common/ideologies.txt";
+	static const std::string issues_file = "common/issues.txt";
+	static const std::string national_values_file = "common/nationalvalues.txt";
+	static const std::string production_types_file = "common/production_types.txt";
+	static const std::string religion_file = "common/religion.txt";
+	static const std::string leader_traits_file = "common/traits.txt";
 
 	bool ret = true;
 
@@ -832,15 +876,13 @@ bool Dataloader::load_defines(GameManager& game_manager) const {
 		Logger::error("Failed to load bookmarks!");
 		ret = false;
 	}
-	if (!_load_oobs(game_manager)) {
-		Logger::error("Failed to load orders of battle!");
-		ret = false;
-	}
-	if (!_load_countries(game_manager)) {
+	if (!game_manager.get_country_manager().load_countries(
+		game_manager, *this, parse_defines(lookup_file(countries_file)).get_file_node()
+	)) {
 		Logger::error("Failed to load countries!");
 		ret = false;
 	}
-	if (!_load_history(game_manager)) {
+	if (!_load_history(game_manager, false)) {
 		Logger::error("Failed to load history!");
 		ret = false;
 	}
@@ -848,13 +890,17 @@ bool Dataloader::load_defines(GameManager& game_manager) const {
 	return ret;
 }
 
-bool Dataloader::load_pop_history(GameManager& game_manager, fs::path const& path) const {
-	return apply_to_files_in_dir(path, ".txt", [&game_manager](fs::path const& file) -> bool {
-		return game_manager.get_map()
-			.expect_province_dictionary([&game_manager](Province& province, ast::NodeCPtr value) -> bool {
-				return province.load_pop_list(game_manager.get_pop_manager(), value);
-			})(parse_defines(file).get_file_node());
-	});
+bool Dataloader::load_pop_history(GameManager& game_manager, std::string_view path) const {
+	return apply_to_files(
+		lookup_files_in_dir(path, ".txt"),
+		[&game_manager](fs::path const& file) -> bool {
+			return game_manager.get_map().expect_province_dictionary(
+				[&game_manager](Province& province, ast::NodeCPtr value) -> bool {
+					return province.load_pop_list(game_manager.get_pop_manager(), value);
+				}
+			)(parse_defines(file).get_file_node());
+		}
+	);
 }
 
 static bool _load_localisation_file(Dataloader::localisation_callback_t callback, std::vector<csv::LineObject> const& lines) {
@@ -874,8 +920,11 @@ static bool _load_localisation_file(Dataloader::localisation_callback_t callback
 	return ret;
 }
 
-bool Dataloader::load_localisation_files(localisation_callback_t callback, fs::path const& localisation_dir) const {
-	return apply_to_files_in_dir(localisation_dir, ".csv", [callback](fs::path path) -> bool {
-		return _load_localisation_file(callback, parse_csv(path).get_lines());
-	});
+bool Dataloader::load_localisation_files(localisation_callback_t callback, std::string_view localisation_dir) const {
+	return apply_to_files(
+		lookup_files_in_dir(localisation_dir, ".csv"),
+		[callback](fs::path path) -> bool {
+			return _load_localisation_file(callback, parse_csv(path).get_lines());
+		}
+	);
 }

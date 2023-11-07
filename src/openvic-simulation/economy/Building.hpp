@@ -133,13 +133,13 @@ namespace OpenVic {
 
 		level_t get_current_level() const;
 		ExpansionState get_expansion_state() const;
-		Date const& get_start_date() const;
-		Date const& get_end_date() const;
+		Date get_start_date() const;
+		Date get_end_date() const;
 		float get_expansion_progress() const;
 
 		bool expand();
-		void update_state(Date const& today);
-		void tick(Date const& today);
+		void update_state(Date today);
+		void tick(Date today);
 	};
 
 	struct Province;
@@ -162,7 +162,7 @@ namespace OpenVic {
 
 		bool load_buildings_file(
 			GoodManager const& good_manager, ProductionTypeManager const& production_type_manager,
-			ModifierManager const& modifier_manager, ast::NodeCPtr root
+			ModifierManager& modifier_manager, ast::NodeCPtr root
 		);
 
 		bool generate_province_buildings(Province& province) const;

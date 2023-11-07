@@ -5,6 +5,7 @@
 
 #include "openvic-simulation/country/Country.hpp"
 #include "openvic-simulation/history/Bookmark.hpp"
+#include "openvic-simulation/history/HistoryMap.hpp"
 #include "openvic-simulation/map/Province.hpp"
 #include "openvic-simulation/military/Deployment.hpp"
 #include "openvic-simulation/politics/Government.hpp"
@@ -17,86 +18,68 @@
 #include "openvic-simulation/types/Date.hpp"
 
 namespace OpenVic {
-	struct CountryHistoryManager;
+	struct CountryHistoryMap;
 
-	struct CountryHistory {
-		friend struct CountryHistoryManager;
+	struct CountryHistoryEntry : HistoryEntry {
+		friend struct CountryHistoryMap;
 
 	private:
-		Culture const* primary_culture;
-		std::vector<Culture const*> accepted_cultures;
-		Religion const* religion;
-		CountryParty const* ruling_party;
-		Date last_election;
-		std::map<Ideology const*, fixed_point_t> upper_house;
-		Province const* capital;
-		GovernmentType const* government_type;
-		fixed_point_t plurality;
-		NationalValue const* national_value;
-		bool civilised;
-		fixed_point_t prestige;
-		std::vector<Reform const*> reforms;
-		Deployment const* inital_oob;
+		Country const& PROPERTY(country);
+
+		std::optional<Culture const*> PROPERTY(primary_culture);
+		std::vector<Culture const*> PROPERTY(accepted_cultures);
+		std::optional<Religion const*> PROPERTY(religion);
+		std::optional<CountryParty const*> PROPERTY(ruling_party);
+		std::optional<Date> PROPERTY(last_election);
+		decimal_map_t<Ideology const*> PROPERTY(upper_house);
+		std::optional<Province const*> PROPERTY(capital);
+		std::optional<GovernmentType const*> PROPERTY(government_type);
+		std::optional<fixed_point_t> PROPERTY(plurality);
+		std::optional<NationalValue const*> PROPERTY(national_value);
+		std::optional<bool> PROPERTY(civilised);
+		std::optional<fixed_point_t> PROPERTY(prestige);
+		std::vector<Reform const*> PROPERTY(reforms);
+		std::optional<Deployment const*> PROPERTY(inital_oob);
 		// TODO: technologies, tech schools, and inventions when PR#51 merged
 		// TODO: starting foreign investment
 
-		CountryHistory(
-			Culture const* new_primary_culture, std::vector<Culture const*>&& new_accepted_cultures,
-			Religion const* new_religion, CountryParty const* new_ruling_party, Date new_last_election,
-			std::map<Ideology const*, fixed_point_t>&& new_upper_house, Province const* new_capital,
-			GovernmentType const* new_government_type, fixed_point_t new_plurality, NationalValue const* new_national_value,
-			bool new_civilised, fixed_point_t new_prestige, std::vector<Reform const*>&& new_reforms,
-			Deployment const* new_inital_oob
-		);
+		CountryHistoryEntry(Country const& new_country, Date new_date);
+	};
 
-	public:
-		Culture const* get_primary_culture() const;
-		const std::vector<Culture const*>& get_accepted_cultures() const;
-		Religion const* get_religion() const;
-		CountryParty const* get_ruling_party() const;
-		const Date get_last_election() const;
-		const std::map<Ideology const*, fixed_point_t>& get_upper_house() const;
-		Province const* get_capital() const;
-		GovernmentType const* get_government_type() const;
-		const fixed_point_t get_plurality() const;
-		NationalValue const* get_national_value() const;
-		const bool is_civilised() const;
-		const fixed_point_t get_prestige() const;
-		const std::vector<Reform const*>& get_reforms() const;
-		Deployment const* get_inital_oob() const;
+	struct CountryHistoryManager;
+
+	struct CountryHistoryMap : HistoryMap<CountryHistoryEntry, Dataloader const&, DeploymentManager&> {
+		friend struct CountryHistoryManager;
+
+	private:
+		Country const& PROPERTY(country);
+
+	protected:
+		CountryHistoryMap(Country const& new_country);
+
+		std::unique_ptr<CountryHistoryEntry> _make_entry(Date date) const override;
+		bool _load_history_entry(
+			GameManager const& game_manager, Dataloader const& dataloader, DeploymentManager& deployment_manager,
+			CountryHistoryEntry& entry, ast::NodeCPtr root
+		) override;
 	};
 
 	struct CountryHistoryManager {
 	private:
-		std::map<Country const*, std::map<Date, CountryHistory>> country_histories;
+		std::map<Country const*, CountryHistoryMap> country_histories;
 		bool locked = false;
 
-		inline bool _load_country_history_entry(
-			GameManager& game_manager, std::string_view name, Date const& date, ast::NodeCPtr root
-		);
-
 	public:
-		CountryHistoryManager() {}
-
-		bool add_country_history_entry(
-			Country const* country, Date date, Culture const* primary_culture, std::vector<Culture const*>&& accepted_cultures,
-			Religion const* religion, CountryParty const* ruling_party, Date last_election,
-			std::map<Ideology const*, fixed_point_t>&& upper_house, Province const* capital,
-			GovernmentType const* government_type, fixed_point_t plurality, NationalValue const* national_value, bool civilised,
-			fixed_point_t prestige, std::vector<Reform const*>&& reforms, Deployment const* initial_oob,
-			bool updated_accepted_cultures, bool updated_upper_house, bool updated_reforms
-		);
+		CountryHistoryManager() = default;
 
 		void lock_country_histories();
 		bool is_locked() const;
 
-		/* Returns history of country at date, if date doesn't have an entry returns
-		 * closest entry before date. Return can be nullptr if an error occurs. */
-		CountryHistory const* get_country_history(Country const* country, Date entry) const;
-		/* Returns history of country at bookmark date. Return can be nullptr if an error occurs. */
-		inline CountryHistory const* get_country_history(Country const* country, Bookmark const* entry) const;
+		CountryHistoryMap const* get_country_history(Country const* country) const;
 
-		bool load_country_history_file(GameManager& game_manager, std::string_view name, ast::NodeCPtr root);
+		bool load_country_history_file(
+			GameManager& game_manager, Dataloader const& dataloader, Country const& country, ast::NodeCPtr root
+		);
 	};
 
 } // namespace OpenVic

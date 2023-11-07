@@ -5,7 +5,7 @@ using namespace OpenVic::NodeTools;
 
 Province::Province(
 	std::string_view new_identifier, colour_t new_colour, index_t new_index
-) : HasIdentifierAndColour { new_identifier, new_colour, false, false }, index { new_index },
+) : HasIdentifierAndColour { new_identifier, new_colour, true, false }, index { new_index },
 	buildings { "buildings", false } {
 	assert(index != NULL_INDEX);
 }
@@ -36,6 +36,10 @@ TerrainType const* Province::get_terrain_type() const {
 
 Province::life_rating_t Province::get_life_rating() const {
 	return life_rating;
+}
+
+Province::colony_status_t Province::get_colony_status() const {
+	return colony_status;
 }
 
 bool Province::load_positions(BuildingManager const& building_manager, ast::NodeCPtr root) {
@@ -127,42 +131,32 @@ Pop::pop_size_t Province::get_total_population() const {
 	return total_population;
 }
 
-distribution_t const& Province::get_pop_type_distribution() const {
-	return pop_types;
-}
-
-distribution_t const& Province::get_culture_distribution() const {
-	return cultures;
-}
-
-distribution_t const& Province::get_religion_distribution() const {
-	return religions;
-}
-
 /* REQUIREMENTS:
  * MAP-65, MAP-68, MAP-70, MAP-234
  */
 void Province::update_pops() {
 	total_population = 0;
-	pop_types.clear();
-	cultures.clear();
-	religions.clear();
+	pop_type_distribution.clear();
+	ideology_distribution.clear();
+	culture_distribution.clear();
+	religion_distribution.clear();
 	for (Pop const& pop : pops) {
 		total_population += pop.get_size();
-		pop_types[&pop.get_type()] += pop.get_size();
-		cultures[&pop.get_culture()] += pop.get_size();
-		religions[&pop.get_religion()] += pop.get_size();
+		pop_type_distribution[&pop.get_type()] += pop.get_size();
+		//ideology_distribution[&pop.get_???()] += pop.get_size();
+		culture_distribution[&pop.get_culture()] += pop.get_size();
+		religion_distribution[&pop.get_religion()] += pop.get_size();
 	}
 }
 
-void Province::update_state(Date const& today) {
+void Province::update_state(Date today) {
 	for (BuildingInstance& building : buildings.get_items()) {
 		building.update_state(today);
 	}
 	update_pops();
 }
 
-void Province::tick(Date const& today) {
+void Province::tick(Date today) {
 	for (BuildingInstance& building : buildings.get_items()) {
 		building.tick(today);
 	}

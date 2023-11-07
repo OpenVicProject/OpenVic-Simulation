@@ -29,7 +29,7 @@ namespace OpenVic {
 
 		std::string_view get_name() const;
 		std::string_view get_description() const;
-		Date const& get_date() const;
+		Date get_date() const;
 		uint32_t get_initial_camera_x() const;
 		uint32_t get_initial_camera_y() const;
 	};
@@ -42,9 +42,10 @@ namespace OpenVic {
 		BookmarkManager();
 
 		bool add_bookmark(
-			std::string_view name, std::string_view description, Date date, uint32_t initial_camera_x, uint32_t initial_camera_y
+			std::string_view name, std::string_view description, Date date, uint32_t initial_camera_x,
+			uint32_t initial_camera_y
 		);
-		IDENTIFIER_REGISTRY_ACCESSORS(bookmark);
+		IDENTIFIER_REGISTRY_ACCESSORS(bookmark)
 
 		bool load_bookmark_file(ast::NodeCPtr root);
 	};
