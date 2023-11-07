@@ -4,6 +4,38 @@
 #include <string>
 #include <string_view>
 
+#include <openvic-dataloader/detail/SelfType.hpp>
+#include <openvic-dataloader/detail/TypeName.hpp>
+
+#define OV_DETAIL_GET_TYPE_BASE_CLASS(CLASS) \
+	static constexpr std::string_view get_type_static() { return ::ovdl::detail::type_name<CLASS>(); } \
+	constexpr virtual std::string_view get_type() const = 0; \
+	static constexpr std::string_view get_base_type_static() { return ::ovdl::detail::type_name<CLASS>(); } \
+	constexpr virtual std::string_view get_base_type() const { return get_base_type_static(); } \
+	template<typename T> constexpr bool is_type() const { \
+		return get_type().compare(::ovdl::detail::type_name<T>()) == 0; } \
+	template<typename T> constexpr bool is_derived_from() const { \
+		return is_type<T>() || get_base_type().compare(::ovdl::detail::type_name<T>()) == 0; } \
+	template<typename T> constexpr T* cast_to() { \
+		if (is_derived_from<T>() || is_type<CLASS>()) return (static_cast<T*>(this)); \
+		return nullptr; } \
+	template<typename T> constexpr const T* const cast_to() const { \
+		if (is_derived_from<T>() || is_type<CLASS>()) return (static_cast<const T*>(this)); \
+		return nullptr; }
+
+#define OV_DETAIL_GET_TYPE \
+	struct _self_type_tag {}; \
+	constexpr auto _self_type_helper()->decltype(::ovdl::detail::Writer<_self_type_tag, decltype(this)> {}); \
+	using type = ::ovdl::detail::Read<_self_type_tag>; \
+	static constexpr std::string_view get_type_static() { return ::ovdl::detail::type_name<type>(); } \
+	constexpr std::string_view get_type() const override { \
+		return ::ovdl::detail::type_name<std::decay_t<decltype(*this)>>(); }
+
+#define OV_DETAIL_GET_BASE_TYPE(CLASS) \
+	static constexpr std::string_view get_base_type_static() { return ::ovdl::detail::type_name<CLASS>(); } \
+	constexpr std::string_view get_base_type() const override { \
+		return ::ovdl::detail::type_name<std::decay_t<decltype(*this)>>(); }
+
 #define REF_GETTERS(var) \
 	constexpr decltype(var)& get_##var() { \
 		return var; \

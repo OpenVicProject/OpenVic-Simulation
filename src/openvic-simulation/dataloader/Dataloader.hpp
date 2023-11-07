@@ -12,6 +12,7 @@ namespace OpenVic {
 	namespace fs = std::filesystem;
 
 	struct GameManager;
+	class UIManager;
 	struct PopManager;
 	struct UnitManager;
 	struct GoodManager;
@@ -23,6 +24,7 @@ namespace OpenVic {
 	private:
 		path_vector_t roots;
 
+		bool _load_interface_files(UIManager& ui_manager) const;
 		bool _load_pop_types(PopManager& pop_manager, UnitManager const& unit_manager, GoodManager const& good_manager) const;
 		bool _load_units(UnitManager& unit_manager, GoodManager const& good_manager) const;
 		bool _load_map_dir(GameManager& game_manager) const;
@@ -70,6 +72,8 @@ namespace OpenVic {
 		 * DAT-24
 		 */
 		fs::path lookup_file(std::string_view path, bool print_error = true) const;
+		/* Checks alternate file endings, e.g. if "*.tga" doesn't exist then try "*.dds" */
+		fs::path lookup_image_file(std::string_view path) const;
 		path_vector_t lookup_files_in_dir(std::string_view path, fs::path const& extension) const;
 		path_vector_t lookup_files_in_dir_recursive(std::string_view path, fs::path const& extension) const;
 		path_vector_t lookup_basic_indentifier_prefixed_files_in_dir(std::string_view path, fs::path const& extension) const;

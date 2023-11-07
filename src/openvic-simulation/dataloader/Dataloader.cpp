@@ -411,6 +411,19 @@ fs::path Dataloader::lookup_file(std::string_view path, bool print_error) const 
 	return {};
 }
 
+fs::path Dataloader::lookup_image_file(std::string_view path) const {
+	fs::path ret = lookup_file(path, false);
+	if (ret.empty()) {
+		// TODO - change search order so root order takes priority over extension replacement order
+		ret = lookup_file(append_string_views(StringUtils::remove_extension(path), ".dds"), false);
+		if (!ret.empty()) {
+			return ret;
+		}
+		Logger::error("Image lookup for ", path, " failed!");
+	}
+	return ret;
+}
+
 template<typename _DirIterator, std::predicate<fs::path const&, fs::path const&> _Equiv>
 Dataloader::path_vector_t Dataloader::_lookup_files_in_dir(std::string_view path, fs::path const& extension) const {
 #if FILESYSTEM_NEEDS_FORWARD_SLASHES
@@ -553,6 +566,36 @@ static bool _csv_parse(csv::Windows1252Parser& parser) {
 
 csv::Windows1252Parser Dataloader::parse_csv(fs::path const& path) {
 	return _run_ovdl_parser<csv::Windows1252Parser, &_csv_parse>(path);
+}
+
+bool Dataloader::_load_interface_files(UIManager& ui_manager) const {
+	static constexpr std::string_view interface_directory = "interface/";
+
+	bool ret = apply_to_files(
+		lookup_files_in_dir(interface_directory, ".gfx"),
+		[&ui_manager](fs::path const& file) -> bool {
+			return ui_manager.load_gfx_file(parse_defines(file).get_file_node());
+		}
+	);
+	ui_manager.lock_sprites();
+	ui_manager.lock_fonts();
+
+	// Hard-coded example until the mechanism for requesting them from GDScript is fleshed out
+	static const std::vector<std::string_view> gui_files {
+		"province_interface.gui", "topbar.gui"
+	};
+	for (std::string_view const& gui_file : gui_files) {
+		if (!ui_manager.load_gui_file(
+			gui_file,
+			parse_defines(lookup_file(append_string_views(interface_directory, gui_file))).get_file_node()
+		)) {
+			Logger::error("Failed to load interface gui file: ", gui_file);
+			ret = false;
+		}
+	}
+	ui_manager.lock_scenes();
+
+	return ret;
 }
 
 bool Dataloader::_load_pop_types(
@@ -798,6 +841,10 @@ bool Dataloader::load_defines(GameManager& game_manager) const {
 
 	bool ret = true;
 
+	if (!_load_interface_files(game_manager.get_ui_manager())) {
+		Logger::error("Failed to load interface files!");
+		ret = false;
+	}
 	if (!game_manager.get_modifier_manager().setup_modifier_effects()) {
 		Logger::error("Failed to set up modifier effects!");
 		ret = false;
