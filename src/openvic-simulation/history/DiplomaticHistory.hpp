@@ -7,6 +7,7 @@
 
 #include "openvic-simulation/country/Country.hpp"
 #include "openvic-simulation/military/Wargoal.hpp"
+#include "openvic-simulation/map/Province.hpp"
 
 namespace OpenVic {
 	struct DiplomaticHistoryManager;

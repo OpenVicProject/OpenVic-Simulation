@@ -1,5 +1,7 @@
 #include "Province.hpp"
 
+#include "openvic-simulation/history/ProvinceHistory.hpp"
+
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;
 
@@ -40,6 +42,22 @@ Province::life_rating_t Province::get_life_rating() const {
 
 Province::colony_status_t Province::get_colony_status() const {
 	return colony_status;
+}
+
+Country const* Province::get_owner() const {
+	return owner;
+}
+
+Country const* Province::get_controller() const {
+	return controller;
+}
+
+std::vector<Country const*> const& Province::get_cores() const {
+	return cores;
+}
+
+bool Province::is_slave() const {
+	return slave;
 }
 
 bool Province::load_positions(BuildingManager const& building_manager, ast::NodeCPtr root) {
@@ -203,4 +221,40 @@ std::vector<Province::adjacency_t> const& Province::get_adjacencies() const {
 
 void Province::_set_terrain_type(TerrainType const* type) {
 	terrain_type = type;
+}
+
+void Province::apply_history_to_province(ProvinceHistoryMap const& history, Date date) {
+	auto entries = history.get_entries(date);
+	
+	reset_buildings();
+
+	for (const auto& entry : entries) {
+		if (entry->get_life_rating()) life_rating = *entry->get_life_rating();
+		if (entry->get_colonial()) colony_status = *entry->get_colonial();
+		if (entry->get_rgo()) rgo = *entry->get_rgo();
+		if (entry->get_terrain_type()) terrain_type = *entry->get_terrain_type();
+		if (entry->get_owner()) owner = *entry->get_owner();
+		if (entry->get_controller()) controller = *entry->get_controller();
+		if (entry->get_slave()) slave = *entry->get_slave();
+		for (const auto& core : entry->get_remove_cores()) {
+			const auto existing_core = std::find(cores.begin(), cores.end(), core);
+			if (existing_core != cores.end()) cores.erase(existing_core);
+		}
+		for (const auto& core : entry->get_add_cores()) {
+			const auto existing_core = std::find(cores.begin(), cores.end(), core);
+			if (existing_core == cores.end()) cores.push_back(core);
+		}
+		// TODO: rework province buildings
+		for (const auto& building : entry->get_buildings()) {
+			BuildingInstance* existing_entry = buildings.get_item_by_identifier(building.first->get_identifier());
+			if (existing_entry != nullptr) {
+				existing_entry->set_level(building.second);
+			} else {
+				BuildingInstance instance = { *building.first };
+				instance.set_level(building.second);
+				add_building(std::move(instance));
+			}
+		}
+		// TODO: party loyalties for each POP when implemented on POP side
+	}
 }

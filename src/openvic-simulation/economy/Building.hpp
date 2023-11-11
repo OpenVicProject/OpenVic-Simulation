@@ -124,14 +124,15 @@ namespace OpenVic {
 
 		bool _can_expand() const;
 
-		BuildingInstance(Building const& building);
-
 	public:
+		BuildingInstance(Building const& building);
 		BuildingInstance(BuildingInstance&&) = default;
 
 		Building const& get_building() const;
 
 		level_t get_current_level() const;
+		void set_level(level_t new_level);
+
 		ExpansionState get_expansion_state() const;
 		Date get_start_date() const;
 		Date get_end_date() const;
