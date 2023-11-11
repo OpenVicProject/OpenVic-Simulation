@@ -22,7 +22,7 @@ namespace OpenVic::GFX {
 		Font(Font&&) = default;
 	};
 
-	using frame_t = int32_t;
+	using frame_t = int32_t; /* Keep this as int32_t to simplify interfacing with Godot */
 	static constexpr frame_t NO_FRAMES = 0;
 
 	class Sprite : public Named<> {

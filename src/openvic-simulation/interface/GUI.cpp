@@ -37,7 +37,7 @@ bool Element::_fill_elements_key_map(
 		"OverlappingElementsBoxType", ZERO_OR_MORE, _expect_instance<Element, OverlappingElementsBox>(callback, ui_manager),
 		"listboxType", ZERO_OR_MORE, _expect_instance<Element, ListBox>(callback, ui_manager),
 		"windowType", ZERO_OR_MORE, _expect_instance<Element, Window>(callback, ui_manager),
-		"positionType", ZERO_OR_MORE, success_callback
+		"positionType", ZERO_OR_MORE, success_callback // TODO - load this as a marker for placing sub-scenes
 	);
 	return ret;
 }
@@ -67,10 +67,10 @@ bool Window::_fill_key_map(NodeTools::key_map_t& key_map, UIManager const& ui_ma
 	}, ui_manager);
 	ret &= Element::_fill_key_map(key_map, ui_manager);
 	ret &= add_key_map_entries(key_map,
-		"backGround", ZERO_OR_ONE, success_callback,
+		"backGround", ZERO_OR_ONE, success_callback, // TODO - load as potential panel texture (almost always empty)
 		"size", ONE_EXACTLY, expect_ivec2(assign_variable_callback(size)),
 		"moveable", ONE_EXACTLY, expect_int_bool(assign_variable_callback(moveable)),
-		"dontRender", ZERO_OR_ONE, success_callback,
+		"dontRender", ZERO_OR_ONE, success_callback, // always empty string?
 		"horizontalBorder", ZERO_OR_ONE, success_callback,
 		"verticalBorder", ZERO_OR_ONE, success_callback,
 		"fullScreen", ZERO_OR_ONE, expect_bool(assign_variable_callback(fullscreen))
@@ -96,8 +96,8 @@ bool BaseButton::_fill_key_map(NodeTools::key_map_t& key_map, UIManager const& u
 	// look up sprite registry for texture sprite with name...
 	ret &= add_key_map_entries(key_map,
 		"quadTextureSprite", ONE_EXACTLY,
-			expect_string(ui_manager.expect_sprite_str(assign_variable_callback_pointer(sprite))),
-		"shortcut", ZERO_OR_ONE, success_callback
+			expect_string(ui_manager.expect_sprite_str(assign_variable_callback_pointer(sprite)), true),
+		"shortcut", ZERO_OR_ONE, success_callback // TODO - load and use shortcuts (how to integrate with custom keybinds?)
 	);
 	return ret;
 }
@@ -175,7 +175,7 @@ bool ListBox::_fill_key_map(NodeTools::key_map_t& key_map, UIManager const& ui_m
 		"backGround", ZERO_OR_ONE, success_callback,
 		"size", ONE_EXACTLY, expect_ivec2(assign_variable_callback(size)),
 		"spacing", ZERO_OR_ONE, success_callback,
-		"scrollbartype", ZERO_OR_ONE, success_callback,
+		"scrollbartype", ZERO_OR_ONE, success_callback, // TODO - implement modable listbox scrollbars
 		"borderSize", ZERO_OR_ONE, success_callback
 	);
 	return ret;

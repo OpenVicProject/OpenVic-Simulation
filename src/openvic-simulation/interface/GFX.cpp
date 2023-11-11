@@ -15,6 +15,7 @@ node_callback_t Sprite::expect_sprite(callback_t<std::unique_ptr<Sprite>&&> call
 		"LineChartType", ZERO_OR_MORE, _expect_instance<Sprite, LineChart>(callback),
 		"textSpriteType", ZERO_OR_MORE, _expect_instance<Sprite, TextureSprite>(callback),
 		"maskedShieldType", ZERO_OR_MORE, _expect_instance<Sprite, MaskedFlag>(callback),
+		// TODO - add the rest of the sprite types
 		"corneredTileSpriteType", ZERO_OR_MORE, success_callback,
 		"tileSpriteType", ZERO_OR_MORE, success_callback,
 		"BarChartType", ZERO_OR_MORE, success_callback,

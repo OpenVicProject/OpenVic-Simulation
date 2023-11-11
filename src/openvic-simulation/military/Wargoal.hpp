@@ -1,8 +1,9 @@
 #pragma once
 
-#include "openvic-simulation/types/IdentifierRegistry.hpp"
-#include "openvic-simulation/types/EnumBitfield.hpp"
 #include "openvic-simulation/Modifier.hpp"
+#include "openvic-simulation/types/EnumBitfield.hpp"
+#include "openvic-simulation/types/IdentifierRegistry.hpp"
+#include "openvic-simulation/utility/Getters.hpp"
 
 namespace OpenVic {
 	struct WargoalTypeManager;
@@ -46,22 +47,22 @@ namespace OpenVic {
 			WAR_SCORE_BATTLE_FACTOR,
 			CONSTRUCTION_SPEED
 		};
-		using peace_modifiers_t = std::map<PEACE_MODIFIERS, fixed_point_t>;
-		
+		using peace_modifiers_t = decimal_map_t<PEACE_MODIFIERS>;
+
 	private:
-		const std::string sprite;
-		const std::string war_name;
-		const Timespan available_length;
-		const Timespan truce_length;
-		const bool triggered_only; // only able to be added via effects (or within the code)
-		const bool civil_war;
-		const bool constructing; // can be added to existing wars or justified
-		const bool crisis; // able to be added to crises
-		const bool great_war; // automatically add to great wars
-		const bool mutual; // attacked and defender share wargoal
-		const peace_modifiers_t modifiers;
-		const peace_options_t peace_options;
-		
+		const std::string PROPERTY(sprite);
+		const std::string PROPERTY(war_name);
+		const Timespan PROPERTY(available_length);
+		const Timespan PROPERTY(truce_length);
+		const bool PROPERTY(triggered_only); // only able to be added via effects (or within the code)
+		const bool PROPERTY(civil_war);
+		const bool PROPERTY(constructing); // can be added to existing wars or justified
+		const bool PROPERTY(crisis); // able to be added to crises
+		const bool PROPERTY(great_war); // automatically add to great wars
+		const bool PROPERTY(mutual); // attacked and defender share wargoal
+		const peace_modifiers_t PROPERTY(modifiers);
+		const peace_options_t PROPERTY(peace_options);
+
 		// TODO: can_use, prerequisites, on_add, on_po_accepted
 
 		WargoalType(
@@ -82,25 +83,12 @@ namespace OpenVic {
 
 	public:
 		WargoalType(WargoalType&&) = default;
-
-		std::string_view get_sprite() const;
-		std::string_view get_war_name() const;
-		const Timespan get_available_length() const;
-		const Timespan get_truce_length() const;
-		const bool is_triggered_only() const;
-		const bool is_civil_war() const;
-		const bool is_constructing() const;
-		const bool is_crisis() const;
-		const bool is_great_war() const;
-		const bool is_mutual() const;
-		peace_modifiers_t const& get_modifiers() const;
-		const peace_options_t get_peace_options() const;
 	};
 
 	struct WargoalTypeManager {
 	private:
 		IdentifierRegistry<WargoalType> wargoal_types;
-		std::vector<WargoalType const*> peace_priorities; 
+		std::vector<WargoalType const*> PROPERTY(peace_priorities);
 
 	public:
 		WargoalTypeManager();

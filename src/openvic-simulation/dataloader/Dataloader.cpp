@@ -36,8 +36,13 @@ using namespace ovdl;
 
 using StringUtils::append_string_views;
 
-#define FILESYSTEM_CASE_INSENSITIVE (defined(_WIN32) || (defined(__APPLE__) && defined(__MACH__)))
-#define FILESYSTEM_NEEDS_FORWARD_SLASHES (!defined(_WIN32))
+#if defined(_WIN32) || (defined(__APPLE__) && defined(__MACH__))
+#define FILESYSTEM_CASE_INSENSITIVE
+#endif
+
+#if !defined(_WIN32)
+#define FILESYSTEM_NEEDS_FORWARD_SLASHES
+#endif
 
 static constexpr bool path_equals_case_insensitive(std::string_view lhs, std::string_view rhs) {
 	constexpr auto ichar_equals = [](unsigned char l, unsigned char r) {
@@ -48,7 +53,7 @@ static constexpr bool path_equals_case_insensitive(std::string_view lhs, std::st
 
 // Windows and Mac by default act like case insensitive filesystems
 static constexpr bool path_equals(std::string_view lhs, std::string_view rhs) {
-#if FILESYSTEM_CASE_INSENSITIVE
+#if defined(FILESYSTEM_CASE_INSENSITIVE)
 	return path_equals_case_insensitive(lhs, rhs);
 #else
 	return std::equal(lhs.begin(), lhs.end(), rhs.begin(), rhs.end());
@@ -369,7 +374,7 @@ bool Dataloader::set_roots(path_vector_t const& new_roots) {
 }
 
 fs::path Dataloader::lookup_file(std::string_view path, bool print_error) const {
-#if FILESYSTEM_NEEDS_FORWARD_SLASHES
+#if defined(FILESYSTEM_NEEDS_FORWARD_SLASHES)
 	/* Back-slashes need to be converted into forward-slashes */
 	const std::string forward_slash_path { StringUtils::make_forward_slash_path(StringUtils::remove_leading_slashes(path)) };
 	path = forward_slash_path;
@@ -377,7 +382,7 @@ fs::path Dataloader::lookup_file(std::string_view path, bool print_error) const 
 
 	const fs::path filepath { path };
 
-#if FILESYSTEM_CASE_INSENSITIVE
+#if defined(FILESYSTEM_CASE_INSENSITIVE)
 	/* Case-insensitive filesystem */
 	for (fs::path const& root : roots) {
 		const fs::path composed = root / filepath;
@@ -411,7 +416,7 @@ fs::path Dataloader::lookup_file(std::string_view path, bool print_error) const 
 	return {};
 }
 
-fs::path Dataloader::lookup_image_file(std::string_view path) const {
+fs::path Dataloader::lookup_image_file_or_dds(std::string_view path) const {
 	fs::path ret = lookup_file(path, false);
 	if (ret.empty()) {
 		// TODO - change search order so root order takes priority over extension replacement order
@@ -424,34 +429,49 @@ fs::path Dataloader::lookup_image_file(std::string_view path) const {
 	return ret;
 }
 
-template<typename _DirIterator, std::predicate<fs::path const&, fs::path const&> _Equiv>
-Dataloader::path_vector_t Dataloader::_lookup_files_in_dir(std::string_view path, fs::path const& extension) const {
-#if FILESYSTEM_NEEDS_FORWARD_SLASHES
+template<typename _DirIterator, typename _UniqueKey>
+requires requires (_UniqueKey const& unique_key, std::string_view path) {
+	{ unique_key(path) } -> std::convertible_to<std::string_view>;
+}
+Dataloader::path_vector_t Dataloader::_lookup_files_in_dir(
+	std::string_view path, fs::path const& extension, _UniqueKey const& unique_key
+) const {
+#if defined(FILESYSTEM_NEEDS_FORWARD_SLASHES)
 	/* Back-slashes need to be converted into forward-slashes */
 	const std::string forward_slash_path { StringUtils::make_forward_slash_path(StringUtils::remove_leading_slashes(path)) };
 	path = forward_slash_path;
 #endif
-	const fs::path filepath { path };
-	static constexpr _Equiv Equiv {};
+	const fs::path dirpath { path };
 	path_vector_t ret;
-	size_t start_of_current_root_entries;
+	struct file_entry_t {
+		fs::path file;
+		fs::path const* root;
+	};
+	string_map_t<file_entry_t> found_files;
 	for (fs::path const& root : roots) {
-		start_of_current_root_entries = ret.size();
-		const fs::path composed = root / filepath;
+		const size_t root_len = root.string().size();
+		const fs::path composed = root / dirpath;
 		std::error_code ec;
 		for (fs::directory_entry const& entry : _DirIterator { composed, ec }) {
 			if (entry.is_regular_file()) {
-				const fs::path file = entry;
-				if ((extension.empty() || file.extension() == extension) && !Equiv(file, {})) {
-					size_t index = 0;
-					for (; index < ret.size() && !Equiv(file, ret[index]); ++index) {}
-					if (index >= ret.size()) {
-						ret.push_back(file);
-					} else if (start_of_current_root_entries <= index) {
-						Logger::warning(
-							"Files in the same directory with conflicting names: ", ret[index], " (accepted) and ", file,
-							" (rejected)"
-						);
+				fs::path file = entry;
+				if ((extension.empty() || file.extension() == extension)) {
+					const std::string full_path = file.string();
+					std::string_view relative_path = full_path;
+					relative_path.remove_prefix(root_len);
+					relative_path = StringUtils::remove_leading_slashes(relative_path);
+					const std::string_view key = unique_key(relative_path);
+					if (!key.empty()) {
+						const typename decltype(found_files)::const_iterator it = found_files.find(key);
+						if (it == found_files.end()) {
+							found_files.emplace(key, file_entry_t { file, &root });
+							ret.emplace_back(std::move(file));
+						} else if (it->second.root == &root) {
+							Logger::warning(
+								"Files in the same directory with conflicting keys: ", it->first, " - ", it->second.file,
+								" (accepted) and ", key, " - ", file, " (rejected)"
+							);
+						}
 					}
 				}
 			}
@@ -460,38 +480,28 @@ Dataloader::path_vector_t Dataloader::_lookup_files_in_dir(std::string_view path
 	return ret;
 }
 
-struct EquivFilename {
-	bool operator()(fs::path const& lhs, fs::path const& rhs) const {
-		return lhs.filename() == rhs.filename();
-	}
-};
-
 Dataloader::path_vector_t Dataloader::lookup_files_in_dir(std::string_view path, fs::path const& extension) const {
-	return _lookup_files_in_dir<fs::directory_iterator, EquivFilename>(path, extension);
+	return _lookup_files_in_dir<fs::directory_iterator>(path, extension, std::identity {});
 }
 
 Dataloader::path_vector_t Dataloader::lookup_files_in_dir_recursive(std::string_view path, fs::path const& extension) const {
-	return _lookup_files_in_dir<fs::recursive_directory_iterator, EquivFilename>(path, extension);
+	return _lookup_files_in_dir<fs::recursive_directory_iterator>(path, extension, std::identity {});
 }
 
-struct EquivBasicIdentifierPrefix {
-	bool operator()(fs::path const& lhs, fs::path const& rhs) const {
-		const std::string lhs_str = lhs.stem().string();
-		const std::string rhs_str = rhs.stem().string();
-		return extract_basic_identifier_prefix(lhs_str) == extract_basic_identifier_prefix(rhs_str);
-	}
+static std::string_view _extract_basic_identifier_prefix_from_path(std::string_view path) {
+	return extract_basic_identifier_prefix(StringUtils::get_filename(path));
 };
 
 Dataloader::path_vector_t Dataloader::lookup_basic_indentifier_prefixed_files_in_dir(
 	std::string_view path, fs::path const& extension
 ) const {
-	return _lookup_files_in_dir<fs::directory_iterator, EquivBasicIdentifierPrefix>(path, extension);
+	return _lookup_files_in_dir<fs::directory_iterator>(path, extension, _extract_basic_identifier_prefix_from_path);
 }
 
 Dataloader::path_vector_t Dataloader::lookup_basic_indentifier_prefixed_files_in_dir_recursive(
 	std::string_view path, fs::path const& extension
 ) const {
-	return _lookup_files_in_dir<fs::recursive_directory_iterator, EquivBasicIdentifierPrefix>(path, extension);
+	return _lookup_files_in_dir<fs::recursive_directory_iterator>(path, extension, _extract_basic_identifier_prefix_from_path);
 }
 
 bool Dataloader::apply_to_files(path_vector_t const& files, callback_t<fs::path const&> callback) const {
@@ -936,7 +946,9 @@ bool Dataloader::load_defines(GameManager& game_manager) const {
 		Logger::error("Failed to load leader traits!");
 		ret = false;
 	}
-	if (!game_manager.get_military_manager().get_wargoal_manager().load_wargoal_file(parse_defines(lookup_file(cb_types_file)).get_file_node())) {
+	if (!game_manager.get_military_manager().get_wargoal_manager().load_wargoal_file(
+		parse_defines(lookup_file(cb_types_file)).get_file_node()
+	)) {
 		Logger::error("Failed to load wargoals!");
 		ret = false;
 	}

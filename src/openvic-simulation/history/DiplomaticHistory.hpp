@@ -46,7 +46,7 @@ namespace OpenVic {
 			std::optional<Date> exited;
 
 			war_participant_t(Country const* new_country, Date new_joined, std::optional<Date> new_exited);
-		
+
 		public:
 			Country const* get_country() const;
 			Date get_date_joined() const;
@@ -105,7 +105,7 @@ namespace OpenVic {
 	public:
 		Country const* get_overlord() const;
 		Country const* get_subject() const;
-		const type_t get_subject_type() const; 
+		const type_t get_subject_type() const;
 	};
 
 	struct DiplomaticHistoryManager {
