@@ -52,9 +52,11 @@ library = None
 env["OBJSUFFIX"] = suffix + env["OBJSUFFIX"]
 library_name = "libopenvic-simulation{}{}".format(suffix, env["LIBSUFFIX"])
 
+default_args = []
+
 if env["build_ovsim_library"]:
     library = env.StaticLibrary(target=env.File(os.path.join(BINDIR, library_name)), source=sources)
-    Default(library)
+    default_args += [library]
 
     env.Append(LIBPATH=[env.Dir(BINDIR)])
     env.Prepend(LIBS=[library_name])
@@ -80,8 +82,13 @@ if env["build_ovsim_headless"]:
         source=headless_env.headless_sources,
         PROGSUFFIX=".headless" + env["PROGSUFFIX"]
     )
-    Default(headless_program)
+    default_args += [headless_program]
 
+# Add compiledb if the option is set
+if env.get("compiledb", False):
+    default_args += ["compiledb"]
+
+Default(*default_args)
 
 if "env" in locals():
     # FIXME: This method mixes both cosmetic progress stuff and cache handling...
