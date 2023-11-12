@@ -16,7 +16,7 @@ namespace OpenVic {
 	struct ReturnByValueProperty {};
 
 	/*
-	 * Template function used to choose the return type and provide the implementation for the
+	 * Template function used to choose the return type and provide the implementation
 	 * for variable getters created using the PROPERTY macro.
 	 */
 	template<typename decl, typename T>
@@ -55,12 +55,19 @@ namespace OpenVic {
  */
 #define PROPERTY(NAME) \
 	NAME; \
-\
 public: \
 	auto get_##NAME() const -> decltype(OpenVic::_get_property<decltype(NAME)>(NAME)) { \
 		return OpenVic::_get_property<decltype(NAME)>(NAME); \
 	} \
-\
+private:
+
+// TODO: Special logic to decide argument type and control assignment.
+#define PROPERTY_RW(NAME) \
+	PROPERTY(NAME) \
+public: \
+	void set_##NAME(decltype(NAME) new_##NAME) { \
+		NAME = new_##NAME; \
+	} \
 private:
 
 }
