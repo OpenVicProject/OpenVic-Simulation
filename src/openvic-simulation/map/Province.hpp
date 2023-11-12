@@ -5,6 +5,7 @@
 #include "openvic-simulation/economy/Building.hpp"
 #include "openvic-simulation/politics/Ideology.hpp"
 #include "openvic-simulation/pop/Pop.hpp"
+#include "openvic-simulation/country/Country.hpp"
 
 namespace OpenVic {
 	struct Map;
@@ -12,6 +13,7 @@ namespace OpenVic {
 	struct Good;
 	struct TerrainType;
 	struct TerrainTypeMapping;
+	struct ProvinceHistoryMap;
 
 	/* REQUIREMENTS:
 	 * MAP-5, MAP-7, MAP-8, MAP-43, MAP-47
@@ -85,6 +87,11 @@ namespace OpenVic {
 
 		void _set_terrain_type(TerrainType const* type);
 
+		Country const* owner = nullptr;
+		Country const* controller = nullptr;
+		std::vector<Country const*> cores;
+		bool slave = false;
+
 		Province(std::string_view new_identifier, colour_t new_colour, index_t new_index);
 
 	public:
@@ -121,5 +128,12 @@ namespace OpenVic {
 		bool is_adjacent_to(Province const* province);
 		bool add_adjacency(Province const* province, distance_t distance, flags_t flags);
 		std::vector<adjacency_t> const& get_adjacencies() const;
+
+		Country const* get_owner() const;
+		Country const* get_controller() const;
+		std::vector<Country const*> const& get_cores() const;
+		bool is_slave() const;
+
+		void apply_history_to_province(ProvinceHistoryMap const& history, Date date);
 	};
 }

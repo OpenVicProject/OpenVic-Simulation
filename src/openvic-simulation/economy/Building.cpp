@@ -125,6 +125,10 @@ BuildingInstance::level_t BuildingInstance::get_current_level() const {
 	return level;
 }
 
+void BuildingInstance::set_level(BuildingInstance::level_t new_level) {
+	level = new_level;
+}
+
 ExpansionState BuildingInstance::get_expansion_state() const {
 	return expansion_state;
 }
