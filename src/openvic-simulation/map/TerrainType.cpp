@@ -43,7 +43,9 @@ bool TerrainTypeMapping::get_has_texture() const {
 TerrainTypeManager::TerrainTypeManager()
 	: terrain_types { "terrain types" }, terrain_type_mappings { "terrain type mappings" } {}
 
-bool TerrainTypeManager::add_terrain_type(std::string_view identifier, colour_t colour, ModifierValue&& values, bool is_water) {
+bool TerrainTypeManager::add_terrain_type(
+	std::string_view identifier, colour_t colour, ModifierValue&& values, bool is_water
+) {
 	if (identifier.empty()) {
 		Logger::error("Invalid terrain type identifier - empty!");
 		return false;

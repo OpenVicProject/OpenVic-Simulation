@@ -12,6 +12,7 @@ namespace OpenVic {
 	namespace fs = std::filesystem;
 
 	struct GameManager;
+	class UIManager;
 	struct PopManager;
 	struct UnitManager;
 	struct GoodManager;
@@ -23,16 +24,22 @@ namespace OpenVic {
 	private:
 		path_vector_t roots;
 
+		bool _load_interface_files(UIManager& ui_manager) const;
 		bool _load_pop_types(PopManager& pop_manager, UnitManager const& unit_manager, GoodManager const& good_manager) const;
 		bool _load_units(UnitManager& unit_manager, GoodManager const& good_manager) const;
 		bool _load_map_dir(GameManager& game_manager) const;
 		bool _load_history(GameManager& game_manager, bool unused_history_file_warnings) const;
 
-		/* _DirIterator is fs::directory_iterator or fs::recursive_directory_iterator.
-		 * _Equiv is an equivalence relation with respect to which every found file shall be unique.
-		 * If a file is equivalent to the empty path then it is not included. */
-		template<typename _DirIterator, std::predicate<fs::path const&, fs::path const&> _Equiv>
-		path_vector_t _lookup_files_in_dir(std::string_view path, fs::path const& extension) const;
+		/* _DirIterator is fs::directory_iterator or fs::recursive_directory_iterator. _UniqueKey is the type of a callable
+		 * which converts a string_view filepath with root removed into a string_view unique key. Any path whose key is empty
+		 * or matches an earlier found path's key is discarded, ensuring each looked up path's key is non-empty and unique. */
+		template<typename _DirIterator, typename _UniqueKey>
+		requires requires (_UniqueKey const& unique_key, std::string_view path) {
+			{ unique_key(path) } -> std::convertible_to<std::string_view>;
+		}
+		path_vector_t _lookup_files_in_dir(
+			std::string_view path, fs::path const& extension, _UniqueKey const& unique_key
+		) const;
 
 	public:
 		static ovdl::v2script::Parser parse_defines(fs::path const& path);
@@ -70,6 +77,8 @@ namespace OpenVic {
 		 * DAT-24
 		 */
 		fs::path lookup_file(std::string_view path, bool print_error = true) const;
+		/* Checks alternate file endings, e.g. if "*.tga" doesn't exist then try "*.dds" */
+		fs::path lookup_image_file_or_dds(std::string_view path) const;
 		path_vector_t lookup_files_in_dir(std::string_view path, fs::path const& extension) const;
 		path_vector_t lookup_files_in_dir_recursive(std::string_view path, fs::path const& extension) const;
 		path_vector_t lookup_basic_indentifier_prefixed_files_in_dir(std::string_view path, fs::path const& extension) const;

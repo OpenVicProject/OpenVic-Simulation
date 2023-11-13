@@ -73,11 +73,11 @@ namespace OpenVic {
 		node_callback_t expect_bool(callback_t<bool> callback);
 		node_callback_t expect_int_bool(callback_t<bool> callback);
 
-		node_callback_t expect_int64(callback_t<int64_t> callback);
-		node_callback_t expect_uint64(callback_t<uint64_t> callback);
+		node_callback_t expect_int64(callback_t<int64_t> callback, int base = 10);
+		node_callback_t expect_uint64(callback_t<uint64_t> callback, int base = 10);
 
 		template<std::signed_integral T>
-		NodeCallback auto expect_int(callback_t<T> callback) {
+		NodeCallback auto expect_int(callback_t<T> callback, int base = 10) {
 			return expect_int64([callback](int64_t val) -> bool {
 				if (static_cast<int64_t>(std::numeric_limits<T>::lowest()) <= val &&
 					val <= static_cast<int64_t>(std::numeric_limits<T>::max())) {
@@ -88,11 +88,11 @@ namespace OpenVic {
 					static_cast<int64_t>(std::numeric_limits<T>::max()), "])"
 				);
 				return false;
-			});
+			}, base);
 		}
 
 		template<std::integral T>
-		NodeCallback auto expect_uint(callback_t<T> callback) {
+		NodeCallback auto expect_uint(callback_t<T> callback, int base = 10) {
 			return expect_uint64([callback](uint64_t val) -> bool {
 				if (val <= static_cast<uint64_t>(std::numeric_limits<T>::max())) {
 					return callback(val);
@@ -101,12 +101,13 @@ namespace OpenVic {
 					"Invalid uint: ", val, " (valid range: [0, ", static_cast<uint64_t>(std::numeric_limits<T>::max()), "])"
 				);
 				return false;
-			});
+			}, base);
 		}
 
 		callback_t<std::string_view> expect_fixed_point_str(callback_t<fixed_point_t> callback);
 		node_callback_t expect_fixed_point(callback_t<fixed_point_t> callback);
 		node_callback_t expect_colour(callback_t<colour_t> callback);
+		node_callback_t expect_colour_hex(callback_t<colour_t> callback);
 
 		callback_t<std::string_view> expect_date_str(callback_t<Date> callback);
 		node_callback_t expect_date(callback_t<Date> callback);

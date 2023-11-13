@@ -33,54 +33,6 @@ WargoalType::WargoalType(
 	modifiers { std::move(new_modifiers) },
 	peace_options { new_peace_options } {}
 
-std::string_view WargoalType::get_sprite() const {
-	return sprite;
-}
-
-std::string_view WargoalType::get_war_name() const {
-	return war_name;
-}
-
-const Timespan WargoalType::get_available_length() const {
-	return available_length;
-}
-
-const Timespan WargoalType::get_truce_length() const {
-	return truce_length;
-}
-
-const bool WargoalType::is_triggered_only() const {
-	return triggered_only;
-}
-
-const bool WargoalType::is_civil_war() const {
-	return civil_war;
-}
-
-const bool WargoalType::is_constructing() const {
-	return constructing;
-}
-
-const bool WargoalType::is_crisis() const {
-	return crisis;
-}
-
-const bool WargoalType::is_great_war() const {
-	return great_war;
-}
-
-const bool WargoalType::is_mutual() const {
-	return mutual;
-}
-
-WargoalType::peace_modifiers_t const& WargoalType::get_modifiers() const {
-	return modifiers;
-}
-
-const peace_options_t WargoalType::get_peace_options() const {
-	return peace_options;
-}
-
 WargoalTypeManager::WargoalTypeManager() : wargoal_types { "wargoal types" } {}
 
 const std::vector<WargoalType const*>& WargoalTypeManager::get_peace_priority_list() const {
@@ -106,7 +58,7 @@ bool WargoalTypeManager::add_wargoal_type(
 		Logger::error("Invalid wargoal identifier - empty!");
 		return false;
 	}
-	
+
 	if (sprite.empty()) {
 		Logger::error("Invalid sprite for wargoal ", identifier, " - empty!");
 		return false;
@@ -117,72 +69,47 @@ bool WargoalTypeManager::add_wargoal_type(
 		return false;
 	}
 
-	return wargoal_types.add_item({ identifier, sprite, war_name, available_length, truce_length, triggered_only, civil_war, constructing, crisis, great_war, mutual, std::move(modifiers), peace_options });
+	return wargoal_types.add_item({
+		identifier, sprite, war_name, available_length, truce_length, triggered_only, civil_war, constructing, crisis,
+		great_war, mutual, std::move(modifiers), peace_options
+	});
 }
 
 bool WargoalTypeManager::load_wargoal_file(ast::NodeCPtr root) {
 	bool ret = expect_dictionary(
 		[this](std::string_view identifier, ast::NodeCPtr value) -> bool {
 			if (identifier == "peace_order") return true;
-		
+
 			std::string_view sprite, war_name;
 			Timespan available, truce;
-			bool triggered_only = false, civil_war = false, constructing = false, crisis = false, great_war = false, mutual = false;
-			peace_options_t peace_options;
+			bool triggered_only = false, civil_war = false, constructing = true, crisis = true, great_war = false,
+				mutual = false;
+			peace_options_t peace_options {};
 			WargoalType::peace_modifiers_t modifiers;
 
 			bool ret = expect_dictionary_keys_and_default(
 				[&modifiers, &identifier](std::string_view key, ast::NodeCPtr value) -> bool {
-					fixed_point_t modifier;
-					expect_fixed_point(assign_variable_callback(modifier))(value);
-
-					if (key == "badboy_factor") {
-						modifiers[WargoalType::PEACE_MODIFIERS::BADBOY_FACTOR] += modifier;
-						return true;
-					}
-					if (key == "prestige_factor") {
-						modifiers[WargoalType::PEACE_MODIFIERS::PRESTIGE_FACTOR] += modifier;
-						return true;
-					}
-					if (key == "peace_cost_factor") {
-						modifiers[WargoalType::PEACE_MODIFIERS::PEACE_COST_FACTOR] += modifier;
-						return true;
-					}
-					if (key == "penalty_factor") {
-						modifiers[WargoalType::PEACE_MODIFIERS::PENALTY_FACTOR] += modifier;
-						return true;
-					}
-					if (key == "break_truce_prestige_factor") {
-						modifiers[WargoalType::PEACE_MODIFIERS::BREAK_TRUCE_PRESTIGE_FACTOR] += modifier;
-						return true;
-					}
-					if (key == "break_truce_infamy_factor") {
-						modifiers[WargoalType::PEACE_MODIFIERS::BREAK_TRUCE_INFAMY_FACTOR] += modifier;
-						return true;
-					}
-					if (key == "break_truce_militancy_factor") {
-						modifiers[WargoalType::PEACE_MODIFIERS::BREAK_TRUCE_MILITANCY_FACTOR] += modifier;
-						return true;
-					}
-					if (key == "good_relation_prestige_factor") {
-						modifiers[WargoalType::PEACE_MODIFIERS::GOOD_RELATION_PRESTIGE_FACTOR] += modifier;
-						return true;
-					}
-					if (key == "good_relation_infamy_factor") {
-						modifiers[WargoalType::PEACE_MODIFIERS::GOOD_RELATION_INFAMY_FACTOR] += modifier;
-						return true;
-					}
-					if (key == "good_relation_militancy_factor") {
-						modifiers[WargoalType::PEACE_MODIFIERS::GOOD_RELATION_MILITANCY_FACTOR] += modifier;
-						return true;
-					}
-					if (key == "tws_battle_factor") {
-						modifiers[WargoalType::PEACE_MODIFIERS::WAR_SCORE_BATTLE_FACTOR] += modifier;
-						return true;
-					}
-					if (key == "construction_speed") {
-						modifiers[WargoalType::PEACE_MODIFIERS::CONSTRUCTION_SPEED] += modifier;
-						return true;
+					using enum WargoalType::PEACE_MODIFIERS;
+					static const string_map_t<WargoalType::PEACE_MODIFIERS> peace_modifier_map {
+						{ "badboy_factor", BADBOY_FACTOR },
+						{ "prestige_factor", PRESTIGE_FACTOR },
+						{ "peace_cost_factor", PEACE_COST_FACTOR },
+						{ "penalty_factor", PENALTY_FACTOR },
+						{ "break_truce_prestige_factor", BREAK_TRUCE_PRESTIGE_FACTOR },
+						{ "break_truce_infamy_factor", BREAK_TRUCE_INFAMY_FACTOR },
+						{ "break_truce_militancy_factor", BREAK_TRUCE_MILITANCY_FACTOR },
+						{ "good_relation_prestige_factor", GOOD_RELATION_PRESTIGE_FACTOR },
+						{ "good_relation_infamy_factor", GOOD_RELATION_INFAMY_FACTOR },
+						{ "good_relation_militancy_factor", GOOD_RELATION_MILITANCY_FACTOR },
+						{ "tws_battle_factor", WAR_SCORE_BATTLE_FACTOR },
+						{ "construction_speed", CONSTRUCTION_SPEED }
+					};
+					const decltype(peace_modifier_map)::const_iterator it = peace_modifier_map.find(key);
+					if (it != peace_modifier_map.end()) {
+						return expect_fixed_point([&modifiers, peace_modifier = it->second](fixed_point_t val) -> bool {
+							modifiers[peace_modifier] = val;
+							return true;
+						})(value);
 					}
 
 					Logger::error("Modifier ", key, " in wargoal ", identifier, " is invalid.");
@@ -284,24 +211,30 @@ bool WargoalTypeManager::load_wargoal_file(ast::NodeCPtr root) {
 				"always", ZERO_OR_ONE, success_callback // usage unknown / quirk
 			)(value);
 
-			add_wargoal_type(identifier, sprite, war_name, available, truce, triggered_only, civil_war, constructing, crisis, great_war, mutual, std::move(modifiers), peace_options);
+			add_wargoal_type(
+				identifier, sprite, war_name, available, truce, triggered_only, civil_war, constructing, crisis, great_war,
+				mutual, std::move(modifiers), peace_options
+			);
 			return ret;
 		}
 	)(root);
 
 	/* load order in which CBs are prioritised by AI */
-	ret &= expect_dictionary_keys_and_default(
-		key_value_success_callback,
-		"peace_order", ONE_EXACTLY, expect_list([this](ast::NodeCPtr value) -> bool {
-			WargoalType const* wargoal;
-			bool ret = expect_wargoal_type_identifier(assign_variable_callback_pointer(wargoal))(value);
-			if (ret) {
-				peace_priorities.push_back(wargoal);
-			} else {
-				Logger::warning("Attempted to add invalid wargoal type to AI peace order!");
-			}
-			return true;
-		})
+	ret &= expect_key(
+		"peace_order",
+		expect_list(
+			expect_wargoal_type_identifier(
+				[this](WargoalType const& wargoal) -> bool {
+					if (std::find(peace_priorities.begin(), peace_priorities.end(), &wargoal) == peace_priorities.end()) {
+						peace_priorities.push_back(&wargoal);
+					} else {
+						Logger::warning("Wargoal ", wargoal.get_identifier(), " is already in the peace priority list!");
+					}
+					return true;
+				},
+				true // warn instead of error
+			)
+		)
 	)(root);
 
 	lock_wargoal_types();

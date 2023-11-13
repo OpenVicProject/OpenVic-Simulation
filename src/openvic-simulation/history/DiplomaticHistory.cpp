@@ -164,7 +164,7 @@ bool DiplomaticHistoryManager::load_diplomacy_history_file(GameManager& game_man
 				"start_date", ONE_EXACTLY, expect_identifier_or_string(expect_date_str(assign_variable_callback(start))),
 				"end_date", ONE_EXACTLY, expect_identifier_or_string(expect_date_str(assign_variable_callback(end)))
 			)(node);
-			
+
 			alliances.push_back({ first, second, start, end });
 			return ret;
 		},

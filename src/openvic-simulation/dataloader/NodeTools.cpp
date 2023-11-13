@@ -76,10 +76,10 @@ node_callback_t NodeTools::expect_int_bool(callback_t<bool> callback) {
 	return expect_identifier(expect_mapped_string(bool_map, callback));
 }
 
-node_callback_t NodeTools::expect_int64(callback_t<int64_t> callback) {
-	return expect_identifier([callback](std::string_view identifier) -> bool {
+node_callback_t NodeTools::expect_int64(callback_t<int64_t> callback, int base) {
+	return expect_identifier([callback, base](std::string_view identifier) -> bool {
 		bool successful = false;
-		const int64_t val = StringUtils::string_to_int64(identifier, &successful, 10);
+		const int64_t val = StringUtils::string_to_int64(identifier, &successful, base);
 		if (successful) {
 			return callback(val);
 		}
@@ -88,10 +88,10 @@ node_callback_t NodeTools::expect_int64(callback_t<int64_t> callback) {
 	});
 }
 
-node_callback_t NodeTools::expect_uint64(callback_t<uint64_t> callback) {
-	return expect_identifier([callback](std::string_view identifier) -> bool {
+node_callback_t NodeTools::expect_uint64(callback_t<uint64_t> callback, int base) {
+	return expect_identifier([callback, base](std::string_view identifier) -> bool {
 		bool successful = false;
-		const uint64_t val = StringUtils::string_to_uint64(identifier, &successful, 10);
+		const uint64_t val = StringUtils::string_to_uint64(identifier, &successful, base);
 		if (successful) {
 			return callback(val);
 		}
@@ -141,6 +141,10 @@ node_callback_t NodeTools::expect_colour(callback_t<colour_t> callback) {
 	};
 }
 
+node_callback_t NodeTools::expect_colour_hex(callback_t<colour_t> callback) {
+	return expect_uint(callback, 16);
+}
+
 callback_t<std::string_view> NodeTools::expect_date_str(callback_t<Date> callback) {
 	return [callback](std::string_view identifier) -> bool {
 		bool successful = false;
@@ -188,8 +192,12 @@ NodeCallback auto _expect_vec2(Callback<vec2_t<T>> auto callback) {
 	};
 }
 
+static node_callback_t _expect_int(callback_t<ivec2_t::type> callback) {
+	return expect_int(callback);
+}
+
 node_callback_t NodeTools::expect_ivec2(callback_t<ivec2_t> callback) {
-	return _expect_vec2<int32_t, expect_int>(callback);
+	return _expect_vec2<ivec2_t::type, _expect_int>(callback);
 }
 
 node_callback_t NodeTools::expect_fvec2(callback_t<fvec2_t> callback) {

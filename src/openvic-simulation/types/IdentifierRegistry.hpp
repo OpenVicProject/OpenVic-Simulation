@@ -214,24 +214,31 @@ namespace OpenVic {
 	value_type CONST* get_item_by_index(size_t index) CONST { \
 		return index < items.size() ? &items[index] : nullptr; \
 	} \
-	NodeTools::callback_t<std::string_view> expect_item_str(NodeTools::callback_t<value_type CONST&> callback) CONST { \
-		return [this, callback](std::string_view identifier) -> bool { \
+	NodeTools::callback_t<std::string_view> expect_item_str( \
+		NodeTools::callback_t<value_type CONST&> callback, bool warn \
+	) CONST { \
+		return [this, callback, warn](std::string_view identifier) -> bool { \
 			value_type CONST* item = get_item_by_identifier(identifier); \
 			if (item != nullptr) { \
 				return callback(*item); \
 			} \
-			Logger::error("Invalid ", name, ": ", identifier); \
-			return false; \
+			if (!warn) { \
+				Logger::error("Invalid ", name, ": ", identifier); \
+				return false; \
+			} else { \
+				Logger::warning("Invalid ", name, ": ", identifier); \
+				return true; \
+			} \
 		}; \
 	} \
-	NodeTools::node_callback_t expect_item_identifier(NodeTools::callback_t<value_type CONST&> callback) CONST { \
-		return NodeTools::expect_identifier(expect_item_str(callback)); \
+	NodeTools::node_callback_t expect_item_identifier(NodeTools::callback_t<value_type CONST&> callback, bool warn) CONST { \
+		return NodeTools::expect_identifier(expect_item_str(callback, warn)); \
 	} \
 	NodeTools::node_callback_t expect_item_dictionary( \
 		NodeTools::callback_t<value_type CONST&, ast::NodeCPtr> callback \
 	) CONST { \
 		return NodeTools::expect_dictionary([this, callback](std::string_view key, ast::NodeCPtr value) -> bool { \
-			return expect_item_str(std::bind(callback, std::placeholders::_1, value))(key); \
+			return expect_item_str(std::bind(callback, std::placeholders::_1, value), false)(key); \
 		}); \
 	}
 
@@ -348,14 +355,14 @@ namespace OpenVic {
 		return plural.get_item_identifiers(); \
 	} \
 	NodeTools::callback_t<std::string_view> expect_##singular##_str( \
-		NodeTools::callback_t<decltype(plural)::value_type const&> callback \
+		NodeTools::callback_t<decltype(plural)::value_type const&> callback, bool warn = false \
 	) const { \
-		return plural.expect_item_str(callback); \
+		return plural.expect_item_str(callback, warn); \
 	} \
 	NodeTools::node_callback_t expect_##singular##_identifier( \
-		NodeTools::callback_t<decltype(plural)::value_type const&> callback \
+		NodeTools::callback_t<decltype(plural)::value_type const&> callback, bool warn = false \
 	) const { \
-		return plural.expect_item_identifier(callback); \
+		return plural.expect_item_identifier(callback, warn); \
 	} \
 	NodeTools::node_callback_t expect_##singular##_dictionary( \
 		NodeTools::callback_t<decltype(plural)::value_type const&, ast::NodeCPtr> callback \
@@ -373,14 +380,14 @@ namespace OpenVic {
 		return plural.get_item_by_identifier(identifier); \
 	} \
 	NodeTools::callback_t<std::string_view> expect_##singular##_str( \
-		NodeTools::callback_t<decltype(plural)::value_type&> callback \
+		NodeTools::callback_t<decltype(plural)::value_type&> callback, bool warn = false \
 	) { \
-		return plural.expect_item_str(callback); \
+		return plural.expect_item_str(callback, warn); \
 	} \
 	NodeTools::node_callback_t expect_##singular##_identifier( \
-		NodeTools::callback_t<decltype(plural)::value_type&> callback \
+		NodeTools::callback_t<decltype(plural)::value_type&> callback, bool warn = false \
 	) { \
-		return plural.expect_item_identifier(callback); \
+		return plural.expect_item_identifier(callback, warn); \
 	} \
 	NodeTools::node_callback_t expect_##singular##_dictionary( \
 		NodeTools::callback_t<decltype(plural)::value_type&, ast::NodeCPtr> callback \
