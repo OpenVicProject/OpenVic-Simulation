@@ -51,6 +51,7 @@ namespace OpenVic {
 		policy_map_t const& get_policies() const;
 	};
 
+	/* Generic information about a TAG */
 	struct Country : HasIdentifierAndColour {
 		friend struct CountryManager;
 

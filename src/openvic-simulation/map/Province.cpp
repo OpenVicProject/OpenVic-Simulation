@@ -228,7 +228,7 @@ void Province::apply_history_to_province(ProvinceHistoryMap const& history, Date
 	
 	reset_buildings();
 
-	for (const auto& entry : entries) {
+	for (ProvinceHistoryEntry const* entry : entries) {
 		if (entry->get_life_rating()) life_rating = *entry->get_life_rating();
 		if (entry->get_colonial()) colony_status = *entry->get_colonial();
 		if (entry->get_rgo()) rgo = *entry->get_rgo();
