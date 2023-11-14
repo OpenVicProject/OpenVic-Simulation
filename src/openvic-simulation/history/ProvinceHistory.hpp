@@ -33,7 +33,7 @@ namespace OpenVic {
 		std::optional<Province::life_rating_t> PROPERTY(life_rating);
 		std::optional<TerrainType const*> PROPERTY(terrain_type);
 		building_level_map_t PROPERTY(buildings);
-		decimal_map_t<Ideology const*> PROPERTY(party_loyalties);
+		fixed_point_map_t<Ideology const*> PROPERTY(party_loyalties);
 
 		ProvinceHistoryEntry(Province const& new_province, Date new_date);
 	};

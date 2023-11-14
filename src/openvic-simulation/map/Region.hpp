@@ -28,7 +28,7 @@ namespace OpenVic {
 	/* REQUIREMENTS:
 	 * MAP-6, MAP-44, MAP-48
 	 */
-	struct Region : HasIdentifier, ProvinceSet {
+	struct Region : HasIdentifierAndColour, ProvinceSet {
 		friend struct Map;
 
 	private:
@@ -44,6 +44,5 @@ namespace OpenVic {
 		Region(Region&&) = default;
 
 		bool get_meta() const;
-		colour_t get_colour() const;
 	};
 }

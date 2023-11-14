@@ -15,7 +15,7 @@ namespace OpenVic {
         Religion const* PROPERTY_RW(religion);
         CountryParty const* PROPERTY_RW(ruling_party);
         Date PROPERTY_RW(last_election);
-        decimal_map_t<Ideology const*> PROPERTY(upper_house);
+        fixed_point_map_t<Ideology const*> PROPERTY(upper_house);
         Province const* PROPERTY_RW(capital);
         GovernmentType const* PROPERTY_RW(government_type);
         fixed_point_t PROPERTY_RW(plurality);

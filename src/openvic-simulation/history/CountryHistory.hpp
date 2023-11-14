@@ -31,7 +31,7 @@ namespace OpenVic {
 		std::optional<Religion const*> PROPERTY(religion);
 		std::optional<CountryParty const*> PROPERTY(ruling_party);
 		std::optional<Date> PROPERTY(last_election);
-		decimal_map_t<Ideology const*> PROPERTY(upper_house);
+		fixed_point_map_t<Ideology const*> PROPERTY(upper_house);
 		std::optional<Province const*> PROPERTY(capital);
 		std::optional<GovernmentType const*> PROPERTY(government_type);
 		std::optional<fixed_point_t> PROPERTY(plurality);

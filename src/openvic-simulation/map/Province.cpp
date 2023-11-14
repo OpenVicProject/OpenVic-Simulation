@@ -16,7 +16,7 @@ Province::index_t Province::get_index() const {
 	return index;
 }
 
-Region* Province::get_region() const {
+Region const* Province::get_region() const {
 	return region;
 }
 

@@ -6,6 +6,7 @@
 #include <vector>
 
 #include "openvic-simulation/dataloader/NodeTools.hpp"
+#include "openvic-simulation/types/fixed_point/FixedPointMap.hpp"
 #include "openvic-simulation/utility/Getters.hpp"
 #include "openvic-simulation/utility/Logger.hpp"
 
@@ -76,22 +77,6 @@ namespace OpenVic {
 		HasIdentifierAndColour& operator=(HasIdentifierAndColour const&) = delete;
 		HasIdentifierAndColour& operator=(HasIdentifierAndColour&&) = delete;
 	};
-
-	template<typename T>
-	using decimal_map_t = std::map<T, fixed_point_t>;
-
-	template<typename T>
-	constexpr typename decimal_map_t<T>::value_type get_largest_item(decimal_map_t<T> const& map) {
-		constexpr auto pred = [](typename decimal_map_t<T>::value_type a, typename decimal_map_t<T>::value_type b) -> bool {
-			return a.second < b.second;
-		};
-		const typename decimal_map_t<T>::const_iterator result = std::max_element(map.begin(), map.end(), pred);
-		if (result != map.end()) {
-			return *result;
-		} else {
-			return { nullptr, -1 };
-		}
-	}
 
 	/* Callbacks for trying to add duplicate keys via UniqueKeyRegistry::add_item */
 	static bool duplicate_fail_callback(std::string_view registry_name, std::string_view duplicate_identifier) {
@@ -274,10 +259,10 @@ namespace OpenVic {
 		}
 
 		NodeTools::node_callback_t expect_item_decimal_map(
-			NodeTools::callback_t<decimal_map_t<value_type const*>&&> callback
+			NodeTools::callback_t<fixed_point_map_t<value_type const*>&&> callback
 		) const {
 			return [this, callback](ast::NodeCPtr node) -> bool {
-				decimal_map_t<value_type const*> map;
+				fixed_point_map_t<value_type const*> map;
 				bool ret = expect_item_dictionary([&map](value_type const& key, ast::NodeCPtr value) -> bool {
 					fixed_point_t val;
 					const bool ret = NodeTools::expect_fixed_point(NodeTools::assign_variable_callback(val))(value);
@@ -370,7 +355,7 @@ namespace OpenVic {
 		return plural.expect_item_dictionary(callback); \
 	} \
 	NodeTools::node_callback_t expect_##singular##_decimal_map( \
-		NodeTools::callback_t<decimal_map_t<decltype(plural)::value_type const*>&&> callback \
+		NodeTools::callback_t<fixed_point_map_t<decltype(plural)::value_type const*>&&> callback \
 	) const { \
 		return plural.expect_item_decimal_map(callback); \
 	}

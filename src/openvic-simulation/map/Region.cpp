@@ -65,18 +65,15 @@ ProvinceSet::provinces_t const& ProvinceSet::get_provinces() const {
 	return provinces;
 }
 
+static constexpr colour_t ERROR_REGION_COLOUR = COLOUR_COMPONENT << 16;
+
 Region::Region(std::string_view new_identifier, provinces_t&& new_provinces, bool new_meta)
-	: HasIdentifier { new_identifier }, ProvinceSet { std::move(new_provinces) }, meta { new_meta } {
+	: HasIdentifierAndColour {
+		new_identifier, new_provinces.size() > 0 ? new_provinces.front()->get_colour() : ERROR_REGION_COLOUR, false, false
+	}, ProvinceSet { std::move(new_provinces) }, meta { new_meta } {
 	lock();
 }
 
 bool Region::get_meta() const {
 	return meta;
-}
-
-colour_t Region::get_colour() const {
-	if (empty()) {
-		return FULL_COLOUR << 16;
-	}
-	return get_provinces().front()->get_colour();
 }

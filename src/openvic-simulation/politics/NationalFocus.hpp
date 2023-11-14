@@ -23,9 +23,9 @@ namespace OpenVic {
 		friend struct NationalFocusManager;
 
 	public:
-		using pop_promotion_map_t = std::map<PopType const*, fixed_point_t>;
-		using party_loyalty_map_t = std::map<Ideology const*, fixed_point_t>;
-		using production_map_t = std::map<Good const*, fixed_point_t>;
+		using pop_promotion_map_t = fixed_point_map_t<PopType const*>;
+		using party_loyalty_map_t = fixed_point_map_t<Ideology const*>;
+		using production_map_t = fixed_point_map_t<Good const*>;
 
 	private:
 		uint8_t PROPERTY(icon);

@@ -65,7 +65,7 @@ namespace OpenVic {
 
 	private:
 		const index_t index;
-		Region* region = nullptr;
+		Region const* region = nullptr;
 		bool on_map = false, has_region = false, water = false;
 		life_rating_t life_rating = 0;
 		colony_status_t colony_status = colony_status_t::STATE;
@@ -75,10 +75,10 @@ namespace OpenVic {
 
 		std::vector<Pop> pops;
 		Pop::pop_size_t total_population;
-		decimal_map_t<PopType const*> PROPERTY(pop_type_distribution);
-		decimal_map_t<Ideology const*> PROPERTY(ideology_distribution);
-		decimal_map_t<Culture const*> PROPERTY(culture_distribution);
-		decimal_map_t<Religion const*> PROPERTY(religion_distribution);
+		fixed_point_map_t<PopType const*> PROPERTY(pop_type_distribution);
+		fixed_point_map_t<Ideology const*> PROPERTY(ideology_distribution);
+		fixed_point_map_t<Culture const*> PROPERTY(culture_distribution);
+		fixed_point_map_t<Religion const*> PROPERTY(religion_distribution);
 
 		std::vector<adjacency_t> adjacencies;
 		province_positions_t positions;
@@ -98,7 +98,7 @@ namespace OpenVic {
 		Province(Province&&) = default;
 
 		index_t get_index() const;
-		Region* get_region() const;
+		Region const* get_region() const;
 		bool get_on_map() const;
 		bool get_has_region() const;
 		bool get_water() const;
