@@ -2,7 +2,7 @@
 
 #include "openvic-simulation/types/IdentifierRegistry.hpp"
 #include "openvic-simulation/utility/Getters.hpp"
-#include "openvic-simulation/Modifier.hpp"
+#include "openvic-simulation/misc/Modifier.hpp"
 #include "openvic-simulation/pop/Pop.hpp"
 #include "openvic-simulation/politics/Ideology.hpp"
 #include "openvic-simulation/economy/Good.hpp"
@@ -14,7 +14,7 @@ namespace OpenVic {
 
 	struct NationalFocusGroup : HasIdentifier {
 		friend struct NationalFocusManager;
-	
+
 	private:
 		NationalFocusGroup(std::string_view new_identifier);
 	};
@@ -39,8 +39,8 @@ namespace OpenVic {
 			std::string_view new_identifier,
 			uint8_t new_icon,
 			NationalFocusGroup const& new_group,
-			ModifierValue&& new_modifiers, 
-			pop_promotion_map_t&& new_encouraged_promotion, 
+			ModifierValue&& new_modifiers,
+			pop_promotion_map_t&& new_encouraged_promotion,
 			party_loyalty_map_t&& new_encouraged_loyalty,
 			production_map_t&& new_encouraged_production
 		);
@@ -64,8 +64,8 @@ namespace OpenVic {
 			std::string_view identifier,
 			uint8_t icon,
 			NationalFocusGroup const& group,
-			ModifierValue&& modifiers, 
-			NationalFocus::pop_promotion_map_t&& encouraged_promotion, 
+			ModifierValue&& modifiers,
+			NationalFocus::pop_promotion_map_t&& encouraged_promotion,
 			NationalFocus::party_loyalty_map_t&& encouraged_loyalty,
 			NationalFocus::production_map_t&& encouraged_production
 		);

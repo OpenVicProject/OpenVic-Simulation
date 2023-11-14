@@ -52,7 +52,7 @@ namespace OpenVic {
 		IDENTIFIER_REGISTRY_ACCESSORS(religion_group)
 
 		bool add_religion(
-			std::string_view identifier, colour_t colour, ReligionGroup const* group, Religion::icon_t icon, bool pagan
+			std::string_view identifier, colour_t colour, ReligionGroup const& group, Religion::icon_t icon, bool pagan
 		);
 		IDENTIFIER_REGISTRY_ACCESSORS(religion)
 

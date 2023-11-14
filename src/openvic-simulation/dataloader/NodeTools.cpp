@@ -206,7 +206,11 @@ node_callback_t NodeTools::expect_fvec2(callback_t<fvec2_t> callback) {
 
 node_callback_t NodeTools::expect_assign(key_value_callback_t callback) {
 	return _expect_type<ast::AssignNode>([callback](ast::AssignNode const& assign_node) -> bool {
-		return callback(assign_node._name, assign_node._initializer.get());
+		const bool ret = callback(assign_node._name, assign_node._initializer.get());
+		if (!ret) {
+			Logger::error("Callback failed for assign node with key: ", assign_node._name);
+		}
+		return ret;
 	});
 }
 

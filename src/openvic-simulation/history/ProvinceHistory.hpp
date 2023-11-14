@@ -5,7 +5,7 @@
 #include <vector>
 
 #include "openvic-simulation/country/Country.hpp"
-#include "openvic-simulation/economy/Building.hpp"
+#include "openvic-simulation/economy/BuildingType.hpp"
 #include "openvic-simulation/economy/Good.hpp"
 #include "openvic-simulation/history/Bookmark.hpp"
 #include "openvic-simulation/history/HistoryMap.hpp"
@@ -30,8 +30,8 @@ namespace OpenVic {
 		std::optional<Good const*> PROPERTY(rgo);
 		std::optional<Province::life_rating_t> PROPERTY(life_rating);
 		std::optional<TerrainType const*> PROPERTY(terrain_type);
-		std::map<Building const*, Building::level_t> PROPERTY(province_buildings);
-		std::map<Building const*, Building::level_t> PROPERTY(state_buildings);
+		std::map<BuildingType const*, BuildingType::level_t> PROPERTY(province_buildings);
+		std::map<BuildingType const*, BuildingType::level_t> PROPERTY(state_buildings);
 		fixed_point_map_t<Ideology const*> PROPERTY(party_loyalties);
 
 		ProvinceHistoryEntry(Province const& new_province, Date new_date);

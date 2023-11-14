@@ -117,7 +117,7 @@ bool WargoalTypeManager::load_wargoal_file(ast::NodeCPtr root) {
 				},
 				"sprite_index", ONE_EXACTLY, expect_identifier(assign_variable_callback(sprite)),
 				"war_name", ONE_EXACTLY, expect_identifier_or_string(assign_variable_callback(war_name)),
-				"months", ONE_EXACTLY, expect_months(assign_variable_callback(available)),
+				"months", ZERO_OR_ONE, expect_months(assign_variable_callback(available)),
 				"truce_months", ONE_EXACTLY, expect_months(assign_variable_callback(truce)),
 				"is_triggered_only", ZERO_OR_ONE, expect_bool(assign_variable_callback(triggered_only)),
 				"is_civil_war", ZERO_OR_ONE, expect_bool(assign_variable_callback(civil_war)),

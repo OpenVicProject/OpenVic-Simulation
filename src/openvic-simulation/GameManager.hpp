@@ -1,7 +1,7 @@
 #pragma once
 
 #include "openvic-simulation/GameAdvancementHook.hpp"
-#include "openvic-simulation/Modifier.hpp"
+#include "openvic-simulation/misc/Modifier.hpp"
 #include "openvic-simulation/country/Country.hpp"
 #include "openvic-simulation/economy/EconomyManager.hpp"
 #include "openvic-simulation/history/HistoryManager.hpp"

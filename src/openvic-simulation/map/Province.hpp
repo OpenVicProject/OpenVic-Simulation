@@ -2,7 +2,7 @@
 
 #include <cassert>
 
-#include "openvic-simulation/economy/Building.hpp"
+#include "openvic-simulation/economy/BuildingInstance.hpp"
 #include "openvic-simulation/politics/Ideology.hpp"
 #include "openvic-simulation/pop/Pop.hpp"
 #include "openvic-simulation/country/Country.hpp"

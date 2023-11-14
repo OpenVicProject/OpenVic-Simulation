@@ -1,6 +1,6 @@
 #pragma once
 
-#include "openvic-simulation/economy/Building.hpp"
+#include "openvic-simulation/economy/BuildingType.hpp"
 #include "openvic-simulation/economy/Good.hpp"
 #include "openvic-simulation/economy/ProductionType.hpp"
 

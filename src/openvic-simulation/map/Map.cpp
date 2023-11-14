@@ -624,6 +624,6 @@ bool Map::_generate_province_adjacencies() {
 
 bool Map::generate_and_load_province_adjacencies(std::vector<ovdl::csv::LineObject> const& additional_adjacencies) {
 	bool ret = _generate_province_adjacencies();
-	// TODO - read additional adjacencies
+	// TODO - DEV TASK: read additional adjacencies
 	return ret;
 }

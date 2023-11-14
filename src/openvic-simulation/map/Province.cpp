@@ -149,10 +149,10 @@ bool Province::reset(BuildingManager const& building_manager) {
 	buildings.reset();
 	bool ret = true;
 	if (!get_water()) {
-		if (building_manager.building_types_are_locked() && building_manager.buildings_are_locked()) {
-			for (Building const& building : building_manager.get_buildings()) {
-				if (building.get_in_province()) {
-					ret &= buildings.add_item({ building });
+		if (building_manager.building_types_are_locked()) {
+			for (BuildingType const& building_type : building_manager.get_building_types()) {
+				if (building_type.get_in_province()) {
+					ret &= buildings.add_item({ building_type });
 				}
 			}
 		} else {

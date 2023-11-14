@@ -77,7 +77,7 @@ bool CultureManager::add_culture_group(
 }
 
 bool CultureManager::add_culture(
-	std::string_view identifier, colour_t colour, CultureGroup const* group, std::vector<std::string>&& first_names,
+	std::string_view identifier, colour_t colour, CultureGroup const& group, std::vector<std::string>&& first_names,
 	std::vector<std::string>&& last_names
 ) {
 	if (!culture_groups.is_locked()) {
@@ -88,15 +88,11 @@ bool CultureManager::add_culture(
 		Logger::error("Invalid culture identifier - empty!");
 		return false;
 	}
-	if (group == nullptr) {
-		Logger::error("Null culture group for ", identifier);
-		return false;
-	}
 	if (colour > MAX_COLOUR_RGB) {
 		Logger::error("Invalid culture colour for ", identifier, ": ", colour_to_hex_string(colour));
 		return false;
 	}
-	return cultures.add_item({ identifier, colour, *group, std::move(first_names), std::move(last_names) });
+	return cultures.add_item({ identifier, colour, group, std::move(first_names), std::move(last_names) });
 }
 
 bool CultureManager::load_graphical_culture_type_file(ast::NodeCPtr root) {
@@ -131,7 +127,7 @@ bool CultureManager::_load_culture_group(
 }
 
 bool CultureManager::_load_culture(
-	CultureGroup const* culture_group, std::string_view culture_key, ast::NodeCPtr culture_node
+	CultureGroup const& culture_group, std::string_view culture_key, ast::NodeCPtr culture_node
 ) {
 
 	colour_t colour = NULL_COLOUR;
@@ -191,9 +187,8 @@ bool CultureManager::load_culture_file(ast::NodeCPtr root) {
 	lock_culture_groups();
 	cultures.reserve(cultures.size() + total_expected_cultures);
 
-	ret &= expect_dictionary([this](std::string_view culture_group_key, ast::NodeCPtr culture_group_value) -> bool {
-		CultureGroup const* culture_group = get_culture_group_by_identifier(culture_group_key);
-		return expect_dictionary([this, culture_group](std::string_view key, ast::NodeCPtr value) -> bool {
+	ret &= expect_culture_group_dictionary([this](CultureGroup const& culture_group, ast::NodeCPtr culture_group_value) -> bool {
+		return expect_dictionary([this, &culture_group](std::string_view key, ast::NodeCPtr value) -> bool {
 			static const string_set_t reserved_keys = { "leader", "unit", "union", "is_overseas" };
 			if (reserved_keys.contains(key)) {
 				return true;

@@ -33,10 +33,10 @@ bool ProvinceHistoryMap::_load_history_entry(
 		[this, &game_manager, &building_manager, &entry](
 			std::string_view key, ast::NodeCPtr value) -> bool {
 			// used for province buildings like forts or railroads
-			Building const* building = building_manager.get_building_by_identifier(key);
-			if (building != nullptr) {
-				return expect_uint<Building::level_t>([&entry, building](Building::level_t level) -> bool {
-					entry.province_buildings[building] = level;
+			BuildingType const* building_type = building_manager.get_building_type_by_identifier(key);
+			if (building_type != nullptr) {
+				return expect_uint<BuildingType::level_t>([&entry, building_type](BuildingType::level_t level) -> bool {
+					entry.province_buildings[building_type] = level;
 					return true;
 				})(value);
 			}
@@ -83,17 +83,17 @@ bool ProvinceHistoryMap::_load_history_entry(
 			return ret;
 		},
 		"state_building", ZERO_OR_MORE, [&building_manager, &entry](ast::NodeCPtr node) -> bool {
-			Building const* building = nullptr;
+			BuildingType const* building_type = nullptr;
 			uint8_t level = 0;
 
 			const bool ret = expect_dictionary_keys(
 				"level", ONE_EXACTLY, expect_uint(assign_variable_callback(level)),
-				"building", ONE_EXACTLY, building_manager.expect_building_identifier(
-					assign_variable_callback_pointer(building)
+				"building", ONE_EXACTLY, building_manager.expect_building_type_identifier(
+					assign_variable_callback_pointer(building_type)
 				),
 				"upgrade", ZERO_OR_ONE, success_callback // doesn't appear to have an effect
 			)(node);
-			entry.state_buildings[building] = level;
+			entry.state_buildings[building_type] = level;
 			return ret;
 		}
 	)(root);

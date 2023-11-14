@@ -170,12 +170,12 @@ bool GameManager::load_hardcoded_defines() {
 				BuildingInstance const* railroad = province.get_building_by_identifier("railroad");
 				if (railroad != nullptr) {
 					colour_t val = fraction_to_colour_byte(railroad->get_level(),
-						railroad->get_building().get_max_level() + 1, 0.5f, 1.0f);
+						railroad->get_building_type().get_max_level() + 1, 0.5f, 1.0f);
 					switch (railroad->get_expansion_state()) {
-					case ExpansionState::CannotExpand:
+					case BuildingInstance::ExpansionState::CannotExpand:
 						val <<= 16;
 						break;
-					case ExpansionState::CanExpand:
+					case BuildingInstance::ExpansionState::CanExpand:
 						break;
 					default:
 						val <<= 8;

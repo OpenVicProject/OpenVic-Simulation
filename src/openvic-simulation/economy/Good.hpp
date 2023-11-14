@@ -73,7 +73,7 @@ namespace OpenVic {
 		IDENTIFIER_REGISTRY_ACCESSORS_CUSTOM_PLURAL(good_category, good_categories)
 
 		bool add_good(
-			std::string_view identifier, colour_t colour, GoodCategory const* category, Good::price_t base_price,
+			std::string_view identifier, colour_t colour, GoodCategory const& category, Good::price_t base_price,
 			bool available_from_start, bool tradeable, bool money, bool overseas_penalty
 		);
 		IDENTIFIER_REGISTRY_ACCESSORS(good)
