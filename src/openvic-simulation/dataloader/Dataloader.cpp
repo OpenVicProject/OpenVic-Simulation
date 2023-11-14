@@ -843,6 +843,7 @@ bool Dataloader::load_defines(GameManager& game_manager) const {
 	static const std::string graphical_culture_type_file = "common/graphicalculturetype.txt";
 	static const std::string ideology_file = "common/ideologies.txt";
 	static const std::string issues_file = "common/issues.txt";
+	static const std::string national_foci_file = "common/national_focus.txt";
 	static const std::string national_values_file = "common/nationalvalues.txt";
 	static const std::string production_types_file = "common/production_types.txt";
 	static const std::string religion_file = "common/religion.txt";
@@ -916,6 +917,12 @@ bool Dataloader::load_defines(GameManager& game_manager) const {
 		parse_defines(lookup_file(issues_file)).get_file_node()
 	)) {
 		Logger::error("Failed to load issues!");
+		ret = false;
+	}
+	if (!game_manager.get_politics_manager().load_national_foci_file(
+		game_manager.get_pop_manager(), game_manager.get_economy_manager().get_good_manager(), game_manager.get_modifier_manager(), parse_defines(lookup_file(national_foci_file)).get_file_node()
+	)) {
+		Logger::error("Failed to load national foci!");
 		ret = false;
 	}
 	if (!game_manager.get_politics_manager().get_national_value_manager().load_national_values_file(

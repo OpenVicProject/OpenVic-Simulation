@@ -226,6 +226,7 @@ bool ModifierManager::setup_modifier_effects() {
 	ret &= add_modifier_effect("pop_consciousness_modifier", false, RAW_DECIMAL);
 	ret &= add_modifier_effect("pop_militancy_modifier", false, RAW_DECIMAL);
 	ret &= add_modifier_effect("population_growth", true);
+	ret &= add_modifier_effect("flashpoint_tension", false);
 	ret &= add_modifier_effect("farm_rgo_eff", true);
 	ret &= add_modifier_effect("farm_RGO_eff", true);
 	ret &= add_modifier_effect("farm_rgo_size", true);
@@ -235,6 +236,7 @@ bool ModifierManager::setup_modifier_effects() {
 	ret &= add_modifier_effect("mine_rgo_size", true);
 	ret &= add_modifier_effect("mine_RGO_size", true);
 	ret &= add_modifier_effect("movement_cost", false);
+	ret &= add_modifier_effect("railroads", true); // capitalist likelihood for railroads vs factories
 	ret &= add_modifier_effect("supply_limit", true, RAW_DECIMAL);
 
 	/* Military Modifier Effects */
@@ -324,10 +326,10 @@ node_callback_t ModifierManager::expect_whitelisted_modifier_value(
 node_callback_t ModifierManager::expect_modifier_value_and_key_map_and_default(
 	callback_t<ModifierValue&&> modifier_callback, key_value_callback_t default_callback, key_map_t&& key_map
 ) const {
-	return [this, modifier_callback, key_map = std::move(key_map)](ast::NodeCPtr node) mutable -> bool {
+	return [this, modifier_callback, default_callback, key_map = std::move(key_map)](ast::NodeCPtr node) mutable -> bool {
 		bool ret = expect_modifier_value_and_default(
 			modifier_callback,
-			dictionary_keys_callback(key_map, key_value_invalid_callback)
+			dictionary_keys_callback(key_map, default_callback)
 		)(node);
 		ret &= check_key_map_counts(key_map);
 		return ret;
