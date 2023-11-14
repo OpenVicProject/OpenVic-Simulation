@@ -18,8 +18,6 @@ namespace OpenVic {
 	struct ProvinceHistoryEntry : HistoryEntry {
 		friend struct ProvinceHistoryMap;
 
-		using building_level_map_t = std::map<Building const*, Building::level_t>;
-
 	private:
 		Province const& PROPERTY(province);
 
@@ -32,7 +30,8 @@ namespace OpenVic {
 		std::optional<Good const*> PROPERTY(rgo);
 		std::optional<Province::life_rating_t> PROPERTY(life_rating);
 		std::optional<TerrainType const*> PROPERTY(terrain_type);
-		building_level_map_t PROPERTY(buildings);
+		std::map<Building const*, Building::level_t> PROPERTY(province_buildings);
+		std::map<Building const*, Building::level_t> PROPERTY(state_buildings);
 		fixed_point_map_t<Ideology const*> PROPERTY(party_loyalties);
 
 		ProvinceHistoryEntry(Province const& new_province, Date new_date);

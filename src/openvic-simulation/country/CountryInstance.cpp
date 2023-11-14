@@ -49,7 +49,7 @@ bool CountryInstance::remove_reform(Reform const* reform_to_remove) {
 }
 
 void CountryInstance::apply_history_to_country(CountryHistoryMap const& history, Date date) {
-    auto entries = history.get_entries(date);
+    auto entries = history.get_entries_up_to(date);
 
     accepted_cultures.clear();
     upper_house.clear();

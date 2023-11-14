@@ -91,6 +91,8 @@ namespace OpenVic {
 		Date& operator++();
 		Date operator++(int);
 
+		bool in_range(Date start, Date end) const;
+
 		std::string to_string() const;
 		explicit operator std::string() const;
 		// Parsed from string of the form YYYY.MM.DD

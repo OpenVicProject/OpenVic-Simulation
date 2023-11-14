@@ -36,7 +36,7 @@ bool ProvinceHistoryMap::_load_history_entry(
 			Building const* building = building_manager.get_building_by_identifier(key);
 			if (building != nullptr) {
 				return expect_uint<Building::level_t>([&entry, building](Building::level_t level) -> bool {
-					entry.buildings[building] = level;
+					entry.province_buildings[building] = level;
 					return true;
 				})(value);
 			}
@@ -93,7 +93,7 @@ bool ProvinceHistoryMap::_load_history_entry(
 				),
 				"upgrade", ZERO_OR_ONE, success_callback // doesn't appear to have an effect
 			)(node);
-			entry.buildings[building] = level;
+			entry.state_buildings[building] = level;
 			return ret;
 		}
 	)(root);

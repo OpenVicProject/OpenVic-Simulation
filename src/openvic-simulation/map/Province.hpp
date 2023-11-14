@@ -13,7 +13,7 @@ namespace OpenVic {
 	struct Good;
 	struct TerrainType;
 	struct TerrainTypeMapping;
-	struct ProvinceHistoryMap;
+	struct ProvinceHistoryEntry;
 
 	/* REQUIREMENTS:
 	 * MAP-5, MAP-7, MAP-8, MAP-43, MAP-47
@@ -34,14 +34,10 @@ namespace OpenVic {
 
 		private:
 			Province const* const province;
-			const distance_t distance;
-			flags_t flags;
+			const distance_t PROPERTY(distance);
+			flags_t PROPERTY(flags);
 
 			adjacency_t(Province const* province, distance_t distance, flags_t flags);
-
-		public:
-			distance_t get_distance() const;
-			flags_t get_flags() const;
 		};
 
 		struct province_positions_t {
@@ -64,62 +60,50 @@ namespace OpenVic {
 		static constexpr index_t NULL_INDEX = 0, MAX_INDEX = std::numeric_limits<index_t>::max();
 
 	private:
-		const index_t index;
-		Region const* region = nullptr;
-		bool on_map = false, has_region = false, water = false;
-		life_rating_t life_rating = 0;
-		colony_status_t colony_status = colony_status_t::STATE;
-		IdentifierRegistry<BuildingInstance> buildings;
-		// TODO - change this into a factory-like structure
-		Good const* rgo = nullptr;
+		const index_t PROPERTY(index);
+		Region* PROPERTY(region);
+		bool PROPERTY(on_map);
+		bool PROPERTY(has_region);
+		bool PROPERTY(water);
+		/* Terrain type calculated from terrain image */
+		TerrainType const* PROPERTY(default_terrain_type);
 
-		std::vector<Pop> pops;
-		Pop::pop_size_t total_population;
+		std::vector<adjacency_t> PROPERTY(adjacencies);
+		province_positions_t positions;
+
+		TerrainType const* PROPERTY(terrain_type);
+		life_rating_t PROPERTY(life_rating);
+		colony_status_t PROPERTY(colony_status);
+		Country const* PROPERTY(owner);
+		Country const* PROPERTY(controller);
+		std::vector<Country const*> PROPERTY(cores);
+		bool PROPERTY(slave);
+		// TODO - change this into a factory-like structure
+		Good const* PROPERTY(rgo);
+		IdentifierRegistry<BuildingInstance> buildings;
+
+		std::vector<Pop> PROPERTY(pops);
+		Pop::pop_size_t PROPERTY(total_population);
 		fixed_point_map_t<PopType const*> PROPERTY(pop_type_distribution);
 		fixed_point_map_t<Ideology const*> PROPERTY(ideology_distribution);
 		fixed_point_map_t<Culture const*> PROPERTY(culture_distribution);
 		fixed_point_map_t<Religion const*> PROPERTY(religion_distribution);
-
-		std::vector<adjacency_t> adjacencies;
-		province_positions_t positions;
-
-		TerrainType const* terrain_type = nullptr;
-
-		void _set_terrain_type(TerrainType const* type);
-
-		Country const* owner = nullptr;
-		Country const* controller = nullptr;
-		std::vector<Country const*> cores;
-		bool slave = false;
 
 		Province(std::string_view new_identifier, colour_t new_colour, index_t new_index);
 
 	public:
 		Province(Province&&) = default;
 
-		index_t get_index() const;
-		Region const* get_region() const;
-		bool get_on_map() const;
-		bool get_has_region() const;
-		bool get_water() const;
-		TerrainType const* get_terrain_type() const;
-		life_rating_t get_life_rating() const;
-		colony_status_t get_colony_status() const;
+		std::string to_string() const;
+
 		bool load_positions(BuildingManager const& building_manager, ast::NodeCPtr root);
 
-		bool add_building(BuildingInstance&& building_instance);
 		IDENTIFIER_REGISTRY_ACCESSORS(building)
-		void reset_buildings();
 		bool expand_building(std::string_view building_type_identifier);
-		Good const* get_rgo() const;
-		std::string to_string() const;
 
 		bool load_pop_list(PopManager const& pop_manager, ast::NodeCPtr root);
 		bool add_pop(Pop&& pop);
-		void clear_pops();
 		size_t get_pop_count() const;
-		std::vector<Pop> const& get_pops() const;
-		Pop::pop_size_t get_total_population() const;
 		void update_pops();
 
 		void update_state(Date today);
@@ -127,13 +111,8 @@ namespace OpenVic {
 
 		bool is_adjacent_to(Province const* province);
 		bool add_adjacency(Province const* province, distance_t distance, flags_t flags);
-		std::vector<adjacency_t> const& get_adjacencies() const;
 
-		Country const* get_owner() const;
-		Country const* get_controller() const;
-		std::vector<Country const*> const& get_cores() const;
-		bool is_slave() const;
-
-		void apply_history_to_province(ProvinceHistoryMap const& history, Date date);
+		bool reset(BuildingManager const& building_manager);
+		bool apply_history_to_province(ProvinceHistoryEntry const* entry);
 	};
 }

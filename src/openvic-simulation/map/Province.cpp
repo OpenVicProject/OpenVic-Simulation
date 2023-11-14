@@ -8,56 +8,16 @@ using namespace OpenVic::NodeTools;
 Province::Province(
 	std::string_view new_identifier, colour_t new_colour, index_t new_index
 ) : HasIdentifierAndColour { new_identifier, new_colour, true, false }, index { new_index },
-	buildings { "buildings", false } {
+	region { nullptr }, on_map { false }, has_region { false }, water { false }, default_terrain_type { nullptr },
+	terrain_type { nullptr }, life_rating { 0 }, colony_status { colony_status_t::STATE }, owner { nullptr },
+	controller { nullptr }, slave { false }, buildings { "buildings", false }, rgo { nullptr }, total_population { 0 } {
 	assert(index != NULL_INDEX);
 }
 
-Province::index_t Province::get_index() const {
-	return index;
-}
-
-Region const* Province::get_region() const {
-	return region;
-}
-
-bool Province::get_on_map() const {
-	return on_map;
-}
-
-bool Province::get_has_region() const {
-	return has_region;
-}
-
-bool Province::get_water() const {
-	return water;
-}
-
-TerrainType const* Province::get_terrain_type() const {
-	return terrain_type;
-}
-
-Province::life_rating_t Province::get_life_rating() const {
-	return life_rating;
-}
-
-Province::colony_status_t Province::get_colony_status() const {
-	return colony_status;
-}
-
-Country const* Province::get_owner() const {
-	return owner;
-}
-
-Country const* Province::get_controller() const {
-	return controller;
-}
-
-std::vector<Country const*> const& Province::get_cores() const {
-	return cores;
-}
-
-bool Province::is_slave() const {
-	return slave;
+std::string Province::to_string() const {
+	std::stringstream stream;
+	stream << "(#" << std::to_string(index) << ", " << get_identifier() << ", 0x" << colour_to_hex_string() << ")";
+	return stream.str();
 }
 
 bool Province::load_positions(BuildingManager const& building_manager, ast::NodeCPtr root) {
@@ -89,30 +49,12 @@ bool Province::load_positions(BuildingManager const& building_manager, ast::Node
 	)(root);
 }
 
-bool Province::add_building(BuildingInstance&& building_instance) {
-	return buildings.add_item(std::move(building_instance));
-}
-
-void Province::reset_buildings() {
-	buildings.reset();
-}
-
 bool Province::expand_building(std::string_view building_type_identifier) {
 	BuildingInstance* building = buildings.get_item_by_identifier(building_type_identifier);
 	if (building == nullptr) {
 		return false;
 	}
 	return building->expand();
-}
-
-Good const* Province::get_rgo() const {
-	return rgo;
-}
-
-std::string Province::to_string() const {
-	std::stringstream stream;
-	stream << "(#" << std::to_string(index) << ", " << get_identifier() << ", 0x" << colour_to_hex_string() << ")";
-	return stream.str();
 }
 
 bool Province::load_pop_list(PopManager const& pop_manager, ast::NodeCPtr root) {
@@ -133,20 +75,8 @@ bool Province::add_pop(Pop&& pop) {
 	}
 }
 
-void Province::clear_pops() {
-	pops.clear();
-}
-
 size_t Province::get_pop_count() const {
 	return pops.size();
-}
-
-std::vector<Pop> const& Province::get_pops() const {
-	return pops;
-}
-
-Pop::pop_size_t Province::get_total_population() const {
-	return total_population;
 }
 
 /* REQUIREMENTS:
@@ -185,14 +115,6 @@ Province::adjacency_t::adjacency_t(Province const* province, distance_t distance
 	assert(province != nullptr);
 }
 
-Province::distance_t Province::adjacency_t::get_distance() const {
-	return distance;
-}
-
-Province::flags_t Province::adjacency_t::get_flags() const {
-	return flags;
-}
-
 bool Province::is_adjacent_to(Province const* province) {
 	for (adjacency_t adj : adjacencies) {
 		if (adj.province == province) {
@@ -207,7 +129,6 @@ bool Province::add_adjacency(Province const* province, distance_t distance, flag
 		Logger::error("Tried to create null adjacency province for province ", get_identifier(), "!");
 		return false;
 	}
-
 	if (is_adjacent_to(province)) {
 		return false;
 	}
@@ -215,46 +136,84 @@ bool Province::add_adjacency(Province const* province, distance_t distance, flag
 	return true;
 }
 
-std::vector<Province::adjacency_t> const& Province::get_adjacencies() const {
-	return adjacencies;
-}
+bool Province::reset(BuildingManager const& building_manager) {
+	terrain_type = default_terrain_type;
+	life_rating = 0;
+	colony_status = colony_status_t::STATE;
+	owner = nullptr;
+	controller = nullptr;
+	cores.clear();
+	slave = false;
+	rgo = nullptr;
 
-void Province::_set_terrain_type(TerrainType const* type) {
-	terrain_type = type;
-}
-
-void Province::apply_history_to_province(ProvinceHistoryMap const& history, Date date) {
-	auto entries = history.get_entries(date);
-	
-	reset_buildings();
-
-	for (ProvinceHistoryEntry const* entry : entries) {
-		if (entry->get_life_rating()) life_rating = *entry->get_life_rating();
-		if (entry->get_colonial()) colony_status = *entry->get_colonial();
-		if (entry->get_rgo()) rgo = *entry->get_rgo();
-		if (entry->get_terrain_type()) terrain_type = *entry->get_terrain_type();
-		if (entry->get_owner()) owner = *entry->get_owner();
-		if (entry->get_controller()) controller = *entry->get_controller();
-		if (entry->get_slave()) slave = *entry->get_slave();
-		for (const auto& core : entry->get_remove_cores()) {
-			const auto existing_core = std::find(cores.begin(), cores.end(), core);
-			if (existing_core != cores.end()) cores.erase(existing_core);
-		}
-		for (const auto& core : entry->get_add_cores()) {
-			const auto existing_core = std::find(cores.begin(), cores.end(), core);
-			if (existing_core == cores.end()) cores.push_back(core);
-		}
-		// TODO: rework province buildings
-		for (const auto& building : entry->get_buildings()) {
-			BuildingInstance* existing_entry = buildings.get_item_by_identifier(building.first->get_identifier());
-			if (existing_entry != nullptr) {
-				existing_entry->set_level(building.second);
-			} else {
-				BuildingInstance instance = { *building.first };
-				instance.set_level(building.second);
-				add_building(std::move(instance));
+	buildings.reset();
+	bool ret = true;
+	if (!get_water()) {
+		if (building_manager.building_types_are_locked() && building_manager.buildings_are_locked()) {
+			for (Building const& building : building_manager.get_buildings()) {
+				if (building.get_in_province()) {
+					ret &= buildings.add_item({ building });
+				}
 			}
+		} else {
+			Logger::error("Cannot generate buildings until building types are locked!");
+			ret = false;
 		}
-		// TODO: party loyalties for each POP when implemented on POP side
 	}
+	lock_buildings();
+
+	pops.clear();
+	update_pops();
+
+	return ret;
+}
+
+bool Province::apply_history_to_province(ProvinceHistoryEntry const* entry) {
+	if (entry == nullptr) {
+		Logger::error("Trying to apply null province history to ", get_identifier());
+		return false;
+	}
+	if (entry->get_life_rating()) life_rating = *entry->get_life_rating();
+	if (entry->get_colonial()) colony_status = *entry->get_colonial();
+	if (entry->get_rgo()) rgo = *entry->get_rgo();
+	if (entry->get_terrain_type()) terrain_type = *entry->get_terrain_type();
+	if (entry->get_owner()) owner = *entry->get_owner();
+	if (entry->get_controller()) controller = *entry->get_controller();
+	if (entry->get_slave()) slave = *entry->get_slave();
+	for (Country const* core : entry->get_remove_cores()) {
+		const typename decltype(cores)::iterator existing_core = std::find(cores.begin(), cores.end(), core);
+		if (existing_core != cores.end()) {
+			cores.erase(existing_core);
+		} else {
+			Logger::warning(
+				"Trying to remove non-existent core ", core->get_identifier(), " from province ", get_identifier()
+			);
+		}
+	}
+	for (Country const* core : entry->get_add_cores()) {
+		const typename decltype(cores)::iterator existing_core = std::find(cores.begin(), cores.end(), core);
+		if (existing_core == cores.end()) {
+			cores.push_back(core);
+		} else {
+			Logger::warning(
+				"Trying to add already-existing core ", core->get_identifier(), " to province ", get_identifier()
+			);
+		}
+	}
+	bool ret = true;
+	for (auto const& [building, level] : entry->get_province_buildings()) {
+		BuildingInstance* existing_entry = buildings.get_item_by_identifier(building->get_identifier());
+		if (existing_entry != nullptr) {
+			existing_entry->set_level(level);
+		} else {
+			Logger::error(
+				"Trying to set level of non-existent province building ", building->get_identifier(), " to ", level,
+				" in province ", get_identifier()
+			);
+			ret = false;
+		}
+	}
+	// TODO: load state buildings
+	// TODO: party loyalties for each POP when implemented on POP side#
+	return ret;
 }

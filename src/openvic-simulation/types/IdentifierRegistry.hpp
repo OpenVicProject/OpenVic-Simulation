@@ -333,6 +333,9 @@ namespace OpenVic {
 	size_t get_##singular##_count() const { \
 		return plural.size(); \
 	} \
+	bool plural##_empty() const { \
+		return plural.empty(); \
+	} \
 	std::vector<decltype(plural)::storage_type> const& get_##plural() const { \
 		return plural.get_items(); \
 	} \

@@ -36,6 +36,7 @@ namespace OpenVic {
 	};
 
 	struct GoodManager;
+	struct ProvinceHistoryManager;
 
 	/* REQUIREMENTS:
 	 * MAP-4
@@ -109,7 +110,8 @@ namespace OpenVic {
 		 * that is the maximum allowed number of provinces plus one for the index-zero "null province". */
 		bool generate_mapmode_colours(Mapmode::index_t index, uint8_t* target) const;
 
-		bool setup(BuildingManager const& building_manager, PopManager const& pop_manager);
+		bool reset(BuildingManager const& building_manager);
+		bool apply_history_to_provinces(ProvinceHistoryManager const& history_manager, Date date);
 
 		void update_highest_province_population();
 		Pop::pop_size_t get_highest_province_population() const;

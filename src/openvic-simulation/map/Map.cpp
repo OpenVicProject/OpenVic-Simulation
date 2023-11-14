@@ -4,6 +4,7 @@
 #include <unordered_set>
 
 #include "openvic-simulation/economy/Good.hpp"
+#include "openvic-simulation/history/ProvinceHistory.hpp"
 #include "openvic-simulation/utility/BMP.hpp"
 #include "openvic-simulation/utility/Logger.hpp"
 
@@ -297,11 +298,25 @@ Pop::pop_size_t Map::get_total_map_population() const {
 	return total_map_population;
 }
 
-bool Map::setup(BuildingManager const& building_manager, PopManager const& pop_manager) {
+bool Map::reset(BuildingManager const& building_manager) {
 	bool ret = true;
 	for (Province& province : provinces.get_items()) {
-		province.clear_pops();
-		ret &= building_manager.generate_province_buildings(province);
+		ret &= province.reset(building_manager);
+	}
+	return ret;
+}
+
+bool Map::apply_history_to_provinces(ProvinceHistoryManager const& history_manager, Date date) {
+	bool ret = true;
+	for (Province& province : provinces.get_items()) {
+		if (!province.get_water()) {
+			ProvinceHistoryMap const* history_map = history_manager.get_province_history(&province);
+			if (history_map != nullptr) {
+				for (ProvinceHistoryEntry const* entry : history_map->get_entries_up_to(date)) {
+					province.apply_history_to_province(entry);
+				}
+			}
+		}
 	}
 	return ret;
 }
@@ -562,7 +577,7 @@ bool Map::load_map_images(fs::path const& province_path, fs::path const& terrain
 	for (size_t idx = 0; idx < province_checklist.size(); ++idx) {
 		Province* province = provinces.get_item_by_index(idx);
 		const fixed_point_map_const_iterator_t<TerrainType const*> largest = get_largest_item(terrain_type_pixels_list[idx]);
-		province->_set_terrain_type(largest != terrain_type_pixels_list[idx].end() ? largest->first : nullptr);
+		province->default_terrain_type = largest != terrain_type_pixels_list[idx].end() ? largest->first : nullptr;
 		province->on_map = province_checklist[idx];
 		if (!province->on_map) {
 			if (detailed_errors) {

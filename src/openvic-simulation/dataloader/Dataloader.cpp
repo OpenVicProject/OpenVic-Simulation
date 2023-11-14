@@ -959,7 +959,9 @@ bool Dataloader::load_defines(GameManager& game_manager) const {
 		Logger::error("Failed to load wargoals!");
 		ret = false;
 	}
-	if (!game_manager.get_history_manager().load_bookmark_file(parse_defines(lookup_file(bookmark_file)).get_file_node())) {
+	if (!game_manager.get_history_manager().get_bookmark_manager().load_bookmark_file(
+		parse_defines(lookup_file(bookmark_file)).get_file_node()
+	)) {
 		Logger::error("Failed to load bookmarks!");
 		ret = false;
 	}

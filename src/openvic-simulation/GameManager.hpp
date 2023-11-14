@@ -29,7 +29,8 @@ namespace OpenVic {
 		GameAdvancementHook clock;
 
 		time_t session_start; /* SS-54, as well as allowing time-tracking */
-		Date today;
+		Bookmark const* PROPERTY(bookmark);
+		Date PROPERTY(today);
 		state_updated_func_t state_updated;
 		bool needs_update;
 
@@ -52,9 +53,9 @@ namespace OpenVic {
 		REF_GETTERS(ui_manager)
 		REF_GETTERS(clock)
 
-		bool setup();
+		bool reset();
+		bool load_bookmark(Bookmark const* new_bookmark);
 
-		Date get_today() const;
 		bool expand_building(Province::index_t province_index, std::string_view building_type_identifier);
 
 		/* Hardcoded data for defining things for which parsing from files has

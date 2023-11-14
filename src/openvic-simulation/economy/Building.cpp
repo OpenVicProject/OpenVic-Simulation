@@ -1,9 +1,9 @@
 #include "Building.hpp"
 
-#include "openvic-simulation/map/Province.hpp" //imported here so the hpp doesn't get circular imports
-
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;
+
+BuildingType::BuildingType(std::string_view new_identifier) : HasIdentifier { new_identifier } {}
 
 Building::Building(
 	std::string_view identifier, BuildingType const& type, ARGS
@@ -16,133 +16,16 @@ Building::Building(
 	colonial_range { colonial_range }, infrastructure { infrastructure }, spawn_railway_track { spawn_railway_track },
 	sail { sail }, steam { steam }, capital { capital }, port { port } {}
 
-BuildingType const& Building::get_type() const {
-	return type;
-}
-
-ModifierValue const& Building::get_modifier() const {
-	return modifier;
-}
-
-std::string_view Building::get_on_completion() const {
-	return on_completion;
-}
-
-fixed_point_t Building::get_completion_size() const {
-	return completion_size;
-}
-
-Building::level_t Building::get_max_level() const {
-	return max_level;
-}
-
-Good::good_map_t const& Building::get_goods_cost() const {
-	return goods_cost;
-}
-
-fixed_point_t Building::get_cost() const {
-	return cost;
-}
-
-Timespan Building::get_build_time() const {
-	return build_time;
-}
-
-bool Building::has_visibility() const {
-	return visibility;
-}
-
-bool Building::is_on_map() const {
-	return on_map;
-}
-
-bool Building::is_default_enabled() const {
-	return default_enabled;
-}
-
-ProductionType const* Building::get_production_type() const {
-	return production_type;
-}
-
-bool Building::is_pop_built_factory() const {
-	return pop_build_factory;
-}
-
-bool Building::is_strategic_factory() const {
-	return strategic_factory;
-}
-
-bool Building::is_advanced_factory() const {
-	return advanced_factory;
-}
-
-Building::level_t Building::get_fort_level() const {
-	return fort_level;
-}
-
-uint64_t Building::get_naval_capacity() const {
-	return naval_capacity;
-}
-
-std::vector<fixed_point_t> const& Building::get_colonial_points() const {
-	return colonial_points;
-}
-
-bool Building::is_in_province() const {
-	return in_province;
-}
-
-bool Building::is_one_per_state() const {
-	return one_per_state;
-}
-
-fixed_point_t Building::get_colonial_range() const {
-	return colonial_range;
-}
-
-fixed_point_t Building::get_infrastructure() const {
-	return infrastructure;
-}
-
-bool Building::spawned_railway_track() const {
-	return spawn_railway_track;
-}
-
-BuildingType::BuildingType(std::string_view new_identifier) : HasIdentifier { new_identifier } {}
-
-BuildingInstance::BuildingInstance(Building const& building)
-	: HasIdentifier { building.get_identifier() }, building { building } {}
-
-Building const& BuildingInstance::get_building() const {
-	return building;
-}
+BuildingInstance::BuildingInstance(Building const& new_building, level_t new_level)
+	: HasIdentifier { building.get_identifier() }, building { new_building }, level { new_level },
+	expansion_state { ExpansionState::CannotExpand } {}
 
 bool BuildingInstance::_can_expand() const {
 	return level < building.get_max_level();
 }
 
-BuildingInstance::level_t BuildingInstance::get_current_level() const {
-	return level;
-}
-
 void BuildingInstance::set_level(BuildingInstance::level_t new_level) {
 	level = new_level;
-}
-
-ExpansionState BuildingInstance::get_expansion_state() const {
-	return expansion_state;
-}
-
-Date BuildingInstance::get_start_date() const {
-	return start;
-}
-
-Date BuildingInstance::get_end_date() const {
-	return end;
-}
-
-float BuildingInstance::get_expansion_progress() const {
-	return expansion_progress;
 }
 
 bool BuildingInstance::expand() {
@@ -160,11 +43,11 @@ bool BuildingInstance::expand() {
 void BuildingInstance::update_state(Date today) {
 	switch (expansion_state) {
 	case ExpansionState::Preparing:
-		start = today;
-		end = start + building.get_build_time();
+		start_date = today;
+		end_date = start_date + building.get_build_time();
 		break;
 	case ExpansionState::Expanding:
-		expansion_progress = static_cast<double>(today - start) / static_cast<double>(end - start);
+		expansion_progress = static_cast<double>(today - start_date) / static_cast<double>(end_date - start_date);
 		break;
 	default: expansion_state = _can_expand() ? ExpansionState::CanExpand : ExpansionState::CannotExpand;
 	}
@@ -175,7 +58,7 @@ void BuildingInstance::tick(Date today) {
 		expansion_state = ExpansionState::Expanding;
 	}
 	if (expansion_state == ExpansionState::Expanding) {
-		if (end <= today) {
+		if (end_date <= today) {
 			level++;
 			expansion_state = ExpansionState::CannotExpand;
 		}
@@ -193,6 +76,10 @@ bool BuildingManager::add_building_type(std::string_view identifier) {
 }
 
 bool BuildingManager::add_building(std::string_view identifier, BuildingType const* type, ARGS) {
+	if (!building_types.is_locked()) {
+		Logger::error("Cannot add buildings until building types are locked!");
+		return false;
+	}
 	if (identifier.empty()) {
 		Logger::error("Invalid building identifier - empty!");
 		return false;
@@ -296,21 +183,5 @@ bool BuildingManager::load_buildings_file(
 		);
 	}
 
-	return ret;
-}
-
-bool BuildingManager::generate_province_buildings(Province& province) const {
-	province.reset_buildings();
-	if (!building_types.is_locked()) {
-		Logger::error("Cannot generate buildings until building types are locked!");
-		return false;
-	}
-	bool ret = true;
-	if (!province.get_water()) {
-		for (Building const& building : buildings.get_items()) {
-			ret &= province.add_building({ building });
-		}
-	}
-	province.lock_buildings();
 	return ret;
 }

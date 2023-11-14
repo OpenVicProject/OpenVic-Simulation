@@ -37,27 +37,30 @@ bool DefineManager::add_define(std::string_view name, std::string&& value, Defin
 }
 
 Date DefineManager::get_start_date() const {
-	return *start_date;
+	return start_date ? *start_date : Date {};
 }
 
 Date DefineManager::get_end_date() const {
-	return *end_date;
+	return end_date ? *end_date : Date {};
+}
+
+bool DefineManager::in_game_period(Date date) const {
+	if (start_date && end_date) {
+		return date.in_range(*start_date, *end_date);
+	} else {
+		return false;
+	}
 }
 
 bool DefineManager::add_date_define(std::string_view name, Date date) {
-	if (name != "start_date" && name != "end_date") {
+	if (name == "start_date") {
+		start_date = date;
+	} else if (name == "end_date") {
+		end_date = date;
+	} else {
 		return false;
 	}
-
-	bool ret = defines.add_item({ name, date.to_string(), Define::Type::None });
-
-	if (name == "start_date") {
-		start_date.reset(new Date(date));
-	} else if (name == "end_date") {
-		end_date.reset(new Date(date));
-	}
-
-	return ret;
+	return defines.add_item({ name, date.to_string(), Define::Type::None });
 }
 
 bool DefineManager::load_defines_file(ast::NodeCPtr root) {
@@ -103,8 +106,6 @@ bool DefineManager::load_defines_file(ast::NodeCPtr root) {
 					return ret;
 				})(value);
 			} else if (key == "start_date" || key == "end_date") {
-				using namespace std::placeholders;
-
 				return expect_identifier_or_string(expect_date_str([this, &key](Date date) -> bool {
 					return add_date_define(key, date);
 				}))(value);

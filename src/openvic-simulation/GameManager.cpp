@@ -37,18 +37,31 @@ void GameManager::tick() {
 	set_needs_update();
 }
 
-bool GameManager::setup() {
+bool GameManager::reset() {
 	session_start = time(nullptr);
 	clock.reset();
-	today = { 1836 };
+	today = {};
 	economy_manager.get_good_manager().reset_to_defaults();
-	bool ret = map.setup(economy_manager.get_building_manager(), pop_manager);
+	bool ret = map.reset(economy_manager.get_building_manager());
 	set_needs_update();
 	return ret;
 }
 
-Date GameManager::get_today() const {
-	return today;
+bool GameManager::load_bookmark(Bookmark const* new_bookmark) {
+	bool ret = reset();
+	bookmark = new_bookmark;
+	if (bookmark == nullptr) {
+		return ret;
+	}
+	Logger::info("Loading bookmark ", bookmark->get_name(), " with start date ", bookmark->get_date());
+	if (!define_manager.in_game_period(bookmark->get_date())) {
+		Logger::warning("Bookmark date ", bookmark->get_date(), " is not in the game's time period!");
+	}
+	today = bookmark->get_date();
+	ret &= map.apply_history_to_provinces(history_manager.get_province_manager(), today);
+	// TODO - apply country history
+	// TODO - apply pop history
+	return ret;
 }
 
 bool GameManager::expand_building(Province::index_t province_index, std::string_view building_type_identifier) {
@@ -156,7 +169,7 @@ bool GameManager::load_hardcoded_defines() {
 			make_solid_base_stripe_func([](Map const& map, Province const& province) -> colour_t {
 				BuildingInstance const* railroad = province.get_building_by_identifier("railroad");
 				if (railroad != nullptr) {
-					colour_t val = fraction_to_colour_byte(railroad->get_current_level(),
+					colour_t val = fraction_to_colour_byte(railroad->get_level(),
 						railroad->get_building().get_max_level() + 1, 0.5f, 1.0f);
 					switch (railroad->get_expansion_state()) {
 					case ExpansionState::CannotExpand:
