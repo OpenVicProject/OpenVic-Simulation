@@ -849,6 +849,10 @@ bool Dataloader::load_defines(GameManager& game_manager) const {
 	static const std::string religion_file = "common/religion.txt";
 	static const std::string leader_traits_file = "common/traits.txt";
 	static const std::string cb_types_file = "common/cb_types.txt";
+	static const std::string crime_modifiers_file = "common/crime.txt";
+	static const std::string event_modifiers_file = "common/event_modifiers.txt";
+	static const std::string static_modifiers_file = "common/static_modifiers.txt";
+	static const std::string triggered_modifiers_file = "common/triggered_modifiers.txt";
 
 	bool ret = true;
 
@@ -858,6 +862,30 @@ bool Dataloader::load_defines(GameManager& game_manager) const {
 	}
 	if (!game_manager.get_modifier_manager().setup_modifier_effects()) {
 		Logger::error("Failed to set up modifier effects!");
+		ret = false;
+	}
+	if (!game_manager.get_modifier_manager().load_crime_modifiers(
+		parse_defines(lookup_file(crime_modifiers_file)).get_file_node()
+	)) {
+		Logger::error("Failed to load crime modifiers!");
+		ret = false;
+	}
+	if (!game_manager.get_modifier_manager().load_event_modifiers(
+		parse_defines(lookup_file(event_modifiers_file)).get_file_node()
+	)) {
+		Logger::error("Failed to load event modifiers!");
+		ret = false;
+	}
+	if (!game_manager.get_modifier_manager().load_static_modifiers(
+		parse_defines(lookup_file(static_modifiers_file)).get_file_node()
+	)) {
+		Logger::error("Failed to load static modifiers!");
+		ret = false;
+	}
+	if (!game_manager.get_modifier_manager().load_triggered_modifiers(
+		parse_defines(lookup_file(triggered_modifiers_file)).get_file_node()
+	)) {
+		Logger::error("Failed to load triggered modifiers!");
 		ret = false;
 	}
 	if (!game_manager.get_define_manager().load_defines_file(parse_lua_defines(lookup_file(defines_file)).get_file_node())) {
@@ -959,7 +987,9 @@ bool Dataloader::load_defines(GameManager& game_manager) const {
 		Logger::error("Failed to load wargoals!");
 		ret = false;
 	}
-	if (!game_manager.get_history_manager().load_bookmark_file(parse_defines(lookup_file(bookmark_file)).get_file_node())) {
+	if (!game_manager.get_history_manager().get_bookmark_manager().load_bookmark_file(
+		parse_defines(lookup_file(bookmark_file)).get_file_node()
+	)) {
 		Logger::error("Failed to load bookmarks!");
 		ret = false;
 	}

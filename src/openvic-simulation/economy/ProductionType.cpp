@@ -145,7 +145,7 @@ node_callback_t ProductionTypeManager::_expect_employed_pop_list(
 		return false; \
 	}
 
-bool ProductionTypeManager::add_production_type(PRODUCTION_TYPE_ARGS, GoodManager const& good_manager) {
+bool ProductionTypeManager::add_production_type(PRODUCTION_TYPE_ARGS) {
 	if (identifier.empty()) {
 		Logger::error("Invalid production type identifier - empty!");
 		return false;
@@ -274,7 +274,7 @@ bool ProductionTypeManager::load_production_types_file(
 
 			ret &= add_production_type(
 				key, owner, employees, type, workforce, std::move(input_goods), output_goods, value, std::move(bonuses),
-				std::move(efficiency), coastal, farm, mine, good_manager
+				std::move(efficiency), coastal, farm, mine
 			);
 			return ret;
 		}

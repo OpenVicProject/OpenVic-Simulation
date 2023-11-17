@@ -3,7 +3,7 @@
 #include <cstdint>
 #include <string_view>
 
-#include "openvic-simulation/Modifier.hpp"
+#include "openvic-simulation/misc/Modifier.hpp"
 #include "openvic-simulation/dataloader/NodeTools.hpp"
 #include "openvic-simulation/types/IdentifierRegistry.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"

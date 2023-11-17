@@ -1,6 +1,6 @@
 #pragma once
 
-#include "openvic-simulation/Modifier.hpp"
+#include "openvic-simulation/misc/Modifier.hpp"
 #include "openvic-simulation/types/IdentifierRegistry.hpp"
 
 namespace OpenVic {

@@ -17,7 +17,7 @@ namespace OpenVic::GUI {
 		};
 
 	private:
-		ivec2_t PROPERTY(position);
+		fvec2_t PROPERTY(position);
 		orientation_t PROPERTY(orientation);
 
 	protected:
@@ -65,7 +65,7 @@ namespace OpenVic::GUI {
 
 		NamedInstanceRegistry<Element, UIManager const&> elements;
 
-		ivec2_t PROPERTY(size);
+		fvec2_t PROPERTY(size);
 		bool PROPERTY(moveable);
 		bool PROPERTY(fullscreen);
 		// TODO - background, dontRender, horizontalBorder, verticalBorder
@@ -179,7 +179,7 @@ namespace OpenVic::GUI {
 
 		std::string PROPERTY(text);
 		GFX::Font const* PROPERTY(font);
-		ivec2_t PROPERTY(max_size); // maxWidth, maxHeight
+		fvec2_t PROPERTY(max_size); // maxWidth, maxHeight
 
 		// TODO - borderSize, fixedsize, textureFile
 
@@ -198,7 +198,7 @@ namespace OpenVic::GUI {
 	class OverlappingElementsBox final : public AlignedElement {
 		friend std::unique_ptr<OverlappingElementsBox> std::make_unique<OverlappingElementsBox>();
 
-		ivec2_t PROPERTY(size);
+		fvec2_t PROPERTY(size);
 
 		// TODO - spacing
 
@@ -217,7 +217,7 @@ namespace OpenVic::GUI {
 	class ListBox final : public Element {
 		friend std::unique_ptr<ListBox> std::make_unique<ListBox>();
 
-		ivec2_t PROPERTY(size);
+		fvec2_t PROPERTY(size);
 
 		// TODO - backGround, spacing, scrollbartype, borderSize
 

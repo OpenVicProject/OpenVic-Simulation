@@ -4,6 +4,7 @@
 #include <unordered_set>
 
 #include "openvic-simulation/economy/Good.hpp"
+#include "openvic-simulation/history/ProvinceHistory.hpp"
 #include "openvic-simulation/utility/BMP.hpp"
 #include "openvic-simulation/utility/Logger.hpp"
 
@@ -24,7 +25,7 @@ Mapmode::index_t Mapmode::get_index() const {
 	return index;
 }
 
-colour_t Mapmode::get_colour(Map const& map, Province const& province) const {
+Mapmode::base_stripe_t Mapmode::get_base_stripe_colours(Map const& map, Province const& province) const {
 	return colour_func ? colour_func(map, province) : NULL_COLOUR;
 }
 
@@ -254,15 +255,23 @@ bool Map::generate_mapmode_colours(Mapmode::index_t index, uint8_t* target) cons
 		mapmode = &Mapmode::ERROR_MAPMODE;
 	}
 	// Skip past Province::NULL_INDEX
-	for (size_t i = 0; i < MAPMODE_COLOUR_SIZE; ++i) {
+	for (size_t i = 0; i < sizeof(Mapmode::base_stripe_t); ++i) {
 		*target++ = 0;
 	}
 	for (Province const& province : provinces.get_items()) {
-		const colour_t colour = mapmode->get_colour(*this, province);
-		*target++ = (colour >> 16) & FULL_COLOUR;
-		*target++ = (colour >> 8) & FULL_COLOUR;
-		*target++ = colour & FULL_COLOUR;
-		*target++ = (colour >> 24) & FULL_COLOUR;
+		const Mapmode::base_stripe_t base_stripe = mapmode->get_base_stripe_colours(*this, province);
+		const colour_t base_colour = static_cast<colour_t>(base_stripe);
+		const colour_t stripe_colour = static_cast<colour_t>(base_stripe >> (sizeof(colour_t) * 8));
+
+		*target++ = (base_colour >> 16) & COLOUR_COMPONENT; // red
+		*target++ = (base_colour >>  8) & COLOUR_COMPONENT; // green
+		*target++ = (base_colour >>  0) & COLOUR_COMPONENT; // blue
+		*target++ = (base_colour >> 24) & COLOUR_COMPONENT; // alpha
+
+		*target++ = (stripe_colour >> 16) & COLOUR_COMPONENT; // red
+		*target++ = (stripe_colour >>  8) & COLOUR_COMPONENT; // green
+		*target++ = (stripe_colour >>  0) & COLOUR_COMPONENT; // blue
+		*target++ = (stripe_colour >> 24) & COLOUR_COMPONENT; // alpha
 	}
 	return ret;
 }
@@ -289,11 +298,25 @@ Pop::pop_size_t Map::get_total_map_population() const {
 	return total_map_population;
 }
 
-bool Map::setup(BuildingManager const& building_manager, PopManager const& pop_manager) {
+bool Map::reset(BuildingManager const& building_manager) {
 	bool ret = true;
 	for (Province& province : provinces.get_items()) {
-		province.clear_pops();
-		ret &= building_manager.generate_province_buildings(province);
+		ret &= province.reset(building_manager);
+	}
+	return ret;
+}
+
+bool Map::apply_history_to_provinces(ProvinceHistoryManager const& history_manager, Date date) {
+	bool ret = true;
+	for (Province& province : provinces.get_items()) {
+		if (!province.get_water()) {
+			ProvinceHistoryMap const* history_map = history_manager.get_province_history(&province);
+			if (history_map != nullptr) {
+				for (ProvinceHistoryEntry const* entry : history_map->get_entries_up_to(date)) {
+					province.apply_history_to_province(entry);
+				}
+			}
+		}
 	}
 	return ret;
 }
@@ -489,7 +512,7 @@ bool Map::load_map_images(fs::path const& province_path, fs::path const& terrain
 	uint8_t const* terrain_data = terrain_bmp.get_pixel_data().data();
 
 	std::vector<bool> province_checklist(provinces.size());
-	std::vector<decimal_map_t<TerrainType const*>> terrain_type_pixels_list(provinces.size());
+	std::vector<fixed_point_map_t<TerrainType const*>> terrain_type_pixels_list(provinces.size());
 	bool ret = true;
 	std::unordered_set<colour_t> unrecognised_province_colours;
 
@@ -553,9 +576,8 @@ bool Map::load_map_images(fs::path const& province_path, fs::path const& terrain
 	size_t missing = 0;
 	for (size_t idx = 0; idx < province_checklist.size(); ++idx) {
 		Province* province = provinces.get_item_by_index(idx);
-		province->_set_terrain_type(
-			reinterpret_cast<TerrainType const*>(get_largest_item(terrain_type_pixels_list[idx]).first)
-		);
+		const fixed_point_map_const_iterator_t<TerrainType const*> largest = get_largest_item(terrain_type_pixels_list[idx]);
+		province->default_terrain_type = largest != terrain_type_pixels_list[idx].end() ? largest->first : nullptr;
 		province->on_map = province_checklist[idx];
 		if (!province->on_map) {
 			if (detailed_errors) {
@@ -602,6 +624,6 @@ bool Map::_generate_province_adjacencies() {
 
 bool Map::generate_and_load_province_adjacencies(std::vector<ovdl::csv::LineObject> const& additional_adjacencies) {
 	bool ret = _generate_province_adjacencies();
-	// TODO - read additional adjacencies
+	// TODO - DEV TASK: read additional adjacencies
 	return ret;
 }

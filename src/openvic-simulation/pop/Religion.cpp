@@ -37,7 +37,7 @@ bool ReligionManager::add_religion_group(std::string_view identifier) {
 }
 
 bool ReligionManager::add_religion(
-	std::string_view identifier, colour_t colour, ReligionGroup const* group, Religion::icon_t icon, bool pagan
+	std::string_view identifier, colour_t colour, ReligionGroup const& group, Religion::icon_t icon, bool pagan
 ) {
 	if (!religion_groups.is_locked()) {
 		Logger::error("Cannot register religions until religion groups are locked!");
@@ -45,10 +45,6 @@ bool ReligionManager::add_religion(
 	}
 	if (identifier.empty()) {
 		Logger::error("Invalid religion identifier - empty!");
-		return false;
-	}
-	if (group == nullptr) {
-		Logger::error("Null religion group for ", identifier);
 		return false;
 	}
 	if (colour > MAX_COLOUR_RGB) {
@@ -59,7 +55,7 @@ bool ReligionManager::add_religion(
 		Logger::error("Invalid religion icon for ", identifier, ": ", icon);
 		return false;
 	}
-	return religions.add_item({ identifier, colour, *group, icon, pagan });
+	return religions.add_item({ identifier, colour, group, icon, pagan });
 }
 
 /* REQUIREMENTS:
@@ -77,10 +73,8 @@ bool ReligionManager::load_religion_file(ast::NodeCPtr root) {
 	)(root);
 	lock_religion_groups();
 	religions.reserve(religions.size() + total_expected_religions);
-	ret &= expect_dictionary([this](std::string_view religion_group_key, ast::NodeCPtr religion_group_value) -> bool {
-		ReligionGroup const* religion_group = get_religion_group_by_identifier(religion_group_key);
-
-		return expect_dictionary([this, religion_group](std::string_view key, ast::NodeCPtr value) -> bool {
+	ret &= expect_religion_group_dictionary([this](ReligionGroup const& religion_group, ast::NodeCPtr religion_group_value) -> bool {
+		return expect_dictionary([this, &religion_group](std::string_view key, ast::NodeCPtr value) -> bool {
 			colour_t colour = NULL_COLOUR;
 			Religion::icon_t icon = 0;
 			bool pagan = false;

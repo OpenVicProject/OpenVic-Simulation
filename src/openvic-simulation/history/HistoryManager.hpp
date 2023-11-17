@@ -19,9 +19,5 @@ namespace OpenVic {
 		REF_GETTERS(country_manager)
 		REF_GETTERS(province_manager)
 		REF_GETTERS(diplomacy_manager)
-
-		inline bool load_bookmark_file(ast::NodeCPtr root) {
-			return bookmark_manager.load_bookmark_file(root);
-		}
 	};
 }

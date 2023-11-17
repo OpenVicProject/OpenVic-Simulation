@@ -1,7 +1,7 @@
 #pragma once
 
 #include <concepts>
-#include <memory>
+#include <optional>
 
 #include "openvic-simulation/types/IdentifierRegistry.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
@@ -32,8 +32,8 @@ namespace OpenVic {
 	private:
 		IdentifierRegistry<Define> defines;
 
-		std::unique_ptr<Date> start_date = nullptr;
-		std::unique_ptr<Date> end_date = nullptr;
+		std::optional<Date> start_date;
+		std::optional<Date> end_date;
 
 	public:
 		DefineManager();
@@ -44,6 +44,7 @@ namespace OpenVic {
 
 		Date get_start_date() const;
 		Date get_end_date() const;
+		bool in_game_period(Date date) const;
 
 		bool load_defines_file(ast::NodeCPtr root);
 	};

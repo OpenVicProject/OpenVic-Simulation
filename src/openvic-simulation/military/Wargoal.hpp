@@ -1,6 +1,6 @@
 #pragma once
 
-#include "openvic-simulation/Modifier.hpp"
+#include "openvic-simulation/misc/Modifier.hpp"
 #include "openvic-simulation/types/EnumBitfield.hpp"
 #include "openvic-simulation/types/IdentifierRegistry.hpp"
 #include "openvic-simulation/utility/Getters.hpp"
@@ -47,7 +47,7 @@ namespace OpenVic {
 			WAR_SCORE_BATTLE_FACTOR,
 			CONSTRUCTION_SPEED
 		};
-		using peace_modifiers_t = decimal_map_t<PEACE_MODIFIERS>;
+		using peace_modifiers_t = fixed_point_map_t<PEACE_MODIFIERS>;
 
 	private:
 		const std::string PROPERTY(sprite);

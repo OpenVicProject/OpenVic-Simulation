@@ -49,7 +49,7 @@ namespace OpenVic {
 		friend struct PopManager;
 
 		using sprite_t = uint8_t;
-		using rebel_units_t = decimal_map_t<Unit const*>;
+		using rebel_units_t = fixed_point_map_t<Unit const*>;
 
 	private:
 		const enum class strata_t { POOR, MIDDLE, RICH } strata;

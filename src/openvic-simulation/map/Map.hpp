@@ -14,7 +14,10 @@ namespace OpenVic {
 	struct Mapmode : HasIdentifier {
 		friend struct Map;
 
-		using colour_func_t = std::function<colour_t(Map const&, Province const&)>;
+		/* Bottom 32 bits are the base colour, top 32 are the stripe colour, both in ARGB format with the alpha channels
+		 * controlling interpolation with the terrain colour (0 = all terrain, 255 = all corresponding RGB) */
+		using base_stripe_t = uint64_t;
+		using colour_func_t = std::function<base_stripe_t(Map const&, Province const&)>;
 		using index_t = size_t;
 
 	private:
@@ -29,10 +32,11 @@ namespace OpenVic {
 		Mapmode(Mapmode&&) = default;
 
 		index_t get_index() const;
-		colour_t get_colour(Map const& map, Province const& province) const;
+		base_stripe_t get_base_stripe_colours(Map const& map, Province const& province) const;
 	};
 
 	struct GoodManager;
+	struct ProvinceHistoryManager;
 
 	/* REQUIREMENTS:
 	 * MAP-4
@@ -98,10 +102,16 @@ namespace OpenVic {
 		bool add_mapmode(std::string_view identifier, Mapmode::colour_func_t colour_func);
 		IDENTIFIER_REGISTRY_ACCESSORS(mapmode)
 		Mapmode const* get_mapmode_by_index(size_t index) const;
-		static constexpr size_t MAPMODE_COLOUR_SIZE = 4;
+
+		/* The mapmode colour image contains of a list of base colours and stripe colours. Each colour is four bytes
+		 * in RGBA format, with the alpha value being used to interpolate with the terrain colour, so A = 0 is fully terrain
+		 * and A = 255 is fully the RGB colour packaged with A. The base and stripe colours for each province are packed
+		 * together adjacently, so each province's entry is 8 bytes long. The list contains Province::MAX_INDEX + 1 entries,
+		 * that is the maximum allowed number of provinces plus one for the index-zero "null province". */
 		bool generate_mapmode_colours(Mapmode::index_t index, uint8_t* target) const;
 
-		bool setup(BuildingManager const& building_manager, PopManager const& pop_manager);
+		bool reset(BuildingManager const& building_manager);
+		bool apply_history_to_provinces(ProvinceHistoryManager const& history_manager, Date date);
 
 		void update_highest_province_population();
 		Pop::pop_size_t get_highest_province_population() const;

@@ -15,7 +15,7 @@ namespace OpenVic {
 	 * When colour_t is used in a purely graphical context, NULL_COLOUR
 	 * should be allowed.
 	 */
-	static constexpr colour_t NULL_COLOUR = 0, FULL_COLOUR = 0xFF;
+	static constexpr colour_t NULL_COLOUR = 0, COLOUR_COMPONENT = 0xFF;
 	static constexpr colour_t MAX_COLOUR_RGB = 0xFFFFFF, MAX_COLOUR_ARGB = 0xFFFFFFFF;
 
 	constexpr colour_t float_to_colour_byte(float f, float min = 0.0f, float max = 1.0f) {

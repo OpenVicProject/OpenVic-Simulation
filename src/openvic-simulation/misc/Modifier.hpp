@@ -36,7 +36,7 @@ namespace OpenVic {
 	struct ModifierValue {
 		friend struct ModifierManager;
 
-		using effect_map_t = decimal_map_t<ModifierEffect const*>;
+		using effect_map_t = fixed_point_map_t<ModifierEffect const*>;
 
 	private:
 		effect_map_t values;
@@ -106,7 +106,7 @@ namespace OpenVic {
 		 */
 	private:
 		IdentifierInstanceRegistry<ModifierEffect> modifier_effects;
-		IdentifierRegistry<Modifier> modifiers;
+		IdentifierRegistry<Modifier> event_modifiers;
 
 		/* effect_validator takes in ModifierEffect const& */
 		NodeTools::key_value_callback_t _modifier_effect_callback(
@@ -123,10 +123,15 @@ namespace OpenVic {
 		);
 		IDENTIFIER_REGISTRY_ACCESSORS(modifier_effect)
 
-		bool add_modifier(std::string_view identifier, ModifierValue&& values, Modifier::icon_t icon);
-		IDENTIFIER_REGISTRY_ACCESSORS(modifier)
+		bool add_event_modifier(std::string_view identifier, ModifierValue&& values, Modifier::icon_t icon);
+		IDENTIFIER_REGISTRY_ACCESSORS(event_modifier)
 
 		bool setup_modifier_effects();
+
+		bool load_crime_modifiers(ast::NodeCPtr root);
+		bool load_event_modifiers(ast::NodeCPtr root);
+		bool load_static_modifiers(ast::NodeCPtr root);
+		bool load_triggered_modifiers(ast::NodeCPtr root);
 
 		NodeTools::node_callback_t expect_validated_modifier_value_and_default(
 			NodeTools::callback_t<ModifierValue&&> modifier_callback, NodeTools::key_value_callback_t default_callback,

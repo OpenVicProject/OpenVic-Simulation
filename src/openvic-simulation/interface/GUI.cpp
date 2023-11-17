@@ -17,7 +17,7 @@ bool Element::_fill_key_map(NodeTools::key_map_t& key_map, UIManager const& ui_m
 		{ "CENTER", CENTER }
 	};
 	ret &= add_key_map_entries(key_map,
-		"position", ONE_EXACTLY, expect_ivec2(assign_variable_callback(position)),
+		"position", ONE_EXACTLY, expect_fvec2(assign_variable_callback(position)),
 		"orientation", ZERO_OR_ONE, expect_string(expect_mapped_string(orientation_map, assign_variable_callback(orientation))),
 		"Orientation", ZERO_OR_ONE, expect_string(expect_mapped_string(orientation_map, assign_variable_callback(orientation)))
 	);
@@ -68,7 +68,7 @@ bool Window::_fill_key_map(NodeTools::key_map_t& key_map, UIManager const& ui_ma
 	ret &= Element::_fill_key_map(key_map, ui_manager);
 	ret &= add_key_map_entries(key_map,
 		"backGround", ZERO_OR_ONE, success_callback, // TODO - load as potential panel texture (almost always empty)
-		"size", ONE_EXACTLY, expect_ivec2(assign_variable_callback(size)),
+		"size", ONE_EXACTLY, expect_fvec2(assign_variable_callback(size)),
 		"moveable", ONE_EXACTLY, expect_int_bool(assign_variable_callback(moveable)),
 		"dontRender", ZERO_OR_ONE, success_callback, // always empty string?
 		"horizontalBorder", ZERO_OR_ONE, success_callback,
@@ -144,8 +144,8 @@ bool Text::_fill_key_map(NodeTools::key_map_t& key_map, UIManager const& ui_mana
 	ret &= add_key_map_entries(key_map,
 		"text", ZERO_OR_ONE, expect_string(assign_variable_callback_string(text), true),
 		"font", ONE_EXACTLY, expect_string(ui_manager.expect_font_str(assign_variable_callback_pointer(font))),
-		"maxWidth", ONE_EXACTLY, expect_uint(assign_variable_callback(max_size.x)),
-		"maxHeight", ONE_EXACTLY, expect_uint(assign_variable_callback(max_size.y)),
+		"maxWidth", ONE_EXACTLY, expect_fixed_point(assign_variable_callback(max_size.x)),
+		"maxHeight", ONE_EXACTLY, expect_fixed_point(assign_variable_callback(max_size.y)),
 
 		"borderSize", ZERO_OR_ONE, success_callback,
 		"fixedsize", ZERO_OR_ONE, success_callback,
@@ -161,7 +161,7 @@ OverlappingElementsBox::OverlappingElementsBox() : size {} {}
 bool OverlappingElementsBox::_fill_key_map(NodeTools::key_map_t& key_map, UIManager const& ui_manager) {
 	bool ret = AlignedElement::_fill_key_map(key_map, ui_manager);
 	ret &= add_key_map_entries(key_map,
-		"size", ONE_EXACTLY, expect_ivec2(assign_variable_callback(size)),
+		"size", ONE_EXACTLY, expect_fvec2(assign_variable_callback(size)),
 		"spacing", ONE_EXACTLY, success_callback
 	);
 	return ret;
@@ -173,7 +173,7 @@ bool ListBox::_fill_key_map(NodeTools::key_map_t& key_map, UIManager const& ui_m
 	bool ret = Element::_fill_key_map(key_map, ui_manager);
 	ret &= add_key_map_entries(key_map,
 		"backGround", ZERO_OR_ONE, success_callback,
-		"size", ONE_EXACTLY, expect_ivec2(assign_variable_callback(size)),
+		"size", ONE_EXACTLY, expect_fvec2(assign_variable_callback(size)),
 		"spacing", ZERO_OR_ONE, success_callback,
 		"scrollbartype", ZERO_OR_ONE, success_callback, // TODO - implement modable listbox scrollbars
 		"borderSize", ZERO_OR_ONE, success_callback

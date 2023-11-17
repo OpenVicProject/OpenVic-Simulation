@@ -30,6 +30,11 @@ namespace OpenVic {
 		std::map<Date, std::unique_ptr<entry_type>> PROPERTY(entries);
 
 		bool _try_load_history_entry(GameManager const& game_manager, Args... args, Date date, ast::NodeCPtr root) {
+			const Date end_date = _get_end_date(game_manager);
+			if (date > end_date) {
+				Logger::error("History entry ", date, " defined after end date ", end_date);
+				return false;
+			}
 			typename decltype(entries)::iterator it = entries.find(date);
 			if (it == entries.end()) {
 				const std::pair<typename decltype(entries)::iterator, bool> result = entries.emplace(date, _make_entry(date));
@@ -64,14 +69,12 @@ namespace OpenVic {
 			bool is_date = false;
 			const Date sub_date { Date::from_string(key, &is_date, true) };
 			if (is_date) {
-				if (sub_date <= date) {
+				if (sub_date < date) {
 					Logger::error("History entry ", sub_date, " defined before parent entry date ", date);
 					return false;
 				}
-				const Date end_date = _get_end_date(game_manager);
-				if (sub_date > end_date) {
-					Logger::error("History entry ", sub_date, " defined after end date ", end_date);
-					return false;
+				if (sub_date == date) {
+					Logger::warning("History entry ", sub_date, " defined with same date as parent entry");
 				}
 				if (_try_load_history_entry(game_manager, args..., sub_date, value)) {
 					return true;
@@ -94,7 +97,7 @@ namespace OpenVic {
 			return nullptr;
 		}
 		/* Returns history entries up to date as an ordered list of entries. */
-		std::vector<entry_type const*> get_entries(Date end) const {
+		std::vector<entry_type const*> get_entries_up_to(Date end) const {
 			std::vector<entry_type const*> ret;
 			for (typename decltype(entries)::value_type const& entry : entries) {
 				if (entry.first <= end) {

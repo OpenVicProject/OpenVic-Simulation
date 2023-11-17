@@ -204,6 +204,10 @@ Date Date::operator++(int) {
 	return old;
 }
 
+bool Date::in_range(Date start, Date end) const {
+	return start <= *this && *this <= end;
+}
+
 std::string Date::to_string() const {
 	std::stringstream ss;
 	ss << *this;

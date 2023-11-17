@@ -100,7 +100,7 @@ Date ModifierInstance::get_expiry_date() const {
 	return expiry_date;
 }
 
-ModifierManager::ModifierManager() : modifier_effects { "modifier effects" }, modifiers { "modifiers" } {}
+ModifierManager::ModifierManager() : modifier_effects { "modifier effects" }, event_modifiers { "event modifiers" } {}
 
 bool ModifierManager::add_modifier_effect(std::string_view identifier, bool positive_good, ModifierEffect::format_t format) {
 	if (identifier.empty()) {
@@ -112,7 +112,7 @@ bool ModifierManager::add_modifier_effect(std::string_view identifier, bool posi
 	);
 }
 
-bool ModifierManager::add_modifier(std::string_view identifier, ModifierValue&& values, Modifier::icon_t icon) {
+bool ModifierManager::add_event_modifier(std::string_view identifier, ModifierValue&& values, Modifier::icon_t icon) {
 	if (identifier.empty()) {
 		Logger::error("Invalid modifier effect identifier - empty!");
 		return false;
@@ -121,7 +121,7 @@ bool ModifierManager::add_modifier(std::string_view identifier, ModifierValue&& 
 		Logger::error("Invalid modifier icon for ", identifier, ": ", icon);
 		return false;
 	}
-	return modifiers.add_item({ identifier, std::move(values), icon });
+	return event_modifiers.add_item({ identifier, std::move(values), icon }, duplicate_warning_callback);
 }
 
 bool ModifierManager::setup_modifier_effects() {
@@ -220,6 +220,7 @@ bool ModifierManager::setup_modifier_effects() {
 	ret &= add_modifier_effect("local_factory_throughput", true);
 	ret &= add_modifier_effect("local_repair", true);
 	ret &= add_modifier_effect("local_rgo_output", true);
+	ret &= add_modifier_effect("local_RGO_output", true);
 	ret &= add_modifier_effect("local_RGO_throughput", true);
 	ret &= add_modifier_effect("local_ruling_party_support", true);
 	ret &= add_modifier_effect("local_ship_build", false);
@@ -252,6 +253,39 @@ bool ModifierManager::setup_modifier_effects() {
 	ret &= add_modifier_effect("speed", true);
 
 	return ret;
+}
+
+bool ModifierManager::load_crime_modifiers(ast::NodeCPtr root) {
+	// TODO - DEV TASK: read crime modifiers
+	return true;
+}
+
+bool ModifierManager::load_event_modifiers(ast::NodeCPtr root) {
+	// TODO - DEV TASK: read event modifiers - example framework below
+	return true;
+	/*return expect_dictionary_reserve_length(
+		event_modifiers,
+		[this](std::string_view key, ast::NodeCPtr value) -> bool {
+			ModifierValue modifier_value;
+			Modifier::icon_t icon = 0;
+			bool ret = expect_modifier_value_and_keys(
+				move_variable_callback(modifier_value),
+				"icon", ONE_EXACTLY, expect_uint(assign_variable_callback(icon))
+			)(value);
+			ret &= add_event_modifier(key, std::move(modifier_value), icon);
+			return ret;
+		}
+	)(root);*/
+}
+
+bool ModifierManager::load_static_modifiers(ast::NodeCPtr root) {
+	// TODO - DEV TASK: read static modifiers
+	return true;
+}
+
+bool ModifierManager::load_triggered_modifiers(ast::NodeCPtr root) {
+	// TODO - DEV TASK: read triggered modifiers
+	return true;
 }
 
 key_value_callback_t ModifierManager::_modifier_effect_callback(

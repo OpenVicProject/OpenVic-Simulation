@@ -64,7 +64,7 @@ bool GoodManager::add_good_category(std::string_view identifier) {
 }
 
 bool GoodManager::add_good(
-	std::string_view identifier, colour_t colour, GoodCategory const* category, Good::price_t base_price,
+	std::string_view identifier, colour_t colour, GoodCategory const& category, Good::price_t base_price,
 	bool available_from_start, bool tradeable, bool money, bool overseas_penalty
 ) {
 	if (identifier.empty()) {
@@ -75,16 +75,12 @@ bool GoodManager::add_good(
 		Logger::error("Invalid good colour for ", identifier, ": ", colour_to_hex_string(colour));
 		return false;
 	}
-	if (category == nullptr) {
-		Logger::error("Invalid good category for ", identifier, ": null");
-		return false;
-	}
 	if (base_price <= Good::NULL_PRICE) {
 		Logger::error("Invalid base price for ", identifier, ": ", base_price);
 		return false;
 	}
 	return goods.add_item({
-		identifier, colour, *category, base_price, available_from_start,
+		identifier, colour, category, base_price, available_from_start,
 		tradeable, money, overseas_penalty
 	});
 }
@@ -107,10 +103,8 @@ bool GoodManager::load_goods_file(ast::NodeCPtr root) {
 	)(root);
 	lock_good_categories();
 	goods.reserve(goods.size() + total_expected_goods);
-	ret &= expect_dictionary([this](std::string_view good_category_key, ast::NodeCPtr good_category_value) -> bool {
-		GoodCategory const* good_category = get_good_category_by_identifier(good_category_key);
-
-		return expect_dictionary([this, good_category](std::string_view key, ast::NodeCPtr value) -> bool {
+	ret &= expect_good_category_dictionary([this](GoodCategory const& good_category, ast::NodeCPtr good_category_value) -> bool {
+		return expect_dictionary([this, &good_category](std::string_view key, ast::NodeCPtr value) -> bool {
 			colour_t colour = NULL_COLOUR;
 			Good::price_t base_price;
 			bool available_from_start = true, tradeable = true;

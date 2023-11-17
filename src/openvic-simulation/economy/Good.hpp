@@ -33,7 +33,7 @@ namespace OpenVic {
 		using price_t = fixed_point_t;
 		static constexpr price_t NULL_PRICE = fixed_point_t::_0();
 
-		using good_map_t = decimal_map_t<Good const*>;
+		using good_map_t = fixed_point_map_t<Good const*>;
 
 	private:
 		GoodCategory const& category;
@@ -73,7 +73,7 @@ namespace OpenVic {
 		IDENTIFIER_REGISTRY_ACCESSORS_CUSTOM_PLURAL(good_category, good_categories)
 
 		bool add_good(
-			std::string_view identifier, colour_t colour, GoodCategory const* category, Good::price_t base_price,
+			std::string_view identifier, colour_t colour, GoodCategory const& category, Good::price_t base_price,
 			bool available_from_start, bool tradeable, bool money, bool overseas_penalty
 		);
 		IDENTIFIER_REGISTRY_ACCESSORS(good)
