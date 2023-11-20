@@ -31,13 +31,18 @@ namespace OpenVic {
 
 		struct adjacency_t {
 			friend struct Province;
+			enum type_t {standard, sea, impassable, canal};
 
 		private:
+			type_t PROPERTY(type);
 			Province const* const province;
 			const distance_t PROPERTY(distance);
+			Province const* const through_province;
+			//For now using Flags as the "data" section of adjacencies.csv
 			flags_t PROPERTY(flags);
 
 			adjacency_t(Province const* province, distance_t distance, flags_t flags);
+			adjacency_t(Province const* province, distance_t distance, flags_t flags, type_t type, Province const* through_province);
 		};
 
 		struct province_positions_t {
@@ -111,6 +116,8 @@ namespace OpenVic {
 
 		bool is_adjacent_to(Province const* province);
 		bool add_adjacency(Province const* province, distance_t distance, flags_t flags);
+		bool add_special_adjacency(Province const* province, distance_t distance, flags_t flags, adjacency_t::type_t type, Province const* through);
+		adjacency_t::type_t get_adjacency_type_from_string(std::String type);
 
 		bool reset(BuildingManager const& building_manager);
 		bool apply_history_to_province(ProvinceHistoryEntry const* entry);
