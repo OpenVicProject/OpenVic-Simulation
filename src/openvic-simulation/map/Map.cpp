@@ -25,6 +25,10 @@ Mapmode::base_stripe_t Mapmode::get_base_stripe_colours(Map const& map, Province
 	return colour_func ? colour_func(map, province) : NULL_COLOUR;
 }
 
+Map::Map()
+  : width { 0 }, height { 0 }, max_provinces { Province::MAX_INDEX }, selected_province_index { Province::NULL_INDEX },
+  	highest_province_population { 0 }, total_map_population { 0 } {}
+
 bool Map::add_province(std::string_view identifier, colour_t colour) {
 	if (provinces.size() >= max_provinces) {
 		Logger::error(
@@ -69,7 +73,7 @@ bool Map::set_water_province(std::string_view identifier) {
 		Logger::error("Unrecognised water province identifier: ", identifier);
 		return false;
 	}
-	if (province->get_water()) {
+	if (province->is_water()) {
 		Logger::warning("Province ", identifier, " is already a water province!");
 		return true;
 	}
@@ -172,39 +176,19 @@ bool Map::set_max_provinces(Province::index_t new_max_provinces) {
 	return true;
 }
 
-Province::index_t Map::get_max_provinces() const {
-	return max_provinces;
-}
-
 void Map::set_selected_province(Province::index_t index) {
 	if (index > get_province_count()) {
 		Logger::error(
 			"Trying to set selected province to an invalid index ", index, " (max index is ", get_province_count(), ")"
 		);
-		selected_province = Province::NULL_INDEX;
+		selected_province_index = Province::NULL_INDEX;
 	} else {
-		selected_province = index;
+		selected_province_index = index;
 	}
-}
-
-Province::index_t Map::get_selected_province_index() const {
-	return selected_province;
 }
 
 Province const* Map::get_selected_province() const {
 	return get_province_by_index(get_selected_province_index());
-}
-
-size_t Map::get_width() const {
-	return width;
-}
-
-size_t Map::get_height() const {
-	return height;
-}
-
-std::vector<Map::shape_pixel_t> const& Map::get_province_shape_image() const {
-	return province_shape_image;
 }
 
 bool Map::add_mapmode(std::string_view identifier, Mapmode::colour_func_t colour_func) {
@@ -265,19 +249,11 @@ void Map::update_highest_province_population() {
 	}
 }
 
-Pop::pop_size_t Map::get_highest_province_population() const {
-	return highest_province_population;
-}
-
 void Map::update_total_map_population() {
 	total_map_population = 0;
 	for (Province const& province : provinces.get_items()) {
 		total_map_population += province.get_total_population();
 	}
-}
-
-Pop::pop_size_t Map::get_total_map_population() const {
-	return total_map_population;
 }
 
 bool Map::reset(BuildingTypeManager const& building_type_manager) {
@@ -291,7 +267,7 @@ bool Map::reset(BuildingTypeManager const& building_type_manager) {
 bool Map::apply_history_to_provinces(ProvinceHistoryManager const& history_manager, Date date) {
 	bool ret = true;
 	for (Province& province : provinces.get_items()) {
-		if (!province.get_water()) {
+		if (!province.is_water()) {
 			ProvinceHistoryMap const* history_map = history_manager.get_province_history(&province);
 			if (history_map != nullptr) {
 				ProvinceHistoryEntry const* pop_history_entry = nullptr;
@@ -496,46 +472,39 @@ bool Map::load_map_images(fs::path const& province_path, fs::path const& terrain
 	uint8_t const* province_data = province_bmp.get_pixel_data().data();
 	uint8_t const* terrain_data = terrain_bmp.get_pixel_data().data();
 
-	std::vector<bool> province_checklist(provinces.size());
 	std::vector<fixed_point_map_t<TerrainType const*>> terrain_type_pixels_list(provinces.size());
+
 	bool ret = true;
 	std::unordered_set<colour_t> unrecognised_province_colours;
-	
-	std::vector<fixed_point_t> pixels_per_province(provinces.size());
-	std::vector<fixed_point_t> x_sum_per_province(provinces.size());
-	std::vector<fixed_point_t> y_sum_per_province(provinces.size());
 
-	for (size_t y = 0; y < height; ++y) {
-		for (size_t x = 0; x < width; ++x) {
+	std::vector<fixed_point_t> pixels_per_province(provinces.size());
+	std::vector<fvec2_t> pixel_position_sum_per_province(provinces.size());
+
+	for (int32_t y = 0; y < height; ++y) {
+		for (int32_t x = 0; x < width; ++x) {
 			const size_t pixel_index = x + y * width;
 			const colour_t province_colour = colour_at(province_data, pixel_index);
+			Province::index_t province_index = Province::NULL_INDEX;
 
 			if (x > 0) {
 				const size_t jdx = pixel_index - 1;
 				if (colour_at(province_data, jdx) == province_colour) {
-					province_shape_image[pixel_index].index = province_shape_image[jdx].index;
-					goto set_terrain;
+					province_index = province_shape_image[jdx].index;
+					goto index_found;
 				}
 			}
 
 			if (y > 0) {
 				const size_t jdx = pixel_index - width;
 				if (colour_at(province_data, jdx) == province_colour) {
-					province_shape_image[pixel_index].index = province_shape_image[jdx].index;
-					goto set_terrain;
+					province_index = province_shape_image[jdx].index;
+					goto index_found;
 				}
 			}
 
-			{
-				const Province::index_t province_index = get_index_from_colour(province_colour);
-				if (province_index != Province::NULL_INDEX) {
-					province_checklist[province_index - 1] = true;
-					province_shape_image[pixel_index].index = province_index;
-					goto set_terrain;
-				}
-			}
+			province_index = get_index_from_colour(province_colour);
 
-			if (!unrecognised_province_colours.contains(province_colour)) {
+			if (province_index == Province::NULL_INDEX && !unrecognised_province_colours.contains(province_colour)) {
 				unrecognised_province_colours.insert(province_colour);
 				if (detailed_errors) {
 					Logger::warning(
@@ -544,27 +513,26 @@ bool Map::load_map_images(fs::path const& province_path, fs::path const& terrain
 				}
 			}
 
-			province_shape_image[pixel_index].index = Province::NULL_INDEX;
+		index_found:
+			province_shape_image[pixel_index].index = province_index;
 
-		set_terrain:
-			const Province::index_t province_index = province_shape_image[pixel_index].index;			
 			if (province_index != Province::NULL_INDEX) {
-				const uint16_t array_index = province_index - 1;
+				const Province::index_t array_index = province_index - 1;
 				pixels_per_province[array_index]++;
-				x_sum_per_province[array_index] += x;
-				y_sum_per_province[array_index] += y;
+				pixel_position_sum_per_province[array_index] += static_cast<fvec2_t>(ivec2_t { x, y });
 			}
 
 			const TerrainTypeMapping::index_t terrain = terrain_data[pixel_index];
 			TerrainTypeMapping const* mapping = terrain_type_manager.get_terrain_type_mapping_for(terrain);
 			if (mapping != nullptr) {
-
 				if (province_index != Province::NULL_INDEX) {
 					terrain_type_pixels_list[province_index - 1][&mapping->get_type()]++;
 				}
-
-				province_shape_image[pixel_index].terrain =
-					mapping->get_has_texture() && terrain < terrain_type_manager.get_terrain_texture_limit() ? terrain + 1 : 0;
+				if (mapping->get_has_texture() && terrain < terrain_type_manager.get_terrain_texture_limit()) {
+					province_shape_image[pixel_index].terrain = terrain + 1;
+				} else {
+					province_shape_image[pixel_index].terrain = 0;
+				}
 			} else {
 				province_shape_image[pixel_index].terrain = 0;
 			}
@@ -576,23 +544,19 @@ bool Map::load_map_images(fs::path const& province_path, fs::path const& terrain
 	}
 
 	size_t missing = 0;
-	for (size_t array_index = 0; array_index < province_checklist.size(); ++array_index) {
+	for (size_t array_index = 0; array_index < provinces.size(); ++array_index) {
 		Province* province = provinces.get_item_by_index(array_index);
-		const fixed_point_t pixel_count = pixels_per_province[array_index];
-		if(pixel_count > 0) {
-			const fixed_point_t x = x_sum_per_province[array_index] / pixel_count;
-			const fixed_point_t y = y_sum_per_province[array_index] / pixel_count;
-			const fvec2_t center { x, y };
-			province->positions.center = center;
-		}
-		else {
-			Logger::warning("Province ",province->index," has no pixels");
-		}
 
-		const fixed_point_map_const_iterator_t<TerrainType const*> largest = get_largest_item(terrain_type_pixels_list[array_index]);
-		province->default_terrain_type = largest != terrain_type_pixels_list[array_index].end() ? largest->first : nullptr;
-		province->on_map = province_checklist[array_index];
-		if (!province->on_map) {
+		fixed_point_map_t<TerrainType const*> const& terrain_type_pixels = terrain_type_pixels_list[array_index];
+		const fixed_point_map_const_iterator_t<TerrainType const*> largest = get_largest_item(terrain_type_pixels);
+		province->default_terrain_type = largest != terrain_type_pixels.end() ? largest->first : nullptr;
+
+		const fixed_point_t pixel_count = pixels_per_province[array_index];
+		province->on_map = pixel_count > 0;
+
+		if (province->on_map) {
+			province->positions.centre = pixel_position_sum_per_province[array_index] / pixel_count;
+		} else {
 			if (detailed_errors) {
 				Logger::warning("Province missing from shape image: ", province->to_string());
 			}
@@ -609,15 +573,13 @@ bool Map::load_map_images(fs::path const& province_path, fs::path const& terrain
 /* REQUIREMENTS:
  * MAP-19, MAP-84
  */
-bool Map::_generate_province_adjacencies() {
+bool Map::_generate_standard_province_adjacencies() {
 	bool changed = false;
 
-	auto generate_adjacency = [&](Province* current, size_t x, size_t y) -> bool {
+	const auto generate_adjacency = [this, &changed](Province* current, size_t x, size_t y) -> bool {
 		Province* neighbour = get_province_by_index(province_shape_image[x + y * width].index);
-		if (neighbour != nullptr && current != neighbour) {
-			const Province::distance_t distance = current->calculate_distance_to(neighbour);
-			const Province::flags_t flags = 0;
-			return current->add_adjacency(neighbour, distance, flags) | neighbour->add_adjacency(current, distance, flags);
+		if (neighbour != nullptr) {
+			return Province::add_standard_adjacency(*current, *neighbour);
 		}
 		return false;
 	};
@@ -638,8 +600,64 @@ bool Map::_generate_province_adjacencies() {
 	return changed;
 }
 
-bool Map::generate_and_load_province_adjacencies(std::vector<ovdl::csv::LineObject> const& additional_adjacencies) {
-	bool ret = _generate_province_adjacencies();
-	// TODO - DEV TASK: read additional adjacencies
+bool Map::generate_and_load_province_adjacencies(std::vector<LineObject> const& additional_adjacencies) {
+	bool ret = _generate_standard_province_adjacencies();
+	if (!ret) {
+		Logger::error("Failed to generate standard province adjacencies!");
+	}
+	/* Skip first line containing column headers */
+	if (additional_adjacencies.size() <= 1) {
+		Logger::error("No entries in province adjacencies file!");
+		return false;
+	}
+	std::for_each(
+		additional_adjacencies.begin() + 1, additional_adjacencies.end(), [this, &ret](LineObject const& adjacency) -> void {
+			const std::string_view from_str = adjacency.get_value_for(0);
+			if (from_str.empty() || from_str.front() == '#') {
+				return;
+			}
+			Province* const from = get_province_by_identifier(from_str);
+			if (from == nullptr) {
+				Logger::error("Unrecognised adjacency from province identifier: \"", from_str, "\"");
+				ret = false;
+				return;
+			}
+
+			const std::string_view to_str = adjacency.get_value_for(1);
+			Province* const to = get_province_by_identifier(to_str);
+			if (to == nullptr) {
+				Logger::error("Unrecognised adjacency to province identifier: \"", to_str, "\"");
+				ret = false;
+				return;
+			}
+
+			using enum Province::adjacency_t::type_t;
+			static const string_map_t<Province::adjacency_t::type_t> type_map {
+				{ "land", LAND }, { "sea", STRAIT }, { "impassable", IMPASSABLE }, { "canal", CANAL }
+			};
+			const std::string_view type_str = adjacency.get_value_for(2);
+			const string_map_t<Province::adjacency_t::type_t>::const_iterator it = type_map.find(type_str);
+			if (it == type_map.end()) {
+				Logger::error("Invalid adjacency type: \"", type_str, "\"");
+				ret = false;
+				return;
+			}
+			const Province::adjacency_t::type_t type = it->second;
+
+			Province const* const through = get_province_by_identifier(adjacency.get_value_for(3));
+
+			const std::string_view data_str = adjacency.get_value_for(4);
+			bool successful = false;
+			const uint64_t data_uint = StringUtils::string_to_uint64(data_str, &successful);
+			if (!successful || data_uint > std::numeric_limits<Province::adjacency_t::data_t>::max()) {
+				Logger::error("Invalid adjacency data: \"", data_str, "\"");
+				ret = false;
+				return;
+			}
+			const Province::adjacency_t::data_t data = data_uint;
+
+			ret &= Province::add_special_adjacency(*from, *to, type, through, data);
+		}
+	);
 	return ret;
 }

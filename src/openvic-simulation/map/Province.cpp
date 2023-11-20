@@ -7,12 +7,16 @@ using namespace OpenVic::NodeTools;
 
 Province::Province(
 	std::string_view new_identifier, colour_t new_colour, index_t new_index
-) : HasIdentifierAndColour { new_identifier, new_colour, true, false }, index { new_index },
-	region { nullptr }, on_map { false }, has_region { false }, water { false }, default_terrain_type { nullptr },
-	positions {}, terrain_type { nullptr }, life_rating { 0 }, colony_status { colony_status_t::STATE }, owner { nullptr },
-	controller { nullptr }, slave { false }, crime { nullptr }, rgo { nullptr }, buildings { "buildings", false },
-	total_population { 0 } {
+) : HasIdentifierAndColour { new_identifier, new_colour, true, false }, index { new_index }, region { nullptr },
+	on_map { false }, has_region { false }, water { false }, coastal { false }, port { false },
+	default_terrain_type { nullptr }, positions {}, terrain_type { nullptr }, life_rating { 0 },
+	colony_status { colony_status_t::STATE }, state { nullptr }, owner { nullptr }, controller { nullptr }, slave { false },
+	crime { nullptr }, rgo { nullptr }, buildings { "buildings", false }, total_population { 0 } {
 	assert(index != NULL_INDEX);
+}
+
+bool Province::operator==(Province const& other) const {
+	return this == &other;
 }
 
 std::string Province::to_string() const {
@@ -22,7 +26,7 @@ std::string Province::to_string() const {
 }
 
 bool Province::load_positions(BuildingTypeManager const& building_type_manager, ast::NodeCPtr root) {
-	return expect_dictionary_keys(
+	const bool ret = expect_dictionary_keys(
 		"text_position", ZERO_OR_ONE, expect_fvec2(assign_variable_callback(positions.text)),
 		"text_rotation", ZERO_OR_ONE, expect_fixed_point(assign_variable_callback(positions.text_rotation)),
 		"text_scale", ZERO_OR_ONE, expect_fixed_point(assign_variable_callback(positions.text_scale)),
@@ -48,6 +52,10 @@ bool Province::load_positions(BuildingTypeManager const& building_type_manager, 
 		"railroad_visibility", ZERO_OR_ONE, success_callback,
 		"building_nudge", ZERO_OR_ONE, success_callback
 	)(root);
+
+	port = coastal && positions.building_position.contains(building_type_manager.get_port_building_type());
+
+	return ret;
 }
 
 bool Province::expand_building(std::string_view building_type_identifier) {
@@ -59,7 +67,7 @@ bool Province::expand_building(std::string_view building_type_identifier) {
 }
 
 bool Province::add_pop(Pop&& pop) {
-	if (!get_water()) {
+	if (!is_water()) {
 		pops.push_back(std::move(pop));
 		return true;
 	} else {
@@ -69,7 +77,7 @@ bool Province::add_pop(Pop&& pop) {
 }
 
 bool Province::add_pop_vec(std::vector<Pop> const& pop_vec) {
-	if (!get_water()) {
+	if (!is_water()) {
 		pops.reserve(pops.size() + pop_vec.size());
 		for (Pop const& pop : pop_vec) {
 			pops.push_back(pop);
@@ -116,57 +124,241 @@ void Province::tick(Date today) {
 	}
 }
 
-Province::adjacency_t::adjacency_t(Province const* province, distance_t distance, flags_t flags)
-	: province { province }, distance { distance }, flags { flags } {
-	assert(province != nullptr);
+Province::adjacency_t::adjacency_t(
+	Province const* new_to, distance_t new_distance, type_t new_type, Province const* new_through, data_t new_data
+) : to { new_to }, distance { new_distance }, type { new_type }, through { new_through }, data { new_data } {}
+
+std::string_view Province::adjacency_t::get_type_name(type_t type) {
+	switch (type) {
+	case type_t::LAND: return "Land";
+	case type_t::WATER: return "Water";
+	case type_t::COASTAL: return "Coastal";
+	case type_t::IMPASSABLE: return "Impassable";
+	case type_t::STRAIT: return "Strait";
+	case type_t::CANAL: return "Canal";
+	default: return "Invalid Adjacency Type";
+	}
+}
+
+Province::adjacency_t* Province::get_adjacency_to(Province const* province) {
+	const std::vector<adjacency_t>::iterator it = std::find_if(adjacencies.begin(), adjacencies.end(),
+		[province](adjacency_t const& adj) -> bool { return adj.get_to() == province; }
+	);
+	if (it != adjacencies.end()) {
+		return &*it;
+	} else {
+		return nullptr;
+	}
+}
+
+Province::adjacency_t const* Province::get_adjacency_to(Province const* province) const {
+	const std::vector<adjacency_t>::const_iterator it = std::find_if(adjacencies.begin(), adjacencies.end(),
+		[province](adjacency_t const& adj) -> bool { return adj.get_to() == province; }
+	);
+	if (it != adjacencies.end()) {
+		return &*it;
+	} else {
+		return nullptr;
+	}
 }
 
 bool Province::is_adjacent_to(Province const* province) const {
-	for (adjacency_t adj : adjacencies) {
-		if (adj.province == province) {
-			return true;
-		}
-	}
-	return false;
+	return province != nullptr && std::any_of(adjacencies.begin(), adjacencies.end(),
+		[province](adjacency_t const& adj) -> bool { return adj.get_to() == province; }
+	);
 }
 
-bool Province::add_adjacency(Province const* province, distance_t distance, flags_t flags) {
-	if (province == nullptr) {
-		Logger::error("Tried to create null adjacency province for province ", get_identifier(), "!");
+std::vector<Province::adjacency_t const*> Province::get_adjacencies_going_through(Province const* province) const {
+	std::vector<adjacency_t const*> ret;
+	for (adjacency_t const& adj : adjacencies) {
+		if (adj.get_through() == province) {
+			ret.push_back(&adj);
+		}
+	}
+	return ret;
+}
+
+bool Province::has_adjacency_going_through(Province const* province) const {
+	return province != nullptr && std::any_of(adjacencies.begin(), adjacencies.end(),
+		[province](adjacency_t const& adj) -> bool { return adj.get_through() == province; }
+	);
+}
+
+/* This is called for all adjacent pixel pairs and returns whether or not a new adjacency was add,
+ * hence the lack of error messages in the false return cases. */
+bool Province::add_standard_adjacency(Province& from, Province& to) {
+	if (from == to) {
 		return false;
 	}
-	if (is_adjacent_to(province)) {
+
+	const bool from_needs_adjacency = !from.is_adjacent_to(&to);
+	const bool to_needs_adjacency = !to.is_adjacent_to(&from);
+
+	if (!from_needs_adjacency && !to_needs_adjacency) {
 		return false;
 	}
-	adjacencies.push_back({ province, distance, flags });
+
+	const distance_t distance = calculate_distance_between(from, to);
+
+	using enum adjacency_t::type_t;
+
+	/* Default land-to-land adjacency */
+	adjacency_t::type_t type = LAND;
+	if (from.is_water() != to.is_water()) {
+		/* Land-to-water adjacency */
+		type = COASTAL;
+
+		/* Mark the land province as coastal */
+		from.coastal = !from.is_water();
+		to.coastal = !to.is_water();
+	} else if (from.is_water()) {
+		/* Water-to-water adjacency */
+		type = WATER;
+	}
+
+	if (from_needs_adjacency) {
+		from.adjacencies.emplace_back(&to, distance, type, nullptr, 0);
+	}
+	if (to_needs_adjacency) {
+		to.adjacencies.emplace_back(&from, distance, type, nullptr, 0);
+	}
 	return true;
 }
 
-fvec2_t Province::get_unit_position() const {
-	return positions.unit.value_or(positions.center);
+bool Province::add_special_adjacency(
+	Province& from, Province& to, adjacency_t::type_t type, Province const* through, adjacency_t::data_t data
+) {
+	if (from == to) {
+		Logger::error("Trying to add ", adjacency_t::get_type_name(type), " adjacency from province ", from, " to itself!");
+		return false;
+	}
+
+	using enum adjacency_t::type_t;
+
+	/* Check end points */
+	switch (type) {
+	case LAND:
+	case IMPASSABLE:
+	case STRAIT:
+		if (from.is_water() || to.is_water()) {
+			Logger::error(adjacency_t::get_type_name(type), " adjacency from ", from, " to ", to, " has water endpoint(s)!");
+			return false;
+		}
+		break;
+	case WATER:
+	case CANAL:
+		if (!from.is_water() || !to.is_water()) {
+			Logger::error(adjacency_t::get_type_name(type), " adjacency from ", from, " to ", to, " has land endpoint(s)!");
+			return false;
+		}
+		break;
+	case COASTAL:
+		if (from.is_water() == to.is_water()) {
+			Logger::error("Coastal adjacency from ", from, " to ", to, " has both land or water endpoints!");
+			return false;
+		}
+		break;
+	default:
+		Logger::error("Invalid adjacency type ", static_cast<uint32_t>(type));
+		return false;
+	}
+
+	/* Check through province */
+	if (type == STRAIT || type == CANAL) {
+		const bool water_expected = type == STRAIT;
+		if (through == nullptr || through->is_water() != water_expected) {
+			Logger::error(
+				adjacency_t::get_type_name(type), " adjacency from ", from, " to ", to, " has a ",
+				(through == nullptr ? "null" : water_expected ? "land" : "water"), " through province ", through
+			);
+			return false;
+		}
+	} else if (through != nullptr) {
+		Logger::warning(
+			adjacency_t::get_type_name(type), " adjacency from ", from, " to ", to, " has a non-null through province ",
+			through
+		);
+		through = nullptr;
+	}
+
+	/* Check canal data */
+	if (data != adjacency_t::NO_CANAL && type != CANAL) {
+		Logger::warning(
+			adjacency_t::get_type_name(type), " adjacency from ", from, " to ", to, " has invalid data ",
+			static_cast<uint32_t>(data)
+		);
+		data = adjacency_t::NO_CANAL;
+	}
+
+	const distance_t distance = calculate_distance_between(from, to);
+
+	const auto add_adjacency = [distance, type, through, data](Province& from, Province const& to) -> bool {
+		adjacency_t* existing_adjacency = from.get_adjacency_to(&to);
+		if (existing_adjacency != nullptr) {
+			if (type == existing_adjacency->get_type()) {
+				Logger::warning(
+					"Adjacency from ", from, " to ", to, " already has type ", adjacency_t::get_type_name(type), "!"
+				);
+				if (type != STRAIT && type != CANAL) {
+					/* Straits and canals might change through or data, otherwise we can exit early */
+					return true;
+				}
+			}
+			if (type != IMPASSABLE && type != STRAIT && type != CANAL) {
+				Logger::error(
+					"Provinces ", from, " and ", to, " already have an existing ",
+					adjacency_t::get_type_name(existing_adjacency->get_type()), " adjacency, cannot create a ",
+					adjacency_t::get_type_name(type), " adjacency!"
+				);
+				return false;
+			}
+			if (type != existing_adjacency->get_type() && existing_adjacency->get_type() != (type == CANAL ? WATER : LAND)) {
+				Logger::error(
+					"Cannot convert ", adjacency_t::get_type_name(existing_adjacency->get_type()), " adjacency from ", from,
+					" to ", to, " to type ", adjacency_t::get_type_name(type), "!"
+				);
+				return false;
+			}
+			*existing_adjacency = { &to, distance, type, through, data };
+			return true;
+		} else if (type == IMPASSABLE) {
+			Logger::warning(
+				"Provinces ", from, " and ", to, " do not have an existing adjacency to make impassable!"
+			);
+			return true;
+		} else {
+			from.adjacencies.emplace_back(&to, distance, type, through, data);
+			return true;
+		}
+	};
+
+	return add_adjacency(from, to) & add_adjacency(to, from);
 }
 
-Province::distance_t Province::calculate_distance_to(Province const* province) const {
-	const fvec2_t my_unit_position = get_unit_position();
-	const fvec2_t other_unit_position = province->get_unit_position();
-	const fvec2_t distance_vector = other_unit_position - my_unit_position;
-	const fixed_point_t distance = distance_vector.length_squared();
-	return static_cast<Province::distance_t>(distance);
+fvec2_t Province::get_unit_position() const {
+	return positions.unit.value_or(positions.centre);
+}
+
+Province::distance_t Province::calculate_distance_between(Province const& from, Province const& to) {
+	const fvec2_t distance_vector = to.get_unit_position() - from.get_unit_position();
+	return distance_vector.length_squared(); // TODO - replace with length using deterministic fixed point square root
 }
 
 bool Province::reset(BuildingTypeManager const& building_type_manager) {
 	terrain_type = default_terrain_type;
 	life_rating = 0;
 	colony_status = colony_status_t::STATE;
+	state = nullptr;
 	owner = nullptr;
 	controller = nullptr;
 	cores.clear();
 	slave = false;
+	crime = nullptr;
 	rgo = nullptr;
 
 	buildings.reset();
 	bool ret = true;
-	if (!get_water()) {
+	if (!is_water()) {
 		if (building_type_manager.building_types_are_locked()) {
 			for (BuildingType const& building_type : building_type_manager.get_building_types()) {
 				if (building_type.get_in_province()) {
@@ -232,6 +424,6 @@ bool Province::apply_history_to_province(ProvinceHistoryEntry const* entry) {
 		}
 	}
 	// TODO: load state buildings
-	// TODO: party loyalties for each POP when implemented on POP side#
+	// TODO: party loyalties for each POP when implemented on POP side
 	return ret;
 }

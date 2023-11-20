@@ -101,7 +101,7 @@ void ProvinceHistoryManager::lock_province_histories(Map const& map, bool detail
 	for (size_t idx = 0; idx < province_checklist.size(); ++idx) {
 		if (!province_checklist[idx]) {
 			Province const& province = *map.get_province_by_index(idx + 1);
-			if (!province.get_water()) {
+			if (!province.is_water()) {
 				if (detailed_errors) {
 					Logger::warning("Province history missing for province: ", province.get_identifier());
 				}

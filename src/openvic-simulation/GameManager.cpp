@@ -203,6 +203,43 @@ bool GameManager::load_hardcoded_defines() {
 		},
 		{
 			"mapmode_religion", shaded_mapmode(&Province::get_religion_distribution)
+		},
+		{
+			"mapmode_adjacencies", [](Map const& map, Province const& province) -> Mapmode::base_stripe_t {
+				Province const* selected_province = map.get_selected_province();
+				if (selected_province != nullptr) {
+					if (selected_province == &province) {
+						return make_solid_base_stripe(ALPHA_VALUE | 0xFFFFFF);
+					}
+					colour_t base = NULL_COLOUR, stripe = NULL_COLOUR;
+					Province::adjacency_t const* adj = selected_province->get_adjacency_to(&province);
+					if (adj != nullptr) {
+						using enum Province::adjacency_t::type_t;
+						switch (adj->get_type()) {
+						case LAND: base = 0x00FF00; break;
+						case WATER: base = 0x0000FF; break;
+						case COASTAL: base = 0xF9D199; break;
+						case IMPASSABLE: base = 0x8B4513; break;
+						case STRAIT: base = 0x00FFFF; break;
+						case CANAL: base = 0x888888; break;
+						default: base = 0xFF0000; break;
+						}
+						base |= ALPHA_VALUE;
+						stripe = base;
+					}
+					if (selected_province->has_adjacency_going_through(&province)) {
+						stripe = ALPHA_VALUE | 0xFFFF00;
+					}
+
+					return combine_base_stripe(base, stripe);
+				}
+				return NULL_COLOUR;
+			}
+		},
+		{
+			"mapmode_port", make_solid_base_stripe_func([](Map const& map, Province const& province) -> colour_t {
+				return province.has_port() ? ALPHA_VALUE | 0xFFFFFF : NULL_COLOUR;
+			})
 		}
 	};
 

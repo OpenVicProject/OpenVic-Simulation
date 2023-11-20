@@ -585,15 +585,18 @@ bool Dataloader::_load_map_dir(GameManager& game_manager) const {
 	static constexpr std::string_view default_provinces = "provinces.bmp";
 	static constexpr std::string_view default_positions = "positions.txt";
 	static constexpr std::string_view default_terrain = "terrain.bmp";
-	static constexpr std::string_view default_rivers = "rivers.bmp";
+	static constexpr std::string_view default_rivers = "rivers.bmp"; // TODO
 	static constexpr std::string_view default_terrain_definition = "terrain.txt";
-	static constexpr std::string_view default_tree_definition = "trees.txt";
-	static constexpr std::string_view default_continent = "continent.txt";
+	static constexpr std::string_view default_tree_definition = "trees.txt"; // TODO
+	static constexpr std::string_view default_continent = "continent.txt"; // TODO
 	static constexpr std::string_view default_adjacencies = "adjacencies.csv";
 	static constexpr std::string_view default_region = "region.txt";
-	static constexpr std::string_view default_region_sea = "region_sea.txt";
-	static constexpr std::string_view default_province_flag_sprite = "province_flag_sprites";
+	static constexpr std::string_view default_region_sea = "region_sea.txt"; // TODO
+	static constexpr std::string_view default_province_flag_sprite = "province_flag_sprites"; // TODO
 
+	static constexpr std::string_view climate_filename = "climate.txt"; // TODO
+
+	/* Parser stored so the filename string_views persist until the end of this function. */
 	const v2script::Parser parser = parse_defines(lookup_file(append_string_views(map_directory, defaults_filename)));
 
 	std::vector<std::string_view> water_province_identifiers;
@@ -645,14 +648,6 @@ bool Dataloader::_load_map_dir(GameManager& game_manager) const {
 		ret = false;
 	}
 
-	if (!map.load_province_positions(
-		game_manager.get_economy_manager().get_building_type_manager(),
-		parse_defines(lookup_file(append_string_views(map_directory, positions))).get_file_node()
-	)) {
-		Logger::error("Failed to load province positions file!");
-		ret = false;
-	}
-
 	if (!map.load_region_file(parse_defines(lookup_file(append_string_views(map_directory, region))).get_file_node())) {
 		Logger::error("Failed to load region file!");
 		ret = false;
@@ -679,10 +674,21 @@ bool Dataloader::_load_map_dir(GameManager& game_manager) const {
 		ret = false;
 	}
 
-	if (!map.generate_and_load_province_adjacencies(
+	if (map.generate_and_load_province_adjacencies(
 		parse_csv(lookup_file(append_string_views(map_directory, adjacencies))).get_lines()
 	)) {
+		Logger::info("Successfully generated and loaded province adjacencies!");
+	} else {
 		Logger::error("Failed to generate and load province adjacencies!");
+		ret = false;
+	}
+
+	/* Must be loaded after adjacencies so we know what provinces are coastal, and so can have a port */
+	if (!map.load_province_positions(
+		game_manager.get_economy_manager().get_building_type_manager(),
+		parse_defines(lookup_file(append_string_views(map_directory, positions))).get_file_node()
+	)) {
+		Logger::error("Failed to load province positions file!");
 		ret = false;
 	}
 

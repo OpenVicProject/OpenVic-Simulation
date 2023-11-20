@@ -61,7 +61,7 @@ namespace OpenVic {
 		bool PROPERTY(sail); // only in clipper shipyard
 		bool PROPERTY(steam); // only in steamer shipyard
 		bool PROPERTY(capital); // only in naval base
-		bool PROPERTY(port); // only in naval base
+		bool PROPERTY_CUSTOM_PREFIX(port, is); // only in naval base
 
 		BuildingType(std::string_view identifier, ARGS);
 
@@ -74,8 +74,11 @@ namespace OpenVic {
 
 	private:
 		IdentifierRegistry<BuildingType> IDENTIFIER_REGISTRY(building_type);
+		BuildingType const* PROPERTY(port_building_type);
 
 	public:
+		BuildingTypeManager();
+
 		bool add_building_type(std::string_view identifier, ARGS);
 
 		bool load_buildings_file(
