@@ -15,34 +15,6 @@ Pop::Pop(
 	assert(size > 0);
 }
 
-PopType const& Pop::get_type() const {
-	return type;
-}
-
-Culture const& Pop::get_culture() const {
-	return culture;
-}
-
-Religion const& Pop::get_religion() const {
-	return religion;
-}
-
-Pop::pop_size_t Pop::get_size() const {
-	return size;
-}
-
-Pop::pop_size_t Pop::get_num_promoted() const {
-	return num_promoted;
-}
-
-Pop::pop_size_t Pop::get_num_demoted() const {
-	return num_demoted;
-}
-
-Pop::pop_size_t Pop::get_num_migrated() const {
-	return num_migrated;
-}
-
 Pop::pop_size_t Pop::get_pop_daily_change() const {
 	return Pop::get_num_promoted() - (Pop::get_num_demoted() + Pop::get_num_migrated());
 }
@@ -60,54 +32,6 @@ PopType::PopType(
 	assert(sprite > 0);
 	assert(max_size >= 0);
 	assert(merge_max_size >= 0);
-}
-
-PopType::sprite_t PopType::get_sprite() const {
-	return sprite;
-}
-
-Good::good_map_t const& PopType::get_life_needs() const {
-	return life_needs;
-}
-
-Good::good_map_t const& PopType::get_everyday_needs() const {
-	return everyday_needs;
-}
-
-Good::good_map_t const& PopType::get_luxury_needs() const {
-	return luxury_needs;
-}
-
-PopType::rebel_units_t const& PopType::get_rebel_units() const {
-	return rebel_units;
-}
-
-PopType::strata_t PopType::get_strata() const {
-	return strata;
-}
-
-Pop::pop_size_t PopType::get_max_size() const {
-	return max_size;
-}
-
-Pop::pop_size_t PopType::get_merge_max_size() const {
-	return merge_max_size;
-}
-
-bool PopType::get_state_capital_only() const {
-	return state_capital_only;
-}
-
-bool PopType::get_demote_migrant() const {
-	return demote_migrant;
-}
-
-bool PopType::get_is_artisan() const {
-	return is_artisan;
-}
-
-bool PopType::get_is_slave() const {
-	return is_slave;
 }
 
 PopManager::PopManager() : pop_types { "pop types" } {}

@@ -14,18 +14,6 @@ Religion::Religion(
 	assert(icon > 0);
 }
 
-ReligionGroup const& Religion::get_group() const {
-	return group;
-}
-
-Religion::icon_t Religion::get_icon() const {
-	return icon;
-}
-
-bool Religion::get_pagan() const {
-	return pagan;
-}
-
 ReligionManager::ReligionManager() : religion_groups { "religion groups" }, religions { "religions" } {}
 
 bool ReligionManager::add_religion_group(std::string_view identifier) {

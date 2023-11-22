@@ -9,10 +9,11 @@ namespace OpenVic {
 		friend struct GovernmentTypeManager;
 
 	private:
-		const std::vector<Ideology const*> ideologies;
-		const bool elections, appoint_ruling_party;
-		const Timespan term_duration;
-		const std::string flag_type_identifier;
+		const std::vector<Ideology const*> PROPERTY(ideologies);
+		const bool PROPERTY_CUSTOM_NAME(elections, holds_elections);
+		const bool PROPERTY_CUSTOM_NAME(appoint_ruling_party, can_appoint_ruling_party);
+		const Timespan PROPERTY(term_duration);
+		const std::string PROPERTY_CUSTOM_NAME(flag_type_identifier, get_flag_type);
 
 		GovernmentType(
 			std::string_view new_identifier, std::vector<Ideology const*>&& new_ideologies, bool new_elections,
@@ -23,11 +24,6 @@ namespace OpenVic {
 		GovernmentType(GovernmentType&&) = default;
 
 		bool is_ideology_compatible(Ideology const* ideology) const;
-		std::vector<Ideology const*> const& get_ideologies() const;
-		bool holds_elections() const;
-		bool can_appoint_ruling_party() const;
-		Timespan get_term_duration() const;
-		std::string_view get_flag_type() const;
 	};
 
 	struct GovernmentTypeManager {

@@ -7,42 +7,14 @@ IssueGroup::IssueGroup(std::string_view new_identifier) : HasIdentifier { new_id
 
 Issue::Issue(std::string_view identifier, IssueGroup const& group) : HasIdentifier { identifier }, group { group } {}
 
-IssueGroup const& Issue::get_group() const {
-	return group;
-}
-
 ReformType::ReformType(std::string_view new_identifier, bool uncivilised)
 	: HasIdentifier { new_identifier }, uncivilised { uncivilised } {}
 
 ReformGroup::ReformGroup(std::string_view identifier, ReformType const& type, bool ordered, bool administrative)
 	: IssueGroup { identifier }, type { type }, ordered { ordered }, administrative { administrative } {}
 
-ReformType const& ReformGroup::get_type() const {
-	return type;
-}
-
-bool ReformGroup::is_ordered() const {
-	return ordered;
-}
-
-bool ReformGroup::is_administrative() const {
-	return administrative;
-}
-
 Reform::Reform(std::string_view identifier, ReformGroup const& group, size_t ordinal)
 	: Issue { identifier, group }, ordinal { ordinal }, reform_group { group } {}
-
-ReformGroup const& Reform::get_reform_group() const {
-	return reform_group;
-}
-
-ReformType const& Reform::get_type() const {
-	return get_reform_group().get_type();
-}
-
-size_t Reform::get_ordinal() const {
-	return ordinal;
-}
 
 IssueManager::IssueManager()
   : issue_groups { "issue groups" }, issues { "issues" }, reform_types { "reform types" }, reform_groups { "reform groups" },

@@ -13,11 +13,11 @@ namespace OpenVic {
 		friend struct BookmarkManager;
 
 	private:
-		const std::string name;
-		const std::string description;
-		const Date date;
-		const uint32_t initial_camera_x;
-		const uint32_t initial_camera_y;
+		const std::string PROPERTY(name);
+		const std::string PROPERTY(description);
+		const Date PROPERTY(date);
+		const uint32_t PROPERTY(initial_camera_x);
+		const uint32_t PROPERTY(initial_camera_y);
 
 		Bookmark(
 			size_t new_index, std::string_view new_name, std::string_view new_description, Date new_date,
@@ -26,12 +26,6 @@ namespace OpenVic {
 
 	public:
 		Bookmark(Bookmark&&) = default;
-
-		std::string_view get_name() const;
-		std::string_view get_description() const;
-		Date get_date() const;
-		uint32_t get_initial_camera_x() const;
-		uint32_t get_initial_camera_y() const;
 	};
 
 	struct BookmarkManager {

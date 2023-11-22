@@ -21,7 +21,7 @@ namespace OpenVic {
 		using index_t = size_t;
 
 	private:
-		const index_t index;
+		const index_t PROPERTY(index);
 		const colour_func_t colour_func;
 
 		Mapmode(std::string_view new_identifier, index_t new_index, colour_func_t new_colour_func);
@@ -31,7 +31,6 @@ namespace OpenVic {
 
 		Mapmode(Mapmode&&) = default;
 
-		index_t get_index() const;
 		base_stripe_t get_base_stripe_colours(Map const& map, Province const& province) const;
 	};
 

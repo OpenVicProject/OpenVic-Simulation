@@ -12,7 +12,7 @@ namespace OpenVic {
 	private:
 		BuildingType const& PROPERTY(building_type);
 
-		level_t PROPERTY(level);
+		level_t PROPERTY_RW(level);
 		ExpansionState PROPERTY(expansion_state);
 		Date PROPERTY(start_date)
 		Date PROPERTY(end_date);
@@ -23,8 +23,6 @@ namespace OpenVic {
 	public:
 		BuildingInstance(BuildingType const& new_building_type, level_t new_level = 0);
 		BuildingInstance(BuildingInstance&&) = default;
-
-		void set_level(level_t new_level);
 
 		bool expand();
 		void update_state(Date today);

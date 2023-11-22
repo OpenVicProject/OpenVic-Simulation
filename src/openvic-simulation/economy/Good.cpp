@@ -16,38 +16,6 @@ Good::Good(
 	assert(base_price > NULL_PRICE);
 }
 
-GoodCategory const& Good::get_category() const {
-	return category;
-}
-
-Good::price_t Good::get_base_price() const {
-	return base_price;
-}
-
-Good::price_t Good::get_price() const {
-	return price;
-}
-
-bool Good::get_available_from_start() const {
-	return available_from_start;
-}
-
-bool Good::get_available() const {
-	return available;
-}
-
-bool Good::get_tradeable() const {
-	return tradeable;
-}
-
-bool Good::get_money() const {
-	return money;
-}
-
-bool Good::get_overseas_penalty() {
-	return overseas_penalty;
-}
-
 void Good::reset_to_defaults() {
 	available = available_from_start;
 	price = base_price;

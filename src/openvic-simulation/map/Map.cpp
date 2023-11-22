@@ -21,10 +21,6 @@ const Mapmode Mapmode::ERROR_MAPMODE {
 	"mapmode_error", 0, [](Map const& map, Province const& province) -> colour_t { return 0xFFFF0000; }
 };
 
-Mapmode::index_t Mapmode::get_index() const {
-	return index;
-}
-
 Mapmode::base_stripe_t Mapmode::get_base_stripe_colours(Map const& map, Province const& province) const {
 	return colour_func ? colour_func(map, province) : NULL_COLOUR;
 }

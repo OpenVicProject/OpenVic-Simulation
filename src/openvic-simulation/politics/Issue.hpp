@@ -25,7 +25,7 @@ namespace OpenVic {
 		friend struct IssueManager;
 
 	private:
-		IssueGroup const& group;
+		IssueGroup const& PROPERTY(group);
 
 		// TODO: policy modifiers, policy rule changes
 
@@ -34,7 +34,6 @@ namespace OpenVic {
 
 	public:
 		Issue(Issue&&) = default;
-		IssueGroup const& get_group() const;
 	};
 
 	// Reform type (i.e. political_issues)
@@ -56,17 +55,14 @@ namespace OpenVic {
 		friend struct IssueManager;
 
 	private:
-		ReformType const& type;
-		const bool ordered; // next_step_only
-		const bool administrative;
+		ReformType const& PROPERTY(type);
+		const bool PROPERTY_CUSTOM_NAME(ordered, is_ordered); // next_step_only
+		const bool PROPERTY_CUSTOM_NAME(administrative, is_administrative);
 
 		ReformGroup(std::string_view identifier, ReformType const& type, bool ordered, bool administrative);
 
 	public:
 		ReformGroup(ReformGroup&&) = default;
-		ReformType const& get_type() const;
-		bool is_ordered() const;
-		bool is_administrative() const;
 	};
 
 	// Reform (i.e. yes_slavery)
@@ -74,8 +70,8 @@ namespace OpenVic {
 		friend struct IssueManager;
 
 	private:
-		ReformGroup const& reform_group; // stores an already casted reference
-		const size_t ordinal; // assigned by the parser to allow policy sorting
+		ReformGroup const& PROPERTY(reform_group); // stores an already casted reference
+		const size_t PROPERTY(ordinal); // assigned by the parser to allow policy sorting
 
 		Reform(std::string_view new_identifier, ReformGroup const& group, size_t ordinal);
 
@@ -83,9 +79,6 @@ namespace OpenVic {
 
 	public:
 		Reform(Reform&&) = default;
-		ReformGroup const& get_reform_group() const;
-		ReformType const& get_type() const;
-		size_t get_ordinal() const;
 	};
 
 	// Issue manager - holds the registries

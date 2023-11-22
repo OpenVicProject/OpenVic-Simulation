@@ -19,69 +19,46 @@ namespace OpenVic {
 			friend struct DiplomaticHistoryManager;
 
 		private:
-			Date added;
-			Country const* actor;
-			Country const* receiver;
-			WargoalType const* wargoal;
-			std::optional<Country const*> third_party;
-			std::optional<Province const*> target;
+			Date PROPERTY_CUSTOM_NAME(added, get_date_added);
+			Country const* PROPERTY(actor);
+			Country const* PROPERTY(receiver);
+			WargoalType const* PROPERTY(wargoal);
+			std::optional<Country const*> PROPERTY(third_party);
+			std::optional<Province const*> PROPERTY(target);
 
 			added_wargoal_t(Date new_added, Country const* new_actor, Country const* new_receiver, WargoalType const* new_wargoal, std::optional<Country const*> new_third_party, std::optional<Province const*> new_target);
-
-		public:
-			Date get_date_added() const;
-			Country const* get_actor() const;
-			Country const* get_receiver() const;
-			WargoalType const* get_wargoal_type() const;
-			std::optional<Country const*> const& get_third_party() const;
-			std::optional<Province const*> const& get_target() const;
 		};
 
 		struct war_participant_t {
 			friend struct DiplomaticHistoryManager;
 
 		private:
-			Country const* country;
-			Date joined;
-			std::optional<Date> exited;
+			Country const* PROPERTY(country);
+			Date PROPERTY_CUSTOM_NAME(joined, get_date_joined);
+			std::optional<Date> PROPERTY_CUSTOM_NAME(exited, get_date_exited);
 
 			war_participant_t(Country const* new_country, Date new_joined, std::optional<Date> new_exited);
-
-		public:
-			Country const* get_country() const;
-			Date get_date_joined() const;
-			std::optional<Date> get_date_exited() const;
 		};
 
 	private:
-		std::string war_name; // edge cases where this is empty/undef for some reason, probably need to just generate war names like usual for that.
-		std::vector<war_participant_t> attackers;
-		std::vector<war_participant_t> defenders;
-		std::vector<added_wargoal_t> wargoals;
+		std::string PROPERTY(war_name); // edge cases where this is empty/undef for some reason, probably need to just generate war names like usual for that.
+		std::vector<war_participant_t> PROPERTY(attackers);
+		std::vector<war_participant_t> PROPERTY(defenders);
+		std::vector<added_wargoal_t> PROPERTY(wargoals);
 
 		WarHistory(std::string_view new_war_name, std::vector<war_participant_t>&& new_attackers, std::vector<war_participant_t>&& new_defenders, std::vector<added_wargoal_t>&& new_wargoals);
-
-	public:
-		std::string_view get_war_name() const;
-		std::vector<war_participant_t> const& get_attackers() const;
-		std::vector<war_participant_t> const& get_defenders() const;
-		std::vector<added_wargoal_t> const& get_wargoals() const;
 	};
 
 	struct AllianceHistory {
 		friend struct DiplomaticHistoryManager;
 
 	private:
-		Country const* first;
-		Country const* second;
+		Country const* PROPERTY(first);
+		Country const* PROPERTY(second);
 		const Date start;
 		const Date end;
 
 		AllianceHistory(Country const* new_first, Country const* new_second, const Date new_start, const Date new_end);
-
-	public:
-		Country const* get_first() const;
-		Country const* get_second() const;
 	};
 
 	struct SubjectHistory {
@@ -94,18 +71,13 @@ namespace OpenVic {
 		};
 
 	private:
-		Country const* overlord;
-		Country const* subject;
-		const type_t type;
+		Country const* PROPERTY(overlord);
+		Country const* PROPERTY(subject);
+		const type_t PROPERTY_CUSTOM_NAME(type, get_subject_type);
 		const Date start;
 		const Date end;
 
 		SubjectHistory(Country const* new_overlord, Country const* new_subject, const type_t new_type, const Date new_start, const Date new_end);
-
-	public:
-		Country const* get_overlord() const;
-		Country const* get_subject() const;
-		const type_t get_subject_type() const;
 	};
 
 	struct DiplomaticHistoryManager {

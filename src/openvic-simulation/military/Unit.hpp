@@ -32,128 +32,80 @@ namespace OpenVic {
 		enum struct type_t { LAND, NAVAL };
 
 	private:
-		const type_t type;
-		const icon_t icon;
-		const std::string sprite;
-		const bool active;
-		const std::string unit_type;
-		const bool floating_flag;
+		const type_t PROPERTY(type);
+		const icon_t PROPERTY(icon);
+		const std::string PROPERTY(sprite);
+		const bool PROPERTY_CUSTOM_NAME(active, is_active);
+		const std::string PROPERTY(unit_type);
+		const bool PROPERTY_CUSTOM_NAME(floating_flag, has_floating_flag);
 
-		const uint32_t priority;
-		const fixed_point_t max_strength;
-		const fixed_point_t default_organisation;
-		const fixed_point_t maximum_speed;
-		const fixed_point_t weighted_value;
+		const uint32_t PROPERTY(priority);
+		const fixed_point_t PROPERTY(max_strength);
+		const fixed_point_t PROPERTY(default_organisation);
+		const fixed_point_t PROPERTY(maximum_speed);
+		const fixed_point_t PROPERTY(weighted_value);
 
-		const std::string move_sound;
-		const std::string select_sound;
+		const std::string PROPERTY(move_sound);
+		const std::string PROPERTY(select_sound);
 
-		const Timespan build_time;
-		const Good::good_map_t build_cost;
-		const fixed_point_t supply_consumption;
-		const Good::good_map_t supply_cost;
+		const Timespan PROPERTY(build_time);
+		const Good::good_map_t PROPERTY(build_cost);
+		const fixed_point_t PROPERTY(supply_consumption);
+		const Good::good_map_t PROPERTY(supply_cost);
 
 	protected:
 		Unit(std::string_view identifier, type_t type, UNIT_PARAMS);
 
 	public:
 		Unit(Unit&&) = default;
-
-		icon_t get_icon() const;
-		type_t get_type() const;
-		std::string_view get_sprite() const;
-		bool is_active() const;
-		std::string_view get_unit_type() const;
-		bool has_floating_flag() const;
-
-		uint32_t get_priority() const;
-		fixed_point_t get_max_strength() const;
-		fixed_point_t get_default_organisation() const;
-		fixed_point_t get_maximum_speed() const;
-		fixed_point_t get_weighted_value() const;
-
-		std::string_view get_move_sound() const;
-		std::string_view get_select_sound() const;
-
-		Timespan get_build_time() const;
-		Good::good_map_t const& get_build_cost() const;
-		fixed_point_t get_supply_consumption() const;
-		Good::good_map_t const& get_supply_cost() const;
 	};
 
 	struct LandUnit : Unit {
 		friend struct UnitManager;
 
 	private:
-		const bool primary_culture;
-		const std::string sprite_override, sprite_mount, sprite_mount_attach_node;
-		const fixed_point_t reconnaissance;
-		const fixed_point_t attack;
-		const fixed_point_t defence;
-		const fixed_point_t discipline;
-		const fixed_point_t support;
-		const fixed_point_t maneuver;
-		const fixed_point_t siege;
+		const bool PROPERTY_CUSTOM_NAME(primary_culture, is_primary_culture);
+		const std::string PROPERTY(sprite_override);
+		const std::string PROPERTY(sprite_mount);
+		const std::string PROPERTY(sprite_mount_attach_node);
+		const fixed_point_t PROPERTY(reconnaissance);
+		const fixed_point_t PROPERTY(attack);
+		const fixed_point_t PROPERTY(defence);
+		const fixed_point_t PROPERTY(discipline);
+		const fixed_point_t PROPERTY(support);
+		const fixed_point_t PROPERTY(maneuver);
+		const fixed_point_t PROPERTY(siege);
 
 		LandUnit(std::string_view identifier, UNIT_PARAMS, LAND_PARAMS);
 
 	public:
 		LandUnit(LandUnit&&) = default;
-
-		bool get_primary_culture() const;
-		std::string_view get_sprite_override() const;
-		std::string_view get_sprite_mount() const;
-		std::string_view get_sprite_mount_attach_node() const;
-
-		fixed_point_t get_reconnaissance() const;
-		fixed_point_t get_attack() const;
-		fixed_point_t get_defence() const;
-		fixed_point_t get_discipline() const;
-		fixed_point_t get_support() const;
-		fixed_point_t get_maneuver() const;
-		fixed_point_t get_siege() const;
 	};
 
 	struct NavalUnit : Unit {
 		friend struct UnitManager;
 
 	private:
-		const icon_t naval_icon;
-		const bool sail;
-		const bool transport;
-		const bool capital;
-		const fixed_point_t colonial_points;
-		const bool build_overseas;
-		const uint32_t min_port_level;
-		const int32_t limit_per_port;
-		const fixed_point_t supply_consumption_score;
+		const icon_t PROPERTY(naval_icon);
+		const bool PROPERTY_CUSTOM_NAME(sail, can_sail);
+		const bool PROPERTY_CUSTOM_NAME(transport, is_transport);
+		const bool PROPERTY_CUSTOM_NAME(capital, is_capital);
+		const fixed_point_t PROPERTY(colonial_points);
+		const bool PROPERTY_CUSTOM_NAME(build_overseas, can_build_overseas);
+		const uint32_t PROPERTY(min_port_level);
+		const int32_t PROPERTY(limit_per_port);
+		const fixed_point_t PROPERTY(supply_consumption_score);
 
-		const fixed_point_t hull;
-		const fixed_point_t gun_power;
-		const fixed_point_t fire_range;
-		const fixed_point_t evasion;
-		const fixed_point_t torpedo_attack;
+		const fixed_point_t PROPERTY(hull);
+		const fixed_point_t PROPERTY(gun_power);
+		const fixed_point_t PROPERTY(fire_range);
+		const fixed_point_t PROPERTY(evasion);
+		const fixed_point_t PROPERTY(torpedo_attack);
 
 		NavalUnit(std::string_view identifier, UNIT_PARAMS, NAVY_PARAMS);
 
 	public:
 		NavalUnit(NavalUnit&&) = default;
-
-		icon_t get_naval_icon() const;
-		bool can_sail() const;
-		bool is_transport() const;
-		bool is_capital() const;
-		fixed_point_t get_colonial_points() const;
-		bool can_build_overseas() const;
-		uint32_t get_min_port_level() const;
-		int32_t get_limit_per_port() const;
-		fixed_point_t get_supply_consumption_score() const;
-
-		fixed_point_t get_hull() const;
-		fixed_point_t get_gun_power() const;
-		fixed_point_t get_fire_range() const;
-		fixed_point_t get_evasion() const;
-		fixed_point_t get_torpedo_attack() const;
 	};
 
 	struct UnitManager {

@@ -6,14 +6,6 @@ using namespace OpenVic::NodeTools;
 ModifierEffect::ModifierEffect(std::string_view new_identifier, bool new_positive_good, format_t new_format)
 	: HasIdentifier { new_identifier }, positive_good { new_positive_good }, format { new_format } {}
 
-bool ModifierEffect::get_positive_good() const {
-	return positive_good;
-}
-
-ModifierEffect::format_t ModifierEffect::get_format() const {
-	return format;
-}
-
 ModifierValue::ModifierValue() = default;
 ModifierValue::ModifierValue(effect_map_t&& new_values) : values { std::move(new_values) } {}
 ModifierValue::ModifierValue(ModifierValue const&) = default;
@@ -85,20 +77,8 @@ ModifierValue ModifierValue::operator-(ModifierValue const& right) const {
 Modifier::Modifier(std::string_view new_identifier, ModifierValue&& new_values, icon_t new_icon)
 	: HasIdentifier { new_identifier }, ModifierValue { std::move(new_values) }, icon { new_icon } {}
 
-Modifier::icon_t Modifier::get_icon() const {
-	return icon;
-}
-
 ModifierInstance::ModifierInstance(Modifier const& modifier, Date expiry_date)
 	: modifier { modifier }, expiry_date { expiry_date } {}
-
-Modifier const& ModifierInstance::get_modifier() const {
-	return modifier;
-}
-
-Date ModifierInstance::get_expiry_date() const {
-	return expiry_date;
-}
 
 ModifierManager::ModifierManager() : modifier_effects { "modifier effects" }, event_modifiers { "event modifiers" } {}
 

@@ -3,6 +3,7 @@
 #include <chrono>
 #include <functional>
 #include <vector>
+#include "openvic-simulation/utility/Getters.hpp"
 
 namespace OpenVic {
 	// Conditionally advances game with provided behaviour
@@ -19,29 +20,28 @@ namespace OpenVic {
 	private:
 		using time_point_t = std::chrono::time_point<std::chrono::high_resolution_clock>;
 
-		time_point_t lastPolledTime;
+		time_point_t last_polled_time;
 		// A function pointer that advances the simulation, intended to be a capturing
 		// lambda or something similar. May need to be reworked later
-		AdvancementFunction triggerFunction;
-		RefreshFunction refreshFunction;
-		speed_t currentSpeed;
+		AdvancementFunction trigger_function;
+		RefreshFunction refresh_function;
+		speed_t PROPERTY_CUSTOM_NAME(current_speed, get_simulation_speed);
 
 	public:
-		bool isPaused;
+		bool is_paused;
 
 		GameAdvancementHook(
-			AdvancementFunction tickFunction, RefreshFunction updateFunction, bool startPaused = true, speed_t startingSpeed = 0
+			AdvancementFunction tick_function, RefreshFunction update_function, bool start_paused = true, speed_t starting_speed = 0
 		);
 
-		void setSimulationSpeed(speed_t speed);
-		speed_t getSimulationSpeed() const;
-		void increaseSimulationSpeed();
-		void decreaseSimulationSpeed();
-		bool canIncreaseSimulationSpeed() const;
-		bool canDecreaseSimulationSpeed() const;
+		void set_simulation_speed(speed_t speed);
+		void increase_simulation_speed();
+		void decrease_simulation_speed();
+		bool can_increase_simulation_speed() const;
+		bool can_decrease_simulation_speed() const;
 		GameAdvancementHook& operator++();
 		GameAdvancementHook& operator--();
-		void conditionallyAdvanceGame();
+		void conditionally_advance_game();
 		void reset();
 	};
 }

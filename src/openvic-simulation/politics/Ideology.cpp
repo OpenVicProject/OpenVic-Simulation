@@ -11,22 +11,6 @@ Ideology::Ideology(
 ) : HasIdentifierAndColour { new_identifier, new_colour, false, false }, group { new_group }, uncivilised { new_uncivilised },
 	can_reduce_militancy { new_can_reduce_militancy }, spawn_date { new_spawn_date } {}
 
-IdeologyGroup const& Ideology::get_group() const {
-	return group;
-}
-
-bool Ideology::is_uncivilised() const {
-	return uncivilised;
-}
-
-bool Ideology::get_can_reduce_militancy() const {
-	return can_reduce_militancy;
-}
-
-Date Ideology::get_spawn_date() const {
-	return spawn_date;
-}
-
 IdeologyManager::IdeologyManager() : ideology_groups { "ideology groups" }, ideologies { "ideologies" } {}
 
 bool IdeologyManager::add_ideology_group(std::string_view identifier) {

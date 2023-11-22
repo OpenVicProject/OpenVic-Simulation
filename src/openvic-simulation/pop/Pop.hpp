@@ -19,10 +19,13 @@ namespace OpenVic {
 		using pop_size_t = int64_t;
 
 	private:
-		PopType const& type;
-		Culture const& culture;
-		Religion const& religion;
-		pop_size_t size, num_promoted, num_demoted, num_migrated;
+		PopType const& PROPERTY(type);
+		Culture const& PROPERTY(culture);
+		Religion const& PROPERTY(religion);
+		pop_size_t PROPERTY(size);
+		pop_size_t PROPERTY(num_promoted);
+		pop_size_t PROPERTY(num_demoted);
+		pop_size_t PROPERTY(num_migrated);
 
 		Pop(PopType const& new_type, Culture const& new_culture, Religion const& new_religion, pop_size_t new_size);
 
@@ -32,13 +35,6 @@ namespace OpenVic {
 		Pop& operator=(Pop const&) = delete;
 		Pop& operator=(Pop&&) = delete;
 
-		PopType const& get_type() const;
-		Culture const& get_culture() const;
-		Religion const& get_religion() const;
-		pop_size_t get_size() const;
-		pop_size_t get_num_promoted() const;
-		pop_size_t get_num_demoted() const;
-		pop_size_t get_num_migrated() const;
 		pop_size_t get_pop_daily_change() const;
 	};
 
@@ -52,12 +48,18 @@ namespace OpenVic {
 		using rebel_units_t = fixed_point_map_t<Unit const*>;
 
 	private:
-		const enum class strata_t { POOR, MIDDLE, RICH } strata;
-		const sprite_t sprite;
-		const Good::good_map_t life_needs, everyday_needs, luxury_needs;
-		const rebel_units_t rebel_units;
-		const Pop::pop_size_t max_size, merge_max_size;
-		const bool state_capital_only, demote_migrant, is_artisan, is_slave;
+		const enum class strata_t { POOR, MIDDLE, RICH } PROPERTY(strata);
+		const sprite_t PROPERTY(sprite);
+		const Good::good_map_t PROPERTY(life_needs);
+		const Good::good_map_t PROPERTY(everyday_needs);
+		const Good::good_map_t PROPERTY(luxury_needs);
+		const rebel_units_t PROPERTY(rebel_units);
+		const Pop::pop_size_t PROPERTY(max_size);
+		const Pop::pop_size_t PROPERTY(merge_max_size);
+		const bool PROPERTY(state_capital_only);
+		const bool PROPERTY(demote_migrant);
+		const bool PROPERTY(is_artisan);
+		const bool PROPERTY(is_slave);
 
 		// TODO - country and province migration targets, promote_to targets, ideologies and issues
 
@@ -70,19 +72,6 @@ namespace OpenVic {
 
 	public:
 		PopType(PopType&&) = default;
-
-		strata_t get_strata() const;
-		sprite_t get_sprite() const;
-		Good::good_map_t const& get_life_needs() const;
-		Good::good_map_t const& get_everyday_needs() const;
-		Good::good_map_t const& get_luxury_needs() const;
-		rebel_units_t const& get_rebel_units() const;
-		Pop::pop_size_t get_max_size() const;
-		Pop::pop_size_t get_merge_max_size() const;
-		bool get_state_capital_only() const;
-		bool get_demote_migrant() const;
-		bool get_is_artisan() const;
-		bool get_is_slave() const;
 	};
 
 	struct Province;
