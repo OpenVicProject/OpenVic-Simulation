@@ -19,8 +19,8 @@ namespace OpenVic {
 		/* If true, positive values will be green and negative values will be red.
 		 * If false, the colours will be switced.
 		 */
-		const bool positive_good;
-		const format_t format;
+		const bool PROPERTY_CUSTOM_NAME(positive_good, is_positive_good);
+		const format_t PROPERTY(format);
 
 		// TODO - format/precision, e.g. 80% vs 0.8 vs 0.800, 2 vs 2.0 vs 200%
 
@@ -28,9 +28,6 @@ namespace OpenVic {
 
 	public:
 		ModifierEffect(ModifierEffect&&) = default;
-
-		bool get_positive_good() const;
-		format_t get_format() const;
 	};
 
 	struct ModifierValue {
@@ -73,27 +70,21 @@ namespace OpenVic {
 
 	private:
 		/* A modifier can have no icon (zero). */
-		const icon_t icon;
+		const icon_t PROPERTY(icon);
 
 		Modifier(std::string_view new_identifier, ModifierValue&& new_values, icon_t new_icon);
 
 	public:
 		Modifier(Modifier&&) = default;
-
-		icon_t get_icon() const;
 	};
 
 	struct ModifierInstance {
 
 	private:
-		Modifier const& modifier;
-		Date expiry_date;
+		Modifier const& PROPERTY(modifier);
+		Date PROPERTY(expiry_date);
 
 		ModifierInstance(Modifier const& modifier, Date expiry_date);
-
-	public:
-		Modifier const& get_modifier() const;
-		Date get_expiry_date() const;
 	};
 
 	template<typename Fn>

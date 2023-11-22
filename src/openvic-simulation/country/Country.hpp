@@ -32,10 +32,10 @@ namespace OpenVic {
 		using policy_map_t = std::map<IssueGroup const*, Issue const*>;
 
 	private:
-		const Date start_date;
-		const Date end_date;
-		Ideology const& ideology;
-		const policy_map_t policies;
+		const Date PROPERTY(start_date);
+		const Date PROPERTY(end_date);
+		Ideology const& PROPERTY(ideology);
+		const policy_map_t PROPERTY(policies);
 
 		CountryParty(
 			std::string_view new_identifier, Date new_start_date, Date new_end_date, Ideology const& new_ideology,
@@ -44,11 +44,6 @@ namespace OpenVic {
 
 	public:
 		CountryParty(CountryParty&&) = default;
-
-		Date get_start_date() const;
-		Date get_end_date() const;
-		Ideology const& get_ideology() const;
-		policy_map_t const& get_policies() const;
 	};
 
 	/* Generic information about a TAG */
@@ -59,14 +54,14 @@ namespace OpenVic {
 		using government_colour_map_t = std::map<GovernmentType const*, colour_t>;
 
 	private:
-		GraphicalCultureType const& graphical_culture;
+		GraphicalCultureType const& PROPERTY(graphical_culture);
 		/* Not const to allow elements to be moved, otherwise a copy is forced
 		 * which causes a compile error as the copy constructor has been deleted.
 		 */
 		IdentifierRegistry<CountryParty> parties;
-		const unit_names_map_t unit_names;
-		const bool dynamic_tag;
-		const government_colour_map_t alternative_colours;
+		const unit_names_map_t PROPERTY(unit_names);
+		const bool PROPERTY_CUSTOM_NAME(dynamic_tag, is_dynamic_tag);
+		const government_colour_map_t PROPERTY(alternative_colours);
 
 		Country(
 			std::string_view new_identifier, colour_t new_colour, GraphicalCultureType const& new_graphical_culture,
@@ -78,11 +73,6 @@ namespace OpenVic {
 		Country(Country&&) = default;
 
 		IDENTIFIER_REGISTRY_ACCESSORS_CUSTOM_PLURAL(party, parties)
-
-		GraphicalCultureType const& get_graphical_culture() const;
-		unit_names_map_t const& get_unit_names() const;
-		bool is_dynamic_tag() const;
-		government_colour_map_t const& get_alternative_colours() const;
 	};
 
 	struct CountryManager {

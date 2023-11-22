@@ -27,22 +27,6 @@ CountryParty::CountryParty(
 ) : HasIdentifier { new_identifier }, start_date { new_start_date }, end_date { new_end_date }, ideology { new_ideology },
 	policies { std::move(new_policies) } {}
 
-Date CountryParty::get_start_date() const {
-	return start_date;
-}
-
-Date CountryParty::get_end_date() const {
-	return end_date;
-}
-
-Ideology const& CountryParty::get_ideology() const {
-	return ideology;
-}
-
-CountryParty::policy_map_t const& CountryParty::get_policies() const {
-	return policies;
-}
-
 Country::Country(
 	std::string_view new_identifier, colour_t new_colour, GraphicalCultureType const& new_graphical_culture,
 	IdentifierRegistry<CountryParty>&& new_parties, unit_names_map_t&& new_unit_names, bool new_dynamic_tag,
@@ -50,22 +34,6 @@ Country::Country(
 ) : HasIdentifierAndColour { new_identifier, new_colour, false, false }, graphical_culture { new_graphical_culture },
 	parties { std::move(new_parties) }, unit_names { std::move(new_unit_names) }, dynamic_tag { new_dynamic_tag },
 	alternative_colours { std::move(new_alternative_colours) } {}
-
-GraphicalCultureType const& Country::get_graphical_culture() const {
-	return graphical_culture;
-}
-
-Country::unit_names_map_t const& Country::get_unit_names() const {
-	return unit_names;
-}
-
-bool Country::is_dynamic_tag() const {
-	return dynamic_tag;
-}
-
-Country::government_colour_map_t const& Country::get_alternative_colours() const {
-	return alternative_colours;
-}
 
 CountryManager::CountryManager() : countries { "countries" } {}
 

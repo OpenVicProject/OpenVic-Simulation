@@ -23,9 +23,9 @@ namespace OpenVic {
 		using icon_t = uint8_t;
 
 	private:
-		ReligionGroup const& group;
-		const icon_t icon;
-		const bool pagan;
+		ReligionGroup const& PROPERTY(group);
+		const icon_t PROPERTY(icon);
+		const bool PROPERTY(pagan);
 
 		Religion(
 			std::string_view new_identifier, colour_t new_colour, ReligionGroup const& new_group, icon_t new_icon,
@@ -34,10 +34,6 @@ namespace OpenVic {
 
 	public:
 		Religion(Religion&&) = default;
-
-		ReligionGroup const& get_group() const;
-		icon_t get_icon() const;
-		bool get_pagan() const;
 	};
 
 	struct ReligionManager {

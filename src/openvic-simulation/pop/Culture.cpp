@@ -13,35 +13,11 @@ CultureGroup::CultureGroup(
 ) : HasIdentifier { new_identifier }, leader { new_leader }, unit_graphical_culture_type { new_unit_graphical_culture_type },
 	is_overseas { new_is_overseas } {}
 
-std::string_view CultureGroup::get_leader() const {
-	return leader;
-}
-
-GraphicalCultureType const& CultureGroup::get_unit_graphical_culture_type() const {
-	return unit_graphical_culture_type;
-}
-
-bool CultureGroup::get_is_overseas() const {
-	return is_overseas;
-}
-
 Culture::Culture(
 	std::string_view new_identifier, colour_t new_colour, CultureGroup const& new_group,
 	std::vector<std::string>&& new_first_names, std::vector<std::string>&& new_last_names
 ) : HasIdentifierAndColour { new_identifier, new_colour, false, false }, group { new_group },
 	first_names { std::move(new_first_names) }, last_names { std::move(new_last_names) } {}
-
-CultureGroup const& Culture::get_group() const {
-	return group;
-}
-
-std::vector<std::string> const& Culture::get_first_names() const {
-	return first_names;
-}
-
-std::vector<std::string> const& Culture::get_last_names() const {
-	return last_names;
-}
 
 CultureManager::CultureManager()
 	: graphical_culture_types { "graphical culture types" }, culture_groups { "culture groups" }, cultures { "cultures" } {}

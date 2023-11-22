@@ -36,11 +36,15 @@ namespace OpenVic {
 		using good_map_t = fixed_point_map_t<Good const*>;
 
 	private:
-		GoodCategory const& category;
-		const price_t base_price;
-		price_t price;
-		const bool available_from_start, tradeable, money, overseas_penalty;
-		bool available;
+		GoodCategory const& PROPERTY(category);
+		const price_t PROPERTY(base_price);
+		const bool PROPERTY_CUSTOM_NAME(available_from_start, is_available_from_start);
+		const bool PROPERTY_CUSTOM_NAME(tradeable, is_tradeable);
+		const bool PROPERTY(money);
+		const bool PROPERTY(overseas_penalty);
+
+		price_t PROPERTY_RW(price);
+		bool PROPERTY_RW(available);
 
 		Good(
 			std::string_view new_identifier, colour_t new_colour, GoodCategory const& new_category, price_t new_base_price,
@@ -49,15 +53,6 @@ namespace OpenVic {
 
 	public:
 		Good(Good&&) = default;
-
-		GoodCategory const& get_category() const;
-		price_t get_base_price() const;
-		price_t get_price() const;
-		bool get_available_from_start() const;
-		bool get_available() const;
-		bool get_tradeable() const;
-		bool get_money() const;
-		bool get_overseas_penalty();
 		void reset_to_defaults();
 	};
 

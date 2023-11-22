@@ -19,11 +19,11 @@ namespace OpenVic {
 		enum struct effect_t { INPUT, OUTPUT, THROUGHPUT };
 
 	private:
-		PopType const* pop_type; // poptype
-		bool artisan; // set by the parser if the magic "artisan" poptype is passed
-		effect_t effect;
-		fixed_point_t effect_multiplier;
-		fixed_point_t amount;
+		PopType const* PROPERTY(pop_type); // poptype
+		bool PROPERTY(artisan); // set by the parser if the magic "artisan" poptype is passed
+		effect_t PROPERTY(effect);
+		fixed_point_t PROPERTY(effect_multiplier);
+		fixed_point_t PROPERTY(amount);
 
 		EmployedPop(
 			PopType const* pop_type, bool artisan, effect_t effect, fixed_point_t effect_multiplier, fixed_point_t amount
@@ -31,12 +31,6 @@ namespace OpenVic {
 
 	public:
 		EmployedPop() = default;
-
-		PopType const* get_pop_type() const;
-		bool is_artisan() const;
-		effect_t get_effect() const;
-		fixed_point_t get_effect_multiplier() const;
-		fixed_point_t get_amount() const;
 	};
 
 	struct Bonus {
@@ -48,42 +42,26 @@ namespace OpenVic {
 		friend struct ProductionTypeManager;
 
 	private:
-		const EmployedPop owner;
-		const std::vector<EmployedPop> employees;
-		const enum struct type_t { FACTORY, RGO, ARTISAN } type;
+		const EmployedPop PROPERTY(owner);
+		const std::vector<EmployedPop> PROPERTY(employees);
+		const enum struct type_t { FACTORY, RGO, ARTISAN } PROPERTY(type);
 		const Pop::pop_size_t workforce;
 
-		const Good::good_map_t input_goods;
-		Good const* output_goods;
-		const fixed_point_t value;
-		const std::vector<Bonus> bonuses;
+		const Good::good_map_t PROPERTY(input_goods);
+		Good const* PROPERTY(output_goods);
+		const fixed_point_t PROPERTY(value);
+		const std::vector<Bonus> PROPERTY(bonuses);
 
-		const Good::good_map_t efficiency;
-		const bool coastal; // is_coastal
+		const Good::good_map_t PROPERTY(efficiency);
+		const bool PROPERTY_CUSTOM_NAME(coastal, is_coastal); // is_coastal
 
-		const bool farm;
-		const bool mine;
+		const bool PROPERTY_CUSTOM_NAME(farm, is_farm);
+		const bool PROPERTY_CUSTOM_NAME(mine, is_mine);
 
 		ProductionType(PRODUCTION_TYPE_ARGS);
 
 	public:
 		ProductionType(ProductionType&&) = default;
-
-		EmployedPop const& get_owner() const;
-		std::vector<EmployedPop> const& get_employees() const;
-		type_t get_type() const;
-		Pop::pop_size_t get_workforce() const;
-
-		Good::good_map_t const& get_input_goods() const;
-		Good const* get_output_goods() const;
-		fixed_point_t get_value() const;
-		std::vector<Bonus> const& get_bonuses() const;
-
-		Good::good_map_t const& get_efficiency() const;
-		bool is_coastal() const;
-
-		bool is_farm() const;
-		bool is_mine() const;
 	};
 
 	struct ProductionTypeManager {

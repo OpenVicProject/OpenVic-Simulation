@@ -4,22 +4,14 @@ using namespace OpenVic;
 using namespace OpenVic::NodeTools;
 
 LeaderTrait::LeaderTrait(std::string_view new_identifier, trait_type_t new_type, ModifierValue&& new_modifiers)
-	: HasIdentifier { new_identifier }, type { new_type }, modifiers { std::move(new_modifiers) } {}
-
-LeaderTrait::trait_type_t LeaderTrait::get_trait_type() const {
-	return type;
-}
+	: HasIdentifier { new_identifier }, trait_type { new_type }, modifiers { std::move(new_modifiers) } {}
 
 bool LeaderTrait::is_personality_trait() const {
-	return type == trait_type_t::PERSONALITY;
+	return trait_type == trait_type_t::PERSONALITY;
 }
 
 bool LeaderTrait::is_background_trait() const {
-	return type == trait_type_t::BACKGROUND;
-}
-
-ModifierValue const& LeaderTrait::get_modifiers() const {
-	return modifiers;
+	return trait_type == trait_type_t::BACKGROUND;
 }
 
 LeaderTraitManager::LeaderTraitManager() : leader_traits { "leader trait" } {}

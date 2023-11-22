@@ -19,9 +19,10 @@ namespace OpenVic {
 		friend struct IdeologyManager;
 
 	private:
-		IdeologyGroup const& group;
-		const bool uncivilised, can_reduce_militancy;
-		const Date spawn_date;
+		IdeologyGroup const& PROPERTY(group);
+		const bool PROPERTY_CUSTOM_NAME(uncivilised, is_uncivilised);
+		const bool PROPERTY(can_reduce_militancy);
+		const Date PROPERTY(spawn_date);
 
 		// TODO - willingness to repeal/pass reforms (and its modifiers)
 
@@ -32,11 +33,6 @@ namespace OpenVic {
 
 	public:
 		Ideology(Ideology&&) = default;
-
-		IdeologyGroup const& get_group() const;
-		bool is_uncivilised() const;
-		bool get_can_reduce_militancy() const;
-		Date get_spawn_date() const;
 	};
 
 	struct IdeologyManager {

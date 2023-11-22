@@ -1,7 +1,5 @@
 #include "ProductionType.hpp"
 
-#include <set>
-
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;
 
@@ -10,79 +8,11 @@ EmployedPop::EmployedPop(
 ) : pop_type { pop_type }, artisan { artisan }, effect { effect }, effect_multiplier { effect_multiplier },
 	amount { amount } {}
 
-PopType const* EmployedPop::get_pop_type() const {
-	return pop_type;
-}
-
-bool EmployedPop::is_artisan() const {
-	return artisan;
-}
-
-EmployedPop::effect_t EmployedPop::get_effect() const {
-	return effect;
-}
-
-fixed_point_t EmployedPop::get_effect_multiplier() const {
-	return effect_multiplier;
-}
-
-fixed_point_t EmployedPop::get_amount() const {
-	return amount;
-}
-
 ProductionType::ProductionType(
 	PRODUCTION_TYPE_ARGS
 ) : HasIdentifier { identifier }, owner { owner }, employees { employees }, type { type }, workforce { workforce },
 	input_goods { std::move(input_goods) }, output_goods { output_goods }, value { value }, bonuses { std::move(bonuses) },
 	efficiency { std::move(efficiency) }, coastal { coastal }, farm { farm }, mine { mine } {}
-
-EmployedPop const& ProductionType::get_owner() const {
-	return owner;
-}
-
-std::vector<EmployedPop> const& ProductionType::get_employees() const {
-	return employees;
-}
-
-ProductionType::type_t ProductionType::get_type() const {
-	return type;
-}
-
-Pop::pop_size_t ProductionType::get_workforce() const {
-	return workforce;
-}
-
-Good::good_map_t const& ProductionType::get_input_goods() const {
-	return input_goods;
-}
-
-Good const* ProductionType::get_output_goods() const {
-	return output_goods;
-}
-
-fixed_point_t ProductionType::get_value() const {
-	return value;
-}
-
-std::vector<Bonus> const& ProductionType::get_bonuses() const {
-	return bonuses;
-}
-
-Good::good_map_t const& ProductionType::get_efficiency() const {
-	return efficiency;
-}
-
-bool ProductionType::is_coastal() const {
-	return coastal;
-}
-
-bool ProductionType::is_farm() const {
-	return farm;
-}
-
-bool ProductionType::is_mine() const {
-	return mine;
-}
 
 ProductionTypeManager::ProductionTypeManager() : production_types { "production types" } {}
 

@@ -9,16 +9,13 @@ namespace OpenVic {
 		friend struct TerrainTypeManager;
 
 	private:
-		const ModifierValue modifier;
-		const bool is_water;
+		const ModifierValue PROPERTY(modifier);
+		const bool PROPERTY(is_water);
 
 		TerrainType(std::string_view new_identifier, colour_t new_colour, ModifierValue&& new_modifier, bool new_is_water);
 
 	public:
 		TerrainType(TerrainType&&) = default;
-
-		ModifierValue const& get_modifier() const;
-		bool get_is_water() const;
 	};
 
 	struct TerrainTypeMapping : HasIdentifier {
@@ -27,10 +24,10 @@ namespace OpenVic {
 		using index_t = uint8_t;
 
 	private:
-		TerrainType const& type;
-		const std::vector<index_t> terrain_indicies;
-		const index_t priority;
-		const bool has_texture;
+		TerrainType const& PROPERTY(type);
+		const std::vector<index_t> PROPERTY(terrain_indices);
+		const index_t PROPERTY(priority);
+		const bool PROPERTY(has_texture);
 
 		TerrainTypeMapping(
 			std::string_view new_identifier, TerrainType const& new_type, std::vector<index_t>&& new_terrain_indicies,
@@ -39,11 +36,6 @@ namespace OpenVic {
 
 	public:
 		TerrainTypeMapping(TerrainTypeMapping&&) = default;
-
-		TerrainType const& get_type() const;
-		std::vector<index_t> const& get_terrain_indicies() const;
-		index_t get_priority() const;
-		bool get_has_texture() const;
 	};
 
 	struct TerrainTypeManager {

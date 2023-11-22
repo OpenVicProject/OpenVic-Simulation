@@ -24,124 +24,12 @@ Unit::Unit(
 	move_sound { move_sound }, select_sound { select_sound }, build_time { build_time }, build_cost { std::move(build_cost) },
 	supply_consumption { supply_consumption }, supply_cost { std::move(supply_cost) } {}
 
-Unit::icon_t Unit::get_icon() const {
-	return icon;
-}
-
-Unit::type_t Unit::get_type() const {
-	return type;
-}
-
-std::string_view Unit::get_sprite() const {
-	return sprite;
-}
-
-bool Unit::is_active() const {
-	return active;
-}
-
-std::string_view Unit::get_unit_type() const {
-	return unit_type;
-}
-
-bool Unit::has_floating_flag() const {
-	return floating_flag;
-}
-
-uint32_t Unit::get_priority() const {
-	return priority;
-}
-
-fixed_point_t Unit::get_max_strength() const {
-	return max_strength;
-}
-
-fixed_point_t Unit::get_default_organisation() const {
-	return default_organisation;
-}
-
-fixed_point_t Unit::get_maximum_speed() const {
-	return maximum_speed;
-}
-
-Timespan Unit::get_build_time() const {
-	return build_time;
-}
-
-fixed_point_t Unit::get_weighted_value() const {
-	return weighted_value;
-}
-
-std::string_view Unit::get_move_sound() const {
-	return move_sound;
-}
-
-std::string_view Unit::get_select_sound() const {
-	return select_sound;
-}
-
-Good::good_map_t const& Unit::get_build_cost() const {
-	return build_cost;
-}
-
-fixed_point_t Unit::get_supply_consumption() const {
-	return supply_consumption;
-}
-
-Good::good_map_t const& Unit::get_supply_cost() const {
-	return supply_cost;
-}
-
 LandUnit::LandUnit(
 	std::string_view identifier, UNIT_PARAMS, LAND_PARAMS
 ) : Unit { identifier, type_t::LAND, UNIT_ARGS }, primary_culture { primary_culture }, sprite_override { sprite_override },
 	sprite_mount { sprite_mount }, sprite_mount_attach_node { sprite_mount_attach_node }, reconnaissance { reconnaissance },
 	attack { attack }, defence { defence }, discipline { discipline }, support { support }, maneuver { maneuver },
 	siege { siege } {}
-
-bool LandUnit::get_primary_culture() const {
-	return primary_culture;
-}
-
-std::string_view LandUnit::get_sprite_override() const {
-	return sprite_override;
-}
-
-std::string_view LandUnit::get_sprite_mount() const {
-	return sprite_mount;
-}
-
-std::string_view LandUnit::get_sprite_mount_attach_node() const {
-	return sprite_mount_attach_node;
-}
-
-fixed_point_t LandUnit::get_reconnaissance() const {
-	return reconnaissance;
-}
-
-fixed_point_t LandUnit::get_attack() const {
-	return attack;
-}
-
-fixed_point_t LandUnit::get_defence() const {
-	return defence;
-}
-
-fixed_point_t LandUnit::get_discipline() const {
-	return discipline;
-}
-
-fixed_point_t LandUnit::get_support() const {
-	return support;
-}
-
-fixed_point_t LandUnit::get_maneuver() const {
-	return maneuver;
-}
-
-fixed_point_t LandUnit::get_siege() const {
-	return siege;
-}
 
 NavalUnit::NavalUnit(
 	std::string_view identifier, UNIT_PARAMS, NAVY_PARAMS
@@ -150,58 +38,6 @@ NavalUnit::NavalUnit(
 	min_port_level { min_port_level }, limit_per_port { limit_per_port },
 	supply_consumption_score { supply_consumption_score }, hull { hull }, gun_power { gun_power }, fire_range { fire_range },
 	evasion { evasion }, torpedo_attack { torpedo_attack } {};
-
-NavalUnit::icon_t NavalUnit::get_naval_icon() const {
-	return naval_icon;
-}
-
-bool NavalUnit::can_sail() const {
-	return sail;
-}
-
-bool NavalUnit::is_transport() const {
-	return transport;
-}
-
-fixed_point_t NavalUnit::get_colonial_points() const {
-	return colonial_points;
-}
-
-bool NavalUnit::can_build_overseas() const {
-	return build_overseas;
-}
-
-uint32_t NavalUnit::get_min_port_level() const {
-	return min_port_level;
-}
-
-int32_t NavalUnit::get_limit_per_port() const {
-	return limit_per_port;
-}
-
-fixed_point_t NavalUnit::get_supply_consumption_score() const {
-	return supply_consumption_score;
-}
-
-fixed_point_t NavalUnit::get_hull() const {
-	return hull;
-}
-
-fixed_point_t NavalUnit::get_gun_power() const {
-	return gun_power;
-}
-
-fixed_point_t NavalUnit::get_fire_range() const {
-	return fire_range;
-}
-
-fixed_point_t NavalUnit::get_evasion() const {
-	return evasion;
-}
-
-fixed_point_t NavalUnit::get_torpedo_attack() const {
-	return torpedo_attack;
-}
 
 UnitManager::UnitManager() : units { "units" } {}
 

@@ -16,26 +16,6 @@ bool GovernmentType::is_ideology_compatible(Ideology const* ideology) const {
 	return std::find(ideologies.begin(), ideologies.end(), ideology) != ideologies.end();
 }
 
-std::vector<Ideology const*> const& GovernmentType::get_ideologies() const {
-	return ideologies;
-}
-
-bool GovernmentType::holds_elections() const {
-	return elections;
-}
-
-bool GovernmentType::can_appoint_ruling_party() const {
-	return appoint_ruling_party;
-}
-
-Timespan GovernmentType::get_term_duration() const {
-	return term_duration;
-}
-
-std::string_view GovernmentType::get_flag_type() const {
-	return flag_type_identifier;
-}
-
 GovernmentTypeManager::GovernmentTypeManager() : government_types { "government types" } {}
 
 bool GovernmentTypeManager::add_government_type(

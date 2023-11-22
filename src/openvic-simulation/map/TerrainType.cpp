@@ -10,35 +10,12 @@ TerrainType::TerrainType(
 ) : HasIdentifierAndColour { new_identifier, new_colour, false, false }, modifier { std::move(new_modifier) },
 	is_water { new_is_water } {}
 
-ModifierValue const& TerrainType::get_modifier() const {
-	return modifier;
-}
-
-bool TerrainType::get_is_water() const {
-	return is_water;
-}
 
 TerrainTypeMapping::TerrainTypeMapping(
 	std::string_view new_identifier, TerrainType const& new_type, std::vector<index_t>&& new_terrain_indicies,
 	index_t new_priority, bool new_has_texture
-) : HasIdentifier { new_identifier }, type { new_type }, terrain_indicies { std::move(new_terrain_indicies) },
+) : HasIdentifier { new_identifier }, type { new_type }, terrain_indices { std::move(new_terrain_indicies) },
 	priority { new_priority }, has_texture { new_has_texture } {}
-
-TerrainType const& TerrainTypeMapping::get_type() const {
-	return type;
-}
-
-std::vector<TerrainTypeMapping::index_t> const& TerrainTypeMapping::get_terrain_indicies() const {
-	return terrain_indicies;
-}
-
-TerrainTypeMapping::index_t TerrainTypeMapping::get_priority() const {
-	return priority;
-}
-
-bool TerrainTypeMapping::get_has_texture() const {
-	return has_texture;
-}
 
 TerrainTypeManager::TerrainTypeManager()
 	: terrain_types { "terrain types" }, terrain_type_mappings { "terrain type mappings" } {}

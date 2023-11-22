@@ -10,14 +10,12 @@ namespace OpenVic {
 		friend struct NationalValueManager;
 
 	private:
-		const ModifierValue modifiers;
+		const ModifierValue PROPERTY(modifiers);
 
 		NationalValue(std::string_view new_identifier, ModifierValue&& new_modifiers);
 
 	public:
 		NationalValue(NationalValue&&) = default;
-
-		ModifierValue const& get_modifiers() const;
 	};
 
 	struct NationalValueManager {

@@ -15,47 +15,11 @@ WarHistory::added_wargoal_t::added_wargoal_t(
 	std::optional<Province const*> new_target
 ) : added { new_added }, actor { new_actor }, receiver { new_receiver }, wargoal { new_wargoal }, third_party { new_third_party }, target { new_target } {}
 
-Country const* WarHistory::added_wargoal_t::get_actor() const {
-	return actor;
-}
-
-Country const* WarHistory::added_wargoal_t::get_receiver() const {
-	return receiver;
-}
-
-WargoalType const* WarHistory::added_wargoal_t::get_wargoal_type() const {
-	return wargoal;
-}
-
-std::optional<Country const*> const& WarHistory::added_wargoal_t::get_third_party() const {
-	return third_party;
-}
-
-std::optional<Province const*> const& WarHistory::added_wargoal_t::get_target() const {
-	return target;
-}
-
-Date WarHistory::added_wargoal_t::get_date_added() const {
-	return added;
-}
-
 WarHistory::war_participant_t::war_participant_t(
 	Country const* new_country,
 	Date new_joined,
 	std::optional<Date> new_exited
 ) : country { new_country }, joined { new_joined }, exited { new_exited } {}
-
-Country const* WarHistory::war_participant_t::get_country() const {
-	return country;
-}
-
-Date WarHistory::war_participant_t::get_date_joined() const {
-	return joined;
-}
-
-std::optional<Date> WarHistory::war_participant_t::get_date_exited() const {
-	return exited;
-}
 
 WarHistory::WarHistory(
 	std::string_view new_war_name,
@@ -64,51 +28,15 @@ WarHistory::WarHistory(
 	std::vector<added_wargoal_t>&& new_wargoals
 ) : war_name { new_war_name }, attackers { std::move(new_attackers) }, defenders { std::move(new_defenders) }, wargoals { std::move(new_wargoals) } {}
 
-std::string_view WarHistory::get_war_name() const {
-	return war_name;
-}
-
-std::vector<WarHistory::war_participant_t> const& WarHistory::get_attackers() const {
-	return attackers;
-}
-
-std::vector<WarHistory::war_participant_t> const& WarHistory::get_defenders() const {
-	return defenders;
-}
-
-std::vector<WarHistory::added_wargoal_t> const& WarHistory::get_wargoals() const {
-	return wargoals;
-}
-
 AllianceHistory::AllianceHistory(
 	Country const* new_first, Country const* new_second,
 	Date new_start, Date new_end
 ) : first { new_first }, second { new_second }, start { new_start }, end { new_end } {}
 
-Country const* AllianceHistory::get_first() const {
-	return first;
-}
-
-Country const* AllianceHistory::get_second() const {
-	return second;
-}
-
 SubjectHistory::SubjectHistory(
 	Country const* new_overlord, Country const* new_subject,
 	const type_t new_type, const Date new_start, const Date new_end
 ) : overlord { new_overlord }, subject { new_subject }, type { new_type }, start { new_start }, end { new_end } {}
-
-Country const* SubjectHistory::get_overlord() const {
-	return overlord;
-}
-
-Country const* SubjectHistory::get_subject() const {
-	return subject;
-}
-
-const SubjectHistory::type_t SubjectHistory::get_subject_type() const {
-	return type;
-}
 
 void DiplomaticHistoryManager::lock_diplomatic_history() {
 	Logger::info("Locked diplomacy history registry after registering ", alliances.size() + subjects.size() + wars.size(), " items");

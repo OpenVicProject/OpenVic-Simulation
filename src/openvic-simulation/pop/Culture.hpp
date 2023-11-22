@@ -20,9 +20,9 @@ namespace OpenVic {
 		friend struct CultureManager;
 
 	private:
-		const std::string leader;
-		GraphicalCultureType const& unit_graphical_culture_type;
-		const bool is_overseas;
+		const std::string PROPERTY(leader);
+		GraphicalCultureType const& PROPERTY(unit_graphical_culture_type);
+		const bool PROPERTY(is_overseas);
 
 		// TODO - union tag
 
@@ -33,18 +33,15 @@ namespace OpenVic {
 
 	public:
 		CultureGroup(CultureGroup&&) = default;
-
-		std::string_view get_leader() const;
-		GraphicalCultureType const& get_unit_graphical_culture_type() const;
-		bool get_is_overseas() const;
 	};
 
 	struct Culture : HasIdentifierAndColour {
 		friend struct CultureManager;
 
 	private:
-		CultureGroup const& group;
-		const std::vector<std::string> first_names, last_names;
+		CultureGroup const& PROPERTY(group);
+		const std::vector<std::string> PROPERTY(first_names);
+		const std::vector<std::string> PROPERTY(last_names);
 
 		// TODO - radicalism, primary tag
 
@@ -55,10 +52,6 @@ namespace OpenVic {
 
 	public:
 		Culture(Culture&&) = default;
-
-		CultureGroup const& get_group() const;
-		std::vector<std::string> const& get_first_names() const;
-		std::vector<std::string> const& get_last_names() const;
 	};
 
 	struct CultureManager {
