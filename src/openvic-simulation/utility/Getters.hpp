@@ -74,8 +74,10 @@ namespace OpenVic {
 	}
 
 /*
- * Use this on a variable delcaration to generate a getter function. It assumes the variable is private and so
- * sets the accessibility modifier state back to private after declaring the getter as public.
+ * Use this on a variable declaration to generate a getter function. PROPERTY assumes the variable is private and so
+ * sets the accessibility modifier state back to private after declaring the getter as public; use PROPERTY_ACCESS to
+ * manually specify the accessibility level, if your variable deviates from this norm; use PROPERTY_CUSTOM_NAME when
+ * you wish to manually specify the getter name; use PROPERTY_FULL if you want to specify everything.
  * Examples:
  * 		int PROPERTY(x);					// int x;						int get_x() const;
  * 		const std::string PROPERTY(name);	// const std::string name;		std::string_view get_name() const;
@@ -85,21 +87,27 @@ namespace OpenVic {
  * 		CultureGroup const& PROPERTY(group);// CultureGroup const& group;	CultureGroup const& get_group() const;
  * 		Province& PROPERTY(province);		// Province& province;			Province const& get_province() const;
  */
-#define PROPERTY(NAME) \
+#define PROPERTY(NAME) PROPERTY_ACCESS(NAME, private)
+#define PROPERTY_CUSTOM_NAME(NAME, GETTER_NAME) PROPERTY_FULL(NAME, GETTER_NAME, private)
+#define PROPERTY_ACCESS(NAME, ACCESS) PROPERTY_FULL(NAME, get_##NAME, ACCESS)
+#define PROPERTY_FULL(NAME, GETTER_NAME, ACCESS) \
 	NAME; \
 public: \
-	auto get_##NAME() const -> decltype(OpenVic::_get_property<decltype(NAME)>(NAME)) { \
+	auto GETTER_NAME() const -> decltype(OpenVic::_get_property<decltype(NAME)>(NAME)) { \
 		return OpenVic::_get_property<decltype(NAME)>(NAME); \
 	} \
-private:
+ACCESS:
 
 // TODO: Special logic to decide argument type and control assignment.
-#define PROPERTY_RW(NAME) \
-	PROPERTY(NAME) \
+#define PROPERTY_RW(NAME) PROPERTY_RW_ACCESS(NAME, private)
+#define PROPERTY_RW_CUSTOM_NAME(NAME, GETTER_NAME, SETTER_NAME)
+#define PROPERTY_RW_ACCESS(NAME, ACCESS) PROPERTY_RW_FULL(NAME, get_##NAME, set_##NAME, ACCESS)
+#define PROPERTY_RW_FULL(NAME, GETTER_NAME, SETTER_NAME, ACCESS) \
+	PROPERTY_FULL(NAME, GETTER_NAME, ACCESS) \
 public: \
-	void set_##NAME(decltype(NAME) new_##NAME) { \
+	void SETTER_NAME(decltype(NAME) new_##NAME) { \
 		NAME = new_##NAME; \
 	} \
-private:
+ACCESS:
 
 }
