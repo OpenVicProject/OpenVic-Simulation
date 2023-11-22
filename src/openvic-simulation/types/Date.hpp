@@ -38,9 +38,9 @@ namespace OpenVic {
 		std::string to_string() const;
 		explicit operator std::string() const;
 
-		static Timespan fromYears(day_t num);
-		static Timespan fromMonths(day_t num);
-		static Timespan fromDays(day_t num);
+		static Timespan from_years(day_t num);
+		static Timespan from_months(day_t num);
+		static Timespan from_days(day_t num);
 	};
 	std::ostream& operator<<(std::ostream& out, Timespan const& timespan);
 
@@ -63,7 +63,7 @@ namespace OpenVic {
 		// Number of days since Jan 1st, Year 0
 		Timespan timespan;
 
-		static Timespan _dateToTimespan(year_t year, month_t month, day_t day);
+		static Timespan _date_to_timespan(year_t year, month_t month, day_t day);
 		static Timespan::day_t const* generate_days_up_to_month();
 		static month_t const* generate_month_from_day_in_year();
 
@@ -73,9 +73,9 @@ namespace OpenVic {
 		// Year month day specification
 		Date(year_t year = 0, month_t month = 1, day_t day = 1);
 
-		year_t getYear() const;
-		month_t getMonth() const;
-		day_t getDay() const;
+		year_t get_year() const;
+		month_t get_month() const;
+		day_t get_day() const;
 
 		bool operator<(Date other) const;
 		bool operator>(Date other) const;

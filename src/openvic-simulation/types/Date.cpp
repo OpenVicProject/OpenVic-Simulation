@@ -84,15 +84,15 @@ Timespan::operator std::string() const {
 	return to_string();
 }
 
-Timespan Timespan::fromYears(day_t num) {
+Timespan Timespan::from_years(day_t num) {
 	return num * Date::DAYS_IN_YEAR;
 }
 
-Timespan Timespan::fromMonths(day_t num) {
+Timespan Timespan::from_months(day_t num) {
 	return (num / Date::MONTHS_IN_YEAR) * Date::DAYS_IN_YEAR + Date::DAYS_UP_TO_MONTH[num % Date::MONTHS_IN_YEAR];
 }
 
-Timespan Timespan::fromDays(day_t num) {
+Timespan Timespan::from_days(day_t num) {
 	return num;
 }
 
@@ -100,7 +100,7 @@ std::ostream& OpenVic::operator<<(std::ostream& out, Timespan const& timespan) {
 	return out << timespan.to_string();
 }
 
-Timespan Date::_dateToTimespan(year_t year, month_t month, day_t day) {
+Timespan Date::_date_to_timespan(year_t year, month_t month, day_t day) {
 	month = std::clamp<month_t>(month, 1, MONTHS_IN_YEAR);
 	day = std::clamp<day_t>(day, 1, DAYS_IN_MONTH[month - 1]);
 	return year * DAYS_IN_YEAR + DAYS_UP_TO_MONTH[month - 1] + day - 1;
@@ -142,18 +142,18 @@ Date::Date(Timespan total_days) : timespan { total_days } {
 	}
 }
 
-Date::Date(year_t year, month_t month, day_t day) : timespan { _dateToTimespan(year, month, day) } {}
+Date::Date(year_t year, month_t month, day_t day) : timespan { _date_to_timespan(year, month, day) } {}
 
-Date::year_t Date::getYear() const {
+Date::year_t Date::get_year() const {
 	return static_cast<Timespan::day_t>(timespan) / DAYS_IN_YEAR;
 }
 
-Date::month_t Date::getMonth() const {
+Date::month_t Date::get_month() const {
 	return MONTH_FROM_DAY_IN_YEAR[static_cast<Timespan::day_t>(timespan) % DAYS_IN_YEAR];
 }
 
-Date::day_t Date::getDay() const {
-	return (static_cast<Timespan::day_t>(timespan) % DAYS_IN_YEAR) - DAYS_UP_TO_MONTH[getMonth() - 1] + 1;
+Date::day_t Date::get_day() const {
+	return (static_cast<Timespan::day_t>(timespan) % DAYS_IN_YEAR) - DAYS_UP_TO_MONTH[get_month() - 1] + 1;
 }
 
 bool Date::operator<(Date other) const {
@@ -219,8 +219,8 @@ Date::operator std::string() const {
 }
 
 std::ostream& OpenVic::operator<<(std::ostream& out, Date date) {
-	return out << static_cast<int>(date.getYear()) << Date::SEPARATOR_CHARACTER << static_cast<int>(date.getMonth())
-		<< Date::SEPARATOR_CHARACTER << static_cast<int>(date.getDay());
+	return out << static_cast<int>(date.get_year()) << Date::SEPARATOR_CHARACTER << static_cast<int>(date.get_month())
+		<< Date::SEPARATOR_CHARACTER << static_cast<int>(date.get_day());
 }
 
 // Parsed from string of the form YYYY.MM.DD

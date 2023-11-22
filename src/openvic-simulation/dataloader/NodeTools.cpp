@@ -163,19 +163,19 @@ node_callback_t NodeTools::expect_date(callback_t<Date> callback) {
 
 node_callback_t NodeTools::expect_years(callback_t<Timespan> callback) {
 	return expect_uint<Timespan::day_t>([callback](Timespan::day_t val) -> bool {
-		return callback(Timespan::fromYears(val));
+		return callback(Timespan::from_years(val));
 	});
 }
 
 node_callback_t NodeTools::expect_months(callback_t<Timespan> callback) {
 	return expect_uint<Timespan::day_t>([callback](Timespan::day_t val) -> bool {
-		return callback(Timespan::fromMonths(val));
+		return callback(Timespan::from_months(val));
 	});
 }
 
 node_callback_t NodeTools::expect_days(callback_t<Timespan> callback) {
 	return expect_uint<Timespan::day_t>([callback](Timespan::day_t val) -> bool {
-		return callback(Timespan::fromDays(val));
+		return callback(Timespan::from_days(val));
 	});
 }
 
