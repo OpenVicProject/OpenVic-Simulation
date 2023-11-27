@@ -7,6 +7,7 @@
 
 #include "openvic-simulation/map/Region.hpp"
 #include "openvic-simulation/map/TerrainType.hpp"
+#include "openvic-simulation/map/State.hpp"
 
 namespace OpenVic {
 	namespace fs = std::filesystem;
@@ -69,6 +70,8 @@ namespace OpenVic {
 		Province::index_t get_index_from_colour(colour_t colour) const;
 		bool _generate_province_adjacencies();
 
+		StateManager state_manager;
+
 	public:
 		Map();
 
@@ -101,6 +104,8 @@ namespace OpenVic {
 		bool add_mapmode(std::string_view identifier, Mapmode::colour_func_t colour_func);
 		IDENTIFIER_REGISTRY_ACCESSORS(mapmode)
 		Mapmode const* get_mapmode_by_index(size_t index) const;
+
+		REF_GETTERS(state_manager);
 
 		/* The mapmode colour image contains of a list of base colours and stripe colours. Each colour is four bytes
 		 * in RGBA format, with the alpha value being used to interpolate with the terrain colour, so A = 0 is fully terrain
