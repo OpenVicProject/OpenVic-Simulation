@@ -141,6 +141,7 @@ bool Map::add_region(std::string_view identifier, std::vector<std::string_view> 
 	return ret;
 }
 
+//Using the province ID as an integer, gets the province
 Province* Map::get_province_by_index(Province::index_t index) {
 	return index != Province::NULL_INDEX ? provinces.get_item_by_index(index - 1) : nullptr;
 }
@@ -621,5 +622,14 @@ bool Map::_generate_province_adjacencies() {
 bool Map::generate_and_load_province_adjacencies(std::vector<ovdl::csv::LineObject> const& additional_adjacencies) {
 	bool ret = _generate_province_adjacencies();
 	// TODO - DEV TASK: read additional adjacencies
+	for (ovdl::csv::LineObject special_adjacency : additional_adjacencies)
+	{	
+		Province* from = get_province_by_identifier(special_adjacency.get_value_for(0));
+		Province* to = get_province_by_identifier(special_adjacency.get_value_for(1));
+		Province::ajacency_t::type_t type = Province::get_adjacency_type_from_string(special_adjacency.get_value_for(2));
+		Province* through = get_province_by_identifier(special_adjacency.get_value_for(3));
+		Province::flags_t data = (uint16_t)special_adjacency.get_value_for(4);
+		from->add_special_adjacency(to, 0, data, type, through);
+	}
 	return ret;
 }

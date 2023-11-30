@@ -80,6 +80,7 @@ namespace OpenVic {
 		bool set_water_province_list(std::vector<std::string_view> const& list);
 		void lock_water_provinces();
 
+		//gets province through the province id as an integer
 		Province* get_province_by_index(Province::index_t index);
 		Province const* get_province_by_index(Province::index_t index) const;
 		Province::index_t get_province_index_at(size_t x, size_t y) const;

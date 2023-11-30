@@ -111,7 +111,12 @@ void Province::tick(Date today) {
 }
 
 Province::adjacency_t::adjacency_t(Province const* province, distance_t distance, flags_t flags)
-	: province { province }, distance { distance }, flags { flags } {
+	: province{ province }, distance{ distance }, flags{ flags }, type{ adjacency_t::type_t::standard} {
+	assert(province != nullptr);
+}
+
+Province::adjacency_t::adjacency_t(Province const* province, distance_t distance, flags_t flags, type_t type, Province const* through_province)
+	: province{ province }, distance{ distance }, flags{ flags }, type{ type }, through_province{ through_province } {
 	assert(province != nullptr);
 }
 
@@ -134,6 +139,39 @@ bool Province::add_adjacency(Province const* province, distance_t distance, flag
 	}
 	adjacencies.push_back({ province, distance, flags });
 	return true;
+}
+
+bool Province::add_special_adjacency(Province const* province, distance_t distance, flags_t flags, adjacency_t::type_t type, Province const* through)
+{
+	if (province == nullptr) {
+		Logger::error("Tried to create null adjacency province for province ", get_identifier(), "!");
+		return false;
+	}
+	if (is_adjacent_to(province)) {
+		return false;
+	}
+	adjacencies.push_back({ province, distance, flags, type, through });
+	return true;
+}
+
+adjacency_t::type_t OpenVic::Province::get_adjacency_type_from_string(std::String type)
+{
+	switch (type)
+	{
+		case "sea":
+			return adjacency_t::type_t::sea
+				break;
+		case "impassable":
+			return adjacency_t::type_t::impassable
+				break;
+		case "canal":
+			return adjacency_t::type_t::canal
+				break;
+		default:
+			return adjacency_t::type_t::standard
+				break;
+	}
+	return adjacency_t::type_t::standard
 }
 
 bool Province::reset(BuildingManager const& building_manager) {
