@@ -1,5 +1,6 @@
 #pragma once
 
+#include "openvic-simulation/misc/Modifier.hpp"
 #include "openvic-simulation/types/IdentifierRegistry.hpp"
 
 namespace OpenVic {
@@ -75,5 +76,6 @@ namespace OpenVic {
 
 		void reset_to_defaults();
 		bool load_goods_file(ast::NodeCPtr root);
+		bool generate_modifiers(ModifierManager& modifier_manager);
 	};
 }

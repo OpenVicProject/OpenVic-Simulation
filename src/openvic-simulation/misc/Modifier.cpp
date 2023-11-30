@@ -132,7 +132,7 @@ bool ModifierManager::setup_modifier_effects() {
 	ret &= add_modifier_effect("influence_modifier", true);
 	ret &= add_modifier_effect("issue_change_speed", true);
 	ret &= add_modifier_effect("land_organisation", true);
-	ret &= add_modifier_effect("land_unit_start_experience", true, PERCENTAGE_DECIMAL);
+	ret &= add_modifier_effect("land_unit_start_experience", true, RAW_DECIMAL);
 	ret &= add_modifier_effect("leadership_modifier", true);
 	ret &= add_modifier_effect("loan_interest", false);
 	ret &= add_modifier_effect("max_loan_modifier", true);
@@ -153,7 +153,7 @@ bool ModifierManager::setup_modifier_effects() {
 	ret &= add_modifier_effect("mobilisation_impact", false);
 	ret &= add_modifier_effect("mobilisation_size", true);
 	ret &= add_modifier_effect("naval_organisation", true);
-	ret &= add_modifier_effect("naval_unit_start_experience", true, PERCENTAGE_DECIMAL);
+	ret &= add_modifier_effect("naval_unit_start_experience", true, RAW_DECIMAL);
 	ret &= add_modifier_effect("non_accepted_pop_consciousness_modifier", false, RAW_DECIMAL);
 	ret &= add_modifier_effect("non_accepted_pop_militancy_modifier", false, RAW_DECIMAL);
 	ret &= add_modifier_effect("org_regain", true);
@@ -180,16 +180,23 @@ bool ModifierManager::setup_modifier_effects() {
 	ret &= add_modifier_effect("social_reform_desire", false);
 	ret &= add_modifier_effect("supply_consumption", false);
 	ret &= add_modifier_effect("tax_efficiency", true);
-	ret &= add_modifier_effect("unit_start_experience", true, PERCENTAGE_DECIMAL);
+	ret &= add_modifier_effect("unit_start_experience", true, RAW_DECIMAL);
 	ret &= add_modifier_effect("war_exhaustion", false);
-
-	// TODO: make technology group modifiers dynamic
-	ret &= add_modifier_effect("army_tech_research_bonus", true);
-	ret &= add_modifier_effect("navy_tech_research_bonus", true);
-	ret &= add_modifier_effect("commerce_tech_research_bonus", true);
-	ret &= add_modifier_effect("culture_tech_research_bonus", true);
-	ret &= add_modifier_effect("industry_tech_research_bonus", true);
-	ret &= add_modifier_effect("navy_tech_research_bonus", true);
+	ret &= add_modifier_effect("reinforce_rate", true);
+	ret &= add_modifier_effect("colonial_migration", true);
+	ret &= add_modifier_effect("supply_range", true);
+	ret &= add_modifier_effect("colonial_points", true, INT);
+	ret &= add_modifier_effect("diplomatic_points", true);
+	ret &= add_modifier_effect("cb_creation_speed", true); //seemingly works the same way as cb_generation_speed_modifier
+	ret &= add_modifier_effect("education_efficiency", true);
+	ret &= add_modifier_effect("increase_research", true);
+	ret &= add_modifier_effect("influence", true);
+	ret &= add_modifier_effect("administrative_efficiency", true);
+	ret &= add_modifier_effect("tax_eff", true);	
+	ret &= add_modifier_effect("military_tactics", true);
+	ret &= add_modifier_effect("dig_in_cap", true, INT);
+	ret &= add_modifier_effect("max_national_focus", true, INT);
+	ret &= add_modifier_effect("regular_experience_level", true, RAW_DECIMAL);
 
 	/* Province Modifier Effects */
 	ret &= add_modifier_effect("assimilation_rate", true);
@@ -236,6 +243,10 @@ bool ModifierManager::setup_modifier_effects() {
 	return ret;
 }
 
+void ModifierManager::register_complex_modifier(std::string_view identifier) {
+	complex_modifiers.emplace(identifier);
+}
+
 bool ModifierManager::load_crime_modifiers(ast::NodeCPtr root) {
 	// TODO - DEV TASK: read crime modifiers
 	return true;
@@ -272,23 +283,38 @@ bool ModifierManager::load_triggered_modifiers(ast::NodeCPtr root) {
 key_value_callback_t ModifierManager::_modifier_effect_callback(
 	ModifierValue& modifier, key_value_callback_t default_callback, ModifierEffectValidator auto effect_validator
 ) const {
-
-	return [this, &modifier, default_callback, effect_validator](std::string_view key, ast::NodeCPtr value) -> bool {
-		ModifierEffect const* effect = get_modifier_effect_by_identifier(key);
-		if (effect != nullptr) {
-			if (effect_validator(*effect)) {
-				if (!modifier.values.contains(effect)) {
-					return expect_fixed_point(assign_variable_callback(modifier.values[effect]))(value);
-				} else {
-					Logger::error("Duplicate modifier effect: ", key);
-					return false;
-				}
+	std::function<bool(ModifierEffect const*, ast::NodeCPtr)> add_modifier_cb = [this, &modifier, effect_validator](ModifierEffect const* effect, ast::NodeCPtr value) -> bool {
+		if (effect_validator(*effect)) {
+			if (!modifier.values.contains(effect)) {
+				return expect_fixed_point(assign_variable_callback(modifier.values[effect]))(value);
 			} else {
-				Logger::error("Failed to validate modifier effect: ", key);
+				Logger::error("Duplicate modifier effect: ", effect->get_identifier());
 				return false;
 			}
+		} else {
+			Logger::error("Failed to validate modifier effect: ", effect->get_identifier());
+			return false;
 		}
-		return default_callback(key, value);
+	};
+
+	return [this, &modifier, default_callback, effect_validator, add_modifier_cb](std::string_view key, ast::NodeCPtr value) -> bool {
+		ModifierEffect const* effect = get_modifier_effect_by_identifier(key);
+		if (effect != nullptr && value->is_type<ast::IdentifierNode>()) {
+			return add_modifier_cb(effect, value);
+		} else if (complex_modifiers.contains(key) && value->is_derived_from<ast::AbstractListNode>()) {
+			return expect_dictionary([this, &key, &add_modifier_cb, &default_callback](std::string_view identifier, ast::NodeCPtr node) -> bool {
+				std::string flat_identifier = std::string(key);
+				flat_identifier += "_";
+				flat_identifier += identifier;
+				ModifierEffect const* effect = get_modifier_effect_by_identifier(flat_identifier);
+				if(effect != nullptr) {
+					return add_modifier_cb(effect, node);
+				} else {
+					Logger::error("Could not find flattened modifier: ", flat_identifier);
+					return false;
+				}
+			})(value);
+		} else return default_callback(key, value);
 	};
 }
 

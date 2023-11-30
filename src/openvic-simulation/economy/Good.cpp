@@ -95,3 +95,21 @@ bool GoodManager::load_goods_file(ast::NodeCPtr root) {
 	lock_goods();
 	return ret;
 }
+
+#define GOOD_MODIFIER(name) \
+	modifier_manager.register_complex_modifier(name); \
+	for (Good const& good : this->get_goods()) { \
+		std::string modifier_name = name; \
+		modifier_name += "_"; \
+		modifier_name += good.get_identifier(); \
+		ret &= modifier_manager.add_modifier_effect(modifier_name, true, ModifierEffect::format_t::PROPORTION_DECIMAL); \
+	}
+
+
+bool GoodManager::generate_modifiers(ModifierManager& modifier_manager) {
+	bool ret = true;
+	GOOD_MODIFIER("factory_goods_output");
+	GOOD_MODIFIER("rgo_goods_output");
+	GOOD_MODIFIER("rgo_size");
+	return ret;
+}

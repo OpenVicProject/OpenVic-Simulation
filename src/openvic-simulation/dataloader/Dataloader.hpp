@@ -1,10 +1,8 @@
 #pragma once
 
-#include <filesystem>
-#include <unordered_map>
-
 #include <openvic-dataloader/csv/Parser.hpp>
 #include <openvic-dataloader/v2script/Parser.hpp>
+#include <unordered_map> //keep this here or mac builds will fail
 
 #include "openvic-simulation/dataloader/NodeTools.hpp"
 
@@ -28,8 +26,9 @@ namespace OpenVic {
 
 		bool _load_interface_files(UIManager& ui_manager) const;
 		bool _load_pop_types(PopManager& pop_manager, UnitManager const& unit_manager, GoodManager const& good_manager) const;
-		bool _load_units(UnitManager& unit_manager, GoodManager const& good_manager) const;
-		bool _load_technologies(TechnologyManager& technology_manager, ModifierManager& modifier_manager) const;
+		bool _load_units(GameManager& game_manager) const;
+		bool _load_goods(GameManager& game_manager, std::string_view goods_file) const;
+		bool _load_technologies(GameManager& game_manager, std::string_view technology_file) const;
 		bool _load_map_dir(GameManager& game_manager) const;
 		bool _load_history(GameManager& game_manager, bool unused_history_file_warnings) const;
 

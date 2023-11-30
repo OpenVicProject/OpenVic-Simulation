@@ -3,6 +3,7 @@
 #include <cstdint>
 #include <string_view>
 
+#include "openvic-simulation/misc/Modifier.hpp"
 #include "openvic-simulation/dataloader/NodeTools.hpp"
 #include "openvic-simulation/economy/Good.hpp"
 #include "openvic-simulation/types/Date.hpp"
@@ -124,5 +125,6 @@ namespace OpenVic {
 		static NodeTools::callback_t<std::string_view> expect_type_str(NodeTools::Callback<Unit::type_t> auto callback);
 
 		bool load_unit_file(GoodManager const& good_manager, ast::NodeCPtr root);
+		bool generate_modifiers(ModifierManager& modifier_manager);
 	};
 }

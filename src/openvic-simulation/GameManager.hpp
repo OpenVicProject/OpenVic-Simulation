@@ -12,13 +12,6 @@
 #include "openvic-simulation/politics/PoliticsManager.hpp"
 #include "openvic-simulation/pop/Pop.hpp"
 #include "openvic-simulation/tech/Technology.hpp"
-#include "utility/Getters.hpp"
-
-#define DECLARE_WITH_REF_GETTERS(Type, name) \
-	Type name; \
-public: \
-	REF_GETTERS(name) \
-private:
 
 namespace OpenVic {
 	struct GameManager {
