@@ -853,6 +853,7 @@ bool Dataloader::load_defines(GameManager& game_manager) const {
 	static const std::string event_modifiers_file = "common/event_modifiers.txt";
 	static const std::string static_modifiers_file = "common/static_modifiers.txt";
 	static const std::string triggered_modifiers_file = "common/triggered_modifiers.txt";
+	static const std::string rebel_types_file = "common/rebel_types.txt";
 
 	bool ret = true;
 
@@ -997,6 +998,14 @@ bool Dataloader::load_defines(GameManager& game_manager) const {
 		game_manager, *this, parse_defines(lookup_file(countries_file)).get_file_node()
 	)) {
 		Logger::error("Failed to load countries!");
+		ret = false;
+	}
+	if (!game_manager.get_politics_manager().get_rebel_manager().load_rebels_file(
+		game_manager.get_politics_manager().get_ideology_manager(),
+		game_manager.get_politics_manager().get_government_type_manager(),
+		parse_defines(lookup_file(rebel_types_file)).get_file_node()
+	)) {
+		Logger::error("Failed to load rebel types!");
 		ret = false;
 	}
 	if (!_load_history(game_manager, false)) {

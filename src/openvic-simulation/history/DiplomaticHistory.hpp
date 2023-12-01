@@ -19,7 +19,7 @@ namespace OpenVic {
 			friend struct DiplomaticHistoryManager;
 
 		private:
-			Date PROPERTY_CUSTOM_NAME(added, get_date_added);
+			Date PROPERTY_CUSTOM_PREFIX(added, get_date);
 			Country const* PROPERTY(actor);
 			Country const* PROPERTY(receiver);
 			WargoalType const* PROPERTY(wargoal);
@@ -34,8 +34,8 @@ namespace OpenVic {
 
 		private:
 			Country const* PROPERTY(country);
-			Date PROPERTY_CUSTOM_NAME(joined, get_date_joined);
-			std::optional<Date> PROPERTY_CUSTOM_NAME(exited, get_date_exited);
+			Date PROPERTY_CUSTOM_PREFIX(joined, get_date);
+			std::optional<Date> PROPERTY_CUSTOM_PREFIX(exited, get_date);
 
 			war_participant_t(Country const* new_country, Date new_joined, std::optional<Date> new_exited);
 		};
@@ -73,7 +73,7 @@ namespace OpenVic {
 	private:
 		Country const* PROPERTY(overlord);
 		Country const* PROPERTY(subject);
-		const type_t PROPERTY_CUSTOM_NAME(type, get_subject_type);
+		const type_t PROPERTY_CUSTOM_PREFIX(type, get_subject);
 		const Date start;
 		const Date end;
 

@@ -80,14 +80,11 @@ namespace OpenVic {
 	private:
 		IdentifierRegistry<PopType> pop_types;
 
-		CultureManager culture_manager;
-		ReligionManager religion_manager;
+		CultureManager PROPERTY_REF(culture_manager);
+		ReligionManager PROPERTY_REF(religion_manager);
 
 	public:
 		PopManager();
-
-		REF_GETTERS(culture_manager)
-		REF_GETTERS(religion_manager)
 
 		bool add_pop_type(
 			std::string_view identifier, colour_t new_colour, PopType::strata_t strata, PopType::sprite_t sprite,

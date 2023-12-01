@@ -105,7 +105,7 @@ namespace OpenVic {
 
 		const std::string name;
 		const bool log_lock;
-		std::vector<_Storage> items;
+		std::vector<_Storage> PROPERTY_REF(items);
 		bool locked = false;
 		string_map_t<size_t> identifier_index_map;
 
@@ -247,8 +247,6 @@ namespace OpenVic {
 		bool has_index(size_t index) const {
 			return index < size();
 		}
-
-		REF_GETTERS(items)
 
 		std::vector<std::string_view> get_item_identifiers() const {
 			std::vector<std::string_view> identifiers(items.size());

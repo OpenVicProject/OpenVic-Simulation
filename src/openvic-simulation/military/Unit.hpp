@@ -35,9 +35,9 @@ namespace OpenVic {
 		const type_t PROPERTY(type);
 		const icon_t PROPERTY(icon);
 		const std::string PROPERTY(sprite);
-		const bool PROPERTY_CUSTOM_NAME(active, is_active);
+		const bool PROPERTY_CUSTOM_PREFIX(active, is);
 		const std::string PROPERTY(unit_type);
-		const bool PROPERTY_CUSTOM_NAME(floating_flag, has_floating_flag);
+		const bool PROPERTY_CUSTOM_PREFIX(floating_flag, has);
 
 		const uint32_t PROPERTY(priority);
 		const fixed_point_t PROPERTY(max_strength);
@@ -64,7 +64,7 @@ namespace OpenVic {
 		friend struct UnitManager;
 
 	private:
-		const bool PROPERTY_CUSTOM_NAME(primary_culture, is_primary_culture);
+		const bool PROPERTY_CUSTOM_PREFIX(primary_culture, is);
 		const std::string PROPERTY(sprite_override);
 		const std::string PROPERTY(sprite_mount);
 		const std::string PROPERTY(sprite_mount_attach_node);
@@ -87,11 +87,11 @@ namespace OpenVic {
 
 	private:
 		const icon_t PROPERTY(naval_icon);
-		const bool PROPERTY_CUSTOM_NAME(sail, can_sail);
-		const bool PROPERTY_CUSTOM_NAME(transport, is_transport);
-		const bool PROPERTY_CUSTOM_NAME(capital, is_capital);
+		const bool PROPERTY_CUSTOM_PREFIX(sail, can);
+		const bool PROPERTY_CUSTOM_PREFIX(transport, is);
+		const bool PROPERTY_CUSTOM_PREFIX(capital, is);
 		const fixed_point_t PROPERTY(colonial_points);
-		const bool PROPERTY_CUSTOM_NAME(build_overseas, can_build_overseas);
+		const bool PROPERTY_CUSTOM_PREFIX(build_overseas, can);
 		const uint32_t PROPERTY(min_port_level);
 		const int32_t PROPERTY(limit_per_port);
 		const fixed_point_t PROPERTY(supply_consumption_score);

@@ -38,8 +38,8 @@ namespace OpenVic {
 	private:
 		GoodCategory const& PROPERTY(category);
 		const price_t PROPERTY(base_price);
-		const bool PROPERTY_CUSTOM_NAME(available_from_start, is_available_from_start);
-		const bool PROPERTY_CUSTOM_NAME(tradeable, is_tradeable);
+		const bool PROPERTY_CUSTOM_PREFIX(available_from_start, is);
+		const bool PROPERTY_CUSTOM_PREFIX(tradeable, is);
 		const bool PROPERTY(money);
 		const bool PROPERTY(overseas_penalty);
 

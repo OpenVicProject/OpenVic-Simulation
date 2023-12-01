@@ -20,7 +20,7 @@ namespace OpenVic {
 
 	private:
 		IdeologyGroup const& PROPERTY(group);
-		const bool PROPERTY_CUSTOM_NAME(uncivilised, is_uncivilised);
+		const bool PROPERTY_CUSTOM_PREFIX(uncivilised, is);
 		const bool PROPERTY(can_reduce_militancy);
 		const Date PROPERTY(spawn_date);
 

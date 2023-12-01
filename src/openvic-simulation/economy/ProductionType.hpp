@@ -53,10 +53,10 @@ namespace OpenVic {
 		const std::vector<Bonus> PROPERTY(bonuses);
 
 		const Good::good_map_t PROPERTY(efficiency);
-		const bool PROPERTY_CUSTOM_NAME(coastal, is_coastal); // is_coastal
+		const bool PROPERTY_CUSTOM_PREFIX(coastal, is); // is_coastal
 
-		const bool PROPERTY_CUSTOM_NAME(farm, is_farm);
-		const bool PROPERTY_CUSTOM_NAME(mine, is_mine);
+		const bool PROPERTY_CUSTOM_PREFIX(farm, is);
+		const bool PROPERTY_CUSTOM_PREFIX(mine, is);
 
 		ProductionType(PRODUCTION_TYPE_ARGS);
 

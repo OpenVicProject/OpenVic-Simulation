@@ -60,7 +60,7 @@ namespace OpenVic {
 		 */
 		IdentifierRegistry<CountryParty> parties;
 		const unit_names_map_t PROPERTY(unit_names);
-		const bool PROPERTY_CUSTOM_NAME(dynamic_tag, is_dynamic_tag);
+		const bool PROPERTY_CUSTOM_PREFIX(dynamic_tag, is);
 		const government_colour_map_t PROPERTY(alternative_colours);
 
 		Country(

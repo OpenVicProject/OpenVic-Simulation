@@ -8,15 +8,9 @@
 namespace OpenVic {
 	struct MilitaryManager {
 	private:
-		UnitManager unit_manager;
-		LeaderTraitManager leader_trait_manager;
-		DeploymentManager deployment_manager;
-		WargoalTypeManager wargoal_manager;
-
-	public:
-		REF_GETTERS(unit_manager)
-		REF_GETTERS(leader_trait_manager)
-		REF_GETTERS(deployment_manager)
-		REF_GETTERS(wargoal_manager)
+		UnitManager PROPERTY_REF(unit_manager);
+		LeaderTraitManager PROPERTY_REF(leader_trait_manager);
+		DeploymentManager PROPERTY_REF(deployment_manager);
+		WargoalTypeManager PROPERTY_REF(wargoal_manager);
 	};
 }

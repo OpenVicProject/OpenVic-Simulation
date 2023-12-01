@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Rebel.hpp"
 #include "openvic-simulation/politics/Government.hpp"
 #include "openvic-simulation/politics/Ideology.hpp"
 #include "openvic-simulation/politics/Issue.hpp"
@@ -9,19 +10,14 @@
 namespace OpenVic {
 	struct PoliticsManager {
 	private:
-		GovernmentTypeManager government_type_manager;
-		IdeologyManager ideology_manager;
-		IssueManager issue_manager;
-		NationalValueManager national_value_manager;
-		NationalFocusManager national_focus_manager;
+		GovernmentTypeManager PROPERTY_REF(government_type_manager);
+		IdeologyManager PROPERTY_REF(ideology_manager);
+		IssueManager PROPERTY_REF(issue_manager);
+		NationalValueManager PROPERTY_REF(national_value_manager);
+		NationalFocusManager PROPERTY_REF(national_focus_manager);
+		RebelManager PROPERTY_REF(rebel_manager);
 
 	public:
-		REF_GETTERS(government_type_manager)
-		REF_GETTERS(ideology_manager)
-		REF_GETTERS(issue_manager)
-		REF_GETTERS(national_value_manager)
-		REF_GETTERS(national_focus_manager)
-
 		inline bool load_government_types_file(ast::NodeCPtr root) {
 			return government_type_manager.load_government_types_file(ideology_manager, root);
 		}
