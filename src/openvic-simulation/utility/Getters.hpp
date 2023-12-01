@@ -36,13 +36,17 @@
 	constexpr std::string_view get_base_type() const override { \
 		return ::ovdl::detail::type_name<std::decay_t<decltype(*this)>>(); }
 
-#define REF_GETTERS(var) \
-	constexpr decltype(var)& get_##var() { \
-		return var; \
+#define PROPERTY_REF(NAME) PROPERTY_REF_FULL(NAME, private)
+#define PROPERTY_REF_FULL(NAME, ACCESS) \
+	NAME; \
+public: \
+	constexpr decltype(NAME)& get_##NAME() { \
+		return NAME; \
 	} \
-	constexpr decltype(var) const& get_##var() const { \
-		return var; \
-	}
+	constexpr decltype(NAME) const& get_##NAME() const { \
+		return NAME; \
+	} \
+ACCESS:
 
 namespace OpenVic {
 	struct ReturnByValueProperty {};
@@ -88,6 +92,7 @@ namespace OpenVic {
  * 		Province& PROPERTY(province);		// Province& province;			Province const& get_province() const;
  */
 #define PROPERTY(NAME) PROPERTY_ACCESS(NAME, private)
+#define PROPERTY_CUSTOM_PREFIX(NAME, PREFIX) PROPERTY_CUSTOM_NAME(NAME, PREFIX##_##NAME)
 #define PROPERTY_CUSTOM_NAME(NAME, GETTER_NAME) PROPERTY_FULL(NAME, GETTER_NAME, private)
 #define PROPERTY_ACCESS(NAME, ACCESS) PROPERTY_FULL(NAME, get_##NAME, ACCESS)
 #define PROPERTY_FULL(NAME, GETTER_NAME, ACCESS) \

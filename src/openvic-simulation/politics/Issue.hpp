@@ -56,8 +56,8 @@ namespace OpenVic {
 
 	private:
 		ReformType const& PROPERTY(type);
-		const bool PROPERTY_CUSTOM_NAME(ordered, is_ordered); // next_step_only
-		const bool PROPERTY_CUSTOM_NAME(administrative, is_administrative);
+		const bool PROPERTY_CUSTOM_PREFIX(ordered, is); // next_step_only
+		const bool PROPERTY_CUSTOM_PREFIX(administrative, is);
 
 		ReformGroup(std::string_view identifier, ReformType const& type, bool ordered, bool administrative);
 

@@ -19,7 +19,7 @@ namespace OpenVic {
 		/* If true, positive values will be green and negative values will be red.
 		 * If false, the colours will be switced.
 		 */
-		const bool PROPERTY_CUSTOM_NAME(positive_good, is_positive_good);
+		const bool PROPERTY_CUSTOM_PREFIX(positive_good, is);
 		const format_t PROPERTY(format);
 
 		// TODO - format/precision, e.g. 80% vs 0.8 vs 0.800, 2 vs 2.0 vs 200%

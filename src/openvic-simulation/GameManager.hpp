@@ -16,17 +16,17 @@ namespace OpenVic {
 		using state_updated_func_t = std::function<void()>;
 
 	private:
-		Map map;
-		DefineManager define_manager;
-		EconomyManager economy_manager;
-		MilitaryManager military_manager;
-		ModifierManager modifier_manager;
-		PoliticsManager politics_manager;
-		HistoryManager history_manager;
-		PopManager pop_manager;
-		CountryManager country_manager;
-		UIManager ui_manager;
-		GameAdvancementHook clock;
+		Map PROPERTY_REF(map);
+		DefineManager PROPERTY_REF(define_manager);
+		EconomyManager PROPERTY_REF(economy_manager);
+		MilitaryManager PROPERTY_REF(military_manager);
+		ModifierManager PROPERTY_REF(modifier_manager);
+		PoliticsManager PROPERTY_REF(politics_manager);
+		HistoryManager PROPERTY_REF(history_manager);
+		PopManager PROPERTY_REF(pop_manager);
+		CountryManager PROPERTY_REF(country_manager);
+		UIManager PROPERTY_REF(ui_manager);
+		GameAdvancementHook PROPERTY_REF(clock);
 
 		time_t session_start; /* SS-54, as well as allowing time-tracking */
 		Bookmark const* PROPERTY(bookmark);
@@ -40,18 +40,6 @@ namespace OpenVic {
 
 	public:
 		GameManager(state_updated_func_t state_updated_callback);
-
-		REF_GETTERS(map)
-		REF_GETTERS(define_manager)
-		REF_GETTERS(economy_manager)
-		REF_GETTERS(military_manager)
-		REF_GETTERS(modifier_manager)
-		REF_GETTERS(politics_manager)
-		REF_GETTERS(history_manager)
-		REF_GETTERS(pop_manager)
-		REF_GETTERS(country_manager)
-		REF_GETTERS(ui_manager)
-		REF_GETTERS(clock)
 
 		bool reset();
 		bool load_bookmark(Bookmark const* new_bookmark);

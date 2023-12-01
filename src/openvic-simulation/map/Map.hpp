@@ -56,7 +56,7 @@ namespace OpenVic {
 		IdentifierRegistry<Region> regions;
 		IdentifierRegistry<Mapmode> mapmodes;
 		ProvinceSet water_provinces;
-		TerrainTypeManager terrain_type_manager;
+		TerrainTypeManager PROPERTY_REF(terrain_type_manager);
 
 		size_t width = 0, height = 0;
 		std::vector<shape_pixel_t> province_shape_image;
@@ -92,7 +92,6 @@ namespace OpenVic {
 		size_t get_width() const;
 		size_t get_height() const;
 		std::vector<shape_pixel_t> const& get_province_shape_image() const;
-		REF_GETTERS(terrain_type_manager)
 
 		bool add_region(std::string_view identifier, std::vector<std::string_view> const& province_identifiers);
 		IDENTIFIER_REGISTRY_ACCESSORS(region)

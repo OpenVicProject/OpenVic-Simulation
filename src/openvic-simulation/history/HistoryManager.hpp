@@ -9,15 +9,9 @@
 namespace OpenVic {
 	struct HistoryManager {
 	private:
-		BookmarkManager bookmark_manager;
-		CountryHistoryManager country_manager;
-		ProvinceHistoryManager province_manager;
-		DiplomaticHistoryManager diplomacy_manager;
-
-	public:
-		REF_GETTERS(bookmark_manager)
-		REF_GETTERS(country_manager)
-		REF_GETTERS(province_manager)
-		REF_GETTERS(diplomacy_manager)
+		BookmarkManager PROPERTY_REF(bookmark_manager);
+		CountryHistoryManager PROPERTY_REF(country_manager);
+		ProvinceHistoryManager PROPERTY_REF(province_manager);
+		DiplomaticHistoryManager PROPERTY_REF(diplomacy_manager);
 	};
 }
