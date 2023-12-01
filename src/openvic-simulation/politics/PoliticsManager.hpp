@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Rebel.hpp"
 #include "openvic-simulation/politics/Government.hpp"
 #include "openvic-simulation/politics/Ideology.hpp"
 #include "openvic-simulation/politics/Issue.hpp"
@@ -14,6 +15,7 @@ namespace OpenVic {
 		IssueManager PROPERTY_REF(issue_manager);
 		NationalValueManager PROPERTY_REF(national_value_manager);
 		NationalFocusManager PROPERTY_REF(national_focus_manager);
+		RebelManager PROPERTY_REF(rebel_manager);
 
 	public:
 		inline bool load_government_types_file(ast::NodeCPtr root) {
