@@ -10,7 +10,6 @@ TerrainType::TerrainType(
 ) : HasIdentifierAndColour { new_identifier, new_colour, false, false }, modifier { std::move(new_modifier) },
 	is_water { new_is_water } {}
 
-
 TerrainTypeMapping::TerrainTypeMapping(
 	std::string_view new_identifier, TerrainType const& new_type, std::vector<index_t>&& new_terrain_indicies,
 	index_t new_priority, bool new_has_texture

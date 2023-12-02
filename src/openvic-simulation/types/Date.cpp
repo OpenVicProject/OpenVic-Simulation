@@ -100,6 +100,12 @@ std::ostream& OpenVic::operator<<(std::ostream& out, Timespan const& timespan) {
 	return out << timespan.to_string();
 }
 
+const std::string Date::MONTH_NAMES[MONTHS_IN_YEAR] = {
+	"January", "February", "March", "April", "May", "June",
+	"July", "August", "September", "October", "November",
+	"December"
+};
+
 Timespan Date::_date_to_timespan(year_t year, month_t month, day_t day) {
 	month = std::clamp<month_t>(month, 1, MONTHS_IN_YEAR);
 	day = std::clamp<day_t>(day, 1, DAYS_IN_MONTH[month - 1]);
@@ -206,6 +212,15 @@ Date Date::operator++(int) {
 
 bool Date::in_range(Date start, Date end) const {
 	return start <= *this && *this <= end;
+}
+
+std::string const& Date::get_month_name() const {
+	const month_t month = get_month();
+	if (1 <= month && month <= MONTHS_IN_YEAR) {
+		return MONTH_NAMES[month - 1];
+	}
+	static const std::string invalid_month_name = "Invalid Month";
+	return invalid_month_name;
 }
 
 std::string Date::to_string() const {

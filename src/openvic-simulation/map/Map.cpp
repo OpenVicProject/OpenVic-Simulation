@@ -141,14 +141,6 @@ bool Map::add_region(std::string_view identifier, std::vector<std::string_view> 
 	return ret;
 }
 
-Province* Map::get_province_by_index(Province::index_t index) {
-	return index != Province::NULL_INDEX ? provinces.get_item_by_index(index - 1) : nullptr;
-}
-
-Province const* Map::get_province_by_index(Province::index_t index) const {
-	return index != Province::NULL_INDEX ? provinces.get_item_by_index(index - 1) : nullptr;
-}
-
 Province::index_t Map::get_index_from_colour(colour_t colour) const {
 	const colour_index_map_t::const_iterator it = colour_index_map.find(colour);
 	if (it != colour_index_map.end()) {
@@ -227,10 +219,6 @@ bool Map::add_mapmode(std::string_view identifier, Mapmode::colour_func_t colour
 		return false;
 	}
 	return mapmodes.add_item({ identifier, mapmodes.size(), colour_func });
-}
-
-Mapmode const* Map::get_mapmode_by_index(size_t index) const {
-	return mapmodes.get_item_by_index(index);
 }
 
 bool Map::generate_mapmode_colours(Mapmode::index_t index, uint8_t* target) const {

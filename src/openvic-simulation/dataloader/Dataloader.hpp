@@ -27,8 +27,8 @@ namespace OpenVic {
 		bool _load_interface_files(UIManager& ui_manager) const;
 		bool _load_pop_types(PopManager& pop_manager, UnitManager const& unit_manager, GoodManager const& good_manager) const;
 		bool _load_units(GameManager& game_manager) const;
-		bool _load_goods(GameManager& game_manager, std::string_view goods_file) const;
-		bool _load_technologies(GameManager& game_manager, std::string_view technology_file) const;
+		bool _load_goods(GameManager& game_manager) const;
+		bool _load_technologies(GameManager& game_manager) const;
 		bool _load_map_dir(GameManager& game_manager) const;
 		bool _load_history(GameManager& game_manager, bool unused_history_file_warnings) const;
 
@@ -79,8 +79,10 @@ namespace OpenVic {
 		 * DAT-24
 		 */
 		fs::path lookup_file(std::string_view path, bool print_error = true) const;
-		/* Checks alternate file endings, e.g. if "*.tga" doesn't exist then try "*.dds" */
-		fs::path lookup_image_file_or_dds(std::string_view path) const;
+		/* If the path ends with the extension ".tga", then this function will first try to load the file with the extension
+		 * replaced with ".dds", and if that fails it will try the original ".tga" version. Paths not ending with ".tga" will
+		 * just be passed to lookup_file. */
+		fs::path lookup_image_file(std::string_view path) const;
 		path_vector_t lookup_files_in_dir(std::string_view path, fs::path const& extension) const;
 		path_vector_t lookup_files_in_dir_recursive(std::string_view path, fs::path const& extension) const;
 		path_vector_t lookup_basic_indentifier_prefixed_files_in_dir(std::string_view path, fs::path const& extension) const;

@@ -77,10 +77,19 @@ ModifierValue ModifierValue::operator-(ModifierValue const& right) const {
 Modifier::Modifier(std::string_view new_identifier, ModifierValue&& new_values, icon_t new_icon)
 	: HasIdentifier { new_identifier }, ModifierValue { std::move(new_values) }, icon { new_icon } {}
 
+TriggeredModifier::TriggeredModifier(std::string_view new_identifier, ModifierValue&& new_values, icon_t new_icon)
+	: Modifier { new_identifier, std::move(new_values), new_icon } {}
+
 ModifierInstance::ModifierInstance(Modifier const& modifier, Date expiry_date)
 	: modifier { modifier }, expiry_date { expiry_date } {}
 
-ModifierManager::ModifierManager() : modifier_effects { "modifier effects" }, event_modifiers { "event modifiers" } {}
+Crime::Crime(std::string_view new_identifier, ModifierValue&& new_values, icon_t new_icon, bool new_default_active)
+  : TriggeredModifier { new_identifier, std::move(new_values), new_icon }, default_active { new_default_active },
+	active { new_default_active } {}
+
+ModifierManager::ModifierManager()
+  : modifier_effects { "modifier effects" }, crime_modifiers { "crime modifiers" }, event_modifiers { "event modifiers" },
+	static_modifiers { "static modifiers" }, triggered_modifiers { "triggered modifiers" } {}
 
 bool ModifierManager::add_modifier_effect(std::string_view identifier, bool positive_good, ModifierEffect::format_t format) {
 	if (identifier.empty()) {
@@ -90,18 +99,6 @@ bool ModifierManager::add_modifier_effect(std::string_view identifier, bool posi
 	return modifier_effects.add_item(
 		std::make_unique<ModifierEffect>(std::move(identifier), std::move(positive_good), std::move(format))
 	);
-}
-
-bool ModifierManager::add_event_modifier(std::string_view identifier, ModifierValue&& values, Modifier::icon_t icon) {
-	if (identifier.empty()) {
-		Logger::error("Invalid modifier effect identifier - empty!");
-		return false;
-	}
-	if (icon <= 0) {
-		Logger::error("Invalid modifier icon for ", identifier, ": ", icon);
-		return false;
-	}
-	return event_modifiers.add_item({ identifier, std::move(values), icon }, duplicate_warning_callback);
 }
 
 bool ModifierManager::setup_modifier_effects() {
@@ -133,6 +130,7 @@ bool ModifierManager::setup_modifier_effects() {
 	ret &= add_modifier_effect("issue_change_speed", true);
 	ret &= add_modifier_effect("land_organisation", true);
 	ret &= add_modifier_effect("land_unit_start_experience", true, RAW_DECIMAL);
+	ret &= add_modifier_effect("leadership", true, RAW_DECIMAL);
 	ret &= add_modifier_effect("leadership_modifier", true);
 	ret &= add_modifier_effect("loan_interest", false);
 	ret &= add_modifier_effect("max_loan_modifier", true);
@@ -140,6 +138,7 @@ bool ModifierManager::setup_modifier_effects() {
 	ret &= add_modifier_effect("max_social_spending", true);
 	ret &= add_modifier_effect("max_tariff", true);
 	ret &= add_modifier_effect("max_tax", true);
+	ret &= add_modifier_effect("max_war_exhaustion", true, PERCENTAGE_DECIMAL);
 	ret &= add_modifier_effect("middle_income_modifier", true);
 	ret &= add_modifier_effect("middle_life_needs", true);
 	ret &= add_modifier_effect("middle_everyday_needs", true);
@@ -192,7 +191,7 @@ bool ModifierManager::setup_modifier_effects() {
 	ret &= add_modifier_effect("increase_research", true);
 	ret &= add_modifier_effect("influence", true);
 	ret &= add_modifier_effect("administrative_efficiency", true);
-	ret &= add_modifier_effect("tax_eff", true);	
+	ret &= add_modifier_effect("tax_eff", true);
 	ret &= add_modifier_effect("military_tactics", true);
 	ret &= add_modifier_effect("dig_in_cap", true, INT);
 	ret &= add_modifier_effect("max_national_focus", true, INT);
@@ -200,6 +199,7 @@ bool ModifierManager::setup_modifier_effects() {
 
 	/* Province Modifier Effects */
 	ret &= add_modifier_effect("assimilation_rate", true);
+	ret &= add_modifier_effect("boost_strongest_party", false);
 	ret &= add_modifier_effect("immigrant_attract", true);
 	ret &= add_modifier_effect("immigrant_push", false);
 	ret &= add_modifier_effect("life_rating", true);
@@ -220,11 +220,13 @@ bool ModifierManager::setup_modifier_effects() {
 	ret &= add_modifier_effect("farm_RGO_eff", true);
 	ret &= add_modifier_effect("farm_rgo_size", true);
 	ret &= add_modifier_effect("farm_RGO_size", true);
+	ret &= add_modifier_effect("max_attrition", false, RAW_DECIMAL);
 	ret &= add_modifier_effect("mine_rgo_eff", true);
 	ret &= add_modifier_effect("mine_RGO_eff", true);
 	ret &= add_modifier_effect("mine_rgo_size", true);
 	ret &= add_modifier_effect("mine_RGO_size", true);
 	ret &= add_modifier_effect("movement_cost", false);
+	ret &= add_modifier_effect("number_of_voters", false);
 	ret &= add_modifier_effect("railroads", true); // capitalist likelihood for railroads vs factories
 	ret &= add_modifier_effect("supply_limit", true, RAW_DECIMAL);
 
@@ -247,37 +249,111 @@ void ModifierManager::register_complex_modifier(std::string_view identifier) {
 	complex_modifiers.emplace(identifier);
 }
 
+bool ModifierManager::add_crime_modifier(
+	std::string_view identifier, ModifierValue&& values, Modifier::icon_t icon, bool active
+) {
+	if (identifier.empty()) {
+		Logger::error("Invalid crime modifier effect identifier - empty!");
+		return false;
+	}
+	return crime_modifiers.add_item({ identifier, std::move(values), icon, active }, duplicate_warning_callback);
+}
+
 bool ModifierManager::load_crime_modifiers(ast::NodeCPtr root) {
-	// TODO - DEV TASK: read crime modifiers
+	const bool ret = expect_dictionary_reserve_length(
+		crime_modifiers,
+		[this](std::string_view key, ast::NodeCPtr value) -> bool {
+			ModifierValue modifier_value;
+			Modifier::icon_t icon = 0;
+			bool active = false;
+			bool ret = expect_modifier_value_and_keys(
+				move_variable_callback(modifier_value),
+				"icon", ZERO_OR_ONE, expect_uint(assign_variable_callback(icon)),
+				"trigger", ONE_EXACTLY, success_callback, // TODO - load condition
+				"active", ZERO_OR_ONE, expect_bool(assign_variable_callback(active))
+			)(value);
+			ret &= add_crime_modifier(key, std::move(modifier_value), icon, active);
+			return ret;
+		}
+	)(root);
+	lock_crime_modifiers();
+	return ret;
 	return true;
 }
 
+bool ModifierManager::add_event_modifier(std::string_view identifier, ModifierValue&& values, Modifier::icon_t icon) {
+	if (identifier.empty()) {
+		Logger::error("Invalid event modifier effect identifier - empty!");
+		return false;
+	}
+	return event_modifiers.add_item({ identifier, std::move(values), icon }, duplicate_warning_callback);
+}
+
 bool ModifierManager::load_event_modifiers(ast::NodeCPtr root) {
-	// TODO - DEV TASK: read event modifiers - example framework below
-	return true;
-	/*return expect_dictionary_reserve_length(
+	const bool ret = expect_dictionary_reserve_length(
 		event_modifiers,
 		[this](std::string_view key, ast::NodeCPtr value) -> bool {
 			ModifierValue modifier_value;
 			Modifier::icon_t icon = 0;
 			bool ret = expect_modifier_value_and_keys(
 				move_variable_callback(modifier_value),
-				"icon", ONE_EXACTLY, expect_uint(assign_variable_callback(icon))
+				"icon", ZERO_OR_ONE, expect_uint(assign_variable_callback(icon))
 			)(value);
 			ret &= add_event_modifier(key, std::move(modifier_value), icon);
 			return ret;
 		}
-	)(root);*/
+	)(root);
+	lock_event_modifiers();
+	return ret;
+}
+
+bool ModifierManager::add_static_modifier(std::string_view identifier, ModifierValue&& values) {
+	if (identifier.empty()) {
+		Logger::error("Invalid static modifier effect identifier - empty!");
+		return false;
+	}
+	return static_modifiers.add_item({ identifier, std::move(values), 0 }, duplicate_warning_callback);
 }
 
 bool ModifierManager::load_static_modifiers(ast::NodeCPtr root) {
-	// TODO - DEV TASK: read static modifiers
-	return true;
+	const bool ret = expect_dictionary_reserve_length(
+		static_modifiers,
+		[this](std::string_view key, ast::NodeCPtr value) -> bool {
+			ModifierValue modifier_value;
+			bool ret = expect_modifier_value(move_variable_callback(modifier_value))(value);
+			ret &= add_static_modifier(key, std::move(modifier_value));
+			return ret;
+		}
+	)(root);
+	lock_static_modifiers();
+	return ret;
+}
+
+bool ModifierManager::add_triggered_modifier(std::string_view identifier, ModifierValue&& values, Modifier::icon_t icon) {
+	if (identifier.empty()) {
+		Logger::error("Invalid triggered modifier effect identifier - empty!");
+		return false;
+	}
+	return triggered_modifiers.add_item({ identifier, std::move(values), icon }, duplicate_warning_callback);
 }
 
 bool ModifierManager::load_triggered_modifiers(ast::NodeCPtr root) {
-	// TODO - DEV TASK: read triggered modifiers
-	return true;
+	const bool ret = expect_dictionary_reserve_length(
+		triggered_modifiers,
+		[this](std::string_view key, ast::NodeCPtr value) -> bool {
+			ModifierValue modifier_value;
+			Modifier::icon_t icon = 0;
+			bool ret = expect_modifier_value_and_keys(
+				move_variable_callback(modifier_value),
+				"icon", ZERO_OR_ONE, expect_uint(assign_variable_callback(icon)),
+				"trigger", ONE_EXACTLY, success_callback // TODO - load condition
+			)(value);
+			ret &= add_triggered_modifier(key, std::move(modifier_value), icon);
+			return ret;
+		}
+	)(root);
+	lock_triggered_modifiers();
+	return ret;
 }
 
 key_value_callback_t ModifierManager::_modifier_effect_callback(

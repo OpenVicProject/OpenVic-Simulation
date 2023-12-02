@@ -132,7 +132,7 @@ bool UnitManager::load_unit_file(GoodManager const& good_manager, ast::NodeCPtr 
 			bool primary_culture = false;
 			std::string_view sprite_override {}, sprite_mount {}, sprite_mount_attach_node {};
 			fixed_point_t reconnaissance = 0, attack = 0, defence = 0, discipline = 0, support = 0, maneuver = 0, siege = 0;
-			
+
 			ret &= add_key_map_entries(key_map,
 				"primary_culture", ZERO_OR_ONE, expect_bool(assign_variable_callback(primary_culture)),
 				"sprite_override", ZERO_OR_ONE, expect_identifier(assign_variable_callback(sprite_override)),
@@ -146,9 +146,9 @@ bool UnitManager::load_unit_file(GoodManager const& good_manager, ast::NodeCPtr 
 				"maneuver", ONE_EXACTLY, expect_fixed_point(assign_variable_callback(maneuver)),
 				"siege", ZERO_OR_ONE, expect_fixed_point(assign_variable_callback(siege))
 			);
-			
+
 			ret &= expect_dictionary_key_map(key_map)(value);
-			
+
 			ret &= add_land_unit(key, UNIT_ARGS, LAND_ARGS);
 
 			return ret;
@@ -180,9 +180,9 @@ bool UnitManager::load_unit_file(GoodManager const& good_manager, ast::NodeCPtr 
 			);
 
 			ret &= expect_dictionary_key_map(key_map)(value);
-			
+
 			ret &= add_naval_unit(key, UNIT_ARGS, NAVY_ARGS);
-			
+
 			return ret;
 		}
 			default: Logger::error("Unknown unit type for ", key, ": ", static_cast<int>(type)); return false;
@@ -215,7 +215,7 @@ bool UnitManager::generate_modifiers(ModifierManager& modifier_manager) {
 			STAT_MODIFIER("siege", true, RAW_DECIMAL);
 			break;
 		}
-        case Unit::type_t::NAVAL: {
+		case Unit::type_t::NAVAL: {
 			STAT_MODIFIER("colonial_points", true, INT);
 			STAT_MODIFIER("supply_consumption_score", false, INT);
 			STAT_MODIFIER("hull", true, RAW_DECIMAL);
@@ -223,8 +223,8 @@ bool UnitManager::generate_modifiers(ModifierManager& modifier_manager) {
 			STAT_MODIFIER("fire_range", true, RAW_DECIMAL);
 			STAT_MODIFIER("evasion", true, PROPORTION_DECIMAL);
 			STAT_MODIFIER("torpedo_attack", true, RAW_DECIMAL);
-        	break;
-        }
+			break;
+		}
 		}
 
 		return ret;

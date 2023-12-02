@@ -58,6 +58,7 @@ namespace OpenVic {
 		static month_t const* MONTH_FROM_DAY_IN_YEAR;
 
 		static constexpr char SEPARATOR_CHARACTER = '.';
+		static const std::string MONTH_NAMES[MONTHS_IN_YEAR];
 
 	private:
 		// Number of days since Jan 1st, Year 0
@@ -93,6 +94,10 @@ namespace OpenVic {
 
 		bool in_range(Date start, Date end) const;
 
+		/* This returns a std::string const&, rather than a std::string_view, as it needs to be converted to a
+		 * godot::StringName in order to be localised, and std::string_view to a godot::StringName conversion requires an
+		 * intermediary std::string. */
+		std::string const& get_month_name() const;
 		std::string to_string() const;
 		explicit operator std::string() const;
 		// Parsed from string of the form YYYY.MM.DD

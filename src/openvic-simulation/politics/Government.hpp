@@ -29,6 +29,7 @@ namespace OpenVic {
 	struct GovernmentTypeManager {
 	private:
 		IdentifierRegistry<GovernmentType> government_types;
+		std::vector<std::string> PROPERTY(flag_types);
 
 	public:
 		GovernmentTypeManager();

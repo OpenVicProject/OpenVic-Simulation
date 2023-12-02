@@ -78,6 +78,7 @@ namespace OpenVic {
 		Country const* PROPERTY(controller);
 		std::vector<Country const*> PROPERTY(cores);
 		bool PROPERTY(slave);
+		Crime const* PROPERTY_RW(crime);
 		// TODO - change this into a factory-like structure
 		Good const* PROPERTY(rgo);
 		IdentifierRegistry<BuildingInstance> buildings;

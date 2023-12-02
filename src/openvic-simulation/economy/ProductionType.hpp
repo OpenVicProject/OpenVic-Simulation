@@ -67,6 +67,7 @@ namespace OpenVic {
 	struct ProductionTypeManager {
 	private:
 		IdentifierRegistry<ProductionType> production_types;
+		PopType::sprite_t PROPERTY(rgo_owner_sprite);
 
 		NodeTools::node_callback_t _expect_employed_pop(
 			GoodManager const& good_manager, PopManager const& pop_manager, NodeTools::callback_t<EmployedPop&&> cb

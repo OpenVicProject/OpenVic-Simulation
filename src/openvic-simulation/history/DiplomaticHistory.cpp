@@ -186,7 +186,7 @@ bool DiplomaticHistoryManager::load_war_history_file(GameManager& game_manager, 
 					}
 
 					if (participant_to_remove == nullptr) {
-						Logger::error("In history of war ", name, " at date ", current_date.to_string(), ": Attempted to remove attacking country ",    country.get_identifier(), " which was not present!");
+						Logger::error("In history of war ", name, " at date ", current_date.to_string(), ": Attempted to remove attacking country ", country.get_identifier(), " which was not present!");
 						return false;
 					}
 
@@ -204,7 +204,7 @@ bool DiplomaticHistoryManager::load_war_history_file(GameManager& game_manager, 
 					}
 
 					if (participant_to_remove == nullptr) {
-						Logger::error("In history of war ", name, " at date ", current_date.to_string(), ": Attempted to remove attacking country ",    country.get_identifier(), " which was not present!");
+						Logger::error("In history of war ", name, " at date ", current_date.to_string(), ": Attempted to remove attacking country ", country.get_identifier(), " which was not present!");
 						return false;
 					}
 

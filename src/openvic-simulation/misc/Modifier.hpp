@@ -80,6 +80,32 @@ namespace OpenVic {
 		Modifier(Modifier&&) = default;
 	};
 
+	struct TriggeredModifier : Modifier {
+		friend struct ModifierManager;
+
+	private:
+		// TODO - trigger condition
+
+	protected:
+		TriggeredModifier(std::string_view new_identifier, ModifierValue&& new_values, icon_t new_icon);
+
+	public:
+		TriggeredModifier(TriggeredModifier&&) = default;
+	};
+
+	struct Crime final : TriggeredModifier {
+		friend struct ModifierManager;
+
+	private:
+		const bool PROPERTY(default_active);
+		bool PROPERTY_RW(active);
+
+		Crime(std::string_view new_identifier, ModifierValue&& new_values, icon_t new_icon, bool new_default_active);
+
+	public:
+		Crime(Crime&&) = default;
+	};
+
 	struct ModifierInstance {
 
 	private:
@@ -99,8 +125,12 @@ namespace OpenVic {
 		 */
 	private:
 		IdentifierInstanceRegistry<ModifierEffect> modifier_effects;
-		IdentifierRegistry<Modifier> event_modifiers;
 		string_set_t complex_modifiers;
+
+		IdentifierRegistry<Crime> crime_modifiers;
+		IdentifierRegistry<Modifier> event_modifiers;
+		IdentifierRegistry<Modifier> static_modifiers;
+		IdentifierRegistry<TriggeredModifier> triggered_modifiers;
 
 		/* effect_validator takes in ModifierEffect const& */
 		NodeTools::key_value_callback_t _modifier_effect_callback(
@@ -117,15 +147,24 @@ namespace OpenVic {
 		);
 		IDENTIFIER_REGISTRY_ACCESSORS(modifier_effect)
 
-		bool add_event_modifier(std::string_view identifier, ModifierValue&& values, Modifier::icon_t icon);
-		IDENTIFIER_REGISTRY_ACCESSORS(event_modifier)
 		void register_complex_modifier(std::string_view identifier);
 
 		bool setup_modifier_effects();
 
+		bool add_crime_modifier(std::string_view identifier, ModifierValue&& values, Modifier::icon_t icon, bool active);
+		IDENTIFIER_REGISTRY_ACCESSORS(crime_modifier)
 		bool load_crime_modifiers(ast::NodeCPtr root);
+
+		bool add_event_modifier(std::string_view identifier, ModifierValue&& values, Modifier::icon_t icon);
+		IDENTIFIER_REGISTRY_ACCESSORS(event_modifier)
 		bool load_event_modifiers(ast::NodeCPtr root);
+
+		bool add_static_modifier(std::string_view identifier, ModifierValue&& values);
+		IDENTIFIER_REGISTRY_ACCESSORS(static_modifier)
 		bool load_static_modifiers(ast::NodeCPtr root);
+
+		bool add_triggered_modifier(std::string_view identifier, ModifierValue&& values, Modifier::icon_t icon);
+		IDENTIFIER_REGISTRY_ACCESSORS(triggered_modifier)
 		bool load_triggered_modifiers(ast::NodeCPtr root);
 
 		NodeTools::node_callback_t expect_validated_modifier_value_and_default(
