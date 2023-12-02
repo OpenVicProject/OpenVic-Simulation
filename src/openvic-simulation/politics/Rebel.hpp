@@ -52,13 +52,14 @@ namespace OpenVic {
 
 		RebelType(
 			std::string_view new_identifier, RebelType::icon_t icon, RebelType::area_t area, bool break_alliance_on_win,
-			RebelType::government_map_t desired_governments, RebelType::defection_t defection, RebelType::independence_t independence, uint16_t defect_delay,
-			Ideology const* ideology, bool allow_all_cultures, bool allow_all_culture_groups, bool allow_all_religions, bool allow_all_ideologies, bool resilient,
+			RebelType::government_map_t&& desired_governments, RebelType::defection_t defection,
+			RebelType::independence_t independence, uint16_t defect_delay, Ideology const* ideology, bool allow_all_cultures,
+			bool allow_all_culture_groups, bool allow_all_religions, bool allow_all_ideologies, bool resilient,
 			bool reinforcing, bool general, bool smart, bool unit_transfer, fixed_point_t occupation_mult
 		);
 
 	public:
-		RebelType(RebelType&&) = default; 
+		RebelType(RebelType&&) = default;
 	};
 
 	struct RebelManager {
@@ -71,11 +72,14 @@ namespace OpenVic {
 		IDENTIFIER_REGISTRY_ACCESSORS(rebel_type)
 		bool add_rebel_type(
 			std::string_view new_identifier, RebelType::icon_t icon, RebelType::area_t area, bool break_alliance_on_win,
-			RebelType::government_map_t desired_governments, RebelType::defection_t defection, RebelType::independence_t independence, uint16_t defect_delay,
-			Ideology const* ideology, bool allow_all_cultures, bool allow_all_culture_groups, bool allow_all_religions, bool allow_all_ideologies, bool resilient,
+			RebelType::government_map_t&& desired_governments, RebelType::defection_t defection,
+			RebelType::independence_t independence, uint16_t defect_delay, Ideology const* ideology, bool allow_all_cultures,
+			bool allow_all_culture_groups, bool allow_all_religions, bool allow_all_ideologies, bool resilient,
 			bool reinforcing, bool general, bool smart, bool unit_transfer, fixed_point_t occupation_mult
 		);
 
-		bool load_rebels_file(IdeologyManager const& ideology_manager, GovernmentTypeManager const& government_type_manager, ast::NodeCPtr root);
+		bool load_rebels_file(
+			IdeologyManager const& ideology_manager, GovernmentTypeManager const& government_type_manager, ast::NodeCPtr root
+		);
 	};
 }

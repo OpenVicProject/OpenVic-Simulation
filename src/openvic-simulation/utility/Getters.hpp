@@ -83,13 +83,13 @@ namespace OpenVic {
  * manually specify the accessibility level, if your variable deviates from this norm; use PROPERTY_CUSTOM_NAME when
  * you wish to manually specify the getter name; use PROPERTY_FULL if you want to specify everything.
  * Examples:
- * 		int PROPERTY(x);					// int x;						int get_x() const;
- * 		const std::string PROPERTY(name);	// const std::string name;		std::string_view get_name() const;
- * 		std::vector<int> PROPERTY(sizes);	// std::vector<int> sizes;		std::vector<int> const& get_sizes() const;
- * 		uint8_t const* PROPERTY(data);		// uint8_t const* data;			uint8_t const* get_data() const;
- * 		colour_t* PROPERTY(pixels);			// colour_t* pixels;			colour_t const* get_pixels() const;
- * 		CultureGroup const& PROPERTY(group);// CultureGroup const& group;	CultureGroup const& get_group() const;
- * 		Province& PROPERTY(province);		// Province& province;			Province const& get_province() const;
+ *		int PROPERTY(x);					// int x;						int get_x() const;
+ *		const std::string PROPERTY(name);	// const std::string name;		std::string_view get_name() const;
+ *		std::vector<int> PROPERTY(sizes);	// std::vector<int> sizes;		std::vector<int> const& get_sizes() const;
+ *		uint8_t const* PROPERTY(data);		// uint8_t const* data;			uint8_t const* get_data() const;
+ *		colour_t* PROPERTY(pixels);			// colour_t* pixels;			colour_t const* get_pixels() const;
+ *		CultureGroup const& PROPERTY(group);// CultureGroup const& group;	CultureGroup const& get_group() const;
+ *		Province& PROPERTY(province);		// Province& province;			Province const& get_province() const;
  */
 #define PROPERTY(NAME) PROPERTY_ACCESS(NAME, private)
 #define PROPERTY_CUSTOM_PREFIX(NAME, PREFIX) PROPERTY_CUSTOM_NAME(NAME, PREFIX##_##NAME)

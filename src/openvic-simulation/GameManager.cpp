@@ -74,7 +74,7 @@ bool GameManager::expand_building(Province::index_t province_index, std::string_
 	return province->expand_building(building_type_identifier);
 }
 
-static constexpr colour_t ALPHA_VALUE = float_to_alpha_value(0.5f);
+static constexpr colour_t ALPHA_VALUE = float_to_alpha_value(0.7f);
 
 static constexpr Mapmode::base_stripe_t combine_base_stripe(colour_t base, colour_t stripe) {
 	return (static_cast<Mapmode::base_stripe_t>(stripe) << (sizeof(colour_t) * 8)) | base;

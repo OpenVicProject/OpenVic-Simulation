@@ -42,18 +42,15 @@ bool TextureSprite::_fill_key_map(key_map_t& key_map) {
 	return ret;
 }
 
-ProgressBar::ProgressBar()
-: back_colour {}, back_texture_file {},
-  progress_colour {}, progress_texture_file {},
-  size {} {}
+ProgressBar::ProgressBar() : back_colour {}, progress_colour {} {}
 
 bool ProgressBar::_fill_key_map(key_map_t& key_map) {
 	bool ret = Sprite::_fill_key_map(key_map);
 	ret &= add_key_map_entries(key_map,
 		"color", ONE_EXACTLY, expect_colour(assign_variable_callback(back_colour)),
 		"colortwo", ONE_EXACTLY, expect_colour(assign_variable_callback(progress_colour)),
-		"textureFile1", ZERO_OR_ONE, expect_string(assign_variable_callback_string(back_texture_file)),
-		"textureFile2", ZERO_OR_ONE, expect_string(assign_variable_callback_string(progress_texture_file)),
+		"textureFile1", ZERO_OR_ONE, expect_string(assign_variable_callback_string(progress_texture_file)),
+		"textureFile2", ZERO_OR_ONE, expect_string(assign_variable_callback_string(back_texture_file)),
 		"size", ONE_EXACTLY, expect_ivec2(assign_variable_callback(size)),
 
 		"effectFile", ONE_EXACTLY, success_callback,
@@ -84,12 +81,12 @@ bool LineChart::_fill_key_map(key_map_t& key_map) {
 	return ret;
 }
 
-MaskedFlag::MaskedFlag() : texture_file {}, mask_file {} {}
+MaskedFlag::MaskedFlag() : overlay_file {}, mask_file {} {}
 
 bool MaskedFlag::_fill_key_map(key_map_t& key_map) {
 	bool ret = Sprite::_fill_key_map(key_map);
 	ret &= add_key_map_entries(key_map,
-		"textureFile1", ONE_EXACTLY, expect_string(assign_variable_callback_string(texture_file)),
+		"textureFile1", ONE_EXACTLY, expect_string(assign_variable_callback_string(overlay_file)),
 		"textureFile2", ONE_EXACTLY, expect_string(assign_variable_callback_string(mask_file)),
 		"effectFile", ONE_EXACTLY, success_callback,
 		"allwaystransparent", ZERO_OR_ONE, success_callback,

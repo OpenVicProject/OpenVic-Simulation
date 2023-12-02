@@ -37,9 +37,16 @@ bool GovernmentTypeManager::add_government_type(
 		return false;
 	}
 
-	return government_types.add_item({
+	const bool ret = government_types.add_item({
 		identifier, std::move(ideologies), elections, appoint_ruling_party, term_duration, flag_type
 	});
+
+	/* flag_type can be empty here for default/non-ideological flag  */
+	if (ret && std::find(flag_types.begin(), flag_types.end(), flag_type) == flag_types.end()) {
+		flag_types.emplace_back(flag_type);
+	}
+
+	return ret;
 }
 
 /* REQUIREMENTS: FS-525, SIM-27 */
@@ -49,7 +56,7 @@ bool GovernmentTypeManager::load_government_types_file(IdeologyManager const& id
 			std::vector<Ideology const*> ideologies;
 			bool elections = false, appoint_ruling_party = false;
 			Timespan term_duration = 0;
-			std::string_view flag_type_identifier = "republic";
+			std::string_view flag_type_identifier;
 
 			size_t total_expected_ideologies = 0;
 			bool ret = expect_dictionary_keys_and_default(

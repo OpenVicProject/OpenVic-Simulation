@@ -31,12 +31,15 @@ namespace OpenVic {
 	struct Good : HasIdentifierAndColour {
 		friend struct GoodManager;
 
+		using index_t = size_t;
+
 		using price_t = fixed_point_t;
 		static constexpr price_t NULL_PRICE = fixed_point_t::_0();
 
 		using good_map_t = fixed_point_map_t<Good const*>;
 
 	private:
+		const index_t PROPERTY(index);
 		GoodCategory const& PROPERTY(category);
 		const price_t PROPERTY(base_price);
 		const bool PROPERTY_CUSTOM_PREFIX(available_from_start, is);
@@ -48,8 +51,9 @@ namespace OpenVic {
 		bool PROPERTY_RW(available);
 
 		Good(
-			std::string_view new_identifier, colour_t new_colour, GoodCategory const& new_category, price_t new_base_price,
-			bool new_available_from_start, bool new_tradeable, bool new_money, bool new_overseas_penalty
+			std::string_view new_identifier, colour_t new_colour, index_t new_index, GoodCategory const& new_category,
+			price_t new_base_price, bool new_available_from_start, bool new_tradeable, bool new_money,
+			bool new_overseas_penalty
 		);
 
 	public:

@@ -407,17 +407,15 @@ fs::path Dataloader::lookup_file(std::string_view path, bool print_error) const 
 	return {};
 }
 
-fs::path Dataloader::lookup_image_file_or_dds(std::string_view path) const {
-	fs::path ret = lookup_file(path, false);
-	if (ret.empty()) {
-		// TODO - change search order so root order takes priority over extension replacement order
-		ret = lookup_file(append_string_views(StringUtils::remove_extension(path), ".dds"), false);
+fs::path Dataloader::lookup_image_file(std::string_view path) const {
+	const std::string_view path_without_extension = StringUtils::remove_extension(path);
+	if (path.substr(path_without_extension.size()) == ".tga") {
+		const fs::path ret = lookup_file(append_string_views(path_without_extension, ".dds"), false);
 		if (!ret.empty()) {
 			return ret;
 		}
-		Logger::error("Image lookup for ", path, " failed!");
 	}
-	return ret;
+	return lookup_file(path);
 }
 
 template<typename _DirIterator, typename _UniqueKey>
@@ -618,37 +616,41 @@ bool Dataloader::_load_pop_types(
 bool Dataloader::_load_units(GameManager& game_manager) const {
 	static constexpr std::string_view units_directory = "units";
 
-	UnitManager& unit_manager = game_manager.get_military_manager().get_unit_manager(); 
+	UnitManager& unit_manager = game_manager.get_military_manager().get_unit_manager();
 	bool ret = apply_to_files(
 		lookup_files_in_dir(units_directory, ".txt"),
 		[&game_manager, &unit_manager](fs::path const& file) -> bool {
 			return unit_manager.load_unit_file(game_manager.get_economy_manager().get_good_manager(), parse_defines(file).get_file_node());
 		}
 	);
-	
+
 	unit_manager.lock_units();
-	
+
 	if(!unit_manager.generate_modifiers(game_manager.get_modifier_manager())) {
 		Logger::error("Failed to generate unit-based modifiers!");
-		ret &= false;
+		ret = false;
 	}
 
 	return ret;
 }
 
-bool Dataloader::_load_goods(GameManager& game_manager, std::string_view goods_file) const {
+bool Dataloader::_load_goods(GameManager& game_manager) const {
+	static constexpr std::string_view goods_file = "common/goods.txt";
+
 	GoodManager& good_manager = game_manager.get_economy_manager().get_good_manager();
 	bool ret = good_manager.load_goods_file(parse_defines(lookup_file(goods_file)).get_file_node());
 
 	if(!good_manager.generate_modifiers(game_manager.get_modifier_manager())) {
 		Logger::error("Failed to generate good-based modifiers!");
-		ret &= false;
+		ret = false;
 	}
-	
+
 	return ret;
 }
 
-bool Dataloader::_load_technologies(GameManager& game_manager, std::string_view technology_file) const {
+bool Dataloader::_load_technologies(GameManager& game_manager) const {
+	static constexpr std::string_view technology_file = "common/technology.txt";
+
 	TechnologyManager& technology_manager = game_manager.get_technology_manager();
 
 	bool ret = true;
@@ -889,28 +891,26 @@ bool Dataloader::_load_map_dir(GameManager& game_manager) const {
 }
 
 bool Dataloader::load_defines(GameManager& game_manager) const {
-	static const std::string defines_file = "common/defines.lua";
-	static const std::string buildings_file = "common/buildings.txt";
-	static const std::string bookmark_file = "common/bookmarks.txt";
-	static const std::string countries_file = "common/countries.txt";
-	static const std::string culture_file = "common/cultures.txt";
-	static const std::string goods_file = "common/goods.txt";
-	static const std::string governments_file = "common/governments.txt";
-	static const std::string graphical_culture_type_file = "common/graphicalculturetype.txt";
-	static const std::string ideology_file = "common/ideologies.txt";
-	static const std::string issues_file = "common/issues.txt";
-	static const std::string national_foci_file = "common/national_focus.txt";
-	static const std::string national_values_file = "common/nationalvalues.txt";
-	static const std::string production_types_file = "common/production_types.txt";
-	static const std::string religion_file = "common/religion.txt";
-	static const std::string technology_file = "common/technology.txt";
-	static const std::string leader_traits_file = "common/traits.txt";
-	static const std::string cb_types_file = "common/cb_types.txt";
-	static const std::string crime_modifiers_file = "common/crime.txt";
-	static const std::string event_modifiers_file = "common/event_modifiers.txt";
-	static const std::string static_modifiers_file = "common/static_modifiers.txt";
-	static const std::string triggered_modifiers_file = "common/triggered_modifiers.txt";
-	static const std::string rebel_types_file = "common/rebel_types.txt";
+	static constexpr std::string_view defines_file = "common/defines.lua";
+	static constexpr std::string_view buildings_file = "common/buildings.txt";
+	static constexpr std::string_view bookmark_file = "common/bookmarks.txt";
+	static constexpr std::string_view countries_file = "common/countries.txt";
+	static constexpr std::string_view culture_file = "common/cultures.txt";
+	static constexpr std::string_view governments_file = "common/governments.txt";
+	static constexpr std::string_view graphical_culture_type_file = "common/graphicalculturetype.txt";
+	static constexpr std::string_view ideology_file = "common/ideologies.txt";
+	static constexpr std::string_view issues_file = "common/issues.txt";
+	static constexpr std::string_view national_foci_file = "common/national_focus.txt";
+	static constexpr std::string_view national_values_file = "common/nationalvalues.txt";
+	static constexpr std::string_view production_types_file = "common/production_types.txt";
+	static constexpr std::string_view religion_file = "common/religion.txt";
+	static constexpr std::string_view leader_traits_file = "common/traits.txt";
+	static constexpr std::string_view cb_types_file = "common/cb_types.txt";
+	static constexpr std::string_view crime_modifiers_file = "common/crime.txt";
+	static constexpr std::string_view event_modifiers_file = "common/event_modifiers.txt";
+	static constexpr std::string_view static_modifiers_file = "common/static_modifiers.txt";
+	static constexpr std::string_view triggered_modifiers_file = "common/triggered_modifiers.txt";
+	static constexpr std::string_view rebel_types_file = "common/rebel_types.txt";
 
 	bool ret = true;
 
@@ -922,35 +922,11 @@ bool Dataloader::load_defines(GameManager& game_manager) const {
 		Logger::error("Failed to set up modifier effects!");
 		ret = false;
 	}
-	if (!game_manager.get_modifier_manager().load_crime_modifiers(
-		parse_defines(lookup_file(crime_modifiers_file)).get_file_node()
-	)) {
-		Logger::error("Failed to load crime modifiers!");
-		ret = false;
-	}
-	if (!game_manager.get_modifier_manager().load_event_modifiers(
-		parse_defines(lookup_file(event_modifiers_file)).get_file_node()
-	)) {
-		Logger::error("Failed to load event modifiers!");
-		ret = false;
-	}
-	if (!game_manager.get_modifier_manager().load_static_modifiers(
-		parse_defines(lookup_file(static_modifiers_file)).get_file_node()
-	)) {
-		Logger::error("Failed to load static modifiers!");
-		ret = false;
-	}
-	if (!game_manager.get_modifier_manager().load_triggered_modifiers(
-		parse_defines(lookup_file(triggered_modifiers_file)).get_file_node()
-	)) {
-		Logger::error("Failed to load triggered modifiers!");
-		ret = false;
-	}
 	if (!game_manager.get_define_manager().load_defines_file(parse_lua_defines(lookup_file(defines_file)).get_file_node())) {
 		Logger::error("Failed to load defines!");
 		ret = false;
 	}
-	if (!_load_goods(game_manager, goods_file)) {
+	if (!_load_goods(game_manager)) {
 		Logger::error("Failed to load goods!");
 		ret = false;
 	}
@@ -1025,7 +1001,31 @@ bool Dataloader::load_defines(GameManager& game_manager) const {
 		Logger::error("Failed to load buildings!");
 		ret = false;
 	}
-	if (!_load_technologies(game_manager, technology_file)) {
+	if (!_load_technologies(game_manager)) {
+		ret = false;
+	}
+	if (!game_manager.get_modifier_manager().load_crime_modifiers(
+		parse_defines(lookup_file(crime_modifiers_file)).get_file_node()
+	)) {
+		Logger::error("Failed to load crime modifiers!");
+		ret = false;
+	}
+	if (!game_manager.get_modifier_manager().load_event_modifiers(
+		parse_defines(lookup_file(event_modifiers_file)).get_file_node()
+	)) {
+		Logger::error("Failed to load event modifiers!");
+		ret = false;
+	}
+	if (!game_manager.get_modifier_manager().load_static_modifiers(
+		parse_defines(lookup_file(static_modifiers_file)).get_file_node()
+	)) {
+		Logger::error("Failed to load static modifiers!");
+		ret = false;
+	}
+	if (!game_manager.get_modifier_manager().load_triggered_modifiers(
+		parse_defines(lookup_file(triggered_modifiers_file)).get_file_node()
+	)) {
+		Logger::error("Failed to load triggered modifiers!");
 		ret = false;
 	}
 	if (!_load_map_dir(game_manager)) {
@@ -1056,11 +1056,7 @@ bool Dataloader::load_defines(GameManager& game_manager) const {
 		Logger::error("Failed to load countries!");
 		ret = false;
 	}
-	if (!game_manager.get_politics_manager().get_rebel_manager().load_rebels_file(
-		game_manager.get_politics_manager().get_ideology_manager(),
-		game_manager.get_politics_manager().get_government_type_manager(),
-		parse_defines(lookup_file(rebel_types_file)).get_file_node()
-	)) {
+	if (!game_manager.get_politics_manager().load_rebels_file(parse_defines(lookup_file(rebel_types_file)).get_file_node())) {
 		Logger::error("Failed to load rebel types!");
 		ret = false;
 	}

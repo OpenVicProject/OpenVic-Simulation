@@ -167,7 +167,7 @@ namespace OpenVic {
 			);
 			add_requirement(ECON_244);
 			Requirement* ECON_245 = new Requirement(
-				"ECON_245", "The base price for Precious Metal  shall be 8",
+				"ECON_245", "The base price for Precious Metal shall be 8",
 				"The base price of 8 for Precious Metal can be seen in program output data"
 			);
 			add_requirement(ECON_245);
@@ -449,7 +449,7 @@ namespace OpenVic {
 			check_base_price("paper", "3.4", "ECON_244");
 
 			// ECON_245
-			// The base price for Precious Metal  shall be 8
+			// The base price for Precious Metal shall be 8
 			// The base price of 8 for Precious Metal can be seen in program output data
 
 			check_base_price("precious_metal", "8.0", "ECON_245");

@@ -8,9 +8,9 @@ using namespace OpenVic::NodeTools;
 GoodCategory::GoodCategory(std::string_view new_identifier) : HasIdentifier { new_identifier } {}
 
 Good::Good(
-	std::string_view new_identifier, colour_t new_colour, GoodCategory const& new_category, price_t new_base_price,
-	bool new_available_from_start, bool new_tradeable, bool new_money, bool new_overseas_penalty
-) : HasIdentifierAndColour { new_identifier, new_colour, false, false }, category { new_category },
+	std::string_view new_identifier, colour_t new_colour, index_t new_index, GoodCategory const& new_category,
+	price_t new_base_price, bool new_available_from_start, bool new_tradeable, bool new_money, bool new_overseas_penalty
+) : HasIdentifierAndColour { new_identifier, new_colour, false, false }, index { new_index }, category { new_category },
 	base_price { new_base_price }, available_from_start { new_available_from_start }, tradeable { new_tradeable },
 	money { new_money }, overseas_penalty { new_overseas_penalty } {
 	assert(base_price > NULL_PRICE);
@@ -48,7 +48,7 @@ bool GoodManager::add_good(
 		return false;
 	}
 	return goods.add_item({
-		identifier, colour, category, base_price, available_from_start,
+		identifier, colour, get_good_count(), category, base_price, available_from_start,
 		tradeable, money, overseas_penalty
 	});
 }
@@ -104,7 +104,6 @@ bool GoodManager::load_goods_file(ast::NodeCPtr root) {
 		modifier_name += good.get_identifier(); \
 		ret &= modifier_manager.add_modifier_effect(modifier_name, true, ModifierEffect::format_t::PROPORTION_DECIMAL); \
 	}
-
 
 bool GoodManager::generate_modifiers(ModifierManager& modifier_manager) {
 	bool ret = true;

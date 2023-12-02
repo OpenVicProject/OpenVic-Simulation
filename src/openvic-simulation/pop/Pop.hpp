@@ -59,7 +59,15 @@ namespace OpenVic {
 		const bool PROPERTY(state_capital_only);
 		const bool PROPERTY(demote_migrant);
 		const bool PROPERTY(is_artisan);
+		const bool PROPERTY(allowed_to_vote);
 		const bool PROPERTY(is_slave);
+		const bool PROPERTY(can_be_recruited);
+		const bool PROPERTY(can_reduce_consciousness);
+		const bool PROPERTY(administrative_efficiency);
+		const bool PROPERTY(can_build);
+		const bool PROPERTY(factory);
+		const bool PROPERTY(can_work_factory);
+		const bool PROPERTY(unemployment);
 
 		// TODO - country and province migration targets, promote_to targets, ideologies and issues
 
@@ -67,7 +75,10 @@ namespace OpenVic {
 			std::string_view new_identifier, colour_t new_colour, strata_t new_strata, sprite_t new_sprite,
 			Good::good_map_t&& new_life_needs, Good::good_map_t&& new_everyday_needs, Good::good_map_t&& new_luxury_needs,
 			rebel_units_t&& new_rebel_units, Pop::pop_size_t new_max_size, Pop::pop_size_t new_merge_max_size,
-			bool new_state_capital_only, bool new_demote_migrant, bool new_is_artisan, bool new_is_slave
+			bool new_state_capital_only, bool new_demote_migrant, bool new_is_artisan, bool new_allowed_to_vote,
+			bool new_is_slave, bool new_can_be_recruited, bool new_can_reduce_consciousness,
+			bool new_administrative_efficiency, bool new_can_build, bool new_factory, bool new_can_work_factory,
+			bool new_unemployment
 		);
 
 	public:
@@ -79,6 +90,8 @@ namespace OpenVic {
 	struct PopManager {
 	private:
 		IdentifierRegistry<PopType> pop_types;
+		PopType::sprite_t PROPERTY(slave_sprite);
+		PopType::sprite_t PROPERTY(administrative_sprite);
 
 		CultureManager PROPERTY_REF(culture_manager);
 		ReligionManager PROPERTY_REF(religion_manager);
@@ -90,7 +103,9 @@ namespace OpenVic {
 			std::string_view identifier, colour_t new_colour, PopType::strata_t strata, PopType::sprite_t sprite,
 			Good::good_map_t&& life_needs, Good::good_map_t&& everyday_needs, Good::good_map_t&& luxury_needs,
 			PopType::rebel_units_t&& rebel_units, Pop::pop_size_t max_size, Pop::pop_size_t merge_max_size,
-			bool state_capital_only, bool demote_migrant, bool is_artisan, bool is_slave
+			bool state_capital_only, bool demote_migrant, bool is_artisan, bool allowed_to_vote, bool is_slave,
+			bool can_be_recruited, bool can_reduce_consciousness, bool administrative_efficiency, bool can_build, bool factory,
+			bool can_work_factory, bool unemployment
 		);
 		IDENTIFIER_REGISTRY_ACCESSORS(pop_type)
 

@@ -24,5 +24,8 @@ namespace OpenVic {
 		inline bool load_national_foci_file(PopManager const& pop_manager, GoodManager const& good_manager, ModifierManager const& modifier_manager, ast::NodeCPtr root) {
 			return national_focus_manager.load_national_foci_file(pop_manager, ideology_manager, good_manager, modifier_manager, root);
 		}
+		inline bool load_rebels_file(ast::NodeCPtr root) {
+			return rebel_manager.load_rebels_file(ideology_manager, government_type_manager, root);
+		}
 	};
 }

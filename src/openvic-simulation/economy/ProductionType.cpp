@@ -14,7 +14,7 @@ ProductionType::ProductionType(
 	input_goods { std::move(input_goods) }, output_goods { output_goods }, value { value }, bonuses { std::move(bonuses) },
 	efficiency { std::move(efficiency) }, coastal { coastal }, farm { farm }, mine { mine } {}
 
-ProductionTypeManager::ProductionTypeManager() : production_types { "production types" } {}
+ProductionTypeManager::ProductionTypeManager() : production_types { "production types" }, rgo_owner_sprite { 0 } {}
 
 node_callback_t ProductionTypeManager::_expect_employed_pop(
 	GoodManager const& good_manager, PopManager const& pop_manager, callback_t<EmployedPop&&> cb
@@ -102,10 +102,15 @@ bool ProductionTypeManager::add_production_type(PRODUCTION_TYPE_ARGS) {
 		return false;
 	}
 
-	return production_types.add_item({
+	const bool ret = production_types.add_item({
 		identifier, owner, employees, type, workforce, std::move(input_goods),
 		output_goods, value, std::move(bonuses), std::move(efficiency), coastal, farm, mine
 	});
+	if (rgo_owner_sprite <= 0 && ret && type == ProductionType::type_t::RGO && owner.get_pop_type() != nullptr) {
+		/* Set rgo owner sprite to that of the first RGO owner we find. */
+		rgo_owner_sprite = owner.get_pop_type()->get_sprite();
+	}
+	return ret;
 }
 
 #define PARSE_NODE \

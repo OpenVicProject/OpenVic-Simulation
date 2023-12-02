@@ -73,6 +73,8 @@ namespace OpenVic {
 		Country(Country&&) = default;
 
 		IDENTIFIER_REGISTRY_ACCESSORS_CUSTOM_PLURAL(party, parties)
+
+		// TODO - get_colour including alternative colours
 	};
 
 	struct CountryManager {
