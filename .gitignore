@@ -82,3 +82,6 @@ bin/*
 .cache
 compile_commands.json
 src/openvic-simulation/testing/test_results/results.txt
+
+# ccls
+.ccls-cache

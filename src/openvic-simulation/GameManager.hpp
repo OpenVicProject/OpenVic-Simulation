@@ -10,6 +10,8 @@
 #include "openvic-simulation/military/MilitaryManager.hpp"
 #include "openvic-simulation/misc/Define.hpp"
 #include "openvic-simulation/politics/PoliticsManager.hpp"
+#include "openvic-simulation/pop/Pop.hpp"
+#include "openvic-simulation/tech/Technology.hpp"
 
 namespace OpenVic {
 	struct GameManager {
@@ -23,6 +25,7 @@ namespace OpenVic {
 		ModifierManager PROPERTY_REF(modifier_manager);
 		PoliticsManager PROPERTY_REF(politics_manager);
 		HistoryManager PROPERTY_REF(history_manager);
+		TechnologyManager PROPERTY_REF(technology_manager);
 		PopManager PROPERTY_REF(pop_manager);
 		CountryManager PROPERTY_REF(country_manager);
 		UIManager PROPERTY_REF(ui_manager);

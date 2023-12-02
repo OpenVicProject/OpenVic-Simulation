@@ -1,6 +1,7 @@
 #pragma once
 
 #include "openvic-simulation/types/IdentifierRegistry.hpp"
+#include <unordered_set>
 
 namespace OpenVic {
 	struct ModifierManager;
@@ -10,7 +11,7 @@ namespace OpenVic {
 			PROPORTION_DECIMAL,	/* An unscaled fraction/ratio, with 1 being "full"/"whole" */
 			PERCENTAGE_DECIMAL,	/* A fraction/ratio scaled so that 100 is "full"/"whole" */
 			RAW_DECIMAL,		/* A continuous quantity, e.g. attack strength */
-			INT					/* A discrete quantity, e.g. building count limit */
+			INT				/* A discrete quantity, e.g. building count limit */
 		};
 
 		friend std::unique_ptr<ModifierEffect> std::make_unique<ModifierEffect>(std::string_view&&, bool&&, format_t&&);
@@ -72,6 +73,7 @@ namespace OpenVic {
 		/* A modifier can have no icon (zero). */
 		const icon_t PROPERTY(icon);
 
+	protected:
 		Modifier(std::string_view new_identifier, ModifierValue&& new_values, icon_t new_icon);
 
 	public:
@@ -98,6 +100,7 @@ namespace OpenVic {
 	private:
 		IdentifierInstanceRegistry<ModifierEffect> modifier_effects;
 		IdentifierRegistry<Modifier> event_modifiers;
+		string_set_t complex_modifiers;
 
 		/* effect_validator takes in ModifierEffect const& */
 		NodeTools::key_value_callback_t _modifier_effect_callback(
@@ -109,13 +112,14 @@ namespace OpenVic {
 		ModifierManager();
 
 		bool add_modifier_effect(
-			std::string_view identifier, bool province_good,
+			std::string_view identifier, bool positive_good,
 			ModifierEffect::format_t format = ModifierEffect::format_t::PROPORTION_DECIMAL
 		);
 		IDENTIFIER_REGISTRY_ACCESSORS(modifier_effect)
 
 		bool add_event_modifier(std::string_view identifier, ModifierValue&& values, Modifier::icon_t icon);
 		IDENTIFIER_REGISTRY_ACCESSORS(event_modifier)
+		void register_complex_modifier(std::string_view identifier);
 
 		bool setup_modifier_effects();
 

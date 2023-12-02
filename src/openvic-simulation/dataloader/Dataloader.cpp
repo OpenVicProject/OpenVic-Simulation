@@ -1,14 +1,5 @@
 #include "Dataloader.hpp"
 
-#include <array>
-#include <cstdlib>
-#include <filesystem>
-#include <optional>
-#include <string_view>
-#include <system_error>
-#include <type_traits>
-#include <variant>
-
 #include <openvic-dataloader/csv/Parser.hpp>
 #include <openvic-dataloader/detail/CallbackOStream.hpp>
 #include <openvic-dataloader/v2script/Parser.hpp>
@@ -624,15 +615,80 @@ bool Dataloader::_load_pop_types(
 	return ret;
 }
 
-bool Dataloader::_load_units(UnitManager& unit_manager, GoodManager const& good_manager) const {
+bool Dataloader::_load_units(GameManager& game_manager) const {
 	static constexpr std::string_view units_directory = "units";
-	const bool ret = apply_to_files(
+
+	UnitManager& unit_manager = game_manager.get_military_manager().get_unit_manager(); 
+	bool ret = apply_to_files(
 		lookup_files_in_dir(units_directory, ".txt"),
-		[&unit_manager, &good_manager](fs::path const& file) -> bool {
-			return unit_manager.load_unit_file(good_manager, parse_defines(file).get_file_node());
+		[&game_manager, &unit_manager](fs::path const& file) -> bool {
+			return unit_manager.load_unit_file(game_manager.get_economy_manager().get_good_manager(), parse_defines(file).get_file_node());
 		}
 	);
+	
 	unit_manager.lock_units();
+	
+	if(!unit_manager.generate_modifiers(game_manager.get_modifier_manager())) {
+		Logger::error("Failed to generate unit-based modifiers!");
+		ret &= false;
+	}
+
+	return ret;
+}
+
+bool Dataloader::_load_goods(GameManager& game_manager, std::string_view goods_file) const {
+	GoodManager& good_manager = game_manager.get_economy_manager().get_good_manager();
+	bool ret = good_manager.load_goods_file(parse_defines(lookup_file(goods_file)).get_file_node());
+
+	if(!good_manager.generate_modifiers(game_manager.get_modifier_manager())) {
+		Logger::error("Failed to generate good-based modifiers!");
+		ret &= false;
+	}
+	
+	return ret;
+}
+
+bool Dataloader::_load_technologies(GameManager& game_manager, std::string_view technology_file) const {
+	TechnologyManager& technology_manager = game_manager.get_technology_manager();
+
+	bool ret = true;
+
+	const v2script::Parser technology_file_parser = parse_defines(lookup_file(technology_file));
+
+	if(!technology_manager.load_technology_file_areas(technology_file_parser.get_file_node())) {
+		Logger::error("Failed to load technology areas and folders!");
+		ret = false;
+	}
+
+	ModifierManager& modifier_manager = game_manager.get_modifier_manager();
+
+	if(!technology_manager.generate_modifiers(modifier_manager)) {
+		Logger::error("Failed to generate technollogy-based modifiers!");
+		ret = false;
+	}
+
+	if(!technology_manager.load_technology_file_schools(modifier_manager, technology_file_parser.get_file_node())) {
+		Logger::error("Failed to load technology schools!");
+		ret = false;
+	}
+
+	static constexpr std::string_view technologies_directory = "technologies";
+	if(!apply_to_files(
+		lookup_files_in_dir(technologies_directory, ".txt"),
+		[&game_manager, &technology_manager, &modifier_manager](fs::path const& file) -> bool {
+			return technology_manager.load_technologies_file(
+				modifier_manager,
+				game_manager.get_military_manager().get_unit_manager(),
+				game_manager.get_economy_manager().get_building_manager(),
+				parse_defines(file).get_file_node()
+			);
+		}
+	)) {
+		Logger::error("Failed to load technologies!");
+		ret = false;
+	}
+
+	technology_manager.lock_technologies();
 	return ret;
 }
 
@@ -847,6 +903,7 @@ bool Dataloader::load_defines(GameManager& game_manager) const {
 	static const std::string national_values_file = "common/nationalvalues.txt";
 	static const std::string production_types_file = "common/production_types.txt";
 	static const std::string religion_file = "common/religion.txt";
+	static const std::string technology_file = "common/technology.txt";
 	static const std::string leader_traits_file = "common/traits.txt";
 	static const std::string cb_types_file = "common/cb_types.txt";
 	static const std::string crime_modifiers_file = "common/crime.txt";
@@ -893,15 +950,11 @@ bool Dataloader::load_defines(GameManager& game_manager) const {
 		Logger::error("Failed to load defines!");
 		ret = false;
 	}
-	if (!game_manager.get_economy_manager().get_good_manager().load_goods_file(
-		parse_defines(lookup_file(goods_file)).get_file_node()
-	)) {
+	if (!_load_goods(game_manager, goods_file)) {
 		Logger::error("Failed to load goods!");
 		ret = false;
 	}
-	if (!_load_units(
-		game_manager.get_military_manager().get_unit_manager(), game_manager.get_economy_manager().get_good_manager()
-	)) {
+	if (!_load_units(game_manager)) {
 		Logger::error("Failed to load units!");
 		ret = false;
 	}
@@ -970,6 +1023,9 @@ bool Dataloader::load_defines(GameManager& game_manager) const {
 		parse_defines(lookup_file(buildings_file)).get_file_node()
 	)) {
 		Logger::error("Failed to load buildings!");
+		ret = false;
+	}
+	if (!_load_technologies(game_manager, technology_file)) {
 		ret = false;
 	}
 	if (!_load_map_dir(game_manager)) {
