@@ -7,6 +7,7 @@
 
 #include "openvic-simulation/map/Region.hpp"
 #include "openvic-simulation/map/TerrainType.hpp"
+#include "openvic-simulation/map/State.hpp"
 
 namespace OpenVic {
 	namespace fs = std::filesystem;
@@ -68,6 +69,8 @@ namespace OpenVic {
 
 		Province::index_t get_index_from_colour(colour_t colour) const;
 		bool _generate_province_adjacencies();
+
+		StateManager PROPERTY_REF(state_manager);
 
 	public:
 		Map();

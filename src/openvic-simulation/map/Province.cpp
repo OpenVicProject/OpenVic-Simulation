@@ -32,7 +32,7 @@ bool Province::load_positions(BuildingManager const& building_manager, ast::Node
 		"factory", ZERO_OR_ONE, expect_fvec2(assign_variable_callback(positions.factory)),
 		"building_construction", ZERO_OR_ONE, expect_fvec2(assign_variable_callback(positions.building_construction)),
 		"military_construction", ZERO_OR_ONE, expect_fvec2(assign_variable_callback(positions.military_construction)),
-		"building_position", ZERO_OR_ONE, expect_dictionary_keys(
+		"building_position", ZERO_OR_ONE, expect_dictionary_keys( // TODO: for TGC etc are building positions available for modded-in buildings? needs testing
 			"fort", ZERO_OR_ONE, expect_fvec2(assign_variable_callback(positions.fort)),
 			"railroad", ZERO_OR_ONE, expect_fvec2(assign_variable_callback(positions.railroad)),
 			"naval_base", ZERO_OR_ONE, expect_fvec2(assign_variable_callback(positions.navalbase))

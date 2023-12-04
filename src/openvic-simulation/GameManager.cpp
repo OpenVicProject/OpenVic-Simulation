@@ -59,6 +59,7 @@ bool GameManager::load_bookmark(Bookmark const* new_bookmark) {
 	}
 	today = bookmark->get_date();
 	ret &= map.apply_history_to_provinces(history_manager.get_province_manager(), today);
+	map.get_state_manager().generate_states(map);
 	// TODO - apply country history
 	// TODO - apply pop history
 	return ret;

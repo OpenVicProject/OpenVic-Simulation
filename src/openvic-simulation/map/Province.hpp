@@ -10,6 +10,7 @@
 namespace OpenVic {
 	struct Map;
 	struct Region;
+	struct State;
 	struct Good;
 	struct TerrainType;
 	struct TerrainTypeMapping;
@@ -27,7 +28,7 @@ namespace OpenVic {
 		using distance_t = uint16_t;
 		using flags_t = uint16_t;
 
-		enum struct colony_status_t : int8_t { STATE, PROTECTORATE, COLONY };
+		enum struct colony_status_t : uint8_t { STATE, PROTECTORATE, COLONY };
 
 		struct adjacency_t {
 			friend struct Province;
@@ -62,6 +63,7 @@ namespace OpenVic {
 	private:
 		const index_t PROPERTY(index);
 		Region* PROPERTY(region);
+		State const* PROPERTY_RW(state);
 		bool PROPERTY(on_map);
 		bool PROPERTY(has_region);
 		bool PROPERTY(water);
