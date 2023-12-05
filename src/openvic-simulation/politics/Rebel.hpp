@@ -1,5 +1,6 @@
 #pragma once
 
+#include "openvic-simulation/misc/Modifier.hpp"
 #include "openvic-simulation/types/IdentifierRegistry.hpp"
 #include "openvic-simulation/politics/Government.hpp"
 #include "openvic-simulation/politics/Ideology.hpp"
@@ -78,8 +79,7 @@ namespace OpenVic {
 			bool reinforcing, bool general, bool smart, bool unit_transfer, fixed_point_t occupation_mult
 		);
 
-		bool load_rebels_file(
-			IdeologyManager const& ideology_manager, GovernmentTypeManager const& government_type_manager, ast::NodeCPtr root
-		);
+		bool load_rebels_file(IdeologyManager const& ideology_manager, GovernmentTypeManager const& government_type_manager, ast::NodeCPtr root);
+		bool generate_modifiers(ModifierManager& modifier_manager);
 	};
 }

@@ -191,12 +191,11 @@ bool UnitManager::load_unit_file(GoodManager const& good_manager, ast::NodeCPtr 
 }
 
 #define STAT_MODIFIER(name, positive_good, format) \
-	ret &= modifier_manager.add_modifier_effect(base_name + name, positive_good, ModifierEffect::format_t::format)
+	ret &= modifier_manager.add_modifier_effect(StringUtils::append_string_views(identifier, "_", name), positive_good, ModifierEffect::format_t::format)
 
 bool UnitManager::generate_modifiers(ModifierManager& modifier_manager) {
 	std::function<bool(std::string_view, Unit::type_t)> generate_stat_modifiers = [this, &modifier_manager](std::string_view identifier, Unit::type_t type) -> bool {
 		modifier_manager.register_complex_modifier(identifier);
-		std::string base_name = std::string(identifier) + "_";
 		bool ret = true;
 
 		STAT_MODIFIER("default_organisation", true, RAW_DECIMAL);
@@ -238,3 +237,5 @@ bool UnitManager::generate_modifiers(ModifierManager& modifier_manager) {
 
 	return ret;
 }
+
+#undef STAT_MODIFIER

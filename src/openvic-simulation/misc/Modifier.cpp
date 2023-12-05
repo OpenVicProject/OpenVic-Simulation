@@ -1,4 +1,5 @@
 #include "Modifier.hpp"
+#include <string>
 
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;
@@ -196,6 +197,17 @@ bool ModifierManager::setup_modifier_effects() {
 	ret &= add_modifier_effect("dig_in_cap", true, INT);
 	ret &= add_modifier_effect("max_national_focus", true, INT);
 	ret &= add_modifier_effect("regular_experience_level", true, RAW_DECIMAL);
+	ret &= add_modifier_effect("land_attrition", false);
+	ret &= add_modifier_effect("naval_attrition", false);
+	ret &= add_modifier_effect("permanent_prestige", true, RAW_DECIMAL);
+	ret &= add_modifier_effect("shared_prestige", true, RAW_DECIMAL);
+	ret &= add_modifier_effect("colonial_prestige", true);
+	ret &= add_modifier_effect("soldier_to_pop_loss", true);
+	ret &= add_modifier_effect("pop_growth", true);
+	ret &= add_modifier_effect("plurality", true, PERCENTAGE_DECIMAL);
+	ret &= add_modifier_effect("suppression_points_modifier", true);
+	ret &= add_modifier_effect("colonial_life_rating", false, INT);
+	ret &= add_modifier_effect("seperatism", false); //paradox typo
 
 	/* Province Modifier Effects */
 	ret &= add_modifier_effect("assimilation_rate", true);
@@ -359,7 +371,7 @@ bool ModifierManager::load_triggered_modifiers(ast::NodeCPtr root) {
 key_value_callback_t ModifierManager::_modifier_effect_callback(
 	ModifierValue& modifier, key_value_callback_t default_callback, ModifierEffectValidator auto effect_validator
 ) const {
-	std::function<bool(ModifierEffect const*, ast::NodeCPtr)> add_modifier_cb = [this, &modifier, effect_validator](ModifierEffect const* effect, ast::NodeCPtr value) -> bool {
+	const auto add_modifier_cb = [this, &modifier, effect_validator](ModifierEffect const* effect, ast::NodeCPtr value) -> bool {
 		if (effect_validator(*effect)) {
 			if (!modifier.values.contains(effect)) {
 				return expect_fixed_point(assign_variable_callback(modifier.values[effect]))(value);
@@ -373,23 +385,32 @@ key_value_callback_t ModifierManager::_modifier_effect_callback(
 		}
 	};
 
-	return [this, &modifier, default_callback, effect_validator, add_modifier_cb](std::string_view key, ast::NodeCPtr value) -> bool {
+	const auto add_flattened_modifier_cb = [this, add_modifier_cb](std::string_view prefix, std::string_view key, ast::NodeCPtr value) -> bool {
+		const std::string flat_identifier = StringUtils::append_string_views(prefix, "_", key);
+		ModifierEffect const* effect = get_modifier_effect_by_identifier(flat_identifier);
+		if (effect != nullptr) {
+			return add_modifier_cb(effect, value);
+		} else {
+			Logger::error("Could not find flattened modifier: ", flat_identifier);
+			return false;
+		}
+	};
+
+	return [this, default_callback, add_modifier_cb, add_flattened_modifier_cb](std::string_view key, ast::NodeCPtr value) -> bool {
 		ModifierEffect const* effect = get_modifier_effect_by_identifier(key);
 		if (effect != nullptr && value->is_type<ast::IdentifierNode>()) {
 			return add_modifier_cb(effect, value);
 		} else if (complex_modifiers.contains(key) && value->is_derived_from<ast::AbstractListNode>()) {
-			return expect_dictionary([this, &key, &add_modifier_cb, &default_callback](std::string_view identifier, ast::NodeCPtr node) -> bool {
-				std::string flat_identifier = std::string(key);
-				flat_identifier += "_";
-				flat_identifier += identifier;
-				ModifierEffect const* effect = get_modifier_effect_by_identifier(flat_identifier);
-				if(effect != nullptr) {
-					return add_modifier_cb(effect, node);
-				} else {
-					Logger::error("Could not find flattened modifier: ", flat_identifier);
-					return false;
-				}
-			})(value);
+			if (key == "rebel_org_gain") { //because of course there's a special one
+				std::string_view faction_identifier;
+				ast::NodeCPtr value_node = nullptr;
+				bool ret = expect_dictionary_keys(
+					"faction", ONE_EXACTLY, expect_identifier(assign_variable_callback(faction_identifier)),
+					"value", ONE_EXACTLY, assign_variable_callback(value_node)
+				)(value);
+				ret &= add_flattened_modifier_cb(key, faction_identifier, value_node);
+				return ret;
+			} else return expect_dictionary(std::bind(add_flattened_modifier_cb, key, std::placeholders::_1, std::placeholders::_2))(value);
 		} else return default_callback(key, value);
 	};
 }

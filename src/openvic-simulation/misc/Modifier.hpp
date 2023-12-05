@@ -11,7 +11,7 @@ namespace OpenVic {
 			PROPORTION_DECIMAL,	/* An unscaled fraction/ratio, with 1 being "full"/"whole" */
 			PERCENTAGE_DECIMAL,	/* A fraction/ratio scaled so that 100 is "full"/"whole" */
 			RAW_DECIMAL,		/* A continuous quantity, e.g. attack strength */
-			INT				/* A discrete quantity, e.g. building count limit */
+			INT					/* A discrete quantity, e.g. building count limit */
 		};
 
 		friend std::unique_ptr<ModifierEffect> std::make_unique<ModifierEffect>(std::string_view&&, bool&&, format_t&&);

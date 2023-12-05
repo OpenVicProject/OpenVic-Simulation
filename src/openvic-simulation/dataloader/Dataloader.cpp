@@ -648,10 +648,30 @@ bool Dataloader::_load_goods(GameManager& game_manager) const {
 	return ret;
 }
 
+bool Dataloader::_load_rebel_types(GameManager& game_manager) const {
+	static constexpr std::string_view rebel_types_file = "common/rebel_types.txt";
+
+	PoliticsManager& politics_manager = game_manager.get_politics_manager();
+	RebelManager& rebel_manager = politics_manager.get_rebel_manager();
+
+	bool ret = rebel_manager.load_rebels_file(
+		politics_manager.get_ideology_manager(),
+		politics_manager.get_government_type_manager(),
+		parse_defines(lookup_file(rebel_types_file)).get_file_node()
+	);
+
+	if(!rebel_manager.generate_modifiers(game_manager.get_modifier_manager())) {
+		Logger::error("Failed to generate rebel type-based modifiers!");
+		ret &= false;
+	}
+	
+	return ret;
+}
+
 bool Dataloader::_load_technologies(GameManager& game_manager) const {
 	static constexpr std::string_view technology_file = "common/technology.txt";
 
-	TechnologyManager& technology_manager = game_manager.get_technology_manager();
+	TechnologyManager& technology_manager = game_manager.get_research_manager().get_technology_manager();
 
 	bool ret = true;
 
@@ -691,6 +711,28 @@ bool Dataloader::_load_technologies(GameManager& game_manager) const {
 	}
 
 	technology_manager.lock_technologies();
+	return ret;
+}
+
+bool Dataloader::_load_inventions(GameManager& game_manager) const {
+	static constexpr std::string_view inventions_directory = "inventions";
+
+	InventionManager& invention_manager = game_manager.get_research_manager().get_invention_manager();
+
+	bool ret = apply_to_files(
+		lookup_files_in_dir(inventions_directory, ".txt"),
+		[&game_manager, &invention_manager](fs::path const& file) -> bool {
+			return invention_manager.load_inventions_file(
+				game_manager.get_modifier_manager(),
+				game_manager.get_military_manager().get_unit_manager(),
+				game_manager.get_economy_manager().get_building_manager(),
+				parse_defines(file).get_file_node()
+			);
+		}
+	);
+	
+	invention_manager.lock_inventions();
+
 	return ret;
 }
 
@@ -910,7 +952,6 @@ bool Dataloader::load_defines(GameManager& game_manager) const {
 	static constexpr std::string_view event_modifiers_file = "common/event_modifiers.txt";
 	static constexpr std::string_view static_modifiers_file = "common/static_modifiers.txt";
 	static constexpr std::string_view triggered_modifiers_file = "common/triggered_modifiers.txt";
-	static constexpr std::string_view rebel_types_file = "common/rebel_types.txt";
 
 	bool ret = true;
 
@@ -1001,6 +1042,10 @@ bool Dataloader::load_defines(GameManager& game_manager) const {
 		Logger::error("Failed to load buildings!");
 		ret = false;
 	}
+	if (!_load_rebel_types(game_manager)) {
+		Logger::error("Failed to load rebel types!");
+		ret = false;
+	}
 	if (!_load_technologies(game_manager)) {
 		ret = false;
 	}
@@ -1026,6 +1071,10 @@ bool Dataloader::load_defines(GameManager& game_manager) const {
 		parse_defines(lookup_file(triggered_modifiers_file)).get_file_node()
 	)) {
 		Logger::error("Failed to load triggered modifiers!");
+		ret = false;
+	}
+	if (!_load_inventions(game_manager)) {
+		Logger::error("Failed to load inventions!");
 		ret = false;
 	}
 	if (!_load_map_dir(game_manager)) {
@@ -1054,10 +1103,6 @@ bool Dataloader::load_defines(GameManager& game_manager) const {
 		game_manager, *this, parse_defines(lookup_file(countries_file)).get_file_node()
 	)) {
 		Logger::error("Failed to load countries!");
-		ret = false;
-	}
-	if (!game_manager.get_politics_manager().load_rebels_file(parse_defines(lookup_file(rebel_types_file)).get_file_node())) {
-		Logger::error("Failed to load rebel types!");
 		ret = false;
 	}
 	if (!_load_history(game_manager, false)) {

@@ -28,7 +28,9 @@ namespace OpenVic {
 		bool _load_pop_types(PopManager& pop_manager, UnitManager const& unit_manager, GoodManager const& good_manager) const;
 		bool _load_units(GameManager& game_manager) const;
 		bool _load_goods(GameManager& game_manager) const;
+		bool _load_rebel_types(GameManager& game_manager) const;
 		bool _load_technologies(GameManager& game_manager) const;
+		bool _load_inventions(GameManager& game_manager) const;
 		bool _load_map_dir(GameManager& game_manager) const;
 		bool _load_history(GameManager& game_manager, bool unused_history_file_warnings) const;
 
