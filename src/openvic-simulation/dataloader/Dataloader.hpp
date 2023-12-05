@@ -108,16 +108,5 @@ namespace OpenVic {
 		bool load_localisation_files(
 			localisation_callback_t callback, std::string_view localisation_dir = "localisation"
 		) const;
-
-	private:
-		struct fshash {
-			size_t operator()(const std::filesystem::path& p) const noexcept {
-				return std::filesystem::hash_value(p);
-			}
-		};
-
-		using hint_path_t = fs::path;
-		using game_path_t = fs::path;
-		static inline std::unordered_map<hint_path_t, game_path_t, fshash> _cached_paths;
 	};
 }
