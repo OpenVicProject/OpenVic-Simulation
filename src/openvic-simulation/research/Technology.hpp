@@ -32,13 +32,12 @@ namespace OpenVic {
 	struct Technology : Modifier {
 		friend struct TechnologyManager;
 
-		using year_t = Date::year_t;
 		using unit_set_t = std::unordered_set<Unit const*>;
 		using building_set_t = std::unordered_set<BuildingType const*>;
 
 	private:
 		TechnologyArea const& PROPERTY(area);
-		const year_t PROPERTY(year);
+		const Date::year_t PROPERTY(year);
 		const fixed_point_t PROPERTY(cost);
 		const bool PROPERTY(unciv_military);
 		const uint8_t PROPERTY(unit);
@@ -48,7 +47,7 @@ namespace OpenVic {
 		//TODO: implement rules/modifiers and ai_chance
 
 		Technology(
-			std::string_view new_identifier, TechnologyArea const& new_area, year_t new_year, fixed_point_t new_cost,
+			std::string_view new_identifier, TechnologyArea const& new_area, Date::year_t new_year, fixed_point_t new_cost,
 			bool new_unciv_military, uint8_t new_unit, unit_set_t&& new_activated_units,
 			building_set_t&& new_activated_buildings, ModifierValue&& new_values
 		);
@@ -80,7 +79,7 @@ namespace OpenVic {
 		IDENTIFIER_REGISTRY_ACCESSORS(technology_area)
 
 		bool add_technology(
-			std::string_view identifier, TechnologyArea const* area, Technology::year_t year, fixed_point_t cost,
+			std::string_view identifier, TechnologyArea const* area, Date::year_t year, fixed_point_t cost,
 			bool unciv_military, uint8_t unit, Technology::unit_set_t&& activated_units,
 			Technology::building_set_t&& activated_buildings, ModifierValue&& values);
 		IDENTIFIER_REGISTRY_ACCESSORS_CUSTOM_PLURAL(technology, technologies)

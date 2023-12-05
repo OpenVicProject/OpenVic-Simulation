@@ -143,3 +143,17 @@ bool RebelManager::load_rebels_file(
 
 	return ret;
 }
+
+bool RebelManager::generate_modifiers(ModifierManager& modifier_manager) {
+	bool ret = true;
+
+	modifier_manager.register_complex_modifier("rebel_org_gain");
+
+	ret &= modifier_manager.add_modifier_effect("rebel_org_gain_all", false);
+
+	for (RebelType const& rebel_type : get_rebel_types()) {
+		std::string modifier_name = StringUtils::append_string_views("rebel_org_gain_", rebel_type.get_identifier());
+		ret &= modifier_manager.add_modifier_effect(modifier_name, false);
+	}
+	return ret;
+}

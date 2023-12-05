@@ -9,7 +9,7 @@ TechnologyArea::TechnologyArea(std::string_view new_identifier, TechnologyFolder
 	: HasIdentifier { new_identifier }, folder { new_folder } {}
 
 Technology::Technology(
-	std::string_view new_identifier, TechnologyArea const& new_area, year_t new_year, fixed_point_t new_cost,
+	std::string_view new_identifier, TechnologyArea const& new_area, Date::year_t new_year, fixed_point_t new_cost,
 	bool new_unciv_military, uint8_t new_unit, unit_set_t&& new_activated_units, building_set_t&& new_activated_buildings,
 	ModifierValue&& new_values
 ) : Modifier { new_identifier, std::move(new_values), 0 }, area { new_area }, year { new_year }, cost { new_cost },
@@ -47,7 +47,7 @@ bool TechnologyManager::add_technology_area(std::string_view identifier, Technol
 }
 
 bool TechnologyManager::add_technology(
-	std::string_view identifier, TechnologyArea const* area, Technology::year_t year, fixed_point_t cost, bool unciv_military,
+	std::string_view identifier, TechnologyArea const* area, Date::year_t year, fixed_point_t cost, bool unciv_military,
 	uint8_t unit, Technology::unit_set_t&& activated_units, Technology::building_set_t&& activated_buildings,
 	ModifierValue&& values
 ) {
@@ -115,7 +115,7 @@ bool TechnologyManager::load_technologies_file(ModifierManager const& modifier_m
 	return expect_dictionary_reserve_length(technologies, [this, &modifier_manager, &unit_manager, &building_manager](std::string_view tech_key, ast::NodeCPtr tech_value) -> bool {
 		ModifierValue modifiers;
 		TechnologyArea const* area = nullptr;
-		Technology::year_t year = 0;
+		Date::year_t year = 0;
 		fixed_point_t cost = 0;
 		bool unciv_military = false;
 		uint8_t unit = 0;
@@ -149,17 +149,19 @@ bool TechnologyManager::load_technologies_file(ModifierManager const& modifier_m
 	})(root);
 }
 
+#define TECH_MODIFIER(NAME, POS) ret &= modifier_manager.add_modifier_effect(NAME, POS, ModifierEffect::format_t::PROPORTION_DECIMAL)
+#define UNCIV_TECH_MODIFIER(NAME) TECH_MODIFIER(NAME, false); TECH_MODIFIER(StringUtils::append_string_views("self_", NAME), false);
 bool TechnologyManager::generate_modifiers(ModifierManager& modifier_manager) {
 	bool ret = true;
 
-	ret &= modifier_manager.add_modifier_effect("unciv_military_modifier", true);
-	ret &= modifier_manager.add_modifier_effect("unciv_economic_modifier", true);
-	ret &= modifier_manager.add_modifier_effect("self_unciv_economic_modifier", true);
-	ret &= modifier_manager.add_modifier_effect("self_unciv_military_modifier", true);
+	UNCIV_TECH_MODIFIER("unciv_military_modifier");
+	UNCIV_TECH_MODIFIER("unciv_economic_modifier");
 
 	for (TechnologyFolder const& folder : get_technology_folders()) {
-		std::string folder_name = std::string(folder.get_identifier()) + "_research_bonus";
-		ret &= modifier_manager.add_modifier_effect(folder_name, true);
+		TECH_MODIFIER(StringUtils::append_string_views(folder.get_identifier(), "_research_bonus"), true);
 	}
+	
 	return ret;
 }
+#undef UNCIV_TECH_MODIFIER
+#undef TECH_MODIFIER
