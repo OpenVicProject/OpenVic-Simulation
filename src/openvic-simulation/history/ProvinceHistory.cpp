@@ -18,7 +18,7 @@ std::unique_ptr<ProvinceHistoryEntry> ProvinceHistoryMap::_make_entry(Date date)
 bool ProvinceHistoryMap::_load_history_entry(
 	GameManager const& game_manager, ProvinceHistoryEntry& entry, ast::NodeCPtr root
 ) {
-	BuildingManager const& building_manager = game_manager.get_economy_manager().get_building_manager();
+	BuildingTypeManager const& building_type_manager = game_manager.get_economy_manager().get_building_type_manager();
 	CountryManager const& country_manager = game_manager.get_country_manager();
 	GoodManager const& good_manager = game_manager.get_economy_manager().get_good_manager();
 	IdeologyManager const& ideology_manager = game_manager.get_politics_manager().get_ideology_manager();
@@ -30,10 +30,10 @@ bool ProvinceHistoryMap::_load_history_entry(
 	};
 
 	return expect_dictionary_keys_and_default(
-		[this, &game_manager, &building_manager, &entry](
+		[this, &game_manager, &building_type_manager, &entry](
 			std::string_view key, ast::NodeCPtr value) -> bool {
 			// used for province buildings like forts or railroads
-			BuildingType const* building_type = building_manager.get_building_type_by_identifier(key);
+			BuildingType const* building_type = building_type_manager.get_building_type_by_identifier(key);
 			if (building_type != nullptr) {
 				return expect_uint<BuildingType::level_t>([&entry, building_type](BuildingType::level_t level) -> bool {
 					entry.province_buildings[building_type] = level;
@@ -47,17 +47,9 @@ bool ProvinceHistoryMap::_load_history_entry(
 			country_manager.expect_country_identifier(assign_variable_callback_pointer(entry.owner)),
 		"controller", ZERO_OR_ONE,
 			country_manager.expect_country_identifier(assign_variable_callback_pointer(entry.controller)),
-		"add_core", ZERO_OR_MORE, country_manager.expect_country_identifier(
-			[&entry](Country const& core) -> bool {
-				entry.add_cores.push_back(&core);
-				return true;
-			}
-		),
+		"add_core", ZERO_OR_MORE, country_manager.expect_country_identifier(vector_callback_pointer(entry.add_cores)),
 		"remove_core", ZERO_OR_MORE, country_manager.expect_country_identifier(
-			[&entry](Country const& core) -> bool {
-				entry.remove_cores.push_back(&core);
-				return true;
-			}
+			vector_callback_pointer(entry.remove_cores)
 		),
 		"colonial", ZERO_OR_ONE,
 			expect_identifier(expect_mapped_string(colony_status_map, assign_variable_callback(entry.colonial))),
@@ -82,13 +74,13 @@ bool ProvinceHistoryMap::_load_history_entry(
 			entry.party_loyalties[ideology] = amount;
 			return ret;
 		},
-		"state_building", ZERO_OR_MORE, [&building_manager, &entry](ast::NodeCPtr node) -> bool {
+		"state_building", ZERO_OR_MORE, [&building_type_manager, &entry](ast::NodeCPtr node) -> bool {
 			BuildingType const* building_type = nullptr;
 			uint8_t level = 0;
 
 			const bool ret = expect_dictionary_keys(
 				"level", ONE_EXACTLY, expect_uint(assign_variable_callback(level)),
-				"building", ONE_EXACTLY, building_manager.expect_building_type_identifier(
+				"building", ONE_EXACTLY, building_type_manager.expect_building_type_identifier(
 					assign_variable_callback_pointer(building_type)
 				),
 				"upgrade", ZERO_OR_ONE, success_callback // doesn't appear to have an effect

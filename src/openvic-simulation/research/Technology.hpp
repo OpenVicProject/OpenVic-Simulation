@@ -85,13 +85,13 @@ namespace OpenVic {
 		IDENTIFIER_REGISTRY_ACCESSORS_CUSTOM_PLURAL(technology, technologies)
 
 		bool add_technology_school(std::string_view identifier, ModifierValue&& values);
-		IDENTIFIER_REGISTRY_ACCESSORS(technology_school);
+		IDENTIFIER_REGISTRY_ACCESSORS(technology_school)
 
 		bool load_technology_file_areas(ast::NodeCPtr root); // common/technology.txt
 		bool load_technology_file_schools(ModifierManager const& modifier_manager, ast::NodeCPtr root); // also common/technology.txt
 		bool load_technologies_file(
-			ModifierManager const& modifier_manager, UnitManager const& unit_manager, BuildingManager const& building_manager,
-			ast::NodeCPtr root
+			ModifierManager const& modifier_manager, UnitManager const& unit_manager,
+			BuildingTypeManager const& building_type_manager, ast::NodeCPtr root
 		); // technologies/*.txt
 		bool generate_modifiers(ModifierManager& modifier_manager);
 	};

@@ -73,9 +73,7 @@ bool CultureManager::add_culture(
 
 bool CultureManager::load_graphical_culture_type_file(ast::NodeCPtr root) {
 	const bool ret = expect_list_reserve_length(graphical_culture_types,
-		expect_identifier(
-			std::bind(&CultureManager::add_graphical_culture_type, this, std::placeholders::_1)
-		)
+		expect_identifier(std::bind_front(&CultureManager::add_graphical_culture_type, this))
 	)(root);
 	lock_graphical_culture_types();
 	return ret;

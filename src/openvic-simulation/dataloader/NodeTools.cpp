@@ -380,17 +380,7 @@ node_callback_t NodeTools::name_list_callback(callback_t<std::vector<std::string
 	return [callback](ast::NodeCPtr node) -> bool {
 		std::vector<std::string> list;
 		bool ret = expect_list_reserve_length(
-			list,
-			expect_identifier_or_string(
-				[&list](std::string_view str) -> bool {
-					if (!str.empty()) {
-						list.push_back(std::string { str });
-						return true;
-					}
-					Logger::error("Empty identifier or string");
-					return false;
-				}
-			)
+			list, expect_identifier_or_string(vector_callback<std::string_view>(list))
 		)(node);
 		ret &= callback(std::move(list));
 		return ret;

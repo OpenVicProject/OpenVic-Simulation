@@ -108,7 +108,7 @@ namespace OpenVic {
 		 * that is the maximum allowed number of provinces plus one for the index-zero "null province". */
 		bool generate_mapmode_colours(Mapmode::index_t index, uint8_t* target) const;
 
-		bool reset(BuildingManager const& building_manager);
+		bool reset(BuildingTypeManager const& building_type_manager);
 		bool apply_history_to_provinces(ProvinceHistoryManager const& history_manager, Date date);
 
 		void update_highest_province_population();
@@ -120,7 +120,7 @@ namespace OpenVic {
 		void tick(Date today);
 
 		bool load_province_definitions(std::vector<ovdl::csv::LineObject> const& lines);
-		bool load_province_positions(BuildingManager const& building_manager, ast::NodeCPtr root);
+		bool load_province_positions(BuildingTypeManager const& building_type_manager, ast::NodeCPtr root);
 		bool load_region_file(ast::NodeCPtr root);
 		bool load_map_images(fs::path const& province_path, fs::path const& terrain_path, bool detailed_errors);
 		bool generate_and_load_province_adjacencies(std::vector<ovdl::csv::LineObject> const& additional_adjacencies);

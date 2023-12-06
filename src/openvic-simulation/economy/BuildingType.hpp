@@ -17,7 +17,7 @@
 
 namespace OpenVic {
 
-	struct BuildingManager;
+	struct BuildingTypeManager;
 
 	/* REQUIREMENTS:
 	 * MAP-11, MAP-72, MAP-73
@@ -25,7 +25,7 @@ namespace OpenVic {
 	 * MAP-13, MAP-78, MAP-79
 	 */
 	struct BuildingType : HasIdentifier {
-		friend struct BuildingManager;
+		friend struct BuildingTypeManager;
 
 		using level_t = int16_t;
 
@@ -69,14 +69,14 @@ namespace OpenVic {
 		BuildingType(BuildingType&&) = default;
 	};
 
-	struct BuildingManager {
+	struct BuildingTypeManager {
 		using level_t = BuildingType::level_t; // this is getting ridiculous
 
 	private:
 		IdentifierRegistry<BuildingType> building_types;
 
 	public:
-		BuildingManager();
+		BuildingTypeManager();
 
 		bool add_building_type(std::string_view identifier, ARGS);
 		IDENTIFIER_REGISTRY_ACCESSORS(building_type)

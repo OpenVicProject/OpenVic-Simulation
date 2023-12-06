@@ -1,18 +1,19 @@
 #pragma once
 
-#include "openvic-simulation/misc/GameAdvancementHook.hpp"
-#include "openvic-simulation/misc/Modifier.hpp"
 #include "openvic-simulation/country/Country.hpp"
 #include "openvic-simulation/economy/EconomyManager.hpp"
 #include "openvic-simulation/history/HistoryManager.hpp"
 #include "openvic-simulation/interface/UI.hpp"
+#include "openvic-simulation/map/Crime.hpp"
 #include "openvic-simulation/map/Map.hpp"
 #include "openvic-simulation/military/MilitaryManager.hpp"
 #include "openvic-simulation/misc/Define.hpp"
+#include "openvic-simulation/misc/GameAdvancementHook.hpp"
+#include "openvic-simulation/misc/Modifier.hpp"
 #include "openvic-simulation/politics/PoliticsManager.hpp"
 #include "openvic-simulation/pop/Pop.hpp"
+#include "openvic-simulation/research/ResearchManager.hpp"
 #include "openvic-simulation/research/Technology.hpp"
-#include "research/ResearchManager.hpp"
 
 namespace OpenVic {
 	struct GameManager {
@@ -29,6 +30,7 @@ namespace OpenVic {
 		ResearchManager PROPERTY_REF(research_manager);
 		PopManager PROPERTY_REF(pop_manager);
 		CountryManager PROPERTY_REF(country_manager);
+		CrimeManager PROPERTY_REF(crime_manager);
 		UIManager PROPERTY_REF(ui_manager);
 		GameAdvancementHook PROPERTY_REF(clock);
 

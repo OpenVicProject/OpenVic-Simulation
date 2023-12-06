@@ -1,11 +1,11 @@
 #pragma once
 
-#include "Rebel.hpp"
 #include "openvic-simulation/politics/Government.hpp"
 #include "openvic-simulation/politics/Ideology.hpp"
 #include "openvic-simulation/politics/Issue.hpp"
-#include "openvic-simulation/politics/NationalValue.hpp"
 #include "openvic-simulation/politics/NationalFocus.hpp"
+#include "openvic-simulation/politics/NationalValue.hpp"
+#include "openvic-simulation/politics/Rebel.hpp"
 
 namespace OpenVic {
 	struct PoliticsManager {
@@ -21,7 +21,10 @@ namespace OpenVic {
 		inline bool load_government_types_file(ast::NodeCPtr root) {
 			return government_type_manager.load_government_types_file(ideology_manager, root);
 		}
-		inline bool load_national_foci_file(PopManager const& pop_manager, GoodManager const& good_manager, ModifierManager const& modifier_manager, ast::NodeCPtr root) {
+		inline bool load_national_foci_file(
+			PopManager const& pop_manager, GoodManager const& good_manager, ModifierManager const& modifier_manager,
+			ast::NodeCPtr root
+		) {
 			return national_focus_manager.load_national_foci_file(pop_manager, ideology_manager, good_manager, modifier_manager, root);
 		}
 		inline bool load_rebels_file(ast::NodeCPtr root) {

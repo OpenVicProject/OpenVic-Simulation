@@ -1,13 +1,17 @@
 #pragma once
 
-#include "openvic-simulation/economy/BuildingType.hpp"
-#include "openvic-simulation/military/Unit.hpp"
 #include "openvic-simulation/misc/Modifier.hpp"
 #include "openvic-simulation/types/IdentifierRegistry.hpp"
-#include <string_view>
-#include <unordered_set>
 
 namespace OpenVic {
+	struct Unit;
+	struct BuildingType;
+	struct Crime;
+
+	struct UnitManager;
+	struct BuildingTypeManager;
+	struct CrimeManager;
+
 	struct Invention : Modifier {
 		friend struct InventionManager;
 		//TODO implement limit and chance
@@ -24,9 +28,9 @@ namespace OpenVic {
 		const bool PROPERTY_CUSTOM_PREFIX(unlock_gas_defence, will);
 
 		Invention(
-			std::string_view identifier, ModifierValue&& values, bool news, unit_set_t activated_units,
-			building_set_t activated_buildings, crime_set_t enabled_crimes, bool unlock_gas_attack,
-			bool unlock_gas_defence
+			std::string_view new_identifier, ModifierValue&& new_values, bool new_news, unit_set_t&& new_activated_units,
+			building_set_t&& new_activated_buildings, crime_set_t&& new_enabled_crimes, bool new_unlock_gas_attack,
+			bool new_unlock_gas_defence
 		);
 
 	public:
@@ -40,16 +44,16 @@ namespace OpenVic {
 		InventionManager();
 
 		bool add_invention(
-			std::string_view identifier, ModifierValue&& values, bool news, Invention::unit_set_t activated_units,
-			Invention::building_set_t activated_buildings, Invention::crime_set_t enabled_crimes, bool unlock_gas_attack,
+			std::string_view identifier, ModifierValue&& values, bool news, Invention::unit_set_t&& activated_units,
+			Invention::building_set_t&& activated_buildings, Invention::crime_set_t&& enabled_crimes, bool unlock_gas_attack,
 			bool unlock_gas_defence
 		);
 
-		IDENTIFIER_REGISTRY_ACCESSORS(invention);
+		IDENTIFIER_REGISTRY_ACCESSORS(invention)
 
 		bool load_inventions_file(
-			ModifierManager const& modifier_manager, UnitManager const& unit_manager, BuildingManager const& building_manager,
-			ast::NodeCPtr root
+			ModifierManager const& modifier_manager, UnitManager const& unit_manager,
+			BuildingTypeManager const& building_type_manager, CrimeManager const& crime_manager, ast::NodeCPtr root
 		); // inventions/*.txt
 	};
 }

@@ -11,6 +11,7 @@ namespace OpenVic {
 	struct Map;
 	struct Region;
 	struct State;
+	struct Crime;
 	struct Good;
 	struct TerrainType;
 	struct TerrainTypeMapping;
@@ -50,12 +51,8 @@ namespace OpenVic {
 			fvec2_t factory;
 			fvec2_t building_construction;
 			fvec2_t military_construction;
-			fvec2_t fort;
-			fixed_point_t fort_rotation;
-			fvec2_t railroad;
-			fixed_point_t railroad_rotation;
-			fvec2_t navalbase;
-			fixed_point_t navalbase_rotation;
+			std::map<BuildingType const*, fvec2_t> building_position;
+			fixed_point_map_t<BuildingType const*> building_rotation;
 		};
 
 		static constexpr index_t NULL_INDEX = 0, MAX_INDEX = std::numeric_limits<index_t>::max();
@@ -99,7 +96,7 @@ namespace OpenVic {
 
 		std::string to_string() const;
 
-		bool load_positions(BuildingManager const& building_manager, ast::NodeCPtr root);
+		bool load_positions(BuildingTypeManager const& building_type_manager, ast::NodeCPtr root);
 
 		IDENTIFIER_REGISTRY_ACCESSORS(building)
 		bool expand_building(std::string_view building_type_identifier);
@@ -115,7 +112,7 @@ namespace OpenVic {
 		bool is_adjacent_to(Province const* province);
 		bool add_adjacency(Province const* province, distance_t distance, flags_t flags);
 
-		bool reset(BuildingManager const& building_manager);
+		bool reset(BuildingTypeManager const& building_type_manager);
 		bool apply_history_to_province(ProvinceHistoryEntry const* entry);
 	};
 }

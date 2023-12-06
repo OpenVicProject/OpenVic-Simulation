@@ -79,16 +79,16 @@ std::vector<WarHistory const*> DiplomaticHistoryManager::get_wars(Date date) con
 	return ret;
 }
 
-bool DiplomaticHistoryManager::load_diplomacy_history_file(GameManager& game_manager, ast::NodeCPtr root) {
+bool DiplomaticHistoryManager::load_diplomacy_history_file(CountryManager const& country_manager, ast::NodeCPtr root) {
 	return expect_dictionary_keys(
-		"alliance", ZERO_OR_MORE, [this, &game_manager](ast::NodeCPtr node) -> bool {
+		"alliance", ZERO_OR_MORE, [this, &country_manager](ast::NodeCPtr node) -> bool {
 			Country const* first;
 			Country const* second;
 			Date start, end;
 
 			bool ret = expect_dictionary_keys(
-				"first", ONE_EXACTLY, expect_identifier_or_string(game_manager.get_country_manager().expect_country_str(assign_variable_callback_pointer(first))),
-				"second", ONE_EXACTLY, expect_identifier_or_string(game_manager.get_country_manager().expect_country_str(assign_variable_callback_pointer(second))),
+				"first", ONE_EXACTLY, expect_identifier_or_string(country_manager.expect_country_str(assign_variable_callback_pointer(first))),
+				"second", ONE_EXACTLY, expect_identifier_or_string(country_manager.expect_country_str(assign_variable_callback_pointer(second))),
 				"start_date", ONE_EXACTLY, expect_identifier_or_string(expect_date_str(assign_variable_callback(start))),
 				"end_date", ONE_EXACTLY, expect_identifier_or_string(expect_date_str(assign_variable_callback(end)))
 			)(node);
@@ -96,14 +96,14 @@ bool DiplomaticHistoryManager::load_diplomacy_history_file(GameManager& game_man
 			alliances.push_back({ first, second, start, end });
 			return ret;
 		},
-		"vassal", ZERO_OR_MORE, [this, &game_manager](ast::NodeCPtr node) -> bool {
+		"vassal", ZERO_OR_MORE, [this, &country_manager](ast::NodeCPtr node) -> bool {
 			Country const* overlord;
 			Country const* subject;
 			Date start, end;
 
 			bool ret = expect_dictionary_keys(
-				"first", ONE_EXACTLY, expect_identifier_or_string(game_manager.get_country_manager().expect_country_str(assign_variable_callback_pointer(overlord))),
-				"second", ONE_EXACTLY, expect_identifier_or_string(game_manager.get_country_manager().expect_country_str(assign_variable_callback_pointer(subject))),
+				"first", ONE_EXACTLY, expect_identifier_or_string(country_manager.expect_country_str(assign_variable_callback_pointer(overlord))),
+				"second", ONE_EXACTLY, expect_identifier_or_string(country_manager.expect_country_str(assign_variable_callback_pointer(subject))),
 				"start_date", ONE_EXACTLY, expect_identifier_or_string(expect_date_str(assign_variable_callback(start))),
 				"end_date", ONE_EXACTLY, expect_identifier_or_string(expect_date_str(assign_variable_callback(end)))
 			)(node);
@@ -111,14 +111,14 @@ bool DiplomaticHistoryManager::load_diplomacy_history_file(GameManager& game_man
 			subjects.push_back({ overlord, subject, SubjectHistory::type_t::VASSAL, start, end });
 			return ret;
 		},
-		"union", ZERO_OR_MORE, [this, &game_manager](ast::NodeCPtr node) -> bool {
+		"union", ZERO_OR_MORE, [this, &country_manager](ast::NodeCPtr node) -> bool {
 			Country const* overlord;
 			Country const* subject;
 			Date start, end;
 
 			bool ret = expect_dictionary_keys(
-				"first", ONE_EXACTLY, game_manager.get_country_manager().expect_country_identifier(assign_variable_callback_pointer(overlord)),
-				"second", ONE_EXACTLY, game_manager.get_country_manager().expect_country_identifier(assign_variable_callback_pointer(subject)),
+				"first", ONE_EXACTLY, country_manager.expect_country_identifier(assign_variable_callback_pointer(overlord)),
+				"second", ONE_EXACTLY, country_manager.expect_country_identifier(assign_variable_callback_pointer(subject)),
 				"start_date", ONE_EXACTLY, expect_date(assign_variable_callback(start)),
 				"end_date", ONE_EXACTLY, expect_date(assign_variable_callback(end))
 			)(node);
@@ -126,14 +126,14 @@ bool DiplomaticHistoryManager::load_diplomacy_history_file(GameManager& game_man
 			subjects.push_back({ overlord, subject, SubjectHistory::type_t::UNION, start, end });
 			return ret;
 		},
-		"substate", ZERO_OR_MORE, [this, &game_manager](ast::NodeCPtr node) -> bool {
+		"substate", ZERO_OR_MORE, [this, &country_manager](ast::NodeCPtr node) -> bool {
 			Country const* overlord;
 			Country const* subject;
 			Date start, end;
 
 			bool ret = expect_dictionary_keys(
-				"first", ONE_EXACTLY, game_manager.get_country_manager().expect_country_identifier(assign_variable_callback_pointer(overlord)),
-				"second", ONE_EXACTLY, game_manager.get_country_manager().expect_country_identifier(assign_variable_callback_pointer(subject)),
+				"first", ONE_EXACTLY, country_manager.expect_country_identifier(assign_variable_callback_pointer(overlord)),
+				"second", ONE_EXACTLY, country_manager.expect_country_identifier(assign_variable_callback_pointer(subject)),
 				"start_date", ONE_EXACTLY, expect_date(assign_variable_callback(start)),
 				"end_date", ONE_EXACTLY, expect_date(assign_variable_callback(end))
 			)(node);
@@ -144,7 +144,7 @@ bool DiplomaticHistoryManager::load_diplomacy_history_file(GameManager& game_man
 	)(root);
 }
 
-bool DiplomaticHistoryManager::load_war_history_file(GameManager& game_manager, ast::NodeCPtr root) {
+bool DiplomaticHistoryManager::load_war_history_file(GameManager const& game_manager, ast::NodeCPtr root) {
 	std::string name = "";
 	std::vector<WarHistory::war_participant_t> attackers;
 	std::vector<WarHistory::war_participant_t> defenders;

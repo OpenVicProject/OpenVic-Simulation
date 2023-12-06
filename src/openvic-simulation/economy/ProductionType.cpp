@@ -55,16 +55,11 @@ node_callback_t ProductionTypeManager::_expect_employed_pop(
 node_callback_t ProductionTypeManager::_expect_employed_pop_list(
 	GoodManager const& good_manager, PopManager const& pop_manager, callback_t<std::vector<EmployedPop>&&> cb
 ) {
-
 	return [this, &good_manager, &pop_manager, cb](ast::NodeCPtr node) -> bool {
 		std::vector<EmployedPop> employed_pops;
-		bool res = expect_list([this, &good_manager, &pop_manager, &employed_pops](ast::NodeCPtr node) -> bool {
-			EmployedPop owner;
-			bool res_partial = _expect_employed_pop(good_manager, pop_manager, assign_variable_callback(owner))(node);
-			employed_pops.push_back(owner);
-			return res_partial;
-		})(node);
-		return res & cb(std::move(employed_pops));
+		bool ret = expect_list(_expect_employed_pop(good_manager, pop_manager, vector_callback(employed_pops)))(node);
+		ret &= cb(std::move(employed_pops));
+		return ret;
 	};
 }
 

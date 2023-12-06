@@ -140,7 +140,7 @@ bool TerrainTypeManager::load_terrain_types(ModifierManager const& modifier_mana
 			terrain_type_mappings.reserve(size - 2);
 			return size;
 		},
-		std::bind(&TerrainTypeManager::_load_terrain_type_mapping, this, std::placeholders::_1, std::placeholders::_2),
+		std::bind_front(&TerrainTypeManager::_load_terrain_type_mapping, this),
 		"terrain", ONE_EXACTLY, expect_uint(assign_variable_callback(terrain_texture_limit)),
 		"categories", ONE_EXACTLY, _load_terrain_type_categories(modifier_manager)
 	)(root);

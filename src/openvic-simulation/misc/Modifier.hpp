@@ -1,7 +1,6 @@
 #pragma once
 
 #include "openvic-simulation/types/IdentifierRegistry.hpp"
-#include <unordered_set>
 
 namespace OpenVic {
 	struct ModifierManager;
@@ -93,19 +92,6 @@ namespace OpenVic {
 		TriggeredModifier(TriggeredModifier&&) = default;
 	};
 
-	struct Crime final : TriggeredModifier {
-		friend struct ModifierManager;
-
-	private:
-		const bool PROPERTY(default_active);
-		bool PROPERTY_RW(active);
-
-		Crime(std::string_view new_identifier, ModifierValue&& new_values, icon_t new_icon, bool new_default_active);
-
-	public:
-		Crime(Crime&&) = default;
-	};
-
 	struct ModifierInstance {
 
 	private:
@@ -127,7 +113,6 @@ namespace OpenVic {
 		IdentifierInstanceRegistry<ModifierEffect> modifier_effects;
 		string_set_t complex_modifiers;
 
-		IdentifierRegistry<Crime> crime_modifiers;
 		IdentifierRegistry<Modifier> event_modifiers;
 		IdentifierRegistry<Modifier> static_modifiers;
 		IdentifierRegistry<TriggeredModifier> triggered_modifiers;
@@ -150,10 +135,6 @@ namespace OpenVic {
 		void register_complex_modifier(std::string_view identifier);
 
 		bool setup_modifier_effects();
-
-		bool add_crime_modifier(std::string_view identifier, ModifierValue&& values, Modifier::icon_t icon, bool active);
-		IDENTIFIER_REGISTRY_ACCESSORS(crime_modifier)
-		bool load_crime_modifiers(ast::NodeCPtr root);
 
 		bool add_event_modifier(std::string_view identifier, ModifierValue&& values, Modifier::icon_t icon);
 		IDENTIFIER_REGISTRY_ACCESSORS(event_modifier)
