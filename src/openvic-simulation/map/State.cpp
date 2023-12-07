@@ -8,16 +8,15 @@ State::State(
 	Country const* owner, Province const* capital, Region::provinces_t&& provinces, Province::colony_status_t colony_status
 ) : owner { owner }, capital { capital }, provinces { std::move(provinces) }, colony_status { colony_status } {}
 
-StateSet::StateSet(Region const* new_region) {
-	if (region->get_meta()) {
+StateSet::StateSet(Region const& new_region) : region { new_region } {
+	if (region.get_meta()) {
 		Logger::error("Cannot use meta region as state template!");
 	}
-	region = new_region;
 
 	std::vector<Region::provinces_t> temp_provinces;
 	bool in_state = false;
 
-	for (Province* province : region->get_provinces()) {
+	for (Province* province : region.get_provinces()) {
 		// add to existing state if shared owner & status...
 		for (Region::provinces_t& provinces : temp_provinces) {
 			if (provinces[0] == province) {
@@ -77,7 +76,9 @@ void StateManager::generate_states(Map const& map) {
 	regions.clear();
 	regions.reserve(map.get_region_count());
 	for(Region const& region : map.get_regions()) {
-		regions.push_back(StateSet(&region));
+		if (!region.get_meta()) {
+			regions.push_back(StateSet(region));
+		}
 	}
 	Logger::info("Generated states.");
 }

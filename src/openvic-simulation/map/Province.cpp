@@ -9,7 +9,7 @@ Province::Province(
 	std::string_view new_identifier, colour_t new_colour, index_t new_index
 ) : HasIdentifierAndColour { new_identifier, new_colour, true, false }, index { new_index },
 	region { nullptr }, on_map { false }, has_region { false }, water { false }, default_terrain_type { nullptr },
-	terrain_type { nullptr }, life_rating { 0 }, colony_status { colony_status_t::STATE }, owner { nullptr },
+	positions {}, terrain_type { nullptr }, life_rating { 0 }, colony_status { colony_status_t::STATE }, owner { nullptr },
 	controller { nullptr }, slave { false }, crime { nullptr }, rgo { nullptr }, buildings { "buildings", false },
 	total_population { 0 } {
 	assert(index != NULL_INDEX);
