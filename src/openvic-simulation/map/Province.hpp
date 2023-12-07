@@ -68,7 +68,7 @@ namespace OpenVic {
 		TerrainType const* PROPERTY(default_terrain_type);
 
 		std::vector<adjacency_t> PROPERTY(adjacencies);
-		province_positions_t positions;
+		province_positions_t PROPERTY(positions);
 
 		TerrainType const* PROPERTY(terrain_type);
 		life_rating_t PROPERTY(life_rating);

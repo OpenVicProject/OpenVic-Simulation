@@ -29,11 +29,11 @@ namespace OpenVic {
 		using states_t = std::deque<State>;
 
 	private:
-		Region const* PROPERTY(region);
+		Region const& PROPERTY(region);
 		states_t states;
 
 	public:
-		StateSet(Region const* new_region);
+		StateSet(Region const& new_region);
 
 		bool add_state(State&& state);
 		bool remove_state(State const* state);
