@@ -41,7 +41,7 @@ bool GovernmentTypeManager::add_government_type(
 		identifier, std::move(ideologies), elections, appoint_ruling_party, term_duration, flag_type
 	});
 
-	/* flag_type can be empty here for default/non-ideological flag  */
+	/* flag_type can be empty here for default/non-ideological flag */
 	if (ret && std::find(flag_types.begin(), flag_types.end(), flag_type) == flag_types.end()) {
 		flag_types.emplace_back(flag_type);
 	}

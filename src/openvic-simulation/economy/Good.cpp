@@ -101,8 +101,7 @@ bool GoodManager::load_goods_file(ast::NodeCPtr root) {
 	for (Good const& good : this->get_goods()) { \
 		ret &= modifier_manager.add_modifier_effect( \
 			StringUtils::append_string_views(name, "_", good.get_identifier()), \
-			true, \
-			ModifierEffect::format_t::PROPORTION_DECIMAL \
+			true \
 		); \
 	}
 

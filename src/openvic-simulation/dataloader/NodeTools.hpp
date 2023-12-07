@@ -7,6 +7,7 @@
 #include <optional>
 #include <set>
 #include <type_traits>
+#include <unordered_set>
 
 #include <openvic-dataloader/v2script/AbstractSyntaxTree.hpp>
 
@@ -317,6 +318,35 @@ namespace OpenVic {
 		Callback<T const&> auto assign_variable_callback_pointer(std::optional<T const*>& var) {
 			return [&var](T const& val) -> bool {
 				var = &val;
+				return true;
+			};
+		}
+
+		template<typename T, typename U>
+		Callback<T> auto vector_callback(std::vector<U>& vec) {
+			return [&vec](T val) -> bool {
+				vec.emplace_back(std::move(val));
+				return true;
+			};
+		}
+
+		template<typename T>
+		Callback<T> auto vector_callback(std::vector<T>& vec) {
+			return vector_callback<T, T>(vec);
+		}
+
+		template<typename T>
+		Callback<T const&> auto vector_callback_pointer(std::vector<T const*>& vec) {
+			return [&vec](T const& val) -> bool {
+				vec.emplace_back(&val);
+				return true;
+			};
+		}
+
+		template<typename T>
+		Callback<T const&> auto set_callback_pointer(std::unordered_set<T const*>& set) {
+			return [&set](T const& val) -> bool {
+				set.insert(&val);
 				return true;
 			};
 		}

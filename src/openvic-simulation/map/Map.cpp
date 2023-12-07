@@ -282,10 +282,10 @@ Pop::pop_size_t Map::get_total_map_population() const {
 	return total_map_population;
 }
 
-bool Map::reset(BuildingManager const& building_manager) {
+bool Map::reset(BuildingTypeManager const& building_type_manager) {
 	bool ret = true;
 	for (Province& province : provinces.get_items()) {
-		ret &= province.reset(building_manager);
+		ret &= province.reset(building_type_manager);
 	}
 	return ret;
 }
@@ -388,9 +388,9 @@ bool Map::load_province_definitions(std::vector<LineObject> const& lines) {
 	return ret;
 }
 
-bool Map::load_province_positions(BuildingManager const& building_manager, ast::NodeCPtr root) {
-	return expect_province_dictionary([&building_manager](Province& province, ast::NodeCPtr node) -> bool {
-		return province.load_positions(building_manager, node);
+bool Map::load_province_positions(BuildingTypeManager const& building_type_manager, ast::NodeCPtr root) {
+	return expect_province_dictionary([&building_type_manager](Province& province, ast::NodeCPtr node) -> bool {
+		return province.load_positions(building_type_manager, node);
 	})(root);
 }
 
@@ -399,11 +399,7 @@ bool Map::load_region_file(ast::NodeCPtr root) {
 		[this](std::string_view region_identifier, ast::NodeCPtr region_node) -> bool {
 			std::vector<std::string_view> province_identifiers;
 			bool ret = expect_list_reserve_length(
-				province_identifiers,
-				expect_identifier([&province_identifiers](std::string_view identifier) -> bool {
-					province_identifiers.push_back(identifier);
-					return true;
-				})
+				province_identifiers, expect_identifier(vector_callback(province_identifiers))
 			)(region_node);
 			ret &= add_region(region_identifier, province_identifiers);
 			return ret;

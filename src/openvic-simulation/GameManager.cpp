@@ -42,7 +42,7 @@ bool GameManager::reset() {
 	clock.reset();
 	today = {};
 	economy_manager.get_good_manager().reset_to_defaults();
-	bool ret = map.reset(economy_manager.get_building_manager());
+	bool ret = map.reset(economy_manager.get_building_type_manager());
 	set_needs_update();
 	return ret;
 }

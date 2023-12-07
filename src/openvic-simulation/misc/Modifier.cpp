@@ -84,13 +84,9 @@ TriggeredModifier::TriggeredModifier(std::string_view new_identifier, ModifierVa
 ModifierInstance::ModifierInstance(Modifier const& modifier, Date expiry_date)
 	: modifier { modifier }, expiry_date { expiry_date } {}
 
-Crime::Crime(std::string_view new_identifier, ModifierValue&& new_values, icon_t new_icon, bool new_default_active)
-  : TriggeredModifier { new_identifier, std::move(new_values), new_icon }, default_active { new_default_active },
-	active { new_default_active } {}
-
 ModifierManager::ModifierManager()
-  : modifier_effects { "modifier effects" }, crime_modifiers { "crime modifiers" }, event_modifiers { "event modifiers" },
-	static_modifiers { "static modifiers" }, triggered_modifiers { "triggered modifiers" } {}
+  : modifier_effects { "modifier effects" }, event_modifiers { "event modifiers" }, static_modifiers { "static modifiers" },
+	triggered_modifiers { "triggered modifiers" } {}
 
 bool ModifierManager::add_modifier_effect(std::string_view identifier, bool positive_good, ModifierEffect::format_t format) {
 	if (identifier.empty()) {
@@ -261,38 +257,6 @@ void ModifierManager::register_complex_modifier(std::string_view identifier) {
 	complex_modifiers.emplace(identifier);
 }
 
-bool ModifierManager::add_crime_modifier(
-	std::string_view identifier, ModifierValue&& values, Modifier::icon_t icon, bool active
-) {
-	if (identifier.empty()) {
-		Logger::error("Invalid crime modifier effect identifier - empty!");
-		return false;
-	}
-	return crime_modifiers.add_item({ identifier, std::move(values), icon, active }, duplicate_warning_callback);
-}
-
-bool ModifierManager::load_crime_modifiers(ast::NodeCPtr root) {
-	const bool ret = expect_dictionary_reserve_length(
-		crime_modifiers,
-		[this](std::string_view key, ast::NodeCPtr value) -> bool {
-			ModifierValue modifier_value;
-			Modifier::icon_t icon = 0;
-			bool active = false;
-			bool ret = expect_modifier_value_and_keys(
-				move_variable_callback(modifier_value),
-				"icon", ZERO_OR_ONE, expect_uint(assign_variable_callback(icon)),
-				"trigger", ONE_EXACTLY, success_callback, // TODO - load condition
-				"active", ZERO_OR_ONE, expect_bool(assign_variable_callback(active))
-			)(value);
-			ret &= add_crime_modifier(key, std::move(modifier_value), icon, active);
-			return ret;
-		}
-	)(root);
-	lock_crime_modifiers();
-	return ret;
-	return true;
-}
-
 bool ModifierManager::add_event_modifier(std::string_view identifier, ModifierValue&& values, Modifier::icon_t icon) {
 	if (identifier.empty()) {
 		Logger::error("Invalid event modifier effect identifier - empty!");
@@ -410,8 +374,12 @@ key_value_callback_t ModifierManager::_modifier_effect_callback(
 				)(value);
 				ret &= add_flattened_modifier_cb(key, faction_identifier, value_node);
 				return ret;
-			} else return expect_dictionary(std::bind(add_flattened_modifier_cb, key, std::placeholders::_1, std::placeholders::_2))(value);
-		} else return default_callback(key, value);
+			} else {
+				return expect_dictionary(std::bind_front(add_flattened_modifier_cb, key))(value);
+			}
+		} else {
+			return default_callback(key, value);
+		}
 	};
 }
 

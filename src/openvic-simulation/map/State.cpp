@@ -1,6 +1,6 @@
 #include "State.hpp"
 
-#include "Map.hpp"
+#include "openvic-simulation/map/Map.hpp"
 
 using namespace OpenVic;
 

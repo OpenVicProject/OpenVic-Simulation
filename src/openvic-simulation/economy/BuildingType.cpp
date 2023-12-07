@@ -14,9 +14,9 @@ BuildingType::BuildingType(
 	colonial_range { colonial_range }, infrastructure { infrastructure }, spawn_railway_track { spawn_railway_track },
 	sail { sail }, steam { steam }, capital { capital }, port { port } {}
 
-BuildingManager::BuildingManager() : building_types { "building types" } {}
+BuildingTypeManager::BuildingTypeManager() : building_types { "building types" } {}
 
-bool BuildingManager::add_building_type(std::string_view identifier, ARGS) {
+bool BuildingTypeManager::add_building_type(std::string_view identifier, ARGS) {
 	if (identifier.empty()) {
 		Logger::error("Invalid building identifier - empty!");
 		return false;
@@ -30,7 +30,7 @@ bool BuildingManager::add_building_type(std::string_view identifier, ARGS) {
 	});
 }
 
-bool BuildingManager::load_buildings_file(
+bool BuildingTypeManager::load_buildings_file(
 	GoodManager const& good_manager, ProductionTypeManager const& production_type_manager, ModifierManager& modifier_manager,
 	ast::NodeCPtr root
 ) {
@@ -70,12 +70,7 @@ bool BuildingManager::load_buildings_file(
 				"advanced_factory", ZERO_OR_ONE, expect_bool(assign_variable_callback(advanced_factory)),
 				"fort_level", ZERO_OR_ONE, expect_uint(assign_variable_callback(fort_level)),
 				"naval_capacity", ZERO_OR_ONE, expect_uint(assign_variable_callback(naval_capacity)),
-				"colonial_points", ZERO_OR_ONE, expect_list(expect_fixed_point(
-					[&colonial_points](fixed_point_t points) -> bool {
-						colonial_points.push_back(points);
-						return true;
-					}
-				)),
+				"colonial_points", ZERO_OR_ONE, expect_list(expect_fixed_point(vector_callback(colonial_points))),
 				"province", ZERO_OR_ONE, expect_bool(assign_variable_callback(in_province)),
 				"one_per_state", ZERO_OR_ONE, expect_bool(assign_variable_callback(one_per_state)),
 				"colonial_range", ZERO_OR_ONE, expect_fixed_point(assign_variable_callback(colonial_range)),

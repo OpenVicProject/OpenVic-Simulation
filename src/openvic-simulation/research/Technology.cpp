@@ -111,8 +111,12 @@ bool TechnologyManager::load_technology_file_schools(ModifierManager const& modi
 	})(root);
 }
 
-bool TechnologyManager::load_technologies_file(ModifierManager const& modifier_manager, UnitManager const& unit_manager, BuildingManager const& building_manager, ast::NodeCPtr root) {
-	return expect_dictionary_reserve_length(technologies, [this, &modifier_manager, &unit_manager, &building_manager](std::string_view tech_key, ast::NodeCPtr tech_value) -> bool {
+bool TechnologyManager::load_technologies_file(
+	ModifierManager const& modifier_manager, UnitManager const& unit_manager, BuildingTypeManager const& building_type_manager,
+	ast::NodeCPtr root
+) {
+	return expect_dictionary_reserve_length(technologies, [this, &modifier_manager, &unit_manager, &building_type_manager](
+		std::string_view tech_key, ast::NodeCPtr tech_value) -> bool {
 		ModifierValue modifiers;
 		TechnologyArea const* area = nullptr;
 		Date::year_t year = 0;
@@ -128,15 +132,9 @@ bool TechnologyManager::load_technologies_file(ModifierManager const& modifier_m
 			"cost", ONE_EXACTLY, expect_fixed_point(assign_variable_callback(cost)),
 			"unciv_military", ZERO_OR_ONE, expect_bool(assign_variable_callback(unciv_military)),
 			"unit", ZERO_OR_ONE, expect_uint(assign_variable_callback(unit)),
-			"activate_unit", ZERO_OR_MORE, unit_manager.expect_unit_identifier([&activated_units](Unit const& unit) -> bool {
-				activated_units.insert(&unit);
-				return true;
-			}),
-			"activate_building", ZERO_OR_MORE, building_manager.expect_building_type_identifier(
-				[&activated_buildings](BuildingType const& building_type) -> bool {
-					activated_buildings.insert(&building_type);
-					return true;
-				}
+			"activate_unit", ZERO_OR_MORE, unit_manager.expect_unit_identifier(set_callback_pointer(activated_units)),
+			"activate_building", ZERO_OR_MORE, building_type_manager.expect_building_type_identifier(
+				set_callback_pointer(activated_buildings)
 			),
 			"ai_chance", ONE_EXACTLY, success_callback //TODO
 		)(tech_value);
@@ -149,7 +147,7 @@ bool TechnologyManager::load_technologies_file(ModifierManager const& modifier_m
 	})(root);
 }
 
-#define TECH_MODIFIER(NAME, POS) ret &= modifier_manager.add_modifier_effect(NAME, POS, ModifierEffect::format_t::PROPORTION_DECIMAL)
+#define TECH_MODIFIER(NAME, POS) ret &= modifier_manager.add_modifier_effect(NAME, POS)
 #define UNCIV_TECH_MODIFIER(NAME) TECH_MODIFIER(NAME, false); TECH_MODIFIER(StringUtils::append_string_views("self_", NAME), false);
 bool TechnologyManager::generate_modifiers(ModifierManager& modifier_manager) {
 	bool ret = true;
@@ -160,7 +158,7 @@ bool TechnologyManager::generate_modifiers(ModifierManager& modifier_manager) {
 	for (TechnologyFolder const& folder : get_technology_folders()) {
 		TECH_MODIFIER(StringUtils::append_string_views(folder.get_identifier(), "_research_bonus"), true);
 	}
-	
+
 	return ret;
 }
 #undef UNCIV_TECH_MODIFIER

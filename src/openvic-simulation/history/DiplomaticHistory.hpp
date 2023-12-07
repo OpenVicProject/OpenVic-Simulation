@@ -98,7 +98,7 @@ namespace OpenVic {
 		/* Returns all wars that begin before date. NOTE: Some wargoals may be added or countries may join after date, should be checked for by functions that use get_wars() */
 		std::vector<WarHistory const*> get_wars(Date date) const;
 
-		bool load_diplomacy_history_file(GameManager& game_manager, ast::NodeCPtr root);
-		bool load_war_history_file(GameManager& game_manager, ast::NodeCPtr root);
+		bool load_diplomacy_history_file(CountryManager const& country_manager, ast::NodeCPtr root);
+		bool load_war_history_file(GameManager const& game_manager, ast::NodeCPtr root);
 	};
 } // namespace OpenVic

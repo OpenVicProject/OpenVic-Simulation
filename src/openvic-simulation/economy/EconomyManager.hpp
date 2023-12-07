@@ -7,7 +7,7 @@
 namespace OpenVic {
 	struct EconomyManager {
 	private:
-		BuildingManager PROPERTY_REF(building_manager);
+		BuildingTypeManager PROPERTY_REF(building_type_manager);
 		GoodManager PROPERTY_REF(good_manager);
 		ProductionTypeManager PROPERTY_REF(production_type_manager);
 
@@ -17,7 +17,7 @@ namespace OpenVic {
 		}
 
 		inline bool load_buildings_file(ModifierManager& modifier_manager, ast::NodeCPtr root) {
-			return building_manager.load_buildings_file(good_manager, production_type_manager, modifier_manager, root);
+			return building_type_manager.load_buildings_file(good_manager, production_type_manager, modifier_manager, root);
 		}
 	};
 }

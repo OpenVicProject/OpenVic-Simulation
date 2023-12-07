@@ -21,7 +21,7 @@ std::string Province::to_string() const {
 	return stream.str();
 }
 
-bool Province::load_positions(BuildingManager const& building_manager, ast::NodeCPtr root) {
+bool Province::load_positions(BuildingTypeManager const& building_type_manager, ast::NodeCPtr root) {
 	return expect_dictionary_keys(
 		"text_position", ZERO_OR_ONE, expect_fvec2(assign_variable_callback(positions.text)),
 		"text_rotation", ZERO_OR_ONE, expect_fixed_point(assign_variable_callback(positions.text_rotation)),
@@ -32,16 +32,16 @@ bool Province::load_positions(BuildingManager const& building_manager, ast::Node
 		"factory", ZERO_OR_ONE, expect_fvec2(assign_variable_callback(positions.factory)),
 		"building_construction", ZERO_OR_ONE, expect_fvec2(assign_variable_callback(positions.building_construction)),
 		"military_construction", ZERO_OR_ONE, expect_fvec2(assign_variable_callback(positions.military_construction)),
-		"building_position", ZERO_OR_ONE, expect_dictionary_keys( // TODO: for TGC etc are building positions available for modded-in buildings? needs testing
-			"fort", ZERO_OR_ONE, expect_fvec2(assign_variable_callback(positions.fort)),
-			"railroad", ZERO_OR_ONE, expect_fvec2(assign_variable_callback(positions.railroad)),
-			"naval_base", ZERO_OR_ONE, expect_fvec2(assign_variable_callback(positions.navalbase))
+		"building_position", ZERO_OR_ONE, building_type_manager.expect_building_type_dictionary(
+			[this](BuildingType const& type, ast::NodeCPtr value) -> bool {
+				return expect_fvec2([this, &type](fvec2_t position) -> bool {
+					positions.building_position.emplace(&type, std::move(position));
+					return true;
+				})(value);
+			}
 		),
-		"building_rotation", ZERO_OR_ONE, expect_dictionary_keys(
-			"fort", ZERO_OR_ONE, expect_fixed_point(assign_variable_callback(positions.fort_rotation)),
-			"railroad", ZERO_OR_ONE, expect_fixed_point(assign_variable_callback(positions.railroad_rotation)),
-			"naval_base", ZERO_OR_ONE, expect_fixed_point(assign_variable_callback(positions.navalbase_rotation)),
-			"aeroplane_factory", ZERO_OR_ONE, success_callback /* see below */
+		"building_rotation", ZERO_OR_ONE, building_type_manager.expect_building_type_decimal_map(
+			move_variable_callback(positions.building_rotation)
 		),
 		/* the below are esoteric clausewitz leftovers that either have no impact or whose functionality is lost to time */
 		"spawn_railway_track", ZERO_OR_ONE, success_callback,
@@ -137,7 +137,7 @@ bool Province::add_adjacency(Province const* province, distance_t distance, flag
 	return true;
 }
 
-bool Province::reset(BuildingManager const& building_manager) {
+bool Province::reset(BuildingTypeManager const& building_type_manager) {
 	terrain_type = default_terrain_type;
 	life_rating = 0;
 	colony_status = colony_status_t::STATE;
@@ -150,8 +150,8 @@ bool Province::reset(BuildingManager const& building_manager) {
 	buildings.reset();
 	bool ret = true;
 	if (!get_water()) {
-		if (building_manager.building_types_are_locked()) {
-			for (BuildingType const& building_type : building_manager.get_building_types()) {
+		if (building_type_manager.building_types_are_locked()) {
+			for (BuildingType const& building_type : building_type_manager.get_building_types()) {
 				if (building_type.get_in_province()) {
 					ret &= buildings.add_item({ building_type });
 				}

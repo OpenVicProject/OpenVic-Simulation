@@ -59,10 +59,7 @@ bool CountryHistoryMap::_load_history_entry(
 		"primary_culture", ZERO_OR_ONE,
 			culture_manager.expect_culture_identifier(assign_variable_callback_pointer(entry.primary_culture)),
 		"culture", ZERO_OR_MORE, culture_manager.expect_culture_identifier(
-			[&entry](Culture const& culture) -> bool {
-				entry.accepted_cultures.push_back(&culture);
-				return true;
-			}
+			vector_callback_pointer(entry.accepted_cultures)
 		),
 		"religion", ZERO_OR_ONE, game_manager.get_pop_manager().get_religion_manager().expect_religion_identifier(
 			assign_variable_callback_pointer(entry.religion)

@@ -349,17 +349,13 @@ bool Dataloader::_load_rebel_types(GameManager& game_manager) const {
 	PoliticsManager& politics_manager = game_manager.get_politics_manager();
 	RebelManager& rebel_manager = politics_manager.get_rebel_manager();
 
-	bool ret = rebel_manager.load_rebels_file(
-		politics_manager.get_ideology_manager(),
-		politics_manager.get_government_type_manager(),
-		parse_defines(lookup_file(rebel_types_file)).get_file_node()
-	);
+	bool ret = politics_manager.load_rebels_file(parse_defines(lookup_file(rebel_types_file)).get_file_node());
 
 	if(!rebel_manager.generate_modifiers(game_manager.get_modifier_manager())) {
 		Logger::error("Failed to generate rebel type-based modifiers!");
 		ret &= false;
 	}
-	
+
 	return ret;
 }
 
@@ -396,7 +392,7 @@ bool Dataloader::_load_technologies(GameManager& game_manager) const {
 			return technology_manager.load_technologies_file(
 				modifier_manager,
 				game_manager.get_military_manager().get_unit_manager(),
-				game_manager.get_economy_manager().get_building_manager(),
+				game_manager.get_economy_manager().get_building_type_manager(),
 				parse_defines(file).get_file_node()
 			);
 		}
@@ -420,12 +416,13 @@ bool Dataloader::_load_inventions(GameManager& game_manager) const {
 			return invention_manager.load_inventions_file(
 				game_manager.get_modifier_manager(),
 				game_manager.get_military_manager().get_unit_manager(),
-				game_manager.get_economy_manager().get_building_manager(),
+				game_manager.get_economy_manager().get_building_type_manager(),
+				game_manager.get_crime_manager(),
 				parse_defines(file).get_file_node()
 			);
 		}
 	);
-	
+
 	invention_manager.lock_inventions();
 
 	return ret;
@@ -491,7 +488,9 @@ bool Dataloader::_load_history(GameManager& game_manager, bool unused_history_fi
 	ret &= apply_to_files(
 		lookup_files_in_dir(diplomacy_history_directory, ".txt"),
 		[this, &game_manager](fs::path const& file) -> bool {
-			return game_manager.get_history_manager().get_diplomacy_manager().load_diplomacy_history_file(game_manager, parse_defines(file).get_file_node());
+			return game_manager.get_history_manager().get_diplomacy_manager().load_diplomacy_history_file(
+				game_manager.get_country_manager(), parse_defines(file).get_file_node()
+			);
 		}
 	);
 	static constexpr std::string_view war_history_directory = "history/wars";
@@ -548,18 +547,10 @@ bool Dataloader::_load_map_dir(GameManager& game_manager) const {
 
 	bool ret = expect_dictionary_keys(
 		"max_provinces", ONE_EXACTLY,
-			expect_uint<Province::index_t>(
-				std::bind(&Map::set_max_provinces, &map, std::placeholders::_1)
-			),
+			expect_uint<Province::index_t>(std::bind_front(&Map::set_max_provinces, &map)),
 		"sea_starts", ONE_EXACTLY,
 			expect_list_reserve_length(
-				water_province_identifiers,
-				expect_identifier(
-					[&water_province_identifiers](std::string_view identifier) -> bool {
-						water_province_identifiers.push_back(identifier);
-						return true;
-					}
-				)
+				water_province_identifiers, expect_identifier(vector_callback(water_province_identifiers))
 			),
 
 #define MAP_PATH_DICT_ENTRY(X) #X, ONE_EXACTLY, expect_string(assign_variable_callback(X)),
@@ -584,7 +575,7 @@ bool Dataloader::_load_map_dir(GameManager& game_manager) const {
 	}
 
 	if (!map.load_province_positions(
-		game_manager.get_economy_manager().get_building_manager(),
+		game_manager.get_economy_manager().get_building_type_manager(),
 		parse_defines(lookup_file(append_string_views(map_directory, positions))).get_file_node()
 	)) {
 		Logger::error("Failed to load province positions file!");
@@ -744,8 +735,8 @@ bool Dataloader::load_defines(GameManager& game_manager) const {
 	if (!_load_technologies(game_manager)) {
 		ret = false;
 	}
-	if (!game_manager.get_modifier_manager().load_crime_modifiers(
-		parse_defines(lookup_file(crime_modifiers_file)).get_file_node()
+	if (!game_manager.get_crime_manager().load_crime_modifiers(
+		game_manager.get_modifier_manager(), parse_defines(lookup_file(crime_modifiers_file)).get_file_node()
 	)) {
 		Logger::error("Failed to load crime modifiers!");
 		ret = false;
