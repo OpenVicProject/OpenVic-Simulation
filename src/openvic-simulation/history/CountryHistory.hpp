@@ -1,6 +1,7 @@
 #pragma once
 
 #include <map>
+#include <unordered_map>
 #include <vector>
 
 #include "openvic-simulation/country/Country.hpp"
@@ -16,6 +17,8 @@
 #include "openvic-simulation/pop/Religion.hpp"
 #include "openvic-simulation/types/Colour.hpp"
 #include "openvic-simulation/types/Date.hpp"
+#include "openvic-simulation/research/Invention.hpp"
+#include "openvic-simulation/research/Technology.hpp"
 
 namespace OpenVic {
 	struct CountryHistoryMap;
@@ -40,8 +43,10 @@ namespace OpenVic {
 		std::optional<fixed_point_t> PROPERTY(prestige);
 		std::vector<Reform const*> PROPERTY(reforms);
 		std::optional<Deployment const*> PROPERTY(inital_oob);
-		// TODO: technologies, tech schools, and inventions when PR#51 merged
-		// TODO: starting foreign investment
+		std::optional<TechnologySchool const*> PROPERTY(tech_school);
+		std::map<Technology const*, bool> PROPERTY(technologies);
+		std::map<Invention const*, bool> PROPERTY(inventions);
+		fixed_point_map_t<Country const*> PROPERTY(foreign_investment);
 
 		CountryHistoryEntry(Country const& new_country, Date new_date);
 	};
