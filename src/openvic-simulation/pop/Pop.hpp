@@ -27,9 +27,8 @@ namespace OpenVic {
 		pop_size_t PROPERTY(num_demoted);
 		pop_size_t PROPERTY(num_migrated);
 
-		Pop(PopType const& new_type, Culture const& new_culture, Religion const& new_religion, pop_size_t new_size);
-
 	public:
+		Pop(PopType const& new_type, Culture const& new_culture, Religion const& new_religion, pop_size_t new_size);
 		Pop(Pop const&) = delete;
 		Pop(Pop&&) = default;
 		Pop& operator=(Pop const&) = delete;
@@ -111,6 +110,5 @@ namespace OpenVic {
 		bool load_pop_type_file(
 			std::string_view filestem, UnitManager const& unit_manager, GoodManager const& good_manager, ast::NodeCPtr root
 		);
-		bool load_pop_into_province(Province& province, std::string_view pop_type_identifier, ast::NodeCPtr pop_node) const;
 	};
 }

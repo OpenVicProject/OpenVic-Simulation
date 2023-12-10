@@ -156,28 +156,3 @@ bool PopManager::load_pop_type_file(
 	);
 	return ret;
 }
-
-bool PopManager::load_pop_into_province(Province& province, std::string_view pop_type_identifier, ast::NodeCPtr pop_node)
-	const {
-	PopType const* type = get_pop_type_by_identifier(pop_type_identifier);
-	Culture const* culture = nullptr;
-	Religion const* religion = nullptr;
-	Pop::pop_size_t size = 0;
-	bool ret = expect_dictionary_keys(
-		"culture", ONE_EXACTLY, culture_manager.expect_culture_identifier(assign_variable_callback_pointer(culture)),
-		"religion", ONE_EXACTLY, religion_manager.expect_religion_identifier(assign_variable_callback_pointer(religion)),
-		"size", ONE_EXACTLY, expect_uint(assign_variable_callback(size)),
-		"militancy", ZERO_OR_ONE, success_callback,
-		"rebel_type", ZERO_OR_ONE, success_callback
-	)(pop_node);
-
-	if (type != nullptr && culture != nullptr && religion != nullptr && size > 0) {
-		ret &= province.add_pop({ *type, *culture, *religion, size });
-	} else {
-		Logger::warning(
-			"Some pop arguments are invalid: province = ", province, ", type = ", type, ", culture = ", culture,
-			", religion = ", religion, ", size = ", size
-		);
-	}
-	return ret;
-}

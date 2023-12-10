@@ -1,5 +1,6 @@
 #include "Dataloader.hpp"
 
+#include <filesystem>
 #include <openvic-dataloader/csv/Parser.hpp>
 #include <openvic-dataloader/detail/CallbackOStream.hpp>
 #include <openvic-dataloader/v2script/Parser.hpp>
@@ -498,6 +499,25 @@ bool Dataloader::_load_history(GameManager& game_manager, bool unused_history_fi
 			);
 		}
 	);
+
+	/* Pop History */
+	static constexpr std::string_view pop_history_directory = "history/pops";
+	for (fs::path root : roots) {
+		fs::path concat = root / pop_history_directory;
+		for (fs::path dir : fs::directory_iterator(concat)) {
+			const Date date = Date::from_string(dir.filename().string());
+			ret &= apply_to_files(
+				lookup_basic_indentifier_prefixed_files_in_dir_recursive(dir.string(), ".txt"),
+				[this, &game_manager, &date](fs::path const& file) -> bool {
+					const std::string filename = file.stem().string();
+					return game_manager.get_history_manager().get_province_manager().load_pop_history_file(
+						game_manager, date, parse_defines(file).get_file_node()
+					);
+				}
+			);
+		}
+	}
+
 	game_manager.get_history_manager().get_province_manager().lock_province_histories(game_manager.get_map(), false);
 
 	static constexpr std::string_view diplomacy_history_directory = "history/diplomacy";
@@ -835,19 +855,6 @@ bool Dataloader::load_defines(GameManager& game_manager) const {
 	}
 
 	return ret;
-}
-
-bool Dataloader::load_pop_history(GameManager& game_manager, std::string_view path) const {
-	return apply_to_files(
-		lookup_files_in_dir(path, ".txt"),
-		[&game_manager](fs::path const& file) -> bool {
-			return game_manager.get_map().expect_province_dictionary(
-				[&game_manager](Province& province, ast::NodeCPtr value) -> bool {
-					return province.load_pop_list(game_manager.get_pop_manager(), value);
-				}
-			)(parse_defines(file).get_file_node());
-		}
-	);
 }
 
 static bool _load_localisation_file(Dataloader::localisation_callback_t callback, std::vector<csv::LineObject> const& lines) {

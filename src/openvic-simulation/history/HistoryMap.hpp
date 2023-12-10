@@ -27,8 +27,6 @@ namespace OpenVic {
 		using entry_type = _Entry;
 
 	private:
-		std::map<Date, std::unique_ptr<entry_type>> PROPERTY(entries);
-
 		bool _try_load_history_entry(GameManager const& game_manager, Args... args, Date date, ast::NodeCPtr root) {
 			const Date end_date = _get_end_date(game_manager);
 			if (date > end_date) {
@@ -49,6 +47,8 @@ namespace OpenVic {
 		}
 
 	protected:
+		std::map<Date, std::unique_ptr<entry_type>> PROPERTY_ACCESS(entries, protected);
+
 		HistoryMap() = default;
 
 		virtual std::unique_ptr<entry_type> _make_entry(Date date) const = 0;

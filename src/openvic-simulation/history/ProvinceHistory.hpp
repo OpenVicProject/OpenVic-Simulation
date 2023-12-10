@@ -17,6 +17,7 @@ namespace OpenVic {
 
 	struct ProvinceHistoryEntry : HistoryEntry {
 		friend struct ProvinceHistoryMap;
+		friend struct ProvinceHistoryManager;
 
 	private:
 		Province const& PROPERTY(province);
@@ -33,8 +34,10 @@ namespace OpenVic {
 		std::map<BuildingType const*, BuildingType::level_t> PROPERTY(province_buildings);
 		std::map<BuildingType const*, BuildingType::level_t> PROPERTY(state_buildings);
 		fixed_point_map_t<Ideology const*> PROPERTY(party_loyalties);
+		std::vector<Pop> PROPERTY(pops);
 
 		ProvinceHistoryEntry(Province const& new_province, Date new_date);
+		bool _load_province_pop_history(PopManager const& pop_manager, ast::NodeCPtr root);
 	};
 
 	struct ProvinceHistoryManager;
@@ -44,6 +47,8 @@ namespace OpenVic {
 
 	private:
 		Province const& PROPERTY(province);
+
+		ProvinceHistoryEntry* _get_entry(Date date);
 
 	protected:
 		ProvinceHistoryMap(Province const& new_province);
@@ -66,5 +71,6 @@ namespace OpenVic {
 		ProvinceHistoryMap const* get_province_history(Province const* province) const;
 
 		bool load_province_history_file(GameManager const& game_manager, Province const& province, ast::NodeCPtr root);
+		bool load_pop_history_file(GameManager const& game_manager, Date date, ast::NodeCPtr root);
 	};
 } // namespace OpenVic

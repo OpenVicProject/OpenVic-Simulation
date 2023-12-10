@@ -2,6 +2,7 @@
 
 #include "openvic-simulation/GameManager.hpp"
 #include "openvic-simulation/dataloader/NodeTools.hpp"
+#include <memory>
 
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;
@@ -13,6 +14,37 @@ ProvinceHistoryMap::ProvinceHistoryMap(Province const& new_province) : province 
 
 std::unique_ptr<ProvinceHistoryEntry> ProvinceHistoryMap::_make_entry(Date date) const {
 	return std::unique_ptr<ProvinceHistoryEntry> { new ProvinceHistoryEntry { province, date } };
+}
+
+ProvinceHistoryEntry* ProvinceHistoryMap::_get_entry(Date date) {
+	return entries.at(date).get();
+}
+
+bool ProvinceHistoryEntry::_load_province_pop_history(PopManager const& pop_manager, ast::NodeCPtr root) {
+	return pop_manager.expect_pop_type_dictionary([this, &pop_manager](PopType const& type, ast::NodeCPtr pop_node) -> bool {
+			CultureManager const& culture_manager = pop_manager.get_culture_manager();
+			ReligionManager const& religion_manager = pop_manager.get_religion_manager();
+			Culture const* culture = nullptr;
+			Religion const* religion = nullptr;
+			Pop::pop_size_t size = 0;
+			bool ret = expect_dictionary_keys(
+				"culture", ONE_EXACTLY, culture_manager.expect_culture_identifier(assign_variable_callback_pointer(culture)),
+				"religion", ONE_EXACTLY, religion_manager.expect_religion_identifier(assign_variable_callback_pointer(religion)),
+				"size", ONE_EXACTLY, expect_uint(assign_variable_callback(size)),
+				"militancy", ZERO_OR_ONE, success_callback,
+				"rebel_type", ZERO_OR_ONE, success_callback
+			)(pop_node);
+			if (culture != nullptr && religion != nullptr && size > 0) {
+				pops.emplace_back(Pop { type, *culture, *religion, size });
+			} else {
+				Logger::warning(
+					"Some pop arguments are invalid: province = ", province, ", type = ", type, ", culture = ", culture,
+					", religion = ", religion, ", size = ", size
+				);
+			}
+			return ret;
+		}
+	)(root);
 }
 
 bool ProvinceHistoryMap::_load_history_entry(
@@ -160,4 +192,16 @@ bool ProvinceHistoryManager::load_province_history_file(
 	ProvinceHistoryMap& province_history = it->second;
 
 	return province_history._load_history_file(game_manager, root);
+}
+
+bool ProvinceHistoryManager::load_pop_history_file(GameManager const& game_manager, Date date, ast::NodeCPtr root) {
+	PopManager const& pop_manager = game_manager.get_pop_manager();
+	return game_manager.get_map().expect_province_dictionary([this, &pop_manager, date](Province const& province, ast::NodeCPtr node) -> bool {
+		if (province_histories.contains(&province)) {
+			ProvinceHistoryEntry* entry = province_histories.at(&province)._get_entry(date);
+			return entry != nullptr
+				? entry->_load_province_pop_history(pop_manager, node)
+				: false;
+		} else return false;
+	})(root);
 }

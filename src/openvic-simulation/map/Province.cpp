@@ -58,14 +58,6 @@ bool Province::expand_building(std::string_view building_type_identifier) {
 	return building->expand();
 }
 
-bool Province::load_pop_list(PopManager const& pop_manager, ast::NodeCPtr root) {
-	return expect_dictionary_reserve_length(pops,
-		[this, &pop_manager](std::string_view pop_type_identifier, ast::NodeCPtr pop_node) -> bool {
-			return pop_manager.load_pop_into_province(*this, pop_type_identifier, pop_node);
-		}
-	)(root);
-}
-
 bool Province::add_pop(Pop&& pop) {
 	if (!get_water()) {
 		pops.push_back(std::move(pop));
