@@ -40,7 +40,7 @@ PopType::PopType(
 	assert(merge_max_size >= 0);
 }
 
-PopManager::PopManager() : pop_types { "pop types" }, slave_sprite { 0 }, administrative_sprite { 0 } {}
+PopManager::PopManager() : slave_sprite { 0 }, administrative_sprite { 0 } {}
 
 bool PopManager::add_pop_type(
 	std::string_view identifier, colour_t colour, PopType::strata_t strata, PopType::sprite_t sprite,

@@ -66,7 +66,7 @@ namespace OpenVic {
 
 	struct ProductionTypeManager {
 	private:
-		IdentifierRegistry<ProductionType> production_types;
+		IdentifierRegistry<ProductionType> IDENTIFIER_REGISTRY(production_type);
 		PopType::sprite_t PROPERTY(rgo_owner_sprite);
 
 		NodeTools::node_callback_t _expect_employed_pop(
@@ -81,7 +81,6 @@ namespace OpenVic {
 		ProductionTypeManager();
 
 		bool add_production_type(PRODUCTION_TYPE_ARGS);
-		IDENTIFIER_REGISTRY_ACCESSORS(production_type)
 
 		bool load_production_types_file(GoodManager const& good_manager, PopManager const& pop_manager, ast::NodeCPtr root);
 	};

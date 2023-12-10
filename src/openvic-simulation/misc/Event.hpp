@@ -65,11 +65,9 @@ namespace OpenVic {
 
 	struct EventManager {
 	private:
-		IdentifierRegistry<Event> events;
+		IdentifierRegistry<Event> IDENTIFIER_REGISTRY(event);
 
 	public:
-		EventManager();
-
 		bool register_event(
 			std::string_view identifier, std::string_view title, std::string_view description, std::string_view image,
 			Event::event_type_t type, bool triggered_only, bool major, bool fire_only_once, bool allows_multiple_instances,
@@ -77,7 +75,6 @@ namespace OpenVic {
 			std::string_view news_desc_short, bool election, IssueGroup const* election_issue_group,
 			std::vector<Event::EventOption>&& options
 		);
-		IDENTIFIER_REGISTRY_ACCESSORS(event);
 
 		bool load_event_file(IssueManager const& issue_manager, ast::NodeCPtr root);
 	};

@@ -84,11 +84,11 @@ namespace OpenVic {
 	// Issue manager - holds the registries
 	struct IssueManager {
 	private:
-		IdentifierRegistry<IssueGroup> issue_groups;
-		IdentifierRegistry<Issue> issues;
-		IdentifierRegistry<ReformType> reform_types;
-		IdentifierRegistry<ReformGroup> reform_groups;
-		IdentifierRegistry<Reform> reforms;
+		IdentifierRegistry<IssueGroup> IDENTIFIER_REGISTRY(issue_group);
+		IdentifierRegistry<Issue> IDENTIFIER_REGISTRY(issue);
+		IdentifierRegistry<ReformType> IDENTIFIER_REGISTRY(reform_type);
+		IdentifierRegistry<ReformGroup> IDENTIFIER_REGISTRY(reform_group);
+		IdentifierRegistry<Reform> IDENTIFIER_REGISTRY(reform);
 
 		bool _load_issue_group(size_t& expected_issues, std::string_view identifier, ast::NodeCPtr node);
 		bool _load_issue(std::string_view identifier, IssueGroup const* group, ast::NodeCPtr node);
@@ -98,22 +98,15 @@ namespace OpenVic {
 		bool _load_reform(size_t& ordinal, std::string_view identifier, ReformGroup const* group, ast::NodeCPtr node);
 
 	public:
-		IssueManager();
-
 		bool add_issue_group(std::string_view identifier);
-		IDENTIFIER_REGISTRY_ACCESSORS(issue_group)
 
 		bool add_issue(std::string_view identifier, IssueGroup const* group);
-		IDENTIFIER_REGISTRY_ACCESSORS(issue)
 
 		bool add_reform_type(std::string_view identifier, bool uncivilised);
-		IDENTIFIER_REGISTRY_ACCESSORS(reform_type)
 
 		bool add_reform_group(std::string_view identifier, ReformType const* type, bool ordered, bool administrative);
-		IDENTIFIER_REGISTRY_ACCESSORS(reform_group)
 
 		bool add_reform(std::string_view identifier, ReformGroup const* group, size_t ordinal);
-		IDENTIFIER_REGISTRY_ACCESSORS(reform)
 
 		bool load_issues_file(ast::NodeCPtr root);
 	};

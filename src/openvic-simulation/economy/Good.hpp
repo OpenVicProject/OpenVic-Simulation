@@ -63,20 +63,16 @@ namespace OpenVic {
 
 	struct GoodManager {
 	private:
-		IdentifierRegistry<GoodCategory> good_categories;
-		IdentifierRegistry<Good> goods;
+		IdentifierRegistry<GoodCategory> IDENTIFIER_REGISTRY_CUSTOM_PLURAL(good_category, good_categories);
+		IdentifierRegistry<Good> IDENTIFIER_REGISTRY(good);
 
 	public:
-		GoodManager();
-
 		bool add_good_category(std::string_view identifier);
-		IDENTIFIER_REGISTRY_ACCESSORS_CUSTOM_PLURAL(good_category, good_categories)
 
 		bool add_good(
 			std::string_view identifier, colour_t colour, GoodCategory const& category, Good::price_t base_price,
 			bool available_from_start, bool tradeable, bool money, bool overseas_penalty
 		);
-		IDENTIFIER_REGISTRY_ACCESSORS(good)
 
 		void reset_to_defaults();
 		bool load_goods_file(ast::NodeCPtr root);

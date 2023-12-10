@@ -30,17 +30,14 @@ namespace OpenVic {
 
 	struct DecisionManager {
 	private:
-		IdentifierRegistry<Decision> decisions;
+		IdentifierRegistry<Decision> IDENTIFIER_REGISTRY(decision);
 
 	public:
-		DecisionManager();
-
 		bool add_decision(
 			std::string_view identifier, bool alert, bool news, std::string_view news_title,
 			std::string_view news_desc_long, std::string_view news_desc_medium,
 			std::string_view news_desc_short, std::string_view picture
 		);
-		IDENTIFIER_REGISTRY_ACCESSORS(decision)
 
 		bool load_decision_file(ast::NodeCPtr root);
 	};

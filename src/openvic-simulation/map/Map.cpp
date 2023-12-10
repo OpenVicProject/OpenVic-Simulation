@@ -25,8 +25,6 @@ Mapmode::base_stripe_t Mapmode::get_base_stripe_colours(Map const& map, Province
 	return colour_func ? colour_func(map, province) : NULL_COLOUR;
 }
 
-Map::Map() : provinces { "provinces" }, regions { "regions" }, mapmodes { "mapmodes" } {}
-
 bool Map::add_province(std::string_view identifier, colour_t colour) {
 	if (provinces.size() >= max_provinces) {
 		Logger::error(

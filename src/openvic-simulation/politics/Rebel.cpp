@@ -16,8 +16,6 @@ RebelType::RebelType(
 	allow_all_ideologies { allow_all_ideologies }, resilient { resilient }, reinforcing { reinforcing }, general { general },
 	smart { smart }, unit_transfer { unit_transfer }, occupation_mult { occupation_mult } {}
 
-RebelManager::RebelManager() : rebel_types { "rebel types" } {}
-
 bool RebelManager::add_rebel_type(
 	std::string_view new_identifier, RebelType::icon_t icon, RebelType::area_t area, bool break_alliance_on_win,
 	RebelType::government_map_t&& desired_governments, RebelType::defection_t defection,

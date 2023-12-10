@@ -58,7 +58,7 @@ namespace OpenVic {
 		/* Not const to allow elements to be moved, otherwise a copy is forced
 		 * which causes a compile error as the copy constructor has been deleted.
 		 */
-		IdentifierRegistry<CountryParty> parties;
+		IdentifierRegistry<CountryParty> IDENTIFIER_REGISTRY_CUSTOM_PLURAL(party, parties);
 		const unit_names_map_t PROPERTY(unit_names);
 		const bool PROPERTY_CUSTOM_PREFIX(dynamic_tag, is);
 		const government_colour_map_t PROPERTY(alternative_colours);
@@ -72,28 +72,23 @@ namespace OpenVic {
 	public:
 		Country(Country&&) = default;
 
-		IDENTIFIER_REGISTRY_ACCESSORS_CUSTOM_PLURAL(party, parties)
-
 		// TODO - get_colour including alternative colours
 	};
 
 	struct CountryManager {
 	private:
-		IdentifierRegistry<Country> countries;
+		IdentifierRegistry<Country> IDENTIFIER_REGISTRY_CUSTOM_PLURAL(country, countries);
 
 		NodeTools::node_callback_t load_country_party(
 			PoliticsManager const& politics_manager, IdentifierRegistry<CountryParty>& country_parties
 		) const;
 
 	public:
-		CountryManager();
-
 		bool add_country(
 			std::string_view identifier, colour_t colour, GraphicalCultureType const* graphical_culture,
 			IdentifierRegistry<CountryParty>&& parties, Country::unit_names_map_t&& unit_names, bool dynamic_tag,
 			Country::government_colour_map_t&& alternative_colours
 		);
-		IDENTIFIER_REGISTRY_ACCESSORS_CUSTOM_PLURAL(country, countries)
 
 		bool load_countries(GameManager const& game_manager, Dataloader const& dataloader, ast::NodeCPtr root);
 		bool load_country_data_file(

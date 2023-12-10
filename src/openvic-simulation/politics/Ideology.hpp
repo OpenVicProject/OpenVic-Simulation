@@ -37,20 +37,16 @@ namespace OpenVic {
 
 	struct IdeologyManager {
 	private:
-		IdentifierRegistry<IdeologyGroup> ideology_groups;
-		IdentifierRegistry<Ideology> ideologies;
+		IdentifierRegistry<IdeologyGroup> IDENTIFIER_REGISTRY(ideology_group);
+		IdentifierRegistry<Ideology> IDENTIFIER_REGISTRY_CUSTOM_PLURAL(ideology, ideologies);
 
 	public:
-		IdeologyManager();
-
 		bool add_ideology_group(std::string_view identifier);
-		IDENTIFIER_REGISTRY_ACCESSORS(ideology_group)
 
 		bool add_ideology(
 			std::string_view identifier, colour_t colour, IdeologyGroup const* group, bool uncivilised,
 			bool can_reduce_militancy, Date spawn_date
 		);
-		IDENTIFIER_REGISTRY_ACCESSORS_CUSTOM_PLURAL(ideology, ideologies)
 
 		bool load_ideology_file(ast::NodeCPtr root);
 	};

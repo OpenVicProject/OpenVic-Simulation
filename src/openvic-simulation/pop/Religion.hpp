@@ -38,19 +38,15 @@ namespace OpenVic {
 
 	struct ReligionManager {
 	private:
-		IdentifierRegistry<ReligionGroup> religion_groups;
-		IdentifierRegistry<Religion> religions;
+		IdentifierRegistry<ReligionGroup> IDENTIFIER_REGISTRY(religion_group);
+		IdentifierRegistry<Religion> IDENTIFIER_REGISTRY(religion);
 
 	public:
-		ReligionManager();
-
 		bool add_religion_group(std::string_view identifier);
-		IDENTIFIER_REGISTRY_ACCESSORS(religion_group)
 
 		bool add_religion(
 			std::string_view identifier, colour_t colour, ReligionGroup const& group, Religion::icon_t icon, bool pagan
 		);
-		IDENTIFIER_REGISTRY_ACCESSORS(religion)
 
 		bool load_religion_file(ast::NodeCPtr root);
 	};

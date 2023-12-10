@@ -14,8 +14,6 @@ Religion::Religion(
 	assert(icon > 0);
 }
 
-ReligionManager::ReligionManager() : religion_groups { "religion groups" }, religions { "religions" } {}
-
 bool ReligionManager::add_religion_group(std::string_view identifier) {
 	if (identifier.empty()) {
 		Logger::error("Invalid religion group identifier - empty!");

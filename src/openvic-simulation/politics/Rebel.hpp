@@ -65,12 +65,9 @@ namespace OpenVic {
 
 	struct RebelManager {
 	private:
-		IdentifierRegistry<RebelType> rebel_types;
+		IdentifierRegistry<RebelType> IDENTIFIER_REGISTRY(rebel_type);
 
 	public:
-		RebelManager();
-
-		IDENTIFIER_REGISTRY_ACCESSORS(rebel_type)
 		bool add_rebel_type(
 			std::string_view new_identifier, RebelType::icon_t icon, RebelType::area_t area, bool break_alliance_on_win,
 			RebelType::government_map_t&& desired_governments, RebelType::defection_t defection,

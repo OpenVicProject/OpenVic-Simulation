@@ -16,8 +16,6 @@ Invention::Invention(
 	enabled_crimes { std::move(new_enabled_crimes) }, unlock_gas_attack { new_unlock_gas_attack },
 	unlock_gas_defence { new_unlock_gas_defence } {} //TODO icon
 
-InventionManager::InventionManager() : inventions { "inventions" } {}
-
 bool InventionManager::add_invention(
 	std::string_view identifier, ModifierValue&& values, bool news, Invention::unit_set_t&& activated_units,
 	Invention::building_set_t&& activated_buildings, Invention::crime_set_t&& enabled_crimes,

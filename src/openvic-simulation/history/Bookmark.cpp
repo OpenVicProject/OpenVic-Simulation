@@ -16,8 +16,6 @@ Bookmark::Bookmark(
 ) : HasIdentifier { std::to_string(new_index) }, name { new_name }, description { new_description }, date { new_date },
 	initial_camera_x { new_initial_camera_x }, initial_camera_y { new_initial_camera_y } {}
 
-BookmarkManager::BookmarkManager() : bookmarks { "bookmarks" } {}
-
 bool BookmarkManager::add_bookmark(
 	std::string_view name, std::string_view description, Date date, uint32_t initial_camera_x, uint32_t initial_camera_y
 ) {

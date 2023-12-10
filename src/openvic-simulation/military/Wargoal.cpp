@@ -33,8 +33,6 @@ WargoalType::WargoalType(
 	modifiers { std::move(new_modifiers) },
 	peace_options { new_peace_options } {}
 
-WargoalTypeManager::WargoalTypeManager() : wargoal_types { "wargoal types" } {}
-
 const std::vector<WargoalType const*>& WargoalTypeManager::get_peace_priority_list() const {
 	return peace_priorities;
 }

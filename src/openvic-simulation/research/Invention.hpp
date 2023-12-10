@@ -38,18 +38,14 @@ namespace OpenVic {
 	};
 
 	struct InventionManager {
-		IdentifierRegistry<Invention> inventions;
+		IdentifierRegistry<Invention> IDENTIFIER_REGISTRY(invention);
 
 	public:
-		InventionManager();
-
 		bool add_invention(
 			std::string_view identifier, ModifierValue&& values, bool news, Invention::unit_set_t&& activated_units,
 			Invention::building_set_t&& activated_buildings, Invention::crime_set_t&& enabled_crimes, bool unlock_gas_attack,
 			bool unlock_gas_defence
 		);
-
-		IDENTIFIER_REGISTRY_ACCESSORS(invention)
 
 		bool load_inventions_file(
 			ModifierManager const& modifier_manager, UnitManager const& unit_manager,

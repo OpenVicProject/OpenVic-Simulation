@@ -6,8 +6,6 @@ using namespace OpenVic::NodeTools;
 Crime::Crime(std::string_view new_identifier, ModifierValue&& new_values, icon_t new_icon, bool new_default_active)
   : TriggeredModifier { new_identifier, std::move(new_values), new_icon }, default_active { new_default_active } {}
 
-CrimeManager::CrimeManager() : crime_modifiers { "crime modifiers" } {}
-
 bool CrimeManager::add_crime_modifier(
 	std::string_view identifier, ModifierValue&& values, Modifier::icon_t icon, bool default_active
 ) {

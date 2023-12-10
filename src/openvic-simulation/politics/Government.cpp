@@ -1,7 +1,5 @@
 #include "Government.hpp"
 
-#include "openvic-simulation/GameManager.hpp"
-
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;
 
@@ -15,8 +13,6 @@ GovernmentType::GovernmentType(
 bool GovernmentType::is_ideology_compatible(Ideology const* ideology) const {
 	return std::find(ideologies.begin(), ideologies.end(), ideology) != ideologies.end();
 }
-
-GovernmentTypeManager::GovernmentTypeManager() : government_types { "government types" } {}
 
 bool GovernmentTypeManager::add_government_type(
 	std::string_view identifier, std::vector<Ideology const*>&& ideologies, bool elections, bool appoint_ruling_party,

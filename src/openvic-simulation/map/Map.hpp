@@ -53,9 +53,9 @@ namespace OpenVic {
 	private:
 		using colour_index_map_t = std::map<colour_t, Province::index_t>;
 
-		IdentifierRegistry<Province> provinces;
-		IdentifierRegistry<Region> regions;
-		IdentifierRegistry<Mapmode> mapmodes;
+		IdentifierRegistry<Province> IDENTIFIER_REGISTRY_CUSTOM_INDEX_OFFSET(province, 1);
+		IdentifierRegistry<Region> IDENTIFIER_REGISTRY(region);
+		IdentifierRegistry<Mapmode> IDENTIFIER_REGISTRY(mapmode);
 		ProvinceSet water_provinces;
 		TerrainTypeManager PROPERTY_REF(terrain_type_manager);
 
@@ -73,10 +73,7 @@ namespace OpenVic {
 		StateManager PROPERTY_REF(state_manager);
 
 	public:
-		Map();
-
 		bool add_province(std::string_view identifier, colour_t colour);
-		IDENTIFIER_REGISTRY_ACCESSORS_CUSTOM_INDEX_OFFSET(province, 1)
 		IDENTIFIER_REGISTRY_NON_CONST_ACCESSORS_CUSTOM_INDEX_OFFSET(province, 1);
 
 		bool set_water_province(std::string_view identifier);
@@ -95,11 +92,9 @@ namespace OpenVic {
 		std::vector<shape_pixel_t> const& get_province_shape_image() const;
 
 		bool add_region(std::string_view identifier, std::vector<std::string_view> const& province_identifiers);
-		IDENTIFIER_REGISTRY_ACCESSORS(region)
 		IDENTIFIER_REGISTRY_NON_CONST_ACCESSORS(region)
 
 		bool add_mapmode(std::string_view identifier, Mapmode::colour_func_t colour_func);
-		IDENTIFIER_REGISTRY_ACCESSORS(mapmode)
 
 		/* The mapmode colour image contains of a list of base colours and stripe colours. Each colour is four bytes
 		 * in RGBA format, with the alpha value being used to interpolate with the terrain colour, so A = 0 is fully terrain

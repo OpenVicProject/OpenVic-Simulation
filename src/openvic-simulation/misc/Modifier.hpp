@@ -110,12 +110,12 @@ namespace OpenVic {
 		 * so instead we use an IdentifierInstanceRegistry (using std::unique_ptr's under the hood).
 		 */
 	private:
-		IdentifierInstanceRegistry<ModifierEffect> modifier_effects;
+		IdentifierInstanceRegistry<ModifierEffect> IDENTIFIER_REGISTRY(modifier_effect);
 		string_set_t complex_modifiers;
 
-		IdentifierRegistry<Modifier> event_modifiers;
-		IdentifierRegistry<Modifier> static_modifiers;
-		IdentifierRegistry<TriggeredModifier> triggered_modifiers;
+		IdentifierRegistry<Modifier> IDENTIFIER_REGISTRY(event_modifier);
+		IdentifierRegistry<Modifier> IDENTIFIER_REGISTRY(static_modifier);
+		IdentifierRegistry<TriggeredModifier> IDENTIFIER_REGISTRY(triggered_modifier);
 
 		/* effect_validator takes in ModifierEffect const& */
 		NodeTools::key_value_callback_t _modifier_effect_callback(
@@ -124,28 +124,22 @@ namespace OpenVic {
 		) const;
 
 	public:
-		ModifierManager();
-
 		bool add_modifier_effect(
 			std::string_view identifier, bool positive_good,
 			ModifierEffect::format_t format = ModifierEffect::format_t::PROPORTION_DECIMAL
 		);
-		IDENTIFIER_REGISTRY_ACCESSORS(modifier_effect)
 
 		void register_complex_modifier(std::string_view identifier);
 
 		bool setup_modifier_effects();
 
 		bool add_event_modifier(std::string_view identifier, ModifierValue&& values, Modifier::icon_t icon);
-		IDENTIFIER_REGISTRY_ACCESSORS(event_modifier)
 		bool load_event_modifiers(ast::NodeCPtr root);
 
 		bool add_static_modifier(std::string_view identifier, ModifierValue&& values);
-		IDENTIFIER_REGISTRY_ACCESSORS(static_modifier)
 		bool load_static_modifiers(ast::NodeCPtr root);
 
 		bool add_triggered_modifier(std::string_view identifier, ModifierValue&& values, Modifier::icon_t icon);
-		IDENTIFIER_REGISTRY_ACCESSORS(triggered_modifier)
 		bool load_triggered_modifiers(ast::NodeCPtr root);
 
 		NodeTools::node_callback_t expect_validated_modifier_value_and_default(

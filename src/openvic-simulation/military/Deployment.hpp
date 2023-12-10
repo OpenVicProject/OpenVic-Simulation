@@ -90,16 +90,13 @@ namespace OpenVic {
 
 	struct DeploymentManager {
 	private:
-		IdentifierInstanceRegistry<Deployment> deployments;
+		IdentifierInstanceRegistry<Deployment> IDENTIFIER_REGISTRY(deployment);
 		string_set_t missing_oob_files;
 
 	public:
-		DeploymentManager();
-
 		bool add_deployment(
 			std::string_view path, std::vector<Army>&& armies, std::vector<Navy>&& navies, std::vector<Leader>&& leaders
 		);
-		IDENTIFIER_REGISTRY_ACCESSORS(deployment)
 
 		bool load_oob_file(
 			GameManager const& game_manager, Dataloader const& dataloader, std::string_view history_path,

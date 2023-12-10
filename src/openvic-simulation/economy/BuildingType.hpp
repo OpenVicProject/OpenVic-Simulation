@@ -73,13 +73,10 @@ namespace OpenVic {
 		using level_t = BuildingType::level_t; // this is getting ridiculous
 
 	private:
-		IdentifierRegistry<BuildingType> building_types;
+		IdentifierRegistry<BuildingType> IDENTIFIER_REGISTRY(building_type);
 
 	public:
-		BuildingTypeManager();
-
 		bool add_building_type(std::string_view identifier, ARGS);
-		IDENTIFIER_REGISTRY_ACCESSORS(building_type)
 
 		bool load_buildings_file(
 			GoodManager const& good_manager, ProductionTypeManager const& production_type_manager,

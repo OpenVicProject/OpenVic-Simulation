@@ -19,10 +19,6 @@ Technology::Technology(
 TechnologySchool::TechnologySchool(std::string_view new_identifier, ModifierValue&& new_values)
 	: Modifier { new_identifier, std::move(new_values), 0 } {}
 
-TechnologyManager::TechnologyManager()
-  : technology_folders { "technology folders" }, technology_areas { "technology areas" }, technologies { "technologies" },
-	technology_schools { "technology schools" } {}
-
 bool TechnologyManager::add_technology_folder(std::string_view identifier) {
 	if (identifier.empty()) {
 		Logger::error("Invalid technology folder identifier - empty!");

@@ -19,9 +19,6 @@ Culture::Culture(
 ) : HasIdentifierAndColour { new_identifier, new_colour, false, false }, group { new_group },
 	first_names { std::move(new_first_names) }, last_names { std::move(new_last_names) } {}
 
-CultureManager::CultureManager()
-	: graphical_culture_types { "graphical culture types" }, culture_groups { "culture groups" }, cultures { "cultures" } {}
-
 bool CultureManager::add_graphical_culture_type(std::string_view identifier) {
 	if (identifier.empty()) {
 		Logger::error("Invalid culture group identifier - empty!");

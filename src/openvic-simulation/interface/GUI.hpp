@@ -40,10 +40,10 @@ namespace OpenVic::GUI {
 	class Scene : public Named<UIManager const&> {
 		friend std::unique_ptr<Scene> std::make_unique<Scene>();
 
-		NamedInstanceRegistry<Element, UIManager const&> elements;
+		NamedInstanceRegistry<Element, UIManager const&> IDENTIFIER_REGISTRY(scene_element);
 
 	protected:
-		Scene();
+		Scene() = default;
 
 		bool _fill_key_map(NodeTools::key_map_t& key_map, UIManager const& ui_manager) override;
 
@@ -57,13 +57,12 @@ namespace OpenVic::GUI {
 			std::string_view scene_name, NodeTools::callback_t<std::unique_ptr<Scene>&&> callback, UIManager const& ui_manager
 		);
 
-		IDENTIFIER_REGISTRY_ACCESSORS(element)
 	};
 
 	class Window final : public Element {
 		friend std::unique_ptr<Window> std::make_unique<Window>();
 
-		NamedInstanceRegistry<Element, UIManager const&> elements;
+		NamedInstanceRegistry<Element, UIManager const&> IDENTIFIER_REGISTRY(window_element);
 
 		fvec2_t PROPERTY(size);
 		bool PROPERTY(moveable);
@@ -80,8 +79,6 @@ namespace OpenVic::GUI {
 		virtual ~Window() = default;
 
 		OV_DETAIL_GET_TYPE
-
-		IDENTIFIER_REGISTRY_ACCESSORS(element)
 	};
 
 	class Icon final : public Element {
@@ -127,7 +124,7 @@ namespace OpenVic::GUI {
 		// TODO - clicksound
 
 	protected:
-		Button() ;
+		Button();
 
 		bool _fill_key_map(NodeTools::key_map_t& key_map, UIManager const& ui_manager) override;
 

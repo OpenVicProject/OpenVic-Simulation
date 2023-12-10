@@ -111,16 +111,13 @@ namespace OpenVic {
 
 	struct UnitManager {
 	private:
-		IdentifierRegistry<Unit> units;
+		IdentifierRegistry<Unit> IDENTIFIER_REGISTRY(unit);
 
 		bool _check_shared_parameters(std::string_view identifier, UNIT_PARAMS);
 
 	public:
-		UnitManager();
-
 		bool add_land_unit(std::string_view identifier, UNIT_PARAMS, LAND_PARAMS);
 		bool add_naval_unit(std::string_view identifier, UNIT_PARAMS, NAVY_PARAMS);
-		IDENTIFIER_REGISTRY_ACCESSORS(unit)
 
 		static NodeTools::callback_t<std::string_view> expect_type_str(NodeTools::Callback<Unit::type_t> auto callback);
 

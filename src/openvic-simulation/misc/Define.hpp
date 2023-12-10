@@ -30,17 +30,14 @@ namespace OpenVic {
 
 	struct DefineManager {
 	private:
-		IdentifierRegistry<Define> defines;
+		IdentifierRegistry<Define> IDENTIFIER_REGISTRY(define);
 
 		std::optional<Date> start_date;
 		std::optional<Date> end_date;
 
 	public:
-		DefineManager();
-
 		bool add_define(std::string_view name, std::string&& value, Define::Type type);
 		bool add_date_define(std::string_view name, Date date);
-		IDENTIFIER_REGISTRY_ACCESSORS(define)
 
 		Date get_start_date() const;
 		Date get_end_date() const;

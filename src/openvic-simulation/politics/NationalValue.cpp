@@ -6,8 +6,6 @@ using namespace OpenVic::NodeTools;
 NationalValue::NationalValue(std::string_view new_identifier, ModifierValue&& new_modifiers)
 	: HasIdentifier { new_identifier }, modifiers { std::move(new_modifiers) } {}
 
-NationalValueManager::NationalValueManager() : national_values { "national values" } {}
-
 bool NationalValueManager::add_national_value(std::string_view identifier, ModifierValue&& modifiers) {
 	if (identifier.empty()) {
 		Logger::error("Invalid national value identifier - empty!");
