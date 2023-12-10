@@ -14,6 +14,7 @@
 #include "openvic-simulation/pop/Pop.hpp"
 #include "openvic-simulation/research/ResearchManager.hpp"
 #include "openvic-simulation/research/Technology.hpp"
+#include "openvic-simulation/misc/Event.hpp"
 
 namespace OpenVic {
 	struct GameManager {
@@ -31,6 +32,7 @@ namespace OpenVic {
 		PopManager PROPERTY_REF(pop_manager);
 		CountryManager PROPERTY_REF(country_manager);
 		CrimeManager PROPERTY_REF(crime_manager);
+		EventManager PROPERTY_REF(event_manager);
 		UIManager PROPERTY_REF(ui_manager);
 		GameAdvancementHook PROPERTY_REF(clock);
 

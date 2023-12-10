@@ -13,9 +13,8 @@ namespace OpenVic {
 	class UIManager;
 	struct PopManager;
 	struct UnitManager;
-	struct ModifierManager;
-	struct TechnologyManager;
 	struct GoodManager;
+	struct EventManager;
 
 	class Dataloader {
 	public:
@@ -31,6 +30,7 @@ namespace OpenVic {
 		bool _load_rebel_types(GameManager& game_manager) const;
 		bool _load_technologies(GameManager& game_manager) const;
 		bool _load_inventions(GameManager& game_manager) const;
+		bool _load_events(GameManager& game_manager) const;
 		bool _load_map_dir(GameManager& game_manager) const;
 		bool _load_history(GameManager& game_manager, bool unused_history_file_warnings) const;
 

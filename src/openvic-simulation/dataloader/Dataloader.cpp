@@ -505,6 +505,20 @@ bool Dataloader::_load_history(GameManager& game_manager, bool unused_history_fi
 	return ret;
 }
 
+bool Dataloader::_load_events(GameManager& game_manager) const {
+	static constexpr std::string_view events_directory = "events";
+	const bool ret = apply_to_files(
+		lookup_files_in_dir(events_directory, ".txt"),
+		[&game_manager](fs::path const& file) -> bool {
+			return game_manager.get_event_manager().load_event_file(
+				game_manager.get_politics_manager().get_issue_manager(), parse_defines(file).get_file_node()
+			);
+		}
+	);
+	game_manager.get_event_manager().lock_events();
+	return ret;
+}
+
 bool Dataloader::_load_map_dir(GameManager& game_manager) const {
 	static constexpr std::string_view map_directory = "map/";
 	Map& map = game_manager.get_map();
@@ -793,6 +807,10 @@ bool Dataloader::load_defines(GameManager& game_manager) const {
 	}
 	if (!_load_history(game_manager, false)) {
 		Logger::error("Failed to load history!");
+		ret = false;
+	}
+	if (!_load_events(game_manager)) {
+		Logger::error("Failed to load events!");
 		ret = false;
 	}
 
