@@ -11,33 +11,129 @@ namespace OpenVic {
 		T x, y;
 
 		constexpr vec2_t() = default;
-		constexpr vec2_t(T new_val);
-		constexpr vec2_t(T new_x, T new_y);
+		constexpr vec2_t(T new_val) : x { new_val }, y { new_val } {}
+		constexpr vec2_t(T new_x, T new_y) : x { new_x }, y { new_y } {}
 
-		constexpr vec2_t abs() const;
-		constexpr T length_squared() const;
+		constexpr vec2_t abs() const {
+			return { x >= 0 ? x : -x, y >= 0 ? y : -y };
+		}
+		constexpr T length_squared() const {
+			return x * x + y * y;
+		}
 
-		constexpr T* data();
-		constexpr T const* data() const;
+		constexpr T* data() {
+			return reinterpret_cast<T*>(this);
+		}
+		constexpr T const* data() const {
+			return reinterpret_cast<T const*>(this);
+		}
 
-		constexpr T& operator[](size_t index);
-		constexpr T const& operator[](size_t index) const;
+		constexpr T& operator[](size_t index) {
+			return data()[index & 1];
+		}
+		constexpr T const& operator[](size_t index) const {
+			return data()[index & 1];
+		}
 
-		template<typename S>
-		constexpr friend vec2_t<S> operator+(vec2_t<S> const& left, vec2_t<S> const& right);
-		constexpr vec2_t& operator+=(vec2_t const& right);
+		constexpr friend vec2_t operator+(vec2_t const& left, vec2_t const& right) {
+			return { left.x + right.x, left.y + right.y };
+		}
+		constexpr vec2_t& operator+=(vec2_t const& right) {
+			x += right.x;
+			y += right.y;
+			return *this;
+		}
+		constexpr friend vec2_t operator+(vec2_t const& left, T const& right) {
+			return { left.x + right, left.y + right };
+		}
+		constexpr friend vec2_t operator+(T const& left, vec2_t const& right) {
+			return { left + right.x, left + right.y };
+		}
+		constexpr vec2_t& operator+=(T const& right) {
+			x += right;
+			y += right;
+			return *this;
+		}
 
-		template<typename S>
-		constexpr friend vec2_t<S> operator-(vec2_t<S> const& arg);
+		constexpr friend vec2_t operator-(vec2_t const& arg) {
+			return { -arg.x, -arg.y };
+		}
 
-		template<typename S>
-		constexpr friend vec2_t<S> operator-(vec2_t<S> const& left, vec2_t<S> const& right);
-		constexpr vec2_t& operator-=(vec2_t const& right);
+		constexpr friend vec2_t operator-(vec2_t const& left, vec2_t const& right) {
+			return { left.x - right.x, left.y - right.y };
+		}
+		constexpr vec2_t& operator-=(vec2_t const& right) {
+			x -= right.x;
+			y -= right.y;
+			return *this;
+		}
+		constexpr friend vec2_t operator-(vec2_t const& left, T const& right) {
+			return { left.x - right, left.y - right };
+		}
+		constexpr friend vec2_t operator-(T const& left, vec2_t const& right) {
+			return { left - right.x, left - right.y };
+		}
+		constexpr vec2_t& operator-=(T const& right) {
+			x -= right;
+			y -= right;
+			return *this;
+		}
 
-		template<typename S>
-		constexpr friend std::ostream& operator<<(std::ostream& stream, vec2_t<S> const& value);
+		constexpr friend vec2_t operator*(vec2_t const& left, vec2_t const& right) {
+			return { left.x * right.x, left.y * right.y };
+		}
+		constexpr vec2_t& operator*=(vec2_t const& right) {
+			x *= right.x;
+			y *= right.y;
+			return *this;
+		}
+		constexpr friend vec2_t operator*(vec2_t const& left, T const& right) {
+			return { left.x * right, left.y * right };
+		}
+		constexpr friend vec2_t operator*(T const& left, vec2_t const& right) {
+			return { left * right.x, left * right.y };
+		}
+		constexpr vec2_t& operator*=(T const& right) {
+			x *= right;
+			y *= right;
+			return *this;
+		}
+
+		constexpr friend vec2_t operator/(vec2_t const& left, vec2_t const& right) {
+			return { left.x / right.x, left.y / right.y };
+		}
+		constexpr vec2_t& operator/=(vec2_t const& right) {
+			x /= right.x;
+			y /= right.y;
+			return *this;
+		}
+		constexpr friend vec2_t operator/(vec2_t const& left, T const& right) {
+			return { left.x / right, left.y / right };
+		}
+		constexpr friend vec2_t operator/(T const& left, vec2_t const& right) {
+			return { left / right.x, left / right.y };
+		}
+		constexpr vec2_t& operator/=(T const& right) {
+			x /= right;
+			y /= right;
+			return *this;
+		}
+
+		constexpr friend bool operator==(vec2_t const& left, vec2_t const& right) {
+			return left.x == right.x && left.y == right.y;
+		}
+		constexpr friend bool operator!=(vec2_t const& left, vec2_t const& right) {
+			return left.x != right.x || left.y != right.y;
+		}
+
+		constexpr friend std::ostream& operator<<(std::ostream& stream, vec2_t const& value) {
+			return stream << "(" << value.x << ", " << value.y << ")";
+		}
 	};
 
 	using ivec2_t = vec2_t<int32_t>;
 	using fvec2_t = vec2_t<fixed_point_t>;
+
+	static_assert(sizeof(ivec2_t) == 2 * sizeof(ivec2_t::type), "ivec2_t size does not equal the sum of its parts' sizes");
+	static_assert(sizeof(fvec2_t) == 2 * sizeof(fvec2_t::type), "fvec2_t size does not equal the sum of its parts' sizes");
 }
