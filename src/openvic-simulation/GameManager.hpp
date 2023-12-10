@@ -1,5 +1,6 @@
 #pragma once
 
+#include "openvic-simulation/misc/Decision.hpp"
 #include "openvic-simulation/country/Country.hpp"
 #include "openvic-simulation/economy/EconomyManager.hpp"
 #include "openvic-simulation/history/HistoryManager.hpp"
@@ -33,6 +34,7 @@ namespace OpenVic {
 		CountryManager PROPERTY_REF(country_manager);
 		CrimeManager PROPERTY_REF(crime_manager);
 		EventManager PROPERTY_REF(event_manager);
+		DecisionManager PROPERTY_REF(decision_manager);
 		UIManager PROPERTY_REF(ui_manager);
 		GameAdvancementHook PROPERTY_REF(clock);
 

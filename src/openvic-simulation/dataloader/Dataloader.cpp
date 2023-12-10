@@ -428,6 +428,22 @@ bool Dataloader::_load_inventions(GameManager& game_manager) const {
 	return ret;
 }
 
+bool Dataloader::_load_decisions(GameManager& game_manager) const {
+	static constexpr std::string_view decisions_directory = "decisions";
+	DecisionManager& decision_manager = game_manager.get_decision_manager();
+
+	bool ret = apply_to_files(
+		lookup_files_in_dir(decisions_directory, ".txt"),
+		[&decision_manager](fs::path const& file) -> bool {
+			return decision_manager.load_decision_file(parse_defines(file).get_file_node());
+		}
+	);
+
+	decision_manager.lock_decisions();
+
+	return ret;
+}
+
 bool Dataloader::_load_history(GameManager& game_manager, bool unused_history_file_warnings) const {
 
 	/* Country History */
@@ -803,6 +819,10 @@ bool Dataloader::load_defines(GameManager& game_manager) const {
 		game_manager, *this, parse_defines(lookup_file(countries_file)).get_file_node()
 	)) {
 		Logger::error("Failed to load countries!");
+		ret = false;
+	}
+	if (!_load_decisions(game_manager)) {
+		Logger::error("Failde to load decisions!");
 		ret = false;
 	}
 	if (!_load_history(game_manager, false)) {
