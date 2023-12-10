@@ -16,9 +16,6 @@ TerrainTypeMapping::TerrainTypeMapping(
 ) : HasIdentifier { new_identifier }, type { new_type }, terrain_indices { std::move(new_terrain_indicies) },
 	priority { new_priority }, has_texture { new_has_texture } {}
 
-TerrainTypeManager::TerrainTypeManager()
-	: terrain_types { "terrain types" }, terrain_type_mappings { "terrain type mappings" } {}
-
 bool TerrainTypeManager::add_terrain_type(
 	std::string_view identifier, colour_t colour, ModifierValue&& values, bool is_water
 ) {

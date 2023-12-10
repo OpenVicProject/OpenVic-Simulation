@@ -16,10 +16,6 @@ ReformGroup::ReformGroup(std::string_view identifier, ReformType const& type, bo
 Reform::Reform(std::string_view identifier, ReformGroup const& group, size_t ordinal)
 	: Issue { identifier, group }, ordinal { ordinal }, reform_group { group } {}
 
-IssueManager::IssueManager()
-  : issue_groups { "issue groups" }, issues { "issues" }, reform_types { "reform types" }, reform_groups { "reform groups" },
-	reforms { "reforms" } {}
-
 bool IssueManager::add_issue_group(std::string_view identifier) {
 	if (identifier.empty()) {
 		Logger::error("Invalid issue group identifier - empty!");

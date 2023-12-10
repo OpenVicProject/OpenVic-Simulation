@@ -35,8 +35,6 @@ Country::Country(
 	parties { std::move(new_parties) }, unit_names { std::move(new_unit_names) }, dynamic_tag { new_dynamic_tag },
 	alternative_colours { std::move(new_alternative_colours) } {}
 
-CountryManager::CountryManager() : countries { "countries" } {}
-
 bool CountryManager::add_country(
 	std::string_view identifier, colour_t colour, GraphicalCultureType const* graphical_culture,
 	IdentifierRegistry<CountryParty>&& parties, Country::unit_names_map_t&& unit_names, bool dynamic_tag,

@@ -84,10 +84,6 @@ TriggeredModifier::TriggeredModifier(std::string_view new_identifier, ModifierVa
 ModifierInstance::ModifierInstance(Modifier const& modifier, Date expiry_date)
 	: modifier { modifier }, expiry_date { expiry_date } {}
 
-ModifierManager::ModifierManager()
-  : modifier_effects { "modifier effects" }, event_modifiers { "event modifiers" }, static_modifiers { "static modifiers" },
-	triggered_modifiers { "triggered modifiers" } {}
-
 bool ModifierManager::add_modifier_effect(std::string_view identifier, bool positive_good, ModifierEffect::format_t format) {
 	if (identifier.empty()) {
 		Logger::error("Invalid modifier effect identifier - empty!");

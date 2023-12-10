@@ -39,8 +39,6 @@ NavalUnit::NavalUnit(
 	supply_consumption_score { supply_consumption_score }, hull { hull }, gun_power { gun_power }, fire_range { fire_range },
 	evasion { evasion }, torpedo_attack { torpedo_attack } {};
 
-UnitManager::UnitManager() : units { "units" } {}
-
 bool UnitManager::_check_shared_parameters(std::string_view identifier, UNIT_PARAMS) {
 	if (identifier.empty()) {
 		Logger::error("Invalid religion identifier - empty!");

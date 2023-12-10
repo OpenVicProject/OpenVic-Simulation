@@ -21,8 +21,6 @@ void Good::reset_to_defaults() {
 	price = base_price;
 }
 
-GoodManager::GoodManager() : good_categories { "good categories" }, goods { "goods" } {}
-
 bool GoodManager::add_good_category(std::string_view identifier) {
 	if (identifier.empty()) {
 		Logger::error("Invalid good category identifier - empty!");

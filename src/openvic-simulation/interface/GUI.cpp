@@ -42,11 +42,9 @@ bool Element::_fill_elements_key_map(
 	return ret;
 }
 
-Scene::Scene() : elements { "scene elements" } {}
-
 bool Scene::_fill_key_map(NodeTools::key_map_t& key_map, UIManager const& ui_manager) {
 	return Element::_fill_elements_key_map(key_map, [this](std::unique_ptr<Element>&& element) -> bool {
-		return elements.add_item(std::move(element));
+		return scene_elements.add_item(std::move(element));
 	}, ui_manager);
 }
 
@@ -59,11 +57,11 @@ node_callback_t Scene::expect_scene(
 	}, ui_manager);
 }
 
-Window::Window() : elements { "window elements" }, size {}, moveable { false }, fullscreen { false } {}
+Window::Window() : moveable { false }, fullscreen { false } {}
 
 bool Window::_fill_key_map(NodeTools::key_map_t& key_map, UIManager const& ui_manager) {
 	bool ret = Element::_fill_elements_key_map(key_map, [this](std::unique_ptr<Element>&& element) -> bool {
-		return elements.add_item(std::move(element));
+		return window_elements.add_item(std::move(element));
 	}, ui_manager);
 	ret &= Element::_fill_key_map(key_map, ui_manager);
 	ret &= add_key_map_entries(key_map,

@@ -12,8 +12,6 @@ Decision::Decision(
 	news_desc_long { new_news_desc_long }, news_desc_medium { new_news_desc_medium },
 	news_desc_short { new_news_desc_short }, picture { new_picture } {}
 
-DecisionManager::DecisionManager() : decisions { "decisions" } {}
-
 bool DecisionManager::add_decision(
 	std::string_view identifier, bool alert, bool news, std::string_view news_title,
 	std::string_view news_desc_long, std::string_view news_desc_medium,

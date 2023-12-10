@@ -14,8 +14,6 @@ BuildingType::BuildingType(
 	colonial_range { colonial_range }, infrastructure { infrastructure }, spawn_railway_track { spawn_railway_track },
 	sail { sail }, steam { steam }, capital { capital }, port { port } {}
 
-BuildingTypeManager::BuildingTypeManager() : building_types { "building types" } {}
-
 bool BuildingTypeManager::add_building_type(std::string_view identifier, ARGS) {
 	if (identifier.empty()) {
 		Logger::error("Invalid building identifier - empty!");

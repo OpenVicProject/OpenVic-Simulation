@@ -87,12 +87,10 @@ namespace OpenVic {
 
 	struct WargoalTypeManager {
 	private:
-		IdentifierRegistry<WargoalType> wargoal_types;
+		IdentifierRegistry<WargoalType> IDENTIFIER_REGISTRY(wargoal_type);
 		std::vector<WargoalType const*> PROPERTY(peace_priorities);
 
 	public:
-		WargoalTypeManager();
-
 		const std::vector<WargoalType const*>& get_peace_priority_list() const;
 
 		bool add_wargoal_type(
@@ -110,7 +108,6 @@ namespace OpenVic {
 			WargoalType::peace_modifiers_t&& modifiers,
 			peace_options_t peace_options
 		);
-		IDENTIFIER_REGISTRY_ACCESSORS(wargoal_type)
 
 		bool load_wargoal_file(ast::NodeCPtr root);
 	};

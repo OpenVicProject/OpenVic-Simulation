@@ -89,7 +89,7 @@ namespace OpenVic {
 
 	struct PopManager {
 	private:
-		IdentifierRegistry<PopType> pop_types;
+		IdentifierRegistry<PopType> IDENTIFIER_REGISTRY(pop_type);
 		PopType::sprite_t PROPERTY(slave_sprite);
 		PopType::sprite_t PROPERTY(administrative_sprite);
 
@@ -107,7 +107,6 @@ namespace OpenVic {
 			bool can_be_recruited, bool can_reduce_consciousness, bool administrative_efficiency, bool can_build, bool factory,
 			bool can_work_factory, bool unemployment
 		);
-		IDENTIFIER_REGISTRY_ACCESSORS(pop_type)
 
 		bool load_pop_type_file(
 			std::string_view filestem, UnitManager const& unit_manager, GoodManager const& good_manager, ast::NodeCPtr root

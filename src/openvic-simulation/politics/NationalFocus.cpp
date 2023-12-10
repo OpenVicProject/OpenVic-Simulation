@@ -23,8 +23,6 @@ NationalFocus::NationalFocus(
 	encouraged_loyalty { std::move(new_encouraged_loyalty) },
 	encouraged_production { std::move(new_encouraged_production) } {}
 
-NationalFocusManager::NationalFocusManager() : national_focus_groups { "national focus groups" }, national_foci { "national foci" } {}
-
 inline bool NationalFocusManager::add_national_focus_group(std::string_view identifier) {
 	if (identifier.empty()) {
 		Logger::error("No identifier for national focus group!");

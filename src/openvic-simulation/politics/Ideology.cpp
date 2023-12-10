@@ -11,8 +11,6 @@ Ideology::Ideology(
 ) : HasIdentifierAndColour { new_identifier, new_colour, false, false }, group { new_group }, uncivilised { new_uncivilised },
 	can_reduce_militancy { new_can_reduce_militancy }, spawn_date { new_spawn_date } {}
 
-IdeologyManager::IdeologyManager() : ideology_groups { "ideology groups" }, ideologies { "ideologies" } {}
-
 bool IdeologyManager::add_ideology_group(std::string_view identifier) {
 	if (identifier.empty()) {
 		Logger::error("Invalid ideology group identifier - empty!");

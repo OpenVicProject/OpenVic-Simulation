@@ -80,7 +80,7 @@ namespace OpenVic {
 		Crime const* PROPERTY_RW(crime);
 		// TODO - change this into a factory-like structure
 		Good const* PROPERTY(rgo);
-		IdentifierRegistry<BuildingInstance> buildings;
+		IdentifierRegistry<BuildingInstance> IDENTIFIER_REGISTRY(building);
 
 		std::vector<Pop> PROPERTY(pops);
 		Pop::pop_size_t PROPERTY(total_population);
@@ -98,7 +98,6 @@ namespace OpenVic {
 
 		bool load_positions(BuildingTypeManager const& building_type_manager, ast::NodeCPtr root);
 
-		IDENTIFIER_REGISTRY_ACCESSORS(building)
 		bool expand_building(std::string_view building_type_identifier);
 
 		bool load_pop_list(PopManager const& pop_manager, ast::NodeCPtr root);

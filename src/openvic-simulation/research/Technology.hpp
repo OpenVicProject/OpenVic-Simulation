@@ -64,28 +64,22 @@ namespace OpenVic {
 	};
 
 	struct TechnologyManager {
-		IdentifierRegistry<TechnologyFolder> technology_folders;
-		IdentifierRegistry<TechnologyArea> technology_areas;
-		IdentifierRegistry<Technology> technologies;
-		IdentifierRegistry<TechnologySchool> technology_schools;
+		IdentifierRegistry<TechnologyFolder> IDENTIFIER_REGISTRY(technology_folder);
+		IdentifierRegistry<TechnologyArea> IDENTIFIER_REGISTRY(technology_area);
+		IdentifierRegistry<Technology> IDENTIFIER_REGISTRY_CUSTOM_PLURAL(technology, technologies);
+		IdentifierRegistry<TechnologySchool> IDENTIFIER_REGISTRY(technology_school);
 
 	public:
-		TechnologyManager();
-
 		bool add_technology_folder(std::string_view identifier);
-		IDENTIFIER_REGISTRY_ACCESSORS(technology_folder)
 
 		bool add_technology_area(std::string_view identifier, TechnologyFolder const* folder);
-		IDENTIFIER_REGISTRY_ACCESSORS(technology_area)
 
 		bool add_technology(
 			std::string_view identifier, TechnologyArea const* area, Date::year_t year, fixed_point_t cost,
 			bool unciv_military, uint8_t unit, Technology::unit_set_t&& activated_units,
 			Technology::building_set_t&& activated_buildings, ModifierValue&& values);
-		IDENTIFIER_REGISTRY_ACCESSORS_CUSTOM_PLURAL(technology, technologies)
 
 		bool add_technology_school(std::string_view identifier, ModifierValue&& values);
-		IDENTIFIER_REGISTRY_ACCESSORS(technology_school)
 
 		bool load_technology_file_areas(ast::NodeCPtr root); // common/technology.txt
 		bool load_technology_file_schools(ModifierManager const& modifier_manager, ast::NodeCPtr root); // also common/technology.txt

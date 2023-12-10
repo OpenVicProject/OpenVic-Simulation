@@ -51,14 +51,11 @@ namespace OpenVic {
 
 	struct NationalFocusManager {
 	private:
-		IdentifierRegistry<NationalFocusGroup> national_focus_groups;
-		IdentifierRegistry<NationalFocus> national_foci;
+		IdentifierRegistry<NationalFocusGroup> IDENTIFIER_REGISTRY(national_focus_group);
+		IdentifierRegistry<NationalFocus> IDENTIFIER_REGISTRY_CUSTOM_PLURAL(national_focus, national_foci);
 
 	public:
-		NationalFocusManager();
-
 		inline bool add_national_focus_group(std::string_view identifier);
-		IDENTIFIER_REGISTRY_ACCESSORS(national_focus_group)
 
 		inline bool add_national_focus(
 			std::string_view identifier,
@@ -69,7 +66,6 @@ namespace OpenVic {
 			NationalFocus::party_loyalty_map_t&& encouraged_loyalty,
 			NationalFocus::production_map_t&& encouraged_production
 		);
-		IDENTIFIER_REGISTRY_ACCESSORS_CUSTOM_PLURAL(national_focus, national_foci)
 
 		bool load_national_foci_file(PopManager const& pop_manager, IdeologyManager const& ideology_manager, GoodManager const& good_manager, ModifierManager const& modifier_manager, ast::NodeCPtr root);
 	};

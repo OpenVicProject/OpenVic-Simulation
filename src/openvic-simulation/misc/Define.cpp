@@ -29,8 +29,6 @@ uint64_t Define::get_value_as_uint() const {
 	return std::strtoull(value.data(), nullptr, 10);
 }
 
-DefineManager::DefineManager() : defines { "defines" } {}
-
 bool DefineManager::add_define(std::string_view name, std::string&& value, Define::Type type) {
 	return defines.add_item({ name, std::move(value), type }, duplicate_warning_callback);
 }

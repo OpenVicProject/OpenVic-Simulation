@@ -20,8 +20,6 @@ Event::Event(
 	news_desc_long { new_news_desc_long }, news_desc_medium { new_news_desc_medium }, news_desc_short { new_news_desc_short },
 	election { new_election }, election_issue_group { new_election_issue_group }, options { std::move(new_options) } {}
 
-EventManager::EventManager() : events { "events" } {}
-
 bool EventManager::register_event(
 	std::string_view identifier, std::string_view title, std::string_view description, std::string_view image,
 	Event::event_type_t type, bool triggered_only, bool major, bool fire_only_once, bool allows_multiple_instances, bool news,

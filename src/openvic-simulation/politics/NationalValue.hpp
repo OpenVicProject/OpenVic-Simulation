@@ -20,13 +20,10 @@ namespace OpenVic {
 
 	struct NationalValueManager {
 	private:
-		IdentifierRegistry<NationalValue> national_values;
+		IdentifierRegistry<NationalValue> IDENTIFIER_REGISTRY(national_value);
 
 	public:
-		NationalValueManager();
-
 		bool add_national_value(std::string_view identifier, ModifierValue&& modifiers);
-		IDENTIFIER_REGISTRY_ACCESSORS(national_value)
 
 		bool load_national_values_file(ModifierManager const& modifier_manager, ast::NodeCPtr root);
 	};

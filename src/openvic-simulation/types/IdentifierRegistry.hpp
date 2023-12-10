@@ -315,31 +315,28 @@ namespace OpenVic {
 	template<std::derived_from<HasIdentifier> _Type>
 	using IdentifierInstanceRegistry = InstanceRegistry<_Type, _get_identifier<_Type>>;
 
-/* Member functions for const access to a UniqueKeyRegistry member variable. */
-#define IDENTIFIER_REGISTRY_ACCESSORS(name) \
-	IDENTIFIER_REGISTRY_ACCESSORS_CUSTOM_PLURAL(name, name##s)
+/* Macros to generate declaration and constant accessor methods for a UniqueKeyRegistry member variable. */
 
-#define IDENTIFIER_REGISTRY_ACCESSORS_CUSTOM_PLURAL(singular, plural) \
-	IDENTIFIER_REGISTRY_ACCESSORS_FULL_CUSTOM(singular, plural, plural, 0)
+#define IDENTIFIER_REGISTRY(name) \
+	IDENTIFIER_REGISTRY_CUSTOM_PLURAL(name, name##s)
 
-#define IDENTIFIER_REGISTRY_ACCESSORS_CUSTOM_INDEX_OFFSET(name, index_offset) \
-	IDENTIFIER_REGISTRY_ACCESSORS_FULL_CUSTOM(name, name##s, name##s, index_offset)
+#define IDENTIFIER_REGISTRY_CUSTOM_PLURAL(singular, plural) \
+	IDENTIFIER_REGISTRY_FULL_CUSTOM(singular, plural, plural, plural, 0)
 
-#define IDENTIFIER_REGISTRY_ACCESSORS_FULL_CUSTOM(singular, plural, registry, index_offset) \
+#define IDENTIFIER_REGISTRY_CUSTOM_INDEX_OFFSET(name, index_offset) \
+	IDENTIFIER_REGISTRY_FULL_CUSTOM(name, name##s, name##s, name##s, index_offset)
+
+#define IDENTIFIER_REGISTRY_FULL_CUSTOM(singular, plural, registry, debug_name, index_offset) \
+	registry { #debug_name };\
+public: \
 	void lock_##plural() { \
 		registry.lock(); \
 	} \
 	bool plural##_are_locked() const { \
 		return registry.is_locked(); \
 	} \
-	decltype(registry)::value_type const* get_##singular##_by_identifier(std::string_view identifier) const { \
-		return registry.get_item_by_identifier(identifier); \
-	} \
 	bool has_##singular##_identifier(std::string_view identifier) const { \
 		return registry.has_identifier(identifier); \
-	} \
-	decltype(registry)::value_type const* get_##singular##_by_index(size_t index) const { \
-		return index >= index_offset ? registry.get_item_by_index(index - index_offset) : nullptr; \
 	} \
 	size_t get_##singular##_count() const { \
 		return registry.size(); \
@@ -347,66 +344,54 @@ namespace OpenVic {
 	bool plural##_empty() const { \
 		return registry.empty(); \
 	} \
-	std::vector<decltype(registry)::storage_type> const& get_##plural() const { \
-		return registry.get_items(); \
-	} \
 	std::vector<std::string_view> get_##singular##_identifiers() const { \
 		return registry.get_item_identifiers(); \
-	} \
-	NodeTools::callback_t<std::string_view> expect_##singular##_str( \
-		NodeTools::callback_t<decltype(registry)::value_type const&> callback, bool warn = false \
-	) const { \
-		return registry.expect_item_str(callback, warn); \
-	} \
-	NodeTools::node_callback_t expect_##singular##_identifier( \
-		NodeTools::callback_t<decltype(registry)::value_type const&> callback, bool warn = false \
-	) const { \
-		return registry.expect_item_identifier(callback, warn); \
-	} \
-	NodeTools::node_callback_t expect_##singular##_dictionary( \
-		NodeTools::callback_t<decltype(registry)::value_type const&, ast::NodeCPtr> callback \
-	) const { \
-		return registry.expect_item_dictionary(callback); \
 	} \
 	NodeTools::node_callback_t expect_##singular##_decimal_map( \
 		NodeTools::callback_t<fixed_point_map_t<decltype(registry)::value_type const*>&&> callback \
 	) const { \
 		return registry.expect_item_decimal_map(callback); \
-	}
+	} \
+	IDENTIFIER_REGISTRY_INTERNAL_SHARED(singular, plural, registry, index_offset, const) \
+private:
 
-/* Member functions for non-const access to a UniqueKeyRegistry member variable. */
+/* Macros to generate non-constant accessor methods for a UniqueKeyRegistry member variable. */
+
 #define IDENTIFIER_REGISTRY_NON_CONST_ACCESSORS(name) \
 	IDENTIFIER_REGISTRY_NON_CONST_ACCESSORS_CUSTOM_PLURAL(name, name##s)
 
 #define IDENTIFIER_REGISTRY_NON_CONST_ACCESSORS_CUSTOM_PLURAL(singular, plural) \
-	IDENTIFIER_REGISTRY_NON_CONST_ACCESSORS_FULL_CUSTOM(single, plural, plural, 0)
+	IDENTIFIER_REGISTRY_NON_CONST_ACCESSORS_FULL_CUSTOM(singular, plural, plural, plural, 0)
 
 #define IDENTIFIER_REGISTRY_NON_CONST_ACCESSORS_CUSTOM_INDEX_OFFSET(name, index_offset) \
-	IDENTIFIER_REGISTRY_NON_CONST_ACCESSORS_FULL_CUSTOM(name, name##s, name##s, index_offset)
+	IDENTIFIER_REGISTRY_NON_CONST_ACCESSORS_FULL_CUSTOM(name, name##s, name##s, name##s, index_offset)
 
-#define IDENTIFIER_REGISTRY_NON_CONST_ACCESSORS_FULL_CUSTOM(singular, plural, registry, index_offset) \
-	decltype(registry)::value_type* get_##singular##_by_identifier(std::string_view identifier) { \
+#define IDENTIFIER_REGISTRY_NON_CONST_ACCESSORS_FULL_CUSTOM(singular, plural, registry, debug_name, index_offset) \
+	IDENTIFIER_REGISTRY_INTERNAL_SHARED(singular, plural, registry, index_offset,)
+
+#define IDENTIFIER_REGISTRY_INTERNAL_SHARED(singular, plural, registry, index_offset, const_kw) \
+	decltype(registry)::value_type const_kw* get_##singular##_by_identifier(std::string_view identifier) const_kw { \
 		return registry.get_item_by_identifier(identifier); \
 	} \
-	decltype(registry)::value_type* get_##singular##_by_index(size_t index) { \
+	decltype(registry)::value_type const_kw* get_##singular##_by_index(size_t index) const_kw { \
 		return index >= index_offset ? registry.get_item_by_index(index - index_offset) : nullptr; \
 	} \
-	std::vector<decltype(registry)::storage_type>& get_##plural() { \
+	std::vector<decltype(registry)::storage_type> const_kw& get_##plural() const_kw { \
 		return registry.get_items(); \
 	} \
 	NodeTools::callback_t<std::string_view> expect_##singular##_str( \
-		NodeTools::callback_t<decltype(registry)::value_type&> callback, bool warn = false \
-	) { \
+		NodeTools::callback_t<decltype(registry)::value_type const_kw&> callback, bool warn = false \
+	) const_kw { \
 		return registry.expect_item_str(callback, warn); \
 	} \
 	NodeTools::node_callback_t expect_##singular##_identifier( \
-		NodeTools::callback_t<decltype(registry)::value_type&> callback, bool warn = false \
-	) { \
+		NodeTools::callback_t<decltype(registry)::value_type const_kw&> callback, bool warn = false \
+	) const_kw { \
 		return registry.expect_item_identifier(callback, warn); \
 	} \
 	NodeTools::node_callback_t expect_##singular##_dictionary( \
-		NodeTools::callback_t<decltype(registry)::value_type&, ast::NodeCPtr> callback \
-	) { \
+		NodeTools::callback_t<decltype(registry)::value_type const_kw&, ast::NodeCPtr> callback \
+	) const_kw { \
 		return registry.expect_item_dictionary(callback); \
 	}
 }

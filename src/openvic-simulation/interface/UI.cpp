@@ -5,8 +5,6 @@ using namespace OpenVic::NodeTools;
 using namespace OpenVic::GFX;
 using namespace OpenVic::GUI;
 
-UIManager::UIManager() : sprites { "sprites" }, scenes { "scenes" }, fonts { "fonts" } {}
-
 bool UIManager::add_font(std::string_view identifier, colour_t colour, std::string_view fontname) {
 	if (identifier.empty()) {
 		Logger::error("Invalid font identifier - empty!");

@@ -17,15 +17,12 @@ namespace OpenVic {
 
 	struct CrimeManager {
 	private:
-		IdentifierRegistry<Crime> crime_modifiers;
+		IdentifierRegistry<Crime> IDENTIFIER_REGISTRY(crime_modifier);
 
 	public:
-		CrimeManager();
-
 		bool add_crime_modifier(
 			std::string_view identifier, ModifierValue&& values, Modifier::icon_t icon, bool default_active
 		);
-		IDENTIFIER_REGISTRY_ACCESSORS(crime_modifier)
 
 		bool load_crime_modifiers(ModifierManager const& modifier_manager, ast::NodeCPtr root);
 	};

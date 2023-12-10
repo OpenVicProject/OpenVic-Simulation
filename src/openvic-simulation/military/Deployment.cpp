@@ -28,8 +28,6 @@ Deployment::Deployment(
 ) : HasIdentifier { new_path }, armies { std::move(new_armies) }, navies { std::move(new_navies) },
 	leaders { std::move(new_leaders) } {}
 
-DeploymentManager::DeploymentManager() : deployments { "deployments" } {}
-
 bool DeploymentManager::add_deployment(
 	std::string_view path, std::vector<Army>&& armies, std::vector<Navy>&& navies, std::vector<Leader>&& leaders
 ) {
