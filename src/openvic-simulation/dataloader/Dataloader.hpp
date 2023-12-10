@@ -32,6 +32,7 @@ namespace OpenVic {
 		bool _load_inventions(GameManager& game_manager) const;
 		bool _load_events(GameManager& game_manager) const;
 		bool _load_map_dir(GameManager& game_manager) const;
+		bool _load_decisions(GameManager& game_manager) const;
 		bool _load_history(GameManager& game_manager, bool unused_history_file_warnings) const;
 
 		/* _DirIterator is fs::directory_iterator or fs::recursive_directory_iterator. _UniqueKey is the type of a callable
