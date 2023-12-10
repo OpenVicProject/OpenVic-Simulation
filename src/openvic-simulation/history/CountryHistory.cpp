@@ -1,6 +1,7 @@
 #include "CountryHistory.hpp"
 
 #include "openvic-simulation/GameManager.hpp"
+#include <string_view>
 
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;
@@ -21,10 +22,13 @@ bool CountryHistoryMap::_load_history_entry(
 	PoliticsManager const& politics_manager = game_manager.get_politics_manager();
 	IssueManager const& issue_manager = politics_manager.get_issue_manager();
 	CultureManager const& culture_manager = game_manager.get_pop_manager().get_culture_manager();
+	CountryManager const& country_manager = game_manager.get_country_manager();
+	TechnologyManager const& technology_manager = game_manager.get_research_manager().get_technology_manager();
+	InventionManager const& invention_manager = game_manager.get_research_manager().get_invention_manager();
 
 	return expect_dictionary_keys_and_default(
-		[this, &game_manager, &dataloader, &deployment_manager, &issue_manager, &entry](
-			std::string_view key, ast::NodeCPtr value) -> bool {
+		[this, &game_manager, &dataloader, &deployment_manager, &issue_manager, 
+			&technology_manager, &invention_manager, &country_manager, &entry](std::string_view key, ast::NodeCPtr value) -> bool {
 			ReformGroup const* reform_group = issue_manager.get_reform_group_by_identifier(key);
 			if (reform_group != nullptr) {
 				return issue_manager.expect_reform_identifier([&entry, reform_group](Reform const& reform) -> bool {
@@ -46,9 +50,25 @@ bool CountryHistoryMap::_load_history_entry(
 					return true;
 				})(value);
 			}
-			// TODO: technologies & inventions
+
+			Technology const* technology = technology_manager.get_technology_by_identifier(key);
+			if (technology != nullptr) {
+				bool flag;
+				if (expect_int_bool(assign_variable_callback(flag))(value)) {
+					return entry.technologies.emplace(technology, flag).second;
+				} else return false;
+			}
+
+			Invention const* invention = invention_manager.get_invention_by_identifier(key);
+			if (invention != nullptr) {
+				bool flag;
+				if (expect_bool(assign_variable_callback(flag))(value)) {
+					return entry.inventions.emplace(invention, flag).second;
+				} else return false;
+			}
+			
 			return _load_history_sub_entry_callback(
-				game_manager, dataloader, deployment_manager, entry.get_date(), value, key, value, key_value_success_callback
+				game_manager, dataloader, deployment_manager, entry.get_date(), value, key, value
 			);
 		},
 		/* we have to use a lambda, assign_variable_callback_pointer
@@ -93,8 +113,35 @@ bool CountryHistoryMap::_load_history_entry(
 				return ret;
 			}
 		),
-		"schools", ZERO_OR_ONE, success_callback, // TODO: technology school
-		"foreign_investment", ZERO_OR_ONE, success_callback // TODO: foreign investment
+		"schools", ZERO_OR_ONE, technology_manager.expect_technology_school_identifier(
+			assign_variable_callback_pointer(entry.tech_school)
+		),
+		"foreign_investment", ZERO_OR_ONE, country_manager.expect_country_decimal_map(move_variable_callback(entry.foreign_investment)),
+		"literacy", ZERO_OR_ONE, expect_fixed_point(assign_variable_callback(entry.literacy)),
+		"non_state_culture_literacy", ZERO_OR_ONE, expect_fixed_point(assign_variable_callback(entry.nonstate_culture_literacy)),
+		"consciousness", ZERO_OR_ONE, expect_fixed_point(assign_variable_callback(entry.consciousness)),
+		"nonstate_consciousness", ZERO_OR_ONE, expect_fixed_point(assign_variable_callback(entry.nonstate_consciousness)),
+		"is_releasable_vassal", ZERO_OR_ONE, expect_bool(assign_variable_callback(entry.releasable_vassal)),
+		"decision", ZERO_OR_ONE, success_callback, //TODO: decisions
+		"govt_flag", ZERO_OR_ONE, [&entry, &politics_manager](ast::NodeCPtr value) -> bool {
+			GovernmentType const* government_type = nullptr;
+			std::string_view flag;
+			bool ret = expect_dictionary_keys(
+				"government", ONE_EXACTLY, politics_manager.get_government_type_manager()
+					.expect_government_type_identifier(assign_variable_callback_pointer(government_type)),
+				"flag", ONE_EXACTLY, expect_identifier_or_string(assign_variable_callback(flag))
+			)(value);
+			if (government_type != nullptr) {
+				return ret & entry.government_flags.emplace(government_type, flag).second;
+			} else return false;
+		},
+		"colonial_points", ZERO_OR_ONE, expect_fixed_point(assign_variable_callback(entry.colonial_points)), 
+		"set_country_flag", ZERO_OR_ONE, expect_identifier_or_string([&entry](std::string_view flag) -> bool {
+			return entry.country_flags.emplace(flag).second;
+		}),
+		"set_global_flag", ZERO_OR_ONE, expect_identifier_or_string([&entry](std::string_view flag) -> bool {
+			return entry.global_flags.emplace(flag).second;
+		})
 	)(root);
 }
 

@@ -32,8 +32,8 @@ namespace OpenVic {
 	struct Technology : Modifier {
 		friend struct TechnologyManager;
 
-		using unit_set_t = std::unordered_set<Unit const*>;
-		using building_set_t = std::unordered_set<BuildingType const*>;
+		using unit_set_t = std::set<Unit const*>;
+		using building_set_t = std::set<BuildingType const*>;
 
 	private:
 		TechnologyArea const& PROPERTY(area);

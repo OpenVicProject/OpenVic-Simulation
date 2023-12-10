@@ -7,7 +7,6 @@
 #include <optional>
 #include <set>
 #include <type_traits>
-#include <unordered_set>
 
 #include <openvic-dataloader/v2script/AbstractSyntaxTree.hpp>
 
@@ -344,7 +343,7 @@ namespace OpenVic {
 		}
 
 		template<typename T>
-		Callback<T const&> auto set_callback_pointer(std::unordered_set<T const*>& set) {
+		Callback<T const&> auto set_callback_pointer(std::set<T const*>& set) {
 			return [&set](T const& val) -> bool {
 				set.insert(&val);
 				return true;

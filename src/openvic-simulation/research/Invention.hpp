@@ -15,9 +15,9 @@ namespace OpenVic {
 	struct Invention : Modifier {
 		friend struct InventionManager;
 		//TODO implement limit and chance
-		using unit_set_t = std::unordered_set<Unit const*>;
-		using building_set_t = std::unordered_set<BuildingType const*>;
-		using crime_set_t = std::unordered_set<Crime const*>;
+		using unit_set_t = std::set<Unit const*>;
+		using building_set_t = std::set<BuildingType const*>;
+		using crime_set_t = std::set<Crime const*>;
 
 	private:
 		const bool PROPERTY_CUSTOM_PREFIX(news, is);
