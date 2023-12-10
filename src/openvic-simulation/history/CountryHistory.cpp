@@ -1,6 +1,7 @@
 #include "CountryHistory.hpp"
 
 #include "openvic-simulation/GameManager.hpp"
+#include <string_view>
 
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;
@@ -52,14 +53,9 @@ bool CountryHistoryMap::_load_history_entry(
 
 			Technology const* technology = technology_manager.get_technology_by_identifier(key);
 			if (technology != nullptr) {
-				uint8_t flag = -1;
-				if (expect_uint(assign_variable_callback(flag))(value)) {
-					if (flag == 1) return entry.technologies.emplace(technology, true).second;
-					else if (flag == 0) return entry.technologies.emplace(technology, false).second;
-					else {
-						Logger::warning("Refusing to load country history technology with non-boolean value: ", key, ", ", flag);
-						return true;
-					}
+				bool flag;
+				if (expect_int_bool(assign_variable_callback(flag))(value)) {
+					return entry.technologies.emplace(technology, flag).second;
 				} else return false;
 			}
 
@@ -72,7 +68,7 @@ bool CountryHistoryMap::_load_history_entry(
 			}
 			
 			return _load_history_sub_entry_callback(
-				game_manager, dataloader, deployment_manager, entry.get_date(), value, key, value, key_value_success_callback
+				game_manager, dataloader, deployment_manager, entry.get_date(), value, key, value
 			);
 		},
 		/* we have to use a lambda, assign_variable_callback_pointer
@@ -120,7 +116,32 @@ bool CountryHistoryMap::_load_history_entry(
 		"schools", ZERO_OR_ONE, technology_manager.expect_technology_school_identifier(
 			assign_variable_callback_pointer(entry.tech_school)
 		),
-		"foreign_investment", ZERO_OR_ONE, country_manager.expect_country_decimal_map(move_variable_callback(entry.foreign_investment))
+		"foreign_investment", ZERO_OR_ONE, country_manager.expect_country_decimal_map(move_variable_callback(entry.foreign_investment)),
+		"literacy", ZERO_OR_ONE, expect_fixed_point(assign_variable_callback(entry.literacy)),
+		"non_state_culture_literacy", ZERO_OR_ONE, expect_fixed_point(assign_variable_callback(entry.nonstate_culture_literacy)),
+		"consciousness", ZERO_OR_ONE, expect_fixed_point(assign_variable_callback(entry.consciousness)),
+		"nonstate_consciousness", ZERO_OR_ONE, expect_fixed_point(assign_variable_callback(entry.nonstate_consciousness)),
+		"is_releasable_vassal", ZERO_OR_ONE, expect_bool(assign_variable_callback(entry.releasable_vassal)),
+		"decision", ZERO_OR_ONE, success_callback, //TODO: decisions
+		"govt_flag", ZERO_OR_ONE, [&entry, &politics_manager](ast::NodeCPtr value) -> bool {
+			GovernmentType const* government_type = nullptr;
+			std::string_view flag;
+			bool ret = expect_dictionary_keys(
+				"government", ONE_EXACTLY, politics_manager.get_government_type_manager()
+					.expect_government_type_identifier(assign_variable_callback_pointer(government_type)),
+				"flag", ONE_EXACTLY, expect_identifier_or_string(assign_variable_callback(flag))
+			)(value);
+			if (government_type != nullptr) {
+				return ret & entry.government_flags.emplace(government_type, flag).second;
+			} else return false;
+		},
+		"colonial_points", ZERO_OR_ONE, expect_fixed_point(assign_variable_callback(entry.colonial_points)), 
+		"set_country_flag", ZERO_OR_ONE, expect_identifier_or_string([&entry](std::string_view flag) -> bool {
+			return entry.country_flags.emplace(flag).second;
+		}),
+		"set_global_flag", ZERO_OR_ONE, expect_identifier_or_string([&entry](std::string_view flag) -> bool {
+			return entry.global_flags.emplace(flag).second;
+		})
 	)(root);
 }
 

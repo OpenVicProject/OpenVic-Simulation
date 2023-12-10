@@ -1,8 +1,7 @@
 #pragma once
 
 #include <map>
-#include <unordered_map>
-#include <vector>
+#include <optional>
 
 #include "openvic-simulation/country/Country.hpp"
 #include "openvic-simulation/history/Bookmark.hpp"
@@ -39,7 +38,7 @@ namespace OpenVic {
 		std::optional<GovernmentType const*> PROPERTY(government_type);
 		std::optional<fixed_point_t> PROPERTY(plurality);
 		std::optional<NationalValue const*> PROPERTY(national_value);
-		std::optional<bool> PROPERTY(civilised);
+		std::optional<bool> PROPERTY_CUSTOM_PREFIX(civilised, is);
 		std::optional<fixed_point_t> PROPERTY(prestige);
 		std::vector<Reform const*> PROPERTY(reforms);
 		std::optional<Deployment const*> PROPERTY(inital_oob);
@@ -47,6 +46,17 @@ namespace OpenVic {
 		std::map<Technology const*, bool> PROPERTY(technologies);
 		std::map<Invention const*, bool> PROPERTY(inventions);
 		fixed_point_map_t<Country const*> PROPERTY(foreign_investment);
+		std::optional<fixed_point_t> PROPERTY(consciousness);
+		std::optional<fixed_point_t> PROPERTY(nonstate_consciousness);
+		std::optional<fixed_point_t> PROPERTY(literacy);
+		std::optional<fixed_point_t> PROPERTY(nonstate_culture_literacy);
+		std::optional<bool> PROPERTY_CUSTOM_PREFIX(releasable_vassal, is);
+		std::optional<fixed_point_t> PROPERTY(colonial_points);
+		string_set_t PROPERTY(country_flags);
+		string_set_t PROPERTY(global_flags);
+		std::map<GovernmentType const*, std::string> PROPERTY(government_flags);
+
+		//TODO: decisions
 
 		CountryHistoryEntry(Country const& new_country, Date new_date);
 	};

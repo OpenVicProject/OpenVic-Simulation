@@ -69,7 +69,7 @@ bool CountryInstance::apply_history_to_country(CountryHistoryMap const& history,
 		if (entry->get_government_type()) government_type = *entry->get_government_type();
 		if (entry->get_plurality()) plurality = *entry->get_plurality();
 		if (entry->get_national_value()) national_value = *entry->get_national_value();
-		if (entry->get_civilised()) civilised = *entry->get_civilised();
+		if (entry->is_civilised()) civilised = *entry->is_civilised();
 		if (entry->get_prestige()) prestige = *entry->get_prestige();
 		for (Reform const* reform : entry->get_reforms()) {
 			ret &= add_reform(reform);
