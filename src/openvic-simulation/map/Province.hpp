@@ -43,6 +43,7 @@ namespace OpenVic {
 		};
 
 		struct province_positions_t {
+			fvec2_t center;
 			fvec2_t text;
 			fixed_point_t text_rotation;
 			fixed_point_t text_scale;

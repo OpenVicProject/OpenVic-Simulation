@@ -493,34 +493,41 @@ bool Map::load_map_images(fs::path const& province_path, fs::path const& terrain
 	std::vector<fixed_point_map_t<TerrainType const*>> terrain_type_pixels_list(provinces.size());
 	bool ret = true;
 	std::unordered_set<colour_t> unrecognised_province_colours;
+	
+	std::vector<fixed_point_t> pixels_per_province(provinces.size());
+	std::vector<fixed_point_t> x_sum_per_province(provinces.size());
+	std::vector<fixed_point_t> y_sum_per_province(provinces.size());
 
 	for (size_t y = 0; y < height; ++y) {
 		for (size_t x = 0; x < width; ++x) {
-			const size_t idx = x + y * width;
+			const size_t pixel_index = x + y * width;
+			const colour_t province_colour = colour_at(province_data, pixel_index);
 
-			const colour_t province_colour = colour_at(province_data, idx);
 			if (x > 0) {
-				const size_t jdx = idx - 1;
+				const size_t jdx = pixel_index - 1;
 				if (colour_at(province_data, jdx) == province_colour) {
-					province_shape_image[idx].index = province_shape_image[jdx].index;
+					province_shape_image[pixel_index].index = province_shape_image[jdx].index;
 					goto set_terrain;
 				}
 			}
+
 			if (y > 0) {
-				const size_t jdx = idx - width;
+				const size_t jdx = pixel_index - width;
 				if (colour_at(province_data, jdx) == province_colour) {
-					province_shape_image[idx].index = province_shape_image[jdx].index;
+					province_shape_image[pixel_index].index = province_shape_image[jdx].index;
 					goto set_terrain;
 				}
 			}
+
 			{
-				const Province::index_t index = get_index_from_colour(province_colour);
-				if (index != Province::NULL_INDEX) {
-					province_checklist[index - 1] = true;
-					province_shape_image[idx].index = index;
+				const Province::index_t province_index = get_index_from_colour(province_colour);
+				if (province_index != Province::NULL_INDEX) {
+					province_checklist[province_index - 1] = true;
+					province_shape_image[pixel_index].index = province_index;
 					goto set_terrain;
 				}
 			}
+
 			if (!unrecognised_province_colours.contains(province_colour)) {
 				unrecognised_province_colours.insert(province_colour);
 				if (detailed_errors) {
@@ -529,20 +536,30 @@ bool Map::load_map_images(fs::path const& province_path, fs::path const& terrain
 					);
 				}
 			}
-			province_shape_image[idx].index = Province::NULL_INDEX;
+
+			province_shape_image[pixel_index].index = Province::NULL_INDEX;
 
 		set_terrain:
-			const TerrainTypeMapping::index_t terrain = terrain_data[idx];
+			const Province::index_t province_index = province_shape_image[pixel_index].index;			
+			if (province_index != Province::NULL_INDEX) {
+				const uint16_t array_index = province_index - 1;
+				pixels_per_province[array_index]++;
+				x_sum_per_province[array_index] += x;
+				y_sum_per_province[array_index] += y;
+			}
+
+			const TerrainTypeMapping::index_t terrain = terrain_data[pixel_index];
 			TerrainTypeMapping const* mapping = terrain_type_manager.get_terrain_type_mapping_for(terrain);
 			if (mapping != nullptr) {
-				if (province_shape_image[idx].index != Province::NULL_INDEX) {
-					terrain_type_pixels_list[province_shape_image[idx].index - 1][&mapping->get_type()]++;
+
+				if (province_index != Province::NULL_INDEX) {
+					terrain_type_pixels_list[province_index - 1][&mapping->get_type()]++;
 				}
 
-				province_shape_image[idx].terrain =
+				province_shape_image[pixel_index].terrain =
 					mapping->get_has_texture() && terrain < terrain_type_manager.get_terrain_texture_limit() ? terrain + 1 : 0;
 			} else {
-				province_shape_image[idx].terrain = 0;
+				province_shape_image[pixel_index].terrain = 0;
 			}
 		}
 	}
@@ -552,11 +569,22 @@ bool Map::load_map_images(fs::path const& province_path, fs::path const& terrain
 	}
 
 	size_t missing = 0;
-	for (size_t idx = 0; idx < province_checklist.size(); ++idx) {
-		Province* province = provinces.get_item_by_index(idx);
-		const fixed_point_map_const_iterator_t<TerrainType const*> largest = get_largest_item(terrain_type_pixels_list[idx]);
-		province->default_terrain_type = largest != terrain_type_pixels_list[idx].end() ? largest->first : nullptr;
-		province->on_map = province_checklist[idx];
+	for (size_t array_index = 0; array_index < province_checklist.size(); ++array_index) {
+		Province* province = provinces.get_item_by_index(array_index);
+		const fixed_point_t pixel_count = pixels_per_province[array_index];
+		if(pixel_count > 0) {
+			const fixed_point_t x = x_sum_per_province[array_index] / pixel_count;
+			const fixed_point_t y = y_sum_per_province[array_index] / pixel_count;
+			const fvec2_t center { x, y };
+			province->positions.center = center;
+		}
+		else {
+			Logger::warning("Province ",province->index," has no pixels");
+		}
+
+		const fixed_point_map_const_iterator_t<TerrainType const*> largest = get_largest_item(terrain_type_pixels_list[array_index]);
+		province->default_terrain_type = largest != terrain_type_pixels_list[array_index].end() ? largest->first : nullptr;
+		province->on_map = province_checklist[array_index];
 		if (!province->on_map) {
 			if (detailed_errors) {
 				Logger::warning("Province missing from shape image: ", province->to_string());
@@ -588,6 +616,7 @@ bool Map::_generate_province_adjacencies() {
 	for (size_t y = 0; y < height; ++y) {
 		for (size_t x = 0; x < width; ++x) {
 			Province* cur = get_province_by_index(province_shape_image[x + y * width].index);
+
 			if (cur != nullptr) {
 				changed |= generate_adjacency(cur, (x + 1) % width, y);
 				if (y + 1 < height) {
