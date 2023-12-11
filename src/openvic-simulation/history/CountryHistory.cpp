@@ -25,6 +25,7 @@ bool CountryHistoryMap::_load_history_entry(
 	CountryManager const& country_manager = game_manager.get_country_manager();
 	TechnologyManager const& technology_manager = game_manager.get_research_manager().get_technology_manager();
 	InventionManager const& invention_manager = game_manager.get_research_manager().get_invention_manager();
+	DecisionManager const& decision_manager = game_manager.get_decision_manager();
 
 	return expect_dictionary_keys_and_default(
 		[this, &game_manager, &dataloader, &deployment_manager, &issue_manager, 
@@ -71,9 +72,6 @@ bool CountryHistoryMap::_load_history_entry(
 				game_manager, dataloader, deployment_manager, entry.get_date(), value, key, value
 			);
 		},
-		/* we have to use a lambda, assign_variable_callback_pointer
-		 * apparently doesn't play nice with const & non-const accessors */
-		// TODO - fix this issue (cause by provinces having non-const accessors)
 		"capital", ZERO_OR_ONE,
 			game_manager.get_map().expect_province_identifier(assign_variable_callback_pointer(entry.capital)),
 		"primary_culture", ZERO_OR_ONE,
@@ -122,24 +120,33 @@ bool CountryHistoryMap::_load_history_entry(
 		"consciousness", ZERO_OR_ONE, expect_fixed_point(assign_variable_callback(entry.consciousness)),
 		"nonstate_consciousness", ZERO_OR_ONE, expect_fixed_point(assign_variable_callback(entry.nonstate_consciousness)),
 		"is_releasable_vassal", ZERO_OR_ONE, expect_bool(assign_variable_callback(entry.releasable_vassal)),
-		"decision", ZERO_OR_ONE, success_callback, //TODO: decisions
+		"decision", ZERO_OR_MORE, decision_manager.expect_decision_identifier([&entry](Decision const& decision) -> bool {
+			return entry.decisions.emplace(&decision).second;
+		}),
 		"govt_flag", ZERO_OR_ONE, [&entry, &politics_manager](ast::NodeCPtr value) -> bool {
+			GovernmentTypeManager const& government_type_manager = politics_manager.get_government_type_manager();
 			GovernmentType const* government_type = nullptr;
-			std::string_view flag;
-			bool ret = expect_dictionary_keys(
-				"government", ONE_EXACTLY, politics_manager.get_government_type_manager()
-					.expect_government_type_identifier(assign_variable_callback_pointer(government_type)),
-				"flag", ONE_EXACTLY, expect_identifier_or_string(assign_variable_callback(flag))
+			return expect_dictionary(
+				[&entry, &government_type_manager, &government_type](std::string_view id, ast::NodeCPtr node) -> bool {
+					bool ret = true;
+					if (id == "government") {
+						government_type = government_type_manager.get_government_type_by_identifier(id);
+						ret &= government_type != nullptr;
+					} else if (id == "flag") {
+						std::string_view flag;
+						ret &= expect_identifier_or_string(assign_variable_callback(flag))(node);
+						ret &= entry.government_flags.emplace(government_type, flag).second;
+						government_type = nullptr;
+					}
+					return ret;
+				}
 			)(value);
-			if (government_type != nullptr) {
-				return ret & entry.government_flags.emplace(government_type, flag).second;
-			} else return false;
 		},
 		"colonial_points", ZERO_OR_ONE, expect_fixed_point(assign_variable_callback(entry.colonial_points)), 
-		"set_country_flag", ZERO_OR_ONE, expect_identifier_or_string([&entry](std::string_view flag) -> bool {
+		"set_country_flag", ZERO_OR_MORE, expect_identifier_or_string([&entry](std::string_view flag) -> bool {
 			return entry.country_flags.emplace(flag).second;
 		}),
-		"set_global_flag", ZERO_OR_ONE, expect_identifier_or_string([&entry](std::string_view flag) -> bool {
+		"set_global_flag", ZERO_OR_MORE, expect_identifier_or_string([&entry](std::string_view flag) -> bool {
 			return entry.global_flags.emplace(flag).second;
 		})
 	)(root);

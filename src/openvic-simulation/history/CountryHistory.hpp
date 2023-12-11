@@ -3,6 +3,7 @@
 #include <map>
 #include <optional>
 
+#include "openvic-simulation/misc/Decision.hpp"
 #include "openvic-simulation/country/Country.hpp"
 #include "openvic-simulation/history/Bookmark.hpp"
 #include "openvic-simulation/history/HistoryMap.hpp"
@@ -55,8 +56,7 @@ namespace OpenVic {
 		string_set_t PROPERTY(country_flags);
 		string_set_t PROPERTY(global_flags);
 		std::map<GovernmentType const*, std::string> PROPERTY(government_flags);
-
-		//TODO: decisions
+		std::set<Decision const*> decisions;
 
 		CountryHistoryEntry(Country const& new_country, Date new_date);
 	};
