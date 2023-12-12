@@ -9,6 +9,8 @@ namespace OpenVic {
 
 	struct PopManager;
 	struct PopType;
+	struct RebelType;
+	struct RebelManager;
 
 	/* REQUIREMENTS:
 	 * POP-18, POP-19, POP-20, POP-21, POP-34, POP-35, POP-36, POP-37
@@ -27,9 +29,17 @@ namespace OpenVic {
 		pop_size_t PROPERTY(num_demoted);
 		pop_size_t PROPERTY(num_migrated);
 
+		fixed_point_t PROPERTY(militancy);
+		fixed_point_t PROPERTY(consciousness);
+		RebelType const* PROPERTY(rebel_type);
+
+		Pop(
+			PopType const& new_type, Culture const& new_culture, Religion const& new_religion, pop_size_t new_size,
+			fixed_point_t new_militancy, fixed_point_t new_consciousness, RebelType const* new_rebel_type
+		);
+
 	public:
-		Pop(PopType const& new_type, Culture const& new_culture, Religion const& new_religion, pop_size_t new_size);
-		Pop(Pop const&) = delete;
+		Pop(Pop const&) = default;
 		Pop(Pop&&) = default;
 		Pop& operator=(Pop const&) = delete;
 		Pop& operator=(Pop&&) = delete;
@@ -110,5 +120,9 @@ namespace OpenVic {
 		bool load_pop_type_file(
 			std::string_view filestem, UnitManager const& unit_manager, GoodManager const& good_manager, ast::NodeCPtr root
 		);
+		bool load_pop_into_vector(
+			RebelManager const& rebel_manager, std::vector<Pop>& vec, PopType const& type, ast::NodeCPtr pop_node,
+			bool *non_integer_size
+		) const;
 	};
 }

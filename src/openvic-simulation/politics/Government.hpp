@@ -38,5 +38,7 @@ namespace OpenVic {
 		);
 
 		bool load_government_types_file(IdeologyManager const& ideology_manager, ast::NodeCPtr root);
+
+		bool is_valid_flag_type(std::string_view type) const;
 	};
 } // namespace OpenVic

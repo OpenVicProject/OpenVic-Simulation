@@ -55,7 +55,7 @@ namespace OpenVic {
 		std::optional<fixed_point_t> PROPERTY(colonial_points);
 		string_set_t PROPERTY(country_flags);
 		string_set_t PROPERTY(global_flags);
-		std::map<GovernmentType const*, std::string> PROPERTY(government_flags);
+		std::map<GovernmentType const*, GovernmentType const*> PROPERTY(government_flag_overrides);
 		std::set<Decision const*> decisions;
 
 		CountryHistoryEntry(Country const& new_country, Date new_date);

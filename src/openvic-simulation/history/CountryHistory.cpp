@@ -28,7 +28,7 @@ bool CountryHistoryMap::_load_history_entry(
 	DecisionManager const& decision_manager = game_manager.get_decision_manager();
 
 	return expect_dictionary_keys_and_default(
-		[this, &game_manager, &dataloader, &deployment_manager, &issue_manager, 
+		[this, &game_manager, &dataloader, &deployment_manager, &issue_manager,
 			&technology_manager, &invention_manager, &country_manager, &entry](std::string_view key, ast::NodeCPtr value) -> bool {
 			ReformGroup const* reform_group = issue_manager.get_reform_group_by_identifier(key);
 			if (reform_group != nullptr) {
@@ -67,7 +67,7 @@ bool CountryHistoryMap::_load_history_entry(
 					return entry.inventions.emplace(invention, flag).second;
 				} else return false;
 			}
-			
+
 			return _load_history_sub_entry_callback(
 				game_manager, dataloader, deployment_manager, entry.get_date(), value, key, value
 			);
@@ -120,29 +120,70 @@ bool CountryHistoryMap::_load_history_entry(
 		"consciousness", ZERO_OR_ONE, expect_fixed_point(assign_variable_callback(entry.consciousness)),
 		"nonstate_consciousness", ZERO_OR_ONE, expect_fixed_point(assign_variable_callback(entry.nonstate_consciousness)),
 		"is_releasable_vassal", ZERO_OR_ONE, expect_bool(assign_variable_callback(entry.releasable_vassal)),
-		"decision", ZERO_OR_MORE, decision_manager.expect_decision_identifier([&entry](Decision const& decision) -> bool {
-			return entry.decisions.emplace(&decision).second;
-		}),
+		"decision", ZERO_OR_MORE, decision_manager.expect_decision_identifier(set_callback_pointer(entry.decisions)),
 		"govt_flag", ZERO_OR_ONE, [&entry, &politics_manager](ast::NodeCPtr value) -> bool {
 			GovernmentTypeManager const& government_type_manager = politics_manager.get_government_type_manager();
 			GovernmentType const* government_type = nullptr;
-			return expect_dictionary(
-				[&entry, &government_type_manager, &government_type](std::string_view id, ast::NodeCPtr node) -> bool {
-					bool ret = true;
+			bool flag_expected = false;
+			bool ret = expect_dictionary(
+				[&entry, &government_type_manager, &government_type, &flag_expected](std::string_view id,
+					ast::NodeCPtr node) -> bool {
 					if (id == "government") {
-						government_type = government_type_manager.get_government_type_by_identifier(id);
-						ret &= government_type != nullptr;
-					} else if (id == "flag") {
-						std::string_view flag;
-						ret &= expect_identifier_or_string(assign_variable_callback(flag))(node);
-						ret &= entry.government_flags.emplace(government_type, flag).second;
+						bool ret = true;
+						if (flag_expected) {
+							Logger::error(
+								"Government key found when expect flag type override for ", government_type,
+								" in history of ", entry.get_country().get_identifier()
+							);
+							ret = false;
+						}
+						flag_expected = true;
 						government_type = nullptr;
+						ret &= government_type_manager.expect_government_type_identifier(
+							assign_variable_callback_pointer(government_type)
+						)(node);
+						return ret;
+					} else if (id == "flag") {
+						if (flag_expected) {
+							flag_expected = false;
+							GovernmentType const* flag_override_government_type = nullptr;
+							bool ret = government_type_manager.expect_government_type_identifier(
+								assign_variable_callback_pointer(flag_override_government_type)
+							)(node);
+							/* If the first government type is null, the "government" section will have already output
+							 * an error, so no need to output another one here. */
+							if (government_type != nullptr && flag_override_government_type != nullptr) {
+								ret &= entry.government_flag_overrides.emplace(
+									government_type, flag_override_government_type
+								).second;
+							}
+							return ret;
+						} else {
+							Logger::error(
+								"Flag key found when expecting government type for flag type override in history of ",
+								entry.get_country().get_identifier()
+							);
+							return false;
+						}
+					} else {
+						Logger::error(
+							"Invalid key ", id, " in government flag overrides in history of ",
+							entry.get_country().get_identifier()
+						);
+						return false;
 					}
-					return ret;
 				}
 			)(value);
+			if (flag_expected) {
+				Logger::error(
+					"Missing flag type override for government type ", government_type, " in history of ",
+					entry.get_country().get_identifier()
+				);
+				ret = false;
+			}
+			return ret;
 		},
-		"colonial_points", ZERO_OR_ONE, expect_fixed_point(assign_variable_callback(entry.colonial_points)), 
+		"colonial_points", ZERO_OR_ONE, expect_fixed_point(assign_variable_callback(entry.colonial_points)),
 		"set_country_flag", ZERO_OR_MORE, expect_identifier_or_string([&entry](std::string_view flag) -> bool {
 			return entry.country_flags.emplace(flag).second;
 		}),

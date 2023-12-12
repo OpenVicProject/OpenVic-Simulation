@@ -34,7 +34,7 @@ bool DecisionManager::add_decision(
 		}
 	}
 
-	return decisions.add_item({ 
+	return decisions.add_item({
 		identifier,
 		alert,
 		news,
@@ -42,7 +42,7 @@ bool DecisionManager::add_decision(
 		news_desc_long,
 		news_desc_medium,
 		news_desc_short,
-		picture 
+		picture
 	}, duplicate_warning_callback);
 }
 

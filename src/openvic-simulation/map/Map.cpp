@@ -294,8 +294,15 @@ bool Map::apply_history_to_provinces(ProvinceHistoryManager const& history_manag
 		if (!province.get_water()) {
 			ProvinceHistoryMap const* history_map = history_manager.get_province_history(&province);
 			if (history_map != nullptr) {
+				ProvinceHistoryEntry const* pop_history_entry = nullptr;
 				for (ProvinceHistoryEntry const* entry : history_map->get_entries_up_to(date)) {
 					province.apply_history_to_province(entry);
+					if (!entry->get_pops().empty()) {
+						pop_history_entry = entry;
+					}
+				}
+				if (pop_history_entry != nullptr) {
+					province.add_pop_vec(pop_history_entry->get_pops());
 				}
 			}
 		}

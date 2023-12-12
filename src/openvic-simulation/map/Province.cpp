@@ -68,6 +68,19 @@ bool Province::add_pop(Pop&& pop) {
 	}
 }
 
+bool Province::add_pop_vec(std::vector<Pop> const& pop_vec) {
+	if (!get_water()) {
+		pops.reserve(pops.size() + pop_vec.size());
+		for (Pop const& pop : pop_vec) {
+			pops.push_back(pop);
+		}
+		return true;
+	} else {
+		Logger::error("Trying to add pop vector to water province ", get_identifier());
+		return false;
+	}
+}
+
 size_t Province::get_pop_count() const {
 	return pops.size();
 }
