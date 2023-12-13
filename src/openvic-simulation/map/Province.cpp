@@ -121,7 +121,7 @@ Province::adjacency_t::adjacency_t(Province const* province, distance_t distance
 	assert(province != nullptr);
 }
 
-bool Province::is_adjacent_to(Province const* province) {
+bool Province::is_adjacent_to(Province const* province) const {
 	for (adjacency_t adj : adjacencies) {
 		if (adj.province == province) {
 			return true;
@@ -140,6 +140,18 @@ bool Province::add_adjacency(Province const* province, distance_t distance, flag
 	}
 	adjacencies.push_back({ province, distance, flags });
 	return true;
+}
+
+fvec2_t Province::get_unit_position() const {
+	return positions.unit.value_or(positions.center);
+}
+
+Province::distance_t Province::calculate_distance_to(Province const* province) const {
+	const fvec2_t my_unit_position = get_unit_position();
+	const fvec2_t other_unit_position = province->get_unit_position();
+	const fvec2_t distance_vector = other_unit_position - my_unit_position;
+	const fixed_point_t distance = distance_vector.length_squared();
+	return static_cast<Province::distance_t>(distance);
 }
 
 bool Province::reset(BuildingTypeManager const& building_type_manager) {
