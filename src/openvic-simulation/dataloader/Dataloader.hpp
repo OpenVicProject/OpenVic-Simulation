@@ -94,8 +94,9 @@ namespace OpenVic {
 		) const;
 		bool apply_to_files(path_vector_t const& files, NodeTools::callback_t<fs::path const&> callback) const;
 
+		string_set_t lookup_dirs_in_dir(std::string_view path) const;
+
 		bool load_defines(GameManager& game_manager) const;
-		bool load_pop_history(GameManager& game_manager, std::string_view path) const;
 
 		enum locale_t : size_t {
 			English, French, German, Polish, Spanish, Italian, Swedish,

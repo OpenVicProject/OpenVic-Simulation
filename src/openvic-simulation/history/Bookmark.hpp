@@ -38,5 +38,7 @@ namespace OpenVic {
 			uint32_t initial_camera_y
 		);
 		bool load_bookmark_file(ast::NodeCPtr root);
+
+		Date get_last_bookmark_date() const;
 	};
 }

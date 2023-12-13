@@ -135,6 +135,21 @@ ProvinceHistoryMap const* ProvinceHistoryManager::get_province_history(Province 
 	}
 }
 
+ProvinceHistoryMap* ProvinceHistoryManager::_get_or_make_province_history(Province const& province) {
+	decltype(province_histories)::iterator it = province_histories.find(&province);
+	if (it == province_histories.end()) {
+		const std::pair<decltype(province_histories)::iterator, bool> result =
+			province_histories.emplace(&province, ProvinceHistoryMap { province });
+		if (result.second) {
+			it = result.first;
+		} else {
+			Logger::error("Failed to create province history map for province ", province.get_identifier());
+			return nullptr;
+		}
+	}
+	return &it->second;
+}
+
 bool ProvinceHistoryManager::load_province_history_file(
 	GameManager const& game_manager, Province const& province, ast::NodeCPtr root
 ) {
@@ -146,18 +161,52 @@ bool ProvinceHistoryManager::load_province_history_file(
 		return false;
 	}
 
-	decltype(province_histories)::iterator it = province_histories.find(&province);
-	if (it == province_histories.end()) {
-		const std::pair<decltype(province_histories)::iterator, bool> result =
-			province_histories.emplace(&province, ProvinceHistoryMap { province });
-		if (result.second) {
-			it = result.first;
-		} else {
-			Logger::error("Failed to create province history map for province ", province.get_identifier());
-			return false;
-		}
+	ProvinceHistoryMap* province_history = _get_or_make_province_history(province);
+	if (province_history != nullptr) {
+		return province_history->_load_history_file(game_manager, root);
+	} else {
+		return false;
 	}
-	ProvinceHistoryMap& province_history = it->second;
+}
 
-	return province_history._load_history_file(game_manager, root);
+bool ProvinceHistoryEntry::_load_province_pop_history(
+	GameManager const& game_manager, ast::NodeCPtr root, bool *non_integer_size
+) {
+	PopManager const& pop_manager = game_manager.get_pop_manager();
+	RebelManager const& rebel_manager = game_manager.get_politics_manager().get_rebel_manager();
+	return pop_manager.expect_pop_type_dictionary(
+		[this, &pop_manager, &rebel_manager, non_integer_size](PopType const& pop_type, ast::NodeCPtr pop_node) -> bool {
+			return pop_manager.load_pop_into_vector(rebel_manager, pops, pop_type, pop_node, non_integer_size);
+		}
+	)(root);
+}
+
+bool ProvinceHistoryMap::_load_province_pop_history(
+	GameManager const& game_manager, Date date, ast::NodeCPtr root, bool *non_integer_size
+) {
+	ProvinceHistoryEntry* entry = _get_or_make_entry(game_manager, date);
+	if (entry != nullptr) {
+		return entry->_load_province_pop_history(game_manager, root, non_integer_size);
+	} else {
+		return false;
+	}
+}
+
+bool ProvinceHistoryManager::load_pop_history_file(
+	GameManager const& game_manager, Date date, ast::NodeCPtr root, bool *non_integer_size
+) {
+	if (locked) {
+		Logger::error("Attempted to load pop history file after province history registry was locked!");
+		return false;
+	}
+	return game_manager.get_map().expect_province_dictionary(
+		[this, &game_manager, date, non_integer_size](Province const& province, ast::NodeCPtr node) -> bool {
+			ProvinceHistoryMap* province_history = _get_or_make_province_history(province);
+			if (province_history != nullptr) {
+				return province_history->_load_province_pop_history(game_manager, date, node, non_integer_size);
+			} else {
+				return false;
+			}
+		}
+	)(root);
 }

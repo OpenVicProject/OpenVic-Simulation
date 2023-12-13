@@ -4,14 +4,18 @@
 
 #include "openvic-simulation/dataloader/NodeTools.hpp"
 #include "openvic-simulation/map/Province.hpp"
+#include "openvic-simulation/politics/Rebel.hpp"
 #include "openvic-simulation/utility/Logger.hpp"
 
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;
 
 Pop::Pop(
-	PopType const& new_type, Culture const& new_culture, Religion const& new_religion, pop_size_t new_size
-) : type { new_type }, culture { new_culture }, religion { new_religion }, size { new_size } {
+	PopType const& new_type, Culture const& new_culture, Religion const& new_religion, pop_size_t new_size,
+	fixed_point_t new_militancy, fixed_point_t new_consciousness, RebelType const* new_rebel_type
+) : type { new_type }, culture { new_culture }, religion { new_religion }, size { new_size }, num_promoted { 0 },
+	num_demoted { 0 }, num_migrated { 0 }, militancy { new_militancy }, consciousness { new_consciousness },
+	rebel_type { new_rebel_type } {
 	assert(size > 0);
 }
 
@@ -157,26 +161,34 @@ bool PopManager::load_pop_type_file(
 	return ret;
 }
 
-bool PopManager::load_pop_into_province(Province& province, std::string_view pop_type_identifier, ast::NodeCPtr pop_node)
-	const {
-	PopType const* type = get_pop_type_by_identifier(pop_type_identifier);
+bool PopManager::load_pop_into_vector(
+	RebelManager const& rebel_manager, std::vector<Pop>& vec, PopType const& type, ast::NodeCPtr pop_node,
+	bool *non_integer_size
+) const {
 	Culture const* culture = nullptr;
 	Religion const* religion = nullptr;
-	Pop::pop_size_t size = 0;
+	fixed_point_t size = 0; /* Some genius filled later start dates with non-integer sized pops */
+	fixed_point_t militancy = 0, consciousness = 0;
+	RebelType const* rebel_type = nullptr;
+
 	bool ret = expect_dictionary_keys(
 		"culture", ONE_EXACTLY, culture_manager.expect_culture_identifier(assign_variable_callback_pointer(culture)),
 		"religion", ONE_EXACTLY, religion_manager.expect_religion_identifier(assign_variable_callback_pointer(religion)),
-		"size", ONE_EXACTLY, expect_uint(assign_variable_callback(size)),
-		"militancy", ZERO_OR_ONE, success_callback,
-		"rebel_type", ZERO_OR_ONE, success_callback
+		"size", ONE_EXACTLY, expect_fixed_point(assign_variable_callback(size)),
+		"militancy", ZERO_OR_ONE, expect_fixed_point(assign_variable_callback(militancy)),
+		"consciousness", ZERO_OR_ONE, expect_fixed_point(assign_variable_callback(consciousness)),
+		"rebel_type", ZERO_OR_ONE, rebel_manager.expect_rebel_type_identifier(assign_variable_callback_pointer(rebel_type))
 	)(pop_node);
 
-	if (type != nullptr && culture != nullptr && religion != nullptr && size > 0) {
-		ret &= province.add_pop({ *type, *culture, *religion, size });
+	if (non_integer_size != nullptr && !size.is_integer()) {
+		*non_integer_size = true;
+	}
+
+	if (culture != nullptr && religion != nullptr && size >= 1) {
+		vec.emplace_back(Pop { type, *culture, *religion, size.to_int64_t(), militancy, consciousness, rebel_type });
 	} else {
 		Logger::warning(
-			"Some pop arguments are invalid: province = ", province, ", type = ", type, ", culture = ", culture,
-			", religion = ", religion, ", size = ", size
+			"Some pop arguments are invalid: culture = ", culture, ", religion = ", religion, ", size = ", size
 		);
 	}
 	return ret;

@@ -33,8 +33,11 @@ namespace OpenVic {
 		std::map<BuildingType const*, BuildingType::level_t> PROPERTY(province_buildings);
 		std::map<BuildingType const*, BuildingType::level_t> PROPERTY(state_buildings);
 		fixed_point_map_t<Ideology const*> PROPERTY(party_loyalties);
+		std::vector<Pop> PROPERTY(pops);
 
 		ProvinceHistoryEntry(Province const& new_province, Date new_date);
+
+		bool _load_province_pop_history(GameManager const& game_manager, ast::NodeCPtr root, bool *non_integer_size);
 	};
 
 	struct ProvinceHistoryManager;
@@ -50,12 +53,19 @@ namespace OpenVic {
 
 		std::unique_ptr<ProvinceHistoryEntry> _make_entry(Date date) const override;
 		bool _load_history_entry(GameManager const& game_manager, ProvinceHistoryEntry& entry, ast::NodeCPtr root) override;
+
+	private:
+		bool _load_province_pop_history(
+			GameManager const& game_manager, Date date, ast::NodeCPtr root, bool *non_integer_size
+		);
 	};
 
 	struct ProvinceHistoryManager {
 	private:
 		std::map<Province const*, ProvinceHistoryMap> PROPERTY(province_histories);
 		bool locked = false;
+
+		ProvinceHistoryMap* _get_or_make_province_history(Province const& province);
 
 	public:
 		ProvinceHistoryManager() = default;
@@ -66,5 +76,6 @@ namespace OpenVic {
 		ProvinceHistoryMap const* get_province_history(Province const* province) const;
 
 		bool load_province_history_file(GameManager const& game_manager, Province const& province, ast::NodeCPtr root);
+		bool load_pop_history_file(GameManager const& game_manager, Date date, ast::NodeCPtr root, bool *non_integer_size);
 	};
 } // namespace OpenVic

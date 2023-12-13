@@ -214,6 +214,10 @@ namespace OpenVic {
 			return value & (ONE - 1);
 		}
 
+		constexpr bool is_integer() const {
+			return get_frac() == 0;
+		}
+
 		constexpr int64_t to_int64_t() const {
 			return value >> PRECISION;
 		}

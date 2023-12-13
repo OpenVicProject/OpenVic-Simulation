@@ -25,6 +25,15 @@ using StringUtils::append_string_views;
 #define FILESYSTEM_NEEDS_FORWARD_SLASHES
 #endif
 
+static fs::path ensure_forward_slash_path(std::string_view path) {
+#if defined(FILESYSTEM_NEEDS_FORWARD_SLASHES)
+	/* Back-slashes need to be converted into forward-slashes */
+	return StringUtils::make_forward_slash_path(StringUtils::remove_leading_slashes(path));
+#else
+	return path;
+#endif
+}
+
 static constexpr bool path_equals_case_insensitive(std::string_view lhs, std::string_view rhs) {
 	constexpr auto ichar_equals = [](unsigned char l, unsigned char r) {
 		return std::tolower(l) == std::tolower(r);
@@ -60,13 +69,7 @@ bool Dataloader::set_roots(path_vector_t const& new_roots) {
 }
 
 fs::path Dataloader::lookup_file(std::string_view path, bool print_error) const {
-#if defined(FILESYSTEM_NEEDS_FORWARD_SLASHES)
-	/* Back-slashes need to be converted into forward-slashes */
-	const std::string forward_slash_path { StringUtils::make_forward_slash_path(StringUtils::remove_leading_slashes(path)) };
-	path = forward_slash_path;
-#endif
-
-	const fs::path filepath { path };
+	const fs::path filepath { ensure_forward_slash_path(path) };
 
 #if defined(FILESYSTEM_CASE_INSENSITIVE)
 	/* Case-insensitive filesystem */
@@ -120,12 +123,7 @@ requires requires (_UniqueKey const& unique_key, std::string_view path) {
 Dataloader::path_vector_t Dataloader::_lookup_files_in_dir(
 	std::string_view path, fs::path const& extension, _UniqueKey const& unique_key
 ) const {
-#if defined(FILESYSTEM_NEEDS_FORWARD_SLASHES)
-	/* Back-slashes need to be converted into forward-slashes */
-	const std::string forward_slash_path { StringUtils::make_forward_slash_path(StringUtils::remove_leading_slashes(path)) };
-	path = forward_slash_path;
-#endif
-	const fs::path dirpath { path };
+	const fs::path dirpath { ensure_forward_slash_path(path) };
 	path_vector_t ret;
 	struct file_entry_t {
 		fs::path file;
@@ -134,9 +132,8 @@ Dataloader::path_vector_t Dataloader::_lookup_files_in_dir(
 	string_map_t<file_entry_t> found_files;
 	for (fs::path const& root : roots) {
 		const size_t root_len = root.string().size();
-		const fs::path composed = root / dirpath;
 		std::error_code ec;
-		for (fs::directory_entry const& entry : _DirIterator { composed, ec }) {
+		for (fs::directory_entry const& entry : _DirIterator { root / dirpath, ec }) {
 			if (entry.is_regular_file()) {
 				fs::path file = entry;
 				if ((extension.empty() || file.extension() == extension)) {
@@ -194,6 +191,20 @@ bool Dataloader::apply_to_files(path_vector_t const& files, callback_t<fs::path 
 		if (!callback(file)) {
 			Logger::error("Callback failed for file: ", file);
 			ret = false;
+		}
+	}
+	return ret;
+}
+
+string_set_t Dataloader::lookup_dirs_in_dir(std::string_view path) const {
+	const fs::path dirpath { ensure_forward_slash_path(path) };
+	string_set_t ret;
+	for (fs::path const& root : roots) {
+		std::error_code ec;
+		for (fs::directory_entry const& entry : fs::directory_iterator { root / dirpath, ec }) {
+			if (entry.is_directory()) {
+				ret.emplace(entry.path().filename().string());
+			}
 		}
 	}
 	return ret;
@@ -498,6 +509,30 @@ bool Dataloader::_load_history(GameManager& game_manager, bool unused_history_fi
 			);
 		}
 	);
+
+	/* Pop History */
+	static constexpr std::string_view pop_history_directory = "history/pops/";
+	const string_set_t pop_history_dirs = lookup_dirs_in_dir(pop_history_directory);
+	const Date last_bookmark_date = game_manager.get_history_manager().get_bookmark_manager().get_last_bookmark_date();
+	for (std::string const& dir : pop_history_dirs) {
+		bool successful = false;
+		const Date date = Date::from_string(dir, &successful);
+		if (successful && date <= last_bookmark_date) {
+			bool non_integer_size = false;
+			ret &= apply_to_files(
+				lookup_files_in_dir(StringUtils::append_string_views(pop_history_directory, dir), ".txt"),
+				[this, &game_manager, date, &non_integer_size](fs::path const& file) -> bool {
+					return game_manager.get_history_manager().get_province_manager().load_pop_history_file(
+						game_manager, date, parse_defines(file).get_file_node(), &non_integer_size
+					);
+				}
+			);
+			if (non_integer_size) {
+				Logger::warning("Non-integer pop sizes in pop history files for ", date);
+			}
+		}
+	}
+
 	game_manager.get_history_manager().get_province_manager().lock_province_histories(game_manager.get_map(), false);
 
 	static constexpr std::string_view diplomacy_history_directory = "history/diplomacy";
@@ -835,19 +870,6 @@ bool Dataloader::load_defines(GameManager& game_manager) const {
 	}
 
 	return ret;
-}
-
-bool Dataloader::load_pop_history(GameManager& game_manager, std::string_view path) const {
-	return apply_to_files(
-		lookup_files_in_dir(path, ".txt"),
-		[&game_manager](fs::path const& file) -> bool {
-			return game_manager.get_map().expect_province_dictionary(
-				[&game_manager](Province& province, ast::NodeCPtr value) -> bool {
-					return province.load_pop_list(game_manager.get_pop_manager(), value);
-				}
-			)(parse_defines(file).get_file_node());
-		}
-	);
 }
 
 static bool _load_localisation_file(Dataloader::localisation_callback_t callback, std::vector<csv::LineObject> const& lines) {

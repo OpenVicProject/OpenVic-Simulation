@@ -101,8 +101,8 @@ namespace OpenVic {
 
 		bool expand_building(std::string_view building_type_identifier);
 
-		bool load_pop_list(PopManager const& pop_manager, ast::NodeCPtr root);
 		bool add_pop(Pop&& pop);
+		bool add_pop_vec(std::vector<Pop> const& pop_vec);
 		size_t get_pop_count() const;
 		void update_pops();
 

@@ -18,9 +18,11 @@ namespace OpenVic {
 
 	struct GameManager;
 
-	/* Helper functions to avoid cyclic dependency issues */
-	Date _get_start_date(GameManager const& game_manager);
-	Date _get_end_date(GameManager const& game_manager);
+	namespace _HistoryMapHelperFuncs {
+		/* Helper functions to avoid cyclic dependency issues */
+		Date _get_start_date(GameManager const& game_manager);
+		Date _get_end_date(GameManager const& game_manager);
+	}
 
 	template<std::derived_from<HistoryEntry> _Entry, typename... Args>
 	struct HistoryMap {
@@ -30,22 +32,12 @@ namespace OpenVic {
 		std::map<Date, std::unique_ptr<entry_type>> PROPERTY(entries);
 
 		bool _try_load_history_entry(GameManager const& game_manager, Args... args, Date date, ast::NodeCPtr root) {
-			const Date end_date = _get_end_date(game_manager);
-			if (date > end_date) {
-				Logger::error("History entry ", date, " defined after end date ", end_date);
+			entry_type *const entry = _get_or_make_entry(game_manager, date);
+			if (entry != nullptr) {
+				return _load_history_entry(game_manager, args..., *entry, root);
+			} else {
 				return false;
 			}
-			typename decltype(entries)::iterator it = entries.find(date);
-			if (it == entries.end()) {
-				const std::pair<typename decltype(entries)::iterator, bool> result = entries.emplace(date, _make_entry(date));
-				if (result.second) {
-					it = result.first;
-				} else {
-					Logger::error("Failed to create history entry at date ", date);
-					return false;
-				}
-			}
-			return _load_history_entry(game_manager, args..., *it->second, root);
 		}
 
 	protected:
@@ -58,7 +50,7 @@ namespace OpenVic {
 		) = 0;
 
 		bool _load_history_file(GameManager const& game_manager, Args... args, ast::NodeCPtr root) {
-			return _try_load_history_entry(game_manager, args..., _get_start_date(game_manager), root);
+			return _try_load_history_entry(game_manager, args..., _HistoryMapHelperFuncs::_get_start_date(game_manager), root);
 		}
 
 		bool _load_history_sub_entry_callback(
@@ -85,6 +77,26 @@ namespace OpenVic {
 			}
 
 			return default_callback(key, value);
+		}
+
+		/* Returns history entry at specific date, if date doesn't have an entry creates one, if that fails returns nullptr. */
+		entry_type* _get_or_make_entry(GameManager const& game_manager, Date date) {
+			const Date end_date = _HistoryMapHelperFuncs::_get_end_date(game_manager);
+			if (date > end_date) {
+				Logger::error("History entry ", date, " defined after end date ", end_date);
+				return nullptr;
+			}
+			typename decltype(entries)::iterator it = entries.find(date);
+			if (it == entries.end()) {
+				const std::pair<typename decltype(entries)::iterator, bool> result = entries.emplace(date, _make_entry(date));
+				if (result.second) {
+					it = result.first;
+				} else {
+					Logger::error("Failed to create history entry at date ", date);
+					return nullptr;
+				}
+			}
+			return it->second.get();
 		}
 
 	public:

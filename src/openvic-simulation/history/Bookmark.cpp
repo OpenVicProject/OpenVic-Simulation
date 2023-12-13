@@ -48,3 +48,13 @@ bool BookmarkManager::load_bookmark_file(ast::NodeCPtr root) {
 
 	return ret;
 }
+
+Date BookmarkManager::get_last_bookmark_date() const {
+	Date ret {};
+	for (Bookmark const& bookmark : get_bookmarks()) {
+		if (bookmark.get_date() > ret) {
+			ret = bookmark.get_date();
+		}
+	}
+	return ret;
+}

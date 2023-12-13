@@ -111,3 +111,9 @@ bool GovernmentTypeManager::load_government_types_file(IdeologyManager const& id
 
 	return ret;
 }
+
+bool GovernmentTypeManager::is_valid_flag_type(std::string_view type) const {
+	return std::any_of(flag_types.begin(), flag_types.end(), [type](std::string const& flag_type) -> bool {
+		return flag_type == type;
+	});
+}
