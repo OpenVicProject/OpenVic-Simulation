@@ -612,10 +612,12 @@ bool Map::load_map_images(fs::path const& province_path, fs::path const& terrain
 bool Map::_generate_province_adjacencies() {
 	bool changed = false;
 
-	auto generate_adjacency = [&](Province* cur, size_t x, size_t y) -> bool {
+	auto generate_adjacency = [&](Province* current, size_t x, size_t y) -> bool {
 		Province* neighbour = get_province_by_index(province_shape_image[x + y * width].index);
-		if (neighbour != nullptr && cur != neighbour) {
-			return cur->add_adjacency(neighbour, 0, 0) | neighbour->add_adjacency(cur, 0, 0);
+		if (neighbour != nullptr && current != neighbour) {
+			const Province::distance_t distance = current->calculate_distance_to(neighbour);
+			const Province::flags_t flags = 0;
+			return current->add_adjacency(neighbour, distance, flags) | neighbour->add_adjacency(current, distance, flags);
 		}
 		return false;
 	};

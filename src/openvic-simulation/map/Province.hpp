@@ -26,7 +26,7 @@ namespace OpenVic {
 
 		using index_t = uint16_t;
 		using life_rating_t = int8_t;
-		using distance_t = uint16_t;
+		using distance_t = fixed_point_t;
 		using flags_t = uint16_t;
 
 		enum struct colony_status_t : uint8_t { STATE, PROTECTORATE, COLONY };
@@ -47,7 +47,7 @@ namespace OpenVic {
 			fvec2_t text;
 			fixed_point_t text_rotation;
 			fixed_point_t text_scale;
-			fvec2_t unit;
+			std::optional<fvec2_t> unit;
 			fvec2_t city;
 			fvec2_t factory;
 			fvec2_t building_construction;
@@ -90,6 +90,8 @@ namespace OpenVic {
 		fixed_point_map_t<Culture const*> PROPERTY(culture_distribution);
 		fixed_point_map_t<Religion const*> PROPERTY(religion_distribution);
 
+		fvec2_t get_unit_position() const;
+
 		Province(std::string_view new_identifier, colour_t new_colour, index_t new_index);
 
 	public:
@@ -109,8 +111,10 @@ namespace OpenVic {
 		void update_state(Date today);
 		void tick(Date today);
 
-		bool is_adjacent_to(Province const* province);
+		bool is_adjacent_to(Province const* province) const;
 		bool add_adjacency(Province const* province, distance_t distance, flags_t flags);
+
+		distance_t calculate_distance_to(Province const* province) const;
 
 		bool reset(BuildingTypeManager const& building_type_manager);
 		bool apply_history_to_province(ProvinceHistoryEntry const* entry);
