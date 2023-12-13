@@ -234,8 +234,13 @@ bool ModifierManager::setup_modifier_effects() {
 	return ret;
 }
 
-void ModifierManager::register_complex_modifier(std::string_view identifier) {
-	complex_modifiers.emplace(identifier);
+bool ModifierManager::register_complex_modifier(std::string_view identifier) {
+	if (complex_modifiers.emplace(identifier).second) {
+		return true;
+	} else {
+		Logger::error("Duplicate complex modifier: ", identifier);
+		return false;
+	}
 }
 
 bool ModifierManager::add_event_modifier(std::string_view identifier, ModifierValue&& values, Modifier::icon_t icon) {

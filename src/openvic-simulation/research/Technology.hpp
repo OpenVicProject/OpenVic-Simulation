@@ -87,6 +87,6 @@ namespace OpenVic {
 			ModifierManager const& modifier_manager, UnitManager const& unit_manager,
 			BuildingTypeManager const& building_type_manager, ast::NodeCPtr root
 		); // technologies/*.txt
-		bool generate_modifiers(ModifierManager& modifier_manager);
+		bool generate_modifiers(ModifierManager& modifier_manager) const;
 	};
 }

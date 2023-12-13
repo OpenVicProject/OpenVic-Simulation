@@ -129,7 +129,7 @@ namespace OpenVic {
 			ModifierEffect::format_t format = ModifierEffect::format_t::PROPORTION_DECIMAL
 		);
 
-		void register_complex_modifier(std::string_view identifier);
+		bool register_complex_modifier(std::string_view identifier);
 
 		bool setup_modifier_effects();
 

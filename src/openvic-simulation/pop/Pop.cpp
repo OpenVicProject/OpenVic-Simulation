@@ -219,21 +219,22 @@ bool PopManager::load_pop_into_vector(
 	return ret;
 }
 
-#define STRATA_MODIFIER(name, positive_good) \
-	ret &= modifier_manager.add_modifier_effect(StringUtils::append_string_views(strata.get_identifier(), name), positive_good)
-
-bool PopManager::generate_modifiers(ModifierManager& modifier_manager) {
+bool PopManager::generate_modifiers(ModifierManager& modifier_manager) const {
 	bool ret = true;
 	for (Strata const& strata : get_stratas()) {
-		STRATA_MODIFIER("_income_modifier", true);
-		STRATA_MODIFIER("_savings_modifier", true);
-		STRATA_MODIFIER("_vote", true);
+		const auto strata_modifier = [&modifier_manager, &ret, &strata](std::string_view suffix, bool positive_good) -> void {
+			ret &= modifier_manager.add_modifier_effect(
+				StringUtils::append_string_views(strata.get_identifier(), suffix), positive_good
+			);
+		};
 
-		STRATA_MODIFIER("_life_needs", false);
-		STRATA_MODIFIER("_everyday_needs", false);
-		STRATA_MODIFIER("_luxury_needs", false);
+		strata_modifier("_income_modifier", true);
+		strata_modifier("_savings_modifier", true);
+		strata_modifier("_vote", true);
+
+		strata_modifier("_life_needs", false);
+		strata_modifier("_everyday_needs", false);
+		strata_modifier("_luxury_needs", false);
 	}
 	return ret;
 }
-
-#undef STRATA_MODIFIER

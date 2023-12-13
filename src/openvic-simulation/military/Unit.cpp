@@ -188,52 +188,53 @@ bool UnitManager::load_unit_file(GoodManager const& good_manager, ast::NodeCPtr 
 	})(root);
 }
 
-#define STAT_MODIFIER(name, positive_good, format) \
-	ret &= modifier_manager.add_modifier_effect(StringUtils::append_string_views(identifier, "_", name), positive_good, ModifierEffect::format_t::format)
+bool UnitManager::generate_modifiers(ModifierManager& modifier_manager) const {
+	bool ret = true;
 
-bool UnitManager::generate_modifiers(ModifierManager& modifier_manager) {
-	std::function<bool(std::string_view, Unit::type_t)> generate_stat_modifiers = [this, &modifier_manager](std::string_view identifier, Unit::type_t type) -> bool {
-		modifier_manager.register_complex_modifier(identifier);
-		bool ret = true;
+	const auto generate_stat_modifiers = [&modifier_manager, &ret](std::string_view identifier, Unit::type_t type) -> void {
 
-		STAT_MODIFIER("default_organisation", true, RAW_DECIMAL);
-		STAT_MODIFIER("maximum_speed", true, RAW_DECIMAL);
-		STAT_MODIFIER("build_time", false, INT);
-		STAT_MODIFIER("supply_consumption", false, PROPORTION_DECIMAL);
+		const auto stat_modifier = [&modifier_manager, &ret, &identifier](std::string_view suffix, bool positive_good,
+			ModifierEffect::format_t format) -> void {
+			ret &= modifier_manager.add_modifier_effect(
+				StringUtils::append_string_views(identifier, suffix), positive_good, format
+			);
+		};
+
+		using enum ModifierEffect::format_t;
+
+		ret &= modifier_manager.register_complex_modifier(identifier);
+
+		stat_modifier("_default_organisation", true, RAW_DECIMAL);
+		stat_modifier("_maximum_speed", true, RAW_DECIMAL);
+		stat_modifier("_build_time", false, INT);
+		stat_modifier("_supply_consumption", false, PROPORTION_DECIMAL);
 
 		switch (type) {
-		case Unit::type_t::LAND: {
-			STAT_MODIFIER("reconnaissance", true, RAW_DECIMAL);
-			STAT_MODIFIER("attack", true, RAW_DECIMAL);
-			STAT_MODIFIER("defence", true, RAW_DECIMAL);
-			STAT_MODIFIER("discipline", true, PROPORTION_DECIMAL);
-			STAT_MODIFIER("support", true, PROPORTION_DECIMAL);
-			STAT_MODIFIER("maneuver", true, INT);
-			STAT_MODIFIER("siege", true, RAW_DECIMAL);
+		case Unit::type_t::LAND:
+			stat_modifier("_reconnaissance", true, RAW_DECIMAL);
+			stat_modifier("_attack", true, RAW_DECIMAL);
+			stat_modifier("_defence", true, RAW_DECIMAL);
+			stat_modifier("_discipline", true, PROPORTION_DECIMAL);
+			stat_modifier("_support", true, PROPORTION_DECIMAL);
+			stat_modifier("_maneuver", true, INT);
+			stat_modifier("_siege", true, RAW_DECIMAL);
+			break;
+		case Unit::type_t::NAVAL:
+			stat_modifier("_colonial_points", true, INT);
+			stat_modifier("_supply_consumption_score", false, INT);
+			stat_modifier("_hull", true, RAW_DECIMAL);
+			stat_modifier("_gun_power", true, RAW_DECIMAL);
+			stat_modifier("_fire_range", true, RAW_DECIMAL);
+			stat_modifier("_evasion", true, PROPORTION_DECIMAL);
+			stat_modifier("_torpedo_attack", true, RAW_DECIMAL);
 			break;
 		}
-		case Unit::type_t::NAVAL: {
-			STAT_MODIFIER("colonial_points", true, INT);
-			STAT_MODIFIER("supply_consumption_score", false, INT);
-			STAT_MODIFIER("hull", true, RAW_DECIMAL);
-			STAT_MODIFIER("gun_power", true, RAW_DECIMAL);
-			STAT_MODIFIER("fire_range", true, RAW_DECIMAL);
-			STAT_MODIFIER("evasion", true, PROPORTION_DECIMAL);
-			STAT_MODIFIER("torpedo_attack", true, RAW_DECIMAL);
-			break;
-		}
-		}
-
-		return ret;
 	};
 
-	bool ret = true;
-	ret &= generate_stat_modifiers("army_base", Unit::type_t::LAND);
-	ret &= generate_stat_modifiers("navy_base", Unit::type_t::NAVAL);
-	for (Unit const& unit : this->get_units())
-		ret &= generate_stat_modifiers(unit.get_identifier(), unit.get_type());
-
+	generate_stat_modifiers("army_base", Unit::type_t::LAND);
+	generate_stat_modifiers("navy_base", Unit::type_t::NAVAL);
+	for (Unit const& unit : get_units()) {
+		generate_stat_modifiers(unit.get_identifier(), unit.get_type());
+	}
 	return ret;
 }
-
-#undef STAT_MODIFIER

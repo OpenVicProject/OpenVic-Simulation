@@ -141,6 +141,6 @@ namespace OpenVic {
 			bool *non_integer_size
 		) const;
 
-		bool generate_modifiers(ModifierManager& modifier_manager);
+		bool generate_modifiers(ModifierManager& modifier_manager) const;
 	};
 }
