@@ -132,11 +132,6 @@ bool ModifierManager::setup_modifier_effects() {
 	ret &= add_modifier_effect("max_tariff", true);
 	ret &= add_modifier_effect("max_tax", true);
 	ret &= add_modifier_effect("max_war_exhaustion", true, PERCENTAGE_DECIMAL);
-	ret &= add_modifier_effect("middle_income_modifier", true);
-	ret &= add_modifier_effect("middle_life_needs", true);
-	ret &= add_modifier_effect("middle_everyday_needs", true);
-	ret &= add_modifier_effect("middle_luxury_needs", true);
-	ret &= add_modifier_effect("middle_vote", true);
 	ret &= add_modifier_effect("min_military_spending", true);
 	ret &= add_modifier_effect("min_social_spending", true);
 	ret &= add_modifier_effect("min_tariff", true);
@@ -150,11 +145,6 @@ bool ModifierManager::setup_modifier_effects() {
 	ret &= add_modifier_effect("non_accepted_pop_militancy_modifier", false, RAW_DECIMAL);
 	ret &= add_modifier_effect("org_regain", true);
 	ret &= add_modifier_effect("political_reform_desire", false);
-	ret &= add_modifier_effect("poor_income_modifier", true);
-	ret &= add_modifier_effect("poor_life_needs", true);
-	ret &= add_modifier_effect("poor_everyday_needs", true);
-	ret &= add_modifier_effect("poor_luxury_needs", true);
-	ret &= add_modifier_effect("poor_vote", true);
 	ret &= add_modifier_effect("prestige", true, RAW_DECIMAL);
 	ret &= add_modifier_effect("research_points", true, RAW_DECIMAL);
 	ret &= add_modifier_effect("research_points_modifier", true);
@@ -163,11 +153,6 @@ bool ModifierManager::setup_modifier_effects() {
 	ret &= add_modifier_effect("RGO_output", true);
 	ret &= add_modifier_effect("rgo_throughput", true);
 	ret &= add_modifier_effect("RGO_throughput", true);
-	ret &= add_modifier_effect("rich_income_modifier", true);
-	ret &= add_modifier_effect("rich_life_needs", true);
-	ret &= add_modifier_effect("rich_everyday_needs", true);
-	ret &= add_modifier_effect("rich_luxury_needs", true);
-	ret &= add_modifier_effect("rich_vote", true);
 	ret &= add_modifier_effect("ruling_party_support", true);
 	ret &= add_modifier_effect("social_reform_desire", false);
 	ret &= add_modifier_effect("supply_consumption", false);

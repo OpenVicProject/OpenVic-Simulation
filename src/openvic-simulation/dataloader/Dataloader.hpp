@@ -11,10 +11,6 @@ namespace OpenVic {
 
 	struct GameManager;
 	class UIManager;
-	struct PopManager;
-	struct UnitManager;
-	struct GoodManager;
-	struct EventManager;
 
 	class Dataloader {
 	public:
@@ -24,7 +20,7 @@ namespace OpenVic {
 		path_vector_t roots;
 
 		bool _load_interface_files(UIManager& ui_manager) const;
-		bool _load_pop_types(PopManager& pop_manager, UnitManager const& unit_manager, GoodManager const& good_manager) const;
+		bool _load_pop_types(GameManager& game_manager) const;
 		bool _load_units(GameManager& game_manager) const;
 		bool _load_goods(GameManager& game_manager) const;
 		bool _load_rebel_types(GameManager& game_manager) const;
