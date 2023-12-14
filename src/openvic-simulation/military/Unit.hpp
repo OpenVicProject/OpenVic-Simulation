@@ -122,6 +122,6 @@ namespace OpenVic {
 		static NodeTools::callback_t<std::string_view> expect_type_str(NodeTools::Callback<Unit::type_t> auto callback);
 
 		bool load_unit_file(GoodManager const& good_manager, ast::NodeCPtr root);
-		bool generate_modifiers(ModifierManager& modifier_manager);
+		bool generate_modifiers(ModifierManager& modifier_manager) const;
 	};
 }

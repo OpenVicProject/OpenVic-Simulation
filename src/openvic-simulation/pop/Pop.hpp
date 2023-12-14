@@ -47,6 +47,16 @@ namespace OpenVic {
 		pop_size_t get_pop_daily_change() const;
 	};
 
+	struct Strata : HasIdentifier {
+		friend struct PopManager;
+
+	private:
+		Strata(std::string_view new_identifier);
+
+	public:
+		Strata(Strata&&) = default;
+	};
+
 	/* REQUIREMENTS:
 	 * POP-15, POP-16, POP-17, POP-26
 	 */
@@ -57,7 +67,7 @@ namespace OpenVic {
 		using rebel_units_t = fixed_point_map_t<Unit const*>;
 
 	private:
-		const enum class strata_t { POOR, MIDDLE, RICH } PROPERTY(strata);
+		Strata const& PROPERTY(strata);
 		const sprite_t PROPERTY(sprite);
 		const Good::good_map_t PROPERTY(life_needs);
 		const Good::good_map_t PROPERTY(everyday_needs);
@@ -81,7 +91,7 @@ namespace OpenVic {
 		// TODO - country and province migration targets, promote_to targets, ideologies and issues
 
 		PopType(
-			std::string_view new_identifier, colour_t new_colour, strata_t new_strata, sprite_t new_sprite,
+			std::string_view new_identifier, colour_t new_colour, Strata const& new_strata, sprite_t new_sprite,
 			Good::good_map_t&& new_life_needs, Good::good_map_t&& new_everyday_needs, Good::good_map_t&& new_luxury_needs,
 			rebel_units_t&& new_rebel_units, Pop::pop_size_t new_max_size, Pop::pop_size_t new_merge_max_size,
 			bool new_state_capital_only, bool new_demote_migrant, bool new_is_artisan, bool new_allowed_to_vote,
@@ -98,6 +108,8 @@ namespace OpenVic {
 
 	struct PopManager {
 	private:
+		/* Using strata/stratas instead of stratum/strata to avoid confusion. */
+		IdentifierRegistry<Strata> IDENTIFIER_REGISTRY(strata);
 		IdentifierRegistry<PopType> IDENTIFIER_REGISTRY(pop_type);
 		PopType::sprite_t PROPERTY(slave_sprite);
 		PopType::sprite_t PROPERTY(administrative_sprite);
@@ -108,14 +120,18 @@ namespace OpenVic {
 	public:
 		PopManager();
 
+		bool add_strata(std::string_view identifier);
+
 		bool add_pop_type(
-			std::string_view identifier, colour_t new_colour, PopType::strata_t strata, PopType::sprite_t sprite,
+			std::string_view identifier, colour_t new_colour, Strata const* strata, PopType::sprite_t sprite,
 			Good::good_map_t&& life_needs, Good::good_map_t&& everyday_needs, Good::good_map_t&& luxury_needs,
 			PopType::rebel_units_t&& rebel_units, Pop::pop_size_t max_size, Pop::pop_size_t merge_max_size,
 			bool state_capital_only, bool demote_migrant, bool is_artisan, bool allowed_to_vote, bool is_slave,
 			bool can_be_recruited, bool can_reduce_consciousness, bool administrative_efficiency, bool can_build, bool factory,
 			bool can_work_factory, bool unemployment
 		);
+
+		void reserve_pop_types(size_t count);
 
 		bool load_pop_type_file(
 			std::string_view filestem, UnitManager const& unit_manager, GoodManager const& good_manager, ast::NodeCPtr root
@@ -124,5 +140,7 @@ namespace OpenVic {
 			RebelManager const& rebel_manager, std::vector<Pop>& vec, PopType const& type, ast::NodeCPtr pop_node,
 			bool *non_integer_size
 		) const;
+
+		bool generate_modifiers(ModifierManager& modifier_manager) const;
 	};
 }

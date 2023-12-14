@@ -94,22 +94,22 @@ bool GoodManager::load_goods_file(ast::NodeCPtr root) {
 	return ret;
 }
 
-#define GOOD_MODIFIER(name) \
-	modifier_manager.register_complex_modifier(name); \
-	for (Good const& good : this->get_goods()) { \
-		ret &= modifier_manager.add_modifier_effect( \
-			StringUtils::append_string_views(name, "_", good.get_identifier()), \
-			true \
-		); \
-	}
-
-bool GoodManager::generate_modifiers(ModifierManager& modifier_manager) {
+bool GoodManager::generate_modifiers(ModifierManager& modifier_manager) const {
 	bool ret = true;
-	GOOD_MODIFIER("factory_goods_output");
-	GOOD_MODIFIER("factory_goods_throughput");
-	GOOD_MODIFIER("rgo_goods_output");
-	GOOD_MODIFIER("rgo_size");
+
+	const auto good_modifier = [this, &modifier_manager, &ret](std::string_view name) -> void {
+		ret &= modifier_manager.register_complex_modifier(name);
+		for (Good const& good : get_goods()) {
+			ret &= modifier_manager.add_modifier_effect(
+				StringUtils::append_string_views(name, "_", good.get_identifier()), true
+			);
+		}
+	};
+
+	good_modifier("factory_goods_output");
+	good_modifier("factory_goods_throughput");
+	good_modifier("rgo_goods_output");
+	good_modifier("rgo_size");
+
 	return ret;
 }
-
-#undef GOOD_MODIFIER

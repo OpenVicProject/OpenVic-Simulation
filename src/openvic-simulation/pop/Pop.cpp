@@ -23,8 +23,10 @@ Pop::pop_size_t Pop::get_pop_daily_change() const {
 	return Pop::get_num_promoted() - (Pop::get_num_demoted() + Pop::get_num_migrated());
 }
 
+Strata::Strata(std::string_view new_identifier) : HasIdentifier { new_identifier } {}
+
 PopType::PopType(
-	std::string_view new_identifier, colour_t new_colour, strata_t new_strata, sprite_t new_sprite,
+	std::string_view new_identifier, colour_t new_colour, Strata const& new_strata, sprite_t new_sprite,
 	Good::good_map_t&& new_life_needs, Good::good_map_t&& new_everyday_needs, Good::good_map_t&& new_luxury_needs,
 	rebel_units_t&& new_rebel_units, Pop::pop_size_t new_max_size, Pop::pop_size_t new_merge_max_size,
 	bool new_state_capital_only, bool new_demote_migrant, bool new_is_artisan, bool new_allowed_to_vote, bool new_is_slave,
@@ -46,8 +48,16 @@ PopType::PopType(
 
 PopManager::PopManager() : slave_sprite { 0 }, administrative_sprite { 0 } {}
 
+bool PopManager::add_strata(std::string_view identifier) {
+	if (identifier.empty()) {
+		Logger::error("Invalid strata identifier - empty!");
+		return false;
+	}
+	return stratas.add_item({ identifier });
+}
+
 bool PopManager::add_pop_type(
-	std::string_view identifier, colour_t colour, PopType::strata_t strata, PopType::sprite_t sprite,
+	std::string_view identifier, colour_t colour, Strata const* strata, PopType::sprite_t sprite,
 	Good::good_map_t&& life_needs, Good::good_map_t&& everyday_needs, Good::good_map_t&& luxury_needs,
 	PopType::rebel_units_t&& rebel_units, Pop::pop_size_t max_size, Pop::pop_size_t merge_max_size, bool state_capital_only,
 	bool demote_migrant, bool is_artisan, bool allowed_to_vote, bool is_slave, bool can_be_recruited,
@@ -60,6 +70,10 @@ bool PopManager::add_pop_type(
 	}
 	if (colour > MAX_COLOUR_RGB) {
 		Logger::error("Invalid pop type colour for ", identifier, ": ", colour_to_hex_string(colour));
+		return false;
+	}
+	if (strata == nullptr) {
+		Logger::error("Invalid pop type strata for ", identifier, " - null!");
 		return false;
 	}
 	if (sprite <= 0) {
@@ -75,7 +89,7 @@ bool PopManager::add_pop_type(
 		return false;
 	}
 	const bool ret = pop_types.add_item({
-		identifier, colour, strata, sprite, std::move(life_needs), std::move(everyday_needs),
+		identifier, colour, *strata, sprite, std::move(life_needs), std::move(everyday_needs),
 		std::move(luxury_needs), std::move(rebel_units), max_size, merge_max_size, state_capital_only,
 		demote_migrant, is_artisan, allowed_to_vote, is_slave, can_be_recruited, can_reduce_consciousness,
 		administrative_efficiency, can_build, factory, can_work_factory, unemployment
@@ -91,20 +105,19 @@ bool PopManager::add_pop_type(
 	return ret;
 }
 
+void PopManager::reserve_pop_types(size_t count) {
+	stratas.reserve(stratas.size() + count);
+	pop_types.reserve(pop_types.size() + count);
+}
+
 /* REQUIREMENTS:
  * POP-3, POP-4, POP-5, POP-6, POP-7, POP-8, POP-9, POP-10, POP-11, POP-12, POP-13, POP-14
  */
 bool PopManager::load_pop_type_file(
 	std::string_view filestem, UnitManager const& unit_manager, GoodManager const& good_manager, ast::NodeCPtr root
 ) {
-	static const string_map_t<PopType::strata_t> strata_map = {
-		{ "poor", PopType::strata_t::POOR },
-		{ "middle", PopType::strata_t::MIDDLE },
-		{ "rich", PopType::strata_t::RICH }
-	};
-
 	colour_t colour = NULL_COLOUR;
-	PopType::strata_t strata = PopType::strata_t::POOR;
+	Strata const* strata = nullptr;
 	PopType::sprite_t sprite = 0;
 	Good::good_map_t life_needs, everyday_needs, luxury_needs;
 	PopType::rebel_units_t rebel_units;
@@ -118,7 +131,19 @@ bool PopManager::load_pop_type_file(
 		"is_artisan", ZERO_OR_ONE, expect_bool(assign_variable_callback(is_artisan)),
 		"max_size", ZERO_OR_ONE, expect_uint(assign_variable_callback(max_size)),
 		"merge_max_size", ZERO_OR_ONE, expect_uint(assign_variable_callback(merge_max_size)),
-		"strata", ONE_EXACTLY, expect_identifier(expect_mapped_string(strata_map, assign_variable_callback(strata))),
+		"strata", ONE_EXACTLY, expect_identifier(
+			[this, &strata](std::string_view identifier) -> bool {
+				strata = get_strata_by_identifier(identifier);
+				if (strata != nullptr) {
+					return true;
+				}
+				if (add_strata(identifier)) {
+					strata = &get_stratas().back();
+					return true;
+				}
+				return false;
+			}
+		),
 		"state_capital_only", ZERO_OR_ONE, expect_bool(assign_variable_callback(state_capital_only)),
 		"research_points", ZERO_OR_ONE, success_callback, // TODO - research points generation
 		"research_optimum", ZERO_OR_ONE, success_callback, // TODO - bonus research points generation
@@ -190,6 +215,26 @@ bool PopManager::load_pop_into_vector(
 		Logger::warning(
 			"Some pop arguments are invalid: culture = ", culture, ", religion = ", religion, ", size = ", size
 		);
+	}
+	return ret;
+}
+
+bool PopManager::generate_modifiers(ModifierManager& modifier_manager) const {
+	bool ret = true;
+	for (Strata const& strata : get_stratas()) {
+		const auto strata_modifier = [&modifier_manager, &ret, &strata](std::string_view suffix, bool positive_good) -> void {
+			ret &= modifier_manager.add_modifier_effect(
+				StringUtils::append_string_views(strata.get_identifier(), suffix), positive_good
+			);
+		};
+
+		strata_modifier("_income_modifier", true);
+		strata_modifier("_savings_modifier", true);
+		strata_modifier("_vote", true);
+
+		strata_modifier("_life_needs", false);
+		strata_modifier("_everyday_needs", false);
+		strata_modifier("_luxury_needs", false);
 	}
 	return ret;
 }

@@ -77,6 +77,6 @@ namespace OpenVic {
 		);
 
 		bool load_rebels_file(IdeologyManager const& ideology_manager, GovernmentTypeManager const& government_type_manager, ast::NodeCPtr root);
-		bool generate_modifiers(ModifierManager& modifier_manager);
+		bool generate_modifiers(ModifierManager& modifier_manager) const;
 	};
 }

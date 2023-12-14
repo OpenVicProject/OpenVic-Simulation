@@ -76,6 +76,6 @@ namespace OpenVic {
 
 		void reset_to_defaults();
 		bool load_goods_file(ast::NodeCPtr root);
-		bool generate_modifiers(ModifierManager& modifier_manager);
+		bool generate_modifiers(ModifierManager& modifier_manager) const;
 	};
 }
