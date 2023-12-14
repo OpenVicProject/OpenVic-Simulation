@@ -20,6 +20,9 @@ Event::Event(
 	news_desc_long { new_news_desc_long }, news_desc_medium { new_news_desc_medium }, news_desc_short { new_news_desc_short },
 	election { new_election }, election_issue_group { new_election_issue_group }, options { std::move(new_options) } {}
 
+OnAction::OnAction(std::string_view new_identifier, weight_map_t new_weighted_events)
+	: HasIdentifier { new_identifier }, weighted_events { std::move(new_weighted_events) } {}
+
 bool EventManager::register_event(
 	std::string_view identifier, std::string_view title, std::string_view description, std::string_view image,
 	Event::event_type_t type, bool triggered_only, bool major, bool fire_only_once, bool allows_multiple_instances, bool news,
@@ -67,6 +70,15 @@ bool EventManager::register_event(
 		identifier, title, description, image, type, triggered_only, major, fire_only_once, allows_multiple_instances, news,
 		news_title, news_desc_long, news_desc_medium, news_desc_short, election, election_issue_group, std::move(options)
 	}, duplicate_warning_callback);
+}
+
+bool EventManager::add_on_action(std::string_view identifier, OnAction::weight_map_t weighted_events) {
+	if (identifier.empty()) {
+		Logger::error("Invalid decision identifier - empty!");
+		return false;
+	}
+
+	return on_actions.add_item({ identifier, std::move(weighted_events) });
 }
 
 bool EventManager::load_event_file(IssueManager const& issue_manager, ast::NodeCPtr root) {
@@ -131,4 +143,33 @@ bool EventManager::load_event_file(IssueManager const& issue_manager, ast::NodeC
 			return ret;
 		}
 	)(root);
+}
+
+bool EventManager::load_on_action_file(ast::NodeCPtr root) {
+	bool ret = expect_dictionary([this](std::string_view identifier, ast::NodeCPtr node) -> bool {
+		OnAction::weight_map_t weighted_events;
+		bool ret = expect_dictionary([this, &identifier, &weighted_events](std::string_view weight_str, ast::NodeCPtr event_node) -> bool {
+				Event const* event = nullptr;
+
+				bool ret = false;
+				uint64_t weight = StringUtils::string_to_uint64(weight_str, &ret);
+				if (!ret) {
+					Logger::error("Invalid weight ", weight_str, " on action ", identifier);
+					return ret;
+				}
+
+				ret &= expect_event_identifier(assign_variable_callback_pointer(event))(event_node);
+
+				if (event != nullptr) {
+					ret &= weighted_events.emplace(event, weight).second;
+				} else Logger::warning("Non-existing event ", event->get_identifier(), " loaded on action ", identifier, "with weight", weight, "!");
+					
+				return ret;
+			}
+		)(node);
+		ret &= add_on_action(identifier, std::move(weighted_events));
+		return ret;
+	})(root);
+	on_actions.lock();
+	return ret;
 }

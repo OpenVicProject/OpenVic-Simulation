@@ -709,6 +709,7 @@ bool Dataloader::load_defines(GameManager& game_manager) const {
 	static constexpr std::string_view event_modifiers_file = "common/event_modifiers.txt";
 	static constexpr std::string_view static_modifiers_file = "common/static_modifiers.txt";
 	static constexpr std::string_view triggered_modifiers_file = "common/triggered_modifiers.txt";
+	static constexpr std::string_view on_actions_file = "common/on_actions.txt";
 
 	bool ret = true;
 
@@ -869,6 +870,12 @@ bool Dataloader::load_defines(GameManager& game_manager) const {
 	}
 	if (!_load_events(game_manager)) {
 		Logger::error("Failed to load events!");
+		ret = false;
+	}
+	if (!game_manager.get_event_manager().load_on_action_file(
+		parse_defines(lookup_file(on_actions_file)).get_file_node()
+	)) {
+		Logger::error("Failed to load on actions!");
 		ret = false;
 	}
 
