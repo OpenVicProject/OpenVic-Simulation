@@ -59,20 +59,24 @@ namespace OpenVic {
 		ProvinceSet water_provinces;
 		TerrainTypeManager PROPERTY_REF(terrain_type_manager);
 
-		size_t width = 0, height = 0;
-		std::vector<shape_pixel_t> province_shape_image;
+		int32_t PROPERTY(width);
+		int32_t PROPERTY(height);
+		std::vector<shape_pixel_t> PROPERTY(province_shape_image);
 		colour_index_map_t colour_index_map;
 
-		Province::index_t max_provinces = Province::MAX_INDEX;
-		Province::index_t selected_province = Province::NULL_INDEX;
-		Pop::pop_size_t highest_province_population, total_map_population;
+		Province::index_t PROPERTY(max_provinces);
+		Province::index_t PROPERTY(selected_province_index);
+		Pop::pop_size_t PROPERTY(highest_province_population)
+		Pop::pop_size_t PROPERTY(total_map_population);
 
 		Province::index_t get_index_from_colour(colour_t colour) const;
-		bool _generate_province_adjacencies();
+		bool _generate_standard_province_adjacencies();
 
 		StateManager PROPERTY_REF(state_manager);
 
 	public:
+		Map();
+
 		bool add_province(std::string_view identifier, colour_t colour);
 		IDENTIFIER_REGISTRY_NON_CONST_ACCESSORS_CUSTOM_INDEX_OFFSET(province, 1);
 
@@ -82,14 +86,8 @@ namespace OpenVic {
 
 		Province::index_t get_province_index_at(size_t x, size_t y) const;
 		bool set_max_provinces(Province::index_t new_max_provinces);
-		Province::index_t get_max_provinces() const;
 		void set_selected_province(Province::index_t index);
-		Province::index_t get_selected_province_index() const;
 		Province const* get_selected_province() const;
-
-		size_t get_width() const;
-		size_t get_height() const;
-		std::vector<shape_pixel_t> const& get_province_shape_image() const;
 
 		bool add_region(std::string_view identifier, std::vector<std::string_view> const& province_identifiers);
 		IDENTIFIER_REGISTRY_NON_CONST_ACCESSORS(region)
@@ -107,14 +105,13 @@ namespace OpenVic {
 		bool apply_history_to_provinces(ProvinceHistoryManager const& history_manager, Date date);
 
 		void update_highest_province_population();
-		Pop::pop_size_t get_highest_province_population() const;
 		void update_total_map_population();
-		Pop::pop_size_t get_total_map_population() const;
 
 		void update_state(Date today);
 		void tick(Date today);
 
 		bool load_province_definitions(std::vector<ovdl::csv::LineObject> const& lines);
+		/* Must be loaded after adjacencies so we know what provinces are coastal, and so can have a port */
 		bool load_province_positions(BuildingTypeManager const& building_type_manager, ast::NodeCPtr root);
 		bool load_region_file(ast::NodeCPtr root);
 		bool load_map_images(fs::path const& province_path, fs::path const& terrain_path, bool detailed_errors);

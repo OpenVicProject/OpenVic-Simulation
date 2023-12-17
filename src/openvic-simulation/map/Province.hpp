@@ -27,26 +27,52 @@ namespace OpenVic {
 		using index_t = uint16_t;
 		using life_rating_t = int8_t;
 		using distance_t = fixed_point_t;
-		using flags_t = uint16_t;
 
 		enum struct colony_status_t : uint8_t { STATE, PROTECTORATE, COLONY };
 
 		struct adjacency_t {
-			friend struct Province;
+			using data_t = uint8_t;
+			static constexpr data_t NO_CANAL = 0;
+
+			enum struct type_t : uint8_t {
+				LAND,       /* Between two land provinces */
+				WATER,      /* Between two water provinces */
+				COASTAL,    /* Between a land province and a water province */
+				IMPASSABLE, /* Between two land provinces (non-traversable) */
+				STRAIT,     /* Between two land provinces with a water through province */
+				CANAL       /* Between two water provinces with a land through province */
+			};
+
+			/* Type display name used for logging */
+			static std::string_view get_type_name(type_t type);
 
 		private:
-			Province const* const province;
-			const distance_t PROPERTY(distance);
-			flags_t PROPERTY(flags);
+			Province const* PROPERTY(to);
+			Province const* PROPERTY(through);
+			distance_t PROPERTY(distance);
+			type_t PROPERTY(type);
+			data_t PROPERTY(data); // represents canal index, 0 for non-canal adjacencies
 
-			adjacency_t(Province const* province, distance_t distance, flags_t flags);
+		public:
+			adjacency_t(
+				Province const* new_to, distance_t new_distance, type_t new_type, Province const* new_through, data_t new_data
+			);
+			adjacency_t(adjacency_t const&) = delete;
+			adjacency_t(adjacency_t&&) = default;
+			adjacency_t& operator=(adjacency_t const&) = delete;
+			adjacency_t& operator=(adjacency_t&&) = default;
 		};
 
 		struct province_positions_t {
-			fvec2_t center;
+			/* Calculated average */
+			fvec2_t centre;
+
+			/* Province name placement */
 			fvec2_t text;
 			fixed_point_t text_rotation;
 			fixed_point_t text_scale;
+
+			/* Model positions */
 			std::optional<fvec2_t> unit;
 			fvec2_t city;
 			fvec2_t factory;
@@ -59,21 +85,25 @@ namespace OpenVic {
 		static constexpr index_t NULL_INDEX = 0, MAX_INDEX = std::numeric_limits<index_t>::max();
 
 	private:
+		/* Immutable attributes (unchanged after initial game load) */
 		const index_t PROPERTY(index);
 		Region* PROPERTY(region);
-		State const* PROPERTY_RW(state);
 		bool PROPERTY(on_map);
 		bool PROPERTY(has_region);
-		bool PROPERTY(water);
+		bool PROPERTY_CUSTOM_PREFIX(water, is);
+		bool PROPERTY_CUSTOM_PREFIX(coastal, is);
+		bool PROPERTY_CUSTOM_PREFIX(port, has);
 		/* Terrain type calculated from terrain image */
 		TerrainType const* PROPERTY(default_terrain_type);
 
 		std::vector<adjacency_t> PROPERTY(adjacencies);
 		province_positions_t PROPERTY(positions);
 
+		/* Mutable attributes (reset before loading history) */
 		TerrainType const* PROPERTY(terrain_type);
 		life_rating_t PROPERTY(life_rating);
 		colony_status_t PROPERTY(colony_status);
+		State const* PROPERTY_RW(state);
 		Country const* PROPERTY(owner);
 		Country const* PROPERTY(controller);
 		std::vector<Country const*> PROPERTY(cores);
@@ -90,13 +120,12 @@ namespace OpenVic {
 		fixed_point_map_t<Culture const*> PROPERTY(culture_distribution);
 		fixed_point_map_t<Religion const*> PROPERTY(religion_distribution);
 
-		fvec2_t get_unit_position() const;
-
 		Province(std::string_view new_identifier, colour_t new_colour, index_t new_index);
 
 	public:
 		Province(Province&&) = default;
 
+		bool operator==(Province const& other) const;
 		std::string to_string() const;
 
 		bool load_positions(BuildingTypeManager const& building_type_manager, ast::NodeCPtr root);
@@ -111,10 +140,22 @@ namespace OpenVic {
 		void update_state(Date today);
 		void tick(Date today);
 
-		bool is_adjacent_to(Province const* province) const;
-		bool add_adjacency(Province const* province, distance_t distance, flags_t flags);
+	private:
+		adjacency_t* get_adjacency_to(Province const* province);
 
-		distance_t calculate_distance_to(Province const* province) const;
+	public:
+		adjacency_t const* get_adjacency_to(Province const* province) const;
+		bool is_adjacent_to(Province const* province) const;
+		std::vector<adjacency_t const*> get_adjacencies_going_through(Province const* province) const;
+		bool has_adjacency_going_through(Province const* province) const;
+
+		static bool add_standard_adjacency(Province& from, Province& to);
+		static bool add_special_adjacency(
+			Province& from, Province& to, adjacency_t::type_t type, Province const* through, adjacency_t::data_t data
+		);
+
+		fvec2_t get_unit_position() const;
+		static distance_t calculate_distance_between(Province const& from, Province const& to);
 
 		bool reset(BuildingTypeManager const& building_type_manager);
 		bool apply_history_to_province(ProvinceHistoryEntry const* entry);

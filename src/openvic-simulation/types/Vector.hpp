@@ -14,6 +14,16 @@ namespace OpenVic {
 		constexpr vec2_t(T new_val) : x { new_val }, y { new_val } {}
 		constexpr vec2_t(T new_x, T new_y) : x { new_x }, y { new_y } {}
 
+		constexpr vec2_t(vec2_t const&) = default;
+		constexpr vec2_t(vec2_t&&) = default;
+		constexpr vec2_t& operator=(vec2_t const&) = default;
+		constexpr vec2_t& operator=(vec2_t&&) = default;
+
+		template<typename S>
+		constexpr explicit operator vec2_t<S>() {
+			return { static_cast<S>(x), static_cast<S>(y) };
+		}
+
 		constexpr vec2_t abs() const {
 			return { x >= 0 ? x : -x, y >= 0 ? y : -y };
 		}

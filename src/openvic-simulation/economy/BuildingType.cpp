@@ -14,6 +14,8 @@ BuildingType::BuildingType(
 	colonial_range { colonial_range }, infrastructure { infrastructure }, spawn_railway_track { spawn_railway_track },
 	sail { sail }, steam { steam }, capital { capital }, port { port } {}
 
+BuildingTypeManager::BuildingTypeManager() : port_building_type { nullptr } {}
+
 bool BuildingTypeManager::add_building_type(std::string_view identifier, ARGS) {
 	if (identifier.empty()) {
 		Logger::error("Invalid building identifier - empty!");
@@ -32,7 +34,7 @@ bool BuildingTypeManager::load_buildings_file(
 	GoodManager const& good_manager, ProductionTypeManager const& production_type_manager, ModifierManager& modifier_manager,
 	ast::NodeCPtr root
 ) {
-	const bool ret = expect_dictionary_reserve_length(
+	bool ret = expect_dictionary_reserve_length(
 		building_types,
 		[this, &good_manager, &production_type_manager, &modifier_manager](std::string_view key, ast::NodeCPtr value) -> bool {
 			std::string_view type;
@@ -101,6 +103,18 @@ bool BuildingTypeManager::load_buildings_file(
 		modifier_manager.add_modifier_effect(
 			min_modifier_prefix.append(building_type.get_identifier()), false, ModifierEffect::format_t::INT
 		);
+
+		if (building_type.is_port()) {
+			if (port_building_type == nullptr) {
+				port_building_type = &building_type;
+			} else {
+				Logger::error(
+					"Building type ", building_type, " is marked as a port, but we are already using ", port_building_type,
+					" as the port building type!"
+				);
+				ret = false;
+			}
+		}
 	}
 
 	return ret;
