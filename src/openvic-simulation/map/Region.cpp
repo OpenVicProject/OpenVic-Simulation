@@ -1,5 +1,7 @@
 #include "Region.hpp"
 
+#include "openvic-simulation/types/Colour.hpp"
+
 using namespace OpenVic;
 
 ProvinceSet::ProvinceSet(provinces_t&& new_provinces) : provinces { std::move(new_provinces) } {}
@@ -65,11 +67,11 @@ ProvinceSet::provinces_t const& ProvinceSet::get_provinces() const {
 	return provinces;
 }
 
-static constexpr colour_t ERROR_REGION_COLOUR = COLOUR_COMPONENT << 16;
+static constexpr colour_t ERROR_REGION_COLOUR { colour_t::max_value, 0, 0 };
 
 Region::Region(std::string_view new_identifier, provinces_t&& new_provinces, bool new_meta)
 	: HasIdentifierAndColour {
-		new_identifier, new_provinces.size() > 0 ? new_provinces.front()->get_colour() : ERROR_REGION_COLOUR, false, false
+		new_identifier, new_provinces.size() > 0 ? new_provinces.front()->get_colour() : ERROR_REGION_COLOUR, false
 	}, ProvinceSet { std::move(new_provinces) }, meta { new_meta } {
 	lock();
 }

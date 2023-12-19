@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cassert>
 #include <concepts>
 #include <map>
 #include <type_traits>
@@ -34,7 +35,9 @@ namespace OpenVic {
 		const std::string PROPERTY(identifier);
 
 	protected:
-		HasIdentifier(std::string_view new_identifier);
+		HasIdentifier(std::string_view new_identifier): identifier { new_identifier } {
+			assert(!identifier.empty());
+		}
 
 	public:
 		HasIdentifier(HasIdentifier const&) = delete;
@@ -43,40 +46,50 @@ namespace OpenVic {
 		HasIdentifier& operator=(HasIdentifier&&) = delete;
 	};
 
-	std::ostream& operator<<(std::ostream& stream, HasIdentifier const& obj);
-	std::ostream& operator<<(std::ostream& stream, HasIdentifier const* obj);
+	inline std::ostream& operator<<(std::ostream& stream, HasIdentifier const& obj) {
+		return stream << obj.get_identifier();
+	}
+	inline std::ostream& operator<<(std::ostream& stream, HasIdentifier const* obj) {
+		return obj != nullptr ? stream << *obj : stream << "<NULL>";
+	}
 
 	/*
 	 * Base class for objects with associated colour information.
 	 */
-	class HasColour {
-		const colour_t PROPERTY(colour);
+	template<IsColour ColourT>
+	class _HasColour {
+		const ColourT PROPERTY(colour);
 
 	protected:
-		HasColour(colour_t new_colour, bool cannot_be_null, bool can_have_alpha);
+		_HasColour(ColourT new_colour, bool cannot_be_null): colour { new_colour } {
+			assert(!cannot_be_null || !colour.is_null());
+		}
 
 	public:
-		HasColour(HasColour const&) = delete;
-		HasColour(HasColour&&) = default;
-		HasColour& operator=(HasColour const&) = delete;
-		HasColour& operator=(HasColour&&) = delete;
-
-		std::string colour_to_hex_string() const;
+		_HasColour(_HasColour const&) = delete;
+		_HasColour(_HasColour&&) = default;
+		_HasColour& operator=(_HasColour const&) = delete;
+		_HasColour& operator=(_HasColour&&) = delete;
 	};
 
 	/*
 	 * Base class for objects with a unique string identifier and associated colour information.
 	 */
-	class HasIdentifierAndColour : public HasIdentifier, public HasColour {
+	template<IsColour ColourT>
+	class _HasIdentifierAndColour : public HasIdentifier, public _HasColour<ColourT> {
 	protected:
-		HasIdentifierAndColour(std::string_view new_identifier, colour_t new_colour, bool cannot_be_null, bool can_have_alpha);
+		_HasIdentifierAndColour(std::string_view new_identifier, ColourT new_colour, bool cannot_be_null)
+			: HasIdentifier { new_identifier }, _HasColour<ColourT> { new_colour, cannot_be_null } {}
 
 	public:
-		HasIdentifierAndColour(HasIdentifierAndColour const&) = delete;
-		HasIdentifierAndColour(HasIdentifierAndColour&&) = default;
-		HasIdentifierAndColour& operator=(HasIdentifierAndColour const&) = delete;
-		HasIdentifierAndColour& operator=(HasIdentifierAndColour&&) = delete;
+		_HasIdentifierAndColour(_HasIdentifierAndColour const&) = delete;
+		_HasIdentifierAndColour(_HasIdentifierAndColour&&) = default;
+		_HasIdentifierAndColour& operator=(_HasIdentifierAndColour const&) = delete;
+		_HasIdentifierAndColour& operator=(_HasIdentifierAndColour&&) = delete;
 	};
+
+	using HasIdentifierAndColour = _HasIdentifierAndColour<colour_t>;
+	using HasIdentifierAndAlphaColour = _HasIdentifierAndColour<colour_argb_t>;
 
 	/* Callbacks for trying to add duplicate keys via UniqueKeyRegistry::add_item */
 	static bool duplicate_fail_callback(std::string_view registry_name, std::string_view duplicate_identifier) {

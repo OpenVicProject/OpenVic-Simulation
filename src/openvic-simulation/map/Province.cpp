@@ -7,7 +7,7 @@ using namespace OpenVic::NodeTools;
 
 Province::Province(
 	std::string_view new_identifier, colour_t new_colour, index_t new_index
-) : HasIdentifierAndColour { new_identifier, new_colour, true, false }, index { new_index }, region { nullptr },
+) : HasIdentifierAndColour { new_identifier, new_colour, true }, index { new_index }, region { nullptr },
 	on_map { false }, has_region { false }, water { false }, coastal { false }, port { false },
 	default_terrain_type { nullptr }, positions {}, terrain_type { nullptr }, life_rating { 0 },
 	colony_status { colony_status_t::STATE }, state { nullptr }, owner { nullptr }, controller { nullptr }, slave { false },
@@ -21,7 +21,7 @@ bool Province::operator==(Province const& other) const {
 
 std::string Province::to_string() const {
 	std::stringstream stream;
-	stream << "(#" << std::to_string(index) << ", " << get_identifier() << ", 0x" << colour_to_hex_string() << ")";
+	stream << "(#" << std::to_string(index) << ", " << get_identifier() << ", 0x" << get_colour() << ")";
 	return stream.str();
 }
 

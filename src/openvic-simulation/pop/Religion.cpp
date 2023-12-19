@@ -2,6 +2,8 @@
 
 #include <cassert>
 
+#include "openvic-simulation/types/Colour.hpp"
+
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;
 
@@ -9,8 +11,7 @@ ReligionGroup::ReligionGroup(std::string_view new_identifier) : HasIdentifier { 
 
 Religion::Religion(
 	std::string_view new_identifier, colour_t new_colour, ReligionGroup const& new_group, icon_t new_icon, bool new_pagan
-) : HasIdentifierAndColour { new_identifier, new_colour, false, false }, group { new_group }, icon { new_icon },
-	pagan { new_pagan } {
+) : HasIdentifierAndColour { new_identifier, new_colour, false }, group { new_group }, icon { new_icon }, pagan { new_pagan } {
 	assert(icon > 0);
 }
 
@@ -31,10 +32,6 @@ bool ReligionManager::add_religion(
 	}
 	if (identifier.empty()) {
 		Logger::error("Invalid religion identifier - empty!");
-		return false;
-	}
-	if (colour > MAX_COLOUR_RGB) {
-		Logger::error("Invalid religion colour for ", identifier, ": ", colour_to_hex_string(colour));
 		return false;
 	}
 	if (icon <= 0) {
@@ -61,7 +58,7 @@ bool ReligionManager::load_religion_file(ast::NodeCPtr root) {
 	religions.reserve(religions.size() + total_expected_religions);
 	ret &= expect_religion_group_dictionary([this](ReligionGroup const& religion_group, ast::NodeCPtr religion_group_value) -> bool {
 		return expect_dictionary([this, &religion_group](std::string_view key, ast::NodeCPtr value) -> bool {
-			colour_t colour = NULL_COLOUR;
+			colour_t colour = colour_t::null();
 			Religion::icon_t icon = 0;
 			bool pagan = false;
 

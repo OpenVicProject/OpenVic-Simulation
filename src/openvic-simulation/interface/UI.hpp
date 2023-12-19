@@ -12,7 +12,7 @@ namespace OpenVic {
 		bool _load_font(ast::NodeCPtr node);
 
 	public:
-		bool add_font(std::string_view identifier, colour_t colour, std::string_view fontname);
+		bool add_font(std::string_view identifier, colour_argb_t colour, std::string_view fontname);
 
 		bool load_gfx_file(ast::NodeCPtr root);
 		bool load_gui_file(std::string_view scene_name, ast::NodeCPtr root);

@@ -106,8 +106,10 @@ namespace OpenVic {
 
 		callback_t<std::string_view> expect_fixed_point_str(callback_t<fixed_point_t> callback);
 		node_callback_t expect_fixed_point(callback_t<fixed_point_t> callback);
+		/* Expect a list of 3 base 10 values, each either in the range [0, 1] or (1, 255], representing RGB components. */
 		node_callback_t expect_colour(callback_t<colour_t> callback);
-		node_callback_t expect_colour_hex(callback_t<colour_t> callback);
+		/* Expect a hexadecimal value representing a colour in ARGB format. */
+		node_callback_t expect_colour_hex(callback_t<colour_argb_t> callback);
 
 		callback_t<std::string_view> expect_date_str(callback_t<Date> callback);
 		node_callback_t expect_date(callback_t<Date> callback);

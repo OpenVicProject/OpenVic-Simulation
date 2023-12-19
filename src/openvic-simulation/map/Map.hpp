@@ -6,8 +6,9 @@
 #include <openvic-dataloader/csv/LineObject.hpp>
 
 #include "openvic-simulation/map/Region.hpp"
-#include "openvic-simulation/map/TerrainType.hpp"
 #include "openvic-simulation/map/State.hpp"
+#include "openvic-simulation/map/TerrainType.hpp"
+#include "openvic-simulation/types/Colour.hpp"
 
 namespace OpenVic {
 	namespace fs = std::filesystem;
@@ -17,7 +18,13 @@ namespace OpenVic {
 
 		/* Bottom 32 bits are the base colour, top 32 are the stripe colour, both in ARGB format with the alpha channels
 		 * controlling interpolation with the terrain colour (0 = all terrain, 255 = all corresponding RGB) */
-		using base_stripe_t = uint64_t;
+		struct base_stripe_t {
+			colour_argb_t base_colour;
+			colour_argb_t stripe_colour;
+			constexpr base_stripe_t(colour_argb_t base, colour_argb_t stripe)
+				: base_colour { base }, stripe_colour { stripe } {}
+			constexpr base_stripe_t(colour_argb_t both) : base_stripe_t { both, both } {}
+		};
 		using colour_func_t = std::function<base_stripe_t(Map const&, Province const&)>;
 		using index_t = size_t;
 

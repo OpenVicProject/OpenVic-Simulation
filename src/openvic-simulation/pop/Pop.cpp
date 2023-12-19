@@ -5,6 +5,7 @@
 #include "openvic-simulation/dataloader/NodeTools.hpp"
 #include "openvic-simulation/map/Province.hpp"
 #include "openvic-simulation/politics/Rebel.hpp"
+#include "openvic-simulation/types/Colour.hpp"
 #include "openvic-simulation/utility/Logger.hpp"
 
 using namespace OpenVic;
@@ -32,7 +33,7 @@ PopType::PopType(
 	bool new_state_capital_only, bool new_demote_migrant, bool new_is_artisan, bool new_allowed_to_vote, bool new_is_slave,
 	bool new_can_be_recruited, bool new_can_reduce_consciousness, bool new_administrative_efficiency, bool new_can_build,
 	bool new_factory, bool new_can_work_factory, bool new_unemployment
-) : HasIdentifierAndColour { new_identifier, new_colour, false, false }, strata { new_strata }, sprite { new_sprite },
+) : HasIdentifierAndColour { new_identifier, new_colour, false }, strata { new_strata }, sprite { new_sprite },
 	life_needs { std::move(new_life_needs) }, everyday_needs { std::move(new_everyday_needs) },
 	luxury_needs { std::move(new_luxury_needs) }, rebel_units { std::move(new_rebel_units) }, max_size { new_max_size },
 	merge_max_size { new_merge_max_size }, state_capital_only { new_state_capital_only },
@@ -66,10 +67,6 @@ bool PopManager::add_pop_type(
 ) {
 	if (identifier.empty()) {
 		Logger::error("Invalid pop type identifier - empty!");
-		return false;
-	}
-	if (colour > MAX_COLOUR_RGB) {
-		Logger::error("Invalid pop type colour for ", identifier, ": ", colour_to_hex_string(colour));
 		return false;
 	}
 	if (strata == nullptr) {
@@ -116,7 +113,7 @@ void PopManager::reserve_pop_types(size_t count) {
 bool PopManager::load_pop_type_file(
 	std::string_view filestem, UnitManager const& unit_manager, GoodManager const& good_manager, ast::NodeCPtr root
 ) {
-	colour_t colour = NULL_COLOUR;
+	colour_t colour = colour_t::null();
 	Strata const* strata = nullptr;
 	PopType::sprite_t sprite = 0;
 	Good::good_map_t life_needs, everyday_needs, luxury_needs;

@@ -5,11 +5,13 @@
 
 #include "openvic-simulation/economy/Good.hpp"
 #include "openvic-simulation/history/ProvinceHistory.hpp"
+#include "openvic-simulation/types/Colour.hpp"
 #include "openvic-simulation/utility/BMP.hpp"
 #include "openvic-simulation/utility/Logger.hpp"
 
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;
+using namespace OpenVic::colour_literals;
 
 Mapmode::Mapmode(
 	std::string_view new_identifier, index_t new_index, colour_func_t new_colour_func
@@ -18,11 +20,13 @@ Mapmode::Mapmode(
 }
 
 const Mapmode Mapmode::ERROR_MAPMODE {
-	"mapmode_error", 0, [](Map const& map, Province const& province) -> colour_t { return 0xFFFF0000; }
+	"mapmode_error", 0, [](Map const& map, Province const& province) -> base_stripe_t {
+		return { 0xFFFF0000_argb, colour_argb_t::null() };
+	}
 };
 
 Mapmode::base_stripe_t Mapmode::get_base_stripe_colours(Map const& map, Province const& province) const {
-	return colour_func ? colour_func(map, province) : NULL_COLOUR;
+	return colour_func ? colour_func(map, province) : colour_argb_t::null();
 }
 
 Map::Map()
@@ -47,8 +51,8 @@ bool Map::add_province(std::string_view identifier, colour_t colour) {
 		);
 		return false;
 	}
-	if (colour == NULL_COLOUR || colour > MAX_COLOUR_RGB) {
-		Logger::error("Invalid province colour for ", identifier, ": ", colour_to_hex_string(colour));
+	if (colour.is_null()) {
+		Logger::error("Invalid province colour for ", identifier, " - null! (", colour, ")");
 		return false;
 	}
 	Province new_province { identifier, colour, static_cast<Province::index_t>(provinces.size() + 1) };
@@ -226,18 +230,18 @@ bool Map::generate_mapmode_colours(Mapmode::index_t index, uint8_t* target) cons
 	}
 	for (Province const& province : provinces.get_items()) {
 		const Mapmode::base_stripe_t base_stripe = mapmode->get_base_stripe_colours(*this, province);
-		const colour_t base_colour = static_cast<colour_t>(base_stripe);
-		const colour_t stripe_colour = static_cast<colour_t>(base_stripe >> (sizeof(colour_t) * 8));
+		colour_argb_t const& base_colour = base_stripe.base_colour;
+		colour_argb_t const& stripe_colour = base_stripe.stripe_colour;
 
-		*target++ = (base_colour >> 16) & COLOUR_COMPONENT; // red
-		*target++ = (base_colour >>  8) & COLOUR_COMPONENT; // green
-		*target++ = (base_colour >>  0) & COLOUR_COMPONENT; // blue
-		*target++ = (base_colour >> 24) & COLOUR_COMPONENT; // alpha
+		*target++ = base_colour.red;
+		*target++ = base_colour.green;
+		*target++ = base_colour.blue;
+		*target++ = base_colour.alpha;
 
-		*target++ = (stripe_colour >> 16) & COLOUR_COMPONENT; // red
-		*target++ = (stripe_colour >>  8) & COLOUR_COMPONENT; // green
-		*target++ = (stripe_colour >>  0) & COLOUR_COMPONENT; // blue
-		*target++ = (stripe_colour >> 24) & COLOUR_COMPONENT; // alpha
+		*target++ = stripe_colour.red;
+		*target++ = stripe_colour.green;
+		*target++ = stripe_colour.blue;
+		*target++ = stripe_colour.alpha;
 	}
 	return ret;
 }
@@ -302,7 +306,7 @@ void Map::tick(Date today) {
 
 using namespace ovdl::csv;
 
-static bool validate_province_definitions_header(LineObject const& header) {
+static bool _validate_province_definitions_header(LineObject const& header) {
 	static const std::vector<std::string> standard_header { "province", "red", "green", "blue" };
 	for (size_t i = 0; i < standard_header.size(); ++i) {
 		const std::string_view val = header.get_value_for(i);
@@ -316,18 +320,17 @@ static bool validate_province_definitions_header(LineObject const& header) {
 	return true;
 }
 
-static bool parse_province_colour(colour_t& colour, std::array<std::string_view, 3> components) {
+static bool _parse_province_colour(colour_t& colour, std::array<std::string_view, 3> components) {
 	bool ret = true;
-	colour = NULL_COLOUR;
-	for (std::string_view& c : components) {
-		colour <<= 8;
-		if (c.ends_with('.')) {
-			c.remove_suffix(1);
+	for (size_t i = 0; i < 3; ++i) {
+		std::string_view& component = components[i];
+		if (component.ends_with('.')) {
+			component.remove_suffix(1);
 		}
 		bool successful = false;
-		uint64_t val = StringUtils::string_to_uint64(c, &successful, 10);
-		if (successful && val <= 255) {
-			colour |= val;
+		const uint64_t val = StringUtils::string_to_uint64(component, &successful, 10);
+		if (successful && val <= colour_t::max_value) {
+			colour[i] = val;
 		} else {
 			ret = false;
 		}
@@ -342,7 +345,7 @@ bool Map::load_province_definitions(std::vector<LineObject> const& lines) {
 	}
 	{
 		LineObject const& header = lines.front();
-		if (!validate_province_definitions_header(header)) {
+		if (!_validate_province_definitions_header(header)) {
 			Logger::error(
 				"Non-standard province definition file header - make sure this is not a province definition: ", header
 			);
@@ -357,8 +360,8 @@ bool Map::load_province_definitions(std::vector<LineObject> const& lines) {
 	std::for_each(lines.begin() + 1, lines.end(), [this, &ret](LineObject const& line) -> void {
 		const std::string_view identifier = line.get_value_for(0);
 		if (!identifier.empty()) {
-			colour_t colour = NULL_COLOUR;
-			if (!parse_province_colour(colour, { line.get_value_for(1), line.get_value_for(2), line.get_value_for(3) })) {
+			colour_t colour = colour_t::null();
+			if (!_parse_province_colour(colour, { line.get_value_for(1), line.get_value_for(2), line.get_value_for(3) })) {
 				Logger::error("Error reading colour in province definition: ", line);
 				ret = false;
 			}
@@ -417,7 +420,7 @@ static constexpr colour_t colour_at(uint8_t const* colour_data, int32_t idx) {
 	 * triplet, then combine the bytes in reverse order.
 	 */
 	idx *= 3;
-	return (colour_data[idx + 2] << 16) | (colour_data[idx + 1] << 8) | colour_data[idx];
+	return { colour_data[idx + 2], colour_data[idx + 1], colour_data[idx] };
 }
 
 bool Map::load_map_images(fs::path const& province_path, fs::path const& terrain_path, bool detailed_errors) {
@@ -508,7 +511,7 @@ bool Map::load_map_images(fs::path const& province_path, fs::path const& terrain
 				unrecognised_province_colours.insert(province_colour);
 				if (detailed_errors) {
 					Logger::warning(
-						"Unrecognised province colour ", colour_to_hex_string(province_colour), " at (", x, ", ", y, ")"
+						"Unrecognised province colour ", province_colour, " at (", x, ", ", y, ")"
 					);
 				}
 			}
