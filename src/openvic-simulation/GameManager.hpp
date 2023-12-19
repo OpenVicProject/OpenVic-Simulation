@@ -2,6 +2,7 @@
 
 #include "openvic-simulation/misc/Decision.hpp"
 #include "openvic-simulation/country/Country.hpp"
+#include "openvic-simulation/diplomacy/DiplomacyManager.hpp"
 #include "openvic-simulation/economy/EconomyManager.hpp"
 #include "openvic-simulation/history/HistoryManager.hpp"
 #include "openvic-simulation/interface/UI.hpp"
@@ -36,6 +37,7 @@ namespace OpenVic {
 		EventManager PROPERTY_REF(event_manager);
 		DecisionManager PROPERTY_REF(decision_manager);
 		UIManager PROPERTY_REF(ui_manager);
+		DiplomacyManager PROPERTY_REF(diplomacy_manager);
 		SimulationClock PROPERTY_REF(simulation_clock);
 
 		time_t session_start; /* SS-54, as well as allowing time-tracking */
