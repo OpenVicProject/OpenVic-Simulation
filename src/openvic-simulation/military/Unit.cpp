@@ -204,6 +204,8 @@ bool UnitManager::generate_modifiers(ModifierManager& modifier_manager) const {
 
 		ret &= modifier_manager.register_complex_modifier(identifier);
 
+		stat_modifier("_attack", true, RAW_DECIMAL);
+		stat_modifier("_defence", true, RAW_DECIMAL);
 		stat_modifier("_default_organisation", true, RAW_DECIMAL);
 		stat_modifier("_maximum_speed", true, RAW_DECIMAL);
 		stat_modifier("_build_time", false, INT);
@@ -212,8 +214,6 @@ bool UnitManager::generate_modifiers(ModifierManager& modifier_manager) const {
 		switch (type) {
 		case Unit::type_t::LAND:
 			stat_modifier("_reconnaissance", true, RAW_DECIMAL);
-			stat_modifier("_attack", true, RAW_DECIMAL);
-			stat_modifier("_defence", true, RAW_DECIMAL);
 			stat_modifier("_discipline", true, PROPORTION_DECIMAL);
 			stat_modifier("_support", true, PROPORTION_DECIMAL);
 			stat_modifier("_maneuver", true, INT);

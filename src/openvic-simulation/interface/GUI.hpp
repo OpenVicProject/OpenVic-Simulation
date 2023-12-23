@@ -196,8 +196,7 @@ namespace OpenVic::GUI {
 		friend std::unique_ptr<OverlappingElementsBox> std::make_unique<OverlappingElementsBox>();
 
 		fvec2_t PROPERTY(size);
-
-		// TODO - spacing
+		fixed_point_t PROPERTY(spacing);
 
 	protected:
 		OverlappingElementsBox();

@@ -20,7 +20,7 @@ Event::Event(
 	news_desc_long { new_news_desc_long }, news_desc_medium { new_news_desc_medium }, news_desc_short { new_news_desc_short },
 	election { new_election }, election_issue_group { new_election_issue_group }, options { std::move(new_options) } {}
 
-OnAction::OnAction(std::string_view new_identifier, weight_map_t new_weighted_events)
+OnAction::OnAction(std::string_view new_identifier, weight_map_t&& new_weighted_events)
 	: HasIdentifier { new_identifier }, weighted_events { std::move(new_weighted_events) } {}
 
 bool EventManager::register_event(
@@ -72,7 +72,7 @@ bool EventManager::register_event(
 	}, duplicate_warning_callback);
 }
 
-bool EventManager::add_on_action(std::string_view identifier, OnAction::weight_map_t weighted_events) {
+bool EventManager::add_on_action(std::string_view identifier, OnAction::weight_map_t&& weighted_events) {
 	if (identifier.empty()) {
 		Logger::error("Invalid decision identifier - empty!");
 		return false;
@@ -149,8 +149,6 @@ bool EventManager::load_on_action_file(ast::NodeCPtr root) {
 	bool ret = expect_dictionary([this](std::string_view identifier, ast::NodeCPtr node) -> bool {
 		OnAction::weight_map_t weighted_events;
 		bool ret = expect_dictionary([this, &identifier, &weighted_events](std::string_view weight_str, ast::NodeCPtr event_node) -> bool {
-				Event const* event = nullptr;
-
 				bool ret = false;
 				uint64_t weight = StringUtils::string_to_uint64(weight_str, &ret);
 				if (!ret) {
@@ -158,12 +156,18 @@ bool EventManager::load_on_action_file(ast::NodeCPtr root) {
 					return ret;
 				}
 
+				Event const* event = nullptr;
 				ret &= expect_event_identifier(assign_variable_callback_pointer(event))(event_node);
 
 				if (event != nullptr) {
 					ret &= weighted_events.emplace(event, weight).second;
-				} else Logger::warning("Non-existing event ", event->get_identifier(), " loaded on action ", identifier, "with weight", weight, "!");
-					
+				} else {
+					Logger::warning(
+						"Non-existing event ", event->get_identifier(), " loaded on action ", identifier, "with weight",
+						weight, "!"
+					);
+				}
+
 				return ret;
 			}
 		)(node);

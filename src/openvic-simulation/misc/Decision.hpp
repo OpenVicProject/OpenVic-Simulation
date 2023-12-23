@@ -18,9 +18,8 @@ namespace OpenVic {
 		const std::string PROPERTY(picture);
 
 		Decision(
-			std::string_view new_identifier, bool new_alert, bool new_news,
-			std::string_view new_news_title, std::string_view new_news_desc_long,
-			std::string_view new_news_desc_medium, std::string_view new_news_desc_short,
+			std::string_view new_identifier, bool new_alert, bool new_news, std::string_view new_news_title,
+			std::string_view new_news_desc_long, std::string_view new_news_desc_medium, std::string_view new_news_desc_short,
 			std::string_view new_picture
 		);
 
@@ -34,9 +33,8 @@ namespace OpenVic {
 
 	public:
 		bool add_decision(
-			std::string_view identifier, bool alert, bool news, std::string_view news_title,
-			std::string_view news_desc_long, std::string_view news_desc_medium,
-			std::string_view news_desc_short, std::string_view picture
+			std::string_view identifier, bool alert, bool news, std::string_view news_title, std::string_view news_desc_long,
+			std::string_view news_desc_medium, std::string_view news_desc_short, std::string_view picture
 		);
 
 		bool load_decision_file(ast::NodeCPtr root);

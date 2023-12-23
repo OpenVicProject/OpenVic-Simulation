@@ -27,7 +27,7 @@ Mapmode::base_stripe_t Mapmode::get_base_stripe_colours(Map const& map, Province
 
 Map::Map()
   : width { 0 }, height { 0 }, max_provinces { Province::MAX_INDEX }, selected_province_index { Province::NULL_INDEX },
-  	highest_province_population { 0 }, total_map_population { 0 } {}
+	highest_province_population { 0 }, total_map_population { 0 } {}
 
 bool Map::add_province(std::string_view identifier, colour_t colour) {
 	if (provinces.size() >= max_provinces) {

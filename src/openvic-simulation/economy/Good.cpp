@@ -106,9 +106,15 @@ bool GoodManager::generate_modifiers(ModifierManager& modifier_manager) const {
 		}
 	};
 
+	good_modifier("artisan_goods_input");
+	good_modifier("artisan_goods_output");
+	good_modifier("artisan_goods_throughput");
+	good_modifier("factory_goods_input");
 	good_modifier("factory_goods_output");
 	good_modifier("factory_goods_throughput");
+	good_modifier("rgo_goods_input");
 	good_modifier("rgo_goods_output");
+	good_modifier("rgo_goods_throughput");
 	good_modifier("rgo_size");
 
 	return ret;

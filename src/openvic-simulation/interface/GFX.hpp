@@ -45,7 +45,7 @@ namespace OpenVic::GFX {
 		std::string PROPERTY(texture_file);
 		frame_t PROPERTY(no_of_frames);
 
-		// TODO - norefcount, effectFile, allwaystransparent
+		// TODO - effectFile, allwaystransparent
 
 	protected:
 		TextureSprite();
@@ -55,6 +55,24 @@ namespace OpenVic::GFX {
 	public:
 		TextureSprite(TextureSprite&&) = default;
 		virtual ~TextureSprite() = default;
+
+		OV_DETAIL_GET_TYPE
+	};
+
+	class TileTextureSprite final : public Sprite {
+		friend std::unique_ptr<TileTextureSprite> std::make_unique<TileTextureSprite>();
+
+		std::string PROPERTY(texture_file);
+		ivec2_t PROPERTY(size);
+
+	protected:
+		TileTextureSprite();
+
+		bool _fill_key_map(NodeTools::key_map_t& key_map) override;
+
+	public:
+		TileTextureSprite(TileTextureSprite&&) = default;
+		virtual ~TileTextureSprite() = default;
 
 		OV_DETAIL_GET_TYPE
 	};
