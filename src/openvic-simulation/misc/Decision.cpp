@@ -4,18 +4,16 @@ using namespace OpenVic;
 using namespace OpenVic::NodeTools;
 
 Decision::Decision(
-	std::string_view new_identifier, bool new_alert, bool new_news,
-	std::string_view new_news_title, std::string_view new_news_desc_long,
-	std::string_view new_news_desc_medium, std::string_view new_news_desc_short,
+	std::string_view new_identifier, bool new_alert, bool new_news, std::string_view new_news_title,
+	std::string_view new_news_desc_long, std::string_view new_news_desc_medium, std::string_view new_news_desc_short,
 	std::string_view new_picture
 ) : HasIdentifier { new_identifier }, alert { new_alert }, news { new_news }, news_title { new_news_title },
 	news_desc_long { new_news_desc_long }, news_desc_medium { new_news_desc_medium },
 	news_desc_short { new_news_desc_short }, picture { new_picture } {}
 
 bool DecisionManager::add_decision(
-	std::string_view identifier, bool alert, bool news, std::string_view news_title,
-	std::string_view news_desc_long, std::string_view news_desc_medium,
-	std::string_view news_desc_short, std::string_view picture
+	std::string_view identifier, bool alert, bool news, std::string_view news_title, std::string_view news_desc_long,
+	std::string_view news_desc_medium, std::string_view news_desc_short, std::string_view picture
 ) {
 	if (identifier.empty()) {
 		Logger::error("Invalid decision identifier - empty!");
@@ -35,14 +33,7 @@ bool DecisionManager::add_decision(
 	}
 
 	return decisions.add_item({
-		identifier,
-		alert,
-		news,
-		news_title,
-		news_desc_long,
-		news_desc_medium,
-		news_desc_short,
-		picture
+		identifier, alert, news, news_title, news_desc_long, news_desc_medium, news_desc_short, picture
 	}, duplicate_warning_callback);
 }
 
@@ -65,7 +56,9 @@ bool DecisionManager::load_decision_file(ast::NodeCPtr root) {
 					"effect", ONE_EXACTLY, success_callback, //TODO
 					"ai_will_do", ZERO_OR_ONE, success_callback //TODO
 				)(node);
-				ret &= add_decision(identifier, alert, news, news_title, news_desc_long, news_desc_medium, news_desc_short, picture);
+				ret &= add_decision(
+					identifier, alert, news, news_title, news_desc_long, news_desc_medium, news_desc_short, picture
+				);
 				return ret;
 			}
 		)

@@ -65,13 +65,14 @@ namespace OpenVic {
 
 	struct OnAction : HasIdentifier {
 		friend struct EventManager;
-		using weight_map_t = std::map<Event const*, uint64_t>; 
+
+		using weight_map_t = std::map<Event const*, uint64_t>;
 
 	private:
 		weight_map_t PROPERTY(weighted_events);
 
-		OnAction(std::string_view new_identifier, weight_map_t new_weighted_events);
-	
+		OnAction(std::string_view new_identifier, weight_map_t&& new_weighted_events);
+
 	public:
 		OnAction(OnAction&&) = default;
 	};
@@ -90,7 +91,7 @@ namespace OpenVic {
 			std::vector<Event::EventOption>&& options
 		);
 
-		bool add_on_action(std::string_view identifier, OnAction::weight_map_t new_weighted_events);
+		bool add_on_action(std::string_view identifier, OnAction::weight_map_t&& new_weighted_events);
 
 		bool load_event_file(IssueManager const& issue_manager, ast::NodeCPtr root);
 		bool load_on_action_file(ast::NodeCPtr root);

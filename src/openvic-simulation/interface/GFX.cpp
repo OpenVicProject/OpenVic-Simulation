@@ -15,9 +15,9 @@ node_callback_t Sprite::expect_sprite(callback_t<std::unique_ptr<Sprite>&&> call
 		"LineChartType", ZERO_OR_MORE, _expect_instance<Sprite, LineChart>(callback),
 		"textSpriteType", ZERO_OR_MORE, _expect_instance<Sprite, TextureSprite>(callback),
 		"maskedShieldType", ZERO_OR_MORE, _expect_instance<Sprite, MaskedFlag>(callback),
+		"tileSpriteType", ZERO_OR_MORE, _expect_instance<Sprite, TileTextureSprite>(callback),
 		// TODO - add the rest of the sprite types
 		"corneredTileSpriteType", ZERO_OR_MORE, success_callback,
-		"tileSpriteType", ZERO_OR_MORE, success_callback,
 		"BarChartType", ZERO_OR_MORE, success_callback,
 		"scrollingSprite", ZERO_OR_MORE, success_callback
 	);
@@ -38,6 +38,20 @@ bool TextureSprite::_fill_key_map(key_map_t& key_map) {
 		"transparencecheck", ZERO_OR_ONE, success_callback,
 		"loadType", ZERO_OR_ONE, success_callback,
 		"clicksound", ZERO_OR_ONE, success_callback
+	);
+	return ret;
+}
+
+TileTextureSprite::TileTextureSprite() : texture_file {}, size {} {}
+
+bool TileTextureSprite::_fill_key_map(key_map_t& key_map) {
+	bool ret = Sprite::_fill_key_map(key_map);
+	ret &= add_key_map_entries(key_map,
+		"texturefile", ZERO_OR_ONE, expect_string(assign_variable_callback_string(texture_file)),
+		"size", ZERO_OR_ONE, expect_ivec2(assign_variable_callback(size)),
+
+		"norefcount", ZERO_OR_ONE, success_callback,
+		"loadType", ZERO_OR_ONE, success_callback
 	);
 	return ret;
 }

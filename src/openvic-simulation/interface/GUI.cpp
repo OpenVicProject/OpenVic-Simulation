@@ -93,7 +93,9 @@ bool BaseButton::_fill_key_map(NodeTools::key_map_t& key_map, UIManager const& u
 	bool ret = Element::_fill_key_map(key_map, ui_manager);
 	// look up sprite registry for texture sprite with name...
 	ret &= add_key_map_entries(key_map,
-		"quadTextureSprite", ONE_EXACTLY,
+		"quadTextureSprite", ZERO_OR_ONE,
+			expect_string(ui_manager.expect_sprite_str(assign_variable_callback_pointer(sprite)), true),
+		"spriteType", ZERO_OR_ONE,
 			expect_string(ui_manager.expect_sprite_str(assign_variable_callback_pointer(sprite)), true),
 		"shortcut", ZERO_OR_ONE, success_callback // TODO - load and use shortcuts (how to integrate with custom keybinds?)
 	);
@@ -160,7 +162,7 @@ bool OverlappingElementsBox::_fill_key_map(NodeTools::key_map_t& key_map, UIMana
 	bool ret = AlignedElement::_fill_key_map(key_map, ui_manager);
 	ret &= add_key_map_entries(key_map,
 		"size", ONE_EXACTLY, expect_fvec2(assign_variable_callback(size)),
-		"spacing", ONE_EXACTLY, success_callback
+		"spacing", ONE_EXACTLY, expect_fixed_point(assign_variable_callback(spacing))
 	);
 	return ret;
 }

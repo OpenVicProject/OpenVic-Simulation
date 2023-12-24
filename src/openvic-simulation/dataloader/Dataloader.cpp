@@ -779,18 +779,6 @@ bool Dataloader::load_defines(GameManager& game_manager) const {
 		Logger::error("Failed to load issues!");
 		ret = false;
 	}
-	if (!game_manager.get_politics_manager().load_national_foci_file(
-		game_manager.get_pop_manager(), game_manager.get_economy_manager().get_good_manager(), game_manager.get_modifier_manager(), parse_defines(lookup_file(national_foci_file)).get_file_node()
-	)) {
-		Logger::error("Failed to load national foci!");
-		ret = false;
-	}
-	if (!game_manager.get_politics_manager().get_national_value_manager().load_national_values_file(
-		game_manager.get_modifier_manager(), parse_defines(lookup_file(national_values_file)).get_file_node()
-	)) {
-		Logger::error("Failed to load national values!");
-		ret = false;
-	}
 	if (!game_manager.get_economy_manager().load_production_types_file(game_manager.get_pop_manager(),
 		parse_defines(lookup_file(production_types_file)).get_file_node()
 	)) {
@@ -808,6 +796,19 @@ bool Dataloader::load_defines(GameManager& game_manager) const {
 		ret = false;
 	}
 	if (!_load_technologies(game_manager)) {
+		ret = false;
+	}
+	if (!game_manager.get_politics_manager().load_national_foci_file(
+		game_manager.get_pop_manager(), game_manager.get_economy_manager().get_good_manager(),
+		game_manager.get_modifier_manager(), parse_defines(lookup_file(national_foci_file)).get_file_node()
+	)) {
+		Logger::error("Failed to load national foci!");
+		ret = false;
+	}
+	if (!game_manager.get_politics_manager().get_national_value_manager().load_national_values_file(
+		game_manager.get_modifier_manager(), parse_defines(lookup_file(national_values_file)).get_file_node()
+	)) {
+		Logger::error("Failed to load national values!");
 		ret = false;
 	}
 	if (!game_manager.get_crime_manager().load_crime_modifiers(
