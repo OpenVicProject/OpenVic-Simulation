@@ -4,8 +4,8 @@ using namespace OpenVic;
 using namespace OpenVic::GFX;
 using namespace OpenVic::NodeTools;
 
-Font::Font(std::string_view new_identifier, colour_t new_colour, std::string_view new_fontname)
-	: HasIdentifierAndColour { new_identifier, new_colour, false, true }, fontname { new_fontname } {}
+Font::Font(std::string_view new_identifier, colour_argb_t new_colour, std::string_view new_fontname)
+	: HasIdentifierAndAlphaColour { new_identifier, new_colour, false }, fontname { new_fontname } {}
 
 node_callback_t Sprite::expect_sprite(callback_t<std::unique_ptr<Sprite>&&> callback) {
 	return expect_dictionary_keys(

@@ -8,7 +8,7 @@ namespace OpenVic {
 
 namespace OpenVic::GFX {
 
-	struct Font : HasIdentifierAndColour {
+	struct Font : HasIdentifierAndAlphaColour {
 		friend class OpenVic::UIManager;
 
 	private:
@@ -16,7 +16,7 @@ namespace OpenVic::GFX {
 
 		// TODO - colorcodes, effect
 
-		Font(std::string_view new_identifier, colour_t new_colour, std::string_view new_fontname);
+		Font(std::string_view new_identifier, colour_argb_t new_colour, std::string_view new_fontname);
 
 	public:
 		Font(Font&&) = default;

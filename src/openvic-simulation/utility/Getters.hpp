@@ -49,7 +49,10 @@ public: \
 ACCESS:
 
 namespace OpenVic {
-	struct ReturnByValueProperty {};
+	struct ReturnByValueProperty {
+		constexpr bool operator==(ReturnByValueProperty const&) const = default;
+		constexpr std::strong_ordering operator<=>(ReturnByValueProperty const&) const = default;
+	};
 
 	/*
 	 * Template function used to choose the return type and provide the implementation

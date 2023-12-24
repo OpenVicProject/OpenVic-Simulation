@@ -102,7 +102,7 @@ bool BMP::read_header() {
 	if (header.num_colours != 0 && header.bits_per_pixel > PALETTE_BITS_PER_PIXEL_LIMIT) {
 		Logger::error(
 			"Invalid BMP palette size: ", header.num_colours, " (should be 0 as bits per pixel is ", header.bits_per_pixel,
-			" > 8)"
+			" > ", PALETTE_BITS_PER_PIXEL_LIMIT, ")"
 		);
 		header_validated = false;
 	}
@@ -207,7 +207,7 @@ bool BMP::read_pixel_data() {
 		Logger::error("Failed to move to the pixel data in the BMP file!");
 		return false;
 	}
-	const size_t pixel_data_size = get_width() * get_height() * header.bits_per_pixel / 8;
+	const size_t pixel_data_size = get_width() * get_height() * header.bits_per_pixel / CHAR_BIT;
 	pixel_data.resize(pixel_data_size);
 	file.read(reinterpret_cast<char*>(pixel_data.data()), pixel_data_size);
 	if (file.fail()) {

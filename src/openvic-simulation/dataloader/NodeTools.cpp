@@ -1,5 +1,7 @@
 #include "NodeTools.hpp"
 
+#include "openvic-simulation/types/Colour.hpp"
+
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;
 
@@ -118,31 +120,33 @@ node_callback_t NodeTools::expect_fixed_point(callback_t<fixed_point_t> callback
 
 node_callback_t NodeTools::expect_colour(callback_t<colour_t> callback) {
 	return [callback](ast::NodeCPtr node) -> bool {
-		colour_t col = NULL_COLOUR;
-		uint32_t components = 0;
+		colour_t col = colour_t::null();
+		int32_t components = 0;
 		bool ret = expect_list_of_length(3, expect_fixed_point(
 			[&col, &components](fixed_point_t val) -> bool {
-				components++;
-				col <<= 8;
 				if (val < 0 || val > 255) {
-					Logger::error("Invalid colour component: ", val);
+					Logger::error("Invalid colour component #", components++, ": ", val);
 					return false;
 				} else {
 					if (val <= 1) {
 						val *= 255;
+					} else if (!val.is_integer()) {
+						Logger::warning("Fractional part of colour component #", components, " will be truncated: ", val);
 					}
-					col |= val.to_int32_t();
+					col[components++] = val.to_int64_t();
 					return true;
 				}
 			}
 		))(node);
-		ret &= callback(col << 8 * (3 - components));
+		ret &= callback(col);
 		return ret;
 	};
 }
 
-node_callback_t NodeTools::expect_colour_hex(callback_t<colour_t> callback) {
-	return expect_uint(callback, 16);
+node_callback_t NodeTools::expect_colour_hex(callback_t<colour_argb_t> callback) {
+	return expect_uint<colour_argb_t::integer_type>([callback](colour_argb_t::integer_type val) -> bool {
+		return callback(colour_argb_t::from_integer(val));
+	}, 16);
 }
 
 callback_t<std::string_view> NodeTools::expect_date_str(callback_t<Date> callback) {

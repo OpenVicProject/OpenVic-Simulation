@@ -1,17 +1,23 @@
 #include "UI.hpp"
 
+#include "openvic-simulation/types/Colour.hpp"
+
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;
 using namespace OpenVic::GFX;
 using namespace OpenVic::GUI;
 
-bool UIManager::add_font(std::string_view identifier, colour_t colour, std::string_view fontname) {
+bool UIManager::add_font(std::string_view identifier, colour_argb_t colour, std::string_view fontname) {
 	if (identifier.empty()) {
 		Logger::error("Invalid font identifier - empty!");
 		return false;
 	}
+	if (colour.alpha == colour_argb_t::colour_traits::null) {
+		Logger::error("Invalid colour for font ", identifier, " - completely transparent! (", colour, ")");
+		return false;
+	}
 	if (fontname.empty()) {
-		Logger::error("Invalid culture colour for ", identifier, ": ", colour_to_hex_string(colour));
+		Logger::error("Invalid fontname for font ", identifier, " - empty!");
 		return false;
 	}
 	return fonts.add_item({ identifier, colour, fontname }, duplicate_warning_callback);
@@ -19,7 +25,7 @@ bool UIManager::add_font(std::string_view identifier, colour_t colour, std::stri
 
 bool UIManager::_load_font(ast::NodeCPtr node) {
 	std::string_view identifier, fontname;
-	colour_t colour = NULL_COLOUR;
+	colour_argb_t colour = colour_argb_t::null();
 	bool ret = expect_dictionary_keys(
 		"name", ONE_EXACTLY, expect_string(assign_variable_callback(identifier)),
 		"fontname", ONE_EXACTLY, expect_string(assign_variable_callback(fontname)),

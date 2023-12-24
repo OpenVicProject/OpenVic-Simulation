@@ -2,12 +2,14 @@
 
 #include <limits>
 
+#include "openvic-simulation/types/Colour.hpp"
+
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;
 
 TerrainType::TerrainType(
 	std::string_view new_identifier, colour_t new_colour, ModifierValue&& new_modifier, bool new_is_water
-) : HasIdentifierAndColour { new_identifier, new_colour, false, false }, modifier { std::move(new_modifier) },
+) : HasIdentifierAndColour { new_identifier, new_colour, false }, modifier { std::move(new_modifier) },
 	is_water { new_is_water } {}
 
 TerrainTypeMapping::TerrainTypeMapping(
@@ -21,10 +23,6 @@ bool TerrainTypeManager::add_terrain_type(
 ) {
 	if (identifier.empty()) {
 		Logger::error("Invalid terrain type identifier - empty!");
-		return false;
-	}
-	if (colour > MAX_COLOUR_RGB) {
-		Logger::error("Invalid terrain type colour for ", identifier, ": ", colour_to_hex_string(colour));
 		return false;
 	}
 	return terrain_types.add_item({ identifier, colour, std::move(values), is_water });
@@ -68,7 +66,7 @@ node_callback_t TerrainTypeManager::_load_terrain_type_categories(ModifierManage
 		const bool ret = expect_dictionary_reserve_length(terrain_types,
 			[this, &modifier_manager](std::string_view type_key, ast::NodeCPtr type_node) -> bool {
 				ModifierValue values;
-				colour_t colour = NULL_COLOUR;
+				colour_t colour = colour_t::null();
 				bool is_water = false;
 				bool ret = modifier_manager.expect_modifier_value_and_keys(move_variable_callback(values),
 					"color", ONE_EXACTLY, expect_colour(assign_variable_callback(colour)),

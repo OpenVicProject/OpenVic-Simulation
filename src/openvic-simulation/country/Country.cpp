@@ -31,7 +31,7 @@ Country::Country(
 	std::string_view new_identifier, colour_t new_colour, GraphicalCultureType const& new_graphical_culture,
 	IdentifierRegistry<CountryParty>&& new_parties, unit_names_map_t&& new_unit_names, bool new_dynamic_tag,
 	government_colour_map_t&& new_alternative_colours
-) : HasIdentifierAndColour { new_identifier, new_colour, false, false }, graphical_culture { new_graphical_culture },
+) : HasIdentifierAndColour { new_identifier, new_colour, false }, graphical_culture { new_graphical_culture },
 	parties { std::move(new_parties) }, unit_names { std::move(new_unit_names) }, dynamic_tag { new_dynamic_tag },
 	alternative_colours { std::move(new_alternative_colours) } {}
 
@@ -48,10 +48,6 @@ bool CountryManager::add_country(
 		Logger::error(
 			"Invalid country identifier: ", identifier, " (can only contain alphanumeric characters and underscores)"
 		);
-		return false;
-	}
-	if (colour > MAX_COLOUR_RGB) {
-		Logger::error("Invalid country colour for ", identifier, ": ", colour_to_hex_string(colour));
 		return false;
 	}
 	if (graphical_culture == nullptr) {

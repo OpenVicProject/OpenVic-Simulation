@@ -1,6 +1,9 @@
 #include "GameManager.hpp"
 
+#include "openvic-simulation/types/Colour.hpp"
+
 using namespace OpenVic;
+using namespace OpenVic::colour_literals;
 
 GameManager::GameManager(state_updated_func_t state_updated_callback)
 	: clock {
@@ -75,54 +78,35 @@ bool GameManager::expand_building(Province::index_t province_index, std::string_
 	return province->expand_building(building_type_identifier);
 }
 
-static constexpr colour_t ALPHA_VALUE = float_to_alpha_value(0.7f);
+static constexpr colour_argb_t::value_type ALPHA_VALUE = colour_argb_t::colour_traits::alpha_from_float(0.7f);
 
-static constexpr Mapmode::base_stripe_t combine_base_stripe(colour_t base, colour_t stripe) {
-	return (static_cast<Mapmode::base_stripe_t>(stripe) << (sizeof(colour_t) * 8)) | base;
-}
-
-static constexpr Mapmode::base_stripe_t make_solid_base_stripe(colour_t colour) {
-	return combine_base_stripe(colour, colour);
-}
-
-static constexpr auto make_solid_base_stripe_func(auto func) {
-	return [func](Map const& map, Province const& province) -> Mapmode::base_stripe_t {
-		return make_solid_base_stripe(func(map, province));
-	};
-}
-
-template<std::derived_from<HasColour> T>
-static constexpr Mapmode::base_stripe_t get_colour_mapmode(T const* item) {
-	return item != nullptr ? make_solid_base_stripe(ALPHA_VALUE | item->get_colour()) : NULL_COLOUR;
-}
-
-template<std::derived_from<HasColour> T>
+template<IsColour ColourT = colour_t, std::derived_from<_HasColour<ColourT>> T>
 static constexpr auto get_colour_mapmode(T const*(Province::*get_item)() const) {
 	return [get_item](Map const& map, Province const& province) -> Mapmode::base_stripe_t {
 		T const* item = (province.*get_item)();
-		return item != nullptr ? make_solid_base_stripe(ALPHA_VALUE | item->get_colour()) : NULL_COLOUR;
+		return item != nullptr ? colour_argb_t { item->get_colour(), ALPHA_VALUE } : colour_argb_t::null();
 	};
 }
 
-template<std::derived_from<HasColour> T>
+template<IsColour ColourT = colour_t, std::derived_from<_HasColour<ColourT>> T>
 static constexpr Mapmode::base_stripe_t shaded_mapmode(fixed_point_map_t<T const*> const& map) {
 	const std::pair<fixed_point_map_const_iterator_t<T const*>, fixed_point_map_const_iterator_t<T const*>> largest =
 		get_largest_two_items(map);
 	if (largest.first != map.end()) {
-		const colour_t base_colour = ALPHA_VALUE | largest.first->first->get_colour();
+		const colour_argb_t base_colour = colour_argb_t { largest.first->first->get_colour(), ALPHA_VALUE };
 		if (largest.second != map.end()) {
 			/* If second largest is at least a third... */
 			if (largest.second->second * 3 >= get_total(map)) {
-				const colour_t stripe_colour = ALPHA_VALUE | largest.second->first->get_colour();
-				return combine_base_stripe(base_colour, stripe_colour);
+				const colour_argb_t stripe_colour = colour_argb_t { largest.second->first->get_colour(), ALPHA_VALUE };
+				return { base_colour, stripe_colour };
 			}
 		}
-		return make_solid_base_stripe(base_colour);
+		return base_colour;
 	}
-	return NULL_COLOUR;
+	return colour_argb_t::null();
 }
 
-template<std::derived_from<HasColour> T>
+template<IsColour ColourT = colour_t, std::derived_from<_HasColour<ColourT>> T>
 static constexpr auto shaded_mapmode(fixed_point_map_t<T const*> const&(Province::*get_map)() const) {
 	return [get_map](Map const& map, Province const& province) -> Mapmode::base_stripe_t {
 		return shaded_mapmode((province.*get_map)());
@@ -137,7 +121,7 @@ bool GameManager::load_hardcoded_defines() {
 		{
 			"mapmode_terrain",
 			[](Map const&, Province const& province) -> Mapmode::base_stripe_t {
-				return NULL_COLOUR;
+				return colour_argb_t::null();
 			}
 		},
 		{
@@ -145,19 +129,20 @@ bool GameManager::load_hardcoded_defines() {
 		},
 		{
 			"mapmode_province",
-			make_solid_base_stripe_func([](Map const&, Province const& province) -> colour_t {
-				return ALPHA_VALUE | province.get_colour();
-			})
+			[](Map const&, Province const& province) -> Mapmode::base_stripe_t {
+				return colour_argb_t { province.get_colour(), ALPHA_VALUE };
+			}
 		},
 		{
 			"mapmode_region", get_colour_mapmode(&Province::get_region)
 		},
 		{
 			"mapmode_index",
-			make_solid_base_stripe_func([](Map const& map, Province const& province) -> colour_t {
-				const colour_t f = fraction_to_colour_byte(province.get_index(), map.get_province_count() + 1);
-				return ALPHA_VALUE | (f << 16) | (f << 8) | f;
-			})
+			[](Map const& map, Province const& province) -> Mapmode::base_stripe_t {
+				const colour_argb_t::value_type f =
+					colour_argb_t::colour_traits::component_from_fraction(province.get_index(), map.get_province_count() + 1);
+				return colour_argb_t::fill_as(f).with_alpha(ALPHA_VALUE);
+			}
 		},
 		{
 			"mapmode_terrain_type", get_colour_mapmode(&Province::get_terrain_type)
@@ -167,36 +152,35 @@ bool GameManager::load_hardcoded_defines() {
 		},
 		{
 			"mapmode_infrastructure",
-			make_solid_base_stripe_func([](Map const& map, Province const& province) -> colour_t {
+			[](Map const& map, Province const& province) -> Mapmode::base_stripe_t {
 				BuildingInstance const* railroad = province.get_building_by_identifier("railroad");
 				if (railroad != nullptr) {
-					colour_t val = fraction_to_colour_byte(railroad->get_level(),
-						railroad->get_building_type().get_max_level() + 1, 0.5f, 1.0f);
+					const colour_argb_t::value_type val = colour_argb_t::colour_traits::component_from_fraction(
+						railroad->get_level(), railroad->get_building_type().get_max_level() + 1, 0.5f, 1.0f
+					);
 					switch (railroad->get_expansion_state()) {
 					case BuildingInstance::ExpansionState::CannotExpand:
-						val <<= 16;
-						break;
+						return colour_argb_t { val, 0, 0, ALPHA_VALUE };
 					case BuildingInstance::ExpansionState::CanExpand:
-						break;
+						return colour_argb_t { 0, 0, val, ALPHA_VALUE };
 					default:
-						val <<= 8;
-						break;
+						return colour_argb_t { 0, val, 0, ALPHA_VALUE };
 					}
-					return ALPHA_VALUE | val;
 				}
-				return NULL_COLOUR;
-			})
+				return colour_argb_t::null();
+			}
 		},
 		{
 			"mapmode_population",
-			make_solid_base_stripe_func([](Map const& map, Province const& province) -> colour_t {
+			[](Map const& map, Province const& province) -> Mapmode::base_stripe_t {
 				// TODO - explore non-linear scaling to have more variation among non-massive provinces
 				// TODO - when selecting a province, only show the population of provinces controlled (or owned?)
 				// by the same country, relative to the most populous province in that set of provinces
-				return ALPHA_VALUE | (fraction_to_colour_byte(
+				const colour_argb_t::value_type val = colour_argb_t::colour_traits::component_from_fraction(
 					province.get_total_population(), map.get_highest_province_population() + 1, 0.1f, 1.0f
-				) << 8);
-			})
+				);
+				return colour_argb_t { 0, val, 0, ALPHA_VALUE };
+			}
 		},
 		{
 			"mapmode_culture", shaded_mapmode(&Province::get_culture_distribution)
@@ -209,37 +193,38 @@ bool GameManager::load_hardcoded_defines() {
 				Province const* selected_province = map.get_selected_province();
 				if (selected_province != nullptr) {
 					if (selected_province == &province) {
-						return make_solid_base_stripe(ALPHA_VALUE | 0xFFFFFF);
+						return (0xFFFFFF_argb).with_alpha(ALPHA_VALUE);
 					}
-					colour_t base = NULL_COLOUR, stripe = NULL_COLOUR;
+					colour_argb_t base = colour_argb_t::null(), stripe = colour_argb_t::null();
 					Province::adjacency_t const* adj = selected_province->get_adjacency_to(&province);
 					if (adj != nullptr) {
-						using enum Province::adjacency_t::type_t;
+						colour_argb_t::integer_type base_int;
 						switch (adj->get_type()) {
-						case LAND: base = 0x00FF00; break;
-						case WATER: base = 0x0000FF; break;
-						case COASTAL: base = 0xF9D199; break;
-						case IMPASSABLE: base = 0x8B4513; break;
-						case STRAIT: base = 0x00FFFF; break;
-						case CANAL: base = 0x888888; break;
-						default: base = 0xFF0000; break;
+							using enum Province::adjacency_t::type_t;
+						case LAND:		 base_int = 0x00FF00; break;
+						case WATER:		 base_int = 0x0000FF; break;
+						case COASTAL:	 base_int = 0xF9D199; break;
+						case IMPASSABLE: base_int = 0x8B4513; break;
+						case STRAIT:	 base_int = 0x00FFFF; break;
+						case CANAL:		 base_int = 0x888888; break;
+						default:		 base_int = 0xFF0000; break;
 						}
-						base |= ALPHA_VALUE;
+						base = colour_argb_t::from_integer(base_int).with_alpha(ALPHA_VALUE);
 						stripe = base;
 					}
 					if (selected_province->has_adjacency_going_through(&province)) {
-						stripe = ALPHA_VALUE | 0xFFFF00;
+						stripe = (0xFFFF00_argb).with_alpha(ALPHA_VALUE);
 					}
 
-					return combine_base_stripe(base, stripe);
+					return { base, stripe };
 				}
-				return NULL_COLOUR;
+				return colour_argb_t::null();
 			}
 		},
 		{
-			"mapmode_port", make_solid_base_stripe_func([](Map const& map, Province const& province) -> colour_t {
-				return province.has_port() ? ALPHA_VALUE | 0xFFFFFF : NULL_COLOUR;
-			})
+			"mapmode_port", [](Map const& map, Province const& province) -> Mapmode::base_stripe_t {
+				return province.has_port() ? (0xFFFFFF_argb).with_alpha(ALPHA_VALUE) : colour_argb_t::null();
+			}
 		}
 	};
 

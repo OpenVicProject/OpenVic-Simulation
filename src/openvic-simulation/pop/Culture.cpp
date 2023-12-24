@@ -1,6 +1,7 @@
 #include "Culture.hpp"
 
 #include "openvic-simulation/dataloader/NodeTools.hpp"
+#include "openvic-simulation/types/Colour.hpp"
 
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;
@@ -16,7 +17,7 @@ CultureGroup::CultureGroup(
 Culture::Culture(
 	std::string_view new_identifier, colour_t new_colour, CultureGroup const& new_group,
 	std::vector<std::string>&& new_first_names, std::vector<std::string>&& new_last_names
-) : HasIdentifierAndColour { new_identifier, new_colour, false, false }, group { new_group },
+) : HasIdentifierAndColour { new_identifier, new_colour, false }, group { new_group },
 	first_names { std::move(new_first_names) }, last_names { std::move(new_last_names) } {}
 
 bool CultureManager::add_graphical_culture_type(std::string_view identifier) {
@@ -61,10 +62,6 @@ bool CultureManager::add_culture(
 		Logger::error("Invalid culture identifier - empty!");
 		return false;
 	}
-	if (colour > MAX_COLOUR_RGB) {
-		Logger::error("Invalid culture colour for ", identifier, ": ", colour_to_hex_string(colour));
-		return false;
-	}
 	return cultures.add_item({ identifier, colour, group, std::move(first_names), std::move(last_names) });
 }
 
@@ -101,7 +98,7 @@ bool CultureManager::_load_culture(
 	CultureGroup const& culture_group, std::string_view culture_key, ast::NodeCPtr culture_node
 ) {
 
-	colour_t colour = NULL_COLOUR;
+	colour_t colour = colour_t::null();
 	std::vector<std::string> first_names, last_names;
 
 	bool ret = expect_dictionary_keys(
