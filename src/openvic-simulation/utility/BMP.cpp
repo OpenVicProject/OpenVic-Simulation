@@ -110,7 +110,7 @@ bool BMP::read_header() {
 
 	palette_size = header.bits_per_pixel > PALETTE_BITS_PER_PIXEL_LIMIT ? 0
 		// Use header.num_colours if it's greater than 0 and at most 1 << header.bits_per_pixel
-		: (0 < header.num_colours && header.num_colours - 1 >> header.bits_per_pixel == 0
+		: (0 < header.num_colours && (header.num_colours - 1) >> header.bits_per_pixel == 0
 		? header.num_colours : 1 << header.bits_per_pixel);
 
 	const uint32_t expected_offset = palette_size * PALETTE_COLOUR_SIZE + sizeof(header);
@@ -182,7 +182,7 @@ uint16_t BMP::get_bits_per_pixel() const {
 	return header.bits_per_pixel;
 }
 
-std::vector<colour_t> const& BMP::get_palette() const {
+std::vector<BMP::palette_colour_t> const& BMP::get_palette() const {
 	if (!palette_read) {
 		Logger::warning("Trying to get BMP palette before loading");
 	}
