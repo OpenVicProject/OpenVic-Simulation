@@ -32,14 +32,18 @@ namespace OpenVic {
 		} header;
 #pragma pack(pop)
 
+	public:
+		using palette_colour_t = uint32_t;
+
+	private:
 		std::ifstream file;
 		bool header_validated = false, palette_read = false, pixel_data_read = false;
 		uint32_t palette_size = 0;
-		std::vector<colour_t> palette;
+		std::vector<palette_colour_t> palette;
 		std::vector<uint8_t> pixel_data;
 
 	public:
-		static constexpr uint32_t PALETTE_COLOUR_SIZE = sizeof(colour_t);
+		static constexpr uint32_t PALETTE_COLOUR_SIZE = sizeof(palette_colour_t);
 
 		BMP() = default;
 		~BMP();
@@ -54,7 +58,7 @@ namespace OpenVic {
 		int32_t get_width() const;
 		int32_t get_height() const;
 		uint16_t get_bits_per_pixel() const;
-		std::vector<colour_t> const& get_palette() const;
+		std::vector<palette_colour_t> const& get_palette() const;
 		std::vector<uint8_t> const& get_pixel_data() const;
 	};
 }
