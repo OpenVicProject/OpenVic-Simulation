@@ -3,22 +3,23 @@
 #include <map>
 #include <optional>
 
-#include "openvic-simulation/misc/Decision.hpp"
 #include "openvic-simulation/country/Country.hpp"
 #include "openvic-simulation/history/Bookmark.hpp"
 #include "openvic-simulation/history/HistoryMap.hpp"
 #include "openvic-simulation/map/Province.hpp"
 #include "openvic-simulation/military/Deployment.hpp"
+#include "openvic-simulation/misc/Decision.hpp"
 #include "openvic-simulation/politics/Government.hpp"
 #include "openvic-simulation/politics/Ideology.hpp"
 #include "openvic-simulation/politics/Issue.hpp"
 #include "openvic-simulation/politics/NationalValue.hpp"
 #include "openvic-simulation/pop/Culture.hpp"
 #include "openvic-simulation/pop/Religion.hpp"
-#include "openvic-simulation/types/Colour.hpp"
-#include "openvic-simulation/types/Date.hpp"
 #include "openvic-simulation/research/Invention.hpp"
 #include "openvic-simulation/research/Technology.hpp"
+#include "openvic-simulation/types/Colour.hpp"
+#include "openvic-simulation/types/Date.hpp"
+#include "openvic-simulation/types/OrderedContainers.hpp"
 
 namespace OpenVic {
 	struct CountryHistoryMap;
@@ -44,8 +45,8 @@ namespace OpenVic {
 		std::vector<Reform const*> PROPERTY(reforms);
 		std::optional<Deployment const*> PROPERTY(inital_oob);
 		std::optional<TechnologySchool const*> PROPERTY(tech_school);
-		std::map<Technology const*, bool> PROPERTY(technologies);
-		std::map<Invention const*, bool> PROPERTY(inventions);
+		ordered_map<Technology const*, bool> PROPERTY(technologies);
+		ordered_map<Invention const*, bool> PROPERTY(inventions);
 		fixed_point_map_t<Country const*> PROPERTY(foreign_investment);
 		std::optional<fixed_point_t> PROPERTY(consciousness);
 		std::optional<fixed_point_t> PROPERTY(nonstate_consciousness);
@@ -55,8 +56,8 @@ namespace OpenVic {
 		std::optional<fixed_point_t> PROPERTY(colonial_points);
 		string_set_t PROPERTY(country_flags);
 		string_set_t PROPERTY(global_flags);
-		std::map<GovernmentType const*, GovernmentType const*> PROPERTY(government_flag_overrides);
-		std::set<Decision const*> decisions;
+		ordered_map<GovernmentType const*, GovernmentType const*> PROPERTY(government_flag_overrides);
+		ordered_set<Decision const*> decisions;
 
 		CountryHistoryEntry(Country const& new_country, Date new_date);
 	};
@@ -81,7 +82,7 @@ namespace OpenVic {
 
 	struct CountryHistoryManager {
 	private:
-		std::map<Country const*, CountryHistoryMap> country_histories;
+		ordered_map<Country const*, CountryHistoryMap> country_histories;
 		bool locked = false;
 
 	public:

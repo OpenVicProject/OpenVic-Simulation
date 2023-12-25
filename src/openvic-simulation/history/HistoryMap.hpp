@@ -5,6 +5,7 @@
 
 #include "openvic-simulation/dataloader/NodeTools.hpp"
 #include "openvic-simulation/types/Date.hpp"
+#include "openvic-simulation/types/OrderedContainers.hpp"
 
 namespace OpenVic {
 
@@ -29,7 +30,7 @@ namespace OpenVic {
 		using entry_type = _Entry;
 
 	private:
-		std::map<Date, std::unique_ptr<entry_type>> PROPERTY(entries);
+		ordered_map<Date, std::unique_ptr<entry_type>> PROPERTY(entries);
 
 		bool _try_load_history_entry(GameManager const& game_manager, Args... args, Date date, ast::NodeCPtr root) {
 			entry_type *const entry = _get_or_make_entry(game_manager, date);

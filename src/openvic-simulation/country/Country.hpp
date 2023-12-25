@@ -21,6 +21,7 @@
 #include "openvic-simulation/types/Colour.hpp"
 #include "openvic-simulation/types/Date.hpp"
 #include "openvic-simulation/types/IdentifierRegistry.hpp"
+#include "openvic-simulation/types/OrderedContainers.hpp"
 
 namespace OpenVic {
 	struct GameManager;
@@ -29,7 +30,7 @@ namespace OpenVic {
 	struct CountryParty : HasIdentifier {
 		friend struct CountryManager;
 
-		using policy_map_t = std::map<IssueGroup const*, Issue const*>;
+		using policy_map_t = ordered_map<IssueGroup const*, Issue const*>;
 
 	private:
 		const Date PROPERTY(start_date);
@@ -50,8 +51,8 @@ namespace OpenVic {
 	struct Country : HasIdentifierAndColour {
 		friend struct CountryManager;
 
-		using unit_names_map_t = std::map<Unit const*, std::vector<std::string>>;
-		using government_colour_map_t = std::map<GovernmentType const*, colour_t>;
+		using unit_names_map_t = ordered_map<Unit const*, std::vector<std::string>>;
+		using government_colour_map_t = ordered_map<GovernmentType const*, colour_t>;
 
 	private:
 		GraphicalCultureType const& PROPERTY(graphical_culture);

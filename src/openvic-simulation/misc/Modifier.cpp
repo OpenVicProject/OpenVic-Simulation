@@ -1,5 +1,9 @@
 #include "Modifier.hpp"
+
 #include <string>
+
+#include "openvic-simulation/types/OrderedContainers.hpp"
+#include "openvic-simulation/utility/TslHelper.hpp"
 
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;
@@ -16,7 +20,7 @@ ModifierValue& ModifierValue::operator=(ModifierValue const&) = default;
 ModifierValue& ModifierValue::operator=(ModifierValue&&) = default;
 
 void ModifierValue::trim() {
-	std::erase_if(values, [](effect_map_t::value_type const& value) -> bool {
+	erase_if(values, [](effect_map_t::value_type const& value) -> bool {
 		return value.second == fixed_point_t::_0();
 	});
 }
@@ -57,7 +61,7 @@ ModifierValue ModifierValue::operator+(ModifierValue const& right) const {
 
 ModifierValue ModifierValue::operator-() const {
 	ModifierValue ret = *this;
-	for (effect_map_t::value_type& value : ret.values) {
+	for (auto value : mutable_iterator(ret.values)) {
 		value.second = -value.second;
 	}
 	return ret;

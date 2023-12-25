@@ -1,6 +1,7 @@
 #include "NodeTools.hpp"
 
 #include "openvic-simulation/types/Colour.hpp"
+#include "openvic-simulation/utility/TslHelper.hpp"
 
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;
@@ -314,22 +315,20 @@ bool NodeTools::add_key_map_entry(
 }
 
 bool NodeTools::remove_key_map_entry(key_map_t& key_map, std::string_view key) {
-	const key_map_t::const_iterator it = key_map.find(key);
-	if (it != key_map.end()) {
-		key_map.erase(it);
-		return true;
+	if(key_map.erase(key) == 0) {
+		Logger::error("Failed to find dictionary key to remove: ", key);
+		return false;
 	}
-	Logger::error("Failed to find dictionary key to remove: ", key);
-	return false;
+	return true;
 }
 
 key_value_callback_t NodeTools::dictionary_keys_callback(key_map_t& key_map, key_value_callback_t default_callback) {
 	return [&key_map, default_callback](std::string_view key, ast::NodeCPtr value) -> bool {
-		const key_map_t::iterator it = key_map.find(key);
+		key_map_t::iterator it = key_map.find(key);
 		if (it == key_map.end()) {
 			return default_callback(key, value);
 		}
-		dictionary_entry_t& entry = it->second;
+		dictionary_entry_t& entry = it.value();
 		if (++entry.count > 1 && !entry.can_repeat()) {
 			Logger::error("Invalid repeat of dictionary key: ", key);
 			return false;
@@ -345,7 +344,7 @@ key_value_callback_t NodeTools::dictionary_keys_callback(key_map_t& key_map, key
 
 bool NodeTools::check_key_map_counts(key_map_t& key_map) {
 	bool ret = true;
-	for (key_map_t::value_type& key_entry : key_map) {
+	for (auto key_entry : mutable_iterator(key_map)) {
 		dictionary_entry_t& entry = key_entry.second;
 		if (entry.must_appear() && entry.count < 1) {
 			Logger::error("Mandatory dictionary key not present: ", key_entry.first);

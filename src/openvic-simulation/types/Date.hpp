@@ -1,10 +1,12 @@
 #pragma once
 
+#include <climits>
 #include <cstdint>
 #include <ostream>
 #include <string>
 
 #include "openvic-simulation/utility/Getters.hpp"
+#include "openvic-simulation/utility/Utility.hpp"
 
 namespace OpenVic {
 	// A relative period between points in time, measured in days
@@ -106,4 +108,15 @@ namespace OpenVic {
 		static Date from_string(std::string_view str, bool* successful = nullptr, bool quiet = false);
 	};
 	std::ostream& operator<<(std::ostream& out, Date date);
+}
+
+namespace std {
+	template<>
+	struct hash<OpenVic::Date> {
+		[[nodiscard]] size_t operator()(OpenVic::Date date) const {
+			size_t result = 0;
+			OpenVic::utility::perfect_hash(result, date.get_day(), date.get_month(), date.get_year());
+			return result;
+		}
+	};
 }

@@ -10,8 +10,11 @@
 
 #include <openvic-dataloader/v2script/AbstractSyntaxTree.hpp>
 
+#include <tsl/ordered_set.h>
+
 #include "openvic-simulation/types/Colour.hpp"
 #include "openvic-simulation/types/Date.hpp"
+#include "openvic-simulation/types/OrderedContainers.hpp"
 #include "openvic-simulation/types/Vector.hpp"
 
 namespace OpenVic {
@@ -20,10 +23,10 @@ namespace OpenVic {
 	/* Template for map from strings to Ts, in which string_views can be
 	 * searched for without needing to be copied into a string */
 	template<typename T>
-	using string_map_t = std::map<std::string, T, std::less<void>>;
+	using string_map_t = ordered_map<std::string, T>;
 
 	/* String set type supporting heterogeneous key lookup */
-	using string_set_t = std::set<std::string, std::less<void>>;
+	using string_set_t = ordered_set<std::string>;
 
 	namespace NodeTools {
 
@@ -137,7 +140,7 @@ namespace OpenVic {
 		node_callback_t expect_dictionary(key_value_callback_t callback);
 
 		struct dictionary_entry_t {
-			const enum class expected_count_t : uint8_t {
+			enum class expected_count_t : uint8_t {
 				_MUST_APPEAR = 0b01,
 				_CAN_REPEAT = 0b10,
 
@@ -146,7 +149,7 @@ namespace OpenVic {
 				ZERO_OR_MORE = _CAN_REPEAT,
 				ONE_OR_MORE = _MUST_APPEAR | _CAN_REPEAT
 			} expected_count;
-			const node_callback_t callback;
+			node_callback_t callback;
 			size_t count;
 
 			dictionary_entry_t(expected_count_t new_expected_count, node_callback_t new_callback)
@@ -344,8 +347,8 @@ namespace OpenVic {
 			};
 		}
 
-		template<typename T>
-		Callback<T const&> auto set_callback_pointer(std::set<T const*>& set) {
+		template<typename T, typename...SetArgs>
+		Callback<T const&> auto set_callback_pointer(tsl::ordered_set<T const*, SetArgs...>& set) {
 			return [&set](T const& val) -> bool {
 				set.insert(&val);
 				return true;

@@ -2,7 +2,6 @@
 
 #include <cassert>
 #include <cstddef>
-#include <unordered_set>
 #include <vector>
 
 #include "openvic-simulation/economy/Good.hpp"
@@ -10,6 +9,7 @@
 #include "openvic-simulation/types/Colour.hpp"
 #include "openvic-simulation/utility/BMP.hpp"
 #include "openvic-simulation/utility/Logger.hpp"
+#include "openvic-simulation/types/OrderedContainers.hpp"
 
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;
@@ -460,7 +460,7 @@ bool Map::load_map_images(fs::path const& province_path, fs::path const& terrain
 	std::vector<fixed_point_map_t<TerrainType const*>> terrain_type_pixels_list(provinces.size());
 
 	bool ret = true;
-	std::unordered_set<colour_t> unrecognised_province_colours;
+	ordered_set<colour_t> unrecognised_province_colours;
 
 	std::vector<fixed_point_t> pixels_per_province(provinces.size());
 	std::vector<fvec2_t> pixel_position_sum_per_province(provinces.size());

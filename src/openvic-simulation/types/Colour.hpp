@@ -375,9 +375,7 @@ namespace OpenVic {
 	};
 
 	template<typename T>
-	concept IsColour = requires(T t) {
-		{ basic_colour_t { t } } -> std::same_as<T>;
-	};
+	concept IsColour = OpenVic::utility::is_specialization_of_v<T, basic_colour_t>;
 
 	template<typename ValueT, typename IntT>
 	struct rgb_colour_traits : colour_traits<ValueT, IntT> {

@@ -19,6 +19,8 @@ opts.Add(BoolVariable("build_ovsim_headless", "Build the openvic simulation head
 
 env.FinalizeOptions()
 
+env.exposed_includes = []
+
 SConscript("deps/SCsub", "env")
 
 env.openvic_simulation = {}
@@ -63,7 +65,7 @@ if env["build_ovsim_library"]:
 
     env.openvic_simulation["LIBPATH"] = env["LIBPATH"]
     env.openvic_simulation["LIBS"] = env["LIBS"]
-    env.openvic_simulation["INCPATH"] = [env.Dir(include_path)] + env.openvic_dataloader["INCPATH"]
+    env.openvic_simulation["INCPATH"] = [env.Dir(include_path)] + env.exposed_includes
 
 headless_program = None
 env["PROGSUFFIX"] = suffix + env["PROGSUFFIX"]

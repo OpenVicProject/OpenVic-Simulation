@@ -1,6 +1,7 @@
 #pragma once
 
 #include "openvic-simulation/types/IdentifierRegistry.hpp"
+#include "openvic-simulation/types/OrderedContainers.hpp"
 
 namespace OpenVic {
 	struct RuleManager;
@@ -18,7 +19,7 @@ namespace OpenVic {
 	struct RuleSet {
 		friend struct RuleManager;
 
-		using rule_map_t = std::map<Rule const*, bool>;
+		using rule_map_t = ordered_map<Rule const*, bool>;
 
 	private:
 		rule_map_t rules;

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "openvic-simulation/misc/Modifier.hpp"
+#include "openvic-simulation/types/OrderedContainers.hpp"
 
 namespace OpenVic {
 	struct TerrainTypeManager;
@@ -40,7 +41,7 @@ namespace OpenVic {
 
 	struct TerrainTypeManager {
 	private:
-		using terrain_type_mappings_map_t = std::map<TerrainTypeMapping::index_t, size_t>;
+		using terrain_type_mappings_map_t = ordered_map<TerrainTypeMapping::index_t, size_t>;
 		IdentifierRegistry<TerrainType> IDENTIFIER_REGISTRY(terrain_type);
 		IdentifierRegistry<TerrainTypeMapping> IDENTIFIER_REGISTRY(terrain_type_mapping);
 		terrain_type_mappings_map_t terrain_type_mappings_map;

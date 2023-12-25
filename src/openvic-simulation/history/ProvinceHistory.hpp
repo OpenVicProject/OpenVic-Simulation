@@ -11,6 +11,7 @@
 #include "openvic-simulation/history/HistoryMap.hpp"
 #include "openvic-simulation/map/Province.hpp"
 #include "openvic-simulation/map/TerrainType.hpp"
+#include "openvic-simulation/types/OrderedContainers.hpp"
 
 namespace OpenVic {
 	struct ProvinceHistoryMap;
@@ -30,8 +31,8 @@ namespace OpenVic {
 		std::optional<Good const*> PROPERTY(rgo);
 		std::optional<Province::life_rating_t> PROPERTY(life_rating);
 		std::optional<TerrainType const*> PROPERTY(terrain_type);
-		std::map<BuildingType const*, BuildingType::level_t> PROPERTY(province_buildings);
-		std::map<BuildingType const*, BuildingType::level_t> PROPERTY(state_buildings);
+		ordered_map<BuildingType const*, BuildingType::level_t> PROPERTY(province_buildings);
+		ordered_map<BuildingType const*, BuildingType::level_t> PROPERTY(state_buildings);
 		fixed_point_map_t<Ideology const*> PROPERTY(party_loyalties);
 		std::vector<Pop> PROPERTY(pops);
 
@@ -62,7 +63,7 @@ namespace OpenVic {
 
 	struct ProvinceHistoryManager {
 	private:
-		std::map<Province const*, ProvinceHistoryMap> PROPERTY(province_histories);
+		ordered_map<Province const*, ProvinceHistoryMap> PROPERTY(province_histories);
 		bool locked = false;
 
 		ProvinceHistoryMap* _get_or_make_province_history(Province const& province);
