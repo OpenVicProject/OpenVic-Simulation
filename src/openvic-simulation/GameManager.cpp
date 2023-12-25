@@ -68,14 +68,18 @@ bool GameManager::load_bookmark(Bookmark const* new_bookmark) {
 	return ret;
 }
 
-bool GameManager::expand_building(Province::index_t province_index, std::string_view building_type_identifier) {
+bool GameManager::expand_selected_province_building(size_t building_index) {
 	set_needs_update();
-	Province* province = map.get_province_by_index(province_index);
+	Province* province = map.get_selected_province();
 	if (province == nullptr) {
-		Logger::error("Invalid province index ", province_index, " while trying to expand building ", building_type_identifier);
+		Logger::error("Cannot expand building index ", building_index, " - no province selected!");
 		return false;
 	}
-	return province->expand_building(building_type_identifier);
+	if (building_index < 0) {
+		Logger::error("Invalid building index ", building_index, " while trying to expand in province ", province);
+		return false;
+	}
+	return province->expand_building(building_index);
 }
 
 static constexpr colour_argb_t::value_type ALPHA_VALUE = colour_argb_t::colour_traits::alpha_from_float(0.7f);

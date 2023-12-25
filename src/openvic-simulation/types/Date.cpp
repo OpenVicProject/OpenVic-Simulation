@@ -68,11 +68,11 @@ Timespan Timespan::operator++(int) {
 	return old;
 }
 
-Timespan::operator day_t() const {
+Timespan::day_t Timespan::to_int() const {
 	return days;
 }
 
-Timespan::operator double() const {
+Timespan::operator day_t() const {
 	return days;
 }
 

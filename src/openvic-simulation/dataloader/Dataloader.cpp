@@ -321,6 +321,16 @@ bool Dataloader::_load_pop_types(GameManager& game_manager) const {
 	);
 	pop_manager.lock_stratas();
 	pop_manager.lock_pop_types();
+
+	if (pop_manager.get_slave_sprite() <= 0) {
+		Logger::error("No slave pop type sprite found!");
+		ret = false;
+	}
+	if (pop_manager.get_administrative_sprite() <= 0) {
+		Logger::error("No administrative pop type sprite found!");
+		ret = false;
+	}
+
 	ret &= pop_manager.generate_modifiers(game_manager.get_modifier_manager());
 	return ret;
 }

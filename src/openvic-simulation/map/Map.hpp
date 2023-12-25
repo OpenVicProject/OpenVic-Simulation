@@ -72,7 +72,7 @@ namespace OpenVic {
 		colour_index_map_t colour_index_map;
 
 		Province::index_t PROPERTY(max_provinces);
-		Province::index_t PROPERTY(selected_province_index);
+		Province* PROPERTY(selected_province);
 		Pop::pop_size_t PROPERTY(highest_province_population)
 		Pop::pop_size_t PROPERTY(total_map_population);
 
@@ -94,7 +94,8 @@ namespace OpenVic {
 		Province::index_t get_province_index_at(size_t x, size_t y) const;
 		bool set_max_provinces(Province::index_t new_max_provinces);
 		void set_selected_province(Province::index_t index);
-		Province const* get_selected_province() const;
+		Province* get_selected_province();
+		Province::index_t get_selected_province_index() const;
 
 		bool add_region(std::string_view identifier, std::vector<std::string_view> const& province_identifiers);
 		IDENTIFIER_REGISTRY_NON_CONST_ACCESSORS(region)

@@ -104,17 +104,40 @@ bool BuildingTypeManager::load_buildings_file(
 			min_modifier_prefix.append(building_type.get_identifier()), false, ModifierEffect::format_t::INT
 		);
 
+		if (building_type.is_in_province()) {
+			province_building_types.emplace_back(&building_type);
+		}
+
 		if (building_type.is_port()) {
-			if (port_building_type == nullptr) {
-				port_building_type = &building_type;
+			if (building_type.is_in_province()) {
+				if (port_building_type == nullptr) {
+					port_building_type = &building_type;
+				} else {
+					Logger::error(
+						"Building type ", building_type, " is marked as a port, but we are already using ", port_building_type,
+						" as the port building type!"
+					);
+					ret = false;
+				}
 			} else {
-				Logger::error(
-					"Building type ", building_type, " is marked as a port, but we are already using ", port_building_type,
-					" as the port building type!"
-				);
+				Logger::error("Building type ", building_type, " is marked as a port, but is not a province building!");
 				ret = false;
 			}
 		}
+	}
+
+	if (port_building_type == nullptr) {
+		Logger::error("No port building type found!");
+		ret = false;
+	}
+	if (province_building_types.empty()) {
+		Logger::error("No province building types found!");
+		ret = false;
+	} else {
+		Logger::info(
+			"Found ", province_building_types.size(), " province building types out of ", get_building_type_count(),
+			" total building types"
+		);
 	}
 
 	return ret;

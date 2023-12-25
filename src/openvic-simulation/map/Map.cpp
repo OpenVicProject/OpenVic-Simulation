@@ -30,7 +30,7 @@ Mapmode::base_stripe_t Mapmode::get_base_stripe_colours(Map const& map, Province
 }
 
 Map::Map()
-  : width { 0 }, height { 0 }, max_provinces { Province::MAX_INDEX }, selected_province_index { Province::NULL_INDEX },
+  : width { 0 }, height { 0 }, max_provinces { Province::MAX_INDEX }, selected_province { nullptr },
 	highest_province_population { 0 }, total_map_population { 0 } {}
 
 bool Map::add_province(std::string_view identifier, colour_t colour) {
@@ -181,18 +181,24 @@ bool Map::set_max_provinces(Province::index_t new_max_provinces) {
 }
 
 void Map::set_selected_province(Province::index_t index) {
-	if (index > get_province_count()) {
-		Logger::error(
-			"Trying to set selected province to an invalid index ", index, " (max index is ", get_province_count(), ")"
-		);
-		selected_province_index = Province::NULL_INDEX;
+	if (index == Province::NULL_INDEX) {
+		selected_province = nullptr;
 	} else {
-		selected_province_index = index;
+		selected_province = get_province_by_index(index);
+		if (selected_province == nullptr) {
+			Logger::error(
+				"Trying to set selected province to an invalid index ", index, " (max index is ", get_province_count(), ")"
+			);
+		}
 	}
 }
 
-Province const* Map::get_selected_province() const {
-	return get_province_by_index(get_selected_province_index());
+Province* Map::get_selected_province() {
+	return selected_province;
+}
+
+Province::index_t Map::get_selected_province_index() const {
+	return selected_province != nullptr ? selected_province->get_index() : Province::NULL_INDEX;
 }
 
 bool Map::add_mapmode(std::string_view identifier, Mapmode::colour_func_t colour_func) {

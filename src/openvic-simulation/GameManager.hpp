@@ -54,7 +54,7 @@ namespace OpenVic {
 		bool reset();
 		bool load_bookmark(Bookmark const* new_bookmark);
 
-		bool expand_building(Province::index_t province_index, std::string_view building_type_identifier);
+		bool expand_selected_province_building(size_t building_index);
 
 		/* Hardcoded data for defining things for which parsing from files has
 		 * not been implemented, currently mapmodes and building types.
