@@ -130,7 +130,7 @@ namespace OpenVic {
 
 		bool load_positions(BuildingTypeManager const& building_type_manager, ast::NodeCPtr root);
 
-		bool expand_building(std::string_view building_type_identifier);
+		bool expand_building(size_t building_index);
 
 		bool add_pop(Pop&& pop);
 		bool add_pop_vec(std::vector<Pop> const& pop_vec);

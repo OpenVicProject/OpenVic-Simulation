@@ -212,5 +212,10 @@ bool ProductionTypeManager::load_production_types_file(
 
 	production_types.lock();
 
+	if (rgo_owner_sprite <= 0) {
+		Logger::error("No RGO owner pop type sprite found!");
+		ret = false;
+	}
+
 	return ret;
 }

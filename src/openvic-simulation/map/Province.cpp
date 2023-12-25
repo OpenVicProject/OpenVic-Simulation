@@ -58,9 +58,10 @@ bool Province::load_positions(BuildingTypeManager const& building_type_manager, 
 	return ret;
 }
 
-bool Province::expand_building(std::string_view building_type_identifier) {
-	BuildingInstance* building = buildings.get_item_by_identifier(building_type_identifier);
+bool Province::expand_building(size_t building_index) {
+	BuildingInstance* building = buildings.get_item_by_index(building_index);
 	if (building == nullptr) {
+		Logger::error("Trying to expand non-existent building index ", building_index, " in province ", get_identifier());
 		return false;
 	}
 	return building->expand();
@@ -360,10 +361,8 @@ bool Province::reset(BuildingTypeManager const& building_type_manager) {
 	bool ret = true;
 	if (!is_water()) {
 		if (building_type_manager.building_types_are_locked()) {
-			for (BuildingType const& building_type : building_type_manager.get_building_types()) {
-				if (building_type.get_in_province()) {
-					ret &= buildings.add_item({ building_type });
-				}
+			for (BuildingType const* building_type : building_type_manager.get_province_building_types()) {
+				ret &= buildings.add_item({ *building_type });
 			}
 		} else {
 			Logger::error("Cannot generate buildings until building types are locked!");

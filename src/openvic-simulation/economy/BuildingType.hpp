@@ -47,11 +47,11 @@ namespace OpenVic {
 		bool PROPERTY(strategic_factory);
 		bool PROPERTY(advanced_factory);
 
-		level_t PROPERTY(fort_level); // probably the step-per-level
+		level_t PROPERTY(fort_level); // fort bonus step-per-level
 
 		uint64_t PROPERTY(naval_capacity);
 		std::vector<fixed_point_t> PROPERTY(colonial_points);
-		bool PROPERTY(in_province); // province
+		bool PROPERTY_CUSTOM_PREFIX(in_province, is); // province
 		bool PROPERTY(one_per_state);
 		fixed_point_t PROPERTY(colonial_range);
 
@@ -74,6 +74,7 @@ namespace OpenVic {
 
 	private:
 		IdentifierRegistry<BuildingType> IDENTIFIER_REGISTRY(building_type);
+		std::vector<BuildingType const*> PROPERTY(province_building_types);
 		BuildingType const* PROPERTY(port_building_type);
 
 	public:

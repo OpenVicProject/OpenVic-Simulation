@@ -33,8 +33,8 @@ namespace OpenVic {
 		Timespan& operator++();
 		Timespan operator++(int);
 
+		day_t to_int() const;
 		explicit operator day_t() const;
-		explicit operator double() const;
 		std::string to_string() const;
 		explicit operator std::string() const;
 

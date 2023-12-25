@@ -4,7 +4,7 @@ using namespace OpenVic;
 
 BuildingInstance::BuildingInstance(BuildingType const& new_building_type, level_t new_level)
 	: HasIdentifier { new_building_type.get_identifier() }, building_type { new_building_type }, level { new_level },
-	expansion_state { ExpansionState::CannotExpand } {}
+	expansion_state { ExpansionState::CannotExpand }, start_date {}, end_date {}, expansion_progress { 0.0f } {}
 
 bool BuildingInstance::_can_expand() const {
 	return level < building_type.get_max_level();
@@ -29,7 +29,8 @@ void BuildingInstance::update_state(Date today) {
 		end_date = start_date + building_type.get_build_time();
 		break;
 	case ExpansionState::Expanding:
-		expansion_progress = static_cast<double>(today - start_date) / static_cast<double>(end_date - start_date);
+		expansion_progress =
+			static_cast<float>((today - start_date).to_int()) / static_cast<float>((end_date - start_date).to_int());
 		break;
 	default: expansion_state = _can_expand() ? ExpansionState::CanExpand : ExpansionState::CannotExpand;
 	}
