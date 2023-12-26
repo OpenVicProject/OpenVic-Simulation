@@ -737,6 +737,10 @@ bool Dataloader::load_defines(GameManager& game_manager) const {
 		Logger::error("Failed to set up modifier effects!");
 		ret = false;
 	}
+	if (!game_manager.get_politics_manager().get_rule_manager().setup_rules()) {
+		Logger::error("Failed to set up rules!");
+		ret = false;
+	}
 	if (!game_manager.get_define_manager().load_defines_file(parse_lua_defines(lookup_file(defines_file)).get_file_node())) {
 		Logger::error("Failed to load defines!");
 		ret = false;
