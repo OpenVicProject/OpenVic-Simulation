@@ -6,12 +6,14 @@
 #include "openvic-simulation/politics/NationalFocus.hpp"
 #include "openvic-simulation/politics/NationalValue.hpp"
 #include "openvic-simulation/politics/Rebel.hpp"
+#include "openvic-simulation/politics/Rule.hpp"
 
 namespace OpenVic {
 	struct PoliticsManager {
 	private:
 		GovernmentTypeManager PROPERTY_REF(government_type_manager);
 		IdeologyManager PROPERTY_REF(ideology_manager);
+		RuleManager PROPERTY_REF(rule_manager);
 		IssueManager PROPERTY_REF(issue_manager);
 		NationalValueManager PROPERTY_REF(national_value_manager);
 		NationalFocusManager PROPERTY_REF(national_focus_manager);
@@ -25,7 +27,9 @@ namespace OpenVic {
 			PopManager const& pop_manager, GoodManager const& good_manager, ModifierManager const& modifier_manager,
 			ast::NodeCPtr root
 		) {
-			return national_focus_manager.load_national_foci_file(pop_manager, ideology_manager, good_manager, modifier_manager, root);
+			return national_focus_manager.load_national_foci_file(
+				pop_manager, ideology_manager, good_manager, modifier_manager, root
+			);
 		}
 		inline bool load_rebels_file(ast::NodeCPtr root) {
 			return rebel_manager.load_rebels_file(ideology_manager, government_type_manager, root);
