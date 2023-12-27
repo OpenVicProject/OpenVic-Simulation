@@ -87,7 +87,7 @@ namespace OpenVic {
 	private:
 		/* Immutable attributes (unchanged after initial game load) */
 		const index_t PROPERTY(index);
-		Region* PROPERTY(region);
+		Region const* PROPERTY(region);
 		bool PROPERTY(on_map);
 		bool PROPERTY(has_region);
 		bool PROPERTY_CUSTOM_PREFIX(water, is);

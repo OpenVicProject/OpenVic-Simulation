@@ -8,76 +8,60 @@ State::State(
 	Country const* owner, Province const* capital, Region::provinces_t&& provinces, Province::colony_status_t colony_status
 ) : owner { owner }, capital { capital }, provinces { std::move(provinces) }, colony_status { colony_status } {}
 
-StateSet::StateSet(Region const& new_region) : region { new_region } {
+/* Whether two provinces in the same region should be grouped into the same state or not.
+ * (Assumes both provinces non-null.) */
+static bool provinces_belong_in_same_state(Province const* lhs, Province const* rhs) {
+	return lhs->get_owner() == rhs->get_owner() && lhs->get_colony_status() == rhs->get_colony_status();
+}
+
+StateSet::StateSet(Map& map, Region const& new_region) : region { new_region } {
 	if (region.get_meta()) {
 		Logger::error("Cannot use meta region as state template!");
 	}
 
 	std::vector<Region::provinces_t> temp_provinces;
-	bool in_state = false;
 
-	for (Province* province : region.get_provinces()) {
+	for (Province const* province : region.get_provinces()) {
 		// add to existing state if shared owner & status...
 		for (Region::provinces_t& provinces : temp_provinces) {
-			if (provinces[0] == province) {
+			if (provinces_belong_in_same_state(provinces[0], province)) {
 				provinces.push_back(province);
-				in_state = true;
-				break;
+				// jump to the end of the outer loop, skipping the new state code
+				goto loop_end;
 			}
 		}
-		if (in_state) {
-			in_state = false;
-		} else {
-			// ...otherwise start a new state
-			temp_provinces.push_back({ province });
-		}
+		// ...otherwise start a new state
+		temp_provinces.push_back({ province });
+	loop_end:;
+		/* Either the province was added to an existing state and the program jumped to here,
+		 * or it was used to create a new state and the program arrived here normally. */
 	}
 
 	for (Region::provinces_t& provinces : temp_provinces) {
-		states.push_back({
+		states.emplace_back(
 			/* TODO: capital province logic */
 			provinces[0]->get_owner(), provinces[0], std::move(provinces), provinces[0]->get_colony_status()
-		});
+		);
 	}
 
 	// Go back and assign each new state to its provinces.
 	for (State const& state : states) {
-		for (Province* province : state.get_provinces()) {
-			province->set_state(&state);
+		for (Province const* province : state.get_provinces()) {
+			map.remove_province_const(province)->set_state(&state);
 		}
 	}
-}
-
-bool StateSet::add_state(State&& state) {
-	const auto existing = std::find(states.begin(), states.end(), state);
-	if (existing != states.end()) {
-		Logger::error("Attempted to add existing state!");
-		return false;
-	}
-	states.push_back(std::move(state));
-	return true;
-}
-
-bool StateSet::remove_state(State const* state) {
-	const auto existing = std::find(states.begin(), states.end(), *state);
-	if (existing == states.end()) {
-		Logger::error("Attempted to remove non-existant state!");
-		return false;
-	}
-	states.erase(existing);
-	return true;
 }
 
 StateSet::states_t& StateSet::get_states() {
 	return states;
 }
 
-void StateManager::generate_states(Map const& map) {
+void StateManager::generate_states(Map& map) {
 	regions.clear();
 	regions.reserve(map.get_region_count());
 	for(Region const& region : map.get_regions()) {
 		if (!region.get_meta()) {
-			regions.push_back(StateSet(region));
+			regions.emplace_back(map, region);
 		}
 	}
 	Logger::info("Generated states.");

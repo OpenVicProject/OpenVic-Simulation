@@ -4,9 +4,7 @@
 
 using namespace OpenVic;
 
-ProvinceSet::ProvinceSet(provinces_t&& new_provinces) : provinces { std::move(new_provinces) } {}
-
-bool ProvinceSet::add_province(Province* province) {
+bool ProvinceSet::add_province(Province const* province) {
 	if (locked) {
 		Logger::error("Cannot add province to province set - locked!");
 		return false;
@@ -16,10 +14,36 @@ bool ProvinceSet::add_province(Province* province) {
 		return false;
 	}
 	if (contains_province(province)) {
-		Logger::error("Cannot add province ", province->get_identifier(), " to province set - already in the set!");
+		Logger::warning("Cannot add province ", province->get_identifier(), " to province set - already in the set!");
 		return false;
 	}
 	provinces.push_back(province);
+	return true;
+}
+
+bool ProvinceSet::add_provinces(provinces_t const& new_provinces) {
+	bool ret = true;
+	for (Province const* province : new_provinces) {
+		ret &= add_province(province);
+	}
+	return ret;
+}
+
+bool ProvinceSet::remove_province(Province const* province) {
+	if (locked) {
+		Logger::error("Cannot remove province from province set - locked!");
+		return false;
+	}
+	if (province == nullptr) {
+		Logger::error("Cannot remove province from province set - null province!");
+		return false;
+	}
+	const provinces_t::const_iterator it = std::find(provinces.begin(), provinces.end(), province);
+	if (it == provinces.end()) {
+		Logger::warning("Cannot remove province ", province->get_identifier(), " from province set - already not in the set!");
+		return false;
+	}
+	provinces.erase(it);
 	return true;
 }
 
@@ -67,14 +91,8 @@ ProvinceSet::provinces_t const& ProvinceSet::get_provinces() const {
 	return provinces;
 }
 
-static constexpr colour_t ERROR_REGION_COLOUR { colour_t::max_value, 0, 0 };
-
-Region::Region(std::string_view new_identifier, provinces_t&& new_provinces, bool new_meta)
-	: HasIdentifierAndColour {
-		new_identifier, new_provinces.size() > 0 ? new_provinces.front()->get_colour() : ERROR_REGION_COLOUR, false
-	}, ProvinceSet { std::move(new_provinces) }, meta { new_meta } {
-	lock();
-}
+Region::Region(std::string_view new_identifier, colour_t new_colour, bool new_meta)
+	: HasIdentifierAndColour { new_identifier, new_colour, false }, meta { new_meta } {}
 
 bool Region::get_meta() const {
 	return meta;

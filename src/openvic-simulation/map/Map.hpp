@@ -87,6 +87,15 @@ namespace OpenVic {
 		bool add_province(std::string_view identifier, colour_t colour);
 		IDENTIFIER_REGISTRY_NON_CONST_ACCESSORS_CUSTOM_INDEX_OFFSET(province, 1);
 
+		/* This provides a safe way to remove the const qualifier of a Province const*, via a non-const Map.
+		 * It uses a const_cast (the fastest/simplest solution), but this could also be done without it by looking up the
+		 * Province* using the Province const*'s index. Requiring a non-const Map ensures that this function can only be
+		 * used where the Province* could already be accessed by other means, such as the index method, preventing
+		 * misleading code, or in the worst case undefined behaviour. */
+		constexpr Province* remove_province_const(Province const* province) {
+			return const_cast<Province*>(province);
+		}
+
 		bool set_water_province(std::string_view identifier);
 		bool set_water_province_list(std::vector<std::string_view> const& list);
 		void lock_water_provinces();
@@ -97,8 +106,7 @@ namespace OpenVic {
 		Province* get_selected_province();
 		Province::index_t get_selected_province_index() const;
 
-		bool add_region(std::string_view identifier, std::vector<std::string_view> const& province_identifiers);
-		IDENTIFIER_REGISTRY_NON_CONST_ACCESSORS(region)
+		bool add_region(std::string_view identifier, Region::provinces_t const& provinces);
 
 		bool add_mapmode(std::string_view identifier, Mapmode::colour_func_t colour_func);
 
