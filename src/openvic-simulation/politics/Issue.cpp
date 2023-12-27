@@ -5,16 +5,21 @@ using namespace OpenVic::NodeTools;
 
 IssueGroup::IssueGroup(std::string_view new_identifier) : HasIdentifier { new_identifier } {}
 
-Issue::Issue(std::string_view identifier, IssueGroup const& group) : HasIdentifier { identifier }, group { group } {}
+Issue::Issue(std::string_view new_identifier, ModifierValue&& new_values, IssueGroup const& new_group, RuleSet&& new_rules, bool new_jingoism)
+	: Modifier { new_identifier, std::move(new_values), 0 }, group { new_group }, rules { std::move(new_rules) },
+	jingoism { new_jingoism } {}
 
-ReformType::ReformType(std::string_view new_identifier, bool uncivilised)
-	: HasIdentifier { new_identifier }, uncivilised { uncivilised } {}
+ReformType::ReformType(std::string_view new_identifier, bool new_uncivilised)
+	: HasIdentifier { new_identifier }, uncivilised { new_uncivilised } {}
 
-ReformGroup::ReformGroup(std::string_view identifier, ReformType const& type, bool ordered, bool administrative)
-	: IssueGroup { identifier }, type { type }, ordered { ordered }, administrative { administrative } {}
+ReformGroup::ReformGroup(std::string_view new_identifier, ReformType const& new_type, bool new_ordered, bool new_administrative)
+	: IssueGroup { new_identifier }, type { new_type }, ordered { new_ordered }, administrative { new_administrative } {}
 
-Reform::Reform(std::string_view identifier, ReformGroup const& group, size_t ordinal)
-	: Issue { identifier, group }, ordinal { ordinal }, reform_group { group } {}
+Reform::Reform(
+	std::string_view new_identifier, ModifierValue&& new_values, ReformGroup const& new_group, size_t new_ordinal,
+	RuleSet&& new_rules, tech_cost_t new_technology_cost
+) : Issue { new_identifier, std::move(new_values), new_group, std::move(new_rules), false },
+	ordinal { new_ordinal }, reform_group { new_group }, technology_cost { new_technology_cost } {}
 
 bool IssueManager::add_issue_group(std::string_view identifier) {
 	if (identifier.empty()) {
@@ -25,7 +30,7 @@ bool IssueManager::add_issue_group(std::string_view identifier) {
 	return issue_groups.add_item({ identifier });
 }
 
-bool IssueManager::add_issue(std::string_view identifier, IssueGroup const* group) {
+bool IssueManager::add_issue(std::string_view identifier, ModifierValue&& values, IssueGroup const* group, RuleSet&& rules, bool jingoism) {
 	if (identifier.empty()) {
 		Logger::error("Invalid issue identifier - empty!");
 		return false;
@@ -36,7 +41,7 @@ bool IssueManager::add_issue(std::string_view identifier, IssueGroup const* grou
 		return false;
 	}
 
-	return issues.add_item({ identifier, *group });
+	return issues.add_item({ identifier, std::move(values), *group, std::move(rules), jingoism });
 }
 
 bool IssueManager::add_reform_type(std::string_view identifier, bool uncivilised) {
@@ -62,7 +67,10 @@ bool IssueManager::add_reform_group(std::string_view identifier, ReformType cons
 	return reform_groups.add_item({ identifier, *type, ordered, administrative });
 }
 
-bool IssueManager::add_reform(std::string_view identifier, ReformGroup const* group, size_t ordinal) {
+bool IssueManager::add_reform(
+	std::string_view identifier, ModifierValue&& values, ReformGroup const* group, size_t ordinal,
+	RuleSet&& rules, Reform::tech_cost_t technology_cost
+) {
 	if (identifier.empty()) {
 		Logger::error("Invalid issue identifier - empty!");
 		return false;
@@ -73,19 +81,35 @@ bool IssueManager::add_reform(std::string_view identifier, ReformGroup const* gr
 		return false;
 	}
 
-	return reforms.add_item({ identifier, *group, ordinal });
+	if (group->get_type().is_uncivilised()) {
+		if (technology_cost <= 0) {
+			Logger::warning("Non-positive technology cost ", technology_cost, " found in uncivilised reform ", identifier, "!");
+		}
+	} else if (technology_cost != 0) {
+		Logger::warning("Non-zero technology cost ", technology_cost, " found in civilised reform ", identifier, "!");
+	}
+
+	return reforms.add_item({ identifier, std::move(values), *group, ordinal, std::move(rules), technology_cost });
 }
 
 bool IssueManager::_load_issue_group(size_t& expected_issues, std::string_view identifier, ast::NodeCPtr node) {
-	return expect_length([&expected_issues](size_t size) -> size_t {
-		expected_issues += size;
-		return size;
-	})(node) & add_issue_group(identifier);
+	return expect_length(add_variable_callback(expected_issues))(node)
+		& add_issue_group(identifier);
 }
 
-bool IssueManager::_load_issue(std::string_view identifier, IssueGroup const* group, ast::NodeCPtr node) {
-	// TODO: policy modifiers, policy rule changes
-	return add_issue(identifier, group);
+bool IssueManager::_load_issue(
+	ModifierManager const& modifier_manager, RuleManager const& rule_manager, std::string_view identifier,
+	IssueGroup const* group, ast::NodeCPtr node
+) {
+	ModifierValue values;
+	RuleSet rules;
+	bool jingoism = false;
+	bool ret = modifier_manager.expect_modifier_value_and_keys(move_variable_callback(values),
+		"is_jingoism", ZERO_OR_ONE, expect_bool(assign_variable_callback(jingoism)),
+		"rules", ZERO_OR_ONE, rule_manager.expect_rule_set(move_variable_callback(rules))
+	)(node);
+	ret &= add_issue(identifier, std::move(values), group, std::move(rules), jingoism);
+	return ret;
 }
 
 bool IssueManager::_load_reform_group(
@@ -101,9 +125,22 @@ bool IssueManager::_load_reform_group(
 	return ret;
 }
 
-bool IssueManager::_load_reform(size_t& ordinal, std::string_view identifier, ReformGroup const* group, ast::NodeCPtr node) {
-	// TODO: conditions to allow, policy modifiers, policy rule changes
-	return add_reform(identifier, group, ordinal);
+bool IssueManager::_load_reform(
+	ModifierManager const& modifier_manager, RuleManager const& rule_manager, size_t ordinal, std::string_view identifier,
+	ReformGroup const* group, ast::NodeCPtr node
+) {
+	// TODO: conditions to allow, policy rule changes
+	ModifierValue values;
+	RuleSet rules;
+	Reform::tech_cost_t technology_cost = 0;
+	bool ret = modifier_manager.expect_modifier_value_and_keys(move_variable_callback(values),
+		"technology_cost", ZERO_OR_ONE, expect_uint(assign_variable_callback(technology_cost)),
+		"allow", ZERO_OR_ONE, success_callback, //TODO: allow block
+		"rules", ZERO_OR_ONE, rule_manager.expect_rule_set(move_variable_callback(rules)),
+		"on_execute", ZERO_OR_MORE, success_callback //TODO: trigger/effect blocks
+	)(node);
+	ret &= add_reform(identifier, std::move(values), group, ordinal, std::move(rules), technology_cost);
+	return ret;
 }
 
 /* REQUIREMENTS:
@@ -115,17 +152,15 @@ bool IssueManager::_load_reform(size_t& ordinal, std::string_view identifier, Re
  * POL-99, POL-101, POL-102, POL-103, POL-104, POL-105, POL-107, POL-108, POL-109, POL-110, POL-111, POL-113,
  * POL-113, POL-114, POL-115, POL-116
  */
-bool IssueManager::load_issues_file(ast::NodeCPtr root) {
+bool IssueManager::load_issues_file(ModifierManager const& modifier_manager, RuleManager const& rule_manager, ast::NodeCPtr root) {
 	size_t expected_issue_groups = 0;
 	size_t expected_reform_groups = 0;
 	bool ret = expect_dictionary_reserve_length(reform_types,
 		[this, &expected_issue_groups, &expected_reform_groups](std::string_view key, ast::NodeCPtr value) -> bool {
-			if (key == "party_issues") {
+			if (key == "party_issues")
 				return expect_length(add_variable_callback(expected_issue_groups))(value);
-			} else {
-				return expect_length(add_variable_callback(expected_reform_groups))(value) &
-					add_reform_type(key, key == "economic_reforms" || "education_reforms" || "military_reforms");
-			}
+			else return expect_length(add_variable_callback(expected_reform_groups))(value)
+				& add_reform_type(key, key == "economic_reforms" || "education_reforms" || "military_reforms");
 		}
 	)(root);
 	lock_reform_types();
@@ -157,24 +192,21 @@ bool IssueManager::load_issues_file(ast::NodeCPtr root) {
 	issues.reserve(issues.size() + expected_issues);
 	reforms.reserve(reforms.size() + expected_reforms);
 
-	ret &= expect_dictionary([this](std::string_view type_key, ast::NodeCPtr type_value) -> bool {
-		return expect_dictionary([this, type_key](std::string_view group_key, ast::NodeCPtr group_value) -> bool {
+	ret &= expect_dictionary([this, &modifier_manager, &rule_manager](std::string_view type_key, ast::NodeCPtr type_value) -> bool {
+		return expect_dictionary([this, &modifier_manager, &rule_manager, type_key](std::string_view group_key, ast::NodeCPtr group_value) -> bool {
 			if (type_key == "party_issues") {
 				IssueGroup const* issue_group = get_issue_group_by_identifier(group_key);
-				return expect_dictionary([this, issue_group](std::string_view key, ast::NodeCPtr value) -> bool {
-					bool ret = _load_issue(key, issue_group, value);
-					return ret;
+				return expect_dictionary([this, &modifier_manager, &rule_manager, issue_group](std::string_view key, ast::NodeCPtr value) -> bool {
+					return _load_issue(modifier_manager, rule_manager, key, issue_group, value);
 				})(group_value);
 			} else {
 				ReformGroup const* reform_group = get_reform_group_by_identifier(group_key);
 				size_t ordinal = 0;
-				return expect_dictionary([this, reform_group, &ordinal](std::string_view key, ast::NodeCPtr value) -> bool {
+				return expect_dictionary([this, &modifier_manager, &rule_manager, reform_group, &ordinal](std::string_view key, ast::NodeCPtr value) -> bool {
 					if (key == "next_step_only" || key == "administrative") {
 						return true;
 					}
-					bool ret = _load_reform(ordinal, key, reform_group, value);
-					ordinal++;
-					return ret;
+					return _load_reform(modifier_manager, rule_manager, ordinal++, key, reform_group, value);
 				})(group_value);
 			}
 		})(type_value);
