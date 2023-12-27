@@ -603,8 +603,7 @@ bool Dataloader::_load_map_dir(GameManager& game_manager) const {
 	static constexpr std::string_view default_region = "region.txt";
 	static constexpr std::string_view default_region_sea = "region_sea.txt"; // TODO
 	static constexpr std::string_view default_province_flag_sprite = "province_flag_sprites"; // TODO
-
-	static constexpr std::string_view climate_filename = "climate.txt"; // TODO
+	static constexpr std::string_view climate_file = "climate.txt"; // TODO
 
 	/* Parser stored so the filename string_views persist until the end of this function. */
 	const v2script::Parser parser = parse_defines(lookup_file(append_string_views(map_directory, defaults_filename)));
@@ -699,6 +698,22 @@ bool Dataloader::_load_map_dir(GameManager& game_manager) const {
 		parse_defines(lookup_file(append_string_views(map_directory, positions))).get_file_node()
 	)) {
 		Logger::error("Failed to load province positions file!");
+		ret = false;
+	}
+
+	if (!map.load_climate_file(
+		game_manager.get_modifier_manager(),
+		parse_defines(lookup_file(append_string_views(map_directory, climate_file))).get_file_node()
+	)) {
+		Logger::error("Failed to load climates!");
+		ret = false;
+	}
+
+	if (!map.load_continent_file(
+		game_manager.get_modifier_manager(),
+		parse_defines(lookup_file(append_string_views(map_directory, continent))).get_file_node()
+	)) {
+		Logger::error("Failed to load continents!");
 		ret = false;
 	}
 

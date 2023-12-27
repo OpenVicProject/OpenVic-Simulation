@@ -1,7 +1,9 @@
 #include "Map.hpp"
 
 #include <cassert>
+#include <cstddef>
 #include <unordered_set>
+#include <vector>
 
 #include "openvic-simulation/economy/Good.hpp"
 #include "openvic-simulation/history/ProvinceHistory.hpp"
@@ -642,5 +644,93 @@ bool Map::generate_and_load_province_adjacencies(std::vector<LineObject> const& 
 			ret &= Province::add_special_adjacency(*from, *to, type, through, data);
 		}
 	);
+	return ret;
+}
+
+bool Map::load_climate_file(ModifierManager const& modifier_manager, ast::NodeCPtr root) {
+	bool ret = expect_dictionary_reserve_length(climates, [this, &modifier_manager](std::string_view identifier, ast::NodeCPtr node) -> bool {
+		if (identifier.empty()) {
+			Logger::error("Invalid climate identifier - empty!");
+			return false;
+		}
+
+		bool ret = true;
+		Climate* cur_climate = climates.get_item_by_identifier(identifier);
+		if (cur_climate == nullptr) {
+			ModifierValue values;
+			ret &= modifier_manager.expect_modifier_value(move_variable_callback(values))(node);
+			ret &= climates.add_item({ identifier, std::move(values) });
+		} else {
+			ret &= expect_list_reserve_length(*cur_climate, expect_province_identifier(
+				[cur_climate, &identifier](Province& province) {
+					if (province.climate != cur_climate) {
+						cur_climate->add_province(&province);
+						if (province.climate != nullptr) {
+							Climate* old_climate = const_cast<Climate*>(province.climate);
+							old_climate->remove_province(&province);
+							Logger::warning(
+								"Province with id ", province.get_identifier(),
+								" found in multiple climates: ", identifier,
+								" and ", old_climate->get_identifier()
+							);
+						}
+						province.climate = cur_climate;
+					} else {
+						Logger::warning(
+							"Province with id ", province.get_identifier(),
+							"defined twice in climate ", identifier
+						);
+					}
+					return true;
+				}
+			))(node);
+			cur_climate->lock();
+		}
+		return ret;
+	})(root);
+
+	lock_climates();
+
+	return ret;
+}
+
+bool Map::load_continent_file(ModifierManager const& modifier_manager, ast::NodeCPtr root) {
+	bool ret = expect_dictionary_reserve_length(continents, [this, &modifier_manager](std::string_view identifier, ast::NodeCPtr node) -> bool {
+		if (identifier.empty()) {
+			Logger::error("Invalid continent identifier - empty!");
+			return false;
+		}
+
+		ModifierValue values;
+		ProvinceSetModifier::provinces_t prov_list;
+		bool ret = modifier_manager.expect_modifier_value_and_keys(move_variable_callback(values),
+			"provinces", ONE_EXACTLY, expect_list_reserve_length(prov_list, expect_province_identifier(
+				[&prov_list](Province const& province) -> bool {
+					if (province.continent == nullptr) {
+						prov_list.emplace_back(&province);
+					}
+					return true;
+				}
+			))
+		)(node);
+
+		Continent continent = { identifier, std::move(values) };
+		continent.add_provinces(prov_list);
+		continent.lock();
+
+		if (continents.add_item(std::move(continent))) {
+			Continent const& moved_continent = continents.get_items().back();
+			for (Province const* prov : moved_continent.get_provinces()) {
+				remove_province_const(prov)->continent = &moved_continent;
+			}
+		} else {
+			ret = false;
+		}
+
+		return ret;
+	})(root);
+
+	lock_continents();
+
 	return ret;
 }

@@ -16,6 +16,10 @@ namespace OpenVic {
 	struct TerrainType;
 	struct TerrainTypeMapping;
 	struct ProvinceHistoryEntry;
+	struct ProvinceSetModifier;
+	using Climate = ProvinceSetModifier;
+	using Continent = ProvinceSetModifier;
+
 
 	/* REQUIREMENTS:
 	 * MAP-5, MAP-7, MAP-8, MAP-43, MAP-47
@@ -88,6 +92,8 @@ namespace OpenVic {
 		/* Immutable attributes (unchanged after initial game load) */
 		const index_t PROPERTY(index);
 		Region const* PROPERTY(region);
+		Climate const* PROPERTY(climate);
+		Continent const* PROPERTY(continent);
 		bool PROPERTY(on_map);
 		bool PROPERTY(has_region);
 		bool PROPERTY_CUSTOM_PREFIX(water, is);

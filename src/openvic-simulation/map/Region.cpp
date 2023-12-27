@@ -94,6 +94,9 @@ ProvinceSet::provinces_t const& ProvinceSet::get_provinces() const {
 Region::Region(std::string_view new_identifier, colour_t new_colour, bool new_meta)
 	: HasIdentifierAndColour { new_identifier, new_colour, false }, meta { new_meta } {}
 
+ProvinceSetModifier::ProvinceSetModifier(std::string_view new_identifier, ModifierValue&& new_values)
+	: Modifier { new_identifier, std::move(new_values), 0 } {}
+
 bool Region::get_meta() const {
 	return meta;
 }

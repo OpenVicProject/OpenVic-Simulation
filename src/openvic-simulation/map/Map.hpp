@@ -49,7 +49,6 @@ namespace OpenVic {
 	 * MAP-4
 	 */
 	struct Map {
-
 #pragma pack(push, 1)
 		/* Used to represent tightly packed 3-byte integer pixel information. */
 		struct shape_pixel_t {
@@ -63,6 +62,8 @@ namespace OpenVic {
 		IdentifierRegistry<Province> IDENTIFIER_REGISTRY_CUSTOM_INDEX_OFFSET(province, 1);
 		IdentifierRegistry<Region> IDENTIFIER_REGISTRY(region);
 		IdentifierRegistry<Mapmode> IDENTIFIER_REGISTRY(mapmode);
+		IdentifierRegistry<Climate> IDENTIFIER_REGISTRY(climate);
+		IdentifierRegistry<Continent> IDENTIFIER_REGISTRY(continent);
 		ProvinceSet water_provinces;
 		TerrainTypeManager PROPERTY_REF(terrain_type_manager);
 
@@ -132,5 +133,7 @@ namespace OpenVic {
 		bool load_region_file(ast::NodeCPtr root);
 		bool load_map_images(fs::path const& province_path, fs::path const& terrain_path, bool detailed_errors);
 		bool generate_and_load_province_adjacencies(std::vector<ovdl::csv::LineObject> const& additional_adjacencies);
+		bool load_climate_file(ModifierManager const& modifier_manager, ast::NodeCPtr root);
+		bool load_continent_file(ModifierManager const& modifier_manager, ast::NodeCPtr root);
 	};
 }

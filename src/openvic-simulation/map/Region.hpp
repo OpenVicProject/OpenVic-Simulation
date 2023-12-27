@@ -27,6 +27,14 @@ namespace OpenVic {
 		provinces_t const& get_provinces() const;
 	};
 
+	struct ProvinceSetModifier : Modifier, ProvinceSet {
+		friend struct Map;
+	private:
+		ProvinceSetModifier(std::string_view new_identifier, ModifierValue&& new_values);
+	public:
+		ProvinceSetModifier(ProvinceSetModifier&&) = default;
+	};
+
 	/* REQUIREMENTS:
 	 * MAP-6, MAP-44, MAP-48
 	 */
