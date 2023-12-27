@@ -199,6 +199,12 @@ bool ModifierManager::setup_modifier_effects() {
 	ret &= add_modifier_effect("unit_recruitment_time", false);
 	ret &= add_modifier_effect("unit_start_experience", true, RAW_DECIMAL);
 	ret &= add_modifier_effect("war_exhaustion", false);
+	ret &= add_modifier_effect("civilization_progress_modifier", true);
+	ret &= add_modifier_effect("administrative_multiplier", true);
+	ret &= add_modifier_effect("unemployment_benefit", true);
+	ret &= add_modifier_effect("minimum_wage", true);
+	ret &= add_modifier_effect("war_exhaustion_effect", false);
+	ret &= add_modifier_effect("reinforce_speed", true);
 
 	/* Province Modifier Effects */
 	ret &= add_modifier_effect("assimilation_rate", true);

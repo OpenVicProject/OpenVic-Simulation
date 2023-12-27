@@ -802,7 +802,8 @@ bool Dataloader::load_defines(GameManager& game_manager) const {
 		Logger::error("Failed to load government types!");
 		ret = false;
 	}
-	if (!game_manager.get_politics_manager().get_issue_manager().load_issues_file(
+	if (!game_manager.get_politics_manager().load_issues_file(
+		game_manager.get_modifier_manager(),
 		parse_defines(lookup_file(issues_file)).get_file_node()
 	)) {
 		Logger::error("Failed to load issues!");

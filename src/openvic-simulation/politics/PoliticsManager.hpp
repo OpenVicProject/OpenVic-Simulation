@@ -34,5 +34,8 @@ namespace OpenVic {
 		inline bool load_rebels_file(ast::NodeCPtr root) {
 			return rebel_manager.load_rebels_file(ideology_manager, government_type_manager, root);
 		}
+		inline bool load_issues_file(ModifierManager const& modifier_manager, ast::NodeCPtr root) {
+			return issue_manager.load_issues_file(modifier_manager, rule_manager, root);
+		}
 	};
 }
