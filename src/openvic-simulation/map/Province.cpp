@@ -8,8 +8,8 @@ using namespace OpenVic::NodeTools;
 Province::Province(
 	std::string_view new_identifier, colour_t new_colour, index_t new_index
 ) : HasIdentifierAndColour { new_identifier, new_colour, true }, index { new_index }, region { nullptr },
-	on_map { false }, has_region { false }, water { false }, coastal { false }, port { false },
-	default_terrain_type { nullptr }, positions {}, terrain_type { nullptr }, life_rating { 0 },
+	climate { nullptr }, continent { nullptr }, on_map { false }, has_region { false }, water { false }, coastal { false },
+	port { false }, default_terrain_type { nullptr }, positions {}, terrain_type { nullptr }, life_rating { 0 },
 	colony_status { colony_status_t::STATE }, state { nullptr }, owner { nullptr }, controller { nullptr }, slave { false },
 	crime { nullptr }, rgo { nullptr }, buildings { "buildings", false }, total_population { 0 } {
 	assert(index != NULL_INDEX);

@@ -5,7 +5,7 @@
 namespace OpenVic {
 	struct TerrainTypeManager;
 
-	struct TerrainType : HasIdentifierAndColour, ModifierValue {
+	struct TerrainType : HasIdentifierAndColour {
 		friend struct TerrainTypeManager;
 
 	private:
