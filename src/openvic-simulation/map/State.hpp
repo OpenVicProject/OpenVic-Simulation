@@ -21,22 +21,16 @@ namespace OpenVic {
 		);
 	};
 
-	inline bool operator==(const State& lhs, const State& rhs) {
-		return (lhs.get_owner() == rhs.get_owner() && lhs.get_colony_status() == rhs.get_colony_status());
-	}
-
 	struct StateSet {
 		using states_t = std::deque<State>;
 
 	private:
 		Region const& PROPERTY(region);
-		states_t states;
+		states_t PROPERTY(states);
 
 	public:
-		StateSet(Region const& new_region);
+		StateSet(Map& map, Region const& new_region);
 
-		bool add_state(State&& state);
-		bool remove_state(State const* state);
 		states_t& get_states();
 	};
 
@@ -49,6 +43,6 @@ namespace OpenVic {
 		/* Creates states from current province gamestate & regions, sets province state value.
 		 * After this function, the `regions` property is unmanaged and must be carefully updated and
 		 * validated by functions that modify it. */
-		void generate_states(Map const& map);
+		void generate_states(Map& map);
 	};
 } // namespace OpenVic

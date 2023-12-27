@@ -5,16 +5,18 @@
 namespace OpenVic {
 
 	struct ProvinceSet {
-		using provinces_t = std::vector<Province*>;
+		using provinces_t = std::vector<Province const*>;
 
 	private:
 		provinces_t provinces;
 		bool locked = false;
 
 	public:
-		ProvinceSet(provinces_t&& new_provinces = {});
-
-		bool add_province(Province* province);
+		/* Returns true if the province is successfully added, false if not (including if it's already in the set). */
+		bool add_province(Province const* province);
+		bool add_provinces(provinces_t const& new_provinces);
+		/* Returns true if the province is successfully removed, false if not (including if it's not in the set). */
+		bool remove_province(Province const* province);
 		void lock(bool log = false);
 		bool is_locked() const;
 		void reset();
@@ -38,7 +40,7 @@ namespace OpenVic {
 		 */
 		const bool meta;
 
-		Region(std::string_view new_identifier, provinces_t&& new_provinces, bool new_meta);
+		Region(std::string_view new_identifier, colour_t new_colour, bool new_meta);
 
 	public:
 		Region(Region&&) = default;

@@ -108,42 +108,30 @@ void Map::lock_water_provinces() {
 	Logger::info("Locked water provinces after registering ", water_provinces.size());
 }
 
-bool Map::add_region(std::string_view identifier, std::vector<std::string_view> const& province_identifiers) {
+bool Map::add_region(std::string_view identifier, Region::provinces_t const& provinces) {
 	if (identifier.empty()) {
 		Logger::error("Invalid region identifier - empty!");
 		return false;
 	}
-	Region::provinces_t provinces;
-	provinces.reserve(province_identifiers.size());
-	bool meta = false, ret = true;
-	for (const std::string_view province_identifier : province_identifiers) {
-		Province* province = get_province_by_identifier(province_identifier);
-		if (province != nullptr) {
-			if (std::find(provinces.begin(), provinces.end(), province) != provinces.end()) {
-				Logger::error("Duplicate province identifier ", province_identifier, " in region ", identifier);
-				ret = false;
-			} else {
-				if (province->get_has_region()) {
-					meta = true;
-				}
-				provinces.push_back(province);
-			}
-		} else {
-			Logger::error("Invalid province identifier ", province_identifier, " for region ", identifier);
-			ret = false;
-		}
-	}
 	if (provinces.empty()) {
 		Logger::warning("No valid provinces in list for ", identifier);
-		return ret;
+		return true;
 	}
 
-	if (!meta) {
-		for (Province* province : provinces) {
-			province->has_region = true;
+	const bool meta = std::any_of(provinces.begin(), provinces.end(), std::bind_front(&Province::get_has_region));
+
+	Region region { identifier, provinces.front()->get_colour(), meta };
+	bool ret = region.add_provinces(provinces);
+	region.lock();
+	if (regions.add_item(std::move(region))) {
+		if (!meta) {
+			for (Province const* province : provinces) {
+				remove_province_const(province)->has_region = true;
+			}
 		}
+	} else {
+		ret = false;
 	}
-	ret &= regions.add_item({ identifier, std::move(provinces), meta });
 	return ret;
 }
 
@@ -387,34 +375,20 @@ bool Map::load_province_positions(BuildingTypeManager const& building_type_manag
 bool Map::load_region_file(ast::NodeCPtr root) {
 	const bool ret = expect_dictionary_reserve_length(regions,
 		[this](std::string_view region_identifier, ast::NodeCPtr region_node) -> bool {
-			std::vector<std::string_view> province_identifiers;
+			Region::provinces_t provinces;
 			bool ret = expect_list_reserve_length(
-				province_identifiers, expect_identifier(vector_callback(province_identifiers))
+				provinces, expect_province_identifier(vector_callback_pointer(provinces))
 			)(region_node);
-			ret &= add_region(region_identifier, province_identifiers);
+			ret &= add_region(region_identifier, provinces);
 			return ret;
 		}
 	)(root);
 	lock_regions();
-	for (Region& region : regions.get_items()) {
+	for (Region const& region : regions.get_items()) {
 		if (!region.meta) {
-			for (Province* province : region.get_provinces()) {
-				if (!province->get_has_region()) {
-					Logger::error("Province in non-meta region without has_region set: ", province->get_identifier());
-					province->has_region = true;
-				}
-				province->region = &region;
+			for (Province const* province : region.get_provinces()) {
+				remove_province_const(province)->region = &region;
 			}
-		}
-	}
-	for (Province& province : provinces.get_items()) {
-		const bool region_null = province.get_region() == nullptr;
-		if (province.get_has_region() == region_null) {
-			Logger::error(
-				"Province has_region / region mismatch: has_region = ", province.get_has_region(),
-				", region = ", province.get_region()
-			);
-			province.has_region = !region_null;
 		}
 	}
 	return ret;
