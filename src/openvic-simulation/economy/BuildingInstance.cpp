@@ -22,7 +22,7 @@ bool BuildingInstance::expand() {
 /* REQUIREMENTS:
  * MAP-71, MAP-74, MAP-77
  */
-void BuildingInstance::update_state(Date today) {
+void BuildingInstance::update_gamestate(Date today) {
 	switch (expansion_state) {
 	case ExpansionState::Preparing:
 		start_date = today;

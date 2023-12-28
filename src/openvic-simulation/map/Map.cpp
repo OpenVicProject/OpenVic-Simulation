@@ -286,9 +286,9 @@ bool Map::apply_history_to_provinces(ProvinceHistoryManager const& history_manag
 	return ret;
 }
 
-void Map::update_state(Date today) {
+void Map::update_gamestate(Date today) {
 	for (Province& province : provinces.get_items()) {
-		province.update_state(today);
+		province.update_gamestate(today);
 	}
 	update_highest_province_population();
 	update_total_map_population();
@@ -684,10 +684,13 @@ bool Map::load_climate_file(ModifierManager const& modifier_manager, ast::NodeCP
 					return true;
 				}
 			))(node);
-			cur_climate->lock();
 		}
 		return ret;
 	})(root);
+
+	for (Climate& climate : climates.get_items()) {
+		climate.lock();
+	}
 
 	lock_climates();
 

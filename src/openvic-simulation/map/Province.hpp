@@ -20,7 +20,6 @@ namespace OpenVic {
 	using Climate = ProvinceSetModifier;
 	using Continent = ProvinceSetModifier;
 
-
 	/* REQUIREMENTS:
 	 * MAP-5, MAP-7, MAP-8, MAP-43, MAP-47
 	 * POP-22
@@ -143,7 +142,7 @@ namespace OpenVic {
 		size_t get_pop_count() const;
 		void update_pops();
 
-		void update_state(Date today);
+		void update_gamestate(Date today);
 		void tick(Date today);
 
 	private:

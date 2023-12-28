@@ -6,4 +6,4 @@
 	url = https://github.com/OpenVicProject/scripts
 [submodule "deps/lexy-vdf"]
 	path = deps/lexy-vdf
-	url = https://github.com/OpenVicProject/lexy-vdf.git
+	url = https://github.com/OpenVicProject/lexy-vdf

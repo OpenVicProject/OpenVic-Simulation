@@ -112,9 +112,9 @@ void Province::update_pops() {
 	}
 }
 
-void Province::update_state(Date today) {
+void Province::update_gamestate(Date today) {
 	for (BuildingInstance& building : buildings.get_items()) {
-		building.update_state(today);
+		building.update_gamestate(today);
 	}
 	update_pops();
 }

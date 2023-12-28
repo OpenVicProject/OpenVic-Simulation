@@ -124,7 +124,7 @@ namespace OpenVic {
 		void update_highest_province_population();
 		void update_total_map_population();
 
-		void update_state(Date today);
+		void update_gamestate(Date today);
 		void tick(Date today);
 
 		bool load_province_definitions(std::vector<ovdl::csv::LineObject> const& lines);
