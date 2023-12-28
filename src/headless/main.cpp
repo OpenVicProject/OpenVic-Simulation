@@ -52,7 +52,7 @@ static bool run_headless(Dataloader::path_vector_t const& roots, bool run_tests)
 
 	GameManager game_manager { []() {
 		Logger::info("State updated");
-	} };
+	}, nullptr };
 
 	ret &= headless_load(game_manager, dataloader);
 

@@ -9,8 +9,8 @@
 #include "openvic-simulation/map/Map.hpp"
 #include "openvic-simulation/military/MilitaryManager.hpp"
 #include "openvic-simulation/misc/Define.hpp"
-#include "openvic-simulation/misc/GameAdvancementHook.hpp"
 #include "openvic-simulation/misc/Modifier.hpp"
+#include "openvic-simulation/misc/SimulationClock.hpp"
 #include "openvic-simulation/politics/PoliticsManager.hpp"
 #include "openvic-simulation/pop/Pop.hpp"
 #include "openvic-simulation/research/ResearchManager.hpp"
@@ -19,7 +19,7 @@
 
 namespace OpenVic {
 	struct GameManager {
-		using state_updated_func_t = std::function<void()>;
+		using gamestate_updated_func_t = std::function<void()>;
 
 	private:
 		Map PROPERTY_REF(map);
@@ -36,20 +36,23 @@ namespace OpenVic {
 		EventManager PROPERTY_REF(event_manager);
 		DecisionManager PROPERTY_REF(decision_manager);
 		UIManager PROPERTY_REF(ui_manager);
-		GameAdvancementHook PROPERTY_REF(clock);
+		SimulationClock PROPERTY_REF(simulation_clock);
 
 		time_t session_start; /* SS-54, as well as allowing time-tracking */
 		Bookmark const* PROPERTY(bookmark);
 		Date PROPERTY(today);
-		state_updated_func_t state_updated;
-		bool needs_update;
+		gamestate_updated_func_t gamestate_updated;
+		bool gamestate_needs_update, currently_updating_gamestate;
 
-		void set_needs_update();
-		void update_state();
+		void set_gamestate_needs_update();
+		void update_gamestate();
 		void tick();
 
 	public:
-		GameManager(state_updated_func_t state_updated_callback);
+		GameManager(
+			gamestate_updated_func_t gamestate_updated_callback,
+			SimulationClock::state_changed_function_t clock_state_changed_callback
+		);
 
 		bool reset();
 		bool load_bookmark(Bookmark const* new_bookmark);

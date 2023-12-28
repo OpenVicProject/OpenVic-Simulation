@@ -20,7 +20,7 @@ namespace OpenVic {
 		constexpr vec2_t& operator=(vec2_t&&) = default;
 
 		template<typename S>
-		constexpr explicit operator vec2_t<S>() {
+		constexpr explicit operator vec2_t<S>() const {
 			return { static_cast<S>(x), static_cast<S>(y) };
 		}
 

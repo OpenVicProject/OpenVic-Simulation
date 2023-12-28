@@ -61,8 +61,8 @@ ProgressBar::ProgressBar() : back_colour {}, progress_colour {} {}
 bool ProgressBar::_fill_key_map(key_map_t& key_map) {
 	bool ret = Sprite::_fill_key_map(key_map);
 	ret &= add_key_map_entries(key_map,
-		"color", ONE_EXACTLY, expect_colour(assign_variable_callback(back_colour)),
-		"colortwo", ONE_EXACTLY, expect_colour(assign_variable_callback(progress_colour)),
+		"color", ONE_EXACTLY, expect_colour(assign_variable_callback(progress_colour)),
+		"colortwo", ONE_EXACTLY, expect_colour(assign_variable_callback(back_colour)),
 		"textureFile1", ZERO_OR_ONE, expect_string(assign_variable_callback_string(progress_texture_file)),
 		"textureFile2", ZERO_OR_ONE, expect_string(assign_variable_callback_string(back_texture_file)),
 		"size", ONE_EXACTLY, expect_ivec2(assign_variable_callback(size)),

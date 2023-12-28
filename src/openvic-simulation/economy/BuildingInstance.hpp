@@ -25,7 +25,7 @@ namespace OpenVic {
 		BuildingInstance(BuildingInstance&&) = default;
 
 		bool expand();
-		void update_state(Date today);
+		void update_gamestate(Date today);
 		void tick(Date today);
 	};
 }

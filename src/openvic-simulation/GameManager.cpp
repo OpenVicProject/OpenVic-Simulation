@@ -5,29 +5,31 @@
 using namespace OpenVic;
 using namespace OpenVic::colour_literals;
 
-GameManager::GameManager(state_updated_func_t state_updated_callback)
-	: clock {
-		[this]() {
-			tick();
-		},
-		[this]() {
-			update_state();
-	} }, state_updated { state_updated_callback } {}
+GameManager::GameManager(
+	gamestate_updated_func_t gamestate_updated_callback, SimulationClock::state_changed_function_t clock_state_changed_callback
+) : simulation_clock {
+		std::bind(&GameManager::tick, this), std::bind(&GameManager::update_gamestate, this), clock_state_changed_callback
+	}, gamestate_updated { gamestate_updated_callback ? std::move(gamestate_updated_callback) : []() {} },
+	session_start { 0 }, today {}, gamestate_needs_update { false }, currently_updating_gamestate { false } {}
 
-void GameManager::set_needs_update() {
-	needs_update = true;
+void GameManager::set_gamestate_needs_update() {
+	if (!currently_updating_gamestate) {
+		gamestate_needs_update = true;
+	} else {
+		Logger::error("Attempted to queue a gamestate update already updating the gamestate!");
+	}
 }
 
-void GameManager::update_state() {
-	if (!needs_update) {
+void GameManager::update_gamestate() {
+	if (!gamestate_needs_update) {
 		return;
 	}
+	currently_updating_gamestate = true;
 	Logger::info("Update: ", today);
-	map.update_state(today);
-	if (state_updated) {
-		state_updated();
-	}
-	needs_update = false;
+	map.update_gamestate(today);
+	gamestate_updated();
+	gamestate_needs_update = false;
+	currently_updating_gamestate = false;
 }
 
 /* REQUIREMENTS:
@@ -37,16 +39,16 @@ void GameManager::tick() {
 	today++;
 	Logger::info("Tick: ", today);
 	map.tick(today);
-	set_needs_update();
+	set_gamestate_needs_update();
 }
 
 bool GameManager::reset() {
 	session_start = time(nullptr);
-	clock.reset();
+	simulation_clock.reset();
 	today = {};
 	economy_manager.get_good_manager().reset_to_defaults();
 	bool ret = map.reset(economy_manager.get_building_type_manager());
-	set_needs_update();
+	set_gamestate_needs_update();
 	return ret;
 }
 
@@ -69,7 +71,7 @@ bool GameManager::load_bookmark(Bookmark const* new_bookmark) {
 }
 
 bool GameManager::expand_selected_province_building(size_t building_index) {
-	set_needs_update();
+	set_gamestate_needs_update();
 	Province* province = map.get_selected_province();
 	if (province == nullptr) {
 		Logger::error("Cannot expand building index ", building_index, " - no province selected!");
