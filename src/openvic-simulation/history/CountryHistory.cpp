@@ -52,20 +52,40 @@ bool CountryHistoryMap::_load_history_entry(
 				})(value);
 			}
 
-			Technology const* technology = technology_manager.get_technology_by_identifier(key);
-			if (technology != nullptr) {
-				bool flag;
-				if (expect_int_bool(assign_variable_callback(flag))(value)) {
-					return entry.technologies.emplace(technology, flag).second;
-				} else return false;
+			{
+				Technology const* technology = technology_manager.get_technology_by_identifier(key);
+				if (technology != nullptr) {
+					return expect_int_bool(
+						[&entry, technology](bool flag) -> bool {
+							if (!entry.technologies.emplace(technology, flag).second) {
+								Logger::error(
+									"Duplicate entry for technology ", technology->get_identifier(), " in history of ",
+									entry.get_country().get_identifier(), " at date ", entry.get_date()
+								);
+								return false;
+							}
+							return true;
+						}
+					)(value);
+				}
 			}
 
-			Invention const* invention = invention_manager.get_invention_by_identifier(key);
-			if (invention != nullptr) {
-				bool flag;
-				if (expect_bool(assign_variable_callback(flag))(value)) {
-					return entry.inventions.emplace(invention, flag).second;
-				} else return false;
+			{
+				Invention const* invention = invention_manager.get_invention_by_identifier(key);
+				if (invention != nullptr) {
+					return expect_bool(
+						[&entry, invention](bool flag) -> bool {
+							if (!entry.inventions.emplace(invention, flag).second) {
+								Logger::error(
+									"Duplicate entry for invention ", invention->get_identifier(), " in history of ",
+									entry.get_country().get_identifier(), " at date ", entry.get_date()
+								);
+								return false;
+							}
+							return true;
+						}
+					)(value);
+				}
 			}
 
 			return _load_history_sub_entry_callback(

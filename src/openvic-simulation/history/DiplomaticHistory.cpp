@@ -221,7 +221,7 @@ bool DiplomaticHistoryManager::load_war_history_file(GameManager const& game_man
 					bool ret = expect_dictionary_keys(
 						"actor", ONE_EXACTLY, game_manager.get_country_manager().expect_country_identifier(assign_variable_callback_pointer(actor)),
 						"receiver", ONE_EXACTLY, game_manager.get_country_manager().expect_country_identifier(assign_variable_callback_pointer(receiver)),
-						"casus_belli", ONE_EXACTLY, game_manager.get_military_manager().get_wargoal_manager().expect_wargoal_type_identifier(assign_variable_callback_pointer(type)),
+						"casus_belli", ONE_EXACTLY, game_manager.get_military_manager().get_wargoal_type_manager().expect_wargoal_type_identifier(assign_variable_callback_pointer(type)),
 						"country", ZERO_OR_ONE, game_manager.get_country_manager().expect_country_identifier(assign_variable_callback_pointer(*third_party)),
 						"state_province_id", ZERO_OR_ONE, game_manager.get_map().expect_province_identifier(assign_variable_callback_pointer(*target))
 					)(value);

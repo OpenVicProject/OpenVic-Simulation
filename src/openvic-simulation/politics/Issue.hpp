@@ -1,8 +1,10 @@
 #pragma once
 
-#include "openvic-simulation/politics/Rule.hpp"
-#include "openvic-simulation/misc/Modifier.hpp"
 #include "openvic-simulation/dataloader/NodeTools.hpp"
+#include "openvic-simulation/misc/Modifier.hpp"
+#include "openvic-simulation/politics/Rule.hpp"
+#include "openvic-simulation/scripts/ConditionScript.hpp"
+#include "openvic-simulation/scripts/EffectScript.hpp"
 #include "openvic-simulation/types/IdentifierRegistry.hpp"
 
 namespace OpenVic {
@@ -76,11 +78,17 @@ namespace OpenVic {
 		ReformGroup const& PROPERTY(reform_group); // stores an already casted reference
 		const size_t PROPERTY(ordinal); // assigned by the parser to allow policy sorting
 		const tech_cost_t PROPERTY(technology_cost);
+		ConditionScript PROPERTY(allow);
+		ConditionScript PROPERTY(on_execute_trigger);
+		EffectScript PROPERTY(on_execute_effect);
 
 		Reform(
 			std::string_view new_identifier, ModifierValue&& new_values, ReformGroup const& new_group, size_t new_ordinal,
-			RuleSet&& new_rules, tech_cost_t new_technology_cost
+			RuleSet&& new_rules, tech_cost_t new_technology_cost, ConditionScript&& new_allow,
+			ConditionScript&& new_on_execute_trigger, EffectScript&& new_on_execute_effect
 		);
+
+		bool parse_scripts(GameManager& game_manager);
 
 	public:
 		Reform(Reform&&) = default;
@@ -104,16 +112,24 @@ namespace OpenVic {
 			size_t& expected_reforms, std::string_view identifier, ReformType const* type, ast::NodeCPtr node
 		);
 		bool _load_reform(
-			ModifierManager const& modifier_manager, RuleManager const& rule_manager, size_t ordinal, std::string_view identifier,
-			ReformGroup const* group, ast::NodeCPtr node
+			ModifierManager const& modifier_manager, RuleManager const& rule_manager, size_t ordinal,
+			std::string_view identifier, ReformGroup const* group, ast::NodeCPtr node
 		);
 
 	public:
 		bool add_issue_group(std::string_view identifier);
-		bool add_issue(std::string_view identifier, ModifierValue&& values, IssueGroup const* group, RuleSet&& rules, bool jingoism);
+		bool add_issue(
+			std::string_view identifier, ModifierValue&& values, IssueGroup const* group, RuleSet&& rules, bool jingoism
+		);
 		bool add_reform_type(std::string_view identifier, bool uncivilised);
 		bool add_reform_group(std::string_view identifier, ReformType const* type, bool ordered, bool administrative);
-		bool add_reform(std::string_view identifier, ModifierValue&& values, ReformGroup const* group, size_t ordinal, RuleSet&& rules, Reform::tech_cost_t technology_cost);
+		bool add_reform(
+			std::string_view identifier, ModifierValue&& values, ReformGroup const* group, size_t ordinal, RuleSet&& rules,
+			Reform::tech_cost_t technology_cost, ConditionScript&& allow, ConditionScript&& on_execute_trigger,
+			EffectScript&& on_execute_effect
+		);
 		bool load_issues_file(ModifierManager const& modifier_manager, RuleManager const& rule_manager, ast::NodeCPtr root);
+
+		bool parse_scripts(GameManager& game_manager);
 	};
 }

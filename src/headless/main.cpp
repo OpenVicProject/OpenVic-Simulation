@@ -18,7 +18,7 @@ static void print_help(std::ostream& stream, char const* program_name) {
 		<< "(Paths with spaces need to be enclosed in \"quotes\").\n";
 }
 
-static bool headless_load(GameManager& game_manager, Dataloader const& dataloader) {
+static bool headless_load(GameManager& game_manager, Dataloader& dataloader) {
 	bool ret = true;
 
 	if (!dataloader.load_defines(game_manager)) {

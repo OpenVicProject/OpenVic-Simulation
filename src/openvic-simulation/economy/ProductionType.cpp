@@ -6,15 +6,28 @@ using namespace OpenVic;
 using namespace OpenVic::NodeTools;
 
 EmployedPop::EmployedPop(
-	PopType const* pop_type, bool artisan, effect_t effect, fixed_point_t effect_multiplier, fixed_point_t amount
-) : pop_type { pop_type }, artisan { artisan }, effect { effect }, effect_multiplier { effect_multiplier },
-	amount { amount } {}
+	PopType const* new_pop_type, bool new_artisan, effect_t new_effect, fixed_point_t new_effect_multiplier,
+	fixed_point_t new_amount
+) : pop_type { new_pop_type }, artisan { new_artisan }, effect { new_effect }, effect_multiplier { new_effect_multiplier },
+	amount { new_amount } {}
 
 ProductionType::ProductionType(
-	PRODUCTION_TYPE_ARGS
-) : HasIdentifier { identifier }, owner { owner }, employees { employees }, type { type }, workforce { workforce },
-	input_goods { std::move(input_goods) }, output_goods { output_goods }, value { value }, bonuses { std::move(bonuses) },
-	efficiency { std::move(efficiency) }, coastal { coastal }, farm { farm }, mine { mine } {}
+	std::string_view new_identifier, EmployedPop new_owner, std::vector<EmployedPop> new_employees, type_t new_type,
+	Pop::pop_size_t new_workforce, Good::good_map_t&& new_input_goods, Good const* new_output_goods,
+	fixed_point_t new_value, std::vector<bonus_t>&& new_bonuses, Good::good_map_t&& new_efficiency, bool new_coastal,
+	bool new_farm, bool new_mine
+) : HasIdentifier { new_identifier }, owner { new_owner }, employees { new_employees }, type { new_type },
+	workforce { new_workforce }, input_goods { std::move(new_input_goods) }, output_goods { new_output_goods },
+	value { new_value }, bonuses { std::move(new_bonuses) }, efficiency { std::move(new_efficiency) },
+	coastal { new_coastal }, farm { new_farm }, mine { new_mine } {}
+
+bool ProductionType::parse_scripts(GameManager const& game_manager) {
+	bool ret = true;
+	for (auto& [bonus_script, bonus_value] : bonuses) {
+		ret &= bonus_script.parse_script(false, game_manager);
+	}
+	return ret;
+}
 
 ProductionTypeManager::ProductionTypeManager() : rgo_owner_sprite { 0 } {}
 
@@ -72,7 +85,11 @@ node_callback_t ProductionTypeManager::_expect_employed_pop_list(
 		return false; \
 	}
 
-bool ProductionTypeManager::add_production_type(PRODUCTION_TYPE_ARGS) {
+bool ProductionTypeManager::add_production_type(
+	std::string_view identifier, EmployedPop owner, std::vector<EmployedPop> employees, ProductionType::type_t type,
+	Pop::pop_size_t workforce, Good::good_map_t&& input_goods, Good const* output_goods, fixed_point_t value,
+	std::vector<ProductionType::bonus_t>&& bonuses, Good::good_map_t&& efficiency, bool coastal, bool farm, bool mine
+) {
 	if (identifier.empty()) {
 		Logger::error("Invalid production type identifier - empty!");
 		return false;
@@ -109,22 +126,6 @@ bool ProductionTypeManager::add_production_type(PRODUCTION_TYPE_ARGS) {
 	}
 	return ret;
 }
-
-#define PARSE_NODE \
-	expect_dictionary_keys_and_default( \
-		key_value_success_callback, \
-		"owner", ZERO_OR_ONE, _expect_employed_pop(good_manager, pop_manager, move_variable_callback(owner)), \
-		"employees", ZERO_OR_ONE, _expect_employed_pop_list(good_manager, pop_manager, move_variable_callback(employees)), \
-		"type", ZERO_OR_ONE, expect_identifier(expect_mapped_string(type_map, assign_variable_callback(type))), \
-		"workforce", ZERO_OR_ONE, expect_uint(assign_variable_callback(workforce)), \
-		"input_goods", ZERO_OR_ONE, good_manager.expect_good_decimal_map(move_variable_callback(input_goods)), \
-		"output_goods", ZERO_OR_ONE, good_manager.expect_good_identifier(assign_variable_callback_pointer(output_goods)), \
-		"value", ZERO_OR_ONE, expect_fixed_point(assign_variable_callback(value)), \
-		"efficiency", ZERO_OR_ONE, good_manager.expect_good_decimal_map(move_variable_callback(efficiency)), \
-		"is_coastal", ZERO_OR_ONE, expect_bool(assign_variable_callback(coastal)), \
-		"farm", ZERO_OR_ONE, expect_bool(assign_variable_callback(farm)), \
-		"mine", ZERO_OR_ONE, expect_bool(assign_variable_callback(mine)) \
-	)
 
 bool ProductionTypeManager::load_production_types_file(
 	GoodManager const& good_manager, PopManager const& pop_manager, ast::NodeCPtr root
@@ -183,7 +184,7 @@ bool ProductionTypeManager::load_production_types_file(
 			Pop::pop_size_t workforce = 0; // 0 is a meaningless value -> unset
 			Good::good_map_t input_goods, efficiency;
 			fixed_point_t value = 0; // 0 is a meaningless value -> unset
-			std::vector<Bonus> bonuses;
+			std::vector<ProductionType::bonus_t> bonuses;
 			bool coastal = false, farm = false, mine = false;
 
 			bool ret = true;
@@ -193,16 +194,47 @@ bool ProductionTypeManager::load_production_types_file(
 				{ "factory", FACTORY }, { "rgo", RGO }, { "artisan", ARTISAN }
 			};
 
+			const node_callback_t parse_node = expect_dictionary_keys(
+				"template", ZERO_OR_ONE, success_callback,
+				"bonus", ZERO_OR_MORE, [&bonuses](ast::NodeCPtr bonus_node) -> bool {
+					ConditionScript trigger;
+					fixed_point_t value {};
+					const bool ret = expect_dictionary_keys(
+						"trigger", ONE_EXACTLY, trigger.expect_script(),
+						"value", ONE_EXACTLY, expect_fixed_point(assign_variable_callback(value))
+					)(bonus_node);
+					bonuses.emplace_back(std::move(trigger), value);
+					return ret;
+				},
+				"owner", ZERO_OR_ONE, _expect_employed_pop(good_manager, pop_manager, move_variable_callback(owner)),
+				"employees", ZERO_OR_ONE, _expect_employed_pop_list(good_manager, pop_manager, move_variable_callback(employees)),
+				"type", ZERO_OR_ONE, expect_identifier(expect_mapped_string(type_map, assign_variable_callback(type))),
+				"workforce", ZERO_OR_ONE, expect_uint(assign_variable_callback(workforce)),
+				"input_goods", ZERO_OR_ONE, good_manager.expect_good_decimal_map(move_variable_callback(input_goods)),
+				"output_goods", ZERO_OR_ONE, good_manager.expect_good_identifier(assign_variable_callback_pointer(output_goods)),
+				"value", ZERO_OR_ONE, expect_fixed_point(assign_variable_callback(value)),
+				"efficiency", ZERO_OR_ONE, good_manager.expect_good_decimal_map(move_variable_callback(efficiency)),
+				"is_coastal", ZERO_OR_ONE, expect_bool(assign_variable_callback(coastal)),
+				"farm", ZERO_OR_ONE, expect_bool(assign_variable_callback(farm)),
+				"mine", ZERO_OR_ONE, expect_bool(assign_variable_callback(mine))
+			);
+
 			// apply template first
-			if (template_target_map.contains(key)) {
-				std::string_view template_id = template_target_map[key];
-				if (template_node_map.contains(template_id)) {
-					ast::NodeCPtr template_node = template_node_map[template_id];
-					ret &= PARSE_NODE(template_node);
+			{
+				const typename decltype(template_target_map)::const_iterator target_it = template_target_map.find(key);
+				if (target_it != template_target_map.end()) {
+					const std::string_view template_id = target_it->second;
+					const typename decltype(template_node_map)::const_iterator node_it = template_node_map.find(template_id);
+					if (node_it != template_node_map.end()) {
+						ret &= parse_node(node_it->second);
+					} else {
+						Logger::error("Missing template ", template_id, " for production type ", key, "!");
+						ret = false;
+					}
 				}
 			}
 
-			ret &= PARSE_NODE(node);
+			ret &= parse_node(node);
 
 			ret &= add_production_type(
 				key, owner, employees, type, workforce, std::move(input_goods), output_goods, value, std::move(bonuses),
@@ -219,5 +251,13 @@ bool ProductionTypeManager::load_production_types_file(
 		ret = false;
 	}
 
+	return ret;
+}
+
+bool ProductionTypeManager::parse_scripts(GameManager const& game_manager) {
+	bool ret = true;
+	for (ProductionType& production_type : production_types.get_items()) {
+		ret &= production_type.parse_scripts(game_manager);
+	}
 	return ret;
 }

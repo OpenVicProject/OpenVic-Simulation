@@ -11,6 +11,6 @@ namespace OpenVic {
 		UnitManager PROPERTY_REF(unit_manager);
 		LeaderTraitManager PROPERTY_REF(leader_trait_manager);
 		DeploymentManager PROPERTY_REF(deployment_manager);
-		WargoalTypeManager PROPERTY_REF(wargoal_manager);
+		WargoalTypeManager PROPERTY_REF(wargoal_type_manager);
 	};
 }

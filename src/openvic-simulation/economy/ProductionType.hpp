@@ -2,13 +2,9 @@
 
 #include "openvic-simulation/economy/Good.hpp"
 #include "openvic-simulation/pop/Pop.hpp"
+#include "openvic-simulation/scripts/ConditionScript.hpp"
 #include "openvic-simulation/types/IdentifierRegistry.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
-
-#define PRODUCTION_TYPE_ARGS \
-	std::string_view identifier, EmployedPop owner, std::vector<EmployedPop> employees, ProductionType::type_t type, \
-	Pop::pop_size_t workforce, Good::good_map_t&& input_goods, Good const* output_goods, fixed_point_t value, \
-	std::vector<Bonus>&& bonuses, Good::good_map_t&& efficiency, bool coastal, bool farm, bool mine
 
 namespace OpenVic {
 	struct ProductionTypeManager;
@@ -26,40 +22,46 @@ namespace OpenVic {
 		fixed_point_t PROPERTY(amount);
 
 		EmployedPop(
-			PopType const* pop_type, bool artisan, effect_t effect, fixed_point_t effect_multiplier, fixed_point_t amount
+			PopType const* new_pop_type, bool new_artisan, effect_t new_effect, fixed_point_t new_effect_multiplier,
+			fixed_point_t new_amount
 		);
 
 	public:
 		EmployedPop() = default;
 	};
 
-	struct Bonus {
-		// TODO: trigger condition(s)
-		const fixed_point_t value;
-	};
-
 	struct ProductionType : HasIdentifier {
 		friend struct ProductionTypeManager;
 
+		enum struct type_t { FACTORY, RGO, ARTISAN };
+
+		using bonus_t = std::pair<ConditionScript, fixed_point_t>;
+
 	private:
 		const EmployedPop PROPERTY(owner);
-		const std::vector<EmployedPop> PROPERTY(employees);
-		const enum struct type_t { FACTORY, RGO, ARTISAN } PROPERTY(type);
+		std::vector<EmployedPop> PROPERTY(employees);
+		const type_t PROPERTY(type);
 		const Pop::pop_size_t workforce;
 
-		const Good::good_map_t PROPERTY(input_goods);
+		Good::good_map_t PROPERTY(input_goods);
 		Good const* PROPERTY(output_goods);
 		const fixed_point_t PROPERTY(value);
-		const std::vector<Bonus> PROPERTY(bonuses);
+		std::vector<bonus_t> PROPERTY(bonuses);
 
-		const Good::good_map_t PROPERTY(efficiency);
+		Good::good_map_t PROPERTY(efficiency);
 		const bool PROPERTY_CUSTOM_PREFIX(coastal, is); // is_coastal
 
 		const bool PROPERTY_CUSTOM_PREFIX(farm, is);
 		const bool PROPERTY_CUSTOM_PREFIX(mine, is);
 
-		ProductionType(PRODUCTION_TYPE_ARGS);
+		ProductionType(
+			std::string_view new_identifier, EmployedPop new_owner, std::vector<EmployedPop> new_employees, type_t new_type,
+			Pop::pop_size_t new_workforce, Good::good_map_t&& new_input_goods, Good const* new_output_goods,
+			fixed_point_t new_value, std::vector<bonus_t>&& new_bonuses, Good::good_map_t&& new_efficiency, bool new_coastal,
+			bool new_farm, bool new_mine
+		);
 
+		bool parse_scripts(GameManager const& game_manager);
 	public:
 		ProductionType(ProductionType&&) = default;
 	};
@@ -80,8 +82,14 @@ namespace OpenVic {
 	public:
 		ProductionTypeManager();
 
-		bool add_production_type(PRODUCTION_TYPE_ARGS);
+		bool add_production_type(
+			std::string_view identifier, EmployedPop owner, std::vector<EmployedPop> employees, ProductionType::type_t type,
+			Pop::pop_size_t workforce, Good::good_map_t&& input_goods, Good const* output_goods, fixed_point_t value,
+			std::vector<ProductionType::bonus_t>&& bonuses, Good::good_map_t&& efficiency, bool coastal, bool farm, bool mine
+		);
 
 		bool load_production_types_file(GoodManager const& good_manager, PopManager const& pop_manager, ast::NodeCPtr root);
+
+		bool parse_scripts(GameManager const& game_manager);
 	};
 }

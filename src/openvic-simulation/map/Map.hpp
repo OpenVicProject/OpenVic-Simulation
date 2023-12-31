@@ -75,7 +75,7 @@ namespace OpenVic {
 
 		Province::index_t PROPERTY(max_provinces);
 		Province* PROPERTY(selected_province);
-		Pop::pop_size_t PROPERTY(highest_province_population)
+		Pop::pop_size_t PROPERTY(highest_province_population);
 		Pop::pop_size_t PROPERTY(total_map_population);
 
 		Province::index_t get_index_from_colour(colour_t colour) const;

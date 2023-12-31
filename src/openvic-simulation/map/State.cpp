@@ -59,7 +59,7 @@ StateSet::states_t& StateSet::get_states() {
 void StateManager::generate_states(Map& map) {
 	regions.clear();
 	regions.reserve(map.get_region_count());
-	for(Region const& region : map.get_regions()) {
+	for (Region const& region : map.get_regions()) {
 		if (!region.get_meta()) {
 			regions.emplace_back(map, region);
 		}

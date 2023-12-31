@@ -1,5 +1,6 @@
 #pragma once
 
+#include "openvic-simulation/scripts/ConditionScript.hpp"
 #include "openvic-simulation/types/IdentifierRegistry.hpp"
 
 namespace OpenVic {
@@ -83,10 +84,14 @@ namespace OpenVic {
 		friend struct ModifierManager;
 
 	private:
-		// TODO - trigger condition
+		ConditionScript trigger;
 
 	protected:
-		TriggeredModifier(std::string_view new_identifier, ModifierValue&& new_values, icon_t new_icon);
+		TriggeredModifier(
+			std::string_view new_identifier, ModifierValue&& new_values, icon_t new_icon, ConditionScript&& new_trigger
+		);
+
+		bool parse_scripts(GameManager const& game_manager);
 
 	public:
 		TriggeredModifier(TriggeredModifier&&) = default;
@@ -139,8 +144,12 @@ namespace OpenVic {
 		bool add_static_modifier(std::string_view identifier, ModifierValue&& values);
 		bool load_static_modifiers(ast::NodeCPtr root);
 
-		bool add_triggered_modifier(std::string_view identifier, ModifierValue&& values, Modifier::icon_t icon);
+		bool add_triggered_modifier(
+			std::string_view identifier, ModifierValue&& values, Modifier::icon_t icon, ConditionScript&& trigger
+		);
 		bool load_triggered_modifiers(ast::NodeCPtr root);
+
+		bool parse_scripts(GameManager const& game_manager);
 
 		NodeTools::node_callback_t expect_validated_modifier_value_and_default(
 			NodeTools::callback_t<ModifierValue&&> modifier_callback, NodeTools::key_value_callback_t default_callback,

@@ -10,16 +10,23 @@ using namespace OpenVic::NodeTools;
 Invention::Invention(
 	std::string_view new_identifier, ModifierValue&& new_values, bool new_news, unit_set_t&& new_activated_units,
 	building_set_t&& new_activated_buildings, crime_set_t&& new_enabled_crimes, bool new_unlock_gas_attack,
-	bool new_unlock_gas_defence
+	bool new_unlock_gas_defence, ConditionScript&& new_limit, ConditionalWeight&& new_chance
 ) : Modifier { new_identifier, std::move(new_values), 0 }, news { new_news },
 	activated_units { std::move(new_activated_units) }, activated_buildings { std::move(new_activated_buildings) },
 	enabled_crimes { std::move(new_enabled_crimes) }, unlock_gas_attack { new_unlock_gas_attack },
-	unlock_gas_defence { new_unlock_gas_defence } {} //TODO icon
+	unlock_gas_defence { new_unlock_gas_defence }, limit { std::move(new_limit) }, chance { std::move(new_chance) } {}
+
+bool Invention::parse_scripts(GameManager const& game_manager) {
+	bool ret = true;
+	ret &= limit.parse_script(false, game_manager);
+	ret &= chance.parse_scripts(game_manager);
+	return ret;
+}
 
 bool InventionManager::add_invention(
 	std::string_view identifier, ModifierValue&& values, bool news, Invention::unit_set_t&& activated_units,
 	Invention::building_set_t&& activated_buildings, Invention::crime_set_t&& enabled_crimes,
-	bool unlock_gas_attack, bool unlock_gas_defence
+	bool unlock_gas_attack, bool unlock_gas_defence, ConditionScript&& limit, ConditionalWeight&& chance
 ) {
 	if (identifier.empty()) {
 		Logger::error("Invalid invention identifier - empty!");
@@ -28,7 +35,7 @@ bool InventionManager::add_invention(
 
 	return inventions.add_item({
 		identifier, std::move(values), news, std::move(activated_units), std::move(activated_buildings),
-		std::move(enabled_crimes), unlock_gas_attack, unlock_gas_defence
+		std::move(enabled_crimes), unlock_gas_attack, unlock_gas_defence, std::move(limit), std::move(chance)
 	});
 }
 
@@ -50,10 +57,13 @@ bool InventionManager::load_inventions_file(
 			bool unlock_gas_defence = false;
 			bool news = true; //defaults to true!
 
+			ConditionScript limit;
+			ConditionalWeight chance;
+
 			bool ret = modifier_manager.expect_modifier_value_and_keys(move_variable_callback(loose_modifiers),
 				"news", ZERO_OR_ONE, expect_bool(assign_variable_callback(news)),
-				"limit", ONE_EXACTLY, success_callback,
-				"chance", ONE_EXACTLY, success_callback,
+				"limit", ONE_EXACTLY, limit.expect_script(),
+				"chance", ONE_EXACTLY, chance.expect_conditional_weight(ConditionalWeight::BASE),
 				"effect", ZERO_OR_ONE, modifier_manager.expect_modifier_value_and_keys(
 					move_variable_callback(modifiers),
 					"gas_attack", ZERO_OR_ONE, expect_bool(assign_variable_callback(unlock_gas_attack)),
@@ -72,10 +82,18 @@ bool InventionManager::load_inventions_file(
 
 			ret &= add_invention(
 				identifier, std::move(modifiers), news, std::move(activated_units), std::move(activated_buildings),
-				std::move(enabled_crimes), unlock_gas_attack, unlock_gas_defence
+				std::move(enabled_crimes), unlock_gas_attack, unlock_gas_defence, std::move(limit), std::move(chance)
 			);
 
 			return ret;
 		}
 	)(root);
+}
+
+bool InventionManager::parse_scripts(GameManager const& game_manager) {
+	bool ret = true;
+	for (Invention& invention : inventions.get_items()) {
+		ret &= invention.parse_scripts(game_manager);
+	}
+	return ret;
 }

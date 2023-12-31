@@ -6,59 +6,48 @@ using namespace OpenVic;
 using namespace OpenVic::NodeTools;
 
 WargoalType::WargoalType(
-	std::string_view new_identifier,
-	std::string_view new_sprite,
-	std::string_view new_war_name,
-	Timespan new_available_length,
-	Timespan new_truce_length,
-	bool new_triggered_only,
-	bool new_civil_war,
-	bool new_constructing,
-	bool new_crisis,
-	bool new_great_war,
-	bool new_mutual,
-	const peace_modifiers_t&& new_modifiers,
-	peace_options_t new_peace_options
-) : HasIdentifier { new_identifier },
-	sprite { new_sprite },
-	war_name { new_war_name },
-	available_length { new_available_length },
-	truce_length { new_truce_length },
-	triggered_only { new_triggered_only },
-	civil_war { new_civil_war },
-	constructing { new_constructing },
-	crisis { new_crisis },
-	great_war { new_great_war },
-	mutual { new_mutual },
-	modifiers { std::move(new_modifiers) },
-	peace_options { new_peace_options } {}
+	std::string_view new_identifier, std::string_view new_war_name, Timespan new_available_length,
+	Timespan new_truce_length, sprite_t new_sprite_index, bool new_triggered_only, bool new_civil_war,
+	bool new_constructing, bool new_crisis, bool new_great_war_obligatory, bool new_mutual,
+	bool new_all_allowed_states, bool new_always, peace_modifiers_t&& new_modifiers, peace_options_t new_peace_options,
+	ConditionScript&& new_can_use, ConditionScript&& new_is_valid, ConditionScript&& new_allowed_states,
+	ConditionScript&& new_allowed_substate_regions, ConditionScript&& new_allowed_states_in_crisis,
+	ConditionScript&& new_allowed_countries, EffectScript&& new_on_add, EffectScript&& new_on_po_accepted
+) : HasIdentifier { new_identifier }, war_name { new_war_name }, available_length { new_available_length },
+	truce_length { new_truce_length }, sprite_index { new_sprite_index }, triggered_only { new_triggered_only },
+	civil_war { new_civil_war }, constructing { new_constructing }, crisis { new_crisis },
+	great_war_obligatory { new_great_war_obligatory }, mutual { new_mutual }, all_allowed_states { new_all_allowed_states },
+	always { new_always }, modifiers { std::move(new_modifiers) }, peace_options { new_peace_options },
+	can_use { std::move(new_can_use) }, is_valid { std::move(new_is_valid) }, allowed_states { std::move(new_allowed_states) },
+	allowed_substate_regions { std::move(new_allowed_substate_regions) },
+	allowed_states_in_crisis { std::move(new_allowed_states_in_crisis) },
+	allowed_countries { std::move(new_allowed_countries) }, on_add { std::move(new_on_add) },
+	on_po_accepted { std::move(new_on_po_accepted) } {}
 
-const std::vector<WargoalType const*>& WargoalTypeManager::get_peace_priority_list() const {
-	return peace_priorities;
+bool WargoalType::parse_scripts(GameManager& game_manager) {
+	bool ret = true;
+	ret &= can_use.parse_script(true, game_manager);
+	ret &= is_valid.parse_script(true, game_manager);
+	ret &= allowed_states.parse_script(true, game_manager);
+	ret &= allowed_substate_regions.parse_script(true, game_manager);
+	ret &= allowed_states_in_crisis.parse_script(true, game_manager);
+	ret &= allowed_countries.parse_script(true, game_manager);
+	ret &= on_add.parse_script(true, game_manager);
+	ret &= on_po_accepted.parse_script(true, game_manager);
+	return ret;
 }
 
 bool WargoalTypeManager::add_wargoal_type(
-	std::string_view identifier,
-	std::string_view sprite,
-	std::string_view war_name,
-	Timespan available_length,
-	Timespan truce_length,
-	bool triggered_only,
-	bool civil_war,
-	bool constructing,
-	bool crisis,
-	bool great_war,
-	bool mutual,
-	WargoalType::peace_modifiers_t&& modifiers,
-	peace_options_t peace_options
+	std::string_view identifier, std::string_view war_name, Timespan available_length,
+	Timespan truce_length, WargoalType::sprite_t sprite_index, bool triggered_only, bool civil_war,
+	bool constructing, bool crisis, bool great_war_obligatory, bool mutual, bool all_allowed_states,
+	bool always, WargoalType::peace_modifiers_t&& modifiers, peace_options_t peace_options,
+	ConditionScript&& can_use, ConditionScript&& is_valid, ConditionScript&& allowed_states,
+	ConditionScript&& allowed_substate_regions, ConditionScript&& allowed_states_in_crisis,
+	ConditionScript&& allowed_countries, EffectScript&& on_add, EffectScript&& on_po_accepted
 ) {
 	if (identifier.empty()) {
 		Logger::error("Invalid wargoal identifier - empty!");
-		return false;
-	}
-
-	if (sprite.empty()) {
-		Logger::error("Invalid sprite for wargoal ", identifier, " - empty!");
 		return false;
 	}
 
@@ -67,23 +56,48 @@ bool WargoalTypeManager::add_wargoal_type(
 		return false;
 	}
 
+	if (sprite_index == 0) {
+		Logger::warning("Invalid sprite for wargoal ", identifier, " - 0");
+	}
+
 	return wargoal_types.add_item({
-		identifier, sprite, war_name, available_length, truce_length, triggered_only, civil_war, constructing, crisis,
-		great_war, mutual, std::move(modifiers), peace_options
+		identifier, war_name, available_length, truce_length, sprite_index, triggered_only, civil_war, constructing, crisis,
+		great_war_obligatory, mutual, all_allowed_states, always, std::move(modifiers), peace_options, std::move(can_use),
+		std::move(is_valid), std::move(allowed_states), std::move(allowed_substate_regions),
+		std::move(allowed_states_in_crisis), std::move(allowed_countries), std::move(on_add), std::move(on_po_accepted)
 	});
 }
 
 bool WargoalTypeManager::load_wargoal_file(ast::NodeCPtr root) {
 	bool ret = expect_dictionary(
 		[this](std::string_view identifier, ast::NodeCPtr value) -> bool {
-			if (identifier == "peace_order") return true;
+			if (identifier == "peace_order") {
+				return true;
+			}
 
-			std::string_view sprite, war_name;
-			Timespan available, truce;
-			bool triggered_only = false, civil_war = false, constructing = true, crisis = true, great_war = false,
-				mutual = false;
-			peace_options_t peace_options {};
+			using enum peace_options_t;
+
+			std::string_view war_name;
+			Timespan available {}, truce {};
+			WargoalType::sprite_t sprite_index = 0;
+			bool triggered_only = false, civil_war = false, constructing = true, crisis = true, great_war_obligatory = false,
+				mutual = false, all_allowed_states = false, always = false;
+			peace_options_t peace_options = NO_PEACE_OPTIONS;
 			WargoalType::peace_modifiers_t modifiers;
+			ConditionScript can_use, is_valid, allowed_states, allowed_substate_regions, allowed_states_in_crisis,
+				allowed_countries;
+			EffectScript on_add, on_po_accepted;
+
+			const auto expect_peace_option = [&peace_options](peace_options_t peace_option) -> node_callback_t {
+				return expect_bool([&peace_options, peace_option](bool val) -> bool {
+					if (val) {
+						peace_options |= peace_option;
+					} else {
+						peace_options &= ~peace_option;
+					}
+					return true;
+				});
+			};
 
 			bool ret = expect_dictionary_keys_and_default(
 				[&modifiers, &identifier](std::string_view key, ast::NodeCPtr value) -> bool {
@@ -113,105 +127,53 @@ bool WargoalTypeManager::load_wargoal_file(ast::NodeCPtr root) {
 					Logger::error("Modifier ", key, " in wargoal ", identifier, " is invalid.");
 					return false;
 				},
-				"sprite_index", ONE_EXACTLY, expect_identifier(assign_variable_callback(sprite)),
 				"war_name", ONE_EXACTLY, expect_identifier_or_string(assign_variable_callback(war_name)),
 				"months", ZERO_OR_ONE, expect_months(assign_variable_callback(available)),
 				"truce_months", ONE_EXACTLY, expect_months(assign_variable_callback(truce)),
+				"sprite_index", ONE_EXACTLY, expect_uint(assign_variable_callback(sprite_index)),
 				"is_triggered_only", ZERO_OR_ONE, expect_bool(assign_variable_callback(triggered_only)),
 				"is_civil_war", ZERO_OR_ONE, expect_bool(assign_variable_callback(civil_war)),
 				"constructing_cb", ZERO_OR_ONE, expect_bool(assign_variable_callback(constructing)),
 				"crisis", ZERO_OR_ONE, expect_bool(assign_variable_callback(crisis)),
-				"great_war_obligatory", ZERO_OR_ONE, expect_bool(assign_variable_callback(great_war)),
+				"great_war_obligatory", ZERO_OR_ONE, expect_bool(assign_variable_callback(great_war_obligatory)),
 				"mutual", ZERO_OR_ONE, expect_bool(assign_variable_callback(mutual)),
-				/* PEACE OPTIONS */
-				"po_annex", ZERO_OR_ONE, expect_bool([&peace_options](bool annex) -> bool {
-					if (annex) peace_options |= peace_options_t::PO_ANNEX;
-					return true;
-				}),
-				"po_demand_state", ZERO_OR_ONE, expect_bool([&peace_options](bool demand_state) -> bool {
-					if (demand_state) peace_options |= peace_options_t::PO_DEMAND_STATE;
-					return true;
-				}),
-				"po_add_to_sphere", ZERO_OR_ONE, expect_bool([&peace_options](bool add_to_sphere) -> bool {
-					if (add_to_sphere) peace_options |= peace_options_t::PO_ADD_TO_SPHERE;
-					return true;
-				}),
-				"po_disarmament", ZERO_OR_ONE, expect_bool([&peace_options](bool disarm) -> bool {
-					if (disarm) peace_options |= peace_options_t::PO_DISARMAMENT;
-					return true;
-				}),
-				"po_destroy_forts", ZERO_OR_ONE, expect_bool([&peace_options](bool disarm) -> bool {
-					if (disarm) peace_options |= peace_options_t::PO_REMOVE_FORTS;
-					return true;
-				}),
-				"po_destroy_naval_bases", ZERO_OR_ONE, expect_bool([&peace_options](bool disarm) -> bool {
-					if (disarm) peace_options |= peace_options_t::PO_REMOVE_NAVAL_BASES;
-					return true;
-				}),
-				"po_reparations", ZERO_OR_ONE, expect_bool([&peace_options](bool reps) -> bool {
-					if (reps) peace_options |= peace_options_t::PO_REPARATIONS;
-					return true;
-				}),
-				"po_transfer_provinces", ZERO_OR_ONE, expect_bool([&peace_options](bool provinces) -> bool {
-					if (provinces) peace_options |= peace_options_t::PO_TRANSFER_PROVINCES;
-					return true;
-				}),
-				"po_remove_prestige", ZERO_OR_ONE, expect_bool([&peace_options](bool humiliate) -> bool {
-					if (humiliate) peace_options |= peace_options_t::PO_REMOVE_PRESTIGE;
-					return true;
-				}),
-				"po_make_puppet", ZERO_OR_ONE, expect_bool([&peace_options](bool puppet) -> bool {
-					if (puppet) peace_options |= peace_options_t::PO_MAKE_PUPPET;
-					return true;
-				}),
-				"po_release_puppet", ZERO_OR_ONE, expect_bool([&peace_options](bool puppet) -> bool {
-					if (puppet) peace_options |= peace_options_t::PO_RELEASE_PUPPET;
-					return true;
-				}),
-				"po_status_quo", ZERO_OR_ONE, expect_bool([&peace_options](bool status_quo) -> bool {
-					if (status_quo) peace_options |= peace_options_t::PO_STATUS_QUO;
-					return true;
-				}),
-				"po_install_communist_gov_type", ZERO_OR_ONE, expect_bool([&peace_options](bool puppet) -> bool {
-					if (puppet) peace_options |= peace_options_t::PO_INSTALL_COMMUNISM;
-					return true;
-				}),
-				"po_uninstall_communist_gov_type", ZERO_OR_ONE, expect_bool([&peace_options](bool puppet) -> bool {
-					if (puppet) peace_options |= peace_options_t::PO_REMOVE_COMMUNISM;
-					return true;
-				}),
-				"po_remove_cores", ZERO_OR_ONE, expect_bool([&peace_options](bool uncore) -> bool {
-					if (uncore) peace_options |= peace_options_t::PO_REMOVE_CORES;
-					return true;
-				}),
-				"po_colony", ZERO_OR_ONE, expect_bool([&peace_options](bool colony) -> bool {
-					if (colony) peace_options |= peace_options_t::PO_COLONY;
-					return true;
-				}),
-				"po_gunboat", ZERO_OR_ONE, expect_bool([&peace_options](bool gunboat) -> bool {
-					if (gunboat) peace_options |= peace_options_t::PO_REPAY_DEBT;
-					return true;
-				}),
-				"po_clear_union_sphere", ZERO_OR_ONE, expect_bool([&peace_options](bool clear) -> bool {
-					if (clear) peace_options |= peace_options_t::PO_CLEAR_UNION_SPHERE;
-					return true;
-				}),
-				/* TODO: CONDITION & EFFECT BLOCKS */
-				"can_use", ZERO_OR_ONE, success_callback,
-				"is_valid", ZERO_OR_ONE, success_callback,
-				"on_add", ZERO_OR_ONE, success_callback,
-				"on_po_accepted", ZERO_OR_ONE, success_callback,
-				"allowed_states", ZERO_OR_ONE, success_callback,
-				"all_allowed_states", ZERO_OR_ONE, success_callback,
-				"allowed_substate_regions", ZERO_OR_ONE, success_callback,
-				"allowed_states_in_crisis", ZERO_OR_ONE, success_callback,
-				"allowed_countries", ZERO_OR_ONE, success_callback,
-				"always", ZERO_OR_ONE, success_callback // usage unknown / quirk
+				/* START PEACE OPTIONS */
+				"po_annex", ZERO_OR_ONE, expect_peace_option(PO_ANNEX),
+				"po_demand_state", ZERO_OR_ONE, expect_peace_option(PO_DEMAND_STATE),
+				"po_add_to_sphere", ZERO_OR_ONE, expect_peace_option(PO_ADD_TO_SPHERE),
+				"po_disarmament", ZERO_OR_ONE, expect_peace_option(PO_DISARMAMENT),
+				"po_destroy_forts", ZERO_OR_ONE, expect_peace_option(PO_REMOVE_FORTS),
+				"po_destroy_naval_bases", ZERO_OR_ONE, expect_peace_option(PO_REMOVE_NAVAL_BASES),
+				"po_reparations", ZERO_OR_ONE, expect_peace_option(PO_REPARATIONS),
+				"po_transfer_provinces", ZERO_OR_ONE, expect_peace_option(PO_TRANSFER_PROVINCES),
+				"po_remove_prestige", ZERO_OR_ONE, expect_peace_option(PO_REMOVE_PRESTIGE),
+				"po_make_puppet", ZERO_OR_ONE, expect_peace_option(PO_MAKE_PUPPET),
+				"po_release_puppet", ZERO_OR_ONE, expect_peace_option(PO_RELEASE_PUPPET),
+				"po_status_quo", ZERO_OR_ONE, expect_peace_option(PO_STATUS_QUO),
+				"po_install_communist_gov_type", ZERO_OR_ONE, expect_peace_option(PO_INSTALL_COMMUNISM),
+				"po_uninstall_communist_gov_type", ZERO_OR_ONE, expect_peace_option(PO_REMOVE_COMMUNISM),
+				"po_remove_cores", ZERO_OR_ONE, expect_peace_option(PO_REMOVE_CORES),
+				"po_colony", ZERO_OR_ONE, expect_peace_option(PO_COLONY),
+				"po_gunboat", ZERO_OR_ONE, expect_peace_option(PO_REPAY_DEBT),
+				"po_clear_union_sphere", ZERO_OR_ONE, expect_peace_option(PO_CLEAR_UNION_SPHERE),
+				/* END PEACE OPTIONS */
+				"can_use", ZERO_OR_ONE, can_use.expect_script(),
+				"is_valid", ZERO_OR_ONE, is_valid.expect_script(),
+				"on_add", ZERO_OR_ONE, on_add.expect_script(),
+				"on_po_accepted", ZERO_OR_ONE, on_po_accepted.expect_script(),
+				"allowed_states", ZERO_OR_ONE, allowed_states.expect_script(),
+				"all_allowed_states", ZERO_OR_ONE, expect_bool(assign_variable_callback(all_allowed_states)),
+				"allowed_substate_regions", ZERO_OR_ONE, allowed_substate_regions.expect_script(),
+				"allowed_states_in_crisis", ZERO_OR_ONE, allowed_states_in_crisis.expect_script(),
+				"allowed_countries", ZERO_OR_ONE, allowed_countries.expect_script(),
+				"always", ZERO_OR_ONE, expect_bool(assign_variable_callback(always))
 			)(value);
 
 			add_wargoal_type(
-				identifier, sprite, war_name, available, truce, triggered_only, civil_war, constructing, crisis, great_war,
-				mutual, std::move(modifiers), peace_options
+				identifier, war_name, available, truce, sprite_index, triggered_only, civil_war, constructing, crisis,
+				great_war_obligatory, mutual, all_allowed_states, always, std::move(modifiers), peace_options,
+				std::move(can_use), std::move(is_valid), std::move(allowed_states), std::move(allowed_substate_regions),
+				std::move(allowed_states_in_crisis), std::move(allowed_countries), std::move(on_add), std::move(on_po_accepted)
 			);
 			return ret;
 		}
@@ -236,5 +198,13 @@ bool WargoalTypeManager::load_wargoal_file(ast::NodeCPtr root) {
 	)(root);
 
 	lock_wargoal_types();
+	return ret;
+}
+
+bool WargoalTypeManager::parse_scripts(GameManager& game_manager) {
+	bool ret = true;
+	for (WargoalType& wargoal_type : wargoal_types.get_items()) {
+		ret &= wargoal_type.parse_scripts(game_manager);
+	}
 	return ret;
 }

@@ -14,14 +14,20 @@ NationalFocus::NationalFocus(
 	ModifierValue&& new_modifiers,
 	pop_promotion_map_t&& new_encouraged_promotion,
 	party_loyalty_map_t&& new_encouraged_loyalty,
-	production_map_t&& new_encouraged_production
+	production_map_t&& new_encouraged_production,
+	ConditionScript&& new_limit
 ) : HasIdentifier { new_identifier },
 	icon { new_icon },
 	group { new_group },
 	modifiers { std::move(new_modifiers) },
 	encouraged_promotion { std::move(new_encouraged_promotion) },
 	encouraged_loyalty { std::move(new_encouraged_loyalty) },
-	encouraged_production { std::move(new_encouraged_production) } {}
+	encouraged_production { std::move(new_encouraged_production) },
+	limit { std::move(new_limit) } {}
+
+bool NationalFocus::parse_scripts(GameManager const& game_manager) {
+	return limit.parse_script(true, game_manager);
+}
 
 inline bool NationalFocusManager::add_national_focus_group(std::string_view identifier) {
 	if (identifier.empty()) {
@@ -38,7 +44,8 @@ inline bool NationalFocusManager::add_national_focus(
 	ModifierValue&& modifiers,
 	NationalFocus::pop_promotion_map_t&& encouraged_promotion,
 	NationalFocus::party_loyalty_map_t&& encouraged_loyalty,
-	NationalFocus::production_map_t&& encouraged_production
+	NationalFocus::production_map_t&& encouraged_production,
+	ConditionScript&& limit
 ) {
 	if (identifier.empty()) {
 		Logger::error("No identifier for national focus!");
@@ -48,7 +55,10 @@ inline bool NationalFocusManager::add_national_focus(
 		Logger::error("Invalid icon ", icon, " for national focus ", identifier);
 		return false;
 	}
-	return national_foci.add_item({ identifier, icon, group, std::move(modifiers), std::move(encouraged_promotion), std::move(encouraged_loyalty), std::move(encouraged_production) });
+	return national_foci.add_item({
+		identifier, icon, group, std::move(modifiers), std::move(encouraged_promotion), std::move(encouraged_loyalty),
+		std::move(encouraged_production), std::move(limit)
+	});
 }
 
 bool NationalFocusManager::load_national_foci_file(PopManager const& pop_manager, IdeologyManager const& ideology_manager, GoodManager const& good_manager, ModifierManager const& modifier_manager, ast::NodeCPtr root) {
@@ -64,6 +74,7 @@ bool NationalFocusManager::load_national_foci_file(PopManager const& pop_manager
 			NationalFocus::pop_promotion_map_t promotions;
 			NationalFocus::party_loyalty_map_t loyalties;
 			NationalFocus::production_map_t production;
+			ConditionScript limit;
 
 			Ideology const* last_specified_ideology = nullptr; // weird, I know
 
@@ -98,13 +109,16 @@ bool NationalFocusManager::load_national_foci_file(PopManager const& pop_manager
 					loyalties[last_specified_ideology] += boost;
 					return ret;
 				},
-				"limit", ZERO_OR_ONE, success_callback, // TODO: implement conditions
+				"limit", ZERO_OR_ONE, limit.expect_script(),
 				"has_flashpoint", ZERO_OR_ONE, success_callback, // special case, include in limit
 				"own_provinces", ZERO_OR_ONE, success_callback, // special case, include in limit
 				"outliner_show_as_percent", ZERO_OR_ONE, success_callback // special case
 			)(node);
 
-			add_national_focus(identifier, icon, group, std::move(modifiers), std::move(promotions), std::move(loyalties), std::move(production));
+			add_national_focus(
+				identifier, icon, group, std::move(modifiers), std::move(promotions), std::move(loyalties),
+				std::move(production), std::move(limit)
+			);
 
 			return ret;
 		})(node);
@@ -112,5 +126,13 @@ bool NationalFocusManager::load_national_foci_file(PopManager const& pop_manager
 	})(root);
 	lock_national_foci();
 
+	return ret;
+}
+
+bool NationalFocusManager::parse_scripts(GameManager const& game_manager) {
+	bool ret = true;
+	for (NationalFocus& national_focus : national_foci.get_items()) {
+		ret &= national_focus.parse_scripts(game_manager);
+	}
 	return ret;
 }

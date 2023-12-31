@@ -138,7 +138,7 @@ namespace OpenVic::GFX {
 	class MaskedFlag final : public Sprite {
 		friend std::unique_ptr<MaskedFlag> std::make_unique<MaskedFlag>();
 
-		std::string PROPERTY(overlay_file)
+		std::string PROPERTY(overlay_file);
 		std::string PROPERTY(mask_file);
 
 	protected:

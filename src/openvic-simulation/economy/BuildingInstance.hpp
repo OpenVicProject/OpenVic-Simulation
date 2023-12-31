@@ -14,7 +14,7 @@ namespace OpenVic {
 
 		level_t PROPERTY_RW(level);
 		ExpansionState PROPERTY(expansion_state);
-		Date PROPERTY(start_date)
+		Date PROPERTY(start_date);
 		Date PROPERTY(end_date);
 		float PROPERTY(expansion_progress);
 
