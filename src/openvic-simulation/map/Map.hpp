@@ -9,6 +9,7 @@
 #include "openvic-simulation/map/State.hpp"
 #include "openvic-simulation/map/TerrainType.hpp"
 #include "openvic-simulation/types/Colour.hpp"
+#include "openvic-simulation/types/OrderedContainers.hpp"
 
 namespace OpenVic {
 	namespace fs = std::filesystem;
@@ -57,7 +58,7 @@ namespace OpenVic {
 		};
 #pragma pack(pop)
 	private:
-		using colour_index_map_t = std::map<colour_t, Province::index_t>;
+		using colour_index_map_t = ordered_map<colour_t, Province::index_t>;
 
 		IdentifierRegistry<Province> IDENTIFIER_REGISTRY_CUSTOM_INDEX_OFFSET(province, 1);
 		IdentifierRegistry<Region> IDENTIFIER_REGISTRY(region);

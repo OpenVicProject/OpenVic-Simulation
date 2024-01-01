@@ -1,6 +1,7 @@
 #pragma once
 
 #include "openvic-simulation/types/IdentifierRegistry.hpp"
+#include "openvic-simulation/types/OrderedContainers.hpp"
 
 namespace OpenVic {
 	struct EventManager;
@@ -66,7 +67,7 @@ namespace OpenVic {
 	struct OnAction : HasIdentifier {
 		friend struct EventManager;
 
-		using weight_map_t = std::map<Event const*, uint64_t>;
+		using weight_map_t = ordered_map<Event const*, uint64_t>;
 
 	private:
 		weight_map_t PROPERTY(weighted_events);

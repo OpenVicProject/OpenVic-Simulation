@@ -147,7 +147,7 @@ ProvinceHistoryMap* ProvinceHistoryManager::_get_or_make_province_history(Provin
 			return nullptr;
 		}
 	}
-	return &it->second;
+	return &it.value();
 }
 
 bool ProvinceHistoryManager::load_province_history_file(

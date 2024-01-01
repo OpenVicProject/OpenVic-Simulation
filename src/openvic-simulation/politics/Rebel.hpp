@@ -1,11 +1,12 @@
 #pragma once
 
+#include <cstdint>
+
 #include "openvic-simulation/misc/Modifier.hpp"
-#include "openvic-simulation/types/IdentifierRegistry.hpp"
 #include "openvic-simulation/politics/Government.hpp"
 #include "openvic-simulation/politics/Ideology.hpp"
-#include <cstdint>
-#include <unordered_map>
+#include "openvic-simulation/types/IdentifierRegistry.hpp"
+#include "openvic-simulation/types/OrderedContainers.hpp"
 
 namespace OpenVic {
 	struct RebelManager;
@@ -13,7 +14,7 @@ namespace OpenVic {
 	struct RebelType : HasIdentifier {
 		friend struct RebelManager;
 
-		using government_map_t = std::unordered_map<GovernmentType const*, GovernmentType const*>;
+		using government_map_t = ordered_map<GovernmentType const*, GovernmentType const*>;
 		using icon_t = uint16_t;
 
 		enum class area_t {

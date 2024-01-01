@@ -1,10 +1,12 @@
 #pragma once
 
+#include <cstdint>
+
+#include "openvic-simulation/economy/BuildingType.hpp"
+#include "openvic-simulation/military/Unit.hpp"
 #include "openvic-simulation/misc/Modifier.hpp"
 #include "openvic-simulation/types/Date.hpp"
-#include "openvic-simulation/military/Unit.hpp"
-#include "openvic-simulation/economy/BuildingType.hpp"
-#include <cstdint>
+#include "openvic-simulation/types/OrderedContainers.hpp"
 
 namespace OpenVic {
 	struct TechnologyFolder : HasIdentifier {
@@ -32,8 +34,8 @@ namespace OpenVic {
 	struct Technology : Modifier {
 		friend struct TechnologyManager;
 
-		using unit_set_t = std::set<Unit const*>;
-		using building_set_t = std::set<BuildingType const*>;
+		using unit_set_t = ordered_set<Unit const*>;
+		using building_set_t = ordered_set<BuildingType const*>;
 
 	private:
 		TechnologyArea const& PROPERTY(area);

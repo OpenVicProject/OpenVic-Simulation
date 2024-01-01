@@ -2,10 +2,11 @@
 
 #include <cassert>
 
+#include "openvic-simulation/country/Country.hpp"
 #include "openvic-simulation/economy/BuildingInstance.hpp"
 #include "openvic-simulation/politics/Ideology.hpp"
 #include "openvic-simulation/pop/Pop.hpp"
-#include "openvic-simulation/country/Country.hpp"
+#include "openvic-simulation/types/OrderedContainers.hpp"
 
 namespace OpenVic {
 	struct Map;
@@ -81,7 +82,7 @@ namespace OpenVic {
 			fvec2_t factory;
 			fvec2_t building_construction;
 			fvec2_t military_construction;
-			std::map<BuildingType const*, fvec2_t> building_position;
+			ordered_map<BuildingType const*, fvec2_t> building_position;
 			fixed_point_map_t<BuildingType const*> building_rotation;
 		};
 

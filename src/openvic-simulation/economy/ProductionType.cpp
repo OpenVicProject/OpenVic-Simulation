@@ -1,5 +1,7 @@
 #include "ProductionType.hpp"
 
+#include "openvic-simulation/types/OrderedContainers.hpp"
+
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;
 
@@ -130,8 +132,8 @@ bool ProductionTypeManager::load_production_types_file(
 	size_t expected_types = 0;
 
 	// pass 1: find and store template identifiers
-	std::set<std::string_view> templates;
-	std::map<std::string_view, std::string_view> template_target_map;
+	ordered_set<std::string_view> templates;
+	ordered_map<std::string_view, std::string_view> template_target_map;
 	bool ret = expect_dictionary(
 		[this, &expected_types, &templates, &template_target_map](std::string_view key, ast::NodeCPtr value) -> bool {
 			expected_types++;
@@ -154,7 +156,7 @@ bool ProductionTypeManager::load_production_types_file(
 	)(root);
 
 	// pass 2: create and populate the template map
-	std::map<std::string_view, ast::NodeCPtr> template_node_map;
+	ordered_map<std::string_view, ast::NodeCPtr> template_node_map;
 	ret &= expect_dictionary(
 		[this, &expected_types, &templates, &template_node_map](std::string_view key, ast::NodeCPtr value) -> bool {
 			if (templates.contains(key)) {

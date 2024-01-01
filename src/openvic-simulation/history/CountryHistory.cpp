@@ -242,7 +242,7 @@ bool CountryHistoryManager::load_country_history_file(
 			return false;
 		}
 	}
-	CountryHistoryMap& country_history = it->second;
+	CountryHistoryMap& country_history = it.value();
 
 	return country_history._load_history_file(
 		game_manager, dataloader, game_manager.get_military_manager().get_deployment_manager(), root

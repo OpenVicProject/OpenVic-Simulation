@@ -3,6 +3,7 @@
 #include <cstring>
 #include <set>
 
+#include "openvic-simulation/types/OrderedContainers.hpp"
 #include "openvic-simulation/utility/Logger.hpp"
 
 using namespace OpenVic;
@@ -91,7 +92,7 @@ bool BMP::read_header() {
 	// Validate colours
 #define VALID_BITS_PER_PIXEL 1, 2, 4, 8, 16, 24, 32
 #define STR(x) #x
-	static const std::set<uint16_t> BITS_PER_PIXEL { VALID_BITS_PER_PIXEL };
+	static const ordered_set<uint16_t> BITS_PER_PIXEL { VALID_BITS_PER_PIXEL };
 	if (!BITS_PER_PIXEL.contains(header.bits_per_pixel)) {
 		Logger::error("Invalid BMP bits per pixel: ", header.bits_per_pixel, " (must be one of " STR(VALID_BITS_PER_PIXEL) ")");
 		header_validated = false;

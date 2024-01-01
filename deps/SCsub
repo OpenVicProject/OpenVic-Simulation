@@ -8,6 +8,7 @@ def build_openvic_dataloader(env):
     env.Prepend(LIBS=ovdl_env.openvic_dataloader["LIBS"])
     env.Append(CPPPATH=ovdl_env.openvic_dataloader["INCPATH"])
     env.openvic_dataloader = ovdl_env.openvic_dataloader
+    env.exposed_includes += env.openvic_dataloader["INCPATH"]
 
 def build_lexy_vdf(env):
     lvdf_env = SConscript("lexy-vdf/SConstruct")
@@ -16,5 +17,13 @@ def build_lexy_vdf(env):
     env.Append(CPPPATH=lvdf_env.lexy_vdf["INCPATH"])
     env.lexy_vdf = lvdf_env.lexy_vdf
 
+def build_ordered_map(env):
+    include_path = "ordered-map/include"
+    env.ordered_map = {}
+    env.ordered_map["INCPATH"] = [env.Dir(include_path)]
+    env.Append(CPPPATH=env.ordered_map["INCPATH"])
+    env.exposed_includes += env.ordered_map["INCPATH"]
+
 build_openvic_dataloader(env)
 build_lexy_vdf(env)
+build_ordered_map(env)

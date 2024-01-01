@@ -2,6 +2,7 @@
 
 #include "openvic-simulation/misc/Modifier.hpp"
 #include "openvic-simulation/types/IdentifierRegistry.hpp"
+#include "openvic-simulation/types/OrderedContainers.hpp"
 
 namespace OpenVic {
 	struct Unit;
@@ -15,9 +16,9 @@ namespace OpenVic {
 	struct Invention : Modifier {
 		friend struct InventionManager;
 		//TODO implement limit and chance
-		using unit_set_t = std::set<Unit const*>;
-		using building_set_t = std::set<BuildingType const*>;
-		using crime_set_t = std::set<Crime const*>;
+		using unit_set_t = ordered_set<Unit const*>;
+		using building_set_t = ordered_set<BuildingType const*>;
+		using crime_set_t = ordered_set<Crime const*>;
 
 	private:
 		const bool PROPERTY_CUSTOM_PREFIX(news, is);
