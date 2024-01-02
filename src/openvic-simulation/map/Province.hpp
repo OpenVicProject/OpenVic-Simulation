@@ -155,13 +155,7 @@ namespace OpenVic {
 		std::vector<adjacency_t const*> get_adjacencies_going_through(Province const* province) const;
 		bool has_adjacency_going_through(Province const* province) const;
 
-		static bool add_standard_adjacency(Province& from, Province& to);
-		static bool add_special_adjacency(
-			Province& from, Province& to, adjacency_t::type_t type, Province const* through, adjacency_t::data_t data
-		);
-
 		fvec2_t get_unit_position() const;
-		static distance_t calculate_distance_between(Province const& from, Province const& to);
 
 		bool reset(BuildingTypeManager const& building_type_manager);
 		bool apply_history_to_province(ProvinceHistoryEntry const* entry);
