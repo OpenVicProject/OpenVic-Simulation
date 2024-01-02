@@ -9,7 +9,7 @@ namespace OpenVic::NumberUtils {
 		return (num > 0.0) ? (num + 0.5) : (num - 0.5);
 	}
 
-	constexpr uint64_t pow(uint64_t base, size_t exponent) {
+	constexpr uint64_t pow(uint64_t base, std::size_t exponent) {
 		uint64_t ret = 1;
 		while (exponent-- > 0) {
 			ret *= base;
@@ -17,11 +17,36 @@ namespace OpenVic::NumberUtils {
 		return ret;
 	}
 
-	constexpr int64_t pow(int64_t base, size_t exponent) {
+	constexpr int64_t pow(int64_t base, std::size_t exponent) {
 		int64_t ret = 1;
 		while (exponent-- > 0) {
 			ret *= base;
 		}
 		return ret;
+	}
+
+	constexpr uint64_t sqrt(uint64_t n) {
+		uint64_t x = n;
+		uint64_t c = 0;
+		uint64_t d = 1ull << 62;
+
+		while (d > n)
+			d >>= 2;
+
+		for (; d != 0; d >>= 2) {
+			if (x >= c + d) {
+				x -= c + d;
+				c = (c >> 1) + d;
+			} else {
+				c >>= 1;
+			}
+		}
+
+		//round up
+		if (x > 0) {
+			c += 1;
+		}
+
+		return c;
 	}
 }
