@@ -50,7 +50,7 @@ AllowShortIfStatementsOnASingleLine: Never
 AllowShortEnumsOnASingleLine: true
 AllowShortCaseLabelsOnASingleLine: true
 AllowShortBlocksOnASingleLine: Empty
-AllowShortCompoundRequirementOnASingleLine: true
+# AllowShortCompoundRequirementOnASingleLine: true
 AllowShortFunctionsOnASingleLine: Empty
 AllowShortLoopsOnASingleLine: false
 AlignTrailingComments:
