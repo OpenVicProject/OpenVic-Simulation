@@ -3,7 +3,7 @@
 using namespace OpenVic;
 
 bool CountryInstance::add_accepted_culture(Culture const* new_accepted_culture) {
-	if(std::find(accepted_cultures.begin(), accepted_cultures.end(), new_accepted_culture) != accepted_cultures.end()) {
+	if (std::find(accepted_cultures.begin(), accepted_cultures.end(), new_accepted_culture) != accepted_cultures.end()) {
 		Logger::warning("Attempted to add accepted culture ", new_accepted_culture->get_identifier(), " to country ", base_country->get_identifier(), ": already present!");
 		return false;
 	}

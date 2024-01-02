@@ -6,19 +6,41 @@
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;
 
-Event::EventOption::EventOption(std::string_view new_title) : title { new_title } {}
+Event::EventOption::EventOption(std::string_view new_title, EffectScript&& new_effect, ConditionalWeight&& new_ai_chance)
+  : title { new_title }, effect { std::move(new_effect) }, ai_chance { std::move(new_ai_chance) } {}
+
+bool Event::EventOption::parse_scripts(GameManager& game_manager) {
+	bool ret = true;
+	ret &= effect.parse_script(false, game_manager);
+	ret &= ai_chance.parse_scripts(game_manager);
+	return ret;
+}
 
 Event::Event(
 	std::string_view new_identifier, std::string_view new_title, std::string_view new_description,
 	std::string_view new_image, event_type_t new_type, bool new_triggered_only, bool new_major, bool new_fire_only_once,
 	bool new_allows_multiple_instances, bool new_news, std::string_view new_news_title, std::string_view new_news_desc_long,
 	std::string_view new_news_desc_medium, std::string_view new_news_desc_short, bool new_election,
-	IssueGroup const* new_election_issue_group, std::vector<EventOption>&& new_options
+	IssueGroup const* new_election_issue_group, ConditionScript&& new_trigger, ConditionalWeight&& new_mean_time_to_happen,
+	EffectScript&& new_immediate, std::vector<EventOption>&& new_options
 ) : HasIdentifier { new_identifier }, title { new_title }, description { new_description }, image { new_image },
 	type { new_type }, triggered_only { new_triggered_only }, major { new_major }, fire_only_once { new_fire_only_once },
 	allows_multiple_instances { new_allows_multiple_instances }, news { new_news }, news_title { new_news_title },
 	news_desc_long { new_news_desc_long }, news_desc_medium { new_news_desc_medium }, news_desc_short { new_news_desc_short },
-	election { new_election }, election_issue_group { new_election_issue_group }, options { std::move(new_options) } {}
+	election { new_election }, election_issue_group { new_election_issue_group }, trigger { std::move(new_trigger) },
+	mean_time_to_happen { std::move(new_mean_time_to_happen) }, immediate { std::move(new_immediate) },
+	options { std::move(new_options) } {}
+
+bool Event::parse_scripts(GameManager& game_manager) {
+	bool ret = true;
+	ret &= trigger.parse_script(true, game_manager);
+	ret &= mean_time_to_happen.parse_scripts(game_manager);
+	ret &= immediate.parse_script(true, game_manager);
+	for (EventOption& option : options) {
+		ret &= option.parse_scripts(game_manager);
+	}
+	return ret;
+}
 
 OnAction::OnAction(std::string_view new_identifier, weight_map_t&& new_weighted_events)
 	: HasIdentifier { new_identifier }, weighted_events { std::move(new_weighted_events) } {}
@@ -27,8 +49,8 @@ bool EventManager::register_event(
 	std::string_view identifier, std::string_view title, std::string_view description, std::string_view image,
 	Event::event_type_t type, bool triggered_only, bool major, bool fire_only_once, bool allows_multiple_instances, bool news,
 	std::string_view news_title, std::string_view news_desc_long, std::string_view news_desc_medium,
-	std::string_view news_desc_short, bool election, IssueGroup const* election_issue_group,
-	std::vector<Event::EventOption>&& options
+	std::string_view news_desc_short, bool election, IssueGroup const* election_issue_group, ConditionScript&& trigger,
+	ConditionalWeight&& mean_time_to_happen, EffectScript&& immediate, std::vector<Event::EventOption>&& options
 ) {
 	if (identifier.empty()) {
 		Logger::error("Invalid event ID - empty!");
@@ -68,7 +90,8 @@ bool EventManager::register_event(
 
 	return events.add_item({
 		identifier, title, description, image, type, triggered_only, major, fire_only_once, allows_multiple_instances, news,
-		news_title, news_desc_long, news_desc_medium, news_desc_short, election, election_issue_group, std::move(options)
+		news_title, news_desc_long, news_desc_medium, news_desc_short, election, election_issue_group, std::move(trigger),
+		std::move(mean_time_to_happen), std::move(immediate), std::move(options)
 	}, duplicate_warning_callback);
 }
 
@@ -90,6 +113,9 @@ bool EventManager::load_event_file(IssueManager const& issue_manager, ast::NodeC
 			bool triggered_only = false, major = false, fire_only_once = false, allows_multiple_instances = false,
 				news = false, election = false;
 			IssueGroup const* election_issue_group = nullptr;
+			ConditionScript trigger;
+			ConditionalWeight mean_time_to_happen;
+			EffectScript immediate;
 			std::vector<Event::EventOption> options;
 
 			if (key == "country_event") {
@@ -120,25 +146,28 @@ bool EventManager::load_event_file(IssueManager const& issue_manager, ast::NodeC
 					issue_manager.expect_issue_group_identifier(assign_variable_callback_pointer(election_issue_group)),
 				"option", ONE_OR_MORE, [&options](ast::NodeCPtr node) -> bool {
 					std::string_view title;
+					EffectScript effect;
+					ConditionalWeight ai_chance;
 
 					bool ret = expect_dictionary_keys_and_default(
 						key_value_success_callback,
-						"name", ONE_EXACTLY, expect_identifier_or_string(assign_variable_callback(title))
+						"name", ONE_EXACTLY, expect_identifier_or_string(assign_variable_callback(title)),
+						"ai_chance", ZERO_OR_ONE, ai_chance.expect_conditional_weight(ConditionalWeight::FACTOR)
 					)(node);
 
-					// TODO: option effects
+					ret &= effect.expect_script()(node);
 
-					options.push_back({ title });
+					options.push_back({ title, std::move(effect), std::move(ai_chance) });
 					return ret;
 				},
-				"trigger", ZERO_OR_ONE, success_callback, // TODO - trigger condition
-				"mean_time_to_happen", ZERO_OR_ONE, success_callback, // TODO - MTTH weighted conditions
-				"immediate", ZERO_OR_MORE, success_callback // TODO - immediate effects
+				"trigger", ZERO_OR_ONE, trigger.expect_script(),
+				"mean_time_to_happen", ZERO_OR_ONE, mean_time_to_happen.expect_conditional_weight(ConditionalWeight::MONTHS),
+				"immediate", ZERO_OR_MORE, immediate.expect_script()
 			)(value);
 			ret &= register_event(
 				identifier, title, description, image, type, triggered_only, major, fire_only_once, allows_multiple_instances,
 				news, news_title, news_desc_long, news_desc_medium, news_desc_short, election, election_issue_group,
-				std::move(options)
+				std::move(trigger), std::move(mean_time_to_happen), std::move(immediate), std::move(options)
 			);
 			return ret;
 		}
@@ -175,5 +204,13 @@ bool EventManager::load_on_action_file(ast::NodeCPtr root) {
 		return ret;
 	})(root);
 	on_actions.lock();
+	return ret;
+}
+
+bool EventManager::parse_scripts(GameManager& game_manager) {
+	bool ret = true;
+	for (Event& event : events.get_items()) {
+		ret &= event.parse_scripts(game_manager);
+	}
 	return ret;
 }

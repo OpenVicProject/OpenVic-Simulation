@@ -9,7 +9,10 @@ namespace OpenVic {
 	private:
 		const bool PROPERTY(default_active);
 
-		Crime(std::string_view new_identifier, ModifierValue&& new_values, icon_t new_icon, bool new_default_active);
+		Crime(
+			std::string_view new_identifier, ModifierValue&& new_values, icon_t new_icon, ConditionScript&& new_trigger,
+			bool new_default_active
+		);
 
 	public:
 		Crime(Crime&&) = default;
@@ -21,9 +24,12 @@ namespace OpenVic {
 
 	public:
 		bool add_crime_modifier(
-			std::string_view identifier, ModifierValue&& values, Modifier::icon_t icon, bool default_active
+			std::string_view identifier, ModifierValue&& values, Modifier::icon_t icon, ConditionScript&& trigger,
+			bool default_active
 		);
 
 		bool load_crime_modifiers(ModifierManager const& modifier_manager, ast::NodeCPtr root);
+
+		bool parse_scripts(GameManager const& game_manager);
 	};
 }

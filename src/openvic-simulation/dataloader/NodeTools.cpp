@@ -274,25 +274,42 @@ node_callback_t NodeTools::expect_length(callback_t<size_t> callback) {
 	};
 }
 
-node_callback_t NodeTools::expect_key(std::string_view key, node_callback_t callback, bool* key_found) {
-	return _expect_type<ast::AbstractListNode>([key, callback, key_found](ast::AbstractListNode const& list_node) -> bool {
-		std::vector<ast::NodeUPtr> const& list = list_node._statements;
-		for (ast::NodeUPtr const& sub_node : list_node._statements) {
-			ast::AssignNode const* assign_node = sub_node->cast_to<ast::AssignNode>();
-			if (assign_node != nullptr && assign_node->_name == key) {
+node_callback_t NodeTools::expect_key(std::string_view key, node_callback_t callback, bool* key_found, bool allow_duplicates) {
+	return _expect_type<ast::AbstractListNode>(
+		[key, callback, key_found, allow_duplicates](ast::AbstractListNode const& list_node) -> bool {
+			bool ret = true;
+			size_t keys_found = 0;
+			std::vector<ast::NodeUPtr> const& list = list_node._statements;
+			for (ast::NodeUPtr const& sub_node : list_node._statements) {
+				ast::AssignNode const* assign_node = sub_node->cast_to<ast::AssignNode>();
+				if (assign_node != nullptr && assign_node->_name == key) {
+					if (keys_found++ == 0) {
+						ret &= callback(&*assign_node->_initializer);
+						if (allow_duplicates) {
+							break;
+						}
+					}
+				}
+			}
+			if (keys_found == 0) {
+				if (key_found != nullptr) {
+					*key_found = false;
+				} else {
+					Logger::error("Failed to find expected key: \"", key, "\"");
+				}
+				ret = false;
+			} else {
 				if (key_found != nullptr) {
 					*key_found = true;
 				}
-				return callback(&*assign_node->_initializer);
+				if (!allow_duplicates && keys_found > 1) {
+					Logger::error("Found ", keys_found, " instances of key: \"", key, "\" (expected 1)");
+					ret = false;
+				}
 			}
+			return ret;
 		}
-		if (key_found != nullptr) {
-			*key_found = false;
-		} else {
-			Logger::error("Failed to find expected key: ", key);
-		}
-		return false;
-	});
+	);
 }
 
 node_callback_t NodeTools::expect_dictionary_and_length(length_callback_t length_callback, key_value_callback_t callback) {
@@ -315,7 +332,7 @@ bool NodeTools::add_key_map_entry(
 }
 
 bool NodeTools::remove_key_map_entry(key_map_t& key_map, std::string_view key) {
-	if(key_map.erase(key) == 0) {
+	if (key_map.erase(key) == 0) {
 		Logger::error("Failed to find dictionary key to remove: ", key);
 		return false;
 	}

@@ -11,10 +11,14 @@ TechnologyArea::TechnologyArea(std::string_view new_identifier, TechnologyFolder
 Technology::Technology(
 	std::string_view new_identifier, TechnologyArea const& new_area, Date::year_t new_year, fixed_point_t new_cost,
 	bool new_unciv_military, uint8_t new_unit, unit_set_t&& new_activated_units, building_set_t&& new_activated_buildings,
-	ModifierValue&& new_values
+	ModifierValue&& new_values, ConditionalWeight&& new_ai_chance
 ) : Modifier { new_identifier, std::move(new_values), 0 }, area { new_area }, year { new_year }, cost { new_cost },
 	unciv_military { new_unciv_military }, unit { new_unit }, activated_buildings { std::move(new_activated_units) },
-	activated_units { std::move(new_activated_buildings) } {}
+	activated_units { std::move(new_activated_buildings) }, ai_chance { std::move(new_ai_chance) } {}
+
+bool Technology::parse_scripts(GameManager const& game_manager) {
+	return ai_chance.parse_scripts(game_manager);
+}
 
 TechnologySchool::TechnologySchool(std::string_view new_identifier, ModifierValue&& new_values)
 	: Modifier { new_identifier, std::move(new_values), 0 } {}
@@ -45,7 +49,7 @@ bool TechnologyManager::add_technology_area(std::string_view identifier, Technol
 bool TechnologyManager::add_technology(
 	std::string_view identifier, TechnologyArea const* area, Date::year_t year, fixed_point_t cost, bool unciv_military,
 	uint8_t unit, Technology::unit_set_t&& activated_units, Technology::building_set_t&& activated_buildings,
-	ModifierValue&& values
+	ModifierValue&& values, ConditionalWeight&& ai_chance
 ) {
 	if (identifier.empty()) {
 		Logger::error("Invalid technology identifier - empty!");
@@ -59,7 +63,7 @@ bool TechnologyManager::add_technology(
 
 	return technologies.add_item({
 		identifier, *area, year, cost, unciv_military, unit, std::move(activated_units), std::move(activated_buildings),
-		std::move(values)
+		std::move(values), std::move(ai_chance)
 	});
 }
 
@@ -87,8 +91,9 @@ bool TechnologyManager::load_technology_file_areas(ast::NodeCPtr root) {
 			})(root_value);
 			lock_technology_folders();
 			lock_technology_areas();
-		} else if (root_key == "schools") return true; //ignore
-		else return false;
+		} else {
+			return root_key == "schools"; /* Ignore schools, error otherwise */
+		}
 	})(root);
 }
 
@@ -102,8 +107,9 @@ bool TechnologyManager::load_technology_file_schools(ModifierManager const& modi
 				return ret;
 			})(root_value);
 			lock_technology_schools();
-		} else if (root_key == "folders") return true; //ignore
-		else return false;
+		} else {
+			return root_key == "folders"; /* Ignore folders, error otherwise */
+		}
 	})(root);
 }
 
@@ -121,6 +127,7 @@ bool TechnologyManager::load_technologies_file(
 		uint8_t unit = 0;
 		Technology::unit_set_t activated_units;
 		Technology::building_set_t activated_buildings;
+		ConditionalWeight ai_chance;
 
 		bool ret = modifier_manager.expect_modifier_value_and_keys(move_variable_callback(modifiers),
 			"area", ONE_EXACTLY, expect_technology_area_identifier(assign_variable_callback_pointer(area)),
@@ -132,12 +139,12 @@ bool TechnologyManager::load_technologies_file(
 			"activate_building", ZERO_OR_MORE, building_type_manager.expect_building_type_identifier(
 				set_callback_pointer(activated_buildings)
 			),
-			"ai_chance", ONE_EXACTLY, success_callback //TODO
+			"ai_chance", ONE_EXACTLY, ai_chance.expect_conditional_weight(ConditionalWeight::FACTOR)
 		)(tech_value);
 
 		ret &= add_technology(
 			tech_key, area, year, cost, unciv_military, unit, std::move(activated_units), std::move(activated_buildings),
-			std::move(modifiers)
+			std::move(modifiers), std::move(ai_chance)
 		);
 		return ret;
 	})(root);
@@ -160,5 +167,13 @@ bool TechnologyManager::generate_modifiers(ModifierManager& modifier_manager) co
 		);
 	}
 
+	return ret;
+}
+
+bool TechnologyManager::parse_scripts(GameManager const& game_manager) {
+	bool ret = true;
+	for (Technology& technology : technologies.get_items()) {
+		ret &= technology.parse_scripts(game_manager);
+	}
 	return ret;
 }

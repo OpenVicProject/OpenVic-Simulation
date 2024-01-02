@@ -1,11 +1,8 @@
 #pragma once
 
-#include <concepts>
 #include <cstdint>
 #include <functional>
-#include <map>
 #include <optional>
-#include <set>
 #include <type_traits>
 
 #include <openvic-dataloader/v2script/AbstractSyntaxTree.hpp>
@@ -134,7 +131,9 @@ namespace OpenVic {
 		node_callback_t expect_list(node_callback_t callback);
 		node_callback_t expect_length(callback_t<size_t> callback);
 
-		node_callback_t expect_key(std::string_view key, node_callback_t callback, bool* key_found = nullptr);
+		node_callback_t expect_key(
+			std::string_view key, node_callback_t callback, bool* key_found = nullptr, bool allow_duplicates = false
+		);
 
 		node_callback_t expect_dictionary_and_length(length_callback_t length_callback, key_value_callback_t callback);
 		node_callback_t expect_dictionary(key_value_callback_t callback);

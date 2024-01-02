@@ -17,9 +17,19 @@ ReformGroup::ReformGroup(std::string_view new_identifier, ReformType const& new_
 
 Reform::Reform(
 	std::string_view new_identifier, ModifierValue&& new_values, ReformGroup const& new_group, size_t new_ordinal,
-	RuleSet&& new_rules, tech_cost_t new_technology_cost
-) : Issue { new_identifier, std::move(new_values), new_group, std::move(new_rules), false },
-	ordinal { new_ordinal }, reform_group { new_group }, technology_cost { new_technology_cost } {}
+	RuleSet&& new_rules, tech_cost_t new_technology_cost, ConditionScript&& new_allow,
+	ConditionScript&& new_on_execute_trigger, EffectScript&& new_on_execute_effect
+) : Issue { new_identifier, std::move(new_values), new_group, std::move(new_rules), false }, ordinal { new_ordinal },
+	reform_group { new_group }, technology_cost { new_technology_cost }, allow { std::move(new_allow) },
+	on_execute_trigger { std::move(new_on_execute_trigger) }, on_execute_effect { std::move(new_on_execute_effect) } {}
+
+bool Reform::parse_scripts(GameManager& game_manager) {
+	bool ret = true;
+	ret &= allow.parse_script(true, game_manager);
+	ret &= on_execute_trigger.parse_script(true, game_manager);
+	ret &= on_execute_effect.parse_script(true, game_manager);
+	return ret;
+}
 
 bool IssueManager::add_issue_group(std::string_view identifier) {
 	if (identifier.empty()) {
@@ -30,7 +40,9 @@ bool IssueManager::add_issue_group(std::string_view identifier) {
 	return issue_groups.add_item({ identifier });
 }
 
-bool IssueManager::add_issue(std::string_view identifier, ModifierValue&& values, IssueGroup const* group, RuleSet&& rules, bool jingoism) {
+bool IssueManager::add_issue(
+	std::string_view identifier, ModifierValue&& values, IssueGroup const* group, RuleSet&& rules, bool jingoism
+) {
 	if (identifier.empty()) {
 		Logger::error("Invalid issue identifier - empty!");
 		return false;
@@ -68,8 +80,9 @@ bool IssueManager::add_reform_group(std::string_view identifier, ReformType cons
 }
 
 bool IssueManager::add_reform(
-	std::string_view identifier, ModifierValue&& values, ReformGroup const* group, size_t ordinal,
-	RuleSet&& rules, Reform::tech_cost_t technology_cost
+	std::string_view identifier, ModifierValue&& values, ReformGroup const* group, size_t ordinal, RuleSet&& rules,
+	Reform::tech_cost_t technology_cost, ConditionScript&& allow, ConditionScript&& on_execute_trigger,
+	EffectScript&& on_execute_effect
 ) {
 	if (identifier.empty()) {
 		Logger::error("Invalid issue identifier - empty!");
@@ -89,7 +102,10 @@ bool IssueManager::add_reform(
 		Logger::warning("Non-zero technology cost ", technology_cost, " found in civilised reform ", identifier, "!");
 	}
 
-	return reforms.add_item({ identifier, std::move(values), *group, ordinal, std::move(rules), technology_cost });
+	return reforms.add_item({
+		identifier, std::move(values), *group, ordinal, std::move(rules), technology_cost, std::move(allow),
+		std::move(on_execute_trigger), std::move(on_execute_effect)
+	});
 }
 
 bool IssueManager::_load_issue_group(size_t& expected_issues, std::string_view identifier, ast::NodeCPtr node) {
@@ -129,17 +145,25 @@ bool IssueManager::_load_reform(
 	ModifierManager const& modifier_manager, RuleManager const& rule_manager, size_t ordinal, std::string_view identifier,
 	ReformGroup const* group, ast::NodeCPtr node
 ) {
-	// TODO: conditions to allow, policy rule changes
 	ModifierValue values;
 	RuleSet rules;
 	Reform::tech_cost_t technology_cost = 0;
+	ConditionScript allow, on_execute_trigger;
+	EffectScript on_execute_effect;
+
 	bool ret = modifier_manager.expect_modifier_value_and_keys(move_variable_callback(values),
 		"technology_cost", ZERO_OR_ONE, expect_uint(assign_variable_callback(technology_cost)),
-		"allow", ZERO_OR_ONE, success_callback, //TODO: allow block
+		"allow", ZERO_OR_ONE, allow.expect_script(),
 		"rules", ZERO_OR_ONE, rule_manager.expect_rule_set(move_variable_callback(rules)),
-		"on_execute", ZERO_OR_MORE, success_callback //TODO: trigger/effect blocks
+		"on_execute", ZERO_OR_ONE, expect_dictionary_keys(
+			"trigger", ZERO_OR_ONE, on_execute_trigger.expect_script(),
+			"effect", ONE_EXACTLY, on_execute_effect.expect_script()
+		)
 	)(node);
-	ret &= add_reform(identifier, std::move(values), group, ordinal, std::move(rules), technology_cost);
+	ret &= add_reform(
+		identifier, std::move(values), group, ordinal, std::move(rules), technology_cost, std::move(allow),
+		std::move(on_execute_trigger), std::move(on_execute_effect)
+	);
 	return ret;
 }
 
@@ -157,10 +181,12 @@ bool IssueManager::load_issues_file(ModifierManager const& modifier_manager, Rul
 	size_t expected_reform_groups = 0;
 	bool ret = expect_dictionary_reserve_length(reform_types,
 		[this, &expected_issue_groups, &expected_reform_groups](std::string_view key, ast::NodeCPtr value) -> bool {
-			if (key == "party_issues")
+			if (key == "party_issues") {
 				return expect_length(add_variable_callback(expected_issue_groups))(value);
-			else return expect_length(add_variable_callback(expected_reform_groups))(value)
-				& add_reform_type(key, key == "economic_reforms" || "education_reforms" || "military_reforms");
+			} else {
+				return expect_length(add_variable_callback(expected_reform_groups))(value)
+					& add_reform_type(key, key == "economic_reforms" || key == "education_reforms" || key == "military_reforms");
+			}
 		}
 	)(root);
 	lock_reform_types();
@@ -214,5 +240,13 @@ bool IssueManager::load_issues_file(ModifierManager const& modifier_manager, Rul
 	lock_issues();
 	lock_reforms();
 
+	return ret;
+}
+
+bool IssueManager::parse_scripts(GameManager& game_manager) {
+	bool ret = true;
+	for (Reform& reform : reforms.get_items()) {
+		ret &= reform.parse_scripts(game_manager);
+	}
 	return ret;
 }

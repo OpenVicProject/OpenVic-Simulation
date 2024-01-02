@@ -1,13 +1,12 @@
 #pragma once
 
+#include "openvic-simulation/economy/Good.hpp"
+#include "openvic-simulation/misc/Modifier.hpp"
+#include "openvic-simulation/politics/Ideology.hpp"
+#include "openvic-simulation/pop/Pop.hpp"
+#include "openvic-simulation/scripts/ConditionScript.hpp"
 #include "openvic-simulation/types/IdentifierRegistry.hpp"
 #include "openvic-simulation/utility/Getters.hpp"
-#include "openvic-simulation/misc/Modifier.hpp"
-#include "openvic-simulation/pop/Pop.hpp"
-#include "openvic-simulation/politics/Ideology.hpp"
-#include "openvic-simulation/economy/Good.hpp"
-
-#include <optional>
 
 namespace OpenVic {
 	struct NationalFocusManager;
@@ -34,6 +33,7 @@ namespace OpenVic {
 		pop_promotion_map_t PROPERTY(encouraged_promotion);
 		party_loyalty_map_t PROPERTY(encouraged_loyalty);
 		production_map_t PROPERTY(encouraged_production);
+		ConditionScript PROPERTY(limit);
 
 		NationalFocus(
 			std::string_view new_identifier,
@@ -42,8 +42,11 @@ namespace OpenVic {
 			ModifierValue&& new_modifiers,
 			pop_promotion_map_t&& new_encouraged_promotion,
 			party_loyalty_map_t&& new_encouraged_loyalty,
-			production_map_t&& new_encouraged_production
+			production_map_t&& new_encouraged_production,
+			ConditionScript&& new_limit
 		);
+
+		bool parse_scripts(GameManager const& game_manager);
 
 	public:
 		NationalFocus(NationalFocus&&) = default;
@@ -64,9 +67,15 @@ namespace OpenVic {
 			ModifierValue&& modifiers,
 			NationalFocus::pop_promotion_map_t&& encouraged_promotion,
 			NationalFocus::party_loyalty_map_t&& encouraged_loyalty,
-			NationalFocus::production_map_t&& encouraged_production
+			NationalFocus::production_map_t&& encouraged_production,
+			ConditionScript&& limit
 		);
 
-		bool load_national_foci_file(PopManager const& pop_manager, IdeologyManager const& ideology_manager, GoodManager const& good_manager, ModifierManager const& modifier_manager, ast::NodeCPtr root);
+		bool load_national_foci_file(
+			PopManager const& pop_manager, IdeologyManager const& ideology_manager, GoodManager const& good_manager,
+			ModifierManager const& modifier_manager, ast::NodeCPtr root
+		);
+
+		bool parse_scripts(GameManager const& game_manager);
 	};
 } // namespace OpenVic

@@ -18,17 +18,18 @@ namespace OpenVic {
 
 	private:
 		path_vector_t roots;
+		std::vector<ovdl::v2script::Parser> cached_parsers;
 
 		bool _load_interface_files(UIManager& ui_manager) const;
-		bool _load_pop_types(GameManager& game_manager) const;
+		bool _load_pop_types(GameManager& game_manager);
 		bool _load_units(GameManager& game_manager) const;
 		bool _load_goods(GameManager& game_manager) const;
-		bool _load_rebel_types(GameManager& game_manager) const;
-		bool _load_technologies(GameManager& game_manager) const;
-		bool _load_inventions(GameManager& game_manager) const;
-		bool _load_events(GameManager& game_manager) const;
+		bool _load_rebel_types(GameManager& game_manager);
+		bool _load_technologies(GameManager& game_manager);
+		bool _load_inventions(GameManager& game_manager);
+		bool _load_events(GameManager& game_manager);
 		bool _load_map_dir(GameManager& game_manager) const;
-		bool _load_decisions(GameManager& game_manager) const;
+		bool _load_decisions(GameManager& game_manager);
 		bool _load_history(GameManager& game_manager, bool unused_history_file_warnings) const;
 
 		/* _DirIterator is fs::directory_iterator or fs::recursive_directory_iterator. _UniqueKey is the type of a callable
@@ -47,6 +48,17 @@ namespace OpenVic {
 		static ovdl::v2script::Parser parse_lua_defines(fs::path const& path);
 		static ovdl::csv::Windows1252Parser parse_csv(fs::path const& path);
 
+		/* Cache the Parser so it won't be freed until free_cache is called. This is used to preserve condition and effect
+		 * script Nodes until all defines are loaded and the scripts can be parsed. The reference returned by this function
+		 * is only guaranteed to be valid until the function is next called. */
+		ovdl::v2script::Parser& parse_defines_cached(fs::path const& path);
+
+	private:
+		/* Clear the cache vector, freeing all cached Parsers and their Node trees. Pointers to cached Parsers' Nodes should
+		 * be set to null before this is called to avoid segfaults. */
+		void free_cache();
+
+	public:
 		Dataloader() = default;
 
 		/// @brief Searches for the Victoria 2 install directory
@@ -92,8 +104,16 @@ namespace OpenVic {
 
 		string_set_t lookup_dirs_in_dir(std::string_view path) const;
 
-		bool load_defines(GameManager& game_manager) const;
+		/* Load and parse all of the text defines data, including parsing cached condition and effect scripts after all the
+		 * static data is loaded. Paths to the base and mod defines must have been supplied with set_roots.*/
+		bool load_defines(GameManager& game_manager);
 
+	private:
+		/* Parse the cached Nodes of every condition and effect script in the defines.
+		 * This is called by load_defines after all static data has been loaded. */
+		bool parse_scripts(GameManager& game_manager) const;
+
+	public:
 		enum locale_t : size_t {
 			English, French, German, Polish, Spanish, Italian, Swedish,
 			Czech, Hungarian, Dutch, Portugese, Russian, Finnish, _LocaleCount

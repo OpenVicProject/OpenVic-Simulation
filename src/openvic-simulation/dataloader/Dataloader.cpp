@@ -261,7 +261,7 @@ static bool _lua_parse(v2script::Parser& parser) {
 	return parser.lua_defines_parse();
 }
 
-ovdl::v2script::Parser Dataloader::parse_lua_defines(fs::path const& path) {
+v2script::Parser Dataloader::parse_lua_defines(fs::path const& path) {
 	return _run_ovdl_parser<v2script::Parser, &_lua_parse>(path);
 }
 
@@ -271,6 +271,14 @@ static bool _csv_parse(csv::Windows1252Parser& parser) {
 
 csv::Windows1252Parser Dataloader::parse_csv(fs::path const& path) {
 	return _run_ovdl_parser<csv::Windows1252Parser, &_csv_parse>(path);
+}
+
+v2script::Parser& Dataloader::parse_defines_cached(fs::path const& path) {
+	return cached_parsers.emplace_back(parse_defines(path));
+}
+
+void Dataloader::free_cache() {
+	cached_parsers.clear();
 }
 
 bool Dataloader::_load_interface_files(UIManager& ui_manager) const {
@@ -291,8 +299,7 @@ bool Dataloader::_load_interface_files(UIManager& ui_manager) const {
 	};
 	for (std::string_view const& gui_file : gui_files) {
 		if (!ui_manager.load_gui_file(
-			gui_file,
-			parse_defines(lookup_file(append_string_views(interface_directory, gui_file))).get_file_node()
+			gui_file, parse_defines(lookup_file(append_string_views(interface_directory, gui_file))).get_file_node()
 		)) {
 			Logger::error("Failed to load interface gui file: ", gui_file);
 			ret = false;
@@ -303,19 +310,21 @@ bool Dataloader::_load_interface_files(UIManager& ui_manager) const {
 	return ret;
 }
 
-bool Dataloader::_load_pop_types(GameManager& game_manager) const {
+bool Dataloader::_load_pop_types(GameManager& game_manager) {
 	PopManager& pop_manager = game_manager.get_pop_manager();
 	UnitManager const& unit_manager = game_manager.get_military_manager().get_unit_manager();
 	GoodManager const& good_manager = game_manager.get_economy_manager().get_good_manager();
+	IdeologyManager const& ideology_manager = game_manager.get_politics_manager().get_ideology_manager();
 
 	static constexpr std::string_view pop_type_directory = "poptypes";
 	const path_vector_t pop_type_files = lookup_files_in_dir(pop_type_directory, ".txt");
 	pop_manager.reserve_pop_types(pop_type_files.size());
+
 	bool ret = apply_to_files(
 		pop_type_files,
-		[&pop_manager, &unit_manager, &good_manager](fs::path const& file) -> bool {
+		[this, &pop_manager, &unit_manager, &good_manager, &ideology_manager](fs::path const& file) -> bool {
 			return pop_manager.load_pop_type_file(
-				file.stem().string(), unit_manager, good_manager, parse_defines(file).get_file_node()
+				file.stem().string(), unit_manager, good_manager, ideology_manager, parse_defines_cached(file).get_file_node()
 			);
 		}
 	);
@@ -332,6 +341,10 @@ bool Dataloader::_load_pop_types(GameManager& game_manager) const {
 	}
 
 	ret &= pop_manager.generate_modifiers(game_manager.get_modifier_manager());
+
+	static constexpr std::string_view pop_type_chances_file = "common/pop_types.txt";
+	ret &= pop_manager.load_pop_type_chances_file(parse_defines_cached(lookup_file(pop_type_chances_file)).get_file_node());
+
 	return ret;
 }
 
@@ -339,16 +352,19 @@ bool Dataloader::_load_units(GameManager& game_manager) const {
 	static constexpr std::string_view units_directory = "units";
 
 	UnitManager& unit_manager = game_manager.get_military_manager().get_unit_manager();
+
 	bool ret = apply_to_files(
 		lookup_files_in_dir(units_directory, ".txt"),
 		[&game_manager, &unit_manager](fs::path const& file) -> bool {
-			return unit_manager.load_unit_file(game_manager.get_economy_manager().get_good_manager(), parse_defines(file).get_file_node());
+			return unit_manager.load_unit_file(
+				game_manager.get_economy_manager().get_good_manager(), parse_defines(file).get_file_node()
+			);
 		}
 	);
 
 	unit_manager.lock_units();
 
-	if(!unit_manager.generate_modifiers(game_manager.get_modifier_manager())) {
+	if (!unit_manager.generate_modifiers(game_manager.get_modifier_manager())) {
 		Logger::error("Failed to generate unit-based modifiers!");
 		ret = false;
 	}
@@ -360,9 +376,10 @@ bool Dataloader::_load_goods(GameManager& game_manager) const {
 	static constexpr std::string_view goods_file = "common/goods.txt";
 
 	GoodManager& good_manager = game_manager.get_economy_manager().get_good_manager();
+
 	bool ret = good_manager.load_goods_file(parse_defines(lookup_file(goods_file)).get_file_node());
 
-	if(!good_manager.generate_modifiers(game_manager.get_modifier_manager())) {
+	if (!good_manager.generate_modifiers(game_manager.get_modifier_manager())) {
 		Logger::error("Failed to generate good-based modifiers!");
 		ret = false;
 	}
@@ -370,15 +387,15 @@ bool Dataloader::_load_goods(GameManager& game_manager) const {
 	return ret;
 }
 
-bool Dataloader::_load_rebel_types(GameManager& game_manager) const {
+bool Dataloader::_load_rebel_types(GameManager& game_manager) {
 	static constexpr std::string_view rebel_types_file = "common/rebel_types.txt";
 
 	PoliticsManager& politics_manager = game_manager.get_politics_manager();
 	RebelManager& rebel_manager = politics_manager.get_rebel_manager();
 
-	bool ret = politics_manager.load_rebels_file(parse_defines(lookup_file(rebel_types_file)).get_file_node());
+	bool ret = politics_manager.load_rebels_file(parse_defines_cached(lookup_file(rebel_types_file)).get_file_node());
 
-	if(!rebel_manager.generate_modifiers(game_manager.get_modifier_manager())) {
+	if (!rebel_manager.generate_modifiers(game_manager.get_modifier_manager())) {
 		Logger::error("Failed to generate rebel type-based modifiers!");
 		ret &= false;
 	}
@@ -386,7 +403,7 @@ bool Dataloader::_load_rebel_types(GameManager& game_manager) const {
 	return ret;
 }
 
-bool Dataloader::_load_technologies(GameManager& game_manager) const {
+bool Dataloader::_load_technologies(GameManager& game_manager) {
 	static constexpr std::string_view technology_file = "common/technology.txt";
 
 	TechnologyManager& technology_manager = game_manager.get_research_manager().get_technology_manager();
@@ -395,32 +412,32 @@ bool Dataloader::_load_technologies(GameManager& game_manager) const {
 
 	const v2script::Parser technology_file_parser = parse_defines(lookup_file(technology_file));
 
-	if(!technology_manager.load_technology_file_areas(technology_file_parser.get_file_node())) {
+	if (!technology_manager.load_technology_file_areas(technology_file_parser.get_file_node())) {
 		Logger::error("Failed to load technology areas and folders!");
 		ret = false;
 	}
 
 	ModifierManager& modifier_manager = game_manager.get_modifier_manager();
 
-	if(!technology_manager.generate_modifiers(modifier_manager)) {
+	if (!technology_manager.generate_modifiers(modifier_manager)) {
 		Logger::error("Failed to generate technollogy-based modifiers!");
 		ret = false;
 	}
 
-	if(!technology_manager.load_technology_file_schools(modifier_manager, technology_file_parser.get_file_node())) {
+	if (!technology_manager.load_technology_file_schools(modifier_manager, technology_file_parser.get_file_node())) {
 		Logger::error("Failed to load technology schools!");
 		ret = false;
 	}
 
 	static constexpr std::string_view technologies_directory = "technologies";
-	if(!apply_to_files(
+	if (!apply_to_files(
 		lookup_files_in_dir(technologies_directory, ".txt"),
-		[&game_manager, &technology_manager, &modifier_manager](fs::path const& file) -> bool {
+		[this, &game_manager, &technology_manager, &modifier_manager](fs::path const& file) -> bool {
 			return technology_manager.load_technologies_file(
 				modifier_manager,
 				game_manager.get_military_manager().get_unit_manager(),
 				game_manager.get_economy_manager().get_building_type_manager(),
-				parse_defines(file).get_file_node()
+				parse_defines_cached(file).get_file_node()
 			);
 		}
 	)) {
@@ -432,20 +449,20 @@ bool Dataloader::_load_technologies(GameManager& game_manager) const {
 	return ret;
 }
 
-bool Dataloader::_load_inventions(GameManager& game_manager) const {
+bool Dataloader::_load_inventions(GameManager& game_manager) {
 	static constexpr std::string_view inventions_directory = "inventions";
 
 	InventionManager& invention_manager = game_manager.get_research_manager().get_invention_manager();
 
 	bool ret = apply_to_files(
 		lookup_files_in_dir(inventions_directory, ".txt"),
-		[&game_manager, &invention_manager](fs::path const& file) -> bool {
+		[this, &game_manager, &invention_manager](fs::path const& file) -> bool {
 			return invention_manager.load_inventions_file(
 				game_manager.get_modifier_manager(),
 				game_manager.get_military_manager().get_unit_manager(),
 				game_manager.get_economy_manager().get_building_type_manager(),
 				game_manager.get_crime_manager(),
-				parse_defines(file).get_file_node()
+				parse_defines_cached(file).get_file_node()
 			);
 		}
 	);
@@ -455,14 +472,15 @@ bool Dataloader::_load_inventions(GameManager& game_manager) const {
 	return ret;
 }
 
-bool Dataloader::_load_decisions(GameManager& game_manager) const {
+bool Dataloader::_load_decisions(GameManager& game_manager) {
 	static constexpr std::string_view decisions_directory = "decisions";
+
 	DecisionManager& decision_manager = game_manager.get_decision_manager();
 
 	bool ret = apply_to_files(
 		lookup_files_in_dir(decisions_directory, ".txt"),
-		[&decision_manager](fs::path const& file) -> bool {
-			return decision_manager.load_decision_file(parse_defines(file).get_file_node());
+		[this, &decision_manager](fs::path const& file) -> bool {
+			return decision_manager.load_decision_file(parse_defines_cached(file).get_file_node());
 		}
 	);
 
@@ -551,6 +569,7 @@ bool Dataloader::_load_history(GameManager& game_manager, bool unused_history_fi
 
 	game_manager.get_history_manager().get_province_manager().lock_province_histories(game_manager.get_map(), false);
 
+	/* Diplomacy History */
 	static constexpr std::string_view diplomacy_history_directory = "history/diplomacy";
 	ret &= apply_to_files(
 		lookup_files_in_dir(diplomacy_history_directory, ".txt"),
@@ -560,11 +579,15 @@ bool Dataloader::_load_history(GameManager& game_manager, bool unused_history_fi
 			);
 		}
 	);
+
+	/* War History */
 	static constexpr std::string_view war_history_directory = "history/wars";
 	ret &= apply_to_files(
 		lookup_files_in_dir(war_history_directory, ".txt"),
 		[this, &game_manager](fs::path const& file) -> bool {
-			return game_manager.get_history_manager().get_diplomacy_manager().load_war_history_file(game_manager, parse_defines(file).get_file_node());
+			return game_manager.get_history_manager().get_diplomacy_manager().load_war_history_file(
+				game_manager, parse_defines(file).get_file_node()
+			);
 		}
 	);
 	game_manager.get_history_manager().get_diplomacy_manager().lock_diplomatic_history();
@@ -572,7 +595,7 @@ bool Dataloader::_load_history(GameManager& game_manager, bool unused_history_fi
 	return ret;
 }
 
-bool Dataloader::_load_events(GameManager& game_manager) const {
+bool Dataloader::_load_events(GameManager& game_manager) {
 	static constexpr std::string_view events_directory = "events";
 	const bool ret = apply_to_files(
 		lookup_files_in_dir(events_directory, ".txt"),
@@ -595,15 +618,15 @@ bool Dataloader::_load_map_dir(GameManager& game_manager) const {
 	static constexpr std::string_view default_provinces = "provinces.bmp";
 	static constexpr std::string_view default_positions = "positions.txt";
 	static constexpr std::string_view default_terrain = "terrain.bmp";
-	static constexpr std::string_view default_rivers = "rivers.bmp"; // TODO
+	static constexpr std::string_view default_rivers = "rivers.bmp"; // TODO - load rivers into map pixel data
 	static constexpr std::string_view default_terrain_definition = "terrain.txt";
-	static constexpr std::string_view default_tree_definition = "trees.txt"; // TODO
-	static constexpr std::string_view default_continent = "continent.txt"; // TODO
+	static constexpr std::string_view default_tree_definition = "trees.txt"; /* Tree textures and density values (unused). */
+	static constexpr std::string_view default_continent = "continent.txt";
 	static constexpr std::string_view default_adjacencies = "adjacencies.csv";
 	static constexpr std::string_view default_region = "region.txt";
-	static constexpr std::string_view default_region_sea = "region_sea.txt"; // TODO
-	static constexpr std::string_view default_province_flag_sprite = "province_flag_sprites"; // TODO
-	static constexpr std::string_view climate_file = "climate.txt"; // TODO
+	static constexpr std::string_view default_region_sea = "region_sea.txt"; /* Some empty province sets (unused). */
+	static constexpr std::string_view default_province_flag_sprite = "province_flag_sprites"; /* Canal sprite/model names. */
+	static constexpr std::string_view climate_file = "climate.txt";
 
 	/* Parser stored so the filename string_views persist until the end of this function. */
 	const v2script::Parser parser = parse_defines(lookup_file(append_string_views(map_directory, defaults_filename)));
@@ -720,7 +743,12 @@ bool Dataloader::_load_map_dir(GameManager& game_manager) const {
 	return ret;
 }
 
-bool Dataloader::load_defines(GameManager& game_manager) const {
+bool Dataloader::load_defines(GameManager& game_manager) {
+	if (roots.empty()) {
+		Logger::error("Cannot load defines - Dataloader has no roots!");
+		return false;
+	}
+
 	static constexpr std::string_view defines_file = "common/defines.lua";
 	static constexpr std::string_view buildings_file = "common/buildings.txt";
 	static constexpr std::string_view bookmark_file = "common/bookmarks.txt";
@@ -768,10 +796,6 @@ bool Dataloader::load_defines(GameManager& game_manager) const {
 		Logger::error("Failed to load units!");
 		ret = false;
 	}
-	if (!_load_pop_types(game_manager)) {
-		Logger::error("Failed to load pop types!");
-		ret = false;
-	}
 	if (!game_manager.get_pop_manager().get_culture_manager().load_graphical_culture_type_file(
 		parse_defines(lookup_file(graphical_culture_type_file)).get_file_node()
 	)) {
@@ -791,7 +815,7 @@ bool Dataloader::load_defines(GameManager& game_manager) const {
 		ret = false;
 	}
 	if (!game_manager.get_politics_manager().get_ideology_manager().load_ideology_file(
-		parse_defines(lookup_file(ideology_file)).get_file_node()
+		parse_defines_cached(lookup_file(ideology_file)).get_file_node()
 	)) {
 		Logger::error("Failed to load ideologies!");
 		ret = false;
@@ -802,15 +826,25 @@ bool Dataloader::load_defines(GameManager& game_manager) const {
 		Logger::error("Failed to load government types!");
 		ret = false;
 	}
+	if (!_load_pop_types(game_manager)) {
+		Logger::error("Failed to load pop types!");
+		ret = false;
+	}
 	if (!game_manager.get_politics_manager().load_issues_file(
 		game_manager.get_modifier_manager(),
-		parse_defines(lookup_file(issues_file)).get_file_node()
+		parse_defines_cached(lookup_file(issues_file)).get_file_node()
 	)) {
-		Logger::error("Failed to load issues!");
+		Logger::error("Failed to load issues and reforms!");
+		ret = false;
+	}
+	if (!game_manager.get_pop_manager().load_delayed_parse_pop_type_data(
+		game_manager.get_politics_manager().get_issue_manager()
+	)) {
+		Logger::error("Failed to load delayed parse pop type data (promotion and issue weights)!");
 		ret = false;
 	}
 	if (!game_manager.get_economy_manager().load_production_types_file(game_manager.get_pop_manager(),
-		parse_defines(lookup_file(production_types_file)).get_file_node()
+		parse_defines_cached(lookup_file(production_types_file)).get_file_node()
 	)) {
 		Logger::error("Failed to load production types!");
 		ret = false;
@@ -830,7 +864,7 @@ bool Dataloader::load_defines(GameManager& game_manager) const {
 	}
 	if (!game_manager.get_politics_manager().load_national_foci_file(
 		game_manager.get_pop_manager(), game_manager.get_economy_manager().get_good_manager(),
-		game_manager.get_modifier_manager(), parse_defines(lookup_file(national_foci_file)).get_file_node()
+		game_manager.get_modifier_manager(), parse_defines_cached(lookup_file(national_foci_file)).get_file_node()
 	)) {
 		Logger::error("Failed to load national foci!");
 		ret = false;
@@ -842,7 +876,7 @@ bool Dataloader::load_defines(GameManager& game_manager) const {
 		ret = false;
 	}
 	if (!game_manager.get_crime_manager().load_crime_modifiers(
-		game_manager.get_modifier_manager(), parse_defines(lookup_file(crime_modifiers_file)).get_file_node()
+		game_manager.get_modifier_manager(), parse_defines_cached(lookup_file(crime_modifiers_file)).get_file_node()
 	)) {
 		Logger::error("Failed to load crime modifiers!");
 		ret = false;
@@ -860,7 +894,7 @@ bool Dataloader::load_defines(GameManager& game_manager) const {
 		ret = false;
 	}
 	if (!game_manager.get_modifier_manager().load_triggered_modifiers(
-		parse_defines(lookup_file(triggered_modifiers_file)).get_file_node()
+		parse_defines_cached(lookup_file(triggered_modifiers_file)).get_file_node()
 	)) {
 		Logger::error("Failed to load triggered modifiers!");
 		ret = false;
@@ -879,8 +913,8 @@ bool Dataloader::load_defines(GameManager& game_manager) const {
 		Logger::error("Failed to load leader traits!");
 		ret = false;
 	}
-	if (!game_manager.get_military_manager().get_wargoal_manager().load_wargoal_file(
-		parse_defines(lookup_file(cb_types_file)).get_file_node()
+	if (!game_manager.get_military_manager().get_wargoal_type_manager().load_wargoal_file(
+		parse_defines_cached(lookup_file(cb_types_file)).get_file_node()
 	)) {
 		Logger::error("Failed to load wargoals!");
 		ret = false;
@@ -913,6 +947,65 @@ bool Dataloader::load_defines(GameManager& game_manager) const {
 		parse_defines(lookup_file(on_actions_file)).get_file_node()
 	)) {
 		Logger::error("Failed to load on actions!");
+		ret = false;
+	}
+
+	parse_scripts(game_manager);
+
+	free_cache();
+
+	return ret;
+}
+
+bool Dataloader::parse_scripts(GameManager& game_manager) const {
+	bool ret = true;
+
+	if (!game_manager.get_pop_manager().parse_scripts(game_manager)) {
+		Logger::error("Failed to parse pop scripts!");
+		ret = false;
+	}
+	if (!game_manager.get_politics_manager().get_ideology_manager().parse_scripts(game_manager)) {
+		Logger::error("Failed to parse ideology scripts!");
+		ret = false;
+	}
+	if (!game_manager.get_politics_manager().get_issue_manager().parse_scripts(game_manager)) {
+		Logger::error("Failed to parse reform scripts!");
+		ret = false;
+	}
+	if (!game_manager.get_economy_manager().get_production_type_manager().parse_scripts(game_manager)) {
+		Logger::error("Failed to parse production type scripts!");
+		ret = false;
+	}
+	if (!game_manager.get_politics_manager().get_rebel_manager().parse_scripts(game_manager)) {
+		Logger::error("Failed to parse rebel type scripts!");
+		ret = false;
+	}
+	if (!game_manager.get_research_manager().get_technology_manager().parse_scripts(game_manager)) {
+		Logger::error("Failed to parse technology scripts!");
+		ret = false;
+	}
+	if (!game_manager.get_crime_manager().parse_scripts(game_manager)) {
+		Logger::error("Failed to parse crime scripts!");
+		ret = false;
+	}
+	if (!game_manager.get_modifier_manager().parse_scripts(game_manager)) {
+		Logger::error("Failed to parse triggered modifier scripts!");
+		ret = false;
+	}
+	if (!game_manager.get_research_manager().get_invention_manager().parse_scripts(game_manager)) {
+		Logger::error("Failed to parse invention scripts!");
+		ret = false;
+	}
+	if (!game_manager.get_military_manager().get_wargoal_type_manager().parse_scripts(game_manager)) {
+		Logger::error("Failed to parse wargoal type scripts!");
+		ret = false;
+	}
+	if (!game_manager.get_decision_manager().parse_scripts(game_manager)) {
+		Logger::error("Failed to parse decision scripts!");
+		ret = false;
+	}
+	if (!game_manager.get_event_manager().parse_scripts(game_manager)) {
+		Logger::error("Failed to parse event scripts!");
 		ret = false;
 	}
 

@@ -82,8 +82,13 @@ ModifierValue ModifierValue::operator-(ModifierValue const& right) const {
 Modifier::Modifier(std::string_view new_identifier, ModifierValue&& new_values, icon_t new_icon)
 	: HasIdentifier { new_identifier }, ModifierValue { std::move(new_values) }, icon { new_icon } {}
 
-TriggeredModifier::TriggeredModifier(std::string_view new_identifier, ModifierValue&& new_values, icon_t new_icon)
-	: Modifier { new_identifier, std::move(new_values), new_icon } {}
+TriggeredModifier::TriggeredModifier(
+	std::string_view new_identifier, ModifierValue&& new_values, icon_t new_icon, ConditionScript&& new_trigger
+) : Modifier { new_identifier, std::move(new_values), new_icon }, trigger { std::move(new_trigger) } {}
+
+bool TriggeredModifier::parse_scripts(GameManager const& game_manager) {
+	return trigger.parse_script(false, game_manager);
+}
 
 ModifierInstance::ModifierInstance(Modifier const& modifier, Date expiry_date)
 	: modifier { modifier }, expiry_date { expiry_date } {}
@@ -319,12 +324,14 @@ bool ModifierManager::load_static_modifiers(ast::NodeCPtr root) {
 	return ret;
 }
 
-bool ModifierManager::add_triggered_modifier(std::string_view identifier, ModifierValue&& values, Modifier::icon_t icon) {
+bool ModifierManager::add_triggered_modifier(
+	std::string_view identifier, ModifierValue&& values, Modifier::icon_t icon, ConditionScript&& trigger
+) {
 	if (identifier.empty()) {
 		Logger::error("Invalid triggered modifier effect identifier - empty!");
 		return false;
 	}
-	return triggered_modifiers.add_item({ identifier, std::move(values), icon }, duplicate_warning_callback);
+	return triggered_modifiers.add_item({ identifier, std::move(values), icon, std::move(trigger) }, duplicate_warning_callback);
 }
 
 bool ModifierManager::load_triggered_modifiers(ast::NodeCPtr root) {
@@ -333,16 +340,26 @@ bool ModifierManager::load_triggered_modifiers(ast::NodeCPtr root) {
 		[this](std::string_view key, ast::NodeCPtr value) -> bool {
 			ModifierValue modifier_value;
 			Modifier::icon_t icon = 0;
+			ConditionScript trigger;
+
 			bool ret = expect_modifier_value_and_keys(
 				move_variable_callback(modifier_value),
 				"icon", ZERO_OR_ONE, expect_uint(assign_variable_callback(icon)),
-				"trigger", ONE_EXACTLY, success_callback // TODO - load condition
+				"trigger", ONE_EXACTLY, trigger.expect_script()
 			)(value);
-			ret &= add_triggered_modifier(key, std::move(modifier_value), icon);
+			ret &= add_triggered_modifier(key, std::move(modifier_value), icon, std::move(trigger));
 			return ret;
 		}
 	)(root);
 	lock_triggered_modifiers();
+	return ret;
+}
+
+bool ModifierManager::parse_scripts(GameManager const& game_manager) {
+	bool ret = true;
+	for (TriggeredModifier& modifier : triggered_modifiers.get_items()) {
+		ret &= modifier.parse_scripts(game_manager);
+	}
 	return ret;
 }
 
