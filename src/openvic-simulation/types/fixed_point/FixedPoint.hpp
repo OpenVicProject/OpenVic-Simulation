@@ -209,6 +209,12 @@ namespace OpenVic {
 			return !is_negative() ? value : -value;
 		}
 
+		constexpr fixed_point_t sqrt() const {
+			return !is_negative()
+				? static_cast<int64_t>(NumberUtils::sqrt(static_cast<uint64_t>(value) << PRECISION))
+				: 0;
+		}
+
 		// Doesn't account for sign, so -n.abc -> 1 - 0.abc
 		constexpr fixed_point_t get_frac() const {
 			return value & (ONE - 1);

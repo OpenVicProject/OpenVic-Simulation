@@ -5,6 +5,7 @@
 
 #include <openvic-dataloader/csv/LineObject.hpp>
 
+#include "openvic-simulation/map/Province.hpp"
 #include "openvic-simulation/map/Region.hpp"
 #include "openvic-simulation/map/State.hpp"
 #include "openvic-simulation/map/TerrainType.hpp"
@@ -88,6 +89,13 @@ namespace OpenVic {
 
 		bool add_province(std::string_view identifier, colour_t colour);
 		IDENTIFIER_REGISTRY_NON_CONST_ACCESSORS_CUSTOM_INDEX_OFFSET(province, 1);
+
+		Province::distance_t calculate_distance_between(Province const& from, Province const& to) const;
+		bool add_standard_adjacency(Province& from, Province& to) const;
+		bool add_special_adjacency(
+			Province& from, Province& to, Province::adjacency_t::type_t type, Province const* through,
+			Province::adjacency_t::data_t data
+		) const;
 
 		/* This provides a safe way to remove the const qualifier of a Province const*, via a non-const Map.
 		 * It uses a const_cast (the fastest/simplest solution), but this could also be done without it by looking up the
