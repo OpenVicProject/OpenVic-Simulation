@@ -19,8 +19,8 @@ namespace OpenVic {
 
 	/* Template for map from strings to Ts, in which string_views can be
 	 * searched for without needing to be copied into a string */
-	template<typename T>
-	using string_map_t = ordered_map<std::string, T>;
+	template<typename T, class Hash = container_hash<std::string>, class KeyEqual = std::equal_to<>>
+	using string_map_t = ordered_map<std::string, T, Hash, KeyEqual>;
 
 	/* String set type supporting heterogeneous key lookup */
 	using string_set_t = ordered_set<std::string>;

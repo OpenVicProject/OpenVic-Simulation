@@ -6,6 +6,7 @@
 #include "openvic-simulation/types/OrderedContainers.hpp"
 #include "openvic-simulation/utility/ConstexprIntToStr.hpp"
 #include "openvic-simulation/utility/Logger.hpp"
+#include "openvic-simulation/utility/StringUtils.hpp"
 
 #include "Dataloader.hpp"
 
@@ -20,7 +21,6 @@
 #endif
 
 using namespace OpenVic;
-using namespace OpenVic::NodeTools;
 using namespace ovdl;
 
 #if defined(_WIN32) || (defined(__APPLE__) && defined(__MACH__))
@@ -31,17 +31,10 @@ using namespace ovdl;
 #define FILESYSTEM_NEEDS_FORWARD_SLASHES
 #endif
 
-static constexpr bool path_equals_case_insensitive(std::string_view lhs, std::string_view rhs) {
-	constexpr auto ichar_equals = [](unsigned char l, unsigned char r) {
-		return std::tolower(l) == std::tolower(r);
-	};
-	return std::equal(lhs.begin(), lhs.end(), rhs.begin(), rhs.end(), ichar_equals);
-}
-
 // Windows and Mac by default act like case insensitive filesystems
 static constexpr bool path_equals(std::string_view lhs, std::string_view rhs) {
 #if defined(FILESYSTEM_CASE_INSENSITIVE)
-	return path_equals_case_insensitive(lhs, rhs);
+	return StringUtils::strings_equal_case_insensitive(lhs, rhs);
 #else
 	return std::equal(lhs.begin(), lhs.end(), rhs.begin(), rhs.end());
 #endif

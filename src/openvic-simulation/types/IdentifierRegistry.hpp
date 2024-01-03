@@ -110,14 +110,18 @@ namespace OpenVic {
 	/* _GetIdentifier - takes _Type const* and returns std::string_view
 	 * _GetPointer - takes _Storage [const]& and returns T [const]*
 	 */
-	template<typename _Type, typename _Storage, typename _GetIdentifier, typename _GetPointer>
+	template<
+		typename _Type, typename _Storage, typename _GetIdentifier, typename _GetPointer,
+		class Hash = container_hash<std::string>, class KeyEqual = std::equal_to<>>
 	class UniqueKeyRegistry {
+
+		using identifier_index_map_t = string_map_t<size_t, Hash, KeyEqual>;
 
 		const std::string name;
 		const bool log_lock;
 		std::vector<_Storage> PROPERTY_REF(items);
 		bool locked = false;
-		string_map_t<size_t> identifier_index_map;
+		identifier_index_map_t identifier_index_map;
 
 		_GetIdentifier GetIdentifier;
 		_GetPointer GetPointer;
@@ -155,7 +159,7 @@ namespace OpenVic {
 					return duplicate_callback(name, new_identifier);
 				}
 			}
-			const std::pair<string_map_t<size_t>::iterator, bool> ret =
+			const std::pair<typename identifier_index_map_t::iterator, bool> ret =
 				identifier_index_map.emplace(std::move(new_identifier), items.size());
 			items.emplace_back(std::move(item));
 			return ret.second && ret.first->second + 1 == items.size();
@@ -279,8 +283,9 @@ namespace OpenVic {
 		}
 
 		std::vector<std::string_view> get_item_identifiers() const {
-			std::vector<std::string_view> identifiers(items.size());
-			for (typename decltype(identifier_index_map)::value_type const& entry : identifier_index_map) {
+			std::vector<std::string_view> identifiers;
+			identifiers.reserve(items.size());
+			for (typename identifier_index_map_t::value_type const& entry : identifier_index_map) {
 				identifiers.push_back(entry.first);
 			}
 			return identifiers;
@@ -314,8 +319,8 @@ namespace OpenVic {
 		}
 	};
 
-	template<typename _Type, typename _GetIdentifier>
-	using ValueRegistry = UniqueKeyRegistry<_Type, _Type, _GetIdentifier, _addressof<_Type>>;
+	template<typename _Type, typename _GetIdentifier, class Hash = container_hash<std::string>, class KeyEqual = std::equal_to<>>
+	using ValueRegistry = UniqueKeyRegistry<_Type, _Type, _GetIdentifier, _addressof<_Type>, Hash, KeyEqual>;
 
 	/* std::unique_ptr dynamic storage */
 	template<typename T>
@@ -328,8 +333,8 @@ namespace OpenVic {
 		}
 	};
 
-	template<typename _Type, typename _GetIdentifier>
-	using InstanceRegistry = UniqueKeyRegistry<_Type, std::unique_ptr<_Type>, _GetIdentifier, _uptr_get<_Type>>;
+	template<typename _Type, typename _GetIdentifier, class Hash = container_hash<std::string>, class KeyEqual = std::equal_to<>>
+	using InstanceRegistry = UniqueKeyRegistry<_Type, std::unique_ptr<_Type>, _GetIdentifier, _uptr_get<_Type>, Hash, KeyEqual>;
 
 	/* HasIdentifier versions */
 	template<std::derived_from<HasIdentifier> T>
@@ -339,11 +344,19 @@ namespace OpenVic {
 		}
 	};
 
-	template<std::derived_from<HasIdentifier> _Type>
-	using IdentifierRegistry = ValueRegistry<_Type, _get_identifier<_Type>>;
+	template<std::derived_from<HasIdentifier> _Type, class Hash = container_hash<std::string>, class KeyEqual = std::equal_to<>>
+	using IdentifierRegistry = ValueRegistry<_Type, _get_identifier<_Type>, Hash, KeyEqual>;
 
 	template<std::derived_from<HasIdentifier> _Type>
-	using IdentifierInstanceRegistry = InstanceRegistry<_Type, _get_identifier<_Type>>;
+	using CaseInsensitiveIdentifierRegistry =
+		IdentifierRegistry<_Type, case_insensitive_string_hash, case_insensitive_string_equal>;
+
+	template<std::derived_from<HasIdentifier> _Type, class Hash = container_hash<std::string>, class KeyEqual = std::equal_to<>>
+	using IdentifierInstanceRegistry = InstanceRegistry<_Type, _get_identifier<_Type>, Hash, KeyEqual>;
+
+	template<std::derived_from<HasIdentifier> _Type>
+	using CaseInsensitiveIdentifierInstanceRegistry =
+		IdentifierInstanceRegistry<_Type, case_insensitive_string_hash, case_insensitive_string_equal>;
 
 /* Macros to generate declaration and constant accessor methods for a UniqueKeyRegistry member variable. */
 
