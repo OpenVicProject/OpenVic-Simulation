@@ -8,8 +8,8 @@
 #include <lexy-vdf/Parser.hpp>
 
 #include "openvic-simulation/GameManager.hpp"
-#include "openvic-simulation/utility/ConstexprIntToStr.hpp"
 #include "openvic-simulation/utility/Logger.hpp"
+#include "openvic-simulation/utility/StringUtils.hpp"
 
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;
@@ -32,13 +32,6 @@ static fs::path ensure_forward_slash_path(std::string_view path) {
 #else
 	return path;
 #endif
-}
-
-static constexpr bool path_equals_case_insensitive(std::string_view lhs, std::string_view rhs) {
-	constexpr auto ichar_equals = [](unsigned char l, unsigned char r) {
-		return std::tolower(l) == std::tolower(r);
-	};
-	return std::equal(lhs.begin(), lhs.end(), rhs.begin(), rhs.end(), ichar_equals);
 }
 
 bool Dataloader::set_roots(path_vector_t const& new_roots) {
@@ -91,7 +84,7 @@ fs::path Dataloader::lookup_file(std::string_view path, bool print_error) const 
 		for (fs::directory_entry const& entry : fs::directory_iterator { composed.parent_path(), ec }) {
 			if (entry.is_regular_file()) {
 				const fs::path file = entry;
-				if (path_equals_case_insensitive(file.filename().string(), filename)) {
+				if (StringUtils::strings_equal_case_insensitive(file.filename().string(), filename)) {
 					return file;
 				}
 			}
@@ -599,9 +592,9 @@ bool Dataloader::_load_events(GameManager& game_manager) {
 	static constexpr std::string_view events_directory = "events";
 	const bool ret = apply_to_files(
 		lookup_files_in_dir(events_directory, ".txt"),
-		[&game_manager](fs::path const& file) -> bool {
+		[this, &game_manager](fs::path const& file) -> bool {
 			return game_manager.get_event_manager().load_event_file(
-				game_manager.get_politics_manager().get_issue_manager(), parse_defines(file).get_file_node()
+				game_manager.get_politics_manager().get_issue_manager(), parse_defines_cached(file).get_file_node()
 			);
 		}
 	);

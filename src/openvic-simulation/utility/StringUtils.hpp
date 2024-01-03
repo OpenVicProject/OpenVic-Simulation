@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cctype>
 #include <cstdint>
 #include <cstring>
 #include <limits>
@@ -97,7 +98,7 @@ namespace OpenVic::StringUtils {
 		return string_to_uint64(str, str + length, successful, base);
 	}
 
-	inline uint64_t string_to_uint64(std::string_view str, bool* successful = nullptr, int base = 10) {
+	inline constexpr uint64_t string_to_uint64(std::string_view str, bool* successful = nullptr, int base = 10) {
 		return string_to_uint64(str.data(), str.length(), successful, base);
 	}
 
@@ -142,8 +143,18 @@ namespace OpenVic::StringUtils {
 		return string_to_int64(str, str + length, successful, base);
 	}
 
-	inline int64_t string_to_int64(std::string_view str, bool* successful = nullptr, int base = 10) {
+	inline constexpr int64_t string_to_int64(std::string_view str, bool* successful = nullptr, int base = 10) {
 		return string_to_int64(str.data(), str.length(), successful, base);
+	}
+
+	inline constexpr bool strings_equal_case_insensitive(std::string_view const& lhs, std::string_view const& rhs) {
+		if (lhs.size() != rhs.size()) {
+			return false;
+		}
+		constexpr auto ichar_equals = [](unsigned char l, unsigned char r) {
+			return std::tolower(l) == std::tolower(r);
+		};
+		return std::equal(lhs.begin(), lhs.end(), rhs.begin(), rhs.end(), ichar_equals);
 	}
 
 	inline constexpr std::string_view get_filename(std::string_view path) {
@@ -198,11 +209,29 @@ namespace OpenVic::StringUtils {
 		return _append_string_views(std::string_view { args }...);
 	}
 
-	inline constexpr std::string_view remove_extension(std::string_view path) {
+	inline constexpr size_t get_extension_pos(std::string_view const& path) {
 		size_t pos = path.size();
 		while (pos > 0 && path[--pos] != '.') {}
-		if (path[pos] == '.') {
-			path.remove_suffix(path.size() - pos);
+		return pos;
+	}
+
+	inline constexpr std::string_view get_extension(std::string_view path) {
+		if (!path.empty()) {
+			const size_t pos = get_extension_pos(path);
+			if (path[pos] == '.') {
+				path.remove_prefix(pos);
+				return path;
+			}
+		}
+		return {};
+	}
+
+	inline constexpr std::string_view remove_extension(std::string_view path) {
+		if (!path.empty()) {
+			const size_t pos = get_extension_pos(path);
+			if (path[pos] == '.') {
+				path.remove_suffix(path.size() - pos);
+			}
 		}
 		return path;
 	}

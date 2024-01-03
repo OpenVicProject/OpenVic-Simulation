@@ -23,7 +23,9 @@ static NodeCallback auto expect_modifier(std::vector<T>& items) {
 node_callback_t ConditionalWeight::expect_conditional_weight(base_key_t base_key) {
 	return expect_dictionary_keys(
 		// TODO - add days and years as options with a shared expected count of ONE_EXACTLY
-		base_key_to_string(base_key), ONE_EXACTLY, expect_fixed_point(assign_variable_callback(base)),
+		base_key_to_string(base_key), ZERO_OR_ONE, expect_fixed_point(assign_variable_callback(base)),
+		"days", ZERO_OR_ONE, success_callback,
+		"years", ZERO_OR_ONE, success_callback,
 		"modifier", ZERO_OR_MORE, expect_modifier(condition_weight_items),
 		"group", ZERO_OR_MORE, [this](ast::NodeCPtr node) -> bool {
 			condition_weight_group_t items;
