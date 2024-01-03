@@ -949,6 +949,10 @@ bool Dataloader::load_defines(GameManager& game_manager) {
 		Logger::error("Failed to load on actions!");
 		ret = false;
 	}
+	if (!game_manager.get_diplomacy_manager().get_diplomatic_action_manager().setup_diplomatic_actions()) {
+		Logger::error("Failed to load diplomatic actions!");
+		ret = false;
+	}
 
 	parse_scripts(game_manager);
 
