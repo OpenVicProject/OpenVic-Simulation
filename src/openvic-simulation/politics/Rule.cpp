@@ -1,19 +1,70 @@
 #include "Rule.hpp"
 
+#include "openvic-simulation/economy/BuildingType.hpp"
+#include "openvic-simulation/utility/TslHelper.hpp"
+
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;
 
-Rule::Rule(std::string_view new_identifier) : HasIdentifier { new_identifier } {}
+Rule::Rule(std::string_view new_identifier, rule_group_t new_group, size_t new_index)
+  : HasIdentifier { new_identifier }, group { new_group }, index { new_index } {}
 
-RuleSet::RuleSet(rule_map_t&& new_rules) : rules { std::move(new_rules) } {}
+RuleSet::RuleSet(rule_group_map_t&& new_rule_groups) : rule_groups { std::move(new_rule_groups) } {}
 
-size_t RuleSet::get_rule_count() const {
-	return rules.size();
+bool RuleSet::trim_and_resolve_conflicts(bool log) {
+	bool ret = true;
+	for (auto [group, rule_map] : mutable_iterator(rule_groups)) {
+		if (Rule::is_mutually_exclusive_group(group)) {
+			Rule const* primary_rule = nullptr;
+			for (auto const& [rule, value] : rule_map) {
+				if (value) {
+					if (primary_rule == nullptr) {
+						primary_rule = rule;
+					} else {
+						if (primary_rule->get_index() < rule->get_index()) {
+							primary_rule = rule;
+						}
+						ret = false;
+					}
+				}
+			}
+			if (log) {
+				for (auto const& [rule, value] : rule_map) {
+					if (value) {
+						if (rule != primary_rule) {
+							Logger::error(
+								"Conflicting mutually exclusive rule: ", rule, " superceeded by ", primary_rule, " - removing!"
+							);
+						}
+					} else {
+						Logger::warning("Disabled mutually exclusive rule: ", rule, " - removing!");
+					}
+				}
+			}
+			rule_map.clear();
+			if (primary_rule != nullptr) {
+				rule_map.emplace(primary_rule, true);
+			}
+		}
+	}
+	return ret;
 }
 
-bool RuleSet::get_rule(Rule const* rule, bool* successful) {
-	const rule_map_t::const_iterator it = rules.find(rule);
-	if (it != rules.end()) {
+size_t RuleSet::get_rule_group_count() const {
+	return rule_groups.size();
+}
+
+size_t RuleSet::get_rule_count() const {
+	size_t ret = 0;
+	for (auto const& [group, rule_map] : rule_groups) {
+		ret += rule_map.size();
+	}
+	return ret;
+}
+
+RuleSet::rule_map_t const& RuleSet::get_rule_group(Rule::rule_group_t group, bool* successful) const {
+	const rule_group_map_t::const_iterator it = rule_groups.find(group);
+	if (it != rule_groups.end()) {
 		if (successful != nullptr) {
 			*successful = true;
 		}
@@ -22,16 +73,51 @@ bool RuleSet::get_rule(Rule const* rule, bool* successful) {
 	if (successful != nullptr) {
 		*successful = false;
 	}
-	return false;
+	static const rule_map_t empty_map {};
+	return empty_map;
+}
+
+bool RuleSet::get_rule(Rule const* rule, bool* successful) const {
+	if (rule == nullptr) {
+		Logger::error("Invalid rule - null!");
+		return false;
+	}
+	rule_map_t const& rule_map = get_rule_group(rule->get_group());
+	const rule_map_t::const_iterator it = rule_map.find(rule);
+	if (it != rule_map.end()) {
+		if (successful != nullptr) {
+			*successful = true;
+		}
+		return it->second;
+	}
+	if (successful != nullptr) {
+		*successful = false;
+	}
+	return Rule::is_default_enabled(rule->get_group());
 }
 
 bool RuleSet::has_rule(Rule const* rule) const {
-	return rules.contains(rule);
+	if (rule == nullptr) {
+		Logger::error("Invalid rule - null!");
+		return false;
+	}
+	return get_rule_group(rule->get_group()).contains(rule);
+}
+
+bool RuleSet::set_rule(Rule const* rule, bool value) {
+	if (rule == nullptr) {
+		Logger::error("Invalid rule - null!");
+		return false;
+	}
+	rule_map_t& rule_map = rule_groups[rule->get_group()];
+	return rule_groups[rule->get_group()].emplace(rule, value).second;
 }
 
 RuleSet& RuleSet::operator|=(RuleSet const& right) {
-	for (rule_map_t::value_type const& value : right.rules) {
-		rules[value.first] |= value.second;
+	for (auto const& [group, rule_map] : right.rule_groups) {
+		for (auto const& [rule, value] : rule_map) {
+			rule_groups[group][rule] |= value;
+		}
 	}
 	return *this;
 }
@@ -41,61 +127,57 @@ RuleSet RuleSet::operator|(RuleSet const& right) const {
 	return ret |= right;
 }
 
-bool RuleManager::add_rule(std::string_view identifier) {
+bool RuleManager::add_rule(std::string_view identifier, Rule::rule_group_t group) {
 	if (identifier.empty()) {
 		Logger::error("Invalid rule identifier - empty!");
 		return false;
 	}
-	return rules.add_item({ identifier });
+	return rules.add_item({ identifier, group, rule_group_sizes[group]++ });
 }
 
-bool RuleManager::setup_rules() {
+bool RuleManager::setup_rules(BuildingTypeManager const& building_type_manager) {
 	bool ret = true;
 
-	/* Economic Rules */
-	ret &= add_rule("build_factory");
-	ret &= add_rule("expand_factory");
-	ret &= add_rule("open_factory");
-	ret &= add_rule("destroy_factory");
+	using enum Rule::rule_group_t;
 
-	ret &= add_rule("pop_build_factory");
-	ret &= add_rule("pop_expand_factory");
-	ret &= add_rule("pop_open_factory");
+	static const ordered_map<Rule::rule_group_t, std::vector<std::string_view>> hardcoded_rules {
+		{ ECONOMY, {
+			"expand_factory", "open_factory", "destroy_factory", "pop_build_factory", "pop_expand_factory", "pop_open_factory",
+			"can_subsidise", "factory_priority", "delete_factory_if_no_input", "build_factory_invest", "expand_factory_invest",
+			"open_factory_invest", "build_railway_invest", "pop_build_factory_invest", "pop_expand_factory_invest",
+			"can_invest_in_pop_projects", "allow_foreign_investment"
+		} },
+		{ CITIZENSHIP, { "primary_culture_voting", "culture_voting", "all_voting" } },
+		{ SLAVERY, { "slavery_allowed" } },
+		{ UPPER_HOUSE, { "same_as_ruling_party", "rich_only", "state_vote", "population_vote" } },
+		{ VOTING, {
+			"largest_share" /* First Past the Post */,
+			"dhont" /* Jefferson Method */,
+			"sainte_laque" /* Proportional Representation */
+		} }
+	};
 
-	ret &= add_rule("build_railway");
-	ret &= add_rule("can_subsidise");
-	ret &= add_rule("factory_priority");
-	ret &= add_rule("delete_factory_if_no_input");
+	size_t rule_count = building_type_manager.get_building_type_types().size();
+	for (auto const& [group, rule_list] : hardcoded_rules) {
+		rule_count += rule_list.size();
+	}
+	rules.reserve(rule_count);
 
-	ret &= add_rule("build_factory_invest");
-	ret &= add_rule("expand_factory_invest");
-	ret &= add_rule("open_factory_invest");
-	ret &= add_rule("build_railway_invest");
+	for (auto const& [group, rule_list] : hardcoded_rules) {
+		for (std::string_view const& rule : rule_list) {
+			ret &= add_rule(rule, group);
+		}
+	}
 
-	ret &= add_rule("pop_build_factory_invest");
-	ret &= add_rule("pop_expand_factory_invest");
-
-	ret &= add_rule("can_invest_in_pop_projects");
-	ret &= add_rule("allow_foreign_investment");
-
-	/* Citizenship Rules */
-	ret &= add_rule("primary_culture_voting");
-	ret &= add_rule("culture_voting");
-	ret &= add_rule("all_voting");
-
-	/* Slavery Rule */
-	ret &= add_rule("slavery_allowed");
-
-	/* Upper House Composition Rules */
-	ret &= add_rule("same_as_ruling_party");
-	ret &= add_rule("rich_only");
-	ret &= add_rule("state_vote");
-	ret &= add_rule("population_vote");
-
-	/* Voting System Rules */
-	ret &= add_rule("largest_share"); // First Past the Post
-	ret &= add_rule("dhont"); // Jefferson Method
-	ret &= add_rule("sainte_laque"); // Proportional Representation
+	for (std::string const& type : building_type_manager.get_building_type_types()) {
+		std::string build_rule_string = "build_";
+		if (type != "infrastructure") {
+			build_rule_string += type;
+		} else {
+			build_rule_string += "railway";
+		}
+		ret &= add_rule(build_rule_string, ECONOMY);
+	}
 
 	lock_rules();
 
@@ -111,8 +193,8 @@ node_callback_t RuleManager::expect_rule_set(callback_t<RuleSet&&> ruleset_callb
 				if (rule != nullptr) {
 					return expect_bool(
 						[&ruleset, rule](bool value) -> bool {
-							if (!ruleset.rules.emplace(rule, value).second) {
-								Logger::warning("Duplicate rule entry: ", rule, " - overwriting existing value!");
+							if (!ruleset.rule_groups[rule->get_group()].emplace(rule, value).second) {
+								Logger::warning("Duplicate rule entry: ", rule, " - ignoring!");
 							}
 							return true;
 						}
@@ -123,6 +205,7 @@ node_callback_t RuleManager::expect_rule_set(callback_t<RuleSet&&> ruleset_callb
 				}
 			}
 		)(root);
+		ret &= ruleset.trim_and_resolve_conflicts(true);
 		ret &= ruleset_callback(std::move(ruleset));
 		return ret;
 	};
@@ -130,8 +213,10 @@ node_callback_t RuleManager::expect_rule_set(callback_t<RuleSet&&> ruleset_callb
 
 namespace OpenVic { // so the compiler shuts up (copied from Modifier.cpp)
 	std::ostream& operator<<(std::ostream& stream, RuleSet const& value) {
-		for (RuleSet::rule_map_t::value_type const& rule : value.rules) {
-			stream << rule.first << ": " << (rule.second ? "yes" : "no") << "\n";
+		for (auto const& [group, rule_map] : value.rule_groups) {
+			for (auto const& [rule, value] : rule_map) {
+				stream << rule << ": " << (value ? "yes" : "no") << "\n";
+			}
 		}
 		return stream;
 	}

@@ -111,6 +111,9 @@ bool ModifierManager::setup_modifier_effects() {
 	/* Country Modifier Effects */
 	ret &= add_modifier_effect("administrative_efficiency", true);
 	ret &= add_modifier_effect("administrative_efficiency_modifier", true);
+	ret &= add_modifier_effect("artisan_input", false);
+	ret &= add_modifier_effect("artisan_output", true);
+	ret &= add_modifier_effect("artisan_throughput", true);
 	ret &= add_modifier_effect("badboy", false, RAW_DECIMAL);
 	ret &= add_modifier_effect("cb_creation_speed", true); //seemingly works the same way as cb_generation_speed_modifier
 	ret &= add_modifier_effect("cb_generation_speed_modifier", true);
@@ -127,6 +130,7 @@ bool ModifierManager::setup_modifier_effects() {
 	ret &= add_modifier_effect("education_efficiency_modifier", true);
 	ret &= add_modifier_effect("factory_cost", false);
 	ret &= add_modifier_effect("factory_input", false);
+	ret &= add_modifier_effect("factory_maintenance", false);
 	ret &= add_modifier_effect("factory_output", true);
 	ret &= add_modifier_effect("factory_owner_cost", false);
 	ret &= add_modifier_effect("factory_throughput", true);
@@ -226,10 +230,10 @@ bool ModifierManager::setup_modifier_effects() {
 	ret &= add_modifier_effect("immigrant_attract", true);
 	ret &= add_modifier_effect("immigrant_push", false);
 	ret &= add_modifier_effect("life_rating", true);
-	ret &= add_modifier_effect("local_artisan_input", true);
+	ret &= add_modifier_effect("local_artisan_input", false);
 	ret &= add_modifier_effect("local_artisan_output", true);
 	ret &= add_modifier_effect("local_artisan_throughput", true);
-	ret &= add_modifier_effect("local_factory_input", true);
+	ret &= add_modifier_effect("local_factory_input", false);
 	ret &= add_modifier_effect("local_factory_output", true);
 	ret &= add_modifier_effect("local_factory_throughput", true);
 	ret &= add_modifier_effect("local_repair", true);

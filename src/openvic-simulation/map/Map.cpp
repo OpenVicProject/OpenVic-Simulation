@@ -845,7 +845,7 @@ bool Map::load_climate_file(ModifierManager const& modifier_manager, ast::NodeCP
 					} else {
 						Logger::warning(
 							"Province with id ", province.get_identifier(),
-							"defined twice in climate ", identifier
+							" defined twice in climate ", identifier
 						);
 					}
 					return true;

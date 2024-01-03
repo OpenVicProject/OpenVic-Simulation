@@ -74,6 +74,7 @@ namespace OpenVic {
 
 	private:
 		IdentifierRegistry<BuildingType> IDENTIFIER_REGISTRY(building_type);
+		string_set_t PROPERTY(building_type_types);
 		std::vector<BuildingType const*> PROPERTY(province_building_types);
 		BuildingType const* PROPERTY(port_building_type);
 

@@ -95,8 +95,19 @@ bool IssueManager::add_reform(
 	}
 
 	if (group->get_type().is_uncivilised()) {
-		if (technology_cost <= 0) {
-			Logger::warning("Non-positive technology cost ", technology_cost, " found in uncivilised reform ", identifier, "!");
+		if (ordinal == 0) {
+			if (technology_cost != 0) {
+				Logger::warning(
+					"Non-zero technology cost ", technology_cost, " found in ordinal 0 uncivilised reform ", identifier, "!"
+				);
+			}
+		} else {
+			if (technology_cost <= 0) {
+				Logger::warning(
+					"Non-positive technology cost ", technology_cost, " found in ordinal ", ordinal,
+					" uncivilised reform ", identifier, "!"
+				);
+			}
 		}
 	} else if (technology_cost != 0) {
 		Logger::warning("Non-zero technology cost ", technology_cost, " found in civilised reform ", identifier, "!");
@@ -184,8 +195,11 @@ bool IssueManager::load_issues_file(ModifierManager const& modifier_manager, Rul
 			if (key == "party_issues") {
 				return expect_length(add_variable_callback(expected_issue_groups))(value);
 			} else {
+				static const string_set_t uncivilised_reform_groups {
+					"economic_reforms", "education_reforms", "military_reforms"
+				};
 				return expect_length(add_variable_callback(expected_reform_groups))(value)
-					& add_reform_type(key, key == "economic_reforms" || key == "education_reforms" || key == "military_reforms");
+					& add_reform_type(key, uncivilised_reform_groups.contains(key));
 			}
 		}
 	)(root);

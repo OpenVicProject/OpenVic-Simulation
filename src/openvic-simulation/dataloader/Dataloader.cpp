@@ -780,10 +780,6 @@ bool Dataloader::load_defines(GameManager& game_manager) {
 		Logger::error("Failed to set up modifier effects!");
 		ret = false;
 	}
-	if (!game_manager.get_politics_manager().get_rule_manager().setup_rules()) {
-		Logger::error("Failed to set up rules!");
-		ret = false;
-	}
 	if (!game_manager.get_define_manager().load_defines_file(parse_lua_defines(lookup_file(defines_file)).get_file_node())) {
 		Logger::error("Failed to load defines!");
 		ret = false;
@@ -830,19 +826,6 @@ bool Dataloader::load_defines(GameManager& game_manager) {
 		Logger::error("Failed to load pop types!");
 		ret = false;
 	}
-	if (!game_manager.get_politics_manager().load_issues_file(
-		game_manager.get_modifier_manager(),
-		parse_defines_cached(lookup_file(issues_file)).get_file_node()
-	)) {
-		Logger::error("Failed to load issues and reforms!");
-		ret = false;
-	}
-	if (!game_manager.get_pop_manager().load_delayed_parse_pop_type_data(
-		game_manager.get_politics_manager().get_issue_manager()
-	)) {
-		Logger::error("Failed to load delayed parse pop type data (promotion and issue weights)!");
-		ret = false;
-	}
 	if (!game_manager.get_economy_manager().load_production_types_file(game_manager.get_pop_manager(),
 		parse_defines_cached(lookup_file(production_types_file)).get_file_node()
 	)) {
@@ -860,6 +843,25 @@ bool Dataloader::load_defines(GameManager& game_manager) {
 		ret = false;
 	}
 	if (!_load_technologies(game_manager)) {
+		ret = false;
+	}
+	if (!game_manager.get_politics_manager().get_rule_manager().setup_rules(
+		game_manager.get_economy_manager().get_building_type_manager()
+	)) {
+		Logger::error("Failed to set up rules!");
+		ret = false;
+	}
+	if (!game_manager.get_politics_manager().load_issues_file(
+		game_manager.get_modifier_manager(),
+		parse_defines_cached(lookup_file(issues_file)).get_file_node()
+	)) {
+		Logger::error("Failed to load issues and reforms!");
+		ret = false;
+	}
+	if (!game_manager.get_pop_manager().load_delayed_parse_pop_type_data(
+		game_manager.get_politics_manager().get_issue_manager()
+	)) {
+		Logger::error("Failed to load delayed parse pop type data (promotion and issue weights)!");
 		ret = false;
 	}
 	if (!game_manager.get_politics_manager().load_national_foci_file(
