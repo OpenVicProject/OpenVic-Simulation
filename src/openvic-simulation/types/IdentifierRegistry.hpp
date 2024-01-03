@@ -1,9 +1,6 @@
 #pragma once
 
 #include <cassert>
-#include <concepts>
-#include <map>
-#include <type_traits>
 #include <vector>
 
 #include "openvic-simulation/dataloader/NodeTools.hpp"
@@ -212,8 +209,8 @@ namespace OpenVic {
 	value_type CONST* get_item_by_index(size_t index) CONST { \
 		return index < items.size() ? GetPointer(items[index]) : nullptr; \
 	} \
-	NodeTools::callback_t<std::string_view> expect_item_str( \
-		NodeTools::callback_t<value_type CONST&> callback, bool warn \
+	NodeTools::Callback<std::string_view> auto expect_item_str( \
+		NodeTools::Callback<value_type CONST&> auto callback, bool warn \
 	) CONST { \
 		return [this, callback, warn](std::string_view identifier) -> bool { \
 			value_type CONST* item = get_item_by_identifier(identifier); \
@@ -229,15 +226,35 @@ namespace OpenVic {
 			} \
 		}; \
 	} \
-	NodeTools::node_callback_t expect_item_identifier(NodeTools::callback_t<value_type CONST&> callback, bool warn) CONST { \
+	NodeTools::NodeCallback auto expect_item_identifier( \
+		NodeTools::Callback<value_type CONST&> auto callback, bool warn \
+	) CONST { \
 		return NodeTools::expect_identifier(expect_item_str(callback, warn)); \
 	} \
-	NodeTools::node_callback_t expect_item_dictionary( \
-		NodeTools::callback_t<value_type CONST&, ast::NodeCPtr> callback \
+	NodeTools::NodeCallback auto expect_item_dictionary_and_default( \
+		NodeTools::Callback<value_type CONST&, ast::NodeCPtr> auto callback, \
+		NodeTools::KeyValueCallback auto default_callback \
 	) CONST { \
-		return NodeTools::expect_dictionary([this, callback](std::string_view key, ast::NodeCPtr value) -> bool { \
-			return expect_item_str(std::bind(callback, std::placeholders::_1, value), false)(key); \
-		}); \
+		return NodeTools::expect_dictionary( \
+			[this, callback, default_callback](std::string_view key, ast::NodeCPtr value) -> bool { \
+				value_type CONST* item = get_item_by_identifier(key); \
+				if (item != nullptr) { \
+					return callback(*item, value); \
+				} else {\
+					return default_callback(key, value); \
+				} \
+			} \
+		); \
+	} \
+	NodeTools::NodeCallback auto expect_item_dictionary( \
+		NodeTools::Callback<value_type CONST&, ast::NodeCPtr> auto callback \
+	) CONST { \
+		return expect_item_dictionary_and_default( \
+			callback, [this](std::string_view key, ast::NodeCPtr) -> bool { \
+				Logger::error("Invalid ", name, ": ", key); \
+				return false; \
+			} \
+		); \
 	}
 
 #if defined(_MSC_VER)
@@ -269,8 +286,8 @@ namespace OpenVic {
 			return identifiers;
 		}
 
-		NodeTools::node_callback_t expect_item_decimal_map(
-			NodeTools::callback_t<fixed_point_map_t<value_type const*>&&> callback
+		NodeTools::NodeCallback auto expect_item_decimal_map(
+			NodeTools::Callback<fixed_point_map_t<value_type const*>&&> auto callback
 		) const {
 			return [this, callback](ast::NodeCPtr node) -> bool {
 				fixed_point_map_t<value_type const*> map;
@@ -360,8 +377,8 @@ public: \
 	std::vector<std::string_view> get_##singular##_identifiers() const { \
 		return registry.get_item_identifiers(); \
 	} \
-	NodeTools::node_callback_t expect_##singular##_decimal_map( \
-		NodeTools::callback_t<fixed_point_map_t<decltype(registry)::value_type const*>&&> callback \
+	NodeTools::NodeCallback auto expect_##singular##_decimal_map( \
+		NodeTools::Callback<fixed_point_map_t<decltype(registry)::value_type const*>&&> auto callback \
 	) const { \
 		return registry.expect_item_decimal_map(callback); \
 	} \
@@ -392,18 +409,24 @@ private:
 	std::vector<decltype(registry)::storage_type> const_kw& get_##plural() const_kw { \
 		return registry.get_items(); \
 	} \
-	NodeTools::callback_t<std::string_view> expect_##singular##_str( \
-		NodeTools::callback_t<decltype(registry)::value_type const_kw&> callback, bool warn = false \
+	NodeTools::Callback<std::string_view> auto expect_##singular##_str( \
+		NodeTools::Callback<decltype(registry)::value_type const_kw&> auto callback, bool warn = false \
 	) const_kw { \
 		return registry.expect_item_str(callback, warn); \
 	} \
-	NodeTools::node_callback_t expect_##singular##_identifier( \
-		NodeTools::callback_t<decltype(registry)::value_type const_kw&> callback, bool warn = false \
+	NodeTools::NodeCallback auto expect_##singular##_identifier( \
+		NodeTools::Callback<decltype(registry)::value_type const_kw&> auto callback, bool warn = false \
 	) const_kw { \
 		return registry.expect_item_identifier(callback, warn); \
 	} \
-	NodeTools::node_callback_t expect_##singular##_dictionary( \
-		NodeTools::callback_t<decltype(registry)::value_type const_kw&, ast::NodeCPtr> callback \
+	NodeTools::NodeCallback auto expect_##singular##_dictionary_and_default( \
+		NodeTools::Callback<decltype(registry)::value_type const_kw&, ast::NodeCPtr> auto callback, \
+		NodeTools::KeyValueCallback auto default_callback \
+	) const_kw { \
+		return registry.expect_item_dictionary_and_default(callback, default_callback); \
+	} \
+	NodeTools::NodeCallback auto expect_##singular##_dictionary( \
+		NodeTools::Callback<decltype(registry)::value_type const_kw&, ast::NodeCPtr> auto callback \
 	) const_kw { \
 		return registry.expect_item_dictionary(callback); \
 	}
