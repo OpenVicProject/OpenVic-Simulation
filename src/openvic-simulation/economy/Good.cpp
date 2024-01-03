@@ -93,25 +93,24 @@ bool GoodManager::load_goods_file(ast::NodeCPtr root) {
 bool GoodManager::generate_modifiers(ModifierManager& modifier_manager) const {
 	bool ret = true;
 
-	const auto good_modifier = [this, &modifier_manager, &ret](std::string_view name) -> void {
+	const auto good_modifier = [this, &modifier_manager, &ret](std::string_view name, bool positive_good) -> void {
 		ret &= modifier_manager.register_complex_modifier(name);
 		for (Good const& good : get_goods()) {
 			ret &= modifier_manager.add_modifier_effect(
-				StringUtils::append_string_views(name, "_", good.get_identifier()), true
+				StringUtils::append_string_views(name, "_", good.get_identifier()), positive_good
 			);
 		}
 	};
 
-	good_modifier("artisan_goods_input");
-	good_modifier("artisan_goods_output");
-	good_modifier("artisan_goods_throughput");
-	good_modifier("factory_goods_input");
-	good_modifier("factory_goods_output");
-	good_modifier("factory_goods_throughput");
-	good_modifier("rgo_goods_input");
-	good_modifier("rgo_goods_output");
-	good_modifier("rgo_goods_throughput");
-	good_modifier("rgo_size");
+	good_modifier("artisan_goods_input", false);
+	good_modifier("artisan_goods_output", true);
+	good_modifier("artisan_goods_throughput", true);
+	good_modifier("factory_goods_input", false);
+	good_modifier("factory_goods_output", true);
+	good_modifier("factory_goods_throughput", true);
+	good_modifier("rgo_goods_output", true);
+	good_modifier("rgo_goods_throughput", true);
+	good_modifier("rgo_size", true);
 
 	return ret;
 }

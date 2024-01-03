@@ -22,6 +22,8 @@ bool BuildingTypeManager::add_building_type(std::string_view identifier, ARGS) {
 		return false;
 	}
 
+	building_type_types.emplace(type);
+
 	return building_types.add_item({
 		identifier, type, std::move(modifier), on_completion, completion_size, max_level, std::move(goods_cost),
 		cost, build_time, visibility, on_map, default_enabled, production_type, pop_build_factory, strategic_factory,

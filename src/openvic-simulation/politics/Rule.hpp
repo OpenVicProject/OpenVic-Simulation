@@ -5,12 +5,32 @@
 
 namespace OpenVic {
 	struct RuleManager;
+	struct BuildingTypeManager;
 
 	struct Rule : HasIdentifier {
 		friend struct RuleManager;
 
+		enum class rule_group_t : uint8_t {
+			ECONOMY, CITIZENSHIP, SLAVERY, UPPER_HOUSE, VOTING
+		};
+
+		static constexpr bool is_mutually_exclusive_group(rule_group_t group) {
+			using enum rule_group_t;
+			return group == CITIZENSHIP || group == UPPER_HOUSE || group == VOTING;
+		}
+
+		/* Mutually exclusive groups must be default disabled! */
+		static constexpr bool is_default_enabled(rule_group_t group) {
+			using enum rule_group_t;
+			return !is_mutually_exclusive_group(group) && group != SLAVERY;
+		}
+
 	private:
-		Rule(std::string_view new_identifier);
+		const rule_group_t PROPERTY(group);
+		/* The index of the Rule within its group, used to determine precedence in mutually exclusive rule groups. */
+		const size_t PROPERTY(index);
+
+		Rule(std::string_view new_identifier, rule_group_t new_group, size_t new_index);
 
 	public:
 		Rule(Rule&&) = default;
@@ -20,23 +40,33 @@ namespace OpenVic {
 		friend struct RuleManager;
 
 		using rule_map_t = ordered_map<Rule const*, bool>;
+		using rule_group_map_t = ordered_map<Rule::rule_group_t, rule_map_t>;
 
 	private:
-		rule_map_t rules;
+		rule_group_map_t rule_groups;
 
 	public:
 		RuleSet() = default;
-		RuleSet(rule_map_t&& new_rules);
+		RuleSet(rule_group_map_t&& new_rule_groups);
 		RuleSet(RuleSet const&) = default;
 		RuleSet(RuleSet&&) = default;
 
 		RuleSet& operator=(RuleSet const&) = default;
 		RuleSet& operator=(RuleSet&&) = default;
 
+		/* Removes conflicting and disabled mutually exclusive rules. If log is true, a warning will be emitted for each
+		 * removed disabled rule and an error will be emitted for each removed conflicting rule. Returns true if no conflicts
+		 * are found (regardless of whether disabled rules are removed or not), false otherwise. */
+		bool trim_and_resolve_conflicts(bool log);
+		size_t get_rule_group_count() const;
 		size_t get_rule_count() const;
 
-		bool get_rule(Rule const* rule, bool* successful = nullptr);
+		rule_map_t const& get_rule_group(Rule::rule_group_t group, bool* successful = nullptr) const;
+		bool get_rule(Rule const* rule, bool* successful = nullptr) const;
 		bool has_rule(Rule const* rule) const;
+
+		/* Sets the rule to the specified value. Returns false if there was an existing rule, regardless of its value. */
+		bool set_rule(Rule const* rule, bool value);
 
 		RuleSet& operator|=(RuleSet const& right);
 		RuleSet operator|(RuleSet const& right) const;
@@ -47,11 +77,12 @@ namespace OpenVic {
 	struct RuleManager {
 	private:
 		IdentifierRegistry<Rule> IDENTIFIER_REGISTRY(rule);
+		ordered_map<Rule::rule_group_t, size_t> rule_group_sizes;
 
 	public:
-		bool add_rule(std::string_view identifier);
+		bool add_rule(std::string_view identifier, Rule::rule_group_t group);
 
-		bool setup_rules();
+		bool setup_rules(BuildingTypeManager const& building_type_manager);
 
 		NodeTools::node_callback_t expect_rule_set(NodeTools::callback_t<RuleSet&&> ruleset_callback) const;
 	};
