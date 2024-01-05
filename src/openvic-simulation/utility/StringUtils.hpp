@@ -1,9 +1,11 @@
 #pragma once
 
+#include <algorithm>
 #include <cctype>
 #include <cstdint>
 #include <cstring>
 #include <limits>
+#include <string>
 #include <string_view>
 
 namespace OpenVic::StringUtils {

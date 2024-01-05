@@ -8,17 +8,20 @@
 #include <variant>
 
 #include "openvic-simulation/country/Country.hpp"
+#include "openvic-simulation/country/CountryInstance.hpp"
 #include "openvic-simulation/types/FunctionRef.hpp"
 #include "openvic-simulation/types/IdentifierRegistry.hpp"
 
 namespace OpenVic {
+	struct GameManager;
+
 	struct DiplomaticActionType {
 		friend struct DiplomaticActionManager;
 		friend struct CancelableDiplomaticActionType;
 
 		struct Argument {
-			Country& sender;
-			Country& reciever;
+			CountryInstance* sender;
+			CountryInstance* reciever;
 			std::any context_data;
 		};
 
@@ -69,7 +72,7 @@ namespace OpenVic {
 			allowed_to_cancel_func allowed_cancel = allowed_to_cancel_default;
 
 			operator DiplomaticActionType::Initializer() {
-				return {commit, allowed, get_acceptance};
+				return { commit, allowed, get_acceptance };
 			}
 		};
 
@@ -88,7 +91,7 @@ namespace OpenVic {
 		constexpr DiplomaticActionTypeStorage(std::string_view identifier, T&& t) : HasIdentifier(identifier), base_type(t) {}
 
 		template<class Visitor>
-		constexpr decltype(auto) visit(Visitor&& vis){
+		constexpr decltype(auto) visit(Visitor&& vis) {
 			return std::visit(std::forward<Visitor>(vis), *this);
 		}
 
@@ -100,7 +103,7 @@ namespace OpenVic {
 		constexpr bool is_cancelable() const {
 			return visit([](auto&& arg) -> bool {
 				using T = std::decay_t<decltype(arg)>;
-				if constexpr(std::same_as<T, CancelableDiplomaticActionType>) {
+				if constexpr (std::same_as<T, CancelableDiplomaticActionType>) {
 					return true;
 				} else {
 					return false;
@@ -124,11 +127,14 @@ namespace OpenVic {
 		DiplomaticActionManager();
 
 		bool add_diplomatic_action(std::string_view identifier, DiplomaticActionType::Initializer&& initializer);
-		bool add_cancelable_diplomatic_action(std::string_view identifier, CancelableDiplomaticActionType::Initializer&& initializer);
+		bool add_cancelable_diplomatic_action(
+			std::string_view identifier, CancelableDiplomaticActionType::Initializer&& initializer
+		);
 
-		DiplomaticActionTickCache
-		create_diplomatic_action_tick(std::string_view identifier, Country& sender, Country& reciever, std::any context_data);
+		DiplomaticActionTickCache create_diplomatic_action_tick(
+			std::string_view identifier, CountryInstance* sender, CountryInstance* reciever, std::any context_data
+		);
 
-		bool setup_diplomatic_actions();
+		bool setup_diplomatic_actions(GameManager& manager);
 	};
 }
