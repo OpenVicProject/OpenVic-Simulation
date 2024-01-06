@@ -17,7 +17,7 @@
 	Good::good_map_t&& build_cost, fixed_point_t supply_consumption, Good::good_map_t&& supply_cost
 
 #define LAND_PARAMS \
-	bool primary_culture, std::string_view sprite_override, std::string_view sprite_mount, \
+	LandUnit::allowed_cultures_t allowed_cultures, std::string_view sprite_override, std::string_view sprite_mount, \
 	std::string_view sprite_mount_attach_node, fixed_point_t reconnaissance, fixed_point_t attack, fixed_point_t defence, \
 	fixed_point_t discipline, fixed_point_t support, fixed_point_t maneuver, fixed_point_t siege
 
@@ -64,8 +64,10 @@ namespace OpenVic {
 	struct LandUnit : Unit {
 		friend struct UnitManager;
 
+		enum struct allowed_cultures_t { ALL_CULTURES, ACCEPTED_CULTURES, PRIMARY_CULTURE };
+
 	private:
-		const bool PROPERTY_CUSTOM_PREFIX(primary_culture, is);
+		const allowed_cultures_t PROPERTY(allowed_cultures);
 		const std::string PROPERTY(sprite_override);
 		const std::string PROPERTY(sprite_mount);
 		const std::string PROPERTY(sprite_mount_attach_node);

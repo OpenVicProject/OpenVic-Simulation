@@ -6,7 +6,7 @@
 	std::move(supply_cost)
 
 #define LAND_ARGS \
-	primary_culture, sprite_override, sprite_mount, sprite_mount_attach_node, reconnaissance, attack, defence, discipline, \
+	allowed_cultures, sprite_override, sprite_mount, sprite_mount_attach_node, reconnaissance, attack, defence, discipline, \
 	support, maneuver, siege
 
 #define NAVY_ARGS \
@@ -26,7 +26,7 @@ Unit::Unit(
 
 LandUnit::LandUnit(
 	std::string_view identifier, UNIT_PARAMS, LAND_PARAMS
-) : Unit { identifier, type_t::LAND, UNIT_ARGS }, primary_culture { primary_culture }, sprite_override { sprite_override },
+) : Unit { identifier, type_t::LAND, UNIT_ARGS }, allowed_cultures { allowed_cultures }, sprite_override { sprite_override },
 	sprite_mount { sprite_mount }, sprite_mount_attach_node { sprite_mount_attach_node }, reconnaissance { reconnaissance },
 	attack { attack }, defence { defence }, discipline { discipline }, support { support }, maneuver { maneuver },
 	siege { siege } {}
@@ -127,12 +127,14 @@ bool UnitManager::load_unit_file(GoodManager const& good_manager, ast::NodeCPtr 
 
 		switch (type) {
 		case Unit::type_t::LAND: {
-			bool primary_culture = false;
+			bool is_restricted_to_primary_culture = false;
+			bool is_restricted_to_accepted_cultures = false;
 			std::string_view sprite_override {}, sprite_mount {}, sprite_mount_attach_node {};
 			fixed_point_t reconnaissance = 0, attack = 0, defence = 0, discipline = 0, support = 0, maneuver = 0, siege = 0;
 
 			ret &= add_key_map_entries(key_map,
-				"primary_culture", ZERO_OR_ONE, expect_bool(assign_variable_callback(primary_culture)),
+				"primary_culture", ZERO_OR_ONE, expect_bool(assign_variable_callback(is_restricted_to_primary_culture)),
+				"accepted_culture", ZERO_OR_ONE, expect_bool(assign_variable_callback(is_restricted_to_accepted_cultures)),
 				"sprite_override", ZERO_OR_ONE, expect_identifier(assign_variable_callback(sprite_override)),
 				"sprite_mount", ZERO_OR_ONE, expect_identifier(assign_variable_callback(sprite_mount)),
 				"sprite_mount_attach_node", ZERO_OR_ONE, expect_identifier(assign_variable_callback(sprite_mount_attach_node)),
@@ -144,6 +146,15 @@ bool UnitManager::load_unit_file(GoodManager const& good_manager, ast::NodeCPtr 
 				"maneuver", ONE_EXACTLY, expect_fixed_point(assign_variable_callback(maneuver)),
 				"siege", ZERO_OR_ONE, expect_fixed_point(assign_variable_callback(siege))
 			);
+
+			LandUnit::allowed_cultures_t allowed_cultures;
+			if (is_restricted_to_accepted_cultures) {
+				allowed_cultures = LandUnit::allowed_cultures_t::ACCEPTED_CULTURES;
+			} else if (is_restricted_to_primary_culture) {
+				allowed_cultures = LandUnit::allowed_cultures_t::PRIMARY_CULTURE;
+			} else {
+				allowed_cultures = LandUnit::allowed_cultures_t::ALL_CULTURES;
+			}
 
 			ret &= expect_dictionary_key_map(key_map)(value);
 
