@@ -1,6 +1,5 @@
 #pragma once
 
-#include "openvic-simulation/misc/Decision.hpp"
 #include "openvic-simulation/country/Country.hpp"
 #include "openvic-simulation/diplomacy/DiplomacyManager.hpp"
 #include "openvic-simulation/economy/EconomyManager.hpp"
@@ -9,14 +8,15 @@
 #include "openvic-simulation/map/Crime.hpp"
 #include "openvic-simulation/map/Map.hpp"
 #include "openvic-simulation/military/MilitaryManager.hpp"
+#include "openvic-simulation/misc/Decision.hpp"
 #include "openvic-simulation/misc/Define.hpp"
+#include "openvic-simulation/misc/Event.hpp"
 #include "openvic-simulation/misc/Modifier.hpp"
 #include "openvic-simulation/misc/SimulationClock.hpp"
 #include "openvic-simulation/politics/PoliticsManager.hpp"
 #include "openvic-simulation/pop/Pop.hpp"
 #include "openvic-simulation/research/ResearchManager.hpp"
-#include "openvic-simulation/research/Technology.hpp"
-#include "openvic-simulation/misc/Event.hpp"
+#include "openvic-simulation/scripts/ScriptManager.hpp"
 
 namespace OpenVic {
 	struct GameManager {
@@ -38,6 +38,7 @@ namespace OpenVic {
 		DecisionManager PROPERTY_REF(decision_manager);
 		UIManager PROPERTY_REF(ui_manager);
 		DiplomacyManager PROPERTY_REF(diplomacy_manager);
+		ScriptManager PROPERTY_REF(script_manager);
 		SimulationClock PROPERTY_REF(simulation_clock);
 
 		time_t session_start; /* SS-54, as well as allowing time-tracking */

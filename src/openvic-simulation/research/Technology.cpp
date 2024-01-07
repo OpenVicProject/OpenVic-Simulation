@@ -127,7 +127,7 @@ bool TechnologyManager::load_technologies_file(
 		uint8_t unit = 0;
 		Technology::unit_set_t activated_units;
 		Technology::building_set_t activated_buildings;
-		ConditionalWeight ai_chance;
+		ConditionalWeight ai_chance { scope_t::COUNTRY, scope_t::COUNTRY, scope_t::NO_SCOPE };
 
 		bool ret = modifier_manager.expect_modifier_value_and_keys(move_variable_callback(modifiers),
 			"area", ONE_EXACTLY, expect_technology_area_identifier(assign_variable_callback_pointer(area)),

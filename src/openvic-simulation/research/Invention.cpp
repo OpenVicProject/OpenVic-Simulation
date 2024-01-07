@@ -2,7 +2,6 @@
 
 #include "openvic-simulation/economy/BuildingType.hpp"
 #include "openvic-simulation/map/Crime.hpp"
-#include "openvic-simulation/military/Unit.hpp"
 
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;
@@ -57,8 +56,8 @@ bool InventionManager::load_inventions_file(
 			bool unlock_gas_defence = false;
 			bool news = true; //defaults to true!
 
-			ConditionScript limit;
-			ConditionalWeight chance;
+			ConditionScript limit { scope_t::COUNTRY, scope_t::COUNTRY, scope_t::NO_SCOPE };
+			ConditionalWeight chance { scope_t::COUNTRY, scope_t::COUNTRY, scope_t::NO_SCOPE };
 
 			bool ret = modifier_manager.expect_modifier_value_and_keys(move_variable_callback(loose_modifiers),
 				"news", ZERO_OR_ONE, expect_bool(assign_variable_callback(news)),

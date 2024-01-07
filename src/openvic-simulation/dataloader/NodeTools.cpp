@@ -70,13 +70,17 @@ node_callback_t NodeTools::expect_identifier_or_string(callback_t<std::string_vi
 }
 
 node_callback_t NodeTools::expect_bool(callback_t<bool> callback) {
-	static const string_map_t<bool> bool_map = { { "yes", true }, { "no", false } };
+	static const case_insensitive_string_map_t<bool> bool_map = { { "yes", true }, { "no", false } };
 	return expect_identifier(expect_mapped_string(bool_map, callback));
 }
 
 node_callback_t NodeTools::expect_int_bool(callback_t<bool> callback) {
-	static const string_map_t<bool> bool_map = { { "1", true }, { "0", false } };
-	return expect_identifier(expect_mapped_string(bool_map, callback));
+	return expect_uint64([callback](uint64_t num) -> bool {
+		if (num > 1) {
+			Logger::warning("Found int bool with value >1: ", num);
+		}
+		return callback(num != 0);
+	});
 }
 
 node_callback_t NodeTools::expect_int64(callback_t<int64_t> callback, int base) {

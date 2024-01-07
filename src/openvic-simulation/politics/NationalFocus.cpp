@@ -1,7 +1,5 @@
 #include "NationalFocus.hpp"
 
-#include "openvic-simulation/dataloader/NodeTools.hpp"
-
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;
 
@@ -74,7 +72,7 @@ bool NationalFocusManager::load_national_foci_file(PopManager const& pop_manager
 			NationalFocus::pop_promotion_map_t promotions;
 			NationalFocus::party_loyalty_map_t loyalties;
 			NationalFocus::production_map_t production;
-			ConditionScript limit;
+			ConditionScript limit { scope_t::PROVINCE | scope_t::COUNTRY, scope_t::PROVINCE | scope_t::COUNTRY, scope_t::NO_SCOPE };
 
 			Ideology const* last_specified_ideology = nullptr; // weird, I know
 

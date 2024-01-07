@@ -3,9 +3,12 @@
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;
 
+ConditionalWeight::ConditionalWeight(scope_t new_initial_scope, scope_t new_this_scope, scope_t new_from_scope)
+  : initial_scope { new_initial_scope }, this_scope { new_this_scope }, from_scope { new_from_scope } {}
+
 template<typename T>
-static NodeCallback auto expect_modifier(std::vector<T>& items) {
-	return [&items](ast::NodeCPtr node) -> bool {
+static NodeCallback auto expect_modifier(std::vector<T>& items, scope_t initial_scope, scope_t this_scope, scope_t from_scope) {
+	return [&items, initial_scope, this_scope, from_scope](ast::NodeCPtr node) -> bool {
 		fixed_point_t weight = 0;
 		bool successful = false;
 		bool ret = expect_key("factor", expect_fixed_point(assign_variable_callback(weight)), &successful)(node);
@@ -13,7 +16,7 @@ static NodeCallback auto expect_modifier(std::vector<T>& items) {
 			Logger::info("ConditionalWeight modifier missing factor key!");
 			return false;
 		}
-		ConditionScript condition;
+		ConditionScript condition { initial_scope, this_scope, from_scope };
 		ret &= condition.expect_script()(node);
 		items.emplace_back(std::make_pair(weight, std::move(condition)));
 		return ret;
@@ -26,11 +29,11 @@ node_callback_t ConditionalWeight::expect_conditional_weight(base_key_t base_key
 		base_key_to_string(base_key), ZERO_OR_ONE, expect_fixed_point(assign_variable_callback(base)),
 		"days", ZERO_OR_ONE, success_callback,
 		"years", ZERO_OR_ONE, success_callback,
-		"modifier", ZERO_OR_MORE, expect_modifier(condition_weight_items),
+		"modifier", ZERO_OR_MORE, expect_modifier(condition_weight_items, initial_scope, this_scope, from_scope),
 		"group", ZERO_OR_MORE, [this](ast::NodeCPtr node) -> bool {
 			condition_weight_group_t items;
 			const bool ret = expect_dictionary_keys(
-				"modifier", ONE_OR_MORE, expect_modifier(items)
+				"modifier", ONE_OR_MORE, expect_modifier(items, initial_scope, this_scope, from_scope)
 			)(node);
 			if (!items.empty()) {
 				condition_weight_items.emplace_back(std::move(items));

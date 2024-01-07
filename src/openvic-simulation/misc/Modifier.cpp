@@ -344,7 +344,7 @@ bool ModifierManager::load_triggered_modifiers(ast::NodeCPtr root) {
 		[this](std::string_view key, ast::NodeCPtr value) -> bool {
 			ModifierValue modifier_value;
 			Modifier::icon_t icon = 0;
-			ConditionScript trigger;
+			ConditionScript trigger { scope_t::COUNTRY, scope_t::COUNTRY, scope_t::NO_SCOPE };
 
 			bool ret = expect_modifier_value_and_keys(
 				move_variable_callback(modifier_value),
