@@ -27,7 +27,7 @@ bool CrimeManager::load_crime_modifiers(ModifierManager const& modifier_manager,
 		[this, &modifier_manager](std::string_view key, ast::NodeCPtr value) -> bool {
 			ModifierValue modifier_value;
 			Modifier::icon_t icon = 0;
-			ConditionScript trigger;
+			ConditionScript trigger { scope_t::PROVINCE, scope_t::NO_SCOPE, scope_t::NO_SCOPE };
 			bool default_active = false;
 			bool ret = modifier_manager.expect_modifier_value_and_keys(
 				move_variable_callback(modifier_value),

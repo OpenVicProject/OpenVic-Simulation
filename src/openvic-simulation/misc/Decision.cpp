@@ -56,8 +56,9 @@ bool DecisionManager::load_decision_file(ast::NodeCPtr root) {
 			[this](std::string_view identifier, ast::NodeCPtr node) -> bool {
 				bool alert = true, news = false;
 				std::string_view news_title, news_desc_long, news_desc_medium, news_desc_short, picture;
-				ConditionScript potential, allow;
-				ConditionalWeight ai_will_do;
+				ConditionScript potential { scope_t::COUNTRY, scope_t::COUNTRY, scope_t::NO_SCOPE };
+				ConditionScript allow { scope_t::COUNTRY, scope_t::COUNTRY, scope_t::NO_SCOPE };
+				ConditionalWeight ai_will_do { scope_t::COUNTRY, scope_t::COUNTRY, scope_t::NO_SCOPE };
 				EffectScript effect;
 				bool ret = expect_dictionary_keys(
 					"alert", ZERO_OR_ONE, expect_bool(assign_variable_callback(alert)),

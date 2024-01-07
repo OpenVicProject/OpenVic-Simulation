@@ -104,8 +104,11 @@ bool RebelManager::load_rebels_file(
 				allow_all_religions = true, allow_all_ideologies = true, resilient = true, reinforcing = true, general = true,
 				smart = true, unit_transfer = false;
 			fixed_point_t occupation_mult = 0;
-			ConditionalWeight will_rise, spawn_chance, movement_evaluation;
-			ConditionScript siege_won_trigger, demands_enforced_trigger;
+			ConditionalWeight will_rise { scope_t::POP, scope_t::COUNTRY, scope_t::NO_SCOPE };
+			ConditionalWeight spawn_chance { scope_t::POP, scope_t::POP, scope_t::NO_SCOPE };
+			ConditionalWeight movement_evaluation { scope_t::PROVINCE, scope_t::PROVINCE, scope_t::NO_SCOPE };
+			ConditionScript siege_won_trigger { scope_t::PROVINCE, scope_t::PROVINCE, scope_t::NO_SCOPE };
+			ConditionScript demands_enforced_trigger { scope_t::COUNTRY, scope_t::COUNTRY, scope_t::NO_SCOPE };
 			EffectScript siege_won_effect, demands_enforced_effect;
 
 			bool ret = expect_dictionary_keys(

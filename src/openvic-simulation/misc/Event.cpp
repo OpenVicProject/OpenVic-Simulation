@@ -6,8 +6,8 @@
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;
 
-Event::EventOption::EventOption(std::string_view new_title, EffectScript&& new_effect, ConditionalWeight&& new_ai_chance)
-  : title { new_title }, effect { std::move(new_effect) }, ai_chance { std::move(new_ai_chance) } {}
+Event::EventOption::EventOption(std::string_view new_name, EffectScript&& new_effect, ConditionalWeight&& new_ai_chance)
+  : name { new_name }, effect { std::move(new_effect) }, ai_chance { std::move(new_ai_chance) } {}
 
 bool Event::EventOption::parse_scripts(GameManager& game_manager) {
 	bool ret = true;
@@ -86,6 +86,17 @@ bool EventManager::register_event(
 		}
 	}
 
+	if (options.empty()) {
+		Logger::error("Event with ID ", identifier, " has no options!");
+		return false;
+	} else {
+		for (Event::EventOption const& option : options) {
+			if (option.name.empty()) {
+				Logger::warning("Event with ID ", identifier, " has an option with no name!");
+			}
+		}
+	}
+
 	// TODO - error if is_triggered_only with triggers or MTTH defined
 
 	return events.add_item({
@@ -108,24 +119,28 @@ bool EventManager::load_event_file(IssueManager const& issue_manager, ast::NodeC
 	return expect_dictionary(
 		[this, &issue_manager](std::string_view key, ast::NodeCPtr value) -> bool {
 			Event::event_type_t type;
+			scope_t initial_scope;
+
+			if (key == "country_event") {
+				type = Event::event_type_t::COUNTRY;
+				initial_scope = scope_t::COUNTRY;
+			} else if (key == "province_event") {
+				type = Event::event_type_t::PROVINCE;
+				initial_scope = scope_t::PROVINCE;
+			} else {
+				Logger::error("Invalid event type: ", key);
+				return false;
+			}
+
 			std::string_view identifier, title, description, image, news_title, news_desc_long, news_desc_medium,
 				news_desc_short;
 			bool triggered_only = false, major = false, fire_only_once = false, allows_multiple_instances = false,
 				news = false, election = false;
 			IssueGroup const* election_issue_group = nullptr;
-			ConditionScript trigger;
-			ConditionalWeight mean_time_to_happen;
+			ConditionScript trigger { initial_scope, initial_scope, scope_t::NO_SCOPE };
+			ConditionalWeight mean_time_to_happen { initial_scope, initial_scope, scope_t::NO_SCOPE };
 			EffectScript immediate;
 			std::vector<Event::EventOption> options;
-
-			if (key == "country_event") {
-				type = Event::event_type_t::COUNTRY;
-			} else if (key == "province_event") {
-				type = Event::event_type_t::PROVINCE;
-			} else {
-				Logger::error("Invalid event type: ", key);
-				return false;
-			}
 
 			bool ret = expect_dictionary_keys(
 				"id", ONE_EXACTLY, expect_identifier(assign_variable_callback(identifier)),
@@ -144,20 +159,24 @@ bool EventManager::load_event_file(IssueManager const& issue_manager, ast::NodeC
 				"election", ZERO_OR_ONE, expect_bool(assign_variable_callback(election)),
 				"issue_group", ZERO_OR_ONE,
 					issue_manager.expect_issue_group_identifier(assign_variable_callback_pointer(election_issue_group)),
-				"option", ONE_OR_MORE, [&options](ast::NodeCPtr node) -> bool {
-					std::string_view title;
+				"option", ONE_OR_MORE, [&options, initial_scope](ast::NodeCPtr node) -> bool {
+					std::string_view name;
 					EffectScript effect;
-					ConditionalWeight ai_chance;
+					ConditionalWeight ai_chance {
+						initial_scope,
+						initial_scope,
+						scope_t::COUNTRY | scope_t::PROVINCE
+					};
 
 					bool ret = expect_dictionary_keys_and_default(
 						key_value_success_callback,
-						"name", ONE_EXACTLY, expect_identifier_or_string(assign_variable_callback(title)),
+						"name", ONE_EXACTLY, expect_identifier_or_string(assign_variable_callback(name)),
 						"ai_chance", ZERO_OR_ONE, ai_chance.expect_conditional_weight(ConditionalWeight::FACTOR)
 					)(node);
 
 					ret &= effect.expect_script()(node);
 
-					options.push_back({ title, std::move(effect), std::move(ai_chance) });
+					options.push_back({ name, std::move(effect), std::move(ai_chance) });
 					return ret;
 				},
 				"trigger", ZERO_OR_ONE, trigger.expect_script(),

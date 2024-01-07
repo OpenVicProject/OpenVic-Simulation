@@ -948,68 +948,40 @@ bool Dataloader::load_defines(GameManager& game_manager) {
 		Logger::error("Failed to load diplomatic actions!");
 		ret = false;
 	}
+	if(!game_manager.get_script_manager().get_condition_manager().setup_conditions(game_manager)) {
+		Logger::error("Failed to set up conditions!");
+		ret = false;
+	}
 
-	parse_scripts(game_manager);
+	ret &= parse_scripts(game_manager);
 
 	free_cache();
 
 	return ret;
 }
 
+#define PARSE_SCRIPTS(name, mgr) \
+	if (!mgr.parse_scripts(game_manager)) { Logger::error("Failed to parse ", name, " scripts!"); ret = false; } \
+	else Logger::info("Successfully parsed ", name, " scripts!");
+
 bool Dataloader::parse_scripts(GameManager& game_manager) const {
 	bool ret = true;
-
-	if (!game_manager.get_pop_manager().parse_scripts(game_manager)) {
-		Logger::error("Failed to parse pop scripts!");
-		ret = false;
-	}
-	if (!game_manager.get_politics_manager().get_ideology_manager().parse_scripts(game_manager)) {
-		Logger::error("Failed to parse ideology scripts!");
-		ret = false;
-	}
-	if (!game_manager.get_politics_manager().get_issue_manager().parse_scripts(game_manager)) {
-		Logger::error("Failed to parse reform scripts!");
-		ret = false;
-	}
-	if (!game_manager.get_economy_manager().get_production_type_manager().parse_scripts(game_manager)) {
-		Logger::error("Failed to parse production type scripts!");
-		ret = false;
-	}
-	if (!game_manager.get_politics_manager().get_rebel_manager().parse_scripts(game_manager)) {
-		Logger::error("Failed to parse rebel type scripts!");
-		ret = false;
-	}
-	if (!game_manager.get_research_manager().get_technology_manager().parse_scripts(game_manager)) {
-		Logger::error("Failed to parse technology scripts!");
-		ret = false;
-	}
-	if (!game_manager.get_crime_manager().parse_scripts(game_manager)) {
-		Logger::error("Failed to parse crime scripts!");
-		ret = false;
-	}
-	if (!game_manager.get_modifier_manager().parse_scripts(game_manager)) {
-		Logger::error("Failed to parse triggered modifier scripts!");
-		ret = false;
-	}
-	if (!game_manager.get_research_manager().get_invention_manager().parse_scripts(game_manager)) {
-		Logger::error("Failed to parse invention scripts!");
-		ret = false;
-	}
-	if (!game_manager.get_military_manager().get_wargoal_type_manager().parse_scripts(game_manager)) {
-		Logger::error("Failed to parse wargoal type scripts!");
-		ret = false;
-	}
-	if (!game_manager.get_decision_manager().parse_scripts(game_manager)) {
-		Logger::error("Failed to parse decision scripts!");
-		ret = false;
-	}
-	if (!game_manager.get_event_manager().parse_scripts(game_manager)) {
-		Logger::error("Failed to parse event scripts!");
-		ret = false;
-	}
-
+	PARSE_SCRIPTS("pop", game_manager.get_pop_manager());
+	PARSE_SCRIPTS("ideology", game_manager.get_politics_manager().get_ideology_manager());
+	PARSE_SCRIPTS("reform", game_manager.get_politics_manager().get_issue_manager());
+	PARSE_SCRIPTS("production type", game_manager.get_economy_manager().get_production_type_manager());
+	PARSE_SCRIPTS("rebel type", game_manager.get_politics_manager().get_rebel_manager());
+	PARSE_SCRIPTS("technology", game_manager.get_research_manager().get_technology_manager());
+	PARSE_SCRIPTS("crime", game_manager.get_crime_manager());
+	PARSE_SCRIPTS("triggered modifier", game_manager.get_modifier_manager());
+	PARSE_SCRIPTS("invention", game_manager.get_research_manager().get_invention_manager());
+	PARSE_SCRIPTS("wargoal type", game_manager.get_military_manager().get_wargoal_type_manager());
+	PARSE_SCRIPTS("decision", game_manager.get_decision_manager());
+	PARSE_SCRIPTS("event", game_manager.get_event_manager());
 	return ret;
 }
+
+#undef PARSE_SCRIPTS
 
 static bool _load_localisation_file(Dataloader::localisation_callback_t callback, std::vector<csv::LineObject> const& lines) {
 	bool ret = true;

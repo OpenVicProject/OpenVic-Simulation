@@ -159,7 +159,8 @@ bool IssueManager::_load_reform(
 	ModifierValue values;
 	RuleSet rules;
 	Reform::tech_cost_t technology_cost = 0;
-	ConditionScript allow, on_execute_trigger;
+	ConditionScript allow { scope_t::COUNTRY, scope_t::COUNTRY, scope_t::NO_SCOPE };
+	ConditionScript on_execute_trigger { scope_t::COUNTRY, scope_t::COUNTRY, scope_t::NO_SCOPE };
 	EffectScript on_execute_effect;
 
 	bool ret = modifier_manager.expect_modifier_value_and_keys(move_variable_callback(values),

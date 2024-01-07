@@ -20,11 +20,11 @@ namespace OpenVic {
 			friend struct Event;
 
 		private:
-			std::string PROPERTY(title);
+			std::string PROPERTY(name);
 			EffectScript PROPERTY(effect);
 			ConditionalWeight PROPERTY(ai_chance);
 
-			EventOption(std::string_view new_title, EffectScript&& new_effect, ConditionalWeight&& new_ai_chance);
+			EventOption(std::string_view new_name, EffectScript&& new_effect, ConditionalWeight&& new_ai_chance);
 
 			bool parse_scripts(GameManager& game_manager);
 

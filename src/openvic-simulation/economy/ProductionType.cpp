@@ -1,7 +1,5 @@
 #include "ProductionType.hpp"
 
-#include "openvic-simulation/types/OrderedContainers.hpp"
-
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;
 
@@ -197,7 +195,7 @@ bool ProductionTypeManager::load_production_types_file(
 			const node_callback_t parse_node = expect_dictionary_keys(
 				"template", ZERO_OR_ONE, success_callback,
 				"bonus", ZERO_OR_MORE, [&bonuses](ast::NodeCPtr bonus_node) -> bool {
-					ConditionScript trigger;
+					ConditionScript trigger { scope_t::STATE, scope_t::NO_SCOPE, scope_t::NO_SCOPE };
 					fixed_point_t value {};
 					const bool ret = expect_dictionary_keys(
 						"trigger", ONE_EXACTLY, trigger.expect_script(),

@@ -85,8 +85,12 @@ bool IdeologyManager::load_ideology_file(ast::NodeCPtr root) {
 			colour_t colour = colour_t::null();
 			bool uncivilised = true, can_reduce_militancy = false;
 			Date spawn_date;
-			ConditionalWeight add_political_reform, remove_political_reform, add_social_reform, remove_social_reform,
-				add_military_reform, add_economic_reform;
+			ConditionalWeight add_political_reform { scope_t::COUNTRY, scope_t::COUNTRY, scope_t::NO_SCOPE };
+			ConditionalWeight remove_political_reform { scope_t::COUNTRY, scope_t::COUNTRY, scope_t::NO_SCOPE };
+			ConditionalWeight add_social_reform { scope_t::COUNTRY, scope_t::COUNTRY, scope_t::NO_SCOPE };
+			ConditionalWeight remove_social_reform { scope_t::COUNTRY, scope_t::COUNTRY, scope_t::NO_SCOPE };
+			ConditionalWeight add_military_reform { scope_t::COUNTRY, scope_t::COUNTRY, scope_t::NO_SCOPE };
+			ConditionalWeight add_economic_reform { scope_t::COUNTRY, scope_t::COUNTRY, scope_t::NO_SCOPE };
 
 			bool ret = expect_dictionary_keys(
 				"uncivilized", ZERO_OR_ONE, expect_bool(assign_variable_callback(uncivilised)),

@@ -1,14 +1,8 @@
 #include "Pop.hpp"
 
-#include <cassert>
-
-#include "openvic-simulation/dataloader/NodeTools.hpp"
-#include "openvic-simulation/map/Province.hpp"
 #include "openvic-simulation/politics/Ideology.hpp"
 #include "openvic-simulation/politics/Issue.hpp"
 #include "openvic-simulation/politics/Rebel.hpp"
-#include "openvic-simulation/types/Colour.hpp"
-#include "openvic-simulation/utility/Logger.hpp"
 #include "openvic-simulation/utility/TslHelper.hpp"
 
 using namespace OpenVic;
@@ -67,7 +61,15 @@ bool PopType::parse_scripts(GameManager const& game_manager) {
 	return ret;
 }
 
-PopManager::PopManager() : slave_sprite { 0 }, administrative_sprite { 0 } {}
+PopManager::PopManager()
+  : slave_sprite { 0 }, administrative_sprite { 0 },
+	promotion_chance { scope_t::POP, scope_t::POP, scope_t::NO_SCOPE },
+	demotion_chance { scope_t::POP, scope_t::POP, scope_t::NO_SCOPE },
+	migration_chance { scope_t::POP, scope_t::POP, scope_t::NO_SCOPE },
+	colonialmigration_chance { scope_t::POP, scope_t::POP, scope_t::NO_SCOPE },
+	emigration_chance { scope_t::POP, scope_t::POP, scope_t::NO_SCOPE },
+	assimilation_chance { scope_t::POP, scope_t::POP, scope_t::NO_SCOPE },
+	conversion_chance { scope_t::POP, scope_t::POP, scope_t::NO_SCOPE } {}
 
 bool PopManager::add_strata(std::string_view identifier) {
 	if (identifier.empty()) {
@@ -148,7 +150,8 @@ bool PopManager::load_pop_type_file(
 		can_be_recruited = false, can_reduce_consciousness = false, administrative_efficiency = false, can_build = false,
 		factory = false, can_work_factory = false, unemployment = false;
 	Pop::pop_size_t max_size = 0, merge_max_size = 0;
-	ConditionalWeight country_migration_target, migration_target;
+	ConditionalWeight country_migration_target { scope_t::COUNTRY, scope_t::POP, scope_t::NO_SCOPE };
+	ConditionalWeight migration_target { scope_t::PROVINCE, scope_t::POP, scope_t::NO_SCOPE };
 	ast::NodeCPtr promote_to_node = nullptr;
 	PopType::ideology_weight_map_t ideologies;
 	ast::NodeCPtr issues_node = nullptr;
@@ -193,7 +196,7 @@ bool PopManager::load_pop_type_file(
 		"promote_to", ZERO_OR_ONE, assign_variable_callback(promote_to_node),
 		"ideologies", ZERO_OR_ONE, ideology_manager.expect_ideology_dictionary(
 			[&filestem, &ideologies](Ideology const& ideology, ast::NodeCPtr node) -> bool {
-				ConditionalWeight weight;
+				ConditionalWeight weight { scope_t::POP, scope_t::POP, scope_t::NO_SCOPE };
 				bool ret = weight.expect_conditional_weight(ConditionalWeight::FACTOR)(node);
 				if (!ideologies.emplace(&ideology, std::move(weight)).second) {
 					Logger::error("Duplicate ideology in pop type ", filestem, " ideology weights: ", ideology);
@@ -236,7 +239,7 @@ bool PopManager::load_delayed_parse_pop_type_data(IssueManager const& issue_mana
 					Logger::error("Pop type ", type, " cannot have promotion weight to itself!");
 					return false;
 				}
-				ConditionalWeight weight;
+				ConditionalWeight weight { scope_t::POP, scope_t::POP, scope_t::NO_SCOPE };
 				bool ret = weight.expect_conditional_weight(ConditionalWeight::FACTOR)(node);
 				if (!pop_type->promote_to.emplace(&type, std::move(weight)).second) {
 					Logger::error("Duplicate pop type in pop type ", pop_type, " promotion weights: ", type);
@@ -258,7 +261,7 @@ bool PopManager::load_delayed_parse_pop_type_data(IssueManager const& issue_mana
 					Logger::error("Invalid issue in pop type ", pop_type, " issue weights: ", key);
 					return false;
 				}
-				ConditionalWeight weight;
+				ConditionalWeight weight { scope_t::POP, scope_t::POP, scope_t::NO_SCOPE };
 				bool ret = weight.expect_conditional_weight(ConditionalWeight::FACTOR)(node);
 				if (!pop_type->issues.emplace(issue, std::move(weight)).second) {
 					Logger::error("Duplicate issue in pop type ", pop_type, " issue weights: ", issue->get_identifier());

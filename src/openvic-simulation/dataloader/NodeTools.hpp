@@ -21,9 +21,12 @@ namespace OpenVic {
 	 * searched for without needing to be copied into a string */
 	template<typename T, class Hash = container_hash<std::string>, class KeyEqual = std::equal_to<>>
 	using string_map_t = ordered_map<std::string, T, Hash, KeyEqual>;
+	template<typename T>
+	using case_insensitive_string_map_t = string_map_t<T, case_insensitive_string_hash, case_insensitive_string_equal>;
 
 	/* String set type supporting heterogeneous key lookup */
 	using string_set_t = ordered_set<std::string>;
+	using case_insensitive_string_set_t = case_insensitive_ordered_set<std::string>;
 
 	namespace NodeTools {
 
@@ -247,10 +250,12 @@ namespace OpenVic {
 
 		node_callback_t name_list_callback(callback_t<std::vector<std::string>&&> callback);
 
-		template<typename T>
-		Callback<std::string_view> auto expect_mapped_string(string_map_t<T> const& map, Callback<T> auto callback) {
+		template<typename T, class Hash, class KeyEqual>
+		Callback<std::string_view> auto expect_mapped_string(
+			string_map_t<T, Hash, KeyEqual> const& map, Callback<T> auto callback
+		) {
 			return [&map, callback](std::string_view string) -> bool {
-				const typename string_map_t<T>::const_iterator it = map.find(string);
+				const typename string_map_t<T, Hash, KeyEqual>::const_iterator it = map.find(string);
 				if (it != map.end()) {
 					return callback(it->second);
 				}
