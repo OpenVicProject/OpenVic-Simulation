@@ -146,10 +146,6 @@ namespace OpenVic {
 		void update_gamestate(Date today);
 		void tick(Date today);
 
-	private:
-		adjacency_t* get_adjacency_to(Province const* province);
-
-	public:
 		adjacency_t const* get_adjacency_to(Province const* province) const;
 		bool is_adjacent_to(Province const* province) const;
 		std::vector<adjacency_t const*> get_adjacencies_going_through(Province const* province) const;

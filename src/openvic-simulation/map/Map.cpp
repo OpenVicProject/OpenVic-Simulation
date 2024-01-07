@@ -4,12 +4,11 @@
 #include <cstddef>
 #include <vector>
 
-#include "openvic-simulation/economy/Good.hpp"
 #include "openvic-simulation/history/ProvinceHistory.hpp"
 #include "openvic-simulation/types/Colour.hpp"
+#include "openvic-simulation/types/OrderedContainers.hpp"
 #include "openvic-simulation/utility/BMP.hpp"
 #include "openvic-simulation/utility/Logger.hpp"
-#include "openvic-simulation/types/OrderedContainers.hpp"
 
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;
@@ -84,6 +83,8 @@ Province::distance_t Map::calculate_distance_between(Province const& from, Provi
 	return fvec2_t { min_x, to_pos.y - from_pos.y}.length_squared().sqrt();
 }
 
+using adjacency_t = Province::adjacency_t;
+
 /* This is called for all adjacent pixel pairs and returns whether or not a new adjacency was add,
  * hence the lack of error messages in the false return cases. */
 bool Map::add_standard_adjacency(Province& from, Province& to) const {
@@ -100,10 +101,10 @@ bool Map::add_standard_adjacency(Province& from, Province& to) const {
 
 	const Province::distance_t distance = calculate_distance_between(from, to);
 
-	using enum Province::adjacency_t::type_t;
+	using enum adjacency_t::type_t;
 
 	/* Default land-to-land adjacency */
-	Province::adjacency_t::type_t type = LAND;
+	adjacency_t::type_t type = LAND;
 	if (from.is_water() != to.is_water()) {
 		/* Land-to-water adjacency */
 		type = COASTAL;
@@ -126,30 +127,28 @@ bool Map::add_standard_adjacency(Province& from, Province& to) const {
 }
 
 bool Map::add_special_adjacency(
-	Province& from, Province& to, Province::adjacency_t::type_t type, Province const* through,
-	Province::adjacency_t::data_t data
+	Province& from, Province& to, adjacency_t::type_t type, Province const* through, adjacency_t::data_t data
 ) const {
 	if (from == to) {
-		Logger::error("Trying to add ", Province::adjacency_t::get_type_name(type), " adjacency from province ", from, " to itself!");
+		Logger::error("Trying to add ", adjacency_t::get_type_name(type), " adjacency from province ", from, " to itself!");
 		return false;
 	}
 
-	using enum Province::adjacency_t::type_t;
+	using enum adjacency_t::type_t;
 
 	/* Check end points */
 	switch (type) {
 	case LAND:
-	case IMPASSABLE:
 	case STRAIT:
 		if (from.is_water() || to.is_water()) {
-			Logger::error(Province::adjacency_t::get_type_name(type), " adjacency from ", from, " to ", to, " has water endpoint(s)!");
+			Logger::error(adjacency_t::get_type_name(type), " adjacency from ", from, " to ", to, " has water endpoint(s)!");
 			return false;
 		}
 		break;
 	case WATER:
 	case CANAL:
 		if (!from.is_water() || !to.is_water()) {
-			Logger::error(Province::adjacency_t::get_type_name(type), " adjacency from ", from, " to ", to, " has land endpoint(s)!");
+			Logger::error(adjacency_t::get_type_name(type), " adjacency from ", from, " to ", to, " has land endpoint(s)!");
 			return false;
 		}
 		break;
@@ -158,6 +157,12 @@ bool Map::add_special_adjacency(
 			Logger::error("Coastal adjacency from ", from, " to ", to, " has both land or water endpoints!");
 			return false;
 		}
+		break;
+	case IMPASSABLE:
+		/* Impassable is valid for all combinations of land and water:
+		 * - land-land = replace existing land adjacency with impassable adjacency (blue borders)
+		 * - land-water = delete existing coastal adjacency, preventing armies and navies from moving between the provinces
+		 * - water-water = delete existing water adjacency, preventing navies from moving between the provinces */
 		break;
 	default:
 		Logger::error("Invalid adjacency type ", static_cast<uint32_t>(type));
@@ -169,56 +174,66 @@ bool Map::add_special_adjacency(
 		const bool water_expected = type == STRAIT;
 		if (through == nullptr || through->is_water() != water_expected) {
 			Logger::error(
-				Province::adjacency_t::get_type_name(type), " adjacency from ", from, " to ", to, " has a ",
+				adjacency_t::get_type_name(type), " adjacency from ", from, " to ", to, " has a ",
 				(through == nullptr ? "null" : water_expected ? "land" : "water"), " through province ", through
 			);
 			return false;
 		}
 	} else if (through != nullptr) {
 		Logger::warning(
-			Province::adjacency_t::get_type_name(type), " adjacency from ", from, " to ", to, " has a non-null through province ",
+			adjacency_t::get_type_name(type), " adjacency from ", from, " to ", to, " has a non-null through province ",
 			through
 		);
 		through = nullptr;
 	}
 
 	/* Check canal data */
-	if (data != Province::adjacency_t::NO_CANAL && type != CANAL) {
+	if (data != adjacency_t::NO_CANAL && type != CANAL) {
 		Logger::warning(
-			Province::adjacency_t::get_type_name(type), " adjacency from ", from, " to ", to, " has invalid data ",
+			adjacency_t::get_type_name(type), " adjacency from ", from, " to ", to, " has invalid data ",
 			static_cast<uint32_t>(data)
 		);
-		data = Province::adjacency_t::NO_CANAL;
+		data = adjacency_t::NO_CANAL;
 	}
 
 	const Province::distance_t distance = calculate_distance_between(from, to);
 
 	const auto add_adjacency = [distance, type, through, data](Province& from, Province const& to) -> bool {
-		Province::adjacency_t* existing_adjacency = from.get_adjacency_to(&to);
-		if (existing_adjacency != nullptr) {
+		const std::vector<adjacency_t>::iterator existing_adjacency = std::find_if(
+			from.adjacencies.begin(), from.adjacencies.end(),
+			[&to](adjacency_t const& adj) -> bool { return adj.get_to() == &to; }
+		);
+		if (existing_adjacency != from.adjacencies.end()) {
 			if (type == existing_adjacency->get_type()) {
 				Logger::warning(
-					"Adjacency from ", from, " to ", to, " already has type ", Province::adjacency_t::get_type_name(type), "!"
+					"Adjacency from ", from, " to ", to, " already has type ", adjacency_t::get_type_name(type), "!"
 				);
 				if (type != STRAIT && type != CANAL) {
 					/* Straits and canals might change through or data, otherwise we can exit early */
 					return true;
 				}
 			}
-			if (type != IMPASSABLE && type != STRAIT && type != CANAL) {
-				Logger::error(
-					"Provinces ", from, " and ", to, " already have an existing ",
-					Province::adjacency_t::get_type_name(existing_adjacency->get_type()), " adjacency, cannot create a ",
-					Province::adjacency_t::get_type_name(type), " adjacency!"
-				);
-				return false;
-			}
-			if (type != existing_adjacency->get_type() && existing_adjacency->get_type() != (type == CANAL ? WATER : LAND)) {
-				Logger::error(
-					"Cannot convert ", Province::adjacency_t::get_type_name(existing_adjacency->get_type()), " adjacency from ", from,
-					" to ", to, " to type ", Province::adjacency_t::get_type_name(type), "!"
-				);
-				return false;
+			if (type == IMPASSABLE) {
+				if (existing_adjacency->get_type() == WATER || existing_adjacency->get_type() == COASTAL) {
+					from.adjacencies.erase(existing_adjacency);
+					return true;
+				}
+			} else {
+				if (type != STRAIT && type != CANAL) {
+					Logger::error(
+						"Provinces ", from, " and ", to, " already have an existing ",
+						adjacency_t::get_type_name(existing_adjacency->get_type()), " adjacency, cannot create a ",
+						adjacency_t::get_type_name(type), " adjacency!"
+					);
+					return false;
+				}
+				if (type != existing_adjacency->get_type() && existing_adjacency->get_type() != (type == CANAL ? WATER : LAND)) {
+					Logger::error(
+						"Cannot convert ", adjacency_t::get_type_name(existing_adjacency->get_type()), " adjacency from ", from,
+						" to ", to, " to type ", adjacency_t::get_type_name(type), "!"
+					);
+					return false;
+				}
 			}
 			*existing_adjacency = { &to, distance, type, through, data };
 			return true;
@@ -783,30 +798,30 @@ bool Map::generate_and_load_province_adjacencies(std::vector<LineObject> const& 
 				return;
 			}
 
-			using enum Province::adjacency_t::type_t;
-			static const string_map_t<Province::adjacency_t::type_t> type_map {
+			using enum adjacency_t::type_t;
+			static const string_map_t<adjacency_t::type_t> type_map {
 				{ "land", LAND }, { "sea", STRAIT }, { "impassable", IMPASSABLE }, { "canal", CANAL }
 			};
 			const std::string_view type_str = adjacency.get_value_for(2);
-			const string_map_t<Province::adjacency_t::type_t>::const_iterator it = type_map.find(type_str);
+			const string_map_t<adjacency_t::type_t>::const_iterator it = type_map.find(type_str);
 			if (it == type_map.end()) {
 				Logger::error("Invalid adjacency type: \"", type_str, "\"");
 				ret = false;
 				return;
 			}
-			const Province::adjacency_t::type_t type = it->second;
+			const adjacency_t::type_t type = it->second;
 
 			Province const* const through = get_province_by_identifier(adjacency.get_value_for(3));
 
 			const std::string_view data_str = adjacency.get_value_for(4);
 			bool successful = false;
 			const uint64_t data_uint = StringUtils::string_to_uint64(data_str, &successful);
-			if (!successful || data_uint > std::numeric_limits<Province::adjacency_t::data_t>::max()) {
+			if (!successful || data_uint > std::numeric_limits<adjacency_t::data_t>::max()) {
 				Logger::error("Invalid adjacency data: \"", data_str, "\"");
 				ret = false;
 				return;
 			}
-			const Province::adjacency_t::data_t data = data_uint;
+			const adjacency_t::data_t data = data_uint;
 
 			ret &= add_special_adjacency(*from, *to, type, through, data);
 		}

@@ -141,7 +141,7 @@ bool CountryHistoryMap::_load_history_entry(
 		"nonstate_consciousness", ZERO_OR_ONE, expect_fixed_point(assign_variable_callback(entry.nonstate_consciousness)),
 		"is_releasable_vassal", ZERO_OR_ONE, expect_bool(assign_variable_callback(entry.releasable_vassal)),
 		"decision", ZERO_OR_MORE, decision_manager.expect_decision_identifier(set_callback_pointer(entry.decisions)),
-		"govt_flag", ZERO_OR_ONE, [&entry, &politics_manager](ast::NodeCPtr value) -> bool {
+		"govt_flag", ZERO_OR_MORE, [&entry, &politics_manager](ast::NodeCPtr value) -> bool {
 			GovernmentTypeManager const& government_type_manager = politics_manager.get_government_type_manager();
 			GovernmentType const* government_type = nullptr;
 			bool flag_expected = false;
