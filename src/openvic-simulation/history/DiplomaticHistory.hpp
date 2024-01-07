@@ -8,6 +8,7 @@
 #include "openvic-simulation/country/Country.hpp"
 #include "openvic-simulation/military/Wargoal.hpp"
 #include "openvic-simulation/map/Province.hpp"
+#include "openvic-simulation/history/Period.hpp"
 
 namespace OpenVic {
 	struct DiplomaticHistoryManager;
@@ -34,10 +35,9 @@ namespace OpenVic {
 
 		private:
 			Country const* PROPERTY(country);
-			Date PROPERTY_CUSTOM_PREFIX(joined, get_date);
-			std::optional<Date> PROPERTY_CUSTOM_PREFIX(exited, get_date);
+			Period PROPERTY(period);
 
-			war_participant_t(Country const* new_country, Date new_joined, std::optional<Date> new_exited);
+			war_participant_t(Country const* new_country, const Period period);
 		};
 
 	private:
@@ -55,10 +55,20 @@ namespace OpenVic {
 	private:
 		Country const* PROPERTY(first);
 		Country const* PROPERTY(second);
-		const Date start;
-		const Date end;
+		const Period PROPERTY(period);
 
-		AllianceHistory(Country const* new_first, Country const* new_second, const Date new_start, const Date new_end);
+		AllianceHistory(Country const* new_first, Country const* new_second, const Period period);
+	};
+
+	struct ReparationsHistory {
+		friend struct DiplomaticHistoryManager;
+
+	private:
+		Country const* PROPERTY(receiver);
+		Country const* PROPERTY(sender);
+		const Period PROPERTY(period);
+
+		ReparationsHistory(Country const* new_receiver, Country const* new_sender, const Period period);
 	};
 
 	struct SubjectHistory {
@@ -74,15 +84,15 @@ namespace OpenVic {
 		Country const* PROPERTY(overlord);
 		Country const* PROPERTY(subject);
 		const type_t PROPERTY_CUSTOM_PREFIX(type, get_subject);
-		const Date start;
-		const Date end;
+		const Period PROPERTY(period);
 
-		SubjectHistory(Country const* new_overlord, Country const* new_subject, const type_t new_type, const Date new_start, const Date new_end);
+		SubjectHistory(Country const* new_overlord, Country const* new_subject, const type_t new_type, const Period period);
 	};
 
 	struct DiplomaticHistoryManager {
 	private:
 		std::vector<AllianceHistory> alliances;
+		std::vector<ReparationsHistory> reparations;
 		std::vector<SubjectHistory> subjects;
 		std::vector<WarHistory> wars;
 		bool locked = false;
@@ -94,6 +104,7 @@ namespace OpenVic {
 		bool is_locked() const;
 
 		std::vector<AllianceHistory const*> get_alliances(Date date) const;
+		std::vector<ReparationsHistory const*> get_reparations(Date date) const;
 		std::vector<SubjectHistory const*> get_subjects(Date date) const;
 		/* Returns all wars that begin before date. NOTE: Some wargoals may be added or countries may join after date, should be checked for by functions that use get_wars() */
 		std::vector<WarHistory const*> get_wars(Date date) const;
