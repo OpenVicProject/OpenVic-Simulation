@@ -96,8 +96,8 @@ bool RebelManager::load_rebels_file(
 			RebelType::icon_t icon = 0;
 			RebelType::area_t area = RebelType::area_t::ALL;
 			RebelType::government_map_t desired_governments;
-			RebelType::defection_t defection = RebelType::defection_t::ANY;
-			RebelType::independence_t independence = RebelType::independence_t::ANY;
+			RebelType::defection_t defection = RebelType::defection_t::NONE;
+			RebelType::independence_t independence = RebelType::independence_t::NONE;
 			uint16_t defect_delay = 0;
 			Ideology const* ideology = nullptr;
 			bool break_alliance_on_win = false, allow_all_cultures = true, allow_all_culture_groups = true,
@@ -127,9 +127,9 @@ bool RebelManager::load_rebels_file(
 						)(value);
 					}
 				),
-				"defection", ONE_EXACTLY,
+				"defection", ZERO_OR_ONE,
 					expect_identifier(expect_mapped_string(defection_map, assign_variable_callback(defection))),
-				"independence", ONE_EXACTLY,
+				"independence", ZERO_OR_ONE,
 					expect_identifier(expect_mapped_string(independence_map, assign_variable_callback(independence))),
 				"defect_delay", ONE_EXACTLY, expect_uint(assign_variable_callback(defect_delay)),
 				"ideology", ZERO_OR_ONE,

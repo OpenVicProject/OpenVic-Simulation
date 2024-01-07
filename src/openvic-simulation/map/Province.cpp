@@ -141,17 +141,6 @@ std::string_view Province::adjacency_t::get_type_name(type_t type) {
 	}
 }
 
-Province::adjacency_t* Province::get_adjacency_to(Province const* province) {
-	const std::vector<adjacency_t>::iterator it = std::find_if(adjacencies.begin(), adjacencies.end(),
-		[province](adjacency_t const& adj) -> bool { return adj.get_to() == province; }
-	);
-	if (it != adjacencies.end()) {
-		return &*it;
-	} else {
-		return nullptr;
-	}
-}
-
 Province::adjacency_t const* Province::get_adjacency_to(Province const* province) const {
 	const std::vector<adjacency_t>::const_iterator it = std::find_if(adjacencies.begin(), adjacencies.end(),
 		[province](adjacency_t const& adj) -> bool { return adj.get_to() == province; }

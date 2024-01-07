@@ -206,13 +206,13 @@ bool GameManager::load_hardcoded_defines() {
 						colour_argb_t::integer_type base_int;
 						switch (adj->get_type()) {
 							using enum Province::adjacency_t::type_t;
-						case LAND:		 base_int = 0x00FF00; break;
-						case WATER:		 base_int = 0x0000FF; break;
-						case COASTAL:	 base_int = 0xF9D199; break;
+						case LAND:       base_int = 0x00FF00; break;
+						case WATER:      base_int = 0x0000FF; break;
+						case COASTAL:    base_int = 0xF9D199; break;
 						case IMPASSABLE: base_int = 0x8B4513; break;
-						case STRAIT:	 base_int = 0x00FFFF; break;
-						case CANAL:		 base_int = 0x888888; break;
-						default:		 base_int = 0xFF0000; break;
+						case STRAIT:     base_int = 0x00FFFF; break;
+						case CANAL:      base_int = 0x888888; break;
+						default:         base_int = 0xFF0000; break;
 						}
 						base = colour_argb_t::from_integer(base_int).with_alpha(ALPHA_VALUE);
 						stripe = base;
