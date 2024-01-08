@@ -400,15 +400,26 @@ node_callback_t NodeTools::expect_dictionary_key_map(key_map_t key_map) {
 	);
 }
 
-node_callback_t NodeTools::name_list_callback(callback_t<std::vector<std::string>&&> callback) {
+node_callback_t NodeTools::name_list_callback(callback_t<name_list_t&&> callback) {
 	return [callback](ast::NodeCPtr node) -> bool {
-		std::vector<std::string> list;
+		name_list_t list;
 		bool ret = expect_list_reserve_length(
 			list, expect_identifier_or_string(vector_callback<std::string_view>(list))
 		)(node);
 		ret &= callback(std::move(list));
 		return ret;
 	};
+}
+
+std::ostream& OpenVic::operator<<(std::ostream& stream, name_list_t const& name_list) {
+	stream << '[';
+	if (!name_list.empty()) {
+		stream << name_list.front();
+		std::for_each(name_list.begin() + 1, name_list.end(), [&stream](std::string const& name) -> void {
+			stream << ", " << name;
+		});
+	}
+	return stream << ']';
 }
 
 callback_t<std::string_view> NodeTools::assign_variable_callback_string(std::string& var) {

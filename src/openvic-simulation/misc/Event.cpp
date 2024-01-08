@@ -196,7 +196,9 @@ bool EventManager::load_event_file(IssueManager const& issue_manager, ast::NodeC
 bool EventManager::load_on_action_file(ast::NodeCPtr root) {
 	bool ret = expect_dictionary([this](std::string_view identifier, ast::NodeCPtr node) -> bool {
 		OnAction::weight_map_t weighted_events;
-		bool ret = expect_dictionary([this, &identifier, &weighted_events](std::string_view weight_str, ast::NodeCPtr event_node) -> bool {
+		bool ret = expect_dictionary_reserve_length(
+			weighted_events,
+			[this, &identifier, &weighted_events](std::string_view weight_str, ast::NodeCPtr event_node) -> bool {
 				bool ret = false;
 				uint64_t weight = StringUtils::string_to_uint64(weight_str, &ret);
 				if (!ret) {
@@ -208,7 +210,7 @@ bool EventManager::load_on_action_file(ast::NodeCPtr root) {
 				ret &= expect_event_identifier(assign_variable_callback_pointer(event))(event_node);
 
 				if (event != nullptr) {
-					ret &= weighted_events.emplace(event, weight).second;
+					ret &= map_callback(weighted_events, event)(weight);
 				} else {
 					Logger::warning(
 						"Non-existing event ", event->get_identifier(), " loaded on action ", identifier, "with weight",

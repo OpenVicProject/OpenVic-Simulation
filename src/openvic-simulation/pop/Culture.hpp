@@ -40,14 +40,14 @@ namespace OpenVic {
 
 	private:
 		CultureGroup const& PROPERTY(group);
-		const std::vector<std::string> PROPERTY(first_names);
-		const std::vector<std::string> PROPERTY(last_names);
+		const name_list_t PROPERTY(first_names);
+		const name_list_t PROPERTY(last_names);
 
 		// TODO - radicalism, primary tag
 
 		Culture(
 			std::string_view new_identifier, colour_t new_colour, CultureGroup const& new_group,
-			std::vector<std::string>&& new_first_names, std::vector<std::string>&& new_last_names
+			name_list_t&& new_first_names, name_list_t&& new_last_names
 		);
 
 	public:
@@ -75,8 +75,8 @@ namespace OpenVic {
 		);
 
 		bool add_culture(
-			std::string_view identifier, colour_t colour, CultureGroup const& group, std::vector<std::string>&& first_names,
-			std::vector<std::string>&& last_names
+			std::string_view identifier, colour_t colour, CultureGroup const& group, name_list_t&& first_names,
+			name_list_t&& last_names
 		);
 
 		bool load_graphical_culture_type_file(ast::NodeCPtr root);

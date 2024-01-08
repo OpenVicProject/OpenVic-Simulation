@@ -194,14 +194,12 @@ bool PopManager::load_pop_type_file(
 		"country_migration_target", ZERO_OR_ONE, country_migration_target.expect_conditional_weight(ConditionalWeight::FACTOR),
 		"migration_target", ZERO_OR_ONE, migration_target.expect_conditional_weight(ConditionalWeight::FACTOR),
 		"promote_to", ZERO_OR_ONE, assign_variable_callback(promote_to_node),
-		"ideologies", ZERO_OR_ONE, ideology_manager.expect_ideology_dictionary(
+		"ideologies", ZERO_OR_ONE, ideology_manager.expect_ideology_dictionary_reserve_length(
+			ideologies,
 			[&filestem, &ideologies](Ideology const& ideology, ast::NodeCPtr node) -> bool {
 				ConditionalWeight weight { scope_t::POP, scope_t::POP, scope_t::NO_SCOPE };
 				bool ret = weight.expect_conditional_weight(ConditionalWeight::FACTOR)(node);
-				if (!ideologies.emplace(&ideology, std::move(weight)).second) {
-					Logger::error("Duplicate ideology in pop type ", filestem, " ideology weights: ", ideology);
-					ret = false;
-				}
+				ret &= map_callback(ideologies, &ideology)(std::move(weight));
 				return ret;
 			}
 		),
@@ -233,7 +231,8 @@ bool PopManager::load_delayed_parse_pop_type_data(IssueManager const& issue_mana
 	for (size_t index = 0; index < delayed_parse_promote_to_and_issues_nodes.size(); ++index) {
 		const auto [promote_to_node, issues_node] = delayed_parse_promote_to_and_issues_nodes[index];
 		PopType* pop_type = pop_types.get_item_by_index(index);
-		if (promote_to_node != nullptr && !expect_pop_type_dictionary(
+		if (promote_to_node != nullptr && !expect_pop_type_dictionary_reserve_length(
+			pop_type->promote_to,
 			[pop_type](PopType const& type, ast::NodeCPtr node) -> bool {
 				if (pop_type == &type) {
 					Logger::error("Pop type ", type, " cannot have promotion weight to itself!");
@@ -241,17 +240,15 @@ bool PopManager::load_delayed_parse_pop_type_data(IssueManager const& issue_mana
 				}
 				ConditionalWeight weight { scope_t::POP, scope_t::POP, scope_t::NO_SCOPE };
 				bool ret = weight.expect_conditional_weight(ConditionalWeight::FACTOR)(node);
-				if (!pop_type->promote_to.emplace(&type, std::move(weight)).second) {
-					Logger::error("Duplicate pop type in pop type ", pop_type, " promotion weights: ", type);
-					ret = false;
-				}
+				ret &= map_callback(pop_type->promote_to, &type)(std::move(weight));
 				return ret;
 			}
 		)(promote_to_node)) {
 			Logger::error("Errors parsing pop type ", pop_type, " promotion weights!");
 			ret = false;
 		}
-		if (issues_node != nullptr && !expect_dictionary(
+		if (issues_node != nullptr && !expect_dictionary_reserve_length(
+			pop_type->issues,
 			[pop_type, &issue_manager](std::string_view key, ast::NodeCPtr node) -> bool {
 				Issue const* issue = issue_manager.get_issue_by_identifier(key);
 				if (issue == nullptr) {
@@ -263,10 +260,7 @@ bool PopManager::load_delayed_parse_pop_type_data(IssueManager const& issue_mana
 				}
 				ConditionalWeight weight { scope_t::POP, scope_t::POP, scope_t::NO_SCOPE };
 				bool ret = weight.expect_conditional_weight(ConditionalWeight::FACTOR)(node);
-				if (!pop_type->issues.emplace(issue, std::move(weight)).second) {
-					Logger::error("Duplicate issue in pop type ", pop_type, " issue weights: ", issue->get_identifier());
-					ret = false;
-				}
+				ret &= map_callback(pop_type->issues, issue)(std::move(weight));
 				return ret;
 			}
 		)(issues_node)) {

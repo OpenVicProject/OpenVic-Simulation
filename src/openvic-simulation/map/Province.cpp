@@ -36,12 +36,10 @@ bool Province::load_positions(BuildingTypeManager const& building_type_manager, 
 		"factory", ZERO_OR_ONE, expect_fvec2(assign_variable_callback(positions.factory)),
 		"building_construction", ZERO_OR_ONE, expect_fvec2(assign_variable_callback(positions.building_construction)),
 		"military_construction", ZERO_OR_ONE, expect_fvec2(assign_variable_callback(positions.military_construction)),
-		"building_position", ZERO_OR_ONE, building_type_manager.expect_building_type_dictionary(
+		"building_position", ZERO_OR_ONE, building_type_manager.expect_building_type_dictionary_reserve_length(
+			positions.building_position,
 			[this](BuildingType const& type, ast::NodeCPtr value) -> bool {
-				return expect_fvec2([this, &type](fvec2_t position) -> bool {
-					positions.building_position.emplace(&type, std::move(position));
-					return true;
-				})(value);
+				return expect_fvec2(map_callback(positions.building_position, &type))(value);
 			}
 		),
 		"building_rotation", ZERO_OR_ONE, building_type_manager.expect_building_type_decimal_map(

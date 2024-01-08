@@ -11,6 +11,7 @@
 
 #include "openvic-simulation/types/Colour.hpp"
 #include "openvic-simulation/types/Date.hpp"
+#include "openvic-simulation/types/HasIdentifier.hpp"
 #include "openvic-simulation/types/OrderedContainers.hpp"
 #include "openvic-simulation/types/Vector.hpp"
 
@@ -27,6 +28,9 @@ namespace OpenVic {
 	/* String set type supporting heterogeneous key lookup */
 	using string_set_t = ordered_set<std::string>;
 	using case_insensitive_string_set_t = case_insensitive_ordered_set<std::string>;
+
+	using name_list_t = std::vector<std::string>;
+	std::ostream& operator<<(std::ostream& stream, name_list_t const& name_list);
 
 	namespace NodeTools {
 
@@ -234,21 +238,22 @@ namespace OpenVic {
 			t.reserve(size_t {});
 		};
 		template<Reservable T>
+		LengthCallback auto reserve_length_callback(T& t) {
+			return [&t](size_t size) -> size_t {
+				t.reserve(size);
+				return size;
+			};
+		}
+		template<Reservable T>
 		NodeCallback auto expect_list_reserve_length(T& t, NodeCallback auto callback) {
-			return expect_list_and_length(
-				[&t](size_t size) -> size_t {
-					t.reserve(t.size() + size);
-					return size;
-				},
-				callback
-			);
+			return expect_list_and_length(reserve_length_callback(t), callback);
 		}
 		template<Reservable T>
 		NodeCallback auto expect_dictionary_reserve_length(T& t, KeyValueCallback auto callback) {
 			return expect_list_reserve_length(t, expect_assign(callback));
 		}
 
-		node_callback_t name_list_callback(callback_t<std::vector<std::string>&&> callback);
+		node_callback_t name_list_callback(callback_t<name_list_t&&> callback);
 
 		template<typename T, class Hash, class KeyEqual>
 		Callback<std::string_view> auto expect_mapped_string(
@@ -351,10 +356,32 @@ namespace OpenVic {
 			};
 		}
 
-		template<typename T, typename...SetArgs>
+		template<typename T, typename U, typename...SetArgs>
+		Callback<T> auto set_callback(tsl::ordered_set<U, SetArgs...>& set) {
+			return [&set](T val) -> bool {
+				if (!set.emplace(std::move(val)).second) {
+					Logger::warning("Duplicate set entry: \"", val, "\"");
+				}
+				return true;
+			};
+		}
+
+		template<std::derived_from<HasIdentifier> T, typename...SetArgs>
 		Callback<T const&> auto set_callback_pointer(tsl::ordered_set<T const*, SetArgs...>& set) {
 			return [&set](T const& val) -> bool {
-				set.insert(&val);
+				if (!set.emplace(&val).second) {
+					Logger::warning("Duplicate set entry: \"", &val, "\"");
+				}
+				return true;
+			};
+		}
+
+		template<std::derived_from<HasIdentifier> Key, typename Value, typename... MapArgs>
+		Callback<Value> auto map_callback(tsl::ordered_map<Key const*, Value, MapArgs...>& map, Key const* key) {
+			return [&map, key](Value value) -> bool {
+				if (!map.emplace(key, std::move(value)).second) {
+					Logger::warning("Duplicate map entry with key: \"", key, "\"");
+				}
 				return true;
 			};
 		}

@@ -372,12 +372,7 @@ key_value_callback_t ModifierManager::_modifier_effect_callback(
 ) const {
 	const auto add_modifier_cb = [this, &modifier, effect_validator](ModifierEffect const* effect, ast::NodeCPtr value) -> bool {
 		if (effect_validator(*effect)) {
-			if (!modifier.values.contains(effect)) {
-				return expect_fixed_point(assign_variable_callback(modifier.values[effect]))(value);
-			} else {
-				Logger::error("Duplicate modifier effect: ", effect->get_identifier());
-				return false;
-			}
+			return expect_fixed_point(map_callback(modifier.values, effect))(value);
 		} else {
 			Logger::error("Failed to validate modifier effect: ", effect->get_identifier());
 			return false;
@@ -424,7 +419,10 @@ node_callback_t ModifierManager::expect_validated_modifier_value_and_default(
 ) const {
 	return [this, modifier_callback, default_callback, effect_validator](ast::NodeCPtr root) -> bool {
 		ModifierValue modifier;
-		bool ret = expect_dictionary(_modifier_effect_callback(modifier, default_callback, effect_validator))(root);
+		bool ret = expect_dictionary_reserve_length(
+			modifier.values,
+			_modifier_effect_callback(modifier, default_callback, effect_validator)
+		)(root);
 		ret &= modifier_callback(std::move(modifier));
 		return ret;
 	};

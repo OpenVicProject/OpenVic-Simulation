@@ -122,10 +122,15 @@ bool WargoalTypeManager::load_wargoal_file(ast::NodeCPtr root) {
 					};
 					const decltype(peace_modifier_map)::const_iterator it = peace_modifier_map.find(key);
 					if (it != peace_modifier_map.end()) {
-						return expect_fixed_point([&modifiers, peace_modifier = it->second](fixed_point_t val) -> bool {
-							modifiers[peace_modifier] = val;
-							return true;
-						})(value);
+						return expect_fixed_point(
+							[&modifiers, &identifier, &key, peace_modifier = it->second](fixed_point_t val) -> bool {
+								if (modifiers.emplace(peace_modifier, val).second) {
+									return true;
+								}
+								Logger::error("Duplicate peace modifier ", key, " in wargoal ", identifier, "!");
+								return false;
+							}
+						)(value);
 					}
 
 					Logger::error("Modifier ", key, " in wargoal ", identifier, " is invalid.");

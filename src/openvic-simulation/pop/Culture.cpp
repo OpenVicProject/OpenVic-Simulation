@@ -16,7 +16,7 @@ CultureGroup::CultureGroup(
 
 Culture::Culture(
 	std::string_view new_identifier, colour_t new_colour, CultureGroup const& new_group,
-	std::vector<std::string>&& new_first_names, std::vector<std::string>&& new_last_names
+	name_list_t&& new_first_names, name_list_t&& new_last_names
 ) : HasIdentifierAndColour { new_identifier, new_colour, false }, group { new_group },
 	first_names { std::move(new_first_names) }, last_names { std::move(new_last_names) } {}
 
@@ -51,8 +51,8 @@ bool CultureManager::add_culture_group(
 }
 
 bool CultureManager::add_culture(
-	std::string_view identifier, colour_t colour, CultureGroup const& group, std::vector<std::string>&& first_names,
-	std::vector<std::string>&& last_names
+	std::string_view identifier, colour_t colour, CultureGroup const& group, name_list_t&& first_names,
+	name_list_t&& last_names
 ) {
 	if (!culture_groups.is_locked()) {
 		Logger::error("Cannot register cultures until culture groups are locked!");
@@ -99,7 +99,7 @@ bool CultureManager::_load_culture(
 ) {
 
 	colour_t colour = colour_t::null();
-	std::vector<std::string> first_names, last_names;
+	name_list_t first_names, last_names;
 
 	bool ret = expect_dictionary_keys(
 		"color", ONE_EXACTLY, expect_colour(assign_variable_callback(colour)),

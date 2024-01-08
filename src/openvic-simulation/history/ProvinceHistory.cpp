@@ -35,10 +35,15 @@ bool ProvinceHistoryMap::_load_history_entry(
 			// used for province buildings like forts or railroads
 			BuildingType const* building_type = building_type_manager.get_building_type_by_identifier(key);
 			if (building_type != nullptr) {
-				return expect_uint<BuildingType::level_t>([&entry, building_type](BuildingType::level_t level) -> bool {
-					entry.province_buildings[building_type] = level;
-					return true;
-				})(value);
+				if (building_type->is_in_province()) {
+					return expect_uint<BuildingType::level_t>(map_callback(entry.province_buildings, building_type))(value);
+				} else {
+					Logger::error(
+						"Attempted to add state building \"", building_type, "\" at top scope of province history for ",
+						entry.get_province()
+					);
+					return false;
+				}
 			}
 
 			return _load_history_sub_entry_callback(game_manager, entry.get_date(), value, key, value);
@@ -65,27 +70,39 @@ bool ProvinceHistoryMap::_load_history_entry(
 			Ideology const* ideology = nullptr;
 			fixed_point_t amount = 0; // percent I do believe
 
-			const bool ret = expect_dictionary_keys(
+			bool ret = expect_dictionary_keys(
 				"ideology", ONE_EXACTLY, ideology_manager.expect_ideology_identifier(
 					assign_variable_callback_pointer(ideology)
 				),
 				"loyalty_value", ONE_EXACTLY, expect_fixed_point(assign_variable_callback(amount))
 			)(node);
-			entry.party_loyalties[ideology] = amount;
+			if (ideology != nullptr) {
+				ret &= map_callback(entry.party_loyalties, ideology)(amount);
+			}
 			return ret;
 		},
 		"state_building", ZERO_OR_MORE, [&building_type_manager, &entry](ast::NodeCPtr node) -> bool {
 			BuildingType const* building_type = nullptr;
 			uint8_t level = 0;
 
-			const bool ret = expect_dictionary_keys(
+			bool ret = expect_dictionary_keys(
 				"level", ONE_EXACTLY, expect_uint(assign_variable_callback(level)),
 				"building", ONE_EXACTLY, building_type_manager.expect_building_type_identifier(
 					assign_variable_callback_pointer(building_type)
 				),
 				"upgrade", ZERO_OR_ONE, success_callback // doesn't appear to have an effect
 			)(node);
-			entry.state_buildings[building_type] = level;
+			if (building_type != nullptr) {
+				if (!building_type->is_in_province()) {
+					ret &= map_callback(entry.state_buildings, building_type)(level);
+				} else {
+					Logger::error(
+						"Attempted to add province building \"", building_type, "\" to state building list of province history for ",
+						entry.get_province()
+					);
+					ret = false;
+				}
+			}
 			return ret;
 		}
 	)(root);
@@ -174,7 +191,8 @@ bool ProvinceHistoryEntry::_load_province_pop_history(
 ) {
 	PopManager const& pop_manager = game_manager.get_pop_manager();
 	RebelManager const& rebel_manager = game_manager.get_politics_manager().get_rebel_manager();
-	return pop_manager.expect_pop_type_dictionary(
+	return pop_manager.expect_pop_type_dictionary_reserve_length(
+		pops,
 		[this, &pop_manager, &rebel_manager, non_integer_size](PopType const& pop_type, ast::NodeCPtr pop_node) -> bool {
 			return pop_manager.load_pop_into_vector(rebel_manager, pops, pop_type, pop_node, non_integer_size);
 		}

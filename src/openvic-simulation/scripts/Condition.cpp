@@ -721,7 +721,7 @@ node_callback_t ConditionManager::expect_condition_node_list(
 		};
 
 		bool ret = conditions.expect_item_dictionary_and_default(
-			expect_node, top_scope ? top_scope_fallback : key_value_invalid_callback
+			top_scope ? top_scope_fallback : key_value_invalid_callback, expect_node
 		)(node);
 		if (!ret) {
 			Logger::error("Error parsing condition node:\n", node);

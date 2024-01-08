@@ -11,16 +11,18 @@ NationalFocus::NationalFocus(
 	NationalFocusGroup const& new_group,
 	ModifierValue&& new_modifiers,
 	pop_promotion_map_t&& new_encouraged_promotion,
-	party_loyalty_map_t&& new_encouraged_loyalty,
 	production_map_t&& new_encouraged_production,
+	Ideology const* new_loyalty_ideology,
+	fixed_point_t new_loyalty_value,
 	ConditionScript&& new_limit
 ) : HasIdentifier { new_identifier },
 	icon { new_icon },
 	group { new_group },
 	modifiers { std::move(new_modifiers) },
 	encouraged_promotion { std::move(new_encouraged_promotion) },
-	encouraged_loyalty { std::move(new_encouraged_loyalty) },
 	encouraged_production { std::move(new_encouraged_production) },
+	loyalty_ideology { new_loyalty_ideology },
+	loyalty_value { new_loyalty_value },
 	limit { std::move(new_limit) } {}
 
 bool NationalFocus::parse_scripts(GameManager const& game_manager) {
@@ -41,8 +43,9 @@ inline bool NationalFocusManager::add_national_focus(
 	NationalFocusGroup const& group,
 	ModifierValue&& modifiers,
 	NationalFocus::pop_promotion_map_t&& encouraged_promotion,
-	NationalFocus::party_loyalty_map_t&& encouraged_loyalty,
 	NationalFocus::production_map_t&& encouraged_production,
+	Ideology const* loyalty_ideology,
+	fixed_point_t loyalty_value,
 	ConditionScript&& limit
 ) {
 	if (identifier.empty()) {
@@ -53,74 +56,79 @@ inline bool NationalFocusManager::add_national_focus(
 		Logger::error("Invalid icon ", icon, " for national focus ", identifier);
 		return false;
 	}
+	if ((loyalty_ideology == nullptr) != (loyalty_value == 0)) {
+		Logger::warning(
+			"Party loyalty incorrectly defined for national focus ", identifier, ": ideology = ", loyalty_ideology,
+			", value = ", loyalty_value
+		);
+	}
 	return national_foci.add_item({
-		identifier, icon, group, std::move(modifiers), std::move(encouraged_promotion), std::move(encouraged_loyalty),
-		std::move(encouraged_production), std::move(limit)
+		identifier, icon, group, std::move(modifiers), std::move(encouraged_promotion), std::move(encouraged_production),
+		loyalty_ideology, loyalty_value, std::move(limit)
 	});
 }
 
-bool NationalFocusManager::load_national_foci_file(PopManager const& pop_manager, IdeologyManager const& ideology_manager, GoodManager const& good_manager, ModifierManager const& modifier_manager, ast::NodeCPtr root) {
-	bool ret = expect_dictionary_reserve_length(national_focus_groups, [this](std::string_view identifier, ast::NodeCPtr node) -> bool {
-		return add_national_focus_group(identifier);
-	})(root);
+bool NationalFocusManager::load_national_foci_file(
+	PopManager const& pop_manager, IdeologyManager const& ideology_manager, GoodManager const& good_manager,
+	ModifierManager const& modifier_manager, ast::NodeCPtr root
+) {
+	size_t expected_national_foci = 0;
+	bool ret = expect_dictionary_reserve_length(
+		national_focus_groups,
+		[this, &expected_national_foci](std::string_view identifier, ast::NodeCPtr node) -> bool {
+			return expect_length(add_variable_callback(expected_national_foci))(node) & add_national_focus_group(identifier);
+		}
+	)(root);
 	lock_national_focus_groups();
 
-	ret &= expect_national_focus_group_dictionary([this, &pop_manager, &ideology_manager, &good_manager, &modifier_manager](NationalFocusGroup const& group, ast::NodeCPtr node) -> bool {
-		bool ret = expect_dictionary([this, &group, &pop_manager, &ideology_manager, &good_manager, &modifier_manager](std::string_view identifier, ast::NodeCPtr node) -> bool {
-			uint8_t icon;
+	national_foci.reserve(expected_national_foci);
+
+	ret &= expect_national_focus_group_dictionary([this, &pop_manager, &ideology_manager, &good_manager, &modifier_manager](
+		NationalFocusGroup const& group, ast::NodeCPtr group_node
+	) -> bool {
+		return expect_dictionary([this, &group, &pop_manager, &ideology_manager, &good_manager, &modifier_manager](
+			std::string_view identifier, ast::NodeCPtr node
+		) -> bool {
+			uint8_t icon = 0;
 			ModifierValue modifiers;
 			NationalFocus::pop_promotion_map_t promotions;
-			NationalFocus::party_loyalty_map_t loyalties;
 			NationalFocus::production_map_t production;
+			Ideology const* loyalty_ideology = nullptr;
+			fixed_point_t loyalty_value = 0;
 			ConditionScript limit { scope_t::PROVINCE | scope_t::COUNTRY, scope_t::PROVINCE | scope_t::COUNTRY, scope_t::NO_SCOPE };
-
-			Ideology const* last_specified_ideology = nullptr; // weird, I know
 
 			bool ret = modifier_manager.expect_modifier_value_and_keys_and_default(
 				move_variable_callback(modifiers),
-				[&promotions, &pop_manager, &production, &good_manager, &modifiers, &modifier_manager](std::string_view key, ast::NodeCPtr value) -> bool {
+				[&promotions, &pop_manager, &production, &good_manager, &modifiers, &modifier_manager](
+					std::string_view key, ast::NodeCPtr value
+				) -> bool {
 					PopType const* pop_type = pop_manager.get_pop_type_by_identifier(key);
 					if (pop_type != nullptr) {
-						fixed_point_t boost;
-						bool ret = expect_fixed_point(assign_variable_callback(boost))(value);
-						promotions[pop_type] = boost;
-						return ret;
+						return expect_fixed_point(map_callback(promotions, pop_type))(value);
 					}
 					Good const* good = good_manager.get_good_by_identifier(key);
 					if (good != nullptr) {
-						fixed_point_t boost;
-						bool ret = expect_fixed_point(assign_variable_callback(boost))(value);
-						production[good] = boost;
-						return ret;
+						return expect_fixed_point(map_callback(production, good))(value);
 					}
 					return key_value_invalid_callback(key, value);
 				},
 				"icon", ONE_EXACTLY, expect_uint(assign_variable_callback(icon)),
-				"ideology", ZERO_OR_MORE, ideology_manager.expect_ideology_identifier(assign_variable_callback_pointer(last_specified_ideology)),
-				"loyalty_value", ZERO_OR_MORE, [&identifier, &last_specified_ideology, &loyalties](ast::NodeCPtr value) -> bool {
-					if (last_specified_ideology == nullptr) {
-						Logger::error("In national focus ", identifier, ": No ideology selected for loyalty_value!");
-						return false;
-					}
-					fixed_point_t boost;
-					bool ret = expect_fixed_point(assign_variable_callback(boost))(value);
-					loyalties[last_specified_ideology] += boost;
-					return ret;
-				},
+				"ideology", ZERO_OR_ONE,
+					ideology_manager.expect_ideology_identifier(assign_variable_callback_pointer(loyalty_ideology)),
+				"loyalty_value", ZERO_OR_ONE, expect_fixed_point(assign_variable_callback(loyalty_value)),
 				"limit", ZERO_OR_ONE, limit.expect_script(),
 				"has_flashpoint", ZERO_OR_ONE, success_callback, // special case, include in limit
 				"own_provinces", ZERO_OR_ONE, success_callback, // special case, include in limit
 				"outliner_show_as_percent", ZERO_OR_ONE, success_callback // special case
 			)(node);
 
-			add_national_focus(
-				identifier, icon, group, std::move(modifiers), std::move(promotions), std::move(loyalties),
-				std::move(production), std::move(limit)
+			ret &= add_national_focus(
+				identifier, icon, group, std::move(modifiers), std::move(promotions), std::move(production),
+				loyalty_ideology, loyalty_value, std::move(limit)
 			);
 
 			return ret;
-		})(node);
-		return ret;
+		})(group_node);
 	})(root);
 	lock_national_foci();
 

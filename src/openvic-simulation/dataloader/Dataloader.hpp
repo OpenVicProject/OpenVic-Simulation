@@ -2,7 +2,6 @@
 
 #include <openvic-dataloader/csv/Parser.hpp>
 #include <openvic-dataloader/v2script/Parser.hpp>
-#include <unordered_map> //keep this here or mac builds will fail
 
 #include "openvic-simulation/dataloader/NodeTools.hpp"
 
