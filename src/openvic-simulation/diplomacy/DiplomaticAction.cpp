@@ -9,12 +9,11 @@
 using namespace OpenVic;
 
 DiplomaticActionType::DiplomaticActionType(DiplomaticActionType::Initializer&& initializer)
-	: commit_action_caller { std::move(initializer.commit) },
-	  allowed_to_commit { std::move(initializer.allowed) }, get_acceptance { std::move(initializer.get_acceptance) } {}
+  : commit_action_caller { std::move(initializer.commit) },
+	allowed_to_commit { std::move(initializer.allowed) }, get_acceptance { std::move(initializer.get_acceptance) } {}
 
 CancelableDiplomaticActionType::CancelableDiplomaticActionType(CancelableDiplomaticActionType::Initializer&& initializer)
 	: allowed_to_cancel{std::move(initializer.allowed_cancel)}, DiplomaticActionType(std::move(initializer)) {}
-
 
 DiplomaticActionManager::DiplomaticActionManager() {}
 
@@ -49,7 +48,7 @@ DiplomaticActionTickCache DiplomaticActionManager::create_diplomatic_action_tick
 			result.acceptance = type.get_acceptance(result.argument);
 		}
 	});
-	
+
 	return result;
 }
 
@@ -78,38 +77,38 @@ bool DiplomaticActionManager::setup_diplomatic_actions() {
 		}
 	);
 	result &= add_diplomatic_action(
-		"give_military_access", 
+		"give_military_access",
 		{ [](Argument& arg) {} }
 	);
 	result &= add_diplomatic_action(
-		"increase_relations", 
+		"increase_relations",
 		{
 			.commit = [](Argument& arg) {},
 			.allowed = [](const Argument& arg) { return false; },
 		}
 	);
 	result &= add_diplomatic_action(
-		"decrease_relations", 
+		"decrease_relations",
 		{ [](Argument& arg) {} }
 	);
 	result &= add_diplomatic_action(
-		"war_subsidies", 
+		"war_subsidies",
 		{ [](Argument& arg) {} }
 	);
 	result &= add_diplomatic_action(
-		"declare_war", 
+		"declare_war",
 		{ [](Argument& arg) {} }
 	);
 	result &= add_diplomatic_action(
-		"offer_peace", 
+		"offer_peace",
 		{ [](Argument& arg) {} }
 	);
 	result &= add_diplomatic_action(
-		"command_units", 
+		"command_units",
 		{ [](Argument& arg) {} }
 	);
 	result &= add_diplomatic_action(
-		"discredit", 
+		"discredit",
 		{ [](Argument& arg) {} }
 	);
 	result &= add_diplomatic_action(

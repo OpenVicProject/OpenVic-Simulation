@@ -109,8 +109,8 @@ bool RuleSet::set_rule(Rule const* rule, bool value) {
 		Logger::error("Invalid rule - null!");
 		return false;
 	}
-	rule_map_t& rule_map = rule_groups[rule->get_group()];
-	return rule_groups[rule->get_group()].emplace(rule, value).second;
+	rule_groups[rule->get_group()][rule] = value;
+	return true;
 }
 
 RuleSet& RuleSet::operator|=(RuleSet const& right) {
@@ -193,10 +193,9 @@ node_callback_t RuleManager::expect_rule_set(callback_t<RuleSet&&> ruleset_callb
 				if (rule != nullptr) {
 					return expect_bool(
 						[&ruleset, rule](bool value) -> bool {
-							if (!ruleset.rule_groups[rule->get_group()].emplace(rule, value).second) {
-								Logger::warning("Duplicate rule entry: ", rule, " - ignoring!");
-							}
-							return true;
+							/* Wrapped in a lambda function so that the rule group is only initialised
+							 * if the value bool is successfully parsed. */
+							return map_callback(ruleset.rule_groups[rule->get_group()], rule)(value);
 						}
 					)(rule_value);
 				} else {

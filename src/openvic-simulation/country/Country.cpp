@@ -1,10 +1,6 @@
 #include "Country.hpp"
 
-#include <filesystem>
 #include <string_view>
-#include <system_error>
-#include <unordered_map>
-#include <vector>
 
 #include <openvic-dataloader/v2script/AbstractSyntaxTree.hpp>
 
@@ -125,8 +121,7 @@ node_callback_t CountryManager::load_country_party(
 						return politics_manager.get_issue_manager().expect_issue_identifier(
 							[&policies, &group](Issue const& issue) -> bool {
 								if (&issue.get_group() == &group) {
-									policies.emplace(&group, &issue);
-									return true;
+									return map_callback(policies, &group)(&issue);
 								}
 								// TODO - change this back to error/false once TGC no longer has this issue
 								Logger::warning("Invalid policy ", issue.get_identifier(), ", group is ",
@@ -161,19 +156,10 @@ bool CountryManager::load_country_data_file(
 	Country::unit_names_map_t unit_names;
 	Country::government_colour_map_t alternative_colours;
 	bool ret = expect_dictionary_keys_and_default(
-		[&game_manager, &alternative_colours, &name](std::string_view key, ast::NodeCPtr value) -> bool {
+		[&game_manager, &alternative_colours](std::string_view key, ast::NodeCPtr value) -> bool {
 			return game_manager.get_politics_manager().get_government_type_manager().expect_government_type_str(
-				[&alternative_colours, &name, &value](GovernmentType const& government_type) -> bool {
-					if (alternative_colours.contains(&government_type)) {
-						Logger::error(
-							"Country ", name, " has duplicate entry for ", government_type.get_identifier(),
-							" alternative colour"
-						);
-						return false;
-					}
-					return expect_colour([&alternative_colours, &government_type](colour_t colour) -> bool {
-						return alternative_colours.emplace(&government_type, std::move(colour)).second;
-					})(value);
+				[&alternative_colours, value](GovernmentType const& government_type) -> bool {
+					return expect_colour(map_callback(alternative_colours, &government_type))(value);
 				}
 			)(key);
 		},
@@ -184,15 +170,10 @@ bool CountryManager::load_country_data_file(
 			),
 		"party", ZERO_OR_MORE, load_country_party(game_manager.get_politics_manager(), parties),
 		"unit_names", ZERO_OR_ONE,
-			game_manager.get_military_manager().get_unit_manager().expect_unit_dictionary(
-				[&unit_names, &name](Unit const& unit, ast::NodeCPtr value) -> bool {
-					if (unit_names.contains(&unit)) {
-						Logger::error("Country ", name, " has duplicate entry for ", unit.get_identifier(), " name list");
-						return false;
-					}
-					return name_list_callback([&unit_names, &unit](std::vector<std::string>&& list) -> bool {
-						return unit_names.emplace(&unit, std::move(list)).second;
-					})(value);
+			game_manager.get_military_manager().get_unit_manager().expect_unit_dictionary_reserve_length(
+				unit_names,
+				[&unit_names](Unit const& unit, ast::NodeCPtr value) -> bool {
+					return name_list_callback(map_callback(unit_names, &unit))(value);
 				}
 			)
 	)(root);

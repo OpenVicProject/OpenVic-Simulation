@@ -51,7 +51,7 @@ namespace OpenVic {
 	struct Country : HasIdentifierAndColour {
 		friend struct CountryManager;
 
-		using unit_names_map_t = ordered_map<Unit const*, std::vector<std::string>>;
+		using unit_names_map_t = ordered_map<Unit const*, name_list_t>;
 		using government_colour_map_t = ordered_map<GovernmentType const*, colour_t>;
 
 	private:

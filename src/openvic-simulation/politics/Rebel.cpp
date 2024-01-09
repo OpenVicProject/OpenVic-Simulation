@@ -115,17 +115,14 @@ bool RebelManager::load_rebels_file(
 				"icon", ONE_EXACTLY, expect_uint(assign_variable_callback(icon)),
 				"area", ONE_EXACTLY, expect_identifier(expect_mapped_string(area_map, assign_variable_callback(area))),
 				"break_alliance_on_win", ZERO_OR_ONE, expect_bool(assign_variable_callback(break_alliance_on_win)),
-				"government", ONE_EXACTLY, government_type_manager.expect_government_type_dictionary(
-					[this, &government_type_manager, &desired_governments](GovernmentType const& from,
-						ast::NodeCPtr value) -> bool {
-						if (desired_governments.contains(&from)) {
-							Logger::error("Duplicate \"from\" government type in rebel type: ", from.get_identifier());
-							return false;
-						}
+				"government", ONE_EXACTLY, government_type_manager.expect_government_type_dictionary_reserve_length(
+					desired_governments,
+					[this, &government_type_manager, &desired_governments](
+						GovernmentType const& from, ast::NodeCPtr value
+					) -> bool {
 						return government_type_manager.expect_government_type_identifier(
 							[&desired_governments, &from](GovernmentType const& to) -> bool {
-								desired_governments.emplace(&from, &to);
-								return true;
+								return map_callback(desired_governments, &from)(&to);
 							}
 						)(value);
 					}

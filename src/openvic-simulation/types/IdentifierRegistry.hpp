@@ -1,93 +1,14 @@
 #pragma once
 
-#include <cassert>
 #include <vector>
 
 #include "openvic-simulation/dataloader/NodeTools.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPointMap.hpp"
+#include "openvic-simulation/types/HasIdentifier.hpp"
 #include "openvic-simulation/utility/Getters.hpp"
 #include "openvic-simulation/utility/Logger.hpp"
 
 namespace OpenVic {
-
-	constexpr bool valid_basic_identifier_char(char c) {
-		return ('A' <= c && c <= 'Z') || ('a' <= c && c <= 'z') || ('0' <= c && c <= '9') || c == '_';
-	}
-	constexpr bool valid_basic_identifier(std::string_view identifier) {
-		return std::all_of(identifier.begin(), identifier.end(), valid_basic_identifier_char);
-	}
-	constexpr std::string_view extract_basic_identifier_prefix(std::string_view identifier) {
-		size_t len = 0;
-		while (len < identifier.size() && valid_basic_identifier_char(identifier[len])) {
-			++len;
-		}
-		return { identifier.data(), len };
-	}
-
-	/*
-	 * Base class for objects with a non-empty string identifier. Uniquely named instances of a type derived from this class
-	 * can be entered into an IdentifierRegistry instance.
-	 */
-	class HasIdentifier {
-		const std::string PROPERTY(identifier);
-
-	protected:
-		HasIdentifier(std::string_view new_identifier): identifier { new_identifier } {
-			assert(!identifier.empty());
-		}
-
-	public:
-		HasIdentifier(HasIdentifier const&) = delete;
-		HasIdentifier(HasIdentifier&&) = default;
-		HasIdentifier& operator=(HasIdentifier const&) = delete;
-		HasIdentifier& operator=(HasIdentifier&&) = delete;
-	};
-
-	inline std::ostream& operator<<(std::ostream& stream, HasIdentifier const& obj) {
-		return stream << obj.get_identifier();
-	}
-	inline std::ostream& operator<<(std::ostream& stream, HasIdentifier const* obj) {
-		return obj != nullptr ? stream << *obj : stream << "<NULL>";
-	}
-
-	/*
-	 * Base class for objects with associated colour information.
-	 */
-	template<IsColour ColourT>
-	class _HasColour {
-		const ColourT PROPERTY(colour);
-
-	protected:
-		_HasColour(ColourT new_colour, bool cannot_be_null): colour { new_colour } {
-			assert(!cannot_be_null || !colour.is_null());
-		}
-
-	public:
-		_HasColour(_HasColour const&) = delete;
-		_HasColour(_HasColour&&) = default;
-		_HasColour& operator=(_HasColour const&) = delete;
-		_HasColour& operator=(_HasColour&&) = delete;
-	};
-
-	/*
-	 * Base class for objects with a unique string identifier and associated colour information.
-	 */
-	template<IsColour ColourT>
-	class _HasIdentifierAndColour : public HasIdentifier, public _HasColour<ColourT> {
-	protected:
-		_HasIdentifierAndColour(std::string_view new_identifier, ColourT new_colour, bool cannot_be_null)
-			: HasIdentifier { new_identifier }, _HasColour<ColourT> { new_colour, cannot_be_null } {}
-
-	public:
-		_HasIdentifierAndColour(_HasIdentifierAndColour const&) = delete;
-		_HasIdentifierAndColour(_HasIdentifierAndColour&&) = default;
-		_HasIdentifierAndColour& operator=(_HasIdentifierAndColour const&) = delete;
-		_HasIdentifierAndColour& operator=(_HasIdentifierAndColour&&) = delete;
-	};
-
-	using HasIdentifierAndColour = _HasIdentifierAndColour<colour_t>;
-	using HasIdentifierAndAlphaColour = _HasIdentifierAndColour<colour_argb_t>;
-
 	/* Callbacks for trying to add duplicate keys via UniqueKeyRegistry::add_item */
 	static bool duplicate_fail_callback(std::string_view registry_name, std::string_view duplicate_identifier) {
 		Logger::error(
@@ -199,7 +120,15 @@ namespace OpenVic {
 				Logger::error("Failed to reserve space for ", size, " items in ", name, " registry - already locked!");
 			} else {
 				items.reserve(size);
+				identifier_index_map.reserve(size);
 			}
+		}
+
+		static NodeTools::KeyValueCallback auto key_value_invalid_callback(std::string_view name) {
+			return [name](std::string_view key, ast::NodeCPtr) {
+				Logger::error("Invalid ", name, ": ", key);
+				return false;
+			};
 		}
 
 #define GETTERS(CONST) \
@@ -235,12 +164,12 @@ namespace OpenVic {
 	) CONST { \
 		return NodeTools::expect_identifier(expect_item_str(callback, warn)); \
 	} \
-	NodeTools::NodeCallback auto expect_item_dictionary_and_default( \
-		NodeTools::Callback<value_type CONST&, ast::NodeCPtr> auto callback, \
-		NodeTools::KeyValueCallback auto default_callback \
+	NodeTools::NodeCallback auto expect_item_assign_and_default( \
+		NodeTools::KeyValueCallback auto default_callback, \
+		NodeTools::Callback<value_type CONST&, ast::NodeCPtr> auto callback \
 	) CONST { \
-		return NodeTools::expect_dictionary( \
-			[this, callback, default_callback](std::string_view key, ast::NodeCPtr value) -> bool { \
+		return NodeTools::expect_assign( \
+			[this, default_callback, callback](std::string_view key, ast::NodeCPtr value) -> bool { \
 				value_type CONST* item = get_item_by_identifier(key); \
 				if (item != nullptr) { \
 					return callback(*item, value); \
@@ -250,14 +179,70 @@ namespace OpenVic {
 			} \
 		); \
 	} \
+	NodeTools::NodeCallback auto expect_item_assign( \
+		NodeTools::Callback<value_type CONST&, ast::NodeCPtr> auto callback \
+	) CONST { \
+		return expect_item_assign_and_default(key_value_invalid_callback(name), callback); \
+	} \
+	NodeTools::NodeCallback auto expect_item_dictionary_and_length_and_default( \
+		NodeTools::LengthCallback auto length_callback, \
+		NodeTools::KeyValueCallback auto default_callback, \
+		NodeTools::Callback<value_type CONST&, ast::NodeCPtr> auto callback \
+	) CONST { \
+		return NodeTools::expect_list_and_length( \
+			length_callback, expect_item_assign_and_default(default_callback, callback) \
+		); \
+	} \
+	NodeTools::NodeCallback auto expect_item_dictionary_and_length( \
+		NodeTools::LengthCallback auto length_callback, \
+		NodeTools::Callback<value_type CONST&, ast::NodeCPtr> auto callback \
+	) CONST { \
+		return expect_item_dictionary_and_length_and_default( \
+			length_callback, \
+			key_value_invalid_callback(name), \
+			callback \
+		); \
+	} \
+	NodeTools::NodeCallback auto expect_item_dictionary_and_default( \
+		NodeTools::KeyValueCallback auto default_callback, \
+		NodeTools::Callback<value_type CONST&, ast::NodeCPtr> auto callback \
+	) CONST { \
+		return expect_item_dictionary_and_length_and_default( \
+			NodeTools::default_length_callback, \
+			default_callback, \
+			callback \
+		); \
+	} \
 	NodeTools::NodeCallback auto expect_item_dictionary( \
 		NodeTools::Callback<value_type CONST&, ast::NodeCPtr> auto callback \
 	) CONST { \
-		return expect_item_dictionary_and_default( \
-			callback, [this](std::string_view key, ast::NodeCPtr) -> bool { \
-				Logger::error("Invalid ", name, ": ", key); \
-				return false; \
-			} \
+		return expect_item_dictionary_and_length_and_default( \
+			NodeTools::default_length_callback, \
+			key_value_invalid_callback(name), \
+			callback \
+		); \
+	} \
+	template<NodeTools::Reservable T> \
+	NodeTools::NodeCallback auto expect_item_dictionary_reserve_length_and_default( \
+		T& t, \
+		NodeTools::KeyValueCallback auto default_callback, \
+		NodeTools::Callback<value_type CONST&, ast::NodeCPtr> auto callback \
+	) CONST { \
+		return expect_item_dictionary_and_length_and_default( \
+			NodeTools::reserve_length_callback(t), \
+			default_callback, \
+			callback \
+		); \
+	} \
+	template<NodeTools::Reservable T> \
+	NodeTools::NodeCallback auto expect_item_dictionary_reserve_length( \
+		T& t, \
+		NodeTools::Callback<value_type CONST&, ast::NodeCPtr> auto callback \
+	) CONST { \
+		return expect_item_dictionary_and_length_and_default( \
+			NodeTools::reserve_length_callback(t), \
+			key_value_invalid_callback(name), \
+			callback \
 		); \
 	}
 
@@ -432,15 +417,48 @@ private:
 	) const_kw { \
 		return registry.expect_item_identifier(callback, warn); \
 	} \
-	NodeTools::NodeCallback auto expect_##singular##_dictionary_and_default( \
-		NodeTools::Callback<decltype(registry)::value_type const_kw&, ast::NodeCPtr> auto callback, \
-		NodeTools::KeyValueCallback auto default_callback \
+	NodeTools::NodeCallback auto expect_##singular##_assign_and_default( \
+		NodeTools::KeyValueCallback auto default_callback, \
+		NodeTools::Callback<decltype(registry)::value_type const_kw&, ast::NodeCPtr> auto callback \
 	) const_kw { \
-		return registry.expect_item_dictionary_and_default(callback, default_callback); \
+		return registry.expect_item_assign_and_default(default_callback, callback); \
+	} \
+	NodeTools::NodeCallback auto expect_##singular##_assign( \
+		NodeTools::Callback<decltype(registry)::value_type const_kw&, ast::NodeCPtr> auto callback \
+	) const_kw { \
+		return registry.expect_item_assign(callback); \
+	} \
+	NodeTools::NodeCallback auto expect_##singular##_dictionary_and_length_and_default( \
+		NodeTools::LengthCallback auto length_callback, \
+		NodeTools::KeyValueCallback auto default_callback, \
+		NodeTools::Callback<decltype(registry)::value_type const_kw&, ast::NodeCPtr> auto callback \
+	) const_kw { \
+		return registry.expect_item_dictionary_and_length_and_default(length_callback, default_callback, callback); \
+	} \
+	NodeTools::NodeCallback auto expect_##singular##_dictionary_and_default( \
+		NodeTools::KeyValueCallback auto default_callback, \
+		NodeTools::Callback<decltype(registry)::value_type const_kw&, ast::NodeCPtr> auto callback \
+	) const_kw { \
+		return registry.expect_item_dictionary_and_default(default_callback, callback); \
 	} \
 	NodeTools::NodeCallback auto expect_##singular##_dictionary( \
 		NodeTools::Callback<decltype(registry)::value_type const_kw&, ast::NodeCPtr> auto callback \
 	) const_kw { \
 		return registry.expect_item_dictionary(callback); \
+	} \
+	template<NodeTools::Reservable T> \
+	NodeTools::NodeCallback auto expect_##singular##_dictionary_reserve_length_and_default( \
+		T& t, \
+		NodeTools::KeyValueCallback auto default_callback, \
+		NodeTools::Callback<decltype(registry)::value_type const_kw&, ast::NodeCPtr> auto callback \
+	) const_kw { \
+		return registry.expect_item_dictionary_reserve_length_and_default(t, default_callback, callback); \
+	} \
+	template<NodeTools::Reservable T> \
+	NodeTools::NodeCallback auto expect_##singular##_dictionary_reserve_length( \
+		T& t, \
+		NodeTools::Callback<decltype(registry)::value_type const_kw&, ast::NodeCPtr> auto callback \
+	) const_kw { \
+		return registry.expect_item_dictionary_reserve_length(t, callback); \
 	}
 }

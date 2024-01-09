@@ -146,7 +146,7 @@ namespace OpenVic {
 	template<class Key, class T, class Allocator = std::allocator<std::pair<Key, T>>, class IndexType = std::uint_least32_t>
 	using case_insensitive_deque_ordered_map =
 		deque_ordered_map<Key, T, case_insensitive_string_hash, case_insensitive_string_equal, Allocator, IndexType>;
-	
+
 	template<class Key, class T, class Allocator = std::allocator<std::pair<Key, T>>, class IndexType = std::uint_least32_t>
 	using case_insensitive_ordered_map = case_insensitive_vector_ordered_map<Key, T, Allocator, IndexType>;
 

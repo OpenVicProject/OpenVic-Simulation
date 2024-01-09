@@ -23,7 +23,6 @@ namespace OpenVic {
 
 	public:
 		using pop_promotion_map_t = fixed_point_map_t<PopType const*>;
-		using party_loyalty_map_t = fixed_point_map_t<Ideology const*>;
 		using production_map_t = fixed_point_map_t<Good const*>;
 
 	private:
@@ -31,8 +30,9 @@ namespace OpenVic {
 		NationalFocusGroup const& PROPERTY(group);
 		ModifierValue PROPERTY(modifiers);
 		pop_promotion_map_t PROPERTY(encouraged_promotion);
-		party_loyalty_map_t PROPERTY(encouraged_loyalty);
 		production_map_t PROPERTY(encouraged_production);
+		Ideology const* PROPERTY(loyalty_ideology);
+		fixed_point_t PROPERTY(loyalty_value);
 		ConditionScript PROPERTY(limit);
 
 		NationalFocus(
@@ -41,8 +41,9 @@ namespace OpenVic {
 			NationalFocusGroup const& new_group,
 			ModifierValue&& new_modifiers,
 			pop_promotion_map_t&& new_encouraged_promotion,
-			party_loyalty_map_t&& new_encouraged_loyalty,
 			production_map_t&& new_encouraged_production,
+			Ideology const* new_loyalty_ideology,
+			fixed_point_t new_loyalty_value,
 			ConditionScript&& new_limit
 		);
 
@@ -66,8 +67,9 @@ namespace OpenVic {
 			NationalFocusGroup const& group,
 			ModifierValue&& modifiers,
 			NationalFocus::pop_promotion_map_t&& encouraged_promotion,
-			NationalFocus::party_loyalty_map_t&& encouraged_loyalty,
 			NationalFocus::production_map_t&& encouraged_production,
+			Ideology const* loyalty_ideology,
+			fixed_point_t loyalty_value,
 			ConditionScript&& limit
 		);
 

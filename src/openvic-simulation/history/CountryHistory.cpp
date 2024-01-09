@@ -1,7 +1,6 @@
 #include "CountryHistory.hpp"
 
 #include "openvic-simulation/GameManager.hpp"
-#include <string_view>
 
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;
@@ -28,22 +27,20 @@ bool CountryHistoryMap::_load_history_entry(
 	DecisionManager const& decision_manager = game_manager.get_decision_manager();
 
 	return expect_dictionary_keys_and_default(
-		[this, &game_manager, &dataloader, &deployment_manager, &issue_manager,
-			&technology_manager, &invention_manager, &country_manager, &entry](std::string_view key, ast::NodeCPtr value) -> bool {
+		[this, &game_manager, &dataloader, &deployment_manager, &issue_manager, &technology_manager, &invention_manager,
+			&country_manager, &entry](std::string_view key, ast::NodeCPtr value) -> bool {
 			ReformGroup const* reform_group = issue_manager.get_reform_group_by_identifier(key);
 			if (reform_group != nullptr) {
 				return issue_manager.expect_reform_identifier([&entry, reform_group](Reform const& reform) -> bool {
 					if (&reform.get_reform_group() != reform_group) {
 						Logger::warning(
-							"Listing ", reform.get_identifier(), " as belonging to the reform group ",
-							reform_group->get_identifier(), " when it actually belongs to ",
-							reform.get_reform_group().get_identifier(), " in history of ", entry.get_country().get_identifier()
+							"Listing ", reform.get_identifier(), " as belonging to the reform group ", reform_group,
+							" when it actually belongs to ", reform.get_reform_group(), " in history of ", entry.get_country()
 						);
 					}
 					if (std::find(entry.reforms.begin(), entry.reforms.end(), &reform) != entry.reforms.end()) {
 						Logger::error(
-							"Redefinition of reform ", reform.get_identifier(), " in history of ",
-							entry.get_country().get_identifier()
+							"Redefinition of reform ", reform.get_identifier(), " in history of ", entry.get_country()
 						);
 						return false;
 					}
@@ -55,36 +52,14 @@ bool CountryHistoryMap::_load_history_entry(
 			{
 				Technology const* technology = technology_manager.get_technology_by_identifier(key);
 				if (technology != nullptr) {
-					return expect_int_bool(
-						[&entry, technology](bool flag) -> bool {
-							if (!entry.technologies.emplace(technology, flag).second) {
-								Logger::error(
-									"Duplicate entry for technology ", technology->get_identifier(), " in history of ",
-									entry.get_country().get_identifier(), " at date ", entry.get_date()
-								);
-								return false;
-							}
-							return true;
-						}
-					)(value);
+					return expect_int_bool(map_callback(entry.technologies, technology))(value);
 				}
 			}
 
 			{
 				Invention const* invention = invention_manager.get_invention_by_identifier(key);
 				if (invention != nullptr) {
-					return expect_bool(
-						[&entry, invention](bool flag) -> bool {
-							if (!entry.inventions.emplace(invention, flag).second) {
-								Logger::error(
-									"Duplicate entry for invention ", invention->get_identifier(), " in history of ",
-									entry.get_country().get_identifier(), " at date ", entry.get_date()
-								);
-								return false;
-							}
-							return true;
-						}
-					)(value);
+					return expect_bool(map_callback(entry.inventions, invention))(value);
 				}
 			}
 
@@ -113,12 +88,10 @@ bool CountryHistoryMap::_load_history_entry(
 		"prestige", ZERO_OR_ONE, expect_fixed_point(assign_variable_callback(entry.prestige)),
 		"ruling_party", ZERO_OR_ONE, country.expect_party_identifier(assign_variable_callback_pointer(entry.ruling_party)),
 		"last_election", ZERO_OR_ONE, expect_date(assign_variable_callback(entry.last_election)),
-		"upper_house", ZERO_OR_ONE, politics_manager.get_ideology_manager().expect_ideology_dictionary(
+		"upper_house", ZERO_OR_ONE, politics_manager.get_ideology_manager().expect_ideology_dictionary_reserve_length(
+			entry.upper_house,
 			[&entry](Ideology const& ideology, ast::NodeCPtr value) -> bool {
-				return expect_fixed_point([&entry, &ideology](fixed_point_t val) -> bool {
-					entry.upper_house[&ideology] = val;
-					return true;
-				})(value);
+				return expect_fixed_point(map_callback(entry.upper_house, &ideology))(value);
 			}
 		),
 		"oob", ZERO_OR_ONE, expect_identifier_or_string(
@@ -134,9 +107,11 @@ bool CountryHistoryMap::_load_history_entry(
 		"schools", ZERO_OR_ONE, technology_manager.expect_technology_school_identifier(
 			assign_variable_callback_pointer(entry.tech_school)
 		),
-		"foreign_investment", ZERO_OR_ONE, country_manager.expect_country_decimal_map(move_variable_callback(entry.foreign_investment)),
+		"foreign_investment", ZERO_OR_ONE,
+			country_manager.expect_country_decimal_map(move_variable_callback(entry.foreign_investment)),
 		"literacy", ZERO_OR_ONE, expect_fixed_point(assign_variable_callback(entry.literacy)),
-		"non_state_culture_literacy", ZERO_OR_ONE, expect_fixed_point(assign_variable_callback(entry.nonstate_culture_literacy)),
+		"non_state_culture_literacy", ZERO_OR_ONE,
+			expect_fixed_point(assign_variable_callback(entry.nonstate_culture_literacy)),
 		"consciousness", ZERO_OR_ONE, expect_fixed_point(assign_variable_callback(entry.consciousness)),
 		"nonstate_consciousness", ZERO_OR_ONE, expect_fixed_point(assign_variable_callback(entry.nonstate_consciousness)),
 		"is_releasable_vassal", ZERO_OR_ONE, expect_bool(assign_variable_callback(entry.releasable_vassal)),
@@ -153,7 +128,7 @@ bool CountryHistoryMap::_load_history_entry(
 						if (flag_expected) {
 							Logger::error(
 								"Government key found when expect flag type override for ", government_type,
-								" in history of ", entry.get_country().get_identifier()
+								" in history of ", entry.get_country()
 							);
 							ret = false;
 						}
@@ -173,22 +148,19 @@ bool CountryHistoryMap::_load_history_entry(
 							/* If the first government type is null, the "government" section will have already output
 							 * an error, so no need to output another one here. */
 							if (government_type != nullptr && flag_override_government_type != nullptr) {
-								ret &= entry.government_flag_overrides.emplace(
-									government_type, flag_override_government_type
-								).second;
+								ret &= map_callback(entry.government_flag_overrides, government_type)(flag_override_government_type);
 							}
 							return ret;
 						} else {
 							Logger::error(
 								"Flag key found when expecting government type for flag type override in history of ",
-								entry.get_country().get_identifier()
+								entry.get_country()
 							);
 							return false;
 						}
 					} else {
 						Logger::error(
-							"Invalid key ", id, " in government flag overrides in history of ",
-							entry.get_country().get_identifier()
+							"Invalid key ", id, " in government flag overrides in history of ", entry.get_country()
 						);
 						return false;
 					}
@@ -196,20 +168,15 @@ bool CountryHistoryMap::_load_history_entry(
 			)(value);
 			if (flag_expected) {
 				Logger::error(
-					"Missing flag type override for government type ", government_type, " in history of ",
-					entry.get_country().get_identifier()
+					"Missing flag type override for government type ", government_type, " in history of ", entry.get_country()
 				);
 				ret = false;
 			}
 			return ret;
 		},
 		"colonial_points", ZERO_OR_ONE, expect_fixed_point(assign_variable_callback(entry.colonial_points)),
-		"set_country_flag", ZERO_OR_MORE, expect_identifier_or_string([&entry](std::string_view flag) -> bool {
-			return entry.country_flags.emplace(flag).second;
-		}),
-		"set_global_flag", ZERO_OR_MORE, expect_identifier_or_string([&entry](std::string_view flag) -> bool {
-			return entry.global_flags.emplace(flag).second;
-		})
+		"set_country_flag", ZERO_OR_MORE, expect_identifier_or_string(set_callback<std::string_view>(entry.country_flags)),
+		"set_global_flag", ZERO_OR_MORE, expect_identifier_or_string(set_callback<std::string_view>(entry.global_flags))
 	)(root);
 }
 
@@ -231,7 +198,7 @@ CountryHistoryMap const* CountryHistoryManager::get_country_history(Country cons
 	if (country_registry != country_histories.end()) {
 		return &country_registry->second;
 	} else {
-		Logger::error("Attempted to access history of country ", country->get_identifier(), " but none has been defined!");
+		Logger::error("Attempted to access history of country ", country, " but none has been defined!");
 		return nullptr;
 	}
 }
@@ -240,10 +207,7 @@ bool CountryHistoryManager::load_country_history_file(
 	GameManager& game_manager, Dataloader const& dataloader, Country const& country, ast::NodeCPtr root
 ) {
 	if (locked) {
-		Logger::error(
-			"Attempted to load country history file for ", country.get_identifier(),
-			" after country history registry was locked!"
-		);
+		Logger::error("Attempted to load country history file for ", country, " after country history registry was locked!");
 		return false;
 	}
 
@@ -258,7 +222,7 @@ bool CountryHistoryManager::load_country_history_file(
 		if (result.second) {
 			it = result.first;
 		} else {
-			Logger::error("Failed to create country history map for country ", country.get_identifier());
+			Logger::error("Failed to create country history map for country ", country);
 			return false;
 		}
 	}

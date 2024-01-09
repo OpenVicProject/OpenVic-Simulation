@@ -893,6 +893,8 @@ bool Map::load_continent_file(ModifierManager const& modifier_manager, ast::Node
 				[&prov_list](Province const& province) -> bool {
 					if (province.continent == nullptr) {
 						prov_list.emplace_back(&province);
+					} else {
+						Logger::warning("Province ", province, " found in multiple continents");
 					}
 					return true;
 				}
