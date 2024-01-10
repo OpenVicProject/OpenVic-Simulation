@@ -9,56 +9,55 @@
 namespace OpenVic {
 	struct ProductionTypeManager;
 
-	struct EmployedPop {
+	struct Job {
 		friend struct ProductionTypeManager;
 
 		enum struct effect_t { INPUT, OUTPUT, THROUGHPUT };
 
 	private:
-		PopType const* PROPERTY(pop_type); // poptype
-		bool PROPERTY(artisan); // set by the parser if the magic "artisan" poptype is passed
-		effect_t PROPERTY(effect);
+		PopType const* PROPERTY(pop_type);
+		effect_t PROPERTY(effect_type);
 		fixed_point_t PROPERTY(effect_multiplier);
-		fixed_point_t PROPERTY(amount);
+		fixed_point_t PROPERTY(desired_workforce_share);
 
-		EmployedPop(
-			PopType const* new_pop_type, bool new_artisan, effect_t new_effect, fixed_point_t new_effect_multiplier,
-			fixed_point_t new_amount
+		Job(
+			PopType const* new_pop_type, effect_t new_effect_type, fixed_point_t new_effect_multiplier,
+			fixed_point_t new_desired_workforce_share
 		);
 
 	public:
-		EmployedPop() = default;
+		Job() = default;
 	};
 
 	struct ProductionType : HasIdentifier {
 		friend struct ProductionTypeManager;
 
-		enum struct type_t { FACTORY, RGO, ARTISAN };
+		enum struct template_type_t { FACTORY, RGO, ARTISAN };
 
 		using bonus_t = std::pair<ConditionScript, fixed_point_t>;
 
 	private:
-		const EmployedPop PROPERTY(owner);
-		std::vector<EmployedPop> PROPERTY(employees);
-		const type_t PROPERTY(type);
-		const Pop::pop_size_t workforce;
+		const Job PROPERTY(owner);
+		std::vector<Job> PROPERTY(jobs);
+		const template_type_t PROPERTY(template_type);
+		const Pop::pop_size_t PROPERTY(base_workforce_size);
 
 		Good::good_map_t PROPERTY(input_goods);
 		Good const* PROPERTY(output_goods);
-		const fixed_point_t PROPERTY(value);
+		const fixed_point_t PROPERTY(base_output_quantity);
 		std::vector<bonus_t> PROPERTY(bonuses);
 
-		Good::good_map_t PROPERTY(efficiency);
-		const bool PROPERTY_CUSTOM_PREFIX(coastal, is); // is_coastal
+		Good::good_map_t PROPERTY(maintenance_requirements);
+		const bool PROPERTY_CUSTOM_PREFIX(coastal, is);
 
 		const bool PROPERTY_CUSTOM_PREFIX(farm, is);
 		const bool PROPERTY_CUSTOM_PREFIX(mine, is);
 
 		ProductionType(
-			std::string_view new_identifier, EmployedPop new_owner, std::vector<EmployedPop> new_employees, type_t new_type,
-			Pop::pop_size_t new_workforce, Good::good_map_t&& new_input_goods, Good const* new_output_goods,
-			fixed_point_t new_value, std::vector<bonus_t>&& new_bonuses, Good::good_map_t&& new_efficiency, bool new_coastal,
-			bool new_farm, bool new_mine
+			std::string_view new_identifier, Job new_owner, std::vector<Job> new_jobs, template_type_t new_template_type,
+			Pop::pop_size_t new_base_workforce_size, Good::good_map_t&& new_input_goods, Good const* new_output_goods,
+			fixed_point_t new_base_output_quantity, std::vector<bonus_t>&& new_bonuses, Good::good_map_t&& new_efficiency, bool new_is_coastal,
+			bool new_is_farm, bool new_is_mine
 		);
 
 		bool parse_scripts(GameManager const& game_manager);
@@ -71,19 +70,18 @@ namespace OpenVic {
 		IdentifierRegistry<ProductionType> IDENTIFIER_REGISTRY(production_type);
 		PopType::sprite_t PROPERTY(rgo_owner_sprite);
 
-		NodeTools::node_callback_t _expect_employed_pop(
-			GoodManager const& good_manager, PopManager const& pop_manager, NodeTools::callback_t<EmployedPop&&> cb
+		NodeTools::node_callback_t _expect_job(
+			GoodManager const& good_manager, PopManager const& pop_manager, NodeTools::callback_t<Job&&> cb
 		);
-		NodeTools::node_callback_t _expect_employed_pop_list(
-			GoodManager const& good_manager, PopManager const& pop_manager,
-			NodeTools::callback_t<std::vector<EmployedPop>&&> cb
+		NodeTools::node_callback_t _expect_job_list(
+			GoodManager const& good_manager, PopManager const& pop_manager, NodeTools::callback_t<std::vector<Job>&&> cb
 		);
 
 	public:
 		ProductionTypeManager();
 
 		bool add_production_type(
-			std::string_view identifier, EmployedPop owner, std::vector<EmployedPop> employees, ProductionType::type_t type,
+			std::string_view identifier, Job owner, std::vector<Job> employees, ProductionType::template_type_t template_type,
 			Pop::pop_size_t workforce, Good::good_map_t&& input_goods, Good const* output_goods, fixed_point_t value,
 			std::vector<ProductionType::bonus_t>&& bonuses, Good::good_map_t&& efficiency, bool coastal, bool farm, bool mine
 		);
