@@ -203,11 +203,11 @@ bool UnitManager::generate_modifiers(ModifierManager& modifier_manager) const {
 	bool ret = true;
 
 	const auto generate_stat_modifiers = [&modifier_manager, &ret](std::string_view identifier, Unit::type_t type) -> void {
-
-		const auto stat_modifier = [&modifier_manager, &ret, &identifier](std::string_view suffix, bool positive_good,
-			ModifierEffect::format_t format) -> void {
+		const auto stat_modifier = [&modifier_manager, &ret, &identifier](
+			std::string_view suffix, bool is_positive_good, ModifierEffect::format_t format
+		) -> void {
 			ret &= modifier_manager.add_modifier_effect(
-				StringUtils::append_string_views(identifier, suffix), positive_good, format
+				ModifierManager::get_flat_identifier(identifier, suffix), is_positive_good, format
 			);
 		};
 
@@ -215,29 +215,29 @@ bool UnitManager::generate_modifiers(ModifierManager& modifier_manager) const {
 
 		ret &= modifier_manager.register_complex_modifier(identifier);
 
-		stat_modifier("_attack", true, RAW_DECIMAL);
-		stat_modifier("_defence", true, RAW_DECIMAL);
-		stat_modifier("_default_organisation", true, RAW_DECIMAL);
-		stat_modifier("_maximum_speed", true, RAW_DECIMAL);
-		stat_modifier("_build_time", false, INT);
-		stat_modifier("_supply_consumption", false, PROPORTION_DECIMAL);
+		stat_modifier("attack", true, RAW_DECIMAL);
+		stat_modifier("defence", true, RAW_DECIMAL);
+		stat_modifier("default_organisation", true, RAW_DECIMAL);
+		stat_modifier("maximum_speed", true, RAW_DECIMAL);
+		stat_modifier("build_time", false, INT);
+		stat_modifier("supply_consumption", false, PROPORTION_DECIMAL);
 
 		switch (type) {
 		case Unit::type_t::LAND:
-			stat_modifier("_reconnaissance", true, RAW_DECIMAL);
-			stat_modifier("_discipline", true, PROPORTION_DECIMAL);
-			stat_modifier("_support", true, PROPORTION_DECIMAL);
-			stat_modifier("_maneuver", true, INT);
-			stat_modifier("_siege", true, RAW_DECIMAL);
+			stat_modifier("reconnaissance", true, RAW_DECIMAL);
+			stat_modifier("discipline", true, PROPORTION_DECIMAL);
+			stat_modifier("support", true, PROPORTION_DECIMAL);
+			stat_modifier("maneuver", true, INT);
+			stat_modifier("siege", true, RAW_DECIMAL);
 			break;
 		case Unit::type_t::NAVAL:
-			stat_modifier("_colonial_points", true, INT);
-			stat_modifier("_supply_consumption_score", false, INT);
-			stat_modifier("_hull", true, RAW_DECIMAL);
-			stat_modifier("_gun_power", true, RAW_DECIMAL);
-			stat_modifier("_fire_range", true, RAW_DECIMAL);
-			stat_modifier("_evasion", true, PROPORTION_DECIMAL);
-			stat_modifier("_torpedo_attack", true, RAW_DECIMAL);
+			stat_modifier("colonial_points", true, INT);
+			stat_modifier("supply_consumption_score", false, INT);
+			stat_modifier("hull", true, RAW_DECIMAL);
+			stat_modifier("gun_power", true, RAW_DECIMAL);
+			stat_modifier("fire_range", true, RAW_DECIMAL);
+			stat_modifier("evasion", true, PROPORTION_DECIMAL);
+			stat_modifier("torpedo_attack", true, RAW_DECIMAL);
 			break;
 		}
 	};
