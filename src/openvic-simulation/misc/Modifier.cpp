@@ -107,16 +107,27 @@ bool ModifierManager::setup_modifier_effects() {
 	bool ret = true;
 
 	using enum ModifierEffect::format_t;
+	/* Tech/inventions only*/
+	ret &= add_modifier_effect("cb_creation_speed", true);
+	ret &= add_modifier_effect("combat_width", false);
+	ret &= add_modifier_effect("plurality", true, PERCENTAGE_DECIMAL);
+	ret &= add_modifier_effect("pop_growth", true);
+	ret &= add_modifier_effect("regular_experience_level", true, RAW_DECIMAL);
+	ret &= add_modifier_effect("reinforce_rate", true);
+	ret &= add_modifier_effect("seperatism", false); // paradox typo
+	ret &= add_modifier_effect("shared_prestige", true, RAW_DECIMAL);
+	ret &= add_modifier_effect("tax_eff", true);
 
 	/* Country Modifier Effects */
 	ret &= add_modifier_effect("administrative_efficiency", true);
 	ret &= add_modifier_effect("administrative_efficiency_modifier", true);
+	ret &= add_modifier_effect("administrative_multiplier", true);
 	ret &= add_modifier_effect("artisan_input", false);
 	ret &= add_modifier_effect("artisan_output", true);
 	ret &= add_modifier_effect("artisan_throughput", true);
 	ret &= add_modifier_effect("badboy", false, RAW_DECIMAL);
-	ret &= add_modifier_effect("cb_creation_speed", true); //seemingly works the same way as cb_generation_speed_modifier
 	ret &= add_modifier_effect("cb_generation_speed_modifier", true);
+	ret &= add_modifier_effect("civilization_progress_modifier", true);
 	ret &= add_modifier_effect("colonial_life_rating", false, INT);
 	ret &= add_modifier_effect("colonial_migration", true);
 	ret &= add_modifier_effect("colonial_points", true, INT);
@@ -137,7 +148,6 @@ bool ModifierManager::setup_modifier_effects() {
 	ret &= add_modifier_effect("global_assimilation_rate", true);
 	ret &= add_modifier_effect("global_immigrant_attract", true);
 	ret &= add_modifier_effect("global_pop_consciousness_modifier", false, RAW_DECIMAL);
-	ret &= add_modifier_effect("global_pop_growth", true);
 	ret &= add_modifier_effect("global_pop_militancy_modifier", false, RAW_DECIMAL);
 	ret &= add_modifier_effect("global_population_growth", true);
 	ret &= add_modifier_effect("goods_demand", false);
@@ -167,12 +177,10 @@ bool ModifierManager::setup_modifier_effects() {
 	ret &= add_modifier_effect("min_social_spending", true);
 	ret &= add_modifier_effect("min_tariff", true);
 	ret &= add_modifier_effect("min_tax", true);
+	ret &= add_modifier_effect("minimum_wage", true);
 	ret &= add_modifier_effect("mobilisation_economy_impact", false);
-	ret &= add_modifier_effect("mobilisation_impact", false);
 	ret &= add_modifier_effect("mobilisation_size", true);
-	ret &= add_modifier_effect("mobilization_economy_impact", false);
 	ret &= add_modifier_effect("mobilization_impact", false);
-	ret &= add_modifier_effect("mobilization_size", true);
 	ret &= add_modifier_effect("naval_attack_modifier", true);
 	ret &= add_modifier_effect("naval_attrition", false);
 	ret &= add_modifier_effect("naval_defense_modifier", true);
@@ -183,50 +191,36 @@ bool ModifierManager::setup_modifier_effects() {
 	ret &= add_modifier_effect("org_regain", true);
 	ret &= add_modifier_effect("pension_level", true);
 	ret &= add_modifier_effect("permanent_prestige", true, RAW_DECIMAL);
-	ret &= add_modifier_effect("plurality", true, PERCENTAGE_DECIMAL);
 	ret &= add_modifier_effect("political_reform_desire", false);
-	ret &= add_modifier_effect("pop_growth", true);
+	ret &= add_modifier_effect("poor_savings_modifier", true);
 	ret &= add_modifier_effect("prestige", true, RAW_DECIMAL);
-	ret &= add_modifier_effect("regular_experience_level", true, RAW_DECIMAL);
-	ret &= add_modifier_effect("reinforce_rate", true);
+	ret &= add_modifier_effect("reinforce_speed", true);
 	ret &= add_modifier_effect("research_points", true, RAW_DECIMAL);
 	ret &= add_modifier_effect("research_points_modifier", true);
 	ret &= add_modifier_effect("research_points_on_conquer", true);
 	ret &= add_modifier_effect("rgo_output", true);
-	ret &= add_modifier_effect("RGO_output", true);
-	ret &= add_modifier_effect("rgo_size", true);
-	ret &= add_modifier_effect("RGO_size", true);
 	ret &= add_modifier_effect("rgo_throughput", true);
-	ret &= add_modifier_effect("RGO_throughput", true);
 	ret &= add_modifier_effect("ruling_party_support", true);
-	ret &= add_modifier_effect("shared_prestige", true, RAW_DECIMAL);
 	ret &= add_modifier_effect("social_reform_desire", false);
 	ret &= add_modifier_effect("soldier_to_pop_loss", true);
-	ret &= add_modifier_effect("seperatism", false); // paradox typo
 	ret &= add_modifier_effect("supply_consumption", false);
 	ret &= add_modifier_effect("supply_range", true);
 	ret &= add_modifier_effect("suppression_points_modifier", true);
 	ret &= add_modifier_effect("tariff_efficiency_modifier", true);
-	ret &= add_modifier_effect("tax_eff", true);
 	ret &= add_modifier_effect("tax_efficiency", true);
-	ret &= add_modifier_effect("unit_recruitment_time", false);
-	ret &= add_modifier_effect("unit_start_experience", true, RAW_DECIMAL);
-	ret &= add_modifier_effect("war_exhaustion", false);
-	ret &= add_modifier_effect("civilization_progress_modifier", true);
-	ret &= add_modifier_effect("administrative_multiplier", true);
 	ret &= add_modifier_effect("unemployment_benefit", true);
-	ret &= add_modifier_effect("minimum_wage", true);
-	ret &= add_modifier_effect("war_exhaustion_effect", false);
-	ret &= add_modifier_effect("reinforce_speed", true);
+	ret &= add_modifier_effect("unit_recruitment_time", false);
+	ret &= add_modifier_effect("war_exhaustion", false);
+
+	/* State only*/
+	ret &= add_modifier_effect("flashpoint_tension", true);
+	ret &= add_modifier_effect("railroads", true); // capitalist likelihood for railroads vs factories
 
 	/* Province Modifier Effects */
 	ret &= add_modifier_effect("assimilation_rate", true);
 	ret &= add_modifier_effect("boost_strongest_party", false);
 	ret &= add_modifier_effect("farm_rgo_eff", true);
-	ret &= add_modifier_effect("farm_RGO_eff", true);
 	ret &= add_modifier_effect("farm_rgo_size", true);
-	ret &= add_modifier_effect("farm_RGO_size", true);
-	ret &= add_modifier_effect("flashpoint_tension", false);
 	ret &= add_modifier_effect("immigrant_attract", true);
 	ret &= add_modifier_effect("immigrant_push", false);
 	ret &= add_modifier_effect("life_rating", true);
@@ -238,28 +232,22 @@ bool ModifierManager::setup_modifier_effects() {
 	ret &= add_modifier_effect("local_factory_throughput", true);
 	ret &= add_modifier_effect("local_repair", true);
 	ret &= add_modifier_effect("local_rgo_output", true);
-	ret &= add_modifier_effect("local_RGO_output", true);
 	ret &= add_modifier_effect("local_rgo_throughput", true);
-	ret &= add_modifier_effect("local_RGO_throughput", true);
 	ret &= add_modifier_effect("local_ruling_party_support", true);
 	ret &= add_modifier_effect("local_ship_build", false);
 	ret &= add_modifier_effect("max_attrition", false, RAW_DECIMAL);
 	ret &= add_modifier_effect("mine_rgo_eff", true);
-	ret &= add_modifier_effect("mine_RGO_eff", true);
 	ret &= add_modifier_effect("mine_rgo_size", true);
-	ret &= add_modifier_effect("mine_RGO_size", true);
 	ret &= add_modifier_effect("movement_cost", false);
 	ret &= add_modifier_effect("number_of_voters", false);
 	ret &= add_modifier_effect("pop_consciousness_modifier", false, RAW_DECIMAL);
 	ret &= add_modifier_effect("pop_militancy_modifier", false, RAW_DECIMAL);
 	ret &= add_modifier_effect("population_growth", true);
-	ret &= add_modifier_effect("railroads", true); // capitalist likelihood for railroads vs factories
 	ret &= add_modifier_effect("supply_limit", true, RAW_DECIMAL);
 
 	/* Military Modifier Effects */
 	ret &= add_modifier_effect("attack", true, INT);
 	ret &= add_modifier_effect("attrition", false, RAW_DECIMAL);
-	ret &= add_modifier_effect("combat_width", false);
 	ret &= add_modifier_effect("defence", true, INT);
 	ret &= add_modifier_effect("experience", true);
 	ret &= add_modifier_effect("morale", true);
@@ -278,6 +266,12 @@ bool ModifierManager::register_complex_modifier(std::string_view identifier) {
 		Logger::error("Duplicate complex modifier: ", identifier);
 		return false;
 	}
+}
+
+std::string ModifierManager::get_flat_identifier(
+	const std::string_view complex_modifier_identifier, const std::string_view variant_identifier
+) {
+	return StringUtils::append_string_views(complex_modifier_identifier, " ", variant_identifier);
 }
 
 bool ModifierManager::add_event_modifier(std::string_view identifier, ModifierValue&& values, Modifier::icon_t icon) {
@@ -370,8 +364,21 @@ bool ModifierManager::parse_scripts(GameManager const& game_manager) {
 key_value_callback_t ModifierManager::_modifier_effect_callback(
 	ModifierValue& modifier, key_value_callback_t default_callback, ModifierEffectValidator auto effect_validator
 ) const {
-	const auto add_modifier_cb = [this, &modifier, effect_validator](ModifierEffect const* effect, ast::NodeCPtr value) -> bool {
+	const auto add_modifier_cb = [this, &modifier,
+								  effect_validator](ModifierEffect const* effect, ast::NodeCPtr value) -> bool {
 		if (effect_validator(*effect)) {
+
+			static const case_insensitive_string_set_t no_effect_modifiers {
+				"boost_strongest_party",	"poor_savings_modifier", "poor_life_needs",
+				"poor_everyday_needs",		"poor_luxury_needs",	 "middle_life_needs",
+				"middle_everyday_needs",	"middle_luxury_needs",	 "rich_life_needs",
+				"rich_everyday_needs",		"rich_luxury_needs",	 "local_artisan_input",
+				"local_artisan_throughput", "local_artisan_output",	 "artisan_input",
+				"artisan_throughput",		"artisan_output",		 "import_cost"
+			};
+			if (no_effect_modifiers.contains(effect->get_identifier())) {
+				Logger::warning("This modifier does nothing: ", effect->get_identifier());
+			}
 			return expect_fixed_point(map_callback(modifier.values, effect))(value);
 		} else {
 			Logger::error("Failed to validate modifier effect: ", effect->get_identifier());
@@ -379,8 +386,9 @@ key_value_callback_t ModifierManager::_modifier_effect_callback(
 		}
 	};
 
-	const auto add_flattened_modifier_cb = [this, add_modifier_cb](std::string_view prefix, std::string_view key, ast::NodeCPtr value) -> bool {
-		const std::string flat_identifier = StringUtils::append_string_views(prefix, "_", key);
+	const auto add_flattened_modifier_cb =
+		[this, add_modifier_cb](std::string_view prefix, std::string_view key, ast::NodeCPtr value) -> bool {
+		const std::string flat_identifier = get_flat_identifier(prefix, key);
 		ModifierEffect const* effect = get_modifier_effect_by_identifier(flat_identifier);
 		if (effect != nullptr) {
 			return add_modifier_cb(effect, value);
@@ -407,6 +415,9 @@ key_value_callback_t ModifierManager::_modifier_effect_callback(
 			} else {
 				return expect_dictionary(std::bind_front(add_flattened_modifier_cb, key))(value);
 			}
+		} else if (key == "war_exhaustion_effect") {
+			Logger::warning("war_exhaustion_effect does nothing (vanilla issues have it).");
+			return true;
 		} else {
 			return default_callback(key, value);
 		}

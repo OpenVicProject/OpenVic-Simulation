@@ -1,5 +1,10 @@
 #include "Rebel.hpp"
 
+#include <string_view>
+
+#include "openvic-simulation/misc/Modifier.hpp"
+
+
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;
 
@@ -172,14 +177,15 @@ bool RebelManager::load_rebels_file(
 
 bool RebelManager::generate_modifiers(ModifierManager& modifier_manager) const {
 	bool ret = true;
+	static constexpr std::string_view identifier = "rebel_org_gain";
+	static constexpr bool is_positive_good = false;
+	ret &= modifier_manager.register_complex_modifier(identifier);
 
-	ret &= modifier_manager.register_complex_modifier("rebel_org_gain");
-
-	ret &= modifier_manager.add_modifier_effect("rebel_org_gain_all", false);
+	ret &= modifier_manager.add_modifier_effect(ModifierManager::get_flat_identifier(identifier, "all"), is_positive_good);
 
 	for (RebelType const& rebel_type : get_rebel_types()) {
 		ret &= modifier_manager.add_modifier_effect(
-			StringUtils::append_string_views("rebel_org_gain_", rebel_type.get_identifier()), false
+			ModifierManager::get_flat_identifier(identifier, rebel_type.get_identifier()), is_positive_good
 		);
 	}
 	return ret;

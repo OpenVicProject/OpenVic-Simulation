@@ -319,15 +319,17 @@ bool PopManager::load_pop_into_vector(
 
 bool PopManager::generate_modifiers(ModifierManager& modifier_manager) const {
 	bool ret = true;
+
 	for (Strata const& strata : get_stratas()) {
-		const auto strata_modifier = [&modifier_manager, &ret, &strata](std::string_view suffix, bool positive_good) -> void {
+		const auto strata_modifier = [&modifier_manager, &ret, &strata](
+			std::string_view suffix, bool is_positive_good
+		) -> void {
 			ret &= modifier_manager.add_modifier_effect(
-				StringUtils::append_string_views(strata.get_identifier(), suffix), positive_good
+				StringUtils::append_string_views(strata.get_identifier(), suffix), is_positive_good
 			);
 		};
 
 		strata_modifier("_income_modifier", true);
-		strata_modifier("_savings_modifier", true);
 		strata_modifier("_vote", true);
 
 		strata_modifier("_life_needs", false);

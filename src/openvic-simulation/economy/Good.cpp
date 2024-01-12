@@ -93,11 +93,11 @@ bool GoodManager::load_goods_file(ast::NodeCPtr root) {
 bool GoodManager::generate_modifiers(ModifierManager& modifier_manager) const {
 	bool ret = true;
 
-	const auto good_modifier = [this, &modifier_manager, &ret](std::string_view name, bool positive_good) -> void {
+	const auto good_modifier = [this, &modifier_manager, &ret](std::string_view name, bool is_positive_good) -> void {
 		ret &= modifier_manager.register_complex_modifier(name);
 		for (Good const& good : get_goods()) {
 			ret &= modifier_manager.add_modifier_effect(
-				StringUtils::append_string_views(name, "_", good.get_identifier()), positive_good
+				ModifierManager::get_flat_identifier(name, good.get_identifier()), is_positive_good
 			);
 		}
 	};

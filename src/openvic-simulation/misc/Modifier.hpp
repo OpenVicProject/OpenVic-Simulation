@@ -3,6 +3,9 @@
 #include "openvic-simulation/scripts/ConditionScript.hpp"
 #include "openvic-simulation/types/IdentifierRegistry.hpp"
 
+#include "dataloader/NodeTools.hpp"
+
+
 namespace OpenVic {
 	struct ModifierManager;
 
@@ -115,8 +118,8 @@ namespace OpenVic {
 		 * so instead we use an IdentifierInstanceRegistry (using std::unique_ptr's under the hood).
 		 */
 	private:
-		IdentifierInstanceRegistry<ModifierEffect> IDENTIFIER_REGISTRY(modifier_effect);
-		string_set_t complex_modifiers;
+		CaseInsensitiveIdentifierInstanceRegistry<ModifierEffect> IDENTIFIER_REGISTRY(modifier_effect);
+		case_insensitive_string_set_t complex_modifiers;
 
 		IdentifierRegistry<Modifier> IDENTIFIER_REGISTRY(event_modifier);
 		IdentifierRegistry<Modifier> IDENTIFIER_REGISTRY(static_modifier);
@@ -135,6 +138,8 @@ namespace OpenVic {
 		);
 
 		bool register_complex_modifier(std::string_view identifier);
+		static std::string
+		get_flat_identifier(const std::string_view complex_modifier_identifier, const std::string_view variant_identifier);
 
 		bool setup_modifier_effects();
 
