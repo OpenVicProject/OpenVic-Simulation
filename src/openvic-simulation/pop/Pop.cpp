@@ -334,6 +334,11 @@ bool PopManager::generate_modifiers(ModifierManager& modifier_manager) const {
 		strata_modifier("_everyday_needs", false);
 		strata_modifier("_luxury_needs", false);
 	}
+
+	for (PopType const& pop_type : get_pop_types()) {
+		ret &= modifier_manager.add_modifier_effect(pop_type.get_identifier(), true);
+	}
+
 	return ret;
 }
 
