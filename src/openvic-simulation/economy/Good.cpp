@@ -112,5 +112,9 @@ bool GoodManager::generate_modifiers(ModifierManager& modifier_manager) const {
 	good_modifier("rgo_goods_throughput", true);
 	good_modifier("rgo_size", true);
 
+	for (Good const& good : get_goods()) {
+		ret &= modifier_manager.add_modifier_effect(good.get_identifier(), true, ModifierEffect::format_t::PERCENTAGE_DECIMAL);
+	}
+
 	return ret;
 }
