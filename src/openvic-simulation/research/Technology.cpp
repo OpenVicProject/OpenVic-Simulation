@@ -153,14 +153,6 @@ bool TechnologyManager::load_technologies_file(
 bool TechnologyManager::generate_modifiers(ModifierManager& modifier_manager) const {
 	bool ret = true;
 
-	const auto unciv_tech_modifier = [&modifier_manager, &ret](std::string_view name) -> void {
-		ret &= modifier_manager.add_modifier_effect(name, false);
-		ret &= modifier_manager.add_modifier_effect(StringUtils::append_string_views("self_", name), false);
-	};
-
-	unciv_tech_modifier("unciv_military_modifier");
-	unciv_tech_modifier("unciv_economic_modifier");
-
 	for (TechnologyFolder const& folder : get_technology_folders()) {
 		ret &= modifier_manager.add_modifier_effect(
 			StringUtils::append_string_views(folder.get_identifier(), "_research_bonus"), true
