@@ -3,21 +3,18 @@
 #include "openvic-simulation/scripts/ConditionScript.hpp"
 #include "openvic-simulation/types/IdentifierRegistry.hpp"
 
-#include "dataloader/NodeTools.hpp"
-
-
 namespace OpenVic {
 	struct ModifierManager;
 
 	struct ModifierEffect : HasIdentifier {
+		friend struct ModifierManager;
+
 		enum class format_t {
 			PROPORTION_DECIMAL,	/* An unscaled fraction/ratio, with 1 being "full"/"whole" */
 			PERCENTAGE_DECIMAL,	/* A fraction/ratio scaled so that 100 is "full"/"whole" */
 			RAW_DECIMAL,		/* A continuous quantity, e.g. attack strength */
 			INT					/* A discrete quantity, e.g. building count limit */
 		};
-
-		friend std::unique_ptr<ModifierEffect> std::make_unique<ModifierEffect>(std::string_view&&, bool&&, format_t&&);
 
 	private:
 		/* If true, positive values will be green and negative values will be red.
@@ -115,10 +112,10 @@ namespace OpenVic {
 	struct ModifierManager {
 		/* Some ModifierEffects are generated mid-load, such as max/min count modifiers for each building, so
 		 * we can't lock it until loading is over. This means we can't rely on locking for pointer stability,
-		 * so instead we use an IdentifierInstanceRegistry (using std::unique_ptr's under the hood).
+		 * so instead we store the effects in a deque which doesn't invalidate pointers on insert.
 		 */
 	private:
-		CaseInsensitiveIdentifierInstanceRegistry<ModifierEffect> IDENTIFIER_REGISTRY(modifier_effect);
+		CaseInsensitiveIdentifierRegistry<ModifierEffect, RegistryStorageInfoDeque> IDENTIFIER_REGISTRY(modifier_effect);
 		case_insensitive_string_set_t complex_modifiers;
 
 		IdentifierRegistry<Modifier> IDENTIFIER_REGISTRY(event_modifier);

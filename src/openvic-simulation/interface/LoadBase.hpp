@@ -5,27 +5,27 @@
 
 namespace OpenVic {
 
-	template<typename... _Context>
+	template<typename... Context>
 	class LoadBase {
 	protected:
 		LoadBase() = default;
 
-		virtual bool _fill_key_map(NodeTools::key_map_t&, _Context...) = 0;
+		virtual bool _fill_key_map(NodeTools::key_map_t&, Context...) = 0;
 
 	public:
 		LoadBase(LoadBase&&) = default;
 		virtual ~LoadBase() = default;
 
-		bool load(ast::NodeCPtr node, _Context... context) {
+		bool load(ast::NodeCPtr node, Context... context) {
 			NodeTools::key_map_t key_map;
 			bool ret = _fill_key_map(key_map, context...);
 			ret &= NodeTools::expect_dictionary_key_map(std::move(key_map))(node);
 			return ret;
 		}
 
-		template<std::derived_from<LoadBase<_Context...>> T, std::derived_from<T> U>
+		template<std::derived_from<LoadBase<Context...>> T, std::derived_from<T> U>
 		static NodeTools::node_callback_t _expect_instance(
-			NodeTools::callback_t<std::unique_ptr<T>&&> callback, _Context... context
+			NodeTools::callback_t<std::unique_ptr<T>&&> callback, Context... context
 		) {
 			return [callback, &context...](ast::NodeCPtr node) -> bool {
 				std::unique_ptr<T> instance { std::make_unique<U>() };
@@ -38,14 +38,14 @@ namespace OpenVic {
 		OV_DETAIL_GET_TYPE_BASE_CLASS(LoadBase)
 	};
 
-	template<typename... _Context>
-	class Named : public LoadBase<_Context...> {
+	template<typename... Context>
+	class Named : public LoadBase<Context...> {
 		std::string PROPERTY(name);
 
 	protected:
 		Named() = default;
 
-		virtual bool _fill_key_map(NodeTools::key_map_t& key_map, _Context...) override {
+		virtual bool _fill_key_map(NodeTools::key_map_t& key_map, Context...) override {
 			using namespace OpenVic::NodeTools;
 			return add_key_map_entries(key_map, "name", ONE_EXACTLY, expect_string(assign_variable_callback_string(name)));
 		}
@@ -64,19 +64,21 @@ namespace OpenVic {
 		OV_DETAIL_GET_TYPE
 	};
 
-	template<typename T, typename... _Context>
-	requires std::derived_from<T, Named<_Context...>>
-	struct _get_name {
-		constexpr std::string_view operator()(T const* item) const {
-			return item->get_name();
+	template<typename Value, typename... Context>
+	requires std::derived_from<Value, Named<Context...>>
+	struct RegistryValueInfoNamed {
+		using value_type = Value;
+
+		static constexpr std::string_view get_identifier(value_type const& item) {
+			return item.get_name();
 		}
 	};
 
-	template<typename T, typename... _Context>
-	requires std::derived_from<T, Named<_Context...>>
-	using NamedRegistry = ValueRegistry<T, _get_name<T, _Context...>>;
+	template<typename Value, typename... Context>
+	requires std::derived_from<Value, Named<Context...>>
+	using NamedRegistry = ValueRegistry<RegistryValueInfoNamed<Value, Context...>>;
 
-	template<typename T, typename... _Context>
-	requires std::derived_from<T, Named<_Context...>>
-	using NamedInstanceRegistry = InstanceRegistry<T, _get_name<T, _Context...>>;
+	template<typename Value, typename... Context>
+	requires std::derived_from<Value, Named<Context...>>
+	using NamedInstanceRegistry = InstanceRegistry<RegistryValueInfoNamed<Value, Context...>>;
 }

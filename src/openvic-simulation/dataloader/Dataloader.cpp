@@ -836,8 +836,10 @@ bool Dataloader::load_defines(GameManager& game_manager) {
 		ret = false;
 	}
 	if (!_load_technologies(game_manager)) {
+		Logger::error("Failed to load technologies!");
 		ret = false;
 	}
+	game_manager.get_modifier_manager().lock_modifier_effects();
 	if (!game_manager.get_politics_manager().get_rule_manager().setup_rules(
 		game_manager.get_economy_manager().get_building_type_manager()
 	)) {
