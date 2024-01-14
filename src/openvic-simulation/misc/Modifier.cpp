@@ -98,9 +98,7 @@ bool ModifierManager::add_modifier_effect(std::string_view identifier, bool posi
 		Logger::error("Invalid modifier effect identifier - empty!");
 		return false;
 	}
-	return modifier_effects.add_item(
-		std::make_unique<ModifierEffect>(std::move(identifier), std::move(positive_good), std::move(format))
-	);
+	return modifier_effects.add_item({ std::move(identifier), positive_good, format });
 }
 
 bool ModifierManager::setup_modifier_effects() {
