@@ -371,11 +371,9 @@ key_value_callback_t ModifierManager::_modifier_effect_callback(
 		if (effect_validator(*effect)) {
 
 			static const case_insensitive_string_set_t no_effect_modifiers {
-				"boost_strongest_party",	"poor_savings_modifier", "poor_life_needs",			"poor_everyday_needs",
-				"poor_luxury_needs",		"middle_life_needs",	 "middle_everyday_needs",	"middle_luxury_needs",
-				"rich_life_needs",			"rich_everyday_needs",	 "rich_luxury_needs",		"local_artisan_input",
-				"local_artisan_throughput", "local_artisan_output",	 "artisan_input",			"artisan_throughput",
-				"artisan_output",			"import_cost",			 "unciv_economic_modifier", "unciv_military_modifier"
+				"boost_strongest_party", "poor_savings_modifier",	"local_artisan_input",	  "local_artisan_throughput",
+				"local_artisan_output",	 "artisan_input",			"artisan_throughput",	  "artisan_output",
+				"import_cost",			 "unciv_economic_modifier", "unciv_military_modifier"
 			};
 			if (no_effect_modifiers.contains(effect->get_identifier())) {
 				Logger::warning("This modifier does nothing: ", effect->get_identifier());
