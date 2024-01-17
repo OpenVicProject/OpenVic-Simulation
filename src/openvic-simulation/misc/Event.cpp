@@ -169,7 +169,7 @@ bool EventManager::load_event_file(IssueManager const& issue_manager, ast::NodeC
 					};
 
 					bool ret = expect_dictionary_keys_and_default(
-						key_value_success_callback,
+						key_value_success_callback, /* Option effects, passed to the EffectScript below */
 						"name", ONE_EXACTLY, expect_identifier_or_string(assign_variable_callback(name)),
 						"ai_chance", ZERO_OR_ONE, ai_chance.expect_conditional_weight(ConditionalWeight::FACTOR)
 					)(node);

@@ -366,10 +366,10 @@ bool ModifierManager::parse_scripts(GameManager const& game_manager) {
 key_value_callback_t ModifierManager::_modifier_effect_callback(
 	ModifierValue& modifier, key_value_callback_t default_callback, ModifierEffectValidator auto effect_validator
 ) const {
-	const auto add_modifier_cb = [this, &modifier,
-								  effect_validator](ModifierEffect const* effect, ast::NodeCPtr value) -> bool {
+	const auto add_modifier_cb = [this, &modifier, effect_validator](
+		ModifierEffect const* effect, ast::NodeCPtr value
+	) -> bool {
 		if (effect_validator(*effect)) {
-
 			static const case_insensitive_string_set_t no_effect_modifiers {
 				"boost_strongest_party", "poor_savings_modifier",	"local_artisan_input",	  "local_artisan_throughput",
 				"local_artisan_output",	 "artisan_input",			"artisan_throughput",	  "artisan_output",
@@ -385,8 +385,9 @@ key_value_callback_t ModifierManager::_modifier_effect_callback(
 		}
 	};
 
-	const auto add_flattened_modifier_cb =
-		[this, add_modifier_cb](std::string_view prefix, std::string_view key, ast::NodeCPtr value) -> bool {
+	const auto add_flattened_modifier_cb = [this, add_modifier_cb](
+		std::string_view prefix, std::string_view key, ast::NodeCPtr value
+	) -> bool {
 		const std::string flat_identifier = get_flat_identifier(prefix, key);
 		ModifierEffect const* effect = get_modifier_effect_by_identifier(flat_identifier);
 		if (effect != nullptr) {
@@ -397,7 +398,9 @@ key_value_callback_t ModifierManager::_modifier_effect_callback(
 		}
 	};
 
-	return [this, default_callback, add_modifier_cb, add_flattened_modifier_cb](std::string_view key, ast::NodeCPtr value) -> bool {
+	return [this, default_callback, add_modifier_cb, add_flattened_modifier_cb](
+		std::string_view key, ast::NodeCPtr value
+	) -> bool {
 		ModifierEffect const* effect = get_modifier_effect_by_identifier(key);
 		if (effect != nullptr && value->is_type<ast::IdentifierNode>()) {
 			return add_modifier_cb(effect, value);
@@ -437,6 +440,7 @@ node_callback_t ModifierManager::expect_validated_modifier_value_and_default(
 		return ret;
 	};
 }
+
 node_callback_t ModifierManager::expect_validated_modifier_value(
 	callback_t<ModifierValue&&> modifier_callback, ModifierEffectValidator auto effect_validator
 ) const {

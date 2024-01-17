@@ -72,6 +72,7 @@ namespace OpenVic {
 		struct log_channel_t {
 			log_func_t func;
 			log_queue_t queue;
+			size_t message_count;
 		};
 
 		template<typename... Ts>
@@ -90,6 +91,8 @@ namespace OpenVic {
 					do {
 						log_channel.func(std::move(log_channel.queue.front()));
 						log_channel.queue.pop();
+						/* Only count printed messages, so that message_count matches what is seen in the console. */
+						log_channel.message_count++;
 					} while (!log_channel.queue.empty());
 				}
 			}
@@ -102,6 +105,9 @@ private: \
 public: \
 	static inline void set_##name##_func(log_func_t log_func) { \
 		name##_channel.func = log_func; \
+	} \
+	static inline size_t get_##name##_count() { \
+		return name##_channel.message_count; \
 	} \
 	template<typename... Ts> \
 	struct name { \

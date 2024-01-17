@@ -36,7 +36,11 @@ bool ProvinceHistoryMap::_load_history_entry(
 			BuildingType const* building_type = building_type_manager.get_building_type_by_identifier(key);
 			if (building_type != nullptr) {
 				if (building_type->is_in_province()) {
-					return expect_uint<BuildingType::level_t>(map_callback(entry.province_buildings, building_type))(value);
+					return expect_uint<BuildingType::level_t>(
+						/* This is set to warn to prevent vanilla from always having errors because
+						 * of a duplicate railroad entry in the 1861.1.1 history of Manchester (278). */
+						map_callback(entry.province_buildings, building_type, true)
+					)(value);
 				} else {
 					Logger::error(
 						"Attempted to add state building \"", building_type, "\" at top scope of province history for ",
@@ -68,7 +72,7 @@ bool ProvinceHistoryMap::_load_history_entry(
 		),
 		"party_loyalty", ZERO_OR_MORE, [&ideology_manager, &entry](ast::NodeCPtr node) -> bool {
 			Ideology const* ideology = nullptr;
-			fixed_point_t amount = 0; // percent I do believe
+			fixed_point_t amount = 0; /* PERCENTAGE_DECIMAL */
 
 			bool ret = expect_dictionary_keys(
 				"ideology", ONE_EXACTLY, ideology_manager.expect_ideology_identifier(
@@ -90,7 +94,7 @@ bool ProvinceHistoryMap::_load_history_entry(
 				"building", ONE_EXACTLY, building_type_manager.expect_building_type_identifier(
 					assign_variable_callback_pointer(building_type)
 				),
-				"upgrade", ZERO_OR_ONE, success_callback // doesn't appear to have an effect
+				"upgrade", ZERO_OR_ONE, success_callback /* Doesn't appear to have an effect */
 			)(node);
 			if (building_type != nullptr) {
 				if (!building_type->is_in_province()) {

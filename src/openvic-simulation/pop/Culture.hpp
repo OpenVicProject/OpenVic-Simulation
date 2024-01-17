@@ -5,6 +5,8 @@
 namespace OpenVic {
 
 	struct CultureManager;
+	struct Country;
+	struct CountryManager;
 
 	struct GraphicalCultureType : HasIdentifier {
 		friend struct CultureManager;
@@ -20,15 +22,14 @@ namespace OpenVic {
 		friend struct CultureManager;
 
 	private:
-		const std::string PROPERTY(leader);
+		std::string PROPERTY(leader);
 		GraphicalCultureType const& PROPERTY(unit_graphical_culture_type);
-		const bool PROPERTY(is_overseas);
-
-		// TODO - union tag
+		bool PROPERTY(is_overseas);
+		Country const* PROPERTY(union_country);
 
 		CultureGroup(
 			std::string_view new_identifier, std::string_view new_leader,
-			GraphicalCultureType const& new_unit_graphical_culture_type, bool new_is_overseas
+			GraphicalCultureType const& new_unit_graphical_culture_type, bool new_is_overseas, Country const* new_union_country
 		);
 
 	public:
@@ -40,14 +41,14 @@ namespace OpenVic {
 
 	private:
 		CultureGroup const& PROPERTY(group);
-		const name_list_t PROPERTY(first_names);
-		const name_list_t PROPERTY(last_names);
-
-		// TODO - radicalism, primary tag
+		name_list_t PROPERTY(first_names);
+		name_list_t PROPERTY(last_names);
+		fixed_point_t PROPERTY(radicalism);
+		Country const* PROPERTY(primary_country);
 
 		Culture(
-			std::string_view new_identifier, colour_t new_colour, CultureGroup const& new_group,
-			name_list_t&& new_first_names, name_list_t&& new_last_names
+			std::string_view new_identifier, colour_t new_colour, CultureGroup const& new_group, name_list_t&& new_first_names,
+			name_list_t&& new_last_names, fixed_point_t new_radicalism, Country const* new_primary_country
 		);
 
 	public:
@@ -61,25 +62,29 @@ namespace OpenVic {
 		IdentifierRegistry<Culture> IDENTIFIER_REGISTRY(culture);
 
 		bool _load_culture_group(
-			size_t& total_expected_cultures, GraphicalCultureType const* default_unit_graphical_culture_type,
-			std::string_view culture_group_key, ast::NodeCPtr culture_group_node
+			CountryManager const& country_manager, size_t& total_expected_cultures,
+			GraphicalCultureType const* default_unit_graphical_culture_type, std::string_view culture_group_key,
+			ast::NodeCPtr culture_group_node
 		);
-		bool _load_culture(CultureGroup const& culture_group, std::string_view culture_key, ast::NodeCPtr node);
+		bool _load_culture(
+			CountryManager const& country_manager, CultureGroup const& culture_group, std::string_view culture_key,
+			ast::NodeCPtr node
+		);
 
 	public:
 		bool add_graphical_culture_type(std::string_view identifier);
 
 		bool add_culture_group(
 			std::string_view identifier, std::string_view leader, GraphicalCultureType const* graphical_culture_type,
-			bool is_overseas
+			bool is_overseas, Country const* union_country
 		);
 
 		bool add_culture(
 			std::string_view identifier, colour_t colour, CultureGroup const& group, name_list_t&& first_names,
-			name_list_t&& last_names
+			name_list_t&& last_names, fixed_point_t radicalism, Country const* primary_country
 		);
 
 		bool load_graphical_culture_type_file(ast::NodeCPtr root);
-		bool load_culture_file(ast::NodeCPtr root);
+		bool load_culture_file(CountryManager const& country_manager, ast::NodeCPtr root);
 	};
 }

@@ -1,10 +1,11 @@
 #pragma once
 
+#include <algorithm>
 #include <cctype>
-#include <cstdint>
 #include <cstring>
 #include <limits>
 #include <string_view>
+#include <type_traits>
 
 namespace OpenVic::StringUtils {
 	/* The constexpr function 'string_to_uint64' will convert a string into a uint64_t integer value.

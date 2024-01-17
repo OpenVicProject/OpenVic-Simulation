@@ -147,15 +147,19 @@ namespace OpenVic {
 
 		static constexpr basic_colour_t from_integer(integer_type integer) {
 			if constexpr (colour_traits::has_alpha) {
-				return { colour_traits::red_from_integer(integer), colour_traits::green_from_integer(integer),
-						 colour_traits::blue_from_integer(integer), colour_traits::alpha_from_integer(integer) };
+				return {
+					colour_traits::red_from_integer(integer), colour_traits::green_from_integer(integer),
+					colour_traits::blue_from_integer(integer), colour_traits::alpha_from_integer(integer)
+				};
 			} else {
 				assert(
 					colour_traits::alpha_from_integer(integer) == colour_traits::null ||
 					colour_traits::alpha_from_integer(integer) == max_value
 				);
-				return { colour_traits::red_from_integer(integer), colour_traits::green_from_integer(integer),
-						 colour_traits::blue_from_integer(integer) };
+				return {
+					colour_traits::red_from_integer(integer), colour_traits::green_from_integer(integer),
+					colour_traits::blue_from_integer(integer)
+				};
 			}
 		}
 
@@ -163,8 +167,10 @@ namespace OpenVic {
 		from_floats(float r, float g, float b, float a = colour_traits::alpha_to_float(max_value))
 		requires(colour_traits::has_alpha)
 		{
-			return { colour_traits::red_from_float(r), colour_traits::green_from_float(g), colour_traits::blue_from_float(b),
-					 colour_traits::alpha_from_float(a) };
+			return {
+				colour_traits::red_from_float(r), colour_traits::green_from_float(g), colour_traits::blue_from_float(b),
+				colour_traits::alpha_from_float(a)
+			};
 		}
 
 		static constexpr basic_colour_t from_floats(float r, float g, float b)
@@ -192,13 +198,19 @@ namespace OpenVic {
 			: red(r), green(g), blue(b) {}
 
 		template<typename _ColourTraits>
-		requires(_ColourTraits::has_alpha && std::same_as<typename _ColourTraits::value_type, value_type> && std::same_as<typename _ColourTraits::integer_type, integer_type>)
+		requires(
+			_ColourTraits::has_alpha && std::same_as<typename _ColourTraits::value_type, value_type> &&
+			std::same_as<typename _ColourTraits::integer_type, integer_type>
+		)
 		explicit constexpr basic_colour_t(basic_colour_t<value_type, integer_type, _ColourTraits> const& colour)
 		requires(colour_traits::has_alpha)
 			: basic_colour_t { colour.red, colour.green, colour.blue, colour.alpha } {}
 
 		template<typename _ColourTraits>
-		requires(!_ColourTraits::has_alpha && std::same_as<typename _ColourTraits::value_type, value_type> && std::same_as<typename _ColourTraits::integer_type, integer_type>)
+		requires(
+			!_ColourTraits::has_alpha && std::same_as<typename _ColourTraits::value_type, value_type> &&
+			std::same_as<typename _ColourTraits::integer_type, integer_type>
+		)
 		explicit constexpr basic_colour_t(
 			basic_colour_t<value_type, integer_type, _ColourTraits> const& colour, value_type a = max_value
 		)
@@ -206,7 +218,10 @@ namespace OpenVic {
 			: basic_colour_t { colour.red, colour.green, colour.blue, a } {}
 
 		template<typename _ColourTraits>
-		requires(std::same_as<typename _ColourTraits::value_type, value_type> && std::same_as<typename _ColourTraits::integer_type, integer_type>)
+		requires(
+			std::same_as<typename _ColourTraits::value_type, value_type> &&
+			std::same_as<typename _ColourTraits::integer_type, integer_type>
+		)
 		explicit constexpr basic_colour_t(basic_colour_t<value_type, integer_type, _ColourTraits> const& colour)
 		requires(!colour_traits::has_alpha)
 			: basic_colour_t { colour.red, colour.green, colour.blue } {}

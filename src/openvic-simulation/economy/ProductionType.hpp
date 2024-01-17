@@ -21,7 +21,9 @@ namespace OpenVic {
 		fixed_point_t PROPERTY(desired_workforce_share);
 
 		Job(
-			PopType const* new_pop_type, effect_t new_effect_type, fixed_point_t new_effect_multiplier,
+			PopType const* new_pop_type,
+			effect_t new_effect_type,
+			fixed_point_t new_effect_multiplier,
 			fixed_point_t new_desired_workforce_share
 		);
 
@@ -37,7 +39,7 @@ namespace OpenVic {
 		using bonus_t = std::pair<ConditionScript, fixed_point_t>;
 
 	private:
-		const Job PROPERTY(owner);
+		const std::optional<Job> PROPERTY(owner);
 		std::vector<Job> PROPERTY(jobs);
 		const template_type_t PROPERTY(template_type);
 		const Pop::pop_size_t PROPERTY(base_workforce_size);
@@ -54,13 +56,23 @@ namespace OpenVic {
 		const bool PROPERTY_CUSTOM_PREFIX(mine, is);
 
 		ProductionType(
-			std::string_view new_identifier, Job new_owner, std::vector<Job> new_jobs, template_type_t new_template_type,
-			Pop::pop_size_t new_base_workforce_size, Good::good_map_t&& new_input_goods, Good const* new_output_goods,
-			fixed_point_t new_base_output_quantity, std::vector<bonus_t>&& new_bonuses, Good::good_map_t&& new_efficiency, bool new_is_coastal,
-			bool new_is_farm, bool new_is_mine
+			std::string_view new_identifier,
+			std::optional<Job> new_owner,
+			std::vector<Job>&& new_jobs,
+			template_type_t new_template_type,
+			Pop::pop_size_t new_base_workforce_size,
+			Good::good_map_t&& new_input_goods,
+			Good const* new_output_goods,
+			fixed_point_t new_base_output_quantity,
+			std::vector<bonus_t>&& new_bonuses,
+			Good::good_map_t&& new_maintenance_requirements,
+			bool new_is_coastal,
+			bool new_is_farm,
+			bool new_is_mine
 		);
 
 		bool parse_scripts(GameManager const& game_manager);
+
 	public:
 		ProductionType(ProductionType&&) = default;
 	};
@@ -71,19 +83,29 @@ namespace OpenVic {
 		PopType::sprite_t PROPERTY(rgo_owner_sprite);
 
 		NodeTools::node_callback_t _expect_job(
-			GoodManager const& good_manager, PopManager const& pop_manager, NodeTools::callback_t<Job&&> cb
+			GoodManager const& good_manager, PopManager const& pop_manager, NodeTools::callback_t<Job&&> callback
 		);
 		NodeTools::node_callback_t _expect_job_list(
-			GoodManager const& good_manager, PopManager const& pop_manager, NodeTools::callback_t<std::vector<Job>&&> cb
+			GoodManager const& good_manager, PopManager const& pop_manager, NodeTools::callback_t<std::vector<Job>&&> callback
 		);
 
 	public:
 		ProductionTypeManager();
 
 		bool add_production_type(
-			std::string_view identifier, Job owner, std::vector<Job> employees, ProductionType::template_type_t template_type,
-			Pop::pop_size_t workforce, Good::good_map_t&& input_goods, Good const* output_goods, fixed_point_t value,
-			std::vector<ProductionType::bonus_t>&& bonuses, Good::good_map_t&& efficiency, bool coastal, bool farm, bool mine
+			std::string_view identifier,
+			std::optional<Job> owner,
+			std::vector<Job>&& employees,
+			ProductionType::template_type_t template_type,
+			Pop::pop_size_t workforce,
+			Good::good_map_t&& input_goods,
+			Good const* output_goods,
+			fixed_point_t value,
+			std::vector<ProductionType::bonus_t>&& bonuses,
+			Good::good_map_t&& maintenance_requirements,
+			bool coastal,
+			bool farm,
+			bool mine
 		);
 
 		bool load_production_types_file(GoodManager const& good_manager, PopManager const& pop_manager, ast::NodeCPtr root);

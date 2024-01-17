@@ -97,13 +97,13 @@ bool BuildingTypeManager::load_buildings_file(
 	lock_building_types();
 
 	for (BuildingType const& building_type : building_types.get_items()) {
-		std::string max_modifier_prefix = "max_";
-		std::string min_modifier_prefix = "min_build_";
-		modifier_manager.add_modifier_effect(
-			max_modifier_prefix.append(building_type.get_identifier()), true, ModifierEffect::format_t::INT
+		static constexpr std::string_view max_prefix = "max_";
+		static constexpr std::string_view min_prefix = "min_build_";
+		ret &= modifier_manager.add_modifier_effect(
+			StringUtils::append_string_views(max_prefix, building_type.get_identifier()), true, ModifierEffect::format_t::INT
 		);
-		modifier_manager.add_modifier_effect(
-			min_modifier_prefix.append(building_type.get_identifier()), false, ModifierEffect::format_t::INT
+		ret &= modifier_manager.add_modifier_effect(
+			StringUtils::append_string_views(min_prefix, building_type.get_identifier()), false, ModifierEffect::format_t::INT
 		);
 
 		if (building_type.is_in_province()) {

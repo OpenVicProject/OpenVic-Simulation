@@ -131,9 +131,10 @@ int main(int argc, char const* argv[]) {
 			return -1;
 		}
 	}
-	Dataloader::path_vector_t roots = { root };
+	Dataloader::path_vector_t roots { root };
 	while (argn < argc) {
-		roots.emplace_back(root / argv[argn++]);
+		static const fs::path mod_directory = "mod";
+		roots.emplace_back(root / mod_directory / argv[argn++]);
 	}
 
 	std::cout << "!!! HEADLESS SIMULATION START !!!" << std::endl;
@@ -143,6 +144,9 @@ int main(int argc, char const* argv[]) {
 	std::cout << "!!! HEADLESS SIMULATION END !!!" << std::endl;
 
 	std::cout << "\nLoad returned: " << (ret ? "SUCCESS" : "FAILURE") << std::endl;
+
+	std::cout << "\nLogger Summary: Info = " << Logger::get_info_count() << ", Warning = " << Logger::get_warning_count()
+		<< ", Error = " << Logger::get_error_count() << std::endl;
 
 	return ret ? 0 : -1;
 }

@@ -232,7 +232,7 @@ namespace OpenVic {
 			}
 		}
 
-		constexpr static NodeTools::KeyValueCallback auto key_value_invalid_callback(std::string_view name) {
+		static constexpr NodeTools::KeyValueCallback auto key_value_invalid_callback(std::string_view name) {
 			return [name](std::string_view key, ast::NodeCPtr) {
 				Logger::error("Invalid ", name, ": ", key);
 				return false;
@@ -258,13 +258,7 @@ namespace OpenVic {
 			if (item != nullptr) { \
 				return callback(*item); \
 			} \
-			if (!warn) { \
-				Logger::error("Invalid ", name, ": ", identifier); \
-				return false; \
-			} else { \
-				Logger::warning("Invalid ", name, ": ", identifier); \
-				return true; \
-			} \
+			return NodeTools::warn_or_error(warn, "Invalid ", name, ": ", identifier); \
 		}; \
 	} \
 	constexpr NodeTools::NodeCallback auto expect_item_identifier( \
