@@ -41,7 +41,7 @@ bool WargoalTypeManager::add_wargoal_type(
 	std::string_view identifier, std::string_view war_name, Timespan available_length,
 	Timespan truce_length, WargoalType::sprite_t sprite_index, bool triggered_only, bool civil_war,
 	bool constructing, bool crisis, bool great_war_obligatory, bool mutual, bool all_allowed_states,
-	bool always, WargoalType::peace_modifiers_t&& modifiers, peace_options_t peace_options,
+	bool always, WargoalType::peace_modifiers_t&& modifiers, WargoalType::peace_options_t peace_options,
 	ConditionScript&& can_use, ConditionScript&& is_valid, ConditionScript&& allowed_states,
 	ConditionScript&& allowed_substate_regions, ConditionScript&& allowed_states_in_crisis,
 	ConditionScript&& allowed_countries, EffectScript&& on_add, EffectScript&& on_po_accepted
@@ -75,14 +75,14 @@ bool WargoalTypeManager::load_wargoal_file(ast::NodeCPtr root) {
 				return true;
 			}
 
-			using enum peace_options_t;
+			using enum WargoalType::peace_options_t;
 
 			std::string_view war_name;
 			Timespan available {}, truce {};
 			WargoalType::sprite_t sprite_index = 0;
 			bool triggered_only = false, civil_war = false, constructing = true, crisis = true, great_war_obligatory = false,
 				mutual = false, all_allowed_states = false, always = false;
-			peace_options_t peace_options = NO_PEACE_OPTIONS;
+			WargoalType::peace_options_t peace_options = NO_PEACE_OPTIONS;
 			WargoalType::peace_modifiers_t modifiers;
 			ConditionScript can_use { scope_t::COUNTRY, scope_t::COUNTRY, scope_t::COUNTRY };
 			ConditionScript is_valid { scope_t::COUNTRY, scope_t::COUNTRY, scope_t::COUNTRY };
@@ -92,7 +92,7 @@ bool WargoalTypeManager::load_wargoal_file(ast::NodeCPtr root) {
 			ConditionScript allowed_countries { scope_t::COUNTRY, scope_t::COUNTRY, scope_t::COUNTRY };
 			EffectScript on_add, on_po_accepted; //country as default scope for both
 
-			const auto expect_peace_option = [&peace_options](peace_options_t peace_option) -> node_callback_t {
+			const auto expect_peace_option = [&peace_options](WargoalType::peace_options_t peace_option) -> node_callback_t {
 				return expect_bool([&peace_options, peace_option](bool val) -> bool {
 					if (val) {
 						peace_options |= peace_option;
