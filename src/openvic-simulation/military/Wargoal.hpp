@@ -1,6 +1,5 @@
 #pragma once
 
-#include "openvic-simulation/misc/Modifier.hpp"
 #include "openvic-simulation/scripts/ConditionScript.hpp"
 #include "openvic-simulation/scripts/EffectScript.hpp"
 #include "openvic-simulation/types/EnumBitfield.hpp"
@@ -10,35 +9,12 @@
 namespace OpenVic {
 	struct WargoalTypeManager;
 
-	enum class peace_options_t : uint32_t {
-		NO_PEACE_OPTIONS      = 0,
-		PO_ANNEX              = 1 << 0,
-		PO_DEMAND_STATE       = 1 << 1,
-		PO_COLONY             = 1 << 2,
-		PO_ADD_TO_SPHERE      = 1 << 3,
-		PO_DISARMAMENT        = 1 << 4,
-		PO_REMOVE_FORTS       = 1 << 5,
-		PO_REMOVE_NAVAL_BASES = 1 << 6,
-		PO_REPARATIONS        = 1 << 7,
-		PO_REPAY_DEBT         = 1 << 8,
-		PO_REMOVE_PRESTIGE    = 1 << 9,
-		PO_MAKE_PUPPET        = 1 << 10,
-		PO_RELEASE_PUPPET     = 1 << 11,
-		PO_STATUS_QUO         = 1 << 12,
-		PO_INSTALL_COMMUNISM  = 1 << 13,
-		PO_REMOVE_COMMUNISM   = 1 << 14,
-		PO_REMOVE_CORES       = 1 << 15, // only usable with ANNEX, DEMAND_STATE, or TRANSFER_PROVINCES
-		PO_TRANSFER_PROVINCES = 1 << 16,
-		PO_CLEAR_UNION_SPHERE = 1 << 17
-	};
-	template<> struct enable_bitfield<peace_options_t> : std::true_type{};
-
 	struct WargoalType : HasIdentifier {
 		friend struct WargoalTypeManager;
 
 		using sprite_t = uint8_t;
 
-		enum class PEACE_MODIFIERS {
+		enum class PEACE_MODIFIERS : uint8_t {
 			BADBOY_FACTOR,
 			PRESTIGE_FACTOR,
 			PEACE_COST_FACTOR,
@@ -53,6 +29,28 @@ namespace OpenVic {
 			CONSTRUCTION_SPEED
 		};
 		using peace_modifiers_t = fixed_point_map_t<PEACE_MODIFIERS>;
+
+		enum class peace_options_t : uint32_t {
+			NO_PEACE_OPTIONS      = 0,
+			PO_ANNEX              = 1 << 0,
+			PO_DEMAND_STATE       = 1 << 1,
+			PO_COLONY             = 1 << 2,
+			PO_ADD_TO_SPHERE      = 1 << 3,
+			PO_DISARMAMENT        = 1 << 4,
+			PO_REMOVE_FORTS       = 1 << 5,
+			PO_REMOVE_NAVAL_BASES = 1 << 6,
+			PO_REPARATIONS        = 1 << 7,
+			PO_REPAY_DEBT         = 1 << 8,
+			PO_REMOVE_PRESTIGE    = 1 << 9,
+			PO_MAKE_PUPPET        = 1 << 10,
+			PO_RELEASE_PUPPET     = 1 << 11,
+			PO_STATUS_QUO         = 1 << 12,
+			PO_INSTALL_COMMUNISM  = 1 << 13,
+			PO_REMOVE_COMMUNISM   = 1 << 14,
+			PO_REMOVE_CORES       = 1 << 15, // only usable with ANNEX, DEMAND_STATE, or TRANSFER_PROVINCES
+			PO_TRANSFER_PROVINCES = 1 << 16,
+			PO_CLEAR_UNION_SPHERE = 1 << 17
+		};
 
 	private:
 		std::string PROPERTY(war_name);
@@ -94,6 +92,8 @@ namespace OpenVic {
 		WargoalType(WargoalType&&) = default;
 	};
 
+	template<> struct enable_bitfield<WargoalType::peace_options_t> : std::true_type{};
+
 	struct WargoalTypeManager {
 	private:
 		IdentifierRegistry<WargoalType> IDENTIFIER_REGISTRY(wargoal_type);
@@ -104,7 +104,7 @@ namespace OpenVic {
 			std::string_view identifier, std::string_view war_name, Timespan available_length,
 			Timespan truce_length, WargoalType::sprite_t sprite_index, bool triggered_only, bool civil_war,
 			bool constructing, bool crisis, bool great_war_obligatory, bool mutual, bool all_allowed_states,
-			bool always, WargoalType::peace_modifiers_t&& modifiers, peace_options_t peace_options,
+			bool always, WargoalType::peace_modifiers_t&& modifiers, WargoalType::peace_options_t peace_options,
 			ConditionScript&& can_use, ConditionScript&& is_valid, ConditionScript&& allowed_states,
 			ConditionScript&& allowed_substate_regions, ConditionScript&& allowed_states_in_crisis,
 			ConditionScript&& allowed_countries, EffectScript&& on_add, EffectScript&& on_po_accepted

@@ -1,5 +1,6 @@
 #pragma once
 
+#include <ostream>
 #include <string_view>
 #include <variant>
 
@@ -23,7 +24,6 @@ namespace OpenVic {
 		GROUP       = 1 << 7,
 		MAX_VALUE   = (1 << 8) - 1
 	};
-	template<> struct enable_bitfield<value_type_t> : std::true_type {};
 
 	// Order matters in this enum, for the fallback system to work
 	// smaller entities must have smaller integers associated!
@@ -37,10 +37,9 @@ namespace OpenVic {
 		FROM        = 1 << 5,
 		MAX_SCOPE   = (1 << 6) - 1
 	};
-	template<> struct enable_bitfield<scope_t> : std::true_type {};
 
 	enum class identifier_type_t : uint32_t {
-		NONE            = 0,
+		NO_IDENTIFIER   = 0,
 		VARIABLE        = 1 << 0,
 		GLOBAL_FLAG     = 1 << 1,
 		COUNTRY_FLAG    = 1 << 2,
@@ -71,6 +70,10 @@ namespace OpenVic {
 		CRIME           = 1 << 27,
 		TERRAIN         = 1 << 28,
 	};
+
+	/* Allows enum types to be used with bitwise operators. */
+	template<> struct enable_bitfield<value_type_t> : std::true_type {};
+	template<> struct enable_bitfield<scope_t> : std::true_type {};
 	template<> struct enable_bitfield<identifier_type_t> : std::true_type {};
 
 	/* Returns true if the values have any bit in common. */
@@ -81,19 +84,28 @@ namespace OpenVic {
 		return (lhs & rhs) != scope_t::NO_SCOPE;
 	}
 	constexpr inline bool share_identifier_type(identifier_type_t lhs, identifier_type_t rhs) {
-		return (lhs & rhs) != identifier_type_t::NONE;
+		return (lhs & rhs) != identifier_type_t::NO_IDENTIFIER;
 	}
 
-#define _BUILD_STRING(entry, share) if (share(value, entry)) { ret += #entry " | "; }
+#define _BUILD_STRING(entry, share) \
+	if (share(value, entry)) { \
+		if (type_found) { \
+			stream << " | "; \
+		} else { \
+			type_found = true; \
+		} \
+		stream << #entry; \
+	}
 
 #define BUILD_STRING(entry) _BUILD_STRING(entry, share_value_type)
 
-	inline std::string get_value_type_string(value_type_t value) {
+	inline std::ostream& operator<<(std::ostream& stream, value_type_t value) {
 		using enum value_type_t;
 		if (value == NO_TYPE) {
-			return "[NO_TYPE]";
+			return stream << "[NO_TYPE]";
 		}
-		std::string ret = {};
+		bool type_found = false;
+		stream << '[';
 		BUILD_STRING(IDENTIFIER);
 		BUILD_STRING(STRING);
 		BUILD_STRING(BOOLEAN);
@@ -102,36 +114,44 @@ namespace OpenVic {
 		BUILD_STRING(REAL);
 		BUILD_STRING(COMPLEX);
 		BUILD_STRING(GROUP);
-		return "[" + ret.substr(0, ret.length() - 3) + "]";
+		if (!type_found) {
+			stream << "INVALID VALUE TYPE";
+		}
+		return stream << ']';
 	}
 
 #undef BUILD_STRING
 #define BUILD_STRING(entry) _BUILD_STRING(entry, share_scope)
 
-	inline std::string get_scope_string(scope_t value) {
+	inline std::ostream& operator<<(std::ostream& stream, scope_t value) {
 		using enum scope_t;
 		if (value == NO_SCOPE) {
-			return "[NO_SCOPE]";
+			return stream << "[NO_SCOPE]";
 		}
-		std::string ret = {};
+		bool type_found = false;
+		stream << '[';
 		BUILD_STRING(COUNTRY);
 		BUILD_STRING(STATE);
 		BUILD_STRING(PROVINCE);
 		BUILD_STRING(POP);
 		BUILD_STRING(THIS);
 		BUILD_STRING(FROM);
-		return "[" + ret.substr(0, ret.length() - 3) + "]";
+		if (!type_found) {
+			stream << "INVALID SCOPE";
+		}
+		return stream << ']';
 	}
 
 #undef BUILD_STRING
 #define BUILD_STRING(entry) _BUILD_STRING(entry, share_identifier_type)
 
-	inline std::string get_identifier_type_string(identifier_type_t value) {
+	inline std::ostream& operator<<(std::ostream& stream, identifier_type_t value) {
 		using enum identifier_type_t;
-		if (value == NONE) {
-			return "[NONE]";
+		if (value == NO_IDENTIFIER) {
+			return stream << "[NO_IDENTIFIER]";
 		}
-		std::string ret = {};
+		bool type_found = false;
+		stream << '[';
 		BUILD_STRING(VARIABLE);
 		BUILD_STRING(GLOBAL_FLAG);
 		BUILD_STRING(COUNTRY_FLAG);
@@ -161,7 +181,10 @@ namespace OpenVic {
 		BUILD_STRING(CONTINENT);
 		BUILD_STRING(CRIME);
 		BUILD_STRING(TERRAIN);
-		return "[" + ret.substr(0, ret.length() - 3) + "]";
+		if (!type_found) {
+			stream << "INVALID IDENTIFIER TYPE";
+		}
+		return stream << ']';
 	}
 
 #undef BUILD_STRING
@@ -224,8 +247,8 @@ namespace OpenVic {
 		bool add_condition(
 			std::string_view identifier, value_type_t value_type, scope_t scope,
 			scope_t scope_change = scope_t::NO_SCOPE,
-			identifier_type_t key_identifier_type = identifier_type_t::NONE,
-			identifier_type_t value_identifier_type = identifier_type_t::NONE
+			identifier_type_t key_identifier_type = identifier_type_t::NO_IDENTIFIER,
+			identifier_type_t value_identifier_type = identifier_type_t::NO_IDENTIFIER
 		);
 
 		NodeTools::callback_t<std::string_view> expect_parse_identifier(
