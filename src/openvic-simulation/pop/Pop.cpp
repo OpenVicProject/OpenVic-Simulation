@@ -1,5 +1,6 @@
 #include "Pop.hpp"
 
+#include "openvic-simulation/military/Unit.hpp"
 #include "openvic-simulation/politics/Ideology.hpp"
 #include "openvic-simulation/politics/Issue.hpp"
 #include "openvic-simulation/politics/Rebel.hpp"
@@ -8,12 +9,28 @@
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;
 
+using enum PopType::income_type_t;
+
 Pop::Pop(
-	PopType const& new_type, Culture const& new_culture, Religion const& new_religion, pop_size_t new_size,
-	fixed_point_t new_militancy, fixed_point_t new_consciousness, RebelType const* new_rebel_type
-) : type { new_type }, culture { new_culture }, religion { new_religion }, size { new_size }, num_grown { 0 },
-	num_promoted { 0 }, num_demoted { 0 }, num_migrated_internal { 0 }, num_migrated_external { 0 },
-	num_migrated_colonial { 0 }, militancy { new_militancy }, consciousness { new_consciousness },
+	PopType const& new_type,
+	Culture const& new_culture,
+	Religion const& new_religion,
+	pop_size_t new_size,
+	fixed_point_t new_militancy,
+	fixed_point_t new_consciousness,
+	RebelType const* new_rebel_type
+) : type { new_type },
+	culture { new_culture },
+	religion { new_religion },
+	size { new_size },
+	num_grown { 0 },
+	num_promoted { 0 },
+	num_demoted { 0 },
+	num_migrated_internal { 0 },
+	num_migrated_external { 0 },
+	num_migrated_colonial { 0 },
+	militancy { new_militancy },
+	consciousness { new_consciousness },
 	rebel_type { new_rebel_type } {
 	assert(size > 0);
 }
@@ -21,25 +38,75 @@ Pop::Pop(
 Strata::Strata(std::string_view new_identifier) : HasIdentifier { new_identifier } {}
 
 PopType::PopType(
-	std::string_view new_identifier, colour_t new_colour, Strata const& new_strata, sprite_t new_sprite,
-	Good::good_map_t&& new_life_needs, Good::good_map_t&& new_everyday_needs, Good::good_map_t&& new_luxury_needs,
-	rebel_units_t&& new_rebel_units, Pop::pop_size_t new_max_size, Pop::pop_size_t new_merge_max_size,
-	bool new_state_capital_only, bool new_demote_migrant, bool new_is_artisan, bool new_allowed_to_vote, bool new_is_slave,
-	bool new_can_be_recruited, bool new_can_reduce_consciousness, bool new_administrative_efficiency, bool new_can_build,
-	bool new_factory, bool new_can_work_factory, bool new_unemployment, ConditionalWeight&& new_country_migration_target,
-	ConditionalWeight&& new_migration_target, poptype_weight_map_t&& new_promote_to, ideology_weight_map_t&& new_ideologies,
+	std::string_view new_identifier,
+	colour_t new_colour,
+	Strata const& new_strata,
+	sprite_t new_sprite,
+	Good::good_map_t&& new_life_needs,
+	Good::good_map_t&& new_everyday_needs,
+	Good::good_map_t&& new_luxury_needs,
+	income_type_t new_life_needs_income_types,
+	income_type_t new_everyday_needs_income_types,
+	income_type_t new_luxury_needs_income_types,
+	rebel_units_t&& new_rebel_units,
+	Pop::pop_size_t new_max_size,
+	Pop::pop_size_t new_merge_max_size,
+	bool new_state_capital_only,
+	bool new_demote_migrant,
+	bool new_is_artisan,
+	bool new_allowed_to_vote,
+	bool new_is_slave,
+	bool new_can_be_recruited,
+	bool new_can_reduce_consciousness,
+	bool new_administrative_efficiency,
+	bool new_can_invest,
+	bool new_factory,
+	bool new_can_work_factory,
+	bool new_unemployment,
+	fixed_point_t new_research_points,
+	fixed_point_t new_leadership_points,
+	fixed_point_t new_research_leadership_optimum,
+	fixed_point_t new_state_administration_multiplier,
+	PopType const* new_equivalent,
+	ConditionalWeight&& new_country_migration_target,
+	ConditionalWeight&& new_migration_target,
+	poptype_weight_map_t&& new_promote_to,
+	ideology_weight_map_t&& new_ideologies,
 	issue_weight_map_t&& new_issues
-) : HasIdentifierAndColour { new_identifier, new_colour, false }, strata { new_strata }, sprite { new_sprite },
-	life_needs { std::move(new_life_needs) }, everyday_needs { std::move(new_everyday_needs) },
-	luxury_needs { std::move(new_luxury_needs) }, rebel_units { std::move(new_rebel_units) }, max_size { new_max_size },
-	merge_max_size { new_merge_max_size }, state_capital_only { new_state_capital_only },
-	demote_migrant { new_demote_migrant }, is_artisan { new_is_artisan }, allowed_to_vote { new_allowed_to_vote },
-	is_slave { new_is_slave }, can_be_recruited { new_can_be_recruited },
-	can_reduce_consciousness { new_can_reduce_consciousness }, administrative_efficiency { new_administrative_efficiency },
-	can_build { new_can_build }, factory { new_factory }, can_work_factory { new_can_work_factory },
-	unemployment { new_unemployment }, country_migration_target { std::move(new_country_migration_target) },
-	migration_target { std::move(new_migration_target) }, promote_to { std::move(new_promote_to) },
-	ideologies { std::move(new_ideologies) }, issues { std::move(new_issues) } {
+) : HasIdentifierAndColour { new_identifier, new_colour, false },
+	strata { new_strata },
+	sprite { new_sprite },
+	life_needs { std::move(new_life_needs) },
+	everyday_needs { std::move(new_everyday_needs) },
+	luxury_needs { std::move(new_luxury_needs) },
+	life_needs_income_types { std::move(new_life_needs_income_types) },
+	everyday_needs_income_types { std::move(new_everyday_needs_income_types) },
+	luxury_needs_income_types { std::move(new_luxury_needs_income_types) },
+	rebel_units { std::move(new_rebel_units) },
+	max_size { new_max_size },
+	merge_max_size { new_merge_max_size },
+	state_capital_only { new_state_capital_only },
+	demote_migrant { new_demote_migrant },
+	is_artisan { new_is_artisan },
+	allowed_to_vote { new_allowed_to_vote },
+	is_slave { new_is_slave },
+	can_be_recruited { new_can_be_recruited },
+	can_reduce_consciousness { new_can_reduce_consciousness },
+	administrative_efficiency { new_administrative_efficiency },
+	can_invest { new_can_invest },
+	factory { new_factory },
+	can_work_factory { new_can_work_factory },
+	unemployment { new_unemployment },
+	research_points { new_research_points },
+	leadership_points { new_leadership_points },
+	research_leadership_optimum { new_research_leadership_optimum },
+	state_administration_multiplier { new_state_administration_multiplier },
+	equivalent { new_equivalent },
+	country_migration_target { std::move(new_country_migration_target) },
+	migration_target { std::move(new_migration_target) },
+	promote_to { std::move(new_promote_to) },
+	ideologies { std::move(new_ideologies) },
+	issues { std::move(new_issues) } {
 	assert(sprite > 0);
 	assert(max_size >= 0);
 	assert(merge_max_size >= 0);
@@ -80,13 +147,41 @@ bool PopManager::add_strata(std::string_view identifier) {
 }
 
 bool PopManager::add_pop_type(
-	std::string_view identifier, colour_t colour, Strata const* strata, PopType::sprite_t sprite,
-	Good::good_map_t&& life_needs, Good::good_map_t&& everyday_needs, Good::good_map_t&& luxury_needs,
-	PopType::rebel_units_t&& rebel_units, Pop::pop_size_t max_size, Pop::pop_size_t merge_max_size, bool state_capital_only,
-	bool demote_migrant, bool is_artisan, bool allowed_to_vote, bool is_slave, bool can_be_recruited,
-	bool can_reduce_consciousness, bool administrative_efficiency, bool can_build, bool factory, bool can_work_factory,
-	bool unemployment, ConditionalWeight&& country_migration_target, ConditionalWeight&& migration_target,
-	ast::NodeCPtr promote_to_node, PopType::ideology_weight_map_t&& ideologies, ast::NodeCPtr issues_node
+	std::string_view identifier,
+	colour_t colour,
+	Strata const* strata,
+	PopType::sprite_t sprite,
+	Good::good_map_t&& life_needs,
+	Good::good_map_t&& everyday_needs,
+	Good::good_map_t&& luxury_needs,
+	PopType::income_type_t life_needs_income_types,
+	PopType::income_type_t everyday_needs_income_types,
+	PopType::income_type_t luxury_needs_income_types,
+	PopType::rebel_units_t&& rebel_units,
+	Pop::pop_size_t max_size,
+	Pop::pop_size_t merge_max_size,
+	bool state_capital_only,
+	bool demote_migrant,
+	bool is_artisan,
+	bool allowed_to_vote,
+	bool is_slave,
+	bool can_be_recruited,
+	bool can_reduce_consciousness,
+	bool administrative_efficiency,
+	bool can_invest,
+	bool factory,
+	bool can_work_factory,
+	bool unemployment,
+	fixed_point_t research_points,
+	fixed_point_t leadership_points,
+	fixed_point_t research_leadership_optimum,
+	fixed_point_t state_administration_multiplier,
+	ast::NodeCPtr equivalent,
+	ConditionalWeight&& country_migration_target,
+	ConditionalWeight&& migration_target,
+	ast::NodeCPtr promote_to_node,
+	PopType::ideology_weight_map_t&& ideologies,
+	ast::NodeCPtr issues_node
 ) {
 	if (identifier.empty()) {
 		Logger::error("Invalid pop type identifier - empty!");
@@ -97,27 +192,76 @@ bool PopManager::add_pop_type(
 		return false;
 	}
 	if (sprite <= 0) {
-		Logger::error("Invalid pop type sprite index for ", identifier, ": ", sprite);
+		Logger::error("Invalid pop type sprite index for ", identifier, ": ", sprite, " (must be positive)");
 		return false;
 	}
-	if (max_size < 0) {
-		Logger::error("Invalid pop type max size for ", identifier, ": ", max_size);
+	if (max_size <= 0) {
+		Logger::error("Invalid pop type max size for ", identifier, ": ", max_size, " (must be positive)");
 		return false;
 	}
-	if (merge_max_size < 0) {
-		Logger::error("Invalid pop type merge max size for ", identifier, ": ", merge_max_size);
+	if (merge_max_size <= 0) {
+		Logger::error("Invalid pop type merge max size for ", identifier, ": ", merge_max_size, " (must be positive)");
 		return false;
 	}
+
+	if (research_leadership_optimum < 0) {
+		Logger::error(
+			"Invalid pop type research/leadership optimum for ", identifier, ": ", research_leadership_optimum,
+			" (cannot be negative)"
+		);
+		return false;
+	}
+	if ((research_points != 0 || leadership_points != 0) != (research_leadership_optimum > 0)) {
+		Logger::error(
+			"Invalid pop type research/leadership points and optimum for ", identifier, ": research = ", research_points,
+			", leadership = ", leadership_points, ", optimum = ", research_leadership_optimum,
+			" (optimum is positive if and only if at least one of research and leadership is non-zero)"
+		);
+		return false;
+	}
+
 	const bool ret = pop_types.add_item({
-		identifier, colour, *strata, sprite, std::move(life_needs), std::move(everyday_needs),
-		std::move(luxury_needs), std::move(rebel_units), max_size, merge_max_size, state_capital_only,
-		demote_migrant, is_artisan, allowed_to_vote, is_slave, can_be_recruited, can_reduce_consciousness,
-		administrative_efficiency, can_build, factory, can_work_factory, unemployment, std::move(country_migration_target),
-		std::move(migration_target), {}, std::move(ideologies), {}
+		identifier,
+		colour,
+		*strata,
+		sprite,
+		std::move(life_needs),
+		std::move(everyday_needs),
+		std::move(luxury_needs),
+		life_needs_income_types,
+		everyday_needs_income_types,
+		luxury_needs_income_types,
+		std::move(rebel_units),
+		max_size,
+		merge_max_size,
+		state_capital_only,
+		demote_migrant,
+		is_artisan,
+		allowed_to_vote,
+		is_slave,
+		can_be_recruited,
+		can_reduce_consciousness,
+		administrative_efficiency,
+		can_invest,
+		factory,
+		can_work_factory,
+		unemployment,
+		research_points,
+		leadership_points,
+		research_leadership_optimum,
+		state_administration_multiplier,
+		nullptr,
+		std::move(country_migration_target),
+		std::move(migration_target),
+		{},
+		std::move(ideologies),
+		{}
 	});
+
 	if (ret) {
-		delayed_parse_promote_to_and_issues_nodes.emplace_back(promote_to_node, issues_node);
+		delayed_parse_nodes.emplace_back(equivalent, promote_to_node, issues_node);
 	}
+
 	if (slave_sprite <= 0 && ret && is_slave) {
 		/* Set slave sprite to that of the first is_slave pop type we find. */
 		slave_sprite = sprite;
@@ -132,6 +276,29 @@ bool PopManager::add_pop_type(
 void PopManager::reserve_pop_types(size_t count) {
 	stratas.reserve(stratas.size() + count);
 	pop_types.reserve(pop_types.size() + count);
+	delayed_parse_nodes.reserve(delayed_parse_nodes.size() + count);
+}
+
+static NodeCallback auto expect_needs_income(PopType::income_type_t& types) {
+	static const string_map_t<PopType::income_type_t> income_type_map {
+		{ "administration", ADMINISTRATION },
+		{ "education", EDUCATION },
+		{ "military", MILITARY },
+		{ "reforms", REFORMS }
+	};
+	return expect_dictionary_keys(
+		"type", ONE_OR_MORE, expect_identifier(expect_mapped_string(income_type_map,
+			[&types](PopType::income_type_t type) -> bool {
+				if (!share_income_type(types, type)) {
+					types |= type;
+					return true;
+				}
+				Logger::error("Duplicate income type ", type, " in pop type income types!");
+				return false;
+			}
+		)),
+		"weight", ZERO_OR_ONE, success_callback /* Has no effect in game */
+	);
 }
 
 /* REQUIREMENTS:
@@ -145,11 +312,16 @@ bool PopManager::load_pop_type_file(
 	Strata const* strata = nullptr;
 	PopType::sprite_t sprite = 0;
 	Good::good_map_t life_needs, everyday_needs, luxury_needs;
+	PopType::income_type_t life_needs_income_types = NO_INCOME_TYPE, everyday_needs_income_types = NO_INCOME_TYPE,
+		luxury_needs_income_types = NO_INCOME_TYPE;
 	PopType::rebel_units_t rebel_units;
+	Pop::pop_size_t max_size = Pop::MAX_SIZE, merge_max_size = Pop::MAX_SIZE;
 	bool state_capital_only = false, demote_migrant = false, is_artisan = false, allowed_to_vote = true, is_slave = false,
-		can_be_recruited = false, can_reduce_consciousness = false, administrative_efficiency = false, can_build = false,
+		can_be_recruited = false, can_reduce_consciousness = false, administrative_efficiency = false, can_invest = false,
 		factory = false, can_work_factory = false, unemployment = false;
-	Pop::pop_size_t max_size = 0, merge_max_size = 0;
+	fixed_point_t research_points = 0, leadership_points = 0, research_leadership_optimum = 0,
+		state_administration_multiplier = 0;
+	ast::NodeCPtr equivalent = nullptr;
 	ConditionalWeight country_migration_target { scope_t::COUNTRY, scope_t::POP, scope_t::NO_SCOPE };
 	ConditionalWeight migration_target { scope_t::PROVINCE, scope_t::POP, scope_t::NO_SCOPE };
 	ast::NodeCPtr promote_to_node = nullptr;
@@ -176,18 +348,18 @@ bool PopManager::load_pop_type_file(
 			}
 		),
 		"state_capital_only", ZERO_OR_ONE, expect_bool(assign_variable_callback(state_capital_only)),
-		"research_points", ZERO_OR_ONE, success_callback, // TODO - research points generation
-		"research_optimum", ZERO_OR_ONE, success_callback, // TODO - bonus research points generation
+		"research_points", ZERO_OR_ONE, expect_fixed_point(assign_variable_callback(research_points)),
+		"research_optimum", ZERO_OR_ONE, expect_fixed_point(assign_variable_callback(research_leadership_optimum)),
 		"rebel", ZERO_OR_ONE, unit_manager.expect_unit_decimal_map(move_variable_callback(rebel_units)),
-		"equivalent", ZERO_OR_ONE, success_callback, // TODO - worker convertability
-		"leadership", ZERO_OR_ONE, success_callback, // TODO - leadership points generation
+		"equivalent", ZERO_OR_ONE, assign_variable_callback(equivalent),
+		"leadership", ZERO_OR_ONE, expect_fixed_point(assign_variable_callback(leadership_points)),
 		"allowed_to_vote", ZERO_OR_ONE, expect_bool(assign_variable_callback(allowed_to_vote)),
 		"is_slave", ZERO_OR_ONE, expect_bool(assign_variable_callback(is_slave)),
 		"can_be_recruited", ZERO_OR_ONE, expect_bool(assign_variable_callback(can_be_recruited)),
 		"can_reduce_consciousness", ZERO_OR_ONE, expect_bool(assign_variable_callback(can_reduce_consciousness)),
-		"life_needs_income", ZERO_OR_ONE, success_callback, // TODO - incomes from national budget
-		"everyday_needs_income", ZERO_OR_ONE, success_callback,
-		"luxury_needs_income", ZERO_OR_ONE, success_callback,
+		"life_needs_income", ZERO_OR_ONE, expect_needs_income(life_needs_income_types),
+		"everyday_needs_income", ZERO_OR_ONE, expect_needs_income(everyday_needs_income_types),
+		"luxury_needs_income", ZERO_OR_ONE, expect_needs_income(luxury_needs_income_types),
 		"luxury_needs", ZERO_OR_ONE, good_manager.expect_good_decimal_map(move_variable_callback(luxury_needs)),
 		"everyday_needs", ZERO_OR_ONE, good_manager.expect_good_decimal_map(move_variable_callback(everyday_needs)),
 		"life_needs", ZERO_OR_ONE, good_manager.expect_good_decimal_map(move_variable_callback(life_needs)),
@@ -206,9 +378,9 @@ bool PopManager::load_pop_type_file(
 		"issues", ZERO_OR_ONE, assign_variable_callback(issues_node),
 		"demote_migrant", ZERO_OR_ONE, expect_bool(assign_variable_callback(demote_migrant)),
 		"administrative_efficiency", ZERO_OR_ONE, expect_bool(assign_variable_callback(administrative_efficiency)),
-		"tax_eff", ZERO_OR_ONE, success_callback, // TODO - tax collection modifier
-		"can_build", ZERO_OR_ONE, expect_bool(assign_variable_callback(can_build)),
-		"factory", ZERO_OR_ONE, expect_bool(assign_variable_callback(factory)),
+		"tax_eff", ZERO_OR_ONE, expect_fixed_point(assign_variable_callback(state_administration_multiplier)),
+		"can_build", ZERO_OR_ONE, expect_bool(assign_variable_callback(can_invest)),
+		"factory", ZERO_OR_ONE, expect_bool(assign_variable_callback(factory)), // TODO - work out what this does
 		"workplace_input", ZERO_OR_ONE, success_callback, // TODO - work out what these do
 		"workplace_output", ZERO_OR_ONE, success_callback,
 		"starter_share", ZERO_OR_ONE, success_callback,
@@ -217,10 +389,40 @@ bool PopManager::load_pop_type_file(
 	)(root);
 
 	ret &= add_pop_type(
-		filestem, colour, strata, sprite, std::move(life_needs), std::move(everyday_needs), std::move(luxury_needs),
-		std::move(rebel_units), max_size, merge_max_size, state_capital_only, demote_migrant, is_artisan, allowed_to_vote,
-		is_slave, can_be_recruited, can_reduce_consciousness, administrative_efficiency, can_build, factory, can_work_factory,
-		unemployment, std::move(country_migration_target), std::move(migration_target), promote_to_node, std::move(ideologies),
+		filestem,
+		colour,
+		strata,
+		sprite,
+		std::move(life_needs),
+		std::move(everyday_needs),
+		std::move(luxury_needs),
+		life_needs_income_types,
+		everyday_needs_income_types,
+		luxury_needs_income_types,
+		std::move(rebel_units),
+		max_size,
+		merge_max_size,
+		state_capital_only,
+		demote_migrant,
+		is_artisan,
+		allowed_to_vote,
+		is_slave,
+		can_be_recruited,
+		can_reduce_consciousness,
+		administrative_efficiency,
+		can_invest,
+		factory,
+		can_work_factory,
+		unemployment,
+		research_points,
+		leadership_points,
+		research_leadership_optimum,
+		state_administration_multiplier,
+		equivalent,
+		std::move(country_migration_target),
+		std::move(migration_target),
+		promote_to_node,
+		std::move(ideologies),
 		issues_node
 	);
 	return ret;
@@ -228,9 +430,15 @@ bool PopManager::load_pop_type_file(
 
 bool PopManager::load_delayed_parse_pop_type_data(IssueManager const& issue_manager) {
 	bool ret = true;
-	for (size_t index = 0; index < delayed_parse_promote_to_and_issues_nodes.size(); ++index) {
-		const auto [promote_to_node, issues_node] = delayed_parse_promote_to_and_issues_nodes[index];
+	for (size_t index = 0; index < delayed_parse_nodes.size(); ++index) {
+		const auto [equivalent, promote_to_node, issues_node] = delayed_parse_nodes[index];
 		PopType* pop_type = pop_types.get_item_by_index(index);
+		if (equivalent != nullptr && !expect_pop_type_identifier(
+			assign_variable_callback_pointer(pop_type->equivalent)
+		)(equivalent)) {
+			Logger::error("Errors parsing equivalent pop type for pop type ", pop_type, "!");
+			ret = false;
+		}
 		if (promote_to_node != nullptr && !expect_pop_type_dictionary_reserve_length(
 			pop_type->promote_to,
 			[pop_type](PopType const& type, ast::NodeCPtr node) -> bool {
@@ -244,7 +452,7 @@ bool PopManager::load_delayed_parse_pop_type_data(IssueManager const& issue_mana
 				return ret;
 			}
 		)(promote_to_node)) {
-			Logger::error("Errors parsing pop type ", pop_type, " promotion weights!");
+			Logger::error("Errors parsing promotion weights for pop type ", pop_type, "!");
 			ret = false;
 		}
 		if (issues_node != nullptr && !expect_dictionary_reserve_length(
@@ -264,11 +472,11 @@ bool PopManager::load_delayed_parse_pop_type_data(IssueManager const& issue_mana
 				return ret;
 			}
 		)(issues_node)) {
-			Logger::error("Errors parsing pop type ", pop_type, " issue weights!");
+			Logger::error("Errors parsing issue weights for pop type ", pop_type, "!");
 			ret = false;
 		}
 	}
-	delayed_parse_promote_to_and_issues_nodes.clear();
+	delayed_parse_nodes.clear();
 	return ret;
 }
 

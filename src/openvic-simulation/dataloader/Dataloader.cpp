@@ -791,12 +791,6 @@ bool Dataloader::load_defines(GameManager& game_manager) {
 		Logger::error("Failed to load graphical culture types!");
 		ret = false;
 	}
-	if (!game_manager.get_pop_manager().get_culture_manager().load_culture_file(
-		parse_defines(lookup_file(culture_file)).get_file_node()
-	)) {
-		Logger::error("Failed to load cultures!");
-		ret = false;
-	}
 	if (!game_manager.get_pop_manager().get_religion_manager().load_religion_file(
 		parse_defines(lookup_file(religion_file)).get_file_node()
 	)) {
@@ -926,6 +920,12 @@ bool Dataloader::load_defines(GameManager& game_manager) {
 		game_manager, *this, parse_defines(lookup_file(countries_file)).get_file_node()
 	)) {
 		Logger::error("Failed to load countries!");
+		ret = false;
+	}
+	if (!game_manager.get_pop_manager().get_culture_manager().load_culture_file(
+		game_manager.get_country_manager(), parse_defines(lookup_file(culture_file)).get_file_node()
+	)) {
+		Logger::error("Failed to load cultures!");
 		ret = false;
 	}
 	if (!_load_decisions(game_manager)) {

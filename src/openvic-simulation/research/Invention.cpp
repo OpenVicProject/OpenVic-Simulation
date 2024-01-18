@@ -2,6 +2,7 @@
 
 #include "openvic-simulation/economy/BuildingType.hpp"
 #include "openvic-simulation/map/Crime.hpp"
+#include "openvic-simulation/military/Unit.hpp"
 
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;

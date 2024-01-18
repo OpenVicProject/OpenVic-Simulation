@@ -1,6 +1,5 @@
 #pragma once
 
-#include <filesystem>
 #include <string>
 #include <string_view>
 #include <vector>
@@ -22,11 +21,12 @@ namespace OpenVic {
 		LeaderTrait const* PROPERTY(personality);
 		LeaderTrait const* PROPERTY(background);
 		fixed_point_t      PROPERTY(prestige);
+		std::string        PROPERTY(picture);
 
 	public:
 		Leader(
 			std::string_view new_name, Unit::type_t new_type, Date new_date, LeaderTrait const* new_personality,
-			LeaderTrait const* new_background, fixed_point_t new_prestige
+			LeaderTrait const* new_background, fixed_point_t new_prestige, std::string_view new_picture
 		);
 	};
 

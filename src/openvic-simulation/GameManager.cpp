@@ -83,13 +83,24 @@ bool GameManager::expand_selected_province_building(size_t building_index) {
 	return province->expand_building(building_index);
 }
 
-static constexpr colour_argb_t::value_type ALPHA_VALUE = colour_argb_t::colour_traits::alpha_from_float(0.7f);
+static constexpr colour_argb_t::value_type ALPHA_VALUE = colour_argb_t::max_value;
+/* White default colour, used in mapmodes including political, revolt risk and party loyaly. */
+static constexpr colour_argb_t DEFAULT_COLOUR_WHITE = (0xFFFFFF_argb).with_alpha(ALPHA_VALUE);
+/* Grey default colour, used in mapmodes including diplomatic, administrative and colonial, recruitment,
+ * national focus, RGO, population density, sphere of influence, ranking and migration. */
+static constexpr colour_argb_t DEFAULT_COLOUR_GREY = (0x7F7F7F_argb).with_alpha(ALPHA_VALUE);
 
 template<IsColour ColourT = colour_t, std::derived_from<_HasColour<ColourT>> T>
 static constexpr auto get_colour_mapmode(T const*(Province::*get_item)() const) {
 	return [get_item](Map const& map, Province const& province) -> Mapmode::base_stripe_t {
 		T const* item = (province.*get_item)();
-		return item != nullptr ? colour_argb_t { item->get_colour(), ALPHA_VALUE } : colour_argb_t::null();
+		if (item != nullptr) {
+			return colour_argb_t { item->get_colour(), ALPHA_VALUE };
+		} else if (!province.is_water()) {
+			return DEFAULT_COLOUR_WHITE;
+		} else {
+			return colour_argb_t::null();
+		}
 	};
 }
 
@@ -133,6 +144,7 @@ bool GameManager::load_hardcoded_defines() {
 			"mapmode_political", get_colour_mapmode(&Province::get_owner)
 		},
 		{
+			/* TEST MAPMODE, TO BE REMOVED */
 			"mapmode_province",
 			[](Map const&, Province const& province) -> Mapmode::base_stripe_t {
 				return colour_argb_t { province.get_colour(), ALPHA_VALUE };
@@ -142,6 +154,7 @@ bool GameManager::load_hardcoded_defines() {
 			"mapmode_region", get_colour_mapmode(&Province::get_region)
 		},
 		{
+			/* TEST MAPMODE, TO BE REMOVED */
 			"mapmode_index",
 			[](Map const& map, Province const& province) -> Mapmode::base_stripe_t {
 				const colour_argb_t::value_type f =
@@ -150,6 +163,7 @@ bool GameManager::load_hardcoded_defines() {
 			}
 		},
 		{
+			/* Non-vanilla mapmode, still of use in game. */
 			"mapmode_terrain_type", get_colour_mapmode(&Province::get_terrain_type)
 		},
 		{
@@ -191,9 +205,11 @@ bool GameManager::load_hardcoded_defines() {
 			"mapmode_culture", shaded_mapmode(&Province::get_culture_distribution)
 		},
 		{
+			/* Non-vanilla mapmode, still of use in game. */
 			"mapmode_religion", shaded_mapmode(&Province::get_religion_distribution)
 		},
 		{
+			/* TEST MAPMODE, TO BE REMOVED */
 			"mapmode_adjacencies", [](Map const& map, Province const& province) -> Mapmode::base_stripe_t {
 				Province const* selected_province = map.get_selected_province();
 				if (selected_province != nullptr) {
@@ -228,7 +244,13 @@ bool GameManager::load_hardcoded_defines() {
 		},
 		{
 			"mapmode_port", [](Map const& map, Province const& province) -> Mapmode::base_stripe_t {
-				return province.has_port() ? (0xFFFFFF_argb).with_alpha(ALPHA_VALUE) : colour_argb_t::null();
+				if (province.has_port()) {
+					return (0xFFFFFF_argb).with_alpha(ALPHA_VALUE);
+				} else if (!province.is_water()) {
+					return (0x333333_argb).with_alpha(ALPHA_VALUE);
+				} else {
+					return colour_argb_t::null();
+				}
 			}
 		}
 	};

@@ -57,7 +57,6 @@ namespace OpenVic {
 
 		using allowed_to_cancel_func = FunctionRef<bool(const Argument&)>;
 
-
 		static bool allowed_to_cancel_default(const Argument& argument) {
 			return true;
 		}

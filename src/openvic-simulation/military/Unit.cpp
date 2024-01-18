@@ -104,10 +104,10 @@ bool UnitManager::load_unit_file(GoodManager const& good_manager, ast::NodeCPtr 
 		}
 
 		key_map_t key_map;
-		// shared
+		/* Shared dictionary entries */
 		ret &= add_key_map_entries(key_map,
 			"icon", ONE_EXACTLY, expect_uint(assign_variable_callback(icon)),
-			"type", ONE_EXACTLY, success_callback,
+			"type", ONE_EXACTLY, success_callback, /* Already loaded above using expect_key */
 			"sprite", ONE_EXACTLY, expect_identifier(assign_variable_callback(sprite)),
 			"active", ZERO_OR_ONE, expect_bool(assign_variable_callback(active)),
 			"unit_type", ONE_EXACTLY, expect_identifier(assign_variable_callback(unit_type)),

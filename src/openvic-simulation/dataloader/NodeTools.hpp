@@ -356,33 +356,46 @@ namespace OpenVic {
 			};
 		}
 
-		template<typename T, typename U, typename...SetArgs>
-		Callback<T> auto set_callback(tsl::ordered_set<U, SetArgs...>& set) {
-			return [&set](T val) -> bool {
-				if (!set.emplace(std::move(val)).second) {
-					Logger::warning("Duplicate set entry: \"", val, "\"");
-				}
+		template<typename... Args>
+		bool warn_or_error(bool warn, Args... args) {
+			if (warn) {
+				Logger::warning(args...);
 				return true;
+			} else {
+				Logger::error(args...);
+				return false;
+			}
+		}
+
+		template<typename T, typename U, typename...SetArgs>
+		Callback<T> auto set_callback(tsl::ordered_set<U, SetArgs...>& set, bool warn = false) {
+			return [&set, warn](T val) -> bool {
+				if (set.emplace(std::move(val)).second) {
+					return true;
+				}
+				return warn_or_error(warn, "Duplicate set entry: \"", val, "\"");
 			};
 		}
 
 		template<std::derived_from<HasIdentifier> T, typename...SetArgs>
-		Callback<T const&> auto set_callback_pointer(tsl::ordered_set<T const*, SetArgs...>& set) {
-			return [&set](T const& val) -> bool {
-				if (!set.emplace(&val).second) {
-					Logger::warning("Duplicate set entry: \"", &val, "\"");
+		Callback<T const&> auto set_callback_pointer(tsl::ordered_set<T const*, SetArgs...>& set, bool warn = false) {
+			return [&set, warn](T const& val) -> bool {
+				if (set.emplace(&val).second) {
+					return true;
 				}
-				return true;
+				return warn_or_error(warn, "Duplicate set entry: \"", &val, "\"");
 			};
 		}
 
 		template<std::derived_from<HasIdentifier> Key, typename Value, typename... MapArgs>
-		Callback<Value> auto map_callback(tsl::ordered_map<Key const*, Value, MapArgs...>& map, Key const* key) {
-			return [&map, key](Value value) -> bool {
-				if (!map.emplace(key, std::move(value)).second) {
-					Logger::warning("Duplicate map entry with key: \"", key, "\"");
+		Callback<Value> auto map_callback(
+			tsl::ordered_map<Key const*, Value, MapArgs...>& map, Key const* key, bool warn = false
+		) {
+			return [&map, key, warn](Value value) -> bool {
+				if (map.emplace(key, std::move(value)).second) {
+					return true;
 				}
-				return true;
+				return warn_or_error(warn, "Duplicate map entry with key: \"", key, "\"");
 			};
 		}
 	}

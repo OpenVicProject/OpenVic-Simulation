@@ -39,8 +39,8 @@ namespace OpenVic {
 		template<bool bNoExcept2, typename Func, typename Ret2, typename... Args2>
 		struct make_type_erased_function_ptr final {
 			type_erased_function_ptr<bNoExcept2, Ret2, Args2...> operator()() const& noexcept {
-				return [](AnyRef anyref,
-						  Args2... args) noexcept(bNoExcept2) -> Ret2 { // implicit cast of stateless lambda to function pointer
+				// implicit cast of stateless lambda to function pointer
+				return [](AnyRef anyref, Args2... args) noexcept(bNoExcept2) -> Ret2 {
 					return std::invoke(
 						anyref.template get_ref<Func>(), std::forward<Args2>(args)...
 					); // MAYTHROW unless bNoExcept
@@ -51,8 +51,8 @@ namespace OpenVic {
 		template<bool bNoExcept2, typename Func, typename... Args2>
 		struct make_type_erased_function_ptr<bNoExcept2, Func, void, Args2...> final {
 			type_erased_function_ptr<bNoExcept2, void, Args2...> operator()() const& noexcept {
-				return [](AnyRef anyref,
-						  Args2... args) noexcept(bNoExcept2) { // implicit cast of stateless lambda to function pointer
+				// implicit cast of stateless lambda to function pointer
+				return [](AnyRef anyref, Args2... args) noexcept(bNoExcept2) {
 					std::invoke(anyref.template get_ref<Func>(), std::forward<Args2>(args)...); // MAYTHROW unless bNoExcept
 				};
 			}
@@ -69,7 +69,6 @@ namespace OpenVic {
 			return m_pfuncTypeErased(m_anyref, std::forward<Args>(args)...); // MAYTHROW unless bNoExcept
 		}
 
-
 		template<typename Derived, typename Base>
 		struct decayed_derived_from : std::bool_constant<std::derived_from<typename std::decay<Derived>::type, Base>> {
 			static_assert(std::same_as<std::decay_t<Base>, Base>);
@@ -77,10 +76,10 @@ namespace OpenVic {
 
 		template<typename Func>
 		requires(!decayed_derived_from<Func, FunctionRefBase>::value) &&
-					std::invocable<std::remove_reference_t<Func>&, Args...> &&
-					(std::convertible_to<
-						 decltype(std::invoke(std::declval<std::remove_reference_t<Func>&>(), std::declval<Args>()...)), Ret> ||
-					 std::is_void<Ret>::value)
+			std::invocable<std::remove_reference_t<Func>&, Args...> &&
+			(std::convertible_to<
+				decltype(std::invoke(std::declval<std::remove_reference_t<Func>&>(), std::declval<Args>()...)), Ret
+			> || std::is_void<Ret>::value)
 		FunctionRefBase(Func&& func) noexcept
 			: m_pfuncTypeErased(make_type_erased_function_ptr<bNoExcept, std::remove_reference_t<Func>, Ret, Args...> {}()),
 			  m_anyref(as_lvalue(func)) {

@@ -7,9 +7,9 @@ using namespace OpenVic::NodeTools;
 
 Leader::Leader(
 	std::string_view new_name, Unit::type_t new_type, Date new_date, LeaderTrait const* new_personality,
-	LeaderTrait const* new_background, fixed_point_t new_prestige
+	LeaderTrait const* new_background, fixed_point_t new_prestige, std::string_view new_picture
 ) : name { new_name }, type { new_type }, date { new_date }, personality { new_personality }, background { new_background },
-	prestige { new_prestige } {}
+	prestige { new_prestige }, picture { new_picture } {}
 
 Regiment::Regiment(std::string_view new_name, Unit const* new_type, Province const* new_home)
 	: name { new_name }, type { new_type }, home { new_home } {}
@@ -76,9 +76,10 @@ bool DeploymentManager::load_oob_file(
 			LeaderTrait const* leader_personality = nullptr;
 			LeaderTrait const* leader_background = nullptr;
 			fixed_point_t leader_prestige = 0;
+			std::string_view picture {};
 
 			bool ret = expect_dictionary_keys(
-				"name", ONE_EXACTLY, expect_string(assign_variable_callback(leader_name)),
+				"name", ONE_EXACTLY, expect_identifier_or_string(assign_variable_callback(leader_name)),
 				"date", ONE_EXACTLY, expect_identifier_or_string(expect_date_str(assign_variable_callback(leader_date))),
 				"type", ONE_EXACTLY, expect_identifier(UnitManager::expect_type_str(assign_variable_callback(leader_type))),
 				"personality", ONE_EXACTLY, game_manager.get_military_manager().get_leader_trait_manager()
@@ -86,7 +87,7 @@ bool DeploymentManager::load_oob_file(
 				"background", ONE_EXACTLY, game_manager.get_military_manager().get_leader_trait_manager()
 					.expect_leader_trait_identifier(assign_variable_callback_pointer(leader_background)),
 				"prestige", ZERO_OR_ONE, expect_fixed_point(assign_variable_callback(leader_prestige)),
-				"picture", ZERO_OR_ONE, success_callback
+				"picture", ZERO_OR_ONE, expect_identifier_or_string(assign_variable_callback(picture))
 			)(node);
 
 			if (!leader_personality->is_personality_trait()) {
@@ -104,7 +105,7 @@ bool DeploymentManager::load_oob_file(
 				ret = false;
 			}
 			leaders.emplace_back(
-				leader_name, leader_type, leader_date, leader_personality, leader_background, leader_prestige
+				leader_name, leader_type, leader_date, leader_personality, leader_background, leader_prestige, picture
 			);
 			return ret;
 		},
@@ -134,7 +135,7 @@ bool DeploymentManager::load_oob_file(
 					army_regiments.emplace_back(regiment_name, regiment_type, regiment_home);
 					return ret;
 				},
-				/* another paradox gem, tested in game and they don't lead the army or even show up */
+				/* Another paradox gem, tested in game and they don't lead the army or even show up */
 				"leader", ZERO_OR_MORE, success_callback
 			)(node);
 			armies.emplace_back(army_name, army_location, std::move(army_regiments));
@@ -160,7 +161,7 @@ bool DeploymentManager::load_oob_file(
 					navy_ships.emplace_back(ship_name, ship_type);
 					return ret;
 				},
-				/* another paradox gem, tested in game and they don't lead the army or even show up */
+				/* Another paradox gem, tested in game and they don't lead the army or even show up */
 				"leader", ZERO_OR_MORE, success_callback
 			)(node);
 			navies.emplace_back(navy_name, navy_location, std::move(navy_ships));
