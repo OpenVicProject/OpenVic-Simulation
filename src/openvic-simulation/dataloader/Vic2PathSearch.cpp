@@ -6,7 +6,6 @@
 #include "openvic-simulation/types/OrderedContainers.hpp"
 #include "openvic-simulation/utility/ConstexprIntToStr.hpp"
 #include "openvic-simulation/utility/Logger.hpp"
-#include "openvic-simulation/utility/StringUtils.hpp"
 
 #include "Dataloader.hpp"
 
@@ -81,6 +80,19 @@ static fs::path _search_for_game_path(fs::path hint_path = {}) {
 	}
 
 	const bool hint_path_was_empty = hint_path.empty();
+	auto empty_fail_result_callback = [&]<typename... Args>(Args&&... args) -> fs::path {
+		if (!hint_path_was_empty) {
+			if constexpr (sizeof...(Args) > 0) {
+				Logger::info(std::forward<Args>(args)...);
+			}
+			return _search_for_game_path();
+		}
+		if constexpr (sizeof...(Args) > 0) {
+			Logger::warning(std::forward<Args>(args)...);
+		}
+		return "";
+	};
+
 	if (hint_path_was_empty) {
 #if defined(_WIN32)
 		static const fs::path registry_path =
@@ -137,7 +149,7 @@ static fs::path _search_for_game_path(fs::path hint_path = {}) {
 
 	// Could not determine Steam install on platform
 	if (hint_path.empty()) {
-		return "";
+		return empty_fail_result_callback("Steam install path not found.");
 	}
 
 	// Supplied path was useless, ignore hint_path
@@ -188,17 +200,16 @@ static fs::path _search_for_game_path(fs::path hint_path = {}) {
 		if (!parser.parse()) {
 			// Could not find or load libraryfolders.vdf, report error as warning
 			if (!buffer.empty()) {
-				Logger::warning _(buffer);
+				return empty_fail_result_callback(buffer);
 			}
-			return "";
+			return empty_fail_result_callback("Could not parse VDF at '", current_path, "'.");
 		}
 		std::optional current_node = *(parser.get_key_values());
 
 		// check "libraryfolders" list
 		auto it = current_node.value().find("libraryfolders");
 		if (it == current_node.value().end()) {
-			Logger::warning("Expected libraryfolders.vdf to contain a libraryfolders key.");
-			return "";
+			return empty_fail_result_callback("Expected libraryfolders.vdf to contain a libraryfolders key.");
 		}
 
 		static constexpr auto visit_node = [](auto&& arg) -> std::optional<lexy_vdf::KeyValues> {
@@ -213,8 +224,7 @@ static fs::path _search_for_game_path(fs::path hint_path = {}) {
 		current_node = std::visit(visit_node, it->second);
 
 		if (!current_node.has_value()) {
-			Logger::warning("Expected libraryfolders.vdf's libraryfolders key to be a KeyValue dictionary.");
-			return "";
+			return empty_fail_result_callback("Expected libraryfolders.vdf's libraryfolders key to be a KeyValue dictionary.");
 		}
 
 		// Array of strings contain "0" to std::to_string(max_amount_of_steam_libraries - 1)
@@ -263,8 +273,7 @@ static fs::path _search_for_game_path(fs::path hint_path = {}) {
 		}
 
 		if (vic2_steam_lib_directory.empty()) {
-			Logger::info("Steam installation appears not to contain Victoria 2.");
-			return "";
+			return empty_fail_result_callback("Steam installation appears not to contain Victoria 2.");
 		}
 	}
 
@@ -283,10 +292,18 @@ static fs::path _search_for_game_path(fs::path hint_path = {}) {
 		auto parser = lexy_vdf::Parser::from_file(vic2_steam_lib_directory);
 		if (!parser.parse()) {
 			// Could not find or load appmanifest_42960.acf, report error as warning
-			for (auto& error : parser.get_errors()) {
-				Logger::warning(error.message);
+			if (parser.get_errors().size() > 1) {
+				for (auto& error : parser.get_errors()) {
+					// TODO: allow empty_fail_result_callback to use callbacks
+					if (hint_path_was_empty) {
+						Logger::warning(error.message);
+					} else {
+						Logger::info(error.message);
+					}
+				}
+				return empty_fail_result_callback();
 			}
-			return "";
+			return empty_fail_result_callback(parser.get_errors().front().message);
 		}
 
 		// we can pretty much assume the Victoria 2 directory on Steam is valid from here
