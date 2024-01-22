@@ -258,13 +258,23 @@ namespace OpenVic {
 			if (item != nullptr) { \
 				return callback(*item); \
 			} \
-			return NodeTools::warn_or_error(warn, "Invalid ", name, ": ", identifier); \
+			return NodeTools::warn_or_error(warn, "Invalid ", name, " identifier: ", identifier); \
 		}; \
 	} \
 	constexpr NodeTools::NodeCallback auto expect_item_identifier( \
 		NodeTools::Callback<value_type CONST&> auto callback, bool warn \
 	) CONST { \
 		return NodeTools::expect_identifier(expect_item_str(callback, warn)); \
+	} \
+	constexpr NodeTools::NodeCallback auto expect_item_string( \
+		NodeTools::Callback<value_type CONST&> auto callback, bool warn \
+	) CONST { \
+		return NodeTools::expect_string(expect_item_str(callback, warn)); \
+	} \
+	constexpr NodeTools::NodeCallback auto expect_item_identifier_or_string( \
+		NodeTools::Callback<value_type CONST&> auto callback, bool warn \
+	) CONST { \
+		return NodeTools::expect_identifier_or_string(expect_item_str(callback, warn)); \
 	} \
 	constexpr NodeTools::NodeCallback auto expect_item_assign_and_default( \
 		NodeTools::KeyValueCallback auto default_callback, \
@@ -505,6 +515,16 @@ private:
 		NodeTools::Callback<decltype(registry)::value_type const_kw&> auto callback, bool warn = false \
 	) const_kw { \
 		return registry.expect_item_identifier(callback, warn); \
+	} \
+	constexpr NodeTools::NodeCallback auto expect_##singular##_string( \
+		NodeTools::Callback<decltype(registry)::value_type const_kw&> auto callback, bool warn = false \
+	) const_kw { \
+		return registry.expect_item_string(callback, warn); \
+	} \
+	constexpr NodeTools::NodeCallback auto expect_##singular##_identifier_or_string( \
+		NodeTools::Callback<decltype(registry)::value_type const_kw&> auto callback, bool warn = false \
+	) const_kw { \
+		return registry.expect_item_identifier_or_string(callback, warn); \
 	} \
 	constexpr NodeTools::NodeCallback auto expect_##singular##_assign_and_default( \
 		NodeTools::KeyValueCallback auto default_callback, \

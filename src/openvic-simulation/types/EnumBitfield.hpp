@@ -27,58 +27,58 @@ namespace OpenVic {
 }
 
 template<OpenVic::EnumSupportBitfield T>
-[[nodiscard]] constexpr inline auto operator|(const T lhs, const T rhs) noexcept {
+[[nodiscard]] inline constexpr auto operator|(const T lhs, const T rhs) noexcept {
 	using underlying_type = std::underlying_type_t<T>;
 	return static_cast<T>(static_cast<underlying_type>(lhs) | static_cast<underlying_type>(rhs));
 }
 
 template<OpenVic::EnumSupportBitfield T>
-[[nodiscard]] constexpr inline auto operator&(const T lhs, const T rhs) noexcept {
+[[nodiscard]] inline constexpr auto operator&(const T lhs, const T rhs) noexcept {
 	using underlying_type = std::underlying_type_t<T>;
 	return static_cast<T>(static_cast<underlying_type>(lhs) & static_cast<underlying_type>(rhs));
 }
 
 template<OpenVic::EnumSupportBitfield T>
-[[nodiscard]] constexpr inline auto operator^(const T lhs, const T rhs) noexcept {
+[[nodiscard]] inline constexpr auto operator^(const T lhs, const T rhs) noexcept {
 	using underlying_type = std::underlying_type_t<T>;
 	return static_cast<T>(static_cast<underlying_type>(lhs) ^ static_cast<underlying_type>(rhs));
 }
 
 template<OpenVic::EnumSupportBitfield T>
-[[nodiscard]] constexpr inline auto operator~(const T lhs) noexcept {
+[[nodiscard]] inline constexpr auto operator~(const T lhs) noexcept {
 	using underlying_type = std::underlying_type_t<T>;
 	return static_cast<T>(~static_cast<underlying_type>(lhs));
 }
 
 template<OpenVic::EnumSupportBitfield T>
-constexpr inline decltype(auto) operator|=(T& lhs, const T rhs) noexcept {
+inline constexpr decltype(auto) operator|=(T& lhs, const T rhs) noexcept {
 	using underlying_type = std::underlying_type_t<T>;
 	lhs = static_cast<T>(static_cast<underlying_type>(lhs) | static_cast<underlying_type>(rhs));
 	return lhs;
 }
 
 template<OpenVic::EnumSupportBitfield T>
-constexpr inline decltype(auto) operator&=(T& lhs, const T rhs) noexcept {
+inline constexpr decltype(auto) operator&=(T& lhs, const T rhs) noexcept {
 	using underlying_type = std::underlying_type_t<T>;
 	lhs = static_cast<T>(static_cast<underlying_type>(lhs) & static_cast<underlying_type>(rhs));
 	return lhs;
 }
 
 template<OpenVic::EnumSupportBitfield T>
-constexpr inline decltype(auto) operator^=(T& lhs, const T rhs) noexcept {
+inline constexpr decltype(auto) operator^=(T& lhs, const T rhs) noexcept {
 	using underlying_type = std::underlying_type_t<T>;
 	lhs = static_cast<T>(static_cast<underlying_type>(lhs) ^ static_cast<underlying_type>(rhs));
 	return lhs;
 }
 
 template<OpenVic::EnumSupportBitfield T>
-[[nodiscard]] constexpr inline bool operator<<(const T lhs, const T rhs) noexcept {
+[[nodiscard]] inline constexpr bool operator<<(const T lhs, const T rhs) noexcept {
 	using underlying_type = std::underlying_type_t<T>;
 	return (lhs & rhs) == rhs;
 }
 
 template<OpenVic::EnumSupportBitfield T>
-[[nodiscard]] constexpr inline bool operator>>(const T lhs, const T rhs) noexcept {
+[[nodiscard]] inline constexpr bool operator>>(const T lhs, const T rhs) noexcept {
 	using underlying_type = std::underlying_type_t<T>;
 	return (lhs & rhs) == lhs;
 }

@@ -195,10 +195,14 @@ bool GameManager::load_hardcoded_defines() {
 				// TODO - explore non-linear scaling to have more variation among non-massive provinces
 				// TODO - when selecting a province, only show the population of provinces controlled (or owned?)
 				// by the same country, relative to the most populous province in that set of provinces
-				const colour_argb_t::value_type val = colour_argb_t::colour_traits::component_from_fraction(
-					province.get_total_population(), map.get_highest_province_population() + 1, 0.1f, 1.0f
-				);
-				return colour_argb_t { 0, val, 0, ALPHA_VALUE };
+				if (!province.is_water()) {
+					const colour_argb_t::value_type val = colour_argb_t::colour_traits::component_from_fraction(
+						province.get_total_population(), map.get_highest_province_population() + 1, 0.1f, 1.0f
+					);
+					return colour_argb_t { 0, val, 0, ALPHA_VALUE };
+				} else {
+					return colour_argb_t::null();
+				}
 			}
 		},
 		{

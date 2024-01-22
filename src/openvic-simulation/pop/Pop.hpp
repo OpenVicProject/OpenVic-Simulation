@@ -184,7 +184,7 @@ namespace OpenVic {
 	template<> struct enable_bitfield<PopType::income_type_t> : std::true_type {};
 
 	/* This returns true if at least one income type is shared by both arguments. */
-	constexpr inline bool share_income_type(PopType::income_type_t lhs, PopType::income_type_t rhs) {
+	inline constexpr bool share_income_type(PopType::income_type_t lhs, PopType::income_type_t rhs) {
 		return (lhs & rhs) != PopType::income_type_t::NO_INCOME_TYPE;
 	}
 

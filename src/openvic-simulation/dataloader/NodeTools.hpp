@@ -357,17 +357,17 @@ namespace OpenVic {
 		}
 
 		template<typename... Args>
-		bool warn_or_error(bool warn, Args... args) {
+		bool warn_or_error(bool warn, Args&&... args) {
 			if (warn) {
-				Logger::warning(args...);
+				Logger::warning(std::forward<Args>(args)...);
 				return true;
 			} else {
-				Logger::error(args...);
+				Logger::error(std::forward<Args>(args)...);
 				return false;
 			}
 		}
 
-		template<typename T, typename U, typename...SetArgs>
+		template<typename T, typename U, typename... SetArgs>
 		Callback<T> auto set_callback(tsl::ordered_set<U, SetArgs...>& set, bool warn = false) {
 			return [&set, warn](T val) -> bool {
 				if (set.emplace(std::move(val)).second) {
@@ -377,7 +377,7 @@ namespace OpenVic {
 			};
 		}
 
-		template<std::derived_from<HasIdentifier> T, typename...SetArgs>
+		template<std::derived_from<HasIdentifier> T, typename... SetArgs>
 		Callback<T const&> auto set_callback_pointer(tsl::ordered_set<T const*, SetArgs...>& set, bool warn = false) {
 			return [&set, warn](T const& val) -> bool {
 				if (set.emplace(&val).second) {

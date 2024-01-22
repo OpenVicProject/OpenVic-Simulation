@@ -82,22 +82,26 @@ bool DeploymentManager::load_oob_file(
 				"name", ONE_EXACTLY, expect_identifier_or_string(assign_variable_callback(leader_name)),
 				"date", ONE_EXACTLY, expect_identifier_or_string(expect_date_str(assign_variable_callback(leader_date))),
 				"type", ONE_EXACTLY, expect_identifier(UnitManager::expect_type_str(assign_variable_callback(leader_type))),
-				"personality", ONE_EXACTLY, game_manager.get_military_manager().get_leader_trait_manager()
-					.expect_leader_trait_identifier(assign_variable_callback_pointer(leader_personality)),
-				"background", ONE_EXACTLY, game_manager.get_military_manager().get_leader_trait_manager()
-					.expect_leader_trait_identifier(assign_variable_callback_pointer(leader_background)),
+				"personality", ONE_EXACTLY,
+					game_manager.get_military_manager().get_leader_trait_manager().expect_leader_trait_identifier_or_string(
+						assign_variable_callback_pointer(leader_personality)
+					),
+				"background", ONE_EXACTLY,
+					game_manager.get_military_manager().get_leader_trait_manager().expect_leader_trait_identifier_or_string(
+						assign_variable_callback_pointer(leader_background)
+					),
 				"prestige", ZERO_OR_ONE, expect_fixed_point(assign_variable_callback(leader_prestige)),
 				"picture", ZERO_OR_ONE, expect_identifier_or_string(assign_variable_callback(picture))
 			)(node);
 
-			if (!leader_personality->is_personality_trait()) {
+			if (leader_personality != nullptr && !leader_personality->is_personality_trait()) {
 				Logger::error(
 					"Leader ", leader_name, " has personality ", leader_personality->get_identifier(),
 					" which is not a personality trait!"
 				);
 				ret = false;
 			}
-			if (!leader_background->is_background_trait()) {
+			if (leader_background != nullptr && !leader_background->is_background_trait()) {
 				Logger::error(
 					"Leader ", leader_name, " has background ", leader_background->get_identifier(),
 					" which is not a background trait!"

@@ -11,6 +11,11 @@ namespace OpenVic {
 	struct GameManager;
 	class UIManager;
 
+	template<typename _UniqueFileKey>
+	concept UniqueFileKey = requires(_UniqueFileKey const& unique_key, std::string_view path) {
+		requires std::same_as<std::remove_cvref_t<decltype(unique_key(path))>, std::string_view>;
+	};
+
 	class Dataloader {
 	public:
 		using path_vector_t = std::vector<fs::path>;
@@ -34,10 +39,7 @@ namespace OpenVic {
 		/* _DirIterator is fs::directory_iterator or fs::recursive_directory_iterator. _UniqueKey is the type of a callable
 		 * which converts a string_view filepath with root removed into a string_view unique key. Any path whose key is empty
 		 * or matches an earlier found path's key is discarded, ensuring each looked up path's key is non-empty and unique. */
-		template<typename _DirIterator, typename _UniqueKey>
-		requires requires (_UniqueKey const& unique_key, std::string_view path) {
-			{ unique_key(path) } -> std::convertible_to<std::string_view>;
-		}
+		template<typename _DirIterator, UniqueFileKey _UniqueKey>
 		path_vector_t _lookup_files_in_dir(
 			std::string_view path, fs::path const& extension, _UniqueKey const& unique_key
 		) const;

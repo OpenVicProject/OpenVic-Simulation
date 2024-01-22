@@ -66,7 +66,8 @@ bool GovernmentTypeManager::load_government_types_file(IdeologyManager const& id
 
 			ret &= expect_dictionary(
 				[this, &ideology_manager, &ideologies, government_type_identifier](
-					std::string_view key, ast::NodeCPtr value) -> bool {
+					std::string_view key, ast::NodeCPtr value
+				) -> bool {
 					static const string_set_t reserved_keys = { "election", "duration", "appoint_ruling_party", "flagType" };
 					if (reserved_keys.contains(key)) {
 						return true;

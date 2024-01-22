@@ -198,7 +198,7 @@ namespace OpenVic::StringUtils {
 	}
 
 	template<typename... Args>
-	requires (std::is_same_v<std::string_view, Args> && ...)
+	requires(std::is_same_v<std::string_view, Args> && ...)
 	inline std::string _append_string_views(Args... args) {
 		std::string ret;
 		ret.reserve((args.size() + ...));
@@ -207,7 +207,7 @@ namespace OpenVic::StringUtils {
 	}
 
 	template<typename... Args>
-	requires (std::is_convertible_v<Args, std::string_view> && ...)
+	requires(std::is_convertible_v<Args, std::string_view> && ...)
 	inline std::string append_string_views(Args... args) {
 		return _append_string_views(std::string_view { args }...);
 	}
