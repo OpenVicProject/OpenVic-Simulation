@@ -105,7 +105,7 @@ bool ModifierManager::setup_modifier_effects() {
 	bool ret = true;
 
 	using enum ModifierEffect::format_t;
-	/* Tech/inventions only*/
+	/* Tech/inventions only */
 	ret &= add_modifier_effect("cb_creation_speed", true);
 	ret &= add_modifier_effect("combat_width", false);
 	ret &= add_modifier_effect("plurality", true, PERCENTAGE_DECIMAL);
@@ -214,7 +214,7 @@ bool ModifierManager::setup_modifier_effects() {
 	ret &= add_modifier_effect("unit_recruitment_time", false);
 	ret &= add_modifier_effect("war_exhaustion", false);
 
-	/* State only*/
+	/* State only */
 	ret &= add_modifier_effect("flashpoint_tension", true);
 	ret &= add_modifier_effect("railroads", true); // capitalist likelihood for railroads vs factories
 
@@ -371,9 +371,9 @@ key_value_callback_t ModifierManager::_modifier_effect_callback(
 	) -> bool {
 		if (effect_validator(*effect)) {
 			static const case_insensitive_string_set_t no_effect_modifiers {
-				"boost_strongest_party", "poor_savings_modifier",	"local_artisan_input",	  "local_artisan_throughput",
-				"local_artisan_output",	 "artisan_input",			"artisan_throughput",	  "artisan_output",
-				"import_cost",			 "unciv_economic_modifier", "unciv_military_modifier"
+				"boost_strongest_party", "poor_savings_modifier",   "local_artisan_input",     "local_artisan_throughput",
+				"local_artisan_output",  "artisan_input",           "artisan_throughput",      "artisan_output",
+				"import_cost",           "unciv_economic_modifier", "unciv_military_modifier"
 			};
 			if (no_effect_modifiers.contains(effect->get_identifier())) {
 				Logger::warning("This modifier does nothing: ", effect->get_identifier());

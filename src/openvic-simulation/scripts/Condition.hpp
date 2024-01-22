@@ -77,13 +77,13 @@ namespace OpenVic {
 	template<> struct enable_bitfield<identifier_type_t> : std::true_type {};
 
 	/* Returns true if the values have any bit in common. */
-	constexpr inline bool share_value_type(value_type_t lhs, value_type_t rhs) {
+	inline constexpr bool share_value_type(value_type_t lhs, value_type_t rhs) {
 		return (lhs & rhs) != value_type_t::NO_TYPE;
 	}
-	constexpr inline bool share_scope(scope_t lhs, scope_t rhs) {
+	inline constexpr bool share_scope(scope_t lhs, scope_t rhs) {
 		return (lhs & rhs) != scope_t::NO_SCOPE;
 	}
-	constexpr inline bool share_identifier_type(identifier_type_t lhs, identifier_type_t rhs) {
+	inline constexpr bool share_identifier_type(identifier_type_t lhs, identifier_type_t rhs) {
 		return (lhs & rhs) != identifier_type_t::NO_IDENTIFIER;
 	}
 

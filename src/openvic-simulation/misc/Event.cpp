@@ -213,7 +213,7 @@ bool EventManager::load_on_action_file(ast::NodeCPtr root) {
 					ret &= map_callback(weighted_events, event)(weight);
 				} else {
 					Logger::warning(
-						"Non-existing event ", event->get_identifier(), " loaded on action ", identifier, "with weight",
+						"Non-existing event ", event_node, " loaded on action ", identifier, " with weight ",
 						weight, "!"
 					);
 				}

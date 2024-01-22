@@ -109,10 +109,7 @@ fs::path Dataloader::lookup_image_file(std::string_view path) const {
 	return lookup_file(path);
 }
 
-template<typename _DirIterator, typename _UniqueKey>
-requires requires (_UniqueKey const& unique_key, std::string_view path) {
-	{ unique_key(path) } -> std::convertible_to<std::string_view>;
-}
+template<typename _DirIterator, UniqueFileKey _UniqueKey>
 Dataloader::path_vector_t Dataloader::_lookup_files_in_dir(
 	std::string_view path, fs::path const& extension, _UniqueKey const& unique_key
 ) const {
@@ -129,7 +126,7 @@ Dataloader::path_vector_t Dataloader::_lookup_files_in_dir(
 		for (fs::directory_entry const& entry : _DirIterator { root / dirpath, ec }) {
 			if (entry.is_regular_file()) {
 				fs::path file = entry;
-				if ((extension.empty() || file.extension() == extension)) {
+				if (extension.empty() || file.extension() == extension) {
 					const std::string full_path = file.string();
 					std::string_view relative_path = full_path;
 					relative_path.remove_prefix(root_len);
@@ -142,7 +139,7 @@ Dataloader::path_vector_t Dataloader::_lookup_files_in_dir(
 							ret.emplace_back(std::move(file));
 						} else if (it->second.root == &root) {
 							Logger::warning(
-								"Files in the same directory with conflicting keys: ", it->first, " - ", it->second.file,
+								"Files under the same root with conflicting keys: ", it->first, " - ", it->second.file,
 								" (accepted) and ", key, " - ", file, " (rejected)"
 							);
 						}
