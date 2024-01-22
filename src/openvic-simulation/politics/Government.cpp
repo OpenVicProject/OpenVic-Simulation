@@ -47,7 +47,8 @@ bool GovernmentTypeManager::add_government_type(
 
 /* REQUIREMENTS: FS-525, SIM-27 */
 bool GovernmentTypeManager::load_government_types_file(IdeologyManager const& ideology_manager, ast::NodeCPtr root) {
-	bool ret = expect_dictionary_reserve_length(government_types,
+	bool ret = expect_dictionary_reserve_length(
+		government_types,
 		[this, &ideology_manager](std::string_view government_type_identifier, ast::NodeCPtr government_type_value) -> bool {
 			std::vector<Ideology const*> ideologies;
 			bool elections = false, appoint_ruling_party = false;

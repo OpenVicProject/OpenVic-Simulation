@@ -36,7 +36,9 @@ namespace OpenVic::GFX {
 		OV_DETAIL_GET_BASE_TYPE(Sprite)
 		OV_DETAIL_GET_TYPE
 
-		static NodeTools::node_callback_t expect_sprite(NodeTools::callback_t<std::unique_ptr<Sprite>&&> callback);
+		static NodeTools::node_callback_t expect_sprites(
+			NodeTools::length_callback_t length_callback, NodeTools::callback_t<std::unique_ptr<Sprite>&&> callback
+		);
 	};
 
 	class TextureSprite final : public Sprite {

@@ -7,8 +7,9 @@ using namespace OpenVic::NodeTools;
 Font::Font(std::string_view new_identifier, colour_argb_t new_colour, std::string_view new_fontname)
 	: HasIdentifierAndAlphaColour { new_identifier, new_colour, false }, fontname { new_fontname } {}
 
-node_callback_t Sprite::expect_sprite(callback_t<std::unique_ptr<Sprite>&&> callback) {
-	return expect_dictionary_keys(
+node_callback_t Sprite::expect_sprites(length_callback_t length_callback, callback_t<std::unique_ptr<Sprite>&&> callback) {
+	return expect_dictionary_keys_and_length(
+		length_callback,
 		"spriteType", ZERO_OR_MORE, _expect_instance<Sprite, TextureSprite>(callback),
 		"progressbartype", ZERO_OR_MORE, _expect_instance<Sprite, ProgressBar>(callback),
 		"PieChartType", ZERO_OR_MORE, _expect_instance<Sprite, PieChart>(callback),

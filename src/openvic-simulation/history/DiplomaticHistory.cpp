@@ -47,6 +47,14 @@ SubjectHistory::SubjectHistory(
 	const Period new_period
 ) : overlord { new_overlord }, subject { new_subject }, type { new_type }, period {new_period} {}
 
+void DiplomaticHistoryManager::reserve_more_wars(size_t size) {
+	if (locked) {
+		Logger::error("Failed to reserve space for ", size, " wars in DiplomaticHistoryManager - already locked!");
+	} else {
+		reserve_more(wars, size);
+	}
+}
+
 void DiplomaticHistoryManager::lock_diplomatic_history() {
 	Logger::info("Locked diplomacy history registry after registering ", alliances.size() + subjects.size() + wars.size(), " items");
 	locked = true;
@@ -184,7 +192,7 @@ bool DiplomaticHistoryManager::load_diplomacy_history_file(CountryManager const&
 }
 
 bool DiplomaticHistoryManager::load_war_history_file(GameManager const& game_manager, ast::NodeCPtr root) {
-	std::string name = "";
+	std::string_view name {};
 	std::vector<WarHistory::war_participant_t> attackers {};
 	std::vector<WarHistory::war_participant_t> defenders {};
 	std::vector<WarHistory::added_wargoal_t> wargoals {};
@@ -270,7 +278,7 @@ bool DiplomaticHistoryManager::load_war_history_file(GameManager const& game_man
 			)(node);
 			return ret;
 		},
-		"name", ZERO_OR_ONE, expect_string(assign_variable_callback_string(name))
+		"name", ZERO_OR_ONE, expect_string(assign_variable_callback(name))
 	)(root);
 
 	wars.push_back({ name, std::move(attackers), std::move(defenders), std::move(wargoals) });

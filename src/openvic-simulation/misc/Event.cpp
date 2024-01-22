@@ -116,7 +116,8 @@ bool EventManager::add_on_action(std::string_view identifier, OnAction::weight_m
 }
 
 bool EventManager::load_event_file(IssueManager const& issue_manager, ast::NodeCPtr root) {
-	return expect_dictionary(
+	return expect_dictionary_reserve_length(
+		events,
 		[this, &issue_manager](std::string_view key, ast::NodeCPtr value) -> bool {
 			Event::event_type_t type;
 			scope_t initial_scope;

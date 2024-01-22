@@ -1,13 +1,10 @@
 #pragma once
 
-#include <bitset>
-#include <map>
 #include <vector>
 
 #include "openvic-simulation/country/Country.hpp"
 #include "openvic-simulation/economy/BuildingType.hpp"
 #include "openvic-simulation/economy/Good.hpp"
-#include "openvic-simulation/history/Bookmark.hpp"
 #include "openvic-simulation/history/HistoryMap.hpp"
 #include "openvic-simulation/map/Province.hpp"
 #include "openvic-simulation/map/TerrainType.hpp"
@@ -63,7 +60,7 @@ namespace OpenVic {
 
 	struct ProvinceHistoryManager {
 	private:
-		ordered_map<Province const*, ProvinceHistoryMap> PROPERTY(province_histories);
+		ordered_map<Province const*, ProvinceHistoryMap> province_histories;
 		bool locked = false;
 
 		ProvinceHistoryMap* _get_or_make_province_history(Province const& province);
@@ -71,6 +68,7 @@ namespace OpenVic {
 	public:
 		ProvinceHistoryManager() = default;
 
+		void reserve_more_province_histories(size_t size);
 		void lock_province_histories(Map const& map, bool detailed_errors);
 		bool is_locked() const;
 

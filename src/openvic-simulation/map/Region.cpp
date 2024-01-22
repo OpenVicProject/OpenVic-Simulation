@@ -83,6 +83,10 @@ void ProvinceSet::reserve(size_t size) {
 	}
 }
 
+void ProvinceSet::reserve_more(size_t size) {
+	OpenVic::reserve_more(*this, size);
+}
+
 bool ProvinceSet::contains_province(Province const* province) const {
 	return province && std::find(provinces.begin(), provinces.end(), province) != provinces.end();
 }

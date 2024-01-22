@@ -95,7 +95,8 @@ bool RebelManager::load_rebels_file(
 		{ "any", RebelType::independence_t::ANY }
 	};
 
-	bool ret = expect_dictionary(
+	bool ret = expect_dictionary_reserve_length(
+		rebel_types,
 		[this, &ideology_manager, &government_type_manager](std::string_view identifier, ast::NodeCPtr node) -> bool {
 			RebelType::icon_t icon = 0;
 			RebelType::area_t area = RebelType::area_t::ALL;

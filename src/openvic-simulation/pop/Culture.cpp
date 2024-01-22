@@ -74,7 +74,8 @@ bool CultureManager::add_culture(
 }
 
 bool CultureManager::load_graphical_culture_type_file(ast::NodeCPtr root) {
-	const bool ret = expect_list_reserve_length(graphical_culture_types,
+	const bool ret = expect_list_reserve_length(
+		graphical_culture_types,
 		expect_identifier(std::bind_front(&CultureManager::add_graphical_culture_type, this))
 	)(root);
 	lock_graphical_culture_types();
@@ -169,7 +170,7 @@ bool CultureManager::load_culture_file(CountryManager const& country_manager, as
 		}
 	)(root);
 	lock_culture_groups();
-	cultures.reserve(cultures.size() + total_expected_cultures);
+	reserve_more_cultures(total_expected_cultures);
 
 	ret &= expect_culture_group_dictionary(
 		[this, &country_manager](CultureGroup const& culture_group, ast::NodeCPtr culture_group_value) -> bool {

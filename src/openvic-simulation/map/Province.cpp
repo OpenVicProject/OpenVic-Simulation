@@ -77,7 +77,7 @@ bool Province::add_pop(Pop&& pop) {
 
 bool Province::add_pop_vec(std::vector<Pop> const& pop_vec) {
 	if (!is_water()) {
-		pops.reserve(pops.size() + pop_vec.size());
+		reserve_more(pops, pop_vec.size());
 		for (Pop const& pop : pop_vec) {
 			pops.push_back(pop);
 		}

@@ -1,6 +1,5 @@
 #pragma once
 
-#include <concepts>
 #include <optional>
 
 #include "openvic-simulation/types/IdentifierRegistry.hpp"
@@ -12,7 +11,7 @@ namespace OpenVic {
 	struct Define : HasIdentifier {
 		friend struct DefineManager;
 
-		enum class Type : unsigned char { None, Country, Economy, Military, Diplomacy, Pops, Ai, Graphics };
+		enum class Type : unsigned char { Date, Country, Economy, Military, Diplomacy, Pops, Ai, Graphics };
 
 	private:
 		const std::string PROPERTY(value);

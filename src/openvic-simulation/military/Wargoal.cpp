@@ -69,7 +69,8 @@ bool WargoalTypeManager::add_wargoal_type(
 }
 
 bool WargoalTypeManager::load_wargoal_file(ast::NodeCPtr root) {
-	bool ret = expect_dictionary(
+	bool ret = expect_dictionary_reserve_length(
+		wargoal_types,
 		[this](std::string_view identifier, ast::NodeCPtr value) -> bool {
 			if (identifier == "peace_order") {
 				return true;

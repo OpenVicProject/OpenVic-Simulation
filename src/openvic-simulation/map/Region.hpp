@@ -23,6 +23,7 @@ namespace OpenVic {
 		bool empty() const;
 		size_t size() const;
 		void reserve(size_t size);
+		void reserve_more(size_t size);
 		bool contains_province(Province const* province) const;
 		provinces_t const& get_provinces() const;
 	};

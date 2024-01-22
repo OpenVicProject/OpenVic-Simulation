@@ -32,6 +32,15 @@ namespace OpenVic {
 	using name_list_t = std::vector<std::string>;
 	std::ostream& operator<<(std::ostream& stream, name_list_t const& name_list);
 
+	template<typename T>
+	concept Reservable = requires(T& t, size_t size) {
+		{ t.size() } -> std::same_as<size_t>;
+		t.reserve(size);
+	};
+	constexpr void reserve_more(Reservable auto& t, size_t size) {
+		t.reserve(t.size() + size);
+	}
+
 	namespace NodeTools {
 
 		template<typename Fn, typename Return = void, typename... Args>
@@ -232,25 +241,43 @@ namespace OpenVic {
 			);
 		}
 
-		template<typename T>
-		concept Reservable = requires(T& t) {
-			{ t.size() } -> std::same_as<size_t>;
-			t.reserve(size_t {});
-		};
-		template<Reservable T>
-		LengthCallback auto reserve_length_callback(T& t) {
-			return [&t](size_t size) -> size_t {
-				t.reserve(size);
+		LengthCallback auto reserve_length_callback(Reservable auto& reservable) {
+			return [&reservable](size_t size) -> size_t {
+				reserve_more(reservable, size);
 				return size;
 			};
 		}
-		template<Reservable T>
-		NodeCallback auto expect_list_reserve_length(T& t, NodeCallback auto callback) {
-			return expect_list_and_length(reserve_length_callback(t), callback);
+		NodeCallback auto expect_list_reserve_length(Reservable auto& reservable, NodeCallback auto callback) {
+			return expect_list_and_length(reserve_length_callback(reservable), callback);
 		}
-		template<Reservable T>
-		NodeCallback auto expect_dictionary_reserve_length(T& t, KeyValueCallback auto callback) {
-			return expect_list_reserve_length(t, expect_assign(callback));
+		NodeCallback auto expect_dictionary_reserve_length(Reservable auto& reservable, KeyValueCallback auto callback) {
+			return expect_dictionary_and_length(reserve_length_callback(reservable), callback);
+		}
+		template<typename... Args>
+		NodeCallback auto expect_dictionary_key_map_reserve_length_and_default(
+			Reservable auto& reservable, key_map_t key_map, KeyValueCallback auto default_callback, Args... args
+		) {
+			return expect_dictionary_key_map_and_length_and_default(
+				std::move(key_map), reserve_length_callback(reservable), default_callback, args...
+			);
+		}
+		template<typename... Args>
+		NodeCallback auto expect_dictionary_key_map_reserve_length(
+			Reservable auto& reservable, key_map_t key_map, Args... args
+		) {
+			return expect_dictionary_key_map_and_length(std::move(key_map), reserve_length_callback(reservable), args...);
+		}
+		template<typename... Args>
+		NodeCallback auto expect_dictionary_keys_reserve_length_and_default(
+			Reservable auto& reservable, KeyValueCallback auto default_callback, Args... args
+		) {
+			return expect_dictionary_keys_and_length_and_default(
+				reserve_length_callback(reservable), default_callback, args...
+			);
+		}
+		template<typename... Args>
+		NodeCallback auto expect_dictionary_keys_reserve_length(Reservable auto& reservable, Args... args) {
+			return expect_dictionary_keys_and_length(reserve_length_callback(reservable), args...);
 		}
 
 		node_callback_t name_list_callback(callback_t<name_list_t&&> callback);

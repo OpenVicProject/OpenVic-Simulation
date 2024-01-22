@@ -286,7 +286,8 @@ namespace OpenVic {
 			ast::NodeCPtr issues_node
 		);
 
-		void reserve_pop_types(size_t count);
+		void reserve_all_pop_types(size_t size);
+		void lock_all_pop_types();
 
 		bool load_pop_type_file(
 			std::string_view filestem, UnitManager const& unit_manager, GoodManager const& good_manager,

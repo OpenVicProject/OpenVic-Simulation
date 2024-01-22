@@ -68,7 +68,8 @@ bool IdeologyManager::add_ideology(
  */
 bool IdeologyManager::load_ideology_file(ast::NodeCPtr root) {
 	size_t expected_ideologies = 0;
-	bool ret = expect_dictionary_reserve_length(ideology_groups,
+	bool ret = expect_dictionary_reserve_length(
+		ideology_groups,
 		[this, &expected_ideologies](std::string_view key, ast::NodeCPtr value) -> bool {
 			bool ret = expect_length(add_variable_callback(expected_ideologies))(value);
 			ret &= add_ideology_group(key);
@@ -77,7 +78,7 @@ bool IdeologyManager::load_ideology_file(ast::NodeCPtr root) {
 	)(root);
 	lock_ideology_groups();
 
-	ideologies.reserve(ideologies.size() + expected_ideologies);
+	reserve_more_ideologies(expected_ideologies);
 	ret &= expect_dictionary([this](std::string_view ideology_group_key, ast::NodeCPtr ideology_group_value) -> bool {
 		IdeologyGroup const* ideology_group = get_ideology_group_by_identifier(ideology_group_key);
 

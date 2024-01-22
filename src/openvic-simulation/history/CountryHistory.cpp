@@ -180,6 +180,14 @@ bool CountryHistoryMap::_load_history_entry(
 	)(root);
 }
 
+void CountryHistoryManager::reserve_more_country_histories(size_t size) {
+	if (locked) {
+		Logger::error("Failed to reserve space for ", size, " countries in CountryHistoryManager - already locked!");
+	} else {
+		reserve_more(country_histories, size);
+	}
+}
+
 void CountryHistoryManager::lock_country_histories() {
 	Logger::info("Locked country history registry after registering ", country_histories.size(), " items");
 	locked = true;

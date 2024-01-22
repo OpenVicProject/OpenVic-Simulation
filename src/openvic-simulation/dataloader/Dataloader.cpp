@@ -287,6 +287,9 @@ bool Dataloader::_load_interface_files(UIManager& ui_manager) const {
 	static const std::vector<std::string_view> gui_files {
 		"province_interface.gui", "topbar.gui"
 	};
+
+	ui_manager.reserve_more_scenes(gui_files.size());
+
 	for (std::string_view const& gui_file : gui_files) {
 		if (!ui_manager.load_gui_file(
 			gui_file, parse_defines(lookup_file(append_string_views(interface_directory, gui_file))).get_file_node()
@@ -307,8 +310,10 @@ bool Dataloader::_load_pop_types(GameManager& game_manager) {
 	IdeologyManager const& ideology_manager = game_manager.get_politics_manager().get_ideology_manager();
 
 	static constexpr std::string_view pop_type_directory = "poptypes";
+
 	const path_vector_t pop_type_files = lookup_files_in_dir(pop_type_directory, ".txt");
-	pop_manager.reserve_pop_types(pop_type_files.size());
+
+	pop_manager.reserve_all_pop_types(pop_type_files.size());
 
 	bool ret = apply_to_files(
 		pop_type_files,
@@ -318,8 +323,8 @@ bool Dataloader::_load_pop_types(GameManager& game_manager) {
 			);
 		}
 	);
-	pop_manager.lock_stratas();
-	pop_manager.lock_pop_types();
+
+	pop_manager.lock_all_pop_types();
 
 	if (pop_manager.get_slave_sprite() <= 0) {
 		Logger::error("No slave pop type sprite found!");
@@ -343,8 +348,12 @@ bool Dataloader::_load_units(GameManager& game_manager) const {
 
 	UnitManager& unit_manager = game_manager.get_military_manager().get_unit_manager();
 
+	const path_vector_t unit_files = lookup_files_in_dir(units_directory, ".txt");
+
+	unit_manager.reserve_more_units(unit_files.size());
+
 	bool ret = apply_to_files(
-		lookup_files_in_dir(units_directory, ".txt"),
+		unit_files,
 		[&game_manager, &unit_manager](fs::path const& file) -> bool {
 			return unit_manager.load_unit_file(
 				game_manager.get_economy_manager().get_good_manager(), parse_defines(file).get_file_node()
@@ -481,112 +490,152 @@ bool Dataloader::_load_decisions(GameManager& game_manager) {
 
 bool Dataloader::_load_history(GameManager& game_manager, bool unused_history_file_warnings) const {
 
-	/* Country History */
-	static constexpr std::string_view country_history_directory = "history/countries";
-	bool ret = apply_to_files(
-		lookup_basic_indentifier_prefixed_files_in_dir(country_history_directory, ".txt"),
-		[this, &game_manager, unused_history_file_warnings](fs::path const& file) -> bool {
-			const std::string filename = file.stem().string();
-			const std::string_view country_id = extract_basic_identifier_prefix(filename);
+	bool ret = true;
 
-			Country const* country = game_manager.get_country_manager().get_country_by_identifier(country_id);
-			if (country == nullptr) {
-				if (unused_history_file_warnings) {
-					Logger::warning("Found history file for non-existent country: ", country_id);
+	{
+		/* Country History */
+		CountryHistoryManager& country_history_manager = game_manager.get_history_manager().get_country_manager();
+
+		static constexpr std::string_view country_history_directory = "history/countries";
+		const path_vector_t country_history_files =
+			lookup_basic_indentifier_prefixed_files_in_dir(country_history_directory, ".txt");
+
+		country_history_manager.reserve_more_country_histories(country_history_files.size());
+
+		ret &= apply_to_files(
+			country_history_files,
+			[this, &game_manager, &country_history_manager, unused_history_file_warnings](fs::path const& file) -> bool {
+				const std::string filename = file.stem().string();
+				const std::string_view country_id = extract_basic_identifier_prefix(filename);
+
+				Country const* country = game_manager.get_country_manager().get_country_by_identifier(country_id);
+				if (country == nullptr) {
+					if (unused_history_file_warnings) {
+						Logger::warning("Found history file for non-existent country: ", country_id);
+					}
+					return true;
 				}
-				return true;
-			}
 
-			return game_manager.get_history_manager().get_country_manager().load_country_history_file(
-				game_manager, *this, *country, parse_defines(file).get_file_node()
-			);
-		}
-	);
-	game_manager.get_history_manager().get_country_manager().lock_country_histories();
+				return country_history_manager.load_country_history_file(
+					game_manager, *this, *country, parse_defines(file).get_file_node()
+				);
+			}
+		);
+
+		country_history_manager.lock_country_histories();
+	}
 
 	{
 		DeploymentManager& deployment_manager = game_manager.get_military_manager().get_deployment_manager();
+
 		deployment_manager.lock_deployments();
+
 		if (deployment_manager.get_missing_oob_file_count() > 0) {
 			Logger::warning(deployment_manager.get_missing_oob_file_count(), " missing OOB files!");
 		}
 	}
 
-	/* Province History */
-	static constexpr std::string_view province_history_directory = "history/provinces";
-	ret &= apply_to_files(
-		lookup_basic_indentifier_prefixed_files_in_dir_recursive(province_history_directory, ".txt"),
-		[this, &game_manager, unused_history_file_warnings](fs::path const& file) -> bool {
-			const std::string filename = file.stem().string();
-			const std::string_view province_id = extract_basic_identifier_prefix(filename);
+	{
+		/* Province History */
+		ProvinceHistoryManager& province_history_manager = game_manager.get_history_manager().get_province_manager();
+		Map const& map = game_manager.get_map();
 
-			Province const* province = game_manager.get_map().get_province_by_identifier(province_id);
-			if (province == nullptr) {
-				if (unused_history_file_warnings) {
-					Logger::warning("Found history file for non-existent province: ", province_id);
+		static constexpr std::string_view province_history_directory = "history/provinces";
+		const path_vector_t province_history_files =
+			lookup_basic_indentifier_prefixed_files_in_dir_recursive(province_history_directory, ".txt");
+
+		province_history_manager.reserve_more_province_histories(province_history_files.size());
+
+		ret &= apply_to_files(
+			province_history_files,
+			[this, &game_manager, &province_history_manager, &map, unused_history_file_warnings](fs::path const& file) -> bool {
+				const std::string filename = file.stem().string();
+				const std::string_view province_id = extract_basic_identifier_prefix(filename);
+
+				Province const* province = map.get_province_by_identifier(province_id);
+				if (province == nullptr) {
+					if (unused_history_file_warnings) {
+						Logger::warning("Found history file for non-existent province: ", province_id);
+					}
+					return true;
 				}
-				return true;
+
+				return province_history_manager.load_province_history_file(
+					game_manager, *province, parse_defines(file).get_file_node()
+				);
 			}
+		);
 
-			return game_manager.get_history_manager().get_province_manager().load_province_history_file(
-				game_manager, *province, parse_defines(file).get_file_node()
-			);
-		}
-	);
+		/* Pop History */
+		static constexpr std::string_view pop_history_directory = "history/pops/";
 
-	/* Pop History */
-	static constexpr std::string_view pop_history_directory = "history/pops/";
-	const string_set_t pop_history_dirs = lookup_dirs_in_dir(pop_history_directory);
-	const Date last_bookmark_date = game_manager.get_history_manager().get_bookmark_manager().get_last_bookmark_date();
-	for (std::string const& dir : pop_history_dirs) {
-		bool successful = false;
-		const Date date = Date::from_string(dir, &successful);
-		if (successful && date <= last_bookmark_date) {
-			bool non_integer_size = false;
-			ret &= apply_to_files(
-				lookup_files_in_dir(StringUtils::append_string_views(pop_history_directory, dir), ".txt"),
-				[this, &game_manager, date, &non_integer_size](fs::path const& file) -> bool {
-					return game_manager.get_history_manager().get_province_manager().load_pop_history_file(
-						game_manager, date, parse_defines(file).get_file_node(), &non_integer_size
-					);
+		const string_set_t pop_history_dirs = lookup_dirs_in_dir(pop_history_directory);
+		const Date last_bookmark_date = game_manager.get_history_manager().get_bookmark_manager().get_last_bookmark_date();
+
+		for (std::string const& dir : pop_history_dirs) {
+			bool successful = false;
+			const Date date = Date::from_string(dir, &successful);
+
+			if (successful && date <= last_bookmark_date) {
+				bool non_integer_size = false;
+
+				ret &= apply_to_files(
+					lookup_files_in_dir(StringUtils::append_string_views(pop_history_directory, dir), ".txt"),
+					[this, &game_manager, &province_history_manager, date, &non_integer_size](fs::path const& file) -> bool {
+						return province_history_manager.load_pop_history_file(
+							game_manager, date, parse_defines(file).get_file_node(), &non_integer_size
+						);
+					}
+				);
+
+				if (non_integer_size) {
+					Logger::warning("Non-integer pop sizes in pop history files for ", date);
 				}
-			);
-			if (non_integer_size) {
-				Logger::warning("Non-integer pop sizes in pop history files for ", date);
 			}
 		}
+
+		province_history_manager.lock_province_histories(map, false);
 	}
 
-	game_manager.get_history_manager().get_province_manager().lock_province_histories(game_manager.get_map(), false);
+	{
+		/* Diplomacy History */
+		DiplomaticHistoryManager& diplomatic_history_manager = game_manager.get_history_manager().get_diplomacy_manager();
 
-	/* Diplomacy History */
-	static constexpr std::string_view diplomacy_history_directory = "history/diplomacy";
-	ret &= apply_to_files(
-		lookup_files_in_dir(diplomacy_history_directory, ".txt"),
-		[this, &game_manager](fs::path const& file) -> bool {
-			return game_manager.get_history_manager().get_diplomacy_manager().load_diplomacy_history_file(
-				game_manager.get_country_manager(), parse_defines(file).get_file_node()
-			);
-		}
-	);
+		static constexpr std::string_view diplomacy_history_directory = "history/diplomacy";
 
-	/* War History */
-	static constexpr std::string_view war_history_directory = "history/wars";
-	ret &= apply_to_files(
-		lookup_files_in_dir(war_history_directory, ".txt"),
-		[this, &game_manager](fs::path const& file) -> bool {
-			return game_manager.get_history_manager().get_diplomacy_manager().load_war_history_file(
-				game_manager, parse_defines(file).get_file_node()
-			);
-		}
-	);
-	game_manager.get_history_manager().get_diplomacy_manager().lock_diplomatic_history();
+		ret &= apply_to_files(
+			lookup_files_in_dir(diplomacy_history_directory, ".txt"),
+			[this, &game_manager, &diplomatic_history_manager](fs::path const& file) -> bool {
+				return diplomatic_history_manager.load_diplomacy_history_file(
+					game_manager.get_country_manager(), parse_defines(file).get_file_node()
+				);
+			}
+		);
+
+		/* War History */
+		static constexpr std::string_view war_history_directory = "history/wars";
+		const path_vector_t war_history_files = lookup_files_in_dir(war_history_directory, ".txt");
+
+		diplomatic_history_manager.reserve_more_wars(war_history_files.size());
+
+		ret &= apply_to_files(
+			war_history_files,
+			[this, &game_manager, &diplomatic_history_manager](fs::path const& file) -> bool {
+				return diplomatic_history_manager.load_war_history_file(
+					game_manager, parse_defines(file).get_file_node()
+				);
+			}
+		);
+
+		diplomatic_history_manager.lock_diplomatic_history();
+	}
 
 	return ret;
 }
 
 bool Dataloader::_load_events(GameManager& game_manager) {
 	static constexpr std::string_view events_directory = "events";
+
 	const bool ret = apply_to_files(
 		lookup_files_in_dir(events_directory, ".txt"),
 		[this, &game_manager](fs::path const& file) -> bool {
@@ -595,6 +644,7 @@ bool Dataloader::_load_events(GameManager& game_manager) {
 			);
 		}
 	);
+
 	game_manager.get_event_manager().lock_events();
 	return ret;
 }
@@ -959,9 +1009,13 @@ bool Dataloader::load_defines(GameManager& game_manager) {
 	return ret;
 }
 
-#define PARSE_SCRIPTS(name, mgr) \
-	if (!mgr.parse_scripts(game_manager)) { Logger::error("Failed to parse ", name, " scripts!"); ret = false; } \
-	else Logger::info("Successfully parsed ", name, " scripts!");
+#define PARSE_SCRIPTS(name, manager) \
+	if (!manager.parse_scripts(game_manager)) { \
+		Logger::error("Failed to parse ", name, " scripts!"); \
+		ret = false; \
+	} else { \
+		Logger::info("Successfully parsed ", name, " scripts!"); \
+	}
 
 bool Dataloader::parse_scripts(GameManager& game_manager) const {
 	bool ret = true;

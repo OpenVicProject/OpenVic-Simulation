@@ -1,8 +1,6 @@
 #pragma once
 
-#include <bitset>
 #include <vector>
-#include <map>
 #include <optional>
 
 #include "openvic-simulation/country/Country.hpp"
@@ -100,6 +98,7 @@ namespace OpenVic {
 	public:
 		DiplomaticHistoryManager() {}
 
+		void reserve_more_wars(size_t size);
 		void lock_diplomatic_history();
 		bool is_locked() const;
 
