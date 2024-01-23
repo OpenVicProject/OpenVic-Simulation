@@ -36,6 +36,8 @@
 	constexpr std::string_view get_base_type() const override { \
 		return ::ovdl::detail::type_name<std::decay_t<decltype(*this)>>(); }
 
+/* Create const and non-const reference getters for a variable, applied to its name in its declaration, e
+ * for example: GameManager PROPERTY_REF(game_manager); */
 #define PROPERTY_REF(NAME) PROPERTY_REF_FULL(NAME, private)
 #define PROPERTY_REF_FULL(NAME, ACCESS) \
 	NAME; \
@@ -49,6 +51,9 @@ public: \
 ACCESS:
 
 namespace OpenVic {
+	/* Any struct extending ReturnByValueProperty will be returned by value by PROPERTY-generated getter functions,
+	 * instead of by const reference as structs are by default. Use this for small structs which don't contain any
+	 * dynamically allocated memory, e.g. Date and fixed_point_t. */
 	struct ReturnByValueProperty {
 		constexpr bool operator==(ReturnByValueProperty const&) const = default;
 		constexpr std::strong_ordering operator<=>(ReturnByValueProperty const&) const = default;
@@ -60,18 +65,18 @@ namespace OpenVic {
 	 */
 	template<typename decl, typename T>
 	inline constexpr decltype(auto) _get_property(const T& property) {
-		if constexpr(std::is_reference_v<decl>) {
+		if constexpr (std::is_reference_v<decl>) {
 			/* Return const reference */
 			return property;
 		} else if constexpr (std::same_as<T, std::string>) {
 			/* Return std::string_view looking at std::string */
 			return std::string_view { property };
 		} else if constexpr (
-			std::integral<T> || std::floating_point<T> || std::is_enum<T>::value || std::derived_from<T, ReturnByValueProperty>
+			std::integral<T> || std::floating_point<T> || std::is_enum_v<T> || std::derived_from<T, ReturnByValueProperty>
 		) {
 			/* Return value */
 			return T { property };
-		} else if constexpr(std::is_pointer<T>::value) {
+		} else if constexpr (std::is_pointer_v<T>) {
 			/* Return const pointer */
 			return static_cast<std::add_pointer_t<std::add_const_t<std::remove_pointer_t<T>>>>(property);
 		} else {
@@ -79,6 +84,7 @@ namespace OpenVic {
 			return property;
 		}
 	}
+}
 
 /*
  * Use this on a variable declaration to generate a getter function. PROPERTY assumes the variable is private and so
@@ -101,7 +107,7 @@ namespace OpenVic {
 #define PROPERTY_FULL(NAME, GETTER_NAME, ACCESS) \
 	NAME; \
 public: \
-	auto GETTER_NAME() const -> decltype(OpenVic::_get_property<decltype(NAME)>(NAME)) { \
+	constexpr auto GETTER_NAME() const -> decltype(OpenVic::_get_property<decltype(NAME)>(NAME)) { \
 		return OpenVic::_get_property<decltype(NAME)>(NAME); \
 	} \
 ACCESS:
@@ -117,5 +123,3 @@ public: \
 		NAME = new_##NAME; \
 	} \
 ACCESS:
-
-}
