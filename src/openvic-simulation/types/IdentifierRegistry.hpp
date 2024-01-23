@@ -30,15 +30,41 @@ namespace OpenVic {
 
 	/* Registry Value Info - the type that is being registered, and a unique identifier string getter. */
 	template<typename ValueInfo>
-	concept RegistryValueInfo = requires(typename ValueInfo::value_type const& item) {
+	concept RegistryValueInfo = requires(
+		typename ValueInfo::internal_value_type& item, typename ValueInfo::internal_value_type const& const_item
+	) {
 		{ ValueInfo::get_identifier(item) } -> std::same_as<std::string_view>;
+		{ ValueInfo::get_external_value(item) } -> std::same_as<typename ValueInfo::external_value_type&>;
+		{ ValueInfo::get_external_value(const_item) } -> std::same_as<typename ValueInfo::external_value_type const&>;
 	};
-	template <std::derived_from<HasIdentifier> Value>
+	template<std::derived_from<HasIdentifier> Value>
 	struct RegistryValueInfoHasIdentifier {
-		using value_type = Value;
+		using internal_value_type = Value;
+		using external_value_type = Value;
 
-		static constexpr std::string_view get_identifier(value_type const& item) {
+		static constexpr std::string_view get_identifier(internal_value_type const& item) {
 			return item.get_identifier();
+		}
+		static constexpr external_value_type& get_external_value(internal_value_type& item) {
+			return item;
+		}
+		static constexpr external_value_type const& get_external_value(internal_value_type const& item) {
+			return item;
+		}
+	};
+	template<RegistryValueInfo ValueInfo>
+	struct RegistryValueInfoPointer {
+		using internal_value_type = typename ValueInfo::internal_value_type*;
+		using external_value_type = typename ValueInfo::external_value_type;
+
+		static constexpr std::string_view get_identifier(internal_value_type const& item) {
+			return ValueInfo::get_identifier(*item);
+		}
+		static constexpr external_value_type& get_external_value(internal_value_type& item) {
+			return ValueInfo::get_external_value(*item);
+		}
+		static constexpr external_value_type const& get_external_value(internal_value_type const& item) {
+			return ValueInfo::get_external_value(*item);
 		}
 	};
 
@@ -137,14 +163,15 @@ namespace OpenVic {
 		template<typename> typename _StorageInfo = RegistryStorageInfoVector, /* How items are stored, including indexing type */
 		RegistryIdentifierMapInfo IdentifierMapInfo = RegistryIdentifierMapInfoCaseSensitive /* Identifier map parameters */
 	>
-	requires (
-		RegistryItemInfo<_ItemInfo, typename ValueInfo::value_type> &&
-		RegistryStorageInfo<_StorageInfo, typename _ItemInfo<typename ValueInfo::value_type>::item_type>
+	requires(
+		RegistryItemInfo<_ItemInfo, typename ValueInfo::internal_value_type> &&
+		RegistryStorageInfo<_StorageInfo, typename _ItemInfo<typename ValueInfo::internal_value_type>::item_type>
 	)
 	class UniqueKeyRegistry {
 	public:
-		using value_type = typename ValueInfo::value_type;
-		using ItemInfo = _ItemInfo<value_type>;
+		using internal_value_type = typename ValueInfo::internal_value_type;
+		using external_value_type = typename ValueInfo::external_value_type;
+		using ItemInfo = _ItemInfo<internal_value_type>;
 		using item_type = typename ItemInfo::item_type;
 
 	private:
@@ -181,7 +208,7 @@ namespace OpenVic {
 			}
 
 			const std::string_view new_identifier = ValueInfo::get_identifier(ItemInfo::get_value(item));
-			value_type const* old_item = get_item_by_identifier(new_identifier);
+			external_value_type const* old_item = get_item_by_identifier(new_identifier);
 			if (old_item != nullptr) {
 				return duplicate_callback(name, new_identifier);
 			}
@@ -249,21 +276,27 @@ namespace OpenVic {
 		}
 
 #define GETTERS(CONST) \
-	constexpr value_type CONST* get_item_by_identifier(std::string_view identifier) CONST { \
+	constexpr external_value_type CONST* get_item_by_identifier(std::string_view identifier) CONST { \
 		const typename decltype(identifier_index_map)::const_iterator it = identifier_index_map.find(identifier); \
 		if (it != identifier_index_map.end()) { \
-			return std::addressof(ItemInfo::get_value(StorageInfo::get_item_from_index(items, it->second))); \
+			return std::addressof( \
+				ValueInfo::get_external_value(ItemInfo::get_value(StorageInfo::get_item_from_index(items, it->second))) \
+			); \
 		} \
 		return nullptr; \
 	} \
-	constexpr value_type CONST* get_item_by_index(std::size_t index) CONST { \
-		return index < items.size() ? std::addressof(ItemInfo::get_value(items[index])) : nullptr; \
+	constexpr external_value_type CONST* get_item_by_index(std::size_t index) CONST { \
+		if (index < items.size()) { \
+			return std::addressof(ValueInfo::get_external_value(ItemInfo::get_value(items[index]))); \
+		} else { \
+			return nullptr; \
+		} \
 	} \
 	constexpr NodeTools::Callback<std::string_view> auto expect_item_str( \
-		NodeTools::Callback<value_type CONST&> auto callback, bool warn \
+		NodeTools::Callback<external_value_type CONST&> auto callback, bool warn \
 	) CONST { \
 		return [this, callback, warn](std::string_view identifier) -> bool { \
-			value_type CONST* item = get_item_by_identifier(identifier); \
+			external_value_type CONST* item = get_item_by_identifier(identifier); \
 			if (item != nullptr) { \
 				return callback(*item); \
 			} \
@@ -271,27 +304,27 @@ namespace OpenVic {
 		}; \
 	} \
 	constexpr NodeTools::NodeCallback auto expect_item_identifier( \
-		NodeTools::Callback<value_type CONST&> auto callback, bool warn \
+		NodeTools::Callback<external_value_type CONST&> auto callback, bool warn \
 	) CONST { \
 		return NodeTools::expect_identifier(expect_item_str(callback, warn)); \
 	} \
 	constexpr NodeTools::NodeCallback auto expect_item_string( \
-		NodeTools::Callback<value_type CONST&> auto callback, bool warn \
+		NodeTools::Callback<external_value_type CONST&> auto callback, bool warn \
 	) CONST { \
 		return NodeTools::expect_string(expect_item_str(callback, warn)); \
 	} \
 	constexpr NodeTools::NodeCallback auto expect_item_identifier_or_string( \
-		NodeTools::Callback<value_type CONST&> auto callback, bool warn \
+		NodeTools::Callback<external_value_type CONST&> auto callback, bool warn \
 	) CONST { \
 		return NodeTools::expect_identifier_or_string(expect_item_str(callback, warn)); \
 	} \
 	constexpr NodeTools::NodeCallback auto expect_item_assign_and_default( \
 		NodeTools::KeyValueCallback auto default_callback, \
-		NodeTools::Callback<value_type CONST&, ast::NodeCPtr> auto callback \
+		NodeTools::Callback<external_value_type CONST&, ast::NodeCPtr> auto callback \
 	) CONST { \
 		return NodeTools::expect_assign( \
 			[this, default_callback, callback](std::string_view key, ast::NodeCPtr value) -> bool { \
-				value_type CONST* item = get_item_by_identifier(key); \
+				external_value_type CONST* item = get_item_by_identifier(key); \
 				if (item != nullptr) { \
 					return callback(*item, value); \
 				} else { \
@@ -301,14 +334,14 @@ namespace OpenVic {
 		); \
 	} \
 	constexpr NodeTools::NodeCallback auto expect_item_assign( \
-		NodeTools::Callback<value_type CONST&, ast::NodeCPtr> auto callback \
+		NodeTools::Callback<external_value_type CONST&, ast::NodeCPtr> auto callback \
 	) CONST { \
 		return expect_item_assign_and_default(key_value_invalid_callback(name), callback); \
 	} \
 	constexpr NodeTools::NodeCallback auto expect_item_dictionary_and_length_and_default( \
 		NodeTools::LengthCallback auto length_callback, \
 		NodeTools::KeyValueCallback auto default_callback, \
-		NodeTools::Callback<value_type CONST&, ast::NodeCPtr> auto callback \
+		NodeTools::Callback<external_value_type CONST&, ast::NodeCPtr> auto callback \
 	) CONST { \
 		return NodeTools::expect_list_and_length( \
 			length_callback, expect_item_assign_and_default(default_callback, callback) \
@@ -316,7 +349,7 @@ namespace OpenVic {
 	} \
 	constexpr NodeTools::NodeCallback auto expect_item_dictionary_and_length( \
 		NodeTools::LengthCallback auto length_callback, \
-		NodeTools::Callback<value_type CONST&, ast::NodeCPtr> auto callback \
+		NodeTools::Callback<external_value_type CONST&, ast::NodeCPtr> auto callback \
 	) CONST { \
 		return expect_item_dictionary_and_length_and_default( \
 			length_callback, \
@@ -326,7 +359,7 @@ namespace OpenVic {
 	} \
 	constexpr NodeTools::NodeCallback auto expect_item_dictionary_and_default( \
 		NodeTools::KeyValueCallback auto default_callback, \
-		NodeTools::Callback<value_type CONST&, ast::NodeCPtr> auto callback \
+		NodeTools::Callback<external_value_type CONST&, ast::NodeCPtr> auto callback \
 	) CONST { \
 		return expect_item_dictionary_and_length_and_default( \
 			NodeTools::default_length_callback, \
@@ -335,7 +368,7 @@ namespace OpenVic {
 		); \
 	} \
 	constexpr NodeTools::NodeCallback auto expect_item_dictionary( \
-		NodeTools::Callback<value_type CONST&, ast::NodeCPtr> auto callback \
+		NodeTools::Callback<external_value_type CONST&, ast::NodeCPtr> auto callback \
 	) CONST { \
 		return expect_item_dictionary_and_length_and_default( \
 			NodeTools::default_length_callback, \
@@ -346,7 +379,7 @@ namespace OpenVic {
 	constexpr NodeTools::NodeCallback auto expect_item_dictionary_reserve_length_and_default( \
 		Reservable auto& reservable, \
 		NodeTools::KeyValueCallback auto default_callback, \
-		NodeTools::Callback<value_type CONST&, ast::NodeCPtr> auto callback \
+		NodeTools::Callback<external_value_type CONST&, ast::NodeCPtr> auto callback \
 	) CONST { \
 		return expect_item_dictionary_and_length_and_default( \
 			NodeTools::reserve_length_callback(reservable), \
@@ -356,7 +389,7 @@ namespace OpenVic {
 	} \
 	constexpr NodeTools::NodeCallback auto expect_item_dictionary_reserve_length( \
 		Reservable auto& reservable, \
-		NodeTools::Callback<value_type CONST&, ast::NodeCPtr> auto callback \
+		NodeTools::Callback<external_value_type CONST&, ast::NodeCPtr> auto callback \
 	) CONST { \
 		return expect_item_dictionary_and_length_and_default( \
 			NodeTools::reserve_length_callback(reservable), \
@@ -396,11 +429,11 @@ namespace OpenVic {
 		}
 
 		constexpr NodeTools::NodeCallback auto expect_item_decimal_map(
-			NodeTools::Callback<fixed_point_map_t<value_type const*>&&> auto callback
+			NodeTools::Callback<fixed_point_map_t<external_value_type const*>&&> auto callback
 		) const {
 			return [this, callback](ast::NodeCPtr node) -> bool {
-				fixed_point_map_t<value_type const*> map;
-				bool ret = expect_item_dictionary([&map](value_type const& key, ast::NodeCPtr value) -> bool {
+				fixed_point_map_t<external_value_type const*> map;
+				bool ret = expect_item_dictionary([&map](external_value_type const& key, ast::NodeCPtr value) -> bool {
 					fixed_point_t val;
 					const bool ret = NodeTools::expect_fixed_point(NodeTools::assign_variable_callback(val))(value);
 					map.emplace(&key, std::move(val));
@@ -417,14 +450,14 @@ namespace OpenVic {
 		RegistryValueInfo ValueInfo, template<typename> typename StorageInfo = RegistryStorageInfoVector,
 		RegistryIdentifierMapInfo IdentifierMapInfo = RegistryIdentifierMapInfoCaseSensitive
 	>
-	requires RegistryStorageInfo<StorageInfo, typename RegistryItemInfoValue<typename ValueInfo::value_type>::item_type>
+	requires RegistryStorageInfo<StorageInfo, typename RegistryItemInfoValue<typename ValueInfo::internal_value_type>::item_type>
 	using ValueRegistry = UniqueKeyRegistry<ValueInfo, RegistryItemInfoValue, StorageInfo, IdentifierMapInfo>;
 
 	template<
 		RegistryValueInfo ValueInfo, template<typename> typename StorageInfo = RegistryStorageInfoVector,
 		RegistryIdentifierMapInfo IdentifierMapInfo = RegistryIdentifierMapInfoCaseSensitive
 	>
-	requires RegistryStorageInfo<StorageInfo, typename RegistryItemInfoInstance<typename ValueInfo::value_type>::item_type>
+	requires RegistryStorageInfo<StorageInfo, typename RegistryItemInfoInstance<typename ValueInfo::internal_value_type>::item_type>
 	using InstanceRegistry = UniqueKeyRegistry<ValueInfo, RegistryItemInfoInstance, StorageInfo, IdentifierMapInfo>;
 
 	/* HasIdentifier Specialisations */
@@ -438,12 +471,23 @@ namespace OpenVic {
 		std::derived_from<HasIdentifier> Value, template<typename> typename StorageInfo = RegistryStorageInfoVector,
 		RegistryIdentifierMapInfo IdentifierMapInfo = RegistryIdentifierMapInfoCaseSensitive
 	>
+	using IdentifierPointerRegistry =
+		ValueRegistry<RegistryValueInfoPointer<RegistryValueInfoHasIdentifier<Value>>, StorageInfo, IdentifierMapInfo>;
+
+	template<
+		std::derived_from<HasIdentifier> Value, template<typename> typename StorageInfo = RegistryStorageInfoVector,
+		RegistryIdentifierMapInfo IdentifierMapInfo = RegistryIdentifierMapInfoCaseSensitive
+	>
 	using IdentifierInstanceRegistry = InstanceRegistry<RegistryValueInfoHasIdentifier<Value>, StorageInfo, IdentifierMapInfo>;
 
 	/* Case-Insensitive HasIdentifier Specialisations */
 	template<std::derived_from<HasIdentifier> Value, template<typename> typename StorageInfo = RegistryStorageInfoVector>
 	using CaseInsensitiveIdentifierRegistry =
 		IdentifierRegistry<Value, StorageInfo, RegistryIdentifierMapInfoCaseInsensitive>;
+
+	template<std::derived_from<HasIdentifier> Value, template<typename> typename StorageInfo = RegistryStorageInfoVector>
+	using CaseInsensitiveIdentifierPointerRegistry =
+		IdentifierPointerRegistry<Value, StorageInfo, RegistryIdentifierMapInfoCaseInsensitive>;
 
 	template<std::derived_from<HasIdentifier> Value, template<typename> typename StorageInfo = RegistryStorageInfoVector>
 	using CaseInsensitiveIdentifierInstanceRegistry =
@@ -490,7 +534,7 @@ public: \
 		return registry.get_item_identifiers(); \
 	} \
 	constexpr NodeTools::NodeCallback auto expect_##singular##_decimal_map( \
-		NodeTools::Callback<fixed_point_map_t<decltype(registry)::value_type const*>&&> auto callback \
+		NodeTools::Callback<fixed_point_map_t<decltype(registry)::external_value_type const*>&&> auto callback \
 	) const { \
 		return registry.expect_item_decimal_map(callback); \
 	} \
@@ -512,74 +556,74 @@ private:
 	IDENTIFIER_REGISTRY_INTERNAL_SHARED(singular, plural, registry, index_offset,)
 
 #define IDENTIFIER_REGISTRY_INTERNAL_SHARED(singular, plural, registry, index_offset, const_kw) \
-	constexpr decltype(registry)::value_type const_kw* get_##singular##_by_identifier(std::string_view identifier) const_kw { \
+	constexpr decltype(registry)::external_value_type const_kw* get_##singular##_by_identifier(std::string_view identifier) const_kw { \
 		return registry.get_item_by_identifier(identifier); \
 	} \
-	constexpr decltype(registry)::value_type const_kw* get_##singular##_by_index(std::size_t index) const_kw { \
+	constexpr decltype(registry)::external_value_type const_kw* get_##singular##_by_index(std::size_t index) const_kw { \
 		return index >= index_offset ? registry.get_item_by_index(index - index_offset) : nullptr; \
 	} \
 	constexpr decltype(registry)::storage_type const_kw& get_##plural() const_kw { \
 		return registry.get_items(); \
 	} \
 	constexpr NodeTools::Callback<std::string_view> auto expect_##singular##_str( \
-		NodeTools::Callback<decltype(registry)::value_type const_kw&> auto callback, bool warn = false \
+		NodeTools::Callback<decltype(registry)::external_value_type const_kw&> auto callback, bool warn = false \
 	) const_kw { \
 		return registry.expect_item_str(callback, warn); \
 	} \
 	constexpr NodeTools::NodeCallback auto expect_##singular##_identifier( \
-		NodeTools::Callback<decltype(registry)::value_type const_kw&> auto callback, bool warn = false \
+		NodeTools::Callback<decltype(registry)::external_value_type const_kw&> auto callback, bool warn = false \
 	) const_kw { \
 		return registry.expect_item_identifier(callback, warn); \
 	} \
 	constexpr NodeTools::NodeCallback auto expect_##singular##_string( \
-		NodeTools::Callback<decltype(registry)::value_type const_kw&> auto callback, bool warn = false \
+		NodeTools::Callback<decltype(registry)::external_value_type const_kw&> auto callback, bool warn = false \
 	) const_kw { \
 		return registry.expect_item_string(callback, warn); \
 	} \
 	constexpr NodeTools::NodeCallback auto expect_##singular##_identifier_or_string( \
-		NodeTools::Callback<decltype(registry)::value_type const_kw&> auto callback, bool warn = false \
+		NodeTools::Callback<decltype(registry)::external_value_type const_kw&> auto callback, bool warn = false \
 	) const_kw { \
 		return registry.expect_item_identifier_or_string(callback, warn); \
 	} \
 	constexpr NodeTools::NodeCallback auto expect_##singular##_assign_and_default( \
 		NodeTools::KeyValueCallback auto default_callback, \
-		NodeTools::Callback<decltype(registry)::value_type const_kw&, ast::NodeCPtr> auto callback \
+		NodeTools::Callback<decltype(registry)::external_value_type const_kw&, ast::NodeCPtr> auto callback \
 	) const_kw { \
 		return registry.expect_item_assign_and_default(default_callback, callback); \
 	} \
 	constexpr NodeTools::NodeCallback auto expect_##singular##_assign( \
-		NodeTools::Callback<decltype(registry)::value_type const_kw&, ast::NodeCPtr> auto callback \
+		NodeTools::Callback<decltype(registry)::external_value_type const_kw&, ast::NodeCPtr> auto callback \
 	) const_kw { \
 		return registry.expect_item_assign(callback); \
 	} \
 	constexpr NodeTools::NodeCallback auto expect_##singular##_dictionary_and_length_and_default( \
 		NodeTools::LengthCallback auto length_callback, \
 		NodeTools::KeyValueCallback auto default_callback, \
-		NodeTools::Callback<decltype(registry)::value_type const_kw&, ast::NodeCPtr> auto callback \
+		NodeTools::Callback<decltype(registry)::external_value_type const_kw&, ast::NodeCPtr> auto callback \
 	) const_kw { \
 		return registry.expect_item_dictionary_and_length_and_default(length_callback, default_callback, callback); \
 	} \
 	constexpr NodeTools::NodeCallback auto expect_##singular##_dictionary_and_default( \
 		NodeTools::KeyValueCallback auto default_callback, \
-		NodeTools::Callback<decltype(registry)::value_type const_kw&, ast::NodeCPtr> auto callback \
+		NodeTools::Callback<decltype(registry)::external_value_type const_kw&, ast::NodeCPtr> auto callback \
 	) const_kw { \
 		return registry.expect_item_dictionary_and_default(default_callback, callback); \
 	} \
 	constexpr NodeTools::NodeCallback auto expect_##singular##_dictionary( \
-		NodeTools::Callback<decltype(registry)::value_type const_kw&, ast::NodeCPtr> auto callback \
+		NodeTools::Callback<decltype(registry)::external_value_type const_kw&, ast::NodeCPtr> auto callback \
 	) const_kw { \
 		return registry.expect_item_dictionary(callback); \
 	} \
 	constexpr NodeTools::NodeCallback auto expect_##singular##_dictionary_reserve_length_and_default( \
 		Reservable auto& reservable, \
 		NodeTools::KeyValueCallback auto default_callback, \
-		NodeTools::Callback<decltype(registry)::value_type const_kw&, ast::NodeCPtr> auto callback \
+		NodeTools::Callback<decltype(registry)::external_value_type const_kw&, ast::NodeCPtr> auto callback \
 	) const_kw { \
 		return registry.expect_item_dictionary_reserve_length_and_default(reservable, default_callback, callback); \
 	} \
 	constexpr NodeTools::NodeCallback auto expect_##singular##_dictionary_reserve_length( \
 		Reservable auto& reservable, \
-		NodeTools::Callback<decltype(registry)::value_type const_kw&, ast::NodeCPtr> auto callback \
+		NodeTools::Callback<decltype(registry)::external_value_type const_kw&, ast::NodeCPtr> auto callback \
 	) const_kw { \
 		return registry.expect_item_dictionary_reserve_length(reservable, callback); \
 	}

@@ -253,6 +253,7 @@ bool ModifierManager::setup_modifier_effects() {
 	ret &= add_modifier_effect("defence", true, INT);
 	ret &= add_modifier_effect("experience", true);
 	ret &= add_modifier_effect("morale", true);
+	ret &= add_modifier_effect("movement", true);
 	ret &= add_modifier_effect("organisation", true);
 	ret &= add_modifier_effect("reconnaissance", true);
 	ret &= add_modifier_effect("reliability", true, RAW_DECIMAL);
