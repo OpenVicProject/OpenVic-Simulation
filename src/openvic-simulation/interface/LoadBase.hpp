@@ -67,10 +67,17 @@ namespace OpenVic {
 	template<typename Value, typename... Context>
 	requires std::derived_from<Value, Named<Context...>>
 	struct RegistryValueInfoNamed {
-		using value_type = Value;
+		using internal_value_type = Value;
+		using external_value_type = Value;
 
-		static constexpr std::string_view get_identifier(value_type const& item) {
+		static constexpr std::string_view get_identifier(internal_value_type const& item) {
 			return item.get_name();
+		}
+		static constexpr external_value_type& get_external_value(internal_value_type& item) {
+			return item;
+		}
+		static constexpr external_value_type const& get_external_value(internal_value_type const& item) {
+			return item;
 		}
 	};
 

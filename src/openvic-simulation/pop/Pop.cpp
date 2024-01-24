@@ -157,7 +157,7 @@ bool PopManager::add_pop_type(
 	PopType::income_type_t life_needs_income_types,
 	PopType::income_type_t everyday_needs_income_types,
 	PopType::income_type_t luxury_needs_income_types,
-	PopType::rebel_units_t&& rebel_units,
+	ast::NodeCPtr rebel_units,
 	Pop::pop_size_t max_size,
 	Pop::pop_size_t merge_max_size,
 	bool state_capital_only,
@@ -231,7 +231,7 @@ bool PopManager::add_pop_type(
 		life_needs_income_types,
 		everyday_needs_income_types,
 		luxury_needs_income_types,
-		std::move(rebel_units),
+		{},
 		max_size,
 		merge_max_size,
 		state_capital_only,
@@ -259,7 +259,7 @@ bool PopManager::add_pop_type(
 	});
 
 	if (ret) {
-		delayed_parse_nodes.emplace_back(equivalent, promote_to_node, issues_node);
+		delayed_parse_nodes.emplace_back(rebel_units, equivalent, promote_to_node, issues_node);
 	}
 
 	if (slave_sprite <= 0 && ret && is_slave) {
@@ -314,8 +314,7 @@ static NodeCallback auto expect_needs_income(PopType::income_type_t& types) {
  * POP-3, POP-4, POP-5, POP-6, POP-7, POP-8, POP-9, POP-10, POP-11, POP-12, POP-13, POP-14
  */
 bool PopManager::load_pop_type_file(
-	std::string_view filestem, UnitManager const& unit_manager, GoodManager const& good_manager,
-	IdeologyManager const& ideology_manager, ast::NodeCPtr root
+	std::string_view filestem, GoodManager const& good_manager, IdeologyManager const& ideology_manager, ast::NodeCPtr root
 ) {
 	colour_t colour = colour_t::null();
 	Strata const* strata = nullptr;
@@ -323,7 +322,7 @@ bool PopManager::load_pop_type_file(
 	Good::good_map_t life_needs, everyday_needs, luxury_needs;
 	PopType::income_type_t life_needs_income_types = NO_INCOME_TYPE, everyday_needs_income_types = NO_INCOME_TYPE,
 		luxury_needs_income_types = NO_INCOME_TYPE;
-	PopType::rebel_units_t rebel_units;
+	ast::NodeCPtr rebel_units = nullptr;
 	Pop::pop_size_t max_size = Pop::MAX_SIZE, merge_max_size = Pop::MAX_SIZE;
 	bool state_capital_only = false, demote_migrant = false, is_artisan = false, allowed_to_vote = true, is_slave = false,
 		can_be_recruited = false, can_reduce_consciousness = false, administrative_efficiency = false, can_invest = false,
@@ -359,7 +358,7 @@ bool PopManager::load_pop_type_file(
 		"state_capital_only", ZERO_OR_ONE, expect_bool(assign_variable_callback(state_capital_only)),
 		"research_points", ZERO_OR_ONE, expect_fixed_point(assign_variable_callback(research_points)),
 		"research_optimum", ZERO_OR_ONE, expect_fixed_point(assign_variable_callback(research_leadership_optimum)),
-		"rebel", ZERO_OR_ONE, unit_manager.expect_unit_decimal_map(move_variable_callback(rebel_units)),
+		"rebel", ZERO_OR_ONE, assign_variable_callback(rebel_units),
 		"equivalent", ZERO_OR_ONE, assign_variable_callback(equivalent),
 		"leadership", ZERO_OR_ONE, expect_fixed_point(assign_variable_callback(leadership_points)),
 		"allowed_to_vote", ZERO_OR_ONE, expect_bool(assign_variable_callback(allowed_to_vote)),
@@ -408,7 +407,7 @@ bool PopManager::load_pop_type_file(
 		life_needs_income_types,
 		everyday_needs_income_types,
 		luxury_needs_income_types,
-		std::move(rebel_units),
+		rebel_units,
 		max_size,
 		merge_max_size,
 		state_capital_only,
@@ -437,17 +436,26 @@ bool PopManager::load_pop_type_file(
 	return ret;
 }
 
-bool PopManager::load_delayed_parse_pop_type_data(IssueManager const& issue_manager) {
+bool PopManager::load_delayed_parse_pop_type_data(UnitManager const& unit_manager, IssueManager const& issue_manager) {
 	bool ret = true;
 	for (size_t index = 0; index < delayed_parse_nodes.size(); ++index) {
-		const auto [equivalent, promote_to_node, issues_node] = delayed_parse_nodes[index];
+		const auto [rebel_units, equivalent, promote_to_node, issues_node] = delayed_parse_nodes[index];
 		PopType* pop_type = pop_types.get_item_by_index(index);
+
+		if (rebel_units != nullptr && !unit_manager.expect_unit_decimal_map(
+			move_variable_callback(pop_type->rebel_units)
+		)(rebel_units)) {
+			Logger::error("Errors parsing rebel unit distribution for pop type ", pop_type, "!");
+			ret = false;
+		}
+
 		if (equivalent != nullptr && !expect_pop_type_identifier(
 			assign_variable_callback_pointer(pop_type->equivalent)
 		)(equivalent)) {
 			Logger::error("Errors parsing equivalent pop type for pop type ", pop_type, "!");
 			ret = false;
 		}
+
 		if (promote_to_node != nullptr && !expect_pop_type_dictionary_reserve_length(
 			pop_type->promote_to,
 			[pop_type](PopType const& type, ast::NodeCPtr node) -> bool {
@@ -464,6 +472,7 @@ bool PopManager::load_delayed_parse_pop_type_data(IssueManager const& issue_mana
 			Logger::error("Errors parsing promotion weights for pop type ", pop_type, "!");
 			ret = false;
 		}
+
 		if (issues_node != nullptr && !expect_dictionary_reserve_length(
 			pop_type->issues,
 			[pop_type, &issue_manager](std::string_view key, ast::NodeCPtr node) -> bool {

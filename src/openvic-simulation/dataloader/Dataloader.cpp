@@ -305,7 +305,6 @@ bool Dataloader::_load_interface_files(UIManager& ui_manager) const {
 
 bool Dataloader::_load_pop_types(GameManager& game_manager) {
 	PopManager& pop_manager = game_manager.get_pop_manager();
-	UnitManager const& unit_manager = game_manager.get_military_manager().get_unit_manager();
 	GoodManager const& good_manager = game_manager.get_economy_manager().get_good_manager();
 	IdeologyManager const& ideology_manager = game_manager.get_politics_manager().get_ideology_manager();
 
@@ -317,9 +316,9 @@ bool Dataloader::_load_pop_types(GameManager& game_manager) {
 
 	bool ret = apply_to_files(
 		pop_type_files,
-		[this, &pop_manager, &unit_manager, &good_manager, &ideology_manager](fs::path const& file) -> bool {
+		[this, &pop_manager, &good_manager, &ideology_manager](fs::path const& file) -> bool {
 			return pop_manager.load_pop_type_file(
-				file.stem().string(), unit_manager, good_manager, ideology_manager, parse_defines_cached(file).get_file_node()
+				file.stem().string(), good_manager, ideology_manager, parse_defines_cached(file).get_file_node()
 			);
 		}
 	);
@@ -350,18 +349,21 @@ bool Dataloader::_load_units(GameManager& game_manager) const {
 
 	const path_vector_t unit_files = lookup_files_in_dir(units_directory, ".txt");
 
-	unit_manager.reserve_more_units(unit_files.size());
+	unit_manager.reserve_all_units(unit_files.size());
 
 	bool ret = apply_to_files(
 		unit_files,
 		[&game_manager, &unit_manager](fs::path const& file) -> bool {
 			return unit_manager.load_unit_file(
-				game_manager.get_economy_manager().get_good_manager(), parse_defines(file).get_file_node()
+				game_manager.get_economy_manager().get_good_manager(),
+				game_manager.get_map().get_terrain_type_manager(),
+				game_manager.get_modifier_manager(),
+				parse_defines(file).get_file_node()
 			);
 		}
 	);
 
-	unit_manager.lock_units();
+	unit_manager.lock_all_units();
 
 	if (!unit_manager.generate_modifiers(game_manager.get_modifier_manager())) {
 		Logger::error("Failed to generate unit-based modifiers!");
@@ -828,10 +830,6 @@ bool Dataloader::load_defines(GameManager& game_manager) {
 		Logger::error("Failed to load goods!");
 		ret = false;
 	}
-	if (!_load_units(game_manager)) {
-		Logger::error("Failed to load units!");
-		ret = false;
-	}
 	if (!game_manager.get_pop_manager().get_culture_manager().load_graphical_culture_type_file(
 		parse_defines(lookup_file(graphical_culture_type_file)).get_file_node()
 	)) {
@@ -872,6 +870,14 @@ bool Dataloader::load_defines(GameManager& game_manager) {
 		Logger::error("Failed to load buildings!");
 		ret = false;
 	}
+	if (!_load_map_dir(game_manager)) {
+		Logger::error("Failed to load map!");
+		ret = false;
+	}
+	if (!_load_units(game_manager)) {
+		Logger::error("Failed to load units!");
+		ret = false;
+	}
 	if (!_load_rebel_types(game_manager)) {
 		Logger::error("Failed to load rebel types!");
 		ret = false;
@@ -895,6 +901,7 @@ bool Dataloader::load_defines(GameManager& game_manager) {
 		ret = false;
 	}
 	if (!game_manager.get_pop_manager().load_delayed_parse_pop_type_data(
+		game_manager.get_military_manager().get_unit_manager(),
 		game_manager.get_politics_manager().get_issue_manager()
 	)) {
 		Logger::error("Failed to load delayed parse pop type data (promotion and issue weights)!");
@@ -939,10 +946,6 @@ bool Dataloader::load_defines(GameManager& game_manager) {
 	}
 	if (!_load_inventions(game_manager)) {
 		Logger::error("Failed to load inventions!");
-		ret = false;
-	}
-	if (!_load_map_dir(game_manager)) {
-		Logger::error("Failed to load map!");
 		ret = false;
 	}
 	if (!game_manager.get_military_manager().get_leader_trait_manager().load_leader_traits_file(

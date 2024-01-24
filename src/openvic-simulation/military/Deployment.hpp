@@ -16,7 +16,7 @@ namespace OpenVic {
 	struct Leader {
 	private:
 		std::string        PROPERTY(name);
-		Unit::type_t       PROPERTY(type);
+		Unit::branch_t     PROPERTY(branch); /* type in defines */
 		Date               PROPERTY(date);
 		LeaderTrait const* PROPERTY(personality);
 		LeaderTrait const* PROPERTY(background);
@@ -25,7 +25,7 @@ namespace OpenVic {
 
 	public:
 		Leader(
-			std::string_view new_name, Unit::type_t new_type, Date new_date, LeaderTrait const* new_personality,
+			std::string_view new_name, Unit::branch_t new_branch, Date new_date, LeaderTrait const* new_personality,
 			LeaderTrait const* new_background, fixed_point_t new_prestige, std::string_view new_picture
 		);
 	};
@@ -33,20 +33,20 @@ namespace OpenVic {
 	struct Regiment {
 	private:
 		std::string     PROPERTY(name);
-		Unit const*     PROPERTY(type);
+		LandUnit const* PROPERTY(type);
 		Province const* PROPERTY(home);
 
 	public:
-		Regiment(std::string_view new_name, Unit const* new_type, Province const* new_home);
+		Regiment(std::string_view new_name, LandUnit const* new_type, Province const* new_home);
 	};
 
 	struct Ship {
 	private:
-		std::string PROPERTY(name);
-		Unit const* PROPERTY(type);
+		std::string      PROPERTY(name);
+		NavalUnit const* PROPERTY(type);
 
 	public:
-		Ship(std::string_view new_name, Unit const* new_type);
+		Ship(std::string_view new_name, NavalUnit const* new_type);
 	};
 
 	struct Army {

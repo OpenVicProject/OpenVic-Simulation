@@ -2,6 +2,7 @@
 
 #include <limits>
 #include <ostream>
+#include <tuple>
 
 #include "openvic-simulation/economy/Good.hpp"
 #include "openvic-simulation/pop/Culture.hpp"
@@ -222,12 +223,14 @@ namespace OpenVic {
 		/* Using strata/stratas instead of stratum/strata to avoid confusion. */
 		IdentifierRegistry<Strata> IDENTIFIER_REGISTRY(strata);
 		IdentifierRegistry<PopType> IDENTIFIER_REGISTRY(pop_type);
-		/* equivalent and promote_to can't be parsed until after all PopTypes are registered, and issues requires Issues
-		 * to be loaded, which themselves depend on pop strata. To get around this, the nodes for these variables are stored
-		 * here and parsed after both PopTypes and Issues. The nodes will remain valid as PopType files' Parser objects are
-		 * cached to preserve their condition script nodes until all other defines are loaded and the scripts can be parsed.
-		 * Entries contain: (equivalent, promote_to, issues) */
-		std::vector<std::tuple<ast::NodeCPtr, ast::NodeCPtr, ast::NodeCPtr>> delayed_parse_nodes;
+		/* - rebel_units require Units which require on PopTypes (Unit->Map->Building->ProductionType->PopType).
+		 * - equivalent and promote_to can't be parsed until after all PopTypes are registered.
+		 * - issues require Issues to be loaded, which themselves depend on pop strata.
+		 * To get around these circular dependencies, the nodes for these variables are stored here and parsed after the
+		 * necessary defines are loaded. The nodes will remain valid as PopType files' Parser objects are already cached to
+		 * preserve their condition script nodes until all other defines are loaded and the scripts can be parsed.
+		 * Entries contain: (rebel, equivalent, promote_to, issues) */
+		std::vector<std::tuple<ast::NodeCPtr, ast::NodeCPtr, ast::NodeCPtr, ast::NodeCPtr>> delayed_parse_nodes;
 
 		ConditionalWeight PROPERTY(promotion_chance);
 		ConditionalWeight PROPERTY(demotion_chance);
@@ -259,7 +262,7 @@ namespace OpenVic {
 			PopType::income_type_t life_needs_income_types,
 			PopType::income_type_t everyday_needs_income_types,
 			PopType::income_type_t luxury_needs_income_types,
-			PopType::rebel_units_t&& rebel_units,
+			ast::NodeCPtr rebel_units,
 			Pop::pop_size_t max_size,
 			Pop::pop_size_t merge_max_size,
 			bool state_capital_only,
@@ -290,10 +293,10 @@ namespace OpenVic {
 		void lock_all_pop_types();
 
 		bool load_pop_type_file(
-			std::string_view filestem, UnitManager const& unit_manager, GoodManager const& good_manager,
-			IdeologyManager const& ideology_manager, ast::NodeCPtr root
+			std::string_view filestem, GoodManager const& good_manager, IdeologyManager const& ideology_manager,
+			ast::NodeCPtr root
 		);
-		bool load_delayed_parse_pop_type_data(IssueManager const& issue_manager);
+		bool load_delayed_parse_pop_type_data(UnitManager const& unit_manager, IssueManager const& issue_manager);
 
 		bool load_pop_type_chances_file(ast::NodeCPtr root);
 
