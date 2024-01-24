@@ -279,7 +279,7 @@ bool Map::set_water_province_list(std::vector<std::string_view> const& list) {
 		return false;
 	}
 	bool ret = true;
-	water_provinces.reserve(water_provinces.size() + list.size());
+	water_provinces.reserve_more(list.size());
 	for (std::string_view const& identifier : list) {
 		ret &= set_water_province(identifier);
 	}
@@ -521,6 +521,7 @@ bool Map::load_province_definitions(std::vector<LineObject> const& lines) {
 		Logger::error("No header or entries in province definition file!");
 		return false;
 	}
+
 	{
 		LineObject const& header = lines.front();
 		if (!_validate_province_definitions_header(header)) {
@@ -529,11 +530,14 @@ bool Map::load_province_definitions(std::vector<LineObject> const& lines) {
 			);
 		}
 	}
+
 	if (lines.size() <= 1) {
 		Logger::error("No entries in province definition file!");
 		return false;
 	}
-	provinces.reserve(lines.size() - 1);
+
+	reserve_more_provinces(lines.size() - 1);
+
 	bool ret = true;
 	std::for_each(lines.begin() + 1, lines.end(), [this, &ret](LineObject const& line) -> void {
 		const std::string_view identifier = line.get_value_for(0);
@@ -546,7 +550,9 @@ bool Map::load_province_definitions(std::vector<LineObject> const& lines) {
 			ret &= add_province(identifier, colour);
 		}
 	});
+
 	lock_provinces();
+
 	return ret;
 }
 
@@ -557,7 +563,8 @@ bool Map::load_province_positions(BuildingTypeManager const& building_type_manag
 }
 
 bool Map::load_region_file(ast::NodeCPtr root) {
-	const bool ret = expect_dictionary_reserve_length(regions,
+	const bool ret = expect_dictionary_reserve_length(
+		regions,
 		[this](std::string_view region_identifier, ast::NodeCPtr region_node) -> bool {
 			Region::provinces_t provinces;
 			bool ret = expect_list_reserve_length(
@@ -567,7 +574,9 @@ bool Map::load_region_file(ast::NodeCPtr root) {
 			return ret;
 		}
 	)(root);
+
 	lock_regions();
+
 	for (Region const& region : regions.get_items()) {
 		if (!region.meta) {
 			for (Province const* province : region.get_provinces()) {
@@ -575,6 +584,7 @@ bool Map::load_region_file(ast::NodeCPtr root) {
 			}
 		}
 	}
+
 	return ret;
 }
 
@@ -830,45 +840,48 @@ bool Map::generate_and_load_province_adjacencies(std::vector<LineObject> const& 
 }
 
 bool Map::load_climate_file(ModifierManager const& modifier_manager, ast::NodeCPtr root) {
-	bool ret = expect_dictionary_reserve_length(climates, [this, &modifier_manager](std::string_view identifier, ast::NodeCPtr node) -> bool {
-		if (identifier.empty()) {
-			Logger::error("Invalid climate identifier - empty!");
-			return false;
-		}
+	bool ret = expect_dictionary_reserve_length(
+		climates,
+		[this, &modifier_manager](std::string_view identifier, ast::NodeCPtr node) -> bool {
+			if (identifier.empty()) {
+				Logger::error("Invalid climate identifier - empty!");
+				return false;
+			}
 
-		bool ret = true;
-		Climate* cur_climate = climates.get_item_by_identifier(identifier);
-		if (cur_climate == nullptr) {
-			ModifierValue values;
-			ret &= modifier_manager.expect_modifier_value(move_variable_callback(values))(node);
-			ret &= climates.add_item({ identifier, std::move(values) });
-		} else {
-			ret &= expect_list_reserve_length(*cur_climate, expect_province_identifier(
-				[cur_climate, &identifier](Province& province) {
-					if (province.climate != cur_climate) {
-						cur_climate->add_province(&province);
-						if (province.climate != nullptr) {
-							Climate* old_climate = const_cast<Climate*>(province.climate);
-							old_climate->remove_province(&province);
+			bool ret = true;
+			Climate* cur_climate = climates.get_item_by_identifier(identifier);
+			if (cur_climate == nullptr) {
+				ModifierValue values;
+				ret &= modifier_manager.expect_modifier_value(move_variable_callback(values))(node);
+				ret &= climates.add_item({ identifier, std::move(values) });
+			} else {
+				ret &= expect_list_reserve_length(*cur_climate, expect_province_identifier(
+					[cur_climate, &identifier](Province& province) {
+						if (province.climate != cur_climate) {
+							cur_climate->add_province(&province);
+							if (province.climate != nullptr) {
+								Climate* old_climate = const_cast<Climate*>(province.climate);
+								old_climate->remove_province(&province);
+								Logger::warning(
+									"Province with id ", province.get_identifier(),
+									" found in multiple climates: ", identifier,
+									" and ", old_climate->get_identifier()
+								);
+							}
+							province.climate = cur_climate;
+						} else {
 							Logger::warning(
 								"Province with id ", province.get_identifier(),
-								" found in multiple climates: ", identifier,
-								" and ", old_climate->get_identifier()
+								" defined twice in climate ", identifier
 							);
 						}
-						province.climate = cur_climate;
-					} else {
-						Logger::warning(
-							"Province with id ", province.get_identifier(),
-							" defined twice in climate ", identifier
-						);
+						return true;
 					}
-					return true;
-				}
-			))(node);
+				))(node);
+			}
+			return ret;
 		}
-		return ret;
-	})(root);
+	)(root);
 
 	for (Climate& climate : climates.get_items()) {
 		climate.lock();
@@ -880,42 +893,45 @@ bool Map::load_climate_file(ModifierManager const& modifier_manager, ast::NodeCP
 }
 
 bool Map::load_continent_file(ModifierManager const& modifier_manager, ast::NodeCPtr root) {
-	bool ret = expect_dictionary_reserve_length(continents, [this, &modifier_manager](std::string_view identifier, ast::NodeCPtr node) -> bool {
-		if (identifier.empty()) {
-			Logger::error("Invalid continent identifier - empty!");
-			return false;
-		}
-
-		ModifierValue values;
-		ProvinceSetModifier::provinces_t prov_list;
-		bool ret = modifier_manager.expect_modifier_value_and_keys(move_variable_callback(values),
-			"provinces", ONE_EXACTLY, expect_list_reserve_length(prov_list, expect_province_identifier(
-				[&prov_list](Province const& province) -> bool {
-					if (province.continent == nullptr) {
-						prov_list.emplace_back(&province);
-					} else {
-						Logger::warning("Province ", province, " found in multiple continents");
-					}
-					return true;
-				}
-			))
-		)(node);
-
-		Continent continent = { identifier, std::move(values) };
-		continent.add_provinces(prov_list);
-		continent.lock();
-
-		if (continents.add_item(std::move(continent))) {
-			Continent const& moved_continent = continents.get_items().back();
-			for (Province const* prov : moved_continent.get_provinces()) {
-				remove_province_const(prov)->continent = &moved_continent;
+	bool ret = expect_dictionary_reserve_length(
+		continents,
+		[this, &modifier_manager](std::string_view identifier, ast::NodeCPtr node) -> bool {
+			if (identifier.empty()) {
+				Logger::error("Invalid continent identifier - empty!");
+				return false;
 			}
-		} else {
-			ret = false;
-		}
 
-		return ret;
-	})(root);
+			ModifierValue values;
+			ProvinceSetModifier::provinces_t prov_list;
+			bool ret = modifier_manager.expect_modifier_value_and_keys(move_variable_callback(values),
+				"provinces", ONE_EXACTLY, expect_list_reserve_length(prov_list, expect_province_identifier(
+					[&prov_list](Province const& province) -> bool {
+						if (province.continent == nullptr) {
+							prov_list.emplace_back(&province);
+						} else {
+							Logger::warning("Province ", province, " found in multiple continents");
+						}
+						return true;
+					}
+				))
+			)(node);
+
+			Continent continent = { identifier, std::move(values) };
+			continent.add_provinces(prov_list);
+			continent.lock();
+
+			if (continents.add_item(std::move(continent))) {
+				Continent const& moved_continent = continents.get_items().back();
+				for (Province const* prov : moved_continent.get_provinces()) {
+					remove_province_const(prov)->continent = &moved_continent;
+				}
+			} else {
+				ret = false;
+			}
+
+			return ret;
+		}
+	)(root);
 
 	lock_continents();
 

@@ -64,7 +64,7 @@ bool GoodManager::load_goods_file(ast::NodeCPtr root) {
 		}
 	)(root);
 	lock_good_categories();
-	goods.reserve(goods.size() + total_expected_goods);
+	reserve_more_goods(total_expected_goods);
 	ret &= expect_good_category_dictionary([this](GoodCategory const& good_category, ast::NodeCPtr good_category_value) -> bool {
 		return expect_dictionary([this, &good_category](std::string_view key, ast::NodeCPtr value) -> bool {
 			colour_t colour = colour_t::null();

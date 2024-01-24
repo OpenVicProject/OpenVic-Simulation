@@ -16,7 +16,8 @@ bool NationalValueManager::add_national_value(std::string_view identifier, Modif
 }
 
 bool NationalValueManager::load_national_values_file(ModifierManager const& modifier_manager, ast::NodeCPtr root) {
-	bool ret = expect_dictionary(
+	bool ret = expect_dictionary_reserve_length(
+		national_values,
 		[this, &modifier_manager](std::string_view national_value_identifier, ast::NodeCPtr value) -> bool {
 			ModifierValue modifiers;
 
@@ -26,6 +27,7 @@ bool NationalValueManager::load_national_values_file(ModifierManager const& modi
 			return ret;
 		}
 	)(root);
+
 	lock_national_values();
 
 	return ret;

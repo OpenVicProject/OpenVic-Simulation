@@ -44,9 +44,6 @@ namespace OpenVic {
 	struct LeaderTraitManager {
 	private:
 		IdentifierRegistry<LeaderTrait> IDENTIFIER_REGISTRY(leader_trait);
-		static inline const string_set_t allowed_modifiers = {
-			"attack", "defence", "morale", "organisation", "reconnaissance", "speed", "attrition", "experience", "reliability"
-		};
 
 	public:
 		bool add_leader_trait(std::string_view identifier, LeaderTrait::trait_type_t type, ModifierValue&& modifiers);

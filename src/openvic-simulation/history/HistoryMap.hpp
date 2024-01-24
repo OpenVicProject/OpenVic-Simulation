@@ -1,6 +1,5 @@
 #pragma once
 
-#include <map>
 #include <memory>
 
 #include "openvic-simulation/dataloader/NodeTools.hpp"

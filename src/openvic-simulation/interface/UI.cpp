@@ -39,7 +39,8 @@ bool UIManager::_load_font(ast::NodeCPtr node) {
 
 bool UIManager::load_gfx_file(ast::NodeCPtr root) {
 	return expect_dictionary_keys(
-		"spriteTypes", ZERO_OR_ONE, Sprite::expect_sprite(
+		"spriteTypes", ZERO_OR_ONE, Sprite::expect_sprites(
+			NodeTools::reserve_length_callback(sprites),
 			[this](std::unique_ptr<Sprite>&& sprite) -> bool {
 				/* TODO - more checks on duplicates (the false here reduces them from
 				 * errors to warnings). The repeats in vanilla are identical (simple
@@ -64,7 +65,8 @@ bool UIManager::load_gfx_file(ast::NodeCPtr root) {
 				return sprites.add_item(std::move(sprite), duplicate_warning_callback);
 			}
 		),
-		"bitmapfonts", ZERO_OR_ONE, expect_dictionary(
+		"bitmapfonts", ZERO_OR_ONE, expect_dictionary_reserve_length(
+			fonts,
 			[this](std::string_view key, ast::NodeCPtr node) -> bool {
 				if (key != "bitmapfont") {
 					Logger::error("Invalid bitmapfonts key: ", key);

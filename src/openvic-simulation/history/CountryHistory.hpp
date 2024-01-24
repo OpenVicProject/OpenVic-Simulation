@@ -1,10 +1,8 @@
 #pragma once
 
-#include <map>
 #include <optional>
 
 #include "openvic-simulation/country/Country.hpp"
-#include "openvic-simulation/history/Bookmark.hpp"
 #include "openvic-simulation/history/HistoryMap.hpp"
 #include "openvic-simulation/map/Province.hpp"
 #include "openvic-simulation/military/Deployment.hpp"
@@ -17,7 +15,6 @@
 #include "openvic-simulation/pop/Religion.hpp"
 #include "openvic-simulation/research/Invention.hpp"
 #include "openvic-simulation/research/Technology.hpp"
-#include "openvic-simulation/types/Colour.hpp"
 #include "openvic-simulation/types/Date.hpp"
 #include "openvic-simulation/types/OrderedContainers.hpp"
 
@@ -88,6 +85,7 @@ namespace OpenVic {
 	public:
 		CountryHistoryManager() = default;
 
+		void reserve_more_country_histories(size_t size);
 		void lock_country_histories();
 		bool is_locked() const;
 

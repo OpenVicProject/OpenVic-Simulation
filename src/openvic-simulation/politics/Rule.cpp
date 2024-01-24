@@ -161,7 +161,7 @@ bool RuleManager::setup_rules(BuildingTypeManager const& building_type_manager) 
 	for (auto const& [group, rule_list] : hardcoded_rules) {
 		rule_count += rule_list.size();
 	}
-	rules.reserve(rule_count);
+	reserve_more_rules(rule_count);
 
 	for (auto const& [group, rule_list] : hardcoded_rules) {
 		for (std::string_view const& rule : rule_list) {

@@ -155,6 +155,7 @@ namespace OpenVic {
 
 	public:
 		using storage_type = typename StorageInfo::storage_type;
+		static constexpr bool storage_type_reservable = Reservable<storage_type>;
 
 	private:
 		const std::string name;
@@ -224,12 +225,20 @@ namespace OpenVic {
 		}
 
 		constexpr void reserve(std::size_t size) {
-			if (locked) {
-				Logger::error("Failed to reserve space for ", size, " items in ", name, " registry - already locked!");
+			if constexpr (storage_type_reservable) {
+				if (locked) {
+					Logger::error("Failed to reserve space for ", size, " items in ", name, " registry - already locked!");
+				} else {
+					items.reserve(size);
+					identifier_index_map.reserve(size);
+				}
 			} else {
-				items.reserve(size);
-				identifier_index_map.reserve(size);
+				Logger::error("Cannot reserve space for ", size, " ", name, " - storage_type not reservable!");
 			}
+		}
+
+		constexpr void reserve_more(std::size_t size) {
+			OpenVic::reserve_more(*this, size);
 		}
 
 		static constexpr NodeTools::KeyValueCallback auto key_value_invalid_callback(std::string_view name) {
@@ -285,7 +294,7 @@ namespace OpenVic {
 				value_type CONST* item = get_item_by_identifier(key); \
 				if (item != nullptr) { \
 					return callback(*item, value); \
-				} else {\
+				} else { \
 					return default_callback(key, value); \
 				} \
 			} \
@@ -334,25 +343,23 @@ namespace OpenVic {
 			callback \
 		); \
 	} \
-	template<NodeTools::Reservable T> \
 	constexpr NodeTools::NodeCallback auto expect_item_dictionary_reserve_length_and_default( \
-		T& t, \
+		Reservable auto& reservable, \
 		NodeTools::KeyValueCallback auto default_callback, \
 		NodeTools::Callback<value_type CONST&, ast::NodeCPtr> auto callback \
 	) CONST { \
 		return expect_item_dictionary_and_length_and_default( \
-			NodeTools::reserve_length_callback(t), \
+			NodeTools::reserve_length_callback(reservable), \
 			default_callback, \
 			callback \
 		); \
 	} \
-	template<NodeTools::Reservable T> \
 	constexpr NodeTools::NodeCallback auto expect_item_dictionary_reserve_length( \
-		T& t, \
+		Reservable auto& reservable, \
 		NodeTools::Callback<value_type CONST&, ast::NodeCPtr> auto callback \
 	) CONST { \
 		return expect_item_dictionary_and_length_and_default( \
-			NodeTools::reserve_length_callback(t), \
+			NodeTools::reserve_length_callback(reservable), \
 			key_value_invalid_callback(name), \
 			callback \
 		); \
@@ -454,13 +461,21 @@ namespace OpenVic {
 	IDENTIFIER_REGISTRY_FULL_CUSTOM(name, name##s, name##s, name##s, index_offset)
 
 #define IDENTIFIER_REGISTRY_FULL_CUSTOM(singular, plural, registry, debug_name, index_offset) \
-	registry { #debug_name };\
+	registry { #debug_name }; \
 public: \
 	constexpr void lock_##plural() { \
 		registry.lock(); \
 	} \
 	constexpr bool plural##_are_locked() const { \
 		return registry.is_locked(); \
+	} \
+	template<typename = void> \
+	constexpr void reserve_##plural(size_t size) requires(decltype(registry)::storage_type_reservable) { \
+		registry.reserve(size); \
+	} \
+	template<typename = void> \
+	constexpr void reserve_more_##plural(size_t size) requires(decltype(registry)::storage_type_reservable) { \
+		registry.reserve_more(size); \
 	} \
 	constexpr bool has_##singular##_identifier(std::string_view identifier) const { \
 		return registry.has_identifier(identifier); \
@@ -555,19 +570,17 @@ private:
 	) const_kw { \
 		return registry.expect_item_dictionary(callback); \
 	} \
-	template<NodeTools::Reservable T> \
 	constexpr NodeTools::NodeCallback auto expect_##singular##_dictionary_reserve_length_and_default( \
-		T& t, \
+		Reservable auto& reservable, \
 		NodeTools::KeyValueCallback auto default_callback, \
 		NodeTools::Callback<decltype(registry)::value_type const_kw&, ast::NodeCPtr> auto callback \
 	) const_kw { \
-		return registry.expect_item_dictionary_reserve_length_and_default(t, default_callback, callback); \
+		return registry.expect_item_dictionary_reserve_length_and_default(reservable, default_callback, callback); \
 	} \
-	template<NodeTools::Reservable T> \
 	constexpr NodeTools::NodeCallback auto expect_##singular##_dictionary_reserve_length( \
-		T& t, \
+		Reservable auto& reservable, \
 		NodeTools::Callback<decltype(registry)::value_type const_kw&, ast::NodeCPtr> auto callback \
 	) const_kw { \
-		return registry.expect_item_dictionary_reserve_length(t, callback); \
+		return registry.expect_item_dictionary_reserve_length(reservable, callback); \
 	}
 }

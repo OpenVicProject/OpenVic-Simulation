@@ -112,6 +112,14 @@ bool ProvinceHistoryMap::_load_history_entry(
 	)(root);
 }
 
+void ProvinceHistoryManager::reserve_more_province_histories(size_t size) {
+	if (locked) {
+		Logger::error("Failed to reserve space for ", size, " provinces in ProvinceHistoryManager - already locked!");
+	} else {
+		reserve_more(province_histories, size);
+	}
+}
+
 void ProvinceHistoryManager::lock_province_histories(Map const& map, bool detailed_errors) {
 	std::vector<bool> province_checklist(map.get_province_count());
 	for (decltype(province_histories)::value_type const& entry : province_histories) {

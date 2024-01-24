@@ -1,7 +1,6 @@
 #include "BMP.hpp"
 
 #include <cstring>
-#include <set>
 
 #include "openvic-simulation/types/OrderedContainers.hpp"
 #include "openvic-simulation/utility/Logger.hpp"

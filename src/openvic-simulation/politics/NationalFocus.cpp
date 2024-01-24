@@ -84,7 +84,7 @@ bool NationalFocusManager::load_national_foci_file(
 	)(root);
 	lock_national_focus_groups();
 
-	national_foci.reserve(expected_national_foci);
+	reserve_more_national_foci(expected_national_foci);
 
 	ret &= expect_national_focus_group_dictionary([this, &pop_manager, &ideology_manager, &good_manager, &modifier_manager](
 		NationalFocusGroup const& group, ast::NodeCPtr group_node

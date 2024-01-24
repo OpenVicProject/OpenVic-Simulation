@@ -204,7 +204,7 @@ bool ProductionTypeManager::load_production_types_file(
 	)(root);
 
 	/* Pass #3: actually load production types */
-	production_types.reserve(production_types.size() + expected_types);
+	reserve_more_production_types(expected_types);
 	ret &= expect_dictionary(
 		[this, &good_manager, &pop_manager, &template_target_map, &template_node_map](
 			std::string_view key, ast::NodeCPtr node) -> bool {

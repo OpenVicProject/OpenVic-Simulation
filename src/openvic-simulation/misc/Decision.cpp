@@ -52,7 +52,8 @@ bool DecisionManager::add_decision(
 
 bool DecisionManager::load_decision_file(ast::NodeCPtr root) {
 	return expect_dictionary_keys(
-		"political_decisions", ZERO_OR_ONE, expect_dictionary(
+		"political_decisions", ZERO_OR_ONE, expect_dictionary_reserve_length(
+			decisions,
 			[this](std::string_view identifier, ast::NodeCPtr node) -> bool {
 				bool alert = true, news = false;
 				std::string_view news_title, news_desc_long, news_desc_medium, news_desc_short, picture;

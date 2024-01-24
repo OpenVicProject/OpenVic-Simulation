@@ -273,10 +273,19 @@ bool PopManager::add_pop_type(
 	return ret;
 }
 
-void PopManager::reserve_pop_types(size_t count) {
-	stratas.reserve(stratas.size() + count);
-	pop_types.reserve(pop_types.size() + count);
-	delayed_parse_nodes.reserve(delayed_parse_nodes.size() + count);
+void PopManager::reserve_all_pop_types(size_t size) {
+	reserve_more_stratas(size);
+	if (pop_types_are_locked()) {
+		Logger::error("Failed to reserve space for ", size, " pop types in PopManager - already locked!");
+	} else {
+		reserve_more_pop_types(size);
+		reserve_more(delayed_parse_nodes, size);
+	}
+}
+
+void PopManager::lock_all_pop_types() {
+	lock_stratas();
+	lock_pop_types();
 }
 
 static NodeCallback auto expect_needs_income(PopType::income_type_t& types) {
