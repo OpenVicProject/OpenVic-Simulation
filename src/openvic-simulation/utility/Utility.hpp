@@ -81,6 +81,14 @@ namespace OpenVic::utility {
 	template<typename T, template<typename...> class Z>
 	inline constexpr bool is_specialization_of_v = is_specialization_of<T, Z>::value;
 
+	template <template<typename...> class Template, typename... Args>
+	void _derived_from_specialization_impl(const Template<Args...>&);
+
+	template <typename T, template<typename...> class Template>
+	concept is_derived_from_specialization_of = requires(const T& t) {
+		_derived_from_specialization_impl<Template>(t);
+	};
+
 	inline constexpr auto three_way(auto&& left, auto&& right) {
 		// This is Apple's fault again
 		#if __cpp_lib_three_way_comparison >= 201907L

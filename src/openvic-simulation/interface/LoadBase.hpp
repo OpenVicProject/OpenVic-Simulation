@@ -10,14 +10,14 @@ namespace OpenVic {
 	protected:
 		LoadBase() = default;
 
-		virtual bool _fill_key_map(NodeTools::key_map_t&, Context...) = 0;
+		virtual bool _fill_key_map(NodeTools::case_insensitive_key_map_t&, Context...) = 0;
 
 	public:
 		LoadBase(LoadBase&&) = default;
 		virtual ~LoadBase() = default;
 
 		bool load(ast::NodeCPtr node, Context... context) {
-			NodeTools::key_map_t key_map;
+			NodeTools::case_insensitive_key_map_t key_map;
 			bool ret = _fill_key_map(key_map, context...);
 			ret &= NodeTools::expect_dictionary_key_map(std::move(key_map))(node);
 			return ret;
@@ -45,7 +45,7 @@ namespace OpenVic {
 	protected:
 		Named() = default;
 
-		virtual bool _fill_key_map(NodeTools::key_map_t& key_map, Context...) override {
+		virtual bool _fill_key_map(NodeTools::case_insensitive_key_map_t& key_map, Context...) override {
 			using namespace OpenVic::NodeTools;
 			return add_key_map_entries(key_map, "name", ONE_EXACTLY, expect_string(assign_variable_callback_string(name)));
 		}

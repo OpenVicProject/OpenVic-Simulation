@@ -8,7 +8,7 @@ using namespace OpenVic::NodeTools;
 
 Element::Element() : position {}, orientation { orientation_t::UPPER_LEFT } {}
 
-bool Element::_fill_key_map(NodeTools::key_map_t& key_map, UIManager const& ui_manager) {
+bool Element::_fill_key_map(NodeTools::case_insensitive_key_map_t& key_map, UIManager const& ui_manager) {
 	bool ret = Named::_fill_key_map(key_map, ui_manager);
 	using enum orientation_t;
 	static const string_map_t<orientation_t> orientation_map = {
@@ -18,14 +18,13 @@ bool Element::_fill_key_map(NodeTools::key_map_t& key_map, UIManager const& ui_m
 	};
 	ret &= add_key_map_entries(key_map,
 		"position", ONE_EXACTLY, expect_fvec2(assign_variable_callback(position)),
-		"orientation", ZERO_OR_ONE, expect_string(expect_mapped_string(orientation_map, assign_variable_callback(orientation))),
-		"Orientation", ZERO_OR_ONE, expect_string(expect_mapped_string(orientation_map, assign_variable_callback(orientation)))
+		"orientation", ZERO_OR_ONE, expect_string(expect_mapped_string(orientation_map, assign_variable_callback(orientation)))
 	);
 	return ret;
 }
 
 bool Element::_fill_elements_key_map(
-	NodeTools::key_map_t& key_map, callback_t<std::unique_ptr<Element>&&> callback, UIManager const& ui_manager
+	NodeTools::case_insensitive_key_map_t& key_map, callback_t<std::unique_ptr<Element>&&> callback, UIManager const& ui_manager
 ) {
 	bool ret = true;
 	ret &= add_key_map_entries(key_map,
@@ -42,7 +41,7 @@ bool Element::_fill_elements_key_map(
 	return ret;
 }
 
-bool Scene::_fill_key_map(NodeTools::key_map_t& key_map, UIManager const& ui_manager) {
+bool Scene::_fill_key_map(NodeTools::case_insensitive_key_map_t& key_map, UIManager const& ui_manager) {
 	return Element::_fill_elements_key_map(key_map, [this](std::unique_ptr<Element>&& element) -> bool {
 		return scene_elements.add_item(std::move(element));
 	}, ui_manager);
@@ -59,7 +58,7 @@ node_callback_t Scene::expect_scene(
 
 Window::Window() : moveable { false }, fullscreen { false } {}
 
-bool Window::_fill_key_map(NodeTools::key_map_t& key_map, UIManager const& ui_manager) {
+bool Window::_fill_key_map(NodeTools::case_insensitive_key_map_t& key_map, UIManager const& ui_manager) {
 	bool ret = Element::_fill_elements_key_map(key_map, [this](std::unique_ptr<Element>&& element) -> bool {
 		return window_elements.add_item(std::move(element));
 	}, ui_manager);
@@ -78,7 +77,7 @@ bool Window::_fill_key_map(NodeTools::key_map_t& key_map, UIManager const& ui_ma
 
 Icon::Icon() : sprite { nullptr }, frame { GFX::NO_FRAMES } {}
 
-bool Icon::_fill_key_map(NodeTools::key_map_t& key_map, UIManager const& ui_manager) {
+bool Icon::_fill_key_map(NodeTools::case_insensitive_key_map_t& key_map, UIManager const& ui_manager) {
 	bool ret = Element::_fill_key_map(key_map, ui_manager);
 	ret &= add_key_map_entries(key_map,
 		"spriteType", ONE_EXACTLY, expect_string(ui_manager.expect_sprite_str(assign_variable_callback_pointer(sprite))),
@@ -89,7 +88,7 @@ bool Icon::_fill_key_map(NodeTools::key_map_t& key_map, UIManager const& ui_mana
 
 BaseButton::BaseButton() : sprite { nullptr } {}
 
-bool BaseButton::_fill_key_map(NodeTools::key_map_t& key_map, UIManager const& ui_manager) {
+bool BaseButton::_fill_key_map(NodeTools::case_insensitive_key_map_t& key_map, UIManager const& ui_manager) {
 	bool ret = Element::_fill_key_map(key_map, ui_manager);
 	// look up sprite registry for texture sprite with name...
 	ret &= add_key_map_entries(key_map,
@@ -104,7 +103,7 @@ bool BaseButton::_fill_key_map(NodeTools::key_map_t& key_map, UIManager const& u
 
 Button::Button() : text {}, font { nullptr} {}
 
-bool Button::_fill_key_map(NodeTools::key_map_t& key_map, UIManager const& ui_manager) {
+bool Button::_fill_key_map(NodeTools::case_insensitive_key_map_t& key_map, UIManager const& ui_manager) {
 	bool ret = BaseButton::_fill_key_map(key_map, ui_manager);
 	ret &= add_key_map_entries(key_map,
 		"buttonText", ZERO_OR_ONE, expect_string(assign_variable_callback_string(text), true),
@@ -118,14 +117,14 @@ bool Button::_fill_key_map(NodeTools::key_map_t& key_map, UIManager const& ui_ma
 	return ret;
 }
 
-bool Checkbox::_fill_key_map(NodeTools::key_map_t& key_map, UIManager const& ui_manager) {
+bool Checkbox::_fill_key_map(NodeTools::case_insensitive_key_map_t& key_map, UIManager const& ui_manager) {
 	bool ret = BaseButton::_fill_key_map(key_map, ui_manager);
 	return ret;
 }
 
 AlignedElement::AlignedElement() : format { format_t::left } {}
 
-bool AlignedElement::_fill_key_map(NodeTools::key_map_t& key_map, UIManager const& ui_manager) {
+bool AlignedElement::_fill_key_map(NodeTools::case_insensitive_key_map_t& key_map, UIManager const& ui_manager) {
 	bool ret = Element::_fill_key_map(key_map, ui_manager);
 	using enum format_t;
 	static const string_map_t<format_t> format_map = {
@@ -139,7 +138,7 @@ bool AlignedElement::_fill_key_map(NodeTools::key_map_t& key_map, UIManager cons
 
 Text::Text() : text {}, font { nullptr } {}
 
-bool Text::_fill_key_map(NodeTools::key_map_t& key_map, UIManager const& ui_manager) {
+bool Text::_fill_key_map(NodeTools::case_insensitive_key_map_t& key_map, UIManager const& ui_manager) {
 	bool ret = AlignedElement::_fill_key_map(key_map, ui_manager);
 	ret &= add_key_map_entries(key_map,
 		"text", ZERO_OR_ONE, expect_string(assign_variable_callback_string(text), true),
@@ -158,7 +157,7 @@ bool Text::_fill_key_map(NodeTools::key_map_t& key_map, UIManager const& ui_mana
 
 OverlappingElementsBox::OverlappingElementsBox() : size {} {}
 
-bool OverlappingElementsBox::_fill_key_map(NodeTools::key_map_t& key_map, UIManager const& ui_manager) {
+bool OverlappingElementsBox::_fill_key_map(NodeTools::case_insensitive_key_map_t& key_map, UIManager const& ui_manager) {
 	bool ret = AlignedElement::_fill_key_map(key_map, ui_manager);
 	ret &= add_key_map_entries(key_map,
 		"size", ONE_EXACTLY, expect_fvec2(assign_variable_callback(size)),
@@ -169,7 +168,7 @@ bool OverlappingElementsBox::_fill_key_map(NodeTools::key_map_t& key_map, UIMana
 
 ListBox::ListBox() : size {} {}
 
-bool ListBox::_fill_key_map(NodeTools::key_map_t& key_map, UIManager const& ui_manager) {
+bool ListBox::_fill_key_map(NodeTools::case_insensitive_key_map_t& key_map, UIManager const& ui_manager) {
 	bool ret = Element::_fill_key_map(key_map, ui_manager);
 	ret &= add_key_map_entries(key_map,
 		"backGround", ZERO_OR_ONE, success_callback,

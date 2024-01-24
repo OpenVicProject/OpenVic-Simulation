@@ -52,7 +52,7 @@ namespace OpenVic::GFX {
 	protected:
 		TextureSprite();
 
-		bool _fill_key_map(NodeTools::key_map_t& key_map) override;
+		bool _fill_key_map(NodeTools::case_insensitive_key_map_t& key_map) override;
 
 	public:
 		TextureSprite(TextureSprite&&) = default;
@@ -70,7 +70,7 @@ namespace OpenVic::GFX {
 	protected:
 		TileTextureSprite();
 
-		bool _fill_key_map(NodeTools::key_map_t& key_map) override;
+		bool _fill_key_map(NodeTools::case_insensitive_key_map_t& key_map) override;
 
 	public:
 		TileTextureSprite(TileTextureSprite&&) = default;
@@ -93,7 +93,7 @@ namespace OpenVic::GFX {
 	protected:
 		ProgressBar();
 
-		bool _fill_key_map(NodeTools::key_map_t& key_map) override;
+		bool _fill_key_map(NodeTools::case_insensitive_key_map_t& key_map) override;
 
 	public:
 		ProgressBar(ProgressBar&&) = default;
@@ -110,7 +110,7 @@ namespace OpenVic::GFX {
 	protected:
 		PieChart();
 
-		bool _fill_key_map(NodeTools::key_map_t& key_map) override;
+		bool _fill_key_map(NodeTools::case_insensitive_key_map_t& key_map) override;
 
 	public:
 		PieChart(PieChart&&) = default;
@@ -128,7 +128,7 @@ namespace OpenVic::GFX {
 	protected:
 		LineChart();
 
-		bool _fill_key_map(NodeTools::key_map_t& key_map) override;
+		bool _fill_key_map(NodeTools::case_insensitive_key_map_t& key_map) override;
 
 	public:
 		LineChart(LineChart&&) = default;
@@ -146,7 +146,7 @@ namespace OpenVic::GFX {
 	protected:
 		MaskedFlag();
 
-		bool _fill_key_map(NodeTools::key_map_t& key_map) override;
+		bool _fill_key_map(NodeTools::case_insensitive_key_map_t& key_map) override;
 
 	public:
 		MaskedFlag(MaskedFlag&&) = default;

@@ -26,11 +26,10 @@ node_callback_t Sprite::expect_sprites(length_callback_t length_callback, callba
 
 TextureSprite::TextureSprite() : texture_file {}, no_of_frames { NO_FRAMES } {}
 
-bool TextureSprite::_fill_key_map(key_map_t& key_map) {
+bool TextureSprite::_fill_key_map(case_insensitive_key_map_t& key_map) {
 	bool ret = Sprite::_fill_key_map(key_map);
 	ret &= add_key_map_entries(key_map,
 		"texturefile", ZERO_OR_ONE, expect_string(assign_variable_callback_string(texture_file)),
-		"textureFile", ZERO_OR_ONE, expect_string(assign_variable_callback_string(texture_file)),
 		"noOfFrames", ZERO_OR_ONE, expect_uint(assign_variable_callback(no_of_frames)),
 
 		"norefcount", ZERO_OR_ONE, success_callback,
@@ -45,7 +44,7 @@ bool TextureSprite::_fill_key_map(key_map_t& key_map) {
 
 TileTextureSprite::TileTextureSprite() : texture_file {}, size {} {}
 
-bool TileTextureSprite::_fill_key_map(key_map_t& key_map) {
+bool TileTextureSprite::_fill_key_map(case_insensitive_key_map_t& key_map) {
 	bool ret = Sprite::_fill_key_map(key_map);
 	ret &= add_key_map_entries(key_map,
 		"texturefile", ZERO_OR_ONE, expect_string(assign_variable_callback_string(texture_file)),
@@ -59,7 +58,7 @@ bool TileTextureSprite::_fill_key_map(key_map_t& key_map) {
 
 ProgressBar::ProgressBar() : back_colour {}, progress_colour {} {}
 
-bool ProgressBar::_fill_key_map(key_map_t& key_map) {
+bool ProgressBar::_fill_key_map(case_insensitive_key_map_t& key_map) {
 	bool ret = Sprite::_fill_key_map(key_map);
 	ret &= add_key_map_entries(key_map,
 		"color", ONE_EXACTLY, expect_colour(assign_variable_callback(progress_colour)),
@@ -78,7 +77,7 @@ bool ProgressBar::_fill_key_map(key_map_t& key_map) {
 
 PieChart::PieChart() : size {} {}
 
-bool PieChart::_fill_key_map(key_map_t& key_map) {
+bool PieChart::_fill_key_map(case_insensitive_key_map_t& key_map) {
 	bool ret = Sprite::_fill_key_map(key_map);
 	ret &= add_key_map_entries(key_map, "size", ONE_EXACTLY, expect_uint(assign_variable_callback(size)));
 	return ret;
@@ -86,7 +85,7 @@ bool PieChart::_fill_key_map(key_map_t& key_map) {
 
 LineChart::LineChart() : size {}, linewidth {} {}
 
-bool LineChart::_fill_key_map(key_map_t& key_map) {
+bool LineChart::_fill_key_map(case_insensitive_key_map_t& key_map) {
 	bool ret = Sprite::_fill_key_map(key_map);
 	ret &= add_key_map_entries(key_map,
 		"size", ONE_EXACTLY, expect_ivec2(assign_variable_callback(size)),
@@ -98,7 +97,7 @@ bool LineChart::_fill_key_map(key_map_t& key_map) {
 
 MaskedFlag::MaskedFlag() : overlay_file {}, mask_file {} {}
 
-bool MaskedFlag::_fill_key_map(key_map_t& key_map) {
+bool MaskedFlag::_fill_key_map(case_insensitive_key_map_t& key_map) {
 	bool ret = Sprite::_fill_key_map(key_map);
 	ret &= add_key_map_entries(key_map,
 		"textureFile1", ONE_EXACTLY, expect_string(assign_variable_callback_string(overlay_file)),
