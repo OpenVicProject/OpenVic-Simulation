@@ -185,19 +185,15 @@ namespace OpenVic {
 		static constexpr bool storage_type_reservable = Reservable<storage_type>;
 
 	private:
-		const std::string name;
+		const std::string PROPERTY(name);
 		const bool log_lock;
 		storage_type PROPERTY_REF(items);
-		bool locked = false;
+		bool PROPERTY_CUSTOM_PREFIX(locked, is);
 		identifier_index_map_t identifier_index_map;
 
 	public:
 		constexpr UniqueKeyRegistry(std::string_view new_name, bool new_log_lock = true)
-			: name { new_name }, log_lock { new_log_lock } {}
-
-		constexpr std::string_view get_name() const {
-			return name;
-		}
+			: name { new_name }, log_lock { new_log_lock }, locked { false } {}
 
 		constexpr bool add_item(
 			item_type&& item, NodeTools::Callback<std::string_view, std::string_view> auto duplicate_callback
@@ -231,10 +227,6 @@ namespace OpenVic {
 					Logger::info("Locked ", name, " registry after registering ", size(), " items");
 				}
 			}
-		}
-
-		constexpr bool is_locked() const {
-			return locked;
 		}
 
 		constexpr void reset() {
