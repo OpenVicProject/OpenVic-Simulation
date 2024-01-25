@@ -72,17 +72,17 @@ namespace OpenVic {
 	using ordered_set = vector_ordered_set<Key, Hash, KeyEqual, Allocator, IndexType>;
 
 	template<typename T>
-	concept IsOrderedMap = utility::is_specialization_of_v<T, tsl::ordered_map>;
+	concept IsOrderedMap = utility::is_derived_from_specialization_of<T, tsl::ordered_map>;
 	template<typename T>
-	concept IsOrderedSet = utility::is_specialization_of_v<T, tsl::ordered_set>;
+	concept IsOrderedSet = utility::is_derived_from_specialization_of<T, tsl::ordered_set>;
 	template<typename T>
-	concept IsVectorOrderedMap = utility::is_specialization_of_v<T, vector_ordered_map>;
+	concept IsVectorOrderedMap = utility::is_derived_from_specialization_of<T, vector_ordered_map>;
 	template<typename T>
-	concept IsVectorOrderedSet = utility::is_specialization_of_v<T, vector_ordered_set>;
+	concept IsVectorOrderedSet = utility::is_derived_from_specialization_of<T, vector_ordered_set>;
 	template<typename T>
-	concept IsDequeOrderedMap = utility::is_specialization_of_v<T, deque_ordered_map>;
+	concept IsDequeOrderedMap = utility::is_derived_from_specialization_of<T, deque_ordered_map>;
 	template<typename T>
-	concept IsDequeOrderedSet = utility::is_specialization_of_v<T, deque_ordered_set>;
+	concept IsDequeOrderedSet = utility::is_derived_from_specialization_of<T, deque_ordered_set>;
 
 	template<typename T, typename Key, typename Value>
 	concept IsOrderedMapOf =
@@ -162,4 +162,44 @@ namespace OpenVic {
 
 	template<class Key, class Allocator = std::allocator<Key>, class IndexType = std::uint_least32_t>
 	using case_insensitive_ordered_set = case_insensitive_vector_ordered_set<Key, Allocator, IndexType>;
+
+	template<typename Case>
+	concept StringMapCase = requires(std::string_view identifier) {
+		{ typename Case::hash {}(identifier) } -> std::same_as<std::size_t>;
+		{ typename Case::equal {}(identifier, identifier) } -> std::same_as<bool>;
+	};
+	struct StringMapCaseSensitive {
+		using hash = container_hash<std::string>;
+		using equal = std::equal_to<>;
+	};
+	struct StringMapCaseInsensitive {
+		using hash = case_insensitive_string_hash;
+		using equal = case_insensitive_string_equal;
+	};
+
+	/* Intermediate struct that "remembers" Case, instead of just decomposing it into its hash and equal components,
+	 * needed so that templates can deduce the Case with which a type was defined. */
+	template<template<typename...> typename Container, StringMapCase Case, typename... Args>
+	struct template_case_container_t : Container<Args..., typename Case::hash, typename Case::equal> {
+		using container_t = Container<Args..., typename Case::hash, typename Case::equal>;
+		using container_t::container_t;
+
+		using case_t = Case;
+	};
+
+	/* Template for map with string keys, supporting search by string_view without creating an intermediate string. */
+	template<typename T, StringMapCase Case>
+	using template_string_map_t = template_case_container_t<ordered_map, Case, std::string, T>;
+
+	template<typename T>
+	using string_map_t = template_string_map_t<T, StringMapCaseSensitive>;
+	template<typename T>
+	using case_insensitive_string_map_t = template_string_map_t<T, StringMapCaseInsensitive>;
+
+	/* Template for set with string elements, supporting search by string_view without creating an intermediate string. */
+	template<StringMapCase Case>
+	using template_string_set_t = template_case_container_t<ordered_set, Case, std::string>;
+
+	using string_set_t = template_string_set_t<StringMapCaseSensitive>;
+	using case_insensitive_string_set_t = template_string_set_t<StringMapCaseInsensitive>;
 }

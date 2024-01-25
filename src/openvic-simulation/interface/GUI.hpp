@@ -23,9 +23,9 @@ namespace OpenVic::GUI {
 	protected:
 		Element();
 
-		bool _fill_key_map(NodeTools::key_map_t& key_map, UIManager const& ui_manager) override;
+		bool _fill_key_map(NodeTools::case_insensitive_key_map_t& key_map, UIManager const& ui_manager) override;
 		static bool _fill_elements_key_map(
-			NodeTools::key_map_t& key_map, NodeTools::callback_t<std::unique_ptr<Element>&&> callback,
+			NodeTools::case_insensitive_key_map_t& key_map, NodeTools::callback_t<std::unique_ptr<Element>&&> callback,
 			UIManager const& ui_manager
 		);
 
@@ -45,7 +45,7 @@ namespace OpenVic::GUI {
 	protected:
 		Scene() = default;
 
-		bool _fill_key_map(NodeTools::key_map_t& key_map, UIManager const& ui_manager) override;
+		bool _fill_key_map(NodeTools::case_insensitive_key_map_t& key_map, UIManager const& ui_manager) override;
 
 	public:
 		Scene(Scene&&) = default;
@@ -72,7 +72,7 @@ namespace OpenVic::GUI {
 	protected:
 		Window();
 
-		bool _fill_key_map(NodeTools::key_map_t& key_map, UIManager const& ui_manager) override;
+		bool _fill_key_map(NodeTools::case_insensitive_key_map_t& key_map, UIManager const& ui_manager) override;
 
 	public:
 		Window(Window&&) = default;
@@ -90,7 +90,7 @@ namespace OpenVic::GUI {
 	protected:
 		Icon();
 
-		bool _fill_key_map(NodeTools::key_map_t& key_map, UIManager const& ui_manager) override;
+		bool _fill_key_map(NodeTools::case_insensitive_key_map_t& key_map, UIManager const& ui_manager) override;
 
 	public:
 		Icon(Icon&&) = default;
@@ -106,7 +106,7 @@ namespace OpenVic::GUI {
 	protected:
 		BaseButton();
 
-		bool _fill_key_map(NodeTools::key_map_t& key_map, UIManager const& ui_manager) override;
+		bool _fill_key_map(NodeTools::case_insensitive_key_map_t& key_map, UIManager const& ui_manager) override;
 
 	public:
 		BaseButton(BaseButton&&) = default;
@@ -126,7 +126,7 @@ namespace OpenVic::GUI {
 	protected:
 		Button();
 
-		bool _fill_key_map(NodeTools::key_map_t& key_map, UIManager const& ui_manager) override;
+		bool _fill_key_map(NodeTools::case_insensitive_key_map_t& key_map, UIManager const& ui_manager) override;
 
 	public:
 		Button(Button&&) = default;
@@ -141,7 +141,7 @@ namespace OpenVic::GUI {
 	protected:
 		Checkbox() = default;
 
-		bool _fill_key_map(NodeTools::key_map_t& key_map, UIManager const& ui_manager) override;
+		bool _fill_key_map(NodeTools::case_insensitive_key_map_t& key_map, UIManager const& ui_manager) override;
 
 	public:
 		Checkbox(Checkbox&&) = default;
@@ -162,7 +162,7 @@ namespace OpenVic::GUI {
 	protected:
 		AlignedElement();
 
-		bool _fill_key_map(NodeTools::key_map_t& key_map, UIManager const& ui_manager) override;
+		bool _fill_key_map(NodeTools::case_insensitive_key_map_t& key_map, UIManager const& ui_manager) override;
 
 	public:
 		AlignedElement(AlignedElement&&) = default;
@@ -183,7 +183,7 @@ namespace OpenVic::GUI {
 	protected:
 		Text();
 
-		bool _fill_key_map(NodeTools::key_map_t& key_map, UIManager const& ui_manager) override;
+		bool _fill_key_map(NodeTools::case_insensitive_key_map_t& key_map, UIManager const& ui_manager) override;
 
 	public:
 		Text(Text&&) = default;
@@ -201,7 +201,7 @@ namespace OpenVic::GUI {
 	protected:
 		OverlappingElementsBox();
 
-		bool _fill_key_map(NodeTools::key_map_t& key_map, UIManager const& ui_manager) override;
+		bool _fill_key_map(NodeTools::case_insensitive_key_map_t& key_map, UIManager const& ui_manager) override;
 
 	public:
 		OverlappingElementsBox(OverlappingElementsBox&&) = default;
@@ -220,7 +220,7 @@ namespace OpenVic::GUI {
 	protected:
 		ListBox();
 
-		bool _fill_key_map(NodeTools::key_map_t& key_map, UIManager const& ui_manager) override;
+		bool _fill_key_map(NodeTools::case_insensitive_key_map_t& key_map, UIManager const& ui_manager) override;
 
 	public:
 		ListBox(ListBox&&) = default;

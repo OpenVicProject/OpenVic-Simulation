@@ -1,7 +1,5 @@
 #include "TerrainType.hpp"
 
-#include <limits>
-
 #include "openvic-simulation/types/Colour.hpp"
 
 using namespace OpenVic;
@@ -132,7 +130,9 @@ TerrainTypeMapping::index_t TerrainTypeManager::get_terrain_texture_limit() cons
 bool TerrainTypeManager::load_terrain_types(ModifierManager const& modifier_manager, ast::NodeCPtr root) {
 	const bool ret = expect_dictionary_keys_reserve_length_and_default(
 		terrain_type_mappings,
-		std::bind_front(&TerrainTypeManager::_load_terrain_type_mapping, this),
+		[this](std::string_view key, ast::NodeCPtr value) -> bool {
+			return _load_terrain_type_mapping(key, value);
+		},
 		"terrain", ONE_EXACTLY, expect_uint(assign_variable_callback(terrain_texture_limit)),
 		"categories", ONE_EXACTLY, _load_terrain_type_categories(modifier_manager)
 	)(root);

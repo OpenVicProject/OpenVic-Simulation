@@ -230,7 +230,7 @@ bool ProductionTypeManager::load_production_types_file(
 				{ "factory", FACTORY }, { "rgo", RGO }, { "artisan", ARTISAN }
 			};
 
-			const auto parse_node = expect_dictionary_keys(
+			auto parse_node = expect_dictionary_keys(
 				"template", ZERO_OR_ONE, success_callback, /* Already parsed using expect_key in Pass #1 above. */
 				"bonus", ZERO_OR_MORE, [&bonuses](ast::NodeCPtr bonus_node) -> bool {
 					ConditionScript trigger { scope_t::STATE, scope_t::NO_SCOPE, scope_t::NO_SCOPE };

@@ -1,7 +1,6 @@
 #include "NodeTools.hpp"
 
 #include "openvic-simulation/types/Colour.hpp"
-#include "openvic-simulation/utility/TslHelper.hpp"
 
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;
@@ -70,7 +69,7 @@ node_callback_t NodeTools::expect_identifier_or_string(callback_t<std::string_vi
 }
 
 node_callback_t NodeTools::expect_bool(callback_t<bool> callback) {
-	static const case_insensitive_string_map_t<bool> bool_map = { { "yes", true }, { "no", false } };
+	static const case_insensitive_string_map_t<bool> bool_map { { "yes", true }, { "no", false } };
 	return expect_identifier(expect_mapped_string(bool_map, callback));
 }
 
@@ -322,82 +321,6 @@ node_callback_t NodeTools::expect_dictionary_and_length(length_callback_t length
 
 node_callback_t NodeTools::expect_dictionary(key_value_callback_t callback) {
 	return expect_dictionary_and_length(default_length_callback, callback);
-}
-
-bool NodeTools::add_key_map_entry(
-	key_map_t& key_map, std::string_view key, dictionary_entry_t::expected_count_t expected_count, node_callback_t callback
-) {
-	if (!key_map.contains(key)) {
-		key_map.emplace(key, dictionary_entry_t { expected_count, callback });
-		return true;
-	}
-	Logger::error("Duplicate expected dictionary key: ", key);
-	return false;
-}
-
-bool NodeTools::remove_key_map_entry(key_map_t& key_map, std::string_view key) {
-	if (key_map.erase(key) == 0) {
-		Logger::error("Failed to find dictionary key to remove: ", key);
-		return false;
-	}
-	return true;
-}
-
-key_value_callback_t NodeTools::dictionary_keys_callback(key_map_t& key_map, key_value_callback_t default_callback) {
-	return [&key_map, default_callback](std::string_view key, ast::NodeCPtr value) -> bool {
-		key_map_t::iterator it = key_map.find(key);
-		if (it == key_map.end()) {
-			return default_callback(key, value);
-		}
-		dictionary_entry_t& entry = it.value();
-		if (++entry.count > 1 && !entry.can_repeat()) {
-			Logger::error("Invalid repeat of dictionary key: ", key);
-			return false;
-		}
-		if (entry.callback(value)) {
-			return true;
-		} else {
-			Logger::error("Callback failed for dictionary key: ", key);
-			return false;
-		}
-	};
-}
-
-bool NodeTools::check_key_map_counts(key_map_t& key_map) {
-	bool ret = true;
-	for (auto key_entry : mutable_iterator(key_map)) {
-		dictionary_entry_t& entry = key_entry.second;
-		if (entry.must_appear() && entry.count < 1) {
-			Logger::error("Mandatory dictionary key not present: ", key_entry.first);
-			ret = false;
-		}
-		entry.count = 0;
-	}
-	return ret;
-}
-
-node_callback_t NodeTools::expect_dictionary_key_map_and_length_and_default(
-	key_map_t key_map, length_callback_t length_callback, key_value_callback_t default_callback
-) {
-	return [length_callback, default_callback, key_map = std::move(key_map)](ast::NodeCPtr node) mutable -> bool {
-		bool ret = expect_dictionary_and_length(length_callback, dictionary_keys_callback(key_map, default_callback))(node);
-		ret &= check_key_map_counts(key_map);
-		return ret;
-	};
-}
-
-node_callback_t NodeTools::expect_dictionary_key_map_and_length(key_map_t key_map, length_callback_t length_callback) {
-	return expect_dictionary_key_map_and_length_and_default(std::move(key_map), length_callback, key_value_invalid_callback);
-}
-
-node_callback_t NodeTools::expect_dictionary_key_map_and_default(key_map_t key_map, key_value_callback_t default_callback) {
-	return expect_dictionary_key_map_and_length_and_default(std::move(key_map), default_length_callback, default_callback);
-}
-
-node_callback_t NodeTools::expect_dictionary_key_map(key_map_t key_map) {
-	return expect_dictionary_key_map_and_length_and_default(
-		std::move(key_map), default_length_callback, key_value_invalid_callback
-	);
 }
 
 node_callback_t NodeTools::name_list_callback(callback_t<name_list_t&&> callback) {
