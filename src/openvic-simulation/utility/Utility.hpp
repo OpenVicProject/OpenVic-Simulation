@@ -72,6 +72,9 @@ namespace OpenVic::utility {
 		}
 	}
 
+	template<typename T, typename... Compare>
+	concept any_of = (std::same_as<T, Compare> || ...);
+
 	template<typename T, template<typename...> class Z>
 	struct is_specialization_of : std::false_type {};
 
