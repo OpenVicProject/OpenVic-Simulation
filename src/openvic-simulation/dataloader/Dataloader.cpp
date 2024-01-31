@@ -795,6 +795,7 @@ bool Dataloader::load_defines(GameManager& game_manager) {
 	static constexpr std::string_view buildings_file = "common/buildings.txt";
 	static constexpr std::string_view bookmark_file = "common/bookmarks.txt";
 	static constexpr std::string_view countries_file = "common/countries.txt";
+	static constexpr std::string_view country_colours_file = "common/country_colors.txt";
 	static constexpr std::string_view culture_file = "common/cultures.txt";
 	static constexpr std::string_view governments_file = "common/governments.txt";
 	static constexpr std::string_view graphical_culture_type_file = "common/graphicalculturetype.txt";
@@ -970,6 +971,12 @@ bool Dataloader::load_defines(GameManager& game_manager) {
 		game_manager, *this, parse_defines(lookup_file(countries_file)).get_file_node()
 	)) {
 		Logger::error("Failed to load countries!");
+		ret = false;
+	}
+	if (!game_manager.get_country_manager().load_country_colours(
+		parse_defines(lookup_file(country_colours_file)).get_file_node()
+	)) {
+		Logger::error("Failed to load country colours!");
 		ret = false;
 	}
 	if (!game_manager.get_pop_manager().get_culture_manager().load_culture_file(

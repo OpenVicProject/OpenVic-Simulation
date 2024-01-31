@@ -63,11 +63,16 @@ namespace OpenVic {
 		const unit_names_map_t PROPERTY(unit_names);
 		const bool PROPERTY_CUSTOM_PREFIX(dynamic_tag, is);
 		const government_colour_map_t PROPERTY(alternative_colours);
+		colour_t PROPERTY(primary_unit_colour);
+		colour_t PROPERTY(secondary_unit_colour);
+		colour_t PROPERTY(tertiary_unit_colour);
+		// Unit colours not const due to being added after construction
 
 		Country(
 			std::string_view new_identifier, colour_t new_colour, GraphicalCultureType const& new_graphical_culture,
 			IdentifierRegistry<CountryParty>&& new_parties, unit_names_map_t&& new_unit_names, bool new_dynamic_tag,
-			government_colour_map_t&& new_alternative_colours
+			government_colour_map_t&& new_alternative_colours, 
+			colour_t new_primary_unit_colour, colour_t new_secondary_unit_colour, colour_t new_tertiary_unit_colour
 		);
 
 	public:
@@ -88,8 +93,11 @@ namespace OpenVic {
 		bool add_country(
 			std::string_view identifier, colour_t colour, GraphicalCultureType const* graphical_culture,
 			IdentifierRegistry<CountryParty>&& parties, Country::unit_names_map_t&& unit_names, bool dynamic_tag,
-			Country::government_colour_map_t&& alternative_colours
+			Country::government_colour_map_t&& alternative_colours, 
+			colour_t primary_unit_colour, colour_t secondary_unit_colour, colour_t tertiary_unit_colour
 		);
+
+		bool load_country_colours(ast::NodeCPtr root);
 
 		bool load_countries(GameManager const& game_manager, Dataloader const& dataloader, ast::NodeCPtr root);
 		bool load_country_data_file(

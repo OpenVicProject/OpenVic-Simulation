@@ -24,17 +24,33 @@ CountryParty::CountryParty(
 	policies { std::move(new_policies) } {}
 
 Country::Country(
-	std::string_view new_identifier, colour_t new_colour, GraphicalCultureType const& new_graphical_culture,
-	IdentifierRegistry<CountryParty>&& new_parties, unit_names_map_t&& new_unit_names, bool new_dynamic_tag,
-	government_colour_map_t&& new_alternative_colours
-) : HasIdentifierAndColour { new_identifier, new_colour, false }, graphical_culture { new_graphical_culture },
-	parties { std::move(new_parties) }, unit_names { std::move(new_unit_names) }, dynamic_tag { new_dynamic_tag },
-	alternative_colours { std::move(new_alternative_colours) } {}
+	std::string_view new_identifier,
+	colour_t new_colour,
+	GraphicalCultureType const& new_graphical_culture,
+	IdentifierRegistry<CountryParty>&& new_parties, 
+	unit_names_map_t&& new_unit_names, 
+	bool new_dynamic_tag,
+	government_colour_map_t&& new_alternative_colours,
+	colour_t new_primary_unit_colour,
+	colour_t new_secondary_unit_colour,
+	colour_t new_tertiary_unit_colour
+) : HasIdentifierAndColour { 
+	new_identifier, new_colour, false }, 
+	graphical_culture { new_graphical_culture },
+	parties { std::move(new_parties) }, 
+	unit_names { std::move(new_unit_names) }, 
+	dynamic_tag { new_dynamic_tag },
+	alternative_colours { std::move(new_alternative_colours) },
+	primary_unit_colour { new_primary_unit_colour },
+	secondary_unit_colour { new_secondary_unit_colour },
+	tertiary_unit_colour { new_tertiary_unit_colour } 
+	{}
 
 bool CountryManager::add_country(
 	std::string_view identifier, colour_t colour, GraphicalCultureType const* graphical_culture,
 	IdentifierRegistry<CountryParty>&& parties, Country::unit_names_map_t&& unit_names, bool dynamic_tag,
-	Country::government_colour_map_t&& alternative_colours
+	Country::government_colour_map_t&& alternative_colours, 
+	colour_t primary_unit_colour, colour_t secondary_unit_colour, colour_t tertiary_unit_colour
 ) {
 	if (identifier.empty()) {
 		Logger::error("Invalid country identifier - empty!");
@@ -53,7 +69,7 @@ bool CountryManager::add_country(
 
 	return countries.add_item({
 		identifier, colour, *graphical_culture, std::move(parties), std::move(unit_names), dynamic_tag,
-		std::move(alternative_colours)
+		std::move(alternative_colours), primary_unit_colour, secondary_unit_colour, tertiary_unit_colour
 	});
 }
 
@@ -99,6 +115,16 @@ bool CountryManager::load_countries(GameManager const& game_manager, Dataloader 
 	)(root);
 	lock_countries();
 	return ret;
+}
+
+bool CountryManager::load_country_colours(ast::NodeCPtr root){
+	return countries.expect_item_dictionary([](Country& country, ast::NodeCPtr colour_node) -> bool {
+		return expect_dictionary_keys(
+			"color1", ONE_EXACTLY, expect_colour(assign_variable_callback(country.primary_unit_colour)),
+			"color2", ONE_EXACTLY, expect_colour(assign_variable_callback(country.secondary_unit_colour)),
+			"color3", ONE_EXACTLY, expect_colour(assign_variable_callback(country.tertiary_unit_colour))
+		)(colour_node);
+	})(root);
 }
 
 node_callback_t CountryManager::load_country_party(
@@ -180,7 +206,7 @@ bool CountryManager::load_country_data_file(
 
 	ret &= add_country(
 		name, colour, graphical_culture, std::move(parties), std::move(unit_names), is_dynamic,
-		std::move(alternative_colours)
+		std::move(alternative_colours), colour_t::null(), colour_t::null(), colour_t::null()
 	);
 	return ret;
 }
