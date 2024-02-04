@@ -75,16 +75,16 @@ namespace OpenVic {
 			size_t message_count;
 		};
 
-		template<typename... Ts>
+		template<typename... Args>
 		struct log {
-			log(log_channel_t& log_channel, Ts&&... ts, source_location const& location) {
+			log(log_channel_t& log_channel, Args&&... args, source_location const& location) {
 				std::stringstream stream;
 				stream << StringUtils::get_filename(location.file_name()) << "("
 					/* Function name removed to reduce clutter. It is already included
 					* in Godot's print functions, so this was repeating it. */
 					//<< location.line() << ") `" << location.function_name() << "`: ";
 					<< location.line() << "): ";
-				((stream << std::forward<Ts>(ts)), ...);
+				((stream << std::forward<Args>(args)), ...);
 				stream << std::endl;
 				log_channel.queue.push(stream.str());
 				if (log_channel.func) {
@@ -109,19 +109,28 @@ public: \
 	static inline size_t get_##name##_count() { \
 		return name##_channel.message_count; \
 	} \
-	template<typename... Ts> \
+	template<typename... Args> \
 	struct name { \
-		name(Ts&&... ts, source_location const& location = source_location::current()) { \
-			log<Ts...> { name##_channel, std::forward<Ts>(ts)..., location }; \
+		name(Args&&... args, source_location const& location = source_location::current()) { \
+			log<Args...> { name##_channel, std::forward<Args>(args)..., location }; \
 		} \
 	}; \
-	template<typename... Ts> \
-	name(Ts&&...) -> name<Ts...>;
+	template<typename... Args> \
+	name(Args&&...) -> name<Args...>;
 
 		LOG_FUNC(info)
 		LOG_FUNC(warning)
 		LOG_FUNC(error)
 
 #undef LOG_FUNC
+
+		template<typename... Args>
+		static inline constexpr void warn_or_error(bool warn, Args&&... args) {
+			if (warn) {
+				warning(std::forward<Args>(args)...);
+			} else {
+				error(std::forward<Args>(args)...);
+			}
+		}
 	};
 }

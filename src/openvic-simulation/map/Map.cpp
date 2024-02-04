@@ -80,7 +80,7 @@ Province::distance_t Map::calculate_distance_between(Province const& from, Provi
 		)
 	);
 
-	return fvec2_t { min_x, to_pos.y - from_pos.y}.length_squared().sqrt();
+	return fvec2_t { min_x, to_pos.y - from_pos.y }.length_squared().sqrt();
 }
 
 using adjacency_t = Province::adjacency_t;

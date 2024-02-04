@@ -169,6 +169,14 @@ node_callback_t NodeTools::expect_date(callback_t<Date> callback) {
 	return expect_identifier(expect_date_str(callback));
 }
 
+node_callback_t NodeTools::expect_date_string(callback_t<Date> callback) {
+	return expect_string(expect_date_str(callback));
+}
+
+node_callback_t NodeTools::expect_date_identifier_or_string(callback_t<Date> callback) {
+	return expect_identifier_or_string(expect_date_str(callback));
+}
+
 node_callback_t NodeTools::expect_years(callback_t<Timespan> callback) {
 	return expect_uint<Timespan::day_t>([callback](Timespan::day_t val) -> bool {
 		return callback(Timespan::from_years(val));

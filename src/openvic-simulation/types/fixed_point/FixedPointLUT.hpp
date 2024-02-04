@@ -1,15 +1,10 @@
 #pragma once
 
-#include <array>
-#include <cmath>
-#include <cstddef>
 #include <cstdint>
-#include <numbers>
-#include <utility>
 
 namespace OpenVic::FPLUT {
 
-#include "FixedPointLUT_sin.hpp"
+#include "openvic-simulation/types/fixed_point/FixedPointLUT_sin.hpp"
 
 	constexpr int32_t SHIFT = SIN_LUT_PRECISION - SIN_LUT_COUNT_LOG2;
 

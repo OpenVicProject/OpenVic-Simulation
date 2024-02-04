@@ -1,16 +1,19 @@
 #pragma once
 
 #include <algorithm>
+#include <array>
 #include <cstdint>
 #include <ostream>
 #include <string>
 
-#include "openvic-simulation/utility/Getters.hpp"
 #include "openvic-simulation/utility/Utility.hpp"
 
 namespace OpenVic {
 	// A relative period between points in time, measured in days
-	struct Timespan : ReturnByValueProperty {
+	struct Timespan {
+		/* PROPERTY generated getter functions will return timespans by value, rather than const reference. */
+		using ov_return_by_value = void;
+
 		using day_t = int64_t;
 
 	private:
@@ -86,7 +89,10 @@ namespace OpenVic {
 
 	// Represents an in-game date
 	// Note: Current implementation does not account for leap-years, or dates before Year 0
-	struct Date : ReturnByValueProperty {
+	struct Date {
+		/* PROPERTY generated getter functions will return dates by value, rather than const reference. */
+		using ov_return_by_value = void;
+
 		using year_t = uint16_t;
 		using month_t = uint8_t;
 		using day_t = uint8_t;

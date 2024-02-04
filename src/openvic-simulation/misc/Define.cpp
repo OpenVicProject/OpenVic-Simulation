@@ -95,9 +95,7 @@ bool DefineManager::load_defines_file(ast::NodeCPtr root) {
 
 			} else if (key == "start_date" || key == "end_date") {
 
-				return expect_identifier_or_string(expect_date_str(
-					std::bind_front(&DefineManager::add_date_define, this, key)
-				))(value);
+				return expect_date_identifier_or_string(std::bind_front(&DefineManager::add_date_define, this, key))(value);
 
 			} else {
 				return false;
