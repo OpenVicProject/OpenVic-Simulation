@@ -7,7 +7,9 @@ using namespace OpenVic::NodeTools;
 using namespace OpenVic::GFX;
 using namespace OpenVic::GUI;
 
-bool UIManager::add_font(std::string_view identifier, colour_argb_t colour, std::string_view fontname) {
+bool UIManager::add_font(
+	std::string_view identifier, colour_argb_t colour, std::string_view fontname, std::string_view charset, uint32_t height
+) {
 	if (identifier.empty()) {
 		Logger::error("Invalid font identifier - empty!");
 		return false;
@@ -20,21 +22,37 @@ bool UIManager::add_font(std::string_view identifier, colour_argb_t colour, std:
 		Logger::error("Invalid fontname for font ", identifier, " - empty!");
 		return false;
 	}
-	return fonts.add_item({ identifier, colour, fontname }, duplicate_warning_callback);
+	return fonts.add_item({ identifier, colour, fontname, charset, height }, duplicate_warning_callback);
 }
 
 bool UIManager::_load_font(ast::NodeCPtr node) {
-	std::string_view identifier, fontname;
+	std::string_view identifier, fontname, charset;
 	colour_argb_t colour = colour_argb_t::null();
+	uint32_t height = 0;
 	bool ret = expect_dictionary_keys(
 		"name", ONE_EXACTLY, expect_string(assign_variable_callback(identifier)),
 		"fontname", ONE_EXACTLY, expect_string(assign_variable_callback(fontname)),
 		"color", ONE_EXACTLY, expect_colour_hex(assign_variable_callback(colour)),
+		"charset", ZERO_OR_ONE, expect_string(assign_variable_callback(charset)),
+		"height", ZERO_OR_ONE, expect_uint(assign_variable_callback(height)),
 		"colorcodes", ZERO_OR_ONE, success_callback,
 		"effect", ZERO_OR_ONE, success_callback
 	)(node);
-	ret &= add_font(identifier, colour, fontname);
+	ret &= add_font(identifier, colour, fontname, charset, height);
 	return ret;
+}
+
+NodeCallback auto UIManager::_load_fonts(std::string_view font_key) {
+	return expect_dictionary_reserve_length(
+		fonts,
+		[this, font_key](std::string_view key, ast::NodeCPtr node) -> bool {
+			if (key != font_key) {
+				Logger::error("Invalid key: \"", key, "\" (expected ", font_key, ")");
+				return false;
+			}
+			return _load_font(node);
+		}
+	);
 }
 
 bool UIManager::load_gfx_file(ast::NodeCPtr root) {
@@ -65,19 +83,10 @@ bool UIManager::load_gfx_file(ast::NodeCPtr root) {
 				return sprites.add_item(std::move(sprite), duplicate_warning_callback);
 			}
 		),
-		"bitmapfonts", ZERO_OR_ONE, expect_dictionary_reserve_length(
-			fonts,
-			[this](std::string_view key, ast::NodeCPtr node) -> bool {
-				if (key != "bitmapfont") {
-					Logger::error("Invalid bitmapfonts key: ", key);
-					return false;
-				}
-				return _load_font(node);
-			}
-		),
+		"bitmapfonts", ZERO_OR_ONE, _load_fonts("bitmapfont"),
+		"fonts", ZERO_OR_ONE, _load_fonts("font"),
 		"objectTypes", ZERO_OR_ONE, success_callback,
-		"lightTypes", ZERO_OR_ONE, success_callback,
-		"fonts", ZERO_OR_ONE, success_callback
+		"lightTypes", ZERO_OR_ONE, success_callback
 	)(root);
 }
 

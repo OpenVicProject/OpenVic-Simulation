@@ -8,12 +8,27 @@ namespace OpenVic {
 namespace OpenVic::GUI {
 	class Scene;
 
+	class Position final : public Named<> {
+		friend class LoadBase;
+
+		fvec2_t PROPERTY(position);
+
+	protected:
+		Position();
+
+		bool _fill_key_map(NodeTools::case_insensitive_key_map_t& key_map) override;
+
+	public:
+		Position(Position&&) = default;
+		virtual ~Position() = default;
+	};
+
 	class Element : public Named<UIManager const&> {
 		friend class Scene;
 
 	public:
 		enum class orientation_t {
-			UPPER_LEFT, LOWER_LEFT, LOWER_RIGHT, UPPER_RIGHT, CENTER
+			UPPER_LEFT, LOWER_LEFT, LOWER_RIGHT, UPPER_RIGHT, CENTER, CENTER_UP, CENTER_DOWN
 		};
 
 	private:
@@ -37,10 +52,13 @@ namespace OpenVic::GUI {
 		OV_DETAIL_GET_TYPE
 	};
 
+	using element_instance_registry_t = NamedInstanceRegistry<Element, UIManager const&>;
+
 	class Scene : public Named<UIManager const&> {
 		friend std::unique_ptr<Scene> std::make_unique<Scene>();
 
-		NamedInstanceRegistry<Element, UIManager const&> IDENTIFIER_REGISTRY(scene_element);
+		element_instance_registry_t IDENTIFIER_REGISTRY(scene_element);
+		NamedRegistry<Position> IDENTIFIER_REGISTRY(scene_position);
 
 	protected:
 		Scene() = default;
@@ -62,12 +80,14 @@ namespace OpenVic::GUI {
 	class Window final : public Element {
 		friend std::unique_ptr<Window> std::make_unique<Window>();
 
-		NamedInstanceRegistry<Element, UIManager const&> IDENTIFIER_REGISTRY(window_element);
+		element_instance_registry_t IDENTIFIER_REGISTRY(window_element);
 
+		std::string PROPERTY(background); /* The name of a child button who's sprite is used as the background. */
 		fvec2_t PROPERTY(size);
 		bool PROPERTY(moveable);
 		bool PROPERTY(fullscreen);
-		// TODO - background, dontRender, horizontalBorder, verticalBorder
+
+		// TODO - dontRender, horizontalBorder, verticalBorder
 
 	protected:
 		Window();
@@ -86,6 +106,8 @@ namespace OpenVic::GUI {
 
 		GFX::Sprite const* PROPERTY(sprite);
 		GFX::frame_t PROPERTY(frame);
+		fixed_point_t PROPERTY(scale);
+		fixed_point_t PROPERTY(rotation); /* In radians, usually one of 0, PI/2 or -PI/2. */
 
 	protected:
 		Icon();
@@ -101,6 +123,9 @@ namespace OpenVic::GUI {
 
 	class BaseButton : public Element {
 		GFX::Sprite const* PROPERTY(sprite);
+		std::string PROPERTY(text);
+		GFX::Font const* PROPERTY(font);
+
 		// TODO - shortcut
 
 	protected:
@@ -118,8 +143,8 @@ namespace OpenVic::GUI {
 	class Button final : public BaseButton {
 		friend std::unique_ptr<Button> std::make_unique<Button>();
 
-		std::string PROPERTY(text);
-		GFX::Font const* PROPERTY(font);
+		fvec2_t PROPERTY(size);
+		fixed_point_t PROPERTY(rotation); /* In radians, usually one of 0, PI/2 or -PI/2. */
 
 		// TODO - clicksound
 
@@ -153,7 +178,7 @@ namespace OpenVic::GUI {
 	class AlignedElement : public Element {
 	public:
 		enum class format_t {
-			left, centre, right
+			left, centre, right, justified
 		};
 
 	private:
@@ -176,7 +201,7 @@ namespace OpenVic::GUI {
 
 		std::string PROPERTY(text);
 		GFX::Font const* PROPERTY(font);
-		fvec2_t PROPERTY(max_size); // maxWidth, maxHeight
+		fvec2_t PROPERTY(max_size); /* Defines keys: maxWidth, maxHeight */
 
 		// TODO - borderSize, fixedsize, textureFile
 
@@ -214,8 +239,11 @@ namespace OpenVic::GUI {
 		friend std::unique_ptr<ListBox> std::make_unique<ListBox>();
 
 		fvec2_t PROPERTY(size);
+		fvec2_t PROPERTY(offset);
+		fixed_point_t PROPERTY(spacing);
+		std::string PROPERTY(scrollbar_name); /* In vanilla this is always core's standardlistbox_slider */
 
-		// TODO - backGround, spacing, scrollbartype, borderSize
+		// TODO - backGround, borderSize
 
 	protected:
 		ListBox();
@@ -225,6 +253,74 @@ namespace OpenVic::GUI {
 	public:
 		ListBox(ListBox&&) = default;
 		virtual ~ListBox() = default;
+
+		OV_DETAIL_GET_TYPE
+	};
+
+	class TextEditBox final : public Element {
+		friend std::unique_ptr<TextEditBox> std::make_unique<TextEditBox>();
+
+		std::string PROPERTY(text);
+		GFX::Font const* PROPERTY(font);
+		std::string PROPERTY(texture_file);
+		fvec2_t PROPERTY(size);
+		fvec2_t PROPERTY(border_size);
+
+	protected:
+		TextEditBox();
+
+		bool _fill_key_map(NodeTools::case_insensitive_key_map_t& key_map, UIManager const& ui_manager) override;
+
+	public:
+		TextEditBox(TextEditBox&&) = default;
+		virtual ~TextEditBox() = default;
+
+		OV_DETAIL_GET_TYPE
+	};
+
+	class Scrollbar final : public Element {
+		friend std::unique_ptr<Scrollbar> std::make_unique<Scrollbar>();
+
+		element_instance_registry_t IDENTIFIER_REGISTRY(scrollbar_element);
+
+		std::string PROPERTY(slider_button_name);
+		std::string PROPERTY(track_button_name);
+		std::string PROPERTY(less_button_name);
+		std::string PROPERTY(more_button_name);
+
+		fvec2_t PROPERTY(size);
+		fvec2_t PROPERTY(border_size);
+		fixed_point_t PROPERTY(min_value);
+		fixed_point_t PROPERTY(max_value);
+		fixed_point_t PROPERTY(step_size);
+		fixed_point_t PROPERTY(start_value);
+		bool PROPERTY_CUSTOM_PREFIX(horizontal, is)
+
+		bool PROPERTY(use_range_limit);
+		fixed_point_t PROPERTY(range_limit_min);
+		fixed_point_t PROPERTY(range_limit_max);
+		std::string PROPERTY(range_limit_min_icon_name);
+		std::string PROPERTY(range_limit_max_icon_name);
+
+		template<std::derived_from<Element> T>
+		T const* get_element(std::string_view name, std::string_view type) const;
+
+	protected:
+		Scrollbar();
+
+		bool _fill_key_map(NodeTools::case_insensitive_key_map_t& key_map, UIManager const& ui_manager) override;
+
+	public:
+		Scrollbar(Scrollbar&&) = default;
+		virtual ~Scrollbar() = default;
+
+		Button const* get_slider_button() const;
+		Button const* get_track_button() const;
+		Button const* get_less_button() const;
+		Button const* get_more_button() const;
+
+		Icon const* get_range_limit_min_icon() const;
+		Icon const* get_range_limit_max_icon() const;
 
 		OV_DETAIL_GET_TYPE
 	};

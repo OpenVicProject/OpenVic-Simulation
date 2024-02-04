@@ -23,6 +23,18 @@ namespace OpenVic {
 			return ret;
 		}
 
+		template<std::derived_from<LoadBase<Context...>> T>
+		static NodeTools::node_callback_t _expect_value(
+			NodeTools::callback_t<T&&> callback, Context... context
+		) {
+			return [callback, &context...](ast::NodeCPtr node) -> bool {
+				T value {};
+				bool ret = value.load(node, context...);
+				ret &= callback(std::move(value));
+				return ret;
+			};
+		}
+
 		template<std::derived_from<LoadBase<Context...>> T, std::derived_from<T> U>
 		static NodeTools::node_callback_t _expect_instance(
 			NodeTools::callback_t<std::unique_ptr<T>&&> callback, Context... context
