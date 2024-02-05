@@ -1,22 +1,21 @@
 #pragma once
 
-#include <cerrno>
-#include <cmath>
 #include <cstdint>
 #include <cstdlib>
 #include <limits>
 #include <sstream>
 #include <string_view>
 
-#include "openvic-simulation/utility/Getters.hpp"
+#include "openvic-simulation/types/fixed_point/FixedPointLUT.hpp"
 #include "openvic-simulation/utility/Logger.hpp"
 #include "openvic-simulation/utility/NumberUtils.hpp"
 #include "openvic-simulation/utility/StringUtils.hpp"
 
-#include "FixedPointLUT.hpp"
-
 namespace OpenVic {
-	struct fixed_point_t : ReturnByValueProperty {
+	struct fixed_point_t {
+		/* PROPERTY generated getter functions will return fixed points by value, rather than const reference. */
+		using ov_return_by_value = void;
+
 		static constexpr size_t SIZE = 8;
 
 		static constexpr int32_t PRECISION = FPLUT::SIN_LUT_PRECISION;
@@ -27,7 +26,7 @@ namespace OpenVic {
 		constexpr fixed_point_t(int32_t new_value) : value { static_cast<int64_t>(new_value) << PRECISION } {}
 
 		// Trivial destructor
-		~fixed_point_t() = default;
+		constexpr ~fixed_point_t() = default;
 
 		static constexpr fixed_point_t max() {
 			return std::numeric_limits<int64_t>::max();

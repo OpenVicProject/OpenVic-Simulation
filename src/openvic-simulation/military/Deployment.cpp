@@ -80,7 +80,7 @@ bool DeploymentManager::load_oob_file(
 
 			bool ret = expect_dictionary_keys(
 				"name", ONE_EXACTLY, expect_identifier_or_string(assign_variable_callback(leader_name)),
-				"date", ONE_EXACTLY, expect_identifier_or_string(expect_date_str(assign_variable_callback(leader_date))),
+				"date", ONE_EXACTLY, expect_date_identifier_or_string(assign_variable_callback(leader_date)),
 				"type", ONE_EXACTLY, UnitManager::expect_branch_identifier(assign_variable_callback(leader_branch)),
 				"personality", ONE_EXACTLY,
 					game_manager.get_military_manager().get_leader_trait_manager().expect_leader_trait_identifier_or_string(

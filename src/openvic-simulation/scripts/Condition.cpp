@@ -620,7 +620,7 @@ node_callback_t ConditionManager::expect_condition_node(
 			} else if (identifier == "relation") {
 				expect_pair("who", "value"); // { who = [tag/this/from] value = x }
 			} else if (identifier == "unemployment_by_type") {
-				expect_pair("type", "value"); // {type = [poptype] value = x }
+				expect_pair("type", "value"); // { type = [poptype] value = x }
 			} else if (identifier == "upper_house") {
 				expect_pair("ideology", "value"); // { ideology = name value = 0.x }
 			} else if (identifier == "work_available") {

@@ -12,7 +12,6 @@
 #include <type_traits>
 #include <utility>
 
-#include "openvic-simulation/utility/Getters.hpp"
 #include "openvic-simulation/utility/Utility.hpp"
 
 namespace OpenVic {
@@ -105,7 +104,10 @@ namespace OpenVic {
 
 	/* Colour represented by an unsigned integer, either 24-bit RGB or 32-bit ARGB. */
 	template<typename ValueT, typename ColourIntT, typename ColourTraits = colour_traits<ValueT, ColourIntT>>
-	struct basic_colour_t : ReturnByValueProperty {
+	struct basic_colour_t {
+		/* PROPERTY generated getter functions will return colours by value, rather than const reference. */
+		using ov_return_by_value = void;
+
 		using colour_traits = ColourTraits;
 		using value_type = typename colour_traits::value_type;
 		using integer_type = typename colour_traits::integer_type;

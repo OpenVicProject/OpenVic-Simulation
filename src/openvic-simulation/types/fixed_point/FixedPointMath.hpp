@@ -1,6 +1,6 @@
 #pragma once
 
-#include "FixedPoint.hpp"
+#include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
 
 namespace OpenVic::FPMath {
 	constexpr fixed_point_t sin(fixed_point_t number) {

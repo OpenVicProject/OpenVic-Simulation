@@ -51,13 +51,15 @@ public: \
 ACCESS:
 
 namespace OpenVic {
-	/* Any struct extending ReturnByValueProperty will be returned by value by PROPERTY-generated getter functions,
+	/* Any struct tagged with ov_return_by_value will be returned by value by PROPERTY-generated getter functions,
 	 * instead of by const reference as structs are by default. Use this for small structs which don't contain any
-	 * dynamically allocated memory, e.g. Date and fixed_point_t. */
-	struct ReturnByValueProperty {
-		constexpr bool operator==(ReturnByValueProperty const&) const = default;
-		constexpr std::strong_ordering operator<=>(ReturnByValueProperty const&) const = default;
-	};
+	 * dynamically allocated memory, e.g. dates and colours. The tag must be public, as in the example below:
+	 *
+	 * public:
+	 *     using ov_return_by_value = void;
+	 */
+	template<typename T>
+	concept ReturnByValue = requires { typename T::ov_return_by_value; };
 
 	/*
 	 * Template function used to choose the return type and provide the implementation
@@ -72,7 +74,7 @@ namespace OpenVic {
 			/* Return std::string_view looking at std::string */
 			return std::string_view { property };
 		} else if constexpr (
-			std::integral<T> || std::floating_point<T> || std::is_enum_v<T> || std::derived_from<T, ReturnByValueProperty>
+			std::integral<T> || std::floating_point<T> || std::is_enum_v<T> || ReturnByValue<T>
 		) {
 			/* Return value */
 			return T { property };

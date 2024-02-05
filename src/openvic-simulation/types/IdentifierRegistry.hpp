@@ -269,30 +269,39 @@ namespace OpenVic {
 		} \
 	} \
 	constexpr NodeTools::Callback<std::string_view> auto expect_item_str( \
-		NodeTools::Callback<external_value_type CONST&> auto callback, bool warn \
+		NodeTools::Callback<external_value_type CONST&> auto callback, bool allow_empty, bool warn \
 	) CONST { \
-		return [this, callback, warn](std::string_view identifier) -> bool { \
+		return [this, callback, allow_empty, warn](std::string_view identifier) -> bool { \
+			if (identifier.empty()) { \
+				if (allow_empty) { \
+					return true; \
+				} else { \
+					Logger::warn_or_error(warn, "Invalid ", name, " identifier: empty!"); \
+					return warn; \
+				} \
+			} \
 			external_value_type CONST* item = get_item_by_identifier(identifier); \
 			if (item != nullptr) { \
 				return callback(*item); \
 			} \
-			return NodeTools::warn_or_error(warn, "Invalid ", name, " identifier: ", identifier); \
+			Logger::warn_or_error(warn, "Invalid ", name, " identifier: ", identifier); \
+			return warn; \
 		}; \
 	} \
 	constexpr NodeTools::NodeCallback auto expect_item_identifier( \
 		NodeTools::Callback<external_value_type CONST&> auto callback, bool warn \
 	) CONST { \
-		return NodeTools::expect_identifier(expect_item_str(callback, warn)); \
+		return NodeTools::expect_identifier(expect_item_str(callback, false, warn)); \
 	} \
 	constexpr NodeTools::NodeCallback auto expect_item_string( \
-		NodeTools::Callback<external_value_type CONST&> auto callback, bool warn \
+		NodeTools::Callback<external_value_type CONST&> auto callback, bool allow_empty, bool warn \
 	) CONST { \
-		return NodeTools::expect_string(expect_item_str(callback, warn)); \
+		return NodeTools::expect_string(expect_item_str(callback, allow_empty, warn), allow_empty); \
 	} \
 	constexpr NodeTools::NodeCallback auto expect_item_identifier_or_string( \
-		NodeTools::Callback<external_value_type CONST&> auto callback, bool warn \
+		NodeTools::Callback<external_value_type CONST&> auto callback, bool allow_empty, bool warn \
 	) CONST { \
-		return NodeTools::expect_identifier_or_string(expect_item_str(callback, warn)); \
+		return NodeTools::expect_identifier_or_string(expect_item_str(callback, allow_empty, warn), allow_empty); \
 	} \
 	constexpr NodeTools::NodeCallback auto expect_item_assign_and_default( \
 		NodeTools::KeyValueCallback auto default_callback, \
@@ -541,9 +550,10 @@ private:
 		return registry.get_items(); \
 	} \
 	constexpr NodeTools::Callback<std::string_view> auto expect_##singular##_str( \
-		NodeTools::Callback<decltype(registry)::external_value_type const_kw&> auto callback, bool warn = false \
+		NodeTools::Callback<decltype(registry)::external_value_type const_kw&> auto callback, bool allow_empty = false, \
+		bool warn = false \
 	) const_kw { \
-		return registry.expect_item_str(callback, warn); \
+		return registry.expect_item_str(callback, allow_empty, warn); \
 	} \
 	constexpr NodeTools::NodeCallback auto expect_##singular##_identifier( \
 		NodeTools::Callback<decltype(registry)::external_value_type const_kw&> auto callback, bool warn = false \
@@ -551,14 +561,16 @@ private:
 		return registry.expect_item_identifier(callback, warn); \
 	} \
 	constexpr NodeTools::NodeCallback auto expect_##singular##_string( \
-		NodeTools::Callback<decltype(registry)::external_value_type const_kw&> auto callback, bool warn = false \
+		NodeTools::Callback<decltype(registry)::external_value_type const_kw&> auto callback, bool allow_empty = false, \
+		bool warn = false \
 	) const_kw { \
-		return registry.expect_item_string(callback, warn); \
+		return registry.expect_item_string(callback, allow_empty, warn); \
 	} \
 	constexpr NodeTools::NodeCallback auto expect_##singular##_identifier_or_string( \
-		NodeTools::Callback<decltype(registry)::external_value_type const_kw&> auto callback, bool warn = false \
+		NodeTools::Callback<decltype(registry)::external_value_type const_kw&> auto callback,bool allow_empty = false, \
+		bool warn = false \
 	) const_kw { \
-		return registry.expect_item_identifier_or_string(callback, warn); \
+		return registry.expect_item_identifier_or_string(callback, allow_empty, warn); \
 	} \
 	constexpr NodeTools::NodeCallback auto expect_##singular##_assign_and_default( \
 		NodeTools::KeyValueCallback auto default_callback, \

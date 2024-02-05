@@ -12,11 +12,16 @@ namespace OpenVic::GFX {
 		friend class OpenVic::UIManager;
 
 	private:
-		const std::string PROPERTY(fontname);
+		std::string PROPERTY(fontname);
+		std::string PROPERTY(charset);
+		uint32_t PROPERTY(height);
 
 		// TODO - colorcodes, effect
 
-		Font(std::string_view new_identifier, colour_argb_t new_colour, std::string_view new_fontname);
+		Font(
+			std::string_view new_identifier, colour_argb_t new_colour, std::string_view new_fontname,
+			std::string_view new_charset, uint32_t new_height
+		);
 
 	public:
 		Font(Font&&) = default;
@@ -75,6 +80,25 @@ namespace OpenVic::GFX {
 	public:
 		TileTextureSprite(TileTextureSprite&&) = default;
 		virtual ~TileTextureSprite() = default;
+
+		OV_DETAIL_GET_TYPE
+	};
+
+	class CorneredTileTextureSprite final : public Sprite {
+		friend std::unique_ptr<CorneredTileTextureSprite> std::make_unique<CorneredTileTextureSprite>();
+
+		std::string PROPERTY(texture_file);
+		ivec2_t PROPERTY(size);
+		ivec2_t PROPERTY(border_size);
+
+	protected:
+		CorneredTileTextureSprite();
+
+		bool _fill_key_map(NodeTools::case_insensitive_key_map_t& key_map) override;
+
+	public:
+		CorneredTileTextureSprite(CorneredTileTextureSprite&&) = default;
+		virtual ~CorneredTileTextureSprite() = default;
 
 		OV_DETAIL_GET_TYPE
 	};

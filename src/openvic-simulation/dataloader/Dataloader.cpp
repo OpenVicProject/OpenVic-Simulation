@@ -283,21 +283,34 @@ bool Dataloader::_load_interface_files(UIManager& ui_manager) const {
 	ui_manager.lock_sprites();
 	ui_manager.lock_fonts();
 
-	// Hard-coded example until the mechanism for requesting them from GDScript is fleshed out
+	/* Hard-coded GUI file names, might be replaced with a dynamic system but everything should still be loaded on startup. */
 	static const std::vector<std::string_view> gui_files {
-		"province_interface.gui", "topbar.gui"
+		/* Contains generic listbox scrollbar */
+		"core",
+
+		/* Over-map menus */
+		"province_interface", "topbar", "menubar", "outliner",
+
+		/* Nation management screens */
+		"country_production", "country_budget", "country_technology", "country_politics", "country_pops", "country_trade",
+		"country_diplomacy", "country_military"
 	};
+
+	static constexpr std::string_view gui_file_extension = ".gui";
 
 	ui_manager.reserve_more_scenes(gui_files.size());
 
 	for (std::string_view const& gui_file : gui_files) {
 		if (!ui_manager.load_gui_file(
-			gui_file, parse_defines(lookup_file(append_string_views(interface_directory, gui_file))).get_file_node()
+			gui_file, parse_defines(lookup_file(
+				append_string_views(interface_directory, gui_file, gui_file_extension)
+			)).get_file_node()
 		)) {
 			Logger::error("Failed to load interface gui file: ", gui_file);
 			ret = false;
 		}
 	}
+
 	ui_manager.lock_scenes();
 
 	return ret;

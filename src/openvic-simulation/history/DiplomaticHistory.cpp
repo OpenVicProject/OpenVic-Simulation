@@ -32,20 +32,20 @@ AllianceHistory::AllianceHistory(
 	Country const* new_first,
 	Country const* new_second,
 	const Period new_period
-) : first { new_first }, second { new_second }, period {new_period} {}
+) : first { new_first }, second { new_second }, period { new_period } {}
 
 ReparationsHistory::ReparationsHistory(
 	Country const* new_receiver,
 	Country const* new_sender,
 	const Period new_period
-) : receiver { new_receiver }, sender { new_sender }, period {new_period} {}
+) : receiver { new_receiver }, sender { new_sender }, period { new_period } {}
 
 SubjectHistory::SubjectHistory(
 	Country const* new_overlord,
 	Country const* new_subject,
 	const type_t new_type,
 	const Period new_period
-) : overlord { new_overlord }, subject { new_subject }, type { new_type }, period {new_period} {}
+) : overlord { new_overlord }, subject { new_subject }, type { new_type }, period { new_period } {}
 
 void DiplomaticHistoryManager::reserve_more_wars(size_t size) {
 	if (locked) {
@@ -115,10 +115,10 @@ bool DiplomaticHistoryManager::load_diplomacy_history_file(CountryManager const&
 			std::optional<Date> end {};
 
 			bool ret = expect_dictionary_keys(
-				"first", ONE_EXACTLY, expect_identifier_or_string(country_manager.expect_country_str(assign_variable_callback_pointer(first))),
-				"second", ONE_EXACTLY, expect_identifier_or_string(country_manager.expect_country_str(assign_variable_callback_pointer(second))),
-				"start_date", ONE_EXACTLY, expect_identifier_or_string(expect_date_str(assign_variable_callback(start))),
-				"end_date", ZERO_OR_ONE, expect_identifier_or_string(expect_date_str(assign_variable_callback(end)))
+				"first", ONE_EXACTLY, country_manager.expect_country_identifier_or_string(assign_variable_callback_pointer(first)),
+				"second", ONE_EXACTLY, country_manager.expect_country_identifier_or_string(assign_variable_callback_pointer(second)),
+				"start_date", ONE_EXACTLY, expect_date_identifier_or_string(assign_variable_callback(start)),
+				"end_date", ZERO_OR_ONE, expect_date_identifier_or_string(assign_variable_callback(end))
 			)(node);
 
 			alliances.push_back({ first, second, { start, end } });
@@ -131,10 +131,10 @@ bool DiplomaticHistoryManager::load_diplomacy_history_file(CountryManager const&
 			std::optional<Date> end {};
 
 			bool ret = expect_dictionary_keys(
-				"first", ONE_EXACTLY, expect_identifier_or_string(country_manager.expect_country_str(assign_variable_callback_pointer(overlord))),
-				"second", ONE_EXACTLY, expect_identifier_or_string(country_manager.expect_country_str(assign_variable_callback_pointer(subject))),
-				"start_date", ONE_EXACTLY, expect_identifier_or_string(expect_date_str(assign_variable_callback(start))),
-				"end_date", ZERO_OR_ONE, expect_identifier_or_string(expect_date_str(assign_variable_callback(end)))
+				"first", ONE_EXACTLY, country_manager.expect_country_identifier_or_string(assign_variable_callback_pointer(overlord)),
+				"second", ONE_EXACTLY, country_manager.expect_country_identifier_or_string(assign_variable_callback_pointer(subject)),
+				"start_date", ONE_EXACTLY, expect_date_identifier_or_string(assign_variable_callback(start)),
+				"end_date", ZERO_OR_ONE, expect_date_identifier_or_string(assign_variable_callback(end))
 			)(node);
 
 			subjects.push_back({ overlord, subject, SubjectHistory::type_t::VASSAL, { start, end } });
@@ -147,10 +147,10 @@ bool DiplomaticHistoryManager::load_diplomacy_history_file(CountryManager const&
 			std::optional<Date> end {};
 
 			bool ret = expect_dictionary_keys(
-				"first", ONE_EXACTLY, country_manager.expect_country_identifier(assign_variable_callback_pointer(overlord)),
-				"second", ONE_EXACTLY, country_manager.expect_country_identifier(assign_variable_callback_pointer(subject)),
-				"start_date", ONE_EXACTLY, expect_date(assign_variable_callback(start)),
-				"end_date", ZERO_OR_ONE, expect_date(assign_variable_callback(end))
+				"first", ONE_EXACTLY, country_manager.expect_country_identifier_or_string(assign_variable_callback_pointer(overlord)),
+				"second", ONE_EXACTLY, country_manager.expect_country_identifier_or_string(assign_variable_callback_pointer(subject)),
+				"start_date", ONE_EXACTLY, expect_date_identifier_or_string(assign_variable_callback(start)),
+				"end_date", ZERO_OR_ONE, expect_date_identifier_or_string(assign_variable_callback(end))
 			)(node);
 
 			subjects.push_back({ overlord, subject, SubjectHistory::type_t::UNION, { start, end } });
@@ -163,10 +163,10 @@ bool DiplomaticHistoryManager::load_diplomacy_history_file(CountryManager const&
 			std::optional<Date> end {};
 
 			bool ret = expect_dictionary_keys(
-				"first", ONE_EXACTLY, country_manager.expect_country_identifier(assign_variable_callback_pointer(overlord)),
-				"second", ONE_EXACTLY, country_manager.expect_country_identifier(assign_variable_callback_pointer(subject)),
-				"start_date", ONE_EXACTLY, expect_date(assign_variable_callback(start)),
-				"end_date", ZERO_OR_ONE, expect_date(assign_variable_callback(end))
+				"first", ONE_EXACTLY, country_manager.expect_country_identifier_or_string(assign_variable_callback_pointer(overlord)),
+				"second", ONE_EXACTLY, country_manager.expect_country_identifier_or_string(assign_variable_callback_pointer(subject)),
+				"start_date", ONE_EXACTLY, expect_date_identifier_or_string(assign_variable_callback(start)),
+				"end_date", ZERO_OR_ONE, expect_date_identifier_or_string(assign_variable_callback(end))
 			)(node);
 
 			subjects.push_back({ overlord, subject, SubjectHistory::type_t::SUBSTATE, { start, end } });
@@ -179,10 +179,10 @@ bool DiplomaticHistoryManager::load_diplomacy_history_file(CountryManager const&
 			std::optional<Date> end {};
 
 			bool ret = expect_dictionary_keys(
-				"first", ONE_EXACTLY, country_manager.expect_country_identifier(assign_variable_callback_pointer(receiver)),
-				"second", ONE_EXACTLY, country_manager.expect_country_identifier(assign_variable_callback_pointer(sender)),
-				"start_date", ONE_EXACTLY, expect_date(assign_variable_callback(start)),
-				"end_date", ZERO_OR_ONE, expect_date(assign_variable_callback(end))
+				"first", ONE_EXACTLY, country_manager.expect_country_identifier_or_string(assign_variable_callback_pointer(receiver)),
+				"second", ONE_EXACTLY, country_manager.expect_country_identifier_or_string(assign_variable_callback_pointer(sender)),
+				"start_date", ONE_EXACTLY, expect_date_identifier_or_string(assign_variable_callback(start)),
+				"end_date", ZERO_OR_ONE, expect_date_identifier_or_string(assign_variable_callback(end))
 			)(node);
 
 			reparations.push_back({ receiver, sender, { start, end } });

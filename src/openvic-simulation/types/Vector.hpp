@@ -6,6 +6,9 @@ namespace OpenVic {
 
 	template<typename T>
 	struct vec2_t {
+		/* PROPERTY generated getter functions will return 2D vectors by value, rather than const reference. */
+		using ov_return_by_value = void;
+
 		using type = T;
 
 		T x, y;

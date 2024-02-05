@@ -119,6 +119,8 @@ namespace OpenVic {
 
 		callback_t<std::string_view> expect_date_str(callback_t<Date> callback);
 		node_callback_t expect_date(callback_t<Date> callback);
+		node_callback_t expect_date_string(callback_t<Date> callback);
+		node_callback_t expect_date_identifier_or_string(callback_t<Date> callback);
 		node_callback_t expect_years(callback_t<Timespan> callback);
 		node_callback_t expect_months(callback_t<Timespan> callback);
 		node_callback_t expect_days(callback_t<Timespan> callback);
@@ -371,15 +373,15 @@ namespace OpenVic {
 
 		template<typename T, StringMapCase Case>
 		Callback<std::string_view> auto expect_mapped_string(
-			template_string_map_t<T, Case> const& map, Callback<T> auto callback
+			template_string_map_t<T, Case> const& map, Callback<T> auto callback, bool warn = false
 		) {
-			return [&map, callback](std::string_view string) -> bool {
+			return [&map, callback, warn](std::string_view string) -> bool {
 				const typename template_string_map_t<T, Case>::const_iterator it = map.find(string);
 				if (it != map.end()) {
 					return callback(it->second);
 				}
-				Logger::error("String not found in map: ", string);
-				return false;
+				Logger::warn_or_error(warn, "String not found in map: ", string);
+				return warn;
 			};
 		}
 
@@ -470,24 +472,14 @@ namespace OpenVic {
 			};
 		}
 
-		template<typename... Args>
-		bool warn_or_error(bool warn, Args&&... args) {
-			if (warn) {
-				Logger::warning(std::forward<Args>(args)...);
-				return true;
-			} else {
-				Logger::error(std::forward<Args>(args)...);
-				return false;
-			}
-		}
-
 		template<typename T, typename U, typename... SetArgs>
 		Callback<T> auto set_callback(tsl::ordered_set<U, SetArgs...>& set, bool warn = false) {
 			return [&set, warn](T val) -> bool {
 				if (set.emplace(std::move(val)).second) {
 					return true;
 				}
-				return warn_or_error(warn, "Duplicate set entry: \"", val, "\"");
+				Logger::warn_or_error(warn, "Duplicate set entry: \"", val, "\"");
+				return warn;
 			};
 		}
 
@@ -497,7 +489,8 @@ namespace OpenVic {
 				if (set.emplace(&val).second) {
 					return true;
 				}
-				return warn_or_error(warn, "Duplicate set entry: \"", &val, "\"");
+				Logger::warn_or_error(warn, "Duplicate set entry: \"", &val, "\"");
+				return warn;
 			};
 		}
 
@@ -509,7 +502,8 @@ namespace OpenVic {
 				if (map.emplace(key, std::move(value)).second) {
 					return true;
 				}
-				return warn_or_error(warn, "Duplicate map entry with key: \"", key, "\"");
+				Logger::warn_or_error(warn, "Duplicate map entry with key: \"", key, "\"");
+				return warn;
 			};
 		}
 	}
