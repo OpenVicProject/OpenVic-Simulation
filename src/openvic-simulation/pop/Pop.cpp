@@ -1,6 +1,6 @@
 #include "Pop.hpp"
 
-#include "openvic-simulation/military/Unit.hpp"
+#include "openvic-simulation/military/UnitType.hpp"
 #include "openvic-simulation/politics/Ideology.hpp"
 #include "openvic-simulation/politics/Issue.hpp"
 #include "openvic-simulation/politics/Rebel.hpp"
@@ -436,13 +436,13 @@ bool PopManager::load_pop_type_file(
 	return ret;
 }
 
-bool PopManager::load_delayed_parse_pop_type_data(UnitManager const& unit_manager, IssueManager const& issue_manager) {
+bool PopManager::load_delayed_parse_pop_type_data(UnitTypeManager const& unit_type_manager, IssueManager const& issue_manager) {
 	bool ret = true;
 	for (size_t index = 0; index < delayed_parse_nodes.size(); ++index) {
 		const auto [rebel_units, equivalent, promote_to_node, issues_node] = delayed_parse_nodes[index];
 		PopType* pop_type = pop_types.get_item_by_index(index);
 
-		if (rebel_units != nullptr && !unit_manager.expect_unit_decimal_map(
+		if (rebel_units != nullptr && !unit_type_manager.expect_unit_type_decimal_map(
 			move_variable_callback(pop_type->rebel_units)
 		)(rebel_units)) {
 			Logger::error("Errors parsing rebel unit distribution for pop type ", pop_type, "!");

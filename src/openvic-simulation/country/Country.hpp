@@ -10,7 +10,7 @@
 #include <openvic-dataloader/v2script/AbstractSyntaxTree.hpp>
 
 #include "openvic-simulation/dataloader/Dataloader.hpp"
-#include "openvic-simulation/military/Unit.hpp"
+#include "openvic-simulation/military/UnitType.hpp"
 #include "openvic-simulation/politics/Government.hpp"
 #include "openvic-simulation/politics/Ideology.hpp"
 #include "openvic-simulation/politics/Issue.hpp"
@@ -51,7 +51,7 @@ namespace OpenVic {
 	struct Country : HasIdentifierAndColour {
 		friend struct CountryManager;
 
-		using unit_names_map_t = ordered_map<Unit const*, name_list_t>;
+		using unit_names_map_t = ordered_map<UnitType const*, name_list_t>;
 		using government_colour_map_t = ordered_map<GovernmentType const*, colour_t>;
 
 	private:

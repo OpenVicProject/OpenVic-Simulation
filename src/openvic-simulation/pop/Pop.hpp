@@ -15,8 +15,8 @@ namespace OpenVic {
 
 	struct PopManager;
 	struct PopType;
-	struct Unit;
-	struct UnitManager;
+	struct UnitType;
+	struct UnitTypeManager;
 	struct RebelType;
 	struct RebelManager;
 	struct Ideology;
@@ -97,7 +97,7 @@ namespace OpenVic {
 		};
 
 		using sprite_t = uint8_t;
-		using rebel_units_t = fixed_point_map_t<Unit const*>;
+		using rebel_units_t = fixed_point_map_t<UnitType const*>;
 		using poptype_weight_map_t = ordered_map<PopType const*, ConditionalWeight>;
 		using ideology_weight_map_t = ordered_map<Ideology const*, ConditionalWeight>;
 		using issue_weight_map_t = ordered_map<Issue const*, ConditionalWeight>;
@@ -223,7 +223,7 @@ namespace OpenVic {
 		/* Using strata/stratas instead of stratum/strata to avoid confusion. */
 		IdentifierRegistry<Strata> IDENTIFIER_REGISTRY(strata);
 		IdentifierRegistry<PopType> IDENTIFIER_REGISTRY(pop_type);
-		/* - rebel_units require Units which require on PopTypes (Unit->Map->Building->ProductionType->PopType).
+		/* - rebel_units require UnitTypes which require on PopTypes (UnitType->Map->Building->ProductionType->PopType).
 		 * - equivalent and promote_to can't be parsed until after all PopTypes are registered.
 		 * - issues require Issues to be loaded, which themselves depend on pop strata.
 		 * To get around these circular dependencies, the nodes for these variables are stored here and parsed after the
@@ -296,7 +296,7 @@ namespace OpenVic {
 			std::string_view filestem, GoodManager const& good_manager, IdeologyManager const& ideology_manager,
 			ast::NodeCPtr root
 		);
-		bool load_delayed_parse_pop_type_data(UnitManager const& unit_manager, IssueManager const& issue_manager);
+		bool load_delayed_parse_pop_type_data(UnitTypeManager const& unit_type_manager, IssueManager const& issue_manager);
 
 		bool load_pop_type_chances_file(ast::NodeCPtr root);
 

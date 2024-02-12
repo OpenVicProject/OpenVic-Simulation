@@ -5,82 +5,62 @@
 #include <vector>
 
 #include "openvic-simulation/dataloader/Dataloader.hpp"
-#include "openvic-simulation/dataloader/NodeTools.hpp"
 #include "openvic-simulation/map/Province.hpp"
-#include "openvic-simulation/military/LeaderTrait.hpp"
-#include "openvic-simulation/military/Unit.hpp"
-#include "openvic-simulation/types/Date.hpp"
-#include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
+#include "openvic-simulation/military/Leader.hpp"
+#include "openvic-simulation/military/UnitType.hpp"
 
 namespace OpenVic {
-	struct Leader {
+	struct RegimentDeployment {
 	private:
-		std::string        PROPERTY(name);
-		Unit::branch_t     PROPERTY(branch); /* type in defines */
-		Date               PROPERTY(date);
-		LeaderTrait const* PROPERTY(personality);
-		LeaderTrait const* PROPERTY(background);
-		fixed_point_t      PROPERTY(prestige);
-		std::string        PROPERTY(picture);
-
-	public:
-		Leader(
-			std::string_view new_name, Unit::branch_t new_branch, Date new_date, LeaderTrait const* new_personality,
-			LeaderTrait const* new_background, fixed_point_t new_prestige, std::string_view new_picture
-		);
-	};
-
-	struct Regiment {
-	private:
-		std::string     PROPERTY(name);
-		LandUnit const* PROPERTY(type);
+		std::string PROPERTY(name);
+		RegimentType const* PROPERTY(type);
 		Province const* PROPERTY(home);
 
 	public:
-		Regiment(std::string_view new_name, LandUnit const* new_type, Province const* new_home);
+		RegimentDeployment(std::string_view new_name, RegimentType const* new_type, Province const* new_home);
 	};
 
-	struct Ship {
+	struct ShipDeployment {
 	private:
-		std::string      PROPERTY(name);
-		NavalUnit const* PROPERTY(type);
+		std::string PROPERTY(name);
+		ShipType const* PROPERTY(type);
 
 	public:
-		Ship(std::string_view new_name, NavalUnit const* new_type);
+		ShipDeployment(std::string_view new_name, ShipType const* new_type);
 	};
 
-	struct Army {
+	struct ArmyDeployment {
 	private:
-		std::string           PROPERTY(name);
-		Province const*       PROPERTY(location);
-		std::vector<Regiment> PROPERTY(regiments);
+		std::string PROPERTY(name);
+		Province const* PROPERTY(location);
+		std::vector<RegimentDeployment> PROPERTY(regiments);
 
 	public:
-		Army(std::string_view new_name, Province const* new_location, std::vector<Regiment>&& new_regiments);
+		ArmyDeployment(std::string_view new_name, Province const* new_location, std::vector<RegimentDeployment>&& new_regiments);
 	};
 
-	struct Navy {
+	struct NavyDeployment {
 	private:
-		std::string       PROPERTY(name);
-		Province const*   PROPERTY(location);
-		std::vector<Ship> PROPERTY(ships);
+		std::string PROPERTY(name);
+		Province const* PROPERTY(location);
+		std::vector<ShipDeployment> PROPERTY(ships);
 
 	public:
-		Navy(std::string_view new_name, Province const* new_location, std::vector<Ship>&& new_ships);
+		NavyDeployment(std::string_view new_name, Province const* new_location, std::vector<ShipDeployment>&& new_ships);
 	};
 
 	struct Deployment : HasIdentifier {
 		friend std::unique_ptr<Deployment> std::make_unique<Deployment>(
-			std::string_view&&, std::vector<OpenVic::Army>&&, std::vector<OpenVic::Navy>&&, std::vector<OpenVic::Leader>&&
+			std::string_view&&, std::vector<OpenVic::ArmyDeployment>&&, std::vector<OpenVic::NavyDeployment>&&, std::vector<OpenVic::Leader>&&
 		);
 
 	private:
-		std::vector<Army>   PROPERTY(armies);
-		std::vector<Navy>   PROPERTY(navies);
+		std::vector<ArmyDeployment> PROPERTY(armies);
+		std::vector<NavyDeployment> PROPERTY(navies);
 		std::vector<Leader> PROPERTY(leaders);
 
 		Deployment(
-			std::string_view new_path, std::vector<Army>&& new_armies, std::vector<Navy>&& new_navies,
+			std::string_view new_path, std::vector<ArmyDeployment>&& new_armies, std::vector<NavyDeployment>&& new_navies,
 			std::vector<Leader>&& new_leaders
 		);
 
@@ -95,7 +75,7 @@ namespace OpenVic {
 
 	public:
 		bool add_deployment(
-			std::string_view path, std::vector<Army>&& armies, std::vector<Navy>&& navies, std::vector<Leader>&& leaders
+			std::string_view path, std::vector<ArmyDeployment>&& armies, std::vector<NavyDeployment>&& navies, std::vector<Leader>&& leaders
 		);
 
 		bool load_oob_file(
