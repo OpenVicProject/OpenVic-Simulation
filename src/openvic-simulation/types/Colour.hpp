@@ -399,7 +399,7 @@ namespace OpenVic {
 	using colour_t = colour_rgb_t;
 
 	namespace colour_literals {
-		constexpr colour_t operator""_colour(unsigned long long value) {
+		constexpr colour_t operator""_rgb(unsigned long long value) {
 			return colour_t::from_integer(value);
 		}
 

@@ -683,6 +683,8 @@ bool Dataloader::_load_map_dir(GameManager& game_manager) const {
 	static constexpr std::string_view default_province_flag_sprite = "province_flag_sprites"; /* Canal sprite/model names. */
 	static constexpr std::string_view climate_file = "climate.txt";
 
+	static constexpr std::string_view region_colours = "interface/colors.txt"; /* This file is not in map_directory */
+
 	/* Parser stored so the filename string_views persist until the end of this function. */
 	const v2script::Parser parser = parse_defines(lookup_file(append_string_views(map_directory, defaults_filename)));
 
@@ -735,9 +737,21 @@ bool Dataloader::_load_map_dir(GameManager& game_manager) const {
 		ret = false;
 	}
 
-	if (!map.load_region_file(parse_defines(lookup_file(append_string_views(map_directory, region))).get_file_node())) {
-		Logger::error("Failed to load region file!");
-		ret = false;
+	{
+		std::vector<colour_t> colours;
+		if (!Map::load_region_colours(parse_defines(lookup_file(region_colours)).get_file_node(), colours)) {
+			Logger::error("Failed to load region colours file!");
+			ret = false;
+		}
+
+		using namespace OpenVic::colour_literals;
+		colours.push_back(0xFFFFFF_rgb); /* This ensures there is always at least one region colour. */
+
+		if (!map.load_region_file(
+				parse_defines(lookup_file(append_string_views(map_directory, region))).get_file_node(), colours)) {
+			Logger::error("Failed to load region file!");
+			ret = false;
+		}
 	}
 
 	if (!map.set_water_province_list(water_province_identifiers)) {
