@@ -13,11 +13,11 @@ Font::Font(
 node_callback_t Sprite::expect_sprites(length_callback_t length_callback, callback_t<std::unique_ptr<Sprite>&&> callback) {
 	return expect_dictionary_keys_and_length(
 		length_callback,
-		"spriteType", ZERO_OR_MORE, _expect_instance<Sprite, TextureSprite>(callback),
+		"spriteType", ZERO_OR_MORE, _expect_instance<Sprite, IconTextureSprite>(callback),
 		"progressbartype", ZERO_OR_MORE, _expect_instance<Sprite, ProgressBar>(callback),
 		"PieChartType", ZERO_OR_MORE, _expect_instance<Sprite, PieChart>(callback),
 		"LineChartType", ZERO_OR_MORE, _expect_instance<Sprite, LineChart>(callback),
-		"textSpriteType", ZERO_OR_MORE, _expect_instance<Sprite, TextureSprite>(callback),
+		"textSpriteType", ZERO_OR_MORE, _expect_instance<Sprite, IconTextureSprite>(callback),
 		"maskedShieldType", ZERO_OR_MORE, _expect_instance<Sprite, MaskedFlag>(callback),
 		"tileSpriteType", ZERO_OR_MORE, _expect_instance<Sprite, TileTextureSprite>(callback),
 		"corneredTileSpriteType", ZERO_OR_MORE, _expect_instance<Sprite, CorneredTileTextureSprite>(callback),
@@ -28,49 +28,51 @@ node_callback_t Sprite::expect_sprites(length_callback_t length_callback, callba
 	);
 }
 
-TextureSprite::TextureSprite() : texture_file {}, no_of_frames { NO_FRAMES } {}
+TextureSprite::TextureSprite() : texture_file {} {}
 
 bool TextureSprite::_fill_key_map(case_insensitive_key_map_t& key_map) {
 	bool ret = Sprite::_fill_key_map(key_map);
 	ret &= add_key_map_entries(key_map,
 		"texturefile", ZERO_OR_ONE, expect_string(assign_variable_callback_string(texture_file)),
-		"noOfFrames", ZERO_OR_ONE, expect_uint(assign_variable_callback(no_of_frames)),
 
 		"norefcount", ZERO_OR_ONE, success_callback,
-		"effectFile", ZERO_OR_ONE, success_callback,
 		"allwaystransparent", ZERO_OR_ONE, success_callback,
+		"loadType", ZERO_OR_ONE, success_callback
+	);
+	return ret;
+}
+
+IconTextureSprite::IconTextureSprite() : no_of_frames { NO_FRAMES } {}
+
+bool IconTextureSprite::_fill_key_map(case_insensitive_key_map_t& key_map) {
+	bool ret = TextureSprite::_fill_key_map(key_map);
+	ret &= add_key_map_entries(key_map,
+		"noOfFrames", ZERO_OR_ONE, expect_uint(assign_variable_callback(no_of_frames)),
+
+		"effectFile", ZERO_OR_ONE, success_callback,
 		"transparencecheck", ZERO_OR_ONE, success_callback,
-		"loadType", ZERO_OR_ONE, success_callback,
 		"clicksound", ZERO_OR_ONE, success_callback
 	);
 	return ret;
 }
 
-TileTextureSprite::TileTextureSprite() : texture_file {}, size {} {}
+TileTextureSprite::TileTextureSprite() : size {} {}
 
 bool TileTextureSprite::_fill_key_map(case_insensitive_key_map_t& key_map) {
-	bool ret = Sprite::_fill_key_map(key_map);
+	bool ret = TextureSprite::_fill_key_map(key_map);
 	ret &= add_key_map_entries(key_map,
-		"texturefile", ONE_EXACTLY, expect_string(assign_variable_callback_string(texture_file)),
-		"size", ONE_EXACTLY, expect_ivec2(assign_variable_callback(size)),
-
-		"norefcount", ZERO_OR_ONE, success_callback,
-		"loadType", ZERO_OR_ONE, success_callback
+		"size", ONE_EXACTLY, expect_ivec2(assign_variable_callback(size))
 	);
 	return ret;
 }
 
-CorneredTileTextureSprite::CorneredTileTextureSprite() : texture_file {}, size {}, border_size {} {}
+CorneredTileTextureSprite::CorneredTileTextureSprite() : size {}, border_size {} {}
 
 bool CorneredTileTextureSprite::_fill_key_map(case_insensitive_key_map_t& key_map) {
-	bool ret = Sprite::_fill_key_map(key_map);
+	bool ret = TextureSprite::_fill_key_map(key_map);
 	ret &= add_key_map_entries(key_map,
-		"texturefile", ZERO_OR_ONE, expect_string(assign_variable_callback_string(texture_file)),
 		"size", ONE_EXACTLY, expect_ivec2(assign_variable_callback(size)),
-		"borderSize", ONE_EXACTLY, expect_ivec2(assign_variable_callback(border_size)),
-
-		"allwaystransparent", ZERO_OR_ONE, success_callback,
-		"loadType", ZERO_OR_ONE, success_callback
+		"borderSize", ONE_EXACTLY, expect_ivec2(assign_variable_callback(border_size))
 	);
 	return ret;
 }

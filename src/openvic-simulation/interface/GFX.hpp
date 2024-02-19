@@ -46,13 +46,8 @@ namespace OpenVic::GFX {
 		);
 	};
 
-	class TextureSprite final : public Sprite {
-		friend std::unique_ptr<TextureSprite> std::make_unique<TextureSprite>();
-
+	class TextureSprite : public Sprite {
 		std::string PROPERTY(texture_file);
-		frame_t PROPERTY(no_of_frames);
-
-		// TODO - effectFile, allwaystransparent
 
 	protected:
 		TextureSprite();
@@ -63,13 +58,30 @@ namespace OpenVic::GFX {
 		TextureSprite(TextureSprite&&) = default;
 		virtual ~TextureSprite() = default;
 
+		OV_DETAIL_GET_BASE_TYPE(TextureSprite)
 		OV_DETAIL_GET_TYPE
 	};
 
-	class TileTextureSprite final : public Sprite {
+	class IconTextureSprite final : public TextureSprite {
+		friend std::unique_ptr<IconTextureSprite> std::make_unique<IconTextureSprite>();
+
+		frame_t PROPERTY(no_of_frames);
+
+	protected:
+		IconTextureSprite();
+
+		bool _fill_key_map(NodeTools::case_insensitive_key_map_t& key_map) override;
+
+	public:
+		IconTextureSprite(IconTextureSprite&&) = default;
+		virtual ~IconTextureSprite() = default;
+
+		OV_DETAIL_GET_TYPE
+	};
+
+	class TileTextureSprite final : public TextureSprite {
 		friend std::unique_ptr<TileTextureSprite> std::make_unique<TileTextureSprite>();
 
-		std::string PROPERTY(texture_file);
 		ivec2_t PROPERTY(size);
 
 	protected:
@@ -84,10 +96,9 @@ namespace OpenVic::GFX {
 		OV_DETAIL_GET_TYPE
 	};
 
-	class CorneredTileTextureSprite final : public Sprite {
+	class CorneredTileTextureSprite final : public TextureSprite {
 		friend std::unique_ptr<CorneredTileTextureSprite> std::make_unique<CorneredTileTextureSprite>();
 
-		std::string PROPERTY(texture_file);
 		ivec2_t PROPERTY(size);
 		ivec2_t PROPERTY(border_size);
 

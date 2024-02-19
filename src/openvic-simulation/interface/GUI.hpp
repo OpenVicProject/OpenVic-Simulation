@@ -296,7 +296,7 @@ namespace OpenVic::GUI {
 		fixed_point_t PROPERTY(start_value);
 		bool PROPERTY_CUSTOM_PREFIX(horizontal, is)
 
-		bool PROPERTY(use_range_limit);
+		bool PROPERTY_CUSTOM_PREFIX(range_limited, is);
 		fixed_point_t PROPERTY(range_limit_min);
 		fixed_point_t PROPERTY(range_limit_max);
 		std::string PROPERTY(range_limit_min_icon_name);
@@ -314,8 +314,8 @@ namespace OpenVic::GUI {
 		Scrollbar(Scrollbar&&) = default;
 		virtual ~Scrollbar() = default;
 
-		Button const* get_slider_button() const;
-		Button const* get_track_button() const;
+		Button const* get_slider_button() const; /* The button you grab and move up and down the scrollbar. */
+		Button const* get_track_button() const; /* The track/background the slider button moves along. */
 		Button const* get_less_button() const;
 		Button const* get_more_button() const;
 
