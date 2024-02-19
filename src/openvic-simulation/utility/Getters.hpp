@@ -121,7 +121,7 @@ ACCESS:
 #define PROPERTY_RW_FULL(NAME, GETTER_NAME, SETTER_NAME, ACCESS) \
 	PROPERTY_FULL(NAME, GETTER_NAME, ACCESS) \
 public: \
-	void SETTER_NAME(decltype(NAME) new_##NAME) { \
+	constexpr void SETTER_NAME(decltype(NAME) new_##NAME) { \
 		NAME = new_##NAME; \
 	} \
 ACCESS:

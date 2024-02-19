@@ -240,7 +240,7 @@ bool TextEditBox::_fill_key_map(NodeTools::case_insensitive_key_map_t& key_map, 
 
 Scrollbar::Scrollbar()
   : slider_button_name {}, track_button_name {}, less_button_name{}, more_button_name {}, size {}, border_size {},
-	min_value {}, max_value {}, step_size {}, start_value {}, horizontal { false }, use_range_limit { false },
+	min_value {}, max_value {}, step_size {}, start_value {}, horizontal { false }, range_limited { false },
 	range_limit_min {}, range_limit_max {}, range_limit_min_icon_name {}, range_limit_max_icon_name {} {
 	scrollbar_elements.reserve(4); /* Space for 4 buttons, might need 2 more for range limit icons. */
 }
@@ -262,7 +262,7 @@ bool Scrollbar::_fill_key_map(NodeTools::case_insensitive_key_map_t& key_map, UI
 		"stepSize", ONE_EXACTLY, expect_fixed_point(assign_variable_callback(step_size)),
 		"startValue", ONE_EXACTLY, expect_fixed_point(assign_variable_callback(start_value)),
 		"horizontal", ONE_EXACTLY, expect_int_bool(assign_variable_callback(horizontal)),
-		"useRangeLimit", ZERO_OR_ONE, expect_bool(assign_variable_callback(use_range_limit)),
+		"useRangeLimit", ZERO_OR_ONE, expect_bool(assign_variable_callback(range_limited)),
 		"rangeLimitMin", ZERO_OR_ONE, expect_fixed_point(assign_variable_callback(range_limit_min)),
 		"rangeLimitMax", ZERO_OR_ONE, expect_fixed_point(assign_variable_callback(range_limit_max)),
 		"rangeLimitMinIcon", ZERO_OR_ONE, expect_string(assign_variable_callback_string(range_limit_min_icon_name)),

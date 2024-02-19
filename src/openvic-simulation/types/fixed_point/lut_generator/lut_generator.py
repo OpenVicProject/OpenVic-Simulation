@@ -20,12 +20,10 @@ def generate_sin_lut(precision : int, count_log2 : int):
 	SinLut.append(SinLut[0])
 
 	output = [
-		"#pragma once",
-		"",
-		"#include <cstdint>",
 		"",
 		f"static constexpr int32_t SIN_LUT_PRECISION = {precision};",
 		f"static constexpr int32_t SIN_LUT_COUNT_LOG2 = {count_log2};",
+		"static constexpr int32_t SIN_LUT_SHIFT = SIN_LUT_PRECISION - SIN_LUT_COUNT_LOG2;",
 		"",
 		"static constexpr int64_t SIN_LUT[(1 << SIN_LUT_COUNT_LOG2) + 1] = {"
 	]

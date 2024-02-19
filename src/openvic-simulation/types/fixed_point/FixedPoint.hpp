@@ -6,7 +6,7 @@
 #include <sstream>
 #include <string_view>
 
-#include "openvic-simulation/types/fixed_point/FixedPointLUT.hpp"
+#include "openvic-simulation/utility/Getters.hpp"
 #include "openvic-simulation/utility/Logger.hpp"
 #include "openvic-simulation/utility/NumberUtils.hpp"
 #include "openvic-simulation/utility/StringUtils.hpp"
@@ -18,14 +18,32 @@ namespace OpenVic {
 
 		static constexpr size_t SIZE = 8;
 
-		static constexpr int32_t PRECISION = FPLUT::SIN_LUT_PRECISION;
+		static constexpr int32_t PRECISION = 16;
 		static constexpr int64_t ONE = 1 << PRECISION;
+		static constexpr int64_t FRAC_MASK = ONE - 1;
 
+		/* Fixed points represent any base 2 number with 48 bits above the point and 16 bits below it.
+		 * - Any number expressible as n / 2^16 where n is an int64_t can be converted to a fixed point exactly.
+		 * - If a number cannot be expressed as an integer divided by 2^16, it will be rounded down to the first
+		 *   representable number below it. For example: 0.01 = 655.36 / 2^16 becomes 0.0099945068359375 = 655 / 2^16.
+		 * - While numbers with an integer part greater than 2^32 can be represented, they do not work properly with
+		 *   multiplication and division which involve an intermediate value that is 2^16 times larger than the result.
+		 *   For numbers with integer part smaller than 2^32 the top 16 bits prevent this intermediate value from
+		 *   overflowing. For larger values this will not work and the result will be missing its most significant bits. */
+
+	private:
+		int64_t PROPERTY_RW_CUSTOM_NAME(value, get_raw_value, set_raw_value);
+
+		/* Sin lookup table */
+		#include "openvic-simulation/types/fixed_point/FixedPointLUT_sin.hpp"
+
+		static_assert(SIN_LUT_PRECISION == PRECISION);
+
+	public:
 		constexpr fixed_point_t() : value { 0 } {}
 		constexpr fixed_point_t(int64_t new_value) : value { new_value } {}
 		constexpr fixed_point_t(int32_t new_value) : value { static_cast<int64_t>(new_value) << PRECISION } {}
 
-		// Trivial destructor
 		constexpr ~fixed_point_t() = default;
 
 		static constexpr fixed_point_t max() {
@@ -200,6 +218,23 @@ namespace OpenVic {
 			return static_cast<int64_t>(178145LL);
 		}
 
+		constexpr fixed_point_t sin() const {
+			int64_t num = (*this % pi2() * one_div_pi2()).get_raw_value();
+
+			const bool negative = num < 0;
+			if (negative) {
+				num = -num;
+			}
+
+			const int64_t index = num >> SIN_LUT_SHIFT;
+			const int64_t a = SIN_LUT[index];
+			const int64_t b = SIN_LUT[index + 1];
+
+			const int64_t fraction = (num - (index << SIN_LUT_SHIFT)) << SIN_LUT_COUNT_LOG2;
+			const int64_t result = a + (((b - a) * fraction) >> SIN_LUT_PRECISION);
+			return !negative ? result : -result;
+		}
+
 		constexpr bool is_negative() const {
 			return value < 0;
 		}
@@ -216,23 +251,35 @@ namespace OpenVic {
 
 		// Doesn't account for sign, so -n.abc -> 1 - 0.abc
 		constexpr fixed_point_t get_frac() const {
-			return value & (ONE - 1);
+			return value & FRAC_MASK;
 		}
 
 		constexpr bool is_integer() const {
 			return get_frac() == 0;
 		}
 
+		constexpr fixed_point_t floor() const {
+			return value & ~FRAC_MASK;
+		}
+
+		constexpr fixed_point_t ceil() const {
+			return floor() + !is_integer();
+		}
+
+		/* WARNING: the results of these rounding functions are affected by the accuracy of base 2 fixed point numbers,
+		 * for example 1.0 rounded to a multiple of 0.01 is 0.99945068359375 for down and 1.0094451904296875 for up. */
+		constexpr fixed_point_t round_down_to_multiple(fixed_point_t factor) const {
+			const fixed_point_t remainder = *this % factor;
+			return *this - remainder - (remainder < 0 ? factor : _0());
+		}
+
+		constexpr fixed_point_t round_up_to_multiple(fixed_point_t factor) const {
+			const fixed_point_t remainder = *this % factor;
+			return *this - remainder + (remainder > 0 ? factor : _0());
+		}
+
 		constexpr int64_t to_int64_t() const {
 			return value >> PRECISION;
-		}
-
-		constexpr void set_raw_value(int64_t value) {
-			this->value = value;
-		}
-
-		constexpr int64_t get_raw_value() const {
-			return value;
 		}
 
 		constexpr int32_t to_int32_t() const {
@@ -251,13 +298,13 @@ namespace OpenVic {
 			return value / static_cast<double>(ONE);
 		}
 
-		constexpr float to_double_rounded() const {
+		constexpr double to_double_rounded() const {
 			return NumberUtils::round_to_int64((value / static_cast<double>(ONE)) * 100000.0) / 100000.0;
 		}
 
 		static std::ostream& print(std::ostream& stream, fixed_point_t val, size_t decimal_places = 0) {
 			if (decimal_places > 0) {
-				fixed_point_t err = fixed_point_t::_0_50();
+				fixed_point_t err = _0_50();
 				for (size_t i = decimal_places; i > 0; --i) {
 					err /= 10;
 				}
@@ -612,8 +659,6 @@ namespace OpenVic {
 		}
 
 	private:
-		int64_t value;
-
 		static constexpr fixed_point_t parse_integer(char const* str, char const* const end, bool* successful) {
 			int64_t parsed_value = StringUtils::string_to_int64(str, end, successful, 10);
 			return parse(parsed_value);
