@@ -5,8 +5,7 @@ namespace OpenVic {
 	class A_001_file_tests : public TestScript {
 
 	public:
-		A_001_file_tests() {
-			set_script_name("A_001_file_tests");
+		A_001_file_tests() : TestScript { "A_001_file_tests" } {
 			add_requirements();
 		}
 

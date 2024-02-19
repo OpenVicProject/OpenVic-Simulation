@@ -2,6 +2,8 @@
 
 using namespace OpenVic;
 
+TestScript::TestScript(std::string_view new_script_name) : script_name { new_script_name } {}
+
 // Getters
 std::vector<Requirement*> TestScript::get_requirements() {
 	return requirements;

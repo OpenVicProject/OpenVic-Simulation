@@ -10,9 +10,11 @@ namespace OpenVic {
 
 		std::vector<Requirement*> requirements = std::vector<Requirement*>();
 		GameManager* PROPERTY_RW(game_manager);
-		std::string PROPERTY_RW(script_name);
+		std::string PROPERTY(script_name);
 
 	public:
+		TestScript(std::string_view new_script_name);
+
 		// expects an overriden method that performs arbitrary code execution
 		// so that each script uniquely performs tests
 		// for both requirement adding to script and to execute code

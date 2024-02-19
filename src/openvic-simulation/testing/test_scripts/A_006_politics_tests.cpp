@@ -5,8 +5,7 @@ namespace OpenVic {
 	class A_006_politics_tests : public TestScript {
 
 	public:
-		A_006_politics_tests() {
-			set_script_name("A_006_politics_tests");
+		A_006_politics_tests() : TestScript { "A_006_politics_tests" } {
 			add_requirements();
 		}
 

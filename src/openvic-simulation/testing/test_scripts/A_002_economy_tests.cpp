@@ -5,8 +5,7 @@ namespace OpenVic {
 	class A_002_economy_tests : public TestScript {
 
 	public:
-		A_002_economy_tests() {
-			set_script_name("A_002_economy_tests");
+		A_002_economy_tests() : TestScript { "A_002_economy_tests" } {
 			add_requirements();
 		}
 

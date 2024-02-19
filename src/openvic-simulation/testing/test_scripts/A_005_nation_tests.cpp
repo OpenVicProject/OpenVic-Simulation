@@ -5,8 +5,7 @@ namespace OpenVic {
 	class A_005_nation_tests : public TestScript {
 
 	public:
-		A_005_nation_tests() {
-			set_script_name("A_005_nation_tests");
+		A_005_nation_tests() : TestScript { "A_005_nation_tests" } {
 			add_requirements();
 		}
 

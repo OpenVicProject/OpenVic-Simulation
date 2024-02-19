@@ -5,8 +5,7 @@ namespace OpenVic {
 	class A_004_networking_tests : public TestScript {
 
 	public:
-		A_004_networking_tests() {
-			set_script_name("A_004_networking_tests");
+		A_004_networking_tests() : TestScript { "A_004_networking_tests" } {
 			add_requirements();
 		}
 

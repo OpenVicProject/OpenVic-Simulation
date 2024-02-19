@@ -1,9 +1,7 @@
-#pragma once
-
-#include <cstdint>
 
 static constexpr int32_t SIN_LUT_PRECISION = 16;
 static constexpr int32_t SIN_LUT_COUNT_LOG2 = 9;
+static constexpr int32_t SIN_LUT_SHIFT = SIN_LUT_PRECISION - SIN_LUT_COUNT_LOG2;
 
 static constexpr int64_t SIN_LUT[(1 << SIN_LUT_COUNT_LOG2) + 1] = {
 	0, 804, 1608, 2412, 3216, 4019, 4821, 5623, 6424, 7224, 8022, 8820, 9616, 10411, 11204, 11996,
