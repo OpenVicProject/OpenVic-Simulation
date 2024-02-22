@@ -292,7 +292,7 @@ void Map::lock_water_provinces() {
 	Logger::info("Locked water provinces after registering ", water_provinces.size());
 }
 
-bool Map::add_region(std::string_view identifier, Region::provinces_t const& provinces) {
+bool Map::add_region(std::string_view identifier, Region::provinces_t const& provinces, colour_t colour) {
 	if (identifier.empty()) {
 		Logger::error("Invalid region identifier - empty!");
 		return false;
@@ -304,7 +304,7 @@ bool Map::add_region(std::string_view identifier, Region::provinces_t const& pro
 
 	const bool meta = std::any_of(provinces.begin(), provinces.end(), std::bind_front(&Province::get_has_region));
 
-	Region region { identifier, provinces.front()->get_colour(), meta };
+	Region region { identifier, colour, meta };
 	bool ret = region.add_provinces(provinces);
 	region.lock();
 	if (regions.add_item(std::move(region))) {
@@ -562,15 +562,27 @@ bool Map::load_province_positions(BuildingTypeManager const& building_type_manag
 	})(root);
 }
 
-bool Map::load_region_file(ast::NodeCPtr root) {
+bool Map::load_region_colours(ast::NodeCPtr root, std::vector<colour_t>& colours) {
+	return expect_dictionary_reserve_length(
+		colours,
+		[&colours](std::string_view key, ast::NodeCPtr value) -> bool {
+			if (key != "color") {
+				Logger::error("Invalid key in region colours: \"", key, "\"");
+				return false;
+			}
+			return expect_colour(vector_callback(colours))(value);
+	})(root);
+}
+
+bool Map::load_region_file(ast::NodeCPtr root, std::vector<colour_t> const& colours) {
 	const bool ret = expect_dictionary_reserve_length(
 		regions,
-		[this](std::string_view region_identifier, ast::NodeCPtr region_node) -> bool {
+		[this, &colours](std::string_view region_identifier, ast::NodeCPtr region_node) -> bool {
 			Region::provinces_t provinces;
 			bool ret = expect_list_reserve_length(
 				provinces, expect_province_identifier(vector_callback_pointer(provinces))
 			)(region_node);
-			ret &= add_region(region_identifier, provinces);
+			ret &= add_region(region_identifier, provinces, colours[regions.size() % colours.size()]);
 			return ret;
 		}
 	)(root);
