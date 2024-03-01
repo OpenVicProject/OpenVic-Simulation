@@ -194,7 +194,15 @@ namespace OpenVic {
 			}
 
 			items.emplace_back(std::move(item));
-			identifier_index_map.emplace(std::move(new_identifier), StorageInfo::get_back_index(items));
+
+			const index_type index = StorageInfo::get_back_index(items);
+
+			/* Get item's identifier via index rather than using new_identifier, as it may have been invalidated item's move. */
+			identifier_index_map.emplace(
+				ValueInfo::get_identifier(ItemInfo::get_value(StorageInfo::get_item_from_index(items, index))),
+				StorageInfo::get_back_index(items)
+			);
+
 			return true;
 		}
 
