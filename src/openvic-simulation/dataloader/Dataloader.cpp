@@ -426,15 +426,15 @@ bool Dataloader::_load_technologies(GameManager& game_manager) {
 
 	const v2script::Parser technology_file_parser = parse_defines(lookup_file(technology_file));
 
-	if (!technology_manager.load_technology_file_areas(technology_file_parser.get_file_node())) {
-		Logger::error("Failed to load technology areas and folders!");
+	if (!technology_manager.load_technology_file_folders_and_areas(technology_file_parser.get_file_node())) {
+		Logger::error("Failed to load technology folders and areas!");
 		ret = false;
 	}
 
 	ModifierManager& modifier_manager = game_manager.get_modifier_manager();
 
 	if (!technology_manager.generate_modifiers(modifier_manager)) {
-		Logger::error("Failed to generate technollogy-based modifiers!");
+		Logger::error("Failed to generate technology-based modifiers!");
 		ret = false;
 	}
 
@@ -460,6 +460,9 @@ bool Dataloader::_load_technologies(GameManager& game_manager) {
 	}
 
 	technology_manager.lock_technologies();
+
+	ret &= technology_manager.generate_technology_lists();
+
 	return ret;
 }
 

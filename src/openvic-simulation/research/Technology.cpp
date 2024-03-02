@@ -76,41 +76,71 @@ bool TechnologyManager::add_technology_school(std::string_view identifier, Modif
 	return technology_schools.add_item({ identifier, std::move(values) });
 }
 
-bool TechnologyManager::load_technology_file_areas(ast::NodeCPtr root) {
-	return expect_dictionary_reserve_length(technology_folders, [this](std::string_view root_key, ast::NodeCPtr root_value) -> bool {
-		if (root_key == "folders") {
-			return expect_dictionary([this](std::string_view folder_key, ast::NodeCPtr folder_value) -> bool {
-				bool ret = add_technology_folder(folder_key);
-				TechnologyFolder const* current_folder = get_technology_folder_by_identifier(folder_key);
-				if (current_folder == nullptr)
-					return false;
-				ret &= expect_list(expect_identifier([this, current_folder](std::string_view area) -> bool {
-					return add_technology_area(area, current_folder);
-				}))(folder_value);
-				return ret;
-			})(root_value);
+bool TechnologyManager::load_technology_file_folders_and_areas(ast::NodeCPtr root) {
+	return expect_dictionary_keys(
+		"folders", ONE_EXACTLY, [this](ast::NodeCPtr root_value) -> bool {
+			const bool ret = expect_dictionary_reserve_length(
+				technology_folders,
+				[this](std::string_view folder_key, ast::NodeCPtr folder_value) -> bool {
+					bool ret = add_technology_folder(folder_key);
+
+					TechnologyFolder const* current_folder = get_technology_folder_by_identifier(folder_key);
+					if (current_folder == nullptr) {
+						Logger::error("Failed to add and retrieve technology folder: \"", folder_key, "\"");
+						return false;
+					}
+
+					ret &= expect_list_reserve_length(
+						technology_areas,
+						expect_identifier(
+							std::bind(&TechnologyManager::add_technology_area, this, std::placeholders::_1, current_folder)
+						)
+					)(folder_value);
+
+					return ret;
+				}
+			)(root_value);
+
 			lock_technology_folders();
 			lock_technology_areas();
-		} else {
-			return root_key == "schools"; /* Ignore schools, error otherwise */
-		}
-	})(root);
+
+			return ret;
+		},
+		/* Never fail because of "schools", even if it's missing or there are duplicate entries,
+		 * those issues will be caught by load_technology_file_schools. */
+		"schools", ZERO_OR_MORE, success_callback
+	)(root);
 }
 
-bool TechnologyManager::load_technology_file_schools(ModifierManager const& modifier_manager, ast::NodeCPtr root) {
-	return expect_dictionary([this, &modifier_manager](std::string_view root_key, ast::NodeCPtr root_value) -> bool {
-		if (root_key == "schools") {
-			return expect_dictionary_reserve_length(technology_schools, [this, &modifier_manager](std::string_view school_key, ast::NodeCPtr school_value) -> bool {
-				ModifierValue modifiers;
-				bool ret = modifier_manager.expect_modifier_value(move_variable_callback(modifiers))(school_value);
-				ret &= add_technology_school(school_key, std::move(modifiers));
-				return ret;
-			})(root_value);
+bool TechnologyManager::load_technology_file_schools(
+	ModifierManager const& modifier_manager, ast::NodeCPtr root
+) {
+	if (!technology_folders.is_locked() || !technology_areas.is_locked()) {
+		Logger::error("Cannot load technology schools until technology folders and areas are locked!");
+		return false;
+	}
+	return expect_dictionary_keys(
+		/* Never fail because of "folders", even if it's missing or there are duplicate entries,
+		 * those issues will have been caught by load_technology_file_folders_and_areas. */
+		"folders", ZERO_OR_MORE, success_callback,
+		"schools", ONE_EXACTLY, [this, &modifier_manager](ast::NodeCPtr root_value) -> bool {
+			const bool ret = expect_dictionary_reserve_length(
+				technology_schools,
+				[this, &modifier_manager](std::string_view school_key, ast::NodeCPtr school_value) -> bool {
+					ModifierValue modifiers;
+					bool ret = modifier_manager.expect_modifier_value(move_variable_callback(modifiers))(school_value);
+
+					ret &= add_technology_school(school_key, std::move(modifiers));
+
+					return ret;
+				}
+			)(root_value);
+
 			lock_technology_schools();
-		} else {
-			return root_key == "folders"; /* Ignore folders, error otherwise */
+
+			return ret;
 		}
-	})(root);
+	)(root);
 }
 
 bool TechnologyManager::load_technologies_file(
@@ -118,7 +148,8 @@ bool TechnologyManager::load_technologies_file(
 	ast::NodeCPtr root
 ) {
 	return expect_dictionary_reserve_length(technologies, [this, &modifier_manager, &unit_manager, &building_type_manager](
-		std::string_view tech_key, ast::NodeCPtr tech_value) -> bool {
+		std::string_view tech_key, ast::NodeCPtr tech_value
+	) -> bool {
 		ModifierValue modifiers;
 		TechnologyArea const* area = nullptr;
 		Date::year_t year = 0;
@@ -129,7 +160,8 @@ bool TechnologyManager::load_technologies_file(
 		Technology::building_set_t activated_buildings;
 		ConditionalWeight ai_chance { scope_t::COUNTRY, scope_t::COUNTRY, scope_t::NO_SCOPE };
 
-		bool ret = modifier_manager.expect_modifier_value_and_keys(move_variable_callback(modifiers),
+		bool ret = modifier_manager.expect_modifier_value_and_keys(
+			move_variable_callback(modifiers),
 			"area", ONE_EXACTLY, expect_technology_area_identifier(assign_variable_callback_pointer(area)),
 			"year", ONE_EXACTLY, expect_uint(assign_variable_callback(year)),
 			"cost", ONE_EXACTLY, expect_fixed_point(assign_variable_callback(cost)),
@@ -164,8 +196,27 @@ bool TechnologyManager::generate_modifiers(ModifierManager& modifier_manager) co
 
 bool TechnologyManager::parse_scripts(GameManager const& game_manager) {
 	bool ret = true;
+
 	for (Technology& technology : technologies.get_items()) {
 		ret &= technology.parse_scripts(game_manager);
 	}
+
 	return ret;
+}
+
+bool TechnologyManager::generate_technology_lists() {
+	if (!technology_folders.is_locked() || !technology_areas.is_locked() || !technologies.is_locked()) {
+		Logger::error("Cannot generate technology lists until technology folders, areas, and technologies are locked!");
+		return false;
+	}
+
+	for (TechnologyArea const& area : technology_areas.get_items()) {
+		const_cast<TechnologyFolder&>(area.folder).technology_areas.push_back(&area);
+	}
+
+	for (Technology const& tech : technologies.get_items()) {
+		const_cast<TechnologyArea&>(tech.area).technologies.push_back(&tech);
+	}
+
+	return true;
 }

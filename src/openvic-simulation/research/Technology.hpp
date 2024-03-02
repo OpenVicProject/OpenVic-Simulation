@@ -10,21 +10,28 @@
 #include "openvic-simulation/types/OrderedContainers.hpp"
 
 namespace OpenVic {
+	struct TechnologyArea;
+
 	struct TechnologyFolder : HasIdentifier {
 		friend struct TechnologyManager;
 
 	private:
+		std::vector<TechnologyArea const*> PROPERTY(technology_areas);
+
 		TechnologyFolder(std::string_view new_identifier);
 
 	public:
 		TechnologyFolder(TechnologyFolder&&) = default;
 	};
 
+	struct Technology;
+
 	struct TechnologyArea : HasIdentifier {
 		friend struct TechnologyManager;
 
 	private:
 		TechnologyFolder const& PROPERTY(folder);
+		std::vector<Technology const*> PROPERTY(technologies);
 
 		TechnologyArea(std::string_view new_identifier, TechnologyFolder const& new_folder);
 
@@ -86,13 +93,21 @@ namespace OpenVic {
 
 		bool add_technology_school(std::string_view identifier, ModifierValue&& values);
 
-		bool load_technology_file_areas(ast::NodeCPtr root); // common/technology.txt
-		bool load_technology_file_schools(ModifierManager const& modifier_manager, ast::NodeCPtr root); // also common/technology.txt
+		/* Both of these functions load data from "common/technology.txt", they are separated because the schools depend
+		 * on modifiers generated from the folder definitions and so loading must be staggered. */
+		bool load_technology_file_folders_and_areas(ast::NodeCPtr root);
+		bool load_technology_file_schools(ModifierManager const& modifier_manager, ast::NodeCPtr root);
+
+		/* Loaded from "technologies/.txt" files named after technology folders. */
 		bool load_technologies_file(
 			ModifierManager const& modifier_manager, UnitManager const& unit_manager,
 			BuildingTypeManager const& building_type_manager, ast::NodeCPtr root
-		); // technologies/*.txt
+		);
+
 		bool generate_modifiers(ModifierManager& modifier_manager) const;
+
+		/* Populates the lists of technology areas for each technology folder and technologies for each technology area. */
+		bool generate_technology_lists();
 
 		bool parse_scripts(GameManager const& game_manager);
 	};
