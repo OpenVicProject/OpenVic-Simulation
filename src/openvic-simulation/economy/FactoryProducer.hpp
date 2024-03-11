@@ -13,6 +13,8 @@ namespace OpenVic {
 		static constexpr uint8_t DAYS_OF_HISTORY = 7;
 		using daily_profit_history_t = std::array<fixed_point_t, DAYS_OF_HISTORY>;
 
+		ordered_map<Job const*, Pop::pop_size_t> employees_per_job_cache;
+
 		uint8_t PROPERTY(profit_history_current);
 		daily_profit_history_t PROPERTY(daily_profit_history);
 		ProductionType const& PROPERTY(production_type);
@@ -47,5 +49,8 @@ namespace OpenVic {
 
 		fixed_point_t get_profitability_yesterday() const;
 		fixed_point_t get_average_profitability_last_seven_days() const;
+		void produce(
+			const fixed_point_t input_modifier, const fixed_point_t throughput_modifier, const fixed_point_t output_modifier
+		);
 	};
 }

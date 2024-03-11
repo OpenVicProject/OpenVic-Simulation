@@ -30,7 +30,7 @@ namespace OpenVic {
 	struct Pop {
 		friend struct PopManager;
 
-		using pop_size_t = int64_t;
+		using pop_size_t = int32_t;
 
 		static constexpr pop_size_t MAX_SIZE = std::numeric_limits<pop_size_t>::max();
 
