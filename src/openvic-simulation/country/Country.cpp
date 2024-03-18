@@ -20,36 +20,36 @@ using namespace OpenVic::NodeTools;
 CountryParty::CountryParty(
 	std::string_view new_identifier, Date new_start_date, Date new_end_date, Ideology const& new_ideology,
 	policy_map_t&& new_policies
-) : HasIdentifier { new_identifier }, start_date { new_start_date }, end_date { new_end_date }, ideology { new_ideology },
-	policies { std::move(new_policies) } {}
+) : HasIdentifierAndColour { new_identifier, new_ideology.get_colour(), false }, start_date { new_start_date },
+	end_date { new_end_date }, ideology { new_ideology }, policies { std::move(new_policies) } {}
 
 Country::Country(
 	std::string_view new_identifier,
 	colour_t new_colour,
 	GraphicalCultureType const& new_graphical_culture,
-	IdentifierRegistry<CountryParty>&& new_parties, 
-	unit_names_map_t&& new_unit_names, 
+	IdentifierRegistry<CountryParty>&& new_parties,
+	unit_names_map_t&& new_unit_names,
 	bool new_dynamic_tag,
 	government_colour_map_t&& new_alternative_colours,
 	colour_t new_primary_unit_colour,
 	colour_t new_secondary_unit_colour,
 	colour_t new_tertiary_unit_colour
-) : HasIdentifierAndColour { 
-	new_identifier, new_colour, false }, 
+) : HasIdentifierAndColour {
+	new_identifier, new_colour, false },
 	graphical_culture { new_graphical_culture },
-	parties { std::move(new_parties) }, 
-	unit_names { std::move(new_unit_names) }, 
+	parties { std::move(new_parties) },
+	unit_names { std::move(new_unit_names) },
 	dynamic_tag { new_dynamic_tag },
 	alternative_colours { std::move(new_alternative_colours) },
 	primary_unit_colour { new_primary_unit_colour },
 	secondary_unit_colour { new_secondary_unit_colour },
-	tertiary_unit_colour { new_tertiary_unit_colour } 
+	tertiary_unit_colour { new_tertiary_unit_colour }
 	{}
 
 bool CountryManager::add_country(
 	std::string_view identifier, colour_t colour, GraphicalCultureType const* graphical_culture,
 	IdentifierRegistry<CountryParty>&& parties, Country::unit_names_map_t&& unit_names, bool dynamic_tag,
-	Country::government_colour_map_t&& alternative_colours, 
+	Country::government_colour_map_t&& alternative_colours,
 	colour_t primary_unit_colour, colour_t secondary_unit_colour, colour_t tertiary_unit_colour
 ) {
 	if (identifier.empty()) {

@@ -1,6 +1,5 @@
 #pragma once
 
-#include "openvic-simulation/dataloader/NodeTools.hpp"
 #include "openvic-simulation/misc/Modifier.hpp"
 #include "openvic-simulation/politics/Rule.hpp"
 #include "openvic-simulation/scripts/ConditionScript.hpp"
@@ -22,7 +21,7 @@ namespace OpenVic {
 	};
 
 	// Issue (i.e. protectionism)
-	struct Issue : Modifier {
+	struct Issue : HasIdentifierAndColour, ModifierValue {
 		friend struct IssueManager;
 
 	private:
@@ -32,7 +31,7 @@ namespace OpenVic {
 
 	protected:
 		Issue(
-			std::string_view new_identifier, ModifierValue&& new_values, IssueGroup const& new_group,
+			std::string_view new_identifier, colour_t new_colour, ModifierValue&& new_values, IssueGroup const& new_group,
 			RuleSet&& new_rules, bool new_jingoism
 		);
 
@@ -83,8 +82,8 @@ namespace OpenVic {
 		EffectScript PROPERTY(on_execute_effect);
 
 		Reform(
-			std::string_view new_identifier, ModifierValue&& new_values, ReformGroup const& new_group, size_t new_ordinal,
-			RuleSet&& new_rules, tech_cost_t new_technology_cost, ConditionScript&& new_allow,
+			std::string_view new_identifier, colour_t new_colour, ModifierValue&& new_values, ReformGroup const& new_group,
+			size_t new_ordinal, RuleSet&& new_rules, tech_cost_t new_technology_cost, ConditionScript&& new_allow,
 			ConditionScript&& new_on_execute_trigger, EffectScript&& new_on_execute_effect
 		);
 
@@ -119,13 +118,14 @@ namespace OpenVic {
 	public:
 		bool add_issue_group(std::string_view identifier);
 		bool add_issue(
-			std::string_view identifier, ModifierValue&& values, IssueGroup const* group, RuleSet&& rules, bool jingoism
+			std::string_view identifier, colour_t new_colour, ModifierValue&& values, IssueGroup const* group, RuleSet&& rules,
+			bool jingoism
 		);
 		bool add_reform_type(std::string_view identifier, bool uncivilised);
 		bool add_reform_group(std::string_view identifier, ReformType const* type, bool ordered, bool administrative);
 		bool add_reform(
-			std::string_view identifier, ModifierValue&& values, ReformGroup const* group, size_t ordinal, RuleSet&& rules,
-			Reform::tech_cost_t technology_cost, ConditionScript&& allow, ConditionScript&& on_execute_trigger,
+			std::string_view identifier, colour_t new_colour, ModifierValue&& values, ReformGroup const* group, size_t ordinal,
+			RuleSet&& rules, Reform::tech_cost_t technology_cost, ConditionScript&& allow, ConditionScript&& on_execute_trigger,
 			EffectScript&& on_execute_effect
 		);
 		bool load_issues_file(ModifierManager const& modifier_manager, RuleManager const& rule_manager, ast::NodeCPtr root);
