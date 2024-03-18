@@ -658,6 +658,10 @@ namespace OpenVic {
 			return static_cast<int64_t>(lhs) << PRECISION != rhs.value;
 		}
 
+		constexpr friend std::strong_ordering operator<=>(fixed_point_t const& lhs, fixed_point_t const& rhs) {
+			return lhs.value <=> rhs.value;
+		}
+
 	private:
 		static constexpr fixed_point_t parse_integer(char const* str, char const* const end, bool* successful) {
 			int64_t parsed_value = StringUtils::string_to_int64(str, end, successful, 10);
