@@ -65,9 +65,14 @@ bool Province::expand_building(size_t building_index) {
 	return building->expand();
 }
 
+void Province::_add_pop(Pop pop) {
+	pop.set_location(this);
+	pops.push_back(std::move(pop));
+}
+
 bool Province::add_pop(Pop&& pop) {
 	if (!is_water()) {
-		pops.push_back(std::move(pop));
+		_add_pop(std::move(pop));
 		return true;
 	} else {
 		Logger::error("Trying to add pop to water province ", get_identifier());
@@ -79,7 +84,7 @@ bool Province::add_pop_vec(std::vector<Pop> const& pop_vec) {
 	if (!is_water()) {
 		reserve_more(pops, pop_vec.size());
 		for (Pop const& pop : pop_vec) {
-			pops.push_back(pop);
+			_add_pop(pop);
 		}
 		return true;
 	} else {
@@ -104,7 +109,7 @@ void Province::update_pops() {
 	for (Pop const& pop : pops) {
 		total_population += pop.get_size();
 		pop_type_distribution[&pop.get_type()] += pop.get_size();
-		//ideology_distribution[&pop.get_???()] += pop.get_size();
+		ideology_distribution += pop.get_ideologies();
 		culture_distribution[&pop.get_culture()] += pop.get_size();
 		religion_distribution[&pop.get_religion()] += pop.get_size();
 	}
@@ -256,4 +261,12 @@ bool Province::apply_history_to_province(ProvinceHistoryEntry const* entry) {
 	// TODO: load state buildings
 	// TODO: party loyalties for each POP when implemented on POP side
 	return ret;
+}
+
+void Province::setup_pop_test_values(
+	IdeologyManager const& ideology_manager, IssueManager const& issue_manager, Country const& country
+) {
+	for (Pop& pop : pops) {
+		pop.setup_pop_test_values(ideology_manager, issue_manager, country);
+	}
 }

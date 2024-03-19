@@ -63,7 +63,10 @@ bool GameManager::load_bookmark(Bookmark const* new_bookmark) {
 		Logger::warning("Bookmark date ", bookmark->get_date(), " is not in the game's time period!");
 	}
 	today = bookmark->get_date();
-	ret &= map.apply_history_to_provinces(history_manager.get_province_manager(), today);
+	ret &= map.apply_history_to_provinces(
+		history_manager.get_province_manager(), today, politics_manager.get_ideology_manager(),
+		politics_manager.get_issue_manager(), *country_manager.get_country_by_identifier("ENG")
+	);
 	map.get_state_manager().generate_states(map);
 	// TODO - apply country history
 	return ret;
