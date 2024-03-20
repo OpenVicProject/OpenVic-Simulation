@@ -144,10 +144,10 @@ bool TechnologyManager::load_technology_file_schools(
 }
 
 bool TechnologyManager::load_technologies_file(
-	ModifierManager const& modifier_manager, UnitManager const& unit_manager, BuildingTypeManager const& building_type_manager,
+	ModifierManager const& modifier_manager, UnitTypeManager const& unit_type_manager, BuildingTypeManager const& building_type_manager,
 	ast::NodeCPtr root
 ) {
-	return expect_dictionary_reserve_length(technologies, [this, &modifier_manager, &unit_manager, &building_type_manager](
+	return expect_dictionary_reserve_length(technologies, [this, &modifier_manager, &unit_type_manager, &building_type_manager](
 		std::string_view tech_key, ast::NodeCPtr tech_value
 	) -> bool {
 		ModifierValue modifiers;
@@ -167,7 +167,7 @@ bool TechnologyManager::load_technologies_file(
 			"cost", ONE_EXACTLY, expect_fixed_point(assign_variable_callback(cost)),
 			"unciv_military", ZERO_OR_ONE, expect_bool(assign_variable_callback(unciv_military)),
 			"unit", ZERO_OR_ONE, expect_uint(assign_variable_callback(unit)),
-			"activate_unit", ZERO_OR_MORE, unit_manager.expect_unit_identifier(set_callback_pointer(activated_units)),
+			"activate_unit", ZERO_OR_MORE, unit_type_manager.expect_unit_type_identifier(set_callback_pointer(activated_units)),
 			"activate_building", ZERO_OR_MORE, building_type_manager.expect_building_type_identifier(
 				set_callback_pointer(activated_buildings)
 			),

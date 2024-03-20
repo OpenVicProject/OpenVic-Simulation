@@ -3,7 +3,7 @@
 #include <cstdint>
 
 #include "openvic-simulation/economy/BuildingType.hpp"
-#include "openvic-simulation/military/Unit.hpp"
+#include "openvic-simulation/military/UnitType.hpp"
 #include "openvic-simulation/misc/Modifier.hpp"
 #include "openvic-simulation/scripts/ConditionalWeight.hpp"
 #include "openvic-simulation/types/Date.hpp"
@@ -42,7 +42,7 @@ namespace OpenVic {
 	struct Technology : Modifier {
 		friend struct TechnologyManager;
 
-		using unit_set_t = ordered_set<Unit const*>;
+		using unit_set_t = ordered_set<UnitType const*>;
 		using building_set_t = ordered_set<BuildingType const*>;
 
 	private:
@@ -100,7 +100,7 @@ namespace OpenVic {
 
 		/* Loaded from "technologies/.txt" files named after technology folders. */
 		bool load_technologies_file(
-			ModifierManager const& modifier_manager, UnitManager const& unit_manager,
+			ModifierManager const& modifier_manager, UnitTypeManager const& unit_type_manager,
 			BuildingTypeManager const& building_type_manager, ast::NodeCPtr root
 		);
 

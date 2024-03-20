@@ -6,18 +6,18 @@
 #include "openvic-simulation/types/OrderedContainers.hpp"
 
 namespace OpenVic {
-	struct Unit;
+	struct UnitType;
 	struct BuildingType;
 	struct Crime;
 
-	struct UnitManager;
+	struct UnitTypeManager;
 	struct BuildingTypeManager;
 	struct CrimeManager;
 
 	struct Invention : Modifier {
 		friend struct InventionManager;
 		//TODO implement limit and chance
-		using unit_set_t = ordered_set<Unit const*>;
+		using unit_set_t = ordered_set<UnitType const*>;
 		using building_set_t = ordered_set<BuildingType const*>;
 		using crime_set_t = ordered_set<Crime const*>;
 
@@ -54,7 +54,7 @@ namespace OpenVic {
 		);
 
 		bool load_inventions_file(
-			ModifierManager const& modifier_manager, UnitManager const& unit_manager,
+			ModifierManager const& modifier_manager, UnitTypeManager const& unit_type_manager,
 			BuildingTypeManager const& building_type_manager, CrimeManager const& crime_manager, ast::NodeCPtr root
 		); // inventions/*.txt
 

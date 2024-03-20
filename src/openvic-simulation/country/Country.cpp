@@ -196,9 +196,9 @@ bool CountryManager::load_country_data_file(
 			),
 		"party", ZERO_OR_MORE, load_country_party(game_manager.get_politics_manager(), parties),
 		"unit_names", ZERO_OR_ONE,
-			game_manager.get_military_manager().get_unit_manager().expect_unit_dictionary_reserve_length(
+			game_manager.get_military_manager().get_unit_type_manager().expect_unit_type_dictionary_reserve_length(
 				unit_names,
-				[&unit_names](Unit const& unit, ast::NodeCPtr value) -> bool {
+				[&unit_names](UnitType const& unit, ast::NodeCPtr value) -> bool {
 					return name_list_callback(map_callback(unit_names, &unit))(value);
 				}
 			)

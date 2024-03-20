@@ -358,16 +358,16 @@ bool Dataloader::_load_pop_types(GameManager& game_manager) {
 bool Dataloader::_load_units(GameManager& game_manager) const {
 	static constexpr std::string_view units_directory = "units";
 
-	UnitManager& unit_manager = game_manager.get_military_manager().get_unit_manager();
+	UnitTypeManager& unit_type_manager = game_manager.get_military_manager().get_unit_type_manager();
 
 	const path_vector_t unit_files = lookup_files_in_dir(units_directory, ".txt");
 
-	unit_manager.reserve_all_units(unit_files.size());
+	unit_type_manager.reserve_all_unit_types(unit_files.size());
 
 	bool ret = apply_to_files(
 		unit_files,
-		[&game_manager, &unit_manager](fs::path const& file) -> bool {
-			return unit_manager.load_unit_file(
+		[&game_manager, &unit_type_manager](fs::path const& file) -> bool {
+			return unit_type_manager.load_unit_type_file(
 				game_manager.get_economy_manager().get_good_manager(),
 				game_manager.get_map().get_terrain_type_manager(),
 				game_manager.get_modifier_manager(),
@@ -376,9 +376,9 @@ bool Dataloader::_load_units(GameManager& game_manager) const {
 		}
 	);
 
-	unit_manager.lock_all_units();
+	unit_type_manager.lock_all_unit_types();
 
-	if (!unit_manager.generate_modifiers(game_manager.get_modifier_manager())) {
+	if (!unit_type_manager.generate_modifiers(game_manager.get_modifier_manager())) {
 		Logger::error("Failed to generate unit-based modifiers!");
 		ret = false;
 	}
@@ -449,7 +449,7 @@ bool Dataloader::_load_technologies(GameManager& game_manager) {
 		[this, &game_manager, &technology_manager, &modifier_manager](fs::path const& file) -> bool {
 			return technology_manager.load_technologies_file(
 				modifier_manager,
-				game_manager.get_military_manager().get_unit_manager(),
+				game_manager.get_military_manager().get_unit_type_manager(),
 				game_manager.get_economy_manager().get_building_type_manager(),
 				parse_defines_cached(file).get_file_node()
 			);
@@ -476,7 +476,7 @@ bool Dataloader::_load_inventions(GameManager& game_manager) {
 		[this, &game_manager, &invention_manager](fs::path const& file) -> bool {
 			return invention_manager.load_inventions_file(
 				game_manager.get_modifier_manager(),
-				game_manager.get_military_manager().get_unit_manager(),
+				game_manager.get_military_manager().get_unit_type_manager(),
 				game_manager.get_economy_manager().get_building_type_manager(),
 				game_manager.get_crime_manager(),
 				parse_defines_cached(file).get_file_node()
@@ -932,7 +932,7 @@ bool Dataloader::load_defines(GameManager& game_manager) {
 		ret = false;
 	}
 	if (!game_manager.get_pop_manager().load_delayed_parse_pop_type_data(
-		game_manager.get_military_manager().get_unit_manager(),
+		game_manager.get_military_manager().get_unit_type_manager(),
 		game_manager.get_politics_manager().get_issue_manager()
 	)) {
 		Logger::error("Failed to load delayed parse pop type data (promotion and issue weights)!");

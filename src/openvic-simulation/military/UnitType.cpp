@@ -1,21 +1,21 @@
-#include "Unit.hpp"
+#include "UnitType.hpp"
 
 #include "openvic-simulation/map/TerrainType.hpp"
 
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;
 
-using enum Unit::branch_t;
-using enum Unit::unit_type_t;
+using enum UnitType::branch_t;
+using enum UnitType::unit_category_t;
 
-Unit::Unit(
-	std::string_view new_identifier, branch_t new_branch, unit_args_t& unit_args
+UnitType::UnitType(
+	std::string_view new_identifier, branch_t new_branch, unit_type_args_t& unit_args
 ) : HasIdentifier { new_identifier },
 	branch { new_branch },
 	icon { unit_args.icon },
 	sprite { unit_args.sprite },
 	active { unit_args.active },
-	unit_type { unit_args.unit_type },
+	unit_category { unit_args.unit_category },
 	floating_flag { unit_args.floating_flag },
 	priority { unit_args.priority },
 	max_strength { unit_args.max_strength },
@@ -30,52 +30,52 @@ Unit::Unit(
 	supply_cost { std::move(unit_args.supply_cost) },
 	terrain_modifiers { std::move(unit_args.terrain_modifiers) } {}
 
-LandUnit::LandUnit(
-	std::string_view new_identifier, unit_args_t& unit_args, land_unit_args_t const& land_unit_args
-) : Unit { new_identifier, LAND, unit_args },
-	allowed_cultures { land_unit_args.allowed_cultures },
-	sprite_override { land_unit_args.sprite_override },
-	sprite_mount { land_unit_args.sprite_mount },
-	sprite_mount_attach_node { land_unit_args.sprite_mount_attach_node },
-	reconnaissance { land_unit_args.reconnaissance },
-	attack { land_unit_args.attack },
-	defence { land_unit_args.defence },
-	discipline { land_unit_args.discipline },
-	support { land_unit_args.support },
-	maneuver { land_unit_args.maneuver },
-	siege { land_unit_args.siege } {}
+RegimentType::RegimentType(
+	std::string_view new_identifier, unit_type_args_t& unit_args, regiment_type_args_t const& regiment_type_args
+) : UnitType { new_identifier, LAND, unit_args },
+	allowed_cultures { regiment_type_args.allowed_cultures },
+	sprite_override { regiment_type_args.sprite_override },
+	sprite_mount { regiment_type_args.sprite_mount },
+	sprite_mount_attach_node { regiment_type_args.sprite_mount_attach_node },
+	reconnaissance { regiment_type_args.reconnaissance },
+	attack { regiment_type_args.attack },
+	defence { regiment_type_args.defence },
+	discipline { regiment_type_args.discipline },
+	support { regiment_type_args.support },
+	maneuver { regiment_type_args.maneuver },
+	siege { regiment_type_args.siege } {}
 
-NavalUnit::NavalUnit(
-	std::string_view new_identifier, unit_args_t& unit_args, naval_unit_args_t const& naval_unit_args
-) : Unit { new_identifier, NAVAL, unit_args },
-	naval_icon { naval_unit_args.naval_icon },
-	sail { naval_unit_args.sail },
-	transport { naval_unit_args.transport },
-	capital { naval_unit_args.capital },
-	colonial_points { naval_unit_args.colonial_points },
-	build_overseas { naval_unit_args.build_overseas },
-	min_port_level { naval_unit_args.min_port_level },
-	limit_per_port { naval_unit_args.limit_per_port },
-	supply_consumption_score { naval_unit_args.supply_consumption_score },
-	hull { naval_unit_args.hull },
-	gun_power { naval_unit_args.gun_power },
-	fire_range { naval_unit_args.fire_range },
-	evasion { naval_unit_args.evasion },
-	torpedo_attack { naval_unit_args.torpedo_attack } {}
+ShipType::ShipType(
+	std::string_view new_identifier, unit_type_args_t& unit_args, ship_type_args_t const& ship_type_args
+) : UnitType { new_identifier, NAVAL, unit_args },
+	naval_icon { ship_type_args.naval_icon },
+	sail { ship_type_args.sail },
+	transport { ship_type_args.transport },
+	capital { ship_type_args.capital },
+	colonial_points { ship_type_args.colonial_points },
+	build_overseas { ship_type_args.build_overseas },
+	min_port_level { ship_type_args.min_port_level },
+	limit_per_port { ship_type_args.limit_per_port },
+	supply_consumption_score { ship_type_args.supply_consumption_score },
+	hull { ship_type_args.hull },
+	gun_power { ship_type_args.gun_power },
+	fire_range { ship_type_args.fire_range },
+	evasion { ship_type_args.evasion },
+	torpedo_attack { ship_type_args.torpedo_attack } {}
 
-void UnitManager::reserve_all_units(size_t size) {
-	reserve_more_units(size);
-	reserve_more_land_units(size);
-	reserve_more_naval_units(size);
+void UnitTypeManager::reserve_all_unit_types(size_t size) {
+	reserve_more_unit_types(size);
+	reserve_more_regiment_types(size);
+	reserve_more_ship_types(size);
 }
 
-void UnitManager::lock_all_units() {
-	units.lock();
-	land_units.lock();
-	naval_units.lock();
+void UnitTypeManager::lock_all_unit_types() {
+	unit_types.lock();
+	regiment_types.lock();
+	ship_types.lock();
 }
 
-static bool _check_shared_parameters(std::string_view identifier, Unit::unit_args_t const& unit_args) {
+static bool _check_shared_parameters(std::string_view identifier, UnitType::unit_type_args_t const& unit_args) {
 	if (identifier.empty()) {
 		Logger::error("Invalid unit identifier - empty!");
 		return false;
@@ -86,7 +86,7 @@ static bool _check_shared_parameters(std::string_view identifier, Unit::unit_arg
 		return false;
 	}
 
-	if (unit_args.unit_type == INVALID_UNIT_TYPE) {
+	if (unit_args.unit_category == INVALID_UNIT_CATEGORY) {
 		Logger::error("Invalid unit type for unit ", identifier, "!");
 		return false;
 	}
@@ -96,8 +96,8 @@ static bool _check_shared_parameters(std::string_view identifier, Unit::unit_arg
 	return true;
 }
 
-bool UnitManager::add_land_unit(
-	std::string_view identifier, Unit::unit_args_t& unit_args, LandUnit::land_unit_args_t const& land_unit_args
+bool UnitTypeManager::add_regiment_type(
+	std::string_view identifier, UnitType::unit_type_args_t& unit_args, RegimentType::regiment_type_args_t const& regiment_type_args
 ) {
 	if (!_check_shared_parameters(identifier, unit_args)) {
 		return false;
@@ -105,47 +105,47 @@ bool UnitManager::add_land_unit(
 
 	// TODO check that sprite_override, sprite_mount, and sprite_mount_attach_node exist
 
-	if (naval_units.has_identifier(identifier)) {
+	if (ship_types.has_identifier(identifier)) {
 		Logger::error("Land unit ", identifier, " already exists as a naval unit!");
 		return false;
 	}
 
-	bool ret = land_units.add_item({ identifier, unit_args, std::move(land_unit_args) });
+	bool ret = regiment_types.add_item({ identifier, unit_args, std::move(regiment_type_args) });
 	if (ret) {
-		ret &= units.add_item(&land_units.get_items().back());
+		ret &= unit_types.add_item(&regiment_types.get_items().back());
 	}
 	return ret;
 }
 
-bool UnitManager::add_naval_unit(
-	std::string_view identifier, Unit::unit_args_t& unit_args, NavalUnit::naval_unit_args_t const& naval_unit_args
+bool UnitTypeManager::add_ship_type(
+	std::string_view identifier, UnitType::unit_type_args_t& unit_args, ShipType::ship_type_args_t const& ship_type_args
 ) {
 	if (!_check_shared_parameters(identifier, unit_args)) {
 		return false;
 	}
 
-	if (naval_unit_args.naval_icon <= 0) {
-		Logger::error("Invalid naval icon identifier - ", naval_unit_args.naval_icon, " (must be positive)");
+	if (ship_type_args.naval_icon <= 0) {
+		Logger::error("Invalid naval icon identifier - ", ship_type_args.naval_icon, " (must be positive)");
 		return false;
 	}
 
-	if (naval_unit_args.supply_consumption_score <= 0) {
+	if (ship_type_args.supply_consumption_score <= 0) {
 		Logger::warning("Supply consumption score for ", identifier, " is not positive!");
 	}
 
-	if (land_units.has_identifier(identifier)) {
+	if (regiment_types.has_identifier(identifier)) {
 		Logger::error("Naval unit ", identifier, " already exists as a land unit!");
 		return false;
 	}
 
-	bool ret = naval_units.add_item({ identifier, unit_args, naval_unit_args });
+	bool ret = ship_types.add_item({ identifier, unit_args, ship_type_args });
 	if (ret) {
-		ret &= units.add_item(&naval_units.get_items().back());
+		ret &= unit_types.add_item(&ship_types.get_items().back());
 	}
 	return ret;
 }
 
-bool UnitManager::load_unit_file(
+bool UnitTypeManager::load_unit_type_file(
 	GoodManager const& good_manager, TerrainTypeManager const& terrain_type_manager, ModifierManager const& modifier_manager,
 	ast::NodeCPtr root
 ) {
@@ -153,7 +153,7 @@ bool UnitManager::load_unit_file(
 		std::string_view key, ast::NodeCPtr value
 	) -> bool {
 
-		Unit::branch_t branch = INVALID_BRANCH;
+		UnitType::branch_t branch = INVALID_BRANCH;
 
 		bool ret = expect_key("type", expect_branch_identifier(assign_variable_callback(branch)))(value);
 
@@ -164,9 +164,9 @@ bool UnitManager::load_unit_file(
 			return false;
 		}
 
-		Unit::unit_args_t unit_args {};
+		UnitType::unit_type_args_t unit_args {};
 
-		static const string_map_t<Unit::unit_type_t> unit_type_map {
+		static const string_map_t<UnitType::unit_category_t> unit_type_map {
 			{ "infantry", INFANTRY },
 			{ "cavalry", CAVALRY },
 			{ "support", SUPPORT },
@@ -184,7 +184,7 @@ bool UnitManager::load_unit_file(
 			"sprite", ONE_EXACTLY, expect_identifier(assign_variable_callback(unit_args.sprite)),
 			"active", ZERO_OR_ONE, expect_bool(assign_variable_callback(unit_args.active)),
 			"unit_type", ONE_EXACTLY,
-				expect_identifier(expect_mapped_string(unit_type_map, assign_variable_callback(unit_args.unit_type))),
+				expect_identifier(expect_mapped_string(unit_type_map, assign_variable_callback(unit_args.unit_category))),
 			"floating_flag", ONE_EXACTLY, expect_bool(assign_variable_callback(unit_args.floating_flag)),
 			"priority", ONE_EXACTLY, expect_uint(assign_variable_callback(unit_args.priority)),
 			"max_strength", ONE_EXACTLY, expect_fixed_point(assign_variable_callback(unit_args.max_strength)),
@@ -214,64 +214,64 @@ bool UnitManager::load_unit_file(
 
 		switch (branch) {
 		case LAND: {
-			LandUnit::land_unit_args_t land_unit_args {};
+			RegimentType::regiment_type_args_t regiment_type_args {};
 			bool is_restricted_to_primary_culture = false;
 			bool is_restricted_to_accepted_cultures = false;
 
 			ret &= add_key_map_entries(key_map,
 				"primary_culture", ZERO_OR_ONE, expect_bool(assign_variable_callback(is_restricted_to_primary_culture)),
 				"accepted_culture", ZERO_OR_ONE, expect_bool(assign_variable_callback(is_restricted_to_accepted_cultures)),
-				"sprite_override", ZERO_OR_ONE, expect_identifier(assign_variable_callback(land_unit_args.sprite_override)),
-				"sprite_mount", ZERO_OR_ONE, expect_identifier(assign_variable_callback(land_unit_args.sprite_mount)),
+				"sprite_override", ZERO_OR_ONE, expect_identifier(assign_variable_callback(regiment_type_args.sprite_override)),
+				"sprite_mount", ZERO_OR_ONE, expect_identifier(assign_variable_callback(regiment_type_args.sprite_mount)),
 				"sprite_mount_attach_node", ZERO_OR_ONE,
-					expect_identifier(assign_variable_callback(land_unit_args.sprite_mount_attach_node)),
-				"reconnaissance", ONE_EXACTLY, expect_fixed_point(assign_variable_callback(land_unit_args.reconnaissance)),
-				"attack", ONE_EXACTLY, expect_fixed_point(assign_variable_callback(land_unit_args.attack)),
-				"defence", ONE_EXACTLY, expect_fixed_point(assign_variable_callback(land_unit_args.defence)),
-				"discipline", ONE_EXACTLY, expect_fixed_point(assign_variable_callback(land_unit_args.discipline)),
-				"support", ONE_EXACTLY, expect_fixed_point(assign_variable_callback(land_unit_args.support)),
-				"maneuver", ONE_EXACTLY, expect_fixed_point(assign_variable_callback(land_unit_args.maneuver)),
-				"siege", ZERO_OR_ONE, expect_fixed_point(assign_variable_callback(land_unit_args.siege))
+					expect_identifier(assign_variable_callback(regiment_type_args.sprite_mount_attach_node)),
+				"reconnaissance", ONE_EXACTLY, expect_fixed_point(assign_variable_callback(regiment_type_args.reconnaissance)),
+				"attack", ONE_EXACTLY, expect_fixed_point(assign_variable_callback(regiment_type_args.attack)),
+				"defence", ONE_EXACTLY, expect_fixed_point(assign_variable_callback(regiment_type_args.defence)),
+				"discipline", ONE_EXACTLY, expect_fixed_point(assign_variable_callback(regiment_type_args.discipline)),
+				"support", ONE_EXACTLY, expect_fixed_point(assign_variable_callback(regiment_type_args.support)),
+				"maneuver", ONE_EXACTLY, expect_fixed_point(assign_variable_callback(regiment_type_args.maneuver)),
+				"siege", ZERO_OR_ONE, expect_fixed_point(assign_variable_callback(regiment_type_args.siege))
 			);
 
 			if (is_restricted_to_accepted_cultures) {
-				land_unit_args.allowed_cultures = LandUnit::allowed_cultures_t::ACCEPTED_CULTURES;
+				regiment_type_args.allowed_cultures = RegimentType::allowed_cultures_t::ACCEPTED_CULTURES;
 			} else if (is_restricted_to_primary_culture) {
-				land_unit_args.allowed_cultures = LandUnit::allowed_cultures_t::PRIMARY_CULTURE;
+				regiment_type_args.allowed_cultures = RegimentType::allowed_cultures_t::PRIMARY_CULTURE;
 			} else {
-				land_unit_args.allowed_cultures = LandUnit::allowed_cultures_t::ALL_CULTURES;
+				regiment_type_args.allowed_cultures = RegimentType::allowed_cultures_t::ALL_CULTURES;
 			}
 
 			ret &= expect_dictionary_key_map_and_default(key_map, add_terrain_modifier)(value);
 
-			ret &= add_land_unit(key, unit_args, land_unit_args);
+			ret &= add_regiment_type(key, unit_args, regiment_type_args);
 
 			return ret;
 		}
 		case NAVAL: {
-			NavalUnit::naval_unit_args_t naval_unit_args {};
+			ShipType::ship_type_args_t ship_type_args {};
 
 			ret &= add_key_map_entries(key_map,
-				"naval_icon", ONE_EXACTLY, expect_uint(assign_variable_callback(naval_unit_args.naval_icon)),
-				"sail", ZERO_OR_ONE, expect_bool(assign_variable_callback(naval_unit_args.sail)),
-				"transport", ZERO_OR_ONE, expect_bool(assign_variable_callback(naval_unit_args.transport)),
-				"capital", ZERO_OR_ONE, expect_bool(assign_variable_callback(naval_unit_args.capital)),
-				"colonial_points", ZERO_OR_ONE, expect_fixed_point(assign_variable_callback(naval_unit_args.colonial_points)),
-				"can_build_overseas", ZERO_OR_ONE, expect_bool(assign_variable_callback(naval_unit_args.build_overseas)),
-				"min_port_level", ONE_EXACTLY, expect_uint(assign_variable_callback(naval_unit_args.min_port_level)),
-				"limit_per_port", ONE_EXACTLY, expect_int(assign_variable_callback(naval_unit_args.limit_per_port)),
+				"naval_icon", ONE_EXACTLY, expect_uint(assign_variable_callback(ship_type_args.naval_icon)),
+				"sail", ZERO_OR_ONE, expect_bool(assign_variable_callback(ship_type_args.sail)),
+				"transport", ZERO_OR_ONE, expect_bool(assign_variable_callback(ship_type_args.transport)),
+				"capital", ZERO_OR_ONE, expect_bool(assign_variable_callback(ship_type_args.capital)),
+				"colonial_points", ZERO_OR_ONE, expect_fixed_point(assign_variable_callback(ship_type_args.colonial_points)),
+				"can_build_overseas", ZERO_OR_ONE, expect_bool(assign_variable_callback(ship_type_args.build_overseas)),
+				"min_port_level", ONE_EXACTLY, expect_uint(assign_variable_callback(ship_type_args.min_port_level)),
+				"limit_per_port", ONE_EXACTLY, expect_int(assign_variable_callback(ship_type_args.limit_per_port)),
 				"supply_consumption_score", ZERO_OR_ONE,
-					expect_fixed_point(assign_variable_callback(naval_unit_args.supply_consumption_score)),
-				"hull", ONE_EXACTLY, expect_fixed_point(assign_variable_callback(naval_unit_args.hull)),
-				"gun_power", ONE_EXACTLY, expect_fixed_point(assign_variable_callback(naval_unit_args.gun_power)),
-				"fire_range", ONE_EXACTLY, expect_fixed_point(assign_variable_callback(naval_unit_args.fire_range)),
-				"evasion", ONE_EXACTLY, expect_fixed_point(assign_variable_callback(naval_unit_args.evasion)),
-				"torpedo_attack", ZERO_OR_ONE, expect_fixed_point(assign_variable_callback(naval_unit_args.torpedo_attack))
+					expect_fixed_point(assign_variable_callback(ship_type_args.supply_consumption_score)),
+				"hull", ONE_EXACTLY, expect_fixed_point(assign_variable_callback(ship_type_args.hull)),
+				"gun_power", ONE_EXACTLY, expect_fixed_point(assign_variable_callback(ship_type_args.gun_power)),
+				"fire_range", ONE_EXACTLY, expect_fixed_point(assign_variable_callback(ship_type_args.fire_range)),
+				"evasion", ONE_EXACTLY, expect_fixed_point(assign_variable_callback(ship_type_args.evasion)),
+				"torpedo_attack", ZERO_OR_ONE, expect_fixed_point(assign_variable_callback(ship_type_args.torpedo_attack))
 			);
 
 			ret &= expect_dictionary_key_map_and_default(key_map, add_terrain_modifier)(value);
 
-			ret &= add_naval_unit(key, unit_args, naval_unit_args);
+			ret &= add_ship_type(key, unit_args, ship_type_args);
 
 			return ret;
 		}
@@ -283,10 +283,10 @@ bool UnitManager::load_unit_file(
 	})(root);
 }
 
-bool UnitManager::generate_modifiers(ModifierManager& modifier_manager) const {
+bool UnitTypeManager::generate_modifiers(ModifierManager& modifier_manager) const {
 	bool ret = true;
 
-	const auto generate_stat_modifiers = [&modifier_manager, &ret](std::string_view identifier, Unit::branch_t branch) -> void {
+	const auto generate_stat_modifiers = [&modifier_manager, &ret](std::string_view identifier, UnitType::branch_t branch) -> void {
 		const auto stat_modifier = [&modifier_manager, &ret, &identifier](
 			std::string_view suffix, bool is_positive_good, ModifierEffect::format_t format
 		) -> void {
@@ -324,19 +324,19 @@ bool UnitManager::generate_modifiers(ModifierManager& modifier_manager) const {
 			stat_modifier("torpedo_attack", true, RAW_DECIMAL);
 			break;
 		default:
-			/* Unreachable - units are only added via add_land_unit or add_naval_unit which set branch to LAND or NAVAL. */
+			/* Unreachable - unit types are only added via add_regiment_type or add_ship_type which set branch to LAND or NAVAL. */
 			Logger::error("Invalid branch for unit ", identifier, ": ", static_cast<int>(branch));
 		}
 	};
 
 	generate_stat_modifiers("army_base", LAND);
-	for (LandUnit const& land_unit : get_land_units()) {
-		generate_stat_modifiers(land_unit.get_identifier(), LAND);
+	for (RegimentType const& regiment_type : get_regiment_types()) {
+		generate_stat_modifiers(regiment_type.get_identifier(), LAND);
 	}
 
 	generate_stat_modifiers("navy_base", NAVAL);
-	for (NavalUnit const& naval_unit : get_naval_units()) {
-		generate_stat_modifiers(naval_unit.get_identifier(), NAVAL);
+	for (ShipType const& ship_type : get_ship_types()) {
+		generate_stat_modifiers(ship_type.get_identifier(), NAVAL);
 	}
 
 	return ret;

@@ -14,18 +14,18 @@ namespace OpenVic {
 	struct TerrainType;
 	struct TerrainTypeManager;
 
-	struct Unit : HasIdentifier {
+	struct UnitType : HasIdentifier {
 		using icon_t = uint32_t;
 		using terrain_modifiers_t = ordered_map<TerrainType const*, ModifierValue>;
 
 		enum struct branch_t : uint8_t { INVALID_BRANCH, LAND, NAVAL };
-		enum struct unit_type_t : uint8_t {
-			INVALID_UNIT_TYPE, INFANTRY, CAVALRY, SUPPORT, SPECIAL, BIG_SHIP, LIGHT_SHIP, TRANSPORT
+		enum struct unit_category_t : uint8_t {
+			INVALID_UNIT_CATEGORY, INFANTRY, CAVALRY, SUPPORT, SPECIAL, BIG_SHIP, LIGHT_SHIP, TRANSPORT
 		};
 
-		struct unit_args_t {
+		struct unit_type_args_t {
 			icon_t icon = 0;
-			unit_type_t unit_type = unit_type_t::INVALID_UNIT_TYPE;
+			unit_category_t unit_category = unit_category_t::INVALID_UNIT_CATEGORY;
 			// TODO defaults for move_sound and select_sound
 			std::string_view sprite, move_sound, select_sound;
 			bool active = true, floating_flag = false;
@@ -36,8 +36,8 @@ namespace OpenVic {
 			Good::good_map_t build_cost, supply_cost;
 			terrain_modifiers_t terrain_modifiers;
 
-			unit_args_t() = default;
-			unit_args_t(unit_args_t&&) = default;
+			unit_type_args_t() = default;
+			unit_type_args_t(unit_type_args_t&&) = default;
 		};
 
 	private:
@@ -45,7 +45,7 @@ namespace OpenVic {
 		const icon_t PROPERTY(icon);
 		std::string PROPERTY(sprite);
 		const bool PROPERTY_CUSTOM_PREFIX(active, is);
-		unit_type_t PROPERTY(unit_type);
+		unit_category_t PROPERTY(unit_category);
 		const bool PROPERTY_CUSTOM_PREFIX(floating_flag, has);
 
 		const uint32_t PROPERTY(priority);
@@ -66,27 +66,27 @@ namespace OpenVic {
 
 	protected:
 		/* Non-const reference unit_args so variables can be moved from it. */
-		Unit(std::string_view new_identifier, branch_t new_branch, unit_args_t& unit_args);
+		UnitType(std::string_view new_identifier, branch_t new_branch, unit_type_args_t& unit_args);
 
 	public:
-		Unit(Unit&&) = default;
+		UnitType(UnitType&&) = default;
 	};
 
-	struct LandUnit : Unit {
-		friend struct UnitManager;
+	struct RegimentType : UnitType {
+		friend struct UnitTypeManager;
 
 		enum struct allowed_cultures_t { ALL_CULTURES, ACCEPTED_CULTURES, PRIMARY_CULTURE };
 
-		struct land_unit_args_t {
+		struct regiment_type_args_t {
 			allowed_cultures_t allowed_cultures = allowed_cultures_t::ALL_CULTURES;
 			std::string_view sprite_override, sprite_mount, sprite_mount_attach_node;
 			// TODO - represent these as modifier effects, so that they can be combined with tech, inventions,
-			// leader bonuses, etc. and applied to unit instances all in one go (same for NavalUnits below)
+			// leader bonuses, etc. and applied to unit instances all in one go (same for ShipTypes below)
 			fixed_point_t reconnaissance = 0, attack = 0, defence = 0, discipline = 0, support = 0, maneuver = 0,
 				siege = 0;
 
-			land_unit_args_t() = default;
-			land_unit_args_t(land_unit_args_t&&) = default;
+			regiment_type_args_t() = default;
+			regiment_type_args_t(regiment_type_args_t&&) = default;
 		};
 
 	private:
@@ -102,25 +102,25 @@ namespace OpenVic {
 		const fixed_point_t PROPERTY(maneuver);
 		const fixed_point_t PROPERTY(siege);
 
-		LandUnit(std::string_view new_identifier, unit_args_t& unit_args, land_unit_args_t const& land_unit_args);
+		RegimentType(std::string_view new_identifier, unit_type_args_t& unit_args, regiment_type_args_t const& regiment_type_args);
 
 	public:
-		LandUnit(LandUnit&&) = default;
+		RegimentType(RegimentType&&) = default;
 	};
 
-	struct NavalUnit : Unit {
-		friend struct UnitManager;
+	struct ShipType : UnitType {
+		friend struct UnitTypeManager;
 
-		struct naval_unit_args_t {
-			Unit::icon_t naval_icon = 0;
+		struct ship_type_args_t {
+			UnitType::icon_t naval_icon = 0;
 			bool sail = false, transport = false, capital = false, build_overseas = false;
 			uint32_t min_port_level = 0;
 			int32_t limit_per_port = 0;
 			fixed_point_t colonial_points = 0, supply_consumption_score = 0, hull = 0, gun_power = 0, fire_range = 0,
 				evasion = 0, torpedo_attack = 0;
 
-			naval_unit_args_t() = default;
-			naval_unit_args_t(naval_unit_args_t&&) = default;
+			ship_type_args_t() = default;
+			ship_type_args_t(ship_type_args_t&&) = default;
 		};
 
 	private:
@@ -140,39 +140,39 @@ namespace OpenVic {
 		const fixed_point_t PROPERTY(evasion);
 		const fixed_point_t PROPERTY(torpedo_attack);
 
-		NavalUnit(std::string_view new_identifier, unit_args_t& unit_args, naval_unit_args_t const& naval_unit_args);
+		ShipType(std::string_view new_identifier, unit_type_args_t& unit_args, ship_type_args_t const& ship_type_args);
 
 	public:
-		NavalUnit(NavalUnit&&) = default;
+		ShipType(ShipType&&) = default;
 	};
 
-	struct UnitManager {
+	struct UnitTypeManager {
 	private:
-		IdentifierPointerRegistry<Unit> IDENTIFIER_REGISTRY(unit);
-		IdentifierRegistry<LandUnit> IDENTIFIER_REGISTRY(land_unit);
-		IdentifierRegistry<NavalUnit> IDENTIFIER_REGISTRY(naval_unit);
+		IdentifierPointerRegistry<UnitType> IDENTIFIER_REGISTRY(unit_type);
+		IdentifierRegistry<RegimentType> IDENTIFIER_REGISTRY(regiment_type);
+		IdentifierRegistry<ShipType> IDENTIFIER_REGISTRY(ship_type);
 
 	public:
-		void reserve_all_units(size_t size);
-		void lock_all_units();
+		void reserve_all_unit_types(size_t size);
+		void lock_all_unit_types();
 
-		bool add_land_unit(
-			std::string_view identifier, Unit::unit_args_t& unit_args, LandUnit::land_unit_args_t const& land_unit_args
+		bool add_regiment_type(
+			std::string_view identifier, UnitType::unit_type_args_t& unit_args, RegimentType::regiment_type_args_t const& regiment_type_args
 		);
-		bool add_naval_unit(
-			std::string_view identifier, Unit::unit_args_t& unit_args, NavalUnit::naval_unit_args_t const& naval_unit_args
+		bool add_ship_type(
+			std::string_view identifier, UnitType::unit_type_args_t& unit_args, ShipType::ship_type_args_t const& ship_type_args
 		);
 
-		static NodeTools::Callback<std::string_view> auto expect_branch_str(NodeTools::Callback<Unit::branch_t> auto callback) {
-			using enum Unit::branch_t;
-			static const string_map_t<Unit::branch_t> branch_map { { "land", LAND }, { "naval", NAVAL }, { "sea", NAVAL } };
+		static NodeTools::Callback<std::string_view> auto expect_branch_str(NodeTools::Callback<UnitType::branch_t> auto callback) {
+			using enum UnitType::branch_t;
+			static const string_map_t<UnitType::branch_t> branch_map { { "land", LAND }, { "naval", NAVAL }, { "sea", NAVAL } };
 			return NodeTools::expect_mapped_string(branch_map, callback);
 		}
-		static NodeTools::NodeCallback auto expect_branch_identifier(NodeTools::Callback<Unit::branch_t> auto callback) {
+		static NodeTools::NodeCallback auto expect_branch_identifier(NodeTools::Callback<UnitType::branch_t> auto callback) {
 			return NodeTools::expect_identifier(expect_branch_str(callback));
 		}
 
-		bool load_unit_file(
+		bool load_unit_type_file(
 			GoodManager const& good_manager, TerrainTypeManager const& terrain_type_manager,
 			ModifierManager const& modifier_manager, ast::NodeCPtr root
 		);
