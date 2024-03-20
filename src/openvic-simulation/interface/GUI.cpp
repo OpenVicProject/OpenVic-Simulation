@@ -174,7 +174,7 @@ bool AlignedElement::_fill_key_map(NodeTools::case_insensitive_key_map_t& key_ma
 	return ret;
 }
 
-Text::Text() : text {}, font { nullptr }, max_size {} {}
+Text::Text() : text {}, font { nullptr }, max_size {}, border_size {} {}
 
 bool Text::_fill_key_map(NodeTools::case_insensitive_key_map_t& key_map, UIManager const& ui_manager) {
 	bool ret = AlignedElement::_fill_key_map(key_map, ui_manager);
@@ -183,8 +183,8 @@ bool Text::_fill_key_map(NodeTools::case_insensitive_key_map_t& key_map, UIManag
 		"font", ONE_EXACTLY, ui_manager.expect_font_string(assign_variable_callback_pointer(font)),
 		"maxWidth", ZERO_OR_ONE, expect_fixed_point(assign_variable_callback(max_size.x)),
 		"maxHeight", ZERO_OR_ONE, expect_fixed_point(assign_variable_callback(max_size.y)),
+		"borderSize", ZERO_OR_ONE, expect_fvec2(assign_variable_callback(border_size)),
 
-		"borderSize", ZERO_OR_ONE, success_callback,
 		"fixedsize", ZERO_OR_ONE, success_callback,
 		"allwaystransparent", ZERO_OR_ONE, success_callback,
 

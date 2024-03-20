@@ -23,6 +23,8 @@ namespace OpenVic {
 	struct IdeologyManager;
 	struct Issue;
 	struct IssueManager;
+	struct Province;
+	struct CountryParty;
 
 	/* REQUIREMENTS:
 	 * POP-18, POP-19, POP-20, POP-21, POP-34, POP-35, POP-36, POP-37
@@ -39,8 +41,10 @@ namespace OpenVic {
 		Culture const& PROPERTY(culture);
 		Religion const& PROPERTY(religion);
 		pop_size_t PROPERTY(size);
+		Province const* PROPERTY_RW(location);
 
 		/* Last day's size change by source. */
+		pop_size_t PROPERTY(total_change);
 		pop_size_t PROPERTY(num_grown);
 		pop_size_t PROPERTY(num_promoted); // TODO - detailed promotion/demotion info (what to)
 		pop_size_t PROPERTY(num_demoted);
@@ -52,6 +56,19 @@ namespace OpenVic {
 		fixed_point_t PROPERTY(consciousness);
 		fixed_point_t PROPERTY(literacy);
 		RebelType const* PROPERTY(rebel_type);
+
+		fixed_point_map_t<Ideology const*> PROPERTY(ideologies);
+		fixed_point_map_t<Issue const*> PROPERTY(issues);
+		fixed_point_map_t<CountryParty const*> PROPERTY(votes);
+
+		fixed_point_t PROPERTY(unemployment);
+		fixed_point_t PROPERTY(cash);
+		fixed_point_t PROPERTY(income);
+		fixed_point_t PROPERTY(expenses);
+		fixed_point_t PROPERTY(savings);
+		fixed_point_t PROPERTY(life_needs_fulfilled);
+		fixed_point_t PROPERTY(everyday_needs_fulfilled);
+		fixed_point_t PROPERTY(luxury_needs_fulfilled);
 
 		Pop(
 			PopType const& new_type,
@@ -68,6 +85,10 @@ namespace OpenVic {
 		Pop(Pop&&) = default;
 		Pop& operator=(Pop const&) = delete;
 		Pop& operator=(Pop&&) = delete;
+
+		void setup_pop_test_values(
+			IdeologyManager const& ideology_manager, IssueManager const& issue_manager, Country const& country
+		);
 	};
 
 	struct Strata : HasIdentifier {

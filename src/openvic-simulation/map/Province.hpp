@@ -128,6 +128,8 @@ namespace OpenVic {
 
 		Province(std::string_view new_identifier, colour_t new_colour, index_t new_index);
 
+		void _add_pop(Pop pop);
+
 	public:
 		Province(Province&&) = default;
 
@@ -155,5 +157,9 @@ namespace OpenVic {
 
 		bool reset(BuildingTypeManager const& building_type_manager);
 		bool apply_history_to_province(ProvinceHistoryEntry const* entry);
+
+		void setup_pop_test_values(
+			IdeologyManager const& ideology_manager, IssueManager const& issue_manager, Country const& country
+		);
 	};
 }

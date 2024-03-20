@@ -1,5 +1,6 @@
 #include "Pop.hpp"
 
+#include "openvic-simulation/country/Country.hpp"
 #include "openvic-simulation/military/UnitType.hpp"
 #include "openvic-simulation/politics/Ideology.hpp"
 #include "openvic-simulation/politics/Issue.hpp"
@@ -23,6 +24,8 @@ Pop::Pop(
 	culture { new_culture },
 	religion { new_religion },
 	size { new_size },
+	location { nullptr },
+	total_change { 0 },
 	num_grown { 0 },
 	num_promoted { 0 },
 	num_demoted { 0 },
@@ -31,8 +34,87 @@ Pop::Pop(
 	num_migrated_colonial { 0 },
 	militancy { new_militancy },
 	consciousness { new_consciousness },
-	rebel_type { new_rebel_type } {
+	rebel_type { new_rebel_type },
+	ideologies {},
+	issues {},
+	votes {},
+	unemployment { 0 },
+	cash { 0 },
+	income { 0 },
+	expenses { 0 },
+	savings { 0 },
+	life_needs_fulfilled { 0 },
+	everyday_needs_fulfilled { 0 },
+	luxury_needs_fulfilled { 0 } {
 	assert(size > 0);
+}
+
+void Pop::setup_pop_test_values(
+	IdeologyManager const& ideology_manager, IssueManager const& issue_manager, Country const& country
+) {
+	/* Returns +/- range% of size. */
+	const auto test_size = [this](int32_t range) -> pop_size_t {
+		return size * ((rand() % (2 * range + 1)) - range) / 100;
+	};
+
+	num_grown = test_size(5);
+	num_promoted = test_size(1);
+	num_demoted = test_size(1);
+	num_migrated_internal = test_size(3);
+	num_migrated_external = test_size(1);
+	num_migrated_colonial = test_size(2);
+
+	total_change =
+		num_grown + num_promoted + num_demoted + num_migrated_internal + num_migrated_external + num_migrated_colonial;
+
+	/* Generates a number between 0 and max (inclusive) and sets map[&key] to it if it's at least min. */
+	auto test_weight =
+		[]<typename T, std::derived_from<T> U>(
+			fixed_point_map_t<T const*>& map, U const& key, int32_t min, int32_t max
+		) -> void {
+			const int32_t value = rand() % (max + 1);
+			if (value >= min) {
+				map.emplace(&key, value);
+			}
+		};
+
+	/* All entries equally weighted for testing. */
+	ideologies.clear();
+	for (Ideology const& ideology : ideology_manager.get_ideologies()) {
+		test_weight(ideologies, ideology, 1, 5);
+	}
+	normalise_fixed_point_map(ideologies);
+
+	issues.clear();
+	for (Issue const& issue : issue_manager.get_issues()) {
+		test_weight(issues, issue, 3, 6);
+	}
+	for (Reform const& reform : issue_manager.get_reforms()) {
+		if (!reform.get_reform_group().get_type().is_uncivilised()) {
+			test_weight(issues, reform, 3, 6);
+		}
+	}
+	normalise_fixed_point_map(issues);
+
+	votes.clear();
+	for (CountryParty const& party : country.get_parties()) {
+		test_weight(votes, party, 4, 10);
+	}
+	normalise_fixed_point_map(votes);
+
+	/* Returns a fixed point between 0 and max. */
+	const auto test_range = [](fixed_point_t max = 1) -> fixed_point_t {
+		return (rand() % 256) * max / 256;
+	};
+
+	unemployment = test_range();
+	cash = test_range(20);
+	income = test_range(5);
+	expenses = test_range(5);
+	savings = test_range(15);
+	life_needs_fulfilled = test_range();
+	everyday_needs_fulfilled = test_range();
+	luxury_needs_fulfilled = test_range();
 }
 
 Strata::Strata(std::string_view new_identifier) : HasIdentifier { new_identifier } {}
