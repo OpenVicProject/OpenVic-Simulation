@@ -1,6 +1,6 @@
 #pragma once
 
-#include "openvic-simulation/interface/GFX.hpp"
+#include "openvic-simulation/interface/GFXSprite.hpp"
 
 namespace OpenVic {
 	class UIManager;

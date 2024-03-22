@@ -1,5 +1,6 @@
 #pragma once
 
+#include "openvic-simulation/interface/GFXObject.hpp"
 #include "openvic-simulation/interface/GUI.hpp"
 
 namespace OpenVic {
@@ -8,6 +9,7 @@ namespace OpenVic {
 		NamedInstanceRegistry<GFX::Sprite> IDENTIFIER_REGISTRY(sprite);
 		NamedInstanceRegistry<GUI::Scene, UIManager const&> IDENTIFIER_REGISTRY(scene);
 		IdentifierRegistry<GFX::Font> IDENTIFIER_REGISTRY(font);
+		NamedInstanceRegistry<GFX::Object> IDENTIFIER_REGISTRY(object);
 
 		bool _load_font(ast::NodeCPtr node);
 		NodeTools::NodeCallback auto _load_fonts(std::string_view font_key);
