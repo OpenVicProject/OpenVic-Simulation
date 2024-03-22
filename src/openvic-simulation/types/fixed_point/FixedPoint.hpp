@@ -341,7 +341,7 @@ namespace OpenVic {
 		}
 
 		// Deterministic
-		static constexpr fixed_point_t parse(char const* str, char const* const end, bool* successful = nullptr) {
+		static constexpr fixed_point_t parse(char const* str, char const* end, bool* successful = nullptr) {
 			if (successful != nullptr) {
 				*successful = false;
 			}
@@ -357,6 +357,16 @@ namespace OpenVic {
 				++str;
 				if (str == end) {
 					return _0();
+				}
+			}
+
+			{
+				const char last_char = *(end - 1);
+				if (last_char == 'f' || last_char == 'F') {
+					--end;
+					if (str == end) {
+						return _0();
+					}
 				}
 			}
 

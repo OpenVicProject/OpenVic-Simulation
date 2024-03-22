@@ -1,4 +1,4 @@
-#include "GFX.hpp"
+#include "GFXSprite.hpp"
 
 using namespace OpenVic;
 using namespace OpenVic::GFX;
