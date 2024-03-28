@@ -83,9 +83,21 @@ bool UIManager::load_gfx_file(ast::NodeCPtr root) {
 				return sprites.add_item(std::move(sprite), duplicate_warning_callback);
 			}
 		),
+
 		"bitmapfonts", ZERO_OR_ONE, _load_fonts("bitmapfont"),
 		"fonts", ZERO_OR_ONE, _load_fonts("font"),
-		"objectTypes", ZERO_OR_ONE, success_callback,
+
+		"objectTypes", ZERO_OR_ONE, Object::expect_objects(
+			NodeTools::reserve_length_callback(objects),
+			[this](std::unique_ptr<Object>&& object) -> bool {
+				/* There are various models with the same name but slight differences, e.g. Prussian and German variants
+				 * of PrussianGCCavalry (the latter added in a spritepack). Currently we default to using the first loaded
+				 * model of each name, but we may want to switch to using the last loaded or allow multiple models per name
+				 * (e.g. by grouping them per gfx file). */
+				return objects.add_item(std::move(object), duplicate_warning_callback);
+			}
+		),
+
 		"lightTypes", ZERO_OR_ONE, success_callback
 	)(root);
 }
