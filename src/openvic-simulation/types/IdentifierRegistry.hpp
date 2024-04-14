@@ -269,6 +269,23 @@ namespace OpenVic {
 		} \
 		return nullptr; \
 	} \
+	template<std::derived_from<external_value_type> T> \
+	requires requires(external_value_type const& value) { \
+		{ value.get_type() } -> std::same_as<std::string_view>; \
+		{ T::get_type_static() } -> std::same_as<std::string_view>; \
+	} \
+	constexpr T CONST* get_cast_item_by_identifier(std::string_view identifier) CONST { \
+		external_value_type CONST* item = get_item_by_identifier(identifier); \
+		if (item != nullptr) { \
+			if (item->get_type() == T::get_type_static()) { \
+				return reinterpret_cast<T CONST*>(item); \
+			} \
+			Logger::error( \
+				"Invalid type for item \"", identifier, "\": ", item->get_type(), " (expected ", T::get_type_static(), ")" \
+			); \
+		} \
+		return nullptr; \
+	} \
 	constexpr external_value_type CONST* get_item_by_index(std::size_t index) CONST { \
 		if (index < items.size()) { \
 			return std::addressof(ValueInfo::get_external_value(ItemInfo::get_value(items[index]))); \
@@ -564,6 +581,10 @@ private:
 #define IDENTIFIER_REGISTRY_INTERNAL_SHARED(singular, plural, registry, index_offset, const_kw) \
 	constexpr decltype(registry)::external_value_type const_kw* get_##singular##_by_identifier(std::string_view identifier) const_kw { \
 		return registry.get_item_by_identifier(identifier); \
+	} \
+	template<std::derived_from<decltype(registry)::external_value_type> T> \
+	constexpr T const_kw* get_cast_##singular##_by_identifier(std::string_view identifier) const_kw { \
+		return registry.get_cast_item_by_identifier<T>(identifier); \
 	} \
 	constexpr decltype(registry)::external_value_type const_kw* get_##singular##_by_index(std::size_t index) const_kw { \
 		return index >= index_offset ? registry.get_item_by_index(index - index_offset) : nullptr; \

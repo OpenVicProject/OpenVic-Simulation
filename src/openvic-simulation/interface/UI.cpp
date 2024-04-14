@@ -55,6 +55,12 @@ NodeCallback auto UIManager::_load_fonts(std::string_view font_key) {
 	);
 }
 
+void UIManager::lock_gfx_registries() {
+	lock_sprites();
+	lock_fonts();
+	lock_objects();
+}
+
 bool UIManager::load_gfx_file(ast::NodeCPtr root) {
 	return expect_dictionary_keys(
 		"spriteTypes", ZERO_OR_ONE, Sprite::expect_sprites(
