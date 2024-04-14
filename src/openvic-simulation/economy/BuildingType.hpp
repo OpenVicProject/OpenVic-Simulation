@@ -7,14 +7,6 @@
 #include "openvic-simulation/types/IdentifierRegistry.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
 
-#define ARGS \
-	std::string_view type, ModifierValue&& modifier, std::string_view on_completion, fixed_point_t completion_size, \
-	level_t max_level, Good::good_map_t&& goods_cost, fixed_point_t cost, Timespan build_time, bool visibility, bool on_map, \
-	bool default_enabled, ProductionType const* production_type, bool pop_build_factory, bool strategic_factory, \
-	bool advanced_factory, level_t fort_level, uint64_t naval_capacity, std::vector<fixed_point_t>&& colonial_points, \
-	bool in_province, bool one_per_state, fixed_point_t colonial_range, fixed_point_t infrastructure, \
-	bool spawn_railway_track, bool sail, bool steam, bool capital, bool port
-
 namespace OpenVic {
 
 	struct BuildingTypeManager;
@@ -28,6 +20,25 @@ namespace OpenVic {
 		friend struct BuildingTypeManager;
 
 		using level_t = int16_t;
+		using naval_capacity_t = uint64_t;
+
+		struct building_type_args_t {
+			std::string_view type, on_completion;
+			ModifierValue modifier;
+			fixed_point_t completion_size = 0, cost = 0, colonial_range = 0, infrastructure = 0;
+			BuildingType::level_t max_level = 0, fort_level = 0;
+			Good::good_map_t goods_cost;
+			Timespan build_time;
+			bool on_map = false, default_enabled = false, pop_build_factory = false, strategic_factory = false,
+				advanced_factory = false, in_province = false, one_per_state = false, spawn_railway_track = false,
+				sail = false, steam = false, capital = false, port = false;
+			ProductionType const* production_type = nullptr;
+			naval_capacity_t naval_capacity = 0;
+			std::vector<fixed_point_t> colonial_points;
+
+			building_type_args_t() = default;
+			building_type_args_t(building_type_args_t&&) = default;
+		};
 
 	private:
 		std::string PROPERTY(type);
@@ -38,7 +49,6 @@ namespace OpenVic {
 		Good::good_map_t PROPERTY(goods_cost);
 		fixed_point_t PROPERTY(cost);
 		Timespan PROPERTY(build_time); // time
-		bool PROPERTY(visibility);
 		bool PROPERTY(on_map); // onmap
 
 		bool PROPERTY(default_enabled);
@@ -49,7 +59,7 @@ namespace OpenVic {
 
 		level_t PROPERTY(fort_level); // fort bonus step-per-level
 
-		uint64_t PROPERTY(naval_capacity);
+		naval_capacity_t PROPERTY(naval_capacity);
 		std::vector<fixed_point_t> PROPERTY(colonial_points);
 		bool PROPERTY_CUSTOM_PREFIX(in_province, is); // province
 		bool PROPERTY(one_per_state);
@@ -63,7 +73,7 @@ namespace OpenVic {
 		bool PROPERTY(capital); // only in naval base
 		bool PROPERTY_CUSTOM_PREFIX(port, is); // only in naval base
 
-		BuildingType(std::string_view identifier, ARGS);
+		BuildingType(std::string_view identifier, building_type_args_t& building_type_args);
 
 	public:
 		BuildingType(BuildingType&&) = default;
@@ -81,7 +91,7 @@ namespace OpenVic {
 	public:
 		BuildingTypeManager();
 
-		bool add_building_type(std::string_view identifier, ARGS);
+		bool add_building_type(std::string_view identifier, BuildingType::building_type_args_t& building_type_args);
 
 		bool load_buildings_file(
 			GoodManager const& good_manager, ProductionTypeManager const& production_type_manager,
