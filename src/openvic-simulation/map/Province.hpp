@@ -1,7 +1,5 @@
 #pragma once
 
-#include <cassert>
-
 #include "openvic-simulation/country/Country.hpp"
 #include "openvic-simulation/economy/BuildingInstance.hpp"
 #include "openvic-simulation/politics/Ideology.hpp"
@@ -20,6 +18,8 @@ namespace OpenVic {
 	struct ProvinceSetModifier;
 	using Climate = ProvinceSetModifier;
 	using Continent = ProvinceSetModifier;
+	struct ArmyInstance;
+	struct NavyInstance;
 
 	/* REQUIREMENTS:
 	 * MAP-5, MAP-7, MAP-8, MAP-43, MAP-47
@@ -118,6 +118,8 @@ namespace OpenVic {
 		// TODO - change this into a factory-like structure
 		Good const* PROPERTY(rgo);
 		IdentifierRegistry<BuildingInstance> IDENTIFIER_REGISTRY(building);
+		ordered_set<ArmyInstance*> PROPERTY(armies);
+		ordered_set<NavyInstance*> PROPERTY(navies);
 
 		std::vector<Pop> PROPERTY(pops);
 		Pop::pop_size_t PROPERTY(total_population);
@@ -154,6 +156,10 @@ namespace OpenVic {
 		bool has_adjacency_going_through(Province const* province) const;
 
 		fvec2_t get_unit_position() const;
+		bool add_army(ArmyInstance& army);
+		bool remove_army(ArmyInstance& army);
+		bool add_navy(NavyInstance& navy);
+		bool remove_navy(NavyInstance& navy);
 
 		bool reset(BuildingTypeManager const& building_type_manager);
 		bool apply_history_to_province(ProvinceHistoryEntry const* entry);
