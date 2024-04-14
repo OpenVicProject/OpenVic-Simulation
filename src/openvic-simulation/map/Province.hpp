@@ -96,6 +96,7 @@ namespace OpenVic {
 		bool PROPERTY_CUSTOM_PREFIX(water, is);
 		bool PROPERTY_CUSTOM_PREFIX(coastal, is);
 		bool PROPERTY_CUSTOM_PREFIX(port, has);
+		Province const* PROPERTY(port_adjacent_province);
 		/* Terrain type calculated from terrain image */
 		TerrainType const* PROPERTY(default_terrain_type);
 

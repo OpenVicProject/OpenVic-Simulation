@@ -235,6 +235,10 @@ namespace OpenVic {
 			return !negative ? result : -result;
 		}
 
+		constexpr fixed_point_t cos() const {
+			return (*this + pi_half()).sin();
+		}
+
 		constexpr bool is_negative() const {
 			return value < 0;
 		}

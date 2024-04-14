@@ -11,9 +11,10 @@ Province::Province(
 	std::string_view new_identifier, colour_t new_colour, index_t new_index
 ) : HasIdentifierAndColour { new_identifier, new_colour, true }, index { new_index }, region { nullptr },
 	climate { nullptr }, continent { nullptr }, on_map { false }, has_region { false }, water { false }, coastal { false },
-	port { false }, default_terrain_type { nullptr }, positions {}, terrain_type { nullptr }, life_rating { 0 },
-	colony_status { colony_status_t::STATE }, state { nullptr }, owner { nullptr }, controller { nullptr }, slave { false },
-	crime { nullptr }, rgo { nullptr }, buildings { "buildings", false }, total_population { 0 } {
+	port { false }, port_adjacent_province { nullptr }, default_terrain_type { nullptr }, positions {},
+	terrain_type { nullptr }, life_rating { 0 }, colony_status { colony_status_t::STATE }, state { nullptr },
+	owner { nullptr }, controller { nullptr }, slave { false }, crime { nullptr }, rgo { nullptr },
+	buildings { "buildings", false }, total_population { 0 } {
 	assert(index != NULL_INDEX);
 }
 
@@ -62,7 +63,33 @@ bool Province::load_positions(Map const& map, BuildingTypeManager const& buildin
 		"building_nudge", ZERO_OR_ONE, success_callback
 	)(root);
 
-	port = coastal && positions.building_position.contains(building_type_manager.get_port_building_type());
+	if (coastal) {
+		fvec2_t const* port_position = get_building_position(building_type_manager.get_port_building_type());
+		if (port_position != nullptr) {
+			const fixed_point_t rotation = get_building_rotation(building_type_manager.get_port_building_type());
+
+			/* At 0 rotation the port faces west, as rotation increases the port rotates anti-clockwise. */
+			const fvec2_t port_dir { -rotation.cos(), rotation.sin() };
+			const ivec2_t port_facing_position = static_cast<ivec2_t>(*port_position + port_dir / 4);
+
+			Province const* province = map.get_province_at(port_facing_position);
+
+			if (province != nullptr) {
+				if (province->is_water() && is_adjacent_to(province)) {
+					port = true;
+					port_adjacent_province = province;
+				} else {
+					/*  Expected provinces with invalid ports: 39, 296, 1047, 1406, 2044 */
+					Logger::warning(
+						"Invalid port for province ", get_identifier(), ": facing province ", province,
+						" which has: water = ", province->is_water(), ", adjacent = ", is_adjacent_to(province)
+					);
+				}
+			} else {
+				Logger::warning("Invalid port for province ", get_identifier(), ": facing null province!");
+			}
+		}
+	}
 
 	return ret;
 }
