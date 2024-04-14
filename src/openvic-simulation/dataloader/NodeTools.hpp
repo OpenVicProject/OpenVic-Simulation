@@ -443,9 +443,17 @@ namespace OpenVic {
 			};
 		}
 
+		/* By default this will only allow an optional to be set once. Set allow_overwrite
+		 * to true to allow multiple assignments, with the last taking precedence. */
 		template<typename T>
-		Callback<T const&> auto assign_variable_callback_pointer(std::optional<T const*>& var) {
-			return [&var](T const& val) -> bool {
+		Callback<T const&> auto assign_variable_callback_pointer_opt(
+			std::optional<T const*>& var, bool allow_overwrite = false
+		) {
+			return [&var, allow_overwrite](T const& val) -> bool {
+				if (!allow_overwrite && var.has_value()) {
+					Logger::error("Canoot assign pointer value to already-initialised optional!");
+					return false;
+				}
 				var = &val;
 				return true;
 			};

@@ -68,25 +68,25 @@ bool CountryHistoryMap::_load_history_entry(
 			);
 		},
 		"capital", ZERO_OR_ONE,
-			game_manager.get_map().expect_province_identifier(assign_variable_callback_pointer(entry.capital)),
+			game_manager.get_map().expect_province_identifier(assign_variable_callback_pointer_opt(entry.capital)),
 		"primary_culture", ZERO_OR_ONE,
-			culture_manager.expect_culture_identifier(assign_variable_callback_pointer(entry.primary_culture)),
+			culture_manager.expect_culture_identifier(assign_variable_callback_pointer_opt(entry.primary_culture)),
 		"culture", ZERO_OR_MORE, culture_manager.expect_culture_identifier(
 			vector_callback_pointer(entry.accepted_cultures)
 		),
 		"religion", ZERO_OR_ONE, game_manager.get_pop_manager().get_religion_manager().expect_religion_identifier(
-			assign_variable_callback_pointer(entry.religion)
+			assign_variable_callback_pointer_opt(entry.religion)
 		),
 		"government", ZERO_OR_ONE, politics_manager.get_government_type_manager().expect_government_type_identifier(
-			assign_variable_callback_pointer(entry.government_type)
+			assign_variable_callback_pointer_opt(entry.government_type)
 		),
 		"plurality", ZERO_OR_ONE, expect_fixed_point(assign_variable_callback(entry.plurality)),
 		"nationalvalue", ZERO_OR_ONE, politics_manager.get_national_value_manager().expect_national_value_identifier(
-			assign_variable_callback_pointer(entry.national_value)
+			assign_variable_callback_pointer_opt(entry.national_value)
 		),
 		"civilized", ZERO_OR_ONE, expect_bool(assign_variable_callback(entry.civilised)),
 		"prestige", ZERO_OR_ONE, expect_fixed_point(assign_variable_callback(entry.prestige)),
-		"ruling_party", ZERO_OR_ONE, country.expect_party_identifier(assign_variable_callback_pointer(entry.ruling_party)),
+		"ruling_party", ZERO_OR_ONE, country.expect_party_identifier(assign_variable_callback_pointer_opt(entry.ruling_party)),
 		"last_election", ZERO_OR_ONE, expect_date(assign_variable_callback(entry.last_election)),
 		"upper_house", ZERO_OR_ONE, politics_manager.get_ideology_manager().expect_ideology_dictionary_reserve_length(
 			entry.upper_house,
@@ -105,7 +105,7 @@ bool CountryHistoryMap::_load_history_entry(
 			}
 		),
 		"schools", ZERO_OR_ONE, technology_manager.expect_technology_school_identifier(
-			assign_variable_callback_pointer(entry.tech_school)
+			assign_variable_callback_pointer_opt(entry.tech_school)
 		),
 		"foreign_investment", ZERO_OR_ONE,
 			country_manager.expect_country_decimal_map(move_variable_callback(entry.foreign_investment)),
