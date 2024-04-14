@@ -69,8 +69,7 @@ namespace OpenVic {
 		ProvinceSet water_provinces;
 		TerrainTypeManager PROPERTY_REF(terrain_type_manager);
 
-		int32_t PROPERTY(width);
-		int32_t PROPERTY(height);
+		ivec2_t PROPERTY(dims);
 		std::vector<shape_pixel_t> PROPERTY(province_shape_image);
 		colour_index_map_t colour_index_map;
 
@@ -84,8 +83,15 @@ namespace OpenVic {
 
 		StateManager PROPERTY_REF(state_manager);
 
+		inline constexpr int32_t get_pixel_index_from_pos(ivec2_t pos) const {
+			return pos.x + pos.y * dims.x;
+		}
+
 	public:
 		Map();
+
+		inline constexpr int32_t get_width() const { return dims.x; }
+		inline constexpr int32_t get_height() const { return dims.y; }
 
 		bool add_province(std::string_view identifier, colour_t colour);
 		IDENTIFIER_REGISTRY_NON_CONST_ACCESSORS_CUSTOM_INDEX_OFFSET(province, 1);
@@ -110,7 +116,9 @@ namespace OpenVic {
 		bool set_water_province_list(std::vector<std::string_view> const& list);
 		void lock_water_provinces();
 
-		Province::index_t get_province_index_at(size_t x, size_t y) const;
+		Province::index_t get_province_index_at(ivec2_t pos) const;
+		Province* get_province_at(ivec2_t pos);
+		Province const* get_province_at(ivec2_t pos) const;
 		bool set_max_provinces(Province::index_t new_max_provinces);
 		void set_selected_province(Province::index_t index);
 		Province* get_selected_province();

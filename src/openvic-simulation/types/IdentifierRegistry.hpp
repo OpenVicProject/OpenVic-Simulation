@@ -421,18 +421,30 @@ namespace OpenVic {
 			return identifiers;
 		}
 
+		/* Parses a dictionary with item keys and decimal number values (in the form of fixed point values),
+		 * with the resulting map move-returned via `callback`. The values can be transformed by providing
+		 * a fixed point to fixed point function fixed_point_functor, which will be applied to ever parsed value. */
+		template<NodeTools::FunctorConvertible<fixed_point_t, fixed_point_t> FixedPointFunctor = std::identity>
 		constexpr NodeTools::NodeCallback auto expect_item_decimal_map(
-			NodeTools::Callback<fixed_point_map_t<external_value_type const*>&&> auto callback
+			NodeTools::Callback<fixed_point_map_t<external_value_type const*>&&> auto callback,
+			FixedPointFunctor fixed_point_functor = {}
 		) const {
-			return [this, callback](ast::NodeCPtr node) -> bool {
+			return [this, callback, fixed_point_functor](ast::NodeCPtr node) -> bool {
 				fixed_point_map_t<external_value_type const*> map;
-				bool ret = expect_item_dictionary([&map](external_value_type const& key, ast::NodeCPtr value) -> bool {
-					fixed_point_t val;
-					const bool ret = NodeTools::expect_fixed_point(NodeTools::assign_variable_callback(val))(value);
-					map.emplace(&key, std::move(val));
-					return ret;
-				})(node);
+
+				bool ret = expect_item_dictionary(
+					[&map, fixed_point_functor](external_value_type const& key, ast::NodeCPtr value) -> bool {
+						return NodeTools::expect_fixed_point(
+							[&map, fixed_point_functor, &key](fixed_point_t val) -> bool {
+								map.emplace(&key, fixed_point_functor(val));
+								return true;
+							}
+						)(value);
+					}
+				)(node);
+
 				ret &= callback(std::move(map));
+
 				return ret;
 			};
 		}
@@ -525,10 +537,12 @@ public: \
 	std::vector<std::string_view> get_##singular##_identifiers() const { \
 		return registry.get_item_identifiers(); \
 	} \
+	template<NodeTools::FunctorConvertible<fixed_point_t, fixed_point_t> FixedPointFunctor = std::identity> \
 	constexpr NodeTools::NodeCallback auto expect_##singular##_decimal_map( \
-		NodeTools::Callback<fixed_point_map_t<decltype(registry)::external_value_type const*>&&> auto callback \
+		NodeTools::Callback<fixed_point_map_t<decltype(registry)::external_value_type const*>&&> auto callback, \
+		FixedPointFunctor fixed_point_functor = {} \
 	) const { \
-		return registry.expect_item_decimal_map(callback); \
+		return registry.expect_item_decimal_map(callback, fixed_point_functor); \
 	} \
 	IDENTIFIER_REGISTRY_INTERNAL_SHARED(singular, plural, registry, index_offset, const) \
 private:

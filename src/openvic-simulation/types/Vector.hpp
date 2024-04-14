@@ -34,6 +34,15 @@ namespace OpenVic {
 			return x * x + y * y;
 		}
 
+		constexpr bool nonnegative() const {
+			return x >= 0 && y >= 0;
+		}
+		/* Checks that both coordinates are less than their corresponding values in the argument vector.
+		 * This is intended for checking coordinates lie within certain bounds, it is not suitable for sorting vectors. */
+		constexpr bool less_than(vec2_t const& vec) const {
+			return x < vec.x && y < vec.y;
+		}
+
 		constexpr T* data() {
 			return reinterpret_cast<T*>(this);
 		}

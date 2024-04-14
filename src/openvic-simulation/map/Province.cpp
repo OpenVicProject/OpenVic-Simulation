@@ -1,6 +1,7 @@
 #include "Province.hpp"
 
 #include "openvic-simulation/history/ProvinceHistory.hpp"
+#include "openvic-simulation/map/Map.hpp"
 #include "openvic-simulation/military/UnitInstance.hpp"
 
 using namespace OpenVic;
@@ -26,26 +27,35 @@ std::string Province::to_string() const {
 	return stream.str();
 }
 
-bool Province::load_positions(BuildingTypeManager const& building_type_manager, ast::NodeCPtr root) {
+bool Province::load_positions(Map const& map, BuildingTypeManager const& building_type_manager, ast::NodeCPtr root) {
+	const fixed_point_t map_height = map.get_height();
+
 	const bool ret = expect_dictionary_keys(
-		"text_position", ZERO_OR_ONE, expect_fvec2(assign_variable_callback(positions.text)),
-		"text_rotation", ZERO_OR_ONE, expect_fixed_point(assign_variable_callback(positions.text_rotation)),
+		"text_position", ZERO_OR_ONE, expect_fvec2(flip_y_callback(assign_variable_callback(positions.text), map_height)),
+		"text_rotation", ZERO_OR_ONE,
+			expect_fixed_point(negate_callback<fixed_point_t>(assign_variable_callback(positions.text_rotation))),
 		"text_scale", ZERO_OR_ONE, expect_fixed_point(assign_variable_callback(positions.text_scale)),
-		"unit", ZERO_OR_ONE, expect_fvec2(assign_variable_callback(positions.unit)),
-		"town", ZERO_OR_ONE, expect_fvec2(assign_variable_callback(positions.city)),
-		"city", ZERO_OR_ONE, expect_fvec2(assign_variable_callback(positions.city)),
-		"factory", ZERO_OR_ONE, expect_fvec2(assign_variable_callback(positions.factory)),
-		"building_construction", ZERO_OR_ONE, expect_fvec2(assign_variable_callback(positions.building_construction)),
-		"military_construction", ZERO_OR_ONE, expect_fvec2(assign_variable_callback(positions.military_construction)),
+
+		"unit", ZERO_OR_ONE, expect_fvec2(flip_y_callback(assign_variable_callback(positions.unit), map_height)),
+		"town", ZERO_OR_ONE, expect_fvec2(flip_y_callback(assign_variable_callback(positions.city), map_height)),
+		"city", ZERO_OR_ONE, expect_fvec2(flip_y_callback(assign_variable_callback(positions.city), map_height)),
+		"factory", ZERO_OR_ONE, expect_fvec2(flip_y_callback(assign_variable_callback(positions.factory), map_height)),
+
+		"building_construction", ZERO_OR_ONE,
+			expect_fvec2(flip_y_callback(assign_variable_callback(positions.building_construction), map_height)),
+		"military_construction", ZERO_OR_ONE,
+			expect_fvec2(flip_y_callback(assign_variable_callback(positions.military_construction), map_height)),
+
 		"building_position", ZERO_OR_ONE, building_type_manager.expect_building_type_dictionary_reserve_length(
 			positions.building_position,
-			[this](BuildingType const& type, ast::NodeCPtr value) -> bool {
-				return expect_fvec2(map_callback(positions.building_position, &type))(value);
+			[this, map_height](BuildingType const& type, ast::NodeCPtr value) -> bool {
+				return expect_fvec2(flip_y_callback(map_callback(positions.building_position, &type), map_height))(value);
 			}
 		),
 		"building_rotation", ZERO_OR_ONE, building_type_manager.expect_building_type_decimal_map(
-			move_variable_callback(positions.building_rotation)
+			move_variable_callback(positions.building_rotation), std::negate {}
 		),
+
 		/* the below are esoteric clausewitz leftovers that either have no impact or whose functionality is lost to time */
 		"spawn_railway_track", ZERO_OR_ONE, success_callback,
 		"railroad_visibility", ZERO_OR_ONE, success_callback,
@@ -64,6 +74,28 @@ bool Province::expand_building(size_t building_index) {
 		return false;
 	}
 	return building->expand();
+}
+
+fvec2_t const* Province::get_building_position(BuildingType const* building_type) const {
+	if (building_type != nullptr) {
+		const decltype(positions.building_position)::const_iterator it = positions.building_position.find(building_type);
+
+		if (it != positions.building_position.end()) {
+			return &it->second;
+		}
+	}
+	return nullptr;
+}
+
+fixed_point_t Province::get_building_rotation(BuildingType const* building_type) const {
+	if (building_type != nullptr) {
+		const decltype(positions.building_rotation)::const_iterator it = positions.building_rotation.find(building_type);
+
+		if (it != positions.building_rotation.end()) {
+			return it->second;
+		}
+	}
+	return 0;
 }
 
 void Province::_add_pop(Pop pop) {
@@ -179,7 +211,7 @@ bool Province::has_adjacency_going_through(Province const* province) const {
 }
 
 fvec2_t Province::get_unit_position() const {
-	return positions.unit.value_or(positions.centre);
+	return positions.unit.value_or(centre);
 }
 
 bool Province::add_army(ArmyInstance& army) {
