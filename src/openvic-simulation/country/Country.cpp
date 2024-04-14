@@ -43,14 +43,12 @@ Country::Country(
 	alternative_colours { std::move(new_alternative_colours) },
 	primary_unit_colour { new_primary_unit_colour },
 	secondary_unit_colour { new_secondary_unit_colour },
-	tertiary_unit_colour { new_tertiary_unit_colour }
-	{}
+	tertiary_unit_colour { new_tertiary_unit_colour } {}
 
 bool CountryManager::add_country(
 	std::string_view identifier, colour_t colour, GraphicalCultureType const* graphical_culture,
 	IdentifierRegistry<CountryParty>&& parties, Country::unit_names_map_t&& unit_names, bool dynamic_tag,
-	Country::government_colour_map_t&& alternative_colours,
-	colour_t primary_unit_colour, colour_t secondary_unit_colour, colour_t tertiary_unit_colour
+	Country::government_colour_map_t&& alternative_colours
 ) {
 	if (identifier.empty()) {
 		Logger::error("Invalid country identifier - empty!");
@@ -67,9 +65,13 @@ bool CountryManager::add_country(
 		return false;
 	}
 
+	static constexpr colour_t default_colour = colour_t::fill_as(colour_t::max_value);
+
 	return countries.add_item({
 		identifier, colour, *graphical_culture, std::move(parties), std::move(unit_names), dynamic_tag,
-		std::move(alternative_colours), primary_unit_colour, secondary_unit_colour, tertiary_unit_colour
+		std::move(alternative_colours),
+		/* Default to country colour for the chest and grey for the others. Update later if necessary. */
+		colour, default_colour, default_colour
 	});
 }
 
@@ -205,8 +207,7 @@ bool CountryManager::load_country_data_file(
 	)(root);
 
 	ret &= add_country(
-		name, colour, graphical_culture, std::move(parties), std::move(unit_names), is_dynamic,
-		std::move(alternative_colours), colour_t::null(), colour_t::null(), colour_t::null()
+		name, colour, graphical_culture, std::move(parties), std::move(unit_names), is_dynamic, std::move(alternative_colours)
 	);
 	return ret;
 }
