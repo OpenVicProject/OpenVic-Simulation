@@ -513,12 +513,14 @@ bool Dataloader::_load_history(GameManager& game_manager, bool unused_history_fi
 	{
 		/* Country History */
 		CountryHistoryManager& country_history_manager = game_manager.get_history_manager().get_country_manager();
+		DeploymentManager& deployment_manager = game_manager.get_military_manager().get_deployment_manager();
 
 		static constexpr std::string_view country_history_directory = "history/countries";
 		const path_vector_t country_history_files =
 			lookup_basic_indentifier_prefixed_files_in_dir(country_history_directory, ".txt");
 
 		country_history_manager.reserve_more_country_histories(country_history_files.size());
+		deployment_manager.reserve_more_deployments(country_history_files.size());
 
 		ret &= apply_to_files(
 			country_history_files,
@@ -541,11 +543,6 @@ bool Dataloader::_load_history(GameManager& game_manager, bool unused_history_fi
 		);
 
 		country_history_manager.lock_country_histories();
-	}
-
-	{
-		DeploymentManager& deployment_manager = game_manager.get_military_manager().get_deployment_manager();
-
 		deployment_manager.lock_deployments();
 
 		if (deployment_manager.get_missing_oob_file_count() > 0) {

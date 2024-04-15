@@ -151,6 +151,19 @@ namespace OpenVic {
 		return std::max_element(map.begin(), map.end(), pred);
 	}
 
+	/* This function includes a key comparator to choose between entries with equal values. */
+	template<typename T>
+	constexpr fixed_point_map_const_iterator_t<T> get_largest_item_tie_break(
+		fixed_point_map_t<T> const& map, const auto key_pred
+	) {
+		constexpr auto pred =
+			[key_pred](fixed_point_map_value_t<T> const& lhs, fixed_point_map_value_t<T> const& rhs) -> bool {
+				return lhs.second < rhs.second || (lhs.second == rhs.second && key_pred(lhs.first, rhs.first));
+			};
+
+		return std::max_element(map.begin(), map.end(), pred);
+	}
+
 	template<typename T>
 	constexpr std::pair<fixed_point_map_const_iterator_t<T>, fixed_point_map_const_iterator_t<T>> get_largest_two_items(
 		fixed_point_map_t<T> const& map

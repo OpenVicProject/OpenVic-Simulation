@@ -54,21 +54,33 @@ bool GameManager::reset() {
 
 bool GameManager::load_bookmark(Bookmark const* new_bookmark) {
 	bool ret = reset();
+
 	bookmark = new_bookmark;
 	if (bookmark == nullptr) {
+		Logger::error("Cannot load bookmark - null!");
 		return ret;
 	}
+
 	Logger::info("Loading bookmark ", bookmark->get_name(), " with start date ", bookmark->get_date());
+
 	if (!define_manager.in_game_period(bookmark->get_date())) {
 		Logger::warning("Bookmark date ", bookmark->get_date(), " is not in the game's time period!");
 	}
+
 	today = bookmark->get_date();
+
 	ret &= map.apply_history_to_provinces(
 		history_manager.get_province_manager(), today, politics_manager.get_ideology_manager(),
 		politics_manager.get_issue_manager(), *country_manager.get_country_by_identifier("ENG")
 	);
+
 	map.get_state_manager().generate_states(map);
-	// TODO - apply country history
+
+	ret &= country_instance_manager.generate_country_instances(country_manager);
+	ret &= country_instance_manager.apply_history_to_countries(
+		history_manager.get_country_manager(), today, military_manager.get_unit_instance_manager(), map
+	);
+
 	return ret;
 }
 

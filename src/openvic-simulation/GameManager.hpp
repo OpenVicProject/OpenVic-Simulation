@@ -23,7 +23,6 @@ namespace OpenVic {
 		using gamestate_updated_func_t = std::function<void()>;
 
 	private:
-		Map PROPERTY_REF(map);
 		DefineManager PROPERTY_REF(define_manager);
 		EconomyManager PROPERTY_REF(economy_manager);
 		MilitaryManager PROPERTY_REF(military_manager);
@@ -33,11 +32,15 @@ namespace OpenVic {
 		ResearchManager PROPERTY_REF(research_manager);
 		PopManager PROPERTY_REF(pop_manager);
 		CountryManager PROPERTY_REF(country_manager);
+		CountryInstanceManager PROPERTY_REF(country_instance_manager);
 		CrimeManager PROPERTY_REF(crime_manager);
 		EventManager PROPERTY_REF(event_manager);
 		DecisionManager PROPERTY_REF(decision_manager);
 		UIManager PROPERTY_REF(ui_manager);
 		DiplomacyManager PROPERTY_REF(diplomacy_manager);
+		/* Near the end so it is freed after other managers that may depend on it,
+		 * e.g. if we want to remove military units from the province they're in when they're destructed. */
+		Map PROPERTY_REF(map);
 		ScriptManager PROPERTY_REF(script_manager);
 		SimulationClock PROPERTY_REF(simulation_clock);
 

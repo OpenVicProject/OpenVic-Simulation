@@ -1,6 +1,17 @@
 #include "CountryInstance.hpp"
 
+#include "openvic-simulation/military/UnitInstance.hpp"
+
 using namespace OpenVic;
+
+CountryInstance::CountryInstance(Country const* new_base_country)
+  : base_country { new_base_country }, primary_culture { nullptr }, religion { nullptr }, ruling_party { nullptr },
+	last_election {}, capital { nullptr }, government_type { nullptr }, plurality { 0 }, national_value { nullptr },
+	civilised { false }, prestige { 0 } {}
+
+std::string_view CountryInstance::get_identifier() const {
+	return base_country != nullptr ? base_country->get_identifier() : "NULL";
+}
 
 bool CountryInstance::add_accepted_culture(Culture const* new_accepted_culture) {
 	if (std::find(accepted_cultures.begin(), accepted_cultures.end(), new_accepted_culture) != accepted_cultures.end()) {
@@ -48,32 +59,79 @@ bool CountryInstance::remove_reform(Reform const* reform_to_remove) {
 	return true;
 }
 
-bool CountryInstance::apply_history_to_country(CountryHistoryMap const& history, Date date) {
-	accepted_cultures.clear();
-	upper_house.clear();
-	reforms.clear();
+bool CountryInstance::apply_history_to_country(CountryHistoryEntry const* entry) {
+	if (entry == nullptr) {
+		Logger::error("Trying to apply null country history to ", get_identifier());
+		return false;
+	}
+
+	constexpr auto set_optional = []<typename T>(T& target, std::optional<T> const& source) {
+		if (source) {
+			target = *source;
+		}
+	};
 
 	bool ret = true;
-	for (CountryHistoryEntry const* entry : history.get_entries_up_to(date)) {
-		if (entry->get_primary_culture()) primary_culture = *entry->get_primary_culture();
-		for (Culture const* culture : entry->get_accepted_cultures()) {
-			ret &= add_accepted_culture(culture);
-		}
-		if (entry->get_religion()) religion = *entry->get_religion();
-		if (entry->get_ruling_party()) ruling_party = *entry->get_ruling_party();
-		if (entry->get_last_election()) last_election = *entry->get_last_election();
-		for (auto const& [ideology, popularity] : entry->get_upper_house()) {
-			add_to_upper_house(ideology, popularity);
-		}
-		if (entry->get_capital()) capital = *entry->get_capital();
-		if (entry->get_government_type()) government_type = *entry->get_government_type();
-		if (entry->get_plurality()) plurality = *entry->get_plurality();
-		if (entry->get_national_value()) national_value = *entry->get_national_value();
-		if (entry->is_civilised()) civilised = *entry->is_civilised();
-		if (entry->get_prestige()) prestige = *entry->get_prestige();
-		for (Reform const* reform : entry->get_reforms()) {
-			ret &= add_reform(reform);
+
+	set_optional(primary_culture, entry->get_primary_culture());
+	for (Culture const* culture : entry->get_accepted_cultures()) {
+		ret &= add_accepted_culture(culture);
+	}
+	set_optional(religion, entry->get_religion());
+	set_optional(ruling_party, entry->get_ruling_party());
+	set_optional(last_election, entry->get_last_election());
+	for (auto const& [ideology, popularity] : entry->get_upper_house()) {
+		add_to_upper_house(ideology, popularity);
+	}
+	set_optional(capital, entry->get_capital());
+	set_optional(government_type, entry->get_government_type());
+	set_optional(plurality, entry->get_plurality());
+	set_optional(national_value, entry->get_national_value());
+	set_optional(civilised, entry->is_civilised());
+	set_optional(prestige, entry->get_prestige());
+	for (Reform const* reform : entry->get_reforms()) {
+		ret &= add_reform(reform);
+	}
+
+	return ret;
+}
+
+bool CountryInstanceManager::generate_country_instances(CountryManager const& country_manager) {
+	reserve_more(country_instances, country_manager.get_country_count());
+
+	for (Country const& country : country_manager.get_countries()) {
+		country_instances.push_back({ &country });
+	}
+
+	return true;
+}
+
+bool CountryInstanceManager::apply_history_to_countries(
+	CountryHistoryManager const& history_manager, Date date, UnitInstanceManager& unit_instance_manager, Map& map
+) {
+	bool ret = true;
+
+	for (CountryInstance& country_instance : country_instances) {
+		if (!country_instance.get_base_country()->is_dynamic_tag()) {
+			CountryHistoryMap const* history_map = history_manager.get_country_history(country_instance.get_base_country());
+
+			if (history_map != nullptr) {
+				CountryHistoryEntry const* oob_history_entry = nullptr;
+
+				for (CountryHistoryEntry const* entry : history_map->get_entries_up_to(date)) {
+					country_instance.apply_history_to_country(entry);
+
+					if (entry->get_inital_oob()) {
+						oob_history_entry = entry;
+					}
+				}
+
+				if (oob_history_entry != nullptr) {
+					unit_instance_manager.generate_deployment(map, country_instance, *oob_history_entry->get_inital_oob());
+				}
+			}
 		}
 	}
+
 	return ret;
 }

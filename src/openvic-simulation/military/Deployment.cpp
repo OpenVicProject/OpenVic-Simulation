@@ -5,16 +5,19 @@
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;
 
-RegimentDeployment::RegimentDeployment(std::string_view new_name, RegimentType const* new_type, Province const* new_home)
+RegimentDeployment::RegimentDeployment(std::string_view new_name, RegimentType const& new_type, Province const* new_home)
 	: name { new_name }, type { new_type }, home { new_home } {}
 
-ShipDeployment::ShipDeployment(std::string_view new_name, ShipType const* new_type) : name { new_name }, type { new_type } {}
+ShipDeployment::ShipDeployment(std::string_view new_name, ShipType const& new_type)
+	: name { new_name }, type { new_type } {}
 
-ArmyDeployment::ArmyDeployment(std::string_view new_name, Province const* new_location, std::vector<RegimentDeployment>&& new_regiments)
-	: name { new_name }, location { new_location }, regiments { std::move(new_regiments) } {}
+ArmyDeployment::ArmyDeployment(
+	std::string_view new_name, Province const* new_location, std::vector<RegimentDeployment>&& new_regiments
+) : name { new_name }, location { new_location }, regiments { std::move(new_regiments) } {}
 
-NavyDeployment::NavyDeployment(std::string_view new_name, Province const* new_location, std::vector<ShipDeployment>&& new_ships)
-	: name { new_name }, location { new_location }, ships { std::move(new_ships) } {}
+NavyDeployment::NavyDeployment(
+	std::string_view new_name, Province const* new_location, std::vector<ShipDeployment>&& new_ships
+) : name { new_name }, location { new_location }, ships { std::move(new_ships) } {}
 
 Deployment::Deployment(
 	std::string_view new_path, std::vector<ArmyDeployment>&& new_armies, std::vector<NavyDeployment>&& new_navies,
@@ -23,16 +26,15 @@ Deployment::Deployment(
 	leaders { std::move(new_leaders) } {}
 
 bool DeploymentManager::add_deployment(
-	std::string_view path, std::vector<ArmyDeployment>&& armies, std::vector<NavyDeployment>&& navies, std::vector<Leader>&& leaders
+	std::string_view path, std::vector<ArmyDeployment>&& armies, std::vector<NavyDeployment>&& navies,
+	std::vector<Leader>&& leaders
 ) {
 	if (path.empty()) {
 		Logger::error("Attemped to load order of battle with no path! Something is very wrong!");
 		return false;
 	}
 
-	return deployments.add_item(
-		std::make_unique<Deployment>(std::move(path), std::move(armies), std::move(navies), std::move(leaders))
-	);
+	return deployments.add_item({ path, std::move(armies), std::move(navies), std::move(leaders) });
 }
 
 bool DeploymentManager::load_oob_file(
@@ -43,12 +45,16 @@ bool DeploymentManager::load_oob_file(
 	if (deployment != nullptr) {
 		return true;
 	}
+
 	if (missing_oob_files.contains(history_path)) {
 		return !fail_on_missing;
 	}
+
 	static constexpr std::string_view oob_directory = "history/units/";
+
 	const fs::path lookedup_path =
 		dataloader.lookup_file(StringUtils::append_string_views(oob_directory, history_path), false);
+
 	if (lookedup_path.empty()) {
 		missing_oob_files.emplace(history_path);
 		if (fail_on_missing) {
@@ -58,9 +64,11 @@ bool DeploymentManager::load_oob_file(
 			return true;
 		}
 	}
+
 	std::vector<ArmyDeployment> armies;
 	std::vector<NavyDeployment> navies;
 	std::vector<Leader> leaders;
+
 	bool ret = expect_dictionary_keys_and_default(
 		key_value_success_callback, // TODO: load SOI information
 		"leader", ZERO_OR_MORE, [&leaders, &game_manager](ast::NodeCPtr node) -> bool {
@@ -95,6 +103,7 @@ bool DeploymentManager::load_oob_file(
 				);
 				ret = false;
 			}
+
 			if (leader_background != nullptr && !leader_background->is_background_trait()) {
 				Logger::error(
 					"Leader ", leader_name, " has background ", leader_background->get_identifier(),
@@ -102,9 +111,11 @@ bool DeploymentManager::load_oob_file(
 				);
 				ret = false;
 			}
+
 			leaders.emplace_back(
 				leader_name, leader_branch, leader_date, leader_personality, leader_background, leader_prestige, picture
 			);
+
 			return ret;
 		},
 		"army", ZERO_OR_MORE, [&armies, &game_manager](ast::NodeCPtr node) -> bool {
@@ -120,6 +131,7 @@ bool DeploymentManager::load_oob_file(
 					std::string_view regiment_name {};
 					RegimentType const* regiment_type = nullptr;
 					Province const* regiment_home = nullptr;
+
 					const bool ret = expect_dictionary_keys(
 						"name", ONE_EXACTLY, expect_string(assign_variable_callback(regiment_name)),
 						"type", ONE_EXACTLY, game_manager.get_military_manager().get_unit_type_manager()
@@ -127,16 +139,26 @@ bool DeploymentManager::load_oob_file(
 						"home", ZERO_OR_ONE, game_manager.get_map()
 							.expect_province_identifier(assign_variable_callback_pointer(regiment_home))
 					)(node);
+
 					if (regiment_home == nullptr) {
 						Logger::warning("RegimentDeployment ", regiment_name, " has no home province!");
 					}
-					army_regiments.emplace_back(regiment_name, regiment_type, regiment_home);
+
+					if (regiment_type == nullptr) {
+						Logger::error("RegimentDeployment ", regiment_name, " has no type!");
+						return false;
+					}
+
+					army_regiments.push_back({regiment_name, *regiment_type, regiment_home});
+
 					return ret;
 				},
 				/* Another paradox gem, tested in game and they don't lead the army or even show up */
 				"leader", ZERO_OR_MORE, success_callback
 			)(node);
-			armies.emplace_back(army_name, army_location, std::move(army_regiments));
+
+			armies.push_back({ army_name, army_location, std::move(army_regiments) });
+
 			return ret;
 		},
 		"navy", ZERO_OR_MORE, [&navies, &game_manager](ast::NodeCPtr node) -> bool {
@@ -151,26 +173,39 @@ bool DeploymentManager::load_oob_file(
 				"ship", ONE_OR_MORE, [&game_manager, &navy_ships](ast::NodeCPtr node) -> bool {
 					std::string_view ship_name {};
 					ShipType const* ship_type = nullptr;
+
 					const bool ret = expect_dictionary_keys(
 						"name", ONE_EXACTLY, expect_string(assign_variable_callback(ship_name)),
 						"type", ONE_EXACTLY, game_manager.get_military_manager().get_unit_type_manager()
 							.expect_ship_type_identifier(assign_variable_callback_pointer(ship_type))
 					)(node);
-					navy_ships.emplace_back(ship_name, ship_type);
+
+					if (ship_type == nullptr) {
+						Logger::error("ShipDeployment ", ship_name, " has no type!");
+						return false;
+					}
+
+					navy_ships.push_back({ ship_name, *ship_type });
+
 					return ret;
 				},
 				/* Another paradox gem, tested in game and they don't lead the army or even show up */
 				"leader", ZERO_OR_MORE, success_callback
 			)(node);
-			navies.emplace_back(navy_name, navy_location, std::move(navy_ships));
+
+			navies.push_back({ navy_name, navy_location, std::move(navy_ships) });
+
 			return ret;
 		}
 	)(Dataloader::parse_defines(lookedup_path).get_file_node());
+
 	ret &= add_deployment(history_path, std::move(armies), std::move(navies), std::move(leaders));
+
 	deployment = get_deployment_by_identifier(history_path);
 	if (deployment == nullptr) {
 		ret = false;
 	}
+
 	return ret;
 }
 

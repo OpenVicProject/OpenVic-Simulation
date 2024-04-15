@@ -1,6 +1,7 @@
 #include "Province.hpp"
 
 #include "openvic-simulation/history/ProvinceHistory.hpp"
+#include "openvic-simulation/military/UnitInstance.hpp"
 
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;
@@ -179,6 +180,42 @@ bool Province::has_adjacency_going_through(Province const* province) const {
 
 fvec2_t Province::get_unit_position() const {
 	return positions.unit.value_or(positions.centre);
+}
+
+bool Province::add_army(ArmyInstance& army) {
+	if (armies.emplace(&army).second) {
+		return true;
+	} else {
+		Logger::error("Trying to add already-existing army ", army.get_name(), " to province ", get_identifier());
+		return false;
+	}
+}
+
+bool Province::remove_army(ArmyInstance& army) {
+	if (armies.erase(&army) > 0) {
+		return true;
+	} else {
+		Logger::error("Trying to remove non-existent army ", army.get_name(), " from province ", get_identifier());
+		return false;
+	}
+}
+
+bool Province::add_navy(NavyInstance& navy) {
+	if (navies.emplace(&navy).second) {
+		return true;
+	} else {
+		Logger::error("Trying to add already-existing navy ", navy.get_name(), " to province ", get_identifier());
+		return false;
+	}
+}
+
+bool Province::remove_navy(NavyInstance& navy) {
+	if (navies.erase(&navy) > 0) {
+		return true;
+	} else {
+		Logger::error("Trying to remove non-existent navy ", navy.get_name(), " from province ", get_identifier());
+		return false;
+	}
 }
 
 bool Province::reset(BuildingTypeManager const& building_type_manager) {

@@ -6,8 +6,11 @@
 #include "openvic-simulation/utility/Getters.hpp"
 
 namespace OpenVic {
+	struct UnitInstanceManager;
+
 	/* Representation of an existing country that is currently in-game. */
 	struct CountryInstance {
+		friend struct CountryInstanceManager;
 	private:
 		Country const* PROPERTY_RW(base_country);
 		Culture const* PROPERTY_RW(primary_culture);
@@ -25,7 +28,11 @@ namespace OpenVic {
 		std::vector<Reform const*> PROPERTY(reforms); // TODO: should be map of reform groups to active reforms: must set defaults & validate applied history
 		// TODO: Military units + OOBs; will probably need an extensible deployment class
 
+		CountryInstance(Country const* new_base_country);
+
 	public:
+		std::string_view get_identifier() const;
+
 		bool add_accepted_culture(Culture const* new_accepted_culture);
 		bool remove_accepted_culture(Culture const* culture_to_remove);
 		/* Add or modify a party in the upper house. */
@@ -34,6 +41,18 @@ namespace OpenVic {
 		bool add_reform(Reform const* new_reform);
 		bool remove_reform(Reform const* reform_to_remove);
 
-		bool apply_history_to_country(CountryHistoryMap const& history, Date date);
+		bool apply_history_to_country(CountryHistoryEntry const* entry);
+	};
+
+	struct CountryInstanceManager {
+	private:
+		std::vector<CountryInstance> PROPERTY(country_instances);
+
+	public:
+		bool generate_country_instances(CountryManager const& country_manager);
+
+		bool apply_history_to_countries(
+			CountryHistoryManager const& history_manager, Date date, UnitInstanceManager& unit_instance_manager, Map& map
+		);
 	};
 } // namespace OpenVic
