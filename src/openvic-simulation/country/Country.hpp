@@ -85,8 +85,7 @@ namespace OpenVic {
 		bool add_country(
 			std::string_view identifier, colour_t colour, GraphicalCultureType const* graphical_culture,
 			IdentifierRegistry<CountryParty>&& parties, Country::unit_names_map_t&& unit_names, bool dynamic_tag,
-			Country::government_colour_map_t&& alternative_colours,
-			colour_t primary_unit_colour, colour_t secondary_unit_colour, colour_t tertiary_unit_colour
+			Country::government_colour_map_t&& alternative_colours
 		);
 
 		bool load_country_colours(ast::NodeCPtr root);

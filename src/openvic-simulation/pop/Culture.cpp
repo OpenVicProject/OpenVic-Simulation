@@ -22,6 +22,8 @@ Culture::Culture(
 	first_names { std::move(new_first_names) }, last_names { std::move(new_last_names) }, radicalism { new_radicalism },
 	primary_country { new_primary_country } {}
 
+CultureManager::CultureManager() : default_graphical_culture_type { nullptr } {}
+
 bool CultureManager::add_graphical_culture_type(std::string_view identifier) {
 	if (identifier.empty()) {
 		Logger::error("Invalid culture group identifier - empty!");
@@ -78,17 +80,26 @@ bool CultureManager::load_graphical_culture_type_file(ast::NodeCPtr root) {
 		graphical_culture_types,
 		expect_identifier(std::bind_front(&CultureManager::add_graphical_culture_type, this))
 	)(root);
+
 	lock_graphical_culture_types();
+
+	if (graphical_culture_types_empty()) {
+		Logger::error("Cannot set default graphical culture type - none loaded!");
+		return false;
+	}
+
+	/* Last defined graphical culture type is used as default. */
+	default_graphical_culture_type = &get_graphical_culture_types().back();
+
 	return ret;
 }
 
 bool CultureManager::_load_culture_group(
-	CountryManager const& country_manager, size_t& total_expected_cultures,
-	GraphicalCultureType const* default_unit_graphical_culture_type, std::string_view culture_group_key,
+	CountryManager const& country_manager, size_t& total_expected_cultures, std::string_view culture_group_key,
 	ast::NodeCPtr culture_group_node
 ) {
 	std::string_view leader {};
-	GraphicalCultureType const* unit_graphical_culture_type = default_unit_graphical_culture_type;
+	GraphicalCultureType const* unit_graphical_culture_type = default_graphical_culture_type;
 	bool is_overseas = true;
 	Country const* union_country = nullptr;
 
@@ -152,21 +163,12 @@ bool CultureManager::load_culture_file(CountryManager const& country_manager, as
 		return false;
 	}
 
-	static constexpr std::string_view default_unit_graphical_culture_type_identifier = "Generic";
-	GraphicalCultureType const* const default_unit_graphical_culture_type =
-		get_graphical_culture_type_by_identifier(default_unit_graphical_culture_type_identifier);
-	if (default_unit_graphical_culture_type == nullptr) {
-		Logger::error("Failed to find default unit graphical culture type: ", default_unit_graphical_culture_type_identifier);
-	}
-
 	size_t total_expected_cultures = 0;
 	bool ret = expect_dictionary_reserve_length(culture_groups,
-		[this, &country_manager, default_unit_graphical_culture_type, &total_expected_cultures](
+		[this, &country_manager, &total_expected_cultures](
 			std::string_view key, ast::NodeCPtr value
 		) -> bool {
-			return _load_culture_group(
-				country_manager, total_expected_cultures, default_unit_graphical_culture_type, key, value
-			);
+			return _load_culture_group(country_manager, total_expected_cultures, key, value);
 		}
 	)(root);
 	lock_culture_groups();

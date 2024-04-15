@@ -280,8 +280,7 @@ bool Dataloader::_load_interface_files(UIManager& ui_manager) const {
 			return ui_manager.load_gfx_file(parse_defines(file).get_file_node());
 		}
 	);
-	ui_manager.lock_sprites();
-	ui_manager.lock_fonts();
+	ui_manager.lock_gfx_registries();
 
 	/* Hard-coded GUI file names, might be replaced with a dynamic system but everything should still be loaded on startup. */
 	static const std::vector<std::string_view> gui_files {

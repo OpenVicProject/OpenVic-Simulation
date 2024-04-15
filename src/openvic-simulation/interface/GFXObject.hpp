@@ -24,48 +24,44 @@ namespace OpenVic::GFX {
 		friend std::unique_ptr<Actor> std::make_unique<Actor>();
 
 	public:
-		class Attachment : public Named<> {
-			friend class LoadBase;
+		class Attachment {
+			friend class Actor;
+
+		public:
+			using attach_id_t = uint32_t;
 
 		private:
-			std::string PROPERTY(node);
-			int32_t PROPERTY(attach_id);
+			std::string PROPERTY(actor_name);
+			std::string PROPERTY(attach_node);
+			attach_id_t PROPERTY(attach_id);
 
-		protected:
-			Attachment();
-
-			bool _fill_key_map(NodeTools::case_insensitive_key_map_t& key_map) override;
+			Attachment(std::string_view new_actor_name, std::string_view new_attach_node, attach_id_t new_attach_id);
 
 		public:
 			Attachment(Attachment&&) = default;
-			virtual ~Attachment() = default;
 		};
 
-		class Animation : public Named<> {
-			friend class LoadBase;
+		class Animation {
+			friend class Actor;
 
 			std::string PROPERTY(file);
-			fixed_point_t PROPERTY(default_time);
+			fixed_point_t PROPERTY(scroll_time);
 
-		protected:
-			Animation();
-
-			bool _fill_key_map(NodeTools::case_insensitive_key_map_t& key_map) override;
+			Animation(std::string_view new_file, fixed_point_t new_scroll_time);
 
 		public:
 			Animation(Animation&&) = default;
-			virtual ~Animation() = default;
 		};
 
 	private:
-		std::string PROPERTY(model_file);
-		std::string PROPERTY(idle_animation_file);
-		std::string PROPERTY(move_animation_file);
-		std::string PROPERTY(attack_animation_file);
 		fixed_point_t PROPERTY(scale);
+		std::string PROPERTY(model_file);
+		std::optional<Animation> PROPERTY(idle_animation);
+		std::optional<Animation> PROPERTY(move_animation);
+		std::optional<Animation> PROPERTY(attack_animation);
+		std::vector<Attachment> PROPERTY(attachments);
 
-		NamedRegistry<Attachment> IDENTIFIER_REGISTRY(attachment);
-		NamedRegistry<Animation> IDENTIFIER_REGISTRY(animation);
+		bool _set_animation(std::string_view name, std::string_view file, fixed_point_t scroll_time);
 
 	protected:
 		Actor();

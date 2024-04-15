@@ -61,10 +61,11 @@ namespace OpenVic {
 		IdentifierRegistry<CultureGroup> IDENTIFIER_REGISTRY(culture_group);
 		IdentifierRegistry<Culture> IDENTIFIER_REGISTRY(culture);
 
+		GraphicalCultureType const* PROPERTY(default_graphical_culture_type);
+
 		bool _load_culture_group(
 			CountryManager const& country_manager, size_t& total_expected_cultures,
-			GraphicalCultureType const* default_unit_graphical_culture_type, std::string_view culture_group_key,
-			ast::NodeCPtr culture_group_node
+			std::string_view culture_group_key, ast::NodeCPtr culture_group_node
 		);
 		bool _load_culture(
 			CountryManager const& country_manager, CultureGroup const& culture_group, std::string_view culture_key,
@@ -72,6 +73,8 @@ namespace OpenVic {
 		);
 
 	public:
+		CultureManager();
+
 		bool add_graphical_culture_type(std::string_view identifier);
 
 		bool add_culture_group(

@@ -101,44 +101,92 @@ node_callback_t Object::expect_objects(length_callback_t length_callback, callba
 	);
 }
 
-Actor::Attachment::Attachment() : node {}, attach_id { 0 } {}
+Actor::Attachment::Attachment(std::string_view new_actor_name, std::string_view new_attach_node, attach_id_t new_attach_id)
+  : actor_name { new_actor_name }, attach_node { new_attach_node }, attach_id { new_attach_id } {}
 
-bool Actor::Attachment::_fill_key_map(NodeTools::case_insensitive_key_map_t& key_map) {
-	bool ret = Named::_fill_key_map(key_map);
-	ret &= add_key_map_entries(key_map,
-		"node", ONE_EXACTLY, expect_string(assign_variable_callback_string(node)),
-		"attachId", ONE_EXACTLY, expect_uint(assign_variable_callback(attach_id))
-	);
-	return ret;
+Actor::Animation::Animation(std::string_view new_file, fixed_point_t new_scroll_time)
+  : file { new_file }, scroll_time { new_scroll_time } {}
+
+Actor::Actor() : model_file {}, scale { 1 }, idle_animation {}, move_animation {}, attack_animation {} {}
+
+bool Actor::_set_animation(std::string_view name, std::string_view file, fixed_point_t scroll_time) {
+	std::optional<Animation>* animation = nullptr;
+
+	if (name == "idle") {
+		animation = &idle_animation;
+	} else if (name == "move") {
+		animation = &move_animation;
+	} else if (name == "attack") {
+		animation = &attack_animation;
+	} else {
+		Logger::error(
+			"Unknown animation type \"", name, "\" for actor ", get_name(), " (with file ", file, " and scroll time ",
+			scroll_time, ")"
+		);
+		return false;
+	}
+
+	if (animation->has_value()) {
+		Logger::error(
+			"Duplicate ", name, " animation for actor ", get_name(), ": ", file, " with scroll time ",
+			scroll_time, " (already set to ", (*animation)->file, " with scroll time ", (*animation)->scroll_time, ")"
+		);
+		return false;
+	}
+
+	/* Don't set static/non-moving animation, to avoid needing an AnimationPlayer for the generated Godot Skeleton3D. */
+	static constexpr std::string_view null_animation = "static.xsm";
+	if (file.ends_with(null_animation)) {
+		return true;
+	}
+
+	animation->emplace(Animation { file, scroll_time });
+	return true;
 }
-
-Actor::Animation::Animation() : file {}, default_time { 0 } {}
-
-bool Actor::Animation::_fill_key_map(NodeTools::case_insensitive_key_map_t& key_map) {
-	bool ret = Named::_fill_key_map(key_map);
-	ret &= add_key_map_entries(key_map,
-		"file", ONE_EXACTLY, expect_string(assign_variable_callback_string(file)),
-		"defaultAnimationTime", ONE_EXACTLY, expect_fixed_point(assign_variable_callback(default_time))
-	);
-	return ret;
-}
-
-Actor::Actor() : model_file {}, idle_animation_file {}, move_animation_file {}, attack_animation_file {}, scale { 1 } {}
 
 bool Actor::_fill_key_map(NodeTools::case_insensitive_key_map_t& key_map) {
 	bool ret = Object::_fill_key_map(key_map);
+
 	ret &= add_key_map_entries(key_map,
 		"actorfile", ONE_EXACTLY, expect_string(assign_variable_callback_string(model_file)),
-		"idle", ZERO_OR_ONE, expect_string(assign_variable_callback_string(idle_animation_file)),
-		"move", ZERO_OR_ONE, expect_string(assign_variable_callback_string(move_animation_file)),
-		"attack", ZERO_OR_ONE, expect_string(assign_variable_callback_string(attack_animation_file)),
 		"scale", ONE_EXACTLY, expect_fixed_point(assign_variable_callback(scale)),
-		"attach", ZERO_OR_MORE, Attachment::_expect_value<Attachment>([this](Attachment&& attachment) -> bool {
-			return attachments.add_item(std::move(attachment));
-		}),
-		"animation", ZERO_OR_MORE, Animation::_expect_value<Animation>([this](Animation&& animation) -> bool {
-			return animations.add_item(std::move(animation));
-		})
+
+		"attach", ZERO_OR_MORE, [this](ast::NodeCPtr node) -> bool {
+			std::string_view actor_name {}, attach_node {};
+			Attachment::attach_id_t attach_id = 0;
+
+			if (!expect_dictionary_keys<StringMapCaseInsensitive>(
+				"name", ONE_EXACTLY, expect_string(assign_variable_callback(actor_name)),
+				"node", ONE_EXACTLY, expect_string(assign_variable_callback(attach_node)),
+				"attachId", ONE_EXACTLY, expect_uint(assign_variable_callback(attach_id))
+			)(node)) {
+				Logger::error("Failed to load attachment for actor ", get_name());
+				return false;
+			}
+
+			attachments.push_back({ actor_name, attach_node, attach_id });
+			return true;
+		},
+
+		"idle", ZERO_OR_ONE, expect_string(std::bind(&Actor::_set_animation, this, "idle", std::placeholders::_1, 0)),
+		"move", ZERO_OR_ONE, expect_string(std::bind(&Actor::_set_animation, this, "move", std::placeholders::_1, 0)),
+		"attack", ZERO_OR_ONE, expect_string(std::bind(&Actor::_set_animation, this, "attack", std::placeholders::_1, 0)),
+		"animation", ZERO_OR_MORE, [this](ast::NodeCPtr node) -> bool {
+			std::string_view name {}, file {};
+			fixed_point_t scroll_time = 0;
+
+			if (!expect_dictionary_keys<StringMapCaseInsensitive>(
+				"name", ONE_EXACTLY, expect_string(assign_variable_callback(name)),
+				"file", ONE_EXACTLY, expect_string(assign_variable_callback(file)),
+				"defaultAnimationTime", ONE_EXACTLY, expect_fixed_point(assign_variable_callback(scroll_time))
+			)(node)) {
+				Logger::error("Failed to load animation for actor ", get_name());
+				return false;
+			}
+
+			return _set_animation(name, file, scroll_time);
+		}
 	);
+
 	return ret;
 }
