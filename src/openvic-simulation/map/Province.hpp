@@ -68,20 +68,17 @@ namespace OpenVic {
 		};
 
 		struct province_positions_t {
-			/* Calculated average */
-			fvec2_t centre;
-
 			/* Province name placement */
-			fvec2_t text;
-			fixed_point_t text_rotation;
-			fixed_point_t text_scale;
+			std::optional<fvec2_t> text;
+			std::optional<fvec2_t> text_rotation;
+			std::optional<fvec2_t> text_scale;
 
 			/* Model positions */
 			std::optional<fvec2_t> unit;
-			fvec2_t city;
-			fvec2_t factory;
-			fvec2_t building_construction;
-			fvec2_t military_construction;
+			std::optional<fvec2_t> city;
+			std::optional<fvec2_t> factory;
+			std::optional<fvec2_t> building_construction;
+			std::optional<fvec2_t> military_construction;
 			ordered_map<BuildingType const*, fvec2_t> building_position;
 			fixed_point_map_t<BuildingType const*> building_rotation;
 		};
@@ -99,11 +96,14 @@ namespace OpenVic {
 		bool PROPERTY_CUSTOM_PREFIX(water, is);
 		bool PROPERTY_CUSTOM_PREFIX(coastal, is);
 		bool PROPERTY_CUSTOM_PREFIX(port, has);
+		Province const* PROPERTY(port_adjacent_province);
 		/* Terrain type calculated from terrain image */
 		TerrainType const* PROPERTY(default_terrain_type);
 
 		std::vector<adjacency_t> PROPERTY(adjacencies);
-		province_positions_t PROPERTY(positions);
+		/* Calculated mean pixel position. */
+		fvec2_t PROPERTY(centre);
+		province_positions_t positions;
 
 		/* Mutable attributes (reset before loading history) */
 		TerrainType const* PROPERTY(terrain_type);
@@ -138,9 +138,13 @@ namespace OpenVic {
 		bool operator==(Province const& other) const;
 		std::string to_string() const;
 
-		bool load_positions(BuildingTypeManager const& building_type_manager, ast::NodeCPtr root);
+		/* The positions' y coordinates need to be inverted. */
+		bool load_positions(Map const& map, BuildingTypeManager const& building_type_manager, ast::NodeCPtr root);
 
 		bool expand_building(size_t building_index);
+		/* This returns a pointer to the position of the specified building type, or nullptr if none exists. */
+		fvec2_t const* get_building_position(BuildingType const* building_type) const;
+		fixed_point_t get_building_rotation(BuildingType const* building_type) const;
 
 		bool add_pop(Pop&& pop);
 		bool add_pop_vec(std::vector<Pop> const& pop_vec);

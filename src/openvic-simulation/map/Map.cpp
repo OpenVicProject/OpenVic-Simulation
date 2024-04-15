@@ -31,7 +31,7 @@ Mapmode::base_stripe_t Mapmode::get_base_stripe_colours(Map const& map, Province
 }
 
 Map::Map()
-  : width { 0 }, height { 0 }, max_provinces { Province::MAX_INDEX }, selected_province { nullptr },
+  : dims { 0, 0 }, max_provinces { Province::MAX_INDEX }, selected_province { nullptr },
 	highest_province_population { 0 }, total_map_population { 0 } {}
 
 bool Map::add_province(std::string_view identifier, colour_t colour) {
@@ -75,8 +75,8 @@ Province::distance_t Map::calculate_distance_between(Province const& from, Provi
 	const fixed_point_t min_x = std::min(
 		(to_pos.x - from_pos.x).abs(),
 		std::min(
-			(to_pos.x - from_pos.x + width).abs(),
-			(to_pos.x - from_pos.x - width).abs()
+			(to_pos.x - from_pos.x + get_width()).abs(),
+			(to_pos.x - from_pos.x - get_width()).abs()
 		)
 	);
 
@@ -327,11 +327,19 @@ Province::index_t Map::get_index_from_colour(colour_t colour) const {
 	return Province::NULL_INDEX;
 }
 
-Province::index_t Map::get_province_index_at(size_t x, size_t y) const {
-	if (x < width && y < height) {
-		return province_shape_image[x + y * width].index;
+Province::index_t Map::get_province_index_at(ivec2_t pos) const {
+	if (pos.nonnegative() && pos.less_than(dims)) {
+		return province_shape_image[get_pixel_index_from_pos(pos)].index;
 	}
 	return Province::NULL_INDEX;
+}
+
+Province* Map::get_province_at(ivec2_t pos) {
+	return get_province_by_index(get_province_index_at(pos));
+}
+
+Province const* Map::get_province_at(ivec2_t pos) const {
+	return get_province_by_index(get_province_index_at(pos));
 }
 
 bool Map::set_max_provinces(Province::index_t new_max_provinces) {
@@ -568,8 +576,8 @@ bool Map::load_province_definitions(std::vector<LineObject> const& lines) {
 }
 
 bool Map::load_province_positions(BuildingTypeManager const& building_type_manager, ast::NodeCPtr root) {
-	return expect_province_dictionary([&building_type_manager](Province& province, ast::NodeCPtr node) -> bool {
-		return province.load_positions(building_type_manager, node);
+	return expect_province_dictionary([this, &building_type_manager](Province& province, ast::NodeCPtr node) -> bool {
+		return province.load_positions(*this, building_type_manager, node);
 	})(root);
 }
 
@@ -665,9 +673,9 @@ bool Map::load_map_images(fs::path const& province_path, fs::path const& terrain
 		return false;
 	}
 
-	width = province_bmp.get_width();
-	height = province_bmp.get_height();
-	province_shape_image.resize(width * height);
+	dims.x = province_bmp.get_width();
+	dims.y = province_bmp.get_height();
+	province_shape_image.resize(dims.x * dims.y);
 
 	uint8_t const* province_data = province_bmp.get_pixel_data().data();
 	uint8_t const* terrain_data = terrain_bmp.get_pixel_data().data();
@@ -680,13 +688,13 @@ bool Map::load_map_images(fs::path const& province_path, fs::path const& terrain
 	std::vector<fixed_point_t> pixels_per_province(provinces.size());
 	std::vector<fvec2_t> pixel_position_sum_per_province(provinces.size());
 
-	for (int32_t y = 0; y < height; ++y) {
-		for (int32_t x = 0; x < width; ++x) {
-			const size_t pixel_index = x + y * width;
+	for (ivec2_t pos {}; pos.y < get_height(); ++pos.y) {
+		for (pos.x = 0; pos.x < get_width(); ++pos.x) {
+			const size_t pixel_index = get_pixel_index_from_pos(pos);
 			const colour_t province_colour = colour_at(province_data, pixel_index);
 			Province::index_t province_index = Province::NULL_INDEX;
 
-			if (x > 0) {
+			if (pos.x > 0) {
 				const size_t jdx = pixel_index - 1;
 				if (colour_at(province_data, jdx) == province_colour) {
 					province_index = province_shape_image[jdx].index;
@@ -694,8 +702,8 @@ bool Map::load_map_images(fs::path const& province_path, fs::path const& terrain
 				}
 			}
 
-			if (y > 0) {
-				const size_t jdx = pixel_index - width;
+			if (pos.y > 0) {
+				const size_t jdx = pixel_index - get_width();
 				if (colour_at(province_data, jdx) == province_colour) {
 					province_index = province_shape_image[jdx].index;
 					goto index_found;
@@ -708,7 +716,7 @@ bool Map::load_map_images(fs::path const& province_path, fs::path const& terrain
 				unrecognised_province_colours.insert(province_colour);
 				if (detailed_errors) {
 					Logger::warning(
-						"Unrecognised province colour ", province_colour, " at (", x, ", ", y, ")"
+						"Unrecognised province colour ", province_colour, " at ", pos
 					);
 				}
 			}
@@ -719,7 +727,7 @@ bool Map::load_map_images(fs::path const& province_path, fs::path const& terrain
 			if (province_index != Province::NULL_INDEX) {
 				const Province::index_t array_index = province_index - 1;
 				pixels_per_province[array_index]++;
-				pixel_position_sum_per_province[array_index] += static_cast<fvec2_t>(ivec2_t { x, y });
+				pixel_position_sum_per_province[array_index] += static_cast<fvec2_t>(pos);
 			}
 
 			const TerrainTypeMapping::index_t terrain = terrain_data[pixel_index];
@@ -755,7 +763,7 @@ bool Map::load_map_images(fs::path const& province_path, fs::path const& terrain
 		province->on_map = pixel_count > 0;
 
 		if (province->on_map) {
-			province->positions.centre = pixel_position_sum_per_province[array_index] / pixel_count;
+			province->centre = pixel_position_sum_per_province[array_index] / pixel_count;
 		} else {
 			if (detailed_errors) {
 				Logger::warning("Province missing from shape image: ", province->to_string());
@@ -776,23 +784,21 @@ bool Map::load_map_images(fs::path const& province_path, fs::path const& terrain
 bool Map::_generate_standard_province_adjacencies() {
 	bool changed = false;
 
-	const auto generate_adjacency = [this, &changed](Province* current, size_t x, size_t y) -> bool {
-		Province* neighbour = get_province_by_index(province_shape_image[x + y * width].index);
+	const auto generate_adjacency = [this](Province* current, ivec2_t pos) -> bool {
+		Province* neighbour = get_province_at(pos);
 		if (neighbour != nullptr) {
 			return add_standard_adjacency(*current, *neighbour);
 		}
 		return false;
 	};
 
-	for (size_t y = 0; y < height; ++y) {
-		for (size_t x = 0; x < width; ++x) {
-			Province* cur = get_province_by_index(province_shape_image[x + y * width].index);
+	for (ivec2_t pos {}; pos.y < get_height(); ++pos.y) {
+		for (pos.x = 0; pos.x < get_width(); ++pos.x) {
+			Province* cur = get_province_at(pos);
 
 			if (cur != nullptr) {
-				changed |= generate_adjacency(cur, (x + 1) % width, y);
-				if (y + 1 < height) {
-					changed |= generate_adjacency(cur, x, y + 1);
-				}
+				changed |= generate_adjacency(cur, { (pos.x + 1) % get_width(), pos.y });
+				changed |= generate_adjacency(cur, { pos.x, pos.y + 1 });
 			}
 		}
 	}

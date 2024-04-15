@@ -506,5 +506,24 @@ namespace OpenVic {
 				return warn;
 			};
 		}
+
+		/* Often used for rotations which must be negated due to OpenVic's coordinate system being orientated
+		 * oppositely to Vic2's. */
+		template<typename T = fixed_point_t>
+		constexpr Callback<T> auto negate_callback(Callback<T> auto callback) {
+			return [callback](T val) -> bool {
+				return callback(-val);
+			};
+		}
+
+		/* Often used for map-space coordinates which must have their y-coordinate flipped due to OpenVic using the
+		 * top-left of the map as the origin as opposed Vic2 using the bottom-left. */
+		template<typename T>
+		constexpr Callback<vec2_t<T>> auto flip_y_callback(Callback<vec2_t<T>> auto callback, T height) {
+			return [callback, height](vec2_t<T> val) -> bool {
+				val.y = height - val.y;
+				return callback(val);
+			};
+		}
 	}
 }
