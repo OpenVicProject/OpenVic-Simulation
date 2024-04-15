@@ -53,9 +53,9 @@ bool ProvinceHistoryMap::_load_history_entry(
 			return _load_history_sub_entry_callback(game_manager, entry.get_date(), value, key, value);
 		},
 		"owner", ZERO_OR_ONE,
-			country_manager.expect_country_identifier(assign_variable_callback_pointer(entry.owner)),
+			country_manager.expect_country_identifier(assign_variable_callback_pointer_opt(entry.owner, true)),
 		"controller", ZERO_OR_ONE,
-			country_manager.expect_country_identifier(assign_variable_callback_pointer(entry.controller)),
+			country_manager.expect_country_identifier(assign_variable_callback_pointer_opt(entry.controller, true)),
 		"add_core", ZERO_OR_MORE, country_manager.expect_country_identifier(vector_callback_pointer(entry.add_cores)),
 		"remove_core", ZERO_OR_MORE, country_manager.expect_country_identifier(
 			vector_callback_pointer(entry.remove_cores)
@@ -65,10 +65,10 @@ bool ProvinceHistoryMap::_load_history_entry(
 		"colony", ZERO_OR_ONE,
 			expect_identifier(expect_mapped_string(colony_status_map, assign_variable_callback(entry.colonial))),
 		"is_slave", ZERO_OR_ONE, expect_bool(assign_variable_callback(entry.slave)),
-		"trade_goods", ZERO_OR_ONE, good_manager.expect_good_identifier(assign_variable_callback_pointer(entry.rgo)),
+		"trade_goods", ZERO_OR_ONE, good_manager.expect_good_identifier(assign_variable_callback_pointer_opt(entry.rgo)),
 		"life_rating", ZERO_OR_ONE, expect_uint<Province::life_rating_t>(assign_variable_callback(entry.life_rating)),
 		"terrain", ZERO_OR_ONE, terrain_type_manager.expect_terrain_type_identifier(
-			assign_variable_callback_pointer(entry.terrain_type)
+			assign_variable_callback_pointer_opt(entry.terrain_type)
 		),
 		"party_loyalty", ZERO_OR_MORE, [&ideology_manager, &entry](ast::NodeCPtr node) -> bool {
 			Ideology const* ideology = nullptr;
