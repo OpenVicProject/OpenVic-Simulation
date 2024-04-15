@@ -4,32 +4,37 @@ using namespace OpenVic;
 using namespace OpenVic::NodeTools;
 
 BuildingType::BuildingType(
-	std::string_view identifier, ARGS
-) : HasIdentifier { identifier }, type { type }, modifier { std::move(modifier) }, on_completion { on_completion },
-	completion_size { completion_size }, max_level { max_level }, goods_cost { std::move(goods_cost) }, cost { cost },
-	build_time { build_time }, visibility { visibility }, on_map { on_map }, default_enabled { default_enabled },
-	production_type { production_type }, pop_build_factory { pop_build_factory }, strategic_factory { strategic_factory },
-	advanced_factory { advanced_factory }, fort_level { fort_level }, naval_capacity { naval_capacity },
-	colonial_points { std::move(colonial_points) }, in_province { in_province }, one_per_state { one_per_state },
-	colonial_range { colonial_range }, infrastructure { infrastructure }, spawn_railway_track { spawn_railway_track },
-	sail { sail }, steam { steam }, capital { capital }, port { port } {}
+	std::string_view identifier, building_type_args_t& building_type_args
+) : HasIdentifier { identifier }, type { building_type_args.type }, modifier { std::move(building_type_args.modifier) },
+	on_completion { building_type_args.on_completion }, completion_size { building_type_args.completion_size },
+	max_level { building_type_args.max_level }, goods_cost { std::move(building_type_args.goods_cost) },
+	cost { building_type_args.cost }, build_time { building_type_args.build_time }, on_map { building_type_args.on_map },
+	default_enabled { building_type_args.default_enabled }, production_type { building_type_args.production_type },
+	pop_build_factory { building_type_args.pop_build_factory }, strategic_factory { building_type_args.strategic_factory },
+	advanced_factory { building_type_args.advanced_factory }, fort_level { building_type_args.fort_level },
+	naval_capacity { building_type_args.naval_capacity }, colonial_points { std::move(building_type_args.colonial_points) },
+	in_province { building_type_args.in_province }, one_per_state { building_type_args.one_per_state },
+	colonial_range { building_type_args.colonial_range }, infrastructure { building_type_args.infrastructure },
+	spawn_railway_track { building_type_args.spawn_railway_track }, sail { building_type_args.sail },
+	steam { building_type_args.steam }, capital { building_type_args.capital }, port { building_type_args.port } {}
 
 BuildingTypeManager::BuildingTypeManager() : port_building_type { nullptr } {}
 
-bool BuildingTypeManager::add_building_type(std::string_view identifier, ARGS) {
+bool BuildingTypeManager::add_building_type(
+	std::string_view identifier, BuildingType::building_type_args_t& building_type_args
+) {
 	if (identifier.empty()) {
 		Logger::error("Invalid building identifier - empty!");
 		return false;
 	}
 
-	building_type_types.emplace(type);
+	const bool ret = building_types.add_item({ identifier, building_type_args });
 
-	return building_types.add_item({
-		identifier, type, std::move(modifier), on_completion, completion_size, max_level, std::move(goods_cost),
-		cost, build_time, visibility, on_map, default_enabled, production_type, pop_build_factory, strategic_factory,
-		advanced_factory, fort_level, naval_capacity, std::move(colonial_points), in_province, one_per_state,
-		colonial_range, infrastructure, spawn_railway_track, sail, steam, capital, port
-	});
+	if (ret) {
+		building_type_types.emplace(building_type_args.type);
+	}
+
+	return ret;
 }
 
 bool BuildingTypeManager::load_buildings_file(
@@ -39,57 +44,52 @@ bool BuildingTypeManager::load_buildings_file(
 	bool ret = expect_dictionary_reserve_length(
 		building_types,
 		[this, &good_manager, &production_type_manager, &modifier_manager](std::string_view key, ast::NodeCPtr value) -> bool {
-			std::string_view type;
-			ProductionType const* production_type = nullptr;
-			std::string_view on_completion;
-			fixed_point_t completion_size = 0, cost = 0, infrastructure = 0, colonial_range = 0;
-			BuildingType::level_t max_level = 0, fort_level = 0;
-			Good::good_map_t goods_cost;
-			Timespan build_time;
-			bool visibility = false, on_map = false, default_enabled = false, pop_build_factory = false;
-			bool strategic_factory = false, advanced_factory = false;
-			bool in_province = false, one_per_state = false, spawn_railway_track = false, sail = false, steam = false;
-			bool capital = false, port = false;
-			uint64_t naval_capacity = 0;
-			std::vector<fixed_point_t> colonial_points;
-			ModifierValue modifier;
+			BuildingType::building_type_args_t building_type_args {};
 
-			bool ret = modifier_manager.expect_modifier_value_and_keys(move_variable_callback(modifier),
-				"type", ONE_EXACTLY, expect_identifier(assign_variable_callback(type)),
-				"on_completion", ZERO_OR_ONE, expect_identifier(assign_variable_callback(on_completion)),
-				"completion_size", ZERO_OR_ONE, expect_fixed_point(assign_variable_callback(completion_size)),
-				"max_level", ONE_EXACTLY, expect_uint(assign_variable_callback(max_level)),
-				"goods_cost", ONE_EXACTLY, good_manager.expect_good_decimal_map(move_variable_callback(goods_cost)),
-				"cost", ZERO_OR_MORE, expect_fixed_point(assign_variable_callback(cost)),
-				"time", ONE_EXACTLY, expect_days(assign_variable_callback(build_time)),
-				"visibility", ONE_EXACTLY, expect_bool(assign_variable_callback(visibility)),
-				"onmap", ONE_EXACTLY, expect_bool(assign_variable_callback(on_map)),
-				"default_enabled", ZERO_OR_ONE, expect_bool(assign_variable_callback(default_enabled)),
+			bool ret = modifier_manager.expect_modifier_value_and_keys(move_variable_callback(building_type_args.modifier),
+				"type", ONE_EXACTLY, expect_identifier(assign_variable_callback(building_type_args.type)),
+				"on_completion", ZERO_OR_ONE, expect_identifier(assign_variable_callback(building_type_args.on_completion)),
+				"completion_size", ZERO_OR_ONE,
+					expect_fixed_point(assign_variable_callback(building_type_args.completion_size)),
+				"max_level", ONE_EXACTLY, expect_uint(assign_variable_callback(building_type_args.max_level)),
+				"goods_cost", ONE_EXACTLY,
+					good_manager.expect_good_decimal_map(move_variable_callback(building_type_args.goods_cost)),
+				"cost", ZERO_OR_MORE, expect_fixed_point(assign_variable_callback(building_type_args.cost)),
+				"time", ONE_EXACTLY, expect_days(assign_variable_callback(building_type_args.build_time)),
+				"visibility", ONE_EXACTLY, expect_bool([key](bool visibility) -> bool {
+					if (!visibility) {
+						Logger::warning(
+							"Visibility is \"no\" for building type \"", key,
+							"\", the building will still be visible as this option has no effect!"
+						);
+					}
+					return true;
+				}),
+				"onmap", ONE_EXACTLY, expect_bool(assign_variable_callback(building_type_args.on_map)),
+				"default_enabled", ZERO_OR_ONE, expect_bool(assign_variable_callback(building_type_args.default_enabled)),
 				"production_type", ZERO_OR_ONE, production_type_manager.expect_production_type_identifier(
-					assign_variable_callback_pointer(production_type)),
-				"pop_build_factory", ZERO_OR_ONE, expect_bool(assign_variable_callback(pop_build_factory)),
-				"strategic_factory", ZERO_OR_ONE, expect_bool(assign_variable_callback(strategic_factory)),
-				"advanced_factory", ZERO_OR_ONE, expect_bool(assign_variable_callback(advanced_factory)),
-				"fort_level", ZERO_OR_ONE, expect_uint(assign_variable_callback(fort_level)),
-				"naval_capacity", ZERO_OR_ONE, expect_uint(assign_variable_callback(naval_capacity)),
-				"colonial_points", ZERO_OR_ONE, expect_list(expect_fixed_point(vector_callback(colonial_points))),
-				"province", ZERO_OR_ONE, expect_bool(assign_variable_callback(in_province)),
-				"one_per_state", ZERO_OR_ONE, expect_bool(assign_variable_callback(one_per_state)),
-				"colonial_range", ZERO_OR_ONE, expect_fixed_point(assign_variable_callback(colonial_range)),
-				"infrastructure", ZERO_OR_ONE, expect_fixed_point(assign_variable_callback(infrastructure)),
-				"spawn_railway_track", ZERO_OR_ONE, expect_bool(assign_variable_callback(spawn_railway_track)),
-				"sail", ZERO_OR_ONE, expect_bool(assign_variable_callback(sail)),
-				"steam", ZERO_OR_ONE, expect_bool(assign_variable_callback(steam)),
-				"capital", ZERO_OR_ONE, expect_bool(assign_variable_callback(capital)),
-				"port", ZERO_OR_ONE, expect_bool(assign_variable_callback(port))
+					assign_variable_callback_pointer(building_type_args.production_type)
+				),
+				"pop_build_factory", ZERO_OR_ONE, expect_bool(assign_variable_callback(building_type_args.pop_build_factory)),
+				"strategic_factory", ZERO_OR_ONE, expect_bool(assign_variable_callback(building_type_args.strategic_factory)),
+				"advanced_factory", ZERO_OR_ONE, expect_bool(assign_variable_callback(building_type_args.advanced_factory)),
+				"fort_level", ZERO_OR_ONE, expect_uint(assign_variable_callback(building_type_args.fort_level)),
+				"naval_capacity", ZERO_OR_ONE, expect_uint(assign_variable_callback(building_type_args.naval_capacity)),
+				"colonial_points", ZERO_OR_ONE,
+					expect_list(expect_fixed_point(vector_callback(building_type_args.colonial_points))),
+				"province", ZERO_OR_ONE, expect_bool(assign_variable_callback(building_type_args.in_province)),
+				"one_per_state", ZERO_OR_ONE, expect_bool(assign_variable_callback(building_type_args.one_per_state)),
+				"colonial_range", ZERO_OR_ONE, expect_fixed_point(assign_variable_callback(building_type_args.colonial_range)),
+				"infrastructure", ZERO_OR_ONE, expect_fixed_point(assign_variable_callback(building_type_args.infrastructure)),
+				"spawn_railway_track", ZERO_OR_ONE,
+					expect_bool(assign_variable_callback(building_type_args.spawn_railway_track)),
+				"sail", ZERO_OR_ONE, expect_bool(assign_variable_callback(building_type_args.sail)),
+				"steam", ZERO_OR_ONE, expect_bool(assign_variable_callback(building_type_args.steam)),
+				"capital", ZERO_OR_ONE, expect_bool(assign_variable_callback(building_type_args.capital)),
+				"port", ZERO_OR_ONE, expect_bool(assign_variable_callback(building_type_args.port))
 			)(value);
 
-			ret &= add_building_type(
-				key, type, std::move(modifier), on_completion, completion_size, max_level, std::move(goods_cost), cost,
-				build_time, visibility, on_map, default_enabled, production_type, pop_build_factory, strategic_factory,
-				advanced_factory, fort_level, naval_capacity, std::move(colonial_points), in_province, one_per_state,
-				colonial_range, infrastructure, spawn_railway_track, sail, steam, capital, port
-			);
+			ret &= add_building_type(key, building_type_args);
 
 			return ret;
 		}
