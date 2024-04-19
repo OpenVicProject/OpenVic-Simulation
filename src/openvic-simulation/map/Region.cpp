@@ -95,12 +95,18 @@ ProvinceSet::provinces_t const& ProvinceSet::get_provinces() const {
 	return provinces;
 }
 
-Region::Region(std::string_view new_identifier, colour_t new_colour, bool new_meta)
-	: HasIdentifierAndColour { new_identifier, new_colour, false }, meta { new_meta } {}
+Pop::pop_size_t ProvinceSet::calculate_total_population() const {
+	Pop::pop_size_t total_population = 0;
+
+	for (Province const* province : provinces) {
+		total_population += province->get_total_population();
+	}
+
+	return total_population;
+}
 
 ProvinceSetModifier::ProvinceSetModifier(std::string_view new_identifier, ModifierValue&& new_values)
 	: Modifier { new_identifier, std::move(new_values), 0 } {}
 
-bool Region::get_meta() const {
-	return meta;
-}
+Region::Region(std::string_view new_identifier, colour_t new_colour, bool new_meta)
+	: HasIdentifierAndColour { new_identifier, new_colour, false }, meta { new_meta } {}

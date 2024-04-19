@@ -610,7 +610,7 @@ private:
 		return registry.expect_item_string(callback, allow_empty, warn); \
 	} \
 	constexpr NodeTools::NodeCallback auto expect_##singular##_identifier_or_string( \
-		NodeTools::Callback<decltype(registry)::external_value_type const_kw&> auto callback,bool allow_empty = false, \
+		NodeTools::Callback<decltype(registry)::external_value_type const_kw&> auto callback, bool allow_empty = false, \
 		bool warn = false \
 	) const_kw { \
 		return registry.expect_item_identifier_or_string(callback, allow_empty, warn); \
