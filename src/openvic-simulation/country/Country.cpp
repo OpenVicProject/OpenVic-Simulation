@@ -26,6 +26,7 @@ CountryParty::CountryParty(
 Country::Country(
 	std::string_view new_identifier,
 	colour_t new_colour,
+	size_t new_index,
 	GraphicalCultureType const& new_graphical_culture,
 	IdentifierRegistry<CountryParty>&& new_parties,
 	unit_names_map_t&& new_unit_names,
@@ -34,8 +35,8 @@ Country::Country(
 	colour_t new_primary_unit_colour,
 	colour_t new_secondary_unit_colour,
 	colour_t new_tertiary_unit_colour
-) : HasIdentifierAndColour {
-	new_identifier, new_colour, false },
+) : HasIdentifierAndColour { new_identifier, new_colour, false },
+	index { new_index },
 	graphical_culture { new_graphical_culture },
 	parties { std::move(new_parties) },
 	unit_names { std::move(new_unit_names) },
@@ -68,8 +69,8 @@ bool CountryManager::add_country(
 	static constexpr colour_t default_colour = colour_t::fill_as(colour_t::max_value);
 
 	return countries.add_item({
-		identifier, colour, *graphical_culture, std::move(parties), std::move(unit_names), dynamic_tag,
-		std::move(alternative_colours),
+		identifier, colour, countries.size(), *graphical_culture, std::move(parties), std::move(unit_names),
+		dynamic_tag, std::move(alternative_colours),
 		/* Default to country colour for the chest and grey for the others. Update later if necessary. */
 		colour, default_colour, default_colour
 	});

@@ -38,8 +38,8 @@ bool GovernmentTypeManager::add_government_type(
 	});
 
 	/* flag_type can be empty here for default/non-ideological flag */
-	if (ret && std::find(flag_types.begin(), flag_types.end(), flag_type) == flag_types.end()) {
-		flag_types.emplace_back(flag_type);
+	if (ret) {
+		flag_types.emplace(flag_type);
 	}
 
 	return ret;

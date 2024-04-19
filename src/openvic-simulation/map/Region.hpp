@@ -26,6 +26,7 @@ namespace OpenVic {
 		void reserve_more(size_t size);
 		bool contains_province(Province const* province) const;
 		provinces_t const& get_provinces() const;
+		Pop::pop_size_t calculate_total_population() const;
 	};
 
 	struct ProvinceSetModifier : Modifier, ProvinceSet {
@@ -47,13 +48,11 @@ namespace OpenVic {
 		 * Any region containing a province already listed in a
 		 * previously defined region is considered a meta region.
 		 */
-		const bool meta;
+		const bool PROPERTY(meta);
 
 		Region(std::string_view new_identifier, colour_t new_colour, bool new_meta);
 
 	public:
 		Region(Region&&) = default;
-
-		bool get_meta() const;
 	};
 }

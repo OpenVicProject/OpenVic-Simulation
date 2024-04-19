@@ -48,6 +48,7 @@ namespace OpenVic {
 		using government_colour_map_t = ordered_map<GovernmentType const*, colour_t>;
 
 	private:
+		const size_t PROPERTY(index);
 		GraphicalCultureType const& PROPERTY(graphical_culture);
 		/* Not const to allow elements to be moved, otherwise a copy is forced
 		 * which causes a compile error as the copy constructor has been deleted. */
@@ -61,9 +62,9 @@ namespace OpenVic {
 		// Unit colours not const due to being added after construction
 
 		Country(
-			std::string_view new_identifier, colour_t new_colour, GraphicalCultureType const& new_graphical_culture,
-			IdentifierRegistry<CountryParty>&& new_parties, unit_names_map_t&& new_unit_names, bool new_dynamic_tag,
-			government_colour_map_t&& new_alternative_colours,
+			std::string_view new_identifier, colour_t new_colour, size_t new_index,
+			GraphicalCultureType const& new_graphical_culture, IdentifierRegistry<CountryParty>&& new_parties,
+			unit_names_map_t&& new_unit_names, bool new_dynamic_tag, government_colour_map_t&& new_alternative_colours,
 			colour_t new_primary_unit_colour, colour_t new_secondary_unit_colour, colour_t new_tertiary_unit_colour
 		);
 
