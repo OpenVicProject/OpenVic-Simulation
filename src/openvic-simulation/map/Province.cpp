@@ -32,9 +32,9 @@ bool Province::load_positions(Map const& map, BuildingTypeManager const& buildin
 	const fixed_point_t map_height = map.get_height();
 
 	const bool ret = expect_dictionary_keys(
-		"text_position", ZERO_OR_ONE, expect_fvec2(flip_y_callback(assign_variable_callback(positions.text), map_height)),
-		"text_rotation", ZERO_OR_ONE,
-			expect_fixed_point(negate_callback<fixed_point_t>(assign_variable_callback(positions.text_rotation))),
+		"text_position", ZERO_OR_ONE,
+			expect_fvec2(flip_y_callback(assign_variable_callback(positions.text_position), map_height)),
+		"text_rotation", ZERO_OR_ONE, expect_fixed_point(assign_variable_callback(positions.text_rotation)),
 		"text_scale", ZERO_OR_ONE, expect_fixed_point(assign_variable_callback(positions.text_scale)),
 
 		"unit", ZERO_OR_ONE, expect_fvec2(flip_y_callback(assign_variable_callback(positions.unit), map_height)),
@@ -92,6 +92,18 @@ bool Province::load_positions(Map const& map, BuildingTypeManager const& buildin
 	}
 
 	return ret;
+}
+
+fvec2_t Province::get_text_position() const {
+	return positions.text_position.value_or(centre);
+}
+
+fixed_point_t Province::get_text_rotation() const {
+	return positions.text_rotation.value_or(0);
+}
+
+fixed_point_t Province::get_text_scale() const {
+	return positions.text_scale.value_or(1);
 }
 
 bool Province::expand_building(size_t building_index) {
