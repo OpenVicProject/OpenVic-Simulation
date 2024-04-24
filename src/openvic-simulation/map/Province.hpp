@@ -69,9 +69,9 @@ namespace OpenVic {
 
 		struct province_positions_t {
 			/* Province name placement */
-			std::optional<fvec2_t> text;
-			std::optional<fvec2_t> text_rotation;
-			std::optional<fvec2_t> text_scale;
+			std::optional<fvec2_t> text_position;
+			std::optional<fixed_point_t> text_rotation;
+			std::optional<fixed_point_t> text_scale;
 
 			/* Model positions */
 			std::optional<fvec2_t> unit;
@@ -140,6 +140,10 @@ namespace OpenVic {
 
 		/* The positions' y coordinates need to be inverted. */
 		bool load_positions(Map const& map, BuildingTypeManager const& building_type_manager, ast::NodeCPtr root);
+
+		fvec2_t get_text_position() const;
+		fixed_point_t get_text_rotation() const;
+		fixed_point_t get_text_scale() const;
 
 		bool expand_building(size_t building_index);
 		/* This returns a pointer to the position of the specified building type, or nullptr if none exists. */
