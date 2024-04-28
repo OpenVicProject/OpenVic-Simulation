@@ -1,7 +1,8 @@
 #pragma once
 
-#include <filesystem>
+#include <cstdint>
 #include <functional>
+#include <vector>
 
 #include <openvic-dataloader/csv/LineObject.hpp>
 
@@ -11,6 +12,7 @@
 #include "openvic-simulation/map/TerrainType.hpp"
 #include "openvic-simulation/types/Colour.hpp"
 #include "openvic-simulation/types/OrderedContainers.hpp"
+#include "types/Vector.hpp"
 
 namespace OpenVic {
 	namespace fs = std::filesystem;
@@ -44,6 +46,16 @@ namespace OpenVic {
 		base_stripe_t get_base_stripe_colours(Map const& map, Province const& province) const;
 	};
 
+	struct RiverSegment {
+		friend struct Map;
+
+	private:
+		const uint8_t PROPERTY(size);
+		const std::vector<ivec2_t> PROPERTY(points);
+
+		RiverSegment(uint8_t new_size, std::vector<ivec2_t> new_points);
+	};
+
 	struct GoodManager;
 	struct ProvinceHistoryManager;
 
@@ -60,6 +72,7 @@ namespace OpenVic {
 #pragma pack(pop)
 	private:
 		using colour_index_map_t = ordered_map<colour_t, Province::index_t>;
+		using river_t = std::vector<RiverSegment>;
 
 		IdentifierRegistry<Province> IDENTIFIER_REGISTRY_CUSTOM_INDEX_OFFSET(province, 1);
 		IdentifierRegistry<Region> IDENTIFIER_REGISTRY(region);
@@ -77,6 +90,8 @@ namespace OpenVic {
 		Province* PROPERTY(selected_province);
 		Pop::pop_size_t PROPERTY(highest_province_population);
 		Pop::pop_size_t PROPERTY(total_map_population);
+
+		std::vector<river_t> PROPERTY(rivers); // TODO: calculate what provinces are affected by crossing or how we plan on doing that.
 
 		Province::index_t get_index_from_colour(colour_t colour) const;
 		bool _generate_standard_province_adjacencies();
@@ -152,7 +167,7 @@ namespace OpenVic {
 		bool load_province_positions(BuildingTypeManager const& building_type_manager, ast::NodeCPtr root);
 		static bool load_region_colours(ast::NodeCPtr root, std::vector<colour_t>& colours);
 		bool load_region_file(ast::NodeCPtr root, std::vector<colour_t> const& colours);
-		bool load_map_images(fs::path const& province_path, fs::path const& terrain_path, bool detailed_errors);
+		bool load_map_images(fs::path const& province_path, fs::path const& terrain_path, fs::path const& rivers_path, bool detailed_errors);
 		bool generate_and_load_province_adjacencies(std::vector<ovdl::csv::LineObject> const& additional_adjacencies);
 		bool load_climate_file(ModifierManager const& modifier_manager, ast::NodeCPtr root);
 		bool load_continent_file(ModifierManager const& modifier_manager, ast::NodeCPtr root);
