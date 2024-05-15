@@ -47,7 +47,7 @@ namespace OpenVic {
 	public:
 		static ovdl::v2script::Parser parse_defines(fs::path const& path);
 		static ovdl::v2script::Parser parse_lua_defines(fs::path const& path);
-		static ovdl::csv::Windows1252Parser parse_csv(fs::path const& path);
+		static ovdl::csv::Parser parse_csv(fs::path const& path);
 
 		/* Cache the Parser so it won't be freed until free_cache is called. This is used to preserve condition and effect
 		 * script Nodes until all defines are loaded and the scripts can be parsed. The reference returned by this function

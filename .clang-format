@@ -82,7 +82,13 @@ IncludeCategories:
     Priority: 4
   - Regex: ^<tsl/
     Priority: 5
-  - Regex: ^"openvic-simulation/
+  - Regex: ^<dryad/
     Priority: 6
-  - Regex: .*
+  - Regex: ^<fmt/
     Priority: 7
+  - Regex: ^<range
+    Priority: 8
+  - Regex: ^"openvic-simulation/
+    Priority: 9
+  - Regex: .*
+    Priority: 10

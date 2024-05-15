@@ -2,6 +2,10 @@
 
 #include <string>
 
+#include <openvic-dataloader/v2script/AbstractSyntaxTree.hpp>
+
+#include <dryad/node.hpp>
+
 #include "openvic-simulation/types/OrderedContainers.hpp"
 #include "openvic-simulation/utility/TslHelper.hpp"
 
@@ -403,9 +407,9 @@ key_value_callback_t ModifierManager::_modifier_effect_callback(
 		std::string_view key, ast::NodeCPtr value
 	) -> bool {
 		ModifierEffect const* effect = get_modifier_effect_by_identifier(key);
-		if (effect != nullptr && value->is_type<ast::IdentifierNode>()) {
+		if (effect != nullptr && dryad::node_has_kind<ast::IdentifierValue>(value)) {
 			return add_modifier_cb(effect, value);
-		} else if (complex_modifiers.contains(key) && value->is_derived_from<ast::AbstractListNode>()) {
+		} else if (complex_modifiers.contains(key) && dryad::node_has_kind<ast::ListValue>(value)) {
 			if (key == "rebel_org_gain") { //because of course there's a special one
 				std::string_view faction_identifier;
 				ast::NodeCPtr value_node = nullptr;

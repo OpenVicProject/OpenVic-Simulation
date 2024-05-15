@@ -14,10 +14,32 @@
 #include "openvic-simulation/types/HasIdentifier.hpp"
 #include "openvic-simulation/types/OrderedContainers.hpp"
 #include "openvic-simulation/types/Vector.hpp"
+#include "openvic-simulation/utility/Getters.hpp"
 #include "openvic-simulation/utility/TslHelper.hpp"
 
 namespace OpenVic {
-	namespace ast = ovdl::v2script::ast;
+	namespace ast {
+		using namespace ovdl::v2script::ast;
+		using NodeCPtr = const Node*;
+
+		constexpr std::string_view get_type_name(NodeKind kind) {
+#define NODE_CASE(Node) \
+	case Node: return OpenVic::utility::type_name<ast::Node>();
+			switch (kind) {
+				using enum NodeKind;
+				NODE_CASE(FileTree);
+				NODE_CASE(IdentifierValue);
+				NODE_CASE(StringValue);
+				NODE_CASE(ListValue);
+				NODE_CASE(NullValue);
+				NODE_CASE(EventStatement);
+				NODE_CASE(AssignStatement);
+				NODE_CASE(ValueStatement);
+			default: ovdl::detail::unreachable();
+			}
+		}
+#undef NODE_CASE
+	}
 
 	using name_list_t = std::vector<std::string>;
 	std::ostream& operator<<(std::ostream& stream, name_list_t const& name_list);

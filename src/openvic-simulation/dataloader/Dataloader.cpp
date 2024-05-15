@@ -204,7 +204,7 @@ template<std::derived_from<detail::BasicParser> Parser, bool (*parse_func)(Parse
 static Parser _run_ovdl_parser(fs::path const& path) {
 	Parser parser;
 	std::string buffer;
-	auto error_log_stream = detail::CallbackStream {
+	auto error_log_stream = detail::make_callback_stream<char>(
 		[](void const* s, std::streamsize n, void* user_data) -> std::streamsize {
 			if (s != nullptr && n > 0 && user_data != nullptr) {
 				static_cast<std::string*>(user_data)->append(static_cast<char const*>(s), n);
@@ -215,7 +215,7 @@ static Parser _run_ovdl_parser(fs::path const& path) {
 			}
 		},
 		&buffer
-	};
+	);
 	parser.set_error_log_to(error_log_stream);
 	parser.load_from_file(path);
 	if (!buffer.empty()) {
@@ -255,12 +255,12 @@ v2script::Parser Dataloader::parse_lua_defines(fs::path const& path) {
 	return _run_ovdl_parser<v2script::Parser, &_lua_parse>(path);
 }
 
-static bool _csv_parse(csv::Windows1252Parser& parser) {
+static bool _csv_parse(csv::Parser& parser) {
 	return parser.parse_csv();
 }
 
-csv::Windows1252Parser Dataloader::parse_csv(fs::path const& path) {
-	return _run_ovdl_parser<csv::Windows1252Parser, &_csv_parse>(path);
+csv::Parser Dataloader::parse_csv(fs::path const& path) {
+	return _run_ovdl_parser<csv::Parser, &_csv_parse>(path);
 }
 
 v2script::Parser& Dataloader::parse_defines_cached(fs::path const& path) {
