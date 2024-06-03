@@ -1,10 +1,11 @@
 #include "Region.hpp"
 
+#include "openvic-simulation/map/ProvinceDefinition.hpp"
 #include "openvic-simulation/types/Colour.hpp"
 
 using namespace OpenVic;
 
-bool ProvinceSet::add_province(Province const* province) {
+bool ProvinceSet::add_province(ProvinceDefinition const* province) {
 	if (locked) {
 		Logger::error("Cannot add province to province set - locked!");
 		return false;
@@ -21,15 +22,7 @@ bool ProvinceSet::add_province(Province const* province) {
 	return true;
 }
 
-bool ProvinceSet::add_provinces(provinces_t const& new_provinces) {
-	bool ret = true;
-	for (Province const* province : new_provinces) {
-		ret &= add_province(province);
-	}
-	return ret;
-}
-
-bool ProvinceSet::remove_province(Province const* province) {
+bool ProvinceSet::remove_province(ProvinceDefinition const* province) {
 	if (locked) {
 		Logger::error("Cannot remove province from province set - locked!");
 		return false;
@@ -38,7 +31,7 @@ bool ProvinceSet::remove_province(Province const* province) {
 		Logger::error("Cannot remove province from province set - null province!");
 		return false;
 	}
-	const provinces_t::const_iterator it = std::find(provinces.begin(), provinces.end(), province);
+	const decltype(provinces)::const_iterator it = std::find(provinces.begin(), provinces.end(), province);
 	if (it == provinces.end()) {
 		Logger::warning("Cannot remove province ", province->get_identifier(), " from province set - already not in the set!");
 		return false;
@@ -87,22 +80,8 @@ void ProvinceSet::reserve_more(size_t size) {
 	OpenVic::reserve_more(*this, size);
 }
 
-bool ProvinceSet::contains_province(Province const* province) const {
-	return province && std::find(provinces.begin(), provinces.end(), province) != provinces.end();
-}
-
-ProvinceSet::provinces_t const& ProvinceSet::get_provinces() const {
-	return provinces;
-}
-
-Pop::pop_size_t ProvinceSet::calculate_total_population() const {
-	Pop::pop_size_t total_population = 0;
-
-	for (Province const* province : provinces) {
-		total_population += province->get_total_population();
-	}
-
-	return total_population;
+bool ProvinceSet::contains_province(ProvinceDefinition const* province) const {
+	return province != nullptr && std::find(provinces.begin(), provinces.end(), province) != provinces.end();
 }
 
 ProvinceSetModifier::ProvinceSetModifier(std::string_view new_identifier, ModifierValue&& new_values)

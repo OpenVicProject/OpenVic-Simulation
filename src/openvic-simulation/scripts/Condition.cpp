@@ -370,7 +370,7 @@ bool ConditionManager::setup_conditions(GameManager const& game_manager) {
 	);
 
 	import_identifiers(
-		game_manager.get_map().get_province_identifiers(),
+		game_manager.get_map().get_province_definition_identifiers(),
 		GROUP,
 		COUNTRY,
 		PROVINCE,
@@ -485,7 +485,7 @@ callback_t<std::string_view> ConditionManager::expect_parse_identifier(
 		EXPECT_CALL_PLACEHOLDER(COUNTRY_FLAG);
 		EXPECT_CALL_PLACEHOLDER(PROVINCE_FLAG);
 		EXPECT_CALL(COUNTRY_TAG, country, game_manager.get_country_manager(), "THIS", "FROM", "OWNER");
-		EXPECT_CALL(PROVINCE_ID, province, game_manager.get_map(), "THIS", "FROM");
+		EXPECT_CALL(PROVINCE_ID, province_definition, game_manager.get_map(), "THIS", "FROM");
 		EXPECT_CALL(REGION, region, game_manager.get_map());
 		EXPECT_CALL(IDEOLOGY, ideology, game_manager.get_politics_manager().get_ideology_manager());
 		EXPECT_CALL(REFORM_GROUP, reform_group, game_manager.get_politics_manager().get_issue_manager());

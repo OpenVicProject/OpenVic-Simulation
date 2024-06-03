@@ -562,11 +562,13 @@ bool Dataloader::_load_history(GameManager& game_manager, bool unused_history_fi
 
 		ret &= apply_to_files(
 			province_history_files,
-			[this, &game_manager, &province_history_manager, &map, unused_history_file_warnings](fs::path const& file) -> bool {
+			[this, &game_manager, &province_history_manager, &map, unused_history_file_warnings](
+				fs::path const& file
+			) -> bool {
 				const std::string filename = file.stem().string();
 				const std::string_view province_id = extract_basic_identifier_prefix(filename);
 
-				Province const* province = map.get_province_by_identifier(province_id);
+				ProvinceDefinition const* province = map.get_province_definition_by_identifier(province_id);
 				if (province == nullptr) {
 					if (unused_history_file_warnings) {
 						Logger::warning("Found history file for non-existent province: ", province_id);
@@ -709,7 +711,7 @@ bool Dataloader::_load_map_dir(GameManager& game_manager) const {
 
 	bool ret = expect_dictionary_keys(
 		"max_provinces", ONE_EXACTLY,
-			expect_uint<Province::index_t>(std::bind_front(&Map::set_max_provinces, &map)),
+			expect_uint<ProvinceDefinition::index_t>(std::bind_front(&Map::set_max_provinces, &map)),
 		"sea_starts", ONE_EXACTLY,
 			expect_list_reserve_length(
 				water_province_identifiers, expect_identifier(vector_callback(water_province_identifiers))

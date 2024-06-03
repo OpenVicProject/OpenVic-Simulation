@@ -1,15 +1,15 @@
 #include "ProvinceHistory.hpp"
 
 #include "openvic-simulation/GameManager.hpp"
-#include "openvic-simulation/dataloader/NodeTools.hpp"
+#include "openvic-simulation/map/ProvinceDefinition.hpp"
 
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;
 
-ProvinceHistoryEntry::ProvinceHistoryEntry(Province const& new_province, Date new_date)
+ProvinceHistoryEntry::ProvinceHistoryEntry(ProvinceDefinition const& new_province, Date new_date)
 	: HistoryEntry { new_date }, province { new_province } {}
 
-ProvinceHistoryMap::ProvinceHistoryMap(Province const& new_province) : province { new_province } {}
+ProvinceHistoryMap::ProvinceHistoryMap(ProvinceDefinition const& new_province) : province { new_province } {}
 
 std::unique_ptr<ProvinceHistoryEntry> ProvinceHistoryMap::_make_entry(Date date) const {
 	return std::unique_ptr<ProvinceHistoryEntry> { new ProvinceHistoryEntry { province, date } };
@@ -24,8 +24,8 @@ bool ProvinceHistoryMap::_load_history_entry(
 	IdeologyManager const& ideology_manager = game_manager.get_politics_manager().get_ideology_manager();
 	TerrainTypeManager const& terrain_type_manager = game_manager.get_map().get_terrain_type_manager();
 
-	using enum Province::colony_status_t;
-	static const string_map_t<Province::colony_status_t> colony_status_map {
+	using enum ProvinceInstance::colony_status_t;
+	static const string_map_t<ProvinceInstance::colony_status_t> colony_status_map {
 		{ "0", STATE }, { "1", PROTECTORATE }, { "2", COLONY }
 	};
 
@@ -66,7 +66,7 @@ bool ProvinceHistoryMap::_load_history_entry(
 			expect_identifier(expect_mapped_string(colony_status_map, assign_variable_callback(entry.colonial))),
 		"is_slave", ZERO_OR_ONE, expect_bool(assign_variable_callback(entry.slave)),
 		"trade_goods", ZERO_OR_ONE, good_manager.expect_good_identifier(assign_variable_callback_pointer_opt(entry.rgo)),
-		"life_rating", ZERO_OR_ONE, expect_uint<Province::life_rating_t>(assign_variable_callback(entry.life_rating)),
+		"life_rating", ZERO_OR_ONE, expect_uint<ProvinceInstance::life_rating_t>(assign_variable_callback(entry.life_rating)),
 		"terrain", ZERO_OR_ONE, terrain_type_manager.expect_terrain_type_identifier(
 			assign_variable_callback_pointer_opt(entry.terrain_type)
 		),
@@ -101,8 +101,8 @@ bool ProvinceHistoryMap::_load_history_entry(
 					ret &= map_callback(entry.state_buildings, building_type)(level);
 				} else {
 					Logger::error(
-						"Attempted to add province building \"", building_type, "\" to state building list of province history for ",
-						entry.get_province()
+						"Attempted to add province building \"", building_type,
+						"\" to state building list of province history for ", entry.get_province()
 					);
 					ret = false;
 				}
@@ -121,7 +121,9 @@ void ProvinceHistoryManager::reserve_more_province_histories(size_t size) {
 }
 
 void ProvinceHistoryManager::lock_province_histories(Map const& map, bool detailed_errors) {
-	std::vector<bool> province_checklist(map.get_province_count());
+	std::vector<ProvinceDefinition> const& provinces = map.get_province_definitions();
+
+	std::vector<bool> province_checklist(provinces.size());
 	for (decltype(province_histories)::value_type const& entry : province_histories) {
 		province_checklist[entry.first->get_index() - 1] = true;
 	}
@@ -129,7 +131,7 @@ void ProvinceHistoryManager::lock_province_histories(Map const& map, bool detail
 	size_t missing = 0;
 	for (size_t idx = 0; idx < province_checklist.size(); ++idx) {
 		if (!province_checklist[idx]) {
-			Province const& province = *map.get_province_by_index(idx + 1);
+			ProvinceDefinition const& province = provinces[idx];
 			if (!province.is_water()) {
 				if (detailed_errors) {
 					Logger::warning("Province history missing for province: ", province.get_identifier());
@@ -150,7 +152,7 @@ bool ProvinceHistoryManager::is_locked() const {
 	return locked;
 }
 
-ProvinceHistoryMap const* ProvinceHistoryManager::get_province_history(Province const* province) const {
+ProvinceHistoryMap const* ProvinceHistoryManager::get_province_history(ProvinceDefinition const* province) const {
 	if (province == nullptr) {
 		Logger::error("Attempted to access history of null province");
 		return nullptr;
@@ -164,7 +166,7 @@ ProvinceHistoryMap const* ProvinceHistoryManager::get_province_history(Province 
 	}
 }
 
-ProvinceHistoryMap* ProvinceHistoryManager::_get_or_make_province_history(Province const& province) {
+ProvinceHistoryMap* ProvinceHistoryManager::_get_or_make_province_history(ProvinceDefinition const& province) {
 	decltype(province_histories)::iterator it = province_histories.find(&province);
 	if (it == province_histories.end()) {
 		const std::pair<decltype(province_histories)::iterator, bool> result =
@@ -180,7 +182,7 @@ ProvinceHistoryMap* ProvinceHistoryManager::_get_or_make_province_history(Provin
 }
 
 bool ProvinceHistoryManager::load_province_history_file(
-	GameManager const& game_manager, Province const& province, ast::NodeCPtr root
+	GameManager const& game_manager, ProvinceDefinition const& province, ast::NodeCPtr root
 ) {
 	if (locked) {
 		Logger::error(
@@ -229,8 +231,8 @@ bool ProvinceHistoryManager::load_pop_history_file(
 		Logger::error("Attempted to load pop history file after province history registry was locked!");
 		return false;
 	}
-	return game_manager.get_map().expect_province_dictionary(
-		[this, &game_manager, date, non_integer_size](Province const& province, ast::NodeCPtr node) -> bool {
+	return game_manager.get_map().expect_province_definition_dictionary(
+		[this, &game_manager, date, non_integer_size](ProvinceDefinition const& province, ast::NodeCPtr node) -> bool {
 			ProvinceHistoryMap* province_history = _get_or_make_province_history(province);
 			if (province_history != nullptr) {
 				return province_history->_load_province_pop_history(game_manager, date, node, non_integer_size);

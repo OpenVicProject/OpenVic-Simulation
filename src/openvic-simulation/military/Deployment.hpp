@@ -4,25 +4,29 @@
 #include <string_view>
 #include <vector>
 
-#include "openvic-simulation/dataloader/Dataloader.hpp"
-#include "openvic-simulation/map/Province.hpp"
 #include "openvic-simulation/military/Leader.hpp"
-#include "openvic-simulation/military/UnitType.hpp"
+#include "openvic-simulation/types/HasIdentifier.hpp"
+#include "openvic-simulation/utility/Getters.hpp"
 
 namespace OpenVic {
+	struct ProvinceDefinition;
+	struct RegimentType;
+
 	struct RegimentDeployment {
 		friend struct DeploymentManager;
 
 	private:
 		std::string PROPERTY(name);
 		RegimentType const& PROPERTY(type);
-		Province const* PROPERTY(home);
+		ProvinceDefinition const* PROPERTY(home);
 
-		RegimentDeployment(std::string_view new_name, RegimentType const& new_type, Province const* new_home);
+		RegimentDeployment(std::string_view new_name, RegimentType const& new_type, ProvinceDefinition const* new_home);
 
 	public:
 		RegimentDeployment(RegimentDeployment&&) = default;
 	};
+
+	struct ShipType;
 
 	struct ShipDeployment {
 		friend struct DeploymentManager;
@@ -42,11 +46,11 @@ namespace OpenVic {
 
 	private:
 		std::string PROPERTY(name);
-		Province const* PROPERTY(location);
+		ProvinceDefinition const* PROPERTY(location);
 		std::vector<RegimentDeployment> PROPERTY(regiments);
 
 		ArmyDeployment(
-			std::string_view new_name, Province const* new_location, std::vector<RegimentDeployment>&& new_regiments
+			std::string_view new_name, ProvinceDefinition const* new_location, std::vector<RegimentDeployment>&& new_regiments
 		);
 
 	public:
@@ -58,10 +62,12 @@ namespace OpenVic {
 
 	private:
 		std::string PROPERTY(name);
-		Province const* PROPERTY(location);
+		ProvinceDefinition const* PROPERTY(location);
 		std::vector<ShipDeployment> PROPERTY(ships);
 
-		NavyDeployment(std::string_view new_name, Province const* new_location, std::vector<ShipDeployment>&& new_ships);
+		NavyDeployment(
+			std::string_view new_name, ProvinceDefinition const* new_location, std::vector<ShipDeployment>&& new_ships
+		);
 
 	public:
 		NavyDeployment(NavyDeployment&&) = default;
@@ -84,6 +90,9 @@ namespace OpenVic {
 		Deployment(Deployment&&) = default;
 	};
 
+	struct GameManager;
+	class Dataloader;
+
 	struct DeploymentManager {
 	private:
 		IdentifierRegistry<Deployment> IDENTIFIER_REGISTRY(deployment);
@@ -102,4 +111,4 @@ namespace OpenVic {
 
 		size_t get_missing_oob_file_count() const;
 	};
-} // namespace OpenVic
+}

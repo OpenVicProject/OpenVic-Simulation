@@ -1,48 +1,75 @@
 #pragma once
 
-#include "openvic-simulation/map/Province.hpp"
-#include "openvic-simulation/map/Region.hpp"
-#include "openvic-simulation/country/Country.hpp"
+#include <vector>
 
-#include <deque>
+#include "openvic-simulation/map/ProvinceInstance.hpp"
+#include "openvic-simulation/pop/Pop.hpp"
+#include "openvic-simulation/utility/Getters.hpp"
 
 namespace OpenVic {
+	struct StateManager;
+	struct StateSet;
+	struct Country;
+	struct ProvinceInstance;
+
 	struct State {
+		friend struct StateManager;
+
 	private:
-		Country const* PROPERTY_RW(owner);
-		Province const* PROPERTY_RW(capital);
-		Region::provinces_t PROPERTY(provinces);
-		Province::colony_status_t PROPERTY_RW(colony_status);
+		StateSet const& PROPERTY(state_set);
+		Country const* PROPERTY(owner);
+		ProvinceInstance* PROPERTY(capital);
+		std::vector<ProvinceInstance*> PROPERTY(provinces);
+		ProvinceInstance::colony_status_t PROPERTY(colony_status);
+
+		Pop::pop_size_t PROPERTY(total_population);
+
+		State(
+			StateSet const& new_state_set, Country const* owner, ProvinceInstance* capital,
+			std::vector<ProvinceInstance*>&& provinces, ProvinceInstance::colony_status_t colony_status
+		);
 
 	public:
-		State(
-			Country const* owner, Province const* capital, Region::provinces_t&& provinces,
-			Province::colony_status_t colony_status
-		);
+		void update_gamestate();
 	};
 
+	struct Region;
+
 	struct StateSet {
-		using states_t = std::deque<State>;
+		friend struct StateManager;
+
+		// TODO - use a container that supports adding and removing items without invalidating pointers
+		using states_t = std::vector<State>;
 
 	private:
 		Region const& PROPERTY(region);
 		states_t PROPERTY(states);
 
-	public:
-		StateSet(Map& map, Region const& new_region);
+		StateSet(Region const& new_region);
 
-		states_t& get_states();
+	public:
+		size_t get_state_count() const;
+
+		void update_gamestate();
 	};
+
+	struct Map;
 
 	/* Contains all current states.*/
 	struct StateManager {
 	private:
-		std::vector<StateSet> PROPERTY(regions);
+		std::vector<StateSet> PROPERTY(state_sets);
+
+		bool add_state_set(Map& map, Region const& region);
 
 	public:
 		/* Creates states from current province gamestate & regions, sets province state value.
 		 * After this function, the `regions` property is unmanaged and must be carefully updated and
 		 * validated by functions that modify it. */
-		void generate_states(Map& map);
+		bool generate_states(Map& map);
+
+		void reset();
+
+		void update_gamestate();
 	};
-} // namespace OpenVic
+}

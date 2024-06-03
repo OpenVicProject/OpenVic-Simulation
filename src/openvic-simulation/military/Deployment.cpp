@@ -5,18 +5,19 @@
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;
 
-RegimentDeployment::RegimentDeployment(std::string_view new_name, RegimentType const& new_type, Province const* new_home)
-	: name { new_name }, type { new_type }, home { new_home } {}
+RegimentDeployment::RegimentDeployment(
+	std::string_view new_name, RegimentType const& new_type, ProvinceDefinition const* new_home
+) : name { new_name }, type { new_type }, home { new_home } {}
 
 ShipDeployment::ShipDeployment(std::string_view new_name, ShipType const& new_type)
 	: name { new_name }, type { new_type } {}
 
 ArmyDeployment::ArmyDeployment(
-	std::string_view new_name, Province const* new_location, std::vector<RegimentDeployment>&& new_regiments
+	std::string_view new_name, ProvinceDefinition const* new_location, std::vector<RegimentDeployment>&& new_regiments
 ) : name { new_name }, location { new_location }, regiments { std::move(new_regiments) } {}
 
 NavyDeployment::NavyDeployment(
-	std::string_view new_name, Province const* new_location, std::vector<ShipDeployment>&& new_ships
+	std::string_view new_name, ProvinceDefinition const* new_location, std::vector<ShipDeployment>&& new_ships
 ) : name { new_name }, location { new_location }, ships { std::move(new_ships) } {}
 
 Deployment::Deployment(
@@ -120,24 +121,25 @@ bool DeploymentManager::load_oob_file(
 		},
 		"army", ZERO_OR_MORE, [&armies, &game_manager](ast::NodeCPtr node) -> bool {
 			std::string_view army_name {};
-			Province const* army_location = nullptr;
+			ProvinceDefinition const* army_location = nullptr;
 			std::vector<RegimentDeployment> army_regiments {};
 
 			const bool ret = expect_dictionary_keys(
 				"name", ONE_EXACTLY, expect_string(assign_variable_callback(army_name)),
-				"location", ONE_EXACTLY,
-					game_manager.get_map().expect_province_identifier(assign_variable_callback_pointer(army_location)),
+				"location", ONE_EXACTLY, game_manager.get_map().expect_province_definition_identifier(
+					assign_variable_callback_pointer(army_location)
+				),
 				"regiment", ONE_OR_MORE, [&game_manager, &army_regiments](ast::NodeCPtr node) -> bool {
 					std::string_view regiment_name {};
 					RegimentType const* regiment_type = nullptr;
-					Province const* regiment_home = nullptr;
+					ProvinceDefinition const* regiment_home = nullptr;
 
 					const bool ret = expect_dictionary_keys(
 						"name", ONE_EXACTLY, expect_string(assign_variable_callback(regiment_name)),
 						"type", ONE_EXACTLY, game_manager.get_military_manager().get_unit_type_manager()
 							.expect_regiment_type_identifier(assign_variable_callback_pointer(regiment_type)),
 						"home", ZERO_OR_ONE, game_manager.get_map()
-							.expect_province_identifier(assign_variable_callback_pointer(regiment_home))
+							.expect_province_definition_identifier(assign_variable_callback_pointer(regiment_home))
 					)(node);
 
 					if (regiment_home == nullptr) {
@@ -163,13 +165,14 @@ bool DeploymentManager::load_oob_file(
 		},
 		"navy", ZERO_OR_MORE, [&navies, &game_manager](ast::NodeCPtr node) -> bool {
 			std::string_view navy_name {};
-			Province const* navy_location = nullptr;
+			ProvinceDefinition const* navy_location = nullptr;
 			std::vector<ShipDeployment> navy_ships {};
 
 			const bool ret = expect_dictionary_keys(
 				"name", ONE_EXACTLY, expect_string(assign_variable_callback(navy_name)),
-				"location", ONE_EXACTLY,
-					game_manager.get_map().expect_province_identifier(assign_variable_callback_pointer(navy_location)),
+				"location", ONE_EXACTLY, game_manager.get_map().expect_province_definition_identifier(
+					assign_variable_callback_pointer(navy_location)
+				),
 				"ship", ONE_OR_MORE, [&game_manager, &navy_ships](ast::NodeCPtr node) -> bool {
 					std::string_view ship_name {};
 					ShipType const* ship_type = nullptr;

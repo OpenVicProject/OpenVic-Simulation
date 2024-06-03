@@ -1,15 +1,18 @@
 #pragma once
 
-#include <vector>
 #include <optional>
+#include <vector>
 
-#include "openvic-simulation/country/Country.hpp"
-#include "openvic-simulation/military/Wargoal.hpp"
-#include "openvic-simulation/map/Province.hpp"
+#include "openvic-simulation/dataloader/NodeTools.hpp"
 #include "openvic-simulation/history/Period.hpp"
+#include "openvic-simulation/types/Date.hpp"
+#include "openvic-simulation/utility/Getters.hpp"
 
 namespace OpenVic {
 	struct DiplomaticHistoryManager;
+	struct Country;
+	struct WargoalType;
+	struct ProvinceDefinition;
 
 	struct WarHistory {
 		friend struct DiplomaticHistoryManager;
@@ -22,10 +25,15 @@ namespace OpenVic {
 			Country const* PROPERTY(actor);
 			Country const* PROPERTY(receiver);
 			WargoalType const* PROPERTY(wargoal);
-			std::optional<Country const*> PROPERTY(third_party);
-			std::optional<Province const*> PROPERTY(target);
 
-			added_wargoal_t(Date new_added, Country const* new_actor, Country const* new_receiver, WargoalType const* new_wargoal, std::optional<Country const*> new_third_party, std::optional<Province const*> new_target);
+			// TODO - could these just be nullptr when unset rather than using optionals?
+			std::optional<Country const*> PROPERTY(third_party);
+			std::optional<ProvinceDefinition const*> PROPERTY(target);
+
+			added_wargoal_t(
+				Date new_added, Country const* new_actor, Country const* new_receiver, WargoalType const* new_wargoal,
+				std::optional<Country const*> new_third_party, std::optional<ProvinceDefinition const*> new_target
+			);
 		};
 
 		struct war_participant_t {
@@ -39,12 +47,17 @@ namespace OpenVic {
 		};
 
 	private:
-		std::string PROPERTY(war_name); // edge cases where this is empty/undef for some reason, probably need to just generate war names like usual for that.
+		/* Edge cases where this is empty/undef for some reason,
+		 * probably need to just generate war names like usual for that. */
+		std::string PROPERTY(war_name);
 		std::vector<war_participant_t> PROPERTY(attackers);
 		std::vector<war_participant_t> PROPERTY(defenders);
 		std::vector<added_wargoal_t> PROPERTY(wargoals);
 
-		WarHistory(std::string_view new_war_name, std::vector<war_participant_t>&& new_attackers, std::vector<war_participant_t>&& new_defenders, std::vector<added_wargoal_t>&& new_wargoals);
+		WarHistory(
+			std::string_view new_war_name, std::vector<war_participant_t>&& new_attackers,
+			std::vector<war_participant_t>&& new_defenders, std::vector<added_wargoal_t>&& new_wargoals
+		);
 	};
 
 	struct AllianceHistory {
@@ -87,6 +100,9 @@ namespace OpenVic {
 		SubjectHistory(Country const* new_overlord, Country const* new_subject, const type_t new_type, const Period period);
 	};
 
+	struct CountryManager;
+	struct GameManager;
+
 	struct DiplomaticHistoryManager {
 	private:
 		std::vector<AllianceHistory> alliances;
@@ -105,10 +121,11 @@ namespace OpenVic {
 		std::vector<AllianceHistory const*> get_alliances(Date date) const;
 		std::vector<ReparationsHistory const*> get_reparations(Date date) const;
 		std::vector<SubjectHistory const*> get_subjects(Date date) const;
-		/* Returns all wars that begin before date. NOTE: Some wargoals may be added or countries may join after date, should be checked for by functions that use get_wars() */
+		/* Returns all wars that begin before date. NOTE: Some wargoals may be added or countries may join after date,
+		 * should be checked for by functions that use get_wars() */
 		std::vector<WarHistory const*> get_wars(Date date) const;
 
 		bool load_diplomacy_history_file(CountryManager const& country_manager, ast::NodeCPtr root);
 		bool load_war_history_file(GameManager const& game_manager, ast::NodeCPtr root);
 	};
-} // namespace OpenVic
+}

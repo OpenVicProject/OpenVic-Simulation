@@ -21,24 +21,24 @@ Mapmode::Mapmode(
 }
 
 const Mapmode Mapmode::ERROR_MAPMODE {
-	"mapmode_error", 0, [](Map const& map, Province const& province) -> base_stripe_t {
+	"mapmode_error", 0, [](Map const& map, ProvinceInstance const& province) -> base_stripe_t {
 		return { 0xFFFF0000_argb, colour_argb_t::null() };
 	}
 };
 
-Mapmode::base_stripe_t Mapmode::get_base_stripe_colours(Map const& map, Province const& province) const {
+Mapmode::base_stripe_t Mapmode::get_base_stripe_colours(Map const& map, ProvinceInstance const& province) const {
 	return colour_func ? colour_func(map, province) : colour_argb_t::null();
 }
 
 Map::Map()
-  : dims { 0, 0 }, max_provinces { Province::MAX_INDEX }, selected_province { nullptr },
+  : dims { 0, 0 }, max_provinces { ProvinceDefinition::MAX_INDEX }, selected_province { nullptr },
 	highest_province_population { 0 }, total_map_population { 0 } {}
 
-bool Map::add_province(std::string_view identifier, colour_t colour) {
-	if (provinces.size() >= max_provinces) {
+bool Map::add_province_definition(std::string_view identifier, colour_t colour) {
+	if (province_definitions.size() >= max_provinces) {
 		Logger::error(
 			"The map's province list is full - maximum number of provinces is ", max_provinces, " (this can be at most ",
-			Province::MAX_INDEX, ")"
+			ProvinceDefinition::MAX_INDEX, ")"
 		);
 		return false;
 	}
@@ -56,19 +56,40 @@ bool Map::add_province(std::string_view identifier, colour_t colour) {
 		Logger::error("Invalid province colour for ", identifier, " - null! (", colour, ")");
 		return false;
 	}
-	Province new_province { identifier, colour, static_cast<Province::index_t>(provinces.size() + 1) };
-	const Province::index_t index = get_index_from_colour(colour);
-	if (index != Province::NULL_INDEX) {
+	ProvinceDefinition new_province {
+		identifier, colour, static_cast<ProvinceDefinition::index_t>(province_definitions.size() + 1)
+	};
+	const ProvinceDefinition::index_t index = get_index_from_colour(colour);
+	if (index != ProvinceDefinition::NULL_INDEX) {
 		Logger::error(
-			"Duplicate province colours: ", get_province_by_index(index)->to_string(), " and ", new_province.to_string()
+			"Duplicate province colours: ", get_province_definition_by_index(index)->to_string(), " and ",
+			new_province.to_string()
 		);
 		return false;
 	}
 	colour_index_map[new_province.get_colour()] = new_province.get_index();
-	return provinces.add_item(std::move(new_province));
+	return province_definitions.add_item(std::move(new_province));
 }
 
-Province::distance_t Map::calculate_distance_between(Province const& from, Province const& to) const {
+ProvinceInstance* Map::get_province_instance_from_const(ProvinceDefinition const* province) {
+	if (province != nullptr) {
+		return get_province_instance_by_index(province->get_index());
+	} else {
+		return nullptr;
+	}
+}
+
+ProvinceInstance const* Map::get_province_instance_from_const(ProvinceDefinition const* province) const {
+	if (province != nullptr) {
+		return get_province_instance_by_index(province->get_index());
+	} else {
+		return nullptr;
+	}
+}
+
+ProvinceDefinition::distance_t Map::calculate_distance_between(
+	ProvinceDefinition const& from, ProvinceDefinition const& to
+) const {
 	const fvec2_t to_pos = to.get_unit_position();
 	const fvec2_t from_pos = from.get_unit_position();
 
@@ -83,11 +104,11 @@ Province::distance_t Map::calculate_distance_between(Province const& from, Provi
 	return fvec2_t { min_x, to_pos.y - from_pos.y }.length_squared().sqrt();
 }
 
-using adjacency_t = Province::adjacency_t;
+using adjacency_t = ProvinceDefinition::adjacency_t;
 
 /* This is called for all adjacent pixel pairs and returns whether or not a new adjacency was add,
  * hence the lack of error messages in the false return cases. */
-bool Map::add_standard_adjacency(Province& from, Province& to) const {
+bool Map::add_standard_adjacency(ProvinceDefinition& from, ProvinceDefinition& to) const {
 	if (from == to) {
 		return false;
 	}
@@ -99,7 +120,7 @@ bool Map::add_standard_adjacency(Province& from, Province& to) const {
 		return false;
 	}
 
-	const Province::distance_t distance = calculate_distance_between(from, to);
+	const ProvinceDefinition::distance_t distance = calculate_distance_between(from, to);
 
 	using enum adjacency_t::type_t;
 
@@ -127,7 +148,8 @@ bool Map::add_standard_adjacency(Province& from, Province& to) const {
 }
 
 bool Map::add_special_adjacency(
-	Province& from, Province& to, adjacency_t::type_t type, Province const* through, adjacency_t::data_t data
+	ProvinceDefinition& from, ProvinceDefinition& to, adjacency_t::type_t type, ProvinceDefinition const* through,
+	adjacency_t::data_t data
 ) const {
 	if (from == to) {
 		Logger::error("Trying to add ", adjacency_t::get_type_name(type), " adjacency from province ", from, " to itself!");
@@ -196,9 +218,11 @@ bool Map::add_special_adjacency(
 		data = adjacency_t::NO_CANAL;
 	}
 
-	const Province::distance_t distance = calculate_distance_between(from, to);
+	const ProvinceDefinition::distance_t distance = calculate_distance_between(from, to);
 
-	const auto add_adjacency = [distance, type, through, data](Province& from, Province const& to) -> bool {
+	const auto add_adjacency = [distance, type, through, data](
+		ProvinceDefinition& from, ProvinceDefinition const& to
+	) -> bool {
 		const std::vector<adjacency_t>::iterator existing_adjacency = std::find_if(
 			from.adjacencies.begin(), from.adjacencies.end(),
 			[&to](adjacency_t const& adj) -> bool { return adj.get_to() == &to; }
@@ -256,9 +280,15 @@ bool Map::set_water_province(std::string_view identifier) {
 		Logger::error("The map's water provinces have already been locked!");
 		return false;
 	}
-	Province* province = get_province_by_identifier(identifier);
+
+	ProvinceDefinition* province = get_province_definition_by_identifier(identifier);
+
 	if (province == nullptr) {
 		Logger::error("Unrecognised water province identifier: ", identifier);
+		return false;
+	}
+	if (province->has_region()) {
+		Logger::error("Province ", identifier, " cannot be water as it belongs to region \"", province->get_region(), "\"");
 		return false;
 	}
 	if (province->is_water()) {
@@ -292,25 +322,39 @@ void Map::lock_water_provinces() {
 	Logger::info("Locked water provinces after registering ", water_provinces.size());
 }
 
-bool Map::add_region(std::string_view identifier, Region::provinces_t const& provinces, colour_t colour) {
+bool Map::add_region(std::string_view identifier, std::vector<ProvinceDefinition const*>&& provinces, colour_t colour) {
 	if (identifier.empty()) {
 		Logger::error("Invalid region identifier - empty!");
 		return false;
 	}
-	if (provinces.empty()) {
-		Logger::warning("No valid provinces in list for ", identifier);
-		return true;
-	}
 
-	const bool meta = std::any_of(provinces.begin(), provinces.end(), std::bind_front(&Province::get_has_region));
+	bool ret = true;
+
+	std::erase_if(provinces, [identifier, &ret](ProvinceDefinition const* province) -> bool {
+		if (province->is_water()) {
+			Logger::error(
+				"Province ", province->get_identifier(), " cannot be added to region \"", identifier,
+				"\" as it is a water province!"
+			);
+			ret = false;
+			return true;
+		} else {
+			return false;
+		}
+	});
+
+	const bool meta = provinces.empty() || std::any_of(
+		provinces.begin(), provinces.end(), std::bind_front(&ProvinceDefinition::has_region)
+	);
 
 	Region region { identifier, colour, meta };
-	bool ret = region.add_provinces(provinces);
+	ret &= region.add_provinces(provinces);
 	region.lock();
 	if (regions.add_item(std::move(region))) {
 		if (!meta) {
-			for (Province const* province : provinces) {
-				remove_province_const(province)->has_region = true;
+			Region const& last_region = regions.get_items().back();
+			for (ProvinceDefinition const* province : last_region.get_provinces()) {
+				remove_province_definition_const(province)->region = &last_region;
 			}
 		}
 	} else {
@@ -319,38 +363,38 @@ bool Map::add_region(std::string_view identifier, Region::provinces_t const& pro
 	return ret;
 }
 
-Province::index_t Map::get_index_from_colour(colour_t colour) const {
+ProvinceDefinition::index_t Map::get_index_from_colour(colour_t colour) const {
 	const colour_index_map_t::const_iterator it = colour_index_map.find(colour);
 	if (it != colour_index_map.end()) {
 		return it->second;
 	}
-	return Province::NULL_INDEX;
+	return ProvinceDefinition::NULL_INDEX;
 }
 
-Province::index_t Map::get_province_index_at(ivec2_t pos) const {
+ProvinceDefinition::index_t Map::get_province_index_at(ivec2_t pos) const {
 	if (pos.nonnegative() && pos.less_than(dims)) {
 		return province_shape_image[get_pixel_index_from_pos(pos)].index;
 	}
-	return Province::NULL_INDEX;
+	return ProvinceDefinition::NULL_INDEX;
 }
 
-Province* Map::get_province_at(ivec2_t pos) {
-	return get_province_by_index(get_province_index_at(pos));
+ProvinceDefinition* Map::get_province_definition_at(ivec2_t pos) {
+	return get_province_definition_by_index(get_province_index_at(pos));
 }
 
-Province const* Map::get_province_at(ivec2_t pos) const {
-	return get_province_by_index(get_province_index_at(pos));
+ProvinceDefinition const* Map::get_province_definition_at(ivec2_t pos) const {
+	return get_province_definition_by_index(get_province_index_at(pos));
 }
 
-bool Map::set_max_provinces(Province::index_t new_max_provinces) {
-	if (new_max_provinces <= Province::NULL_INDEX) {
+bool Map::set_max_provinces(ProvinceDefinition::index_t new_max_provinces) {
+	if (new_max_provinces <= ProvinceDefinition::NULL_INDEX) {
 		Logger::error(
 			"Trying to set max province count to an invalid value ", new_max_provinces, " (must be greater than ",
-			Province::NULL_INDEX, ")"
+			ProvinceDefinition::NULL_INDEX, ")"
 		);
 		return false;
 	}
-	if (!provinces.empty() || provinces.is_locked()) {
+	if (!province_definitions.empty() || province_definitions.is_locked()) {
 		Logger::error(
 			"Trying to set max province count to ", new_max_provinces, " after provinces have already been added and/or locked"
 		);
@@ -360,25 +404,27 @@ bool Map::set_max_provinces(Province::index_t new_max_provinces) {
 	return true;
 }
 
-void Map::set_selected_province(Province::index_t index) {
-	if (index == Province::NULL_INDEX) {
+void Map::set_selected_province(ProvinceDefinition::index_t index) {
+	if (index == ProvinceDefinition::NULL_INDEX) {
 		selected_province = nullptr;
 	} else {
-		selected_province = get_province_by_index(index);
+		selected_province = get_province_instance_by_index(index);
 		if (selected_province == nullptr) {
 			Logger::error(
-				"Trying to set selected province to an invalid index ", index, " (max index is ", get_province_count(), ")"
+				"Trying to set selected province to an invalid index ", index, " (max index is ",
+				get_province_instance_count(), ")"
 			);
 		}
 	}
 }
 
-Province* Map::get_selected_province() {
+ProvinceInstance* Map::get_selected_province() {
 	return selected_province;
 }
 
-Province::index_t Map::get_selected_province_index() const {
-	return selected_province != nullptr ? selected_province->get_index() : Province::NULL_INDEX;
+ProvinceDefinition::index_t Map::get_selected_province_index() const {
+	return selected_province != nullptr ? selected_province->get_province_definition().get_index()
+		: ProvinceDefinition::NULL_INDEX;
 }
 
 bool Map::add_mapmode(std::string_view identifier, Mapmode::colour_func_t colour_func) {
@@ -398,6 +444,7 @@ bool Map::generate_mapmode_colours(Mapmode::index_t index, uint8_t* target) cons
 		Logger::error("Mapmode colour target pointer is null!");
 		return false;
 	}
+
 	bool ret = true;
 	Mapmode const* mapmode = mapmodes.get_item_by_index(index);
 	if (mapmode == nullptr) {
@@ -410,47 +457,58 @@ bool Map::generate_mapmode_colours(Mapmode::index_t index, uint8_t* target) cons
 		}
 		mapmode = &Mapmode::ERROR_MAPMODE;
 	}
-	// Skip past Province::NULL_INDEX
-	for (size_t i = 0; i < sizeof(Mapmode::base_stripe_t); ++i) {
-		*target++ = 0;
-	}
-	for (Province const& province : provinces.get_items()) {
-		const Mapmode::base_stripe_t base_stripe = mapmode->get_base_stripe_colours(*this, province);
-		colour_argb_t const& base_colour = base_stripe.base_colour;
-		colour_argb_t const& stripe_colour = base_stripe.stripe_colour;
 
-		*target++ = base_colour.red;
-		*target++ = base_colour.green;
-		*target++ = base_colour.blue;
-		*target++ = base_colour.alpha;
+	Mapmode::base_stripe_t* target_stripes = reinterpret_cast<Mapmode::base_stripe_t*>(target);
 
-		*target++ = stripe_colour.red;
-		*target++ = stripe_colour.green;
-		*target++ = stripe_colour.blue;
-		*target++ = stripe_colour.alpha;
+	target_stripes[ProvinceDefinition::NULL_INDEX] = colour_argb_t::null();
+
+	if (province_instances_are_locked()) {
+		for (ProvinceInstance const& province : province_instances.get_items()) {
+			target_stripes[province.get_province_definition().get_index()] = mapmode->get_base_stripe_colours(*this, province);
+		}
+	} else {
+		for (size_t index = ProvinceDefinition::NULL_INDEX + 1; index <= get_province_definition_count(); ++index) {
+			target_stripes[index] = colour_argb_t::null();
+		}
 	}
+
 	return ret;
 }
 
-void Map::update_highest_province_population() {
-	highest_province_population = 0;
-	for (Province const& province : provinces.get_items()) {
-		highest_province_population = std::max(highest_province_population, province.get_total_population());
-	}
-}
-
-void Map::update_total_map_population() {
-	total_map_population = 0;
-	for (Province const& province : provinces.get_items()) {
-		total_map_population += province.get_total_population();
-	}
-}
-
 bool Map::reset(BuildingTypeManager const& building_type_manager) {
+	if (!province_definitions_are_locked()) {
+		Logger::error("Cannot reset map - province consts are not locked!");
+		return false;
+	}
+
 	bool ret = true;
-	for (Province& province : provinces.get_items()) {
+
+	// TODO - ensure all references to old ProvinceInstances are safely cleared
+	state_manager.reset();
+	selected_province = nullptr;
+
+	province_instances.reset();
+
+	province_instances.reserve(province_definitions.size());
+
+	for (ProvinceDefinition const& province : province_definitions.get_items()) {
+		ret &= province_instances.add_item({ province });
+	}
+
+	province_instances.lock();
+
+	for (ProvinceInstance& province : province_instances.get_items()) {
 		ret &= province.reset(building_type_manager);
 	}
+
+	if (get_province_instance_count() != get_province_definition_count()) {
+		Logger::error(
+			"ProvinceInstance count (", get_province_instance_count(), ") does not match ProvinceDefinition count (",
+			get_province_definition_count(), ")!"
+		);
+		return false;
+	}
+
 	return ret;
 }
 
@@ -460,9 +518,10 @@ bool Map::apply_history_to_provinces(
 ) {
 	bool ret = true;
 
-	for (Province& province : provinces.get_items()) {
-		if (!province.is_water()) {
-			ProvinceHistoryMap const* history_map = history_manager.get_province_history(&province);
+	for (ProvinceInstance& province : province_instances.get_items()) {
+		ProvinceDefinition const& province_definition = province.get_province_definition();
+		if (!province_definition.is_water()) {
+			ProvinceHistoryMap const* history_map = history_manager.get_province_history(&province_definition);
 
 			if (history_map != nullptr) {
 				ProvinceHistoryEntry const* pop_history_entry = nullptr;
@@ -488,15 +547,28 @@ bool Map::apply_history_to_provinces(
 }
 
 void Map::update_gamestate(Date today) {
-	for (Province& province : provinces.get_items()) {
+	for (ProvinceInstance& province : province_instances.get_items()) {
 		province.update_gamestate(today);
 	}
-	update_highest_province_population();
-	update_total_map_population();
+	state_manager.update_gamestate();
+
+	// Update population stats
+	highest_province_population = 0;
+	total_map_population = 0;
+
+	for (ProvinceInstance const& province : province_instances.get_items()) {
+		const Pop::pop_size_t province_population = province.get_total_population();
+
+		if (highest_province_population < province_population) {
+			highest_province_population = province_population;
+		}
+
+		total_map_population += province_population;
+	}
 }
 
 void Map::tick(Date today) {
-	for (Province& province : provinces.get_items()) {
+	for (ProvinceInstance& province : province_instances.get_items()) {
 		province.tick(today);
 	}
 }
@@ -555,7 +627,7 @@ bool Map::load_province_definitions(std::vector<LineObject> const& lines) {
 		return false;
 	}
 
-	reserve_more_provinces(lines.size() - 1);
+	reserve_more_province_definitions(lines.size() - 1);
 
 	bool ret = true;
 	std::for_each(lines.begin() + 1, lines.end(), [this, &ret](LineObject const& line) -> void {
@@ -566,19 +638,21 @@ bool Map::load_province_definitions(std::vector<LineObject> const& lines) {
 				Logger::error("Error reading colour in province definition: ", line);
 				ret = false;
 			}
-			ret &= add_province(identifier, colour);
+			ret &= add_province_definition(identifier, colour);
 		}
 	});
 
-	lock_provinces();
+	lock_province_definitions();
 
 	return ret;
 }
 
 bool Map::load_province_positions(BuildingTypeManager const& building_type_manager, ast::NodeCPtr root) {
-	return expect_province_dictionary([this, &building_type_manager](Province& province, ast::NodeCPtr node) -> bool {
-		return province.load_positions(*this, building_type_manager, node);
-	})(root);
+	return expect_province_definition_dictionary(
+		[this, &building_type_manager](ProvinceDefinition& province, ast::NodeCPtr node) -> bool {
+			return province.load_positions(*this, building_type_manager, node);
+		}
+	)(root);
 }
 
 bool Map::load_region_colours(ast::NodeCPtr root, std::vector<colour_t>& colours) {
@@ -597,24 +671,19 @@ bool Map::load_region_file(ast::NodeCPtr root, std::vector<colour_t> const& colo
 	const bool ret = expect_dictionary_reserve_length(
 		regions,
 		[this, &colours](std::string_view region_identifier, ast::NodeCPtr region_node) -> bool {
-			Region::provinces_t provinces;
+			std::vector<ProvinceDefinition const*> provinces;
+
 			bool ret = expect_list_reserve_length(
-				provinces, expect_province_identifier(vector_callback_pointer(provinces))
+				provinces, expect_province_definition_identifier(vector_callback_pointer(provinces))
 			)(region_node);
-			ret &= add_region(region_identifier, provinces, colours[regions.size() % colours.size()]);
+
+			ret &= add_region(region_identifier, std::move(provinces), colours[regions.size() % colours.size()]);
+
 			return ret;
 		}
 	)(root);
 
 	lock_regions();
-
-	for (Region const& region : regions.get_items()) {
-		if (!region.meta) {
-			for (Province const* province : region.get_provinces()) {
-				remove_province_const(province)->region = &region;
-			}
-		}
-	}
 
 	return ret;
 }
@@ -629,7 +698,7 @@ static constexpr colour_t colour_at(uint8_t const* colour_data, int32_t idx) {
 }
 
 bool Map::load_map_images(fs::path const& province_path, fs::path const& terrain_path, bool detailed_errors) {
-	if (!provinces.is_locked()) {
+	if (!province_definitions_are_locked()) {
 		Logger::error("Province index image cannot be generated until after provinces are locked!");
 		return false;
 	}
@@ -680,19 +749,19 @@ bool Map::load_map_images(fs::path const& province_path, fs::path const& terrain
 	uint8_t const* province_data = province_bmp.get_pixel_data().data();
 	uint8_t const* terrain_data = terrain_bmp.get_pixel_data().data();
 
-	std::vector<fixed_point_map_t<TerrainType const*>> terrain_type_pixels_list(provinces.size());
+	std::vector<fixed_point_map_t<TerrainType const*>> terrain_type_pixels_list(province_definitions.size());
 
 	bool ret = true;
 	ordered_set<colour_t> unrecognised_province_colours;
 
-	std::vector<fixed_point_t> pixels_per_province(provinces.size());
-	std::vector<fvec2_t> pixel_position_sum_per_province(provinces.size());
+	std::vector<fixed_point_t> pixels_per_province(province_definitions.size());
+	std::vector<fvec2_t> pixel_position_sum_per_province(province_definitions.size());
 
 	for (ivec2_t pos {}; pos.y < get_height(); ++pos.y) {
 		for (pos.x = 0; pos.x < get_width(); ++pos.x) {
 			const size_t pixel_index = get_pixel_index_from_pos(pos);
 			const colour_t province_colour = colour_at(province_data, pixel_index);
-			Province::index_t province_index = Province::NULL_INDEX;
+			ProvinceDefinition::index_t province_index = ProvinceDefinition::NULL_INDEX;
 
 			if (pos.x > 0) {
 				const size_t jdx = pixel_index - 1;
@@ -712,7 +781,7 @@ bool Map::load_map_images(fs::path const& province_path, fs::path const& terrain
 
 			province_index = get_index_from_colour(province_colour);
 
-			if (province_index == Province::NULL_INDEX && !unrecognised_province_colours.contains(province_colour)) {
+			if (province_index == ProvinceDefinition::NULL_INDEX && !unrecognised_province_colours.contains(province_colour)) {
 				unrecognised_province_colours.insert(province_colour);
 				if (detailed_errors) {
 					Logger::warning(
@@ -724,8 +793,8 @@ bool Map::load_map_images(fs::path const& province_path, fs::path const& terrain
 		index_found:
 			province_shape_image[pixel_index].index = province_index;
 
-			if (province_index != Province::NULL_INDEX) {
-				const Province::index_t array_index = province_index - 1;
+			if (province_index != ProvinceDefinition::NULL_INDEX) {
+				const ProvinceDefinition::index_t array_index = province_index - 1;
 				pixels_per_province[array_index]++;
 				pixel_position_sum_per_province[array_index] += static_cast<fvec2_t>(pos);
 			}
@@ -733,7 +802,7 @@ bool Map::load_map_images(fs::path const& province_path, fs::path const& terrain
 			const TerrainTypeMapping::index_t terrain = terrain_data[pixel_index];
 			TerrainTypeMapping const* mapping = terrain_type_manager.get_terrain_type_mapping_for(terrain);
 			if (mapping != nullptr) {
-				if (province_index != Province::NULL_INDEX) {
+				if (province_index != ProvinceDefinition::NULL_INDEX) {
 					terrain_type_pixels_list[province_index - 1][&mapping->get_type()]++;
 				}
 				if (mapping->get_has_texture() && terrain < terrain_type_manager.get_terrain_texture_limit()) {
@@ -752,8 +821,8 @@ bool Map::load_map_images(fs::path const& province_path, fs::path const& terrain
 	}
 
 	size_t missing = 0;
-	for (size_t array_index = 0; array_index < provinces.size(); ++array_index) {
-		Province* province = provinces.get_item_by_index(array_index);
+	for (size_t array_index = 0; array_index < province_definitions.size(); ++array_index) {
+		ProvinceDefinition* province = province_definitions.get_item_by_index(array_index);
 
 		fixed_point_map_t<TerrainType const*> const& terrain_type_pixels = terrain_type_pixels_list[array_index];
 		const fixed_point_map_const_iterator_t<TerrainType const*> largest = get_largest_item(terrain_type_pixels);
@@ -784,8 +853,8 @@ bool Map::load_map_images(fs::path const& province_path, fs::path const& terrain
 bool Map::_generate_standard_province_adjacencies() {
 	bool changed = false;
 
-	const auto generate_adjacency = [this](Province* current, ivec2_t pos) -> bool {
-		Province* neighbour = get_province_at(pos);
+	const auto generate_adjacency = [this](ProvinceDefinition* current, ivec2_t pos) -> bool {
+		ProvinceDefinition* neighbour = get_province_definition_at(pos);
 		if (neighbour != nullptr) {
 			return add_standard_adjacency(*current, *neighbour);
 		}
@@ -794,7 +863,7 @@ bool Map::_generate_standard_province_adjacencies() {
 
 	for (ivec2_t pos {}; pos.y < get_height(); ++pos.y) {
 		for (pos.x = 0; pos.x < get_width(); ++pos.x) {
-			Province* cur = get_province_at(pos);
+			ProvinceDefinition* cur = get_province_definition_at(pos);
 
 			if (cur != nullptr) {
 				changed |= generate_adjacency(cur, { (pos.x + 1) % get_width(), pos.y });
@@ -822,7 +891,7 @@ bool Map::generate_and_load_province_adjacencies(std::vector<LineObject> const& 
 			if (from_str.empty() || from_str.front() == '#') {
 				return;
 			}
-			Province* const from = get_province_by_identifier(from_str);
+			ProvinceDefinition* const from = get_province_definition_by_identifier(from_str);
 			if (from == nullptr) {
 				Logger::error("Unrecognised adjacency from province identifier: \"", from_str, "\"");
 				ret = false;
@@ -830,7 +899,7 @@ bool Map::generate_and_load_province_adjacencies(std::vector<LineObject> const& 
 			}
 
 			const std::string_view to_str = adjacency.get_value_for(1);
-			Province* const to = get_province_by_identifier(to_str);
+			ProvinceDefinition* const to = get_province_definition_by_identifier(to_str);
 			if (to == nullptr) {
 				Logger::error("Unrecognised adjacency to province identifier: \"", to_str, "\"");
 				ret = false;
@@ -850,7 +919,7 @@ bool Map::generate_and_load_province_adjacencies(std::vector<LineObject> const& 
 			}
 			const adjacency_t::type_t type = it->second;
 
-			Province const* const through = get_province_by_identifier(adjacency.get_value_for(3));
+			ProvinceDefinition const* const through = get_province_definition_by_identifier(adjacency.get_value_for(3));
 
 			const std::string_view data_str = adjacency.get_value_for(4);
 			bool successful = false;
@@ -884,8 +953,8 @@ bool Map::load_climate_file(ModifierManager const& modifier_manager, ast::NodeCP
 				ret &= modifier_manager.expect_modifier_value(move_variable_callback(values))(node);
 				ret &= climates.add_item({ identifier, std::move(values) });
 			} else {
-				ret &= expect_list_reserve_length(*cur_climate, expect_province_identifier(
-					[cur_climate, &identifier](Province& province) {
+				ret &= expect_list_reserve_length(*cur_climate, expect_province_definition_identifier(
+					[cur_climate, &identifier](ProvinceDefinition& province) {
 						if (province.climate != cur_climate) {
 							cur_climate->add_province(&province);
 							if (province.climate != nullptr) {
@@ -931,10 +1000,10 @@ bool Map::load_continent_file(ModifierManager const& modifier_manager, ast::Node
 			}
 
 			ModifierValue values;
-			ProvinceSetModifier::provinces_t prov_list;
+			std::vector<ProvinceDefinition const*> prov_list;
 			bool ret = modifier_manager.expect_modifier_value_and_keys(move_variable_callback(values),
-				"provinces", ONE_EXACTLY, expect_list_reserve_length(prov_list, expect_province_identifier(
-					[&prov_list](Province const& province) -> bool {
+				"provinces", ONE_EXACTLY, expect_list_reserve_length(prov_list, expect_province_definition_identifier(
+					[&prov_list](ProvinceDefinition const& province) -> bool {
 						if (province.continent == nullptr) {
 							prov_list.emplace_back(&province);
 						} else {
@@ -951,8 +1020,8 @@ bool Map::load_continent_file(ModifierManager const& modifier_manager, ast::Node
 
 			if (continents.add_item(std::move(continent))) {
 				Continent const& moved_continent = continents.get_items().back();
-				for (Province const* prov : moved_continent.get_provinces()) {
-					remove_province_const(prov)->continent = &moved_continent;
+				for (ProvinceDefinition const* prov : moved_continent.get_provinces()) {
+					remove_province_definition_const(prov)->continent = &moved_continent;
 				}
 			} else {
 				ret = false;
