@@ -4,7 +4,8 @@
 
 #include "openvic-simulation/country/CountryInstance.hpp"
 #include "openvic-simulation/map/Map.hpp"
-#include "openvic-simulation/military/UnitType.hpp"
+#include "openvic-simulation/map/ProvinceInstance.hpp"
+#include "openvic-simulation/military/Deployment.hpp"
 
 using namespace OpenVic;
 
@@ -17,7 +18,7 @@ ShipInstance::ShipInstance(std::string_view new_name, ShipType const& new_ship_t
 MovementInfo::MovementInfo() : path {}, movement_progress {} {}
 
 //TODO: pathfinding logic
-MovementInfo::MovementInfo(Province const* starting_province, Province const* target_province)
+MovementInfo::MovementInfo(ProvinceInstance const* starting_province, ProvinceInstance const* target_province)
 	: path { starting_province, target_province }, movement_progress { 0 } {}
 
 ArmyInstance::ArmyInstance(
@@ -27,7 +28,7 @@ ArmyInstance::ArmyInstance(
 	CountryInstance* new_country
 ) : UnitInstanceGroup { new_name, UnitType::branch_t::LAND, std::move(new_units), new_leader, new_country } {}
 
-void ArmyInstance::set_position(Province* new_position) {
+void ArmyInstance::set_position(ProvinceInstance* new_position) {
 	if (position != new_position) {
 		if (position != nullptr) {
 			position->remove_army(*this);
@@ -46,7 +47,7 @@ NavyInstance::NavyInstance(
 	CountryInstance* new_country
 ) : UnitInstanceGroup { new_name, UnitType::branch_t::NAVAL, std::move(new_units), new_leader, new_country } {}
 
-void NavyInstance::set_position(Province* new_position) {
+void NavyInstance::set_position(ProvinceInstance* new_position) {
 	if (position != new_position) {
 		if (position != nullptr) {
 			position->remove_navy(*this);
@@ -116,7 +117,7 @@ bool UnitInstanceManager::generate_army(Map& map, CountryInstance& country, Army
 
 	armies.push_back({ army_deployment.get_name(), std::move(army_regiments), nullptr, &country });
 
-	armies.back().set_position(map.remove_province_const(army_deployment.get_location()));
+	armies.back().set_position(map.get_province_instance_from_const(army_deployment.get_location()));
 
 	return ret;
 }
@@ -162,7 +163,7 @@ bool UnitInstanceManager::generate_navy(Map& map, CountryInstance& country, Navy
 
 	navies.push_back({ navy_deployment.get_name(), std::move(navy_ships), nullptr, &country });
 
-	navies.back().set_position(map.remove_province_const(navy_deployment.get_location()));
+	navies.back().set_position(map.get_province_instance_from_const(navy_deployment.get_location()));
 
 	return ret;
 }

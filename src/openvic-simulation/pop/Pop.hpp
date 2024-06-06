@@ -23,7 +23,7 @@ namespace OpenVic {
 	struct IdeologyManager;
 	struct Issue;
 	struct IssueManager;
-	struct Province;
+	struct ProvinceInstance;
 	struct CountryParty;
 
 	/* REQUIREMENTS:
@@ -41,7 +41,7 @@ namespace OpenVic {
 		Culture const& PROPERTY(culture);
 		Religion const& PROPERTY(religion);
 		pop_size_t PROPERTY(size);
-		Province const* PROPERTY_RW(location);
+		ProvinceInstance const* PROPERTY_RW(location);
 
 		/* Last day's size change by source. */
 		pop_size_t PROPERTY(total_change);
@@ -236,8 +236,6 @@ namespace OpenVic {
 		}
 		return stream << ']';
 	}
-
-	struct Province;
 
 	struct PopManager {
 	private:

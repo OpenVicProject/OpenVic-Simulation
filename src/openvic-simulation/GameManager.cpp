@@ -73,8 +73,7 @@ bool GameManager::load_bookmark(Bookmark const* new_bookmark) {
 		history_manager.get_province_manager(), today, politics_manager.get_ideology_manager(),
 		politics_manager.get_issue_manager(), *country_manager.get_country_by_identifier("ENG")
 	);
-
-	map.get_state_manager().generate_states(map);
+	ret &= map.get_state_manager().generate_states(map);
 
 	ret &= country_instance_manager.generate_country_instances(country_manager);
 	ret &= country_instance_manager.apply_history_to_countries(
@@ -86,7 +85,7 @@ bool GameManager::load_bookmark(Bookmark const* new_bookmark) {
 
 bool GameManager::expand_selected_province_building(size_t building_index) {
 	set_gamestate_needs_update();
-	Province* province = map.get_selected_province();
+	ProvinceInstance* province = map.get_selected_province();
 	if (province == nullptr) {
 		Logger::error("Cannot expand building index ", building_index, " - no province selected!");
 		return false;
@@ -105,13 +104,23 @@ static constexpr colour_argb_t DEFAULT_COLOUR_WHITE = (0xFFFFFF_argb).with_alpha
  * national focus, RGO, population density, sphere of influence, ranking and migration. */
 static constexpr colour_argb_t DEFAULT_COLOUR_GREY = (0x7F7F7F_argb).with_alpha(ALPHA_VALUE);
 
-template<IsColour ColourT = colour_t, std::derived_from<_HasColour<ColourT>> T>
-static constexpr auto get_colour_mapmode(T const*(Province::*get_item)() const) {
-	return [get_item](Map const& map, Province const& province) -> Mapmode::base_stripe_t {
-		T const* item = (province.*get_item)();
+template<utility::is_derived_from_specialization_of<_HasColour> T, typename P>
+requires(std::same_as<P, ProvinceDefinition> || std::same_as<P, ProvinceInstance>)
+static constexpr auto get_colour_mapmode(T const*(P::*get_item)() const) {
+	return [get_item](Map const& map, ProvinceInstance const& province) -> Mapmode::base_stripe_t {
+		ProvinceDefinition const& province_definition = province.get_province_definition();
+
+		T const* item = [&province, &province_definition, get_item]() -> T const* {
+			if constexpr (std::same_as<P, ProvinceDefinition>) {
+				return (province_definition.*get_item)();
+			} else {
+				return (province.*get_item)();
+			}
+		}();
+
 		if (item != nullptr) {
 			return colour_argb_t { item->get_colour(), ALPHA_VALUE };
-		} else if (!province.is_water()) {
+		} else if (!province_definition.is_water()) {
 			return DEFAULT_COLOUR_WHITE;
 		} else {
 			return colour_argb_t::null();
@@ -119,7 +128,7 @@ static constexpr auto get_colour_mapmode(T const*(Province::*get_item)() const) 
 	};
 }
 
-template<IsColour ColourT = colour_t, std::derived_from<_HasColour<ColourT>> T>
+template<utility::is_derived_from_specialization_of<_HasColour> T>
 static constexpr Mapmode::base_stripe_t shaded_mapmode(fixed_point_map_t<T const*> const& map) {
 	const std::pair<fixed_point_map_const_iterator_t<T const*>, fixed_point_map_const_iterator_t<T const*>> largest =
 		get_largest_two_items(map);
@@ -137,9 +146,9 @@ static constexpr Mapmode::base_stripe_t shaded_mapmode(fixed_point_map_t<T const
 	return colour_argb_t::null();
 }
 
-template<IsColour ColourT = colour_t, std::derived_from<_HasColour<ColourT>> T>
-static constexpr auto shaded_mapmode(fixed_point_map_t<T const*> const&(Province::*get_map)() const) {
-	return [get_map](Map const& map, Province const& province) -> Mapmode::base_stripe_t {
+template<utility::is_derived_from_specialization_of<_HasColour> T>
+static constexpr auto shaded_mapmode(fixed_point_map_t<T const*> const&(ProvinceInstance::*get_map)() const) {
+	return [get_map](Map const& map, ProvinceInstance const& province) -> Mapmode::base_stripe_t {
 		return shaded_mapmode((province.*get_map)());
 	};
 }
@@ -151,42 +160,43 @@ bool GameManager::load_hardcoded_defines() {
 	const std::vector<mapmode_t> mapmodes {
 		{
 			"mapmode_terrain",
-			[](Map const&, Province const& province) -> Mapmode::base_stripe_t {
+			[](Map const&, ProvinceInstance const& province) -> Mapmode::base_stripe_t {
 				return colour_argb_t::null();
 			}
 		},
 		{
-			"mapmode_political", get_colour_mapmode(&Province::get_owner)
+			"mapmode_political", get_colour_mapmode(&ProvinceInstance::get_owner)
 		},
 		{
 			/* TEST MAPMODE, TO BE REMOVED */
 			"mapmode_province",
-			[](Map const&, Province const& province) -> Mapmode::base_stripe_t {
-				return colour_argb_t { province.get_colour(), ALPHA_VALUE };
+			[](Map const&, ProvinceInstance const& province) -> Mapmode::base_stripe_t {
+				return colour_argb_t { province.get_province_definition().get_colour(), ALPHA_VALUE };
 			}
 		},
 		{
-			"mapmode_region", get_colour_mapmode(&Province::get_region)
+			"mapmode_region", get_colour_mapmode(&ProvinceDefinition::get_region)
 		},
 		{
 			/* TEST MAPMODE, TO BE REMOVED */
 			"mapmode_index",
-			[](Map const& map, Province const& province) -> Mapmode::base_stripe_t {
-				const colour_argb_t::value_type f =
-					colour_argb_t::colour_traits::component_from_fraction(province.get_index(), map.get_province_count() + 1);
+			[](Map const& map, ProvinceInstance const& province) -> Mapmode::base_stripe_t {
+				const colour_argb_t::value_type f = colour_argb_t::colour_traits::component_from_fraction(
+					province.get_province_definition().get_index(), map.get_province_definition_count() + 1
+				);
 				return colour_argb_t::fill_as(f).with_alpha(ALPHA_VALUE);
 			}
 		},
 		{
 			/* Non-vanilla mapmode, still of use in game. */
-			"mapmode_terrain_type", get_colour_mapmode(&Province::get_terrain_type)
+			"mapmode_terrain_type", get_colour_mapmode(&ProvinceInstance::get_terrain_type)
 		},
 		{
-			"mapmode_rgo", get_colour_mapmode(&Province::get_rgo)
+			"mapmode_rgo", get_colour_mapmode(&ProvinceInstance::get_rgo)
 		},
 		{
 			"mapmode_infrastructure",
-			[](Map const& map, Province const& province) -> Mapmode::base_stripe_t {
+			[](Map const& map, ProvinceInstance const& province) -> Mapmode::base_stripe_t {
 				BuildingInstance const* railroad = province.get_building_by_identifier("railroad");
 				if (railroad != nullptr) {
 					const colour_argb_t::value_type val = colour_argb_t::colour_traits::component_from_fraction(
@@ -206,11 +216,11 @@ bool GameManager::load_hardcoded_defines() {
 		},
 		{
 			"mapmode_population",
-			[](Map const& map, Province const& province) -> Mapmode::base_stripe_t {
+			[](Map const& map, ProvinceInstance const& province) -> Mapmode::base_stripe_t {
 				// TODO - explore non-linear scaling to have more variation among non-massive provinces
 				// TODO - when selecting a province, only show the population of provinces controlled (or owned?)
 				// by the same country, relative to the most populous province in that set of provinces
-				if (!province.is_water()) {
+				if (!province.get_province_definition().is_water()) {
 					const colour_argb_t::value_type val = colour_argb_t::colour_traits::component_from_fraction(
 						province.get_total_population(), map.get_highest_province_population() + 1, 0.1f, 1.0f
 					);
@@ -221,26 +231,34 @@ bool GameManager::load_hardcoded_defines() {
 			}
 		},
 		{
-			"mapmode_culture", shaded_mapmode(&Province::get_culture_distribution)
+			"mapmode_culture", shaded_mapmode(&ProvinceInstance::get_culture_distribution)
 		},
 		{
 			/* Non-vanilla mapmode, still of use in game. */
-			"mapmode_religion", shaded_mapmode(&Province::get_religion_distribution)
+			"mapmode_religion", shaded_mapmode(&ProvinceInstance::get_religion_distribution)
 		},
 		{
 			/* TEST MAPMODE, TO BE REMOVED */
-			"mapmode_adjacencies", [](Map const& map, Province const& province) -> Mapmode::base_stripe_t {
-				Province const* selected_province = map.get_selected_province();
+			"mapmode_adjacencies", [](Map const& map, ProvinceInstance const& province) -> Mapmode::base_stripe_t {
+				ProvinceInstance const* selected_province = map.get_selected_province();
+
 				if (selected_province != nullptr) {
+					ProvinceDefinition const& selected_province_definition = selected_province->get_province_definition();
+
 					if (selected_province == &province) {
 						return (0xFFFFFF_argb).with_alpha(ALPHA_VALUE);
 					}
+
+					ProvinceDefinition const* province_definition = &province.get_province_definition();
+
 					colour_argb_t base = colour_argb_t::null(), stripe = colour_argb_t::null();
-					Province::adjacency_t const* adj = selected_province->get_adjacency_to(&province);
+					ProvinceDefinition::adjacency_t const* adj =
+						selected_province_definition.get_adjacency_to(province_definition);
+
 					if (adj != nullptr) {
 						colour_argb_t::integer_type base_int;
 						switch (adj->get_type()) {
-							using enum Province::adjacency_t::type_t;
+							using enum ProvinceDefinition::adjacency_t::type_t;
 						case LAND:       base_int = 0x00FF00; break;
 						case WATER:      base_int = 0x0000FF; break;
 						case COASTAL:    base_int = 0xF9D199; break;
@@ -252,20 +270,24 @@ bool GameManager::load_hardcoded_defines() {
 						base = colour_argb_t::from_integer(base_int).with_alpha(ALPHA_VALUE);
 						stripe = base;
 					}
-					if (selected_province->has_adjacency_going_through(&province)) {
+
+					if (selected_province_definition.has_adjacency_going_through(province_definition)) {
 						stripe = (0xFFFF00_argb).with_alpha(ALPHA_VALUE);
 					}
 
 					return { base, stripe };
 				}
+
 				return colour_argb_t::null();
 			}
 		},
 		{
-			"mapmode_port", [](Map const& map, Province const& province) -> Mapmode::base_stripe_t {
-				if (province.has_port()) {
+			"mapmode_port", [](Map const& map, ProvinceInstance const& province) -> Mapmode::base_stripe_t {
+				ProvinceDefinition const& province_definition = province.get_province_definition();
+
+				if (province_definition.has_port()) {
 					return (0xFFFFFF_argb).with_alpha(ALPHA_VALUE);
-				} else if (!province.is_water()) {
+				} else if (!province_definition.is_water()) {
 					return (0x333333_argb).with_alpha(ALPHA_VALUE);
 				} else {
 					return colour_argb_t::null();

@@ -1,8 +1,8 @@
 #pragma once
 
 #include <optional>
+
 #include "openvic-simulation/types/Date.hpp"
-#include "openvic-simulation/utility/Logger.hpp"
 
 namespace OpenVic {
 	struct Period {

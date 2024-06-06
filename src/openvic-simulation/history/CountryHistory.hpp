@@ -1,25 +1,29 @@
 #pragma once
 
 #include <optional>
+#include <vector>
 
-#include "openvic-simulation/country/Country.hpp"
 #include "openvic-simulation/history/HistoryMap.hpp"
-#include "openvic-simulation/map/Province.hpp"
-#include "openvic-simulation/military/Deployment.hpp"
-#include "openvic-simulation/misc/Decision.hpp"
-#include "openvic-simulation/politics/Government.hpp"
-#include "openvic-simulation/politics/Ideology.hpp"
-#include "openvic-simulation/politics/Issue.hpp"
-#include "openvic-simulation/politics/NationalValue.hpp"
-#include "openvic-simulation/pop/Culture.hpp"
-#include "openvic-simulation/pop/Religion.hpp"
-#include "openvic-simulation/research/Invention.hpp"
-#include "openvic-simulation/research/Technology.hpp"
 #include "openvic-simulation/types/Date.hpp"
+#include "openvic-simulation/types/fixed_point/FixedPointMap.hpp"
 #include "openvic-simulation/types/OrderedContainers.hpp"
 
 namespace OpenVic {
 	struct CountryHistoryMap;
+	struct Country;
+	struct Culture;
+	struct Religion;
+	struct CountryParty;
+	struct Ideology;
+	struct ProvinceDefinition;
+	struct GovernmentType;
+	struct NationalValue;
+	struct Reform;
+	struct Deployment;
+	struct TechnologySchool;
+	struct Technology;
+	struct Invention;
+	struct Decision;
 
 	struct CountryHistoryEntry : HistoryEntry {
 		friend struct CountryHistoryMap;
@@ -33,7 +37,7 @@ namespace OpenVic {
 		std::optional<CountryParty const*> PROPERTY(ruling_party);
 		std::optional<Date> PROPERTY(last_election);
 		fixed_point_map_t<Ideology const*> PROPERTY(upper_house);
-		std::optional<Province const*> PROPERTY(capital);
+		std::optional<ProvinceDefinition const*> PROPERTY(capital);
 		std::optional<GovernmentType const*> PROPERTY(government_type);
 		std::optional<fixed_point_t> PROPERTY(plurality);
 		std::optional<NationalValue const*> PROPERTY(national_value);
@@ -59,6 +63,8 @@ namespace OpenVic {
 		CountryHistoryEntry(Country const& new_country, Date new_date);
 	};
 
+	class Dataloader;
+	struct DeploymentManager;
 	struct CountryHistoryManager;
 
 	struct CountryHistoryMap : HistoryMap<CountryHistoryEntry, Dataloader const&, DeploymentManager&> {
@@ -96,4 +102,4 @@ namespace OpenVic {
 		);
 	};
 
-} // namespace OpenVic
+}

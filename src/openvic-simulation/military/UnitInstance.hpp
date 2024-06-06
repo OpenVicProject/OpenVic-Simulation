@@ -1,14 +1,14 @@
 #pragma once
 
 #include <concepts>
+#include <string>
 #include <string_view>
 #include <vector>
 
-#include "openvic-simulation/map/Province.hpp"
-#include "openvic-simulation/military/Deployment.hpp"
 #include "openvic-simulation/military/Leader.hpp"
 #include "openvic-simulation/military/UnitType.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
+#include "openvic-simulation/utility/Getters.hpp"
 
 namespace OpenVic {
 	template<std::derived_from<UnitType> T>
@@ -37,6 +37,8 @@ namespace OpenVic {
 		}
 	};
 
+	struct Pop;
+
 	struct RegimentInstance : UnitInstance<RegimentType> {
 		friend struct UnitInstanceManager;
 
@@ -59,14 +61,17 @@ namespace OpenVic {
 		ShipInstance(ShipInstance&&) = default;
 	};
 
+	struct ProvinceInstance;
+
 	struct MovementInfo {
 	private:
-		std::vector<Province const*> PROPERTY(path);
+		std::vector<ProvinceInstance const*> PROPERTY(path);
 		fixed_point_t PROPERTY(movement_progress);
 
 	public:
 		MovementInfo();
-		MovementInfo(Province const* starting_province, Province const* target_province); // contains/calls pathfinding logic
+		// contains/calls pathfinding logic
+		MovementInfo(ProvinceInstance const* starting_province, ProvinceInstance const* target_province);
 	};
 
 	struct CountryInstance;
@@ -82,7 +87,7 @@ namespace OpenVic {
 		MovementInfo PROPERTY_REF(movement_info);
 
 	protected:
-		Province* PROPERTY_ACCESS(position, protected);
+		ProvinceInstance* PROPERTY_ACCESS(position, protected);
 		CountryInstance* PROPERTY_ACCESS(country, protected);
 
 		UnitInstanceGroup(
@@ -140,7 +145,7 @@ namespace OpenVic {
 			)->first;
 		}
 
-		virtual void set_position(Province* new_position) = 0;
+		virtual void set_position(ProvinceInstance* new_position) = 0;
 	};
 
 	struct ArmyInstance : UnitInstanceGroup<RegimentInstance> {
@@ -157,7 +162,7 @@ namespace OpenVic {
 	public:
 		ArmyInstance(ArmyInstance&&) = default;
 
-		void set_position(Province* new_position) override;
+		void set_position(ProvinceInstance* new_position) override;
 	};
 
 	struct NavyInstance : UnitInstanceGroup<ShipInstance> {
@@ -176,8 +181,15 @@ namespace OpenVic {
 	public:
 		NavyInstance(NavyInstance&&) = default;
 
-		void set_position(Province* new_position) override;
+		void set_position(ProvinceInstance* new_position) override;
 	};
+
+	struct RegimentDeployment;
+	struct ShipDeployment;
+	struct Map;
+	struct ArmyDeployment;
+	struct NavyDeployment;
+	struct Deployment;
 
 	struct UnitInstanceManager {
 	private:

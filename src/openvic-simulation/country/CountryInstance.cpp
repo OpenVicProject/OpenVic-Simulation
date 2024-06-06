@@ -1,5 +1,7 @@
 #include "CountryInstance.hpp"
 
+#include "openvic-simulation/country/Country.hpp"
+#include "openvic-simulation/history/CountryHistory.hpp"
 #include "openvic-simulation/military/UnitInstance.hpp"
 
 using namespace OpenVic;

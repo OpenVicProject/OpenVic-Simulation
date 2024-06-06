@@ -2,6 +2,7 @@
 
 #include <cassert>
 
+#include "openvic-simulation/country/Country.hpp"
 #include "openvic-simulation/country/CountryInstance.hpp"
 #include "openvic-simulation/utility/ErrorMacros.hpp"
 

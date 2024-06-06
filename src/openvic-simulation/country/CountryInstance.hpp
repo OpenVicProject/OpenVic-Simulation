@@ -1,12 +1,22 @@
 #pragma once
 
-#include "openvic-simulation/country/Country.hpp"
-#include "openvic-simulation/history/CountryHistory.hpp"
-#include "openvic-simulation/map/Province.hpp"
+#include <vector>
+
+#include "openvic-simulation/types/Date.hpp"
+#include "openvic-simulation/types/fixed_point/FixedPointMap.hpp"
 #include "openvic-simulation/utility/Getters.hpp"
 
 namespace OpenVic {
-	struct UnitInstanceManager;
+	struct Country;
+	struct Culture;
+	struct Religion;
+	struct CountryParty;
+	struct Ideology;
+	struct ProvinceDefinition;
+	struct GovernmentType;
+	struct NationalValue;
+	struct Reform;
+	struct CountryHistoryEntry;
 
 	/* Representation of an existing country that is currently in-game. */
 	struct CountryInstance {
@@ -19,7 +29,9 @@ namespace OpenVic {
 		CountryParty const* PROPERTY_RW(ruling_party);
 		Date PROPERTY_RW(last_election);
 		fixed_point_map_t<Ideology const*> PROPERTY(upper_house);
-		Province const* PROPERTY_RW(capital);
+		// TODO - should this be ProvinceInstance and/or non-const pointer?
+		// Currently ProvinceDefinition as that's what CountryHistoryEntry has (loaded prior to ProvinceInstance generation)
+		ProvinceDefinition const* PROPERTY_RW(capital);
 		GovernmentType const* PROPERTY_RW(government_type);
 		fixed_point_t PROPERTY_RW(plurality);
 		NationalValue const* PROPERTY_RW(national_value);
@@ -44,6 +56,11 @@ namespace OpenVic {
 		bool apply_history_to_country(CountryHistoryEntry const* entry);
 	};
 
+	struct CountryManager;
+	struct CountryHistoryManager;
+	struct UnitInstanceManager;
+	struct Map;
+
 	struct CountryInstanceManager {
 	private:
 		std::vector<CountryInstance> PROPERTY(country_instances);
@@ -55,4 +72,4 @@ namespace OpenVic {
 			CountryHistoryManager const& history_manager, Date date, UnitInstanceManager& unit_instance_manager, Map& map
 		);
 	};
-} // namespace OpenVic
+}

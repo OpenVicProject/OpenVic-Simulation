@@ -1,22 +1,40 @@
 #pragma once
 
-#include "openvic-simulation/map/Province.hpp"
+#include <ranges>
+#include <string_view>
+#include <vector>
+
+#include "openvic-simulation/misc/Modifier.hpp"
 
 namespace OpenVic {
 
-	struct ProvinceSet {
-		using provinces_t = std::vector<Province const*>;
+	struct ProvinceDefinition;
 
+	struct ProvinceSet {
 	private:
-		provinces_t provinces;
+		std::vector<ProvinceDefinition const*> PROPERTY(provinces);
 		bool locked = false;
 
 	public:
 		/* Returns true if the province is successfully added, false if not (including if it's already in the set). */
-		bool add_province(Province const* province);
-		bool add_provinces(provinces_t const& new_provinces);
+		bool add_province(ProvinceDefinition const* province);
+
+		template<std::ranges::sized_range Container>
+		requires std::convertible_to<std::ranges::range_value_t<Container>, ProvinceDefinition const*>
+		bool add_provinces(Container const& new_provinces) {
+			reserve_more(new_provinces.size());
+
+			bool ret = true;
+
+			for (ProvinceDefinition const* province : new_provinces) {
+				ret &= add_province(province);
+			}
+
+			return ret;
+		}
+
 		/* Returns true if the province is successfully removed, false if not (including if it's not in the set). */
-		bool remove_province(Province const* province);
+		bool remove_province(ProvinceDefinition const* province);
 		void lock(bool log = false);
 		bool is_locked() const;
 		void reset();
@@ -24,9 +42,7 @@ namespace OpenVic {
 		size_t size() const;
 		void reserve(size_t size);
 		void reserve_more(size_t size);
-		bool contains_province(Province const* province) const;
-		provinces_t const& get_provinces() const;
-		Pop::pop_size_t calculate_total_population() const;
+		bool contains_province(ProvinceDefinition const* province) const;
 	};
 
 	struct ProvinceSetModifier : Modifier, ProvinceSet {

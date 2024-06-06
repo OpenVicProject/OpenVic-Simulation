@@ -1,68 +1,131 @@
 #include "State.hpp"
 
+#include "openvic-simulation/country/Country.hpp"
 #include "openvic-simulation/map/Map.hpp"
+#include "openvic-simulation/map/ProvinceInstance.hpp"
+#include "openvic-simulation/map/Region.hpp"
 
 using namespace OpenVic;
 
 State::State(
-	Country const* owner, Province const* capital, Region::provinces_t&& provinces, Province::colony_status_t colony_status
-) : owner { owner }, capital { capital }, provinces { std::move(provinces) }, colony_status { colony_status } {}
+	StateSet const& new_state_set, Country const* owner, ProvinceInstance* capital, std::vector<ProvinceInstance*>&& provinces,
+	ProvinceInstance::colony_status_t colony_status
+) : state_set { new_state_set }, owner { owner }, capital { capital }, provinces { std::move(provinces) },
+	colony_status { colony_status } {}
+
+void State::update_gamestate() {
+	total_population = 0;
+
+	for (ProvinceInstance const* province : provinces) {
+		total_population += province->get_total_population();
+	}
+}
 
 /* Whether two provinces in the same region should be grouped into the same state or not.
  * (Assumes both provinces non-null.) */
-static bool provinces_belong_in_same_state(Province const* lhs, Province const* rhs) {
+static bool provinces_belong_in_same_state(ProvinceInstance const* lhs, ProvinceInstance const* rhs) {
 	return lhs->get_owner() == rhs->get_owner() && lhs->get_colony_status() == rhs->get_colony_status();
 }
 
-StateSet::StateSet(Map& map, Region const& new_region) : region { new_region } {
+StateSet::StateSet(Region const& new_region) : region { new_region }, states {} {}
+
+size_t StateSet::get_state_count() const {
+	return states.size();
+}
+
+void StateSet::update_gamestate() {
+	for (State& state : states) {
+		state.update_gamestate();
+	}
+}
+
+bool StateManager::add_state_set(Map& map, Region const& region) {
 	if (region.get_meta()) {
-		Logger::error("Cannot use meta region as state template!");
+		Logger::error("Cannot use meta region \"", region.get_identifier(), "\" as state template!");
+		return false;
 	}
 
-	std::vector<Region::provinces_t> temp_provinces;
+	if (region.empty()) {
+		Logger::error("Cannot use empty region \"", region.get_identifier(), "\" as state template!");
+		return false;
+	}
 
-	for (Province const* province : region.get_provinces()) {
+	std::vector<std::vector<ProvinceInstance*>> temp_provinces;
+
+	for (ProvinceDefinition const* province : region.get_provinces()) {
+
+		ProvinceInstance* province_instance = map.get_province_instance_from_const(province);
+
 		// add to existing state if shared owner & status...
-		for (Region::provinces_t& provinces : temp_provinces) {
-			if (provinces_belong_in_same_state(provinces[0], province)) {
-				provinces.push_back(province);
+		for (std::vector<ProvinceInstance*>& provinces : temp_provinces) {
+			if (provinces_belong_in_same_state(provinces.front(), province_instance)) {
+				provinces.push_back(province_instance);
 				// jump to the end of the outer loop, skipping the new state code
 				goto loop_end;
 			}
 		}
+
 		// ...otherwise start a new state
-		temp_provinces.push_back({ province });
+		temp_provinces.push_back({ province_instance });
+
 	loop_end:;
 		/* Either the province was added to an existing state and the program jumped to here,
 		 * or it was used to create a new state and the program arrived here normally. */
 	}
 
-	for (Region::provinces_t& provinces : temp_provinces) {
-		states.emplace_back(
-			/* TODO: capital province logic */
-			provinces[0]->get_owner(), provinces[0], std::move(provinces), provinces[0]->get_colony_status()
-		);
-	}
+	state_sets.push_back({ region });
 
-	// Go back and assign each new state to its provinces.
-	for (State const& state : states) {
-		for (Province const* province : state.get_provinces()) {
-			map.remove_province_const(province)->set_state(&state);
+	StateSet& state_set = state_sets.back();
+
+	// Reserve space for the maximum number of states (one per province)
+	state_set.states.reserve(region.size());
+
+	for (std::vector<ProvinceInstance*>& provinces : temp_provinces) {
+		ProvinceInstance* capital = provinces.front();
+
+		state_set.states.push_back(
+			/* TODO: capital province logic */
+			{ state_set, capital->get_owner(), capital, std::move(provinces), capital->get_colony_status() }
+		);
+
+		State const& state = state_set.states.back();
+
+		for (ProvinceInstance* province : state.get_provinces()) {
+			province->set_state(&state);
 		}
 	}
+
+	return true;
 }
 
-StateSet::states_t& StateSet::get_states() {
-	return states;
-}
+bool StateManager::generate_states(Map& map) {
+	state_sets.clear();
+	state_sets.reserve(map.get_region_count());
 
-void StateManager::generate_states(Map& map) {
-	regions.clear();
-	regions.reserve(map.get_region_count());
+	bool ret = true;
+	size_t state_count = 0;
+
 	for (Region const& region : map.get_regions()) {
 		if (!region.get_meta()) {
-			regions.emplace_back(map, region);
+			if (add_state_set(map, region)) {
+				state_count += state_sets.back().get_state_count();
+			} else {
+				ret = false;
+			}
 		}
 	}
-	Logger::info("Generated states.");
+
+	Logger::info("Generated ", state_count, " states across ", state_sets.size(), " state sets.");
+
+	return ret;
+}
+
+void StateManager::reset() {
+	state_sets.clear();
+}
+
+void StateManager::update_gamestate() {
+	for (StateSet& state_set : state_sets) {
+		state_set.update_gamestate();
+	}
 }

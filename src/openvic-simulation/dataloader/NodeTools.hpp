@@ -473,8 +473,8 @@ namespace OpenVic {
 		}
 
 		template<typename T>
-		Callback<T const&> auto vector_callback_pointer(std::vector<T const*>& vec) {
-			return [&vec](T const& val) -> bool {
+		Callback<T&> auto vector_callback_pointer(std::vector<T*>& vec) {
+			return [&vec](T& val) -> bool {
 				vec.emplace_back(&val);
 				return true;
 			};

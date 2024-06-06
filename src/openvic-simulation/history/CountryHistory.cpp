@@ -68,7 +68,7 @@ bool CountryHistoryMap::_load_history_entry(
 			);
 		},
 		"capital", ZERO_OR_ONE,
-			game_manager.get_map().expect_province_identifier(assign_variable_callback_pointer_opt(entry.capital)),
+			game_manager.get_map().expect_province_definition_identifier(assign_variable_callback_pointer_opt(entry.capital)),
 		"primary_culture", ZERO_OR_ONE,
 			culture_manager.expect_culture_identifier(assign_variable_callback_pointer_opt(entry.primary_culture)),
 		"culture", ZERO_OR_MORE, culture_manager.expect_culture_identifier(
@@ -148,7 +148,9 @@ bool CountryHistoryMap::_load_history_entry(
 							/* If the first government type is null, the "government" section will have already output
 							 * an error, so no need to output another one here. */
 							if (government_type != nullptr && flag_override_government_type != nullptr) {
-								ret &= map_callback(entry.government_flag_overrides, government_type)(flag_override_government_type);
+								ret &= map_callback(
+									entry.government_flag_overrides, government_type)(flag_override_government_type
+								);
 							}
 							return ret;
 						} else {
