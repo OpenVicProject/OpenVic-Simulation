@@ -1,6 +1,5 @@
 #include "Map.hpp"
 
-#include <cassert>
 #include <cstddef>
 #include <vector>
 
@@ -12,23 +11,6 @@
 
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;
-using namespace OpenVic::colour_literals;
-
-Mapmode::Mapmode(
-	std::string_view new_identifier, index_t new_index, colour_func_t new_colour_func
-) : HasIdentifier { new_identifier }, index { new_index }, colour_func { new_colour_func } {
-	assert(colour_func != nullptr);
-}
-
-const Mapmode Mapmode::ERROR_MAPMODE {
-	"mapmode_error", 0, [](Map const& map, ProvinceInstance const& province) -> base_stripe_t {
-		return { 0xFFFF0000_argb, colour_argb_t::null() };
-	}
-};
-
-Mapmode::base_stripe_t Mapmode::get_base_stripe_colours(Map const& map, ProvinceInstance const& province) const {
-	return colour_func ? colour_func(map, province) : colour_argb_t::null();
-}
 
 Map::Map()
   : dims { 0, 0 }, max_provinces { ProvinceDefinition::MAX_INDEX }, selected_province { nullptr },
@@ -425,54 +407,6 @@ ProvinceInstance* Map::get_selected_province() {
 ProvinceDefinition::index_t Map::get_selected_province_index() const {
 	return selected_province != nullptr ? selected_province->get_province_definition().get_index()
 		: ProvinceDefinition::NULL_INDEX;
-}
-
-bool Map::add_mapmode(std::string_view identifier, Mapmode::colour_func_t colour_func) {
-	if (identifier.empty()) {
-		Logger::error("Invalid mapmode identifier - empty!");
-		return false;
-	}
-	if (colour_func == nullptr) {
-		Logger::error("Mapmode colour function is null for identifier: ", identifier);
-		return false;
-	}
-	return mapmodes.add_item({ identifier, mapmodes.size(), colour_func });
-}
-
-bool Map::generate_mapmode_colours(Mapmode::index_t index, uint8_t* target) const {
-	if (target == nullptr) {
-		Logger::error("Mapmode colour target pointer is null!");
-		return false;
-	}
-
-	bool ret = true;
-	Mapmode const* mapmode = mapmodes.get_item_by_index(index);
-	if (mapmode == nullptr) {
-		// Not an error if mapmodes haven't yet been loaded,
-		// e.g. if we want to allocate the province colour
-		// texture before mapmodes are loaded.
-		if (!(mapmodes.empty() && index == 0)) {
-			Logger::error("Invalid mapmode index: ", index);
-			ret = false;
-		}
-		mapmode = &Mapmode::ERROR_MAPMODE;
-	}
-
-	Mapmode::base_stripe_t* target_stripes = reinterpret_cast<Mapmode::base_stripe_t*>(target);
-
-	target_stripes[ProvinceDefinition::NULL_INDEX] = colour_argb_t::null();
-
-	if (province_instances_are_locked()) {
-		for (ProvinceInstance const& province : province_instances.get_items()) {
-			target_stripes[province.get_province_definition().get_index()] = mapmode->get_base_stripe_colours(*this, province);
-		}
-	} else {
-		for (size_t index = ProvinceDefinition::NULL_INDEX + 1; index <= get_province_definition_count(); ++index) {
-			target_stripes[index] = colour_argb_t::null();
-		}
-	}
-
-	return ret;
 }
 
 bool Map::reset(BuildingTypeManager const& building_type_manager) {

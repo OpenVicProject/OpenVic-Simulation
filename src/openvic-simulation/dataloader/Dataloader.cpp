@@ -843,6 +843,10 @@ bool Dataloader::load_defines(GameManager& game_manager) {
 
 	bool ret = true;
 
+	if (!game_manager.get_mapmode_manager().setup_mapmodes()) {
+		Logger::error("Failed to set up mapmodes!");
+		ret = false;
+	}
 	if (!_load_interface_files(game_manager.get_ui_manager())) {
 		Logger::error("Failed to load interface files!");
 		ret = false;

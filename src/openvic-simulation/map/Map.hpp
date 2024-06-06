@@ -1,7 +1,6 @@
 #pragma once
 
 #include <filesystem>
-#include <functional>
 
 #include <openvic-dataloader/csv/LineObject.hpp>
 
@@ -15,35 +14,6 @@
 
 namespace OpenVic {
 	namespace fs = std::filesystem;
-
-	struct Mapmode : HasIdentifier {
-		friend struct Map;
-
-		/* Bottom 32 bits are the base colour, top 32 are the stripe colour, both in ARGB format with the alpha channels
-		 * controlling interpolation with the terrain colour (0 = all terrain, 255 = all corresponding RGB) */
-		struct base_stripe_t {
-			colour_argb_t base_colour;
-			colour_argb_t stripe_colour;
-			constexpr base_stripe_t(colour_argb_t base, colour_argb_t stripe)
-				: base_colour { base }, stripe_colour { stripe } {}
-			constexpr base_stripe_t(colour_argb_t both) : base_stripe_t { both, both } {}
-		};
-		using colour_func_t = std::function<base_stripe_t(Map const&, ProvinceInstance const&)>;
-		using index_t = size_t;
-
-	private:
-		const index_t PROPERTY(index);
-		const colour_func_t colour_func;
-
-		Mapmode(std::string_view new_identifier, index_t new_index, colour_func_t new_colour_func);
-
-	public:
-		static const Mapmode ERROR_MAPMODE;
-
-		Mapmode(Mapmode&&) = default;
-
-		base_stripe_t get_base_stripe_colours(Map const& map, ProvinceInstance const& province) const;
-	};
 
 	struct GoodManager;
 	struct ProvinceHistoryManager;
@@ -65,7 +35,6 @@ namespace OpenVic {
 		IdentifierRegistry<ProvinceDefinition> IDENTIFIER_REGISTRY_CUSTOM_INDEX_OFFSET(province_definition, 1);
 		IdentifierRegistry<ProvinceInstance> IDENTIFIER_REGISTRY_CUSTOM_INDEX_OFFSET(province_instance, 1);
 		IdentifierRegistry<Region> IDENTIFIER_REGISTRY(region);
-		IdentifierRegistry<Mapmode> IDENTIFIER_REGISTRY(mapmode);
 		IdentifierRegistry<Climate> IDENTIFIER_REGISTRY(climate);
 		IdentifierRegistry<Continent> IDENTIFIER_REGISTRY(continent);
 		ProvinceSet water_provinces;
@@ -141,15 +110,6 @@ namespace OpenVic {
 		ProvinceDefinition::index_t get_selected_province_index() const;
 
 		bool add_region(std::string_view identifier, std::vector<ProvinceDefinition const*>&& provinces, colour_t colour);
-
-		bool add_mapmode(std::string_view identifier, Mapmode::colour_func_t colour_func);
-
-		/* The mapmode colour image contains of a list of base colours and stripe colours. Each colour is four bytes
-		 * in RGBA format, with the alpha value being used to interpolate with the terrain colour, so A = 0 is fully terrain
-		 * and A = 255 is fully the RGB colour packaged with A. The base and stripe colours for each province are packed
-		 * together adjacently, so each province's entry is 8 bytes long. The list contains ProvinceDefinition::MAX_INDEX + 1
-		 * entries, that is the maximum allowed number of provinces plus one for the index-zero "null province". */
-		bool generate_mapmode_colours(Mapmode::index_t index, uint8_t* target) const;
 
 		bool reset(BuildingTypeManager const& building_type_manager);
 		bool apply_history_to_provinces(
