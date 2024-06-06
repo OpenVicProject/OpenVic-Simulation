@@ -53,20 +53,20 @@ namespace OpenVic {
 		void update_gamestate();
 	};
 
-	struct Map;
+	struct MapInstance;
 
 	/* Contains all current states.*/
 	struct StateManager {
 	private:
 		std::vector<StateSet> PROPERTY(state_sets);
 
-		bool add_state_set(Map& map, Region const& region);
+		bool add_state_set(MapInstance& map_instance, Region const& region);
 
 	public:
 		/* Creates states from current province gamestate & regions, sets province state value.
 		 * After this function, the `regions` property is unmanaged and must be carefully updated and
 		 * validated by functions that modify it. */
-		bool generate_states(Map& map);
+		bool generate_states(MapInstance& map_instance);
 
 		void reset();
 

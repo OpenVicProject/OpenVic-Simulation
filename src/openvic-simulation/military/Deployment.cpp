@@ -126,7 +126,7 @@ bool DeploymentManager::load_oob_file(
 
 			const bool ret = expect_dictionary_keys(
 				"name", ONE_EXACTLY, expect_string(assign_variable_callback(army_name)),
-				"location", ONE_EXACTLY, game_manager.get_map().expect_province_definition_identifier(
+				"location", ONE_EXACTLY, game_manager.get_map_definition().expect_province_definition_identifier(
 					assign_variable_callback_pointer(army_location)
 				),
 				"regiment", ONE_OR_MORE, [&game_manager, &army_regiments](ast::NodeCPtr node) -> bool {
@@ -138,7 +138,7 @@ bool DeploymentManager::load_oob_file(
 						"name", ONE_EXACTLY, expect_string(assign_variable_callback(regiment_name)),
 						"type", ONE_EXACTLY, game_manager.get_military_manager().get_unit_type_manager()
 							.expect_regiment_type_identifier(assign_variable_callback_pointer(regiment_type)),
-						"home", ZERO_OR_ONE, game_manager.get_map()
+						"home", ZERO_OR_ONE, game_manager.get_map_definition()
 							.expect_province_definition_identifier(assign_variable_callback_pointer(regiment_home))
 					)(node);
 
@@ -170,7 +170,7 @@ bool DeploymentManager::load_oob_file(
 
 			const bool ret = expect_dictionary_keys(
 				"name", ONE_EXACTLY, expect_string(assign_variable_callback(navy_name)),
-				"location", ONE_EXACTLY, game_manager.get_map().expect_province_definition_identifier(
+				"location", ONE_EXACTLY, game_manager.get_map_definition().expect_province_definition_identifier(
 					assign_variable_callback_pointer(navy_location)
 				),
 				"ship", ONE_OR_MORE, [&game_manager, &navy_ships](ast::NodeCPtr node) -> bool {

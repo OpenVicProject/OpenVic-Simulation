@@ -368,7 +368,7 @@ bool Dataloader::_load_units(GameManager& game_manager) const {
 		[&game_manager, &unit_type_manager](fs::path const& file) -> bool {
 			return unit_type_manager.load_unit_type_file(
 				game_manager.get_economy_manager().get_good_manager(),
-				game_manager.get_map().get_terrain_type_manager(),
+				game_manager.get_map_definition().get_terrain_type_manager(),
 				game_manager.get_modifier_manager(),
 				parse_defines(file).get_file_node()
 			);
@@ -552,7 +552,7 @@ bool Dataloader::_load_history(GameManager& game_manager, bool unused_history_fi
 	{
 		/* Province History */
 		ProvinceHistoryManager& province_history_manager = game_manager.get_history_manager().get_province_manager();
-		Map const& map = game_manager.get_map();
+		MapDefinition const& map_definition = game_manager.get_map_definition();
 
 		static constexpr std::string_view province_history_directory = "history/provinces";
 		const path_vector_t province_history_files =
@@ -562,13 +562,13 @@ bool Dataloader::_load_history(GameManager& game_manager, bool unused_history_fi
 
 		ret &= apply_to_files(
 			province_history_files,
-			[this, &game_manager, &province_history_manager, &map, unused_history_file_warnings](
+			[this, &game_manager, &province_history_manager, &map_definition, unused_history_file_warnings](
 				fs::path const& file
 			) -> bool {
 				const std::string filename = file.stem().string();
 				const std::string_view province_id = extract_basic_identifier_prefix(filename);
 
-				ProvinceDefinition const* province = map.get_province_definition_by_identifier(province_id);
+				ProvinceDefinition const* province = map_definition.get_province_definition_by_identifier(province_id);
 				if (province == nullptr) {
 					if (unused_history_file_warnings) {
 						Logger::warning("Found history file for non-existent province: ", province_id);
@@ -610,7 +610,7 @@ bool Dataloader::_load_history(GameManager& game_manager, bool unused_history_fi
 			}
 		}
 
-		province_history_manager.lock_province_histories(map, false);
+		province_history_manager.lock_province_histories(map_definition, false);
 	}
 
 	{
@@ -667,7 +667,7 @@ bool Dataloader::_load_events(GameManager& game_manager) {
 
 bool Dataloader::_load_map_dir(GameManager& game_manager) const {
 	static constexpr std::string_view map_directory = "map/";
-	Map& map = game_manager.get_map();
+	MapDefinition& map_definition = game_manager.get_map_definition();
 
 	static constexpr std::string_view defaults_filename = "default.map";
 	static constexpr std::string_view default_definitions = "definition.csv";
@@ -711,7 +711,7 @@ bool Dataloader::_load_map_dir(GameManager& game_manager) const {
 
 	bool ret = expect_dictionary_keys(
 		"max_provinces", ONE_EXACTLY,
-			expect_uint<ProvinceDefinition::index_t>(std::bind_front(&Map::set_max_provinces, &map)),
+			expect_uint<ProvinceDefinition::index_t>(std::bind_front(&MapDefinition::set_max_provinces, &map_definition)),
 		"sea_starts", ONE_EXACTLY,
 			expect_list_reserve_length(
 				water_province_identifiers, expect_identifier(vector_callback(water_province_identifiers))
@@ -733,14 +733,16 @@ bool Dataloader::_load_map_dir(GameManager& game_manager) const {
 		Logger::error("Failed to load map default file!");
 	}
 
-	if (!map.load_province_definitions(parse_csv(lookup_file(append_string_views(map_directory, definitions))).get_lines())) {
+	if (!map_definition.load_province_definitions(
+		parse_csv(lookup_file(append_string_views(map_directory, definitions))).get_lines()
+	)) {
 		Logger::error("Failed to load province definitions file!");
 		ret = false;
 	}
 
 	{
 		std::vector<colour_t> colours;
-		if (!Map::load_region_colours(parse_defines(lookup_file(region_colours)).get_file_node(), colours)) {
+		if (!MapDefinition::load_region_colours(parse_defines(lookup_file(region_colours)).get_file_node(), colours)) {
 			Logger::error("Failed to load region colours file!");
 			ret = false;
 		}
@@ -748,19 +750,19 @@ bool Dataloader::_load_map_dir(GameManager& game_manager) const {
 		using namespace OpenVic::colour_literals;
 		colours.push_back(0xFFFFFF_rgb); /* This ensures there is always at least one region colour. */
 
-		if (!map.load_region_file(
+		if (!map_definition.load_region_file(
 				parse_defines(lookup_file(append_string_views(map_directory, region))).get_file_node(), colours)) {
 			Logger::error("Failed to load region file!");
 			ret = false;
 		}
 	}
 
-	if (!map.set_water_province_list(water_province_identifiers)) {
+	if (!map_definition.set_water_province_list(water_province_identifiers)) {
 		Logger::error("Failed to set water provinces!");
 		ret = false;
 	}
 
-	if (!map.get_terrain_type_manager().load_terrain_types(
+	if (!map_definition.get_terrain_type_manager().load_terrain_types(
 		game_manager.get_modifier_manager(),
 		parse_defines(lookup_file(append_string_views(map_directory, terrain_definition))).get_file_node()
 	)) {
@@ -768,7 +770,7 @@ bool Dataloader::_load_map_dir(GameManager& game_manager) const {
 		ret = false;
 	}
 
-	if (!map.load_map_images(
+	if (!map_definition.load_map_images(
 		lookup_file(append_string_views(map_directory, provinces)),
 		lookup_file(append_string_views(map_directory, terrain)), false
 	)) {
@@ -776,7 +778,7 @@ bool Dataloader::_load_map_dir(GameManager& game_manager) const {
 		ret = false;
 	}
 
-	if (map.generate_and_load_province_adjacencies(
+	if (map_definition.generate_and_load_province_adjacencies(
 		parse_csv(lookup_file(append_string_views(map_directory, adjacencies))).get_lines()
 	)) {
 		Logger::info("Successfully generated and loaded province adjacencies!");
@@ -786,7 +788,7 @@ bool Dataloader::_load_map_dir(GameManager& game_manager) const {
 	}
 
 	/* Must be loaded after adjacencies so we know what provinces are coastal, and so can have a port */
-	if (!map.load_province_positions(
+	if (!map_definition.load_province_positions(
 		game_manager.get_economy_manager().get_building_type_manager(),
 		parse_defines(lookup_file(append_string_views(map_directory, positions))).get_file_node()
 	)) {
@@ -794,7 +796,7 @@ bool Dataloader::_load_map_dir(GameManager& game_manager) const {
 		ret = false;
 	}
 
-	if (!map.load_climate_file(
+	if (!map_definition.load_climate_file(
 		game_manager.get_modifier_manager(),
 		parse_defines(lookup_file(append_string_views(map_directory, climate_file))).get_file_node()
 	)) {
@@ -802,7 +804,7 @@ bool Dataloader::_load_map_dir(GameManager& game_manager) const {
 		ret = false;
 	}
 
-	if (!map.load_continent_file(
+	if (!map_definition.load_continent_file(
 		game_manager.get_modifier_manager(),
 		parse_defines(lookup_file(append_string_views(map_directory, continent))).get_file_node()
 	)) {

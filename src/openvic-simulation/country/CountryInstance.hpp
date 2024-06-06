@@ -59,7 +59,7 @@ namespace OpenVic {
 	struct CountryManager;
 	struct CountryHistoryManager;
 	struct UnitInstanceManager;
-	struct Map;
+	struct MapInstance;
 
 	struct CountryInstanceManager {
 	private:
@@ -69,7 +69,8 @@ namespace OpenVic {
 		bool generate_country_instances(CountryManager const& country_manager);
 
 		bool apply_history_to_countries(
-			CountryHistoryManager const& history_manager, Date date, UnitInstanceManager& unit_instance_manager, Map& map
+			CountryHistoryManager const& history_manager, Date date, UnitInstanceManager& unit_instance_manager,
+			MapInstance& map_instance
 		);
 	};
 }

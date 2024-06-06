@@ -11,7 +11,7 @@
 
 namespace OpenVic {
 
-	struct Map;
+	struct MapDefinition;
 	struct Region;
 	struct TerrainType;
 	struct ProvinceSetModifier;
@@ -25,7 +25,7 @@ namespace OpenVic {
 	 * POP-22
 	 */
 	struct ProvinceDefinition : HasIdentifierAndColour {
-		friend struct Map;
+		friend struct MapDefinition;
 
 		using index_t = uint16_t;
 		using distance_t = fixed_point_t; // should this go inside adjacency_t?
@@ -114,7 +114,9 @@ namespace OpenVic {
 		}
 
 		/* The positions' y coordinates need to be inverted. */
-		bool load_positions(Map const& map, BuildingTypeManager const& building_type_manager, ast::NodeCPtr root);
+		bool load_positions(
+			MapDefinition const& map_definition, BuildingTypeManager const& building_type_manager, ast::NodeCPtr root
+		);
 
 		fvec2_t get_text_position() const;
 		fixed_point_t get_text_rotation() const;

@@ -3,7 +3,10 @@
 #include <cassert>
 
 #include "openvic-simulation/country/Country.hpp"
-#include "openvic-simulation/map/Map.hpp"
+#include "openvic-simulation/map/MapDefinition.hpp"
+#include "openvic-simulation/map/MapInstance.hpp"
+#include "openvic-simulation/map/ProvinceDefinition.hpp"
+#include "openvic-simulation/map/ProvinceInstance.hpp"
 #include "openvic-simulation/utility/Utility.hpp"
 
 using namespace OpenVic;
@@ -16,13 +19,15 @@ Mapmode::Mapmode(
 }
 
 const Mapmode Mapmode::ERROR_MAPMODE {
-	"mapmode_error", 0, [](Map const& map, ProvinceInstance const& province) -> base_stripe_t {
+	"mapmode_error", 0, [](MapInstance const&, ProvinceInstance const& province) -> base_stripe_t {
 		return { 0xFFFF0000_argb, colour_argb_t::null() };
 	}
 };
 
-Mapmode::base_stripe_t Mapmode::get_base_stripe_colours(Map const& map, ProvinceInstance const& province) const {
-	return colour_func ? colour_func(map, province) : colour_argb_t::null();
+Mapmode::base_stripe_t Mapmode::get_base_stripe_colours(
+	MapInstance const& map_instance, ProvinceInstance const& province
+) const {
+	return colour_func ? colour_func(map_instance, province) : colour_argb_t::null();
 }
 
 bool MapmodeManager::add_mapmode(std::string_view identifier, Mapmode::colour_func_t colour_func) {
@@ -37,7 +42,7 @@ bool MapmodeManager::add_mapmode(std::string_view identifier, Mapmode::colour_fu
 	return mapmodes.add_item({ identifier, mapmodes.size(), colour_func });
 }
 
-bool MapmodeManager::generate_mapmode_colours(Map const& map, Mapmode::index_t index, uint8_t* target) const {
+bool MapmodeManager::generate_mapmode_colours(MapInstance const& map_instance, Mapmode::index_t index, uint8_t* target) const {
 	if (target == nullptr) {
 		Logger::error("Mapmode colour target pointer is null!");
 		return false;
@@ -60,12 +65,17 @@ bool MapmodeManager::generate_mapmode_colours(Map const& map, Mapmode::index_t i
 
 	target_stripes[ProvinceDefinition::NULL_INDEX] = colour_argb_t::null();
 
-	if (map.province_instances_are_locked()) {
-		for (ProvinceInstance const& province : map.get_province_instances()) {
-			target_stripes[province.get_province_definition().get_index()] = mapmode->get_base_stripe_colours(map, province);
+	if (map_instance.province_instances_are_locked()) {
+		for (ProvinceInstance const& province : map_instance.get_province_instances()) {
+			target_stripes[province.get_province_definition().get_index()] =
+				mapmode->get_base_stripe_colours(map_instance, province);
 		}
 	} else {
-		for (size_t index = ProvinceDefinition::NULL_INDEX + 1; index <= map.get_province_definition_count(); ++index) {
+		for (
+			size_t index = ProvinceDefinition::NULL_INDEX + 1;
+			index <= map_instance.get_map_definition().get_province_definition_count();
+			++index
+		) {
 			target_stripes[index] = colour_argb_t::null();
 		}
 	}
@@ -83,7 +93,7 @@ static constexpr colour_argb_t DEFAULT_COLOUR_GREY = (0x7F7F7F_argb).with_alpha(
 template<utility::is_derived_from_specialization_of<_HasColour> T, typename P>
 requires(std::same_as<P, ProvinceDefinition> || std::same_as<P, ProvinceInstance>)
 static constexpr auto get_colour_mapmode(T const*(P::*get_item)() const) {
-	return [get_item](Map const& map, ProvinceInstance const& province) -> Mapmode::base_stripe_t {
+	return [get_item](MapInstance const&, ProvinceInstance const& province) -> Mapmode::base_stripe_t {
 		ProvinceDefinition const& province_definition = province.get_province_definition();
 
 		T const* item = ([&province, &province_definition]() -> P const& {
@@ -124,7 +134,7 @@ static constexpr Mapmode::base_stripe_t shaded_mapmode(fixed_point_map_t<T const
 
 template<utility::is_derived_from_specialization_of<_HasColour> T>
 static constexpr auto shaded_mapmode(fixed_point_map_t<T const*> const&(ProvinceInstance::*get_map)() const) {
-	return [get_map](Map const& map, ProvinceInstance const& province) -> Mapmode::base_stripe_t {
+	return [get_map](MapInstance const&, ProvinceInstance const& province) -> Mapmode::base_stripe_t {
 		return shaded_mapmode((province.*get_map)());
 	};
 }
@@ -136,7 +146,7 @@ bool MapmodeManager::setup_mapmodes() {
 	const std::vector<mapmode_t> mapmodes {
 		{
 			"mapmode_terrain",
-			[](Map const&, ProvinceInstance const& province) -> Mapmode::base_stripe_t {
+			[](MapInstance const&, ProvinceInstance const& province) -> Mapmode::base_stripe_t {
 				return colour_argb_t::null();
 			}
 		},
@@ -146,7 +156,7 @@ bool MapmodeManager::setup_mapmodes() {
 		{
 			/* TEST MAPMODE, TO BE REMOVED */
 			"mapmode_province",
-			[](Map const&, ProvinceInstance const& province) -> Mapmode::base_stripe_t {
+			[](MapInstance const&, ProvinceInstance const& province) -> Mapmode::base_stripe_t {
 				return colour_argb_t { province.get_province_definition().get_colour(), ALPHA_VALUE };
 			}
 		},
@@ -156,9 +166,10 @@ bool MapmodeManager::setup_mapmodes() {
 		{
 			/* TEST MAPMODE, TO BE REMOVED */
 			"mapmode_index",
-			[](Map const& map, ProvinceInstance const& province) -> Mapmode::base_stripe_t {
+			[](MapInstance const& map_instance, ProvinceInstance const& province) -> Mapmode::base_stripe_t {
 				const colour_argb_t::value_type f = colour_argb_t::colour_traits::component_from_fraction(
-					province.get_province_definition().get_index(), map.get_province_definition_count() + 1
+					province.get_province_definition().get_index(),
+					map_instance.get_map_definition().get_province_definition_count() + 1
 				);
 				return colour_argb_t::fill_as(f).with_alpha(ALPHA_VALUE);
 			}
@@ -172,7 +183,7 @@ bool MapmodeManager::setup_mapmodes() {
 		},
 		{
 			"mapmode_infrastructure",
-			[](Map const& map, ProvinceInstance const& province) -> Mapmode::base_stripe_t {
+			[](MapInstance const&, ProvinceInstance const& province) -> Mapmode::base_stripe_t {
 				BuildingInstance const* railroad = province.get_building_by_identifier("railroad");
 				if (railroad != nullptr) {
 					const colour_argb_t::value_type val = colour_argb_t::colour_traits::component_from_fraction(
@@ -192,13 +203,13 @@ bool MapmodeManager::setup_mapmodes() {
 		},
 		{
 			"mapmode_population",
-			[](Map const& map, ProvinceInstance const& province) -> Mapmode::base_stripe_t {
+			[](MapInstance const& map_instance, ProvinceInstance const& province) -> Mapmode::base_stripe_t {
 				// TODO - explore non-linear scaling to have more variation among non-massive provinces
 				// TODO - when selecting a province, only show the population of provinces controlled (or owned?)
 				// by the same country, relative to the most populous province in that set of provinces
 				if (!province.get_province_definition().is_water()) {
 					const colour_argb_t::value_type val = colour_argb_t::colour_traits::component_from_fraction(
-						province.get_total_population(), map.get_highest_province_population() + 1, 0.1f, 1.0f
+						province.get_total_population(), map_instance.get_highest_province_population() + 1, 0.1f, 1.0f
 					);
 					return colour_argb_t { 0, val, 0, ALPHA_VALUE };
 				} else {
@@ -215,8 +226,9 @@ bool MapmodeManager::setup_mapmodes() {
 		},
 		{
 			/* TEST MAPMODE, TO BE REMOVED */
-			"mapmode_adjacencies", [](Map const& map, ProvinceInstance const& province) -> Mapmode::base_stripe_t {
-				ProvinceInstance const* selected_province = map.get_selected_province();
+			"mapmode_adjacencies",
+			[](MapInstance const& map_instance, ProvinceInstance const& province) -> Mapmode::base_stripe_t {
+				ProvinceInstance const* selected_province = map_instance.get_selected_province();
 
 				if (selected_province != nullptr) {
 					ProvinceDefinition const& selected_province_definition = selected_province->get_province_definition();
@@ -258,7 +270,7 @@ bool MapmodeManager::setup_mapmodes() {
 			}
 		},
 		{
-			"mapmode_port", [](Map const& map, ProvinceInstance const& province) -> Mapmode::base_stripe_t {
+			"mapmode_port", [](MapInstance const&, ProvinceInstance const& province) -> Mapmode::base_stripe_t {
 				ProvinceDefinition const& province_definition = province.get_province_definition();
 
 				if (province_definition.has_port()) {
