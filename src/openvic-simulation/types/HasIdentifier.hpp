@@ -33,9 +33,9 @@ namespace OpenVic {
 		HasIdentifier(std::string_view new_identifier): identifier { new_identifier } {
 			assert(!identifier.empty());
 		}
+		HasIdentifier(HasIdentifier const&) = default;
 
 	public:
-		HasIdentifier(HasIdentifier const&) = delete;
 		HasIdentifier(HasIdentifier&&) = default;
 		HasIdentifier& operator=(HasIdentifier const&) = delete;
 		HasIdentifier& operator=(HasIdentifier&&) = delete;
@@ -59,9 +59,9 @@ namespace OpenVic {
 		_HasColour(ColourT new_colour, bool cannot_be_null): colour { new_colour } {
 			assert(!cannot_be_null || !colour.is_null());
 		}
+		_HasColour(_HasColour const&) = default;
 
 	public:
-		_HasColour(_HasColour const&) = delete;
 		_HasColour(_HasColour&&) = default;
 		_HasColour& operator=(_HasColour const&) = delete;
 		_HasColour& operator=(_HasColour&&) = delete;
@@ -75,9 +75,9 @@ namespace OpenVic {
 	protected:
 		_HasIdentifierAndColour(std::string_view new_identifier, ColourT new_colour, bool cannot_be_null)
 			: HasIdentifier { new_identifier }, _HasColour<ColourT> { new_colour, cannot_be_null } {}
+		_HasIdentifierAndColour(_HasIdentifierAndColour const&) = default;
 
 	public:
-		_HasIdentifierAndColour(_HasIdentifierAndColour const&) = delete;
 		_HasIdentifierAndColour(_HasIdentifierAndColour&&) = default;
 		_HasIdentifierAndColour& operator=(_HasIdentifierAndColour const&) = delete;
 		_HasIdentifierAndColour& operator=(_HasIdentifierAndColour&&) = delete;

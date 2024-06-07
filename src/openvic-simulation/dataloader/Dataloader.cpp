@@ -317,7 +317,7 @@ bool Dataloader::_load_interface_files(UIManager& ui_manager) const {
 
 bool Dataloader::_load_pop_types(GameManager& game_manager) {
 	PopManager& pop_manager = game_manager.get_pop_manager();
-	GoodManager const& good_manager = game_manager.get_economy_manager().get_good_manager();
+	GoodDefinitionManager const& good_definition_manager = game_manager.get_economy_manager().get_good_definition_manager();
 	IdeologyManager const& ideology_manager = game_manager.get_politics_manager().get_ideology_manager();
 
 	static constexpr std::string_view pop_type_directory = "poptypes";
@@ -328,9 +328,9 @@ bool Dataloader::_load_pop_types(GameManager& game_manager) {
 
 	bool ret = apply_to_files(
 		pop_type_files,
-		[this, &pop_manager, &good_manager, &ideology_manager](fs::path const& file) -> bool {
+		[this, &pop_manager, &good_definition_manager, &ideology_manager](fs::path const& file) -> bool {
 			return pop_manager.load_pop_type_file(
-				file.stem().string(), good_manager, ideology_manager, parse_defines_cached(file).get_file_node()
+				file.stem().string(), good_definition_manager, ideology_manager, parse_defines_cached(file).get_file_node()
 			);
 		}
 	);
@@ -367,7 +367,7 @@ bool Dataloader::_load_units(GameManager& game_manager) const {
 		unit_files,
 		[&game_manager, &unit_type_manager](fs::path const& file) -> bool {
 			return unit_type_manager.load_unit_type_file(
-				game_manager.get_economy_manager().get_good_manager(),
+				game_manager.get_economy_manager().get_good_definition_manager(),
 				game_manager.get_map_definition().get_terrain_type_manager(),
 				game_manager.get_modifier_manager(),
 				parse_defines(file).get_file_node()
@@ -388,11 +388,11 @@ bool Dataloader::_load_units(GameManager& game_manager) const {
 bool Dataloader::_load_goods(GameManager& game_manager) const {
 	static constexpr std::string_view goods_file = "common/goods.txt";
 
-	GoodManager& good_manager = game_manager.get_economy_manager().get_good_manager();
+	GoodDefinitionManager& good_definition_manager = game_manager.get_economy_manager().get_good_definition_manager();
 
-	bool ret = good_manager.load_goods_file(parse_defines(lookup_file(goods_file)).get_file_node());
+	bool ret = good_definition_manager.load_goods_file(parse_defines(lookup_file(goods_file)).get_file_node());
 
-	if (!good_manager.generate_modifiers(game_manager.get_modifier_manager())) {
+	if (!good_definition_manager.generate_modifiers(game_manager.get_modifier_manager())) {
 		Logger::error("Failed to generate good-based modifiers!");
 		ret = false;
 	}
@@ -943,7 +943,7 @@ bool Dataloader::load_defines(GameManager& game_manager) {
 		ret = false;
 	}
 	if (!game_manager.get_politics_manager().load_national_foci_file(
-		game_manager.get_pop_manager(), game_manager.get_economy_manager().get_good_manager(),
+		game_manager.get_pop_manager(), game_manager.get_economy_manager().get_good_definition_manager(),
 		game_manager.get_modifier_manager(), parse_defines_cached(lookup_file(national_foci_file)).get_file_node()
 	)) {
 		Logger::error("Failed to load national foci!");

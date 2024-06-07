@@ -44,8 +44,8 @@ bool GameManager::reset() {
 	session_start = time(nullptr);
 	simulation_clock.reset();
 	today = {};
-	economy_manager.get_good_manager().reset_to_defaults();
-	bool ret = map_instance.reset(economy_manager.get_building_type_manager());
+	bool ret = economy_manager.setup_good_instances();
+	ret &= map_instance.reset(economy_manager.get_building_type_manager());
 	set_gamestate_needs_update();
 	return ret;
 }

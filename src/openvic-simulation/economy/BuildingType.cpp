@@ -5,18 +5,33 @@ using namespace OpenVic::NodeTools;
 
 BuildingType::BuildingType(
 	std::string_view identifier, building_type_args_t& building_type_args
-) : HasIdentifier { identifier }, type { building_type_args.type }, modifier { std::move(building_type_args.modifier) },
-	on_completion { building_type_args.on_completion }, completion_size { building_type_args.completion_size },
-	max_level { building_type_args.max_level }, goods_cost { std::move(building_type_args.goods_cost) },
-	cost { building_type_args.cost }, build_time { building_type_args.build_time }, on_map { building_type_args.on_map },
-	default_enabled { building_type_args.default_enabled }, production_type { building_type_args.production_type },
-	pop_build_factory { building_type_args.pop_build_factory }, strategic_factory { building_type_args.strategic_factory },
-	advanced_factory { building_type_args.advanced_factory }, fort_level { building_type_args.fort_level },
-	naval_capacity { building_type_args.naval_capacity }, colonial_points { std::move(building_type_args.colonial_points) },
-	in_province { building_type_args.in_province }, one_per_state { building_type_args.one_per_state },
-	colonial_range { building_type_args.colonial_range }, infrastructure { building_type_args.infrastructure },
-	spawn_railway_track { building_type_args.spawn_railway_track }, sail { building_type_args.sail },
-	steam { building_type_args.steam }, capital { building_type_args.capital }, port { building_type_args.port } {}
+) : HasIdentifier { identifier },
+	type { building_type_args.type },
+	modifier { std::move(building_type_args.modifier) },
+	on_completion { building_type_args.on_completion },
+	completion_size { building_type_args.completion_size },
+	max_level { building_type_args.max_level },
+	goods_cost { std::move(building_type_args.goods_cost) },
+	cost { building_type_args.cost },
+	build_time { building_type_args.build_time },
+	on_map { building_type_args.on_map },
+	default_enabled { building_type_args.default_enabled },
+	production_type { building_type_args.production_type },
+	pop_build_factory { building_type_args.pop_build_factory },
+	strategic_factory { building_type_args.strategic_factory },
+	advanced_factory { building_type_args.advanced_factory },
+	fort_level { building_type_args.fort_level },
+	naval_capacity { building_type_args.naval_capacity },
+	colonial_points { std::move(building_type_args.colonial_points) },
+	in_province { building_type_args.in_province },
+	one_per_state { building_type_args.one_per_state },
+	colonial_range { building_type_args.colonial_range },
+	infrastructure { building_type_args.infrastructure },
+	spawn_railway_track { building_type_args.spawn_railway_track },
+	sail { building_type_args.sail },
+	steam { building_type_args.steam },
+	capital { building_type_args.capital },
+	port { building_type_args.port } {}
 
 BuildingTypeManager::BuildingTypeManager() : port_building_type { nullptr } {}
 
@@ -38,12 +53,13 @@ bool BuildingTypeManager::add_building_type(
 }
 
 bool BuildingTypeManager::load_buildings_file(
-	GoodManager const& good_manager, ProductionTypeManager const& production_type_manager, ModifierManager& modifier_manager,
-	ast::NodeCPtr root
+	GoodDefinitionManager const& good_definition_manager, ProductionTypeManager const& production_type_manager,
+	ModifierManager& modifier_manager, ast::NodeCPtr root
 ) {
 	bool ret = expect_dictionary_reserve_length(
-		building_types,
-		[this, &good_manager, &production_type_manager, &modifier_manager](std::string_view key, ast::NodeCPtr value) -> bool {
+		building_types, [this, &good_definition_manager, &production_type_manager, &modifier_manager](
+			std::string_view key, ast::NodeCPtr value
+		) -> bool {
 			BuildingType::building_type_args_t building_type_args {};
 
 			bool ret = modifier_manager.expect_modifier_value_and_keys(move_variable_callback(building_type_args.modifier),
@@ -52,8 +68,9 @@ bool BuildingTypeManager::load_buildings_file(
 				"completion_size", ZERO_OR_ONE,
 					expect_fixed_point(assign_variable_callback(building_type_args.completion_size)),
 				"max_level", ONE_EXACTLY, expect_uint(assign_variable_callback(building_type_args.max_level)),
-				"goods_cost", ONE_EXACTLY,
-					good_manager.expect_good_decimal_map(move_variable_callback(building_type_args.goods_cost)),
+				"goods_cost", ONE_EXACTLY, good_definition_manager.expect_good_definition_decimal_map(
+					move_variable_callback(building_type_args.goods_cost)
+				),
 				"cost", ZERO_OR_MORE, expect_fixed_point(assign_variable_callback(building_type_args.cost)),
 				"time", ONE_EXACTLY, expect_days(assign_variable_callback(building_type_args.build_time)),
 				"visibility", ONE_EXACTLY, expect_bool([key](bool visibility) -> bool {

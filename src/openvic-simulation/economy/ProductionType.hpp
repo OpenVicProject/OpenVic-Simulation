@@ -1,6 +1,6 @@
 #pragma once
 
-#include "openvic-simulation/economy/Good.hpp"
+#include "openvic-simulation/economy/GoodDefinition.hpp"
 #include "openvic-simulation/pop/Pop.hpp"
 #include "openvic-simulation/scripts/ConditionScript.hpp"
 #include "openvic-simulation/types/IdentifierRegistry.hpp"
@@ -44,12 +44,12 @@ namespace OpenVic {
 		const template_type_t PROPERTY(template_type);
 		const Pop::pop_size_t PROPERTY(base_workforce_size);
 
-		Good::good_map_t PROPERTY(input_goods);
-		Good const* PROPERTY(output_goods);
+		GoodDefinition::good_definition_map_t PROPERTY(input_goods);
+		GoodDefinition const* PROPERTY(output_goods);
 		const fixed_point_t PROPERTY(base_output_quantity);
 		std::vector<bonus_t> PROPERTY(bonuses);
 
-		Good::good_map_t PROPERTY(maintenance_requirements);
+		GoodDefinition::good_definition_map_t PROPERTY(maintenance_requirements);
 		const bool PROPERTY_CUSTOM_PREFIX(coastal, is);
 
 		const bool PROPERTY_CUSTOM_PREFIX(farm, is);
@@ -61,11 +61,11 @@ namespace OpenVic {
 			std::vector<Job>&& new_jobs,
 			template_type_t new_template_type,
 			Pop::pop_size_t new_base_workforce_size,
-			Good::good_map_t&& new_input_goods,
-			Good const* new_output_goods,
+			GoodDefinition::good_definition_map_t&& new_input_goods,
+			GoodDefinition const* new_output_goods,
 			fixed_point_t new_base_output_quantity,
 			std::vector<bonus_t>&& new_bonuses,
-			Good::good_map_t&& new_maintenance_requirements,
+			GoodDefinition::good_definition_map_t&& new_maintenance_requirements,
 			bool new_is_coastal,
 			bool new_is_farm,
 			bool new_is_mine
@@ -83,10 +83,12 @@ namespace OpenVic {
 		PopType::sprite_t PROPERTY(rgo_owner_sprite);
 
 		NodeTools::node_callback_t _expect_job(
-			GoodManager const& good_manager, PopManager const& pop_manager, NodeTools::callback_t<Job&&> callback
+			GoodDefinitionManager const& good_definition_manager, PopManager const& pop_manager,
+			NodeTools::callback_t<Job&&> callback
 		);
 		NodeTools::node_callback_t _expect_job_list(
-			GoodManager const& good_manager, PopManager const& pop_manager, NodeTools::callback_t<std::vector<Job>&&> callback
+			GoodDefinitionManager const& good_definition_manager, PopManager const& pop_manager,
+			NodeTools::callback_t<std::vector<Job>&&> callback
 		);
 
 	public:
@@ -98,17 +100,19 @@ namespace OpenVic {
 			std::vector<Job>&& employees,
 			ProductionType::template_type_t template_type,
 			Pop::pop_size_t workforce,
-			Good::good_map_t&& input_goods,
-			Good const* output_goods,
+			GoodDefinition::good_definition_map_t&& input_goods,
+			GoodDefinition const* output_goods,
 			fixed_point_t value,
 			std::vector<ProductionType::bonus_t>&& bonuses,
-			Good::good_map_t&& maintenance_requirements,
+			GoodDefinition::good_definition_map_t&& maintenance_requirements,
 			bool coastal,
 			bool farm,
 			bool mine
 		);
 
-		bool load_production_types_file(GoodManager const& good_manager, PopManager const& pop_manager, ast::NodeCPtr root);
+		bool load_production_types_file(
+			GoodDefinitionManager const& good_definition_manager, PopManager const& pop_manager, ast::NodeCPtr root
+		);
 
 		bool parse_scripts(GameManager const& game_manager);
 	};

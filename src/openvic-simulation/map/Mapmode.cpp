@@ -142,8 +142,8 @@ static constexpr auto shaded_mapmode(fixed_point_map_t<T const*> const&(Province
 bool MapmodeManager::setup_mapmodes() {
 	bool ret = true;
 
-	using mapmode_t = std::pair<std::string, Mapmode::colour_func_t>;
-	const std::vector<mapmode_t> mapmodes {
+	using mapmode_definition_t = std::pair<std::string, Mapmode::colour_func_t>;
+	const std::vector<mapmode_definition_t> mapmode_definitions {
 		{
 			"mapmode_terrain",
 			[](MapInstance const&, ProvinceInstance const& province) -> Mapmode::base_stripe_t {
@@ -284,9 +284,13 @@ bool MapmodeManager::setup_mapmodes() {
 		}
 	};
 
-	for (mapmode_t const& mapmode : mapmodes) {
+	mapmodes.reset();
+	reserve_mapmodes(mapmode_definitions.size());
+
+	for (mapmode_definition_t const& mapmode : mapmode_definitions) {
 		ret &= add_mapmode(mapmode.first, mapmode.second);
 	}
+
 	lock_mapmodes();
 
 	return ret;

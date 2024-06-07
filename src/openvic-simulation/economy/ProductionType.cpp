@@ -4,9 +4,13 @@ using namespace OpenVic;
 using namespace OpenVic::NodeTools;
 
 Job::Job(
-	PopType const* new_pop_type, effect_t new_effect_type, fixed_point_t new_effect_multiplier,
+	PopType const* new_pop_type,
+	effect_t new_effect_type,
+	fixed_point_t new_effect_multiplier,
 	fixed_point_t new_desired_workforce_share
-) : pop_type { new_pop_type }, effect_type { new_effect_type }, effect_multiplier { new_effect_multiplier },
+) : pop_type { new_pop_type },
+	effect_type { new_effect_type },
+	effect_multiplier { new_effect_multiplier },
 	desired_workforce_share { new_desired_workforce_share } {}
 
 ProductionType::ProductionType(
@@ -15,18 +19,26 @@ ProductionType::ProductionType(
 	std::vector<Job>&& new_jobs,
 	template_type_t new_template_type,
 	Pop::pop_size_t new_base_workforce_size,
-	Good::good_map_t&& new_input_goods,
-	Good const* new_output_goods,
+	GoodDefinition::good_definition_map_t&& new_input_goods,
+	GoodDefinition const* new_output_goods,
 	fixed_point_t new_base_output_quantity,
 	std::vector<bonus_t>&& new_bonuses,
-	Good::good_map_t&& new_maintenance_requirements,
+	GoodDefinition::good_definition_map_t&& new_maintenance_requirements,
 	bool new_is_coastal,
 	bool new_is_farm,
 	bool new_is_mine
-) : HasIdentifier { new_identifier }, owner { new_owner }, jobs { std::move(new_jobs) }, template_type { new_template_type },
-	base_workforce_size { new_base_workforce_size }, input_goods { std::move(new_input_goods) },
-	output_goods { new_output_goods }, base_output_quantity { new_base_output_quantity }, bonuses { std::move(new_bonuses) },
-	maintenance_requirements { std::move(new_maintenance_requirements) }, coastal { new_is_coastal }, farm { new_is_farm },
+) : HasIdentifier { new_identifier },
+	owner { new_owner },
+	jobs { std::move(new_jobs) },
+	template_type { new_template_type },
+	base_workforce_size { new_base_workforce_size },
+	input_goods { std::move(new_input_goods) },
+	output_goods { new_output_goods },
+	base_output_quantity { new_base_output_quantity },
+	bonuses { std::move(new_bonuses) },
+	maintenance_requirements { std::move(new_maintenance_requirements) },
+	coastal { new_is_coastal },
+	farm { new_is_farm },
 	mine { new_is_mine } {}
 
 bool ProductionType::parse_scripts(GameManager const& game_manager) {
@@ -40,9 +52,9 @@ bool ProductionType::parse_scripts(GameManager const& game_manager) {
 ProductionTypeManager::ProductionTypeManager() : rgo_owner_sprite { 0 } {}
 
 node_callback_t ProductionTypeManager::_expect_job(
-	GoodManager const& good_manager, PopManager const& pop_manager, callback_t<Job&&> callback
+	GoodDefinitionManager const& good_definition_manager, PopManager const& pop_manager, callback_t<Job&&> callback
 ) {
-	return [this, &good_manager, &pop_manager, callback](ast::NodeCPtr node) -> bool {
+	return [this, &good_definition_manager, &pop_manager, callback](ast::NodeCPtr node) -> bool {
 		using enum Job::effect_t;
 
 		std::string_view pop_type {};
@@ -66,11 +78,12 @@ node_callback_t ProductionTypeManager::_expect_job(
 }
 
 node_callback_t ProductionTypeManager::_expect_job_list(
-	GoodManager const& good_manager, PopManager const& pop_manager, callback_t<std::vector<Job>&&> callback
+	GoodDefinitionManager const& good_definition_manager, PopManager const& pop_manager,
+	callback_t<std::vector<Job>&&> callback
 ) {
-	return [this, &good_manager, &pop_manager, callback](ast::NodeCPtr node) -> bool {
+	return [this, &good_definition_manager, &pop_manager, callback](ast::NodeCPtr node) -> bool {
 		std::vector<Job> jobs;
-		bool ret = expect_list(_expect_job(good_manager, pop_manager, vector_callback(jobs)))(node);
+		bool ret = expect_list(_expect_job(good_definition_manager, pop_manager, vector_callback(jobs)))(node);
 		ret &= callback(std::move(jobs));
 		return ret;
 	};
@@ -82,11 +95,11 @@ bool ProductionTypeManager::add_production_type(
 	std::vector<Job>&& jobs,
 	ProductionType::template_type_t template_type,
 	Pop::pop_size_t base_workforce_size,
-	Good::good_map_t&& input_goods,
-	Good const* output_goods,
+	GoodDefinition::good_definition_map_t&& input_goods,
+	GoodDefinition const* output_goods,
 	fixed_point_t base_output_quantity,
 	std::vector<ProductionType::bonus_t>&& bonuses,
-	Good::good_map_t&& maintenance_requirements,
+	GoodDefinition::good_definition_map_t&& maintenance_requirements,
 	bool is_coastal,
 	bool is_farm,
 	bool is_mine
@@ -163,7 +176,7 @@ bool ProductionTypeManager::add_production_type(
 }
 
 bool ProductionTypeManager::load_production_types_file(
-	GoodManager const& good_manager, PopManager const& pop_manager, ast::NodeCPtr root
+	GoodDefinitionManager const& good_definition_manager, PopManager const& pop_manager, ast::NodeCPtr root
 ) {
 	size_t expected_types = 0;
 
@@ -206,7 +219,7 @@ bool ProductionTypeManager::load_production_types_file(
 	/* Pass #3: actually load production types */
 	reserve_more_production_types(expected_types);
 	ret &= expect_dictionary(
-		[this, &good_manager, &pop_manager, &template_target_map, &template_node_map](
+		[this, &good_definition_manager, &pop_manager, &template_target_map, &template_node_map](
 			std::string_view key, ast::NodeCPtr node) -> bool {
 			using enum ProductionType::template_type_t;
 
@@ -217,9 +230,9 @@ bool ProductionTypeManager::load_production_types_file(
 			std::optional<Job> owner;
 			std::vector<Job> jobs;
 			ProductionType::template_type_t template_type { FACTORY };
-			Good const* output_goods = nullptr;
+			GoodDefinition const* output_goods = nullptr;
 			Pop::pop_size_t base_workforce_size = 0;
-			Good::good_map_t input_goods, maintenance_requirements;
+			GoodDefinition::good_definition_map_t input_goods, maintenance_requirements;
 			fixed_point_t base_output_quantity = 0;
 			std::vector<ProductionType::bonus_t> bonuses;
 			bool is_coastal = false, is_farm = false, is_mine = false;
@@ -242,14 +255,19 @@ bool ProductionTypeManager::load_production_types_file(
 					bonuses.emplace_back(std::move(trigger), bonus_value);
 					return ret;
 				},
-				"owner", ZERO_OR_ONE, _expect_job(good_manager, pop_manager, move_variable_callback(owner)),
-				"employees", ZERO_OR_ONE, _expect_job_list(good_manager, pop_manager, move_variable_callback(jobs)),
-				"type", ZERO_OR_ONE, expect_identifier(expect_mapped_string(template_type_map, assign_variable_callback(template_type))),
+				"owner", ZERO_OR_ONE, _expect_job(good_definition_manager, pop_manager, move_variable_callback(owner)),
+				"employees", ZERO_OR_ONE, _expect_job_list(good_definition_manager, pop_manager, move_variable_callback(jobs)),
+				"type", ZERO_OR_ONE,
+					expect_identifier(expect_mapped_string(template_type_map, assign_variable_callback(template_type))),
 				"workforce", ZERO_OR_ONE, expect_uint(assign_variable_callback(base_workforce_size)),
-				"input_goods", ZERO_OR_ONE, good_manager.expect_good_decimal_map(move_variable_callback(input_goods)),
-				"output_goods", ZERO_OR_ONE, good_manager.expect_good_identifier(assign_variable_callback_pointer(output_goods)),
+				"input_goods", ZERO_OR_ONE,
+					good_definition_manager.expect_good_definition_decimal_map(move_variable_callback(input_goods)),
+				"output_goods", ZERO_OR_ONE,
+					good_definition_manager.expect_good_definition_identifier(assign_variable_callback_pointer(output_goods)),
 				"value", ZERO_OR_ONE, expect_fixed_point(assign_variable_callback(base_output_quantity)),
-				"efficiency", ZERO_OR_ONE, good_manager.expect_good_decimal_map(move_variable_callback(maintenance_requirements)),
+				"efficiency", ZERO_OR_ONE, good_definition_manager.expect_good_definition_decimal_map(
+					move_variable_callback(maintenance_requirements)
+				),
 				"is_coastal", ZERO_OR_ONE, expect_bool(assign_variable_callback(is_coastal)),
 				"farm", ZERO_OR_ONE, expect_bool(assign_variable_callback(is_farm)),
 				"mine", ZERO_OR_ONE, expect_bool(assign_variable_callback(is_mine))

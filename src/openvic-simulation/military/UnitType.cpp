@@ -146,10 +146,10 @@ bool UnitTypeManager::add_ship_type(
 }
 
 bool UnitTypeManager::load_unit_type_file(
-	GoodManager const& good_manager, TerrainTypeManager const& terrain_type_manager, ModifierManager const& modifier_manager,
-	ast::NodeCPtr root
+	GoodDefinitionManager const& good_definition_manager, TerrainTypeManager const& terrain_type_manager,
+	ModifierManager const& modifier_manager, ast::NodeCPtr root
 ) {
-	return expect_dictionary([this, &good_manager, &terrain_type_manager, &modifier_manager](
+	return expect_dictionary([this, &good_definition_manager, &terrain_type_manager, &modifier_manager](
 		std::string_view key, ast::NodeCPtr value
 	) -> bool {
 
@@ -194,9 +194,11 @@ bool UnitTypeManager::load_unit_type_file(
 			"move_sound", ZERO_OR_ONE, expect_identifier(assign_variable_callback(unit_args.move_sound)),
 			"select_sound", ZERO_OR_ONE, expect_identifier(assign_variable_callback(unit_args.select_sound)),
 			"build_time", ONE_EXACTLY, expect_days(assign_variable_callback(unit_args.build_time)),
-			"build_cost", ONE_EXACTLY, good_manager.expect_good_decimal_map(move_variable_callback(unit_args.build_cost)),
+			"build_cost", ONE_EXACTLY,
+				good_definition_manager.expect_good_definition_decimal_map(move_variable_callback(unit_args.build_cost)),
 			"supply_consumption", ONE_EXACTLY, expect_fixed_point(assign_variable_callback(unit_args.supply_consumption)),
-			"supply_cost", ONE_EXACTLY, good_manager.expect_good_decimal_map(move_variable_callback(unit_args.supply_cost))
+			"supply_cost", ONE_EXACTLY,
+				good_definition_manager.expect_good_definition_decimal_map(move_variable_callback(unit_args.supply_cost))
 		);
 
 		const auto add_terrain_modifier = [&unit_args, &terrain_type_manager, &modifier_manager](

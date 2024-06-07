@@ -3,8 +3,13 @@
 using namespace OpenVic;
 
 BuildingInstance::BuildingInstance(BuildingType const& new_building_type, level_t new_level)
-	: HasIdentifier { new_building_type.get_identifier() }, building_type { new_building_type }, level { new_level },
-	expansion_state { ExpansionState::CannotExpand }, start_date {}, end_date {}, expansion_progress { 0.0f } {}
+  : HasIdentifier { new_building_type },
+	building_type { new_building_type },
+	level { new_level },
+	expansion_state { ExpansionState::CannotExpand },
+	start_date {},
+	end_date {},
+	expansion_progress { 0.0f } {}
 
 bool BuildingInstance::_can_expand() const {
 	return level < building_type.get_max_level();
