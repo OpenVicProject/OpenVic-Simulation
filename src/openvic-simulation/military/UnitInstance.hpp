@@ -186,7 +186,7 @@ namespace OpenVic {
 
 	struct RegimentDeployment;
 	struct ShipDeployment;
-	struct Map;
+	struct MapInstance;
 	struct ArmyDeployment;
 	struct NavyDeployment;
 	struct Deployment;
@@ -201,10 +201,10 @@ namespace OpenVic {
 
 		bool generate_regiment(RegimentDeployment const& regiment_deployment, RegimentInstance*& regiment);
 		bool generate_ship(ShipDeployment const& ship_deployment, ShipInstance*& ship);
-		bool generate_army(Map& map, CountryInstance& country, ArmyDeployment const& army_deployment);
-		bool generate_navy(Map& map, CountryInstance& country, NavyDeployment const& navy_deployment);
+		bool generate_army(MapInstance& map_instance, CountryInstance& country, ArmyDeployment const& army_deployment);
+		bool generate_navy(MapInstance& map_instance, CountryInstance& country, NavyDeployment const& navy_deployment);
 
 	public:
-		bool generate_deployment(Map& map, CountryInstance& country, Deployment const* deployment);
+		bool generate_deployment(MapInstance& map_instance, CountryInstance& country, Deployment const* deployment);
 	};
 }

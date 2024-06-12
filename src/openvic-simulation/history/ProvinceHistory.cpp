@@ -22,7 +22,7 @@ bool ProvinceHistoryMap::_load_history_entry(
 	CountryManager const& country_manager = game_manager.get_country_manager();
 	GoodManager const& good_manager = game_manager.get_economy_manager().get_good_manager();
 	IdeologyManager const& ideology_manager = game_manager.get_politics_manager().get_ideology_manager();
-	TerrainTypeManager const& terrain_type_manager = game_manager.get_map().get_terrain_type_manager();
+	TerrainTypeManager const& terrain_type_manager = game_manager.get_map_definition().get_terrain_type_manager();
 
 	using enum ProvinceInstance::colony_status_t;
 	static const string_map_t<ProvinceInstance::colony_status_t> colony_status_map {
@@ -120,8 +120,8 @@ void ProvinceHistoryManager::reserve_more_province_histories(size_t size) {
 	}
 }
 
-void ProvinceHistoryManager::lock_province_histories(Map const& map, bool detailed_errors) {
-	std::vector<ProvinceDefinition> const& provinces = map.get_province_definitions();
+void ProvinceHistoryManager::lock_province_histories(MapDefinition const& map_definition, bool detailed_errors) {
+	std::vector<ProvinceDefinition> const& provinces = map_definition.get_province_definitions();
 
 	std::vector<bool> province_checklist(provinces.size());
 	for (decltype(province_histories)::value_type const& entry : province_histories) {
@@ -231,7 +231,7 @@ bool ProvinceHistoryManager::load_pop_history_file(
 		Logger::error("Attempted to load pop history file after province history registry was locked!");
 		return false;
 	}
-	return game_manager.get_map().expect_province_definition_dictionary(
+	return game_manager.get_map_definition().expect_province_definition_dictionary(
 		[this, &game_manager, date, non_integer_size](ProvinceDefinition const& province, ast::NodeCPtr node) -> bool {
 			ProvinceHistoryMap* province_history = _get_or_make_province_history(province);
 			if (province_history != nullptr) {

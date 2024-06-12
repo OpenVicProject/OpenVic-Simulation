@@ -2,7 +2,7 @@
 
 #include "openvic-simulation/dataloader/NodeTools.hpp"
 #include "openvic-simulation/economy/BuildingType.hpp"
-#include "openvic-simulation/map/Map.hpp"
+#include "openvic-simulation/map/MapDefinition.hpp"
 
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;
@@ -26,8 +26,10 @@ std::string ProvinceDefinition::to_string() const {
 	return stream.str();
 }
 
-bool ProvinceDefinition::load_positions(Map const& map, BuildingTypeManager const& building_type_manager, ast::NodeCPtr root) {
-	const fixed_point_t map_height = map.get_height();
+bool ProvinceDefinition::load_positions(
+	MapDefinition const& map_definition, BuildingTypeManager const& building_type_manager, ast::NodeCPtr root
+) {
+	const fixed_point_t map_height = map_definition.get_height();
 
 	const bool ret = expect_dictionary_keys(
 		"text_position", ZERO_OR_ONE,
@@ -70,7 +72,7 @@ bool ProvinceDefinition::load_positions(Map const& map, BuildingTypeManager cons
 			const fvec2_t port_dir { -rotation.cos(), rotation.sin() };
 			const ivec2_t port_facing_position = static_cast<ivec2_t>(*port_position + port_dir / 4);
 
-			ProvinceDefinition const* province = map.get_province_definition_at(port_facing_position);
+			ProvinceDefinition const* province = map_definition.get_province_definition_at(port_facing_position);
 
 			if (province != nullptr) {
 				if (province->is_water() && is_adjacent_to(province)) {

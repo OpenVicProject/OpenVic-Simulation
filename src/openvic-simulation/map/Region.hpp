@@ -46,7 +46,7 @@ namespace OpenVic {
 	};
 
 	struct ProvinceSetModifier : Modifier, ProvinceSet {
-		friend struct Map;
+		friend struct MapDefinition;
 	private:
 		ProvinceSetModifier(std::string_view new_identifier, ModifierValue&& new_values);
 	public:
@@ -57,7 +57,7 @@ namespace OpenVic {
 	 * MAP-6, MAP-44, MAP-48
 	 */
 	struct Region : HasIdentifierAndColour, ProvinceSet {
-		friend struct Map;
+		friend struct MapDefinition;
 
 	private:
 		/* A meta region cannot be the template for a state.

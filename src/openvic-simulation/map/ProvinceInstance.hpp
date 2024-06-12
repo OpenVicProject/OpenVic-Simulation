@@ -7,6 +7,7 @@
 #include "openvic-simulation/types/OrderedContainers.hpp"
 
 namespace OpenVic {
+	struct MapInstance;
 	struct ProvinceDefinition;
 	struct TerrainType;
 	struct State;
@@ -24,7 +25,7 @@ namespace OpenVic {
 	struct IssueManager;
 
 	struct ProvinceInstance : HasIdentifier {
-		friend struct Map;
+		friend struct MapInstance;
 
 		using life_rating_t = int8_t;
 
@@ -63,7 +64,7 @@ namespace OpenVic {
 	public:
 		ProvinceInstance(ProvinceInstance&&) = default;
 
-		inline constexpr operator ProvinceDefinition const&() const {
+		inline explicit constexpr operator ProvinceDefinition const&() const {
 			return province_definition;
 		}
 

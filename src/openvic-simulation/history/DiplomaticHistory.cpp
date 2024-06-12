@@ -322,7 +322,7 @@ bool DiplomaticHistoryManager::load_war_history_file(GameManager const& game_man
 								assign_variable_callback_pointer(*third_party)
 							),
 						"state_province_id", ZERO_OR_ONE,
-							game_manager.get_map().expect_province_definition_identifier(
+							game_manager.get_map_definition().expect_province_definition_identifier(
 								assign_variable_callback_pointer(*target)
 							)
 					)(value);

@@ -67,8 +67,9 @@ bool CountryHistoryMap::_load_history_entry(
 				game_manager, dataloader, deployment_manager, entry.get_date(), value, key, value
 			);
 		},
-		"capital", ZERO_OR_ONE,
-			game_manager.get_map().expect_province_definition_identifier(assign_variable_callback_pointer_opt(entry.capital)),
+		"capital", ZERO_OR_ONE, game_manager.get_map_definition().expect_province_definition_identifier(
+			assign_variable_callback_pointer_opt(entry.capital)
+		),
 		"primary_culture", ZERO_OR_ONE,
 			culture_manager.expect_culture_identifier(assign_variable_callback_pointer_opt(entry.primary_culture)),
 		"culture", ZERO_OR_MORE, culture_manager.expect_culture_identifier(

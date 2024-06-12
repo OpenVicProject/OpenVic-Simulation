@@ -1,7 +1,8 @@
 #include "State.hpp"
 
 #include "openvic-simulation/country/Country.hpp"
-#include "openvic-simulation/map/Map.hpp"
+#include "openvic-simulation/map/MapDefinition.hpp"
+#include "openvic-simulation/map/MapInstance.hpp"
 #include "openvic-simulation/map/ProvinceInstance.hpp"
 #include "openvic-simulation/map/Region.hpp"
 
@@ -39,7 +40,7 @@ void StateSet::update_gamestate() {
 	}
 }
 
-bool StateManager::add_state_set(Map& map, Region const& region) {
+bool StateManager::add_state_set(MapInstance& map_instance, Region const& region) {
 	if (region.get_meta()) {
 		Logger::error("Cannot use meta region \"", region.get_identifier(), "\" as state template!");
 		return false;
@@ -54,7 +55,7 @@ bool StateManager::add_state_set(Map& map, Region const& region) {
 
 	for (ProvinceDefinition const* province : region.get_provinces()) {
 
-		ProvinceInstance* province_instance = map.get_province_instance_from_const(province);
+		ProvinceInstance* province_instance = map_instance.get_province_instance_from_const(province);
 
 		// add to existing state if shared owner & status...
 		for (std::vector<ProvinceInstance*>& provinces : temp_provinces) {
@@ -98,16 +99,18 @@ bool StateManager::add_state_set(Map& map, Region const& region) {
 	return true;
 }
 
-bool StateManager::generate_states(Map& map) {
+bool StateManager::generate_states(MapInstance& map_instance) {
+	MapDefinition const& map_definition = map_instance.get_map_definition();
+
 	state_sets.clear();
-	state_sets.reserve(map.get_region_count());
+	state_sets.reserve(map_definition.get_region_count());
 
 	bool ret = true;
 	size_t state_count = 0;
 
-	for (Region const& region : map.get_regions()) {
+	for (Region const& region : map_definition.get_regions()) {
 		if (!region.get_meta()) {
-			if (add_state_set(map, region)) {
+			if (add_state_set(map_instance, region)) {
 				state_count += state_sets.back().get_state_count();
 			} else {
 				ret = false;

@@ -6,7 +6,9 @@
 #include "openvic-simulation/history/HistoryManager.hpp"
 #include "openvic-simulation/interface/UI.hpp"
 #include "openvic-simulation/map/Crime.hpp"
-#include "openvic-simulation/map/Map.hpp"
+#include "openvic-simulation/map/MapDefinition.hpp"
+#include "openvic-simulation/map/MapInstance.hpp"
+#include "openvic-simulation/map/Mapmode.hpp"
 #include "openvic-simulation/military/MilitaryManager.hpp"
 #include "openvic-simulation/misc/Decision.hpp"
 #include "openvic-simulation/misc/Define.hpp"
@@ -40,7 +42,9 @@ namespace OpenVic {
 		DiplomacyManager PROPERTY_REF(diplomacy_manager);
 		/* Near the end so it is freed after other managers that may depend on it,
 		 * e.g. if we want to remove military units from the province they're in when they're destructed. */
-		Map PROPERTY_REF(map);
+		MapDefinition PROPERTY_REF(map_definition);
+		MapInstance PROPERTY_REF(map_instance);
+		MapmodeManager PROPERTY_REF(mapmode_manager);
 		ScriptManager PROPERTY_REF(script_manager);
 		SimulationClock PROPERTY_REF(simulation_clock);
 
@@ -64,10 +68,5 @@ namespace OpenVic {
 		bool load_bookmark(Bookmark const* new_bookmark);
 
 		bool expand_selected_province_building(size_t building_index);
-
-		/* Hardcoded data for defining things for which parsing from files has
-		 * not been implemented, currently mapmodes and building types.
-		 */
-		bool load_hardcoded_defines();
 	};
 }

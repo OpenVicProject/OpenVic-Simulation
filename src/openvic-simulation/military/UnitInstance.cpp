@@ -3,7 +3,7 @@
 #include <vector>
 
 #include "openvic-simulation/country/CountryInstance.hpp"
-#include "openvic-simulation/map/Map.hpp"
+#include "openvic-simulation/map/MapInstance.hpp"
 #include "openvic-simulation/map/ProvinceInstance.hpp"
 #include "openvic-simulation/military/Deployment.hpp"
 
@@ -76,7 +76,9 @@ bool UnitInstanceManager::generate_ship(ShipDeployment const& ship_deployment, S
 	return true;
 }
 
-bool UnitInstanceManager::generate_army(Map& map, CountryInstance& country, ArmyDeployment const& army_deployment) {
+bool UnitInstanceManager::generate_army(
+	MapInstance& map_instance, CountryInstance& country, ArmyDeployment const& army_deployment
+) {
 	if (army_deployment.get_regiments().empty()) {
 		Logger::error(
 			"Trying to generate army \"", army_deployment.get_name(), "\" with no regiments for country \"",
@@ -117,12 +119,14 @@ bool UnitInstanceManager::generate_army(Map& map, CountryInstance& country, Army
 
 	armies.push_back({ army_deployment.get_name(), std::move(army_regiments), nullptr, &country });
 
-	armies.back().set_position(map.get_province_instance_from_const(army_deployment.get_location()));
+	armies.back().set_position(map_instance.get_province_instance_from_const(army_deployment.get_location()));
 
 	return ret;
 }
 
-bool UnitInstanceManager::generate_navy(Map& map, CountryInstance& country, NavyDeployment const& navy_deployment) {
+bool UnitInstanceManager::generate_navy(
+	MapInstance& map_instance, CountryInstance& country, NavyDeployment const& navy_deployment
+) {
 	if (navy_deployment.get_ships().empty()) {
 		Logger::error(
 			"Trying to generate navy \"", navy_deployment.get_name(), "\" with no ships for country \"",
@@ -163,12 +167,14 @@ bool UnitInstanceManager::generate_navy(Map& map, CountryInstance& country, Navy
 
 	navies.push_back({ navy_deployment.get_name(), std::move(navy_ships), nullptr, &country });
 
-	navies.back().set_position(map.get_province_instance_from_const(navy_deployment.get_location()));
+	navies.back().set_position(map_instance.get_province_instance_from_const(navy_deployment.get_location()));
 
 	return ret;
 }
 
-bool UnitInstanceManager::generate_deployment(Map& map, CountryInstance& country, Deployment const* deployment) {
+bool UnitInstanceManager::generate_deployment(
+	MapInstance& map_instance, CountryInstance& country, Deployment const* deployment
+) {
 	if (deployment == nullptr) {
 		Logger::error("Trying to generate null deployment for ", country.get_identifier());
 		return false;
@@ -179,11 +185,11 @@ bool UnitInstanceManager::generate_deployment(Map& map, CountryInstance& country
 	bool ret = true;
 
 	for (ArmyDeployment const& army_deployment : deployment->get_armies()) {
-		ret &= generate_army(map, country, army_deployment);
+		ret &= generate_army(map_instance, country, army_deployment);
 	}
 
 	for (NavyDeployment const& navy_deployment : deployment->get_navies()) {
-		ret &= generate_navy(map, country, navy_deployment);
+		ret &= generate_navy(map_instance, country, navy_deployment);
 	}
 
 	return ret;

@@ -109,7 +109,8 @@ bool CountryInstanceManager::generate_country_instances(CountryManager const& co
 }
 
 bool CountryInstanceManager::apply_history_to_countries(
-	CountryHistoryManager const& history_manager, Date date, UnitInstanceManager& unit_instance_manager, Map& map
+	CountryHistoryManager const& history_manager, Date date, UnitInstanceManager& unit_instance_manager,
+	MapInstance& map_instance
 ) {
 	bool ret = true;
 
@@ -129,7 +130,9 @@ bool CountryInstanceManager::apply_history_to_countries(
 				}
 
 				if (oob_history_entry != nullptr) {
-					unit_instance_manager.generate_deployment(map, country_instance, *oob_history_entry->get_inital_oob());
+					unit_instance_manager.generate_deployment(
+						map_instance, country_instance, *oob_history_entry->get_inital_oob()
+					);
 				}
 			}
 		}

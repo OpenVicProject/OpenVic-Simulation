@@ -25,10 +25,6 @@ static bool headless_load(GameManager& game_manager, Dataloader& dataloader) {
 		Logger::error("Failed to load defines!");
 		ret = false;
 	}
-	if (!game_manager.load_hardcoded_defines()) {
-		Logger::error("Failed to load hardcoded defines!");
-		ret = false;
-	}
 	if (!dataloader.load_localisation_files(
 		[](std::string_view key, Dataloader::locale_t locale, std::string_view localisation) -> bool {
 			return true;

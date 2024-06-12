@@ -1,57 +1,30 @@
 #pragma once
 
 #include <filesystem>
-#include <functional>
+#include <string_view>
+#include <vector>
 
 #include <openvic-dataloader/csv/LineObject.hpp>
 
 #include "openvic-simulation/map/ProvinceDefinition.hpp"
-#include "openvic-simulation/map/ProvinceInstance.hpp"
 #include "openvic-simulation/map/Region.hpp"
-#include "openvic-simulation/map/State.hpp"
 #include "openvic-simulation/map/TerrainType.hpp"
 #include "openvic-simulation/types/Colour.hpp"
+#include "openvic-simulation/types/IdentifierRegistry.hpp"
 #include "openvic-simulation/types/OrderedContainers.hpp"
+#include "openvic-simulation/types/Vector.hpp"
 
 namespace OpenVic {
 	namespace fs = std::filesystem;
 
-	struct Mapmode : HasIdentifier {
-		friend struct Map;
-
-		/* Bottom 32 bits are the base colour, top 32 are the stripe colour, both in ARGB format with the alpha channels
-		 * controlling interpolation with the terrain colour (0 = all terrain, 255 = all corresponding RGB) */
-		struct base_stripe_t {
-			colour_argb_t base_colour;
-			colour_argb_t stripe_colour;
-			constexpr base_stripe_t(colour_argb_t base, colour_argb_t stripe)
-				: base_colour { base }, stripe_colour { stripe } {}
-			constexpr base_stripe_t(colour_argb_t both) : base_stripe_t { both, both } {}
-		};
-		using colour_func_t = std::function<base_stripe_t(Map const&, ProvinceInstance const&)>;
-		using index_t = size_t;
-
-	private:
-		const index_t PROPERTY(index);
-		const colour_func_t colour_func;
-
-		Mapmode(std::string_view new_identifier, index_t new_index, colour_func_t new_colour_func);
-
-	public:
-		static const Mapmode ERROR_MAPMODE;
-
-		Mapmode(Mapmode&&) = default;
-
-		base_stripe_t get_base_stripe_colours(Map const& map, ProvinceInstance const& province) const;
-	};
-
-	struct GoodManager;
-	struct ProvinceHistoryManager;
+	struct BuildingTypeManager;
+	struct ModifierManager;
 
 	/* REQUIREMENTS:
 	 * MAP-4
 	 */
-	struct Map {
+	struct MapDefinition {
+
 #pragma pack(push, 1)
 		/* Used to represent tightly packed 3-byte integer pixel information. */
 		struct shape_pixel_t {
@@ -59,13 +32,12 @@ namespace OpenVic {
 			TerrainTypeMapping::index_t terrain;
 		};
 #pragma pack(pop)
+
 	private:
 		using colour_index_map_t = ordered_map<colour_t, ProvinceDefinition::index_t>;
 
 		IdentifierRegistry<ProvinceDefinition> IDENTIFIER_REGISTRY_CUSTOM_INDEX_OFFSET(province_definition, 1);
-		IdentifierRegistry<ProvinceInstance> IDENTIFIER_REGISTRY_CUSTOM_INDEX_OFFSET(province_instance, 1);
 		IdentifierRegistry<Region> IDENTIFIER_REGISTRY(region);
-		IdentifierRegistry<Mapmode> IDENTIFIER_REGISTRY(mapmode);
 		IdentifierRegistry<Climate> IDENTIFIER_REGISTRY(climate);
 		IdentifierRegistry<Continent> IDENTIFIER_REGISTRY(continent);
 		ProvinceSet water_provinces;
@@ -76,35 +48,23 @@ namespace OpenVic {
 		colour_index_map_t colour_index_map;
 
 		ProvinceDefinition::index_t PROPERTY(max_provinces);
-		ProvinceInstance* PROPERTY(selected_province); // is it right for this to be mutable? how about using an index instead?
-		Pop::pop_size_t PROPERTY(highest_province_population);
-		Pop::pop_size_t PROPERTY(total_map_population);
 
 		ProvinceDefinition::index_t get_index_from_colour(colour_t colour) const;
 		bool _generate_standard_province_adjacencies();
-
-		StateManager PROPERTY_REF(state_manager);
 
 		inline constexpr int32_t get_pixel_index_from_pos(ivec2_t pos) const {
 			return pos.x + pos.y * dims.x;
 		}
 
+		IDENTIFIER_REGISTRY_NON_CONST_ACCESSORS_CUSTOM_INDEX_OFFSET(province_definition, 1);
+
 	public:
-		Map();
+		MapDefinition();
 
 		inline constexpr int32_t get_width() const { return dims.x; }
 		inline constexpr int32_t get_height() const { return dims.y; }
 
 		bool add_province_definition(std::string_view identifier, colour_t colour);
-
-	private:
-		IDENTIFIER_REGISTRY_NON_CONST_ACCESSORS_CUSTOM_INDEX_OFFSET(province_definition, 1);
-
-	public:
-		IDENTIFIER_REGISTRY_NON_CONST_ACCESSORS_CUSTOM_INDEX_OFFSET(province_instance, 1);
-
-		ProvinceInstance* get_province_instance_from_const(ProvinceDefinition const* province);
-		ProvinceInstance const* get_province_instance_from_const(ProvinceDefinition const* province) const;
 
 		ProvinceDefinition::distance_t calculate_distance_between(
 			ProvinceDefinition const& from, ProvinceDefinition const& to
@@ -136,29 +96,8 @@ namespace OpenVic {
 	public:
 		ProvinceDefinition const* get_province_definition_at(ivec2_t pos) const;
 		bool set_max_provinces(ProvinceDefinition::index_t new_max_provinces);
-		void set_selected_province(ProvinceDefinition::index_t index);
-		ProvinceInstance* get_selected_province();
-		ProvinceDefinition::index_t get_selected_province_index() const;
 
 		bool add_region(std::string_view identifier, std::vector<ProvinceDefinition const*>&& provinces, colour_t colour);
-
-		bool add_mapmode(std::string_view identifier, Mapmode::colour_func_t colour_func);
-
-		/* The mapmode colour image contains of a list of base colours and stripe colours. Each colour is four bytes
-		 * in RGBA format, with the alpha value being used to interpolate with the terrain colour, so A = 0 is fully terrain
-		 * and A = 255 is fully the RGB colour packaged with A. The base and stripe colours for each province are packed
-		 * together adjacently, so each province's entry is 8 bytes long. The list contains ProvinceDefinition::MAX_INDEX + 1
-		 * entries, that is the maximum allowed number of provinces plus one for the index-zero "null province". */
-		bool generate_mapmode_colours(Mapmode::index_t index, uint8_t* target) const;
-
-		bool reset(BuildingTypeManager const& building_type_manager);
-		bool apply_history_to_provinces(
-			ProvinceHistoryManager const& history_manager, Date date, IdeologyManager const& ideology_manager,
-			IssueManager const& issue_manager, Country const& country
-		);
-
-		void update_gamestate(Date today);
-		void tick(Date today);
 
 		bool load_province_definitions(std::vector<ovdl::csv::LineObject> const& lines);
 		/* Must be loaded after adjacencies so we know what provinces are coastal, and so can have a port */
