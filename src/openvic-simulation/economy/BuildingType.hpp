@@ -1,7 +1,7 @@
 #pragma once
 
 #include "openvic-simulation/misc/Modifier.hpp"
-#include "openvic-simulation/economy/Good.hpp"
+#include "openvic-simulation/economy/GoodDefinition.hpp"
 #include "openvic-simulation/economy/ProductionType.hpp"
 #include "openvic-simulation/types/Date.hpp"
 #include "openvic-simulation/types/IdentifierRegistry.hpp"
@@ -27,7 +27,7 @@ namespace OpenVic {
 			ModifierValue modifier;
 			fixed_point_t completion_size = 0, cost = 0, colonial_range = 0, infrastructure = 0;
 			BuildingType::level_t max_level = 0, fort_level = 0;
-			Good::good_map_t goods_cost;
+			GoodDefinition::good_definition_map_t goods_cost;
 			Timespan build_time;
 			bool on_map = false, default_enabled = false, pop_build_factory = false, strategic_factory = false,
 				advanced_factory = false, in_province = false, one_per_state = false, spawn_railway_track = false,
@@ -46,7 +46,7 @@ namespace OpenVic {
 		std::string PROPERTY(on_completion); // probably sound played on completion
 		fixed_point_t PROPERTY(completion_size);
 		level_t PROPERTY(max_level);
-		Good::good_map_t PROPERTY(goods_cost);
+		GoodDefinition::good_definition_map_t PROPERTY(goods_cost);
 		fixed_point_t PROPERTY(cost);
 		Timespan PROPERTY(build_time); // time
 		bool PROPERTY(on_map); // onmap
@@ -94,7 +94,7 @@ namespace OpenVic {
 		bool add_building_type(std::string_view identifier, BuildingType::building_type_args_t& building_type_args);
 
 		bool load_buildings_file(
-			GoodManager const& good_manager, ProductionTypeManager const& production_type_manager,
+			GoodDefinitionManager const& good_definition_manager, ProductionTypeManager const& production_type_manager,
 			ModifierManager& modifier_manager, ast::NodeCPtr root
 		);
 	};

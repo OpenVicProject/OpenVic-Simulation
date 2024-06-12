@@ -24,11 +24,11 @@ namespace OpenVic {
 			return government_type_manager.load_government_types_file(ideology_manager, root);
 		}
 		inline bool load_national_foci_file(
-			PopManager const& pop_manager, GoodManager const& good_manager, ModifierManager const& modifier_manager,
-			ast::NodeCPtr root
+			PopManager const& pop_manager, GoodDefinitionManager const& good_definition_manager,
+			ModifierManager const& modifier_manager, ast::NodeCPtr root
 		) {
 			return national_focus_manager.load_national_foci_file(
-				pop_manager, ideology_manager, good_manager, modifier_manager, root
+				pop_manager, ideology_manager, good_definition_manager, modifier_manager, root
 			);
 		}
 		inline bool load_rebels_file(ast::NodeCPtr root) {

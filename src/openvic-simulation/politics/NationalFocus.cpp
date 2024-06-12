@@ -72,8 +72,8 @@ inline bool NationalFocusManager::add_national_focus(
 }
 
 bool NationalFocusManager::load_national_foci_file(
-	PopManager const& pop_manager, IdeologyManager const& ideology_manager, GoodManager const& good_manager,
-	ModifierManager const& modifier_manager, ast::NodeCPtr root
+	PopManager const& pop_manager, IdeologyManager const& ideology_manager,
+	GoodDefinitionManager const& good_definition_manager, ModifierManager const& modifier_manager, ast::NodeCPtr root
 ) {
 	size_t expected_national_foci = 0;
 	bool ret = expect_dictionary_reserve_length(
@@ -86,41 +86,46 @@ bool NationalFocusManager::load_national_foci_file(
 
 	reserve_more_national_foci(expected_national_foci);
 
-	ret &= expect_national_focus_group_dictionary([this, &pop_manager, &ideology_manager, &good_manager, &modifier_manager](
-		NationalFocusGroup const& group, ast::NodeCPtr group_node
-	) -> bool {
-		return expect_dictionary([this, &group, &pop_manager, &ideology_manager, &good_manager, &modifier_manager](
-			std::string_view identifier, ast::NodeCPtr node
+	ret &= expect_national_focus_group_dictionary(
+		[this, &pop_manager, &ideology_manager, &good_definition_manager, &modifier_manager](
+			NationalFocusGroup const& group, ast::NodeCPtr group_node
 		) -> bool {
-			uint8_t icon = 0;
-			bool has_flashpoint = false, own_provinces = true, outliner_show_as_percent = false;
-			ModifierValue modifiers;
-			Ideology const* loyalty_ideology = nullptr;
-			fixed_point_t loyalty_value = 0;
-			ConditionScript limit {
-				scope_t::PROVINCE | scope_t::COUNTRY, scope_t::PROVINCE | scope_t::COUNTRY, scope_t::NO_SCOPE
-			};
+			return expect_dictionary(
+				[this, &group, &pop_manager, &ideology_manager, &good_definition_manager, &modifier_manager](
+					std::string_view identifier, ast::NodeCPtr node
+				) -> bool {
+					uint8_t icon = 0;
+					bool has_flashpoint = false, own_provinces = true, outliner_show_as_percent = false;
+					ModifierValue modifiers;
+					Ideology const* loyalty_ideology = nullptr;
+					fixed_point_t loyalty_value = 0;
+					ConditionScript limit {
+						scope_t::PROVINCE | scope_t::COUNTRY, scope_t::PROVINCE | scope_t::COUNTRY, scope_t::NO_SCOPE
+					};
 
-			bool ret = modifier_manager.expect_modifier_value_and_keys(
-				move_variable_callback(modifiers),
-				"icon", ONE_EXACTLY, expect_uint(assign_variable_callback(icon)),
-				"ideology", ZERO_OR_ONE,
-					ideology_manager.expect_ideology_identifier(assign_variable_callback_pointer(loyalty_ideology)),
-				"loyalty_value", ZERO_OR_ONE, expect_fixed_point(assign_variable_callback(loyalty_value)),
-				"limit", ZERO_OR_ONE, limit.expect_script(),
-				"has_flashpoint", ZERO_OR_ONE, expect_bool(assign_variable_callback(has_flashpoint)),
-				"own_provinces", ZERO_OR_ONE, expect_bool(assign_variable_callback(own_provinces)),
-				"outliner_show_as_percent", ZERO_OR_ONE, expect_bool(assign_variable_callback(outliner_show_as_percent))
-			)(node);
+					bool ret = modifier_manager.expect_modifier_value_and_keys(
+						move_variable_callback(modifiers),
+						"icon", ONE_EXACTLY, expect_uint(assign_variable_callback(icon)),
+						"ideology", ZERO_OR_ONE,
+							ideology_manager.expect_ideology_identifier(assign_variable_callback_pointer(loyalty_ideology)),
+						"loyalty_value", ZERO_OR_ONE, expect_fixed_point(assign_variable_callback(loyalty_value)),
+						"limit", ZERO_OR_ONE, limit.expect_script(),
+						"has_flashpoint", ZERO_OR_ONE, expect_bool(assign_variable_callback(has_flashpoint)),
+						"own_provinces", ZERO_OR_ONE, expect_bool(assign_variable_callback(own_provinces)),
+						"outliner_show_as_percent", ZERO_OR_ONE,
+							expect_bool(assign_variable_callback(outliner_show_as_percent))
+					)(node);
 
-			ret &= add_national_focus(
-				identifier, group, icon, has_flashpoint, own_provinces, outliner_show_as_percent, std::move(modifiers),
-				loyalty_ideology, loyalty_value, std::move(limit)
-			);
+					ret &= add_national_focus(
+						identifier, group, icon, has_flashpoint, own_provinces, outliner_show_as_percent, std::move(modifiers),
+						loyalty_ideology, loyalty_value, std::move(limit)
+					);
 
-			return ret;
-		})(group_node);
-	})(root);
+					return ret;
+				}
+			)(group_node);
+		}
+	)(root);
 	lock_national_foci();
 
 	return ret;

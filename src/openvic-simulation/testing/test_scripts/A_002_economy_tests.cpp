@@ -552,8 +552,8 @@ namespace OpenVic {
 
 		void check_base_price(std::string identifier, std::string target_value, std::string req_name) {
 			// Get string of base_price from goods manager
-			fixed_point_t base_price_fp = get_game_manager()->get_economy_manager().get_good_manager()
-				.get_good_by_identifier(identifier)->get_base_price();
+			fixed_point_t base_price_fp = get_game_manager()->get_economy_manager().get_good_definition_manager()
+				.get_good_definition_by_identifier(identifier)->get_base_price();
 			std::stringstream ss;
 			// Use a single digit floating point of the value
 			ss << std::fixed << std::setprecision(1) << base_price_fp.to_double();

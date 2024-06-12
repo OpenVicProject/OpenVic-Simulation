@@ -16,7 +16,7 @@ namespace OpenVic {
 	struct ProvinceHistoryMap;
 	struct ProvinceDefinition;
 	struct Country;
-	struct Good;
+	struct GoodDefinition;
 	struct TerrainType;
 	struct Ideology;
 	struct GameManager;
@@ -33,7 +33,7 @@ namespace OpenVic {
 		std::optional<bool> PROPERTY(slave);
 		std::vector<Country const*> PROPERTY(add_cores);
 		std::vector<Country const*> PROPERTY(remove_cores);
-		std::optional<Good const*> PROPERTY(rgo);
+		std::optional<GoodDefinition const*> PROPERTY(rgo);
 		std::optional<ProvinceInstance::life_rating_t> PROPERTY(life_rating);
 		std::optional<TerrainType const*> PROPERTY(terrain_type);
 		ordered_map<BuildingType const*, BuildingType::level_t> PROPERTY(province_buildings);

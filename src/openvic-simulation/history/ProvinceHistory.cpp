@@ -20,7 +20,7 @@ bool ProvinceHistoryMap::_load_history_entry(
 ) {
 	BuildingTypeManager const& building_type_manager = game_manager.get_economy_manager().get_building_type_manager();
 	CountryManager const& country_manager = game_manager.get_country_manager();
-	GoodManager const& good_manager = game_manager.get_economy_manager().get_good_manager();
+	GoodDefinitionManager const& good_definition_manager = game_manager.get_economy_manager().get_good_definition_manager();
 	IdeologyManager const& ideology_manager = game_manager.get_politics_manager().get_ideology_manager();
 	TerrainTypeManager const& terrain_type_manager = game_manager.get_map_definition().get_terrain_type_manager();
 
@@ -65,7 +65,8 @@ bool ProvinceHistoryMap::_load_history_entry(
 		"colony", ZERO_OR_ONE,
 			expect_identifier(expect_mapped_string(colony_status_map, assign_variable_callback(entry.colonial))),
 		"is_slave", ZERO_OR_ONE, expect_bool(assign_variable_callback(entry.slave)),
-		"trade_goods", ZERO_OR_ONE, good_manager.expect_good_identifier(assign_variable_callback_pointer_opt(entry.rgo)),
+		"trade_goods", ZERO_OR_ONE,
+			good_definition_manager.expect_good_definition_identifier(assign_variable_callback_pointer_opt(entry.rgo)),
 		"life_rating", ZERO_OR_ONE, expect_uint<ProvinceInstance::life_rating_t>(assign_variable_callback(entry.life_rating)),
 		"terrain", ZERO_OR_ONE, terrain_type_manager.expect_terrain_type_identifier(
 			assign_variable_callback_pointer_opt(entry.terrain_type)

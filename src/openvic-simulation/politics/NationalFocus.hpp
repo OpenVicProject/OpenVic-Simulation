@@ -1,6 +1,6 @@
 #pragma once
 
-#include "openvic-simulation/economy/Good.hpp"
+#include "openvic-simulation/economy/GoodDefinition.hpp"
 #include "openvic-simulation/misc/Modifier.hpp"
 #include "openvic-simulation/politics/Ideology.hpp"
 #include "openvic-simulation/pop/Pop.hpp"
@@ -73,8 +73,8 @@ namespace OpenVic {
 		);
 
 		bool load_national_foci_file(
-			PopManager const& pop_manager, IdeologyManager const& ideology_manager, GoodManager const& good_manager,
-			ModifierManager const& modifier_manager, ast::NodeCPtr root
+			PopManager const& pop_manager, IdeologyManager const& ideology_manager,
+			GoodDefinitionManager const& good_definition_manager, ModifierManager const& modifier_manager, ast::NodeCPtr root
 		);
 
 		bool parse_scripts(GameManager const& game_manager);

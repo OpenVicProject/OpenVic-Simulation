@@ -4,10 +4,10 @@
 #include "openvic-simulation/types/IdentifierRegistry.hpp"
 
 namespace OpenVic {
-	struct GoodManager;
+	struct GoodDefinitionManager;
 
 	struct GoodCategory : HasIdentifier {
-		friend struct GoodManager;
+		friend struct GoodDefinitionManager;
 
 	private:
 		GoodCategory(std::string_view new_identifier);
@@ -28,15 +28,15 @@ namespace OpenVic {
 	 * ECON-238, ECON-239, ECON-240, ECON-241, ECON-242, ECON-243, ECON-244, ECON-245, ECON-246, ECON-247, ECON-248, ECON-249,
 	 * ECON-250, ECON-251, ECON-252, ECON-253, ECON-254, ECON-255, ECON-256, ECON-257, ECON-258, ECON-259, ECON-260, ECON-261
 	 */
-	struct Good : HasIdentifierAndColour {
-		friend struct GoodManager;
+	struct GoodDefinition : HasIdentifierAndColour {
+		friend struct GoodDefinitionManager;
 
 		using index_t = size_t;
 
 		using price_t = fixed_point_t;
 		static constexpr price_t NULL_PRICE = fixed_point_t::_0();
 
-		using good_map_t = fixed_point_map_t<Good const*>;
+		using good_definition_map_t = fixed_point_map_t<GoodDefinition const*>;
 
 	private:
 		const index_t PROPERTY(index);
@@ -47,34 +47,29 @@ namespace OpenVic {
 		const bool PROPERTY(money);
 		const bool PROPERTY(overseas_penalty);
 
-		price_t PROPERTY_RW(price);
-		bool PROPERTY_RW(available);
-
-		Good(
+		GoodDefinition(
 			std::string_view new_identifier, colour_t new_colour, index_t new_index, GoodCategory const& new_category,
 			price_t new_base_price, bool new_available_from_start, bool new_tradeable, bool new_money,
 			bool new_overseas_penalty
 		);
 
 	public:
-		Good(Good&&) = default;
-		void reset_to_defaults();
+		GoodDefinition(GoodDefinition&&) = default;
 	};
 
-	struct GoodManager {
+	struct GoodDefinitionManager {
 	private:
 		IdentifierRegistry<GoodCategory> IDENTIFIER_REGISTRY_CUSTOM_PLURAL(good_category, good_categories);
-		IdentifierRegistry<Good> IDENTIFIER_REGISTRY(good);
+		IdentifierRegistry<GoodDefinition> IDENTIFIER_REGISTRY(good_definition);
 
 	public:
 		bool add_good_category(std::string_view identifier);
 
-		bool add_good(
-			std::string_view identifier, colour_t colour, GoodCategory const& category, Good::price_t base_price,
+		bool add_good_definition(
+			std::string_view identifier, colour_t colour, GoodCategory const& category, GoodDefinition::price_t base_price,
 			bool available_from_start, bool tradeable, bool money, bool overseas_penalty
 		);
 
-		void reset_to_defaults();
 		bool load_goods_file(ast::NodeCPtr root);
 		bool generate_modifiers(ModifierManager& modifier_manager) const;
 	};

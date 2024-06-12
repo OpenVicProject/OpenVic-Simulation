@@ -5,7 +5,7 @@
 
 #include "openvic-simulation/misc/Modifier.hpp"
 #include "openvic-simulation/dataloader/NodeTools.hpp"
-#include "openvic-simulation/economy/Good.hpp"
+#include "openvic-simulation/economy/GoodDefinition.hpp"
 #include "openvic-simulation/types/Date.hpp"
 #include "openvic-simulation/types/IdentifierRegistry.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
@@ -33,7 +33,7 @@ namespace OpenVic {
 			fixed_point_t max_strength = 0, default_organisation = 0, maximum_speed = 0, weighted_value = 0,
 				supply_consumption = 0;
 			Timespan build_time;
-			Good::good_map_t build_cost, supply_cost;
+			GoodDefinition::good_definition_map_t build_cost, supply_cost;
 			terrain_modifiers_t terrain_modifiers;
 
 			unit_type_args_t() = default;
@@ -58,9 +58,9 @@ namespace OpenVic {
 		std::string PROPERTY(select_sound);
 
 		const Timespan PROPERTY(build_time);
-		Good::good_map_t PROPERTY(build_cost);
+		GoodDefinition::good_definition_map_t PROPERTY(build_cost);
 		const fixed_point_t PROPERTY(supply_consumption);
-		Good::good_map_t PROPERTY(supply_cost);
+		GoodDefinition::good_definition_map_t PROPERTY(supply_cost);
 
 		terrain_modifiers_t PROPERTY(terrain_modifiers);
 
@@ -173,7 +173,7 @@ namespace OpenVic {
 		}
 
 		bool load_unit_type_file(
-			GoodManager const& good_manager, TerrainTypeManager const& terrain_type_manager,
+			GoodDefinitionManager const& good_definition_manager, TerrainTypeManager const& terrain_type_manager,
 			ModifierManager const& modifier_manager, ast::NodeCPtr root
 		);
 		bool generate_modifiers(ModifierManager& modifier_manager) const;

@@ -434,7 +434,7 @@ bool ConditionManager::setup_conditions(GameManager const& game_manager) {
 	);
 
 	import_identifiers(
-		game_manager.get_economy_manager().get_good_manager().get_good_identifiers(),
+		game_manager.get_economy_manager().get_good_definition_manager().get_good_definition_identifiers(),
 		INTEGER,
 		COUNTRY,
 		NO_SCOPE,
@@ -499,7 +499,7 @@ callback_t<std::string_view> ConditionManager::expect_parse_identifier(
 		EXPECT_CALL(CULTURE, culture, game_manager.get_pop_manager().get_culture_manager(), "THIS", "FROM");
 		EXPECT_CALL(CULTURE_GROUP, culture_group, game_manager.get_pop_manager().get_culture_manager());
 		EXPECT_CALL(RELIGION, religion, game_manager.get_pop_manager().get_religion_manager(), "THIS", "FROM");
-		EXPECT_CALL(TRADE_GOOD, good, game_manager.get_economy_manager().get_good_manager());
+		EXPECT_CALL(TRADE_GOOD, good_definition, game_manager.get_economy_manager().get_good_definition_manager());
 		EXPECT_CALL(BUILDING, building_type, game_manager.get_economy_manager().get_building_type_manager(), "FACTORY");
 		EXPECT_CALL(CASUS_BELLI, wargoal_type, game_manager.get_military_manager().get_wargoal_type_manager());
 		EXPECT_CALL(GOVERNMENT_TYPE, government_type, game_manager.get_politics_manager().get_government_type_manager());

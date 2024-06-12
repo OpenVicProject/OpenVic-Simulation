@@ -13,7 +13,7 @@ namespace OpenVic {
 	struct State;
 	struct Country;
 	struct Crime;
-	struct Good;
+	struct GoodDefinition;
 	struct ArmyInstance;
 	struct NavyInstance;
 	struct Ideology;
@@ -24,7 +24,7 @@ namespace OpenVic {
 	struct IdeologyManager;
 	struct IssueManager;
 
-	struct ProvinceInstance : HasIdentifier {
+	struct ProvinceInstance : HasIdentifierAndColour {
 		friend struct MapInstance;
 
 		using life_rating_t = int8_t;
@@ -44,7 +44,7 @@ namespace OpenVic {
 		bool PROPERTY(slave);
 		Crime const* PROPERTY_RW(crime);
 		// TODO - change this into a factory-like structure
-		Good const* PROPERTY(rgo);
+		GoodDefinition const* PROPERTY(rgo);
 		IdentifierRegistry<BuildingInstance> IDENTIFIER_REGISTRY(building);
 		ordered_set<ArmyInstance*> PROPERTY(armies);
 		ordered_set<NavyInstance*> PROPERTY(navies);

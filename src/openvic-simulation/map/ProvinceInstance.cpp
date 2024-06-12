@@ -8,11 +8,27 @@
 using namespace OpenVic;
 
 ProvinceInstance::ProvinceInstance(ProvinceDefinition const& new_province_definition)
-  : HasIdentifier { new_province_definition.get_identifier() }, province_definition { new_province_definition },
-	terrain_type { nullptr }, life_rating { 0 }, colony_status { colony_status_t::STATE }, state { nullptr },
-	owner { nullptr }, controller { nullptr }, cores {}, slave { false }, crime { nullptr }, rgo { nullptr },
-	buildings { "buildings", false }, armies {}, navies {}, pops {}, total_population { 0 }, pop_type_distribution {},
-	ideology_distribution {}, culture_distribution {}, religion_distribution {} {}
+  : HasIdentifierAndColour { new_province_definition },
+	province_definition { new_province_definition },
+	terrain_type { nullptr },
+	life_rating { 0 },
+	colony_status { colony_status_t::STATE },
+	state { nullptr },
+	owner { nullptr },
+	controller { nullptr },
+	cores {},
+	slave { false },
+	crime { nullptr },
+	rgo { nullptr },
+	buildings { "buildings", false },
+	armies {},
+	navies {},
+	pops {},
+	total_population { 0 },
+	pop_type_distribution {},
+	ideology_distribution {},
+	culture_distribution {},
+	religion_distribution {} {}
 
 bool ProvinceInstance::expand_building(size_t building_index) {
 	BuildingInstance* building = buildings.get_item_by_index(building_index);

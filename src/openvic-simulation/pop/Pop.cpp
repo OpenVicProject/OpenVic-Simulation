@@ -124,9 +124,9 @@ PopType::PopType(
 	colour_t new_colour,
 	Strata const& new_strata,
 	sprite_t new_sprite,
-	Good::good_map_t&& new_life_needs,
-	Good::good_map_t&& new_everyday_needs,
-	Good::good_map_t&& new_luxury_needs,
+	GoodDefinition::good_definition_map_t&& new_life_needs,
+	GoodDefinition::good_definition_map_t&& new_everyday_needs,
+	GoodDefinition::good_definition_map_t&& new_luxury_needs,
 	income_type_t new_life_needs_income_types,
 	income_type_t new_everyday_needs_income_types,
 	income_type_t new_luxury_needs_income_types,
@@ -233,9 +233,9 @@ bool PopManager::add_pop_type(
 	colour_t colour,
 	Strata const* strata,
 	PopType::sprite_t sprite,
-	Good::good_map_t&& life_needs,
-	Good::good_map_t&& everyday_needs,
-	Good::good_map_t&& luxury_needs,
+	GoodDefinition::good_definition_map_t&& life_needs,
+	GoodDefinition::good_definition_map_t&& everyday_needs,
+	GoodDefinition::good_definition_map_t&& luxury_needs,
 	PopType::income_type_t life_needs_income_types,
 	PopType::income_type_t everyday_needs_income_types,
 	PopType::income_type_t luxury_needs_income_types,
@@ -396,12 +396,13 @@ static NodeCallback auto expect_needs_income(PopType::income_type_t& types) {
  * POP-3, POP-4, POP-5, POP-6, POP-7, POP-8, POP-9, POP-10, POP-11, POP-12, POP-13, POP-14
  */
 bool PopManager::load_pop_type_file(
-	std::string_view filestem, GoodManager const& good_manager, IdeologyManager const& ideology_manager, ast::NodeCPtr root
+	std::string_view filestem, GoodDefinitionManager const& good_definition_manager, IdeologyManager const& ideology_manager,
+	ast::NodeCPtr root
 ) {
 	colour_t colour = colour_t::null();
 	Strata const* strata = nullptr;
 	PopType::sprite_t sprite = 0;
-	Good::good_map_t life_needs, everyday_needs, luxury_needs;
+	GoodDefinition::good_definition_map_t life_needs, everyday_needs, luxury_needs;
 	PopType::income_type_t life_needs_income_types = NO_INCOME_TYPE, everyday_needs_income_types = NO_INCOME_TYPE,
 		luxury_needs_income_types = NO_INCOME_TYPE;
 	ast::NodeCPtr rebel_units = nullptr;
@@ -450,9 +451,12 @@ bool PopManager::load_pop_type_file(
 		"life_needs_income", ZERO_OR_ONE, expect_needs_income(life_needs_income_types),
 		"everyday_needs_income", ZERO_OR_ONE, expect_needs_income(everyday_needs_income_types),
 		"luxury_needs_income", ZERO_OR_ONE, expect_needs_income(luxury_needs_income_types),
-		"luxury_needs", ZERO_OR_ONE, good_manager.expect_good_decimal_map(move_variable_callback(luxury_needs)),
-		"everyday_needs", ZERO_OR_ONE, good_manager.expect_good_decimal_map(move_variable_callback(everyday_needs)),
-		"life_needs", ZERO_OR_ONE, good_manager.expect_good_decimal_map(move_variable_callback(life_needs)),
+		"luxury_needs", ZERO_OR_ONE,
+			good_definition_manager.expect_good_definition_decimal_map(move_variable_callback(luxury_needs)),
+		"everyday_needs", ZERO_OR_ONE,
+			good_definition_manager.expect_good_definition_decimal_map(move_variable_callback(everyday_needs)),
+		"life_needs", ZERO_OR_ONE,
+			good_definition_manager.expect_good_definition_decimal_map(move_variable_callback(life_needs)),
 		"country_migration_target", ZERO_OR_ONE, country_migration_target.expect_conditional_weight(ConditionalWeight::FACTOR),
 		"migration_target", ZERO_OR_ONE, migration_target.expect_conditional_weight(ConditionalWeight::FACTOR),
 		"promote_to", ZERO_OR_ONE, assign_variable_callback(promote_to_node),

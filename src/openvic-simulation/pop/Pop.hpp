@@ -4,7 +4,7 @@
 #include <ostream>
 #include <tuple>
 
-#include "openvic-simulation/economy/Good.hpp"
+#include "openvic-simulation/economy/GoodDefinition.hpp"
 #include "openvic-simulation/pop/Culture.hpp"
 #include "openvic-simulation/pop/Religion.hpp"
 #include "openvic-simulation/scripts/ConditionalWeight.hpp"
@@ -126,9 +126,9 @@ namespace OpenVic {
 	private:
 		Strata const& PROPERTY(strata);
 		const sprite_t PROPERTY(sprite);
-		Good::good_map_t PROPERTY(life_needs);
-		Good::good_map_t PROPERTY(everyday_needs);
-		Good::good_map_t PROPERTY(luxury_needs);
+		GoodDefinition::good_definition_map_t PROPERTY(life_needs);
+		GoodDefinition::good_definition_map_t PROPERTY(everyday_needs);
+		GoodDefinition::good_definition_map_t PROPERTY(luxury_needs);
 		income_type_t PROPERTY(life_needs_income_types);
 		income_type_t PROPERTY(everyday_needs_income_types);
 		income_type_t PROPERTY(luxury_needs_income_types);
@@ -164,9 +164,9 @@ namespace OpenVic {
 			colour_t new_colour,
 			Strata const& new_strata,
 			sprite_t new_sprite,
-			Good::good_map_t&& new_life_needs,
-			Good::good_map_t&& new_everyday_needs,
-			Good::good_map_t&& new_luxury_needs,
+			GoodDefinition::good_definition_map_t&& new_life_needs,
+			GoodDefinition::good_definition_map_t&& new_everyday_needs,
+			GoodDefinition::good_definition_map_t&& new_luxury_needs,
 			income_type_t new_life_needs_income_types,
 			income_type_t new_everyday_needs_income_types,
 			income_type_t new_luxury_needs_income_types,
@@ -275,9 +275,9 @@ namespace OpenVic {
 			colour_t new_colour,
 			Strata const* strata,
 			PopType::sprite_t sprite,
-			Good::good_map_t&& life_needs,
-			Good::good_map_t&& everyday_needs,
-			Good::good_map_t&& luxury_needs,
+			GoodDefinition::good_definition_map_t&& life_needs,
+			GoodDefinition::good_definition_map_t&& everyday_needs,
+			GoodDefinition::good_definition_map_t&& luxury_needs,
 			PopType::income_type_t life_needs_income_types,
 			PopType::income_type_t everyday_needs_income_types,
 			PopType::income_type_t luxury_needs_income_types,
@@ -312,8 +312,8 @@ namespace OpenVic {
 		void lock_all_pop_types();
 
 		bool load_pop_type_file(
-			std::string_view filestem, GoodManager const& good_manager, IdeologyManager const& ideology_manager,
-			ast::NodeCPtr root
+			std::string_view filestem, GoodDefinitionManager const& good_definition_manager,
+			IdeologyManager const& ideology_manager, ast::NodeCPtr root
 		);
 		bool load_delayed_parse_pop_type_data(UnitTypeManager const& unit_type_manager, IssueManager const& issue_manager);
 
