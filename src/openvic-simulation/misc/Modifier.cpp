@@ -86,8 +86,8 @@ TriggeredModifier::TriggeredModifier(
 	std::string_view new_identifier, ModifierValue&& new_values, icon_t new_icon, ConditionScript&& new_trigger
 ) : Modifier { new_identifier, std::move(new_values), new_icon }, trigger { std::move(new_trigger) } {}
 
-bool TriggeredModifier::parse_scripts(GameManager const& game_manager) {
-	return trigger.parse_script(false, game_manager);
+bool TriggeredModifier::parse_scripts(DefinitionManager const& definition_manager) {
+	return trigger.parse_script(false, definition_manager);
 }
 
 ModifierInstance::ModifierInstance(Modifier const& modifier, Date expiry_date)
@@ -356,10 +356,10 @@ bool ModifierManager::load_triggered_modifiers(ast::NodeCPtr root) {
 	return ret;
 }
 
-bool ModifierManager::parse_scripts(GameManager const& game_manager) {
+bool ModifierManager::parse_scripts(DefinitionManager const& definition_manager) {
 	bool ret = true;
 	for (TriggeredModifier& modifier : triggered_modifiers.get_items()) {
-		ret &= modifier.parse_scripts(game_manager);
+		ret &= modifier.parse_scripts(definition_manager);
 	}
 	return ret;
 }

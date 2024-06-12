@@ -61,7 +61,7 @@ namespace OpenVic {
 			building_set_t&& new_activated_buildings, ModifierValue&& new_values, ConditionalWeight&& new_ai_chance
 		);
 
-		bool parse_scripts(GameManager const& game_manager);
+		bool parse_scripts(DefinitionManager const& definition_manager);
 
 	public:
 		Technology(Technology&&) = default;
@@ -109,6 +109,6 @@ namespace OpenVic {
 		/* Populates the lists of technology areas for each technology folder and technologies for each technology area. */
 		bool generate_technology_lists();
 
-		bool parse_scripts(GameManager const& game_manager);
+		bool parse_scripts(DefinitionManager const& definition_manager);
 	};
 }

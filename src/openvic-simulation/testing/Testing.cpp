@@ -6,7 +6,7 @@
 
 using namespace OpenVic;
 
-Testing::Testing(GameManager* game_manager) {
+Testing::Testing(DefinitionManager const& definition_manager) {
 
 	// Constructor for the tests will add requirements
 	// Then execute the script
@@ -24,7 +24,7 @@ Testing::Testing(GameManager* game_manager) {
 	test_scripts.push_back(a_006_politics_tests);
 
 	for (auto test_script : test_scripts) {
-		test_script->set_game_manager(game_manager);
+		test_script->set_definition_manager(&definition_manager);
 	}
 }
 

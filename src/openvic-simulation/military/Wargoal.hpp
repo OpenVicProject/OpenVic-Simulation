@@ -8,6 +8,7 @@
 
 namespace OpenVic {
 	struct WargoalTypeManager;
+	struct DefinitionManager;
 
 	struct WargoalType : HasIdentifier {
 		friend struct WargoalTypeManager;
@@ -86,7 +87,7 @@ namespace OpenVic {
 			ConditionScript&& new_allowed_countries, EffectScript&& new_on_add, EffectScript&& new_on_po_accepted
 		);
 
-		bool parse_scripts(GameManager& game_manager);
+		bool parse_scripts(DefinitionManager const& definition_manager);
 
 	public:
 		WargoalType(WargoalType&&) = default;
@@ -112,6 +113,6 @@ namespace OpenVic {
 
 		bool load_wargoal_file(ast::NodeCPtr root);
 
-		bool parse_scripts(GameManager& game_manager);
+		bool parse_scripts(DefinitionManager const& definition_manager);
 	};
-} // namespace OpenVic
+}

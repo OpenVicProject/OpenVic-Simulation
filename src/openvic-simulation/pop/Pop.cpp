@@ -194,18 +194,18 @@ PopType::PopType(
 	assert(merge_max_size >= 0);
 }
 
-bool PopType::parse_scripts(GameManager const& game_manager) {
+bool PopType::parse_scripts(DefinitionManager const& definition_manager) {
 	bool ret = true;
-	ret &= country_migration_target.parse_scripts(game_manager);
-	ret &= migration_target.parse_scripts(game_manager);
+	ret &= country_migration_target.parse_scripts(definition_manager);
+	ret &= migration_target.parse_scripts(definition_manager);
 	for (auto [pop_type, weight] : mutable_iterator(promote_to)) {
-		ret &= weight.parse_scripts(game_manager);
+		ret &= weight.parse_scripts(definition_manager);
 	}
 	for (auto [ideology, weight] : mutable_iterator(ideologies)) {
-		ret &= weight.parse_scripts(game_manager);
+		ret &= weight.parse_scripts(definition_manager);
 	}
 	for (auto [issue, weight] : mutable_iterator(issues)) {
-		ret &= weight.parse_scripts(game_manager);
+		ret &= weight.parse_scripts(definition_manager);
 	}
 	return ret;
 }
@@ -656,17 +656,17 @@ bool PopManager::generate_modifiers(ModifierManager& modifier_manager) const {
 	return ret;
 }
 
-bool PopManager::parse_scripts(GameManager const& game_manager) {
+bool PopManager::parse_scripts(DefinitionManager const& definition_manager) {
 	bool ret = true;
 	for (PopType& pop_type : pop_types.get_items()) {
-		ret &= pop_type.parse_scripts(game_manager);
+		ret &= pop_type.parse_scripts(definition_manager);
 	}
-	ret &= promotion_chance.parse_scripts(game_manager);
-	ret &= demotion_chance.parse_scripts(game_manager);
-	ret &= migration_chance.parse_scripts(game_manager);
-	ret &= colonialmigration_chance.parse_scripts(game_manager);
-	ret &= emigration_chance.parse_scripts(game_manager);
-	ret &= assimilation_chance.parse_scripts(game_manager);
-	ret &= conversion_chance.parse_scripts(game_manager);
+	ret &= promotion_chance.parse_scripts(definition_manager);
+	ret &= demotion_chance.parse_scripts(definition_manager);
+	ret &= migration_chance.parse_scripts(definition_manager);
+	ret &= colonialmigration_chance.parse_scripts(definition_manager);
+	ret &= emigration_chance.parse_scripts(definition_manager);
+	ret &= assimilation_chance.parse_scripts(definition_manager);
+	ret &= conversion_chance.parse_scripts(definition_manager);
 	return ret;
 }

@@ -2,15 +2,15 @@
 
 #include <string_view>
 
-#include "openvic-simulation/GameManager.hpp"
+#include "openvic-simulation/InstanceManager.hpp"
 #include "openvic-simulation/types/IdentifierRegistry.hpp"
 #include "openvic-simulation/utility/Logger.hpp"
 
 using namespace OpenVic;
 
 DiplomaticActionType::DiplomaticActionType(DiplomaticActionType::Initializer&& initializer)
-	: commit_action_caller { std::move(initializer.commit) }, allowed_to_commit { std::move(initializer.allowed) },
-	  get_acceptance { std::move(initializer.get_acceptance) } {}
+  : commit_action_caller { std::move(initializer.commit) }, allowed_to_commit { std::move(initializer.allowed) },
+	get_acceptance { std::move(initializer.get_acceptance) } {}
 
 CancelableDiplomaticActionType::CancelableDiplomaticActionType(CancelableDiplomaticActionType::Initializer&& initializer)
 	: allowed_to_cancel { std::move(initializer.allowed_cancel) }, DiplomaticActionType(std::move(initializer)) {}
@@ -38,11 +38,12 @@ bool DiplomaticActionManager::add_cancelable_diplomatic_action(
 }
 
 DiplomaticActionTickCache DiplomaticActionManager::create_diplomatic_action_tick(
-	std::string_view identifier, CountryInstance* sender, CountryInstance* reciever, std::any context_data
+	std::string_view identifier, CountryInstance* sender, CountryInstance* reciever, std::any context_data,
+	InstanceManager& instance_manager
 ) {
 	auto type = diplomatic_action_types.get_item_by_identifier(identifier);
 
-	DiplomaticActionTickCache result { { sender, reciever, context_data }, type };
+	DiplomaticActionTickCache result { { instance_manager, sender, reciever, context_data }, type };
 	type->visit([&](auto type) {
 		if ((result.allowed_to_commit = type.allowed_to_commit(result.argument))) {
 			result.acceptance = type.get_acceptance(result.argument);
@@ -52,7 +53,7 @@ DiplomaticActionTickCache DiplomaticActionManager::create_diplomatic_action_tick
 	return result;
 }
 
-bool DiplomaticActionManager::setup_diplomatic_actions(GameManager& manager) {
+bool DiplomaticActionManager::setup_diplomatic_actions() {
 	using Argument = DiplomaticActionType::Argument;
 
 	bool result = true;
@@ -68,11 +69,11 @@ bool DiplomaticActionManager::setup_diplomatic_actions(GameManager& manager) {
 		{
 			.commit = [](Argument& arg) {},
 			.allowed =
-				[](const Argument& arg) {
+				[](Argument const& arg) {
 					return false;
 				},
 			.get_acceptance =
-				[](const Argument& arg) {
+				[](Argument const& arg) {
 					return 1;
 				},
 		}
@@ -82,7 +83,7 @@ bool DiplomaticActionManager::setup_diplomatic_actions(GameManager& manager) {
 		{
 			.commit = [](Argument& arg) {},
 			.allowed_cancel =
-				[](const Argument& arg) {
+				[](Argument const& arg) {
 					return true;
 				},
 		}
@@ -92,8 +93,8 @@ bool DiplomaticActionManager::setup_diplomatic_actions(GameManager& manager) {
 		"increase_relations",
 		{
 			.commit =
-				[&manager](Argument& arg) {
-					auto relation = manager.get_diplomacy_manager().get_country_relation_manager().get_country_relation_ptr(
+				[](Argument& arg) {
+					auto relation = arg.instance_manager.get_country_relation_manager().get_country_relation_ptr(
 						arg.sender, arg.reciever
 					);
 					if (!relation) {
@@ -102,7 +103,7 @@ bool DiplomaticActionManager::setup_diplomatic_actions(GameManager& manager) {
 					*relation += 25;
 				},
 			.allowed =
-				[](const Argument& arg) {
+				[](Argument const& arg) {
 					return false;
 				},
 		}
@@ -111,8 +112,8 @@ bool DiplomaticActionManager::setup_diplomatic_actions(GameManager& manager) {
 		"decrease_relations",
 		{
 			.commit =
-				[&manager](Argument& arg) {
-					auto relation = manager.get_diplomacy_manager().get_country_relation_manager().get_country_relation_ptr(
+				[](Argument& arg) {
+					auto relation = arg.instance_manager.get_country_relation_manager().get_country_relation_ptr(
 						arg.sender, arg.reciever
 					);
 					if (!relation) {
@@ -121,7 +122,7 @@ bool DiplomaticActionManager::setup_diplomatic_actions(GameManager& manager) {
 					*relation -= 25;
 				},
 			.allowed =
-				[](const Argument& arg) {
+				[](Argument const& arg) {
 					return false;
 				},
 		}

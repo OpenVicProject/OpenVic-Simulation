@@ -1,7 +1,7 @@
 #include "Condition.hpp"
 
 #include "openvic-simulation/dataloader/NodeTools.hpp"
-#include "openvic-simulation/GameManager.hpp"
+#include "openvic-simulation/DefinitionManager.hpp"
 
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;
@@ -65,7 +65,7 @@ bool ConditionManager::add_condition(
 	});
 }
 
-bool ConditionManager::setup_conditions(GameManager const& game_manager) {
+bool ConditionManager::setup_conditions(DefinitionManager const& definition_manager) {
 	bool ret = true;
 
 	/* Special Scopes */
@@ -352,7 +352,7 @@ bool ConditionManager::setup_conditions(GameManager const& game_manager) {
 
 	/* Scopes from other registries */
 	import_identifiers(
-		game_manager.get_country_manager().get_country_identifiers(),
+		definition_manager.get_country_manager().get_country_identifiers(),
 		GROUP,
 		COUNTRY,
 		COUNTRY,
@@ -361,7 +361,7 @@ bool ConditionManager::setup_conditions(GameManager const& game_manager) {
 	);
 
 	import_identifiers(
-		game_manager.get_map_definition().get_region_identifiers(),
+		definition_manager.get_map_definition().get_region_identifiers(),
 		GROUP,
 		COUNTRY,
 		STATE,
@@ -370,7 +370,7 @@ bool ConditionManager::setup_conditions(GameManager const& game_manager) {
 	);
 
 	import_identifiers(
-		game_manager.get_map_definition().get_province_definition_identifiers(),
+		definition_manager.get_map_definition().get_province_definition_identifiers(),
 		GROUP,
 		COUNTRY,
 		PROVINCE,
@@ -380,7 +380,7 @@ bool ConditionManager::setup_conditions(GameManager const& game_manager) {
 
 	/* Conditions from other registries */
 	import_identifiers(
-		game_manager.get_politics_manager().get_ideology_manager().get_ideology_identifiers(),
+		definition_manager.get_politics_manager().get_ideology_manager().get_ideology_identifiers(),
 		REAL,
 		COUNTRY,
 		NO_SCOPE,
@@ -389,7 +389,7 @@ bool ConditionManager::setup_conditions(GameManager const& game_manager) {
 	);
 
 	import_identifiers(
-		game_manager.get_politics_manager().get_issue_manager().get_reform_group_identifiers(),
+		definition_manager.get_politics_manager().get_issue_manager().get_reform_group_identifiers(),
 		IDENTIFIER,
 		COUNTRY,
 		NO_SCOPE,
@@ -398,7 +398,7 @@ bool ConditionManager::setup_conditions(GameManager const& game_manager) {
 	);
 
 	import_identifiers(
-		game_manager.get_politics_manager().get_issue_manager().get_reform_identifiers(),
+		definition_manager.get_politics_manager().get_issue_manager().get_reform_identifiers(),
 		REAL,
 		COUNTRY,
 		NO_SCOPE,
@@ -407,7 +407,7 @@ bool ConditionManager::setup_conditions(GameManager const& game_manager) {
 	);
 
 	import_identifiers(
-		game_manager.get_politics_manager().get_issue_manager().get_issue_identifiers(),
+		definition_manager.get_politics_manager().get_issue_manager().get_issue_identifiers(),
 		REAL,
 		COUNTRY,
 		NO_SCOPE,
@@ -416,7 +416,7 @@ bool ConditionManager::setup_conditions(GameManager const& game_manager) {
 	);
 
 	import_identifiers(
-		game_manager.get_pop_manager().get_pop_type_identifiers(),
+		definition_manager.get_pop_manager().get_pop_type_identifiers(),
 		REAL,
 		COUNTRY,
 		NO_SCOPE,
@@ -425,7 +425,7 @@ bool ConditionManager::setup_conditions(GameManager const& game_manager) {
 	);
 
 	import_identifiers(
-		game_manager.get_research_manager().get_technology_manager().get_technology_identifiers(),
+		definition_manager.get_research_manager().get_technology_manager().get_technology_identifiers(),
 		BOOLEAN_INT,
 		COUNTRY,
 		NO_SCOPE,
@@ -434,7 +434,7 @@ bool ConditionManager::setup_conditions(GameManager const& game_manager) {
 	);
 
 	import_identifiers(
-		game_manager.get_economy_manager().get_good_definition_manager().get_good_definition_identifiers(),
+		definition_manager.get_economy_manager().get_good_definition_manager().get_good_definition_identifiers(),
 		INTEGER,
 		COUNTRY,
 		NO_SCOPE,
@@ -456,10 +456,10 @@ bool ConditionManager::setup_conditions(GameManager const& game_manager) {
 }
 
 callback_t<std::string_view> ConditionManager::expect_parse_identifier(
-	GameManager const& game_manager, identifier_type_t identifier_type,
+	DefinitionManager const& definition_manager, identifier_type_t identifier_type,
 	callback_t<HasIdentifier const*> callback
 ) const {
-	return [this, &game_manager, identifier_type, callback](std::string_view identifier) -> bool {
+	return [this, &definition_manager, identifier_type, callback](std::string_view identifier) -> bool {
 		HasIdentifier const* identified = nullptr;
 
 		#define EXPECT_CALL(type, name, manager, ...) \
@@ -484,33 +484,33 @@ callback_t<std::string_view> ConditionManager::expect_parse_identifier(
 		EXPECT_CALL_PLACEHOLDER(GLOBAL_FLAG);
 		EXPECT_CALL_PLACEHOLDER(COUNTRY_FLAG);
 		EXPECT_CALL_PLACEHOLDER(PROVINCE_FLAG);
-		EXPECT_CALL(COUNTRY_TAG, country, game_manager.get_country_manager(), "THIS", "FROM", "OWNER");
-		EXPECT_CALL(PROVINCE_ID, province_definition, game_manager.get_map_definition(), "THIS", "FROM");
-		EXPECT_CALL(REGION, region, game_manager.get_map_definition());
-		EXPECT_CALL(IDEOLOGY, ideology, game_manager.get_politics_manager().get_ideology_manager());
-		EXPECT_CALL(REFORM_GROUP, reform_group, game_manager.get_politics_manager().get_issue_manager());
-		EXPECT_CALL(REFORM, reform, game_manager.get_politics_manager().get_issue_manager());
-		EXPECT_CALL(ISSUE, issue, game_manager.get_politics_manager().get_issue_manager());
-		EXPECT_CALL(POP_TYPE, pop_type, game_manager.get_pop_manager());
-		EXPECT_CALL(POP_STRATA, strata, game_manager.get_pop_manager());
-		EXPECT_CALL(TECHNOLOGY, technology, game_manager.get_research_manager().get_technology_manager());
-		EXPECT_CALL(INVENTION, invention, game_manager.get_research_manager().get_invention_manager());
-		EXPECT_CALL(TECH_SCHOOL, technology_school, game_manager.get_research_manager().get_technology_manager());
-		EXPECT_CALL(CULTURE, culture, game_manager.get_pop_manager().get_culture_manager(), "THIS", "FROM");
-		EXPECT_CALL(CULTURE_GROUP, culture_group, game_manager.get_pop_manager().get_culture_manager());
-		EXPECT_CALL(RELIGION, religion, game_manager.get_pop_manager().get_religion_manager(), "THIS", "FROM");
-		EXPECT_CALL(TRADE_GOOD, good_definition, game_manager.get_economy_manager().get_good_definition_manager());
-		EXPECT_CALL(BUILDING, building_type, game_manager.get_economy_manager().get_building_type_manager(), "FACTORY");
-		EXPECT_CALL(CASUS_BELLI, wargoal_type, game_manager.get_military_manager().get_wargoal_type_manager());
-		EXPECT_CALL(GOVERNMENT_TYPE, government_type, game_manager.get_politics_manager().get_government_type_manager());
-		EXPECT_CALL(MODIFIER, event_modifier, game_manager.get_modifier_manager());
-		EXPECT_CALL(MODIFIER, triggered_modifier, game_manager.get_modifier_manager());
-		EXPECT_CALL(MODIFIER, static_modifier, game_manager.get_modifier_manager());
-		EXPECT_CALL(NATIONAL_VALUE, national_value, game_manager.get_politics_manager().get_national_value_manager());
-		EXPECT_CALL(CULTURE_UNION, country, game_manager.get_country_manager(), "THIS", "FROM", "THIS_UNION");
-		EXPECT_CALL(CONTINENT, continent, game_manager.get_map_definition());
-		EXPECT_CALL(CRIME, crime_modifier, game_manager.get_crime_manager());
-		EXPECT_CALL(TERRAIN, terrain_type, game_manager.get_map_definition().get_terrain_type_manager());
+		EXPECT_CALL(COUNTRY_TAG, country, definition_manager.get_country_manager(), "THIS", "FROM", "OWNER");
+		EXPECT_CALL(PROVINCE_ID, province_definition, definition_manager.get_map_definition(), "THIS", "FROM");
+		EXPECT_CALL(REGION, region, definition_manager.get_map_definition());
+		EXPECT_CALL(IDEOLOGY, ideology, definition_manager.get_politics_manager().get_ideology_manager());
+		EXPECT_CALL(REFORM_GROUP, reform_group, definition_manager.get_politics_manager().get_issue_manager());
+		EXPECT_CALL(REFORM, reform, definition_manager.get_politics_manager().get_issue_manager());
+		EXPECT_CALL(ISSUE, issue, definition_manager.get_politics_manager().get_issue_manager());
+		EXPECT_CALL(POP_TYPE, pop_type, definition_manager.get_pop_manager());
+		EXPECT_CALL(POP_STRATA, strata, definition_manager.get_pop_manager());
+		EXPECT_CALL(TECHNOLOGY, technology, definition_manager.get_research_manager().get_technology_manager());
+		EXPECT_CALL(INVENTION, invention, definition_manager.get_research_manager().get_invention_manager());
+		EXPECT_CALL(TECH_SCHOOL, technology_school, definition_manager.get_research_manager().get_technology_manager());
+		EXPECT_CALL(CULTURE, culture, definition_manager.get_pop_manager().get_culture_manager(), "THIS", "FROM");
+		EXPECT_CALL(CULTURE_GROUP, culture_group, definition_manager.get_pop_manager().get_culture_manager());
+		EXPECT_CALL(RELIGION, religion, definition_manager.get_pop_manager().get_religion_manager(), "THIS", "FROM");
+		EXPECT_CALL(TRADE_GOOD, good_definition, definition_manager.get_economy_manager().get_good_definition_manager());
+		EXPECT_CALL(BUILDING, building_type, definition_manager.get_economy_manager().get_building_type_manager(), "FACTORY");
+		EXPECT_CALL(CASUS_BELLI, wargoal_type, definition_manager.get_military_manager().get_wargoal_type_manager());
+		EXPECT_CALL(GOVERNMENT_TYPE, government_type, definition_manager.get_politics_manager().get_government_type_manager());
+		EXPECT_CALL(MODIFIER, event_modifier, definition_manager.get_modifier_manager());
+		EXPECT_CALL(MODIFIER, triggered_modifier, definition_manager.get_modifier_manager());
+		EXPECT_CALL(MODIFIER, static_modifier, definition_manager.get_modifier_manager());
+		EXPECT_CALL(NATIONAL_VALUE, national_value, definition_manager.get_politics_manager().get_national_value_manager());
+		EXPECT_CALL(CULTURE_UNION, country, definition_manager.get_country_manager(), "THIS", "FROM", "THIS_UNION");
+		EXPECT_CALL(CONTINENT, continent, definition_manager.get_map_definition());
+		EXPECT_CALL(CRIME, crime_modifier, definition_manager.get_crime_manager());
+		EXPECT_CALL(TERRAIN, terrain_type, definition_manager.get_map_definition().get_terrain_type_manager());
 
 		#undef EXPECT_CALL
 		#undef EXPECT_CALL_PLACEHOLDER
@@ -520,10 +520,10 @@ callback_t<std::string_view> ConditionManager::expect_parse_identifier(
 }
 
 node_callback_t ConditionManager::expect_condition_node(
-	GameManager const& game_manager, Condition const& condition, scope_t this_scope,
+	DefinitionManager const& definition_manager, Condition const& condition, scope_t this_scope,
 	scope_t from_scope, scope_t cur_scope, callback_t<ConditionNode&&> callback
 ) const {
-	return [this, &game_manager, &condition, callback, this_scope, from_scope, cur_scope](
+	return [this, &definition_manager, &condition, callback, this_scope, from_scope, cur_scope](
 		ast::NodeCPtr node
 	) -> bool {
 		bool ret = false;
@@ -538,12 +538,12 @@ node_callback_t ConditionManager::expect_condition_node(
 
 		HasIdentifier const* value_item = nullptr;
 
-		const auto get_identifiable = [this, &game_manager](
+		const auto get_identifiable = [this, &definition_manager](
 			identifier_type_t item_type, std::string_view id, bool log
 		) -> HasIdentifier const* {
 			HasIdentifier const* keyval = nullptr;
 			bool ret = expect_parse_identifier(
-				game_manager,
+				definition_manager,
 				item_type,
 				assign_variable_callback(keyval)
 			)(id);
@@ -591,7 +591,9 @@ node_callback_t ConditionManager::expect_condition_node(
 
 		//entries with magic syntax, thanks paradox!
 		if (!ret && share_value_type(value_type, COMPLEX)) {
-			const auto expect_pair = [&ret, &value, node](std::string_view identifier_key, std::string_view value_key) -> void {
+			const auto expect_pair = [&ret, &value, node](
+				std::string_view identifier_key, std::string_view value_key
+			) -> void {
 				std::string_view pair_identifier {};
 				fixed_point_t pair_value = 0;
 				ret |= expect_dictionary_keys(
@@ -642,7 +644,7 @@ node_callback_t ConditionManager::expect_condition_node(
 		if (!ret && share_value_type(value_type, GROUP)) {
 			ConditionNode::condition_list_t node_list;
 			ret |= expect_condition_node_list(
-				game_manager, this_scope, from_scope,
+				definition_manager, this_scope, from_scope,
 				scope_change == NO_SCOPE ? cur_scope : scope_change,
 				false,
 				vector_callback(node_list)
@@ -701,15 +703,15 @@ static bool top_scope_fallback(std::string_view id, ast::NodeCPtr node) {
 };
 
 node_callback_t ConditionManager::expect_condition_node_list(
-	GameManager const& game_manager, scope_t this_scope, scope_t from_scope,
+	DefinitionManager const& definition_manager, scope_t this_scope, scope_t from_scope,
 	scope_t cur_scope, bool top_scope, callback_t<ConditionNode&&> callback
 ) const {
-	return [this, &game_manager, callback, this_scope, from_scope, cur_scope, top_scope](ast::NodeCPtr node) -> bool {
+	return [this, &definition_manager, callback, this_scope, from_scope, cur_scope, top_scope](ast::NodeCPtr node) -> bool {
 		const auto expect_node = [
-			this, &game_manager, callback, this_scope, from_scope, cur_scope
+			this, &definition_manager, callback, this_scope, from_scope, cur_scope
 		](Condition const& condition, ast::NodeCPtr node) -> bool {
 			return expect_condition_node(
-				game_manager, condition, this_scope, from_scope, cur_scope, callback
+				definition_manager, condition, this_scope, from_scope, cur_scope, callback
 			)(node);
 		};
 
@@ -724,14 +726,14 @@ node_callback_t ConditionManager::expect_condition_node_list(
 }
 
 node_callback_t ConditionManager::expect_condition_script(
-	GameManager const& game_manager, scope_t initial_scope, scope_t this_scope,
+	DefinitionManager const& definition_manager, scope_t initial_scope, scope_t this_scope,
 	scope_t from_scope, callback_t<ConditionNode&&> callback
 ) const {
-	return [this, &game_manager, initial_scope, this_scope, from_scope, callback](ast::NodeCPtr node) -> bool {
+	return [this, &definition_manager, initial_scope, this_scope, from_scope, callback](ast::NodeCPtr node) -> bool {
 
 		ConditionNode::condition_list_t conds;
 		bool ret = expect_condition_node_list(
-			game_manager,
+			definition_manager,
 			this_scope,
 			from_scope,
 			initial_scope,

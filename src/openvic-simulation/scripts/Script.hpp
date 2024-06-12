@@ -3,6 +3,7 @@
 #include "openvic-simulation/dataloader/NodeTools.hpp"
 
 namespace OpenVic {
+	// TODO - is template needed if context is always DefinitionManager const&?
 	template<typename... _Context>
 	struct Script {
 	private:

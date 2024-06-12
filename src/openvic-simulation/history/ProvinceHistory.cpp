@@ -1,6 +1,6 @@
 #include "ProvinceHistory.hpp"
 
-#include "openvic-simulation/GameManager.hpp"
+#include "openvic-simulation/DefinitionManager.hpp"
 #include "openvic-simulation/map/ProvinceDefinition.hpp"
 
 using namespace OpenVic;
@@ -16,13 +16,14 @@ std::unique_ptr<ProvinceHistoryEntry> ProvinceHistoryMap::_make_entry(Date date)
 }
 
 bool ProvinceHistoryMap::_load_history_entry(
-	GameManager const& game_manager, ProvinceHistoryEntry& entry, ast::NodeCPtr root
+	DefinitionManager const& definition_manager, ProvinceHistoryEntry& entry, ast::NodeCPtr root
 ) {
-	BuildingTypeManager const& building_type_manager = game_manager.get_economy_manager().get_building_type_manager();
-	CountryManager const& country_manager = game_manager.get_country_manager();
-	GoodDefinitionManager const& good_definition_manager = game_manager.get_economy_manager().get_good_definition_manager();
-	IdeologyManager const& ideology_manager = game_manager.get_politics_manager().get_ideology_manager();
-	TerrainTypeManager const& terrain_type_manager = game_manager.get_map_definition().get_terrain_type_manager();
+	BuildingTypeManager const& building_type_manager = definition_manager.get_economy_manager().get_building_type_manager();
+	CountryManager const& country_manager = definition_manager.get_country_manager();
+	GoodDefinitionManager const& good_definition_manager =
+		definition_manager.get_economy_manager().get_good_definition_manager();
+	IdeologyManager const& ideology_manager = definition_manager.get_politics_manager().get_ideology_manager();
+	TerrainTypeManager const& terrain_type_manager = definition_manager.get_map_definition().get_terrain_type_manager();
 
 	using enum ProvinceInstance::colony_status_t;
 	static const string_map_t<ProvinceInstance::colony_status_t> colony_status_map {
@@ -30,7 +31,7 @@ bool ProvinceHistoryMap::_load_history_entry(
 	};
 
 	return expect_dictionary_keys_and_default(
-		[this, &game_manager, &building_type_manager, &entry](
+		[this, &definition_manager, &building_type_manager, &entry](
 			std::string_view key, ast::NodeCPtr value) -> bool {
 			// used for province buildings like forts or railroads
 			BuildingType const* building_type = building_type_manager.get_building_type_by_identifier(key);
@@ -50,7 +51,7 @@ bool ProvinceHistoryMap::_load_history_entry(
 				}
 			}
 
-			return _load_history_sub_entry_callback(game_manager, entry.get_date(), value, key, value);
+			return _load_history_sub_entry_callback(definition_manager, entry.get_date(), value, key, value);
 		},
 		"owner", ZERO_OR_ONE,
 			country_manager.expect_country_identifier(assign_variable_callback_pointer_opt(entry.owner, true)),
@@ -183,7 +184,7 @@ ProvinceHistoryMap* ProvinceHistoryManager::_get_or_make_province_history(Provin
 }
 
 bool ProvinceHistoryManager::load_province_history_file(
-	GameManager const& game_manager, ProvinceDefinition const& province, ast::NodeCPtr root
+	DefinitionManager const& definition_manager, ProvinceDefinition const& province, ast::NodeCPtr root
 ) {
 	if (locked) {
 		Logger::error(
@@ -195,17 +196,17 @@ bool ProvinceHistoryManager::load_province_history_file(
 
 	ProvinceHistoryMap* province_history = _get_or_make_province_history(province);
 	if (province_history != nullptr) {
-		return province_history->_load_history_file(game_manager, root);
+		return province_history->_load_history_file(definition_manager, root);
 	} else {
 		return false;
 	}
 }
 
 bool ProvinceHistoryEntry::_load_province_pop_history(
-	GameManager const& game_manager, ast::NodeCPtr root, bool *non_integer_size
+	DefinitionManager const& definition_manager, ast::NodeCPtr root, bool *non_integer_size
 ) {
-	PopManager const& pop_manager = game_manager.get_pop_manager();
-	RebelManager const& rebel_manager = game_manager.get_politics_manager().get_rebel_manager();
+	PopManager const& pop_manager = definition_manager.get_pop_manager();
+	RebelManager const& rebel_manager = definition_manager.get_politics_manager().get_rebel_manager();
 	return pop_manager.expect_pop_type_dictionary_reserve_length(
 		pops,
 		[this, &pop_manager, &rebel_manager, non_integer_size](PopType const& pop_type, ast::NodeCPtr pop_node) -> bool {
@@ -215,28 +216,28 @@ bool ProvinceHistoryEntry::_load_province_pop_history(
 }
 
 bool ProvinceHistoryMap::_load_province_pop_history(
-	GameManager const& game_manager, Date date, ast::NodeCPtr root, bool *non_integer_size
+	DefinitionManager const& definition_manager, Date date, ast::NodeCPtr root, bool *non_integer_size
 ) {
-	ProvinceHistoryEntry* entry = _get_or_make_entry(game_manager, date);
+	ProvinceHistoryEntry* entry = _get_or_make_entry(definition_manager, date);
 	if (entry != nullptr) {
-		return entry->_load_province_pop_history(game_manager, root, non_integer_size);
+		return entry->_load_province_pop_history(definition_manager, root, non_integer_size);
 	} else {
 		return false;
 	}
 }
 
 bool ProvinceHistoryManager::load_pop_history_file(
-	GameManager const& game_manager, Date date, ast::NodeCPtr root, bool *non_integer_size
+	DefinitionManager const& definition_manager, Date date, ast::NodeCPtr root, bool *non_integer_size
 ) {
 	if (locked) {
 		Logger::error("Attempted to load pop history file after province history registry was locked!");
 		return false;
 	}
-	return game_manager.get_map_definition().expect_province_definition_dictionary(
-		[this, &game_manager, date, non_integer_size](ProvinceDefinition const& province, ast::NodeCPtr node) -> bool {
+	return definition_manager.get_map_definition().expect_province_definition_dictionary(
+		[this, &definition_manager, date, non_integer_size](ProvinceDefinition const& province, ast::NodeCPtr node) -> bool {
 			ProvinceHistoryMap* province_history = _get_or_make_province_history(province);
 			if (province_history != nullptr) {
-				return province_history->_load_province_pop_history(game_manager, date, node, non_integer_size);
+				return province_history->_load_province_pop_history(definition_manager, date, node, non_integer_size);
 			} else {
 				return false;
 			}

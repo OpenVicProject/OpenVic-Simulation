@@ -10,7 +10,7 @@ using namespace OpenVic;
 ProvinceInstance::ProvinceInstance(ProvinceDefinition const& new_province_definition)
   : HasIdentifierAndColour { new_province_definition },
 	province_definition { new_province_definition },
-	terrain_type { nullptr },
+	terrain_type { new_province_definition.get_default_terrain_type() },
 	life_rating { 0 },
 	colony_status { colony_status_t::STATE },
 	state { nullptr },
@@ -138,22 +138,18 @@ bool ProvinceInstance::remove_navy(NavyInstance& navy) {
 	}
 }
 
-bool ProvinceInstance::reset(BuildingTypeManager const& building_type_manager) {
-	terrain_type = province_definition.get_default_terrain_type();
-	life_rating = 0;
-	colony_status = colony_status_t::STATE;
-	state = nullptr;
-	owner = nullptr;
-	controller = nullptr;
-	cores.clear();
-	slave = false;
-	crime = nullptr;
-	rgo = nullptr;
+bool ProvinceInstance::setup(BuildingTypeManager const& building_type_manager) {
+	if (buildings_are_locked()) {
+		Logger::error("Cannot setup province ", get_identifier(), " - buildings already locked!");
+		return false;
+	}
 
-	buildings.reset();
 	bool ret = true;
+
 	if (!province_definition.is_water()) {
 		if (building_type_manager.building_types_are_locked()) {
+			buildings.reserve(building_type_manager.get_province_building_types().size());
+
 			for (BuildingType const* building_type : building_type_manager.get_province_building_types()) {
 				ret &= buildings.add_item({ *building_type });
 			}
@@ -162,10 +158,8 @@ bool ProvinceInstance::reset(BuildingTypeManager const& building_type_manager) {
 			ret = false;
 		}
 	}
-	lock_buildings();
 
-	pops.clear();
-	_update_pops();
+	lock_buildings();
 
 	return ret;
 }

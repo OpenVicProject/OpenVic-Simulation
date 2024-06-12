@@ -2,7 +2,7 @@
 #include <iostream>
 #include <vector>
 
-#include "openvic-simulation/GameManager.hpp"
+#include "openvic-simulation/DefinitionManager.hpp"
 #include "openvic-simulation/testing/TestScript.hpp"
 #include "openvic-simulation/testing/test_scripts/A_001_file_tests.cpp"
 #include "openvic-simulation/testing/test_scripts/A_002_economy_tests.cpp"
@@ -16,7 +16,7 @@ namespace OpenVic {
 	class Testing {
 
 	public:
-		Testing(GameManager* game_manager);
+		Testing(DefinitionManager const& definition_manager);
 		~Testing();
 
 		std::vector<TestScript*> test_scripts = std::vector<TestScript*>();

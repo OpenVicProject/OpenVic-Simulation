@@ -3,94 +3,73 @@
 using namespace OpenVic;
 
 GameManager::GameManager(
-	gamestate_updated_func_t gamestate_updated_callback, SimulationClock::state_changed_function_t clock_state_changed_callback
-) : simulation_clock {
-		std::bind(&GameManager::tick, this), std::bind(&GameManager::update_gamestate, this), clock_state_changed_callback
-	}, gamestate_updated { gamestate_updated_callback ? std::move(gamestate_updated_callback) : []() {} },
-	session_start { 0 }, today {}, gamestate_needs_update { false }, currently_updating_gamestate { false },
-	map_instance { map_definition } {}
+	InstanceManager::gamestate_updated_func_t new_gamestate_updated_callback,
+	SimulationClock::state_changed_function_t new_clock_state_changed_callback
+) : gamestate_updated_callback {
+		new_gamestate_updated_callback ? std::move(new_gamestate_updated_callback) : []() {}
+	}, clock_state_changed_callback {
+		new_clock_state_changed_callback ? std::move(new_clock_state_changed_callback) : []() {}
+	}, definitions_loaded { false } {}
 
-void GameManager::set_gamestate_needs_update() {
-	if (!currently_updating_gamestate) {
-		gamestate_needs_update = true;
+bool GameManager::load_definitions(
+	Dataloader::path_vector_t const& roots, Dataloader::localisation_callback_t localisation_callback
+) {
+	if (definitions_loaded) {
+		Logger::error("Cannot load definitions - already loaded!");
+		return false;
+	}
+
+	bool ret = true;
+
+	if (!dataloader.set_roots(roots)) {
+		Logger::error("Failed to set dataloader roots!");
+		ret = false;
+	}
+
+	if (!dataloader.load_defines(definition_manager)) {
+		Logger::error("Failed to load defines!");
+		ret = false;
+	}
+
+	if (!dataloader.load_localisation_files(localisation_callback)) {
+		Logger::error("Failed to load localisation!");
+		ret = false;
+	}
+
+	definitions_loaded = true;
+
+	return ret;
+}
+
+bool GameManager::setup_instance(Bookmark const* bookmark) {
+	if (instance_manager) {
+		Logger::info("Resetting existing game instance.");
 	} else {
-		Logger::error("Attempted to queue a gamestate update already updating the gamestate!");
-	}
-}
-
-void GameManager::update_gamestate() {
-	if (!gamestate_needs_update) {
-		return;
-	}
-	currently_updating_gamestate = true;
-	Logger::info("Update: ", today);
-	map_instance.update_gamestate(today);
-	gamestate_updated();
-	gamestate_needs_update = false;
-	currently_updating_gamestate = false;
-}
-
-/* REQUIREMENTS:
- * SS-98, SS-101
- */
-void GameManager::tick() {
-	today++;
-	Logger::info("Tick: ", today);
-	map_instance.tick(today);
-	set_gamestate_needs_update();
-}
-
-bool GameManager::reset() {
-	session_start = time(nullptr);
-	simulation_clock.reset();
-	today = {};
-	bool ret = economy_manager.setup_good_instances();
-	ret &= map_instance.reset(economy_manager.get_building_type_manager());
-	set_gamestate_needs_update();
-	return ret;
-}
-
-bool GameManager::load_bookmark(Bookmark const* new_bookmark) {
-	bool ret = reset();
-
-	bookmark = new_bookmark;
-	if (bookmark == nullptr) {
-		Logger::error("Cannot load bookmark - null!");
-		return ret;
+		Logger::info("Setting up first game instance.");
 	}
 
-	Logger::info("Loading bookmark ", bookmark->get_name(), " with start date ", bookmark->get_date());
+	instance_manager.emplace(definition_manager, gamestate_updated_callback, clock_state_changed_callback);
 
-	if (!define_manager.in_game_period(bookmark->get_date())) {
-		Logger::warning("Bookmark date ", bookmark->get_date(), " is not in the game's time period!");
-	}
-
-	today = bookmark->get_date();
-
-	ret &= map_instance.apply_history_to_provinces(
-		history_manager.get_province_manager(), today, politics_manager.get_ideology_manager(),
-		politics_manager.get_issue_manager(), *country_manager.get_country_by_identifier("ENG")
-	);
-	ret &= map_instance.get_state_manager().generate_states(map_instance);
-
-	ret &= country_instance_manager.generate_country_instances(country_manager);
-	ret &= country_instance_manager.apply_history_to_countries(
-		history_manager.get_country_manager(), today, military_manager.get_unit_instance_manager(), map_instance
-	);
+	bool ret = instance_manager->setup();
+	ret &= instance_manager->load_bookmark(bookmark);
 
 	return ret;
 }
 
-bool GameManager::expand_selected_province_building(size_t building_index) {
-	set_gamestate_needs_update();
-	ProvinceInstance* province = map_instance.get_selected_province();
-	if (province == nullptr) {
-		Logger::error("Cannot expand building index ", building_index, " - no province selected!");
+bool GameManager::start_game_session() {
+	if (!instance_manager || !instance_manager->is_game_instance_setup()) {
+		Logger::error("Cannot start game session - instance manager not set up!");
 		return false;
 	}
-	if (building_index < 0) {
-		Logger::error("Invalid building index ", building_index, " while trying to expand in province ", province);
+
+	if (instance_manager->is_game_session_started()) {
+		Logger::error("Cannot start game session - session already started!");
 		return false;
 	}
-	return province->expand_building(building_index);
+
+	if (!instance_manager->is_bookmark_loaded()) {
+		Logger::warning("Starting game session with no bookmark loaded!");
+	}
+
+	return instance_manager->start_game_session();
 }

@@ -73,7 +73,7 @@ namespace OpenVic {
 			EffectScript&& new_demands_enforced_effect
 		);
 
-		bool parse_scripts(GameManager& game_manager);
+		bool parse_scripts(DefinitionManager const& definition_manager);
 
 	public:
 		RebelType(RebelType&&) = default;
@@ -98,6 +98,6 @@ namespace OpenVic {
 		bool load_rebels_file(IdeologyManager const& ideology_manager, GovernmentTypeManager const& government_type_manager, ast::NodeCPtr root);
 		bool generate_modifiers(ModifierManager& modifier_manager) const;
 
-		bool parse_scripts(GameManager& game_manager);
+		bool parse_scripts(DefinitionManager const& definition_manager);
 	};
 }

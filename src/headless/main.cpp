@@ -1,7 +1,7 @@
 #include <cstring>
 
-#include <openvic-simulation/GameManager.hpp>
 #include <openvic-simulation/dataloader/Dataloader.hpp>
+#include <openvic-simulation/GameManager.hpp>
 #include <openvic-simulation/testing/Testing.hpp>
 #include <openvic-simulation/utility/Logger.hpp>
 
@@ -18,42 +18,22 @@ static void print_help(std::ostream& stream, char const* program_name) {
 		<< "(Paths with spaces need to be enclosed in \"quotes\").\n";
 }
 
-static bool headless_load(GameManager& game_manager, Dataloader& dataloader) {
-	bool ret = true;
-
-	if (!dataloader.load_defines(game_manager)) {
-		Logger::error("Failed to load defines!");
-		ret = false;
-	}
-	if (!dataloader.load_localisation_files(
-		[](std::string_view key, Dataloader::locale_t locale, std::string_view localisation) -> bool {
-			return true;
-		}
-	)) {
-		Logger::error("Failed to load localisation!");
-		ret = false;
-	}
-
-	return ret;
-}
-
 static bool run_headless(Dataloader::path_vector_t const& roots, bool run_tests) {
 	bool ret = true;
-
-	Dataloader dataloader;
-	if (!dataloader.set_roots(roots)) {
-		Logger::error("Failed to set dataloader roots!");
-		ret = false;
-	}
 
 	GameManager game_manager { []() {
 		Logger::info("State updated");
 	}, nullptr };
 
-	ret &= headless_load(game_manager, dataloader);
+	ret &= game_manager.load_definitions(
+		roots,
+		[](std::string_view key, Dataloader::locale_t locale, std::string_view localisation) -> bool {
+			return true;
+		}
+	);
 
 	if (run_tests) {
-		Testing testing = Testing(&game_manager);
+		Testing testing { game_manager.get_definition_manager() };
 		std::cout << std::endl << "Testing Loaded" << std::endl << std::endl;
 		testing.execute_all_scripts();
 		testing.report_results();

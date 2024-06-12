@@ -10,7 +10,7 @@
 namespace OpenVic {
 	struct ConditionManager;
 	struct ConditionScript;
-	struct GameManager;
+	struct DefinitionManager;
 
 	enum class value_type_t : uint8_t {
 		NO_TYPE     = 0,
@@ -222,7 +222,9 @@ namespace OpenVic {
 		using real_t = fixed_point_t;
 		using identifier_real_t = std::pair<std::string, real_t>;
 		using condition_list_t = std::vector<ConditionNode>;
-		using value_t = std::variant<string_t, boolean_t, double_boolean_t, integer_t, real_t, identifier_real_t, condition_list_t>;
+		using value_t = std::variant<
+			string_t, boolean_t, double_boolean_t, integer_t, real_t, identifier_real_t, condition_list_t
+		>;
 
 	private:
 		Condition const* PROPERTY(condition);
@@ -252,25 +254,25 @@ namespace OpenVic {
 		);
 
 		NodeTools::callback_t<std::string_view> expect_parse_identifier(
-			GameManager const& game_manager, identifier_type_t identifier_type,
+			DefinitionManager const& definition_manager, identifier_type_t identifier_type,
 			NodeTools::callback_t<HasIdentifier const*> callback
 		) const;
 
 		NodeTools::node_callback_t expect_condition_node(
-			GameManager const& game_manager, Condition const& condition, scope_t this_scope,
+			DefinitionManager const& definition_manager, Condition const& condition, scope_t this_scope,
 			scope_t from_scope, scope_t cur_scope, NodeTools::callback_t<ConditionNode&&> callback
 		) const;
 
 		NodeTools::node_callback_t expect_condition_node_list(
-			GameManager const& game_manager, scope_t this_scope, scope_t from_scope,
+			DefinitionManager const& definition_manager, scope_t this_scope, scope_t from_scope,
 			scope_t cur_scope, bool top_scope, NodeTools::callback_t<ConditionNode&&> callback
 		) const;
 
 	public:
-		bool setup_conditions(GameManager const& game_manager);
+		bool setup_conditions(DefinitionManager const& definition_manager);
 
 		NodeTools::node_callback_t expect_condition_script(
-			GameManager const& game_manager, scope_t initial_scope, scope_t this_scope, scope_t from_scope,
+			DefinitionManager const& definition_manager, scope_t initial_scope, scope_t this_scope, scope_t from_scope,
 			NodeTools::callback_t<ConditionNode&&> callback
 		) const;
 	};

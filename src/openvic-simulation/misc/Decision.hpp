@@ -30,7 +30,7 @@ namespace OpenVic {
 			ConditionalWeight&& new_ai_will_do, EffectScript&& new_effect
 		);
 
-		bool parse_scripts(GameManager& game_manager);
+		bool parse_scripts(DefinitionManager const& definition_manager);
 
 	public:
 		Decision(Decision&&) = default;
@@ -49,6 +49,6 @@ namespace OpenVic {
 
 		bool load_decision_file(ast::NodeCPtr root);
 
-		bool parse_scripts(GameManager& game_manager);
+		bool parse_scripts(DefinitionManager const& definition_manager);
 	};
 }

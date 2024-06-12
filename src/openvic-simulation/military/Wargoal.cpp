@@ -24,16 +24,16 @@ WargoalType::WargoalType(
 	allowed_countries { std::move(new_allowed_countries) }, on_add { std::move(new_on_add) },
 	on_po_accepted { std::move(new_on_po_accepted) } {}
 
-bool WargoalType::parse_scripts(GameManager& game_manager) {
+bool WargoalType::parse_scripts(DefinitionManager const& definition_manager) {
 	bool ret = true;
-	ret &= can_use.parse_script(true, game_manager);
-	ret &= is_valid.parse_script(true, game_manager);
-	ret &= allowed_states.parse_script(true, game_manager);
-	ret &= allowed_substate_regions.parse_script(true, game_manager);
-	ret &= allowed_states_in_crisis.parse_script(true, game_manager);
-	ret &= allowed_countries.parse_script(true, game_manager);
-	ret &= on_add.parse_script(true, game_manager);
-	ret &= on_po_accepted.parse_script(true, game_manager);
+	ret &= can_use.parse_script(true, definition_manager);
+	ret &= is_valid.parse_script(true, definition_manager);
+	ret &= allowed_states.parse_script(true, definition_manager);
+	ret &= allowed_substate_regions.parse_script(true, definition_manager);
+	ret &= allowed_states_in_crisis.parse_script(true, definition_manager);
+	ret &= allowed_countries.parse_script(true, definition_manager);
+	ret &= on_add.parse_script(true, definition_manager);
+	ret &= on_po_accepted.parse_script(true, definition_manager);
 	return ret;
 }
 
@@ -211,10 +211,10 @@ bool WargoalTypeManager::load_wargoal_file(ast::NodeCPtr root) {
 	return ret;
 }
 
-bool WargoalTypeManager::parse_scripts(GameManager& game_manager) {
+bool WargoalTypeManager::parse_scripts(DefinitionManager const& definition_manager) {
 	bool ret = true;
 	for (WargoalType& wargoal_type : wargoal_types.get_items()) {
-		ret &= wargoal_type.parse_scripts(game_manager);
+		ret &= wargoal_type.parse_scripts(definition_manager);
 	}
 	return ret;
 }

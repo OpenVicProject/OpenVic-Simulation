@@ -44,7 +44,7 @@ namespace OpenVic {
 		ProvinceInstance* get_selected_province();
 		ProvinceDefinition::index_t get_selected_province_index() const;
 
-		bool reset(BuildingTypeManager const& building_type_manager);
+		bool setup(BuildingTypeManager const& building_type_manager);
 		bool apply_history_to_provinces(
 			ProvinceHistoryManager const& history_manager, Date date, IdeologyManager const& ideology_manager,
 			IssueManager const& issue_manager, Country const& country

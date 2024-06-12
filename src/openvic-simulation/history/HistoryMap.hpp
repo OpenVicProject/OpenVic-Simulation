@@ -16,12 +16,12 @@ namespace OpenVic {
 		HistoryEntry(Date new_date);
 	};
 
-	struct GameManager;
+	struct DefinitionManager;
 
 	namespace _HistoryMapHelperFuncs {
 		/* Helper functions to avoid cyclic dependency issues */
-		Date _get_start_date(GameManager const& game_manager);
-		Date _get_end_date(GameManager const& game_manager);
+		Date _get_start_date(DefinitionManager const& definition_manager);
+		Date _get_end_date(DefinitionManager const& definition_manager);
 	}
 
 	template<std::derived_from<HistoryEntry> _Entry, typename... Args>
@@ -31,10 +31,12 @@ namespace OpenVic {
 	private:
 		ordered_map<Date, std::unique_ptr<entry_type>> PROPERTY(entries);
 
-		bool _try_load_history_entry(GameManager const& game_manager, Args... args, Date date, ast::NodeCPtr root) {
-			entry_type *const entry = _get_or_make_entry(game_manager, date);
+		bool _try_load_history_entry(
+			DefinitionManager const& definition_manager, Args... args, Date date, ast::NodeCPtr root
+		) {
+			entry_type *const entry = _get_or_make_entry(definition_manager, date);
 			if (entry != nullptr) {
-				return _load_history_entry(game_manager, args..., *entry, root);
+				return _load_history_entry(definition_manager, args..., *entry, root);
 			} else {
 				return false;
 			}
@@ -46,15 +48,17 @@ namespace OpenVic {
 		virtual std::unique_ptr<entry_type> _make_entry(Date date) const = 0;
 
 		virtual bool _load_history_entry(
-			GameManager const& game_manager, Args... args, entry_type& entry, ast::NodeCPtr root
+			DefinitionManager const& definition_manager, Args... args, entry_type& entry, ast::NodeCPtr root
 		) = 0;
 
-		bool _load_history_file(GameManager const& game_manager, Args... args, ast::NodeCPtr root) {
-			return _try_load_history_entry(game_manager, args..., _HistoryMapHelperFuncs::_get_start_date(game_manager), root);
+		bool _load_history_file(DefinitionManager const& definition_manager, Args... args, ast::NodeCPtr root) {
+			return _try_load_history_entry(
+				definition_manager, args..., _HistoryMapHelperFuncs::_get_start_date(definition_manager), root
+			);
 		}
 
 		bool _load_history_sub_entry_callback(
-			GameManager const& game_manager, Args... args, Date date, ast::NodeCPtr root, std::string_view key,
+			DefinitionManager const& definition_manager, Args... args, Date date, ast::NodeCPtr root, std::string_view key,
 			ast::NodeCPtr value, NodeTools::key_value_callback_t default_callback = NodeTools::key_value_invalid_callback
 		) {
 			/* Date blocks (loaded into the corresponding HistoryEntry) */
@@ -68,7 +72,7 @@ namespace OpenVic {
 				if (sub_date == date) {
 					Logger::warning("History entry ", sub_date, " defined with same date as parent entry");
 				}
-				if (_try_load_history_entry(game_manager, args..., sub_date, value)) {
+				if (_try_load_history_entry(definition_manager, args..., sub_date, value)) {
 					return true;
 				} else {
 					Logger::error("Failed to load history entry at date ", sub_date);
@@ -80,8 +84,8 @@ namespace OpenVic {
 		}
 
 		/* Returns history entry at specific date, if date doesn't have an entry creates one, if that fails returns nullptr. */
-		entry_type* _get_or_make_entry(GameManager const& game_manager, Date date) {
-			const Date end_date = _HistoryMapHelperFuncs::_get_end_date(game_manager);
+		entry_type* _get_or_make_entry(DefinitionManager const& definition_manager, Date date) {
+			const Date end_date = _HistoryMapHelperFuncs::_get_end_date(definition_manager);
 			if (date > end_date) {
 				Logger::error("History entry ", date, " defined after end date ", end_date);
 				return nullptr;

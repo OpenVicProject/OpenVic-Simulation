@@ -91,7 +91,7 @@ namespace OpenVic {
 			std::string_view new_identifier, ModifierValue&& new_values, icon_t new_icon, ConditionScript&& new_trigger
 		);
 
-		bool parse_scripts(GameManager const& game_manager);
+		bool parse_scripts(DefinitionManager const& definition_manager);
 
 	public:
 		TriggeredModifier(TriggeredModifier&&) = default;
@@ -151,7 +151,7 @@ namespace OpenVic {
 		);
 		bool load_triggered_modifiers(ast::NodeCPtr root);
 
-		bool parse_scripts(GameManager const& game_manager);
+		bool parse_scripts(DefinitionManager const& definition_manager);
 
 		NodeTools::node_callback_t expect_validated_modifier_value_and_default(
 			NodeTools::callback_t<ModifierValue&&> modifier_callback, NodeTools::key_value_callback_t default_callback,

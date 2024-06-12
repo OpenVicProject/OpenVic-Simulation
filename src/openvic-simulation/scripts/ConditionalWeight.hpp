@@ -42,6 +42,6 @@ namespace OpenVic {
 
 		NodeTools::node_callback_t expect_conditional_weight(base_key_t base_key);
 
-		bool parse_scripts(GameManager const& game_manager);
+		bool parse_scripts(DefinitionManager const& definition_manager);
 	};
 }

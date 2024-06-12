@@ -30,6 +30,6 @@ namespace OpenVic {
 
 		bool load_crime_modifiers(ModifierManager const& modifier_manager, ast::NodeCPtr root);
 
-		bool parse_scripts(GameManager const& game_manager);
+		bool parse_scripts(DefinitionManager const& definition_manager);
 	};
 }

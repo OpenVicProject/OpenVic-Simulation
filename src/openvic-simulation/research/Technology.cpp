@@ -16,8 +16,8 @@ Technology::Technology(
 	unciv_military { new_unciv_military }, unit { new_unit }, activated_buildings { std::move(new_activated_units) },
 	activated_units { std::move(new_activated_buildings) }, ai_chance { std::move(new_ai_chance) } {}
 
-bool Technology::parse_scripts(GameManager const& game_manager) {
-	return ai_chance.parse_scripts(game_manager);
+bool Technology::parse_scripts(DefinitionManager const& definition_manager) {
+	return ai_chance.parse_scripts(definition_manager);
 }
 
 TechnologySchool::TechnologySchool(std::string_view new_identifier, ModifierValue&& new_values)
@@ -194,11 +194,11 @@ bool TechnologyManager::generate_modifiers(ModifierManager& modifier_manager) co
 	return ret;
 }
 
-bool TechnologyManager::parse_scripts(GameManager const& game_manager) {
+bool TechnologyManager::parse_scripts(DefinitionManager const& definition_manager) {
 	bool ret = true;
 
 	for (Technology& technology : technologies.get_items()) {
-		ret &= technology.parse_scripts(game_manager);
+		ret &= technology.parse_scripts(definition_manager);
 	}
 
 	return ret;
