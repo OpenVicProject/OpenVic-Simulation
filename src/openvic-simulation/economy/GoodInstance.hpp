@@ -28,6 +28,6 @@ namespace OpenVic {
 		IdentifierRegistry<GoodInstance> IDENTIFIER_REGISTRY(good_instance);
 
 	public:
-		bool setup_good_instances(GoodDefinitionManager const& good_definition_manager);
+		bool setup(GoodDefinitionManager const& good_definition_manager);
 	};
 }

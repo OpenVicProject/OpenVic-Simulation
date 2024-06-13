@@ -43,10 +43,10 @@ bool CrimeManager::load_crime_modifiers(ModifierManager const& modifier_manager,
 	return ret;
 }
 
-bool CrimeManager::parse_scripts(GameManager const& game_manager) {
+bool CrimeManager::parse_scripts(DefinitionManager const& definition_manager) {
 	bool ret = true;
 	for (Crime& crime : crime_modifiers.get_items()) {
-		ret &= crime.parse_scripts(game_manager);
+		ret &= crime.parse_scripts(definition_manager);
 	}
 	return ret;
 }

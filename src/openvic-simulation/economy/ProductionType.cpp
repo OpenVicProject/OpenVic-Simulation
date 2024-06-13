@@ -41,10 +41,10 @@ ProductionType::ProductionType(
 	farm { new_is_farm },
 	mine { new_is_mine } {}
 
-bool ProductionType::parse_scripts(GameManager const& game_manager) {
+bool ProductionType::parse_scripts(DefinitionManager const& definition_manager) {
 	bool ret = true;
 	for (auto& [bonus_script, bonus_value] : bonuses) {
-		ret &= bonus_script.parse_script(false, game_manager);
+		ret &= bonus_script.parse_script(false, definition_manager);
 	}
 	return ret;
 }
@@ -309,10 +309,10 @@ bool ProductionTypeManager::load_production_types_file(
 	return ret;
 }
 
-bool ProductionTypeManager::parse_scripts(GameManager const& game_manager) {
+bool ProductionTypeManager::parse_scripts(DefinitionManager const& definition_manager) {
 	bool ret = true;
 	for (ProductionType& production_type : production_types.get_items()) {
-		ret &= production_type.parse_scripts(game_manager);
+		ret &= production_type.parse_scripts(definition_manager);
 	}
 	return ret;
 }

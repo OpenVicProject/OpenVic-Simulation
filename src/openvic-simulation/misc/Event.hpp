@@ -26,7 +26,7 @@ namespace OpenVic {
 
 			EventOption(std::string_view new_name, EffectScript&& new_effect, ConditionalWeight&& new_ai_chance);
 
-			bool parse_scripts(GameManager& game_manager);
+			bool parse_scripts(DefinitionManager const& definition_manager);
 
 		public:
 			EventOption(EventOption const&) = delete;
@@ -69,7 +69,7 @@ namespace OpenVic {
 			ConditionalWeight&& new_mean_time_to_happen, EffectScript&& new_immediate, std::vector<EventOption>&& new_options
 		);
 
-		bool parse_scripts(GameManager& game_manager);
+		bool parse_scripts(DefinitionManager const& definition_manager);
 
 	public:
 		Event(Event&&) = default;
@@ -108,6 +108,6 @@ namespace OpenVic {
 		bool load_event_file(IssueManager const& issue_manager, ast::NodeCPtr root);
 		bool load_on_action_file(ast::NodeCPtr root);
 
-		bool parse_scripts(GameManager& game_manager);
+		bool parse_scripts(DefinitionManager const& definition_manager);
 	};
-} // namespace OpenVic
+}

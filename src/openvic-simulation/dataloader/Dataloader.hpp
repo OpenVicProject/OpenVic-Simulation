@@ -8,7 +8,7 @@
 namespace OpenVic {
 	namespace fs = std::filesystem;
 
-	struct GameManager;
+	struct DefinitionManager;
 	class UIManager;
 
 	template<typename _UniqueFileKey>
@@ -25,16 +25,16 @@ namespace OpenVic {
 		std::vector<ovdl::v2script::Parser> cached_parsers;
 
 		bool _load_interface_files(UIManager& ui_manager) const;
-		bool _load_pop_types(GameManager& game_manager);
-		bool _load_units(GameManager& game_manager) const;
-		bool _load_goods(GameManager& game_manager) const;
-		bool _load_rebel_types(GameManager& game_manager);
-		bool _load_technologies(GameManager& game_manager);
-		bool _load_inventions(GameManager& game_manager);
-		bool _load_events(GameManager& game_manager);
-		bool _load_map_dir(GameManager& game_manager) const;
-		bool _load_decisions(GameManager& game_manager);
-		bool _load_history(GameManager& game_manager, bool unused_history_file_warnings) const;
+		bool _load_pop_types(DefinitionManager& definition_manager);
+		bool _load_units(DefinitionManager& definition_manager) const;
+		bool _load_goods(DefinitionManager& definition_manager) const;
+		bool _load_rebel_types(DefinitionManager& definition_manager);
+		bool _load_technologies(DefinitionManager& definition_manager);
+		bool _load_inventions(DefinitionManager& definition_manager);
+		bool _load_events(DefinitionManager& definition_manager);
+		bool _load_map_dir(DefinitionManager& definition_manager) const;
+		bool _load_decisions(DefinitionManager& definition_manager);
+		bool _load_history(DefinitionManager& definition_manager, bool unused_history_file_warnings) const;
 
 		/* _DirIterator is fs::directory_iterator or fs::recursive_directory_iterator. _UniqueKey is the type of a callable
 		 * which converts a string_view filepath with root removed into a string_view unique key. Any path whose key is empty
@@ -107,12 +107,12 @@ namespace OpenVic {
 
 		/* Load and parse all of the text defines data, including parsing cached condition and effect scripts after all the
 		 * static data is loaded. Paths to the base and mod defines must have been supplied with set_roots.*/
-		bool load_defines(GameManager& game_manager);
+		bool load_defines(DefinitionManager& definition_manager);
 
 	private:
 		/* Parse the cached Nodes of every condition and effect script in the defines.
 		 * This is called by load_defines after all static data has been loaded. */
-		bool parse_scripts(GameManager& game_manager) const;
+		bool parse_scripts(DefinitionManager& definition_manager) const;
 
 	public:
 		enum locale_t : size_t {

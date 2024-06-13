@@ -13,12 +13,12 @@ Decision::Decision(
 	news_desc_short { new_news_desc_short }, picture { new_picture }, potential { std::move(new_potential) },
 	allow { std::move(new_allow) }, ai_will_do { std::move(new_ai_will_do) }, effect { std::move(new_effect) } {}
 
-bool Decision::parse_scripts(GameManager& game_manager) {
+bool Decision::parse_scripts(DefinitionManager const& definition_manager) {
 	bool ret = true;
-	ret &= potential.parse_script(false, game_manager);
-	ret &= allow.parse_script(false, game_manager);
-	ret &= ai_will_do.parse_scripts(game_manager);
-	ret &= effect.parse_script(false, game_manager);
+	ret &= potential.parse_script(false, definition_manager);
+	ret &= allow.parse_script(false, definition_manager);
+	ret &= ai_will_do.parse_scripts(definition_manager);
+	ret &= effect.parse_script(false, definition_manager);
 	return ret;
 }
 
@@ -84,10 +84,10 @@ bool DecisionManager::load_decision_file(ast::NodeCPtr root) {
 	)(root);
 }
 
-bool DecisionManager::parse_scripts(GameManager& game_manager) {
+bool DecisionManager::parse_scripts(DefinitionManager const& definition_manager) {
 	bool ret = true;
 	for (Decision& decision : decisions.get_items()) {
-		ret &= decision.parse_scripts(game_manager);
+		ret &= decision.parse_scripts(definition_manager);
 	}
 	return ret;
 }

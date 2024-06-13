@@ -41,7 +41,7 @@ namespace OpenVic {
 			ConditionalWeight&& new_add_economic_reform
 		);
 
-		bool parse_scripts(GameManager const& game_manager);
+		bool parse_scripts(DefinitionManager const& definition_manager);
 
 	public:
 		Ideology(Ideology&&) = default;
@@ -65,6 +65,6 @@ namespace OpenVic {
 
 		bool load_ideology_file(ast::NodeCPtr root);
 
-		bool parse_scripts(GameManager const& game_manager);
+		bool parse_scripts(DefinitionManager const& definition_manager);
 	};
 }

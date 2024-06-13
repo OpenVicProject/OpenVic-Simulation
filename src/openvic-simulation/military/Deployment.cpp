@@ -1,6 +1,6 @@
 #include "Deployment.hpp"
 
-#include "openvic-simulation/GameManager.hpp" /* gosh don't we all just love circular inclusion :DDD */
+#include "openvic-simulation/DefinitionManager.hpp" /* gosh don't we all just love circular inclusion :DDD */
 
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;
@@ -39,7 +39,7 @@ bool DeploymentManager::add_deployment(
 }
 
 bool DeploymentManager::load_oob_file(
-	GameManager const& game_manager, Dataloader const& dataloader, std::string_view history_path,
+	DefinitionManager const& definition_manager, Dataloader const& dataloader, std::string_view history_path,
 	Deployment const*& deployment, bool fail_on_missing
 ) {
 	deployment = get_deployment_by_identifier(history_path);
@@ -72,7 +72,7 @@ bool DeploymentManager::load_oob_file(
 
 	bool ret = expect_dictionary_keys_and_default(
 		key_value_success_callback, // TODO: load SOI information
-		"leader", ZERO_OR_MORE, [&leaders, &game_manager](ast::NodeCPtr node) -> bool {
+		"leader", ZERO_OR_MORE, [&leaders, &definition_manager](ast::NodeCPtr node) -> bool {
 			std::string_view leader_name {};
 			UnitType::branch_t leader_branch = UnitType::branch_t::INVALID_BRANCH;
 			Date leader_date {};
@@ -85,14 +85,10 @@ bool DeploymentManager::load_oob_file(
 				"name", ONE_EXACTLY, expect_identifier_or_string(assign_variable_callback(leader_name)),
 				"date", ONE_EXACTLY, expect_date_identifier_or_string(assign_variable_callback(leader_date)),
 				"type", ONE_EXACTLY, UnitTypeManager::expect_branch_identifier(assign_variable_callback(leader_branch)),
-				"personality", ONE_EXACTLY,
-					game_manager.get_military_manager().get_leader_trait_manager().expect_leader_trait_identifier_or_string(
-						assign_variable_callback_pointer(leader_personality)
-					),
-				"background", ONE_EXACTLY,
-					game_manager.get_military_manager().get_leader_trait_manager().expect_leader_trait_identifier_or_string(
-						assign_variable_callback_pointer(leader_background)
-					),
+				"personality", ONE_EXACTLY, definition_manager.get_military_manager().get_leader_trait_manager()
+					.expect_leader_trait_identifier_or_string(assign_variable_callback_pointer(leader_personality)),
+				"background", ONE_EXACTLY, definition_manager.get_military_manager().get_leader_trait_manager()
+					.expect_leader_trait_identifier_or_string(assign_variable_callback_pointer(leader_background)),
 				"prestige", ZERO_OR_ONE, expect_fixed_point(assign_variable_callback(leader_prestige)),
 				"picture", ZERO_OR_ONE, expect_identifier_or_string(assign_variable_callback(picture))
 			)(node);
@@ -119,26 +115,26 @@ bool DeploymentManager::load_oob_file(
 
 			return ret;
 		},
-		"army", ZERO_OR_MORE, [&armies, &game_manager](ast::NodeCPtr node) -> bool {
+		"army", ZERO_OR_MORE, [&armies, &definition_manager](ast::NodeCPtr node) -> bool {
 			std::string_view army_name {};
 			ProvinceDefinition const* army_location = nullptr;
 			std::vector<RegimentDeployment> army_regiments {};
 
 			const bool ret = expect_dictionary_keys(
 				"name", ONE_EXACTLY, expect_string(assign_variable_callback(army_name)),
-				"location", ONE_EXACTLY, game_manager.get_map_definition().expect_province_definition_identifier(
+				"location", ONE_EXACTLY, definition_manager.get_map_definition().expect_province_definition_identifier(
 					assign_variable_callback_pointer(army_location)
 				),
-				"regiment", ONE_OR_MORE, [&game_manager, &army_regiments](ast::NodeCPtr node) -> bool {
+				"regiment", ONE_OR_MORE, [&definition_manager, &army_regiments](ast::NodeCPtr node) -> bool {
 					std::string_view regiment_name {};
 					RegimentType const* regiment_type = nullptr;
 					ProvinceDefinition const* regiment_home = nullptr;
 
 					const bool ret = expect_dictionary_keys(
 						"name", ONE_EXACTLY, expect_string(assign_variable_callback(regiment_name)),
-						"type", ONE_EXACTLY, game_manager.get_military_manager().get_unit_type_manager()
+						"type", ONE_EXACTLY, definition_manager.get_military_manager().get_unit_type_manager()
 							.expect_regiment_type_identifier(assign_variable_callback_pointer(regiment_type)),
-						"home", ZERO_OR_ONE, game_manager.get_map_definition()
+						"home", ZERO_OR_ONE, definition_manager.get_map_definition()
 							.expect_province_definition_identifier(assign_variable_callback_pointer(regiment_home))
 					)(node);
 
@@ -163,23 +159,23 @@ bool DeploymentManager::load_oob_file(
 
 			return ret;
 		},
-		"navy", ZERO_OR_MORE, [&navies, &game_manager](ast::NodeCPtr node) -> bool {
+		"navy", ZERO_OR_MORE, [&navies, &definition_manager](ast::NodeCPtr node) -> bool {
 			std::string_view navy_name {};
 			ProvinceDefinition const* navy_location = nullptr;
 			std::vector<ShipDeployment> navy_ships {};
 
 			const bool ret = expect_dictionary_keys(
 				"name", ONE_EXACTLY, expect_string(assign_variable_callback(navy_name)),
-				"location", ONE_EXACTLY, game_manager.get_map_definition().expect_province_definition_identifier(
+				"location", ONE_EXACTLY, definition_manager.get_map_definition().expect_province_definition_identifier(
 					assign_variable_callback_pointer(navy_location)
 				),
-				"ship", ONE_OR_MORE, [&game_manager, &navy_ships](ast::NodeCPtr node) -> bool {
+				"ship", ONE_OR_MORE, [&definition_manager, &navy_ships](ast::NodeCPtr node) -> bool {
 					std::string_view ship_name {};
 					ShipType const* ship_type = nullptr;
 
 					const bool ret = expect_dictionary_keys(
 						"name", ONE_EXACTLY, expect_string(assign_variable_callback(ship_name)),
-						"type", ONE_EXACTLY, game_manager.get_military_manager().get_unit_type_manager()
+						"type", ONE_EXACTLY, definition_manager.get_military_manager().get_unit_type_manager()
 							.expect_ship_type_identifier(assign_variable_callback_pointer(ship_type))
 					)(node);
 

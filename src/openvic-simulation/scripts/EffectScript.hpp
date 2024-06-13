@@ -3,10 +3,10 @@
 #include "openvic-simulation/scripts/Script.hpp"
 
 namespace OpenVic {
-	struct GameManager;
+	struct DefinitionManager;
 
-	struct EffectScript final : Script<GameManager&> {
+	struct EffectScript final : Script<DefinitionManager const&> {
 	protected:
-		bool _parse_script(ast::NodeCPtr root, GameManager& game_manager) override;
+		bool _parse_script(ast::NodeCPtr root, DefinitionManager const& definition_manager) override;
 	};
 }

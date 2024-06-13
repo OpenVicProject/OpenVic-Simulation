@@ -1,7 +1,7 @@
 #pragma once
 #include <vector>
 
-#include "openvic-simulation/GameManager.hpp"
+#include "openvic-simulation/DefinitionManager.hpp"
 #include "openvic-simulation/testing/Requirement.hpp"
 
 namespace OpenVic {
@@ -9,7 +9,7 @@ namespace OpenVic {
 	class TestScript {
 
 		std::vector<Requirement*> requirements = std::vector<Requirement*>();
-		GameManager* PROPERTY_RW(game_manager);
+		DefinitionManager const* PROPERTY_RW(definition_manager);
 		std::string PROPERTY(script_name);
 
 	public:

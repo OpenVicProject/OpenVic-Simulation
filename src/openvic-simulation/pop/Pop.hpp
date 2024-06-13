@@ -197,7 +197,7 @@ namespace OpenVic {
 			issue_weight_map_t&& new_issues
 		);
 
-		bool parse_scripts(GameManager const& game_manager);
+		bool parse_scripts(DefinitionManager const& definition_manager);
 
 	public:
 		PopType(PopType&&) = default;
@@ -326,6 +326,6 @@ namespace OpenVic {
 
 		bool generate_modifiers(ModifierManager& modifier_manager) const;
 
-		bool parse_scripts(GameManager const& game_manager);
+		bool parse_scripts(DefinitionManager const& definition_manager);
 	};
 }

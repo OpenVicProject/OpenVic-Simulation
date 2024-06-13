@@ -1,6 +1,6 @@
 #include "CountryHistory.hpp"
 
-#include "openvic-simulation/GameManager.hpp"
+#include "openvic-simulation/DefinitionManager.hpp"
 
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;
@@ -15,19 +15,19 @@ std::unique_ptr<CountryHistoryEntry> CountryHistoryMap::_make_entry(Date date) c
 }
 
 bool CountryHistoryMap::_load_history_entry(
-	GameManager const& game_manager, Dataloader const& dataloader, DeploymentManager& deployment_manager,
+	DefinitionManager const& definition_manager, Dataloader const& dataloader, DeploymentManager& deployment_manager,
 	CountryHistoryEntry& entry, ast::NodeCPtr root
 ) {
-	PoliticsManager const& politics_manager = game_manager.get_politics_manager();
+	PoliticsManager const& politics_manager = definition_manager.get_politics_manager();
 	IssueManager const& issue_manager = politics_manager.get_issue_manager();
-	CultureManager const& culture_manager = game_manager.get_pop_manager().get_culture_manager();
-	CountryManager const& country_manager = game_manager.get_country_manager();
-	TechnologyManager const& technology_manager = game_manager.get_research_manager().get_technology_manager();
-	InventionManager const& invention_manager = game_manager.get_research_manager().get_invention_manager();
-	DecisionManager const& decision_manager = game_manager.get_decision_manager();
+	CultureManager const& culture_manager = definition_manager.get_pop_manager().get_culture_manager();
+	CountryManager const& country_manager = definition_manager.get_country_manager();
+	TechnologyManager const& technology_manager = definition_manager.get_research_manager().get_technology_manager();
+	InventionManager const& invention_manager = definition_manager.get_research_manager().get_invention_manager();
+	DecisionManager const& decision_manager = definition_manager.get_decision_manager();
 
 	return expect_dictionary_keys_and_default(
-		[this, &game_manager, &dataloader, &deployment_manager, &issue_manager, &technology_manager, &invention_manager,
+		[this, &definition_manager, &dataloader, &deployment_manager, &issue_manager, &technology_manager, &invention_manager,
 			&country_manager, &entry](std::string_view key, ast::NodeCPtr value) -> bool {
 			ReformGroup const* reform_group = issue_manager.get_reform_group_by_identifier(key);
 			if (reform_group != nullptr) {
@@ -64,10 +64,10 @@ bool CountryHistoryMap::_load_history_entry(
 			}
 
 			return _load_history_sub_entry_callback(
-				game_manager, dataloader, deployment_manager, entry.get_date(), value, key, value
+				definition_manager, dataloader, deployment_manager, entry.get_date(), value, key, value
 			);
 		},
-		"capital", ZERO_OR_ONE, game_manager.get_map_definition().expect_province_definition_identifier(
+		"capital", ZERO_OR_ONE, definition_manager.get_map_definition().expect_province_definition_identifier(
 			assign_variable_callback_pointer_opt(entry.capital)
 		),
 		"primary_culture", ZERO_OR_ONE,
@@ -75,7 +75,7 @@ bool CountryHistoryMap::_load_history_entry(
 		"culture", ZERO_OR_MORE, culture_manager.expect_culture_identifier(
 			vector_callback_pointer(entry.accepted_cultures)
 		),
-		"religion", ZERO_OR_ONE, game_manager.get_pop_manager().get_religion_manager().expect_religion_identifier(
+		"religion", ZERO_OR_ONE, definition_manager.get_pop_manager().get_religion_manager().expect_religion_identifier(
 			assign_variable_callback_pointer_opt(entry.religion)
 		),
 		"government", ZERO_OR_ONE, politics_manager.get_government_type_manager().expect_government_type_identifier(
@@ -96,9 +96,9 @@ bool CountryHistoryMap::_load_history_entry(
 			}
 		),
 		"oob", ZERO_OR_ONE, expect_identifier_or_string(
-			[&game_manager, &deployment_manager, &dataloader, &entry](std::string_view path) -> bool {
+			[&definition_manager, &deployment_manager, &dataloader, &entry](std::string_view path) -> bool {
 				Deployment const* deployment = nullptr;
-				const bool ret = deployment_manager.load_oob_file(game_manager, dataloader, path, deployment, false);
+				const bool ret = deployment_manager.load_oob_file(definition_manager, dataloader, path, deployment, false);
 				if (deployment != nullptr) {
 					entry.inital_oob = deployment;
 				}
@@ -215,7 +215,7 @@ CountryHistoryMap const* CountryHistoryManager::get_country_history(Country cons
 }
 
 bool CountryHistoryManager::load_country_history_file(
-	GameManager& game_manager, Dataloader const& dataloader, Country const& country, ast::NodeCPtr root
+	DefinitionManager& definition_manager, Dataloader const& dataloader, Country const& country, ast::NodeCPtr root
 ) {
 	if (locked) {
 		Logger::error("Attempted to load country history file for ", country, " after country history registry was locked!");
@@ -240,6 +240,6 @@ bool CountryHistoryManager::load_country_history_file(
 	CountryHistoryMap& country_history = it.value();
 
 	return country_history._load_history_file(
-		game_manager, dataloader, game_manager.get_military_manager().get_deployment_manager(), root
+		definition_manager, dataloader, definition_manager.get_military_manager().get_deployment_manager(), root
 	);
 }

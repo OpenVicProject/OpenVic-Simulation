@@ -82,7 +82,7 @@ namespace OpenVic {
 		bool add_navy(NavyInstance& navy);
 		bool remove_navy(NavyInstance& navy);
 
-		bool reset(BuildingTypeManager const& building_type_manager);
+		bool setup(BuildingTypeManager const& building_type_manager);
 		bool apply_history_to_province(ProvinceHistoryEntry const* entry);
 
 		void setup_pop_test_values(

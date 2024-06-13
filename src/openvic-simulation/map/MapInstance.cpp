@@ -49,19 +49,17 @@ ProvinceDefinition::index_t MapInstance::get_selected_province_index() const {
 		: ProvinceDefinition::NULL_INDEX;
 }
 
-bool MapInstance::reset(BuildingTypeManager const& building_type_manager) {
+bool MapInstance::setup(BuildingTypeManager const& building_type_manager) {
+	if (province_instances_are_locked()) {
+		Logger::error("Cannot setup map - province instances are locked!");
+		return false;
+	}
 	if (!map_definition.province_definitions_are_locked()) {
-		Logger::error("Cannot reset map - province consts are not locked!");
+		Logger::error("Cannot setup map - province consts are not locked!");
 		return false;
 	}
 
 	bool ret = true;
-
-	// TODO - ensure all references to old ProvinceInstances are safely cleared
-	state_manager.reset();
-	selected_province = nullptr;
-
-	province_instances.reset();
 
 	province_instances.reserve(map_definition.get_province_definition_count());
 
@@ -72,7 +70,7 @@ bool MapInstance::reset(BuildingTypeManager const& building_type_manager) {
 	province_instances.lock();
 
 	for (ProvinceInstance& province : province_instances.get_items()) {
-		ret &= province.reset(building_type_manager);
+		ret &= province.setup(building_type_manager);
 	}
 
 	if (get_province_instance_count() != map_definition.get_province_definition_count()) {

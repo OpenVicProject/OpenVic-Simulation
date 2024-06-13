@@ -90,7 +90,7 @@ namespace OpenVic {
 		Deployment(Deployment&&) = default;
 	};
 
-	struct GameManager;
+	struct DefinitionManager;
 	class Dataloader;
 
 	struct DeploymentManager {
@@ -105,7 +105,7 @@ namespace OpenVic {
 		);
 
 		bool load_oob_file(
-			GameManager const& game_manager, Dataloader const& dataloader, std::string_view history_path,
+			DefinitionManager const& definition_manager, Dataloader const& dataloader, std::string_view history_path,
 			Deployment const*& deployment, bool fail_on_missing
 		);
 

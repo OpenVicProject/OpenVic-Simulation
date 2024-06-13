@@ -45,7 +45,7 @@ namespace OpenVic {
 			ConditionScript&& new_limit
 		);
 
-		bool parse_scripts(GameManager const& game_manager);
+		bool parse_scripts(DefinitionManager const& definition_manager);
 
 	public:
 		NationalFocus(NationalFocus&&) = default;
@@ -77,6 +77,6 @@ namespace OpenVic {
 			GoodDefinitionManager const& good_definition_manager, ModifierManager const& modifier_manager, ast::NodeCPtr root
 		);
 
-		bool parse_scripts(GameManager const& game_manager);
+		bool parse_scripts(DefinitionManager const& definition_manager);
 	};
-} // namespace OpenVic
+}

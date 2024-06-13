@@ -37,7 +37,7 @@ namespace OpenVic {
 			bool new_unlock_gas_defence, ConditionScript&& new_limit, ConditionalWeight&& new_chance
 		);
 
-		bool parse_scripts(GameManager const& game_manager);
+		bool parse_scripts(DefinitionManager const& definition_manager);
 
 	public:
 		Invention(Invention&&) = default;
@@ -58,6 +58,6 @@ namespace OpenVic {
 			BuildingTypeManager const& building_type_manager, CrimeManager const& crime_manager, ast::NodeCPtr root
 		); // inventions/*.txt
 
-		bool parse_scripts(GameManager const& game_manager);
+		bool parse_scripts(DefinitionManager const& definition_manager);
 	};
 }

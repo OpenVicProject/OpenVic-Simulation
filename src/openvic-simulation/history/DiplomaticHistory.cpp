@@ -1,6 +1,6 @@
 #include "DiplomaticHistory.hpp"
 
-#include "openvic-simulation/GameManager.hpp"
+#include "openvic-simulation/DefinitionManager.hpp"
 
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;
@@ -203,7 +203,7 @@ bool DiplomaticHistoryManager::load_diplomacy_history_file(CountryManager const&
 	)(root);
 }
 
-bool DiplomaticHistoryManager::load_war_history_file(GameManager const& game_manager, ast::NodeCPtr root) {
+bool DiplomaticHistoryManager::load_war_history_file(DefinitionManager const& definition_manager, ast::NodeCPtr root) {
 	std::string_view name {};
 	std::vector<WarHistory::war_participant_t> attackers {};
 	std::vector<WarHistory::war_participant_t> defenders {};
@@ -211,13 +211,13 @@ bool DiplomaticHistoryManager::load_war_history_file(GameManager const& game_man
 	Date current_date {};
 
 	bool ret = expect_dictionary_keys_and_default(
-		[&game_manager, &attackers, &defenders, &wargoals, &current_date, &name](
+		[&definition_manager, &attackers, &defenders, &wargoals, &current_date, &name](
 			std::string_view key, ast::NodeCPtr node
 		) -> bool {
 			bool ret = expect_date_str(assign_variable_callback(current_date))(key);
 
 			ret &= expect_dictionary_keys(
-				"add_attacker", ZERO_OR_MORE, game_manager.get_country_manager().expect_country_identifier(
+				"add_attacker", ZERO_OR_MORE, definition_manager.get_country_manager().expect_country_identifier(
 					[&attackers, &current_date, &name](Country const& country) -> bool {
 						for (auto const& attacker : attackers) {
 							if (attacker.get_country() == &country) {
@@ -234,7 +234,7 @@ bool DiplomaticHistoryManager::load_war_history_file(GameManager const& game_man
 						return true;
 					}
 				),
-				"add_defender", ZERO_OR_MORE, game_manager.get_country_manager().expect_country_identifier(
+				"add_defender", ZERO_OR_MORE, definition_manager.get_country_manager().expect_country_identifier(
 					[&defenders, &current_date, &name](Country const& country) -> bool {
 						for (auto const& defender : defenders) {
 							if (defender.get_country() == &country) {
@@ -251,7 +251,7 @@ bool DiplomaticHistoryManager::load_war_history_file(GameManager const& game_man
 						return true;
 					}
 				),
-				"rem_attacker", ZERO_OR_MORE, game_manager.get_country_manager().expect_country_identifier(
+				"rem_attacker", ZERO_OR_MORE, definition_manager.get_country_manager().expect_country_identifier(
 					[&attackers, &current_date, &name](Country const& country) -> bool {
 						WarHistory::war_participant_t* participant_to_remove = nullptr;
 
@@ -274,7 +274,7 @@ bool DiplomaticHistoryManager::load_war_history_file(GameManager const& game_man
 						return participant_to_remove->period.try_set_end(current_date);
 					}
 				),
-				"rem_defender", ZERO_OR_MORE, game_manager.get_country_manager().expect_country_identifier(
+				"rem_defender", ZERO_OR_MORE, definition_manager.get_country_manager().expect_country_identifier(
 					[&defenders, &current_date, &name](Country const& country) -> bool {
 						WarHistory::war_participant_t* participant_to_remove = nullptr;
 
@@ -297,7 +297,7 @@ bool DiplomaticHistoryManager::load_war_history_file(GameManager const& game_man
 						return participant_to_remove->period.try_set_end(current_date);
 					}
 				),
-				"war_goal", ZERO_OR_MORE, [&game_manager, &wargoals, &current_date](ast::NodeCPtr value) -> bool {
+				"war_goal", ZERO_OR_MORE, [&definition_manager, &wargoals, &current_date](ast::NodeCPtr value) -> bool {
 					Country const* actor = nullptr;
 					Country const* receiver = nullptr;
 					WargoalType const* type = nullptr;
@@ -306,23 +306,21 @@ bool DiplomaticHistoryManager::load_war_history_file(GameManager const& game_man
 
 					bool ret = expect_dictionary_keys(
 						"actor", ONE_EXACTLY,
-							game_manager.get_country_manager().expect_country_identifier(
+							definition_manager.get_country_manager().expect_country_identifier(
 								assign_variable_callback_pointer(actor)
 							),
 						"receiver", ONE_EXACTLY,
-							game_manager.get_country_manager().expect_country_identifier(
+							definition_manager.get_country_manager().expect_country_identifier(
 								assign_variable_callback_pointer(receiver)
 							),
-						"casus_belli", ONE_EXACTLY,
-							game_manager.get_military_manager().get_wargoal_type_manager().expect_wargoal_type_identifier(
-								assign_variable_callback_pointer(type)
-							),
+						"casus_belli", ONE_EXACTLY, definition_manager.get_military_manager().get_wargoal_type_manager()
+							.expect_wargoal_type_identifier(assign_variable_callback_pointer(type)),
 						"country", ZERO_OR_ONE,
-							game_manager.get_country_manager().expect_country_identifier(
+							definition_manager.get_country_manager().expect_country_identifier(
 								assign_variable_callback_pointer(*third_party)
 							),
 						"state_province_id", ZERO_OR_ONE,
-							game_manager.get_map_definition().expect_province_definition_identifier(
+							definition_manager.get_map_definition().expect_province_definition_identifier(
 								assign_variable_callback_pointer(*target)
 							)
 					)(value);

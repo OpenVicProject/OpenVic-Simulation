@@ -27,15 +27,15 @@ RebelType::RebelType(
 	siege_won_effect { std::move(new_siege_won_effect) }, demands_enforced_trigger { std::move(new_demands_enforced_trigger) },
 	demands_enforced_effect { std::move(new_demands_enforced_effect) } {}
 
-bool RebelType::parse_scripts(GameManager& game_manager) {
+bool RebelType::parse_scripts(DefinitionManager const& definition_manager) {
 	bool ret = true;
-	ret &= will_rise.parse_scripts(game_manager);
-	ret &= spawn_chance.parse_scripts(game_manager);
-	ret &= movement_evaluation.parse_scripts(game_manager);
-	ret &= siege_won_trigger.parse_script(true, game_manager);
-	ret &= siege_won_effect.parse_script(true, game_manager);
-	ret &= demands_enforced_trigger.parse_script(true, game_manager);
-	ret &= demands_enforced_effect.parse_script(true, game_manager);
+	ret &= will_rise.parse_scripts(definition_manager);
+	ret &= spawn_chance.parse_scripts(definition_manager);
+	ret &= movement_evaluation.parse_scripts(definition_manager);
+	ret &= siege_won_trigger.parse_script(true, definition_manager);
+	ret &= siege_won_effect.parse_script(true, definition_manager);
+	ret &= demands_enforced_trigger.parse_script(true, definition_manager);
+	ret &= demands_enforced_effect.parse_script(true, definition_manager);
 	return ret;
 }
 
@@ -191,10 +191,10 @@ bool RebelManager::generate_modifiers(ModifierManager& modifier_manager) const {
 	return ret;
 }
 
-bool RebelManager::parse_scripts(GameManager& game_manager) {
+bool RebelManager::parse_scripts(DefinitionManager const& definition_manager) {
 	bool ret = true;
 	for (RebelType& rebel_type : rebel_types.get_items()) {
-		ret &= rebel_type.parse_scripts(game_manager);
+		ret &= rebel_type.parse_scripts(definition_manager);
 	}
 	return ret;
 }

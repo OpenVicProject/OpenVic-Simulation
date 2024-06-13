@@ -17,7 +17,7 @@
 #include "openvic-simulation/types/OrderedContainers.hpp"
 
 namespace OpenVic {
-	struct GameManager;
+	struct DefinitionManager;
 	struct CountryManager;
 
 	struct CountryParty : HasIdentifierAndColour {
@@ -91,9 +91,9 @@ namespace OpenVic {
 
 		bool load_country_colours(ast::NodeCPtr root);
 
-		bool load_countries(GameManager const& game_manager, Dataloader const& dataloader, ast::NodeCPtr root);
+		bool load_countries(DefinitionManager const& definition_manager, Dataloader const& dataloader, ast::NodeCPtr root);
 		bool load_country_data_file(
-			GameManager const& game_manager, std::string_view name, bool is_dynamic, ast::NodeCPtr root
+			DefinitionManager const& definition_manager, std::string_view name, bool is_dynamic, ast::NodeCPtr root
 		);
 	};
 }

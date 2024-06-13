@@ -2,17 +2,16 @@
 
 #include <string_view>
 
-#include <openvic-dataloader/v2script/AbstractSyntaxTree.hpp>
-
-#include "openvic-simulation/GameManager.hpp"
 #include "openvic-simulation/dataloader/Dataloader.hpp"
 #include "openvic-simulation/dataloader/NodeTools.hpp"
+#include "openvic-simulation/DefinitionManager.hpp"
 #include "openvic-simulation/politics/Government.hpp"
 #include "openvic-simulation/politics/Ideology.hpp"
 #include "openvic-simulation/politics/Issue.hpp"
 #include "openvic-simulation/pop/Culture.hpp"
 #include "openvic-simulation/types/Colour.hpp"
 #include "openvic-simulation/types/IdentifierRegistry.hpp"
+#include <openvic-dataloader/v2script/AbstractSyntaxTree.hpp>
 
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;
@@ -76,13 +75,15 @@ bool CountryManager::add_country(
 	});
 }
 
-bool CountryManager::load_countries(GameManager const& game_manager, Dataloader const& dataloader, ast::NodeCPtr root) {
+bool CountryManager::load_countries(
+	DefinitionManager const& definition_manager, Dataloader const& dataloader, ast::NodeCPtr root
+) {
 	static constexpr std::string_view common_dir = "common/";
 	bool is_dynamic = false;
 
 	const bool ret = expect_dictionary_reserve_length(
 		countries,
-		[this, &game_manager, &is_dynamic, &dataloader](std::string_view key, ast::NodeCPtr value) -> bool {
+		[this, &definition_manager, &is_dynamic, &dataloader](std::string_view key, ast::NodeCPtr value) -> bool {
 			if (key == "dynamic_tags") {
 				return expect_bool([&is_dynamic](bool val) -> bool {
 					if (val == is_dynamic) {
@@ -97,9 +98,9 @@ bool CountryManager::load_countries(GameManager const& game_manager, Dataloader 
 				})(value);
 			}
 			if (expect_string(
-				[this, &game_manager, is_dynamic, &dataloader, &key](std::string_view filepath) -> bool {
+				[this, &definition_manager, is_dynamic, &dataloader, &key](std::string_view filepath) -> bool {
 					if (load_country_data_file(
-						game_manager, key, is_dynamic,
+						definition_manager, key, is_dynamic,
 						Dataloader::parse_defines(
 							dataloader.lookup_file(StringUtils::append_string_views(common_dir, filepath))
 						).get_file_node()
@@ -177,7 +178,7 @@ node_callback_t CountryManager::load_country_party(
 }
 
 bool CountryManager::load_country_data_file(
-	GameManager const& game_manager, std::string_view name, bool is_dynamic, ast::NodeCPtr root
+	DefinitionManager const& definition_manager, std::string_view name, bool is_dynamic, ast::NodeCPtr root
 ) {
 	colour_t colour;
 	GraphicalCultureType const* graphical_culture;
@@ -185,8 +186,8 @@ bool CountryManager::load_country_data_file(
 	Country::unit_names_map_t unit_names;
 	Country::government_colour_map_t alternative_colours;
 	bool ret = expect_dictionary_keys_and_default(
-		[&game_manager, &alternative_colours](std::string_view key, ast::NodeCPtr value) -> bool {
-			return game_manager.get_politics_manager().get_government_type_manager().expect_government_type_str(
+		[&definition_manager, &alternative_colours](std::string_view key, ast::NodeCPtr value) -> bool {
+			return definition_manager.get_politics_manager().get_government_type_manager().expect_government_type_str(
 				[&alternative_colours, value](GovernmentType const& government_type) -> bool {
 					return expect_colour(map_callback(alternative_colours, &government_type))(value);
 				}
@@ -194,12 +195,12 @@ bool CountryManager::load_country_data_file(
 		},
 		"color", ONE_EXACTLY, expect_colour(assign_variable_callback(colour)),
 		"graphical_culture", ONE_EXACTLY,
-			game_manager.get_pop_manager().get_culture_manager().expect_graphical_culture_type_identifier(
+			definition_manager.get_pop_manager().get_culture_manager().expect_graphical_culture_type_identifier(
 				assign_variable_callback_pointer(graphical_culture)
 			),
-		"party", ZERO_OR_MORE, load_country_party(game_manager.get_politics_manager(), parties),
+		"party", ZERO_OR_MORE, load_country_party(definition_manager.get_politics_manager(), parties),
 		"unit_names", ZERO_OR_ONE,
-			game_manager.get_military_manager().get_unit_type_manager().expect_unit_type_dictionary_reserve_length(
+			definition_manager.get_military_manager().get_unit_type_manager().expect_unit_type_dictionary_reserve_length(
 				unit_names,
 				[&unit_names](UnitType const& unit, ast::NodeCPtr value) -> bool {
 					return name_list_callback(map_callback(unit_names, &unit))(value);

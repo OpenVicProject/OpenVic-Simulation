@@ -101,7 +101,7 @@ namespace OpenVic {
 	};
 
 	struct CountryManager;
-	struct GameManager;
+	struct DefinitionManager;
 
 	struct DiplomaticHistoryManager {
 	private:
@@ -126,6 +126,6 @@ namespace OpenVic {
 		std::vector<WarHistory const*> get_wars(Date date) const;
 
 		bool load_diplomacy_history_file(CountryManager const& country_manager, ast::NodeCPtr root);
-		bool load_war_history_file(GameManager const& game_manager, ast::NodeCPtr root);
+		bool load_war_history_file(DefinitionManager const& definition_manager, ast::NodeCPtr root);
 	};
 }

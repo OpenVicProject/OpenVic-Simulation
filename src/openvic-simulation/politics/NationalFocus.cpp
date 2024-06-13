@@ -27,8 +27,8 @@ NationalFocus::NationalFocus(
 	loyalty_value { new_loyalty_value },
 	limit { std::move(new_limit) } {}
 
-bool NationalFocus::parse_scripts(GameManager const& game_manager) {
-	return limit.parse_script(true, game_manager);
+bool NationalFocus::parse_scripts(DefinitionManager const& definition_manager) {
+	return limit.parse_script(true, definition_manager);
 }
 
 inline bool NationalFocusManager::add_national_focus_group(std::string_view identifier) {
@@ -131,10 +131,10 @@ bool NationalFocusManager::load_national_foci_file(
 	return ret;
 }
 
-bool NationalFocusManager::parse_scripts(GameManager const& game_manager) {
+bool NationalFocusManager::parse_scripts(DefinitionManager const& definition_manager) {
 	bool ret = true;
 	for (NationalFocus& national_focus : national_foci.get_items()) {
-		ret &= national_focus.parse_scripts(game_manager);
+		ret &= national_focus.parse_scripts(definition_manager);
 	}
 	return ret;
 }

@@ -16,10 +16,10 @@ Invention::Invention(
 	enabled_crimes { std::move(new_enabled_crimes) }, unlock_gas_attack { new_unlock_gas_attack },
 	unlock_gas_defence { new_unlock_gas_defence }, limit { std::move(new_limit) }, chance { std::move(new_chance) } {}
 
-bool Invention::parse_scripts(GameManager const& game_manager) {
+bool Invention::parse_scripts(DefinitionManager const& definition_manager) {
 	bool ret = true;
-	ret &= limit.parse_script(false, game_manager);
-	ret &= chance.parse_scripts(game_manager);
+	ret &= limit.parse_script(false, definition_manager);
+	ret &= chance.parse_scripts(definition_manager);
 	return ret;
 }
 
@@ -90,10 +90,10 @@ bool InventionManager::load_inventions_file(
 	)(root);
 }
 
-bool InventionManager::parse_scripts(GameManager const& game_manager) {
+bool InventionManager::parse_scripts(DefinitionManager const& definition_manager) {
 	bool ret = true;
 	for (Invention& invention : inventions.get_items()) {
-		ret &= invention.parse_scripts(game_manager);
+		ret &= invention.parse_scripts(definition_manager);
 	}
 	return ret;
 }

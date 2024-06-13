@@ -20,14 +20,14 @@ Ideology::Ideology(
 	add_social_reform { std::move(new_add_social_reform) }, remove_social_reform { std::move(new_remove_social_reform) },
 	add_military_reform { std::move(new_add_military_reform) }, add_economic_reform { std::move(new_add_economic_reform) } {}
 
-bool Ideology::parse_scripts(GameManager const& game_manager) {
+bool Ideology::parse_scripts(DefinitionManager const& definition_manager) {
 	bool ret = true;
-	ret &= add_political_reform.parse_scripts(game_manager);
-	ret &= remove_political_reform.parse_scripts(game_manager);
-	ret &= add_social_reform.parse_scripts(game_manager);
-	ret &= remove_social_reform.parse_scripts(game_manager);
-	ret &= add_military_reform.parse_scripts(game_manager);
-	ret &= add_economic_reform.parse_scripts(game_manager);
+	ret &= add_political_reform.parse_scripts(definition_manager);
+	ret &= remove_political_reform.parse_scripts(definition_manager);
+	ret &= add_social_reform.parse_scripts(definition_manager);
+	ret &= remove_social_reform.parse_scripts(definition_manager);
+	ret &= add_military_reform.parse_scripts(definition_manager);
+	ret &= add_economic_reform.parse_scripts(definition_manager);
 	return ret;
 }
 
@@ -118,10 +118,10 @@ bool IdeologyManager::load_ideology_file(ast::NodeCPtr root) {
 	return ret;
 }
 
-bool IdeologyManager::parse_scripts(GameManager const& game_manager) {
+bool IdeologyManager::parse_scripts(DefinitionManager const& definition_manager) {
 	bool ret = true;
 	for (Ideology& ideology : ideologies.get_items()) {
-		ideology.parse_scripts(game_manager);
+		ideology.parse_scripts(definition_manager);
 	}
 	return ret;
 }

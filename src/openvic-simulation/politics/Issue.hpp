@@ -87,7 +87,7 @@ namespace OpenVic {
 			ConditionScript&& new_on_execute_trigger, EffectScript&& new_on_execute_effect
 		);
 
-		bool parse_scripts(GameManager& game_manager);
+		bool parse_scripts(DefinitionManager const& definition_manager);
 
 	public:
 		Reform(Reform&&) = default;
@@ -130,6 +130,6 @@ namespace OpenVic {
 		);
 		bool load_issues_file(ModifierManager const& modifier_manager, RuleManager const& rule_manager, ast::NodeCPtr root);
 
-		bool parse_scripts(GameManager& game_manager);
+		bool parse_scripts(DefinitionManager const& definition_manager);
 	};
 }

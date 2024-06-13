@@ -1,4 +1,4 @@
-#include "openvic-simulation/GameManager.hpp"
+#include "openvic-simulation/DefinitionManager.hpp"
 #include "openvic-simulation/testing/TestScript.hpp"
 
 namespace OpenVic {
@@ -552,7 +552,7 @@ namespace OpenVic {
 
 		void check_base_price(std::string identifier, std::string target_value, std::string req_name) {
 			// Get string of base_price from goods manager
-			fixed_point_t base_price_fp = get_game_manager()->get_economy_manager().get_good_definition_manager()
+			fixed_point_t base_price_fp = get_definition_manager()->get_economy_manager().get_good_definition_manager()
 				.get_good_definition_by_identifier(identifier)->get_base_price();
 			std::stringstream ss;
 			// Use a single digit floating point of the value

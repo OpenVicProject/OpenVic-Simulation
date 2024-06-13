@@ -9,10 +9,10 @@ using namespace OpenVic::NodeTools;
 Event::EventOption::EventOption(std::string_view new_name, EffectScript&& new_effect, ConditionalWeight&& new_ai_chance)
   : name { new_name }, effect { std::move(new_effect) }, ai_chance { std::move(new_ai_chance) } {}
 
-bool Event::EventOption::parse_scripts(GameManager& game_manager) {
+bool Event::EventOption::parse_scripts(DefinitionManager const& definition_manager) {
 	bool ret = true;
-	ret &= effect.parse_script(false, game_manager);
-	ret &= ai_chance.parse_scripts(game_manager);
+	ret &= effect.parse_script(false, definition_manager);
+	ret &= ai_chance.parse_scripts(definition_manager);
 	return ret;
 }
 
@@ -31,13 +31,13 @@ Event::Event(
 	mean_time_to_happen { std::move(new_mean_time_to_happen) }, immediate { std::move(new_immediate) },
 	options { std::move(new_options) } {}
 
-bool Event::parse_scripts(GameManager& game_manager) {
+bool Event::parse_scripts(DefinitionManager const& definition_manager) {
 	bool ret = true;
-	ret &= trigger.parse_script(true, game_manager);
-	ret &= mean_time_to_happen.parse_scripts(game_manager);
-	ret &= immediate.parse_script(true, game_manager);
+	ret &= trigger.parse_script(true, definition_manager);
+	ret &= mean_time_to_happen.parse_scripts(definition_manager);
+	ret &= immediate.parse_script(true, definition_manager);
 	for (EventOption& option : options) {
-		ret &= option.parse_scripts(game_manager);
+		ret &= option.parse_scripts(definition_manager);
 	}
 	return ret;
 }
@@ -229,10 +229,10 @@ bool EventManager::load_on_action_file(ast::NodeCPtr root) {
 	return ret;
 }
 
-bool EventManager::parse_scripts(GameManager& game_manager) {
+bool EventManager::parse_scripts(DefinitionManager const& definition_manager) {
 	bool ret = true;
 	for (Event& event : events.get_items()) {
-		ret &= event.parse_scripts(game_manager);
+		ret &= event.parse_scripts(definition_manager);
 	}
 	return ret;
 }

@@ -25,11 +25,11 @@ Reform::Reform(
 	reform_group { new_group }, technology_cost { new_technology_cost }, allow { std::move(new_allow) },
 	on_execute_trigger { std::move(new_on_execute_trigger) }, on_execute_effect { std::move(new_on_execute_effect) } {}
 
-bool Reform::parse_scripts(GameManager& game_manager) {
+bool Reform::parse_scripts(DefinitionManager const& definition_manager) {
 	bool ret = true;
-	ret &= allow.parse_script(true, game_manager);
-	ret &= on_execute_trigger.parse_script(true, game_manager);
-	ret &= on_execute_effect.parse_script(true, game_manager);
+	ret &= allow.parse_script(true, definition_manager);
+	ret &= on_execute_trigger.parse_script(true, definition_manager);
+	ret &= on_execute_effect.parse_script(true, definition_manager);
 	return ret;
 }
 
@@ -350,10 +350,10 @@ bool IssueManager::load_issues_file(
 	return ret;
 }
 
-bool IssueManager::parse_scripts(GameManager& game_manager) {
+bool IssueManager::parse_scripts(DefinitionManager const& definition_manager) {
 	bool ret = true;
 	for (Reform& reform : reforms.get_items()) {
-		ret &= reform.parse_scripts(game_manager);
+		ret &= reform.parse_scripts(definition_manager);
 	}
 	return ret;
 }

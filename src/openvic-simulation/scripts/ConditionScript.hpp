@@ -4,9 +4,9 @@
 #include "openvic-simulation/scripts/Script.hpp"
 
 namespace OpenVic {
-	struct GameManager;
+	struct DefinitionManager;
 
-	struct ConditionScript final : Script<GameManager const&> {
+	struct ConditionScript final : Script<DefinitionManager const&> {
 
 	private:
 		ConditionNode PROPERTY_REF(condition_root);
@@ -15,7 +15,7 @@ namespace OpenVic {
 		scope_t PROPERTY(from_scope);
 
 	protected:
-		bool _parse_script(ast::NodeCPtr root, GameManager const& game_manager) override;
+		bool _parse_script(ast::NodeCPtr root, DefinitionManager const& definition_manager) override;
 
 	public:
 		ConditionScript(scope_t new_initial_scope, scope_t new_this_scope, scope_t new_from_scope);

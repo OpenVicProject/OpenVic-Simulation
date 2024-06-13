@@ -71,7 +71,7 @@ namespace OpenVic {
 			bool new_is_mine
 		);
 
-		bool parse_scripts(GameManager const& game_manager);
+		bool parse_scripts(DefinitionManager const& definition_manager);
 
 	public:
 		ProductionType(ProductionType&&) = default;
@@ -114,6 +114,6 @@ namespace OpenVic {
 			GoodDefinitionManager const& good_definition_manager, PopManager const& pop_manager, ast::NodeCPtr root
 		);
 
-		bool parse_scripts(GameManager const& game_manager);
+		bool parse_scripts(DefinitionManager const& definition_manager);
 	};
 }

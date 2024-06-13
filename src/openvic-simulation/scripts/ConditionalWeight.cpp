@@ -7,7 +7,9 @@ ConditionalWeight::ConditionalWeight(scope_t new_initial_scope, scope_t new_this
   : initial_scope { new_initial_scope }, this_scope { new_this_scope }, from_scope { new_from_scope } {}
 
 template<typename T>
-static NodeCallback auto expect_modifier(std::vector<T>& items, scope_t initial_scope, scope_t this_scope, scope_t from_scope) {
+static NodeCallback auto expect_modifier(
+	std::vector<T>& items, scope_t initial_scope, scope_t this_scope, scope_t from_scope
+) {
 	return [&items, initial_scope, this_scope, from_scope](ast::NodeCPtr node) -> bool {
 		fixed_point_t weight = 0;
 		bool successful = false;
@@ -46,10 +48,10 @@ node_callback_t ConditionalWeight::expect_conditional_weight(base_key_t base_key
 }
 
 struct ConditionalWeight::parse_scripts_visitor_t {
-	GameManager const& game_manager;
+	DefinitionManager const& definition_manager;
 
 	bool operator()(condition_weight_t& condition_weight) const {
-		return condition_weight.second.parse_script(false, game_manager);
+		return condition_weight.second.parse_script(false, definition_manager);
 	}
 	bool operator()(condition_weight_item_t& item) const {
 		return std::visit(*this, item);
@@ -64,6 +66,6 @@ struct ConditionalWeight::parse_scripts_visitor_t {
 	}
 };
 
-bool ConditionalWeight::parse_scripts(GameManager const& game_manager) {
-	return parse_scripts_visitor_t { game_manager }(condition_weight_items);
+bool ConditionalWeight::parse_scripts(DefinitionManager const& definition_manager) {
+	return parse_scripts_visitor_t { definition_manager }(condition_weight_items);
 }
