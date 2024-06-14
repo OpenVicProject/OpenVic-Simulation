@@ -9,7 +9,7 @@
 namespace OpenVic {
 	struct StateManager;
 	struct StateSet;
-	struct Country;
+	struct CountryDefinition;
 	struct ProvinceInstance;
 
 	struct State {
@@ -17,7 +17,7 @@ namespace OpenVic {
 
 	private:
 		StateSet const& PROPERTY(state_set);
-		Country const* PROPERTY(owner);
+		CountryDefinition const* PROPERTY(owner);
 		ProvinceInstance* PROPERTY(capital);
 		std::vector<ProvinceInstance*> PROPERTY(provinces);
 		ProvinceInstance::colony_status_t PROPERTY(colony_status);
@@ -25,7 +25,7 @@ namespace OpenVic {
 		Pop::pop_size_t PROPERTY(total_population);
 
 		State(
-			StateSet const& new_state_set, Country const* owner, ProvinceInstance* capital,
+			StateSet const& new_state_set, CountryDefinition const* owner, ProvinceInstance* capital,
 			std::vector<ProvinceInstance*>&& provinces, ProvinceInstance::colony_status_t colony_status
 		);
 

@@ -11,7 +11,7 @@ namespace OpenVic {
 	struct ProvinceDefinition;
 	struct TerrainType;
 	struct State;
-	struct Country;
+	struct CountryDefinition;
 	struct Crime;
 	struct GoodDefinition;
 	struct ArmyInstance;
@@ -31,16 +31,17 @@ namespace OpenVic {
 
 		enum struct colony_status_t : uint8_t { STATE, PROTECTORATE, COLONY };
 
+	private:
 		ProvinceDefinition const& PROPERTY(province_definition);
 
-		/* Mutable attributes (reset before loading history) */
 		TerrainType const* PROPERTY(terrain_type);
 		life_rating_t PROPERTY(life_rating);
 		colony_status_t PROPERTY(colony_status);
 		State const* PROPERTY_RW(state);
-		Country const* PROPERTY(owner);
-		Country const* PROPERTY(controller);
-		std::vector<Country const*> PROPERTY(cores);
+		CountryDefinition const* PROPERTY(owner);
+		CountryDefinition const* PROPERTY(controller);
+		// Cores being CountryDefinitions means then they won't be affected by tag switched (as desired)
+		std::vector<CountryDefinition const*> PROPERTY(cores);
 		bool PROPERTY(slave);
 		Crime const* PROPERTY_RW(crime);
 		// TODO - change this into a factory-like structure
@@ -86,7 +87,7 @@ namespace OpenVic {
 		bool apply_history_to_province(ProvinceHistoryEntry const* entry);
 
 		void setup_pop_test_values(
-			IdeologyManager const& ideology_manager, IssueManager const& issue_manager, Country const& country
+			IdeologyManager const& ideology_manager, IssueManager const& issue_manager, CountryDefinition const& country
 		);
 	};
 }

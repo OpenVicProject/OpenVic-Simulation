@@ -4,10 +4,11 @@
 
 #include "openvic-simulation/types/Date.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPointMap.hpp"
+#include "openvic-simulation/types/IdentifierRegistry.hpp"
 #include "openvic-simulation/utility/Getters.hpp"
 
 namespace OpenVic {
-	struct Country;
+	struct CountryDefinition;
 	struct Culture;
 	struct Religion;
 	struct CountryParty;
@@ -21,8 +22,9 @@ namespace OpenVic {
 	/* Representation of an existing country that is currently in-game. */
 	struct CountryInstance {
 		friend struct CountryInstanceManager;
+
 	private:
-		Country const* PROPERTY_RW(base_country);
+		CountryDefinition const* PROPERTY_RW(country_definition);
 		Culture const* PROPERTY_RW(primary_culture);
 		std::vector<Culture const*> PROPERTY(accepted_cultures);
 		Religion const* PROPERTY_RW(religion);
@@ -40,7 +42,7 @@ namespace OpenVic {
 		std::vector<Reform const*> PROPERTY(reforms); // TODO: should be map of reform groups to active reforms: must set defaults & validate applied history
 		// TODO: Military units + OOBs; will probably need an extensible deployment class
 
-		CountryInstance(Country const* new_base_country);
+		CountryInstance(CountryDefinition const* new_country_definition);
 
 	public:
 		std::string_view get_identifier() const;
@@ -56,17 +58,17 @@ namespace OpenVic {
 		bool apply_history_to_country(CountryHistoryEntry const* entry);
 	};
 
-	struct CountryManager;
+	struct CountryDefinitionManager;
 	struct CountryHistoryManager;
 	struct UnitInstanceManager;
 	struct MapInstance;
 
 	struct CountryInstanceManager {
 	private:
-		std::vector<CountryInstance> PROPERTY(country_instances);
+		IdentifierRegistry<CountryInstance> IDENTIFIER_REGISTRY(country_instance);
 
 	public:
-		bool generate_country_instances(CountryManager const& country_manager);
+		bool generate_country_instances(CountryDefinitionManager const& country_definition_manager);
 
 		bool apply_history_to_countries(
 			CountryHistoryManager const& history_manager, Date date, UnitInstanceManager& unit_instance_manager,

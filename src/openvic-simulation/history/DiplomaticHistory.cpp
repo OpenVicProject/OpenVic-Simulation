@@ -7,17 +7,17 @@ using namespace OpenVic::NodeTools;
 
 WarHistory::added_wargoal_t::added_wargoal_t(
 	Date new_added,
-	Country const* new_actor,
-	Country const* new_receiver,
+	CountryDefinition const* new_actor,
+	CountryDefinition const* new_receiver,
 	WargoalType const* new_wargoal,
-	std::optional<Country const*> new_third_party,
+	std::optional<CountryDefinition const*> new_third_party,
 	std::optional<ProvinceDefinition const*> new_target
 ) : added { new_added }, actor { new_actor }, receiver { new_receiver }, wargoal { new_wargoal },
 	third_party { new_third_party }, target { new_target } {}
 
 WarHistory::war_participant_t::war_participant_t(
-	Country const* new_country,
-	const Period new_period
+	CountryDefinition const* new_country,
+	Period new_period
 ) : country { new_country }, period { new_period } {}
 
 WarHistory::WarHistory(
@@ -29,22 +29,22 @@ WarHistory::WarHistory(
 	wargoals { std::move(new_wargoals) } {}
 
 AllianceHistory::AllianceHistory(
-	Country const* new_first,
-	Country const* new_second,
-	const Period new_period
+	CountryDefinition const* new_first,
+	CountryDefinition const* new_second,
+	Period new_period
 ) : first { new_first }, second { new_second }, period { new_period } {}
 
 ReparationsHistory::ReparationsHistory(
-	Country const* new_receiver,
-	Country const* new_sender,
-	const Period new_period
+	CountryDefinition const* new_receiver,
+	CountryDefinition const* new_sender,
+	Period new_period
 ) : receiver { new_receiver }, sender { new_sender }, period { new_period } {}
 
 SubjectHistory::SubjectHistory(
-	Country const* new_overlord,
-	Country const* new_subject,
-	const type_t new_type,
-	const Period new_period
+	CountryDefinition const* new_overlord,
+	CountryDefinition const* new_subject,
+	type_t new_type,
+	Period new_period
 ) : overlord { new_overlord }, subject { new_subject }, type { new_type }, period { new_period } {}
 
 void DiplomaticHistoryManager::reserve_more_wars(size_t size) {
@@ -108,19 +108,23 @@ std::vector<WarHistory const*> DiplomaticHistoryManager::get_wars(Date date) con
 	return ret;
 }
 
-bool DiplomaticHistoryManager::load_diplomacy_history_file(CountryManager const& country_manager, ast::NodeCPtr root) {
+bool DiplomaticHistoryManager::load_diplomacy_history_file(
+	CountryDefinitionManager const& country_definition_manager, ast::NodeCPtr root
+) {
 	return expect_dictionary_keys(
-		"alliance", ZERO_OR_MORE, [this, &country_manager](ast::NodeCPtr node) -> bool {
-			Country const* first = nullptr;
-			Country const* second = nullptr;
+		"alliance", ZERO_OR_MORE, [this, &country_definition_manager](ast::NodeCPtr node) -> bool {
+			CountryDefinition const* first = nullptr;
+			CountryDefinition const* second = nullptr;
 			Date start {};
 			std::optional<Date> end {};
 
 			bool ret = expect_dictionary_keys(
-				"first", ONE_EXACTLY,
-					country_manager.expect_country_identifier_or_string(assign_variable_callback_pointer(first)),
-				"second", ONE_EXACTLY,
-					country_manager.expect_country_identifier_or_string(assign_variable_callback_pointer(second)),
+				"first", ONE_EXACTLY, country_definition_manager.expect_country_definition_identifier_or_string(
+					assign_variable_callback_pointer(first)
+				),
+				"second", ONE_EXACTLY, country_definition_manager.expect_country_definition_identifier_or_string(
+					assign_variable_callback_pointer(second)
+				),
 				"start_date", ONE_EXACTLY, expect_date_identifier_or_string(assign_variable_callback(start)),
 				"end_date", ZERO_OR_ONE, expect_date_identifier_or_string(assign_variable_callback(end))
 			)(node);
@@ -128,17 +132,19 @@ bool DiplomaticHistoryManager::load_diplomacy_history_file(CountryManager const&
 			alliances.push_back({ first, second, { start, end } });
 			return ret;
 		},
-		"vassal", ZERO_OR_MORE, [this, &country_manager](ast::NodeCPtr node) -> bool {
-			Country const* overlord = nullptr;
-			Country const* subject = nullptr;
+		"vassal", ZERO_OR_MORE, [this, &country_definition_manager](ast::NodeCPtr node) -> bool {
+			CountryDefinition const* overlord = nullptr;
+			CountryDefinition const* subject = nullptr;
 			Date start {};
 			std::optional<Date> end {};
 
 			bool ret = expect_dictionary_keys(
-				"first", ONE_EXACTLY,
-					country_manager.expect_country_identifier_or_string(assign_variable_callback_pointer(overlord)),
-				"second", ONE_EXACTLY,
-					country_manager.expect_country_identifier_or_string(assign_variable_callback_pointer(subject)),
+				"first", ONE_EXACTLY, country_definition_manager.expect_country_definition_identifier_or_string(
+					assign_variable_callback_pointer(overlord)
+				),
+				"second", ONE_EXACTLY, country_definition_manager.expect_country_definition_identifier_or_string(
+					assign_variable_callback_pointer(subject)
+				),
 				"start_date", ONE_EXACTLY, expect_date_identifier_or_string(assign_variable_callback(start)),
 				"end_date", ZERO_OR_ONE, expect_date_identifier_or_string(assign_variable_callback(end))
 			)(node);
@@ -146,17 +152,19 @@ bool DiplomaticHistoryManager::load_diplomacy_history_file(CountryManager const&
 			subjects.push_back({ overlord, subject, SubjectHistory::type_t::VASSAL, { start, end } });
 			return ret;
 		},
-		"union", ZERO_OR_MORE, [this, &country_manager](ast::NodeCPtr node) -> bool {
-			Country const* overlord = nullptr;
-			Country const* subject = nullptr;
+		"union", ZERO_OR_MORE, [this, &country_definition_manager](ast::NodeCPtr node) -> bool {
+			CountryDefinition const* overlord = nullptr;
+			CountryDefinition const* subject = nullptr;
 			Date start {};
 			std::optional<Date> end {};
 
 			bool ret = expect_dictionary_keys(
-				"first", ONE_EXACTLY,
-					country_manager.expect_country_identifier_or_string(assign_variable_callback_pointer(overlord)),
-				"second", ONE_EXACTLY,
-					country_manager.expect_country_identifier_or_string(assign_variable_callback_pointer(subject)),
+				"first", ONE_EXACTLY, country_definition_manager.expect_country_definition_identifier_or_string(
+					assign_variable_callback_pointer(overlord)
+				),
+				"second", ONE_EXACTLY, country_definition_manager.expect_country_definition_identifier_or_string(
+					assign_variable_callback_pointer(subject)
+				),
 				"start_date", ONE_EXACTLY, expect_date_identifier_or_string(assign_variable_callback(start)),
 				"end_date", ZERO_OR_ONE, expect_date_identifier_or_string(assign_variable_callback(end))
 			)(node);
@@ -164,17 +172,19 @@ bool DiplomaticHistoryManager::load_diplomacy_history_file(CountryManager const&
 			subjects.push_back({ overlord, subject, SubjectHistory::type_t::UNION, { start, end } });
 			return ret;
 		},
-		"substate", ZERO_OR_MORE, [this, &country_manager](ast::NodeCPtr node) -> bool {
-			Country const* overlord = nullptr;
-			Country const* subject = nullptr;
+		"substate", ZERO_OR_MORE, [this, &country_definition_manager](ast::NodeCPtr node) -> bool {
+			CountryDefinition const* overlord = nullptr;
+			CountryDefinition const* subject = nullptr;
 			Date start {};
 			std::optional<Date> end {};
 
 			bool ret = expect_dictionary_keys(
-				"first", ONE_EXACTLY,
-					country_manager.expect_country_identifier_or_string(assign_variable_callback_pointer(overlord)),
-				"second", ONE_EXACTLY,
-					country_manager.expect_country_identifier_or_string(assign_variable_callback_pointer(subject)),
+				"first", ONE_EXACTLY, country_definition_manager.expect_country_definition_identifier_or_string(
+					assign_variable_callback_pointer(overlord)
+				),
+				"second", ONE_EXACTLY, country_definition_manager.expect_country_definition_identifier_or_string(
+					assign_variable_callback_pointer(subject)
+				),
 				"start_date", ONE_EXACTLY, expect_date_identifier_or_string(assign_variable_callback(start)),
 				"end_date", ZERO_OR_ONE, expect_date_identifier_or_string(assign_variable_callback(end))
 			)(node);
@@ -182,17 +192,19 @@ bool DiplomaticHistoryManager::load_diplomacy_history_file(CountryManager const&
 			subjects.push_back({ overlord, subject, SubjectHistory::type_t::SUBSTATE, { start, end } });
 			return ret;
 		},
-		"reparations", ZERO_OR_MORE, [this, &country_manager](ast::NodeCPtr node) -> bool {
-			Country const* receiver = nullptr;
-			Country const* sender = nullptr;
+		"reparations", ZERO_OR_MORE, [this, &country_definition_manager](ast::NodeCPtr node) -> bool {
+			CountryDefinition const* receiver = nullptr;
+			CountryDefinition const* sender = nullptr;
 			Date start {};
 			std::optional<Date> end {};
 
 			bool ret = expect_dictionary_keys(
-				"first", ONE_EXACTLY,
-					country_manager.expect_country_identifier_or_string(assign_variable_callback_pointer(receiver)),
-				"second", ONE_EXACTLY,
-					country_manager.expect_country_identifier_or_string(assign_variable_callback_pointer(sender)),
+				"first", ONE_EXACTLY, country_definition_manager.expect_country_definition_identifier_or_string(
+					assign_variable_callback_pointer(receiver)
+				),
+				"second", ONE_EXACTLY, country_definition_manager.expect_country_definition_identifier_or_string(
+					assign_variable_callback_pointer(sender)
+				),
 				"start_date", ONE_EXACTLY, expect_date_identifier_or_string(assign_variable_callback(start)),
 				"end_date", ZERO_OR_ONE, expect_date_identifier_or_string(assign_variable_callback(end))
 			)(node);
@@ -217,111 +229,115 @@ bool DiplomaticHistoryManager::load_war_history_file(DefinitionManager const& de
 			bool ret = expect_date_str(assign_variable_callback(current_date))(key);
 
 			ret &= expect_dictionary_keys(
-				"add_attacker", ZERO_OR_MORE, definition_manager.get_country_manager().expect_country_identifier(
-					[&attackers, &current_date, &name](Country const& country) -> bool {
-						for (auto const& attacker : attackers) {
-							if (attacker.get_country() == &country) {
-								Logger::error(
-									"In history of war ", name, " at date ", current_date.to_string(),
-									": Attempted to add attacking country ", attacker.get_country()->get_identifier(),
-									" which is already present!"
-								);
-								return false;
+				"add_attacker", ZERO_OR_MORE,
+					definition_manager.get_country_definition_manager().expect_country_definition_identifier(
+						[&attackers, &current_date, &name](CountryDefinition const& country) -> bool {
+							for (auto const& attacker : attackers) {
+								if (attacker.get_country() == &country) {
+									Logger::error(
+										"In history of war ", name, " at date ", current_date.to_string(),
+										": Attempted to add attacking country ", attacker.get_country()->get_identifier(),
+										" which is already present!"
+									);
+									return false;
+								}
 							}
-						}
 
-						attackers.push_back({ &country, { current_date, {} } });
-						return true;
-					}
-				),
-				"add_defender", ZERO_OR_MORE, definition_manager.get_country_manager().expect_country_identifier(
-					[&defenders, &current_date, &name](Country const& country) -> bool {
-						for (auto const& defender : defenders) {
-							if (defender.get_country() == &country) {
-								Logger::error(
-									"In history of war ", name, " at date ", current_date.to_string(),
-									": Attempted to add defending country ", defender.get_country()->get_identifier(),
-									" which is already present!"
-								);
-								return false;
-							}
-						}
-
-						defenders.push_back({ &country, { current_date, {} } });
-						return true;
-					}
-				),
-				"rem_attacker", ZERO_OR_MORE, definition_manager.get_country_manager().expect_country_identifier(
-					[&attackers, &current_date, &name](Country const& country) -> bool {
-						WarHistory::war_participant_t* participant_to_remove = nullptr;
-
-						for (auto& attacker : attackers) {
-							if (attacker.country == &country) {
-								participant_to_remove = &attacker;
-								break;
-							}
-						}
-
-						if (participant_to_remove == nullptr) {
-							Logger::warning(
-								"In history of war ", name, " at date ", current_date.to_string(),
-								": Attempted to remove attacking country ", country.get_identifier(),
-								" which was not present!"
-							);
+							attackers.push_back({ &country, { current_date, {} } });
 							return true;
 						}
-
-						return participant_to_remove->period.try_set_end(current_date);
-					}
-				),
-				"rem_defender", ZERO_OR_MORE, definition_manager.get_country_manager().expect_country_identifier(
-					[&defenders, &current_date, &name](Country const& country) -> bool {
-						WarHistory::war_participant_t* participant_to_remove = nullptr;
-
-						for (auto& defender : defenders) {
-							if (defender.country == &country) {
-								participant_to_remove = &defender;
-								break;
+					),
+				"add_defender", ZERO_OR_MORE,
+					definition_manager.get_country_definition_manager().expect_country_definition_identifier(
+						[&defenders, &current_date, &name](CountryDefinition const& country) -> bool {
+							for (auto const& defender : defenders) {
+								if (defender.get_country() == &country) {
+									Logger::error(
+										"In history of war ", name, " at date ", current_date.to_string(),
+										": Attempted to add defending country ", defender.get_country()->get_identifier(),
+										" which is already present!"
+									);
+									return false;
+								}
 							}
-						}
 
-						if (participant_to_remove == nullptr) {
-							Logger::warning(
-								"In history of war ", name, " at date ", current_date.to_string(),
-								": Attempted to remove attacking country ", country.get_identifier(),
-								" which was not present!"
-							);
+							defenders.push_back({ &country, { current_date, {} } });
 							return true;
 						}
+					),
+				"rem_attacker", ZERO_OR_MORE,
+					definition_manager.get_country_definition_manager().expect_country_definition_identifier(
+						[&attackers, &current_date, &name](CountryDefinition const& country) -> bool {
+							WarHistory::war_participant_t* participant_to_remove = nullptr;
 
-						return participant_to_remove->period.try_set_end(current_date);
-					}
-				),
+							for (auto& attacker : attackers) {
+								if (attacker.country == &country) {
+									participant_to_remove = &attacker;
+									break;
+								}
+							}
+
+							if (participant_to_remove == nullptr) {
+								Logger::warning(
+									"In history of war ", name, " at date ", current_date.to_string(),
+									": Attempted to remove attacking country ", country.get_identifier(),
+									" which was not present!"
+								);
+								return true;
+							}
+
+							return participant_to_remove->period.try_set_end(current_date);
+						}
+					),
+				"rem_defender", ZERO_OR_MORE,
+					definition_manager.get_country_definition_manager().expect_country_definition_identifier(
+						[&defenders, &current_date, &name](CountryDefinition const& country) -> bool {
+							WarHistory::war_participant_t* participant_to_remove = nullptr;
+
+							for (auto& defender : defenders) {
+								if (defender.country == &country) {
+									participant_to_remove = &defender;
+									break;
+								}
+							}
+
+							if (participant_to_remove == nullptr) {
+								Logger::warning(
+									"In history of war ", name, " at date ", current_date.to_string(),
+									": Attempted to remove attacking country ", country.get_identifier(),
+									" which was not present!"
+								);
+								return true;
+							}
+
+							return participant_to_remove->period.try_set_end(current_date);
+						}
+					),
 				"war_goal", ZERO_OR_MORE, [&definition_manager, &wargoals, &current_date](ast::NodeCPtr value) -> bool {
-					Country const* actor = nullptr;
-					Country const* receiver = nullptr;
+					CountryDefinition const* actor = nullptr;
+					CountryDefinition const* receiver = nullptr;
 					WargoalType const* type = nullptr;
-					std::optional<Country const*> third_party {};
+					std::optional<CountryDefinition const*> third_party {};
 					std::optional<ProvinceDefinition const*> target {};
 
 					bool ret = expect_dictionary_keys(
 						"actor", ONE_EXACTLY,
-							definition_manager.get_country_manager().expect_country_identifier(
+							definition_manager.get_country_definition_manager().expect_country_definition_identifier(
 								assign_variable_callback_pointer(actor)
 							),
 						"receiver", ONE_EXACTLY,
-							definition_manager.get_country_manager().expect_country_identifier(
+							definition_manager.get_country_definition_manager().expect_country_definition_identifier(
 								assign_variable_callback_pointer(receiver)
 							),
 						"casus_belli", ONE_EXACTLY, definition_manager.get_military_manager().get_wargoal_type_manager()
 							.expect_wargoal_type_identifier(assign_variable_callback_pointer(type)),
 						"country", ZERO_OR_ONE,
-							definition_manager.get_country_manager().expect_country_identifier(
-								assign_variable_callback_pointer(*third_party)
+							definition_manager.get_country_definition_manager().expect_country_definition_identifier(
+								assign_variable_callback_pointer_opt(third_party)
 							),
 						"state_province_id", ZERO_OR_ONE,
 							definition_manager.get_map_definition().expect_province_definition_identifier(
-								assign_variable_callback_pointer(*target)
+								assign_variable_callback_pointer_opt(target)
 							)
 					)(value);
 

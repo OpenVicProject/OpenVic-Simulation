@@ -87,7 +87,7 @@ namespace OpenVic {
 		Pop& operator=(Pop&&) = delete;
 
 		void setup_pop_test_values(
-			IdeologyManager const& ideology_manager, IssueManager const& issue_manager, Country const& country
+			IdeologyManager const& ideology_manager, IssueManager const& issue_manager, CountryDefinition const& country
 		);
 	};
 

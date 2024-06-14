@@ -86,7 +86,7 @@ bool MapInstance::setup(BuildingTypeManager const& building_type_manager) {
 
 bool MapInstance::apply_history_to_provinces(
 	ProvinceHistoryManager const& history_manager, Date date, IdeologyManager const& ideology_manager,
-	IssueManager const& issue_manager, Country const& country
+	IssueManager const& issue_manager, CountryDefinition const& country
 ) {
 	bool ret = true;
 

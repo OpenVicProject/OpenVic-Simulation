@@ -1,6 +1,5 @@
 #include "State.hpp"
 
-#include "openvic-simulation/country/Country.hpp"
 #include "openvic-simulation/map/MapDefinition.hpp"
 #include "openvic-simulation/map/MapInstance.hpp"
 #include "openvic-simulation/map/ProvinceInstance.hpp"
@@ -9,8 +8,8 @@
 using namespace OpenVic;
 
 State::State(
-	StateSet const& new_state_set, Country const* owner, ProvinceInstance* capital, std::vector<ProvinceInstance*>&& provinces,
-	ProvinceInstance::colony_status_t colony_status
+	StateSet const& new_state_set, CountryDefinition const* owner, ProvinceInstance* capital,
+	std::vector<ProvinceInstance*>&& provinces, ProvinceInstance::colony_status_t colony_status
 ) : state_set { new_state_set }, owner { owner }, capital { capital }, provinces { std::move(provinces) },
 	colony_status { colony_status } {}
 

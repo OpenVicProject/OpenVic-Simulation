@@ -1,6 +1,6 @@
 #include "Pop.hpp"
 
-#include "openvic-simulation/country/Country.hpp"
+#include "openvic-simulation/country/CountryDefinition.hpp"
 #include "openvic-simulation/military/UnitType.hpp"
 #include "openvic-simulation/politics/Ideology.hpp"
 #include "openvic-simulation/politics/Issue.hpp"
@@ -50,7 +50,7 @@ Pop::Pop(
 }
 
 void Pop::setup_pop_test_values(
-	IdeologyManager const& ideology_manager, IssueManager const& issue_manager, Country const& country
+	IdeologyManager const& ideology_manager, IssueManager const& issue_manager, CountryDefinition const& country
 ) {
 	/* Returns +/- range% of size. */
 	const auto test_size = [this](int32_t range) -> pop_size_t {

@@ -18,10 +18,10 @@
 
 namespace OpenVic {
 	struct DefinitionManager;
-	struct CountryManager;
+	struct CountryDefinitionManager;
 
 	struct CountryParty : HasIdentifierAndColour {
-		friend struct CountryManager;
+		friend struct CountryDefinitionManager;
 
 		using policy_map_t = ordered_map<IssueGroup const*, Issue const*>;
 
@@ -41,8 +41,8 @@ namespace OpenVic {
 	};
 
 	/* Generic information about a TAG */
-	struct Country : HasIdentifierAndColour {
-		friend struct CountryManager;
+	struct CountryDefinition : HasIdentifierAndColour {
+		friend struct CountryDefinitionManager;
 
 		using unit_names_map_t = ordered_map<UnitType const*, name_list_t>;
 		using government_colour_map_t = ordered_map<GovernmentType const*, colour_t>;
@@ -61,7 +61,7 @@ namespace OpenVic {
 		colour_t PROPERTY(tertiary_unit_colour);
 		// Unit colours not const due to being added after construction
 
-		Country(
+		CountryDefinition(
 			std::string_view new_identifier, colour_t new_colour, size_t new_index,
 			GraphicalCultureType const& new_graphical_culture, IdentifierRegistry<CountryParty>&& new_parties,
 			unit_names_map_t&& new_unit_names, bool new_dynamic_tag, government_colour_map_t&& new_alternative_colours,
@@ -69,14 +69,14 @@ namespace OpenVic {
 		);
 
 	public:
-		Country(Country&&) = default;
+		CountryDefinition(CountryDefinition&&) = default;
 
 		// TODO - get_colour including alternative colours
 	};
 
-	struct CountryManager {
+	struct CountryDefinitionManager {
 	private:
-		IdentifierRegistry<Country> IDENTIFIER_REGISTRY_CUSTOM_PLURAL(country, countries);
+		IdentifierRegistry<CountryDefinition> IDENTIFIER_REGISTRY(country_definition);
 
 		NodeTools::node_callback_t load_country_party(
 			PoliticsManager const& politics_manager, IdentifierRegistry<CountryParty>& country_parties
@@ -85,8 +85,8 @@ namespace OpenVic {
 	public:
 		bool add_country(
 			std::string_view identifier, colour_t colour, GraphicalCultureType const* graphical_culture,
-			IdentifierRegistry<CountryParty>&& parties, Country::unit_names_map_t&& unit_names, bool dynamic_tag,
-			Country::government_colour_map_t&& alternative_colours
+			IdentifierRegistry<CountryParty>&& parties, CountryDefinition::unit_names_map_t&& unit_names, bool dynamic_tag,
+			CountryDefinition::government_colour_map_t&& alternative_colours
 		);
 
 		bool load_country_colours(ast::NodeCPtr root);
