@@ -27,7 +27,10 @@ std::string ProvinceDefinition::to_string() const {
 }
 
 bool ProvinceDefinition::load_positions(
-	MapDefinition const& map_definition, BuildingTypeManager const& building_type_manager, ast::NodeCPtr root
+	MapDefinition const& map_definition,
+	BuildingTypeManager const& building_type_manager,
+	ast::NodeCPtr root,
+	ovdl::v2script::Parser const& parser
 ) {
 	const fixed_point_t map_height = map_definition.get_height();
 

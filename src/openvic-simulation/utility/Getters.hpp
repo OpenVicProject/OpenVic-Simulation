@@ -4,8 +4,8 @@
 #include <string>
 #include <string_view>
 
-#include <openvic-dataloader/detail/SelfType.hpp>
-#include <openvic-dataloader/detail/TypeName.hpp>
+#include <openvic-dataloader/detail/utility/SelfType.hpp>
+#include <openvic-dataloader/detail/utility/TypeName.hpp>
 
 #define OV_DETAIL_GET_TYPE_BASE_CLASS(CLASS) \
 	static constexpr std::string_view get_type_static() { return ::ovdl::detail::type_name<CLASS>(); } \

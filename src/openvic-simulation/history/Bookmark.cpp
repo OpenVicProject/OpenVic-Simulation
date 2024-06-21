@@ -22,7 +22,7 @@ bool BookmarkManager::add_bookmark(
 	return bookmarks.add_item({ bookmarks.size(), name, description, date, initial_camera_x, initial_camera_y });
 }
 
-bool BookmarkManager::load_bookmark_file(ast::NodeCPtr root) {
+bool BookmarkManager::load_bookmark_file(ast::NodeCPtr root, ovdl::v2script::Parser const& parser) {
 	const bool ret = expect_dictionary_reserve_length(
 		bookmarks,
 		[this](std::string_view key, ast::NodeCPtr value) -> bool {

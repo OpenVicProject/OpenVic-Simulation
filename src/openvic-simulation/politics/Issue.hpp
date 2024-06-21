@@ -5,6 +5,7 @@
 #include "openvic-simulation/scripts/ConditionScript.hpp"
 #include "openvic-simulation/scripts/EffectScript.hpp"
 #include "openvic-simulation/types/IdentifierRegistry.hpp"
+#include "openvic-dataloader/v2script/Parser.hpp"
 
 namespace OpenVic {
 	struct IssueManager;
@@ -102,17 +103,17 @@ namespace OpenVic {
 		IdentifierRegistry<ReformGroup> IDENTIFIER_REGISTRY(reform_group);
 		IdentifierRegistry<Reform> IDENTIFIER_REGISTRY(reform);
 
-		bool _load_issue_group(size_t& expected_issues, std::string_view identifier, ast::NodeCPtr node);
+		bool _load_issue_group(size_t& expected_issues, std::string_view identifier, ast::NodeCPtr node, ovdl::v2script::Parser const& parser);
 		bool _load_issue(
 			ModifierManager const& modifier_manager, RuleManager const& rule_manager, std::string_view identifier,
-			IssueGroup const* group, ast::NodeCPtr node
+			IssueGroup const* group, ast::NodeCPtr node, ovdl::v2script::Parser const& parser
 		);
 		bool _load_reform_group(
-			size_t& expected_reforms, std::string_view identifier, ReformType const* type, ast::NodeCPtr node
+			size_t& expected_reforms, std::string_view identifier, ReformType const* type, ast::NodeCPtr node, ovdl::v2script::Parser const& parser
 		);
 		bool _load_reform(
 			ModifierManager const& modifier_manager, RuleManager const& rule_manager, size_t ordinal,
-			std::string_view identifier, ReformGroup const* group, ast::NodeCPtr node
+			std::string_view identifier, ReformGroup const* group, ast::NodeCPtr node, ovdl::v2script::Parser const& parser
 		);
 
 	public:
@@ -128,7 +129,12 @@ namespace OpenVic {
 			RuleSet&& rules, Reform::tech_cost_t technology_cost, ConditionScript&& allow, ConditionScript&& on_execute_trigger,
 			EffectScript&& on_execute_effect
 		);
-		bool load_issues_file(ModifierManager const& modifier_manager, RuleManager const& rule_manager, ast::NodeCPtr root);
+		bool load_issues_file(
+			ModifierManager const& modifier_manager,
+			RuleManager const& rule_manager,
+			ast::NodeCPtr root,
+			ovdl::v2script::Parser const& parser
+		);
 
 		bool parse_scripts(DefinitionManager const& definition_manager);
 	};

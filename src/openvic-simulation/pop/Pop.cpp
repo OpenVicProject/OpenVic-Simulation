@@ -396,8 +396,11 @@ static NodeCallback auto expect_needs_income(PopType::income_type_t& types) {
  * POP-3, POP-4, POP-5, POP-6, POP-7, POP-8, POP-9, POP-10, POP-11, POP-12, POP-13, POP-14
  */
 bool PopManager::load_pop_type_file(
-	std::string_view filestem, GoodDefinitionManager const& good_definition_manager, IdeologyManager const& ideology_manager,
-	ast::NodeCPtr root
+	std::string_view filestem,
+	GoodDefinitionManager const& good_definition_manager,
+	IdeologyManager const& ideology_manager,
+	ast::NodeCPtr root,
+	ovdl::v2script::Parser const& parser
 ) {
 	colour_t colour = colour_t::null();
 	Strata const* strata = nullptr;
@@ -584,7 +587,7 @@ bool PopManager::load_delayed_parse_pop_type_data(UnitTypeManager const& unit_ty
 	return ret;
 }
 
-bool PopManager::load_pop_type_chances_file(ast::NodeCPtr root) {
+bool PopManager::load_pop_type_chances_file(ast::NodeCPtr root, ovdl::v2script::Parser const& parser) {
 	return expect_dictionary_keys(
 		"promotion_chance", ONE_EXACTLY, promotion_chance.expect_conditional_weight(ConditionalWeight::FACTOR),
 		"demotion_chance", ONE_EXACTLY, demotion_chance.expect_conditional_weight(ConditionalWeight::FACTOR),

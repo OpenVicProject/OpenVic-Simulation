@@ -46,7 +46,10 @@ namespace OpenVic {
 		ProvinceHistoryEntry(ProvinceDefinition const& new_province, Date new_date);
 
 		bool _load_province_pop_history(
-			DefinitionManager const& definition_manager, ast::NodeCPtr root, bool *non_integer_size
+			DefinitionManager const& definition_manager,
+			ast::NodeCPtr root,
+			ovdl::v2script::Parser const& parser,
+			bool *non_integer_size
 		);
 	};
 
@@ -63,12 +66,15 @@ namespace OpenVic {
 
 		std::unique_ptr<ProvinceHistoryEntry> _make_entry(Date date) const override;
 		bool _load_history_entry(
-			DefinitionManager const& definition_manager, ProvinceHistoryEntry& entry, ast::NodeCPtr root
+			DefinitionManager const& definition_manager,
+			ProvinceHistoryEntry& entry,
+			ast::NodeCPtr root,
+			ovdl::v2script::Parser const& parser
 		) override;
 
 	private:
 		bool _load_province_pop_history(
-			DefinitionManager const& definition_manager, Date date, ast::NodeCPtr root, bool *non_integer_size
+			DefinitionManager const& definition_manager, Date date, ast::NodeCPtr root, ovdl::v2script::Parser const& parser, bool *non_integer_size
 		);
 	};
 
@@ -91,10 +97,17 @@ namespace OpenVic {
 		ProvinceHistoryMap const* get_province_history(ProvinceDefinition const* province) const;
 
 		bool load_province_history_file(
-			DefinitionManager const& definition_manager, ProvinceDefinition const& province, ast::NodeCPtr root
+			DefinitionManager const& definition_manager,
+			ProvinceDefinition const& province,
+			ast::NodeCPtr root,
+			ovdl::v2script::Parser const& parser
 		);
 		bool load_pop_history_file(
-			DefinitionManager const& definition_manager, Date date, ast::NodeCPtr root, bool *non_integer_size
+			DefinitionManager const& definition_manager,
+			Date date,
+			ast::NodeCPtr root,
+			ovdl::v2script::Parser const& parser,
+			bool *non_integer_size
 		);
 	};
 }

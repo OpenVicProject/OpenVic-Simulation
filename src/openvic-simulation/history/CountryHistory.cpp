@@ -16,7 +16,7 @@ std::unique_ptr<CountryHistoryEntry> CountryHistoryMap::_make_entry(Date date) c
 
 bool CountryHistoryMap::_load_history_entry(
 	DefinitionManager const& definition_manager, Dataloader const& dataloader, DeploymentManager& deployment_manager,
-	CountryHistoryEntry& entry, ast::NodeCPtr root
+	CountryHistoryEntry& entry, ast::NodeCPtr root, ovdl::v2script::Parser const& parser
 ) {
 	PoliticsManager const& politics_manager = definition_manager.get_politics_manager();
 	IssueManager const& issue_manager = politics_manager.get_issue_manager();
@@ -28,7 +28,7 @@ bool CountryHistoryMap::_load_history_entry(
 
 	return expect_dictionary_keys_and_default(
 		[this, &definition_manager, &dataloader, &deployment_manager, &issue_manager, &technology_manager, &invention_manager,
-			&country_manager, &entry](std::string_view key, ast::NodeCPtr value) -> bool {
+			&country_manager, &entry, &parser](std::string_view key, ast::NodeCPtr value) -> bool {
 			ReformGroup const* reform_group = issue_manager.get_reform_group_by_identifier(key);
 			if (reform_group != nullptr) {
 				return issue_manager.expect_reform_identifier([&entry, reform_group](Reform const& reform) -> bool {
@@ -64,7 +64,7 @@ bool CountryHistoryMap::_load_history_entry(
 			}
 
 			return _load_history_sub_entry_callback(
-				definition_manager, dataloader, deployment_manager, entry.get_date(), value, key, value
+				definition_manager, dataloader, deployment_manager, entry.get_date(), value, key, value, parser
 			);
 		},
 		"capital", ZERO_OR_ONE, definition_manager.get_map_definition().expect_province_definition_identifier(
@@ -215,7 +215,11 @@ CountryHistoryMap const* CountryHistoryManager::get_country_history(Country cons
 }
 
 bool CountryHistoryManager::load_country_history_file(
-	DefinitionManager& definition_manager, Dataloader const& dataloader, Country const& country, ast::NodeCPtr root
+	DefinitionManager& definition_manager,
+	Dataloader const& dataloader,
+	Country const& country,
+	ast::NodeCPtr root,
+	ovdl::v2script::Parser const& parser
 ) {
 	if (locked) {
 		Logger::error("Attempted to load country history file for ", country, " after country history registry was locked!");
@@ -240,6 +244,6 @@ bool CountryHistoryManager::load_country_history_file(
 	CountryHistoryMap& country_history = it.value();
 
 	return country_history._load_history_file(
-		definition_manager, dataloader, definition_manager.get_military_manager().get_deployment_manager(), root
+		definition_manager, dataloader, definition_manager.get_military_manager().get_deployment_manager(), root, parser
 	);
 }

@@ -54,8 +54,12 @@ namespace OpenVic {
 		);
 
 		bool load_inventions_file(
-			ModifierManager const& modifier_manager, UnitTypeManager const& unit_type_manager,
-			BuildingTypeManager const& building_type_manager, CrimeManager const& crime_manager, ast::NodeCPtr root
+			ModifierManager const& modifier_manager,
+			UnitTypeManager const& unit_type_manager,
+			BuildingTypeManager const& building_type_manager,
+			CrimeManager const& crime_manager,
+			ast::NodeCPtr root,
+			ovdl::v2script::Parser const& parser
 		); // inventions/*.txt
 
 		bool parse_scripts(DefinitionManager const& definition_manager);

@@ -2,6 +2,7 @@
 
 #include "openvic-simulation/dataloader/NodeTools.hpp"
 #include "openvic-simulation/types/IdentifierRegistry.hpp"
+#include "openvic-dataloader/v2script/Parser.hpp"
 
 namespace OpenVic {
 
@@ -48,6 +49,6 @@ namespace OpenVic {
 			std::string_view identifier, colour_t colour, ReligionGroup const& group, Religion::icon_t icon, bool pagan
 		);
 
-		bool load_religion_file(ast::NodeCPtr root);
+		bool load_religion_file(ast::NodeCPtr root, ovdl::v2script::Parser const& parser);
 	};
 }

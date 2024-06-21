@@ -2,6 +2,7 @@
 
 #include "openvic-simulation/misc/Modifier.hpp"
 #include "openvic-simulation/types/IdentifierRegistry.hpp"
+#include "openvic-dataloader/v2script/Parser.hpp"
 
 namespace OpenVic {
 	struct NationalValueManager;
@@ -25,6 +26,6 @@ namespace OpenVic {
 	public:
 		bool add_national_value(std::string_view identifier, ModifierValue&& modifiers);
 
-		bool load_national_values_file(ModifierManager const& modifier_manager, ast::NodeCPtr root);
+		bool load_national_values_file(ModifierManager const& modifier_manager, ast::NodeCPtr root, ovdl::v2script::Parser const& parser);
 	};
 } // namespace OpenVic

@@ -76,7 +76,7 @@ bool TechnologyManager::add_technology_school(std::string_view identifier, Modif
 	return technology_schools.add_item({ identifier, std::move(values) });
 }
 
-bool TechnologyManager::load_technology_file_folders_and_areas(ast::NodeCPtr root) {
+bool TechnologyManager::load_technology_file_folders_and_areas(ast::NodeCPtr root, ovdl::v2script::Parser const& parser) {
 	return expect_dictionary_keys(
 		"folders", ONE_EXACTLY, [this](ast::NodeCPtr root_value) -> bool {
 			const bool ret = expect_dictionary_reserve_length(
@@ -113,7 +113,9 @@ bool TechnologyManager::load_technology_file_folders_and_areas(ast::NodeCPtr roo
 }
 
 bool TechnologyManager::load_technology_file_schools(
-	ModifierManager const& modifier_manager, ast::NodeCPtr root
+	ModifierManager const& modifier_manager,
+	ast::NodeCPtr root,
+	ovdl::v2script::Parser const& parser
 ) {
 	if (!technology_folders.is_locked() || !technology_areas.is_locked()) {
 		Logger::error("Cannot load technology schools until technology folders and areas are locked!");
@@ -144,8 +146,11 @@ bool TechnologyManager::load_technology_file_schools(
 }
 
 bool TechnologyManager::load_technologies_file(
-	ModifierManager const& modifier_manager, UnitTypeManager const& unit_type_manager, BuildingTypeManager const& building_type_manager,
-	ast::NodeCPtr root
+	ModifierManager const& modifier_manager,
+	UnitTypeManager const& unit_type_manager,
+	BuildingTypeManager const& building_type_manager,
+	ast::NodeCPtr root,
+	ovdl::v2script::Parser const& parser
 ) {
 	return expect_dictionary_reserve_length(technologies, [this, &modifier_manager, &unit_type_manager, &building_type_manager](
 		std::string_view tech_key, ast::NodeCPtr tech_value

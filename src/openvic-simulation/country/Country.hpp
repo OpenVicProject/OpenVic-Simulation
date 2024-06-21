@@ -91,9 +91,19 @@ namespace OpenVic {
 
 		bool load_country_colours(ast::NodeCPtr root);
 
-		bool load_countries(DefinitionManager const& definition_manager, Dataloader const& dataloader, ast::NodeCPtr root);
+		bool load_countries(
+			DefinitionManager const& definition_manager,
+			Dataloader const& dataloader,
+			ast::NodeCPtr root,
+			ovdl::v2script::Parser const& parser
+		);
+
 		bool load_country_data_file(
-			DefinitionManager const& definition_manager, std::string_view name, bool is_dynamic, ast::NodeCPtr root
+			DefinitionManager const& definition_manager,
+			std::string_view name,
+			bool is_dynamic,
+			ast::NodeCPtr root,
+			ovdl::v2script::Parser const& parser
 		);
 	};
 }

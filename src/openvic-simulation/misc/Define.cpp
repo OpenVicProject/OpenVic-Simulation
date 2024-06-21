@@ -65,7 +65,7 @@ bool DefineManager::add_date_define(std::string_view name, Date date) {
 	return defines.add_item({ name, date.to_string(), Define::Type::Date });
 }
 
-bool DefineManager::load_defines_file(ast::NodeCPtr root) {
+bool DefineManager::load_defines_file(ast::NodeCPtr root, ovdl::v2script::Parser const& parser) {
 	bool ret = expect_dictionary_keys(
 		"defines", ONE_EXACTLY, expect_dictionary([this](std::string_view key, ast::NodeCPtr value) -> bool {
 			using enum Define::Type;

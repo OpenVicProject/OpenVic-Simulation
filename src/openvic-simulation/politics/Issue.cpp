@@ -122,7 +122,7 @@ bool IssueManager::add_reform(
 	});
 }
 
-bool IssueManager::_load_issue_group(size_t& expected_issues, std::string_view identifier, ast::NodeCPtr node) {
+bool IssueManager::_load_issue_group(size_t& expected_issues, std::string_view identifier, ast::NodeCPtr node, ovdl::v2script::Parser const& parser) {
 	return expect_length(add_variable_callback(expected_issues))(node)
 		& add_issue_group(identifier);
 }
@@ -163,7 +163,7 @@ static constexpr colour_t create_issue_reform_colour(size_t index) {
 
 bool IssueManager::_load_issue(
 	ModifierManager const& modifier_manager, RuleManager const& rule_manager, std::string_view identifier,
-	IssueGroup const* group, ast::NodeCPtr node
+	IssueGroup const* group, ast::NodeCPtr node, ovdl::v2script::Parser const& parser
 ) {
 	ModifierValue values;
 	RuleSet rules;
@@ -180,7 +180,7 @@ bool IssueManager::_load_issue(
 }
 
 bool IssueManager::_load_reform_group(
-	size_t& expected_reforms, std::string_view identifier, ReformType const* type, ast::NodeCPtr node
+	size_t& expected_reforms, std::string_view identifier, ReformType const* type, ast::NodeCPtr node, ovdl::v2script::Parser const& parser
 ) {
 	bool ordered = false, administrative = false;
 	bool ret = expect_dictionary_keys_and_default(
@@ -194,7 +194,7 @@ bool IssueManager::_load_reform_group(
 
 bool IssueManager::_load_reform(
 	ModifierManager const& modifier_manager, RuleManager const& rule_manager, size_t ordinal, std::string_view identifier,
-	ReformGroup const* group, ast::NodeCPtr node
+	ReformGroup const* group, ast::NodeCPtr node, ovdl::v2script::Parser const& parser
 ) {
 	ModifierValue values;
 	RuleSet rules;
@@ -229,7 +229,10 @@ bool IssueManager::_load_reform(
  * POL-113, POL-114, POL-115, POL-116
  */
 bool IssueManager::load_issues_file(
-	ModifierManager const& modifier_manager, RuleManager const& rule_manager, ast::NodeCPtr root
+	ModifierManager const& modifier_manager,
+	RuleManager const& rule_manager,
+	ast::NodeCPtr root,
+	ovdl::v2script::Parser const& parser
 ) {
 	bool party_issues_found = false;
 	size_t expected_issue_groups = 0;
@@ -271,7 +274,7 @@ bool IssueManager::load_issues_file(
 
 	/* Load issue and reform groups. */
 	ret &= expect_dictionary(
-		[this, &party_issues_found, &expected_issues, &expected_reforms](
+		[this, &party_issues_found, &expected_issues, &expected_reforms, &parser](
 			std::string_view type_key, ast::NodeCPtr type_value
 		) -> bool {
 			if (type_key == "party_issues") {
@@ -280,15 +283,15 @@ bool IssueManager::load_issues_file(
 				}
 				party_issues_found = true;
 
-				return expect_dictionary([this, &expected_issues](std::string_view key, ast::NodeCPtr value) -> bool {
-					return _load_issue_group(expected_issues, key, value);
+				return expect_dictionary([this, &expected_issues, &parser](std::string_view key, ast::NodeCPtr value) -> bool {
+					return _load_issue_group(expected_issues, key, value, parser);
 				})(type_value);
 			} else {
 				ReformType const* reform_type = get_reform_type_by_identifier(type_key);
 
 				return expect_dictionary(
-					[this, reform_type, &expected_reforms](std::string_view key, ast::NodeCPtr value) -> bool {
-						return _load_reform_group(expected_reforms, key, reform_type, value);
+					[this, reform_type, &expected_reforms, &parser](std::string_view key, ast::NodeCPtr value) -> bool {
+						return _load_reform_group(expected_reforms, key, reform_type, value, parser);
 					}
 				)(type_value);
 			}
@@ -304,7 +307,7 @@ bool IssueManager::load_issues_file(
 
 	/* Load issues and reforms. */
 	ret &= expect_dictionary(
-		[this, &party_issues_found, &modifier_manager, &rule_manager](
+		[this, &party_issues_found, &modifier_manager, &rule_manager, &parser](
 			std::string_view type_key, ast::NodeCPtr type_value
 		) -> bool {
 			if (type_key == "party_issues") {
@@ -313,32 +316,32 @@ bool IssueManager::load_issues_file(
 				}
 				party_issues_found = true;
 
-				return expect_dictionary([this, &modifier_manager, &rule_manager](
+				return expect_dictionary([this, &modifier_manager, &rule_manager, &parser](
 					std::string_view group_key, ast::NodeCPtr group_value
 				) -> bool {
 					IssueGroup const* issue_group = get_issue_group_by_identifier(group_key);
 
-					return expect_dictionary([this, &modifier_manager, &rule_manager, issue_group](
+					return expect_dictionary([this, &modifier_manager, &rule_manager, issue_group, &parser](
 						std::string_view key, ast::NodeCPtr value
 					) -> bool {
-						return _load_issue(modifier_manager, rule_manager, key, issue_group, value);
+						return _load_issue(modifier_manager, rule_manager, key, issue_group, value, parser);
 					})(group_value);
 				})(type_value);
 			} else {
-				return expect_dictionary([this, &party_issues_found, &modifier_manager, &rule_manager](
+				return expect_dictionary([this, &party_issues_found, &modifier_manager, &rule_manager, &parser](
 					std::string_view group_key, ast::NodeCPtr group_value
 				) -> bool {
 					ReformGroup const* reform_group = get_reform_group_by_identifier(group_key);
 					size_t ordinal = 0;
 
-					return expect_dictionary([this, &modifier_manager, &rule_manager, reform_group, &ordinal](
+					return expect_dictionary([this, &modifier_manager, &rule_manager, reform_group, &ordinal, &parser](
 						std::string_view key, ast::NodeCPtr value
 					) -> bool {
 						if (key == "next_step_only" || key == "administrative") {
 							return true;
 						}
 
-						return _load_reform(modifier_manager, rule_manager, ordinal++, key, reform_group, value);
+						return _load_reform(modifier_manager, rule_manager, ordinal++, key, reform_group, value, parser);
 					})(group_value);
 				})(type_value);
 			}

@@ -8,6 +8,7 @@
 #include "openvic-simulation/types/HasIdentifier.hpp"
 #include "openvic-simulation/types/OrderedContainers.hpp"
 #include "openvic-simulation/types/Vector.hpp"
+#include "openvic-dataloader/v2script/Parser.hpp"
 
 namespace OpenVic {
 
@@ -115,7 +116,10 @@ namespace OpenVic {
 
 		/* The positions' y coordinates need to be inverted. */
 		bool load_positions(
-			MapDefinition const& map_definition, BuildingTypeManager const& building_type_manager, ast::NodeCPtr root
+			MapDefinition const& map_definition,
+			BuildingTypeManager const& building_type_manager,
+			ast::NodeCPtr root,
+			ovdl::v2script::Parser const& parser
 		);
 
 		fvec2_t get_text_position() const;

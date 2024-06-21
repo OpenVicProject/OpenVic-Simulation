@@ -2,6 +2,7 @@
 
 #include "openvic-simulation/scripts/ConditionScript.hpp"
 #include "openvic-simulation/types/IdentifierRegistry.hpp"
+#include "openvic-dataloader/v2script/Parser.hpp"
 
 namespace OpenVic {
 	struct ModifierManager;
@@ -141,15 +142,15 @@ namespace OpenVic {
 		bool setup_modifier_effects();
 
 		bool add_event_modifier(std::string_view identifier, ModifierValue&& values, Modifier::icon_t icon);
-		bool load_event_modifiers(ast::NodeCPtr root);
+		bool load_event_modifiers(ast::NodeCPtr root, ovdl::v2script::Parser const& parser);
 
 		bool add_static_modifier(std::string_view identifier, ModifierValue&& values);
-		bool load_static_modifiers(ast::NodeCPtr root);
+		bool load_static_modifiers(ast::NodeCPtr root, ovdl::v2script::Parser const& parser);
 
 		bool add_triggered_modifier(
 			std::string_view identifier, ModifierValue&& values, Modifier::icon_t icon, ConditionScript&& trigger
 		);
-		bool load_triggered_modifiers(ast::NodeCPtr root);
+		bool load_triggered_modifiers(ast::NodeCPtr root, ovdl::v2script::Parser const& parser);
 
 		bool parse_scripts(DefinitionManager const& definition_manager);
 

@@ -75,7 +75,7 @@ bool CultureManager::add_culture(
 	});
 }
 
-bool CultureManager::load_graphical_culture_type_file(ast::NodeCPtr root) {
+bool CultureManager::load_graphical_culture_type_file(ast::NodeCPtr root, ovdl::v2script::Parser const& parser) {
 	const bool ret = expect_list_reserve_length(
 		graphical_culture_types,
 		expect_identifier(std::bind_front(&CultureManager::add_graphical_culture_type, this))
@@ -96,7 +96,7 @@ bool CultureManager::load_graphical_culture_type_file(ast::NodeCPtr root) {
 
 bool CultureManager::_load_culture_group(
 	CountryManager const& country_manager, size_t& total_expected_cultures, std::string_view culture_group_key,
-	ast::NodeCPtr culture_group_node
+	ast::NodeCPtr culture_group_node, ovdl::v2script::Parser const& parser
 ) {
 	std::string_view leader {};
 	GraphicalCultureType const* unit_graphical_culture_type = default_graphical_culture_type;
@@ -117,7 +117,7 @@ bool CultureManager::_load_culture_group(
 
 bool CultureManager::_load_culture(
 	CountryManager const& country_manager, CultureGroup const& culture_group, std::string_view culture_key,
-	ast::NodeCPtr culture_node
+	ast::NodeCPtr culture_node, ovdl::v2script::Parser const& parser
 ) {
 	colour_t colour = colour_t::null();
 	name_list_t first_names {}, last_names {};
@@ -157,7 +157,7 @@ bool CultureManager::_load_culture(
  * POP-267, POP-268, POP-269, POP-270, POP-271, POP-272, POP-273, POP-274, POP-275, POP-276, POP-277, POP-278, POP-279,
  * POP-280, POP-281, POP-282, POP-283, POP-284
  */
-bool CultureManager::load_culture_file(CountryManager const& country_manager, ast::NodeCPtr root) {
+bool CultureManager::load_culture_file(CountryManager const& country_manager, ast::NodeCPtr root, ovdl::v2script::Parser const& parser) {
 	if (!graphical_culture_types.is_locked()) {
 		Logger::error("Cannot load culture groups until graphical culture types are locked!");
 		return false;
@@ -165,24 +165,24 @@ bool CultureManager::load_culture_file(CountryManager const& country_manager, as
 
 	size_t total_expected_cultures = 0;
 	bool ret = expect_dictionary_reserve_length(culture_groups,
-		[this, &country_manager, &total_expected_cultures](
+		[this, &country_manager, &total_expected_cultures, &parser](
 			std::string_view key, ast::NodeCPtr value
 		) -> bool {
-			return _load_culture_group(country_manager, total_expected_cultures, key, value);
+			return _load_culture_group(country_manager, total_expected_cultures, key, value, parser);
 		}
 	)(root);
 	lock_culture_groups();
 	reserve_more_cultures(total_expected_cultures);
 
 	ret &= expect_culture_group_dictionary(
-		[this, &country_manager](CultureGroup const& culture_group, ast::NodeCPtr culture_group_value) -> bool {
+		[this, &country_manager, &parser](CultureGroup const& culture_group, ast::NodeCPtr culture_group_value) -> bool {
 			return expect_dictionary(
-				[this, &country_manager, &culture_group](std::string_view key, ast::NodeCPtr value) -> bool {
+				[this, &country_manager, &culture_group, &parser](std::string_view key, ast::NodeCPtr value) -> bool {
 					static const string_set_t reserved_keys = { "leader", "unit", "union", "is_overseas" };
 					if (reserved_keys.contains(key)) {
 						return true;
 					}
-					return _load_culture(country_manager, culture_group, key, value);
+					return _load_culture(country_manager, culture_group, key, value, parser);
 				}
 			)(culture_group_value);
 		}

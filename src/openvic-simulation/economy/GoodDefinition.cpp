@@ -42,7 +42,7 @@ bool GoodDefinitionManager::add_good_definition(
 	});
 }
 
-bool GoodDefinitionManager::load_goods_file(ast::NodeCPtr root) {
+bool GoodDefinitionManager::load_goods_file(ast::NodeCPtr root, ovdl::v2script::Parser const& parser) {
 	size_t total_expected_goods = 0;
 	bool ret = expect_dictionary_reserve_length(
 		good_categories,

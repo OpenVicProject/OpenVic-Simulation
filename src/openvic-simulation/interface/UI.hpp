@@ -2,6 +2,7 @@
 
 #include "openvic-simulation/interface/GFXObject.hpp"
 #include "openvic-simulation/interface/GUI.hpp"
+#include "openvic-dataloader/v2script/Parser.hpp"
 
 namespace OpenVic {
 
@@ -12,7 +13,7 @@ namespace OpenVic {
 
 		NamedInstanceRegistry<GUI::Scene, UIManager const&> IDENTIFIER_REGISTRY(scene);
 
-		bool _load_font(ast::NodeCPtr node);
+		bool _load_font(ast::NodeCPtr node, ovdl::v2script::Parser const& parser);
 		NodeTools::NodeCallback auto _load_fonts(std::string_view font_key);
 
 	public:
@@ -23,7 +24,7 @@ namespace OpenVic {
 
 		void lock_gfx_registries();
 
-		bool load_gfx_file(ast::NodeCPtr root);
-		bool load_gui_file(std::string_view scene_name, ast::NodeCPtr root);
+		bool load_gfx_file(ast::NodeCPtr root, ovdl::v2script::Parser const& parser);
+		bool load_gui_file(std::string_view scene_name, ast::NodeCPtr root, ovdl::v2script::Parser const& parser);
 	};
 }

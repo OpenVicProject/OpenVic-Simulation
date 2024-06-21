@@ -5,6 +5,7 @@
 #include "openvic-simulation/dataloader/NodeTools.hpp"
 #include "openvic-simulation/types/Date.hpp"
 #include "openvic-simulation/types/OrderedContainers.hpp"
+#include "openvic-dataloader/v2script/Parser.hpp"
 
 namespace OpenVic {
 
@@ -32,7 +33,7 @@ namespace OpenVic {
 		ordered_map<Date, std::unique_ptr<entry_type>> PROPERTY(entries);
 
 		bool _try_load_history_entry(
-			DefinitionManager const& definition_manager, Args... args, Date date, ast::NodeCPtr root
+			DefinitionManager const& definition_manager, Args... args, Date date, ast::NodeCPtr root, ovdl::v2script::Parser const& parser
 		) {
 			entry_type *const entry = _get_or_make_entry(definition_manager, date);
 			if (entry != nullptr) {
@@ -48,18 +49,28 @@ namespace OpenVic {
 		virtual std::unique_ptr<entry_type> _make_entry(Date date) const = 0;
 
 		virtual bool _load_history_entry(
-			DefinitionManager const& definition_manager, Args... args, entry_type& entry, ast::NodeCPtr root
+			DefinitionManager const& definition_manager,
+			Args... args,
+			entry_type& entry,
+			ast::NodeCPtr root,
+			ovdl::v2script::Parser const& parser
 		) = 0;
 
-		bool _load_history_file(DefinitionManager const& definition_manager, Args... args, ast::NodeCPtr root) {
+		bool _load_history_file(DefinitionManager const& definition_manager, Args... args, ast::NodeCPtr root, ovdl::v2script::Parser const& parser) {
 			return _try_load_history_entry(
 				definition_manager, args..., _HistoryMapHelperFuncs::_get_start_date(definition_manager), root
 			);
 		}
 
 		bool _load_history_sub_entry_callback(
-			DefinitionManager const& definition_manager, Args... args, Date date, ast::NodeCPtr root, std::string_view key,
-			ast::NodeCPtr value, NodeTools::key_value_callback_t default_callback = NodeTools::key_value_invalid_callback
+			DefinitionManager const& definition_manager,
+			Args... args,
+			Date date,
+			ast::NodeCPtr root,
+			std::string_view key,
+			ast::NodeCPtr value,
+			ovdl::v2script::Parser const& parser,
+			NodeTools::key_value_callback_t default_callback = NodeTools::key_value_invalid_callback
 		) {
 			/* Date blocks (loaded into the corresponding HistoryEntry) */
 			bool is_date = false;

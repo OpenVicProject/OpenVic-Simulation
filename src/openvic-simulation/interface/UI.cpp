@@ -25,7 +25,7 @@ bool UIManager::add_font(
 	return fonts.add_item({ identifier, colour, fontname, charset, height }, duplicate_warning_callback);
 }
 
-bool UIManager::_load_font(ast::NodeCPtr node) {
+bool UIManager::_load_font(ast::NodeCPtr node, ovdl::v2script::Parser const& parser) {
 	std::string_view identifier, fontname, charset;
 	colour_argb_t colour = colour_argb_t::null();
 	uint32_t height = 0;
@@ -61,7 +61,7 @@ void UIManager::lock_gfx_registries() {
 	lock_objects();
 }
 
-bool UIManager::load_gfx_file(ast::NodeCPtr root) {
+bool UIManager::load_gfx_file(ast::NodeCPtr root, ovdl::v2script::Parser const& parser) {
 	return expect_dictionary_keys(
 		"spriteTypes", ZERO_OR_ONE, Sprite::expect_sprites(
 			NodeTools::reserve_length_callback(sprites),
@@ -108,7 +108,7 @@ bool UIManager::load_gfx_file(ast::NodeCPtr root) {
 	)(root);
 }
 
-bool UIManager::load_gui_file(std::string_view scene_name, ast::NodeCPtr root) {
+bool UIManager::load_gui_file(std::string_view scene_name, ast::NodeCPtr root, ovdl::v2script::Parser const& parser) {
 	if (!sprites_are_locked()) {
 		Logger::error("Cannot load GUI files until GFX files (i.e. Sprites) are locked!");
 		return false;

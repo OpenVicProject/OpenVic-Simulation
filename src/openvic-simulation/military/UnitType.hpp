@@ -9,6 +9,7 @@
 #include "openvic-simulation/types/Date.hpp"
 #include "openvic-simulation/types/IdentifierRegistry.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
+#include "openvic-dataloader/v2script/Parser.hpp"
 
 namespace OpenVic {
 	struct TerrainType;
@@ -173,8 +174,11 @@ namespace OpenVic {
 		}
 
 		bool load_unit_type_file(
-			GoodDefinitionManager const& good_definition_manager, TerrainTypeManager const& terrain_type_manager,
-			ModifierManager const& modifier_manager, ast::NodeCPtr root
+			GoodDefinitionManager const& good_definition_manager,
+			TerrainTypeManager const& terrain_type_manager,
+			ModifierManager const& modifier_manager,
+			ast::NodeCPtr root,
+			ovdl::v2script::Parser const& parser
 		);
 		bool generate_modifiers(ModifierManager& modifier_manager) const;
 	};

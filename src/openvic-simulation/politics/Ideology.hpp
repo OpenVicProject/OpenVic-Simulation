@@ -2,6 +2,7 @@
 
 #include "openvic-simulation/scripts/ConditionalWeight.hpp"
 #include "openvic-simulation/types/IdentifierRegistry.hpp"
+#include "openvic-dataloader/v2script/Parser.hpp"
 
 namespace OpenVic {
 	struct IdeologyManager;
@@ -63,7 +64,7 @@ namespace OpenVic {
 			ConditionalWeight&& add_economic_reform
 		);
 
-		bool load_ideology_file(ast::NodeCPtr root);
+		bool load_ideology_file(ast::NodeCPtr root, ovdl::v2script::Parser const& parser);
 
 		bool parse_scripts(DefinitionManager const& definition_manager);
 	};

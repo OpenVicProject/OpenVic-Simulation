@@ -4,6 +4,7 @@
 
 #include "openvic-simulation/types/IdentifierRegistry.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
+#include "openvic-dataloader/v2script/Parser.hpp"
 
 namespace OpenVic {
 	struct DefineManager;
@@ -42,6 +43,6 @@ namespace OpenVic {
 		Date get_end_date() const;
 		bool in_game_period(Date date) const;
 
-		bool load_defines_file(ast::NodeCPtr root);
+		bool load_defines_file(ast::NodeCPtr root, ovdl::v2script::Parser const& parser);
 	};
 }

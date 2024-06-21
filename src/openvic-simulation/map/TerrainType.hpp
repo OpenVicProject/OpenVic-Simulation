@@ -2,6 +2,7 @@
 
 #include "openvic-simulation/misc/Modifier.hpp"
 #include "openvic-simulation/types/OrderedContainers.hpp"
+#include "openvic-dataloader/v2script/Parser.hpp"
 
 namespace OpenVic {
 	struct TerrainTypeManager;
@@ -49,7 +50,7 @@ namespace OpenVic {
 		TerrainTypeMapping::index_t terrain_texture_limit = 0, terrain_texture_count = 0;
 
 		NodeTools::node_callback_t _load_terrain_type_categories(ModifierManager const& modifier_manager);
-		bool _load_terrain_type_mapping(std::string_view key, ast::NodeCPtr value);
+		bool _load_terrain_type_mapping(std::string_view key, ast::NodeCPtr value, ovdl::v2script::Parser const& parser);
 
 	public:
 		bool add_terrain_type(std::string_view identifier, colour_t colour, ModifierValue&& values, bool is_water);
@@ -63,6 +64,6 @@ namespace OpenVic {
 
 		TerrainTypeMapping::index_t get_terrain_texture_limit() const;
 
-		bool load_terrain_types(ModifierManager const& modifier_manager, ast::NodeCPtr root);
+		bool load_terrain_types(ModifierManager const& modifier_manager, ast::NodeCPtr root, ovdl::v2script::Parser const& parser);
 	};
 }

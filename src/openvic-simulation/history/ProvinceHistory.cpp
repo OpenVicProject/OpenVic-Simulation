@@ -16,7 +16,7 @@ std::unique_ptr<ProvinceHistoryEntry> ProvinceHistoryMap::_make_entry(Date date)
 }
 
 bool ProvinceHistoryMap::_load_history_entry(
-	DefinitionManager const& definition_manager, ProvinceHistoryEntry& entry, ast::NodeCPtr root
+	DefinitionManager const& definition_manager, ProvinceHistoryEntry& entry, ast::NodeCPtr root, ovdl::v2script::Parser const& parser
 ) {
 	BuildingTypeManager const& building_type_manager = definition_manager.get_economy_manager().get_building_type_manager();
 	CountryManager const& country_manager = definition_manager.get_country_manager();
@@ -31,7 +31,7 @@ bool ProvinceHistoryMap::_load_history_entry(
 	};
 
 	return expect_dictionary_keys_and_default(
-		[this, &definition_manager, &building_type_manager, &entry](
+		[this, &definition_manager, &building_type_manager, &parser, &entry](
 			std::string_view key, ast::NodeCPtr value) -> bool {
 			// used for province buildings like forts or railroads
 			BuildingType const* building_type = building_type_manager.get_building_type_by_identifier(key);
@@ -51,7 +51,7 @@ bool ProvinceHistoryMap::_load_history_entry(
 				}
 			}
 
-			return _load_history_sub_entry_callback(definition_manager, entry.get_date(), value, key, value);
+			return _load_history_sub_entry_callback(definition_manager, entry.get_date(), value, key, value, parser);
 		},
 		"owner", ZERO_OR_ONE,
 			country_manager.expect_country_identifier(assign_variable_callback_pointer_opt(entry.owner, true)),
@@ -184,7 +184,10 @@ ProvinceHistoryMap* ProvinceHistoryManager::_get_or_make_province_history(Provin
 }
 
 bool ProvinceHistoryManager::load_province_history_file(
-	DefinitionManager const& definition_manager, ProvinceDefinition const& province, ast::NodeCPtr root
+	DefinitionManager const& definition_manager,
+	ProvinceDefinition const& province,
+	ast::NodeCPtr root,
+	ovdl::v2script::Parser const& parser
 ) {
 	if (locked) {
 		Logger::error(
@@ -196,14 +199,14 @@ bool ProvinceHistoryManager::load_province_history_file(
 
 	ProvinceHistoryMap* province_history = _get_or_make_province_history(province);
 	if (province_history != nullptr) {
-		return province_history->_load_history_file(definition_manager, root);
+		return province_history->_load_history_file(definition_manager, root, parser);
 	} else {
 		return false;
 	}
 }
 
 bool ProvinceHistoryEntry::_load_province_pop_history(
-	DefinitionManager const& definition_manager, ast::NodeCPtr root, bool *non_integer_size
+	DefinitionManager const& definition_manager, ast::NodeCPtr root, ovdl::v2script::Parser const& parser, bool *non_integer_size
 ) {
 	PopManager const& pop_manager = definition_manager.get_pop_manager();
 	RebelManager const& rebel_manager = definition_manager.get_politics_manager().get_rebel_manager();
@@ -216,28 +219,36 @@ bool ProvinceHistoryEntry::_load_province_pop_history(
 }
 
 bool ProvinceHistoryMap::_load_province_pop_history(
-	DefinitionManager const& definition_manager, Date date, ast::NodeCPtr root, bool *non_integer_size
+	DefinitionManager const& definition_manager,
+	Date date,
+	ast::NodeCPtr root,
+	ovdl::v2script::Parser const& parser,
+	bool *non_integer_size
 ) {
 	ProvinceHistoryEntry* entry = _get_or_make_entry(definition_manager, date);
 	if (entry != nullptr) {
-		return entry->_load_province_pop_history(definition_manager, root, non_integer_size);
+		return entry->_load_province_pop_history(definition_manager, root, parser, non_integer_size);
 	} else {
 		return false;
 	}
 }
 
 bool ProvinceHistoryManager::load_pop_history_file(
-	DefinitionManager const& definition_manager, Date date, ast::NodeCPtr root, bool *non_integer_size
+	DefinitionManager const& definition_manager,
+	Date date,
+	ast::NodeCPtr root,
+	ovdl::v2script::Parser const& parser,
+	bool *non_integer_size
 ) {
 	if (locked) {
 		Logger::error("Attempted to load pop history file after province history registry was locked!");
 		return false;
 	}
 	return definition_manager.get_map_definition().expect_province_definition_dictionary(
-		[this, &definition_manager, date, non_integer_size](ProvinceDefinition const& province, ast::NodeCPtr node) -> bool {
+		[this, &definition_manager, &parser, date, non_integer_size](ProvinceDefinition const& province, ast::NodeCPtr node) -> bool {
 			ProvinceHistoryMap* province_history = _get_or_make_province_history(province);
 			if (province_history != nullptr) {
-				return province_history->_load_province_pop_history(definition_manager, date, node, non_integer_size);
+				return province_history->_load_province_pop_history(definition_manager, date, node, parser, non_integer_size);
 			} else {
 				return false;
 			}

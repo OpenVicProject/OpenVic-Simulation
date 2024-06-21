@@ -72,8 +72,12 @@ inline bool NationalFocusManager::add_national_focus(
 }
 
 bool NationalFocusManager::load_national_foci_file(
-	PopManager const& pop_manager, IdeologyManager const& ideology_manager,
-	GoodDefinitionManager const& good_definition_manager, ModifierManager const& modifier_manager, ast::NodeCPtr root
+	PopManager const& pop_manager,
+	IdeologyManager const& ideology_manager,
+	GoodDefinitionManager const& good_definition_manager,
+	ModifierManager const& modifier_manager,
+	ast::NodeCPtr root,
+	ovdl::v2script::Parser const& parser
 ) {
 	size_t expected_national_foci = 0;
 	bool ret = expect_dictionary_reserve_length(

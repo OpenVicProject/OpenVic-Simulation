@@ -63,7 +63,9 @@ bool RebelManager::add_rebel_type(
 }
 
 bool RebelManager::load_rebels_file(
-	IdeologyManager const& ideology_manager, GovernmentTypeManager const& government_type_manager, ast::NodeCPtr root
+	IdeologyManager const& ideology_manager, GovernmentTypeManager const& government_type_manager,
+	ast::NodeCPtr root,
+	ovdl::v2script::Parser const& parser
 ) {
 	static const string_map_t<RebelType::area_t> area_map = {
 		{ "nation", RebelType::area_t::NATION },

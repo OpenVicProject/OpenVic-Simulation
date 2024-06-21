@@ -15,7 +15,7 @@ namespace OpenVic {
 		scope_t PROPERTY(from_scope);
 
 	protected:
-		bool _parse_script(ast::NodeCPtr root, DefinitionManager const& definition_manager) override;
+		bool _parse_script(ast::NodeCPtr root, ovdl::v2script::Parser const& parser, DefinitionManager const& definition_manager) override;
 
 	public:
 		ConditionScript(scope_t new_initial_scope, scope_t new_this_scope, scope_t new_from_scope);

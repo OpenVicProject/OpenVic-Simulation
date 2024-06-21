@@ -5,6 +5,7 @@
 #include <openvic-dataloader/v2script/AbstractSyntaxTree.hpp>
 
 #include "openvic-simulation/types/IdentifierRegistry.hpp"
+#include "openvic-dataloader/v2script/Parser.hpp"
 
 namespace OpenVic {
 	struct BookmarkManager;
@@ -37,7 +38,7 @@ namespace OpenVic {
 			std::string_view name, std::string_view description, Date date, uint32_t initial_camera_x,
 			uint32_t initial_camera_y
 		);
-		bool load_bookmark_file(ast::NodeCPtr root);
+		bool load_bookmark_file(ast::NodeCPtr root, ovdl::v2script::Parser const& parser);
 
 		Date get_last_bookmark_date() const;
 	};

@@ -2,6 +2,7 @@
 
 #include "openvic-simulation/types/IdentifierRegistry.hpp"
 #include "openvic-simulation/utility/Getters.hpp"
+#include "openvic-dataloader/v2script/Parser.hpp"
 
 namespace OpenVic {
 
@@ -16,7 +17,7 @@ namespace OpenVic {
 		LoadBase(LoadBase&&) = default;
 		virtual ~LoadBase() = default;
 
-		bool load(ast::NodeCPtr node, Context... context) {
+		bool load(ast::NodeCPtr node, ovdl::v2script::Parser const& parser, Context... context) {
 			NodeTools::case_insensitive_key_map_t key_map;
 			bool ret = _fill_key_map(key_map, context...);
 			ret &= NodeTools::expect_dictionary_key_map(std::move(key_map))(node);
@@ -27,9 +28,9 @@ namespace OpenVic {
 		static NodeTools::node_callback_t _expect_value(
 			NodeTools::callback_t<T&&> callback, Context... context
 		) {
-			return [callback, &context...](ast::NodeCPtr node) -> bool {
+			return [callback, &context...](ast::NodeCPtr node, ovdl::v2script::Parser const& parser) -> bool {
 				T value {};
-				bool ret = value.load(node, context...);
+				bool ret = value.load(node, parser, context...);
 				ret &= callback(std::move(value));
 				return ret;
 			};
@@ -39,9 +40,9 @@ namespace OpenVic {
 		static NodeTools::node_callback_t _expect_instance(
 			NodeTools::callback_t<std::unique_ptr<T>&&> callback, Context... context
 		) {
-			return [callback, &context...](ast::NodeCPtr node) -> bool {
+			return [callback, &context...](ast::NodeCPtr node, ovdl::v2script::Parser const& parser) -> bool {
 				std::unique_ptr<T> instance { std::make_unique<U>() };
-				bool ret = instance->load(node, context...);
+				bool ret = instance->load(node, parser, context...);
 				ret &= callback(std::move(instance));
 				return ret;
 			};

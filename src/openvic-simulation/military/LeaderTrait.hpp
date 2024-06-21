@@ -7,6 +7,7 @@
 #include "openvic-simulation/dataloader/NodeTools.hpp"
 #include "openvic-simulation/types/IdentifierRegistry.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
+#include "openvic-dataloader/v2script/Parser.hpp"
 
 namespace OpenVic {
 	struct LeaderTraitManager;
@@ -48,6 +49,6 @@ namespace OpenVic {
 	public:
 		bool add_leader_trait(std::string_view identifier, LeaderTrait::trait_type_t type, ModifierValue&& modifiers);
 
-		bool load_leader_traits_file(ModifierManager const& modifier_manager, ast::NodeCPtr root);
+		bool load_leader_traits_file(ModifierManager const& modifier_manager, ast::NodeCPtr root, ovdl::v2script::Parser const& parser);
 	};
 } // namespace OpenVic

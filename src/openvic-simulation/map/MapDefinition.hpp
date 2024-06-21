@@ -13,6 +13,7 @@
 #include "openvic-simulation/types/IdentifierRegistry.hpp"
 #include "openvic-simulation/types/OrderedContainers.hpp"
 #include "openvic-simulation/types/Vector.hpp"
+#include "openvic-dataloader/v2script/Parser.hpp"
 
 namespace OpenVic {
 	namespace fs = std::filesystem;
@@ -101,12 +102,12 @@ namespace OpenVic {
 
 		bool load_province_definitions(std::vector<ovdl::csv::LineObject> const& lines);
 		/* Must be loaded after adjacencies so we know what provinces are coastal, and so can have a port */
-		bool load_province_positions(BuildingTypeManager const& building_type_manager, ast::NodeCPtr root);
-		static bool load_region_colours(ast::NodeCPtr root, std::vector<colour_t>& colours);
-		bool load_region_file(ast::NodeCPtr root, std::vector<colour_t> const& colours);
+		bool load_province_positions(BuildingTypeManager const& building_type_manager, ast::NodeCPtr root, ovdl::v2script::Parser const& parser);
+		static bool load_region_colours(ast::NodeCPtr root, ovdl::v2script::Parser const& parser, std::vector<colour_t>& colours);
+		bool load_region_file(ast::NodeCPtr root, ovdl::v2script::Parser const& parser, std::vector<colour_t> const& colours);
 		bool load_map_images(fs::path const& province_path, fs::path const& terrain_path, bool detailed_errors);
 		bool generate_and_load_province_adjacencies(std::vector<ovdl::csv::LineObject> const& additional_adjacencies);
-		bool load_climate_file(ModifierManager const& modifier_manager, ast::NodeCPtr root);
-		bool load_continent_file(ModifierManager const& modifier_manager, ast::NodeCPtr root);
+		bool load_climate_file(ModifierManager const& modifier_manager, ast::NodeCPtr root, ovdl::v2script::Parser const& parser);
+		bool load_continent_file(ModifierManager const& modifier_manager, ast::NodeCPtr root, ovdl::v2script::Parser const& parser);
 	};
 }

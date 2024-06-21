@@ -1,6 +1,7 @@
 #pragma once
 
 #include "openvic-simulation/misc/Modifier.hpp"
+#include "openvic-dataloader/v2script/Parser.hpp"
 
 namespace OpenVic {
 	struct Crime final : TriggeredModifier {
@@ -28,7 +29,7 @@ namespace OpenVic {
 			bool default_active
 		);
 
-		bool load_crime_modifiers(ModifierManager const& modifier_manager, ast::NodeCPtr root);
+		bool load_crime_modifiers(ModifierManager const& modifier_manager, ast::NodeCPtr root, ovdl::v2script::Parser const& parser);
 
 		bool parse_scripts(DefinitionManager const& definition_manager);
 	};

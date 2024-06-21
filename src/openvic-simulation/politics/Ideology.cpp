@@ -66,7 +66,7 @@ bool IdeologyManager::add_ideology(
 /* REQUIREMENTS:
  * POL-9, POL-10, POL-11, POL-12, POL-13, POL-14, POL-15
  */
-bool IdeologyManager::load_ideology_file(ast::NodeCPtr root) {
+bool IdeologyManager::load_ideology_file(ast::NodeCPtr root, ovdl::v2script::Parser const& parser) {
 	size_t expected_ideologies = 0;
 	bool ret = expect_dictionary_reserve_length(
 		ideology_groups,

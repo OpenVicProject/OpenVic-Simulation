@@ -25,7 +25,7 @@ bool LeaderTraitManager::add_leader_trait(
 	return leader_traits.add_item({ identifier, type, std::move(modifiers) });
 }
 
-bool LeaderTraitManager::load_leader_traits_file(ModifierManager const& modifier_manager, ast::NodeCPtr root) {
+bool LeaderTraitManager::load_leader_traits_file(ModifierManager const& modifier_manager, ast::NodeCPtr root, ovdl::v2script::Parser const& parser) {
 	const auto trait_callback = [this, &modifier_manager](LeaderTrait::trait_type_t type) -> NodeCallback auto {
 		return expect_dictionary_reserve_length(
 			leader_traits,

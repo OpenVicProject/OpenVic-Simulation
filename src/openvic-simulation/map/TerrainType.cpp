@@ -79,7 +79,7 @@ node_callback_t TerrainTypeManager::_load_terrain_type_categories(ModifierManage
 	};
 }
 
-bool TerrainTypeManager::_load_terrain_type_mapping(std::string_view mapping_key, ast::NodeCPtr mapping_value) {
+bool TerrainTypeManager::_load_terrain_type_mapping(std::string_view mapping_key, ast::NodeCPtr mapping_value, ovdl::v2script::Parser const& parser) {
 	if (terrain_texture_limit <= 0) {
 		Logger::error("Cannot define terrain type mapping before terrain texture limit: ", mapping_key);
 		return false;
@@ -127,11 +127,11 @@ TerrainTypeMapping::index_t TerrainTypeManager::get_terrain_texture_limit() cons
 	return terrain_texture_limit;
 }
 
-bool TerrainTypeManager::load_terrain_types(ModifierManager const& modifier_manager, ast::NodeCPtr root) {
+bool TerrainTypeManager::load_terrain_types(ModifierManager const& modifier_manager, ast::NodeCPtr root, ovdl::v2script::Parser const& parser) {
 	const bool ret = expect_dictionary_keys_reserve_length_and_default(
 		terrain_type_mappings,
-		[this](std::string_view key, ast::NodeCPtr value) -> bool {
-			return _load_terrain_type_mapping(key, value);
+		[this, &parser](std::string_view key, ast::NodeCPtr value) -> bool {
+			return _load_terrain_type_mapping(key, value, parser);
 		},
 		"terrain", ONE_EXACTLY, expect_uint(assign_variable_callback(terrain_texture_limit)),
 		"categories", ONE_EXACTLY, _load_terrain_type_categories(modifier_manager)

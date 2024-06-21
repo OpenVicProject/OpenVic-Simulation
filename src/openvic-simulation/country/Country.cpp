@@ -76,7 +76,7 @@ bool CountryManager::add_country(
 }
 
 bool CountryManager::load_countries(
-	DefinitionManager const& definition_manager, Dataloader const& dataloader, ast::NodeCPtr root
+	DefinitionManager const& definition_manager, Dataloader const& dataloader, ast::NodeCPtr root, ovdl::v2script::Parser const& parser
 ) {
 	static constexpr std::string_view common_dir = "common/";
 	bool is_dynamic = false;
@@ -99,11 +99,13 @@ bool CountryManager::load_countries(
 			}
 			if (expect_string(
 				[this, &definition_manager, is_dynamic, &dataloader, &key](std::string_view filepath) -> bool {
+					ovdl::v2script::Parser parser = Dataloader::parse_defines(
+						dataloader.lookup_file(StringUtils::append_string_views(common_dir, filepath))
+					); 
 					if (load_country_data_file(
 						definition_manager, key, is_dynamic,
-						Dataloader::parse_defines(
-							dataloader.lookup_file(StringUtils::append_string_views(common_dir, filepath))
-						).get_file_node()
+						parser.get_file_node(),
+						parser
 					)) {
 						return true;
 					}
@@ -178,7 +180,7 @@ node_callback_t CountryManager::load_country_party(
 }
 
 bool CountryManager::load_country_data_file(
-	DefinitionManager const& definition_manager, std::string_view name, bool is_dynamic, ast::NodeCPtr root
+	DefinitionManager const& definition_manager, std::string_view name, bool is_dynamic, ast::NodeCPtr root, ovdl::v2script::Parser const& parser
 ) {
 	colour_t colour;
 	GraphicalCultureType const* graphical_culture;

@@ -15,7 +15,7 @@ bool NationalValueManager::add_national_value(std::string_view identifier, Modif
 	return national_values.add_item({ identifier, std::move(modifiers) });
 }
 
-bool NationalValueManager::load_national_values_file(ModifierManager const& modifier_manager, ast::NodeCPtr root) {
+bool NationalValueManager::load_national_values_file(ModifierManager const& modifier_manager, ast::NodeCPtr root, ovdl::v2script::Parser const& parser) {
 	bool ret = expect_dictionary_reserve_length(
 		national_values,
 		[this, &modifier_manager](std::string_view national_value_identifier, ast::NodeCPtr value) -> bool {

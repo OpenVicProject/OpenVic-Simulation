@@ -9,6 +9,7 @@
 #include "openvic-simulation/scripts/EffectScript.hpp"
 #include "openvic-simulation/types/IdentifierRegistry.hpp"
 #include "openvic-simulation/types/OrderedContainers.hpp"
+#include "openvic-dataloader/v2script/Parser.hpp"
 
 namespace OpenVic {
 	struct RebelManager;
@@ -95,7 +96,12 @@ namespace OpenVic {
 			EffectScript&& demands_enforced_effect
 		);
 
-		bool load_rebels_file(IdeologyManager const& ideology_manager, GovernmentTypeManager const& government_type_manager, ast::NodeCPtr root);
+		bool load_rebels_file(
+			IdeologyManager const& ideology_manager,
+			GovernmentTypeManager const& government_type_manager,
+			ast::NodeCPtr root,
+			ovdl::v2script::Parser const& parser
+		);
 		bool generate_modifiers(ModifierManager& modifier_manager) const;
 
 		bool parse_scripts(DefinitionManager const& definition_manager);

@@ -115,7 +115,7 @@ bool EventManager::add_on_action(std::string_view identifier, OnAction::weight_m
 	return on_actions.add_item({ identifier, std::move(weighted_events) });
 }
 
-bool EventManager::load_event_file(IssueManager const& issue_manager, ast::NodeCPtr root) {
+bool EventManager::load_event_file(IssueManager const& issue_manager, ast::NodeCPtr root, ovdl::v2script::Parser const& parser) {
 	return expect_dictionary_reserve_length(
 		events,
 		[this, &issue_manager](std::string_view key, ast::NodeCPtr value) -> bool {
@@ -194,7 +194,7 @@ bool EventManager::load_event_file(IssueManager const& issue_manager, ast::NodeC
 	)(root);
 }
 
-bool EventManager::load_on_action_file(ast::NodeCPtr root) {
+bool EventManager::load_on_action_file(ast::NodeCPtr root, ovdl::v2script::Parser const& parser) {
 	bool ret = expect_dictionary([this](std::string_view identifier, ast::NodeCPtr node) -> bool {
 		OnAction::weight_map_t weighted_events;
 		bool ret = expect_dictionary_reserve_length(

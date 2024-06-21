@@ -285,7 +285,7 @@ bool ModifierManager::add_event_modifier(std::string_view identifier, ModifierVa
 	return event_modifiers.add_item({ identifier, std::move(values), icon }, duplicate_warning_callback);
 }
 
-bool ModifierManager::load_event_modifiers(ast::NodeCPtr root) {
+bool ModifierManager::load_event_modifiers(ast::NodeCPtr root, ovdl::v2script::Parser const& parser) {
 	const bool ret = expect_dictionary_reserve_length(
 		event_modifiers,
 		[this](std::string_view key, ast::NodeCPtr value) -> bool {
@@ -311,7 +311,7 @@ bool ModifierManager::add_static_modifier(std::string_view identifier, ModifierV
 	return static_modifiers.add_item({ identifier, std::move(values), 0 }, duplicate_warning_callback);
 }
 
-bool ModifierManager::load_static_modifiers(ast::NodeCPtr root) {
+bool ModifierManager::load_static_modifiers(ast::NodeCPtr root, ovdl::v2script::Parser const& parser) {
 	const bool ret = expect_dictionary_reserve_length(
 		static_modifiers,
 		[this](std::string_view key, ast::NodeCPtr value) -> bool {
@@ -335,7 +335,7 @@ bool ModifierManager::add_triggered_modifier(
 	return triggered_modifiers.add_item({ identifier, std::move(values), icon, std::move(trigger) }, duplicate_warning_callback);
 }
 
-bool ModifierManager::load_triggered_modifiers(ast::NodeCPtr root) {
+bool ModifierManager::load_triggered_modifiers(ast::NodeCPtr root, ovdl::v2script::Parser const& parser) {
 	const bool ret = expect_dictionary_reserve_length(
 		triggered_modifiers,
 		[this](std::string_view key, ast::NodeCPtr value) -> bool {

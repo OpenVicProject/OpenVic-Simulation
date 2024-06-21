@@ -277,7 +277,8 @@ bool Dataloader::_load_interface_files(UIManager& ui_manager) const {
 	bool ret = apply_to_files(
 		lookup_files_in_dir(interface_directory, ".gfx"),
 		[&ui_manager](fs::path const& file) -> bool {
-			return ui_manager.load_gfx_file(parse_defines(file).get_file_node());
+			v2script::Parser parser = parse_defines(file);
+			return ui_manager.load_gfx_file(parse_defines(file).get_file_node(), parser);
 		}
 	);
 	ui_manager.lock_gfx_registries();
@@ -300,11 +301,8 @@ bool Dataloader::_load_interface_files(UIManager& ui_manager) const {
 	ui_manager.reserve_more_scenes(gui_files.size());
 
 	for (std::string_view const& gui_file : gui_files) {
-		if (!ui_manager.load_gui_file(
-			gui_file, parse_defines(lookup_file(
-				append_string_views(interface_directory, gui_file, gui_file_extension)
-			)).get_file_node()
-		)) {
+		v2script::Parser parser = parse_defines(lookup_file(append_string_views(interface_directory, gui_file, gui_file_extension)));
+		if (!ui_manager.load_gui_file(gui_file, parser.get_file_node(), parser)) {
 			Logger::error("Failed to load interface gui file: ", gui_file);
 			ret = false;
 		}
@@ -330,8 +328,13 @@ bool Dataloader::_load_pop_types(DefinitionManager& definition_manager) {
 	bool ret = apply_to_files(
 		pop_type_files,
 		[this, &pop_manager, &good_definition_manager, &ideology_manager](fs::path const& file) -> bool {
+			v2script::Parser& parser = parse_defines_cached(file);
 			return pop_manager.load_pop_type_file(
-				file.stem().string(), good_definition_manager, ideology_manager, parse_defines_cached(file).get_file_node()
+				file.stem().string(),
+				good_definition_manager,
+				ideology_manager,
+				parser.get_file_node(),
+				parser
 			);
 		}
 	);
@@ -350,7 +353,9 @@ bool Dataloader::_load_pop_types(DefinitionManager& definition_manager) {
 	ret &= pop_manager.generate_modifiers(definition_manager.get_modifier_manager());
 
 	static constexpr std::string_view pop_type_chances_file = "common/pop_types.txt";
-	ret &= pop_manager.load_pop_type_chances_file(parse_defines_cached(lookup_file(pop_type_chances_file)).get_file_node());
+
+	v2script::Parser& parser = parse_defines_cached(lookup_file(pop_type_chances_file));
+	ret &= pop_manager.load_pop_type_chances_file(parser.get_file_node(), parser);
 
 	return ret;
 }
@@ -367,11 +372,13 @@ bool Dataloader::_load_units(DefinitionManager& definition_manager) const {
 	bool ret = apply_to_files(
 		unit_files,
 		[&definition_manager, &unit_type_manager](fs::path const& file) -> bool {
+			v2script::Parser parser = parse_defines(file);
 			return unit_type_manager.load_unit_type_file(
 				definition_manager.get_economy_manager().get_good_definition_manager(),
 				definition_manager.get_map_definition().get_terrain_type_manager(),
 				definition_manager.get_modifier_manager(),
-				parse_defines(file).get_file_node()
+				parser.get_file_node(),
+				parser
 			);
 		}
 	);
@@ -391,7 +398,8 @@ bool Dataloader::_load_goods(DefinitionManager& definition_manager) const {
 
 	GoodDefinitionManager& good_definition_manager = definition_manager.get_economy_manager().get_good_definition_manager();
 
-	bool ret = good_definition_manager.load_goods_file(parse_defines(lookup_file(goods_file)).get_file_node());
+	v2script::Parser parser = parse_defines(lookup_file(goods_file));
+	bool ret = good_definition_manager.load_goods_file(parser.get_file_node(), parser);
 
 	if (!good_definition_manager.generate_modifiers(definition_manager.get_modifier_manager())) {
 		Logger::error("Failed to generate good-based modifiers!");
@@ -407,7 +415,8 @@ bool Dataloader::_load_rebel_types(DefinitionManager& definition_manager) {
 	PoliticsManager& politics_manager = definition_manager.get_politics_manager();
 	RebelManager& rebel_manager = politics_manager.get_rebel_manager();
 
-	bool ret = politics_manager.load_rebels_file(parse_defines_cached(lookup_file(rebel_types_file)).get_file_node());
+	v2script::Parser& parser = parse_defines_cached(lookup_file(rebel_types_file));
+	bool ret = politics_manager.load_rebels_file(parser.get_file_node(), parser);
 
 	if (!rebel_manager.generate_modifiers(definition_manager.get_modifier_manager())) {
 		Logger::error("Failed to generate rebel type-based modifiers!");
@@ -426,7 +435,7 @@ bool Dataloader::_load_technologies(DefinitionManager& definition_manager) {
 
 	const v2script::Parser technology_file_parser = parse_defines(lookup_file(technology_file));
 
-	if (!technology_manager.load_technology_file_folders_and_areas(technology_file_parser.get_file_node())) {
+	if (!technology_manager.load_technology_file_folders_and_areas(technology_file_parser.get_file_node(), technology_file_parser)) {
 		Logger::error("Failed to load technology folders and areas!");
 		ret = false;
 	}
@@ -438,7 +447,7 @@ bool Dataloader::_load_technologies(DefinitionManager& definition_manager) {
 		ret = false;
 	}
 
-	if (!technology_manager.load_technology_file_schools(modifier_manager, technology_file_parser.get_file_node())) {
+	if (!technology_manager.load_technology_file_schools(modifier_manager, technology_file_parser.get_file_node(), technology_file_parser)) {
 		Logger::error("Failed to load technology schools!");
 		ret = false;
 	}
@@ -447,11 +456,13 @@ bool Dataloader::_load_technologies(DefinitionManager& definition_manager) {
 	if (!apply_to_files(
 		lookup_files_in_dir(technologies_directory, ".txt"),
 		[this, &definition_manager, &technology_manager, &modifier_manager](fs::path const& file) -> bool {
+			v2script::Parser& parser = parse_defines_cached(file);
 			return technology_manager.load_technologies_file(
 				modifier_manager,
 				definition_manager.get_military_manager().get_unit_type_manager(),
 				definition_manager.get_economy_manager().get_building_type_manager(),
-				parse_defines_cached(file).get_file_node()
+				parser.get_file_node(),
+				parser
 			);
 		}
 	)) {
@@ -474,12 +485,14 @@ bool Dataloader::_load_inventions(DefinitionManager& definition_manager) {
 	bool ret = apply_to_files(
 		lookup_files_in_dir(inventions_directory, ".txt"),
 		[this, &definition_manager, &invention_manager](fs::path const& file) -> bool {
+			v2script::Parser& parser = parse_defines_cached(file);
 			return invention_manager.load_inventions_file(
 				definition_manager.get_modifier_manager(),
 				definition_manager.get_military_manager().get_unit_type_manager(),
 				definition_manager.get_economy_manager().get_building_type_manager(),
 				definition_manager.get_crime_manager(),
-				parse_defines_cached(file).get_file_node()
+				parser.get_file_node(),
+				parser
 			);
 		}
 	);
@@ -497,7 +510,8 @@ bool Dataloader::_load_decisions(DefinitionManager& definition_manager) {
 	bool ret = apply_to_files(
 		lookup_files_in_dir(decisions_directory, ".txt"),
 		[this, &decision_manager](fs::path const& file) -> bool {
-			return decision_manager.load_decision_file(parse_defines_cached(file).get_file_node());
+			v2script::Parser& parser = parse_defines_cached(file);
+			return decision_manager.load_decision_file(parser.get_file_node(), parser);
 		}
 	);
 
@@ -536,8 +550,9 @@ bool Dataloader::_load_history(DefinitionManager& definition_manager, bool unuse
 					return true;
 				}
 
+				v2script::Parser parser = parse_defines(file);
 				return country_history_manager.load_country_history_file(
-					definition_manager, *this, *country, parse_defines(file).get_file_node()
+					definition_manager, *this, *country, parser.get_file_node(), parser
 				);
 			}
 		);
@@ -577,8 +592,9 @@ bool Dataloader::_load_history(DefinitionManager& definition_manager, bool unuse
 					return true;
 				}
 
+				v2script::Parser parser = parse_defines(file);
 				return province_history_manager.load_province_history_file(
-					definition_manager, *province, parse_defines(file).get_file_node()
+					definition_manager, *province, parser.get_file_node(), parser
 				);
 			}
 		);
@@ -602,8 +618,9 @@ bool Dataloader::_load_history(DefinitionManager& definition_manager, bool unuse
 					[this, &definition_manager, &province_history_manager, date, &non_integer_size](
 						fs::path const& file
 					) -> bool {
+						v2script::Parser parser = parse_defines(file);
 						return province_history_manager.load_pop_history_file(
-							definition_manager, date, parse_defines(file).get_file_node(), &non_integer_size
+							definition_manager, date, parser.get_file_node(), parser, &non_integer_size
 						);
 					}
 				);
@@ -627,8 +644,9 @@ bool Dataloader::_load_history(DefinitionManager& definition_manager, bool unuse
 		ret &= apply_to_files(
 			lookup_files_in_dir(diplomacy_history_directory, ".txt"),
 			[this, &definition_manager, &diplomatic_history_manager](fs::path const& file) -> bool {
+				v2script::Parser parser = parse_defines(file);
 				return diplomatic_history_manager.load_diplomacy_history_file(
-					definition_manager.get_country_manager(), parse_defines(file).get_file_node()
+					definition_manager.get_country_manager(), parser.get_file_node(), parser
 				);
 			}
 		);
@@ -642,8 +660,9 @@ bool Dataloader::_load_history(DefinitionManager& definition_manager, bool unuse
 		ret &= apply_to_files(
 			war_history_files,
 			[this, &definition_manager, &diplomatic_history_manager](fs::path const& file) -> bool {
+				v2script::Parser parser = parse_defines(file);
 				return diplomatic_history_manager.load_war_history_file(
-					definition_manager, parse_defines(file).get_file_node()
+					definition_manager, parser.get_file_node(), parser
 				);
 			}
 		);
@@ -660,8 +679,9 @@ bool Dataloader::_load_events(DefinitionManager& definition_manager) {
 	const bool ret = apply_to_files(
 		lookup_files_in_dir(events_directory, ".txt"),
 		[this, &definition_manager](fs::path const& file) -> bool {
+			v2script::Parser& parser = parse_defines_cached(file);
 			return definition_manager.get_event_manager().load_event_file(
-				definition_manager.get_politics_manager().get_issue_manager(), parse_defines_cached(file).get_file_node()
+				definition_manager.get_politics_manager().get_issue_manager(), parser.get_file_node(), parser
 			);
 		}
 	);
@@ -747,7 +767,8 @@ bool Dataloader::_load_map_dir(DefinitionManager& definition_manager) const {
 
 	{
 		std::vector<colour_t> colours;
-		if (!MapDefinition::load_region_colours(parse_defines(lookup_file(region_colours)).get_file_node(), colours)) {
+		v2script::Parser colour_parser = parse_defines(lookup_file(region_colours));
+		if (!MapDefinition::load_region_colours(colour_parser.get_file_node(), colour_parser, colours)) {
 			Logger::error("Failed to load region colours file!");
 			ret = false;
 		}
@@ -755,8 +776,8 @@ bool Dataloader::_load_map_dir(DefinitionManager& definition_manager) const {
 		using namespace OpenVic::colour_literals;
 		colours.push_back(0xFFFFFF_rgb); /* This ensures there is always at least one region colour. */
 
-		if (!map_definition.load_region_file(
-				parse_defines(lookup_file(append_string_views(map_directory, region))).get_file_node(), colours)) {
+		v2script::Parser file_parser = parse_defines(lookup_file(append_string_views(map_directory, region)));
+		if (!map_definition.load_region_file(file_parser.get_file_node(), file_parser, colours)) {
 			Logger::error("Failed to load region file!");
 			ret = false;
 		}
@@ -767,9 +788,11 @@ bool Dataloader::_load_map_dir(DefinitionManager& definition_manager) const {
 		ret = false;
 	}
 
+	v2script::Parser terrain_parser = parse_defines(lookup_file(append_string_views(map_directory, terrain_definition)));
 	if (!map_definition.get_terrain_type_manager().load_terrain_types(
 		definition_manager.get_modifier_manager(),
-		parse_defines(lookup_file(append_string_views(map_directory, terrain_definition))).get_file_node()
+		terrain_parser.get_file_node(),
+		terrain_parser
 	)) {
 		Logger::error("Failed to load terrain types!");
 		ret = false;
@@ -793,25 +816,31 @@ bool Dataloader::_load_map_dir(DefinitionManager& definition_manager) const {
 	}
 
 	/* Must be loaded after adjacencies so we know what provinces are coastal, and so can have a port */
+	v2script::Parser province_positions_parser = parse_defines(lookup_file(append_string_views(map_directory, positions)));
 	if (!map_definition.load_province_positions(
 		definition_manager.get_economy_manager().get_building_type_manager(),
-		parse_defines(lookup_file(append_string_views(map_directory, positions))).get_file_node()
+		province_positions_parser.get_file_node(),
+		province_positions_parser
 	)) {
 		Logger::error("Failed to load province positions file!");
 		ret = false;
 	}
 
+	v2script::Parser climate_parser = parse_defines(lookup_file(append_string_views(map_directory, climate_file)));
 	if (!map_definition.load_climate_file(
 		definition_manager.get_modifier_manager(),
-		parse_defines(lookup_file(append_string_views(map_directory, climate_file))).get_file_node()
+		climate_parser.get_file_node(),
+		climate_parser
 	)) {
 		Logger::error("Failed to load climates!");
 		ret = false;
 	}
 
+	v2script::Parser continent_parser = parse_defines(lookup_file(append_string_views(map_directory, continent)));
 	if (!map_definition.load_continent_file(
 		definition_manager.get_modifier_manager(),
-		parse_defines(lookup_file(append_string_views(map_directory, continent))).get_file_node()
+		continent_parser.get_file_node(),
+		continent_parser
 	)) {
 		Logger::error("Failed to load continents!");
 		ret = false;
@@ -862,8 +891,10 @@ bool Dataloader::load_defines(DefinitionManager& definition_manager) {
 		Logger::error("Failed to set up modifier effects!");
 		ret = false;
 	}
+	v2script::Parser defines_parser = parse_lua_defines(lookup_file(defines_file));
 	if (!definition_manager.get_define_manager().load_defines_file(
-		parse_lua_defines(lookup_file(defines_file)).get_file_node()
+		defines_parser.get_file_node(),
+		defines_parser
 	)) {
 		Logger::error("Failed to load defines!");
 		ret = false;
@@ -872,26 +903,34 @@ bool Dataloader::load_defines(DefinitionManager& definition_manager) {
 		Logger::error("Failed to load goods!");
 		ret = false;
 	}
+	v2script::Parser grahical_culture_parser = parse_defines(lookup_file(graphical_culture_type_file));
 	if (!definition_manager.get_pop_manager().get_culture_manager().load_graphical_culture_type_file(
-		parse_defines(lookup_file(graphical_culture_type_file)).get_file_node()
+		grahical_culture_parser.get_file_node(),
+		grahical_culture_parser
 	)) {
 		Logger::error("Failed to load graphical culture types!");
 		ret = false;
 	}
+	v2script::Parser religion_parser = parse_defines(lookup_file(religion_file));
 	if (!definition_manager.get_pop_manager().get_religion_manager().load_religion_file(
-		parse_defines(lookup_file(religion_file)).get_file_node()
+		religion_parser.get_file_node(),
+		religion_parser
 	)) {
 		Logger::error("Failed to load religions!");
 		ret = false;
 	}
+	v2script::Parser& ideology_parser = parse_defines_cached(lookup_file(ideology_file));
 	if (!definition_manager.get_politics_manager().get_ideology_manager().load_ideology_file(
-		parse_defines_cached(lookup_file(ideology_file)).get_file_node()
+		ideology_parser.get_file_node(),
+		ideology_parser
 	)) {
 		Logger::error("Failed to load ideologies!");
 		ret = false;
 	}
+	v2script::Parser governments_parser = parse_defines(lookup_file(governments_file));
 	if (!definition_manager.get_politics_manager().load_government_types_file(
-		parse_defines(lookup_file(governments_file)).get_file_node()
+		governments_parser.get_file_node(),
+		governments_parser
 	)) {
 		Logger::error("Failed to load government types!");
 		ret = false;
@@ -900,14 +939,20 @@ bool Dataloader::load_defines(DefinitionManager& definition_manager) {
 		Logger::error("Failed to load pop types!");
 		ret = false;
 	}
-	if (!definition_manager.get_economy_manager().load_production_types_file(definition_manager.get_pop_manager(),
-		parse_defines_cached(lookup_file(production_types_file)).get_file_node()
+	v2script::Parser& production_types_parser = parse_defines_cached(lookup_file(production_types_file));
+	if (!definition_manager.get_economy_manager().load_production_types_file(
+		definition_manager.get_pop_manager(),
+		production_types_parser.get_file_node(),
+		production_types_parser
 	)) {
 		Logger::error("Failed to load production types!");
 		ret = false;
 	}
-	if (!definition_manager.get_economy_manager().load_buildings_file(definition_manager.get_modifier_manager(),
-		parse_defines(lookup_file(buildings_file)).get_file_node()
+	v2script::Parser buildings_parser = parse_defines(lookup_file(buildings_file));
+	if (!definition_manager.get_economy_manager().load_buildings_file(
+		definition_manager.get_modifier_manager(),
+		buildings_parser.get_file_node(),
+		buildings_parser
 	)) {
 		Logger::error("Failed to load buildings!");
 		ret = false;
@@ -935,9 +980,11 @@ bool Dataloader::load_defines(DefinitionManager& definition_manager) {
 		Logger::error("Failed to set up rules!");
 		ret = false;
 	}
+	v2script::Parser& issues_parser = parse_defines_cached(lookup_file(issues_file));
 	if (!definition_manager.get_politics_manager().load_issues_file(
 		definition_manager.get_modifier_manager(),
-		parse_defines_cached(lookup_file(issues_file)).get_file_node()
+		issues_parser.get_file_node(),
+		issues_parser
 	)) {
 		Logger::error("Failed to load issues and reforms!");
 		ret = false;
@@ -949,39 +996,55 @@ bool Dataloader::load_defines(DefinitionManager& definition_manager) {
 		Logger::error("Failed to load delayed parse pop type data (promotion and issue weights)!");
 		ret = false;
 	}
+	v2script::Parser& national_foci_parser = parse_defines_cached(lookup_file(national_foci_file));
 	if (!definition_manager.get_politics_manager().load_national_foci_file(
-		definition_manager.get_pop_manager(), definition_manager.get_economy_manager().get_good_definition_manager(),
-		definition_manager.get_modifier_manager(), parse_defines_cached(lookup_file(national_foci_file)).get_file_node()
+		definition_manager.get_pop_manager(),
+		definition_manager.get_economy_manager().get_good_definition_manager(),
+		definition_manager.get_modifier_manager(),
+		national_foci_parser.get_file_node(),
+		national_foci_parser
 	)) {
 		Logger::error("Failed to load national foci!");
 		ret = false;
 	}
+	v2script::Parser national_values_parser = parse_defines(lookup_file(national_values_file));
 	if (!definition_manager.get_politics_manager().get_national_value_manager().load_national_values_file(
-		definition_manager.get_modifier_manager(), parse_defines(lookup_file(national_values_file)).get_file_node()
+		definition_manager.get_modifier_manager(),
+		national_values_parser.get_file_node(),
+		national_values_parser
 	)) {
 		Logger::error("Failed to load national values!");
 		ret = false;
 	}
+	v2script::Parser& crime_modifiers_parser = parse_defines_cached(lookup_file(crime_modifiers_file)); 
 	if (!definition_manager.get_crime_manager().load_crime_modifiers(
-		definition_manager.get_modifier_manager(), parse_defines_cached(lookup_file(crime_modifiers_file)).get_file_node()
+		definition_manager.get_modifier_manager(),
+		crime_modifiers_parser.get_file_node(),
+		crime_modifiers_parser
 	)) {
 		Logger::error("Failed to load crime modifiers!");
 		ret = false;
 	}
+	v2script::Parser& event_modifiers_parser = parse_defines_cached(lookup_file(event_modifiers_file)); 
 	if (!definition_manager.get_modifier_manager().load_event_modifiers(
-		parse_defines(lookup_file(event_modifiers_file)).get_file_node()
+		event_modifiers_parser.get_file_node(),
+		event_modifiers_parser
 	)) {
 		Logger::error("Failed to load event modifiers!");
 		ret = false;
 	}
+	v2script::Parser static_modifiers_parser = parse_defines(lookup_file(static_modifiers_file));
 	if (!definition_manager.get_modifier_manager().load_static_modifiers(
-		parse_defines(lookup_file(static_modifiers_file)).get_file_node()
+		static_modifiers_parser.get_file_node(),
+		static_modifiers_parser
 	)) {
 		Logger::error("Failed to load static modifiers!");
 		ret = false;
 	}
+	v2script::Parser& triggered_modifiers_parser = parse_defines_cached(lookup_file(triggered_modifiers_file)); 
 	if (!definition_manager.get_modifier_manager().load_triggered_modifiers(
-		parse_defines_cached(lookup_file(triggered_modifiers_file)).get_file_node()
+		triggered_modifiers_parser.get_file_node(),
+		triggered_modifiers_parser
 	)) {
 		Logger::error("Failed to load triggered modifiers!");
 		ret = false;
@@ -990,26 +1053,37 @@ bool Dataloader::load_defines(DefinitionManager& definition_manager) {
 		Logger::error("Failed to load inventions!");
 		ret = false;
 	}
+	v2script::Parser leader_traits_parser = parse_defines(lookup_file(leader_traits_file));
 	if (!definition_manager.get_military_manager().get_leader_trait_manager().load_leader_traits_file(
-		definition_manager.get_modifier_manager(), parse_defines(lookup_file(leader_traits_file)).get_file_node()
+		definition_manager.get_modifier_manager(),
+		leader_traits_parser.get_file_node(),
+		leader_traits_parser
 	)) {
 		Logger::error("Failed to load leader traits!");
 		ret = false;
 	}
+	v2script::Parser cb_types_parser = parse_defines(lookup_file(cb_types_file));
 	if (!definition_manager.get_military_manager().get_wargoal_type_manager().load_wargoal_file(
-		parse_defines_cached(lookup_file(cb_types_file)).get_file_node()
+		cb_types_parser.get_file_node(),
+		cb_types_parser
 	)) {
 		Logger::error("Failed to load wargoals!");
 		ret = false;
 	}
+	v2script::Parser bookmark_parser = parse_defines(lookup_file(bookmark_file));
 	if (!definition_manager.get_history_manager().get_bookmark_manager().load_bookmark_file(
-		parse_defines(lookup_file(bookmark_file)).get_file_node()
+		bookmark_parser.get_file_node(),
+		bookmark_parser
 	)) {
 		Logger::error("Failed to load bookmarks!");
 		ret = false;
 	}
+	v2script::Parser countries_parser = parse_defines(lookup_file(countries_file));
 	if (!definition_manager.get_country_manager().load_countries(
-		definition_manager, *this, parse_defines(lookup_file(countries_file)).get_file_node()
+		definition_manager,
+		*this,
+		countries_parser.get_file_node(),
+		countries_parser
 	)) {
 		Logger::error("Failed to load countries!");
 		ret = false;
@@ -1020,8 +1094,11 @@ bool Dataloader::load_defines(DefinitionManager& definition_manager) {
 		Logger::error("Failed to load country colours!");
 		ret = false;
 	}
+	v2script::Parser culture_parser = parse_defines(lookup_file(culture_file));
 	if (!definition_manager.get_pop_manager().get_culture_manager().load_culture_file(
-		definition_manager.get_country_manager(), parse_defines(lookup_file(culture_file)).get_file_node()
+		definition_manager.get_country_manager(),
+		culture_parser.get_file_node(),
+		culture_parser
 	)) {
 		Logger::error("Failed to load cultures!");
 		ret = false;
@@ -1038,8 +1115,10 @@ bool Dataloader::load_defines(DefinitionManager& definition_manager) {
 		Logger::error("Failed to load events!");
 		ret = false;
 	}
+	v2script::Parser on_actions_parser = parse_defines(lookup_file(on_actions_file));
 	if (!definition_manager.get_event_manager().load_on_action_file(
-		parse_defines(lookup_file(on_actions_file)).get_file_node()
+		on_actions_parser.get_file_node(),
+		on_actions_parser
 	)) {
 		Logger::error("Failed to load on actions!");
 		ret = false;

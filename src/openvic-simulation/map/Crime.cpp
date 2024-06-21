@@ -21,7 +21,7 @@ bool CrimeManager::add_crime_modifier(
 	);
 }
 
-bool CrimeManager::load_crime_modifiers(ModifierManager const& modifier_manager, ast::NodeCPtr root) {
+bool CrimeManager::load_crime_modifiers(ModifierManager const& modifier_manager, ast::NodeCPtr root, ovdl::v2script::Parser const& parser) {
 	const bool ret = expect_dictionary_reserve_length(
 		crime_modifiers,
 		[this, &modifier_manager](std::string_view key, ast::NodeCPtr value) -> bool {

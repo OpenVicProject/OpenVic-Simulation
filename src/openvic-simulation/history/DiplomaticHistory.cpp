@@ -108,7 +108,11 @@ std::vector<WarHistory const*> DiplomaticHistoryManager::get_wars(Date date) con
 	return ret;
 }
 
-bool DiplomaticHistoryManager::load_diplomacy_history_file(CountryManager const& country_manager, ast::NodeCPtr root) {
+bool DiplomaticHistoryManager::load_diplomacy_history_file(
+	CountryManager const& country_manager,
+	ast::NodeCPtr root,
+	ovdl::v2script::Parser const& parser
+) {
 	return expect_dictionary_keys(
 		"alliance", ZERO_OR_MORE, [this, &country_manager](ast::NodeCPtr node) -> bool {
 			Country const* first = nullptr;
@@ -203,7 +207,11 @@ bool DiplomaticHistoryManager::load_diplomacy_history_file(CountryManager const&
 	)(root);
 }
 
-bool DiplomaticHistoryManager::load_war_history_file(DefinitionManager const& definition_manager, ast::NodeCPtr root) {
+bool DiplomaticHistoryManager::load_war_history_file(
+	DefinitionManager const& definition_manager,
+	ast::NodeCPtr root,
+	ovdl::v2script::Parser const& parser
+) {
 	std::string_view name {};
 	std::vector<WarHistory::war_participant_t> attackers {};
 	std::vector<WarHistory::war_participant_t> defenders {};

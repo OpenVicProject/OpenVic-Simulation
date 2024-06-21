@@ -2,6 +2,7 @@
 
 #include "openvic-simulation/misc/Modifier.hpp"
 #include "openvic-simulation/types/IdentifierRegistry.hpp"
+#include "openvic-dataloader/v2script/Parser.hpp"
 
 namespace OpenVic {
 	struct GoodDefinitionManager;
@@ -70,7 +71,7 @@ namespace OpenVic {
 			bool available_from_start, bool tradeable, bool money, bool overseas_penalty
 		);
 
-		bool load_goods_file(ast::NodeCPtr root);
+		bool load_goods_file(ast::NodeCPtr root, ovdl::v2script::Parser const& parser);
 		bool generate_modifiers(ModifierManager& modifier_manager) const;
 	};
 }

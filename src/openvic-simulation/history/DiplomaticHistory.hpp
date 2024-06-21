@@ -7,6 +7,7 @@
 #include "openvic-simulation/history/Period.hpp"
 #include "openvic-simulation/types/Date.hpp"
 #include "openvic-simulation/utility/Getters.hpp"
+#include "openvic-dataloader/v2script/Parser.hpp"
 
 namespace OpenVic {
 	struct DiplomaticHistoryManager;
@@ -125,7 +126,7 @@ namespace OpenVic {
 		 * should be checked for by functions that use get_wars() */
 		std::vector<WarHistory const*> get_wars(Date date) const;
 
-		bool load_diplomacy_history_file(CountryManager const& country_manager, ast::NodeCPtr root);
-		bool load_war_history_file(DefinitionManager const& definition_manager, ast::NodeCPtr root);
+		bool load_diplomacy_history_file(CountryManager const& country_manager, ast::NodeCPtr root, ovdl::v2script::Parser const& parser);
+		bool load_war_history_file(DefinitionManager const& definition_manager, ast::NodeCPtr root, ovdl::v2script::Parser const& parser);
 	};
 }

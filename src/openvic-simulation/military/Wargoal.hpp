@@ -5,6 +5,7 @@
 #include "openvic-simulation/types/EnumBitfield.hpp"
 #include "openvic-simulation/types/IdentifierRegistry.hpp"
 #include "openvic-simulation/utility/Getters.hpp"
+#include "openvic-dataloader/v2script/Parser.hpp"
 
 namespace OpenVic {
 	struct WargoalTypeManager;
@@ -111,7 +112,7 @@ namespace OpenVic {
 			ConditionScript&& allowed_countries, EffectScript&& on_add, EffectScript&& on_po_accepted
 		);
 
-		bool load_wargoal_file(ast::NodeCPtr root);
+		bool load_wargoal_file(ast::NodeCPtr root, ovdl::v2script::Parser const& parser);
 
 		bool parse_scripts(DefinitionManager const& definition_manager);
 	};

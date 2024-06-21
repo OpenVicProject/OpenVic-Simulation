@@ -7,6 +7,7 @@
 #include "openvic-simulation/types/Date.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPointMap.hpp"
 #include "openvic-simulation/types/OrderedContainers.hpp"
+#include "openvic-dataloader/v2script/Parser.hpp"
 
 namespace OpenVic {
 	struct CountryHistoryMap;
@@ -79,7 +80,7 @@ namespace OpenVic {
 		std::unique_ptr<CountryHistoryEntry> _make_entry(Date date) const override;
 		bool _load_history_entry(
 			DefinitionManager const& definition_manager, Dataloader const& dataloader, DeploymentManager& deployment_manager,
-			CountryHistoryEntry& entry, ast::NodeCPtr root
+			CountryHistoryEntry& entry, ast::NodeCPtr root, ovdl::v2script::Parser const& parser
 		) override;
 	};
 
@@ -98,7 +99,11 @@ namespace OpenVic {
 		CountryHistoryMap const* get_country_history(Country const* country) const;
 
 		bool load_country_history_file(
-			DefinitionManager& definition_manager, Dataloader const& dataloader, Country const& country, ast::NodeCPtr root
+			DefinitionManager& definition_manager,
+			Dataloader const& dataloader,
+			Country const& country,
+			ast::NodeCPtr root,
+			ovdl::v2script::Parser const& parser
 		);
 	};
 

@@ -50,7 +50,7 @@ bool DecisionManager::add_decision(
 	}, duplicate_warning_callback);
 }
 
-bool DecisionManager::load_decision_file(ast::NodeCPtr root) {
+bool DecisionManager::load_decision_file(ast::NodeCPtr root, ovdl::v2script::Parser const& parser) {
 	return expect_dictionary_keys(
 		"political_decisions", ZERO_OR_ONE, expect_dictionary_reserve_length(
 			decisions,

@@ -4,6 +4,7 @@
 #include "openvic-simulation/scripts/EffectScript.hpp"
 #include "openvic-simulation/types/IdentifierRegistry.hpp"
 #include "openvic-simulation/types/OrderedContainers.hpp"
+#include "openvic-dataloader/v2script/Parser.hpp"
 
 namespace OpenVic {
 	struct EventManager;
@@ -105,8 +106,8 @@ namespace OpenVic {
 
 		bool add_on_action(std::string_view identifier, OnAction::weight_map_t&& new_weighted_events);
 
-		bool load_event_file(IssueManager const& issue_manager, ast::NodeCPtr root);
-		bool load_on_action_file(ast::NodeCPtr root);
+		bool load_event_file(IssueManager const& issue_manager, ast::NodeCPtr root, ovdl::v2script::Parser const& parser);
+		bool load_on_action_file(ast::NodeCPtr root, ovdl::v2script::Parser const& parser);
 
 		bool parse_scripts(DefinitionManager const& definition_manager);
 	};

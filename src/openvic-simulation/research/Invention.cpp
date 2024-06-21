@@ -40,8 +40,12 @@ bool InventionManager::add_invention(
 }
 
 bool InventionManager::load_inventions_file(
-	ModifierManager const& modifier_manager, UnitTypeManager const& unit_type_manager, BuildingTypeManager const& building_type_manager,
-	CrimeManager const& crime_manager, ast::NodeCPtr root
+	ModifierManager const& modifier_manager,
+	UnitTypeManager const& unit_type_manager,
+	BuildingTypeManager const& building_type_manager,
+	CrimeManager const& crime_manager,
+	ast::NodeCPtr root,
+	ovdl::v2script::Parser const& parser
 ) {
 	return expect_dictionary_reserve_length(
 		inventions, [this, &modifier_manager, &unit_type_manager, &building_type_manager, &crime_manager](

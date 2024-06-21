@@ -3,6 +3,7 @@
 #include "openvic-simulation/scripts/ConditionalWeight.hpp"
 #include "openvic-simulation/scripts/EffectScript.hpp"
 #include "openvic-simulation/types/IdentifierRegistry.hpp"
+#include "openvic-dataloader/v2script/Parser.hpp"
 
 namespace OpenVic {
 	struct DecisionManager;
@@ -47,7 +48,7 @@ namespace OpenVic {
 			ConditionScript&& potential, ConditionScript&& allow, ConditionalWeight&& ai_will_do, EffectScript&& effect
 		);
 
-		bool load_decision_file(ast::NodeCPtr root);
+		bool load_decision_file(ast::NodeCPtr root, ovdl::v2script::Parser const& parser);
 
 		bool parse_scripts(DefinitionManager const& definition_manager);
 	};

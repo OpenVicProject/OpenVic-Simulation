@@ -440,15 +440,15 @@ bool MapDefinition::load_province_definitions(std::vector<LineObject> const& lin
 	return ret;
 }
 
-bool MapDefinition::load_province_positions(BuildingTypeManager const& building_type_manager, ast::NodeCPtr root) {
+bool MapDefinition::load_province_positions(BuildingTypeManager const& building_type_manager, ast::NodeCPtr root, ovdl::v2script::Parser const& parser) {
 	return expect_province_definition_dictionary(
-		[this, &building_type_manager](ProvinceDefinition& province, ast::NodeCPtr node) -> bool {
-			return province.load_positions(*this, building_type_manager, node);
+		[this, &building_type_manager, &parser](ProvinceDefinition& province, ast::NodeCPtr node) -> bool {
+			return province.load_positions(*this, building_type_manager, node, parser);
 		}
 	)(root);
 }
 
-bool MapDefinition::load_region_colours(ast::NodeCPtr root, std::vector<colour_t>& colours) {
+bool MapDefinition::load_region_colours(ast::NodeCPtr root, ovdl::v2script::Parser const& parser, std::vector<colour_t>& colours) {
 	return expect_dictionary_reserve_length(
 		colours,
 		[&colours](std::string_view key, ast::NodeCPtr value) -> bool {
@@ -460,7 +460,7 @@ bool MapDefinition::load_region_colours(ast::NodeCPtr root, std::vector<colour_t
 	})(root);
 }
 
-bool MapDefinition::load_region_file(ast::NodeCPtr root, std::vector<colour_t> const& colours) {
+bool MapDefinition::load_region_file(ast::NodeCPtr root, ovdl::v2script::Parser const& parser, std::vector<colour_t> const& colours) {
 	const bool ret = expect_dictionary_reserve_length(
 		regions,
 		[this, &colours](std::string_view region_identifier, ast::NodeCPtr region_node) -> bool {
@@ -730,7 +730,7 @@ bool MapDefinition::generate_and_load_province_adjacencies(std::vector<LineObjec
 	return ret;
 }
 
-bool MapDefinition::load_climate_file(ModifierManager const& modifier_manager, ast::NodeCPtr root) {
+bool MapDefinition::load_climate_file(ModifierManager const& modifier_manager, ast::NodeCPtr root, ovdl::v2script::Parser const& parser) {
 	bool ret = expect_dictionary_reserve_length(
 		climates,
 		[this, &modifier_manager](std::string_view identifier, ast::NodeCPtr node) -> bool {
@@ -783,7 +783,7 @@ bool MapDefinition::load_climate_file(ModifierManager const& modifier_manager, a
 	return ret;
 }
 
-bool MapDefinition::load_continent_file(ModifierManager const& modifier_manager, ast::NodeCPtr root) {
+bool MapDefinition::load_continent_file(ModifierManager const& modifier_manager, ast::NodeCPtr root, ovdl::v2script::Parser const& parser) {
 	bool ret = expect_dictionary_reserve_length(
 		continents,
 		[this, &modifier_manager](std::string_view identifier, ast::NodeCPtr node) -> bool {

@@ -10,6 +10,7 @@
 #include "openvic-simulation/scripts/ConditionalWeight.hpp"
 #include "openvic-simulation/types/EnumBitfield.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
+#include "openvic-dataloader/v2script/Parser.hpp"
 
 namespace OpenVic {
 
@@ -312,15 +313,21 @@ namespace OpenVic {
 		void lock_all_pop_types();
 
 		bool load_pop_type_file(
-			std::string_view filestem, GoodDefinitionManager const& good_definition_manager,
-			IdeologyManager const& ideology_manager, ast::NodeCPtr root
+			std::string_view filestem,
+			GoodDefinitionManager const& good_definition_manager,
+			IdeologyManager const& ideology_manager,
+			ast::NodeCPtr root,
+			ovdl::v2script::Parser const& parser
 		);
 		bool load_delayed_parse_pop_type_data(UnitTypeManager const& unit_type_manager, IssueManager const& issue_manager);
 
-		bool load_pop_type_chances_file(ast::NodeCPtr root);
+		bool load_pop_type_chances_file(ast::NodeCPtr root, ovdl::v2script::Parser const& parser);
 
 		bool load_pop_into_vector(
-			RebelManager const& rebel_manager, std::vector<Pop>& vec, PopType const& type, ast::NodeCPtr pop_node,
+			RebelManager const& rebel_manager,
+			std::vector<Pop>& vec,
+			PopType const& type,
+			ast::NodeCPtr pop_node,
 			bool *non_integer_size
 		) const;
 

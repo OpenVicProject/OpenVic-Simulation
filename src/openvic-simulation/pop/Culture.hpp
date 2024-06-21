@@ -1,6 +1,7 @@
 #pragma once
 
 #include "openvic-simulation/types/IdentifierRegistry.hpp"
+#include "openvic-dataloader/v2script/Parser.hpp"
 
 namespace OpenVic {
 
@@ -65,11 +66,11 @@ namespace OpenVic {
 
 		bool _load_culture_group(
 			CountryManager const& country_manager, size_t& total_expected_cultures,
-			std::string_view culture_group_key, ast::NodeCPtr culture_group_node
+			std::string_view culture_group_key, ast::NodeCPtr culture_group_node, ovdl::v2script::Parser const& parser
 		);
 		bool _load_culture(
 			CountryManager const& country_manager, CultureGroup const& culture_group, std::string_view culture_key,
-			ast::NodeCPtr node
+			ast::NodeCPtr node, ovdl::v2script::Parser const& parser
 		);
 
 	public:
@@ -87,7 +88,7 @@ namespace OpenVic {
 			name_list_t&& last_names, fixed_point_t radicalism, Country const* primary_country
 		);
 
-		bool load_graphical_culture_type_file(ast::NodeCPtr root);
-		bool load_culture_file(CountryManager const& country_manager, ast::NodeCPtr root);
+		bool load_graphical_culture_type_file(ast::NodeCPtr root, ovdl::v2script::Parser const& parser);
+		bool load_culture_file(CountryManager const& country_manager, ast::NodeCPtr root, ovdl::v2script::Parser const& parser);
 	};
 }

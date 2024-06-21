@@ -146,8 +146,11 @@ bool UnitTypeManager::add_ship_type(
 }
 
 bool UnitTypeManager::load_unit_type_file(
-	GoodDefinitionManager const& good_definition_manager, TerrainTypeManager const& terrain_type_manager,
-	ModifierManager const& modifier_manager, ast::NodeCPtr root
+	GoodDefinitionManager const& good_definition_manager,
+	TerrainTypeManager const& terrain_type_manager,
+	ModifierManager const& modifier_manager,
+	ast::NodeCPtr root,
+	ovdl::v2script::Parser const& parser
 ) {
 	return expect_dictionary([this, &good_definition_manager, &terrain_type_manager, &modifier_manager](
 		std::string_view key, ast::NodeCPtr value
