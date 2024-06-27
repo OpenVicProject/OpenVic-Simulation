@@ -1,6 +1,7 @@
 #include "Pop.hpp"
 
 #include "openvic-simulation/country/CountryDefinition.hpp"
+#include "openvic-simulation/map/ProvinceInstance.hpp"
 #include "openvic-simulation/military/UnitType.hpp"
 #include "openvic-simulation/politics/Ideology.hpp"
 #include "openvic-simulation/politics/Issue.hpp"
@@ -12,18 +13,14 @@ using namespace OpenVic::NodeTools;
 
 using enum PopType::income_type_t;
 
-Pop::Pop(
-	PopType const& new_type,
-	Culture const& new_culture,
-	Religion const& new_religion,
-	pop_size_t new_size,
-	fixed_point_t new_militancy,
-	fixed_point_t new_consciousness,
-	RebelType const* new_rebel_type
-) : type { new_type },
-	culture { new_culture },
-	religion { new_religion },
-	size { new_size },
+PopBase::PopBase(
+	PopType const& new_type, Culture const& new_culture, Religion const& new_religion, pop_size_t new_size,
+	fixed_point_t new_militancy, fixed_point_t new_consciousness, RebelType const* new_rebel_type
+) : type { new_type }, culture { new_culture }, religion { new_religion }, size { new_size }, militancy { new_militancy },
+	consciousness { new_consciousness }, rebel_type { new_rebel_type } {}
+
+Pop::Pop(PopBase const& pop_base)
+  : PopBase { pop_base },
 	location { nullptr },
 	total_change { 0 },
 	num_grown { 0 },
@@ -32,9 +29,6 @@ Pop::Pop(
 	num_migrated_internal { 0 },
 	num_migrated_external { 0 },
 	num_migrated_colonial { 0 },
-	militancy { new_militancy },
-	consciousness { new_consciousness },
-	rebel_type { new_rebel_type },
 	ideologies {},
 	issues {},
 	votes {},
@@ -115,6 +109,14 @@ void Pop::setup_pop_test_values(
 	life_needs_fulfilled = test_range();
 	everyday_needs_fulfilled = test_range();
 	luxury_needs_fulfilled = test_range();
+}
+
+void Pop::set_location(ProvinceInstance const& new_location) {
+	if (location != &new_location) {
+		location = &new_location;
+
+		// TODO - update location dependent attributes
+	}
 }
 
 Strata::Strata(std::string_view new_identifier) : HasIdentifier { new_identifier } {}
@@ -596,8 +598,8 @@ bool PopManager::load_pop_type_chances_file(ast::NodeCPtr root) {
 	)(root);
 }
 
-bool PopManager::load_pop_into_vector(
-	RebelManager const& rebel_manager, std::vector<Pop>& vec, PopType const& type, ast::NodeCPtr pop_node,
+bool PopManager::load_pop_bases_into_vector(
+	RebelManager const& rebel_manager, std::vector<PopBase>& vec, PopType const& type, ast::NodeCPtr pop_node,
 	bool *non_integer_size
 ) const {
 	Culture const* culture = nullptr;
@@ -620,7 +622,7 @@ bool PopManager::load_pop_into_vector(
 	}
 
 	if (culture != nullptr && religion != nullptr && size >= 1) {
-		vec.emplace_back(Pop { type, *culture, *religion, size.to_int64_t(), militancy, consciousness, rebel_type });
+		vec.emplace_back(PopBase { type, *culture, *religion, size.to_int64_t(), militancy, consciousness, rebel_type });
 	} else {
 		Logger::warning(
 			"Some pop arguments are invalid: culture = ", culture, ", religion = ", religion, ", size = ", size

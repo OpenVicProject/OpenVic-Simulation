@@ -214,7 +214,7 @@ bool ProvinceHistoryEntry::_load_province_pop_history(
 	return pop_manager.expect_pop_type_dictionary_reserve_length(
 		pops,
 		[this, &pop_manager, &rebel_manager, non_integer_size](PopType const& pop_type, ast::NodeCPtr pop_node) -> bool {
-			return pop_manager.load_pop_into_vector(rebel_manager, pops, pop_type, pop_node, non_integer_size);
+			return pop_manager.load_pop_bases_into_vector(rebel_manager, pops, pop_type, pop_node, non_integer_size);
 		}
 	)(root);
 }
