@@ -10,7 +10,7 @@
 
 namespace OpenVic {
 	struct DiplomaticHistoryManager;
-	struct Country;
+	struct CountryDefinition;
 	struct WargoalType;
 	struct ProvinceDefinition;
 
@@ -22,17 +22,18 @@ namespace OpenVic {
 
 		private:
 			Date PROPERTY_CUSTOM_PREFIX(added, get_date);
-			Country const* PROPERTY(actor);
-			Country const* PROPERTY(receiver);
+			CountryDefinition const* PROPERTY(actor);
+			CountryDefinition const* PROPERTY(receiver);
 			WargoalType const* PROPERTY(wargoal);
 
 			// TODO - could these just be nullptr when unset rather than using optionals?
-			std::optional<Country const*> PROPERTY(third_party);
+			std::optional<CountryDefinition const*> PROPERTY(third_party);
 			std::optional<ProvinceDefinition const*> PROPERTY(target);
 
 			added_wargoal_t(
-				Date new_added, Country const* new_actor, Country const* new_receiver, WargoalType const* new_wargoal,
-				std::optional<Country const*> new_third_party, std::optional<ProvinceDefinition const*> new_target
+				Date new_added, CountryDefinition const* new_actor, CountryDefinition const* new_receiver,
+				WargoalType const* new_wargoal, std::optional<CountryDefinition const*> new_third_party,
+				std::optional<ProvinceDefinition const*> new_target
 			);
 		};
 
@@ -40,10 +41,10 @@ namespace OpenVic {
 			friend struct DiplomaticHistoryManager;
 
 		private:
-			Country const* PROPERTY(country);
+			CountryDefinition const* PROPERTY(country);
 			Period PROPERTY(period);
 
-			war_participant_t(Country const* new_country, const Period period);
+			war_participant_t(CountryDefinition const* new_country, Period period);
 		};
 
 	private:
@@ -64,22 +65,22 @@ namespace OpenVic {
 		friend struct DiplomaticHistoryManager;
 
 	private:
-		Country const* PROPERTY(first);
-		Country const* PROPERTY(second);
+		CountryDefinition const* PROPERTY(first);
+		CountryDefinition const* PROPERTY(second);
 		const Period PROPERTY(period);
 
-		AllianceHistory(Country const* new_first, Country const* new_second, const Period period);
+		AllianceHistory(CountryDefinition const* new_first, CountryDefinition const* new_second, Period period);
 	};
 
 	struct ReparationsHistory {
 		friend struct DiplomaticHistoryManager;
 
 	private:
-		Country const* PROPERTY(receiver);
-		Country const* PROPERTY(sender);
+		CountryDefinition const* PROPERTY(receiver);
+		CountryDefinition const* PROPERTY(sender);
 		const Period PROPERTY(period);
 
-		ReparationsHistory(Country const* new_receiver, Country const* new_sender, const Period period);
+		ReparationsHistory(CountryDefinition const* new_receiver, CountryDefinition const* new_sender, Period period);
 	};
 
 	struct SubjectHistory {
@@ -92,15 +93,17 @@ namespace OpenVic {
 		};
 
 	private:
-		Country const* PROPERTY(overlord);
-		Country const* PROPERTY(subject);
+		CountryDefinition const* PROPERTY(overlord);
+		CountryDefinition const* PROPERTY(subject);
 		const type_t PROPERTY_CUSTOM_PREFIX(type, get_subject);
 		const Period PROPERTY(period);
 
-		SubjectHistory(Country const* new_overlord, Country const* new_subject, const type_t new_type, const Period period);
+		SubjectHistory(
+			CountryDefinition const* new_overlord, CountryDefinition const* new_subject, type_t new_type, Period period
+		);
 	};
 
-	struct CountryManager;
+	struct CountryDefinitionManager;
 	struct DefinitionManager;
 
 	struct DiplomaticHistoryManager {
@@ -125,7 +128,7 @@ namespace OpenVic {
 		 * should be checked for by functions that use get_wars() */
 		std::vector<WarHistory const*> get_wars(Date date) const;
 
-		bool load_diplomacy_history_file(CountryManager const& country_manager, ast::NodeCPtr root);
+		bool load_diplomacy_history_file(CountryDefinitionManager const& country_definition_manager, ast::NodeCPtr root);
 		bool load_war_history_file(DefinitionManager const& definition_manager, ast::NodeCPtr root);
 	};
 }

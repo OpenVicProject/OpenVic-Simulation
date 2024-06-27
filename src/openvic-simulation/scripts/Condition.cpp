@@ -352,7 +352,7 @@ bool ConditionManager::setup_conditions(DefinitionManager const& definition_mana
 
 	/* Scopes from other registries */
 	import_identifiers(
-		definition_manager.get_country_manager().get_country_identifiers(),
+		definition_manager.get_country_definition_manager().get_country_definition_identifiers(),
 		GROUP,
 		COUNTRY,
 		COUNTRY,
@@ -484,7 +484,9 @@ callback_t<std::string_view> ConditionManager::expect_parse_identifier(
 		EXPECT_CALL_PLACEHOLDER(GLOBAL_FLAG);
 		EXPECT_CALL_PLACEHOLDER(COUNTRY_FLAG);
 		EXPECT_CALL_PLACEHOLDER(PROVINCE_FLAG);
-		EXPECT_CALL(COUNTRY_TAG, country, definition_manager.get_country_manager(), "THIS", "FROM", "OWNER");
+		EXPECT_CALL(
+			COUNTRY_TAG, country_definition, definition_manager.get_country_definition_manager(), "THIS", "FROM", "OWNER"
+		);
 		EXPECT_CALL(PROVINCE_ID, province_definition, definition_manager.get_map_definition(), "THIS", "FROM");
 		EXPECT_CALL(REGION, region, definition_manager.get_map_definition());
 		EXPECT_CALL(IDEOLOGY, ideology, definition_manager.get_politics_manager().get_ideology_manager());
@@ -507,7 +509,9 @@ callback_t<std::string_view> ConditionManager::expect_parse_identifier(
 		EXPECT_CALL(MODIFIER, triggered_modifier, definition_manager.get_modifier_manager());
 		EXPECT_CALL(MODIFIER, static_modifier, definition_manager.get_modifier_manager());
 		EXPECT_CALL(NATIONAL_VALUE, national_value, definition_manager.get_politics_manager().get_national_value_manager());
-		EXPECT_CALL(CULTURE_UNION, country, definition_manager.get_country_manager(), "THIS", "FROM", "THIS_UNION");
+		EXPECT_CALL(
+			CULTURE_UNION, country_definition, definition_manager.get_country_definition_manager(), "THIS", "FROM", "THIS_UNION"
+		);
 		EXPECT_CALL(CONTINENT, continent, definition_manager.get_map_definition());
 		EXPECT_CALL(CRIME, crime_modifier, definition_manager.get_crime_manager());
 		EXPECT_CALL(TERRAIN, terrain_type, definition_manager.get_map_definition().get_terrain_type_manager());

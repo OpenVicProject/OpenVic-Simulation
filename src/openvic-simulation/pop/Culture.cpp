@@ -1,6 +1,6 @@
 #include "Culture.hpp"
 
-#include "openvic-simulation/country/Country.hpp"
+#include "openvic-simulation/country/CountryDefinition.hpp"
 #include "openvic-simulation/dataloader/NodeTools.hpp"
 #include "openvic-simulation/types/Colour.hpp"
 
@@ -11,13 +11,13 @@ GraphicalCultureType::GraphicalCultureType(std::string_view new_identifier) : Ha
 
 CultureGroup::CultureGroup(
 	std::string_view new_identifier, std::string_view new_leader, GraphicalCultureType const& new_unit_graphical_culture_type,
-	bool new_is_overseas, Country const* new_union_country
+	bool new_is_overseas, CountryDefinition const* new_union_country
 ) : HasIdentifier { new_identifier }, leader { new_leader }, unit_graphical_culture_type { new_unit_graphical_culture_type },
 	is_overseas { new_is_overseas }, union_country { new_union_country } {}
 
 Culture::Culture(
 	std::string_view new_identifier, colour_t new_colour, CultureGroup const& new_group, name_list_t&& new_first_names,
-	name_list_t&& new_last_names, fixed_point_t new_radicalism, Country const* new_primary_country
+	name_list_t&& new_last_names, fixed_point_t new_radicalism, CountryDefinition const* new_primary_country
 ) : HasIdentifierAndColour { new_identifier, new_colour, false }, group { new_group },
 	first_names { std::move(new_first_names) }, last_names { std::move(new_last_names) }, radicalism { new_radicalism },
 	primary_country { new_primary_country } {}
@@ -34,7 +34,7 @@ bool CultureManager::add_graphical_culture_type(std::string_view identifier) {
 
 bool CultureManager::add_culture_group(
 	std::string_view identifier, std::string_view leader, GraphicalCultureType const* graphical_culture_type, bool is_overseas,
-	Country const* union_country
+	CountryDefinition const* union_country
 ) {
 	if (!graphical_culture_types.is_locked()) {
 		Logger::error("Cannot register culture groups until graphical culture types are locked!");
@@ -57,7 +57,7 @@ bool CultureManager::add_culture_group(
 
 bool CultureManager::add_culture(
 	std::string_view identifier, colour_t colour, CultureGroup const& group, name_list_t&& first_names,
-	name_list_t&& last_names, fixed_point_t radicalism, Country const* primary_country
+	name_list_t&& last_names, fixed_point_t radicalism, CountryDefinition const* primary_country
 ) {
 	if (!culture_groups.is_locked()) {
 		Logger::error("Cannot register cultures until culture groups are locked!");
@@ -95,20 +95,21 @@ bool CultureManager::load_graphical_culture_type_file(ast::NodeCPtr root) {
 }
 
 bool CultureManager::_load_culture_group(
-	CountryManager const& country_manager, size_t& total_expected_cultures, std::string_view culture_group_key,
-	ast::NodeCPtr culture_group_node
+	CountryDefinitionManager const& country_definition_manager, size_t& total_expected_cultures,
+	std::string_view culture_group_key, ast::NodeCPtr culture_group_node
 ) {
 	std::string_view leader {};
 	GraphicalCultureType const* unit_graphical_culture_type = default_graphical_culture_type;
 	bool is_overseas = true;
-	Country const* union_country = nullptr;
+	CountryDefinition const* union_country = nullptr;
 
 	bool ret = expect_dictionary_keys_and_default(
 		increment_callback(total_expected_cultures),
 		"leader", ONE_EXACTLY, expect_identifier(assign_variable_callback(leader)),
 		"unit", ZERO_OR_ONE,
 			expect_graphical_culture_type_identifier(assign_variable_callback_pointer(unit_graphical_culture_type)),
-		"union", ZERO_OR_ONE, country_manager.expect_country_identifier(assign_variable_callback_pointer(union_country)),
+		"union", ZERO_OR_ONE,
+			country_definition_manager.expect_country_definition_identifier(assign_variable_callback_pointer(union_country)),
 		"is_overseas", ZERO_OR_ONE, expect_bool(assign_variable_callback(is_overseas))
 	)(culture_group_node);
 	ret &= add_culture_group(culture_group_key, leader, unit_graphical_culture_type, is_overseas, union_country);
@@ -116,20 +117,21 @@ bool CultureManager::_load_culture_group(
 }
 
 bool CultureManager::_load_culture(
-	CountryManager const& country_manager, CultureGroup const& culture_group, std::string_view culture_key,
+	CountryDefinitionManager const& country_definition_manager, CultureGroup const& culture_group, std::string_view culture_key,
 	ast::NodeCPtr culture_node
 ) {
 	colour_t colour = colour_t::null();
 	name_list_t first_names {}, last_names {};
 	fixed_point_t radicalism = 0;
-	Country const* primary_country = nullptr;
+	CountryDefinition const* primary_country = nullptr;
 
 	bool ret = expect_dictionary_keys(
 		"color", ONE_EXACTLY, expect_colour(assign_variable_callback(colour)),
 		"first_names", ONE_EXACTLY, name_list_callback(move_variable_callback(first_names)),
 		"last_names", ONE_EXACTLY, name_list_callback(move_variable_callback(last_names)),
 		"radicalism", ZERO_OR_ONE, expect_fixed_point(assign_variable_callback(radicalism)),
-		"primary", ZERO_OR_ONE, country_manager.expect_country_identifier(assign_variable_callback_pointer(primary_country))
+		"primary", ZERO_OR_ONE,
+			country_definition_manager.expect_country_definition_identifier(assign_variable_callback_pointer(primary_country))
 	)(culture_node);
 	ret &= add_culture(
 		culture_key, colour, culture_group, std::move(first_names), std::move(last_names), radicalism, primary_country
@@ -157,7 +159,7 @@ bool CultureManager::_load_culture(
  * POP-267, POP-268, POP-269, POP-270, POP-271, POP-272, POP-273, POP-274, POP-275, POP-276, POP-277, POP-278, POP-279,
  * POP-280, POP-281, POP-282, POP-283, POP-284
  */
-bool CultureManager::load_culture_file(CountryManager const& country_manager, ast::NodeCPtr root) {
+bool CultureManager::load_culture_file(CountryDefinitionManager const& country_definition_manager, ast::NodeCPtr root) {
 	if (!graphical_culture_types.is_locked()) {
 		Logger::error("Cannot load culture groups until graphical culture types are locked!");
 		return false;
@@ -165,24 +167,24 @@ bool CultureManager::load_culture_file(CountryManager const& country_manager, as
 
 	size_t total_expected_cultures = 0;
 	bool ret = expect_dictionary_reserve_length(culture_groups,
-		[this, &country_manager, &total_expected_cultures](
+		[this, &country_definition_manager, &total_expected_cultures](
 			std::string_view key, ast::NodeCPtr value
 		) -> bool {
-			return _load_culture_group(country_manager, total_expected_cultures, key, value);
+			return _load_culture_group(country_definition_manager, total_expected_cultures, key, value);
 		}
 	)(root);
 	lock_culture_groups();
 	reserve_more_cultures(total_expected_cultures);
 
 	ret &= expect_culture_group_dictionary(
-		[this, &country_manager](CultureGroup const& culture_group, ast::NodeCPtr culture_group_value) -> bool {
+		[this, &country_definition_manager](CultureGroup const& culture_group, ast::NodeCPtr culture_group_value) -> bool {
 			return expect_dictionary(
-				[this, &country_manager, &culture_group](std::string_view key, ast::NodeCPtr value) -> bool {
+				[this, &country_definition_manager, &culture_group](std::string_view key, ast::NodeCPtr value) -> bool {
 					static const string_set_t reserved_keys = { "leader", "unit", "union", "is_overseas" };
 					if (reserved_keys.contains(key)) {
 						return true;
 					}
-					return _load_culture(country_manager, culture_group, key, value);
+					return _load_culture(country_definition_manager, culture_group, key, value);
 				}
 			)(culture_group_value);
 		}

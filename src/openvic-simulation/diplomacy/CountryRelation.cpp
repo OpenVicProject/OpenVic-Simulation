@@ -2,7 +2,7 @@
 
 #include <cassert>
 
-#include "openvic-simulation/country/Country.hpp"
+#include "openvic-simulation/country/CountryDefinition.hpp"
 #include "openvic-simulation/country/CountryInstance.hpp"
 #include "openvic-simulation/utility/ErrorMacros.hpp"
 
@@ -11,7 +11,7 @@ using namespace OpenVic;
 CountryRelationInstanceProxy::CountryRelationInstanceProxy(std::string_view id) : country_id { id } {}
 
 CountryRelationInstanceProxy::CountryRelationInstanceProxy(CountryInstance const* country)
-	: country_id { country->get_base_country()->get_identifier() } {}
+	: country_id { country->get_country_definition()->get_identifier() } {}
 
 CountryRelationInstanceProxy::operator std::string_view() const {
 	return country_id;

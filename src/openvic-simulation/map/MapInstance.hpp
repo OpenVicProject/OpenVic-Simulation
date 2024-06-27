@@ -12,7 +12,7 @@ namespace OpenVic {
 	struct ProvinceHistoryManager;
 	struct IdeologyManager;
 	struct IssueManager;
-	struct Country;
+	struct CountryDefinition;
 
 	/* REQUIREMENTS:
 	 * MAP-4
@@ -47,7 +47,7 @@ namespace OpenVic {
 		bool setup(BuildingTypeManager const& building_type_manager);
 		bool apply_history_to_provinces(
 			ProvinceHistoryManager const& history_manager, Date date, IdeologyManager const& ideology_manager,
-			IssueManager const& issue_manager, Country const& country
+			IssueManager const& issue_manager, CountryDefinition const& country
 		);
 
 		void update_gamestate(Date today);

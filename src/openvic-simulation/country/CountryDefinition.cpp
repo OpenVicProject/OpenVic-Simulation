@@ -1,4 +1,4 @@
-#include "Country.hpp"
+#include "CountryDefinition.hpp"
 
 #include <string_view>
 
@@ -22,7 +22,7 @@ CountryParty::CountryParty(
 ) : HasIdentifierAndColour { new_identifier, new_ideology.get_colour(), false }, start_date { new_start_date },
 	end_date { new_end_date }, ideology { new_ideology }, policies { std::move(new_policies) } {}
 
-Country::Country(
+CountryDefinition::CountryDefinition(
 	std::string_view new_identifier,
 	colour_t new_colour,
 	size_t new_index,
@@ -45,10 +45,10 @@ Country::Country(
 	secondary_unit_colour { new_secondary_unit_colour },
 	tertiary_unit_colour { new_tertiary_unit_colour } {}
 
-bool CountryManager::add_country(
+bool CountryDefinitionManager::add_country(
 	std::string_view identifier, colour_t colour, GraphicalCultureType const* graphical_culture,
-	IdentifierRegistry<CountryParty>&& parties, Country::unit_names_map_t&& unit_names, bool dynamic_tag,
-	Country::government_colour_map_t&& alternative_colours
+	IdentifierRegistry<CountryParty>&& parties, CountryDefinition::unit_names_map_t&& unit_names, bool dynamic_tag,
+	CountryDefinition::government_colour_map_t&& alternative_colours
 ) {
 	if (identifier.empty()) {
 		Logger::error("Invalid country identifier - empty!");
@@ -67,22 +67,22 @@ bool CountryManager::add_country(
 
 	static constexpr colour_t default_colour = colour_t::fill_as(colour_t::max_value);
 
-	return countries.add_item({
-		identifier, colour, countries.size(), *graphical_culture, std::move(parties), std::move(unit_names),
+	return country_definitions.add_item({
+		identifier, colour, get_country_definition_count(), *graphical_culture, std::move(parties), std::move(unit_names),
 		dynamic_tag, std::move(alternative_colours),
 		/* Default to country colour for the chest and grey for the others. Update later if necessary. */
 		colour, default_colour, default_colour
 	});
 }
 
-bool CountryManager::load_countries(
+bool CountryDefinitionManager::load_countries(
 	DefinitionManager const& definition_manager, Dataloader const& dataloader, ast::NodeCPtr root
 ) {
 	static constexpr std::string_view common_dir = "common/";
 	bool is_dynamic = false;
 
 	const bool ret = expect_dictionary_reserve_length(
-		countries,
+		country_definitions,
 		[this, &definition_manager, &is_dynamic, &dataloader](std::string_view key, ast::NodeCPtr value) -> bool {
 			if (key == "dynamic_tags") {
 				return expect_bool([&is_dynamic](bool val) -> bool {
@@ -117,12 +117,12 @@ bool CountryManager::load_countries(
 			return false;
 		}
 	)(root);
-	lock_countries();
+	lock_country_definitions();
 	return ret;
 }
 
-bool CountryManager::load_country_colours(ast::NodeCPtr root){
-	return countries.expect_item_dictionary([](Country& country, ast::NodeCPtr colour_node) -> bool {
+bool CountryDefinitionManager::load_country_colours(ast::NodeCPtr root){
+	return country_definitions.expect_item_dictionary([](CountryDefinition& country, ast::NodeCPtr colour_node) -> bool {
 		return expect_dictionary_keys(
 			"color1", ONE_EXACTLY, expect_colour(assign_variable_callback(country.primary_unit_colour)),
 			"color2", ONE_EXACTLY, expect_colour(assign_variable_callback(country.secondary_unit_colour)),
@@ -131,7 +131,7 @@ bool CountryManager::load_country_colours(ast::NodeCPtr root){
 	})(root);
 }
 
-node_callback_t CountryManager::load_country_party(
+node_callback_t CountryDefinitionManager::load_country_party(
 	PoliticsManager const& politics_manager, IdentifierRegistry<CountryParty>& country_parties
 ) const {
 	return [&politics_manager, &country_parties](ast::NodeCPtr value) -> bool {
@@ -177,14 +177,14 @@ node_callback_t CountryManager::load_country_party(
 	};
 }
 
-bool CountryManager::load_country_data_file(
+bool CountryDefinitionManager::load_country_data_file(
 	DefinitionManager const& definition_manager, std::string_view name, bool is_dynamic, ast::NodeCPtr root
 ) {
 	colour_t colour;
 	GraphicalCultureType const* graphical_culture;
 	IdentifierRegistry<CountryParty> parties { "country parties" };
-	Country::unit_names_map_t unit_names;
-	Country::government_colour_map_t alternative_colours;
+	CountryDefinition::unit_names_map_t unit_names;
+	CountryDefinition::government_colour_map_t alternative_colours;
 	bool ret = expect_dictionary_keys_and_default(
 		[&definition_manager, &alternative_colours](std::string_view key, ast::NodeCPtr value) -> bool {
 			return definition_manager.get_politics_manager().get_government_type_manager().expect_government_type_str(

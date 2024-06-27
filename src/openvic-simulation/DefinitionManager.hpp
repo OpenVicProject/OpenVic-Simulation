@@ -1,6 +1,6 @@
 #pragma once
 
-#include "openvic-simulation/country/Country.hpp"
+#include "openvic-simulation/country/CountryDefinition.hpp"
 #include "openvic-simulation/diplomacy/DiplomaticAction.hpp"
 #include "openvic-simulation/economy/EconomyManager.hpp"
 #include "openvic-simulation/history/HistoryManager.hpp"
@@ -29,7 +29,7 @@ namespace OpenVic {
 		HistoryManager PROPERTY_REF(history_manager);
 		ResearchManager PROPERTY_REF(research_manager);
 		PopManager PROPERTY_REF(pop_manager);
-		CountryManager PROPERTY_REF(country_manager);
+		CountryDefinitionManager PROPERTY_REF(country_definition_manager);
 		CrimeManager PROPERTY_REF(crime_manager);
 		EventManager PROPERTY_REF(event_manager);
 		DecisionManager PROPERTY_REF(decision_manager);

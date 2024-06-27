@@ -4,7 +4,6 @@
 
 #include "openvic-simulation/dataloader/NodeTools.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPointMap.hpp"
-#include "openvic-simulation/types/HasIdentifier.hpp"
 #include "openvic-simulation/utility/Getters.hpp"
 #include "openvic-simulation/utility/Logger.hpp"
 
@@ -28,6 +27,11 @@ namespace OpenVic {
 		return true;
 	}
 
+	template<typename T>
+	concept HasGetIdentifier = requires(T const& t) {
+		{ t.get_identifier() } -> std::same_as<std::string_view>;
+	};
+
 	/* Registry Value Info - the type that is being registered, and a unique identifier string getter. */
 	template<typename ValueInfo>
 	concept RegistryValueInfo = requires(
@@ -37,8 +41,8 @@ namespace OpenVic {
 		{ ValueInfo::get_external_value(item) } -> std::same_as<typename ValueInfo::external_value_type&>;
 		{ ValueInfo::get_external_value(const_item) } -> std::same_as<typename ValueInfo::external_value_type const&>;
 	};
-	template<std::derived_from<HasIdentifier> Value>
-	struct RegistryValueInfoHasIdentifier {
+	template<HasGetIdentifier Value>
+	struct RegistryValueInfoHasGetIdentifier {
 		using internal_value_type = Value;
 		using external_value_type = Value;
 
@@ -484,34 +488,34 @@ namespace OpenVic {
 		RegistryStorageInfo<StorageInfo, typename RegistryItemInfoInstance<typename ValueInfo::internal_value_type>::item_type>
 	using InstanceRegistry = UniqueKeyRegistry<ValueInfo, RegistryItemInfoInstance, StorageInfo, Case>;
 
-	/* HasIdentifier Specialisations */
+	/* HasGetIdentifier Specialisations */
 	template<
-		std::derived_from<HasIdentifier> Value, template<typename> typename StorageInfo = RegistryStorageInfoVector,
+		HasGetIdentifier Value, template<typename> typename StorageInfo = RegistryStorageInfoVector,
 		StringMapCase Case = StringMapCaseSensitive
 	>
-	using IdentifierRegistry = ValueRegistry<RegistryValueInfoHasIdentifier<Value>, StorageInfo, Case>;
+	using IdentifierRegistry = ValueRegistry<RegistryValueInfoHasGetIdentifier<Value>, StorageInfo, Case>;
 
 	template<
-		std::derived_from<HasIdentifier> Value, template<typename> typename StorageInfo = RegistryStorageInfoVector,
+		HasGetIdentifier Value, template<typename> typename StorageInfo = RegistryStorageInfoVector,
 		StringMapCase Case = StringMapCaseSensitive
 	>
 	using IdentifierPointerRegistry =
-		ValueRegistry<RegistryValueInfoPointer<RegistryValueInfoHasIdentifier<Value>>, StorageInfo, Case>;
+		ValueRegistry<RegistryValueInfoPointer<RegistryValueInfoHasGetIdentifier<Value>>, StorageInfo, Case>;
 
 	template<
-		std::derived_from<HasIdentifier> Value, template<typename> typename StorageInfo = RegistryStorageInfoVector,
+		HasGetIdentifier Value, template<typename> typename StorageInfo = RegistryStorageInfoVector,
 		StringMapCase Case = StringMapCaseSensitive
 	>
-	using IdentifierInstanceRegistry = InstanceRegistry<RegistryValueInfoHasIdentifier<Value>, StorageInfo, Case>;
+	using IdentifierInstanceRegistry = InstanceRegistry<RegistryValueInfoHasGetIdentifier<Value>, StorageInfo, Case>;
 
-	/* Case-Insensitive HasIdentifier Specialisations */
-	template<std::derived_from<HasIdentifier> Value, template<typename> typename StorageInfo = RegistryStorageInfoVector>
+	/* Case-Insensitive HasGetIdentifier Specialisations */
+	template<HasGetIdentifier Value, template<typename> typename StorageInfo = RegistryStorageInfoVector>
 	using CaseInsensitiveIdentifierRegistry = IdentifierRegistry<Value, StorageInfo, StringMapCaseInsensitive>;
 
-	template<std::derived_from<HasIdentifier> Value, template<typename> typename StorageInfo = RegistryStorageInfoVector>
+	template<HasGetIdentifier Value, template<typename> typename StorageInfo = RegistryStorageInfoVector>
 	using CaseInsensitiveIdentifierPointerRegistry = IdentifierPointerRegistry<Value, StorageInfo, StringMapCaseInsensitive>;
 
-	template<std::derived_from<HasIdentifier> Value, template<typename> typename StorageInfo = RegistryStorageInfoVector>
+	template<HasGetIdentifier Value, template<typename> typename StorageInfo = RegistryStorageInfoVector>
 	using CaseInsensitiveIdentifierInstanceRegistry = IdentifierInstanceRegistry<Value, StorageInfo, StringMapCaseInsensitive>;
 
 /* Macros to generate declaration and constant accessor methods for a UniqueKeyRegistry member variable. */

@@ -528,7 +528,8 @@ bool Dataloader::_load_history(DefinitionManager& definition_manager, bool unuse
 				const std::string filename = file.stem().string();
 				const std::string_view country_id = extract_basic_identifier_prefix(filename);
 
-				Country const* country = definition_manager.get_country_manager().get_country_by_identifier(country_id);
+				CountryDefinition const* country =
+					definition_manager.get_country_definition_manager().get_country_definition_by_identifier(country_id);
 				if (country == nullptr) {
 					if (unused_history_file_warnings) {
 						Logger::warning("Found history file for non-existent country: ", country_id);
@@ -628,7 +629,7 @@ bool Dataloader::_load_history(DefinitionManager& definition_manager, bool unuse
 			lookup_files_in_dir(diplomacy_history_directory, ".txt"),
 			[this, &definition_manager, &diplomatic_history_manager](fs::path const& file) -> bool {
 				return diplomatic_history_manager.load_diplomacy_history_file(
-					definition_manager.get_country_manager(), parse_defines(file).get_file_node()
+					definition_manager.get_country_definition_manager(), parse_defines(file).get_file_node()
 				);
 			}
 		);
@@ -1008,20 +1009,20 @@ bool Dataloader::load_defines(DefinitionManager& definition_manager) {
 		Logger::error("Failed to load bookmarks!");
 		ret = false;
 	}
-	if (!definition_manager.get_country_manager().load_countries(
+	if (!definition_manager.get_country_definition_manager().load_countries(
 		definition_manager, *this, parse_defines(lookup_file(countries_file)).get_file_node()
 	)) {
 		Logger::error("Failed to load countries!");
 		ret = false;
 	}
-	if (!definition_manager.get_country_manager().load_country_colours(
+	if (!definition_manager.get_country_definition_manager().load_country_colours(
 		parse_defines(lookup_file(country_colours_file)).get_file_node()
 	)) {
 		Logger::error("Failed to load country colours!");
 		ret = false;
 	}
 	if (!definition_manager.get_pop_manager().get_culture_manager().load_culture_file(
-		definition_manager.get_country_manager(), parse_defines(lookup_file(culture_file)).get_file_node()
+		definition_manager.get_country_definition_manager(), parse_defines(lookup_file(culture_file)).get_file_node()
 	)) {
 		Logger::error("Failed to load cultures!");
 		ret = false;

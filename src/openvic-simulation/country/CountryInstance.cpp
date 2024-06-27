@@ -1,23 +1,26 @@
 #include "CountryInstance.hpp"
 
-#include "openvic-simulation/country/Country.hpp"
+#include "openvic-simulation/country/CountryDefinition.hpp"
 #include "openvic-simulation/history/CountryHistory.hpp"
 #include "openvic-simulation/military/UnitInstance.hpp"
 
 using namespace OpenVic;
 
-CountryInstance::CountryInstance(Country const* new_base_country)
-  : base_country { new_base_country }, primary_culture { nullptr }, religion { nullptr }, ruling_party { nullptr },
+CountryInstance::CountryInstance(CountryDefinition const* new_country_definition)
+  : country_definition { new_country_definition }, primary_culture { nullptr }, religion { nullptr }, ruling_party { nullptr },
 	last_election {}, capital { nullptr }, government_type { nullptr }, plurality { 0 }, national_value { nullptr },
 	civilised { false }, prestige { 0 } {}
 
 std::string_view CountryInstance::get_identifier() const {
-	return base_country != nullptr ? base_country->get_identifier() : "NULL";
+	return country_definition != nullptr ? country_definition->get_identifier() : "NULL";
 }
 
 bool CountryInstance::add_accepted_culture(Culture const* new_accepted_culture) {
 	if (std::find(accepted_cultures.begin(), accepted_cultures.end(), new_accepted_culture) != accepted_cultures.end()) {
-		Logger::warning("Attempted to add accepted culture ", new_accepted_culture->get_identifier(), " to country ", base_country->get_identifier(), ": already present!");
+		Logger::warning(
+			"Attempted to add accepted culture ", new_accepted_culture->get_identifier(), " to country ",
+			country_definition->get_identifier(), ": already present!"
+		);
 		return false;
 	}
 	accepted_cultures.push_back(new_accepted_culture);
@@ -27,7 +30,10 @@ bool CountryInstance::add_accepted_culture(Culture const* new_accepted_culture) 
 bool CountryInstance::remove_accepted_culture(Culture const* culture_to_remove) {
 	auto existing_entry = std::find(accepted_cultures.begin(), accepted_cultures.end(), culture_to_remove);
 	if (existing_entry == accepted_cultures.end()) {
-		Logger::warning("Attempted to remove accepted culture ", culture_to_remove->get_identifier(), " from country ", base_country->get_identifier(), ": not present!");
+		Logger::warning(
+			"Attempted to remove accepted culture ", culture_to_remove->get_identifier(), " from country ",
+			country_definition->get_identifier(), ": not present!"
+		);
 		return false;
 	}
 	accepted_cultures.erase(existing_entry);
@@ -44,7 +50,10 @@ bool CountryInstance::remove_from_upper_house(Ideology const* party) {
 
 bool CountryInstance::add_reform(Reform const* new_reform) {
 	if (std::find(reforms.begin(), reforms.end(), new_reform) != reforms.end()) {
-		Logger::warning("Attempted to add reform ", new_reform->get_identifier(), " to country ", base_country->get_identifier(), ": already present!");
+		Logger::warning(
+			"Attempted to add reform ", new_reform->get_identifier(), " to country ", country_definition->get_identifier(),
+			": already present!"
+		);
 		return false;
 	}
 	reforms.push_back(new_reform);
@@ -54,7 +63,10 @@ bool CountryInstance::add_reform(Reform const* new_reform) {
 bool CountryInstance::remove_reform(Reform const* reform_to_remove) {
 	auto existing_entry = std::find(reforms.begin(), reforms.end(), reform_to_remove);
 	if (existing_entry == reforms.end()) {
-		Logger::warning("Attempted to remove reform ", reform_to_remove->get_identifier(), " from country ", base_country->get_identifier(), ": not present!");
+		Logger::warning(
+			"Attempted to remove reform ", reform_to_remove->get_identifier(), " from country ",
+			country_definition->get_identifier(), ": not present!"
+		);
 		return false;
 	}
 	reforms.erase(existing_entry);
@@ -98,11 +110,11 @@ bool CountryInstance::apply_history_to_country(CountryHistoryEntry const* entry)
 	return ret;
 }
 
-bool CountryInstanceManager::generate_country_instances(CountryManager const& country_manager) {
-	reserve_more(country_instances, country_manager.get_country_count());
+bool CountryInstanceManager::generate_country_instances(CountryDefinitionManager const& country_definition_manager) {
+	reserve_more(country_instances, country_definition_manager.get_country_definition_count());
 
-	for (Country const& country : country_manager.get_countries()) {
-		country_instances.push_back({ &country });
+	for (CountryDefinition const& country_definition : country_definition_manager.get_country_definitions()) {
+		country_instances.add_item({ &country_definition });
 	}
 
 	return true;
@@ -114,9 +126,10 @@ bool CountryInstanceManager::apply_history_to_countries(
 ) {
 	bool ret = true;
 
-	for (CountryInstance& country_instance : country_instances) {
-		if (!country_instance.get_base_country()->is_dynamic_tag()) {
-			CountryHistoryMap const* history_map = history_manager.get_country_history(country_instance.get_base_country());
+	for (CountryInstance& country_instance : country_instances.get_items()) {
+		if (!country_instance.get_country_definition()->is_dynamic_tag()) {
+			CountryHistoryMap const* history_map =
+				history_manager.get_country_history(country_instance.get_country_definition());
 
 			if (history_map != nullptr) {
 				CountryHistoryEntry const* oob_history_entry = nullptr;

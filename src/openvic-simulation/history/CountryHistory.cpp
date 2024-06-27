@@ -1,14 +1,15 @@
 #include "CountryHistory.hpp"
 
+#include "openvic-simulation/country/CountryDefinition.hpp"
 #include "openvic-simulation/DefinitionManager.hpp"
 
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;
 
-CountryHistoryEntry::CountryHistoryEntry(Country const& new_country, Date new_date)
+CountryHistoryEntry::CountryHistoryEntry(CountryDefinition const& new_country, Date new_date)
 	: HistoryEntry { new_date }, country { new_country } {}
 
-CountryHistoryMap::CountryHistoryMap(Country const& new_country) : country { new_country } {}
+CountryHistoryMap::CountryHistoryMap(CountryDefinition const& new_country) : country { new_country } {}
 
 std::unique_ptr<CountryHistoryEntry> CountryHistoryMap::_make_entry(Date date) const {
 	return std::unique_ptr<CountryHistoryEntry> { new CountryHistoryEntry { country, date } };
@@ -21,14 +22,14 @@ bool CountryHistoryMap::_load_history_entry(
 	PoliticsManager const& politics_manager = definition_manager.get_politics_manager();
 	IssueManager const& issue_manager = politics_manager.get_issue_manager();
 	CultureManager const& culture_manager = definition_manager.get_pop_manager().get_culture_manager();
-	CountryManager const& country_manager = definition_manager.get_country_manager();
+	CountryDefinitionManager const& country_definition_manager = definition_manager.get_country_definition_manager();
 	TechnologyManager const& technology_manager = definition_manager.get_research_manager().get_technology_manager();
 	InventionManager const& invention_manager = definition_manager.get_research_manager().get_invention_manager();
 	DecisionManager const& decision_manager = definition_manager.get_decision_manager();
 
 	return expect_dictionary_keys_and_default(
 		[this, &definition_manager, &dataloader, &deployment_manager, &issue_manager, &technology_manager, &invention_manager,
-			&country_manager, &entry](std::string_view key, ast::NodeCPtr value) -> bool {
+			&country_definition_manager, &entry](std::string_view key, ast::NodeCPtr value) -> bool {
 			ReformGroup const* reform_group = issue_manager.get_reform_group_by_identifier(key);
 			if (reform_group != nullptr) {
 				return issue_manager.expect_reform_identifier([&entry, reform_group](Reform const& reform) -> bool {
@@ -109,7 +110,7 @@ bool CountryHistoryMap::_load_history_entry(
 			assign_variable_callback_pointer_opt(entry.tech_school)
 		),
 		"foreign_investment", ZERO_OR_ONE,
-			country_manager.expect_country_decimal_map(move_variable_callback(entry.foreign_investment)),
+			country_definition_manager.expect_country_definition_decimal_map(move_variable_callback(entry.foreign_investment)),
 		"literacy", ZERO_OR_ONE, expect_fixed_point(assign_variable_callback(entry.literacy)),
 		"non_state_culture_literacy", ZERO_OR_ONE,
 			expect_fixed_point(assign_variable_callback(entry.nonstate_culture_literacy)),
@@ -200,7 +201,7 @@ bool CountryHistoryManager::is_locked() const {
 	return locked;
 }
 
-CountryHistoryMap const* CountryHistoryManager::get_country_history(Country const* country) const {
+CountryHistoryMap const* CountryHistoryManager::get_country_history(CountryDefinition const* country) const {
 	if (country == nullptr) {
 		Logger::error("Attempted to access history of null country");
 		return nullptr;
@@ -215,7 +216,7 @@ CountryHistoryMap const* CountryHistoryManager::get_country_history(Country cons
 }
 
 bool CountryHistoryManager::load_country_history_file(
-	DefinitionManager& definition_manager, Dataloader const& dataloader, Country const& country, ast::NodeCPtr root
+	DefinitionManager& definition_manager, Dataloader const& dataloader, CountryDefinition const& country, ast::NodeCPtr root
 ) {
 	if (locked) {
 		Logger::error("Attempted to load country history file for ", country, " after country history registry was locked!");
