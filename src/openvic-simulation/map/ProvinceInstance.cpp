@@ -39,8 +39,8 @@ bool ProvinceInstance::expand_building(size_t building_index) {
 	return building->expand();
 }
 
-void ProvinceInstance::_add_pop(Pop pop) {
-	pop.set_location(this);
+void ProvinceInstance::_add_pop(Pop&& pop) {
+	pop.set_location(*this);
 	pops.push_back(std::move(pop));
 }
 
@@ -54,11 +54,11 @@ bool ProvinceInstance::add_pop(Pop&& pop) {
 	}
 }
 
-bool ProvinceInstance::add_pop_vec(std::vector<Pop> const& pop_vec) {
+bool ProvinceInstance::add_pop_vec(std::vector<PopBase> const& pop_vec) {
 	if (!province_definition.is_water()) {
 		reserve_more(pops, pop_vec.size());
-		for (Pop const& pop : pop_vec) {
-			_add_pop(pop);
+		for (PopBase const& pop : pop_vec) {
+			_add_pop(Pop { pop });
 		}
 		return true;
 	} else {

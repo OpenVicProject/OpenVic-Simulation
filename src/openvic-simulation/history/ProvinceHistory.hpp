@@ -39,9 +39,7 @@ namespace OpenVic {
 		ordered_map<BuildingType const*, BuildingType::level_t> PROPERTY(province_buildings);
 		ordered_map<BuildingType const*, BuildingType::level_t> PROPERTY(state_buildings);
 		fixed_point_map_t<Ideology const*> PROPERTY(party_loyalties);
-
-		// TODO - use minimal pop representation (size, type, culture, religion, consciousness, militancy, rebel type)
-		std::vector<Pop> PROPERTY(pops);
+		std::vector<PopBase> PROPERTY(pops);
 
 		ProvinceHistoryEntry(ProvinceDefinition const& new_province, Date new_date);
 
