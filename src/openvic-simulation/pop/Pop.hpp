@@ -26,22 +26,36 @@ namespace OpenVic {
 	struct ProvinceInstance;
 	struct CountryParty;
 
-	/* REQUIREMENTS:
-	 * POP-18, POP-19, POP-20, POP-21, POP-34, POP-35, POP-36, POP-37
-	 */
-	struct Pop {
+	struct PopBase {
 		friend struct PopManager;
 
 		using pop_size_t = int64_t;
 
+	protected:
+		PopType const& PROPERTY_ACCESS(type, protected);
+		Culture const& PROPERTY_ACCESS(culture, protected);
+		Religion const& PROPERTY_ACCESS(religion, protected);
+		pop_size_t PROPERTY_ACCESS(size, protected);
+		fixed_point_t PROPERTY_ACCESS(militancy, protected);
+		fixed_point_t PROPERTY_ACCESS(consciousness, protected);
+		RebelType const* PROPERTY_ACCESS(rebel_type, protected);
+
+		PopBase(
+			PopType const& new_type, Culture const& new_culture, Religion const& new_religion, pop_size_t new_size,
+			fixed_point_t new_militancy, fixed_point_t new_consciousness, RebelType const* new_rebel_type
+		);
+	};
+
+	/* REQUIREMENTS:
+	 * POP-18, POP-19, POP-20, POP-21, POP-34, POP-35, POP-36, POP-37
+	 */
+	struct Pop : PopBase {
+		friend struct ProvinceInstance;
+
 		static constexpr pop_size_t MAX_SIZE = std::numeric_limits<pop_size_t>::max();
 
 	private:
-		PopType const& PROPERTY(type);
-		Culture const& PROPERTY(culture);
-		Religion const& PROPERTY(religion);
-		pop_size_t PROPERTY(size);
-		ProvinceInstance const* PROPERTY_RW(location);
+		ProvinceInstance const* PROPERTY(location);
 
 		/* Last day's size change by source. */
 		pop_size_t PROPERTY(total_change);
@@ -52,10 +66,7 @@ namespace OpenVic {
 		pop_size_t PROPERTY(num_migrated_external);
 		pop_size_t PROPERTY(num_migrated_colonial);
 
-		fixed_point_t PROPERTY(militancy);
-		fixed_point_t PROPERTY(consciousness);
 		fixed_point_t PROPERTY(literacy);
-		RebelType const* PROPERTY(rebel_type);
 
 		fixed_point_map_t<Ideology const*> PROPERTY(ideologies);
 		fixed_point_map_t<Issue const*> PROPERTY(issues);
@@ -70,25 +81,19 @@ namespace OpenVic {
 		fixed_point_t PROPERTY(everyday_needs_fulfilled);
 		fixed_point_t PROPERTY(luxury_needs_fulfilled);
 
-		Pop(
-			PopType const& new_type,
-			Culture const& new_culture,
-			Religion const& new_religion,
-			pop_size_t new_size,
-			fixed_point_t new_militancy,
-			fixed_point_t new_consciousness,
-			RebelType const* new_rebel_type
-		);
+		Pop(PopBase const& pop_base);
 
 	public:
-		Pop(Pop const&) = default;
+		Pop(Pop const&) = delete;
 		Pop(Pop&&) = default;
 		Pop& operator=(Pop const&) = delete;
 		Pop& operator=(Pop&&) = delete;
 
 		void setup_pop_test_values(
-			IdeologyManager const& ideology_manager, IssueManager const& issue_manager, Country const& country
+			IdeologyManager const& ideology_manager, IssueManager const& issue_manager, CountryDefinition const& country
 		);
+
+		void set_location(ProvinceInstance const& new_location);
 	};
 
 	struct Strata : HasIdentifier {
@@ -319,8 +324,8 @@ namespace OpenVic {
 
 		bool load_pop_type_chances_file(ast::NodeCPtr root);
 
-		bool load_pop_into_vector(
-			RebelManager const& rebel_manager, std::vector<Pop>& vec, PopType const& type, ast::NodeCPtr pop_node,
+		bool load_pop_bases_into_vector(
+			RebelManager const& rebel_manager, std::vector<PopBase>& vec, PopType const& type, ast::NodeCPtr pop_node,
 			bool *non_integer_size
 		) const;
 

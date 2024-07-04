@@ -98,11 +98,11 @@ bool InstanceManager::load_bookmark(Bookmark const* new_bookmark) {
 		// TODO - the following arguments are for generating test pop attributes
 		definition_manager.get_politics_manager().get_ideology_manager(),
 		definition_manager.get_politics_manager().get_issue_manager(),
-		*definition_manager.get_country_manager().get_country_by_identifier("ENG")
+		*definition_manager.get_country_definition_manager().get_country_definition_by_identifier("ENG")
 	);
 	ret &= map_instance.get_state_manager().generate_states(map_instance);
 
-	ret &= country_instance_manager.generate_country_instances(definition_manager.get_country_manager());
+	ret &= country_instance_manager.generate_country_instances(definition_manager.get_country_definition_manager());
 	ret &= country_instance_manager.apply_history_to_countries(
 		definition_manager.get_history_manager().get_country_manager(), today, unit_instance_manager, map_instance
 	);

@@ -10,7 +10,7 @@
 
 namespace OpenVic {
 	struct CountryHistoryMap;
-	struct Country;
+	struct CountryDefinition;
 	struct Culture;
 	struct Religion;
 	struct CountryParty;
@@ -29,7 +29,7 @@ namespace OpenVic {
 		friend struct CountryHistoryMap;
 
 	private:
-		Country const& PROPERTY(country);
+		CountryDefinition const& PROPERTY(country);
 
 		std::optional<Culture const*> PROPERTY(primary_culture);
 		std::vector<Culture const*> PROPERTY(accepted_cultures);
@@ -48,7 +48,7 @@ namespace OpenVic {
 		std::optional<TechnologySchool const*> PROPERTY(tech_school);
 		ordered_map<Technology const*, bool> PROPERTY(technologies);
 		ordered_map<Invention const*, bool> PROPERTY(inventions);
-		fixed_point_map_t<Country const*> PROPERTY(foreign_investment);
+		fixed_point_map_t<CountryDefinition const*> PROPERTY(foreign_investment);
 		std::optional<fixed_point_t> PROPERTY(consciousness);
 		std::optional<fixed_point_t> PROPERTY(nonstate_consciousness);
 		std::optional<fixed_point_t> PROPERTY(literacy);
@@ -58,9 +58,9 @@ namespace OpenVic {
 		string_set_t PROPERTY(country_flags);
 		string_set_t PROPERTY(global_flags);
 		ordered_map<GovernmentType const*, GovernmentType const*> PROPERTY(government_flag_overrides);
-		ordered_set<Decision const*> decisions;
+		ordered_set<Decision const*> PROPERTY(decisions);
 
-		CountryHistoryEntry(Country const& new_country, Date new_date);
+		CountryHistoryEntry(CountryDefinition const& new_country, Date new_date);
 	};
 
 	class Dataloader;
@@ -71,10 +71,10 @@ namespace OpenVic {
 		friend struct CountryHistoryManager;
 
 	private:
-		Country const& PROPERTY(country);
+		CountryDefinition const& PROPERTY(country);
 
 	protected:
-		CountryHistoryMap(Country const& new_country);
+		CountryHistoryMap(CountryDefinition const& new_country);
 
 		std::unique_ptr<CountryHistoryEntry> _make_entry(Date date) const override;
 		bool _load_history_entry(
@@ -85,7 +85,7 @@ namespace OpenVic {
 
 	struct CountryHistoryManager {
 	private:
-		ordered_map<Country const*, CountryHistoryMap> country_histories;
+		ordered_map<CountryDefinition const*, CountryHistoryMap> country_histories;
 		bool locked = false;
 
 	public:
@@ -95,10 +95,11 @@ namespace OpenVic {
 		void lock_country_histories();
 		bool is_locked() const;
 
-		CountryHistoryMap const* get_country_history(Country const* country) const;
+		CountryHistoryMap const* get_country_history(CountryDefinition const* country) const;
 
 		bool load_country_history_file(
-			DefinitionManager& definition_manager, Dataloader const& dataloader, Country const& country, ast::NodeCPtr root
+			DefinitionManager& definition_manager, Dataloader const& dataloader, CountryDefinition const& country,
+			ast::NodeCPtr root
 		);
 	};
 

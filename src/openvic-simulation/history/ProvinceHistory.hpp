@@ -15,7 +15,7 @@
 namespace OpenVic {
 	struct ProvinceHistoryMap;
 	struct ProvinceDefinition;
-	struct Country;
+	struct CountryDefinition;
 	struct GoodDefinition;
 	struct TerrainType;
 	struct Ideology;
@@ -27,21 +27,19 @@ namespace OpenVic {
 	private:
 		ProvinceDefinition const& PROPERTY(province);
 
-		std::optional<Country const*> PROPERTY(owner);
-		std::optional<Country const*> PROPERTY(controller);
+		std::optional<CountryDefinition const*> PROPERTY(owner);
+		std::optional<CountryDefinition const*> PROPERTY(controller);
 		std::optional<ProvinceInstance::colony_status_t> PROPERTY(colonial);
 		std::optional<bool> PROPERTY(slave);
-		std::vector<Country const*> PROPERTY(add_cores);
-		std::vector<Country const*> PROPERTY(remove_cores);
+		std::vector<CountryDefinition const*> PROPERTY(add_cores);
+		std::vector<CountryDefinition const*> PROPERTY(remove_cores);
 		std::optional<GoodDefinition const*> PROPERTY(rgo);
 		std::optional<ProvinceInstance::life_rating_t> PROPERTY(life_rating);
 		std::optional<TerrainType const*> PROPERTY(terrain_type);
 		ordered_map<BuildingType const*, BuildingType::level_t> PROPERTY(province_buildings);
 		ordered_map<BuildingType const*, BuildingType::level_t> PROPERTY(state_buildings);
 		fixed_point_map_t<Ideology const*> PROPERTY(party_loyalties);
-
-		// TODO - use minimal pop representation (size, type, culture, religion, consciousness, militancy, rebel type)
-		std::vector<Pop> PROPERTY(pops);
+		std::vector<PopBase> PROPERTY(pops);
 
 		ProvinceHistoryEntry(ProvinceDefinition const& new_province, Date new_date);
 

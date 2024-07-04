@@ -19,7 +19,7 @@ bool ProvinceHistoryMap::_load_history_entry(
 	DefinitionManager const& definition_manager, ProvinceHistoryEntry& entry, ast::NodeCPtr root
 ) {
 	BuildingTypeManager const& building_type_manager = definition_manager.get_economy_manager().get_building_type_manager();
-	CountryManager const& country_manager = definition_manager.get_country_manager();
+	CountryDefinitionManager const& country_definition_manager = definition_manager.get_country_definition_manager();
 	GoodDefinitionManager const& good_definition_manager =
 		definition_manager.get_economy_manager().get_good_definition_manager();
 	IdeologyManager const& ideology_manager = definition_manager.get_politics_manager().get_ideology_manager();
@@ -53,12 +53,16 @@ bool ProvinceHistoryMap::_load_history_entry(
 
 			return _load_history_sub_entry_callback(definition_manager, entry.get_date(), value, key, value);
 		},
-		"owner", ZERO_OR_ONE,
-			country_manager.expect_country_identifier(assign_variable_callback_pointer_opt(entry.owner, true)),
-		"controller", ZERO_OR_ONE,
-			country_manager.expect_country_identifier(assign_variable_callback_pointer_opt(entry.controller, true)),
-		"add_core", ZERO_OR_MORE, country_manager.expect_country_identifier(vector_callback_pointer(entry.add_cores)),
-		"remove_core", ZERO_OR_MORE, country_manager.expect_country_identifier(
+		"owner", ZERO_OR_ONE, country_definition_manager.expect_country_definition_identifier(
+			assign_variable_callback_pointer_opt(entry.owner, true)
+		),
+		"controller", ZERO_OR_ONE, country_definition_manager.expect_country_definition_identifier(
+			assign_variable_callback_pointer_opt(entry.controller, true)
+		),
+		"add_core", ZERO_OR_MORE, country_definition_manager.expect_country_definition_identifier(
+			vector_callback_pointer(entry.add_cores)
+		),
+		"remove_core", ZERO_OR_MORE, country_definition_manager.expect_country_definition_identifier(
 			vector_callback_pointer(entry.remove_cores)
 		),
 		"colonial", ZERO_OR_ONE,
@@ -210,7 +214,7 @@ bool ProvinceHistoryEntry::_load_province_pop_history(
 	return pop_manager.expect_pop_type_dictionary_reserve_length(
 		pops,
 		[this, &pop_manager, &rebel_manager, non_integer_size](PopType const& pop_type, ast::NodeCPtr pop_node) -> bool {
-			return pop_manager.load_pop_into_vector(rebel_manager, pops, pop_type, pop_node, non_integer_size);
+			return pop_manager.load_pop_bases_into_vector(rebel_manager, pops, pop_type, pop_node, non_integer_size);
 		}
 	)(root);
 }

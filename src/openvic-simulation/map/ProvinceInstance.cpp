@@ -1,6 +1,6 @@
 #include "ProvinceInstance.hpp"
 
-#include "openvic-simulation/country/Country.hpp"
+#include "openvic-simulation/country/CountryDefinition.hpp"
 #include "openvic-simulation/history/ProvinceHistory.hpp"
 #include "openvic-simulation/map/ProvinceDefinition.hpp"
 #include "openvic-simulation/military/UnitInstance.hpp"
@@ -39,8 +39,8 @@ bool ProvinceInstance::expand_building(size_t building_index) {
 	return building->expand();
 }
 
-void ProvinceInstance::_add_pop(Pop pop) {
-	pop.set_location(this);
+void ProvinceInstance::_add_pop(Pop&& pop) {
+	pop.set_location(*this);
 	pops.push_back(std::move(pop));
 }
 
@@ -54,11 +54,11 @@ bool ProvinceInstance::add_pop(Pop&& pop) {
 	}
 }
 
-bool ProvinceInstance::add_pop_vec(std::vector<Pop> const& pop_vec) {
+bool ProvinceInstance::add_pop_vec(std::vector<PopBase> const& pop_vec) {
 	if (!province_definition.is_water()) {
 		reserve_more(pops, pop_vec.size());
-		for (Pop const& pop : pop_vec) {
-			_add_pop(pop);
+		for (PopBase const& pop : pop_vec) {
+			_add_pop(Pop { pop });
 		}
 		return true;
 	} else {
@@ -176,7 +176,7 @@ bool ProvinceInstance::apply_history_to_province(ProvinceHistoryEntry const* ent
 	if (entry->get_owner()) owner = *entry->get_owner();
 	if (entry->get_controller()) controller = *entry->get_controller();
 	if (entry->get_slave()) slave = *entry->get_slave();
-	for (Country const* core : entry->get_remove_cores()) {
+	for (CountryDefinition const* core : entry->get_remove_cores()) {
 		const typename decltype(cores)::iterator existing_core = std::find(cores.begin(), cores.end(), core);
 		if (existing_core != cores.end()) {
 			cores.erase(existing_core);
@@ -186,7 +186,7 @@ bool ProvinceInstance::apply_history_to_province(ProvinceHistoryEntry const* ent
 			);
 		}
 	}
-	for (Country const* core : entry->get_add_cores()) {
+	for (CountryDefinition const* core : entry->get_add_cores()) {
 		const typename decltype(cores)::iterator existing_core = std::find(cores.begin(), cores.end(), core);
 		if (existing_core == cores.end()) {
 			cores.push_back(core);
@@ -215,7 +215,7 @@ bool ProvinceInstance::apply_history_to_province(ProvinceHistoryEntry const* ent
 }
 
 void ProvinceInstance::setup_pop_test_values(
-	IdeologyManager const& ideology_manager, IssueManager const& issue_manager, Country const& country
+	IdeologyManager const& ideology_manager, IssueManager const& issue_manager, CountryDefinition const& country
 ) {
 	for (Pop& pop : pops) {
 		pop.setup_pop_test_values(ideology_manager, issue_manager, country);
