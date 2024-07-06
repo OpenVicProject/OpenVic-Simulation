@@ -1,5 +1,7 @@
 #pragma once
 
+#include <openvic-dataloader/v2script/Parser.hpp>
+
 #include "openvic-simulation/scripts/ConditionScript.hpp"
 #include "openvic-simulation/scripts/EffectScript.hpp"
 #include "openvic-simulation/types/EnumBitfield.hpp"
@@ -111,7 +113,7 @@ namespace OpenVic {
 			ConditionScript&& allowed_countries, EffectScript&& on_add, EffectScript&& on_po_accepted
 		);
 
-		bool load_wargoal_file(ast::NodeCPtr root);
+		bool load_wargoal_file(ovdl::v2script::Parser const& parser);
 
 		bool parse_scripts(DefinitionManager const& definition_manager);
 	};

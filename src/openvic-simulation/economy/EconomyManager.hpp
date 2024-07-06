@@ -3,6 +3,7 @@
 #include "openvic-simulation/economy/BuildingType.hpp"
 #include "openvic-simulation/economy/GoodDefinition.hpp"
 #include "openvic-simulation/economy/ProductionType.hpp"
+#include "openvic-dataloader/v2script/Parser.hpp"
 
 namespace OpenVic {
 	struct EconomyManager {
@@ -12,8 +13,8 @@ namespace OpenVic {
 		ProductionTypeManager PROPERTY_REF(production_type_manager);
 
 	public:
-		inline bool load_production_types_file(PopManager const& pop_manager, ast::NodeCPtr root) {
-			return production_type_manager.load_production_types_file(good_definition_manager, pop_manager, root);
+		inline bool load_production_types_file(PopManager const& pop_manager, ovdl::v2script::Parser const& parser) {
+			return production_type_manager.load_production_types_file(good_definition_manager, pop_manager, parser);
 		}
 
 		inline bool load_buildings_file(ModifierManager& modifier_manager, ast::NodeCPtr root) {

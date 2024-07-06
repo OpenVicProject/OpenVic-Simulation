@@ -371,7 +371,7 @@ bool Dataloader::_load_units(DefinitionManager& definition_manager) const {
 				definition_manager.get_economy_manager().get_good_definition_manager(),
 				definition_manager.get_map_definition().get_terrain_type_manager(),
 				definition_manager.get_modifier_manager(),
-				parse_defines(file).get_file_node()
+				parse_defines(file)
 			);
 		}
 	);
@@ -905,7 +905,7 @@ bool Dataloader::load_defines(DefinitionManager& definition_manager) {
 		ret = false;
 	}
 	if (!definition_manager.get_economy_manager().load_production_types_file(definition_manager.get_pop_manager(),
-		parse_defines_cached(lookup_file(production_types_file)).get_file_node()
+		parse_defines_cached(lookup_file(production_types_file))
 	)) {
 		Logger::error("Failed to load production types!");
 		ret = false;
@@ -1001,7 +1001,7 @@ bool Dataloader::load_defines(DefinitionManager& definition_manager) {
 		ret = false;
 	}
 	if (!definition_manager.get_military_manager().get_wargoal_type_manager().load_wargoal_file(
-		parse_defines_cached(lookup_file(cb_types_file)).get_file_node()
+		parse_defines_cached(lookup_file(cb_types_file))
 	)) {
 		Logger::error("Failed to load wargoals!");
 		ret = false;

@@ -5,6 +5,7 @@
 #include <optional>
 #include <type_traits>
 
+#include <openvic-dataloader/detail/SymbolIntern.hpp>
 #include <openvic-dataloader/v2script/AbstractSyntaxTree.hpp>
 
 #include <tsl/ordered_set.h>
@@ -173,6 +174,10 @@ namespace OpenVic {
 		node_callback_t expect_length(callback_t<size_t> callback);
 
 		node_callback_t expect_key(
+			ovdl::symbol<char> key, node_callback_t callback, bool* key_found = nullptr, bool allow_duplicates = false
+		);
+
+		node_callback_t expect_key(
 			std::string_view key, node_callback_t callback, bool* key_found = nullptr, bool allow_duplicates = false
 		);
 
@@ -269,13 +274,9 @@ namespace OpenVic {
 			return ret;
 		}
 
-		template<StringMapCase Case>
-		constexpr bool add_key_map_entries(template_key_map_t<Case>& key_map) {
+		template<IsOrderedMap Map>
+		constexpr bool add_key_map_entries(Map&& key_map) {
 			return true;
-		}
-		template<StringMapCase Case>
-		constexpr bool add_key_map_entries(template_key_map_t<Case>&& key_map) {
-			return add_key_map_entries(key_map);
 		}
 
 		template<IsOrderedMap Map, typename... Args>

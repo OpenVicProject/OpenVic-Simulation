@@ -1,5 +1,7 @@
 #include "Wargoal.hpp"
 
+#include <openvic-dataloader/v2script/Parser.hpp>
+
 #include "openvic-simulation/dataloader/NodeTools.hpp"
 
 using namespace OpenVic;
@@ -68,11 +70,18 @@ bool WargoalTypeManager::add_wargoal_type(
 	});
 }
 
-bool WargoalTypeManager::load_wargoal_file(ast::NodeCPtr root) {
+bool WargoalTypeManager::load_wargoal_file(ovdl::v2script::Parser const& parser) {
+	using namespace std::string_view_literals;
+	ovdl::symbol<char> peace_order_symbol = parser.find_intern("peace_order"sv);
+	if (!peace_order_symbol) {
+		Logger::error("peace_order could not be interned.");
+	}
+
 	bool ret = expect_dictionary_reserve_length(
 		wargoal_types,
-		[this](std::string_view identifier, ast::NodeCPtr value) -> bool {
-			if (identifier == "peace_order") {
+		[this, &peace_order_symbol](std::string_view identifier, ast::NodeCPtr value) -> bool {
+			// If peace_order_symbol is false, we know there is no peace_order string in the parser
+			if (peace_order_symbol && identifier == peace_order_symbol.c_str()) {
 				return true;
 			}
 
@@ -187,11 +196,11 @@ bool WargoalTypeManager::load_wargoal_file(ast::NodeCPtr root) {
 			);
 			return ret;
 		}
-	)(root);
+	)(parser.get_file_node());
 
 	/* load order in which CBs are prioritised by AI */
 	ret &= expect_key(
-		"peace_order",
+		peace_order_symbol,
 		expect_list(
 			expect_wargoal_type_identifier(
 				[this](WargoalType const& wargoal) -> bool {
@@ -205,7 +214,7 @@ bool WargoalTypeManager::load_wargoal_file(ast::NodeCPtr root) {
 				true // warn instead of error
 			)
 		)
-	)(root);
+	)(parser.get_file_node());
 
 	lock_wargoal_types();
 	return ret;

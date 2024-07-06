@@ -1,5 +1,7 @@
 #pragma once
 
+#include <openvic-dataloader/v2script/Parser.hpp>
+
 #include "openvic-simulation/economy/GoodDefinition.hpp"
 #include "openvic-simulation/pop/Pop.hpp"
 #include "openvic-simulation/scripts/ConditionScript.hpp"
@@ -111,7 +113,7 @@ namespace OpenVic {
 		);
 
 		bool load_production_types_file(
-			GoodDefinitionManager const& good_definition_manager, PopManager const& pop_manager, ast::NodeCPtr root
+			GoodDefinitionManager const& good_definition_manager, PopManager const& pop_manager, ovdl::v2script::Parser const& parser
 		);
 
 		bool parse_scripts(DefinitionManager const& definition_manager);
