@@ -1,34 +1,70 @@
 #include "NodeTools.hpp"
 
+#include <type_traits>
+
+#include <openvic-dataloader/detail/Utility.hpp>
+#include <openvic-dataloader/v2script/AbstractSyntaxTree.hpp>
+
+#include <dryad/node.hpp>
+
+#include <range/v3/iterator/operations.hpp>
+#include <range/v3/view/enumerate.hpp>
+
 #include "openvic-simulation/types/Colour.hpp"
+#include "openvic-simulation/utility/Getters.hpp"
 
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;
 
 template<typename T>
-static NodeCallback auto _expect_type(Callback<T const&> auto callback) {
+static NodeCallback auto _expect_type(Callback<T const*> auto callback) {
 	return [callback](ast::NodeCPtr node) -> bool {
 		if (node != nullptr) {
-			T const* cast_node = node->cast_to<T>();
+			T const* cast_node = dryad::node_try_cast<T>(node);
 			if (cast_node != nullptr) {
-				return callback(*cast_node);
+				return callback(cast_node);
 			}
-			Logger::error("Invalid node type ", node->get_type(), " when expecting ", T::get_type_static());
+			Logger::error("Invalid node type ", ast::get_type_name(node->kind()), " when expecting ", utility::type_name<T>());
 		} else {
-			Logger::error("Null node when expecting ", T::get_type_static());
+			Logger::error("Null node when expecting ", utility::type_name<T>());
 		}
 		return false;
 	};
 }
 
-template<std::derived_from<ast::AbstractStringNode> T>
-static Callback<T const&> auto _abstract_string_node_callback(Callback<std::string_view> auto callback, bool allow_empty) {
-	return [callback, allow_empty](T const& node) -> bool {
-		if (allow_empty) {
-			return callback(node._name);
+using _NodeIterator = typename decltype(std::declval<ast::NodeCPtr>()->children())::iterator;
+using _NodeStatementRange = dryad::node_range<_NodeIterator, ast::Statement>;
+
+static NodeCallback auto _abstract_statement_node_callback(Callback<_NodeStatementRange> auto callback) {
+	return [callback](ast::NodeCPtr node) -> bool {
+		if (node != nullptr) {
+			if (auto const* file_tree = dryad::node_try_cast<ast::FileTree>(node)) {
+				return callback(file_tree->statements());
+			}
+			if (auto const* list_value = dryad::node_try_cast<ast::ListValue>(node)) {
+				return callback(list_value->statements());
+			}
+			Logger::error(
+				"Invalid node type ", ast::get_type_name(node->kind()), " when expecting ", utility::type_name<ast::FileTree>(), " or ",
+				utility::type_name<ast::ListValue>()
+			);
 		} else {
-			if (!node._name.empty()) {
-				return callback(node._name);
+			Logger::error(
+				"Null node when expecting ", utility::type_name<ast::FileTree>(), " or ", utility::type_name<ast::ListValue>()
+			);
+		}
+		return false;
+	};
+}
+
+template<std::derived_from<ast::FlatValue> T>
+static Callback<T const*> auto _abstract_string_node_callback(Callback<std::string_view> auto callback, bool allow_empty) {
+	return [callback, allow_empty](T const* node) -> bool {
+		if (allow_empty) {
+			return callback(node->value().view());
+		} else {
+			if (node->value()) {
+				return callback(node->value().view());
 			} else {
 				Logger::error("Invalid string value - empty!");
 				return false;
@@ -38,30 +74,27 @@ static Callback<T const&> auto _abstract_string_node_callback(Callback<std::stri
 }
 
 node_callback_t NodeTools::expect_identifier(callback_t<std::string_view> callback) {
-	return _expect_type<ast::IdentifierNode>(_abstract_string_node_callback<ast::IdentifierNode>(callback, false));
+	return _expect_type<ast::IdentifierValue>(_abstract_string_node_callback<ast::IdentifierValue>(callback, false));
 }
 
 node_callback_t NodeTools::expect_string(callback_t<std::string_view> callback, bool allow_empty) {
-	return _expect_type<ast::StringNode>(_abstract_string_node_callback<ast::StringNode>(callback, allow_empty));
+	return _expect_type<ast::StringValue>(_abstract_string_node_callback<ast::StringValue>(callback, allow_empty));
 }
 
 node_callback_t NodeTools::expect_identifier_or_string(callback_t<std::string_view> callback, bool allow_empty) {
 	return [callback, allow_empty](ast::NodeCPtr node) -> bool {
 		if (node != nullptr) {
-			ast::AbstractStringNode const* cast_node = node->cast_to<ast::IdentifierNode>();
-			if (cast_node == nullptr) {
-				cast_node = node->cast_to<ast::StringNode>();
-			}
+			auto const* cast_node = dryad::node_try_cast<ast::FlatValue>(node);
 			if (cast_node != nullptr) {
-				return _abstract_string_node_callback<ast::AbstractStringNode>(callback, allow_empty)(*cast_node);
+				return _abstract_string_node_callback<ast::FlatValue>(callback, allow_empty)(cast_node);
 			}
 			Logger::error(
-				"Invalid node type ", node->get_type(), " when expecting ", ast::IdentifierNode::get_type_static(), " or ",
-				ast::StringNode::get_type_static()
+				"Invalid node type ", ast::get_type_name(node->kind()), " when expecting ", utility::type_name<ast::IdentifierValue>(), " or ",
+				utility::type_name<ast::StringValue>()
 			);
 		} else {
 			Logger::error(
-				"Null node when expecting ", ast::IdentifierNode::get_type_static(), " or ", ast::StringNode::get_type_static()
+				"Null node when expecting ", utility::type_name<ast::IdentifierValue>(), " or ", utility::type_name<ast::StringValue>()
 			);
 		}
 		return false;
@@ -221,28 +254,42 @@ node_callback_t NodeTools::expect_fvec2(callback_t<fvec2_t> callback) {
 }
 
 node_callback_t NodeTools::expect_assign(key_value_callback_t callback) {
-	return _expect_type<ast::AssignNode>([callback](ast::AssignNode const& assign_node) -> bool {
-		const bool ret = callback(assign_node._name, assign_node._initializer.get());
-		if (!ret) {
-			Logger::error("Callback failed for assign node with key: ", assign_node._name);
+	return _expect_type<ast::AssignStatement>([callback](ast::AssignStatement const* assign_node) -> bool {
+		std::string_view left;
+		bool ret = expect_identifier(assign_variable_callback(left))(assign_node->left());
+		if (ret) {
+			ret &= callback(left, assign_node->right());
+			if (!ret) {
+				Logger::error("Callback failed for assign node with key: ", left);
+			}
+		} else {
+			Logger::error("Callback key failed for assign node with key: ", left);
 		}
 		return ret;
 	});
 }
 
 node_callback_t NodeTools::expect_list_and_length(length_callback_t length_callback, node_callback_t callback) {
-	return _expect_type<ast::AbstractListNode>([length_callback, callback](ast::AbstractListNode const& list_node) -> bool {
-		std::vector<ast::NodeUPtr> const& list = list_node._statements;
+	return _abstract_statement_node_callback([length_callback, callback](_NodeStatementRange list) -> bool {
 		bool ret = true;
-		size_t size = length_callback(list.size());
-		if (size > list.size()) {
-			Logger::error("Trying to read more values than the list contains: ", size, " > ", list.size());
-			size = list.size();
+		auto dist = ranges::distance(list);
+		size_t size = length_callback(dist);
+
+		if (size > dist) {
+			Logger::error("Trying to read more values than the list contains: ", size, " > ", dist);
+			size = dist;
 			ret = false;
 		}
-		std::for_each(list.begin(), list.begin() + size, [callback, &ret](ast::NodeUPtr const& sub_node) -> void {
-			ret &= callback(sub_node.get());
-		});
+		for (auto [index, sub_node] : list | ranges::views::enumerate) {
+			if (index >= size) {
+				break;
+			}
+			if (auto const* value = dryad::node_try_cast<ast::ValueStatement>(sub_node)) {
+				ret &= callback(value->value());
+				continue;
+			}
+			ret &= callback(sub_node);
+		}
 		return ret;
 	});
 }
@@ -286,16 +333,22 @@ node_callback_t NodeTools::expect_length(callback_t<size_t> callback) {
 }
 
 node_callback_t NodeTools::expect_key(std::string_view key, node_callback_t callback, bool* key_found, bool allow_duplicates) {
-	return _expect_type<ast::AbstractListNode>(
-		[key, callback, key_found, allow_duplicates](ast::AbstractListNode const& list_node) -> bool {
+	return _abstract_statement_node_callback(
+		[key, callback, key_found, allow_duplicates](_NodeStatementRange list) -> bool {
 			bool ret = true;
 			size_t keys_found = 0;
-			std::vector<ast::NodeUPtr> const& list = list_node._statements;
-			for (ast::NodeUPtr const& sub_node : list_node._statements) {
-				ast::AssignNode const* assign_node = sub_node->cast_to<ast::AssignNode>();
-				if (assign_node != nullptr && assign_node->_name == key) {
+			for (auto sub_node : list) {
+				auto const* assign_node = dryad::node_try_cast<ast::AssignStatement>(sub_node);
+				if (assign_node == nullptr) {
+					continue;
+				}
+				std::string_view left;
+				if (!expect_identifier(assign_variable_callback(left))(assign_node->left())) {
+					continue;
+				}
+				if (left == key) {
 					if (keys_found++ == 0) {
-						ret &= callback(&*assign_node->_initializer);
+						ret &= callback(assign_node->right());
 						if (allow_duplicates) {
 							break;
 						}

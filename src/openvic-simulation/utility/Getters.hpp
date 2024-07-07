@@ -1,46 +1,140 @@
 #pragma once
 
+#include <array>
 #include <concepts>
+#include <cstddef>
 #include <string>
 #include <string_view>
+#include <type_traits>
+#include <utility>
 
-#include <openvic-dataloader/detail/SelfType.hpp>
-#include <openvic-dataloader/detail/TypeName.hpp>
+namespace OpenVic::utility {
+	template<std::size_t... Idxs>
+	constexpr auto substring_as_array(std::string_view str, std::index_sequence<Idxs...>) {
+		return std::array { str[Idxs]... };
+	}
+
+	template<typename T>
+	constexpr auto type_name_array() {
+#if defined(__clang__)
+		constexpr auto prefix = std::string_view { "[T = " };
+		constexpr auto suffix = std::string_view { "]" };
+		constexpr auto function = std::string_view { __PRETTY_FUNCTION__ };
+#elif defined(__GNUC__)
+		constexpr auto prefix = std::string_view { "with T = " };
+		constexpr auto suffix = std::string_view { "]" };
+		constexpr auto function = std::string_view { __PRETTY_FUNCTION__ };
+#elif defined(_MSC_VER)
+		constexpr auto prefix = std::string_view { "type_name_array<" };
+		constexpr auto suffix = std::string_view { ">(void)" };
+		constexpr auto function = std::string_view { __FUNCSIG__ };
+#else
+#error Unsupported compiler
+#endif
+
+		constexpr auto start = function.find(prefix) + prefix.size();
+		constexpr auto end = function.rfind(suffix);
+
+		static_assert(start < end);
+
+		constexpr auto name = function.substr(start, (end - start));
+		return substring_as_array(name, std::make_index_sequence<name.size()> {});
+	}
+
+	template<typename T>
+	struct type_name_holder {
+		static inline constexpr auto value = type_name_array<T>();
+	};
+
+	template<typename T>
+	constexpr auto type_name() -> std::string_view {
+		constexpr auto& value = type_name_holder<T>::value;
+		return std::string_view { value.data(), value.size() };
+	}
+
+#if !defined(_MSC_VER)
+#pragma GCC diagnostic push
+#pragma clang diagnostic ignored "-Wunknown-warning-option"
+#pragma GCC diagnostic ignored "-Wnon-template-friend"
+#endif
+	template<typename T>
+	struct Reader {
+		friend auto adl_GetSelfType(Reader<T>);
+	};
+
+	template<typename T, typename U>
+	struct Writer {
+		friend auto adl_GetSelfType(Reader<T>) {
+			return U {};
+		}
+	};
+#if !defined(_MSC_VER)
+#pragma GCC diagnostic pop
+#endif
+
+	inline void adl_GetSelfType() {}
+
+	template<typename T>
+	using Read = std::remove_pointer_t<decltype(adl_GetSelfType(Reader<T> {}))>;
+}
 
 #define OV_DETAIL_GET_TYPE_BASE_CLASS(CLASS) \
-	static constexpr std::string_view get_type_static() { return ::ovdl::detail::type_name<CLASS>(); } \
+	static constexpr std::string_view get_type_static() { \
+		return ::OpenVic::utility::type_name<CLASS>(); \
+	} \
 	constexpr virtual std::string_view get_type() const = 0; \
-	static constexpr std::string_view get_base_type_static() { return ::ovdl::detail::type_name<CLASS>(); } \
-	constexpr virtual std::string_view get_base_type() const { return get_base_type_static(); } \
-	template<typename T> constexpr bool is_type() const { \
-		return get_type().compare(::ovdl::detail::type_name<T>()) == 0; } \
-	template<typename T> constexpr bool is_derived_from() const { \
-		return is_type<T>() || get_base_type().compare(::ovdl::detail::type_name<T>()) == 0; } \
-	template<typename T> constexpr T* cast_to() { \
-		if (is_derived_from<T>() || is_type<CLASS>()) return (static_cast<T*>(this)); \
-		return nullptr; } \
-	template<typename T> constexpr const T* const cast_to() const { \
-		if (is_derived_from<T>() || is_type<CLASS>()) return (static_cast<const T*>(this)); \
-		return nullptr; }
+	static constexpr std::string_view get_base_type_static() { \
+		return ::OpenVic::utility::type_name<CLASS>(); \
+	} \
+	constexpr virtual std::string_view get_base_type() const { \
+		return get_base_type_static(); \
+	} \
+	template<typename T> \
+	constexpr bool is_type() const { \
+		return get_type().compare(::OpenVic::utility::type_name<T>()) == 0; \
+	} \
+	template<typename T> \
+	constexpr bool is_derived_from() const { \
+		return is_type<T>() || get_base_type().compare(::OpenVic::utility::type_name<T>()) == 0; \
+	} \
+	template<typename T> \
+	constexpr T* cast_to() { \
+		if (is_derived_from<T>() || is_type<CLASS>()) \
+			return (static_cast<T*>(this)); \
+		return nullptr; \
+	} \
+	template<typename T> \
+	constexpr const T* const cast_to() const { \
+		if (is_derived_from<T>() || is_type<CLASS>()) \
+			return (static_cast<const T*>(this)); \
+		return nullptr; \
+	}
 
 #define OV_DETAIL_GET_TYPE \
 	struct _self_type_tag {}; \
-	constexpr auto _self_type_helper()->decltype(::ovdl::detail::Writer<_self_type_tag, decltype(this)> {}); \
-	using type = ::ovdl::detail::Read<_self_type_tag>; \
-	static constexpr std::string_view get_type_static() { return ::ovdl::detail::type_name<type>(); } \
+	constexpr auto _self_type_helper() -> decltype(::OpenVic::utility::Writer<_self_type_tag, decltype(this)> {}); \
+	using type = ::OpenVic::utility::Read<_self_type_tag>; \
+	static constexpr std::string_view get_type_static() { \
+		return ::OpenVic::utility::type_name<type>(); \
+	} \
 	constexpr std::string_view get_type() const override { \
-		return ::ovdl::detail::type_name<std::decay_t<decltype(*this)>>(); }
+		return ::OpenVic::utility::type_name<std::decay_t<decltype(*this)>>(); \
+	}
 
 #define OV_DETAIL_GET_BASE_TYPE(CLASS) \
-	static constexpr std::string_view get_base_type_static() { return ::ovdl::detail::type_name<CLASS>(); } \
+	static constexpr std::string_view get_base_type_static() { \
+		return ::OpenVic::utility::type_name<CLASS>(); \
+	} \
 	constexpr std::string_view get_base_type() const override { \
-		return ::ovdl::detail::type_name<std::decay_t<decltype(*this)>>(); }
+		return ::OpenVic::utility::type_name<std::decay_t<decltype(*this)>>(); \
+	}
 
 /* Create const and non-const reference getters for a variable, applied to its name in its declaration, e
  * for example: GameManager PROPERTY_REF(game_manager); */
 #define PROPERTY_REF(NAME) PROPERTY_REF_FULL(NAME, private)
 #define PROPERTY_REF_FULL(NAME, ACCESS) \
 	NAME; \
+\
 public: \
 	constexpr decltype(NAME)& get_##NAME() { \
 		return NAME; \
@@ -48,7 +142,7 @@ public: \
 	constexpr decltype(NAME) const& get_##NAME() const { \
 		return NAME; \
 	} \
-ACCESS:
+	ACCESS:
 
 namespace OpenVic {
 	/* Any struct tagged with ov_return_by_value will be returned by value by PROPERTY-generated getter functions,
@@ -73,9 +167,7 @@ namespace OpenVic {
 		} else if constexpr (std::same_as<T, std::string>) {
 			/* Return std::string_view looking at std::string */
 			return std::string_view { property };
-		} else if constexpr (
-			std::integral<T> || std::floating_point<T> || std::is_enum_v<T> || ReturnByValue<T>
-		) {
+		} else if constexpr (std::integral<T> || std::floating_point<T> || std::is_enum_v<T> || ReturnByValue<T>) {
 			/* Return value */
 			return T { property };
 		} else if constexpr (std::is_pointer_v<T>) {
@@ -108,11 +200,12 @@ namespace OpenVic {
 #define PROPERTY_ACCESS(NAME, ACCESS) PROPERTY_FULL(NAME, get_##NAME, ACCESS)
 #define PROPERTY_FULL(NAME, GETTER_NAME, ACCESS) \
 	NAME; \
+\
 public: \
 	constexpr auto GETTER_NAME() const -> decltype(OpenVic::_get_property<decltype(NAME)>(NAME)) { \
 		return OpenVic::_get_property<decltype(NAME)>(NAME); \
 	} \
-ACCESS:
+	ACCESS:
 
 // TODO: Special logic to decide argument type and control assignment.
 #define PROPERTY_RW(NAME) PROPERTY_RW_ACCESS(NAME, private)
@@ -124,4 +217,4 @@ public: \
 	constexpr void SETTER_NAME(decltype(NAME) new_##NAME) { \
 		NAME = new_##NAME; \
 	} \
-ACCESS:
+	ACCESS:
