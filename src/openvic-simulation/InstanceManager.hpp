@@ -7,7 +7,7 @@
 #include "openvic-simulation/economy/GoodInstance.hpp"
 #include "openvic-simulation/map/MapInstance.hpp"
 #include "openvic-simulation/map/Mapmode.hpp"
-#include "openvic-simulation/military/UnitInstance.hpp"
+#include "openvic-simulation/military/UnitInstanceGroup.hpp"
 #include "openvic-simulation/misc/SimulationClock.hpp"
 #include "openvic-simulation/types/Date.hpp"
 

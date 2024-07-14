@@ -2,6 +2,10 @@
 
 #include <vector>
 
+#include <plf_colony.h>
+
+#include "openvic-simulation/military/Leader.hpp"
+#include "openvic-simulation/military/UnitInstanceGroup.hpp"
 #include "openvic-simulation/types/Date.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPointMap.hpp"
 #include "openvic-simulation/types/IdentifierRegistry.hpp"
@@ -42,6 +46,9 @@ namespace OpenVic {
 		std::vector<Reform const*> PROPERTY(reforms); // TODO: should be map of reform groups to active reforms: must set defaults & validate applied history
 		// TODO: Military units + OOBs; will probably need an extensible deployment class
 
+		plf::colony<General> PROPERTY(generals);
+		plf::colony<Admiral> PROPERTY(admirals);
+
 		CountryInstance(CountryDefinition const* new_country_definition);
 
 	public:
@@ -54,6 +61,14 @@ namespace OpenVic {
 		bool remove_from_upper_house(Ideology const* party);
 		bool add_reform(Reform const* new_reform);
 		bool remove_reform(Reform const* reform_to_remove);
+
+		void add_general(General&& new_general);
+		bool remove_general(General const* general_to_remove);
+		void add_admiral(Admiral&& new_admiral);
+		bool remove_admiral(Admiral const* admiral_to_remove);
+
+		bool add_leader(LeaderBase const& new_leader);
+		bool remove_leader(LeaderBase const* leader_to_remove);
 
 		bool apply_history_to_country(CountryHistoryEntry const* entry);
 	};

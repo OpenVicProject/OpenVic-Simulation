@@ -10,7 +10,6 @@
 
 namespace OpenVic {
 	struct ProvinceDefinition;
-	struct RegimentType;
 
 	struct RegimentDeployment {
 		friend struct DeploymentManager;
@@ -25,8 +24,6 @@ namespace OpenVic {
 	public:
 		RegimentDeployment(RegimentDeployment&&) = default;
 	};
-
-	struct ShipType;
 
 	struct ShipDeployment {
 		friend struct DeploymentManager;
@@ -79,11 +76,11 @@ namespace OpenVic {
 	private:
 		std::vector<ArmyDeployment> PROPERTY(armies);
 		std::vector<NavyDeployment> PROPERTY(navies);
-		std::vector<Leader> PROPERTY(leaders);
+		std::vector<LeaderBase> PROPERTY(leaders);
 
 		Deployment(
 			std::string_view new_path, std::vector<ArmyDeployment>&& new_armies, std::vector<NavyDeployment>&& new_navies,
-			std::vector<Leader>&& new_leaders
+			std::vector<LeaderBase>&& new_leaders
 		);
 
 	public:
@@ -101,7 +98,7 @@ namespace OpenVic {
 	public:
 		bool add_deployment(
 			std::string_view path, std::vector<ArmyDeployment>&& armies, std::vector<NavyDeployment>&& navies,
-			std::vector<Leader>&& leaders
+			std::vector<LeaderBase>&& leaders
 		);
 
 		bool load_oob_file(
