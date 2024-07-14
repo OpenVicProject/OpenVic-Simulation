@@ -24,6 +24,14 @@ def build_ordered_map(env):
     env.Append(CPPPATH=env.ordered_map["INCPATH"])
     env.exposed_includes += env.ordered_map["INCPATH"]
 
+def build_colony(env):
+    include_path = "plf_colony"
+    env.colony = {}
+    env.colony["INCPATH"] = [env.Dir(include_path)]
+    env.Append(CPPPATH=env.colony["INCPATH"])
+    env.exposed_includes += env.colony["INCPATH"]
+
 build_openvic_dataloader(env)
 build_lexy_vdf(env)
 build_ordered_map(env)
+build_colony(env)
