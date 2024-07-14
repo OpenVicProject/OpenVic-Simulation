@@ -72,7 +72,11 @@ namespace OpenVic {
 		UnitType(UnitType&&) = default;
 	};
 
-	struct RegimentType : UnitType {
+	template<UnitType::branch_t>
+	struct UnitTypeBranched;
+
+	template<>
+	struct UnitTypeBranched<UnitType::branch_t::LAND> : UnitType {
 		friend struct UnitTypeManager;
 
 		enum struct allowed_cultures_t { ALL_CULTURES, ACCEPTED_CULTURES, PRIMARY_CULTURE };
@@ -102,17 +106,22 @@ namespace OpenVic {
 		const fixed_point_t PROPERTY(maneuver);
 		const fixed_point_t PROPERTY(siege);
 
-		RegimentType(std::string_view new_identifier, unit_type_args_t& unit_args, regiment_type_args_t const& regiment_type_args);
+		UnitTypeBranched(
+			std::string_view new_identifier, unit_type_args_t& unit_args, regiment_type_args_t const& regiment_type_args
+		);
 
 	public:
-		RegimentType(RegimentType&&) = default;
+		UnitTypeBranched(UnitTypeBranched&&) = default;
 	};
 
-	struct ShipType : UnitType {
+	using RegimentType = UnitTypeBranched<UnitType::branch_t::LAND>;
+
+	template<>
+	struct UnitTypeBranched<UnitType::branch_t::NAVAL> : UnitType {
 		friend struct UnitTypeManager;
 
 		struct ship_type_args_t {
-			UnitType::icon_t naval_icon = 0;
+			icon_t naval_icon = 0;
 			bool sail = false, transport = false, capital = false, build_overseas = false;
 			uint32_t min_port_level = 0;
 			int32_t limit_per_port = 0;
@@ -140,11 +149,13 @@ namespace OpenVic {
 		const fixed_point_t PROPERTY(evasion);
 		const fixed_point_t PROPERTY(torpedo_attack);
 
-		ShipType(std::string_view new_identifier, unit_type_args_t& unit_args, ship_type_args_t const& ship_type_args);
+		UnitTypeBranched(std::string_view new_identifier, unit_type_args_t& unit_args, ship_type_args_t const& ship_type_args);
 
 	public:
-		ShipType(ShipType&&) = default;
+		UnitTypeBranched(UnitTypeBranched&&) = default;
 	};
+
+	using ShipType = UnitTypeBranched<UnitType::branch_t::NAVAL>;
 
 	struct UnitTypeManager {
 	private:
@@ -157,15 +168,21 @@ namespace OpenVic {
 		void lock_all_unit_types();
 
 		bool add_regiment_type(
-			std::string_view identifier, UnitType::unit_type_args_t& unit_args, RegimentType::regiment_type_args_t const& regiment_type_args
+			std::string_view identifier, UnitType::unit_type_args_t& unit_args,
+			RegimentType::regiment_type_args_t const& regiment_type_args
 		);
 		bool add_ship_type(
-			std::string_view identifier, UnitType::unit_type_args_t& unit_args, ShipType::ship_type_args_t const& ship_type_args
+			std::string_view identifier, UnitType::unit_type_args_t& unit_args,
+			ShipType::ship_type_args_t const& ship_type_args
 		);
 
-		static NodeTools::Callback<std::string_view> auto expect_branch_str(NodeTools::Callback<UnitType::branch_t> auto callback) {
+		static NodeTools::Callback<std::string_view> auto expect_branch_str(
+			NodeTools::Callback<UnitType::branch_t> auto callback
+		) {
 			using enum UnitType::branch_t;
-			static const string_map_t<UnitType::branch_t> branch_map { { "land", LAND }, { "naval", NAVAL }, { "sea", NAVAL } };
+			static const string_map_t<UnitType::branch_t> branch_map {
+				{ "land", LAND }, { "naval", NAVAL }, { "sea", NAVAL }
+			};
 			return NodeTools::expect_mapped_string(branch_map, callback);
 		}
 		static NodeTools::NodeCallback auto expect_branch_identifier(NodeTools::Callback<UnitType::branch_t> auto callback) {

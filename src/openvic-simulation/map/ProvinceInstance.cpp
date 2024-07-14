@@ -3,7 +3,7 @@
 #include "openvic-simulation/country/CountryDefinition.hpp"
 #include "openvic-simulation/history/ProvinceHistory.hpp"
 #include "openvic-simulation/map/ProvinceDefinition.hpp"
-#include "openvic-simulation/military/UnitInstance.hpp"
+#include "openvic-simulation/military/UnitInstanceGroup.hpp"
 
 using namespace OpenVic;
 

@@ -2,7 +2,8 @@
 
 #include "openvic-simulation/country/CountryDefinition.hpp"
 #include "openvic-simulation/history/CountryHistory.hpp"
-#include "openvic-simulation/military/UnitInstance.hpp"
+#include "openvic-simulation/military/Deployment.hpp"
+#include "openvic-simulation/military/UnitInstanceGroup.hpp"
 
 using namespace OpenVic;
 
@@ -73,6 +74,89 @@ bool CountryInstance::remove_reform(Reform const* reform_to_remove) {
 	return true;
 }
 
+void CountryInstance::add_general(General&& new_general) {
+	generals.emplace(std::move(new_general));
+}
+
+bool CountryInstance::remove_general(General const* general_to_remove) {
+	const auto it = generals.get_iterator(general_to_remove);
+	if (it != generals.end()) {
+		generals.erase(it);
+		return true;
+	}
+
+	Logger::error(
+		"Trying to remove non-existent general ", general_to_remove != nullptr ? general_to_remove->get_name() : "NULL",
+		" from country ", get_identifier()
+	);
+	return false;
+}
+
+void CountryInstance::add_admiral(Admiral&& new_admiral) {
+	admirals.emplace(std::move(new_admiral));
+}
+
+bool CountryInstance::remove_admiral(Admiral const* admiral_to_remove) {
+	const auto it = admirals.get_iterator(admiral_to_remove);
+	if (it != admirals.end()) {
+		admirals.erase(it);
+		return true;
+	}
+
+	Logger::error(
+		"Trying to remove non-existent admiral ", admiral_to_remove != nullptr ? admiral_to_remove->get_name() : "NULL",
+		" from country ", get_identifier()
+	);
+	return false;
+}
+
+bool CountryInstance::add_leader(LeaderBase const& new_leader) {
+	using enum UnitType::branch_t;
+
+	switch (new_leader.get_branch()) {
+	case LAND:
+		add_general({ new_leader });
+		return true;
+
+	case NAVAL:
+		add_admiral({ new_leader });
+		return true;
+
+	default:
+		Logger::error(
+			"Trying to add leader ", new_leader.get_name(), " to country ", get_identifier(), " with invalid branch ",
+			static_cast<uint32_t>(new_leader.get_branch())
+		);
+		return false;
+	}
+}
+
+bool CountryInstance::remove_leader(LeaderBase const* leader_to_remove) {
+	if (leader_to_remove == nullptr) {
+		Logger::error("Trying to remvoe null leader from country ", get_identifier());
+		return false;
+	}
+
+	using enum UnitType::branch_t;
+
+	switch (leader_to_remove->get_branch()) {
+	case LAND:
+		remove_general(static_cast<General const*>(leader_to_remove));
+		return true;
+
+	case NAVAL:
+		remove_admiral(static_cast<Admiral const*>(leader_to_remove));
+		return true;
+
+	default:
+		Logger::error(
+			"Trying to add leader ", leader_to_remove->get_name(), " to country ", get_identifier(), " with invalid branch ",
+			static_cast<uint32_t>(leader_to_remove->get_branch())
+		);
+		return false;
+	}
+}
+
 bool CountryInstance::apply_history_to_country(CountryHistoryEntry const* entry) {
 	if (entry == nullptr) {
 		Logger::error("Trying to apply null country history to ", get_identifier());
@@ -135,7 +219,7 @@ bool CountryInstanceManager::apply_history_to_countries(
 				CountryHistoryEntry const* oob_history_entry = nullptr;
 
 				for (CountryHistoryEntry const* entry : history_map->get_entries_up_to(date)) {
-					country_instance.apply_history_to_country(entry);
+					ret &= country_instance.apply_history_to_country(entry);
 
 					if (entry->get_inital_oob()) {
 						oob_history_entry = entry;
@@ -143,10 +227,13 @@ bool CountryInstanceManager::apply_history_to_countries(
 				}
 
 				if (oob_history_entry != nullptr) {
-					unit_instance_manager.generate_deployment(
+					ret &= unit_instance_manager.generate_deployment(
 						map_instance, country_instance, *oob_history_entry->get_inital_oob()
 					);
 				}
+			} else {
+				Logger::error("Country ", country_instance.get_identifier(), " has no history!");
+				ret = false;
 			}
 		}
 	}

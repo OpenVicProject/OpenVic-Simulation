@@ -1,6 +1,8 @@
 #pragma once
 
 #include "openvic-simulation/economy/BuildingInstance.hpp"
+#include "openvic-simulation/military/UnitInstance.hpp"
+#include "openvic-simulation/military/UnitType.hpp"
 #include "openvic-simulation/pop/Pop.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPointMap.hpp"
 #include "openvic-simulation/types/HasIdentifier.hpp"
@@ -14,8 +16,6 @@ namespace OpenVic {
 	struct CountryDefinition;
 	struct Crime;
 	struct GoodDefinition;
-	struct ArmyInstance;
-	struct NavyInstance;
 	struct Ideology;
 	struct Culture;
 	struct Religion;
@@ -23,6 +23,15 @@ namespace OpenVic {
 	struct ProvinceHistoryEntry;
 	struct IdeologyManager;
 	struct IssueManager;
+
+	template<UnitType::branch_t>
+	struct UnitInstanceGroup;
+
+	template<UnitType::branch_t>
+	struct UnitInstanceGroupBranched;
+
+	using ArmyInstance = UnitInstanceGroupBranched<UnitType::branch_t::LAND>;
+	using NavyInstance = UnitInstanceGroupBranched<UnitType::branch_t::NAVAL>;
 
 	struct ProvinceInstance : HasIdentifierAndColour {
 		friend struct MapInstance;
@@ -82,6 +91,27 @@ namespace OpenVic {
 		bool remove_army(ArmyInstance& army);
 		bool add_navy(NavyInstance& navy);
 		bool remove_navy(NavyInstance& navy);
+
+		template<UnitType::branch_t Branch>
+		bool add_unit_instance_group(UnitInstanceGroup<Branch>& group) {
+			if constexpr (Branch == UnitType::branch_t::LAND) {
+				return add_army(static_cast<ArmyInstance&>(group));
+			} else if constexpr (Branch == UnitType::branch_t::NAVAL) {
+				return add_navy(static_cast<NavyInstance&>(group));
+			} else {
+				OpenVic::utility::unreachable();
+			}
+		}
+		template<UnitType::branch_t Branch>
+		bool remove_unit_instance_group(UnitInstanceGroup<Branch>& group) {
+			if constexpr (Branch == UnitType::branch_t::LAND) {
+				return remove_army(static_cast<ArmyInstance&>(group));
+			} else if constexpr (Branch == UnitType::branch_t::NAVAL) {
+				return remove_navy(static_cast<NavyInstance&>(group));
+			} else {
+				OpenVic::utility::unreachable();
+			}
+		}
 
 		bool setup(BuildingTypeManager const& building_type_manager);
 		bool apply_history_to_province(ProvinceHistoryEntry const* entry);

@@ -22,13 +22,13 @@ NavyDeployment::NavyDeployment(
 
 Deployment::Deployment(
 	std::string_view new_path, std::vector<ArmyDeployment>&& new_armies, std::vector<NavyDeployment>&& new_navies,
-	std::vector<Leader>&& new_leaders
+	std::vector<LeaderBase>&& new_leaders
 ) : HasIdentifier { new_path }, armies { std::move(new_armies) }, navies { std::move(new_navies) },
 	leaders { std::move(new_leaders) } {}
 
 bool DeploymentManager::add_deployment(
 	std::string_view path, std::vector<ArmyDeployment>&& armies, std::vector<NavyDeployment>&& navies,
-	std::vector<Leader>&& leaders
+	std::vector<LeaderBase>&& leaders
 ) {
 	if (path.empty()) {
 		Logger::error("Attemped to load order of battle with no path! Something is very wrong!");
@@ -68,7 +68,7 @@ bool DeploymentManager::load_oob_file(
 
 	std::vector<ArmyDeployment> armies;
 	std::vector<NavyDeployment> navies;
-	std::vector<Leader> leaders;
+	std::vector<LeaderBase> leaders;
 
 	bool ret = expect_dictionary_keys_and_default(
 		key_value_success_callback, // TODO: load SOI information
@@ -109,8 +109,8 @@ bool DeploymentManager::load_oob_file(
 				ret = false;
 			}
 
-			leaders.emplace_back(
-				leader_name, leader_branch, leader_date, leader_personality, leader_background, leader_prestige, picture
+			leaders.push_back(
+				{ leader_name, leader_branch, leader_date, leader_personality, leader_background, leader_prestige, picture }
 			);
 
 			return ret;

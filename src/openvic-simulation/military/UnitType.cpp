@@ -30,7 +30,7 @@ UnitType::UnitType(
 	supply_cost { std::move(unit_args.supply_cost) },
 	terrain_modifiers { std::move(unit_args.terrain_modifiers) } {}
 
-RegimentType::RegimentType(
+UnitTypeBranched<LAND>::UnitTypeBranched(
 	std::string_view new_identifier, unit_type_args_t& unit_args, regiment_type_args_t const& regiment_type_args
 ) : UnitType { new_identifier, LAND, unit_args },
 	allowed_cultures { regiment_type_args.allowed_cultures },
@@ -45,7 +45,7 @@ RegimentType::RegimentType(
 	maneuver { regiment_type_args.maneuver },
 	siege { regiment_type_args.siege } {}
 
-ShipType::ShipType(
+UnitTypeBranched<NAVAL>::UnitTypeBranched(
 	std::string_view new_identifier, unit_type_args_t& unit_args, ship_type_args_t const& ship_type_args
 ) : UnitType { new_identifier, NAVAL, unit_args },
 	naval_icon { ship_type_args.naval_icon },

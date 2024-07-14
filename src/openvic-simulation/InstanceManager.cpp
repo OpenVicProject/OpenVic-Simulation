@@ -36,10 +36,15 @@ void InstanceManager::update_gamestate() {
 		return;
 	}
 	currently_updating_gamestate = true;
+
 	Logger::info("Update: ", today);
+
+	// Update gamestate...
 	map_instance.update_gamestate(today);
+
 	gamestate_updated();
 	gamestate_needs_update = false;
+
 	currently_updating_gamestate = false;
 }
 
@@ -48,8 +53,12 @@ void InstanceManager::update_gamestate() {
  */
 void InstanceManager::tick() {
 	today++;
+
 	Logger::info("Tick: ", today);
+
+	// Tick...
 	map_instance.tick(today);
+
 	set_gamestate_needs_update();
 }
 
