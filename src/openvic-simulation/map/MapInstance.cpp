@@ -49,7 +49,11 @@ ProvinceDefinition::index_t MapInstance::get_selected_province_index() const {
 		: ProvinceDefinition::NULL_INDEX;
 }
 
-bool MapInstance::setup(BuildingTypeManager const& building_type_manager) {
+bool MapInstance::setup(
+	BuildingTypeManager const& building_type_manager,
+	decltype(ProvinceInstance::pop_type_distribution)::keys_t const& pop_type_keys,
+	decltype(ProvinceInstance::ideology_distribution)::keys_t const& ideology_keys
+) {
 	if (province_instances_are_locked()) {
 		Logger::error("Cannot setup map - province instances are locked!");
 		return false;
@@ -64,7 +68,7 @@ bool MapInstance::setup(BuildingTypeManager const& building_type_manager) {
 	province_instances.reserve(map_definition.get_province_definition_count());
 
 	for (ProvinceDefinition const& province : map_definition.get_province_definitions()) {
-		ret &= province_instances.add_item({ province });
+		ret &= province_instances.add_item({ province, pop_type_keys, ideology_keys });
 	}
 
 	province_instances.lock();
@@ -85,8 +89,7 @@ bool MapInstance::setup(BuildingTypeManager const& building_type_manager) {
 }
 
 bool MapInstance::apply_history_to_provinces(
-	ProvinceHistoryManager const& history_manager, Date date, IdeologyManager const& ideology_manager,
-	IssueManager const& issue_manager, CountryDefinition const& country
+	ProvinceHistoryManager const& history_manager, Date date, IssueManager const& issue_manager
 ) {
 	bool ret = true;
 
@@ -109,7 +112,7 @@ bool MapInstance::apply_history_to_provinces(
 				if (pop_history_entry != nullptr) {
 					province.add_pop_vec(pop_history_entry->get_pops());
 
-					province.setup_pop_test_values(ideology_manager, issue_manager, country);
+					province.setup_pop_test_values(issue_manager);
 				}
 			}
 		}

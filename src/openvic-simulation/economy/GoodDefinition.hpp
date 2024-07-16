@@ -28,10 +28,8 @@ namespace OpenVic {
 	 * ECON-238, ECON-239, ECON-240, ECON-241, ECON-242, ECON-243, ECON-244, ECON-245, ECON-246, ECON-247, ECON-248, ECON-249,
 	 * ECON-250, ECON-251, ECON-252, ECON-253, ECON-254, ECON-255, ECON-256, ECON-257, ECON-258, ECON-259, ECON-260, ECON-261
 	 */
-	struct GoodDefinition : HasIdentifierAndColour {
+	struct GoodDefinition : HasIdentifierAndColour, HasIndex<> {
 		friend struct GoodDefinitionManager;
-
-		using index_t = size_t;
 
 		using price_t = fixed_point_t;
 		static constexpr price_t NULL_PRICE = fixed_point_t::_0();
@@ -39,7 +37,6 @@ namespace OpenVic {
 		using good_definition_map_t = fixed_point_map_t<GoodDefinition const*>;
 
 	private:
-		const index_t PROPERTY(index);
 		GoodCategory const& PROPERTY(category);
 		const price_t PROPERTY(base_price);
 		const bool PROPERTY_CUSTOM_PREFIX(available_from_start, is);

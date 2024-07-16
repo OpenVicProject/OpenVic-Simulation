@@ -2,15 +2,29 @@
 
 #include "openvic-simulation/country/CountryDefinition.hpp"
 #include "openvic-simulation/history/CountryHistory.hpp"
-#include "openvic-simulation/military/Deployment.hpp"
 #include "openvic-simulation/military/UnitInstanceGroup.hpp"
 
 using namespace OpenVic;
 
-CountryInstance::CountryInstance(CountryDefinition const* new_country_definition)
-  : country_definition { new_country_definition }, primary_culture { nullptr }, religion { nullptr }, ruling_party { nullptr },
-	last_election {}, capital { nullptr }, government_type { nullptr }, plurality { 0 }, national_value { nullptr },
-	civilised { false }, prestige { 0 } {}
+CountryInstance::CountryInstance(
+	CountryDefinition const* new_country_definition,
+	decltype(technologies)::keys_t const& technology_keys,
+	decltype(inventions)::keys_t const& invention_keys,
+	decltype(upper_house)::keys_t const& ideology_keys
+) : country_definition { new_country_definition },
+	primary_culture { nullptr },
+	religion { nullptr },
+	ruling_party { nullptr },
+	last_election {},
+	capital { nullptr },
+	government_type { nullptr },
+	plurality { 0 },
+	national_value { nullptr },
+	civilised { false },
+	prestige { 0 },
+	upper_house { &ideology_keys },
+	technologies { &technology_keys },
+	inventions { &invention_keys } {}
 
 std::string_view CountryInstance::get_identifier() const {
 	return country_definition != nullptr ? country_definition->get_identifier() : "NULL";
@@ -41,19 +55,20 @@ bool CountryInstance::remove_accepted_culture(Culture const* culture_to_remove) 
 	return true;
 }
 
-void CountryInstance::add_to_upper_house(Ideology const* party, fixed_point_t popularity) {
-	upper_house[party] = popularity;
-}
-
-bool CountryInstance::remove_from_upper_house(Ideology const* party) {
-	return upper_house.erase(party) == 1;
+bool CountryInstance::set_upper_house(Ideology const* ideology, fixed_point_t popularity) {
+	if (ideology != nullptr) {
+		upper_house[*ideology] = popularity;
+		return true;
+	} else {
+		Logger::error("Trying to set null ideology in upper house of ", get_identifier());
+		return false;
+	}
 }
 
 bool CountryInstance::add_reform(Reform const* new_reform) {
 	if (std::find(reforms.begin(), reforms.end(), new_reform) != reforms.end()) {
 		Logger::warning(
-			"Attempted to add reform ", new_reform->get_identifier(), " to country ", country_definition->get_identifier(),
-			": already present!"
+			"Attempted to add reform \"", new_reform, "\" to country ", get_identifier(), ": already present!"
 		);
 		return false;
 	}
@@ -65,8 +80,7 @@ bool CountryInstance::remove_reform(Reform const* reform_to_remove) {
 	auto existing_entry = std::find(reforms.begin(), reforms.end(), reform_to_remove);
 	if (existing_entry == reforms.end()) {
 		Logger::warning(
-			"Attempted to remove reform ", reform_to_remove->get_identifier(), " from country ",
-			country_definition->get_identifier(), ": not present!"
+			"Attempted to remove reform \"", reform_to_remove, "\" from country ", get_identifier(), ": not present!"
 		);
 		return false;
 	}
@@ -178,9 +192,7 @@ bool CountryInstance::apply_history_to_country(CountryHistoryEntry const* entry)
 	set_optional(religion, entry->get_religion());
 	set_optional(ruling_party, entry->get_ruling_party());
 	set_optional(last_election, entry->get_last_election());
-	for (auto const& [ideology, popularity] : entry->get_upper_house()) {
-		add_to_upper_house(ideology, popularity);
-	}
+	ret &= upper_house.copy(entry->get_upper_house());
 	set_optional(capital, entry->get_capital());
 	set_optional(government_type, entry->get_government_type());
 	set_optional(plurality, entry->get_plurality());
@@ -194,11 +206,16 @@ bool CountryInstance::apply_history_to_country(CountryHistoryEntry const* entry)
 	return ret;
 }
 
-bool CountryInstanceManager::generate_country_instances(CountryDefinitionManager const& country_definition_manager) {
+bool CountryInstanceManager::generate_country_instances(
+	CountryDefinitionManager const& country_definition_manager,
+	decltype(CountryInstance::technologies)::keys_t const& technology_keys,
+	decltype(CountryInstance::inventions)::keys_t const& invention_keys,
+	decltype(CountryInstance::upper_house)::keys_t const& ideology_keys
+) {
 	reserve_more(country_instances, country_definition_manager.get_country_definition_count());
 
 	for (CountryDefinition const& country_definition : country_definition_manager.get_country_definitions()) {
-		country_instances.add_item({ &country_definition });
+		country_instances.add_item({ &country_definition, technology_keys, invention_keys, ideology_keys });
 	}
 
 	return true;

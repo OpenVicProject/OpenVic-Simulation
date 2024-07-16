@@ -11,7 +11,7 @@ namespace OpenVic {
 	struct MapInstance;
 	struct ProvinceInstance;
 
-	struct Mapmode : HasIdentifier {
+	struct Mapmode : HasIdentifier, HasIndex<> {
 		friend struct MapmodeManager;
 
 		/* Bottom 32 bits are the base colour, top 32 are the stripe colour, both in ARGB format with the alpha channels
@@ -24,10 +24,8 @@ namespace OpenVic {
 			constexpr base_stripe_t(colour_argb_t both) : base_stripe_t { both, both } {}
 		};
 		using colour_func_t = std::function<base_stripe_t(MapInstance const&, ProvinceInstance const&)>;
-		using index_t = size_t;
 
 	private:
-		const index_t PROPERTY(index);
 		const colour_func_t colour_func;
 
 		Mapmode(std::string_view new_identifier, index_t new_index, colour_func_t new_colour_func);

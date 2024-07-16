@@ -21,7 +21,6 @@ namespace OpenVic {
 	struct Religion;
 	struct BuildingTypeManager;
 	struct ProvinceHistoryEntry;
-	struct IdeologyManager;
 	struct IssueManager;
 
 	template<UnitType::branch_t>
@@ -61,12 +60,15 @@ namespace OpenVic {
 
 		std::vector<Pop> PROPERTY(pops);
 		Pop::pop_size_t PROPERTY(total_population);
-		fixed_point_map_t<PopType const*> PROPERTY(pop_type_distribution);
-		fixed_point_map_t<Ideology const*> PROPERTY(ideology_distribution);
+		IndexedMap<PopType, fixed_point_t> PROPERTY(pop_type_distribution);
+		IndexedMap<Ideology, fixed_point_t> PROPERTY(ideology_distribution);
 		fixed_point_map_t<Culture const*> PROPERTY(culture_distribution);
 		fixed_point_map_t<Religion const*> PROPERTY(religion_distribution);
 
-		ProvinceInstance(ProvinceDefinition const& new_province_definition);
+		ProvinceInstance(
+			ProvinceDefinition const& new_province_definition, decltype(pop_type_distribution)::keys_t const& pop_type_keys,
+			decltype(ideology_distribution)::keys_t const& ideology_keys
+		);
 
 		void _add_pop(Pop&& pop);
 		void _update_pops();
@@ -116,8 +118,6 @@ namespace OpenVic {
 		bool setup(BuildingTypeManager const& building_type_manager);
 		bool apply_history_to_province(ProvinceHistoryEntry const* entry);
 
-		void setup_pop_test_values(
-			IdeologyManager const& ideology_manager, IssueManager const& issue_manager, CountryDefinition const& country
-		);
+		void setup_pop_test_values(IssueManager const& issue_manager);
 	};
 }

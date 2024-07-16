@@ -10,6 +10,7 @@
 #include "openvic-simulation/scripts/ConditionalWeight.hpp"
 #include "openvic-simulation/types/EnumBitfield.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
+#include "openvic-simulation/types/IndexedMap.hpp"
 
 namespace OpenVic {
 
@@ -68,9 +69,9 @@ namespace OpenVic {
 
 		fixed_point_t PROPERTY(literacy);
 
-		fixed_point_map_t<Ideology const*> PROPERTY(ideologies);
+		IndexedMap<Ideology, fixed_point_t> PROPERTY(ideologies);
 		fixed_point_map_t<Issue const*> PROPERTY(issues);
-		fixed_point_map_t<CountryParty const*> PROPERTY(votes);
+		IndexedMap<CountryParty, fixed_point_t> PROPERTY(votes);
 
 		fixed_point_t PROPERTY(unemployment);
 		fixed_point_t PROPERTY(cash);
@@ -81,7 +82,7 @@ namespace OpenVic {
 		fixed_point_t PROPERTY(everyday_needs_fulfilled);
 		fixed_point_t PROPERTY(luxury_needs_fulfilled);
 
-		Pop(PopBase const& pop_base);
+		Pop(PopBase const& pop_base, decltype(ideologies)::keys_t const& ideology_keys);
 
 	public:
 		Pop(Pop const&) = delete;
@@ -89,9 +90,7 @@ namespace OpenVic {
 		Pop& operator=(Pop const&) = delete;
 		Pop& operator=(Pop&&) = delete;
 
-		void setup_pop_test_values(
-			IdeologyManager const& ideology_manager, IssueManager const& issue_manager, CountryDefinition const& country
-		);
+		void setup_pop_test_values(IssueManager const& issue_manager);
 
 		void set_location(ProvinceInstance const& new_location);
 	};

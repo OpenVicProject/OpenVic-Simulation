@@ -12,6 +12,7 @@
 #include "openvic-simulation/types/Colour.hpp"
 #include "openvic-simulation/types/Date.hpp"
 #include "openvic-simulation/types/HasIdentifier.hpp"
+#include "openvic-simulation/types/IndexedMap.hpp"
 #include "openvic-simulation/types/OrderedContainers.hpp"
 #include "openvic-simulation/types/Vector.hpp"
 #include "openvic-simulation/utility/Getters.hpp"
@@ -534,6 +535,26 @@ namespace OpenVic {
 				}
 				Logger::warn_or_error(warn, "Duplicate map entry with key: \"", key, "\"");
 				return warn;
+			};
+		}
+
+		template<typename Key, typename Value>
+		Callback<Value> auto map_callback(
+			IndexedMap<Key, Value>& map, Key const* key, bool warn = false
+		) {
+			return [&map, key, warn](Value value) -> bool {
+				if (key == nullptr) {
+					Logger::error("Null key in map_callback");
+					return false;
+				}
+				Value& map_value = map[*key];
+				bool ret = true;
+				if (map_value != Value {}) {
+					Logger::warn_or_error(warn, "Duplicate map entry with key: \"", key, "\"");
+					ret = warn;
+				}
+				map_value = std::move(value);
+				return ret;
 			};
 		}
 

@@ -1,5 +1,7 @@
 #include "NationalFocus.hpp"
 
+#include "openvic-simulation/politics/Ideology.hpp"
+
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;
 
@@ -16,13 +18,12 @@ NationalFocus::NationalFocus(
 	Ideology const* new_loyalty_ideology,
 	fixed_point_t new_loyalty_value,
 	ConditionScript&& new_limit
-) : HasIdentifier { new_identifier },
+) : Modifier { new_identifier, std::move(new_modifiers), 0 },
 	group { new_group },
 	icon { new_icon },
 	has_flashpoint { new_has_flashpoint },
 	own_provinces { new_own_provinces },
 	outliner_show_as_percent { new_outliner_show_as_percent },
-	modifiers { std::move(new_modifiers) },
 	loyalty_ideology { new_loyalty_ideology },
 	loyalty_value { new_loyalty_value },
 	limit { std::move(new_limit) } {}

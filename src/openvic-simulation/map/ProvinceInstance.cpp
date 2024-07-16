@@ -7,8 +7,10 @@
 
 using namespace OpenVic;
 
-ProvinceInstance::ProvinceInstance(ProvinceDefinition const& new_province_definition)
-  : HasIdentifierAndColour { new_province_definition },
+ProvinceInstance::ProvinceInstance(
+	ProvinceDefinition const& new_province_definition, decltype(pop_type_distribution)::keys_t const& pop_type_keys,
+	decltype(ideology_distribution)::keys_t const& ideology_keys
+) : HasIdentifierAndColour { new_province_definition },
 	province_definition { new_province_definition },
 	terrain_type { new_province_definition.get_default_terrain_type() },
 	life_rating { 0 },
@@ -25,8 +27,8 @@ ProvinceInstance::ProvinceInstance(ProvinceDefinition const& new_province_defini
 	navies {},
 	pops {},
 	total_population { 0 },
-	pop_type_distribution {},
-	ideology_distribution {},
+	pop_type_distribution { &pop_type_keys },
+	ideology_distribution { &ideology_keys },
 	culture_distribution {},
 	religion_distribution {} {}
 
@@ -58,7 +60,7 @@ bool ProvinceInstance::add_pop_vec(std::vector<PopBase> const& pop_vec) {
 	if (!province_definition.is_water()) {
 		reserve_more(pops, pop_vec.size());
 		for (PopBase const& pop : pop_vec) {
-			_add_pop(Pop { pop });
+			_add_pop(Pop { pop, *ideology_distribution.get_keys() });
 		}
 		return true;
 	} else {
@@ -82,7 +84,7 @@ void ProvinceInstance::_update_pops() {
 	religion_distribution.clear();
 	for (Pop const& pop : pops) {
 		total_population += pop.get_size();
-		pop_type_distribution[&pop.get_type()] += pop.get_size();
+		pop_type_distribution[pop.get_type()] += pop.get_size();
 		ideology_distribution += pop.get_ideologies();
 		culture_distribution[&pop.get_culture()] += pop.get_size();
 		religion_distribution[&pop.get_religion()] += pop.get_size();
@@ -214,10 +216,8 @@ bool ProvinceInstance::apply_history_to_province(ProvinceHistoryEntry const* ent
 	return ret;
 }
 
-void ProvinceInstance::setup_pop_test_values(
-	IdeologyManager const& ideology_manager, IssueManager const& issue_manager, CountryDefinition const& country
-) {
+void ProvinceInstance::setup_pop_test_values(IssueManager const& issue_manager) {
 	for (Pop& pop : pops) {
-		pop.setup_pop_test_values(ideology_manager, issue_manager, country);
+		pop.setup_pop_test_values(issue_manager);
 	}
 }

@@ -6,13 +6,21 @@
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;
 
-CountryHistoryEntry::CountryHistoryEntry(CountryDefinition const& new_country, Date new_date)
-	: HistoryEntry { new_date }, country { new_country } {}
+CountryHistoryEntry::CountryHistoryEntry(
+	CountryDefinition const& new_country, Date new_date, decltype(upper_house)::keys_t const& ideology_keys,
+	decltype(government_flag_overrides)::keys_t const& government_type_keys
+) : HistoryEntry { new_date }, country { new_country }, upper_house { &ideology_keys },
+	government_flag_overrides { &government_type_keys } {}
 
-CountryHistoryMap::CountryHistoryMap(CountryDefinition const& new_country) : country { new_country } {}
+CountryHistoryMap::CountryHistoryMap(
+	CountryDefinition const& new_country, decltype(ideology_keys) new_ideology_keys,
+	decltype(government_type_keys) new_government_type_keys
+) : country { new_country }, ideology_keys { new_ideology_keys }, government_type_keys { new_government_type_keys } {}
 
 std::unique_ptr<CountryHistoryEntry> CountryHistoryMap::_make_entry(Date date) const {
-	return std::unique_ptr<CountryHistoryEntry> { new CountryHistoryEntry { country, date } };
+	return std::unique_ptr<CountryHistoryEntry> {
+		new CountryHistoryEntry { country, date, ideology_keys, government_type_keys }
+	};
 }
 
 bool CountryHistoryMap::_load_history_entry(
@@ -90,8 +98,7 @@ bool CountryHistoryMap::_load_history_entry(
 		"prestige", ZERO_OR_ONE, expect_fixed_point(assign_variable_callback(entry.prestige)),
 		"ruling_party", ZERO_OR_ONE, country.expect_party_identifier(assign_variable_callback_pointer_opt(entry.ruling_party)),
 		"last_election", ZERO_OR_ONE, expect_date(assign_variable_callback(entry.last_election)),
-		"upper_house", ZERO_OR_ONE, politics_manager.get_ideology_manager().expect_ideology_dictionary_reserve_length(
-			entry.upper_house,
+		"upper_house", ZERO_OR_ONE, politics_manager.get_ideology_manager().expect_ideology_dictionary(
 			[&entry](Ideology const& ideology, ast::NodeCPtr value) -> bool {
 				return expect_fixed_point(map_callback(entry.upper_house, &ideology))(value);
 			}
@@ -216,7 +223,9 @@ CountryHistoryMap const* CountryHistoryManager::get_country_history(CountryDefin
 }
 
 bool CountryHistoryManager::load_country_history_file(
-	DefinitionManager& definition_manager, Dataloader const& dataloader, CountryDefinition const& country, ast::NodeCPtr root
+	DefinitionManager& definition_manager, Dataloader const& dataloader, CountryDefinition const& country,
+	decltype(CountryHistoryMap::ideology_keys) ideology_keys,
+	decltype(CountryHistoryMap::government_type_keys) government_type_keys, ast::NodeCPtr root
 ) {
 	if (locked) {
 		Logger::error("Attempted to load country history file for ", country, " after country history registry was locked!");
@@ -230,7 +239,7 @@ bool CountryHistoryManager::load_country_history_file(
 	decltype(country_histories)::iterator it = country_histories.find(&country);
 	if (it == country_histories.end()) {
 		const std::pair<decltype(country_histories)::iterator, bool> result =
-			country_histories.emplace(&country, CountryHistoryMap { country });
+			country_histories.emplace(&country, CountryHistoryMap { country, ideology_keys, government_type_keys });
 		if (result.second) {
 			it = result.first;
 		} else {

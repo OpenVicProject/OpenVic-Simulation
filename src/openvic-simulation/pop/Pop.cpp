@@ -19,7 +19,7 @@ PopBase::PopBase(
 ) : type { new_type }, culture { new_culture }, religion { new_religion }, size { new_size }, militancy { new_militancy },
 	consciousness { new_consciousness }, rebel_type { new_rebel_type } {}
 
-Pop::Pop(PopBase const& pop_base)
+Pop::Pop(PopBase const& pop_base, decltype(ideologies)::keys_t const& ideology_keys)
   : PopBase { pop_base },
 	location { nullptr },
 	total_change { 0 },
@@ -29,9 +29,9 @@ Pop::Pop(PopBase const& pop_base)
 	num_migrated_internal { 0 },
 	num_migrated_external { 0 },
 	num_migrated_colonial { 0 },
-	ideologies {},
+	ideologies { &ideology_keys },
 	issues {},
-	votes {},
+	votes { nullptr },
 	unemployment { 0 },
 	cash { 0 },
 	income { 0 },
@@ -43,9 +43,7 @@ Pop::Pop(PopBase const& pop_base)
 	assert(size > 0);
 }
 
-void Pop::setup_pop_test_values(
-	IdeologyManager const& ideology_manager, IssueManager const& issue_manager, CountryDefinition const& country
-) {
+void Pop::setup_pop_test_values(IssueManager const& issue_manager) {
 	/* Returns +/- range% of size. */
 	const auto test_size = [this](int32_t range) -> pop_size_t {
 		return size * ((rand() % (2 * range + 1)) - range) / 100;
@@ -63,21 +61,23 @@ void Pop::setup_pop_test_values(
 
 	/* Generates a number between 0 and max (inclusive) and sets map[&key] to it if it's at least min. */
 	auto test_weight =
-		[]<typename T, std::derived_from<T> U>(
-			fixed_point_map_t<T const*>& map, U const& key, int32_t min, int32_t max
-		) -> void {
+		[]<typename T, typename U>(T& map, U const& key, int32_t min, int32_t max) -> void {
 			const int32_t value = rand() % (max + 1);
 			if (value >= min) {
-				map.emplace(&key, value);
+				if constexpr (utility::is_specialization_of_v<T, IndexedMap>) {
+					map[key] = value;
+				} else {
+					map.emplace(&key, value);
+				}
 			}
 		};
 
 	/* All entries equally weighted for testing. */
 	ideologies.clear();
-	for (Ideology const& ideology : ideology_manager.get_ideologies()) {
+	for (Ideology const& ideology : *ideologies.get_keys()) {
 		test_weight(ideologies, ideology, 1, 5);
 	}
-	normalise_fixed_point_map(ideologies);
+	ideologies.normalise();
 
 	issues.clear();
 	for (Issue const& issue : issue_manager.get_issues()) {
@@ -90,11 +90,13 @@ void Pop::setup_pop_test_values(
 	}
 	normalise_fixed_point_map(issues);
 
-	votes.clear();
-	for (CountryParty const& party : country.get_parties()) {
-		test_weight(votes, party, 4, 10);
+	if (votes.has_keys()) {
+		votes.clear();
+		for (CountryParty const& party : *votes.get_keys()) {
+			test_weight(votes, party, 4, 10);
+		}
+		votes.normalise();
 	}
-	normalise_fixed_point_map(votes);
 
 	/* Returns a fixed point between 0 and max. */
 	const auto test_range = [](fixed_point_t max = 1) -> fixed_point_t {
@@ -116,6 +118,9 @@ void Pop::set_location(ProvinceInstance const& new_location) {
 		location = &new_location;
 
 		// TODO - update location dependent attributes
+
+		votes.set_keys(location->get_owner() != nullptr ? &location->get_owner()->get_parties() : nullptr);
+		// TODO - calculate vote distribution
 	}
 }
 

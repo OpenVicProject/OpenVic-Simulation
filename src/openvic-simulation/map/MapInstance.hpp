@@ -10,9 +10,7 @@ namespace OpenVic {
 	struct MapDefinition;
 	struct BuildingTypeManager;
 	struct ProvinceHistoryManager;
-	struct IdeologyManager;
 	struct IssueManager;
-	struct CountryDefinition;
 
 	/* REQUIREMENTS:
 	 * MAP-4
@@ -44,10 +42,13 @@ namespace OpenVic {
 		ProvinceInstance* get_selected_province();
 		ProvinceDefinition::index_t get_selected_province_index() const;
 
-		bool setup(BuildingTypeManager const& building_type_manager);
+		bool setup(
+			BuildingTypeManager const& building_type_manager,
+			decltype(ProvinceInstance::pop_type_distribution)::keys_t const& pop_type_keys,
+			decltype(ProvinceInstance::ideology_distribution)::keys_t const& ideology_keys
+		);
 		bool apply_history_to_provinces(
-			ProvinceHistoryManager const& history_manager, Date date, IdeologyManager const& ideology_manager,
-			IssueManager const& issue_manager, CountryDefinition const& country
+			ProvinceHistoryManager const& history_manager, Date date, IssueManager const& issue_manager
 		);
 
 		void update_gamestate(Date today);

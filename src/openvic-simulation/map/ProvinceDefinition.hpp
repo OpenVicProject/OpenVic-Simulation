@@ -24,10 +24,9 @@ namespace OpenVic {
 	 * MAP-5, MAP-7, MAP-8, MAP-43, MAP-47
 	 * POP-22
 	 */
-	struct ProvinceDefinition : HasIdentifierAndColour {
+	struct ProvinceDefinition : HasIdentifierAndColour, HasIndex<uint16_t> {
 		friend struct MapDefinition;
 
-		using index_t = uint16_t;
 		using distance_t = fixed_point_t; // should this go inside adjacency_t?
 
 		struct adjacency_t {
@@ -84,7 +83,6 @@ namespace OpenVic {
 
 	private:
 		/* Immutable attributes (unchanged after initial game load) */
-		const index_t PROPERTY(index);
 		Region const* PROPERTY(region);
 		Climate const* PROPERTY(climate);
 		Continent const* PROPERTY(continent);
