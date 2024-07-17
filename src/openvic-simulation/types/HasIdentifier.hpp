@@ -85,4 +85,22 @@ namespace OpenVic {
 
 	using HasIdentifierAndColour = _HasIdentifierAndColour<colour_t>;
 	using HasIdentifierAndAlphaColour = _HasIdentifierAndColour<colour_argb_t>;
+
+	template<std::unsigned_integral T = size_t>
+	class HasIndex {
+	public:
+		using index_t = T;
+
+	private:
+		const index_t PROPERTY(index);
+
+	protected:
+		HasIndex(index_t new_index) : index { new_index } {}
+		HasIndex(HasIndex const&) = default;
+
+	public:
+		HasIndex(HasIndex&&) = default;
+		HasIndex& operator=(HasIndex const&) = delete;
+		HasIndex& operator=(HasIndex&&) = delete;
+	};
 }

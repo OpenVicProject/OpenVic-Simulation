@@ -1,9 +1,6 @@
 #pragma once
 
-#include "openvic-simulation/economy/GoodDefinition.hpp"
 #include "openvic-simulation/misc/Modifier.hpp"
-#include "openvic-simulation/politics/Ideology.hpp"
-#include "openvic-simulation/pop/Pop.hpp"
 #include "openvic-simulation/scripts/ConditionScript.hpp"
 #include "openvic-simulation/types/IdentifierRegistry.hpp"
 #include "openvic-simulation/utility/Getters.hpp"
@@ -18,7 +15,9 @@ namespace OpenVic {
 		NationalFocusGroup(std::string_view new_identifier);
 	};
 
-	struct NationalFocus : HasIdentifier {
+	struct Ideology;
+
+	struct NationalFocus : Modifier {
 		friend struct NationalFocusManager;
 
 	private:
@@ -27,7 +26,6 @@ namespace OpenVic {
 		bool PROPERTY(has_flashpoint);
 		bool PROPERTY(own_provinces);
 		bool PROPERTY(outliner_show_as_percent);
-		ModifierValue PROPERTY(modifiers);
 		Ideology const* PROPERTY(loyalty_ideology);
 		fixed_point_t PROPERTY(loyalty_value);
 		ConditionScript PROPERTY(limit);
@@ -50,6 +48,10 @@ namespace OpenVic {
 	public:
 		NationalFocus(NationalFocus&&) = default;
 	};
+
+	struct PopManager;
+	struct IdeologyManager;
+	struct GoodDefinitionManager;
 
 	struct NationalFocusManager {
 	private:

@@ -1,11 +1,11 @@
 #pragma once
 
 #include <optional>
-#include <vector>
 
 #include "openvic-simulation/history/HistoryMap.hpp"
 #include "openvic-simulation/types/Date.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPointMap.hpp"
+#include "openvic-simulation/types/IndexedMap.hpp"
 #include "openvic-simulation/types/OrderedContainers.hpp"
 
 namespace OpenVic {
@@ -36,7 +36,7 @@ namespace OpenVic {
 		std::optional<Religion const*> PROPERTY(religion);
 		std::optional<CountryParty const*> PROPERTY(ruling_party);
 		std::optional<Date> PROPERTY(last_election);
-		fixed_point_map_t<Ideology const*> PROPERTY(upper_house);
+		IndexedMap<Ideology, fixed_point_t> PROPERTY(upper_house);
 		std::optional<ProvinceDefinition const*> PROPERTY(capital);
 		std::optional<GovernmentType const*> PROPERTY(government_type);
 		std::optional<fixed_point_t> PROPERTY(plurality);
@@ -57,10 +57,13 @@ namespace OpenVic {
 		std::optional<fixed_point_t> PROPERTY(colonial_points);
 		string_set_t PROPERTY(country_flags);
 		string_set_t PROPERTY(global_flags);
-		ordered_map<GovernmentType const*, GovernmentType const*> PROPERTY(government_flag_overrides);
+		IndexedMap<GovernmentType, GovernmentType const*> PROPERTY(government_flag_overrides);
 		ordered_set<Decision const*> PROPERTY(decisions);
 
-		CountryHistoryEntry(CountryDefinition const& new_country, Date new_date);
+		CountryHistoryEntry(
+			CountryDefinition const& new_country, Date new_date, decltype(upper_house)::keys_t const& ideology_keys,
+			decltype(government_flag_overrides)::keys_t const& government_type_keys
+		);
 	};
 
 	class Dataloader;
@@ -72,9 +75,14 @@ namespace OpenVic {
 
 	private:
 		CountryDefinition const& PROPERTY(country);
+		decltype(CountryHistoryEntry::upper_house)::keys_t const& PROPERTY(ideology_keys);
+		decltype(CountryHistoryEntry::government_flag_overrides)::keys_t const& PROPERTY(government_type_keys);
 
 	protected:
-		CountryHistoryMap(CountryDefinition const& new_country);
+		CountryHistoryMap(
+			CountryDefinition const& new_country, decltype(ideology_keys) new_ideology_keys,
+			decltype(government_type_keys) new_government_type_keys
+		);
 
 		std::unique_ptr<CountryHistoryEntry> _make_entry(Date date) const override;
 		bool _load_history_entry(
@@ -99,7 +107,8 @@ namespace OpenVic {
 
 		bool load_country_history_file(
 			DefinitionManager& definition_manager, Dataloader const& dataloader, CountryDefinition const& country,
-			ast::NodeCPtr root
+			decltype(CountryHistoryMap::ideology_keys) ideology_keys,
+			decltype(CountryHistoryMap::government_type_keys) government_type_keys, ast::NodeCPtr root
 		);
 	};
 

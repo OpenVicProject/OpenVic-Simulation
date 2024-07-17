@@ -25,7 +25,7 @@ CountryParty::CountryParty(
 CountryDefinition::CountryDefinition(
 	std::string_view new_identifier,
 	colour_t new_colour,
-	size_t new_index,
+	index_t new_index,
 	GraphicalCultureType const& new_graphical_culture,
 	IdentifierRegistry<CountryParty>&& new_parties,
 	unit_names_map_t&& new_unit_names,
@@ -35,7 +35,7 @@ CountryDefinition::CountryDefinition(
 	colour_t new_secondary_unit_colour,
 	colour_t new_tertiary_unit_colour
 ) : HasIdentifierAndColour { new_identifier, new_colour, false },
-	index { new_index },
+	HasIndex { new_index },
 	graphical_culture { new_graphical_culture },
 	parties { std::move(new_parties) },
 	unit_names { std::move(new_unit_names) },

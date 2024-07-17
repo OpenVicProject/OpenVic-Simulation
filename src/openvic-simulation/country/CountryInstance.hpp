@@ -6,9 +6,11 @@
 
 #include "openvic-simulation/military/Leader.hpp"
 #include "openvic-simulation/military/UnitInstanceGroup.hpp"
+#include "openvic-simulation/research/Invention.hpp"
+#include "openvic-simulation/research/Technology.hpp"
 #include "openvic-simulation/types/Date.hpp"
-#include "openvic-simulation/types/fixed_point/FixedPointMap.hpp"
 #include "openvic-simulation/types/IdentifierRegistry.hpp"
+#include "openvic-simulation/types/IndexedMap.hpp"
 #include "openvic-simulation/utility/Getters.hpp"
 
 namespace OpenVic {
@@ -34,7 +36,7 @@ namespace OpenVic {
 		Religion const* PROPERTY_RW(religion);
 		CountryParty const* PROPERTY_RW(ruling_party);
 		Date PROPERTY_RW(last_election);
-		fixed_point_map_t<Ideology const*> PROPERTY(upper_house);
+		IndexedMap<Ideology, fixed_point_t> PROPERTY(upper_house);
 		// TODO - should this be ProvinceInstance and/or non-const pointer?
 		// Currently ProvinceDefinition as that's what CountryHistoryEntry has (loaded prior to ProvinceInstance generation)
 		ProvinceDefinition const* PROPERTY_RW(capital);
@@ -44,21 +46,27 @@ namespace OpenVic {
 		bool PROPERTY_RW(civilised);
 		fixed_point_t PROPERTY_RW(prestige);
 		std::vector<Reform const*> PROPERTY(reforms); // TODO: should be map of reform groups to active reforms: must set defaults & validate applied history
+
+		IndexedMap<Technology, bool> PROPERTY(technologies);
+		IndexedMap<Invention, bool> PROPERTY(inventions);
+
 		// TODO: Military units + OOBs; will probably need an extensible deployment class
 
 		plf::colony<General> PROPERTY(generals);
 		plf::colony<Admiral> PROPERTY(admirals);
 
-		CountryInstance(CountryDefinition const* new_country_definition);
+		CountryInstance(
+			CountryDefinition const* new_country_definition, decltype(technologies)::keys_t const& technology_keys,
+			decltype(inventions)::keys_t const& invention_keys, decltype(upper_house)::keys_t const& ideology_keys
+		);
 
 	public:
 		std::string_view get_identifier() const;
 
 		bool add_accepted_culture(Culture const* new_accepted_culture);
 		bool remove_accepted_culture(Culture const* culture_to_remove);
-		/* Add or modify a party in the upper house. */
-		void add_to_upper_house(Ideology const* party, fixed_point_t popularity);
-		bool remove_from_upper_house(Ideology const* party);
+		/* Set a party's popularity in the upper house. */
+		bool set_upper_house(Ideology const* ideology, fixed_point_t popularity);
 		bool add_reform(Reform const* new_reform);
 		bool remove_reform(Reform const* reform_to_remove);
 
@@ -83,7 +91,12 @@ namespace OpenVic {
 		IdentifierRegistry<CountryInstance> IDENTIFIER_REGISTRY(country_instance);
 
 	public:
-		bool generate_country_instances(CountryDefinitionManager const& country_definition_manager);
+		bool generate_country_instances(
+			CountryDefinitionManager const& country_definition_manager,
+			decltype(CountryInstance::technologies)::keys_t const& technology_keys,
+			decltype(CountryInstance::inventions)::keys_t const& invention_keys,
+			decltype(CountryInstance::upper_house)::keys_t const& ideology_keys
+		);
 
 		bool apply_history_to_countries(
 			CountryHistoryManager const& history_manager, Date date, UnitInstanceManager& unit_instance_manager,

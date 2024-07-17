@@ -14,7 +14,7 @@ using namespace OpenVic::colour_literals;
 
 Mapmode::Mapmode(
 	std::string_view new_identifier, index_t new_index, colour_func_t new_colour_func
-) : HasIdentifier { new_identifier }, index { new_index }, colour_func { new_colour_func } {
+) : HasIdentifier { new_identifier }, HasIndex { new_index }, colour_func { new_colour_func } {
 	assert(colour_func != nullptr);
 }
 

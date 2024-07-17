@@ -538,7 +538,10 @@ bool Dataloader::_load_history(DefinitionManager& definition_manager, bool unuse
 				}
 
 				return country_history_manager.load_country_history_file(
-					definition_manager, *this, *country, parse_defines(file).get_file_node()
+					definition_manager, *this, *country,
+					definition_manager.get_politics_manager().get_ideology_manager().get_ideologies(),
+					definition_manager.get_politics_manager().get_government_type_manager().get_government_types(),
+					parse_defines(file).get_file_node()
 				);
 			}
 		);
