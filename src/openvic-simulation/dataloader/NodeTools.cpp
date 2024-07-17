@@ -16,9 +16,12 @@
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;
 
+#define MOV(...) static_cast<std::remove_reference_t<decltype(__VA_ARGS__)>&&>(__VA_ARGS__)
+#define FWD(...) static_cast<decltype(__VA_ARGS__)>(__VA_ARGS__)
+
 template<typename T>
-static NodeCallback auto _expect_type(Callback<T const*> auto callback) {
-	return [callback](ast::NodeCPtr node) -> bool {
+static NodeCallback auto _expect_type(Callback<T const*> auto&& callback) {
+	return [callback = FWD(callback)](ast::NodeCPtr node) -> bool {
 		if (node != nullptr) {
 			T const* cast_node = dryad::node_try_cast<T>(node);
 			if (cast_node != nullptr) {
@@ -35,8 +38,8 @@ static NodeCallback auto _expect_type(Callback<T const*> auto callback) {
 using _NodeIterator = typename decltype(std::declval<ast::NodeCPtr>()->children())::iterator;
 using _NodeStatementRange = dryad::node_range<_NodeIterator, ast::Statement>;
 
-static NodeCallback auto _abstract_statement_node_callback(Callback<_NodeStatementRange> auto callback) {
-	return [callback](ast::NodeCPtr node) -> bool {
+static NodeCallback auto _abstract_statement_node_callback(Callback<_NodeStatementRange> auto&& callback) {
+	return [callback = FWD(callback)](ast::NodeCPtr node) -> bool {
 		if (node != nullptr) {
 			if (auto const* file_tree = dryad::node_try_cast<ast::FileTree>(node)) {
 				return callback(file_tree->statements());
@@ -58,8 +61,8 @@ static NodeCallback auto _abstract_statement_node_callback(Callback<_NodeStateme
 }
 
 template<std::derived_from<ast::FlatValue> T>
-static Callback<T const*> auto _abstract_string_node_callback(Callback<std::string_view> auto callback, bool allow_empty) {
-	return [callback, allow_empty](T const* node) -> bool {
+static Callback<T const*> auto _abstract_string_node_callback(Callback<std::string_view> auto&& callback, bool allow_empty) {
+	return [callback = FWD(callback), allow_empty](T const* node) -> bool {
 		if (allow_empty) {
 			return callback(node->value().view());
 		} else {
@@ -229,8 +232,8 @@ node_callback_t NodeTools::expect_days(callback_t<Timespan> callback) {
 }
 
 template<typename T, node_callback_t (*expect_func)(callback_t<T>)>
-NodeCallback auto _expect_vec2(Callback<vec2_t<T>> auto callback) {
-	return [callback](ast::NodeCPtr node) -> bool {
+NodeCallback auto _expect_vec2(Callback<vec2_t<T>> auto&& callback) {
+	return [callback = FWD(callback)](ast::NodeCPtr node) -> bool {
 		vec2_t<T> vec;
 		bool ret = expect_dictionary_keys(
 			"x", ONE_EXACTLY, expect_func(assign_variable_callback(vec.x)),

@@ -18,6 +18,9 @@
 #include "openvic-simulation/utility/Getters.hpp"
 #include "openvic-simulation/utility/TslHelper.hpp"
 
+#define MOV(...) static_cast<std::remove_reference_t<decltype(__VA_ARGS__)>&&>(__VA_ARGS__)
+#define FWD(...) static_cast<decltype(__VA_ARGS__)>(__VA_ARGS__)
+
 namespace OpenVic {
 	namespace ast {
 		using namespace ovdl::v2script::ast;
@@ -55,15 +58,14 @@ namespace OpenVic {
 	}
 
 	namespace NodeTools {
-
 		template<typename Fn, typename Return = void, typename... Args>
 		concept Functor = requires(Fn&& fn, Args&&... args) {
-			{ std::invoke(std::forward<Fn>(fn), std::forward<Args>(args)...) } -> std::same_as<Return>;
+			{ std::invoke(FWD(fn), FWD(args)...) } -> std::same_as<Return>;
 		};
 
 		template<typename Fn, typename Return = void, typename... Args>
 		concept FunctorConvertible = requires(Fn&& fn, Args&&... args) {
-			{ std::invoke(std::forward<Fn>(fn), std::forward<Args>(args)...) } -> std::convertible_to<Return>;
+			{ std::invoke(FWD(fn), FWD(args)...) } -> std::convertible_to<Return>;
 		};
 
 		template<typename Fn, typename... Args>
@@ -106,7 +108,7 @@ namespace OpenVic {
 		node_callback_t expect_uint64(callback_t<uint64_t> callback, int base = 10);
 
 		template<std::signed_integral T>
-		NodeCallback auto expect_int(callback_t<T> callback, int base = 10) {
+		NodeCallback auto expect_int(callback_t<T>& callback, int base = 10) {
 			return expect_int64([callback](int64_t val) -> bool {
 				if (static_cast<int64_t>(std::numeric_limits<T>::lowest()) <= val &&
 					val <= static_cast<int64_t>(std::numeric_limits<T>::max())) {
@@ -119,9 +121,13 @@ namespace OpenVic {
 				return false;
 			}, base);
 		}
+		template<std::signed_integral T>
+		NodeCallback auto expect_int(callback_t<T>&& callback, int base = 10) {
+			return expect_int(callback, base);
+		}
 
 		template<std::integral T>
-		NodeCallback auto expect_uint(callback_t<T> callback, int base = 10) {
+		NodeCallback auto expect_uint(callback_t<T>& callback, int base = 10) {
 			return expect_uint64([callback](uint64_t val) -> bool {
 				if (val <= static_cast<uint64_t>(std::numeric_limits<T>::max())) {
 					return callback(val);
@@ -131,6 +137,10 @@ namespace OpenVic {
 				);
 				return false;
 			}, base);
+		}
+		template<std::integral T>
+		NodeCallback auto expect_uint(callback_t<T>&& callback, int base = 10) {
+			return expect_uint(callback, base);
 		}
 
 		callback_t<std::string_view> expect_fixed_point_str(callback_t<fixed_point_t> callback);
@@ -182,8 +192,8 @@ namespace OpenVic {
 			node_callback_t callback;
 			size_t count;
 
-			dictionary_entry_t(expected_count_t new_expected_count, node_callback_t new_callback)
-				: expected_count { new_expected_count }, callback { new_callback }, count { 0 } {}
+			dictionary_entry_t(expected_count_t new_expected_count, node_callback_t&& new_callback)
+				: expected_count { new_expected_count }, callback { MOV(new_callback) }, count { 0 } {}
 
 			constexpr bool must_appear() const {
 				return static_cast<uint8_t>(expected_count) & static_cast<uint8_t>(expected_count_t::_MUST_APPEAR);
@@ -200,21 +210,21 @@ namespace OpenVic {
 		using key_map_t = template_key_map_t<StringMapCaseSensitive>;
 		using case_insensitive_key_map_t = template_key_map_t<StringMapCaseInsensitive>;
 
-		template<StringMapCase Case>
+		template<IsOrderedMap Map>
 		bool add_key_map_entry(
-			template_key_map_t<Case>& key_map, std::string_view key, dictionary_entry_t::expected_count_t expected_count,
-			NodeCallback auto callback
+			Map&& key_map, std::string_view key, dictionary_entry_t::expected_count_t expected_count,
+			NodeCallback auto&& callback
 		) {
 			if (!key_map.contains(key)) {
-				key_map.emplace(key, dictionary_entry_t { expected_count, callback });
+				key_map.emplace(key, dictionary_entry_t { expected_count, MOV(callback) });
 				return true;
 			}
 			Logger::error("Duplicate expected dictionary key: ", key);
 			return false;
 		}
 
-		template<StringMapCase Case>
-		bool remove_key_map_entry(template_key_map_t<Case>& key_map, std::string_view key) {
+		template<IsOrderedMap Map>
+		bool remove_key_map_entry(Map&& key_map, std::string_view key) {
 			if (key_map.erase(key) == 0) {
 				Logger::error("Failed to find dictionary key to remove: ", key);
 				return false;
@@ -222,12 +232,12 @@ namespace OpenVic {
 			return true;
 		}
 
-		template<StringMapCase Case>
+		template<IsOrderedMap Map>
 		KeyValueCallback auto dictionary_keys_callback(
-			template_key_map_t<Case>& key_map, KeyValueCallback auto default_callback
+			Map&& key_map, KeyValueCallback auto&& default_callback
 		) {
-			return [&key_map, default_callback](std::string_view key, ast::NodeCPtr value) -> bool {
-				typename template_key_map_t<Case>::iterator it = key_map.find(key);
+			return [&key_map, default_callback = FWD(default_callback)](std::string_view key, ast::NodeCPtr value) mutable -> bool {
+				typename std::remove_reference_t<Map>::iterator it = key_map.find(key);
 				if (it == key_map.end()) {
 					return default_callback(key, value);
 				}
@@ -245,8 +255,8 @@ namespace OpenVic {
 			};
 		}
 
-		template<StringMapCase Case>
-		bool check_key_map_counts(template_key_map_t<Case>& key_map) {
+		template<IsOrderedMap Map>
+		bool check_key_map_counts(Map&& key_map) {
 			bool ret = true;
 			for (auto key_entry : mutable_iterator(key_map)) {
 				dictionary_entry_t& entry = key_entry.second;
@@ -263,92 +273,95 @@ namespace OpenVic {
 		constexpr bool add_key_map_entries(template_key_map_t<Case>& key_map) {
 			return true;
 		}
-
-		template<StringMapCase Case, typename... Args>
-		bool add_key_map_entries(
-			template_key_map_t<Case>& key_map, std::string_view key, dictionary_entry_t::expected_count_t expected_count,
-			NodeCallback auto callback, Args... args
-		) {
-			bool ret = add_key_map_entry(key_map, key, expected_count, callback);
-			ret &= add_key_map_entries(key_map, args...);
-			return ret;
+		template<StringMapCase Case>
+		constexpr bool add_key_map_entries(template_key_map_t<Case>&& key_map) {
+			return add_key_map_entries(key_map);
 		}
 
-		template<StringMapCase Case>
-		NodeCallback auto expect_dictionary_key_map_and_length_and_default(
-			template_key_map_t<Case> key_map, LengthCallback auto length_callback, KeyValueCallback auto default_callback
+		template<IsOrderedMap Map, typename... Args>
+		bool add_key_map_entries(
+			Map&& key_map, std::string_view key, dictionary_entry_t::expected_count_t expected_count,
+			NodeCallback auto&& callback, Args&&... args
 		) {
-			return [length_callback, default_callback, key_map = std::move(key_map)](ast::NodeCPtr node) mutable -> bool {
+			bool ret = add_key_map_entry(FWD(key_map), FWD(key), expected_count, FWD(callback));
+			ret &= add_key_map_entries(FWD(key_map), FWD(args)...);
+			return ret;
+		}
+		template<IsOrderedMap Map>
+		NodeCallback auto expect_dictionary_key_map_and_length_and_default(
+			Map&& key_map, LengthCallback auto&& length_callback, KeyValueCallback auto&& default_callback
+		) {
+			return [length_callback = FWD(length_callback), default_callback = FWD(default_callback), key_map = MOV(key_map)](ast::NodeCPtr node) mutable -> bool {
 				bool ret = expect_dictionary_and_length(
-					length_callback, dictionary_keys_callback(key_map, default_callback)
+					FWD(length_callback), dictionary_keys_callback(key_map, FWD(default_callback))
 				)(node);
 				ret &= check_key_map_counts(key_map);
 				return ret;
 			};
 		}
 
-		template<StringMapCase Case>
+		template<IsOrderedMap Map>
 		NodeCallback auto expect_dictionary_key_map_and_length(
-			template_key_map_t<Case> key_map, LengthCallback auto length_callback
+			Map&& key_map, LengthCallback auto&& length_callback
 		) {
 			return expect_dictionary_key_map_and_length_and_default(
-				std::move(key_map), length_callback, key_value_invalid_callback
+				FWD(key_map), FWD(length_callback), key_value_invalid_callback
 			);
 		}
 
-		template<StringMapCase Case>
+		template<IsOrderedMap Map>
 		NodeCallback auto expect_dictionary_key_map_and_default(
-			template_key_map_t<Case> key_map, KeyValueCallback auto default_callback
+			Map&& key_map, KeyValueCallback auto&& default_callback
 		) {
 			return expect_dictionary_key_map_and_length_and_default(
-				std::move(key_map), default_length_callback, default_callback
+				FWD(key_map), default_length_callback, FWD(default_callback)
 			);
 		}
 
 		template<StringMapCase Case>
-		NodeCallback auto expect_dictionary_key_map(template_key_map_t<Case> key_map) {
+		NodeCallback auto expect_dictionary_key_map(template_key_map_t<Case>&& key_map) {
 			return expect_dictionary_key_map_and_length_and_default(
-				std::move(key_map), default_length_callback, key_value_invalid_callback
+				MOV(key_map), default_length_callback, key_value_invalid_callback
 			);
 		}
 
-		template<StringMapCase Case, typename... Args>
+		template<IsOrderedMap Map, typename... Args>
 		NodeCallback auto expect_dictionary_key_map_and_length_and_default(
-			template_key_map_t<Case> key_map, LengthCallback auto length_callback, KeyValueCallback auto default_callback,
-			Args... args
+			Map&& key_map, LengthCallback auto&& length_callback, KeyValueCallback auto&& default_callback,
+			Args&&... args
 		) {
 			// TODO - pass return value back up (part of big key_map_t rewrite?)
-			add_key_map_entries(key_map, args...);
-			return expect_dictionary_key_map_and_length_and_default(std::move(key_map), length_callback, default_callback);
+			add_key_map_entries(FWD(key_map), FWD(args)...);
+			return expect_dictionary_key_map_and_length_and_default(FWD(key_map), FWD(length_callback), FWD(default_callback));
 		}
 
 		template<StringMapCase Case = StringMapCaseSensitive, typename... Args>
 		NodeCallback auto expect_dictionary_keys_and_length_and_default(
-			LengthCallback auto length_callback, KeyValueCallback auto default_callback, Args... args
+			LengthCallback auto&& length_callback, KeyValueCallback auto&& default_callback, Args&&... args
 		) {
 			return expect_dictionary_key_map_and_length_and_default(
-				template_key_map_t<Case> {}, length_callback, default_callback, args...
+				template_key_map_t<Case> {}, FWD(length_callback), FWD(default_callback), FWD(args)...
 			);
 		}
 
 		template<StringMapCase Case = StringMapCaseSensitive, typename... Args>
-		NodeCallback auto expect_dictionary_keys_and_length(LengthCallback auto length_callback, Args... args) {
+		NodeCallback auto expect_dictionary_keys_and_length(LengthCallback auto&& length_callback, Args&&... args) {
 			return expect_dictionary_key_map_and_length_and_default(
-				template_key_map_t<Case> {}, length_callback, key_value_invalid_callback, args...
+				template_key_map_t<Case> {}, FWD(length_callback), key_value_invalid_callback, FWD(args)...
 			);
 		}
 
 		template<StringMapCase Case = StringMapCaseSensitive, typename... Args>
-		NodeCallback auto expect_dictionary_keys_and_default(KeyValueCallback auto default_callback, Args... args) {
+		NodeCallback auto expect_dictionary_keys_and_default(KeyValueCallback auto&& default_callback, Args&&... args) {
 			return expect_dictionary_key_map_and_length_and_default(
-				template_key_map_t<Case> {}, default_length_callback, default_callback, args...
+				template_key_map_t<Case> {}, default_length_callback, FWD(default_callback), FWD(args)...
 			);
 		}
 
 		template<StringMapCase Case = StringMapCaseSensitive, typename... Args>
-		NodeCallback auto expect_dictionary_keys(Args... args) {
+		NodeCallback auto expect_dictionary_keys(Args&&... args) {
 			return expect_dictionary_key_map_and_length_and_default(
-				template_key_map_t<Case> {}, default_length_callback, key_value_invalid_callback, args...
+				template_key_map_t<Case> {}, default_length_callback, key_value_invalid_callback, FWD(args)...
 			);
 		}
 
@@ -358,47 +371,47 @@ namespace OpenVic {
 				return size;
 			};
 		}
-		NodeCallback auto expect_list_reserve_length(Reservable auto& reservable, NodeCallback auto callback) {
-			return expect_list_and_length(reserve_length_callback(reservable), callback);
+		NodeCallback auto expect_list_reserve_length(Reservable auto& reservable, NodeCallback auto&& callback) {
+			return expect_list_and_length(reserve_length_callback(reservable), FWD(callback));
 		}
-		NodeCallback auto expect_dictionary_reserve_length(Reservable auto& reservable, KeyValueCallback auto callback) {
-			return expect_dictionary_and_length(reserve_length_callback(reservable), callback);
+		NodeCallback auto expect_dictionary_reserve_length(Reservable auto& reservable, KeyValueCallback auto&& callback) {
+			return expect_dictionary_and_length(reserve_length_callback(reservable), FWD(callback));
 		}
-		template<StringMapCase Case, typename... Args>
+		template<IsOrderedMap Map, typename... Args>
 		NodeCallback auto expect_dictionary_key_map_reserve_length_and_default(
-			Reservable auto& reservable, template_key_map_t<Case> key_map, KeyValueCallback auto default_callback,
-			Args... args
+			Reservable auto& reservable, Map&& key_map, KeyValueCallback auto&& default_callback,
+			Args&&... args
 		) {
 			return expect_dictionary_key_map_and_length_and_default(
-				std::move(key_map), reserve_length_callback(reservable), default_callback, args...
+				FWD(key_map), reserve_length_callback(reservable), FWD(default_callback), FWD(args)...
 			);
 		}
-		template<StringMapCase Case, typename... Args>
+		template<IsOrderedMap Map, typename... Args>
 		NodeCallback auto expect_dictionary_key_map_reserve_length(
-			Reservable auto& reservable, template_key_map_t<Case> key_map, Args... args
+			Reservable auto& reservable, Map&& key_map, Args&&... args
 		) {
-			return expect_dictionary_key_map_and_length(std::move(key_map), reserve_length_callback(reservable), args...);
+			return expect_dictionary_key_map_and_length(FWD(key_map), reserve_length_callback(reservable), FWD(args)...);
 		}
 		template<StringMapCase Case = StringMapCaseSensitive, typename... Args>
 		NodeCallback auto expect_dictionary_keys_reserve_length_and_default(
-			Reservable auto& reservable, KeyValueCallback auto default_callback, Args... args
+			Reservable auto& reservable, KeyValueCallback auto&& default_callback, Args&&... args
 		) {
 			return expect_dictionary_keys_and_length_and_default<Case>(
-				reserve_length_callback(reservable), default_callback, args...
+				reserve_length_callback(reservable), FWD(default_callback), FWD(args)...
 			);
 		}
 		template<StringMapCase Case = StringMapCaseSensitive, typename... Args>
-		NodeCallback auto expect_dictionary_keys_reserve_length(Reservable auto& reservable, Args... args) {
-			return expect_dictionary_keys_and_length<Case>(reserve_length_callback(reservable), args...);
+		NodeCallback auto expect_dictionary_keys_reserve_length(Reservable auto& reservable, Args&&... args) {
+			return expect_dictionary_keys_and_length<Case>(reserve_length_callback(reservable), FWD(args)...);
 		}
 
 		node_callback_t name_list_callback(callback_t<name_list_t&&> callback);
 
 		template<typename T, StringMapCase Case>
 		Callback<std::string_view> auto expect_mapped_string(
-			template_string_map_t<T, Case> const& map, Callback<T> auto callback, bool warn = false
+			template_string_map_t<T, Case> const& map, Callback<T> auto&& callback, bool warn = false
 		) {
-			return [&map, callback, warn](std::string_view string) -> bool {
+			return [&map, callback = FWD(callback), warn](std::string_view string) -> bool {
 				const typename template_string_map_t<T, Case>::const_iterator it = map.find(string);
 				if (it != map.end()) {
 					return callback(it->second);
@@ -561,7 +574,7 @@ namespace OpenVic {
 		/* Often used for rotations which must be negated due to OpenVic's coordinate system being orientated
 		 * oppositely to Vic2's. */
 		template<typename T = fixed_point_t>
-		constexpr Callback<T> auto negate_callback(Callback<T> auto callback) {
+		constexpr Callback<T> auto negate_callback(Callback<T> auto&& callback) {
 			return [callback](T val) -> bool {
 				return callback(-val);
 			};
@@ -570,7 +583,7 @@ namespace OpenVic {
 		/* Often used for map-space coordinates which must have their y-coordinate flipped due to OpenVic using the
 		 * top-left of the map as the origin as opposed Vic2 using the bottom-left. */
 		template<typename T>
-		constexpr Callback<vec2_t<T>> auto flip_y_callback(Callback<vec2_t<T>> auto callback, T height) {
+		constexpr Callback<vec2_t<T>> auto flip_y_callback(Callback<vec2_t<T>> auto&& callback, T height) {
 			return [callback, height](vec2_t<T> val) -> bool {
 				val.y = height - val.y;
 				return callback(val);
@@ -578,3 +591,6 @@ namespace OpenVic {
 		}
 	}
 }
+
+#undef FWD
+#undef MOV

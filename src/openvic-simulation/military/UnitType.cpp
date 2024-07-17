@@ -201,7 +201,7 @@ bool UnitTypeManager::load_unit_type_file(
 				good_definition_manager.expect_good_definition_decimal_map(move_variable_callback(unit_args.supply_cost))
 		);
 
-		const auto add_terrain_modifier = [&unit_args, &terrain_type_manager, &modifier_manager](
+		auto add_terrain_modifier = [&unit_args, &terrain_type_manager, &modifier_manager](
 			std::string_view default_key, ast::NodeCPtr default_value
 		) -> bool {
 			TerrainType const* terrain_type = terrain_type_manager.get_terrain_type_by_identifier(default_key);
