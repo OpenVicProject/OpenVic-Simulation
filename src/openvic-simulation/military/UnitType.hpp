@@ -3,9 +3,11 @@
 #include <cstdint>
 #include <string_view>
 
-#include "openvic-simulation/misc/Modifier.hpp"
+#include <openvic-dataloader/v2script/Parser.hpp>
+
 #include "openvic-simulation/dataloader/NodeTools.hpp"
 #include "openvic-simulation/economy/GoodDefinition.hpp"
+#include "openvic-simulation/misc/Modifier.hpp"
 #include "openvic-simulation/types/Date.hpp"
 #include "openvic-simulation/types/IdentifierRegistry.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
@@ -191,7 +193,7 @@ namespace OpenVic {
 
 		bool load_unit_type_file(
 			GoodDefinitionManager const& good_definition_manager, TerrainTypeManager const& terrain_type_manager,
-			ModifierManager const& modifier_manager, ast::NodeCPtr root
+			ModifierManager const& modifier_manager, ovdl::v2script::Parser const& parser
 		);
 		bool generate_modifiers(ModifierManager& modifier_manager) const;
 	};

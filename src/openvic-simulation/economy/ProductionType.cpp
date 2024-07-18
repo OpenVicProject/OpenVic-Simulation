@@ -1,5 +1,7 @@
 #include "ProductionType.hpp"
 
+#include <openvic-dataloader/v2script/Parser.hpp>
+
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;
 
@@ -176,21 +178,27 @@ bool ProductionTypeManager::add_production_type(
 }
 
 bool ProductionTypeManager::load_production_types_file(
-	GoodDefinitionManager const& good_definition_manager, PopManager const& pop_manager, ast::NodeCPtr root
+	GoodDefinitionManager const& good_definition_manager, PopManager const& pop_manager, ovdl::v2script::Parser const& parser
 ) {
+	using namespace std::string_view_literals;
+	auto template_symbol = parser.find_intern("template"sv);
+	if (!template_symbol) {
+		Logger::error("template could not be interned.");
+	}
+
 	size_t expected_types = 0;
 
 	/* Pass #1: find and store template identifiers */
 	ordered_set<std::string_view> templates;
 	ordered_map<std::string_view, std::string_view> template_target_map;
 	bool ret = expect_dictionary(
-		[this, &expected_types, &templates, &template_target_map](std::string_view key, ast::NodeCPtr value) -> bool {
+		[this, &expected_types, &templates, &template_target_map, &template_symbol](std::string_view key, ast::NodeCPtr value) -> bool {
 			expected_types++;
 
 			std::string_view template_id = "";
 			bool found_template = false;
 			const bool ret =
-				expect_key("template", expect_identifier(assign_variable_callback(template_id)), &found_template)(value);
+				expect_key(template_symbol, expect_identifier(assign_variable_callback(template_id)), &found_template)(value);
 			if (found_template) {
 				if (ret) {
 					templates.emplace(template_id);
@@ -202,7 +210,7 @@ bool ProductionTypeManager::load_production_types_file(
 			}
 			return true;
 		}
-	)(root);
+	)(parser.get_file_node());
 
 	/* Pass #2: create and populate the template map */
 	ordered_map<std::string_view, ast::NodeCPtr> template_node_map;
@@ -214,7 +222,7 @@ bool ProductionTypeManager::load_production_types_file(
 			}
 			return true;
 		}
-	)(root);
+	)(parser.get_file_node());
 
 	/* Pass #3: actually load production types */
 	reserve_more_production_types(expected_types);
@@ -297,7 +305,7 @@ bool ProductionTypeManager::load_production_types_file(
 			);
 			return ret;
 		}
-	)(root);
+	)(parser.get_file_node());
 
 	production_types.lock();
 

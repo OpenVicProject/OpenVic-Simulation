@@ -147,15 +147,21 @@ bool UnitTypeManager::add_ship_type(
 
 bool UnitTypeManager::load_unit_type_file(
 	GoodDefinitionManager const& good_definition_manager, TerrainTypeManager const& terrain_type_manager,
-	ModifierManager const& modifier_manager, ast::NodeCPtr root
+	ModifierManager const& modifier_manager, ovdl::v2script::Parser const& parser
 ) {
-	return expect_dictionary([this, &good_definition_manager, &terrain_type_manager, &modifier_manager](
+	using namespace std::string_view_literals;
+	auto type_symbol = parser.find_intern("type"sv);
+	if(!type_symbol) {
+		Logger::error("type could not be interned.");
+	}
+
+	return expect_dictionary([this, &good_definition_manager, &terrain_type_manager, &modifier_manager, &type_symbol](
 		std::string_view key, ast::NodeCPtr value
 	) -> bool {
 
 		UnitType::branch_t branch = INVALID_BRANCH;
 
-		bool ret = expect_key("type", expect_branch_identifier(assign_variable_callback(branch)))(value);
+		bool ret = expect_key(type_symbol, expect_branch_identifier(assign_variable_callback(branch)))(value);
 
 		/* We shouldn't just check ret as it can be false even if branch was successfully parsed,
 		 * but more than one instance of the key was found. */
@@ -282,7 +288,7 @@ bool UnitTypeManager::load_unit_type_file(
 			Logger::error("Unknown branch for unit ", key, ": ", static_cast<int>(branch));
 			return false;
 		}
-	})(root);
+	})(parser.get_file_node());
 }
 
 bool UnitTypeManager::generate_modifiers(ModifierManager& modifier_manager) const {

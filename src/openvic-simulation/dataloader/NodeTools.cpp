@@ -1,7 +1,9 @@
 #include "NodeTools.hpp"
 
-#include <type_traits>
+#include <concepts>
+#include <string_view>
 
+#include <openvic-dataloader/detail/SymbolIntern.hpp>
 #include <openvic-dataloader/detail/Utility.hpp>
 #include <openvic-dataloader/v2script/AbstractSyntaxTree.hpp>
 
@@ -61,13 +63,13 @@ static NodeCallback auto _abstract_statement_node_callback(Callback<_NodeStateme
 }
 
 template<std::derived_from<ast::FlatValue> T>
-static Callback<T const*> auto _abstract_string_node_callback(Callback<std::string_view> auto&& callback, bool allow_empty) {
+static Callback<T const*> auto _abstract_symbol_node_callback(Callback<ovdl::symbol<char>> auto&& callback, bool allow_empty) {
 	return [callback = FWD(callback), allow_empty](T const* node) -> bool {
 		if (allow_empty) {
-			return callback(node->value().view());
+			return callback(node->value());
 		} else {
 			if (node->value()) {
-				return callback(node->value().view());
+				return callback(node->value());
 			} else {
 				Logger::error("Invalid string value - empty!");
 				return false;
@@ -76,13 +78,32 @@ static Callback<T const*> auto _abstract_string_node_callback(Callback<std::stri
 	};
 }
 
+template<std::derived_from<ast::FlatValue> T>
+static Callback<T const*> auto _abstract_string_node_callback(Callback<std::string_view> auto callback, bool allow_empty) {
+	return _abstract_symbol_node_callback<T>(
+		[callback](ovdl::symbol<char> symbol) -> bool {
+			return callback(symbol.view());
+		},
+		allow_empty
+	);
+}
+
 node_callback_t NodeTools::expect_identifier(callback_t<std::string_view> callback) {
 	return _expect_type<ast::IdentifierValue>(_abstract_string_node_callback<ast::IdentifierValue>(callback, false));
+}
+
+static NodeCallback auto _expect_identifier(Callback<ovdl::symbol<char>> auto callback) {
+	return _expect_type<ast::IdentifierValue>(_abstract_symbol_node_callback<ast::IdentifierValue>(callback, false));
 }
 
 node_callback_t NodeTools::expect_string(callback_t<std::string_view> callback, bool allow_empty) {
 	return _expect_type<ast::StringValue>(_abstract_string_node_callback<ast::StringValue>(callback, allow_empty));
 }
+
+static NodeCallback auto _expect_string(Callback<ovdl::symbol<char>> auto callback, bool allow_empty) {
+	return _expect_type<ast::StringValue>(_abstract_symbol_node_callback<ast::StringValue>(callback, allow_empty));
+}
+
 
 node_callback_t NodeTools::expect_identifier_or_string(callback_t<std::string_view> callback, bool allow_empty) {
 	return [callback, allow_empty](ast::NodeCPtr node) -> bool {
@@ -335,48 +356,83 @@ node_callback_t NodeTools::expect_length(callback_t<size_t> callback) {
 	};
 }
 
-node_callback_t NodeTools::expect_key(std::string_view key, node_callback_t callback, bool* key_found, bool allow_duplicates) {
-	return _abstract_statement_node_callback(
-		[key, callback, key_found, allow_duplicates](_NodeStatementRange list) -> bool {
-			bool ret = true;
-			size_t keys_found = 0;
-			for (auto sub_node : list) {
-				auto const* assign_node = dryad::node_try_cast<ast::AssignStatement>(sub_node);
-				if (assign_node == nullptr) {
-					continue;
-				}
-				std::string_view left;
-				if (!expect_identifier(assign_variable_callback(left))(assign_node->left())) {
-					continue;
-				}
-				if (left == key) {
-					if (keys_found++ == 0) {
-						ret &= callback(assign_node->right());
-						if (allow_duplicates) {
-							break;
-						}
+template<typename Key>
+static node_callback_t _expect_key(Key key, NodeCallback auto callback, bool* key_found, bool allow_duplicates) {
+	if constexpr (std::same_as<Key, ovdl::symbol<char>>) {
+		if (!key) {
+			if (key_found != nullptr) {
+				*key_found = false;
+			}
+			return [](ast::NodeCPtr) -> bool {
+				Logger::error("Failed to find expected interned key.");
+				return false;
+			};
+		}
+	}
+
+	static constexpr auto assign_left = [](Key& left) {
+		if constexpr (std::same_as<Key, std::string_view>) {
+			return expect_identifier(assign_variable_callback(left));
+		} else if (std::same_as<Key, ovdl::symbol<char>>) {
+			return _expect_identifier(assign_variable_callback_cast<ovdl::symbol<char>>(left));
+		}
+	};
+
+	return _abstract_statement_node_callback([key, callback, key_found, allow_duplicates](_NodeStatementRange list) -> bool {
+		bool ret = true;
+		size_t keys_found = 0;
+		for (auto sub_node : list) {
+			auto const* assign_node = dryad::node_try_cast<ast::AssignStatement>(sub_node);
+			if (assign_node == nullptr) {
+				continue;
+			}
+			Key left;
+			if (!assign_left(left)(assign_node->left())) {
+				continue;
+			}
+			if (left == key) {
+				if (keys_found++ == 0) {
+					ret &= callback(assign_node->right());
+					if (allow_duplicates) {
+						break;
 					}
 				}
 			}
-			if (keys_found == 0) {
-				if (key_found != nullptr) {
-					*key_found = false;
-				} else {
-					Logger::error("Failed to find expected key: \"", key, "\"");
-				}
-				ret = false;
-			} else {
-				if (key_found != nullptr) {
-					*key_found = true;
-				}
-				if (!allow_duplicates && keys_found > 1) {
-					Logger::error("Found ", keys_found, " instances of key: \"", key, "\" (expected 1)");
-					ret = false;
-				}
-			}
-			return ret;
 		}
-	);
+		std::string_view key_str = [&] {
+			if constexpr (std::same_as<Key, std::string_view>) {
+				return key;
+			} else {
+				return key.view();
+			}
+		}();
+		if (keys_found == 0) {
+			if (key_found != nullptr) {
+				*key_found = false;
+			} else {
+				Logger::error("Failed to find expected key: \"", key_str, "\"");
+			}
+			ret = false;
+		} else {
+			if (key_found != nullptr) {
+				*key_found = true;
+			}
+			if (!allow_duplicates && keys_found > 1) {
+				Logger::error("Found ", keys_found, " instances of key: \"", key_str, "\" (expected 1)");
+				ret = false;
+			}
+		}
+		return ret;
+	});
+}
+
+node_callback_t NodeTools::expect_key(std::string_view key, node_callback_t callback, bool* key_found, bool allow_duplicates) {
+	return _expect_key(key, callback, key_found, allow_duplicates);
+}
+
+node_callback_t
+NodeTools::expect_key(ovdl::symbol<char> key, node_callback_t callback, bool* key_found, bool allow_duplicates) {
+	return _expect_key(key, callback, key_found, allow_duplicates);
 }
 
 node_callback_t NodeTools::expect_dictionary_and_length(length_callback_t length_callback, key_value_callback_t callback) {
