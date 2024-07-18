@@ -54,6 +54,11 @@ namespace OpenVic {
 
 		plf::colony<General> PROPERTY(generals);
 		plf::colony<Admiral> PROPERTY(admirals);
+		ordered_set<ArmyInstance*> PROPERTY(armies);
+		ordered_set<NavyInstance*> PROPERTY(navies);
+
+		UNIT_BRANCHED_GETTER(get_unit_instance_groups, armies, navies);
+		UNIT_BRANCHED_GETTER(get_leaders, generals, admirals);
 
 		CountryInstance(
 			CountryDefinition const* new_country_definition, decltype(technologies)::keys_t const& technology_keys,
@@ -70,13 +75,15 @@ namespace OpenVic {
 		bool add_reform(Reform const* new_reform);
 		bool remove_reform(Reform const* reform_to_remove);
 
-		void add_general(General&& new_general);
-		bool remove_general(General const* general_to_remove);
-		void add_admiral(Admiral&& new_admiral);
-		bool remove_admiral(Admiral const* admiral_to_remove);
+		template<UnitType::branch_t Branch>
+		bool add_unit_instance_group(UnitInstanceGroup<Branch>& group);
+		template<UnitType::branch_t Branch>
+		bool remove_unit_instance_group(UnitInstanceGroup<Branch>& group);
 
-		bool add_leader(LeaderBase const& new_leader);
-		bool remove_leader(LeaderBase const* leader_to_remove);
+		template<UnitType::branch_t Branch>
+		void add_leader(LeaderBranched<Branch>&& leader);
+		template<UnitType::branch_t Branch>
+		bool remove_leader(LeaderBranched<Branch> const* leader);
 
 		bool apply_history_to_country(CountryHistoryEntry const* entry);
 	};

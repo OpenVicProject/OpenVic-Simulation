@@ -5,13 +5,18 @@
 #include <vector>
 
 #include "openvic-simulation/military/Leader.hpp"
+#include "openvic-simulation/military/UnitType.hpp"
 #include "openvic-simulation/types/HasIdentifier.hpp"
 #include "openvic-simulation/utility/Getters.hpp"
 
 namespace OpenVic {
 	struct ProvinceDefinition;
 
-	struct RegimentDeployment {
+	template<UnitType::branch_t>
+	struct UnitDeployment;
+
+	template<>
+	struct UnitDeployment<UnitType::branch_t::LAND> {
 		friend struct DeploymentManager;
 
 	private:
@@ -19,56 +24,51 @@ namespace OpenVic {
 		RegimentType const& PROPERTY(type);
 		ProvinceDefinition const* PROPERTY(home);
 
-		RegimentDeployment(std::string_view new_name, RegimentType const& new_type, ProvinceDefinition const* new_home);
+		UnitDeployment(std::string_view new_name, RegimentType const& new_type, ProvinceDefinition const* new_home);
 
 	public:
-		RegimentDeployment(RegimentDeployment&&) = default;
+		UnitDeployment(UnitDeployment&&) = default;
 	};
 
-	struct ShipDeployment {
+	using RegimentDeployment = UnitDeployment<UnitType::branch_t::LAND>;
+
+	template<>
+	struct UnitDeployment<UnitType::branch_t::NAVAL> {
 		friend struct DeploymentManager;
 
 	private:
 		std::string PROPERTY(name);
 		ShipType const& PROPERTY(type);
 
-		ShipDeployment(std::string_view new_name, ShipType const& new_type);
+		UnitDeployment(std::string_view new_name, ShipType const& new_type);
 
 	public:
-		ShipDeployment(ShipDeployment&&) = default;
+		UnitDeployment(UnitDeployment&&) = default;
 	};
 
-	struct ArmyDeployment {
+	using ShipDeployment = UnitDeployment<UnitType::branch_t::NAVAL>;
+
+	template<UnitType::branch_t Branch>
+	struct UnitDeploymentGroup {
 		friend struct DeploymentManager;
+
+		using _Unit = UnitDeployment<Branch>;
 
 	private:
 		std::string PROPERTY(name);
 		ProvinceDefinition const* PROPERTY(location);
-		std::vector<RegimentDeployment> PROPERTY(regiments);
+		std::vector<_Unit> PROPERTY(units);
 
-		ArmyDeployment(
-			std::string_view new_name, ProvinceDefinition const* new_location, std::vector<RegimentDeployment>&& new_regiments
+		UnitDeploymentGroup(
+			std::string_view new_name, ProvinceDefinition const* new_location, std::vector<_Unit>&& new_units
 		);
 
 	public:
-		ArmyDeployment(ArmyDeployment&&) = default;
+		UnitDeploymentGroup(UnitDeploymentGroup&&) = default;
 	};
 
-	struct NavyDeployment {
-		friend struct DeploymentManager;
-
-	private:
-		std::string PROPERTY(name);
-		ProvinceDefinition const* PROPERTY(location);
-		std::vector<ShipDeployment> PROPERTY(ships);
-
-		NavyDeployment(
-			std::string_view new_name, ProvinceDefinition const* new_location, std::vector<ShipDeployment>&& new_ships
-		);
-
-	public:
-		NavyDeployment(NavyDeployment&&) = default;
-	};
+	using ArmyDeployment = UnitDeploymentGroup<UnitType::branch_t::LAND>;
+	using NavyDeployment = UnitDeploymentGroup<UnitType::branch_t::NAVAL>;
 
 	struct Deployment : HasIdentifier {
 		friend struct DeploymentManager;
@@ -85,6 +85,8 @@ namespace OpenVic {
 
 	public:
 		Deployment(Deployment&&) = default;
+
+		UNIT_BRANCHED_GETTER_CONST(get_unit_deployment_groups, armies, navies);
 	};
 
 	struct DefinitionManager;

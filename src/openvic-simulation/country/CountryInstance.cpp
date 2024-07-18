@@ -88,88 +88,62 @@ bool CountryInstance::remove_reform(Reform const* reform_to_remove) {
 	return true;
 }
 
-void CountryInstance::add_general(General&& new_general) {
-	generals.emplace(std::move(new_general));
-}
-
-bool CountryInstance::remove_general(General const* general_to_remove) {
-	const auto it = generals.get_iterator(general_to_remove);
-	if (it != generals.end()) {
-		generals.erase(it);
+template<UnitType::branch_t Branch>
+bool CountryInstance::add_unit_instance_group(UnitInstanceGroup<Branch>& group) {
+	if (get_unit_instance_groups<Branch>().emplace(static_cast<UnitInstanceGroupBranched<Branch>*>(&group)).second) {
 		return true;
-	}
-
-	Logger::error(
-		"Trying to remove non-existent general ", general_to_remove != nullptr ? general_to_remove->get_name() : "NULL",
-		" from country ", get_identifier()
-	);
-	return false;
-}
-
-void CountryInstance::add_admiral(Admiral&& new_admiral) {
-	admirals.emplace(std::move(new_admiral));
-}
-
-bool CountryInstance::remove_admiral(Admiral const* admiral_to_remove) {
-	const auto it = admirals.get_iterator(admiral_to_remove);
-	if (it != admirals.end()) {
-		admirals.erase(it);
-		return true;
-	}
-
-	Logger::error(
-		"Trying to remove non-existent admiral ", admiral_to_remove != nullptr ? admiral_to_remove->get_name() : "NULL",
-		" from country ", get_identifier()
-	);
-	return false;
-}
-
-bool CountryInstance::add_leader(LeaderBase const& new_leader) {
-	using enum UnitType::branch_t;
-
-	switch (new_leader.get_branch()) {
-	case LAND:
-		add_general({ new_leader });
-		return true;
-
-	case NAVAL:
-		add_admiral({ new_leader });
-		return true;
-
-	default:
+	} else {
 		Logger::error(
-			"Trying to add leader ", new_leader.get_name(), " to country ", get_identifier(), " with invalid branch ",
-			static_cast<uint32_t>(new_leader.get_branch())
+			"Trying to add already-existing ", Branch == UnitType::branch_t::LAND ? "army" : "navy", " ",
+			group.get_name(), " to country ", get_identifier()
 		);
 		return false;
 	}
 }
 
-bool CountryInstance::remove_leader(LeaderBase const* leader_to_remove) {
-	if (leader_to_remove == nullptr) {
-		Logger::error("Trying to remvoe null leader from country ", get_identifier());
-		return false;
-	}
-
-	using enum UnitType::branch_t;
-
-	switch (leader_to_remove->get_branch()) {
-	case LAND:
-		remove_general(static_cast<General const*>(leader_to_remove));
+template<UnitType::branch_t Branch>
+bool CountryInstance::remove_unit_instance_group(UnitInstanceGroup<Branch>& group) {
+	if (get_unit_instance_groups<Branch>().erase(static_cast<UnitInstanceGroupBranched<Branch>*>(&group)) > 0) {
 		return true;
-
-	case NAVAL:
-		remove_admiral(static_cast<Admiral const*>(leader_to_remove));
-		return true;
-
-	default:
+	} else {
 		Logger::error(
-			"Trying to add leader ", leader_to_remove->get_name(), " to country ", get_identifier(), " with invalid branch ",
-			static_cast<uint32_t>(leader_to_remove->get_branch())
+			"Trying to remove non-existent ", Branch == UnitType::branch_t::LAND ? "army" : "navy", " ",
+			group.get_name(), " from country ", get_identifier()
 		);
 		return false;
 	}
 }
+
+template bool CountryInstance::add_unit_instance_group(UnitInstanceGroup<UnitType::branch_t::LAND>&);
+template bool CountryInstance::add_unit_instance_group(UnitInstanceGroup<UnitType::branch_t::NAVAL>&);
+template bool CountryInstance::remove_unit_instance_group(UnitInstanceGroup<UnitType::branch_t::LAND>&);
+template bool CountryInstance::remove_unit_instance_group(UnitInstanceGroup<UnitType::branch_t::NAVAL>&);
+
+template<UnitType::branch_t Branch>
+void CountryInstance::add_leader(LeaderBranched<Branch>&& leader) {
+	get_leaders<Branch>().emplace(std::move(leader));
+}
+
+template<UnitType::branch_t Branch>
+bool CountryInstance::remove_leader(LeaderBranched<Branch> const* leader) {
+	plf::colony<LeaderBranched<Branch>>& leaders = get_leaders<Branch>();
+	const auto it = leaders.get_iterator(leader);
+	if (it != leaders.end()) {
+		leaders.erase(it);
+		return true;
+	}
+
+	Logger::error(
+		"Trying to remove non-existent ", Branch == UnitType::branch_t::LAND ? "general" : "admiral", " ",
+		leader != nullptr ? leader->get_name() : "NULL", " from country ", get_identifier()
+	);
+	return false;
+}
+
+template void CountryInstance::add_leader(LeaderBranched<UnitType::branch_t::LAND>&&);
+template void CountryInstance::add_leader(LeaderBranched<UnitType::branch_t::NAVAL>&&);
+template bool CountryInstance::remove_leader(LeaderBranched<UnitType::branch_t::LAND> const*);
+template bool CountryInstance::remove_leader(LeaderBranched<UnitType::branch_t::NAVAL> const*);
 
 bool CountryInstance::apply_history_to_country(CountryHistoryEntry const* entry) {
 	if (entry == nullptr) {
