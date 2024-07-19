@@ -104,41 +104,36 @@ void ProvinceInstance::tick(Date today) {
 	}
 }
 
-bool ProvinceInstance::add_army(ArmyInstance& army) {
-	if (armies.emplace(&army).second) {
+template<UnitType::branch_t Branch>
+bool ProvinceInstance::add_unit_instance_group(UnitInstanceGroup<Branch>& group) {
+	if (get_unit_instance_groups<Branch>().emplace(static_cast<UnitInstanceGroupBranched<Branch>*>(&group)).second) {
 		return true;
 	} else {
-		Logger::error("Trying to add already-existing army ", army.get_name(), " to province ", get_identifier());
+		Logger::error(
+			"Trying to add already-existing ", Branch == UnitType::branch_t::LAND ? "army" : "navy", " ",
+			group.get_name(), " to province ", get_identifier()
+		);
 		return false;
 	}
 }
 
-bool ProvinceInstance::remove_army(ArmyInstance& army) {
-	if (armies.erase(&army) > 0) {
+template<UnitType::branch_t Branch>
+bool ProvinceInstance::remove_unit_instance_group(UnitInstanceGroup<Branch>& group) {
+	if (get_unit_instance_groups<Branch>().erase(static_cast<UnitInstanceGroupBranched<Branch>*>(&group)) > 0) {
 		return true;
 	} else {
-		Logger::error("Trying to remove non-existent army ", army.get_name(), " from province ", get_identifier());
+		Logger::error(
+			"Trying to remove non-existent ", Branch == UnitType::branch_t::LAND ? "army" : "navy", " ",
+			group.get_name(), " from province ", get_identifier()
+		);
 		return false;
 	}
 }
 
-bool ProvinceInstance::add_navy(NavyInstance& navy) {
-	if (navies.emplace(&navy).second) {
-		return true;
-	} else {
-		Logger::error("Trying to add already-existing navy ", navy.get_name(), " to province ", get_identifier());
-		return false;
-	}
-}
-
-bool ProvinceInstance::remove_navy(NavyInstance& navy) {
-	if (navies.erase(&navy) > 0) {
-		return true;
-	} else {
-		Logger::error("Trying to remove non-existent navy ", navy.get_name(), " from province ", get_identifier());
-		return false;
-	}
-}
+template bool ProvinceInstance::add_unit_instance_group(UnitInstanceGroup<UnitType::branch_t::LAND>&);
+template bool ProvinceInstance::add_unit_instance_group(UnitInstanceGroup<UnitType::branch_t::NAVAL>&);
+template bool ProvinceInstance::remove_unit_instance_group(UnitInstanceGroup<UnitType::branch_t::LAND>&);
+template bool ProvinceInstance::remove_unit_instance_group(UnitInstanceGroup<UnitType::branch_t::NAVAL>&);
 
 bool ProvinceInstance::setup(BuildingTypeManager const& building_type_manager) {
 	if (buildings_are_locked()) {

@@ -37,7 +37,7 @@ namespace OpenVic {
 		LeaderBase(LeaderBase&&) = default;
 	};
 
-	struct CountryInstance;
+	struct UnitInstanceManager;
 
 	template<UnitType::branch_t>
 	struct UnitInstanceGroup;
@@ -48,7 +48,7 @@ namespace OpenVic {
 	template<UnitType::branch_t Branch>
 	struct LeaderBranched : LeaderBase {
 
-		friend struct CountryInstance;
+		friend struct UnitInstanceManager;
 		friend bool UnitInstanceGroup<Branch>::set_leader(LeaderBranched<Branch>* new_leader);
 
 	private:

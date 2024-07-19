@@ -22,19 +22,12 @@ namespace OpenVic {
 		fixed_point_t PROPERTY_RW(strength);
 
 	protected:
-		UnitInstance(std::string_view new_unit_name, _UnitType const& new_unit_type) :
-			unit_name { new_unit_name },
-			unit_type { new_unit_type },
-			organisation { new_unit_type.get_default_organisation() }, //TODO: modifiers
-			morale { 0 }, //TODO: modifiers
-			strength { new_unit_type.get_max_strength() } {}
+		UnitInstance(std::string_view new_unit_name, _UnitType const& new_unit_type);
 
 	public:
 		UnitInstance(UnitInstance&&) = default;
 
-		void set_unit_name(std::string_view new_unit_name) {
-			unit_name = new_unit_name;
-		}
+		void set_unit_name(std::string_view new_unit_name);
 	};
 
 	struct Pop;

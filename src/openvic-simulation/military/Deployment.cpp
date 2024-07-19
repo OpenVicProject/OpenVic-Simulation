@@ -5,20 +5,17 @@
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;
 
-RegimentDeployment::RegimentDeployment(
+UnitDeployment<UnitType::branch_t::LAND>::UnitDeployment(
 	std::string_view new_name, RegimentType const& new_type, ProvinceDefinition const* new_home
 ) : name { new_name }, type { new_type }, home { new_home } {}
 
-ShipDeployment::ShipDeployment(std::string_view new_name, ShipType const& new_type)
+UnitDeployment<UnitType::branch_t::NAVAL>::UnitDeployment(std::string_view new_name, ShipType const& new_type)
 	: name { new_name }, type { new_type } {}
 
-ArmyDeployment::ArmyDeployment(
-	std::string_view new_name, ProvinceDefinition const* new_location, std::vector<RegimentDeployment>&& new_regiments
-) : name { new_name }, location { new_location }, regiments { std::move(new_regiments) } {}
-
-NavyDeployment::NavyDeployment(
-	std::string_view new_name, ProvinceDefinition const* new_location, std::vector<ShipDeployment>&& new_ships
-) : name { new_name }, location { new_location }, ships { std::move(new_ships) } {}
+template<UnitType::branch_t Branch>
+UnitDeploymentGroup<Branch>::UnitDeploymentGroup(
+	std::string_view new_name, ProvinceDefinition const* new_location, std::vector<_Unit>&& new_units
+) : name { new_name }, location { new_location }, units { std::move(new_units) } {}
 
 Deployment::Deployment(
 	std::string_view new_path, std::vector<ArmyDeployment>&& new_armies, std::vector<NavyDeployment>&& new_navies,

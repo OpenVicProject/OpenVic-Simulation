@@ -58,6 +58,8 @@ namespace OpenVic {
 		ordered_set<ArmyInstance*> PROPERTY(armies);
 		ordered_set<NavyInstance*> PROPERTY(navies);
 
+		UNIT_BRANCHED_GETTER(get_unit_instance_groups, armies, navies);
+
 		std::vector<Pop> PROPERTY(pops);
 		Pop::pop_size_t PROPERTY(total_population);
 		IndexedMap<PopType, fixed_point_t> PROPERTY(pop_type_distribution);
@@ -89,31 +91,10 @@ namespace OpenVic {
 		void update_gamestate(Date today);
 		void tick(Date today);
 
-		bool add_army(ArmyInstance& army);
-		bool remove_army(ArmyInstance& army);
-		bool add_navy(NavyInstance& navy);
-		bool remove_navy(NavyInstance& navy);
-
 		template<UnitType::branch_t Branch>
-		bool add_unit_instance_group(UnitInstanceGroup<Branch>& group) {
-			if constexpr (Branch == UnitType::branch_t::LAND) {
-				return add_army(static_cast<ArmyInstance&>(group));
-			} else if constexpr (Branch == UnitType::branch_t::NAVAL) {
-				return add_navy(static_cast<NavyInstance&>(group));
-			} else {
-				OpenVic::utility::unreachable();
-			}
-		}
+		bool add_unit_instance_group(UnitInstanceGroup<Branch>& group);
 		template<UnitType::branch_t Branch>
-		bool remove_unit_instance_group(UnitInstanceGroup<Branch>& group) {
-			if constexpr (Branch == UnitType::branch_t::LAND) {
-				return remove_army(static_cast<ArmyInstance&>(group));
-			} else if constexpr (Branch == UnitType::branch_t::NAVAL) {
-				return remove_navy(static_cast<NavyInstance&>(group));
-			} else {
-				OpenVic::utility::unreachable();
-			}
-		}
+		bool remove_unit_instance_group(UnitInstanceGroup<Branch>& group);
 
 		bool setup(BuildingTypeManager const& building_type_manager);
 		bool apply_history_to_province(ProvinceHistoryEntry const* entry);

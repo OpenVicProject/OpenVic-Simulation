@@ -74,6 +74,19 @@ namespace OpenVic {
 		UnitType(UnitType&&) = default;
 	};
 
+#define _UNIT_BRANCHED_GETTER(name, land, naval, const) \
+	template<UnitType::branch_t Branch> \
+	constexpr auto const& name() const { \
+		if constexpr (Branch == UnitType::branch_t::LAND) { \
+			return land; \
+		} else if constexpr (Branch == UnitType::branch_t::NAVAL) { \
+			return naval; \
+		} \
+	}
+
+#define UNIT_BRANCHED_GETTER(name, land, naval) _UNIT_BRANCHED_GETTER(name, land, naval, )
+#define UNIT_BRANCHED_GETTER_CONST(name, land, naval) _UNIT_BRANCHED_GETTER(name, land, naval, const)
+
 	template<UnitType::branch_t>
 	struct UnitTypeBranched;
 
