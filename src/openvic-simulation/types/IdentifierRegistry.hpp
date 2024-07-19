@@ -173,7 +173,7 @@ namespace OpenVic {
 		static constexpr bool storage_type_reservable = Reservable<storage_type>;
 
 	private:
-		const std::string PROPERTY(name);
+		std::string PROPERTY(name);
 		const bool log_lock;
 		storage_type PROPERTY_REF(items);
 		bool PROPERTY_CUSTOM_PREFIX(locked, is);

@@ -32,13 +32,13 @@ namespace OpenVic::utility {
 	}
 
 	template<class T>
-	inline constexpr void hash_combine(std::size_t& s, const T& v) {
+	inline constexpr void hash_combine(std::size_t& s, T const& v) {
 		std::hash<T> h;
 		s ^= h(v) + 0x9e3779b9 + (s << 6) + (s >> 2);
 	}
 
 	template<size_t Shift, class T>
-	inline constexpr void hash_combine_index(std::size_t& s, const T& v) {
+	inline constexpr void hash_combine_index(std::size_t& s, T const& v) {
 		std::hash<T> h;
 		if constexpr (Shift == 0) {
 			s = h(v);
@@ -61,8 +61,8 @@ namespace OpenVic::utility {
 			(
 				[&] {
 					// If args is not last pointer of args
-					if (static_cast<const void*>(&(std::get<sizeof...(args) - 1>(arg_tuple))) !=
-						static_cast<const void*>(&args)) {
+					if (static_cast<void const*>(&(std::get<sizeof...(args) - 1>(arg_tuple))) !=
+						static_cast<void const*>(&args)) {
 						s <<= sizeof(Args) * CHAR_BIT;
 					}
 					s |= std::hash<Args> {}(args);
@@ -82,10 +82,10 @@ namespace OpenVic::utility {
 	inline constexpr bool is_specialization_of_v = is_specialization_of<T, Z>::value;
 
 	template <template<typename...> class Template, typename... Args>
-	void _derived_from_specialization_impl(const Template<Args...>&);
+	void _derived_from_specialization_impl(Template<Args...> const&);
 
 	template <typename T, template<typename...> class Template>
-	concept is_derived_from_specialization_of = requires(const T& t) {
+	concept is_derived_from_specialization_of = requires(T const& t) {
 		_derived_from_specialization_impl<Template>(t);
 	};
 

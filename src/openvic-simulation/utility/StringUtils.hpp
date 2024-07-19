@@ -18,7 +18,7 @@ namespace OpenVic::StringUtils {
 	 * still starts with "0", otherwise 10. The success bool pointer parameter is used to report whether
 	 * or not conversion was successful. It can be nullptr if this information is not needed.
 	 */
-	constexpr uint64_t string_to_uint64(char const* str, const char* const end, bool* successful = nullptr, int base = 10) {
+	constexpr uint64_t string_to_uint64(char const* str, char const* const end, bool* successful = nullptr, int base = 10) {
 		if (successful != nullptr) {
 			*successful = false;
 		}
@@ -105,7 +105,7 @@ namespace OpenVic::StringUtils {
 		return string_to_uint64(str.data(), str.length(), successful, base);
 	}
 
-	constexpr int64_t string_to_int64(char const* str, const char* const end, bool* successful = nullptr, int base = 10) {
+	constexpr int64_t string_to_int64(char const* str, char const* const end, bool* successful = nullptr, int base = 10) {
 		if (successful != nullptr) {
 			*successful = false;
 		}

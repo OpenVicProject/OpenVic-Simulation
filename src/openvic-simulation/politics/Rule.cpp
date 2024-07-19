@@ -6,8 +6,8 @@
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;
 
-Rule::Rule(std::string_view new_identifier, rule_group_t new_group, size_t new_index)
-  : HasIdentifier { new_identifier }, group { new_group }, index { new_index } {}
+Rule::Rule(std::string_view new_identifier, rule_group_t new_group, index_t new_index)
+  : HasIdentifier { new_identifier }, HasIndex { new_index }, group { new_group } {}
 
 RuleSet::RuleSet(rule_group_map_t&& new_rule_groups) : rule_groups { std::move(new_rule_groups) } {}
 

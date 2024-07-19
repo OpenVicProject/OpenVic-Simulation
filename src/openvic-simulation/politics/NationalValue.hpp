@@ -6,12 +6,10 @@
 namespace OpenVic {
 	struct NationalValueManager;
 
-	struct NationalValue : HasIdentifier {
+	struct NationalValue : Modifier {
 		friend struct NationalValueManager;
 
 	private:
-		const ModifierValue PROPERTY(modifiers);
-
 		NationalValue(std::string_view new_identifier, ModifierValue&& new_modifiers);
 
 	public:
@@ -27,4 +25,4 @@ namespace OpenVic {
 
 		bool load_national_values_file(ModifierManager const& modifier_manager, ast::NodeCPtr root);
 	};
-} // namespace OpenVic
+}

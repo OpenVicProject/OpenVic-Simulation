@@ -25,7 +25,7 @@
 namespace OpenVic {
 	namespace ast {
 		using namespace ovdl::v2script::ast;
-		using NodeCPtr = const Node*;
+		using NodeCPtr = Node const*;
 
 		constexpr std::string_view get_type_name(NodeKind kind) {
 #define NODE_CASE(Node) \

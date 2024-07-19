@@ -55,7 +55,7 @@ namespace OpenVic::Windows {
 
 	template<typename T>
 	concept has_data = requires(T t) {
-		{ t.data() } -> std::convertible_to<const typename T::value_type*>;
+		{ t.data() } -> std::convertible_to<typename T::value_type const*>;
 	};
 
 	class RegistryKey {
@@ -116,7 +116,7 @@ namespace OpenVic::Windows {
 			DWORD data_size;
 			DWORD type;
 
-			const auto& wide_value = [&value_name]() -> has_data auto {
+			auto const& wide_value = [&value_name]() -> has_data auto {
 				if constexpr (std::is_same_v<CHAR_T, char>) {
 					return convert(value_name);
 				} else {
@@ -161,7 +161,7 @@ namespace OpenVic::Windows {
 	}
 
 	template<either_char_type RCHAR_T, either_char_type CHAR_T, either_char_type CHAR_T2>
-	std::basic_string<RCHAR_T> ReadRegValue(HKEY root, const CHAR_T* key, const CHAR_T2* name) {
+	std::basic_string<RCHAR_T> ReadRegValue(HKEY root, CHAR_T const* key, CHAR_T2 const* name) {
 		auto key_sv = std::basic_string_view(key);
 		auto name_sv = std::basic_string_view(name);
 

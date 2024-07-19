@@ -9,19 +9,23 @@
 namespace OpenVic {
 	struct BookmarkManager;
 
-	struct Bookmark : HasIdentifier {
+	struct Bookmark : HasIdentifier, HasIndex<> {
 		friend struct BookmarkManager;
 
 	private:
-		const std::string PROPERTY(name);
-		const std::string PROPERTY(description);
+		std::string PROPERTY(name);
+		std::string PROPERTY(description);
 		const Date PROPERTY(date);
 		const uint32_t PROPERTY(initial_camera_x);
 		const uint32_t PROPERTY(initial_camera_y);
 
 		Bookmark(
-			size_t new_index, std::string_view new_name, std::string_view new_description, Date new_date,
-			uint32_t new_initial_camera_x, uint32_t new_initial_camera_y
+			index_t new_index,
+			std::string_view new_name,
+			std::string_view new_description,
+			Date new_date,
+			uint32_t new_initial_camera_x,
+			uint32_t new_initial_camera_y
 		);
 
 	public:

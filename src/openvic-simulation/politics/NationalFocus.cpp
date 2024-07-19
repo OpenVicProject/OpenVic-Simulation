@@ -18,7 +18,7 @@ NationalFocus::NationalFocus(
 	Ideology const* new_loyalty_ideology,
 	fixed_point_t new_loyalty_value,
 	ConditionScript&& new_limit
-) : Modifier { new_identifier, std::move(new_modifiers), 0 },
+) : Modifier { new_identifier, std::move(new_modifiers) },
 	group { new_group },
 	icon { new_icon },
 	has_flashpoint { new_has_flashpoint },
