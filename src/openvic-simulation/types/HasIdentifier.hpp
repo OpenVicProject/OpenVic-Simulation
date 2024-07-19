@@ -27,7 +27,8 @@ namespace OpenVic {
 	 * can be entered into an IdentifierRegistry instance.
 	 */
 	class HasIdentifier {
-		const std::string PROPERTY(identifier);
+		/* Not const so it can be moved rather than needing to be copied. */
+		std::string PROPERTY(identifier);
 
 	protected:
 		HasIdentifier(std::string_view new_identifier): identifier { new_identifier } {
@@ -66,6 +67,9 @@ namespace OpenVic {
 		_HasColour& operator=(_HasColour const&) = delete;
 		_HasColour& operator=(_HasColour&&) = delete;
 	};
+
+	using HasColour = _HasColour<colour_t>;
+	using HasAlphaColour = _HasColour<colour_argb_t>;
 
 	/*
 	 * Base class for objects with a unique string identifier and associated colour information.

@@ -26,7 +26,7 @@ namespace OpenVic {
 
 	private:
 		IssueGroup const& PROPERTY(group);
-		const RuleSet PROPERTY(rules);
+		RuleSet PROPERTY(rules);
 		const bool PROPERTY_CUSTOM_PREFIX(jingoism, is);
 
 	protected:

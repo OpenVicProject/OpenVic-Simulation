@@ -7,8 +7,7 @@ using namespace OpenVic::NodeTools;
 
 TerrainType::TerrainType(
 	std::string_view new_identifier, colour_t new_colour, ModifierValue&& new_modifier, bool new_is_water
-) : HasIdentifierAndColour { new_identifier, new_colour, false }, modifier { std::move(new_modifier) },
-	is_water { new_is_water } {}
+) : Modifier { new_identifier, std::move(new_modifier) }, HasColour { new_colour, false }, is_water { new_is_water } {}
 
 TerrainTypeMapping::TerrainTypeMapping(
 	std::string_view new_identifier, TerrainType const& new_type, std::vector<index_t>&& new_terrain_indicies,

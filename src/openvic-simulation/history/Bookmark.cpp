@@ -11,10 +11,19 @@ using namespace OpenVic;
 using namespace OpenVic::NodeTools;
 
 Bookmark::Bookmark(
-	size_t new_index, std::string_view new_name, std::string_view new_description, Date new_date, uint32_t new_initial_camera_x,
+	index_t new_index,
+	std::string_view new_name,
+	std::string_view new_description,
+	Date new_date,
+	uint32_t new_initial_camera_x,
 	uint32_t new_initial_camera_y
-) : HasIdentifier { std::to_string(new_index) }, name { new_name }, description { new_description }, date { new_date },
-	initial_camera_x { new_initial_camera_x }, initial_camera_y { new_initial_camera_y } {}
+) : HasIdentifier { std::to_string(new_index) },
+	HasIndex { new_index },
+	name { new_name },
+	description { new_description },
+	date { new_date },
+	initial_camera_x { new_initial_camera_x },
+	initial_camera_y { new_initial_camera_y } {}
 
 bool BookmarkManager::add_bookmark(
 	std::string_view name, std::string_view description, Date date, uint32_t initial_camera_x, uint32_t initial_camera_y

@@ -32,9 +32,16 @@ namespace OpenVic {
 		ConditionalWeight PROPERTY(chance);
 
 		Invention(
-			std::string_view new_identifier, ModifierValue&& new_values, bool new_news, unit_set_t&& new_activated_units,
-			building_set_t&& new_activated_buildings, crime_set_t&& new_enabled_crimes, bool new_unlock_gas_attack,
-			bool new_unlock_gas_defence, ConditionScript&& new_limit, ConditionalWeight&& new_chance
+			std::string_view new_identifier,
+			ModifierValue&& new_values,
+			bool new_news,
+			unit_set_t&& new_activated_units,
+			building_set_t&& new_activated_buildings,
+			crime_set_t&& new_enabled_crimes,
+			bool new_unlock_gas_attack,
+			bool new_unlock_gas_defence,
+			ConditionScript&& new_limit,
+			ConditionalWeight&& new_chance
 		);
 
 		bool parse_scripts(DefinitionManager const& definition_manager);

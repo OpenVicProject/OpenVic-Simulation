@@ -74,7 +74,7 @@ namespace OpenVic {
 		const icon_t PROPERTY(icon);
 
 	protected:
-		Modifier(std::string_view new_identifier, ModifierValue&& new_values, icon_t new_icon);
+		Modifier(std::string_view new_identifier, ModifierValue&& new_values, icon_t new_icon = 0);
 
 	public:
 		Modifier(Modifier&&) = default;
@@ -135,8 +135,9 @@ namespace OpenVic {
 		);
 
 		bool register_complex_modifier(std::string_view identifier);
-		static std::string
-		get_flat_identifier(const std::string_view complex_modifier_identifier, const std::string_view variant_identifier);
+		static std::string get_flat_identifier(
+			std::string_view complex_modifier_identifier, std::string_view variant_identifier
+		);
 
 		bool setup_modifier_effects();
 

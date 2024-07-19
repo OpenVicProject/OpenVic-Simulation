@@ -9,19 +9,32 @@ TechnologyArea::TechnologyArea(std::string_view new_identifier, TechnologyFolder
 	: HasIdentifier { new_identifier }, folder { new_folder } {}
 
 Technology::Technology(
-	std::string_view new_identifier, TechnologyArea const& new_area, Date::year_t new_year, fixed_point_t new_cost,
-	bool new_unciv_military, uint8_t new_unit, unit_set_t&& new_activated_units, building_set_t&& new_activated_buildings,
-	ModifierValue&& new_values, ConditionalWeight&& new_ai_chance
-) : Modifier { new_identifier, std::move(new_values), 0 }, area { new_area }, year { new_year }, cost { new_cost },
-	unciv_military { new_unciv_military }, unit { new_unit }, activated_buildings { std::move(new_activated_units) },
-	activated_units { std::move(new_activated_buildings) }, ai_chance { std::move(new_ai_chance) } {}
+	std::string_view new_identifier,
+	TechnologyArea const& new_area,
+	Date::year_t new_year,
+	fixed_point_t new_cost,
+	bool new_unciv_military,
+	uint8_t new_unit,
+	unit_set_t&& new_activated_units,
+	building_set_t&& new_activated_buildings,
+	ModifierValue&& new_values,
+	ConditionalWeight&& new_ai_chance
+) : Modifier { new_identifier, std::move(new_values) },
+	area { new_area },
+	year { new_year },
+	cost { new_cost },
+	unciv_military { new_unciv_military },
+	unit { new_unit },
+	activated_buildings { std::move(new_activated_units) },
+	activated_units { std::move(new_activated_buildings) },
+	ai_chance { std::move(new_ai_chance) } {}
 
 bool Technology::parse_scripts(DefinitionManager const& definition_manager) {
 	return ai_chance.parse_scripts(definition_manager);
 }
 
 TechnologySchool::TechnologySchool(std::string_view new_identifier, ModifierValue&& new_values)
-	: Modifier { new_identifier, std::move(new_values), 0 } {}
+	: Modifier { new_identifier, std::move(new_values) } {}
 
 bool TechnologyManager::add_technology_folder(std::string_view identifier) {
 	if (identifier.empty()) {

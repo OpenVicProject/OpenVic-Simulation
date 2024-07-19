@@ -14,7 +14,7 @@ namespace OpenVic {
 		enum class Type : unsigned char { Date, Country, Economy, Military, Diplomacy, Pops, Ai, Graphics };
 
 	private:
-		const std::string PROPERTY(value);
+		std::string PROPERTY(value);
 		const Type PROPERTY(type);
 
 		Define(std::string_view new_identifier, std::string&& new_value, Type new_type);

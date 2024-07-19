@@ -8,13 +8,25 @@ using namespace OpenVic;
 using namespace OpenVic::NodeTools;
 
 Invention::Invention(
-	std::string_view new_identifier, ModifierValue&& new_values, bool new_news, unit_set_t&& new_activated_units,
-	building_set_t&& new_activated_buildings, crime_set_t&& new_enabled_crimes, bool new_unlock_gas_attack,
-	bool new_unlock_gas_defence, ConditionScript&& new_limit, ConditionalWeight&& new_chance
-) : Modifier { new_identifier, std::move(new_values), 0 }, news { new_news },
-	activated_units { std::move(new_activated_units) }, activated_buildings { std::move(new_activated_buildings) },
-	enabled_crimes { std::move(new_enabled_crimes) }, unlock_gas_attack { new_unlock_gas_attack },
-	unlock_gas_defence { new_unlock_gas_defence }, limit { std::move(new_limit) }, chance { std::move(new_chance) } {}
+	std::string_view new_identifier,
+	ModifierValue&& new_values,
+	bool new_news,
+	unit_set_t&& new_activated_units,
+	building_set_t&& new_activated_buildings,
+	crime_set_t&& new_enabled_crimes,
+	bool new_unlock_gas_attack,
+	bool new_unlock_gas_defence,
+	ConditionScript&& new_limit,
+	ConditionalWeight&& new_chance
+) : Modifier { new_identifier, std::move(new_values) },
+	news { new_news },
+	activated_units { std::move(new_activated_units) },
+	activated_buildings { std::move(new_activated_buildings) },
+	enabled_crimes { std::move(new_enabled_crimes) },
+	unlock_gas_attack { new_unlock_gas_attack },
+	unlock_gas_defence { new_unlock_gas_defence },
+	limit { std::move(new_limit) },
+	chance { std::move(new_chance) } {}
 
 bool Invention::parse_scripts(DefinitionManager const& definition_manager) {
 	bool ret = true;

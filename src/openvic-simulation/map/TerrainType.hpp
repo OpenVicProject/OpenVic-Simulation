@@ -6,11 +6,13 @@
 namespace OpenVic {
 	struct TerrainTypeManager;
 
-	struct TerrainType : HasIdentifierAndColour {
+	// Using HasColour rather than HasIdentifierAndColour to avoid needing virtual inheritance
+	// (extending Modifier is more useful than extending HasIdentifierAndColour).
+	struct TerrainType : Modifier, HasColour {
 		friend struct TerrainTypeManager;
 
 	private:
-		const ModifierValue PROPERTY(modifier);
+		ModifierValue PROPERTY(modifier);
 		const bool PROPERTY(is_water);
 
 		TerrainType(std::string_view new_identifier, colour_t new_colour, ModifierValue&& new_modifier, bool new_is_water);
@@ -26,7 +28,7 @@ namespace OpenVic {
 
 	private:
 		TerrainType const& PROPERTY(type);
-		const std::vector<index_t> PROPERTY(terrain_indices);
+		std::vector<index_t> PROPERTY(terrain_indices);
 		const index_t PROPERTY(priority);
 		const bool PROPERTY(has_texture);
 
@@ -42,6 +44,7 @@ namespace OpenVic {
 	struct TerrainTypeManager {
 	private:
 		using terrain_type_mappings_map_t = ordered_map<TerrainTypeMapping::index_t, size_t>;
+
 		IdentifierRegistry<TerrainType> IDENTIFIER_REGISTRY(terrain_type);
 		IdentifierRegistry<TerrainTypeMapping> IDENTIFIER_REGISTRY(terrain_type_mapping);
 		terrain_type_mappings_map_t terrain_type_mappings_map;

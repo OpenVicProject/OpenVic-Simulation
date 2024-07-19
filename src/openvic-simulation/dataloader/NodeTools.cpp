@@ -104,7 +104,6 @@ static NodeCallback auto _expect_string(Callback<ovdl::symbol<char>> auto callba
 	return _expect_type<ast::StringValue>(_abstract_symbol_node_callback<ast::StringValue>(callback, allow_empty));
 }
 
-
 node_callback_t NodeTools::expect_identifier_or_string(callback_t<std::string_view> callback, bool allow_empty) {
 	return [callback, allow_empty](ast::NodeCPtr node) -> bool {
 		if (node != nullptr) {

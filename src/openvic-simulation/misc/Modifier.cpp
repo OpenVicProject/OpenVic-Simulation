@@ -276,7 +276,7 @@ bool ModifierManager::register_complex_modifier(std::string_view identifier) {
 }
 
 std::string ModifierManager::get_flat_identifier(
-	const std::string_view complex_modifier_identifier, const std::string_view variant_identifier
+	std::string_view complex_modifier_identifier, std::string_view variant_identifier
 ) {
 	return StringUtils::append_string_views(complex_modifier_identifier, " ", variant_identifier);
 }

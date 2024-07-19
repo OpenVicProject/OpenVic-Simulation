@@ -321,7 +321,7 @@ namespace OpenVic {
 			return _array_access_helper<value_type>(*this, index);
 		}
 
-		constexpr const value_type& operator[](std::size_t index) const {
+		constexpr value_type const& operator[](std::size_t index) const {
 			return _array_access_helper<const value_type>(*this, index);
 		}
 

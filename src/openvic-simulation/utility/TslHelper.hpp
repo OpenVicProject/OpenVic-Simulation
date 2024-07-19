@@ -70,39 +70,39 @@ namespace OpenVic {
 				return tmp;
 			}
 
-			bool operator==(const ordered_iterator& rhs) const {
+			bool operator==(ordered_iterator const& rhs) const {
 				return m_iterator == rhs.m_iterator;
 			}
 
-			bool operator!=(const ordered_iterator& rhs) const {
+			bool operator!=(ordered_iterator const& rhs) const {
 				return m_iterator != rhs.m_iterator;
 			}
 
-			bool operator<(const ordered_iterator& rhs) const {
+			bool operator<(ordered_iterator const& rhs) const {
 				return m_iterator < rhs.m_iterator;
 			}
 
-			bool operator>(const ordered_iterator& rhs) const {
+			bool operator>(ordered_iterator const& rhs) const {
 				return m_iterator > rhs.m_iterator;
 			}
 
-			bool operator<=(const ordered_iterator& rhs) const {
+			bool operator<=(ordered_iterator const& rhs) const {
 				return m_iterator <= rhs.m_iterator;
 			}
 
-			bool operator>=(const ordered_iterator& rhs) const {
+			bool operator>=(ordered_iterator const& rhs) const {
 				return m_iterator >= rhs.m_iterator;
 			}
 
-			friend ordered_iterator operator+(difference_type n, const ordered_iterator& it) {
+			friend ordered_iterator operator+(difference_type n, ordered_iterator const& it) {
 				return n + it.m_iterator;
 			}
 
-			ordered_iterator operator+(const ordered_iterator& rhs) const {
+			ordered_iterator operator+(ordered_iterator const& rhs) const {
 				return m_iterator + rhs.m_iterator;
 			}
 
-			difference_type operator-(const ordered_iterator& rhs) const {
+			difference_type operator-(ordered_iterator const& rhs) const {
 				return m_iterator - rhs.m_iterator;
 			}
 

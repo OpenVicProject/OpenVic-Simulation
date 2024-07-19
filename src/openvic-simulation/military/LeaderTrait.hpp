@@ -1,23 +1,22 @@
 #pragma once
 
-#include <cstdint>
 #include <string_view>
 
 #include "openvic-simulation/misc/Modifier.hpp"
 #include "openvic-simulation/dataloader/NodeTools.hpp"
 #include "openvic-simulation/types/IdentifierRegistry.hpp"
-#include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
 
 namespace OpenVic {
 	struct LeaderTraitManager;
 
-	struct LeaderTrait : HasIdentifier {
+	struct LeaderTrait : Modifier {
 		friend struct LeaderTraitManager;
 
 		enum class trait_type_t { PERSONALITY, BACKGROUND };
 
 	private:
 		const trait_type_t PROPERTY(trait_type);
+
 		/*
 		 * Allowed modifiers for leaders:
 		 * attack - integer
@@ -30,7 +29,6 @@ namespace OpenVic {
 		 * experience - %
 		 * reliability - decimal, mil gain or loss for associated POPs
 		 */
-		const ModifierValue PROPERTY(modifiers);
 
 		LeaderTrait(std::string_view new_identifier, trait_type_t new_type, ModifierValue&& new_modifiers);
 

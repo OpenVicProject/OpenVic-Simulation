@@ -99,14 +99,16 @@ namespace OpenVic::utility {
 	} \
 	template<typename T> \
 	constexpr T* cast_to() { \
-		if (is_derived_from<T>() || is_type<CLASS>()) \
+		if (is_derived_from<T>() || is_type<CLASS>()) { \
 			return (static_cast<T*>(this)); \
+		} \
 		return nullptr; \
 	} \
 	template<typename T> \
-	constexpr const T* const cast_to() const { \
-		if (is_derived_from<T>() || is_type<CLASS>()) \
-			return (static_cast<const T*>(this)); \
+	constexpr T const* const cast_to() const { \
+		if (is_derived_from<T>() || is_type<CLASS>()) { \
+			return (static_cast<T const*>(this)); \
+		} \
 		return nullptr; \
 	}
 
@@ -160,7 +162,7 @@ namespace OpenVic {
 	 * for variable getters created using the PROPERTY macro.
 	 */
 	template<typename decl, typename T>
-	inline constexpr decltype(auto) _get_property(const T& property) {
+	inline constexpr decltype(auto) _get_property(T const& property) {
 		if constexpr (std::is_reference_v<decl>) {
 			/* Return const reference */
 			return property;

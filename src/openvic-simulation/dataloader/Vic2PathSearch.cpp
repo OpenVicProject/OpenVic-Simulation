@@ -42,7 +42,7 @@ static constexpr bool path_equals(std::string_view lhs, std::string_view rhs) {
 template<typename T>
 concept is_filename = std::same_as<T, std::filesystem::path> || std::convertible_to<T, std::string_view>;
 
-static bool filename_equals(const is_filename auto& lhs, const is_filename auto& rhs) {
+static bool filename_equals(is_filename auto const& lhs, is_filename auto const& rhs) {
 	auto left = [&lhs] {
 		if constexpr (std::same_as<std::decay_t<decltype(lhs)>, std::filesystem::path>) {
 			return lhs.filename().string();
@@ -230,7 +230,7 @@ static fs::path _search_for_game_path(fs::path hint_path = {}) {
 		// Array of strings contain "0" to std::to_string(max_amount_of_steam_libraries - 1)
 		static constexpr auto library_indexes = OpenVic::ConstexprIntToStr::make_itosv_array<max_amount_of_steam_libraries>();
 
-		for (const auto& index : library_indexes) {
+		for (auto const& index : library_indexes) {
 			decltype(current_node) node = std::nullopt;
 
 			auto it = current_node.value().find(index);
@@ -336,7 +336,7 @@ static fs::path _search_for_game_path(fs::path hint_path = {}) {
 
 fs::path Dataloader::search_for_game_path(fs::path hint_path) {
 	struct fshash {
-		size_t operator()(const std::filesystem::path& p) const noexcept {
+		size_t operator()(std::filesystem::path const& p) const noexcept {
 			return std::filesystem::hash_value(p);
 		}
 	};

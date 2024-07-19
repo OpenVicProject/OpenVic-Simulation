@@ -121,7 +121,7 @@ bool CountryDefinitionManager::load_countries(
 	return ret;
 }
 
-bool CountryDefinitionManager::load_country_colours(ast::NodeCPtr root){
+bool CountryDefinitionManager::load_country_colours(ast::NodeCPtr root) {
 	return country_definitions.expect_item_dictionary([](CountryDefinition& country, ast::NodeCPtr colour_node) -> bool {
 		return expect_dictionary_keys(
 			"color1", ONE_EXACTLY, expect_colour(assign_variable_callback(country.primary_unit_colour)),
