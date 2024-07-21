@@ -25,6 +25,7 @@ static bool run_headless(Dataloader::path_vector_t const& roots, bool run_tests)
 		Logger::info("State updated");
 	}, nullptr };
 
+	Logger::info("===== Loading definitions... =====");
 	ret &= game_manager.load_definitions(
 		roots,
 		[](std::string_view key, Dataloader::locale_t locale, std::string_view localisation) -> bool {
@@ -39,6 +40,14 @@ static bool run_headless(Dataloader::path_vector_t const& roots, bool run_tests)
 		testing.report_results();
 		std::cout << "Testing Executed" << std::endl << std::endl;
 	}
+
+	Logger::info("===== Setting up instance... =====");
+	ret &= game_manager.setup_instance(
+		game_manager.get_definition_manager().get_history_manager().get_bookmark_manager().get_bookmark_by_index(0)
+	);
+
+	Logger::info("===== Starting game session... =====");
+	ret &= game_manager.start_game_session();
 
 	return ret;
 }

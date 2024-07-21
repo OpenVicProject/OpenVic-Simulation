@@ -1,5 +1,7 @@
 #pragma once
 
+#include <plf_colony.h>
+
 #include "openvic-simulation/economy/BuildingInstance.hpp"
 #include "openvic-simulation/military/UnitInstance.hpp"
 #include "openvic-simulation/military/UnitType.hpp"
@@ -13,7 +15,7 @@ namespace OpenVic {
 	struct ProvinceDefinition;
 	struct TerrainType;
 	struct State;
-	struct CountryDefinition;
+	struct CountryInstance;
 	struct Crime;
 	struct GoodDefinition;
 	struct Ideology;
@@ -22,6 +24,7 @@ namespace OpenVic {
 	struct BuildingTypeManager;
 	struct ProvinceHistoryEntry;
 	struct IssueManager;
+	struct CountryInstanceManager;
 
 	template<UnitType::branch_t>
 	struct UnitInstanceGroup;
@@ -39,17 +42,32 @@ namespace OpenVic {
 
 		enum struct colony_status_t : uint8_t { STATE, PROTECTORATE, COLONY };
 
+		static constexpr std::string_view get_colony_status_string(colony_status_t colony_status) {
+			using enum colony_status_t;
+			switch (colony_status) {
+			case STATE:
+				return "state";
+			case PROTECTORATE:
+				return "protectorate";
+			case COLONY:
+				return "colony";
+			default:
+				return "unknown colony status";
+			}
+		}
+
 	private:
 		ProvinceDefinition const& PROPERTY(province_definition);
 
 		TerrainType const* PROPERTY(terrain_type);
 		life_rating_t PROPERTY(life_rating);
 		colony_status_t PROPERTY(colony_status);
-		State const* PROPERTY_RW(state);
-		CountryDefinition const* PROPERTY(owner);
-		CountryDefinition const* PROPERTY(controller);
-		// Cores being CountryDefinitions means then they won't be affected by tag switched (as desired)
-		std::vector<CountryDefinition const*> PROPERTY(cores);
+		State* PROPERTY_RW(state);
+
+		CountryInstance* PROPERTY(owner);
+		CountryInstance* PROPERTY(controller);
+		ordered_set<CountryInstance*> PROPERTY(cores);
+
 		bool PROPERTY(slave);
 		Crime const* PROPERTY_RW(crime);
 		// TODO - change this into a factory-like structure
@@ -60,8 +78,12 @@ namespace OpenVic {
 
 		UNIT_BRANCHED_GETTER(get_unit_instance_groups, armies, navies);
 
-		std::vector<Pop> PROPERTY(pops);
+		plf::colony<Pop> PROPERTY(pops); // TODO - replace with a more easily vectorisable container?
 		Pop::pop_size_t PROPERTY(total_population);
+		// TODO - population change (growth + migration), monthly totals + breakdown by source/destination
+		fixed_point_t PROPERTY(average_literacy);
+		fixed_point_t PROPERTY(average_consciousness);
+		fixed_point_t PROPERTY(average_militancy);
 		IndexedMap<PopType, fixed_point_t> PROPERTY(pop_type_distribution);
 		IndexedMap<Ideology, fixed_point_t> PROPERTY(ideology_distribution);
 		fixed_point_map_t<Culture const*> PROPERTY(culture_distribution);
@@ -82,6 +104,18 @@ namespace OpenVic {
 			return province_definition;
 		}
 
+		constexpr CountryInstance* get_owner() {
+			return owner;
+		}
+		constexpr CountryInstance* get_controller() {
+			return controller;
+		}
+
+		bool set_owner(CountryInstance* new_owner);
+		bool set_controller(CountryInstance* new_controller);
+		bool add_core(CountryInstance& new_core);
+		bool remove_core(CountryInstance& core_to_remove);
+
 		bool expand_building(size_t building_index);
 
 		bool add_pop(Pop&& pop);
@@ -97,7 +131,7 @@ namespace OpenVic {
 		bool remove_unit_instance_group(UnitInstanceGroup<Branch>& group);
 
 		bool setup(BuildingTypeManager const& building_type_manager);
-		bool apply_history_to_province(ProvinceHistoryEntry const* entry);
+		bool apply_history_to_province(ProvinceHistoryEntry const* entry, CountryInstanceManager& country_manager);
 
 		void setup_pop_test_values(IssueManager const& issue_manager);
 	};

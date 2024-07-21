@@ -1,6 +1,9 @@
 #pragma once
 
+#include <string>
 #include <vector>
+
+#include <plf_colony.h>
 
 #include "openvic-simulation/map/ProvinceInstance.hpp"
 #include "openvic-simulation/pop/Pop.hpp"
@@ -9,7 +12,7 @@
 namespace OpenVic {
 	struct StateManager;
 	struct StateSet;
-	struct CountryDefinition;
+	struct CountryInstance;
 	struct ProvinceInstance;
 
 	struct State {
@@ -17,19 +20,26 @@ namespace OpenVic {
 
 	private:
 		StateSet const& PROPERTY(state_set);
-		CountryDefinition const* PROPERTY(owner);
+		CountryInstance* PROPERTY(owner);
 		ProvinceInstance* PROPERTY(capital);
 		std::vector<ProvinceInstance*> PROPERTY(provinces);
 		ProvinceInstance::colony_status_t PROPERTY(colony_status);
 
 		Pop::pop_size_t PROPERTY(total_population);
+		fixed_point_t PROPERTY(average_literacy);
+		fixed_point_t PROPERTY(average_consciousness);
+		fixed_point_t PROPERTY(average_militancy);
+		IndexedMap<PopType, fixed_point_t> PROPERTY(pop_type_distribution);
 
 		State(
-			StateSet const& new_state_set, CountryDefinition const* owner, ProvinceInstance* capital,
-			std::vector<ProvinceInstance*>&& provinces, ProvinceInstance::colony_status_t colony_status
+			StateSet const& new_state_set, CountryInstance* owner, ProvinceInstance* capital,
+			std::vector<ProvinceInstance*>&& provinces, ProvinceInstance::colony_status_t colony_status,
+			decltype(pop_type_distribution)::keys_t const& pop_type_keys
 		);
 
 	public:
+		std::string get_identifier() const;
+
 		void update_gamestate();
 	};
 
@@ -38,8 +48,7 @@ namespace OpenVic {
 	struct StateSet {
 		friend struct StateManager;
 
-		// TODO - use a container that supports adding and removing items without invalidating pointers
-		using states_t = std::vector<State>;
+		using states_t = plf::colony<State>;
 
 	private:
 		Region const& PROPERTY(region);
@@ -60,13 +69,16 @@ namespace OpenVic {
 	private:
 		std::vector<StateSet> PROPERTY(state_sets);
 
-		bool add_state_set(MapInstance& map_instance, Region const& region);
+		bool add_state_set(
+			MapInstance& map_instance, Region const& region,
+			decltype(State::pop_type_distribution)::keys_t const& pop_type_keys
+		);
 
 	public:
 		/* Creates states from current province gamestate & regions, sets province state value.
 		 * After this function, the `regions` property is unmanaged and must be carefully updated and
 		 * validated by functions that modify it. */
-		bool generate_states(MapInstance& map_instance);
+		bool generate_states(MapInstance& map_instance, decltype(State::pop_type_distribution)::keys_t const& pop_type_keys);
 
 		void reset();
 

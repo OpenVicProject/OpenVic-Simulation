@@ -47,14 +47,7 @@ bool CountryHistoryMap::_load_history_entry(
 							" when it actually belongs to ", reform.get_reform_group(), " in history of ", entry.get_country()
 						);
 					}
-					if (std::find(entry.reforms.begin(), entry.reforms.end(), &reform) != entry.reforms.end()) {
-						Logger::error(
-							"Redefinition of reform ", reform.get_identifier(), " in history of ", entry.get_country()
-						);
-						return false;
-					}
-					entry.reforms.push_back(&reform);
-					return true;
+					return set_callback_pointer(entry.reforms)(reform);
 				})(value);
 			}
 
@@ -81,9 +74,7 @@ bool CountryHistoryMap::_load_history_entry(
 		),
 		"primary_culture", ZERO_OR_ONE,
 			culture_manager.expect_culture_identifier(assign_variable_callback_pointer_opt(entry.primary_culture)),
-		"culture", ZERO_OR_MORE, culture_manager.expect_culture_identifier(
-			vector_callback_pointer(entry.accepted_cultures)
-		),
+		"culture", ZERO_OR_MORE, culture_manager.expect_culture_identifier(set_callback_pointer(entry.accepted_cultures)),
 		"religion", ZERO_OR_ONE, definition_manager.get_pop_manager().get_religion_manager().expect_religion_identifier(
 			assign_variable_callback_pointer_opt(entry.religion)
 		),

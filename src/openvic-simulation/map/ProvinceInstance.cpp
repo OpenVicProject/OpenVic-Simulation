@@ -1,9 +1,10 @@
 #include "ProvinceInstance.hpp"
 
-#include "openvic-simulation/country/CountryDefinition.hpp"
+#include "openvic-simulation/country/CountryInstance.hpp"
 #include "openvic-simulation/history/ProvinceHistory.hpp"
 #include "openvic-simulation/map/ProvinceDefinition.hpp"
 #include "openvic-simulation/military/UnitInstanceGroup.hpp"
+#include "openvic-simulation/politics/Ideology.hpp"
 
 using namespace OpenVic;
 
@@ -32,6 +33,65 @@ ProvinceInstance::ProvinceInstance(
 	culture_distribution {},
 	religion_distribution {} {}
 
+bool ProvinceInstance::set_owner(CountryInstance* new_owner) {
+	bool ret = true;
+
+	if (owner != new_owner) {
+		if (owner != nullptr) {
+			ret &= owner->remove_owned_province(*this);
+		}
+
+		owner = new_owner;
+
+		if (owner != nullptr) {
+			ret &= owner->add_owned_province(*this);
+		}
+	}
+
+	return ret;
+}
+
+bool ProvinceInstance::set_controller(CountryInstance* new_controller) {
+	bool ret = true;
+
+	if (controller != new_controller) {
+		if (controller != nullptr) {
+			ret &= controller->remove_controlled_province(*this);
+		}
+
+		controller = new_controller;
+
+		if (controller != nullptr) {
+			ret &= controller->add_controlled_province(*this);
+		}
+	}
+
+	return ret;
+}
+
+bool ProvinceInstance::add_core(CountryInstance& new_core) {
+	if (cores.emplace(&new_core).second) {
+		return new_core.add_core_province(*this);
+	} else {
+		Logger::error(
+			"Attempted to add core \"", new_core.get_identifier(), "\" to country ", get_identifier(), ": already exists!"
+		);
+		return false;
+	}
+}
+
+bool ProvinceInstance::remove_core(CountryInstance& core_to_remove) {
+	if (cores.erase(&core_to_remove) > 0) {
+		return core_to_remove.remove_core_province(*this);
+	} else {
+		Logger::error(
+			"Attempted to remove core \"", core_to_remove.get_identifier(), "\" from country ", get_identifier(),
+			": does not exist!"
+		);
+		return false;
+	}
+}
+
 bool ProvinceInstance::expand_building(size_t building_index) {
 	BuildingInstance* building = buildings.get_item_by_index(building_index);
 	if (building == nullptr) {
@@ -43,7 +103,7 @@ bool ProvinceInstance::expand_building(size_t building_index) {
 
 void ProvinceInstance::_add_pop(Pop&& pop) {
 	pop.set_location(*this);
-	pops.push_back(std::move(pop));
+	pops.insert(std::move(pop));
 }
 
 bool ProvinceInstance::add_pop(Pop&& pop) {
@@ -78,16 +138,31 @@ size_t ProvinceInstance::get_pop_count() const {
  */
 void ProvinceInstance::_update_pops() {
 	total_population = 0;
+	average_literacy = 0;
+	average_consciousness = 0;
+	average_militancy = 0;
+
 	pop_type_distribution.clear();
 	ideology_distribution.clear();
 	culture_distribution.clear();
 	religion_distribution.clear();
+
 	for (Pop const& pop : pops) {
 		total_population += pop.get_size();
+		average_literacy += pop.get_literacy();
+		average_consciousness += pop.get_consciousness();
+		average_militancy += pop.get_militancy();
+
 		pop_type_distribution[pop.get_type()] += pop.get_size();
 		ideology_distribution += pop.get_ideologies();
 		culture_distribution[&pop.get_culture()] += pop.get_size();
 		religion_distribution[&pop.get_religion()] += pop.get_size();
+	}
+
+	if (total_population > 0) {
+		average_literacy /= total_population;
+		average_consciousness /= total_population;
+		average_militancy /= total_population;
 	}
 }
 
@@ -161,39 +236,38 @@ bool ProvinceInstance::setup(BuildingTypeManager const& building_type_manager) {
 	return ret;
 }
 
-bool ProvinceInstance::apply_history_to_province(ProvinceHistoryEntry const* entry) {
+bool ProvinceInstance::apply_history_to_province(ProvinceHistoryEntry const* entry, CountryInstanceManager& country_manager) {
 	if (entry == nullptr) {
 		Logger::error("Trying to apply null province history to ", get_identifier());
 		return false;
 	}
-	if (entry->get_life_rating()) life_rating = *entry->get_life_rating();
-	if (entry->get_colonial()) colony_status = *entry->get_colonial();
-	if (entry->get_rgo()) rgo = *entry->get_rgo();
-	if (entry->get_terrain_type()) terrain_type = *entry->get_terrain_type();
-	if (entry->get_owner()) owner = *entry->get_owner();
-	if (entry->get_controller()) controller = *entry->get_controller();
-	if (entry->get_slave()) slave = *entry->get_slave();
-	for (CountryDefinition const* core : entry->get_remove_cores()) {
-		const typename decltype(cores)::iterator existing_core = std::find(cores.begin(), cores.end(), core);
-		if (existing_core != cores.end()) {
-			cores.erase(existing_core);
-		} else {
-			Logger::warning(
-				"Trying to remove non-existent core ", core->get_identifier(), " from province ", get_identifier()
-			);
-		}
-	}
-	for (CountryDefinition const* core : entry->get_add_cores()) {
-		const typename decltype(cores)::iterator existing_core = std::find(cores.begin(), cores.end(), core);
-		if (existing_core == cores.end()) {
-			cores.push_back(core);
-		} else {
-			Logger::warning(
-				"Trying to add already-existing core ", core->get_identifier(), " to province ", get_identifier()
-			);
-		}
-	}
+
 	bool ret = true;
+
+	constexpr auto set_optional = []<typename T>(T& target, std::optional<T> const& source) {
+		if (source) {
+			target = *source;
+		}
+	};
+
+	if (entry->get_owner()) {
+		ret &= set_owner(&country_manager.get_country_instance_from_definition(**entry->get_owner()));
+	}
+	if (entry->get_controller()) {
+		ret &= set_controller(&country_manager.get_country_instance_from_definition(**entry->get_controller()));
+	}
+	set_optional(colony_status, entry->get_colonial());
+	set_optional(slave, entry->get_slave());
+	for (auto const& [country, add] : entry->get_cores()) {
+		if (add) {
+			ret &= add_core(country_manager.get_country_instance_from_definition(*country));
+		} else {
+			ret &= remove_core(country_manager.get_country_instance_from_definition(*country));
+		}
+	}
+	set_optional(rgo, entry->get_rgo());
+	set_optional(life_rating, entry->get_life_rating());
+	set_optional(terrain_type, entry->get_terrain_type());
 	for (auto const& [building, level] : entry->get_province_buildings()) {
 		BuildingInstance* existing_entry = buildings.get_item_by_identifier(building->get_identifier());
 		if (existing_entry != nullptr) {
@@ -206,8 +280,8 @@ bool ProvinceInstance::apply_history_to_province(ProvinceHistoryEntry const* ent
 			ret = false;
 		}
 	}
-	// TODO: load state buildings
-	// TODO: party loyalties for each POP when implemented on POP side
+	// TODO: load state buildings - entry->get_state_buildings()
+	// TODO: party loyalties for each POP when implemented on POP side - entry->get_party_loyalties()
 	return ret;
 }
 

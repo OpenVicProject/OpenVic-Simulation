@@ -90,7 +90,7 @@ namespace OpenVic {
 		friend struct UnitInstanceManager;
 
 	private:
-		std::vector<ArmyInstance const*> PROPERTY(carried_armies);
+		std::vector<ArmyInstance*> PROPERTY(carried_armies);
 
 		UnitInstanceGroupBranched(
 			std::string_view new_name,
@@ -99,6 +99,8 @@ namespace OpenVic {
 
 	public:
 		UnitInstanceGroupBranched(UnitInstanceGroupBranched&&) = default;
+
+		fixed_point_t get_total_consumed_supply() const;
 	};
 
 	using NavyInstance = UnitInstanceGroupBranched<UnitType::branch_t::NAVAL>;

@@ -1,6 +1,7 @@
 #include "Pop.hpp"
 
 #include "openvic-simulation/country/CountryDefinition.hpp"
+#include "openvic-simulation/country/CountryInstance.hpp"
 #include "openvic-simulation/map/ProvinceInstance.hpp"
 #include "openvic-simulation/military/UnitType.hpp"
 #include "openvic-simulation/politics/Ideology.hpp"
@@ -119,7 +120,9 @@ void Pop::set_location(ProvinceInstance const& new_location) {
 
 		// TODO - update location dependent attributes
 
-		votes.set_keys(location->get_owner() != nullptr ? &location->get_owner()->get_parties() : nullptr);
+		votes.set_keys(
+			location->get_owner() != nullptr ? &location->get_owner()->get_country_definition()->get_parties() : nullptr
+		);
 		// TODO - calculate vote distribution
 	}
 }

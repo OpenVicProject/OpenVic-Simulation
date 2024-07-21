@@ -30,6 +30,33 @@ bool ProvinceHistoryMap::_load_history_entry(
 		{ "0", STATE }, { "1", PROTECTORATE }, { "2", COLONY }
 	};
 
+	const auto set_core_instruction = [&entry](bool add) {
+		return [&entry, add](CountryDefinition const& country) -> bool {
+			const auto it = entry.cores.find(&country);
+			if (it == entry.cores.end()) {
+				// No current core instruction
+				entry.cores.emplace(&country, add);
+				return true;
+			} else if (it->second == add) {
+				// Desired core instruction already exists
+				Logger::warning(
+					"Duplicate attempt to ", add ? "add" : "remove", " core of country ", country.get_identifier(),
+					" ", add ? "to" : "from", " province history of ", entry.get_province()
+				);
+				return true;
+			} else {
+				// Opposite core instruction exists
+				entry.cores.erase(it);
+				Logger::warning(
+					"Attempted to ", add ? "add" : "remove", " core of country ", country.get_identifier(),
+					" ", add ? "to" : "from", " province history of ", entry.get_province(),
+					" after previously ", add ? "adding" : "removing", " it"
+				);
+				return true;
+			}
+		};
+	};
+
 	return expect_dictionary_keys_and_default(
 		[this, &definition_manager, &building_type_manager, &entry](
 			std::string_view key, ast::NodeCPtr value) -> bool {
@@ -60,10 +87,10 @@ bool ProvinceHistoryMap::_load_history_entry(
 			assign_variable_callback_pointer_opt(entry.controller, true)
 		),
 		"add_core", ZERO_OR_MORE, country_definition_manager.expect_country_definition_identifier(
-			vector_callback_pointer(entry.add_cores)
+			set_core_instruction(true)
 		),
 		"remove_core", ZERO_OR_MORE, country_definition_manager.expect_country_definition_identifier(
-			vector_callback_pointer(entry.remove_cores)
+			set_core_instruction(false)
 		),
 		"colonial", ZERO_OR_ONE,
 			expect_identifier(expect_mapped_string(colony_status_map, assign_variable_callback(entry.colonial))),
