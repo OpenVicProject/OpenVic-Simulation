@@ -31,7 +31,36 @@ def build_colony(env):
     env.Append(CPPPATH=env.colony["INCPATH"])
     env.exposed_includes += env.colony["INCPATH"]
 
+def build_lauf(env):
+    lauf_dir = env.Dir("lauf")
+
+    cmake_configure = env.AddPreAction(
+        lauf_dir,
+        env.Command(
+            env.File('lauf/build/CMakeCache.txt'),
+            env.File('lauf/CMakeLists.txt'),
+            env.Action('@cmake -DCMAKE_BUILD_TYPE="Release" -DLAUF_BUILD_BENCHMARKS=false -DLAUF_BUILD_TESTS=false -DLAUF_BUILD_TOOLS=false -Bbuild -H.', chdir=lauf_dir)
+        )
+    )
+    cmake_build = env.AddPreAction(
+        cmake_configure,
+        env.Command(
+            env.File("lauf/build/src/liblauf_core" + env["LIBSUFFIX"]),
+            env.File('lauf/build/CMakeCache.txt'),
+            env.Action('@cmake --build build', chdir=lauf_dir)
+        )
+    )
+    env.Default(cmake_build)
+
+    include_path = "lauf/include"
+    env.Append(LIBPATH=env.Dir("lauf/build/src"))
+    env.Prepend(LIBS=["liblauf_core", "liblauf_text", "liblauf_qbe"])
+    env.Append(CPPPATH=[env.Dir(include_path)])
+    env.Append(CPPDEFINES=["LAUF_CONFIG_DISPATCH_JUMP_TABLE=1"])
+    env.exposed_includes += [env.Dir(include_path)]
+
 build_openvic_dataloader(env)
 build_lexy_vdf(env)
 build_ordered_map(env)
 build_colony(env)
+build_lauf(env)

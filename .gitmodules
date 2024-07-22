@@ -13,3 +13,6 @@
 [submodule "deps/plf_colony"]
 	path = deps/plf_colony
 	url = https://github.com/mattreecebentley/plf_colony
+[submodule "deps/lauf"]
+	path = deps/lauf
+	url = https://github.com/OpenVicProject/lauf

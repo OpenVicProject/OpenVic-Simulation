@@ -6,9 +6,10 @@ For detailed instructions, view the OpenVic Contributor Quickstart Guide [here](
 
 ## Required
 * [scons](https://scons.org/)
+* [cmake](https://cmake.org/)
 
 ## Build Instructions
-1. Install [scons](https://scons.org/) for your system.
+1. Install [scons](https://scons.org/) and [cmake](https://cmake.org/) for your system.
 2. Run the command `git submodule update --init --recursive` to retrieve all related submodules.
 3. Run `scons` in the project root, you should see a openvic-simulation.headless file in `bin`.
 
