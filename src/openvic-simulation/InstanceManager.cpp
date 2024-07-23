@@ -41,6 +41,7 @@ void InstanceManager::update_gamestate() {
 
 	// Update gamestate...
 	map_instance.update_gamestate(today);
+	country_instance_manager.update_gamestate();
 
 	gamestate_updated();
 	gamestate_needs_update = false;
@@ -74,12 +75,12 @@ bool InstanceManager::setup() {
 		definition_manager.get_pop_manager().get_pop_types(),
 		definition_manager.get_politics_manager().get_ideology_manager().get_ideologies()
 	);
-	ret &= map_instance.get_state_manager().generate_states(map_instance);
 	ret &= country_instance_manager.generate_country_instances(
 		definition_manager.get_country_definition_manager(),
 		definition_manager.get_research_manager().get_technology_manager().get_technologies(),
 		definition_manager.get_research_manager().get_invention_manager().get_inventions(),
-		definition_manager.get_politics_manager().get_ideology_manager().get_ideologies()
+		definition_manager.get_politics_manager().get_ideology_manager().get_ideologies(),
+		definition_manager.get_pop_manager().get_pop_types()
 	);
 
 	game_instance_setup = true;
@@ -115,12 +116,17 @@ bool InstanceManager::load_bookmark(Bookmark const* new_bookmark) {
 
 	bool ret = map_instance.apply_history_to_provinces(
 		definition_manager.get_history_manager().get_province_manager(), today,
+		country_instance_manager,
 		// TODO - the following argument is for generating test pop attributes
 		definition_manager.get_politics_manager().get_issue_manager()
 	);
 
 	ret &= country_instance_manager.apply_history_to_countries(
 		definition_manager.get_history_manager().get_country_manager(), today, unit_instance_manager, map_instance
+	);
+
+	ret &= map_instance.get_state_manager().generate_states(
+		map_instance, definition_manager.get_pop_manager().get_pop_types()
 	);
 
 	return ret;

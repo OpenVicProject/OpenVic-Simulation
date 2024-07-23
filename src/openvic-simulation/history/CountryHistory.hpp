@@ -32,7 +32,7 @@ namespace OpenVic {
 		CountryDefinition const& PROPERTY(country);
 
 		std::optional<Culture const*> PROPERTY(primary_culture);
-		std::vector<Culture const*> PROPERTY(accepted_cultures);
+		ordered_set<Culture const*> PROPERTY(accepted_cultures);
 		std::optional<Religion const*> PROPERTY(religion);
 		std::optional<CountryParty const*> PROPERTY(ruling_party);
 		std::optional<Date> PROPERTY(last_election);
@@ -43,7 +43,7 @@ namespace OpenVic {
 		std::optional<NationalValue const*> PROPERTY(national_value);
 		std::optional<bool> PROPERTY_CUSTOM_PREFIX(civilised, is);
 		std::optional<fixed_point_t> PROPERTY(prestige);
-		std::vector<Reform const*> PROPERTY(reforms);
+		ordered_set<Reform const*> PROPERTY(reforms);
 		std::optional<Deployment const*> PROPERTY(inital_oob);
 		std::optional<TechnologySchool const*> PROPERTY(tech_school);
 		ordered_map<Technology const*, bool> PROPERTY(technologies);

@@ -4,6 +4,7 @@
 
 #include "openvic-simulation/dataloader/NodeTools.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPointMap.hpp"
+#include "openvic-simulation/types/HasIdentifier.hpp"
 #include "openvic-simulation/utility/Getters.hpp"
 #include "openvic-simulation/utility/Logger.hpp"
 
@@ -26,11 +27,6 @@ namespace OpenVic {
 	static constexpr bool duplicate_ignore_callback(std::string_view registry_name, std::string_view duplicate_identifier) {
 		return true;
 	}
-
-	template<typename T>
-	concept HasGetIdentifier = requires(T const& t) {
-		{ t.get_identifier() } -> std::same_as<std::string_view>;
-	};
 
 	/* Registry Value Info - the type that is being registered, and a unique identifier string getter. */
 	template<typename ValueInfo>

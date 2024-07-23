@@ -35,8 +35,8 @@ namespace OpenVic {
 
 		IDENTIFIER_REGISTRY_NON_CONST_ACCESSORS_CUSTOM_INDEX_OFFSET(province_instance, 1);
 
-		ProvinceInstance* get_province_instance_from_const(ProvinceDefinition const* province);
-		ProvinceInstance const* get_province_instance_from_const(ProvinceDefinition const* province) const;
+		ProvinceInstance& get_province_instance_from_definition(ProvinceDefinition const& province);
+		ProvinceInstance const& get_province_instance_from_definition(ProvinceDefinition const& province) const;
 
 		void set_selected_province(ProvinceDefinition::index_t index);
 		ProvinceInstance* get_selected_province();
@@ -48,7 +48,8 @@ namespace OpenVic {
 			decltype(ProvinceInstance::ideology_distribution)::keys_t const& ideology_keys
 		);
 		bool apply_history_to_provinces(
-			ProvinceHistoryManager const& history_manager, Date date, IssueManager const& issue_manager
+			ProvinceHistoryManager const& history_manager, Date date, CountryInstanceManager& country_manager,
+			IssueManager const& issue_manager
 		);
 
 		void update_gamestate(Date today);

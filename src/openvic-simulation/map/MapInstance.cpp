@@ -10,20 +10,12 @@ MapInstance::MapInstance(MapDefinition const& new_map_definition)
   : map_definition { new_map_definition }, selected_province { nullptr }, highest_province_population { 0 },
 	total_map_population { 0 } {}
 
-ProvinceInstance* MapInstance::get_province_instance_from_const(ProvinceDefinition const* province) {
-	if (province != nullptr) {
-		return get_province_instance_by_index(province->get_index());
-	} else {
-		return nullptr;
-	}
+ProvinceInstance& MapInstance::get_province_instance_from_definition(ProvinceDefinition const& province) {
+	return province_instances.get_items()[province.get_index() - 1];
 }
 
-ProvinceInstance const* MapInstance::get_province_instance_from_const(ProvinceDefinition const* province) const {
-	if (province != nullptr) {
-		return get_province_instance_by_index(province->get_index());
-	} else {
-		return nullptr;
-	}
+ProvinceInstance const& MapInstance::get_province_instance_from_definition(ProvinceDefinition const& province) const {
+	return province_instances.get_items()[province.get_index() - 1];
 }
 
 void MapInstance::set_selected_province(ProvinceDefinition::index_t index) {
@@ -89,7 +81,8 @@ bool MapInstance::setup(
 }
 
 bool MapInstance::apply_history_to_provinces(
-	ProvinceHistoryManager const& history_manager, Date date, IssueManager const& issue_manager
+	ProvinceHistoryManager const& history_manager, Date date, CountryInstanceManager& country_manager,
+	IssueManager const& issue_manager
 ) {
 	bool ret = true;
 
@@ -102,7 +95,7 @@ bool MapInstance::apply_history_to_provinces(
 				ProvinceHistoryEntry const* pop_history_entry = nullptr;
 
 				for (ProvinceHistoryEntry const* entry : history_map->get_entries_up_to(date)) {
-					province.apply_history_to_province(entry);
+					province.apply_history_to_province(entry, country_manager);
 
 					if (!entry->get_pops().empty()) {
 						pop_history_entry = entry;

@@ -2,6 +2,8 @@
 
 #include <algorithm>
 #include <cassert>
+#include <string>
+#include <string_view>
 #include <ostream>
 
 #include "openvic-simulation/types/Colour.hpp"
@@ -49,6 +51,11 @@ namespace OpenVic {
 		return obj != nullptr ? stream << *obj : stream << "<NULL>";
 	}
 
+	template<typename T>
+	concept HasGetIdentifier = requires(T const& t) {
+		{ t.get_identifier() } -> std::same_as<std::string_view>;
+	};
+
 	/*
 	 * Base class for objects with associated colour information.
 	 */
@@ -70,6 +77,11 @@ namespace OpenVic {
 
 	using HasColour = _HasColour<colour_t>;
 	using HasAlphaColour = _HasColour<colour_argb_t>;
+
+	template<typename T>
+	concept HasGetColour = requires(T const& t) {
+		{ t.get_colour() } -> IsColour;
+	};
 
 	/*
 	 * Base class for objects with a unique string identifier and associated colour information.
@@ -106,5 +118,10 @@ namespace OpenVic {
 		HasIndex(HasIndex&&) = default;
 		HasIndex& operator=(HasIndex const&) = delete;
 		HasIndex& operator=(HasIndex&&) = delete;
+	};
+
+	template<typename T>
+	concept HasGetIndex = requires(T const& t) {
+		{ t.get_index() } -> std::unsigned_integral;
 	};
 }

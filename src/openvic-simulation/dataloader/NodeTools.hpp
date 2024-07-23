@@ -12,7 +12,6 @@
 
 #include "openvic-simulation/types/Colour.hpp"
 #include "openvic-simulation/types/Date.hpp"
-#include "openvic-simulation/types/HasIdentifier.hpp"
 #include "openvic-simulation/types/IndexedMap.hpp"
 #include "openvic-simulation/types/OrderedContainers.hpp"
 #include "openvic-simulation/types/Vector.hpp"
@@ -528,7 +527,7 @@ namespace OpenVic {
 			};
 		}
 
-		template<std::derived_from<HasIdentifier> T, typename... SetArgs>
+		template<typename T, typename... SetArgs>
 		Callback<T const&> auto set_callback_pointer(tsl::ordered_set<T const*, SetArgs...>& set, bool warn = false) {
 			return [&set, warn](T const& val) -> bool {
 				if (set.emplace(&val).second) {
@@ -539,7 +538,7 @@ namespace OpenVic {
 			};
 		}
 
-		template<std::derived_from<HasIdentifier> Key, typename Value, typename... MapArgs>
+		template<typename Key, typename Value, typename... MapArgs>
 		Callback<Value> auto map_callback(
 			tsl::ordered_map<Key const*, Value, MapArgs...>& map, Key const* key, bool warn = false
 		) {
@@ -561,7 +560,7 @@ namespace OpenVic {
 					Logger::error("Null key in map_callback");
 					return false;
 				}
-				Value& map_value = map[*key];
+				typename IndexedMap<Key, Value>::value_ref_t map_value = map[*key];
 				bool ret = true;
 				if (map_value != Value {}) {
 					Logger::warn_or_error(warn, "Duplicate map entry with key: \"", key, "\"");

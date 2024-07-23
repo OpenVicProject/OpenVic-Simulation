@@ -155,6 +155,17 @@ UnitInstanceGroupBranched<UnitType::branch_t::NAVAL>::UnitInstanceGroupBranched(
 	std::vector<ShipInstance*>&& new_units
 ) : UnitInstanceGroup { new_name, std::move(new_units) } {}
 
+
+fixed_point_t UnitInstanceGroupBranched<UnitType::branch_t::NAVAL>::get_total_consumed_supply() const {
+	fixed_point_t total_consumed_supply = 0;
+
+	for (ShipInstance const* ship : get_units()) {
+		total_consumed_supply += ship->get_unit_type().get_supply_consumption_score();
+	}
+
+	return total_consumed_supply;
+}
+
 template<UnitType::branch_t Branch>
 bool UnitInstanceManager::generate_unit_instance(
 	UnitDeployment<Branch> const& unit_deployment, UnitInstanceBranched<Branch>*& unit_instance
@@ -220,7 +231,7 @@ bool UnitInstanceManager::generate_unit_instance_group(
 	});
 
 	ret &= unit_instance_group.set_position(
-		map_instance.get_province_instance_from_const(unit_deployment_group.get_location())
+		&map_instance.get_province_instance_from_definition(*unit_deployment_group.get_location())
 	);
 	ret &= unit_instance_group.set_country(&country);
 

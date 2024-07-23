@@ -2,7 +2,7 @@
 
 #include <cassert>
 
-#include "openvic-simulation/country/CountryDefinition.hpp"
+#include "openvic-simulation/country/CountryInstance.hpp"
 #include "openvic-simulation/map/MapDefinition.hpp"
 #include "openvic-simulation/map/MapInstance.hpp"
 #include "openvic-simulation/map/ProvinceDefinition.hpp"
@@ -90,7 +90,7 @@ static constexpr colour_argb_t DEFAULT_COLOUR_WHITE = (0xFFFFFF_argb).with_alpha
  * national focus, RGO, population density, sphere of influence, ranking and migration. */
 static constexpr colour_argb_t DEFAULT_COLOUR_GREY = (0x7F7F7F_argb).with_alpha(ALPHA_VALUE);
 
-template<utility::is_derived_from_specialization_of<_HasColour> T, typename P>
+template<HasGetColour T, typename P>
 requires(std::same_as<P, ProvinceDefinition> || std::same_as<P, ProvinceInstance>)
 static constexpr auto get_colour_mapmode(T const*(P::*get_item)() const) {
 	return [get_item](MapInstance const&, ProvinceInstance const& province) -> Mapmode::base_stripe_t {
@@ -114,7 +114,7 @@ static constexpr auto get_colour_mapmode(T const*(P::*get_item)() const) {
 	};
 }
 
-template<utility::is_derived_from_specialization_of<_HasColour> T>
+template<HasGetColour T>
 static constexpr Mapmode::base_stripe_t shaded_mapmode(fixed_point_map_t<T const*> const& map) {
 	const std::pair<fixed_point_map_const_iterator_t<T const*>, fixed_point_map_const_iterator_t<T const*>> largest =
 		get_largest_two_items(map);
@@ -132,7 +132,7 @@ static constexpr Mapmode::base_stripe_t shaded_mapmode(fixed_point_map_t<T const
 	return colour_argb_t::null();
 }
 
-template<utility::is_derived_from_specialization_of<_HasColour> T>
+template<HasGetColour T>
 static constexpr auto shaded_mapmode(fixed_point_map_t<T const*> const&(ProvinceInstance::*get_map)() const) {
 	return [get_map](MapInstance const&, ProvinceInstance const& province) -> Mapmode::base_stripe_t {
 		return shaded_mapmode((province.*get_map)());

@@ -14,6 +14,8 @@ namespace OpenVic {
 		using container_t = std::vector<Value>;
 		using key_t = Key;
 		using value_t = Value;
+		using value_ref_t = container_t::reference;
+		using value_const_ref_t = container_t::const_reference;
 		using keys_t = std::vector<key_t>;
 
 		using container_t::operator[];
@@ -91,11 +93,11 @@ namespace OpenVic {
 			}
 		}
 
-		constexpr value_t& operator[](key_t const& key) {
+		constexpr value_ref_t operator[](key_t const& key) {
 			return container_t::operator[](get_index_from_item(key));
 		}
 
-		constexpr value_t const& operator[](key_t const& key) const {
+		constexpr value_const_ref_t operator[](key_t const& key) const {
 			return container_t::operator[](get_index_from_item(key));
 		}
 

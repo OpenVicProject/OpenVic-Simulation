@@ -31,8 +31,7 @@ namespace OpenVic {
 		std::optional<CountryDefinition const*> PROPERTY(controller);
 		std::optional<ProvinceInstance::colony_status_t> PROPERTY(colonial);
 		std::optional<bool> PROPERTY(slave);
-		std::vector<CountryDefinition const*> PROPERTY(add_cores);
-		std::vector<CountryDefinition const*> PROPERTY(remove_cores);
+		ordered_map<CountryDefinition const*, bool> PROPERTY(cores);
 		std::optional<GoodDefinition const*> PROPERTY(rgo);
 		std::optional<ProvinceInstance::life_rating_t> PROPERTY(life_rating);
 		std::optional<TerrainType const*> PROPERTY(terrain_type);
