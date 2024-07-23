@@ -1007,6 +1007,7 @@ bool Dataloader::load_defines(DefinitionManager& definition_manager) {
 		ret = false;
 	}
 	if (!definition_manager.get_history_manager().get_bookmark_manager().load_bookmark_file(
+		definition_manager.get_map_definition().get_height(),
 		parse_defines(lookup_file(bookmark_file)).get_file_node()
 	)) {
 		Logger::error("Failed to load bookmarks!");

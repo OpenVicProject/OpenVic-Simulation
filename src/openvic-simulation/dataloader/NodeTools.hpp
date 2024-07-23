@@ -590,6 +590,13 @@ namespace OpenVic {
 				return callback(val);
 			};
 		}
+
+		template<typename T>
+		constexpr Callback<T> auto flip_height_callback(Callback<T> auto&& callback, T height) {
+			return [callback, height](T val) -> bool {
+				return callback(height - val);
+			};
+		}
 	}
 }
 
