@@ -6,6 +6,7 @@
 
 #include <range/v3/view/enumerate.hpp>
 
+#include "vm/Utility.hpp"
 #include <lauf/asm/module.h>
 #include <lauf/asm/program.h>
 #include <lauf/asm/type.h>
@@ -14,34 +15,8 @@ namespace OpenVic::Vm {
 	template<typename T>
 	concept Arithmetic = std::is_arithmetic_v<T>;
 
-	struct Module {
-		Module(const char* module_name) : _handle(lauf_asm_create_module(module_name)) {}
-
-		Module(Module&&) = default;
-		Module& operator=(Module&&) = default;
-
-		Module(Module const&) = delete;
-		Module& operator=(Module const&) = delete;
-
-		~Module() {
-			lauf_asm_destroy_module(_handle);
-		}
-
-		lauf_asm_module* handle() {
-			return _handle;
-		}
-
-		const lauf_asm_module* handle() const {
-			return _handle;
-		}
-
-		operator lauf_asm_module*() {
-			return _handle;
-		}
-
-		operator const lauf_asm_module*() const {
-			return _handle;
-		}
+	struct ModuleRef : utility::HandleBase<lauf_asm_module> {
+		using HandleBase::HandleBase;
 
 		const char* name() const {
 			return lauf_asm_module_name(_handle);
@@ -80,7 +55,7 @@ namespace OpenVic::Vm {
 			define_data(global, { sizeof(T), alignof(T) }, static_cast<const void*>(data));
 		}
 
-		static std::unique_ptr<const lauf_asm_module* const[]> make_list(std::span<Module> mods) {
+		static std::unique_ptr<const lauf_asm_module* const[]> make_list(std::span<ModuleRef> mods) {
 			auto result = new const lauf_asm_module*[mods.size()];
 			auto span = std::span<const lauf_asm_module*> { result, mods.size() };
 			for (auto [count, element] : span | ranges::views::enumerate) {
@@ -88,8 +63,20 @@ namespace OpenVic::Vm {
 			}
 			return std::unique_ptr<const lauf_asm_module* const[]>(result);
 		}
+	};
 
-	private:
-		lauf_asm_module* _handle;
+	struct Module : utility::MoveOnlyHandleDerived<Module, ModuleRef> {
+		using MoveOnlyHandleDerived::MoveOnlyHandleDerived;
+		using MoveOnlyHandleDerived::operator=;
+
+		Module(const char* module_name) : MoveOnlyHandleDerived(lauf_asm_create_module(module_name)) {}
+
+		~Module() {
+			if (_handle == nullptr) {
+				return;
+			}
+			lauf_asm_destroy_module(_handle);
+			_handle = nullptr;
+		}
 	};
 }

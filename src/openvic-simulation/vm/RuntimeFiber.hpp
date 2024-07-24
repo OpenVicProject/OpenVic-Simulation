@@ -3,7 +3,8 @@
 #include <cassert>
 #include <optional>
 
-#include "vm/Stacktrace.hpp"
+#include "Stacktrace.hpp"
+#include "Utility.hpp"
 #include <lauf/runtime/process.h>
 #include <lauf/runtime/value.h>
 
@@ -12,24 +13,8 @@ namespace OpenVic::Vm {
 
 	struct RuntimeFiber;
 
-	struct RuntimeFiberRef {
-		RuntimeFiberRef(lauf_runtime_fiber* fiber) : _handle(fiber) {}
-
-		lauf_runtime_fiber* handle() {
-			return _handle;
-		}
-
-		const lauf_runtime_fiber* handle() const {
-			return _handle;
-		}
-
-		operator lauf_runtime_fiber*() {
-			return _handle;
-		}
-
-		operator const lauf_runtime_fiber*() const {
-			return _handle;
-		}
+	struct RuntimeFiberRef : utility::HandleBase<lauf_runtime_fiber> {
+		using HandleBase::HandleBase;
 
 		lauf_runtime_address lauf_handle() const {
 			assert(is_valid());
@@ -51,27 +36,13 @@ namespace OpenVic::Vm {
 		bool is_valid() const {
 			return _handle != nullptr;
 		}
-
-	protected:
-		lauf_runtime_fiber* _handle;
 	};
 
-	struct RuntimeFiber : RuntimeFiberRef {
-		RuntimeFiber(RuntimeFiber&&) = default;
-		RuntimeFiber& operator=(RuntimeFiber&&) = default;
-
-		RuntimeFiber(RuntimeFiber const&) = delete;
-		RuntimeFiber& operator=(RuntimeFiber const&) = delete;
+	struct RuntimeFiber : utility::MoveOnlyHandleDerived<RuntimeFiber, RuntimeFiberRef> {
+		using MoveOnlyHandleDerived::MoveOnlyHandleDerived;
+		using MoveOnlyHandleDerived::operator=;
 
 		~RuntimeFiber();
-
-		RuntimeFiberRef& as_ref() {
-			return *this;
-		}
-
-		RuntimeFiberRef const& as_ref() const {
-			return *this;
-		}
 
 		std::optional<Stacktrace> get_stacktrace() const;
 
@@ -87,9 +58,8 @@ namespace OpenVic::Vm {
 		void destroy();
 
 	private:
-		friend RuntimeFiberRef;
 		friend struct RuntimeProcess;
-		RuntimeFiber(RuntimeProcess* process, lauf_runtime_fiber* fiber) : RuntimeFiberRef(fiber), _process(process) {}
+		RuntimeFiber(RuntimeProcess* process, lauf_runtime_fiber* fiber) : MoveOnlyHandleDerived(fiber), _process(process) {}
 
 		RuntimeProcess* _process;
 	};

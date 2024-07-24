@@ -1,50 +1,32 @@
 #pragma once
 
+#include "Utility.hpp"
 #include <lauf/writer.h>
 
 namespace OpenVic::Vm {
 	template<typename Tag>
-	struct BasicWriter {
-		BasicWriter(BasicWriter&&) = default;
-		BasicWriter& operator=(BasicWriter&&) = default;
-
-		BasicWriter(BasicWriter const&) = delete;
-		BasicWriter& operator=(BasicWriter const&) = delete;
+	struct BasicWriter : utility::MoveOnlyHandleBase<BasicWriter<Tag>, lauf_writer> {
+		using utility::MoveOnlyHandleBase<BasicWriter<Tag>, lauf_writer>::MoveOnlyHandleBase;
+		using utility::MoveOnlyHandleBase<BasicWriter<Tag>, lauf_writer>::operator=;
 
 		~BasicWriter() {
-			lauf_destroy_writer(_handle);
-		}
-
-		lauf_writer* handle() {
-			return _handle;
-		}
-
-		const lauf_writer* handle() const {
-			return _handle;
-		}
-
-		operator lauf_writer*() {
-			return _handle;
-		}
-
-		operator const lauf_writer*() const {
-			return _handle;
+			if (this->_handle == nullptr) {
+				return;
+			}
+			lauf_destroy_writer(*this);
+			this->_handle = nullptr;
 		}
 
 		struct StringTag;
 		struct FileTag;
 		struct StdoutTag;
-
-	protected:
-		BasicWriter(lauf_writer* writer) : _handle(writer) {}
-
-	private:
-		lauf_writer* _handle;
 	};
 
 	template<>
 	struct BasicWriter<BasicWriter<void>::StringTag> : BasicWriter<void> {
 		using BasicWriter<void>::BasicWriter;
+		using BasicWriter<void>::operator=;
+
 		BasicWriter() : BasicWriter(lauf_create_string_writer()) {}
 
 		const char* c_str() {
@@ -55,12 +37,16 @@ namespace OpenVic::Vm {
 	template<>
 	struct BasicWriter<BasicWriter<void>::FileTag> : BasicWriter<void> {
 		using BasicWriter<void>::BasicWriter;
+		using BasicWriter<void>::operator=;
+
 		BasicWriter(const char* path) : BasicWriter(lauf_create_file_writer(path)) {}
 	};
 
 	template<>
 	struct BasicWriter<BasicWriter<void>::StdoutTag> : BasicWriter<void> {
 		using BasicWriter<void>::BasicWriter;
+		using BasicWriter<void>::operator=;
+
 		BasicWriter() : BasicWriter(lauf_create_stdout_writer()) {}
 	};
 
