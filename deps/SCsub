@@ -1,6 +1,33 @@
 #!/usr/bin/env python
+import os
 
 Import("env")
+
+def run_cmake(target, source, env, cmake_arguments = None):
+    import subprocess
+    import os
+
+    cmake_arguments = cmake_arguments or env.overrides.get('cmake_arguments', None)
+    if cmake_arguments == None:
+        cmake_arguments = []
+
+    cmake_path = env.WhereIs("cmake")
+
+    if cmake_path == None:
+        print("CMake could not be found. (may need to install CMake) Exiting build process.")
+        return 1
+
+    cmake_arguments.insert(0, cmake_path)
+
+    completed_process = subprocess.run(cmake_arguments, text=True)
+
+    if completed_process.returncode != 0:
+        print("CMake failed. Exiting build process.")
+        return 1
+
+    return 0
+
+env.Append(BUILDERS={'RunCMake': Builder(action=run_cmake)})
 
 def build_openvic_dataloader(env):
     ovdl_env = SConscript("openvic-dataloader/SConstruct")
@@ -32,32 +59,49 @@ def build_colony(env):
     env.exposed_includes += env.colony["INCPATH"]
 
 def build_lauf(env):
-    lauf_dir = env.Dir("lauf")
+    env.Append(CPPDEFINES=["LAUF_CONFIG_DISPATCH_JUMP_TABLE=1"])
+    lauf_env = env.Clone()
+    lauf_env.Append(LIBPATH=[env.Dir("openvic-dataloader/deps/lexy/src")])
+    lauf_env.Append(LIBS=["lexy_file"])
+    lauf_env.Append(CPPPATH=[env.Dir("openvic-dataloader/deps/lexy/include")])
 
-    cmake_configure = env.AddPreAction(
-        lauf_dir,
-        env.Command(
-            env.File('lauf/build/CMakeCache.txt'),
-            env.File('lauf/CMakeLists.txt'),
-            env.Action('@cmake -DCMAKE_BUILD_TYPE="Release" -DLAUF_BUILD_BENCHMARKS=false -DLAUF_BUILD_TESTS=false -DLAUF_BUILD_TOOLS=false -Bbuild -H.', chdir=lauf_dir)
-        )
-    )
-    cmake_build = env.AddPreAction(
-        cmake_configure,
-        env.Command(
-            env.File("lauf/build/src/liblauf_core" + env["LIBSUFFIX"]),
-            env.File('lauf/build/CMakeCache.txt'),
-            env.Action('@cmake --build build', chdir=lauf_dir)
-        )
-    )
-    env.Default(cmake_build)
+    # Require C++20
+    if lauf_env.get("is_msvc", False):
+        lauf_env.Append(CXXFLAGS=["/std:c++20"])
+
+        lauf_env.Append(CXXFLAGS=["/WX", "/W3", "/D", "_CRT_SECURE_NO_WARNINGS"])
+        if lauf_env.get("use_clang_cl"):
+            lauf_env.Append(CXXFLAGS=["-Wno-return-type-c-linkage", "-fomit-frame-pointer"])
+    else:
+        lauf_env.Append(CXXFLAGS=["-std=c++20"])
+
+        lauf_env.Append(CXXFLAGS=["-pedantic-errors", "-Werror", "-Wall", "-Wextra", "-Wconversion", "-Wsign-conversion", "-fomit-frame-pointer"])
+        if lauf_env["CXX"] == "clang++":
+            lauf_env.Append(CXXFLAGS=["-Wno-return-type-c-linkage"])
+        else:
+            lauf_env.Append(CXXFLAGS=[
+                "-Wno-parentheses", "-Wno-unused-local-typedefs", "-Wno-array-bounds"
+            ])
 
     include_path = "lauf/include"
-    env.Append(LIBPATH=env.Dir("lauf/build/src"))
-    env.Prepend(LIBS=["liblauf_core", "liblauf_text", "liblauf_qbe"])
-    env.Append(CPPPATH=[env.Dir(include_path)])
-    env.Append(CPPDEFINES=["LAUF_CONFIG_DISPATCH_JUMP_TABLE=1"])
-    env.exposed_includes += [env.Dir(include_path)]
+    source_path = "lauf/src"
+    lauf_env.Append(CPPPATH=[[lauf_env.Dir(p) for p in [source_path, include_path]]])
+    sources = env.GlobRecursive("*.cpp", [source_path])
+    env.lexy_sources = sources
+
+    library_name = "liblauf" + env["LIBSUFFIX"]
+    library = lauf_env.StaticLibrary(target=os.path.join(source_path, library_name), source=sources)
+    Default(library)
+
+    include_dir = lauf_env.Dir(include_path)
+    source_dir = lauf_env.Dir(source_path)
+    env.Append(CPPPATH=[include_dir])
+    if env.get("is_msvc", False):
+        env.Append(CXXFLAGS=["/external:I", include_dir, "/external:W0"])
+    else:
+        env.Append(CXXFLAGS=["-isystem", include_dir])
+    env.Append(LIBPATH=[source_dir])
+    env.Prepend(LIBS=[library_name])
 
 build_openvic_dataloader(env)
 build_lexy_vdf(env)
