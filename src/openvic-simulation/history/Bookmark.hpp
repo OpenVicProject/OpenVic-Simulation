@@ -16,16 +16,14 @@ namespace OpenVic {
 		std::string PROPERTY(name);
 		std::string PROPERTY(description);
 		const Date PROPERTY(date);
-		const uint32_t PROPERTY(initial_camera_x);
-		const uint32_t PROPERTY(initial_camera_y);
+		const fvec2_t PROPERTY(initial_camera_position);
 
 		Bookmark(
 			index_t new_index,
 			std::string_view new_name,
 			std::string_view new_description,
 			Date new_date,
-			uint32_t new_initial_camera_x,
-			uint32_t new_initial_camera_y
+			fvec2_t new_initial_camera_position
 		);
 
 	public:
@@ -38,10 +36,9 @@ namespace OpenVic {
 
 	public:
 		bool add_bookmark(
-			std::string_view name, std::string_view description, Date date, uint32_t initial_camera_x,
-			uint32_t initial_camera_y
+			std::string_view name, std::string_view description, Date date, fvec2_t initial_camera_position
 		);
-		bool load_bookmark_file(ast::NodeCPtr root);
+		bool load_bookmark_file(fixed_point_t map_height, ast::NodeCPtr root);
 
 		Date get_last_bookmark_date() const;
 	};
