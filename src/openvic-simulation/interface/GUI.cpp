@@ -205,18 +205,18 @@ bool OverlappingElementsBox::_fill_key_map(NodeTools::case_insensitive_key_map_t
 	return ret;
 }
 
-ListBox::ListBox() : size {}, offset {}, spacing {}, scrollbar_name {} {}
+ListBox::ListBox() : size {}, scrollbar_offset {}, items_offset {}, spacing {}, scrollbar_name {} {}
 
 bool ListBox::_fill_key_map(NodeTools::case_insensitive_key_map_t& key_map, UIManager const& ui_manager) {
 	bool ret = Element::_fill_key_map(key_map, ui_manager);
 	ret &= add_key_map_entries(key_map,
 		"size", ONE_EXACTLY, expect_fvec2(assign_variable_callback(size)),
-		"offset", ZERO_OR_ONE, expect_fvec2(assign_variable_callback(offset)),
+		"offset", ZERO_OR_ONE, expect_fvec2(assign_variable_callback(scrollbar_offset)),
+		"borderSize", ZERO_OR_ONE, expect_fvec2(assign_variable_callback(items_offset)),
 		"spacing", ZERO_OR_ONE, expect_fixed_point(assign_variable_callback(spacing)),
 		"scrollbartype", ZERO_OR_ONE, expect_string(assign_variable_callback_string(scrollbar_name)),
 
 		"backGround", ZERO_OR_ONE, success_callback,
-		"borderSize", ZERO_OR_ONE, success_callback,
 		"horizontal", ZERO_OR_ONE, success_callback,
 		"priority", ZERO_OR_ONE, success_callback,
 		"allwaystransparent", ZERO_OR_ONE, success_callback
