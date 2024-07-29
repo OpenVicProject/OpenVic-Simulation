@@ -240,11 +240,12 @@ namespace OpenVic::GUI {
 		friend std::unique_ptr<ListBox> std::make_unique<ListBox>();
 
 		fvec2_t PROPERTY(size);
-		fvec2_t PROPERTY(offset);
+		fvec2_t PROPERTY(scrollbar_offset);
+		fvec2_t PROPERTY(items_offset);
 		fixed_point_t PROPERTY(spacing);
 		std::string PROPERTY(scrollbar_name); /* In vanilla this is always core's standardlistbox_slider */
 
-		// TODO - backGround, borderSize
+		// TODO - backGround
 
 	protected:
 		ListBox();
