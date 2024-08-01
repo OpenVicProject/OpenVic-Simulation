@@ -21,7 +21,7 @@ namespace OpenVic {
 		using path_vector_t = std::vector<fs::path>;
 
 	private:
-		path_vector_t roots;
+		path_vector_t PROPERTY(roots);
 		std::vector<ovdl::v2script::Parser> cached_parsers;
 
 		bool _load_interface_files(UIManager& ui_manager) const;
@@ -33,6 +33,8 @@ namespace OpenVic {
 		bool _load_inventions(DefinitionManager& definition_manager);
 		bool _load_events(DefinitionManager& definition_manager);
 		bool _load_map_dir(DefinitionManager& definition_manager) const;
+		bool _load_song_chances(DefinitionManager& definition_manager);
+		bool _load_sound_effect_defines(DefinitionManager& definition_manager) const;
 		bool _load_decisions(DefinitionManager& definition_manager);
 		bool _load_history(DefinitionManager& definition_manager, bool unused_history_file_warnings) const;
 

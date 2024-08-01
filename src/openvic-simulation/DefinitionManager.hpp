@@ -13,6 +13,8 @@
 #include "openvic-simulation/misc/Define.hpp"
 #include "openvic-simulation/misc/Event.hpp"
 #include "openvic-simulation/misc/Modifier.hpp"
+#include "openvic-simulation/misc/SongChance.hpp"
+#include "openvic-simulation/misc/SoundEffect.hpp"
 #include "openvic-simulation/politics/PoliticsManager.hpp"
 #include "openvic-simulation/pop/Pop.hpp"
 #include "openvic-simulation/research/ResearchManager.hpp"
@@ -38,5 +40,7 @@ namespace OpenVic {
 		MapDefinition PROPERTY_REF(map_definition);
 		MapmodeManager PROPERTY_REF(mapmode_manager);
 		ScriptManager PROPERTY_REF(script_manager);
+		SongChanceManager PROPERTY_REF(song_chance_manager);
+		SoundEffectManager PROPERTY_REF(sound_effect_manager);
 	};
 }
