@@ -1,5 +1,8 @@
 #pragma once
 
+#include <unordered_set>
+
+#include <openvic-dataloader/detail/SymbolIntern.hpp>
 #include <openvic-dataloader/v2script/AbstractSyntaxTree.hpp>
 #include <openvic-dataloader/v2script/Parser.hpp>
 
@@ -9,10 +12,12 @@
 
 namespace OpenVic::Vm {
 	struct Codegen {
-		Codegen(const char* module_name, lauf_asm_build_options options = lauf_asm_default_build_options)
-			: _module(module_name), _builder(options) {}
+		Codegen(
+			ovdl::v2script::Parser const& parser, const char* module_name,
+			lauf_asm_build_options options = lauf_asm_default_build_options
+		);
 
-		Codegen(Module&& module, AsmBuilder&& builder) : _module(std::move(module)), _builder(std::move(builder)) {}
+		Codegen(ovdl::v2script::Parser const& parser, Module&& module, AsmBuilder&& builder);
 
 		operator lauf_asm_module*() {
 			return _module;
@@ -46,6 +51,8 @@ namespace OpenVic::Vm {
 			return _builder;
 		}
 
+		void intern_scopes();
+
 		lauf_asm_block* create_block(size_t input_count) {
 			return lauf_asm_declare_block(_builder, input_count);
 		}
@@ -54,11 +61,17 @@ namespace OpenVic::Vm {
 			lauf_asm_build_block(*this, block);
 		}
 
-		lauf_asm_function* create_effect_function(ovdl::v2script::Parser const& parser, ovdl::v2script::ast::Node* node);
-		lauf_asm_function* create_condition_function(ovdl::v2script::Parser const& parser, ovdl::v2script::ast::Node* node);
+		enum class scope_execution_type : std::uint8_t { Effect, Trigger };
+		enum class scope_type : std::uint8_t { Country, State, Province, Pop };
 
-		void generate_effect_from(ovdl::v2script::Parser const& parser, ovdl::v2script::ast::Node* node);
-		void generate_condition_from(ovdl::v2script::Parser const& parser, ovdl::v2script::ast::Node* node);
+		bool is_iterative_scope(scope_execution_type execution_type, scope_type active_scope, ovdl::symbol<char> name) const;
+		bool is_scope_for(scope_execution_type execution_type, scope_type active_scope, ovdl::symbol<char> name) const;
+
+		lauf_asm_function* create_effect_function(scope_type type, ovdl::v2script::ast::Node* node);
+		lauf_asm_function* create_condition_function(scope_type type, ovdl::v2script::ast::Node* node);
+
+		void generate_effect_from(scope_type type, ovdl::v2script::ast::Node* node);
+		void generate_condition_from(scope_type type, ovdl::v2script::ast::Node* node);
 
 		// Bytecode instructions //
 		void inst_push_scope_this();
@@ -135,8 +148,21 @@ namespace OpenVic::Vm {
 		void inst_push_get_province_modifier(const char* modifier_id);
 		// Bytecode instructions //
 
+		struct symbol_hash {
+			std::size_t operator()(const ovdl::symbol<char>& s) const noexcept {
+				return std::hash<const void*> {}(static_cast<const void*>(s.c_str()));
+			}
+		};
+
 	private:
 		Module _module;
 		AsmBuilder _builder;
+		ovdl::v2script::Parser const& _parser;
+		std::unordered_set<ovdl::symbol<char>, symbol_hash> _all_scopes;
+		std::unordered_set<ovdl::symbol<char>, symbol_hash> _country_scopes;
+		std::unordered_set<ovdl::symbol<char>, symbol_hash> _province_scopes;
+		std::unordered_set<ovdl::symbol<char>, symbol_hash> _pop_scopes;
+		bool _has_top_level_country_scopes;
+		bool _has_top_level_province_scopes;
 	};
 }
