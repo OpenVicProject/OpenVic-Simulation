@@ -31,9 +31,9 @@ namespace OpenVic {
 			return instance_manager ? &*instance_manager : nullptr;
 		}
 
-		bool load_definitions(
-			Dataloader::path_vector_t const& roots, Dataloader::localisation_callback_t localisation_callback
-		);
+		bool set_roots(Dataloader::path_vector_t const& roots);
+
+		bool load_definitions(Dataloader::localisation_callback_t localisation_callback);
 
 		bool setup_instance(Bookmark const* bookmark);
 

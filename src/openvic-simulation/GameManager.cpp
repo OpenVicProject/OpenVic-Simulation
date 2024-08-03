@@ -11,20 +11,21 @@ GameManager::GameManager(
 		new_clock_state_changed_callback ? std::move(new_clock_state_changed_callback) : []() {}
 	}, definitions_loaded { false } {}
 
-bool GameManager::load_definitions(
-	Dataloader::path_vector_t const& roots, Dataloader::localisation_callback_t localisation_callback
-) {
+bool GameManager::set_roots(Dataloader::path_vector_t const& roots) {
+	if (!dataloader.set_roots(roots)) {
+		Logger::error("Failed to set dataloader roots!");
+		return false;
+	}
+	return true;
+}
+
+bool GameManager::load_definitions(Dataloader::localisation_callback_t localisation_callback) {
 	if (definitions_loaded) {
 		Logger::error("Cannot load definitions - already loaded!");
 		return false;
 	}
 
 	bool ret = true;
-
-	if (!dataloader.set_roots(roots)) {
-		Logger::error("Failed to set dataloader roots!");
-		ret = false;
-	}
 
 	if (!dataloader.load_defines(definition_manager)) {
 		Logger::error("Failed to load defines!");

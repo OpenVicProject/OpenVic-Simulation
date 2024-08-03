@@ -26,8 +26,8 @@ static bool run_headless(Dataloader::path_vector_t const& roots, bool run_tests)
 	}, nullptr };
 
 	Logger::info("===== Loading definitions... =====");
+	ret &= game_manager.set_roots(roots);
 	ret &= game_manager.load_definitions(
-		roots,
 		[](std::string_view key, Dataloader::locale_t locale, std::string_view localisation) -> bool {
 			return true;
 		}

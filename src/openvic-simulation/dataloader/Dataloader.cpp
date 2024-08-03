@@ -824,6 +824,41 @@ bool Dataloader::_load_map_dir(DefinitionManager& definition_manager) const {
 	return ret;
 }
 
+bool Dataloader::_load_song_chances(DefinitionManager& definition_manager) {
+	static constexpr std::string_view song_chance_file = "music/songs.txt";
+	const fs::path path = lookup_file(song_chance_file, false);
+
+	bool ret = true;
+	SongChanceManager& song_chance_manager = definition_manager.get_song_chance_manager();
+
+	if(path.empty()) {
+		Logger::info("No Songs.txt file to load");
+		song_chance_manager.lock_song_chances();
+		return true;
+	}
+
+	ret &= song_chance_manager.load_songs_file(parse_defines_cached(path).get_file_node());
+
+	song_chance_manager.lock_song_chances();
+
+	return ret;
+}
+
+bool Dataloader::_load_sound_effect_defines(DefinitionManager& definition_manager) const {
+	static constexpr std::string_view sfx_file = "interface/sound.sfx";
+	const fs::path path = lookup_file(sfx_file);
+
+	bool ret = true;
+	SoundEffectManager& sound_effect_manager = definition_manager.get_sound_effect_manager();
+
+	ret &= sound_effect_manager.load_sound_defines_file(parse_defines(path).get_file_node());
+
+	sound_effect_manager.lock_sound_effects();
+
+	return ret;
+
+}
+
 bool Dataloader::load_defines(DefinitionManager& definition_manager) {
 	if (roots.empty()) {
 		Logger::error("Cannot load defines - Dataloader has no roots!");
@@ -1043,6 +1078,14 @@ bool Dataloader::load_defines(DefinitionManager& definition_manager) {
 		Logger::error("Failed to load events!");
 		ret = false;
 	}
+	if (!_load_song_chances(definition_manager)) {
+		Logger::error("Error while loading Song chances!");
+		ret = false;
+	}
+	if (!_load_sound_effect_defines(definition_manager)) {
+		Logger::error("Failed to load sound effect defines");
+		ret = false;
+	}
 	if (!definition_manager.get_event_manager().load_on_action_file(
 		parse_defines(lookup_file(on_actions_file)).get_file_node()
 	)) {
@@ -1087,6 +1130,7 @@ bool Dataloader::parse_scripts(DefinitionManager& definition_manager) const {
 	PARSE_SCRIPTS("wargoal type", definition_manager.get_military_manager().get_wargoal_type_manager());
 	PARSE_SCRIPTS("decision", definition_manager.get_decision_manager());
 	PARSE_SCRIPTS("event", definition_manager.get_event_manager());
+	PARSE_SCRIPTS("song chance", definition_manager.get_song_chance_manager());
 	return ret;
 }
 
