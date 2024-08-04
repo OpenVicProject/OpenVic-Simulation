@@ -11,16 +11,19 @@ namespace OpenVic::GFX {
 	struct Font : HasIdentifierAndAlphaColour {
 		friend class OpenVic::UIManager;
 
+		using colour_codes_t = ordered_map<char, colour_t>;
+
 	private:
 		std::string PROPERTY(fontname);
 		std::string PROPERTY(charset);
 		uint32_t PROPERTY(height);
+		colour_codes_t PROPERTY(colour_codes);
 
-		// TODO - colorcodes, effect
+		// TODO - effect
 
 		Font(
 			std::string_view new_identifier, colour_argb_t new_colour, std::string_view new_fontname,
-			std::string_view new_charset, uint32_t new_height
+			std::string_view new_charset, uint32_t new_height, colour_codes_t&& new_colour_codes
 		);
 
 	public:

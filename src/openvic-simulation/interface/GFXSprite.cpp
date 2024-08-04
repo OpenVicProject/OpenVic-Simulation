@@ -6,9 +6,9 @@ using namespace OpenVic::NodeTools;
 
 Font::Font(
 	std::string_view new_identifier, colour_argb_t new_colour, std::string_view new_fontname, std::string_view new_charset,
-	uint32_t new_height
+	uint32_t new_height, colour_codes_t&& new_colour_codes
 ) : HasIdentifierAndAlphaColour { new_identifier, new_colour, false }, fontname { new_fontname }, charset { new_charset },
-	height { new_height } {}
+	height { new_height }, colour_codes { std::move(new_colour_codes) } {}
 
 node_callback_t Sprite::expect_sprites(length_callback_t length_callback, callback_t<std::unique_ptr<Sprite>&&> callback) {
 	return expect_dictionary_keys_and_length(
