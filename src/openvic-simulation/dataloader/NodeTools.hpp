@@ -540,7 +540,7 @@ namespace OpenVic {
 
 		template<typename Key, typename Value, typename... MapArgs>
 		Callback<Value> auto map_callback(
-			tsl::ordered_map<Key const*, Value, MapArgs...>& map, Key const* key, bool warn = false
+			tsl::ordered_map<Key, Value, MapArgs...>& map, Key key, bool warn = false
 		) {
 			return [&map, key, warn](Value value) -> bool {
 				if (map.emplace(key, std::move(value)).second) {

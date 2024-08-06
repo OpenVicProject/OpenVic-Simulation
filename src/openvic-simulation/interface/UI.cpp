@@ -8,7 +8,8 @@ using namespace OpenVic::GFX;
 using namespace OpenVic::GUI;
 
 bool UIManager::add_font(
-	std::string_view identifier, colour_argb_t colour, std::string_view fontname, std::string_view charset, uint32_t height
+	std::string_view identifier, colour_argb_t colour, std::string_view fontname, std::string_view charset, uint32_t height,
+	Font::colour_codes_t&& colour_codes
 ) {
 	if (identifier.empty()) {
 		Logger::error("Invalid font identifier - empty!");
@@ -22,23 +23,38 @@ bool UIManager::add_font(
 		Logger::error("Invalid fontname for font ", identifier, " - empty!");
 		return false;
 	}
-	return fonts.add_item({ identifier, colour, fontname, charset, height }, duplicate_warning_callback);
+	return fonts.add_item(
+		{ identifier, colour, fontname, charset, height, std::move(colour_codes) },
+		duplicate_warning_callback
+	);
 }
 
 bool UIManager::_load_font(ast::NodeCPtr node) {
 	std::string_view identifier, fontname, charset;
 	colour_argb_t colour = colour_argb_t::null();
 	uint32_t height = 0;
+	Font::colour_codes_t colour_codes;
+
 	bool ret = expect_dictionary_keys(
 		"name", ONE_EXACTLY, expect_string(assign_variable_callback(identifier)),
 		"fontname", ONE_EXACTLY, expect_string(assign_variable_callback(fontname)),
 		"color", ONE_EXACTLY, expect_colour_hex(assign_variable_callback(colour)),
 		"charset", ZERO_OR_ONE, expect_string(assign_variable_callback(charset)),
 		"height", ZERO_OR_ONE, expect_uint(assign_variable_callback(height)),
-		"colorcodes", ZERO_OR_ONE, success_callback,
+		"colorcodes", ZERO_OR_ONE, expect_dictionary(
+			[&colour_codes](std::string_view key, ast::NodeCPtr value) -> bool {
+				if (key.size() != 1) {
+					Logger::error("Invalid colour code key: \"", key, "\" (expected single character)");
+					return false;
+				}
+				return expect_colour(map_callback(colour_codes, key.front()))(value);
+			}
+		),
 		"effect", ZERO_OR_ONE, success_callback
 	)(node);
-	ret &= add_font(identifier, colour, fontname, charset, height);
+
+	ret &= add_font(identifier, colour, fontname, charset, height, std::move(colour_codes));
+
 	return ret;
 }
 

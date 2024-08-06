@@ -18,7 +18,7 @@ namespace OpenVic {
 	public:
 		bool add_font(
 			std::string_view identifier, colour_argb_t colour, std::string_view fontname, std::string_view charset,
-			uint32_t height
+			uint32_t height, GFX::Font::colour_codes_t&& colour_codes
 		);
 
 		void lock_gfx_registries();
