@@ -1,13 +1,12 @@
 #pragma once
 
-#include <unordered_set>
-
 #include <openvic-dataloader/detail/SymbolIntern.hpp>
 #include <openvic-dataloader/v2script/AbstractSyntaxTree.hpp>
 #include <openvic-dataloader/v2script/Parser.hpp>
 
 #include "AsmBuilder.hpp"
 #include "Module.hpp"
+#include "types/EnumBitfield.hpp"
 #include <lauf/asm/builder.h>
 
 namespace OpenVic::Vm {
@@ -51,8 +50,6 @@ namespace OpenVic::Vm {
 			return _builder;
 		}
 
-		void intern_scopes();
-
 		lauf_asm_block* create_block(size_t input_count) {
 			return lauf_asm_declare_block(_builder, input_count);
 		}
@@ -62,16 +59,38 @@ namespace OpenVic::Vm {
 		}
 
 		enum class scope_execution_type : std::uint8_t { Effect, Trigger };
-		enum class scope_type : std::uint8_t { Country, State, Province, Pop };
+		enum class scope_type : std::uint8_t {
+			None = 0,
+			Country = 1 << 0,
+			State = 1 << 1,
+			Province = 1 << 2,
+			Pop = 1 << 3,
 
-		bool is_iterative_scope(scope_execution_type execution_type, scope_type active_scope, ovdl::symbol<char> name) const;
-		bool is_scope_for(scope_execution_type execution_type, scope_type active_scope, ovdl::symbol<char> name) const;
+			Generic = Country | State | Province | Pop,
+		};
+
+		enum class trigger_modifier : std::uint8_t { //
+			Not = 1 << 0,
+			And = 1 << 1,
+			Or = 1 << 2,
+		};
+
+		bool
+		is_iterative_scope(scope_execution_type execution_type, scope_type active_scope_type, ovdl::symbol<char> name) const;
+		scope_type get_scope_type_for(scope_execution_type execution_type, ovdl::symbol<char> name) const;
 
 		lauf_asm_function* create_effect_function(scope_type type, ovdl::v2script::ast::Node* node);
 		lauf_asm_function* create_condition_function(scope_type type, ovdl::v2script::ast::Node* node);
 
 		void generate_effect_from(scope_type type, ovdl::v2script::ast::Node* node);
 		void generate_condition_from(scope_type type, ovdl::v2script::ast::Node* node);
+
+		bool inst_store_ov_asm_key_null(lauf_asm_local* local, std::size_t index);
+		bool inst_store_ov_asm_key(lauf_asm_local* local, std::size_t index, ovdl::symbol<char> key);
+		bool inst_store_ov_asm_value_from_vstack(lauf_asm_local* local, std::size_t index, std::uint8_t type);
+		bool inst_store_ov_asm_type(lauf_asm_local* local, std::size_t index, std::uint8_t type);
+
+		bool push_instruction_for_scope(scope_type type, ovdl::symbol<char> scope_symbol);
 
 		// Bytecode instructions //
 		void inst_push_scope_this();
@@ -85,6 +104,8 @@ namespace OpenVic::Vm {
 		void inst_push_get_province_controller();
 		void inst_push_get_province_owner();
 		void inst_push_get_province_state();
+
+		void inst_push_get_state_cultural_union();
 
 		void inst_push_get_pop_location();
 		void inst_push_get_pop_country();
@@ -158,11 +179,13 @@ namespace OpenVic::Vm {
 		Module _module;
 		AsmBuilder _builder;
 		ovdl::v2script::Parser const& _parser;
-		std::unordered_set<ovdl::symbol<char>, symbol_hash> _all_scopes;
-		std::unordered_set<ovdl::symbol<char>, symbol_hash> _country_scopes;
-		std::unordered_set<ovdl::symbol<char>, symbol_hash> _province_scopes;
-		std::unordered_set<ovdl::symbol<char>, symbol_hash> _pop_scopes;
 		bool _has_top_level_country_scopes;
 		bool _has_top_level_province_scopes;
 	};
 }
+
+template<>
+struct OpenVic::enable_bitfield<OpenVic::Vm::Codegen::scope_type> : std::true_type {};
+
+template<>
+struct OpenVic::enable_bitfield<OpenVic::Vm::Codegen::trigger_modifier> : std::true_type {};
