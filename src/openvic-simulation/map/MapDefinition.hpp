@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstdint>
 #include <filesystem>
 #include <string_view>
 #include <vector>
@@ -20,6 +21,16 @@ namespace OpenVic {
 	struct BuildingTypeManager;
 	struct ModifierManager;
 
+	struct RiverSegment {
+		friend struct MapDefinition;
+
+	private:
+			const uint8_t PROPERTY(size);
+			const std::vector<ivec2_t> PROPERTY(points);
+
+			RiverSegment(uint8_t new_size, std::vector<ivec2_t> new_points);
+	};
+
 	/* REQUIREMENTS:
 	 * MAP-4
 	 */
@@ -35,6 +46,7 @@ namespace OpenVic {
 
 	private:
 		using colour_index_map_t = ordered_map<colour_t, ProvinceDefinition::index_t>;
+		using river_t = std::vector<RiverSegment>;
 
 		IdentifierRegistry<ProvinceDefinition> IDENTIFIER_REGISTRY_CUSTOM_INDEX_OFFSET(province_definition, 1);
 		IdentifierRegistry<Region> IDENTIFIER_REGISTRY(region);
@@ -43,6 +55,7 @@ namespace OpenVic {
 		ProvinceSet water_provinces;
 		TerrainTypeManager PROPERTY_REF(terrain_type_manager);
 
+		std::vector<river_t> PROPERTY(rivers); // TODO: calculate provinces affected by crossing
 		ivec2_t PROPERTY(dims);
 		std::vector<shape_pixel_t> PROPERTY(province_shape_image);
 		colour_index_map_t colour_index_map;
@@ -104,7 +117,7 @@ namespace OpenVic {
 		bool load_province_positions(BuildingTypeManager const& building_type_manager, ast::NodeCPtr root);
 		static bool load_region_colours(ast::NodeCPtr root, std::vector<colour_t>& colours);
 		bool load_region_file(ast::NodeCPtr root, std::vector<colour_t> const& colours);
-		bool load_map_images(fs::path const& province_path, fs::path const& terrain_path, bool detailed_errors);
+		bool load_map_images(fs::path const& province_path, fs::path const& terrain_path, fs::path const& rivers_path, bool detailed_errors);
 		bool generate_and_load_province_adjacencies(std::vector<ovdl::csv::LineObject> const& additional_adjacencies);
 		bool load_climate_file(ModifierManager const& modifier_manager, ast::NodeCPtr root);
 		bool load_continent_file(ModifierManager const& modifier_manager, ast::NodeCPtr root);

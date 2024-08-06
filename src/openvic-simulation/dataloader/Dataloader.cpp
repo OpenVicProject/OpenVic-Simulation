@@ -683,7 +683,7 @@ bool Dataloader::_load_map_dir(DefinitionManager& definition_manager) const {
 	static constexpr std::string_view default_provinces = "provinces.bmp";
 	static constexpr std::string_view default_positions = "positions.txt";
 	static constexpr std::string_view default_terrain = "terrain.bmp";
-	static constexpr std::string_view default_rivers = "rivers.bmp"; // TODO - load rivers into map pixel data
+	static constexpr std::string_view default_rivers = "rivers.bmp";
 	static constexpr std::string_view default_terrain_definition = "terrain.txt";
 	static constexpr std::string_view default_tree_definition = "trees.txt"; /* Tree textures and density values (unused). */
 	static constexpr std::string_view default_continent = "continent.txt";
@@ -781,7 +781,8 @@ bool Dataloader::_load_map_dir(DefinitionManager& definition_manager) const {
 
 	if (!map_definition.load_map_images(
 		lookup_file(append_string_views(map_directory, provinces)),
-		lookup_file(append_string_views(map_directory, terrain)), false
+		lookup_file(append_string_views(map_directory, terrain)),
+		lookup_file(append_string_views(map_directory, rivers)), false
 	)) {
 		Logger::error("Failed to load map images!");
 		ret = false;
