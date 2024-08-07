@@ -1,22 +1,28 @@
 #pragma once
 
+#include <vector>
+
 #include <openvic-dataloader/detail/SymbolIntern.hpp>
 #include <openvic-dataloader/v2script/AbstractSyntaxTree.hpp>
 #include <openvic-dataloader/v2script/Parser.hpp>
 
 #include "AsmBuilder.hpp"
+#include "InstanceManager.hpp"
 #include "Module.hpp"
 #include "types/EnumBitfield.hpp"
+#include "vm/Builtin.hpp"
+#include "vm/VirtualMachine.hpp"
 #include <lauf/asm/builder.h>
+#include <lauf/vm.h>
 
 namespace OpenVic::Vm {
 	struct Codegen {
 		Codegen(
-			ovdl::v2script::Parser const& parser, const char* module_name,
+			ovdl::v2script::Parser const& parser, InstanceManager* instance_manager, const char* module_name,
 			lauf_asm_build_options options = lauf_asm_default_build_options
 		);
 
-		Codegen(ovdl::v2script::Parser const& parser, Module&& module, AsmBuilder&& builder);
+		Codegen(ovdl::v2script::Parser const& parser, InstanceManager* instance_manager, Module&& module, AsmBuilder&& builder);
 
 		operator lauf_asm_module*() {
 			return _module;
@@ -48,6 +54,10 @@ namespace OpenVic::Vm {
 
 		AsmBuilder const& builder() const {
 			return _builder;
+		}
+
+		OpenVicVirtualMachine create_virtual_machine() && {
+			return { _instance_manager, std::move(_scope_references) };
 		}
 
 		lauf_asm_block* create_block(size_t input_count) {
@@ -90,7 +100,13 @@ namespace OpenVic::Vm {
 		bool inst_store_ov_asm_value_from_vstack(lauf_asm_local* local, std::size_t index, std::uint8_t type);
 		bool inst_store_ov_asm_type(lauf_asm_local* local, std::size_t index, std::uint8_t type);
 
-		bool push_instruction_for_scope(scope_type type, ovdl::symbol<char> scope_symbol);
+		bool push_instruction_for_keyword_scope(
+			scope_execution_type execution_type, scope_type type, ovdl::symbol<char> scope_symbol
+		);
+
+		Asm::scope_variant get_scope_for( //
+			scope_execution_type execution_type, scope_type type, ovdl::symbol<char> scope_symbol
+		) const;
 
 		// Bytecode instructions //
 		void inst_push_scope_this();
@@ -139,6 +155,7 @@ namespace OpenVic::Vm {
 
 		void inst_push_get_trade_policy(const char* trade_policy_id);
 		void inst_push_get_war_policy(const char* war_policy_id);
+		void inst_push_get_citizenship_policy(const char* citizenship_policy_id);
 
 		void inst_push_get_issue(const char* issue_id);
 		void inst_push_get_ideology(const char* ideology_id);
@@ -176,6 +193,8 @@ namespace OpenVic::Vm {
 		};
 
 	private:
+		std::vector<OpenVic::Asm::scope_variant> _scope_references;
+		InstanceManager* _instance_manager;
 		Module _module;
 		AsmBuilder _builder;
 		ovdl::v2script::Parser const& _parser;

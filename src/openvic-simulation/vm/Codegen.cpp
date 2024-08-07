@@ -6,7 +6,6 @@
 #include <cstring>
 #include <string_view>
 #include <unordered_map>
-#include <variant>
 
 #include <openvic-dataloader/detail/SymbolIntern.hpp>
 #include <openvic-dataloader/detail/Utility.hpp>
@@ -21,8 +20,8 @@
 #include <range/v3/algorithm/equal.hpp>
 #include <range/v3/algorithm/reverse.hpp>
 
-#include "InstanceManager.hpp"
 #include "types/fixed_point/FixedPoint.hpp"
+#include "vm/Builtin.hpp"
 #include <lauf/asm/builder.h>
 #include <lauf/asm/module.h>
 #include <lauf/runtime/builtin.h>
@@ -40,194 +39,16 @@ bool ichar_equals(char a, char b) {
 	return std::tolower(static_cast<unsigned char>(a)) == std::tolower(static_cast<unsigned char>(b));
 }
 
-using scope_variant = std::variant<std::monostate>;
-using argument_variant = std::variant<std::monostate>;
-using argument_map = std::unordered_map<std::string_view, argument_variant>;
+Codegen::Codegen(
+	ovdl::v2script::Parser const& parser, OpenVic::InstanceManager* instance_manager, const char* module_name,
+	lauf_asm_build_options options
+)
+	: _parser(parser), _instance_manager(instance_manager), _module(module_name), _builder(options) {}
 
-static constexpr auto argument_size = 32;
-
-struct ov_asm_argument {
-	const char* key;
-
-	union {
-		const char* as_cstr;
-		const scope_variant* as_scope;
-		std::uint64_t as_uint;
-		std::int64_t as_int;
-		const void* as_ptr;
-	} value;
-
-	enum class type_t : std::uint8_t { //
-		cstring,
-		scope,
-		uint,
-		int_,
-		ptr,
-		fixed_point
-	} type;
-
-	const char* val_cstr() const {
-		if (type != type_t::cstring) {
-			return nullptr;
-		}
-		return value.as_cstr;
-	}
-
-	const scope_variant* val_scope() const {
-		if (type != type_t::scope) {
-			return nullptr;
-		}
-		return value.as_scope;
-	}
-
-	std::uint64_t val_uint() const {
-		if (type != type_t::uint) {
-			return 0;
-		}
-		return value.as_uint;
-	}
-
-	std::int64_t val_int() const {
-		if (type != type_t::int_) {
-			return 0;
-		}
-		return value.as_int;
-	}
-
-	const void* val_ptr() const {
-		if (type != type_t::ptr) {
-			return nullptr;
-		}
-		return value.as_ptr;
-	}
-
-	OpenVic::fixed_point_t val_fixed() const {
-		if (type != type_t::fixed_point) {
-			return 0;
-		}
-		return OpenVic::fixed_point_t(value.as_int);
-	}
-};
-
-bool execute_effect(
-	OpenVic::InstanceManager* instance_manager, const char* effect_id, scope_variant& scope, ov_asm_argument*,
-	std::size_t arg_count
-) {
-	return true;
-}
-
-ov_asm_argument arguments[argument_size];
-
-// This builtin takes three arguments:
-// * vstack_ptr[0] is an address of the name of the effect
-// * vstack_ptr[1] is an address of the scope reference to apply the effect by
-// * vstack_ptr[2] is an address to an array of pointers to the arguments for the effect
-LAUF_RUNTIME_BUILTIN(call_effect, 3, 0, LAUF_RUNTIME_BUILTIN_DEFAULT, "call_effect", nullptr) {
-	auto user_data = lauf_runtime_get_vm_user_data(process);
-	if (user_data == nullptr) {
-		return lauf_runtime_panic(process, "invalid user data");
-	}
-
-	auto effect_name_addr = vstack_ptr[0].as_address;
-	auto scope_addr = vstack_ptr[1].as_address;
-	auto argument_array_addr = vstack_ptr[2].as_address;
-
-	auto effect_name = lauf_runtime_get_cstr(process, effect_name_addr);
-	if (effect_name == nullptr) {
-		return lauf_runtime_panic(process, "invalid effect name address");
-	}
-
-	auto scope_ptr = lauf_runtime_get_mut_ptr(process, scope_addr, { 0, 1 });
-	if (scope_ptr == nullptr) {
-		return lauf_runtime_panic(process, "invalid scope address");
-	}
-
-	lauf_runtime_allocation array_allocation;
-	if (!lauf_runtime_get_allocation(process, argument_array_addr, &array_allocation)) {
-		return lauf_runtime_panic(process, "invalid arguments address");
-	}
-
-	std::size_t count = array_allocation.size / lauf_asm_type_value.layout.size;
-	if (count > argument_size) {
-		return lauf_runtime_panic(process, "too many arguments");
-	}
-
-	auto argument_array = static_cast<ov_asm_argument*>(lauf_runtime_get_mut_ptr(process, argument_array_addr, { 1, 1 }));
-
-	if (!execute_effect(
-			static_cast<OpenVic::InstanceManager*>(user_data), effect_name, *static_cast<scope_variant*>(scope_ptr),
-			argument_array, count
-		)) {
-		return lauf_runtime_panic(process, "effect could not be found");
-	}
-
-	vstack_ptr += 3;
-	LAUF_RUNTIME_BUILTIN_DISPATCH;
-}
-
-// This builtin takes three arguments:
-// * vstack_ptr[0] is an address of the name of the trigger
-// * vstack_ptr[1] is an address of the scope to apply the trigger by
-// * vstack_ptr[2] is an address to an array of pointers to the arguments for the trigger
-// Returns whether the trigger evaluated to true
-LAUF_RUNTIME_BUILTIN(call_trigger, 3, 1, LAUF_RUNTIME_BUILTIN_DEFAULT, "call_trigger", &call_effect) {
-	auto effect_name_addr = vstack_ptr[0].as_address;
-	auto scope_addr = vstack_ptr[1].as_address;
-	auto argument_array_addr = vstack_ptr[2].as_address;
-
-	auto effect_name = lauf_runtime_get_cstr(process, effect_name_addr);
-	if (effect_name == nullptr) {
-		return lauf_runtime_panic(process, "invalid address");
-	}
-
-
-	auto argument_addresses =
-		static_cast<lauf_runtime_value*>(lauf_runtime_get_mut_ptr(process, argument_array_addr, { 1, 1 }));
-
-	// TODO: call trigger by name
-
-	vstack_ptr[0].as_sint = 1;
-
-	vstack_ptr += 2;
-	LAUF_RUNTIME_BUILTIN_DISPATCH;
-}
-
-// Translates a lauf address into the native pointer representation.
-// It takes one argument, which is the address, and returns one argument, which is the pointer.
-LAUF_RUNTIME_BUILTIN(
-	translate_address_to_pointer, 1, 1, LAUF_RUNTIME_BUILTIN_DEFAULT, "translate_address_to_pointer", &call_trigger
-) {
-	auto address = vstack_ptr[0].as_address;
-
-	auto ptr = lauf_runtime_get_const_ptr(process, address, { 0, 1 });
-	if (ptr == nullptr) {
-		return lauf_runtime_panic(process, "invalid address");
-	}
-	vstack_ptr[0].as_native_ptr = (void*)ptr;
-
-	LAUF_RUNTIME_BUILTIN_DISPATCH;
-}
-// As above, but translates to a C string.
-LAUF_RUNTIME_BUILTIN(
-	translate_address_to_string, 1, 1, LAUF_RUNTIME_BUILTIN_DEFAULT, "translate_address_to_string",
-	&translate_address_to_pointer
-) {
-	auto address = vstack_ptr[0].as_address;
-
-	auto ptr = lauf_runtime_get_cstr(process, address);
-	if (ptr == nullptr) {
-		return lauf_runtime_panic(process, "invalid address");
-	}
-	vstack_ptr[0].as_native_ptr = (void*)ptr;
-
-	LAUF_RUNTIME_BUILTIN_DISPATCH;
-}
-
-Codegen::Codegen(ovdl::v2script::Parser const& parser, const char* module_name, lauf_asm_build_options options)
-	: _parser(parser), _module(module_name), _builder(options) {}
-
-Codegen::Codegen(ovdl::v2script::Parser const& parser, Module&& module, AsmBuilder&& builder)
-	: _parser(parser), _module(std::move(module)), _builder(std::move(builder)) {}
+Codegen::Codegen(
+	ovdl::v2script::Parser const& parser, OpenVic::InstanceManager* instance_manager, Module&& module, AsmBuilder&& builder
+)
+	: _parser(parser), _instance_manager(instance_manager), _module(std::move(module)), _builder(std::move(builder)) {}
 
 static constexpr auto any_ = "any_"sv;
 static constexpr auto all_ = "all_"sv;
@@ -242,6 +63,10 @@ bool Codegen::is_iterative_scope(scope_execution_type execution_type, scope_type
 
 Codegen::scope_type Codegen::get_scope_type_for(scope_execution_type execution_type, ovdl::symbol<char> name) const {
 	using enum scope_type;
+
+	if (!name) {
+		return None;
+	}
 
 #define FIND_SCOPE(SCOPE_TYPE, NAME) \
 	if (_parser.find_intern(#NAME##sv) == name) \
@@ -303,7 +128,7 @@ void Codegen::generate_effect_from(scope_type type, Node* node) {
 
 	bool is_arguments = false;
 	std::unordered_map<ovdl::symbol<char>, FlatValue const*, symbol_hash> named_arguments;
-	ov_asm_argument::type_t ov_asm_type;
+	Asm::argument::type_t ov_asm_type;
 
 	dryad::visit_tree(
 		node, //
@@ -353,10 +178,8 @@ void Codegen::generate_effect_from(scope_type type, Node* node) {
 					// TODO: loop header
 				}
 
-				// TODO: build arguments from named_arguments
-
 				arguments = lauf_asm_build_local(
-					_builder, lauf_asm_array_layout(LAUF_ASM_NATIVE_LAYOUT_OF(ov_asm_argument), named_arguments.size())
+					*this, lauf_asm_array_layout(LAUF_ASM_NATIVE_LAYOUT_OF(Asm::argument), named_arguments.size())
 				);
 
 				std::size_t index = 0;
@@ -374,9 +197,9 @@ void Codegen::generate_effect_from(scope_type type, Node* node) {
 				is_arguments = false;
 			} else if (auto yes_symbol = _parser.find_intern("yes"sv); yes_symbol && right->value() == yes_symbol) {
 				// Build empty arguments
-				arguments = lauf_asm_build_local(_builder, lauf_asm_array_layout(lauf_asm_type_value.layout, 0));
+				arguments = lauf_asm_build_local(*this, lauf_asm_array_layout(LAUF_ASM_NATIVE_LAYOUT_OF(Asm::argument), 0));
 			} else if (_parser.find_intern("no"sv) != right->value()) {
-				arguments = lauf_asm_build_local(_builder, lauf_asm_array_layout(lauf_asm_type_value.layout, 1));
+				arguments = lauf_asm_build_local(*this, lauf_asm_array_layout(LAUF_ASM_NATIVE_LAYOUT_OF(Asm::argument), 1));
 				inst_store_ov_asm_key_null(arguments, 0);
 
 				visitor(right);
@@ -386,26 +209,26 @@ void Codegen::generate_effect_from(scope_type type, Node* node) {
 			}
 
 			// Load arguments address (vstack[2])
-			lauf_asm_inst_local_addr(_builder, arguments);
+			lauf_asm_inst_local_addr(*this, arguments);
 			// Load scope address in lauf (vstack[1])
-			push_instruction_for_scope(current_scope.type, current_scope.symbol);
+			push_instruction_for_keyword_scope(scope_execution_type::Effect, current_scope.type, current_scope.symbol);
 			// Create effect name literal (vstack[0])
-			auto effect_name = lauf_asm_build_string_literal(_builder, left->value().c_str());
-			lauf_asm_inst_global_addr(_builder, effect_name);
+			auto effect_name = lauf_asm_build_string_literal(*this, left->value().c_str());
+			lauf_asm_inst_global_addr(*this, effect_name);
 			// Consumes vstack[0], vstack[1], and vstack[2]
-			lauf_asm_inst_call_builtin(_builder, call_effect);
+			lauf_asm_inst_call_builtin(*this, call_effect);
 
 			if (is_iterative) {
 				// TODO: loop footer
 			}
 		},
 		[&](const FlatValue* value) {
-			using enum ov_asm_argument::type_t;
+			using enum Asm::argument::type_t;
 			if (!is_arguments) {
 				return;
 			}
 
-			if (push_instruction_for_scope(current_scope.type, value->value())) {
+			if (push_instruction_for_keyword_scope(scope_execution_type::Effect, current_scope.type, value->value())) {
 				ov_asm_type = scope;
 				return;
 			}
@@ -413,14 +236,14 @@ void Codegen::generate_effect_from(scope_type type, Node* node) {
 			auto view = value->value().view();
 			if (view[0] == '-') {
 				if (std::int64_t value; std::from_chars(view.begin(), view.end(), value).ptr == view.end()) {
-					lauf_asm_inst_sint(_builder, value);
+					lauf_asm_inst_sint(*this, value);
 					ov_asm_type = int_;
 					return;
 				}
 			}
 
 			if (std::uint64_t value; std::from_chars(view.begin(), view.end(), value).ptr == view.end()) {
-				lauf_asm_inst_uint(_builder, value);
+				lauf_asm_inst_uint(*this, value);
 				ov_asm_type = uint;
 				return;
 			}
@@ -429,15 +252,15 @@ void Codegen::generate_effect_from(scope_type type, Node* node) {
 				bool success;
 				auto value = fixed_point_t::parse(view, &success);
 				if (success) {
-					lauf_asm_inst_sint(_builder, value.get_raw_value());
+					lauf_asm_inst_sint(*this, value.get_raw_value());
 					ov_asm_type = fixed_point;
 					return;
 				}
 			}
 
 			// Create argument string literal
-			auto argument_str = lauf_asm_build_string_literal(_builder, value->value().c_str());
-			lauf_asm_inst_global_addr(_builder, argument_str);
+			auto argument_str = lauf_asm_build_string_literal(*this, value->value().c_str());
+			lauf_asm_inst_global_addr(*this, argument_str);
 			ov_asm_type = cstring;
 
 			// TODO: find/create and insert value here
@@ -483,144 +306,78 @@ void Codegen::generate_condition_from(scope_type type, Node* node) {
 	);
 }
 
-bool Codegen::push_instruction_for_scope(scope_type type, ovdl::symbol<char> scope_symbol) {
-
-	auto is_scope = [&](std::string_view name) -> bool {
-		auto intern = _parser.find_intern(name);
-		return intern && intern == scope_symbol;
-	};
-
-	if (is_scope("this"sv)) {
-		inst_push_scope_this();
-		return true;
-	} else if (is_scope("from"sv)) {
-		inst_push_scope_from();
-		return true;
-	} else if (is_scope("cultural_union"sv)) {
-		DRYAD_PRECONDITION(std::has_single_bit(ovdl::detail::to_underlying(type)));
-		switch (type) {
-		case scope_type::Country: //
-			inst_push_get_country_cultural_union();
-			return true;
-		case scope_type::State: //
-			inst_push_get_state_cultural_union();
-			return true;
-		case scope_type::Province: //
-			DRYAD_ASSERT(false, "province scope does not support cultural_union scope");
-			break;
-		case scope_type::Pop: //
-			inst_push_get_pop_cultural_union();
-			return true;
-		default: return false;
-		}
-	} else {
-		DRYAD_PRECONDITION(std::has_single_bit(ovdl::detail::to_underlying(type)));
-		switch (type) {
-		case scope_type::Country:
-			if (is_scope("capital_scope"sv)) {
-				inst_push_get_country_capital();
-				return true;
-			} else if (is_scope("overlord"sv)) {
-				inst_push_get_country_overlord();
-				return true;
-			} else if (is_scope("sphere_owner"sv)) {
-				inst_push_get_country_sphere_owner();
-				return true;
-			} else if (is_scope("random_country"sv)) {
-				inst_push_get_random_country();
-				return true;
-			} else if (is_scope("random_owned"sv)) {
-				inst_push_get_random_owned();
-				return true;
-			} else if (is_scope("random_pop"sv)) {
-			}
-			break;
-		case scope_type::State: break;
-		case scope_type::Province:
-			if (is_scope("controller"sv)) {
-				inst_push_get_province_controller();
-				return true;
-			} else if (is_scope("owner"sv)) {
-				inst_push_get_province_owner();
-				return true;
-			} else if (is_scope("state_scope"sv)) {
-				inst_push_get_province_state();
-				return true;
-			} else if (is_scope("random_neighbor_province"sv)) {
-				inst_push_get_random_neighbor_province();
-				return true;
-			} else if (is_scope("random_empty_neighbor_province"sv)) {
-				inst_push_get_random_empty_neighbor_province();
-				return true;
-			}
-			break;
-		case scope_type::Pop:
-			if (is_scope("country"sv)) {
-				inst_push_get_pop_country();
-				return true;
-			} else if (is_scope("location"sv)) {
-				inst_push_get_pop_location();
-				return true;
-			}
-			break;
-		default: return false;
-		}
+bool Codegen::push_instruction_for_keyword_scope(
+	scope_execution_type execution_type, scope_type type, ovdl::symbol<char> scope_symbol
+) {
+	if (type >> get_scope_type_for(execution_type, scope_symbol)) {
+		lauf_asm_inst_uint(*this, _scope_references.size());
+		_scope_references.push_back(get_scope_for(execution_type, type, scope_symbol));
+		// TODO: push scope into _scope_references
+		lauf_asm_inst_call_builtin(*this, load_scope_ptr);
 	}
+
 	return false;
 }
 
-static constexpr lauf_asm_layout aggregate_layouts[] = { LAUF_ASM_NATIVE_LAYOUT_OF(ov_asm_argument::key),
-														 LAUF_ASM_NATIVE_LAYOUT_OF(ov_asm_argument::type),
-														 LAUF_ASM_NATIVE_LAYOUT_OF(ov_asm_argument::value) };
+OpenVic::Asm::scope_variant Codegen::get_scope_for( //
+	scope_execution_type execution_type, scope_type type, ovdl::symbol<char> scope_symbol
+) const {
+	return {};
+}
+
+static constexpr lauf_asm_layout ov_asm_argument_layout[] = { LAUF_ASM_NATIVE_LAYOUT_OF(OpenVic::Asm::argument::key),
+															  LAUF_ASM_NATIVE_LAYOUT_OF(OpenVic::Asm::argument::type),
+															  LAUF_ASM_NATIVE_LAYOUT_OF(OpenVic::Asm::argument::value) };
 
 bool Codegen::inst_store_ov_asm_key_null(lauf_asm_local* local, std::size_t index) {
-	lauf_asm_inst_null(_builder);
+	lauf_asm_inst_null(*this);
 	// Start Load arguments //
 	// vstack[1]
-	lauf_asm_inst_local_addr(_builder, local);
+	lauf_asm_inst_local_addr(*this, local);
 	// vstack[0]
-	lauf_asm_inst_uint(_builder, index);
+	lauf_asm_inst_uint(*this, index);
 	// Consumes vstack[0] = arguments_index, vstack[1] = argument_key_address, produces array address as
 	// vstack[0]
-	lauf_asm_inst_array_element(_builder, lauf_asm_type_value.layout);
+	lauf_asm_inst_array_element(*this, lauf_asm_type_value.layout);
 	// End Load arguments //
-	lauf_asm_inst_aggregate_member(_builder, 0, aggregate_layouts, 3);
+	lauf_asm_inst_aggregate_member(*this, 0, ov_asm_argument_layout, 3);
 	// Consumes vstack[0] and vstack[1]
-	lauf_asm_inst_store_field(_builder, lauf_asm_type_value, 0);
+	lauf_asm_inst_store_field(*this, lauf_asm_type_value, 0);
 	return true;
 }
 
 bool Codegen::inst_store_ov_asm_key(lauf_asm_local* local, std::size_t index, ovdl::symbol<char> key) {
 	// Create key literal
-	auto argument_key = lauf_asm_build_string_literal(_builder, key.c_str());
-	lauf_asm_inst_global_addr(_builder, argument_key);
+	auto argument_key = lauf_asm_build_string_literal(*this, key.c_str());
+	lauf_asm_inst_global_addr(*this, argument_key);
 	// Translate key literal to cstring
-	lauf_asm_inst_call_builtin(_builder, translate_address_to_string);
+	lauf_asm_inst_call_builtin(*this, translate_address_to_string);
 	// Start Load arguments //
 	// vstack[1]
-	lauf_asm_inst_local_addr(_builder, local);
+	lauf_asm_inst_local_addr(*this, local);
 	// vstack[0]
-	lauf_asm_inst_uint(_builder, index);
+	lauf_asm_inst_uint(*this, index);
 	// Consumes vstack[0] = arguments_index, vstack[1] = argument_key_address, produces array address as
 	// vstack[0]
-	lauf_asm_inst_array_element(_builder, lauf_asm_type_value.layout);
+	lauf_asm_inst_array_element(*this, lauf_asm_type_value.layout);
 	// End Load arguments //
-	lauf_asm_inst_aggregate_member(_builder, 0, aggregate_layouts, 3);
+	lauf_asm_inst_aggregate_member(*this, 0, ov_asm_argument_layout, 3);
 	// Consumes vstack[0] and vstack[1]
-	lauf_asm_inst_store_field(_builder, lauf_asm_type_value, 0);
+	lauf_asm_inst_store_field(*this, lauf_asm_type_value, 0);
 	return true;
 }
 
 bool Codegen::inst_store_ov_asm_value_from_vstack(lauf_asm_local* local, std::size_t index, std::uint8_t type) {
-	switch (ovdl::detail::from_underlying<ov_asm_argument::type_t>(type)) {
-		using enum ov_asm_argument::type_t;
+	switch (ovdl::detail::from_underlying<Asm::argument::type_t>(type)) {
+		using enum Asm::argument::type_t;
 	case cstring:
 		// Translate key literal to cstring
-		lauf_asm_inst_call_builtin(_builder, translate_address_to_string);
-	case scope:
+		lauf_asm_inst_call_builtin(*this, translate_address_to_string);
 	case ptr:
 		// Translate address to pointer
-		lauf_asm_inst_call_builtin(_builder, translate_address_to_pointer);
+		lauf_asm_inst_call_builtin(*this, translate_address_to_pointer);
+	case scope:
+		// Scope pointer is already native
 	case uint:
 	case int_:
 	case fixed_point:
@@ -630,32 +387,32 @@ bool Codegen::inst_store_ov_asm_value_from_vstack(lauf_asm_local* local, std::si
 
 	// Start Load arguments //
 	// vstack[1]
-	lauf_asm_inst_local_addr(_builder, local);
+	lauf_asm_inst_local_addr(*this, local);
 	// vstack[0]
-	lauf_asm_inst_uint(_builder, index);
+	lauf_asm_inst_uint(*this, index);
 	// Consumes vstack[0] = arguments_index, vstack[1] = argument_key_address, produces array address as
 	// vstack[0]
-	lauf_asm_inst_array_element(_builder, lauf_asm_type_value.layout);
+	lauf_asm_inst_array_element(*this, lauf_asm_type_value.layout);
 	// End Load arguments //
-	lauf_asm_inst_aggregate_member(_builder, 2, aggregate_layouts, 3);
+	lauf_asm_inst_aggregate_member(*this, 2, ov_asm_argument_layout, 3);
 	// Consumes vstack[0] and vstack[1]
-	lauf_asm_inst_store_field(_builder, lauf_asm_type_value, 0);
+	lauf_asm_inst_store_field(*this, lauf_asm_type_value, 0);
 	return true;
 }
 
 bool Codegen::inst_store_ov_asm_type(lauf_asm_local* local, std::size_t index, std::uint8_t type) {
-	lauf_asm_inst_uint(_builder, static_cast<lauf_uint>(type));
+	lauf_asm_inst_uint(*this, static_cast<lauf_uint>(type));
 	// Start Load arguments //
 	// vstack[1]
-	lauf_asm_inst_local_addr(_builder, local);
+	lauf_asm_inst_local_addr(*this, local);
 	// vstack[0]
-	lauf_asm_inst_uint(_builder, index);
+	lauf_asm_inst_uint(*this, index);
 	// Consumes vstack[0] = arguments_index, vstack[1] = argument_key_address, produces array address as
 	// vstack[0]
-	lauf_asm_inst_array_element(_builder, lauf_asm_type_value.layout);
+	lauf_asm_inst_array_element(*this, lauf_asm_type_value.layout);
 	// End Load arguments //
-	lauf_asm_inst_aggregate_member(_builder, 1, aggregate_layouts, 3);
+	lauf_asm_inst_aggregate_member(*this, 1, ov_asm_argument_layout, 3);
 	// Consumes vstack[0] and vstack[1]
-	lauf_asm_inst_store_field(_builder, lauf_asm_type_value, 0);
+	lauf_asm_inst_store_field(*this, lauf_asm_type_value, 0);
 	return true;
 }
