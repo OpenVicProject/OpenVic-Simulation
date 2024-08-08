@@ -7,7 +7,7 @@
 #include <openvic-dataloader/v2script/Parser.hpp>
 
 #include "AsmBuilder.hpp"
-#include "InstanceManager.hpp"
+#include "GameManager.hpp"
 #include "Module.hpp"
 #include "types/EnumBitfield.hpp"
 #include "vm/Builtin.hpp"
@@ -18,11 +18,11 @@
 namespace OpenVic::Vm {
 	struct Codegen {
 		Codegen(
-			ovdl::v2script::Parser const& parser, InstanceManager* instance_manager, const char* module_name,
+			ovdl::v2script::Parser const& parser, GameManager* instance_manager, const char* module_name,
 			lauf_asm_build_options options = lauf_asm_default_build_options
 		);
 
-		Codegen(ovdl::v2script::Parser const& parser, InstanceManager* instance_manager, Module&& module, AsmBuilder&& builder);
+		Codegen(ovdl::v2script::Parser const& parser, GameManager* instance_manager, Module&& module, AsmBuilder&& builder);
 
 		operator lauf_asm_module*() {
 			return _module;
@@ -57,7 +57,7 @@ namespace OpenVic::Vm {
 		}
 
 		OpenVicVirtualMachine create_virtual_machine() && {
-			return { _instance_manager, std::move(_scope_references) };
+			return { _game_manager, std::move(_scope_definitions) };
 		}
 
 		lauf_asm_block* create_block(size_t input_count) {
@@ -89,24 +89,24 @@ namespace OpenVic::Vm {
 		is_iterative_scope(scope_execution_type execution_type, scope_type active_scope_type, ovdl::symbol<char> name) const;
 		scope_type get_scope_type_for(scope_execution_type execution_type, ovdl::symbol<char> name) const;
 
-		lauf_asm_function* create_effect_function(scope_type type, ovdl::v2script::ast::Node* node);
-		lauf_asm_function* create_condition_function(scope_type type, ovdl::v2script::ast::Node* node);
+		OpenVic::Asm::scope_store_variant get_static_scope( //
+			scope_execution_type execution_type, scope_type active_scope_type, ovdl::symbol<char> name
+		) const;
 
-		void generate_effect_from(scope_type type, ovdl::v2script::ast::Node* node);
-		void generate_condition_from(scope_type type, ovdl::v2script::ast::Node* node);
+		bool supports_limit(scope_execution_type execution_type, scope_type active_scope_type, ovdl::symbol<char> name) const;
+
+		lauf_asm_function* create_effect_function(scope_type type, const ovdl::v2script::ast::Node* node);
+		lauf_asm_function* create_condition_function(scope_type type, const ovdl::v2script::ast::Node* node);
+
+		void generate_effect_from(scope_type type, const ovdl::v2script::ast::Node* node);
+		void generate_condition_from(scope_type type, const ovdl::v2script::ast::Node* node);
 
 		bool inst_store_ov_asm_key_null(lauf_asm_local* local, std::size_t index);
 		bool inst_store_ov_asm_key(lauf_asm_local* local, std::size_t index, ovdl::symbol<char> key);
 		bool inst_store_ov_asm_value_from_vstack(lauf_asm_local* local, std::size_t index, std::uint8_t type);
 		bool inst_store_ov_asm_type(lauf_asm_local* local, std::size_t index, std::uint8_t type);
 
-		bool push_instruction_for_keyword_scope(
-			scope_execution_type execution_type, scope_type type, ovdl::symbol<char> scope_symbol
-		);
-
-		Asm::scope_variant get_scope_for( //
-			scope_execution_type execution_type, scope_type type, ovdl::symbol<char> scope_symbol
-		) const;
+		bool push_instruction_for_scope(scope_execution_type execution_type, scope_type type, ovdl::symbol<char> scope_symbol);
 
 		// Bytecode instructions //
 		void inst_push_scope_this();
@@ -193,8 +193,8 @@ namespace OpenVic::Vm {
 		};
 
 	private:
-		std::vector<OpenVic::Asm::scope_variant> _scope_references;
-		InstanceManager* _instance_manager;
+		std::vector<OpenVic::Asm::scope_store_variant> _scope_definitions;
+		GameManager* _game_manager;
 		Module _module;
 		AsmBuilder _builder;
 		ovdl::v2script::Parser const& _parser;

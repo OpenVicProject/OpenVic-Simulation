@@ -6,6 +6,7 @@
 #include <cstring>
 #include <string_view>
 #include <unordered_map>
+#include <variant>
 
 #include <openvic-dataloader/detail/SymbolIntern.hpp>
 #include <openvic-dataloader/detail/Utility.hpp>
@@ -20,6 +21,7 @@
 #include <range/v3/algorithm/equal.hpp>
 #include <range/v3/algorithm/reverse.hpp>
 
+#include "GameManager.hpp"
 #include "types/fixed_point/FixedPoint.hpp"
 #include "vm/Builtin.hpp"
 #include <lauf/asm/builder.h>
@@ -40,15 +42,15 @@ bool ichar_equals(char a, char b) {
 }
 
 Codegen::Codegen(
-	ovdl::v2script::Parser const& parser, OpenVic::InstanceManager* instance_manager, const char* module_name,
+	ovdl::v2script::Parser const& parser, OpenVic::GameManager* game_manager, const char* module_name,
 	lauf_asm_build_options options
 )
-	: _parser(parser), _instance_manager(instance_manager), _module(module_name), _builder(options) {}
+	: _parser(parser), _game_manager(game_manager), _module(module_name), _builder(options) {}
 
 Codegen::Codegen(
-	ovdl::v2script::Parser const& parser, OpenVic::InstanceManager* instance_manager, Module&& module, AsmBuilder&& builder
+	ovdl::v2script::Parser const& parser, OpenVic::GameManager* game_manager, Module&& module, AsmBuilder&& builder
 )
-	: _parser(parser), _instance_manager(instance_manager), _module(std::move(module)), _builder(std::move(builder)) {}
+	: _parser(parser), _game_manager(game_manager), _module(std::move(module)), _builder(std::move(builder)) {}
 
 static constexpr auto any_ = "any_"sv;
 static constexpr auto all_ = "all_"sv;
@@ -72,8 +74,7 @@ Codegen::scope_type Codegen::get_scope_type_for(scope_execution_type execution_t
 	if (_parser.find_intern(#NAME##sv) == name) \
 	return SCOPE_TYPE
 
-	FIND_SCOPE(Generic, THIS);
-	FIND_SCOPE(Generic, FROM);
+	FIND_SCOPE(Generic, this);
 	FIND_SCOPE(Generic, from);
 
 	// Country and Pop Scope
@@ -120,28 +121,73 @@ Codegen::scope_type Codegen::get_scope_type_for(scope_execution_type execution_t
 	return None;
 }
 
-void Codegen::generate_effect_from(scope_type type, Node* node) {
+OpenVic::Asm::scope_store_variant Codegen::get_static_scope( //
+	scope_execution_type execution_type, scope_type active_scope_type, ovdl::symbol<char> name
+) const {
+	auto name_sv = name.view();
+
+	auto country =
+		_game_manager->get_definition_manager().get_country_definition_manager().get_country_definition_by_identifier(name_sv);
+	if (country != nullptr) {
+		return country;
+	}
+
+	auto state_region = _game_manager->get_definition_manager().get_map_definition().get_region_by_identifier(name_sv);
+	if (state_region != nullptr) {
+		return state_region;
+	}
+
+	auto province = _game_manager->get_definition_manager().get_map_definition().get_province_definition_by_identifier(name_sv);
+	if (province != nullptr) {
+		return province;
+	}
+
+	return {};
+}
+
+static constexpr auto random_ = "random_"sv;
+
+bool Codegen::supports_limit(scope_execution_type execution_type, scope_type active_scope_type, ovdl::symbol<char> name) const {
+	if (is_iterative_scope(execution_type, active_scope_type, name)) {
+		return true;
+	}
+
+	if (std::strncmp(name.c_str(), random_.data(), random_.size()) == 0) {
+		return true;
+	}
+
+	// TODO: decide limit support
+	return false;
+}
+
+void Codegen::generate_effect_from(scope_type type, const Node* node) {
 	struct current_scope_t {
 		scope_type type;
 		ovdl::symbol<char> symbol;
 	} current_scope { .type = type, .symbol = {} };
 
 	bool is_arguments = false;
-	std::unordered_map<ovdl::symbol<char>, FlatValue const*, symbol_hash> named_arguments;
+	std::unordered_map<ovdl::symbol<char>, const Node*, symbol_hash> named_arguments;
 	Asm::argument::type_t ov_asm_type;
 
 	dryad::visit_tree(
 		node, //
 		[&](dryad::child_visitor<NodeKind> visitor, const AssignStatement* statement) {
-			auto const* left = dryad::node_try_cast<FlatValue>(statement->left());
+			using enum Codegen::scope_execution_type;
+
+			const auto* left = dryad::node_try_cast<FlatValue>(statement->left());
 			if (!left) {
 				return;
 			}
 
-			auto const* right = dryad::node_try_cast<FlatValue>(statement->right());
+			const auto* right = dryad::node_try_cast<FlatValue>(statement->right());
 			if (is_arguments) {
 				if (right) {
 					named_arguments.insert_or_assign(left->value(), right);
+					return;
+				} else if (supports_limit(Effect, current_scope.type, current_scope.symbol) &&
+						   _parser.find_intern("limit"sv) == left->value()) {
+					named_arguments.insert_or_assign(left->value(), statement->right());
 					return;
 				}
 
@@ -163,7 +209,16 @@ void Codegen::generate_effect_from(scope_type type, Node* node) {
 			lauf_asm_local* arguments = nullptr;
 
 			if (!right) {
-				using enum Codegen::scope_execution_type;
+				if (_parser.find_intern("random"sv) == left->value()) {
+					// TODO: implement random
+					return;
+				}
+
+				if (_parser.find_intern("random_list"sv) == left->value()) {
+					// TODO: implement random_list
+					return;
+				}
+
 				is_arguments = current_scope.type >> get_scope_type_for(Effect, left->value());
 				if (!is_arguments) {
 					current_scope_t previous_scope = current_scope;
@@ -211,7 +266,7 @@ void Codegen::generate_effect_from(scope_type type, Node* node) {
 			// Load arguments address (vstack[2])
 			lauf_asm_inst_local_addr(*this, arguments);
 			// Load scope address in lauf (vstack[1])
-			push_instruction_for_keyword_scope(scope_execution_type::Effect, current_scope.type, current_scope.symbol);
+			push_instruction_for_scope(scope_execution_type::Effect, current_scope.type, current_scope.symbol);
 			// Create effect name literal (vstack[0])
 			auto effect_name = lauf_asm_build_string_literal(*this, left->value().c_str());
 			lauf_asm_inst_global_addr(*this, effect_name);
@@ -228,7 +283,7 @@ void Codegen::generate_effect_from(scope_type type, Node* node) {
 				return;
 			}
 
-			if (push_instruction_for_keyword_scope(scope_execution_type::Effect, current_scope.type, value->value())) {
+			if (push_instruction_for_scope(scope_execution_type::Effect, current_scope.type, value->value())) {
 				ov_asm_type = scope;
 				return;
 			}
@@ -259,16 +314,25 @@ void Codegen::generate_effect_from(scope_type type, Node* node) {
 			}
 
 			// Create argument string literal
-			auto argument_str = lauf_asm_build_string_literal(*this, value->value().c_str());
+			auto argument_str =
+				lauf_asm_build_data_literal(*this, reinterpret_cast<const unsigned char*>(view.data()), view.size());
 			lauf_asm_inst_global_addr(*this, argument_str);
 			ov_asm_type = cstring;
+		},
+		[&](dryad::child_visitor<NodeKind> visitor, const ListValue* value) {
+			if (!is_arguments) {
+				visitor(value);
+				return;
+			}
 
-			// TODO: find/create and insert value here
+			auto limit_function = create_condition_function(current_scope.type, value);
+			lauf_asm_inst_function_addr(*this, limit_function);
+			ov_asm_type = Asm::argument::type_t::function_address;
 		}
 	);
 }
 
-void Codegen::generate_condition_from(scope_type type, Node* node) {
+void Codegen::generate_condition_from(scope_type type, const Node* node) {
 	struct current_scope_t {
 		scope_type type;
 		ovdl::symbol<char> symbol;
@@ -306,23 +370,45 @@ void Codegen::generate_condition_from(scope_type type, Node* node) {
 	);
 }
 
-bool Codegen::push_instruction_for_keyword_scope(
+bool Codegen::push_instruction_for_scope(
 	scope_execution_type execution_type, scope_type type, ovdl::symbol<char> scope_symbol
 ) {
 	if (type >> get_scope_type_for(execution_type, scope_symbol)) {
-		lauf_asm_inst_uint(*this, _scope_references.size());
-		_scope_references.push_back(get_scope_for(execution_type, type, scope_symbol));
-		// TODO: push scope into _scope_references
-		lauf_asm_inst_call_builtin(*this, load_scope_ptr);
+		if (auto static_scope = get_static_scope(execution_type, type, scope_symbol);
+			!std::holds_alternative<std::monostate>(static_scope)) {
+			lauf_asm_inst_uint(*this, _scope_definitions.size());
+			_scope_definitions.push_back(std::move(static_scope));
+			lauf_asm_inst_call_builtin(*this, load_static_scope_ptr);
+			return true;
+		}
+
+#define SCOPE_LIST(END) \
+	X(from) \
+	X(this) \
+	X(year) \
+	X(month) \
+	X(has_global_flag) \
+	X(is_canal_enabled) \
+	END
+
+#define X(SCOPE_NAME) _parser.find_intern(#SCOPE_NAME##sv) == scope_symbol ||
+
+		if (SCOPE_LIST(false)) {
+			lauf_asm_inst_null(*this);
+		} else {
+			lauf_asm_inst_call_builtin(*this, load_current_scope);
+		}
+
+#undef X
+#undef SCOPE_LIST
+
+		auto scope_str = lauf_asm_build_string_literal(*this, scope_symbol.c_str());
+		lauf_asm_inst_global_addr(*this, scope_str);
+		lauf_asm_inst_call_builtin(*this, load_relative_scope_ptr);
+		return true;
 	}
 
 	return false;
-}
-
-OpenVic::Asm::scope_variant Codegen::get_scope_for( //
-	scope_execution_type execution_type, scope_type type, ovdl::symbol<char> scope_symbol
-) const {
-	return {};
 }
 
 static constexpr lauf_asm_layout ov_asm_argument_layout[] = { LAUF_ASM_NATIVE_LAYOUT_OF(OpenVic::Asm::argument::key),
@@ -373,11 +459,14 @@ bool Codegen::inst_store_ov_asm_value_from_vstack(lauf_asm_local* local, std::si
 	case cstring:
 		// Translate key literal to cstring
 		lauf_asm_inst_call_builtin(*this, translate_address_to_string);
+		break;
 	case ptr:
 		// Translate address to pointer
 		lauf_asm_inst_call_builtin(*this, translate_address_to_pointer);
+		break;
 	case scope:
 		// Scope pointer is already native
+	case function_address:
 	case uint:
 	case int_:
 	case fixed_point:

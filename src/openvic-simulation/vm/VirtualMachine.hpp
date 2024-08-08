@@ -2,7 +2,7 @@
 
 #include <vector>
 
-#include "InstanceManager.hpp"
+#include "GameManager.hpp"
 #include "RuntimeProcess.hpp"
 #include "Utility.hpp"
 #include "vm/Builtin.hpp"
@@ -33,15 +33,15 @@ namespace OpenVic::Vm {
 		using VirtualMachine::operator=;
 
 		OpenVicVirtualMachine(
-			InstanceManager* instance_manager, std::vector<Asm::scope_variant>&& scope_references,
+			GameManager* game_manager, std::vector<Asm::scope_store_variant>&& scope_references,
 			lauf_vm_options options = lauf_default_vm_options
 		)
 			: VirtualMachine([&] {
 				  options.user_data = &user_data;
 				  return options;
 			  }()) {
-			user_data.scope_references = std::move(scope_references);
-			user_data.instance_manager = instance_manager;
+			user_data.scope_dict_refs = std::move(scope_references);
+			user_data.game_manager = game_manager;
 		}
 
 	private:
