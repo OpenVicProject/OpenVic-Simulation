@@ -203,8 +203,9 @@ namespace OpenVic::GUI {
 		GFX::Font const* PROPERTY(font);
 		fvec2_t PROPERTY(max_size); /* Defines keys: maxWidth, maxHeight */
 		fvec2_t PROPERTY(border_size);
+		std::string PROPERTY(texture_file);
 
-		// TODO - fixedsize, textureFile
+		// TODO - fixedsize
 
 	protected:
 		Text();

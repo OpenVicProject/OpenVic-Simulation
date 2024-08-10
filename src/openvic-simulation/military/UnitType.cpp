@@ -151,7 +151,7 @@ bool UnitTypeManager::load_unit_type_file(
 ) {
 	using namespace std::string_view_literals;
 	auto type_symbol = parser.find_intern("type"sv);
-	if(!type_symbol) {
+	if (!type_symbol) {
 		Logger::error("type could not be interned.");
 	}
 

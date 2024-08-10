@@ -184,12 +184,10 @@ bool Text::_fill_key_map(NodeTools::case_insensitive_key_map_t& key_map, UIManag
 		"maxWidth", ZERO_OR_ONE, expect_fixed_point(assign_variable_callback(max_size.x)),
 		"maxHeight", ZERO_OR_ONE, expect_fixed_point(assign_variable_callback(max_size.y)),
 		"borderSize", ZERO_OR_ONE, expect_fvec2(assign_variable_callback(border_size)),
+		"textureFile", ZERO_OR_ONE, expect_string(assign_variable_callback_string(texture_file), true),
 
 		"fixedsize", ZERO_OR_ONE, success_callback,
-		"allwaystransparent", ZERO_OR_ONE, success_callback,
-
-		// Add warning about redundant key?
-		"textureFile", ZERO_OR_ONE, success_callback
+		"allwaystransparent", ZERO_OR_ONE, success_callback
 	);
 	return ret;
 }

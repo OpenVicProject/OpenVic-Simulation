@@ -20,7 +20,7 @@ bool SoundEffectManager::_load_sound_define(std::string_view sfx_identifier, ast
 		Logger::error("Invalid sound identifier - empty!");
 		return false;
 	}
-	if(file.empty()) {
+	if (file.empty()) {
 		Logger::error("Invalid sound file name - empty!");
 		return false;
 	}

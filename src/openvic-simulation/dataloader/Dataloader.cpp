@@ -831,7 +831,7 @@ bool Dataloader::_load_song_chances(DefinitionManager& definition_manager) {
 	bool ret = true;
 	SongChanceManager& song_chance_manager = definition_manager.get_song_chance_manager();
 
-	if(path.empty()) {
+	if (path.empty()) {
 		Logger::info("No Songs.txt file to load");
 		song_chance_manager.lock_song_chances();
 		return true;
@@ -1096,7 +1096,7 @@ bool Dataloader::load_defines(DefinitionManager& definition_manager) {
 		Logger::error("Failed to load diplomatic actions!");
 		ret = false;
 	}
-	if(!definition_manager.get_script_manager().get_condition_manager().setup_conditions(definition_manager)) {
+	if (!definition_manager.get_script_manager().get_condition_manager().setup_conditions(definition_manager)) {
 		Logger::error("Failed to set up conditions!");
 		ret = false;
 	}
@@ -1131,6 +1131,7 @@ bool Dataloader::parse_scripts(DefinitionManager& definition_manager) const {
 	PARSE_SCRIPTS("decision", definition_manager.get_decision_manager());
 	PARSE_SCRIPTS("event", definition_manager.get_event_manager());
 	PARSE_SCRIPTS("song chance", definition_manager.get_song_chance_manager());
+	PARSE_SCRIPTS("national focus", definition_manager.get_politics_manager().get_national_focus_manager());
 	return ret;
 }
 
