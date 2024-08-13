@@ -1,19 +1,23 @@
 #pragma once
 
-#include <openvic-simulation/types/IdentifierRegistry.hpp>
-#include <openvic-simulation/scripts/ConditionalWeight.hpp>
+#include "openvic-simulation/types/IdentifierRegistry.hpp"
+#include "openvic-simulation/scripts/ConditionalWeight.hpp"
 
 namespace OpenVic {
 	/*For music/Songs.txt if it exists*/
 	struct SongChanceManager;
+
 	struct SongChance : HasIdentifier {
-	private:
 		friend struct SongChanceManager;
+
+	private:
 		std::string PROPERTY(file_name);
 		ConditionalWeight PROPERTY(chance);
+
 		SongChance(size_t new_index, std::string_view new_filename, ConditionalWeight&& new_chance);
+
 		bool parse_scripts(DefinitionManager const& definition_manager);
-	
+
 	public:
 		SongChance(SongChance&&) = default;
 	};

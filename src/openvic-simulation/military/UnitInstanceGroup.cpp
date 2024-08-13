@@ -155,7 +155,6 @@ UnitInstanceGroupBranched<UnitType::branch_t::NAVAL>::UnitInstanceGroupBranched(
 	std::vector<ShipInstance*>&& new_units
 ) : UnitInstanceGroup { new_name, std::move(new_units) } {}
 
-
 fixed_point_t UnitInstanceGroupBranched<UnitType::branch_t::NAVAL>::get_total_consumed_supply() const {
 	fixed_point_t total_consumed_supply = 0;
 
