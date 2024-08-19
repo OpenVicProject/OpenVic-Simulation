@@ -23,10 +23,20 @@ bool UIManager::add_font(
 		Logger::error("Invalid fontname for font ", identifier, " - empty!");
 		return false;
 	}
-	return fonts.add_item(
+	const bool ret = fonts.add_item(
 		{ identifier, colour, fontname, charset, height, std::move(colour_codes) },
 		duplicate_warning_callback
 	);
+
+	if (universal_colour_codes.empty() && ret) {
+		GFX::Font::colour_codes_t const& loaded_colour_codes = get_fonts().back().get_colour_codes();
+		if (!loaded_colour_codes.empty()) {
+			universal_colour_codes = loaded_colour_codes;
+			Logger::info("Loaded universal colour codes from font: \"", identifier, "\"");
+		}
+	}
+
+	return ret;
 }
 
 bool UIManager::_load_font(ast::NodeCPtr node) {
