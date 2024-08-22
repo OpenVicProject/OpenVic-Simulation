@@ -8,6 +8,7 @@ namespace OpenVic {
 	class UIManager {
 		NamedInstanceRegistry<GFX::Sprite> IDENTIFIER_REGISTRY(sprite);
 		IdentifierRegistry<GFX::Font> IDENTIFIER_REGISTRY(font);
+		GFX::Font::colour_codes_t PROPERTY(universal_colour_codes);
 		NamedInstanceRegistry<GFX::Object> IDENTIFIER_REGISTRY(object);
 
 		NamedInstanceRegistry<GUI::Scene, UIManager const&> IDENTIFIER_REGISTRY(scene);
