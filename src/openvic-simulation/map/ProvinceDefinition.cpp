@@ -193,3 +193,7 @@ bool ProvinceDefinition::has_adjacency_going_through(ProvinceDefinition const* p
 fvec2_t ProvinceDefinition::get_unit_position() const {
 	return positions.unit.value_or(centre);
 }
+
+fvec2_t ProvinceDefinition::get_city_position() const {
+	return positions.city.value_or(centre);
+}

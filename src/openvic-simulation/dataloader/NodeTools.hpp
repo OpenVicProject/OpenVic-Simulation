@@ -14,6 +14,7 @@
 #include "openvic-simulation/types/Date.hpp"
 #include "openvic-simulation/types/IndexedMap.hpp"
 #include "openvic-simulation/types/OrderedContainers.hpp"
+#include "openvic-simulation/types/TextFormat.hpp"
 #include "openvic-simulation/types/Vector.hpp"
 #include "openvic-simulation/utility/Getters.hpp"
 #include "openvic-simulation/utility/TslHelper.hpp"
@@ -150,6 +151,8 @@ namespace OpenVic {
 		/* Expect a hexadecimal value representing a colour in ARGB format. */
 		node_callback_t expect_colour_hex(callback_t<colour_argb_t> callback);
 
+		node_callback_t expect_text_format(callback_t<text_format_t> callback);
+
 		callback_t<std::string_view> expect_date_str(callback_t<Date> callback);
 		node_callback_t expect_date(callback_t<Date> callback);
 		node_callback_t expect_date_string(callback_t<Date> callback);
@@ -160,6 +163,8 @@ namespace OpenVic {
 
 		node_callback_t expect_ivec2(callback_t<ivec2_t> callback);
 		node_callback_t expect_fvec2(callback_t<fvec2_t> callback);
+		node_callback_t expect_fvec3(callback_t<fvec3_t> callback);
+		node_callback_t expect_fvec4(callback_t<fvec4_t> callback);
 		node_callback_t expect_assign(key_value_callback_t callback);
 
 		using length_callback_t = std::function<size_t(size_t)>;
