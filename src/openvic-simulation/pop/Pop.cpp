@@ -40,9 +40,7 @@ Pop::Pop(PopBase const& pop_base, decltype(ideologies)::keys_t const& ideology_k
 	savings { 0 },
 	life_needs_fulfilled { 0 },
 	everyday_needs_fulfilled { 0 },
-	luxury_needs_fulfilled { 0 } {
-	assert(size > 0);
-}
+	luxury_needs_fulfilled { 0 } {}
 
 void Pop::setup_pop_test_values(IssueManager const& issue_manager) {
 	/* Returns +/- range% of size. */
@@ -198,11 +196,7 @@ PopType::PopType(
 	migration_target { std::move(new_migration_target) },
 	promote_to { std::move(new_promote_to) },
 	ideologies { std::move(new_ideologies) },
-	issues { std::move(new_issues) } {
-	assert(sprite > 0);
-	assert(max_size >= 0);
-	assert(merge_max_size >= 0);
-}
+	issues { std::move(new_issues) } {}
 
 bool PopType::parse_scripts(DefinitionManager const& definition_manager) {
 	bool ret = true;

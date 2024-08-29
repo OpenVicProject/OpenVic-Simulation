@@ -8,13 +8,23 @@ using namespace OpenVic;
 using namespace OpenVic::NodeTools;
 
 ProvinceDefinition::ProvinceDefinition(
-	std::string_view new_identifier, colour_t new_colour, index_t new_index
-) : HasIdentifierAndColour { new_identifier, new_colour, true }, HasIndex { new_index }, region { nullptr },
-	climate { nullptr }, continent { nullptr }, on_map { false }, water { false }, coastal { false },
-	port { false }, port_adjacent_province { nullptr }, default_terrain_type { nullptr }, adjacencies {}, centre {},
-	positions {} {
-	assert(index != NULL_INDEX);
-}
+	std::string_view new_identifier,
+	colour_t new_colour,
+	index_t new_index
+) : HasIdentifierAndColour { new_identifier, new_colour, true },
+	HasIndex { new_index },
+	region { nullptr },
+	climate { nullptr },
+	continent { nullptr },
+	on_map { false },
+	water { false },
+	coastal { false },
+	port { false },
+	port_adjacent_province { nullptr },
+	default_terrain_type { nullptr },
+	adjacencies {},
+	centre {},
+	positions {} {}
 
 bool ProvinceDefinition::operator==(ProvinceDefinition const& other) const {
 	return this == &other;
