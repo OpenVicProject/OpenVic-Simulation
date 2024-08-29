@@ -16,6 +16,7 @@ CountryInstance::CountryInstance(
 	decltype(technologies)::keys_t const& technology_keys,
 	decltype(inventions)::keys_t const& invention_keys,
 	decltype(upper_house)::keys_t const& ideology_keys,
+	decltype(government_flag_overrides)::keys_t const& government_type_keys,
 	decltype(pop_type_distribution)::keys_t const& pop_type_keys
 ) : /* Main attributes */
 	country_definition { new_country_definition },
@@ -52,6 +53,8 @@ CountryInstance::CountryInstance(
 	ruling_party { nullptr },
 	upper_house { &ideology_keys },
 	reforms {},
+	government_flag_overrides { &government_type_keys },
+	flag_government_type { nullptr },
 	suppression_points { 0 },
 	infamy { 0 },
 	plurality { 0 },
@@ -300,7 +303,7 @@ bool CountryInstance::apply_history_to_country(CountryHistoryEntry const* entry,
 	for (std::string const& flag : entry->get_global_flags()) {
 		// TODO - set global flag
 	}
-	// entry->get_government_flag_overrides();
+	government_flag_overrides.write_non_empty_values(entry->get_government_flag_overrides());
 	for (Decision const* decision : entry->get_decisions()) {
 		// TODO - take decision
 	}
@@ -393,6 +396,16 @@ void CountryInstance::update_gamestate() {
 		colour = ERROR_COLOUR;
 	}
 
+	if (government_type != nullptr) {
+		flag_government_type = government_flag_overrides[*government_type];
+
+		if (flag_government_type == nullptr) {
+			flag_government_type = government_type;
+		}
+	} else {
+		flag_government_type = nullptr;
+	}
+
 	// Order of updates might need to be changed/functions split up to account for dependencies
 	_update_production();
 	_update_budget();
@@ -421,12 +434,15 @@ bool CountryInstanceManager::generate_country_instances(
 	decltype(CountryInstance::technologies)::keys_t const& technology_keys,
 	decltype(CountryInstance::inventions)::keys_t const& invention_keys,
 	decltype(CountryInstance::upper_house)::keys_t const& ideology_keys,
+	decltype(CountryInstance::government_flag_overrides)::keys_t const& government_type_keys,
 	decltype(CountryInstance::pop_type_distribution)::keys_t const& pop_type_keys
 ) {
 	reserve_more(country_instances, country_definition_manager.get_country_definition_count());
 
 	for (CountryDefinition const& country_definition : country_definition_manager.get_country_definitions()) {
-		country_instances.add_item({ &country_definition, technology_keys, invention_keys, ideology_keys, pop_type_keys });
+		country_instances.add_item({
+			&country_definition, technology_keys, invention_keys, ideology_keys, government_type_keys, pop_type_keys
+		});
 	}
 
 	return true;

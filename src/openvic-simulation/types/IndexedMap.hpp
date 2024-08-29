@@ -169,6 +169,16 @@ namespace OpenVic {
 			return true;
 		}
 
+		constexpr void write_non_empty_values(IndexedMap const& other) {
+			const size_t count = std::min(container_t::size(), other.size());
+			for (size_t index = 0; index < count; ++index) {
+				value_t const& value = other[index];
+				if (value) {
+					container_t::operator[](index) = value;
+				}
+			}
+		}
+
 		fixed_point_map_t<key_t const *> to_fixed_point_map() const
 		requires(std::same_as<value_t, fixed_point_t>)
 		{
