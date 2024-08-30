@@ -78,6 +78,8 @@ namespace OpenVic {
 		IndexedMap<Ideology, fixed_point_t> PROPERTY(upper_house);
 		std::vector<Reform const*> PROPERTY(reforms); // TODO: should be map of reform groups to active reforms: must set defaults & validate applied history
 		// TODO - national issue support distribution (for just voters and for everyone)
+		IndexedMap<GovernmentType, GovernmentType const*> PROPERTY(government_flag_overrides);
+		GovernmentType const* PROPERTY(flag_government_type);
 		fixed_point_t PROPERTY(suppression_points);
 		fixed_point_t PROPERTY(infamy);
 		fixed_point_t PROPERTY(plurality);
@@ -127,8 +129,11 @@ namespace OpenVic {
 		UNIT_BRANCHED_GETTER(get_leaders, generals, admirals);
 
 		CountryInstance(
-			CountryDefinition const* new_country_definition, decltype(technologies)::keys_t const& technology_keys,
-			decltype(inventions)::keys_t const& invention_keys, decltype(upper_house)::keys_t const& ideology_keys,
+			CountryDefinition const* new_country_definition,
+			decltype(technologies)::keys_t const& technology_keys,
+			decltype(inventions)::keys_t const& invention_keys,
+			decltype(upper_house)::keys_t const& ideology_keys,
+			decltype(government_flag_overrides)::keys_t const& government_type_keys,
 			decltype(pop_type_distribution)::keys_t const& pop_type_keys
 		);
 
@@ -198,6 +203,7 @@ namespace OpenVic {
 			decltype(CountryInstance::technologies)::keys_t const& technology_keys,
 			decltype(CountryInstance::inventions)::keys_t const& invention_keys,
 			decltype(CountryInstance::upper_house)::keys_t const& ideology_keys,
+			decltype(CountryInstance::government_flag_overrides)::keys_t const& government_type_keys,
 			decltype(CountryInstance::pop_type_distribution)::keys_t const& pop_type_keys
 		);
 
