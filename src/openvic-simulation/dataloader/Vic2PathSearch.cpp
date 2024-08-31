@@ -1,3 +1,5 @@
+#include <filesystem>
+
 #include <openvic-dataloader/detail/CallbackOStream.hpp>
 
 #include <lexy-vdf/KeyValues.hpp>
@@ -159,7 +161,7 @@ static fs::path _search_for_game_path(fs::path hint_path = {}) {
 
 	// Steam Library's directory that will contain Victoria 2
 	fs::path vic2_steam_lib_directory;
-	fs::path current_path = hint_path;
+	fs::path current_path = std::filesystem::weakly_canonical(hint_path, error_code);
 
 	// If hinted path is directory that contains steamapps
 	bool is_steamapps = false;
@@ -288,7 +290,7 @@ static fs::path _search_for_game_path(fs::path hint_path = {}) {
 
 	// If we could not confirm Victoria 2 was installed via the default Steam installation
 	bool is_common_folder = false;
-	if (!vic2_install_confirmed) {
+	if (!vic2_install_confirmed && !vic2_steam_lib_directory.empty()) {
 		auto parser = lexy_vdf::Parser::from_file(vic2_steam_lib_directory);
 		if (!parser.parse()) {
 			// Could not find or load appmanifest_42960.acf, report error as warning
