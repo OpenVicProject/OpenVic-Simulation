@@ -40,8 +40,10 @@ void InstanceManager::update_gamestate() {
 	Logger::info("Update: ", today);
 
 	// Update gamestate...
-	map_instance.update_gamestate(today);
-	country_instance_manager.update_gamestate(today, definition_manager.get_define_manager());
+	map_instance.update_gamestate(today, definition_manager.get_define_manager());
+	country_instance_manager.update_gamestate(
+		today, definition_manager.get_define_manager(), definition_manager.get_military_manager().get_unit_type_manager()
+	);
 
 	gamestate_updated();
 	gamestate_needs_update = false;
@@ -81,7 +83,9 @@ bool InstanceManager::setup() {
 		definition_manager.get_research_manager().get_invention_manager().get_inventions(),
 		definition_manager.get_politics_manager().get_ideology_manager().get_ideologies(),
 		definition_manager.get_politics_manager().get_government_type_manager().get_government_types(),
-		definition_manager.get_pop_manager().get_pop_types()
+		definition_manager.get_pop_manager().get_pop_types(),
+		definition_manager.get_military_manager().get_unit_type_manager().get_regiment_types(),
+		definition_manager.get_military_manager().get_unit_type_manager().get_ship_types()
 	);
 
 	game_instance_setup = true;

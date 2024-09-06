@@ -41,8 +41,11 @@ namespace OpenVic {
 
 	private:
 		Pop* PROPERTY(pop);
+		bool PROPERTY_CUSTOM_PREFIX(mobilised, is);
 
-		UnitInstanceBranched(std::string_view new_name, RegimentType const& new_regiment_type, Pop* new_pop);
+		UnitInstanceBranched(
+			std::string_view new_name, RegimentType const& new_regiment_type, Pop* new_pop, bool new_mobilised)
+		;
 
 	public:
 		UnitInstanceBranched(UnitInstanceBranched&&) = default;

@@ -4,6 +4,7 @@
 #include "openvic-simulation/country/CountryInstance.hpp"
 #include "openvic-simulation/map/ProvinceInstance.hpp"
 #include "openvic-simulation/military/UnitType.hpp"
+#include "openvic-simulation/misc/Define.hpp"
 #include "openvic-simulation/politics/Ideology.hpp"
 #include "openvic-simulation/politics/Issue.hpp"
 #include "openvic-simulation/politics/Rebel.hpp"
@@ -40,7 +41,8 @@ Pop::Pop(PopBase const& pop_base, decltype(ideologies)::keys_t const& ideology_k
 	savings { 0 },
 	life_needs_fulfilled { 0 },
 	everyday_needs_fulfilled { 0 },
-	luxury_needs_fulfilled { 0 } {}
+	luxury_needs_fulfilled { 0 },
+	max_supported_regiments { 0 } {}
 
 void Pop::setup_pop_test_values(IssueManager const& issue_manager) {
 	/* Returns +/- range% of size. */
@@ -122,6 +124,23 @@ void Pop::set_location(ProvinceInstance const& new_location) {
 			location->get_owner() != nullptr ? &location->get_owner()->get_country_definition()->get_parties() : nullptr
 		);
 		// TODO - calculate vote distribution
+	}
+}
+
+void Pop::update_gamestate(
+	DefineManager const& define_manager, CountryInstance const* owner, fixed_point_t const& pop_size_per_regiment_multiplier
+) {
+	if (type.get_can_be_recruited()) {
+		if (
+			size < define_manager.get_min_pop_size_for_regiment() || owner == nullptr ||
+			!RegimentType::allowed_cultures_check_culture_in_country(owner->get_allowed_regiment_cultures(), culture, *owner)
+		) {
+			max_supported_regiments = 0;
+		} else {
+			max_supported_regiments = (fixed_point_t::parse(size) / (
+				fixed_point_t::parse(define_manager.get_pop_size_per_regiment()) * pop_size_per_regiment_multiplier
+			)).to_int64_t() + 1;
+		}
 	}
 }
 

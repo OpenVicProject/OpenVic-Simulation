@@ -118,9 +118,9 @@ bool MapInstance::apply_history_to_provinces(
 	return ret;
 }
 
-void MapInstance::update_gamestate(Date today) {
+void MapInstance::update_gamestate(Date today, DefineManager const& define_manager) {
 	for (ProvinceInstance& province : province_instances.get_items()) {
-		province.update_gamestate(today);
+		province.update_gamestate(today, define_manager);
 	}
 	state_manager.update_gamestate();
 

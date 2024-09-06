@@ -136,21 +136,34 @@ namespace OpenVic {
 
 		/* Military */
 		fixed_point_t PROPERTY(military_power);
+		fixed_point_t PROPERTY(military_power_from_land);
+		fixed_point_t PROPERTY(military_power_from_sea);
+		fixed_point_t PROPERTY(military_power_from_leaders);
 		size_t PROPERTY(military_rank);
 		plf::colony<General> PROPERTY(generals);
 		plf::colony<Admiral> PROPERTY(admirals);
 		ordered_set<ArmyInstance*> PROPERTY(armies);
 		ordered_set<NavyInstance*> PROPERTY(navies);
 		size_t PROPERTY(regiment_count);
-		size_t PROPERTY(mobilisation_regiment_potential);
+		size_t PROPERTY(max_supported_regiment_count);
+		size_t PROPERTY(mobilisation_potential_regiment_count);
+		size_t PROPERTY(mobilisation_max_regiment_count);
+		fixed_point_t PROPERTY(mobilisation_impact);
+		fixed_point_t PROPERTY(supply_consumption);
 		size_t PROPERTY(ship_count);
 		fixed_point_t PROPERTY(total_consumed_ship_supply);
 		fixed_point_t PROPERTY(max_ship_supply);
 		fixed_point_t PROPERTY(leadership_points);
 		fixed_point_t PROPERTY(war_exhaustion);
+		bool PROPERTY_CUSTOM_PREFIX(mobilised, is);
+		bool PROPERTY_CUSTOM_PREFIX(disarmed, is);
+		IndexedMap<RegimentType, bool> PROPERTY(unlocked_regiment_types);
+		RegimentType::allowed_cultures_t PROPERTY(allowed_regiment_cultures);
+		IndexedMap<ShipType, bool> PROPERTY(unlocked_ship_types);
 
 		UNIT_BRANCHED_GETTER(get_unit_instance_groups, armies, navies);
 		UNIT_BRANCHED_GETTER(get_leaders, generals, admirals);
+		UNIT_BRANCHED_GETTER(get_unlocked_unit_types, unlocked_regiment_types, unlocked_ship_types);
 
 		CountryInstance(
 			CountryDefinition const* new_country_definition,
@@ -158,7 +171,9 @@ namespace OpenVic {
 			decltype(inventions)::keys_t const& invention_keys,
 			decltype(upper_house)::keys_t const& ideology_keys,
 			decltype(government_flag_overrides)::keys_t const& government_type_keys,
-			decltype(pop_type_distribution)::keys_t const& pop_type_keys
+			decltype(pop_type_distribution)::keys_t const& pop_type_keys,
+			decltype(unlocked_regiment_types)::keys_t const& unlocked_regiment_types_keys,
+			decltype(unlocked_ship_types)::keys_t const& unlocked_ship_types_keys
 		);
 
 	public:
@@ -198,6 +213,14 @@ namespace OpenVic {
 		template<UnitType::branch_t Branch>
 		bool remove_leader(LeaderBranched<Branch> const* leader);
 
+		template<UnitType::branch_t Branch>
+		void unlock_unit_type(UnitTypeBranched<Branch> const& unit_type);
+
+		bool is_primary_culture(Culture const& culture) const;
+		// This only checks the accepted cultures list, ignoring the primary culture.
+		bool is_accepted_culture(Culture const& culture) const;
+		bool is_primary_or_accepted_culture(Culture const& culture) const;
+
 		// Sets the investment of each country in the map (rather than adding to them), leaving the rest unchanged.
 		void apply_foreign_investments(
 			fixed_point_map_t<CountryDefinition const*> const& investments,
@@ -216,11 +239,11 @@ namespace OpenVic {
 		void _update_population();
 		void _update_trade();
 		void _update_diplomacy();
-		void _update_military();
+		void _update_military(DefineManager const& define_manager, UnitTypeManager const& unit_type_manager);
 
 	public:
 
-		void update_gamestate(DefineManager const& define_manager);
+		void update_gamestate(DefineManager const& define_manager, UnitTypeManager const& unit_type_manager);
 		void tick();
 	};
 
@@ -252,7 +275,9 @@ namespace OpenVic {
 			decltype(CountryInstance::inventions)::keys_t const& invention_keys,
 			decltype(CountryInstance::upper_house)::keys_t const& ideology_keys,
 			decltype(CountryInstance::government_flag_overrides)::keys_t const& government_type_keys,
-			decltype(CountryInstance::pop_type_distribution)::keys_t const& pop_type_keys
+			decltype(CountryInstance::pop_type_distribution)::keys_t const& pop_type_keys,
+			decltype(CountryInstance::unlocked_regiment_types)::keys_t const& unlocked_regiment_types_keys,
+			decltype(CountryInstance::unlocked_ship_types)::keys_t const& unlocked_ship_types_keys
 		);
 
 		bool apply_history_to_countries(
@@ -260,7 +285,7 @@ namespace OpenVic {
 			MapInstance& map_instance
 		);
 
-		void update_gamestate(Date today, DefineManager const& define_manager);
+		void update_gamestate(Date today, DefineManager const& define_manager, UnitTypeManager const& unit_type_manager);
 		void tick();
 	};
 }

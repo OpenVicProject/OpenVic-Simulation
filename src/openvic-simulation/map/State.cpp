@@ -22,7 +22,8 @@ State::State(
 	provinces { std::move(new_provinces) },
 	colony_status { new_colony_status },
 	pop_type_distribution { &pop_type_keys },
-	industrial_power { 0 } {}
+	industrial_power { 0 },
+	max_supported_regiments { 0 } {}
 
 std::string State::get_identifier() const {
 	return StringUtils::append_string_views(
@@ -37,6 +38,7 @@ void State::update_gamestate() {
 	average_consciousness = 0;
 	average_militancy = 0;
 	pop_type_distribution.clear();
+	max_supported_regiments = 0;
 
 	for (ProvinceInstance const* province : provinces) {
 		total_population += province->get_total_population();
@@ -48,6 +50,8 @@ void State::update_gamestate() {
 		average_militancy += province->get_average_militancy() * province_population;
 
 		pop_type_distribution += province->get_pop_type_distribution();
+
+		max_supported_regiments += province->get_max_supported_regiments();
 	}
 
 	if (total_population > 0) {

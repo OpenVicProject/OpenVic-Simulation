@@ -33,6 +33,8 @@ namespace OpenVic {
 
 		fixed_point_t PROPERTY(industrial_power);
 
+		size_t PROPERTY(max_supported_regiments);
+
 		State(
 			StateSet const& new_state_set,
 			CountryInstance* new_owner,

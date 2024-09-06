@@ -20,7 +20,9 @@ CountryInstance::CountryInstance(
 	decltype(inventions)::keys_t const& invention_keys,
 	decltype(upper_house)::keys_t const& ideology_keys,
 	decltype(government_flag_overrides)::keys_t const& government_type_keys,
-	decltype(pop_type_distribution)::keys_t const& pop_type_keys
+	decltype(pop_type_distribution)::keys_t const& pop_type_keys,
+	decltype(unlocked_regiment_types)::keys_t const& unlocked_regiment_types_keys,
+	decltype(unlocked_ship_types)::keys_t const& unlocked_ship_types_keys
 ) : /* Main attributes */
 	country_definition { new_country_definition },
 	colour { ERROR_COLOUR },
@@ -90,18 +92,43 @@ CountryInstance::CountryInstance(
 
 	/* Military */
 	military_power { 0 },
+	military_power_from_land { 0 },
+	military_power_from_sea { 0 },
+	military_power_from_leaders { 0 },
 	military_rank { 0 },
 	generals {},
 	admirals {},
 	armies {},
 	navies {},
 	regiment_count { 0 },
-	mobilisation_regiment_potential { 0 },
+	max_supported_regiment_count { 0 },
+	mobilisation_potential_regiment_count { 0 },
+	mobilisation_max_regiment_count { 0 },
+	mobilisation_impact { 0 },
+	supply_consumption { 1 },
 	ship_count { 0 },
 	total_consumed_ship_supply { 0 },
 	max_ship_supply { 0 },
 	leadership_points { 0 },
-	war_exhaustion { 0 } {}
+	war_exhaustion { 0 },
+	mobilised { false },
+	disarmed { false },
+	unlocked_regiment_types { &unlocked_regiment_types_keys },
+	allowed_regiment_cultures { RegimentType::allowed_cultures_t::NO_CULTURES },
+	unlocked_ship_types { &unlocked_ship_types_keys } {
+
+	for (RegimentType const& regiment_type : *unlocked_regiment_types.get_keys()) {
+		if (regiment_type.is_active()) {
+			unlock_unit_type(regiment_type);
+		}
+	}
+
+	for (ShipType const& ship_type : *unlocked_ship_types.get_keys()) {
+		if (ship_type.is_active()) {
+			unlock_unit_type(ship_type);
+		}
+	}
+}
 
 std::string_view CountryInstance::get_identifier() const {
 	return country_definition->get_identifier();
@@ -273,6 +300,44 @@ template void CountryInstance::add_leader(LeaderBranched<UnitType::branch_t::NAV
 template bool CountryInstance::remove_leader(LeaderBranched<UnitType::branch_t::LAND> const*);
 template bool CountryInstance::remove_leader(LeaderBranched<UnitType::branch_t::NAVAL> const*);
 
+template<UnitType::branch_t Branch>
+void CountryInstance::unlock_unit_type(UnitTypeBranched<Branch> const& unit_type) {
+	IndexedMap<UnitTypeBranched<Branch>, bool>& unlocked_unit_types = get_unlocked_unit_types<Branch>();
+
+	decltype(unlocked_regiment_types)::value_ref_t unlock_value = unlocked_unit_types[unit_type];
+
+	if (unlock_value) {
+		Logger::warning(
+			"Attempted to unlock already-unlocked unit type \"", unit_type.get_identifier(),
+			"\" for country ", get_identifier()
+		);
+		return;
+	}
+
+	unlock_value = true;
+
+	if constexpr (Branch == UnitType::branch_t::LAND) {
+		allowed_regiment_cultures = RegimentType::allowed_cultures_get_most_permissive(
+			allowed_regiment_cultures, unit_type.get_allowed_cultures()
+		);
+	}
+}
+
+template void CountryInstance::unlock_unit_type(UnitTypeBranched<UnitType::branch_t::LAND> const&);
+template void CountryInstance::unlock_unit_type(UnitTypeBranched<UnitType::branch_t::NAVAL> const&);
+
+bool CountryInstance::is_primary_culture(Culture const& culture) const {
+	return &culture == primary_culture;
+}
+
+bool CountryInstance::is_accepted_culture(Culture const& culture) const {
+	return accepted_cultures.contains(&culture);
+}
+
+bool CountryInstance::is_primary_or_accepted_culture(Culture const& culture) const {
+	return is_primary_culture(culture) || is_accepted_culture(culture);
+}
+
 void CountryInstance::apply_foreign_investments(
 	fixed_point_map_t<CountryDefinition const*> const& investments, CountryInstanceManager const& country_instance_manager
 ) {
@@ -401,7 +466,7 @@ void CountryInstance::_update_population() {
 	national_militancy = 0;
 	pop_type_distribution.clear();
 
-	for (auto const& state : states) {
+	for (State const* state : states) {
 		total_population += state->get_total_population();
 
 		// TODO - change casting if Pop::pop_size_t changes type
@@ -431,7 +496,7 @@ void CountryInstance::_update_diplomacy() {
 	// TODO - update diplomatic points and colonial power
 }
 
-void CountryInstance::_update_military() {
+void CountryInstance::_update_military(DefineManager const& define_manager, UnitTypeManager const& unit_type_manager) {
 	regiment_count = 0;
 
 	for (ArmyInstance const* army : armies) {
@@ -446,10 +511,79 @@ void CountryInstance::_update_military() {
 		total_consumed_ship_supply += navy->get_total_consumed_supply();
 	}
 
-	// TODO - update mobilisation_regiment_potential, max_ship_supply, leadership_points, war_exhaustion
+	// Calculate military power from land, sea, and leaders
+
+	size_t deployed_non_mobilised_regiments = 0;
+	for (ArmyInstance const* army : armies) {
+		for (RegimentInstance const* regiment : army->get_units()) {
+			if (!regiment->is_mobilised()) {
+				deployed_non_mobilised_regiments++;
+			}
+		}
+	}
+
+	max_supported_regiment_count = 0;
+	for (State const* state : states) {
+		max_supported_regiment_count += state->get_max_supported_regiments();
+	}
+
+	// TODO - apply country/tech modifiers to supply consumption
+	supply_consumption = 1;
+
+	const size_t regular_army_size = std::min(4 * deployed_non_mobilised_regiments, max_supported_regiment_count);
+
+	fixed_point_t sum_of_regiment_type_stats = 0;
+	for (RegimentType const& regiment_type : unit_type_manager.get_regiment_types()) {
+		// TODO - apply country/tech modifiers to regiment stats
+		sum_of_regiment_type_stats += (
+			regiment_type.get_attack() + regiment_type.get_defence() /*+ land_attack_modifier + land_defense_modifier*/
+		) * regiment_type.get_discipline();
+	}
+
+	military_power_from_land = supply_consumption * fixed_point_t::parse(regular_army_size) * sum_of_regiment_type_stats
+		/ fixed_point_t::parse(7 * (1 + unit_type_manager.get_regiment_type_count()));
+
+	if (disarmed) {
+		military_power_from_land *= define_manager.get_disarmed_penalty();
+	}
+
+	military_power_from_sea = 0;
+	for (NavyInstance const* navy : navies) {
+		for (ShipInstance const* ship : navy->get_units()) {
+			ShipType const& ship_type = ship->get_unit_type();
+
+			if (ship_type.is_capital()) {
+
+				// TODO - include gun power and hull modifiers + naval attack and defense modifiers
+
+				military_power_from_sea += (ship_type.get_gun_power() /*+ naval_attack_modifier*/)
+					* (ship_type.get_hull() /* + naval_defense_modifier*/);
+			}
+		}
+	}
+	military_power_from_sea /= 250;
+
+	military_power_from_leaders = fixed_point_t::parse(
+		std::min(generals.size() + admirals.size(), deployed_non_mobilised_regiments)
+	);
+
+	military_power = military_power_from_land + military_power_from_sea + military_power_from_leaders;
+
+	// Mobilisation calculations
+	mobilisation_impact = 0; // TODO - apply ruling party's war policy
+
+	mobilisation_max_regiment_count =
+		((fixed_point_t::_1() + mobilisation_impact) * fixed_point_t::parse(regiment_count)).to_int64_t();
+
+	mobilisation_potential_regiment_count = 0; // TODO - calculate max regiments from poor citizens
+	if (mobilisation_potential_regiment_count > mobilisation_max_regiment_count) {
+		mobilisation_potential_regiment_count = mobilisation_max_regiment_count;
+	}
+
+	// TODO - update max_ship_supply, leadership_points, war_exhaustion
 }
 
-void CountryInstance::update_gamestate(DefineManager const& define_manager) {
+void CountryInstance::update_gamestate(DefineManager const& define_manager, UnitTypeManager const& unit_type_manager) {
 	// Order of updates might need to be changed/functions split up to account for dependencies
 	_update_production(define_manager);
 	_update_budget();
@@ -458,7 +592,7 @@ void CountryInstance::update_gamestate(DefineManager const& define_manager) {
 	_update_population();
 	_update_trade();
 	_update_diplomacy();
-	_update_military();
+	_update_military(define_manager, unit_type_manager);
 
 	total_score = prestige + industrial_power + military_power;
 
@@ -621,13 +755,16 @@ bool CountryInstanceManager::generate_country_instances(
 	decltype(CountryInstance::inventions)::keys_t const& invention_keys,
 	decltype(CountryInstance::upper_house)::keys_t const& ideology_keys,
 	decltype(CountryInstance::government_flag_overrides)::keys_t const& government_type_keys,
-	decltype(CountryInstance::pop_type_distribution)::keys_t const& pop_type_keys
+	decltype(CountryInstance::pop_type_distribution)::keys_t const& pop_type_keys,
+	decltype(CountryInstance::unlocked_regiment_types)::keys_t const& unlocked_regiment_types_keys,
+	decltype(CountryInstance::unlocked_ship_types)::keys_t const& unlocked_ship_types_keys
 ) {
 	reserve_more(country_instances, country_definition_manager.get_country_definition_count());
 
 	for (CountryDefinition const& country_definition : country_definition_manager.get_country_definitions()) {
 		country_instances.add_item({
-			&country_definition, technology_keys, invention_keys, ideology_keys, government_type_keys, pop_type_keys
+			&country_definition, technology_keys, invention_keys, ideology_keys, government_type_keys, pop_type_keys,
+			unlocked_regiment_types_keys, unlocked_ship_types_keys
 		});
 	}
 
@@ -676,9 +813,11 @@ bool CountryInstanceManager::apply_history_to_countries(
 	return ret;
 }
 
-void CountryInstanceManager::update_gamestate(Date today, DefineManager const& define_manager) {
+void CountryInstanceManager::update_gamestate(
+	Date today, DefineManager const& define_manager, UnitTypeManager const& unit_type_manager
+) {
 	for (CountryInstance& country : country_instances.get_items()) {
-		country.update_gamestate(define_manager);
+		country.update_gamestate(define_manager, unit_type_manager);
 	}
 
 	update_rankings(today, define_manager);

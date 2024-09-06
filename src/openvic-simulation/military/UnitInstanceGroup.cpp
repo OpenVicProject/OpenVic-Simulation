@@ -172,8 +172,11 @@ bool UnitInstanceManager::generate_unit_instance(
 	unit_instance = &*get_unit_instances<Branch>().insert(
 		[&unit_deployment]() -> UnitInstanceBranched<Branch> {
 			if constexpr (Branch == UnitType::branch_t::LAND) {
-				// TODO - get pop from Province unit_deployment.get_home()
-				return { unit_deployment.get_name(), unit_deployment.get_type(), nullptr };
+				return {
+					unit_deployment.get_name(), unit_deployment.get_type(),
+					nullptr, // TODO - get pop from Province unit_deployment.get_home()
+					false // Not mobilised
+				};
 			} else if constexpr (Branch == UnitType::branch_t::NAVAL) {
 				return { unit_deployment.get_name(), unit_deployment.get_type() };
 			}

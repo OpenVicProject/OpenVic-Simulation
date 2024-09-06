@@ -26,6 +26,8 @@ namespace OpenVic {
 	struct IssueManager;
 	struct ProvinceInstance;
 	struct CountryParty;
+	struct DefineManager;
+	struct CountryInstance;
 
 	struct PopBase {
 		friend struct PopManager;
@@ -82,6 +84,8 @@ namespace OpenVic {
 		fixed_point_t PROPERTY(everyday_needs_fulfilled);
 		fixed_point_t PROPERTY(luxury_needs_fulfilled);
 
+		size_t PROPERTY(max_supported_regiments);
+
 		Pop(PopBase const& pop_base, decltype(ideologies)::keys_t const& ideology_keys);
 
 	public:
@@ -93,6 +97,11 @@ namespace OpenVic {
 		void setup_pop_test_values(IssueManager const& issue_manager);
 
 		void set_location(ProvinceInstance const& new_location);
+
+		void update_gamestate(
+			DefineManager const& define_manager, CountryInstance const* owner,
+			fixed_point_t const& pop_size_per_regiment_multiplier
+		);
 	};
 
 	struct Strata : HasIdentifier {
