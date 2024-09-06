@@ -49,6 +49,9 @@ static bool run_headless(Dataloader::path_vector_t const& roots, bool run_tests)
 	Logger::info("===== Starting game session... =====");
 	ret &= game_manager.start_game_session();
 
+	// This triggers a gamestate update
+	ret &= game_manager.update_clock();
+
 	return ret;
 }
 

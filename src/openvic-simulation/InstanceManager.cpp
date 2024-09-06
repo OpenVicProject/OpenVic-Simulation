@@ -148,6 +148,16 @@ bool InstanceManager::start_game_session() {
 	return true;
 }
 
+bool InstanceManager::update_clock() {
+	if (!is_game_session_started()) {
+		Logger::error("Cannot update clock - game session not started!");
+		return false;
+	}
+
+	simulation_clock.conditionally_advance_game();
+	return true;
+}
+
 bool InstanceManager::expand_selected_province_building(size_t building_index) {
 	set_gamestate_needs_update();
 	ProvinceInstance* province = map_instance.get_selected_province();
