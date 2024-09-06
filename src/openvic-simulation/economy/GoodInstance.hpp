@@ -13,7 +13,7 @@ namespace OpenVic {
 
 	private:
 		GoodDefinition const& PROPERTY(good_definition);
-		GoodDefinition::price_t PROPERTY(price);
+		fixed_point_t PROPERTY(price);
 		bool PROPERTY(available);
 		// TODO - supply, demand, actual bought
 
