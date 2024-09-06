@@ -38,5 +38,7 @@ namespace OpenVic {
 		bool setup_instance(Bookmark const* bookmark);
 
 		bool start_game_session();
+
+		bool update_clock();
 	};
 }
