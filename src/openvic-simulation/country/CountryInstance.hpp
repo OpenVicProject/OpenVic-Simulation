@@ -75,7 +75,10 @@ namespace OpenVic {
 
 		/* Production */
 		fixed_point_t PROPERTY(industrial_power);
+		std::vector<std::pair<State const*, fixed_point_t>> PROPERTY(industrial_power_from_states);
+		std::vector<std::pair<CountryInstance const*, fixed_point_t>> PROPERTY(industrial_power_from_investments);
 		size_t PROPERTY(industrial_rank);
+		fixed_point_map_t<CountryInstance const*> PROPERTY(foreign_investments);
 		// TODO - total amount of each good produced
 
 		/* Budget */
@@ -195,10 +198,18 @@ namespace OpenVic {
 		template<UnitType::branch_t Branch>
 		bool remove_leader(LeaderBranched<Branch> const* leader);
 
-		bool apply_history_to_country(CountryHistoryEntry const* entry, MapInstance& map_instance);
+		// Sets the investment of each country in the map (rather than adding to them), leaving the rest unchanged.
+		void apply_foreign_investments(
+			fixed_point_map_t<CountryDefinition const*> const& investments,
+			CountryInstanceManager const& country_instance_manager
+		);
+
+		bool apply_history_to_country(
+			CountryHistoryEntry const& entry, MapInstance& map_instance, CountryInstanceManager const& country_instance_manager
+		);
 
 	private:
-		void _update_production();
+		void _update_production(DefineManager const& define_manager);
 		void _update_budget();
 		void _update_technology();
 		void _update_politics();
@@ -209,7 +220,7 @@ namespace OpenVic {
 
 	public:
 
-		void update_gamestate();
+		void update_gamestate(DefineManager const& define_manager);
 		void tick();
 	};
 

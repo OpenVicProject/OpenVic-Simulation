@@ -94,11 +94,15 @@ bool MapInstance::apply_history_to_provinces(
 			if (history_map != nullptr) {
 				ProvinceHistoryEntry const* pop_history_entry = nullptr;
 
-				for (ProvinceHistoryEntry const* entry : history_map->get_entries_up_to(date)) {
-					province.apply_history_to_province(entry, country_manager);
+				for (auto const& [entry_date, entry] : history_map->get_entries()) {
+					if (entry_date > date) {
+						break;
+					}
+
+					province.apply_history_to_province(*entry, country_manager);
 
 					if (!entry->get_pops().empty()) {
-						pop_history_entry = entry;
+						pop_history_entry = entry.get();
 					}
 				}
 

@@ -38,7 +38,10 @@ CountryInstance::CountryInstance(
 
 	/* Production */
 	industrial_power { 0 },
+	industrial_power_from_states {},
+	industrial_power_from_investments {},
 	industrial_rank { 0 },
+	foreign_investments {},
 
 	/* Budget */
 	cash_stockpile { 0 },
@@ -270,12 +273,17 @@ template void CountryInstance::add_leader(LeaderBranched<UnitType::branch_t::NAV
 template bool CountryInstance::remove_leader(LeaderBranched<UnitType::branch_t::LAND> const*);
 template bool CountryInstance::remove_leader(LeaderBranched<UnitType::branch_t::NAVAL> const*);
 
-bool CountryInstance::apply_history_to_country(CountryHistoryEntry const* entry, MapInstance& map_instance) {
-	if (entry == nullptr) {
-		Logger::error("Trying to apply null country history to ", get_identifier());
-		return false;
+void CountryInstance::apply_foreign_investments(
+	fixed_point_map_t<CountryDefinition const*> const& investments, CountryInstanceManager const& country_instance_manager
+) {
+	for (auto const& [country, money_invested] : investments) {
+		foreign_investments[&country_instance_manager.get_country_instance_from_definition(*country)] = money_invested;
 	}
+}
 
+bool CountryInstance::apply_history_to_country(
+	CountryHistoryEntry const& entry, MapInstance& map_instance, CountryInstanceManager const& country_instance_manager
+) {
 	constexpr auto set_optional = []<typename T>(T& target, std::optional<T> const& source) {
 		if (source) {
 			target = *source;
@@ -284,62 +292,94 @@ bool CountryInstance::apply_history_to_country(CountryHistoryEntry const* entry,
 
 	bool ret = true;
 
-	set_optional(primary_culture, entry->get_primary_culture());
-	for (Culture const* culture : entry->get_accepted_cultures()) {
+	set_optional(primary_culture, entry.get_primary_culture());
+	for (Culture const* culture : entry.get_accepted_cultures()) {
 		ret &= add_accepted_culture(*culture);
 	}
-	set_optional(religion, entry->get_religion());
-	set_optional(ruling_party, entry->get_ruling_party());
-	set_optional(last_election, entry->get_last_election());
-	ret &= upper_house.copy(entry->get_upper_house());
-	if (entry->get_capital()) {
-		capital = &map_instance.get_province_instance_from_definition(**entry->get_capital());
+	set_optional(religion, entry.get_religion());
+	set_optional(ruling_party, entry.get_ruling_party());
+	set_optional(last_election, entry.get_last_election());
+	ret &= upper_house.copy(entry.get_upper_house());
+	if (entry.get_capital()) {
+		capital = &map_instance.get_province_instance_from_definition(**entry.get_capital());
 	}
-	set_optional(government_type, entry->get_government_type());
-	set_optional(plurality, entry->get_plurality());
-	set_optional(national_value, entry->get_national_value());
-	if (entry->is_civilised()) {
-		country_status = *entry->is_civilised() ? COUNTRY_STATUS_CIVILISED : COUNTRY_STATUS_UNCIVILISED;
+	set_optional(government_type, entry.get_government_type());
+	set_optional(plurality, entry.get_plurality());
+	set_optional(national_value, entry.get_national_value());
+	if (entry.is_civilised()) {
+		country_status = *entry.is_civilised() ? COUNTRY_STATUS_CIVILISED : COUNTRY_STATUS_UNCIVILISED;
 	}
-	set_optional(prestige, entry->get_prestige());
-	for (Reform const* reform : entry->get_reforms()) {
+	set_optional(prestige, entry.get_prestige());
+	for (Reform const* reform : entry.get_reforms()) {
 		ret &= add_reform(reform);
 	}
-	set_optional(tech_school, entry->get_tech_school());
+	set_optional(tech_school, entry.get_tech_school());
 	constexpr auto set_bool_map_to_indexed_map =
 		[]<typename T>(IndexedMap<T, bool>& target, ordered_map<T const*, bool> source) {
 			for (auto const& [key, value] : source) {
 				target[*key] = value;
 			}
 		};
-	set_bool_map_to_indexed_map(technologies, entry->get_technologies());
-	set_bool_map_to_indexed_map(inventions, entry->get_inventions());
-	// entry->get_foreign_investment();
+	set_bool_map_to_indexed_map(technologies, entry.get_technologies());
+	set_bool_map_to_indexed_map(inventions, entry.get_inventions());
+	apply_foreign_investments(entry.get_foreign_investment(), country_instance_manager);
 
 	// These need to be applied to pops
-	// entry->get_consciousness();
-	// entry->get_nonstate_consciousness();
-	// entry->get_literacy();
-	// entry->get_nonstate_culture_literacy();
+	// entry.get_consciousness();
+	// entry.get_nonstate_consciousness();
+	// entry.get_literacy();
+	// entry.get_nonstate_culture_literacy();
 
-	set_optional(releasable_vassal, entry->is_releasable_vassal());
-	// entry->get_colonial_points();
-	for (std::string const& flag : entry->get_country_flags()) {
+	set_optional(releasable_vassal, entry.is_releasable_vassal());
+	// entry.get_colonial_points();
+	for (std::string const& flag : entry.get_country_flags()) {
 		ret &= set_country_flag(flag, true);
 	}
-	for (std::string const& flag : entry->get_global_flags()) {
+	for (std::string const& flag : entry.get_global_flags()) {
 		// TODO - set global flag
 	}
-	government_flag_overrides.write_non_empty_values(entry->get_government_flag_overrides());
-	for (Decision const* decision : entry->get_decisions()) {
+	government_flag_overrides.write_non_empty_values(entry.get_government_flag_overrides());
+	for (Decision const* decision : entry.get_decisions()) {
 		// TODO - take decision
 	}
 
 	return ret;
 }
 
-void CountryInstance::_update_production() {
+void CountryInstance::_update_production(DefineManager const& define_manager) {
+	// Calculate industrial power from states and foreign investments
+	industrial_power = 0;
+	industrial_power_from_states.clear();
+	industrial_power_from_investments.clear();
 
+	for (State const* state : states) {
+		const fixed_point_t state_industrial_power = state->get_industrial_power();
+		if (state_industrial_power != 0) {
+			industrial_power += state_industrial_power;
+			industrial_power_from_states.emplace_back(state, state_industrial_power);
+		}
+	}
+
+	for (auto const& [country, money_invested] : foreign_investments) {
+		if (country->exists()) {
+			const fixed_point_t investment_industrial_power =
+				money_invested * define_manager.get_country_investment_industrial_score_factor() / 100;
+
+			if (investment_industrial_power != 0) {
+				industrial_power += investment_industrial_power;
+				industrial_power_from_investments.emplace_back(country, investment_industrial_power);
+			}
+		}
+	}
+
+	std::sort(
+		industrial_power_from_states.begin(), industrial_power_from_states.end(),
+		[](auto const& a, auto const& b) -> bool { return a.second > b.second; }
+	);
+	std::sort(
+		industrial_power_from_investments.begin(), industrial_power_from_investments.end(),
+		[](auto const& a, auto const& b) -> bool { return a.second > b.second; }
+	);
 }
 
 void CountryInstance::_update_budget() {
@@ -409,9 +449,9 @@ void CountryInstance::_update_military() {
 	// TODO - update mobilisation_regiment_potential, max_ship_supply, leadership_points, war_exhaustion
 }
 
-void CountryInstance::update_gamestate() {
+void CountryInstance::update_gamestate(DefineManager const& define_manager) {
 	// Order of updates might need to be changed/functions split up to account for dependencies
-	_update_production();
+	_update_production(define_manager);
 	_update_budget();
 	_update_technology();
 	_update_politics();
@@ -608,11 +648,16 @@ bool CountryInstanceManager::apply_history_to_countries(
 			if (history_map != nullptr) {
 				CountryHistoryEntry const* oob_history_entry = nullptr;
 
-				for (CountryHistoryEntry const* entry : history_map->get_entries_up_to(date)) {
-					ret &= country_instance.apply_history_to_country(entry, map_instance);
+				for (auto const& [entry_date, entry] : history_map->get_entries()) {
+					if (entry_date <= date) {
+						ret &= country_instance.apply_history_to_country(*entry, map_instance, *this);
 
-					if (entry->get_inital_oob()) {
-						oob_history_entry = entry;
+						if (entry->get_inital_oob()) {
+							oob_history_entry = entry.get();
+						}
+					} else {
+						// All foreign investments are applied regardless of the bookmark's date
+						country_instance.apply_foreign_investments(entry->get_foreign_investment(), *this);
 					}
 				}
 
@@ -633,7 +678,7 @@ bool CountryInstanceManager::apply_history_to_countries(
 
 void CountryInstanceManager::update_gamestate(Date today, DefineManager const& define_manager) {
 	for (CountryInstance& country : country_instances.get_items()) {
-		country.update_gamestate();
+		country.update_gamestate(define_manager);
 	}
 
 	update_rankings(today, define_manager);

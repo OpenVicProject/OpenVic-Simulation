@@ -131,7 +131,7 @@ namespace OpenVic {
 		bool remove_unit_instance_group(UnitInstanceGroup<Branch>& group);
 
 		bool setup(BuildingTypeManager const& building_type_manager);
-		bool apply_history_to_province(ProvinceHistoryEntry const* entry, CountryInstanceManager& country_manager);
+		bool apply_history_to_province(ProvinceHistoryEntry const& entry, CountryInstanceManager& country_manager);
 
 		void setup_pop_test_values(IssueManager const& issue_manager);
 	};

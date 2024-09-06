@@ -44,6 +44,7 @@ namespace OpenVic {
 		size_t PROPERTY(great_power_rank); // GREAT_NATIONS_COUNT
 		Timespan PROPERTY(lose_great_power_grace_days); // GREATNESS_DAYS
 		size_t PROPERTY(secondary_power_rank); // COLONIAL_RANK
+		fixed_point_t PROPERTY(country_investment_industrial_score_factor); // INVESTMENT_SCORE_FACTOR
 
 		// Economy
 

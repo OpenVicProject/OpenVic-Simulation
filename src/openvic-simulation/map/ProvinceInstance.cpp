@@ -236,12 +236,7 @@ bool ProvinceInstance::setup(BuildingTypeManager const& building_type_manager) {
 	return ret;
 }
 
-bool ProvinceInstance::apply_history_to_province(ProvinceHistoryEntry const* entry, CountryInstanceManager& country_manager) {
-	if (entry == nullptr) {
-		Logger::error("Trying to apply null province history to ", get_identifier());
-		return false;
-	}
-
+bool ProvinceInstance::apply_history_to_province(ProvinceHistoryEntry const& entry, CountryInstanceManager& country_manager) {
 	bool ret = true;
 
 	constexpr auto set_optional = []<typename T>(T& target, std::optional<T> const& source) {
@@ -250,25 +245,25 @@ bool ProvinceInstance::apply_history_to_province(ProvinceHistoryEntry const* ent
 		}
 	};
 
-	if (entry->get_owner()) {
-		ret &= set_owner(&country_manager.get_country_instance_from_definition(**entry->get_owner()));
+	if (entry.get_owner()) {
+		ret &= set_owner(&country_manager.get_country_instance_from_definition(**entry.get_owner()));
 	}
-	if (entry->get_controller()) {
-		ret &= set_controller(&country_manager.get_country_instance_from_definition(**entry->get_controller()));
+	if (entry.get_controller()) {
+		ret &= set_controller(&country_manager.get_country_instance_from_definition(**entry.get_controller()));
 	}
-	set_optional(colony_status, entry->get_colonial());
-	set_optional(slave, entry->get_slave());
-	for (auto const& [country, add] : entry->get_cores()) {
+	set_optional(colony_status, entry.get_colonial());
+	set_optional(slave, entry.get_slave());
+	for (auto const& [country, add] : entry.get_cores()) {
 		if (add) {
 			ret &= add_core(country_manager.get_country_instance_from_definition(*country));
 		} else {
 			ret &= remove_core(country_manager.get_country_instance_from_definition(*country));
 		}
 	}
-	set_optional(rgo, entry->get_rgo());
-	set_optional(life_rating, entry->get_life_rating());
-	set_optional(terrain_type, entry->get_terrain_type());
-	for (auto const& [building, level] : entry->get_province_buildings()) {
+	set_optional(rgo, entry.get_rgo());
+	set_optional(life_rating, entry.get_life_rating());
+	set_optional(terrain_type, entry.get_terrain_type());
+	for (auto const& [building, level] : entry.get_province_buildings()) {
 		BuildingInstance* existing_entry = buildings.get_item_by_identifier(building->get_identifier());
 		if (existing_entry != nullptr) {
 			existing_entry->set_level(level);
@@ -280,8 +275,8 @@ bool ProvinceInstance::apply_history_to_province(ProvinceHistoryEntry const* ent
 			ret = false;
 		}
 	}
-	// TODO: load state buildings - entry->get_state_buildings()
-	// TODO: party loyalties for each POP when implemented on POP side - entry->get_party_loyalties()
+	// TODO: load state buildings - entry.get_state_buildings()
+	// TODO: party loyalties for each POP when implemented on POP side - entry.get_party_loyalties()
 	return ret;
 }
 

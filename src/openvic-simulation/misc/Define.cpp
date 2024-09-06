@@ -155,7 +155,8 @@ DefineManager::DefineManager()
 	// Country
 	great_power_rank { 8 },
 	lose_great_power_grace_days { Timespan::from_years(1) },
-	secondary_power_rank { 16 }
+	secondary_power_rank { 16 },
+	country_investment_industrial_score_factor { 1 }
 
 	// Economy
 
@@ -237,6 +238,7 @@ bool DefineManager::load_defines_file(ast::NodeCPtr root) {
 	ret &= load_define(great_power_rank, Country, "GREAT_NATIONS_COUNT");
 	ret &= load_define_days(lose_great_power_grace_days, Country, "GREATNESS_DAYS");
 	ret &= load_define(secondary_power_rank, Country, "COLONIAL_RANK");
+	ret &= load_define(country_investment_industrial_score_factor, Country, "INVESTMENT_SCORE_FACTOR");
 
 	// Economy
 
