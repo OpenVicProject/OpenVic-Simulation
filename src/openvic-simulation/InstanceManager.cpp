@@ -41,7 +41,7 @@ void InstanceManager::update_gamestate() {
 
 	// Update gamestate...
 	map_instance.update_gamestate(today);
-	country_instance_manager.update_gamestate();
+	country_instance_manager.update_gamestate(today, definition_manager.get_define_manager());
 
 	gamestate_updated();
 	gamestate_needs_update = false;

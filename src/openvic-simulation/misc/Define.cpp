@@ -150,9 +150,12 @@ bool DefineManager::load_define_years(Timespan& value, Define::Type type, std::s
 DefineManager::DefineManager()
   : // Date
 	start_date { 1836, 1, 1 },
-	end_date { 1936, 1, 1 }
+	end_date { 1936, 1, 1 },
 
 	// Country
+	great_power_rank { 8 },
+	lose_great_power_grace_days { Timespan::from_years(1) },
+	secondary_power_rank { 16 }
 
 	// Economy
 
@@ -231,6 +234,9 @@ bool DefineManager::load_defines_file(ast::NodeCPtr root) {
 	ret &= load_define(end_date, Date, "end_date");
 
 	// Country
+	ret &= load_define(great_power_rank, Country, "GREAT_NATIONS_COUNT");
+	ret &= load_define_days(lose_great_power_grace_days, Country, "GREATNESS_DAYS");
+	ret &= load_define(secondary_power_rank, Country, "COLONIAL_RANK");
 
 	// Economy
 

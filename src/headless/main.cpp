@@ -52,6 +52,34 @@ static bool run_headless(Dataloader::path_vector_t const& roots, bool run_tests)
 	// This triggers a gamestate update
 	ret &= game_manager.update_clock();
 
+	// TODO - REMOVE TEST CODE
+	Logger::info("===== Ranking system test... =====");
+	if (game_manager.get_instance_manager()) {
+		const auto print_ranking_list = [](std::string_view title, std::vector<CountryInstance*> const& countries) -> void {
+			std::string text;
+			for (CountryInstance const* country : countries) {
+				text += StringUtils::append_string_views(
+					"\n    ", country->get_identifier(),
+					" - Total #", std::to_string(country->get_total_rank()), " (", country->get_total_score().to_string(1),
+					"), Prestige #", std::to_string(country->get_prestige_rank()), " (", country->get_prestige().to_string(1),
+					"), Industry #", std::to_string(country->get_industrial_rank()), " (", country->get_industrial_power().to_string(1),
+					"), Military #", std::to_string(country->get_military_rank()), " (", country->get_military_power().to_string(1), ")"
+				);
+			}
+			Logger::info(title, ":", text);
+		};
+
+		CountryInstanceManager const& country_instance_manager =
+			game_manager.get_instance_manager()->get_country_instance_manager();
+
+		print_ranking_list("Great Powers", country_instance_manager.get_great_powers());
+		print_ranking_list("Secondary Powers", country_instance_manager.get_secondary_powers());
+		print_ranking_list("All countries", country_instance_manager.get_total_ranking());
+	} else {
+		Logger::error("Instance manager not available!");
+		ret = false;
+	}
+
 	return ret;
 }
 

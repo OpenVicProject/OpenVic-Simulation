@@ -13,6 +13,7 @@
 #include "openvic-simulation/utility/Getters.hpp"
 
 namespace OpenVic {
+	struct CountryInstanceManager;
 	struct CountryDefinition;
 	struct ProvinceInstance;
 	struct State;
@@ -28,11 +29,29 @@ namespace OpenVic {
 	struct Religion;
 	struct CountryHistoryEntry;
 	struct MapInstance;
+	struct DefineManager;
 
 	/* Representation of a country's mutable attributes, with a CountryDefinition that is unique at any single time
 	 * but can be swapped with other CountryInstance's CountryDefinition when switching tags. */
 	struct CountryInstance {
 		friend struct CountryInstanceManager;
+
+		/*
+			Westernisation Progress vs Status for Uncivilised Countries:
+				15 - primitive
+				16 - uncivilised
+				50 - uncivilised
+				51 - partially westernised
+		*/
+
+		enum struct country_status_t : uint8_t {
+			COUNTRY_STATUS_GREAT_POWER,
+			COUNTRY_STATUS_SECONDARY_POWER,
+			COUNTRY_STATUS_CIVILISED,
+			COUNTRY_STATUS_PARTIALLY_CIVILISED,
+			COUNTRY_STATUS_UNCIVILISED,
+			COUNTRY_STATUS_PRIMITIVE
+		};
 
 	private:
 		/* Main attributes */
@@ -42,9 +61,12 @@ namespace OpenVic {
 		colour_t PROPERTY(colour); // Cached to avoid searching government overrides for every province
 		ProvinceInstance const* PROPERTY(capital);
 		string_set_t PROPERTY(country_flags);
-
-		bool PROPERTY(civilised);
 		bool PROPERTY_CUSTOM_PREFIX(releasable_vassal, is);
+
+		country_status_t PROPERTY(country_status);
+		Date PROPERTY(lose_great_power_date);
+		fixed_point_t PROPERTY(total_score);
+		size_t PROPERTY(total_rank);
 
 		ordered_set<ProvinceInstance*> PROPERTY(owned_provinces);
 		ordered_set<ProvinceInstance*> PROPERTY(controlled_provinces);
@@ -52,6 +74,8 @@ namespace OpenVic {
 		ordered_set<State*> PROPERTY(states);
 
 		/* Production */
+		fixed_point_t PROPERTY(industrial_power);
+		size_t PROPERTY(industrial_rank);
 		// TODO - total amount of each good produced
 
 		/* Budget */
@@ -102,17 +126,14 @@ namespace OpenVic {
 		// TODO - total amount of each good exported and imported
 
 		/* Diplomacy */
-		size_t PROPERTY(total_rank);
 		fixed_point_t PROPERTY(prestige);
 		size_t PROPERTY(prestige_rank);
-		fixed_point_t PROPERTY(industrial_power);
-		size_t PROPERTY(industrial_rank);
-		fixed_point_t PROPERTY(military_power);
-		size_t PROPERTY(military_rank);
 		fixed_point_t PROPERTY(diplomatic_points);
 		// TODO - colonial power, current wars
 
 		/* Military */
+		fixed_point_t PROPERTY(military_power);
+		size_t PROPERTY(military_rank);
 		plf::colony<General> PROPERTY(generals);
 		plf::colony<Admiral> PROPERTY(admirals);
 		ordered_set<ArmyInstance*> PROPERTY(armies);
@@ -139,6 +160,12 @@ namespace OpenVic {
 
 	public:
 		std::string_view get_identifier() const;
+
+		bool exists() const;
+		bool is_civilised() const;
+		bool can_colonise() const;
+		bool is_great_power() const;
+		bool is_secondary_power() const;
 
 		bool set_country_flag(std::string_view flag, bool warn);
 		bool clear_country_flag(std::string_view flag, bool warn);
@@ -194,6 +221,16 @@ namespace OpenVic {
 	private:
 		IdentifierRegistry<CountryInstance> IDENTIFIER_REGISTRY(country_instance);
 
+		std::vector<CountryInstance*> PROPERTY(great_powers);
+		std::vector<CountryInstance*> PROPERTY(secondary_powers);
+
+		std::vector<CountryInstance*> PROPERTY(total_ranking);
+		std::vector<CountryInstance*> PROPERTY(prestige_ranking);
+		std::vector<CountryInstance*> PROPERTY(industrial_power_ranking);
+		std::vector<CountryInstance*> PROPERTY(military_power_ranking);
+
+		void update_rankings(Date today, DefineManager const& define_manager);
+
 	public:
 		CountryInstance& get_country_instance_from_definition(CountryDefinition const& country);
 		CountryInstance const& get_country_instance_from_definition(CountryDefinition const& country) const;
@@ -212,7 +249,7 @@ namespace OpenVic {
 			MapInstance& map_instance
 		);
 
-		void update_gamestate();
+		void update_gamestate(Date today, DefineManager const& define_manager);
 		void tick();
 	};
 }

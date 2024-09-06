@@ -3,11 +3,14 @@
 #include "openvic-simulation/country/CountryDefinition.hpp"
 #include "openvic-simulation/history/CountryHistory.hpp"
 #include "openvic-simulation/map/MapInstance.hpp"
+#include "openvic-simulation/misc/Define.hpp"
 #include "openvic-simulation/politics/Ideology.hpp"
 #include "openvic-simulation/research/Invention.hpp"
 #include "openvic-simulation/research/Technology.hpp"
 
 using namespace OpenVic;
+
+using enum CountryInstance::country_status_t;
 
 static constexpr colour_t ERROR_COLOUR = colour_t::from_integer(0xFF0000);
 
@@ -23,14 +26,19 @@ CountryInstance::CountryInstance(
 	colour { ERROR_COLOUR },
 	capital { nullptr },
 	country_flags {},
-	civilised { false },
 	releasable_vassal { true },
+	country_status { COUNTRY_STATUS_UNCIVILISED },
+	lose_great_power_date {},
+	total_score { 0 },
+	total_rank { 0 },
 	owned_provinces {},
 	controlled_provinces {},
 	core_provinces {},
 	states {},
 
 	/* Production */
+	industrial_power { 0 },
+	industrial_rank { 0 },
 
 	/* Budget */
 	cash_stockpile { 0 },
@@ -73,16 +81,13 @@ CountryInstance::CountryInstance(
 	/* Trade */
 
 	/* Diplomacy */
-	total_rank { 0 },
 	prestige { 0 },
 	prestige_rank { 0 },
-	industrial_power { 0 },
-	industrial_rank { 0 },
-	military_power { 0 },
-	military_rank { 0 },
 	diplomatic_points { 0 },
 
 	/* Military */
+	military_power { 0 },
+	military_rank { 0 },
 	generals {},
 	admirals {},
 	armies {},
@@ -97,6 +102,26 @@ CountryInstance::CountryInstance(
 
 std::string_view CountryInstance::get_identifier() const {
 	return country_definition->get_identifier();
+}
+
+bool CountryInstance::exists() const {
+	return !owned_provinces.empty();
+}
+
+bool CountryInstance::is_civilised() const {
+	return country_status <= COUNTRY_STATUS_CIVILISED;
+}
+
+bool CountryInstance::can_colonise() const {
+	return country_status <= COUNTRY_STATUS_SECONDARY_POWER;
+}
+
+bool CountryInstance::is_great_power() const {
+	return country_status == COUNTRY_STATUS_GREAT_POWER;
+}
+
+bool CountryInstance::is_secondary_power() const {
+	return country_status == COUNTRY_STATUS_SECONDARY_POWER;
 }
 
 bool CountryInstance::set_country_flag(std::string_view flag, bool warn) {
@@ -273,7 +298,9 @@ bool CountryInstance::apply_history_to_country(CountryHistoryEntry const* entry,
 	set_optional(government_type, entry->get_government_type());
 	set_optional(plurality, entry->get_plurality());
 	set_optional(national_value, entry->get_national_value());
-	set_optional(civilised, entry->is_civilised());
+	if (entry->is_civilised()) {
+		country_status = *entry->is_civilised() ? COUNTRY_STATUS_CIVILISED : COUNTRY_STATUS_UNCIVILISED;
+	}
 	set_optional(prestige, entry->get_prestige());
 	for (Reform const* reform : entry->get_reforms()) {
 		ret &= add_reform(reform);
@@ -360,7 +387,7 @@ void CountryInstance::_update_trade() {
 }
 
 void CountryInstance::_update_diplomacy() {
-	// TODO - update prestige, industrial_power, military_power (ranks will be updated after all countries have calculated their scores)
+	// TODO - add prestige from modifiers
 	// TODO - update diplomatic points and colonial power
 }
 
@@ -383,6 +410,18 @@ void CountryInstance::_update_military() {
 }
 
 void CountryInstance::update_gamestate() {
+	// Order of updates might need to be changed/functions split up to account for dependencies
+	_update_production();
+	_update_budget();
+	_update_technology();
+	_update_politics();
+	_update_population();
+	_update_trade();
+	_update_diplomacy();
+	_update_military();
+
+	total_score = prestige + industrial_power + military_power;
+
 	if (country_definition != nullptr) {
 		const CountryDefinition::government_colour_map_t::const_iterator it =
 			country_definition->get_alternative_colours().find(government_type);
@@ -405,20 +444,127 @@ void CountryInstance::update_gamestate() {
 	} else {
 		flag_government_type = nullptr;
 	}
-
-	// Order of updates might need to be changed/functions split up to account for dependencies
-	_update_production();
-	_update_budget();
-	_update_technology();
-	_update_politics();
-	_update_population();
-	_update_trade();
-	_update_diplomacy();
-	_update_military();
 }
 
 void CountryInstance::tick() {
 
+}
+
+void CountryInstanceManager::update_rankings(Date today, DefineManager const& define_manager) {
+	total_ranking.clear();
+
+	for (CountryInstance& country : country_instances.get_items()) {
+		if (country.exists()) {
+			total_ranking.push_back(&country);
+		}
+	}
+
+	prestige_ranking = total_ranking;
+	industrial_power_ranking = total_ranking;
+	military_power_ranking = total_ranking;
+
+	std::sort(
+		total_ranking.begin(), total_ranking.end(),
+		[](CountryInstance const* a, CountryInstance const* b) -> bool {
+			const bool a_civilised = a->is_civilised();
+			const bool b_civilised = b->is_civilised();
+			return a_civilised != b_civilised ? a_civilised : a->get_total_score() > b->get_total_score();
+		}
+	);
+	std::sort(
+		prestige_ranking.begin(), prestige_ranking.end(),
+		[](CountryInstance const* a, CountryInstance const* b) -> bool {
+			return a->get_prestige() > b->get_prestige();
+		}
+	);
+	std::sort(
+		industrial_power_ranking.begin(), industrial_power_ranking.end(),
+		[](CountryInstance const* a, CountryInstance const* b) -> bool {
+			return a->get_industrial_power() > b->get_industrial_power();
+		}
+	);
+	std::sort(
+		military_power_ranking.begin(), military_power_ranking.end(),
+		[](CountryInstance const* a, CountryInstance const* b) -> bool {
+			return a->get_military_power() > b->get_military_power();
+		}
+	);
+
+	for (size_t index = 0; index < total_ranking.size(); ++index) {
+		const size_t rank = index + 1;
+		total_ranking[index]->total_rank = rank;
+		prestige_ranking[index]->prestige_rank = rank;
+		industrial_power_ranking[index]->industrial_rank = rank;
+		military_power_ranking[index]->military_rank = rank;
+	}
+
+	const size_t max_great_power_rank = define_manager.get_great_power_rank();
+	const size_t max_secondary_power_rank = define_manager.get_secondary_power_rank();
+	const Timespan lose_great_power_grace_days = define_manager.get_lose_great_power_grace_days();
+
+	// Demote great powers who have been below the max great power rank for longer than the demotion grace period and
+	// remove them from the list. We don't just demote them all and clear the list as when rebuilding we'd need to look
+	// ahead for countries below the max great power rank but still within the demotion grace period.
+	for (CountryInstance* great_power : great_powers) {
+		if (great_power->get_total_rank() > max_great_power_rank && great_power->get_lose_great_power_date() < today) {
+			great_power->country_status = COUNTRY_STATUS_CIVILISED;
+		}
+	}
+	std::erase_if(great_powers, [](CountryInstance const* country) -> bool {
+		return country->get_country_status() != COUNTRY_STATUS_GREAT_POWER;
+	});
+
+	// Demote all secondary powers and clear the list. We will rebuilt the whole list from scratch, so there's no need to
+	// keep countries which are still above the max secondary power rank (they might become great powers instead anyway).
+	for (CountryInstance* secondary_power : secondary_powers) {
+		secondary_power->country_status = COUNTRY_STATUS_CIVILISED;
+	}
+	secondary_powers.clear();
+
+	// Calculate the maximum number of countries eligible for great or secondary power status. This accounts for the
+	// possibility of the max secondary power rank being higher than the max great power rank or both being zero, just
+	// in case someone wants to experiment with only having secondary powers when some great power slots are filled by
+	// countries in the demotion grace period, or having no great or secondary powers at all.
+	const size_t max_power_index = std::clamp(max_secondary_power_rank, max_great_power_rank, total_ranking.size());
+
+	for (size_t index = 0; index < max_power_index; index++) {
+		CountryInstance* country = total_ranking[index];
+
+		if (!country->is_civilised()) {
+			// All further countries are civilised and so ineligible for great or secondary power status.
+			break;
+		}
+
+		if (country->is_great_power()) {
+			// The country already has great power status and is in the great powers list.
+			continue;
+		}
+
+		if (great_powers.size() < max_great_power_rank && country->get_total_rank() <= max_great_power_rank) {
+			// The country is eligible for great power status and there are still slots available,
+			// so it is promoted and added to the list.
+			country->country_status = COUNTRY_STATUS_GREAT_POWER;
+			great_powers.push_back(country);
+		} else if (country->get_total_rank() <= max_secondary_power_rank) {
+			// The country is eligible for secondary power status and so is promoted and added to the list.
+			country->country_status = COUNTRY_STATUS_SECONDARY_POWER;
+			secondary_powers.push_back(country);
+		}
+	}
+
+	// Sort the great powers list by total rank, as pre-existing great powers may have changed rank order and new great
+	// powers will have beeen added to the end of the list regardless of rank.
+	std::sort(great_powers.begin(), great_powers.end(), [](CountryInstance const* a, CountryInstance const* b) -> bool {
+		return a->get_total_rank() < b->get_total_rank();
+	});
+
+	// Update the lose great power date for all great powers which are above the max great power rank.
+	const Date new_lose_great_power_date = today + lose_great_power_grace_days;
+	for (CountryInstance* great_power : great_powers) {
+		if (great_power->get_total_rank() <= max_great_power_rank) {
+			great_power->lose_great_power_date = new_lose_great_power_date;
+		}
+	}
 }
 
 CountryInstance& CountryInstanceManager::get_country_instance_from_definition(CountryDefinition const& country) {
@@ -485,10 +631,12 @@ bool CountryInstanceManager::apply_history_to_countries(
 	return ret;
 }
 
-void CountryInstanceManager::update_gamestate() {
+void CountryInstanceManager::update_gamestate(Date today, DefineManager const& define_manager) {
 	for (CountryInstance& country : country_instances.get_items()) {
 		country.update_gamestate();
 	}
+
+	update_rankings(today, define_manager);
 }
 
 void CountryInstanceManager::tick() {

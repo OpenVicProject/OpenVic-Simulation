@@ -41,6 +41,9 @@ namespace OpenVic {
 		Date PROPERTY(end_date); // end_date
 
 		// Country
+		size_t PROPERTY(great_power_rank); // GREAT_NATIONS_COUNT
+		Timespan PROPERTY(lose_great_power_grace_days); // GREATNESS_DAYS
+		size_t PROPERTY(secondary_power_rank); // COLONIAL_RANK
 
 		// Economy
 
