@@ -10,7 +10,7 @@ GoodDefinition::GoodDefinition(
 	colour_t new_colour,
 	index_t new_index,
 	GoodCategory const& new_category,
-	price_t new_base_price,
+	fixed_point_t new_base_price,
 	bool new_available_from_start,
 	bool new_tradeable,
 	bool new_money,
@@ -33,14 +33,14 @@ bool GoodDefinitionManager::add_good_category(std::string_view identifier) {
 }
 
 bool GoodDefinitionManager::add_good_definition(
-	std::string_view identifier, colour_t colour, GoodCategory const& category, GoodDefinition::price_t base_price,
+	std::string_view identifier, colour_t colour, GoodCategory const& category, fixed_point_t base_price,
 	bool available_from_start, bool tradeable, bool money, bool overseas_penalty
 ) {
 	if (identifier.empty()) {
 		Logger::error("Invalid good identifier - empty!");
 		return false;
 	}
-	if (base_price <= GoodDefinition::NULL_PRICE) {
+	if (base_price <= 0) {
 		Logger::error("Invalid base price for ", identifier, ": ", base_price);
 		return false;
 	}
@@ -65,7 +65,7 @@ bool GoodDefinitionManager::load_goods_file(ast::NodeCPtr root) {
 	ret &= expect_good_category_dictionary([this](GoodCategory const& good_category, ast::NodeCPtr good_category_value) -> bool {
 		return expect_dictionary([this, &good_category](std::string_view key, ast::NodeCPtr value) -> bool {
 			colour_t colour = colour_t::null();
-			GoodDefinition::price_t base_price;
+			fixed_point_t base_price;
 			bool available_from_start = true, tradeable = true;
 			bool money = false, overseas_penalty = false;
 

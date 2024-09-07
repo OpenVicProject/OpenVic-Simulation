@@ -31,14 +31,11 @@ namespace OpenVic {
 	struct GoodDefinition : HasIdentifierAndColour, HasIndex<> {
 		friend struct GoodDefinitionManager;
 
-		using price_t = fixed_point_t;
-		static constexpr price_t NULL_PRICE = fixed_point_t::_0();
-
 		using good_definition_map_t = fixed_point_map_t<GoodDefinition const*>;
 
 	private:
 		GoodCategory const& PROPERTY(category);
-		const price_t PROPERTY(base_price);
+		const fixed_point_t PROPERTY(base_price);
 		const bool PROPERTY_CUSTOM_PREFIX(available_from_start, is);
 		const bool PROPERTY_CUSTOM_PREFIX(tradeable, is);
 		const bool PROPERTY(money);
@@ -46,7 +43,7 @@ namespace OpenVic {
 
 		GoodDefinition(
 			std::string_view new_identifier, colour_t new_colour, index_t new_index, GoodCategory const& new_category,
-			price_t new_base_price, bool new_available_from_start, bool new_tradeable, bool new_money,
+			fixed_point_t new_base_price, bool new_available_from_start, bool new_tradeable, bool new_money,
 			bool new_overseas_penalty
 		);
 
@@ -63,7 +60,7 @@ namespace OpenVic {
 		bool add_good_category(std::string_view identifier);
 
 		bool add_good_definition(
-			std::string_view identifier, colour_t colour, GoodCategory const& category, GoodDefinition::price_t base_price,
+			std::string_view identifier, colour_t colour, GoodCategory const& category, fixed_point_t base_price,
 			bool available_from_start, bool tradeable, bool money, bool overseas_penalty
 		);
 
