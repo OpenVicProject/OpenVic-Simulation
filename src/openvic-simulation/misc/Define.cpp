@@ -1,109 +1,248 @@
 #include "Define.hpp"
 
-#include <cassert>
-#include <cstdlib>
-#include <memory>
-
 #include <openvic-dataloader/v2script/AbstractSyntaxTree.hpp>
 
 #include "openvic-simulation/dataloader/NodeTools.hpp"
 #include "openvic-simulation/types/Date.hpp"
 #include "openvic-simulation/types/IdentifierRegistry.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
+#include "openvic-simulation/utility/StringUtils.hpp"
 
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;
 
-Define::Define(std::string_view new_identifier, std::string&& new_value, Type new_type)
-	: HasIdentifier { new_identifier }, value { std::move(new_value) }, type { new_type } {}
+std::string_view Define::type_to_string(Type type) {
+	using enum Type;
 
-fixed_point_t Define::get_value_as_fp() const {
-	return fixed_point_t::parse(value);
+	switch (type) {
+	case Date: return "date";
+	case Country: return "country";
+	case Economy: return "economy";
+	case Military: return "military";
+	case Diplomacy: return "diplomacy";
+	case Pops: return "pops";
+	case Ai: return "ai";
+	case Graphics: return "graphics";
+	default: return "unknown";
+	}
 }
 
-int64_t Define::get_value_as_int() const {
-	return std::strtoll(value.data(), nullptr, 10);
+Define::Type Define::string_to_type(std::string_view str) {
+	using enum Type;
+
+	static const string_map_t<Define::Type> type_map {
+		{ "country",   Country },
+		{ "economy",   Economy },
+		{ "military",  Military },
+		{ "diplomacy", Diplomacy },
+		{ "pops",      Pops },
+		{ "ai",        Ai },
+		{ "graphics",  Graphics },
+	};
+
+	const string_map_t<Define::Type>::const_iterator type_it = type_map.find(str);
+
+	if (type_it != type_map.end()) {
+		return type_it->second;
+	} else {
+		return Unknown;
+	}
 }
 
-uint64_t Define::get_value_as_uint() const {
-	return std::strtoull(value.data(), nullptr, 10);
+Define::Define(std::string_view new_identifier, std::string_view new_value, Type new_type)
+	: HasIdentifier { new_identifier }, value { new_value }, type { new_type } {}
+
+Date Define::get_value_as_date(bool* successful) const {
+	return Date::from_string(value, successful);
 }
 
-bool DefineManager::add_define(std::string_view name, std::string&& value, Define::Type type) {
+fixed_point_t Define::get_value_as_fp(bool* successful) const {
+	return fixed_point_t::parse(value, successful);
+}
+
+int64_t Define::get_value_as_int(bool* successful) const {
+	return StringUtils::string_to_int64(value, successful);
+}
+
+uint64_t Define::get_value_as_uint(bool* successful) const {
+	return StringUtils::string_to_uint64(value, successful);
+}
+
+std::ostream& OpenVic::operator<<(std::ostream& os, Define::Type type) {
+	return os << Define::type_to_string(type);
+}
+
+template<typename T>
+bool DefineManager::load_define(T& value, Define::Type type, std::string_view name) const {
+	static_assert(
+		std::same_as<T, OpenVic::Date> || std::same_as<T, fixed_point_t> || std::integral<T>
+	);
+
+	Define const* define = defines.get_item_by_identifier(name);
+
+	if (define != nullptr) {
+		if (define->type != type) {
+			Logger::warning("Mismatched define type for \"", name, "\" - expected ", type, ", got ", define->type);
+		}
+
+		const auto parse =
+			[define, &value, &name]<typename U, U (Define::*Func)(bool*) const>(std::string_view type_name) -> bool {
+				bool success = false;
+				const U result = (define->*Func)(&success);
+				if (success) {
+					value = static_cast<T>(result);
+					return true;
+				} else {
+					Logger::error("Failed to parse ", type_name, " \"", define->get_value(), "\" for define \"", name, "\"");
+					return false;
+				}
+			};
+
+		if constexpr (std::same_as<T, OpenVic::Date>) {
+			return parse.template operator()<Date, &Define::get_value_as_date>("date");
+		} else if constexpr (std::same_as<T, fixed_point_t>) {
+			return parse.template operator()<fixed_point_t, &Define::get_value_as_fp>("fixed point");
+		} else if constexpr (std::signed_integral<T>) {
+			return parse.template operator()<int64_t, &Define::get_value_as_int>("signed int");
+		} else if constexpr (std::unsigned_integral<T>) {
+			return parse.template operator()<uint64_t, &Define::get_value_as_uint>("unsigned int");
+		}
+	} else {
+		Logger::error("Missing define \"", name, "\"");
+		return false;
+	}
+}
+
+template<Timespan (*Func)(Timespan::day_t)>
+bool DefineManager::_load_define_timespan(Timespan& value, Define::Type type, std::string_view name) const {
+	Define const* define = defines.get_item_by_identifier(name);
+	if (define != nullptr) {
+		if (define->type != type) {
+			Logger::warning("Mismatched define type for \"", name, "\" - expected ", type, ", got ", define->type);
+		}
+		bool success = false;
+		const int64_t result = define->get_value_as_int(&success);
+		if (success) {
+			value = Func(result);
+			return true;
+		} else {
+			Logger::error("Failed to parse days \"", define->get_value(), "\" for define \"", name, "\"");
+			return false;
+		}
+	} else {
+		Logger::error("Missing define \"", name, "\"");
+		return false;
+	}
+}
+
+bool DefineManager::load_define_days(Timespan& value, Define::Type type, std::string_view name) const {
+	return _load_define_timespan<Timespan::from_days>(value, type, name);
+}
+
+bool DefineManager::load_define_months(Timespan& value, Define::Type type, std::string_view name) const {
+	return _load_define_timespan<Timespan::from_months>(value, type, name);
+}
+
+bool DefineManager::load_define_years(Timespan& value, Define::Type type, std::string_view name) const {
+	return _load_define_timespan<Timespan::from_years>(value, type, name);
+}
+
+DefineManager::DefineManager()
+  : // Date
+	start_date { 1836, 1, 1 },
+	end_date { 1936, 1, 1 }
+
+	// Country
+
+	// Economy
+
+	// Military
+
+	// Diplomacy
+
+	// Pops
+
+	// Ai
+
+	// Graphics
+
+	{}
+
+bool DefineManager::add_define(std::string_view name, std::string_view value, Define::Type type) {
 	if (name.empty()) {
 		Logger::error("Invalid define identifier - empty!");
 		return false;
 	}
-	return defines.add_item({ name, std::move(value), type }, duplicate_warning_callback);
-}
 
-Date DefineManager::get_start_date() const {
-	return start_date ? *start_date : Date {};
-}
+	if (value.empty()) {
+		Logger::error("Invalid define value for \"", name, "\" - empty!");
+		return false;
+	}
 
-Date DefineManager::get_end_date() const {
-	return end_date ? *end_date : Date {};
+	return defines.add_item({ name, value, type }, duplicate_warning_callback);
 }
 
 bool DefineManager::in_game_period(Date date) const {
-	if (start_date && end_date) {
-		return date.in_range(*start_date, *end_date);
-	} else {
-		return false;
-	}
-}
-
-bool DefineManager::add_date_define(std::string_view name, Date date) {
-	if (name == "start_date") {
-		start_date = date;
-	} else if (name == "end_date") {
-		end_date = date;
-	} else {
-		Logger::error("Invalid date define identifier - \"", name, "\" (must be start_date or end_date)");
-		return false;
-	}
-	return defines.add_item({ name, date.to_string(), Define::Type::Date });
+	return date.in_range(start_date, end_date);
 }
 
 bool DefineManager::load_defines_file(ast::NodeCPtr root) {
+	using enum Define::Type;
+
 	bool ret = expect_dictionary_keys(
 		"defines", ONE_EXACTLY, expect_dictionary([this](std::string_view key, ast::NodeCPtr value) -> bool {
-			using enum Define::Type;
-			static const string_map_t<Define::Type> type_map {
-				{ "country",   Country },
-				{ "economy",   Economy },
-				{ "military",  Military },
-				{ "diplomacy", Diplomacy },
-				{ "pops",      Pops },
-				{ "ai",        Ai },
-				{ "graphics",  Graphics },
-			};
 
-			const string_map_t<Define::Type>::const_iterator type_it = type_map.find(key);
+			const Define::Type type = Define::string_to_type(key);
 
-			if (type_it != type_map.end()) {
+			if (type != Unknown) {
 
 				return expect_dictionary_reserve_length(
 					defines,
-					[this, &key, type = type_it->second](std::string_view inner_key, ast::NodeCPtr value) -> bool {
-						std::string str_val;
-						bool ret = expect_identifier_or_string(assign_variable_callback_string(str_val))(value);
-						ret &= add_define(inner_key, std::move(str_val), type);
-						return ret;
+					[this, type](std::string_view inner_key, ast::NodeCPtr value) -> bool {
+						return expect_identifier_or_string(
+							[this, &inner_key, type](std::string_view value) -> bool {
+								return add_define(inner_key, value, type);
+							}
+						)(value);
 					}
 				)(value);
 
 			} else if (key == "start_date" || key == "end_date") {
 
-				return expect_date_identifier_or_string(std::bind_front(&DefineManager::add_date_define, this, key))(value);
+				return expect_identifier_or_string(
+					[this, &key](std::string_view value) -> bool {
+						return add_define(key, value, Date);
+					}
+				)(value);
 
 			} else {
+
+				Logger::error("Invalid define type - \"", key, "\"");
 				return false;
+
 			}
 		})
 	)(root);
 
 	lock_defines();
+
+	// Date
+	ret &= load_define(start_date, Date, "start_date");
+	ret &= load_define(end_date, Date, "end_date");
+
+	// Country
+
+	// Economy
+
+	// Military
+
+	// Diplomacy
+
+	// Pops
+
+	// Ai
+
+	// Graphics
 
 	return ret;
 }
