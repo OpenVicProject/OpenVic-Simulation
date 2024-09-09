@@ -88,6 +88,7 @@ namespace OpenVic {
 		IndexedMap<Ideology, fixed_point_t> PROPERTY(ideology_distribution);
 		fixed_point_map_t<Culture const*> PROPERTY(culture_distribution);
 		fixed_point_map_t<Religion const*> PROPERTY(religion_distribution);
+		size_t PROPERTY(max_supported_regiments);
 
 		ProvinceInstance(
 			ProvinceDefinition const& new_province_definition, decltype(pop_type_distribution)::keys_t const& pop_type_keys,
@@ -95,7 +96,7 @@ namespace OpenVic {
 		);
 
 		void _add_pop(Pop&& pop);
-		void _update_pops();
+		void _update_pops(DefineManager const& define_manager);
 
 	public:
 		ProvinceInstance(ProvinceInstance&&) = default;
@@ -115,6 +116,7 @@ namespace OpenVic {
 		bool set_controller(CountryInstance* new_controller);
 		bool add_core(CountryInstance& new_core);
 		bool remove_core(CountryInstance& core_to_remove);
+		bool is_owner_core() const;
 
 		bool expand_building(size_t building_index);
 
@@ -122,7 +124,7 @@ namespace OpenVic {
 		bool add_pop_vec(std::vector<PopBase> const& pop_vec);
 		size_t get_pop_count() const;
 
-		void update_gamestate(Date today);
+		void update_gamestate(Date today, DefineManager const& define_manager);
 		void tick(Date today);
 
 		template<UnitType::branch_t Branch>
@@ -131,7 +133,7 @@ namespace OpenVic {
 		bool remove_unit_instance_group(UnitInstanceGroup<Branch>& group);
 
 		bool setup(BuildingTypeManager const& building_type_manager);
-		bool apply_history_to_province(ProvinceHistoryEntry const* entry, CountryInstanceManager& country_manager);
+		bool apply_history_to_province(ProvinceHistoryEntry const& entry, CountryInstanceManager& country_manager);
 
 		void setup_pop_test_values(IssueManager const& issue_manager);
 	};

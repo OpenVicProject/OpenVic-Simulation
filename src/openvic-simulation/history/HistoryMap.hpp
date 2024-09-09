@@ -104,6 +104,20 @@ namespace OpenVic {
 		}
 
 	public:
+		void sort_entries() {
+			std::vector<Date> keys;
+			keys.reserve(entries.size());
+			for (typename decltype(entries)::value_type const& entry : entries) {
+				keys.push_back(entry.first);
+			}
+			std::sort(keys.begin(), keys.end());
+			ordered_map<Date, std::unique_ptr<entry_type>> new_entries;
+			for (Date const& key : keys) {
+				new_entries.emplace(key, std::move(entries[key]));
+			}
+			entries = std::move(new_entries);
+		}
+
 		/* Returns history entry at specific date, if date doesn't have an entry returns nullptr. */
 		entry_type const* get_entry(Date date) const {
 			typename decltype(entries)::const_iterator it = entries.find(date);
@@ -111,19 +125,6 @@ namespace OpenVic {
 				return it->second.get();
 			}
 			return nullptr;
-		}
-		/* Returns history entries up to date as an ordered list of entries. */
-		std::vector<entry_type const*> get_entries_up_to(Date end) const {
-			std::vector<entry_type const*> ret;
-			for (typename decltype(entries)::value_type const& entry : entries) {
-				if (entry.first <= end) {
-					ret.push_back(entry.second.get());
-				}
-			}
-			std::sort(ret.begin(), ret.end(), [](entry_type const* lhs, entry_type const* rhs) -> bool {
-				return lhs->get_date() < rhs->get_date();
-			});
-			return ret;
 		}
 	};
 }

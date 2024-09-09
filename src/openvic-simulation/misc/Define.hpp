@@ -1,5 +1,6 @@
 #pragma once
 
+#include "openvic-simulation/pop/Pop.hpp"
 #include "openvic-simulation/types/IdentifierRegistry.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
 
@@ -41,12 +42,23 @@ namespace OpenVic {
 		Date PROPERTY(end_date); // end_date
 
 		// Country
+		size_t PROPERTY(great_power_rank); // GREAT_NATIONS_COUNT
+		Timespan PROPERTY(lose_great_power_grace_days); // GREATNESS_DAYS
+		size_t PROPERTY(secondary_power_rank); // COLONIAL_RANK
+		fixed_point_t PROPERTY(country_investment_industrial_score_factor); // INVESTMENT_SCORE_FACTOR
 
 		// Economy
 
 		// Military
+		Pop::pop_size_t PROPERTY(pop_size_per_regiment); // POP_SIZE_PER_REGIMENT
+		Pop::pop_size_t PROPERTY(min_pop_size_for_regiment); // POP_MIN_SIZE_FOR_REGIMENT
+		// POP_MIN_SIZE_FOR_REGIMENT_PROTECTORATE_MULTIPLIER
+		fixed_point_t PROPERTY(pop_size_per_regiment_protectorate_multiplier);
+		fixed_point_t PROPERTY(pop_size_per_regiment_colony_multiplier); // POP_MIN_SIZE_FOR_REGIMENT_COLONY_MULTIPLIER
+		fixed_point_t PROPERTY(pop_size_per_regiment_non_core_multiplier); // POP_MIN_SIZE_FOR_REGIMENT_NONCORE_MULTIPLIER
 
 		// Diplomacy
+		fixed_point_t PROPERTY(disarmed_penalty); // DISARMAMENT_ARMY_HIT
 
 		// Pops
 

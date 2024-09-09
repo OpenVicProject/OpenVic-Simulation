@@ -191,6 +191,10 @@ void CountryHistoryManager::reserve_more_country_histories(size_t size) {
 }
 
 void CountryHistoryManager::lock_country_histories() {
+	for (auto [country, history_map] : mutable_iterator(country_histories)) {
+		history_map.sort_entries();
+	}
+
 	Logger::info("Locked country history registry after registering ", country_histories.size(), " items");
 	locked = true;
 }

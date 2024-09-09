@@ -31,9 +31,16 @@ namespace OpenVic {
 		fixed_point_t PROPERTY(average_militancy);
 		IndexedMap<PopType, fixed_point_t> PROPERTY(pop_type_distribution);
 
+		fixed_point_t PROPERTY(industrial_power);
+
+		size_t PROPERTY(max_supported_regiments);
+
 		State(
-			StateSet const& new_state_set, CountryInstance* owner, ProvinceInstance* capital,
-			std::vector<ProvinceInstance*>&& provinces, ProvinceInstance::colony_status_t colony_status,
+			StateSet const& new_state_set,
+			CountryInstance* new_owner,
+			ProvinceInstance* new_capital,
+			std::vector<ProvinceInstance*>&& new_provinces,
+			ProvinceInstance::colony_status_t new_colony_status,
 			decltype(pop_type_distribution)::keys_t const& pop_type_keys
 		);
 

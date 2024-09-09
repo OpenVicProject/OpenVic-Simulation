@@ -1,5 +1,6 @@
 #include "UnitType.hpp"
 
+#include "openvic-simulation/country/CountryInstance.hpp"
 #include "openvic-simulation/map/TerrainType.hpp"
 
 using namespace OpenVic;
@@ -29,6 +30,29 @@ UnitType::UnitType(
 	supply_consumption { unit_args.supply_consumption },
 	supply_cost { std::move(unit_args.supply_cost) },
 	terrain_modifiers { std::move(unit_args.terrain_modifiers) } {}
+
+bool UnitTypeBranched<LAND>::allowed_cultures_check_culture_in_country(
+	allowed_cultures_t allowed_cultures, Culture const& culture, CountryInstance const& country
+) {
+	using enum allowed_cultures_t;
+
+	switch (allowed_cultures) {
+		case ALL_CULTURES:
+			return true;
+		case ACCEPTED_CULTURES:
+			return country.is_primary_or_accepted_culture(culture);
+		case PRIMARY_CULTURE:
+			return country.is_primary_culture(culture);
+		case NO_CULTURES:
+			return false;
+		default:
+			Logger::error(
+				"Unknown allowed cultures value ", static_cast<uint32_t>(allowed_cultures), " for culture ",
+				culture.get_identifier(), " and country ", country.get_identifier()
+			);
+			return false;
+	}
+}
 
 UnitTypeBranched<LAND>::UnitTypeBranched(
 	std::string_view new_identifier, unit_type_args_t& unit_args, regiment_type_args_t const& regiment_type_args

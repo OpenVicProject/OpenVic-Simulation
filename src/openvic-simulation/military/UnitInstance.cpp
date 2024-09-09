@@ -19,8 +19,8 @@ template struct OpenVic::UnitInstance<UnitType::branch_t::LAND>;
 template struct OpenVic::UnitInstance<UnitType::branch_t::NAVAL>;
 
 UnitInstanceBranched<UnitType::branch_t::LAND>::UnitInstanceBranched(
-	std::string_view new_name, RegimentType const& new_regiment_type, Pop* new_pop
-) : UnitInstance { new_name, new_regiment_type }, pop { new_pop } {}
+	std::string_view new_name, RegimentType const& new_regiment_type, Pop* new_pop, bool new_mobilised
+) : UnitInstance { new_name, new_regiment_type }, pop { new_pop }, mobilised { new_mobilised } {}
 
 UnitInstanceBranched<UnitType::branch_t::NAVAL>::UnitInstanceBranched(
 	std::string_view new_name, ShipType const& new_ship_type

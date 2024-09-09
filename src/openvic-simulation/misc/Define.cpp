@@ -150,15 +150,25 @@ bool DefineManager::load_define_years(Timespan& value, Define::Type type, std::s
 DefineManager::DefineManager()
   : // Date
 	start_date { 1836, 1, 1 },
-	end_date { 1936, 1, 1 }
+	end_date { 1936, 1, 1 },
 
 	// Country
+	great_power_rank { 8 },
+	lose_great_power_grace_days { Timespan::from_years(1) },
+	secondary_power_rank { 16 },
+	country_investment_industrial_score_factor { 1 },
 
 	// Economy
 
 	// Military
+	pop_size_per_regiment { 1000 },
+	min_pop_size_for_regiment { 1000 },
+	pop_size_per_regiment_protectorate_multiplier { 1 },
+	pop_size_per_regiment_colony_multiplier { 1 },
+	pop_size_per_regiment_non_core_multiplier { 1 },
 
 	// Diplomacy
+	disarmed_penalty { 0 }
 
 	// Pops
 
@@ -231,12 +241,24 @@ bool DefineManager::load_defines_file(ast::NodeCPtr root) {
 	ret &= load_define(end_date, Date, "end_date");
 
 	// Country
+	ret &= load_define(great_power_rank, Country, "GREAT_NATIONS_COUNT");
+	ret &= load_define_days(lose_great_power_grace_days, Country, "GREATNESS_DAYS");
+	ret &= load_define(secondary_power_rank, Country, "COLONIAL_RANK");
+	ret &= load_define(country_investment_industrial_score_factor, Country, "INVESTMENT_SCORE_FACTOR");
 
 	// Economy
 
 	// Military
+	ret &= load_define(pop_size_per_regiment, Military, "POP_SIZE_PER_REGIMENT");
+	ret &= load_define(min_pop_size_for_regiment, Military, "POP_MIN_SIZE_FOR_REGIMENT");
+	ret &= load_define(
+		pop_size_per_regiment_protectorate_multiplier, Military, "POP_MIN_SIZE_FOR_REGIMENT_PROTECTORATE_MULTIPLIER"
+	);
+	ret &= load_define(pop_size_per_regiment_colony_multiplier, Military, "POP_MIN_SIZE_FOR_REGIMENT_COLONY_MULTIPLIER");
+	ret &= load_define(pop_size_per_regiment_non_core_multiplier, Military, "POP_MIN_SIZE_FOR_REGIMENT_NONCORE_MULTIPLIER");
 
 	// Diplomacy
+	ret &= load_define(disarmed_penalty, Diplomacy, "DISARMAMENT_ARMY_HIT");
 
 	// Pops
 

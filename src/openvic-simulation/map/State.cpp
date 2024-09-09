@@ -10,11 +10,20 @@
 using namespace OpenVic;
 
 State::State(
-	StateSet const& new_state_set, CountryInstance* owner, ProvinceInstance* capital,
-	std::vector<ProvinceInstance*>&& provinces, ProvinceInstance::colony_status_t colony_status,
+	StateSet const& new_state_set,
+	CountryInstance* new_owner,
+	ProvinceInstance* new_capital,
+	std::vector<ProvinceInstance*>&& new_provinces,
+	ProvinceInstance::colony_status_t new_colony_status,
 	decltype(pop_type_distribution)::keys_t const& pop_type_keys
-) : state_set { new_state_set }, owner { owner }, capital { capital }, provinces { std::move(provinces) },
-	colony_status { colony_status }, pop_type_distribution { &pop_type_keys } {}
+) : state_set { new_state_set },
+	owner { new_owner },
+	capital { new_capital },
+	provinces { std::move(new_provinces) },
+	colony_status { new_colony_status },
+	pop_type_distribution { &pop_type_keys },
+	industrial_power { 0 },
+	max_supported_regiments { 0 } {}
 
 std::string State::get_identifier() const {
 	return StringUtils::append_string_views(
@@ -29,6 +38,7 @@ void State::update_gamestate() {
 	average_consciousness = 0;
 	average_militancy = 0;
 	pop_type_distribution.clear();
+	max_supported_regiments = 0;
 
 	for (ProvinceInstance const* province : provinces) {
 		total_population += province->get_total_population();
@@ -40,6 +50,8 @@ void State::update_gamestate() {
 		average_militancy += province->get_average_militancy() * province_population;
 
 		pop_type_distribution += province->get_pop_type_distribution();
+
+		max_supported_regiments += province->get_max_supported_regiments();
 	}
 
 	if (total_population > 0) {
@@ -47,6 +59,16 @@ void State::update_gamestate() {
 		average_consciousness /= total_population;
 		average_militancy /= total_population;
 	}
+
+	// TODO - use actual values when State has factory data
+	const int32_t total_factory_levels_in_state = 0;
+	const int32_t potential_workforce_in_state = 0; // sum of worker pops, regardless of employment
+	const int32_t potential_employment_in_state = 0; // sum of (factory level * production method base_workforce_size)
+
+	industrial_power = total_factory_levels_in_state * std::clamp(
+		(fixed_point_t { potential_workforce_in_state } / 100).floor() * 400 / potential_employment_in_state,
+		fixed_point_t::_0_20(), fixed_point_t::_4()
+	);
 }
 
 /* Whether two provinces in the same region should be grouped into the same state or not.

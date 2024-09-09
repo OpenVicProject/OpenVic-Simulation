@@ -15,6 +15,8 @@
 namespace OpenVic {
 	struct TerrainType;
 	struct TerrainTypeManager;
+	struct Culture;
+	struct CountryInstance;
 
 	struct UnitType : HasIdentifier {
 		using icon_t = uint32_t;
@@ -94,7 +96,18 @@ namespace OpenVic {
 	struct UnitTypeBranched<UnitType::branch_t::LAND> : UnitType {
 		friend struct UnitTypeManager;
 
-		enum struct allowed_cultures_t { ALL_CULTURES, ACCEPTED_CULTURES, PRIMARY_CULTURE };
+		// Each value is a subset of its predecessor, so smaller values contain larger values
+		enum struct allowed_cultures_t { ALL_CULTURES, ACCEPTED_CULTURES, PRIMARY_CULTURE, NO_CULTURES };
+
+		constexpr static allowed_cultures_t allowed_cultures_get_most_permissive(
+			allowed_cultures_t lhs, allowed_cultures_t rhs
+		) {
+			return std::min(lhs, rhs);
+		}
+
+		static bool allowed_cultures_check_culture_in_country(
+			allowed_cultures_t allowed_cultures, Culture const& culture, CountryInstance const& country
+		);
 
 		struct regiment_type_args_t {
 			allowed_cultures_t allowed_cultures = allowed_cultures_t::ALL_CULTURES;

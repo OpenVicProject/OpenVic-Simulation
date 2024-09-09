@@ -52,7 +52,7 @@ namespace OpenVic {
 			IssueManager const& issue_manager
 		);
 
-		void update_gamestate(Date today);
+		void update_gamestate(Date today, DefineManager const& define_manager);
 		void tick(Date today);
 	};
 }

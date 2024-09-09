@@ -157,8 +157,10 @@ void ProvinceHistoryManager::lock_province_histories(MapDefinition const& map_de
 	std::vector<ProvinceDefinition> const& provinces = map_definition.get_province_definitions();
 
 	std::vector<bool> province_checklist(provinces.size());
-	for (decltype(province_histories)::value_type const& entry : province_histories) {
-		province_checklist[entry.first->get_index() - 1] = true;
+	for (auto [province, history_map] : mutable_iterator(province_histories)) {
+		province_checklist[province->get_index() - 1] = true;
+
+		history_map.sort_entries();
 	}
 
 	size_t missing = 0;
