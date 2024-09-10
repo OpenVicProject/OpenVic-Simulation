@@ -2,6 +2,7 @@
 
 #include <optional>
 
+#include "openvic-simulation/country/CountryInstance.hpp"
 #include "openvic-simulation/history/HistoryMap.hpp"
 #include "openvic-simulation/types/Date.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPointMap.hpp"
@@ -46,7 +47,7 @@ namespace OpenVic {
 		ordered_set<Reform const*> PROPERTY(reforms);
 		std::optional<Deployment const*> PROPERTY(inital_oob);
 		std::optional<TechnologySchool const*> PROPERTY(tech_school);
-		ordered_map<Technology const*, bool> PROPERTY(technologies);
+		ordered_map<Technology const*, CountryInstance::unlock_level_t> PROPERTY(technologies);
 		ordered_map<Invention const*, bool> PROPERTY(inventions);
 		fixed_point_map_t<CountryDefinition const*> PROPERTY(foreign_investment);
 		std::optional<fixed_point_t> PROPERTY(consciousness);

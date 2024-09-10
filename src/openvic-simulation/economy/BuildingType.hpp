@@ -16,7 +16,7 @@ namespace OpenVic {
 	 * MAP-12, MAP-75, MAP-76
 	 * MAP-13, MAP-78, MAP-79
 	 */
-	struct BuildingType : HasIdentifier {
+	struct BuildingType : Modifier {
 		friend struct BuildingTypeManager;
 
 		using level_t = int16_t;
@@ -42,7 +42,6 @@ namespace OpenVic {
 
 	private:
 		std::string PROPERTY(type);
-		ModifierValue PROPERTY(modifier);
 		std::string PROPERTY(on_completion); // probably sound played on completion
 		fixed_point_t PROPERTY(completion_size);
 		level_t PROPERTY(max_level);
@@ -51,7 +50,7 @@ namespace OpenVic {
 		Timespan PROPERTY(build_time); // time
 		bool PROPERTY(on_map); // onmap
 
-		bool PROPERTY(default_enabled);
+		bool PROPERTY_CUSTOM_PREFIX(default_enabled, is);
 		ProductionType const* PROPERTY(production_type);
 		bool PROPERTY(pop_build_factory);
 		bool PROPERTY(strategic_factory);

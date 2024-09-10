@@ -25,8 +25,10 @@ namespace OpenVic {
 	struct CountryParty;
 	struct Ideology;
 	struct Reform;
+	struct Crime;
 	struct Culture;
 	struct Religion;
+	struct BuildingType;
 	struct CountryHistoryEntry;
 	struct MapInstance;
 	struct DefineManager;
@@ -52,6 +54,9 @@ namespace OpenVic {
 			COUNTRY_STATUS_UNCIVILISED,
 			COUNTRY_STATUS_PRIMITIVE
 		};
+
+		using unlock_level_t = int8_t;
+		using unit_variant_t = uint8_t;
 
 	private:
 		/* Main attributes */
@@ -79,6 +84,7 @@ namespace OpenVic {
 		std::vector<std::pair<CountryInstance const*, fixed_point_t>> PROPERTY(industrial_power_from_investments);
 		size_t PROPERTY(industrial_rank);
 		fixed_point_map_t<CountryInstance const*> PROPERTY(foreign_investments);
+		IndexedMap<BuildingType, unlock_level_t> PROPERTY(unlocked_building_types);
 		// TODO - total amount of each good produced
 
 		/* Budget */
@@ -86,8 +92,8 @@ namespace OpenVic {
 		// TODO - cash stockpile change over last 30 days
 
 		/* Technology */
-		IndexedMap<Technology, bool> PROPERTY(technologies);
-		IndexedMap<Invention, bool> PROPERTY(inventions);
+		IndexedMap<Technology, unlock_level_t> PROPERTY(unlocked_technologies);
+		IndexedMap<Invention, unlock_level_t> PROPERTY(unlocked_inventions);
 		Technology const* PROPERTY(current_research);
 		fixed_point_t PROPERTY(invested_research_points);
 		Date PROPERTY(expected_completion_date);
@@ -111,6 +117,7 @@ namespace OpenVic {
 		fixed_point_t PROPERTY(infamy);
 		fixed_point_t PROPERTY(plurality);
 		fixed_point_t PROPERTY(revanchism);
+		IndexedMap<Crime, unlock_level_t> PROPERTY(unlocked_crimes);
 		// TODO - rebel movements
 
 		/* Population */
@@ -157,9 +164,12 @@ namespace OpenVic {
 		fixed_point_t PROPERTY(war_exhaustion);
 		bool PROPERTY_CUSTOM_PREFIX(mobilised, is);
 		bool PROPERTY_CUSTOM_PREFIX(disarmed, is);
-		IndexedMap<RegimentType, bool> PROPERTY(unlocked_regiment_types);
+		IndexedMap<RegimentType, unlock_level_t> PROPERTY(unlocked_regiment_types);
 		RegimentType::allowed_cultures_t PROPERTY(allowed_regiment_cultures);
-		IndexedMap<ShipType, bool> PROPERTY(unlocked_ship_types);
+		IndexedMap<ShipType, unlock_level_t> PROPERTY(unlocked_ship_types);
+		unlock_level_t PROPERTY(gas_attack_unlock_level);
+		unlock_level_t PROPERTY(gas_defence_unlock_level);
+		std::vector<unlock_level_t> PROPERTY(unit_variant_unlock_levels);
 
 		UNIT_BRANCHED_GETTER(get_unit_instance_groups, armies, navies);
 		UNIT_BRANCHED_GETTER(get_leaders, generals, admirals);
@@ -167,10 +177,12 @@ namespace OpenVic {
 
 		CountryInstance(
 			CountryDefinition const* new_country_definition,
-			decltype(technologies)::keys_t const& technology_keys,
-			decltype(inventions)::keys_t const& invention_keys,
+			decltype(unlocked_building_types)::keys_t const& building_type_keys,
+			decltype(unlocked_technologies)::keys_t const& technology_keys,
+			decltype(unlocked_inventions)::keys_t const& invention_keys,
 			decltype(upper_house)::keys_t const& ideology_keys,
 			decltype(government_flag_overrides)::keys_t const& government_type_keys,
+			decltype(unlocked_crimes)::keys_t const& crime_keys,
 			decltype(pop_type_distribution)::keys_t const& pop_type_keys,
 			decltype(unlocked_regiment_types)::keys_t const& unlocked_regiment_types_keys,
 			decltype(unlocked_ship_types)::keys_t const& unlocked_ship_types_keys
@@ -214,7 +226,41 @@ namespace OpenVic {
 		bool remove_leader(LeaderBranched<Branch> const* leader);
 
 		template<UnitType::branch_t Branch>
-		void unlock_unit_type(UnitTypeBranched<Branch> const& unit_type);
+		bool modify_unit_type_unlock(UnitTypeBranched<Branch> const& unit_type, unlock_level_t unlock_level_change);
+
+		bool modify_unit_type_unlock(UnitType const& unit_type, unlock_level_t unlock_level_change);
+		bool unlock_unit_type(UnitType const& unit_type);
+		bool is_unit_type_unlocked(UnitType const& unit_type) const;
+
+		bool modify_building_type_unlock(BuildingType const& building_type, unlock_level_t unlock_level_change);
+		bool unlock_building_type(BuildingType const& building_type);
+		bool is_building_type_unlocked(BuildingType const& building_type) const;
+
+		bool modify_crime_unlock(Crime const& crime, unlock_level_t unlock_level_change);
+		bool unlock_crime(Crime const& crime);
+		bool is_crime_unlocked(Crime const& crime) const;
+
+		bool modify_gas_attack_unlock(unlock_level_t unlock_level_change);
+		bool unlock_gas_attack();
+		bool is_gas_attack_unlocked() const;
+
+		bool modify_gas_defence_unlock(unlock_level_t unlock_level_change);
+		bool unlock_gas_defence();
+		bool is_gas_defence_unlocked() const;
+
+		bool modify_unit_variant_unlock(unit_variant_t unit_variant, unlock_level_t unlock_level_change);
+		bool unlock_unit_variant(unit_variant_t unit_variant);
+		unit_variant_t get_max_unlocked_unit_variant() const;
+
+		bool modify_technology_unlock(Technology const& technology, unlock_level_t unlock_level_change);
+		bool set_technology_unlock_level(Technology const& technology, unlock_level_t unlock_level);
+		bool unlock_technology(Technology const& technology);
+		bool is_technology_unlocked(Technology const& technology) const;
+
+		bool modify_invention_unlock(Invention const& invention, unlock_level_t unlock_level_change);
+		bool set_invention_unlock_level(Invention const& invention, unlock_level_t unlock_level);
+		bool unlock_invention(Invention const& invention);
+		bool is_invention_unlocked(Invention const& invention) const;
 
 		bool is_primary_culture(Culture const& culture) const;
 		// This only checks the accepted cultures list, ignoring the primary culture.
@@ -271,10 +317,12 @@ namespace OpenVic {
 
 		bool generate_country_instances(
 			CountryDefinitionManager const& country_definition_manager,
-			decltype(CountryInstance::technologies)::keys_t const& technology_keys,
-			decltype(CountryInstance::inventions)::keys_t const& invention_keys,
+			decltype(CountryInstance::unlocked_building_types)::keys_t const& building_type_keys,
+			decltype(CountryInstance::unlocked_technologies)::keys_t const& technology_keys,
+			decltype(CountryInstance::unlocked_inventions)::keys_t const& invention_keys,
 			decltype(CountryInstance::upper_house)::keys_t const& ideology_keys,
 			decltype(CountryInstance::government_flag_overrides)::keys_t const& government_type_keys,
+			decltype(CountryInstance::unlocked_crimes)::keys_t const& crime_keys,
 			decltype(CountryInstance::pop_type_distribution)::keys_t const& pop_type_keys,
 			decltype(CountryInstance::unlocked_regiment_types)::keys_t const& unlocked_regiment_types_keys,
 			decltype(CountryInstance::unlocked_ship_types)::keys_t const& unlocked_ship_types_keys

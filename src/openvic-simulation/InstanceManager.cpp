@@ -79,10 +79,12 @@ bool InstanceManager::setup() {
 	);
 	ret &= country_instance_manager.generate_country_instances(
 		definition_manager.get_country_definition_manager(),
+		definition_manager.get_economy_manager().get_building_type_manager().get_building_types(),
 		definition_manager.get_research_manager().get_technology_manager().get_technologies(),
 		definition_manager.get_research_manager().get_invention_manager().get_inventions(),
 		definition_manager.get_politics_manager().get_ideology_manager().get_ideologies(),
 		definition_manager.get_politics_manager().get_government_type_manager().get_government_types(),
+		definition_manager.get_crime_manager().get_crime_modifiers(),
 		definition_manager.get_pop_manager().get_pop_types(),
 		definition_manager.get_military_manager().get_unit_type_manager().get_regiment_types(),
 		definition_manager.get_military_manager().get_unit_type_manager().get_ship_types()

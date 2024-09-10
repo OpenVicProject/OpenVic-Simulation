@@ -14,7 +14,7 @@ Technology::Technology(
 	Date::year_t new_year,
 	fixed_point_t new_cost,
 	bool new_unciv_military,
-	uint8_t new_unit,
+	std::optional<CountryInstance::unit_variant_t>&& new_unit_variant,
 	unit_set_t&& new_activated_units,
 	building_set_t&& new_activated_buildings,
 	ModifierValue&& new_values,
@@ -24,9 +24,9 @@ Technology::Technology(
 	year { new_year },
 	cost { new_cost },
 	unciv_military { new_unciv_military },
-	unit { new_unit },
-	activated_buildings { std::move(new_activated_units) },
-	activated_units { std::move(new_activated_buildings) },
+	unit_variant { std::move(new_unit_variant) },
+	activated_units { std::move(new_activated_units) },
+	activated_buildings { std::move(new_activated_buildings) },
 	ai_chance { std::move(new_ai_chance) } {}
 
 bool Technology::parse_scripts(DefinitionManager const& definition_manager) {
@@ -61,8 +61,8 @@ bool TechnologyManager::add_technology_area(std::string_view identifier, Technol
 
 bool TechnologyManager::add_technology(
 	std::string_view identifier, TechnologyArea const* area, Date::year_t year, fixed_point_t cost, bool unciv_military,
-	uint8_t unit, Technology::unit_set_t&& activated_units, Technology::building_set_t&& activated_buildings,
-	ModifierValue&& values, ConditionalWeight&& ai_chance
+	std::optional<CountryInstance::unit_variant_t>&& unit_variant, Technology::unit_set_t&& activated_units,
+	Technology::building_set_t&& activated_buildings, ModifierValue&& values, ConditionalWeight&& ai_chance
 ) {
 	if (identifier.empty()) {
 		Logger::error("Invalid technology identifier - empty!");
@@ -75,8 +75,8 @@ bool TechnologyManager::add_technology(
 	}
 
 	return technologies.add_item({
-		identifier, *area, year, cost, unciv_military, unit, std::move(activated_units), std::move(activated_buildings),
-		std::move(values), std::move(ai_chance)
+		identifier, *area, year, cost, unciv_military, std::move(unit_variant), std::move(activated_units),
+		std::move(activated_buildings), std::move(values), std::move(ai_chance)
 	});
 }
 
@@ -157,8 +157,8 @@ bool TechnologyManager::load_technology_file_schools(
 }
 
 bool TechnologyManager::load_technologies_file(
-	ModifierManager const& modifier_manager, UnitTypeManager const& unit_type_manager, BuildingTypeManager const& building_type_manager,
-	ast::NodeCPtr root
+	ModifierManager const& modifier_manager, UnitTypeManager const& unit_type_manager,
+	BuildingTypeManager const& building_type_manager, ast::NodeCPtr root
 ) {
 	return expect_dictionary_reserve_length(technologies, [this, &modifier_manager, &unit_type_manager, &building_type_manager](
 		std::string_view tech_key, ast::NodeCPtr tech_value
@@ -168,7 +168,7 @@ bool TechnologyManager::load_technologies_file(
 		Date::year_t year = 0;
 		fixed_point_t cost = 0;
 		bool unciv_military = false;
-		uint8_t unit = 0;
+		std::optional<CountryInstance::unit_variant_t> unit_variant;
 		Technology::unit_set_t activated_units;
 		Technology::building_set_t activated_buildings;
 		ConditionalWeight ai_chance { scope_t::COUNTRY, scope_t::COUNTRY, scope_t::NO_SCOPE };
@@ -179,7 +179,7 @@ bool TechnologyManager::load_technologies_file(
 			"year", ONE_EXACTLY, expect_uint(assign_variable_callback(year)),
 			"cost", ONE_EXACTLY, expect_fixed_point(assign_variable_callback(cost)),
 			"unciv_military", ZERO_OR_ONE, expect_bool(assign_variable_callback(unciv_military)),
-			"unit", ZERO_OR_ONE, expect_uint(assign_variable_callback(unit)),
+			"unit", ZERO_OR_ONE, expect_uint<decltype(unit_variant)::value_type>(assign_variable_callback_opt(unit_variant)),
 			"activate_unit", ZERO_OR_MORE, unit_type_manager.expect_unit_type_identifier(set_callback_pointer(activated_units)),
 			"activate_building", ZERO_OR_MORE, building_type_manager.expect_building_type_identifier(
 				set_callback_pointer(activated_buildings)
@@ -188,8 +188,8 @@ bool TechnologyManager::load_technologies_file(
 		)(tech_value);
 
 		ret &= add_technology(
-			tech_key, area, year, cost, unciv_military, unit, std::move(activated_units), std::move(activated_buildings),
-			std::move(modifiers), std::move(ai_chance)
+			tech_key, area, year, cost, unciv_military, std::move(unit_variant), std::move(activated_units),
+			std::move(activated_buildings), std::move(modifiers), std::move(ai_chance)
 		);
 		return ret;
 	})(root);

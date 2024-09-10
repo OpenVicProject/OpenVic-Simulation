@@ -5,9 +5,8 @@ using namespace OpenVic::NodeTools;
 
 BuildingType::BuildingType(
 	std::string_view identifier, building_type_args_t& building_type_args
-) : HasIdentifier { identifier },
+) : Modifier { identifier, std::move(building_type_args.modifier) },
 	type { building_type_args.type },
-	modifier { std::move(building_type_args.modifier) },
 	on_completion { building_type_args.on_completion },
 	completion_size { building_type_args.completion_size },
 	max_level { building_type_args.max_level },
@@ -133,13 +132,15 @@ bool BuildingTypeManager::load_buildings_file(
 					port_building_type = &building_type;
 				} else {
 					Logger::error(
-						"Building type ", building_type, " is marked as a port, but we are already using ", port_building_type,
-						" as the port building type!"
+						"Building type ", building_type.get_identifier(), " is marked as a port, but we are already using ",
+						port_building_type->get_identifier(), " as the port building type!"
 					);
 					ret = false;
 				}
 			} else {
-				Logger::error("Building type ", building_type, " is marked as a port, but is not a province building!");
+				Logger::error(
+					"Building type ", building_type.get_identifier(), " is marked as a port, but is not a province building!"
+				);
 				ret = false;
 			}
 		}

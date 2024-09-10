@@ -2,6 +2,7 @@
 
 #include <cstdint>
 
+#include "openvic-simulation/country/CountryInstance.hpp"
 #include "openvic-simulation/economy/BuildingType.hpp"
 #include "openvic-simulation/military/UnitType.hpp"
 #include "openvic-simulation/misc/Modifier.hpp"
@@ -50,15 +51,16 @@ namespace OpenVic {
 		const Date::year_t PROPERTY(year);
 		const fixed_point_t PROPERTY(cost);
 		const bool PROPERTY(unciv_military);
-		const uint8_t PROPERTY(unit);
-		unit_set_t PROPERTY(activated_buildings);
-		building_set_t PROPERTY(activated_units);
+		std::optional<CountryInstance::unit_variant_t> PROPERTY(unit_variant);
+		unit_set_t PROPERTY(activated_units);
+		building_set_t PROPERTY(activated_buildings);
 		ConditionalWeight PROPERTY(ai_chance);
 
 		Technology(
 			std::string_view new_identifier, TechnologyArea const& new_area, Date::year_t new_year, fixed_point_t new_cost,
-			bool new_unciv_military, uint8_t new_unit, unit_set_t&& new_activated_units,
-			building_set_t&& new_activated_buildings, ModifierValue&& new_values, ConditionalWeight&& new_ai_chance
+			bool new_unciv_military, std::optional<CountryInstance::unit_variant_t>&& new_unit_variant,
+			unit_set_t&& new_activated_units, building_set_t&& new_activated_buildings, ModifierValue&& new_values,
+			ConditionalWeight&& new_ai_chance
 		);
 
 		bool parse_scripts(DefinitionManager const& definition_manager);
@@ -87,8 +89,9 @@ namespace OpenVic {
 
 		bool add_technology(
 			std::string_view identifier, TechnologyArea const* area, Date::year_t year, fixed_point_t cost,
-			bool unciv_military, uint8_t unit, Technology::unit_set_t&& activated_units,
-			Technology::building_set_t&& activated_buildings, ModifierValue&& values, ConditionalWeight&& ai_chance
+			bool unciv_military, std::optional<CountryInstance::unit_variant_t>&& unit_variant,
+			Technology::unit_set_t&& activated_units, Technology::building_set_t&& activated_buildings,
+			ModifierValue&& values, ConditionalWeight&& ai_chance
 		);
 
 		bool add_technology_school(std::string_view identifier, ModifierValue&& values);
