@@ -37,7 +37,7 @@ namespace OpenVic {
 		using effect_map_t = fixed_point_map_t<ModifierEffect const*>;
 
 	private:
-		effect_map_t values;
+		effect_map_t PROPERTY(values);
 
 	public:
 		ModifierValue();
@@ -51,6 +51,8 @@ namespace OpenVic {
 		/* Removes effect entries with a value of zero. */
 		void trim();
 		size_t get_effect_count() const;
+		void clear();
+		bool empty() const;
 
 		fixed_point_t get_effect(ModifierEffect const* effect, bool* successful = nullptr);
 		bool has_effect(ModifierEffect const* effect) const;

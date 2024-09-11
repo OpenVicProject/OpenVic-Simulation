@@ -14,6 +14,7 @@
 #include "openvic-simulation/types/Colour.hpp"
 #include "openvic-simulation/types/Date.hpp"
 #include "openvic-simulation/types/IdentifierRegistry.hpp"
+#include "openvic-simulation/types/IndexedMap.hpp"
 #include "openvic-simulation/types/OrderedContainers.hpp"
 
 namespace OpenVic {
@@ -23,7 +24,7 @@ namespace OpenVic {
 	struct CountryParty : HasIdentifierAndColour {
 		friend struct CountryDefinitionManager;
 
-		using policy_map_t = ordered_map<IssueGroup const*, Issue const*>;
+		using policy_map_t = IndexedMap<IssueGroup, Issue const*>;
 
 	private:
 		const Date PROPERTY(start_date);

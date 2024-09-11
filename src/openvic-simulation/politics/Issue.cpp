@@ -19,10 +19,11 @@ ReformGroup::ReformGroup(std::string_view new_identifier, ReformType const& new_
 
 Reform::Reform(
 	std::string_view new_identifier, colour_t new_colour, ModifierValue&& new_values, ReformGroup const& new_group,
-	size_t new_ordinal, RuleSet&& new_rules, tech_cost_t new_technology_cost, ConditionScript&& new_allow,
-	ConditionScript&& new_on_execute_trigger, EffectScript&& new_on_execute_effect
-) : Issue { new_identifier, new_colour, std::move(new_values), new_group, std::move(new_rules), false }, ordinal { new_ordinal },
-	reform_group { new_group }, technology_cost { new_technology_cost }, allow { std::move(new_allow) },
+	size_t new_ordinal, fixed_point_t new_administrative_multiplier, RuleSet&& new_rules, tech_cost_t new_technology_cost,
+	ConditionScript&& new_allow, ConditionScript&& new_on_execute_trigger, EffectScript&& new_on_execute_effect
+) : Issue { new_identifier, new_colour, std::move(new_values), new_group, std::move(new_rules), false },
+	reform_group { new_group }, ordinal { new_ordinal }, administrative_multiplier { new_administrative_multiplier },
+	technology_cost { new_technology_cost }, allow { std::move(new_allow) },
 	on_execute_trigger { std::move(new_on_execute_trigger) }, on_execute_effect { std::move(new_on_execute_effect) } {}
 
 bool Reform::parse_scripts(DefinitionManager const& definition_manager) {
@@ -84,8 +85,8 @@ bool IssueManager::add_reform_group(std::string_view identifier, ReformType cons
 
 bool IssueManager::add_reform(
 	std::string_view identifier, colour_t new_colour, ModifierValue&& values, ReformGroup const* group, size_t ordinal,
-	RuleSet&& rules, Reform::tech_cost_t technology_cost, ConditionScript&& allow, ConditionScript&& on_execute_trigger,
-	EffectScript&& on_execute_effect
+	fixed_point_t administrative_multiplier, RuleSet&& rules, Reform::tech_cost_t technology_cost, ConditionScript&& allow,
+	ConditionScript&& on_execute_trigger, EffectScript&& on_execute_effect
 ) {
 	if (identifier.empty()) {
 		Logger::error("Invalid issue identifier - empty!");
@@ -116,9 +117,16 @@ bool IssueManager::add_reform(
 		Logger::warning("Non-zero technology cost ", technology_cost, " found in civilised reform ", identifier, "!");
 	}
 
+	if (administrative_multiplier != 0 && !group->is_administrative()) {
+		Logger::warning(
+			"Non-zero administrative multiplier ", administrative_multiplier, " found in reform ", identifier,
+			" belonging to non-administrative group ", group->get_identifier(), "!"
+		);
+	}
+
 	return reforms.add_item({
-		identifier, new_colour, std::move(values), *group, ordinal, std::move(rules), technology_cost, std::move(allow),
-		std::move(on_execute_trigger), std::move(on_execute_effect)
+		identifier, new_colour, std::move(values), *group, ordinal, administrative_multiplier, std::move(rules),
+		technology_cost, std::move(allow), std::move(on_execute_trigger), std::move(on_execute_effect)
 	});
 }
 
@@ -198,12 +206,15 @@ bool IssueManager::_load_reform(
 ) {
 	ModifierValue values;
 	RuleSet rules;
+	fixed_point_t administrative_multiplier = 0;
 	Reform::tech_cost_t technology_cost = 0;
 	ConditionScript allow { scope_t::COUNTRY, scope_t::COUNTRY, scope_t::NO_SCOPE };
 	ConditionScript on_execute_trigger { scope_t::COUNTRY, scope_t::COUNTRY, scope_t::NO_SCOPE };
 	EffectScript on_execute_effect;
 
-	bool ret = modifier_manager.expect_modifier_value_and_keys(move_variable_callback(values),
+	bool ret = modifier_manager.expect_modifier_value_and_keys(
+		move_variable_callback(values),
+		"administrative_multiplier", ZERO_OR_ONE, expect_fixed_point(assign_variable_callback(administrative_multiplier)),
 		"technology_cost", ZERO_OR_ONE, expect_uint(assign_variable_callback(technology_cost)),
 		"allow", ZERO_OR_ONE, allow.expect_script(),
 		"rules", ZERO_OR_ONE, rule_manager.expect_rule_set(move_variable_callback(rules)),
@@ -214,7 +225,8 @@ bool IssueManager::_load_reform(
 	)(node);
 	ret &= add_reform(
 		identifier, create_issue_reform_colour(get_issue_count() + get_reform_count()), std::move(values), group, ordinal,
-		std::move(rules), technology_cost, std::move(allow), std::move(on_execute_trigger), std::move(on_execute_effect)
+		administrative_multiplier, std::move(rules), technology_cost, std::move(allow), std::move(on_execute_trigger),
+		std::move(on_execute_effect)
 	);
 	return ret;
 }

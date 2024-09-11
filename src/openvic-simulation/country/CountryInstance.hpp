@@ -6,6 +6,7 @@
 
 #include "openvic-simulation/military/Leader.hpp"
 #include "openvic-simulation/military/UnitInstanceGroup.hpp"
+#include "openvic-simulation/politics/Rule.hpp"
 #include "openvic-simulation/pop/Pop.hpp"
 #include "openvic-simulation/types/Date.hpp"
 #include "openvic-simulation/types/IdentifierRegistry.hpp"
@@ -24,6 +25,7 @@ namespace OpenVic {
 	struct GovernmentType;
 	struct CountryParty;
 	struct Ideology;
+	struct ReformGroup;
 	struct Reform;
 	struct Crime;
 	struct Culture;
@@ -109,7 +111,9 @@ namespace OpenVic {
 		Date PROPERTY(last_election);
 		CountryParty const* PROPERTY(ruling_party);
 		IndexedMap<Ideology, fixed_point_t> PROPERTY(upper_house);
-		std::vector<Reform const*> PROPERTY(reforms); // TODO: should be map of reform groups to active reforms: must set defaults & validate applied history
+		IndexedMap<ReformGroup, Reform const*> PROPERTY(reforms);
+		fixed_point_t PROPERTY(total_administrative_multiplier);
+		RuleSet PROPERTY(rule_set);
 		// TODO - national issue support distribution (for just voters and for everyone)
 		IndexedMap<GovernmentType, GovernmentType const*> PROPERTY(government_flag_overrides);
 		GovernmentType const* PROPERTY(flag_government_type);
@@ -181,6 +185,7 @@ namespace OpenVic {
 			decltype(unlocked_technologies)::keys_t const& technology_keys,
 			decltype(unlocked_inventions)::keys_t const& invention_keys,
 			decltype(upper_house)::keys_t const& ideology_keys,
+			decltype(reforms)::keys_t const& reform_keys,
 			decltype(government_flag_overrides)::keys_t const& government_type_keys,
 			decltype(unlocked_crimes)::keys_t const& crime_keys,
 			decltype(pop_type_distribution)::keys_t const& pop_type_keys,
@@ -212,8 +217,8 @@ namespace OpenVic {
 		bool remove_accepted_culture(Culture const& culture_to_remove);
 		/* Set a party's popularity in the upper house. */
 		bool set_upper_house(Ideology const* ideology, fixed_point_t popularity);
-		bool add_reform(Reform const* new_reform);
-		bool remove_reform(Reform const* reform_to_remove);
+		bool set_ruling_party(CountryParty const& new_ruling_party);
+		bool add_reform(Reform const& new_reform);
 
 		template<UnitType::branch_t Branch>
 		bool add_unit_instance_group(UnitInstanceGroup<Branch>& group);
@@ -287,6 +292,8 @@ namespace OpenVic {
 		void _update_diplomacy();
 		void _update_military(DefineManager const& define_manager, UnitTypeManager const& unit_type_manager);
 
+		bool update_rule_set();
+
 	public:
 
 		void update_gamestate(DefineManager const& define_manager, UnitTypeManager const& unit_type_manager);
@@ -321,6 +328,7 @@ namespace OpenVic {
 			decltype(CountryInstance::unlocked_technologies)::keys_t const& technology_keys,
 			decltype(CountryInstance::unlocked_inventions)::keys_t const& invention_keys,
 			decltype(CountryInstance::upper_house)::keys_t const& ideology_keys,
+			decltype(CountryInstance::reforms)::keys_t const& reform_keys,
 			decltype(CountryInstance::government_flag_overrides)::keys_t const& government_type_keys,
 			decltype(CountryInstance::unlocked_crimes)::keys_t const& crime_keys,
 			decltype(CountryInstance::pop_type_distribution)::keys_t const& pop_type_keys,

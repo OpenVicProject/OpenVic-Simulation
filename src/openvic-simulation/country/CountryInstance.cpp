@@ -21,6 +21,7 @@ CountryInstance::CountryInstance(
 	decltype(unlocked_technologies)::keys_t const& technology_keys,
 	decltype(unlocked_inventions)::keys_t const& invention_keys,
 	decltype(upper_house)::keys_t const& ideology_keys,
+	decltype(reforms)::keys_t const& reform_keys,
 	decltype(government_flag_overrides)::keys_t const& government_type_keys,
 	decltype(unlocked_crimes)::keys_t const& crime_keys,
 	decltype(pop_type_distribution)::keys_t const& pop_type_keys,
@@ -69,7 +70,9 @@ CountryInstance::CountryInstance(
 	last_election {},
 	ruling_party { nullptr },
 	upper_house { &ideology_keys },
-	reforms {},
+	reforms { &reform_keys },
+	total_administrative_multiplier { 0 },
+	rule_set {},
 	government_flag_overrides { &government_type_keys },
 	flag_government_type { nullptr },
 	suppression_points { 0 },
@@ -240,27 +243,37 @@ bool CountryInstance::set_upper_house(Ideology const* ideology, fixed_point_t po
 	}
 }
 
-bool CountryInstance::add_reform(Reform const* new_reform) {
-	if (std::find(reforms.begin(), reforms.end(), new_reform) != reforms.end()) {
-		Logger::warning(
-			"Attempted to add reform \"", new_reform, "\" to country ", get_identifier(), ": already present!"
-		);
-		return false;
+bool CountryInstance::set_ruling_party(CountryParty const& new_ruling_party) {
+	if (ruling_party != &new_ruling_party) {
+		ruling_party = &new_ruling_party;
+
+		return update_rule_set();
+	} else {
+		return true;
 	}
-	reforms.push_back(new_reform);
-	return true;
 }
 
-bool CountryInstance::remove_reform(Reform const* reform_to_remove) {
-	auto existing_entry = std::find(reforms.begin(), reforms.end(), reform_to_remove);
-	if (existing_entry == reforms.end()) {
-		Logger::warning(
-			"Attempted to remove reform \"", reform_to_remove, "\" from country ", get_identifier(), ": not present!"
-		);
-		return false;
+bool CountryInstance::add_reform(Reform const& new_reform) {
+	ReformGroup const& reform_group = new_reform.get_reform_group();
+	decltype(reforms)::value_ref_t reform = reforms[reform_group];
+
+	if (reform != &new_reform) {
+		if (reform_group.is_administrative()) {
+			if (reform != nullptr) {
+				total_administrative_multiplier -= reform->get_administrative_multiplier();
+			}
+			total_administrative_multiplier += new_reform.get_administrative_multiplier();
+		}
+
+		reform = &new_reform;
+
+		// TODO - if new_reform.get_reform_group().get_type().is_uncivilised() ?
+		// TODO - new_reform.get_on_execute_trigger() / new_reform.get_on_execute_effect() ?
+
+		return update_rule_set();
+	} else {
+		return true;
 	}
-	reforms.erase(existing_entry);
-	return true;
 }
 
 template<UnitType::branch_t Branch>
@@ -663,7 +676,9 @@ bool CountryInstance::apply_history_to_country(
 		ret &= add_accepted_culture(*culture);
 	}
 	set_optional(religion, entry.get_religion());
-	set_optional(ruling_party, entry.get_ruling_party());
+	if (entry.get_ruling_party()) {
+		ret &= set_ruling_party(**entry.get_ruling_party());
+	}
 	set_optional(last_election, entry.get_last_election());
 	ret &= upper_house.copy(entry.get_upper_house());
 	if (entry.get_capital()) {
@@ -677,7 +692,7 @@ bool CountryInstance::apply_history_to_country(
 	}
 	set_optional(prestige, entry.get_prestige());
 	for (Reform const* reform : entry.get_reforms()) {
-		ret &= add_reform(reform);
+		ret &= add_reform(*reform);
 	}
 	set_optional(tech_school, entry.get_tech_school());
 	constexpr auto set_bool_map_to_indexed_map =
@@ -888,6 +903,26 @@ void CountryInstance::_update_military(DefineManager const& define_manager, Unit
 	// TODO - update max_ship_supply, leadership_points, war_exhaustion
 }
 
+bool CountryInstance::update_rule_set() {
+	rule_set.clear();
+
+	if (ruling_party != nullptr) {
+		for (Issue const* issue : ruling_party->get_policies()) {
+			if (issue != nullptr) {
+				rule_set |= issue->get_rules();
+			}
+		}
+	}
+
+	for (Reform const* reform : reforms) {
+		if (reform != nullptr) {
+			rule_set |= reform->get_rules();
+		}
+	}
+
+	return rule_set.trim_and_resolve_conflicts(true);
+}
+
 void CountryInstance::update_gamestate(DefineManager const& define_manager, UnitTypeManager const& unit_type_manager) {
 	// Order of updates might need to be changed/functions split up to account for dependencies
 	_update_production(define_manager);
@@ -1060,6 +1095,7 @@ bool CountryInstanceManager::generate_country_instances(
 	decltype(CountryInstance::unlocked_technologies)::keys_t const& technology_keys,
 	decltype(CountryInstance::unlocked_inventions)::keys_t const& invention_keys,
 	decltype(CountryInstance::upper_house)::keys_t const& ideology_keys,
+	decltype(CountryInstance::reforms)::keys_t const& reform_keys,
 	decltype(CountryInstance::government_flag_overrides)::keys_t const& government_type_keys,
 	decltype(CountryInstance::unlocked_crimes)::keys_t const& crime_keys,
 	decltype(CountryInstance::pop_type_distribution)::keys_t const& pop_type_keys,
@@ -1077,6 +1113,7 @@ bool CountryInstanceManager::generate_country_instances(
 			technology_keys,
 			invention_keys,
 			ideology_keys,
+			reform_keys,
 			government_type_keys,
 			crime_keys,
 			pop_type_keys,

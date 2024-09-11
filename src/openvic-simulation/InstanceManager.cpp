@@ -83,6 +83,7 @@ bool InstanceManager::setup() {
 		definition_manager.get_research_manager().get_technology_manager().get_technologies(),
 		definition_manager.get_research_manager().get_invention_manager().get_inventions(),
 		definition_manager.get_politics_manager().get_ideology_manager().get_ideologies(),
+		definition_manager.get_politics_manager().get_issue_manager().get_reform_groups(),
 		definition_manager.get_politics_manager().get_government_type_manager().get_government_types(),
 		definition_manager.get_crime_manager().get_crime_modifiers(),
 		definition_manager.get_pop_manager().get_pop_types(),
