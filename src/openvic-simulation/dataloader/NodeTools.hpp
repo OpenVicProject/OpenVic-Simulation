@@ -443,6 +443,22 @@ namespace OpenVic {
 			return assign_variable_callback_cast<T, T>(var);
 		}
 
+		/* By default this will only allow an optional to be set once. Set allow_overwrite
+		 * to true to allow multiple assignments, with the last taking precedence. */
+		template<typename T>
+		Callback<T> auto assign_variable_callback_opt(
+			std::optional<T>& var, bool allow_overwrite = false
+		) {
+			return [&var, allow_overwrite](T const& val) -> bool {
+				if (!allow_overwrite && var.has_value()) {
+					Logger::error("Cannot assign value to already-initialised optional!");
+					return false;
+				}
+				var = val;
+				return true;
+			};
+		}
+
 		callback_t<std::string_view> assign_variable_callback_string(std::string& var);
 
 		template<typename T>
@@ -487,7 +503,7 @@ namespace OpenVic {
 		) {
 			return [&var, allow_overwrite](T const& val) -> bool {
 				if (!allow_overwrite && var.has_value()) {
-					Logger::error("Canoot assign pointer value to already-initialised optional!");
+					Logger::error("Cannot assign pointer value to already-initialised optional!");
 					return false;
 				}
 				var = &val;

@@ -42,7 +42,7 @@ namespace OpenVic {
 		using rule_group_map_t = ordered_map<Rule::rule_group_t, rule_map_t>;
 
 	private:
-		rule_group_map_t rule_groups;
+		rule_group_map_t PROPERTY(rule_groups);
 
 	public:
 		RuleSet() = default;
@@ -59,6 +59,8 @@ namespace OpenVic {
 		bool trim_and_resolve_conflicts(bool log);
 		size_t get_rule_group_count() const;
 		size_t get_rule_count() const;
+		void clear();
+		bool empty() const;
 
 		rule_map_t const& get_rule_group(Rule::rule_group_t group, bool* successful = nullptr) const;
 		bool get_rule(Rule const* rule, bool* successful = nullptr) const;

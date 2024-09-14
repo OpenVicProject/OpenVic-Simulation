@@ -54,7 +54,17 @@ bool CountryHistoryMap::_load_history_entry(
 			{
 				Technology const* technology = technology_manager.get_technology_by_identifier(key);
 				if (technology != nullptr) {
-					return expect_int_bool(map_callback(entry.technologies, technology))(value);
+					return expect_uint<decltype(entry.technologies)::mapped_type>(
+						[&entry, technology](decltype(entry.technologies)::mapped_type value) -> bool {
+							if (value > 1) {
+								Logger::warning(
+									"Technology ", technology->get_identifier(),
+									" is applied multiple times in history of country ", entry.get_country().get_identifier()
+								);
+							}
+							return map_callback(entry.technologies, technology)(value);
+						}
+					)(value);
 				}
 			}
 

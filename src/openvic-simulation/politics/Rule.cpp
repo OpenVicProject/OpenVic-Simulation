@@ -62,6 +62,20 @@ size_t RuleSet::get_rule_count() const {
 	return ret;
 }
 
+void RuleSet::clear() {
+	rule_groups.clear();
+}
+
+bool RuleSet::empty() const {
+	for (auto const& [group, rule_map] : rule_groups) {
+		if (!rule_map.empty()) {
+			return false;
+		}
+	}
+
+	return true;
+}
+
 RuleSet::rule_map_t const& RuleSet::get_rule_group(Rule::rule_group_t group, bool* successful) const {
 	const rule_group_map_t::const_iterator it = rule_groups.find(group);
 	if (it != rule_groups.end()) {

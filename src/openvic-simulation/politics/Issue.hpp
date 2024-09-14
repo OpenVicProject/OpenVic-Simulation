@@ -76,6 +76,7 @@ namespace OpenVic {
 	private:
 		ReformGroup const& PROPERTY(reform_group); // stores an already casted reference
 		const size_t PROPERTY(ordinal); // assigned by the parser to allow policy sorting
+		const fixed_point_t PROPERTY(administrative_multiplier);
 		const tech_cost_t PROPERTY(technology_cost);
 		ConditionScript PROPERTY(allow);
 		ConditionScript PROPERTY(on_execute_trigger);
@@ -83,8 +84,9 @@ namespace OpenVic {
 
 		Reform(
 			std::string_view new_identifier, colour_t new_colour, ModifierValue&& new_values, ReformGroup const& new_group,
-			size_t new_ordinal, RuleSet&& new_rules, tech_cost_t new_technology_cost, ConditionScript&& new_allow,
-			ConditionScript&& new_on_execute_trigger, EffectScript&& new_on_execute_effect
+			size_t new_ordinal, fixed_point_t new_administrative_multiplier, RuleSet&& new_rules,
+			tech_cost_t new_technology_cost, ConditionScript&& new_allow, ConditionScript&& new_on_execute_trigger,
+			EffectScript&& new_on_execute_effect
 		);
 
 		bool parse_scripts(DefinitionManager const& definition_manager);
@@ -125,8 +127,8 @@ namespace OpenVic {
 		bool add_reform_group(std::string_view identifier, ReformType const* type, bool ordered, bool administrative);
 		bool add_reform(
 			std::string_view identifier, colour_t new_colour, ModifierValue&& values, ReformGroup const* group, size_t ordinal,
-			RuleSet&& rules, Reform::tech_cost_t technology_cost, ConditionScript&& allow, ConditionScript&& on_execute_trigger,
-			EffectScript&& on_execute_effect
+			fixed_point_t administrative_multiplier, RuleSet&& rules, Reform::tech_cost_t technology_cost,
+			ConditionScript&& allow, ConditionScript&& on_execute_trigger, EffectScript&& on_execute_effect
 		);
 		bool load_issues_file(ModifierManager const& modifier_manager, RuleManager const& rule_manager, ast::NodeCPtr root);
 

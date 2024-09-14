@@ -33,6 +33,14 @@ size_t ModifierValue::get_effect_count() const {
 	return values.size();
 }
 
+void ModifierValue::clear() {
+	values.clear();
+}
+
+bool ModifierValue::empty() const {
+	return values.empty();
+}
+
 fixed_point_t ModifierValue::get_effect(ModifierEffect const* effect, bool* successful) {
 	const effect_map_t::const_iterator it = values.find(effect);
 	if (it != values.end()) {
@@ -123,7 +131,6 @@ bool ModifierManager::setup_modifier_effects() {
 	/* Country Modifier Effects */
 	ret &= add_modifier_effect("administrative_efficiency", true);
 	ret &= add_modifier_effect("administrative_efficiency_modifier", true);
-	ret &= add_modifier_effect("administrative_multiplier", true);
 	ret &= add_modifier_effect("artisan_input", false);
 	ret &= add_modifier_effect("artisan_output", true);
 	ret &= add_modifier_effect("artisan_throughput", true);

@@ -7,7 +7,7 @@ namespace OpenVic {
 		friend struct CrimeManager;
 
 	private:
-		const bool PROPERTY(default_active);
+		const bool PROPERTY_CUSTOM_PREFIX(default_active, is);
 
 		Crime(
 			std::string_view new_identifier, ModifierValue&& new_values, icon_t new_icon, ConditionScript&& new_trigger,

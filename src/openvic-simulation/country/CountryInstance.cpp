@@ -2,6 +2,7 @@
 
 #include "openvic-simulation/country/CountryDefinition.hpp"
 #include "openvic-simulation/history/CountryHistory.hpp"
+#include "openvic-simulation/map/Crime.hpp"
 #include "openvic-simulation/map/MapInstance.hpp"
 #include "openvic-simulation/misc/Define.hpp"
 #include "openvic-simulation/politics/Ideology.hpp"
@@ -16,10 +17,13 @@ static constexpr colour_t ERROR_COLOUR = colour_t::from_integer(0xFF0000);
 
 CountryInstance::CountryInstance(
 	CountryDefinition const* new_country_definition,
-	decltype(technologies)::keys_t const& technology_keys,
-	decltype(inventions)::keys_t const& invention_keys,
+	decltype(unlocked_building_types)::keys_t const& building_type_keys,
+	decltype(unlocked_technologies)::keys_t const& technology_keys,
+	decltype(unlocked_inventions)::keys_t const& invention_keys,
 	decltype(upper_house)::keys_t const& ideology_keys,
+	decltype(reforms)::keys_t const& reform_keys,
 	decltype(government_flag_overrides)::keys_t const& government_type_keys,
+	decltype(unlocked_crimes)::keys_t const& crime_keys,
 	decltype(pop_type_distribution)::keys_t const& pop_type_keys,
 	decltype(unlocked_regiment_types)::keys_t const& unlocked_regiment_types_keys,
 	decltype(unlocked_ship_types)::keys_t const& unlocked_ship_types_keys
@@ -44,13 +48,14 @@ CountryInstance::CountryInstance(
 	industrial_power_from_investments {},
 	industrial_rank { 0 },
 	foreign_investments {},
+	unlocked_building_types { &building_type_keys },
 
 	/* Budget */
 	cash_stockpile { 0 },
 
 	/* Technology */
-	technologies { &technology_keys },
-	inventions { &invention_keys },
+	unlocked_technologies { &technology_keys },
+	unlocked_inventions { &invention_keys },
 	current_research { nullptr },
 	invested_research_points { 0 },
 	expected_completion_date {},
@@ -65,13 +70,16 @@ CountryInstance::CountryInstance(
 	last_election {},
 	ruling_party { nullptr },
 	upper_house { &ideology_keys },
-	reforms {},
+	reforms { &reform_keys },
+	total_administrative_multiplier { 0 },
+	rule_set {},
 	government_flag_overrides { &government_type_keys },
 	flag_government_type { nullptr },
 	suppression_points { 0 },
 	infamy { 0 },
 	plurality { 0 },
 	revanchism { 0 },
+	unlocked_crimes { &crime_keys },
 
 	/* Population */
 	primary_culture { nullptr },
@@ -115,7 +123,22 @@ CountryInstance::CountryInstance(
 	disarmed { false },
 	unlocked_regiment_types { &unlocked_regiment_types_keys },
 	allowed_regiment_cultures { RegimentType::allowed_cultures_t::NO_CULTURES },
-	unlocked_ship_types { &unlocked_ship_types_keys } {
+	unlocked_ship_types { &unlocked_ship_types_keys },
+	gas_attack_unlock_level { 0 },
+	gas_defence_unlock_level { 0 },
+	unit_variant_unlock_levels {} {
+
+	for (BuildingType const& building_type : *unlocked_building_types.get_keys()) {
+		if (building_type.is_default_enabled()) {
+			unlock_building_type(building_type);
+		}
+	}
+
+	for (Crime const& crime : *unlocked_crimes.get_keys()) {
+		if (crime.is_default_active()) {
+			unlock_crime(crime);
+		}
+	}
 
 	for (RegimentType const& regiment_type : *unlocked_regiment_types.get_keys()) {
 		if (regiment_type.is_active()) {
@@ -220,27 +243,37 @@ bool CountryInstance::set_upper_house(Ideology const* ideology, fixed_point_t po
 	}
 }
 
-bool CountryInstance::add_reform(Reform const* new_reform) {
-	if (std::find(reforms.begin(), reforms.end(), new_reform) != reforms.end()) {
-		Logger::warning(
-			"Attempted to add reform \"", new_reform, "\" to country ", get_identifier(), ": already present!"
-		);
-		return false;
+bool CountryInstance::set_ruling_party(CountryParty const& new_ruling_party) {
+	if (ruling_party != &new_ruling_party) {
+		ruling_party = &new_ruling_party;
+
+		return update_rule_set();
+	} else {
+		return true;
 	}
-	reforms.push_back(new_reform);
-	return true;
 }
 
-bool CountryInstance::remove_reform(Reform const* reform_to_remove) {
-	auto existing_entry = std::find(reforms.begin(), reforms.end(), reform_to_remove);
-	if (existing_entry == reforms.end()) {
-		Logger::warning(
-			"Attempted to remove reform \"", reform_to_remove, "\" from country ", get_identifier(), ": not present!"
-		);
-		return false;
+bool CountryInstance::add_reform(Reform const& new_reform) {
+	ReformGroup const& reform_group = new_reform.get_reform_group();
+	decltype(reforms)::value_ref_t reform = reforms[reform_group];
+
+	if (reform != &new_reform) {
+		if (reform_group.is_administrative()) {
+			if (reform != nullptr) {
+				total_administrative_multiplier -= reform->get_administrative_multiplier();
+			}
+			total_administrative_multiplier += new_reform.get_administrative_multiplier();
+		}
+
+		reform = &new_reform;
+
+		// TODO - if new_reform.get_reform_group().get_type().is_uncivilised() ?
+		// TODO - new_reform.get_on_execute_trigger() / new_reform.get_on_execute_effect() ?
+
+		return update_rule_set();
+	} else {
+		return true;
 	}
-	reforms.erase(existing_entry);
-	return true;
 }
 
 template<UnitType::branch_t Branch>
@@ -301,30 +334,311 @@ template bool CountryInstance::remove_leader(LeaderBranched<UnitType::branch_t::
 template bool CountryInstance::remove_leader(LeaderBranched<UnitType::branch_t::NAVAL> const*);
 
 template<UnitType::branch_t Branch>
-void CountryInstance::unlock_unit_type(UnitTypeBranched<Branch> const& unit_type) {
-	IndexedMap<UnitTypeBranched<Branch>, bool>& unlocked_unit_types = get_unlocked_unit_types<Branch>();
+bool CountryInstance::modify_unit_type_unlock(UnitTypeBranched<Branch> const& unit_type, unlock_level_t unlock_level_change) {
+	IndexedMap<UnitTypeBranched<Branch>, unlock_level_t>& unlocked_unit_types = get_unlocked_unit_types<Branch>();
 
-	decltype(unlocked_regiment_types)::value_ref_t unlock_value = unlocked_unit_types[unit_type];
+	typename IndexedMap<UnitTypeBranched<Branch>, unlock_level_t>::value_ref_t unlock_level = unlocked_unit_types[unit_type];
 
-	if (unlock_value) {
-		Logger::warning(
-			"Attempted to unlock already-unlocked unit type \"", unit_type.get_identifier(),
-			"\" for country ", get_identifier()
+	// This catches subtracting below 0 or adding above the int types maximum value
+	if (unlock_level + unlock_level_change < 0) {
+		Logger::error(
+			"Attempted to change unlock level for unit type ", unit_type.get_identifier(), " in country ",
+			get_identifier(), " to invalid value: current level = ", static_cast<int64_t>(unlock_level), ", change = ",
+			static_cast<int64_t>(unlock_level_change), ", invalid new value = ",
+			static_cast<int64_t>(unlock_level + unlock_level_change)
 		);
-		return;
+		return false;
 	}
 
-	unlock_value = true;
+	unlock_level += unlock_level_change;
 
-	if constexpr (Branch == UnitType::branch_t::LAND) {
-		allowed_regiment_cultures = RegimentType::allowed_cultures_get_most_permissive(
-			allowed_regiment_cultures, unit_type.get_allowed_cultures()
+	return true;
+}
+
+template bool CountryInstance::modify_unit_type_unlock(UnitTypeBranched<UnitType::branch_t::LAND> const&, unlock_level_t);
+template bool CountryInstance::modify_unit_type_unlock(UnitTypeBranched<UnitType::branch_t::NAVAL> const&, unlock_level_t);
+
+bool CountryInstance::modify_unit_type_unlock(UnitType const& unit_type, unlock_level_t unlock_level_change) {
+	using enum UnitType::branch_t;
+
+	switch (unit_type.get_branch()) {
+	case LAND:
+		return modify_unit_type_unlock(static_cast<UnitTypeBranched<LAND> const&>(unit_type), unlock_level_change);
+	case NAVAL:
+		return modify_unit_type_unlock(static_cast<UnitTypeBranched<NAVAL> const&>(unit_type), unlock_level_change);
+	default:
+		Logger::error(
+			"Attempted to change unlock level for unit type \"", unit_type.get_identifier(), "\" with invalid branch ",
+			static_cast<uint32_t>(unit_type.get_branch()), " is unlocked for country ", get_identifier()
 		);
+		return false;
 	}
 }
 
-template void CountryInstance::unlock_unit_type(UnitTypeBranched<UnitType::branch_t::LAND> const&);
-template void CountryInstance::unlock_unit_type(UnitTypeBranched<UnitType::branch_t::NAVAL> const&);
+bool CountryInstance::unlock_unit_type(UnitType const& unit_type) {
+	return modify_unit_type_unlock(unit_type, 1);
+}
+
+bool CountryInstance::is_unit_type_unlocked(UnitType const& unit_type) const {
+	using enum UnitType::branch_t;
+
+	switch (unit_type.get_branch()) {
+	case LAND:
+		return unlocked_regiment_types[static_cast<UnitTypeBranched<LAND> const&>(unit_type)] > 0;
+	case NAVAL:
+		return unlocked_ship_types[static_cast<UnitTypeBranched<NAVAL> const&>(unit_type)] > 0;
+	default:
+		Logger::error(
+			"Attempted to check if unit type \"", unit_type.get_identifier(), "\" with invalid branch ",
+			static_cast<uint32_t>(unit_type.get_branch()), " is unlocked for country ", get_identifier()
+		);
+		return false;
+	}
+}
+
+bool CountryInstance::modify_building_type_unlock(BuildingType const& building_type, unlock_level_t unlock_level_change) {
+	decltype(unlocked_building_types)::value_ref_t unlock_level = unlocked_building_types[building_type];
+
+	// This catches subtracting below 0 or adding above the int types maximum value
+	if (unlock_level + unlock_level_change < 0) {
+		Logger::error(
+			"Attempted to change unlock level for building type ", building_type.get_identifier(), " in country ",
+			get_identifier(), " to invalid value: current level = ", static_cast<int64_t>(unlock_level), ", change = ",
+			static_cast<int64_t>(unlock_level_change), ", invalid new value = ",
+			static_cast<int64_t>(unlock_level + unlock_level_change)
+		);
+		return false;
+	}
+
+	unlock_level += unlock_level_change;
+
+	return true;
+}
+
+bool CountryInstance::unlock_building_type(BuildingType const& building_type) {
+	return modify_building_type_unlock(building_type, 1);
+}
+
+bool CountryInstance::is_building_type_unlocked(BuildingType const& building_type) const {
+	return unlocked_building_types[building_type] > 0;
+}
+
+bool CountryInstance::modify_crime_unlock(Crime const& crime, unlock_level_t unlock_level_change) {
+	decltype(unlocked_crimes)::value_ref_t unlock_level = unlocked_crimes[crime];
+
+	// This catches subtracting below 0 or adding above the int types maximum value
+	if (unlock_level + unlock_level_change < 0) {
+		Logger::error(
+			"Attempted to change unlock level for crime ", crime.get_identifier(), " in country ",
+			get_identifier(), " to invalid value: current level = ", static_cast<int64_t>(unlock_level), ", change = ",
+			static_cast<int64_t>(unlock_level_change), ", invalid new value = ",
+			static_cast<int64_t>(unlock_level + unlock_level_change)
+		);
+		return false;
+	}
+
+	unlock_level += unlock_level_change;
+
+	return true;
+}
+
+bool CountryInstance::unlock_crime(Crime const& crime) {
+	return modify_crime_unlock(crime, 1);
+}
+
+bool CountryInstance::is_crime_unlocked(Crime const& crime) const {
+	return unlocked_crimes[crime] > 0;
+}
+
+bool CountryInstance::modify_gas_attack_unlock(unlock_level_t unlock_level_change) {
+	// This catches subtracting below 0 or adding above the int types maximum value
+	if (gas_attack_unlock_level + unlock_level_change < 0) {
+		Logger::error(
+			"Attempted to change unlock level for gas attack in country ", get_identifier(),
+			" to invalid value: current level = ", static_cast<int64_t>(gas_attack_unlock_level), ", change = ",
+			static_cast<int64_t>(unlock_level_change), ", invalid new value = ",
+			static_cast<int64_t>(gas_attack_unlock_level + unlock_level_change)
+		);
+		return false;
+	}
+
+	gas_attack_unlock_level += unlock_level_change;
+
+	return true;
+}
+
+bool CountryInstance::unlock_gas_attack() {
+	return modify_gas_attack_unlock(1);
+}
+
+bool CountryInstance::is_gas_attack_unlocked() const {
+	return gas_attack_unlock_level > 0;
+}
+
+bool CountryInstance::modify_gas_defence_unlock(unlock_level_t unlock_level_change) {
+	// This catches subtracting below 0 or adding above the int types maximum value
+	if (gas_defence_unlock_level + unlock_level_change < 0) {
+		Logger::error(
+			"Attempted to change unlock level for gas defence in country ", get_identifier(),
+			" to invalid value: current level = ", static_cast<int64_t>(gas_defence_unlock_level), ", change = ",
+			static_cast<int64_t>(unlock_level_change), ", invalid new value = ",
+			static_cast<int64_t>(gas_defence_unlock_level + unlock_level_change)
+		);
+		return false;
+	}
+
+	gas_defence_unlock_level += unlock_level_change;
+
+	return true;
+}
+
+bool CountryInstance::unlock_gas_defence() {
+	return modify_gas_defence_unlock(1);
+}
+
+bool CountryInstance::is_gas_defence_unlocked() const {
+	return gas_defence_unlock_level > 0;
+}
+
+bool CountryInstance::modify_unit_variant_unlock(unit_variant_t unit_variant, unlock_level_t unlock_level_change) {
+	if (unit_variant < 1) {
+		Logger::error("Trying to modify unlock level for default unit variant 0");
+		return false;
+	}
+
+	if (unit_variant_unlock_levels.size() < unit_variant) {
+		unit_variant_unlock_levels.resize(unit_variant);
+	}
+
+	unlock_level_t& unlock_level = unit_variant_unlock_levels[unit_variant - 1];
+
+	bool ret = true;
+
+	// This catches subtracting below 0 or adding above the int types maximum value
+	if (unlock_level + unlock_level_change < 0) {
+		Logger::error(
+			"Attempted to change unlock level for unit variant ", static_cast<uint64_t>(unit_variant), " in country ",
+			get_identifier(), " to invalid value: current level = ", static_cast<int64_t>(unlock_level), ", change = ",
+			static_cast<int64_t>(unlock_level_change), ", invalid new value = ",
+			static_cast<int64_t>(unlock_level + unlock_level_change)
+		);
+		ret = false;
+	} else {
+		unlock_level += unlock_level_change;
+	}
+
+	while (!unit_variant_unlock_levels.empty() && unit_variant_unlock_levels.back() < 1) {
+		unit_variant_unlock_levels.pop_back();
+	}
+
+	return ret;
+}
+
+bool CountryInstance::unlock_unit_variant(unit_variant_t unit_variant) {
+	return modify_unit_variant_unlock(unit_variant, 1);
+}
+
+CountryInstance::unit_variant_t CountryInstance::get_max_unlocked_unit_variant() const {
+	return unit_variant_unlock_levels.size();
+}
+
+bool CountryInstance::modify_technology_unlock(Technology const& technology, unlock_level_t unlock_level_change) {
+	decltype(unlocked_technologies)::value_ref_t unlock_level = unlocked_technologies[technology];
+
+	// This catches subtracting below 0 or adding above the int types maximum value
+	if (unlock_level + unlock_level_change < 0) {
+		Logger::error(
+			"Attempted to change unlock level for technology ", technology.get_identifier(), " in country ",
+			get_identifier(), " to invalid value: current level = ", static_cast<int64_t>(unlock_level), ", change = ",
+			static_cast<int64_t>(unlock_level_change), ", invalid new value = ",
+			static_cast<int64_t>(unlock_level + unlock_level_change)
+		);
+		return false;
+	}
+
+	unlock_level += unlock_level_change;
+
+	bool ret = true;
+
+	// TODO - bool unciv_military ?
+
+	if (technology.get_unit_variant().has_value()) {
+		ret &= modify_unit_variant_unlock(*technology.get_unit_variant(), unlock_level_change);
+	}
+	for (UnitType const* unit : technology.get_activated_units()) {
+		ret &= modify_unit_type_unlock(*unit, unlock_level_change);
+	}
+	for (BuildingType const* building : technology.get_activated_buildings()) {
+		ret &= modify_building_type_unlock(*building, unlock_level_change);
+	}
+
+	return ret;
+}
+
+bool CountryInstance::set_technology_unlock_level(Technology const& technology, unlock_level_t unlock_level) {
+	const unlock_level_t unlock_level_change = unlock_level - unlocked_technologies[technology];
+	return unlock_level_change != 0 ? modify_technology_unlock(technology, unlock_level_change) : true;
+}
+
+bool CountryInstance::unlock_technology(Technology const& technology) {
+	return modify_technology_unlock(technology, 1);
+}
+
+bool CountryInstance::is_technology_unlocked(Technology const& technology) const {
+	return unlocked_technologies[technology] > 0;
+}
+
+bool CountryInstance::modify_invention_unlock(Invention const& invention, unlock_level_t unlock_level_change) {
+	decltype(unlocked_inventions)::value_ref_t unlock_level = unlocked_inventions[invention];
+
+	// This catches subtracting below 0 or adding above the int types maximum value
+	if (unlock_level + unlock_level_change < 0) {
+		Logger::error(
+			"Attempted to change unlock level for invention ", invention.get_identifier(), " in country ",
+			get_identifier(), " to invalid value: current level = ", static_cast<int64_t>(unlock_level), ", change = ",
+			static_cast<int64_t>(unlock_level_change), ", invalid new value = ",
+			static_cast<int64_t>(unlock_level + unlock_level_change)
+		);
+		return false;
+	}
+
+	unlock_level += unlock_level_change;
+
+	bool ret = true;
+
+	// TODO - handle invention.is_news()
+
+	for (UnitType const* unit : invention.get_activated_units()) {
+		ret &= modify_unit_type_unlock(*unit, unlock_level_change);
+	}
+	for (BuildingType const* building : invention.get_activated_buildings()) {
+		ret &= modify_building_type_unlock(*building, unlock_level_change);
+	}
+	for (Crime const* crime : invention.get_enabled_crimes()) {
+		ret &= modify_crime_unlock(*crime, unlock_level_change);
+	}
+	if (invention.will_unlock_gas_attack()) {
+		ret &= modify_gas_attack_unlock(unlock_level_change);
+	}
+	if (invention.will_unlock_gas_defence()) {
+		ret &= modify_gas_defence_unlock(unlock_level_change);
+	}
+
+	return ret;
+}
+
+bool CountryInstance::set_invention_unlock_level(Invention const& invention, unlock_level_t unlock_level) {
+	const unlock_level_t unlock_level_change = unlock_level - unlocked_inventions[invention];
+	return unlock_level_change != 0 ? modify_invention_unlock(invention, unlock_level_change) : true;
+}
+
+bool CountryInstance::unlock_invention(Invention const& invention) {
+	return modify_invention_unlock(invention, 1);
+}
+
+bool CountryInstance::is_invention_unlocked(Invention const& invention) const {
+	return unlocked_inventions[invention] > 0;
+}
 
 bool CountryInstance::is_primary_culture(Culture const& culture) const {
 	return &culture == primary_culture;
@@ -362,7 +676,9 @@ bool CountryInstance::apply_history_to_country(
 		ret &= add_accepted_culture(*culture);
 	}
 	set_optional(religion, entry.get_religion());
-	set_optional(ruling_party, entry.get_ruling_party());
+	if (entry.get_ruling_party()) {
+		ret &= set_ruling_party(**entry.get_ruling_party());
+	}
 	set_optional(last_election, entry.get_last_election());
 	ret &= upper_house.copy(entry.get_upper_house());
 	if (entry.get_capital()) {
@@ -376,7 +692,7 @@ bool CountryInstance::apply_history_to_country(
 	}
 	set_optional(prestige, entry.get_prestige());
 	for (Reform const* reform : entry.get_reforms()) {
-		ret &= add_reform(reform);
+		ret &= add_reform(*reform);
 	}
 	set_optional(tech_school, entry.get_tech_school());
 	constexpr auto set_bool_map_to_indexed_map =
@@ -385,8 +701,12 @@ bool CountryInstance::apply_history_to_country(
 				target[*key] = value;
 			}
 		};
-	set_bool_map_to_indexed_map(technologies, entry.get_technologies());
-	set_bool_map_to_indexed_map(inventions, entry.get_inventions());
+	for (auto const& [technology, level] : entry.get_technologies()) {
+		ret &= set_technology_unlock_level(*technology, level);
+	}
+	for (auto const& [invention, activated] : entry.get_inventions()) {
+		ret &= set_invention_unlock_level(*invention, activated ? 1 : 0);
+	}
 	apply_foreign_investments(entry.get_foreign_investment(), country_instance_manager);
 
 	// These need to be applied to pops
@@ -583,6 +903,26 @@ void CountryInstance::_update_military(DefineManager const& define_manager, Unit
 	// TODO - update max_ship_supply, leadership_points, war_exhaustion
 }
 
+bool CountryInstance::update_rule_set() {
+	rule_set.clear();
+
+	if (ruling_party != nullptr) {
+		for (Issue const* issue : ruling_party->get_policies()) {
+			if (issue != nullptr) {
+				rule_set |= issue->get_rules();
+			}
+		}
+	}
+
+	for (Reform const* reform : reforms) {
+		if (reform != nullptr) {
+			rule_set |= reform->get_rules();
+		}
+	}
+
+	return rule_set.trim_and_resolve_conflicts(true);
+}
+
 void CountryInstance::update_gamestate(DefineManager const& define_manager, UnitTypeManager const& unit_type_manager) {
 	// Order of updates might need to be changed/functions split up to account for dependencies
 	_update_production(define_manager);
@@ -751,24 +1091,38 @@ CountryInstance const& CountryInstanceManager::get_country_instance_from_definit
 
 bool CountryInstanceManager::generate_country_instances(
 	CountryDefinitionManager const& country_definition_manager,
-	decltype(CountryInstance::technologies)::keys_t const& technology_keys,
-	decltype(CountryInstance::inventions)::keys_t const& invention_keys,
+	decltype(CountryInstance::unlocked_building_types)::keys_t const& building_type_keys,
+	decltype(CountryInstance::unlocked_technologies)::keys_t const& technology_keys,
+	decltype(CountryInstance::unlocked_inventions)::keys_t const& invention_keys,
 	decltype(CountryInstance::upper_house)::keys_t const& ideology_keys,
+	decltype(CountryInstance::reforms)::keys_t const& reform_keys,
 	decltype(CountryInstance::government_flag_overrides)::keys_t const& government_type_keys,
+	decltype(CountryInstance::unlocked_crimes)::keys_t const& crime_keys,
 	decltype(CountryInstance::pop_type_distribution)::keys_t const& pop_type_keys,
 	decltype(CountryInstance::unlocked_regiment_types)::keys_t const& unlocked_regiment_types_keys,
 	decltype(CountryInstance::unlocked_ship_types)::keys_t const& unlocked_ship_types_keys
 ) {
 	reserve_more(country_instances, country_definition_manager.get_country_definition_count());
 
+	bool ret = true;
+
 	for (CountryDefinition const& country_definition : country_definition_manager.get_country_definitions()) {
-		country_instances.add_item({
-			&country_definition, technology_keys, invention_keys, ideology_keys, government_type_keys, pop_type_keys,
-			unlocked_regiment_types_keys, unlocked_ship_types_keys
+		ret &= country_instances.add_item({
+			&country_definition,
+			building_type_keys,
+			technology_keys,
+			invention_keys,
+			ideology_keys,
+			reform_keys,
+			government_type_keys,
+			crime_keys,
+			pop_type_keys,
+			unlocked_regiment_types_keys,
+			unlocked_ship_types_keys
 		});
 	}
 
-	return true;
+	return ret;
 }
 
 bool CountryInstanceManager::apply_history_to_countries(
