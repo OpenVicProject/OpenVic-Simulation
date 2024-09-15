@@ -14,7 +14,8 @@ using namespace OpenVic::NodeTools;
 
 MapDefinition::MapDefinition() : dims { 0, 0 }, max_provinces { ProvinceDefinition::MAX_INDEX } {}
 
-RiverSegment::RiverSegment(uint8_t new_size, std::vector<ivec2_t> new_points) : size { new_size }, points { std::move(new_points) } {}
+RiverSegment::RiverSegment(uint8_t new_size, std::vector<ivec2_t>&& new_points)
+	: size { new_size }, points { std::move(new_points) } {}
 
 bool MapDefinition::add_province_definition(std::string_view identifier, colour_t colour) {
 	if (province_definitions.size() >= max_provinces) {
@@ -533,7 +534,7 @@ bool MapDefinition::load_map_images(fs::path const& province_path, fs::path cons
 	}
 
 	BMP rivers_bmp;
-	if (!(rivers_bmp.open(rivers_path) && rivers_bmp.read_header() && rivers_bmp.read_palette() && rivers_bmp.read_pixel_data())) {
+	if (!(rivers_bmp.open(rivers_path) && rivers_bmp.read_header() && rivers_bmp.read_pixel_data())) {
 		Logger::error("Failed to read BMP for compatibility mode river image: ", rivers_path);
 		return false;
 	}
@@ -674,7 +675,7 @@ bool MapDefinition::load_map_images(fs::path const& province_path, fs::path cons
 
 	uint8_t const* river_data = rivers_bmp.get_pixel_data().data();
 
-	/** Generating River Segments - Unoptimised & Unprofiled
+	/** Generating River Segments
 		1. check pixels up, right, down, and left from last_segment_end for a colour <12
 		2. add first point
 		3. set size of segment based on color value at first point
@@ -693,14 +694,14 @@ bool MapDefinition::load_map_images(fs::path const& province_path, fs::path cons
 		size_t idx = last_segment_end.x + last_segment_end.y * rivers_bmp.get_width();
 
 		std::vector<ivec2_t> points;
-		uint8_t direction;
+		uint8_t direction = 0;
 
 		// check pixel above
 		if (last_segment_end.y > 0 && last_segment_direction != 1) { // check for bounds & ignore direction
 			if (river_data[idx - rivers_bmp.get_width()] < 12) {
 				points.push_back({ last_segment_end.x, last_segment_end.y - 1 });
 				direction = 2;
-			}	
+			}
 		}
 		// check pixel to right
 		if (last_segment_end.x < rivers_bmp.get_width() - 1 && last_segment_direction != 4) {
@@ -724,6 +725,10 @@ bool MapDefinition::load_map_images(fs::path const& province_path, fs::path cons
 			}
 		}
 
+		if (points.empty()) {
+			Logger::error("River analysis failed: single-pixel river @ (", last_segment_end.x, ", ", last_segment_end.y, ").");
+			return;
+		}
 		uint8_t size = river_data[points.front().x + points.front().y * rivers_bmp.get_width()] - 1; // size of river from 1 - 10 determined by colour
 
 		bool river_complete = false;
@@ -742,7 +747,7 @@ bool MapDefinition::load_map_images(fs::path const& province_path, fs::path cons
 			idx = points.back().x + points.back().y * rivers_bmp.get_width();
 
 			ivec2_t merge_location;
-			bool merge;
+			bool merge = false;
 
 			// check pixel above
 			if (points.back().y > 0 && direction != 1) { // check for bounds & ignore direction
@@ -811,17 +816,26 @@ bool MapDefinition::load_map_images(fs::path const& province_path, fs::path cons
 			break;
 		}
 
-		// TODO: implement optimisation algorithm to remove irrelevant points. Ramer-Douglas-Peucker?
+		// save memory & simplify by storing only start, corner, and end points.
+		const auto is_corner_point = [](ivec2_t previous, ivec2_t current, ivec2_t next) {
+			return ((current.x - previous.x) * (next.y - current.y)) != ((current.y - previous.y) * (next.x - current.x)); // slope is fun
+		};
+		std::vector<ivec2_t> simplified_points;
+		simplified_points.push_back(points.front()); // add starting point
+		for (int i = 1; i < points.size()-1; ++i) {
+			if (is_corner_point(points[i-1], points[i], points[i+1])) { // add corner points
+				simplified_points.push_back(points[i]);
+			}
+		}
+		simplified_points.push_back(points.back());
 
 		// add segment then recursively call if neeeded
-		river.push_back({ size, points });
-
+		river.push_back({ size, std::move(simplified_points) });
 		if (river_complete) return;
 		next_segment(new_point, direction, river);
 	};
 
 	// find every river source and then run the segment algorithm.
-	int temp = 0;
 	for (int y = 0; y < rivers_bmp.get_height(); ++y) {
 		for (int x = 0; x < rivers_bmp.get_width(); ++x) {
 			if (river_data[x + y * rivers_bmp.get_width()] == START_COLOUR) { // start of a river
@@ -829,7 +843,7 @@ bool MapDefinition::load_map_images(fs::path const& province_path, fs::path cons
 
 				next_segment({ x, y }, 0, river);
 
-				rivers.push_back(river);
+				rivers.push_back(std::move(river));
 			}
 		}
 	}
