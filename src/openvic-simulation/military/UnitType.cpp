@@ -318,12 +318,15 @@ bool UnitTypeManager::load_unit_type_file(
 bool UnitTypeManager::generate_modifiers(ModifierManager& modifier_manager) const {
 	bool ret = true;
 
-	const auto generate_stat_modifiers = [&modifier_manager, &ret](std::string_view identifier, UnitType::branch_t branch) -> void {
+	const auto generate_stat_modifiers = [&modifier_manager, &ret](
+		std::string_view identifier, UnitType::branch_t branch
+	) -> void {
 		const auto stat_modifier = [&modifier_manager, &ret, &identifier](
 			std::string_view suffix, bool is_positive_good, ModifierEffect::format_t format
 		) -> void {
 			ret &= modifier_manager.add_modifier_effect(
-				ModifierManager::get_flat_identifier(identifier, suffix), is_positive_good, format
+				ModifierManager::get_flat_identifier(identifier, suffix), is_positive_good, format,
+				StringUtils::append_string_views("$", identifier, "$: $", suffix, "$")
 			);
 		};
 

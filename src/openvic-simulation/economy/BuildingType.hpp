@@ -7,7 +7,6 @@
 #include "openvic-simulation/types/IdentifierRegistry.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
 
-
 namespace OpenVic {
 
 	struct BuildingTypeManager;

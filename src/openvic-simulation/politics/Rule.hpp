@@ -28,8 +28,11 @@ namespace OpenVic {
 
 	private:
 		const rule_group_t PROPERTY(group);
+		std::string PROPERTY(localisation_key);
 
-		Rule(std::string_view new_identifier, rule_group_t new_group, index_t new_index);
+		Rule(
+			std::string_view new_identifier, rule_group_t new_group, index_t new_index, std::string_view new_localisation_key
+		);
 
 	public:
 		Rule(Rule&&) = default;
@@ -81,7 +84,7 @@ namespace OpenVic {
 		ordered_map<Rule::rule_group_t, size_t> rule_group_sizes;
 
 	public:
-		bool add_rule(std::string_view identifier, Rule::rule_group_t group);
+		bool add_rule(std::string_view identifier, Rule::rule_group_t group, std::string_view localisation_key = {});
 
 		bool setup_rules(BuildingTypeManager const& building_type_manager);
 

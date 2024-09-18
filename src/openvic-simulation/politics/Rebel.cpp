@@ -176,16 +176,23 @@ bool RebelManager::load_rebels_file(
 }
 
 bool RebelManager::generate_modifiers(ModifierManager& modifier_manager) const {
+	using enum ModifierEffect::format_t;
+
 	bool ret = true;
+
 	static constexpr std::string_view identifier = "rebel_org_gain";
 	static constexpr bool is_positive_good = false;
+
 	ret &= modifier_manager.register_complex_modifier(identifier);
 
-	ret &= modifier_manager.add_modifier_effect(ModifierManager::get_flat_identifier(identifier, "all"), is_positive_good);
+	ret &= modifier_manager.add_modifier_effect(
+		ModifierManager::get_flat_identifier(identifier, "all"), is_positive_good, PROPORTION_DECIMAL, "TECH_REBEL_ORG_GAIN"
+	);
 
 	for (RebelType const& rebel_type : get_rebel_types()) {
 		ret &= modifier_manager.add_modifier_effect(
-			ModifierManager::get_flat_identifier(identifier, rebel_type.get_identifier()), is_positive_good
+			ModifierManager::get_flat_identifier(identifier, rebel_type.get_identifier()), is_positive_good, PROPORTION_DECIMAL,
+			StringUtils::append_string_views("$", rebel_type.get_identifier(), "_title$ $TECH_REBEL_ORG_GAIN$")
 		);
 	}
 	return ret;
