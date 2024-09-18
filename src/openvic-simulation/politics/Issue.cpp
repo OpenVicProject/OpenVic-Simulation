@@ -8,8 +8,8 @@ IssueGroup::IssueGroup(std::string_view new_identifier) : HasIdentifier { new_id
 Issue::Issue(
 	std::string_view new_identifier, colour_t new_colour, ModifierValue&& new_values, IssueGroup const& new_group,
 	RuleSet&& new_rules, bool new_jingoism
-) : HasIdentifierAndColour { new_identifier, new_colour, false }, ModifierValue { std::move(new_values) },
-	group { new_group }, rules { std::move(new_rules) }, jingoism { new_jingoism } {}
+) : Modifier { new_identifier, std::move(new_values) }, HasColour { new_colour, false }, group { new_group },
+	rules { std::move(new_rules) }, jingoism { new_jingoism } {}
 
 ReformType::ReformType(std::string_view new_identifier, bool new_uncivilised)
 	: HasIdentifier { new_identifier }, uncivilised { new_uncivilised } {}

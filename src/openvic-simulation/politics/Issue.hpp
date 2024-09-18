@@ -21,7 +21,7 @@ namespace OpenVic {
 	};
 
 	// Issue (i.e. protectionism)
-	struct Issue : HasIdentifierAndColour, ModifierValue {
+	struct Issue : Modifier, HasColour {
 		friend struct IssueManager;
 
 	private:
