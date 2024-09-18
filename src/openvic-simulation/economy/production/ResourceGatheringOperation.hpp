@@ -1,6 +1,6 @@
 #pragma once
 
-#include "openvic-simulation/economy/ProductionType.hpp"
+#include "openvic-simulation/economy/production/ProductionType.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
 #include "openvic-simulation/utility/Getters.hpp"
 
@@ -16,11 +16,8 @@ namespace OpenVic {
 
 	public:
 		ResourceGatheringOperation(
-			ProductionType const& new_production_type,
-			fixed_point_t new_size_multiplier,
-			fixed_point_t new_revenue_yesterday,
-			fixed_point_t new_output_quantity_yesterday,
-			fixed_point_t new_unsold_quantity_yesterday,
+			ProductionType const& new_production_type, fixed_point_t new_size_multiplier, fixed_point_t new_revenue_yesterday,
+			fixed_point_t new_output_quantity_yesterday, fixed_point_t new_unsold_quantity_yesterday,
 			ordered_map<Pop*, Pop::pop_size_t>&& new_employees
 		);
 		ResourceGatheringOperation(ProductionType const& new_production_type, fixed_point_t new_size_multiplier);
