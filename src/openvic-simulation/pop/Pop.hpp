@@ -32,7 +32,7 @@ namespace OpenVic {
 	struct PopBase {
 		friend struct PopManager;
 
-		using pop_size_t = int64_t;
+		using pop_size_t = int32_t;
 
 	protected:
 		PopType const& PROPERTY_ACCESS(type, protected);

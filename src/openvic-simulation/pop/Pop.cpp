@@ -642,8 +642,8 @@ bool PopManager::load_pop_bases_into_vector(
 		*non_integer_size = true;
 	}
 
-	if (culture != nullptr && religion != nullptr && size >= 1) {
-		vec.emplace_back(PopBase { type, *culture, *religion, size.to_int64_t(), militancy, consciousness, rebel_type });
+	if (culture != nullptr && religion != nullptr && size >= 1 && size <= std::numeric_limits<Pop::pop_size_t>::max()) {
+		vec.emplace_back(PopBase { type, *culture, *religion, size.to_int32_t(), militancy, consciousness, rebel_type });
 	} else {
 		Logger::warning(
 			"Some pop arguments are invalid: culture = ", culture, ", religion = ", religion, ", size = ", size
