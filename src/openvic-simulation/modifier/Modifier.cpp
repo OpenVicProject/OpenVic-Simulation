@@ -49,22 +49,26 @@ bool ModifierValue::empty() const {
 	return values.empty();
 }
 
-fixed_point_t ModifierValue::get_effect(ModifierEffect const* effect, bool* successful) {
-	const effect_map_t::const_iterator it = values.find(effect);
+fixed_point_t ModifierValue::get_effect(ModifierEffect const& effect, bool* effect_found) const {
+	const effect_map_t::const_iterator it = values.find(&effect);
 	if (it != values.end()) {
-		if (successful != nullptr) {
-			*successful = true;
+		if (effect_found != nullptr) {
+			*effect_found = true;
 		}
 		return it->second;
 	}
-	if (successful != nullptr) {
-		*successful = false;
+	if (effect_found != nullptr) {
+		*effect_found = false;
 	}
 	return fixed_point_t::_0();
 }
 
-bool ModifierValue::has_effect(ModifierEffect const* effect) const {
-	return values.contains(effect);
+bool ModifierValue::has_effect(ModifierEffect const& effect) const {
+	return values.contains(&effect);
+}
+
+void ModifierValue::set_effect(ModifierEffect const& effect, fixed_point_t value) {
+	values[&effect] = value;
 }
 
 ModifierValue& ModifierValue::operator+=(ModifierValue const& right) {
@@ -75,16 +79,16 @@ ModifierValue& ModifierValue::operator+=(ModifierValue const& right) {
 }
 
 ModifierValue ModifierValue::operator+(ModifierValue const& right) const {
-	ModifierValue ret = *this;
-	return ret += right;
+	ModifierValue copy = *this;
+	return copy += right;
 }
 
 ModifierValue ModifierValue::operator-() const {
-	ModifierValue ret = *this;
-	for (auto value : mutable_iterator(ret.values)) {
+	ModifierValue copy = *this;
+	for (auto value : mutable_iterator(copy.values)) {
 		value.second = -value.second;
 	}
-	return ret;
+	return copy;
 }
 
 ModifierValue& ModifierValue::operator-=(ModifierValue const& right) {
@@ -95,8 +99,34 @@ ModifierValue& ModifierValue::operator-=(ModifierValue const& right) {
 }
 
 ModifierValue ModifierValue::operator-(ModifierValue const& right) const {
-	ModifierValue ret = *this;
-	return ret -= right;
+	ModifierValue copy = *this;
+	return copy -= right;
+}
+
+ModifierValue& ModifierValue::operator*=(fixed_point_t const& right) {
+	for (auto value : mutable_iterator(values)) {
+		value.second *= right;
+	}
+	return *this;
+}
+
+ModifierValue ModifierValue::operator*(fixed_point_t const& right) const {
+	ModifierValue copy = *this;
+	return copy *= right;
+}
+
+fixed_point_t& ModifierValue::operator[](ModifierEffect const& effect) {
+	return values[&effect];
+}
+
+void ModifierValue::multiply_add(ModifierValue const& other, fixed_point_t multiplier) {
+	if (multiplier == fixed_point_t::_1()) {
+		*this += other;
+	} else if (multiplier != fixed_point_t::_0()) {
+		for (effect_map_t::value_type const& value : other.values) {
+			values[value.first] += value.second * multiplier;
+		}
+	}
 }
 
 Modifier::Modifier(std::string_view new_identifier, ModifierValue&& new_values, icon_t new_icon)
@@ -110,8 +140,8 @@ bool TriggeredModifier::parse_scripts(DefinitionManager const& definition_manage
 	return trigger.parse_script(false, definition_manager);
 }
 
-ModifierInstance::ModifierInstance(Modifier const& modifier, Date expiry_date)
-	: modifier { modifier }, expiry_date { expiry_date } {}
+ModifierInstance::ModifierInstance(Modifier const& new_modifier, Date new_expiry_date)
+	: modifier { &new_modifier }, expiry_date { new_expiry_date } {}
 
 bool ModifierManager::add_modifier_effect(
 	std::string_view identifier, bool positive_good, ModifierEffect::format_t format, std::string_view localisation_key

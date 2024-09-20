@@ -83,54 +83,42 @@ bool RuleSet::empty() const {
 	return true;
 }
 
-RuleSet::rule_map_t const& RuleSet::get_rule_group(Rule::rule_group_t group, bool* successful) const {
+RuleSet::rule_map_t const& RuleSet::get_rule_group(Rule::rule_group_t group, bool* rule_group_found) const {
 	const rule_group_map_t::const_iterator it = rule_groups.find(group);
 	if (it != rule_groups.end()) {
-		if (successful != nullptr) {
-			*successful = true;
+		if (rule_group_found != nullptr) {
+			*rule_group_found = true;
 		}
 		return it->second;
 	}
-	if (successful != nullptr) {
-		*successful = false;
+	if (rule_group_found != nullptr) {
+		*rule_group_found = false;
 	}
 	static const rule_map_t empty_map {};
 	return empty_map;
 }
 
-bool RuleSet::get_rule(Rule const* rule, bool* successful) const {
-	if (rule == nullptr) {
-		Logger::error("Invalid rule - null!");
-		return false;
-	}
-	rule_map_t const& rule_map = get_rule_group(rule->get_group());
-	const rule_map_t::const_iterator it = rule_map.find(rule);
+bool RuleSet::get_rule(Rule const& rule, bool* rule_found) const {
+	rule_map_t const& rule_map = get_rule_group(rule.get_group());
+	const rule_map_t::const_iterator it = rule_map.find(&rule);
 	if (it != rule_map.end()) {
-		if (successful != nullptr) {
-			*successful = true;
+		if (rule_found != nullptr) {
+			*rule_found = true;
 		}
 		return it->second;
 	}
-	if (successful != nullptr) {
-		*successful = false;
+	if (rule_found != nullptr) {
+		*rule_found = false;
 	}
-	return Rule::is_default_enabled(rule->get_group());
+	return Rule::is_default_enabled(rule.get_group());
 }
 
-bool RuleSet::has_rule(Rule const* rule) const {
-	if (rule == nullptr) {
-		Logger::error("Invalid rule - null!");
-		return false;
-	}
-	return get_rule_group(rule->get_group()).contains(rule);
+bool RuleSet::has_rule(Rule const& rule) const {
+	return get_rule_group(rule.get_group()).contains(&rule);
 }
 
-bool RuleSet::set_rule(Rule const* rule, bool value) {
-	if (rule == nullptr) {
-		Logger::error("Invalid rule - null!");
-		return false;
-	}
-	rule_groups[rule->get_group()][rule] = value;
+bool RuleSet::set_rule(Rule const& rule, bool value) {
+	rule_groups[rule.get_group()][&rule] = value;
 	return true;
 }
 
@@ -144,8 +132,8 @@ RuleSet& RuleSet::operator|=(RuleSet const& right) {
 }
 
 RuleSet RuleSet::operator|(RuleSet const& right) const {
-	RuleSet ret = *this;
-	return ret |= right;
+	RuleSet copy = *this;
+	return copy |= right;
 }
 
 bool RuleManager::add_rule(std::string_view identifier, Rule::rule_group_t group, std::string_view localisation_key) {

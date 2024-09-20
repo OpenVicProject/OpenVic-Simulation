@@ -2,7 +2,7 @@
 
 #include <cstdint>
 
-#include "openvic-simulation/misc/Modifier.hpp"
+#include "openvic-simulation/modifier/Modifier.hpp"
 #include "openvic-simulation/politics/Government.hpp"
 #include "openvic-simulation/politics/Ideology.hpp"
 #include "openvic-simulation/scripts/ConditionalWeight.hpp"

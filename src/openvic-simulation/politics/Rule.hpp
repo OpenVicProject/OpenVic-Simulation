@@ -65,12 +65,12 @@ namespace OpenVic {
 		void clear();
 		bool empty() const;
 
-		rule_map_t const& get_rule_group(Rule::rule_group_t group, bool* successful = nullptr) const;
-		bool get_rule(Rule const* rule, bool* successful = nullptr) const;
-		bool has_rule(Rule const* rule) const;
+		rule_map_t const& get_rule_group(Rule::rule_group_t group, bool* rule_group_found = nullptr) const;
+		bool get_rule(Rule const& rule, bool* rule_found = nullptr) const;
+		bool has_rule(Rule const& rule) const;
 
 		/* Sets the rule to the specified value. Returns false if there was an existing rule, regardless of its value. */
-		bool set_rule(Rule const* rule, bool value);
+		bool set_rule(Rule const& rule, bool value);
 
 		RuleSet& operator|=(RuleSet const& right);
 		RuleSet operator|(RuleSet const& right) const;

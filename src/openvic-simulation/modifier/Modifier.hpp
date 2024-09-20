@@ -57,14 +57,21 @@ namespace OpenVic {
 		void clear();
 		bool empty() const;
 
-		fixed_point_t get_effect(ModifierEffect const* effect, bool* successful = nullptr);
-		bool has_effect(ModifierEffect const* effect) const;
+		fixed_point_t get_effect(ModifierEffect const& effect, bool* effect_found = nullptr) const;
+		bool has_effect(ModifierEffect const& effect) const;
+		void set_effect(ModifierEffect const& effect, fixed_point_t value);
 
 		ModifierValue& operator+=(ModifierValue const& right);
 		ModifierValue operator+(ModifierValue const& right) const;
 		ModifierValue operator-() const;
 		ModifierValue& operator-=(ModifierValue const& right);
 		ModifierValue operator-(ModifierValue const& right) const;
+		ModifierValue& operator*=(fixed_point_t const& right);
+		ModifierValue operator*(fixed_point_t const& right) const;
+
+		fixed_point_t& operator[](ModifierEffect const& effect);
+
+		void multiply_add(ModifierValue const& other, fixed_point_t multiplier);
 
 		friend std::ostream& operator<<(std::ostream& stream, ModifierValue const& value);
 	};
@@ -105,10 +112,11 @@ namespace OpenVic {
 	struct ModifierInstance {
 
 	private:
-		Modifier const& PROPERTY(modifier);
+		Modifier const* PROPERTY(modifier); // We can assume this is never null
 		Date PROPERTY(expiry_date);
 
-		ModifierInstance(Modifier const& modifier, Date expiry_date);
+	public:
+		ModifierInstance(Modifier const& new_modifier, Date new_expiry_date);
 	};
 
 	template<typename Fn>
