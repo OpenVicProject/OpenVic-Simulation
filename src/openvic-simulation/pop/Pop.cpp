@@ -653,6 +653,8 @@ bool PopManager::load_pop_bases_into_vector(
 }
 
 bool PopManager::generate_modifiers(ModifierManager& modifier_manager) const {
+	using enum ModifierEffect::format_t;
+
 	bool ret = true;
 
 	for (Strata const& strata : get_stratas()) {
@@ -673,7 +675,10 @@ bool PopManager::generate_modifiers(ModifierManager& modifier_manager) const {
 	}
 
 	for (PopType const& pop_type : get_pop_types()) {
-		ret &= modifier_manager.add_modifier_effect(pop_type.get_identifier(), true);
+		ret &= modifier_manager.add_modifier_effect(
+			pop_type.get_identifier(), true, PROPORTION_DECIMAL,
+			StringUtils::append_string_views("$ENCOURAGEMENT_FOR$$", pop_type.get_identifier(), "$")
+		);
 	}
 
 	return ret;

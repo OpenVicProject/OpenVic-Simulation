@@ -1,11 +1,10 @@
 #pragma once
 
+#include <openvic-dataloader/v2script/Parser.hpp>
+
 #include "openvic-simulation/economy/BuildingType.hpp"
 #include "openvic-simulation/economy/GoodDefinition.hpp"
 #include "openvic-simulation/economy/production/ProductionType.hpp"
-
-#include "openvic-dataloader/v2script/Parser.hpp"
-
 
 namespace OpenVic {
 	struct EconomyManager {

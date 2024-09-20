@@ -88,29 +88,46 @@ bool GoodDefinitionManager::load_goods_file(ast::NodeCPtr root) {
 }
 
 bool GoodDefinitionManager::generate_modifiers(ModifierManager& modifier_manager) const {
+	using enum ModifierEffect::format_t;
+
 	bool ret = true;
 
-	const auto good_modifier = [this, &modifier_manager, &ret](std::string_view name, bool is_positive_good) -> void {
+	const auto good_modifier = [this, &modifier_manager, &ret](
+		std::string_view name, bool is_positive_good, auto make_localisation_suffix
+	) -> void {
 		ret &= modifier_manager.register_complex_modifier(name);
+
 		for (GoodDefinition const& good : get_good_definitions()) {
 			ret &= modifier_manager.add_modifier_effect(
-				ModifierManager::get_flat_identifier(name, good.get_identifier()), is_positive_good
+				ModifierManager::get_flat_identifier(name, good.get_identifier()), is_positive_good, PROPORTION_DECIMAL,
+				make_localisation_suffix(good.get_identifier())
 			);
 		}
 	};
 
-	good_modifier("artisan_goods_input", false);
-	good_modifier("artisan_goods_output", true);
-	good_modifier("artisan_goods_throughput", true);
-	good_modifier("factory_goods_input", false);
-	good_modifier("factory_goods_output", true);
-	good_modifier("factory_goods_throughput", true);
-	good_modifier("rgo_goods_output", true);
-	good_modifier("rgo_goods_throughput", true);
-	good_modifier("rgo_size", true);
+	const auto make_production_localisation_suffix = [](std::string_view localisation_suffix) -> auto {
+		return [localisation_suffix](std::string_view good_identifier) -> std::string {
+			return StringUtils::append_string_views("$", good_identifier,  "$ $", localisation_suffix, "$");
+		};
+	};
+
+	good_modifier("artisan_goods_input", false, make_production_localisation_suffix("TECH_INPUT"));
+	good_modifier("artisan_goods_output", true, make_production_localisation_suffix("TECH_OUTPUT"));
+	good_modifier("artisan_goods_throughput", true, make_production_localisation_suffix("TECH_THROUGHPUT"));
+	good_modifier("factory_goods_input", false, make_production_localisation_suffix("TECH_INPUT"));
+	good_modifier("factory_goods_output", true, make_production_localisation_suffix("TECH_OUTPUT"));
+	good_modifier("factory_goods_throughput", true, make_production_localisation_suffix("TECH_THROUGHPUT"));
+	good_modifier("rgo_goods_output", true, make_production_localisation_suffix("TECH_OUTPUT"));
+	good_modifier("rgo_goods_throughput", true, make_production_localisation_suffix("TECH_THROUGHPUT"));
+	good_modifier("rgo_size", true, [](std::string_view good_identifier) -> std::string {
+		return StringUtils::append_string_views(good_identifier, "_RGO_SIZE");
+	});
 
 	for (GoodDefinition const& good : get_good_definitions()) {
-		ret &= modifier_manager.add_modifier_effect(good.get_identifier(), true, ModifierEffect::format_t::PERCENTAGE_DECIMAL);
+		ret &= modifier_manager.add_modifier_effect(
+			good.get_identifier(), true, PERCENTAGE_DECIMAL,
+			StringUtils::append_string_views("$ENCOURAGEMENT_FOR$$", good.get_identifier(), "$")
+		);
 	}
 
 	return ret;

@@ -160,6 +160,22 @@ namespace OpenVic::StringUtils {
 		return std::equal(lhs.begin(), lhs.end(), rhs.begin(), rhs.end(), ichar_equals);
 	}
 
+	inline constexpr std::string string_tolower(std::string_view str) {
+		std::string result { str };
+		std::transform(result.begin(), result.end(), result.begin(),
+			[](unsigned char c) -> unsigned char { return std::tolower(c); }
+		);
+		return result;
+	}
+
+	inline constexpr std::string string_toupper(std::string_view str) {
+		std::string result { str };
+		std::transform(result.begin(), result.end(), result.begin(),
+			[](unsigned char c) -> unsigned char { return std::toupper(c); }
+		);
+		return result;
+	}
+
 	inline constexpr std::string_view get_filename(std::string_view path) {
 		size_t pos = path.size();
 		while (pos > 0 && path[pos - 1] != '/' && path[pos - 1] != '\\') {

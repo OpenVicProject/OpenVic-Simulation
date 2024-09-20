@@ -22,10 +22,13 @@ namespace OpenVic {
 		 */
 		const bool PROPERTY_CUSTOM_PREFIX(positive_good, is);
 		const format_t PROPERTY(format);
+		std::string PROPERTY(localisation_key);
 
 		// TODO - format/precision, e.g. 80% vs 0.8 vs 0.800, 2 vs 2.0 vs 200%
 
-		ModifierEffect(std::string_view new_identifier, bool new_positive_good, format_t new_format);
+		ModifierEffect(
+			std::string_view new_identifier, bool new_positive_good, format_t new_format, std::string_view new_localisation_key
+		);
 
 	public:
 		ModifierEffect(ModifierEffect&&) = default;
@@ -133,7 +136,8 @@ namespace OpenVic {
 	public:
 		bool add_modifier_effect(
 			std::string_view identifier, bool positive_good,
-			ModifierEffect::format_t format = ModifierEffect::format_t::PROPORTION_DECIMAL
+			ModifierEffect::format_t format = ModifierEffect::format_t::PROPORTION_DECIMAL,
+			std::string_view localisation_key = {}
 		);
 
 		bool register_complex_modifier(std::string_view identifier);

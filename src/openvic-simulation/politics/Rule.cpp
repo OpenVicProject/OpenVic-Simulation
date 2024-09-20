@@ -6,8 +6,15 @@
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;
 
-Rule::Rule(std::string_view new_identifier, rule_group_t new_group, index_t new_index)
-  : HasIdentifier { new_identifier }, HasIndex { new_index }, group { new_group } {}
+static std::string make_default_rule_localisation_key(std::string_view identifier) {
+	return "RULE_" + StringUtils::string_toupper(identifier);
+}
+
+Rule::Rule(std::string_view new_identifier, rule_group_t new_group, index_t new_index, std::string_view new_localisation_key)
+  : HasIdentifier { new_identifier }, HasIndex { new_index }, group { new_group },
+	localisation_key {
+		new_localisation_key.empty() ? make_default_rule_localisation_key(new_identifier) : new_localisation_key
+	} {}
 
 RuleSet::RuleSet(rule_group_map_t&& new_rule_groups) : rule_groups { std::move(new_rule_groups) } {}
 
@@ -141,12 +148,12 @@ RuleSet RuleSet::operator|(RuleSet const& right) const {
 	return ret |= right;
 }
 
-bool RuleManager::add_rule(std::string_view identifier, Rule::rule_group_t group) {
+bool RuleManager::add_rule(std::string_view identifier, Rule::rule_group_t group, std::string_view localisation_key) {
 	if (identifier.empty()) {
 		Logger::error("Invalid rule identifier - empty!");
 		return false;
 	}
-	return rules.add_item({ identifier, group, rule_group_sizes[group]++ });
+	return rules.add_item({ identifier, group, rule_group_sizes[group]++, localisation_key });
 }
 
 bool RuleManager::setup_rules(BuildingTypeManager const& building_type_manager) {
@@ -156,10 +163,11 @@ bool RuleManager::setup_rules(BuildingTypeManager const& building_type_manager) 
 
 	static const ordered_map<Rule::rule_group_t, std::vector<std::string_view>> hardcoded_rules {
 		{ ECONOMY, {
-			"expand_factory", "open_factory", "destroy_factory", "pop_build_factory", "pop_expand_factory", "pop_open_factory",
-			"can_subsidise", "factory_priority", "delete_factory_if_no_input", "build_factory_invest", "expand_factory_invest",
-			"open_factory_invest", "build_railway_invest", "pop_build_factory_invest", "pop_expand_factory_invest",
-			"can_invest_in_pop_projects", "allow_foreign_investment"
+			"build_railway", "build_factory", "expand_factory", "open_factory", "destroy_factory", "pop_build_factory",
+			"pop_expand_factory", "pop_open_factory", "can_subsidise", "factory_priority", "delete_factory_if_no_input",
+			"build_factory_invest", "expand_factory_invest", "open_factory_invest", "build_railway_invest",
+			"pop_build_factory_invest", "pop_expand_factory_invest", "pop_open_factory_invest", "can_invest_in_pop_projects",
+			"allow_foreign_investment"
 		} },
 		{ CITIZENSHIP, { "primary_culture_voting", "culture_voting", "all_voting" } },
 		{ SLAVERY, { "slavery_allowed" } },
@@ -181,16 +189,6 @@ bool RuleManager::setup_rules(BuildingTypeManager const& building_type_manager) 
 		for (std::string_view const& rule : rule_list) {
 			ret &= add_rule(rule, group);
 		}
-	}
-
-	for (std::string const& type : building_type_manager.get_building_type_types()) {
-		std::string build_rule_string = "build_";
-		if (type != "infrastructure") {
-			build_rule_string += type;
-		} else {
-			build_rule_string += "railway";
-		}
-		ret &= add_rule(build_rule_string, ECONOMY);
 	}
 
 	lock_rules();
