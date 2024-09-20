@@ -1,6 +1,6 @@
 #pragma once
 
-#include "openvic-simulation/misc/Modifier.hpp"
+#include "openvic-simulation/modifier/Modifier.hpp"
 
 namespace OpenVic {
 	struct Crime final : TriggeredModifier {

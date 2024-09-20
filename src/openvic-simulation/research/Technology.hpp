@@ -5,7 +5,7 @@
 #include "openvic-simulation/country/CountryInstance.hpp"
 #include "openvic-simulation/economy/BuildingType.hpp"
 #include "openvic-simulation/military/UnitType.hpp"
-#include "openvic-simulation/misc/Modifier.hpp"
+#include "openvic-simulation/modifier/Modifier.hpp"
 #include "openvic-simulation/scripts/ConditionalWeight.hpp"
 #include "openvic-simulation/types/Date.hpp"
 #include "openvic-simulation/types/OrderedContainers.hpp"

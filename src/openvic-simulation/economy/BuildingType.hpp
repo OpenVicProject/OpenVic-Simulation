@@ -2,7 +2,7 @@
 
 #include "openvic-simulation/economy/GoodDefinition.hpp"
 #include "openvic-simulation/economy/production/ProductionType.hpp"
-#include "openvic-simulation/misc/Modifier.hpp"
+#include "openvic-simulation/modifier/Modifier.hpp"
 #include "openvic-simulation/types/Date.hpp"
 #include "openvic-simulation/types/IdentifierRegistry.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"

@@ -2,8 +2,8 @@
 
 #include <string_view>
 
-#include "openvic-simulation/misc/Modifier.hpp"
 #include "openvic-simulation/dataloader/NodeTools.hpp"
+#include "openvic-simulation/modifier/Modifier.hpp"
 #include "openvic-simulation/types/IdentifierRegistry.hpp"
 
 namespace OpenVic {

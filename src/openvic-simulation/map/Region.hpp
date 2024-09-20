@@ -4,7 +4,7 @@
 #include <string_view>
 #include <vector>
 
-#include "openvic-simulation/misc/Modifier.hpp"
+#include "openvic-simulation/modifier/Modifier.hpp"
 
 namespace OpenVic {
 

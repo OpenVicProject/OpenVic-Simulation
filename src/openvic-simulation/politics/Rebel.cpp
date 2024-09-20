@@ -2,8 +2,6 @@
 
 #include <string_view>
 
-#include "openvic-simulation/misc/Modifier.hpp"
-
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;
 
