@@ -18,6 +18,8 @@ namespace OpenVic {
 		using value_const_ref_t = container_t::const_reference;
 		using keys_t = std::vector<key_t>;
 
+		using key_type = key_t; // To match tsl::ordered_map's key_type
+
 		using container_t::operator[];
 		using container_t::size;
 		using container_t::begin;

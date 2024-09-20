@@ -102,6 +102,9 @@ namespace OpenVic {
 	using HasIdentifierAndColour = _HasIdentifierAndColour<colour_t>;
 	using HasIdentifierAndAlphaColour = _HasIdentifierAndColour<colour_argb_t>;
 
+	template<typename T>
+	concept HasGetIdentifierAndGetColour = HasGetIdentifier<T> && HasGetColour<T>;
+
 	template<std::unsigned_integral T = size_t>
 	class HasIndex {
 	public:
