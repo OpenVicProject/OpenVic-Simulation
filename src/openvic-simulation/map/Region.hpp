@@ -48,7 +48,7 @@ namespace OpenVic {
 	struct ProvinceSetModifier : Modifier, ProvinceSet {
 		friend struct MapDefinition;
 	private:
-		ProvinceSetModifier(std::string_view new_identifier, ModifierValue&& new_values);
+		ProvinceSetModifier(std::string_view new_identifier, ModifierValue&& new_values, modifier_type_t new_type);
 	public:
 		ProvinceSetModifier(ProvinceSetModifier&&) = default;
 	};

@@ -79,6 +79,24 @@ namespace OpenVic {
 	struct Modifier : HasIdentifier, ModifierValue {
 		friend struct ModifierManager;
 
+		enum struct modifier_type_t : uint8_t {
+			EVENT, STATIC, TRIGGERED, CRIME, TERRAIN, CLIMATE, CONTINENT, BUILDING, LEADER, NATIONAL_VALUE, NATIONAL_FOCUS,
+			ISSUE, REFORM, TECHNOLOGY, INVENTION, TECH_SCHOOL
+		};
+
+	private:
+		const modifier_type_t PROPERTY(type);
+
+	protected:
+		Modifier(std::string_view new_identifier, ModifierValue&& new_values, modifier_type_t new_type);
+
+	public:
+		Modifier(Modifier&&) = default;
+	};
+
+	struct IconModifier : Modifier {
+		friend struct ModifierManager;
+
 		using icon_t = uint8_t;
 
 	private:
@@ -86,13 +104,13 @@ namespace OpenVic {
 		const icon_t PROPERTY(icon);
 
 	protected:
-		Modifier(std::string_view new_identifier, ModifierValue&& new_values, icon_t new_icon = 0);
+		IconModifier(std::string_view new_identifier, ModifierValue&& new_values, modifier_type_t new_type, icon_t new_icon);
 
 	public:
-		Modifier(Modifier&&) = default;
+		IconModifier(IconModifier&&) = default;
 	};
 
-	struct TriggeredModifier : Modifier {
+	struct TriggeredModifier : IconModifier {
 		friend struct ModifierManager;
 
 	private:
@@ -100,7 +118,8 @@ namespace OpenVic {
 
 	protected:
 		TriggeredModifier(
-			std::string_view new_identifier, ModifierValue&& new_values, icon_t new_icon, ConditionScript&& new_trigger
+			std::string_view new_identifier, ModifierValue&& new_values, modifier_type_t new_type, icon_t new_icon,
+			ConditionScript&& new_trigger
 		);
 
 		bool parse_scripts(DefinitionManager const& definition_manager);
@@ -131,7 +150,7 @@ namespace OpenVic {
 		CaseInsensitiveIdentifierRegistry<ModifierEffect, RegistryStorageInfoDeque> IDENTIFIER_REGISTRY(modifier_effect);
 		case_insensitive_string_set_t complex_modifiers;
 
-		IdentifierRegistry<Modifier> IDENTIFIER_REGISTRY(event_modifier);
+		IdentifierRegistry<IconModifier> IDENTIFIER_REGISTRY(event_modifier);
 		IdentifierRegistry<Modifier> IDENTIFIER_REGISTRY(static_modifier);
 		IdentifierRegistry<TriggeredModifier> IDENTIFIER_REGISTRY(triggered_modifier);
 
@@ -155,14 +174,14 @@ namespace OpenVic {
 
 		bool setup_modifier_effects();
 
-		bool add_event_modifier(std::string_view identifier, ModifierValue&& values, Modifier::icon_t icon);
+		bool add_event_modifier(std::string_view identifier, ModifierValue&& values, IconModifier::icon_t icon);
 		bool load_event_modifiers(ast::NodeCPtr root);
 
 		bool add_static_modifier(std::string_view identifier, ModifierValue&& values);
 		bool load_static_modifiers(ast::NodeCPtr root);
 
 		bool add_triggered_modifier(
-			std::string_view identifier, ModifierValue&& values, Modifier::icon_t icon, ConditionScript&& trigger
+			std::string_view identifier, ModifierValue&& values, IconModifier::icon_t icon, ConditionScript&& trigger
 		);
 		bool load_triggered_modifiers(ast::NodeCPtr root);
 

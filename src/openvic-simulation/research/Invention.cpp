@@ -18,7 +18,7 @@ Invention::Invention(
 	bool new_unlock_gas_defence,
 	ConditionScript&& new_limit,
 	ConditionalWeight&& new_chance
-) : Modifier { new_identifier, std::move(new_values) },
+) : Modifier { new_identifier, std::move(new_values), modifier_type_t::INVENTION },
 	news { new_news },
 	activated_units { std::move(new_activated_units) },
 	activated_buildings { std::move(new_activated_buildings) },
@@ -30,8 +30,10 @@ Invention::Invention(
 
 bool Invention::parse_scripts(DefinitionManager const& definition_manager) {
 	bool ret = true;
+
 	ret &= limit.parse_script(false, definition_manager);
 	ret &= chance.parse_scripts(definition_manager);
+
 	return ret;
 }
 
@@ -104,8 +106,10 @@ bool InventionManager::load_inventions_file(
 
 bool InventionManager::parse_scripts(DefinitionManager const& definition_manager) {
 	bool ret = true;
+
 	for (Invention& invention : inventions.get_items()) {
 		ret &= invention.parse_scripts(definition_manager);
 	}
+
 	return ret;
 }

@@ -4,7 +4,7 @@ using namespace OpenVic;
 using namespace OpenVic::NodeTools;
 
 NationalValue::NationalValue(std::string_view new_identifier, ModifierValue&& new_modifiers)
-	: Modifier { new_identifier, std::move(new_modifiers) } {}
+	: Modifier { new_identifier, std::move(new_modifiers), modifier_type_t::NATIONAL_VALUE } {}
 
 bool NationalValueManager::add_national_value(std::string_view identifier, ModifierValue&& modifiers) {
 	if (identifier.empty()) {

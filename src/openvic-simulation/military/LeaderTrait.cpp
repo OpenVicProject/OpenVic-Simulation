@@ -4,7 +4,7 @@ using namespace OpenVic;
 using namespace OpenVic::NodeTools;
 
 LeaderTrait::LeaderTrait(std::string_view new_identifier, trait_type_t new_type, ModifierValue&& new_modifiers)
-	: Modifier { new_identifier, std::move(new_modifiers) }, trait_type { new_type } {}
+	: Modifier { new_identifier, std::move(new_modifiers), modifier_type_t::LEADER }, trait_type { new_type } {}
 
 bool LeaderTrait::is_personality_trait() const {
 	return trait_type == trait_type_t::PERSONALITY;

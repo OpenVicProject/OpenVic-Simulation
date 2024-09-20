@@ -7,8 +7,8 @@ IssueGroup::IssueGroup(std::string_view new_identifier) : HasIdentifier { new_id
 
 Issue::Issue(
 	std::string_view new_identifier, colour_t new_colour, ModifierValue&& new_values, IssueGroup const& new_group,
-	RuleSet&& new_rules, bool new_jingoism
-) : Modifier { new_identifier, std::move(new_values) }, HasColour { new_colour, false }, group { new_group },
+	RuleSet&& new_rules, bool new_jingoism, modifier_type_t new_type
+) : Modifier { new_identifier, std::move(new_values), new_type }, HasColour { new_colour, false }, group { new_group },
 	rules { std::move(new_rules) }, jingoism { new_jingoism } {}
 
 ReformType::ReformType(std::string_view new_identifier, bool new_uncivilised)
@@ -21,16 +21,19 @@ Reform::Reform(
 	std::string_view new_identifier, colour_t new_colour, ModifierValue&& new_values, ReformGroup const& new_group,
 	size_t new_ordinal, fixed_point_t new_administrative_multiplier, RuleSet&& new_rules, tech_cost_t new_technology_cost,
 	ConditionScript&& new_allow, ConditionScript&& new_on_execute_trigger, EffectScript&& new_on_execute_effect
-) : Issue { new_identifier, new_colour, std::move(new_values), new_group, std::move(new_rules), false },
-	reform_group { new_group }, ordinal { new_ordinal }, administrative_multiplier { new_administrative_multiplier },
+) : Issue {
+		new_identifier, new_colour, std::move(new_values), new_group, std::move(new_rules), false, modifier_type_t::REFORM
+	}, reform_group { new_group }, ordinal { new_ordinal }, administrative_multiplier { new_administrative_multiplier },
 	technology_cost { new_technology_cost }, allow { std::move(new_allow) },
 	on_execute_trigger { std::move(new_on_execute_trigger) }, on_execute_effect { std::move(new_on_execute_effect) } {}
 
 bool Reform::parse_scripts(DefinitionManager const& definition_manager) {
 	bool ret = true;
+
 	ret &= allow.parse_script(true, definition_manager);
 	ret &= on_execute_trigger.parse_script(true, definition_manager);
 	ret &= on_execute_effect.parse_script(true, definition_manager);
+
 	return ret;
 }
 
@@ -176,14 +179,17 @@ bool IssueManager::_load_issue(
 	ModifierValue values;
 	RuleSet rules;
 	bool jingoism = false;
+
 	bool ret = modifier_manager.expect_modifier_value_and_keys(move_variable_callback(values),
 		"is_jingoism", ZERO_OR_ONE, expect_bool(assign_variable_callback(jingoism)),
 		"rules", ZERO_OR_ONE, rule_manager.expect_rule_set(move_variable_callback(rules))
 	)(node);
+
 	ret &= add_issue(
 		identifier, create_issue_reform_colour(get_issue_count() + get_reform_count()), std::move(values), group,
 		std::move(rules), jingoism
 	);
+
 	return ret;
 }
 
@@ -191,12 +197,15 @@ bool IssueManager::_load_reform_group(
 	size_t& expected_reforms, std::string_view identifier, ReformType const* type, ast::NodeCPtr node
 ) {
 	bool ordered = false, administrative = false;
+
 	bool ret = expect_dictionary_keys_and_default(
 		increment_callback(expected_reforms),
 		"next_step_only", ZERO_OR_ONE, expect_bool(assign_variable_callback(ordered)),
 		"administrative", ZERO_OR_ONE, expect_bool(assign_variable_callback(administrative))
 	)(node);
+
 	ret &= add_reform_group(identifier, type, ordered, administrative);
+
 	return ret;
 }
 
@@ -223,11 +232,13 @@ bool IssueManager::_load_reform(
 			"effect", ONE_EXACTLY, on_execute_effect.expect_script()
 		)
 	)(node);
+
 	ret &= add_reform(
 		identifier, create_issue_reform_colour(get_issue_count() + get_reform_count()), std::move(values), group, ordinal,
 		administrative_multiplier, std::move(rules), technology_cost, std::move(allow), std::move(on_execute_trigger),
 		std::move(on_execute_effect)
 	);
+
 	return ret;
 }
 
@@ -272,6 +283,7 @@ bool IssueManager::load_issues_file(
 			}
 		}
 	)(root);
+
 	lock_reform_types();
 
 	reserve_more_issue_groups(expected_issue_groups);
@@ -306,6 +318,7 @@ bool IssueManager::load_issues_file(
 			}
 		}
 	)(root);
+
 	lock_issue_groups();
 	lock_reform_groups();
 
@@ -356,6 +369,7 @@ bool IssueManager::load_issues_file(
 			}
 		}
 	)(root);
+
 	lock_issues();
 	lock_reforms();
 
@@ -364,8 +378,10 @@ bool IssueManager::load_issues_file(
 
 bool IssueManager::parse_scripts(DefinitionManager const& definition_manager) {
 	bool ret = true;
+
 	for (Reform& reform : reforms.get_items()) {
 		ret &= reform.parse_scripts(definition_manager);
 	}
+
 	return ret;
 }
