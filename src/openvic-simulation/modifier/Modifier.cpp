@@ -317,13 +317,6 @@ bool ModifierManager::setup_modifier_effects() {
 	ret &= add_modifier_effect("unit_recruitment_time", false);
 	ret &= add_modifier_effect("war_exhaustion", false, PROPORTION_DECIMAL, "WAR_EXHAUST_BATTLES");
 
-	/* State only */
-	// replace $VAL$ with effect value * 30 (as proportion decimal, only used in national foci)
-	ret &= add_modifier_effect("flashpoint_tension", true, PROPORTION_DECIMAL, "increase_tension_focus_desc");
-	// capitalist likelihood for railroads vs factories
-	// replace $VAL$ with effect value (as proportion decimal, only used in national foci)
-	ret &= add_modifier_effect("railroads", true, PROPORTION_DECIMAL, "railroad_build_desc");
-
 	/* Province Modifier Effects */
 	ret &= add_modifier_effect("assimilation_rate", true);
 	ret &= add_modifier_effect("boost_strongest_party", false);

@@ -674,13 +674,6 @@ bool PopManager::generate_modifiers(ModifierManager& modifier_manager) const {
 		strata_modifier("_luxury_needs", false);
 	}
 
-	for (PopType const& pop_type : get_pop_types()) {
-		ret &= modifier_manager.add_modifier_effect(
-			pop_type.get_identifier(), true, PROPORTION_DECIMAL,
-			StringUtils::append_string_views("$ENCOURAGEMENT_FOR$$", pop_type.get_identifier(), "$")
-		);
-	}
-
 	return ret;
 }
 
