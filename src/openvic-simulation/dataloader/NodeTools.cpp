@@ -13,6 +13,7 @@
 #include <range/v3/view/enumerate.hpp>
 
 #include "openvic-simulation/types/Colour.hpp"
+#include "openvic-simulation/types/TextFormat.hpp"
 #include "openvic-simulation/utility/Getters.hpp"
 
 using namespace OpenVic;
@@ -264,6 +265,17 @@ NodeCallback auto _expect_vec2(Callback<vec2_t<T>> auto&& callback) {
 	};
 }
 
+node_callback_t NodeTools::_expect_text_format_t(callback_t<text_format_t> callback){
+	static const string_map_t<text_format_t> format_map = {
+		{ "left",  text_format_t::left },
+		{ "right", text_format_t::right },
+		{ "centre", text_format_t::centre },
+		{ "center", text_format_t::centre },
+		{ "justified", text_format_t::justified }
+	};
+	return expect_identifier(expect_mapped_string(format_map, callback));
+}
+
 static node_callback_t _expect_int(callback_t<ivec2_t::type> callback) {
 	return expect_int(callback);
 }
@@ -274,6 +286,28 @@ node_callback_t NodeTools::expect_ivec2(callback_t<ivec2_t> callback) {
 
 node_callback_t NodeTools::expect_fvec2(callback_t<fvec2_t> callback) {
 	return _expect_vec2<fixed_point_t, expect_fixed_point>(callback);
+}
+
+node_callback_t NodeTools::expect_v2_vector3(callback_t<V2Vector3> callback) {
+	return [callback](ast::NodeCPtr node) -> bool {
+		
+		int components = 0;
+		fixed_point_t x = 0;
+		fixed_point_t y = 0;
+		fixed_point_t z = 0;
+
+		bool ret = expect_list_of_length(3, expect_fixed_point(
+			[&components,&x,&y,&z](fixed_point_t val) -> bool {
+				if(components == 0) x = val;
+				else if(components == 1) y = val;
+				else z =  val;
+				components++;
+				return true;
+			}))(node);
+
+		ret &= callback(V2Vector3(x,y,z));
+		return ret;	
+	};
 }
 
 node_callback_t NodeTools::expect_assign(key_value_callback_t callback) {
