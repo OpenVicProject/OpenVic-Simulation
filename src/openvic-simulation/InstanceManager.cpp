@@ -38,32 +38,7 @@ void InstanceManager::update_gamestate() {
 	currently_updating_gamestate = true;
 
 	Logger::info("Update: ", today);
-
-	if constexpr (ProvinceInstance::ADD_OWNER_CONTRIBUTION) {
-		// Calculate local province modifier sums first, then national country modifier sums, then loop over owned provinces
-		// adding their contributions to the owner country's modifier sum and loop over them again to add the country's total
-		// (including province contributions) to the provinces' modifier sum. This results in every country and province
-		// having a full copy of all the modifiers affecting them in their modifier sum.
-		map_instance.update_modifier_sums(
-			today, definition_manager.get_modifier_manager().get_static_modifier_cache()
-		);
-		country_instance_manager.update_modifier_sums(
-			today, definition_manager.get_modifier_manager().get_static_modifier_cache()
-		);
-	} else {
-		// Calculate national country modifier sums first, then local province modifier sums, adding province contributions
-		// to owner countries' modifier sums if each province has an owner. This results in every country having a full copy
-		// of all the modifiers affecting them in their modifier sum, but provinces only having their directly/locally applied
-		// modifiers in their modifier sum, hence requiring both province and owner country modifier effect values to be looked
-		// up and added together to get the full effect on the province.
-		country_instance_manager.update_modifier_sums(
-			today, definition_manager.get_modifier_manager().get_static_modifier_cache()
-		);
-		map_instance.update_modifier_sums(
-			today, definition_manager.get_modifier_manager().get_static_modifier_cache()
-		);
-	}
-
+	update_modifier_sums();
 	// Update gamestate...
 	map_instance.update_gamestate(today, definition_manager.get_define_manager());
 	country_instance_manager.update_gamestate(
@@ -163,6 +138,11 @@ bool InstanceManager::load_bookmark(Bookmark const* new_bookmark) {
 		map_instance, definition_manager.get_pop_manager().get_pop_types()
 	);
 
+	if (ret) {
+		update_modifier_sums();
+		map_instance.initialise_for_new_game(definition_manager.get_modifier_manager().get_modifier_effect_cache());
+	}
+
 	return ret;
 }
 
@@ -203,4 +183,31 @@ bool InstanceManager::expand_selected_province_building(size_t building_index) {
 		return false;
 	}
 	return province->expand_building(building_index);
+}
+
+void InstanceManager::update_modifier_sums() {
+	if constexpr (ProvinceInstance::ADD_OWNER_CONTRIBUTION) {
+		// Calculate local province modifier sums first, then national country modifier sums, then loop over owned provinces
+		// adding their contributions to the owner country's modifier sum and loop over them again to add the country's total
+		// (including province contributions) to the provinces' modifier sum. This results in every country and province
+		// having a full copy of all the modifiers affecting them in their modifier sum.
+		map_instance.update_modifier_sums(
+			today, definition_manager.get_modifier_manager().get_static_modifier_cache()
+		);
+		country_instance_manager.update_modifier_sums(
+			today, definition_manager.get_modifier_manager().get_static_modifier_cache()
+		);
+	} else {
+		// Calculate national country modifier sums first, then local province modifier sums, adding province contributions
+		// to owner countries' modifier sums if each province has an owner. This results in every country having a full copy
+		// of all the modifiers affecting them in their modifier sum, but provinces only having their directly/locally applied
+		// modifiers in their modifier sum, hence requiring both province and owner country modifier effect values to be looked
+		// up and added together to get the full effect on the province.
+		country_instance_manager.update_modifier_sums(
+			today, definition_manager.get_modifier_manager().get_static_modifier_cache()
+		);
+		map_instance.update_modifier_sums(
+			today, definition_manager.get_modifier_manager().get_static_modifier_cache()
+		);
+	}
 }

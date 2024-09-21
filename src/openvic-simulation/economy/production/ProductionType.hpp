@@ -20,13 +20,13 @@ namespace OpenVic {
 		PopType const* PROPERTY(pop_type);
 		effect_t PROPERTY(effect_type);
 		fixed_point_t PROPERTY(effect_multiplier);
-		fixed_point_t PROPERTY(desired_workforce_share);
+		fixed_point_t PROPERTY(amount);
 
 		Job(
 			PopType const* new_pop_type,
 			effect_t new_effect_type,
 			fixed_point_t new_effect_multiplier,
-			fixed_point_t new_desired_workforce_share
+			fixed_point_t new_amount
 		);
 
 	public:
@@ -47,7 +47,7 @@ namespace OpenVic {
 		const Pop::pop_size_t PROPERTY(base_workforce_size);
 
 		GoodDefinition::good_definition_map_t PROPERTY(input_goods);
-		GoodDefinition const* PROPERTY(output_goods);
+		GoodDefinition const& PROPERTY(output_good);
 		const fixed_point_t PROPERTY(base_output_quantity);
 		std::vector<bonus_t> PROPERTY(bonuses);
 
@@ -58,19 +58,19 @@ namespace OpenVic {
 		const bool PROPERTY_CUSTOM_PREFIX(mine, is);
 
 		ProductionType(
-			std::string_view new_identifier,
-			std::optional<Job> new_owner,
+			const std::string_view new_identifier,
+			const std::optional<Job> new_owner,
 			std::vector<Job>&& new_jobs,
-			template_type_t new_template_type,
-			Pop::pop_size_t new_base_workforce_size,
+			const template_type_t new_template_type,
+			const Pop::pop_size_t new_base_workforce_size,
 			GoodDefinition::good_definition_map_t&& new_input_goods,
-			GoodDefinition const* new_output_goods,
-			fixed_point_t new_base_output_quantity,
+			GoodDefinition const& new_output_good,
+			const fixed_point_t new_base_output_quantity,
 			std::vector<bonus_t>&& new_bonuses,
 			GoodDefinition::good_definition_map_t&& new_maintenance_requirements,
-			bool new_is_coastal,
-			bool new_is_farm,
-			bool new_is_mine
+			const bool new_is_coastal,
+			const bool new_is_farm,
+			const bool new_is_mine
 		);
 
 		bool parse_scripts(DefinitionManager const& definition_manager);
@@ -83,6 +83,7 @@ namespace OpenVic {
 	private:
 		IdentifierRegistry<ProductionType> IDENTIFIER_REGISTRY(production_type);
 		PopType::sprite_t PROPERTY(rgo_owner_sprite);
+		IndexedMap<GoodDefinition, ProductionType const*> PROPERTY(good_to_rgo_production_type);
 
 		NodeTools::node_callback_t _expect_job(
 			GoodDefinitionManager const& good_definition_manager, PopManager const& pop_manager,
@@ -97,19 +98,19 @@ namespace OpenVic {
 		ProductionTypeManager();
 
 		bool add_production_type(
-			std::string_view identifier,
+			const std::string_view identifier,
 			std::optional<Job> owner,
-			std::vector<Job>&& employees,
-			ProductionType::template_type_t template_type,
-			Pop::pop_size_t workforce,
+			std::vector<Job>&& jobs,
+			const ProductionType::template_type_t template_type,
+			const Pop::pop_size_t base_workforce_size,
 			GoodDefinition::good_definition_map_t&& input_goods,
-			GoodDefinition const* output_goods,
-			fixed_point_t value,
+			GoodDefinition const* const output_good,
+			const fixed_point_t base_output_quantity,
 			std::vector<ProductionType::bonus_t>&& bonuses,
 			GoodDefinition::good_definition_map_t&& maintenance_requirements,
-			bool coastal,
-			bool farm,
-			bool mine
+			const bool is_coastal,
+			const bool is_farm,
+			const bool is_mine
 		);
 
 		bool load_production_types_file(

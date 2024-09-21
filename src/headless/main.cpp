@@ -1,7 +1,10 @@
-#include <cstring>
-
+#include <openvic-simulation/country/CountryInstance.hpp>
 #include <openvic-simulation/dataloader/Dataloader.hpp>
+#include <openvic-simulation/economy/GoodDefinition.hpp>
+#include <openvic-simulation/economy/production/ProductionType.hpp>
+#include <openvic-simulation/economy/production/ResourceGatheringOperation.hpp>
 #include <openvic-simulation/GameManager.hpp>
+#include <openvic-simulation/pop/Pop.hpp>
 #include <openvic-simulation/testing/Testing.hpp>
 #include <openvic-simulation/utility/Logger.hpp>
 
@@ -16,6 +19,40 @@ static void print_help(std::ostream& stream, char const* program_name) {
 		<< "    -s : Use the following path as a hint to search for a base directory.\n"
 		<< "Any following paths are read as mod directories, with priority starting at one above the base directory.\n"
 		<< "(Paths with spaces need to be enclosed in \"quotes\").\n";
+}
+
+static void print_rgo(ProvinceInstance const& province) {
+	ResourceGatheringOperation const& rgo = province.get_rgo();
+	ProductionType const* const production_type_nullable = rgo.get_production_type_nullable();
+	if (production_type_nullable == nullptr) {
+		Logger::error(
+			"\n    ", province.get_identifier(),
+			" - production_type: nullptr"
+		);
+	} else {
+		ProductionType const& production_type = *production_type_nullable;
+		GoodDefinition const& output_good = production_type.get_output_good();
+		std::string text = StringUtils::append_string_views(
+			"\n\t", province.get_identifier(),
+			" - good: ", output_good.get_identifier(),
+			", production_type: ", production_type.get_identifier(),
+			", size_multiplier: ", rgo.get_size_multiplier().to_string(3),
+			", output_quantity_yesterday: ", rgo.get_output_quantity_yesterday().to_string(3),
+			", revenue_yesterday: ", rgo.get_revenue_yesterday().to_string(3),
+			", total owner income: ", rgo.get_total_owner_income_cache().to_string(3),
+			", total employee income: ", rgo.get_total_employee_income_cache().to_string(3),
+			"\n\temployees:"
+		);
+
+		auto const& employee_count_per_type_cache=rgo.get_employee_count_per_type_cache();
+		for (PopType const& pop_type : *employee_count_per_type_cache.get_keys()) {
+			const Pop::pop_size_t employees_of_type = employee_count_per_type_cache[pop_type];
+			if (employees_of_type > 0) {
+				text += StringUtils::append_string_views("\n\t\t", std::to_string(employees_of_type), " ", pop_type.get_identifier());
+			}
+		}
+		Logger::info("", text);
+	}
 }
 
 static bool run_headless(Dataloader::path_vector_t const& roots, bool run_tests) {
@@ -72,9 +109,21 @@ static bool run_headless(Dataloader::path_vector_t const& roots, bool run_tests)
 		CountryInstanceManager const& country_instance_manager =
 			game_manager.get_instance_manager()->get_country_instance_manager();
 
-		print_ranking_list("Great Powers", country_instance_manager.get_great_powers());
+		std::vector<CountryInstance*> const& great_powers = country_instance_manager.get_great_powers();
+		print_ranking_list("Great Powers", great_powers);
 		print_ranking_list("Secondary Powers", country_instance_manager.get_secondary_powers());
 		print_ranking_list("All countries", country_instance_manager.get_total_ranking());
+
+		Logger::info("===== RGO test... =====");
+		for (size_t i = 0; i < std::min<size_t>(3, great_powers.size()); ++i) {
+			CountryInstance const& great_power = *great_powers[i];
+			ProvinceInstance const* const capital_province = great_power.get_capital();
+			if (capital_province == nullptr) {
+				Logger::warning(great_power.get_identifier(), " has no capital ProvinceInstance set.");
+			} else {
+				print_rgo(*capital_province);
+			}
+		}
 	} else {
 		Logger::error("Instance manager not available!");
 		ret = false;

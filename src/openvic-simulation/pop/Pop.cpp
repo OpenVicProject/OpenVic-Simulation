@@ -9,6 +9,7 @@
 #include "openvic-simulation/politics/Ideology.hpp"
 #include "openvic-simulation/politics/Issue.hpp"
 #include "openvic-simulation/politics/Rebel.hpp"
+#include "openvic-simulation/utility/Logger.hpp"
 #include "openvic-simulation/utility/TslHelper.hpp"
 
 using namespace OpenVic;
@@ -19,7 +20,7 @@ using enum PopType::income_type_t;
 PopBase::PopBase(
 	PopType const& new_type, Culture const& new_culture, Religion const& new_religion, pop_size_t new_size,
 	fixed_point_t new_militancy, fixed_point_t new_consciousness, RebelType const* new_rebel_type
-) : type { new_type }, culture { new_culture }, religion { new_religion }, size { new_size }, militancy { new_militancy },
+) : type { &new_type }, culture { new_culture }, religion { new_religion }, size { new_size }, militancy { new_militancy },
 	consciousness { new_consciousness }, rebel_type { new_rebel_type } {}
 
 Pop::Pop(PopBase const& pop_base, decltype(ideologies)::keys_t const& ideology_keys)
@@ -115,6 +116,17 @@ void Pop::setup_pop_test_values(IssueManager const& issue_manager) {
 	luxury_needs_fulfilled = test_range();
 }
 
+bool Pop::convert_to_equivalent() {
+	PopType const* const equivalent = get_type()->get_equivalent();
+	if (equivalent == nullptr) {
+		Logger::error("Tried to convert pop of type ", get_type()->get_identifier(), " to equivalent, but there is no equivalent.");
+		return false;
+	}
+	
+	type = equivalent;
+	return true;
+}
+
 void Pop::set_location(ProvinceInstance const& new_location) {
 	if (location != &new_location) {
 		location = &new_location;
@@ -131,7 +143,7 @@ void Pop::set_location(ProvinceInstance const& new_location) {
 void Pop::update_gamestate(
 	DefineManager const& define_manager, CountryInstance const* owner, fixed_point_t const& pop_size_per_regiment_multiplier
 ) {
-	if (type.get_can_be_recruited()) {
+	if (type->get_can_be_recruited()) {
 		if (
 			size < define_manager.get_min_pop_size_for_regiment() || owner == nullptr ||
 			!RegimentType::allowed_cultures_check_culture_in_country(owner->get_allowed_regiment_cultures(), culture, *owner)
@@ -144,6 +156,10 @@ void Pop::update_gamestate(
 		}
 	}
 }
+
+//TODO store income
+void Pop::add_rgo_owner_income(const fixed_point_t income) {}
+void Pop::add_rgo_worker_income(const fixed_point_t income) {}
 
 Strata::Strata(std::string_view new_identifier) : HasIdentifier { new_identifier } {}
 

@@ -9,33 +9,33 @@ Job::Job(
 	PopType const* new_pop_type,
 	effect_t new_effect_type,
 	fixed_point_t new_effect_multiplier,
-	fixed_point_t new_desired_workforce_share
+	fixed_point_t new_amount
 ) : pop_type { new_pop_type },
 	effect_type { new_effect_type },
 	effect_multiplier { new_effect_multiplier },
-	desired_workforce_share { new_desired_workforce_share } {}
+	amount { new_amount } {}
 
 ProductionType::ProductionType(
-	std::string_view new_identifier,
-	std::optional<Job> new_owner,
+	const std::string_view new_identifier,
+	const std::optional<Job> new_owner,
 	std::vector<Job>&& new_jobs,
-	template_type_t new_template_type,
-	Pop::pop_size_t new_base_workforce_size,
+	const template_type_t new_template_type,
+	const Pop::pop_size_t new_base_workforce_size,
 	GoodDefinition::good_definition_map_t&& new_input_goods,
-	GoodDefinition const* new_output_goods,
-	fixed_point_t new_base_output_quantity,
+	GoodDefinition const& new_output_good,
+	const fixed_point_t new_base_output_quantity,
 	std::vector<bonus_t>&& new_bonuses,
 	GoodDefinition::good_definition_map_t&& new_maintenance_requirements,
-	bool new_is_coastal,
-	bool new_is_farm,
-	bool new_is_mine
+	const bool new_is_coastal,
+	const bool new_is_farm,
+	const bool new_is_mine
 ) : HasIdentifier { new_identifier },
 	owner { new_owner },
 	jobs { std::move(new_jobs) },
 	template_type { new_template_type },
 	base_workforce_size { new_base_workforce_size },
 	input_goods { std::move(new_input_goods) },
-	output_goods { new_output_goods },
+	output_good { new_output_good },
 	base_output_quantity { new_base_output_quantity },
 	bonuses { std::move(new_bonuses) },
 	maintenance_requirements { std::move(new_maintenance_requirements) },
@@ -51,7 +51,9 @@ bool ProductionType::parse_scripts(DefinitionManager const& definition_manager) 
 	return ret;
 }
 
-ProductionTypeManager::ProductionTypeManager() : rgo_owner_sprite { 0 } {}
+ProductionTypeManager::ProductionTypeManager() :
+	good_to_rgo_production_type { nullptr },
+	rgo_owner_sprite { 0 } {}
 
 node_callback_t ProductionTypeManager::_expect_job(
 	GoodDefinitionManager const& good_definition_manager, PopManager const& pop_manager, callback_t<Job&&> callback
@@ -92,19 +94,19 @@ node_callback_t ProductionTypeManager::_expect_job_list(
 }
 
 bool ProductionTypeManager::add_production_type(
-	std::string_view identifier,
+	const std::string_view identifier,
 	std::optional<Job> owner,
 	std::vector<Job>&& jobs,
-	ProductionType::template_type_t template_type,
-	Pop::pop_size_t base_workforce_size,
+	const ProductionType::template_type_t template_type,
+	const Pop::pop_size_t base_workforce_size,
 	GoodDefinition::good_definition_map_t&& input_goods,
-	GoodDefinition const* output_goods,
-	fixed_point_t base_output_quantity,
+	GoodDefinition const* const output_good,
+	const fixed_point_t base_output_quantity,
 	std::vector<ProductionType::bonus_t>&& bonuses,
 	GoodDefinition::good_definition_map_t&& maintenance_requirements,
-	bool is_coastal,
-	bool is_farm,
-	bool is_mine
+	const bool is_coastal,
+	const bool is_farm,
+	const bool is_mine
 ) {
 	if (identifier.empty()) {
 		Logger::error("Invalid production type identifier - empty!");
@@ -121,7 +123,7 @@ bool ProductionTypeManager::add_production_type(
 		return false;
 	}
 
-	if (output_goods == nullptr) {
+	if (output_good == nullptr) {
 		Logger::error("Output good for production type ", identifier, " was null!");
 		return false;
 	}
@@ -167,13 +169,25 @@ bool ProductionTypeManager::add_production_type(
 	}
 
 	const bool ret = production_types.add_item({
-		identifier, owner, std::move(jobs), template_type, base_workforce_size, std::move(input_goods), output_goods,
+		identifier, owner, std::move(jobs), template_type, base_workforce_size, std::move(input_goods), *output_good,
 		base_output_quantity, std::move(bonuses), std::move(maintenance_requirements), is_coastal, is_farm, is_mine
 	});
+
+	if (ret && (template_type == RGO)) {
+		ProductionType const& production_type = production_types.get_items().back();
+		ProductionType const*& current_rgo_pt = good_to_rgo_production_type[*output_good];
+		if (current_rgo_pt == nullptr || (is_farm && !current_rgo_pt->is_farm())) {
+			// first rgo pt or farms are preferred (over mines) in V2
+			current_rgo_pt = &production_type;
+		}
+		//else ignore, we already have an rgo pt
+	}
+
 	if (rgo_owner_sprite <= 0 && ret && template_type == RGO && owner.has_value() && owner->get_pop_type() != nullptr) {
 		/* Set rgo owner sprite to that of the first RGO owner we find. */
 		rgo_owner_sprite = owner->get_pop_type()->get_sprite();
 	}
+
 	return ret;
 }
 
@@ -224,7 +238,10 @@ bool ProductionTypeManager::load_production_types_file(
 		}
 	)(parser.get_file_node());
 
+
 	/* Pass #3: actually load production types */
+	good_to_rgo_production_type.set_keys(&good_definition_manager.get_good_definitions());
+
 	reserve_more_production_types(expected_types);
 	ret &= expect_dictionary(
 		[this, &good_definition_manager, &pop_manager, &template_target_map, &template_node_map](
@@ -238,7 +255,7 @@ bool ProductionTypeManager::load_production_types_file(
 			std::optional<Job> owner;
 			std::vector<Job> jobs;
 			ProductionType::template_type_t template_type { FACTORY };
-			GoodDefinition const* output_goods = nullptr;
+			GoodDefinition const* output_good = nullptr;
 			Pop::pop_size_t base_workforce_size = 0;
 			GoodDefinition::good_definition_map_t input_goods, maintenance_requirements;
 			fixed_point_t base_output_quantity = 0;
@@ -271,7 +288,7 @@ bool ProductionTypeManager::load_production_types_file(
 				"input_goods", ZERO_OR_ONE,
 					good_definition_manager.expect_good_definition_decimal_map(move_variable_callback(input_goods)),
 				"output_goods", ZERO_OR_ONE,
-					good_definition_manager.expect_good_definition_identifier(assign_variable_callback_pointer(output_goods)),
+					good_definition_manager.expect_good_definition_identifier(assign_variable_callback_pointer(output_good)),
 				"value", ZERO_OR_ONE, expect_fixed_point(assign_variable_callback(base_output_quantity)),
 				"efficiency", ZERO_OR_ONE, good_definition_manager.expect_good_definition_decimal_map(
 					move_variable_callback(maintenance_requirements)
@@ -300,9 +317,10 @@ bool ProductionTypeManager::load_production_types_file(
 			ret &= parse_node(node);
 
 			ret &= add_production_type(
-				key, owner, std::move(jobs), template_type, base_workforce_size, std::move(input_goods), output_goods,
+				key, owner, std::move(jobs), template_type, base_workforce_size, std::move(input_goods), output_good,
 				base_output_quantity, std::move(bonuses), std::move(maintenance_requirements), is_coastal, is_farm, is_mine
 			);
+
 			return ret;
 		}
 	)(parser.get_file_node());
