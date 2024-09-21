@@ -19,7 +19,7 @@ Technology::Technology(
 	building_set_t&& new_activated_buildings,
 	ModifierValue&& new_values,
 	ConditionalWeight&& new_ai_chance
-) : Modifier { new_identifier, std::move(new_values) },
+) : Modifier { new_identifier, std::move(new_values), modifier_type_t::TECHNOLOGY },
 	area { new_area },
 	year { new_year },
 	cost { new_cost },
@@ -34,7 +34,7 @@ bool Technology::parse_scripts(DefinitionManager const& definition_manager) {
 }
 
 TechnologySchool::TechnologySchool(std::string_view new_identifier, ModifierValue&& new_values)
-	: Modifier { new_identifier, std::move(new_values) } {}
+	: Modifier { new_identifier, std::move(new_values), modifier_type_t::TECH_SCHOOL } {}
 
 bool TechnologyManager::add_technology_folder(std::string_view identifier) {
 	if (identifier.empty()) {

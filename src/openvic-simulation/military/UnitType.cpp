@@ -322,11 +322,11 @@ bool UnitTypeManager::generate_modifiers(ModifierManager& modifier_manager) cons
 		std::string_view identifier, UnitType::branch_t branch
 	) -> void {
 		const auto stat_modifier = [&modifier_manager, &ret, &identifier](
-			std::string_view suffix, bool is_positive_good, ModifierEffect::format_t format
+			std::string_view suffix, bool is_positive_good, ModifierEffect::format_t format, std::string_view localisation_key
 		) -> void {
 			ret &= modifier_manager.add_modifier_effect(
 				ModifierManager::get_flat_identifier(identifier, suffix), is_positive_good, format,
-				StringUtils::append_string_views("$", identifier, "$: $", suffix, "$")
+				StringUtils::append_string_views("$", identifier, "$: $", localisation_key, "$")
 			);
 		};
 
@@ -334,29 +334,29 @@ bool UnitTypeManager::generate_modifiers(ModifierManager& modifier_manager) cons
 
 		ret &= modifier_manager.register_complex_modifier(identifier);
 
-		stat_modifier("attack", true, RAW_DECIMAL);
-		stat_modifier("defence", true, RAW_DECIMAL);
-		stat_modifier("default_organisation", true, RAW_DECIMAL);
-		stat_modifier("maximum_speed", true, RAW_DECIMAL);
-		stat_modifier("build_time", false, INT);
-		stat_modifier("supply_consumption", false, PROPORTION_DECIMAL);
+		stat_modifier("attack", true, RAW_DECIMAL, "ATTACK");
+		stat_modifier("defence", true, RAW_DECIMAL, "DEFENCE");
+		stat_modifier("default_organisation", true, RAW_DECIMAL, "DEFAULT_ORG");
+		stat_modifier("maximum_speed", true, RAW_DECIMAL, "MAXIMUM_SPEED");
+		stat_modifier("build_time", false, INT, "BUILD_TIME");
+		stat_modifier("supply_consumption", false, PROPORTION_DECIMAL, "SUPPLY_CONSUMPTION");
 
 		switch (branch) {
 		case LAND:
-			stat_modifier("reconnaissance", true, RAW_DECIMAL);
-			stat_modifier("discipline", true, PROPORTION_DECIMAL);
-			stat_modifier("support", true, PROPORTION_DECIMAL);
-			stat_modifier("maneuver", true, INT);
-			stat_modifier("siege", true, RAW_DECIMAL);
+			stat_modifier("reconnaissance", true, RAW_DECIMAL, "RECONAISSANCE");
+			stat_modifier("discipline", true, PROPORTION_DECIMAL, "DISCIPLINE");
+			stat_modifier("support", true, PROPORTION_DECIMAL, "SUPPORT");
+			stat_modifier("maneuver", true, INT, "Maneuver");
+			stat_modifier("siege", true, RAW_DECIMAL, "SIEGE");
 			break;
 		case NAVAL:
-			stat_modifier("colonial_points", true, INT);
-			stat_modifier("supply_consumption_score", false, INT);
-			stat_modifier("hull", true, RAW_DECIMAL);
-			stat_modifier("gun_power", true, RAW_DECIMAL);
-			stat_modifier("fire_range", true, RAW_DECIMAL);
-			stat_modifier("evasion", true, PROPORTION_DECIMAL);
-			stat_modifier("torpedo_attack", true, RAW_DECIMAL);
+			stat_modifier("colonial_points", true, INT, "COLONIAL_POINTS_TECH");
+			stat_modifier("supply_consumption_score", false, INT, "SUPPLY_LOAD");
+			stat_modifier("hull", true, RAW_DECIMAL, "HULL");
+			stat_modifier("gun_power", true, RAW_DECIMAL, "GUN_POWER");
+			stat_modifier("fire_range", true, RAW_DECIMAL, "FIRE_RANGE");
+			stat_modifier("evasion", true, PROPORTION_DECIMAL, "EVASION");
+			stat_modifier("torpedo_attack", true, RAW_DECIMAL, "TORPEDO_ATTACK");
 			break;
 		default:
 			/* Unreachable - unit types are only added via add_regiment_type or add_ship_type which set branch to LAND or NAVAL. */

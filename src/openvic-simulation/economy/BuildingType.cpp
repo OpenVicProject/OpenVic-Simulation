@@ -5,7 +5,7 @@ using namespace OpenVic::NodeTools;
 
 BuildingType::BuildingType(
 	std::string_view identifier, building_type_args_t& building_type_args
-) : Modifier { identifier, std::move(building_type_args.modifier) },
+) : Modifier { identifier, std::move(building_type_args.modifier), modifier_type_t::BUILDING },
 	type { building_type_args.type },
 	on_completion { building_type_args.on_completion },
 	completion_size { building_type_args.completion_size },
@@ -154,6 +154,7 @@ bool BuildingTypeManager::load_buildings_file(
 		Logger::error("No port building type found!");
 		ret = false;
 	}
+
 	if (province_building_types.empty()) {
 		Logger::error("No province building types found!");
 		ret = false;

@@ -32,7 +32,7 @@ namespace OpenVic {
 	protected:
 		Issue(
 			std::string_view new_identifier, colour_t new_colour, ModifierValue&& new_values, IssueGroup const& new_group,
-			RuleSet&& new_rules, bool new_jingoism
+			RuleSet&& new_rules, bool new_jingoism, modifier_type_t new_type = modifier_type_t::ISSUE
 		);
 
 	public:

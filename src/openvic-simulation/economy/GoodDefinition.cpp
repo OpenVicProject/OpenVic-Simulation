@@ -123,12 +123,5 @@ bool GoodDefinitionManager::generate_modifiers(ModifierManager& modifier_manager
 		return StringUtils::append_string_views(good_identifier, "_RGO_SIZE");
 	});
 
-	for (GoodDefinition const& good : get_good_definitions()) {
-		ret &= modifier_manager.add_modifier_effect(
-			good.get_identifier(), true, PERCENTAGE_DECIMAL,
-			StringUtils::append_string_views("$ENCOURAGEMENT_FOR$$", good.get_identifier(), "$")
-		);
-	}
-
 	return ret;
 }
