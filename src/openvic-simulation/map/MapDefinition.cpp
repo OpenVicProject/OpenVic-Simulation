@@ -1,9 +1,11 @@
 #include "MapDefinition.hpp"
 
+#include <cstdint>
 #include <vector>
 
 #include "openvic-simulation/types/Colour.hpp"
 #include "openvic-simulation/types/OrderedContainers.hpp"
+#include "openvic-simulation/types/Vector.hpp"
 #include "openvic-simulation/utility/BMP.hpp"
 #include "openvic-simulation/utility/Logger.hpp"
 
@@ -11,6 +13,9 @@ using namespace OpenVic;
 using namespace OpenVic::NodeTools;
 
 MapDefinition::MapDefinition() : dims { 0, 0 }, max_provinces { ProvinceDefinition::MAX_INDEX } {}
+
+RiverSegment::RiverSegment(uint8_t new_size, std::vector<ivec2_t>&& new_points)
+	: size { new_size }, points { std::move(new_points) } {}
 
 bool MapDefinition::add_province_definition(std::string_view identifier, colour_t colour) {
 	if (province_definitions.size() >= max_provinces) {
@@ -490,7 +495,7 @@ static constexpr colour_t colour_at(uint8_t const* colour_data, int32_t idx) {
 	return { colour_data[idx + 2], colour_data[idx + 1], colour_data[idx] };
 }
 
-bool MapDefinition::load_map_images(fs::path const& province_path, fs::path const& terrain_path, bool detailed_errors) {
+bool MapDefinition::load_map_images(fs::path const& province_path, fs::path const& terrain_path, fs::path const& rivers_path, bool detailed_errors) {
 	if (!province_definitions_are_locked()) {
 		Logger::error("Province index image cannot be generated until after provinces are locked!");
 		return false;
@@ -500,12 +505,14 @@ bool MapDefinition::load_map_images(fs::path const& province_path, fs::path cons
 		return false;
 	}
 
+	static constexpr uint16_t expected_province_bpp = 24;
+	static constexpr uint16_t expected_terrain_rivers_bpp = 8;
+
 	BMP province_bmp;
 	if (!(province_bmp.open(province_path) && province_bmp.read_header() && province_bmp.read_pixel_data())) {
 		Logger::error("Failed to read BMP for compatibility mode province image: ", province_path);
 		return false;
 	}
-	static constexpr uint16_t expected_province_bpp = 24;
 	if (province_bmp.get_bits_per_pixel() != expected_province_bpp) {
 		Logger::error(
 			"Invalid province BMP bits per pixel: ", province_bmp.get_bits_per_pixel(), " (expected ", expected_province_bpp,
@@ -519,18 +526,33 @@ bool MapDefinition::load_map_images(fs::path const& province_path, fs::path cons
 		Logger::error("Failed to read BMP for compatibility mode terrain image: ", terrain_path);
 		return false;
 	}
-	static constexpr uint16_t expected_terrain_bpp = 8;
-	if (terrain_bmp.get_bits_per_pixel() != expected_terrain_bpp) {
+	if (terrain_bmp.get_bits_per_pixel() != expected_terrain_rivers_bpp) {
 		Logger::error(
-			"Invalid terrain BMP bits per pixel: ", terrain_bmp.get_bits_per_pixel(), " (expected ", expected_terrain_bpp, ")"
+			"Invalid terrain BMP bits per pixel: ", terrain_bmp.get_bits_per_pixel(), " (expected ", expected_terrain_rivers_bpp, ")"
 		);
 		return false;
 	}
 
-	if (province_bmp.get_width() != terrain_bmp.get_width() || province_bmp.get_height() != terrain_bmp.get_height()) {
+	BMP rivers_bmp;
+	if (!(rivers_bmp.open(rivers_path) && rivers_bmp.read_header() && rivers_bmp.read_pixel_data())) {
+		Logger::error("Failed to read BMP for compatibility mode river image: ", rivers_path);
+		return false;
+	}
+	if (rivers_bmp.get_bits_per_pixel() != expected_terrain_rivers_bpp) {
 		Logger::error(
-			"Mismatched province and terrain BMP dims: ", province_bmp.get_width(), "x", province_bmp.get_height(), " vs ",
-			terrain_bmp.get_width(), "x", terrain_bmp.get_height()
+			"Invalid rivers BMP bits per pixel: ", rivers_bmp.get_bits_per_pixel(), " (expected ", expected_terrain_rivers_bpp, ")"
+		);
+		return false;
+	}
+
+	if (province_bmp.get_width() != terrain_bmp.get_width() ||
+		province_bmp.get_height() != terrain_bmp.get_height() ||
+		province_bmp.get_width() != rivers_bmp.get_width() ||
+		province_bmp.get_height() != rivers_bmp.get_height()
+	) {
+		Logger::error(
+			"Mismatched map BMP dims: provinces:", province_bmp.get_width(), "x", province_bmp.get_height(), ", terrain: ",
+			terrain_bmp.get_width(), "x", terrain_bmp.get_height(), ", rivers: ", rivers_bmp.get_width(), "x", rivers_bmp.get_height()
 		);
 		return false;
 	}
@@ -636,6 +658,196 @@ bool MapDefinition::load_map_images(fs::path const& province_path, fs::path cons
 	if (missing > 0) {
 		Logger::warning("Province image is missing ", missing, " province colours");
 	}
+
+	// Constants in the River BMP Palette
+	static constexpr uint8_t START_COLOUR = 0;
+	static constexpr uint8_t MERGE_COLOUR = 1;
+	static constexpr uint8_t RIVER_SIZE_1 = 2;
+	static constexpr uint8_t RIVER_SIZE_2 = 3;
+	static constexpr uint8_t RIVER_SIZE_3 = 4;
+	static constexpr uint8_t RIVER_SIZE_4 = 5;
+	static constexpr uint8_t RIVER_SIZE_5 = 6;
+	static constexpr uint8_t RIVER_SIZE_6 = 7;
+	static constexpr uint8_t RIVER_SIZE_7 = 8;
+	static constexpr uint8_t RIVER_SIZE_8 = 9;
+	static constexpr uint8_t RIVER_SIZE_9 = 10;
+	static constexpr uint8_t RIVER_SIZE_10 = 11;
+
+	uint8_t const* river_data = rivers_bmp.get_pixel_data().data();
+
+	/** Generating River Segments
+		1. check pixels up, right, down, and left from last_segment_end for a colour <12
+		2. add first point
+		3. set size of segment based on color value at first point
+		4. loop, adding adjacent points until the colour value changes (to make sure we don't backtrack, last_segment_direction provides a pixel to automatically ignore)
+				last_segment_direction:
+				0 -> start, ignore nothing
+				1 -> ignore up
+				2 -> ignore down
+				3 -> ignore left
+				4 -> ignore right
+		5. if the colour value changes to MERGE_COLOUR, add the point & finish the segment
+		6. if there is no further point, finish the segment
+		7. if the colour value changes to a different river size (>1 && <12), recursively call this function on the next segment
+	*/
+	const std::function<void(ivec2_t, uint8_t, river_t&)> next_segment = [&river_data, &rivers_bmp, &next_segment](ivec2_t last_segment_end, uint8_t last_segment_direction, river_t& river) {
+		size_t idx = last_segment_end.x + last_segment_end.y * rivers_bmp.get_width();
+
+		std::vector<ivec2_t> points;
+		uint8_t direction = 0;
+
+		// check pixel above
+		if (last_segment_end.y > 0 && last_segment_direction != 1) { // check for bounds & ignore direction
+			if (river_data[idx - rivers_bmp.get_width()] < 12) {
+				points.push_back({ last_segment_end.x, last_segment_end.y - 1 });
+				direction = 2;
+			}
+		}
+		// check pixel to right
+		if (last_segment_end.x < rivers_bmp.get_width() - 1 && last_segment_direction != 4) {
+			if (river_data[idx + 1] < 12) {
+				points.push_back({ last_segment_end.x + 1, last_segment_end.y });
+				direction = 3;
+			}
+		}
+		// check pixel below
+		if (last_segment_end.y < rivers_bmp.get_height() - 1 && last_segment_direction != 2) {
+			if (river_data[idx + rivers_bmp.get_width()] < 12) {
+				points.push_back({ last_segment_end.x, last_segment_end.y + 1 });
+				direction = 1;
+			}
+		}
+		// check pixel to left
+		if (last_segment_end.x > 0 && last_segment_direction != 3) {
+			if (river_data[idx - 1] < 12) {
+				points.push_back({ last_segment_end.x - 1, last_segment_end.y });
+				direction = 4;
+			}
+		}
+
+		if (points.empty()) {
+			Logger::error("River analysis failed: single-pixel river @ (", last_segment_end.x, ", ", last_segment_end.y, ").");
+			return;
+		}
+		uint8_t size = river_data[points.front().x + points.front().y * rivers_bmp.get_width()] - 1; // size of river from 1 - 10 determined by colour
+
+		bool river_complete = false;
+		ivec2_t new_point;
+
+		size_t limit = 0; // stops infinite loop
+
+		while (true) {
+			limit++;
+			if (limit == 4096) {
+				Logger::error("River segment starting at (", points.front().x, ", ", points.front().y, ") is longer than limit 4096, check for misplaced pixels or other definition errors!");
+				river_complete = true;
+				break;
+			}
+
+			idx = points.back().x + points.back().y * rivers_bmp.get_width();
+
+			ivec2_t merge_location;
+			bool merge = false;
+
+			// check pixel above
+			if (points.back().y > 0 && direction != 1) { // check for bounds & ignore direction
+				if (river_data[idx - rivers_bmp.get_width()] == size + 1) { // now checking if size changes too
+					points.push_back({ points.back().x, points.back().y - 1 });
+					direction = 2;
+					continue;
+				} else if (river_data[idx - rivers_bmp.get_width()] == MERGE_COLOUR) { // check for merge node
+					merge_location = { points.back().x, points.back().y - 1 };
+					merge = true;
+				} else if (river_data[idx - rivers_bmp.get_width()] > 1 && river_data[idx - rivers_bmp.get_width()] < 12) { // new segment
+					new_point = { points.back().x, points.back().y - 1 };
+					direction = 2;
+					break;
+				}
+			}
+			// check pixel to right
+			if (points.back().x < rivers_bmp.get_width() - 1 && direction != 4) {
+				if (river_data[idx + 1] == size + 1) {
+					points.push_back({ points.back().x + 1, points.back().y });
+					direction = 3;
+					continue;
+				} else if (river_data[idx + 1] == MERGE_COLOUR) {
+					merge_location = { points.back().x + 1, points.back().y };
+					merge = true;
+				} else if (river_data[idx + 1] > 1 && river_data[idx + 1] < 12) { // new segment
+					new_point = { points.back().x + 1, points.back().y };
+					direction = 3;
+					break;
+				}
+			}
+			// check pixel below
+			if (points.back().y < rivers_bmp.get_height() - 1 && direction != 2) {
+				if (river_data[idx + rivers_bmp.get_width()] == size + 1) {
+					points.push_back({ points.back().x, points.back().y + 1 });
+					direction = 1;
+					continue;
+				} else if (river_data[idx + rivers_bmp.get_width()] == MERGE_COLOUR) {
+					merge_location = { points.back().x, points.back().y + 1 };
+					merge = true;
+				} else if (river_data[idx + rivers_bmp.get_width()] > 1 && river_data[idx + rivers_bmp.get_width()] < 12) { // new segment
+					new_point = { points.back().x, points.back().y + 1 };
+					direction = 1;
+					break;
+				}
+			}
+			// check pixel to left
+			if (points.back().x > 0 && direction != 3) {
+				if (river_data[idx - 1] == size + 1) {
+					points.push_back({ points.back().x - 1, points.back().y });
+					direction = 4;
+					continue;
+				} else if (river_data[idx - 1] == MERGE_COLOUR) {
+					merge_location = { points.back().x - 1, points.back().y };
+					merge = true;
+				} else if (river_data[idx - 1] > 1 && river_data[idx - 1] < 12) { // new segment
+					new_point = { points.back().x - 1, points.back().y };
+					direction = 4;
+					break;
+				}
+			}
+
+			// no further points
+			if (merge) points.push_back(merge_location);
+			river_complete = true;
+			break;
+		}
+
+		// save memory & simplify by storing only start, corner, and end points.
+		const auto is_corner_point = [](ivec2_t previous, ivec2_t current, ivec2_t next) {
+			return ((current.x - previous.x) * (next.y - current.y)) != ((current.y - previous.y) * (next.x - current.x)); // slope is fun
+		};
+		std::vector<ivec2_t> simplified_points;
+		simplified_points.push_back(points.front()); // add starting point
+		for (int i = 1; i < points.size()-1; ++i) {
+			if (is_corner_point(points[i-1], points[i], points[i+1])) { // add corner points
+				simplified_points.push_back(points[i]);
+			}
+		}
+		simplified_points.push_back(points.back());
+
+		// add segment then recursively call if neeeded
+		river.push_back({ size, std::move(simplified_points) });
+		if (river_complete) return;
+		next_segment(new_point, direction, river);
+	};
+
+	// find every river source and then run the segment algorithm.
+	for (int y = 0; y < rivers_bmp.get_height(); ++y) {
+		for (int x = 0; x < rivers_bmp.get_width(); ++x) {
+			if (river_data[x + y * rivers_bmp.get_width()] == START_COLOUR) { // start of a river
+				river_t river;
+
+				next_segment({ x, y }, 0, river);
+
+				rivers.push_back(std::move(river));
+			}
+		}
+	}
+	Logger::info("Generated ", rivers.size(), " rivers.");
 
 	return ret;
 }
