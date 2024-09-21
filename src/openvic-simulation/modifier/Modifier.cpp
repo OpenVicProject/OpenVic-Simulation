@@ -115,10 +115,6 @@ ModifierValue ModifierValue::operator*(fixed_point_t const& right) const {
 	return copy *= right;
 }
 
-fixed_point_t& ModifierValue::operator[](ModifierEffect const& effect) {
-	return values[&effect];
-}
-
 void ModifierValue::multiply_add(ModifierValue const& other, fixed_point_t multiplier) {
 	if (multiplier == fixed_point_t::_1()) {
 		*this += other;

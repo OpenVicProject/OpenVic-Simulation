@@ -69,8 +69,6 @@ namespace OpenVic {
 		ModifierValue& operator*=(fixed_point_t const& right);
 		ModifierValue operator*(fixed_point_t const& right) const;
 
-		fixed_point_t& operator[](ModifierEffect const& effect);
-
 		void multiply_add(ModifierValue const& other, fixed_point_t multiplier);
 
 		friend std::ostream& operator<<(std::ostream& stream, ModifierValue const& value);
