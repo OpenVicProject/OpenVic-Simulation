@@ -24,7 +24,7 @@ namespace OpenVic {
 
 	public:
 		bool add_crime_modifier(
-			std::string_view identifier, ModifierValue&& values, Modifier::icon_t icon, ConditionScript&& trigger,
+			std::string_view identifier, ModifierValue&& values, IconModifier::icon_t icon, ConditionScript&& trigger,
 			bool default_active
 		);
 

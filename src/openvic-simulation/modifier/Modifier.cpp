@@ -129,12 +129,17 @@ void ModifierValue::multiply_add(ModifierValue const& other, fixed_point_t multi
 	}
 }
 
-Modifier::Modifier(std::string_view new_identifier, ModifierValue&& new_values, icon_t new_icon)
-	: HasIdentifier { new_identifier }, ModifierValue { std::move(new_values) }, icon { new_icon } {}
+Modifier::Modifier(std::string_view new_identifier, ModifierValue&& new_values, modifier_type_t new_type)
+	: HasIdentifier { new_identifier }, ModifierValue { std::move(new_values) }, type { new_type } {}
+
+IconModifier::IconModifier(
+	std::string_view new_identifier, ModifierValue&& new_values, modifier_type_t new_type, icon_t new_icon
+) : Modifier { new_identifier, std::move(new_values), new_type }, icon { new_icon } {}
 
 TriggeredModifier::TriggeredModifier(
-	std::string_view new_identifier, ModifierValue&& new_values, icon_t new_icon, ConditionScript&& new_trigger
-) : Modifier { new_identifier, std::move(new_values), new_icon }, trigger { std::move(new_trigger) } {}
+	std::string_view new_identifier, ModifierValue&& new_values, modifier_type_t new_type, icon_t new_icon,
+	ConditionScript&& new_trigger
+) : IconModifier { new_identifier, std::move(new_values), new_type, new_icon }, trigger { std::move(new_trigger) } {}
 
 bool TriggeredModifier::parse_scripts(DefinitionManager const& definition_manager) {
 	return trigger.parse_script(false, definition_manager);
@@ -404,12 +409,15 @@ std::string ModifierManager::get_flat_identifier(
 	return StringUtils::append_string_views(complex_modifier_identifier, " ", variant_identifier);
 }
 
-bool ModifierManager::add_event_modifier(std::string_view identifier, ModifierValue&& values, Modifier::icon_t icon) {
+bool ModifierManager::add_event_modifier(std::string_view identifier, ModifierValue&& values, IconModifier::icon_t icon) {
 	if (identifier.empty()) {
 		Logger::error("Invalid event modifier effect identifier - empty!");
 		return false;
 	}
-	return event_modifiers.add_item({ identifier, std::move(values), icon }, duplicate_warning_callback);
+
+	return event_modifiers.add_item(
+		{ identifier, std::move(values), Modifier::modifier_type_t::EVENT, icon }, duplicate_warning_callback
+	);
 }
 
 bool ModifierManager::load_event_modifiers(ast::NodeCPtr root) {
@@ -417,7 +425,7 @@ bool ModifierManager::load_event_modifiers(ast::NodeCPtr root) {
 		event_modifiers,
 		[this](std::string_view key, ast::NodeCPtr value) -> bool {
 			ModifierValue modifier_value;
-			Modifier::icon_t icon = 0;
+			IconModifier::icon_t icon = 0;
 			bool ret = expect_modifier_value_and_keys(
 				move_variable_callback(modifier_value),
 				"icon", ZERO_OR_ONE, expect_uint(assign_variable_callback(icon))
@@ -426,7 +434,9 @@ bool ModifierManager::load_event_modifiers(ast::NodeCPtr root) {
 			return ret;
 		}
 	)(root);
+
 	lock_event_modifiers();
+
 	return ret;
 }
 
@@ -435,7 +445,10 @@ bool ModifierManager::add_static_modifier(std::string_view identifier, ModifierV
 		Logger::error("Invalid static modifier effect identifier - empty!");
 		return false;
 	}
-	return static_modifiers.add_item({ identifier, std::move(values), 0 }, duplicate_warning_callback);
+
+	return static_modifiers.add_item(
+		{ identifier, std::move(values), Modifier::modifier_type_t::STATIC }, duplicate_warning_callback
+	);
 }
 
 bool ModifierManager::load_static_modifiers(ast::NodeCPtr root) {
@@ -448,18 +461,24 @@ bool ModifierManager::load_static_modifiers(ast::NodeCPtr root) {
 			return ret;
 		}
 	)(root);
+
 	lock_static_modifiers();
+
 	return ret;
 }
 
 bool ModifierManager::add_triggered_modifier(
-	std::string_view identifier, ModifierValue&& values, Modifier::icon_t icon, ConditionScript&& trigger
+	std::string_view identifier, ModifierValue&& values, IconModifier::icon_t icon, ConditionScript&& trigger
 ) {
 	if (identifier.empty()) {
 		Logger::error("Invalid triggered modifier effect identifier - empty!");
 		return false;
 	}
-	return triggered_modifiers.add_item({ identifier, std::move(values), icon, std::move(trigger) }, duplicate_warning_callback);
+
+	return triggered_modifiers.add_item(
+		{ identifier, std::move(values), Modifier::modifier_type_t::TRIGGERED, icon, std::move(trigger) },
+		duplicate_warning_callback
+	);
 }
 
 bool ModifierManager::load_triggered_modifiers(ast::NodeCPtr root) {
@@ -467,7 +486,7 @@ bool ModifierManager::load_triggered_modifiers(ast::NodeCPtr root) {
 		triggered_modifiers,
 		[this](std::string_view key, ast::NodeCPtr value) -> bool {
 			ModifierValue modifier_value;
-			Modifier::icon_t icon = 0;
+			IconModifier::icon_t icon = 0;
 			ConditionScript trigger { scope_t::COUNTRY, scope_t::COUNTRY, scope_t::NO_SCOPE };
 
 			bool ret = expect_modifier_value_and_keys(
@@ -479,15 +498,19 @@ bool ModifierManager::load_triggered_modifiers(ast::NodeCPtr root) {
 			return ret;
 		}
 	)(root);
+
 	lock_triggered_modifiers();
+
 	return ret;
 }
 
 bool ModifierManager::parse_scripts(DefinitionManager const& definition_manager) {
 	bool ret = true;
+
 	for (TriggeredModifier& modifier : triggered_modifiers.get_items()) {
 		ret &= modifier.parse_scripts(definition_manager);
 	}
+
 	return ret;
 }
 

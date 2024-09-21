@@ -24,7 +24,7 @@ NationalFocus::NationalFocus(
 	fixed_point_map_t<GoodDefinition const*>&& new_encourage_goods,
 	fixed_point_map_t<PopType const*>&& new_encourage_pop_types,
 	ConditionScript&& new_limit
-) : Modifier { new_identifier, std::move(new_modifiers) },
+) : Modifier { new_identifier, std::move(new_modifiers), modifier_type_t::NATIONAL_FOCUS },
 	group { new_group },
 	icon { new_icon },
 	has_flashpoint { new_has_flashpoint },
@@ -47,6 +47,7 @@ inline bool NationalFocusManager::add_national_focus_group(std::string_view iden
 		Logger::error("No identifier for national focus group!");
 		return false;
 	}
+
 	return national_focus_groups.add_item({ identifier });
 }
 
@@ -70,16 +71,19 @@ inline bool NationalFocusManager::add_national_focus(
 		Logger::error("No identifier for national focus!");
 		return false;
 	}
+
 	if (icon < 1) {
 		Logger::error("Invalid icon ", icon, " for national focus ", identifier);
 		return false;
 	}
+
 	if ((loyalty_ideology == nullptr) != (loyalty_value == 0)) {
 		Logger::warning(
 			"Party loyalty incorrectly defined for national focus ", identifier, ": ideology = ", loyalty_ideology,
 			", value = ", loyalty_value
 		);
 	}
+
 	return national_foci.add_item({
 		identifier, group, icon, has_flashpoint, flashpoint_tension, own_provinces, outliner_show_as_percent,
 		std::move(modifiers), loyalty_ideology, loyalty_value, encourage_railroads, std::move(encourage_goods),
@@ -92,12 +96,14 @@ bool NationalFocusManager::load_national_foci_file(
 	GoodDefinitionManager const& good_definition_manager, ModifierManager const& modifier_manager, ast::NodeCPtr root
 ) {
 	size_t expected_national_foci = 0;
+
 	bool ret = expect_dictionary_reserve_length(
 		national_focus_groups,
 		[this, &expected_national_foci](std::string_view identifier, ast::NodeCPtr node) -> bool {
 			return expect_length(add_variable_callback(expected_national_foci))(node) & add_national_focus_group(identifier);
 		}
 	)(root);
+
 	lock_national_focus_groups();
 
 	reserve_more_national_foci(expected_national_foci);
@@ -164,6 +170,7 @@ bool NationalFocusManager::load_national_foci_file(
 			)(group_node);
 		}
 	)(root);
+
 	lock_national_foci();
 
 	return ret;
@@ -171,8 +178,10 @@ bool NationalFocusManager::load_national_foci_file(
 
 bool NationalFocusManager::parse_scripts(DefinitionManager const& definition_manager) {
 	bool ret = true;
+
 	for (NationalFocus& national_focus : national_foci.get_items()) {
 		ret &= national_focus.parse_scripts(definition_manager);
 	}
+
 	return ret;
 }

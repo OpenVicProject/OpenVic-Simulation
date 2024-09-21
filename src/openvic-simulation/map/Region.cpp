@@ -10,15 +10,19 @@ bool ProvinceSet::add_province(ProvinceDefinition const* province) {
 		Logger::error("Cannot add province to province set - locked!");
 		return false;
 	}
+
 	if (province == nullptr) {
 		Logger::error("Cannot add province to province set - null province!");
 		return false;
 	}
+
 	if (contains_province(province)) {
 		Logger::warning("Cannot add province ", province->get_identifier(), " to province set - already in the set!");
 		return false;
 	}
+
 	provinces.push_back(province);
+
 	return true;
 }
 
@@ -27,16 +31,20 @@ bool ProvinceSet::remove_province(ProvinceDefinition const* province) {
 		Logger::error("Cannot remove province from province set - locked!");
 		return false;
 	}
+
 	if (province == nullptr) {
 		Logger::error("Cannot remove province from province set - null province!");
 		return false;
 	}
+
 	const decltype(provinces)::const_iterator it = std::find(provinces.begin(), provinces.end(), province);
 	if (it == provinces.end()) {
 		Logger::warning("Cannot remove province ", province->get_identifier(), " from province set - already not in the set!");
 		return false;
 	}
+
 	provinces.erase(it);
+
 	return true;
 }
 
@@ -84,8 +92,8 @@ bool ProvinceSet::contains_province(ProvinceDefinition const* province) const {
 	return province != nullptr && std::find(provinces.begin(), provinces.end(), province) != provinces.end();
 }
 
-ProvinceSetModifier::ProvinceSetModifier(std::string_view new_identifier, ModifierValue&& new_values)
-	: Modifier { new_identifier, std::move(new_values) } {}
+ProvinceSetModifier::ProvinceSetModifier(std::string_view new_identifier, ModifierValue&& new_values, modifier_type_t new_type)
+	: Modifier { new_identifier, std::move(new_values), new_type } {}
 
 Region::Region(std::string_view new_identifier, colour_t new_colour, bool new_meta)
 	: HasIdentifierAndColour { new_identifier, new_colour, false }, meta { new_meta } {}

@@ -744,7 +744,7 @@ bool MapDefinition::load_climate_file(ModifierManager const& modifier_manager, a
 			if (cur_climate == nullptr) {
 				ModifierValue values;
 				ret &= modifier_manager.expect_modifier_value(move_variable_callback(values))(node);
-				ret &= climates.add_item({ identifier, std::move(values) });
+				ret &= climates.add_item({ identifier, std::move(values), Modifier::modifier_type_t::CLIMATE });
 			} else {
 				ret &= expect_list_reserve_length(*cur_climate, expect_province_definition_identifier(
 					[cur_climate, &identifier](ProvinceDefinition& province) {
@@ -807,7 +807,7 @@ bool MapDefinition::load_continent_file(ModifierManager const& modifier_manager,
 				))
 			)(node);
 
-			Continent continent = { identifier, std::move(values) };
+			Continent continent { identifier, std::move(values), Modifier::modifier_type_t::CONTINENT };
 			continent.add_provinces(prov_list);
 			continent.lock();
 
