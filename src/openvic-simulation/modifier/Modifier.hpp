@@ -1,5 +1,6 @@
 #pragma once
 
+#include "openvic-simulation/modifier/StaticModifierCache.hpp"
 #include "openvic-simulation/scripts/ConditionScript.hpp"
 #include "openvic-simulation/types/IdentifierRegistry.hpp"
 
@@ -140,6 +141,8 @@ namespace OpenVic {
 	concept ModifierEffectValidator = std::predicate<Fn, ModifierEffect const&>;
 
 	struct ModifierManager {
+		friend struct StaticModifierCache;
+
 		/* Some ModifierEffects are generated mid-load, such as max/min count modifiers for each building, so
 		 * we can't lock it until loading is over. This means we can't rely on locking for pointer stability,
 		 * so instead we store the effects in a deque which doesn't invalidate pointers on insert.
@@ -151,6 +154,8 @@ namespace OpenVic {
 		IdentifierRegistry<IconModifier> IDENTIFIER_REGISTRY(event_modifier);
 		IdentifierRegistry<Modifier> IDENTIFIER_REGISTRY(static_modifier);
 		IdentifierRegistry<TriggeredModifier> IDENTIFIER_REGISTRY(triggered_modifier);
+
+		StaticModifierCache PROPERTY(static_modifier_cache);
 
 		/* effect_validator takes in ModifierEffect const& */
 		NodeTools::key_value_callback_t _modifier_effect_callback(
