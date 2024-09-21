@@ -448,7 +448,7 @@ bool ModifierManager::add_static_modifier(std::string_view identifier, ModifierV
 }
 
 bool ModifierManager::load_static_modifiers(ast::NodeCPtr root) {
-	const bool ret = expect_dictionary_reserve_length(
+	bool ret = expect_dictionary_reserve_length(
 		static_modifiers,
 		[this](std::string_view key, ast::NodeCPtr value) -> bool {
 			ModifierValue modifier_value;
@@ -459,6 +459,8 @@ bool ModifierManager::load_static_modifiers(ast::NodeCPtr root) {
 	)(root);
 
 	lock_static_modifiers();
+
+	ret &= static_modifier_cache.load_static_modifiers(*this);
 
 	return ret;
 }
