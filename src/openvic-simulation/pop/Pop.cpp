@@ -662,7 +662,7 @@ bool PopManager::generate_modifiers(ModifierManager& modifier_manager) const {
 			std::string_view suffix, bool is_positive_good
 		) -> void {
 			ret &= modifier_manager.add_modifier_effect(
-				StringUtils::append_string_views(strata.get_identifier(), suffix), is_positive_good
+				StringUtils::append_string_views(strata.get_identifier(), suffix), is_positive_good, PROPORTION_DECIMAL
 			);
 		};
 

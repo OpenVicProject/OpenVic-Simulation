@@ -166,7 +166,7 @@ namespace OpenVic {
 	public:
 		bool add_modifier_effect(
 			std::string_view identifier, bool positive_good,
-			ModifierEffect::format_t format = ModifierEffect::format_t::PROPORTION_DECIMAL,
+			ModifierEffect::format_t format,
 			std::string_view localisation_key = {}
 		);
 
