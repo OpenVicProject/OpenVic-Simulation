@@ -17,8 +17,9 @@ static std::string make_default_modifier_effect_localisation_key(std::string_vie
 }
 
 ModifierEffect::ModifierEffect(
-	std::string_view new_identifier, bool new_positive_good, format_t new_format, std::string_view new_localisation_key
-) : HasIdentifier { new_identifier }, positive_good { new_positive_good }, format { new_format },
+	std::string_view new_identifier, bool new_positive_good, format_t new_format, target_t new_targets,
+	std::string_view new_localisation_key
+) : HasIdentifier { new_identifier }, positive_good { new_positive_good }, format { new_format }, targets { new_targets },
 	localisation_key {
 		new_localisation_key.empty() ? make_default_modifier_effect_localisation_key(new_identifier) : new_localisation_key
 	} {}
@@ -115,12 +116,29 @@ ModifierValue ModifierValue::operator*(fixed_point_t const& right) const {
 	return copy *= right;
 }
 
-void ModifierValue::multiply_add(ModifierValue const& other, fixed_point_t multiplier) {
-	if (multiplier == fixed_point_t::_1()) {
+void ModifierValue::apply_target_filter(ModifierEffect::target_t targets) {
+	using enum ModifierEffect::target_t;
+
+	erase_if(
+		values,
+		[targets](effect_map_t::value_type const& value) -> bool {
+			return (value.first->get_targets() & targets) == NO_TARGETS;
+		}
+	);
+}
+
+void ModifierValue::multiply_add_filter(
+	ModifierValue const& other, fixed_point_t multiplier, ModifierEffect::target_t targets
+) {
+	using enum ModifierEffect::target_t;
+
+	if (multiplier == fixed_point_t::_1() && targets == ALL_TARGETS) {
 		*this += other;
-	} else if (multiplier != fixed_point_t::_0()) {
+	} else if (multiplier != fixed_point_t::_0() && targets != NO_TARGETS) {
 		for (effect_map_t::value_type const& value : other.values) {
-			values[value.first] += value.second * multiplier;
+			if ((value.first->get_targets() & targets) != NO_TARGETS) {
+				values[value.first] += value.second * multiplier;
+			}
 		}
 	}
 }
@@ -145,247 +163,261 @@ ModifierInstance::ModifierInstance(Modifier const& new_modifier, Date new_expiry
 	: modifier { &new_modifier }, expiry_date { new_expiry_date } {}
 
 bool ModifierManager::add_modifier_effect(
-	std::string_view identifier, bool positive_good, ModifierEffect::format_t format, std::string_view localisation_key
+	std::string_view identifier, bool positive_good, ModifierEffect::format_t format, ModifierEffect::target_t targets,
+	std::string_view localisation_key
 ) {
 	if (identifier.empty()) {
 		Logger::error("Invalid modifier effect identifier - empty!");
 		return false;
 	}
-	return modifier_effects.add_item({ std::move(identifier), positive_good, format, localisation_key });
+	return modifier_effects.add_item({ std::move(identifier), positive_good, format, targets, localisation_key });
 }
 
 bool ModifierManager::setup_modifier_effects() {
 	bool ret = true;
 
 	using enum ModifierEffect::format_t;
+	using enum ModifierEffect::target_t;
 	/* Tech/inventions only */
-	ret &= add_modifier_effect("cb_creation_speed", true, PROPORTION_DECIMAL, "CB_MANUFACTURE_TECH");
-	ret &= add_modifier_effect("combat_width", false, PROPORTION_DECIMAL);
-	ret &= add_modifier_effect("plurality", true, PERCENTAGE_DECIMAL, "TECH_PLURALITY");
-	ret &= add_modifier_effect("pop_growth", true, PROPORTION_DECIMAL, "TECH_POP_GROWTH");
-	ret &= add_modifier_effect("regular_experience_level", true, RAW_DECIMAL, "REGULAR_EXP_TECH");
-	ret &= add_modifier_effect("reinforce_rate", true, PROPORTION_DECIMAL, "REINFORCE_TECH");
-	ret &= add_modifier_effect("seperatism", false, PROPORTION_DECIMAL, "SEPARATISM_TECH"); // paradox typo
-	ret &= add_modifier_effect("shared_prestige", true, RAW_DECIMAL, "SHARED_PRESTIGE_TECH");
-	ret &= add_modifier_effect("tax_eff", true, PROPORTION_DECIMAL, "TECH_TAX_EFF");
+	ret &= add_modifier_effect("cb_creation_speed", true, PROPORTION_DECIMAL, COUNTRY, "CB_MANUFACTURE_TECH");
+	ret &= add_modifier_effect("combat_width", false, PROPORTION_DECIMAL, COUNTRY);
+	ret &= add_modifier_effect("plurality", true, PERCENTAGE_DECIMAL, COUNTRY, "TECH_PLURALITY");
+	ret &= add_modifier_effect("pop_growth", true, PROPORTION_DECIMAL, COUNTRY, "TECH_POP_GROWTH");
+	ret &= add_modifier_effect("regular_experience_level", true, RAW_DECIMAL, COUNTRY, "REGULAR_EXP_TECH");
+	ret &= add_modifier_effect("reinforce_rate", true, PROPORTION_DECIMAL, COUNTRY, "REINFORCE_TECH");
+	ret &= add_modifier_effect("seperatism", false, PROPORTION_DECIMAL, COUNTRY, "SEPARATISM_TECH"); // paradox typo
+	ret &= add_modifier_effect("shared_prestige", true, RAW_DECIMAL, COUNTRY, "SHARED_PRESTIGE_TECH");
+	ret &= add_modifier_effect("tax_eff", true, PERCENTAGE_DECIMAL, COUNTRY, "TECH_TAX_EFF");
 
 	/* Country Modifier Effects */
-	ret &= add_modifier_effect("administrative_efficiency", true, PROPORTION_DECIMAL);
+	ret &= add_modifier_effect("administrative_efficiency", true, PROPORTION_DECIMAL, COUNTRY);
 	ret &= add_modifier_effect(
-		"administrative_efficiency_modifier", true, PROPORTION_DECIMAL,
+		"administrative_efficiency_modifier", true, PROPORTION_DECIMAL, COUNTRY,
 		make_default_modifier_effect_localisation_key("administrative_efficiency")
 	);
-	ret &= add_modifier_effect("artisan_input", false, PROPORTION_DECIMAL);
-	ret &= add_modifier_effect("artisan_output", true, PROPORTION_DECIMAL);
-	ret &= add_modifier_effect("artisan_throughput", true, PROPORTION_DECIMAL);
-	ret &= add_modifier_effect("badboy", false, RAW_DECIMAL);
-	ret &= add_modifier_effect("cb_generation_speed_modifier", true, PROPORTION_DECIMAL);
+	ret &= add_modifier_effect("artisan_input", false, PROPORTION_DECIMAL, COUNTRY);
+	ret &= add_modifier_effect("artisan_output", true, PROPORTION_DECIMAL, COUNTRY);
+	ret &= add_modifier_effect("artisan_throughput", true, PROPORTION_DECIMAL, COUNTRY);
+	ret &= add_modifier_effect("badboy", false, RAW_DECIMAL, COUNTRY);
+	ret &= add_modifier_effect("cb_generation_speed_modifier", true, PROPORTION_DECIMAL, COUNTRY);
 	ret &= add_modifier_effect(
-		"civilization_progress_modifier", true, PROPORTION_DECIMAL,
+		"civilization_progress_modifier", true, PROPORTION_DECIMAL, COUNTRY,
 		make_default_modifier_effect_localisation_key("civilization_progress")
 	);
-	ret &= add_modifier_effect("colonial_life_rating", false, INT, "COLONIAL_LIFE_TECH");
-	ret &= add_modifier_effect("colonial_migration", true, PROPORTION_DECIMAL, "COLONIAL_MIGRATION_TECH");
-	ret &= add_modifier_effect("colonial_points", true, INT, "COLONIAL_POINTS_TECH");
-	ret &= add_modifier_effect("colonial_prestige", true, PROPORTION_DECIMAL, "COLONIAL_PRESTIGE_MODIFIER_TECH");
-	ret &= add_modifier_effect("core_pop_consciousness_modifier", false, RAW_DECIMAL);
-	ret &= add_modifier_effect("core_pop_militancy_modifier", false, RAW_DECIMAL);
-	ret &= add_modifier_effect("dig_in_cap", true, INT, "DIGIN_FROM_TECH");
-	ret &= add_modifier_effect("diplomatic_points", true, PROPORTION_DECIMAL, "DIPLOMATIC_POINTS_TECH");
+	ret &= add_modifier_effect("colonial_life_rating", false, INT, COUNTRY, "COLONIAL_LIFE_TECH");
+	ret &= add_modifier_effect("colonial_migration", true, PROPORTION_DECIMAL, COUNTRY, "COLONIAL_MIGRATION_TECH");
+	ret &= add_modifier_effect("colonial_points", true, INT, COUNTRY, "COLONIAL_POINTS_TECH");
+	ret &= add_modifier_effect("colonial_prestige", true, PROPORTION_DECIMAL, COUNTRY, "COLONIAL_PRESTIGE_MODIFIER_TECH");
+	ret &= add_modifier_effect("core_pop_consciousness_modifier", false, RAW_DECIMAL, COUNTRY);
+	ret &= add_modifier_effect("core_pop_militancy_modifier", false, RAW_DECIMAL, COUNTRY);
+	ret &= add_modifier_effect("dig_in_cap", true, INT, COUNTRY, "DIGIN_FROM_TECH");
+	ret &= add_modifier_effect("diplomatic_points", true, PROPORTION_DECIMAL, COUNTRY, "DIPLOMATIC_POINTS_TECH");
 	ret &= add_modifier_effect(
-		"diplomatic_points_modifier", true, PROPORTION_DECIMAL,
+		"diplomatic_points_modifier", true, PROPORTION_DECIMAL, COUNTRY,
 		make_default_modifier_effect_localisation_key("diplopoints_gain")
 	);
-	ret &= add_modifier_effect("education_efficiency", true, PROPORTION_DECIMAL);
+	ret &= add_modifier_effect("education_efficiency", true, PROPORTION_DECIMAL, COUNTRY);
 	ret &= add_modifier_effect(
-		"education_efficiency_modifier", true, PROPORTION_DECIMAL,
+		"education_efficiency_modifier", true, PROPORTION_DECIMAL, COUNTRY,
 		make_default_modifier_effect_localisation_key("education_efficiency")
 	);
-	ret &= add_modifier_effect("factory_cost", false, PROPORTION_DECIMAL);
-	ret &= add_modifier_effect("factory_input", false, PROPORTION_DECIMAL);
-	ret &= add_modifier_effect("factory_maintenance", false, PROPORTION_DECIMAL);
-	ret &= add_modifier_effect("factory_output", true, PROPORTION_DECIMAL);
-	ret &= add_modifier_effect("factory_owner_cost", false, PROPORTION_DECIMAL);
-	ret &= add_modifier_effect("factory_throughput", true, PROPORTION_DECIMAL);
+	ret &= add_modifier_effect("factory_cost", false, PROPORTION_DECIMAL, COUNTRY);
+	ret &= add_modifier_effect("factory_input", false, PROPORTION_DECIMAL, COUNTRY);
+	ret &= add_modifier_effect("factory_maintenance", false, PROPORTION_DECIMAL, COUNTRY);
+	ret &= add_modifier_effect("factory_output", true, PROPORTION_DECIMAL, COUNTRY);
+	ret &= add_modifier_effect("factory_owner_cost", false, PROPORTION_DECIMAL, COUNTRY);
+	ret &= add_modifier_effect("factory_throughput", true, PROPORTION_DECIMAL, COUNTRY);
 	ret &= add_modifier_effect(
-		"global_assimilation_rate", true, PROPORTION_DECIMAL,
+		"global_assimilation_rate", true, PROPORTION_DECIMAL, COUNTRY,
 		make_default_modifier_effect_localisation_key("assimilation_rate")
 	);
 	ret &= add_modifier_effect(
-		"global_immigrant_attract", true, PROPORTION_DECIMAL,
+		"global_immigrant_attract", true, PROPORTION_DECIMAL, COUNTRY,
 		make_default_modifier_effect_localisation_key("immigant_attract")
 	);
-	ret &= add_modifier_effect("global_pop_consciousness_modifier", false, RAW_DECIMAL);
-	ret &= add_modifier_effect("global_pop_militancy_modifier", false, RAW_DECIMAL);
+	ret &= add_modifier_effect("global_pop_consciousness_modifier", false, RAW_DECIMAL, COUNTRY);
+	ret &= add_modifier_effect("global_pop_militancy_modifier", false, RAW_DECIMAL, COUNTRY);
 	ret &= add_modifier_effect(
-		"global_population_growth", true, PROPORTION_DECIMAL,
+		"global_population_growth", true, PROPORTION_DECIMAL, COUNTRY,
 		make_default_modifier_effect_localisation_key("population_growth")
 	);
-	ret &= add_modifier_effect("goods_demand", false, PROPORTION_DECIMAL);
-	ret &= add_modifier_effect("import_cost", false, PROPORTION_DECIMAL);
-	ret &= add_modifier_effect("increase_research", true, PROPORTION_DECIMAL, "INC_RES_TECH");
-	ret &= add_modifier_effect("influence", true, PROPORTION_DECIMAL, "TECH_GP_INFLUENCE");
+	ret &= add_modifier_effect("goods_demand", false, PROPORTION_DECIMAL, COUNTRY);
+	ret &= add_modifier_effect("import_cost", false, PROPORTION_DECIMAL, COUNTRY);
+	ret &= add_modifier_effect("increase_research", true, PROPORTION_DECIMAL, COUNTRY, "INC_RES_TECH");
+	ret &= add_modifier_effect("influence", true, PROPORTION_DECIMAL, COUNTRY, "TECH_GP_INFLUENCE");
 	ret &= add_modifier_effect(
-		"influence_modifier", true, PROPORTION_DECIMAL,
+		"influence_modifier", true, PROPORTION_DECIMAL, COUNTRY,
 		make_default_modifier_effect_localisation_key("greatpower_influence_gain")
 	);
-	ret &= add_modifier_effect("issue_change_speed", true, PROPORTION_DECIMAL);
+	ret &= add_modifier_effect("issue_change_speed", true, PROPORTION_DECIMAL, COUNTRY);
 	ret &= add_modifier_effect(
-		"land_attack_modifier", true, PROPORTION_DECIMAL, make_default_modifier_effect_localisation_key("land_attack")
+		"land_attack_modifier", true, PROPORTION_DECIMAL, COUNTRY, make_default_modifier_effect_localisation_key("land_attack")
 	);
-	ret &= add_modifier_effect("land_attrition", false, PROPORTION_DECIMAL, "LAND_ATTRITION_TECH");
+	ret &= add_modifier_effect("land_attrition", false, PROPORTION_DECIMAL, COUNTRY, "LAND_ATTRITION_TECH");
 	ret &= add_modifier_effect(
-		"land_defense_modifier", true, PROPORTION_DECIMAL, make_default_modifier_effect_localisation_key("land_defense")
+		"land_defense_modifier", true, PROPORTION_DECIMAL, COUNTRY,
+		make_default_modifier_effect_localisation_key("land_defense")
 	);
-	ret &= add_modifier_effect("land_organisation", true, PROPORTION_DECIMAL);
-	ret &= add_modifier_effect("land_unit_start_experience", true, RAW_DECIMAL);
-	ret &= add_modifier_effect("leadership", true, RAW_DECIMAL, "LEADERSHIP");
+	ret &= add_modifier_effect("land_organisation", true, PROPORTION_DECIMAL, COUNTRY);
+	ret &= add_modifier_effect("land_unit_start_experience", true, RAW_DECIMAL, COUNTRY);
+	ret &= add_modifier_effect("leadership", true, RAW_DECIMAL, COUNTRY, "LEADERSHIP");
 	ret &= add_modifier_effect(
-		"leadership_modifier", true, PROPORTION_DECIMAL,
+		"leadership_modifier", true, PROPORTION_DECIMAL, COUNTRY,
 		make_default_modifier_effect_localisation_key("global_leadership_modifier")
 	);
-	ret &= add_modifier_effect("literacy_con_impact", false, PROPORTION_DECIMAL);
-	ret &= add_modifier_effect("loan_interest", false, PROPORTION_DECIMAL);
+	ret &= add_modifier_effect("literacy_con_impact", false, PROPORTION_DECIMAL, COUNTRY);
+	ret &= add_modifier_effect("loan_interest", false, PROPORTION_DECIMAL, COUNTRY);
 	ret &= add_modifier_effect(
-		"max_loan_modifier", true, PROPORTION_DECIMAL, make_default_modifier_effect_localisation_key("max_loan_amount")
+		"max_loan_modifier", true, PROPORTION_DECIMAL, COUNTRY,
+		make_default_modifier_effect_localisation_key("max_loan_amount")
 	);
-	ret &= add_modifier_effect("max_military_spending", true, PROPORTION_DECIMAL);
-	ret &= add_modifier_effect("max_national_focus", true, INT, "TECH_MAX_FOCUS");
-	ret &= add_modifier_effect("max_social_spending", true, PROPORTION_DECIMAL);
-	ret &= add_modifier_effect("max_tariff", true, PROPORTION_DECIMAL);
-	ret &= add_modifier_effect("max_tax", true, PROPORTION_DECIMAL);
-	ret &= add_modifier_effect("max_war_exhaustion", true, PERCENTAGE_DECIMAL, "MAX_WAR_EXHAUSTION");
-	ret &= add_modifier_effect("military_tactics", true, PROPORTION_DECIMAL, "MIL_TACTICS_TECH");
-	ret &= add_modifier_effect("min_military_spending", true, PROPORTION_DECIMAL);
-	ret &= add_modifier_effect("min_social_spending", true, PROPORTION_DECIMAL);
-	ret &= add_modifier_effect("min_tariff", true, PROPORTION_DECIMAL);
-	ret &= add_modifier_effect("min_tax", true, PROPORTION_DECIMAL);
+	ret &= add_modifier_effect("max_military_spending", true, PROPORTION_DECIMAL, COUNTRY);
+	ret &= add_modifier_effect("max_national_focus", true, INT, COUNTRY, "TECH_MAX_FOCUS");
+	ret &= add_modifier_effect("max_social_spending", true, PROPORTION_DECIMAL, COUNTRY);
+	ret &= add_modifier_effect("max_tariff", true, PROPORTION_DECIMAL, COUNTRY);
+	ret &= add_modifier_effect("max_tax", true, PROPORTION_DECIMAL, COUNTRY);
+	ret &= add_modifier_effect("max_war_exhaustion", true, PERCENTAGE_DECIMAL, COUNTRY, "MAX_WAR_EXHAUSTION");
+	ret &= add_modifier_effect("military_tactics", true, PROPORTION_DECIMAL, COUNTRY, "MIL_TACTICS_TECH");
+	ret &= add_modifier_effect("min_military_spending", true, PROPORTION_DECIMAL, COUNTRY);
+	ret &= add_modifier_effect("min_social_spending", true, PROPORTION_DECIMAL, COUNTRY);
+	ret &= add_modifier_effect("min_tariff", true, PROPORTION_DECIMAL, COUNTRY);
+	ret &= add_modifier_effect("min_tax", true, PROPORTION_DECIMAL, COUNTRY);
 	ret &= add_modifier_effect(
-		"minimum_wage", true, PROPORTION_DECIMAL, make_default_modifier_effect_localisation_key("minimun_wage")
+		"minimum_wage", true, PROPORTION_DECIMAL, COUNTRY, make_default_modifier_effect_localisation_key("minimun_wage")
 	);
-	ret &= add_modifier_effect("mobilisation_economy_impact", false, PROPORTION_DECIMAL);
-	ret &= add_modifier_effect("mobilisation_size", true, PROPORTION_DECIMAL);
-	ret &= add_modifier_effect("mobilization_impact", false, PROPORTION_DECIMAL);
+	ret &= add_modifier_effect("mobilisation_economy_impact", false, PROPORTION_DECIMAL, COUNTRY);
+	ret &= add_modifier_effect("mobilisation_size", true, PROPORTION_DECIMAL, COUNTRY);
+	ret &= add_modifier_effect("mobilization_impact", false, PROPORTION_DECIMAL, COUNTRY);
 	ret &= add_modifier_effect(
-		"naval_attack_modifier", true, PROPORTION_DECIMAL, make_default_modifier_effect_localisation_key("naval_attack")
+		"naval_attack_modifier", true, PROPORTION_DECIMAL, COUNTRY,
+		make_default_modifier_effect_localisation_key("naval_attack")
 	);
-	ret &= add_modifier_effect("naval_attrition", false, PROPORTION_DECIMAL, "NAVAL_ATTRITION_TECH");
+	ret &= add_modifier_effect("naval_attrition", false, PROPORTION_DECIMAL, COUNTRY, "NAVAL_ATTRITION_TECH");
 	ret &= add_modifier_effect(
-		"naval_defense_modifier", true, PROPORTION_DECIMAL, make_default_modifier_effect_localisation_key("naval_defense")
+		"naval_defense_modifier", true, PROPORTION_DECIMAL, COUNTRY,
+		make_default_modifier_effect_localisation_key("naval_defense")
 	);
-	ret &= add_modifier_effect("naval_organisation", true, PROPORTION_DECIMAL);
-	ret &= add_modifier_effect("naval_unit_start_experience", true, RAW_DECIMAL);
-	ret &= add_modifier_effect("non_accepted_pop_consciousness_modifier", false, RAW_DECIMAL);
-	ret &= add_modifier_effect("non_accepted_pop_militancy_modifier", false, RAW_DECIMAL);
-	ret &= add_modifier_effect("org_regain", true, PROPORTION_DECIMAL);
-	ret &= add_modifier_effect("pension_level", true, PROPORTION_DECIMAL);
-	ret &= add_modifier_effect("permanent_prestige", true, RAW_DECIMAL, "PERMANENT_PRESTIGE_TECH");
-	ret &= add_modifier_effect("political_reform_desire", false, PROPORTION_DECIMAL);
-	ret &= add_modifier_effect("poor_savings_modifier", true, PROPORTION_DECIMAL);
-	ret &= add_modifier_effect("prestige", true, RAW_DECIMAL);
-	ret &= add_modifier_effect("reinforce_speed", true, PROPORTION_DECIMAL);
-	ret &= add_modifier_effect("research_points", true, RAW_DECIMAL);
-	ret &= add_modifier_effect("research_points_modifier", true, PROPORTION_DECIMAL);
-	ret &= add_modifier_effect("research_points_on_conquer", true, PROPORTION_DECIMAL);
-	ret &= add_modifier_effect("rgo_output", true, PROPORTION_DECIMAL);
-	ret &= add_modifier_effect("rgo_throughput", true, PROPORTION_DECIMAL);
-	ret &= add_modifier_effect("ruling_party_support", true, PROPORTION_DECIMAL);
+	ret &= add_modifier_effect("naval_organisation", true, PROPORTION_DECIMAL, COUNTRY);
+	ret &= add_modifier_effect("naval_unit_start_experience", true, RAW_DECIMAL, COUNTRY);
+	ret &= add_modifier_effect("non_accepted_pop_consciousness_modifier", false, RAW_DECIMAL, COUNTRY);
+	ret &= add_modifier_effect("non_accepted_pop_militancy_modifier", false, RAW_DECIMAL, COUNTRY);
+	ret &= add_modifier_effect("org_regain", true, PROPORTION_DECIMAL, COUNTRY);
+	ret &= add_modifier_effect("pension_level", true, PROPORTION_DECIMAL, COUNTRY);
+	ret &= add_modifier_effect("permanent_prestige", true, RAW_DECIMAL, COUNTRY, "PERMANENT_PRESTIGE_TECH");
+	ret &= add_modifier_effect("political_reform_desire", false, PROPORTION_DECIMAL, COUNTRY);
+	ret &= add_modifier_effect("poor_savings_modifier", true, PROPORTION_DECIMAL, COUNTRY);
+	ret &= add_modifier_effect("prestige", true, RAW_DECIMAL, COUNTRY);
+	ret &= add_modifier_effect("reinforce_speed", true, PROPORTION_DECIMAL, COUNTRY);
+	ret &= add_modifier_effect("research_points", true, RAW_DECIMAL, COUNTRY);
+	ret &= add_modifier_effect("research_points_modifier", true, PROPORTION_DECIMAL, COUNTRY);
+	ret &= add_modifier_effect("research_points_on_conquer", true, PROPORTION_DECIMAL, COUNTRY);
+	ret &= add_modifier_effect("rgo_output", true, PROPORTION_DECIMAL, COUNTRY);
+	ret &= add_modifier_effect("rgo_throughput", true, PROPORTION_DECIMAL, COUNTRY);
+	ret &= add_modifier_effect("ruling_party_support", true, PROPORTION_DECIMAL, COUNTRY);
 	ret &= add_modifier_effect(
-		"self_unciv_economic_modifier", false, PROPORTION_DECIMAL,
+		"self_unciv_economic_modifier", false, PROPORTION_DECIMAL, COUNTRY,
 		make_default_modifier_effect_localisation_key("self_unciv_economic")
 	);
 	ret &= add_modifier_effect(
-		"self_unciv_military_modifier", false, PROPORTION_DECIMAL,
+		"self_unciv_military_modifier", false, PROPORTION_DECIMAL, COUNTRY,
 		make_default_modifier_effect_localisation_key("self_unciv_military")
 	);
-	ret &= add_modifier_effect("social_reform_desire", false, PROPORTION_DECIMAL);
-	ret &= add_modifier_effect("soldier_to_pop_loss", true, PROPORTION_DECIMAL, "SOLDIER_TO_POP_LOSS_TECH");
-	ret &= add_modifier_effect("supply_consumption", false, PROPORTION_DECIMAL);
-	ret &= add_modifier_effect("supply_range", true, PROPORTION_DECIMAL, "SUPPLY_RANGE_TECH");
-	ret &= add_modifier_effect("suppression_points_modifier", true, PROPORTION_DECIMAL, "SUPPRESSION_TECH");
+	ret &= add_modifier_effect("social_reform_desire", false, PROPORTION_DECIMAL, COUNTRY);
+	ret &= add_modifier_effect("soldier_to_pop_loss", true, PROPORTION_DECIMAL, COUNTRY, "SOLDIER_TO_POP_LOSS_TECH");
+	ret &= add_modifier_effect("supply_consumption", false, PROPORTION_DECIMAL, COUNTRY);
+	ret &= add_modifier_effect("supply_range", true, PROPORTION_DECIMAL, COUNTRY, "SUPPLY_RANGE_TECH");
+	ret &= add_modifier_effect("suppression_points_modifier", true, PROPORTION_DECIMAL, COUNTRY, "SUPPRESSION_TECH");
 	ret &= add_modifier_effect(
-		"tariff_efficiency_modifier", true, PROPORTION_DECIMAL,
+		"tariff_efficiency_modifier", true, PROPORTION_DECIMAL, COUNTRY,
 		make_default_modifier_effect_localisation_key("tariff_efficiency")
 	);
-	ret &= add_modifier_effect("tax_efficiency", true, PROPORTION_DECIMAL);
-	ret &= add_modifier_effect("unemployment_benefit", true, PROPORTION_DECIMAL);
+	ret &= add_modifier_effect("tax_efficiency", true, PROPORTION_DECIMAL, COUNTRY);
+	ret &= add_modifier_effect("unemployment_benefit", true, PROPORTION_DECIMAL, COUNTRY);
 	ret &= add_modifier_effect(
-		"unciv_economic_modifier", false, PROPORTION_DECIMAL, make_default_modifier_effect_localisation_key("unciv_economic")
+		"unciv_economic_modifier", false, PROPORTION_DECIMAL, COUNTRY,
+		make_default_modifier_effect_localisation_key("unciv_economic")
 	);
 	ret &= add_modifier_effect(
-		"unciv_military_modifier", false, PROPORTION_DECIMAL, make_default_modifier_effect_localisation_key("unciv_military")
+		"unciv_military_modifier", false, PROPORTION_DECIMAL, COUNTRY,
+		make_default_modifier_effect_localisation_key("unciv_military")
 	);
-	ret &= add_modifier_effect("unit_recruitment_time", false, PROPORTION_DECIMAL);
-	ret &= add_modifier_effect("war_exhaustion", false, PROPORTION_DECIMAL, "WAR_EXHAUST_BATTLES");
+	ret &= add_modifier_effect("unit_recruitment_time", false, PROPORTION_DECIMAL, COUNTRY);
+	ret &= add_modifier_effect("war_exhaustion", false, PROPORTION_DECIMAL, COUNTRY, "WAR_EXHAUST_BATTLES");
 
 	/* Province Modifier Effects */
-	ret &= add_modifier_effect("assimilation_rate", true, PROPORTION_DECIMAL);
-	ret &= add_modifier_effect("boost_strongest_party", false, PROPORTION_DECIMAL);
-	ret &= add_modifier_effect("farm_rgo_eff", true, PROPORTION_DECIMAL, "TECH_FARM_OUTPUT");
+	ret &= add_modifier_effect("assimilation_rate", true, PROPORTION_DECIMAL, PROVINCE);
+	ret &= add_modifier_effect("boost_strongest_party", false, PROPORTION_DECIMAL, PROVINCE);
+	ret &= add_modifier_effect("farm_rgo_eff", true, PROPORTION_DECIMAL, PROVINCE, "TECH_FARM_OUTPUT");
 	ret &= add_modifier_effect(
-		"farm_rgo_size", true, PROPORTION_DECIMAL, make_default_modifier_effect_localisation_key("farm_size")
+		"farm_rgo_size", true, PROPORTION_DECIMAL, PROVINCE, make_default_modifier_effect_localisation_key("farm_size")
 	);
 	ret &= add_modifier_effect(
-		"immigrant_attract", true, PROPORTION_DECIMAL, make_default_modifier_effect_localisation_key("immigant_attract")
+		"immigrant_attract", true, PROPORTION_DECIMAL, PROVINCE,
+		make_default_modifier_effect_localisation_key("immigant_attract")
 	);
 	ret &= add_modifier_effect(
-		"immigrant_push", false, PROPORTION_DECIMAL, make_default_modifier_effect_localisation_key("immigant_push")
+		"immigrant_push", false, PROPORTION_DECIMAL, PROVINCE, make_default_modifier_effect_localisation_key("immigant_push")
 	);
-	ret &= add_modifier_effect("life_rating", true, PROPORTION_DECIMAL);
+	ret &= add_modifier_effect("life_rating", true, PROPORTION_DECIMAL, PROVINCE);
 	ret &= add_modifier_effect(
-		"local_artisan_input", false, PROPORTION_DECIMAL, make_default_modifier_effect_localisation_key("artisan_input")
-	);
-	ret &= add_modifier_effect(
-		"local_artisan_output", true, PROPORTION_DECIMAL, make_default_modifier_effect_localisation_key("artisan_output")
+		"local_artisan_input", false, PROPORTION_DECIMAL, PROVINCE,
+		make_default_modifier_effect_localisation_key("artisan_input")
 	);
 	ret &= add_modifier_effect(
-		"local_artisan_throughput", true, PROPORTION_DECIMAL,
+		"local_artisan_output", true, PROPORTION_DECIMAL, PROVINCE,
+		make_default_modifier_effect_localisation_key("artisan_output")
+	);
+	ret &= add_modifier_effect(
+		"local_artisan_throughput", true, PROPORTION_DECIMAL, PROVINCE,
 		make_default_modifier_effect_localisation_key("artisan_throughput")
 	);
 	ret &= add_modifier_effect(
-		"local_factory_input", false, PROPORTION_DECIMAL, make_default_modifier_effect_localisation_key("factory_input")
+		"local_factory_input", false, PROPORTION_DECIMAL, PROVINCE,
+		make_default_modifier_effect_localisation_key("factory_input")
 	);
 	ret &= add_modifier_effect(
-		"local_factory_output", true, PROPORTION_DECIMAL, make_default_modifier_effect_localisation_key("factory_output")
+		"local_factory_output", true, PROPORTION_DECIMAL, PROVINCE,
+		make_default_modifier_effect_localisation_key("factory_output")
 	);
 	ret &= add_modifier_effect(
-		"local_factory_throughput", true, PROPORTION_DECIMAL,
+		"local_factory_throughput", true, PROPORTION_DECIMAL, PROVINCE,
 		make_default_modifier_effect_localisation_key("factory_throughput")
 	);
-	ret &= add_modifier_effect("local_repair", true, PROPORTION_DECIMAL);
+	ret &= add_modifier_effect("local_repair", true, PROPORTION_DECIMAL, PROVINCE);
 	ret &= add_modifier_effect(
-		"local_rgo_output", true, PROPORTION_DECIMAL, make_default_modifier_effect_localisation_key("rgo_output")
+		"local_rgo_output", true, PROPORTION_DECIMAL, PROVINCE, make_default_modifier_effect_localisation_key("rgo_output")
 	);
 	ret &= add_modifier_effect(
-		"local_rgo_throughput", true, PROPORTION_DECIMAL, make_default_modifier_effect_localisation_key("rgo_throughput")
+		"local_rgo_throughput", true, PROPORTION_DECIMAL, PROVINCE,
+		make_default_modifier_effect_localisation_key("rgo_throughput")
 	);
 	ret &= add_modifier_effect(
-		"local_ruling_party_support", true, PROPORTION_DECIMAL,
+		"local_ruling_party_support", true, PROPORTION_DECIMAL, PROVINCE,
 		make_default_modifier_effect_localisation_key("ruling_party_support")
 	);
-	ret &= add_modifier_effect("local_ship_build", false, PROPORTION_DECIMAL);
-	ret &= add_modifier_effect("max_attrition", false, RAW_DECIMAL);
-	ret &= add_modifier_effect("mine_rgo_eff", true, PROPORTION_DECIMAL, "TECH_MINE_OUTPUT");
+	ret &= add_modifier_effect("local_ship_build", false, PROPORTION_DECIMAL, PROVINCE);
+	ret &= add_modifier_effect("max_attrition", false, RAW_DECIMAL, PROVINCE);
+	ret &= add_modifier_effect("mine_rgo_eff", true, PROPORTION_DECIMAL, PROVINCE, "TECH_MINE_OUTPUT");
 	ret &= add_modifier_effect(
-		"mine_rgo_size", true, PROPORTION_DECIMAL, make_default_modifier_effect_localisation_key("mine_size")
+		"mine_rgo_size", true, PROPORTION_DECIMAL, PROVINCE, make_default_modifier_effect_localisation_key("mine_size")
 	);
-	ret &= add_modifier_effect("movement_cost", false, PROPORTION_DECIMAL);
-	ret &= add_modifier_effect("number_of_voters", false, PROPORTION_DECIMAL);
-	ret &= add_modifier_effect("pop_consciousness_modifier", false, RAW_DECIMAL);
-	ret &= add_modifier_effect("pop_militancy_modifier", false, RAW_DECIMAL);
-	ret &= add_modifier_effect("population_growth", true, PROPORTION_DECIMAL);
-	ret &= add_modifier_effect("supply_limit", true, RAW_DECIMAL);
+	ret &= add_modifier_effect("movement_cost", false, PROPORTION_DECIMAL, PROVINCE);
+	ret &= add_modifier_effect("number_of_voters", false, PROPORTION_DECIMAL, PROVINCE);
+	ret &= add_modifier_effect("pop_consciousness_modifier", false, RAW_DECIMAL, PROVINCE);
+	ret &= add_modifier_effect("pop_militancy_modifier", false, RAW_DECIMAL, PROVINCE);
+	ret &= add_modifier_effect("population_growth", true, PROPORTION_DECIMAL, PROVINCE);
+	ret &= add_modifier_effect("supply_limit", true, RAW_DECIMAL, PROVINCE);
 
 	/* Military Modifier Effects */
-	ret &= add_modifier_effect("attack", true, INT, "TRAIT_ATTACK");
-	ret &= add_modifier_effect("attrition", false, RAW_DECIMAL, "ATTRITION");
-	ret &= add_modifier_effect("defence", true, INT, "TRAIT_DEFEND");
-	ret &= add_modifier_effect("experience", true, PROPORTION_DECIMAL, "TRAIT_EXPERIENCE");
-	ret &= add_modifier_effect("morale", true, PROPORTION_DECIMAL, "TRAIT_MORALE");
-	ret &= add_modifier_effect("organisation", true, PROPORTION_DECIMAL, "TRAIT_ORGANISATION");
-	ret &= add_modifier_effect("reconnaissance", true, PROPORTION_DECIMAL, "TRAIT_RECONAISSANCE");
-	ret &= add_modifier_effect("reliability", true, RAW_DECIMAL, "TRAIT_RELIABILITY");
-	ret &= add_modifier_effect("speed", true, PROPORTION_DECIMAL, "TRAIT_SPEED");
+	ret &= add_modifier_effect("attack", true, INT, UNIT, "TRAIT_ATTACK");
+	ret &= add_modifier_effect("attrition", false, RAW_DECIMAL, UNIT, "ATTRITION");
+	ret &= add_modifier_effect("defence", true, INT, UNIT, "TRAIT_DEFEND");
+	ret &= add_modifier_effect("experience", true, PROPORTION_DECIMAL, UNIT, "TRAIT_EXPERIENCE");
+	ret &= add_modifier_effect("morale", true, PROPORTION_DECIMAL, UNIT, "TRAIT_MORALE");
+	ret &= add_modifier_effect("organisation", true, PROPORTION_DECIMAL, UNIT, "TRAIT_ORGANISATION");
+	ret &= add_modifier_effect("reconnaissance", true, PROPORTION_DECIMAL, UNIT, "TRAIT_RECONAISSANCE");
+	ret &= add_modifier_effect("reliability", true, RAW_DECIMAL, UNIT, "TRAIT_RELIABILITY");
+	ret &= add_modifier_effect("speed", true, PROPORTION_DECIMAL, UNIT, "TRAIT_SPEED");
 
 	return ret;
 }

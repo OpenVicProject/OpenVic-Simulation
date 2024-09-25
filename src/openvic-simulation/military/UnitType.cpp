@@ -321,16 +321,17 @@ bool UnitTypeManager::generate_modifiers(ModifierManager& modifier_manager) cons
 	const auto generate_stat_modifiers = [&modifier_manager, &ret](
 		std::string_view identifier, UnitType::branch_t branch
 	) -> void {
+		using enum ModifierEffect::format_t;
+		using enum ModifierEffect::target_t;
+
 		const auto stat_modifier = [&modifier_manager, &ret, &identifier](
 			std::string_view suffix, bool is_positive_good, ModifierEffect::format_t format, std::string_view localisation_key
 		) -> void {
 			ret &= modifier_manager.add_modifier_effect(
-				ModifierManager::get_flat_identifier(identifier, suffix), is_positive_good, format,
+				ModifierManager::get_flat_identifier(identifier, suffix), is_positive_good, format, COUNTRY,
 				StringUtils::append_string_views("$", identifier, "$: $", localisation_key, "$")
 			);
 		};
-
-		using enum ModifierEffect::format_t;
 
 		ret &= modifier_manager.register_complex_modifier(identifier);
 
