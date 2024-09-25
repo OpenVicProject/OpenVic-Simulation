@@ -654,6 +654,7 @@ bool PopManager::load_pop_bases_into_vector(
 
 bool PopManager::generate_modifiers(ModifierManager& modifier_manager) const {
 	using enum ModifierEffect::format_t;
+	using enum ModifierEffect::target_t;
 
 	bool ret = true;
 
@@ -662,11 +663,12 @@ bool PopManager::generate_modifiers(ModifierManager& modifier_manager) const {
 			std::string_view suffix, bool is_positive_good
 		) -> void {
 			ret &= modifier_manager.add_modifier_effect(
-				StringUtils::append_string_views(strata.get_identifier(), suffix), is_positive_good, PROPORTION_DECIMAL
+				StringUtils::append_string_views(strata.get_identifier(), suffix), is_positive_good, PROPORTION_DECIMAL,
+				COUNTRY
 			);
 		};
 
-		strata_modifier("_income_modifier", true);
+		strata_modifier("_income_modifier", true); // Has no effect in game
 		strata_modifier("_vote", true);
 
 		strata_modifier("_life_needs", false);

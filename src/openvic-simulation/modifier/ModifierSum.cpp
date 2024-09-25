@@ -19,9 +19,15 @@ bool ModifierSum::has_effect(ModifierEffect const& effect) const {
 	return value_sum.has_effect(effect);
 }
 
-void ModifierSum::add_modifier(Modifier const& modifier, modifier_source_t source, fixed_point_t multiplier) {
-	modifiers.emplace_back(&modifier, multiplier, source);
-	value_sum.multiply_add(modifier, multiplier);
+void ModifierSum::add_modifier(
+	Modifier const& modifier, modifier_source_t const& source, fixed_point_t multiplier, ModifierEffect::target_t targets
+) {
+	using enum ModifierEffect::target_t;
+
+	if (multiplier != fixed_point_t::_0() && targets != NO_TARGETS) {
+		modifiers.emplace_back(&modifier, multiplier, source, targets);
+		value_sum.multiply_add_filter(modifier, multiplier, targets);
+	}
 }
 
 void ModifierSum::add_modifier_sum(ModifierSum const& modifier_sum) {
@@ -29,10 +35,22 @@ void ModifierSum::add_modifier_sum(ModifierSum const& modifier_sum) {
 	value_sum += modifier_sum.value_sum;
 }
 
+void ModifierSum::add_modifier_sum_filter_targets(ModifierSum const& modifier_sum, ModifierEffect::target_t targets) {
+	using enum ModifierEffect::target_t;
+
+	for (modifier_entry_t const& modifier_entry : modifier_sum.modifiers) {
+		ModifierEffect::target_t new_targets = modifier_entry.targets & targets;
+
+		if (new_targets != NO_TARGETS) {
+			add_modifier(*modifier_entry.modifier, modifier_entry.source, modifier_entry.multiplier, new_targets);
+		}
+	}
+}
+
 void ModifierSum::add_modifier_sum_exclude_source(ModifierSum const& modifier_sum, modifier_source_t const& excluded_source) {
 	for (modifier_entry_t const& modifier_entry : modifier_sum.modifiers) {
 		if (modifier_entry.source != excluded_source) {
-			add_modifier(*modifier_entry.modifier, modifier_entry.source, modifier_entry.multiplier);
+			add_modifier(*modifier_entry.modifier, modifier_entry.source, modifier_entry.multiplier, modifier_entry.targets);
 		}
 	}
 }
@@ -41,14 +59,18 @@ void ModifierSum::add_modifier_sum_exclude_source(ModifierSum const& modifier_su
 std::vector<ModifierSum::modifier_entry_t> ModifierSum::get_contributing_modifiers(
 	ModifierEffect const& effect
 ) const {
+	using enum ModifierEffect::target_t;
+
 	std::vector<modifier_entry_t> ret;
 
 	for (modifier_entry_t const& modifier_entry : modifiers) {
-		bool effect_found = false;
-		const fixed_point_t value = modifier_entry.modifier->get_effect(effect, &effect_found);
+		if ((modifier_entry.targets & effect.get_targets()) != NO_TARGETS) {
+			bool effect_found = false;
+			const fixed_point_t value = modifier_entry.modifier->get_effect(effect, &effect_found);
 
-		if (effect_found) {
-			ret.push_back(modifier_entry);
+			if (effect_found) {
+				ret.push_back(modifier_entry);
+			}
 		}
 	}
 

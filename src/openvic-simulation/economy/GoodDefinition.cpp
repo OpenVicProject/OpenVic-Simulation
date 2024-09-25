@@ -89,6 +89,7 @@ bool GoodDefinitionManager::load_goods_file(ast::NodeCPtr root) {
 
 bool GoodDefinitionManager::generate_modifiers(ModifierManager& modifier_manager) const {
 	using enum ModifierEffect::format_t;
+	using enum ModifierEffect::target_t;
 
 	bool ret = true;
 
@@ -100,7 +101,7 @@ bool GoodDefinitionManager::generate_modifiers(ModifierManager& modifier_manager
 		for (GoodDefinition const& good : get_good_definitions()) {
 			ret &= modifier_manager.add_modifier_effect(
 				ModifierManager::get_flat_identifier(name, good.get_identifier()), is_positive_good, PROPORTION_DECIMAL,
-				make_localisation_suffix(good.get_identifier())
+				COUNTRY, make_localisation_suffix(good.get_identifier())
 			);
 		}
 	};

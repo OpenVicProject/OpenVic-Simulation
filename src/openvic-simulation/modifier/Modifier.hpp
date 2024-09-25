@@ -10,11 +10,19 @@ namespace OpenVic {
 	struct ModifierEffect : HasIdentifier {
 		friend struct ModifierManager;
 
-		enum class format_t {
+		enum class format_t : uint8_t {
 			PROPORTION_DECIMAL,	/* An unscaled fraction/ratio, with 1 being "full"/"whole" */
 			PERCENTAGE_DECIMAL,	/* A fraction/ratio scaled so that 100 is "full"/"whole" */
 			RAW_DECIMAL,		/* A continuous quantity, e.g. attack strength */
 			INT					/* A discrete quantity, e.g. building count limit */
+		};
+
+		enum class target_t : uint8_t {
+			NO_TARGETS  = 0,
+			COUNTRY     = 1 << 0,
+			PROVINCE    = 1 << 1,
+			UNIT        = 1 << 2,
+			ALL_TARGETS = (1 << 3) - 1
 		};
 
 	private:
@@ -23,17 +31,21 @@ namespace OpenVic {
 		 */
 		const bool PROPERTY_CUSTOM_PREFIX(positive_good, is);
 		const format_t PROPERTY(format);
+		const target_t PROPERTY(targets);
 		std::string PROPERTY(localisation_key);
 
 		// TODO - format/precision, e.g. 80% vs 0.8 vs 0.800, 2 vs 2.0 vs 200%
 
 		ModifierEffect(
-			std::string_view new_identifier, bool new_positive_good, format_t new_format, std::string_view new_localisation_key
+			std::string_view new_identifier, bool new_positive_good, format_t new_format, target_t mew_targets,
+			std::string_view new_localisation_key
 		);
 
 	public:
 		ModifierEffect(ModifierEffect&&) = default;
 	};
+
+	template<> struct enable_bitfield<ModifierEffect::target_t> : std::true_type {};
 
 	struct ModifierValue {
 		friend struct ModifierManager;
@@ -70,7 +82,8 @@ namespace OpenVic {
 		ModifierValue& operator*=(fixed_point_t const& right);
 		ModifierValue operator*(fixed_point_t const& right) const;
 
-		void multiply_add(ModifierValue const& other, fixed_point_t multiplier);
+		void apply_target_filter(ModifierEffect::target_t targets);
+		void multiply_add_filter(ModifierValue const& other, fixed_point_t multiplier, ModifierEffect::target_t targets);
 
 		friend std::ostream& operator<<(std::ostream& stream, ModifierValue const& value);
 	};
@@ -167,6 +180,7 @@ namespace OpenVic {
 		bool add_modifier_effect(
 			std::string_view identifier, bool positive_good,
 			ModifierEffect::format_t format,
+			ModifierEffect::target_t targets,
 			std::string_view localisation_key = {}
 		);
 

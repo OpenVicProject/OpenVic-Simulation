@@ -197,13 +197,16 @@ bool TechnologyManager::load_technologies_file(
 
 bool TechnologyManager::generate_modifiers(ModifierManager& modifier_manager) const {
 	using enum ModifierEffect::format_t;
+	using enum ModifierEffect::target_t;
 
 	bool ret = true;
 
 	for (TechnologyFolder const& folder : get_technology_folders()) {
 		const std::string modifier_identifier = StringUtils::append_string_views(folder.get_identifier(), "_research_bonus");
 
-		ret &= modifier_manager.add_modifier_effect(modifier_identifier, true, PROPORTION_DECIMAL, modifier_identifier);
+		ret &= modifier_manager.add_modifier_effect(
+			modifier_identifier, true, PROPORTION_DECIMAL, COUNTRY, modifier_identifier
+		);
 	}
 
 	return ret;

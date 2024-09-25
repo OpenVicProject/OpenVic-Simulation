@@ -114,16 +114,17 @@ bool BuildingTypeManager::load_buildings_file(
 
 	for (BuildingType const& building_type : building_types.get_items()) {
 		using enum ModifierEffect::format_t;
+		using enum ModifierEffect::target_t;
 
 		static constexpr std::string_view max_prefix = "max_";
 		static constexpr std::string_view min_prefix = "min_build_";
 		ret &= modifier_manager.add_modifier_effect(
-			StringUtils::append_string_views(max_prefix, building_type.get_identifier()), true, INT,
+			StringUtils::append_string_views(max_prefix, building_type.get_identifier()), true, INT, PROVINCE,
 			StringUtils::append_string_views("$", building_type.get_identifier(), "$ $TECH_MAX_LEVEL$")
 		);
 		// TODO - add custom localisation for "min_build_$building_type$" modifiers
 		ret &= modifier_manager.add_modifier_effect(
-			StringUtils::append_string_views(min_prefix, building_type.get_identifier()), false, INT
+			StringUtils::append_string_views(min_prefix, building_type.get_identifier()), false, INT, PROVINCE
 		);
 
 		if (building_type.is_in_province()) {
