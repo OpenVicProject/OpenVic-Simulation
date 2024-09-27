@@ -50,7 +50,7 @@ bool ProvinceHistoryMap::_load_history_entry(
 				Logger::warning(
 					"Attempted to ", add ? "add" : "remove", " core of country ", country.get_identifier(),
 					" ", add ? "to" : "from", " province history of ", entry.get_province(),
-					" after previously ", add ? "adding" : "removing", " it"
+					" after previously ", add ? "removing" : "adding", " it"
 				);
 				return true;
 			}

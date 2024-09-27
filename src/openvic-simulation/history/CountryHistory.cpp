@@ -35,6 +35,33 @@ bool CountryHistoryMap::_load_history_entry(
 	InventionManager const& invention_manager = definition_manager.get_research_manager().get_invention_manager();
 	DecisionManager const& decision_manager = definition_manager.get_decision_manager();
 
+	const auto accepted_culture_instruction = [&entry](bool add) {
+		return [&entry, add](Culture const& culture) -> bool {
+			const auto it = entry.accepted_cultures.find(&culture);
+			if (it == entry.accepted_cultures.end()) {
+				// No current culture instruction
+				entry.accepted_cultures.emplace(&culture, add);
+				return true;
+			} else if (it->second == add) {
+				// Desired culture instruction already exists
+				Logger::warning(
+					"Duplicate attempt to ", add ? "add" : "remove", " accepted culture ", culture.get_identifier(),
+					" ", add ? "to" : "from", " country history of ", entry.get_country()
+				);
+				return true;
+			} else {
+				// Opposite culture instruction exists
+				entry.accepted_cultures.erase(it);
+				Logger::warning(
+					"Attempted to ", add ? "add" : "remove", " accepted culture ", culture.get_identifier(),
+					" ", add ? "to" : "from", " country history of ", entry.get_country(),
+					" after previously ", add ? "removing" : "adding", " it"
+				);
+				return true;
+			}
+		};
+	};
+
 	return expect_dictionary_keys_and_default(
 		[this, &definition_manager, &dataloader, &deployment_manager, &issue_manager, &technology_manager, &invention_manager,
 			&country_definition_manager, &entry](std::string_view key, ast::NodeCPtr value) -> bool {
@@ -84,7 +111,8 @@ bool CountryHistoryMap::_load_history_entry(
 		),
 		"primary_culture", ZERO_OR_ONE,
 			culture_manager.expect_culture_identifier(assign_variable_callback_pointer_opt(entry.primary_culture)),
-		"culture", ZERO_OR_MORE, culture_manager.expect_culture_identifier(set_callback_pointer(entry.accepted_cultures)),
+		"culture", ZERO_OR_MORE, culture_manager.expect_culture_identifier(accepted_culture_instruction(true)),
+		"remove_culture", ZERO_OR_MORE, culture_manager.expect_culture_identifier(accepted_culture_instruction(false)),
 		"religion", ZERO_OR_ONE, definition_manager.get_pop_manager().get_religion_manager().expect_religion_identifier(
 			assign_variable_callback_pointer_opt(entry.religion)
 		),
