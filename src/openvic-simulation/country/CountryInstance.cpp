@@ -671,9 +671,13 @@ bool CountryInstance::apply_history_to_country(
 
 	bool ret = true;
 
-	set_optional(primary_culture, entry.get_primary_culture());
-	for (Culture const* culture : entry.get_accepted_cultures()) {
-		ret &= add_accepted_culture(*culture);
+	set_optional(primary_culture, entry.get_primary_culture());	
+	for (auto const& [culture, add] : entry.get_accepted_cultures()) {
+		if (add) {
+			ret &= add_accepted_culture(*culture);
+		} else {
+			ret &= remove_accepted_culture(*culture);
+		}
 	}
 	set_optional(religion, entry.get_religion());
 	if (entry.get_ruling_party()) {
