@@ -292,7 +292,10 @@ bool Dataloader::_load_interface_files(UIManager& ui_manager) const {
 
 		/* Nation management screens */
 		"country_production", "country_budget", "country_technology", "country_politics", "country_pops", "country_trade",
-		"country_diplomacy", "country_military"
+		"country_diplomacy", "country_military",
+
+		/* News */
+		"news" //news_window_default
 	};
 
 	static constexpr std::string_view gui_file_extension = ".gui";
