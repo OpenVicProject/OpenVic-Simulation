@@ -39,6 +39,11 @@ void InstanceManager::update_gamestate() {
 
 	Logger::info("Update: ", today);
 
+	map_instance.update_modifier_sums(today, definition_manager.get_modifier_manager().get_static_modifier_cache());
+	country_instance_manager.update_modifier_sums(
+		today, definition_manager.get_modifier_manager().get_static_modifier_cache()
+	);
+
 	// Update gamestate...
 	map_instance.update_gamestate(today, definition_manager.get_define_manager());
 	country_instance_manager.update_gamestate(

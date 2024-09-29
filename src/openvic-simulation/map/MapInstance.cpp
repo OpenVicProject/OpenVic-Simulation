@@ -118,6 +118,12 @@ bool MapInstance::apply_history_to_provinces(
 	return ret;
 }
 
+void MapInstance::update_modifier_sums(Date today, StaticModifierCache const& static_modifier_cache) {
+	for (ProvinceInstance& province : province_instances.get_items()) {
+		province.update_modifier_sum(today, static_modifier_cache);
+	}
+}
+
 void MapInstance::update_gamestate(Date today, DefineManager const& define_manager) {
 	for (ProvinceInstance& province : province_instances.get_items()) {
 		province.update_gamestate(today, define_manager);

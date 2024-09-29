@@ -2,7 +2,10 @@
 
 #include "openvic-simulation/country/CountryInstance.hpp"
 #include "openvic-simulation/history/ProvinceHistory.hpp"
+#include "openvic-simulation/map/Crime.hpp"
 #include "openvic-simulation/map/ProvinceDefinition.hpp"
+#include "openvic-simulation/map/Region.hpp"
+#include "openvic-simulation/map/TerrainType.hpp"
 #include "openvic-simulation/military/UnitInstanceGroup.hpp"
 #include "openvic-simulation/misc/Define.hpp"
 #include "openvic-simulation/politics/Ideology.hpp"
@@ -21,6 +24,8 @@ ProvinceInstance::ProvinceInstance(
 	owner { nullptr },
 	controller { nullptr },
 	cores {},
+	modifier_sum {},
+	event_modifiers {},
 	slave { false },
 	crime { nullptr },
 	rgo { nullptr },
@@ -183,6 +188,65 @@ void ProvinceInstance::_update_pops(DefineManager const& define_manager) {
 		average_consciousness /= total_population;
 		average_militancy /= total_population;
 	}
+}
+
+void ProvinceInstance::update_modifier_sum(Date today, StaticModifierCache const& static_modifier_cache) {
+	// Update sum of direct province modifiers
+	modifier_sum.clear();
+
+	const ModifierSum::modifier_source_t province_source { this };
+
+	// Erase expired event modifiers and add non-expired ones to the sum
+	std::erase_if(event_modifiers, [this, today, &province_source](ModifierInstance const& modifier) -> bool {
+		if (today <= modifier.get_expiry_date()) {
+			modifier_sum.add_modifier(*modifier.get_modifier(), province_source);
+			return false;
+		} else {
+			return true;
+		}
+	});
+
+	// Add static modifiers
+	if (is_owner_core()) {
+		modifier_sum.add_modifier_nullcheck(static_modifier_cache.get_core(), province_source);
+	}
+	if (province_definition.is_water()) {
+		modifier_sum.add_modifier_nullcheck(static_modifier_cache.get_sea_zone(), province_source);
+	} else {
+		modifier_sum.add_modifier_nullcheck(static_modifier_cache.get_land_province(), province_source);
+
+		if (province_definition.is_coastal()) {
+			modifier_sum.add_modifier_nullcheck(static_modifier_cache.get_coastal(), province_source);
+		} else {
+			modifier_sum.add_modifier_nullcheck(static_modifier_cache.get_non_coastal(), province_source);
+		}
+
+		// TODO - overseas, blockaded, no_adjacent_controlled, has_siege, occupied, nationalism, infrastructure
+	}
+
+	for (BuildingInstance const& building : buildings.get_items()) {
+		modifier_sum.add_modifier(building.get_building_type(), province_source);
+	}
+
+	modifier_sum.add_modifier_nullcheck(crime, province_source);
+
+	modifier_sum.add_modifier_nullcheck(province_definition.get_continent(), province_source);
+
+	modifier_sum.add_modifier_nullcheck(province_definition.get_climate(), province_source);
+
+	modifier_sum.add_modifier_nullcheck(terrain_type, province_source);
+}
+
+void ProvinceInstance::contribute_country_modifier_sum(ModifierSum const& owner_modifier_sum) {
+	modifier_sum.add_modifier_sum_exclude_source(owner_modifier_sum, this);
+}
+
+fixed_point_t ProvinceInstance::get_modifier_effect_value(ModifierEffect const& effect) const {
+	return modifier_sum.get_effect(effect);
+}
+
+fixed_point_t ProvinceInstance::get_modifier_effect_value_nullcheck(ModifierEffect const* effect) const {
+	return modifier_sum.get_effect_nullcheck(effect);
 }
 
 void ProvinceInstance::update_gamestate(Date today, DefineManager const& define_manager) {
