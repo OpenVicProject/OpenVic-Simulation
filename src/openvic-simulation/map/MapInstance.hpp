@@ -53,6 +53,7 @@ namespace OpenVic {
 			IssueManager const& issue_manager
 		);
 
+		void update_modifier_sums(Date today, StaticModifierCache const& static_modifier_cache);
 		void update_gamestate(Date today, DefineManager const& define_manager);
 		void tick(Date today);
 		void initialise_for_new_game();
