@@ -1,5 +1,7 @@
 #include "ModifierSum.hpp"
 
+#include "openvic-simulation/modifier/Modifier.hpp"
+
 using namespace OpenVic;
 
 void ModifierSum::clear() {
