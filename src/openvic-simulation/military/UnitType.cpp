@@ -319,60 +319,72 @@ bool UnitTypeManager::generate_modifiers(ModifierManager& modifier_manager) cons
 	bool ret = true;
 
 	const auto generate_stat_modifiers = [&modifier_manager, &ret](
-		std::string_view identifier, UnitType::branch_t branch
+		std::derived_from<ModifierEffectCache::unit_type_effects_t> auto unit_type_effects, std::string_view identifier
 	) -> void {
 		using enum ModifierEffect::format_t;
 		using enum ModifierEffect::target_t;
 
 		const auto stat_modifier = [&modifier_manager, &ret, &identifier](
-			std::string_view suffix, bool is_positive_good, ModifierEffect::format_t format, std::string_view localisation_key
+			ModifierEffect const*& effect_cache, std::string_view suffix, bool is_positive_good,
+			ModifierEffect::format_t format, std::string_view localisation_key
 		) -> void {
 			ret &= modifier_manager.add_modifier_effect(
-				ModifierManager::get_flat_identifier(identifier, suffix), is_positive_good, format, COUNTRY,
+				effect_cache, ModifierManager::get_flat_identifier(identifier, suffix), is_positive_good, format, COUNTRY,
 				StringUtils::append_string_views("$", identifier, "$: $", localisation_key, "$")
 			);
 		};
 
 		ret &= modifier_manager.register_complex_modifier(identifier);
 
-		stat_modifier("attack", true, RAW_DECIMAL, "ATTACK");
-		stat_modifier("defence", true, RAW_DECIMAL, "DEFENCE");
-		stat_modifier("default_organisation", true, RAW_DECIMAL, "DEFAULT_ORG");
-		stat_modifier("maximum_speed", true, RAW_DECIMAL, "MAXIMUM_SPEED");
-		stat_modifier("build_time", false, INT, "BUILD_TIME");
-		stat_modifier("supply_consumption", false, PROPORTION_DECIMAL, "SUPPLY_CONSUMPTION");
+		stat_modifier(unit_type_effects.attack, "attack", true, RAW_DECIMAL, "ATTACK");
+		stat_modifier(unit_type_effects.defence, "defence", true, RAW_DECIMAL, "DEFENCE");
+		stat_modifier(unit_type_effects.default_organisation, "default_organisation", true, RAW_DECIMAL, "DEFAULT_ORG");
+		stat_modifier(unit_type_effects.maximum_speed, "maximum_speed", true, RAW_DECIMAL, "MAXIMUM_SPEED");
+		stat_modifier(unit_type_effects.build_time, "build_time", false, INT, "BUILD_TIME");
+		stat_modifier(
+			unit_type_effects.supply_consumption, "supply_consumption", false, PROPORTION_DECIMAL, "SUPPLY_CONSUMPTION"
+		);
 
-		switch (branch) {
-		case LAND:
-			stat_modifier("reconnaissance", true, RAW_DECIMAL, "RECONAISSANCE");
-			stat_modifier("discipline", true, PROPORTION_DECIMAL, "DISCIPLINE");
-			stat_modifier("support", true, PROPORTION_DECIMAL, "SUPPORT");
-			stat_modifier("maneuver", true, INT, "Maneuver");
-			stat_modifier("siege", true, RAW_DECIMAL, "SIEGE");
-			break;
-		case NAVAL:
-			stat_modifier("colonial_points", true, INT, "COLONIAL_POINTS_TECH");
-			stat_modifier("supply_consumption_score", false, INT, "SUPPLY_LOAD");
-			stat_modifier("hull", true, RAW_DECIMAL, "HULL");
-			stat_modifier("gun_power", true, RAW_DECIMAL, "GUN_POWER");
-			stat_modifier("fire_range", true, RAW_DECIMAL, "FIRE_RANGE");
-			stat_modifier("evasion", true, PROPORTION_DECIMAL, "EVASION");
-			stat_modifier("torpedo_attack", true, RAW_DECIMAL, "TORPEDO_ATTACK");
-			break;
-		default:
+		if constexpr (std::same_as<decltype(unit_type_effects), ModifierEffectCache::regiment_type_effects_t>) {
+			stat_modifier(unit_type_effects.reconnaissance, "reconnaissance", true, RAW_DECIMAL, "RECONAISSANCE");
+			stat_modifier(unit_type_effects.discipline, "discipline", true, PROPORTION_DECIMAL, "DISCIPLINE");
+			stat_modifier(unit_type_effects.support, "support", true, PROPORTION_DECIMAL, "SUPPORT");
+			stat_modifier(unit_type_effects.maneuver, "maneuver", true, INT, "Maneuver");
+			stat_modifier(unit_type_effects.siege, "siege", true, RAW_DECIMAL, "SIEGE");
+		} else if constexpr(std::same_as<decltype(unit_type_effects), ModifierEffectCache::ship_type_effects_t>) {
+			stat_modifier(unit_type_effects.colonial_points, "colonial_points", true, INT, "COLONIAL_POINTS_TECH");
+			stat_modifier(unit_type_effects.supply_consumption_score, "supply_consumption_score", false, INT, "SUPPLY_LOAD");
+			stat_modifier(unit_type_effects.hull, "hull", true, RAW_DECIMAL, "HULL");
+			stat_modifier(unit_type_effects.gun_power, "gun_power", true, RAW_DECIMAL, "GUN_POWER");
+			stat_modifier(unit_type_effects.fire_range, "fire_range", true, RAW_DECIMAL, "FIRE_RANGE");
+			stat_modifier(unit_type_effects.evasion, "evasion", true, PROPORTION_DECIMAL, "EVASION");
+			stat_modifier(unit_type_effects.torpedo_attack, "torpedo_attack", true, RAW_DECIMAL, "TORPEDO_ATTACK");
+		} else {
 			/* Unreachable - unit types are only added via add_regiment_type or add_ship_type which set branch to LAND or NAVAL. */
-			Logger::error("Invalid branch for unit ", identifier, ": ", static_cast<int>(branch));
+			Logger::error("Invalid branch for unit ", identifier, " - not LAND or NAVAL!");
 		}
 	};
 
-	generate_stat_modifiers("army_base", LAND);
+	generate_stat_modifiers(modifier_manager.modifier_effect_cache.army_base_effects, "army_base");
+
+	IndexedMap<RegimentType, ModifierEffectCache::regiment_type_effects_t>& regiment_type_effects =
+		modifier_manager.modifier_effect_cache.regiment_type_effects;
+
+	regiment_type_effects.set_keys(&get_regiment_types());
+
 	for (RegimentType const& regiment_type : get_regiment_types()) {
-		generate_stat_modifiers(regiment_type.get_identifier(), LAND);
+		generate_stat_modifiers(regiment_type_effects[regiment_type], regiment_type.get_identifier());
 	}
 
-	generate_stat_modifiers("navy_base", NAVAL);
+	generate_stat_modifiers(modifier_manager.modifier_effect_cache.navy_base_effects, "navy_base");
+
+	IndexedMap<ShipType, ModifierEffectCache::ship_type_effects_t>& ship_type_effects =
+		modifier_manager.modifier_effect_cache.ship_type_effects;
+
+	ship_type_effects.set_keys(&get_ship_types());
+
 	for (ShipType const& ship_type : get_ship_types()) {
-		generate_stat_modifiers(ship_type.get_identifier(), NAVAL);
+		generate_stat_modifiers(ship_type_effects[ship_type], ship_type.get_identifier());
 	}
 
 	return ret;

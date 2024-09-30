@@ -1,6 +1,7 @@
 #pragma once
 
 #include "openvic-simulation/modifier/ModifierEffect.hpp"
+#include "openvic-simulation/modifier/ModifierEffectCache.hpp"
 #include "openvic-simulation/modifier/ModifierValue.hpp"
 #include "openvic-simulation/modifier/StaticModifierCache.hpp"
 #include "openvic-simulation/scripts/ConditionScript.hpp"
@@ -74,6 +75,12 @@ namespace OpenVic {
 
 	struct ModifierManager {
 		friend struct StaticModifierCache;
+		friend struct BuildingTypeManager;
+		friend struct GoodDefinitionManager;
+		friend struct UnitTypeManager;
+		friend struct RebelManager;
+		friend struct PopManager;
+		friend struct TechnologyManager;
 
 		/* Some ModifierEffects are generated mid-load, such as max/min count modifiers for each building, so
 		 * we can't lock it until loading is over. This means we can't rely on locking for pointer stability,
@@ -87,6 +94,7 @@ namespace OpenVic {
 		IdentifierRegistry<Modifier> IDENTIFIER_REGISTRY(static_modifier);
 		IdentifierRegistry<TriggeredModifier> IDENTIFIER_REGISTRY(triggered_modifier);
 
+		ModifierEffectCache PROPERTY(modifier_effect_cache);
 		StaticModifierCache PROPERTY(static_modifier_cache);
 
 		/* effect_validator takes in ModifierEffect const& */
@@ -97,7 +105,9 @@ namespace OpenVic {
 
 	public:
 		bool add_modifier_effect(
-			std::string_view identifier, bool positive_good,
+			ModifierEffect const*& effect_cache,
+			std::string_view identifier,
+			bool positive_good,
 			ModifierEffect::format_t format,
 			ModifierEffect::target_t targets,
 			std::string_view localisation_key = {}
