@@ -656,24 +656,31 @@ bool PopManager::generate_modifiers(ModifierManager& modifier_manager) const {
 	using enum ModifierEffect::format_t;
 	using enum ModifierEffect::target_t;
 
+	IndexedMap<Strata, ModifierEffectCache::strata_effects_t>& strata_effects =
+		modifier_manager.modifier_effect_cache.strata_effects;
+
+	strata_effects.set_keys(&get_stratas());
+
 	bool ret = true;
 
 	for (Strata const& strata : get_stratas()) {
 		const auto strata_modifier = [&modifier_manager, &ret, &strata](
-			std::string_view suffix, bool is_positive_good
+			ModifierEffect const*& effect_cache, std::string_view suffix, bool is_positive_good
 		) -> void {
 			ret &= modifier_manager.add_modifier_effect(
-				StringUtils::append_string_views(strata.get_identifier(), suffix), is_positive_good, PROPORTION_DECIMAL,
-				COUNTRY
+				effect_cache, StringUtils::append_string_views(strata.get_identifier(), suffix), is_positive_good,
+				PROPORTION_DECIMAL, COUNTRY
 			);
 		};
 
-		strata_modifier("_income_modifier", true); // Has no effect in game
-		strata_modifier("_vote", true);
+		ModifierEffectCache::strata_effects_t& this_strata_effects = strata_effects[strata];
 
-		strata_modifier("_life_needs", false);
-		strata_modifier("_everyday_needs", false);
-		strata_modifier("_luxury_needs", false);
+		strata_modifier(this_strata_effects.income_modifier, "_income_modifier", true); // Has no effect in game
+		strata_modifier(this_strata_effects.vote, "_vote", true);
+
+		strata_modifier(this_strata_effects.life_needs, "_life_needs", false);
+		strata_modifier(this_strata_effects.everyday_needs, "_everyday_needs", false);
+		strata_modifier(this_strata_effects.luxury_needs, "_luxury_needs", false);
 	}
 
 	return ret;

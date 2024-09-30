@@ -187,14 +187,19 @@ bool RebelManager::generate_modifiers(ModifierManager& modifier_manager) const {
 	ret &= modifier_manager.register_complex_modifier(identifier);
 
 	ret &= modifier_manager.add_modifier_effect(
-		ModifierManager::get_flat_identifier(identifier, "all"), is_positive_good, PROPORTION_DECIMAL, COUNTRY,
-		"TECH_REBEL_ORG_GAIN"
+		modifier_manager.modifier_effect_cache.rebel_org_gain_all, ModifierManager::get_flat_identifier(identifier, "all"),
+		is_positive_good, PROPORTION_DECIMAL, COUNTRY, "TECH_REBEL_ORG_GAIN"
 	);
+
+	IndexedMap<RebelType, ModifierEffect const*>& rebel_org_gain_effects =
+		modifier_manager.modifier_effect_cache.rebel_org_gain_effects;
+
+	rebel_org_gain_effects.set_keys(&get_rebel_types());
 
 	for (RebelType const& rebel_type : get_rebel_types()) {
 		ret &= modifier_manager.add_modifier_effect(
-			ModifierManager::get_flat_identifier(identifier, rebel_type.get_identifier()), is_positive_good,
-			PROPORTION_DECIMAL, COUNTRY,
+			rebel_org_gain_effects[rebel_type], ModifierManager::get_flat_identifier(identifier, rebel_type.get_identifier()),
+			is_positive_good, PROPORTION_DECIMAL, COUNTRY,
 			StringUtils::append_string_views("$", rebel_type.get_identifier(), "_title$ $TECH_REBEL_ORG_GAIN$")
 		);
 	}
