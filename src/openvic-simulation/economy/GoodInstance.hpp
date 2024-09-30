@@ -14,7 +14,7 @@ namespace OpenVic {
 	private:
 		GoodDefinition const& PROPERTY(good_definition);
 		fixed_point_t PROPERTY(price);
-		bool PROPERTY(available);
+		bool PROPERTY(is_available);
 		// TODO - supply, demand, actual bought
 
 		GoodInstance(GoodDefinition const& new_good_definition);

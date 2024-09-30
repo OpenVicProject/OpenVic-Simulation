@@ -1,11 +1,15 @@
 #include "ProvinceInstance.hpp"
 
 #include "openvic-simulation/country/CountryInstance.hpp"
+#include "openvic-simulation/economy/production/ProductionType.hpp"
+#include "openvic-simulation/economy/production/ResourceGatheringOperation.hpp"
 #include "openvic-simulation/history/ProvinceHistory.hpp"
 #include "openvic-simulation/map/ProvinceDefinition.hpp"
 #include "openvic-simulation/military/UnitInstanceGroup.hpp"
 #include "openvic-simulation/misc/Define.hpp"
 #include "openvic-simulation/politics/Ideology.hpp"
+#include "openvic-simulation/pop/Pop.hpp"
+#include "utility/Logger.hpp"
 
 using namespace OpenVic;
 
@@ -23,7 +27,7 @@ ProvinceInstance::ProvinceInstance(
 	cores {},
 	slave { false },
 	crime { nullptr },
-	rgo { nullptr },
+	rgo { { pop_type_keys} },
 	buildings { "buildings", false },
 	armies {},
 	navies {},
@@ -34,6 +38,25 @@ ProvinceInstance::ProvinceInstance(
 	culture_distribution {},
 	religion_distribution {},
 	max_supported_regiments { 0 } {}
+
+GoodDefinition const* ProvinceInstance::get_rgo_good() const {
+	if(!rgo.is_valid()) { return nullptr; }
+	return &(rgo.get_production_type_nullable()->get_output_good());
+}
+bool ProvinceInstance::set_rgo_production_type_nullable(ProductionType const* rgo_production_type_nullable) {
+	bool is_valid_operation = true;
+	if(rgo_production_type_nullable != nullptr) {
+		ProductionType const& rgo_production_type = *rgo_production_type_nullable;
+		if(rgo_production_type.get_template_type() != ProductionType::template_type_t::RGO) {
+			Logger::error("Tried setting province ", get_identifier(), " rgo to ", rgo_production_type.get_identifier(), " which is not of template_type RGO.");
+			is_valid_operation = false;
+		}
+		is_valid_operation&=convert_rgo_worker_pops_to_equivalent(rgo_production_type);
+	}
+	
+	rgo.set_production_type_nullable(rgo_production_type_nullable);
+	return is_valid_operation;
+}
 
 bool ProvinceInstance::set_owner(CountryInstance* new_owner) {
 	bool ret = true;
@@ -170,7 +193,7 @@ void ProvinceInstance::_update_pops(DefineManager const& define_manager) {
 		average_consciousness += pop.get_consciousness();
 		average_militancy += pop.get_militancy();
 
-		pop_type_distribution[pop.get_type()] += pop.get_size();
+		pop_type_distribution[*pop.get_type()] += pop.get_size();
 		ideology_distribution += pop.get_ideologies();
 		culture_distribution[&pop.get_culture()] += pop.get_size();
 		religion_distribution[&pop.get_religion()] += pop.get_size();
@@ -183,6 +206,24 @@ void ProvinceInstance::_update_pops(DefineManager const& define_manager) {
 		average_consciousness /= total_population;
 		average_militancy /= total_population;
 	}
+}
+
+bool ProvinceInstance::convert_rgo_worker_pops_to_equivalent(ProductionType const& production_type) {
+	bool is_valid_operation = true;
+	std::vector<Job> const& jobs = production_type.get_jobs();
+	for(Pop& pop : pops) {
+		for(Job const& job : jobs) {
+			PopType const* const job_pop_type = job.get_pop_type();
+			PopType const* old_pop_type = pop.get_type();
+			if(job_pop_type != old_pop_type) {
+				PopType const* const equivalent = old_pop_type->get_equivalent();
+				if(job_pop_type == equivalent) {
+					is_valid_operation&=pop.convert_to_equivalent();
+				}
+			}
+		}
+	}
+	return is_valid_operation;
 }
 
 void ProvinceInstance::update_gamestate(Date today, DefineManager const& define_manager) {
@@ -279,7 +320,7 @@ bool ProvinceInstance::apply_history_to_province(ProvinceHistoryEntry const& ent
 			ret &= remove_core(country_manager.get_country_instance_from_definition(*country));
 		}
 	}
-	set_optional(rgo, entry.get_rgo());
+
 	set_optional(life_rating, entry.get_life_rating());
 	set_optional(terrain_type, entry.get_terrain_type());
 	for (auto const& [building, level] : entry.get_province_buildings()) {
@@ -299,8 +340,16 @@ bool ProvinceInstance::apply_history_to_province(ProvinceHistoryEntry const& ent
 	return ret;
 }
 
+void ProvinceInstance::initialise_for_new_game() {
+	rgo.initialise_for_new_game(*this);
+}
+
 void ProvinceInstance::setup_pop_test_values(IssueManager const& issue_manager) {
 	for (Pop& pop : pops) {
 		pop.setup_pop_test_values(issue_manager);
 	}
+}
+
+plf::colony<Pop>& ProvinceInstance::get_mutable_pops() {
+	return pops;
 }

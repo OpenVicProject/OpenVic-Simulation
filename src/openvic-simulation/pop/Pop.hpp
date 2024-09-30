@@ -35,7 +35,7 @@ namespace OpenVic {
 		using pop_size_t = int32_t;
 
 	protected:
-		PopType const& PROPERTY_ACCESS(type, protected);
+		PopType const* PROPERTY_ACCESS(type, protected);
 		Culture const& PROPERTY_ACCESS(culture, protected);
 		Religion const& PROPERTY_ACCESS(religion, protected);
 		pop_size_t PROPERTY_ACCESS(size, protected);
@@ -95,6 +95,7 @@ namespace OpenVic {
 		Pop& operator=(Pop&&) = delete;
 
 		void setup_pop_test_values(IssueManager const& issue_manager);
+		bool convert_to_equivalent();
 
 		void set_location(ProvinceInstance const& new_location);
 
@@ -102,6 +103,9 @@ namespace OpenVic {
 			DefineManager const& define_manager, CountryInstance const* owner,
 			fixed_point_t const& pop_size_per_regiment_multiplier
 		);
+
+		void add_rgo_owner_income(const fixed_point_t income);
+		void add_rgo_worker_income(const fixed_point_t income);
 	};
 
 	struct Strata : HasIdentifier {

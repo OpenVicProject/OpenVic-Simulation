@@ -8,7 +8,7 @@
 #include "openvic-simulation/utility/Getters.hpp"
 
 namespace OpenVic {
-	class FactoryProducer final {
+	struct FactoryProducer {
 	private:
 		static constexpr uint8_t DAYS_OF_HISTORY = 7;
 		using daily_profit_history_t = std::array<fixed_point_t, DAYS_OF_HISTORY>;

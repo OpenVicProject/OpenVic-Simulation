@@ -93,10 +93,16 @@ bool MapInstance::apply_history_to_provinces(
 
 			if (history_map != nullptr) {
 				ProvinceHistoryEntry const* pop_history_entry = nullptr;
+				ProductionType const* rgo_production_type_nullable = nullptr;
 
 				for (auto const& [entry_date, entry] : history_map->get_entries()) {
 					if (entry_date > date) {
 						break;
+					}
+
+					std::optional<ProductionType const*> const& rgo_production_type_nullable_optional = entry->get_rgo_production_type_nullable();
+					if(rgo_production_type_nullable_optional.has_value()) {
+						rgo_production_type_nullable = rgo_production_type_nullable_optional.value();
 					}
 
 					province.apply_history_to_province(*entry, country_manager);
@@ -111,6 +117,8 @@ bool MapInstance::apply_history_to_provinces(
 
 					province.setup_pop_test_values(issue_manager);
 				}
+
+				ret&=province.set_rgo_production_type_nullable(rgo_production_type_nullable);
 			}
 		}
 	}
@@ -142,5 +150,11 @@ void MapInstance::update_gamestate(Date today, DefineManager const& define_manag
 void MapInstance::tick(Date today) {
 	for (ProvinceInstance& province : province_instances.get_items()) {
 		province.tick(today);
+	}
+}
+
+void MapInstance::initialise_for_new_game(){
+	for (ProvinceInstance& province : province_instances.get_items()) {
+		province.initialise_for_new_game();
 	}
 }

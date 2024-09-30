@@ -32,7 +32,7 @@ namespace OpenVic {
 		std::optional<ProvinceInstance::colony_status_t> PROPERTY(colonial);
 		std::optional<bool> PROPERTY(slave);
 		ordered_map<CountryDefinition const*, bool> PROPERTY(cores);
-		std::optional<GoodDefinition const*> PROPERTY(rgo);
+		std::optional<ProductionType const*> PROPERTY(rgo_production_type_nullable);
 		std::optional<ProvinceInstance::life_rating_t> PROPERTY(life_rating);
 		std::optional<TerrainType const*> PROPERTY(terrain_type);
 		ordered_map<BuildingType const*, BuildingType::level_t> PROPERTY(province_buildings);

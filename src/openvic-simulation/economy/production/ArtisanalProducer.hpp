@@ -6,7 +6,7 @@
 #include "openvic-simulation/utility/Getters.hpp"
 
 namespace OpenVic {
-	class ArtisanalProducer final {
+	struct ArtisanalProducer {
 	private:
 		ProductionType const& PROPERTY(production_type);
 		GoodDefinition::good_definition_map_t PROPERTY(stockpile);

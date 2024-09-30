@@ -4,7 +4,7 @@ using namespace OpenVic;
 
 GoodInstance::GoodInstance(GoodDefinition const& new_good_definition)
   : HasIdentifierAndColour { new_good_definition }, good_definition { new_good_definition },
-	price { new_good_definition.get_base_price() }, available { new_good_definition.is_available_from_start() } {}
+	price { new_good_definition.get_base_price() }, is_available { new_good_definition.get_is_available_from_start() } {}
 
 bool GoodInstanceManager::setup(GoodDefinitionManager const& good_definition_manager) {
 	if (good_instances_are_locked()) {

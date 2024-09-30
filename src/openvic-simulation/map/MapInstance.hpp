@@ -5,6 +5,7 @@
 #include "openvic-simulation/map/State.hpp"
 #include "openvic-simulation/types/Date.hpp"
 #include "openvic-simulation/types/IdentifierRegistry.hpp"
+#include "openvic-simulation/economy/production/ProductionType.hpp"
 
 namespace OpenVic {
 	struct MapDefinition;
@@ -54,5 +55,6 @@ namespace OpenVic {
 
 		void update_gamestate(Date today, DefineManager const& define_manager);
 		void tick(Date today);
+		void initialise_for_new_game();
 	};
 }

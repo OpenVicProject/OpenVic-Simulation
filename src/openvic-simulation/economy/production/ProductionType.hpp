@@ -20,13 +20,13 @@ namespace OpenVic {
 		PopType const* PROPERTY(pop_type);
 		effect_t PROPERTY(effect_type);
 		fixed_point_t PROPERTY(effect_multiplier);
-		fixed_point_t PROPERTY(desired_workforce_share);
+		fixed_point_t PROPERTY(amount);
 
 		Job(
 			PopType const* new_pop_type,
 			effect_t new_effect_type,
 			fixed_point_t new_effect_multiplier,
-			fixed_point_t new_desired_workforce_share
+			fixed_point_t new_amount
 		);
 
 	public:
@@ -47,7 +47,7 @@ namespace OpenVic {
 		const Pop::pop_size_t PROPERTY(base_workforce_size);
 
 		GoodDefinition::good_definition_map_t PROPERTY(input_goods);
-		GoodDefinition const* PROPERTY(output_goods);
+		GoodDefinition const& PROPERTY(output_good);
 		const fixed_point_t PROPERTY(base_output_quantity);
 		std::vector<bonus_t> PROPERTY(bonuses);
 
@@ -64,7 +64,7 @@ namespace OpenVic {
 			template_type_t new_template_type,
 			Pop::pop_size_t new_base_workforce_size,
 			GoodDefinition::good_definition_map_t&& new_input_goods,
-			GoodDefinition const* new_output_goods,
+			GoodDefinition const& new_output_goods,
 			fixed_point_t new_base_output_quantity,
 			std::vector<bonus_t>&& new_bonuses,
 			GoodDefinition::good_definition_map_t&& new_maintenance_requirements,
@@ -83,6 +83,7 @@ namespace OpenVic {
 	private:
 		IdentifierRegistry<ProductionType> IDENTIFIER_REGISTRY(production_type);
 		PopType::sprite_t PROPERTY(rgo_owner_sprite);
+		IndexedMap<GoodDefinition, ProductionType const*> PROPERTY(good_to_rgo_production_type);
 
 		NodeTools::node_callback_t _expect_job(
 			GoodDefinitionManager const& good_definition_manager, PopManager const& pop_manager,

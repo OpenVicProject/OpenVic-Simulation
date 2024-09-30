@@ -179,7 +179,7 @@ bool MapmodeManager::setup_mapmodes() {
 			"mapmode_terrain_type", get_colour_mapmode(&ProvinceInstance::get_terrain_type)
 		},
 		{
-			"mapmode_rgo", get_colour_mapmode(&ProvinceInstance::get_rgo)
+			"mapmode_rgo", get_colour_mapmode(&ProvinceInstance::get_rgo_good)
 		},
 		{
 			"mapmode_infrastructure",

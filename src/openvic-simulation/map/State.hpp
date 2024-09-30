@@ -29,7 +29,7 @@ namespace OpenVic {
 		fixed_point_t PROPERTY(average_literacy);
 		fixed_point_t PROPERTY(average_consciousness);
 		fixed_point_t PROPERTY(average_militancy);
-		IndexedMap<PopType, fixed_point_t> PROPERTY(pop_type_distribution);
+		IndexedMap<PopType, Pop::pop_size_t> PROPERTY(pop_type_distribution);
 
 		fixed_point_t PROPERTY(industrial_power);
 

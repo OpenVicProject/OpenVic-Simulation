@@ -137,6 +137,10 @@ bool InstanceManager::load_bookmark(Bookmark const* new_bookmark) {
 		map_instance, definition_manager.get_pop_manager().get_pop_types()
 	);
 
+	if(ret) {
+		map_instance.initialise_for_new_game();
+	}
+
 	return ret;
 }
 

@@ -1,14 +1,15 @@
 #pragma once
-
 #include <plf_colony.h>
 
 #include "openvic-simulation/economy/BuildingInstance.hpp"
+#include "openvic-simulation/economy/production/ProductionType.hpp"
+#include "openvic-simulation/economy/production/ResourceGatheringOperation.hpp"
 #include "openvic-simulation/military/UnitInstance.hpp"
 #include "openvic-simulation/military/UnitType.hpp"
 #include "openvic-simulation/pop/Pop.hpp"
-#include "openvic-simulation/types/fixed_point/FixedPointMap.hpp"
 #include "openvic-simulation/types/HasIdentifier.hpp"
 #include "openvic-simulation/types/OrderedContainers.hpp"
+
 
 namespace OpenVic {
 	struct MapInstance;
@@ -70,8 +71,7 @@ namespace OpenVic {
 
 		bool PROPERTY(slave);
 		Crime const* PROPERTY_RW(crime);
-		// TODO - change this into a factory-like structure
-		GoodDefinition const* PROPERTY(rgo);
+		ResourceGatheringOperation PROPERTY(rgo);
 		IdentifierRegistry<BuildingInstance> IDENTIFIER_REGISTRY(building);
 		ordered_set<ArmyInstance*> PROPERTY(armies);
 		ordered_set<NavyInstance*> PROPERTY(navies);
@@ -84,7 +84,7 @@ namespace OpenVic {
 		fixed_point_t PROPERTY(average_literacy);
 		fixed_point_t PROPERTY(average_consciousness);
 		fixed_point_t PROPERTY(average_militancy);
-		IndexedMap<PopType, fixed_point_t> PROPERTY(pop_type_distribution);
+		IndexedMap<PopType, Pop::pop_size_t> PROPERTY(pop_type_distribution);
 		IndexedMap<Ideology, fixed_point_t> PROPERTY(ideology_distribution);
 		fixed_point_map_t<Culture const*> PROPERTY(culture_distribution);
 		fixed_point_map_t<Religion const*> PROPERTY(religion_distribution);
@@ -97,6 +97,7 @@ namespace OpenVic {
 
 		void _add_pop(Pop&& pop);
 		void _update_pops(DefineManager const& define_manager);
+		bool convert_rgo_worker_pops_to_equivalent(ProductionType const& production_type);
 
 	public:
 		ProvinceInstance(ProvinceInstance&&) = default;
@@ -111,6 +112,9 @@ namespace OpenVic {
 		constexpr CountryInstance* get_controller() {
 			return controller;
 		}
+
+		GoodDefinition const* get_rgo_good() const;
+		bool set_rgo_production_type_nullable(ProductionType const* rgo_production_type_nullable);
 
 		bool set_owner(CountryInstance* new_owner);
 		bool set_controller(CountryInstance* new_controller);
@@ -135,6 +139,9 @@ namespace OpenVic {
 		bool setup(BuildingTypeManager const& building_type_manager);
 		bool apply_history_to_province(ProvinceHistoryEntry const& entry, CountryInstanceManager& country_manager);
 
+		void initialise_for_new_game();
+
 		void setup_pop_test_values(IssueManager const& issue_manager);
+		plf::colony<Pop>& get_mutable_pops();
 	};
 }
