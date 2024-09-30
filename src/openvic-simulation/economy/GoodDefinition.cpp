@@ -1,5 +1,7 @@
 #include "GoodDefinition.hpp"
 
+#include "openvic-simulation/modifier/Modifier.hpp"
+
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;
 

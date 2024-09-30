@@ -2,12 +2,13 @@
 
 #include <variant>
 
-#include "openvic-simulation/modifier/Modifier.hpp"
+#include "openvic-simulation/modifier/ModifierValue.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
 
 namespace OpenVic {
 	struct CountryInstance;
 	struct ProvinceInstance;
+	struct Modifier;
 
 	struct ModifierSum {
 		using modifier_source_t = std::variant<CountryInstance const*, ProvinceInstance const*>;
