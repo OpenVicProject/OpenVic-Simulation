@@ -47,7 +47,8 @@ void InstanceManager::update_gamestate() {
 	// Update gamestate...
 	map_instance.update_gamestate(today, definition_manager.get_define_manager());
 	country_instance_manager.update_gamestate(
-		today, definition_manager.get_define_manager(), definition_manager.get_military_manager().get_unit_type_manager()
+		today, definition_manager.get_define_manager(), definition_manager.get_military_manager().get_unit_type_manager(),
+		definition_manager.get_modifier_manager().get_modifier_effect_cache()
 	);
 
 	gamestate_updated();

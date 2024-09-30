@@ -295,7 +295,10 @@ namespace OpenVic {
 		void _update_population();
 		void _update_trade();
 		void _update_diplomacy();
-		void _update_military(DefineManager const& define_manager, UnitTypeManager const& unit_type_manager);
+		void _update_military(
+			DefineManager const& define_manager, UnitTypeManager const& unit_type_manager,
+			ModifierEffectCache const& modifier_effect_cache
+		);
 
 		bool update_rule_set();
 
@@ -305,7 +308,10 @@ namespace OpenVic {
 		fixed_point_t get_modifier_effect_value(ModifierEffect const& effect) const;
 		fixed_point_t get_modifier_effect_value_nullcheck(ModifierEffect const* effect) const;
 
-		void update_gamestate(DefineManager const& define_manager, UnitTypeManager const& unit_type_manager);
+		void update_gamestate(
+			DefineManager const& define_manager, UnitTypeManager const& unit_type_manager,
+			ModifierEffectCache const& modifier_effect_cache
+		);
 		void tick();
 	};
 
@@ -351,7 +357,10 @@ namespace OpenVic {
 		);
 
 		void update_modifier_sums(Date today, StaticModifierCache const& static_modifier_cache);
-		void update_gamestate(Date today, DefineManager const& define_manager, UnitTypeManager const& unit_type_manager);
+		void update_gamestate(
+			Date today, DefineManager const& define_manager, UnitTypeManager const& unit_type_manager,
+			ModifierEffectCache const& modifier_effect_cache
+		);
 		void tick();
 	};
 }

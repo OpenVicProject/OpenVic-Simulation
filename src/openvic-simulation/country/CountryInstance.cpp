@@ -822,7 +822,10 @@ void CountryInstance::_update_diplomacy() {
 	// TODO - update diplomatic points and colonial power
 }
 
-void CountryInstance::_update_military(DefineManager const& define_manager, UnitTypeManager const& unit_type_manager) {
+void CountryInstance::_update_military(
+	DefineManager const& define_manager, UnitTypeManager const& unit_type_manager,
+	ModifierEffectCache const& modifier_effect_cache
+) {
 	regiment_count = 0;
 
 	for (ArmyInstance const* army : armies) {
@@ -853,8 +856,8 @@ void CountryInstance::_update_military(DefineManager const& define_manager, Unit
 		max_supported_regiment_count += state->get_max_supported_regiments();
 	}
 
-	// TODO - apply country/tech modifiers to supply consumption
-	supply_consumption = 1;
+	supply_consumption =
+		fixed_point_t::_1() + get_modifier_effect_value_nullcheck(modifier_effect_cache.get_supply_consumption());
 
 	const size_t regular_army_size = std::min(4 * deployed_non_mobilised_regiments, max_supported_regiment_count);
 
@@ -896,7 +899,7 @@ void CountryInstance::_update_military(DefineManager const& define_manager, Unit
 	military_power = military_power_from_land + military_power_from_sea + military_power_from_leaders;
 
 	// Mobilisation calculations
-	mobilisation_impact = 0; // TODO - apply ruling party's war policy
+	mobilisation_impact = get_modifier_effect_value_nullcheck(modifier_effect_cache.get_mobilization_impact());
 
 	mobilisation_max_regiment_count =
 		((fixed_point_t::_1() + mobilisation_impact) * fixed_point_t::parse(regiment_count)).to_int64_t();
@@ -1029,7 +1032,10 @@ fixed_point_t CountryInstance::get_modifier_effect_value_nullcheck(ModifierEffec
 	return modifier_sum.get_effect_nullcheck(effect);
 }
 
-void CountryInstance::update_gamestate(DefineManager const& define_manager, UnitTypeManager const& unit_type_manager) {
+void CountryInstance::update_gamestate(
+	DefineManager const& define_manager, UnitTypeManager const& unit_type_manager,
+	ModifierEffectCache const& modifier_effect_cache
+) {
 	// Order of updates might need to be changed/functions split up to account for dependencies
 	_update_production(define_manager);
 	_update_budget();
@@ -1038,7 +1044,7 @@ void CountryInstance::update_gamestate(DefineManager const& define_manager, Unit
 	_update_population();
 	_update_trade();
 	_update_diplomacy();
-	_update_military(define_manager, unit_type_manager);
+	_update_military(define_manager, unit_type_manager, modifier_effect_cache);
 
 	total_score = prestige + industrial_power + military_power;
 
@@ -1280,10 +1286,11 @@ void CountryInstanceManager::update_modifier_sums(Date today, StaticModifierCach
 }
 
 void CountryInstanceManager::update_gamestate(
-	Date today, DefineManager const& define_manager, UnitTypeManager const& unit_type_manager
+	Date today, DefineManager const& define_manager, UnitTypeManager const& unit_type_manager,
+	ModifierEffectCache const& modifier_effect_cache
 ) {
 	for (CountryInstance& country : country_instances.get_items()) {
-		country.update_gamestate(define_manager, unit_type_manager);
+		country.update_gamestate(define_manager, unit_type_manager, modifier_effect_cache);
 	}
 
 	update_rankings(today, define_manager);
