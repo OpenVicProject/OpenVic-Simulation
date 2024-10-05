@@ -70,12 +70,11 @@ void ModifierSum::add_modifier_sum_exclude_source(ModifierSum const& modifier_su
 }
 
 // TODO - include value_sum[effect] in result? Early return if lookup in value_sum fails?
-std::vector<ModifierSum::modifier_entry_t> ModifierSum::get_contributing_modifiers(
-	ModifierEffect const& effect
+
+void ModifierSum::push_contributing_modifiers(
+	ModifierEffect const& effect, std::vector<modifier_entry_t>& contributions
 ) const {
 	using enum ModifierEffect::target_t;
-
-	std::vector<modifier_entry_t> ret;
 
 	for (modifier_entry_t const& modifier_entry : modifiers) {
 		if ((modifier_entry.targets & effect.get_targets()) != NO_TARGETS) {
@@ -83,10 +82,16 @@ std::vector<ModifierSum::modifier_entry_t> ModifierSum::get_contributing_modifie
 			const fixed_point_t value = modifier_entry.modifier->get_effect(effect, &effect_found);
 
 			if (effect_found) {
-				ret.push_back(modifier_entry);
+				contributions.push_back(modifier_entry);
 			}
 		}
 	}
+}
 
-	return ret;
+std::vector<ModifierSum::modifier_entry_t> ModifierSum::get_contributing_modifiers(ModifierEffect const& effect) const {
+	std::vector<modifier_entry_t> contributions;
+
+	push_contributing_modifiers(effect, contributions);
+
+	return contributions;
 }

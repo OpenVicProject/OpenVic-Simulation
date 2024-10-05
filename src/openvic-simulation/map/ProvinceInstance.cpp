@@ -235,6 +235,12 @@ void ProvinceInstance::update_modifier_sum(Date today, StaticModifierCache const
 	modifier_sum.add_modifier_nullcheck(province_definition.get_climate(), province_source);
 
 	modifier_sum.add_modifier_nullcheck(terrain_type, province_source);
+
+	if constexpr (!ADD_OWNER_CONTRIBUTION) {
+		if (owner != nullptr) {
+			owner->contribute_province_modifier_sum(modifier_sum);
+		}
+	}
 }
 
 void ProvinceInstance::contribute_country_modifier_sum(ModifierSum const& owner_modifier_sum) {
@@ -242,11 +248,66 @@ void ProvinceInstance::contribute_country_modifier_sum(ModifierSum const& owner_
 }
 
 fixed_point_t ProvinceInstance::get_modifier_effect_value(ModifierEffect const& effect) const {
-	return modifier_sum.get_effect(effect);
+	if constexpr (ADD_OWNER_CONTRIBUTION) {
+		return modifier_sum.get_effect(effect);
+	} else {
+		using enum ModifierEffect::target_t;
+
+		if (owner != nullptr) {
+			if ((effect.get_targets() & PROVINCE) == NO_TARGETS) {
+				// Non-province targeted effects are already added to the country modifier sum
+				return owner->get_modifier_effect_value(effect);
+			} else {
+				// Province-targeted effects aren't passed to the country modifier sum
+				return owner->get_modifier_effect_value(effect) + modifier_sum.get_effect(effect);
+			}
+		} else {
+			return modifier_sum.get_effect(effect);
+		}
+	}
 }
 
 fixed_point_t ProvinceInstance::get_modifier_effect_value_nullcheck(ModifierEffect const* effect) const {
-	return modifier_sum.get_effect_nullcheck(effect);
+	if (effect != nullptr) {
+		return get_modifier_effect_value(*effect);
+	} else {
+		return fixed_point_t::_0();
+	}
+}
+
+void ProvinceInstance::push_contributing_modifiers(
+	ModifierEffect const& effect, std::vector<ModifierSum::modifier_entry_t>& contributions
+) const {
+	if constexpr (ADD_OWNER_CONTRIBUTION) {
+		modifier_sum.push_contributing_modifiers(effect, contributions);
+	} else {
+		using enum ModifierEffect::target_t;
+
+		if (owner != nullptr) {
+			if ((effect.get_targets() & PROVINCE) == NO_TARGETS) {
+				// Non-province targeted effects are already added to the country modifier sum
+				owner->push_contributing_modifiers(effect, contributions);
+			} else {
+				// Province-targeted effects aren't passed to the country modifier sum
+				modifier_sum.push_contributing_modifiers(effect, contributions);
+				owner->push_contributing_modifiers(effect, contributions);
+			}
+		} else {
+			modifier_sum.push_contributing_modifiers(effect, contributions);
+		}
+	}
+}
+
+std::vector<ModifierSum::modifier_entry_t> ProvinceInstance::get_contributing_modifiers(ModifierEffect const& effect) const {
+	if constexpr (ADD_OWNER_CONTRIBUTION) {
+		return modifier_sum.get_contributing_modifiers(effect);
+	} else {
+		std::vector<ModifierSum::modifier_entry_t> contributions;
+
+		push_contributing_modifiers(effect, contributions);
+
+		return contributions;
+	}
 }
 
 void ProvinceInstance::update_gamestate(Date today, DefineManager const& define_manager) {

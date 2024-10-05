@@ -69,7 +69,12 @@ namespace OpenVic {
 		CountryInstance* PROPERTY(controller);
 		ordered_set<CountryInstance*> PROPERTY(cores);
 
-		// The total/resultant modifier affecting this province, including owner country contributions.
+	public:
+		static constexpr bool ADD_OWNER_CONTRIBUTION = true;
+
+	private:
+		// The total/resultant modifier affecting this province, including owner country contributions if
+		// ADD_OWNER_CONTRIBUTION is true.
 		ModifierSum PROPERTY(modifier_sum);
 		std::vector<ModifierInstance> PROPERTY(event_modifiers);
 
@@ -133,6 +138,10 @@ namespace OpenVic {
 		void contribute_country_modifier_sum(ModifierSum const& owner_modifier_sum);
 		fixed_point_t get_modifier_effect_value(ModifierEffect const& effect) const;
 		fixed_point_t get_modifier_effect_value_nullcheck(ModifierEffect const* effect) const;
+		void push_contributing_modifiers(
+			ModifierEffect const& effect, std::vector<ModifierSum::modifier_entry_t>& contributions
+		) const;
+		std::vector<ModifierSum::modifier_entry_t> get_contributing_modifiers(ModifierEffect const& effect) const;
 
 		void update_gamestate(Date today, DefineManager const& define_manager);
 		void tick(Date today);

@@ -55,6 +55,7 @@ namespace OpenVic {
 		void add_modifier_sum_filter_targets(ModifierSum const& modifier_sum, ModifierEffect::target_t targets);
 		void add_modifier_sum_exclude_source(ModifierSum const& modifier_sum, modifier_source_t const& excluded_source);
 
+		void push_contributing_modifiers(ModifierEffect const& effect, std::vector<modifier_entry_t>& contributions) const;
 		std::vector<modifier_entry_t> get_contributing_modifiers(ModifierEffect const& effect) const;
 	};
 }

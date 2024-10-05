@@ -305,8 +305,13 @@ namespace OpenVic {
 	public:
 
 		void update_modifier_sum(Date today, StaticModifierCache const& static_modifier_cache);
+		void contribute_province_modifier_sum(ModifierSum const& province_modifier_sum);
 		fixed_point_t get_modifier_effect_value(ModifierEffect const& effect) const;
 		fixed_point_t get_modifier_effect_value_nullcheck(ModifierEffect const* effect) const;
+		void push_contributing_modifiers(
+			ModifierEffect const& effect, std::vector<ModifierSum::modifier_entry_t>& contributions
+		) const;
+		std::vector<ModifierSum::modifier_entry_t> get_contributing_modifiers(ModifierEffect const& effect) const;
 
 		void update_gamestate(
 			DefineManager const& define_manager, UnitTypeManager const& unit_type_manager,
