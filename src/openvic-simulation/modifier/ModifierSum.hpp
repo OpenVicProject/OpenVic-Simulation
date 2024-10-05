@@ -39,10 +39,15 @@ namespace OpenVic {
 		bool empty();
 
 		fixed_point_t get_effect(ModifierEffect const& effect, bool* effect_found = nullptr) const;
+		fixed_point_t get_effect_nullcheck(ModifierEffect const* effect, bool* effect_found = nullptr) const;
 		bool has_effect(ModifierEffect const& effect) const;
 
 		void add_modifier(
 			Modifier const& modifier, modifier_source_t const& source, fixed_point_t multiplier = fixed_point_t::_1(),
+			ModifierEffect::target_t targets = ModifierEffect::target_t::ALL_TARGETS
+		);
+		void add_modifier_nullcheck(
+			Modifier const* modifier, modifier_source_t const& source, fixed_point_t multiplier = fixed_point_t::_1(),
 			ModifierEffect::target_t targets = ModifierEffect::target_t::ALL_TARGETS
 		);
 		void add_modifier_sum(ModifierSum const& modifier_sum);
