@@ -1007,21 +1007,28 @@ void CountryInstance::update_modifier_sum(Date today, StaticModifierCache const&
 		}
 	}
 
-	// Add province base modifiers (with local province modifier effects removed)
-	using enum ModifierEffect::target_t;
-	static constexpr ModifierEffect::target_t NOT_PROVINCE = ALL_TARGETS & ~PROVINCE;
+	if constexpr (ProvinceInstance::ADD_OWNER_CONTRIBUTION) {
+		// Add province base modifiers (with local province modifier effects removed)
+		for (ProvinceInstance const* province : owned_provinces) {
+			contribute_province_modifier_sum(province->get_modifier_sum());
+		}
 
-	for (ProvinceInstance const* province : owned_provinces) {
-		modifier_sum.add_modifier_sum_filter_targets(province->get_modifier_sum(), NOT_PROVINCE);
-	}
-
-	// This has to be done after adding all province modifiers to the country's sum, otherwise provinces earlier in the list
-	// wouldn't be affected by modifiers from provinces later in the list.
-	for (ProvinceInstance* province : owned_provinces) {
-		province->contribute_country_modifier_sum(modifier_sum);
+		// This has to be done after adding all province modifiers to the country's sum, otherwise provinces
+		// earlier in the list wouldn't be affected by modifiers from provinces later in the list.
+		for (ProvinceInstance* province : owned_provinces) {
+			province->contribute_country_modifier_sum(modifier_sum);
+		}
 	}
 
 	// TODO - calculate stats for each unit type (locked and unlocked)
+}
+
+void CountryInstance::contribute_province_modifier_sum(ModifierSum const& province_modifier_sum) {
+	using enum ModifierEffect::target_t;
+
+	static constexpr ModifierEffect::target_t NOT_PROVINCE = ALL_TARGETS & ~PROVINCE;
+
+	modifier_sum.add_modifier_sum_filter_targets(province_modifier_sum, NOT_PROVINCE);
 }
 
 fixed_point_t CountryInstance::get_modifier_effect_value(ModifierEffect const& effect) const {
@@ -1030,6 +1037,16 @@ fixed_point_t CountryInstance::get_modifier_effect_value(ModifierEffect const& e
 
 fixed_point_t CountryInstance::get_modifier_effect_value_nullcheck(ModifierEffect const* effect) const {
 	return modifier_sum.get_effect_nullcheck(effect);
+}
+
+void CountryInstance::push_contributing_modifiers(
+	ModifierEffect const& effect, std::vector<ModifierSum::modifier_entry_t>& contributions
+) const {
+	modifier_sum.push_contributing_modifiers(effect, contributions);
+}
+
+std::vector<ModifierSum::modifier_entry_t> CountryInstance::get_contributing_modifiers(ModifierEffect const& effect) const {
+	return modifier_sum.get_contributing_modifiers(effect);
 }
 
 void CountryInstance::update_gamestate(
