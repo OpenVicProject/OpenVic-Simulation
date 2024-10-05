@@ -15,6 +15,10 @@ fixed_point_t ModifierSum::get_effect(ModifierEffect const& effect, bool* effect
 	return value_sum.get_effect(effect, effect_found);
 }
 
+fixed_point_t ModifierSum::get_effect_nullcheck(ModifierEffect const* effect, bool* effect_found) const {
+	return value_sum.get_effect_nullcheck(effect, effect_found);
+}
+
 bool ModifierSum::has_effect(ModifierEffect const& effect) const {
 	return value_sum.has_effect(effect);
 }
@@ -27,6 +31,14 @@ void ModifierSum::add_modifier(
 	if (multiplier != fixed_point_t::_0() && targets != NO_TARGETS) {
 		modifiers.emplace_back(&modifier, multiplier, source, targets);
 		value_sum.multiply_add_filter(modifier, multiplier, targets);
+	}
+}
+
+void ModifierSum::add_modifier_nullcheck(
+	Modifier const* modifier, modifier_source_t const& source, fixed_point_t multiplier, ModifierEffect::target_t targets
+) {
+	if (modifier != nullptr) {
+		add_modifier(*modifier, source, multiplier, targets);
 	}
 }
 

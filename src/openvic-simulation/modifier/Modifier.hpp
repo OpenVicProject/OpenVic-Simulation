@@ -71,6 +71,7 @@ namespace OpenVic {
 		bool empty() const;
 
 		fixed_point_t get_effect(ModifierEffect const& effect, bool* effect_found = nullptr) const;
+		fixed_point_t get_effect_nullcheck(ModifierEffect const* effect, bool* effect_found = nullptr) const;
 		bool has_effect(ModifierEffect const& effect) const;
 		void set_effect(ModifierEffect const& effect, fixed_point_t value);
 

@@ -58,6 +58,18 @@ fixed_point_t ModifierValue::get_effect(ModifierEffect const& effect, bool* effe
 		}
 		return it->second;
 	}
+
+	if (effect_found != nullptr) {
+		*effect_found = false;
+	}
+	return fixed_point_t::_0();
+}
+
+fixed_point_t ModifierValue::get_effect_nullcheck(ModifierEffect const* effect, bool* effect_found) const {
+	if (effect != nullptr) {
+		return get_effect(*effect, effect_found);
+	}
+
 	if (effect_found != nullptr) {
 		*effect_found = false;
 	}
