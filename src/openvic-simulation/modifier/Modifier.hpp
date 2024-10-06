@@ -1,81 +1,13 @@
 #pragma once
 
+#include "openvic-simulation/modifier/ModifierEffect.hpp"
+#include "openvic-simulation/modifier/ModifierEffectCache.hpp"
+#include "openvic-simulation/modifier/ModifierValue.hpp"
+#include "openvic-simulation/modifier/StaticModifierCache.hpp"
 #include "openvic-simulation/scripts/ConditionScript.hpp"
 #include "openvic-simulation/types/IdentifierRegistry.hpp"
 
 namespace OpenVic {
-	struct ModifierManager;
-
-	struct ModifierEffect : HasIdentifier {
-		friend struct ModifierManager;
-
-		enum class format_t {
-			PROPORTION_DECIMAL,	/* An unscaled fraction/ratio, with 1 being "full"/"whole" */
-			PERCENTAGE_DECIMAL,	/* A fraction/ratio scaled so that 100 is "full"/"whole" */
-			RAW_DECIMAL,		/* A continuous quantity, e.g. attack strength */
-			INT					/* A discrete quantity, e.g. building count limit */
-		};
-
-	private:
-		/* If true, positive values will be green and negative values will be red.
-		 * If false, the colours will be switced.
-		 */
-		const bool PROPERTY_CUSTOM_PREFIX(positive_good, is);
-		const format_t PROPERTY(format);
-		std::string PROPERTY(localisation_key);
-
-		// TODO - format/precision, e.g. 80% vs 0.8 vs 0.800, 2 vs 2.0 vs 200%
-
-		ModifierEffect(
-			std::string_view new_identifier, bool new_positive_good, format_t new_format, std::string_view new_localisation_key
-		);
-
-	public:
-		ModifierEffect(ModifierEffect&&) = default;
-	};
-
-	struct ModifierValue {
-		friend struct ModifierManager;
-
-		using effect_map_t = fixed_point_map_t<ModifierEffect const*>;
-
-	private:
-		effect_map_t PROPERTY(values);
-
-	public:
-		ModifierValue();
-		ModifierValue(effect_map_t&& new_values);
-		ModifierValue(ModifierValue const&);
-		ModifierValue(ModifierValue&&);
-
-		ModifierValue& operator=(ModifierValue const&);
-		ModifierValue& operator=(ModifierValue&&);
-
-		/* Removes effect entries with a value of zero. */
-		void trim();
-		size_t get_effect_count() const;
-		void clear();
-		bool empty() const;
-
-		fixed_point_t get_effect(ModifierEffect const& effect, bool* effect_found = nullptr) const;
-		bool has_effect(ModifierEffect const& effect) const;
-		void set_effect(ModifierEffect const& effect, fixed_point_t value);
-
-		ModifierValue& operator+=(ModifierValue const& right);
-		ModifierValue operator+(ModifierValue const& right) const;
-		ModifierValue operator-() const;
-		ModifierValue& operator-=(ModifierValue const& right);
-		ModifierValue operator-(ModifierValue const& right) const;
-		ModifierValue& operator*=(fixed_point_t const& right);
-		ModifierValue operator*(fixed_point_t const& right) const;
-
-		fixed_point_t& operator[](ModifierEffect const& effect);
-
-		void multiply_add(ModifierValue const& other, fixed_point_t multiplier);
-
-		friend std::ostream& operator<<(std::ostream& stream, ModifierValue const& value);
-	};
-
 	struct Modifier : HasIdentifier, ModifierValue {
 		friend struct ModifierManager;
 
@@ -142,6 +74,14 @@ namespace OpenVic {
 	concept ModifierEffectValidator = std::predicate<Fn, ModifierEffect const&>;
 
 	struct ModifierManager {
+		friend struct StaticModifierCache;
+		friend struct BuildingTypeManager;
+		friend struct GoodDefinitionManager;
+		friend struct UnitTypeManager;
+		friend struct RebelManager;
+		friend struct PopManager;
+		friend struct TechnologyManager;
+
 		/* Some ModifierEffects are generated mid-load, such as max/min count modifiers for each building, so
 		 * we can't lock it until loading is over. This means we can't rely on locking for pointer stability,
 		 * so instead we store the effects in a deque which doesn't invalidate pointers on insert.
@@ -154,6 +94,9 @@ namespace OpenVic {
 		IdentifierRegistry<Modifier> IDENTIFIER_REGISTRY(static_modifier);
 		IdentifierRegistry<TriggeredModifier> IDENTIFIER_REGISTRY(triggered_modifier);
 
+		ModifierEffectCache PROPERTY(modifier_effect_cache);
+		StaticModifierCache PROPERTY(static_modifier_cache);
+
 		/* effect_validator takes in ModifierEffect const& */
 		NodeTools::key_value_callback_t _modifier_effect_callback(
 			ModifierValue& modifier, NodeTools::key_value_callback_t default_callback,
@@ -162,8 +105,11 @@ namespace OpenVic {
 
 	public:
 		bool add_modifier_effect(
-			std::string_view identifier, bool positive_good,
-			ModifierEffect::format_t format = ModifierEffect::format_t::PROPORTION_DECIMAL,
+			ModifierEffect const*& effect_cache,
+			std::string_view identifier,
+			bool positive_good,
+			ModifierEffect::format_t format,
+			ModifierEffect::target_t targets,
 			std::string_view localisation_key = {}
 		);
 
