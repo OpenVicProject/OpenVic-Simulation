@@ -1,5 +1,7 @@
 #include "Crime.hpp"
 
+#include "openvic-simulation/modifier/ModifierManager.hpp"
+
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;
 

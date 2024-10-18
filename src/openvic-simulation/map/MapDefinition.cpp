@@ -3,6 +3,7 @@
 #include <cstdint>
 #include <vector>
 
+#include "openvic-simulation/modifier/ModifierManager.hpp"
 #include "openvic-simulation/types/Colour.hpp"
 #include "openvic-simulation/types/OrderedContainers.hpp"
 #include "openvic-simulation/types/Vector.hpp"

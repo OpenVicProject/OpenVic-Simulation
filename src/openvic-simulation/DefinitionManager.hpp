@@ -14,7 +14,7 @@
 #include "openvic-simulation/misc/Event.hpp"
 #include "openvic-simulation/misc/SongChance.hpp"
 #include "openvic-simulation/misc/SoundEffect.hpp"
-#include "openvic-simulation/modifier/Modifier.hpp"
+#include "openvic-simulation/modifier/ModifierManager.hpp"
 #include "openvic-simulation/politics/PoliticsManager.hpp"
 #include "openvic-simulation/pop/Pop.hpp"
 #include "openvic-simulation/research/ResearchManager.hpp"

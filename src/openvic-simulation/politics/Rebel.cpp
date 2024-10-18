@@ -2,7 +2,7 @@
 
 #include <string_view>
 
-#include "openvic-simulation/modifier/Modifier.hpp"
+#include "openvic-simulation/modifier/ModifierManager.hpp"
 
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;

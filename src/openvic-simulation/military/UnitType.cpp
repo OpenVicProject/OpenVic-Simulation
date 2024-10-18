@@ -2,6 +2,7 @@
 
 #include "openvic-simulation/country/CountryInstance.hpp"
 #include "openvic-simulation/map/TerrainType.hpp"
+#include "openvic-simulation/modifier/ModifierManager.hpp"
 
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;
