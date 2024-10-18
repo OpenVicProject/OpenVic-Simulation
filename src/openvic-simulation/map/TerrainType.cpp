@@ -1,5 +1,6 @@
 #include "TerrainType.hpp"
 
+#include "openvic-simulation/modifier/ModifierManager.hpp"
 #include "openvic-simulation/types/Colour.hpp"
 
 using namespace OpenVic;

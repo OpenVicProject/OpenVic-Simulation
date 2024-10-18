@@ -1,6 +1,6 @@
 #include "StaticModifierCache.hpp"
 
-#include "openvic-simulation/modifier/Modifier.hpp"
+#include "openvic-simulation/modifier/ModifierManager.hpp"
 
 using namespace OpenVic;
 

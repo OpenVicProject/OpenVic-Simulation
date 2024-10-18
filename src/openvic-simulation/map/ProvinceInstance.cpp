@@ -10,6 +10,7 @@
 #include "openvic-simulation/map/TerrainType.hpp"
 #include "openvic-simulation/military/UnitInstanceGroup.hpp"
 #include "openvic-simulation/misc/Define.hpp"
+#include "openvic-simulation/modifier/StaticModifierCache.hpp"
 #include "openvic-simulation/politics/Ideology.hpp"
 #include "openvic-simulation/pop/Pop.hpp"
 #include "utility/Logger.hpp"

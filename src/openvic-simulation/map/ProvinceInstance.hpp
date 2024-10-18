@@ -23,6 +23,7 @@ namespace OpenVic {
 	struct Ideology;
 	struct Culture;
 	struct Religion;
+	struct StaticModifierCache;
 	struct BuildingTypeManager;
 	struct ProvinceHistoryEntry;
 	struct IssueManager;

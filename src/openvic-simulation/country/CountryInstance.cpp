@@ -5,6 +5,8 @@
 #include "openvic-simulation/map/Crime.hpp"
 #include "openvic-simulation/map/MapInstance.hpp"
 #include "openvic-simulation/misc/Define.hpp"
+#include "openvic-simulation/modifier/ModifierEffectCache.hpp"
+#include "openvic-simulation/modifier/StaticModifierCache.hpp"
 #include "openvic-simulation/politics/Ideology.hpp"
 #include "openvic-simulation/research/Invention.hpp"
 #include "openvic-simulation/research/Technology.hpp"

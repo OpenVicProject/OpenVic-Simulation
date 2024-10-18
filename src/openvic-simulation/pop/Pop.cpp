@@ -5,6 +5,7 @@
 #include "openvic-simulation/map/ProvinceInstance.hpp"
 #include "openvic-simulation/military/UnitType.hpp"
 #include "openvic-simulation/misc/Define.hpp"
+#include "openvic-simulation/modifier/ModifierManager.hpp"
 #include "openvic-simulation/politics/Ideology.hpp"
 #include "openvic-simulation/politics/Issue.hpp"
 #include "openvic-simulation/politics/Rebel.hpp"

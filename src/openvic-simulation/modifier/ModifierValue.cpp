@@ -134,3 +134,12 @@ void ModifierValue::multiply_add_filter(
 		}
 	}
 }
+
+namespace OpenVic { // so the compiler shuts up
+	std::ostream& operator<<(std::ostream& stream, ModifierValue const& value) {
+		for (ModifierValue::effect_map_t::value_type const& effect : value.values) {
+			stream << effect.first << ": " << effect.second << "\n";
+		}
+		return stream;
+	}
+}
