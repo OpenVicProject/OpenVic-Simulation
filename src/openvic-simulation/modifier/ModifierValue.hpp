@@ -40,8 +40,10 @@ namespace OpenVic {
 		ModifierValue& operator*=(fixed_point_t const& right);
 		ModifierValue operator*(fixed_point_t const& right) const;
 
-		void apply_target_filter(ModifierEffect::target_t targets);
-		void multiply_add_filter(ModifierValue const& other, fixed_point_t multiplier, ModifierEffect::target_t targets);
+		void apply_exclude_targets(ModifierEffect::target_t excluded_targets);
+		void multiply_add_exclude_targets(
+			ModifierValue const& other, fixed_point_t multiplier, ModifierEffect::target_t excluded_targets
+		);
 
 		friend std::ostream& operator<<(std::ostream& stream, ModifierValue const& value);
 	};
