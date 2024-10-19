@@ -142,8 +142,13 @@ bool TechnologyManager::load_technology_file_schools(
 			const bool ret = expect_dictionary_reserve_length(
 				technology_schools,
 				[this, &modifier_manager](std::string_view school_key, ast::NodeCPtr school_value) -> bool {
+					using enum Modifier::modifier_type_t;
+
 					ModifierValue modifiers;
-					bool ret = modifier_manager.expect_modifier_value(move_variable_callback(modifiers))(school_value);
+
+					bool ret = modifier_manager.expect_modifier_value(
+						move_variable_callback(modifiers), TECH_SCHOOL
+					)(school_value);
 
 					ret &= add_technology_school(school_key, std::move(modifiers));
 
@@ -165,6 +170,8 @@ bool TechnologyManager::load_technologies_file(
 	return expect_dictionary_reserve_length(technologies, [this, &modifier_manager, &unit_type_manager, &building_type_manager](
 		std::string_view tech_key, ast::NodeCPtr tech_value
 	) -> bool {
+		using enum Modifier::modifier_type_t;
+
 		ModifierValue modifiers;
 		TechnologyArea const* area = nullptr;
 		Date::year_t year = 0;
@@ -177,6 +184,7 @@ bool TechnologyManager::load_technologies_file(
 
 		bool ret = modifier_manager.expect_modifier_value_and_keys(
 			move_variable_callback(modifiers),
+			TECHNOLOGY,
 			"area", ONE_EXACTLY, expect_technology_area_identifier(assign_variable_callback_pointer(area)),
 			"year", ONE_EXACTLY, expect_uint(assign_variable_callback(year)),
 			"cost", ONE_EXACTLY, expect_fixed_point(assign_variable_callback(cost)),

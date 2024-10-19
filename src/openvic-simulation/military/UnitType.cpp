@@ -29,8 +29,17 @@ UnitType::UnitType(
 	build_time { unit_args.build_time },
 	build_cost { std::move(unit_args.build_cost) },
 	supply_consumption { unit_args.supply_consumption },
-	supply_cost { std::move(unit_args.supply_cost) },
-	terrain_modifiers { std::move(unit_args.terrain_modifiers) } {}
+	supply_cost { std::move(unit_args.supply_cost) } {
+
+	using enum Modifier::modifier_type_t;
+
+	for (auto [terrain, modifier_value] : mutable_iterator(unit_args.terrain_modifier_values)) {
+		terrain_modifiers.emplace(terrain, Modifier {
+			StringUtils::append_string_views(new_identifier, " ", terrain->get_identifier()), std::move(modifier_value),
+			UNIT_TERRAIN
+		});
+	}
+}
 
 bool UnitTypeBranched<LAND>::allowed_cultures_check_culture_in_country(
 	allowed_cultures_t allowed_cultures, Culture const& culture, CountryInstance const& country
@@ -232,16 +241,20 @@ bool UnitTypeManager::load_unit_type_file(
 				good_definition_manager.expect_good_definition_decimal_map(move_variable_callback(unit_args.supply_cost))
 		);
 
-		auto add_terrain_modifier = [&unit_args, &terrain_type_manager, &modifier_manager](
+		auto add_terrain_modifier_value = [&unit_args, &terrain_type_manager, &modifier_manager](
 			std::string_view default_key, ast::NodeCPtr default_value
 		) -> bool {
 			TerrainType const* terrain_type = terrain_type_manager.get_terrain_type_by_identifier(default_key);
+
 			if (terrain_type != nullptr) {
+				using enum Modifier::modifier_type_t;
+
 				// TODO - restrict what modifier effects can be used here
 				return modifier_manager.expect_modifier_value(
-					map_callback(unit_args.terrain_modifiers, terrain_type)
+					map_callback(unit_args.terrain_modifier_values, terrain_type), UNIT_TERRAIN
 				)(default_value);
 			}
+
 			return key_value_invalid_callback(default_key, default_value);
 		};
 
@@ -275,7 +288,7 @@ bool UnitTypeManager::load_unit_type_file(
 				regiment_type_args.allowed_cultures = RegimentType::allowed_cultures_t::ALL_CULTURES;
 			}
 
-			ret &= expect_dictionary_key_map_and_default(key_map, add_terrain_modifier)(value);
+			ret &= expect_dictionary_key_map_and_default(key_map, add_terrain_modifier_value)(value);
 
 			ret &= add_regiment_type(key, unit_args, regiment_type_args);
 
@@ -302,7 +315,7 @@ bool UnitTypeManager::load_unit_type_file(
 				"torpedo_attack", ZERO_OR_ONE, expect_fixed_point(assign_variable_callback(ship_type_args.torpedo_attack))
 			);
 
-			ret &= expect_dictionary_key_map_and_default(key_map, add_terrain_modifier)(value);
+			ret &= expect_dictionary_key_map_and_default(key_map, add_terrain_modifier_value)(value);
 
 			ret &= add_ship_type(key, unit_args, ship_type_args);
 

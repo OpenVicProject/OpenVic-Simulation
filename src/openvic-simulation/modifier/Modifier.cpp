@@ -2,6 +2,33 @@
 
 using namespace OpenVic;
 
+std::string_view Modifier::modifier_type_to_string(modifier_type_t type) {
+	using enum Modifier::modifier_type_t;
+
+	switch (type) {
+#define _CASE(X) case X: return #X;
+	_CASE(EVENT)
+	_CASE(STATIC)
+	_CASE(TRIGGERED)
+	_CASE(CRIME)
+	_CASE(TERRAIN)
+	_CASE(CLIMATE)
+	_CASE(CONTINENT)
+	_CASE(BUILDING)
+	_CASE(LEADER)
+	_CASE(UNIT_TERRAIN)
+	_CASE(NATIONAL_VALUE)
+	_CASE(NATIONAL_FOCUS)
+	_CASE(ISSUE)
+	_CASE(REFORM)
+	_CASE(TECHNOLOGY)
+	_CASE(INVENTION)
+	_CASE(TECH_SCHOOL)
+#undef _CASE
+	default: return "INVALID MODIFIER TYPE";
+	}
+}
+
 Modifier::Modifier(std::string_view new_identifier, ModifierValue&& new_values, modifier_type_t new_type)
 	: HasIdentifier { new_identifier }, ModifierValue { std::move(new_values) }, type { new_type } {}
 

@@ -8,13 +8,18 @@
 #include "openvic-simulation/utility/Getters.hpp"
 
 namespace OpenVic {
+	struct UnitType;
+
 	struct Modifier : HasIdentifier, ModifierValue {
 		friend struct ModifierManager;
+		friend struct UnitType;
 
 		enum struct modifier_type_t : uint8_t {
-			EVENT, STATIC, TRIGGERED, CRIME, TERRAIN, CLIMATE, CONTINENT, BUILDING, LEADER, NATIONAL_VALUE, NATIONAL_FOCUS,
-			ISSUE, REFORM, TECHNOLOGY, INVENTION, TECH_SCHOOL
+			EVENT, STATIC, TRIGGERED, CRIME, TERRAIN, CLIMATE, CONTINENT, BUILDING, LEADER, UNIT_TERRAIN,
+			NATIONAL_VALUE, NATIONAL_FOCUS, ISSUE, REFORM, TECHNOLOGY, INVENTION, TECH_SCHOOL
 		};
+
+		static std::string_view modifier_type_to_string(modifier_type_t type);
 
 	private:
 		const modifier_type_t PROPERTY(type);
