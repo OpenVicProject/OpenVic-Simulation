@@ -11,6 +11,8 @@
 #include "openvic-simulation/types/HasIdentifier.hpp"
 #include "openvic-simulation/types/OrderedContainers.hpp"
 
+#include "openvic-simulation/ModifierCalculationTestToggle.hpp"
+
 namespace OpenVic {
 	struct MapInstance;
 	struct ProvinceDefinition;
@@ -70,10 +72,14 @@ namespace OpenVic {
 		CountryInstance* PROPERTY(controller);
 		ordered_set<CountryInstance*> PROPERTY(cores);
 
+#if OV_MODIFIER_CALCULATION_TEST
+		const bool ADD_OWNER_CONTRIBUTION;
+#else
 	public:
 		static constexpr bool ADD_OWNER_CONTRIBUTION = true;
 
 	private:
+#endif
 		// The total/resultant modifier affecting this province, including owner country contributions if
 		// ADD_OWNER_CONTRIBUTION is true.
 		ModifierSum PROPERTY(modifier_sum);
@@ -102,6 +108,9 @@ namespace OpenVic {
 		size_t PROPERTY(max_supported_regiments);
 
 		ProvinceInstance(
+#if OV_MODIFIER_CALCULATION_TEST
+			bool new_ADD_OWNER_CONTRIBUTION,
+#endif
 			ProvinceDefinition const& new_province_definition, decltype(pop_type_distribution)::keys_t const& pop_type_keys,
 			decltype(ideology_distribution)::keys_t const& ideology_keys
 		);

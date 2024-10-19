@@ -14,9 +14,15 @@
 using namespace OpenVic;
 
 ProvinceInstance::ProvinceInstance(
+#if OV_MODIFIER_CALCULATION_TEST
+	bool new_ADD_OWNER_CONTRIBUTION,
+#endif
 	ProvinceDefinition const& new_province_definition, decltype(pop_type_distribution)::keys_t const& pop_type_keys,
 	decltype(ideology_distribution)::keys_t const& ideology_keys
 ) : HasIdentifierAndColour { new_province_definition },
+#if OV_MODIFIER_CALCULATION_TEST
+	ADD_OWNER_CONTRIBUTION { new_ADD_OWNER_CONTRIBUTION },
+#endif
 	province_definition { new_province_definition },
 	terrain_type { new_province_definition.get_default_terrain_type() },
 	life_rating { 0 },
@@ -237,7 +243,11 @@ void ProvinceInstance::update_modifier_sum(Date today, StaticModifierCache const
 
 	modifier_sum.add_modifier_nullcheck(terrain_type, province_source);
 
+#if OV_MODIFIER_CALCULATION_TEST
+	if (!ADD_OWNER_CONTRIBUTION) {
+#else
 	if constexpr (!ADD_OWNER_CONTRIBUTION) {
+#endif
 		if (owner != nullptr) {
 			owner->contribute_province_modifier_sum(modifier_sum);
 		}
@@ -249,7 +259,11 @@ void ProvinceInstance::contribute_country_modifier_sum(ModifierSum const& owner_
 }
 
 fixed_point_t ProvinceInstance::get_modifier_effect_value(ModifierEffect const& effect) const {
+#if OV_MODIFIER_CALCULATION_TEST
+	if (ADD_OWNER_CONTRIBUTION) {
+#else
 	if constexpr (ADD_OWNER_CONTRIBUTION) {
+#endif
 		return modifier_sum.get_effect(effect);
 	} else {
 		using enum ModifierEffect::target_t;
@@ -279,7 +293,11 @@ fixed_point_t ProvinceInstance::get_modifier_effect_value_nullcheck(ModifierEffe
 void ProvinceInstance::push_contributing_modifiers(
 	ModifierEffect const& effect, std::vector<ModifierSum::modifier_entry_t>& contributions
 ) const {
+#if OV_MODIFIER_CALCULATION_TEST
+	if (ADD_OWNER_CONTRIBUTION) {
+#else
 	if constexpr (ADD_OWNER_CONTRIBUTION) {
+#endif
 		modifier_sum.push_contributing_modifiers(effect, contributions);
 	} else {
 		using enum ModifierEffect::target_t;
@@ -300,7 +318,11 @@ void ProvinceInstance::push_contributing_modifiers(
 }
 
 std::vector<ModifierSum::modifier_entry_t> ProvinceInstance::get_contributing_modifiers(ModifierEffect const& effect) const {
+#if OV_MODIFIER_CALCULATION_TEST
+	if (ADD_OWNER_CONTRIBUTION) {
+#else
 	if constexpr (ADD_OWNER_CONTRIBUTION) {
+#endif
 		return modifier_sum.get_contributing_modifiers(effect);
 	} else {
 		std::vector<ModifierSum::modifier_entry_t> contributions;

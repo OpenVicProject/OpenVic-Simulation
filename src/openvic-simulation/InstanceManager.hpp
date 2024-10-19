@@ -11,6 +11,8 @@
 #include "openvic-simulation/misc/SimulationClock.hpp"
 #include "openvic-simulation/types/Date.hpp"
 
+#include "openvic-simulation/ModifierCalculationTestToggle.hpp"
+
 namespace OpenVic {
 	struct DefinitionManager;
 	struct Bookmark;
@@ -20,6 +22,10 @@ namespace OpenVic {
 
 	private:
 		DefinitionManager const& PROPERTY(definition_manager);
+
+#if OV_MODIFIER_CALCULATION_TEST
+		const bool ADD_OWNER_CONTRIBUTION;
+#endif
 
 		CountryInstanceManager PROPERTY_REF(country_instance_manager);
 		CountryRelationManager PROPERTY_REF(country_relation_manager);
@@ -51,6 +57,9 @@ namespace OpenVic {
 
 	public:
 		InstanceManager(
+#if OV_MODIFIER_CALCULATION_TEST
+			bool new_ADD_OWNER_CONTRIBUTION,
+#endif
 			DefinitionManager const& new_definition_manager, gamestate_updated_func_t gamestate_updated_callback,
 			SimulationClock::state_changed_function_t clock_state_changed_callback
 		);

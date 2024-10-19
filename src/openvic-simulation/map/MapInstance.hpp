@@ -6,6 +6,8 @@
 #include "openvic-simulation/types/Date.hpp"
 #include "openvic-simulation/types/IdentifierRegistry.hpp"
 
+#include "openvic-simulation/ModifierCalculationTestToggle.hpp"
+
 namespace OpenVic {
 	struct MapDefinition;
 	struct BuildingTypeManager;
@@ -43,6 +45,9 @@ namespace OpenVic {
 		ProvinceDefinition::index_t get_selected_province_index() const;
 
 		bool setup(
+#if OV_MODIFIER_CALCULATION_TEST
+			bool ADD_OWNER_CONTRIBUTION,
+#endif
 			BuildingTypeManager const& building_type_manager,
 			decltype(ProvinceInstance::pop_type_distribution)::keys_t const& pop_type_keys,
 			decltype(ProvinceInstance::ideology_distribution)::keys_t const& ideology_keys

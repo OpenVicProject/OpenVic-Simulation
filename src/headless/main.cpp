@@ -5,6 +5,8 @@
 #include <openvic-simulation/testing/Testing.hpp>
 #include <openvic-simulation/utility/Logger.hpp>
 
+#include <openvic-simulation/ModifierCalculationTestToggle.hpp>
+
 using namespace OpenVic;
 
 static void print_help(std::ostream& stream, char const* program_name) {
@@ -75,6 +77,82 @@ static bool run_headless(Dataloader::path_vector_t const& roots, bool run_tests)
 		print_ranking_list("Great Powers", country_instance_manager.get_great_powers());
 		print_ranking_list("Secondary Powers", country_instance_manager.get_secondary_powers());
 		print_ranking_list("All countries", country_instance_manager.get_total_ranking());
+
+#if OV_MODIFIER_CALCULATION_TEST
+		Logger::info("Comparing resultant modifier calculation methods...");
+
+		std::vector<ProvinceInstance> const& provinces =
+			game_manager.get_instance_manager()->get_map_instance().get_province_instances();
+		std::vector<ProvinceInstance> const& provinces_no_add =
+			game_manager.get_instance_manager_no_add()->get_map_instance().get_province_instances();
+
+		std::deque<ModifierEffect> const& modifier_effects =
+			game_manager.get_definition_manager().get_modifier_manager().get_modifier_effects();
+
+		if (provinces.size() != provinces_no_add.size()) {
+			Logger::error("ProvinceInstance count mismatch between add and no-add instances!");
+			ret = false;
+		} else {
+			for (size_t idx = 0; idx < provinces.size(); ++idx) {
+				ProvinceInstance const& province = provinces[idx];
+				ProvinceInstance const& province_no_add = provinces_no_add[idx];
+				if (province.get_identifier() != province_no_add.get_identifier()) {
+					Logger::error("ProvinceInstance mismatch at index ", idx, " between add and no-add instances!");
+					ret = false;
+					continue;
+				}
+
+				if (province.get_modifier_sum().get_value_sum().empty()) {
+					Logger::error("ProvinceInstance has no modifiers at ID ", province.get_identifier(), "!");
+					ret = false;
+				}
+
+				for (ModifierEffect const& effect : modifier_effects) {
+					const fixed_point_t value = province.get_modifier_effect_value(effect);
+					const fixed_point_t value_no_add = province_no_add.get_modifier_effect_value(effect);
+
+					if (value != value_no_add) {
+						Logger::error(
+							"ProvinceInstance modifier effect value mismatch for effect ", effect.get_identifier(),
+							" at ID ", province.get_identifier(), " between add (", value.to_string(), ") and no-add (",
+							value_no_add.to_string(), ") instances!"
+						);
+						ret = false;
+						continue;
+					}
+
+					std::vector<ModifierSum::modifier_entry_t> contributions = province.get_contributing_modifiers(effect);
+					std::vector<ModifierSum::modifier_entry_t> contributions_no_add =
+						province_no_add.get_contributing_modifiers(effect);
+
+					if (contributions.size() != contributions_no_add.size()) {
+						Logger::error(
+							"ProvinceInstance modifier effect contributing modifier count mismatch for effect ",
+							effect.get_identifier(), " at ID ", province.get_identifier(), " between add (",
+							contributions.size(), ") and no-add (", contributions_no_add.size(), ") instances!"
+						);
+						ret = false;
+						continue;
+					}
+					for (size_t cidx = 0; cidx < contributions.size(); ++cidx) {
+						ModifierSum::modifier_entry_t const& contribution = contributions[cidx];
+						ModifierSum::modifier_entry_t const& contribution_no_add = contributions_no_add[cidx];
+
+						if (contribution != contribution_no_add) {
+							Logger::error(
+								"ProvinceInstance modifier effect contributing modifier mismatch for effect ",
+								effect.get_identifier(), " at ID ", province.get_identifier(), " between add (",
+								contribution.to_string(), ") and no-add (", contribution_no_add.to_string(), ") instances!"
+							);
+							ret = false;
+							continue;
+						}
+					}
+				}
+
+			}
+		}
+#endif
 	} else {
 		Logger::error("Instance manager not available!");
 		ret = false;

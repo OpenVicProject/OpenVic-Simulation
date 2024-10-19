@@ -42,6 +42,9 @@ ProvinceDefinition::index_t MapInstance::get_selected_province_index() const {
 }
 
 bool MapInstance::setup(
+#if OV_MODIFIER_CALCULATION_TEST
+	bool ADD_OWNER_CONTRIBUTION,
+#endif
 	BuildingTypeManager const& building_type_manager,
 	decltype(ProvinceInstance::pop_type_distribution)::keys_t const& pop_type_keys,
 	decltype(ProvinceInstance::ideology_distribution)::keys_t const& ideology_keys
@@ -60,7 +63,12 @@ bool MapInstance::setup(
 	province_instances.reserve(map_definition.get_province_definition_count());
 
 	for (ProvinceDefinition const& province : map_definition.get_province_definitions()) {
-		ret &= province_instances.add_item({ province, pop_type_keys, ideology_keys });
+		ret &= province_instances.add_item({
+#if OV_MODIFIER_CALCULATION_TEST
+			ADD_OWNER_CONTRIBUTION,
+#endif
+			province, pop_type_keys, ideology_keys
+		});
 	}
 
 	province_instances.lock();
