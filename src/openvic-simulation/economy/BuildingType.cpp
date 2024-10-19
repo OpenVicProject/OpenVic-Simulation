@@ -61,9 +61,13 @@ bool BuildingTypeManager::load_buildings_file(
 		building_types, [this, &good_definition_manager, &production_type_manager, &modifier_manager](
 			std::string_view key, ast::NodeCPtr value
 		) -> bool {
+			using enum Modifier::modifier_type_t;
+
 			BuildingType::building_type_args_t building_type_args {};
 
-			bool ret = modifier_manager.expect_modifier_value_and_keys(move_variable_callback(building_type_args.modifier),
+			bool ret = modifier_manager.expect_modifier_value_and_keys(
+				move_variable_callback(building_type_args.modifier),
+				BUILDING,
 				"type", ONE_EXACTLY, expect_identifier(assign_variable_callback(building_type_args.type)),
 				"on_completion", ZERO_OR_ONE, expect_identifier(assign_variable_callback(building_type_args.on_completion)),
 				"completion_size", ZERO_OR_ONE,

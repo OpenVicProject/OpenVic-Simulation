@@ -32,17 +32,21 @@ bool LeaderTraitManager::load_leader_traits_file(ModifierManager const& modifier
 		return expect_dictionary_reserve_length(
 			leader_traits,
 			[this, &modifier_manager, type](std::string_view trait_identifier, ast::NodeCPtr value) -> bool {
+				using enum Modifier::modifier_type_t;
+
 				static const string_set_t allowed_modifiers = {
 					"attack", "defence", "morale", "organisation", "reconnaissance",
 					"speed", "attrition", "experience", "reliability"
 				};
 
 				ModifierValue modifiers;
+
 				bool ret = modifier_manager.expect_whitelisted_modifier_value(
-					move_variable_callback(modifiers), allowed_modifiers
+					move_variable_callback(modifiers), LEADER, allowed_modifiers
 				)(value);
 
 				ret &= add_leader_trait(trait_identifier, type, std::move(modifiers));
+
 				return ret;
 			}
 		);

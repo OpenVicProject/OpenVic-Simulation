@@ -460,13 +460,15 @@ std::string ModifierManager::get_flat_identifier(
 }
 
 bool ModifierManager::add_event_modifier(std::string_view identifier, ModifierValue&& values, IconModifier::icon_t icon) {
+	using enum Modifier::modifier_type_t;
+
 	if (identifier.empty()) {
 		Logger::error("Invalid event modifier effect identifier - empty!");
 		return false;
 	}
 
 	return event_modifiers.add_item(
-		{ identifier, std::move(values), Modifier::modifier_type_t::EVENT, icon }, duplicate_warning_callback
+		{ identifier, std::move(values), EVENT, icon }, duplicate_warning_callback
 	);
 }
 
@@ -474,13 +476,19 @@ bool ModifierManager::load_event_modifiers(ast::NodeCPtr root) {
 	const bool ret = expect_dictionary_reserve_length(
 		event_modifiers,
 		[this](std::string_view key, ast::NodeCPtr value) -> bool {
+			using enum Modifier::modifier_type_t;
+
 			ModifierValue modifier_value;
 			IconModifier::icon_t icon = 0;
+
 			bool ret = expect_modifier_value_and_keys(
 				move_variable_callback(modifier_value),
+				EVENT,
 				"icon", ZERO_OR_ONE, expect_uint(assign_variable_callback(icon))
 			)(value);
+
 			ret &= add_event_modifier(key, std::move(modifier_value), icon);
+
 			return ret;
 		}
 	)(root);
@@ -491,13 +499,15 @@ bool ModifierManager::load_event_modifiers(ast::NodeCPtr root) {
 }
 
 bool ModifierManager::add_static_modifier(std::string_view identifier, ModifierValue&& values) {
+	using enum Modifier::modifier_type_t;
+
 	if (identifier.empty()) {
 		Logger::error("Invalid static modifier effect identifier - empty!");
 		return false;
 	}
 
 	return static_modifiers.add_item(
-		{ identifier, std::move(values), Modifier::modifier_type_t::STATIC }, duplicate_warning_callback
+		{ identifier, std::move(values), STATIC }, duplicate_warning_callback
 	);
 }
 
@@ -505,9 +515,14 @@ bool ModifierManager::load_static_modifiers(ast::NodeCPtr root) {
 	bool ret = expect_dictionary_reserve_length(
 		static_modifiers,
 		[this](std::string_view key, ast::NodeCPtr value) -> bool {
+			using enum Modifier::modifier_type_t;
+
 			ModifierValue modifier_value;
-			bool ret = expect_modifier_value(move_variable_callback(modifier_value))(value);
+
+			bool ret = expect_modifier_value(move_variable_callback(modifier_value), STATIC)(value);
+
 			ret &= add_static_modifier(key, std::move(modifier_value));
+
 			return ret;
 		}
 	)(root);
@@ -522,13 +537,15 @@ bool ModifierManager::load_static_modifiers(ast::NodeCPtr root) {
 bool ModifierManager::add_triggered_modifier(
 	std::string_view identifier, ModifierValue&& values, IconModifier::icon_t icon, ConditionScript&& trigger
 ) {
+	using enum Modifier::modifier_type_t;
+
 	if (identifier.empty()) {
 		Logger::error("Invalid triggered modifier effect identifier - empty!");
 		return false;
 	}
 
 	return triggered_modifiers.add_item(
-		{ identifier, std::move(values), Modifier::modifier_type_t::TRIGGERED, icon, std::move(trigger) },
+		{ identifier, std::move(values), TRIGGERED, icon, std::move(trigger) },
 		duplicate_warning_callback
 	);
 }
@@ -537,16 +554,21 @@ bool ModifierManager::load_triggered_modifiers(ast::NodeCPtr root) {
 	const bool ret = expect_dictionary_reserve_length(
 		triggered_modifiers,
 		[this](std::string_view key, ast::NodeCPtr value) -> bool {
+			using enum Modifier::modifier_type_t;
+
 			ModifierValue modifier_value;
 			IconModifier::icon_t icon = 0;
 			ConditionScript trigger { scope_t::COUNTRY, scope_t::COUNTRY, scope_t::NO_SCOPE };
 
 			bool ret = expect_modifier_value_and_keys(
 				move_variable_callback(modifier_value),
+				TRIGGERED,
 				"icon", ZERO_OR_ONE, expect_uint(assign_variable_callback(icon)),
 				"trigger", ONE_EXACTLY, trigger.expect_script()
 			)(value);
+
 			ret &= add_triggered_modifier(key, std::move(modifier_value), icon, std::move(trigger));
+
 			return ret;
 		}
 	)(root);
@@ -567,7 +589,8 @@ bool ModifierManager::parse_scripts(DefinitionManager const& definition_manager)
 }
 
 key_value_callback_t ModifierManager::_modifier_effect_callback(
-	ModifierValue& modifier, key_value_callback_t default_callback, ModifierEffectValidator auto effect_validator
+	ModifierValue& modifier, Modifier::modifier_type_t type, key_value_callback_t default_callback,
+	ModifierEffectValidator auto effect_validator
 ) const {
 	const auto add_modifier_cb = [this, &modifier, effect_validator](
 		ModifierEffect const* effect, ast::NodeCPtr value
@@ -578,9 +601,11 @@ key_value_callback_t ModifierManager::_modifier_effect_callback(
 				"local_artisan_output",  "artisan_input",           "artisan_throughput",      "artisan_output",
 				"import_cost",           "unciv_economic_modifier", "unciv_military_modifier"
 			};
+
 			if (no_effect_modifiers.contains(effect->get_identifier())) {
 				Logger::warning("This modifier does nothing: ", effect->get_identifier());
 			}
+
 			return expect_fixed_point(map_callback(modifier.values, effect))(value);
 		} else {
 			Logger::error("Failed to validate modifier effect: ", effect->get_identifier());
@@ -630,43 +655,52 @@ key_value_callback_t ModifierManager::_modifier_effect_callback(
 }
 
 node_callback_t ModifierManager::expect_validated_modifier_value_and_default(
-	callback_t<ModifierValue&&> modifier_callback, key_value_callback_t default_callback,
+	callback_t<ModifierValue&&> modifier_callback, Modifier::modifier_type_t type, key_value_callback_t default_callback,
 	ModifierEffectValidator auto effect_validator
 ) const {
-	return [this, modifier_callback, default_callback, effect_validator](ast::NodeCPtr root) -> bool {
+	return [this, modifier_callback, type, default_callback, effect_validator](ast::NodeCPtr root) -> bool {
 		ModifierValue modifier;
+
 		bool ret = expect_dictionary_reserve_length(
 			modifier.values,
-			_modifier_effect_callback(modifier, default_callback, effect_validator)
+			_modifier_effect_callback(modifier, type, default_callback, effect_validator)
 		)(root);
+
 		ret &= modifier_callback(std::move(modifier));
+
 		return ret;
 	};
 }
 
 node_callback_t ModifierManager::expect_validated_modifier_value(
-	callback_t<ModifierValue&&> modifier_callback, ModifierEffectValidator auto effect_validator
+	callback_t<ModifierValue&&> modifier_callback, Modifier::modifier_type_t type,
+	ModifierEffectValidator auto effect_validator
 ) const {
-	return expect_validated_modifier_value_and_default(modifier_callback, key_value_invalid_callback, effect_validator);
+	return expect_validated_modifier_value_and_default(modifier_callback, type, key_value_invalid_callback, effect_validator);
 }
 
 node_callback_t ModifierManager::expect_modifier_value_and_default(
-	callback_t<ModifierValue&&> modifier_callback, key_value_callback_t default_callback
+	callback_t<ModifierValue&&> modifier_callback, Modifier::modifier_type_t type, key_value_callback_t default_callback
 ) const {
-	return expect_validated_modifier_value_and_default(modifier_callback, default_callback, [](ModifierEffect const&) -> bool {
-		return true;
-	});
+	return expect_validated_modifier_value_and_default(
+		modifier_callback, type, default_callback, [](ModifierEffect const&) -> bool {
+			return true;
+		}
+	);
 }
 
-node_callback_t ModifierManager::expect_modifier_value(callback_t<ModifierValue&&> modifier_callback) const {
-	return expect_modifier_value_and_default(modifier_callback, key_value_invalid_callback);
+node_callback_t ModifierManager::expect_modifier_value(
+	callback_t<ModifierValue&&> modifier_callback, Modifier::modifier_type_t type
+) const {
+	return expect_modifier_value_and_default(modifier_callback, type, key_value_invalid_callback);
 }
 
 node_callback_t ModifierManager::expect_whitelisted_modifier_value_and_default(
-	callback_t<ModifierValue&&> modifier_callback, string_set_t const& whitelist, key_value_callback_t default_callback
+	callback_t<ModifierValue&&> modifier_callback, Modifier::modifier_type_t type, string_set_t const& whitelist,
+	key_value_callback_t default_callback
 ) const {
 	return expect_validated_modifier_value_and_default(
-		modifier_callback, default_callback,
+		modifier_callback, type, default_callback,
 		[&whitelist](ModifierEffect const& effect) -> bool {
 			return whitelist.contains(effect.get_identifier());
 		}
@@ -674,26 +708,32 @@ node_callback_t ModifierManager::expect_whitelisted_modifier_value_and_default(
 }
 
 node_callback_t ModifierManager::expect_whitelisted_modifier_value(
-	callback_t<ModifierValue&&> modifier_callback, string_set_t const& whitelist
+	callback_t<ModifierValue&&> modifier_callback, Modifier::modifier_type_t type, string_set_t const& whitelist
 ) const {
-	return expect_whitelisted_modifier_value_and_default(modifier_callback, whitelist, key_value_invalid_callback);
+	return expect_whitelisted_modifier_value_and_default(modifier_callback, type, whitelist, key_value_invalid_callback);
 }
 
 node_callback_t ModifierManager::expect_modifier_value_and_key_map_and_default(
-	callback_t<ModifierValue&&> modifier_callback, key_value_callback_t default_callback, key_map_t&& key_map
+	callback_t<ModifierValue&&> modifier_callback, Modifier::modifier_type_t type, key_value_callback_t default_callback,
+	key_map_t&& key_map
 ) const {
-	return [this, modifier_callback, default_callback, key_map = std::move(key_map)](ast::NodeCPtr node) mutable -> bool {
+	return [this, modifier_callback, type, default_callback, key_map = std::move(key_map)](
+		ast::NodeCPtr node
+	) mutable -> bool {
 		bool ret = expect_modifier_value_and_default(
-			modifier_callback,
-			dictionary_keys_callback(key_map, default_callback)
+			modifier_callback, type, dictionary_keys_callback(key_map, default_callback)
 		)(node);
+
 		ret &= check_key_map_counts(key_map);
+
 		return ret;
 	};
 }
 
 node_callback_t ModifierManager::expect_modifier_value_and_key_map(
-	callback_t<ModifierValue&&> modifier_callback, key_map_t&& key_map
+	callback_t<ModifierValue&&> modifier_callback, Modifier::modifier_type_t type, key_map_t&& key_map
 ) const {
-	return expect_modifier_value_and_key_map_and_default(modifier_callback, key_value_invalid_callback, std::move(key_map));
+	return expect_modifier_value_and_key_map_and_default(
+		modifier_callback, type, key_value_invalid_callback, std::move(key_map)
+	);
 }

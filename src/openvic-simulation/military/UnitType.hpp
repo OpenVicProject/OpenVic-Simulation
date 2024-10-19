@@ -7,7 +7,7 @@
 
 #include "openvic-simulation/dataloader/NodeTools.hpp"
 #include "openvic-simulation/economy/GoodDefinition.hpp"
-#include "openvic-simulation/modifier/ModifierValue.hpp"
+#include "openvic-simulation/modifier/Modifier.hpp"
 #include "openvic-simulation/types/Date.hpp"
 #include "openvic-simulation/types/IdentifierRegistry.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
@@ -20,7 +20,7 @@ namespace OpenVic {
 
 	struct UnitType : HasIdentifier {
 		using icon_t = uint32_t;
-		using terrain_modifiers_t = ordered_map<TerrainType const*, ModifierValue>;
+		using terrain_modifiers_t = ordered_map<TerrainType const*, Modifier>;
 
 		enum struct branch_t : uint8_t { INVALID_BRANCH, LAND, NAVAL };
 		enum struct unit_category_t : uint8_t {
@@ -28,6 +28,8 @@ namespace OpenVic {
 		};
 
 		struct unit_type_args_t {
+			using terrain_modifier_values_t = ordered_map<TerrainType const*, ModifierValue>;
+
 			icon_t icon = 0;
 			unit_category_t unit_category = unit_category_t::INVALID_UNIT_CATEGORY;
 			// TODO defaults for move_sound and select_sound
@@ -38,7 +40,7 @@ namespace OpenVic {
 				supply_consumption = 0;
 			Timespan build_time;
 			GoodDefinition::good_definition_map_t build_cost, supply_cost;
-			terrain_modifiers_t terrain_modifiers;
+			terrain_modifier_values_t terrain_modifier_values;
 
 			unit_type_args_t() = default;
 			unit_type_args_t(unit_type_args_t&&) = default;

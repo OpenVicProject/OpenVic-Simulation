@@ -29,17 +29,23 @@ bool CrimeManager::load_crime_modifiers(ModifierManager const& modifier_manager,
 	const bool ret = expect_dictionary_reserve_length(
 		crime_modifiers,
 		[this, &modifier_manager](std::string_view key, ast::NodeCPtr value) -> bool {
+			using enum Modifier::modifier_type_t;
+
 			ModifierValue modifier_value;
 			IconModifier::icon_t icon = 0;
 			ConditionScript trigger { scope_t::PROVINCE, scope_t::NO_SCOPE, scope_t::NO_SCOPE };
 			bool default_active = false;
+
 			bool ret = modifier_manager.expect_modifier_value_and_keys(
 				move_variable_callback(modifier_value),
+				CRIME,
 				"icon", ZERO_OR_ONE, expect_uint(assign_variable_callback(icon)),
 				"trigger", ONE_EXACTLY, trigger.expect_script(),
 				"active", ZERO_OR_ONE, expect_bool(assign_variable_callback(default_active))
 			)(value);
+
 			ret &= add_crime_modifier(key, std::move(modifier_value), icon, std::move(trigger), default_active);
+
 			return ret;
 		}
 	)(root);

@@ -21,11 +21,14 @@ bool NationalValueManager::load_national_values_file(ModifierManager const& modi
 	bool ret = expect_dictionary_reserve_length(
 		national_values,
 		[this, &modifier_manager](std::string_view national_value_identifier, ast::NodeCPtr value) -> bool {
+			using enum Modifier::modifier_type_t;
+
 			ModifierValue modifiers;
 
-			bool ret = modifier_manager.expect_modifier_value(move_variable_callback(modifiers))(value);
+			bool ret = modifier_manager.expect_modifier_value(move_variable_callback(modifiers), NATIONAL_VALUE)(value);
 
 			ret &= add_national_value(national_value_identifier, std::move(modifiers));
+
 			return ret;
 		}
 	)(root);

@@ -117,6 +117,8 @@ bool NationalFocusManager::load_national_foci_file(
 				[this, &group, &pop_manager, &ideology_manager, &good_definition_manager, &modifier_manager](
 					std::string_view identifier, ast::NodeCPtr node
 				) -> bool {
+					using enum Modifier::modifier_type_t;
+
 					uint8_t icon = 0;
 					bool has_flashpoint = false, own_provinces = true, outliner_show_as_percent = false;
 					fixed_point_t flashpoint_tension = 0;
@@ -132,6 +134,7 @@ bool NationalFocusManager::load_national_foci_file(
 
 					bool ret = modifier_manager.expect_modifier_value_and_keys_and_default(
 						move_variable_callback(modifiers),
+						NATIONAL_FOCUS,
 						[&good_definition_manager, &encourage_goods, &pop_manager, &encourage_pop_types](
 							std::string_view key, ast::NodeCPtr value
 						) -> bool {
