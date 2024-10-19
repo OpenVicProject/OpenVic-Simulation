@@ -58,9 +58,10 @@ ModifierEffectCache::strata_effects_t::strata_effects_t()
 ModifierEffectCache::ModifierEffectCache()
   : /* Tech/inventions only */
 	cb_creation_speed { nullptr },
-	combat_width { nullptr },
+	combat_width_additive { nullptr },
 	plurality { nullptr },
 	pop_growth { nullptr },
+	prestige_gain_multiplier { nullptr },
 	regular_experience_level { nullptr },
 	reinforce_rate { nullptr },
 	separatism { nullptr },
@@ -141,7 +142,7 @@ ModifierEffectCache::ModifierEffectCache()
 	permanent_prestige { nullptr },
 	political_reform_desire { nullptr },
 	poor_savings_modifier { nullptr },
-	prestige { nullptr },
+	prestige_monthly_gain { nullptr },
 	reinforce_speed { nullptr },
 	research_points { nullptr },
 	research_points_modifier { nullptr },
@@ -167,6 +168,8 @@ ModifierEffectCache::ModifierEffectCache()
 	/* Province Modifier Effects */
 	assimilation_rate { nullptr },
 	boost_strongest_party { nullptr },
+	combat_width_percentage_change { nullptr },
+	defence_terrain { nullptr },
 	farm_rgo_eff { nullptr },
 	farm_rgo_size { nullptr },
 	immigrant_attract { nullptr },
@@ -186,7 +189,8 @@ ModifierEffectCache::ModifierEffectCache()
 	max_attrition { nullptr },
 	mine_rgo_eff { nullptr },
 	mine_rgo_size { nullptr },
-	movement_cost { nullptr },
+	movement_cost_base { nullptr },
+	movement_cost_percentage_change { nullptr },
 	number_of_voters { nullptr },
 	pop_consciousness_modifier { nullptr },
 	pop_militancy_modifier { nullptr },
@@ -196,7 +200,7 @@ ModifierEffectCache::ModifierEffectCache()
 	/* Military Modifier Effects */
 	attack { nullptr },
 	attrition { nullptr },
-	defence { nullptr },
+	defence_leader { nullptr },
 	experience { nullptr },
 	morale { nullptr },
 	organisation { nullptr },
