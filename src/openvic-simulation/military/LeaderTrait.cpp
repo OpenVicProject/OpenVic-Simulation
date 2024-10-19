@@ -35,7 +35,7 @@ bool LeaderTraitManager::load_leader_traits_file(ModifierManager const& modifier
 				using enum Modifier::modifier_type_t;
 
 				static const string_set_t allowed_modifiers = {
-					"attack", "defence", "morale", "organisation", "reconnaissance",
+					"attack", "defence leader", "morale", "organisation", "reconnaissance",
 					"speed", "attrition", "experience", "reliability"
 				};
 

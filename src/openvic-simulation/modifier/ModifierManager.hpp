@@ -19,6 +19,8 @@ namespace OpenVic {
 		friend struct PopManager;
 		friend struct TechnologyManager;
 
+		using effect_variant_map_t = ordered_map<Modifier::modifier_type_t, ModifierEffect const*>;
+
 		/* Some ModifierEffects are generated mid-load, such as max/min count modifiers for each building, so
 		 * we can't lock it until loading is over. This means we can't rely on locking for pointer stability,
 		 * so instead we store the effects in a deque which doesn't invalidate pointers on insert.
@@ -26,6 +28,7 @@ namespace OpenVic {
 	private:
 		CaseInsensitiveIdentifierRegistry<ModifierEffect, RegistryStorageInfoDeque> IDENTIFIER_REGISTRY(modifier_effect);
 		case_insensitive_string_set_t complex_modifiers;
+		string_map_t<effect_variant_map_t> modifier_effect_variants;
 
 		IdentifierRegistry<IconModifier> IDENTIFIER_REGISTRY(event_modifier);
 		IdentifierRegistry<Modifier> IDENTIFIER_REGISTRY(static_modifier);
@@ -53,6 +56,10 @@ namespace OpenVic {
 		bool register_complex_modifier(std::string_view identifier);
 		static std::string get_flat_identifier(
 			std::string_view complex_modifier_identifier, std::string_view variant_identifier
+		);
+
+		bool register_modifier_effect_variants(
+			std::string const& identifier, ModifierEffect const* effect, std::vector<Modifier::modifier_type_t> const& types
 		);
 
 		bool setup_modifier_effects();

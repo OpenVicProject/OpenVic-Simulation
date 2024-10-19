@@ -12,7 +12,7 @@ InstanceManager::InstanceManager(
 	map_instance { new_definition_manager.get_map_definition() },
 	simulation_clock {
 		std::bind(&InstanceManager::tick, this), std::bind(&InstanceManager::update_gamestate, this),
-		clock_state_changed_callback ? std::move(clock_state_changed_callback)  : []() {}
+		clock_state_changed_callback ? std::move(clock_state_changed_callback) : []() {}
 	},
 	game_instance_setup { false },
 	game_session_started { false },

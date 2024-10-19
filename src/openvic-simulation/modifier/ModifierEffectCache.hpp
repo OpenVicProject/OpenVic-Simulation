@@ -31,9 +31,10 @@ namespace OpenVic {
 	private:
 		/* Tech/inventions only */
 		ModifierEffect const* PROPERTY(cb_creation_speed);
-		ModifierEffect const* PROPERTY(combat_width);
+		ModifierEffect const* PROPERTY(combat_width_additive);
 		ModifierEffect const* PROPERTY(plurality);
 		ModifierEffect const* PROPERTY(pop_growth);
+		ModifierEffect const* PROPERTY(prestige_gain_multiplier);
 		ModifierEffect const* PROPERTY(regular_experience_level);
 		ModifierEffect const* PROPERTY(reinforce_rate);
 		ModifierEffect const* PROPERTY(separatism);
@@ -114,7 +115,7 @@ namespace OpenVic {
 		ModifierEffect const* PROPERTY(permanent_prestige);
 		ModifierEffect const* PROPERTY(political_reform_desire);
 		ModifierEffect const* PROPERTY(poor_savings_modifier);
-		ModifierEffect const* PROPERTY(prestige);
+		ModifierEffect const* PROPERTY(prestige_monthly_gain);
 		ModifierEffect const* PROPERTY(reinforce_speed);
 		ModifierEffect const* PROPERTY(research_points);
 		ModifierEffect const* PROPERTY(research_points_modifier);
@@ -140,6 +141,8 @@ namespace OpenVic {
 		/* Province Modifier Effects */
 		ModifierEffect const* PROPERTY(assimilation_rate);
 		ModifierEffect const* PROPERTY(boost_strongest_party);
+		ModifierEffect const* PROPERTY(combat_width_percentage_change);
+		ModifierEffect const* PROPERTY(defence_terrain);
 		ModifierEffect const* PROPERTY(farm_rgo_eff);
 		ModifierEffect const* PROPERTY(farm_rgo_size);
 		ModifierEffect const* PROPERTY(immigrant_attract);
@@ -159,7 +162,8 @@ namespace OpenVic {
 		ModifierEffect const* PROPERTY(max_attrition);
 		ModifierEffect const* PROPERTY(mine_rgo_eff);
 		ModifierEffect const* PROPERTY(mine_rgo_size);
-		ModifierEffect const* PROPERTY(movement_cost);
+		ModifierEffect const* PROPERTY(movement_cost_base);
+		ModifierEffect const* PROPERTY(movement_cost_percentage_change);
 		ModifierEffect const* PROPERTY(number_of_voters);
 		ModifierEffect const* PROPERTY(pop_consciousness_modifier);
 		ModifierEffect const* PROPERTY(pop_militancy_modifier);
@@ -169,7 +173,7 @@ namespace OpenVic {
 		/* Military Modifier Effects */
 		ModifierEffect const* PROPERTY(attack);
 		ModifierEffect const* PROPERTY(attrition);
-		ModifierEffect const* PROPERTY(defence);
+		ModifierEffect const* PROPERTY(defence_leader);
 		ModifierEffect const* PROPERTY(experience);
 		ModifierEffect const* PROPERTY(morale);
 		ModifierEffect const* PROPERTY(organisation);

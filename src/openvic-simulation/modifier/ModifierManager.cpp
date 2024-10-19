@@ -19,6 +19,14 @@ bool ModifierManager::add_modifier_effect(
 		return false;
 	}
 
+	if (!NumberUtils::is_power_of_two(static_cast<uint64_t>(targets))) {
+		Logger::error(
+			"Invalid targets for modifier effect \"", identifier, "\" - ", ModifierEffect::target_to_string(targets),
+			" (can only contain one target)"
+		);
+		return false;
+	}
+
 	if (effect_cache != nullptr) {
 		Logger::error(
 			"Cache variable for modifier effect \"", identifier, "\" is already filled with modifier effect \"",
@@ -37,21 +45,42 @@ bool ModifierManager::add_modifier_effect(
 }
 
 bool ModifierManager::setup_modifier_effects() {
+	// Variant Modifier Effeects
+	static const std::string combat_width = "combat_width";
+	static const std::string movement_cost = "movement_cost";
+	static const std::string prestige = "prestige";
+	static const std::string defence = "defence";
+
 	bool ret = true;
 
 	using enum ModifierEffect::format_t;
 	using enum ModifierEffect::target_t;
+	using enum Modifier::modifier_type_t;
 
 	/* Tech/inventions only */
 	ret &= add_modifier_effect(
 		modifier_effect_cache.cb_creation_speed, "cb_creation_speed", true, PROPORTION_DECIMAL, COUNTRY, "CB_MANUFACTURE_TECH"
 	);
-	ret &= add_modifier_effect(modifier_effect_cache.combat_width, "combat_width", false, PROPORTION_DECIMAL, COUNTRY);
+	// When applied to countries (army tech/inventions), combat_width is an additive integer value.
+	ret &= add_modifier_effect(
+		modifier_effect_cache.combat_width_additive, "combat_width add", false, INT, COUNTRY,
+		ModifierEffect::make_default_modifier_effect_localisation_key(combat_width)
+	);
+	ret &= register_modifier_effect_variants(
+		combat_width, modifier_effect_cache.combat_width_additive, { TECHNOLOGY, INVENTION }
+	);
 	ret &= add_modifier_effect(
 		modifier_effect_cache.plurality, "plurality", true, PERCENTAGE_DECIMAL, COUNTRY, "TECH_PLURALITY"
 	);
 	ret &= add_modifier_effect(
 		modifier_effect_cache.pop_growth, "pop_growth", true, PROPORTION_DECIMAL, COUNTRY, "TECH_POP_GROWTH"
+	);
+	ret &= add_modifier_effect(
+		modifier_effect_cache.prestige_gain_multiplier, "prestige gain_multiplier", true, PROPORTION_DECIMAL, COUNTRY,
+		"PRESTIGE_MODIFIER_TECH"
+	);
+	ret &= register_modifier_effect_variants(
+		prestige, modifier_effect_cache.prestige_gain_multiplier, { TECHNOLOGY, INVENTION }
 	);
 	ret &= add_modifier_effect(
 		modifier_effect_cache.regular_experience_level, "regular_experience_level", true, RAW_DECIMAL, COUNTRY,
@@ -276,7 +305,13 @@ bool ModifierManager::setup_modifier_effects() {
 	ret &= add_modifier_effect(
 		modifier_effect_cache.poor_savings_modifier, "poor_savings_modifier", true, PROPORTION_DECIMAL, COUNTRY
 	);
-	ret &= add_modifier_effect(modifier_effect_cache.prestige, "prestige", true, RAW_DECIMAL, COUNTRY);
+	ret &= add_modifier_effect(
+		modifier_effect_cache.prestige_monthly_gain, "prestige monthly_gain", true, RAW_DECIMAL, COUNTRY,
+		ModifierEffect::make_default_modifier_effect_localisation_key(prestige)
+	);
+	ret &= register_modifier_effect_variants(
+		prestige, modifier_effect_cache.prestige_monthly_gain, { EVENT, STATIC, TRIGGERED }
+	);
 	ret &= add_modifier_effect(modifier_effect_cache.reinforce_speed, "reinforce_speed", true, PROPORTION_DECIMAL, COUNTRY);
 	ret &= add_modifier_effect(modifier_effect_cache.research_points, "research_points", true, RAW_DECIMAL, COUNTRY);
 	ret &= add_modifier_effect(
@@ -345,6 +380,14 @@ bool ModifierManager::setup_modifier_effects() {
 	ret &= add_modifier_effect(
 		modifier_effect_cache.boost_strongest_party, "boost_strongest_party", false, PROPORTION_DECIMAL, PROVINCE
 	);
+	// When applied to provinces (terrain), combat_width is a multiplicative proportional decimal value.
+	ret &= add_modifier_effect(
+		modifier_effect_cache.combat_width_percentage_change, "combat_width percentage_change", false, PROPORTION_DECIMAL,
+		PROVINCE, ModifierEffect::make_default_modifier_effect_localisation_key(combat_width)
+	);
+	ret &= register_modifier_effect_variants(combat_width, modifier_effect_cache.combat_width_percentage_change, { TERRAIN });
+	ret &= add_modifier_effect(modifier_effect_cache.defence_terrain, "defence terrain", true, INT, PROVINCE, "TRAIT_DEFEND");
+	ret &= register_modifier_effect_variants(defence, modifier_effect_cache.defence_terrain, { TERRAIN });
 	ret &= add_modifier_effect(
 		modifier_effect_cache.farm_rgo_eff, "farm_rgo_eff", true, PROPORTION_DECIMAL, PROVINCE, "TECH_FARM_OUTPUT"
 	);
@@ -409,7 +452,18 @@ bool ModifierManager::setup_modifier_effects() {
 		modifier_effect_cache.mine_rgo_size, "mine_rgo_size", true, PROPORTION_DECIMAL, PROVINCE,
 		ModifierEffect::make_default_modifier_effect_localisation_key("mine_size")
 	);
-	ret &= add_modifier_effect(modifier_effect_cache.movement_cost, "movement_cost", false, PROPORTION_DECIMAL, PROVINCE);
+	ret &= add_modifier_effect(
+		modifier_effect_cache.movement_cost_base, "movement_cost base", true, PROPORTION_DECIMAL, PROVINCE,
+		ModifierEffect::make_default_modifier_effect_localisation_key(movement_cost)
+	);
+	ret &= register_modifier_effect_variants(movement_cost, modifier_effect_cache.movement_cost_base, { TERRAIN });
+	ret &= add_modifier_effect(
+		modifier_effect_cache.movement_cost_percentage_change, "movement_cost percentage_change", false, PROPORTION_DECIMAL,
+		PROVINCE, ModifierEffect::make_default_modifier_effect_localisation_key(movement_cost)
+	);
+	ret &= register_modifier_effect_variants(
+		movement_cost, modifier_effect_cache.movement_cost_percentage_change, { EVENT, BUILDING }
+	);
 	ret &= add_modifier_effect(
 		modifier_effect_cache.number_of_voters, "number_of_voters", false, PROPORTION_DECIMAL, PROVINCE
 	);
@@ -427,7 +481,8 @@ bool ModifierManager::setup_modifier_effects() {
 	/* Military Modifier Effects */
 	ret &= add_modifier_effect(modifier_effect_cache.attack, "attack", true, INT, UNIT, "TRAIT_ATTACK");
 	ret &= add_modifier_effect(modifier_effect_cache.attrition, "attrition", false, RAW_DECIMAL, UNIT, "ATTRITION");
-	ret &= add_modifier_effect(modifier_effect_cache.defence, "defence", true, INT, UNIT, "TRAIT_DEFEND");
+	ret &= add_modifier_effect(modifier_effect_cache.defence_leader, "defence leader", true, INT, UNIT, "TRAIT_DEFEND");
+	ret &= register_modifier_effect_variants(defence, modifier_effect_cache.defence_leader, { LEADER });
 	ret &= add_modifier_effect(
 		modifier_effect_cache.experience, "experience", true, PROPORTION_DECIMAL, UNIT, "TRAIT_EXPERIENCE"
 	);
@@ -457,6 +512,49 @@ std::string ModifierManager::get_flat_identifier(
 	std::string_view complex_modifier_identifier, std::string_view variant_identifier
 ) {
 	return StringUtils::append_string_views(complex_modifier_identifier, " ", variant_identifier);
+}
+
+// We use std::string const& identifier instead of std::string_view identifier as the map [] lookup operator only accepts
+// strings. In order to use string_views we need to use the find method but that returns an iterator with a const references
+// to the key and value (in order to prevent modification of the key), so it's simplest to just use [] with a string.
+bool ModifierManager::register_modifier_effect_variants(
+	std::string const& identifier, ModifierEffect const* effect, std::vector<Modifier::modifier_type_t> const& types
+) {
+	if (identifier.empty()) {
+		Logger::error("Invalid modifier effect variants identifier - empty!");
+		return false;
+	}
+
+	if (effect == nullptr) {
+		Logger::error("Invalid modifier effect variants effect for \"", identifier, "\" - nullptr!");
+		return false;
+	}
+
+	if (types.empty()) {
+		Logger::error("Invalid modifier effect variants types for \"", identifier, "\" - empty!");
+		return false;
+	}
+
+	effect_variant_map_t& variant_map = modifier_effect_variants[identifier];
+
+	bool ret = true;
+
+	for (const Modifier::modifier_type_t type : types) {
+		ModifierEffect const*& variant_effect = variant_map[type];
+
+		if (variant_effect != nullptr) {
+			Logger::error(
+				"Duplicate modifier effect variant for \"", identifier, "\" with type \"",
+				Modifier::modifier_type_to_string(type), "\" - already registered as \"",
+				variant_effect->get_identifier(), "\", setting to \"", effect->get_identifier(), "\""
+			);
+			ret = false;
+		}
+
+		variant_effect = effect;
+	}
+
+	return ret;
 }
 
 bool ModifierManager::add_event_modifier(std::string_view identifier, ModifierValue&& values, IconModifier::icon_t icon) {
@@ -626,31 +724,60 @@ key_value_callback_t ModifierManager::_modifier_effect_callback(
 		}
 	};
 
-	return [this, default_callback, add_modifier_cb, add_flattened_modifier_cb](
+	return [this, type, default_callback, add_modifier_cb, add_flattened_modifier_cb](
 		std::string_view key, ast::NodeCPtr value
 	) -> bool {
-		ModifierEffect const* effect = get_modifier_effect_by_identifier(key);
-		if (effect != nullptr && dryad::node_has_kind<ast::IdentifierValue>(value)) {
-			return add_modifier_cb(effect, value);
-		} else if (complex_modifiers.contains(key) && dryad::node_has_kind<ast::ListValue>(value)) {
-			if (key == "rebel_org_gain") { //because of course there's a special one
+
+		if (dryad::node_has_kind<ast::IdentifierValue>(value)) {
+			ModifierEffect const* effect = get_modifier_effect_by_identifier(key);
+
+			if (effect != nullptr) {
+				return add_modifier_cb(effect, value);
+			} else if (key == "war_exhaustion_effect") {
+				Logger::warning("war_exhaustion_effect does nothing (vanilla issues have it).");
+				return true;
+			} else {
+				const decltype(modifier_effect_variants)::const_iterator effect_it = modifier_effect_variants.find(key);
+
+				if (effect_it != modifier_effect_variants.end()) {
+					effect_variant_map_t const& variants = effect_it->second;
+
+					const effect_variant_map_t::const_iterator variant_it = variants.find(type);
+
+					if (variant_it != variants.end()) {
+						effect = variant_it->second;
+
+						if (effect != nullptr) {
+							return add_modifier_cb(effect, value);
+						}
+					}
+
+					Logger::error(
+						"Modifier effect \"", key, "\" does not have a valid variant for use in ",
+						Modifier::modifier_type_to_string(type), " modifiers."
+					);
+					return false;
+				}
+			}
+		} else if (dryad::node_has_kind<ast::ListValue>(value) && complex_modifiers.contains(key)) {
+			if (key == "rebel_org_gain") { // because of course there's a special one
 				std::string_view faction_identifier;
 				ast::NodeCPtr value_node = nullptr;
+
 				bool ret = expect_dictionary_keys(
 					"faction", ONE_EXACTLY, expect_identifier(assign_variable_callback(faction_identifier)),
 					"value", ONE_EXACTLY, assign_variable_callback(value_node)
 				)(value);
+
 				ret &= add_flattened_modifier_cb(key, faction_identifier, value_node);
+
 				return ret;
 			} else {
 				return expect_dictionary(std::bind_front(add_flattened_modifier_cb, key))(value);
 			}
-		} else if (key == "war_exhaustion_effect") {
-			Logger::warning("war_exhaustion_effect does nothing (vanilla issues have it).");
-			return true;
-		} else {
-			return default_callback(key, value);
 		}
+
+		return default_callback(key, value);
 	};
 }
 
