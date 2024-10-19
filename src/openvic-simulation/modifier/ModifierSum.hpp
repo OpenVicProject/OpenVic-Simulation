@@ -36,7 +36,8 @@ namespace OpenVic {
 			constexpr bool operator==(modifier_entry_t const& other) const {
 				return &modifier == &other.modifier
 					&& multiplier == other.multiplier
-					&& source == other.source
+					// We must compare strings for the resultant modifier test as we have multiple copies of each source
+					&& source_to_string(source) == source_to_string(other.source)
 					&& excluded_targets == other.excluded_targets;
 			}
 

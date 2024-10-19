@@ -49,15 +49,27 @@ bool GameManager::setup_instance(Bookmark const* bookmark) {
 		Logger::info("Setting up first game instance.");
 	}
 
-	instance_manager.emplace(
-		game_rules_manager,
-		definition_manager,
-		gamestate_updated_callback,
-		clock_state_changed_callback
-	);
+	bool ret = true;
 
-	bool ret = instance_manager->setup();
+#if OV_MODIFIER_CALCULATION_TEST
+	instance_manager.emplace(
+		true, game_rules_manager, definition_manager, gamestate_updated_callback, clock_state_changed_callback
+	);
+	ret &= instance_manager->setup();
 	ret &= instance_manager->load_bookmark(bookmark);
+
+	instance_manager_no_add.emplace(
+		false, game_rules_manager, definition_manager, gamestate_updated_callback, clock_state_changed_callback
+	);
+	ret &= instance_manager_no_add->setup();
+	ret &= instance_manager_no_add->load_bookmark(bookmark);
+#else
+	instance_manager.emplace(
+		game_rules_manager, definition_manager, gamestate_updated_callback, clock_state_changed_callback
+	);
+	ret &= instance_manager->setup();
+	ret &= instance_manager->load_bookmark(bookmark);
+#endif
 
 	return ret;
 }
@@ -77,7 +89,11 @@ bool GameManager::start_game_session() {
 		Logger::warning("Starting game session with no bookmark loaded!");
 	}
 
+#if OV_MODIFIER_CALCULATION_TEST
+	return instance_manager->start_game_session() & instance_manager_no_add->start_game_session();
+#else
 	return instance_manager->start_game_session();
+#endif
 }
 
 bool GameManager::update_clock() {
@@ -86,5 +102,9 @@ bool GameManager::update_clock() {
 		return false;
 	}
 
+#if OV_MODIFIER_CALCULATION_TEST
+	return instance_manager->update_clock() & instance_manager_no_add->update_clock();
+#else
 	return instance_manager->update_clock();
+#endif
 }

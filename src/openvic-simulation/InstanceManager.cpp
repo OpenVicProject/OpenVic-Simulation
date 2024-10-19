@@ -6,12 +6,18 @@
 using namespace OpenVic;
 
 InstanceManager::InstanceManager(
+#if OV_MODIFIER_CALCULATION_TEST
+	bool new_ADD_OWNER_CONTRIBUTION,
+#endif
 	GameRulesManager const& new_game_rules_manager,
 	DefinitionManager const& new_definition_manager,
 	gamestate_updated_func_t gamestate_updated_callback,
 	SimulationClock::state_changed_function_t clock_state_changed_callback
 ) : game_rules_manager { new_game_rules_manager },
 	definition_manager { new_definition_manager },
+#if OV_MODIFIER_CALCULATION_TEST
+	ADD_OWNER_CONTRIBUTION { new_ADD_OWNER_CONTRIBUTION },
+#endif
 	global_flags { "global" },
 	country_instance_manager { new_definition_manager.get_country_definition_manager() },
 	market_instance { good_instance_manager },
@@ -80,6 +86,9 @@ bool InstanceManager::setup() {
 
 	bool ret = good_instance_manager.setup(definition_manager.get_economy_manager().get_good_definition_manager());
 	ret &= map_instance.setup(
+#if OV_MODIFIER_CALCULATION_TEST
+		ADD_OWNER_CONTRIBUTION,
+#endif
 		definition_manager.get_economy_manager().get_building_type_manager(),
 		market_instance,
 		definition_manager.get_modifier_manager().get_modifier_effect_cache(),
@@ -88,6 +97,9 @@ bool InstanceManager::setup() {
 		definition_manager.get_politics_manager().get_ideology_manager().get_ideologies()
 	);
 	ret &= country_instance_manager.generate_country_instances(
+#if OV_MODIFIER_CALCULATION_TEST
+		ADD_OWNER_CONTRIBUTION,
+#endif
 		definition_manager.get_economy_manager().get_building_type_manager().get_building_types(),
 		definition_manager.get_research_manager().get_technology_manager().get_technologies(),
 		definition_manager.get_research_manager().get_invention_manager().get_inventions(),
@@ -207,7 +219,11 @@ bool InstanceManager::expand_selected_province_building(size_t building_index) {
 }
 
 void InstanceManager::update_modifier_sums() {
+#if OV_MODIFIER_CALCULATION_TEST
+	if (ADD_OWNER_CONTRIBUTION) {
+#else
 	if constexpr (ProvinceInstance::ADD_OWNER_CONTRIBUTION) {
+#endif
 		// Calculate local province modifier sums first, then national country modifier sums, then loop over owned provinces
 		// adding their contributions to the owner country's modifier sum and loop over them again to add the country's total
 		// (including province contributions) to the provinces' modifier sum. This results in every country and province

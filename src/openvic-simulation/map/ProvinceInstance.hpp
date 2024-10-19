@@ -15,6 +15,8 @@
 #include "openvic-simulation/types/HasIdentifier.hpp"
 #include "openvic-simulation/types/OrderedContainers.hpp"
 
+#include "openvic-simulation/ModifierCalculationTestToggle.hpp"
+
 namespace OpenVic {
 	struct DefineManager;
 	struct MapInstance;
@@ -75,10 +77,14 @@ namespace OpenVic {
 		CountryInstance* PROPERTY(controller);
 		ordered_set<CountryInstance*> PROPERTY(cores);
 
+#if OV_MODIFIER_CALCULATION_TEST
+		const bool ADD_OWNER_CONTRIBUTION;
+#else
 	public:
 		static constexpr bool ADD_OWNER_CONTRIBUTION = true;
 
 	private:
+#endif
 		// The total/resultant modifier affecting this province, including owner country contributions if
 		// ADD_OWNER_CONTRIBUTION is true.
 		ModifierSum PROPERTY(modifier_sum);
@@ -121,6 +127,9 @@ namespace OpenVic {
 		size_t PROPERTY(max_supported_regiments);
 
 		ProvinceInstance(
+#if OV_MODIFIER_CALCULATION_TEST
+			bool new_ADD_OWNER_CONTRIBUTION,
+#endif
 			MarketInstance& new_market_instance,
 			ModifierEffectCache const& new_modifier_effect_cache,
 			ProvinceDefinition const& new_province_definition,
@@ -214,7 +223,11 @@ namespace OpenVic {
 		constexpr void for_each_contributing_modifier(
 			ModifierEffect const& effect, std::invocable<ModifierSum::modifier_entry_t const&> auto callback
 		) const {
+#if OV_MODIFIER_CALCULATION_TEST
+			if (ADD_OWNER_CONTRIBUTION) {
+#else
 			if constexpr (ADD_OWNER_CONTRIBUTION) {
+#endif
 				modifier_sum.for_each_contributing_modifier(effect, callback);
 			} else {
 				using enum ModifierEffect::target_t;

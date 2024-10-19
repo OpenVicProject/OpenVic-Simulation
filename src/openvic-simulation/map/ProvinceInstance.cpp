@@ -17,6 +17,9 @@
 using namespace OpenVic;
 
 ProvinceInstance::ProvinceInstance(
+#if OV_MODIFIER_CALCULATION_TEST
+	bool new_ADD_OWNER_CONTRIBUTION,
+#endif
 	MarketInstance& new_market_instance,
 	ModifierEffectCache const& new_modifier_effect_cache,
 	ProvinceDefinition const& new_province_definition,
@@ -24,6 +27,9 @@ ProvinceInstance::ProvinceInstance(
 	decltype(pop_type_distribution)::keys_type const& pop_type_keys,
 	decltype(ideology_distribution)::keys_type const& ideology_keys
 ) : HasIdentifierAndColour { new_province_definition },
+#if OV_MODIFIER_CALCULATION_TEST
+	ADD_OWNER_CONTRIBUTION { new_ADD_OWNER_CONTRIBUTION },
+#endif
 	FlagStrings { "province" },
 	province_definition { new_province_definition },
 	terrain_type { new_province_definition.get_default_terrain_type() },
@@ -351,7 +357,11 @@ void ProvinceInstance::update_modifier_sum(Date today, StaticModifierCache const
 
 	modifier_sum.add_modifier_nullcheck(terrain_type, province_source);
 
+#if OV_MODIFIER_CALCULATION_TEST
+	if (!ADD_OWNER_CONTRIBUTION) {
+#else
 	if constexpr (!ADD_OWNER_CONTRIBUTION) {
+#endif
 		if (controller != nullptr) {
 			controller->contribute_province_modifier_sum(modifier_sum);
 		}
@@ -363,7 +373,11 @@ void ProvinceInstance::contribute_country_modifier_sum(ModifierSum const& owner_
 }
 
 fixed_point_t ProvinceInstance::get_modifier_effect_value(ModifierEffect const& effect) const {
+#if OV_MODIFIER_CALCULATION_TEST
+	if (ADD_OWNER_CONTRIBUTION) {
+#else
 	if constexpr (ADD_OWNER_CONTRIBUTION) {
+#endif
 		return modifier_sum.get_effect(effect);
 	} else {
 		using enum ModifierEffect::target_t;

@@ -42,6 +42,9 @@ ProvinceDefinition::index_t MapInstance::get_selected_province_index() const {
 }
 
 bool MapInstance::setup(
+#if OV_MODIFIER_CALCULATION_TEST
+	bool ADD_OWNER_CONTRIBUTION,
+#endif
 	BuildingTypeManager const& building_type_manager,
 	MarketInstance& market_instance,
 	ModifierEffectCache const& modifier_effect_cache,
@@ -64,6 +67,9 @@ bool MapInstance::setup(
 
 		for (ProvinceDefinition const& province : map_definition.get_province_definitions()) {
 			ret &= province_instances.add_item({
+#if OV_MODIFIER_CALCULATION_TEST
+			ADD_OWNER_CONTRIBUTION,
+#endif
 				market_instance,
 				modifier_effect_cache,
 				province,

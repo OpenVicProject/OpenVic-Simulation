@@ -24,6 +24,9 @@ using enum CountryInstance::country_status_t;
 static constexpr colour_t ERROR_COLOUR = colour_t::from_integer(0xFF0000);
 
 CountryInstance::CountryInstance(
+#if OV_MODIFIER_CALCULATION_TEST
+	bool new_ADD_OWNER_CONTRIBUTION,
+#endif
 	CountryDefinition const* new_country_definition,
 	decltype(building_type_unlock_levels)::keys_type const& building_type_keys,
 	decltype(technology_unlock_levels)::keys_type const& technology_keys,
@@ -38,6 +41,9 @@ CountryInstance::CountryInstance(
 	decltype(tax_rate_by_strata)::keys_type const& strata_keys
 ) : FlagStrings { "country" },
 	/* Main attributes */
+#if OV_MODIFIER_CALCULATION_TEST
+	ADD_OWNER_CONTRIBUTION { new_ADD_OWNER_CONTRIBUTION },
+#endif
 	country_definition { new_country_definition },
 	colour { ERROR_COLOUR },
 	capital { nullptr },
@@ -1219,7 +1225,11 @@ void CountryInstance::update_modifier_sum(Date today, StaticModifierCache const&
 		}
 	}
 
+#if OV_MODIFIER_CALCULATION_TEST
+	if (ADD_OWNER_CONTRIBUTION) {
+#else
 	if constexpr (ProvinceInstance::ADD_OWNER_CONTRIBUTION) {
+#endif
 		// Add province base modifiers (with local province modifier effects removed)
 		for (ProvinceInstance const* province : controlled_provinces) {
 			contribute_province_modifier_sum(province->get_modifier_sum());
@@ -1442,6 +1452,9 @@ CountryInstance const& CountryInstanceManager::get_country_instance_from_definit
 }
 
 bool CountryInstanceManager::generate_country_instances(
+#if OV_MODIFIER_CALCULATION_TEST
+	bool ADD_OWNER_CONTRIBUTION,
+#endif
 	decltype(CountryInstance::building_type_unlock_levels)::keys_type const& building_type_keys,
 	decltype(CountryInstance::technology_unlock_levels)::keys_type const& technology_keys,
 	decltype(CountryInstance::invention_unlock_levels)::keys_type const& invention_keys,
@@ -1460,6 +1473,9 @@ bool CountryInstanceManager::generate_country_instances(
 
 	for (CountryDefinition const& country_definition : country_definition_manager.get_country_definitions()) {
 		ret &= country_instances.add_item({
+#if OV_MODIFIER_CALCULATION_TEST
+			ADD_OWNER_CONTRIBUTION,
+#endif
 			&country_definition,
 			building_type_keys,
 			technology_keys,
