@@ -1028,9 +1028,7 @@ void CountryInstance::update_modifier_sum(Date today, StaticModifierCache const&
 void CountryInstance::contribute_province_modifier_sum(ModifierSum const& province_modifier_sum) {
 	using enum ModifierEffect::target_t;
 
-	static constexpr ModifierEffect::target_t NOT_PROVINCE = ALL_TARGETS & ~PROVINCE;
-
-	modifier_sum.add_modifier_sum_filter_targets(province_modifier_sum, NOT_PROVINCE);
+	modifier_sum.add_modifier_sum_exclude_targets(province_modifier_sum, PROVINCE);
 }
 
 fixed_point_t CountryInstance::get_modifier_effect_value(ModifierEffect const& effect) const {

@@ -27,6 +27,10 @@ namespace OpenVic {
 			ALL_TARGETS = (1 << 3) - 1
 		};
 
+		static constexpr bool excludes_targets(target_t targets, target_t excluded_target);
+
+		static std::string target_to_string(target_t target);
+
 		static std::string make_default_modifier_effect_localisation_key(std::string_view identifier);
 
 	private:
@@ -50,4 +54,10 @@ namespace OpenVic {
 	};
 
 	template<> struct enable_bitfield<ModifierEffect::target_t> : std::true_type {};
+
+	constexpr bool ModifierEffect::excludes_targets(target_t targets, target_t excluded_targets) {
+		using enum target_t;
+
+		return (targets & excluded_targets) == NO_TARGETS;
+	}
 }

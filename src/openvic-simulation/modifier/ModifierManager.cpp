@@ -7,8 +7,15 @@ bool ModifierManager::add_modifier_effect(
 	ModifierEffect const*& effect_cache, std::string_view identifier, bool positive_good, ModifierEffect::format_t format,
 	ModifierEffect::target_t targets, std::string_view localisation_key
 ) {
+	using enum ModifierEffect::target_t;
+
 	if (identifier.empty()) {
 		Logger::error("Invalid modifier effect identifier - empty!");
+		return false;
+	}
+
+	if (targets == NO_TARGETS) {
+		Logger::error("Invalid targets for modifier effect \"", identifier, "\" - none!");
 		return false;
 	}
 

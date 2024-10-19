@@ -108,27 +108,31 @@ ModifierValue ModifierValue::operator*(fixed_point_t const& right) const {
 	return copy *= right;
 }
 
-void ModifierValue::apply_target_filter(ModifierEffect::target_t targets) {
+void ModifierValue::apply_exclude_targets(ModifierEffect::target_t excluded_targets) {
 	using enum ModifierEffect::target_t;
 
+	// We could test if excluded_targets is NO_TARGETS (and so we do nothing) or ALL_TARGETS (and so we clear everything),
+	// but so long as this is always called with an explicit/hardcoded value then we'll never have either of those cases.
 	erase_if(
 		values,
-		[targets](effect_map_t::value_type const& value) -> bool {
-			return (value.first->get_targets() & targets) == NO_TARGETS;
+		[excluded_targets](effect_map_t::value_type const& value) -> bool {
+			return !ModifierEffect::excludes_targets(value.first->get_targets(), excluded_targets);
 		}
 	);
 }
 
-void ModifierValue::multiply_add_filter(
-	ModifierValue const& other, fixed_point_t multiplier, ModifierEffect::target_t targets
+void ModifierValue::multiply_add_exclude_targets(
+	ModifierValue const& other, fixed_point_t multiplier, ModifierEffect::target_t excluded_targets
 ) {
 	using enum ModifierEffect::target_t;
 
-	if (multiplier == fixed_point_t::_1() && targets == ALL_TARGETS) {
+	if (multiplier == fixed_point_t::_1() && excluded_targets == NO_TARGETS) {
 		*this += other;
-	} else if (multiplier != fixed_point_t::_0() && targets != NO_TARGETS) {
+	} else if (multiplier != fixed_point_t::_0()) {
+		// We could test that excluded_targets != ALL_TARGETS, but in practice it's always
+		// called with an explcit/hardcoded value and so won't ever exclude everything.
 		for (effect_map_t::value_type const& value : other.values) {
-			if ((value.first->get_targets() & targets) != NO_TARGETS) {
+			if (ModifierEffect::excludes_targets(value.first->get_targets(), excluded_targets)) {
 				values[value.first] += value.second * multiplier;
 			}
 		}

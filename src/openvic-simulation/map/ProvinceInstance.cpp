@@ -296,7 +296,7 @@ fixed_point_t ProvinceInstance::get_modifier_effect_value(ModifierEffect const& 
 		using enum ModifierEffect::target_t;
 
 		if (owner != nullptr) {
-			if ((effect.get_targets() & PROVINCE) == NO_TARGETS) {
+			if (ModifierEffect::excludes_targets(effect.get_targets(), PROVINCE)) {
 				// Non-province targeted effects are already added to the country modifier sum
 				return owner->get_modifier_effect_value(effect);
 			} else {
@@ -326,7 +326,7 @@ void ProvinceInstance::push_contributing_modifiers(
 		using enum ModifierEffect::target_t;
 
 		if (owner != nullptr) {
-			if ((effect.get_targets() & PROVINCE) == NO_TARGETS) {
+			if (ModifierEffect::excludes_targets(effect.get_targets(), PROVINCE)) {
 				// Non-province targeted effects are already added to the country modifier sum
 				owner->push_contributing_modifiers(effect, contributions);
 			} else {
