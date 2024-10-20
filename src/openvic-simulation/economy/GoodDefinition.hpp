@@ -1,6 +1,5 @@
 #pragma once
 
-#include "openvic-simulation/modifier/Modifier.hpp"
 #include "openvic-simulation/types/IdentifierRegistry.hpp"
 
 namespace OpenVic {
@@ -50,6 +49,8 @@ namespace OpenVic {
 	public:
 		GoodDefinition(GoodDefinition&&) = default;
 	};
+
+	struct ModifierManager;
 
 	struct GoodDefinitionManager {
 	private:

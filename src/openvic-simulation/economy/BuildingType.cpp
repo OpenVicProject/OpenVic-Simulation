@@ -1,5 +1,7 @@
 #include "BuildingType.hpp"
 
+#include "openvic-simulation/modifier/ModifierManager.hpp"
+
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;
 
@@ -59,9 +61,13 @@ bool BuildingTypeManager::load_buildings_file(
 		building_types, [this, &good_definition_manager, &production_type_manager, &modifier_manager](
 			std::string_view key, ast::NodeCPtr value
 		) -> bool {
+			using enum Modifier::modifier_type_t;
+
 			BuildingType::building_type_args_t building_type_args {};
 
-			bool ret = modifier_manager.expect_modifier_value_and_keys(move_variable_callback(building_type_args.modifier),
+			bool ret = modifier_manager.expect_modifier_value_and_keys(
+				move_variable_callback(building_type_args.modifier),
+				BUILDING,
 				"type", ONE_EXACTLY, expect_identifier(assign_variable_callback(building_type_args.type)),
 				"on_completion", ZERO_OR_ONE, expect_identifier(assign_variable_callback(building_type_args.on_completion)),
 				"completion_size", ZERO_OR_ONE,
@@ -112,18 +118,27 @@ bool BuildingTypeManager::load_buildings_file(
 	)(root);
 	lock_building_types();
 
-	for (BuildingType const& building_type : building_types.get_items()) {
+	IndexedMap<BuildingType, ModifierEffectCache::building_type_effects_t>& building_type_effects =
+		modifier_manager.modifier_effect_cache.building_type_effects;
+
+	building_type_effects.set_keys(&get_building_types());
+
+	for (BuildingType const& building_type : get_building_types()) {
 		using enum ModifierEffect::format_t;
+		using enum ModifierEffect::target_t;
+
+		ModifierEffectCache::building_type_effects_t& this_building_type_effects = building_type_effects[building_type];
 
 		static constexpr std::string_view max_prefix = "max_";
 		static constexpr std::string_view min_prefix = "min_build_";
 		ret &= modifier_manager.add_modifier_effect(
-			StringUtils::append_string_views(max_prefix, building_type.get_identifier()), true, INT,
-			StringUtils::append_string_views("$", building_type.get_identifier(), "$ $TECH_MAX_LEVEL$")
+			this_building_type_effects.max_level, StringUtils::append_string_views(max_prefix, building_type.get_identifier()),
+			true, INT, PROVINCE, StringUtils::append_string_views("$", building_type.get_identifier(), "$ $TECH_MAX_LEVEL$")
 		);
 		// TODO - add custom localisation for "min_build_$building_type$" modifiers
 		ret &= modifier_manager.add_modifier_effect(
-			StringUtils::append_string_views(min_prefix, building_type.get_identifier()), false, INT
+			this_building_type_effects.min_level, StringUtils::append_string_views(min_prefix, building_type.get_identifier()),
+			false, INT, PROVINCE
 		);
 
 		if (building_type.is_in_province()) {

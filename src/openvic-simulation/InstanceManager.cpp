@@ -12,7 +12,7 @@ InstanceManager::InstanceManager(
 	map_instance { new_definition_manager.get_map_definition() },
 	simulation_clock {
 		std::bind(&InstanceManager::tick, this), std::bind(&InstanceManager::update_gamestate, this),
-		clock_state_changed_callback ? std::move(clock_state_changed_callback)  : []() {}
+		clock_state_changed_callback ? std::move(clock_state_changed_callback) : []() {}
 	},
 	game_instance_setup { false },
 	game_session_started { false },
@@ -39,10 +39,36 @@ void InstanceManager::update_gamestate() {
 
 	Logger::info("Update: ", today);
 
+	if constexpr (ProvinceInstance::ADD_OWNER_CONTRIBUTION) {
+		// Calculate local province modifier sums first, then national country modifier sums, then loop over owned provinces
+		// adding their contributions to the owner country's modifier sum and loop over them again to add the country's total
+		// (including province contributions) to the provinces' modifier sum. This results in every country and province
+		// having a full copy of all the modifiers affecting them in their modifier sum.
+		map_instance.update_modifier_sums(
+			today, definition_manager.get_modifier_manager().get_static_modifier_cache()
+		);
+		country_instance_manager.update_modifier_sums(
+			today, definition_manager.get_modifier_manager().get_static_modifier_cache()
+		);
+	} else {
+		// Calculate national country modifier sums first, then local province modifier sums, adding province contributions
+		// to owner countries' modifier sums if each province has an owner. This results in every country having a full copy
+		// of all the modifiers affecting them in their modifier sum, but provinces only having their directly/locally applied
+		// modifiers in their modifier sum, hence requiring both province and owner country modifier effect values to be looked
+		// up and added together to get the full effect on the province.
+		country_instance_manager.update_modifier_sums(
+			today, definition_manager.get_modifier_manager().get_static_modifier_cache()
+		);
+		map_instance.update_modifier_sums(
+			today, definition_manager.get_modifier_manager().get_static_modifier_cache()
+		);
+	}
+
 	// Update gamestate...
 	map_instance.update_gamestate(today, definition_manager.get_define_manager());
 	country_instance_manager.update_gamestate(
-		today, definition_manager.get_define_manager(), definition_manager.get_military_manager().get_unit_type_manager()
+		today, definition_manager.get_define_manager(), definition_manager.get_military_manager().get_unit_type_manager(),
+		definition_manager.get_modifier_manager().get_modifier_effect_cache()
 	);
 
 	gamestate_updated();

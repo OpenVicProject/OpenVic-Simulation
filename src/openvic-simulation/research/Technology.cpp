@@ -1,5 +1,7 @@
 #include "Technology.hpp"
 
+#include "openvic-simulation/modifier/ModifierManager.hpp"
+
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;
 
@@ -140,8 +142,13 @@ bool TechnologyManager::load_technology_file_schools(
 			const bool ret = expect_dictionary_reserve_length(
 				technology_schools,
 				[this, &modifier_manager](std::string_view school_key, ast::NodeCPtr school_value) -> bool {
+					using enum Modifier::modifier_type_t;
+
 					ModifierValue modifiers;
-					bool ret = modifier_manager.expect_modifier_value(move_variable_callback(modifiers))(school_value);
+
+					bool ret = modifier_manager.expect_modifier_value(
+						move_variable_callback(modifiers), TECH_SCHOOL
+					)(school_value);
 
 					ret &= add_technology_school(school_key, std::move(modifiers));
 
@@ -163,6 +170,8 @@ bool TechnologyManager::load_technologies_file(
 	return expect_dictionary_reserve_length(technologies, [this, &modifier_manager, &unit_type_manager, &building_type_manager](
 		std::string_view tech_key, ast::NodeCPtr tech_value
 	) -> bool {
+		using enum Modifier::modifier_type_t;
+
 		ModifierValue modifiers;
 		TechnologyArea const* area = nullptr;
 		Date::year_t year = 0;
@@ -175,6 +184,7 @@ bool TechnologyManager::load_technologies_file(
 
 		bool ret = modifier_manager.expect_modifier_value_and_keys(
 			move_variable_callback(modifiers),
+			TECHNOLOGY,
 			"area", ONE_EXACTLY, expect_technology_area_identifier(assign_variable_callback_pointer(area)),
 			"year", ONE_EXACTLY, expect_uint(assign_variable_callback(year)),
 			"cost", ONE_EXACTLY, expect_fixed_point(assign_variable_callback(cost)),
@@ -197,13 +207,21 @@ bool TechnologyManager::load_technologies_file(
 
 bool TechnologyManager::generate_modifiers(ModifierManager& modifier_manager) const {
 	using enum ModifierEffect::format_t;
+	using enum ModifierEffect::target_t;
+
+	IndexedMap<TechnologyFolder, ModifierEffect const*>& research_bonus_effects =
+		modifier_manager.modifier_effect_cache.research_bonus_effects;
+
+	research_bonus_effects.set_keys(&get_technology_folders());
 
 	bool ret = true;
 
 	for (TechnologyFolder const& folder : get_technology_folders()) {
 		const std::string modifier_identifier = StringUtils::append_string_views(folder.get_identifier(), "_research_bonus");
 
-		ret &= modifier_manager.add_modifier_effect(modifier_identifier, true, PROPORTION_DECIMAL, modifier_identifier);
+		ret &= modifier_manager.add_modifier_effect(
+			research_bonus_effects[folder], modifier_identifier, true, PROPORTION_DECIMAL, COUNTRY, modifier_identifier
+		);
 	}
 
 	return ret;

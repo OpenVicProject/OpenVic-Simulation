@@ -1,5 +1,6 @@
 #include "TerrainType.hpp"
 
+#include "openvic-simulation/modifier/ModifierManager.hpp"
 #include "openvic-simulation/types/Colour.hpp"
 
 using namespace OpenVic;
@@ -71,14 +72,21 @@ node_callback_t TerrainTypeManager::_load_terrain_type_categories(ModifierManage
 	return [this, &modifier_manager](ast::NodeCPtr root) -> bool {
 		const bool ret = expect_dictionary_reserve_length(terrain_types,
 			[this, &modifier_manager](std::string_view type_key, ast::NodeCPtr type_node) -> bool {
+				using enum Modifier::modifier_type_t;
+
 				ModifierValue values;
 				colour_t colour = colour_t::null();
 				bool is_water = false;
-				bool ret = modifier_manager.expect_modifier_value_and_keys(move_variable_callback(values),
+
+				bool ret = modifier_manager.expect_modifier_value_and_keys(
+					move_variable_callback(values),
+					TERRAIN,
 					"color", ONE_EXACTLY, expect_colour(assign_variable_callback(colour)),
 					"is_water", ZERO_OR_ONE, expect_bool(assign_variable_callback(is_water))
 				)(type_node);
+
 				ret &= add_terrain_type(type_key, colour, std::move(values), is_water);
+
 				return ret;
 			}
 		)(root);
