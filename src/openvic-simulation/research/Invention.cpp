@@ -3,6 +3,7 @@
 #include "openvic-simulation/economy/BuildingType.hpp"
 #include "openvic-simulation/map/Crime.hpp"
 #include "openvic-simulation/military/UnitType.hpp"
+#include "openvic-simulation/modifier/ModifierManager.hpp"
 
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;
@@ -54,12 +55,16 @@ bool InventionManager::add_invention(
 }
 
 bool InventionManager::load_inventions_file(
-	ModifierManager const& modifier_manager, UnitTypeManager const& unit_type_manager, BuildingTypeManager const& building_type_manager,
-	CrimeManager const& crime_manager, ast::NodeCPtr root
+	ModifierManager const& modifier_manager, UnitTypeManager const& unit_type_manager,
+	BuildingTypeManager const& building_type_manager, CrimeManager const& crime_manager, ast::NodeCPtr root
 ) {
 	return expect_dictionary_reserve_length(
 		inventions, [this, &modifier_manager, &unit_type_manager, &building_type_manager, &crime_manager](
-			std::string_view identifier, ast::NodeCPtr value) -> bool {
+			std::string_view identifier, ast::NodeCPtr value
+		) -> bool {
+			using enum Modifier::modifier_type_t;
+
+			// TODO - use the same variable for all modifiers rather than combining them at the end?
 			ModifierValue loose_modifiers;
 			ModifierValue modifiers;
 
@@ -74,15 +79,19 @@ bool InventionManager::load_inventions_file(
 			ConditionScript limit { scope_t::COUNTRY, scope_t::COUNTRY, scope_t::NO_SCOPE };
 			ConditionalWeight chance { scope_t::COUNTRY, scope_t::COUNTRY, scope_t::NO_SCOPE };
 
-			bool ret = modifier_manager.expect_modifier_value_and_keys(move_variable_callback(loose_modifiers),
+			bool ret = modifier_manager.expect_modifier_value_and_keys(
+				move_variable_callback(loose_modifiers),
+				INVENTION,
 				"news", ZERO_OR_ONE, expect_bool(assign_variable_callback(news)),
 				"limit", ONE_EXACTLY, limit.expect_script(),
 				"chance", ONE_EXACTLY, chance.expect_conditional_weight(ConditionalWeight::BASE),
 				"effect", ZERO_OR_ONE, modifier_manager.expect_modifier_value_and_keys(
 					move_variable_callback(modifiers),
+					INVENTION,
 					"gas_attack", ZERO_OR_ONE, expect_bool(assign_variable_callback(unlock_gas_attack)),
 					"gas_defence", ZERO_OR_ONE, expect_bool(assign_variable_callback(unlock_gas_defence)),
-					"activate_unit", ZERO_OR_MORE, unit_type_manager.expect_unit_type_identifier(set_callback_pointer(activated_units)),
+					"activate_unit", ZERO_OR_MORE,
+						unit_type_manager.expect_unit_type_identifier(set_callback_pointer(activated_units)),
 					"activate_building", ZERO_OR_MORE, building_type_manager.expect_building_type_identifier(
 						set_callback_pointer(activated_buildings)
 					),

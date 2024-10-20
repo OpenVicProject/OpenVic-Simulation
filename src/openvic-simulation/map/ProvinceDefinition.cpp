@@ -89,7 +89,7 @@ bool ProvinceDefinition::load_positions(
 					port = true;
 					port_adjacent_province = province;
 				} else {
-					/*  Expected provinces with invalid ports: 39, 296, 1047, 1406, 2044 */
+					/* Expected provinces with invalid ports: 39, 296, 1047, 1406, 2044 */
 					Logger::warning(
 						"Invalid port for province ", get_identifier(), ": facing province ", province,
 						" which has: water = ", province->is_water(), ", adjacent = ", is_adjacent_to(province)

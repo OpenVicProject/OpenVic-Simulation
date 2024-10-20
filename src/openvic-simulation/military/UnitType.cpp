@@ -2,6 +2,7 @@
 
 #include "openvic-simulation/country/CountryInstance.hpp"
 #include "openvic-simulation/map/TerrainType.hpp"
+#include "openvic-simulation/modifier/ModifierManager.hpp"
 
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;
@@ -28,8 +29,17 @@ UnitType::UnitType(
 	build_time { unit_args.build_time },
 	build_cost { std::move(unit_args.build_cost) },
 	supply_consumption { unit_args.supply_consumption },
-	supply_cost { std::move(unit_args.supply_cost) },
-	terrain_modifiers { std::move(unit_args.terrain_modifiers) } {}
+	supply_cost { std::move(unit_args.supply_cost) } {
+
+	using enum Modifier::modifier_type_t;
+
+	for (auto [terrain, modifier_value] : mutable_iterator(unit_args.terrain_modifier_values)) {
+		terrain_modifiers.emplace(terrain, Modifier {
+			StringUtils::append_string_views(new_identifier, " ", terrain->get_identifier()), std::move(modifier_value),
+			UNIT_TERRAIN
+		});
+	}
+}
 
 bool UnitTypeBranched<LAND>::allowed_cultures_check_culture_in_country(
 	allowed_cultures_t allowed_cultures, Culture const& culture, CountryInstance const& country
@@ -231,16 +241,20 @@ bool UnitTypeManager::load_unit_type_file(
 				good_definition_manager.expect_good_definition_decimal_map(move_variable_callback(unit_args.supply_cost))
 		);
 
-		auto add_terrain_modifier = [&unit_args, &terrain_type_manager, &modifier_manager](
+		auto add_terrain_modifier_value = [&unit_args, &terrain_type_manager, &modifier_manager](
 			std::string_view default_key, ast::NodeCPtr default_value
 		) -> bool {
 			TerrainType const* terrain_type = terrain_type_manager.get_terrain_type_by_identifier(default_key);
+
 			if (terrain_type != nullptr) {
+				using enum Modifier::modifier_type_t;
+
 				// TODO - restrict what modifier effects can be used here
 				return modifier_manager.expect_modifier_value(
-					map_callback(unit_args.terrain_modifiers, terrain_type)
+					map_callback(unit_args.terrain_modifier_values, terrain_type), UNIT_TERRAIN
 				)(default_value);
 			}
+
 			return key_value_invalid_callback(default_key, default_value);
 		};
 
@@ -274,7 +288,7 @@ bool UnitTypeManager::load_unit_type_file(
 				regiment_type_args.allowed_cultures = RegimentType::allowed_cultures_t::ALL_CULTURES;
 			}
 
-			ret &= expect_dictionary_key_map_and_default(key_map, add_terrain_modifier)(value);
+			ret &= expect_dictionary_key_map_and_default(key_map, add_terrain_modifier_value)(value);
 
 			ret &= add_regiment_type(key, unit_args, regiment_type_args);
 
@@ -301,7 +315,7 @@ bool UnitTypeManager::load_unit_type_file(
 				"torpedo_attack", ZERO_OR_ONE, expect_fixed_point(assign_variable_callback(ship_type_args.torpedo_attack))
 			);
 
-			ret &= expect_dictionary_key_map_and_default(key_map, add_terrain_modifier)(value);
+			ret &= expect_dictionary_key_map_and_default(key_map, add_terrain_modifier_value)(value);
 
 			ret &= add_ship_type(key, unit_args, ship_type_args);
 
@@ -319,59 +333,72 @@ bool UnitTypeManager::generate_modifiers(ModifierManager& modifier_manager) cons
 	bool ret = true;
 
 	const auto generate_stat_modifiers = [&modifier_manager, &ret](
-		std::string_view identifier, UnitType::branch_t branch
+		std::derived_from<ModifierEffectCache::unit_type_effects_t> auto unit_type_effects, std::string_view identifier
 	) -> void {
+		using enum ModifierEffect::format_t;
+		using enum ModifierEffect::target_t;
+
 		const auto stat_modifier = [&modifier_manager, &ret, &identifier](
-			std::string_view suffix, bool is_positive_good, ModifierEffect::format_t format, std::string_view localisation_key
+			ModifierEffect const*& effect_cache, std::string_view suffix, bool is_positive_good,
+			ModifierEffect::format_t format, std::string_view localisation_key
 		) -> void {
 			ret &= modifier_manager.add_modifier_effect(
-				ModifierManager::get_flat_identifier(identifier, suffix), is_positive_good, format,
+				effect_cache, ModifierManager::get_flat_identifier(identifier, suffix), is_positive_good, format, COUNTRY,
 				StringUtils::append_string_views("$", identifier, "$: $", localisation_key, "$")
 			);
 		};
 
-		using enum ModifierEffect::format_t;
-
 		ret &= modifier_manager.register_complex_modifier(identifier);
 
-		stat_modifier("attack", true, RAW_DECIMAL, "ATTACK");
-		stat_modifier("defence", true, RAW_DECIMAL, "DEFENCE");
-		stat_modifier("default_organisation", true, RAW_DECIMAL, "DEFAULT_ORG");
-		stat_modifier("maximum_speed", true, RAW_DECIMAL, "MAXIMUM_SPEED");
-		stat_modifier("build_time", false, INT, "BUILD_TIME");
-		stat_modifier("supply_consumption", false, PROPORTION_DECIMAL, "SUPPLY_CONSUMPTION");
+		stat_modifier(unit_type_effects.attack, "attack", true, RAW_DECIMAL, "ATTACK");
+		stat_modifier(unit_type_effects.defence, "defence", true, RAW_DECIMAL, "DEFENCE");
+		stat_modifier(unit_type_effects.default_organisation, "default_organisation", true, RAW_DECIMAL, "DEFAULT_ORG");
+		stat_modifier(unit_type_effects.maximum_speed, "maximum_speed", true, RAW_DECIMAL, "MAXIMUM_SPEED");
+		stat_modifier(unit_type_effects.build_time, "build_time", false, INT, "BUILD_TIME");
+		stat_modifier(
+			unit_type_effects.supply_consumption, "supply_consumption", false, PROPORTION_DECIMAL, "SUPPLY_CONSUMPTION"
+		);
 
-		switch (branch) {
-		case LAND:
-			stat_modifier("reconnaissance", true, RAW_DECIMAL, "RECONAISSANCE");
-			stat_modifier("discipline", true, PROPORTION_DECIMAL, "DISCIPLINE");
-			stat_modifier("support", true, PROPORTION_DECIMAL, "SUPPORT");
-			stat_modifier("maneuver", true, INT, "Maneuver");
-			stat_modifier("siege", true, RAW_DECIMAL, "SIEGE");
-			break;
-		case NAVAL:
-			stat_modifier("colonial_points", true, INT, "COLONIAL_POINTS_TECH");
-			stat_modifier("supply_consumption_score", false, INT, "SUPPLY_LOAD");
-			stat_modifier("hull", true, RAW_DECIMAL, "HULL");
-			stat_modifier("gun_power", true, RAW_DECIMAL, "GUN_POWER");
-			stat_modifier("fire_range", true, RAW_DECIMAL, "FIRE_RANGE");
-			stat_modifier("evasion", true, PROPORTION_DECIMAL, "EVASION");
-			stat_modifier("torpedo_attack", true, RAW_DECIMAL, "TORPEDO_ATTACK");
-			break;
-		default:
+		if constexpr (std::same_as<decltype(unit_type_effects), ModifierEffectCache::regiment_type_effects_t>) {
+			stat_modifier(unit_type_effects.reconnaissance, "reconnaissance", true, RAW_DECIMAL, "RECONAISSANCE");
+			stat_modifier(unit_type_effects.discipline, "discipline", true, PROPORTION_DECIMAL, "DISCIPLINE");
+			stat_modifier(unit_type_effects.support, "support", true, PROPORTION_DECIMAL, "SUPPORT");
+			stat_modifier(unit_type_effects.maneuver, "maneuver", true, INT, "Maneuver");
+			stat_modifier(unit_type_effects.siege, "siege", true, RAW_DECIMAL, "SIEGE");
+		} else if constexpr(std::same_as<decltype(unit_type_effects), ModifierEffectCache::ship_type_effects_t>) {
+			stat_modifier(unit_type_effects.colonial_points, "colonial_points", true, INT, "COLONIAL_POINTS_TECH");
+			stat_modifier(unit_type_effects.supply_consumption_score, "supply_consumption_score", false, INT, "SUPPLY_LOAD");
+			stat_modifier(unit_type_effects.hull, "hull", true, RAW_DECIMAL, "HULL");
+			stat_modifier(unit_type_effects.gun_power, "gun_power", true, RAW_DECIMAL, "GUN_POWER");
+			stat_modifier(unit_type_effects.fire_range, "fire_range", true, RAW_DECIMAL, "FIRE_RANGE");
+			stat_modifier(unit_type_effects.evasion, "evasion", true, PROPORTION_DECIMAL, "EVASION");
+			stat_modifier(unit_type_effects.torpedo_attack, "torpedo_attack", true, RAW_DECIMAL, "TORPEDO_ATTACK");
+		} else {
 			/* Unreachable - unit types are only added via add_regiment_type or add_ship_type which set branch to LAND or NAVAL. */
-			Logger::error("Invalid branch for unit ", identifier, ": ", static_cast<int>(branch));
+			Logger::error("Invalid branch for unit ", identifier, " - not LAND or NAVAL!");
 		}
 	};
 
-	generate_stat_modifiers("army_base", LAND);
+	generate_stat_modifiers(modifier_manager.modifier_effect_cache.army_base_effects, "army_base");
+
+	IndexedMap<RegimentType, ModifierEffectCache::regiment_type_effects_t>& regiment_type_effects =
+		modifier_manager.modifier_effect_cache.regiment_type_effects;
+
+	regiment_type_effects.set_keys(&get_regiment_types());
+
 	for (RegimentType const& regiment_type : get_regiment_types()) {
-		generate_stat_modifiers(regiment_type.get_identifier(), LAND);
+		generate_stat_modifiers(regiment_type_effects[regiment_type], regiment_type.get_identifier());
 	}
 
-	generate_stat_modifiers("navy_base", NAVAL);
+	generate_stat_modifiers(modifier_manager.modifier_effect_cache.navy_base_effects, "navy_base");
+
+	IndexedMap<ShipType, ModifierEffectCache::ship_type_effects_t>& ship_type_effects =
+		modifier_manager.modifier_effect_cache.ship_type_effects;
+
+	ship_type_effects.set_keys(&get_ship_types());
+
 	for (ShipType const& ship_type : get_ship_types()) {
-		generate_stat_modifiers(ship_type.get_identifier(), NAVAL);
+		generate_stat_modifiers(ship_type_effects[ship_type], ship_type.get_identifier());
 	}
 
 	return ret;

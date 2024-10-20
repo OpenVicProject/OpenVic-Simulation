@@ -6,6 +6,7 @@
 
 #include "openvic-simulation/military/Leader.hpp"
 #include "openvic-simulation/military/UnitInstanceGroup.hpp"
+#include "openvic-simulation/modifier/ModifierSum.hpp"
 #include "openvic-simulation/politics/Rule.hpp"
 #include "openvic-simulation/pop/Pop.hpp"
 #include "openvic-simulation/types/Date.hpp"
@@ -34,6 +35,8 @@ namespace OpenVic {
 	struct CountryHistoryEntry;
 	struct MapInstance;
 	struct DefineManager;
+	struct ModifierEffectCache;
+	struct StaticModifierCache;
 
 	/* Representation of a country's mutable attributes, with a CountryDefinition that is unique at any single time
 	 * but can be swapped with other CountryInstance's CountryDefinition when switching tags. */
@@ -80,13 +83,17 @@ namespace OpenVic {
 		ordered_set<ProvinceInstance*> PROPERTY(core_provinces);
 		ordered_set<State*> PROPERTY(states);
 
+		// The total/resultant modifier affecting this country, including owned province contributions.
+		ModifierSum PROPERTY(modifier_sum);
+		std::vector<ModifierInstance> PROPERTY(event_modifiers);
+
 		/* Production */
 		fixed_point_t PROPERTY(industrial_power);
 		std::vector<std::pair<State const*, fixed_point_t>> PROPERTY(industrial_power_from_states);
 		std::vector<std::pair<CountryInstance const*, fixed_point_t>> PROPERTY(industrial_power_from_investments);
 		size_t PROPERTY(industrial_rank);
 		fixed_point_map_t<CountryInstance const*> PROPERTY(foreign_investments);
-		IndexedMap<BuildingType, unlock_level_t> PROPERTY(unlocked_building_types);
+		IndexedMap<BuildingType, unlock_level_t> PROPERTY(building_type_unlock_levels);
 		// TODO - total amount of each good produced
 
 		/* Budget */
@@ -94,8 +101,8 @@ namespace OpenVic {
 		// TODO - cash stockpile change over last 30 days
 
 		/* Technology */
-		IndexedMap<Technology, unlock_level_t> PROPERTY(unlocked_technologies);
-		IndexedMap<Invention, unlock_level_t> PROPERTY(unlocked_inventions);
+		IndexedMap<Technology, unlock_level_t> PROPERTY(technology_unlock_levels);
+		IndexedMap<Invention, unlock_level_t> PROPERTY(invention_unlock_levels);
 		Technology const* PROPERTY(current_research);
 		fixed_point_t PROPERTY(invested_research_points);
 		Date PROPERTY(expected_completion_date);
@@ -118,10 +125,10 @@ namespace OpenVic {
 		IndexedMap<GovernmentType, GovernmentType const*> PROPERTY(government_flag_overrides);
 		GovernmentType const* PROPERTY(flag_government_type);
 		fixed_point_t PROPERTY(suppression_points);
-		fixed_point_t PROPERTY(infamy);
-		fixed_point_t PROPERTY(plurality);
+		fixed_point_t PROPERTY(infamy); // in 0-25+ range
+		fixed_point_t PROPERTY(plurality); // in 0-100 range
 		fixed_point_t PROPERTY(revanchism);
-		IndexedMap<Crime, unlock_level_t> PROPERTY(unlocked_crimes);
+		IndexedMap<Crime, unlock_level_t> PROPERTY(crime_unlock_levels);
 		// TODO - rebel movements
 
 		/* Population */
@@ -165,32 +172,32 @@ namespace OpenVic {
 		fixed_point_t PROPERTY(total_consumed_ship_supply);
 		fixed_point_t PROPERTY(max_ship_supply);
 		fixed_point_t PROPERTY(leadership_points);
-		fixed_point_t PROPERTY(war_exhaustion);
+		fixed_point_t PROPERTY(war_exhaustion); // in 0-100 range
 		bool PROPERTY_CUSTOM_PREFIX(mobilised, is);
 		bool PROPERTY_CUSTOM_PREFIX(disarmed, is);
-		IndexedMap<RegimentType, unlock_level_t> PROPERTY(unlocked_regiment_types);
+		IndexedMap<RegimentType, unlock_level_t> PROPERTY(regiment_type_unlock_levels);
 		RegimentType::allowed_cultures_t PROPERTY(allowed_regiment_cultures);
-		IndexedMap<ShipType, unlock_level_t> PROPERTY(unlocked_ship_types);
+		IndexedMap<ShipType, unlock_level_t> PROPERTY(ship_type_unlock_levels);
 		unlock_level_t PROPERTY(gas_attack_unlock_level);
 		unlock_level_t PROPERTY(gas_defence_unlock_level);
 		std::vector<unlock_level_t> PROPERTY(unit_variant_unlock_levels);
 
 		UNIT_BRANCHED_GETTER(get_unit_instance_groups, armies, navies);
 		UNIT_BRANCHED_GETTER(get_leaders, generals, admirals);
-		UNIT_BRANCHED_GETTER(get_unlocked_unit_types, unlocked_regiment_types, unlocked_ship_types);
+		UNIT_BRANCHED_GETTER(get_unit_type_unlock_levels, regiment_type_unlock_levels, ship_type_unlock_levels);
 
 		CountryInstance(
 			CountryDefinition const* new_country_definition,
-			decltype(unlocked_building_types)::keys_t const& building_type_keys,
-			decltype(unlocked_technologies)::keys_t const& technology_keys,
-			decltype(unlocked_inventions)::keys_t const& invention_keys,
+			decltype(building_type_unlock_levels)::keys_t const& building_type_keys,
+			decltype(technology_unlock_levels)::keys_t const& technology_keys,
+			decltype(invention_unlock_levels)::keys_t const& invention_keys,
 			decltype(upper_house)::keys_t const& ideology_keys,
 			decltype(reforms)::keys_t const& reform_keys,
 			decltype(government_flag_overrides)::keys_t const& government_type_keys,
-			decltype(unlocked_crimes)::keys_t const& crime_keys,
+			decltype(crime_unlock_levels)::keys_t const& crime_keys,
 			decltype(pop_type_distribution)::keys_t const& pop_type_keys,
-			decltype(unlocked_regiment_types)::keys_t const& unlocked_regiment_types_keys,
-			decltype(unlocked_ship_types)::keys_t const& unlocked_ship_types_keys
+			decltype(regiment_type_unlock_levels)::keys_t const& regiment_type_unlock_levels_keys,
+			decltype(ship_type_unlock_levels)::keys_t const& ship_type_unlock_levels_keys
 		);
 
 	public:
@@ -290,13 +297,28 @@ namespace OpenVic {
 		void _update_population();
 		void _update_trade();
 		void _update_diplomacy();
-		void _update_military(DefineManager const& define_manager, UnitTypeManager const& unit_type_manager);
+		void _update_military(
+			DefineManager const& define_manager, UnitTypeManager const& unit_type_manager,
+			ModifierEffectCache const& modifier_effect_cache
+		);
 
 		bool update_rule_set();
 
 	public:
 
-		void update_gamestate(DefineManager const& define_manager, UnitTypeManager const& unit_type_manager);
+		void update_modifier_sum(Date today, StaticModifierCache const& static_modifier_cache);
+		void contribute_province_modifier_sum(ModifierSum const& province_modifier_sum);
+		fixed_point_t get_modifier_effect_value(ModifierEffect const& effect) const;
+		fixed_point_t get_modifier_effect_value_nullcheck(ModifierEffect const* effect) const;
+		void push_contributing_modifiers(
+			ModifierEffect const& effect, std::vector<ModifierSum::modifier_entry_t>& contributions
+		) const;
+		std::vector<ModifierSum::modifier_entry_t> get_contributing_modifiers(ModifierEffect const& effect) const;
+
+		void update_gamestate(
+			DefineManager const& define_manager, UnitTypeManager const& unit_type_manager,
+			ModifierEffectCache const& modifier_effect_cache
+		);
 		void tick();
 	};
 
@@ -324,16 +346,16 @@ namespace OpenVic {
 
 		bool generate_country_instances(
 			CountryDefinitionManager const& country_definition_manager,
-			decltype(CountryInstance::unlocked_building_types)::keys_t const& building_type_keys,
-			decltype(CountryInstance::unlocked_technologies)::keys_t const& technology_keys,
-			decltype(CountryInstance::unlocked_inventions)::keys_t const& invention_keys,
+			decltype(CountryInstance::building_type_unlock_levels)::keys_t const& building_type_keys,
+			decltype(CountryInstance::technology_unlock_levels)::keys_t const& technology_keys,
+			decltype(CountryInstance::invention_unlock_levels)::keys_t const& invention_keys,
 			decltype(CountryInstance::upper_house)::keys_t const& ideology_keys,
 			decltype(CountryInstance::reforms)::keys_t const& reform_keys,
 			decltype(CountryInstance::government_flag_overrides)::keys_t const& government_type_keys,
-			decltype(CountryInstance::unlocked_crimes)::keys_t const& crime_keys,
+			decltype(CountryInstance::crime_unlock_levels)::keys_t const& crime_keys,
 			decltype(CountryInstance::pop_type_distribution)::keys_t const& pop_type_keys,
-			decltype(CountryInstance::unlocked_regiment_types)::keys_t const& unlocked_regiment_types_keys,
-			decltype(CountryInstance::unlocked_ship_types)::keys_t const& unlocked_ship_types_keys
+			decltype(CountryInstance::regiment_type_unlock_levels)::keys_t const& regiment_type_unlock_levels_keys,
+			decltype(CountryInstance::ship_type_unlock_levels)::keys_t const& ship_type_unlock_levels_keys
 		);
 
 		bool apply_history_to_countries(
@@ -341,7 +363,11 @@ namespace OpenVic {
 			MapInstance& map_instance
 		);
 
-		void update_gamestate(Date today, DefineManager const& define_manager, UnitTypeManager const& unit_type_manager);
+		void update_modifier_sums(Date today, StaticModifierCache const& static_modifier_cache);
+		void update_gamestate(
+			Date today, DefineManager const& define_manager, UnitTypeManager const& unit_type_manager,
+			ModifierEffectCache const& modifier_effect_cache
+		);
 		void tick();
 	};
 }

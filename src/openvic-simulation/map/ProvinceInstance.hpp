@@ -5,6 +5,7 @@
 #include "openvic-simulation/economy/BuildingInstance.hpp"
 #include "openvic-simulation/military/UnitInstance.hpp"
 #include "openvic-simulation/military/UnitType.hpp"
+#include "openvic-simulation/modifier/ModifierSum.hpp"
 #include "openvic-simulation/pop/Pop.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPointMap.hpp"
 #include "openvic-simulation/types/HasIdentifier.hpp"
@@ -21,6 +22,7 @@ namespace OpenVic {
 	struct Ideology;
 	struct Culture;
 	struct Religion;
+	struct StaticModifierCache;
 	struct BuildingTypeManager;
 	struct ProvinceHistoryEntry;
 	struct IssueManager;
@@ -67,6 +69,15 @@ namespace OpenVic {
 		CountryInstance* PROPERTY(owner);
 		CountryInstance* PROPERTY(controller);
 		ordered_set<CountryInstance*> PROPERTY(cores);
+
+	public:
+		static constexpr bool ADD_OWNER_CONTRIBUTION = true;
+
+	private:
+		// The total/resultant modifier affecting this province, including owner country contributions if
+		// ADD_OWNER_CONTRIBUTION is true.
+		ModifierSum PROPERTY(modifier_sum);
+		std::vector<ModifierInstance> PROPERTY(event_modifiers);
 
 		bool PROPERTY(slave);
 		Crime const* PROPERTY_RW(crime);
@@ -123,6 +134,15 @@ namespace OpenVic {
 		bool add_pop(Pop&& pop);
 		bool add_pop_vec(std::vector<PopBase> const& pop_vec);
 		size_t get_pop_count() const;
+
+		void update_modifier_sum(Date today, StaticModifierCache const& static_modifier_cache);
+		void contribute_country_modifier_sum(ModifierSum const& owner_modifier_sum);
+		fixed_point_t get_modifier_effect_value(ModifierEffect const& effect) const;
+		fixed_point_t get_modifier_effect_value_nullcheck(ModifierEffect const* effect) const;
+		void push_contributing_modifiers(
+			ModifierEffect const& effect, std::vector<ModifierSum::modifier_entry_t>& contributions
+		) const;
+		std::vector<ModifierSum::modifier_entry_t> get_contributing_modifiers(ModifierEffect const& effect) const;
 
 		void update_gamestate(Date today, DefineManager const& define_manager);
 		void tick(Date today);
