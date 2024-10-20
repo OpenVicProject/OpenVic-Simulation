@@ -61,11 +61,11 @@ namespace OpenVic {
 
 		void add_modifier(
 			Modifier const& modifier, modifier_source_t const& source, fixed_point_t multiplier = fixed_point_t::_1(),
-			ModifierEffect::target_t excluded_targets = ModifierEffect::target_t::ALL_TARGETS
+			ModifierEffect::target_t excluded_targets = ModifierEffect::target_t::NO_TARGETS
 		);
 		void add_modifier_nullcheck(
 			Modifier const* modifier, modifier_source_t const& source, fixed_point_t multiplier = fixed_point_t::_1(),
-			ModifierEffect::target_t excluded_targets = ModifierEffect::target_t::ALL_TARGETS
+			ModifierEffect::target_t excluded_targets = ModifierEffect::target_t::NO_TARGETS
 		);
 		void add_modifier_sum(ModifierSum const& modifier_sum);
 		void add_modifier_sum_exclude_targets(ModifierSum const& modifier_sum, ModifierEffect::target_t excluded_targets);
