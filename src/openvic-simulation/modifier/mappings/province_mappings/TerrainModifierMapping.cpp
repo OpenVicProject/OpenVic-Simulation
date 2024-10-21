@@ -8,5 +8,5 @@ NodeTools::node_callback_t TerrainModifierMapping::expect_modifier_value_and_def
 	NodeTools::key_value_callback_t const& default_callback
 ) const {
 	//special combat_width + min_build_fort + movement_cost + defence + more?
-	return BaseModifierMapping::expect_modifier_value_and_default(modifier_callback, default_callback);
+	return BaseProvinceModifierMapping::expect_modifier_value_and_default(modifier_callback, default_callback);
 }
