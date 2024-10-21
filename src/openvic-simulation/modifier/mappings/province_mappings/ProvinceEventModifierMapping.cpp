@@ -1,5 +1,4 @@
 #include "ProvinceEventModifierMapping.hpp"
-#include "modifier/mappings/BaseModifierMapping.hpp"
 
 using namespace OpenVic;
 

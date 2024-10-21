@@ -1,5 +1,4 @@
 #include "TerrainModifierMapping.hpp"
-#include "modifier/mappings/BaseModifierMapping.hpp"
 
 using namespace OpenVic;
 
