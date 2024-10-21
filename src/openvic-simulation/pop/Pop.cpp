@@ -668,9 +668,9 @@ bool PopManager::generate_modifiers(ModifierManager& modifier_manager) const {
 		const auto strata_modifier = [&modifier_manager, &ret, &strata](
 			ModifierEffect const*& effect_cache, std::string_view suffix, bool is_positive_good
 		) -> void {
-			ret &= modifier_manager.add_modifier_effect(
+			ret &= modifier_manager.register_base_country_modifier_effect(
 				effect_cache, StringUtils::append_string_views(strata.get_identifier(), suffix), is_positive_good,
-				PROPORTION_DECIMAL, COUNTRY
+				PROPORTION_DECIMAL
 			);
 		};
 

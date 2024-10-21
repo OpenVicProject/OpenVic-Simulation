@@ -778,6 +778,10 @@ bool Dataloader::_load_map_dir(DefinitionManager& definition_manager) const {
 		Logger::error("Failed to load terrain types!");
 		ret = false;
 	}
+	if (!map_definition.get_terrain_type_manager().generate_modifiers(definition_manager.get_modifier_manager())) {
+		Logger::error("Failed to generate terrain-based modifiers!");
+		ret = false;
+	}
 
 	if (!map_definition.load_map_images(
 		lookup_file(append_string_views(map_directory, provinces)),
@@ -964,11 +968,12 @@ bool Dataloader::load_defines(DefinitionManager& definition_manager) {
 		Logger::error("Failed to load rebel types!");
 		ret = false;
 	}
+	definition_manager.get_modifier_manager().lock_all_modifier_except_base_country_effects();
 	if (!_load_technologies(definition_manager)) {
 		Logger::error("Failed to load technologies!");
 		ret = false;
 	}
-	definition_manager.get_modifier_manager().lock_modifier_effects();
+	definition_manager.get_modifier_manager().lock_base_country_modifier_effects();
 	if (!definition_manager.get_politics_manager().get_rule_manager().setup_rules(
 		definition_manager.get_economy_manager().get_building_type_manager()
 	)) {
@@ -1008,6 +1013,7 @@ bool Dataloader::load_defines(DefinitionManager& definition_manager) {
 		Logger::error("Failed to load crime modifiers!");
 		ret = false;
 	}
+
 	if (!definition_manager.get_modifier_manager().load_event_modifiers(
 		parse_defines(lookup_file(event_modifiers_file)).get_file_node()
 	)) {
@@ -1020,6 +1026,8 @@ bool Dataloader::load_defines(DefinitionManager& definition_manager) {
 		Logger::error("Failed to load static modifiers!");
 		ret = false;
 	}
+	definition_manager.get_modifier_manager().lock_event_modifiers();
+
 	if (!definition_manager.get_modifier_manager().load_triggered_modifiers(
 		parse_defines_cached(lookup_file(triggered_modifiers_file)).get_file_node()
 	)) {

@@ -18,6 +18,8 @@ namespace OpenVic {
 	struct Strata;
 	struct TechnologyManager;
 	struct TechnologyFolder;
+	struct TerrainTypeManager;
+	struct TerrainType;
 
 	struct ModifierEffectCache {
 		friend struct ModifierManager;
@@ -27,6 +29,7 @@ namespace OpenVic {
 		friend struct RebelManager;
 		friend struct PopManager;
 		friend struct TechnologyManager;
+		friend struct TerrainTypeManager;
 
 	private:
 		/* Tech/inventions only */
@@ -86,7 +89,8 @@ namespace OpenVic {
 		ModifierEffect const* PROPERTY(leadership);
 		ModifierEffect const* PROPERTY(leadership_modifier);
 		ModifierEffect const* PROPERTY(literacy_con_impact);
-		ModifierEffect const* PROPERTY(loan_interest);
+		ModifierEffect const* PROPERTY(loan_interest_base);
+		ModifierEffect const* PROPERTY(loan_interest_foreign);
 		ModifierEffect const* PROPERTY(max_loan_modifier);
 		ModifierEffect const* PROPERTY(max_military_spending);
 		ModifierEffect const* PROPERTY(max_national_focus);
@@ -103,6 +107,7 @@ namespace OpenVic {
 		ModifierEffect const* PROPERTY(mobilisation_economy_impact);
 		ModifierEffect const* PROPERTY(mobilisation_size);
 		ModifierEffect const* PROPERTY(mobilization_impact);
+		ModifierEffect const* PROPERTY(morale_global);
 		ModifierEffect const* PROPERTY(naval_attack_modifier);
 		ModifierEffect const* PROPERTY(naval_attrition);
 		ModifierEffect const* PROPERTY(naval_defense_modifier);
@@ -143,8 +148,11 @@ namespace OpenVic {
 		ModifierEffect const* PROPERTY(boost_strongest_party);
 		ModifierEffect const* PROPERTY(combat_width_percentage_change);
 		ModifierEffect const* PROPERTY(defence_terrain);
-		ModifierEffect const* PROPERTY(farm_rgo_eff);
-		ModifierEffect const* PROPERTY(farm_rgo_size);
+		ModifierEffect const* PROPERTY(farm_rgo_throughput_global);
+		ModifierEffect const* PROPERTY(farm_rgo_output_global);
+		ModifierEffect const* PROPERTY(farm_rgo_output_local);
+		ModifierEffect const* PROPERTY(farm_rgo_size_global);
+		ModifierEffect const* PROPERTY(farm_rgo_size_local);
 		ModifierEffect const* PROPERTY(immigrant_attract);
 		ModifierEffect const* PROPERTY(immigrant_push);
 		ModifierEffect const* PROPERTY(life_rating);
@@ -160,22 +168,28 @@ namespace OpenVic {
 		ModifierEffect const* PROPERTY(local_ruling_party_support);
 		ModifierEffect const* PROPERTY(local_ship_build);
 		ModifierEffect const* PROPERTY(max_attrition);
-		ModifierEffect const* PROPERTY(mine_rgo_eff);
-		ModifierEffect const* PROPERTY(mine_rgo_size);
+		ModifierEffect const* PROPERTY(mine_rgo_throughput_global);
+		ModifierEffect const* PROPERTY(mine_rgo_output_global);
+		ModifierEffect const* PROPERTY(mine_rgo_output_local);
+		ModifierEffect const* PROPERTY(mine_rgo_size_global);
+		ModifierEffect const* PROPERTY(mine_rgo_size_local);
 		ModifierEffect const* PROPERTY(movement_cost_base);
 		ModifierEffect const* PROPERTY(movement_cost_percentage_change);
+		ModifierEffect const* PROPERTY(movement_cost_percentage_change_fake); //shows up but does nothing in Victoria 2
 		ModifierEffect const* PROPERTY(number_of_voters);
 		ModifierEffect const* PROPERTY(pop_consciousness_modifier);
 		ModifierEffect const* PROPERTY(pop_militancy_modifier);
 		ModifierEffect const* PROPERTY(population_growth);
-		ModifierEffect const* PROPERTY(supply_limit);
+		ModifierEffect const* PROPERTY(supply_limit_global_percentage_change);
+		ModifierEffect const* PROPERTY(supply_limit_global_base);
+		ModifierEffect const* PROPERTY(supply_limit_local_base);
 
 		/* Military Modifier Effects */
-		ModifierEffect const* PROPERTY(attack);
+		ModifierEffect const* PROPERTY(attack_leader);
 		ModifierEffect const* PROPERTY(attrition);
 		ModifierEffect const* PROPERTY(defence_leader);
 		ModifierEffect const* PROPERTY(experience);
-		ModifierEffect const* PROPERTY(morale);
+		ModifierEffect const* PROPERTY(morale_leader);
 		ModifierEffect const* PROPERTY(organisation);
 		ModifierEffect const* PROPERTY(reconnaissance);
 		ModifierEffect const* PROPERTY(reliability);
@@ -272,6 +286,24 @@ namespace OpenVic {
 		IndexedMap<RegimentType, regiment_type_effects_t> PROPERTY(regiment_type_effects);
 		ship_type_effects_t PROPERTY(navy_base_effects);
 		IndexedMap<ShipType, ship_type_effects_t> PROPERTY(ship_type_effects);
+
+		/* Unit terrain Effects */
+	public:
+		struct unit_terrain_effects_t {
+			friend struct TerrainTypeManager;
+
+		private:
+			ModifierEffect const* PROPERTY(attack);
+			ModifierEffect const* PROPERTY(defence);
+			ModifierEffect const* PROPERTY(attrition);
+			ModifierEffect const* PROPERTY(movement);
+
+		public:
+			unit_terrain_effects_t();
+		};
+
+	private:
+		IndexedMap<TerrainType, unit_terrain_effects_t> PROPERTY(unit_terrain_effects);
 
 		/* Rebel Effects */
 		ModifierEffect const* PROPERTY(rebel_org_gain_all);

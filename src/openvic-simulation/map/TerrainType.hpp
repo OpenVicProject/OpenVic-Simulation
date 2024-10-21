@@ -67,5 +67,6 @@ namespace OpenVic {
 		TerrainTypeMapping::index_t get_terrain_texture_limit() const;
 
 		bool load_terrain_types(ModifierManager const& modifier_manager, ast::NodeCPtr root);
+		bool generate_modifiers(ModifierManager& modifier_manager) const;
 	};
 }
