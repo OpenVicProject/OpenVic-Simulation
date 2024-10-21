@@ -159,8 +159,8 @@ void MapInstance::tick(Date today) {
 	}
 }
 
-void MapInstance::initialise_for_new_game(){
+void MapInstance::initialise_for_new_game(ModifierEffectCache const& modifier_effect_cache){
 	for (ProvinceInstance& province : province_instances.get_items()) {
-		province.initialise_for_new_game();
+		province.initialise_for_new_game(modifier_effect_cache);
 	}
 }

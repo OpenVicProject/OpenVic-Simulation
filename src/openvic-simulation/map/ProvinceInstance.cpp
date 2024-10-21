@@ -466,8 +466,8 @@ bool ProvinceInstance::apply_history_to_province(ProvinceHistoryEntry const& ent
 	return ret;
 }
 
-void ProvinceInstance::initialise_for_new_game() {
-	rgo.initialise_for_new_game(*this);
+void ProvinceInstance::initialise_for_new_game(ModifierEffectCache const& modifier_effect_cache) {
+	rgo.initialise_for_new_game(*this, modifier_effect_cache);
 }
 
 void ProvinceInstance::setup_pop_test_values(IssueManager const& issue_manager) {

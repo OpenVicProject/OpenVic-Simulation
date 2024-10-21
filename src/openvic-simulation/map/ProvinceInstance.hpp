@@ -159,7 +159,7 @@ namespace OpenVic {
 		bool setup(BuildingTypeManager const& building_type_manager);
 		bool apply_history_to_province(ProvinceHistoryEntry const& entry, CountryInstanceManager& country_manager);
 
-		void initialise_for_new_game();
+		void initialise_for_new_game(ModifierEffectCache const& modifier_effect_cache);
 
 		void setup_pop_test_values(IssueManager const& issue_manager);
 		plf::colony<Pop>& get_mutable_pops();

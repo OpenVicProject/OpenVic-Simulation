@@ -6,10 +6,9 @@
 #include "openvic-simulation/pop/Pop.hpp"
 #include "openvic-simulation/map/ProvinceInstance.hpp"
 #include "openvic-simulation/map/State.hpp"
-#include "openvic-simulation/map/TerrainType.hpp"
-#include "openvic-simulation/modifier/Modifier.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
 #include "openvic-simulation/utility/Logger.hpp"
+#include "modifier/ModifierEffectCache.hpp"
 
 using namespace OpenVic;
 
@@ -48,15 +47,15 @@ void ResourceGatheringOperation::set_production_type_nullable(ProductionType con
 	production_type_nullable = new_production_type_nullable;
 }
 
-void ResourceGatheringOperation::initialise_for_new_game(ProvinceInstance& location) {
+void ResourceGatheringOperation::initialise_for_new_game(ProvinceInstance& location, ModifierEffectCache const& modifier_effect_cache) {
 	if(production_type_nullable == nullptr) {
 		output_quantity_yesterday = 0;
 		revenue_yesterday = 0;
 		return;
 	}
 
-	ProductionType const& production_type = *(this->production_type_nullable);
-	const Pop::pop_size_t total_worker_count_in_province = update_size_and_return_total_worker_count(location);
+	ProductionType const& production_type = *(production_type_nullable);
+	const Pop::pop_size_t total_worker_count_in_province = update_size_and_return_total_worker_count(location, modifier_effect_cache);
 	hire(location, total_worker_count_in_province);
 	Pop::pop_size_t total_owner_count_in_state_cache {};
 	std::vector<Pop*> owner_pops_cache {};
@@ -65,7 +64,7 @@ void ResourceGatheringOperation::initialise_for_new_game(ProvinceInstance& locat
 	pay_employees(location, revenue_yesterday, total_worker_count_in_province, owner_pops_cache, total_owner_count_in_state_cache);	
 }
 
-Pop::pop_size_t ResourceGatheringOperation::update_size_and_return_total_worker_count(ProvinceInstance& location) {
+Pop::pop_size_t ResourceGatheringOperation::update_size_and_return_total_worker_count(ProvinceInstance& location, ModifierEffectCache const& modifier_effect_cache) {
 	if(production_type_nullable == nullptr) {
 		size_multiplier = fixed_point_t::_0();
 		max_employee_count_cache = fixed_point_t::_0();
@@ -87,19 +86,36 @@ Pop::pop_size_t ResourceGatheringOperation::update_size_and_return_total_worker_
 	}
 
 	const fixed_point_t base_workforce_size = production_type.get_base_workforce_size();
-	TerrainType const* const terrain_type = location.get_terrain_type();
-	if(terrain_type != nullptr) {
-		ModifierValue const& terrain_modifiers = terrain_type->get_modifier();
-		if(production_type.is_farm()) {
-			//base_workforce_size *= terrain_modifiers["farm_rgo_size"];
-		}
-		if(production_type.is_mine()) {
-			//base_workforce_size *= terrain_modifiers["mine_rgo_size"];
-		}
+	const fixed_point_t size_modifier = calculate_size_modifier(location, modifier_effect_cache);
+	if(size_modifier == fixed_point_t::_0()) {
+		size_multiplier = 0;
 	}
-	size_multiplier = ((total_worker_count_in_province / base_workforce_size).ceil() * fixed_point_t::_1_50()).floor();
-	max_employee_count_cache = size_multiplier * production_type.get_base_workforce_size(); //time other modifiers
+	else {
+		size_multiplier = ((total_worker_count_in_province / (size_modifier * base_workforce_size)).ceil() * fixed_point_t::_1_50()).floor();
+	}
+	max_employee_count_cache = (size_modifier * size_multiplier * base_workforce_size).floor();
 	return total_worker_count_in_province;
+}
+
+fixed_point_t ResourceGatheringOperation::calculate_size_modifier(ProvinceInstance const& location, ModifierEffectCache const& modifier_effect_cache) const {
+	if(production_type_nullable == nullptr) {
+		return fixed_point_t::_1();
+	}
+	
+	ProductionType const& production_type = *(production_type_nullable);
+
+	fixed_point_t size_modifier = fixed_point_t::_1();
+	if(production_type.is_farm()) {
+		size_modifier *= location.get_modifier_effect_value_nullcheck(modifier_effect_cache.get_farm_rgo_size());
+	}
+	if(production_type.is_mine()) {
+		size_modifier *= location.get_modifier_effect_value_nullcheck(modifier_effect_cache.get_mine_rgo_size());
+	}
+	auto const& good_effects = modifier_effect_cache.get_good_effects().get_item_by_key(production_type.get_output_good());
+	if(good_effects != nullptr) {
+		size_modifier *= location.get_modifier_effect_value_nullcheck(good_effects->get_rgo_size());
+	}
+	return size_modifier;
 }
 
 void ResourceGatheringOperation::hire(ProvinceInstance& location, Pop::pop_size_t available_worker_count) {

@@ -2,9 +2,10 @@
 
 #include "openvic-simulation/economy/production/Employee.hpp"
 #include "openvic-simulation/economy/production/ProductionType.hpp"
+#include "openvic-simulation/modifier/ModifierEffectCache.hpp"
+#include "openvic-simulation/pop/Pop.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
 #include "openvic-simulation/utility/Getters.hpp"
-#include "openvic-simulation/pop/Pop.hpp"
 
 namespace OpenVic {
 	struct ResourceGatheringOperation {
@@ -22,7 +23,8 @@ namespace OpenVic {
 		fixed_point_t PROPERTY(total_employee_income_cache);
 		IndexedMap<PopType, Pop::pop_size_t> PROPERTY(employee_count_per_type_cache);
 
-		Pop::pop_size_t update_size_and_return_total_worker_count(ProvinceInstance& location);
+		Pop::pop_size_t update_size_and_return_total_worker_count(ProvinceInstance& location, ModifierEffectCache const& modifier_effect_cache);
+		fixed_point_t calculate_size_modifier(ProvinceInstance const& location, ModifierEffectCache const& modifier_effect_cache) const;
 		void hire(ProvinceInstance& location, const Pop::pop_size_t available_worker_count);
 		fixed_point_t produce(
 			ProvinceInstance& location,
@@ -52,6 +54,6 @@ namespace OpenVic {
 			return production_type_nullable != nullptr;
 		}
 		void set_production_type_nullable(ProductionType const* new_production_type_nullable);
-		void initialise_for_new_game(ProvinceInstance& location);
+		void initialise_for_new_game(ProvinceInstance& location, ModifierEffectCache const& modifier_effect_cache);
 	};
 }

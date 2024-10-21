@@ -164,7 +164,7 @@ bool InstanceManager::load_bookmark(Bookmark const* new_bookmark) {
 	);
 
 	if(ret) {
-		map_instance.initialise_for_new_game();
+		map_instance.initialise_for_new_game(definition_manager.get_modifier_manager().get_modifier_effect_cache());
 	}
 
 	return ret;
