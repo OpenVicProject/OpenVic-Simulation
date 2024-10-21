@@ -59,7 +59,7 @@ void ResourceGatheringOperation::initialise_for_new_game(ProvinceInstance& locat
 	hire(location, total_worker_count_in_province);
 	Pop::pop_size_t total_owner_count_in_state_cache {};
 	std::vector<Pop*> owner_pops_cache {};
-	output_quantity_yesterday = produce(location, owner_pops_cache, total_owner_count_in_state_cache);
+	output_quantity_yesterday = produce(location, owner_pops_cache, total_owner_count_in_state_cache, modifier_effect_cache);
 	revenue_yesterday = output_quantity_yesterday * production_type.get_output_good().get_base_price(); //TODO sell on market
 	pay_employees(location, revenue_yesterday, total_worker_count_in_province, owner_pops_cache, total_owner_count_in_state_cache);	
 }
@@ -162,7 +162,8 @@ void ResourceGatheringOperation::hire(ProvinceInstance& location, Pop::pop_size_
 fixed_point_t ResourceGatheringOperation::produce(
 	ProvinceInstance& location,
 	std::vector<Pop*>& owner_pops_cache,
-	Pop::pop_size_t& total_owner_count_in_state_cache
+	Pop::pop_size_t& total_owner_count_in_state_cache,
+	ModifierEffectCache const& modifier_effect_cache
 ) {
 	total_owner_count_in_state_cache = 0;
 	owner_pops_cache = {};
@@ -221,7 +222,23 @@ fixed_point_t ResourceGatheringOperation::produce(
 		}
 	}
 
-	//TODO include modifiers, job effects, etc
+	throughput_multiplier += location.get_modifier_effect_value_nullcheck(modifier_effect_cache.get_rgo_throughput())
+		+location.get_modifier_effect_value_nullcheck(modifier_effect_cache.get_local_rgo_throughput());
+	output_multilpier += location.get_modifier_effect_value_nullcheck(modifier_effect_cache.get_rgo_output())
+		+location.get_modifier_effect_value_nullcheck(modifier_effect_cache.get_local_rgo_output());
+
+	if(production_type.is_farm()) {
+		output_multilpier += location.get_modifier_effect_value_nullcheck(modifier_effect_cache.get_farm_rgo_eff());
+	}
+	if(production_type.is_mine()) {
+		output_multilpier += location.get_modifier_effect_value_nullcheck(modifier_effect_cache.get_mine_rgo_eff());
+	}
+	auto const& good_effects = modifier_effect_cache.get_good_effects().get_item_by_key(production_type.get_output_good());
+	if(good_effects != nullptr) {
+		throughput_multiplier *= location.get_modifier_effect_value_nullcheck(good_effects->get_rgo_goods_throughput());
+		output_multilpier *= location.get_modifier_effect_value_nullcheck(good_effects->get_rgo_goods_output());
+	}
+
 	fixed_point_t throughput_from_workers = fixed_point_t::_0();
 	fixed_point_t output_from_workers = fixed_point_t::_1();
 	for (PopType const& pop_type : *(employee_count_per_type_cache.get_keys())) {

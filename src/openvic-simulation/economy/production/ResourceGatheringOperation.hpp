@@ -29,7 +29,8 @@ namespace OpenVic {
 		fixed_point_t produce(
 			ProvinceInstance& location,
 			std::vector<Pop*>& owner_pops_cache,
-			Pop::pop_size_t& total_owner_count_in_state_cache
+			Pop::pop_size_t& total_owner_count_in_state_cache,
+			ModifierEffectCache const& modifier_effect_cache
 		);
 		void pay_employees(
 			ProvinceInstance& location,
