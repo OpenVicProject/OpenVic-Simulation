@@ -12,6 +12,7 @@ namespace OpenVic {
 
 	struct Modifier : HasIdentifier, ModifierValue {
 		friend struct ModifierManager;
+		friend struct StaticModifierCache;
 		friend struct UnitType;
 
 		enum struct modifier_type_t : uint8_t {

@@ -38,6 +38,7 @@ namespace OpenVic {
 		 * If false, the colours will be switced.
 		 */
 		const bool PROPERTY_CUSTOM_PREFIX(positive_good, is);
+		const bool PROPERTY_CUSTOM_PREFIX(no_effect, has);
 		const format_t PROPERTY(format);
 		const target_t PROPERTY(targets);
 		std::string PROPERTY(localisation_key);
@@ -45,8 +46,8 @@ namespace OpenVic {
 		// TODO - format/precision, e.g. 80% vs 0.8 vs 0.800, 2 vs 2.0 vs 200%
 
 		ModifierEffect(
-			std::string_view new_identifier, bool new_positive_good, format_t new_format, target_t mew_targets,
-			std::string_view new_localisation_key
+			std::string_view new_identifier, bool new_is_positive_good, format_t new_format, target_t mew_targets,
+			std::string_view new_localisation_key, bool new_has_no_effect
 		);
 
 	public:

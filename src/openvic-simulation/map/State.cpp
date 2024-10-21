@@ -5,6 +5,7 @@
 #include "openvic-simulation/map/MapInstance.hpp"
 #include "openvic-simulation/map/ProvinceInstance.hpp"
 #include "openvic-simulation/map/Region.hpp"
+#include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
 #include "openvic-simulation/utility/StringUtils.hpp"
 
 using namespace OpenVic;
@@ -65,10 +66,16 @@ void State::update_gamestate() {
 	const int32_t potential_workforce_in_state = 0; // sum of worker pops, regardless of employment
 	const int32_t potential_employment_in_state = 0; // sum of (factory level * production method base_workforce_size)
 
-	industrial_power = total_factory_levels_in_state * std::clamp(
-		(fixed_point_t { potential_workforce_in_state } / 100).floor() * 400 / potential_employment_in_state,
-		fixed_point_t::_0_20(), fixed_point_t::_4()
-	);
+	fixed_point_t unclamped_score_per_factory = fixed_point_t::_0();
+
+	if (potential_employment_in_state > 0) {
+		unclamped_score_per_factory = (fixed_point_t { potential_workforce_in_state } / fixed_point_t::_100()).floor() * 400 / potential_employment_in_state;
+	} else {
+		industrial_power = total_factory_levels_in_state * std::clamp(
+			unclamped_score_per_factory,
+			fixed_point_t::_0_20(), fixed_point_t::_4()
+		);
+	}
 }
 
 /* Whether two provinces in the same region should be grouped into the same state or not.

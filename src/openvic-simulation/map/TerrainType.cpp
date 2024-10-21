@@ -1,5 +1,7 @@
 #include "TerrainType.hpp"
 
+#include <string_view>
+
 #include "openvic-simulation/modifier/ModifierManager.hpp"
 #include "openvic-simulation/types/Colour.hpp"
 
@@ -16,6 +18,38 @@ TerrainTypeMapping::TerrainTypeMapping(
 	index_t new_priority, bool new_has_texture
 ) : HasIdentifier { new_identifier }, type { new_type }, terrain_indices { std::move(new_terrain_indicies) },
 	priority { new_priority }, has_texture { new_has_texture } {}
+
+bool TerrainTypeManager::generate_modifiers(ModifierManager& modifier_manager) const {
+	using enum ModifierEffect::format_t;
+	IndexedMap<TerrainType, ModifierEffectCache::unit_terrain_effects_t>& unit_terrain_effects =
+		modifier_manager.modifier_effect_cache.unit_terrain_effects;
+
+	unit_terrain_effects.set_keys(&get_terrain_types());
+
+	constexpr bool has_no_effect = true;
+	bool ret = true;
+	for (TerrainType const& terrain_type : get_terrain_types()) {
+		const std::string_view identifier = terrain_type.get_identifier();
+		ModifierEffectCache::unit_terrain_effects_t& this_unit_terrain_effects = unit_terrain_effects[terrain_type];
+		ret &= modifier_manager.register_unit_terrain_modifier_effect(
+			this_unit_terrain_effects.attack, ModifierManager::get_flat_identifier("attack", identifier), true,
+			PROPORTION_DECIMAL, "UA_ATTACK", has_no_effect
+		);
+		ret &= modifier_manager.register_unit_terrain_modifier_effect(
+			this_unit_terrain_effects.defence, ModifierManager::get_flat_identifier("defence", identifier), true,
+			PROPORTION_DECIMAL, "UA_DEFENCE", has_no_effect
+		);
+		ret &= modifier_manager.register_unit_terrain_modifier_effect(
+			this_unit_terrain_effects.attrition, ModifierManager::get_flat_identifier("attrition", identifier), false,
+			RAW_DECIMAL, "UA_ATTRITION", has_no_effect
+		);
+		ret &= modifier_manager.register_unit_terrain_modifier_effect(
+			this_unit_terrain_effects.movement, ModifierManager::get_flat_identifier("movement", identifier), true,
+			PROPORTION_DECIMAL, "UA_MOVEMENT"
+		);
+	}
+	return ret;
+}
 
 bool TerrainTypeManager::add_terrain_type(
 	std::string_view identifier, colour_t colour, ModifierValue&& values, bool is_water
@@ -72,15 +106,12 @@ node_callback_t TerrainTypeManager::_load_terrain_type_categories(ModifierManage
 	return [this, &modifier_manager](ast::NodeCPtr root) -> bool {
 		const bool ret = expect_dictionary_reserve_length(terrain_types,
 			[this, &modifier_manager](std::string_view type_key, ast::NodeCPtr type_node) -> bool {
-				using enum Modifier::modifier_type_t;
-
 				ModifierValue values;
 				colour_t colour = colour_t::null();
 				bool is_water = false;
 
-				bool ret = modifier_manager.expect_modifier_value_and_keys(
-					move_variable_callback(values),
-					TERRAIN,
+				bool ret = NodeTools::expect_dictionary_keys_and_default(
+					modifier_manager.expect_terrain_modifier(values),
 					"color", ONE_EXACTLY, expect_colour(assign_variable_callback(colour)),
 					"is_water", ZERO_OR_ONE, expect_bool(assign_variable_callback(is_water))
 				)(type_node);

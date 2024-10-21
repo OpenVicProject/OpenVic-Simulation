@@ -1,6 +1,7 @@
 #include "Issue.hpp"
 
 #include "openvic-simulation/modifier/ModifierManager.hpp"
+#include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
 
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;
@@ -178,17 +179,18 @@ bool IssueManager::_load_issue(
 	ModifierManager const& modifier_manager, RuleManager const& rule_manager, std::string_view identifier,
 	IssueGroup const* group, ast::NodeCPtr node
 ) {
-	using enum Modifier::modifier_type_t;
-
 	ModifierValue values;
 	RuleSet rules;
 	bool jingoism = false;
 
-	bool ret = modifier_manager.expect_modifier_value_and_keys(
-		move_variable_callback(values),
-		ISSUE,
+	bool ret = NodeTools::expect_dictionary_keys_and_default(
+		modifier_manager.expect_base_country_modifier(values),
 		"is_jingoism", ZERO_OR_ONE, expect_bool(assign_variable_callback(jingoism)),
-		"rules", ZERO_OR_ONE, rule_manager.expect_rule_set(move_variable_callback(rules))
+		"rules", ZERO_OR_ONE, rule_manager.expect_rule_set(move_variable_callback(rules)),
+		"war_exhaustion_effect", ZERO_OR_ONE, [](const ast::NodeCPtr _) -> bool {
+			Logger::warning("war_exhaustion_effect does nothing (vanilla issues have it).");
+			return true;
+		 }
 	)(node);
 
 	ret &= add_issue(
@@ -219,8 +221,6 @@ bool IssueManager::_load_reform(
 	ModifierManager const& modifier_manager, RuleManager const& rule_manager, size_t ordinal, std::string_view identifier,
 	ReformGroup const* group, ast::NodeCPtr node
 ) {
-	using enum Modifier::modifier_type_t;
-
 	ModifierValue values;
 	RuleSet rules;
 	fixed_point_t administrative_multiplier = 0;
@@ -229,9 +229,8 @@ bool IssueManager::_load_reform(
 	ConditionScript on_execute_trigger { scope_t::COUNTRY, scope_t::COUNTRY, scope_t::NO_SCOPE };
 	EffectScript on_execute_effect;
 
-	bool ret = modifier_manager.expect_modifier_value_and_keys(
-		move_variable_callback(values),
-		REFORM,
+	bool ret = NodeTools::expect_dictionary_keys_and_default(
+		modifier_manager.expect_base_country_modifier(values),
 		"administrative_multiplier", ZERO_OR_ONE, expect_fixed_point(assign_variable_callback(administrative_multiplier)),
 		"technology_cost", ZERO_OR_ONE, expect_uint(assign_variable_callback(technology_cost)),
 		"allow", ZERO_OR_ONE, allow.expect_script(),

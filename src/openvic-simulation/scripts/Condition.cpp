@@ -155,7 +155,7 @@ bool ConditionManager::setup_conditions(DefinitionManager const& definition_mana
 	ret &= add_condition("great_wars_enabled", BOOLEAN, COUNTRY);
 	ret &= add_condition("have_core_in", IDENTIFIER, COUNTRY, NO_SCOPE, NO_IDENTIFIER, COUNTRY_TAG);
 	ret &= add_condition("has_country_flag", IDENTIFIER, COUNTRY, NO_SCOPE, NO_IDENTIFIER, COUNTRY_FLAG);
-	ret &= add_condition("has_country_modifier", IDENTIFIER, COUNTRY, NO_SCOPE, NO_IDENTIFIER, MODIFIER);
+	ret &= add_condition("has_country_modifier", IDENTIFIER, COUNTRY, NO_SCOPE, NO_IDENTIFIER, COUNTRY_EVENT_MODIFIER);
 	ret &= add_condition("has_cultural_sphere", BOOLEAN, COUNTRY);
 	ret &= add_condition("has_leader", STRING, COUNTRY);
 	ret &= add_condition("has_pop_culture", IDENTIFIER, COUNTRY, NO_SCOPE, NO_IDENTIFIER, CULTURE);
@@ -299,7 +299,7 @@ bool ConditionManager::setup_conditions(DefinitionManager const& definition_mana
 	ret &= add_condition("has_empty_adjacent_state", BOOLEAN, PROVINCE);
 	ret &= add_condition("has_national_minority", BOOLEAN, PROVINCE);
 	ret &= add_condition("has_province_flag", IDENTIFIER, PROVINCE, NO_SCOPE, NO_IDENTIFIER, PROVINCE_FLAG);
-	ret &= add_condition("has_province_modifier", IDENTIFIER, PROVINCE, NO_SCOPE, NO_IDENTIFIER, MODIFIER);
+	ret &= add_condition("has_province_modifier", IDENTIFIER, PROVINCE, NO_SCOPE, NO_IDENTIFIER, PROVINCE_EVENT_MODIFIER);
 	ret &= add_condition("has_recent_imigration", INTEGER, PROVINCE); //paradox typo
 	ret &= add_condition("is_blockaded", BOOLEAN, PROVINCE);
 	ret &= add_condition("is_accepted_culture", IDENTIFIER | BOOLEAN, PROVINCE, NO_SCOPE, NO_IDENTIFIER, COUNTRY_TAG);
@@ -505,9 +505,8 @@ callback_t<std::string_view> ConditionManager::expect_parse_identifier(
 		EXPECT_CALL(BUILDING, building_type, definition_manager.get_economy_manager().get_building_type_manager(), "FACTORY");
 		EXPECT_CALL(CASUS_BELLI, wargoal_type, definition_manager.get_military_manager().get_wargoal_type_manager());
 		EXPECT_CALL(GOVERNMENT_TYPE, government_type, definition_manager.get_politics_manager().get_government_type_manager());
-		EXPECT_CALL(MODIFIER, event_modifier, definition_manager.get_modifier_manager());
-		EXPECT_CALL(MODIFIER, triggered_modifier, definition_manager.get_modifier_manager());
-		EXPECT_CALL(MODIFIER, static_modifier, definition_manager.get_modifier_manager());
+		EXPECT_CALL(COUNTRY_EVENT_MODIFIER | PROVINCE_EVENT_MODIFIER, event_modifier, definition_manager.get_modifier_manager());
+		EXPECT_CALL(COUNTRY_EVENT_MODIFIER, triggered_modifier, definition_manager.get_modifier_manager());
 		EXPECT_CALL(NATIONAL_VALUE, national_value, definition_manager.get_politics_manager().get_national_value_manager());
 		EXPECT_CALL(
 			CULTURE_UNION, country_definition, definition_manager.get_country_definition_manager(), "THIS", "FROM", "THIS_UNION"

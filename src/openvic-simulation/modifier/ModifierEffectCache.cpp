@@ -2,6 +2,7 @@
 
 #include "openvic-simulation/economy/BuildingType.hpp"
 #include "openvic-simulation/economy/GoodDefinition.hpp"
+#include "openvic-simulation/map/TerrainType.hpp"
 #include "openvic-simulation/politics/Rebel.hpp"
 #include "openvic-simulation/research/Technology.hpp"
 
@@ -47,6 +48,12 @@ ModifierEffectCache::ship_type_effects_t::ship_type_effects_t()
 	fire_range { nullptr },
 	evasion { nullptr },
 	torpedo_attack { nullptr } {}
+
+ModifierEffectCache::unit_terrain_effects_t::unit_terrain_effects_t()
+  : attack  { nullptr },
+	defence  { nullptr },
+	attrition { nullptr },
+	movement { nullptr } {}
 
 ModifierEffectCache::strata_effects_t::strata_effects_t()
   : income_modifier { nullptr },
@@ -113,7 +120,8 @@ ModifierEffectCache::ModifierEffectCache()
 	leadership { nullptr },
 	leadership_modifier { nullptr },
 	literacy_con_impact { nullptr },
-	loan_interest { nullptr },
+	loan_interest_base { nullptr },
+	loan_interest_foreign { nullptr },
 	max_loan_modifier { nullptr },
 	max_military_spending { nullptr },
 	max_national_focus { nullptr },
@@ -170,8 +178,11 @@ ModifierEffectCache::ModifierEffectCache()
 	boost_strongest_party { nullptr },
 	combat_width_percentage_change { nullptr },
 	defence_terrain { nullptr },
-	farm_rgo_eff { nullptr },
-	farm_rgo_size { nullptr },
+	farm_rgo_throughput_global { nullptr },
+	farm_rgo_output_global { nullptr },
+	farm_rgo_output_local { nullptr },
+	farm_rgo_size_global { nullptr },
+	farm_rgo_size_local { nullptr },
 	immigrant_attract { nullptr },
 	immigrant_push { nullptr },
 	life_rating { nullptr },
@@ -187,22 +198,28 @@ ModifierEffectCache::ModifierEffectCache()
 	local_ruling_party_support { nullptr },
 	local_ship_build { nullptr },
 	max_attrition { nullptr },
-	mine_rgo_eff { nullptr },
-	mine_rgo_size { nullptr },
+	mine_rgo_throughput_global { nullptr },
+	mine_rgo_output_global { nullptr },
+	mine_rgo_output_local { nullptr },
+	mine_rgo_size_global { nullptr },
+	mine_rgo_size_local { nullptr },
 	movement_cost_base { nullptr },
 	movement_cost_percentage_change { nullptr },
+	movement_cost_percentage_change_fake { nullptr },
 	number_of_voters { nullptr },
 	pop_consciousness_modifier { nullptr },
 	pop_militancy_modifier { nullptr },
 	population_growth { nullptr },
-	supply_limit { nullptr },
+	supply_limit_global_percentage_change { nullptr },
+	supply_limit_local_base { nullptr },
 
 	/* Military Modifier Effects */
-	attack { nullptr },
+	attack_leader { nullptr },
 	attrition { nullptr },
 	defence_leader { nullptr },
 	experience { nullptr },
-	morale { nullptr },
+	morale_global { nullptr },
+	morale_leader { nullptr },
 	organisation { nullptr },
 	reconnaissance { nullptr },
 	reliability { nullptr },
@@ -219,6 +236,7 @@ ModifierEffectCache::ModifierEffectCache()
 	regiment_type_effects { nullptr },
 	navy_base_effects {},
 	ship_type_effects { nullptr },
+	unit_terrain_effects { nullptr },
 
 	/* Rebel Effects */
 	rebel_org_gain_all { nullptr },

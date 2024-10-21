@@ -61,13 +61,10 @@ bool BuildingTypeManager::load_buildings_file(
 		building_types, [this, &good_definition_manager, &production_type_manager, &modifier_manager](
 			std::string_view key, ast::NodeCPtr value
 		) -> bool {
-			using enum Modifier::modifier_type_t;
-
 			BuildingType::building_type_args_t building_type_args {};
 
-			bool ret = modifier_manager.expect_modifier_value_and_keys(
-				move_variable_callback(building_type_args.modifier),
-				BUILDING,
+			bool ret = NodeTools::expect_dictionary_keys_and_default(
+				modifier_manager.expect_base_province_modifier(building_type_args.modifier),
 				"type", ONE_EXACTLY, expect_identifier(assign_variable_callback(building_type_args.type)),
 				"on_completion", ZERO_OR_ONE, expect_identifier(assign_variable_callback(building_type_args.on_completion)),
 				"completion_size", ZERO_OR_ONE,
@@ -131,14 +128,14 @@ bool BuildingTypeManager::load_buildings_file(
 
 		static constexpr std::string_view max_prefix = "max_";
 		static constexpr std::string_view min_prefix = "min_build_";
-		ret &= modifier_manager.add_modifier_effect(
+		ret &= modifier_manager.register_technology_modifier_effect(
 			this_building_type_effects.max_level, StringUtils::append_string_views(max_prefix, building_type.get_identifier()),
-			true, INT, PROVINCE, StringUtils::append_string_views("$", building_type.get_identifier(), "$ $TECH_MAX_LEVEL$")
+			true, INT, StringUtils::append_string_views("$", building_type.get_identifier(), "$ $TECH_MAX_LEVEL$")
 		);
 		// TODO - add custom localisation for "min_build_$building_type$" modifiers
-		ret &= modifier_manager.add_modifier_effect(
+		ret &= modifier_manager.register_terrain_modifier_effect(
 			this_building_type_effects.min_level, StringUtils::append_string_views(min_prefix, building_type.get_identifier()),
-			false, INT, PROVINCE
+			false, INT
 		);
 
 		if (building_type.is_in_province()) {

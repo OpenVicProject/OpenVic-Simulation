@@ -1,6 +1,7 @@
 #include "UnitType.hpp"
 
 #include "openvic-simulation/country/CountryInstance.hpp"
+#include "openvic-simulation/dataloader/NodeTools.hpp"
 #include "openvic-simulation/map/TerrainType.hpp"
 #include "openvic-simulation/modifier/ModifierManager.hpp"
 
@@ -247,11 +248,9 @@ bool UnitTypeManager::load_unit_type_file(
 			TerrainType const* terrain_type = terrain_type_manager.get_terrain_type_by_identifier(default_key);
 
 			if (terrain_type != nullptr) {
-				using enum Modifier::modifier_type_t;
-
-				// TODO - restrict what modifier effects can be used here
-				return modifier_manager.expect_modifier_value(
-					map_callback(unit_args.terrain_modifier_values, terrain_type), UNIT_TERRAIN
+				ModifierValue& modifier_value = unit_args.terrain_modifier_values[terrain_type];
+				return expect_dictionary(
+					modifier_manager.expect_unit_terrain_modifier(modifier_value, terrain_type->get_identifier())
 				)(default_value);
 			}
 
@@ -336,14 +335,13 @@ bool UnitTypeManager::generate_modifiers(ModifierManager& modifier_manager) cons
 		std::derived_from<ModifierEffectCache::unit_type_effects_t> auto unit_type_effects, std::string_view identifier
 	) -> void {
 		using enum ModifierEffect::format_t;
-		using enum ModifierEffect::target_t;
 
 		const auto stat_modifier = [&modifier_manager, &ret, &identifier](
 			ModifierEffect const*& effect_cache, std::string_view suffix, bool is_positive_good,
 			ModifierEffect::format_t format, std::string_view localisation_key
 		) -> void {
-			ret &= modifier_manager.add_modifier_effect(
-				effect_cache, ModifierManager::get_flat_identifier(identifier, suffix), is_positive_good, format, COUNTRY,
+			ret &= modifier_manager.register_technology_modifier_effect(
+				effect_cache, ModifierManager::get_flat_identifier(identifier, suffix), is_positive_good, format,
 				StringUtils::append_string_views("$", identifier, "$: $", localisation_key, "$")
 			);
 		};
