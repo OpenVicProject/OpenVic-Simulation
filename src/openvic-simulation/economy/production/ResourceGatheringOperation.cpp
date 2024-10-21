@@ -115,7 +115,7 @@ fixed_point_t ResourceGatheringOperation::calculate_size_modifier(ProvinceInstan
 	if(good_effects != nullptr) {
 		size_modifier *= location.get_modifier_effect_value_nullcheck(good_effects->get_rgo_size());
 	}
-	return size_modifier;
+	return size_modifier > fixed_point_t::_0() ? size_modifier : fixed_point_t::_0();
 }
 
 void ResourceGatheringOperation::hire(ProvinceInstance& location, Pop::pop_size_t available_worker_count) {
