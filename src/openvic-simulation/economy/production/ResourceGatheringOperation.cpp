@@ -106,15 +106,13 @@ fixed_point_t ResourceGatheringOperation::calculate_size_modifier(ProvinceInstan
 
 	fixed_point_t size_modifier = fixed_point_t::_1();
 	if(production_type.is_farm()) {
-		size_modifier *= location.get_modifier_effect_value_nullcheck(modifier_effect_cache.get_farm_rgo_size());
+		size_modifier += location.get_modifier_effect_value_nullcheck(modifier_effect_cache.get_farm_rgo_size());
 	}
 	if(production_type.is_mine()) {
-		size_modifier *= location.get_modifier_effect_value_nullcheck(modifier_effect_cache.get_mine_rgo_size());
+		size_modifier += location.get_modifier_effect_value_nullcheck(modifier_effect_cache.get_mine_rgo_size());
 	}
-	auto const& good_effects = modifier_effect_cache.get_good_effects().get_item_by_key(production_type.get_output_good());
-	if(good_effects != nullptr) {
-		size_modifier *= location.get_modifier_effect_value_nullcheck(good_effects->get_rgo_size());
-	}
+	auto const& good_effects = modifier_effect_cache.get_good_effects()[production_type.get_output_good()];
+	size_modifier += location.get_modifier_effect_value_nullcheck(good_effects.get_rgo_size());
 	return size_modifier > fixed_point_t::_0() ? size_modifier : fixed_point_t::_0();
 }
 
@@ -129,6 +127,7 @@ void ResourceGatheringOperation::hire(ProvinceInstance& location, Pop::pop_size_
 
 	ProductionType const& production_type = *(production_type_nullable);
 	if(max_employee_count_cache <= 0) { return; }
+	if(available_worker_count <= 0) { return; }
 
 	fixed_point_t proportion_to_hire;
 	if(max_employee_count_cache >= available_worker_count) {
@@ -167,7 +166,7 @@ fixed_point_t ResourceGatheringOperation::produce(
 ) {
 	total_owner_count_in_state_cache = 0;
 	owner_pops_cache = {};
-	if(production_type_nullable == nullptr) {
+	if(production_type_nullable == nullptr || max_employee_count_cache <= 0) {
 		return fixed_point_t::_0();
 	}
 	
@@ -233,11 +232,9 @@ fixed_point_t ResourceGatheringOperation::produce(
 	if(production_type.is_mine()) {
 		output_multilpier += location.get_modifier_effect_value_nullcheck(modifier_effect_cache.get_mine_rgo_eff());
 	}
-	auto const& good_effects = modifier_effect_cache.get_good_effects().get_item_by_key(production_type.get_output_good());
-	if(good_effects != nullptr) {
-		throughput_multiplier *= location.get_modifier_effect_value_nullcheck(good_effects->get_rgo_goods_throughput());
-		output_multilpier *= location.get_modifier_effect_value_nullcheck(good_effects->get_rgo_goods_output());
-	}
+	auto const& good_effects = modifier_effect_cache.get_good_effects()[production_type.get_output_good()];
+	throughput_multiplier += location.get_modifier_effect_value_nullcheck(good_effects.get_rgo_goods_throughput());
+	output_multilpier += location.get_modifier_effect_value_nullcheck(good_effects.get_rgo_goods_output());
 
 	fixed_point_t throughput_from_workers = fixed_point_t::_0();
 	fixed_point_t output_from_workers = fixed_point_t::_1();

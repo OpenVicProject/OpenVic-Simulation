@@ -33,6 +33,7 @@ namespace OpenVic {
 		bool PROPERTY_CUSTOM_PREFIX(game_instance_setup, is);
 		bool PROPERTY_CUSTOM_PREFIX(game_session_started, is);
 
+		void update_modifier_sums();
 	public:
 		inline constexpr bool is_bookmark_loaded() const {
 			return bookmark != nullptr;
