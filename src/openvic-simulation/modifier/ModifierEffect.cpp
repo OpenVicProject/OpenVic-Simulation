@@ -41,9 +41,9 @@ std::string ModifierEffect::make_default_modifier_effect_localisation_key(std::s
 }
 
 ModifierEffect::ModifierEffect(
-	std::string_view new_identifier, bool new_positive_good, format_t new_format, target_t new_targets,
-	std::string_view new_localisation_key
-) : HasIdentifier { new_identifier }, positive_good { new_positive_good }, format { new_format }, targets { new_targets },
+	std::string_view new_identifier, bool new_is_positive_good, format_t new_format, target_t new_targets,
+	std::string_view new_localisation_key, bool new_has_no_effect
+) : HasIdentifier { new_identifier }, positive_good { new_is_positive_good }, format { new_format }, targets { new_targets },
 	localisation_key {
 		new_localisation_key.empty() ? make_default_modifier_effect_localisation_key(new_identifier) : new_localisation_key
-	} {}
+	}, no_effect { new_has_no_effect } {}

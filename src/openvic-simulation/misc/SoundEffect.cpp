@@ -25,14 +25,14 @@ bool SoundEffectManager::_load_sound_define(std::string_view sfx_identifier, ast
 		return false;
 	}
 
-	ret &= sound_effects.add_item({sfx_identifier,file,volume});
+	ret &= sound_effects.add_item({ sfx_identifier, file, volume });
 	return ret;
 }
 
 bool SoundEffectManager::load_sound_defines_file(ast::NodeCPtr root) {
 	return expect_dictionary_reserve_length(sound_effects,
 		[this](std::string_view key, ast::NodeCPtr value) -> bool {
-			return _load_sound_define(key,value);
+			return _load_sound_define(key, value);
 		}
 	)(root);
 }

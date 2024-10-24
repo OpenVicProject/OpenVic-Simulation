@@ -63,12 +63,13 @@ namespace OpenVic {
 		BUILDING        = 1 << 20,
 		CASUS_BELLI     = 1 << 21,
 		GOVERNMENT_TYPE = 1 << 22,
-		MODIFIER        = 1 << 23,
-		NATIONAL_VALUE  = 1 << 24,
-		CULTURE_UNION   = 1 << 25, // same as COUNTRY_TAG but also accepts scope this_union
-		CONTINENT       = 1 << 26,
-		CRIME           = 1 << 27,
-		TERRAIN         = 1 << 28,
+		COUNTRY_EVENT_MODIFIER = 1 << 23,
+		PROVINCE_EVENT_MODIFIER = 1 << 24,
+		NATIONAL_VALUE  = 1 << 25,
+		CULTURE_UNION   = 1 << 26, // same as COUNTRY_TAG but also accepts scope this_union
+		CONTINENT       = 1 << 27,
+		CRIME           = 1 << 28,
+		TERRAIN         = 1 << 29
 	};
 
 	/* Allows enum types to be used with bitwise operators. */
@@ -175,7 +176,8 @@ namespace OpenVic {
 		BUILD_STRING(BUILDING);
 		BUILD_STRING(CASUS_BELLI);
 		BUILD_STRING(GOVERNMENT_TYPE);
-		BUILD_STRING(MODIFIER);
+		BUILD_STRING(COUNTRY_EVENT_MODIFIER);
+		BUILD_STRING(PROVINCE_EVENT_MODIFIER);
 		BUILD_STRING(NATIONAL_VALUE);
 		BUILD_STRING(CULTURE_UNION);
 		BUILD_STRING(CONTINENT);

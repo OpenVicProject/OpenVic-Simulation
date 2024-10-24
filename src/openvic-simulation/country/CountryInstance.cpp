@@ -951,29 +951,29 @@ void CountryInstance::update_modifier_sum(Date today, StaticModifierCache const&
 	});
 
 	// Add static modifiers
-	modifier_sum.add_modifier_nullcheck(static_modifier_cache.get_base_modifier(), country_source);
+	modifier_sum.add_modifier(static_modifier_cache.get_base_modifier(), country_source);
 
 	switch (country_status) {
 		using enum country_status_t;
 	case COUNTRY_STATUS_GREAT_POWER:
-		modifier_sum.add_modifier_nullcheck(static_modifier_cache.get_great_power(), country_source);
+		modifier_sum.add_modifier(static_modifier_cache.get_great_power(), country_source);
 		break;
 	case COUNTRY_STATUS_SECONDARY_POWER:
-		modifier_sum.add_modifier_nullcheck(static_modifier_cache.get_secondary_power(), country_source);
+		modifier_sum.add_modifier(static_modifier_cache.get_secondary_power(), country_source);
 		break;
 	case COUNTRY_STATUS_CIVILISED:
-		modifier_sum.add_modifier_nullcheck(static_modifier_cache.get_civilised(), country_source);
+		modifier_sum.add_modifier(static_modifier_cache.get_civilised(), country_source);
 		break;
 	default:
-		modifier_sum.add_modifier_nullcheck(static_modifier_cache.get_uncivilised(), country_source);
+		modifier_sum.add_modifier(static_modifier_cache.get_uncivilised(), country_source);
 	}
 	if (is_disarmed()) {
-		modifier_sum.add_modifier_nullcheck(static_modifier_cache.get_disarming(), country_source);
+		modifier_sum.add_modifier(static_modifier_cache.get_disarming(), country_source);
 	}
-	modifier_sum.add_modifier_nullcheck(static_modifier_cache.get_war_exhaustion(), country_source, war_exhaustion);
-	modifier_sum.add_modifier_nullcheck(static_modifier_cache.get_infamy(), country_source, infamy);
-	modifier_sum.add_modifier_nullcheck(static_modifier_cache.get_literacy(), country_source, national_literacy);
-	modifier_sum.add_modifier_nullcheck(static_modifier_cache.get_plurality(), country_source, plurality);
+	modifier_sum.add_modifier(static_modifier_cache.get_war_exhaustion(), country_source, war_exhaustion);
+	modifier_sum.add_modifier(static_modifier_cache.get_infamy(), country_source, infamy);
+	modifier_sum.add_modifier(static_modifier_cache.get_literacy(), country_source, national_literacy);
+	modifier_sum.add_modifier(static_modifier_cache.get_plurality(), country_source, plurality);
 	// TODO - difficulty modifiers, war, peace, debt_default_to, bad_debter, generalised_debt_default,
 	//        total_occupation, total_blockaded, in_bankrupcy
 

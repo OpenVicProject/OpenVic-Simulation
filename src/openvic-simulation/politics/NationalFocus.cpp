@@ -117,8 +117,6 @@ bool NationalFocusManager::load_national_foci_file(
 				[this, &group, &pop_manager, &ideology_manager, &good_definition_manager, &modifier_manager](
 					std::string_view identifier, ast::NodeCPtr node
 				) -> bool {
-					using enum Modifier::modifier_type_t;
-
 					uint8_t icon = 0;
 					bool has_flashpoint = false, own_provinces = true, outliner_show_as_percent = false;
 					fixed_point_t flashpoint_tension = 0;
@@ -132,10 +130,9 @@ bool NationalFocusManager::load_national_foci_file(
 						scope_t::PROVINCE | scope_t::COUNTRY, scope_t::PROVINCE | scope_t::COUNTRY, scope_t::NO_SCOPE
 					};
 
-					bool ret = modifier_manager.expect_modifier_value_and_keys_and_default(
-						move_variable_callback(modifiers),
-						NATIONAL_FOCUS,
-						[&good_definition_manager, &encourage_goods, &pop_manager, &encourage_pop_types](
+					const auto expect_base_province_modifier_cb = modifier_manager.expect_base_province_modifier(modifiers);
+					bool ret = NodeTools::expect_dictionary_keys_and_default(
+						[&good_definition_manager, &encourage_goods, &pop_manager, &encourage_pop_types, &expect_base_province_modifier_cb](
 							std::string_view key, ast::NodeCPtr value
 						) -> bool {
 							GoodDefinition const* good = good_definition_manager.get_good_definition_by_identifier(key);
@@ -148,7 +145,7 @@ bool NationalFocusManager::load_national_foci_file(
 								return expect_fixed_point(map_callback(encourage_pop_types, pop_type))(value);
 							}
 
-							return key_value_invalid_callback(key, value);
+							return expect_base_province_modifier_cb(key, value) || key_value_invalid_callback(key, value);
 						},
 						"icon", ONE_EXACTLY, expect_uint(assign_variable_callback(icon)),
 						"ideology", ZERO_OR_ONE,

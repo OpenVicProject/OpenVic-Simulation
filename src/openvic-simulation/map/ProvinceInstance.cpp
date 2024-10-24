@@ -209,17 +209,17 @@ void ProvinceInstance::update_modifier_sum(Date today, StaticModifierCache const
 
 	// Add static modifiers
 	if (is_owner_core()) {
-		modifier_sum.add_modifier_nullcheck(static_modifier_cache.get_core(), province_source);
+		modifier_sum.add_modifier(static_modifier_cache.get_core(), province_source);
 	}
 	if (province_definition.is_water()) {
-		modifier_sum.add_modifier_nullcheck(static_modifier_cache.get_sea_zone(), province_source);
+		modifier_sum.add_modifier(static_modifier_cache.get_sea_zone(), province_source);
 	} else {
-		modifier_sum.add_modifier_nullcheck(static_modifier_cache.get_land_province(), province_source);
+		modifier_sum.add_modifier(static_modifier_cache.get_land_province(), province_source);
 
 		if (province_definition.is_coastal()) {
-			modifier_sum.add_modifier_nullcheck(static_modifier_cache.get_coastal(), province_source);
+			modifier_sum.add_modifier(static_modifier_cache.get_coastal(), province_source);
 		} else {
-			modifier_sum.add_modifier_nullcheck(static_modifier_cache.get_non_coastal(), province_source);
+			modifier_sum.add_modifier(static_modifier_cache.get_non_coastal(), province_source);
 		}
 
 		// TODO - overseas, blockaded, no_adjacent_controlled, has_siege, occupied, nationalism, infrastructure

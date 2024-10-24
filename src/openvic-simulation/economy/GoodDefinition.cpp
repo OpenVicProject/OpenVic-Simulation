@@ -118,9 +118,9 @@ bool GoodDefinitionManager::generate_modifiers(ModifierManager& modifier_manager
 			ModifierEffect const*& effect_cache, std::string_view name, bool is_positive_good,
 			std::string_view localisation_key
 		) -> void {
-			ret &= modifier_manager.add_modifier_effect(
+			ret &= modifier_manager.register_technology_modifier_effect(
 				effect_cache, ModifierManager::get_flat_identifier(name, good_identifier), is_positive_good,
-				PROPORTION_DECIMAL, COUNTRY, localisation_key
+				PROPORTION_DECIMAL, localisation_key
 			);
 		};
 

@@ -60,7 +60,7 @@ node_callback_t ProductionTypeManager::_expect_job(
 		using enum Job::effect_t;
 
 		std::string_view pop_type {};
-		Job::effect_t effect_type {THROUGHPUT};
+		Job::effect_t effect_type { THROUGHPUT };
 		fixed_point_t effect_multiplier = 1, desired_workforce_share = 1;
 
 		static const string_map_t<Job::effect_t> effect_map = {
