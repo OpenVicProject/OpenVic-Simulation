@@ -156,7 +156,12 @@ bool InstanceManager::load_bookmark(Bookmark const* new_bookmark) {
 	);
 
 	ret &= country_instance_manager.apply_history_to_countries(
-		definition_manager.get_history_manager().get_country_manager(), today, unit_instance_manager, map_instance
+		definition_manager.get_history_manager().get_country_manager(),
+		today,
+		unit_instance_manager,
+		map_instance,
+		definition_manager.get_research_manager().get_technology_manager(),
+		definition_manager.get_research_manager().get_invention_manager()
 	);
 
 	ret &= map_instance.get_state_manager().generate_states(

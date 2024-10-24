@@ -10,6 +10,8 @@
 #include "openvic-simulation/politics/Ideology.hpp"
 #include "openvic-simulation/research/Invention.hpp"
 #include "openvic-simulation/research/Technology.hpp"
+#include "openvic-simulation/scripts/Condition.hpp"
+#include "openvic-simulation/utility/Logger.hpp"
 
 using namespace OpenVic;
 
@@ -665,7 +667,8 @@ void CountryInstance::apply_foreign_investments(
 }
 
 bool CountryInstance::apply_history_to_country(
-	CountryHistoryEntry const& entry, MapInstance& map_instance, CountryInstanceManager const& country_instance_manager
+	CountryHistoryEntry const& entry, MapInstance& map_instance, CountryInstanceManager const& country_instance_manager,
+	TechnologyManager const& technology_manager, InventionManager const& invention_manager
 ) {
 	constexpr auto set_optional = []<typename T>(T& target, std::optional<T> const& source) {
 		if (source) {
@@ -712,6 +715,51 @@ bool CountryInstance::apply_history_to_country(
 	for (auto const& [technology, level] : entry.get_technologies()) {
 		ret &= set_technology_unlock_level(*technology, level);
 	}
+
+	const auto inform_limit_parsing_failed = [](Invention const& invention) {
+		Logger::warning("Failed to parse limit for invention ", invention.get_identifier());
+	};
+
+	for (Invention const& invention : invention_manager.get_inventions()) {
+		ConditionNode const& root_condition_node = invention.get_limit().get_condition_root();
+		Condition const* const root_condition_ptr = root_condition_node.get_condition();
+		if (root_condition_ptr == nullptr) {
+			continue;
+		}
+		Condition const& root_condition = *root_condition_ptr;
+		if (
+			root_condition.get_value_type() != value_type_t::GROUP
+			|| root_condition.get_identifier() != "AND"
+		) {
+			inform_limit_parsing_failed(invention);
+			continue;
+		}
+
+		ConditionNode::condition_list_t const& condition_list = std::get<ConditionNode::condition_list_t>(root_condition_node.get_value());
+		if (condition_list.size() != 1) {
+			inform_limit_parsing_failed(invention);
+			continue;
+		}
+
+		ConditionNode const& condition_node = condition_list[0];
+		Condition const* const condition_ptr = condition_node.get_condition();
+		if (condition_ptr == nullptr) {
+			inform_limit_parsing_failed(invention);
+			continue;
+		}
+
+		Condition const& condition = *condition_ptr;
+		if (condition.get_key_identifier_type() != identifier_type_t::TECHNOLOGY) {
+			inform_limit_parsing_failed(invention);
+			continue;
+		}
+
+		Technology const* const required_technology = technology_manager.get_technology_by_identifier(condition_node.get_condition_key_item()->get_identifier());
+		if (is_technology_unlocked(*required_technology)) {
+			ret &= set_invention_unlock_level(invention, 1);
+		}
+	}
+
 	for (auto const& [invention, activated] : entry.get_inventions()) {
 		ret &= set_invention_unlock_level(*invention, activated ? 1 : 0);
 	}
@@ -1256,7 +1304,7 @@ bool CountryInstanceManager::generate_country_instances(
 
 bool CountryInstanceManager::apply_history_to_countries(
 	CountryHistoryManager const& history_manager, Date date, UnitInstanceManager& unit_instance_manager,
-	MapInstance& map_instance
+	MapInstance& map_instance, TechnologyManager const& technology_manager, InventionManager const& invention_manager
 ) {
 	bool ret = true;
 
@@ -1270,7 +1318,7 @@ bool CountryInstanceManager::apply_history_to_countries(
 
 				for (auto const& [entry_date, entry] : history_map->get_entries()) {
 					if (entry_date <= date) {
-						ret &= country_instance.apply_history_to_country(*entry, map_instance, *this);
+						ret &= country_instance.apply_history_to_country(*entry, map_instance, *this, technology_manager, invention_manager);
 
 						if (entry->get_inital_oob()) {
 							oob_history_entry = entry.get();

@@ -20,7 +20,9 @@ namespace OpenVic {
 	struct ProvinceInstance;
 	struct State;
 	struct Technology;
+	struct TechnologyManager;
 	struct Invention;
+	struct InventionManager;
 	struct TechnologySchool;
 	struct NationalValue;
 	struct GovernmentType;
@@ -286,7 +288,8 @@ namespace OpenVic {
 		);
 
 		bool apply_history_to_country(
-			CountryHistoryEntry const& entry, MapInstance& map_instance, CountryInstanceManager const& country_instance_manager
+			CountryHistoryEntry const& entry, MapInstance& map_instance, CountryInstanceManager const& country_instance_manager,
+			TechnologyManager const& technology_manager, InventionManager const& invention_manager
 		);
 
 	private:
@@ -360,7 +363,7 @@ namespace OpenVic {
 
 		bool apply_history_to_countries(
 			CountryHistoryManager const& history_manager, Date date, UnitInstanceManager& unit_instance_manager,
-			MapInstance& map_instance
+			MapInstance& map_instance, TechnologyManager const& technology_manager, InventionManager const& invention_manager
 		);
 
 		void update_modifier_sums(Date today, StaticModifierCache const& static_modifier_cache);
