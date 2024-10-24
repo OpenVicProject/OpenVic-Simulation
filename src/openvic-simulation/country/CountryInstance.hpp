@@ -13,6 +13,7 @@
 #include "openvic-simulation/types/IdentifierRegistry.hpp"
 #include "openvic-simulation/types/IndexedMap.hpp"
 #include "openvic-simulation/utility/Getters.hpp"
+#include "openvic-simulation/research/Invention.hpp"
 
 namespace OpenVic {
 	struct CountryInstanceManager;
@@ -286,7 +287,7 @@ namespace OpenVic {
 		);
 
 		bool apply_history_to_country(
-			CountryHistoryEntry const& entry, MapInstance& map_instance, CountryInstanceManager const& country_instance_manager
+			CountryHistoryEntry const& entry, MapInstance& map_instance, CountryInstanceManager const& country_instance_manager, InventionManager const& invention_manager
 		);
 
 	private:
@@ -359,7 +360,7 @@ namespace OpenVic {
 		);
 
 		bool apply_history_to_countries(
-			CountryHistoryManager const& history_manager, Date date, UnitInstanceManager& unit_instance_manager,
+			CountryHistoryManager const& history_manager, InventionManager const& invention_manager, Date date, UnitInstanceManager& unit_instance_manager,
 			MapInstance& map_instance
 		);
 

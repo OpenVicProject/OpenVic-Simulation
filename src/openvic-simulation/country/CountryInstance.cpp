@@ -665,7 +665,7 @@ void CountryInstance::apply_foreign_investments(
 }
 
 bool CountryInstance::apply_history_to_country(
-	CountryHistoryEntry const& entry, MapInstance& map_instance, CountryInstanceManager const& country_instance_manager
+	CountryHistoryEntry const& entry, MapInstance& map_instance, CountryInstanceManager const& country_instance_manager, InventionManager const& invention_manager
 ) {
 	constexpr auto set_optional = []<typename T>(T& target, std::optional<T> const& source) {
 		if (source) {
@@ -712,6 +712,14 @@ bool CountryInstance::apply_history_to_country(
 	for (auto const& [technology, level] : entry.get_technologies()) {
 		ret &= set_technology_unlock_level(*technology, level);
 	}
+
+	for (Invention const& invention : invention_manager.get_inventions()) {
+		const bool is_condition_met = false; //check invention.get_limit()
+		if(is_condition_met) {
+			ret &= set_invention_unlock_level(invention, 1);
+		}
+	}
+
 	for (auto const& [invention, activated] : entry.get_inventions()) {
 		ret &= set_invention_unlock_level(*invention, activated ? 1 : 0);
 	}
@@ -1255,7 +1263,7 @@ bool CountryInstanceManager::generate_country_instances(
 }
 
 bool CountryInstanceManager::apply_history_to_countries(
-	CountryHistoryManager const& history_manager, Date date, UnitInstanceManager& unit_instance_manager,
+	CountryHistoryManager const& history_manager, InventionManager const& invention_manager, Date date, UnitInstanceManager& unit_instance_manager,
 	MapInstance& map_instance
 ) {
 	bool ret = true;
@@ -1270,7 +1278,7 @@ bool CountryInstanceManager::apply_history_to_countries(
 
 				for (auto const& [entry_date, entry] : history_map->get_entries()) {
 					if (entry_date <= date) {
-						ret &= country_instance.apply_history_to_country(*entry, map_instance, *this);
+						ret &= country_instance.apply_history_to_country(*entry, map_instance, *this, invention_manager);
 
 						if (entry->get_inital_oob()) {
 							oob_history_entry = entry.get();
