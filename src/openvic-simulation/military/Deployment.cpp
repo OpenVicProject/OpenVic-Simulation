@@ -144,7 +144,7 @@ bool DeploymentManager::load_oob_file(
 						return false;
 					}
 
-					army_regiments.push_back({regiment_name, *regiment_type, regiment_home});
+					army_regiments.push_back({ regiment_name, *regiment_type, regiment_home });
 
 					return ret;
 				},

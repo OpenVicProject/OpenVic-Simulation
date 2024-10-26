@@ -3,6 +3,7 @@
 #include <cstdint>
 #include <vector>
 
+#include "openvic-simulation/dataloader/NodeTools.hpp"
 #include "openvic-simulation/modifier/ModifierManager.hpp"
 #include "openvic-simulation/types/Colour.hpp"
 #include "openvic-simulation/types/OrderedContainers.hpp"
@@ -955,11 +956,11 @@ bool MapDefinition::load_climate_file(ModifierManager const& modifier_manager, a
 			bool ret = true;
 			Climate* cur_climate = climates.get_item_by_identifier(identifier);
 			if (cur_climate == nullptr) {
-				using enum Modifier::modifier_type_t;
-
 				ModifierValue values;
 
-				ret &= modifier_manager.expect_modifier_value(move_variable_callback(values), CLIMATE)(node);
+				ret &= NodeTools::expect_dictionary(
+					modifier_manager.expect_base_province_modifier(values)
+				)(node);
 
 				ret &= climates.add_item({ identifier, std::move(values), Modifier::modifier_type_t::CLIMATE });
 			} else {
@@ -1004,7 +1005,6 @@ bool MapDefinition::load_continent_file(ModifierManager const& modifier_manager,
 	bool ret = expect_dictionary_reserve_length(
 		continents,
 		[this, &modifier_manager](std::string_view identifier, ast::NodeCPtr node) -> bool {
-			using enum Modifier::modifier_type_t;
 
 			if (identifier.empty()) {
 				Logger::error("Invalid continent identifier - empty!");
@@ -1013,9 +1013,8 @@ bool MapDefinition::load_continent_file(ModifierManager const& modifier_manager,
 
 			ModifierValue values;
 			std::vector<ProvinceDefinition const*> prov_list;
-			bool ret = modifier_manager.expect_modifier_value_and_keys(
-				move_variable_callback(values),
-				CONTINENT,
+			bool ret = NodeTools::expect_dictionary_keys_and_default(
+				modifier_manager.expect_base_province_modifier(values),
 				"provinces", ONE_EXACTLY, expect_list_reserve_length(prov_list, expect_province_definition_identifier(
 					[&prov_list](ProvinceDefinition const& province) -> bool {
 						if (province.continent == nullptr) {

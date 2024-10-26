@@ -1,9 +1,10 @@
 #pragma once
 
+#include "openvic-simulation/dataloader/NodeTools.hpp"
+#include "openvic-simulation/modifier/Modifier.hpp"
 #include "openvic-simulation/utility/Getters.hpp"
 
 namespace OpenVic {
-	struct Modifier;
 	struct ModifierManager;
 
 	struct StaticModifierCache {
@@ -11,52 +12,54 @@ namespace OpenVic {
 
 	private:
 		// Country modifiers
-		Modifier const* PROPERTY(very_easy_player);
-		Modifier const* PROPERTY(easy_player);
-		Modifier const* PROPERTY(hard_player);
-		Modifier const* PROPERTY(very_hard_player);
-		Modifier const* PROPERTY(very_easy_ai);
-		Modifier const* PROPERTY(easy_ai);
-		Modifier const* PROPERTY(hard_ai);
-		Modifier const* PROPERTY(very_hard_ai);
+		Modifier PROPERTY(very_easy_player);
+		Modifier PROPERTY(easy_player);
+		Modifier PROPERTY(hard_player);
+		Modifier PROPERTY(very_hard_player);
+		Modifier PROPERTY(very_easy_ai);
+		Modifier PROPERTY(easy_ai);
+		Modifier PROPERTY(hard_ai);
+		Modifier PROPERTY(very_hard_ai);
 
-		Modifier const* PROPERTY(base_modifier);
-		Modifier const* PROPERTY(war);
-		Modifier const* PROPERTY(peace);
-		Modifier const* PROPERTY(disarming);
-		Modifier const* PROPERTY(war_exhaustion);
-		Modifier const* PROPERTY(infamy);
-		Modifier const* PROPERTY(debt_default_to);
-		Modifier const* PROPERTY(bad_debter);
-		Modifier const* PROPERTY(great_power);
-		Modifier const* PROPERTY(secondary_power);
-		Modifier const* PROPERTY(civilised);
-		Modifier const* PROPERTY(uncivilised);
-		Modifier const* PROPERTY(literacy);
-		Modifier const* PROPERTY(plurality);
-		Modifier const* PROPERTY(generalised_debt_default);
-		Modifier const* PROPERTY(total_occupation);
-		Modifier const* PROPERTY(total_blockaded);
+		Modifier PROPERTY(base_modifier);
+		Modifier PROPERTY(war);
+		Modifier PROPERTY(peace);
+		Modifier PROPERTY(disarming);
+		Modifier PROPERTY(war_exhaustion);
+		Modifier PROPERTY(infamy);
+		Modifier PROPERTY(debt_default_to);
+		Modifier PROPERTY(great_power);
+		Modifier PROPERTY(secondary_power);
+		Modifier PROPERTY(civilised);
+		Modifier PROPERTY(uncivilised);
+		Modifier PROPERTY(literacy);
+		Modifier PROPERTY(plurality);
+		Modifier PROPERTY(total_occupation);
+		Modifier PROPERTY(total_blockaded);
+
+		// Country event modifiers
 		Modifier const* PROPERTY(in_bankruptcy);
+		Modifier const* PROPERTY(bad_debtor);
+		Modifier const* PROPERTY(generalised_debt_default); //possibly, as it's used to trigger gunboat CB
 
 		// Province modifiers
-		Modifier const* PROPERTY(overseas);
-		Modifier const* PROPERTY(coastal);
-		Modifier const* PROPERTY(non_coastal);
-		Modifier const* PROPERTY(coastal_sea);
-		Modifier const* PROPERTY(sea_zone);
-		Modifier const* PROPERTY(land_province);
-		Modifier const* PROPERTY(blockaded);
-		Modifier const* PROPERTY(no_adjacent_controlled);
-		Modifier const* PROPERTY(core);
-		Modifier const* PROPERTY(has_siege);
-		Modifier const* PROPERTY(occupied);
-		Modifier const* PROPERTY(nationalism);
-		Modifier const* PROPERTY(infrastructure);
+		Modifier PROPERTY(overseas);
+		Modifier PROPERTY(coastal);
+		Modifier PROPERTY(non_coastal);
+		Modifier PROPERTY(coastal_sea);
+		Modifier PROPERTY(sea_zone);
+		Modifier PROPERTY(land_province);
+		Modifier PROPERTY(blockaded);
+		Modifier PROPERTY(no_adjacent_controlled);
+		Modifier PROPERTY(core);
+		Modifier PROPERTY(has_siege);
+		Modifier PROPERTY(occupied);
+		Modifier PROPERTY(nationalism);
+		Modifier PROPERTY(infrastructure);
 
 		StaticModifierCache();
 
-		bool load_static_modifiers(ModifierManager& registry);
+		bool load_static_modifiers(ModifierManager& modifier_manager, const ast::NodeCPtr root);
 
 	public:
 		StaticModifierCache(StaticModifierCache&&) = default;
