@@ -183,7 +183,7 @@ bool EventManager::load_event_file(IssueManager const& issue_manager, ast::NodeC
 					return ret;
 				},
 				"trigger", ZERO_OR_ONE, trigger.expect_script(),
-				"mean_time_to_happen", ZERO_OR_ONE, mean_time_to_happen.expect_conditional_weight(ConditionalWeight::MONTHS),
+				"mean_time_to_happen", ZERO_OR_ONE, mean_time_to_happen.expect_conditional_weight(ConditionalWeight::TIME),
 				"immediate", ZERO_OR_MORE, immediate.expect_script()
 			)(value);
 			ret &= register_event(

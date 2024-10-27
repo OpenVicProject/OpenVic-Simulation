@@ -14,7 +14,7 @@ namespace OpenVic {
 		using condition_weight_item_t = std::variant<condition_weight_t, condition_weight_group_t>;
 
 		enum class base_key_t : uint8_t {
-			BASE, FACTOR, MONTHS
+			BASE, FACTOR, TIME
 		};
 		using enum base_key_t;
 
@@ -30,15 +30,6 @@ namespace OpenVic {
 	public:
 		ConditionalWeight(scope_type_t new_initial_scope, scope_type_t new_this_scope, scope_type_t new_from_scope);
 		ConditionalWeight(ConditionalWeight&&) = default;
-
-		static constexpr std::string_view base_key_to_string(base_key_t base_key) {
-			switch (base_key) {
-				case base_key_t::BASE: return "base";
-				case base_key_t::FACTOR: return "factor";
-				case base_key_t::MONTHS: return "months"; // TODO - add functionality for days or months or years
-				default: return "INVALID BASE KEY";
-			}
-		}
 
 		NodeTools::node_callback_t expect_conditional_weight(base_key_t base_key);
 
