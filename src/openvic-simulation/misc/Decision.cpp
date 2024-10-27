@@ -55,12 +55,15 @@ bool DecisionManager::load_decision_file(ast::NodeCPtr root) {
 		"political_decisions", ZERO_OR_ONE, expect_dictionary_reserve_length(
 			decisions,
 			[this](std::string_view identifier, ast::NodeCPtr node) -> bool {
+				using enum scope_type_t;
+
 				bool alert = true, news = false;
 				std::string_view news_title, news_desc_long, news_desc_medium, news_desc_short, picture;
-				ConditionScript potential { scope_t::COUNTRY, scope_t::COUNTRY, scope_t::NO_SCOPE };
-				ConditionScript allow { scope_t::COUNTRY, scope_t::COUNTRY, scope_t::NO_SCOPE };
-				ConditionalWeight ai_will_do { scope_t::COUNTRY, scope_t::COUNTRY, scope_t::NO_SCOPE };
+				ConditionScript potential { COUNTRY, COUNTRY, NO_SCOPE };
+				ConditionScript allow { COUNTRY, COUNTRY, NO_SCOPE };
+				ConditionalWeight ai_will_do { COUNTRY, COUNTRY, NO_SCOPE };
 				EffectScript effect;
+
 				bool ret = expect_dictionary_keys(
 					"alert", ZERO_OR_ONE, expect_bool(assign_variable_callback(alert)),
 					"news", ZERO_OR_ONE, expect_bool(assign_variable_callback(news)),
@@ -74,10 +77,12 @@ bool DecisionManager::load_decision_file(ast::NodeCPtr root) {
 					"effect", ONE_EXACTLY, effect.expect_script(),
 					"ai_will_do", ZERO_OR_ONE, ai_will_do.expect_conditional_weight(ConditionalWeight::FACTOR)
 				)(node);
+
 				ret &= add_decision(
 					identifier, alert, news, news_title, news_desc_long, news_desc_medium, news_desc_short, picture,
 					std::move(potential), std::move(allow), std::move(ai_will_do), std::move(effect)
 				);
+
 				return ret;
 			}
 		)

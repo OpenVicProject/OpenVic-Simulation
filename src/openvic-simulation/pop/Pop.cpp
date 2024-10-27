@@ -236,13 +236,13 @@ bool PopType::parse_scripts(DefinitionManager const& definition_manager) {
 
 PopManager::PopManager()
   : slave_sprite { 0 }, administrative_sprite { 0 },
-	promotion_chance { scope_t::POP, scope_t::POP, scope_t::NO_SCOPE },
-	demotion_chance { scope_t::POP, scope_t::POP, scope_t::NO_SCOPE },
-	migration_chance { scope_t::POP, scope_t::POP, scope_t::NO_SCOPE },
-	colonialmigration_chance { scope_t::POP, scope_t::POP, scope_t::NO_SCOPE },
-	emigration_chance { scope_t::POP, scope_t::POP, scope_t::NO_SCOPE },
-	assimilation_chance { scope_t::POP, scope_t::POP, scope_t::NO_SCOPE },
-	conversion_chance { scope_t::POP, scope_t::POP, scope_t::NO_SCOPE } {}
+	promotion_chance { scope_type_t::POP, scope_type_t::POP, scope_type_t::NO_SCOPE },
+	demotion_chance { scope_type_t::POP, scope_type_t::POP, scope_type_t::NO_SCOPE },
+	migration_chance { scope_type_t::POP, scope_type_t::POP, scope_type_t::NO_SCOPE },
+	colonialmigration_chance { scope_type_t::POP, scope_type_t::POP, scope_type_t::NO_SCOPE },
+	emigration_chance { scope_type_t::POP, scope_type_t::POP, scope_type_t::NO_SCOPE },
+	assimilation_chance { scope_type_t::POP, scope_type_t::POP, scope_type_t::NO_SCOPE },
+	conversion_chance { scope_type_t::POP, scope_type_t::POP, scope_type_t::NO_SCOPE } {}
 
 bool PopManager::add_strata(std::string_view identifier) {
 	if (identifier.empty()) {
@@ -423,6 +423,8 @@ bool PopManager::load_pop_type_file(
 	std::string_view filestem, GoodDefinitionManager const& good_definition_manager, IdeologyManager const& ideology_manager,
 	ast::NodeCPtr root
 ) {
+	using enum scope_type_t;
+
 	colour_t colour = colour_t::null();
 	Strata const* strata = nullptr;
 	PopType::sprite_t sprite = 0;
@@ -437,8 +439,8 @@ bool PopManager::load_pop_type_file(
 	fixed_point_t research_points = 0, leadership_points = 0, research_leadership_optimum = 0,
 		state_administration_multiplier = 0;
 	ast::NodeCPtr equivalent = nullptr;
-	ConditionalWeight country_migration_target { scope_t::COUNTRY, scope_t::POP, scope_t::NO_SCOPE };
-	ConditionalWeight migration_target { scope_t::PROVINCE, scope_t::POP, scope_t::NO_SCOPE };
+	ConditionalWeight country_migration_target { COUNTRY, POP, NO_SCOPE };
+	ConditionalWeight migration_target { PROVINCE, POP, NO_SCOPE };
 	ast::NodeCPtr promote_to_node = nullptr;
 	PopType::ideology_weight_map_t ideologies;
 	ast::NodeCPtr issues_node = nullptr;
@@ -487,9 +489,12 @@ bool PopManager::load_pop_type_file(
 		"ideologies", ZERO_OR_ONE, ideology_manager.expect_ideology_dictionary_reserve_length(
 			ideologies,
 			[&filestem, &ideologies](Ideology const& ideology, ast::NodeCPtr node) -> bool {
-				ConditionalWeight weight { scope_t::POP, scope_t::POP, scope_t::NO_SCOPE };
+				ConditionalWeight weight { POP, POP, NO_SCOPE };
+
 				bool ret = weight.expect_conditional_weight(ConditionalWeight::FACTOR)(node);
+
 				ret &= map_callback(ideologies, &ideology)(std::move(weight));
+
 				return ret;
 			}
 		),
@@ -546,7 +551,11 @@ bool PopManager::load_pop_type_file(
 	return ret;
 }
 
-bool PopManager::load_delayed_parse_pop_type_data(UnitTypeManager const& unit_type_manager, IssueManager const& issue_manager) {
+bool PopManager::load_delayed_parse_pop_type_data(
+	UnitTypeManager const& unit_type_manager, IssueManager const& issue_manager
+) {
+	using enum scope_type_t;
+
 	bool ret = true;
 	for (size_t index = 0; index < delayed_parse_nodes.size(); ++index) {
 		const auto [rebel_units, equivalent, promote_to_node, issues_node] = delayed_parse_nodes[index];
@@ -573,7 +582,7 @@ bool PopManager::load_delayed_parse_pop_type_data(UnitTypeManager const& unit_ty
 					Logger::error("Pop type ", type, " cannot have promotion weight to itself!");
 					return false;
 				}
-				ConditionalWeight weight { scope_t::POP, scope_t::POP, scope_t::NO_SCOPE };
+				ConditionalWeight weight { POP, POP, NO_SCOPE };
 				bool ret = weight.expect_conditional_weight(ConditionalWeight::FACTOR)(node);
 				ret &= map_callback(pop_type->promote_to, &type)(std::move(weight));
 				return ret;
@@ -594,7 +603,7 @@ bool PopManager::load_delayed_parse_pop_type_data(UnitTypeManager const& unit_ty
 					Logger::error("Invalid issue in pop type ", pop_type, " issue weights: ", key);
 					return false;
 				}
-				ConditionalWeight weight { scope_t::POP, scope_t::POP, scope_t::NO_SCOPE };
+				ConditionalWeight weight { POP, POP, NO_SCOPE };
 				bool ret = weight.expect_conditional_weight(ConditionalWeight::FACTOR)(node);
 				ret &= map_callback(pop_type->issues, issue)(std::move(weight));
 				return ret;

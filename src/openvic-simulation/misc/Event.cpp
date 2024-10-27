@@ -119,15 +119,17 @@ bool EventManager::load_event_file(IssueManager const& issue_manager, ast::NodeC
 	return expect_dictionary_reserve_length(
 		events,
 		[this, &issue_manager](std::string_view key, ast::NodeCPtr value) -> bool {
+			using enum scope_type_t;
+
 			Event::event_type_t type;
-			scope_t initial_scope;
+			scope_type_t initial_scope;
 
 			if (key == "country_event") {
 				type = Event::event_type_t::COUNTRY;
-				initial_scope = scope_t::COUNTRY;
+				initial_scope = COUNTRY;
 			} else if (key == "province_event") {
 				type = Event::event_type_t::PROVINCE;
-				initial_scope = scope_t::PROVINCE;
+				initial_scope = PROVINCE;
 			} else {
 				Logger::error("Invalid event type: ", key);
 				return false;
@@ -138,8 +140,8 @@ bool EventManager::load_event_file(IssueManager const& issue_manager, ast::NodeC
 			bool triggered_only = false, major = false, fire_only_once = false, allows_multiple_instances = false,
 				news = false, election = false;
 			IssueGroup const* election_issue_group = nullptr;
-			ConditionScript trigger { initial_scope, initial_scope, scope_t::NO_SCOPE };
-			ConditionalWeight mean_time_to_happen { initial_scope, initial_scope, scope_t::NO_SCOPE };
+			ConditionScript trigger { initial_scope, initial_scope, NO_SCOPE };
+			ConditionalWeight mean_time_to_happen { initial_scope, initial_scope, NO_SCOPE };
 			EffectScript immediate;
 			std::vector<Event::EventOption> options;
 
@@ -166,7 +168,7 @@ bool EventManager::load_event_file(IssueManager const& issue_manager, ast::NodeC
 					ConditionalWeight ai_chance {
 						initial_scope,
 						initial_scope,
-						scope_t::COUNTRY | scope_t::PROVINCE
+						COUNTRY | PROVINCE // TODO - decide which to use?
 					};
 
 					bool ret = expect_dictionary_keys_and_default(

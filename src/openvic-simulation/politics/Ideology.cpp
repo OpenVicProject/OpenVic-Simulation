@@ -83,15 +83,17 @@ bool IdeologyManager::load_ideology_file(ast::NodeCPtr root) {
 		IdeologyGroup const* ideology_group = get_ideology_group_by_identifier(ideology_group_key);
 
 		return expect_dictionary([this, ideology_group](std::string_view key, ast::NodeCPtr value) -> bool {
+			using enum scope_type_t;
+
 			colour_t colour = colour_t::null();
 			bool uncivilised = true, can_reduce_militancy = false;
 			Date spawn_date;
-			ConditionalWeight add_political_reform { scope_t::COUNTRY, scope_t::COUNTRY, scope_t::NO_SCOPE };
-			ConditionalWeight remove_political_reform { scope_t::COUNTRY, scope_t::COUNTRY, scope_t::NO_SCOPE };
-			ConditionalWeight add_social_reform { scope_t::COUNTRY, scope_t::COUNTRY, scope_t::NO_SCOPE };
-			ConditionalWeight remove_social_reform { scope_t::COUNTRY, scope_t::COUNTRY, scope_t::NO_SCOPE };
-			ConditionalWeight add_military_reform { scope_t::COUNTRY, scope_t::COUNTRY, scope_t::NO_SCOPE };
-			ConditionalWeight add_economic_reform { scope_t::COUNTRY, scope_t::COUNTRY, scope_t::NO_SCOPE };
+			ConditionalWeight add_political_reform { COUNTRY, COUNTRY, NO_SCOPE };
+			ConditionalWeight remove_political_reform { COUNTRY, COUNTRY, NO_SCOPE };
+			ConditionalWeight add_social_reform { COUNTRY, COUNTRY, NO_SCOPE };
+			ConditionalWeight remove_social_reform { COUNTRY, COUNTRY, NO_SCOPE };
+			ConditionalWeight add_military_reform { COUNTRY, COUNTRY, NO_SCOPE };
+			ConditionalWeight add_economic_reform { COUNTRY, COUNTRY, NO_SCOPE };
 
 			bool ret = expect_dictionary_keys(
 				"uncivilized", ZERO_OR_ONE, expect_bool(assign_variable_callback(uncivilised)),
@@ -99,20 +101,24 @@ bool IdeologyManager::load_ideology_file(ast::NodeCPtr root) {
 				"date", ZERO_OR_ONE, expect_date(assign_variable_callback(spawn_date)),
 				"can_reduce_militancy", ZERO_OR_ONE, expect_bool(assign_variable_callback(can_reduce_militancy)),
 				"add_political_reform", ONE_EXACTLY, add_political_reform.expect_conditional_weight(ConditionalWeight::BASE),
-				"remove_political_reform", ONE_EXACTLY, remove_political_reform.expect_conditional_weight(ConditionalWeight::BASE),
+				"remove_political_reform", ONE_EXACTLY,
+					remove_political_reform.expect_conditional_weight(ConditionalWeight::BASE),
 				"add_social_reform", ONE_EXACTLY, add_social_reform.expect_conditional_weight(ConditionalWeight::BASE),
 				"remove_social_reform", ONE_EXACTLY, remove_social_reform.expect_conditional_weight(ConditionalWeight::BASE),
 				"add_military_reform", ZERO_OR_ONE, add_military_reform.expect_conditional_weight(ConditionalWeight::BASE),
 				"add_economic_reform", ZERO_OR_ONE, add_economic_reform.expect_conditional_weight(ConditionalWeight::BASE)
 			)(value);
+
 			ret &= add_ideology(
 				key, colour, ideology_group, uncivilised, can_reduce_militancy, spawn_date, std::move(add_political_reform),
 				std::move(remove_political_reform), std::move(add_social_reform), std::move(remove_social_reform),
 				std::move(add_military_reform), std::move(add_economic_reform)
 			);
+
 			return ret;
 		})(ideology_group_value);
 	})(root);
+
 	lock_ideologies();
 
 	return ret;

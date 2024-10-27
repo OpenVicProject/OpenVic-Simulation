@@ -221,12 +221,14 @@ bool IssueManager::_load_reform(
 	ModifierManager const& modifier_manager, RuleManager const& rule_manager, size_t ordinal, std::string_view identifier,
 	ReformGroup const* group, ast::NodeCPtr node
 ) {
+	using enum scope_type_t;
+
 	ModifierValue values;
 	RuleSet rules;
 	fixed_point_t administrative_multiplier = 0;
 	Reform::tech_cost_t technology_cost = 0;
-	ConditionScript allow { scope_t::COUNTRY, scope_t::COUNTRY, scope_t::NO_SCOPE };
-	ConditionScript on_execute_trigger { scope_t::COUNTRY, scope_t::COUNTRY, scope_t::NO_SCOPE };
+	ConditionScript allow { COUNTRY, COUNTRY, NO_SCOPE };
+	ConditionScript on_execute_trigger { COUNTRY, COUNTRY, NO_SCOPE };
 	EffectScript on_execute_effect;
 
 	bool ret = NodeTools::expect_dictionary_keys_and_default(

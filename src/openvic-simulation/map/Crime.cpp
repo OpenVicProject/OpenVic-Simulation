@@ -30,9 +30,11 @@ bool CrimeManager::load_crime_modifiers(ModifierManager const& modifier_manager,
 	const bool ret = expect_dictionary_reserve_length(
 		crime_modifiers,
 		[this, &modifier_manager](std::string_view key, ast::NodeCPtr value) -> bool {
+			using enum scope_type_t;
+
 			ModifierValue modifier_value;
 			IconModifier::icon_t icon = 0;
-			ConditionScript trigger { scope_t::PROVINCE, scope_t::NO_SCOPE, scope_t::NO_SCOPE };
+			ConditionScript trigger { PROVINCE, NO_SCOPE, NO_SCOPE };
 			bool default_active = false;
 
 			bool ret = NodeTools::expect_dictionary_keys_and_default(

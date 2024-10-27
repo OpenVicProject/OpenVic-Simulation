@@ -21,14 +21,14 @@ namespace OpenVic {
 	private:
 		fixed_point_t PROPERTY(base);
 		std::vector<condition_weight_item_t> PROPERTY(condition_weight_items);
-		scope_t PROPERTY(initial_scope);
-		scope_t PROPERTY(this_scope);
-		scope_t PROPERTY(from_scope);
+		scope_type_t PROPERTY(initial_scope);
+		scope_type_t PROPERTY(this_scope);
+		scope_type_t PROPERTY(from_scope);
 
 		struct parse_scripts_visitor_t;
 
 	public:
-		ConditionalWeight(scope_t new_initial_scope, scope_t new_this_scope, scope_t new_from_scope);
+		ConditionalWeight(scope_type_t new_initial_scope, scope_type_t new_this_scope, scope_type_t new_from_scope);
 		ConditionalWeight(ConditionalWeight&&) = default;
 
 		static constexpr std::string_view base_key_to_string(base_key_t base_key) {

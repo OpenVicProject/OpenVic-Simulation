@@ -17,12 +17,14 @@ bool SongChanceManager::load_songs_file(ast::NodeCPtr root) {
 	ret &= expect_dictionary_reserve_length(
 		song_chances,
 		[this](std::string_view key, ast::NodeCPtr value) -> bool {
+			using enum scope_type_t;
+
 			if (key != "song") {
 				Logger::error("Invalid song declaration ", key);
 				return false;
 			}
 			std::string_view name {};
-			ConditionalWeight chance { scope_t::COUNTRY, scope_t::COUNTRY, scope_t::NO_SCOPE };
+			ConditionalWeight chance { COUNTRY, COUNTRY, NO_SCOPE };
 
 			bool ret = expect_dictionary_keys(
 				"name", ONE_EXACTLY, expect_string(assign_variable_callback(name)),

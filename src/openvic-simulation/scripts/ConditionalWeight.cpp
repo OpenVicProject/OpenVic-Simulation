@@ -3,12 +3,12 @@
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;
 
-ConditionalWeight::ConditionalWeight(scope_t new_initial_scope, scope_t new_this_scope, scope_t new_from_scope)
+ConditionalWeight::ConditionalWeight(scope_type_t new_initial_scope, scope_type_t new_this_scope, scope_type_t new_from_scope)
   : initial_scope { new_initial_scope }, this_scope { new_this_scope }, from_scope { new_from_scope } {}
 
 template<typename T>
 static NodeCallback auto expect_modifier(
-	std::vector<T>& items, scope_t initial_scope, scope_t this_scope, scope_t from_scope
+	std::vector<T>& items, scope_type_t initial_scope, scope_type_t this_scope, scope_type_t from_scope
 ) {
 	return [&items, initial_scope, this_scope, from_scope](ast::NodeCPtr node) -> bool {
 		fixed_point_t weight = 0;
