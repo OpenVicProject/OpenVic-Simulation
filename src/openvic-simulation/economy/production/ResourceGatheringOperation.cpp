@@ -4,6 +4,7 @@
 
 #include "openvic-simulation/economy/production/Employee.hpp"
 #include "openvic-simulation/economy/production/ProductionType.hpp"
+#include "openvic-simulation/economy/trading/SellResult.hpp"
 #include "openvic-simulation/map/ProvinceInstance.hpp"
 #include "openvic-simulation/map/State.hpp"
 #include "openvic-simulation/modifier/ModifierEffectCache.hpp"
@@ -14,6 +15,7 @@
 using namespace OpenVic;
 
 ResourceGatheringOperation::ResourceGatheringOperation(
+	MarketInstance& new_market_instance,
 	ModifierEffectCache const& new_modifier_effect_cache,
 	ProductionType const* new_production_type_nullable,
 	fixed_point_t new_size_multiplier,
@@ -22,7 +24,8 @@ ResourceGatheringOperation::ResourceGatheringOperation(
 	fixed_point_t new_unsold_quantity_yesterday,
 	std::vector<Employee>&& new_employees,
 	decltype(employee_count_per_type_cache)::keys_t const& pop_type_keys
-) : modifier_effect_cache { new_modifier_effect_cache },
+) : market_instance { new_market_instance },
+	modifier_effect_cache { new_modifier_effect_cache },
 	location_ptr { nullptr },
 	production_type_nullable { new_production_type_nullable },
 	revenue_yesterday { new_revenue_yesterday },
@@ -39,9 +42,11 @@ ResourceGatheringOperation::ResourceGatheringOperation(
 { }
 
 ResourceGatheringOperation::ResourceGatheringOperation(
+	MarketInstance& new_market_instance,
 	ModifierEffectCache const& new_modifier_effect_cache,
 	decltype(employee_count_per_type_cache)::keys_t const& pop_type_keys
 ) : ResourceGatheringOperation {
+	new_market_instance,
 	new_modifier_effect_cache,
 	nullptr, fixed_point_t::_0(),
 	fixed_point_t::_0(), fixed_point_t::_0(),
@@ -134,27 +139,33 @@ void ResourceGatheringOperation::rgo_tick() {
 	hire(total_worker_count_in_province);
 
 	pop_size_t total_owner_count_in_state_cache = 0;
-	std::vector<Pop*> const* owner_pops_cache = nullptr;
+	std::vector<Pop*> const* owner_pops_cache_nullable = nullptr;
 
 	if (production_type.get_owner().has_value()) {
 		PopType const& owner_pop_type = *production_type.get_owner()->get_pop_type();
 		total_owner_count_in_state_cache = location.get_state()->get_pop_type_distribution()[owner_pop_type];
-		owner_pops_cache = &location.get_state()->get_pops_cache_by_type()[owner_pop_type];
+		owner_pops_cache_nullable = &location.get_state()->get_pops_cache_by_type()[owner_pop_type];
 	}
 
-	output_quantity_yesterday = produce(
-		owner_pops_cache,
-		total_owner_count_in_state_cache
-	);
-
-	revenue_yesterday = output_quantity_yesterday * production_type.get_output_good().get_base_price(); //TODO sell on market
-
-	pay_employees(
-		revenue_yesterday,
-		total_worker_count_in_province,
-		owner_pops_cache,
-		total_owner_count_in_state_cache
-	);	
+	output_quantity_yesterday = produce(total_owner_count_in_state_cache);
+	market_instance.place_market_sell_order({
+		production_type.get_output_good(),
+		output_quantity_yesterday,
+		[
+			this,
+			total_worker_count_in_province,
+			owner_pops_cache_nullable,
+			total_owner_count_in_state_cache
+		](const SellResult sell_result) -> void {
+			revenue_yesterday = sell_result.get_money_gained();
+			pay_employees(
+				revenue_yesterday,
+				total_worker_count_in_province,
+				owner_pops_cache_nullable,
+				total_owner_count_in_state_cache
+			);
+		}
+	});
 }
 
 void ResourceGatheringOperation::hire(const pop_size_t available_worker_count) {
@@ -199,10 +210,7 @@ void ResourceGatheringOperation::hire(const pop_size_t available_worker_count) {
 	}
 }
 
-fixed_point_t ResourceGatheringOperation::produce(
-	std::vector<Pop*> const* const owner_pops_cache,
-	const pop_size_t total_owner_count_in_state_cache
-) {
+fixed_point_t ResourceGatheringOperation::produce(const pop_size_t total_owner_count_in_state_cache) {
 	const fixed_point_t size_modifier = calculate_size_modifier();
 	if (size_modifier == fixed_point_t::_0()){
 		return fixed_point_t::_0();
@@ -304,7 +312,7 @@ fixed_point_t ResourceGatheringOperation::produce(
 void ResourceGatheringOperation::pay_employees(
 	const fixed_point_t revenue,
 	const pop_size_t total_worker_count_in_province,
-	std::vector<Pop*> const* const owner_pops_cache,
+	std::vector<Pop*> const* const owner_pops_cache_nullable,
 	const pop_size_t total_owner_count_in_state_cache
 ) {
 	ProvinceInstance& location = *location_ptr;
@@ -325,7 +333,7 @@ void ResourceGatheringOperation::pay_employees(
 			owner_share = upper_limit;
 		}
 
-		for(Pop* owner_pop_ptr : *owner_pops_cache) {
+		for(Pop* owner_pop_ptr : *owner_pops_cache_nullable) {
 			Pop& owner_pop = *owner_pop_ptr;
 			const fixed_point_t income_for_this_pop = revenue_left * owner_share * owner_pop.get_size() / total_owner_count_in_state_cache;
 			owner_pop.add_rgo_owner_income(income_for_this_pop);
