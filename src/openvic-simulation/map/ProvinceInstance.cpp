@@ -238,8 +238,8 @@ void ProvinceInstance::update_modifier_sum(Date today, StaticModifierCache const
 	modifier_sum.add_modifier_nullcheck(terrain_type, province_source);
 
 	if constexpr (!ADD_OWNER_CONTRIBUTION) {
-		if (owner != nullptr) {
-			owner->contribute_province_modifier_sum(modifier_sum);
+		if (controller != nullptr) {
+			controller->contribute_province_modifier_sum(modifier_sum);
 		}
 	}
 }
