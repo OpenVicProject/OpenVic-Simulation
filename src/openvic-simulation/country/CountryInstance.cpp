@@ -1011,7 +1011,7 @@ void CountryInstance::update_modifier_sum(Date today, StaticModifierCache const&
 
 	if constexpr (ProvinceInstance::ADD_OWNER_CONTRIBUTION) {
 		// Add province base modifiers (with local province modifier effects removed)
-		for (ProvinceInstance const* province : owned_provinces) {
+		for (ProvinceInstance const* province : controlled_provinces) {
 			contribute_province_modifier_sum(province->get_modifier_sum());
 		}
 
