@@ -18,6 +18,7 @@
 using namespace OpenVic;
 
 ProvinceInstance::ProvinceInstance(
+	MarketInstance& new_market_instance,
 	ModifierEffectCache const& new_modifier_effect_cache,
 	ProvinceDefinition const& new_province_definition,
 	decltype(pop_type_distribution)::keys_t const& pop_type_keys,
@@ -35,7 +36,7 @@ ProvinceInstance::ProvinceInstance(
 	event_modifiers {},
 	slave { false },
 	crime { nullptr },
-	rgo { new_modifier_effect_cache, pop_type_keys },
+	rgo { new_market_instance, new_modifier_effect_cache, pop_type_keys },
 	buildings { "buildings", false },
 	armies {},
 	navies {},

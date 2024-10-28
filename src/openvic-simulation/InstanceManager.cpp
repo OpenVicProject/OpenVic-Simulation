@@ -62,6 +62,7 @@ void InstanceManager::tick() {
 
 	// Tick...
 	map_instance.map_tick(today);
+	market_instance.execute_orders();
 
 	set_gamestate_needs_update();
 }
@@ -73,8 +74,10 @@ bool InstanceManager::setup() {
 	}
 
 	bool ret = good_instance_manager.setup(definition_manager.get_economy_manager().get_good_definition_manager());
+	ret &= market_instance.setup(good_instance_manager);
 	ret &= map_instance.setup(
 		definition_manager.get_economy_manager().get_building_type_manager(),
+		market_instance,
 		definition_manager.get_modifier_manager().get_modifier_effect_cache(),
 		definition_manager.get_pop_manager().get_pop_types(),
 		definition_manager.get_politics_manager().get_ideology_manager().get_ideologies()
@@ -145,6 +148,7 @@ bool InstanceManager::load_bookmark(Bookmark const* new_bookmark) {
 			today,
 			definition_manager.get_define_manager()
 		);
+		market_instance.execute_orders();
 	}
 
 	return ret;

@@ -5,6 +5,7 @@
 #include "openvic-simulation/economy/BuildingInstance.hpp"
 #include "openvic-simulation/economy/production/ProductionType.hpp"
 #include "openvic-simulation/economy/production/ResourceGatheringOperation.hpp"
+#include "openvic-simulation/economy/trading/MarketInstance.hpp"
 #include "openvic-simulation/military/UnitInstance.hpp"
 #include "openvic-simulation/military/UnitType.hpp"
 #include "openvic-simulation/modifier/ModifierEffectCache.hpp"
@@ -104,6 +105,7 @@ namespace OpenVic {
 		size_t PROPERTY(max_supported_regiments);
 
 		ProvinceInstance(
+			MarketInstance& new_market_instance,
 			ModifierEffectCache const& new_modifier_effect_cache,
 			ProvinceDefinition const& new_province_definition,
 			decltype(pop_type_distribution)::keys_t const& pop_type_keys,

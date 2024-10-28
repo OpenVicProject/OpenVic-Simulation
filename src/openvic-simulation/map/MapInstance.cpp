@@ -43,6 +43,7 @@ ProvinceDefinition::index_t MapInstance::get_selected_province_index() const {
 
 bool MapInstance::setup(
 	BuildingTypeManager const& building_type_manager,
+	MarketInstance& market_instance,
 	ModifierEffectCache const& modifier_effect_cache,
 	decltype(ProvinceInstance::pop_type_distribution)::keys_t const& pop_type_keys,
 	decltype(ProvinceInstance::ideology_distribution)::keys_t const& ideology_keys
@@ -61,7 +62,8 @@ bool MapInstance::setup(
 	province_instances.reserve(map_definition.get_province_definition_count());
 
 	for (ProvinceDefinition const& province : map_definition.get_province_definitions()) {
-		ret &= province_instances.add_item({ 
+		ret &= province_instances.add_item({
+			market_instance,
 			modifier_effect_cache, 
 			province,
 			pop_type_keys,

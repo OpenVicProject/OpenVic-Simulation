@@ -1,5 +1,6 @@
 #pragma once
 
+#include "openvic-simulation/economy/trading/MarketInstance.hpp"
 #include "openvic-simulation/map/ProvinceDefinition.hpp"
 #include "openvic-simulation/map/ProvinceInstance.hpp"
 #include "openvic-simulation/map/State.hpp"
@@ -44,6 +45,7 @@ namespace OpenVic {
 
 		bool setup(
 			BuildingTypeManager const& building_type_manager,
+			MarketInstance& market_instance,
 			ModifierEffectCache const& modifier_effect_cache,
 			decltype(ProvinceInstance::pop_type_distribution)::keys_t const& pop_type_keys,
 			decltype(ProvinceInstance::ideology_distribution)::keys_t const& ideology_keys

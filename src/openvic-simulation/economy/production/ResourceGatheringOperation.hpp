@@ -2,6 +2,7 @@
 
 #include "openvic-simulation/economy/production/Employee.hpp"
 #include "openvic-simulation/economy/production/ProductionType.hpp"
+#include "openvic-simulation/economy/trading/MarketInstance.hpp"
 #include "openvic-simulation/modifier/ModifierEffectCache.hpp"
 #include "openvic-simulation/pop/Pop.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
@@ -12,6 +13,7 @@ namespace OpenVic {
 
 	struct ResourceGatheringOperation {
 	private:
+		MarketInstance& market_instance;
 		ModifierEffectCache const& modifier_effect_cache;
 		ProvinceInstance* location_ptr;
 		ProductionType const* PROPERTY_RW(production_type_nullable);
@@ -42,6 +44,7 @@ namespace OpenVic {
 
 	public:
 		ResourceGatheringOperation(
+			MarketInstance& new_market_instance,
 			ModifierEffectCache const& new_modifier_effect_cache,
 			ProductionType const* new_production_type_nullable,
 			fixed_point_t new_size_multiplier,
@@ -53,6 +56,7 @@ namespace OpenVic {
 		);
 
 		ResourceGatheringOperation(
+			MarketInstance& new_market_instance,
 			ModifierEffectCache const& new_modifier_effect_cache,
 			decltype(employee_count_per_type_cache)::keys_t const& pop_type_keys
 		);
