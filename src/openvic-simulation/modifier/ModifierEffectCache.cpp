@@ -205,7 +205,6 @@ ModifierEffectCache::ModifierEffectCache()
 	mine_rgo_size_local { nullptr },
 	movement_cost_base { nullptr },
 	movement_cost_percentage_change { nullptr },
-	movement_cost_percentage_change_fake { nullptr },
 	number_of_voters { nullptr },
 	pop_consciousness_modifier { nullptr },
 	pop_militancy_modifier { nullptr },

@@ -175,7 +175,6 @@ namespace OpenVic {
 		ModifierEffect const* PROPERTY(mine_rgo_size_local);
 		ModifierEffect const* PROPERTY(movement_cost_base);
 		ModifierEffect const* PROPERTY(movement_cost_percentage_change);
-		ModifierEffect const* PROPERTY(movement_cost_percentage_change_fake); //shows up but does nothing in Victoria 2
 		ModifierEffect const* PROPERTY(number_of_voters);
 		ModifierEffect const* PROPERTY(pop_consciousness_modifier);
 		ModifierEffect const* PROPERTY(pop_militancy_modifier);
