@@ -116,8 +116,8 @@ static bool _check_shared_parameters(std::string_view identifier, UnitType::unit
 		return false;
 	}
 
-	if (unit_args.icon <= 0) {
-		Logger::error("Invalid icon for unit ", identifier, " - ", unit_args.icon, " (must be positive)");
+	if (unit_args.icon < 0) {
+		Logger::error("Invalid icon for unit ", identifier, " - ", unit_args.icon, " (must be >= 0)");
 		return false;
 	}
 
