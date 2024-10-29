@@ -197,6 +197,7 @@ ModifierEffectCache::ModifierEffectCache()
 	local_rgo_throughput { nullptr },
 	local_ruling_party_support { nullptr },
 	local_ship_build { nullptr },
+	attrition_local { nullptr },
 	max_attrition { nullptr },
 	mine_rgo_throughput_global { nullptr },
 	mine_rgo_output_global { nullptr },
@@ -215,7 +216,7 @@ ModifierEffectCache::ModifierEffectCache()
 
 	/* Military Modifier Effects */
 	attack_leader { nullptr },
-	attrition { nullptr },
+	attrition_leader { nullptr },
 	defence_leader { nullptr },
 	experience { nullptr },
 	morale_global { nullptr },
