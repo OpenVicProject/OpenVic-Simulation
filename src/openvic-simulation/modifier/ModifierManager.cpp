@@ -488,6 +488,7 @@ bool ModifierManager::setup_modifier_effects() {
 	ret &= register_base_province_modifier_effect(
 		modifier_effect_cache.local_ship_build, "local_ship_build", false, PROPORTION_DECIMAL
 	);
+	ret &= register_terrain_modifier_effect(modifier_effect_cache.attrition_local, "attrition", false, PROPORTION_DECIMAL, "UA_ATTRITION");
 	ret &= register_base_province_modifier_effect(modifier_effect_cache.max_attrition, "max_attrition", false, RAW_DECIMAL);
 	ret &= register_technology_modifier_effect(
 		modifier_effect_cache.mine_rgo_throughput_global, "mine_rgo_eff", true, PROPORTION_DECIMAL, "TECH_MINE_OUTPUT"
@@ -530,7 +531,7 @@ bool ModifierManager::setup_modifier_effects() {
 
 	/* Military Modifier Effects */
 	ret &= register_leader_modifier_effect(modifier_effect_cache.attack_leader, "attack", true, INT, "TRAIT_ATTACK");
-	ret &= register_leader_modifier_effect(modifier_effect_cache.attrition, "attrition", false, RAW_DECIMAL, "ATTRITION");
+	ret &= register_leader_modifier_effect(modifier_effect_cache.attrition_leader, "attrition", false, RAW_DECIMAL, "ATTRITION");
 	ret &= register_leader_modifier_effect(modifier_effect_cache.defence_leader, "defence", true, INT, "TRAIT_DEFEND");
 	ret &= register_leader_modifier_effect(
 		modifier_effect_cache.experience, "experience", true, PROPORTION_DECIMAL, "TRAIT_EXPERIENCE"

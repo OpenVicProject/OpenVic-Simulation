@@ -167,6 +167,7 @@ namespace OpenVic {
 		ModifierEffect const* PROPERTY(local_rgo_throughput);
 		ModifierEffect const* PROPERTY(local_ruling_party_support);
 		ModifierEffect const* PROPERTY(local_ship_build);
+		ModifierEffect const* PROPERTY(attrition_local);
 		ModifierEffect const* PROPERTY(max_attrition);
 		ModifierEffect const* PROPERTY(mine_rgo_throughput_global);
 		ModifierEffect const* PROPERTY(mine_rgo_output_global);
@@ -186,7 +187,7 @@ namespace OpenVic {
 
 		/* Military Modifier Effects */
 		ModifierEffect const* PROPERTY(attack_leader);
-		ModifierEffect const* PROPERTY(attrition);
+		ModifierEffect const* PROPERTY(attrition_leader);
 		ModifierEffect const* PROPERTY(defence_leader);
 		ModifierEffect const* PROPERTY(experience);
 		ModifierEffect const* PROPERTY(morale_leader);
