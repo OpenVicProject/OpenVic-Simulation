@@ -510,7 +510,7 @@ bool ModifierManager::setup_modifier_effects() {
 	ret &= register_terrain_modifier_effect(
 		modifier_effect_cache.movement_cost_base, "movement_cost", true, PROPORTION_DECIMAL
 	);
-	ret &= register_base_country_modifier_effect(
+	ret &= register_base_province_modifier_effect(
 		modifier_effect_cache.movement_cost_percentage_change, "movement_cost", false, PROPORTION_DECIMAL
 	);
 	ret &= register_base_province_modifier_effect(
@@ -590,7 +590,7 @@ bool ModifierManager::load_event_modifiers(const ast::NodeCPtr root) {
 			IconModifier::icon_t icon = 0;
 
 			bool ret = expect_dictionary_keys_and_default(
-				expect_province_event_modifier(modifier_value),
+				expect_base_province_modifier(modifier_value),
 				"icon", ZERO_OR_ONE, expect_uint(assign_variable_callback(icon))
 			)(value);
 
@@ -780,16 +780,6 @@ NodeTools::key_value_callback_t ModifierManager::expect_base_province_modifier(M
 		modifier_value,
 		expect_base_country_modifier(modifier_value)
 	);
-}
-NodeTools::key_value_callback_t ModifierManager::expect_province_event_modifier(ModifierValue& modifier_value) const {
-	return [this, &modifier_value](const std::string_view key, const ast::NodeCPtr value) -> bool {
-		if (strings_equal_case_insensitive(key, "movement_cost")) {
-			return _add_modifier_cb(modifier_value, modifier_effect_cache.movement_cost_percentage_change, value);
-		}
-		else {
-			return expect_base_province_modifier(modifier_value)(key, value);
-		}
-	};
 }
 NodeTools::key_value_callback_t ModifierManager::expect_terrain_modifier(ModifierValue& modifier_value) const {
 	return _expect_modifier_effect_with_fallback(

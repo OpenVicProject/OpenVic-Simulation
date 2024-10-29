@@ -97,7 +97,6 @@ namespace OpenVic {
 
 		NodeTools::key_value_callback_t _expect_shared_tech_country_modifier_effect(ModifierValue& modifier_value) const;
 	public:
-
 		bool register_complex_modifier(const std::string_view identifier);
 		static std::string get_flat_identifier(const std::string_view complex_modifier_identifier, const std::string_view variant_identifier);
 
@@ -132,7 +131,6 @@ namespace OpenVic {
 		) const;
 		NodeTools::key_value_callback_t expect_base_country_modifier(ModifierValue& modifier_value) const;
 		NodeTools::key_value_callback_t expect_base_province_modifier(ModifierValue& modifier_value) const;
-		NodeTools::key_value_callback_t expect_province_event_modifier(ModifierValue& modifier_value) const;
 		NodeTools::key_value_callback_t expect_terrain_modifier(ModifierValue& modifier_value) const;
 	};
 }
