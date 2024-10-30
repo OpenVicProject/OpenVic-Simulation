@@ -95,20 +95,23 @@ bool MapInstance::apply_history_to_provinces(
 				ProvinceHistoryEntry const* pop_history_entry = nullptr;
 
 				for (auto const& [entry_date, entry] : history_map->get_entries()) {
-					if (entry_date > date) {
-						break;
+					if(entry_date > date) {
+						if(pop_history_entry != nullptr) {
+							break;
+						}
+					} else {
+						province.apply_history_to_province(*entry, country_manager);
 					}
-
-					province.apply_history_to_province(*entry, country_manager);
 
 					if (!entry->get_pops().empty()) {
 						pop_history_entry = entry.get();
 					}
 				}
 
-				if (pop_history_entry != nullptr) {
+				if (pop_history_entry == nullptr) {
+					Logger::warning("No pop history entry for province ",province.get_identifier(), " for date ", date.to_string());
+				} else {
 					province.add_pop_vec(pop_history_entry->get_pops());
-
 					province.setup_pop_test_values(issue_manager);
 				}
 			}
