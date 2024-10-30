@@ -141,7 +141,7 @@ void Pop::set_location(ProvinceInstance const& new_location) {
 }
 
 void Pop::update_gamestate(
-	DefineManager const& define_manager, CountryInstance const* owner, fixed_point_t const& pop_size_per_regiment_multiplier
+	DefineManager const& define_manager, CountryInstance const* owner, const fixed_point_t pop_size_per_regiment_multiplier
 ) {
 	if (type->get_can_be_recruited()) {
 		if (

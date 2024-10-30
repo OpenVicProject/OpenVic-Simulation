@@ -96,14 +96,14 @@ ModifierValue ModifierValue::operator-(ModifierValue const& right) const {
 	return copy -= right;
 }
 
-ModifierValue& ModifierValue::operator*=(fixed_point_t const& right) {
+ModifierValue& ModifierValue::operator*=(const fixed_point_t right) {
 	for (auto value : mutable_iterator(values)) {
 		value.second *= right;
 	}
 	return *this;
 }
 
-ModifierValue ModifierValue::operator*(fixed_point_t const& right) const {
+ModifierValue ModifierValue::operator*(const fixed_point_t right) const {
 	ModifierValue copy = *this;
 	return copy *= right;
 }

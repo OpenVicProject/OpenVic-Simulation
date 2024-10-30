@@ -37,8 +37,8 @@ namespace OpenVic {
 		ModifierValue operator-() const;
 		ModifierValue& operator-=(ModifierValue const& right);
 		ModifierValue operator-(ModifierValue const& right) const;
-		ModifierValue& operator*=(fixed_point_t const& right);
-		ModifierValue operator*(fixed_point_t const& right) const;
+		ModifierValue& operator*=(const fixed_point_t right);
+		ModifierValue operator*(const fixed_point_t right) const;
 
 		void apply_exclude_targets(ModifierEffect::target_t excluded_targets);
 		void multiply_add_exclude_targets(
