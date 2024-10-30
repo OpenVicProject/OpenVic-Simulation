@@ -206,7 +206,7 @@ static fs::path _search_for_game_path(fs::path hint_path = {}) {
 			}
 			return empty_fail_result_callback("Could not parse VDF at '", current_path, "'.");
 		}
-		std::optional current_node = *(parser.get_key_values());
+		std::optional current_node = *parser.get_key_values();
 
 		// check "libraryfolders" list
 		auto it = current_node.value().find("libraryfolders");

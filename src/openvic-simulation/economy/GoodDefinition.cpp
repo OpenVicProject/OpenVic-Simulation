@@ -13,18 +13,18 @@ GoodDefinition::GoodDefinition(
 	index_t new_index,
 	GoodCategory const& new_category,
 	fixed_point_t new_base_price,
-	bool new_available_from_start,
-	bool new_tradeable,
-	bool new_money,
-	bool new_overseas_penalty
+	bool new_is_available_from_start,
+	bool new_is_tradeable,
+	bool new_is_money,
+	bool new_counters_overseas_penalty
 ) : HasIdentifierAndColour { new_identifier, new_colour, false },
 	HasIndex { new_index },
 	category { new_category },
 	base_price { new_base_price },
-	available_from_start { new_available_from_start },
-	tradeable { new_tradeable },
-	money { new_money },
-	overseas_penalty { new_overseas_penalty } {}
+	is_available_from_start { new_is_available_from_start },
+	is_tradeable { new_is_tradeable },
+	is_money { new_is_money },
+	counters_overseas_penalty { new_counters_overseas_penalty } {}
 
 bool GoodDefinitionManager::add_good_category(std::string_view identifier) {
 	if (identifier.empty()) {
@@ -36,7 +36,7 @@ bool GoodDefinitionManager::add_good_category(std::string_view identifier) {
 
 bool GoodDefinitionManager::add_good_definition(
 	std::string_view identifier, colour_t colour, GoodCategory const& category, fixed_point_t base_price,
-	bool available_from_start, bool tradeable, bool money, bool overseas_penalty
+	bool is_available_from_start, bool is_tradeable, bool is_money, bool has_overseas_penalty
 ) {
 	if (identifier.empty()) {
 		Logger::error("Invalid good identifier - empty!");
@@ -47,8 +47,8 @@ bool GoodDefinitionManager::add_good_definition(
 		return false;
 	}
 	return good_definitions.add_item({
-		identifier, colour, get_good_definition_count(), category, base_price, available_from_start,
-		tradeable, money, overseas_penalty
+		identifier, colour, get_good_definition_count(), category, base_price, is_available_from_start,
+		is_tradeable, is_money, has_overseas_penalty
 	});
 }
 
@@ -68,19 +68,19 @@ bool GoodDefinitionManager::load_goods_file(ast::NodeCPtr root) {
 		return expect_dictionary([this, &good_category](std::string_view key, ast::NodeCPtr value) -> bool {
 			colour_t colour = colour_t::null();
 			fixed_point_t base_price;
-			bool available_from_start = true, tradeable = true;
-			bool money = false, overseas_penalty = false;
+			bool is_available_from_start = true, is_tradeable = true;
+			bool is_money = false, has_overseas_penalty = false;
 
 			bool ret = expect_dictionary_keys(
 				"color", ONE_EXACTLY, expect_colour(assign_variable_callback(colour)),
 				"cost", ONE_EXACTLY, expect_fixed_point(assign_variable_callback(base_price)),
-				"available_from_start", ZERO_OR_ONE, expect_bool(assign_variable_callback(available_from_start)),
-				"tradeable", ZERO_OR_ONE, expect_bool(assign_variable_callback(tradeable)),
-				"money", ZERO_OR_ONE, expect_bool(assign_variable_callback(money)),
-				"overseas_penalty", ZERO_OR_ONE, expect_bool(assign_variable_callback(overseas_penalty))
+				"available_from_start", ZERO_OR_ONE, expect_bool(assign_variable_callback(is_available_from_start)),
+				"tradeable", ZERO_OR_ONE, expect_bool(assign_variable_callback(is_tradeable)),
+				"money", ZERO_OR_ONE, expect_bool(assign_variable_callback(is_money)),
+				"overseas_penalty", ZERO_OR_ONE, expect_bool(assign_variable_callback(has_overseas_penalty))
 			)(value);
 			ret &= add_good_definition(
-				key, colour, good_category, base_price, available_from_start, tradeable, money, overseas_penalty
+				key, colour, good_category, base_price, is_available_from_start, is_tradeable, is_money, has_overseas_penalty
 			);
 			return ret;
 		})(good_category_value);

@@ -35,15 +35,15 @@ namespace OpenVic {
 	private:
 		GoodCategory const& PROPERTY(category);
 		const fixed_point_t PROPERTY(base_price);
-		const bool PROPERTY_CUSTOM_PREFIX(available_from_start, is);
-		const bool PROPERTY_CUSTOM_PREFIX(tradeable, is);
-		const bool PROPERTY(money);
-		const bool PROPERTY(overseas_penalty);
+		const bool PROPERTY(is_available_from_start);
+		const bool PROPERTY(is_tradeable);
+		const bool PROPERTY(is_money);
+		const bool PROPERTY(counters_overseas_penalty);
 
 		GoodDefinition(
 			std::string_view new_identifier, colour_t new_colour, index_t new_index, GoodCategory const& new_category,
-			fixed_point_t new_base_price, bool new_available_from_start, bool new_tradeable, bool new_money,
-			bool new_overseas_penalty
+			fixed_point_t new_base_price, bool new_is_available_from_start, bool new_is_tradeable, bool new_is_money,
+			bool new_counters_overseas_penalty
 		);
 
 	public:
@@ -62,7 +62,7 @@ namespace OpenVic {
 
 		bool add_good_definition(
 			std::string_view identifier, colour_t colour, GoodCategory const& category, fixed_point_t base_price,
-			bool available_from_start, bool tradeable, bool money, bool overseas_penalty
+			bool is_available_from_start, bool is_tradeable, bool is_money, bool has_overseas_penalty
 		);
 
 		bool load_goods_file(ast::NodeCPtr root);

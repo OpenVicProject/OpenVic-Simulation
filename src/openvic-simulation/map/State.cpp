@@ -66,16 +66,19 @@ void State::update_gamestate() {
 	const int32_t potential_workforce_in_state = 0; // sum of worker pops, regardless of employment
 	const int32_t potential_employment_in_state = 0; // sum of (factory level * production method base_workforce_size)
 
-	fixed_point_t unclamped_score_per_factory = fixed_point_t::_0();
-
-	if (potential_employment_in_state > 0) {
-		unclamped_score_per_factory = (fixed_point_t { potential_workforce_in_state } / fixed_point_t::_100()).floor() * 400 / potential_employment_in_state;
+	fixed_point_t workforce_scalar;
+	constexpr fixed_point_t min_workforce_scalar = fixed_point_t::_0_20();
+	constexpr fixed_point_t max_workforce_scalar = fixed_point_t::_4();
+	if (potential_employment_in_state <= 0) {
+		workforce_scalar = min_workforce_scalar;
 	} else {
-		industrial_power = total_factory_levels_in_state * std::clamp(
-			unclamped_score_per_factory,
-			fixed_point_t::_0_20(), fixed_point_t::_4()
+		workforce_scalar = std::clamp(
+			(fixed_point_t { potential_workforce_in_state } / 100).floor() * 400 / potential_employment_in_state,
+			min_workforce_scalar, max_workforce_scalar
 		);
 	}
+
+	industrial_power = total_factory_levels_in_state * workforce_scalar;
 }
 
 /* Whether two provinces in the same region should be grouped into the same state or not.

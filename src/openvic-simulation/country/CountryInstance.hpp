@@ -139,7 +139,7 @@ namespace OpenVic {
 		// TODO - population change over last 30 days
 		fixed_point_t PROPERTY(national_consciousness);
 		fixed_point_t PROPERTY(national_militancy);
-		IndexedMap<PopType, fixed_point_t> PROPERTY(pop_type_distribution);
+		IndexedMap<PopType, Pop::pop_size_t> PROPERTY(pop_type_distribution);
 		size_t PROPERTY(national_focus_capacity)
 		// TODO - national foci
 

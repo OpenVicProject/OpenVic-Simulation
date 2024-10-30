@@ -1,7 +1,9 @@
 #include "ProvinceHistory.hpp"
 
 #include "openvic-simulation/DefinitionManager.hpp"
+#include "openvic-simulation/economy/GoodDefinition.hpp"
 #include "openvic-simulation/map/ProvinceDefinition.hpp"
+#include "openvic-simulation/utility/Logger.hpp"
 
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;
@@ -57,6 +59,9 @@ bool ProvinceHistoryMap::_load_history_entry(
 		};
 	};
 
+	constexpr bool allow_empty_true = true;
+	constexpr bool do_warn = true;
+
 	return expect_dictionary_keys_and_default(
 		[this, &definition_manager, &building_type_manager, &entry](
 			std::string_view key, ast::NodeCPtr value) -> bool {
@@ -98,7 +103,20 @@ bool ProvinceHistoryMap::_load_history_entry(
 			expect_identifier(expect_mapped_string(colony_status_map, assign_variable_callback(entry.colonial))),
 		"is_slave", ZERO_OR_ONE, expect_bool(assign_variable_callback(entry.slave)),
 		"trade_goods", ZERO_OR_ONE,
-			good_definition_manager.expect_good_definition_identifier(assign_variable_callback_pointer_opt(entry.rgo)),
+			good_definition_manager.expect_good_definition_identifier_or_string(
+				[&definition_manager, &entry](GoodDefinition const& rgo_good) ->bool {
+					entry.rgo_production_type_nullable = definition_manager.get_economy_manager().get_production_type_manager().get_good_to_rgo_production_type()[rgo_good];
+					if (entry.rgo_production_type_nullable == nullptr) {
+						Logger::error(entry.province.get_identifier(), " has trade_goods ", rgo_good.get_identifier(), " which has no rgo production type defined.");
+						//we expect the good to have an rgo production type
+						//Victoria 2 treats this as null, but clearly the modder wanted there to be a good
+						return false;
+					}
+					return true;
+				},
+				allow_empty_true, //could be explicitly setting trade_goods to null
+				do_warn //could be typo in good identifier
+			),
 		"life_rating", ZERO_OR_ONE, expect_uint<ProvinceInstance::life_rating_t>(assign_variable_callback(entry.life_rating)),
 		"terrain", ZERO_OR_ONE, terrain_type_manager.expect_terrain_type_identifier(
 			assign_variable_callback_pointer_opt(entry.terrain_type)
