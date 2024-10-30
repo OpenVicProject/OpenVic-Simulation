@@ -101,7 +101,7 @@ namespace OpenVic {
 
 		void update_gamestate(
 			DefineManager const& define_manager, CountryInstance const* owner,
-			fixed_point_t const& pop_size_per_regiment_multiplier
+			const fixed_point_t pop_size_per_regiment_multiplier
 		);
 
 		void add_rgo_owner_income(const fixed_point_t income);
