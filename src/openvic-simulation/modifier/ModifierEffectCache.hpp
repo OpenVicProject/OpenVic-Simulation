@@ -151,6 +151,7 @@ namespace OpenVic {
 		ModifierEffect const* PROPERTY(farm_rgo_throughput_global);
 		ModifierEffect const* PROPERTY(farm_rgo_output_global);
 		ModifierEffect const* PROPERTY(farm_rgo_output_local);
+		ModifierEffect const* PROPERTY(farm_rgo_size_fake);
 		ModifierEffect const* PROPERTY(farm_rgo_size_global);
 		ModifierEffect const* PROPERTY(farm_rgo_size_local);
 		ModifierEffect const* PROPERTY(immigrant_attract);
@@ -172,6 +173,7 @@ namespace OpenVic {
 		ModifierEffect const* PROPERTY(mine_rgo_throughput_global);
 		ModifierEffect const* PROPERTY(mine_rgo_output_global);
 		ModifierEffect const* PROPERTY(mine_rgo_output_local);
+		ModifierEffect const* PROPERTY(mine_rgo_size_fake);
 		ModifierEffect const* PROPERTY(mine_rgo_size_global);
 		ModifierEffect const* PROPERTY(mine_rgo_size_local);
 		ModifierEffect const* PROPERTY(movement_cost_base);
