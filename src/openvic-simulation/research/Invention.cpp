@@ -62,6 +62,8 @@ bool InventionManager::load_inventions_file(
 		inventions, [this, &modifier_manager, &unit_type_manager, &building_type_manager, &crime_manager](
 			std::string_view identifier, ast::NodeCPtr value
 		) -> bool {
+			using enum scope_type_t;
+
 			// TODO - use the same variable for all modifiers rather than combining them at the end?
 			ModifierValue loose_modifiers;
 			ModifierValue modifiers;
@@ -74,8 +76,8 @@ bool InventionManager::load_inventions_file(
 			bool unlock_gas_defence = false;
 			bool news = true; //defaults to true!
 
-			ConditionScript limit { scope_t::COUNTRY, scope_t::COUNTRY, scope_t::NO_SCOPE };
-			ConditionalWeight chance { scope_t::COUNTRY, scope_t::COUNTRY, scope_t::NO_SCOPE };
+			ConditionScript limit { COUNTRY, COUNTRY, NO_SCOPE };
+			ConditionalWeight chance { COUNTRY, COUNTRY, NO_SCOPE };
 
 			bool ret = NodeTools::expect_dictionary_keys_and_default(
 				modifier_manager.expect_base_country_modifier(loose_modifiers),

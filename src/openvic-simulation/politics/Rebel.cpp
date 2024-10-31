@@ -98,6 +98,8 @@ bool RebelManager::load_rebels_file(
 	bool ret = expect_dictionary_reserve_length(
 		rebel_types,
 		[this, &ideology_manager, &government_type_manager](std::string_view identifier, ast::NodeCPtr node) -> bool {
+			using enum scope_type_t;
+
 			RebelType::icon_t icon = 0;
 			RebelType::area_t area = RebelType::area_t::ALL;
 			RebelType::government_map_t desired_governments;
@@ -109,11 +111,11 @@ bool RebelManager::load_rebels_file(
 				allow_all_religions = true, allow_all_ideologies = true, resilient = true, reinforcing = true, general = true,
 				smart = true, unit_transfer = false;
 			fixed_point_t occupation_mult = 0;
-			ConditionalWeight will_rise { scope_t::POP, scope_t::COUNTRY, scope_t::NO_SCOPE };
-			ConditionalWeight spawn_chance { scope_t::POP, scope_t::POP, scope_t::NO_SCOPE };
-			ConditionalWeight movement_evaluation { scope_t::PROVINCE, scope_t::PROVINCE, scope_t::NO_SCOPE };
-			ConditionScript siege_won_trigger { scope_t::PROVINCE, scope_t::PROVINCE, scope_t::NO_SCOPE };
-			ConditionScript demands_enforced_trigger { scope_t::COUNTRY, scope_t::COUNTRY, scope_t::NO_SCOPE };
+			ConditionalWeight will_rise { POP, COUNTRY, NO_SCOPE };
+			ConditionalWeight spawn_chance { POP, POP, NO_SCOPE };
+			ConditionalWeight movement_evaluation { PROVINCE, PROVINCE, NO_SCOPE };
+			ConditionScript siege_won_trigger { PROVINCE, PROVINCE, NO_SCOPE };
+			ConditionScript demands_enforced_trigger { COUNTRY, COUNTRY, NO_SCOPE };
 			EffectScript siege_won_effect, demands_enforced_effect;
 
 			bool ret = expect_dictionary_keys(

@@ -7,12 +7,12 @@ using namespace OpenVic;
 using namespace OpenVic::NodeTools;
 
 using enum value_type_t;
-using enum scope_t;
+using enum scope_type_t;
 using enum identifier_type_t;
 
 Condition::Condition(
-	std::string_view new_identifier, value_type_t new_value_type, scope_t new_scope,
-	scope_t new_scope_change, identifier_type_t new_key_identifier_type,
+	std::string_view new_identifier, value_type_t new_value_type, scope_type_t new_scope,
+	scope_type_t new_scope_change, identifier_type_t new_key_identifier_type,
 	identifier_type_t new_value_identifier_type
 ) : HasIdentifier { new_identifier }, value_type { new_value_type }, scope { new_scope },
 	scope_change { new_scope_change }, key_identifier_type { new_key_identifier_type },
@@ -26,7 +26,7 @@ ConditionNode::ConditionNode(
 	condition_key_item { new_condition_key_item }, condition_value_item { new_condition_key_item } {}
 
 bool ConditionManager::add_condition(
-	std::string_view identifier, value_type_t value_type, scope_t scope, scope_t scope_change,
+	std::string_view identifier, value_type_t value_type, scope_type_t scope, scope_type_t scope_change,
 	identifier_type_t key_identifier_type, identifier_type_t value_identifier_type
 ) {
 	if (identifier.empty()) {
@@ -337,8 +337,8 @@ bool ConditionManager::setup_conditions(DefinitionManager const& definition_mana
 	const auto import_identifiers = [this, &ret](
 		std::vector<std::string_view> const& identifiers,
 		value_type_t value_type,
-		scope_t scope,
-		scope_t scope_change = NO_SCOPE,
+		scope_type_t scope,
+		scope_type_t scope_change = NO_SCOPE,
 		identifier_type_t key_identifier_type = NO_IDENTIFIER,
 		identifier_type_t value_identifier_type = NO_IDENTIFIER
 	) -> void {
@@ -523,10 +523,10 @@ callback_t<std::string_view> ConditionManager::expect_parse_identifier(
 }
 
 node_callback_t ConditionManager::expect_condition_node(
-	DefinitionManager const& definition_manager, Condition const& condition, scope_t this_scope,
-	scope_t from_scope, scope_t cur_scope, callback_t<ConditionNode&&> callback
+	DefinitionManager const& definition_manager, Condition const& condition, scope_type_t current_scope,
+	scope_type_t this_scope, scope_type_t from_scope, callback_t<ConditionNode&&> callback
 ) const {
-	return [this, &definition_manager, &condition, callback, this_scope, from_scope, cur_scope](
+	return [this, &definition_manager, &condition, callback, current_scope, this_scope, from_scope](
 		ast::NodeCPtr node
 	) -> bool {
 		bool ret = false;
@@ -534,8 +534,8 @@ node_callback_t ConditionManager::expect_condition_node(
 
 		const std::string_view identifier = condition.get_identifier();
 		const value_type_t value_type = condition.get_value_type();
-		const scope_t scope = condition.get_scope();
-		const scope_t scope_change = condition.get_scope_change();
+		const scope_type_t scope = condition.get_scope();
+		const scope_type_t scope_change = condition.get_scope_change();
 		const identifier_type_t key_identifier_type = condition.get_key_identifier_type();
 		const identifier_type_t value_identifier_type = condition.get_value_identifier_type();
 
@@ -647,23 +647,24 @@ node_callback_t ConditionManager::expect_condition_node(
 		if (!ret && share_value_type(value_type, GROUP)) {
 			ConditionNode::condition_list_t node_list;
 			ret |= expect_condition_node_list(
-				definition_manager, this_scope, from_scope,
-				scope_change == NO_SCOPE ? cur_scope : scope_change,
-				false,
+				definition_manager,
+				scope_change == NO_SCOPE ? current_scope : scope_change,
+				this_scope,
+				from_scope,
 				vector_callback(node_list)
 			)(node);
 			value = std::move(node_list);
 		}
 
 		// scope validation
-		scope_t effective_current_scope = cur_scope;
-		if (share_scope(effective_current_scope, THIS)) {
+		scope_type_t effective_current_scope = current_scope;
+		if (share_scope_type(effective_current_scope, THIS)) {
 			effective_current_scope = this_scope;
-		} else if (share_scope(effective_current_scope, FROM)) {
+		} else if (share_scope_type(effective_current_scope, FROM)) {
 			effective_current_scope = from_scope;
 		}
 
-		if (!share_scope(scope, effective_current_scope) && effective_current_scope > scope) {
+		if (!share_scope_type(scope, effective_current_scope) && effective_current_scope > scope) {
 			Logger::warning(
 				"Condition or scope ", identifier, " was found in wrong scope ", effective_current_scope, ", expected ",
 				scope, "!"
@@ -706,15 +707,15 @@ static bool top_scope_fallback(std::string_view id, ast::NodeCPtr node) {
 };
 
 node_callback_t ConditionManager::expect_condition_node_list(
-	DefinitionManager const& definition_manager, scope_t this_scope, scope_t from_scope,
-	scope_t cur_scope, bool top_scope, callback_t<ConditionNode&&> callback
+	DefinitionManager const& definition_manager, scope_type_t current_scope, scope_type_t this_scope, scope_type_t from_scope,
+	callback_t<ConditionNode&&> callback, bool top_scope
 ) const {
-	return [this, &definition_manager, callback, this_scope, from_scope, cur_scope, top_scope](ast::NodeCPtr node) -> bool {
+	return [this, &definition_manager, callback, current_scope, this_scope, from_scope, top_scope](ast::NodeCPtr node) -> bool {
 		const auto expect_node = [
-			this, &definition_manager, callback, this_scope, from_scope, cur_scope
+			this, &definition_manager, callback, current_scope, this_scope, from_scope
 		](Condition const& condition, ast::NodeCPtr node) -> bool {
 			return expect_condition_node(
-				definition_manager, condition, this_scope, from_scope, cur_scope, callback
+				definition_manager, condition, current_scope, this_scope, from_scope, callback
 			)(node);
 		};
 
@@ -729,19 +730,19 @@ node_callback_t ConditionManager::expect_condition_node_list(
 }
 
 node_callback_t ConditionManager::expect_condition_script(
-	DefinitionManager const& definition_manager, scope_t initial_scope, scope_t this_scope,
-	scope_t from_scope, callback_t<ConditionNode&&> callback
+	DefinitionManager const& definition_manager, scope_type_t initial_scope, scope_type_t this_scope,
+	scope_type_t from_scope, callback_t<ConditionNode&&> callback
 ) const {
 	return [this, &definition_manager, initial_scope, this_scope, from_scope, callback](ast::NodeCPtr node) -> bool {
 
 		ConditionNode::condition_list_t conds;
 		bool ret = expect_condition_node_list(
 			definition_manager,
+			initial_scope,
 			this_scope,
 			from_scope,
-			initial_scope,
-			true,
-			NodeTools::vector_callback(conds)
+			NodeTools::vector_callback(conds),
+			true
 		)(node);
 
 		ret &= callback({ root_condition, std::move(conds), true });

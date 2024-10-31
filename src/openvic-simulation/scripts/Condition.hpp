@@ -27,7 +27,7 @@ namespace OpenVic {
 
 	// Order matters in this enum, for the fallback system to work
 	// smaller entities must have smaller integers associated!
-	enum class scope_t : uint8_t { //TODO: maybe distinguish TRANSPARENT from NO_SCOPE
+	enum class scope_type_t : uint8_t { //TODO: maybe distinguish TRANSPARENT from NO_SCOPE
 		NO_SCOPE    = 0,
 		POP         = 1 << 0,
 		PROVINCE    = 1 << 1,
@@ -74,15 +74,15 @@ namespace OpenVic {
 
 	/* Allows enum types to be used with bitwise operators. */
 	template<> struct enable_bitfield<value_type_t> : std::true_type {};
-	template<> struct enable_bitfield<scope_t> : std::true_type {};
+	template<> struct enable_bitfield<scope_type_t> : std::true_type {};
 	template<> struct enable_bitfield<identifier_type_t> : std::true_type {};
 
 	/* Returns true if the values have any bit in common. */
 	inline constexpr bool share_value_type(value_type_t lhs, value_type_t rhs) {
 		return (lhs & rhs) != value_type_t::NO_TYPE;
 	}
-	inline constexpr bool share_scope(scope_t lhs, scope_t rhs) {
-		return (lhs & rhs) != scope_t::NO_SCOPE;
+	inline constexpr bool share_scope_type(scope_type_t lhs, scope_type_t rhs) {
+		return (lhs & rhs) != scope_type_t::NO_SCOPE;
 	}
 	inline constexpr bool share_identifier_type(identifier_type_t lhs, identifier_type_t rhs) {
 		return (lhs & rhs) != identifier_type_t::NO_IDENTIFIER;
@@ -122,10 +122,10 @@ namespace OpenVic {
 	}
 
 #undef BUILD_STRING
-#define BUILD_STRING(entry) _BUILD_STRING(entry, share_scope)
+#define BUILD_STRING(entry) _BUILD_STRING(entry, share_scope_type)
 
-	inline std::ostream& operator<<(std::ostream& stream, scope_t value) {
-		using enum scope_t;
+	inline std::ostream& operator<<(std::ostream& stream, scope_type_t value) {
+		using enum scope_type_t;
 		if (value == NO_SCOPE) {
 			return stream << "[NO_SCOPE]";
 		}
@@ -198,14 +198,14 @@ namespace OpenVic {
 
 	private:
 		const value_type_t PROPERTY(value_type);
-		const scope_t PROPERTY(scope);
-		const scope_t PROPERTY(scope_change);
+		const scope_type_t PROPERTY(scope);
+		const scope_type_t PROPERTY(scope_change);
 		const identifier_type_t PROPERTY(key_identifier_type);
 		const identifier_type_t PROPERTY(value_identifier_type);
 
 		Condition(
-			std::string_view new_identifier, value_type_t new_value_type, scope_t new_scope,
-			scope_t new_scope_change, identifier_type_t new_key_identifier_type,
+			std::string_view new_identifier, value_type_t new_value_type, scope_type_t new_scope,
+			scope_type_t new_scope_change, identifier_type_t new_key_identifier_type,
 			identifier_type_t new_value_identifier_type
 		);
 
@@ -249,8 +249,8 @@ namespace OpenVic {
 		Condition const* root_condition = nullptr;
 
 		bool add_condition(
-			std::string_view identifier, value_type_t value_type, scope_t scope,
-			scope_t scope_change = scope_t::NO_SCOPE,
+			std::string_view identifier, value_type_t value_type, scope_type_t scope,
+			scope_type_t scope_change = scope_type_t::NO_SCOPE,
 			identifier_type_t key_identifier_type = identifier_type_t::NO_IDENTIFIER,
 			identifier_type_t value_identifier_type = identifier_type_t::NO_IDENTIFIER
 		);
@@ -261,21 +261,21 @@ namespace OpenVic {
 		) const;
 
 		NodeTools::node_callback_t expect_condition_node(
-			DefinitionManager const& definition_manager, Condition const& condition, scope_t this_scope,
-			scope_t from_scope, scope_t cur_scope, NodeTools::callback_t<ConditionNode&&> callback
+			DefinitionManager const& definition_manager, Condition const& condition, scope_type_t current_scope,
+			scope_type_t this_scope, scope_type_t from_scope, NodeTools::callback_t<ConditionNode&&> callback
 		) const;
 
 		NodeTools::node_callback_t expect_condition_node_list(
-			DefinitionManager const& definition_manager, scope_t this_scope, scope_t from_scope,
-			scope_t cur_scope, bool top_scope, NodeTools::callback_t<ConditionNode&&> callback
+			DefinitionManager const& definition_manager, scope_type_t current_scope, scope_type_t this_scope,
+			scope_type_t from_scope, NodeTools::callback_t<ConditionNode&&> callback, bool top_scope = false
 		) const;
 
 	public:
 		bool setup_conditions(DefinitionManager const& definition_manager);
 
 		NodeTools::node_callback_t expect_condition_script(
-			DefinitionManager const& definition_manager, scope_t initial_scope, scope_t this_scope, scope_t from_scope,
-			NodeTools::callback_t<ConditionNode&&> callback
+			DefinitionManager const& definition_manager, scope_type_t initial_scope, scope_type_t this_scope,
+			scope_type_t from_scope, NodeTools::callback_t<ConditionNode&&> callback
 		) const;
 	};
 }

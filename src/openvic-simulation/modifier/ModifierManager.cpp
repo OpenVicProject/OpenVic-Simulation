@@ -638,9 +638,11 @@ bool ModifierManager::load_triggered_modifiers(const ast::NodeCPtr root) {
 	const bool ret = expect_dictionary_reserve_length(
 		triggered_modifiers,
 		[this](const std::string_view key, const ast::NodeCPtr value) -> bool {
+			using enum scope_type_t;
+
 			ModifierValue modifier_value {};
 			IconModifier::icon_t icon = 0;
-			ConditionScript trigger { scope_t::COUNTRY, scope_t::COUNTRY, scope_t::NO_SCOPE };
+			ConditionScript trigger { COUNTRY, COUNTRY, NO_SCOPE };
 
 			bool ret = expect_dictionary_keys_and_default(
 				expect_base_country_modifier(modifier_value),

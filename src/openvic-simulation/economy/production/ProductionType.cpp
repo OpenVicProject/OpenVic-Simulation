@@ -271,13 +271,18 @@ bool ProductionTypeManager::load_production_types_file(
 			auto parse_node = expect_dictionary_keys(
 				"template", ZERO_OR_ONE, success_callback, /* Already parsed using expect_key in Pass #1 above. */
 				"bonus", ZERO_OR_MORE, [&bonuses](ast::NodeCPtr bonus_node) -> bool {
-					ConditionScript trigger { scope_t::STATE, scope_t::NO_SCOPE, scope_t::NO_SCOPE };
+					using enum scope_type_t;
+
+					ConditionScript trigger { STATE, NO_SCOPE, NO_SCOPE };
 					fixed_point_t bonus_value {};
+
 					const bool ret = expect_dictionary_keys(
 						"trigger", ONE_EXACTLY, trigger.expect_script(),
 						"value", ONE_EXACTLY, expect_fixed_point(assign_variable_callback(bonus_value))
 					)(bonus_node);
+
 					bonuses.emplace_back(std::move(trigger), bonus_value);
+
 					return ret;
 				},
 				"owner", ZERO_OR_ONE, _expect_job(good_definition_manager, pop_manager, move_variable_callback(owner)),

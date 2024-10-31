@@ -287,11 +287,14 @@ namespace OpenVic {
 			ret &= add_key_map_entries(FWD(key_map), FWD(args)...);
 			return ret;
 		}
+
 		template<IsOrderedMap Map>
 		NodeCallback auto expect_dictionary_key_map_and_length_and_default(
 			Map&& key_map, LengthCallback auto&& length_callback, KeyValueCallback auto&& default_callback
 		) {
-			return [length_callback = FWD(length_callback), default_callback = FWD(default_callback), key_map = MOV(key_map)](ast::NodeCPtr node) mutable -> bool {
+			return [length_callback = FWD(length_callback), default_callback = FWD(default_callback), key_map = MOV(key_map)](
+				ast::NodeCPtr node
+			) mutable -> bool {
 				bool ret = expect_dictionary_and_length(
 					FWD(length_callback), dictionary_keys_callback(key_map, FWD(default_callback))
 				)(node);
@@ -333,6 +336,28 @@ namespace OpenVic {
 			// TODO - pass return value back up (part of big key_map_t rewrite?)
 			add_key_map_entries(FWD(key_map), FWD(args)...);
 			return expect_dictionary_key_map_and_length_and_default(FWD(key_map), FWD(length_callback), FWD(default_callback));
+		}
+
+		template<IsOrderedMap Map, typename... Args>
+		NodeCallback auto expect_dictionary_key_map_and_length(
+			Map&& key_map, LengthCallback auto&& length_callback, Args&&... args
+		) {
+			add_key_map_entries(FWD(key_map), FWD(args)...);
+			return expect_dictionary_key_map_and_length(FWD(key_map), FWD(length_callback));
+		}
+
+		template<IsOrderedMap Map, typename... Args>
+		NodeCallback auto expect_dictionary_key_map_and_default(
+			Map&& key_map, KeyValueCallback auto&& default_callback, Args&&... args
+		) {
+			add_key_map_entries(FWD(key_map), FWD(args)...);
+			return expect_dictionary_key_map_and_default(FWD(key_map), FWD(default_callback));
+		}
+
+		template<IsOrderedMap Map, typename... Args>
+		NodeCallback auto expect_dictionary_key_map(Map&& key_map, Args&&... args) {
+			add_key_map_entries(FWD(key_map), FWD(args)...);
+			return expect_dictionary_key_map(FWD(key_map));
 		}
 
 		template<StringMapCase Case = StringMapCaseSensitive, typename... Args>

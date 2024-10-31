@@ -117,6 +117,8 @@ bool NationalFocusManager::load_national_foci_file(
 				[this, &group, &pop_manager, &ideology_manager, &good_definition_manager, &modifier_manager](
 					std::string_view identifier, ast::NodeCPtr node
 				) -> bool {
+					using enum scope_type_t;
+
 					uint8_t icon = 0;
 					bool has_flashpoint = false, own_provinces = true, outliner_show_as_percent = false;
 					fixed_point_t flashpoint_tension = 0;
@@ -127,7 +129,7 @@ bool NationalFocusManager::load_national_foci_file(
 					fixed_point_map_t<GoodDefinition const*> encourage_goods;
 					fixed_point_map_t<PopType const*> encourage_pop_types;
 					ConditionScript limit {
-						scope_t::PROVINCE | scope_t::COUNTRY, scope_t::PROVINCE | scope_t::COUNTRY, scope_t::NO_SCOPE
+						PROVINCE | COUNTRY, PROVINCE | COUNTRY, NO_SCOPE
 					};
 
 					const auto expect_base_province_modifier_cb = modifier_manager.expect_base_province_modifier(modifiers);

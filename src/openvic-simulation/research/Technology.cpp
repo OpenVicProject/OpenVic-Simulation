@@ -168,6 +168,8 @@ bool TechnologyManager::load_technologies_file(
 	return expect_dictionary_reserve_length(technologies, [this, &modifier_manager, &unit_type_manager, &building_type_manager](
 		std::string_view tech_key, ast::NodeCPtr tech_value
 	) -> bool {
+		using enum scope_type_t;
+
 		ModifierValue modifiers;
 		TechnologyArea const* area = nullptr;
 		Date::year_t year = 0;
@@ -176,7 +178,7 @@ bool TechnologyManager::load_technologies_file(
 		std::optional<CountryInstance::unit_variant_t> unit_variant;
 		Technology::unit_set_t activated_units;
 		Technology::building_set_t activated_buildings;
-		ConditionalWeight ai_chance { scope_t::COUNTRY, scope_t::COUNTRY, scope_t::NO_SCOPE };
+		ConditionalWeight ai_chance { COUNTRY, COUNTRY, NO_SCOPE };
 
 		bool ret = NodeTools::expect_dictionary_keys_and_default(
 			modifier_manager.expect_technology_modifier(modifiers),

@@ -86,6 +86,7 @@ bool WargoalTypeManager::load_wargoal_file(ovdl::v2script::Parser const& parser)
 			}
 
 			using enum WargoalType::peace_options_t;
+			using enum scope_type_t;
 
 			std::string_view war_name;
 			Timespan available {}, truce {};
@@ -94,12 +95,12 @@ bool WargoalTypeManager::load_wargoal_file(ovdl::v2script::Parser const& parser)
 				mutual = false, all_allowed_states = false, always = false;
 			WargoalType::peace_options_t peace_options = NO_PEACE_OPTIONS;
 			WargoalType::peace_modifiers_t modifiers;
-			ConditionScript can_use { scope_t::COUNTRY, scope_t::COUNTRY, scope_t::COUNTRY };
-			ConditionScript is_valid { scope_t::COUNTRY, scope_t::COUNTRY, scope_t::COUNTRY };
-			ConditionScript allowed_states { scope_t::STATE, scope_t::COUNTRY, scope_t::COUNTRY };
-			ConditionScript allowed_substate_regions { scope_t::STATE, scope_t::COUNTRY, scope_t::COUNTRY };
-			ConditionScript allowed_states_in_crisis { scope_t::STATE, scope_t::COUNTRY, scope_t::COUNTRY };
-			ConditionScript allowed_countries { scope_t::COUNTRY, scope_t::COUNTRY, scope_t::COUNTRY };
+			ConditionScript can_use { COUNTRY, COUNTRY, COUNTRY };
+			ConditionScript is_valid { COUNTRY, COUNTRY, COUNTRY };
+			ConditionScript allowed_states { STATE, COUNTRY, COUNTRY };
+			ConditionScript allowed_substate_regions { STATE, COUNTRY, COUNTRY };
+			ConditionScript allowed_states_in_crisis { STATE, COUNTRY, COUNTRY };
+			ConditionScript allowed_countries { COUNTRY, COUNTRY, COUNTRY };
 			EffectScript on_add, on_po_accepted; //country as default scope for both
 
 			const auto expect_peace_option = [&peace_options](WargoalType::peace_options_t peace_option) -> node_callback_t {
