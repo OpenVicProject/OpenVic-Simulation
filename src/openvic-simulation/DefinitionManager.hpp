@@ -1,6 +1,7 @@
 #pragma once
 
 #include "openvic-simulation/country/CountryDefinition.hpp"
+#include "openvic-simulation/defines/Define.hpp"
 #include "openvic-simulation/diplomacy/DiplomaticAction.hpp"
 #include "openvic-simulation/economy/EconomyManager.hpp"
 #include "openvic-simulation/history/HistoryManager.hpp"
@@ -10,7 +11,6 @@
 #include "openvic-simulation/map/Mapmode.hpp"
 #include "openvic-simulation/military/MilitaryManager.hpp"
 #include "openvic-simulation/misc/Decision.hpp"
-#include "openvic-simulation/misc/Define.hpp"
 #include "openvic-simulation/misc/Event.hpp"
 #include "openvic-simulation/misc/SongChance.hpp"
 #include "openvic-simulation/misc/SoundEffect.hpp"
