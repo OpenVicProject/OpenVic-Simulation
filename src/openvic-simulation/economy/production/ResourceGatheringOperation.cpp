@@ -83,12 +83,20 @@ Pop::pop_size_t ResourceGatheringOperation::update_size_and_return_total_worker_
 			}
 		}
 	}
+	
+	fixed_point_t base_size_modifier = fixed_point_t::_1();
+	if (production_type.is_farm()) {
+		base_size_modifier += location.get_modifier_effect_value_nullcheck(modifier_effect_cache.get_farm_rgo_size_local());
+	}
+	if (production_type.is_mine()) {
+		base_size_modifier += location.get_modifier_effect_value_nullcheck(modifier_effect_cache.get_mine_rgo_size_local());
+	}
 
 	const fixed_point_t base_workforce_size = production_type.get_base_workforce_size();
-	if (size_modifier == fixed_point_t::_0()) {
+	if (base_size_modifier == fixed_point_t::_0()) {
 		size_multiplier = 0;
 	} else {
-		size_multiplier = ((total_worker_count_in_province / (size_modifier * base_workforce_size)).ceil() * fixed_point_t::_1_50()).floor();
+		size_multiplier = ((total_worker_count_in_province / (base_size_modifier * base_workforce_size)).ceil() * fixed_point_t::_1_50()).floor();
 	}
 	max_employee_count_cache = (size_modifier * size_multiplier * base_workforce_size).floor();
 	return total_worker_count_in_province;

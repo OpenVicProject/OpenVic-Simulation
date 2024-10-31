@@ -428,7 +428,11 @@ bool ModifierManager::setup_modifier_effects() {
 	ret &= register_base_province_modifier_effect(
 		modifier_effect_cache.farm_rgo_output_local, "farm_rgo_eff", true, PROPORTION_DECIMAL, "TECH_FARM_OUTPUT"
 	);
-	ret &= register_shared_tech_country_modifier_effect(
+	ret &= register_base_country_modifier_effect(
+		modifier_effect_cache.farm_rgo_size_fake, "farm_rgo_size", true, PROPORTION_DECIMAL,
+		ModifierEffect::make_default_modifier_effect_localisation_key("farm_size"), has_no_effect
+	);
+	ret &= register_technology_modifier_effect(
 		modifier_effect_cache.farm_rgo_size_global, "farm_rgo_size", true, PROPORTION_DECIMAL,
 		ModifierEffect::make_default_modifier_effect_localisation_key("farm_size")
 	);
@@ -499,7 +503,11 @@ bool ModifierManager::setup_modifier_effects() {
 	ret &= register_base_province_modifier_effect(
 		modifier_effect_cache.mine_rgo_output_local, "mine_rgo_eff", true, PROPORTION_DECIMAL, "TECH_MINE_OUTPUT"
 	);
-	ret &= register_shared_tech_country_modifier_effect(
+	ret &= register_base_country_modifier_effect(
+		modifier_effect_cache.mine_rgo_size_fake, "mine_rgo_size", true, PROPORTION_DECIMAL,
+		ModifierEffect::make_default_modifier_effect_localisation_key("mine_size"), has_no_effect
+	);
+	ret &= register_technology_modifier_effect(
 		modifier_effect_cache.mine_rgo_size_global, "mine_rgo_size", true, PROPORTION_DECIMAL,
 		ModifierEffect::make_default_modifier_effect_localisation_key("mine_size")
 	);
