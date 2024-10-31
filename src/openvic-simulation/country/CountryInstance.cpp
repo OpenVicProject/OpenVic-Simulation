@@ -1,10 +1,10 @@
 #include "CountryInstance.hpp"
 
 #include "openvic-simulation/country/CountryDefinition.hpp"
+#include "openvic-simulation/defines/Define.hpp"
 #include "openvic-simulation/history/CountryHistory.hpp"
 #include "openvic-simulation/map/Crime.hpp"
 #include "openvic-simulation/map/MapInstance.hpp"
-#include "openvic-simulation/misc/Define.hpp"
 #include "openvic-simulation/modifier/ModifierEffectCache.hpp"
 #include "openvic-simulation/modifier/StaticModifierCache.hpp"
 #include "openvic-simulation/politics/Ideology.hpp"
@@ -756,7 +756,7 @@ void CountryInstance::_update_production(DefineManager const& define_manager) {
 	for (auto const& [country, money_invested] : foreign_investments) {
 		if (country->exists()) {
 			const fixed_point_t investment_industrial_power =
-				money_invested * define_manager.get_country_investment_industrial_score_factor() / 100;
+				money_invested * define_manager.get_country_defines().get_country_investment_industrial_score_factor() / 100;
 
 			if (investment_industrial_power != 0) {
 				industrial_power += investment_industrial_power;
@@ -875,7 +875,7 @@ void CountryInstance::_update_military(
 		/ fixed_point_t::parse(7 * (1 + unit_type_manager.get_regiment_type_count()));
 
 	if (disarmed) {
-		military_power_from_land *= define_manager.get_disarmed_penalty();
+		military_power_from_land *= define_manager.get_diplomacy_defines().get_disarmed_penalty();
 	}
 
 	military_power_from_sea = 0;
@@ -1141,9 +1141,11 @@ void CountryInstanceManager::update_rankings(Date today, DefineManager const& de
 		military_power_ranking[index]->military_rank = rank;
 	}
 
-	const size_t max_great_power_rank = define_manager.get_great_power_rank();
-	const size_t max_secondary_power_rank = define_manager.get_secondary_power_rank();
-	const Timespan lose_great_power_grace_days = define_manager.get_lose_great_power_grace_days();
+	CountryDefines const& country_defines = define_manager.get_country_defines();
+
+	const size_t max_great_power_rank = country_defines.get_great_power_rank();
+	const size_t max_secondary_power_rank = country_defines.get_secondary_power_rank();
+	const Timespan lose_great_power_grace_days = country_defines.get_lose_great_power_grace_days();
 
 	// Demote great powers who have been below the max great power rank for longer than the demotion grace period and
 	// remove them from the list. We don't just demote them all and clear the list as when rebuilding we'd need to look

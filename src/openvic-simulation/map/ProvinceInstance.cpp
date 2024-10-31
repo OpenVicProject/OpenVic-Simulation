@@ -1,6 +1,7 @@
 #include "ProvinceInstance.hpp"
 
 #include "openvic-simulation/country/CountryInstance.hpp"
+#include "openvic-simulation/defines/Define.hpp"
 #include "openvic-simulation/economy/production/ProductionType.hpp"
 #include "openvic-simulation/economy/production/ResourceGatheringOperation.hpp"
 #include "openvic-simulation/history/ProvinceHistory.hpp"
@@ -9,7 +10,6 @@
 #include "openvic-simulation/map/Region.hpp"
 #include "openvic-simulation/map/TerrainType.hpp"
 #include "openvic-simulation/military/UnitInstanceGroup.hpp"
-#include "openvic-simulation/misc/Define.hpp"
 #include "openvic-simulation/modifier/StaticModifierCache.hpp"
 #include "openvic-simulation/politics/Ideology.hpp"
 #include "openvic-simulation/pop/Pop.hpp"
@@ -184,12 +184,14 @@ void ProvinceInstance::_update_pops(DefineManager const& define_manager) {
 
 	max_supported_regiments = 0;
 
+	MilitaryDefines const& military_defines = define_manager.get_military_defines();
+
 	using enum colony_status_t;
 
 	const fixed_point_t pop_size_per_regiment_multiplier =
-		colony_status == PROTECTORATE ? define_manager.get_pop_size_per_regiment_protectorate_multiplier()
-		: colony_status == COLONY ? define_manager.get_pop_size_per_regiment_colony_multiplier()
-		: is_owner_core() ? fixed_point_t::_1() : define_manager.get_pop_size_per_regiment_non_core_multiplier();
+		colony_status == PROTECTORATE ? military_defines.get_pop_size_per_regiment_protectorate_multiplier()
+		: colony_status == COLONY ? military_defines.get_pop_size_per_regiment_colony_multiplier()
+		: is_owner_core() ? fixed_point_t::_1() : military_defines.get_pop_size_per_regiment_non_core_multiplier();
 
 	for (Pop& pop : pops) {
 		pop.update_gamestate(define_manager, owner, pop_size_per_regiment_multiplier);
