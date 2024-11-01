@@ -18,3 +18,13 @@ bool ConditionScript::_parse_script(ast::NodeCPtr root, DefinitionManager const&
 		move_variable_callback(condition_root)
 	)(root);
 }
+
+bool ConditionScript::execute(
+	InstanceManager const& instance_manager,
+	ConditionNode::scope_t const& initial_scope,
+	ConditionNode::scope_t const& this_scope,
+	ConditionNode::scope_t const& from_scope
+) const {
+	return !condition_root.is_initialised()
+		|| condition_root.execute(instance_manager, initial_scope, this_scope, from_scope);
+}
