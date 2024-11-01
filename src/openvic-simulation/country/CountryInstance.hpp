@@ -220,6 +220,8 @@ namespace OpenVic {
 
 		bool set_country_flag(std::string_view flag, bool warn);
 		bool clear_country_flag(std::string_view flag, bool warn);
+		bool has_country_flag(std::string_view flag) const;
+
 		bool add_owned_province(ProvinceInstance& new_province);
 		bool remove_owned_province(ProvinceInstance& province_to_remove);
 		bool add_controlled_province(ProvinceInstance& new_province);

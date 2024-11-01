@@ -214,6 +214,10 @@ bool CountryInstance::clear_country_flag(std::string_view flag, bool warn) {
 	return true;
 }
 
+bool CountryInstance::has_country_flag(std::string_view flag) const {
+	return country_flags.contains(flag);
+}
+
 #define ADD_AND_REMOVE(item) \
 	bool CountryInstance::add_##item(std::remove_pointer_t<decltype(item##s)::value_type>& new_item) { \
 		if (!item##s.emplace(&new_item).second) { \
