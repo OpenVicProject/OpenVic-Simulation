@@ -1113,7 +1113,7 @@ bool Dataloader::load_defines(
 		Logger::error("Failed to load diplomatic actions!");
 		ret = false;
 	}
-	if (!definition_manager.get_script_manager().get_condition_manager().setup_conditions(definition_manager)) {
+	if (!definition_manager.get_script_manager().get_condition_manager().setup_conditions()) {
 		Logger::error("Failed to set up conditions!");
 		ret = false;
 	}
