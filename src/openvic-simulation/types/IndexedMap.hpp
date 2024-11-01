@@ -19,6 +19,7 @@ namespace OpenVic {
 		using keys_t = std::vector<key_t>;
 
 		using key_type = key_t; // To match tsl::ordered_map's key_type
+		using mapped_type = value_t; // To match tsl::ordered_map's mapped_type
 
 		using container_t::operator[];
 		using container_t::size;
