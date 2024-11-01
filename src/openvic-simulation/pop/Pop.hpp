@@ -172,6 +172,7 @@ namespace OpenVic {
 		Pop& operator=(Pop&&) = delete;
 
 		void setup_pop_test_values(IssueManager const& issue_manager);
+		void generate_political_distributions(InstanceManager const& instance_manager);
 		bool convert_to_equivalent();
 
 		void set_location(ProvinceInstance& new_location);
@@ -184,7 +185,7 @@ namespace OpenVic {
 		fixed_point_t get_party_support(CountryParty const& party) const;
 
 		void update_gamestate(
-			DefineManager const& define_manager, CountryInstance const* owner,
+			InstanceManager const& instance_manager, CountryInstance const* owner,
 			const fixed_point_t pop_size_per_regiment_multiplier
 		);
 

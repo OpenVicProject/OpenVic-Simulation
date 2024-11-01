@@ -47,6 +47,13 @@ namespace OpenVic {
 
 		bool parse_scripts(DefinitionManager const& definition_manager);
 
+		fixed_point_t execute(
+			InstanceManager const& instance_manager,
+			ConditionNode::scope_t const& initial_scope,
+			ConditionNode::scope_t const& this_scope,
+			ConditionNode::scope_t const& from_scope = ConditionNode::no_scope_t {}
+		) const;
+
 		// Used mainly to check if a ConditionalWeight has been properly initialised by comparing against {}
 		bool operator==(ConditionalWeight const& other) const;
 	};

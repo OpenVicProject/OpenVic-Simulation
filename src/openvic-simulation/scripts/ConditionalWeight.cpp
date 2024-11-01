@@ -129,6 +129,53 @@ bool ConditionalWeight<TYPE>::parse_scripts(DefinitionManager const& definition_
 }
 
 template<conditional_weight_type_t TYPE>
+fixed_point_t ConditionalWeight<TYPE>::execute(
+	InstanceManager const& instance_manager,
+	ConditionNode::scope_t const& initial_scope,
+	ConditionNode::scope_t const& this_scope,
+	ConditionNode::scope_t const& from_scope
+) const {
+	struct visitor_t {
+		InstanceManager const& instance_manager;
+		ConditionNode::scope_t const& initial_scope;
+		ConditionNode::scope_t const& this_scope;
+		ConditionNode::scope_t const& from_scope;
+		fixed_point_t result;
+
+		void operator()(condition_weight_t const& item) {
+			if (item.second.execute(instance_manager, initial_scope, this_scope, from_scope)) {
+				if constexpr (conditional_weight_type_is_additive(TYPE)) {
+					result += item.first;
+				} else if constexpr (conditional_weight_type_is_multiplicative(TYPE)) {
+					result *= item.first;
+				}
+			}
+		}
+
+		void operator()(condition_weight_group_t const& group) {
+			for (condition_weight_t const& item : group) {
+				// TODO - should this execute for all items in a group? Maybe it should stop after one of them fails?
+				(*this)(item);
+			}
+		}
+	} visitor {
+		instance_manager, initial_scope, this_scope, from_scope, base
+	};
+
+	for (condition_weight_item_t const& item : condition_weight_items) {
+		if constexpr (conditional_weight_type_is_multiplicative(TYPE)) {
+			if (visitor.result == fixed_point_t::_0()) {
+				return fixed_point_t::_0();
+			}
+		}
+
+		std::visit(visitor, item);
+	}
+
+	return visitor.result;
+}
+
+template<conditional_weight_type_t TYPE>
 bool ConditionalWeight<TYPE>::operator==(ConditionalWeight const& other) const {
 	return initial_scope == other.initial_scope &&
 		this_scope == other.this_scope &&
