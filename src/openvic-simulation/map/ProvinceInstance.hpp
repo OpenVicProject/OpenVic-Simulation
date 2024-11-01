@@ -142,7 +142,7 @@ namespace OpenVic {
 		);
 
 		void _add_pop(Pop&& pop);
-		void _update_pops(DefineManager const& define_manager);
+		void _update_pops(InstanceManager const& instance_manager);
 		bool convert_rgo_worker_pops_to_equivalent(ProductionType const& production_type);
 		void initialise_rgo();
 
