@@ -132,3 +132,45 @@ struct ConditionalWeight::parse_scripts_visitor_t {
 bool ConditionalWeight::parse_scripts(DefinitionManager const& definition_manager) {
 	return parse_scripts_visitor_t { definition_manager }(condition_weight_items);
 }
+
+fixed_point_t ConditionalWeight::execute(
+	InstanceManager const& instance_manager,
+	ConditionNode::scope_t const& initial_scope,
+	ConditionNode::scope_t const& this_scope,
+	ConditionNode::scope_t const& from_scope
+) const {
+	struct visitor_t {
+		InstanceManager const& instance_manager;
+		ConditionNode::scope_t const& initial_scope;
+		ConditionNode::scope_t const& this_scope;
+		ConditionNode::scope_t const& from_scope;
+		fixed_point_t result;
+
+		void operator()(condition_weight_t const& item) {
+			if (item.second.execute(instance_manager, initial_scope, this_scope, from_scope)) {
+				// TODO - Should this always be multiplicative, or additive for some conditional weight scripts?
+				result *= item.first;
+			}
+		}
+
+		void operator()(condition_weight_group_t const& group) {
+			for (condition_weight_t const& item : group) {
+				// TODO - should this execute for all items in a group? Maybe it should stop after one of them fails?
+				(*this)(item);
+			}
+		}
+	} visitor {
+		instance_manager, initial_scope, this_scope, from_scope, base
+	};
+
+	for (condition_weight_item_t const& item : condition_weight_items) {
+		// TODO - this is only valid if all weights are applied multiplicatively, otherwise it must be changed
+		if (visitor.result == fixed_point_t::_0()) {
+			return fixed_point_t::_0();
+		}
+
+		std::visit(visitor, item);
+	}
+
+	return visitor.result;
+}
