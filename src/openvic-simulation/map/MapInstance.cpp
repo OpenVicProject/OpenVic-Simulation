@@ -1,6 +1,7 @@
 #include "MapInstance.hpp"
 
 #include "openvic-simulation/history/ProvinceHistory.hpp"
+#include "openvic-simulation/InstanceManager.hpp"
 #include "openvic-simulation/map/MapDefinition.hpp"
 #include "openvic-simulation/pop/PopValuesFromProvince.hpp"
 #include "openvic-simulation/utility/Logger.hpp"
@@ -135,12 +136,12 @@ void MapInstance::update_modifier_sums(const Date today, StaticModifierCache con
 	}
 }
 
-void MapInstance::update_gamestate(const Date today, DefineManager const& define_manager) {
+void MapInstance::update_gamestate(InstanceManager const& instance_manager) {
 	highest_province_population = 0;
 	total_map_population = 0;
 
 	for (ProvinceInstance& province : province_instances.get_items()) {
-		province.update_gamestate(today, define_manager);
+		province.update_gamestate(instance_manager);
 
 		// Update population stats
 		const pop_size_t province_population = province.get_total_population();
@@ -160,10 +161,7 @@ void MapInstance::map_tick() {
 	//state tick will update pop employment via factories
 }
 
-void MapInstance::initialise_for_new_game(
-	const Date today,
-	DefineManager const& define_manager
-) {
-	update_gamestate(today, define_manager);
+void MapInstance::initialise_for_new_game(InstanceManager const& instance_manager) {
+	update_gamestate(instance_manager);
 	thread_pool.process_province_initialise_for_new_game();
 }

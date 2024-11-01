@@ -924,10 +924,22 @@ bool CountryInstance::apply_history_to_country(CountryHistoryEntry const& entry,
 	for (auto const& [technology, level] : entry.get_technologies()) {
 		ret &= set_technology_unlock_level(*technology, level, good_instance_manager);
 	}
+
+	for (
+		Invention const& invention :
+			instance_manager.get_definition_manager().get_research_manager().get_invention_manager().get_inventions()
+	) {
+		if (
+			invention.get_limit().execute(instance_manager, this, this) &&
+			invention.get_chance().execute(instance_manager, this, this) > 0
+		) {
+			ret &= unlock_invention(invention, good_instance_manager);
+		}
+	}
+
 	for (auto const& [invention, activated] : entry.get_inventions()) {
 		ret &= set_invention_unlock_level(*invention, activated ? 1 : 0, good_instance_manager);
 	}
-
 	apply_foreign_investments(entry.get_foreign_investment(), instance_manager.get_country_instance_manager());
 
 	set_optional(releasable_vassal, entry.is_releasable_vassal());
@@ -1812,9 +1824,10 @@ bool CountryInstanceManager::generate_country_instances(
 	return ret;
 }
 
-bool CountryInstanceManager::apply_history_to_countries(
-	CountryHistoryManager const& history_manager, InstanceManager& instance_manager
-) {
+bool CountryInstanceManager::apply_history_to_countries(InstanceManager& instance_manager) {
+	CountryHistoryManager const& history_manager =
+		instance_manager.get_definition_manager().get_history_manager().get_country_manager();
+
 	bool ret = true;
 
 	const Date today = instance_manager.get_today();
