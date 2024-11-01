@@ -34,5 +34,12 @@ namespace OpenVic {
 		NodeTools::node_callback_t expect_conditional_weight(base_key_t base_key);
 
 		bool parse_scripts(DefinitionManager const& definition_manager);
+
+		fixed_point_t execute(
+			InstanceManager const& instance_manager,
+			ConditionNode::scope_t const& initial_scope,
+			ConditionNode::scope_t const& this_scope,
+			ConditionNode::scope_t const& from_scope
+		) const;
 	};
 }

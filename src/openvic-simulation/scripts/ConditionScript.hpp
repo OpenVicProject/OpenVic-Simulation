@@ -19,5 +19,12 @@ namespace OpenVic {
 
 	public:
 		ConditionScript(scope_type_t new_initial_scope, scope_type_t new_this_scope, scope_type_t new_from_scope);
+
+		bool execute(
+			InstanceManager const& instance_manager,
+			ConditionNode::scope_t const& initial_scope,
+			ConditionNode::scope_t const& this_scope,
+			ConditionNode::scope_t const& from_scope
+		) const;
 	};
 }
