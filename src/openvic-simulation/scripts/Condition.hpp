@@ -9,6 +9,51 @@
 #include "openvic-simulation/types/EnumBitfield.hpp"
 #include "openvic-simulation/types/IdentifierRegistry.hpp"
 
+/*
+
+	ConditionType
+	- execute function (taking ConditionValue's Argument + current context, e.g. THIS and FROM)
+
+	ConditionValue
+	- ConditionType
+	- Arguments:
+		- std::vector<ConditionValue>
+		- std::string
+		- ProvinceDefinition const*
+		- CountryDefinition const*
+		- THIS or FROM
+		- bool
+		- int
+		- fixed_point_t
+		- GovernmentType const*
+		- std::string + int (or fixed_point_t?) (for check_variable)
+		- CountryDefinition const* + int (or fixed_point_t?) (for diplomatic_influence and relation)
+		- GoodDefinition const*
+		- BuildingType const*
+		- Reform const*
+		- ReformGroup const* + Reform const*
+		- Issue const*
+		- IssueGroup const* Issue const*
+		- Issue const* + fixed_point_t
+		- WargoalType const*
+		- Modifier const*
+		- Ideology const*
+		- Ideology const* + fixed_point_t (for upper_house)
+		- Invention const*
+		- Culture const*
+		- Religion const*
+		- PopType const*
+		- PopType const* + fixed_point_t (for unemployment_by_type)
+		- NationalValue const*
+		- Strata const* + fixed_point_t
+		- CountryParty const* (for ruling_party, maybe better to use std::string as parties are stored per country)
+		- Continent const*
+		- Crime const*
+		- Region const*
+		- TerrainType const*
+
+*/
+
 namespace OpenVic {
 	enum class scope_type_t : uint8_t {
 		NO_SCOPE    = 0,
