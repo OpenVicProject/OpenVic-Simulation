@@ -48,13 +48,13 @@ namespace OpenVic {
 			decltype(ProvinceInstance::ideology_distribution)::keys_t const& ideology_keys
 		);
 		bool apply_history_to_provinces(
-			ProvinceHistoryManager const& history_manager, Date date, CountryInstanceManager& country_manager,
+			ProvinceHistoryManager const& history_manager, const Date date, CountryInstanceManager& country_manager,
 			IssueManager const& issue_manager
 		);
 
-		void update_modifier_sums(Date today, StaticModifierCache const& static_modifier_cache);
-		void update_gamestate(Date today, DefineManager const& define_manager);
-		void tick(Date today);
-		void initialise_for_new_game(ModifierEffectCache const& modifier_effect_cache);
+		void update_modifier_sums(const Date today, StaticModifierCache const& static_modifier_cache);
+		void update_gamestate(const Date today, DefineManager const& define_manager);
+		void map_tick(const Date today, ModifierEffectCache const& modifier_effect_cache);
+		void initialise_for_new_game(const Date today, DefineManager const& define_manager, ModifierEffectCache const& modifier_effect_cache);
 	};
 }
