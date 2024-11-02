@@ -61,7 +61,7 @@ void InstanceManager::tick() {
 	Logger::info("Tick: ", today);
 
 	// Tick...
-	map_instance.tick(today);
+	map_instance.map_tick(today, definition_manager.get_modifier_manager().get_modifier_effect_cache());
 
 	set_gamestate_needs_update();
 }
@@ -140,7 +140,11 @@ bool InstanceManager::load_bookmark(Bookmark const* new_bookmark) {
 
 	if (ret) {
 		update_modifier_sums();
-		map_instance.initialise_for_new_game(definition_manager.get_modifier_manager().get_modifier_effect_cache());
+		map_instance.initialise_for_new_game(
+			today,
+			definition_manager.get_define_manager(),
+			definition_manager.get_modifier_manager().get_modifier_effect_cache()
+		);
 	}
 
 	return ret;

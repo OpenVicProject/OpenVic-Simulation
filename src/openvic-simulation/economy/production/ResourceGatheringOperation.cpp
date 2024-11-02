@@ -41,47 +41,23 @@ ResourceGatheringOperation::ResourceGatheringOperation(decltype(employee_count_p
 	fixed_point_t::_0(), {}, pop_type_keys
 } {}
 
-void ResourceGatheringOperation::initialise_for_new_game(ProvinceInstance& location, ModifierEffectCache const& modifier_effect_cache) {
-	if (production_type_nullable == nullptr) {
-		output_quantity_yesterday = 0;
-		revenue_yesterday = 0;
-		return;
-	}
-
-	ProductionType const& production_type = *production_type_nullable;
-	const fixed_point_t size_modifier = calculate_size_modifier(location, modifier_effect_cache);
-	const Pop::pop_size_t total_worker_count_in_province = update_size_and_return_total_worker_count(location, modifier_effect_cache, size_modifier);
-	hire(location, total_worker_count_in_province);
-	Pop::pop_size_t total_owner_count_in_state_cache = 0;
-	std::vector<Pop*> owner_pops_cache {};
-	output_quantity_yesterday = produce(location, owner_pops_cache, total_owner_count_in_state_cache, modifier_effect_cache, size_modifier);
-	revenue_yesterday = output_quantity_yesterday * production_type.get_output_good().get_base_price(); //TODO sell on market
-	pay_employees(location, revenue_yesterday, total_worker_count_in_province, owner_pops_cache, total_owner_count_in_state_cache);	
-}
-
-Pop::pop_size_t ResourceGatheringOperation::update_size_and_return_total_worker_count(
+void ResourceGatheringOperation::initialise_rgo_size_multiplier(
 	ProvinceInstance& location,
-	ModifierEffectCache const& modifier_effect_cache,
-	const fixed_point_t size_modifier
+	ModifierEffectCache const& modifier_effect_cache
 ) {
 	if (production_type_nullable == nullptr) {
 		size_multiplier = fixed_point_t::_0();
 		max_employee_count_cache = fixed_point_t::_0();
-		return fixed_point_t::_0();
+		return;
 	}
 	
-	Pop::pop_size_t total_worker_count_in_province = 0; //not counting equivalents
 	ProductionType const& production_type = *production_type_nullable;
 	std::vector<Job> const& jobs = production_type.get_jobs();
-	//can't use pop_type_distribution as it is not filled correctly yet (possibly due to equivalent pop type conversion)
-	for (Pop const& pop : location.get_pops()){
-		PopType const* pop_type = pop.get_type();
-		for(Job const& job : jobs) {
-			if (job.get_pop_type() == pop_type) {
-				total_worker_count_in_province += pop.get_size();
-				break;
-			}
-		}
+	IndexedMap<PopType, Pop::pop_size_t> const& province_pop_type_distribution = location.get_pop_type_distribution();
+	
+	Pop::pop_size_t total_worker_count_in_province = 0; //not counting equivalents
+	for(Job const& job : jobs) {
+		total_worker_count_in_province += province_pop_type_distribution[*job.get_pop_type()];
 	}
 	
 	fixed_point_t base_size_modifier = fixed_point_t::_1();
@@ -98,8 +74,9 @@ Pop::pop_size_t ResourceGatheringOperation::update_size_and_return_total_worker_
 	} else {
 		size_multiplier = ((total_worker_count_in_province / (base_size_modifier * base_workforce_size)).ceil() * fixed_point_t::_1_50()).floor();
 	}
+
+	const fixed_point_t size_modifier = calculate_size_modifier(location, modifier_effect_cache);
 	max_employee_count_cache = (size_modifier * size_multiplier * base_workforce_size).floor();
-	return total_worker_count_in_province;
 }
 
 fixed_point_t ResourceGatheringOperation::calculate_size_modifier(ProvinceInstance const& location, ModifierEffectCache const& modifier_effect_cache) const {
@@ -121,6 +98,51 @@ fixed_point_t ResourceGatheringOperation::calculate_size_modifier(ProvinceInstan
 	auto const& good_effects = modifier_effect_cache.get_good_effects()[production_type.get_output_good()];
 	size_modifier += location.get_modifier_effect_value_nullcheck(good_effects.get_rgo_size());
 	return size_modifier > fixed_point_t::_0() ? size_modifier : fixed_point_t::_0();
+}
+
+void ResourceGatheringOperation::rgo_tick(ProvinceInstance& location, ModifierEffectCache const& modifier_effect_cache) {
+	if (production_type_nullable == nullptr || location.get_owner() == nullptr) {
+		output_quantity_yesterday = 0;
+		revenue_yesterday = 0;
+		return;
+	}
+	
+	ProductionType const& production_type = *production_type_nullable;
+	std::vector<Job> const& jobs = production_type.get_jobs();
+	IndexedMap<PopType, Pop::pop_size_t> const& province_pop_type_distribution = location.get_pop_type_distribution();
+	
+	Pop::pop_size_t total_worker_count_in_province = 0; //not counting equivalents
+	for(Job const& job : jobs) {
+		total_worker_count_in_province += province_pop_type_distribution[*job.get_pop_type()];
+	}
+	
+	hire(location, total_worker_count_in_province);
+
+	Pop::pop_size_t total_owner_count_in_state_cache = 0;
+	std::vector<Pop*> const* owner_pops_cache = nullptr;
+
+	if (production_type.get_owner().has_value()) {
+		PopType const& owner_pop_type = *production_type.get_owner()->get_pop_type();
+		total_owner_count_in_state_cache = location.get_state()->get_pop_type_distribution()[owner_pop_type];
+		owner_pops_cache = &location.get_state()->get_pops_cache_by_type()[owner_pop_type];
+	}
+
+	output_quantity_yesterday = produce(
+		location,
+		owner_pops_cache,
+		total_owner_count_in_state_cache,
+		modifier_effect_cache
+	);
+
+	revenue_yesterday = output_quantity_yesterday * production_type.get_output_good().get_base_price(); //TODO sell on market
+
+	pay_employees(
+		location,
+		revenue_yesterday,
+		total_worker_count_in_province,
+		owner_pops_cache,
+		total_owner_count_in_state_cache
+	);	
 }
 
 void ResourceGatheringOperation::hire(ProvinceInstance& location, Pop::pop_size_t available_worker_count) {
@@ -166,17 +188,15 @@ void ResourceGatheringOperation::hire(ProvinceInstance& location, Pop::pop_size_
 
 fixed_point_t ResourceGatheringOperation::produce(
 	ProvinceInstance& location,
-	std::vector<Pop*>& owner_pops_cache,
-	Pop::pop_size_t& total_owner_count_in_state_cache,
-	ModifierEffectCache const& modifier_effect_cache,
-	const fixed_point_t size_modifier
+	std::vector<Pop*> const* const owner_pops_cache,
+	const Pop::pop_size_t total_owner_count_in_state_cache,
+	ModifierEffectCache const& modifier_effect_cache
 ) {
+	const fixed_point_t size_modifier = calculate_size_modifier(location, modifier_effect_cache);
 	if (size_modifier == fixed_point_t::_0()){
 		return fixed_point_t::_0();
 	}
 
-	total_owner_count_in_state_cache = 0;
-	owner_pops_cache = {};
 	if (production_type_nullable == nullptr || max_employee_count_cache <= 0) {
 		return fixed_point_t::_0();
 	}
@@ -187,35 +207,15 @@ fixed_point_t ResourceGatheringOperation::produce(
 
 	std::optional<Job> const& owner = production_type.get_owner();
 	if (owner.has_value()) {
-		Job const& owner_job = owner.value();
-		PopType const* owner_job_pop_type_nullable = owner_job.get_pop_type();
-		if (owner_job_pop_type_nullable == nullptr) {
-			Logger::error("Owner job for ", production_type.get_identifier(), " has nullptr as pop_type.");
-			return fixed_point_t::_0();
-		}
-		PopType const& owner_pop_type = *owner_job_pop_type_nullable;
-		State const* state_nullable = location.get_state();
-		if (state_nullable == nullptr) {
+		State const* state_ptr = location.get_state();
+		if (state_ptr == nullptr) {
 			Logger::error("Province ", location.get_identifier(), " has no state.");
 			return fixed_point_t::_0();
 		}
-		State const& state = *state_nullable;
-		Pop::pop_size_t state_population = 0; //state.get_total_population() is not filled yet
-		std::vector<ProvinceInstance*> const& provinces_in_state = state.get_provinces();
-		for (ProvinceInstance* const province_nullable : provinces_in_state) {
-			if (province_nullable == nullptr) {
-				Logger::error("State ", state.get_identifier(), " has nullptr in provinces.");
-				return fixed_point_t::_0();
-			}
-			ProvinceInstance& province = *province_nullable;
-			for (Pop& pop : province.get_mutable_pops()){
-				state_population += pop.get_size();
-				if (&owner_pop_type == pop.get_type()) {
-					owner_pops_cache.push_back(&pop);
-					total_owner_count_in_state_cache += pop.get_size();
-				}
-			}
-		}
+
+		State const& state = *state_ptr;
+		const Pop::pop_size_t state_population = state.get_total_population();
+		Job const& owner_job = owner.value();
 
 		if (total_owner_count_in_state_cache > 0) {
 			switch (owner_job.get_effect_type()) {
@@ -293,32 +293,27 @@ void ResourceGatheringOperation::pay_employees(
 	ProvinceInstance& location,
 	const fixed_point_t revenue,
 	const Pop::pop_size_t total_worker_count_in_province,
-	std::vector<Pop*>& owner_pops_cache,
+	std::vector<Pop*> const* const owner_pops_cache,
 	const Pop::pop_size_t total_owner_count_in_state_cache
 ) {
 	total_owner_income_cache = 0;
 	total_employee_income_cache = 0;
-	if (production_type_nullable == nullptr || revenue <= 0 || total_worker_count_in_province <= 0) {
+	if (revenue <= 0 || total_worker_count_in_province <= 0) {
 		if (revenue < 0) { Logger::error("Negative revenue for province ", location.get_identifier()); }
 		if (total_worker_count_in_province < 0) { Logger::error("Negative total worker count for province ", location.get_identifier()); }
 		return;
 	}
-	
-	ProductionType const& production_type = *production_type_nullable;
 
 	fixed_point_t revenue_left = revenue;
-	if (total_owner_count_in_state_cache > 0) {
-		Job const& owner_job = production_type.get_owner().value();
-		PopType const* owner_job_pop_type_nullable = owner_job.get_pop_type();
-		
+	if (total_owner_count_in_state_cache > 0) {		
 		fixed_point_t owner_share = (fixed_point_t::_2() * total_owner_count_in_state_cache / total_worker_count_in_province);
 		constexpr fixed_point_t upper_limit = fixed_point_t::_0_50();
 		if (owner_share > upper_limit) {
 			owner_share = upper_limit;
 		}
 
-		for(Pop* owner_pop_nullable : owner_pops_cache) {
-			Pop& owner_pop = *owner_pop_nullable;
+		for(Pop* owner_pop_ptr : *owner_pops_cache) {
+			Pop& owner_pop = *owner_pop_ptr;
 			const fixed_point_t income_for_this_pop = revenue_left * owner_share * owner_pop.get_size() / total_owner_count_in_state_cache;
 			owner_pop.add_rgo_owner_income(income_for_this_pop);
 			total_owner_income_cache += income_for_this_pop;
@@ -329,13 +324,14 @@ void ResourceGatheringOperation::pay_employees(
 	if (total_paid_employees_count_cache > 0) {
 		for (Employee& employee : employees) {
 			Pop& employee_pop = employee.pop;
-			PopType const* employee_pop_type_nullable = employee_pop.get_type();
-			if (employee_pop_type_nullable == nullptr) {
+			
+			PopType const* employee_pop_type = employee_pop.get_type();
+			if (employee_pop_type == nullptr) {
 				Logger::error("employee has nullptr pop_type.");
 				return;
 			}
-			PopType const& employee_pop_type = *employee_pop_type_nullable;
-			if (employee_pop_type.get_is_slave()) {
+
+			if (employee_pop_type->get_is_slave()) {
 				continue;
 			}
 

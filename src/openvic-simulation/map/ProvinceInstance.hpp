@@ -96,6 +96,7 @@ namespace OpenVic {
 		fixed_point_t PROPERTY(average_consciousness);
 		fixed_point_t PROPERTY(average_militancy);
 		IndexedMap<PopType, Pop::pop_size_t> PROPERTY(pop_type_distribution);
+		IndexedMap<PopType, std::vector<Pop*>> PROPERTY(pops_cache_by_type);
 		IndexedMap<Ideology, fixed_point_t> PROPERTY(ideology_distribution);
 		fixed_point_map_t<Culture const*> PROPERTY(culture_distribution);
 		fixed_point_map_t<Religion const*> PROPERTY(religion_distribution);
@@ -148,8 +149,8 @@ namespace OpenVic {
 		) const;
 		std::vector<ModifierSum::modifier_entry_t> get_contributing_modifiers(ModifierEffect const& effect) const;
 
-		void update_gamestate(Date today, DefineManager const& define_manager);
-		void tick(Date today);
+		void update_gamestate(const Date today, DefineManager const& define_manager);
+		void province_tick(const Date today, ModifierEffectCache const& modifier_effect_cache);
 
 		template<UnitType::branch_t Branch>
 		bool add_unit_instance_group(UnitInstanceGroup<Branch>& group);
@@ -159,7 +160,7 @@ namespace OpenVic {
 		bool setup(BuildingTypeManager const& building_type_manager);
 		bool apply_history_to_province(ProvinceHistoryEntry const& entry, CountryInstanceManager& country_manager);
 
-		void initialise_for_new_game(ModifierEffectCache const& modifier_effect_cache);
+		void initialise_rgo(ModifierEffectCache const& modifier_effect_cache);
 
 		void setup_pop_test_values(IssueManager const& issue_manager);
 		plf::colony<Pop>& get_mutable_pops();
