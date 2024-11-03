@@ -38,6 +38,11 @@ namespace OpenVic {
 		#include "openvic-simulation/types/fixed_point/FixedPointLUT_sin.hpp"
 
 		static_assert(SIN_LUT_PRECISION == PRECISION);
+		
+		// Doesn't account for sign, so -n.abc -> 1 - 0.abc
+		constexpr fixed_point_t get_frac() const {
+			return value & FRAC_MASK;
+		}
 
 	public:
 		constexpr fixed_point_t() : value { 0 } {}
@@ -74,108 +79,20 @@ namespace OpenVic {
 			return 2;
 		}
 
-		static constexpr fixed_point_t _3() {
-			return 3;
-		}
-
 		static constexpr fixed_point_t _4() {
 			return 4;
-		}
-
-		static constexpr fixed_point_t _5() {
-			return 5;
-		}
-
-		static constexpr fixed_point_t _6() {
-			return 6;
-		}
-
-		static constexpr fixed_point_t _7() {
-			return 7;
-		}
-
-		static constexpr fixed_point_t _8() {
-			return 8;
-		}
-
-		static constexpr fixed_point_t _9() {
-			return 9;
-		}
-
-		static constexpr fixed_point_t _10() {
-			return 10;
-		}
-
-		static constexpr fixed_point_t _50() {
-			return 50;
 		}
 
 		static constexpr fixed_point_t _100() {
 			return 100;
 		}
 
-		static constexpr fixed_point_t _200() {
-			return 200;
-		}
-
-		static constexpr fixed_point_t _0_01() {
-			return _1() / _100();
-		}
-
-		static constexpr fixed_point_t _0_02() {
-			return _0_01() * 2;
-		}
-
-		static constexpr fixed_point_t _0_03() {
-			return _0_01() * 3;
-		}
-
-		static constexpr fixed_point_t _0_04() {
-			return _0_01() * 4;
-		}
-
-		static constexpr fixed_point_t _0_05() {
-			return _0_01() * 5;
-		}
-
-		static constexpr fixed_point_t _0_10() {
-			return _1() / 10;
-		}
-
 		static constexpr fixed_point_t _0_20() {
-			return _0_10() * 2;
-		}
-
-		static constexpr fixed_point_t _0_25() {
-			return _1() / 4;
-		}
-
-		static constexpr fixed_point_t _0_33() {
-			return _1() / 3;
+			return _1() / 5;
 		}
 
 		static constexpr fixed_point_t _0_50() {
 			return _1() / 2;
-		}
-
-		static constexpr fixed_point_t _0_75() {
-			return _1() - _0_25();
-		}
-
-		static constexpr fixed_point_t _0_95() {
-			return _1() - _0_05();
-		}
-
-		static constexpr fixed_point_t _0_99() {
-			return _1() - _0_01();
-		}
-
-		static constexpr fixed_point_t _1_01() {
-			return _1() + _0_01();
-		}
-
-		static constexpr fixed_point_t _1_10() {
-			return _1() + _0_10();
 		}
 
 		static constexpr fixed_point_t _1_50() {
@@ -251,11 +168,6 @@ namespace OpenVic {
 			return !is_negative()
 				? static_cast<int64_t>(NumberUtils::sqrt(static_cast<uint64_t>(value) << PRECISION))
 				: 0;
-		}
-
-		// Doesn't account for sign, so -n.abc -> 1 - 0.abc
-		constexpr fixed_point_t get_frac() const {
-			return value & FRAC_MASK;
 		}
 
 		constexpr bool is_integer() const {
