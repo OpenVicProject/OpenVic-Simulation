@@ -14,6 +14,7 @@
 using namespace OpenVic;
 
 ResourceGatheringOperation::ResourceGatheringOperation(
+	ModifierEffectCache const& new_modifier_effect_cache,
 	ProductionType const* new_production_type_nullable,
 	fixed_point_t new_size_multiplier,
 	fixed_point_t new_revenue_yesterday,
@@ -21,7 +22,9 @@ ResourceGatheringOperation::ResourceGatheringOperation(
 	fixed_point_t new_unsold_quantity_yesterday,
 	std::vector<Employee>&& new_employees,
 	decltype(employee_count_per_type_cache)::keys_t const& pop_type_keys
-) : production_type_nullable { new_production_type_nullable },
+) : modifier_effect_cache { new_modifier_effect_cache },
+	location_ptr { nullptr },
+	production_type_nullable { new_production_type_nullable },
 	revenue_yesterday { new_revenue_yesterday },
 	output_quantity_yesterday { new_output_quantity_yesterday },
 	unsold_quantity_yesterday { new_unsold_quantity_yesterday },
@@ -35,22 +38,32 @@ ResourceGatheringOperation::ResourceGatheringOperation(
 	employee_count_per_type_cache { &pop_type_keys }
 { }
 
-ResourceGatheringOperation::ResourceGatheringOperation(decltype(employee_count_per_type_cache)::keys_t const& pop_type_keys) : ResourceGatheringOperation {
+ResourceGatheringOperation::ResourceGatheringOperation(
+	ModifierEffectCache const& new_modifier_effect_cache,
+	decltype(employee_count_per_type_cache)::keys_t const& pop_type_keys
+) : ResourceGatheringOperation {
+	new_modifier_effect_cache,
 	nullptr, fixed_point_t::_0(),
 	fixed_point_t::_0(), fixed_point_t::_0(),
 	fixed_point_t::_0(), {}, pop_type_keys
 } {}
 
-void ResourceGatheringOperation::initialise_rgo_size_multiplier(
-	ProvinceInstance& location,
-	ModifierEffectCache const& modifier_effect_cache
-) {
+void ResourceGatheringOperation::setup_location_ptr(ProvinceInstance& location) {
+	if (location_ptr != nullptr) {
+		Logger::error("RGO already has a location_ptr pointing to province ", location_ptr->get_identifier());
+	}
+
+	location_ptr = &location;
+}
+
+void ResourceGatheringOperation::initialise_rgo_size_multiplier() {
 	if (production_type_nullable == nullptr) {
 		size_multiplier = fixed_point_t::_0();
 		max_employee_count_cache = fixed_point_t::_0();
 		return;
 	}
 	
+	ProvinceInstance& location = *location_ptr;
 	ProductionType const& production_type = *production_type_nullable;
 	std::vector<Job> const& jobs = production_type.get_jobs();
 	IndexedMap<PopType, Pop::pop_size_t> const& province_pop_type_distribution = location.get_pop_type_distribution();
@@ -75,14 +88,15 @@ void ResourceGatheringOperation::initialise_rgo_size_multiplier(
 		size_multiplier = ((total_worker_count_in_province / (base_size_modifier * base_workforce_size)).ceil() * fixed_point_t::_1_50()).floor();
 	}
 
-	const fixed_point_t size_modifier = calculate_size_modifier(location, modifier_effect_cache);
+	const fixed_point_t size_modifier = calculate_size_modifier();
 	max_employee_count_cache = (size_modifier * size_multiplier * base_workforce_size).floor();
 }
 
-fixed_point_t ResourceGatheringOperation::calculate_size_modifier(ProvinceInstance const& location, ModifierEffectCache const& modifier_effect_cache) const {
+fixed_point_t ResourceGatheringOperation::calculate_size_modifier() const {
 	if (production_type_nullable == nullptr) {
 		return fixed_point_t::_1();
 	}
+	ProvinceInstance& location = *location_ptr;
 	
 	ProductionType const& production_type = *production_type_nullable;
 
@@ -100,7 +114,8 @@ fixed_point_t ResourceGatheringOperation::calculate_size_modifier(ProvinceInstan
 	return size_modifier > fixed_point_t::_0() ? size_modifier : fixed_point_t::_0();
 }
 
-void ResourceGatheringOperation::rgo_tick(ProvinceInstance& location, ModifierEffectCache const& modifier_effect_cache) {
+void ResourceGatheringOperation::rgo_tick() {
+	ProvinceInstance& location = *location_ptr;
 	if (production_type_nullable == nullptr | location.get_owner() == nullptr) {
 		output_quantity_yesterday = 0;
 		revenue_yesterday = 0;
@@ -116,7 +131,7 @@ void ResourceGatheringOperation::rgo_tick(ProvinceInstance& location, ModifierEf
 		total_worker_count_in_province += province_pop_type_distribution[*job.get_pop_type()];
 	}
 	
-	hire(location, total_worker_count_in_province);
+	hire(total_worker_count_in_province);
 
 	Pop::pop_size_t total_owner_count_in_state_cache = 0;
 	std::vector<Pop*> const* owner_pops_cache = nullptr;
@@ -128,16 +143,13 @@ void ResourceGatheringOperation::rgo_tick(ProvinceInstance& location, ModifierEf
 	}
 
 	output_quantity_yesterday = produce(
-		location,
 		owner_pops_cache,
-		total_owner_count_in_state_cache,
-		modifier_effect_cache
+		total_owner_count_in_state_cache
 	);
 
 	revenue_yesterday = output_quantity_yesterday * production_type.get_output_good().get_base_price(); //TODO sell on market
 
 	pay_employees(
-		location,
 		revenue_yesterday,
 		total_worker_count_in_province,
 		owner_pops_cache,
@@ -145,7 +157,7 @@ void ResourceGatheringOperation::rgo_tick(ProvinceInstance& location, ModifierEf
 	);	
 }
 
-void ResourceGatheringOperation::hire(ProvinceInstance& location, Pop::pop_size_t available_worker_count) {
+void ResourceGatheringOperation::hire(const Pop::pop_size_t available_worker_count) {
 	total_employees_count_cache = 0;
 	total_paid_employees_count_cache=0;
 	if (production_type_nullable == nullptr) {
@@ -153,6 +165,7 @@ void ResourceGatheringOperation::hire(ProvinceInstance& location, Pop::pop_size_
 		employee_count_per_type_cache.fill(fixed_point_t::_0());
 		return;
 	}
+	ProvinceInstance& location = *location_ptr;
 
 	ProductionType const& production_type = *production_type_nullable;
 	if (max_employee_count_cache <= 0) { return; }
@@ -187,12 +200,10 @@ void ResourceGatheringOperation::hire(ProvinceInstance& location, Pop::pop_size_
 }
 
 fixed_point_t ResourceGatheringOperation::produce(
-	ProvinceInstance& location,
 	std::vector<Pop*> const* const owner_pops_cache,
-	const Pop::pop_size_t total_owner_count_in_state_cache,
-	ModifierEffectCache const& modifier_effect_cache
+	const Pop::pop_size_t total_owner_count_in_state_cache
 ) {
-	const fixed_point_t size_modifier = calculate_size_modifier(location, modifier_effect_cache);
+	const fixed_point_t size_modifier = calculate_size_modifier();
 	if (size_modifier == fixed_point_t::_0()){
 		return fixed_point_t::_0();
 	}
@@ -200,6 +211,7 @@ fixed_point_t ResourceGatheringOperation::produce(
 	if (production_type_nullable == nullptr || max_employee_count_cache <= 0) {
 		return fixed_point_t::_0();
 	}
+	ProvinceInstance& location = *location_ptr;
 	
 	ProductionType const& production_type = *production_type_nullable;
 	fixed_point_t throughput_multiplier = fixed_point_t::_1();
@@ -290,12 +302,13 @@ fixed_point_t ResourceGatheringOperation::produce(
 }
 
 void ResourceGatheringOperation::pay_employees(
-	ProvinceInstance& location,
 	const fixed_point_t revenue,
 	const Pop::pop_size_t total_worker_count_in_province,
 	std::vector<Pop*> const* const owner_pops_cache,
 	const Pop::pop_size_t total_owner_count_in_state_cache
 ) {
+	ProvinceInstance& location = *location_ptr;
+
 	total_owner_income_cache = 0;
 	total_employee_income_cache = 0;
 	if (revenue <= 0 || total_worker_count_in_province <= 0) {
