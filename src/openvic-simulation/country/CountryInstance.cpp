@@ -239,7 +239,7 @@ bool CountryInstance::has_country_flag(std::string_view flag) const {
 		} \
 		return true; \
 	} \
-	bool CountryInstance::has_##item(std::remove_pointer_t<decltype(item##s)::value_type> const& item) const { \
+	bool CountryInstance::has_##item(std::remove_pointer_t<decltype(item##s)::value_type>& item) const { \
 		return item##s.contains(&item); \
 	}
 

@@ -224,16 +224,16 @@ namespace OpenVic {
 
 		bool add_owned_province(ProvinceInstance& new_province);
 		bool remove_owned_province(ProvinceInstance& province_to_remove);
-		bool has_owned_province(ProvinceInstance const& province) const;
+		bool has_owned_province(ProvinceInstance& province) const;
 		bool add_controlled_province(ProvinceInstance& new_province);
 		bool remove_controlled_province(ProvinceInstance& province_to_remove);
-		bool has_controlled_province(ProvinceInstance const& province) const;
+		bool has_controlled_province(ProvinceInstance& province) const;
 		bool add_core_province(ProvinceInstance& new_core);
 		bool remove_core_province(ProvinceInstance& core_to_remove);
-		bool has_core_province(ProvinceInstance const& province) const;
+		bool has_core_province(ProvinceInstance& province) const;
 		bool add_state(State& new_state);
 		bool remove_state(State& state_to_remove);
-		bool has_state(State const& state) const;
+		bool has_state(State& state) const;
 
 		bool add_accepted_culture(Culture const& new_accepted_culture);
 		bool remove_accepted_culture(Culture const& culture_to_remove);
