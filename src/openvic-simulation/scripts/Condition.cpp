@@ -214,7 +214,8 @@ static bool _parse_condition_node_value_callback(
 		// Game object arguments
 		std::same_as<T, CountryDefinition const*> || std::same_as<T, ProvinceDefinition const*> ||
 		std::same_as<T, GoodDefinition const*> || std::same_as<T, Continent const*> || std::same_as<T, BuildingType const*> ||
-		std::same_as<T, Issue const*> || std::same_as<T, WargoalType const*> || std::same_as<T, Culture const*>
+		std::same_as<T, Issue const*> || std::same_as<T, WargoalType const*> || std::same_as<T, Culture const*> ||
+		std::same_as<T, GovernmentType const*>
 	);
 
 	using enum scope_type_t;
@@ -304,6 +305,11 @@ static bool _parse_condition_node_value_callback(
 		ret = definition_manager.get_pop_manager().get_culture_manager().expect_culture_identifier_or_string(
 			assign_variable_callback_pointer(value)
 		)(node);
+	} else if constexpr (std::same_as<T, GovernmentType const*>) {
+		ret = definition_manager.get_politics_manager().get_government_type_manager()
+			.expect_government_type_identifier_or_string(
+				assign_variable_callback_pointer(value)
+			)(node);
 	}
 
 	if (ret) {
@@ -1499,13 +1505,77 @@ To check if the POP itself has the culture, use "has_pop_culture" instead.
 			)
 		)
 	);
-	// ret &= add_condition("diplomatic_influence", COMPLEX, COUNTRY);
-	// ret &= add_condition("education_spending", REAL, COUNTRY);
-	// ret &= add_condition("election", BOOLEAN, COUNTRY);
-	// ret &= add_condition("exists", IDENTIFIER | BOOLEAN, COUNTRY, NO_SCOPE, NO_IDENTIFIER, COUNTRY_TAG);
-	// ret &= add_condition("government", IDENTIFIER, COUNTRY, NO_SCOPE, NO_IDENTIFIER, GOVERNMENT_TYPE);
-	// ret &= add_condition("great_wars_enabled", BOOLEAN, COUNTRY);
-	// ret &= add_condition("have_core_in", IDENTIFIER, COUNTRY, NO_SCOPE, NO_IDENTIFIER, COUNTRY_TAG);
+/*
+diplomatic_influence
+Syntax:
+
+diplomatic_influence = {
+	who = [THIS/FROM/TAG]
+	value = x
+}
+Use:
+Returns true if country has more than x diplomatic influence in the country in scope.
+
+*/
+	/* TODO - complex:
+	 *  - */
+	ret &= add_condition(
+		"diplomatic_influence",
+		_parse_condition_node_unimplemented,
+		_execute_condition_node_unimplemented
+	);
+	ret &= add_condition(
+		"education_spending", // country and province ???
+		_parse_condition_node_value_callback<fixed_point_t, COUNTRY>,
+		_execute_condition_node_unimplemented
+	);
+	ret &= add_condition(
+		"election",
+		_parse_condition_node_value_callback<bool, COUNTRY>,
+		_execute_condition_node_unimplemented
+	);
+	/*
+exists
+Syntax:
+
+exists = [tag]
+Use:
+Returns true if the specified country exists. May also be used with [yes/no] to determine if the country in scope actually exists.
+	*/
+	ret &= add_condition(
+		"exists",// IDENTIFIER | BOOLEAN, COUNTRY, NO_SCOPE, NO_IDENTIFIER, COUNTRY_TAG
+		// bool or tag or THIS or FROM
+		_parse_condition_node_unimplemented,
+		_execute_condition_node_unimplemented
+	);
+	ret &= add_condition(
+		"government",
+		_parse_condition_node_value_callback<GovernmentType const*, COUNTRY>,
+		_execute_condition_node_cast_argument_callback<GovernmentType const*, scope_t const&, scope_t const&, scope_t const&>(
+			_execute_condition_node_cast_scope<
+				bool, CountryInstance const*, scope_t const&, scope_t const&, GovernmentType const* const&
+			>(
+				[](
+					Condition const& condition, InstanceManager const& instance_manager,
+					CountryInstance const* const& current_scope, scope_t const& this_scope, scope_t const& from_scope,
+					GovernmentType const* const& argument
+				) -> bool {
+					return current_scope->get_government_type() == argument;
+				}
+			)
+		)
+	);
+	ret &= add_condition(
+		"great_wars_enabled",
+		// TODO - wiki says this is COUNTRY scope, I see no reason why it can't be global
+		_parse_condition_node_value_callback<bool>,
+		_execute_condition_node_unimplemented
+	);
+	ret &= add_condition(
+		"have_core_in",
+		_parse_condition_node_value_callback<CountryDefinition const*, COUNTRY | THIS | FROM>,
+		_execute_condition_node_unimplemented
+	);
 	ret &= add_condition(
 		"has_country_flag",
 		_parse_condition_node_value_callback<std::string, COUNTRY>,
@@ -1523,9 +1593,36 @@ To check if the POP itself has the culture, use "has_pop_culture" instead.
 			)
 		)
 	);
-	// ret &= add_condition("has_country_modifier", IDENTIFIER, COUNTRY, NO_SCOPE, NO_IDENTIFIER, COUNTRY_EVENT_MODIFIER);
-	// ret &= add_condition("has_cultural_sphere", BOOLEAN, COUNTRY);
-	// ret &= add_condition("has_leader", STRING, COUNTRY);
+	ret &= add_condition(
+		"has_country_modifier",
+		// TODO - which modifiers work here? just country event (+ specially handled debt statics)?
+		//      - should this be parsed into a Modifier const* or kept as a std::string?
+		_parse_condition_node_unimplemented,
+		_execute_condition_node_unimplemented
+	);
+	ret &= add_condition(
+		"has_cultural_sphere",
+		_parse_condition_node_value_callback<bool, COUNTRY>,,
+		_execute_condition_node_unimplemented
+	);
+	ret &= add_condition(
+		"has_leader",
+		_parse_condition_node_value_callback<std::string, COUNTRY>,
+		_execute_condition_node_cast_argument_callback<std::string, scope_t const&, scope_t const&, scope_t const&>(
+			_execute_condition_node_cast_scope<
+				bool, CountryInstance const*, scope_t const&, scope_t const&, std::string const&
+			>(
+				[](
+					Condition const& condition, InstanceManager const& instance_manager,
+					CountryInstance const* const& current_scope, scope_t const& this_scope, scope_t const& from_scope,
+					std::string const& argument
+				) -> bool {
+					// TODO - search for a leader with a name matching argument
+					return false;
+				}
+			)
+		)
+	);
 	// ret &= add_condition("has_pop_culture", IDENTIFIER, COUNTRY, NO_SCOPE, NO_IDENTIFIER, CULTURE);
 	// ret &= add_condition("has_pop_religion", IDENTIFIER, COUNTRY, NO_SCOPE, NO_IDENTIFIER, RELIGION);
 	// ret &= add_condition("has_pop_type", IDENTIFIER, COUNTRY, NO_SCOPE, NO_IDENTIFIER, POP_TYPE);
