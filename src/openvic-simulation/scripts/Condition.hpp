@@ -116,12 +116,17 @@ namespace OpenVic {
 	struct ConditionScript;
 	struct CountryDefinition;
 	struct CountryInstance;
+	struct State;
 	struct ProvinceDefinition;
 	struct ProvinceInstance;
 	struct Pop;
 	struct GoodDefinition;
 	struct ProvinceSetModifier;
 	using Continent = ProvinceSetModifier;
+	struct BuildingType;
+	struct Issue;
+	struct WargoalType;
+	struct Culture;
 	struct Condition;
 	struct DefinitionManager;
 	struct InstanceManager;
@@ -147,7 +152,8 @@ namespace OpenVic {
 			// Value arguments
 			bool, std::string, integer_t, fixed_point_t,
 			// Game object arguments
-			CountryDefinition const*, ProvinceDefinition const*, GoodDefinition const*, Continent const*
+			CountryDefinition const*, ProvinceDefinition const*, GoodDefinition const*, Continent const*, BuildingType const*,
+			Issue const*, WargoalType const*, Culture const*
 		>;
 
 		static constexpr bool is_this_argument(argument_t const& argument) {
@@ -162,6 +168,7 @@ namespace OpenVic {
 		using scope_t = std::variant<
 			no_scope_t,
 			CountryInstance const*,
+			State const*, // Should State scope exist, or should it just be a list of provinces?
 			ProvinceInstance const*,
 			Pop const*
 		>;
@@ -196,13 +203,13 @@ namespace OpenVic {
 		friend struct ConditionManager;
 
 		using parse_callback_t = NodeTools::callback_t<
-			// bool(definition_manager, current_scope, this_scope, from_scope, node, callback)
-			DefinitionManager const&, scope_type_t, scope_type_t, scope_type_t, ast::NodeCPtr,
+			// bool(condition, definition_manager, current_scope, this_scope, from_scope, node, callback)
+			Condition const&, DefinitionManager const&, scope_type_t, scope_type_t, scope_type_t, ast::NodeCPtr,
 			NodeTools::callback_t<ConditionNode::argument_t&&>
 		>;
 		using execute_callback_t = NodeTools::callback_t<
-			// bool(instance_manager, current_scope, this_scope, from_scope, argument)
-			InstanceManager const&, ConditionNode::scope_t const&, ConditionNode::scope_t const&,
+			// bool(condition, instance_manager, current_scope, this_scope, from_scope, argument)
+			Condition const&, InstanceManager const&, ConditionNode::scope_t const&, ConditionNode::scope_t const&,
 			ConditionNode::scope_t const&, ConditionNode::argument_t const&
 		>;
 
@@ -237,8 +244,9 @@ namespace OpenVic {
 			bool TOP_SCOPE = false
 		>
 		static bool _parse_condition_node_list_callback(
-			DefinitionManager const& definition_manager, scope_type_t current_scope, scope_type_t this_scope,
-			scope_type_t from_scope, ast::NodeCPtr node, NodeTools::callback_t<ConditionNode::argument_t&&> callback
+			Condition const& condition, DefinitionManager const& definition_manager, scope_type_t current_scope,
+			scope_type_t this_scope, scope_type_t from_scope, ast::NodeCPtr node,
+			NodeTools::callback_t<ConditionNode::argument_t&&> callback
 		);
 
 		NodeTools::Callback<Condition const&, ast::NodeCPtr> auto expect_condition_node(

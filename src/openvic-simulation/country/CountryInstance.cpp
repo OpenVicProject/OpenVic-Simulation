@@ -238,6 +238,9 @@ bool CountryInstance::has_country_flag(std::string_view flag) const {
 			return false; \
 		} \
 		return true; \
+	} \
+	bool CountryInstance::has_##item(std::remove_pointer_t<decltype(item##s)::value_type> const& item) const { \
+		return item##s.contains(&item); \
 	}
 
 ADD_AND_REMOVE(owned_province)
