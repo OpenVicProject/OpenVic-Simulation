@@ -203,7 +203,7 @@ namespace OpenVic {
 		bool expand_building(size_t building_index);
 
 		bool add_pop(Pop&& pop);
-		bool add_pop_vec(std::vector<PopBase> const& pop_vec);
+		bool add_pop_vec(std::vector<PopBase> const& pop_vec, ArtisanalProducerFactoryPattern& artisanal_producer_factory_pattern);
 		size_t get_pop_count() const;
 
 		void update_modifier_sum(Date today, StaticModifierCache const& static_modifier_cache);

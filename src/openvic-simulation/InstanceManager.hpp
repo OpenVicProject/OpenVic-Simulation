@@ -23,14 +23,15 @@ namespace OpenVic {
 
 	private:
 		GameRulesManager const& game_rules_manager;
+		GoodInstanceManager PROPERTY_REF(good_instance_manager);
+		MarketInstance PROPERTY_REF(market_instance);
+		ArtisanalProducerFactoryPattern artisanal_producer_factory_pattern;
 		DefinitionManager const& PROPERTY(definition_manager);
 
 		FlagStrings PROPERTY_REF(global_flags);
 
 		CountryInstanceManager PROPERTY_REF(country_instance_manager);
 		CountryRelationManager PROPERTY_REF(country_relation_manager);
-		GoodInstanceManager PROPERTY_REF(good_instance_manager);
-		MarketInstance PROPERTY_REF(market_instance);
 		UnitInstanceManager PROPERTY_REF(unit_instance_manager);
 		PoliticsInstanceManager PROPERTY_REF(politics_instance_manager);
 		/* Near the end so it is freed after other managers that may depend on it,

@@ -2,6 +2,7 @@
 
 #include "openvic-simulation/history/ProvinceHistory.hpp"
 #include "openvic-simulation/map/MapDefinition.hpp"
+#include "openvic-simulation/utility/CompilerFeatureTesting.hpp"
 #include "openvic-simulation/utility/Logger.hpp"
 
 using namespace OpenVic;
@@ -92,8 +93,11 @@ bool MapInstance::setup(
 }
 
 bool MapInstance::apply_history_to_provinces(
-	ProvinceHistoryManager const& history_manager, const Date date, CountryInstanceManager& country_manager,
-	IssueManager const& issue_manager
+	ProvinceHistoryManager const& history_manager,
+	const Date date,
+	CountryInstanceManager& country_manager,
+	IssueManager const& issue_manager,
+	ArtisanalProducerFactoryPattern& artisanal_producer_factory_pattern
 ) {
 	bool ret = true;
 
@@ -127,7 +131,7 @@ bool MapInstance::apply_history_to_provinces(
 				if (pop_history_entry == nullptr) {
 					Logger::warning("No pop history entry for province ", province.get_identifier(), " for date ", date);
 				} else {
-					ret &= province.add_pop_vec(pop_history_entry->get_pops());
+					ret &= province.add_pop_vec(pop_history_entry->get_pops(), artisanal_producer_factory_pattern);
 					province.setup_pop_test_values(issue_manager);
 				}
 
@@ -164,9 +168,14 @@ void MapInstance::update_gamestate(const Date today, DefineManager const& define
 }
 
 void MapInstance::map_tick(const Date today) {
-	for (ProvinceInstance& province : province_instances.get_items()) {
-		province.province_tick(today);
-	}
+	auto& provinces = province_instances.get_items();
+	try_parallel_for_each(
+		provinces.begin(),
+		provinces.end(),
+		[today](ProvinceInstance& province) -> void {
+			province.province_tick(today);
+		}
+	);
 }
 
 void MapInstance::initialise_for_new_game(
@@ -174,8 +183,13 @@ void MapInstance::initialise_for_new_game(
 	DefineManager const& define_manager
 ) {
 	update_gamestate(today, define_manager);
-	for (ProvinceInstance& province : province_instances.get_items()) {
-		province.initialise_rgo();
-		province.province_tick(today);
-	}
+	auto& provinces = province_instances.get_items();
+	try_parallel_for_each(
+		provinces.begin(),
+		provinces.end(),
+		[today](ProvinceInstance& province) -> void {
+			province.initialise_rgo();
+			province.province_tick(today);
+		}
+	);
 }
