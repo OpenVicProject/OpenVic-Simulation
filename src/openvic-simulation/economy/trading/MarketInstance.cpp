@@ -5,6 +5,11 @@ using namespace OpenVic;
 MarketInstance::MarketInstance(GoodInstanceManager& new_good_instance_manager)
 : good_instance_manager { new_good_instance_manager} {}
 
+void MarketInstance::place_buy_up_to_order(BuyUpToOrder&& buy_up_to_order) {
+	GoodDefinition const& good = buy_up_to_order.get_good();
+	GoodInstance& good_instance = good_instance_manager.get_good_instance_from_definition(good);
+	good_instance.add_buy_up_to_order(std::move(buy_up_to_order));
+}
 void MarketInstance::place_market_sell_order(MarketSellOrder&& market_sell_order) {
 	GoodDefinition const& good = market_sell_order.get_good();
 	GoodInstance& good_instance = good_instance_manager.get_good_instance_from_definition(good);

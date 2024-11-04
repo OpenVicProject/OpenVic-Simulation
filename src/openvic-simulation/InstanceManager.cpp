@@ -129,11 +129,17 @@ bool InstanceManager::load_bookmark(Bookmark const* new_bookmark) {
 
 	today = bookmark->get_date();
 
+	ArtisanalProducerFactoryPattern artisanal_producer_factory_pattern {
+		market_instance,
+		definition_manager.get_modifier_manager().get_modifier_effect_cache(),
+		definition_manager.get_economy_manager().get_production_type_manager()
+	};
 	bool ret = map_instance.apply_history_to_provinces(
 		definition_manager.get_history_manager().get_province_manager(), today,
 		country_instance_manager,
 		// TODO - the following argument is for generating test pop attributes
-		definition_manager.get_politics_manager().get_issue_manager()
+		definition_manager.get_politics_manager().get_issue_manager(),
+		artisanal_producer_factory_pattern
 	);
 
 	ret &= country_instance_manager.apply_history_to_countries(
