@@ -214,8 +214,9 @@ static bool _parse_condition_node_value_callback(
 		// Game object arguments
 		std::same_as<T, CountryDefinition const*> || std::same_as<T, ProvinceDefinition const*> ||
 		std::same_as<T, GoodDefinition const*> || std::same_as<T, Continent const*> || std::same_as<T, BuildingType const*> ||
-		std::same_as<T, Issue const*> || std::same_as<T, WargoalType const*> || std::same_as<T, Culture const*> ||
-		std::same_as<T, GovernmentType const*>
+		std::same_as<T, Issue const*> || std::same_as<T, WargoalType const*> || std::same_as<T, PopType const*> ||
+		std::same_as<T, Culture const*> || std::same_as<T, Religion const*> || std::same_as<T, GovernmentType const*> ||
+		std::same_as<T, Ideology const*> || std::same_as<T, Reform const*> || std::same_as<T, Invention const*>
 	);
 
 	using enum scope_type_t;
@@ -301,8 +302,16 @@ static bool _parse_condition_node_value_callback(
 		ret = definition_manager.get_military_manager().get_wargoal_type_manager().expect_wargoal_type_identifier_or_string(
 			assign_variable_callback_pointer(value)
 		)(node);
+	} else if constexpr (std::same_as<T, PopType const*>) {
+		ret = definition_manager.get_pop_manager().expect_pop_type_identifier_or_string(
+			assign_variable_callback_pointer(value)
+		)(node);
 	} else if constexpr (std::same_as<T, Culture const*>) {
 		ret = definition_manager.get_pop_manager().get_culture_manager().expect_culture_identifier_or_string(
+			assign_variable_callback_pointer(value)
+		)(node);
+	} else if constexpr (std::same_as<T, Religion const*>) {
+		ret = definition_manager.get_pop_manager().get_religion_manager().expect_religion_identifier_or_string(
 			assign_variable_callback_pointer(value)
 		)(node);
 	} else if constexpr (std::same_as<T, GovernmentType const*>) {
@@ -310,6 +319,18 @@ static bool _parse_condition_node_value_callback(
 			.expect_government_type_identifier_or_string(
 				assign_variable_callback_pointer(value)
 			)(node);
+	} else if constexpr (std::same_as<T, Ideology const*>) {
+		ret = definition_manager.get_politics_manager().get_ideology_manager().expect_ideology_identifier_or_string(
+			assign_variable_callback_pointer(value)
+		)(node);
+	} else if constexpr (std::same_as<T, Reform const*>) {
+		ret = definition_manager.get_politics_manager().get_issue_manager().expect_reform_identifier_or_string(
+			assign_variable_callback_pointer(value)
+		)(node);
+	} else if constexpr (std::same_as<T, Invention const*>) {
+		ret = definition_manager.get_research_manager().get_invention_manager().expect_invention_identifier_or_string(
+			assign_variable_callback_pointer(value)
+		)(node);
 	}
 
 	if (ret) {
@@ -1472,7 +1493,7 @@ To check if the POP itself has the culture, use "has_pop_culture" instead.
 		 * has_pop_culture should be used to check a specific pop's culture. The tooltips aren't very clear, with
 		 * "culture = <culture>" showing up as "Culture is <culture>" and "has_pop_culture = <culture>" showing up as
 		 * "<Pop type plural> in <province> have <culture>". */
-		_parse_condition_node_value_callback<Culture const*, POP>,
+		_parse_condition_node_value_callback<Culture const*, PROVINCE | POP>,
 		_execute_condition_node_unimplemented
 	);
 	ret &= add_condition(
@@ -1602,7 +1623,7 @@ Returns true if the specified country exists. May also be used with [yes/no] to 
 	);
 	ret &= add_condition(
 		"has_cultural_sphere",
-		_parse_condition_node_value_callback<bool, COUNTRY>,,
+		_parse_condition_node_value_callback<bool, COUNTRY>,
 		_execute_condition_node_unimplemented
 	);
 	ret &= add_condition(
@@ -1623,32 +1644,132 @@ Returns true if the specified country exists. May also be used with [yes/no] to 
 			)
 		)
 	);
-	// ret &= add_condition("has_pop_culture", IDENTIFIER, COUNTRY, NO_SCOPE, NO_IDENTIFIER, CULTURE);
-	// ret &= add_condition("has_pop_religion", IDENTIFIER, COUNTRY, NO_SCOPE, NO_IDENTIFIER, RELIGION);
-	// ret &= add_condition("has_pop_type", IDENTIFIER, COUNTRY, NO_SCOPE, NO_IDENTIFIER, POP_TYPE);
-	// ret &= add_condition("has_recently_lost_war", BOOLEAN, COUNTRY);
-	// ret &= add_condition("has_unclaimed_cores", BOOLEAN, COUNTRY);
+	ret &= add_condition(
+		"has_pop_culture",
+		_parse_condition_node_value_callback<Culture const*, POP>,
+		_execute_condition_node_unimplemented
+	);
+	ret &= add_condition(
+		"has_pop_religion",
+		_parse_condition_node_value_callback<Religion const*, POP>,
+		_execute_condition_node_unimplemented
+	);
+	ret &= add_condition(
+		"has_pop_type",
+		_parse_condition_node_value_callback<PopType const*, POP>,
+		_execute_condition_node_unimplemented
+	);
+	ret &= add_condition(
+		"has_recently_lost_war",
+		_parse_condition_node_value_callback<bool, COUNTRY>,
+		_execute_condition_node_unimplemented
+	);
+	ret &= add_condition(
+		"has_unclaimed_cores",
+		_parse_condition_node_value_callback<bool, COUNTRY>,
+		_execute_condition_node_unimplemented
+	);
+	// "ideology = <ideology>"" doesn't seem to work as a country condition?
 	// ret &= add_condition("ideology", IDENTIFIER, COUNTRY, NO_SCOPE, NO_IDENTIFIER, IDEOLOGY);
-	// ret &= add_condition("industrial_score", REAL | IDENTIFIER, COUNTRY, NO_SCOPE, NO_IDENTIFIER, COUNTRY_TAG);
-	// ret &= add_condition("in_sphere", IDENTIFIER, COUNTRY, NO_SCOPE, NO_IDENTIFIER, COUNTRY_TAG);
-	// ret &= add_condition("in_default", IDENTIFIER | BOOLEAN, COUNTRY, NO_SCOPE, NO_IDENTIFIER, COUNTRY_TAG);
-	// ret &= add_condition("invention", IDENTIFIER, COUNTRY, NO_SCOPE, NO_IDENTIFIER, INVENTION);
-	// ret &= add_condition("involved_in_crisis", BOOLEAN, COUNTRY);
-	// ret &= add_condition("is_claim_crisis", BOOLEAN, COUNTRY);
-	// ret &= add_condition("is_colonial_crisis", BOOLEAN, COUNTRY);
+	ret &= add_condition(
+		"industrial_score",
+		// This doesn't seem to work with regular country identifiers, they're treated as 0
+		_parse_condition_node_value_callback<fixed_point_t, COUNTRY | THIS | FROM>,
+		_execute_condition_node_unimplemented
+	);
+	ret &= add_condition(
+		"in_sphere",
+		_parse_condition_node_value_callback<CountryDefinition const*, COUNTRY | THIS | FROM>,
+		_execute_condition_node_unimplemented
+	);
+	ret &= add_condition(
+		"in_default",
+		// The wiki says this can take a bool to check if the scope country is in default or not, but the tooltip always expects a country
+		// Other conditions like is_cultural_union seem to work with bools even though they always use the country tooltip,
+		// but "in_default = yes" and "in_default = no" seem to be always both false
+		_parse_condition_node_value_callback<CountryDefinition const*, COUNTRY | THIS | FROM>,
+		_execute_condition_node_unimplemented
+	);
+	ret &= add_condition(
+		"invention",
+		_parse_condition_node_value_callback<Invention const*, COUNTRY>,
+		_execute_condition_node_unimplemented
+	);
+	ret &= add_condition(
+		"involved_in_crisis",
+		_parse_condition_node_value_callback<bool, COUNTRY>,
+		_execute_condition_node_unimplemented
+	);
+	ret &= add_condition(
+		"is_claim_crisis",
+		_parse_condition_node_value_callback<bool, COUNTRY>,
+		_execute_condition_node_unimplemented
+	);
+	ret &= add_condition(
+		"is_colonial_crisis",
+		_parse_condition_node_value_callback<bool, COUNTRY>,
+		_execute_condition_node_unimplemented
+	);
+	// is_cultural_union can take bools and country identifiers, probably also THIS and FROM
 	// ret &= add_condition("is_cultural_union", IDENTIFIER | BOOLEAN, COUNTRY, NO_SCOPE, NO_IDENTIFIER, COUNTRY_TAG);
-	// ret &= add_condition("is_disarmed", BOOLEAN, COUNTRY);
-	// ret &= add_condition("is_greater_power", BOOLEAN, COUNTRY);
-	// ret &= add_condition("is_colonial", BOOLEAN, STATE);
+	ret &= add_condition(
+		"is_disarmed",
+		_parse_condition_node_value_callback<bool, COUNTRY>,
+		_execute_condition_node_unimplemented
+	);
+	ret &= add_condition(
+		"is_greater_power",
+		_parse_condition_node_value_callback<bool, COUNTRY>,
+		_execute_condition_node_unimplemented
+	);
+	ret &= add_condition(
+		"is_colonial",
+		_parse_condition_node_value_callback<bool, STATE>,
+		_execute_condition_node_unimplemented
+	);
+	/* is_core can be used:
+	 *  - at COUNTRY scope with a province identifier (maybe THIS or FROM too)
+	 *  - at PROVINCE scope with a country identifier or THIS or FROM
+	 */
 	// ret &= add_condition("is_core", IDENTIFIER, COUNTRY, NO_SCOPE, NO_IDENTIFIER, COUNTRY_TAG | PROVINCE_ID);
+	// is_culture_group can be used at COUNTRY or POP scope with a culture, country, THIS or FROM
 	// ret &= add_condition("is_culture_group", IDENTIFIER, COUNTRY, NO_SCOPE, NO_IDENTIFIER, COUNTRY_TAG | CULTURE_GROUP);
-	// ret &= add_condition("is_ideology_enabled", IDENTIFIER, COUNTRY, NO_SCOPE, NO_IDENTIFIER, IDEOLOGY);
-	// ret &= add_condition("is_independant", BOOLEAN, COUNTRY); //paradox typo
-	// ret &= add_condition("is_liberation_crisis", BOOLEAN, COUNTRY);
-	// ret &= add_condition("is_mobilised", BOOLEAN, COUNTRY);
-	// ret &= add_condition("is_next_reform", IDENTIFIER, COUNTRY, NO_SCOPE, NO_IDENTIFIER, REFORM);
-	// ret &= add_condition("is_our_vassal", IDENTIFIER, COUNTRY, NO_SCOPE, NO_IDENTIFIER, COUNTRY_TAG);
-	// ret &= add_condition("is_possible_vassal", IDENTIFIER, COUNTRY, NO_SCOPE, NO_IDENTIFIER, COUNTRY_TAG);
+	ret &= add_condition(
+		"is_ideology_enabled",
+		// The wiki says this can only be used at COUNTRY and PROVINCE scopes but I see no reason why it can't be global
+		_parse_condition_node_value_callback<Ideology const*>,
+		_execute_condition_node_unimplemented
+	);
+	ret &= add_condition(
+		"is_independant", // paradox typo
+		_parse_condition_node_value_callback<bool, COUNTRY>,
+		_execute_condition_node_unimplemented
+	);
+	ret &= add_condition(
+		"is_liberation_crisis",
+		_parse_condition_node_value_callback<bool, COUNTRY>,
+		_execute_condition_node_unimplemented
+	);
+	ret &= add_condition(
+		"is_mobilised",
+		_parse_condition_node_value_callback<bool, COUNTRY>,
+		_execute_condition_node_unimplemented
+	);
+	ret &= add_condition(
+		"is_next_reform",
+		_parse_condition_node_value_callback<Reform const*, COUNTRY>,
+		_execute_condition_node_unimplemented
+	);
+	ret &= add_condition(
+		"is_our_vassal",
+		_parse_condition_node_value_callback<CountryDefinition const*, COUNTRY | THIS | FROM>,
+		_execute_condition_node_unimplemented
+	);
+	ret &= add_condition(
+		"is_possible_vassal",
+		_parse_condition_node_value_callback<CountryDefinition const*, COUNTRY>,
+		_execute_condition_node_unimplemented
+	);
 	// ret &= add_condition("is_releasable_vassal", IDENTIFIER | BOOLEAN, COUNTRY, NO_SCOPE, NO_IDENTIFIER, COUNTRY_TAG);
 	// ret &= add_condition("is_secondary_power", BOOLEAN, COUNTRY);
 	// ret &= add_condition("is_sphere_leader_of", IDENTIFIER, COUNTRY, NO_SCOPE, NO_IDENTIFIER, COUNTRY_TAG);

@@ -126,8 +126,13 @@ namespace OpenVic {
 	struct BuildingType;
 	struct Issue;
 	struct WargoalType;
+	struct PopType;
 	struct Culture;
+	struct Religion;
 	struct GovernmentType;
+	struct Ideology;
+	struct Reform;
+	struct Invention;
 	struct Condition;
 	struct DefinitionManager;
 	struct InstanceManager;
@@ -154,7 +159,8 @@ namespace OpenVic {
 			bool, std::string, integer_t, fixed_point_t,
 			// Game object arguments
 			CountryDefinition const*, ProvinceDefinition const*, GoodDefinition const*, Continent const*, BuildingType const*,
-			Issue const*, WargoalType const*, Culture const*, GovernmentType const*
+			Issue const*, WargoalType const*, PopType const*, Culture const*, Religion const*, GovernmentType const*,
+			Ideology const*, Reform const*, Invention const*
 		>;
 
 		static constexpr bool is_this_argument(argument_t const& argument) {
