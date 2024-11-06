@@ -216,7 +216,8 @@ static bool _parse_condition_node_value_callback(
 		std::same_as<T, GoodDefinition const*> || std::same_as<T, Continent const*> || std::same_as<T, BuildingType const*> ||
 		std::same_as<T, Issue const*> || std::same_as<T, WargoalType const*> || std::same_as<T, PopType const*> ||
 		std::same_as<T, Culture const*> || std::same_as<T, Religion const*> || std::same_as<T, GovernmentType const*> ||
-		std::same_as<T, Ideology const*> || std::same_as<T, Reform const*> || std::same_as<T, Invention const*>
+		std::same_as<T, Ideology const*> || std::same_as<T, Reform const*> || std::same_as<T, NationalValue const*> ||
+		std::same_as<T, Invention const*> || std::same_as<T, TechnologySchool const*>
 	);
 
 	using enum scope_type_t;
@@ -329,6 +330,10 @@ static bool _parse_condition_node_value_callback(
 		)(node);
 	} else if constexpr (std::same_as<T, Invention const*>) {
 		ret = definition_manager.get_research_manager().get_invention_manager().expect_invention_identifier_or_string(
+			assign_variable_callback_pointer(value)
+		)(node);
+	} else if constexpr (std::same_as<T, TechnologySchool const*>) {
+		ret = definition_manager.get_research_manager().get_technology_manager().expect_technology_school_identifier_or_string(
 			assign_variable_callback_pointer(value)
 		)(node);
 	}
@@ -1770,94 +1775,379 @@ Returns true if the specified country exists. May also be used with [yes/no] to 
 		_parse_condition_node_value_callback<CountryDefinition const*, COUNTRY>,
 		_execute_condition_node_unimplemented
 	);
-	// ret &= add_condition("is_releasable_vassal", IDENTIFIER | BOOLEAN, COUNTRY, NO_SCOPE, NO_IDENTIFIER, COUNTRY_TAG);
-	// ret &= add_condition("is_secondary_power", BOOLEAN, COUNTRY);
-	// ret &= add_condition("is_sphere_leader_of", IDENTIFIER, COUNTRY, NO_SCOPE, NO_IDENTIFIER, COUNTRY_TAG);
-	// ret &= add_condition("is_substate", BOOLEAN, COUNTRY);
-	// ret &= add_condition("is_vassal", BOOLEAN, COUNTRY);
-	// ret &= add_condition("literacy", REAL, COUNTRY);
-	// ret &= add_condition("lost_national", REAL, COUNTRY);
+	ret &= add_condition(
+		"is_releasable_vassal",
+		// Could also be country tag but not used in vanilla or mods + tooltip doesn't display
+		_parse_condition_node_value_callback<bool, COUNTRY | THIS | FROM>,
+		_execute_condition_node_unimplemented
+	);
+	ret &= add_condition(
+		"is_secondary_power",
+		_parse_condition_node_value_callback<bool, COUNTRY>,
+		_execute_condition_node_unimplemented
+	);
+	ret &= add_condition(
+		"is_sphere_leader_of",
+		_parse_condition_node_value_callback<CountryDefinition const*, COUNTRY | THIS | FROM>,
+		_execute_condition_node_unimplemented
+	);
+	ret &= add_condition(
+		"is_substate",
+		_parse_condition_node_value_callback<bool, COUNTRY>,
+		_execute_condition_node_unimplemented
+	);
+	ret &= add_condition(
+		"is_vassal",
+		_parse_condition_node_value_callback<bool, COUNTRY>,
+		_execute_condition_node_unimplemented
+	);
+	ret &= add_condition(
+		"literacy",
+		_parse_condition_node_value_callback<fixed_point_t, COUNTRY | PROVINCE | POP>,
+		_execute_condition_node_unimplemented
+	);
+	ret &= add_condition(
+		"lost_national",
+		_parse_condition_node_value_callback<fixed_point_t, COUNTRY>,
+		_execute_condition_node_unimplemented
+	);
 	// ret &= add_condition("middle_strata_militancy", REAL, COUNTRY);
 	// ret &= add_condition("middle_strata_everyday_needs", REAL, COUNTRY);
 	// ret &= add_condition("middle_strata_life_needs", REAL, COUNTRY);
 	// ret &= add_condition("middle_strata_luxury_needs", REAL, COUNTRY);
 	// ret &= add_condition("middle_tax", REAL, COUNTRY);
-	// ret &= add_condition("military_access", IDENTIFIER, COUNTRY, NO_SCOPE, NO_IDENTIFIER, COUNTRY_TAG);
-	// ret &= add_condition("military_score", REAL | IDENTIFIER, COUNTRY, NO_SCOPE, NO_IDENTIFIER, COUNTRY_TAG);
-	// ret &= add_condition("militancy", REAL, COUNTRY);
-	// ret &= add_condition("military_spending", REAL, COUNTRY);
-	// ret &= add_condition("money", REAL, COUNTRY);
-	// ret &= add_condition("nationalvalue", IDENTIFIER, COUNTRY, NO_SCOPE, NO_IDENTIFIER, NATIONAL_VALUE);
-	// ret &= add_condition("national_provinces_occupied", REAL, COUNTRY);
-	// ret &= add_condition("neighbour", IDENTIFIER, COUNTRY, NO_SCOPE, NO_IDENTIFIER, COUNTRY_TAG);
-	// ret &= add_condition("num_of_allies", INTEGER, COUNTRY);
-	// ret &= add_condition("num_of_cities", INTEGER, COUNTRY);
-	// ret &= add_condition("num_of_ports", INTEGER, COUNTRY);
-	// ret &= add_condition("num_of_revolts", INTEGER, COUNTRY);
-	// ret &= add_condition("number_of_states", INTEGER, COUNTRY);
-	// ret &= add_condition("num_of_substates", INTEGER, COUNTRY);
-	// ret &= add_condition("num_of_vassals", INTEGER, COUNTRY);
-	// ret &= add_condition("num_of_vassals_no_substates", INTEGER, COUNTRY);
-	// ret &= add_condition("owns", IDENTIFIER, COUNTRY, NO_SCOPE, NO_IDENTIFIER, PROVINCE_ID);
-	// ret &= add_condition("part_of_sphere", BOOLEAN, COUNTRY);
-	// ret &= add_condition("plurality", REAL, COUNTRY);
-	// ret &= add_condition("political_movement_strength", REAL, COUNTRY);
-	// ret &= add_condition("political_reform_want", REAL, COUNTRY);
-	// ret &= add_condition("pop_majority_culture", IDENTIFIER, COUNTRY, NO_SCOPE, NO_IDENTIFIER, CULTURE);
-	// ret &= add_condition("pop_majority_ideology", IDENTIFIER, COUNTRY, NO_SCOPE, NO_IDENTIFIER, IDEOLOGY);
-	// ret &= add_condition("pop_majority_religion", IDENTIFIER, COUNTRY, NO_SCOPE, NO_IDENTIFIER, RELIGION);
-	// ret &= add_condition("pop_militancy", REAL, COUNTRY);
+	ret &= add_condition(
+		"military_access",
+		_parse_condition_node_value_callback<CountryDefinition const*, COUNTRY | THIS | FROM>,
+		_execute_condition_node_unimplemented
+	);
+	ret &= add_condition(
+		"military_score",
+		// Country identifiers don't seem to work, in tooltips they're treated as 0
+		_parse_condition_node_value_callback<fixed_point_t, COUNTRY | THIS | FROM>,
+		_execute_condition_node_unimplemented
+	);
+	ret &= add_condition(
+		"militancy",
+		_parse_condition_node_value_callback<fixed_point_t, POP>,
+		_execute_condition_node_unimplemented
+	);
+	ret &= add_condition(
+		"military_spending",
+		// The wiki says this also works for provinces
+		_parse_condition_node_value_callback<fixed_point_t, COUNTRY>,
+		_execute_condition_node_unimplemented
+	);
+	ret &= add_condition(
+		"money",
+		_parse_condition_node_value_callback<fixed_point_t, COUNTRY | POP>,
+		_execute_condition_node_unimplemented
+	);
+	ret &= add_condition(
+		"nationalvalue",
+		_parse_condition_node_value_callback<NationalValue const*, COUNTRY>,
+		_execute_condition_node_unimplemented
+	);
+	ret &= add_condition(
+		"national_provinces_occupied",
+		_parse_condition_node_value_callback<fixed_point_t, COUNTRY>,
+		_execute_condition_node_unimplemented
+	);
+	ret &= add_condition(
+		"neighbour",
+		_parse_condition_node_value_callback<CountryDefinition const*, COUNTRY | THIS | FROM>,
+		_execute_condition_node_unimplemented
+	);
+	ret &= add_condition(
+		"num_of_allies",
+		_parse_condition_node_value_callback<integer_t, COUNTRY>,
+		_execute_condition_node_unimplemented
+	);
+	ret &= add_condition(
+		"num_of_cities",
+		_parse_condition_node_value_callback<integer_t, COUNTRY>,
+		_execute_condition_node_unimplemented
+	);
+	ret &= add_condition(
+		"num_of_ports",
+		_parse_condition_node_value_callback<integer_t, COUNTRY>,
+		_execute_condition_node_unimplemented
+	);
+	ret &= add_condition(
+		"num_of_revolts",
+		_parse_condition_node_value_callback<integer_t, COUNTRY>,
+		_execute_condition_node_unimplemented
+	);
+	ret &= add_condition(
+		"number_of_states",
+		_parse_condition_node_value_callback<integer_t, COUNTRY>,
+		_execute_condition_node_unimplemented
+	);
+	ret &= add_condition(
+		"num_of_substates",
+		_parse_condition_node_value_callback<integer_t, COUNTRY>,
+		_execute_condition_node_unimplemented
+	);
+	ret &= add_condition(
+		"num_of_vassals",
+		_parse_condition_node_value_callback<integer_t, COUNTRY>,
+		_execute_condition_node_unimplemented
+	);
+	ret &= add_condition(
+		"num_of_vassals_no_substates",
+		_parse_condition_node_value_callback<integer_t, COUNTRY>,
+		_execute_condition_node_unimplemented
+	);
+	ret &= add_condition(
+		"owns",
+		_parse_condition_node_value_callback<ProvinceDefinition const*, COUNTRY>,
+		_execute_condition_node_unimplemented
+	);
+	ret &= add_condition(
+		"part_of_sphere",
+		_parse_condition_node_value_callback<bool, COUNTRY>,
+		_execute_condition_node_unimplemented
+	);
+	ret &= add_condition(
+		"plurality",
+		_parse_condition_node_value_callback<fixed_point_t, COUNTRY>,
+		_execute_condition_node_unimplemented
+	);
+	ret &= add_condition(
+		"political_movement_strength",
+		_parse_condition_node_value_callback<fixed_point_t, COUNTRY>,
+		_execute_condition_node_unimplemented
+	);
+	ret &= add_condition(
+		"political_reform_want",
+		_parse_condition_node_value_callback<fixed_point_t, COUNTRY | POP>,
+		_execute_condition_node_unimplemented
+	);
+	ret &= add_condition(
+		"pop_majority_culture",
+		_parse_condition_node_value_callback<Culture const*, COUNTRY | PROVINCE>,
+		_execute_condition_node_unimplemented
+	);
+	ret &= add_condition(
+		"pop_majority_ideology",
+		_parse_condition_node_value_callback<Ideology const*, COUNTRY | PROVINCE>,
+		_execute_condition_node_unimplemented
+	);
+	ret &= add_condition(
+		"pop_majority_religion",
+		_parse_condition_node_value_callback<Religion const*, COUNTRY | PROVINCE>,
+		_execute_condition_node_unimplemented
+	);
+	ret &= add_condition(
+		"pop_militancy",
+		// The wiki also says this can be used at COUNTRY scope
+		_parse_condition_node_value_callback<fixed_point_t, PROVINCE>,
+		_execute_condition_node_unimplemented
+	);
 	// ret &= add_condition("poor_strata_militancy", REAL, COUNTRY);
 	// ret &= add_condition("poor_strata_everyday_needs", REAL, COUNTRY);
 	// ret &= add_condition("poor_strata_life_needs", REAL, COUNTRY);
 	// ret &= add_condition("poor_strata_luxury_needs", REAL, COUNTRY);
 	// ret &= add_condition("poor_tax", REAL, COUNTRY);
-	// ret &= add_condition("prestige", REAL, COUNTRY);
-	// ret &= add_condition("primary_culture", IDENTIFIER, COUNTRY, NO_SCOPE, NO_IDENTIFIER, CULTURE);
-	// ret &= add_condition("accepted_culture", IDENTIFIER, COUNTRY, NO_SCOPE, NO_IDENTIFIER, CULTURE);
-	// ret &= add_condition("produces", IDENTIFIER, COUNTRY, NO_SCOPE, NO_IDENTIFIER, TRADE_GOOD);
-	// ret &= add_condition("rank", INTEGER, COUNTRY);
-	// ret &= add_condition("rebel_power_fraction", REAL, COUNTRY);
-	// ret &= add_condition("recruited_percentage", REAL, COUNTRY);
+	ret &= add_condition(
+		"prestige",
+		_parse_condition_node_value_callback<fixed_point_t, COUNTRY>,
+		_execute_condition_node_unimplemented
+	);
+	ret &= add_condition(
+		"primary_culture",
+		_parse_condition_node_value_callback<Culture const*, COUNTRY>,
+		_execute_condition_node_unimplemented
+	);
+	ret &= add_condition(
+		"accepted_culture",
+		_parse_condition_node_value_callback<Culture const*, COUNTRY>,
+		_execute_condition_node_unimplemented
+	);
+	ret &= add_condition(
+		"produces",
+		_parse_condition_node_value_callback<GoodDefinition const*, COUNTRY>,
+		_execute_condition_node_unimplemented
+	);
+	ret &= add_condition(
+		"rank",
+		_parse_condition_node_value_callback<integer_t, COUNTRY>,
+		_execute_condition_node_unimplemented
+	);
+	ret &= add_condition(
+		"rebel_power_fraction",
+		_parse_condition_node_value_callback<fixed_point_t, COUNTRY>,
+		_execute_condition_node_unimplemented
+	);
+	ret &= add_condition(
+		"recruited_percentage",
+		_parse_condition_node_value_callback<fixed_point_t, COUNTRY>,
+		_execute_condition_node_unimplemented
+	);
+/*
+relation
+Syntax:
+
+relation = { who = [tag/this/from] value = x }
+Use:
+Returns true if the specified country has a relation value equal to x or higher with the specified country.
+*/
 	// ret &= add_condition("relation", COMPLEX, COUNTRY);
-	// ret &= add_condition("religion", IDENTIFIER, COUNTRY, NO_SCOPE, NO_IDENTIFIER, RELIGION);
-	// ret &= add_condition("revanchism", REAL, COUNTRY);
-	// ret &= add_condition("revolt_percentage", REAL, COUNTRY);
+	ret &= add_condition(
+		"religion",
+		_parse_condition_node_value_callback<Religion const*, POP>,
+		_execute_condition_node_unimplemented
+	);
+	ret &= add_condition(
+		"revanchism",
+		_parse_condition_node_value_callback<fixed_point_t, COUNTRY>,
+		_execute_condition_node_unimplemented
+	);
+	ret &= add_condition(
+		"revolt_percentage",
+		_parse_condition_node_value_callback<fixed_point_t, COUNTRY>,
+		_execute_condition_node_unimplemented
+	);
 	// ret &= add_condition("rich_strata_militancy", REAL, COUNTRY);
 	// ret &= add_condition("rich_strata_everyday_needs", REAL, COUNTRY);
 	// ret &= add_condition("rich_strata_life_needs", REAL, COUNTRY);
 	// ret &= add_condition("rich_strata_luxury_needs", REAL, COUNTRY);
 	// ret &= add_condition("rich_tax", REAL, COUNTRY);
 	// ret &= add_condition("rich_tax_above_poor", BOOLEAN, COUNTRY);
-	// ret &= add_condition("ruling_party", IDENTIFIER, COUNTRY, NO_SCOPE, NO_IDENTIFIER, COUNTRY_TAG);
-	// ret &= add_condition("ruling_party_ideology", IDENTIFIER, COUNTRY, NO_SCOPE, NO_IDENTIFIER, IDEOLOGY);
-	// ret &= add_condition("social_movement_strength", REAL, COUNTRY);
-	// ret &= add_condition("social_reform_want", REAL, COUNTRY);
-	// ret &= add_condition("social_spending", REAL, COUNTRY);
+	ret &= add_condition(
+		"ruling_party",
+		_parse_condition_node_value_callback<std::string, COUNTRY>,
+		_execute_condition_node_unimplemented
+	);
+	ret &= add_condition(
+		"ruling_party_ideology",
+		_parse_condition_node_value_callback<Ideology const*, COUNTRY>,
+		_execute_condition_node_unimplemented
+	);
+	ret &= add_condition(
+		"social_movement_strength",
+		_parse_condition_node_value_callback<fixed_point_t, COUNTRY>,
+		_execute_condition_node_unimplemented
+	);
+	ret &= add_condition(
+		"social_reform_want",
+		_parse_condition_node_value_callback<fixed_point_t, COUNTRY | POP>,
+		_execute_condition_node_unimplemented
+	);
+	ret &= add_condition(
+		"social_spending",
+		_parse_condition_node_value_callback<fixed_point_t, COUNTRY>,
+		_execute_condition_node_unimplemented
+	);
+	// Doesn't seem to work? It shows up as an unlocalised condition and is false even when the argument country has no army at all
 	// ret &= add_condition("stronger_army_than", IDENTIFIER, COUNTRY, NO_SCOPE, NO_IDENTIFIER, COUNTRY_TAG);
-	// ret &= add_condition("substate_of", IDENTIFIER, COUNTRY, NO_SCOPE, NO_IDENTIFIER, COUNTRY_TAG);
-	// ret &= add_condition("tag", IDENTIFIER, COUNTRY, NO_SCOPE, NO_IDENTIFIER, COUNTRY_TAG);
-	// ret &= add_condition("tech_school", IDENTIFIER, COUNTRY, NO_SCOPE, NO_IDENTIFIER, TECH_SCHOOL);
+	ret &= add_condition(
+		"substate_of",
+		_parse_condition_node_value_callback<CountryDefinition const*, COUNTRY | THIS | FROM>,
+		_execute_condition_node_unimplemented
+	);
+	ret &= add_condition(
+		"tag",
+		_parse_condition_node_value_callback<CountryDefinition const*, COUNTRY>,
+		_execute_condition_node_unimplemented
+	);
+	ret &= add_condition(
+		"tech_school",
+		_parse_condition_node_value_callback<TechnologySchool const*, COUNTRY>,
+		_execute_condition_node_unimplemented
+	);
+/*
+this_culture_union *HOD ONLY*
+Syntax:
+
+this_culture_union = [country tag] / THIS / FROM / this_union
+Use:
+Returns true if the nation specified has the same cultural union as the country in scope.
+*/
 	// ret &= add_condition("this_culture_union", IDENTIFIER, COUNTRY, NO_SCOPE, NO_IDENTIFIER, CULTURE_UNION);
-	// ret &= add_condition("total_amount_of_divisions", INTEGER, COUNTRY);
-	// ret &= add_condition("total_amount_of_ships", INTEGER, COUNTRY);
+	ret &= add_condition(
+		"total_amount_of_divisions",
+		_parse_condition_node_value_callback<integer_t, COUNTRY>,
+		_execute_condition_node_unimplemented
+	);
+	ret &= add_condition(
+		"total_amount_of_ships",
+		_parse_condition_node_value_callback<integer_t, COUNTRY>,
+		_execute_condition_node_unimplemented
+	);
+	// Doesn't show up or work in allow decision tooltips
 	// ret &= add_condition("total_defensives", INTEGER, COUNTRY);
-	// ret &= add_condition("total_num_of_ports", INTEGER, COUNTRY);
+	ret &= add_condition(
+		"total_num_of_ports",
+		_parse_condition_node_value_callback<integer_t, COUNTRY>,
+		_execute_condition_node_unimplemented
+	);
+	// Doesn't show up or work in allow decision tooltips
 	// ret &= add_condition("total_of_ours_sunk", INTEGER, COUNTRY);
-	// ret &= add_condition("total_pops", INTEGER, COUNTRY);
+	ret &= add_condition(
+		"total_pops",
+		_parse_condition_node_value_callback<integer_t, COUNTRY | PROVINCE>,
+		_execute_condition_node_unimplemented
+	);
+	// Doesn't show up or work in allow decision tooltips
 	// ret &= add_condition("total_sea_battles", INTEGER, COUNTRY);
+	// Doesn't show up or work in allow decision tooltips
 	// ret &= add_condition("total_sunk_by_us", INTEGER, COUNTRY);
-	// ret &= add_condition("treasury", REAL, COUNTRY);
-	// ret &= add_condition("truce_with", IDENTIFIER, COUNTRY, NO_SCOPE, NO_IDENTIFIER, COUNTRY_TAG);
-	// ret &= add_condition("unemployment", REAL, COUNTRY);
+	ret &= add_condition(
+		"truce_with",
+		_parse_condition_node_value_callback<CountryDefinition const*, COUNTRY | THIS | FROM>,
+		_execute_condition_node_unimplemented
+	);
+	ret &= add_condition(
+		"unemployment",
+		_parse_condition_node_value_callback<fixed_point_t, COUNTRY | PROVINCE | POP>,
+		_execute_condition_node_unimplemented
+	);
+	// Shows up in allow decision tooltips but is always false
 	// ret &= add_condition("unit_has_leader", BOOLEAN, COUNTRY);
-	// ret &= add_condition("unit_in_battle", BOOLEAN, COUNTRY);
+	ret &= add_condition(
+		"unit_in_battle",
+		_parse_condition_node_value_callback<bool, COUNTRY>,
+		_execute_condition_node_unimplemented
+	);
+/*
+upper_house
+Syntax:
+
+upper_house = {
+                                          ideology = name
+                                          value = 0.x  
+			}
+where value is a fraction 0.0 to 1.0, so value 0.4 = 40% has that ideology
+Use:
+Returns true if the country's upper house has the required characteristics
+*/
 	// ret &= add_condition("upper_house", COMPLEX, COUNTRY);
-	// ret &= add_condition("vassal_of", IDENTIFIER, COUNTRY, NO_SCOPE, NO_IDENTIFIER, COUNTRY_TAG);
-	// ret &= add_condition("war", BOOLEAN, COUNTRY);
-	// ret &= add_condition("war_exhaustion", REAL, COUNTRY);
-	// ret &= add_condition("war_score", REAL, COUNTRY);
-	// ret &= add_condition("war_with", IDENTIFIER, COUNTRY, NO_SCOPE, NO_IDENTIFIER, COUNTRY_TAG);
+	ret &= add_condition(
+		"vassal_of",
+		_parse_condition_node_value_callback<CountryDefinition const*, COUNTRY | THIS | FROM>,
+		_execute_condition_node_unimplemented
+	);
+	ret &= add_condition(
+		"war",
+		_parse_condition_node_value_callback<bool, COUNTRY>,
+		_execute_condition_node_unimplemented
+	);
+	ret &= add_condition(
+		"war_exhaustion",
+		_parse_condition_node_value_callback<fixed_point_t, COUNTRY>,
+		_execute_condition_node_unimplemented
+	);
+	ret &= add_condition(
+		"war_score",
+		_parse_condition_node_value_callback<fixed_point_t, COUNTRY>,
+		_execute_condition_node_unimplemented
+	);
+	ret &= add_condition(
+		"war_with",
+		_parse_condition_node_value_callback<CountryDefinition const*, COUNTRY | THIS | FROM>,
+		_execute_condition_node_unimplemented
+	);
 
 	/* State Scope Conditions */
 	// ret &= add_condition("controlled_by", IDENTIFIER, STATE, NO_SCOPE, NO_IDENTIFIER, COUNTRY_TAG);
