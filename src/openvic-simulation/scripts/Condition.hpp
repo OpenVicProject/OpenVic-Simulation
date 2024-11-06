@@ -132,7 +132,9 @@ namespace OpenVic {
 	struct GovernmentType;
 	struct Ideology;
 	struct Reform;
+	struct NationalValue;
 	struct Invention;
+	struct TechnologySchool;
 	struct Condition;
 	struct DefinitionManager;
 	struct InstanceManager;
@@ -160,7 +162,7 @@ namespace OpenVic {
 			// Game object arguments
 			CountryDefinition const*, ProvinceDefinition const*, GoodDefinition const*, Continent const*, BuildingType const*,
 			Issue const*, WargoalType const*, PopType const*, Culture const*, Religion const*, GovernmentType const*,
-			Ideology const*, Reform const*, Invention const*
+			Ideology const*, Reform const*, NationalValue const*, Invention const*, TechnologySchool const*
 		>;
 
 		static constexpr bool is_this_argument(argument_t const& argument) {
