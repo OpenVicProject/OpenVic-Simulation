@@ -273,7 +273,7 @@ bool ProductionTypeManager::load_production_types_file(
 				"bonus", ZERO_OR_MORE, [&bonuses](ast::NodeCPtr bonus_node) -> bool {
 					using enum scope_type_t;
 
-					ConditionScript trigger { STATE, NO_SCOPE, NO_SCOPE };
+					ConditionScript trigger { PROVINCE, NO_SCOPE, NO_SCOPE };
 					fixed_point_t bonus_value {};
 
 					const bool ret = expect_dictionary_keys(
