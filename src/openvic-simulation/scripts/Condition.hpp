@@ -59,12 +59,11 @@ namespace OpenVic {
 		NO_SCOPE    = 0,
 		POP         = 1 << 0,
 		PROVINCE    = 1 << 1,
-		STATE       = 1 << 2,
-		COUNTRY     = 1 << 3,
-		THIS        = 1 << 4, // Indicator bit for scope switching ("use the THIS scope", not a scope in and of itself)
-		FROM        = 1 << 5, // Indicator bit for scope switching ("use the FROM scope", not a scope in and of itself)
-		FULL_SCOPE_MASK   = (1 << 6) - 1, // All possible scope bits (including THIS and FROM)
-		ALL_SCOPES = POP | PROVINCE | STATE | COUNTRY // All real scopes (without THIS and FROM)
+		COUNTRY     = 1 << 2,
+		THIS        = 1 << 3, // Indicator bit for scope switching ("use the THIS scope", not a scope in and of itself)
+		FROM        = 1 << 4, // Indicator bit for scope switching ("use the FROM scope", not a scope in and of itself)
+		FULL_SCOPE_MASK   = (1 << 5) - 1, // All possible scope bits (including THIS and FROM)
+		ALL_SCOPES = POP | PROVINCE | COUNTRY // All real scopes (without THIS and FROM)
 	};
 
 	/* Allows enum types to be used with bitwise operators. */
@@ -97,7 +96,6 @@ namespace OpenVic {
 		stream << '[';
 
 		BUILD_STRING(COUNTRY);
-		BUILD_STRING(STATE);
 		BUILD_STRING(PROVINCE);
 		BUILD_STRING(POP);
 		BUILD_STRING(THIS);
@@ -116,7 +114,6 @@ namespace OpenVic {
 	struct ConditionScript;
 	struct CountryDefinition;
 	struct CountryInstance;
-	struct State;
 	struct ProvinceDefinition;
 	struct ProvinceInstance;
 	struct Pop;
@@ -135,6 +132,10 @@ namespace OpenVic {
 	struct NationalValue;
 	struct Invention;
 	struct TechnologySchool;
+	struct Crime;
+	struct Region;
+	struct TerrainType;
+	struct Strata;
 	struct Condition;
 	struct DefinitionManager;
 	struct InstanceManager;
@@ -162,7 +163,10 @@ namespace OpenVic {
 			// Game object arguments
 			CountryDefinition const*, ProvinceDefinition const*, GoodDefinition const*, Continent const*, BuildingType const*,
 			Issue const*, WargoalType const*, PopType const*, Culture const*, Religion const*, GovernmentType const*,
-			Ideology const*, Reform const*, NationalValue const*, Invention const*, TechnologySchool const*
+			Ideology const*, Reform const*, NationalValue const*, Invention const*, TechnologySchool const*, Crime const*,
+			Region const*, TerrainType const*, Strata const*,
+			// Multi-value arguments
+			std::pair<PopType const*, fixed_point_t>, std::pair<Ideology const*, fixed_point_t>
 		>;
 
 		static constexpr bool is_this_argument(argument_t const& argument) {
@@ -177,7 +181,6 @@ namespace OpenVic {
 		using scope_t = std::variant<
 			no_scope_t,
 			CountryInstance const*,
-			State const*, // Should State scope exist, or should it just be a list of provinces?
 			ProvinceInstance const*,
 			Pop const*
 		>;
@@ -278,6 +281,9 @@ namespace OpenVic {
 		ConditionManager();
 
 		bool setup_conditions(DefinitionManager const& definition_manager);
+
+		// TODO - way to call with a state as the starting scope (or rather the list of provinces making up a state)
+		// For: ProductionType bonus trigger, WargoalType allowed_states, allowed_substate_regions and allowed_states_in_crisis
 
 		NodeTools::node_callback_t expect_condition_script(
 			DefinitionManager const& definition_manager, scope_type_t initial_scope, scope_type_t this_scope,

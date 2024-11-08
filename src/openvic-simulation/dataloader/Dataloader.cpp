@@ -1110,7 +1110,7 @@ bool Dataloader::load_defines(DefinitionManager& definition_manager) {
 		ret = false;
 	}
 
-	// ret &= parse_scripts(definition_manager);
+	ret &= parse_scripts(definition_manager);
 
 	free_cache();
 
