@@ -217,7 +217,12 @@ static bool _parse_condition_node_value_callback(
 		std::same_as<T, Issue const*> || std::same_as<T, WargoalType const*> || std::same_as<T, PopType const*> ||
 		std::same_as<T, Culture const*> || std::same_as<T, Religion const*> || std::same_as<T, GovernmentType const*> ||
 		std::same_as<T, Ideology const*> || std::same_as<T, Reform const*> || std::same_as<T, NationalValue const*> ||
-		std::same_as<T, Invention const*> || std::same_as<T, TechnologySchool const*>
+		std::same_as<T, Invention const*> || std::same_as<T, TechnologySchool const*> || std::same_as<T, Crime const*> ||
+		std::same_as<T, Region const*> || std::same_as<T, TerrainType const*> || std::same_as<T, Strata const*> ||
+
+		// Multi-value arguments
+		std::same_as<T, std::pair<PopType const*, fixed_point_t>> ||
+		std::same_as<T, std::pair<Ideology const*, fixed_point_t>>
 	);
 
 	using enum scope_type_t;
@@ -335,6 +340,37 @@ static bool _parse_condition_node_value_callback(
 	} else if constexpr (std::same_as<T, TechnologySchool const*>) {
 		ret = definition_manager.get_research_manager().get_technology_manager().expect_technology_school_identifier_or_string(
 			assign_variable_callback_pointer(value)
+		)(node);
+	} else if constexpr (std::same_as<T, Crime const*>) {
+		ret = definition_manager.get_crime_manager().expect_crime_modifier_identifier_or_string(
+			assign_variable_callback_pointer(value)
+		)(node);
+	} else if constexpr (std::same_as<T, Region const*>) {
+		ret = definition_manager.get_map_definition().expect_region_identifier_or_string(
+			assign_variable_callback_pointer(value)
+		)(node);
+	} else if constexpr (std::same_as<T, TerrainType const*>) {
+		ret = definition_manager.get_map_definition().get_terrain_type_manager().expect_terrain_type_identifier_or_string(
+			assign_variable_callback_pointer(value)
+		)(node);
+	} else if constexpr (std::same_as<T, Strata const*>) {
+		ret = definition_manager.get_pop_manager().expect_strata_identifier_or_string(
+			assign_variable_callback_pointer(value)
+		)(node);
+	} else if constexpr (std::same_as<T, std::pair<PopType const*, fixed_point_t>>) {
+		ret = expect_dictionary_keys(
+			"type", ONE_EXACTLY, definition_manager.get_pop_manager().expect_pop_type_identifier_or_string(
+				assign_variable_callback_pointer(value.first)
+			),
+			"value", ONE_EXACTLY, expect_fixed_point(assign_variable_callback(value.second))
+		)(node);
+	} else if constexpr (std::same_as<T, std::pair<Ideology const*, fixed_point_t>>) {
+		ret = expect_dictionary_keys(
+			"ideology", ONE_EXACTLY,
+				definition_manager.get_politics_manager().get_ideology_manager().expect_ideology_identifier_or_string(
+					assign_variable_callback_pointer(value.first)
+				),
+			"value", ONE_EXACTLY, expect_fixed_point(assign_variable_callback(value.second))
 		)(node);
 	}
 
@@ -880,7 +916,7 @@ bool ConditionManager::setup_conditions(DefinitionManager const& definition_mana
 	);
 	ret &= add_condition(
 		"any_state",
-		_parse_condition_node_list_callback<STATE, COUNTRY>,
+		_parse_condition_node_list_callback<PROVINCE, COUNTRY>,
 		_execute_condition_node_unimplemented
 	);
 	ret &= add_condition(
@@ -999,7 +1035,7 @@ bool ConditionManager::setup_conditions(DefinitionManager const& definition_mana
 	);
 	ret &= add_condition(
 		"state_scope",
-		_parse_condition_node_list_callback<STATE, PROVINCE>,
+		_parse_condition_node_list_callback<PROVINCE, PROVINCE>,
 		_execute_condition_node_unimplemented
 	);
 
@@ -1498,7 +1534,7 @@ To check if the POP itself has the culture, use "has_pop_culture" instead.
 		 * has_pop_culture should be used to check a specific pop's culture. The tooltips aren't very clear, with
 		 * "culture = <culture>" showing up as "Culture is <culture>" and "has_pop_culture = <culture>" showing up as
 		 * "<Pop type plural> in <province> have <culture>". */
-		_parse_condition_node_value_callback<Culture const*, PROVINCE | POP>,
+		_parse_condition_node_value_callback<Culture const*, PROVINCE | POP | THIS | FROM>,
 		_execute_condition_node_unimplemented
 	);
 	ret &= add_condition(
@@ -1729,7 +1765,7 @@ Returns true if the specified country exists. May also be used with [yes/no] to 
 	);
 	ret &= add_condition(
 		"is_colonial",
-		_parse_condition_node_value_callback<bool, STATE>,
+		_parse_condition_node_value_callback<bool, PROVINCE>,
 		_execute_condition_node_unimplemented
 	);
 	/* is_core can be used:
@@ -1811,11 +1847,6 @@ Returns true if the specified country exists. May also be used with [yes/no] to 
 		_parse_condition_node_value_callback<fixed_point_t, COUNTRY>,
 		_execute_condition_node_unimplemented
 	);
-	// ret &= add_condition("middle_strata_militancy", REAL, COUNTRY);
-	// ret &= add_condition("middle_strata_everyday_needs", REAL, COUNTRY);
-	// ret &= add_condition("middle_strata_life_needs", REAL, COUNTRY);
-	// ret &= add_condition("middle_strata_luxury_needs", REAL, COUNTRY);
-	// ret &= add_condition("middle_tax", REAL, COUNTRY);
 	ret &= add_condition(
 		"military_access",
 		_parse_condition_node_value_callback<CountryDefinition const*, COUNTRY | THIS | FROM>,
@@ -1944,11 +1975,6 @@ Returns true if the specified country exists. May also be used with [yes/no] to 
 		_parse_condition_node_value_callback<fixed_point_t, PROVINCE>,
 		_execute_condition_node_unimplemented
 	);
-	// ret &= add_condition("poor_strata_militancy", REAL, COUNTRY);
-	// ret &= add_condition("poor_strata_everyday_needs", REAL, COUNTRY);
-	// ret &= add_condition("poor_strata_life_needs", REAL, COUNTRY);
-	// ret &= add_condition("poor_strata_luxury_needs", REAL, COUNTRY);
-	// ret &= add_condition("poor_tax", REAL, COUNTRY);
 	ret &= add_condition(
 		"prestige",
 		_parse_condition_node_value_callback<fixed_point_t, COUNTRY>,
@@ -1995,7 +2021,7 @@ Returns true if the specified country has a relation value equal to x or higher 
 	// ret &= add_condition("relation", COMPLEX, COUNTRY);
 	ret &= add_condition(
 		"religion",
-		_parse_condition_node_value_callback<Religion const*, POP>,
+		_parse_condition_node_value_callback<Religion const*, POP | THIS | FROM>,
 		_execute_condition_node_unimplemented
 	);
 	ret &= add_condition(
@@ -2008,11 +2034,7 @@ Returns true if the specified country has a relation value equal to x or higher 
 		_parse_condition_node_value_callback<fixed_point_t, COUNTRY>,
 		_execute_condition_node_unimplemented
 	);
-	// ret &= add_condition("rich_strata_militancy", REAL, COUNTRY);
-	// ret &= add_condition("rich_strata_everyday_needs", REAL, COUNTRY);
-	// ret &= add_condition("rich_strata_life_needs", REAL, COUNTRY);
-	// ret &= add_condition("rich_strata_luxury_needs", REAL, COUNTRY);
-	// ret &= add_condition("rich_tax", REAL, COUNTRY);
+	// Doesn't appear in vanilla or test mods
 	// ret &= add_condition("rich_tax_above_poor", BOOLEAN, COUNTRY);
 	ret &= add_condition(
 		"ruling_party",
@@ -2048,7 +2070,7 @@ Returns true if the specified country has a relation value equal to x or higher 
 	);
 	ret &= add_condition(
 		"tag",
-		_parse_condition_node_value_callback<CountryDefinition const*, COUNTRY>,
+		_parse_condition_node_value_callback<CountryDefinition const*, COUNTRY | THIS | FROM>,
 		_execute_condition_node_unimplemented
 	);
 	ret &= add_condition(
@@ -2110,19 +2132,11 @@ Returns true if the nation specified has the same cultural union as the country 
 		_parse_condition_node_value_callback<bool, COUNTRY>,
 		_execute_condition_node_unimplemented
 	);
-/*
-upper_house
-Syntax:
-
-upper_house = {
-                                          ideology = name
-                                          value = 0.x  
-			}
-where value is a fraction 0.0 to 1.0, so value 0.4 = 40% has that ideology
-Use:
-Returns true if the country's upper house has the required characteristics
-*/
-	// ret &= add_condition("upper_house", COMPLEX, COUNTRY);
+	ret &= add_condition(
+		"upper_house",
+		_parse_condition_node_value_callback<std::pair<Ideology const*, fixed_point_t>, COUNTRY>,
+		_execute_condition_node_unimplemented
+	);
 	ret &= add_condition(
 		"vassal_of",
 		_parse_condition_node_value_callback<CountryDefinition const*, COUNTRY | THIS | FROM>,
@@ -2150,62 +2164,288 @@ Returns true if the country's upper house has the required characteristics
 	);
 
 	/* State Scope Conditions */
+	// TODO - can be tag, THIS, FROM or "owner"
 	// ret &= add_condition("controlled_by", IDENTIFIER, STATE, NO_SCOPE, NO_IDENTIFIER, COUNTRY_TAG);
-	// ret &= add_condition("empty", BOOLEAN, STATE);
-	// ret &= add_condition("flashpoint_tension", REAL, STATE);
-	// ret &= add_condition("has_building", IDENTIFIER, STATE, NO_SCOPE, NO_IDENTIFIER, BUILDING);
-	// ret &= add_condition("has_factories", BOOLEAN, STATE);
-	// ret &= add_condition("has_flashpoint", BOOLEAN, STATE);
-	// ret &= add_condition("is_slave", BOOLEAN, STATE);
-	// ret &= add_condition("owned_by", IDENTIFIER, STATE, NO_SCOPE, NO_IDENTIFIER, COUNTRY_TAG);
-	// ret &= add_condition("trade_goods_in_state", IDENTIFIER, STATE, NO_SCOPE, NO_IDENTIFIER, TRADE_GOOD);
+	ret &= add_condition(
+		"empty",
+		_parse_condition_node_value_callback<bool, PROVINCE>,
+		_execute_condition_node_unimplemented
+	);
+	ret &= add_condition(
+		"flashpoint_tension",
+		_parse_condition_node_value_callback<fixed_point_t, PROVINCE>,
+		_execute_condition_node_unimplemented
+	);
+	// TODO - "has_building = factory"
+	ret &= add_condition(
+		"has_building",
+		_parse_condition_node_value_callback<BuildingType const*, PROVINCE>,
+		_execute_condition_node_unimplemented
+	);
+	ret &= add_condition(
+		"has_factories",
+		_parse_condition_node_value_callback<bool, PROVINCE>,
+		_execute_condition_node_unimplemented
+	);
+	ret &= add_condition(
+		"has_flashpoint",
+		_parse_condition_node_value_callback<bool, PROVINCE>,
+		_execute_condition_node_unimplemented
+	);
+	ret &= add_condition(
+		"is_slave",
+		_parse_condition_node_value_callback<bool, PROVINCE>,
+		_execute_condition_node_unimplemented
+	);
+	ret &= add_condition(
+		"owned_by",
+		_parse_condition_node_value_callback<CountryDefinition const*, PROVINCE | THIS | FROM>,
+		_execute_condition_node_unimplemented
+	);
+	ret &= add_condition(
+		"trade_goods_in_state",
+		_parse_condition_node_value_callback<GoodDefinition const*, PROVINCE>,
+		_execute_condition_node_unimplemented
+	);
+/*
+work_available
+Syntax:
+
+work_available = {
+			worker = [type]
+}
+Use:
+Returns true if there is any work available for the specified pop type—meaning specifically is it possible for that pop type to be employed, not whether they would actually find work there or whether there's any unemployment in the province. If a province has factories, this command will always return true for craftsmen and clerks. If the province produces coal, this command will always return true for labourers and false for farmers.
+*/
 	// ret &= add_condition("work_available", COMPLEX, STATE);
 
 	/* Province Scope Conditions */
-	// ret &= add_condition("can_build_factory", BOOLEAN, PROVINCE);
-	// ret &= add_condition("controlled_by_rebels", BOOLEAN, PROVINCE);
-	// ret &= add_condition("country_units_in_province", IDENTIFIER, PROVINCE, NO_SCOPE, NO_IDENTIFIER, COUNTRY_TAG);
+	ret &= add_condition(
+		"can_build_factory",
+		_parse_condition_node_value_callback<bool, PROVINCE>,
+		_execute_condition_node_unimplemented
+	);
+	ret &= add_condition(
+		"controlled_by_rebels",
+		_parse_condition_node_value_callback<bool, PROVINCE>,
+		_execute_condition_node_unimplemented
+	);
+	ret &= add_condition(
+		"country_units_in_province",
+		_parse_condition_node_value_callback<CountryDefinition const*, PROVINCE | THIS | FROM>,
+		_execute_condition_node_unimplemented
+	);
+	// Doesn't appear in vanilla or any test mods
 	// ret &= add_condition("country_units_in_state", IDENTIFIER, PROVINCE, NO_SCOPE, NO_IDENTIFIER, COUNTRY_TAG);
-	// ret &= add_condition("has_crime", IDENTIFIER, PROVINCE, NO_SCOPE, NO_IDENTIFIER, CRIME);
-	// ret &= add_condition("has_culture_core", BOOLEAN, PROVINCE);
-	// ret &= add_condition("has_empty_adjacent_province", BOOLEAN, PROVINCE);
+	ret &= add_condition(
+		"has_crime",
+		_parse_condition_node_value_callback<Crime const*, PROVINCE>,
+		_execute_condition_node_unimplemented
+	);
+	ret &= add_condition(
+		"has_culture_core",
+		_parse_condition_node_value_callback<bool, PROVINCE>,
+		_execute_condition_node_unimplemented
+	);
+	ret &= add_condition(
+		"has_empty_adjacent_province",
+		_parse_condition_node_value_callback<bool, PROVINCE>,
+		_execute_condition_node_unimplemented
+	);
+	// Doesn't appear in vanilla or any test mods
 	// ret &= add_condition("has_empty_adjacent_state", BOOLEAN, PROVINCE);
-	// ret &= add_condition("has_national_minority", BOOLEAN, PROVINCE);
-	// ret &= add_condition("has_province_flag", IDENTIFIER, PROVINCE, NO_SCOPE, NO_IDENTIFIER, PROVINCE_FLAG);
-	// ret &= add_condition("has_province_modifier", IDENTIFIER, PROVINCE, NO_SCOPE, NO_IDENTIFIER, PROVINCE_EVENT_MODIFIER);
-	// ret &= add_condition("has_recent_imigration", INTEGER, PROVINCE); //paradox typo
-	// ret &= add_condition("is_blockaded", BOOLEAN, PROVINCE);
+	ret &= add_condition(
+		"has_national_minority",
+		_parse_condition_node_value_callback<bool, PROVINCE>,
+		_execute_condition_node_unimplemented
+	);
+	ret &= add_condition(
+		"has_province_flag",
+		_parse_condition_node_value_callback<std::string, PROVINCE>,
+		_execute_condition_node_unimplemented
+	);
+	ret &= add_condition(
+		"has_province_modifier",
+		// TODO - parse as Modifier const*? Depends what types of modifiers can go here
+		_parse_condition_node_value_callback<std::string, PROVINCE>,
+		_execute_condition_node_unimplemented
+	);
+	ret &= add_condition(
+		"has_recent_imigration", // paradox typo
+		_parse_condition_node_value_callback<integer_t, PROVINCE>,
+		_execute_condition_node_unimplemented
+	);
+	ret &= add_condition(
+		"is_blockaded",
+		_parse_condition_node_value_callback<bool, PROVINCE>,
+		_execute_condition_node_unimplemented
+	);
 	// ret &= add_condition("is_accepted_culture", IDENTIFIER | BOOLEAN, PROVINCE, NO_SCOPE, NO_IDENTIFIER, COUNTRY_TAG);
-	// ret &= add_condition("is_capital", BOOLEAN, PROVINCE);
-	// ret &= add_condition("is_coastal", BOOLEAN, PROVINCE);
-	// ret &= add_condition("is_overseas", BOOLEAN, PROVINCE);
+	ret &= add_condition(
+		"is_capital",
+		_parse_condition_node_value_callback<bool, PROVINCE>,
+		_execute_condition_node_unimplemented
+	);
+	ret &= add_condition(
+		"is_coastal",
+		_parse_condition_node_value_callback<bool, PROVINCE>,
+		_execute_condition_node_unimplemented
+	);
+	ret &= add_condition(
+		"is_overseas",
+		_parse_condition_node_value_callback<bool, PROVINCE>,
+		_execute_condition_node_unimplemented
+	);
 	// ret &= add_condition("is_primary_culture", IDENTIFIER | BOOLEAN, PROVINCE, NO_SCOPE, NO_IDENTIFIER, COUNTRY_TAG);
-	// ret &= add_condition("is_state_capital", BOOLEAN, PROVINCE);
-	// ret &= add_condition("is_state_religion", BOOLEAN, PROVINCE);
-	// ret &= add_condition("life_rating", REAL, PROVINCE);
-	// ret &= add_condition("minorities", BOOLEAN, PROVINCE);
-	// ret &= add_condition("port", BOOLEAN, PROVINCE);
-	// ret &= add_condition("province_control_days", INTEGER, PROVINCE);
-	// ret &= add_condition("province_id", IDENTIFIER, PROVINCE, NO_SCOPE, NO_IDENTIFIER, PROVINCE_ID);
-	// ret &= add_condition("region", IDENTIFIER, PROVINCE, NO_SCOPE, NO_IDENTIFIER, REGION);
-	// ret &= add_condition("state_id", IDENTIFIER, PROVINCE, NO_SCOPE, NO_IDENTIFIER, PROVINCE_ID);
-	// ret &= add_condition("terrain", IDENTIFIER, PROVINCE, NO_SCOPE, NO_IDENTIFIER, TERRAIN);
-	// ret &= add_condition("trade_goods", IDENTIFIER, PROVINCE, NO_SCOPE, NO_IDENTIFIER, TRADE_GOOD);
-	// ret &= add_condition("unemployment_by_type", COMPLEX, PROVINCE);
-	// ret &= add_condition("units_in_province", INTEGER, PROVINCE);
+	ret &= add_condition(
+		"is_state_capital",
+		_parse_condition_node_value_callback<bool, PROVINCE>,
+		_execute_condition_node_unimplemented
+	);
+	ret &= add_condition(
+		"is_state_religion",
+		_parse_condition_node_value_callback<bool, PROVINCE | POP>,
+		_execute_condition_node_unimplemented
+	);
+	ret &= add_condition(
+		"life_rating",
+		_parse_condition_node_value_callback<fixed_point_t, PROVINCE>,
+		_execute_condition_node_unimplemented
+	);
+	ret &= add_condition(
+		"minorities",
+		_parse_condition_node_value_callback<bool, PROVINCE>,
+		_execute_condition_node_unimplemented
+	);
+	ret &= add_condition(
+		"port",
+		_parse_condition_node_value_callback<bool, PROVINCE>,
+		_execute_condition_node_unimplemented
+	);
+	ret &= add_condition(
+		"province_control_days",
+		_parse_condition_node_value_callback<integer_t, PROVINCE>,
+		_execute_condition_node_unimplemented
+	);
+	ret &= add_condition(
+		"province_id",
+		_parse_condition_node_value_callback<ProvinceDefinition const*, PROVINCE>,
+		_execute_condition_node_unimplemented
+	);
+	ret &= add_condition(
+		"region",
+		_parse_condition_node_value_callback<Region const*, PROVINCE>,
+		_execute_condition_node_unimplemented
+	);
+	ret &= add_condition(
+		"state_id",
+		_parse_condition_node_value_callback<ProvinceDefinition const*, PROVINCE>,
+		_execute_condition_node_unimplemented
+	);
+	ret &= add_condition(
+		"terrain",
+		_parse_condition_node_value_callback<TerrainType const*, PROVINCE>,
+		_execute_condition_node_unimplemented
+	);
+	ret &= add_condition(
+		"trade_goods",
+		_parse_condition_node_value_callback<GoodDefinition const*, PROVINCE>,
+		_execute_condition_node_unimplemented
+	);
+	ret &= add_condition(
+		"unemployment_by_type",
+		_parse_condition_node_value_callback<std::pair<PopType const*, fixed_point_t>, PROVINCE>,
+		_execute_condition_node_unimplemented
+	);
+	ret &= add_condition(
+		"units_in_province",
+		_parse_condition_node_value_callback<integer_t, PROVINCE>,
+		_execute_condition_node_unimplemented
+	);
 
 	/* Pop Scope Conditions */
-	// ret &= add_condition("agree_with_ruling_party", REAL, POP);
-	// ret &= add_condition("cash_reserves", REAL, POP);
-	// ret &= add_condition("everyday_needs", REAL, POP);
-	// ret &= add_condition("life_needs", REAL, POP);
-	// ret &= add_condition("luxury_needs", REAL, POP);
-	// ret &= add_condition("political_movement", BOOLEAN, POP);
+	ret &= add_condition(
+		"agree_with_ruling_party",
+		_parse_condition_node_value_callback<fixed_point_t, POP>,
+		_execute_condition_node_unimplemented
+	);
+	ret &= add_condition(
+		"cash_reserves",
+		_parse_condition_node_value_callback<fixed_point_t, POP>,
+		_execute_condition_node_unimplemented
+	);
+	ret &= add_condition(
+		"life_needs",
+		_parse_condition_node_value_callback<fixed_point_t, POP>,
+		_execute_condition_node_unimplemented
+	);
+	ret &= add_condition(
+		"everyday_needs",
+		_parse_condition_node_value_callback<fixed_point_t, POP>,
+		_execute_condition_node_unimplemented
+	);
+	ret &= add_condition(
+		"luxury_needs",
+		_parse_condition_node_value_callback<fixed_point_t, POP>,
+		_execute_condition_node_unimplemented
+	);
+	ret &= add_condition(
+		"political_movement",
+		_parse_condition_node_value_callback<bool, POP>,
+		_execute_condition_node_unimplemented
+	);
+	// Doesn't appear in vanilla or any test mods
 	// ret &= add_condition("pop_majority_issue", IDENTIFIER, POP, NO_SCOPE, NO_IDENTIFIER, ISSUE);
-	// ret &= add_condition("pop_type", IDENTIFIER, POP, NO_SCOPE, NO_IDENTIFIER, POP_TYPE);
-	// ret &= add_condition("social_movement", BOOLEAN, POP);
-	// ret &= add_condition("strata", IDENTIFIER, POP, NO_SCOPE, NO_IDENTIFIER, POP_STRATA);
-	// ret &= add_condition("type", IDENTIFIER, POP, NO_SCOPE, NO_IDENTIFIER, POP_TYPE);
+	ret &= add_condition(
+		"pop_type",
+		_parse_condition_node_value_callback<PopType const*, POP>,
+		_execute_condition_node_unimplemented
+	);
+	ret &= add_condition(
+		"social_movement",
+		_parse_condition_node_value_callback<bool, POP>,
+		_execute_condition_node_unimplemented
+	);
+	ret &= add_condition(
+		"strata",
+		_parse_condition_node_value_callback<Strata const*, POP>,
+		_execute_condition_node_unimplemented
+	);
+	ret &= add_condition(
+		"type",
+		_parse_condition_node_value_callback<PopType const*, POP>,
+		_execute_condition_node_unimplemented
+	);
+
+	for (Strata const& strata : definition_manager.get_pop_manager().get_stratas()) {
+		const std::string_view identifier = strata.get_identifier();
+
+		ret &= add_condition(
+			StringUtils::append_string_views(identifier, "_tax"),
+			_parse_condition_node_value_callback<fixed_point_t, COUNTRY>,
+			_execute_condition_node_unimplemented
+		);
+		ret &= add_condition(
+			StringUtils::append_string_views(identifier, "_strata_life_needs"),
+			_parse_condition_node_value_callback<fixed_point_t, COUNTRY>,
+			_execute_condition_node_unimplemented
+		);
+		ret &= add_condition(
+			StringUtils::append_string_views(identifier, "_strata_everyday_needs"),
+			_parse_condition_node_value_callback<fixed_point_t, COUNTRY>,
+			_execute_condition_node_unimplemented
+		);
+		ret &= add_condition(
+			StringUtils::append_string_views(identifier, "_strata_luxury_needs"),
+			_parse_condition_node_value_callback<fixed_point_t, COUNTRY>,
+			_execute_condition_node_unimplemented
+		);
+		ret &= add_condition(
+			StringUtils::append_string_views(identifier, "_strata_militancy"),
+			_parse_condition_node_value_callback<fixed_point_t, COUNTRY>,
+			_execute_condition_node_unimplemented
+		);
+	}
 
 	// const auto import_identifiers = [this, &ret](
 	// 	std::vector<std::string_view> const& identifiers,
@@ -2288,6 +2528,13 @@ Returns true if the country's upper house has the required characteristics
 	// 	IDEOLOGY,
 	// 	NO_IDENTIFIER
 	// );
+	for (Ideology const& ideology : definition_manager.get_politics_manager().get_ideology_manager().get_ideologies()) {
+		ret &= add_condition(
+			ideology.get_identifier(),
+			_parse_condition_node_value_callback<fixed_point_t, COUNTRY>,
+			_execute_condition_node_unimplemented
+		);
+	}
 
 	// import_identifiers(
 	// 	definition_manager.get_politics_manager().get_issue_manager().get_reform_group_identifiers(),
@@ -2297,6 +2544,13 @@ Returns true if the country's upper house has the required characteristics
 	// 	REFORM_GROUP,
 	// 	REFORM
 	// );
+	for (ReformGroup const& reform_group : definition_manager.get_politics_manager().get_issue_manager().get_reform_groups()) {
+		ret &= add_condition(
+			reform_group.get_identifier(),
+			_parse_condition_node_value_callback<Reform const*, COUNTRY>,
+			_execute_condition_node_unimplemented
+		);
+	}
 
 	// import_identifiers(
 	// 	definition_manager.get_politics_manager().get_issue_manager().get_reform_identifiers(),
@@ -2339,6 +2593,14 @@ Returns true if the country's upper house has the required characteristics
 		);
 	}
 
+	for (Issue const& issue : definition_manager.get_politics_manager().get_issue_manager().get_issues()) {
+		ret &= add_condition(
+			issue.get_identifier(),
+			_parse_condition_node_value_callback<fixed_point_t, COUNTRY>,
+			_execute_condition_node_unimplemented
+		);
+	}
+
 	// import_identifiers(
 	// 	definition_manager.get_pop_manager().get_pop_type_identifiers(),
 	// 	REAL,
@@ -2356,6 +2618,16 @@ Returns true if the country's upper house has the required characteristics
 	// 	TECHNOLOGY,
 	// 	NO_IDENTIFIER
 	// );
+	for (
+		Technology const& technology : definition_manager.get_research_manager().get_technology_manager().get_technologies()
+	) {
+		ret &= add_condition(
+			technology.get_identifier(),
+			// TODO - Could convert integer to bool?
+			_parse_condition_node_value_callback<integer_t, COUNTRY>,
+			_execute_condition_node_unimplemented
+		);
+	}
 
 	// import_identifiers(
 	// 	definition_manager.get_economy_manager().get_good_definition_manager().get_good_definition_identifiers(),
@@ -2365,6 +2637,16 @@ Returns true if the country's upper house has the required characteristics
 	// 	TRADE_GOOD,
 	// 	NO_IDENTIFIER
 	// );
+	for (
+		GoodDefinition const& good :
+			definition_manager.get_economy_manager().get_good_definition_manager().get_good_definitions()
+	) {
+		ret &= add_condition(
+			good.get_identifier(),
+			_parse_condition_node_value_callback<fixed_point_t, COUNTRY>,
+			_execute_condition_node_unimplemented
+		);
+	}
 
 	if (
 		add_condition(
