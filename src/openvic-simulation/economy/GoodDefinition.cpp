@@ -90,6 +90,7 @@ bool GoodDefinitionManager::load_goods_file(ast::NodeCPtr root) {
 }
 
 bool GoodDefinitionManager::generate_modifiers(ModifierManager& modifier_manager) const {
+	constexpr bool has_no_effect = true;
 	using enum ModifierEffect::format_t;
 	using enum ModifierEffect::target_t;
 
@@ -116,11 +117,11 @@ bool GoodDefinitionManager::generate_modifiers(ModifierManager& modifier_manager
 
 		const auto good_modifier = [&modifier_manager, &ret, &good_identifier](
 			ModifierEffect const*& effect_cache, std::string_view name, bool is_positive_good,
-			std::string_view localisation_key
+			std::string_view localisation_key, bool has_no_effect = false
 		) -> void {
 			ret &= modifier_manager.register_technology_modifier_effect(
 				effect_cache, ModifierManager::get_flat_identifier(name, good_identifier), is_positive_good,
-				PROPORTION_DECIMAL, localisation_key
+				PROPORTION_DECIMAL, localisation_key, has_no_effect
 			);
 		};
 
@@ -132,15 +133,15 @@ bool GoodDefinitionManager::generate_modifiers(ModifierManager& modifier_manager
 
 		good_modifier(
 			this_good_effects.artisan_goods_input, "artisan_goods_input", false,
-			make_production_localisation_suffix("TECH_INPUT")
+			make_production_localisation_suffix("TECH_INPUT"), has_no_effect
 		);
 		good_modifier(
 			this_good_effects.artisan_goods_output, "artisan_goods_output", true,
-			make_production_localisation_suffix("TECH_OUTPUT")
+			make_production_localisation_suffix("TECH_OUTPUT"), has_no_effect
 		);
 		good_modifier(
 			this_good_effects.artisan_goods_throughput, "artisan_goods_throughput", true,
-			make_production_localisation_suffix("TECH_THROUGHPUT")
+			make_production_localisation_suffix("TECH_THROUGHPUT"), has_no_effect
 		);
 		good_modifier(
 			this_good_effects.factory_goods_input, "factory_goods_input", false,
