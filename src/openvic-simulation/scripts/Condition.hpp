@@ -95,9 +95,9 @@ namespace OpenVic {
 
 		stream << '[';
 
-		BUILD_STRING(COUNTRY);
-		BUILD_STRING(PROVINCE);
 		BUILD_STRING(POP);
+		BUILD_STRING(PROVINCE);
+		BUILD_STRING(COUNTRY);
 		BUILD_STRING(THIS);
 		BUILD_STRING(FROM);
 
@@ -124,6 +124,7 @@ namespace OpenVic {
 	struct Issue;
 	struct WargoalType;
 	struct PopType;
+	struct CultureGroup;
 	struct Culture;
 	struct Religion;
 	struct GovernmentType;
@@ -150,23 +151,29 @@ namespace OpenVic {
 		struct no_argument_t {};
 		struct this_argument_t {};
 		struct from_argument_t {};
+		struct special_argument_t {};
 		using integer_t = int64_t;
 		using argument_t = std::variant<
 			// No argument
 			no_argument_t,
 			// Script reference arguments
 			this_argument_t, from_argument_t,
+			// Special argument
+			special_argument_t,
 			// List argument
 			std::vector<ConditionNode>,
 			// Value arguments
 			bool, std::string, integer_t, fixed_point_t,
 			// Game object arguments
 			CountryDefinition const*, ProvinceDefinition const*, GoodDefinition const*, Continent const*, BuildingType const*,
-			Issue const*, WargoalType const*, PopType const*, Culture const*, Religion const*, GovernmentType const*,
-			Ideology const*, Reform const*, NationalValue const*, Invention const*, TechnologySchool const*, Crime const*,
-			Region const*, TerrainType const*, Strata const*,
+			Issue const*, WargoalType const*, PopType const*, CultureGroup const*, Culture const*, Religion const*,
+			GovernmentType const*, Ideology const*, Reform const*, NationalValue const*, Invention const*,
+			TechnologySchool const*, Crime const*, Region const*, TerrainType const*, Strata const*,
 			// Multi-value arguments
-			std::pair<PopType const*, fixed_point_t>, std::pair<Ideology const*, fixed_point_t>
+			std::pair<PopType const*, fixed_point_t>, std::pair<bool, bool>, std::pair<Ideology const*, fixed_point_t>,
+			std::vector<PopType const*>, std::pair<CountryDefinition const*, fixed_point_t>,
+			std::pair<this_argument_t, fixed_point_t>, std::pair<from_argument_t, fixed_point_t>,
+			std::pair<std::string, fixed_point_t>
 		>;
 
 		static constexpr bool is_this_argument(argument_t const& argument) {
@@ -175,6 +182,10 @@ namespace OpenVic {
 
 		static constexpr bool is_from_argument(argument_t const& argument) {
 			return std::holds_alternative<from_argument_t>(argument);
+		}
+
+		static constexpr bool is_special_argument(argument_t const& argument) {
+			return std::holds_alternative<special_argument_t>(argument);
 		}
 
 		struct no_scope_t {};
