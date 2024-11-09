@@ -10,6 +10,7 @@ using namespace OpenVic::NodeTools;
 using no_argument_t = ConditionNode::no_argument_t;
 using this_argument_t = ConditionNode::this_argument_t;
 using from_argument_t = ConditionNode::from_argument_t;
+using special_argument_t = ConditionNode::special_argument_t;
 using integer_t = ConditionNode::integer_t;
 using argument_t = ConditionNode::argument_t;
 
@@ -199,9 +200,63 @@ bool ConditionManager::_parse_condition_node_list_callback(
 	return ret;
 }
 
+/* Callback for conditions with a special case as well as a regular value type:
+ *  - special_case_triggered(condition, definition_manager, callback, str, ret)
+ *    - str is the condition's value parsed as an identifier or string
+ *    - special_case_triggered is the bool return value which determines whether to return ret or continue with the regular
+ *      value parsing */
+using special_callback_t = bool (*)(
+	Condition const&, DefinitionManager const&, callback_t<argument_t&&>, std::string_view, bool&
+);
+
+static bool _parse_condition_node_special_callback_bool(
+	Condition const& condition, DefinitionManager const& definition_manager, callback_t<argument_t&&> callback,
+	std::string_view str, bool& ret
+) {
+	if (StringUtils::strings_equal_case_insensitive(str, "yes")) {
+		ret = callback(true);
+		return true;
+	}
+
+	if (StringUtils::strings_equal_case_insensitive(str, "no")) {
+		ret = callback(false);
+		return true;
+	}
+
+	return false;
+}
+
+template<char const* KEYWORD>
+static bool _parse_condition_node_special_callback_keyword(
+	Condition const& condition, DefinitionManager const& definition_manager, callback_t<argument_t&&> callback,
+	std::string_view str, bool& ret
+) {
+	if (StringUtils::strings_equal_case_insensitive(str, KEYWORD)) {
+		ret = callback(special_argument_t {});
+		return true;
+	}
+
+	return false;
+}
+
+static bool _parse_condition_node_special_callback_country(
+	Condition const& condition, DefinitionManager const& definition_manager, callback_t<argument_t&&> callback,
+	std::string_view str, bool& ret
+) {
+	CountryDefinition const* country =
+		definition_manager.get_country_definition_manager().get_country_definition_by_identifier(str);
+
+	if (country != nullptr) {
+		ret = callback(country);
+		return true;
+	}
+
+	return false;
+}
+
 // ALLOWED_SCOPES is a bitfield indicating valid values of current_scope, as well as whether the value is allowed to be
 // THIS or FROM corresponding to the special argument types this_argument_t and from_argument_t respectively.
-template<typename T, scope_type_t ALLOWED_SCOPES = scope_type_t::ALL_SCOPES>
+template<typename T, scope_type_t ALLOWED_SCOPES = scope_type_t::ALL_SCOPES, special_callback_t SPECIAL_CALLBACK = nullptr>
 static bool _parse_condition_node_value_callback(
 	Condition const& condition, DefinitionManager const& definition_manager, scope_type_t current_scope,
 	scope_type_t this_scope, scope_type_t from_scope, ast::NodeCPtr node, callback_t<argument_t&&> callback
@@ -215,14 +270,16 @@ static bool _parse_condition_node_value_callback(
 		std::same_as<T, CountryDefinition const*> || std::same_as<T, ProvinceDefinition const*> ||
 		std::same_as<T, GoodDefinition const*> || std::same_as<T, Continent const*> || std::same_as<T, BuildingType const*> ||
 		std::same_as<T, Issue const*> || std::same_as<T, WargoalType const*> || std::same_as<T, PopType const*> ||
-		std::same_as<T, Culture const*> || std::same_as<T, Religion const*> || std::same_as<T, GovernmentType const*> ||
-		std::same_as<T, Ideology const*> || std::same_as<T, Reform const*> || std::same_as<T, NationalValue const*> ||
-		std::same_as<T, Invention const*> || std::same_as<T, TechnologySchool const*> || std::same_as<T, Crime const*> ||
-		std::same_as<T, Region const*> || std::same_as<T, TerrainType const*> || std::same_as<T, Strata const*> ||
+		std::same_as<T, CultureGroup const*> || std::same_as<T, Culture const*> || std::same_as<T, Religion const*> ||
+		std::same_as<T, GovernmentType const*> || std::same_as<T, Ideology const*> || std::same_as<T, Reform const*> ||
+		std::same_as<T, NationalValue const*> || std::same_as<T, Invention const*> ||
+		std::same_as<T, TechnologySchool const*> || std::same_as<T, Crime const*> || std::same_as<T, Region const*> ||
+		std::same_as<T, TerrainType const*> || std::same_as<T, Strata const*> ||
 
 		// Multi-value arguments
-		std::same_as<T, std::pair<PopType const*, fixed_point_t>> ||
-		std::same_as<T, std::pair<Ideology const*, fixed_point_t>>
+		std::same_as<T, std::pair<PopType const*, fixed_point_t>> || std::same_as<T, std::pair<bool, bool>> ||
+		std::same_as<T, std::pair<Ideology const*, fixed_point_t>> || std::same_as<T, std::vector<PopType const*>> ||
+		std::same_as<T, std::pair<std::string, fixed_point_t>>
 	);
 
 	using enum scope_type_t;
@@ -235,18 +292,14 @@ static bool _parse_condition_node_value_callback(
 		return false;
 	}
 
-	bool ret = true;
-
 	// All possible value types can also be interpreted as an identifier or string, so we shouldn't get any unwanted error
 	// messages if the value is a regular value rather than THIS or FROM. In fact if expect_identifier_or_string returns false
 	// when checking for THIS or FROM then we can be confident that it would also return false when parsing a regular value.
 
-	if constexpr (share_scope_type(ALLOWED_SCOPES, THIS | FROM)) {
+	if constexpr (share_scope_type(ALLOWED_SCOPES, THIS | FROM) || SPECIAL_CALLBACK != nullptr) {
 		std::string_view str;
 
-		ret &= expect_identifier_or_string(assign_variable_callback(str))(node);
-
-		if (!ret) {
+		if (!expect_identifier_or_string(assign_variable_callback(str))(node)) {
 			Logger::error(
 			"Error parsing condition \"", condition.get_identifier(),
 			"\": failed to parse identifier or string when checking for THIS and/or FROM condition argument!"
@@ -256,19 +309,25 @@ static bool _parse_condition_node_value_callback(
 
 		if constexpr (share_scope_type(ALLOWED_SCOPES, THIS)) {
 			if (StringUtils::strings_equal_case_insensitive(str, THIS_KEYWORD)) {
-				ret &= callback(this_argument_t {});
-				return ret;
+				return callback(this_argument_t {});
 			}
 		}
 
 		if constexpr (share_scope_type(ALLOWED_SCOPES, FROM)) {
 			if (StringUtils::strings_equal_case_insensitive(str, FROM_KEYWORD)) {
-				ret &= callback(from_argument_t {});
+				return callback(from_argument_t {});
+			}
+		}
+
+		if constexpr (SPECIAL_CALLBACK != nullptr) {
+			bool ret = true;
+			if ((*SPECIAL_CALLBACK)(condition, definition_manager, callback, str, ret)) {
 				return ret;
 			}
 		}
 	}
 
+	bool ret = true;
 	T value {};
 
 	if constexpr (std::same_as<T, bool>) {
@@ -310,6 +369,10 @@ static bool _parse_condition_node_value_callback(
 		)(node);
 	} else if constexpr (std::same_as<T, PopType const*>) {
 		ret = definition_manager.get_pop_manager().expect_pop_type_identifier_or_string(
+			assign_variable_callback_pointer(value)
+		)(node);
+	} else if constexpr (std::same_as<T, CultureGroup const*>) {
+		ret = definition_manager.get_pop_manager().get_culture_manager().expect_culture_group_identifier_or_string(
 			assign_variable_callback_pointer(value)
 		)(node);
 	} else if constexpr (std::same_as<T, Culture const*>) {
@@ -364,12 +427,28 @@ static bool _parse_condition_node_value_callback(
 			),
 			"value", ONE_EXACTLY, expect_fixed_point(assign_variable_callback(value.second))
 		)(node);
+	} else if constexpr (std::same_as<T, std::pair<bool, bool>>) {
+		ret = expect_dictionary_keys(
+			"in_whole_capital_state", ONE_EXACTLY, assign_variable_callback(value.first),
+			"limit_to_world_greatest_level", ONE_EXACTLY, assign_variable_callback(value.second)
+		)(node);
 	} else if constexpr (std::same_as<T, std::pair<Ideology const*, fixed_point_t>>) {
 		ret = expect_dictionary_keys(
 			"ideology", ONE_EXACTLY,
 				definition_manager.get_politics_manager().get_ideology_manager().expect_ideology_identifier_or_string(
 					assign_variable_callback_pointer(value.first)
 				),
+			"value", ONE_EXACTLY, expect_fixed_point(assign_variable_callback(value.second))
+		)(node);
+	} else if constexpr (std::same_as<T, std::vector<PopType const*>>) {
+		ret = expect_dictionary_keys(
+			"worker", ONE_OR_MORE, definition_manager.get_pop_manager().expect_pop_type_identifier_or_string(
+				vector_callback_pointer(value)
+			)
+		)(node);
+	} else if constexpr (std::same_as<T, std::pair<std::string, fixed_point_t>>) {
+		ret = expect_dictionary_keys(
+			"which", ONE_EXACTLY, expect_identifier_or_string(assign_variable_callback_string(value.first)),
 			"value", ONE_EXACTLY, expect_fixed_point(assign_variable_callback(value.second))
 		)(node);
 	}
@@ -379,6 +458,52 @@ static bool _parse_condition_node_value_callback(
 	}
 
 	return ret;
+}
+
+static bool _parse_condition_node_who_value_callback(
+	Condition const& condition, DefinitionManager const& definition_manager, scope_type_t current_scope,
+	scope_type_t this_scope, scope_type_t from_scope, ast::NodeCPtr node, callback_t<argument_t&&> callback
+) {
+	using enum scope_type_t;
+
+	if (!share_scope_type(current_scope, COUNTRY)) {
+		Logger::error(
+			"Error parsing condition \"", condition.get_identifier(),
+			"\": scope mismatch - expected ", COUNTRY, ", got ", current_scope
+		);
+		return false;
+	}
+
+	std::string_view str;
+	fixed_point_t value;
+
+	if (
+		expect_dictionary_keys(
+			"who", ONE_EXACTLY, expect_identifier_or_string(assign_variable_callback(str)),
+			"value", ONE_EXACTLY, expect_fixed_point(assign_variable_callback(value))
+		)(node)
+	) {
+		if (StringUtils::strings_equal_case_insensitive(str, THIS_KEYWORD)) {
+			return callback(std::pair { this_argument_t {}, value });
+		}
+		
+		if (StringUtils::strings_equal_case_insensitive(str, FROM_KEYWORD)) {
+			return callback(std::pair { from_argument_t {}, value });
+		}
+
+		CountryDefinition const* country =
+			definition_manager.get_country_definition_manager().get_country_definition_by_identifier(str);
+
+		if (country != nullptr) {
+			return callback(std::pair { country, value });
+		}
+
+		Logger::error(
+			"Error parsing condition \"", condition.get_identifier(), "\": unknown country \"", str, "\""
+		);
+	}
+
+	return false;
 }
 
 // EXECUTE CALLBACK HELPERS
@@ -802,7 +927,12 @@ bool ConditionManager::setup_conditions(DefinitionManager const& definition_mana
 			}
 		)
 	);
-	// ret &= add_condition("independence", GROUP, COUNTRY, COUNTRY); //only from rebels!
+	// Only from RebelType demands_enforced_trigger, changes scope to the country getting independence
+	ret &= add_condition(
+		"independence",
+		_parse_condition_node_list_callback<COUNTRY>,
+		_execute_condition_node_unimplemented
+	);
 
 	/* Trigger Country Scopes */
 	static const auto get_core_scopes =
@@ -1342,23 +1472,12 @@ bool ConditionManager::setup_conditions(DefinitionManager const& definition_mana
 	);
 	ret &= add_condition(
 		"can_build_fort_in_capital",
-		/* TODO - complex:
-		 *  - used at COUNTRY scope, specifically in westernisation reform on_execute trigger conditions
-		 *  - value is a dictionary with two entries:
-		 *    - in_whole_capital_state = <bool>
-		 *      - yes = build in all provinces in capital state
-		 *      - no = just in main capital province
-		 *  - limit_to_world_greatest_level = <bool>
-		 *      - yes = build at level of world's greatest fort (greatest researched or greatest built?)
-		 *      - no = either build level 1 or highest level this country can build (in practice 1 as the country will only
-		 *             just have gotten the first fort tech, should be tested in other scenarios) */
-		_parse_condition_node_unimplemented,
+		_parse_condition_node_value_callback<std::pair<bool, bool>, COUNTRY>,
 		_execute_condition_node_unimplemented
 	);
 	ret &= add_condition(
 		"can_build_railway_in_capital",
-		// TODO - same complex structure as can_build_fort_in_capital, with two dictionary entries
-		_parse_condition_node_unimplemented,
+		_parse_condition_node_value_callback<std::pair<bool, bool>, COUNTRY>,
 		_execute_condition_node_unimplemented
 	);
 	ret &= add_condition(
@@ -1397,7 +1516,6 @@ bool ConditionManager::setup_conditions(DefinitionManager const& definition_mana
 	);
 	ret &= add_condition(
 		"check_variable",
-		//COMPLEX, COUNTRY, NO_SCOPE, NO_IDENTIFIER, VARIABLE
 		/* TODO - complex:
 		 *  - does this have any scope restrictions, and does it affect scope in any way? The wiki warns that this doesn't
 		 *    work from province scope.
@@ -1410,7 +1528,7 @@ bool ConditionManager::setup_conditions(DefinitionManager const& definition_mana
 		 *      - The number to compare the current variable value against. Returns true if the variable has been previously
 		 *        set and has a value greater than or equal to the number.
 		 *      - Can values be negative? Can they be non-integers? How big can they get? */
-		_parse_condition_node_unimplemented,
+		_parse_condition_node_value_callback<std::pair<std::string, fixed_point_t>, COUNTRY>,
 		_execute_condition_node_unimplemented
 	);
 	ret &= add_condition(
@@ -1515,18 +1633,6 @@ bool ConditionManager::setup_conditions(DefinitionManager const& definition_mana
 		_parse_condition_node_value_callback<bool>,
 		_execute_condition_node_unimplemented
 	);
-	/*
-culture
-Syntax:
-
-culture = [culture name]
-Use:
-Province Scope Effects: Returns true if there is a majority of the specified culture in the specified province.
-POP Scope Effects: Warning! Only returns true if there is a majority of the specified culture in the POP's province.
-To check if the POP itself has the culture, use "has_pop_culture" instead.
-
-
-	*/
 	ret &= add_condition(
 		"culture",
 		/* TODO - wiki says this can also be used at PROVINCE scope, and even at POP scope it checks that the majority
@@ -1567,23 +1673,9 @@ To check if the POP itself has the culture, use "has_pop_culture" instead.
 			)
 		)
 	);
-/*
-diplomatic_influence
-Syntax:
-
-diplomatic_influence = {
-	who = [THIS/FROM/TAG]
-	value = x
-}
-Use:
-Returns true if country has more than x diplomatic influence in the country in scope.
-
-*/
-	/* TODO - complex:
-	 *  - */
 	ret &= add_condition(
 		"diplomatic_influence",
-		_parse_condition_node_unimplemented,
+		_parse_condition_node_who_value_callback,
 		_execute_condition_node_unimplemented
 	);
 	ret &= add_condition(
@@ -1596,18 +1688,11 @@ Returns true if country has more than x diplomatic influence in the country in s
 		_parse_condition_node_value_callback<bool, COUNTRY>,
 		_execute_condition_node_unimplemented
 	);
-	/*
-exists
-Syntax:
-
-exists = [tag]
-Use:
-Returns true if the specified country exists. May also be used with [yes/no] to determine if the country in scope actually exists.
-	*/
 	ret &= add_condition(
-		"exists",// IDENTIFIER | BOOLEAN, COUNTRY, NO_SCOPE, NO_IDENTIFIER, COUNTRY_TAG
-		// bool or tag or THIS or FROM
-		_parse_condition_node_unimplemented,
+		"exists",
+		_parse_condition_node_value_callback<
+			CountryDefinition const*, COUNTRY | THIS | FROM, _parse_condition_node_special_callback_bool
+		>,
 		_execute_condition_node_unimplemented
 	);
 	ret &= add_condition(
@@ -1659,7 +1744,7 @@ Returns true if the specified country exists. May also be used with [yes/no] to 
 		"has_country_modifier",
 		// TODO - which modifiers work here? just country event (+ specially handled debt statics)?
 		//      - should this be parsed into a Modifier const* or kept as a std::string?
-		_parse_condition_node_unimplemented,
+		_parse_condition_node_value_callback<std::string, COUNTRY>,
 		_execute_condition_node_unimplemented
 	);
 	ret &= add_condition(
@@ -1687,12 +1772,12 @@ Returns true if the specified country exists. May also be used with [yes/no] to 
 	);
 	ret &= add_condition(
 		"has_pop_culture",
-		_parse_condition_node_value_callback<Culture const*, POP>,
+		_parse_condition_node_value_callback<Culture const*, POP | THIS | FROM>,
 		_execute_condition_node_unimplemented
 	);
 	ret &= add_condition(
 		"has_pop_religion",
-		_parse_condition_node_value_callback<Religion const*, POP>,
+		_parse_condition_node_value_callback<Religion const*, POP | THIS | FROM>,
 		_execute_condition_node_unimplemented
 	);
 	ret &= add_condition(
@@ -1711,7 +1796,7 @@ Returns true if the specified country exists. May also be used with [yes/no] to 
 		_execute_condition_node_unimplemented
 	);
 	// "ideology = <ideology>"" doesn't seem to work as a country condition?
-	// ret &= add_condition("ideology", IDENTIFIER, COUNTRY, NO_SCOPE, NO_IDENTIFIER, IDEOLOGY);
+	// NOT FOUND - ret &= add_condition("ideology", IDENTIFIER, COUNTRY, NO_SCOPE, NO_IDENTIFIER, IDEOLOGY);
 	ret &= add_condition(
 		"industrial_score",
 		// This doesn't seem to work with regular country identifiers, they're treated as 0
@@ -1751,8 +1836,13 @@ Returns true if the specified country exists. May also be used with [yes/no] to 
 		_parse_condition_node_value_callback<bool, COUNTRY>,
 		_execute_condition_node_unimplemented
 	);
-	// is_cultural_union can take bools and country identifiers, probably also THIS and FROM
-	// ret &= add_condition("is_cultural_union", IDENTIFIER | BOOLEAN, COUNTRY, NO_SCOPE, NO_IDENTIFIER, COUNTRY_TAG);
+	ret &= add_condition(
+		"is_cultural_union",
+		_parse_condition_node_value_callback<
+			CountryDefinition const*, COUNTRY | THIS | FROM, _parse_condition_node_special_callback_bool
+		>,
+		_execute_condition_node_unimplemented
+	);
 	ret &= add_condition(
 		"is_disarmed",
 		_parse_condition_node_value_callback<bool, COUNTRY>,
@@ -1768,13 +1858,21 @@ Returns true if the specified country exists. May also be used with [yes/no] to 
 		_parse_condition_node_value_callback<bool, PROVINCE>,
 		_execute_condition_node_unimplemented
 	);
-	/* is_core can be used:
-	 *  - at COUNTRY scope with a province identifier (maybe THIS or FROM too)
-	 *  - at PROVINCE scope with a country identifier or THIS or FROM
-	 */
-	// ret &= add_condition("is_core", IDENTIFIER, COUNTRY, NO_SCOPE, NO_IDENTIFIER, COUNTRY_TAG | PROVINCE_ID);
-	// is_culture_group can be used at COUNTRY or POP scope with a culture, country, THIS or FROM
-	// ret &= add_condition("is_culture_group", IDENTIFIER, COUNTRY, NO_SCOPE, NO_IDENTIFIER, COUNTRY_TAG | CULTURE_GROUP);
+	ret &= add_condition(
+		"is_core",
+		// TODO - ensure ProvinceDefinition const* can only be used at COUNTRY scope and CountryDefinition const* at PROVINCE scope
+		_parse_condition_node_value_callback<
+			ProvinceDefinition const*, COUNTRY | PROVINCE | THIS | FROM, _parse_condition_node_special_callback_country
+		>,
+		_execute_condition_node_unimplemented
+	);
+	ret &= add_condition(
+		"is_culture_group",
+		_parse_condition_node_value_callback<
+			CultureGroup const*, COUNTRY | POP | THIS | FROM, _parse_condition_node_special_callback_country
+		>,
+		_execute_condition_node_unimplemented
+	);
 	ret &= add_condition(
 		"is_ideology_enabled",
 		// The wiki says this can only be used at COUNTRY and PROVINCE scopes but I see no reason why it can't be global
@@ -2010,15 +2108,11 @@ Returns true if the specified country exists. May also be used with [yes/no] to 
 		_parse_condition_node_value_callback<fixed_point_t, COUNTRY>,
 		_execute_condition_node_unimplemented
 	);
-/*
-relation
-Syntax:
-
-relation = { who = [tag/this/from] value = x }
-Use:
-Returns true if the specified country has a relation value equal to x or higher with the specified country.
-*/
-	// ret &= add_condition("relation", COMPLEX, COUNTRY);
+	ret &= add_condition(
+		"relation",
+		_parse_condition_node_who_value_callback,
+		_execute_condition_node_unimplemented
+	);
 	ret &= add_condition(
 		"religion",
 		_parse_condition_node_value_callback<Religion const*, POP | THIS | FROM>,
@@ -2078,15 +2172,14 @@ Returns true if the specified country has a relation value equal to x or higher 
 		_parse_condition_node_value_callback<TechnologySchool const*, COUNTRY>,
 		_execute_condition_node_unimplemented
 	);
-/*
-this_culture_union *HOD ONLY*
-Syntax:
-
-this_culture_union = [country tag] / THIS / FROM / this_union
-Use:
-Returns true if the nation specified has the same cultural union as the country in scope.
-*/
-	// ret &= add_condition("this_culture_union", IDENTIFIER, COUNTRY, NO_SCOPE, NO_IDENTIFIER, CULTURE_UNION);
+	static constexpr const char this_union_keyword[] = "this_union";
+	ret &= add_condition(
+		"this_culture_union",
+		_parse_condition_node_value_callback<
+			CountryDefinition const*, COUNTRY | THIS | FROM, _parse_condition_node_special_callback_keyword<this_union_keyword>
+		>,
+		_execute_condition_node_unimplemented
+	);
 	ret &= add_condition(
 		"total_amount_of_divisions",
 		_parse_condition_node_value_callback<integer_t, COUNTRY>,
@@ -2115,6 +2208,11 @@ Returns true if the nation specified has the same cultural union as the country 
 	// ret &= add_condition("total_sea_battles", INTEGER, COUNTRY);
 	// Doesn't show up or work in allow decision tooltips
 	// ret &= add_condition("total_sunk_by_us", INTEGER, COUNTRY);
+	ret &= add_condition(
+		"treasury",
+		_parse_condition_node_value_callback<fixed_point_t, COUNTRY>,
+		_execute_condition_node_unimplemented
+	);
 	ret &= add_condition(
 		"truce_with",
 		_parse_condition_node_value_callback<CountryDefinition const*, COUNTRY | THIS | FROM>,
@@ -2164,8 +2262,14 @@ Returns true if the nation specified has the same cultural union as the country 
 	);
 
 	/* State Scope Conditions */
-	// TODO - can be tag, THIS, FROM or "owner"
-	// ret &= add_condition("controlled_by", IDENTIFIER, STATE, NO_SCOPE, NO_IDENTIFIER, COUNTRY_TAG);
+	static constexpr const char owner_keyword[] = "owner";
+	ret &= add_condition(
+		"controlled_by",
+		_parse_condition_node_value_callback<
+			CountryDefinition const*, PROVINCE | THIS | FROM, _parse_condition_node_special_callback_keyword<owner_keyword>
+		>,
+		_execute_condition_node_unimplemented
+	);
 	ret &= add_condition(
 		"empty",
 		_parse_condition_node_value_callback<bool, PROVINCE>,
@@ -2176,10 +2280,25 @@ Returns true if the nation specified has the same cultural union as the country 
 		_parse_condition_node_value_callback<fixed_point_t, PROVINCE>,
 		_execute_condition_node_unimplemented
 	);
-	// TODO - "has_building = factory"
 	ret &= add_condition(
 		"has_building",
-		_parse_condition_node_value_callback<BuildingType const*, PROVINCE>,
+		_parse_condition_node_value_callback<
+			BuildingType const*, PROVINCE,
+			[](
+				Condition const& condition, DefinitionManager const& definition_manager, callback_t<argument_t&&> callback,
+				std::string_view str, bool& ret
+			) -> bool {
+				if (
+					definition_manager.get_economy_manager().get_building_type_manager().get_building_type_types()
+						.contains(str)
+				) {
+					ret = callback(std::string { str });
+					return true;
+				}
+
+				return false;
+			}
+		>,
 		_execute_condition_node_unimplemented
 	);
 	ret &= add_condition(
@@ -2207,17 +2326,11 @@ Returns true if the nation specified has the same cultural union as the country 
 		_parse_condition_node_value_callback<GoodDefinition const*, PROVINCE>,
 		_execute_condition_node_unimplemented
 	);
-/*
-work_available
-Syntax:
-
-work_available = {
-			worker = [type]
-}
-Use:
-Returns true if there is any work available for the specified pop type—meaning specifically is it possible for that pop type to be employed, not whether they would actually find work there or whether there's any unemployment in the province. If a province has factories, this command will always return true for craftsmen and clerks. If the province produces coal, this command will always return true for labourers and false for farmers.
-*/
-	// ret &= add_condition("work_available", COMPLEX, STATE);
+	ret &= add_condition(
+		"work_available",
+		_parse_condition_node_value_callback<std::vector<PopType const*>, PROVINCE>,
+		_execute_condition_node_unimplemented
+	);
 
 	/* Province Scope Conditions */
 	ret &= add_condition(
@@ -2280,7 +2393,13 @@ Returns true if there is any work available for the specified pop type—meaning
 		_parse_condition_node_value_callback<bool, PROVINCE>,
 		_execute_condition_node_unimplemented
 	);
-	// ret &= add_condition("is_accepted_culture", IDENTIFIER | BOOLEAN, PROVINCE, NO_SCOPE, NO_IDENTIFIER, COUNTRY_TAG);
+	ret &= add_condition(
+		"is_accepted_culture",
+		_parse_condition_node_value_callback<
+			CountryDefinition const*, PROVINCE | POP | THIS | FROM, _parse_condition_node_special_callback_bool
+		>,
+		_execute_condition_node_unimplemented
+	);
 	ret &= add_condition(
 		"is_capital",
 		_parse_condition_node_value_callback<bool, PROVINCE>,
@@ -2296,7 +2415,13 @@ Returns true if there is any work available for the specified pop type—meaning
 		_parse_condition_node_value_callback<bool, PROVINCE>,
 		_execute_condition_node_unimplemented
 	);
-	// ret &= add_condition("is_primary_culture", IDENTIFIER | BOOLEAN, PROVINCE, NO_SCOPE, NO_IDENTIFIER, COUNTRY_TAG);
+	ret &= add_condition(
+		"is_primary_culture",
+		_parse_condition_node_value_callback<
+			CountryDefinition const*, PROVINCE | POP | THIS | FROM, _parse_condition_node_special_callback_bool
+		>,
+		_execute_condition_node_unimplemented
+	);
 	ret &= add_condition(
 		"is_state_capital",
 		_parse_condition_node_value_callback<bool, PROVINCE>,
@@ -2447,31 +2572,7 @@ Returns true if there is any work available for the specified pop type—meaning
 		);
 	}
 
-	// const auto import_identifiers = [this, &ret](
-	// 	std::vector<std::string_view> const& identifiers,
-	// 	value_type_t value_type,
-	// 	scope_type_t scope,
-	// 	scope_type_t scope_change = NO_SCOPE,
-	// 	identifier_type_t key_identifier_type = NO_IDENTIFIER,
-	// 	identifier_type_t value_identifier_type = NO_IDENTIFIER
-	// ) -> void {
-	// 	for (std::string_view const& identifier : identifiers) {
-	// 		ret &= add_condition(
-	// 			identifier, value_type, scope, scope_change,
-	// 			key_identifier_type, value_identifier_type
-	// 		);
-	// 	}
-	// };
-
 	/* Scopes from other registries */
-	// import_identifiers(
-	// 	definition_manager.get_country_definition_manager().get_country_definition_identifiers(),
-	// 	GROUP,
-	// 	COUNTRY,
-	// 	COUNTRY,
-	// 	COUNTRY_TAG,
-	// 	NO_IDENTIFIER
-	// );
 	for (CountryDefinition const& country : definition_manager.get_country_definition_manager().get_country_definitions()) {
 		ret &= add_condition(
 			country.get_identifier(),
@@ -2487,23 +2588,32 @@ Returns true if there is any work available for the specified pop type—meaning
 		);
 	}
 
-	// import_identifiers(
-	// 	definition_manager.get_map_definition().get_region_identifiers(),
-	// 	GROUP,
-	// 	COUNTRY,
-	// 	STATE,
-	// 	REGION,
-	// 	NO_IDENTIFIER
-	// );
+	for (Region const& region : definition_manager.get_map_definition().get_regions()) {
+		ret &= add_condition(
+			region.get_identifier(),
+			_parse_condition_node_list_callback<PROVINCE>,
+			_execute_condition_node_list_multi_scope_callback<expect_true, require_all>(
+				[&region](
+					Condition const& condition, InstanceManager const& instance_manager, scope_t const& current_scope,
+					scope_t const& this_scope, scope_t const& from_scope
+				) -> std::vector<scope_t> {
+					std::vector<ProvinceDefinition const*> const& region_provinces = region.get_provinces();
 
-	// import_identifiers(
-	// 	definition_manager.get_map_definition().get_province_definition_identifiers(),
-	// 	GROUP,
-	// 	COUNTRY,
-	// 	PROVINCE,
-	// 	PROVINCE_ID,
-	// 	NO_IDENTIFIER
-	// );
+					std::vector<scope_t> region_province_scopes;
+					region_province_scopes.reserve(region_provinces.size());
+
+					for (ProvinceDefinition const* province : region_provinces) {
+						region_province_scopes.push_back(
+							&instance_manager.get_map_instance().get_province_instance_from_definition(*province)
+						);
+					}
+
+					return region_province_scopes;
+				}
+			)
+		);
+	}
+
 	for (ProvinceDefinition const& province : definition_manager.get_map_definition().get_province_definitions()) {
 		ret &= add_condition(
 			province.get_identifier(),
@@ -2520,14 +2630,6 @@ Returns true if there is any work available for the specified pop type—meaning
 	}
 
 	/* Conditions from other registries */
-	// import_identifiers(
-	// 	definition_manager.get_politics_manager().get_ideology_manager().get_ideology_identifiers(),
-	// 	REAL,
-	// 	COUNTRY,
-	// 	NO_SCOPE,
-	// 	IDEOLOGY,
-	// 	NO_IDENTIFIER
-	// );
 	for (Ideology const& ideology : definition_manager.get_politics_manager().get_ideology_manager().get_ideologies()) {
 		ret &= add_condition(
 			ideology.get_identifier(),
@@ -2536,14 +2638,6 @@ Returns true if there is any work available for the specified pop type—meaning
 		);
 	}
 
-	// import_identifiers(
-	// 	definition_manager.get_politics_manager().get_issue_manager().get_reform_group_identifiers(),
-	// 	IDENTIFIER,
-	// 	COUNTRY,
-	// 	NO_SCOPE,
-	// 	REFORM_GROUP,
-	// 	REFORM
-	// );
 	for (ReformGroup const& reform_group : definition_manager.get_politics_manager().get_issue_manager().get_reform_groups()) {
 		ret &= add_condition(
 			reform_group.get_identifier(),
@@ -2552,23 +2646,13 @@ Returns true if there is any work available for the specified pop type—meaning
 		);
 	}
 
-	// import_identifiers(
-	// 	definition_manager.get_politics_manager().get_issue_manager().get_reform_identifiers(),
-	// 	REAL,
-	// 	COUNTRY,
-	// 	NO_SCOPE,
-	// 	REFORM,
-	// 	NO_IDENTIFIER
-	// );
-
-	// import_identifiers(
-	// 	definition_manager.get_politics_manager().get_issue_manager().get_issue_identifiers(),
-	// 	REAL,
-	// 	COUNTRY,
-	// 	NO_SCOPE,
-	// 	ISSUE,
-	// 	NO_IDENTIFIER
-	// );
+	for (Reform const& reform : definition_manager.get_politics_manager().get_issue_manager().get_reforms()) {
+		ret &= add_condition(
+			reform.get_identifier(),
+			_parse_condition_node_value_callback<fixed_point_t, COUNTRY>,
+			_execute_condition_node_unimplemented
+		);
+	}
 
 	for (IssueGroup const& issue_group : definition_manager.get_politics_manager().get_issue_manager().get_issue_groups()) {
 		ret &= add_condition(
@@ -2601,23 +2685,14 @@ Returns true if there is any work available for the specified pop type—meaning
 		);
 	}
 
-	// import_identifiers(
-	// 	definition_manager.get_pop_manager().get_pop_type_identifiers(),
-	// 	REAL,
-	// 	COUNTRY,
-	// 	NO_SCOPE,
-	// 	POP_TYPE,
-	// 	NO_IDENTIFIER
-	// );
+	for (PopType const& pop_type : definition_manager.get_pop_manager().get_pop_types()) {
+		ret &= add_condition(
+			pop_type.get_identifier(),
+			_parse_condition_node_value_callback<fixed_point_t, COUNTRY>,
+			_execute_condition_node_unimplemented
+		);
+	}
 
-	// import_identifiers(
-	// 	definition_manager.get_research_manager().get_technology_manager().get_technology_identifiers(),
-	// 	BOOLEAN_INT,
-	// 	COUNTRY,
-	// 	NO_SCOPE,
-	// 	TECHNOLOGY,
-	// 	NO_IDENTIFIER
-	// );
 	for (
 		Technology const& technology : definition_manager.get_research_manager().get_technology_manager().get_technologies()
 	) {
@@ -2629,14 +2704,6 @@ Returns true if there is any work available for the specified pop type—meaning
 		);
 	}
 
-	// import_identifiers(
-	// 	definition_manager.get_economy_manager().get_good_definition_manager().get_good_definition_identifiers(),
-	// 	INTEGER,
-	// 	COUNTRY,
-	// 	NO_SCOPE,
-	// 	TRADE_GOOD,
-	// 	NO_IDENTIFIER
-	// );
 	for (
 		GoodDefinition const& good :
 			definition_manager.get_economy_manager().get_good_definition_manager().get_good_definitions()
