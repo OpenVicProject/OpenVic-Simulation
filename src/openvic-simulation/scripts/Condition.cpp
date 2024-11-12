@@ -20,6 +20,11 @@ using scope_t = ConditionNode::scope_t;
 static constexpr std::string_view THIS_KEYWORD = "THIS";
 static constexpr std::string_view FROM_KEYWORD = "FROM";
 
+// Used for this_culture_union
+static constexpr const char this_union_keyword[] = "this_union";
+// Used for controlled_by
+static constexpr const char owner_keyword[] = "owner";
+
 ConditionNode::ConditionNode(
 	Condition const* new_condition,
 	argument_t&& new_argument
@@ -38,6 +43,126 @@ bool ConditionNode::execute(
 	return condition->get_execute_callback()(
 		*condition, instance_manager, current_scope, this_scope, from_scope, argument
 	);
+}
+
+struct print_condition_node_visitor_t {
+	std::ostream& stream;
+	size_t indent = 0;
+	static constexpr size_t indent_width = 2;
+	Condition const* last_condition = nullptr;
+
+	void print(ConditionNode const& node) {
+		last_condition = node.get_condition();
+		stream << last_condition << " = ";
+		std::visit(*this, node.get_argument());
+	}
+	void print_newline_indent() {
+		stream << "\n" << std::setw(indent * indent_width) << "";
+	}
+	template<typename P1, typename P2>
+	void print_pair(
+		std::string_view first_key, std::string_view second_key, std::pair<P1, P2> const& values
+	) {
+		stream << "{";
+		indent++;
+		print_newline_indent();
+		stream << first_key << " = " << values.first;
+		print_newline_indent();
+		stream << second_key << " = " << values.second;
+		indent--;
+		print_newline_indent();
+		stream << "}";
+	}
+	void operator()(no_argument_t const& arg) {
+		stream << "<NO_ARGUMENT>";
+	}
+	void operator()(this_argument_t const& arg) {
+		stream << THIS_KEYWORD;
+	}
+	void operator()(from_argument_t const& arg) {
+		stream << FROM_KEYWORD;
+	}
+	void operator()(special_argument_t const& arg) {
+		const std::string_view identifier =
+			last_condition != nullptr ? last_condition->get_identifier() : std::string_view {};
+		if (identifier == "this_culture_union") {
+			stream << this_union_keyword;
+		} else if (identifier == "controlled_by") {
+			stream << owner_keyword;
+		} else {
+			stream << "<SPECIAL_ARGUMENT>";
+		}
+	}
+	void operator()(std::vector<ConditionNode> const& arg) {
+		stream << "{";
+
+		if (!arg.empty()) {
+			indent++;
+
+			for (ConditionNode const& child : arg) {
+				print_newline_indent();
+				print(child);
+			}
+
+			indent--;
+			print_newline_indent();
+		}
+
+		stream << "}";
+	}
+	void operator()(bool const& arg) {
+		stream << (arg ? "yes" : "no");
+	}
+	void operator()(std::pair<PopType const*, fixed_point_t> const& arg) {
+		print_pair("type", "value", arg);
+	}
+	void operator()(std::pair<bool, bool> const& arg) {
+		print_pair(
+			"in_whole_capital_state", "limit_to_world_greatest_level",
+			std::pair { arg.first ? "yes" : "no", arg.second ? "yes" : "no" }
+		);
+	}
+	void operator()(std::pair<Ideology const*, fixed_point_t> const& arg) {
+		print_pair("ideology", "value", arg);
+	}
+	void operator()(std::vector<PopType const*> const& arg) {
+		stream << "{";
+
+		if (!arg.empty()) {
+			indent++;
+
+			for (PopType const* pop_type : arg) {
+				print_newline_indent();
+				stream << "worker = " << pop_type;
+			}
+
+			indent--;
+			print_newline_indent();
+		}
+
+		stream << "}";
+	}
+	void operator()(std::pair<CountryDefinition const*, fixed_point_t> const& arg) {
+		print_pair("who", "value", arg);
+	}
+	void operator()(std::pair<this_argument_t, fixed_point_t> const& arg) {
+		print_pair("who", "value", std::pair { THIS_KEYWORD, arg.second });
+	}
+	void operator()(std::pair<from_argument_t, fixed_point_t> const& arg) {
+		print_pair("who", "value", std::pair { FROM_KEYWORD, arg.second });
+	}
+	void operator()(std::pair<std::string, fixed_point_t> const& arg) {
+		print_pair("which", "value", arg);
+	}
+	void operator()(auto const& arg) {
+		stream << arg;
+	}
+};
+
+std::ostream& OpenVic::operator<<(std::ostream& stream, ConditionNode const& node) {
+	print_condition_node_visitor_t { stream }.print(node);
+
+	return stream;
 }
 
 Condition::Condition(
@@ -2172,7 +2297,6 @@ bool ConditionManager::setup_conditions(DefinitionManager const& definition_mana
 		_parse_condition_node_value_callback<TechnologySchool const*, COUNTRY>,
 		_execute_condition_node_unimplemented
 	);
-	static constexpr const char this_union_keyword[] = "this_union";
 	ret &= add_condition(
 		"this_culture_union",
 		_parse_condition_node_value_callback<
@@ -2262,7 +2386,6 @@ bool ConditionManager::setup_conditions(DefinitionManager const& definition_mana
 	);
 
 	/* State Scope Conditions */
-	static constexpr const char owner_keyword[] = "owner";
 	ret &= add_condition(
 		"controlled_by",
 		_parse_condition_node_value_callback<

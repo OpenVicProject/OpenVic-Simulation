@@ -140,8 +140,8 @@ bool EventManager::load_event_file(IssueManager const& issue_manager, ast::NodeC
 			bool triggered_only = false, major = false, fire_only_once = false, allows_multiple_instances = false,
 				news = false, election = false;
 			IssueGroup const* election_issue_group = nullptr;
-			ConditionScript trigger { initial_scope, initial_scope, NO_SCOPE };
-			ConditionalWeight mean_time_to_happen { initial_scope, initial_scope, NO_SCOPE };
+			ConditionScript trigger { initial_scope, COUNTRY, NO_SCOPE };
+			ConditionalWeight mean_time_to_happen { initial_scope, COUNTRY, NO_SCOPE };
 			EffectScript immediate;
 			std::vector<Event::EventOption> options;
 
@@ -167,8 +167,8 @@ bool EventManager::load_event_file(IssueManager const& issue_manager, ast::NodeC
 					EffectScript effect;
 					ConditionalWeight ai_chance {
 						initial_scope,
-						initial_scope,
-						COUNTRY | PROVINCE // TODO - decide which to use?
+						COUNTRY,
+						COUNTRY
 					};
 
 					bool ret = expect_dictionary_keys_and_default(

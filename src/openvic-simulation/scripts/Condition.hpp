@@ -222,6 +222,8 @@ namespace OpenVic {
 		) const;
 	};
 
+	std::ostream& operator<<(std::ostream& stream, ConditionNode const& node);
+
 	struct Condition : HasIdentifier {
 		friend struct ConditionManager;
 
