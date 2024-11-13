@@ -90,7 +90,8 @@ bool InstanceManager::setup() {
 		definition_manager.get_crime_manager().get_crime_modifiers(),
 		definition_manager.get_pop_manager().get_pop_types(),
 		definition_manager.get_military_manager().get_unit_type_manager().get_regiment_types(),
-		definition_manager.get_military_manager().get_unit_type_manager().get_ship_types()
+		definition_manager.get_military_manager().get_unit_type_manager().get_ship_types(),
+		definition_manager.get_pop_manager().get_stratas()
 	);
 
 	game_instance_setup = true;

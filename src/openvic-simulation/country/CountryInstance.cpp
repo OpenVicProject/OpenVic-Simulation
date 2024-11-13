@@ -1,5 +1,7 @@
 #include "CountryInstance.hpp"
 
+#include <cstdint>
+
 #include "openvic-simulation/country/CountryDefinition.hpp"
 #include "openvic-simulation/defines/Define.hpp"
 #include "openvic-simulation/history/CountryHistory.hpp"
@@ -10,6 +12,8 @@
 #include "openvic-simulation/politics/Ideology.hpp"
 #include "openvic-simulation/research/Invention.hpp"
 #include "openvic-simulation/research/Technology.hpp"
+#include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
+#include "openvic-simulation/types/SliderValue.hpp"
 
 using namespace OpenVic;
 
@@ -28,7 +32,8 @@ CountryInstance::CountryInstance(
 	decltype(crime_unlock_levels)::keys_t const& crime_keys,
 	decltype(pop_type_distribution)::keys_t const& pop_type_keys,
 	decltype(regiment_type_unlock_levels)::keys_t const& regiment_type_unlock_levels_keys,
-	decltype(ship_type_unlock_levels)::keys_t const& ship_type_unlock_levels_keys
+	decltype(ship_type_unlock_levels)::keys_t const& ship_type_unlock_levels_keys,
+	decltype(tax_rate_by_strata)::keys_t const& strata_keys
 ) : /* Main attributes */
 	country_definition { new_country_definition },
 	colour { ERROR_COLOUR },
@@ -56,6 +61,8 @@ CountryInstance::CountryInstance(
 
 	/* Budget */
 	cash_stockpile { 0 },
+	tax_rate_by_strata { &strata_keys },
+	tariff_rate {},
 
 	/* Technology */
 	technology_unlock_levels { &technology_keys },
@@ -278,6 +285,14 @@ bool CountryInstance::add_reform(Reform const& new_reform) {
 	} else {
 		return true;
 	}
+}
+
+void CountryInstance::set_strata_tax_rate(Strata const& strata, const StandardSliderValue::int_type new_value) {
+	tax_rate_by_strata[strata].set_value(new_value);
+}
+
+void CountryInstance::set_tariff_rate(const StandardSliderValue::int_type new_value) {
+	tariff_rate.set_value(new_value);
 }
 
 template<UnitType::branch_t Branch>
@@ -974,8 +989,8 @@ void CountryInstance::update_modifier_sum(Date today, StaticModifierCache const&
 	modifier_sum.add_modifier(static_modifier_cache.get_infamy(), country_source, infamy);
 	modifier_sum.add_modifier(static_modifier_cache.get_literacy(), country_source, national_literacy);
 	modifier_sum.add_modifier(static_modifier_cache.get_plurality(), country_source, plurality);
-	// TODO - difficulty modifiers, war, peace, debt_default_to, bad_debter, generalised_debt_default,
-	//        total_occupation, total_blockaded, in_bankrupcy
+	// TODO - difficulty modifiers, war, peace, debt_default_to, bad_debtor, generalised_debt_default,
+	//        total_occupation, total_blockaded, in_bankruptcy
 
 	// TODO - handle triggered modifiers
 
@@ -1198,7 +1213,7 @@ void CountryInstanceManager::update_rankings(Date today, DefineManager const& de
 	}
 
 	// Sort the great powers list by total rank, as pre-existing great powers may have changed rank order and new great
-	// powers will have beeen added to the end of the list regardless of rank.
+	// powers will have been added to the end of the list regardless of rank.
 	std::sort(great_powers.begin(), great_powers.end(), [](CountryInstance const* a, CountryInstance const* b) -> bool {
 		return a->get_total_rank() < b->get_total_rank();
 	});
@@ -1231,7 +1246,8 @@ bool CountryInstanceManager::generate_country_instances(
 	decltype(CountryInstance::crime_unlock_levels)::keys_t const& crime_keys,
 	decltype(CountryInstance::pop_type_distribution)::keys_t const& pop_type_keys,
 	decltype(CountryInstance::regiment_type_unlock_levels)::keys_t const& regiment_type_unlock_levels_keys,
-	decltype(CountryInstance::ship_type_unlock_levels)::keys_t const& ship_type_unlock_levels_keys
+	decltype(CountryInstance::ship_type_unlock_levels)::keys_t const& ship_type_unlock_levels_keys,
+	decltype(CountryInstance::tax_rate_by_strata):: keys_t const& strata_keys
 ) {
 	reserve_more(country_instances, country_definition_manager.get_country_definition_count());
 
@@ -1249,7 +1265,8 @@ bool CountryInstanceManager::generate_country_instances(
 			crime_keys,
 			pop_type_keys,
 			regiment_type_unlock_levels_keys,
-			ship_type_unlock_levels_keys
+			ship_type_unlock_levels_keys,
+			strata_keys
 		});
 	}
 
