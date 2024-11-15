@@ -49,6 +49,26 @@ namespace OpenVic {
 		);
 	};
 
+	#define DO_FOR_ALL_TYPES_OF_POP_INCOME(F)\
+		F(rgo_owner_income)\
+		F(rgo_worker_income)\
+		F(artisanal_income)\
+		F(factory_worker_income)\
+		F(factory_owner_income)\
+		F(unemployment_subsidies)\
+		F(pensions)\
+		F(government_salary_administration)\
+		F(government_salary_education)\
+		F(government_salary_military)\
+		F(event_and_decision_income)\
+		F(loan_interest_payments)
+	
+	#define DECLARE_POP_INCOME_STORES(income_type)\
+		fixed_point_t PROPERTY(income_type); 
+	
+	#define DECLARE_POP_INCOME_STORE_FUNCTIONS(name)\
+		void add_##name(const fixed_point_t pop_income);
+
 	/* REQUIREMENTS:
 	 * POP-18, POP-19, POP-20, POP-21, POP-34, POP-35, POP-36, POP-37
 	 */
@@ -84,6 +104,9 @@ namespace OpenVic {
 		fixed_point_t PROPERTY(everyday_needs_fulfilled);
 		fixed_point_t PROPERTY(luxury_needs_fulfilled);
 
+		DO_FOR_ALL_TYPES_OF_POP_INCOME(DECLARE_POP_INCOME_STORES);
+		#undef DECLARE_POP_INCOME_STORES
+		
 		size_t PROPERTY(max_supported_regiments);
 
 		Pop(PopBase const& pop_base, decltype(ideologies)::keys_t const& ideology_keys);
@@ -104,8 +127,10 @@ namespace OpenVic {
 			const fixed_point_t pop_size_per_regiment_multiplier
 		);
 
-		void add_rgo_owner_income(const fixed_point_t income);
-		void add_rgo_worker_income(const fixed_point_t income);
+		DO_FOR_ALL_TYPES_OF_POP_INCOME(DECLARE_POP_INCOME_STORE_FUNCTIONS)
+		#undef DECLARE_POP_INCOME_STORE_FUNCTIONS
+		void clear_all_income();
+
 	};
 
 	struct Strata : HasIdentifier {
@@ -346,3 +371,6 @@ namespace OpenVic {
 		bool parse_scripts(DefinitionManager const& definition_manager);
 	};
 }
+#ifndef KEEP_DO_FOR_ALL_TYPES_OF_INCOME 
+	#undef DO_FOR_ALL_TYPES_OF_POP_INCOME
+#endif
