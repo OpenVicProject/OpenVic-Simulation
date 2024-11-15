@@ -1,5 +1,7 @@
 #include "MapInstance.hpp"
 
+#include <execution>
+
 #include "openvic-simulation/history/ProvinceHistory.hpp"
 #include "openvic-simulation/map/MapDefinition.hpp"
 #include "openvic-simulation/utility/Logger.hpp"
@@ -161,9 +163,15 @@ void MapInstance::update_gamestate(const Date today, DefineManager const& define
 }
 
 void MapInstance::map_tick(const Date today) {
-	for (ProvinceInstance& province : province_instances.get_items()) {
-		province.province_tick(today);
-	}
+	std::vector<ProvinceInstance>& provinces = province_instances.get_items();
+	std::for_each(
+		std::execution::par,
+		provinces.begin(),
+		provinces.end(),
+		[today](ProvinceInstance& province) -> void {
+			province.province_tick(today);
+		}
+	);
 }
 
 void MapInstance::initialise_for_new_game(
@@ -171,8 +179,14 @@ void MapInstance::initialise_for_new_game(
 	DefineManager const& define_manager
 ) {
 	update_gamestate(today, define_manager);
-	for (ProvinceInstance& province : province_instances.get_items()) {
-		province.initialise_rgo();
-		province.province_tick(today);
-	}
+	std::vector<ProvinceInstance>& provinces = province_instances.get_items();
+	std::for_each(
+		std::execution::par,
+		provinces.begin(),
+		provinces.end(),
+		[today](ProvinceInstance& province) -> void {
+			province.initialise_rgo();
+			province.province_tick(today);
+		}
+	);
 }
