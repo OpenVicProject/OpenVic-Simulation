@@ -114,6 +114,7 @@ namespace OpenVic {
 	struct ConditionScript;
 	struct CountryDefinition;
 	struct CountryInstance;
+	struct State;
 	struct ProvinceDefinition;
 	struct ProvinceInstance;
 	struct Pop;
@@ -192,6 +193,7 @@ namespace OpenVic {
 		using scope_t = std::variant<
 			no_scope_t,
 			CountryInstance const*,
+			State const*,
 			ProvinceInstance const*,
 			Pop const*
 		>;
