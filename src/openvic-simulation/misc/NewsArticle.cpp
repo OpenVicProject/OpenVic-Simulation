@@ -6,7 +6,7 @@
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;
 
-
+//nope: not all news things are typed, so we want a more general function
 node_callback_t Typed::expect_typed_objects(length_callback_t length_callback, callback_t<std::unique_ptr<Typed>&&> callback) {
 	return expect_dictionary_keys_and_length(
 		length_callback,
@@ -27,7 +27,10 @@ node_callback_t Typed::expect_typed_objects(length_callback_t length_callback, c
 		),
 		"on_printing", ZERO_OR_MORE, expect_dictionary_keys(
 			"effect", ZERO_OR_MORE, success_callback
-		)
+		)//,
+		/*"on_collection", ZERO_OR_ONE, expect_dictionary_keys(
+			"effect", ZERO_OR_MORE, success_callback
+		)*/
 	);
 
 }
@@ -39,10 +42,13 @@ node_callback_t Typed::expect_typed_objects(length_callback_t length_callback, c
 		 std::string_view picture_path, ConditionScript&& new_trigger);
 */
 
-Case::Case( size_t new_index, fixed_point_t new_value,
-fixed_point_t new_priority_add, std::string_view picture_path, ConditionScript&& new_trigger) 
+Case::Case(fixed_point_t new_value, fixed_point_t new_priority_add,
+ std::string_view picture_path, ConditionScript&& new_trigger) :
+ value { 0 }, priority_add { 0 }, picture { }, trigger { std::move(new_trigger) } {}
+ /*
+ size_t new_index, ...
  : HasIdentifier { std::to_string(new_index) }, value { 0 }, priority_add { 0 },
-  picture { }, trigger { std::move(new_trigger) } {}
+  picture { }, trigger { std::move(new_trigger) } {}*/
 
 bool Case::parse_scripts(DefinitionManager const& definition_manager) {
 	return trigger.parse_script(true, definition_manager);
@@ -62,6 +68,31 @@ bool Case::_fill_key_map(NodeTools::case_insensitive_key_map_t& key_map) {
 bool NewsPriority::_fill_key_map(NodeTools::case_insensitive_key_map_t &key_map){
 	return true;
 }
+
+
+
+
+/*
+bool UIManager::load_gfx_file(ast::NodeCPtr root) {
+	return expect_dictionary_keys(
+		"spriteTypes", ZERO_OR_ONE, Sprite::expect_sprites(
+			NodeTools::reserve_length_callback(sprites),
+			[this](std::unique_ptr<Sprite>&& sprite) -> bool {
+				return sprites.add_item(std::move(sprite), duplicate_warning_callback);
+			}
+		),
+		"fonts", ZERO_OR_ONE, _load_fonts("font"),
+		"objectTypes", ZERO_OR_ONE, Object::expect_objects(
+			NodeTools::reserve_length_callback(objects),
+			[this](std::unique_ptr<Object>&& object) -> bool {
+				return objects.add_item(std::move(object), duplicate_warning_callback);
+			}
+		)
+	)(root);
+}
+
+*/
+
 
 /*
 				EffectScript effect;

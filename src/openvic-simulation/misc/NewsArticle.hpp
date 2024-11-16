@@ -5,6 +5,7 @@
 #include <vector>
 #include "openvic-simulation/scripts/ConditionScript.hpp"
 #include "openvic-simulation/scripts/EffectScript.hpp"
+#include "openvic-simulation/types/HasIdentifier.hpp"
 #include "openvic-simulation/types/IdentifierRegistry.hpp"
 #include "openvic-simulation/scripts/ConditionalWeight.hpp"
 #include "openvic-simulation/types/OrderedContainers.hpp"
@@ -70,9 +71,6 @@ namespace OpenVic {
 		);
 	};
 
-
-
-
 	/*
 	case can have
 		0+ trigger = {}
@@ -84,7 +82,7 @@ namespace OpenVic {
 		having a trigger is optional though
 	*/
 
-	struct Case : HasIdentifier {
+	struct Case {//: HasIdentifier {
 		//friend struct NewsManager;
 
 	private:
@@ -94,7 +92,8 @@ namespace OpenVic {
 		fixed_point_t PROPERTY(priority_add);
 		std::string PROPERTY(picture);
 
-		Case(size_t new_index, fixed_point_t new_value, fixed_point_t new_priority_add,
+		//size_t new_index,
+		Case( fixed_point_t new_value, fixed_point_t new_priority_add,
 		 std::string_view picture_path, ConditionScript&& new_trigger);
 
 		bool parse_scripts(DefinitionManager const& definition_manager);
@@ -189,6 +188,8 @@ namespace OpenVic {
 			std::vector<std::string> PROPERTY(pictures);
 			ConditionScript PROPERTY(trigger);
 
+			bool parse_scripts(DefinitionManager const& definition_manager);
+
 			PictureCase(ConditionScript&& trigger_new, std::vector<std::string> pictures_new);
 
 		public:
@@ -200,6 +201,8 @@ namespace OpenVic {
 
 			ConditionScript PROPERTY(trigger);
 			std::vector<std::string> PROPERTY(text);
+
+			bool parse_scripts(DefinitionManager const& definition_manager);
 
 			TextCase(ConditionScript&& trigger_new, std::vector<std::string> text_new);
 
@@ -283,6 +286,7 @@ namespace OpenVic {
 	protected:
 		OnPrinting();
 
+		bool parse_scripts(DefinitionManager const& definition_manager);
 		bool _fill_key_map(NodeTools::case_insensitive_key_map_t& key_map) override;
 
 	public:
@@ -303,27 +307,30 @@ namespace OpenVic {
 		1 effect
 			0?+ clear_news_scopes = {type = string limit = { ... }}
 	*/
-	class OnCollection {
-		friend std::unique_ptr<OnCollection> std::make_unique<OnCollection>();
+	class OnCollection : HasIdentifier {
+		//friend std::unique_ptr<OnCollection> std::make_unique<OnCollection>();
+		friend struct NewsManager;
 	//public:
 
 	private:
 		std::string PROPERTY(type);
 		EffectScript PROPERTY(effect);
 
+		bool parse_scripts(DefinitionManager const& definition_manager);
+
+		
 	protected:
 		OnCollection();
 
-		bool _fill_key_map(NodeTools::case_insensitive_key_map_t& key_map);
+		//bool _fill_key_map(NodeTools::case_insensitive_key_map_t& key_map);
 
 	public:
 		OnCollection(OnCollection&&) = default;
-		virtual ~OnCollection() = default;
+		//virtual ~OnCollection() = default;
 
 		//OV_DETAIL_GET_TYPE
 
 	};
-
 
 	/*
 	TODO
@@ -368,13 +375,14 @@ namespace OpenVic {
 		std::string PROPERTY(gui_window);
 		std::vector<Article> PROPERTY(articles);
 		TitleImage PROPERTY(title_image);
-		//using sfx_asset_map_t = deque_ordered_map<godot::StringName, godot::Ref<godot::AudioStreamWAV>>;
-		identifier_int_map PROPERTY(article_limits_map);
 		// map < IDENTIFIER, INT >
+		identifier_int_map PROPERTY(article_limits_map);
+		
 
 	protected:
 		Style();
 
+		bool parse_scripts(DefinitionManager const& definition_manager);
 		bool _fill_key_map(NodeTools::case_insensitive_key_map_t& key_map) override;
 
 	public:
@@ -388,8 +396,35 @@ namespace OpenVic {
 
 
 	struct NewsManager {
-	private:
-		//IdentifierRegistry<Pattern> IDENTIFIER_REGISTRY(patterns);
+	public:
+		//Pattern is a combination of the first 3 here
+		//considering they all go together, we build more Pattern objects ourselves from orphan Generator and priorities
+		NamedInstanceRegistry<GeneratorSelector> IDENTIFIER_REGISTRY(generator_selector);
+		NamedInstanceRegistry<NewsPriority> IDENTIFIER_REGISTRY(news_priority);
+		NamedInstanceRegistry<GenerateArticle> IDENTIFIER_REGISTRY(generate_article);
+		NamedInstanceRegistry<Pattern> IDENTIFIER_REGISTRY(patterns);
+
+		NamedInstanceRegistry<OnPrinting> IDENTIFIER_REGISTRY(on_printing);
+		IdentifierRegistry<OnCollection> IDENTIFIER_REGISTRY(on_collection);
+		/*
+		Constraints not satisfied for alias template 'IdentifierRegistry'
+		 [with Value = OpenVic::OnCollection,
+		  StorageInfo = OpenVic::RegistryStorageInfoVector,
+		  Case = OpenVic::StringMapCaseSensitive]clang(template_arg_list_constraints_not_satisfied)
+
+IdentifierRegistry.hpp(489, 3): Because 'OpenVic::OnCollection' does not satisfy 'HasGetIdentifier'
+HasIdentifier.hpp(56, 7): Because 't.get_identifier()' would be invalid: 'get_identifier'
+ is a private member of 'OpenVic::HasIdentifier'
+		????????
+		*/
+		NamedInstanceRegistry<Style> IDENTIFIER_REGISTRY(style);
+
+		//GenerateArticle
+
+
+		//OnPrinting
+		//OnCollection
+		//Style
 
 		/*
 		TODO
@@ -405,7 +440,11 @@ namespace OpenVic {
 			1? unlabelled string "SHORT_DESC ...."
 		*/
 		//>>>>>>> map < identifier, std::vector< std::vector<std::string> > >
-		identifier_str_collection_map news_str_collection;//PROPERTY(limits_map);
+
+	private:
+		// for the immediate above ^^, reason for vector vector is that there can be multiple cases
+		// per identifier (1st str)
+		identifier_str_collection_map news_str_collection;
 
 
 		/*
@@ -415,85 +454,13 @@ namespace OpenVic {
 		We should find the identifiers in the various components of a pattern (type property)
 		*/
 		// map < IDENTIFIER, INT >
-		identifier_int_map article_tensions;//PROPERTY(limits_map);
+		identifier_int_map article_tensions;
 
 		//Songs.txt
 	public:
 		bool load_songs_file(ast::NodeCPtr root);
 		bool parse_scripts(DefinitionManager const& definition_manager);
 	};
-
-
-
-
-
-
-
-/*
-	template<typename... Context>
-	class Named : public LoadBase<Context...> {
-		std::string PROPERTY(name);
-
-	protected:
-		Named() = default;
-
-		virtual bool _fill_key_map(NodeTools::case_insensitive_key_map_t& key_map, Context...) override {
-			using namespace OpenVic::NodeTools;
-			return add_key_map_entries(key_map, "name", ONE_EXACTLY, expect_string(assign_variable_callback_string(name)));
-		}
-
-		void _set_name(std::string_view new_name) {
-			if (!name.empty()) {
-				Logger::warning("Overriding scene name ", name, " with ", new_name);
-			}
-			name = new_name;
-		}
-
-	public:
-		Named(Named&&) = default;
-		virtual ~Named() = default;
-
-		OV_DETAIL_GET_TYPE
-	};
-*/
-
-
-	/*struct NewsManager {
-	private:
-		IdentifierRegistry<Case> IDENTIFIER_REGISTRY(case);
-		//Songs.txt
-	public:
-		bool load_songs_file(ast::NodeCPtr root);
-		bool parse_scripts(DefinitionManager const& definition_manager);
-	};*/
-
-
-/*
-	class Actor final : public Object {
-		friend std::unique_ptr<Actor> std::make_unique<Actor>();
-
-	public:
-		struct attachment....
-	private:
-		fixed_point_t PROPERTY(scale);
-		std::string PROPERTY(model_file);
-		std::optional<Animation> PROPERTY(idle_animation);
-		std::vector<Attachment> PROPERTY(attachments);
-
-		bool _set_animation(std::string_view name, std::string_view file, fixed_point_t scroll_time);
-
-	protected:
-		Actor();
-
-		bool _fill_key_map(NodeTools::case_insensitive_key_map_t& key_map) override;
-
-	public:
-		Actor(Actor&&) = default;
-		virtual ~Actor() = default;
-
-		OV_DETAIL_GET_TYPE
-	};
-*/
 
 
 }
