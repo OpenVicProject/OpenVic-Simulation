@@ -5,7 +5,6 @@
 #include "openvic-simulation/map/MapInstance.hpp"
 #include "openvic-simulation/map/ProvinceDefinition.hpp"
 #include "openvic-simulation/map/ProvinceInstance.hpp"
-#include "openvic-simulation/utility/Utility.hpp"
 
 using namespace OpenVic;
 using namespace OpenVic::colour_literals;
@@ -13,13 +12,17 @@ using namespace OpenVic::colour_literals;
 Mapmode::Mapmode(
 	std::string_view new_identifier,
 	index_t new_index,
-	colour_func_t new_colour_func
+	colour_func_t new_colour_func,
+	std::string_view new_localisation_key,
+	bool new_parchment_mapmode_allowed
 ) : HasIdentifier { new_identifier },
 	HasIndex { new_index },
-	colour_func { new_colour_func } {}
+	colour_func { std::move(new_colour_func) },
+	localisation_key { new_localisation_key.empty() ? new_identifier : new_localisation_key },
+	parchment_mapmode_allowed { new_parchment_mapmode_allowed } {}
 
 const Mapmode Mapmode::ERROR_MAPMODE {
-	"mapmode_error", 0, [](MapInstance const&, ProvinceInstance const& province) -> base_stripe_t {
+	"mapmode_error", -1, [](MapInstance const&, ProvinceInstance const& province) -> base_stripe_t {
 		return { 0xFFFF0000_argb, colour_argb_t::null() };
 	}
 };
@@ -30,7 +33,12 @@ Mapmode::base_stripe_t Mapmode::get_base_stripe_colours(
 	return colour_func ? colour_func(map_instance, province) : colour_argb_t::null();
 }
 
-bool MapmodeManager::add_mapmode(std::string_view identifier, Mapmode::colour_func_t colour_func) {
+bool MapmodeManager::add_mapmode(
+	std::string_view identifier,
+	Mapmode::colour_func_t colour_func,
+	std::string_view localisation_key,
+	bool parchment_mapmode_allowed
+) {
 	if (identifier.empty()) {
 		Logger::error("Invalid mapmode identifier - empty!");
 		return false;
@@ -39,26 +47,28 @@ bool MapmodeManager::add_mapmode(std::string_view identifier, Mapmode::colour_fu
 		Logger::error("Mapmode colour function is null for identifier: ", identifier);
 		return false;
 	}
-	return mapmodes.add_item({ identifier, mapmodes.size(), colour_func });
+	return mapmodes.add_item({
+		identifier,
+		static_cast<Mapmode::index_t>(mapmodes.size()),
+		colour_func,
+		localisation_key,
+		parchment_mapmode_allowed
+	});
 }
 
-bool MapmodeManager::generate_mapmode_colours(MapInstance const& map_instance, Mapmode::index_t index, uint8_t* target) const {
+bool MapmodeManager::generate_mapmode_colours(MapInstance const& map_instance, Mapmode const* mapmode, uint8_t* target) const {
 	if (target == nullptr) {
 		Logger::error("Mapmode colour target pointer is null!");
 		return false;
 	}
 
 	bool ret = true;
-	Mapmode const* mapmode = get_mapmode_by_index(index);
 	if (mapmode == nullptr) {
-		// Not an error if mapmodes haven't yet been loaded,
-		// e.g. if we want to allocate the province colour
-		// texture before mapmodes are loaded.
-		if (!(mapmodes_empty() && index == 0)) {
-			Logger::error("Invalid mapmode index: ", index);
-			ret = false;
-		}
 		mapmode = &Mapmode::ERROR_MAPMODE;
+		Logger::error(
+			"Trying to generate mapmode colours using null mapmode! Defaulting to \"", mapmode->get_identifier(), "\""
+		);
+		ret = false;
 	}
 
 	Mapmode::base_stripe_t* target_stripes = reinterpret_cast<Mapmode::base_stripe_t*>(target);
@@ -140,156 +150,165 @@ static constexpr auto shaded_mapmode(fixed_point_map_t<T const*> const&(Province
 }
 
 bool MapmodeManager::setup_mapmodes() {
+	if (mapmodes_are_locked()) {
+		Logger::error("Cannot setup mapmodes - already locked!");
+		return false;
+	}
+
 	bool ret = true;
 
-	using mapmode_definition_t = std::pair<std::string, Mapmode::colour_func_t>;
-	const std::vector<mapmode_definition_t> mapmode_definitions {
-		{
-			"mapmode_terrain",
-			[](MapInstance const&, ProvinceInstance const& province) -> Mapmode::base_stripe_t {
-				return colour_argb_t::null();
-			}
+	// Default number of mapmodes
+	reserve_mapmodes(22);
+
+	// The order of mapmodes matches their numbering, but is different from the order in which their buttons appear
+	ret &= add_mapmode(
+		"mapmode_terrain",
+		[](MapInstance const&, ProvinceInstance const& province) -> Mapmode::base_stripe_t {
+			return colour_argb_t::null();
 		},
-		{
-			"mapmode_political", get_colour_mapmode(&ProvinceInstance::get_owner)
-		},
-		{
-			/* TEST MAPMODE, TO BE REMOVED */
-			"mapmode_province",
-			[](MapInstance const&, ProvinceInstance const& province) -> Mapmode::base_stripe_t {
-				return colour_argb_t { province.get_province_definition().get_colour(), ALPHA_VALUE };
-			}
-		},
-		{
-			"mapmode_region", get_colour_mapmode(&ProvinceDefinition::get_region)
-		},
-		{
-			/* TEST MAPMODE, TO BE REMOVED */
-			"mapmode_index",
-			[](MapInstance const& map_instance, ProvinceInstance const& province) -> Mapmode::base_stripe_t {
-				const colour_argb_t::value_type f = colour_argb_t::colour_traits::component_from_fraction(
-					province.get_province_definition().get_index(),
-					map_instance.get_map_definition().get_province_definition_count() + 1
+		"MAPMODE_1",
+		false // Parchment mapmode not allowed
+	);
+	ret &= add_mapmode("mapmode_political", get_colour_mapmode(&ProvinceInstance::get_owner), "MAPMODE_2");
+	ret &= add_mapmode("mapmode_militancy", Mapmode::ERROR_MAPMODE.get_colour_func(), "MAPMODE_3");
+	ret &= add_mapmode("mapmode_diplomatic", Mapmode::ERROR_MAPMODE.get_colour_func(), "MAPMODE_4");
+	ret &= add_mapmode("mapmode_region", get_colour_mapmode(&ProvinceDefinition::get_region), "MAPMODE_5");
+	ret &= add_mapmode(
+		"mapmode_infrastructure",
+		[](MapInstance const&, ProvinceInstance const& province) -> Mapmode::base_stripe_t {
+			BuildingInstance const* railroad = province.get_building_by_identifier("railroad");
+			if (railroad != nullptr) {
+				const colour_argb_t::value_type val = colour_argb_t::colour_traits::component_from_fraction(
+					railroad->get_level(), railroad->get_building_type().get_max_level() + 1, 0.5f, 1.0f
 				);
-				return colour_argb_t::fill_as(f).with_alpha(ALPHA_VALUE);
-			}
-		},
-		{
-			/* Non-vanilla mapmode, still of use in game. */
-			"mapmode_terrain_type", get_colour_mapmode(&ProvinceInstance::get_terrain_type)
-		},
-		{
-			"mapmode_rgo", get_colour_mapmode(&ProvinceInstance::get_rgo_good)
-		},
-		{
-			"mapmode_infrastructure",
-			[](MapInstance const&, ProvinceInstance const& province) -> Mapmode::base_stripe_t {
-				BuildingInstance const* railroad = province.get_building_by_identifier("railroad");
-				if (railroad != nullptr) {
-					const colour_argb_t::value_type val = colour_argb_t::colour_traits::component_from_fraction(
-						railroad->get_level(), railroad->get_building_type().get_max_level() + 1, 0.5f, 1.0f
-					);
-					switch (railroad->get_expansion_state()) {
-					case BuildingInstance::ExpansionState::CannotExpand:
-						return colour_argb_t { val, 0, 0, ALPHA_VALUE };
-					case BuildingInstance::ExpansionState::CanExpand:
-						return colour_argb_t { 0, 0, val, ALPHA_VALUE };
-					default:
-						return colour_argb_t { 0, val, 0, ALPHA_VALUE };
-					}
-				}
-				return colour_argb_t::null();
-			}
-		},
-		{
-			"mapmode_population",
-			[](MapInstance const& map_instance, ProvinceInstance const& province) -> Mapmode::base_stripe_t {
-				// TODO - explore non-linear scaling to have more variation among non-massive provinces
-				// TODO - when selecting a province, only show the population of provinces controlled (or owned?)
-				// by the same country, relative to the most populous province in that set of provinces
-				if (!province.get_province_definition().is_water()) {
-					const colour_argb_t::value_type val = colour_argb_t::colour_traits::component_from_fraction(
-						province.get_total_population(), map_instance.get_highest_province_population() + 1, 0.1f, 1.0f
-					);
+				switch (railroad->get_expansion_state()) {
+				case BuildingInstance::ExpansionState::CannotExpand:
+					return colour_argb_t { val, 0, 0, ALPHA_VALUE };
+				case BuildingInstance::ExpansionState::CanExpand:
+					return colour_argb_t { 0, 0, val, ALPHA_VALUE };
+				default:
 					return colour_argb_t { 0, val, 0, ALPHA_VALUE };
-				} else {
-					return colour_argb_t::null();
 				}
 			}
+			return colour_argb_t::null();
 		},
-		{
-			"mapmode_culture", shaded_mapmode(&ProvinceInstance::get_culture_distribution)
-		},
-		{
-			/* Non-vanilla mapmode, still of use in game. */
-			"mapmode_religion", shaded_mapmode(&ProvinceInstance::get_religion_distribution)
-		},
-		{
-			/* TEST MAPMODE, TO BE REMOVED */
-			"mapmode_adjacencies",
-			[](MapInstance const& map_instance, ProvinceInstance const& province) -> Mapmode::base_stripe_t {
-				ProvinceInstance const* selected_province = map_instance.get_selected_province();
-
-				if (selected_province != nullptr) {
-					ProvinceDefinition const& selected_province_definition = selected_province->get_province_definition();
-
-					if (selected_province == &province) {
-						return (0xFFFFFF_argb).with_alpha(ALPHA_VALUE);
-					}
-
-					ProvinceDefinition const* province_definition = &province.get_province_definition();
-
-					colour_argb_t base = colour_argb_t::null(), stripe = colour_argb_t::null();
-					ProvinceDefinition::adjacency_t const* adj =
-						selected_province_definition.get_adjacency_to(province_definition);
-
-					if (adj != nullptr) {
-						colour_argb_t::integer_type base_int;
-						switch (adj->get_type()) {
-							using enum ProvinceDefinition::adjacency_t::type_t;
-						case LAND:       base_int = 0x00FF00; break;
-						case WATER:      base_int = 0x0000FF; break;
-						case COASTAL:    base_int = 0xF9D199; break;
-						case IMPASSABLE: base_int = 0x8B4513; break;
-						case STRAIT:     base_int = 0x00FFFF; break;
-						case CANAL:      base_int = 0x888888; break;
-						default:         base_int = 0xFF0000; break;
-						}
-						base = colour_argb_t::from_integer(base_int).with_alpha(ALPHA_VALUE);
-						stripe = base;
-					}
-
-					if (selected_province_definition.has_adjacency_going_through(province_definition)) {
-						stripe = (0xFFFF00_argb).with_alpha(ALPHA_VALUE);
-					}
-
-					return { base, stripe };
-				}
-
+		"MAPMODE_6"
+	);
+	ret &= add_mapmode("mapmode_colonial", Mapmode::ERROR_MAPMODE.get_colour_func(), "MAPMODE_7");
+	ret &= add_mapmode("mapmode_administrative", Mapmode::ERROR_MAPMODE.get_colour_func(), "MAPMODE_8");
+	ret &= add_mapmode("mapmode_recruitment", Mapmode::ERROR_MAPMODE.get_colour_func(), "MAPMODE_9");
+	ret &= add_mapmode("mapmode_national_focus", Mapmode::ERROR_MAPMODE.get_colour_func(), "MAPMODE_10");
+	ret &= add_mapmode("mapmode_rgo", get_colour_mapmode(&ProvinceInstance::get_rgo_good), "MAPMODE_11");
+	ret &= add_mapmode(
+		"mapmode_population",
+		[](MapInstance const& map_instance, ProvinceInstance const& province) -> Mapmode::base_stripe_t {
+			// TODO - explore non-linear scaling to have more variation among non-massive provinces
+			// TODO - when selecting a province, only show the population of provinces controlled (or owned?)
+			// by the same country, relative to the most populous province in that set of provinces
+			if (!province.get_province_definition().is_water()) {
+				const colour_argb_t::value_type val = colour_argb_t::colour_traits::component_from_fraction(
+					province.get_total_population(), map_instance.get_highest_province_population() + 1, 0.1f, 1.0f
+				);
+				return colour_argb_t { 0, val, 0, ALPHA_VALUE };
+			} else {
 				return colour_argb_t::null();
 			}
 		},
-		{
-			"mapmode_port", [](MapInstance const&, ProvinceInstance const& province) -> Mapmode::base_stripe_t {
-				ProvinceDefinition const& province_definition = province.get_province_definition();
+		"MAPMODE_12"
+	);
+	ret &= add_mapmode("mapmode_culture", shaded_mapmode(&ProvinceInstance::get_culture_distribution), "MAPMODE_13");
+	ret &= add_mapmode("mapmode_sphere", Mapmode::ERROR_MAPMODE.get_colour_func(), "MAPMODE_14");
+	ret &= add_mapmode("mapmode_supply", Mapmode::ERROR_MAPMODE.get_colour_func(), "MAPMODE_15");
+	ret &= add_mapmode("mapmode_party_loyalty", Mapmode::ERROR_MAPMODE.get_colour_func(), "MAPMODE_16");
+	ret &= add_mapmode("mapmode_ranking", Mapmode::ERROR_MAPMODE.get_colour_func(), "MAPMODE_17");
+	ret &= add_mapmode("mapmode_migration", Mapmode::ERROR_MAPMODE.get_colour_func(), "MAPMODE_18");
+	ret &= add_mapmode("mapmode_civilisation_level", Mapmode::ERROR_MAPMODE.get_colour_func(), "MAPMODE_19");
+	ret &= add_mapmode("mapmode_relations", Mapmode::ERROR_MAPMODE.get_colour_func(), "MAPMODE_20");
+	ret &= add_mapmode("mapmode_crisis", Mapmode::ERROR_MAPMODE.get_colour_func(), "MAPMODE_21");
+	ret &= add_mapmode(
+		"mapmode_naval",
+		[](MapInstance const&, ProvinceInstance const& province) -> Mapmode::base_stripe_t {
+			ProvinceDefinition const& province_definition = province.get_province_definition();
 
-				if (province_definition.has_port()) {
-					return (0xFFFFFF_argb).with_alpha(ALPHA_VALUE);
-				} else if (!province_definition.is_water()) {
-					return (0x333333_argb).with_alpha(ALPHA_VALUE);
-				} else {
-					return colour_argb_t::null();
-				}
+			if (province_definition.has_port()) {
+				return (0xFFFFFF_argb).with_alpha(ALPHA_VALUE);
+			} else if (!province_definition.is_water()) {
+				return (0x333333_argb).with_alpha(ALPHA_VALUE);
+			} else {
+				return colour_argb_t::null();
 			}
+		},
+		"MAPMODE_22"
+	);
+
+	/*
+	*** CUSTOM MAPMODES FOR TESTING ***
+	- For these mapmodes to have a button in-game you either need to remove the same number of default mapmodes
+	  or add more mapmode buttons (GUIIconButton nodes with path ^".../Menubar/menubar/mapmode_<index>")
+
+	ret &= add_mapmode(
+		"mapmode_province",
+		[](MapInstance const&, ProvinceInstance const& province) -> Mapmode::base_stripe_t {
+			return colour_argb_t { province.get_province_definition().get_colour(), ALPHA_VALUE };
 		}
-	};
+	);
+	ret &= add_mapmode(
+		"mapmode_index",
+		[](MapInstance const& map_instance, ProvinceInstance const& province) -> Mapmode::base_stripe_t {
+			const colour_argb_t::value_type f = colour_argb_t::colour_traits::component_from_fraction(
+				province.get_province_definition().get_index(),
+				map_instance.get_map_definition().get_province_definition_count() + 1
+			);
+			return colour_argb_t::fill_as(f).with_alpha(ALPHA_VALUE);
+		}
+	);
+	ret &= add_mapmode("mapmode_religion", shaded_mapmode(&ProvinceInstance::get_religion_distribution));
+	ret &= add_mapmode("mapmode_terrain_type", get_colour_mapmode(&ProvinceInstance::get_terrain_type));
+	ret &= add_mapmode(
+		"mapmode_adjacencies",
+		[](MapInstance const& map_instance, ProvinceInstance const& province) -> Mapmode::base_stripe_t {
+			ProvinceInstance const* selected_province = map_instance.get_selected_province();
 
-	mapmodes.reset();
-	reserve_mapmodes(mapmode_definitions.size());
+			if (selected_province != nullptr) {
+				ProvinceDefinition const& selected_province_definition = selected_province->get_province_definition();
 
-	for (mapmode_definition_t const& mapmode : mapmode_definitions) {
-		ret &= add_mapmode(mapmode.first, mapmode.second);
-	}
+				if (selected_province == &province) {
+					return (0xFFFFFF_argb).with_alpha(ALPHA_VALUE);
+				}
+
+				ProvinceDefinition const* province_definition = &province.get_province_definition();
+
+				colour_argb_t base = colour_argb_t::null(), stripe = colour_argb_t::null();
+				ProvinceDefinition::adjacency_t const* adj =
+					selected_province_definition.get_adjacency_to(province_definition);
+
+				if (adj != nullptr) {
+					colour_argb_t::integer_type base_int;
+					switch (adj->get_type()) {
+						using enum ProvinceDefinition::adjacency_t::type_t;
+					case LAND:       base_int = 0x00FF00; break;
+					case WATER:      base_int = 0x0000FF; break;
+					case COASTAL:    base_int = 0xF9D199; break;
+					case IMPASSABLE: base_int = 0x8B4513; break;
+					case STRAIT:     base_int = 0x00FFFF; break;
+					case CANAL:      base_int = 0x888888; break;
+					default:         base_int = 0xFF0000; break;
+					}
+					base = colour_argb_t::from_integer(base_int).with_alpha(ALPHA_VALUE);
+					stripe = base;
+				}
+
+				if (selected_province_definition.has_adjacency_going_through(province_definition)) {
+					stripe = (0xFFFF00_argb).with_alpha(ALPHA_VALUE);
+				}
+
+				return { base, stripe };
+			}
+
+			return colour_argb_t::null();
+		}
+	);
+	*/
 
 	lock_mapmodes();
 
