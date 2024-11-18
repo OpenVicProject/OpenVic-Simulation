@@ -44,6 +44,7 @@ namespace OpenVic {
 
 		bool setup(
 			BuildingTypeManager const& building_type_manager,
+			ModifierEffectCache const& modifier_effect_cache,
 			decltype(ProvinceInstance::pop_type_distribution)::keys_t const& pop_type_keys,
 			decltype(ProvinceInstance::ideology_distribution)::keys_t const& ideology_keys
 		);
@@ -54,7 +55,7 @@ namespace OpenVic {
 
 		void update_modifier_sums(const Date today, StaticModifierCache const& static_modifier_cache);
 		void update_gamestate(const Date today, DefineManager const& define_manager);
-		void map_tick(const Date today, ModifierEffectCache const& modifier_effect_cache);
-		void initialise_for_new_game(const Date today, DefineManager const& define_manager, ModifierEffectCache const& modifier_effect_cache);
+		void map_tick(const Date today);
+		void initialise_for_new_game(const Date today, DefineManager const& define_manager);
 	};
 }

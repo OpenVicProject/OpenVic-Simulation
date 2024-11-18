@@ -18,7 +18,9 @@
 using namespace OpenVic;
 
 ProvinceInstance::ProvinceInstance(
-	ProvinceDefinition const& new_province_definition, decltype(pop_type_distribution)::keys_t const& pop_type_keys,
+	ModifierEffectCache const& new_modifier_effect_cache,
+	ProvinceDefinition const& new_province_definition,
+	decltype(pop_type_distribution)::keys_t const& pop_type_keys,
 	decltype(ideology_distribution)::keys_t const& ideology_keys
 ) : HasIdentifierAndColour { new_province_definition },
 	province_definition { new_province_definition },
@@ -33,7 +35,7 @@ ProvinceInstance::ProvinceInstance(
 	event_modifiers {},
 	slave { false },
 	crime { nullptr },
-	rgo { pop_type_keys },
+	rgo { new_modifier_effect_cache, pop_type_keys },
 	buildings { "buildings", false },
 	armies {},
 	navies {},
@@ -368,14 +370,11 @@ void ProvinceInstance::update_gamestate(const Date today, DefineManager const& d
 	_update_pops(define_manager);
 }
 
-void ProvinceInstance::province_tick(const Date today, ModifierEffectCache const& modifier_effect_cache) {
+void ProvinceInstance::province_tick(const Date today) {
 	for (BuildingInstance& building : buildings.get_items()) {
 		building.tick(today);
 	}
-	rgo.rgo_tick(
-		*this,
-		modifier_effect_cache
-	);
+	rgo.rgo_tick();
 }
 
 template<UnitType::branch_t Branch>
@@ -414,6 +413,8 @@ bool ProvinceInstance::setup(BuildingTypeManager const& building_type_manager) {
 		Logger::error("Cannot setup province ", get_identifier(), " - buildings already locked!");
 		return false;
 	}
+
+	rgo.setup_location_ptr(*this);
 
 	bool ret = true;
 
@@ -479,8 +480,8 @@ bool ProvinceInstance::apply_history_to_province(ProvinceHistoryEntry const& ent
 	return ret;
 }
 
-void ProvinceInstance::initialise_rgo(ModifierEffectCache const& modifier_effect_cache) {
-	rgo.initialise_rgo_size_multiplier(*this, modifier_effect_cache);
+void ProvinceInstance::initialise_rgo() {
+	rgo.initialise_rgo_size_multiplier();
 }
 
 void ProvinceInstance::setup_pop_test_values(IssueManager const& issue_manager) {

@@ -43,6 +43,7 @@ ProvinceDefinition::index_t MapInstance::get_selected_province_index() const {
 
 bool MapInstance::setup(
 	BuildingTypeManager const& building_type_manager,
+	ModifierEffectCache const& modifier_effect_cache,
 	decltype(ProvinceInstance::pop_type_distribution)::keys_t const& pop_type_keys,
 	decltype(ProvinceInstance::ideology_distribution)::keys_t const& ideology_keys
 ) {
@@ -60,7 +61,12 @@ bool MapInstance::setup(
 	province_instances.reserve(map_definition.get_province_definition_count());
 
 	for (ProvinceDefinition const& province : map_definition.get_province_definitions()) {
-		ret &= province_instances.add_item({ province, pop_type_keys, ideology_keys });
+		ret &= province_instances.add_item({ 
+			modifier_effect_cache, 
+			province,
+			pop_type_keys,
+			ideology_keys
+		});
 	}
 
 	province_instances.lock();
@@ -152,20 +158,19 @@ void MapInstance::update_gamestate(const Date today, DefineManager const& define
 	state_manager.update_gamestate();
 }
 
-void MapInstance::map_tick(const Date today, ModifierEffectCache const& modifier_effect_cache) {
+void MapInstance::map_tick(const Date today) {
 	for (ProvinceInstance& province : province_instances.get_items()) {
-		province.province_tick(today, modifier_effect_cache);
+		province.province_tick(today);
 	}
 }
 
 void MapInstance::initialise_for_new_game(
 	const Date today,
-	DefineManager const& define_manager,
-	ModifierEffectCache const& modifier_effect_cache
+	DefineManager const& define_manager
 ) {
 	update_gamestate(today, define_manager);
 	for (ProvinceInstance& province : province_instances.get_items()) {
-		province.initialise_rgo(modifier_effect_cache);
-		province.province_tick(today, modifier_effect_cache);
+		province.initialise_rgo();
+		province.province_tick(today);
 	}
 }

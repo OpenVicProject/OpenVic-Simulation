@@ -28,6 +28,7 @@ namespace OpenVic {
 	struct ProvinceHistoryEntry;
 	struct IssueManager;
 	struct CountryInstanceManager;
+	struct ModifierEffectCache;
 
 	template<UnitType::branch_t>
 	struct UnitInstanceGroup;
@@ -103,7 +104,9 @@ namespace OpenVic {
 		size_t PROPERTY(max_supported_regiments);
 
 		ProvinceInstance(
-			ProvinceDefinition const& new_province_definition, decltype(pop_type_distribution)::keys_t const& pop_type_keys,
+			ModifierEffectCache const& new_modifier_effect_cache,
+			ProvinceDefinition const& new_province_definition,
+			decltype(pop_type_distribution)::keys_t const& pop_type_keys,
 			decltype(ideology_distribution)::keys_t const& ideology_keys
 		);
 
@@ -150,7 +153,7 @@ namespace OpenVic {
 		std::vector<ModifierSum::modifier_entry_t> get_contributing_modifiers(ModifierEffect const& effect) const;
 
 		void update_gamestate(const Date today, DefineManager const& define_manager);
-		void province_tick(const Date today, ModifierEffectCache const& modifier_effect_cache);
+		void province_tick(const Date today);
 
 		template<UnitType::branch_t Branch>
 		bool add_unit_instance_group(UnitInstanceGroup<Branch>& group);
@@ -160,7 +163,7 @@ namespace OpenVic {
 		bool setup(BuildingTypeManager const& building_type_manager);
 		bool apply_history_to_province(ProvinceHistoryEntry const& entry, CountryInstanceManager& country_manager);
 
-		void initialise_rgo(ModifierEffectCache const& modifier_effect_cache);
+		void initialise_rgo();
 
 		void setup_pop_test_values(IssueManager const& issue_manager);
 		plf::colony<Pop>& get_mutable_pops();

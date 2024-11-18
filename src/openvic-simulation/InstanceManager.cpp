@@ -61,7 +61,7 @@ void InstanceManager::tick() {
 	Logger::info("Tick: ", today);
 
 	// Tick...
-	map_instance.map_tick(today, definition_manager.get_modifier_manager().get_modifier_effect_cache());
+	map_instance.map_tick(today);
 
 	set_gamestate_needs_update();
 }
@@ -75,6 +75,7 @@ bool InstanceManager::setup() {
 	bool ret = good_instance_manager.setup(definition_manager.get_economy_manager().get_good_definition_manager());
 	ret &= map_instance.setup(
 		definition_manager.get_economy_manager().get_building_type_manager(),
+		definition_manager.get_modifier_manager().get_modifier_effect_cache(),
 		definition_manager.get_pop_manager().get_pop_types(),
 		definition_manager.get_politics_manager().get_ideology_manager().get_ideologies()
 	);
@@ -142,8 +143,7 @@ bool InstanceManager::load_bookmark(Bookmark const* new_bookmark) {
 		update_modifier_sums();
 		map_instance.initialise_for_new_game(
 			today,
-			definition_manager.get_define_manager(),
-			definition_manager.get_modifier_manager().get_modifier_effect_cache()
+			definition_manager.get_define_manager()
 		);
 	}
 
