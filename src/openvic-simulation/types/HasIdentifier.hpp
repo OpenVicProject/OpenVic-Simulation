@@ -105,7 +105,7 @@ namespace OpenVic {
 	template<typename T>
 	concept HasGetIdentifierAndGetColour = HasGetIdentifier<T> && HasGetColour<T>;
 
-	template<std::unsigned_integral T = size_t>
+	template<std::integral T = size_t>
 	class HasIndex {
 	public:
 		using index_t = T;
@@ -125,6 +125,6 @@ namespace OpenVic {
 
 	template<typename T>
 	concept HasGetIndex = requires(T const& t) {
-		{ t.get_index() } -> std::unsigned_integral;
+		{ t.get_index() } -> std::integral;
 	};
 }

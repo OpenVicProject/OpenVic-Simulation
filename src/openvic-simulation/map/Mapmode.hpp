@@ -11,7 +11,7 @@ namespace OpenVic {
 	struct MapInstance;
 	struct ProvinceInstance;
 
-	struct Mapmode : HasIdentifier, HasIndex<> {
+	struct Mapmode : HasIdentifier, HasIndex<int32_t> {
 		friend struct MapmodeManager;
 
 		/* Bottom 32 bits are the base colour, top 32 are the stripe colour, both in ARGB format with the alpha channels
@@ -26,9 +26,18 @@ namespace OpenVic {
 		using colour_func_t = std::function<base_stripe_t(MapInstance const&, ProvinceInstance const&)>;
 
 	private:
-		const colour_func_t colour_func;
+		// Not const so they don't have to be copied when the Mapmode is moved
+		colour_func_t PROPERTY(colour_func);
+		std::string PROPERTY(localisation_key);
+		const bool PROPERTY_CUSTOM_PREFIX(parchment_mapmode_allowed, is);
 
-		Mapmode(std::string_view new_identifier, index_t new_index, colour_func_t new_colour_func);
+		Mapmode(
+			std::string_view new_identifier,
+			index_t new_index,
+			colour_func_t new_colour_func,
+			std::string_view new_localisation_key = {},
+			bool new_parchment_mapmode_allowed = true
+		);
 
 	public:
 		static const Mapmode ERROR_MAPMODE;
@@ -45,14 +54,19 @@ namespace OpenVic {
 	public:
 		MapmodeManager() = default;
 
-		bool add_mapmode(std::string_view identifier, Mapmode::colour_func_t colour_func);
+		bool add_mapmode(
+			std::string_view identifier,
+			Mapmode::colour_func_t colour_func,
+			std::string_view localisation_key = {},
+			bool parchment_mapmode_allowed = true
+		);
 
 		/* The mapmode colour image contains of a list of base colours and stripe colours. Each colour is four bytes
 		 * in RGBA format, with the alpha value being used to interpolate with the terrain colour, so A = 0 is fully terrain
 		 * and A = 255 is fully the RGB colour packaged with A. The base and stripe colours for each province are packed
 		 * together adjacently, so each province's entry is 8 bytes long. The list contains ProvinceDefinition::MAX_INDEX + 1
 		 * entries, that is the maximum allowed number of provinces plus one for the index-zero "null province". */
-		bool generate_mapmode_colours(MapInstance const& map_instance, Mapmode::index_t index, uint8_t* target) const;
+		bool generate_mapmode_colours(MapInstance const& map_instance, Mapmode const* mapmode, uint8_t* target) const;
 
 		bool setup_mapmodes();
 	};
