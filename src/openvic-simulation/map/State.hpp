@@ -6,7 +6,7 @@
 #include <plf_colony.h>
 
 #include "openvic-simulation/map/ProvinceInstance.hpp"
-#include "openvic-simulation/pop/Pop.hpp"
+#include "openvic-simulation/pop/PopType.hpp"
 #include "openvic-simulation/utility/Getters.hpp"
 
 namespace OpenVic {
@@ -25,11 +25,11 @@ namespace OpenVic {
 		std::vector<ProvinceInstance*> PROPERTY(provinces);
 		ProvinceInstance::colony_status_t PROPERTY(colony_status);
 
-		Pop::pop_size_t PROPERTY(total_population);
+		pop_size_t PROPERTY(total_population);
 		fixed_point_t PROPERTY(average_literacy);
 		fixed_point_t PROPERTY(average_consciousness);
 		fixed_point_t PROPERTY(average_militancy);
-		IndexedMap<PopType, Pop::pop_size_t> PROPERTY(pop_type_distribution);
+		IndexedMap<PopType, pop_size_t> PROPERTY(pop_type_distribution);
 		IndexedMap<PopType, std::vector<Pop*>> PROPERTY(pops_cache_by_type);
 
 		fixed_point_t PROPERTY(industrial_power);

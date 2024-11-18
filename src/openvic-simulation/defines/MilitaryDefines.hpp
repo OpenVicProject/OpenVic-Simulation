@@ -1,9 +1,9 @@
 #pragma once
 
 #include "openvic-simulation/dataloader/NodeTools.hpp"
-#include "openvic-simulation/pop/Pop.hpp"
 #include "openvic-simulation/types/Date.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
+#include "openvic-simulation/types/PopSize.hpp"
 #include "openvic-simulation/utility/Getters.hpp"
 
 namespace OpenVic {
@@ -17,8 +17,8 @@ namespace OpenVic {
 		fixed_point_t PROPERTY(reinforce_speed);
 		fixed_point_t PROPERTY(combat_difficulty_impact);
 		size_t PROPERTY(base_combat_width);
-		Pop::pop_size_t PROPERTY(min_pop_size_for_regiment);
-		Pop::pop_size_t PROPERTY(pop_size_per_regiment);
+		pop_size_t PROPERTY(min_pop_size_for_regiment);
+		pop_size_t PROPERTY(pop_size_per_regiment);
 		fixed_point_t PROPERTY(soldier_to_pop_damage);
 		fixed_point_t PROPERTY(land_speed_modifier);
 		fixed_point_t PROPERTY(naval_speed_modifier);

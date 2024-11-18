@@ -797,7 +797,7 @@ void CountryInstance::_update_population() {
 	for (State const* state : states) {
 		total_population += state->get_total_population();
 
-		// TODO - change casting if Pop::pop_size_t changes type
+		// TODO - change casting if pop_size_t changes type
 		const fixed_point_t state_population = fixed_point_t::parse(state->get_total_population());
 		national_literacy += state->get_average_literacy() * state_population;
 		national_consciousness += state->get_average_consciousness() * state_population;

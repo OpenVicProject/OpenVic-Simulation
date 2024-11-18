@@ -16,7 +16,7 @@
 #include "openvic-simulation/misc/SoundEffect.hpp"
 #include "openvic-simulation/modifier/ModifierManager.hpp"
 #include "openvic-simulation/politics/PoliticsManager.hpp"
-#include "openvic-simulation/pop/Pop.hpp"
+#include "openvic-simulation/pop/PopType.hpp"
 #include "openvic-simulation/research/ResearchManager.hpp"
 #include "openvic-simulation/scripts/ScriptManager.hpp"
 

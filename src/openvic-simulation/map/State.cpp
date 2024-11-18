@@ -50,7 +50,7 @@ void State::update_gamestate() {
 	for (ProvinceInstance const* const province : provinces) {
 		total_population += province->get_total_population();
 
-		// TODO - change casting if Pop::pop_size_t changes type
+		// TODO - change casting if pop_size_t changes type
 		const fixed_point_t province_population = fixed_point_t::parse(province->get_total_population());
 		average_literacy += province->get_average_literacy() * province_population;
 		average_consciousness += province->get_average_consciousness() * province_population;

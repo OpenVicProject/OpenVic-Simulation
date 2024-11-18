@@ -21,8 +21,8 @@ namespace OpenVic {
 		IdentifierRegistry<ProvinceInstance> IDENTIFIER_REGISTRY_CUSTOM_INDEX_OFFSET(province_instance, 1);
 
 		ProvinceInstance* PROPERTY(selected_province); // is it right for this to be mutable? how about using an index instead?
-		Pop::pop_size_t PROPERTY(highest_province_population);
-		Pop::pop_size_t PROPERTY(total_map_population);
+		pop_size_t PROPERTY(highest_province_population);
+		pop_size_t PROPERTY(total_map_population);
 
 		StateManager PROPERTY_REF(state_manager);
 

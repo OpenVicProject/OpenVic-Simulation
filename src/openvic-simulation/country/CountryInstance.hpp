@@ -8,7 +8,7 @@
 #include "openvic-simulation/military/UnitInstanceGroup.hpp"
 #include "openvic-simulation/modifier/ModifierSum.hpp"
 #include "openvic-simulation/politics/Rule.hpp"
-#include "openvic-simulation/pop/Pop.hpp"
+#include "openvic-simulation/pop/PopType.hpp"
 #include "openvic-simulation/types/Date.hpp"
 #include "openvic-simulation/types/IdentifierRegistry.hpp"
 #include "openvic-simulation/types/IndexedMap.hpp"
@@ -135,11 +135,11 @@ namespace OpenVic {
 		Culture const* PROPERTY(primary_culture);
 		ordered_set<Culture const*> PROPERTY(accepted_cultures);
 		Religion const* PROPERTY(religion);
-		Pop::pop_size_t PROPERTY(total_population);
+		pop_size_t PROPERTY(total_population);
 		// TODO - population change over last 30 days
 		fixed_point_t PROPERTY(national_consciousness);
 		fixed_point_t PROPERTY(national_militancy);
-		IndexedMap<PopType, Pop::pop_size_t> PROPERTY(pop_type_distribution);
+		IndexedMap<PopType, pop_size_t> PROPERTY(pop_type_distribution);
 		size_t PROPERTY(national_focus_capacity)
 		// TODO - national foci
 

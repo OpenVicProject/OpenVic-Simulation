@@ -148,7 +148,7 @@ void MapInstance::update_gamestate(const Date today, DefineManager const& define
 		province.update_gamestate(today, define_manager);
 
 		// Update population stats
-		const Pop::pop_size_t province_population = province.get_total_population();
+		const pop_size_t province_population = province.get_total_population();
 		if (highest_province_population < province_population) {
 			highest_province_population = province_population;
 		}

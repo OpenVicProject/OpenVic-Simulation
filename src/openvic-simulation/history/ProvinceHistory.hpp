@@ -6,7 +6,7 @@
 #include "openvic-simulation/economy/BuildingType.hpp"
 #include "openvic-simulation/history/HistoryMap.hpp"
 #include "openvic-simulation/map/ProvinceInstance.hpp"
-#include "openvic-simulation/pop/Pop.hpp"
+#include "openvic-simulation/pop/PopType.hpp"
 #include "openvic-simulation/types/Date.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPointMap.hpp"
 #include "openvic-simulation/types/OrderedContainers.hpp"
