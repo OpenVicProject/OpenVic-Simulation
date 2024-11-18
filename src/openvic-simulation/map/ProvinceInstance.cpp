@@ -40,10 +40,12 @@ ProvinceInstance::ProvinceInstance(
 	pops {},
 	total_population { 0 },
 	pop_type_distribution { &pop_type_keys },
+	pops_cache_by_type { &pop_type_keys },
 	ideology_distribution { &ideology_keys },
 	culture_distribution {},
 	religion_distribution {},
-	max_supported_regiments { 0 } {}
+	max_supported_regiments { 0 }
+	{}
 
 GoodDefinition const* ProvinceInstance::get_rgo_good() const {
 	if (!rgo.is_valid()) { return nullptr; }
@@ -182,6 +184,10 @@ void ProvinceInstance::_update_pops(DefineManager const& define_manager) {
 	culture_distribution.clear();
 	religion_distribution.clear();
 
+	for (PopType const& pop_type : *pops_cache_by_type.get_keys()) {
+		pops_cache_by_type[pop_type].clear();
+	}
+
 	max_supported_regiments = 0;
 
 	MilitaryDefines const& military_defines = define_manager.get_military_defines();
@@ -202,6 +208,7 @@ void ProvinceInstance::_update_pops(DefineManager const& define_manager) {
 		average_militancy += pop.get_militancy();
 
 		pop_type_distribution[*pop.get_type()] += pop.get_size();
+		pops_cache_by_type[*pop.get_type()].push_back(&pop);
 		ideology_distribution += pop.get_ideologies();
 		culture_distribution[&pop.get_culture()] += pop.get_size();
 		religion_distribution[&pop.get_religion()] += pop.get_size();
@@ -354,17 +361,21 @@ bool ProvinceInstance::convert_rgo_worker_pops_to_equivalent(ProductionType cons
 	return is_valid_operation;
 }
 
-void ProvinceInstance::update_gamestate(Date today, DefineManager const& define_manager) {
+void ProvinceInstance::update_gamestate(const Date today, DefineManager const& define_manager) {
 	for (BuildingInstance& building : buildings.get_items()) {
 		building.update_gamestate(today);
 	}
 	_update_pops(define_manager);
 }
 
-void ProvinceInstance::tick(Date today) {
+void ProvinceInstance::province_tick(const Date today, ModifierEffectCache const& modifier_effect_cache) {
 	for (BuildingInstance& building : buildings.get_items()) {
 		building.tick(today);
 	}
+	rgo.rgo_tick(
+		*this,
+		modifier_effect_cache
+	);
 }
 
 template<UnitType::branch_t Branch>
@@ -468,8 +479,8 @@ bool ProvinceInstance::apply_history_to_province(ProvinceHistoryEntry const& ent
 	return ret;
 }
 
-void ProvinceInstance::initialise_for_new_game(ModifierEffectCache const& modifier_effect_cache) {
-	rgo.initialise_for_new_game(*this, modifier_effect_cache);
+void ProvinceInstance::initialise_rgo(ModifierEffectCache const& modifier_effect_cache) {
+	rgo.initialise_rgo_size_multiplier(*this, modifier_effect_cache);
 }
 
 void ProvinceInstance::setup_pop_test_values(IssueManager const& issue_manager) {

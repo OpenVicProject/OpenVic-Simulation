@@ -81,7 +81,7 @@ bool MapInstance::setup(
 }
 
 bool MapInstance::apply_history_to_provinces(
-	ProvinceHistoryManager const& history_manager, Date date, CountryInstanceManager& country_manager,
+	ProvinceHistoryManager const& history_manager, const Date date, CountryInstanceManager& country_manager,
 	IssueManager const& issue_manager
 ) {
 	bool ret = true;
@@ -128,41 +128,44 @@ bool MapInstance::apply_history_to_provinces(
 	return ret;
 }
 
-void MapInstance::update_modifier_sums(Date today, StaticModifierCache const& static_modifier_cache) {
+void MapInstance::update_modifier_sums(const Date today, StaticModifierCache const& static_modifier_cache) {
 	for (ProvinceInstance& province : province_instances.get_items()) {
 		province.update_modifier_sum(today, static_modifier_cache);
 	}
 }
 
-void MapInstance::update_gamestate(Date today, DefineManager const& define_manager) {
-	for (ProvinceInstance& province : province_instances.get_items()) {
-		province.update_gamestate(today, define_manager);
-	}
-	state_manager.update_gamestate();
-
-	// Update population stats
+void MapInstance::update_gamestate(const Date today, DefineManager const& define_manager) {
 	highest_province_population = 0;
 	total_map_population = 0;
+	
+	for (ProvinceInstance& province : province_instances.get_items()) {
+		province.update_gamestate(today, define_manager);
 
-	for (ProvinceInstance const& province : province_instances.get_items()) {
+		// Update population stats
 		const Pop::pop_size_t province_population = province.get_total_population();
-
 		if (highest_province_population < province_population) {
 			highest_province_population = province_population;
 		}
 
 		total_map_population += province_population;
 	}
+	state_manager.update_gamestate();
 }
 
-void MapInstance::tick(Date today) {
+void MapInstance::map_tick(const Date today, ModifierEffectCache const& modifier_effect_cache) {
 	for (ProvinceInstance& province : province_instances.get_items()) {
-		province.tick(today);
+		province.province_tick(today, modifier_effect_cache);
 	}
 }
 
-void MapInstance::initialise_for_new_game(ModifierEffectCache const& modifier_effect_cache){
+void MapInstance::initialise_for_new_game(
+	const Date today,
+	DefineManager const& define_manager,
+	ModifierEffectCache const& modifier_effect_cache
+) {
+	update_gamestate(today, define_manager);
 	for (ProvinceInstance& province : province_instances.get_items()) {
-		province.initialise_for_new_game(modifier_effect_cache);
+		province.initialise_rgo(modifier_effect_cache);
+		province.province_tick(today, modifier_effect_cache);
 	}
 }

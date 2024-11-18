@@ -23,8 +23,10 @@ State::State(
 	provinces { std::move(new_provinces) },
 	colony_status { new_colony_status },
 	pop_type_distribution { &pop_type_keys },
+	pops_cache_by_type { &pop_type_keys },
 	industrial_power { 0 },
-	max_supported_regiments { 0 } {}
+	max_supported_regiments { 0 }
+	{}
 
 std::string State::get_identifier() const {
 	return StringUtils::append_string_views(
@@ -41,7 +43,11 @@ void State::update_gamestate() {
 	pop_type_distribution.clear();
 	max_supported_regiments = 0;
 
-	for (ProvinceInstance const* province : provinces) {
+	for (PopType const& pop_type : *pops_cache_by_type.get_keys()) {
+		pops_cache_by_type[pop_type].clear();
+	}
+
+	for (ProvinceInstance const* const province : provinces) {
 		total_population += province->get_total_population();
 
 		// TODO - change casting if Pop::pop_size_t changes type
@@ -51,7 +57,16 @@ void State::update_gamestate() {
 		average_militancy += province->get_average_militancy() * province_population;
 
 		pop_type_distribution += province->get_pop_type_distribution();
-
+		IndexedMap<PopType, std::vector<Pop*>> const& province_pops_cache_by_type = province->get_pops_cache_by_type();
+		for (PopType const& pop_type : *province_pops_cache_by_type.get_keys()) {
+			std::vector<Pop*> const& province_pops_of_type = province_pops_cache_by_type[pop_type];
+			std::vector<Pop*>& state_pops_of_type = pops_cache_by_type[pop_type];
+			state_pops_of_type.insert(
+				state_pops_of_type.end(),
+				province_pops_of_type.begin(),
+				province_pops_of_type.end()
+			);
+		}
 		max_supported_regiments += province->get_max_supported_regiments();
 	}
 
