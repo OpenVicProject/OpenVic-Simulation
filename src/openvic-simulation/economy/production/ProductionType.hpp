@@ -3,7 +3,7 @@
 #include <openvic-dataloader/v2script/Parser.hpp>
 
 #include "openvic-simulation/economy/GoodDefinition.hpp"
-#include "openvic-simulation/pop/Pop.hpp"
+#include "openvic-simulation/pop/PopType.hpp"
 #include "openvic-simulation/scripts/ConditionScript.hpp"
 #include "openvic-simulation/types/IdentifierRegistry.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
@@ -44,7 +44,7 @@ namespace OpenVic {
 		const std::optional<Job> PROPERTY(owner);
 		std::vector<Job> PROPERTY(jobs);
 		const template_type_t PROPERTY(template_type);
-		const Pop::pop_size_t PROPERTY(base_workforce_size);
+		const pop_size_t PROPERTY(base_workforce_size);
 
 		GoodDefinition::good_definition_map_t PROPERTY(input_goods);
 		GoodDefinition const& PROPERTY(output_good);
@@ -62,7 +62,7 @@ namespace OpenVic {
 			const std::optional<Job> new_owner,
 			std::vector<Job>&& new_jobs,
 			const template_type_t new_template_type,
-			const Pop::pop_size_t new_base_workforce_size,
+			const pop_size_t new_base_workforce_size,
 			GoodDefinition::good_definition_map_t&& new_input_goods,
 			GoodDefinition const& new_output_good,
 			const fixed_point_t new_base_output_quantity,
@@ -102,7 +102,7 @@ namespace OpenVic {
 			std::optional<Job> owner,
 			std::vector<Job>&& jobs,
 			const ProductionType::template_type_t template_type,
-			const Pop::pop_size_t base_workforce_size,
+			const pop_size_t base_workforce_size,
 			GoodDefinition::good_definition_map_t&& input_goods,
 			GoodDefinition const* const output_good,
 			const fixed_point_t base_output_quantity,

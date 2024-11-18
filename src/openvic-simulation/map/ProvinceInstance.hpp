@@ -13,6 +13,7 @@
 #include "openvic-simulation/types/OrderedContainers.hpp"
 
 namespace OpenVic {
+	struct DefineManager;
 	struct MapInstance;
 	struct ProvinceDefinition;
 	struct TerrainType;
@@ -91,12 +92,12 @@ namespace OpenVic {
 		UNIT_BRANCHED_GETTER(get_unit_instance_groups, armies, navies);
 
 		plf::colony<Pop> PROPERTY(pops); // TODO - replace with a more easily vectorisable container?
-		Pop::pop_size_t PROPERTY(total_population);
+		pop_size_t PROPERTY(total_population);
 		// TODO - population change (growth + migration), monthly totals + breakdown by source/destination
 		fixed_point_t PROPERTY(average_literacy);
 		fixed_point_t PROPERTY(average_consciousness);
 		fixed_point_t PROPERTY(average_militancy);
-		IndexedMap<PopType, Pop::pop_size_t> PROPERTY(pop_type_distribution);
+		IndexedMap<PopType, pop_size_t> PROPERTY(pop_type_distribution);
 		IndexedMap<PopType, std::vector<Pop*>> PROPERTY(pops_cache_by_type);
 		IndexedMap<Ideology, fixed_point_t> PROPERTY(ideology_distribution);
 		fixed_point_map_t<Culture const*> PROPERTY(culture_distribution);

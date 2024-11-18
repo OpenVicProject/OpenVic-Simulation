@@ -66,9 +66,9 @@ void ResourceGatheringOperation::initialise_rgo_size_multiplier() {
 	ProvinceInstance& location = *location_ptr;
 	ProductionType const& production_type = *production_type_nullable;
 	std::vector<Job> const& jobs = production_type.get_jobs();
-	IndexedMap<PopType, Pop::pop_size_t> const& province_pop_type_distribution = location.get_pop_type_distribution();
+	IndexedMap<PopType, pop_size_t> const& province_pop_type_distribution = location.get_pop_type_distribution();
 	
-	Pop::pop_size_t total_worker_count_in_province = 0; //not counting equivalents
+	pop_size_t total_worker_count_in_province = 0; //not counting equivalents
 	for(Job const& job : jobs) {
 		total_worker_count_in_province += province_pop_type_distribution[*job.get_pop_type()];
 	}
@@ -124,16 +124,16 @@ void ResourceGatheringOperation::rgo_tick() {
 	
 	ProductionType const& production_type = *production_type_nullable;
 	std::vector<Job> const& jobs = production_type.get_jobs();
-	IndexedMap<PopType, Pop::pop_size_t> const& province_pop_type_distribution = location.get_pop_type_distribution();
+	IndexedMap<PopType, pop_size_t> const& province_pop_type_distribution = location.get_pop_type_distribution();
 	
-	Pop::pop_size_t total_worker_count_in_province = 0; //not counting equivalents
+	pop_size_t total_worker_count_in_province = 0; //not counting equivalents
 	for(Job const& job : jobs) {
 		total_worker_count_in_province += province_pop_type_distribution[*job.get_pop_type()];
 	}
 	
 	hire(total_worker_count_in_province);
 
-	Pop::pop_size_t total_owner_count_in_state_cache = 0;
+	pop_size_t total_owner_count_in_state_cache = 0;
 	std::vector<Pop*> const* owner_pops_cache = nullptr;
 
 	if (production_type.get_owner().has_value()) {
@@ -157,7 +157,7 @@ void ResourceGatheringOperation::rgo_tick() {
 	);	
 }
 
-void ResourceGatheringOperation::hire(const Pop::pop_size_t available_worker_count) {
+void ResourceGatheringOperation::hire(const pop_size_t available_worker_count) {
 	total_employees_count_cache = 0;
 	total_paid_employees_count_cache=0;
 	if (production_type_nullable == nullptr) {
@@ -186,7 +186,7 @@ void ResourceGatheringOperation::hire(const Pop::pop_size_t available_worker_cou
 		PopType const& pop_type = *pop.get_type();
 		for(Job const& job : jobs) {
 			if (job.get_pop_type() == &pop_type) {
-				const Pop::pop_size_t pop_size_to_hire = static_cast<Pop::pop_size_t>((proportion_to_hire * pop.get_size()).floor());
+				const pop_size_t pop_size_to_hire = static_cast<pop_size_t>((proportion_to_hire * pop.get_size()).floor());
 				employee_count_per_type_cache[pop_type] += pop_size_to_hire;
 				employees.emplace_back(pop, pop_size_to_hire);
 				total_employees_count_cache += pop_size_to_hire;
@@ -201,7 +201,7 @@ void ResourceGatheringOperation::hire(const Pop::pop_size_t available_worker_cou
 
 fixed_point_t ResourceGatheringOperation::produce(
 	std::vector<Pop*> const* const owner_pops_cache,
-	const Pop::pop_size_t total_owner_count_in_state_cache
+	const pop_size_t total_owner_count_in_state_cache
 ) {
 	const fixed_point_t size_modifier = calculate_size_modifier();
 	if (size_modifier == fixed_point_t::_0()){
@@ -226,7 +226,7 @@ fixed_point_t ResourceGatheringOperation::produce(
 		}
 
 		State const& state = *state_ptr;
-		const Pop::pop_size_t state_population = state.get_total_population();
+		const pop_size_t state_population = state.get_total_population();
 		Job const& owner_job = owner.value();
 
 		if (total_owner_count_in_state_cache > 0) {
@@ -266,7 +266,7 @@ fixed_point_t ResourceGatheringOperation::produce(
 	fixed_point_t throughput_from_workers = fixed_point_t::_0();
 	fixed_point_t output_from_workers = fixed_point_t::_1();
 	for (PopType const& pop_type : *employee_count_per_type_cache.get_keys()) {
-		const Pop::pop_size_t employees_of_type = employee_count_per_type_cache[pop_type];
+		const pop_size_t employees_of_type = employee_count_per_type_cache[pop_type];
 		
 		for(Job const& job : production_type.get_jobs()) {
 			if (job.get_pop_type() != &pop_type) {
@@ -303,9 +303,9 @@ fixed_point_t ResourceGatheringOperation::produce(
 
 void ResourceGatheringOperation::pay_employees(
 	const fixed_point_t revenue,
-	const Pop::pop_size_t total_worker_count_in_province,
+	const pop_size_t total_worker_count_in_province,
 	std::vector<Pop*> const* const owner_pops_cache,
-	const Pop::pop_size_t total_owner_count_in_state_cache
+	const pop_size_t total_owner_count_in_state_cache
 ) {
 	ProvinceInstance& location = *location_ptr;
 
@@ -348,7 +348,7 @@ void ResourceGatheringOperation::pay_employees(
 				continue;
 			}
 
-			const Pop::pop_size_t employee_size = employee.get_size();
+			const pop_size_t employee_size = employee.get_size();
 			const fixed_point_t income_for_this_pop = revenue_left * employee_size / total_paid_employees_count_cache;
 			employee_pop.add_rgo_worker_income(income_for_this_pop);
 			total_employee_income_cache += income_for_this_pop;

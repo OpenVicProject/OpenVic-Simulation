@@ -20,24 +20,24 @@ namespace OpenVic {
 		fixed_point_t PROPERTY(unsold_quantity_yesterday);
 		fixed_point_t PROPERTY_RW(size_multiplier);
 		std::vector<Employee> PROPERTY(employees);
-		Pop::pop_size_t PROPERTY(max_employee_count_cache);
-		Pop::pop_size_t PROPERTY(total_employees_count_cache);
-		Pop::pop_size_t PROPERTY(total_paid_employees_count_cache);
+		pop_size_t PROPERTY(max_employee_count_cache);
+		pop_size_t PROPERTY(total_employees_count_cache);
+		pop_size_t PROPERTY(total_paid_employees_count_cache);
 		fixed_point_t PROPERTY(total_owner_income_cache);
 		fixed_point_t PROPERTY(total_employee_income_cache);
-		IndexedMap<PopType, Pop::pop_size_t> PROPERTY(employee_count_per_type_cache);
+		IndexedMap<PopType, pop_size_t> PROPERTY(employee_count_per_type_cache);
 
 		fixed_point_t calculate_size_modifier() const;
-		void hire(const Pop::pop_size_t available_worker_count);
+		void hire(const pop_size_t available_worker_count);
 		fixed_point_t produce(
 			std::vector<Pop*> const* const owner_pops_cache,
-			const Pop::pop_size_t total_owner_count_in_state_cache
+			const pop_size_t total_owner_count_in_state_cache
 		);
 		void pay_employees(
 			const fixed_point_t revenue,
-			const Pop::pop_size_t total_worker_count_in_province,
+			const pop_size_t total_worker_count_in_province,
 			std::vector<Pop*> const* const owner_pops_cache,
-			const Pop::pop_size_t total_owner_count_in_state_cache
+			const pop_size_t total_owner_count_in_state_cache
 		);
 
 	public:

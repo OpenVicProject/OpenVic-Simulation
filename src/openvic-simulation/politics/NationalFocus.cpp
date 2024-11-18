@@ -3,7 +3,7 @@
 #include "openvic-simulation/economy/GoodDefinition.hpp"
 #include "openvic-simulation/modifier/ModifierManager.hpp"
 #include "openvic-simulation/politics/Ideology.hpp"
-#include "openvic-simulation/pop/Pop.hpp"
+#include "openvic-simulation/pop/PopType.hpp"
 
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;
