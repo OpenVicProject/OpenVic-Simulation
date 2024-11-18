@@ -1,5 +1,6 @@
+#define KEEP_DO_FOR_ALL_TYPES_OF_INCOME
 #include "Pop.hpp"
-
+#undef KEEP_DO_FOR_ALL_TYPES_OF_INCOME
 #include "openvic-simulation/country/CountryDefinition.hpp"
 #include "openvic-simulation/country/CountryInstance.hpp"
 #include "openvic-simulation/defines/Define.hpp"
@@ -44,6 +45,11 @@ Pop::Pop(PopBase const& pop_base, decltype(ideologies)::keys_t const& ideology_k
 	life_needs_fulfilled { 0 },
 	everyday_needs_fulfilled { 0 },
 	luxury_needs_fulfilled { 0 },
+	#define INITALIZE_POP_INCOME_STORES(name)\
+		name { 0 },
+
+	DO_FOR_ALL_TYPES_OF_POP_INCOME(INITALIZE_POP_INCOME_STORES)
+	#undef INITALIZE_POP_INCOME_STORES
 	max_supported_regiments { 0 } {}
 
 void Pop::setup_pop_test_values(IssueManager const& issue_manager) {
@@ -159,9 +165,23 @@ void Pop::update_gamestate(
 	}
 }
 
-//TODO store income
-void Pop::add_rgo_owner_income(const fixed_point_t income) {}
-void Pop::add_rgo_worker_income(const fixed_point_t income) {}
+#define DEFINE_ADD_INCOME_FUNCTIONS(name)\
+	void Pop::add_##name(const fixed_point_t pop_income){\
+		name += pop_income;\
+		income += pop_income;\
+	}
+
+DO_FOR_ALL_TYPES_OF_POP_INCOME(DEFINE_ADD_INCOME_FUNCTIONS)
+#undef DEFINE_ADD_INCOME_FUNCTIONS
+
+#define SET_ALL_INCOME_TO_ZERO(name)\
+	name = fixed_point_t::_0();
+
+void Pop::clear_all_income(){
+	DO_FOR_ALL_TYPES_OF_POP_INCOME(SET_ALL_INCOME_TO_ZERO)
+	#undef DO_FOR_ALL_TYPES_OF_POP_INCOME
+	#undef SET_ALL_INCOME_TO_ZERO
+}
 
 Strata::Strata(std::string_view new_identifier) : HasIdentifier { new_identifier } {}
 
