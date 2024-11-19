@@ -2,6 +2,7 @@
 
 #include "openvic-simulation/economy/production/Employee.hpp"
 #include "openvic-simulation/economy/production/ProductionType.hpp"
+#include "openvic-simulation/economy/trading/MarketInstance.hpp"
 #include "openvic-simulation/pop/Pop.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
 #include "openvic-simulation/utility/Getters.hpp"
@@ -12,6 +13,7 @@ namespace OpenVic {
 
 	struct ResourceGatheringOperation {
 	private:
+		MarketInstance& market_instance;
 		ModifierEffectCache const& modifier_effect_cache;
 		ProvinceInstance* location_ptr;
 		ProductionType const* PROPERTY_RW(production_type_nullable);
@@ -29,19 +31,17 @@ namespace OpenVic {
 
 		fixed_point_t calculate_size_modifier() const;
 		void hire(const pop_size_t available_worker_count);
-		fixed_point_t produce(
-			std::vector<Pop*> const* const owner_pops_cache,
-			const pop_size_t total_owner_count_in_state_cache
-		);
+		fixed_point_t produce(const pop_size_t total_owner_count_in_state_cache);
 		void pay_employees(
 			const fixed_point_t revenue,
 			const pop_size_t total_worker_count_in_province,
-			std::vector<Pop*> const* const owner_pops_cache,
+			std::vector<Pop*> const* const owner_pops_cache_nullable,
 			const pop_size_t total_owner_count_in_state_cache
 		);
 
 	public:
 		ResourceGatheringOperation(
+			MarketInstance& new_market_instance,
 			ModifierEffectCache const& new_modifier_effect_cache,
 			ProductionType const* new_production_type_nullable,
 			fixed_point_t new_size_multiplier,
@@ -53,6 +53,7 @@ namespace OpenVic {
 		);
 
 		ResourceGatheringOperation(
+			MarketInstance& new_market_instance,
 			ModifierEffectCache const& new_modifier_effect_cache,
 			decltype(employee_count_per_type_cache)::keys_t const& pop_type_keys
 		);
