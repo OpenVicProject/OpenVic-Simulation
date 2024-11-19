@@ -1,5 +1,6 @@
 #pragma once
 
+#include <utility>
 #include <vector>
 
 #include <plf_colony.h>
@@ -10,8 +11,10 @@
 #include "openvic-simulation/politics/Rule.hpp"
 #include "openvic-simulation/pop/PopType.hpp"
 #include "openvic-simulation/types/Date.hpp"
+#include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
 #include "openvic-simulation/types/IdentifierRegistry.hpp"
 #include "openvic-simulation/types/IndexedMap.hpp"
+#include "openvic-simulation/types/SliderValue.hpp"
 #include "openvic-simulation/utility/Getters.hpp"
 
 namespace OpenVic {
@@ -63,6 +66,9 @@ namespace OpenVic {
 		using unlock_level_t = int8_t;
 		using unit_variant_t = uint8_t;
 
+		using StandardSliderValue = SliderValue<0, 100>;
+		using TariffSliderValue = SliderValue<-100, 100>;
+
 	private:
 		/* Main attributes */
 		// We can always assume country_definition is not null, as it is initialised from a reference and only ever changed
@@ -98,6 +104,8 @@ namespace OpenVic {
 
 		/* Budget */
 		fixed_point_t PROPERTY(cash_stockpile);
+		IndexedMap<Strata, StandardSliderValue> PROPERTY(tax_rate_by_strata);
+		TariffSliderValue PROPERTY(tariff_rate);
 		// TODO - cash stockpile change over last 30 days
 
 		/* Technology */
@@ -197,7 +205,8 @@ namespace OpenVic {
 			decltype(crime_unlock_levels)::keys_t const& crime_keys,
 			decltype(pop_type_distribution)::keys_t const& pop_type_keys,
 			decltype(regiment_type_unlock_levels)::keys_t const& regiment_type_unlock_levels_keys,
-			decltype(ship_type_unlock_levels)::keys_t const& ship_type_unlock_levels_keys
+			decltype(ship_type_unlock_levels)::keys_t const& ship_type_unlock_levels_keys,
+			decltype(tax_rate_by_strata)::keys_t const& strata_keys
 		);
 
 	public:
@@ -226,6 +235,9 @@ namespace OpenVic {
 		bool set_upper_house(Ideology const* ideology, fixed_point_t popularity);
 		bool set_ruling_party(CountryParty const& new_ruling_party);
 		bool add_reform(Reform const& new_reform);
+
+		void set_strata_tax_rate(Strata const& strata, const StandardSliderValue::int_type new_value);
+		void set_tariff_rate(const StandardSliderValue::int_type new_value);
 
 		template<UnitType::branch_t Branch>
 		bool add_unit_instance_group(UnitInstanceGroup<Branch>& group);
@@ -355,7 +367,8 @@ namespace OpenVic {
 			decltype(CountryInstance::crime_unlock_levels)::keys_t const& crime_keys,
 			decltype(CountryInstance::pop_type_distribution)::keys_t const& pop_type_keys,
 			decltype(CountryInstance::regiment_type_unlock_levels)::keys_t const& regiment_type_unlock_levels_keys,
-			decltype(CountryInstance::ship_type_unlock_levels)::keys_t const& ship_type_unlock_levels_keys
+			decltype(CountryInstance::ship_type_unlock_levels)::keys_t const& ship_type_unlock_levels_keys,
+			decltype(CountryInstance::tax_rate_by_strata):: keys_t const& strata_keys
 		);
 
 		bool apply_history_to_countries(
