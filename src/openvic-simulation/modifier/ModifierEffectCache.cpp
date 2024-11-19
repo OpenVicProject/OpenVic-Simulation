@@ -213,6 +213,7 @@ ModifierEffectCache::ModifierEffectCache()
 	pop_militancy_modifier { nullptr },
 	population_growth { nullptr },
 	supply_limit_global_percentage_change { nullptr },
+	supply_limit_global_base { nullptr },
 	supply_limit_local_base { nullptr },
 
 	/* Military Modifier Effects */
