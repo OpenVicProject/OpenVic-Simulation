@@ -75,10 +75,8 @@ static fs::path _search_for_game_path(fs::path hint_path = {}) {
 	std::error_code error_code;
 
 	// Don't waste time trying to search for Victoria 2 when supplied a valid looking Victoria 2 game directory
-	if (filename_equals(Victoria_2_folder, hint_path)) {
-		if (fs::is_regular_file(hint_path / v2_game_exe, error_code)) {
-			return hint_path;
-		}
+	if (fs::is_regular_file(hint_path / v2_game_exe, error_code)) {
+		return hint_path;
 	}
 
 	const bool hint_path_was_empty = hint_path.empty();
