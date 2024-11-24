@@ -67,8 +67,7 @@ bool BMP::read_header() {
 	}
 
 	// Validate sizes and dimensions
-	// TODO - image_size_bytes can be 0 for non-compressed BMPs
-	if (header.file_size != header.offset + header.image_size_bytes) {
+	if (header.image_size_bytes > 0 && header.file_size != header.offset + header.image_size_bytes) {
 		Logger::error(
 			"Invalid BMP memory sizes: file size = ", header.file_size, " != ", header.offset + header.image_size_bytes, " = ",
 			header.offset, " + ", header.image_size_bytes, " = image data offset + image data size"
