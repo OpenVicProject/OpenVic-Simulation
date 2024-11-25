@@ -190,10 +190,6 @@ namespace OpenVic {
 		unlock_level_t PROPERTY(gas_defence_unlock_level);
 		std::vector<unlock_level_t> PROPERTY(unit_variant_unlock_levels);
 
-		UNIT_BRANCHED_GETTER(get_unit_instance_groups, armies, navies);
-		UNIT_BRANCHED_GETTER(get_leaders, generals, admirals);
-		UNIT_BRANCHED_GETTER(get_unit_type_unlock_levels, regiment_type_unlock_levels, ship_type_unlock_levels);
-
 		CountryInstance(
 			CountryDefinition const* new_country_definition,
 			decltype(building_type_unlock_levels)::keys_t const& building_type_keys,
@@ -238,6 +234,10 @@ namespace OpenVic {
 
 		void set_strata_tax_rate(Strata const& strata, const StandardSliderValue::int_type new_value);
 		void set_tariff_rate(const StandardSliderValue::int_type new_value);
+
+		UNIT_BRANCHED_GETTER(get_unit_instance_groups, armies, navies);
+		UNIT_BRANCHED_GETTER(get_leaders, generals, admirals);
+		UNIT_BRANCHED_GETTER(get_unit_type_unlock_levels, regiment_type_unlock_levels, ship_type_unlock_levels);
 
 		template<UnitType::branch_t Branch>
 		bool add_unit_instance_group(UnitInstanceGroup<Branch>& group);
@@ -353,6 +353,8 @@ namespace OpenVic {
 		void update_rankings(Date today, DefineManager const& define_manager);
 
 	public:
+		IDENTIFIER_REGISTRY_NON_CONST_ACCESSORS(country_instance);
+
 		CountryInstance& get_country_instance_from_definition(CountryDefinition const& country);
 		CountryInstance const& get_country_instance_from_definition(CountryDefinition const& country) const;
 

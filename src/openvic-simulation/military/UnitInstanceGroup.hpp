@@ -12,23 +12,12 @@
 #include "openvic-simulation/utility/Getters.hpp"
 
 namespace OpenVic {
-	struct ProvinceInstance;
-
-	struct MovementInfo {
-	private:
-		std::vector<ProvinceInstance const*> PROPERTY(path);
-		fixed_point_t PROPERTY(movement_progress);
-
-	public:
-		MovementInfo();
-		// contains/calls pathfinding logic
-		MovementInfo(ProvinceInstance const* starting_province, ProvinceInstance const* target_province);
-	};
-
 	template<UnitType::branch_t>
 	struct LeaderBranched;
 
+	struct ProvinceInstance;
 	struct CountryInstance;
+	struct MapInstance;
 
 	template<UnitType::branch_t Branch>
 	struct UnitInstanceGroup {
@@ -40,7 +29,9 @@ namespace OpenVic {
 		std::vector<_UnitInstance*> PROPERTY(units);
 		_Leader* PROPERTY(leader);
 
-		MovementInfo PROPERTY_REF(movement_info);
+		// Movement attributes
+		std::vector<ProvinceInstance const*> PROPERTY(path);
+		fixed_point_t PROPERTY(movement_progress);
 
 	protected:
 		ProvinceInstance* PROPERTY_ACCESS(position, protected);
@@ -64,6 +55,13 @@ namespace OpenVic {
 		bool set_position(ProvinceInstance* new_position);
 		bool set_country(CountryInstance* new_country);
 		bool set_leader(_Leader* new_leader);
+
+		/* Attempt to find a path to the target province, starting from either the end of the unit group's current path if
+		 * continue_movement is true, or the current position of the unit group if continue_movement is false. If a path is
+		 * found add it to the unit group's path and return true, resetting any pre-existing path if continue_movement is
+		 * false. If no path can be found, return false and do not modify the unit group's path regardless of
+		 * continue_movement's value. */
+		bool path_to(ProvinceInstance const& target_province, bool continue_movement, MapInstance const& map);
 	};
 
 	template<UnitType::branch_t>

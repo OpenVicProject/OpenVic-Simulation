@@ -44,14 +44,110 @@ static void print_rgo(ProvinceInstance const& province) {
 			"\n\temployees:"
 		);
 
-		auto const& employee_count_per_type_cache=rgo.get_employee_count_per_type_cache();
+		IndexedMap<PopType, pop_size_t> const& employee_count_per_type_cache = rgo.get_employee_count_per_type_cache();
 		for (PopType const& pop_type : *employee_count_per_type_cache.get_keys()) {
 			const pop_size_t employees_of_type = employee_count_per_type_cache[pop_type];
 			if (employees_of_type > 0) {
-				text += StringUtils::append_string_views("\n\t\t", std::to_string(employees_of_type), " ", pop_type.get_identifier());
+				text += StringUtils::append_string_views(
+					"\n\t\t", std::to_string(employees_of_type), " ", pop_type.get_identifier()
+				);
 			}
 		}
 		Logger::info("", text);
+	}
+}
+
+static void test_rgo(InstanceManager const& instance_manager) {
+	std::vector<CountryInstance*> const& great_powers = instance_manager.get_country_instance_manager().get_great_powers();
+
+	for (size_t i = 0; i < std::min<size_t>(3, great_powers.size()); ++i) {
+		CountryInstance const* great_power = great_powers[i];
+		if (great_power == nullptr) {
+			Logger::warning("Great power index ", i, " is null.");
+			continue;
+		}
+
+		ProvinceInstance const* const capital_province = great_power->get_capital();
+		if (capital_province == nullptr) {
+			Logger::warning(great_power->get_identifier(), " has no capital ProvinceInstance set.");
+		} else {
+			print_rgo(*capital_province);
+		}
+	}
+}
+
+template<UnitType::branch_t Branch>
+static bool test_pathing(
+	InstanceManager& instance_manager, std::string_view country_identifier, size_t unit_group_index,
+	size_t target_province_index, bool continue_movement, bool expect_success = true
+) {
+	using enum UnitType::branch_t;
+
+	CountryInstance* country =
+		instance_manager.get_country_instance_manager().get_country_instance_by_identifier(country_identifier);
+	if (country == nullptr) {
+		Logger::error("Country ", country_identifier, " not found!");
+		return false;
+	}
+
+	ordered_set<UnitInstanceGroupBranched<Branch>*> const& unit_groups = country->get_unit_instance_groups<Branch>();
+	if (unit_groups.size() <= unit_group_index) {
+		Logger::error(
+			Branch == LAND ? "Land" : "Naval", " unit group index ", unit_group_index, " out of bounds for country ",
+			country_identifier
+		);
+		return false;
+	}
+	UnitInstanceGroupBranched<Branch>* unit_group = unit_groups.data()[unit_group_index];
+
+	MapInstance const& map_instance = instance_manager.get_map_instance();
+
+	ProvinceInstance const* target_province = map_instance.get_province_instance_by_index(target_province_index);
+	if (target_province == nullptr) {
+		Logger::error("Province index ", target_province_index, " out of bounds!");
+		return false;
+	}
+
+	const bool path_found = unit_group->path_to(*target_province, continue_movement, map_instance);
+
+	if (expect_success) {
+		if (path_found) {
+			Logger::info(
+				"Path found for ", Branch == LAND ? "land" : "naval", " unit group \"", unit_group->get_name(), "\" to ",
+				target_province->get_identifier(), ". New full path:"
+			);
+
+			for (ProvinceInstance const* province : unit_group->get_path()) {
+				Logger::info("    ", province->get_identifier());
+			}
+
+			return true;
+		} else {
+			Logger::error(
+				"Failed to find path for ", Branch == LAND ? "land" : "naval", " unit group \"", unit_group->get_name(), "\" to ",
+				target_province->get_identifier()
+			);
+			return false;
+		}
+	} else {
+		if (path_found) {
+			Logger::error(
+				"Found path for ", Branch == LAND ? "land" : "naval", " unit group \"", unit_group->get_name(), "\" to ",
+				target_province->get_identifier(), ", despite expecting to fail. New (invalid) path:"
+			);
+
+			for (ProvinceInstance const* province : unit_group->get_path()) {
+				Logger::info("    ", province->get_identifier());
+			}
+
+			return false;
+		} else {
+			Logger::info(
+				"Did not find path for ", Branch == LAND ? "land" : "naval", " unit group \"", unit_group->get_name(), "\" to ",
+				target_province->get_identifier(), ", as expected"
+			);
+			return true;
+		}
 	}
 }
 
@@ -90,40 +186,34 @@ static bool run_headless(Dataloader::path_vector_t const& roots, bool run_tests)
 	ret &= game_manager.update_clock();
 
 	// TODO - REMOVE TEST CODE
-	Logger::info("===== Ranking system test... =====");
 	if (game_manager.get_instance_manager()) {
-		const auto print_ranking_list = [](std::string_view title, std::vector<CountryInstance*> const& countries) -> void {
-			std::string text;
-			for (CountryInstance const* country : countries) {
-				text += StringUtils::append_string_views(
-					"\n    ", country->get_identifier(),
-					" - Total #", std::to_string(country->get_total_rank()), " (", country->get_total_score().to_string(1),
-					"), Prestige #", std::to_string(country->get_prestige_rank()), " (", country->get_prestige().to_string(1),
-					"), Industry #", std::to_string(country->get_industrial_rank()), " (", country->get_industrial_power().to_string(1),
-					"), Military #", std::to_string(country->get_military_rank()), " (", country->get_military_power().to_string(1), ")"
-				);
-			}
-			Logger::info(title, ":", text);
-		};
-
-		CountryInstanceManager const& country_instance_manager =
-			game_manager.get_instance_manager()->get_country_instance_manager();
-
-		std::vector<CountryInstance*> const& great_powers = country_instance_manager.get_great_powers();
-		print_ranking_list("Great Powers", great_powers);
-		print_ranking_list("Secondary Powers", country_instance_manager.get_secondary_powers());
-		print_ranking_list("All countries", country_instance_manager.get_total_ranking());
+		InstanceManager& instance_manager = *game_manager.get_instance_manager();
 
 		Logger::info("===== RGO test... =====");
-		for (size_t i = 0; i < std::min<size_t>(3, great_powers.size()); ++i) {
-			CountryInstance const& great_power = *great_powers[i];
-			ProvinceInstance const* const capital_province = great_power.get_capital();
-			if (capital_province == nullptr) {
-				Logger::warning(great_power.get_identifier(), " has no capital ProvinceInstance set.");
-			} else {
-				print_rgo(*capital_province);
-			}
-		}
+		test_rgo(instance_manager);
+
+		Logger::info("===== Pathing test... =====");
+		using enum UnitType::branch_t;
+		// Move "Garde Royale" from Paris to Brest
+		ret &= test_pathing<LAND>(instance_manager, "FRA", 0, 420, false);
+		// Move "Garde Royale" from Brest to Toulon
+		ret &= test_pathing<LAND>(instance_manager, "FRA", 0, 470, true);
+		// Move "Garde Royale" from Paris to Strasbourg
+		ret &= test_pathing<LAND>(instance_manager, "FRA", 0, 409, false);
+
+		// Move "The South Africa Garrison" from Cape Town to Djibouti
+		ret &= test_pathing<LAND>(instance_manager, "ENG", 6, 1875, false);
+		// Move "The South Africa Garrison" from Djibouti to Socotra (expected to fail)
+		ret &= test_pathing<LAND>(instance_manager, "ENG", 6, 1177, true, false);
+		// Move "The South Africa Garrison" from Cape Town to Tananarive (expected to fail)
+		ret &= test_pathing<LAND>(instance_manager, "ENG", 6, 2115, false, false);
+
+		// Move "Imperial Fleet" from Kyoto to Taiwan Strait
+		ret &= test_pathing<NAVAL>(instance_manager, "JAP", 0, 2825, false);
+		// Move "Imperial Fleet" from Kyoto to Falkland Plateau (should go East)
+		ret &= test_pathing<NAVAL>(instance_manager, "JAP", 0, 3047, false);
+		// Move "Imperial Fleet" from Kyoto to Coast of South Georgia (should go West)
+		ret &= test_pathing<NAVAL>(instance_manager, "JAP", 0, 3200, false);
 	} else {
 		Logger::error("Instance manager not available!");
 		ret = false;

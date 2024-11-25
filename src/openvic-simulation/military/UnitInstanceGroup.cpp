@@ -9,11 +9,7 @@
 
 using namespace OpenVic;
 
-MovementInfo::MovementInfo() : path {}, movement_progress {} {}
-
-//TODO: pathfinding logic
-MovementInfo::MovementInfo(ProvinceInstance const* starting_province, ProvinceInstance const* target_province)
-	: path { starting_province, target_province }, movement_progress { 0 } {}
+using enum UnitType::branch_t;
 
 template<UnitType::branch_t Branch>
 UnitInstanceGroup<Branch>::UnitInstanceGroup(
@@ -142,20 +138,80 @@ bool UnitInstanceGroup<Branch>::set_leader(_Leader* new_leader) {
 	return ret;
 }
 
-template struct OpenVic::UnitInstanceGroup<UnitType::branch_t::LAND>;
-template struct OpenVic::UnitInstanceGroup<UnitType::branch_t::NAVAL>;
+template<UnitType::branch_t Branch>
+bool UnitInstanceGroup<Branch>::path_to(
+	ProvinceInstance const& target_province, bool continue_movement, MapInstance const& map
+) {
+	using adjacency_t = ProvinceDefinition::adjacency_t;
+	using distance_t = ProvinceDefinition::distance_t;
 
-UnitInstanceGroupBranched<UnitType::branch_t::LAND>::UnitInstanceGroupBranched(
+	ProvinceInstance const* start_province = continue_movement && !path.empty() ? path.back() : position;
+
+	if (start_province == nullptr) {
+		Logger::error("Unit group ", name, " has no position to start movement from!");
+		return false;
+	}
+
+	// Examples of how to use adjacency_t
+	std::vector<adjacency_t> const& adjacencies = target_province.get_province_definition().get_adjacencies();
+
+	bool path_found = false;
+	adjacency_t const* shorted_adjacency = nullptr;
+	distance_t shortest_distance = fixed_point_t::_0();
+
+	for (adjacency_t const& adjacency : adjacencies) {
+		// Skip non-land/non-water adjacencies for LAND/NAVAL unit groups
+		if constexpr (Branch == LAND) {
+			if (adjacency.get_type() != adjacency_t::type_t::LAND) {
+				continue;
+			}
+		} else if constexpr (Branch == NAVAL) {
+			if (adjacency.get_type() != adjacency_t::type_t::WATER) {
+				continue;
+			}
+		}
+
+		if (adjacency.get_distance() < shortest_distance || shorted_adjacency == nullptr) {
+			shorted_adjacency = &adjacency;
+			shortest_distance = adjacency.get_distance();
+		}
+
+		// You can go from ProvinceInstance to ProvinceDefinition using get_province_definition()
+		// To go the other way you must use map.get_province_instance_from_definition(province_definition)
+		if (adjacency.get_to() == &target_province.get_province_definition()) {
+			path_found = true;
+			break;
+		}
+	}
+
+	if (path_found) {
+		if (!continue_movement) {
+			path.clear();
+			movement_progress = fixed_point_t::_0();
+		}
+
+		// TODO - add new provinces to path (everything after start_province up to and including &target_province)
+
+		return true;
+	} else {
+		return false;
+	}
+}
+
+template struct OpenVic::UnitInstanceGroup<LAND>;
+template struct OpenVic::UnitInstanceGroup<NAVAL>;
+
+UnitInstanceGroupBranched<LAND>::UnitInstanceGroupBranched(
 	std::string_view new_name,
 	std::vector<RegimentInstance*>&& new_units
 ) : UnitInstanceGroup { new_name, std::move(new_units) } {}
 
-UnitInstanceGroupBranched<UnitType::branch_t::NAVAL>::UnitInstanceGroupBranched(
+UnitInstanceGroupBranched<NAVAL>::UnitInstanceGroupBranched(
 	std::string_view new_name,
 	std::vector<ShipInstance*>&& new_units
 ) : UnitInstanceGroup { new_name, std::move(new_units) } {}
 
-fixed_point_t UnitInstanceGroupBranched<UnitType::branch_t::NAVAL>::get_total_consumed_supply() const {
+fixed_point_t UnitInstanceGroupBranched<NAVAL>::get_total_consumed_supply() const {
 	fixed_point_t total_consumed_supply = 0;
 
 	for (ShipInstance const* ship : get_units()) {
@@ -171,13 +227,13 @@ bool UnitInstanceManager::generate_unit_instance(
 ) {
 	unit_instance = &*get_unit_instances<Branch>().insert(
 		[&unit_deployment]() -> UnitInstanceBranched<Branch> {
-			if constexpr (Branch == UnitType::branch_t::LAND) {
+			if constexpr (Branch == LAND) {
 				return {
 					unit_deployment.get_name(), unit_deployment.get_type(),
 					nullptr, // TODO - get pop from Province unit_deployment.get_home()
 					false // Not mobilised
 				};
-			} else if constexpr (Branch == UnitType::branch_t::NAVAL) {
+			} else if constexpr (Branch == NAVAL) {
 				return { unit_deployment.get_name(), unit_deployment.get_type() };
 			}
 		}()
@@ -255,8 +311,6 @@ bool UnitInstanceManager::generate_deployment(
 			ret &= generate_unit_instance_group(map_instance, country, unit_deployment_group);
 		}
 	};
-
-	using enum UnitType::branch_t;
 
 	generate_group.template operator()<LAND>();
 	generate_group.template operator()<NAVAL>();
