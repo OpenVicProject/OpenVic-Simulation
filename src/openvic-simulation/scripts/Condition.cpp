@@ -1153,9 +1153,19 @@ static constexpr auto _execute_condition_node_list_multi_scope_callback(
 			) -> bool {
 				return _execute_iterative<EXPECTED_VALUE, REQUIRE_ALL>(
 					change_scopes(condition, instance_manager, current_scope, this_scope, from_scope),
-					[&instance_manager, &this_scope, &from_scope, &argument](scope_t new_scope) -> bool {
+					[&instance_manager, &this_scope, &from_scope, &argument](auto new_scope) -> bool {
+						scope_t new_scope_final;
+						if constexpr (std::same_as<decltype(new_scope), CountryDefinition const*>) {
+							new_scope_final = &instance_manager.get_country_instance_manager()
+								.get_country_instance_from_definition(*new_scope);
+						} else if constexpr (std::same_as<decltype(new_scope), ProvinceDefinition const*>) {
+							new_scope_final =
+								&instance_manager.get_map_instance().get_province_instance_from_definition(*new_scope);
+						} else {
+							new_scope_final = new_scope;
+						}
 						return _execute_condition_node_list<true, true>(
-							instance_manager, new_scope, this_scope, from_scope, argument
+							instance_manager, new_scope_final, this_scope, from_scope, argument
 						);
 					}
 				);
@@ -1732,58 +1742,83 @@ bool ConditionManager::setup_conditions(DefinitionManager const& definition_mana
 	ret &= add_condition(
 		"average_consciousness",
 		_parse_condition_node_value_callback<fixed_point_t, COUNTRY | PROVINCE>,
-
-		// TODO - can be used on province too!!!
 		_execute_condition_node_cast_argument_callback<fixed_point_t, scope_t, scope_t, scope_t>(
-			_execute_condition_node_convert_scope<CountryInstance, scope_t, scope_t, fixed_point_t>(
-				[](
-					Condition const& condition, InstanceManager const& instance_manager, CountryInstance const* current_scope,
-					scope_t this_scope, scope_t from_scope, fixed_point_t argument
-				) -> bool {
-					return current_scope->get_national_consciousness() >= argument;
-				}
-			)
-		)
+			[](
+				Condition const& condition, InstanceManager const& instance_manager, scope_t current_scope, scope_t this_scope,
+				scope_t from_scope, fixed_point_t argument
+			) -> bool {
+				struct visitor_t {
 
-		// _execute_condition_node_cast_argument_callback<fixed_point_t, scope_t, scope_t, scope_t>(
-		// 	_execute_condition_node_try_cast_scope_types<
-		// 		bool, CountryInstance const*, ProvinceInstance const*
-		// 	>(
-		// 		[](
-		// 			InstanceManager const& instance_manager, CountryInstance const* current_scope, scope_t this_scope,
-		// 			scope_t from_scope, fixed_point_t argument
-		// 		) -> bool {
-		// 			return current_scope->get_national_consciousness() >= argument;
-		// 		},
-		// 		[](
-		// 			InstanceManager const& instance_manager, ProvinceInstance const* current_scope, scope_t this_scope,
-		// 			scope_t from_scope, fixed_point_t argument
-		// 		) -> bool {
-		// 			return current_scope->get_average_consciousness() >= argument;
-		// 		},
-		// 		[](
-		// 			InstanceManager const& instance_manager, ProvinceInstance const* current_scope, scope_t this_scope,
-		// 			scope_t from_scope, fixed_point_t argument
-		// 		) -> bool {
-		// 			return false;
-		// 		}
-		// 	)
-		// )
+					Condition const& condition;
+					InstanceManager const& instance_manager;
+					scope_t const& this_scope;
+					scope_t const& from_scope;
+					fixed_point_t const& argument;
+
+					bool operator()(no_scope_t no_scope) const {
+						Logger::error("Error executing condition \"", condition.get_identifier(), "\": no current scope!");
+						return false;
+					}
+
+					constexpr bool operator()(CountryInstance const* country) {
+						return country->get_national_consciousness() >= argument;
+					}
+					constexpr bool operator()(State const* state) const {
+						return state->get_average_consciousness() >= argument;
+					}
+					constexpr bool operator()(ProvinceInstance const* province) const {
+						return province->get_average_consciousness() >= argument;
+					}
+					constexpr bool operator()(Pop const* pop) const {
+						return pop->get_consciousness() >= argument;
+					}
+				};
+
+				return std::visit(visitor_t {
+					condition, instance_manager, this_scope, from_scope, argument
+				}, current_scope);
+			}
+		)
 	);
 	ret &= add_condition(
 		"average_militancy",
 		_parse_condition_node_value_callback<fixed_point_t, COUNTRY | PROVINCE>,
-
-		// TODO - can be used on province too!!!
 		_execute_condition_node_cast_argument_callback<fixed_point_t, scope_t, scope_t, scope_t>(
-			_execute_condition_node_convert_scope<CountryInstance, scope_t, scope_t, fixed_point_t>(
-				[](
-					Condition const& condition, InstanceManager const& instance_manager, CountryInstance const* current_scope,
-					scope_t this_scope, scope_t from_scope, fixed_point_t argument
-				) -> bool {
-					return current_scope->get_national_militancy() >= argument;
-				}
-			)
+			[](
+				Condition const& condition, InstanceManager const& instance_manager, scope_t current_scope, scope_t this_scope,
+				scope_t from_scope, fixed_point_t argument
+			) -> bool {
+				struct visitor_t {
+
+					Condition const& condition;
+					InstanceManager const& instance_manager;
+					scope_t const& this_scope;
+					scope_t const& from_scope;
+					fixed_point_t const& argument;
+
+					bool operator()(no_scope_t no_scope) const {
+						Logger::error("Error executing condition \"", condition.get_identifier(), "\": no current scope!");
+						return false;
+					}
+
+					constexpr bool operator()(CountryInstance const* country) {
+						return country->get_national_militancy() >= argument;
+					}
+					constexpr bool operator()(State const* state) const {
+						return state->get_average_militancy() >= argument;
+					}
+					constexpr bool operator()(ProvinceInstance const* province) const {
+						return province->get_average_militancy() >= argument;
+					}
+					constexpr bool operator()(Pop const* pop) const {
+						return pop->get_militancy() >= argument;
+					}
+				};
+
+				return std::visit(visitor_t {
+					condition, instance_manager, this_scope, from_scope, argument
+				}, current_scope);
+			}
 		)
 	);
 	ret &= add_condition(
@@ -2984,26 +3019,16 @@ bool ConditionManager::setup_conditions(DefinitionManager const& definition_mana
 		ret &= add_condition(
 			region.get_identifier(),
 			_parse_condition_node_list_callback<PROVINCE>,
-			_execute_condition_node_unimplemented
-			/*_execute_condition_node_list_multi_scope_callback<expect_true, require_all>(
+			_execute_condition_node_list_multi_scope_callback<
+				expect_true, require_all, std::vector<ProvinceDefinition const*> const&
+			>(
 				[&region](
 					Condition const& condition, InstanceManager const& instance_manager, scope_t current_scope,
 					scope_t this_scope, scope_t from_scope
-				) -> std::vector<scope_t> {
-					std::vector<ProvinceDefinition const*> const& region_provinces = region.get_provinces();
-
-					std::vector<scope_t> region_province_scopes;
-					region_province_scopes.reserve(region_provinces.size());
-
-					for (ProvinceDefinition const* province : region_provinces) {
-						region_province_scopes.push_back(
-							&instance_manager.get_map_instance().get_province_instance_from_definition(*province)
-						);
-					}
-
-					return region_province_scopes;
+				) -> std::vector<ProvinceDefinition const*> const& {
+					return region.get_provinces();
 				}
-			)*/
+			)
 		);
 	}
 
