@@ -18,7 +18,7 @@ bool ConditionScript::_parse_script(ast::NodeCPtr root, DefinitionManager const&
 		move_variable_callback(condition_root)
 	)(root);
 
-	Logger::info("Parsed condition script:\n\n", condition_root, "\n");
+	// Logger::info("Parsed condition script:\n\n", condition_root, "\n");
 
 	return ret;
 }
