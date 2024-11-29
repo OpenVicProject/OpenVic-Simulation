@@ -32,8 +32,7 @@ ConditionNode::ConditionNode(
 	argument { std::move(new_argument) } {}
 
 bool ConditionNode::execute(
-	InstanceManager const& instance_manager, scope_t const& current_scope, scope_t const& this_scope,
-	scope_t const& from_scope
+	InstanceManager const& instance_manager, scope_t current_scope, scope_t this_scope, scope_t from_scope
 ) const {
 	if (condition == nullptr) {
 		Logger::error("ConditionNode has no condition!");
@@ -73,16 +72,16 @@ struct print_condition_node_visitor_t {
 		print_newline_indent();
 		stream << "}";
 	}
-	void operator()(no_argument_t const& arg) {
+	void operator()(no_argument_t arg) {
 		stream << "<NO_ARGUMENT>";
 	}
-	void operator()(this_argument_t const& arg) {
+	void operator()(this_argument_t arg) {
 		stream << THIS_KEYWORD;
 	}
-	void operator()(from_argument_t const& arg) {
+	void operator()(from_argument_t arg) {
 		stream << FROM_KEYWORD;
 	}
-	void operator()(special_argument_t const& arg) {
+	void operator()(special_argument_t arg) {
 		const std::string_view identifier =
 			last_condition != nullptr ? last_condition->get_identifier() : std::string_view {};
 		if (identifier == "this_culture_union") {
@@ -110,19 +109,19 @@ struct print_condition_node_visitor_t {
 
 		stream << "}";
 	}
-	void operator()(bool const& arg) {
+	void operator()(bool arg) {
 		stream << (arg ? "yes" : "no");
 	}
-	void operator()(std::pair<PopType const*, fixed_point_t> const& arg) {
+	void operator()(std::pair<PopType const*, fixed_point_t> arg) {
 		print_pair("type", "value", arg);
 	}
-	void operator()(std::pair<bool, bool> const& arg) {
+	void operator()(std::pair<bool, bool> arg) {
 		print_pair(
 			"in_whole_capital_state", "limit_to_world_greatest_level",
 			std::pair { arg.first ? "yes" : "no", arg.second ? "yes" : "no" }
 		);
 	}
-	void operator()(std::pair<Ideology const*, fixed_point_t> const& arg) {
+	void operator()(std::pair<Ideology const*, fixed_point_t> arg) {
 		print_pair("ideology", "value", arg);
 	}
 	void operator()(std::vector<PopType const*> const& arg) {
@@ -142,13 +141,13 @@ struct print_condition_node_visitor_t {
 
 		stream << "}";
 	}
-	void operator()(std::pair<CountryDefinition const*, fixed_point_t> const& arg) {
+	void operator()(std::pair<CountryDefinition const*, fixed_point_t> arg) {
 		print_pair("who", "value", arg);
 	}
-	void operator()(std::pair<this_argument_t, fixed_point_t> const& arg) {
+	void operator()(std::pair<this_argument_t, fixed_point_t> arg) {
 		print_pair("who", "value", std::pair { THIS_KEYWORD, arg.second });
 	}
-	void operator()(std::pair<from_argument_t, fixed_point_t> const& arg) {
+	void operator()(std::pair<from_argument_t, fixed_point_t> arg) {
 		print_pair("who", "value", std::pair { FROM_KEYWORD, arg.second });
 	}
 	void operator()(std::pair<std::string, fixed_point_t> const& arg) {
@@ -634,8 +633,8 @@ static bool _parse_condition_node_who_value_callback(
 // EXECUTE CALLBACK HELPERS
 
 static constexpr bool _execute_condition_node_unimplemented(
-	Condition const& condition, InstanceManager const& instance_manager, scope_t const& current_scope,
-	scope_t const& this_scope, scope_t const& from_scope, argument_t const& argument
+	Condition const& condition, InstanceManager const& instance_manager, scope_t current_scope, scope_t this_scope,
+	scope_t from_scope, argument_t const& argument
 ) {
 	// Logger::error("Cannot execute condition \"", condition.get_identifier(), "\" - callback unimplemented!");
 	return false;
@@ -794,7 +793,7 @@ static constexpr auto _execute_condition_node_convert_scope(
 	> auto callback
 ) {
 	return [callback](
-		Condition const& condition, InstanceManager const& instance_manager, scope_t const& current_scope,
+		Condition const& condition, InstanceManager const& instance_manager, scope_t current_scope,
 		Args... args
 	) -> bool {
 		const auto visitor =
@@ -819,15 +818,15 @@ template<typename RETURN_TYPE, typename SCOPE_TYPE, typename... Args>
 static constexpr auto _execute_condition_node_try_cast_scope(
 	Functor<
 		// return_type(condition, instance_manager, cast_scope, args...)
-		RETURN_TYPE, Condition const&, InstanceManager const&, SCOPE_TYPE const&, Args...
+		RETURN_TYPE, Condition const&, InstanceManager const&, SCOPE_TYPE, Args...
 	> auto success_callback,
 	Functor<
 		// return_type(condition, instance_manager, first_scope, args...)
-		RETURN_TYPE, Condition const&, InstanceManager const&, scope_t const&, Args...
+		RETURN_TYPE, Condition const&, InstanceManager const&, scope_t, Args...
 	> auto failure_callback
 ) {
 	return [success_callback, failure_callback](
-		Condition const& condition, InstanceManager const& instance_manager, scope_t const& first_scope, Args... args
+		Condition const& condition, InstanceManager const& instance_manager, scope_t first_scope, Args... args
 	) -> RETURN_TYPE {
 		SCOPE_TYPE const* cast_scope = std::get_if<SCOPE_TYPE>(&first_scope);
 
@@ -839,69 +838,67 @@ static constexpr auto _execute_condition_node_try_cast_scope(
 	};
 }
 
-template<typename RETURN_TYPE, typename SCOPE_TYPE, typename... Args>
-static constexpr auto _execute_condition_node_cast_scope(
-	Functor<
-		// return_type(condition, instance_manager, first_scope, args...)
-		RETURN_TYPE, Condition const&, InstanceManager const&, SCOPE_TYPE const&, Args...
-	> auto callback
-) {
-	return _execute_condition_node_try_cast_scope<RETURN_TYPE, SCOPE_TYPE, Args...>(
-		std::move(callback),
-		[](
-			Condition const& condition, InstanceManager const& instance_manager, scope_t const& first_scope, Args... args
-		) -> RETURN_TYPE {
-			Logger::error(
-				"Error executing condition \"", condition.get_identifier(), "\": invalid scope for condition node - expected ",
-				typeid(SCOPE_TYPE).name()
-			);
-			return {};
-		}
-	);
-}
+// template<typename RETURN_TYPE, typename SCOPE_TYPE, typename... Args>
+// static constexpr auto _execute_condition_node_cast_scope(
+// 	Functor<
+// 		// return_type(condition, instance_manager, first_scope, args...)
+// 		RETURN_TYPE, Condition const&, InstanceManager const&, SCOPE_TYPE, Args...
+// 	> auto callback
+// ) {
+// 	return _execute_condition_node_try_cast_scope<RETURN_TYPE, SCOPE_TYPE, Args...>(
+// 		std::move(callback),
+// 		[](
+// 			Condition const& condition, InstanceManager const& instance_manager, scope_t first_scope, Args... args
+// 		) -> RETURN_TYPE {
+// 			Logger::error(
+// 				"Error executing condition \"", condition.get_identifier(), "\": invalid scope for condition node - expected ",
+// 				typeid(SCOPE_TYPE).name()
+// 			);
+// 			return {};
+// 		}
+// 	);
+// }
 
-template<typename RETURN_TYPE, typename FIRST_SCOPE_TYPE, typename SECOND_SCOPE_TYPE, typename... Args>
-static constexpr auto _execute_condition_node_cast_two_scopes(
-	Functor<
-		// return_type(condition, instance_manager, first_scope, second_scope, args...)
-		RETURN_TYPE, Condition const&, InstanceManager const&, FIRST_SCOPE_TYPE const&, SECOND_SCOPE_TYPE const&, Args...
-	> auto callback
-) {
-	return _execute_condition_node_cast_scope<RETURN_TYPE, FIRST_SCOPE_TYPE, scope_t const&, Args...>(
-		[callback](
-			Condition const& condition, InstanceManager const& instance_manager, FIRST_SCOPE_TYPE const& cast_first_scope,
-			scope_t const& second_scope, Args... args
-		) -> RETURN_TYPE {
-			return _execute_condition_node_cast_scope<RETURN_TYPE, SECOND_SCOPE_TYPE, FIRST_SCOPE_TYPE const&, Args...>(
-				[callback](
-					Condition const& condition, InstanceManager const& instance_manager,
-					SECOND_SCOPE_TYPE const& cast_second_scope, FIRST_SCOPE_TYPE const& cast_first_scope, Args... args
-				) -> RETURN_TYPE {
-					return callback(condition, instance_manager, cast_first_scope, cast_second_scope, args...);
-				}
-			)(condition, instance_manager, second_scope, cast_first_scope, args...);
-		}
-	);
-}
+// template<typename RETURN_TYPE, typename FIRST_SCOPE_TYPE, typename SECOND_SCOPE_TYPE, typename... Args>
+// static constexpr auto _execute_condition_node_cast_two_scopes(
+// 	Functor<
+// 		// return_type(condition, instance_manager, first_scope, second_scope, args...)
+// 		RETURN_TYPE, Condition const&, InstanceManager const&, FIRST_SCOPE_TYPE, SECOND_SCOPE_TYPE, Args...
+// 	> auto callback
+// ) {
+// 	return _execute_condition_node_cast_scope<RETURN_TYPE, FIRST_SCOPE_TYPE, scope_t, Args...>(
+// 		[callback](
+// 			Condition const& condition, InstanceManager const& instance_manager, FIRST_SCOPE_TYPE cast_first_scope,
+// 			scope_t second_scope, Args... args
+// 		) -> RETURN_TYPE {
+// 			return _execute_condition_node_cast_scope<RETURN_TYPE, SECOND_SCOPE_TYPE, FIRST_SCOPE_TYPE, Args...>(
+// 				[callback](
+// 					Condition const& condition, InstanceManager const& instance_manager,
+// 					SECOND_SCOPE_TYPE cast_second_scope, FIRST_SCOPE_TYPE cast_first_scope, Args... args
+// 				) -> RETURN_TYPE {
+// 					return callback(condition, instance_manager, cast_first_scope, cast_second_scope, args...);
+// 				}
+// 			)(condition, instance_manager, second_scope, cast_first_scope, args...);
+// 		}
+// 	);
+// }
 
 // template<typename ARGUMENT_TYPE, typename SCOPE_TYPE, typename... OTHER_SCOPES>
 // static constexpr auto _execute_condition_node_try_cast_scope_types(
 // 	Callback<
 // 		// bool(instance_manager, current_scope, this_scope, from_scope, argument)
-// 		InstanceManager const&, SCOPE_TYPE const&, scope_t const&, scope_t const&, ARGUMENT_TYPE const&
+// 		InstanceManager const&, SCOPE_TYPE, scope_t, scope_t, ARGUMENT_TYPE const&
 // 	> auto callback, auto other_callbacks...
 // ) {
 // 	return [callback, other_callbacks](
-// 		InstanceManager const& instance_manager, scope_t const& current_scope, scope_t const& this_scope,
-// 		scope_t const& from_scope, ARGUMENT_TYPE const& argument
+// 		InstanceManager const& instance_manager, scope_t current_scope, scope_t this_scope, scope_t from_scope,
+// 		ARGUMENT_TYPE const& argument
 // 	) -> bool {
-// 		return _execute_condition_node_try_cast_scope<
-// 			bool, SCOPE_TYPE, scope_t const&, scope_t const&, ARGUMENT_TYPE const&
-// 		>(
+// 		return _execute_condition_node_try_cast_scope<bool, SCOPE_TYPE, scope_t, scope_t, ARGUMENT_TYPE const&>(
 // 			callback,
 // 			[other_callbacks](
-// 				InstanceManager const& instance_manager, scope_t const& first_scope, scope_t const& this_scope,
-// 				scope_t const& from_scope, ARGUMENT_TYPE const& argument
+// 				InstanceManager const& instance_manager, scope_t first_scope, scope_t this_scope, scope_t from_scope,
+// 				ARGUMENT_TYPE const& argument
 // 			) -> bool {
 // 				if constexpr (sizeof...(OTHER_SCOPES) == 0) {
 // 					// TODO - add more detail to this message!
@@ -986,27 +983,27 @@ template<typename T>
 static constexpr auto _execute_condition_node_value_or_this_or_from_callback(
 	Callback<
 		// bool(condition, instance_manager, current_scope, value)
-		Condition const&, InstanceManager const&, scope_t const&, T const&
+		Condition const&, InstanceManager const&, scope_t, T const&
 	> auto value_callback,
 	Callback<
 		// bool(condition, instance_manager, current_scope, this_scope)
-		Condition const&, InstanceManager const&, scope_t const&, scope_t const&
+		Condition const&, InstanceManager const&, scope_t, scope_t
 	> auto this_callback,
 	Callback<
 		// bool(condition, instance_manager, current_scope, from_scope)
-		Condition const&, InstanceManager const&, scope_t const&, scope_t const&
+		Condition const&, InstanceManager const&, scope_t, scope_t
 	> auto from_callback
 ) {
-	return _execute_condition_node_try_cast_argument_callback<T, scope_t const&, scope_t const&, scope_t const&>(
+	return _execute_condition_node_try_cast_argument_callback<T, scope_t, scope_t, scope_t>(
 		[value_callback](
-			Condition const& condition, InstanceManager const& instance_manager, scope_t const& current_scope,
-			scope_t const& this_scope, scope_t const& from_scope, T const& value
+			Condition const& condition, InstanceManager const& instance_manager, scope_t current_scope, scope_t this_scope,
+			scope_t from_scope, T const& value
 		) -> bool {
 			return value_callback(condition, instance_manager, current_scope, value);
 		},
 		[this_callback, from_callback](
-			Condition const& condition, InstanceManager const& instance_manager, scope_t const& current_scope,
-			scope_t const& this_scope, scope_t const& from_scope, argument_t const& argument
+			Condition const& condition, InstanceManager const& instance_manager, scope_t current_scope, scope_t this_scope,
+			scope_t from_scope, argument_t const& argument
 		) -> bool {
 			if (ConditionNode::is_this_argument(argument)) {
 				return this_callback(condition, instance_manager, current_scope, this_scope);
@@ -1030,13 +1027,12 @@ template<typename T>
 static constexpr auto _execute_condition_node_value_or_cast_this_or_from_callback(
 	Callback<
 		// bool(condition, instance_manager, current_scope, value)
-		Condition const&, InstanceManager const&, scope_t const&, T const&
+		Condition const&, InstanceManager const&, scope_t, T const&
 	> auto callback
 ) {
 	// If IS_THIS is false then the scope is FROM
 	const auto cast_scope_callback = [callback]<bool IS_THIS>(
-		Condition const& condition, InstanceManager const& instance_manager, scope_t const& current_scope,
-		scope_t const& this_or_from_scope
+		Condition const& condition, InstanceManager const& instance_manager, scope_t current_scope, scope_t this_or_from_scope
 	) -> bool {
 		T const* cast_this_or_from_scope = std::get_if<T>(&this_or_from_scope);
 
@@ -1056,16 +1052,16 @@ static constexpr auto _execute_condition_node_value_or_cast_this_or_from_callbac
 	return _execute_condition_node_value_or_this_or_from_callback<T>(
 		std::move(callback),
 		[cast_scope_callback](
-			Condition const& condition, InstanceManager const& instance_manager, scope_t const& current_scope,
-			scope_t const& this_or_from_scope
+			Condition const& condition, InstanceManager const& instance_manager, scope_t current_scope,
+			scope_t this_or_from_scope
 		) -> bool {
 			return cast_scope_callback.template operator()<true>(
 				condition, instance_manager, current_scope, this_or_from_scope
 			);
 		},
 		[cast_scope_callback](
-			Condition const& condition, InstanceManager const& instance_manager, scope_t const& current_scope,
-			scope_t const& this_or_from_scope
+			Condition const& condition, InstanceManager const& instance_manager, scope_t current_scope,
+			scope_t this_or_from_scope
 		) -> bool {
 			return cast_scope_callback.template operator()<false>(
 				condition, instance_manager, current_scope, this_or_from_scope
@@ -1075,16 +1071,16 @@ static constexpr auto _execute_condition_node_value_or_cast_this_or_from_callbac
 }
 
 static constexpr scope_t _change_scope_keep_current_scope(
-	Condition const& condition, InstanceManager const& instance_manager, scope_t const& current_scope,
-	scope_t const& this_scope, scope_t const& from_scope
+	Condition const& condition, InstanceManager const& instance_manager, scope_t current_scope, scope_t this_scope,
+	scope_t from_scope
 ) {
 	return current_scope;
 }
 
 template<bool EXPECTED_VALUE, bool REQUIRE_ALL>
 static constexpr bool _execute_condition_node_list(
-	InstanceManager const& instance_manager, scope_t const& current_scope,
-	scope_t const& this_scope, scope_t const& from_scope, std::vector<ConditionNode> const& condition_nodes
+	InstanceManager const& instance_manager, scope_t current_scope, scope_t this_scope, scope_t from_scope,
+	std::vector<ConditionNode> const& condition_nodes
 ) {
 	return _execute_iterative<EXPECTED_VALUE, REQUIRE_ALL>(
 		condition_nodes,
@@ -1097,23 +1093,23 @@ static constexpr bool _execute_condition_node_list(
 }
 
 /* - change_scope = returns the current scope for the child conditions to be executed with */
-template<bool EXPECTED_VALUE, bool REQUIRE_ALL>
+template<bool EXPECTED_VALUE, bool REQUIRE_ALL, typename CURRENT_SCOPE = scope_t>
 static constexpr auto _execute_condition_node_list_single_scope_callback(
 	Functor<
 		// new_scope(condition, instance_manager, current_scope, this_scope, from_scope)
-		scope_t, Condition const&, InstanceManager const&, scope_t const&, scope_t const&, scope_t const&
+		scope_t, Condition const&, InstanceManager const&, CURRENT_SCOPE, scope_t, scope_t
 	> auto change_scope
 ) {
 	return [change_scope](
-		Condition const& condition, InstanceManager const& instance_manager, scope_t const& current_scope,
-		scope_t const& this_scope, scope_t const& from_scope, argument_t const& argument
+		Condition const& condition, InstanceManager const& instance_manager, CURRENT_SCOPE current_scope,
+		scope_t this_scope, scope_t from_scope, argument_t const& argument
 	) -> bool {
 		return _execute_condition_node_cast_argument_callback<
-			std::vector<ConditionNode>, scope_t const&, scope_t const&, scope_t const&
+			std::vector<ConditionNode>, CURRENT_SCOPE, scope_t, scope_t
 		>(
 			[change_scope](
-				Condition const& condition, InstanceManager const& instance_manager, scope_t const& current_scope,
-				scope_t const& this_scope, scope_t const& from_scope, std::vector<ConditionNode> const& argument
+				Condition const& condition, InstanceManager const& instance_manager, CURRENT_SCOPE current_scope,
+				scope_t this_scope, scope_t from_scope, std::vector<ConditionNode> const& argument
 			) -> bool {
 				const scope_t new_scope = change_scope(condition, instance_manager, current_scope, this_scope, from_scope);
 
@@ -1137,27 +1133,27 @@ static constexpr auto _execute_condition_node_list_single_scope_callback(
 /* - change_scopes = returns the vector of current scopes for the child conditions to be executed with
  * - here EXPECTED_VALUE and REQUIRE_ALL refer to whether the results per scope are expected to be true and if all are needed,
  *   the conditions themselves are all expected to be true and are all required for each scope individually. */
-template<bool EXPECTED_VALUE, bool REQUIRE_ALL, typename CONTAINER, typename CURRENT_SCOPE = scope_t const&>
+template<bool EXPECTED_VALUE, bool REQUIRE_ALL, typename CONTAINER, typename CURRENT_SCOPE = scope_t>
 static constexpr auto _execute_condition_node_list_multi_scope_callback(
 	Functor<
 		// new_scopes(condition, instance_manager, current_scope, this_scope, from_scope)
-		CONTAINER, Condition const&, InstanceManager const&, CURRENT_SCOPE, scope_t const&, scope_t const&
+		CONTAINER, Condition const&, InstanceManager const&, CURRENT_SCOPE, scope_t, scope_t
 	> auto change_scopes
 ) {
 	return [change_scopes](
 		Condition const& condition, InstanceManager const& instance_manager, CURRENT_SCOPE current_scope,
-		scope_t const& this_scope, scope_t const& from_scope, argument_t const& argument
+		scope_t this_scope, scope_t from_scope, argument_t const& argument
 	) -> bool {
 		return _execute_condition_node_cast_argument_callback<
-			std::vector<ConditionNode>, CURRENT_SCOPE, scope_t const&, scope_t const&
+			std::vector<ConditionNode>, CURRENT_SCOPE, scope_t, scope_t
 		>(
 			[change_scopes](
 				Condition const& condition, InstanceManager const& instance_manager, CURRENT_SCOPE current_scope,
-				scope_t const& this_scope, scope_t const& from_scope, std::vector<ConditionNode> const& argument
+				scope_t this_scope, scope_t from_scope, std::vector<ConditionNode> const& argument
 			) -> bool {
 				return _execute_iterative<EXPECTED_VALUE, REQUIRE_ALL>(
 					change_scopes(condition, instance_manager, current_scope, this_scope, from_scope),
-					[&instance_manager, &this_scope, &from_scope, &argument](scope_t const& new_scope) -> bool {
+					[&instance_manager, &this_scope, &from_scope, &argument](scope_t new_scope) -> bool {
 						return _execute_condition_node_list<true, true>(
 							instance_manager, new_scope, this_scope, from_scope, argument
 						);
@@ -1188,8 +1184,8 @@ bool ConditionManager::setup_conditions(DefinitionManager const& definition_mana
 		_parse_condition_node_list_callback<THIS>,
 		_execute_condition_node_list_single_scope_callback<expect_true, require_all>(
 			[](
-				Condition const& condition, InstanceManager const& instance_manager, scope_t const& current_scope,
-				scope_t const& this_scope, scope_t const& from_scope
+				Condition const& condition, InstanceManager const& instance_manager, scope_t current_scope, scope_t this_scope,
+				scope_t from_scope
 			) -> scope_t {
 				return this_scope;
 			}
@@ -1200,8 +1196,8 @@ bool ConditionManager::setup_conditions(DefinitionManager const& definition_mana
 		_parse_condition_node_list_callback<FROM>,
 		_execute_condition_node_list_single_scope_callback<expect_true, require_all>(
 			[](
-				Condition const& condition, InstanceManager const& instance_manager, scope_t const& current_scope,
-				scope_t const& this_scope, scope_t const& from_scope
+				Condition const& condition, InstanceManager const& instance_manager, scope_t current_scope, scope_t this_scope,
+				scope_t from_scope
 			) -> scope_t {
 				return from_scope;
 			}
@@ -1218,12 +1214,10 @@ bool ConditionManager::setup_conditions(DefinitionManager const& definition_mana
 	ret &= add_condition(
 		"all_core",
 		_parse_condition_node_list_callback<PROVINCE, COUNTRY>,
-		_execute_condition_node_cast_argument_callback<
-			std::vector<ConditionNode>, scope_t const&, scope_t const&, scope_t const&
-		>(
+		_execute_condition_node_cast_argument_callback<std::vector<ConditionNode>, scope_t, scope_t, scope_t>(
 			[](
-				Condition const& condition, InstanceManager const& instance_manager, scope_t const& current_scope,
-				scope_t const& this_scope, scope_t const& from_scope, std::vector<ConditionNode> const& argument
+				Condition const& condition, InstanceManager const& instance_manager, scope_t current_scope, scope_t this_scope,
+				scope_t from_scope, std::vector<ConditionNode> const& argument
 			) -> bool {
 				struct visitor_t {
 
@@ -1268,12 +1262,10 @@ bool ConditionManager::setup_conditions(DefinitionManager const& definition_mana
 	ret &= add_condition(
 		"any_core",
 		_parse_condition_node_list_callback<PROVINCE, COUNTRY | PROVINCE>,
-		_execute_condition_node_cast_argument_callback<
-			std::vector<ConditionNode>, scope_t const&, scope_t const&, scope_t const&
-		>(
+		_execute_condition_node_cast_argument_callback<std::vector<ConditionNode>, scope_t, scope_t, scope_t>(
 			[](
-				Condition const& condition, InstanceManager const& instance_manager, scope_t const& current_scope,
-				scope_t const& this_scope, scope_t const& from_scope, std::vector<ConditionNode> const& argument
+				Condition const& condition, InstanceManager const& instance_manager, scope_t current_scope, scope_t this_scope,
+				scope_t from_scope, std::vector<ConditionNode> const& argument
 			) -> bool {
 				struct visitor_t {
 
@@ -1320,8 +1312,8 @@ bool ConditionManager::setup_conditions(DefinitionManager const& definition_mana
 		_parse_condition_node_list_callback<COUNTRY>,
 		_execute_condition_node_list_multi_scope_callback<expect_true, require_any, std::vector<CountryInstance*> const&>(
 			[](
-				Condition const& condition, InstanceManager const& instance_manager, scope_t const& current_scope,
-				scope_t const& this_scope, scope_t const& from_scope
+				Condition const& condition, InstanceManager const& instance_manager, scope_t current_scope, scope_t this_scope,
+				scope_t from_scope
 			) -> std::vector<CountryInstance*> const& {
 				return instance_manager.get_country_instance_manager().get_great_powers();
 			}
@@ -1330,13 +1322,13 @@ bool ConditionManager::setup_conditions(DefinitionManager const& definition_mana
 	ret &= add_condition(
 		"any_neighbor_country",
 		_parse_condition_node_list_callback<COUNTRY, COUNTRY>,
-		_execute_condition_node_convert_scope<CountryInstance, scope_t const&, scope_t const&, argument_t const&>(
+		_execute_condition_node_convert_scope<CountryInstance, scope_t, scope_t, argument_t const&>(
 			_execute_condition_node_list_multi_scope_callback<
 				expect_true, require_any, std::vector<scope_t>, CountryInstance const*
 			>(
 				[](
 					Condition const& condition, InstanceManager const& instance_manager, CountryInstance const* current_scope,
-					scope_t const& this_scope, scope_t const& from_scope
+					scope_t this_scope, scope_t from_scope
 				) -> std::vector<scope_t> {
 					std::vector<scope_t> neighbouring_country_scopes;
 
@@ -1350,61 +1342,65 @@ bool ConditionManager::setup_conditions(DefinitionManager const& definition_mana
 	ret &= add_condition(
 		"any_owned_province",
 		_parse_condition_node_list_callback<PROVINCE, COUNTRY | PROVINCE>,
-		_execute_condition_node_convert_scope<ProvinceInstance, scope_t const&, scope_t const&, argument_t const&>(
+		_execute_condition_node_convert_scope<CountryInstance, scope_t, scope_t, argument_t const&>(
 			_execute_condition_node_list_multi_scope_callback<
-				expect_true, require_any, std::vector<scope_t>, ProvinceInstance const*
+				expect_true, require_any, ordered_set<ProvinceInstance*> const&, CountryInstance const*
 			>(
 				[](
-					Condition const& condition, InstanceManager const& instance_manager, ProvinceInstance const* current_scope,
-					scope_t const& this_scope, scope_t const& from_scope
-				) -> std::vector<scope_t> {
-					std::vector<scope_t> neighbouring_country_scopes;
-
-					// TODO - fill neighbouring_country_scopes with pointers to countries neighbouring *current_scope
-
-					return neighbouring_country_scopes;
+					Condition const& condition, InstanceManager const& instance_manager, CountryInstance const* current_scope,
+					scope_t this_scope, scope_t from_scope
+				) -> ordered_set<ProvinceInstance*> const& {
+					return current_scope->get_owned_provinces();
 				}
 			)
 		)
-		/*_execute_condition_node_list_multi_scope_ref_callback<expect_true, require_any, ProvinceInstance*>(
-			_execute_condition_node_convert_scope<
-				ordered_set<ProvinceInstance*> const&, CountryInstance, scope_t const&, scope_t const&
-			>(
-				[](
-					Condition const& condition, InstanceManager const& instance_manager,
-					CountryInstance const* const& current_scope, scope_t const& this_scope, scope_t const& from_scope
-				) -> ordered_set<ProvinceInstance*> const& {
-					return {}; //current_scope->get_owned_provinces();
-
-					// ordered_set<ProvinceInstance*> const& owned_provinces = current_scope->get_owned_provinces();
-
-					// std::vector<scope_t> owned_province_scopes;
-					// owned_province_scopes.reserve(owned_provinces.size());
-
-					// for (ProvinceInstance const* owned_province : owned_provinces) {
-					// 	owned_province_scopes.push_back(owned_province);
-					// }
-
-					// return owned_province_scopes;
-				}
-			)
-		)*/
 	);
 	ret &= add_condition(
 		"any_pop",
 		_parse_condition_node_list_callback<POP, COUNTRY | PROVINCE>,
-		nullptr
-		/*_execute_condition_node_list_multi_scope_ref_callback<expect_true, require_any, Pop const*>(
-			_execute_condition_node_convert_scope<plf::colony<Pop> const&, ProvinceInstance, scope_t const&, scope_t const&>(
-				[](
-					Condition const& condition, InstanceManager const& instance_manager,
-					ProvinceInstance const* const& current_scope, scope_t const& this_scope, scope_t const& from_scope
-				) -> plf::colony<Pop> const& {
-					// TODO - fill with all pops in current_scope (either a country or a province)
-					return {}; //current_scope->get_pops();
-				}
-			)
-		)*/
+		_execute_condition_node_cast_argument_callback<std::vector<ConditionNode>, scope_t, scope_t, scope_t>(
+			[](
+				Condition const& condition, InstanceManager const& instance_manager, scope_t current_scope, scope_t this_scope,
+				scope_t from_scope, std::vector<ConditionNode> const& argument
+			) -> bool {
+				struct visitor_t {
+
+					Condition const& condition;
+					InstanceManager const& instance_manager;
+					scope_t const& this_scope;
+					scope_t const& from_scope;
+					std::vector<ConditionNode> const& argument;
+
+					bool operator()(no_scope_t no_scope) const {
+						Logger::error("Error executing condition \"", condition.get_identifier(), "\": no current scope!");
+						return false;
+					}
+
+					constexpr bool operator()(CountryInstance const* country) {
+						// TODO - should this be controlled provinces?
+						return _execute_iterative<expect_true, require_any>(country->get_owned_provinces(), *this);
+					}
+					constexpr bool operator()(State const* state) const {
+						return _execute_iterative<expect_true, require_any>(state->get_provinces(), *this);
+					}
+					constexpr bool operator()(ProvinceInstance const* province) const {
+						return _execute_iterative<expect_true, require_any>(province->get_pops(), *this);
+					}
+					constexpr bool operator()(Pop const* pop) const {
+						return _execute_condition_node_list<expect_true, require_all>(
+							instance_manager, pop, this_scope, from_scope, argument
+						);
+					}
+					constexpr bool operator()(Pop const& pop) const {
+						return (*this)(&pop);
+					}
+				};
+
+				return std::visit(visitor_t {
+					condition, instance_manager, this_scope, from_scope, argument
+				}, current_scope);
+			}
+		)
 	);
 	ret &= add_condition(
 		"any_sphere_member",
@@ -1414,7 +1410,18 @@ bool ConditionManager::setup_conditions(DefinitionManager const& definition_mana
 	ret &= add_condition(
 		"any_state",
 		_parse_condition_node_list_callback<PROVINCE, COUNTRY>,
-		_execute_condition_node_unimplemented
+		_execute_condition_node_convert_scope<CountryInstance, scope_t, scope_t, argument_t const&>(
+			_execute_condition_node_list_multi_scope_callback<
+				expect_true, require_any, ordered_set<State*> const&, CountryInstance const*
+			>(
+				[](
+					Condition const& condition, InstanceManager const& instance_manager, CountryInstance const* current_scope,
+					scope_t this_scope, scope_t from_scope
+				) -> ordered_set<State*> const& {
+					return current_scope->get_states();
+				}
+			)
+		)
 	);
 	ret &= add_condition(
 		"any_substate",
@@ -1424,11 +1431,11 @@ bool ConditionManager::setup_conditions(DefinitionManager const& definition_mana
 	ret &= add_condition(
 		"capital_scope",
 		_parse_condition_node_list_callback<PROVINCE, COUNTRY>,
-		_execute_condition_node_list_single_scope_callback<expect_true, require_all>(
-			_execute_condition_node_cast_scope<scope_t, CountryInstance const*, scope_t const&, scope_t const&>(
+		_execute_condition_node_convert_scope<CountryInstance, scope_t, scope_t, argument_t const&>(
+			_execute_condition_node_list_single_scope_callback<expect_true, require_all, CountryInstance const*>(
 				[](
-					Condition const& condition, InstanceManager const& instance_manager,
-					CountryInstance const* const& current_scope, scope_t const& this_scope, scope_t const& from_scope
+					Condition const& condition, InstanceManager const& instance_manager, CountryInstance const* current_scope,
+					scope_t this_scope, scope_t from_scope
 				) -> scope_t {
 					ProvinceInstance const* capital = current_scope->get_capital();
 
@@ -1483,11 +1490,11 @@ bool ConditionManager::setup_conditions(DefinitionManager const& definition_mana
 	ret &= add_condition(
 		"controller",
 		_parse_condition_node_list_callback<COUNTRY, PROVINCE>,
-		_execute_condition_node_list_single_scope_callback<expect_true, require_all>(
-			_execute_condition_node_cast_scope<scope_t, ProvinceInstance const*, scope_t const&, scope_t const&>(
+		_execute_condition_node_convert_scope<ProvinceInstance, scope_t, scope_t, argument_t const&>(
+			_execute_condition_node_list_single_scope_callback<expect_true, require_all, ProvinceInstance const*>(
 				[](
-					Condition const& condition, InstanceManager const& instance_manager,
-					ProvinceInstance const* const& current_scope, scope_t const& this_scope, scope_t const& from_scope
+					Condition const& condition, InstanceManager const& instance_manager, ProvinceInstance const* current_scope,
+					scope_t this_scope, scope_t from_scope
 				) -> scope_t {
 					CountryInstance const* controller = current_scope->get_controller();
 
@@ -1508,11 +1515,11 @@ bool ConditionManager::setup_conditions(DefinitionManager const& definition_mana
 	ret &= add_condition(
 		"owner",
 		_parse_condition_node_list_callback<COUNTRY, PROVINCE>,
-		_execute_condition_node_list_single_scope_callback<expect_true, require_all>(
-			_execute_condition_node_cast_scope<scope_t, ProvinceInstance const*, scope_t const&, scope_t const&>(
+		_execute_condition_node_convert_scope<ProvinceInstance, scope_t, scope_t, argument_t const&>(
+			_execute_condition_node_list_single_scope_callback<expect_true, require_all, ProvinceInstance const*>(
 				[](
-					Condition const& condition, InstanceManager const& instance_manager,
-					ProvinceInstance const* const& current_scope, scope_t const& this_scope, scope_t const& from_scope
+					Condition const& condition, InstanceManager const& instance_manager, ProvinceInstance const* current_scope,
+					scope_t this_scope, scope_t from_scope
 				) -> scope_t {
 					CountryInstance const* owner = current_scope->get_owner();
 
@@ -1533,18 +1540,38 @@ bool ConditionManager::setup_conditions(DefinitionManager const& definition_mana
 	ret &= add_condition(
 		"state_scope",
 		_parse_condition_node_list_callback<PROVINCE, PROVINCE>,
-		_execute_condition_node_unimplemented
+		_execute_condition_node_convert_scope<ProvinceInstance, scope_t, scope_t, argument_t const&>(
+			_execute_condition_node_list_single_scope_callback<expect_true, require_all, ProvinceInstance const*>(
+				[](
+					Condition const& condition, InstanceManager const& instance_manager, ProvinceInstance const* current_scope,
+					scope_t this_scope, scope_t from_scope
+				) -> scope_t {
+					State const* state = current_scope->get_state();
+
+					if (state == nullptr) {
+						Logger::error(
+							"Error executing condition \"", condition.get_identifier(),
+							"\": cannot create state scope for state condition - province \"",
+							current_scope->get_identifier(), "\"has no state!"
+						);
+						return no_scope_t {};
+					}
+
+					return state;
+				}
+			)
+		)
 	);
 
 	/* Trigger Pop Scopes */
 	ret &= add_condition(
 		"location",
 		_parse_condition_node_list_callback<PROVINCE, POP>,
-		_execute_condition_node_list_single_scope_callback<expect_true, require_all>(
-			_execute_condition_node_cast_scope<scope_t, Pop const*, scope_t const&, scope_t const&>(
+		_execute_condition_node_convert_scope<Pop, scope_t, scope_t, argument_t const&>(
+			_execute_condition_node_list_single_scope_callback<expect_true, require_all, Pop const*>(
 				[](
-					Condition const& condition, InstanceManager const& instance_manager, Pop const* const& current_scope,
-					scope_t const& this_scope, scope_t const& from_scope
+					Condition const& condition, InstanceManager const& instance_manager, Pop const* current_scope,
+					scope_t this_scope, scope_t from_scope
 				) -> scope_t {
 					ProvinceInstance const* location = current_scope->get_location();
 
@@ -1583,10 +1610,10 @@ bool ConditionManager::setup_conditions(DefinitionManager const& definition_mana
 	ret &= add_condition(
 		"year",
 		_parse_condition_node_value_callback<integer_t>,
-		_execute_condition_node_cast_argument_callback<integer_t, scope_t const&, scope_t const&, scope_t const&>(
+		_execute_condition_node_cast_argument_callback<integer_t, scope_t, scope_t, scope_t>(
 			[](
-				Condition const& condition, InstanceManager const& instance_manager, scope_t const& current_scope,
-				scope_t const& this_scope, scope_t const& from_scope, integer_t const& argument
+				Condition const& condition, InstanceManager const& instance_manager, scope_t current_scope, scope_t this_scope,
+				scope_t from_scope, integer_t argument
 			) -> bool {
 				return instance_manager.get_today().get_year() >= argument;
 			}
@@ -1595,10 +1622,10 @@ bool ConditionManager::setup_conditions(DefinitionManager const& definition_mana
 	ret &= add_condition(
 		"month",
 		_parse_condition_node_value_callback<integer_t>,
-		_execute_condition_node_cast_argument_callback<integer_t, scope_t const&, scope_t const&, scope_t const&>(
+		_execute_condition_node_cast_argument_callback<integer_t, scope_t, scope_t, scope_t>(
 			[](
-				Condition const& condition, InstanceManager const& instance_manager, scope_t const& current_scope,
-				scope_t const& this_scope, scope_t const& from_scope, integer_t const& argument
+				Condition const& condition, InstanceManager const& instance_manager, scope_t current_scope, scope_t this_scope,
+				scope_t from_scope, integer_t argument
 			) -> bool {
 				// Month condition values are indexed from 0 and Date months are indexed from 1, so we need to check
 				// current month >= condition month + 1. As both values are integers, this is equivalent to:
@@ -1609,10 +1636,10 @@ bool ConditionManager::setup_conditions(DefinitionManager const& definition_mana
 	ret &= add_condition(
 		"has_global_flag",
 		_parse_condition_node_value_callback<std::string>,
-		_execute_condition_node_cast_argument_callback<std::string, scope_t const&, scope_t const&, scope_t const&>(
+		_execute_condition_node_cast_argument_callback<std::string, scope_t, scope_t, scope_t>(
 			[](
-				Condition const& condition, InstanceManager const& instance_manager, scope_t const& current_scope,
-				scope_t const& this_scope, scope_t const& from_scope, std::string const& argument
+				Condition const& condition, InstanceManager const& instance_manager, scope_t current_scope, scope_t this_scope,
+				scope_t from_scope, std::string const& argument
 			) -> bool {
 				// TODO - check if global flag "argument" is set
 				return false;
@@ -1622,10 +1649,10 @@ bool ConditionManager::setup_conditions(DefinitionManager const& definition_mana
 	ret &= add_condition(
 		"is_canal_enabled",
 		_parse_condition_node_value_callback<integer_t>,
-		_execute_condition_node_cast_argument_callback<integer_t, scope_t const&, scope_t const&, scope_t const&>(
+		_execute_condition_node_cast_argument_callback<integer_t, scope_t, scope_t, scope_t>(
 			[](
-				Condition const& condition, InstanceManager const& instance_manager, scope_t const& current_scope,
-				scope_t const& this_scope, scope_t const& from_scope, integer_t const& argument
+				Condition const& condition, InstanceManager const& instance_manager, scope_t current_scope, scope_t this_scope,
+				scope_t from_scope, integer_t argument
 			) -> bool {
 				// TODO - check if canal[argument] is enabled
 				return false;
@@ -1635,10 +1662,10 @@ bool ConditionManager::setup_conditions(DefinitionManager const& definition_mana
 	ret &= add_condition(
 		"always",
 		_parse_condition_node_value_callback<bool>,
-		_execute_condition_node_cast_argument_callback<bool, scope_t const&, scope_t const&, scope_t const&>(
+		_execute_condition_node_cast_argument_callback<bool, scope_t, scope_t, scope_t>(
 			[](
-				Condition const& condition, InstanceManager const& instance_manager, scope_t const& current_scope,
-				scope_t const& this_scope, scope_t const& from_scope, bool const& argument
+				Condition const& condition, InstanceManager const& instance_manager, scope_t current_scope, scope_t this_scope,
+				scope_t from_scope, bool argument
 			) -> bool {
 				return argument;
 			}
@@ -1647,10 +1674,10 @@ bool ConditionManager::setup_conditions(DefinitionManager const& definition_mana
 	ret &= add_condition(
 		"world_wars_enabled",
 		_parse_condition_node_value_callback<bool>,
-		_execute_condition_node_cast_argument_callback<bool, scope_t const&, scope_t const&, scope_t const&>(
+		_execute_condition_node_cast_argument_callback<bool, scope_t, scope_t, scope_t>(
 			[](
-				Condition const& condition, InstanceManager const& instance_manager, scope_t const& current_scope,
-				scope_t const& this_scope, scope_t const& from_scope, bool const& argument
+				Condition const& condition, InstanceManager const& instance_manager, scope_t current_scope, scope_t this_scope,
+				scope_t from_scope, bool argument
 			) -> bool {
 				// TODO - check if world wars are enabled == argument
 				return false;
@@ -1662,17 +1689,13 @@ bool ConditionManager::setup_conditions(DefinitionManager const& definition_mana
 	ret &= add_condition(
 		"administration_spending",
 		_parse_condition_node_value_callback<fixed_point_t, COUNTRY>,
-		_execute_condition_node_cast_argument_callback<fixed_point_t, scope_t const&, scope_t const&, scope_t const&>(
-			_execute_condition_node_cast_scope<
-				bool, CountryInstance const*, scope_t const&, scope_t const&, fixed_point_t const&
-			>(
+		_execute_condition_node_cast_argument_callback<fixed_point_t, scope_t, scope_t, scope_t>(
+			_execute_condition_node_convert_scope<CountryInstance, scope_t, scope_t, fixed_point_t>(
 				[](
-					Condition const& condition, InstanceManager const& instance_manager,
-					CountryInstance const* const& current_scope, scope_t const& this_scope, scope_t const& from_scope,
-					fixed_point_t const& argument
+					Condition const& condition, InstanceManager const& instance_manager, CountryInstance const* current_scope,
+					scope_t this_scope, scope_t from_scope, fixed_point_t argument
 				) -> bool {
-					// TODO - check if *country has administration spending >= argument (in the range 0 - 1)
-					return false;
+					return current_scope->get_administration_spending().get_value() >= argument * CountryInstance::SLIDER_SIZE;
 				}
 			)
 		)
@@ -1680,15 +1703,13 @@ bool ConditionManager::setup_conditions(DefinitionManager const& definition_mana
 	ret &= add_condition(
 		"ai",
 		_parse_condition_node_value_callback<bool, COUNTRY>,
-		_execute_condition_node_cast_argument_callback<bool, scope_t const&, scope_t const&, scope_t const&>(
-			_execute_condition_node_cast_scope<bool, CountryInstance const*, scope_t const&, scope_t const&, bool const&>(
+		_execute_condition_node_cast_argument_callback<bool, scope_t, scope_t, scope_t>(
+			_execute_condition_node_convert_scope<CountryInstance, scope_t, scope_t, bool>(
 				[](
-					Condition const& condition, InstanceManager const& instance_manager,
-					CountryInstance const* const& current_scope, scope_t const& this_scope, scope_t const& from_scope,
-					bool const& argument
+					Condition const& condition, InstanceManager const& instance_manager, CountryInstance const* current_scope,
+					scope_t this_scope, scope_t from_scope, bool argument
 				) -> bool {
-					// TODO - check if *country is ai == argument
-					return false;
+					return current_scope->is_ai() == argument;
 				}
 			)
 		)
@@ -1697,10 +1718,10 @@ bool ConditionManager::setup_conditions(DefinitionManager const& definition_mana
 		"alliance_with",
 		_parse_condition_node_value_callback<CountryDefinition const*, COUNTRY | THIS | FROM>,
 		_execute_condition_node_value_or_cast_this_or_from_callback<CountryInstance const*>(
-			_execute_condition_node_cast_scope<bool, CountryInstance const*, CountryInstance const* const&>(
+			_execute_condition_node_convert_scope<CountryInstance, CountryInstance const*>(
 				[](
-					Condition const& condition, InstanceManager const& instance_manager,
-					CountryInstance const* const& current_scope, CountryInstance const* const& value
+					Condition const& condition, InstanceManager const& instance_manager, CountryInstance const* current_scope,
+					CountryInstance const* value
 				) -> bool {
 					// TODO - check if *current_scope and *value have alliance
 					return false;
@@ -1713,39 +1734,36 @@ bool ConditionManager::setup_conditions(DefinitionManager const& definition_mana
 		_parse_condition_node_value_callback<fixed_point_t, COUNTRY | PROVINCE>,
 
 		// TODO - can be used on province too!!!
-		_execute_condition_node_cast_argument_callback<fixed_point_t, scope_t const&, scope_t const&, scope_t const&>(
-			_execute_condition_node_cast_scope<
-				bool, CountryInstance const*, scope_t const&, scope_t const&, fixed_point_t const&
-			>(
+		_execute_condition_node_cast_argument_callback<fixed_point_t, scope_t, scope_t, scope_t>(
+			_execute_condition_node_convert_scope<CountryInstance, scope_t, scope_t, fixed_point_t>(
 				[](
-					Condition const& condition, InstanceManager const& instance_manager,
-					CountryInstance const* const& current_scope, scope_t const& this_scope, scope_t const& from_scope,
-					fixed_point_t const& argument
+					Condition const& condition, InstanceManager const& instance_manager, CountryInstance const* current_scope,
+					scope_t this_scope, scope_t from_scope, fixed_point_t argument
 				) -> bool {
 					return current_scope->get_national_consciousness() >= argument;
 				}
 			)
 		)
 
-		// _execute_condition_node_cast_argument_callback<fixed_point_t, scope_t const&, scope_t const&, scope_t const&>(
+		// _execute_condition_node_cast_argument_callback<fixed_point_t, scope_t, scope_t, scope_t>(
 		// 	_execute_condition_node_try_cast_scope_types<
 		// 		bool, CountryInstance const*, ProvinceInstance const*
 		// 	>(
 		// 		[](
-		// 			InstanceManager const& instance_manager, CountryInstance const* const& current_scope,
-		// 			scope_t const& this_scope, scope_t const& from_scope, fixed_point_t const& argument
+		// 			InstanceManager const& instance_manager, CountryInstance const* current_scope, scope_t this_scope,
+		// 			scope_t from_scope, fixed_point_t argument
 		// 		) -> bool {
 		// 			return current_scope->get_national_consciousness() >= argument;
 		// 		},
 		// 		[](
-		// 			InstanceManager const& instance_manager, ProvinceInstance const* const& current_scope,
-		// 			scope_t const& this_scope, scope_t const& from_scope, fixed_point_t const& argument
+		// 			InstanceManager const& instance_manager, ProvinceInstance const* current_scope, scope_t this_scope,
+		// 			scope_t from_scope, fixed_point_t argument
 		// 		) -> bool {
 		// 			return current_scope->get_average_consciousness() >= argument;
 		// 		},
 		// 		[](
-		// 			InstanceManager const& instance_manager, ProvinceInstance const* const& current_scope,
-		// 			scope_t const& this_scope, scope_t const& from_scope, fixed_point_t const& argument
+		// 			InstanceManager const& instance_manager, ProvinceInstance const* current_scope, scope_t this_scope,
+		// 			scope_t from_scope, fixed_point_t argument
 		// 		) -> bool {
 		// 			return false;
 		// 		}
@@ -1757,14 +1775,11 @@ bool ConditionManager::setup_conditions(DefinitionManager const& definition_mana
 		_parse_condition_node_value_callback<fixed_point_t, COUNTRY | PROVINCE>,
 
 		// TODO - can be used on province too!!!
-		_execute_condition_node_cast_argument_callback<fixed_point_t, scope_t const&, scope_t const&, scope_t const&>(
-			_execute_condition_node_cast_scope<
-				bool, CountryInstance const*, scope_t const&, scope_t const&, fixed_point_t const&
-			>(
+		_execute_condition_node_cast_argument_callback<fixed_point_t, scope_t, scope_t, scope_t>(
+			_execute_condition_node_convert_scope<CountryInstance, scope_t, scope_t, fixed_point_t>(
 				[](
-					Condition const& condition, InstanceManager const& instance_manager,
-					CountryInstance const* const& current_scope, scope_t const& this_scope, scope_t const& from_scope,
-					fixed_point_t const& argument
+					Condition const& condition, InstanceManager const& instance_manager, CountryInstance const* current_scope,
+					scope_t this_scope, scope_t from_scope, fixed_point_t argument
 				) -> bool {
 					return current_scope->get_national_militancy() >= argument;
 				}
@@ -1774,14 +1789,11 @@ bool ConditionManager::setup_conditions(DefinitionManager const& definition_mana
 	ret &= add_condition(
 		"badboy",
 		_parse_condition_node_value_callback<fixed_point_t, COUNTRY>,
-		_execute_condition_node_cast_argument_callback<fixed_point_t, scope_t const&, scope_t const&, scope_t const&>(
-			_execute_condition_node_cast_scope<
-				bool, CountryInstance const*, scope_t const&, scope_t const&, fixed_point_t const&
-			>(
+		_execute_condition_node_cast_argument_callback<fixed_point_t, scope_t, scope_t, scope_t>(
+			_execute_condition_node_convert_scope<CountryInstance, scope_t, scope_t, fixed_point_t>(
 				[](
-					Condition const& condition, InstanceManager const& instance_manager,
-					CountryInstance const* const& current_scope, scope_t const& this_scope, scope_t const& from_scope,
-					fixed_point_t const& argument
+					Condition const& condition, InstanceManager const& instance_manager, CountryInstance const* current_scope,
+					scope_t this_scope, scope_t from_scope, fixed_point_t argument
 				) -> bool {
 					// TODO - multiply argument by infamy_containment_limit during parsing rather than during every execution?
 					return current_scope->get_infamy() >= argument * instance_manager.get_definition_manager()
@@ -1793,14 +1805,11 @@ bool ConditionManager::setup_conditions(DefinitionManager const& definition_mana
 	ret &= add_condition(
 		"big_producer",
 		_parse_condition_node_value_callback<GoodDefinition const*, COUNTRY>,
-		_execute_condition_node_cast_argument_callback<GoodDefinition const*, scope_t const&, scope_t const&, scope_t const&>(
-			_execute_condition_node_cast_scope<
-				bool, CountryInstance const*, scope_t const&, scope_t const&, GoodDefinition const* const&
-			>(
+		_execute_condition_node_cast_argument_callback<GoodDefinition const*, scope_t, scope_t, scope_t>(
+			_execute_condition_node_convert_scope<CountryInstance, scope_t, scope_t, GoodDefinition const*>(
 				[](
-					Condition const& condition, InstanceManager const& instance_manager,
-					CountryInstance const* const& current_scope, scope_t const& this_scope, scope_t const& from_scope,
-					GoodDefinition const* const& argument
+					Condition const& condition, InstanceManager const& instance_manager, CountryInstance const* current_scope,
+					scope_t this_scope, scope_t from_scope, GoodDefinition const* argument
 				) -> bool {
 					// TODO - check if *current_scope is big producer of *argument
 					return false;
@@ -1811,14 +1820,11 @@ bool ConditionManager::setup_conditions(DefinitionManager const& definition_mana
 	ret &= add_condition(
 		"blockade",
 		_parse_condition_node_value_callback<fixed_point_t, COUNTRY>,
-		_execute_condition_node_cast_argument_callback<fixed_point_t, scope_t const&, scope_t const&, scope_t const&>(
-			_execute_condition_node_cast_scope<
-				bool, CountryInstance const*, scope_t const&, scope_t const&, fixed_point_t const&
-			>(
+		_execute_condition_node_cast_argument_callback<fixed_point_t, scope_t, scope_t, scope_t>(
+			_execute_condition_node_convert_scope<CountryInstance, scope_t, scope_t, fixed_point_t>(
 				[](
-					Condition const& condition, InstanceManager const& instance_manager,
-					CountryInstance const* const& current_scope, scope_t const& this_scope, scope_t const& from_scope,
-					fixed_point_t const& argument
+					Condition const& condition, InstanceManager const& instance_manager, CountryInstance const* current_scope,
+					scope_t this_scope, scope_t from_scope, fixed_point_t argument
 				) -> bool {
 					// TODO - check if proportion of *current_scope's ports that are blockaded is >= argument
 					return false;
@@ -1860,16 +1866,11 @@ bool ConditionManager::setup_conditions(DefinitionManager const& definition_mana
 	ret &= add_condition(
 		"capital",
 		_parse_condition_node_value_callback<ProvinceDefinition const*, COUNTRY>,
-		_execute_condition_node_cast_argument_callback<
-			ProvinceInstance const*, scope_t const&, scope_t const&, scope_t const&
-		>(
-			_execute_condition_node_cast_scope<
-				bool, CountryInstance const*, scope_t const&, scope_t const&, ProvinceInstance const* const&
-			>(
+		_execute_condition_node_cast_argument_callback<ProvinceInstance const*, scope_t, scope_t, scope_t>(
+			_execute_condition_node_convert_scope<CountryInstance, scope_t, scope_t, ProvinceInstance const*>(
 				[](
-					Condition const& condition, InstanceManager const& instance_manager,
-					CountryInstance const* const& current_scope, scope_t const& this_scope, scope_t const& from_scope,
-					ProvinceInstance const* const& argument
+					Condition const& condition, InstanceManager const& instance_manager, CountryInstance const* current_scope,
+					scope_t this_scope, scope_t from_scope, ProvinceInstance const* argument
 				) -> bool {
 					return current_scope->get_capital() == argument;
 				}
@@ -1906,12 +1907,11 @@ bool ConditionManager::setup_conditions(DefinitionManager const& definition_mana
 	ret &= add_condition(
 		"civilized",
 		_parse_condition_node_value_callback<bool, COUNTRY>,
-		_execute_condition_node_cast_argument_callback<bool, scope_t const&, scope_t const&, scope_t const&>(
-			_execute_condition_node_cast_scope<bool, CountryInstance const*, scope_t const&, scope_t const&, bool const&>(
+		_execute_condition_node_cast_argument_callback<bool, scope_t, scope_t, scope_t>(
+			_execute_condition_node_convert_scope<CountryInstance, scope_t, scope_t, bool>(
 				[](
-					Condition const& condition, InstanceManager const& instance_manager,
-					CountryInstance const* const& current_scope, scope_t const& this_scope, scope_t const& from_scope,
-					bool const& argument
+					Condition const& condition, InstanceManager const& instance_manager, CountryInstance const* current_scope,
+					scope_t this_scope, scope_t from_scope, bool argument
 				) -> bool {
 					return current_scope->is_civilised() == argument;
 				}
@@ -1926,11 +1926,11 @@ bool ConditionManager::setup_conditions(DefinitionManager const& definition_mana
 	ret &= add_condition(
 		"consciousness",
 		_parse_condition_node_value_callback<fixed_point_t, COUNTRY | POP>,
-		_execute_condition_node_cast_argument_callback<fixed_point_t, scope_t const&, scope_t const&, scope_t const&>(
-			_execute_condition_node_cast_scope<bool, Pop const*, scope_t const&, scope_t const&, fixed_point_t const&>(
+		_execute_condition_node_cast_argument_callback<fixed_point_t, scope_t, scope_t, scope_t>(
+			_execute_condition_node_convert_scope<Pop, scope_t, scope_t, fixed_point_t>(
 				[](
-					Condition const& condition, InstanceManager const& instance_manager, Pop const* const& current_scope,
-					scope_t const& this_scope, scope_t const& from_scope, fixed_point_t const& argument
+					Condition const& condition, InstanceManager const& instance_manager, Pop const* current_scope,
+					scope_t this_scope, scope_t from_scope, fixed_point_t argument
 				) -> bool {
 					return current_scope->get_consciousness() >= argument;
 				}
@@ -1950,14 +1950,11 @@ bool ConditionManager::setup_conditions(DefinitionManager const& definition_mana
 	ret &= add_condition(
 		"continent",
 		_parse_condition_node_value_callback<Continent const*, COUNTRY | PROVINCE>,
-		_execute_condition_node_cast_argument_callback<Continent const*, scope_t const&, scope_t const&, scope_t const&>(
-			_execute_condition_node_cast_scope<
-				bool, ProvinceInstance const*, scope_t const&, scope_t const&, Continent const* const&
-			>(
+		_execute_condition_node_cast_argument_callback<Continent const*, scope_t, scope_t, scope_t>(
+			_execute_condition_node_convert_scope<ProvinceInstance, scope_t, scope_t, Continent const*>(
 				[](
-					Condition const& condition, InstanceManager const& instance_manager,
-					ProvinceInstance const* const& current_scope, scope_t const& this_scope, scope_t const& from_scope,
-					Continent const* const& argument
+					Condition const& condition, InstanceManager const& instance_manager, ProvinceInstance const* current_scope,
+					scope_t this_scope, scope_t from_scope, Continent const* argument
 				) -> bool {
 					return current_scope->get_province_definition().get_continent() == argument;
 				}
@@ -1967,16 +1964,11 @@ bool ConditionManager::setup_conditions(DefinitionManager const& definition_mana
 	ret &= add_condition(
 		"controls",
 		_parse_condition_node_value_callback<ProvinceDefinition const*, COUNTRY>,
-		_execute_condition_node_cast_argument_callback<
-			ProvinceInstance const*, scope_t const&, scope_t const&, scope_t const&
-		>(
-			_execute_condition_node_cast_scope<
-				bool, CountryInstance const*, scope_t const&, scope_t const&, ProvinceInstance const* const&
-			>(
+		_execute_condition_node_cast_argument_callback<ProvinceInstance const*, scope_t, scope_t, scope_t>(
+			_execute_condition_node_convert_scope<CountryInstance, scope_t, scope_t, ProvinceInstance const*>(
 				[](
-					Condition const& condition, InstanceManager const& instance_manager,
-					CountryInstance const* const& current_scope, scope_t const& this_scope, scope_t const& from_scope,
-					ProvinceInstance const* const& argument
+					Condition const& condition, InstanceManager const& instance_manager, CountryInstance const* current_scope,
+					scope_t this_scope, scope_t from_scope, ProvinceInstance const* argument
 				) -> bool {
 					return argument->get_controller() == current_scope;
 					// TODO - we could double check with: current_scope->has_controlled_province(*argument);
@@ -2013,16 +2005,11 @@ bool ConditionManager::setup_conditions(DefinitionManager const& definition_mana
 	ret &= add_condition(
 		"culture_has_union_tag",
 		_parse_condition_node_value_callback<bool, COUNTRY>,
-		_execute_condition_node_cast_argument_callback<
-			bool, scope_t const&, scope_t const&, scope_t const&
-		>(
-			_execute_condition_node_cast_scope<
-				bool, CountryInstance const*, scope_t const&, scope_t const&, bool const&
-			>(
+		_execute_condition_node_cast_argument_callback<bool, scope_t, scope_t, scope_t>(
+			_execute_condition_node_convert_scope<CountryInstance, scope_t, scope_t, bool>(
 				[](
-					Condition const& condition, InstanceManager const& instance_manager,
-					CountryInstance const* const& current_scope, scope_t const& this_scope, scope_t const& from_scope,
-					bool const& argument
+					Condition const& condition, InstanceManager const& instance_manager, CountryInstance const* current_scope,
+					scope_t this_scope, scope_t from_scope, bool argument
 				) -> bool {
 					Culture const* primary_culture = current_scope->get_primary_culture();
 
@@ -2065,14 +2052,11 @@ bool ConditionManager::setup_conditions(DefinitionManager const& definition_mana
 	ret &= add_condition(
 		"government",
 		_parse_condition_node_value_callback<GovernmentType const*, COUNTRY>,
-		_execute_condition_node_cast_argument_callback<GovernmentType const*, scope_t const&, scope_t const&, scope_t const&>(
-			_execute_condition_node_cast_scope<
-				bool, CountryInstance const*, scope_t const&, scope_t const&, GovernmentType const* const&
-			>(
+		_execute_condition_node_cast_argument_callback<GovernmentType const*, scope_t, scope_t, scope_t>(
+			_execute_condition_node_convert_scope<CountryInstance, scope_t, scope_t, GovernmentType const*>(
 				[](
-					Condition const& condition, InstanceManager const& instance_manager,
-					CountryInstance const* const& current_scope, scope_t const& this_scope, scope_t const& from_scope,
-					GovernmentType const* const& argument
+					Condition const& condition, InstanceManager const& instance_manager, CountryInstance const* current_scope,
+					scope_t this_scope, scope_t from_scope, GovernmentType const* argument
 				) -> bool {
 					return current_scope->get_government_type() == argument;
 				}
@@ -2093,14 +2077,11 @@ bool ConditionManager::setup_conditions(DefinitionManager const& definition_mana
 	ret &= add_condition(
 		"has_country_flag",
 		_parse_condition_node_value_callback<std::string, COUNTRY | PROVINCE>,
-		_execute_condition_node_cast_argument_callback<std::string, scope_t const&, scope_t const&, scope_t const&>(
-			_execute_condition_node_cast_scope<
-				bool, CountryInstance const*, scope_t const&, scope_t const&, std::string const&
-			>(
+		_execute_condition_node_cast_argument_callback<std::string, scope_t, scope_t, scope_t>(
+			_execute_condition_node_convert_scope<CountryInstance, scope_t, scope_t, std::string const&>(
 				[](
-					Condition const& condition, InstanceManager const& instance_manager,
-					CountryInstance const* const& current_scope, scope_t const& this_scope, scope_t const& from_scope,
-					std::string const& argument
+					Condition const& condition, InstanceManager const& instance_manager, CountryInstance const* current_scope,
+					scope_t this_scope, scope_t from_scope, std::string const& argument
 				) -> bool {
 					return current_scope->has_country_flag(argument);
 				}
@@ -2122,14 +2103,11 @@ bool ConditionManager::setup_conditions(DefinitionManager const& definition_mana
 	ret &= add_condition(
 		"has_leader",
 		_parse_condition_node_value_callback<std::string, COUNTRY>,
-		_execute_condition_node_cast_argument_callback<std::string, scope_t const&, scope_t const&, scope_t const&>(
-			_execute_condition_node_cast_scope<
-				bool, CountryInstance const*, scope_t const&, scope_t const&, std::string const&
-			>(
+		_execute_condition_node_cast_argument_callback<std::string, scope_t, scope_t, scope_t>(
+			_execute_condition_node_convert_scope<CountryInstance, scope_t, scope_t, std::string const&>(
 				[](
-					Condition const& condition, InstanceManager const& instance_manager,
-					CountryInstance const* const& current_scope, scope_t const& this_scope, scope_t const& from_scope,
-					std::string const& argument
+					Condition const& condition, InstanceManager const& instance_manager, CountryInstance const* current_scope,
+					scope_t this_scope, scope_t from_scope, std::string const& argument
 				) -> bool {
 					// TODO - search for a leader with a name matching argument
 					return false;
@@ -2168,7 +2146,16 @@ bool ConditionManager::setup_conditions(DefinitionManager const& definition_mana
 		"industrial_score",
 		// This doesn't seem to work with regular country identifiers, they're treated as 0
 		_parse_condition_node_value_callback<fixed_point_t, COUNTRY | THIS | FROM>,
-		_execute_condition_node_unimplemented
+		_execute_condition_node_cast_argument_callback<fixed_point_t, scope_t, scope_t, scope_t>(
+			_execute_condition_node_convert_scope<CountryInstance, scope_t, scope_t, fixed_point_t>(
+				[](
+					Condition const& condition, InstanceManager const& instance_manager, CountryInstance const* current_scope,
+					scope_t this_scope, scope_t from_scope, fixed_point_t argument
+				) -> bool {
+					return current_scope->get_industrial_power() >= argument;
+				}
+			)
+		)
 	);
 	ret &= add_condition(
 		"in_sphere",
@@ -2186,7 +2173,16 @@ bool ConditionManager::setup_conditions(DefinitionManager const& definition_mana
 	ret &= add_condition(
 		"invention",
 		_parse_condition_node_value_callback<Invention const*, COUNTRY>,
-		_execute_condition_node_unimplemented
+		_execute_condition_node_cast_argument_callback<Invention const*, scope_t, scope_t, scope_t>(
+			_execute_condition_node_convert_scope<CountryInstance, scope_t, scope_t, Invention const*>(
+				[](
+					Condition const& condition, InstanceManager const& instance_manager, CountryInstance const* current_scope,
+					scope_t this_scope, scope_t from_scope, Invention const* argument
+				) -> bool {
+					return current_scope->is_invention_unlocked(*argument);
+				}
+			)
+		)
 	);
 	ret &= add_condition(
 		"involved_in_crisis",
@@ -2213,17 +2209,48 @@ bool ConditionManager::setup_conditions(DefinitionManager const& definition_mana
 	ret &= add_condition(
 		"is_disarmed",
 		_parse_condition_node_value_callback<bool, COUNTRY>,
-		_execute_condition_node_unimplemented
+		_execute_condition_node_cast_argument_callback<bool, scope_t, scope_t, scope_t>(
+			_execute_condition_node_convert_scope<CountryInstance, scope_t, scope_t, bool>(
+				[](
+					Condition const& condition, InstanceManager const& instance_manager, CountryInstance const* current_scope,
+					scope_t this_scope, scope_t from_scope, bool argument
+				) -> bool {
+					return current_scope->is_disarmed() == argument;
+				}
+			)
+		)
 	);
 	ret &= add_condition(
 		"is_greater_power",
 		_parse_condition_node_value_callback<bool, COUNTRY>,
-		_execute_condition_node_unimplemented
+		_execute_condition_node_cast_argument_callback<bool, scope_t, scope_t, scope_t>(
+			_execute_condition_node_convert_scope<CountryInstance, scope_t, scope_t, bool>(
+				[](
+					Condition const& condition, InstanceManager const& instance_manager, CountryInstance const* current_scope,
+					scope_t this_scope, scope_t from_scope, bool argument
+				) -> bool {
+					return current_scope->is_great_power() == argument;
+				}
+			)
+		)
 	);
 	ret &= add_condition(
 		"is_colonial",
 		_parse_condition_node_value_callback<bool, PROVINCE>,
-		_execute_condition_node_unimplemented
+		_execute_condition_node_cast_argument_callback<bool, scope_t, scope_t, scope_t>(
+			_execute_condition_node_convert_scope<ProvinceInstance, scope_t, scope_t, bool>(
+				[](
+					Condition const& condition, InstanceManager const& instance_manager, ProvinceInstance const* current_scope,
+					scope_t this_scope, scope_t from_scope, bool argument
+				) -> bool {
+					using enum ProvinceInstance::colony_status_t;
+
+					// TODO - ensure province colony status is set properly (default state for owned provinces, default colony for unowned)
+
+					return current_scope->get_colony_status() != STATE;
+				}
+			)
+		)
 	);
 	ret &= add_condition(
 		"is_core",
@@ -2944,8 +2971,8 @@ bool ConditionManager::setup_conditions(DefinitionManager const& definition_mana
 			_parse_condition_node_list_callback<COUNTRY>,
 			_execute_condition_node_list_single_scope_callback<expect_true, require_all>(
 				[&country](
-					Condition const& condition, InstanceManager const& instance_manager, scope_t const& current_scope,
-					scope_t const& this_scope, scope_t const& from_scope
+					Condition const& condition, InstanceManager const& instance_manager, scope_t current_scope,
+					scope_t this_scope, scope_t from_scope
 				) -> scope_t {
 					return &instance_manager.get_country_instance_manager().get_country_instance_from_definition(country);
 				}
@@ -2960,8 +2987,8 @@ bool ConditionManager::setup_conditions(DefinitionManager const& definition_mana
 			nullptr
 			/*_execute_condition_node_list_multi_scope_callback<expect_true, require_all>(
 				[&region](
-					Condition const& condition, InstanceManager const& instance_manager, scope_t const& current_scope,
-					scope_t const& this_scope, scope_t const& from_scope
+					Condition const& condition, InstanceManager const& instance_manager, scope_t current_scope,
+					scope_t this_scope, scope_t from_scope
 				) -> std::vector<scope_t> {
 					std::vector<ProvinceDefinition const*> const& region_provinces = region.get_provinces();
 
@@ -2986,8 +3013,8 @@ bool ConditionManager::setup_conditions(DefinitionManager const& definition_mana
 			_parse_condition_node_list_callback<PROVINCE>,
 			_execute_condition_node_list_single_scope_callback<expect_true, require_all>(
 				[&province](
-					Condition const& condition, InstanceManager const& instance_manager, scope_t const& current_scope,
-					scope_t const& this_scope, scope_t const& from_scope
+					Condition const& condition, InstanceManager const& instance_manager, scope_t current_scope,
+					scope_t this_scope, scope_t from_scope
 				) -> scope_t {
 					return &instance_manager.get_map_instance().get_province_instance_from_definition(province);
 				}
@@ -3025,14 +3052,11 @@ bool ConditionManager::setup_conditions(DefinitionManager const& definition_mana
 			issue_group.get_identifier(),
 			// TODO - should we check that the Issue actually belongs to this IssueGroup?
 			_parse_condition_node_value_callback<Issue const*, COUNTRY>,
-			_execute_condition_node_cast_argument_callback<Issue const*, scope_t const&, scope_t const&, scope_t const&>(
-				_execute_condition_node_cast_scope<
-					bool, CountryInstance const*, scope_t const&, scope_t const&, Issue const* const&
-				>(
+			_execute_condition_node_cast_argument_callback<Issue const*, scope_t, scope_t, scope_t>(
+				_execute_condition_node_convert_scope<CountryInstance, scope_t, scope_t, Issue const*>(
 					[&issue_group](
 						Condition const& condition, InstanceManager const& instance_manager,
-						CountryInstance const* const& current_scope, scope_t const& this_scope, scope_t const& from_scope,
-						Issue const* const& argument
+						CountryInstance const* current_scope, scope_t this_scope, scope_t from_scope, Issue const* argument
 					) -> bool {
 						CountryParty const* ruling_party = current_scope->get_ruling_party();
 
