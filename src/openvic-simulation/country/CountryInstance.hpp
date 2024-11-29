@@ -79,6 +79,7 @@ namespace OpenVic {
 		CountryDefinition const* PROPERTY(country_definition);
 		colour_t PROPERTY(colour); // Cached to avoid searching government overrides for every province
 		ProvinceInstance const* PROPERTY(capital);
+		bool PROPERTY_CUSTOM_PREFIX(ai, is);
 		bool PROPERTY_CUSTOM_PREFIX(releasable_vassal, is);
 
 		country_status_t PROPERTY(country_status);

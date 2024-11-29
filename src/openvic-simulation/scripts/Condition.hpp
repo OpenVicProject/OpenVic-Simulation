@@ -219,8 +219,7 @@ namespace OpenVic {
 		}
 
 		bool execute(
-			InstanceManager const& instance_manager, scope_t const& current_scope, scope_t const& this_scope,
-			scope_t const& from_scope
+			InstanceManager const& instance_manager, scope_t current_scope, scope_t this_scope, scope_t from_scope
 		) const;
 	};
 
@@ -236,8 +235,8 @@ namespace OpenVic {
 		>;
 		using execute_callback_t = NodeTools::callback_t<
 			// bool(condition, instance_manager, current_scope, this_scope, from_scope, argument)
-			Condition const&, InstanceManager const&, ConditionNode::scope_t const&, ConditionNode::scope_t const&,
-			ConditionNode::scope_t const&, ConditionNode::argument_t const&
+			Condition const&, InstanceManager const&, ConditionNode::scope_t, ConditionNode::scope_t, ConditionNode::scope_t,
+			ConditionNode::argument_t const&
 		>;
 
 	private:

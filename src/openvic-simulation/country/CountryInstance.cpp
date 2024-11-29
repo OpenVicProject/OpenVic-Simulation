@@ -39,6 +39,7 @@ CountryInstance::CountryInstance(
 	country_definition { new_country_definition },
 	colour { ERROR_COLOUR },
 	capital { nullptr },
+	ai { true },
 	releasable_vassal { true },
 	country_status { COUNTRY_STATUS_UNCIVILISED },
 	lose_great_power_date {},
