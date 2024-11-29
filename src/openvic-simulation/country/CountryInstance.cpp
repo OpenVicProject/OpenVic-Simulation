@@ -39,6 +39,7 @@ CountryInstance::CountryInstance(
 	colour { ERROR_COLOUR },
 	capital { nullptr },
 	country_flags {},
+	ai { true },
 	releasable_vassal { true },
 	country_status { COUNTRY_STATUS_UNCIVILISED },
 	lose_great_power_date {},
@@ -62,6 +63,13 @@ CountryInstance::CountryInstance(
 	/* Budget */
 	cash_stockpile { 0 },
 	tax_rate_by_strata { &strata_keys },
+	land_spending {},
+	naval_spending {},
+	construction_spending {},
+	education_spending {},
+	administration_spending {},
+	social_spending {},
+	military_spending {},
 	tariff_rate {},
 
 	/* Technology */

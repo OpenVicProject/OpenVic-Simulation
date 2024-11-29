@@ -66,8 +66,10 @@ namespace OpenVic {
 		using unlock_level_t = int8_t;
 		using unit_variant_t = uint8_t;
 
-		using StandardSliderValue = SliderValue<0, 100>;
-		using TariffSliderValue = SliderValue<-100, 100>;
+		static constexpr slider_value_int_type SLIDER_SIZE = 100;
+
+		using StandardSliderValue = SliderValue<0, SLIDER_SIZE>;
+		using TariffSliderValue = SliderValue<-SLIDER_SIZE, SLIDER_SIZE>;
 
 	private:
 		/* Main attributes */
@@ -77,6 +79,7 @@ namespace OpenVic {
 		colour_t PROPERTY(colour); // Cached to avoid searching government overrides for every province
 		ProvinceInstance const* PROPERTY(capital);
 		string_set_t PROPERTY(country_flags);
+		bool PROPERTY_CUSTOM_PREFIX(ai, is);
 		bool PROPERTY_CUSTOM_PREFIX(releasable_vassal, is);
 
 		country_status_t PROPERTY(country_status);
@@ -105,6 +108,13 @@ namespace OpenVic {
 		/* Budget */
 		fixed_point_t PROPERTY(cash_stockpile);
 		IndexedMap<Strata, StandardSliderValue> PROPERTY(tax_rate_by_strata);
+		StandardSliderValue PROPERTY(land_spending);
+		StandardSliderValue PROPERTY(naval_spending);
+		StandardSliderValue PROPERTY(construction_spending);
+		StandardSliderValue PROPERTY(education_spending);
+		StandardSliderValue PROPERTY(administration_spending);
+		StandardSliderValue PROPERTY(social_spending);
+		StandardSliderValue PROPERTY(military_spending);
 		TariffSliderValue PROPERTY(tariff_rate);
 		// TODO - cash stockpile change over last 30 days
 
