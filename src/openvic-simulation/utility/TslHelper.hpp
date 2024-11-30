@@ -46,7 +46,7 @@ namespace OpenVic {
 				return tmp;
 			}
 
-			pair_type operator[](difference_type n) {
+			pair_type operator[](difference_type n) const {
 				return *(*this + n);
 			}
 
@@ -59,12 +59,12 @@ namespace OpenVic {
 				return *this;
 			}
 
-			ordered_iterator operator+(difference_type n) {
+			ordered_iterator operator+(difference_type n) const {
 				ordered_iterator tmp(*this);
 				tmp += n;
 				return tmp;
 			}
-			ordered_iterator operator-(difference_type n) {
+			ordered_iterator operator-(difference_type n) const {
 				ordered_iterator tmp(*this);
 				tmp -= n;
 				return tmp;

@@ -16,7 +16,7 @@ State::State(
 	ProvinceInstance* new_capital,
 	std::vector<ProvinceInstance*>&& new_provinces,
 	ProvinceInstance::colony_status_t new_colony_status,
-	decltype(pop_type_distribution)::keys_t const& pop_type_keys
+	decltype(pop_type_distribution)::keys_type const& pop_type_keys
 ) : state_set { new_state_set },
 	owner { new_owner },
 	capital { new_capital },
@@ -43,8 +43,8 @@ void State::update_gamestate() {
 	pop_type_distribution.clear();
 	max_supported_regiments = 0;
 
-	for (PopType const& pop_type : *pops_cache_by_type.get_keys()) {
-		pops_cache_by_type[pop_type].clear();
+	for (std::vector<Pop*>& pops_cache : pops_cache_by_type.get_values()) {
+		pops_cache.clear();
 	}
 
 	for (ProvinceInstance const* const province : provinces) {
@@ -56,10 +56,7 @@ void State::update_gamestate() {
 		average_consciousness += province->get_average_consciousness() * province_population;
 		average_militancy += province->get_average_militancy() * province_population;
 
-		pop_type_distribution += province->get_pop_type_distribution();
-		IndexedMap<PopType, std::vector<Pop*>> const& province_pops_cache_by_type = province->get_pops_cache_by_type();
-		for (PopType const& pop_type : *province_pops_cache_by_type.get_keys()) {
-			std::vector<Pop*> const& province_pops_of_type = province_pops_cache_by_type[pop_type];
+		for (auto const& [pop_type, province_pops_of_type] : province->get_pops_cache_by_type()) {
 			std::vector<Pop*>& state_pops_of_type = pops_cache_by_type[pop_type];
 			state_pops_of_type.insert(
 				state_pops_of_type.end(),
@@ -67,6 +64,7 @@ void State::update_gamestate() {
 				province_pops_of_type.end()
 			);
 		}
+
 		max_supported_regiments += province->get_max_supported_regiments();
 	}
 
@@ -115,7 +113,7 @@ void StateSet::update_gamestate() {
 }
 
 bool StateManager::add_state_set(
-	MapInstance& map_instance, Region const& region, decltype(State::pop_type_distribution)::keys_t const& pop_type_keys
+	MapInstance& map_instance, Region const& region, decltype(State::pop_type_distribution)::keys_type const& pop_type_keys
 ) {
 	if (region.get_meta()) {
 		Logger::error("Cannot use meta region \"", region.get_identifier(), "\" as state template!");
@@ -180,7 +178,7 @@ bool StateManager::add_state_set(
 }
 
 bool StateManager::generate_states(
-	MapInstance& map_instance, decltype(State::pop_type_distribution)::keys_t const& pop_type_keys
+	MapInstance& map_instance, decltype(State::pop_type_distribution)::keys_type const& pop_type_keys
 ) {
 	MapDefinition const& map_definition = map_instance.get_map_definition();
 

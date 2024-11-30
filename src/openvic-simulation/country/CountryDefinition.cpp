@@ -144,7 +144,7 @@ node_callback_t CountryDefinitionManager::load_country_party(
 			[&politics_manager, &policies, &party_name](std::string_view key, ast::NodeCPtr value) -> bool {
 				return politics_manager.get_issue_manager().expect_issue_group_str(
 					[&politics_manager, &policies, value, &party_name](IssueGroup const& group) -> bool {
-						CountryParty::policy_map_t::value_ref_t policy = policies[group];
+						CountryParty::policy_map_t::value_ref_type policy = policies[group];
 
 						if (policy != nullptr) {
 							Logger::error("Country party ", party_name, " has duplicate entry for ", group.get_identifier());

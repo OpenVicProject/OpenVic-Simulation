@@ -20,8 +20,8 @@ ProvinceInstance::ProvinceInstance(
 	MarketInstance& new_market_instance,
 	ModifierEffectCache const& new_modifier_effect_cache,
 	ProvinceDefinition const& new_province_definition,
-	decltype(pop_type_distribution)::keys_t const& pop_type_keys,
-	decltype(ideology_distribution)::keys_t const& ideology_keys
+	decltype(pop_type_distribution)::keys_type const& pop_type_keys,
+	decltype(ideology_distribution)::keys_type const& ideology_keys
 ) : HasIdentifierAndColour { new_province_definition },
 	province_definition { new_province_definition },
 	terrain_type { new_province_definition.get_default_terrain_type() },
@@ -63,7 +63,7 @@ bool ProvinceInstance::set_rgo_production_type_nullable(ProductionType const* rg
 		}
 		is_valid_operation&=convert_rgo_worker_pops_to_equivalent(rgo_production_type);
 	}
-	
+
 	rgo.set_production_type_nullable(rgo_production_type_nullable);
 	return is_valid_operation;
 }
@@ -186,8 +186,8 @@ void ProvinceInstance::_update_pops(DefineManager const& define_manager) {
 	culture_distribution.clear();
 	religion_distribution.clear();
 
-	for (PopType const& pop_type : *pops_cache_by_type.get_keys()) {
-		pops_cache_by_type[pop_type].clear();
+	for (std::vector<Pop*>& pops_cache : pops_cache_by_type.get_values()) {
+		pops_cache.clear();
 	}
 
 	max_supported_regiments = 0;
@@ -348,8 +348,8 @@ std::vector<ModifierSum::modifier_entry_t> ProvinceInstance::get_contributing_mo
 bool ProvinceInstance::convert_rgo_worker_pops_to_equivalent(ProductionType const& production_type) {
 	bool is_valid_operation = true;
 	std::vector<Job> const& jobs = production_type.get_jobs();
-	for(Pop& pop : pops) {
-		for(Job const& job : jobs) {
+	for (Pop& pop : pops) {
+		for (Job const& job : jobs) {
 			PopType const* const job_pop_type = job.get_pop_type();
 			PopType const* old_pop_type = pop.get_type();
 			if (job_pop_type != old_pop_type) {

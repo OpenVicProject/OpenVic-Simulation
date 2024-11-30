@@ -45,8 +45,8 @@ bool MapInstance::setup(
 	BuildingTypeManager const& building_type_manager,
 	MarketInstance& market_instance,
 	ModifierEffectCache const& modifier_effect_cache,
-	decltype(ProvinceInstance::pop_type_distribution)::keys_t const& pop_type_keys,
-	decltype(ProvinceInstance::ideology_distribution)::keys_t const& ideology_keys
+	decltype(ProvinceInstance::pop_type_distribution)::keys_type const& pop_type_keys,
+	decltype(ProvinceInstance::ideology_distribution)::keys_type const& ideology_keys
 ) {
 	if (province_instances_are_locked()) {
 		Logger::error("Cannot setup map - province instances are locked!");
@@ -64,7 +64,7 @@ bool MapInstance::setup(
 	for (ProvinceDefinition const& province : map_definition.get_province_definitions()) {
 		ret &= province_instances.add_item({
 			market_instance,
-			modifier_effect_cache, 
+			modifier_effect_cache,
 			province,
 			pop_type_keys,
 			ideology_keys
@@ -104,8 +104,8 @@ bool MapInstance::apply_history_to_provinces(
 				ProductionType const* rgo_production_type_nullable = nullptr;
 
 				for (auto const& [entry_date, entry] : history_map->get_entries()) {
-					if(entry_date > date) {
-						if(pop_history_entry != nullptr) {
+					if (entry_date > date) {
+						if (pop_history_entry != nullptr) {
 							break;
 						}
 					} else {
@@ -145,7 +145,7 @@ void MapInstance::update_modifier_sums(const Date today, StaticModifierCache con
 void MapInstance::update_gamestate(const Date today, DefineManager const& define_manager) {
 	highest_province_population = 0;
 	total_map_population = 0;
-	
+
 	for (ProvinceInstance& province : province_instances.get_items()) {
 		province.update_gamestate(today, define_manager);
 

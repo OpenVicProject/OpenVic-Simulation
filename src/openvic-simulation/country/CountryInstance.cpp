@@ -23,17 +23,17 @@ static constexpr colour_t ERROR_COLOUR = colour_t::from_integer(0xFF0000);
 
 CountryInstance::CountryInstance(
 	CountryDefinition const* new_country_definition,
-	decltype(building_type_unlock_levels)::keys_t const& building_type_keys,
-	decltype(technology_unlock_levels)::keys_t const& technology_keys,
-	decltype(invention_unlock_levels)::keys_t const& invention_keys,
-	decltype(upper_house)::keys_t const& ideology_keys,
-	decltype(reforms)::keys_t const& reform_keys,
-	decltype(government_flag_overrides)::keys_t const& government_type_keys,
-	decltype(crime_unlock_levels)::keys_t const& crime_keys,
-	decltype(pop_type_distribution)::keys_t const& pop_type_keys,
-	decltype(regiment_type_unlock_levels)::keys_t const& regiment_type_unlock_levels_keys,
-	decltype(ship_type_unlock_levels)::keys_t const& ship_type_unlock_levels_keys,
-	decltype(tax_rate_by_strata)::keys_t const& strata_keys
+	decltype(building_type_unlock_levels)::keys_type const& building_type_keys,
+	decltype(technology_unlock_levels)::keys_type const& technology_keys,
+	decltype(invention_unlock_levels)::keys_type const& invention_keys,
+	decltype(upper_house)::keys_type const& ideology_keys,
+	decltype(reforms)::keys_type const& reform_keys,
+	decltype(government_flag_overrides)::keys_type const& government_type_keys,
+	decltype(crime_unlock_levels)::keys_type const& crime_keys,
+	decltype(pop_type_distribution)::keys_type const& pop_type_keys,
+	decltype(regiment_type_unlock_levels)::keys_type const& regiment_type_unlock_levels_keys,
+	decltype(ship_type_unlock_levels)::keys_type const& ship_type_unlock_levels_keys,
+	decltype(tax_rate_by_strata)::keys_type const& strata_keys
 ) : /* Main attributes */
 	country_definition { new_country_definition },
 	colour { ERROR_COLOUR },
@@ -266,7 +266,7 @@ bool CountryInstance::set_ruling_party(CountryParty const& new_ruling_party) {
 
 bool CountryInstance::add_reform(Reform const& new_reform) {
 	ReformGroup const& reform_group = new_reform.get_reform_group();
-	decltype(reforms)::value_ref_t reform = reforms[reform_group];
+	decltype(reforms)::value_ref_type reform = reforms[reform_group];
 
 	if (reform != &new_reform) {
 		if (reform_group.is_administrative()) {
@@ -356,7 +356,8 @@ template<UnitType::branch_t Branch>
 bool CountryInstance::modify_unit_type_unlock(UnitTypeBranched<Branch> const& unit_type, unlock_level_t unlock_level_change) {
 	IndexedMap<UnitTypeBranched<Branch>, unlock_level_t>& unlocked_unit_types = get_unit_type_unlock_levels<Branch>();
 
-	typename IndexedMap<UnitTypeBranched<Branch>, unlock_level_t>::value_ref_t unlock_level = unlocked_unit_types[unit_type];
+	typename IndexedMap<UnitTypeBranched<Branch>, unlock_level_t>::value_ref_type unlock_level =
+		unlocked_unit_types[unit_type];
 
 	// This catches subtracting below 0 or adding above the int types maximum value
 	if (unlock_level + unlock_level_change < 0) {
@@ -416,7 +417,7 @@ bool CountryInstance::is_unit_type_unlocked(UnitType const& unit_type) const {
 }
 
 bool CountryInstance::modify_building_type_unlock(BuildingType const& building_type, unlock_level_t unlock_level_change) {
-	decltype(building_type_unlock_levels)::value_ref_t unlock_level = building_type_unlock_levels[building_type];
+	decltype(building_type_unlock_levels)::value_ref_type unlock_level = building_type_unlock_levels[building_type];
 
 	// This catches subtracting below 0 or adding above the int types maximum value
 	if (unlock_level + unlock_level_change < 0) {
@@ -443,7 +444,7 @@ bool CountryInstance::is_building_type_unlocked(BuildingType const& building_typ
 }
 
 bool CountryInstance::modify_crime_unlock(Crime const& crime, unlock_level_t unlock_level_change) {
-	decltype(crime_unlock_levels)::value_ref_t unlock_level = crime_unlock_levels[crime];
+	decltype(crime_unlock_levels)::value_ref_type unlock_level = crime_unlock_levels[crime];
 
 	// This catches subtracting below 0 or adding above the int types maximum value
 	if (unlock_level + unlock_level_change < 0) {
@@ -562,7 +563,7 @@ CountryInstance::unit_variant_t CountryInstance::get_max_unlocked_unit_variant()
 }
 
 bool CountryInstance::modify_technology_unlock(Technology const& technology, unlock_level_t unlock_level_change) {
-	decltype(technology_unlock_levels)::value_ref_t unlock_level = technology_unlock_levels[technology];
+	decltype(technology_unlock_levels)::value_ref_type unlock_level = technology_unlock_levels[technology];
 
 	// This catches subtracting below 0 or adding above the int types maximum value
 	if (unlock_level + unlock_level_change < 0) {
@@ -608,7 +609,7 @@ bool CountryInstance::is_technology_unlocked(Technology const& technology) const
 }
 
 bool CountryInstance::modify_invention_unlock(Invention const& invention, unlock_level_t unlock_level_change) {
-	decltype(invention_unlock_levels)::value_ref_t unlock_level = invention_unlock_levels[invention];
+	decltype(invention_unlock_levels)::value_ref_type unlock_level = invention_unlock_levels[invention];
 
 	// This catches subtracting below 0 or adding above the int types maximum value
 	if (unlock_level + unlock_level_change < 0) {
@@ -933,14 +934,14 @@ bool CountryInstance::update_rule_set() {
 	rule_set.clear();
 
 	if (ruling_party != nullptr) {
-		for (Issue const* issue : ruling_party->get_policies()) {
+		for (Issue const* issue : ruling_party->get_policies().get_values()) {
 			if (issue != nullptr) {
 				rule_set |= issue->get_rules();
 			}
 		}
 	}
 
-	for (Reform const* reform : reforms) {
+	for (Reform const* reform : reforms.get_values()) {
 		if (reform != nullptr) {
 			rule_set |= reform->get_rules();
 		}
@@ -995,14 +996,14 @@ void CountryInstance::update_modifier_sum(Date today, StaticModifierCache const&
 	// TODO - handle triggered modifiers
 
 	if (ruling_party != nullptr) {
-		for (Issue const* issue : ruling_party->get_policies()) {
+		for (Issue const* issue : ruling_party->get_policies().get_values()) {
 			// The ruling party's issues here could be null as they're stored in an IndexedMap which has
 			// values for every IssueGroup regardless of whether or not they have a policy set.
 			modifier_sum.add_modifier_nullcheck(issue, country_source);
 		}
 	}
 
-	for (Reform const* reform : reforms) {
+	for (Reform const* reform : reforms.get_values()) {
 		// The country's reforms here could be null as they're stored in an IndexedMap which has
 		// values for every ReformGroup regardless of whether or not they have a reform set.
 		modifier_sum.add_modifier_nullcheck(reform, country_source);
@@ -1237,17 +1238,17 @@ CountryInstance const& CountryInstanceManager::get_country_instance_from_definit
 
 bool CountryInstanceManager::generate_country_instances(
 	CountryDefinitionManager const& country_definition_manager,
-	decltype(CountryInstance::building_type_unlock_levels)::keys_t const& building_type_keys,
-	decltype(CountryInstance::technology_unlock_levels)::keys_t const& technology_keys,
-	decltype(CountryInstance::invention_unlock_levels)::keys_t const& invention_keys,
-	decltype(CountryInstance::upper_house)::keys_t const& ideology_keys,
-	decltype(CountryInstance::reforms)::keys_t const& reform_keys,
-	decltype(CountryInstance::government_flag_overrides)::keys_t const& government_type_keys,
-	decltype(CountryInstance::crime_unlock_levels)::keys_t const& crime_keys,
-	decltype(CountryInstance::pop_type_distribution)::keys_t const& pop_type_keys,
-	decltype(CountryInstance::regiment_type_unlock_levels)::keys_t const& regiment_type_unlock_levels_keys,
-	decltype(CountryInstance::ship_type_unlock_levels)::keys_t const& ship_type_unlock_levels_keys,
-	decltype(CountryInstance::tax_rate_by_strata):: keys_t const& strata_keys
+	decltype(CountryInstance::building_type_unlock_levels)::keys_type const& building_type_keys,
+	decltype(CountryInstance::technology_unlock_levels)::keys_type const& technology_keys,
+	decltype(CountryInstance::invention_unlock_levels)::keys_type const& invention_keys,
+	decltype(CountryInstance::upper_house)::keys_type const& ideology_keys,
+	decltype(CountryInstance::reforms)::keys_type const& reform_keys,
+	decltype(CountryInstance::government_flag_overrides)::keys_type const& government_type_keys,
+	decltype(CountryInstance::crime_unlock_levels)::keys_type const& crime_keys,
+	decltype(CountryInstance::pop_type_distribution)::keys_type const& pop_type_keys,
+	decltype(CountryInstance::regiment_type_unlock_levels)::keys_type const& regiment_type_unlock_levels_keys,
+	decltype(CountryInstance::ship_type_unlock_levels)::keys_type const& ship_type_unlock_levels_keys,
+	decltype(CountryInstance::tax_rate_by_strata):: keys_type const& strata_keys
 ) {
 	reserve_more(country_instances, country_definition_manager.get_country_definition_count());
 

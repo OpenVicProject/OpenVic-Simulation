@@ -196,17 +196,17 @@ namespace OpenVic {
 
 		CountryInstance(
 			CountryDefinition const* new_country_definition,
-			decltype(building_type_unlock_levels)::keys_t const& building_type_keys,
-			decltype(technology_unlock_levels)::keys_t const& technology_keys,
-			decltype(invention_unlock_levels)::keys_t const& invention_keys,
-			decltype(upper_house)::keys_t const& ideology_keys,
-			decltype(reforms)::keys_t const& reform_keys,
-			decltype(government_flag_overrides)::keys_t const& government_type_keys,
-			decltype(crime_unlock_levels)::keys_t const& crime_keys,
-			decltype(pop_type_distribution)::keys_t const& pop_type_keys,
-			decltype(regiment_type_unlock_levels)::keys_t const& regiment_type_unlock_levels_keys,
-			decltype(ship_type_unlock_levels)::keys_t const& ship_type_unlock_levels_keys,
-			decltype(tax_rate_by_strata)::keys_t const& strata_keys
+			decltype(building_type_unlock_levels)::keys_type const& building_type_keys,
+			decltype(technology_unlock_levels)::keys_type const& technology_keys,
+			decltype(invention_unlock_levels)::keys_type const& invention_keys,
+			decltype(upper_house)::keys_type const& ideology_keys,
+			decltype(reforms)::keys_type const& reform_keys,
+			decltype(government_flag_overrides)::keys_type const& government_type_keys,
+			decltype(crime_unlock_levels)::keys_type const& crime_keys,
+			decltype(pop_type_distribution)::keys_type const& pop_type_keys,
+			decltype(regiment_type_unlock_levels)::keys_type const& regiment_type_unlock_levels_keys,
+			decltype(ship_type_unlock_levels)::keys_type const& ship_type_unlock_levels_keys,
+			decltype(tax_rate_by_strata)::keys_type const& strata_keys
 		);
 
 	public:
@@ -358,17 +358,17 @@ namespace OpenVic {
 
 		bool generate_country_instances(
 			CountryDefinitionManager const& country_definition_manager,
-			decltype(CountryInstance::building_type_unlock_levels)::keys_t const& building_type_keys,
-			decltype(CountryInstance::technology_unlock_levels)::keys_t const& technology_keys,
-			decltype(CountryInstance::invention_unlock_levels)::keys_t const& invention_keys,
-			decltype(CountryInstance::upper_house)::keys_t const& ideology_keys,
-			decltype(CountryInstance::reforms)::keys_t const& reform_keys,
-			decltype(CountryInstance::government_flag_overrides)::keys_t const& government_type_keys,
-			decltype(CountryInstance::crime_unlock_levels)::keys_t const& crime_keys,
-			decltype(CountryInstance::pop_type_distribution)::keys_t const& pop_type_keys,
-			decltype(CountryInstance::regiment_type_unlock_levels)::keys_t const& regiment_type_unlock_levels_keys,
-			decltype(CountryInstance::ship_type_unlock_levels)::keys_t const& ship_type_unlock_levels_keys,
-			decltype(CountryInstance::tax_rate_by_strata):: keys_t const& strata_keys
+			decltype(CountryInstance::building_type_unlock_levels)::keys_type const& building_type_keys,
+			decltype(CountryInstance::technology_unlock_levels)::keys_type const& technology_keys,
+			decltype(CountryInstance::invention_unlock_levels)::keys_type const& invention_keys,
+			decltype(CountryInstance::upper_house)::keys_type const& ideology_keys,
+			decltype(CountryInstance::reforms)::keys_type const& reform_keys,
+			decltype(CountryInstance::government_flag_overrides)::keys_type const& government_type_keys,
+			decltype(CountryInstance::crime_unlock_levels)::keys_type const& crime_keys,
+			decltype(CountryInstance::pop_type_distribution)::keys_type const& pop_type_keys,
+			decltype(CountryInstance::regiment_type_unlock_levels)::keys_type const& regiment_type_unlock_levels_keys,
+			decltype(CountryInstance::ship_type_unlock_levels)::keys_type const& ship_type_unlock_levels_keys,
+			decltype(CountryInstance::tax_rate_by_strata):: keys_type const& strata_keys
 		);
 
 		bool apply_history_to_countries(

@@ -44,11 +44,11 @@ static void print_rgo(ProvinceInstance const& province) {
 			"\n\temployees:"
 		);
 
-		auto const& employee_count_per_type_cache=rgo.get_employee_count_per_type_cache();
-		for (PopType const& pop_type : *employee_count_per_type_cache.get_keys()) {
-			const pop_size_t employees_of_type = employee_count_per_type_cache[pop_type];
+		for (auto [pop_type, employees_of_type] : rgo.get_employee_count_per_type_cache()) {
 			if (employees_of_type > 0) {
-				text += StringUtils::append_string_views("\n\t\t", std::to_string(employees_of_type), " ", pop_type.get_identifier());
+				text += StringUtils::append_string_views(
+					"\n\t\t", std::to_string(employees_of_type), " ", pop_type.get_identifier()
+				);
 			}
 		}
 		Logger::info("", text);

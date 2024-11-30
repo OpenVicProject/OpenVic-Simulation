@@ -12,7 +12,7 @@ PopBase::PopBase(
 ) : type { &new_type }, culture { new_culture }, religion { new_religion }, size { new_size }, militancy { new_militancy },
 	consciousness { new_consciousness }, rebel_type { new_rebel_type } {}
 
-Pop::Pop(PopBase const& pop_base, decltype(ideologies)::keys_t const& ideology_keys)
+Pop::Pop(PopBase const& pop_base, decltype(ideologies)::keys_type const& ideology_keys)
   : PopBase { pop_base },
 	location { nullptr },
 	total_change { 0 },
@@ -116,7 +116,7 @@ bool Pop::convert_to_equivalent() {
 		Logger::error("Tried to convert pop of type ", get_type()->get_identifier(), " to equivalent, but there is no equivalent.");
 		return false;
 	}
-	
+
 	type = equivalent;
 	return true;
 }
