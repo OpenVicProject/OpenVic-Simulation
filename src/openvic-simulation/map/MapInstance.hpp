@@ -47,8 +47,8 @@ namespace OpenVic {
 			BuildingTypeManager const& building_type_manager,
 			MarketInstance& market_instance,
 			ModifierEffectCache const& modifier_effect_cache,
-			decltype(ProvinceInstance::pop_type_distribution)::keys_t const& pop_type_keys,
-			decltype(ProvinceInstance::ideology_distribution)::keys_t const& ideology_keys
+			decltype(ProvinceInstance::pop_type_distribution)::keys_type const& pop_type_keys,
+			decltype(ProvinceInstance::ideology_distribution)::keys_type const& ideology_keys
 		);
 		bool apply_history_to_provinces(
 			ProvinceHistoryManager const& history_manager, const Date date, CountryInstanceManager& country_manager,

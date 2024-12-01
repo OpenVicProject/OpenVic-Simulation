@@ -601,7 +601,7 @@ namespace OpenVic {
 					Logger::error("Null key in map_callback");
 					return false;
 				}
-				typename IndexedMap<Key, Value>::value_ref_t map_value = map[*key];
+				typename IndexedMap<Key, Value>::value_ref_type map_value = map[*key];
 				bool ret = true;
 				if (map_value != Value {}) {
 					Logger::warn_or_error(warn, "Duplicate map entry with key: \"", key, "\"");

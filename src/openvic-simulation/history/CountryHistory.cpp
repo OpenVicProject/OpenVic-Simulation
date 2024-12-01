@@ -7,8 +7,8 @@ using namespace OpenVic;
 using namespace OpenVic::NodeTools;
 
 CountryHistoryEntry::CountryHistoryEntry(
-	CountryDefinition const& new_country, Date new_date, decltype(upper_house)::keys_t const& ideology_keys,
-	decltype(government_flag_overrides)::keys_t const& government_type_keys
+	CountryDefinition const& new_country, Date new_date, decltype(upper_house)::keys_type const& ideology_keys,
+	decltype(government_flag_overrides)::keys_type const& government_type_keys
 ) : HistoryEntry { new_date }, country { new_country }, upper_house { &ideology_keys },
 	government_flag_overrides { &government_type_keys } {}
 

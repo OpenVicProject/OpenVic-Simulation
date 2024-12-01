@@ -39,10 +39,10 @@ namespace OpenVic {
 		F(government_salary_military)\
 		F(event_and_decision_income)\
 		F(loan_interest_payments)
-	
+
 	#define DECLARE_POP_INCOME_STORES(income_type)\
-		fixed_point_t PROPERTY(income_type); 
-	
+		fixed_point_t PROPERTY(income_type);
+
 	#define DECLARE_POP_INCOME_STORE_FUNCTIONS(name)\
 		void add_##name(const fixed_point_t pop_income);
 
@@ -83,10 +83,10 @@ namespace OpenVic {
 
 		DO_FOR_ALL_TYPES_OF_POP_INCOME(DECLARE_POP_INCOME_STORES);
 		#undef DECLARE_POP_INCOME_STORES
-		
+
 		size_t PROPERTY(max_supported_regiments);
 
-		Pop(PopBase const& pop_base, decltype(ideologies)::keys_t const& ideology_keys);
+		Pop(PopBase const& pop_base, decltype(ideologies)::keys_type const& ideology_keys);
 
 	public:
 		Pop(Pop const&) = delete;
@@ -110,6 +110,6 @@ namespace OpenVic {
 
 	};
 }
-#ifndef KEEP_DO_FOR_ALL_TYPES_OF_INCOME 
+#ifndef KEEP_DO_FOR_ALL_TYPES_OF_INCOME
 	#undef DO_FOR_ALL_TYPES_OF_POP_INCOME
 #endif

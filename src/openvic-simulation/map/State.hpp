@@ -42,7 +42,7 @@ namespace OpenVic {
 			ProvinceInstance* new_capital,
 			std::vector<ProvinceInstance*>&& new_provinces,
 			ProvinceInstance::colony_status_t new_colony_status,
-			decltype(pop_type_distribution)::keys_t const& pop_type_keys
+			decltype(pop_type_distribution)::keys_type const& pop_type_keys
 		);
 
 	public:
@@ -79,14 +79,16 @@ namespace OpenVic {
 
 		bool add_state_set(
 			MapInstance& map_instance, Region const& region,
-			decltype(State::pop_type_distribution)::keys_t const& pop_type_keys
+			decltype(State::pop_type_distribution)::keys_type const& pop_type_keys
 		);
 
 	public:
 		/* Creates states from current province gamestate & regions, sets province state value.
 		 * After this function, the `regions` property is unmanaged and must be carefully updated and
 		 * validated by functions that modify it. */
-		bool generate_states(MapInstance& map_instance, decltype(State::pop_type_distribution)::keys_t const& pop_type_keys);
+		bool generate_states(
+			MapInstance& map_instance, decltype(State::pop_type_distribution)::keys_type const& pop_type_keys
+		);
 
 		void reset();
 
