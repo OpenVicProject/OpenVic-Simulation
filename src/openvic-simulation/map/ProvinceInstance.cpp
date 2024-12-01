@@ -12,6 +12,7 @@
 #include "openvic-simulation/military/UnitInstanceGroup.hpp"
 #include "openvic-simulation/modifier/StaticModifierCache.hpp"
 #include "openvic-simulation/politics/Ideology.hpp"
+#include "openvic-simulation/utility/CompilerFeatureTesting.hpp"
 #include "openvic-simulation/utility/Logger.hpp"
 
 using namespace OpenVic;
@@ -375,9 +376,13 @@ void ProvinceInstance::update_gamestate(const Date today, DefineManager const& d
 }
 
 void ProvinceInstance::province_tick(const Date today) {
-	for (Pop& pop : pops) {
-		pop.pop_tick();
-	}
+	try_parallel_for_each(
+		pops.begin(),
+		pops.end(),
+		[](Pop& pop) -> void {
+			pop.pop_tick();
+		}
+	);
 	for (BuildingInstance& building : buildings.get_items()) {
 		building.tick(today);
 	}
