@@ -1,5 +1,7 @@
 #include "MarketInstance.hpp"
 
+#include "openvic-simulation/utility/CompilerFeatureTesting.hpp"
+
 using namespace OpenVic;
 
 MarketInstance::MarketInstance(GoodInstanceManager& new_good_instance_manager)
@@ -17,8 +19,10 @@ void MarketInstance::place_market_sell_order(MarketSellOrder&& market_sell_order
 }
 
 void MarketInstance::execute_orders() {
-	std::vector<GoodInstance>& good_instances = good_instance_manager.get_good_instances();
-	for (GoodInstance& good_instance : good_instances) {
+	PARALLELISE_IF_SUPPORTED(
+		good_instance_manager.get_good_instances(),
+		,
+		good_instance,
 		good_instance.execute_orders();
-	}
+	)
 }
