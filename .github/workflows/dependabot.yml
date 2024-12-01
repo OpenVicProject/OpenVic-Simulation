@@ -1,0 +1,10 @@
+﻿version: 2
+updates:
+  - package-ecosystem: "gitsubmodule"
+    directory: "/"
+    schedule:
+      interval: "daily"
+    allow:
+      - dependency-name: "deps/openvic-dataloader"
+      - dependency-name: "scripts"
+      - dependency-name: "deps/lexy-vdf"
