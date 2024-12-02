@@ -35,12 +35,17 @@ static fs::path ensure_forward_slash_path(std::string_view path) {
 #endif
 }
 
-bool Dataloader::set_roots(path_vector_t const& new_roots) {
+bool Dataloader::set_roots(path_vector_t const& new_roots, path_vector_t const& new_replace_paths) {
 	if (!roots.empty()) {
 		Logger::warning("Overriding existing dataloader roots!");
 		roots.clear();
+		replace_paths.clear();
 	}
 	bool ret = true;
+	for (const fs::path& replace_path : new_replace_paths) {
+		Logger::info("Adding replace path: ", replace_path);
+		replace_paths.push_back(replace_path);
+	}
 	for (std::reverse_iterator<path_vector_t::const_iterator> it = new_roots.crbegin(); it != new_roots.crend(); ++it) {
 		if (std::find(roots.begin(), roots.end(), *it) == roots.end()) {
 			if (fs::is_directory(*it)) {
@@ -65,23 +70,72 @@ bool Dataloader::set_roots(path_vector_t const& new_roots) {
 fs::path Dataloader::lookup_file(std::string_view path, bool print_error) const {
 	const fs::path filepath { ensure_forward_slash_path(path) };
 
+#if defined(FILESYSTEM_CASE_INSENSITIVE)
+	/* Case-insensitive filesystem */
+	for (fs::path const& root : roots) {
+		const fs::path composed = root / filepath;
+		if (fs::is_regular_file(composed)) {
+			if (root == roots.back()) {
+				bool ignore = false;
+				for (auto const& replace_path : replace_paths) {
+					if (filepath.string().starts_with(replace_path.string())) {
+						ignore = true;
+						break;
+					}
+				}
+				if (!ignore) {
+					return composed;
+				}
+			} else {
+				return composed;
+			}
+		}
+	}
+#else
 	/* Case-sensitive filesystem */
 	const std::string_view filename = StringUtils::get_filename(path);
 	for (fs::path const& root : roots) {
 		const fs::path composed = root / filepath;
 		if (fs::is_regular_file(composed)) {
-			return composed;
+			if (root == roots.back()) {
+				bool ignore = false;
+				for (auto const& replace_path : replace_paths) {
+					if (filepath.string().starts_with(replace_path.string())) {
+						ignore = true;
+						break;
+					}
+				}
+				if (!ignore) {
+					return composed;
+				}
+			} else {
+				return composed;
+			}
 		}
 		std::error_code ec;
 		for (fs::directory_entry const& entry : fs::directory_iterator { composed.parent_path(), ec }) {
 			if (entry.is_regular_file()) {
 				const fs::path file = entry;
 				if (StringUtils::strings_equal_case_insensitive(file.filename().string(), filename)) {
-					return file;
+					if (root == roots.back()) {
+						bool ignore = false;
+						for (auto const& replace_path : replace_paths) {
+							if (filepath.string().starts_with(replace_path.string())) {
+								ignore = true;
+								break;
+							}
+						}
+						if (!ignore) {
+							return file;
+						}
+					} else {
+						return file;
+					}
 				}
 			}
 		}
 	}
+#endif
 
 	if (print_error) {
 		Logger::error("Lookup for \"", path, "\" failed!");
@@ -114,6 +168,18 @@ Dataloader::path_vector_t Dataloader::_lookup_files_in_dir(
 	for (fs::path const& root : roots) {
 		const size_t root_len = root.string().size();
 		std::error_code ec;
+		if (root == roots.back()) {
+			bool ignore = false;
+			for (auto const& replace_path : replace_paths) {
+				if (dirpath.string().starts_with(replace_path.string())) {
+					ignore = true;
+					break;
+				}
+			}
+			if (ignore) {
+				continue;
+			}
+		}
 		for (fs::directory_entry const& entry : _DirIterator { root / dirpath, ec }) {
 			if (entry.is_regular_file()) {
 				fs::path file = entry;
@@ -260,6 +326,21 @@ v2script::Parser& Dataloader::parse_defines_cached(fs::path const& path) {
 
 void Dataloader::free_cache() {
 	cached_parsers.clear();
+}
+
+bool Dataloader::load_mod_descriptors(std::vector<std::string> descriptors, ModManager& mod_manager) {
+	bool ret = true;
+
+	for (std::string_view descriptor_path : descriptors) {
+		if (!mod_manager.load_mod_file(parse_defines(ensure_forward_slash_path(descriptor_path)).get_file_node())) {
+			Logger::error("Failed to load ", descriptor_path);
+			ret = false;
+		}
+	}
+
+	mod_manager.lock_mods();
+
+	return ret;
 }
 
 bool Dataloader::_load_interface_files(UIManager& ui_manager) const {
