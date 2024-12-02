@@ -6,10 +6,25 @@ GameManager::GameManager(
 	InstanceManager::gamestate_updated_func_t new_gamestate_updated_callback
 ) : gamestate_updated_callback {
 		new_gamestate_updated_callback ? std::move(new_gamestate_updated_callback) : []() {}
-	}, definitions_loaded { false } {}
+	}, clock_state_changed_callback {
+		new_clock_state_changed_callback ? std::move(new_clock_state_changed_callback) : []() {}
+	}, definitions_loaded { false }, mod_descriptors_loaded { false } {}
 
-bool GameManager::set_roots(Dataloader::path_vector_t const& roots) {
-	if (!dataloader.set_roots(roots)) {
+bool GameManager::load_mod_descriptors(std::vector<std::string> descriptors) {
+	if (mod_descriptors_loaded) {
+		Logger::error("Cannot load mod descriptors - already loaded!");
+		return false;
+	}
+
+	if (!dataloader.load_mod_descriptors(std::move(descriptors), mod_manager)) {
+		Logger::error("Failed to load mod descriptors!");
+		return false;
+	}
+	return true;
+}
+
+bool GameManager::set_roots(Dataloader::path_vector_t const& roots, Dataloader::path_vector_t const& replace_paths) {
+	if (!dataloader.set_roots(roots, replace_paths)) {
 		Logger::error("Failed to set dataloader roots!");
 		return false;
 	}
