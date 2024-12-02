@@ -1,6 +1,7 @@
 #include "NodeTools.hpp"
 
 #include <concepts>
+#include <string>
 #include <string_view>
 
 #include <openvic-dataloader/detail/SymbolIntern.hpp>
@@ -514,4 +515,11 @@ std::ostream& OpenVic::operator<<(std::ostream& stream, name_list_t const& name_
 
 callback_t<std::string_view> NodeTools::assign_variable_callback_string(std::string& var) {
 	return assign_variable_callback_cast<std::string_view>(var);
+}
+
+callback_t<std::string_view> NodeTools::vector_callback_string(std::vector<std::string>& vec) {
+	return [&vec](std::string_view val) -> bool {
+		vec.emplace_back(std::string(val));
+		return true;
+	};
 }

@@ -4,6 +4,7 @@
 #include <functional>
 #include <optional>
 #include <type_traits>
+#include <vector>
 
 #include <openvic-dataloader/detail/SymbolIntern.hpp>
 #include <openvic-dataloader/v2script/AbstractSyntaxTree.hpp>
@@ -561,6 +562,8 @@ namespace OpenVic {
 				return true;
 			};
 		}
+
+		callback_t<std::string_view> vector_callback_string(std::vector<std::string>& vec);
 
 		template<typename T, typename U, typename... SetArgs>
 		Callback<T> auto set_callback(tsl::ordered_set<U, SetArgs...>& set, bool warn = false) {
