@@ -1,11 +1,13 @@
 #pragma once
 
 #include <cstdint>
+#include <string_view>
 
 #include <openvic-dataloader/csv/Parser.hpp>
 #include <openvic-dataloader/v2script/Parser.hpp>
 
 #include "openvic-simulation/dataloader/NodeTools.hpp"
+#include "openvic-simulation/dataloader/ModManager.hpp"
 
 #include <function2/function2.hpp>
 
@@ -27,6 +29,7 @@ namespace OpenVic {
 
 	private:
 		path_vector_t PROPERTY(roots);
+		path_vector_t PROPERTY(replace_paths);
 		std::vector<ovdl::v2script::Parser> cached_parsers;
 
 		bool _load_interface_files(UIManager& ui_manager) const;
@@ -91,8 +94,12 @@ namespace OpenVic {
 		///
 		static fs::path search_for_game_path(fs::path hint_path = {});
 
-		/* In reverse-load order, so base defines first and final loaded mod last */
-		bool set_roots(path_vector_t const& new_roots);
+		/// @brief Sets the directories the dataloader should pull content from.
+		///
+		/// @param new_roots Dataloader roots in reverse-load order, so base defines first and final loaded mod last
+		/// @param new_replace_paths All base define paths that should be ignored entirely in favour of mods.
+		/// @return True if successful, false if failed.
+		bool set_roots(path_vector_t const& new_roots, path_vector_t const& new_replace_paths);
 
 		/* REQUIREMENTS:
 		 * DAT-24
@@ -114,6 +121,9 @@ namespace OpenVic {
 		bool apply_to_files(path_vector_t const& files, apply_files_callback_t callback) const;
 
 		string_set_t lookup_dirs_in_dir(std::string_view path) const;
+
+		/* Load all mod descriptors passed by the user. Importantly, loads dependencies and replace_paths for us to check. */
+		bool load_mod_descriptors(std::vector<std::string> descriptors, ModManager& mod_manager);
 
 		/* Load and parse all of the text defines data, including parsing cached condition and effect scripts after all the
 		 * static data is loaded. Paths to the base and mod defines must have been supplied with set_roots.*/
