@@ -6,10 +6,11 @@
 #include "openvic-simulation/types/fixed_point/FixedPointMap.hpp"
 #include "openvic-simulation/utility/Getters.hpp"
 #include "openvic-simulation/utility/Logger.hpp"
+#include "openvic-simulation/utility/Utility.hpp"
 
 namespace OpenVic {
 
-	template<typename Value>
+	template<utility::not_same_as<bool> Value>
 	struct fixed_size_vector : private std::vector<Value> {
 		using base_type = std::vector<Value>;
 
@@ -33,7 +34,7 @@ namespace OpenVic {
 		using base_type::resize;
 	};
 
-	template<typename Key, typename Value>
+	template<utility::not_same_as<bool> Key, utility::not_same_as<bool> Value>
 	struct IndexedMap : public fixed_size_vector<Value> {
 		using values_type = fixed_size_vector<Value>;
 
@@ -44,12 +45,15 @@ namespace OpenVic {
 		using keys_type = std::vector<key_type>;
 		using key_ref_type = keys_type::const_reference;
 		using key_ptr_type = keys_type::const_pointer;
+		using key_iterator = keys_type::const_iterator;
 
 		using value_type = Value;
 		using value_ref_type = values_type::reference;
 		using value_const_ref_type = values_type::const_reference;
 		using value_ptr_type = values_type::pointer;
 		using value_const_ptr_type = values_type::const_pointer;
+		using value_iterator = values_type::iterator;
+		using value_const_iterator = values_type::const_iterator;
 		using mapped_type = value_type; // To match tsl::ordered_map's mapped_type
 
 		using pair_type = std::pair<key_ref_type, value_ref_type>;
@@ -57,6 +61,8 @@ namespace OpenVic {
 
 		template<bool CONST>
 		struct base_iterator_t {
+			friend struct base_iterator_t;
+
 			using map_type = IndexedMap<Key, Value>;
 
 			using key_type = map_type::key_type;
@@ -68,17 +74,17 @@ namespace OpenVic {
 			using pair_type = std::pair<key_ref_type, mapped_ref_type>;
 			using value_type = pair_type;
 
-			using key_iterator = map_type::keys_type::const_iterator;
+			using key_iterator = map_type::key_iterator;
 			using value_iterator = typename std::conditional_t<
-				CONST, typename map_type::values_type::const_iterator, typename map_type::values_type::iterator
+				CONST, map_type::value_const_iterator, map_type::value_iterator
 			>;
 
 			using iterator_category = std::random_access_iterator_tag;
 			using difference_type = map_type::keys_type::difference_type;
 
 		private:
-			key_iterator key_it;
-			value_iterator value_it;
+			key_iterator PROPERTY(key_it);
+			value_iterator PROPERTY(value_it);
 
 		public:
 			base_iterator_t() = default;
@@ -161,31 +167,38 @@ namespace OpenVic {
 			// We only need to compare one of the iterators for the following operations as the
 			// key and value iterators will always be the same position in their respective vectors.
 
-			difference_type operator-(base_iterator_t const& rhs) const {
+			template<bool OTHER_CONST>
+			difference_type operator-(base_iterator_t<OTHER_CONST> const& rhs) const {
 				return key_it - rhs.key_it;
 			}
 
-			bool operator==(base_iterator_t const& rhs) const {
+			template<bool OTHER_CONST>
+			bool operator==(base_iterator_t<OTHER_CONST> const& rhs) const {
 				return key_it == rhs.key_it;
 			}
 
-			bool operator!=(base_iterator_t const& rhs) const {
+			template<bool OTHER_CONST>
+			bool operator!=(base_iterator_t<OTHER_CONST> const& rhs) const {
 				return key_it != rhs.key_it;
 			}
 
-			bool operator<(base_iterator_t const& rhs) const {
+			template<bool OTHER_CONST>
+			bool operator<(base_iterator_t<OTHER_CONST> const& rhs) const {
 				return key_it < rhs.key_it;
 			}
 
-			bool operator>(base_iterator_t const& rhs) const {
+			template<bool OTHER_CONST>
+			bool operator>(base_iterator_t<OTHER_CONST> const& rhs) const {
 				return key_it > rhs.key_it;
 			}
 
-			bool operator<=(base_iterator_t const& rhs) const {
+			template<bool OTHER_CONST>
+			bool operator<=(base_iterator_t<OTHER_CONST> const& rhs) const {
 				return key_it <= rhs.key_it;
 			}
 
-			bool operator>=(base_iterator_t const& rhs) const {
+			template<bool OTHER_CONST>
+			bool operator>=(base_iterator_t<OTHER_CONST> const& rhs) const {
 				return key_it >= rhs.key_it;
 			}
 		};
@@ -303,16 +316,18 @@ namespace OpenVic {
 			const size_t index = get_index_from_item(key);
 			if (index < get_values().size()) {
 				return &get_values()[index];
+			} else {
+				return nullptr;
 			}
-			return nullptr;
 		}
 
 		constexpr value_const_ptr_type get_item_by_key(key_ref_type key) const {
 			const size_t index = get_index_from_item(key);
 			if (index < get_values().size()) {
 				return &get_values()[index];
+			} else {
+				return nullptr;
 			}
-			return nullptr;
 		}
 
 		constexpr key_ref_type operator()(size_t index) const {
