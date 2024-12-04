@@ -1,6 +1,7 @@
 #pragma once
 
 #include "openvic-simulation/interface/GFXSprite.hpp"
+#include "openvic-simulation/types/TextFormat.hpp"
 
 namespace OpenVic {
 	class UIManager;
@@ -177,12 +178,10 @@ namespace OpenVic::GUI {
 
 	class AlignedElement : public Element {
 	public:
-		enum class format_t {
-			left, centre, right, justified
-		};
+		using enum text_format_t;
 
 	private:
-		format_t PROPERTY(format);
+		text_format_t PROPERTY(format);
 
 	protected:
 		AlignedElement();

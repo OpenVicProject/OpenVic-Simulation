@@ -130,5 +130,6 @@ namespace OpenVic {
 		bool has_adjacency_going_through(ProvinceDefinition const* province) const;
 
 		fvec2_t get_unit_position() const;
+		fvec2_t get_city_position() const;
 	};
 }

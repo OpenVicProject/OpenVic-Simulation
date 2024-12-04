@@ -13,6 +13,8 @@
 #include <range/v3/view/enumerate.hpp>
 
 #include "openvic-simulation/types/Colour.hpp"
+#include "openvic-simulation/types/TextFormat.hpp"
+#include "openvic-simulation/types/Vector.hpp"
 #include "openvic-simulation/utility/Getters.hpp"
 
 using namespace OpenVic;
@@ -264,6 +266,20 @@ NodeCallback auto _expect_vec2(Callback<vec2_t<T>> auto&& callback) {
 	};
 }
 
+node_callback_t NodeTools::expect_text_format(callback_t<text_format_t> callback) {
+	using enum text_format_t;
+
+	static const string_map_t<text_format_t> format_map = {
+		{ "left",  left },
+		{ "right", right },
+		{ "centre", centre },
+		{ "center", centre },
+		{ "justified", justified }
+	};
+
+	return expect_identifier(expect_mapped_string(format_map, callback));
+}
+
 static node_callback_t _expect_int(callback_t<ivec2_t::type> callback) {
 	return expect_int(callback);
 }
@@ -274,6 +290,38 @@ node_callback_t NodeTools::expect_ivec2(callback_t<ivec2_t> callback) {
 
 node_callback_t NodeTools::expect_fvec2(callback_t<fvec2_t> callback) {
 	return _expect_vec2<fixed_point_t, expect_fixed_point>(callback);
+}
+
+// seen in some gfx files, these vectors don't have x,y,z,w labels, so are loaded similarly to colours.
+
+node_callback_t NodeTools::expect_fvec3(callback_t<fvec3_t> callback) {
+	return [callback](ast::NodeCPtr node) -> bool {
+		fvec3_t vec;
+		int32_t components = 0;
+		bool ret = expect_list_of_length(3, expect_fixed_point(
+			[&vec, &components](fixed_point_t val) -> bool {
+				vec[components++] = val;
+				return true;
+			}
+		))(node);
+		ret &= callback(vec);
+		return ret;
+	};
+}
+
+node_callback_t NodeTools::expect_fvec4(callback_t<fvec4_t> callback) {
+	return [callback](ast::NodeCPtr node) -> bool {
+		fvec4_t vec;
+		int32_t components = 0;
+		bool ret = expect_list_of_length(4, expect_fixed_point(
+			[&vec, &components](fixed_point_t val) -> bool {
+				vec[components++] = val;
+				return true;
+			}
+		))(node);
+		ret &= callback(vec);
+		return ret;
+	};
 }
 
 node_callback_t NodeTools::expect_assign(key_value_callback_t callback) {

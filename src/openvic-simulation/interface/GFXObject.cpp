@@ -1,4 +1,7 @@
 #include "GFXObject.hpp"
+#include <cstdint>
+#include "openvic-simulation/dataloader/NodeTools.hpp"
+#include "openvic-simulation/utility/Logger.hpp"
 
 using namespace OpenVic;
 using namespace OpenVic::GFX;
@@ -11,93 +14,38 @@ node_callback_t Object::expect_objects(length_callback_t length_callback, callba
 		"EMFXActorType", ZERO_OR_MORE, _expect_instance<Object, Actor>(callback),
 
 		/* arrows.gfx */
-		"arrowType", ZERO_OR_MORE, expect_dictionary_keys(
-			"name", ONE_EXACTLY, success_callback,
-			"size", ONE_EXACTLY, success_callback,
-			"textureFile", ONE_EXACTLY, success_callback,
-			"bodytexture", ONE_EXACTLY, success_callback,
-			"color", ONE_EXACTLY, success_callback,
-			"colortwo", ONE_EXACTLY, success_callback,
-			"endAt", ONE_EXACTLY, success_callback,
-			"height", ONE_EXACTLY, success_callback,
-			"type", ONE_EXACTLY, success_callback,
-			"heading", ONE_EXACTLY, success_callback,
-			"effect", ONE_EXACTLY, success_callback
-		),
+		"arrowType", ZERO_OR_MORE, _expect_instance<Object, ArrowType>(callback),
 
 		/* battlearrow.gfx */
-		"battlearrow", ZERO_OR_MORE, expect_dictionary_keys(
-			"name", ONE_EXACTLY, success_callback,
-			"textureFile", ONE_EXACTLY, success_callback,
-			"textureFile1", ONE_EXACTLY, success_callback,
-			"start", ONE_EXACTLY, success_callback,
-			"stop", ONE_EXACTLY, success_callback,
-			"x", ONE_EXACTLY, success_callback,
-			"y", ONE_EXACTLY, success_callback,
-			"font", ONE_EXACTLY, success_callback,
-			"scale", ONE_EXACTLY, success_callback,
-			"nofade", ZERO_OR_ONE, success_callback,
-			"textureloop", ZERO_OR_ONE, success_callback
-		),
-		"mapinfo", ZERO_OR_MORE, expect_dictionary_keys(
-			"name", ONE_EXACTLY, success_callback,
-			"textureFile", ZERO_OR_ONE, success_callback,
-			"scale", ZERO_OR_ONE, success_callback
-		),
+		"battlearrow", ZERO_OR_MORE, _expect_instance<Object, BattleArrow>(callback),
+		"mapinfo", ZERO_OR_MORE, _expect_instance<Object, MapInfo>(callback),
 
 		/* mapitems.gfx */
-		"projectionType", ZERO_OR_MORE, success_callback,
-		"progressbar3dType", ZERO_OR_MORE, expect_dictionary_keys(
-			"name", ONE_EXACTLY, success_callback,
-			"color", ONE_EXACTLY, success_callback,
-			"colortwo", ONE_EXACTLY, success_callback,
-			"size", ONE_EXACTLY, success_callback,
-			"effectFile", ONE_EXACTLY, success_callback
-		),
-		"billboardType", ZERO_OR_MORE, expect_dictionary_keys<StringMapCaseInsensitive>(
-			"name", ONE_EXACTLY, success_callback,
-			"texturefile", ONE_EXACTLY, success_callback,
-			"noOfFrames", ZERO_OR_ONE, success_callback,
-			"scale", ONE_EXACTLY, success_callback,
-			"font_size", ZERO_OR_ONE, success_callback,
-			"offset2", ZERO_OR_ONE, success_callback,
-			"font", ZERO_OR_ONE, success_callback
-		),
-
-		"unitstatsBillboardType", ZERO_OR_MORE, expect_dictionary_keys(
-			"name", ONE_EXACTLY, success_callback,
-			"textureFile", ONE_EXACTLY, success_callback,
-			"mask", ONE_EXACTLY, success_callback,
-			"effectFile", ONE_EXACTLY, success_callback,
-			"scale", ONE_EXACTLY, success_callback,
-			"noOfFrames", ONE_EXACTLY, success_callback,
-			"font_size", ONE_EXACTLY, success_callback,
-			"font", ONE_EXACTLY, success_callback
-		),
+		"projectionType", ZERO_OR_MORE, _expect_instance<Object, Projection>(callback),
+		"progressbar3dType", ZERO_OR_MORE, _expect_instance<Object, ProgressBar3d>(callback),
+		"billboardType", ZERO_OR_MORE, _expect_instance<Object, Billboard>(callback),
+		"unitstatsBillboardType", ZERO_OR_MORE, success_callback,
 
 		/* core.gfx */
-		"animatedmaptext", ZERO_OR_MORE, expect_dictionary_keys(
-			"name", ONE_EXACTLY, success_callback,
-			"speed", ONE_EXACTLY, success_callback,
-			"position", ZERO_OR_ONE, success_callback,
-			"scale", ZERO_OR_ONE, success_callback,
-			"textblock", ONE_EXACTLY, expect_dictionary_keys(
-				"text", ONE_EXACTLY, success_callback,
-				"color", ONE_EXACTLY, success_callback,
-				"font", ONE_EXACTLY, success_callback,
-				"position", ONE_EXACTLY, success_callback,
-				"size", ONE_EXACTLY, success_callback,
-				"format", ONE_EXACTLY, success_callback
-			)
-		),
+		"animatedmaptext", ZERO_OR_MORE, _expect_instance<Object, AnimatedMapText>(callback),
+
 		"flagType", ZERO_OR_MORE, expect_dictionary_keys(
 			"name", ONE_EXACTLY, success_callback,
 			"size", ONE_EXACTLY, success_callback
 		),
-		"provinceType", ZERO_OR_ONE, success_callback,
-		"provinceWaterType", ZERO_OR_ONE, success_callback,
-		"mapTextType", ZERO_OR_MORE, success_callback,
-		"meshType", ZERO_OR_MORE, success_callback
+		"provinceType", ZERO_OR_MORE, expect_dictionary_keys(
+			"name", ONE_EXACTLY, success_callback
+		),
+		"provinceWaterType", ZERO_OR_MORE, expect_dictionary_keys(
+			"name", ONE_EXACTLY, success_callback
+		),
+		"mapTextType", ZERO_OR_MORE, expect_dictionary_keys(
+			"name", ONE_EXACTLY, success_callback
+		),
+		"meshType", ZERO_OR_MORE, expect_dictionary_keys(
+			"name", ONE_EXACTLY, success_callback,
+			"xfile", ONE_EXACTLY, success_callback
+		)
 	);
 }
 
@@ -186,6 +134,162 @@ bool Actor::_fill_key_map(NodeTools::case_insensitive_key_map_t& key_map) {
 
 			return _set_animation(name, file, scroll_time);
 		}
+	);
+
+	return ret;
+}
+
+/* arrows.gfx */
+ArrowType::ArrowType() : size { 5 }, texture_file {}, body_texture_file {},
+back_colour {}, progress_colour {}, end_at { 1 }, height { 1 }, arrow_type { 0 },
+heading { 1 }, effect_file {} {}
+
+bool ArrowType::_fill_key_map(NodeTools::case_insensitive_key_map_t& key_map) {
+	bool ret = Object::_fill_key_map(key_map);
+
+	ret &= add_key_map_entries(key_map,
+		"size", ONE_EXACTLY, expect_fixed_point(assign_variable_callback(size)),
+		"textureFile", ONE_EXACTLY, expect_string(assign_variable_callback_string(texture_file)),
+		"bodytexture", ONE_EXACTLY, expect_string(assign_variable_callback_string(body_texture_file)),
+		"color", ONE_EXACTLY, expect_colour(assign_variable_callback(back_colour)),
+		"colortwo", ONE_EXACTLY, expect_colour(assign_variable_callback(progress_colour)),
+		"endAt", ONE_EXACTLY, expect_fixed_point(assign_variable_callback(end_at)),
+		"height", ONE_EXACTLY, expect_fixed_point(assign_variable_callback(height)),
+		"type", ONE_EXACTLY, expect_int64(assign_variable_callback(arrow_type)),
+		"heading", ONE_EXACTLY, expect_fixed_point(assign_variable_callback(heading)),
+		"effect", ONE_EXACTLY, expect_string(assign_variable_callback_string(effect_file))
+	);
+
+	return ret;
+}
+
+/* battlearrow.gfx */
+BattleArrow::BattleArrow() : texture_arrow_body {}, texture_arrow_head {}, start { 1 }, stop { 1 },
+ dims { 1,1 }, font {}, scale { 1 }, no_fade { false }, texture_loop {} {}
+
+bool BattleArrow::_fill_key_map(NodeTools::case_insensitive_key_map_t& key_map) {
+	bool ret = Object::_fill_key_map(key_map);
+
+	ret &= add_key_map_entries(key_map,
+		"textureFile", ONE_EXACTLY, expect_string(assign_variable_callback_string(texture_arrow_body)),
+		"textureFile1", ONE_EXACTLY, expect_string(assign_variable_callback_string(texture_arrow_head)),
+		"start", ONE_EXACTLY, expect_fixed_point(assign_variable_callback(start)),
+		"stop", ONE_EXACTLY, expect_fixed_point(assign_variable_callback(stop)),
+		"x", ONE_EXACTLY, expect_fixed_point(assign_variable_callback(dims.x)),
+		"y", ONE_EXACTLY, expect_fixed_point(assign_variable_callback(dims.y)),
+		"font", ONE_EXACTLY, expect_string(assign_variable_callback_string(font)),
+		"scale", ONE_EXACTLY, expect_fixed_point(assign_variable_callback(scale)),
+		"nofade", ZERO_OR_ONE, expect_bool(assign_variable_callback(no_fade)),
+		"textureloop", ZERO_OR_ONE, expect_fixed_point(assign_variable_callback(texture_loop))
+	);
+
+	return ret;
+}
+
+MapInfo::MapInfo() : texture_file {}, scale { 1 } {}
+
+bool MapInfo::_fill_key_map(NodeTools::case_insensitive_key_map_t& key_map) {
+	bool ret = Object::_fill_key_map(key_map);
+
+	ret &= add_key_map_entries(key_map,
+		"textureFile", ZERO_OR_ONE, expect_string(assign_variable_callback_string(texture_file)),
+		"scale", ZERO_OR_ONE, expect_fixed_point(assign_variable_callback(scale))
+	);
+
+	return ret;
+}
+
+/* MapItems.gfx */
+Projection::Projection() :
+	texture_file {}, size { 1 }, spin { 1 },
+	pulsating { false }, pulse_lowest { 1 }, pulse_speed { 1 },
+	additative { false }, expanding { 1 }, duration { 0 }, fadeout { 0 } {}
+
+//TODO: Verify...
+// whether pulseSpeed is fixedpoint_t or int
+// pulseSpeed doesn't seem to do anything, so assume fixed_point_t since its a speed
+//fadeout could be int, expect_int_bool, or fixed_point_t
+//fadeout seems not to do anything
+bool Projection::_fill_key_map(NodeTools::case_insensitive_key_map_t& key_map) {
+	bool ret = Object::_fill_key_map(key_map);
+
+	ret &= add_key_map_entries(key_map,
+		"textureFile", ONE_EXACTLY, expect_string(assign_variable_callback_string(texture_file)),
+		"size", ONE_EXACTLY, expect_fixed_point(assign_variable_callback(size)),
+		"spin", ONE_EXACTLY, expect_fixed_point(assign_variable_callback(spin)),
+		"pulsating", ONE_EXACTLY, expect_bool(assign_variable_callback(pulsating)),
+		"pulseLowest", ONE_EXACTLY, expect_fixed_point(assign_variable_callback(pulse_lowest)),
+		"pulseSpeed", ONE_EXACTLY, expect_fixed_point(assign_variable_callback(pulse_speed)),
+		"additative", ONE_EXACTLY, expect_bool(assign_variable_callback(additative)),
+		"expanding", ONE_EXACTLY, expect_fixed_point(assign_variable_callback(expanding)),
+		"duration", ZERO_OR_ONE, expect_fixed_point(assign_variable_callback(duration)),
+		"fadeout", ZERO_OR_ONE, expect_fixed_point(assign_variable_callback(fadeout))
+	);
+
+	return ret;
+}
+
+
+Billboard::Billboard() : texture_file {}, scale { 1 }, no_of_frames { 1 } {}
+
+bool Billboard::_fill_key_map(NodeTools::case_insensitive_key_map_t& key_map) {
+	bool ret = Object::_fill_key_map(key_map);
+
+	ret &= add_key_map_entries(key_map,
+		"texturefile", ONE_EXACTLY, expect_string(assign_variable_callback_string(texture_file)),
+		"noOfFrames", ZERO_OR_ONE, expect_uint((callback_t<int>)[this](frame_t frames_read) -> bool {
+			if(frames_read < 1){
+				Logger::error("Billboard ", this->get_name(), " had an invalid number of frames ", frames_read, ", setting number of frames to 1");
+				no_of_frames = 1;
+				return false;
+			}
+			no_of_frames = frames_read;
+			return true;
+		}),
+		"scale", ONE_EXACTLY, expect_fixed_point(assign_variable_callback(scale)),
+		"font_size", ZERO_OR_ONE, success_callback,
+		"offset2", ZERO_OR_ONE, success_callback,
+		"font", ZERO_OR_ONE, success_callback
+	);
+
+	return ret;
+}
+
+ProgressBar3d::ProgressBar3d() : back_colour {}, progress_colour {}, size {}, effect_file {} {}
+
+bool ProgressBar3d::_fill_key_map(NodeTools::case_insensitive_key_map_t& key_map) {
+	bool ret = Object::_fill_key_map(key_map);
+
+	ret &= add_key_map_entries(key_map,
+		"color", ONE_EXACTLY, expect_colour(assign_variable_callback(progress_colour)),
+		"colortwo", ONE_EXACTLY, expect_colour(assign_variable_callback(back_colour)),
+		"size", ONE_EXACTLY, expect_ivec2(assign_variable_callback(size)),
+		"effectFile", ONE_EXACTLY, expect_string(assign_variable_callback_string(effect_file))
+	);
+
+	return ret;
+}
+
+
+/* core.gfx */
+AnimatedMapText::AnimatedMapText() :
+speed { 1 }, scale { 1 }, position {} {}
+
+bool AnimatedMapText::_fill_key_map(NodeTools::case_insensitive_key_map_t& key_map) {
+	bool ret = Object::_fill_key_map(key_map);
+
+	ret &= add_key_map_entries(key_map,
+		"speed", ONE_EXACTLY, expect_fixed_point(assign_variable_callback(speed)),
+		"position", ZERO_OR_ONE, expect_fvec3(assign_variable_callback(position)),
+		"scale", ZERO_OR_ONE, expect_fixed_point(assign_variable_callback(scale)),
+		"textblock", ONE_EXACTLY, expect_dictionary_keys(
+			"text", ONE_EXACTLY,  expect_string(assign_variable_callback_string(text)),
+			"color", ONE_EXACTLY, expect_colour(assign_variable_callback(colour)),
+			"font", ONE_EXACTLY,  expect_string(assign_variable_callback_string(font)),
+			"position", ONE_EXACTLY, expect_fvec2(assign_variable_callback(text_position)),
+			"size", ONE_EXACTLY, expect_fvec2(assign_variable_callback(size)),
+			"format", ONE_EXACTLY, expect_text_format(assign_variable_callback(format))
+		)
 	);
 
 	return ret;

@@ -160,17 +160,13 @@ bool Checkbox::_fill_key_map(NodeTools::case_insensitive_key_map_t& key_map, UIM
 	return ret;
 }
 
-AlignedElement::AlignedElement() : format { format_t::left } {}
+AlignedElement::AlignedElement() : format { text_format_t::left } {}
 
 bool AlignedElement::_fill_key_map(NodeTools::case_insensitive_key_map_t& key_map, UIManager const& ui_manager) {
 	bool ret = Element::_fill_key_map(key_map, ui_manager);
-	using enum format_t;
-	static const string_map_t<format_t> format_map = {
-		{ "left", left }, { "right", right }, { "centre", centre }, { "center", centre }, { "justified", justified }
-	};
 	ret &= add_key_map_entries(key_map,
-		"format", ZERO_OR_ONE, expect_identifier(expect_mapped_string(format_map, assign_variable_callback(format))
-	));
+		"format", ZERO_OR_ONE, expect_text_format(assign_variable_callback(format))
+	);
 	return ret;
 }
 
