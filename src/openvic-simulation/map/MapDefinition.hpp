@@ -16,6 +16,7 @@
 #include "openvic-simulation/types/IdentifierRegistry.hpp"
 #include "openvic-simulation/types/OrderedContainers.hpp"
 #include "openvic-simulation/types/Vector.hpp"
+#include "openvic-simulation/utility/BMP.hpp"
 
 namespace OpenVic {
 	namespace fs = std::filesystem;
@@ -60,6 +61,8 @@ namespace OpenVic {
 		TerrainTypeManager PROPERTY_REF(terrain_type_manager);
 
 		std::vector<river_t> PROPERTY(rivers); // TODO: calculate provinces affected by crossing
+		void _trace_river(BMP& rivers_bmp, ivec2_t start, river_t& river);
+
 		ivec2_t PROPERTY(dims);
 		std::vector<shape_pixel_t> PROPERTY(province_shape_image);
 		colour_index_map_t colour_index_map;

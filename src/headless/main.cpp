@@ -112,7 +112,7 @@ static std::chrono::nanoseconds run_pathing_test(AStarPathing& pathing) {
 	return end_time - start_time;
 }
 
-static bool run_headless(const fs::path root, std::vector<std::string> mods, bool run_tests) {
+static bool run_headless(fs::path const& root, std::vector<std::string>& mods, bool run_tests) {
 	bool ret = true;
 	Dataloader::path_vector_t roots = { root };
 	Dataloader::path_vector_t replace_paths = {};
@@ -124,7 +124,7 @@ static bool run_headless(const fs::path root, std::vector<std::string> mods, boo
 	Logger::info("Commit hash: ", GameManager::get_commit_hash());
 
 	Logger::info("===== Loading mod descriptors... =====");
-	ret &= game_manager.load_mod_descriptors(std::move(mods));
+	ret &= game_manager.load_mod_descriptors(mods);
 	for (auto const& mod : game_manager.get_mod_manager().get_mods()) {
 		roots.emplace_back(root / mod.get_dataloader_root_path());
 		for (std::string_view path : mod.get_replace_paths()) {
@@ -237,6 +237,7 @@ int main(int argc, char const* argv[]) {
 	char const* program_name = StringUtils::get_filename(argc > 0 ? argv[0] : nullptr, "<program>");
 	fs::path root;
 	std::vector<std::string> mods;
+	mods.reserve(argc);
 	bool run_tests = false;
 	int argn = 0;
 
@@ -298,7 +299,7 @@ int main(int argc, char const* argv[]) {
 
 	std::cout << "!!! HEADLESS SIMULATION START !!!" << std::endl;
 
-	const bool ret = run_headless(root, std::move(mods), run_tests);
+	const bool ret = run_headless(root, mods, run_tests);
 
 	std::cout << "!!! HEADLESS SIMULATION END !!!" << std::endl;
 

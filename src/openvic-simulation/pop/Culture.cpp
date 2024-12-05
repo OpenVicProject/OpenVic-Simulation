@@ -1,4 +1,5 @@
 #include "Culture.hpp"
+#include <string_view>
 
 #include "openvic-simulation/country/CountryDefinition.hpp"
 #include "openvic-simulation/dataloader/Dataloader.hpp"
@@ -42,12 +43,8 @@ bool CultureManager::add_culture_group(
 		Logger::error("Cannot register culture groups until graphical culture types are locked!");
 		return false;
 	}
-	if (identifier.empty()) {
+	if (OV_unlikely(identifier.empty())) {
 		Logger::error("Invalid culture group identifier - empty!");
-		return false;
-	}
-	if (leader.empty()) {
-		Logger::error("Invalid culture group leader - empty!");
 		return false;
 	}
 	if (graphical_culture_type == nullptr) {
@@ -55,6 +52,16 @@ bool CultureManager::add_culture_group(
 		return false;
 	}
 
+	if (leader.empty()) {
+		std::string_view default_leader {};
+		if (culture_groups.empty()) {
+			default_leader = "NOLEADER";
+		} else {
+			default_leader = culture_groups.front().leader;
+		}
+		leader = default_leader;
+		Logger::warning("In culture \"", identifier, "\" - group leader is undefined, set to default of: \"", default_leader, "\".");
+	}
 	if (culture_groups.add_item({ identifier, leader, *graphical_culture_type, is_overseas, union_country })) {
 		leader_picture_counts.emplace(leader, general_admiral_picture_count_t { 0, 0 });
 		return true;
@@ -113,7 +120,7 @@ bool CultureManager::_load_culture_group(
 
 	bool ret = expect_dictionary_keys_and_default(
 		increment_callback(total_expected_cultures),
-		"leader", ONE_EXACTLY, expect_identifier(assign_variable_callback(leader)),
+		"leader", ZERO_OR_ONE, expect_identifier(assign_variable_callback(leader)), // acts like ONE_EXACTLY, but vic2 doesn't complain and loads anyway if not present, for now I just commuted the error to a warning in the add function and fudged a default leader from the first defined culture group if it exists - brickpi
 		"unit", ZERO_OR_ONE,
 			expect_graphical_culture_type_identifier(assign_variable_callback_pointer(unit_graphical_culture_type)),
 		"union", ZERO_OR_ONE,

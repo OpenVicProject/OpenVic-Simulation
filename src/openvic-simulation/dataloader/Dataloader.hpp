@@ -46,6 +46,8 @@ namespace OpenVic {
 		bool _load_decisions(DefinitionManager& definition_manager);
 		bool _load_history(DefinitionManager& definition_manager, bool unused_history_file_warnings) const;
 
+		bool should_ignore_path(fs::path const& path, path_vector_t const& replace_paths) const;
+
 		/* _DirIterator is fs::directory_iterator or fs::recursive_directory_iterator. _UniqueKey is the type of a callable
 		 * which converts a string_view filepath with root removed into a string_view unique key. Any path whose key is empty
 		 * or matches an earlier found path's key is discarded, ensuring each looked up path's key is non-empty and unique. */
@@ -123,7 +125,7 @@ namespace OpenVic {
 		string_set_t lookup_dirs_in_dir(std::string_view path) const;
 
 		/* Load all mod descriptors passed by the user. Importantly, loads dependencies and replace_paths for us to check. */
-		bool load_mod_descriptors(std::vector<std::string> descriptors, ModManager& mod_manager);
+		bool load_mod_descriptors(std::span<const std::string> descriptors, ModManager& mod_manager);
 
 		/* Load and parse all of the text defines data, including parsing cached condition and effect scripts after all the
 		 * static data is loaded. Paths to the base and mod defines must have been supplied with set_roots.*/

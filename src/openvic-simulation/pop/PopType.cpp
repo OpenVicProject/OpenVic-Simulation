@@ -537,9 +537,10 @@ bool PopManager::load_pop_bases_into_vector(
 	fixed_point_t militancy = 0, consciousness = 0;
 	RebelType const* rebel_type = nullptr;
 
+	constexpr bool do_warn = true;
 	bool ret = expect_dictionary_keys(
-		"culture", ONE_EXACTLY, culture_manager.expect_culture_identifier(assign_variable_callback_pointer(culture)),
-		"religion", ONE_EXACTLY, religion_manager.expect_religion_identifier(assign_variable_callback_pointer(religion)),
+		"culture", ONE_EXACTLY, culture_manager.expect_culture_identifier(assign_variable_callback_pointer(culture), do_warn),
+		"religion", ONE_EXACTLY, religion_manager.expect_religion_identifier(assign_variable_callback_pointer(religion), do_warn),
 		"size", ONE_EXACTLY, expect_fixed_point(assign_variable_callback(size)),
 		"militancy", ZERO_OR_ONE, expect_fixed_point(assign_variable_callback(militancy)),
 		"consciousness", ZERO_OR_ONE, expect_fixed_point(assign_variable_callback(consciousness)),
@@ -548,6 +549,10 @@ bool PopManager::load_pop_bases_into_vector(
 
 	if (non_integer_size != nullptr && !size.is_integer()) {
 		*non_integer_size = true;
+	}
+	if (culture == nullptr || religion == nullptr) {
+		Logger::warning("No/invalid culture or religion defined for pop of size ", size, ", ignored!");
+		return true;
 	}
 
 	if (culture != nullptr && religion != nullptr && size >= 1 && size <= std::numeric_limits<pop_size_t>::max()) {

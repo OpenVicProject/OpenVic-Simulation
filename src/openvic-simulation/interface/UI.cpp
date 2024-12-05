@@ -2,6 +2,7 @@
 
 #include "openvic-simulation/types/Colour.hpp"
 #include "openvic-simulation/DefinitionManager.hpp"
+#include "openvic-simulation/dataloader/NodeTools.hpp"
 
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;
@@ -44,14 +45,14 @@ bool UIManager::add_font(
 
 bool UIManager::_load_font(ast::NodeCPtr node) {
 	std::string_view identifier, fontname, charset;
-	colour_argb_t colour = colour_argb_t::null();
+	colour_argb_t colour = colour_argb_t::fill_as(255);
 	uint32_t height = 0;
 	Font::colour_codes_t colour_codes;
 
 	bool ret = expect_dictionary_keys(
 		"name", ONE_EXACTLY, expect_string(assign_variable_callback(identifier)),
 		"fontname", ONE_EXACTLY, expect_string(assign_variable_callback(fontname)),
-		"color", ONE_EXACTLY, expect_colour_hex(assign_variable_callback(colour)),
+		"color", ZERO_OR_ONE, expect_colour_hex(assign_variable_callback(colour)),
 		"charset", ZERO_OR_ONE, expect_string(assign_variable_callback(charset)),
 		"height", ZERO_OR_ONE, expect_uint(assign_variable_callback(height)),
 		"colorcodes", ZERO_OR_ONE, expect_dictionary(

@@ -121,7 +121,10 @@ using namespace std::string_view_literals;
 		constexpr bool key_value_success_callback(std::string_view, ast::NodeCPtr) {
 			return true;
 		}
-
+		inline bool key_value_warn_callback(std::string_view key, ast::NodeCPtr) {
+			Logger::warning("Invalid dictionary key: ", key);
+			return true;
+		}
 		inline bool key_value_invalid_callback(std::string_view key, ast::NodeCPtr) {
 			Logger::error("Invalid dictionary key: ", key);
 			return false;
@@ -376,7 +379,7 @@ using namespace std::string_view_literals;
 		template<StringMapCase Case>
 		NodeCallback auto expect_dictionary_key_map(template_key_map_t<Case>&& key_map) {
 			return expect_dictionary_key_map_and_length_and_default(
-				MOV(key_map), default_length_callback, map_key_value_invalid_callback<template_key_map_t<Case>>
+				MOV(key_map), default_length_callback, map_key_value_ignore_invalid_callback<template_key_map_t<Case>> // we use map_key_value_ignore_invalid_callback here as some mods add extraneous keys (like maxWidth) which V2 ignores, so we must too
 			);
 		}
 
