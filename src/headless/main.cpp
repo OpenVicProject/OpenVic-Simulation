@@ -112,7 +112,7 @@ static std::chrono::nanoseconds run_pathing_test(AStarPathing& pathing) {
 	return end_time - start_time;
 }
 
-static bool run_headless(const fs::path root, std::vector<std::string> mods, bool run_tests) {
+static bool run_headless(fs::path const& root, std::vector<std::string>& mods, bool run_tests) {
 	bool ret = true;
 	Dataloader::path_vector_t roots = { root };
 	Dataloader::path_vector_t replace_paths = {};
@@ -296,7 +296,7 @@ int main(int argc, char const* argv[]) {
 
 	std::cout << "!!! HEADLESS SIMULATION START !!!" << std::endl;
 
-	const bool ret = run_headless(root, std::move(mods), run_tests);
+	const bool ret = run_headless(root, mods, run_tests);
 
 	std::cout << "!!! HEADLESS SIMULATION END !!!" << std::endl;
 
