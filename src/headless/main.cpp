@@ -132,12 +132,111 @@ static bool run_headless(Dataloader::path_vector_t const& roots, bool run_tests)
 	return ret;
 }
 
+template<typename Value>
+static void test_indexed_map() {
+	using key_type = int32_t;
+	using value_type = Value;
+
+	const std::vector<key_type> test_vector { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
+
+	IndexedMap<key_type, value_type> map { &test_vector };
+
+	for (auto [key, value] : map) {
+		value = 2 * key;
+		Logger::info("Map entry: ", key, " -> ", value);
+	}
+
+	using iterator_t = decltype(map)::iterator;
+	using const_iterator_t = decltype(map)::const_iterator;
+
+	iterator_t it = map.begin();
+	Logger::info("*it = ", (*it).first, " -> ", (*it).second);
+
+	const_iterator_t it2 = ++it;
+	Logger::info("it2 = ++it: it = ", it.key(), " -> ", it.value(), ", it2 = ", it2.key(), " -> ", it2.value());
+
+	it2 = it++;
+	Logger::info("it2 = it++: it = ", it.key(), " -> ", it.value(), ", it2 = ", it2.key(), " -> ", it2.value());
+
+	it += 4;
+	Logger::info("it += 4 = ", it.key(), " -> ", it.value());
+
+	Logger::info("it[2] = ", it[2].first, " -> ", it[2].second);
+
+	it -= 2;
+	Logger::info("it -= 2 = ", it.key(), " -> ", it.value());
+
+	Logger::info("it + 3 = ", (it + 3).key(), " -> ", (it + 3).value());
+	Logger::info("2 + it = ", (2 + it).key(), " -> ", (2 + it).value());
+	Logger::info("it - 3 = ", (it - 3).key(), " -> ", (it - 3).value());
+	Logger::info("it - it2 = ", it - it2);
+	Logger::info("it2 - it = ", it2 - it);
+	Logger::info("it == it2 = ", it == it2);
+	Logger::info("it != it2 = ", it != it2);
+	Logger::info("it < it2 = ", it < it2);
+	Logger::info("it > it2 = ", it > it2);
+	Logger::info("it <= it2 = ", it <= it2);
+	Logger::info("it >= it2 = ", it >= it2);
+
+	it2 = --it;
+	Logger::info("it2 = --it: it = ", it.key(), " -> ", it.value(), ", it2 = ", it2.key(), " -> ", it2.value());
+
+	it2 = it--;
+	Logger::info("it2 = it--: it = ", it.key(), " -> ", it.value(), ", it2 = ", it2.key(), " -> ", it2.value());
+
+	Logger::info("map.begin() = ", map.begin().key(), " -> ", map.begin().value());
+	Logger::info("map.end() = ", map.end().key(), " -> ", map.end().value());
+	Logger::info("map.end() - 1 = ", (map.end() - 1).key(), " -> ", (map.end() - 1).value());
+	Logger::info("map.cbegin() = ", map.cbegin().key(), " -> ", map.cbegin().value());
+	Logger::info("map.cend() = ", map.cend().key(), " -> ", map.cend().value());
+	Logger::info("map.cend() - 1 = ", (map.cend() - 1).key(), " -> ", (map.cend() - 1).value());
+
+	Logger::info("map.cend().get_key/value_it()[-1] = ", map.cend().get_key_it()[-1], " -> ", map.cend().get_value_it()[-1]);
+
+	Logger::info("map.front() = ", map.front().first, " -> ", map.front().second);
+	Logger::info("map.back() = ", map.back().first, " -> ", map.back().second);
+
+	for (key_type const& key : *map.get_keys()) {
+		Logger::info(
+			"Key: ", key, ", map[key] = ", map[key], ", get_index_from_item(key) = ", map.get_index_from_item(key),
+			", *get_item_by_key(key) = ", *map.get_item_by_key(key)
+		);
+	}
+
+	for (size_t i = 0; i < map.size(); ++i) {
+		Logger::info(
+			"map[", i, "] = ", map[i], ", map(i) = ", map(i), ", *map.get_key_by_index(i) = ", *map.get_key_by_index(i),
+			", map.data()[", i, "] = ", map.data()[i]
+		);
+	}
+
+	map.fill(6);
+	Logger::info("map.fill(6):");
+	for (value_type const& value : map.get_values()) {
+		Logger::info("Map entry: ", value);
+	}
+
+	Logger::info("map.clear():");
+	map.clear();
+	for (value_type const& value : map.get_values()) {
+		Logger::info("Map entry: ", value);
+	}
+}
+
 /*
 	$ program [-h] [-t] [-b] [path]+
 */
 
 int main(int argc, char const* argv[]) {
 	Logger::set_logger_funcs();
+
+	Logger::info("========== TESTING int32_t ==========");
+	test_indexed_map<int32_t>();
+
+	Logger::info("========== TESTING fixed_point_t ==========");
+	test_indexed_map<fixed_point_t>();
+
+	return 0;
 
 	char const* program_name = StringUtils::get_filename(argc > 0 ? argv[0] : nullptr, "<program>");
 	fs::path root;
