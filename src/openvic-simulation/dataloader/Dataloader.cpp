@@ -70,29 +70,6 @@ bool Dataloader::set_roots(path_vector_t const& new_roots, path_vector_t const& 
 fs::path Dataloader::lookup_file(std::string_view path, bool print_error) const {
 	const fs::path filepath { ensure_forward_slash_path(path) };
 
-#if defined(FILESYSTEM_CASE_INSENSITIVE)
-	/* Case-insensitive filesystem */
-	for (fs::path const& root : roots) {
-		const fs::path composed = root / filepath;
-		if (fs::is_regular_file(composed)) {
-			if (root == roots.back()) {
-				bool ignore = false;
-				for (auto const& replace_path : replace_paths) {
-					if (filepath.string().starts_with(replace_path.string())) {
-						ignore = true;
-						break;
-					}
-				}
-				if (!ignore) {
-					return composed;
-				}
-			} else {
-				return composed;
-			}
-		}
-	}
-#else
-	/* Case-sensitive filesystem */
 	const std::string_view filename = StringUtils::get_filename(path);
 	for (fs::path const& root : roots) {
 		const fs::path composed = root / filepath;
@@ -135,7 +112,6 @@ fs::path Dataloader::lookup_file(std::string_view path, bool print_error) const 
 			}
 		}
 	}
-#endif
 
 	if (print_error) {
 		Logger::error("Lookup for \"", path, "\" failed!");
@@ -154,6 +130,17 @@ fs::path Dataloader::lookup_image_file(std::string_view path) const {
 	return lookup_file(path);
 }
 
+bool Dataloader::should_ignore_path(fs::path const& path, path_vector_t const& replace_paths) const {
+	bool ignore = false;
+	for (auto const& replace_path : replace_paths) {
+		if (path.string().starts_with(replace_path.string())) {
+			ignore = true;
+			break;
+		}
+	}
+	return ignore;
+}
+
 template<typename _DirIterator, UniqueFileKey _UniqueKey>
 Dataloader::path_vector_t Dataloader::_lookup_files_in_dir(
 	std::string_view path, fs::path const& extension, _UniqueKey const& unique_key
@@ -168,17 +155,8 @@ Dataloader::path_vector_t Dataloader::_lookup_files_in_dir(
 	for (fs::path const& root : roots) {
 		const size_t root_len = root.string().size();
 		std::error_code ec;
-		if (root == roots.back()) {
-			bool ignore = false;
-			for (auto const& replace_path : replace_paths) {
-				if (dirpath.string().starts_with(replace_path.string())) {
-					ignore = true;
-					break;
-				}
-			}
-			if (ignore) {
-				continue;
-			}
+		if (root == roots.back() && should_ignore_path(dirpath, replace_paths)) {
+			continue;
 		}
 		for (fs::directory_entry const& entry : _DirIterator { root / dirpath, ec }) {
 			if (entry.is_regular_file()) {
@@ -824,6 +802,11 @@ bool Dataloader::_load_map_dir(DefinitionManager& definition_manager) const {
 		ret = false;
 	}
 
+	if (!map_definition.set_water_province_list(water_province_identifiers)) {
+		Logger::error("Failed to set water provinces!");
+		ret = false;
+	}
+
 	{
 		std::vector<colour_t> colours;
 		if (!MapDefinition::load_region_colours(parse_defines(lookup_file(region_colours)).get_file_node(), colours)) {
@@ -839,11 +822,6 @@ bool Dataloader::_load_map_dir(DefinitionManager& definition_manager) const {
 			Logger::error("Failed to load region file!");
 			ret = false;
 		}
-	}
-
-	if (!map_definition.set_water_province_list(water_province_identifiers)) {
-		Logger::error("Failed to set water provinces!");
-		ret = false;
 	}
 
 	if (!map_definition.get_terrain_type_manager().load_terrain_types(

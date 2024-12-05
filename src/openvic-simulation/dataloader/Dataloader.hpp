@@ -42,6 +42,8 @@ namespace OpenVic {
 		bool _load_decisions(DefinitionManager& definition_manager);
 		bool _load_history(DefinitionManager& definition_manager, bool unused_history_file_warnings) const;
 
+		bool should_ignore_path(fs::path const& path, path_vector_t const& replace_paths) const;
+
 		/* _DirIterator is fs::directory_iterator or fs::recursive_directory_iterator. _UniqueKey is the type of a callable
 		 * which converts a string_view filepath with root removed into a string_view unique key. Any path whose key is empty
 		 * or matches an earlier found path's key is discarded, ensuring each looked up path's key is non-empty and unique. */

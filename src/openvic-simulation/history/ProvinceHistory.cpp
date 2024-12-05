@@ -4,6 +4,7 @@
 #include "openvic-simulation/economy/GoodDefinition.hpp"
 #include "openvic-simulation/map/ProvinceDefinition.hpp"
 #include "openvic-simulation/utility/Logger.hpp"
+#include "dataloader/NodeTools.hpp"
 
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;
@@ -149,7 +150,7 @@ bool ProvinceHistoryMap::_load_history_entry(
 			)(node);
 			if (building_type != nullptr) {
 				if (!building_type->is_in_province()) {
-					ret &= map_callback(entry.state_buildings, building_type)(level);
+					ret &= map_callback(entry.state_buildings, building_type, true)(level);
 				} else {
 					Logger::error(
 						"Attempted to add province building \"", building_type,
@@ -159,7 +160,11 @@ bool ProvinceHistoryMap::_load_history_entry(
 				}
 			}
 			return ret;
-		}
+		},
+		"revolt", ZERO_OR_ONE, expect_dictionary_keys(
+			"type", ONE_EXACTLY, definition_manager.get_politics_manager().get_rebel_manager().expect_rebel_type_identifier(assign_variable_callback_pointer_opt(entry.revolt)),
+			"controller", ONE_EXACTLY, success_callback
+		)
 	)(root);
 }
 

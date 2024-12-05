@@ -98,6 +98,10 @@ namespace OpenVic {
 		constexpr bool key_value_success_callback(std::string_view, ast::NodeCPtr) {
 			return true;
 		}
+		inline bool key_value_warn_callback(std::string_view key, ast::NodeCPtr) {
+			Logger::warning("Invalid dictionary key: ", key);
+			return true;
+		}
 		inline bool key_value_invalid_callback(std::string_view key, ast::NodeCPtr) {
 			Logger::error("Invalid dictionary key: ", key);
 			return false;
