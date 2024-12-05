@@ -820,6 +820,11 @@ bool Dataloader::_load_map_dir(DefinitionManager& definition_manager) const {
 		ret = false;
 	}
 
+	if (!map_definition.set_water_province_list(water_province_identifiers)) {
+		Logger::error("Failed to set water provinces!");
+		ret = false;
+	}
+
 	{
 		std::vector<colour_t> colours;
 		if (!MapDefinition::load_region_colours(parse_defines(lookup_file(region_colours)).get_file_node(), colours)) {
@@ -835,11 +840,6 @@ bool Dataloader::_load_map_dir(DefinitionManager& definition_manager) const {
 			Logger::error("Failed to load region file!");
 			ret = false;
 		}
-	}
-
-	if (!map_definition.set_water_province_list(water_province_identifiers)) {
-		Logger::error("Failed to set water provinces!");
-		ret = false;
 	}
 
 	if (!map_definition.get_terrain_type_manager().load_terrain_types(

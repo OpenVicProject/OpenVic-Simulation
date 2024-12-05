@@ -40,8 +40,7 @@ bool ModManager::load_mod_file(ast::NodeCPtr root) {
 
     if (ret) {
         ret &= mods.add_item(
-            { identifier, path, user_dir, std::move(replace_paths), std::move(dependencies) },
-            duplicate_fail_callback
+            { identifier, path, user_dir, std::move(replace_paths), std::move(dependencies) }
         );
     }
 

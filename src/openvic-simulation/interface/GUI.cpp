@@ -1,6 +1,8 @@
 #include "GUI.hpp"
 
 #include "openvic-simulation/interface/UI.hpp"
+#include "dataloader/NodeTools.hpp"
+#include "types/IdentifierRegistry.hpp"
 
 using namespace OpenVic;
 using namespace OpenVic::GUI;
@@ -82,7 +84,7 @@ Window::Window() : background {}, size {}, moveable { false }, fullscreen { fals
 
 bool Window::_fill_key_map(NodeTools::case_insensitive_key_map_t& key_map, UIManager const& ui_manager) {
 	bool ret = Element::_fill_elements_key_map(key_map, [this](std::unique_ptr<Element>&& element) -> bool {
-		return window_elements.add_item(std::move(element));
+		return window_elements.add_item(std::move(element), duplicate_warning_callback);
 	}, ui_manager);
 	ret &= Element::_fill_key_map(key_map, ui_manager);
 	ret &= add_key_map_entries(key_map,
@@ -111,7 +113,9 @@ bool Icon::_fill_key_map(NodeTools::case_insensitive_key_map_t& key_map, UIManag
 
 		"frame", ZERO_OR_ONE, expect_uint(assign_variable_callback(frame)),
 		"scale", ZERO_OR_ONE, expect_fixed_point(assign_variable_callback(scale)),
-		"rotation", ZERO_OR_ONE, expect_fixed_point(assign_variable_callback(rotation))
+		"rotation", ZERO_OR_ONE, expect_fixed_point(assign_variable_callback(rotation)),
+		"maxWidth", ZERO_OR_ONE, success_callback, /* some mods use this, there's no effect afaik */
+		"maxHeight", ZERO_OR_ONE, success_callback
 	);
 	return ret;
 }
