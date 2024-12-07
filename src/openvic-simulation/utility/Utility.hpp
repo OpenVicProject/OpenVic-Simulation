@@ -107,4 +107,6 @@ namespace OpenVic::utility {
 		}
 	};
 
+	template<typename T, typename T2>
+	concept not_same_as = !std::same_as<T, T2>;
 }
