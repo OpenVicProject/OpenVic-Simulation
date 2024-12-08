@@ -125,8 +125,7 @@ namespace OpenVic::GUI {
 		GFX::Sprite const* PROPERTY(sprite);
 		std::string PROPERTY(text);
 		GFX::Font const* PROPERTY(font);
-
-		// TODO - shortcut
+		std::string PROPERTY(shortcut);
 
 	protected:
 		BaseButton();
