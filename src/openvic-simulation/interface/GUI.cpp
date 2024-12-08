@@ -131,8 +131,8 @@ bool BaseButton::_fill_key_map(NodeTools::case_insensitive_key_map_t& key_map, U
 		"buttonText", ZERO_OR_ONE, expect_string(assign_variable_callback_string(text), true),
 		/* Some buttons have multiple fonts listed with the last one being used. */
 		"buttonFont", ZERO_OR_MORE, ui_manager.expect_font_string(assign_variable_callback_pointer(font), true),
+		"shortcut", ZERO_OR_ONE, expect_string(assign_variable_callback_string(shortcut), true),
 
-		"shortcut", ZERO_OR_ONE, success_callback, // TODO - load and use shortcuts (how to integrate with custom keybinds?)
 		"tooltip", ZERO_OR_ONE, success_callback,
 		"tooltipText", ZERO_OR_ONE, success_callback,
 		"delayedTooltipText", ZERO_OR_ONE, success_callback
