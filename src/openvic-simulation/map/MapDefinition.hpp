@@ -95,6 +95,9 @@ namespace OpenVic {
 		bool set_water_province_list(std::vector<std::string_view> const& list);
 		void lock_water_provinces();
 
+		size_t get_land_province_count() const;
+		size_t get_water_province_count() const;
+
 		ProvinceDefinition::index_t get_province_index_at(ivec2_t pos) const;
 
 	private:
