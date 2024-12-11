@@ -291,6 +291,14 @@ void MapDefinition::lock_water_provinces() {
 	Logger::info("Locked water provinces after registering ", water_provinces.size());
 }
 
+size_t MapDefinition::get_land_province_count() const {
+	return get_province_definition_count() - get_water_province_count();
+}
+
+size_t MapDefinition::get_water_province_count() const {
+	return water_provinces.size();
+}
+
 bool MapDefinition::add_region(std::string_view identifier, std::vector<ProvinceDefinition const*>&& provinces, colour_t colour) {
 	if (identifier.empty()) {
 		Logger::error("Invalid region identifier - empty!");

@@ -72,6 +72,7 @@ namespace OpenVic {
 			/* Model positions */
 			std::optional<fvec2_t> unit;
 			std::optional<fvec2_t> city;
+			std::optional<fvec2_t> town;
 			std::optional<fvec2_t> factory;
 			std::optional<fvec2_t> building_construction;
 			std::optional<fvec2_t> military_construction;
@@ -131,5 +132,9 @@ namespace OpenVic {
 
 		fvec2_t get_unit_position() const;
 		fvec2_t get_city_position() const;
+		fvec2_t get_town_position() const;
+		fvec2_t get_factory_position() const;
+		fvec2_t get_building_construction_position() const;
+		fvec2_t get_military_construction_position() const;
 	};
 }

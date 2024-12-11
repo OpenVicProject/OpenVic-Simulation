@@ -48,7 +48,7 @@ bool ProvinceDefinition::load_positions(
 		"text_scale", ZERO_OR_ONE, expect_fixed_point(assign_variable_callback(positions.text_scale)),
 
 		"unit", ZERO_OR_ONE, expect_fvec2(flip_y_callback(assign_variable_callback(positions.unit), map_height)),
-		"town", ZERO_OR_ONE, expect_fvec2(flip_y_callback(assign_variable_callback(positions.city), map_height)),
+		"town", ZERO_OR_ONE, expect_fvec2(flip_y_callback(assign_variable_callback(positions.town), map_height)),
 		"city", ZERO_OR_ONE, expect_fvec2(flip_y_callback(assign_variable_callback(positions.city), map_height)),
 		"factory", ZERO_OR_ONE, expect_fvec2(flip_y_callback(assign_variable_callback(positions.factory), map_height)),
 
@@ -196,4 +196,20 @@ fvec2_t ProvinceDefinition::get_unit_position() const {
 
 fvec2_t ProvinceDefinition::get_city_position() const {
 	return positions.city.value_or(centre);
+}
+
+fvec2_t ProvinceDefinition::get_town_position() const {
+	return positions.town.value_or(centre);
+}
+
+fvec2_t ProvinceDefinition::get_factory_position() const {
+	return positions.factory.value_or(centre);
+}
+
+fvec2_t ProvinceDefinition::get_building_construction_position() const {
+	return positions.building_construction.value_or(centre);
+}
+
+fvec2_t ProvinceDefinition::get_military_construction_position() const {
+	return positions.military_construction.value_or(centre);
 }
