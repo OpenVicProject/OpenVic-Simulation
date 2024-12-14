@@ -61,8 +61,6 @@ namespace OpenVic {
 
 		template<bool CONST>
 		struct base_iterator_t {
-			friend struct base_iterator_t;
-
 			using map_type = IndexedMap<Key, Value>;
 
 			using key_type = map_type::key_type;
@@ -169,37 +167,37 @@ namespace OpenVic {
 
 			template<bool OTHER_CONST>
 			difference_type operator-(base_iterator_t<OTHER_CONST> const& rhs) const {
-				return key_it - rhs.key_it;
+				return key_it - rhs.get_key_it();
 			}
 
 			template<bool OTHER_CONST>
 			bool operator==(base_iterator_t<OTHER_CONST> const& rhs) const {
-				return key_it == rhs.key_it;
+				return key_it == rhs.get_key_it();
 			}
 
 			template<bool OTHER_CONST>
 			bool operator!=(base_iterator_t<OTHER_CONST> const& rhs) const {
-				return key_it != rhs.key_it;
+				return key_it != rhs.get_key_it();
 			}
 
 			template<bool OTHER_CONST>
 			bool operator<(base_iterator_t<OTHER_CONST> const& rhs) const {
-				return key_it < rhs.key_it;
+				return key_it < rhs.get_key_it();
 			}
 
 			template<bool OTHER_CONST>
 			bool operator>(base_iterator_t<OTHER_CONST> const& rhs) const {
-				return key_it > rhs.key_it;
+				return key_it > rhs.get_key_it();
 			}
 
 			template<bool OTHER_CONST>
 			bool operator<=(base_iterator_t<OTHER_CONST> const& rhs) const {
-				return key_it <= rhs.key_it;
+				return key_it <= rhs.get_key_it();
 			}
 
 			template<bool OTHER_CONST>
 			bool operator>=(base_iterator_t<OTHER_CONST> const& rhs) const {
-				return key_it >= rhs.key_it;
+				return key_it >= rhs.get_key_it();
 			}
 		};
 
