@@ -35,6 +35,10 @@ namespace OpenVic {
 
 	public:
 		CultureGroup(CultureGroup&&) = default;
+
+		constexpr bool has_union_country() const {
+			return union_country != nullptr;
+		}
 	};
 
 	struct Culture : HasIdentifierAndColour {
@@ -54,6 +58,10 @@ namespace OpenVic {
 
 	public:
 		Culture(Culture&&) = default;
+
+		constexpr bool has_union_country() const {
+			return group.has_union_country();
+		}
 	};
 
 	struct CultureManager {
