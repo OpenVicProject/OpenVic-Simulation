@@ -66,8 +66,10 @@ namespace OpenVic {
 		using unlock_level_t = int8_t;
 		using unit_variant_t = uint8_t;
 
-		using StandardSliderValue = SliderValue<0, 100>;
-		using TariffSliderValue = SliderValue<-100, 100>;
+		static constexpr slider_value_int_type SLIDER_SIZE = 100;
+
+		using StandardSliderValue = SliderValue<0, SLIDER_SIZE>;
+		using TariffSliderValue = SliderValue<-SLIDER_SIZE, SLIDER_SIZE>;
 
 	private:
 		/* Main attributes */
@@ -105,6 +107,13 @@ namespace OpenVic {
 		/* Budget */
 		fixed_point_t PROPERTY(cash_stockpile);
 		IndexedMap<Strata, StandardSliderValue> PROPERTY(tax_rate_by_strata);
+		StandardSliderValue PROPERTY(land_spending);
+		StandardSliderValue PROPERTY(naval_spending);
+		StandardSliderValue PROPERTY(construction_spending);
+		StandardSliderValue PROPERTY(education_spending);
+		StandardSliderValue PROPERTY(administration_spending);
+		StandardSliderValue PROPERTY(social_spending);
+		StandardSliderValue PROPERTY(military_spending);
 		TariffSliderValue PROPERTY(tariff_rate);
 		// TODO - cash stockpile change over last 30 days
 
@@ -220,23 +229,41 @@ namespace OpenVic {
 
 		bool set_country_flag(std::string_view flag, bool warn);
 		bool clear_country_flag(std::string_view flag, bool warn);
+		bool has_country_flag(std::string_view flag) const;
+
 		bool add_owned_province(ProvinceInstance& new_province);
 		bool remove_owned_province(ProvinceInstance& province_to_remove);
+		bool has_owned_province(ProvinceInstance& province) const;
+
 		bool add_controlled_province(ProvinceInstance& new_province);
 		bool remove_controlled_province(ProvinceInstance& province_to_remove);
+		bool has_controlled_province(ProvinceInstance& province) const;
+
 		bool add_core_province(ProvinceInstance& new_core);
 		bool remove_core_province(ProvinceInstance& core_to_remove);
+		bool has_core_province(ProvinceInstance& province) const;
+
 		bool add_state(State& new_state);
 		bool remove_state(State& state_to_remove);
+		bool has_state(State& state) const;
 
 		bool add_accepted_culture(Culture const& new_accepted_culture);
 		bool remove_accepted_culture(Culture const& culture_to_remove);
+		bool has_accepted_culture(Culture const& culture) const;
+
 		/* Set a party's popularity in the upper house. */
 		bool set_upper_house(Ideology const* ideology, fixed_point_t popularity);
 		bool set_ruling_party(CountryParty const& new_ruling_party);
 		bool add_reform(Reform const& new_reform);
 
 		void set_strata_tax_rate(Strata const& strata, const StandardSliderValue::int_type new_value);
+		void set_land_spending(const StandardSliderValue::int_type new_value);
+		void set_naval_spending(const StandardSliderValue::int_type new_value);
+		void set_construction_spending(const StandardSliderValue::int_type new_value);
+		void set_education_spending(const StandardSliderValue::int_type new_value);
+		void set_administration_spending(const StandardSliderValue::int_type new_value);
+		void set_social_spending(const StandardSliderValue::int_type new_value);
+		void set_military_spending(const StandardSliderValue::int_type new_value);
 		void set_tariff_rate(const StandardSliderValue::int_type new_value);
 
 		template<UnitType::branch_t Branch>

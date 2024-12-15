@@ -62,6 +62,13 @@ CountryInstance::CountryInstance(
 	/* Budget */
 	cash_stockpile { 0 },
 	tax_rate_by_strata { &strata_keys },
+	land_spending {},
+	naval_spending {},
+	construction_spending {},
+	education_spending {},
+	administration_spending {},
+	social_spending {},
+	military_spending {},
 	tariff_rate {},
 
 	/* Technology */
@@ -214,6 +221,10 @@ bool CountryInstance::clear_country_flag(std::string_view flag, bool warn) {
 	return true;
 }
 
+bool CountryInstance::has_country_flag(std::string_view flag) const {
+	return country_flags.contains(flag);
+}
+
 #define ADD_AND_REMOVE(item) \
 	bool CountryInstance::add_##item(std::remove_pointer_t<decltype(item##s)::value_type>& new_item) { \
 		if (!item##s.emplace(&new_item).second) { \
@@ -234,6 +245,9 @@ bool CountryInstance::clear_country_flag(std::string_view flag, bool warn) {
 			return false; \
 		} \
 		return true; \
+	} \
+	bool CountryInstance::has_##item(std::remove_pointer_t<decltype(item##s)::value_type>& item) const { \
+		return item##s.contains(&item); \
 	}
 
 ADD_AND_REMOVE(owned_province)
@@ -291,7 +305,35 @@ void CountryInstance::set_strata_tax_rate(Strata const& strata, const StandardSl
 	tax_rate_by_strata[strata].set_value(new_value);
 }
 
-void CountryInstance::set_tariff_rate(const StandardSliderValue::int_type new_value) {
+void CountryInstance::set_land_spending(const StandardSliderValue::int_type new_value) {
+	land_spending.set_value(new_value);
+}
+
+void CountryInstance::set_naval_spending(const StandardSliderValue::int_type new_value) {
+	naval_spending.set_value(new_value);
+}
+
+void CountryInstance::set_construction_spending(const StandardSliderValue::int_type new_value) {
+	construction_spending.set_value(new_value);
+}
+
+void CountryInstance::set_education_spending(const StandardSliderValue::int_type new_value) {
+	education_spending.set_value(new_value);
+}
+
+void CountryInstance::set_administration_spending(const StandardSliderValue::int_type new_value) {
+	administration_spending.set_value(new_value);
+}
+
+void CountryInstance::set_social_spending(const StandardSliderValue::int_type new_value) {
+	social_spending.set_value(new_value);
+}
+
+void CountryInstance::set_military_spending(const StandardSliderValue::int_type new_value) {
+	military_spending.set_value(new_value);
+}
+
+void CountryInstance::set_tariff_rate(const TariffSliderValue::int_type new_value) {
 	tariff_rate.set_value(new_value);
 }
 
