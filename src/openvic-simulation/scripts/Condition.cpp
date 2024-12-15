@@ -1153,17 +1153,27 @@ static constexpr auto _execute_condition_node_list_multi_scope_callback(
 			) -> bool {
 				return _execute_iterative<EXPECTED_VALUE, REQUIRE_ALL>(
 					change_scopes(condition, instance_manager, current_scope, this_scope, from_scope),
-					[&instance_manager, &this_scope, &from_scope, &argument](auto new_scope) -> bool {
+					[&instance_manager, &this_scope, &from_scope, &argument](auto const& new_scope) -> bool {
 						scope_t new_scope_final;
-						if constexpr (std::same_as<decltype(new_scope), CountryDefinition const*>) {
+
+						if constexpr (std::same_as<decltype(new_scope), CountryDefinition const* const&>) {
 							new_scope_final = &instance_manager.get_country_instance_manager()
 								.get_country_instance_from_definition(*new_scope);
-						} else if constexpr (std::same_as<decltype(new_scope), ProvinceDefinition const*>) {
+						} else if constexpr (std::same_as<decltype(new_scope), ProvinceDefinition const* const&>) {
 							new_scope_final =
 								&instance_manager.get_map_instance().get_province_instance_from_definition(*new_scope);
+						} else if constexpr (
+							// TODO - suppot CountryDefinition const& and ProvinceDefinition const&?
+							std::same_as<decltype(new_scope), CountryInstance const&> ||
+							std::same_as<decltype(new_scope), State const&> ||
+							std::same_as<decltype(new_scope), ProvinceInstance const&> ||
+							std::same_as<decltype(new_scope), Pop const&>
+						) {
+							new_scope_final = &new_scope;
 						} else {
 							new_scope_final = new_scope;
 						}
+
 						return _execute_condition_node_list<true, true>(
 							instance_manager, new_scope_final, this_scope, from_scope, argument
 						);
