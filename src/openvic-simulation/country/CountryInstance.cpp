@@ -34,11 +34,11 @@ CountryInstance::CountryInstance(
 	decltype(regiment_type_unlock_levels)::keys_type const& regiment_type_unlock_levels_keys,
 	decltype(ship_type_unlock_levels)::keys_type const& ship_type_unlock_levels_keys,
 	decltype(tax_rate_by_strata)::keys_type const& strata_keys
-) : /* Main attributes */
+) : FlagStrings { "country" },
+	/* Main attributes */
 	country_definition { new_country_definition },
 	colour { ERROR_COLOUR },
 	capital { nullptr },
-	country_flags {},
 	releasable_vassal { true },
 	country_status { COUNTRY_STATUS_UNCIVILISED },
 	lose_great_power_date {},
@@ -193,36 +193,6 @@ bool CountryInstance::is_great_power() const {
 
 bool CountryInstance::is_secondary_power() const {
 	return country_status == COUNTRY_STATUS_SECONDARY_POWER;
-}
-
-bool CountryInstance::set_country_flag(std::string_view flag, bool warn) {
-	if (flag.empty()) {
-		Logger::error("Attempted to set empty country flag for country ", get_identifier());
-		return false;
-	}
-	if (!country_flags.emplace(flag).second && warn) {
-		Logger::warning(
-			"Attempted to set country flag \"", flag, "\" for country ", get_identifier(), ": already set!"
-		);
-	}
-	return true;
-}
-
-bool CountryInstance::clear_country_flag(std::string_view flag, bool warn) {
-	if (flag.empty()) {
-		Logger::error("Attempted to clear empty country flag from country ", get_identifier());
-		return false;
-	}
-	if (country_flags.erase(flag) == 0 && warn) {
-		Logger::warning(
-			"Attempted to clear country flag \"", flag, "\" from country ", get_identifier(), ": not set!"
-		);
-	}
-	return true;
-}
-
-bool CountryInstance::has_country_flag(std::string_view flag) const {
-	return country_flags.contains(flag);
 }
 
 #define ADD_AND_REMOVE(item) \
@@ -784,7 +754,7 @@ bool CountryInstance::apply_history_to_country(
 	set_optional(releasable_vassal, entry.is_releasable_vassal());
 	// entry.get_colonial_points();
 	for (std::string const& flag : entry.get_country_flags()) {
-		ret &= set_country_flag(flag, true);
+		ret &= set_flag(flag, true);
 	}
 	for (std::string const& flag : entry.get_global_flags()) {
 		// TODO - set global flag

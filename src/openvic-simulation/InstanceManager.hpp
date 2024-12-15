@@ -11,6 +11,7 @@
 #include "openvic-simulation/military/UnitInstanceGroup.hpp"
 #include "openvic-simulation/misc/SimulationClock.hpp"
 #include "openvic-simulation/types/Date.hpp"
+#include "openvic-simulation/types/FlagStrings.hpp"
 
 namespace OpenVic {
 	struct DefinitionManager;
@@ -21,6 +22,8 @@ namespace OpenVic {
 
 	private:
 		DefinitionManager const& PROPERTY(definition_manager);
+
+		FlagStrings PROPERTY_REF(global_flags);
 
 		CountryInstanceManager PROPERTY_REF(country_instance_manager);
 		CountryRelationManager PROPERTY_REF(country_relation_manager);

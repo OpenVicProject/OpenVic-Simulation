@@ -10,6 +10,7 @@
 #include "openvic-simulation/military/UnitType.hpp"
 #include "openvic-simulation/modifier/ModifierSum.hpp"
 #include "openvic-simulation/pop/Pop.hpp"
+#include "openvic-simulation/types/FlagStrings.hpp"
 #include "openvic-simulation/types/HasIdentifier.hpp"
 #include "openvic-simulation/types/OrderedContainers.hpp"
 
@@ -41,7 +42,7 @@ namespace OpenVic {
 	using ArmyInstance = UnitInstanceGroupBranched<UnitType::branch_t::LAND>;
 	using NavyInstance = UnitInstanceGroupBranched<UnitType::branch_t::NAVAL>;
 
-	struct ProvinceInstance : HasIdentifierAndColour {
+	struct ProvinceInstance : HasIdentifierAndColour, FlagStrings {
 		friend struct MapInstance;
 
 		using life_rating_t = int8_t;

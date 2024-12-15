@@ -12,6 +12,7 @@
 #include "openvic-simulation/pop/PopType.hpp"
 #include "openvic-simulation/types/Date.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
+#include "openvic-simulation/types/FlagStrings.hpp"
 #include "openvic-simulation/types/IdentifierRegistry.hpp"
 #include "openvic-simulation/types/IndexedMap.hpp"
 #include "openvic-simulation/types/SliderValue.hpp"
@@ -43,7 +44,7 @@ namespace OpenVic {
 
 	/* Representation of a country's mutable attributes, with a CountryDefinition that is unique at any single time
 	 * but can be swapped with other CountryInstance's CountryDefinition when switching tags. */
-	struct CountryInstance {
+	struct CountryInstance : FlagStrings {
 		friend struct CountryInstanceManager;
 
 		/*
@@ -78,7 +79,6 @@ namespace OpenVic {
 		CountryDefinition const* PROPERTY(country_definition);
 		colour_t PROPERTY(colour); // Cached to avoid searching government overrides for every province
 		ProvinceInstance const* PROPERTY(capital);
-		string_set_t PROPERTY(country_flags);
 		bool PROPERTY_CUSTOM_PREFIX(releasable_vassal, is);
 
 		country_status_t PROPERTY(country_status);
@@ -226,10 +226,6 @@ namespace OpenVic {
 		bool can_colonise() const;
 		bool is_great_power() const;
 		bool is_secondary_power() const;
-
-		bool set_country_flag(std::string_view flag, bool warn);
-		bool clear_country_flag(std::string_view flag, bool warn);
-		bool has_country_flag(std::string_view flag) const;
 
 		bool add_owned_province(ProvinceInstance& new_province);
 		bool remove_owned_province(ProvinceInstance& province_to_remove);
