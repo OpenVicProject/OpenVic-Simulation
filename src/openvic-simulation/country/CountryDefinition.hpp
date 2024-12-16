@@ -29,11 +29,11 @@ namespace OpenVic {
 	private:
 		const Date PROPERTY(start_date);
 		const Date PROPERTY(end_date);
-		Ideology const& PROPERTY(ideology);
+		Ideology const* PROPERTY(ideology); // Can be nullptr, shows up as "No Ideology" in game
 		policy_map_t PROPERTY(policies);
 
 		CountryParty(
-			std::string_view new_identifier, Date new_start_date, Date new_end_date, Ideology const& new_ideology,
+			std::string_view new_identifier, Date new_start_date, Date new_end_date, Ideology const* new_ideology,
 			policy_map_t&& new_policies
 		);
 
