@@ -378,34 +378,36 @@ static bool _parse_condition_node_special_callback_country(
 	return false;
 }
 
+template<typename T>
+concept IsValidArgument =
+	// Value arguments
+	std::same_as<T, bool> || std::same_as<T, std::string> || std::same_as<T, integer_t> ||
+	std::same_as<T, fixed_point_t> ||
+
+	// Game object arguments
+	std::same_as<T, CountryDefinition const*> || std::same_as<T, ProvinceDefinition const*> ||
+	std::same_as<T, GoodDefinition const*> || std::same_as<T, Continent const*> || std::same_as<T, BuildingType const*> ||
+	std::same_as<T, Issue const*> || std::same_as<T, WargoalType const*> || std::same_as<T, PopType const*> ||
+	std::same_as<T, CultureGroup const*> || std::same_as<T, Culture const*> || std::same_as<T, Religion const*> ||
+	std::same_as<T, GovernmentType const*> || std::same_as<T, Ideology const*> || std::same_as<T, Reform const*> ||
+	std::same_as<T, NationalValue const*> || std::same_as<T, Invention const*> ||
+	std::same_as<T, TechnologySchool const*> || std::same_as<T, Crime const*> || std::same_as<T, Region const*> ||
+	std::same_as<T, TerrainType const*> || std::same_as<T, Strata const*> ||
+
+	// Multi-value arguments
+	std::same_as<T, std::pair<PopType const*, fixed_point_t>> || std::same_as<T, std::pair<bool, bool>> ||
+	std::same_as<T, std::pair<Ideology const*, fixed_point_t>> || std::same_as<T, std::vector<PopType const*>> ||
+	std::same_as<T, std::pair<std::string, fixed_point_t>>;
+
 // ALLOWED_SCOPES is a bitfield indicating valid values of current_scope, as well as whether the value is allowed to be
 // THIS or FROM corresponding to the special argument types this_argument_t and from_argument_t respectively.
-template<typename T, scope_type_t ALLOWED_SCOPES = scope_type_t::ALL_SCOPES, special_callback_t SPECIAL_CALLBACK = nullptr>
+template<
+	IsValidArgument T, scope_type_t ALLOWED_SCOPES = scope_type_t::ALL_SCOPES, special_callback_t SPECIAL_CALLBACK = nullptr
+>
 static bool _parse_condition_node_value_callback(
 	Condition const& condition, DefinitionManager const& definition_manager, scope_type_t current_scope,
 	scope_type_t this_scope, scope_type_t from_scope, ast::NodeCPtr node, callback_t<argument_t&&> callback
 ) {
-	static_assert(
-		// Value arguments
-		std::same_as<T, bool> || std::same_as<T, std::string> || std::same_as<T, integer_t> ||
-		std::same_as<T, fixed_point_t> ||
-
-		// Game object arguments
-		std::same_as<T, CountryDefinition const*> || std::same_as<T, ProvinceDefinition const*> ||
-		std::same_as<T, GoodDefinition const*> || std::same_as<T, Continent const*> || std::same_as<T, BuildingType const*> ||
-		std::same_as<T, Issue const*> || std::same_as<T, WargoalType const*> || std::same_as<T, PopType const*> ||
-		std::same_as<T, CultureGroup const*> || std::same_as<T, Culture const*> || std::same_as<T, Religion const*> ||
-		std::same_as<T, GovernmentType const*> || std::same_as<T, Ideology const*> || std::same_as<T, Reform const*> ||
-		std::same_as<T, NationalValue const*> || std::same_as<T, Invention const*> ||
-		std::same_as<T, TechnologySchool const*> || std::same_as<T, Crime const*> || std::same_as<T, Region const*> ||
-		std::same_as<T, TerrainType const*> || std::same_as<T, Strata const*> ||
-
-		// Multi-value arguments
-		std::same_as<T, std::pair<PopType const*, fixed_point_t>> || std::same_as<T, std::pair<bool, bool>> ||
-		std::same_as<T, std::pair<Ideology const*, fixed_point_t>> || std::same_as<T, std::vector<PopType const*>> ||
-		std::same_as<T, std::pair<std::string, fixed_point_t>>
-	);
-
 	using enum scope_type_t;
 
 	// if (!share_scope_type(current_scope, ALLOWED_SCOPES & ALL_SCOPES)) {
@@ -2687,7 +2689,7 @@ bool ConditionManager::setup_conditions(DefinitionManager const& definition_mana
 		"has_building",
 		_parse_condition_node_value_callback<
 			BuildingType const*, PROVINCE,
-			[](
+			+[](
 				Condition const& condition, DefinitionManager const& definition_manager, callback_t<argument_t&&> callback,
 				std::string_view str, bool& ret
 			) -> bool {
