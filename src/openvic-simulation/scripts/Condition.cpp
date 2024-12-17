@@ -378,6 +378,18 @@ static bool _parse_condition_node_special_callback_country(
 	return false;
 }
 
+static bool _parse_condition_node_special_callback_building_type_type(
+	Condition const& condition, DefinitionManager const& definition_manager, callback_t<argument_t&&> callback,
+	std::string_view str, bool& ret
+) {
+	if (definition_manager.get_economy_manager().get_building_type_manager().get_building_type_types().contains(str)) {
+		ret = callback(std::string { str });
+		return true;
+	}
+
+	return false;
+}
+
 template<typename T>
 concept IsValidArgument =
 	// Value arguments
@@ -2688,21 +2700,7 @@ bool ConditionManager::setup_conditions(DefinitionManager const& definition_mana
 	ret &= add_condition(
 		"has_building",
 		_parse_condition_node_value_callback<
-			BuildingType const*, PROVINCE,
-			+[](
-				Condition const& condition, DefinitionManager const& definition_manager, callback_t<argument_t&&> callback,
-				std::string_view str, bool& ret
-			) -> bool {
-				if (
-					definition_manager.get_economy_manager().get_building_type_manager().get_building_type_types()
-						.contains(str)
-				) {
-					ret = callback(std::string { str });
-					return true;
-				}
-
-				return false;
-			}
+			BuildingType const*, PROVINCE, _parse_condition_node_special_callback_building_type_type
 		>,
 		_execute_condition_node_unimplemented
 	);
