@@ -17,10 +17,17 @@ using namespace OpenVic;
 using namespace OpenVic::NodeTools;
 
 CountryParty::CountryParty(
-	std::string_view new_identifier, Date new_start_date, Date new_end_date, Ideology const& new_ideology,
+	std::string_view new_identifier, Date new_start_date, Date new_end_date, Ideology const* new_ideology,
 	policy_map_t&& new_policies
-) : HasIdentifierAndColour { new_identifier, new_ideology.get_colour(), false }, start_date { new_start_date },
-	end_date { new_end_date }, ideology { new_ideology }, policies { std::move(new_policies) } {}
+) : HasIdentifierAndColour {
+		new_identifier,
+		new_ideology != nullptr ? new_ideology->get_colour() : Ideology::NO_IDEOLOGY_COLOUR,
+		false
+	},
+	start_date { new_start_date },
+	end_date { new_end_date },
+	ideology { new_ideology },
+	policies { std::move(new_policies) } {}
 
 CountryDefinition::CountryDefinition(
 	std::string_view new_identifier,
@@ -137,7 +144,7 @@ node_callback_t CountryDefinitionManager::load_country_party(
 	return [&politics_manager, &country_parties](ast::NodeCPtr value) -> bool {
 		std::string_view party_name;
 		Date start_date, end_date;
-		Ideology const* ideology;
+		Ideology const* ideology = nullptr;
 		CountryParty::policy_map_t policies { &politics_manager.get_issue_manager().get_issue_groups() };
 
 		bool ret = expect_dictionary_keys_and_default(
@@ -176,8 +183,12 @@ node_callback_t CountryDefinitionManager::load_country_party(
 				politics_manager.get_ideology_manager().expect_ideology_identifier(assign_variable_callback_pointer(ideology))
 		)(value);
 
+		if (ideology == nullptr) {
+			Logger::warning("Country party ", party_name, " has no ideology, defaulting to nullptr / no ideology");
+		}
+
 		ret &= country_parties.add_item(
-			{ party_name, start_date, end_date, *ideology, std::move(policies) }, duplicate_warning_callback
+			{ party_name, start_date, end_date, ideology, std::move(policies) }, duplicate_warning_callback
 		);
 
 		return ret;

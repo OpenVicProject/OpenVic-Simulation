@@ -19,6 +19,8 @@ namespace OpenVic {
 	struct Ideology : HasIdentifierAndColour {
 		friend struct IdeologyManager;
 
+		static constexpr colour_t NO_IDEOLOGY_COLOUR = colour_t::fill_as(colour_t::max_value);
+
 	private:
 		IdeologyGroup const& PROPERTY(group);
 		const bool PROPERTY_CUSTOM_PREFIX(uncivilised, is);
