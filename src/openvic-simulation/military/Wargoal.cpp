@@ -97,9 +97,9 @@ bool WargoalTypeManager::load_wargoal_file(ovdl::v2script::Parser const& parser)
 			WargoalType::peace_modifiers_t modifiers;
 			ConditionScript can_use { COUNTRY, COUNTRY, COUNTRY };
 			ConditionScript is_valid { COUNTRY, COUNTRY, COUNTRY };
-			ConditionScript allowed_states { STATE, COUNTRY, COUNTRY };
-			ConditionScript allowed_substate_regions { STATE, COUNTRY, COUNTRY };
-			ConditionScript allowed_states_in_crisis { STATE, COUNTRY, COUNTRY };
+			ConditionScript allowed_states { PROVINCE, COUNTRY, COUNTRY };
+			ConditionScript allowed_substate_regions { PROVINCE, COUNTRY, COUNTRY };
+			ConditionScript allowed_states_in_crisis { PROVINCE, COUNTRY, COUNTRY };
 			ConditionScript allowed_countries { COUNTRY, COUNTRY, COUNTRY };
 			EffectScript on_add, on_po_accepted; //country as default scope for both
 
