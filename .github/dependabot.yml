@@ -4,7 +4,3 @@ updates:
     directory: "/"
     schedule:
       interval: "daily"
-    allow:
-      - dependency-name: "deps/openvic-dataloader"
-      - dependency-name: "scripts"
-      - dependency-name: "deps/lexy-vdf"
