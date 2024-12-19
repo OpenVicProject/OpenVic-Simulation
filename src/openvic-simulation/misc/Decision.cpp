@@ -7,7 +7,7 @@ Decision::Decision(
 	std::string_view new_identifier, bool new_alert, bool new_news, std::string_view new_news_title,
 	std::string_view new_news_desc_long, std::string_view new_news_desc_medium, std::string_view new_news_desc_short,
 	std::string_view new_picture, ConditionScript&& new_potential, ConditionScript&& new_allow,
-	ConditionalWeight&& new_ai_will_do, EffectScript&& new_effect
+	ConditionalWeightFactorMul&& new_ai_will_do, EffectScript&& new_effect
 ) : HasIdentifier { new_identifier }, alert { new_alert }, news { new_news }, news_title { new_news_title },
 	news_desc_long { new_news_desc_long }, news_desc_medium { new_news_desc_medium },
 	news_desc_short { new_news_desc_short }, picture { new_picture }, potential { std::move(new_potential) },
@@ -25,7 +25,7 @@ bool Decision::parse_scripts(DefinitionManager const& definition_manager) {
 bool DecisionManager::add_decision(
 	std::string_view identifier, bool alert, bool news, std::string_view news_title, std::string_view news_desc_long,
 	std::string_view news_desc_medium, std::string_view news_desc_short, std::string_view picture, ConditionScript&& potential,
-	ConditionScript&& allow, ConditionalWeight&& ai_will_do, EffectScript&& effect
+	ConditionScript&& allow, ConditionalWeightFactorMul&& ai_will_do, EffectScript&& effect
 ) {
 	if (identifier.empty()) {
 		Logger::error("Invalid decision identifier - empty!");
@@ -61,7 +61,7 @@ bool DecisionManager::load_decision_file(ast::NodeCPtr root) {
 				std::string_view news_title, news_desc_long, news_desc_medium, news_desc_short, picture;
 				ConditionScript potential { COUNTRY, COUNTRY, NO_SCOPE };
 				ConditionScript allow { COUNTRY, COUNTRY, NO_SCOPE };
-				ConditionalWeight ai_will_do { COUNTRY, COUNTRY, NO_SCOPE };
+				ConditionalWeightFactorMul ai_will_do { COUNTRY, COUNTRY, NO_SCOPE };
 				EffectScript effect;
 
 				bool ret = expect_dictionary_keys(
@@ -75,7 +75,7 @@ bool DecisionManager::load_decision_file(ast::NodeCPtr root) {
 					"potential", ONE_EXACTLY, potential.expect_script(),
 					"allow", ONE_EXACTLY, allow.expect_script(),
 					"effect", ONE_EXACTLY, effect.expect_script(),
-					"ai_will_do", ZERO_OR_ONE, ai_will_do.expect_conditional_weight(ConditionalWeight::FACTOR)
+					"ai_will_do", ZERO_OR_ONE, ai_will_do.expect_conditional_weight()
 				)(node);
 
 				ret &= add_decision(

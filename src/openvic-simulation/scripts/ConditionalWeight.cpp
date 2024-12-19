@@ -3,8 +3,12 @@
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;
 
-ConditionalWeight::ConditionalWeight(scope_type_t new_initial_scope, scope_type_t new_this_scope, scope_type_t new_from_scope)
-  : initial_scope { new_initial_scope }, this_scope { new_this_scope }, from_scope { new_from_scope } {}
+using enum conditional_weight_type_t;
+
+template<conditional_weight_type_t TYPE>
+ConditionalWeight<TYPE>::ConditionalWeight(
+	scope_type_t new_initial_scope, scope_type_t new_this_scope, scope_type_t new_from_scope
+) : initial_scope { new_initial_scope }, this_scope { new_this_scope }, from_scope { new_from_scope } {}
 
 template<typename T>
 static NodeCallback auto expect_modifier(
@@ -25,65 +29,51 @@ static NodeCallback auto expect_modifier(
 	};
 }
 
-node_callback_t ConditionalWeight::expect_conditional_weight(base_key_t base_key) {
+template<conditional_weight_type_t TYPE>
+node_callback_t ConditionalWeight<TYPE>::expect_conditional_weight() {
 	key_map_t key_map;
 	bool successfully_set_up_base_keys = true;
 
-	switch (base_key) {
-	case BASE:
-		{
-			successfully_set_up_base_keys &= add_key_map_entry(
-				key_map,
-				"base", ONE_EXACTLY, expect_fixed_point(assign_variable_callback(base))
-			);
-
-			break;
-		}
-	case FACTOR:
-		{
-			successfully_set_up_base_keys &= add_key_map_entry(
-				key_map,
-				"factor", ONE_EXACTLY, expect_fixed_point(assign_variable_callback(base))
-			);
-
-			break;
-		}
-	case TIME:
-		{
-			const auto time_callback = [this](std::string_view key, Timespan (*to_timespan)(Timespan::day_t)) -> auto {
-				return [this, key, to_timespan](uint32_t value) -> bool {
-					if (base == fixed_point_t::_0()) {
-						base = fixed_point_t::parse((*to_timespan)(value).to_int());
-						return true;
-					} else {
-						Logger::error(
-							"ConditionalWeight cannot have multiple base values - trying to set base to ", value, " ", key,
-							" when it already has a value equivalent to ", base, " days!"
-						);
-						return false;
-					}
-				};
+	if constexpr(TYPE == BASE) {
+		successfully_set_up_base_keys &= add_key_map_entry(
+			key_map,
+			"base", ONE_EXACTLY, expect_fixed_point(assign_variable_callback(base))
+		);
+	} else if constexpr (TYPE == FACTOR_ADD || TYPE == FACTOR_MUL) {
+		successfully_set_up_base_keys &= add_key_map_entry(
+			key_map,
+			"factor", ONE_EXACTLY, expect_fixed_point(assign_variable_callback(base))
+		);
+	} else if constexpr (TYPE == TIME) {
+		const auto time_callback = [this](std::string_view key, Timespan (*to_timespan)(Timespan::day_t)) -> auto {
+			return [this, key, to_timespan](uint32_t value) -> bool {
+				if (base == fixed_point_t::_0()) {
+					base = fixed_point_t::parse((*to_timespan)(value).to_int());
+					return true;
+				} else {
+					Logger::error(
+						"ConditionalWeight cannot have multiple base values - trying to set base to ", value, " ", key,
+						" when it already has a value equivalent to ", base, " days!"
+					);
+					return false;
+				}
 			};
+		};
 
-			successfully_set_up_base_keys &= add_key_map_entries(
-				key_map,
-				"days", ZERO_OR_ONE, expect_uint<uint32_t>(time_callback("days", Timespan::from_days)),
-				"months", ZERO_OR_ONE, expect_uint<uint32_t>(time_callback("months", Timespan::from_months)),
-				"years", ZERO_OR_ONE, expect_uint<uint32_t>(time_callback("years", Timespan::from_years))
-			);
-
-			break;
-		}
-	default:
-		{
-			successfully_set_up_base_keys = false;
-		}
+		successfully_set_up_base_keys &= add_key_map_entries(
+			key_map,
+			"days", ZERO_OR_ONE, expect_uint<uint32_t>(time_callback("days", Timespan::from_days)),
+			"months", ZERO_OR_ONE, expect_uint<uint32_t>(time_callback("months", Timespan::from_months)),
+			"years", ZERO_OR_ONE, expect_uint<uint32_t>(time_callback("years", Timespan::from_years))
+		);
+	} else {
+		successfully_set_up_base_keys = false;
 	}
 
 	if (!successfully_set_up_base_keys) {
-		return [base_key](ast::NodeCPtr node) -> bool {
+		return [](ast::NodeCPtr node) -> bool {
 			Logger::error(
-				"Failed to set up base keys for ConditionalWeight with base value: ", static_cast<uint32_t>(base_key)
+				"Failed to set up base keys for ConditionalWeight with base value: ", static_cast<uint32_t>(TYPE)
 			);
 			return false;
 		};
@@ -110,7 +100,7 @@ node_callback_t ConditionalWeight::expect_conditional_weight(base_key_t base_key
 	);
 }
 
-struct ConditionalWeight::parse_scripts_visitor_t {
+struct parse_scripts_visitor_t {
 	DefinitionManager const& definition_manager;
 
 	bool operator()(condition_weight_t& condition_weight) const {
@@ -129,11 +119,13 @@ struct ConditionalWeight::parse_scripts_visitor_t {
 	}
 };
 
-bool ConditionalWeight::parse_scripts(DefinitionManager const& definition_manager) {
+template<conditional_weight_type_t TYPE>
+bool ConditionalWeight<TYPE>::parse_scripts(DefinitionManager const& definition_manager) {
 	return parse_scripts_visitor_t { definition_manager }(condition_weight_items);
 }
 
-fixed_point_t ConditionalWeight::execute(
+template<conditional_weight_type_t TYPE>
+fixed_point_t ConditionalWeight<TYPE>::execute(
 	InstanceManager const& instance_manager,
 	ConditionNode::scope_t const& initial_scope,
 	ConditionNode::scope_t const& this_scope,
@@ -148,8 +140,11 @@ fixed_point_t ConditionalWeight::execute(
 
 		void operator()(condition_weight_t const& item) {
 			if (item.second.execute(instance_manager, initial_scope, this_scope, from_scope)) {
-				// TODO - Should this always be multiplicative, or additive for some conditional weight scripts?
-				result *= item.first;
+				if constexpr (conditional_weight_type_is_additive(TYPE)) {
+					result += item.first;
+				} else if constexpr (conditional_weight_type_is_multiplicative(TYPE)) {
+					result *= item.first;
+				}
 			}
 		}
 
@@ -164,9 +159,10 @@ fixed_point_t ConditionalWeight::execute(
 	};
 
 	for (condition_weight_item_t const& item : condition_weight_items) {
-		// TODO - this is only valid if all weights are applied multiplicatively, otherwise it must be changed
-		if (visitor.result == fixed_point_t::_0()) {
-			return fixed_point_t::_0();
+		if constexpr (conditional_weight_type_is_multiplicative(TYPE)) {
+			if (visitor.result == fixed_point_t::_0()) {
+				return fixed_point_t::_0();
+			}
 		}
 
 		std::visit(visitor, item);
@@ -174,3 +170,8 @@ fixed_point_t ConditionalWeight::execute(
 
 	return visitor.result;
 }
+
+template struct OpenVic::ConditionalWeight<BASE>;
+template struct OpenVic::ConditionalWeight<FACTOR_ADD>;
+template struct OpenVic::ConditionalWeight<FACTOR_MUL>;
+template struct OpenVic::ConditionalWeight<TIME>;
