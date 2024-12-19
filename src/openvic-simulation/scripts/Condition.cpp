@@ -274,7 +274,7 @@ static bool _parse_condition_node_unimplemented(
 	Condition const& condition, DefinitionManager const& definition_manager, scope_type_t current_scope,
 	scope_type_t this_scope, scope_type_t from_scope, ast::NodeCPtr node, callback_t<argument_t&&> callback
 ) {
-	// Logger::error("Cannot parse condition \"", condition.get_identifier(), "\" - callback unimplemented!");
+	Logger::error("Cannot parse condition \"", condition.get_identifier(), "\" - callback unimplemented!");
 	return false;
 }
 
@@ -624,7 +624,7 @@ static bool _parse_condition_node_who_value_callback(
 		if (StringUtils::strings_equal_case_insensitive(str, THIS_KEYWORD)) {
 			return callback(std::pair { this_argument_t {}, value });
 		}
-		
+
 		if (StringUtils::strings_equal_case_insensitive(str, FROM_KEYWORD)) {
 			return callback(std::pair { from_argument_t {}, value });
 		}
@@ -646,11 +646,11 @@ static bool _parse_condition_node_who_value_callback(
 
 // EXECUTE CALLBACK HELPERS
 
-static constexpr bool _execute_condition_node_unimplemented(
+static bool _execute_condition_node_unimplemented(
 	Condition const& condition, InstanceManager const& instance_manager, scope_t current_scope, scope_t this_scope,
 	scope_t from_scope, argument_t const& argument
 ) {
-	// Logger::error("Cannot execute condition \"", condition.get_identifier(), "\" - callback unimplemented!");
+	Logger::error("Cannot execute condition \"", condition.get_identifier(), "\" - callback unimplemented!");
 	return false;
 }
 

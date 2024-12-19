@@ -29,7 +29,7 @@ namespace OpenVic {
 		const bool PROPERTY_CUSTOM_PREFIX(unlock_gas_attack, will);
 		const bool PROPERTY_CUSTOM_PREFIX(unlock_gas_defence, will);
 		ConditionScript PROPERTY(limit);
-		ConditionalWeight PROPERTY(chance);
+		ConditionalWeightBase PROPERTY(chance);
 
 		Invention(
 			std::string_view new_identifier,
@@ -41,7 +41,7 @@ namespace OpenVic {
 			bool new_unlock_gas_attack,
 			bool new_unlock_gas_defence,
 			ConditionScript&& new_limit,
-			ConditionalWeight&& new_chance
+			ConditionalWeightBase&& new_chance
 		);
 
 		bool parse_scripts(DefinitionManager const& definition_manager);
@@ -57,7 +57,7 @@ namespace OpenVic {
 		bool add_invention(
 			std::string_view identifier, ModifierValue&& values, bool news, Invention::unit_set_t&& activated_units,
 			Invention::building_set_t&& activated_buildings, Invention::crime_set_t&& enabled_crimes, bool unlock_gas_attack,
-			bool unlock_gas_defence, ConditionScript&& limit, ConditionalWeight&& chance
+			bool unlock_gas_defence, ConditionScript&& limit, ConditionalWeightBase&& chance
 		);
 
 		bool load_inventions_file(
