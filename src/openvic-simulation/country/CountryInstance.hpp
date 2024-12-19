@@ -202,6 +202,7 @@ namespace OpenVic {
 
 		UNIT_BRANCHED_GETTER(get_unit_instance_groups, armies, navies);
 		UNIT_BRANCHED_GETTER(get_leaders, generals, admirals);
+		UNIT_BRANCHED_GETTER_CONST(get_leaders, generals, admirals);
 		UNIT_BRANCHED_GETTER(get_unit_type_unlock_levels, regiment_type_unlock_levels, ship_type_unlock_levels);
 
 		CountryInstance(
@@ -277,6 +278,8 @@ namespace OpenVic {
 		template<UnitType::branch_t Branch>
 		bool remove_leader(LeaderBranched<Branch> const* leader);
 
+		bool has_leader_with_name(std::string_view name) const;
+
 		template<UnitType::branch_t Branch>
 		bool modify_unit_type_unlock(UnitTypeBranched<Branch> const& unit_type, unlock_level_t unlock_level_change);
 
@@ -325,9 +328,7 @@ namespace OpenVic {
 			CountryInstanceManager const& country_instance_manager
 		);
 
-		bool apply_history_to_country(
-			CountryHistoryEntry const& entry, MapInstance& map_instance, CountryInstanceManager const& country_instance_manager
-		);
+		bool apply_history_to_country(CountryHistoryEntry const& entry, InstanceManager const& instance_manager);
 
 	private:
 		void _update_production(DefineManager const& define_manager);
@@ -399,10 +400,7 @@ namespace OpenVic {
 			decltype(CountryInstance::tax_rate_by_strata):: keys_type const& strata_keys
 		);
 
-		bool apply_history_to_countries(
-			CountryHistoryManager const& history_manager, Date date, UnitInstanceManager& unit_instance_manager,
-			MapInstance& map_instance
-		);
+		bool apply_history_to_countries(InstanceManager& instance_manager);
 
 		void update_modifier_sums(Date today, StaticModifierCache const& static_modifier_cache);
 		void update_gamestate(
