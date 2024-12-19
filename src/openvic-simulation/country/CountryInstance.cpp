@@ -4,7 +4,9 @@
 
 #include "openvic-simulation/country/CountryDefinition.hpp"
 #include "openvic-simulation/defines/Define.hpp"
+#include "openvic-simulation/DefinitionManager.hpp"
 #include "openvic-simulation/history/CountryHistory.hpp"
+#include "openvic-simulation/InstanceManager.hpp"
 #include "openvic-simulation/map/Crime.hpp"
 #include "openvic-simulation/map/MapInstance.hpp"
 #include "openvic-simulation/modifier/ModifierEffectCache.hpp"
@@ -41,6 +43,7 @@ CountryInstance::CountryInstance(
 	capital { nullptr },
 	ai { true },
 	releasable_vassal { true },
+	owns_colonial_province { false },
 	country_status { COUNTRY_STATUS_UNCIVILISED },
 	lose_great_power_date {},
 	total_score { 0 },
@@ -205,6 +208,11 @@ bool CountryInstance::is_great_power() const {
 
 bool CountryInstance::is_secondary_power() const {
 	return country_status == COUNTRY_STATUS_SECONDARY_POWER;
+}
+
+bool CountryInstance::is_at_war() const {
+	// TODO - implement this properly once we have wars
+	return false;
 }
 
 fixed_point_t CountryInstance::get_pop_type_proportion(PopType const& pop_type) const {
@@ -763,9 +771,7 @@ void CountryInstance::apply_foreign_investments(
 	}
 }
 
-bool CountryInstance::apply_history_to_country(
-	CountryHistoryEntry const& entry, MapInstance& map_instance, CountryInstanceManager const& country_instance_manager
-) {
+bool CountryInstance::apply_history_to_country(CountryHistoryEntry const& entry, InstanceManager const& instance_manager) {
 	constexpr auto set_optional = []<typename T>(T& target, std::optional<T> const& source) {
 		if (source) {
 			target = *source;
@@ -789,7 +795,7 @@ bool CountryInstance::apply_history_to_country(
 	set_optional(last_election, entry.get_last_election());
 	ret &= upper_house.copy(entry.get_upper_house());
 	if (entry.get_capital()) {
-		capital = &map_instance.get_province_instance_from_definition(**entry.get_capital());
+		capital = &instance_manager.get_map_instance().get_province_instance_from_definition(**entry.get_capital());
 	}
 	set_optional(government_type, entry.get_government_type());
 	set_optional(plurality, entry.get_plurality());
@@ -811,10 +817,24 @@ bool CountryInstance::apply_history_to_country(
 	for (auto const& [technology, level] : entry.get_technologies()) {
 		ret &= set_technology_unlock_level(*technology, level);
 	}
+
+	for (
+		Invention const& invention :
+			instance_manager.get_definition_manager().get_research_manager().get_invention_manager().get_inventions()
+	) {
+		if (
+			invention.get_limit().execute(instance_manager, this, this) &&
+			invention.get_chance().execute(instance_manager, this, this) > 0
+		) {
+			ret &= unlock_invention(invention);
+			// Logger::info("Unlocked invention ", invention.get_identifier(), " for country ", get_identifier());
+		}
+	}
+
 	for (auto const& [invention, activated] : entry.get_inventions()) {
 		ret &= set_invention_unlock_level(*invention, activated ? 1 : 0);
 	}
-	apply_foreign_investments(entry.get_foreign_investment(), country_instance_manager);
+	apply_foreign_investments(entry.get_foreign_investment(), instance_manager.get_country_instance_manager());
 
 	// These need to be applied to pops
 	// entry.get_consciousness();
@@ -1162,6 +1182,14 @@ void CountryInstance::update_gamestate(
 	DefineManager const& define_manager, UnitTypeManager const& unit_type_manager,
 	ModifierEffectCache const& modifier_effect_cache
 ) {
+	owns_colonial_province = std::any_of(
+		owned_provinces.begin(), owned_provinces.end(),
+		[](ProvinceInstance const* province) -> bool {
+			using enum ProvinceInstance::colony_status_t;
+			return province->get_colony_status() != STATE;
+		}
+	);
+
 	// Order of updates might need to be changed/functions split up to account for dependencies
 	_update_production(define_manager);
 	_update_budget();
@@ -1363,10 +1391,13 @@ bool CountryInstanceManager::generate_country_instances(
 	return ret;
 }
 
-bool CountryInstanceManager::apply_history_to_countries(
-	CountryHistoryManager const& history_manager, Date date, UnitInstanceManager& unit_instance_manager,
-	MapInstance& map_instance
-) {
+bool CountryInstanceManager::apply_history_to_countries(InstanceManager& instance_manager) {
+	CountryHistoryManager const& history_manager =
+		instance_manager.get_definition_manager().get_history_manager().get_country_manager();
+	const Date today = instance_manager.get_today();
+	UnitInstanceManager& unit_instance_manager = instance_manager.get_unit_instance_manager();
+	MapInstance& map_instance = instance_manager.get_map_instance();
+
 	bool ret = true;
 
 	for (CountryInstance& country_instance : country_instances.get_items()) {
@@ -1378,8 +1409,8 @@ bool CountryInstanceManager::apply_history_to_countries(
 				CountryHistoryEntry const* oob_history_entry = nullptr;
 
 				for (auto const& [entry_date, entry] : history_map->get_entries()) {
-					if (entry_date <= date) {
-						ret &= country_instance.apply_history_to_country(*entry, map_instance, *this);
+					if (entry_date <= today) {
+						ret &= country_instance.apply_history_to_country(*entry, instance_manager);
 
 						if (entry->get_inital_oob()) {
 							oob_history_entry = entry.get();

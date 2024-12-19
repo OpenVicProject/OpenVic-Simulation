@@ -137,9 +137,7 @@ bool InstanceManager::load_bookmark(Bookmark const* new_bookmark) {
 		definition_manager.get_politics_manager().get_issue_manager()
 	);
 
-	ret &= country_instance_manager.apply_history_to_countries(
-		definition_manager.get_history_manager().get_country_manager(), today, unit_instance_manager, map_instance
-	);
+	ret &= country_instance_manager.apply_history_to_countries(*this);
 
 	ret &= map_instance.get_state_manager().generate_states(
 		map_instance,

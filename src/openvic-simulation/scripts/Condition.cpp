@@ -816,15 +816,9 @@ static constexpr auto _execute_condition_node_convert_scope(
 			) -> bool {
 				return callback(condition, instance_manager, current_scope, args...);
 			};
-		const auto v = execute_condition_node_visitor_t<T, decltype(visitor)> {
+		return std::visit(execute_condition_node_visitor_t<T, decltype(visitor)> {
 			visitor, condition, instance_manager
-		};
-		scope_t s {};
-		std::visit(v, s);
-		return std::visit(v, current_scope);
-		// return std::visit(execute_condition_node_visitor_t<T, decltype(visitor)> {
-		// 	visitor, condition, instance_manager
-		// }, current_scope);
+		}, current_scope);
 	};
 }
 
@@ -1292,7 +1286,8 @@ bool ConditionManager::setup_conditions(DefinitionManager const& definition_mana
 	ret &= add_condition(
 		"any_neighbor_country",
 		_parse_condition_node_list_callback<COUNTRY, COUNTRY>,
-		_execute_condition_node_convert_scope<CountryInstance, scope_t, scope_t, argument_t const&>(
+		_execute_condition_node_unimplemented
+		/*_execute_condition_node_convert_scope<CountryInstance, scope_t, scope_t, argument_t const&>(
 			_execute_condition_node_list_multi_scope_callback<
 				expect_true, require_any, std::vector<scope_t>, CountryInstance const*
 			>(
@@ -1307,7 +1302,7 @@ bool ConditionManager::setup_conditions(DefinitionManager const& definition_mana
 					return neighbouring_country_scopes;
 				}
 			)
-		)
+		)*/
 	);
 	ret &= add_condition(
 		"any_owned_province",
@@ -1575,7 +1570,8 @@ bool ConditionManager::setup_conditions(DefinitionManager const& definition_mana
 	ret &= add_condition(
 		"has_global_flag",
 		_parse_condition_node_value_callback<std::string>,
-		_execute_condition_node_cast_argument_callback<std::string, scope_t, scope_t, scope_t>(
+		_execute_condition_node_unimplemented
+		/*_execute_condition_node_cast_argument_callback<std::string, scope_t, scope_t, scope_t>(
 			[](
 				Condition const& condition, InstanceManager const& instance_manager, scope_t current_scope, scope_t this_scope,
 				scope_t from_scope, std::string const& argument
@@ -1583,12 +1579,13 @@ bool ConditionManager::setup_conditions(DefinitionManager const& definition_mana
 				// TODO - check if global flag "argument" is set
 				return false;
 			}
-		)
+		)*/
 	);
 	ret &= add_condition(
 		"is_canal_enabled",
 		_parse_condition_node_value_callback<integer_t>,
-		_execute_condition_node_cast_argument_callback<integer_t, scope_t, scope_t, scope_t>(
+		_execute_condition_node_unimplemented
+		/*_execute_condition_node_cast_argument_callback<integer_t, scope_t, scope_t, scope_t>(
 			[](
 				Condition const& condition, InstanceManager const& instance_manager, scope_t current_scope, scope_t this_scope,
 				scope_t from_scope, integer_t argument
@@ -1596,7 +1593,7 @@ bool ConditionManager::setup_conditions(DefinitionManager const& definition_mana
 				// TODO - check if canal[argument] is enabled
 				return false;
 			}
-		)
+		)*/
 	);
 	ret &= add_condition(
 		"always",
@@ -1613,7 +1610,8 @@ bool ConditionManager::setup_conditions(DefinitionManager const& definition_mana
 	ret &= add_condition(
 		"world_wars_enabled",
 		_parse_condition_node_value_callback<bool>,
-		_execute_condition_node_cast_argument_callback<bool, scope_t, scope_t, scope_t>(
+		_execute_condition_node_unimplemented
+		/*_execute_condition_node_cast_argument_callback<bool, scope_t, scope_t, scope_t>(
 			[](
 				Condition const& condition, InstanceManager const& instance_manager, scope_t current_scope, scope_t this_scope,
 				scope_t from_scope, bool argument
@@ -1621,7 +1619,7 @@ bool ConditionManager::setup_conditions(DefinitionManager const& definition_mana
 				// TODO - check if world wars are enabled == argument
 				return false;
 			}
-		)
+		)*/
 	);
 
 	/* Country Scope Conditions */
@@ -1656,7 +1654,8 @@ bool ConditionManager::setup_conditions(DefinitionManager const& definition_mana
 	ret &= add_condition(
 		"alliance_with",
 		_parse_condition_node_value_callback<CountryDefinition const*, COUNTRY | THIS | FROM>,
-		_execute_condition_node_value_or_cast_this_or_from_callback<CountryInstance const*>(
+		_execute_condition_node_unimplemented
+		/*_execute_condition_node_value_or_cast_this_or_from_callback<CountryInstance const*>(
 			_execute_condition_node_convert_scope<CountryInstance, CountryInstance const*>(
 				[](
 					Condition const& condition, InstanceManager const& instance_manager, CountryInstance const* current_scope,
@@ -1666,7 +1665,7 @@ bool ConditionManager::setup_conditions(DefinitionManager const& definition_mana
 					return false;
 				}
 			)
-		)
+		)*/
 	);
 	ret &= add_condition(
 		"average_consciousness",
@@ -1769,7 +1768,8 @@ bool ConditionManager::setup_conditions(DefinitionManager const& definition_mana
 	ret &= add_condition(
 		"big_producer",
 		_parse_condition_node_value_callback<GoodDefinition const*, COUNTRY>,
-		_execute_condition_node_cast_argument_callback<GoodDefinition const*, scope_t, scope_t, scope_t>(
+		_execute_condition_node_unimplemented
+		/*_execute_condition_node_cast_argument_callback<GoodDefinition const*, scope_t, scope_t, scope_t>(
 			_execute_condition_node_convert_scope<CountryInstance, scope_t, scope_t, GoodDefinition const*>(
 				[](
 					Condition const& condition, InstanceManager const& instance_manager, CountryInstance const* current_scope,
@@ -1779,12 +1779,13 @@ bool ConditionManager::setup_conditions(DefinitionManager const& definition_mana
 					return false;
 				}
 			)
-		)
+		)*/
 	);
 	ret &= add_condition(
 		"blockade",
 		_parse_condition_node_value_callback<fixed_point_t, COUNTRY>,
-		_execute_condition_node_cast_argument_callback<fixed_point_t, scope_t, scope_t, scope_t>(
+		_execute_condition_node_unimplemented
+		/*_execute_condition_node_cast_argument_callback<fixed_point_t, scope_t, scope_t, scope_t>(
 			_execute_condition_node_convert_scope<CountryInstance, scope_t, scope_t, fixed_point_t>(
 				[](
 					Condition const& condition, InstanceManager const& instance_manager, CountryInstance const* current_scope,
@@ -1794,7 +1795,7 @@ bool ConditionManager::setup_conditions(DefinitionManager const& definition_mana
 					return false;
 				}
 			)
-		)
+		)*/
 	);
 	ret &= add_condition(
 		"brigades_compare",
@@ -1866,7 +1867,8 @@ bool ConditionManager::setup_conditions(DefinitionManager const& definition_mana
 	ret &= add_condition(
 		"civilization_progress",
 		_parse_condition_node_value_callback<fixed_point_t, COUNTRY>,
-		_execute_condition_node_cast_argument_callback<fixed_point_t, scope_t, scope_t, scope_t>(
+		_execute_condition_node_unimplemented
+		/*_execute_condition_node_cast_argument_callback<fixed_point_t, scope_t, scope_t, scope_t>(
 			_execute_condition_node_convert_scope<CountryInstance, scope_t, scope_t, fixed_point_t>(
 				[](
 					Condition const& condition, InstanceManager const& instance_manager, CountryInstance const* current_scope,
@@ -1876,7 +1878,7 @@ bool ConditionManager::setup_conditions(DefinitionManager const& definition_mana
 					return false;
 				}
 			)
-		)
+		)*/
 	);
 	ret &= add_condition(
 		"civilized",
@@ -1901,8 +1903,7 @@ bool ConditionManager::setup_conditions(DefinitionManager const& definition_mana
 					Condition const& condition, InstanceManager const& instance_manager, CountryInstance const* current_scope,
 					scope_t this_scope, scope_t from_scope, bool argument
 				) -> bool {
-					// TODO - check if *current_scope has any colonies == argument
-					return false;
+					return current_scope->get_owns_colonial_province() == argument;
 				}
 			)
 		)
@@ -1924,7 +1925,8 @@ bool ConditionManager::setup_conditions(DefinitionManager const& definition_mana
 	ret &= add_condition(
 		"constructing_cb_progress",
 		_parse_condition_node_value_callback<fixed_point_t, COUNTRY>,
-		_execute_condition_node_cast_argument_callback<fixed_point_t, scope_t, scope_t, scope_t>(
+		_execute_condition_node_unimplemented
+		/*_execute_condition_node_cast_argument_callback<fixed_point_t, scope_t, scope_t, scope_t>(
 			_execute_condition_node_convert_scope<CountryInstance, scope_t, scope_t, fixed_point_t>(
 				[](
 					Condition const& condition, InstanceManager const& instance_manager, CountryInstance const* current_scope,
@@ -1934,12 +1936,13 @@ bool ConditionManager::setup_conditions(DefinitionManager const& definition_mana
 					return false;
 				}
 			)
-		)
+		)*/
 	);
 	ret &= add_condition(
 		"constructing_cb_type",
 		_parse_condition_node_value_callback<WargoalType const*, COUNTRY>,
-		_execute_condition_node_cast_argument_callback<WargoalType const*, scope_t, scope_t, scope_t>(
+		_execute_condition_node_unimplemented
+		/*_execute_condition_node_cast_argument_callback<WargoalType const*, scope_t, scope_t, scope_t>(
 			_execute_condition_node_convert_scope<CountryInstance, scope_t, scope_t, WargoalType const*>(
 				[](
 					Condition const& condition, InstanceManager const& instance_manager, CountryInstance const* current_scope,
@@ -1949,7 +1952,7 @@ bool ConditionManager::setup_conditions(DefinitionManager const& definition_mana
 					return false;
 				}
 			)
-		)
+		)*/
 	);
 	ret &= add_condition(
 		"continent",
@@ -2134,8 +2137,7 @@ bool ConditionManager::setup_conditions(DefinitionManager const& definition_mana
 					Condition const& condition, InstanceManager const& instance_manager, CountryInstance const* current_scope,
 					scope_t this_scope, scope_t from_scope, std::string const& argument
 				) -> bool {
-					// TODO - search for a leader with a name matching argument
-					return false;
+					return current_scope->has_leader_with_name(argument);
 				}
 			)
 		)
@@ -2357,7 +2359,43 @@ bool ConditionManager::setup_conditions(DefinitionManager const& definition_mana
 	ret &= add_condition(
 		"literacy",
 		_parse_condition_node_value_callback<fixed_point_t, COUNTRY | PROVINCE | POP>,
-		_execute_condition_node_unimplemented
+		_execute_condition_node_cast_argument_callback<fixed_point_t, scope_t, scope_t, scope_t>(
+			[](
+				Condition const& condition, InstanceManager const& instance_manager, scope_t current_scope, scope_t this_scope,
+				scope_t from_scope, fixed_point_t argument
+			) -> bool {
+				struct visitor_t {
+
+					Condition const& condition;
+					InstanceManager const& instance_manager;
+					scope_t const& this_scope;
+					scope_t const& from_scope;
+					fixed_point_t const& argument;
+
+					bool operator()(no_scope_t no_scope) const {
+						Logger::error("Error executing condition \"", condition.get_identifier(), "\": no current scope!");
+						return false;
+					}
+
+					constexpr bool operator()(CountryInstance const* country) {
+						return country->get_national_literacy() >= argument;
+					}
+					constexpr bool operator()(State const* state) const {
+						return state->get_average_literacy() >= argument;
+					}
+					constexpr bool operator()(ProvinceInstance const* province) const {
+						return province->get_average_literacy() >= argument;
+					}
+					constexpr bool operator()(Pop const* pop) const {
+						return pop->get_literacy() >= argument;
+					}
+				};
+
+				return std::visit(visitor_t {
+					condition, instance_manager, this_scope, from_scope, argument
+				}, current_scope);
+			}
+		)
 	);
 	ret &= add_condition(
 		"lost_national",
@@ -2394,7 +2432,17 @@ bool ConditionManager::setup_conditions(DefinitionManager const& definition_mana
 	ret &= add_condition(
 		"nationalvalue",
 		_parse_condition_node_value_callback<NationalValue const*, COUNTRY>,
-		_execute_condition_node_unimplemented
+		_execute_condition_node_cast_argument_callback<NationalValue const*, scope_t, scope_t, scope_t>(
+			_execute_condition_node_convert_scope<CountryInstance, scope_t, scope_t, NationalValue const*>(
+				[](
+					Condition const& condition, InstanceManager const& instance_manager, CountryInstance const* current_scope,
+					scope_t this_scope, scope_t from_scope, NationalValue const* argument
+				) -> bool {
+					// TODO - what to do in nullptr NationalValue case?
+					return current_scope->get_national_value() == argument;
+				}
+			)
+		)
 	);
 	ret &= add_condition(
 		"national_provinces_occupied",
@@ -2459,7 +2507,16 @@ bool ConditionManager::setup_conditions(DefinitionManager const& definition_mana
 	ret &= add_condition(
 		"plurality",
 		_parse_condition_node_value_callback<fixed_point_t, COUNTRY>,
-		_execute_condition_node_unimplemented
+		_execute_condition_node_cast_argument_callback<fixed_point_t, scope_t, scope_t, scope_t>(
+			_execute_condition_node_convert_scope<CountryInstance, scope_t, scope_t, fixed_point_t>(
+				[](
+					Condition const& condition, InstanceManager const& instance_manager, CountryInstance const* current_scope,
+					scope_t this_scope, scope_t from_scope, fixed_point_t argument
+				) -> bool {
+					return current_scope->get_plurality() >= argument;
+				}
+			)
+		)
 	);
 	ret &= add_condition(
 		"political_movement_strength",
@@ -2495,17 +2552,46 @@ bool ConditionManager::setup_conditions(DefinitionManager const& definition_mana
 	ret &= add_condition(
 		"prestige",
 		_parse_condition_node_value_callback<fixed_point_t, COUNTRY>,
-		_execute_condition_node_unimplemented
+		_execute_condition_node_cast_argument_callback<fixed_point_t, scope_t, scope_t, scope_t>(
+			_execute_condition_node_convert_scope<CountryInstance, scope_t, scope_t, fixed_point_t>(
+				[](
+					Condition const& condition, InstanceManager const& instance_manager, CountryInstance const* current_scope,
+					scope_t this_scope, scope_t from_scope, fixed_point_t argument
+				) -> bool {
+					return current_scope->get_prestige() >= argument;
+				}
+			)
+		)
 	);
 	ret &= add_condition(
 		"primary_culture",
 		_parse_condition_node_value_callback<Culture const*, COUNTRY>,
-		_execute_condition_node_unimplemented
+		_execute_condition_node_cast_argument_callback<Culture const*, scope_t, scope_t, scope_t>(
+			_execute_condition_node_convert_scope<CountryInstance, scope_t, scope_t, Culture const*>(
+				[](
+					Condition const& condition, InstanceManager const& instance_manager, CountryInstance const* current_scope,
+					scope_t this_scope, scope_t from_scope, Culture const* argument
+				) -> bool {
+					// TODO - is it safe to assume argument != nullptr here?
+					return current_scope->is_primary_culture(*argument);
+				}
+			)
+		)
 	);
 	ret &= add_condition(
 		"accepted_culture",
 		_parse_condition_node_value_callback<Culture const*, COUNTRY>,
-		_execute_condition_node_unimplemented
+		_execute_condition_node_cast_argument_callback<Culture const*, scope_t, scope_t, scope_t>(
+			_execute_condition_node_convert_scope<CountryInstance, scope_t, scope_t, Culture const*>(
+				[](
+					Condition const& condition, InstanceManager const& instance_manager, CountryInstance const* current_scope,
+					scope_t this_scope, scope_t from_scope, Culture const* argument
+				) -> bool {
+					// TODO - is it safe to assume argument != nullptr here?
+					return current_scope->has_accepted_culture(*argument);
+				}
+			)
+		)
 	);
 	ret &= add_condition(
 		"produces",
@@ -2515,7 +2601,16 @@ bool ConditionManager::setup_conditions(DefinitionManager const& definition_mana
 	ret &= add_condition(
 		"rank",
 		_parse_condition_node_value_callback<integer_t, COUNTRY>,
-		_execute_condition_node_unimplemented
+		_execute_condition_node_cast_argument_callback<integer_t, scope_t, scope_t, scope_t>(
+			_execute_condition_node_convert_scope<CountryInstance, scope_t, scope_t, integer_t>(
+				[](
+					Condition const& condition, InstanceManager const& instance_manager, CountryInstance const* current_scope,
+					scope_t this_scope, scope_t from_scope, integer_t argument
+				) -> bool {
+					return current_scope->get_total_rank() <= argument;
+				}
+			)
+		)
 	);
 	ret &= add_condition(
 		"rebel_power_fraction",
@@ -2552,12 +2647,32 @@ bool ConditionManager::setup_conditions(DefinitionManager const& definition_mana
 	ret &= add_condition(
 		"ruling_party",
 		_parse_condition_node_value_callback<std::string, COUNTRY>,
-		_execute_condition_node_unimplemented
+		_execute_condition_node_cast_argument_callback<std::string, scope_t, scope_t, scope_t>(
+			_execute_condition_node_convert_scope<CountryInstance, scope_t, scope_t, std::string const&>(
+				[](
+					Condition const& condition, InstanceManager const& instance_manager, CountryInstance const* current_scope,
+					scope_t this_scope, scope_t from_scope, std::string const& argument
+				) -> bool {
+					CountryParty const* ruling_party = current_scope->get_ruling_party();
+					return ruling_party != nullptr && ruling_party->get_identifier() == argument;
+				}
+			)
+		)
 	);
 	ret &= add_condition(
 		"ruling_party_ideology",
 		_parse_condition_node_value_callback<Ideology const*, COUNTRY>,
-		_execute_condition_node_unimplemented
+		_execute_condition_node_cast_argument_callback<Ideology const*, scope_t, scope_t, scope_t>(
+			_execute_condition_node_convert_scope<CountryInstance, scope_t, scope_t, Ideology const*>(
+				[](
+					Condition const& condition, InstanceManager const& instance_manager, CountryInstance const* current_scope,
+					scope_t this_scope, scope_t from_scope, Ideology const* argument
+				) -> bool {
+					CountryParty const* ruling_party = current_scope->get_ruling_party();
+					return ruling_party != nullptr && ruling_party->get_ideology() == argument;
+				}
+			)
+		)
 	);
 	ret &= add_condition(
 		"social_movement_strength",
@@ -2589,7 +2704,17 @@ bool ConditionManager::setup_conditions(DefinitionManager const& definition_mana
 	ret &= add_condition(
 		"tech_school",
 		_parse_condition_node_value_callback<TechnologySchool const*, COUNTRY>,
-		_execute_condition_node_unimplemented
+		_execute_condition_node_cast_argument_callback<TechnologySchool const*, scope_t, scope_t, scope_t>(
+			_execute_condition_node_convert_scope<CountryInstance, scope_t, scope_t, TechnologySchool const*>(
+				[](
+					Condition const& condition, InstanceManager const& instance_manager, CountryInstance const* current_scope,
+					scope_t this_scope, scope_t from_scope, TechnologySchool const* argument
+				) -> bool {
+					// TODO - what to do in nullptr TechnologySchool case?
+					return current_scope->get_tech_school() == argument;
+				}
+			)
+		)
 	);
 	ret &= add_condition(
 		"this_culture_union",
@@ -2661,7 +2786,16 @@ bool ConditionManager::setup_conditions(DefinitionManager const& definition_mana
 	ret &= add_condition(
 		"war",
 		_parse_condition_node_value_callback<bool, COUNTRY>,
-		_execute_condition_node_unimplemented
+		_execute_condition_node_cast_argument_callback<bool, scope_t, scope_t, scope_t>(
+			_execute_condition_node_convert_scope<CountryInstance, scope_t, scope_t, bool>(
+				[](
+					Condition const& condition, InstanceManager const& instance_manager, CountryInstance const* current_scope,
+					scope_t this_scope, scope_t from_scope, bool argument
+				) -> bool {
+					return current_scope->is_at_war() == argument;
+				}
+			)
+		)
 	);
 	ret &= add_condition(
 		"war_exhaustion",
@@ -3028,7 +3162,44 @@ bool ConditionManager::setup_conditions(DefinitionManager const& definition_mana
 		ret &= add_condition(
 			ideology.get_identifier(),
 			_parse_condition_node_value_callback<fixed_point_t, COUNTRY | PROVINCE>,
-			_execute_condition_node_unimplemented
+			_execute_condition_node_cast_argument_callback<fixed_point_t, scope_t, scope_t, scope_t>(
+				[&ideology](
+					Condition const& condition, InstanceManager const& instance_manager, scope_t current_scope,
+					scope_t this_scope, scope_t from_scope, fixed_point_t argument
+				) -> bool {
+					struct visitor_t {
+
+						Condition const& condition;
+						InstanceManager const& instance_manager;
+						scope_t const& this_scope;
+						scope_t const& from_scope;
+						fixed_point_t const& argument;
+						Ideology const& ideology;
+
+						bool operator()(no_scope_t no_scope) const {
+							Logger::error("Error executing condition \"", condition.get_identifier(), "\": no current scope!");
+							return false;
+						}
+
+						bool operator()(CountryInstance const* country) {
+							return country->get_ideology_support(ideology) >= argument * country->get_total_population();
+						}
+						bool operator()(State const* state) const {
+							return state->get_ideology_support(ideology) >= argument * state->get_total_population();
+						}
+						bool operator()(ProvinceInstance const* province) const {
+							return province->get_ideology_support(ideology) >= argument * province->get_total_population();
+						}
+						bool operator()(Pop const* pop) const {
+							return pop->get_ideology_support(ideology) >= argument * pop->get_size();
+						}
+					};
+
+					return std::visit(visitor_t {
+						condition, instance_manager, this_scope, from_scope, argument, ideology
+					}, current_scope);
+				}
+			)
 		);
 	}
 
@@ -3036,7 +3207,16 @@ bool ConditionManager::setup_conditions(DefinitionManager const& definition_mana
 		ret &= add_condition(
 			reform_group.get_identifier(),
 			_parse_condition_node_value_callback<Reform const*, COUNTRY>,
-			_execute_condition_node_unimplemented
+			_execute_condition_node_cast_argument_callback<Reform const*, scope_t, scope_t, scope_t>(
+				_execute_condition_node_convert_scope<CountryInstance, scope_t, scope_t, Reform const*>(
+					[&reform_group](
+						Condition const& condition, InstanceManager const& instance_manager,
+						CountryInstance const* current_scope, scope_t this_scope, scope_t from_scope, Reform const* argument
+					) -> bool {
+						return current_scope->get_reforms()[reform_group] == argument;
+					}
+				)
+			)
 		);
 	}
 
@@ -3044,7 +3224,17 @@ bool ConditionManager::setup_conditions(DefinitionManager const& definition_mana
 		ret &= add_condition(
 			reform.get_identifier(),
 			_parse_condition_node_value_callback<fixed_point_t, COUNTRY | PROVINCE>,
-			_execute_condition_node_unimplemented
+			_execute_condition_node_cast_argument_callback<fixed_point_t, scope_t, scope_t, scope_t>(
+				_execute_condition_node_convert_scope<CountryInstance, scope_t, scope_t, fixed_point_t>(
+					[&reform](
+						Condition const& condition, InstanceManager const& instance_manager,
+						CountryInstance const* current_scope, scope_t this_scope, scope_t from_scope, fixed_point_t argument
+					) -> bool {
+						return current_scope->get_issue_support(reform) * 100 >=
+							argument * current_scope->get_total_population();
+					}
+				)
+			)
 		);
 	}
 
@@ -3072,7 +3262,17 @@ bool ConditionManager::setup_conditions(DefinitionManager const& definition_mana
 		ret &= add_condition(
 			issue.get_identifier(),
 			_parse_condition_node_value_callback<fixed_point_t, COUNTRY | PROVINCE>,
-			_execute_condition_node_unimplemented
+			_execute_condition_node_cast_argument_callback<fixed_point_t, scope_t, scope_t, scope_t>(
+				_execute_condition_node_convert_scope<CountryInstance, scope_t, scope_t, fixed_point_t>(
+					[&issue](
+						Condition const& condition, InstanceManager const& instance_manager,
+						CountryInstance const* current_scope, scope_t this_scope, scope_t from_scope, fixed_point_t argument
+					) -> bool {
+						return current_scope->get_issue_support(issue) * 100 >=
+							argument * current_scope->get_total_population();
+					}
+				)
+			)
 		);
 	}
 
@@ -3080,7 +3280,17 @@ bool ConditionManager::setup_conditions(DefinitionManager const& definition_mana
 		ret &= add_condition(
 			pop_type.get_identifier(),
 			_parse_condition_node_value_callback<fixed_point_t, COUNTRY>,
-			_execute_condition_node_unimplemented
+			_execute_condition_node_cast_argument_callback<fixed_point_t, scope_t, scope_t, scope_t>(
+				_execute_condition_node_convert_scope<CountryInstance, scope_t, scope_t, fixed_point_t>(
+					[&pop_type](
+						Condition const& condition, InstanceManager const& instance_manager,
+						CountryInstance const* current_scope, scope_t this_scope, scope_t from_scope, fixed_point_t argument
+					) -> bool {
+						return current_scope->get_pop_type_proportion(pop_type) >=
+							argument * current_scope->get_total_population();
+					}
+				)
+			)
 		);
 	}
 
@@ -3091,7 +3301,16 @@ bool ConditionManager::setup_conditions(DefinitionManager const& definition_mana
 			technology.get_identifier(),
 			// TODO - Could convert integer to bool?
 			_parse_condition_node_value_callback<integer_t, COUNTRY>,
-			_execute_condition_node_unimplemented
+			_execute_condition_node_cast_argument_callback<integer_t, scope_t, scope_t, scope_t>(
+				_execute_condition_node_convert_scope<CountryInstance, scope_t, scope_t, integer_t>(
+					[&technology](
+						Condition const& condition, InstanceManager const& instance_manager,
+						CountryInstance const* current_scope, scope_t this_scope, scope_t from_scope, integer_t argument
+					) -> bool {
+						return current_scope->is_technology_unlocked(technology) == (argument != 0);
+					}
+				)
+			)
 		);
 	}
 

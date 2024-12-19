@@ -24,7 +24,7 @@ namespace OpenVic {
 			InstanceManager const& instance_manager,
 			ConditionNode::scope_t const& initial_scope,
 			ConditionNode::scope_t const& this_scope,
-			ConditionNode::scope_t const& from_scope
+			ConditionNode::scope_t const& from_scope = ConditionNode::no_scope_t {}
 		) const;
 	};
 }
