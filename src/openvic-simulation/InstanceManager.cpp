@@ -142,7 +142,9 @@ bool InstanceManager::load_bookmark(Bookmark const* new_bookmark) {
 	);
 
 	ret &= map_instance.get_state_manager().generate_states(
-		map_instance, definition_manager.get_pop_manager().get_pop_types()
+		map_instance,
+		definition_manager.get_pop_manager().get_pop_types(),
+		definition_manager.get_politics_manager().get_ideology_manager().get_ideologies()
 	);
 
 	if (ret) {

@@ -16,7 +16,8 @@ State::State(
 	ProvinceInstance* new_capital,
 	std::vector<ProvinceInstance*>&& new_provinces,
 	ProvinceInstance::colony_status_t new_colony_status,
-	decltype(pop_type_distribution)::keys_type const& pop_type_keys
+	decltype(pop_type_distribution)::keys_type const& pop_type_keys,
+	decltype(ideology_distribution)::keys_type const& ideology_keys
 ) : state_set { new_state_set },
 	owner { new_owner },
 	capital { new_capital },
@@ -24,6 +25,11 @@ State::State(
 	colony_status { new_colony_status },
 	pop_type_distribution { &pop_type_keys },
 	pops_cache_by_type { &pop_type_keys },
+	ideology_distribution { &ideology_keys },
+	issue_distribution {},
+	vote_distribution { new_owner != nullptr ? &new_owner->get_country_definition()->get_parties() : nullptr },
+	culture_distribution {},
+	religion_distribution {},
 	industrial_power { 0 },
 	max_supported_regiments { 0 }
 	{}
@@ -35,17 +41,70 @@ std::string State::get_identifier() const {
 	);
 }
 
+fixed_point_t State::get_pop_type_proportion(PopType const& pop_type) const {
+	return pop_type_distribution[pop_type];
+}
+
+fixed_point_t State::get_ideology_support(Ideology const& ideology) const {
+	return ideology_distribution[ideology];
+}
+
+fixed_point_t State::get_issue_support(Issue const& issue) const {
+	const decltype(issue_distribution)::const_iterator it = issue_distribution.find(&issue);
+
+	if (it != issue_distribution.end()) {
+		return it->second;
+	} else {
+		return fixed_point_t::_0();
+	}
+}
+
+fixed_point_t State::get_party_support(CountryParty const& party) const {
+	if (vote_distribution.has_keys()) {
+		return vote_distribution[party];
+	} else {
+		return fixed_point_t::_0();
+	}
+}
+
+fixed_point_t State::get_culture_proportion(Culture const& culture) const {
+	const decltype(culture_distribution)::const_iterator it = culture_distribution.find(&culture);
+
+	if (it != culture_distribution.end()) {
+		return it->second;
+	} else {
+		return fixed_point_t::_0();
+	}
+}
+
+fixed_point_t State::get_religion_proportion(Religion const& religion) const {
+	const decltype(religion_distribution)::const_iterator it = religion_distribution.find(&religion);
+
+	if (it != religion_distribution.end()) {
+		return it->second;
+	} else {
+		return fixed_point_t::_0();
+	}
+}
+
 void State::update_gamestate() {
 	total_population = 0;
 	average_literacy = 0;
 	average_consciousness = 0;
 	average_militancy = 0;
+
 	pop_type_distribution.clear();
-	max_supported_regiments = 0;
+	ideology_distribution.clear();
+	issue_distribution.clear();
+	vote_distribution.clear();
+	culture_distribution.clear();
+	religion_distribution.clear();
 
 	for (std::vector<Pop*>& pops_cache : pops_cache_by_type.get_values()) {
 		pops_cache.clear();
 	}
+
+	max_supported_regiments = 0;
 
 	for (ProvinceInstance const* const province : provinces) {
 		total_population += province->get_total_population();
@@ -55,6 +114,13 @@ void State::update_gamestate() {
 		average_literacy += province->get_average_literacy() * province_population;
 		average_consciousness += province->get_average_consciousness() * province_population;
 		average_militancy += province->get_average_militancy() * province_population;
+
+		pop_type_distribution += province->get_pop_type_distribution();
+		ideology_distribution += province->get_ideology_distribution();
+		issue_distribution += province->get_issue_distribution();
+		vote_distribution += province->get_vote_distribution();
+		culture_distribution += province->get_culture_distribution();
+		religion_distribution += province->get_religion_distribution();
 
 		for (auto const& [pop_type, province_pops_of_type] : province->get_pops_cache_by_type()) {
 			std::vector<Pop*>& state_pops_of_type = pops_cache_by_type[pop_type];
@@ -113,7 +179,9 @@ void StateSet::update_gamestate() {
 }
 
 bool StateManager::add_state_set(
-	MapInstance& map_instance, Region const& region, decltype(State::pop_type_distribution)::keys_type const& pop_type_keys
+	MapInstance& map_instance, Region const& region,
+	decltype(State::pop_type_distribution)::keys_type const& pop_type_keys,
+	decltype(State::ideology_distribution)::keys_type const& ideology_keys
 ) {
 	if (region.get_meta()) {
 		Logger::error("Cannot use meta region \"", region.get_identifier(), "\" as state template!");
@@ -162,7 +230,7 @@ bool StateManager::add_state_set(
 
 		State& state = *state_set.states.insert(
 			/* TODO: capital province logic */
-			{ state_set, owner, capital, std::move(provinces), capital->get_colony_status(), pop_type_keys }
+			{ state_set, owner, capital, std::move(provinces), capital->get_colony_status(), pop_type_keys, ideology_keys }
 		);
 
 		for (ProvinceInstance* province : state.get_provinces()) {
@@ -178,7 +246,9 @@ bool StateManager::add_state_set(
 }
 
 bool StateManager::generate_states(
-	MapInstance& map_instance, decltype(State::pop_type_distribution)::keys_type const& pop_type_keys
+	MapInstance& map_instance,
+	decltype(State::pop_type_distribution)::keys_type const& pop_type_keys,
+	decltype(State::ideology_distribution)::keys_type const& ideology_keys
 ) {
 	MapDefinition const& map_definition = map_instance.get_map_definition();
 
@@ -190,7 +260,7 @@ bool StateManager::generate_states(
 
 	for (Region const& region : map_definition.get_regions()) {
 		if (!region.get_meta()) {
-			if (add_state_set(map_instance, region, pop_type_keys)) {
+			if (add_state_set(map_instance, region, pop_type_keys, ideology_keys)) {
 				state_count += state_sets.back().get_state_count();
 			} else {
 				ret = false;

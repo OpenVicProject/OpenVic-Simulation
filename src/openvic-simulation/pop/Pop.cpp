@@ -12,7 +12,7 @@ PopBase::PopBase(
 ) : type { &new_type }, culture { new_culture }, religion { new_religion }, size { new_size }, militancy { new_militancy },
 	consciousness { new_consciousness }, rebel_type { new_rebel_type } {}
 
-Pop::Pop(PopBase const& pop_base, decltype(ideologies)::keys_type const& ideology_keys)
+Pop::Pop(PopBase const& pop_base, decltype(ideology_distribution)::keys_type const& ideology_keys)
   : PopBase { pop_base },
 	location { nullptr },
 	total_change { 0 },
@@ -22,9 +22,9 @@ Pop::Pop(PopBase const& pop_base, decltype(ideologies)::keys_type const& ideolog
 	num_migrated_internal { 0 },
 	num_migrated_external { 0 },
 	num_migrated_colonial { 0 },
-	ideologies { &ideology_keys },
-	issues {},
-	votes { nullptr },
+	ideology_distribution { &ideology_keys },
+	issue_distribution {},
+	vote_distribution { nullptr },
 	unemployment { 0 },
 	cash { 0 },
 	income { 0 },
@@ -70,29 +70,29 @@ void Pop::setup_pop_test_values(IssueManager const& issue_manager) {
 		};
 
 	/* All entries equally weighted for testing. */
-	ideologies.clear();
-	for (Ideology const& ideology : *ideologies.get_keys()) {
-		test_weight(ideologies, ideology, 1, 5);
+	ideology_distribution.clear();
+	for (Ideology const& ideology : *ideology_distribution.get_keys()) {
+		test_weight(ideology_distribution, ideology, 1, 5);
 	}
-	ideologies.normalise();
+	ideology_distribution.rescale(size);
 
-	issues.clear();
+	issue_distribution.clear();
 	for (Issue const& issue : issue_manager.get_issues()) {
-		test_weight(issues, issue, 3, 6);
+		test_weight(issue_distribution, issue, 3, 6);
 	}
 	for (Reform const& reform : issue_manager.get_reforms()) {
 		if (!reform.get_reform_group().get_type().is_uncivilised()) {
-			test_weight(issues, reform, 3, 6);
+			test_weight(issue_distribution, reform, 3, 6);
 		}
 	}
-	normalise_fixed_point_map(issues);
+	rescale_fixed_point_map(issue_distribution, size);
 
-	if (votes.has_keys()) {
-		votes.clear();
-		for (CountryParty const& party : *votes.get_keys()) {
-			test_weight(votes, party, 4, 10);
+	if (vote_distribution.has_keys()) {
+		vote_distribution.clear();
+		for (CountryParty const& party : *vote_distribution.get_keys()) {
+			test_weight(vote_distribution, party, 4, 10);
 		}
-		votes.normalise();
+		vote_distribution.rescale(size);
 	}
 
 	/* Returns a fixed point between 0 and max. */
@@ -125,12 +125,45 @@ void Pop::set_location(ProvinceInstance const& new_location) {
 	if (location != &new_location) {
 		location = &new_location;
 
-		// TODO - update location dependent attributes
+		update_location_based_attributes();
+	}
+}
 
-		votes.set_keys(
-			location->get_owner() != nullptr ? &location->get_owner()->get_country_definition()->get_parties() : nullptr
-		);
-		// TODO - calculate vote distribution
+void Pop::update_location_based_attributes() {
+	if (location != nullptr) {
+		CountryInstance const* owner = location->get_owner();
+
+		if (owner != nullptr) {
+			vote_distribution.set_keys(&owner->get_country_definition()->get_parties());
+
+			// TODO - calculate vote distribution
+
+			return;
+		}
+	}
+
+	vote_distribution.set_keys(nullptr);
+}
+
+fixed_point_t Pop::get_ideology_support(Ideology const& ideology) const {
+	return ideology_distribution[ideology];
+}
+
+fixed_point_t Pop::get_issue_support(Issue const& issue) const {
+	const decltype(issue_distribution)::const_iterator it = issue_distribution.find(&issue);
+
+	if (it != issue_distribution.end()) {
+		return it->second;
+	} else {
+		return fixed_point_t::_0();
+	}
+}
+
+fixed_point_t Pop::get_party_support(CountryParty const& party) const {
+	if (vote_distribution.has_keys()) {
+		return vote_distribution[party];
+	} else {
+		return fixed_point_t::_0();
 	}
 }
 

@@ -157,6 +157,11 @@ namespace OpenVic {
 		fixed_point_t PROPERTY(national_consciousness);
 		fixed_point_t PROPERTY(national_militancy);
 		IndexedMap<PopType, pop_size_t> PROPERTY(pop_type_distribution);
+		IndexedMap<Ideology, fixed_point_t> PROPERTY(ideology_distribution);
+		fixed_point_map_t<Issue const*> PROPERTY(issue_distribution);
+		IndexedMap<CountryParty, fixed_point_t> PROPERTY(vote_distribution);
+		fixed_point_map_t<Culture const*> PROPERTY(culture_distribution);
+		fixed_point_map_t<Religion const*> PROPERTY(religion_distribution);
 		size_t PROPERTY(national_focus_capacity)
 		// TODO - national foci
 
@@ -221,11 +226,22 @@ namespace OpenVic {
 	public:
 		std::string_view get_identifier() const;
 
+		void update_country_definition_based_attributes();
+
 		bool exists() const;
 		bool is_civilised() const;
 		bool can_colonise() const;
 		bool is_great_power() const;
 		bool is_secondary_power() const;
+
+		// The values returned by these functions are scaled by population size, so they must be divided by population size
+		// to get the support as a proportion of 1.0
+		fixed_point_t get_pop_type_proportion(PopType const& pop_type) const;
+		fixed_point_t get_ideology_support(Ideology const& ideology) const;
+		fixed_point_t get_issue_support(Issue const& issue) const;
+		fixed_point_t get_party_support(CountryParty const& party) const;
+		fixed_point_t get_culture_proportion(Culture const& culture) const;
+		fixed_point_t get_religion_proportion(Religion const& religion) const;
 
 		bool add_owned_province(ProvinceInstance& new_province);
 		bool remove_owned_province(ProvinceInstance& province_to_remove);
