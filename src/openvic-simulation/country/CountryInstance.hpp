@@ -206,6 +206,7 @@ namespace OpenVic {
 
 		UNIT_BRANCHED_GETTER(get_unit_instance_groups, armies, navies);
 		UNIT_BRANCHED_GETTER(get_leaders, generals, admirals);
+		UNIT_BRANCHED_GETTER_CONST(get_leaders, generals, admirals);
 		UNIT_BRANCHED_GETTER(get_unit_type_unlock_levels, regiment_type_unlock_levels, ship_type_unlock_levels);
 
 		CountryInstance(
@@ -287,6 +288,8 @@ namespace OpenVic {
 		void add_leader(LeaderBranched<Branch>&& leader);
 		template<UnitType::branch_t Branch>
 		bool remove_leader(LeaderBranched<Branch> const* leader);
+
+		bool has_leader_with_name(std::string_view name) const;
 
 		template<UnitType::branch_t Branch>
 		bool modify_unit_type_unlock(UnitTypeBranched<Branch> const& unit_type, unlock_level_t unlock_level_change);

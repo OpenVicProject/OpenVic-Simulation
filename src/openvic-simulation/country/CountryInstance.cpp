@@ -421,6 +421,19 @@ template void CountryInstance::add_leader(LeaderBranched<UnitType::branch_t::NAV
 template bool CountryInstance::remove_leader(LeaderBranched<UnitType::branch_t::LAND> const*);
 template bool CountryInstance::remove_leader(LeaderBranched<UnitType::branch_t::NAVAL> const*);
 
+bool CountryInstance::has_leader_with_name(std::string_view name) const {
+	const auto check_leaders = [this, &name]<UnitType::branch_t Branch>() -> bool {
+		for (LeaderBranched<Branch> const& leader : get_leaders<Branch>()) {
+			if (leader.get_name() == name) {
+				return true;
+			}
+		}
+		return false;
+	};
+
+	return check_leaders.operator()<UnitType::branch_t::LAND>() || check_leaders.operator()<UnitType::branch_t::NAVAL>();
+}
+
 template<UnitType::branch_t Branch>
 bool CountryInstance::modify_unit_type_unlock(UnitTypeBranched<Branch> const& unit_type, unlock_level_t unlock_level_change) {
 	IndexedMap<UnitTypeBranched<Branch>, unlock_level_t>& unlocked_unit_types = get_unit_type_unlock_levels<Branch>();
