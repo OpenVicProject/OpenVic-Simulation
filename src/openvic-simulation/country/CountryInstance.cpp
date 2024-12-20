@@ -4,7 +4,9 @@
 
 #include "openvic-simulation/country/CountryDefinition.hpp"
 #include "openvic-simulation/defines/Define.hpp"
+#include "openvic-simulation/DefinitionManager.hpp"
 #include "openvic-simulation/history/CountryHistory.hpp"
+#include "openvic-simulation/InstanceManager.hpp"
 #include "openvic-simulation/map/Crime.hpp"
 #include "openvic-simulation/map/MapInstance.hpp"
 #include "openvic-simulation/modifier/ModifierEffectCache.hpp"
@@ -39,6 +41,7 @@ CountryInstance::CountryInstance(
 	colour { ERROR_COLOUR },
 	capital { nullptr },
 	country_flags {},
+	ai { true },
 	releasable_vassal { true },
 	country_status { COUNTRY_STATUS_UNCIVILISED },
 	lose_great_power_date {},
@@ -394,6 +397,19 @@ template void CountryInstance::add_leader(LeaderBranched<UnitType::branch_t::NAV
 template bool CountryInstance::remove_leader(LeaderBranched<UnitType::branch_t::LAND> const*);
 template bool CountryInstance::remove_leader(LeaderBranched<UnitType::branch_t::NAVAL> const*);
 
+bool CountryInstance::has_leader_with_name(std::string_view name) const {
+	const auto check_leaders = [this, &name]<UnitType::branch_t Branch>() -> bool {
+		for (LeaderBranched<Branch> const& leader : get_leaders<Branch>()) {
+			if (leader.get_name() == name) {
+				return true;
+			}
+		}
+		return false;
+	};
+
+	return check_leaders.operator()<UnitType::branch_t::LAND>() || check_leaders.operator()<UnitType::branch_t::NAVAL>();
+}
+
 template<UnitType::branch_t Branch>
 bool CountryInstance::modify_unit_type_unlock(UnitTypeBranched<Branch> const& unit_type, unlock_level_t unlock_level_change) {
 	IndexedMap<UnitTypeBranched<Branch>, unlock_level_t>& unlocked_unit_types = get_unit_type_unlock_levels<Branch>();
@@ -722,9 +738,7 @@ void CountryInstance::apply_foreign_investments(
 	}
 }
 
-bool CountryInstance::apply_history_to_country(
-	CountryHistoryEntry const& entry, MapInstance& map_instance, CountryInstanceManager const& country_instance_manager
-) {
+bool CountryInstance::apply_history_to_country(CountryHistoryEntry const& entry, InstanceManager const& instance_manager) {
 	constexpr auto set_optional = []<typename T>(T& target, std::optional<T> const& source) {
 		if (source) {
 			target = *source;
@@ -748,7 +762,7 @@ bool CountryInstance::apply_history_to_country(
 	set_optional(last_election, entry.get_last_election());
 	ret &= upper_house.copy(entry.get_upper_house());
 	if (entry.get_capital()) {
-		capital = &map_instance.get_province_instance_from_definition(**entry.get_capital());
+		capital = &instance_manager.get_map_instance().get_province_instance_from_definition(**entry.get_capital());
 	}
 	set_optional(government_type, entry.get_government_type());
 	set_optional(plurality, entry.get_plurality());
@@ -770,10 +784,24 @@ bool CountryInstance::apply_history_to_country(
 	for (auto const& [technology, level] : entry.get_technologies()) {
 		ret &= set_technology_unlock_level(*technology, level);
 	}
+
+	for (
+		Invention const& invention :
+			instance_manager.get_definition_manager().get_research_manager().get_invention_manager().get_inventions()
+	) {
+		if (
+			invention.get_limit().execute(instance_manager, this, this) &&
+			invention.get_chance().execute(instance_manager, this, this) > 0
+		) {
+			ret &= unlock_invention(invention);
+			// Logger::info("Unlocked invention ", invention.get_identifier(), " for country ", get_identifier());
+		}
+	}
+
 	for (auto const& [invention, activated] : entry.get_inventions()) {
 		ret &= set_invention_unlock_level(*invention, activated ? 1 : 0);
 	}
-	apply_foreign_investments(entry.get_foreign_investment(), country_instance_manager);
+	apply_foreign_investments(entry.get_foreign_investment(), instance_manager.get_country_instance_manager());
 
 	// These need to be applied to pops
 	// entry.get_consciousness();
@@ -1316,10 +1344,13 @@ bool CountryInstanceManager::generate_country_instances(
 	return ret;
 }
 
-bool CountryInstanceManager::apply_history_to_countries(
-	CountryHistoryManager const& history_manager, Date date, UnitInstanceManager& unit_instance_manager,
-	MapInstance& map_instance
-) {
+bool CountryInstanceManager::apply_history_to_countries(InstanceManager& instance_manager) {
+	CountryHistoryManager const& history_manager =
+		instance_manager.get_definition_manager().get_history_manager().get_country_manager();
+	const Date today = instance_manager.get_today();
+	UnitInstanceManager& unit_instance_manager = instance_manager.get_unit_instance_manager();
+	MapInstance& map_instance = instance_manager.get_map_instance();
+
 	bool ret = true;
 
 	for (CountryInstance& country_instance : country_instances.get_items()) {
@@ -1331,8 +1362,8 @@ bool CountryInstanceManager::apply_history_to_countries(
 				CountryHistoryEntry const* oob_history_entry = nullptr;
 
 				for (auto const& [entry_date, entry] : history_map->get_entries()) {
-					if (entry_date <= date) {
-						ret &= country_instance.apply_history_to_country(*entry, map_instance, *this);
+					if (entry_date <= today) {
+						ret &= country_instance.apply_history_to_country(*entry, instance_manager);
 
 						if (entry->get_inital_oob()) {
 							oob_history_entry = entry.get();

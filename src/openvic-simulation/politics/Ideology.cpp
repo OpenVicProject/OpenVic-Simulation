@@ -9,10 +9,10 @@ IdeologyGroup::IdeologyGroup(std::string_view new_identifier) : HasIdentifier { 
 
 Ideology::Ideology(
 	std::string_view new_identifier, colour_t new_colour, IdeologyGroup const& new_group, bool new_uncivilised,
-	bool new_can_reduce_militancy, Date new_spawn_date, ConditionalWeight&& new_add_political_reform,
-	ConditionalWeight&& new_remove_political_reform, ConditionalWeight&& new_add_social_reform,
-	ConditionalWeight&& new_remove_social_reform, ConditionalWeight&& new_add_military_reform,
-	ConditionalWeight&& new_add_economic_reform
+	bool new_can_reduce_militancy, Date new_spawn_date, ConditionalWeightBase&& new_add_political_reform,
+	ConditionalWeightBase&& new_remove_political_reform, ConditionalWeightBase&& new_add_social_reform,
+	ConditionalWeightBase&& new_remove_social_reform, ConditionalWeightBase&& new_add_military_reform,
+	ConditionalWeightBase&& new_add_economic_reform
 ) : HasIdentifierAndColour { new_identifier, new_colour, false }, group { new_group }, uncivilised { new_uncivilised },
 	can_reduce_militancy { new_can_reduce_militancy }, spawn_date { new_spawn_date },
 	add_political_reform { std::move(new_add_political_reform) },
@@ -42,9 +42,9 @@ bool IdeologyManager::add_ideology_group(std::string_view identifier) {
 
 bool IdeologyManager::add_ideology(
 	std::string_view identifier, colour_t colour, IdeologyGroup const* group, bool uncivilised, bool can_reduce_militancy,
-	Date spawn_date, ConditionalWeight&& add_political_reform, ConditionalWeight&& remove_political_reform,
-	ConditionalWeight&& add_social_reform, ConditionalWeight&& remove_social_reform, ConditionalWeight&& add_military_reform,
-	ConditionalWeight&& add_economic_reform
+	Date spawn_date, ConditionalWeightBase&& add_political_reform, ConditionalWeightBase&& remove_political_reform,
+	ConditionalWeightBase&& add_social_reform, ConditionalWeightBase&& remove_social_reform,
+	ConditionalWeightBase&& add_military_reform, ConditionalWeightBase&& add_economic_reform
 ) {
 	if (identifier.empty()) {
 		Logger::error("Invalid ideology identifier - empty!");
@@ -88,25 +88,25 @@ bool IdeologyManager::load_ideology_file(ast::NodeCPtr root) {
 			colour_t colour = colour_t::null();
 			bool uncivilised = true, can_reduce_militancy = false;
 			Date spawn_date;
-			ConditionalWeight add_political_reform { COUNTRY, COUNTRY, NO_SCOPE };
-			ConditionalWeight remove_political_reform { COUNTRY, COUNTRY, NO_SCOPE };
-			ConditionalWeight add_social_reform { COUNTRY, COUNTRY, NO_SCOPE };
-			ConditionalWeight remove_social_reform { COUNTRY, COUNTRY, NO_SCOPE };
-			ConditionalWeight add_military_reform { COUNTRY, COUNTRY, NO_SCOPE };
-			ConditionalWeight add_economic_reform { COUNTRY, COUNTRY, NO_SCOPE };
+			ConditionalWeightBase add_political_reform { COUNTRY, COUNTRY, NO_SCOPE };
+			ConditionalWeightBase remove_political_reform { COUNTRY, COUNTRY, NO_SCOPE };
+			ConditionalWeightBase add_social_reform { COUNTRY, COUNTRY, NO_SCOPE };
+			ConditionalWeightBase remove_social_reform { COUNTRY, COUNTRY, NO_SCOPE };
+			ConditionalWeightBase add_military_reform { COUNTRY, COUNTRY, NO_SCOPE };
+			ConditionalWeightBase add_economic_reform { COUNTRY, COUNTRY, NO_SCOPE };
 
 			bool ret = expect_dictionary_keys(
 				"uncivilized", ZERO_OR_ONE, expect_bool(assign_variable_callback(uncivilised)),
 				"color", ONE_EXACTLY, expect_colour(assign_variable_callback(colour)),
 				"date", ZERO_OR_ONE, expect_date(assign_variable_callback(spawn_date)),
 				"can_reduce_militancy", ZERO_OR_ONE, expect_bool(assign_variable_callback(can_reduce_militancy)),
-				"add_political_reform", ONE_EXACTLY, add_political_reform.expect_conditional_weight(ConditionalWeight::BASE),
+				"add_political_reform", ONE_EXACTLY, add_political_reform.expect_conditional_weight(),
 				"remove_political_reform", ONE_EXACTLY,
-					remove_political_reform.expect_conditional_weight(ConditionalWeight::BASE),
-				"add_social_reform", ONE_EXACTLY, add_social_reform.expect_conditional_weight(ConditionalWeight::BASE),
-				"remove_social_reform", ONE_EXACTLY, remove_social_reform.expect_conditional_weight(ConditionalWeight::BASE),
-				"add_military_reform", ZERO_OR_ONE, add_military_reform.expect_conditional_weight(ConditionalWeight::BASE),
-				"add_economic_reform", ZERO_OR_ONE, add_economic_reform.expect_conditional_weight(ConditionalWeight::BASE)
+					remove_political_reform.expect_conditional_weight(),
+				"add_social_reform", ONE_EXACTLY, add_social_reform.expect_conditional_weight(),
+				"remove_social_reform", ONE_EXACTLY, remove_social_reform.expect_conditional_weight(),
+				"add_military_reform", ZERO_OR_ONE, add_military_reform.expect_conditional_weight(),
+				"add_economic_reform", ZERO_OR_ONE, add_economic_reform.expect_conditional_weight()
 			)(value);
 
 			ret &= add_ideology(

@@ -6,8 +6,9 @@
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;
 
-Event::EventOption::EventOption(std::string_view new_name, EffectScript&& new_effect, ConditionalWeight&& new_ai_chance)
-  : name { new_name }, effect { std::move(new_effect) }, ai_chance { std::move(new_ai_chance) } {}
+Event::EventOption::EventOption(
+	std::string_view new_name, EffectScript&& new_effect, ConditionalWeightFactorMul&& new_ai_chance
+) : name { new_name }, effect { std::move(new_effect) }, ai_chance { std::move(new_ai_chance) } {}
 
 bool Event::EventOption::parse_scripts(DefinitionManager const& definition_manager) {
 	bool ret = true;
@@ -21,7 +22,7 @@ Event::Event(
 	std::string_view new_image, event_type_t new_type, bool new_triggered_only, bool new_major, bool new_fire_only_once,
 	bool new_allows_multiple_instances, bool new_news, std::string_view new_news_title, std::string_view new_news_desc_long,
 	std::string_view new_news_desc_medium, std::string_view new_news_desc_short, bool new_election,
-	IssueGroup const* new_election_issue_group, ConditionScript&& new_trigger, ConditionalWeight&& new_mean_time_to_happen,
+	IssueGroup const* new_election_issue_group, ConditionScript&& new_trigger, ConditionalWeightTime&& new_mean_time_to_happen,
 	EffectScript&& new_immediate, std::vector<EventOption>&& new_options
 ) : HasIdentifier { new_identifier }, title { new_title }, description { new_description }, image { new_image },
 	type { new_type }, triggered_only { new_triggered_only }, major { new_major }, fire_only_once { new_fire_only_once },
@@ -50,7 +51,7 @@ bool EventManager::register_event(
 	Event::event_type_t type, bool triggered_only, bool major, bool fire_only_once, bool allows_multiple_instances, bool news,
 	std::string_view news_title, std::string_view news_desc_long, std::string_view news_desc_medium,
 	std::string_view news_desc_short, bool election, IssueGroup const* election_issue_group, ConditionScript&& trigger,
-	ConditionalWeight&& mean_time_to_happen, EffectScript&& immediate, std::vector<Event::EventOption>&& options
+	ConditionalWeightTime&& mean_time_to_happen, EffectScript&& immediate, std::vector<Event::EventOption>&& options
 ) {
 	if (identifier.empty()) {
 		Logger::error("Invalid event ID - empty!");
@@ -140,8 +141,8 @@ bool EventManager::load_event_file(IssueManager const& issue_manager, ast::NodeC
 			bool triggered_only = false, major = false, fire_only_once = false, allows_multiple_instances = false,
 				news = false, election = false;
 			IssueGroup const* election_issue_group = nullptr;
-			ConditionScript trigger { initial_scope, initial_scope, NO_SCOPE };
-			ConditionalWeight mean_time_to_happen { initial_scope, initial_scope, NO_SCOPE };
+			ConditionScript trigger { initial_scope, COUNTRY, NO_SCOPE };
+			ConditionalWeightTime mean_time_to_happen { initial_scope, COUNTRY, NO_SCOPE };
 			EffectScript immediate;
 			std::vector<Event::EventOption> options;
 
@@ -165,16 +166,16 @@ bool EventManager::load_event_file(IssueManager const& issue_manager, ast::NodeC
 				"option", ONE_OR_MORE, [&options, initial_scope](ast::NodeCPtr node) -> bool {
 					std::string_view name;
 					EffectScript effect;
-					ConditionalWeight ai_chance {
+					ConditionalWeightFactorMul ai_chance {
 						initial_scope,
-						initial_scope,
-						COUNTRY | PROVINCE // TODO - decide which to use?
+						COUNTRY,
+						COUNTRY
 					};
 
 					bool ret = expect_dictionary_keys_and_default(
 						key_value_success_callback, /* Option effects, passed to the EffectScript below */
 						"name", ONE_EXACTLY, expect_identifier_or_string(assign_variable_callback(name)),
-						"ai_chance", ZERO_OR_ONE, ai_chance.expect_conditional_weight(ConditionalWeight::FACTOR)
+						"ai_chance", ZERO_OR_ONE, ai_chance.expect_conditional_weight()
 					)(node);
 
 					ret &= effect.expect_script()(node);
@@ -183,7 +184,7 @@ bool EventManager::load_event_file(IssueManager const& issue_manager, ast::NodeC
 					return ret;
 				},
 				"trigger", ZERO_OR_ONE, trigger.expect_script(),
-				"mean_time_to_happen", ZERO_OR_ONE, mean_time_to_happen.expect_conditional_weight(ConditionalWeight::TIME),
+				"mean_time_to_happen", ZERO_OR_ONE, mean_time_to_happen.expect_conditional_weight(),
 				"immediate", ZERO_OR_MORE, immediate.expect_script()
 			)(value);
 			ret &= register_event(

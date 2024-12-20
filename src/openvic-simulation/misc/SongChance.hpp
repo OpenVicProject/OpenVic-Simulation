@@ -12,9 +12,9 @@ namespace OpenVic {
 
 	private:
 		std::string PROPERTY(file_name);
-		ConditionalWeight PROPERTY(chance);
+		ConditionalWeightFactorMul PROPERTY(chance);
 
-		SongChance(size_t new_index, std::string_view new_filename, ConditionalWeight&& new_chance);
+		SongChance(size_t new_index, std::string_view new_filename, ConditionalWeightFactorMul&& new_chance);
 
 		bool parse_scripts(DefinitionManager const& definition_manager);
 
