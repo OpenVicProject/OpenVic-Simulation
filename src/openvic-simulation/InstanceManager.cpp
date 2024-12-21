@@ -9,6 +9,7 @@ InstanceManager::InstanceManager(
 	DefinitionManager const& new_definition_manager, gamestate_updated_func_t gamestate_updated_callback,
 	SimulationClock::state_changed_function_t clock_state_changed_callback
 ) : definition_manager { new_definition_manager },
+	global_flags { "global" },
 	market_instance { good_instance_manager },
 	map_instance { new_definition_manager.get_map_definition() },
 	simulation_clock {

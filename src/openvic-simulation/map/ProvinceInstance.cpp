@@ -23,6 +23,7 @@ ProvinceInstance::ProvinceInstance(
 	decltype(pop_type_distribution)::keys_type const& pop_type_keys,
 	decltype(ideology_distribution)::keys_type const& ideology_keys
 ) : HasIdentifierAndColour { new_province_definition },
+	FlagStrings { "province" },
 	province_definition { new_province_definition },
 	terrain_type { new_province_definition.get_default_terrain_type() },
 	life_rating { 0 },
