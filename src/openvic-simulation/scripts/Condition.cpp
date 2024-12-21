@@ -137,6 +137,8 @@ bool ConditionManager::setup_conditions(DefinitionManager const& definition_mana
 	ret &= add_condition("civilized", BOOLEAN, COUNTRY);
 	ret &= add_condition("colonial_nation", BOOLEAN, COUNTRY);
 	ret &= add_condition("consciousness", REAL, COUNTRY);
+	/* NOTE: Of the form "constructing_cb = THIS/FROM/TAG", localisation is broken */
+	ret &= add_condition("constructing_cb", IDENTIFIER, COUNTRY, NO_SCOPE, NO_IDENTIFIER, COUNTRY_TAG);
 	ret &= add_condition("constructing_cb_progress", REAL, COUNTRY);
 	ret &= add_condition("constructing_cb_type", IDENTIFIER, COUNTRY, NO_SCOPE, NO_IDENTIFIER, CASUS_BELLI);
 	ret &= add_condition("continent", IDENTIFIER, COUNTRY, NO_SCOPE, NO_IDENTIFIER, CONTINENT);
@@ -153,7 +155,6 @@ bool ConditionManager::setup_conditions(DefinitionManager const& definition_mana
 	ret &= add_condition("exists", IDENTIFIER | BOOLEAN, COUNTRY, NO_SCOPE, NO_IDENTIFIER, COUNTRY_TAG);
 	ret &= add_condition("government", IDENTIFIER, COUNTRY, NO_SCOPE, NO_IDENTIFIER, GOVERNMENT_TYPE);
 	ret &= add_condition("great_wars_enabled", BOOLEAN, COUNTRY);
-	ret &= add_condition("have_core_in", IDENTIFIER, COUNTRY, NO_SCOPE, NO_IDENTIFIER, COUNTRY_TAG);
 	ret &= add_condition("has_country_flag", IDENTIFIER, COUNTRY, NO_SCOPE, NO_IDENTIFIER, COUNTRY_FLAG);
 	ret &= add_condition("has_country_modifier", IDENTIFIER, COUNTRY, NO_SCOPE, NO_IDENTIFIER, COUNTRY_EVENT_MODIFIER);
 	ret &= add_condition("has_cultural_sphere", BOOLEAN, COUNTRY);
@@ -171,6 +172,8 @@ bool ConditionManager::setup_conditions(DefinitionManager const& definition_mana
 	ret &= add_condition("involved_in_crisis", BOOLEAN, COUNTRY);
 	ret &= add_condition("is_claim_crisis", BOOLEAN, COUNTRY);
 	ret &= add_condition("is_colonial_crisis", BOOLEAN, COUNTRY);
+	/* TODO: Unused trigger, but is recognized as a valid trigger (does it ever return true?) */
+	ret &= add_condition("is_influence_crisis", BOOLEAN, COUNTRY);
 	ret &= add_condition("is_cultural_union", IDENTIFIER | BOOLEAN, COUNTRY, NO_SCOPE, NO_IDENTIFIER, COUNTRY_TAG);
 	ret &= add_condition("is_disarmed", BOOLEAN, COUNTRY);
 	ret &= add_condition("is_greater_power", BOOLEAN, COUNTRY);
@@ -266,6 +269,7 @@ bool ConditionManager::setup_conditions(DefinitionManager const& definition_mana
 	ret &= add_condition("treasury", REAL, COUNTRY);
 	ret &= add_condition("truce_with", IDENTIFIER, COUNTRY, NO_SCOPE, NO_IDENTIFIER, COUNTRY_TAG);
 	ret &= add_condition("unemployment", REAL, COUNTRY);
+	/* TODO: "unit_has_leader = no" is the same as "unit_has_leader = yes", do we make a new BOOLEAN_ALWAYS_YES? */
 	ret &= add_condition("unit_has_leader", BOOLEAN, COUNTRY);
 	ret &= add_condition("unit_in_battle", BOOLEAN, COUNTRY);
 	ret &= add_condition("upper_house", COMPLEX, COUNTRY);
@@ -275,6 +279,8 @@ bool ConditionManager::setup_conditions(DefinitionManager const& definition_mana
 	ret &= add_condition("war_policy", IDENTIFIER, COUNTRY, NO_SCOPE, NO_IDENTIFIER, ISSUE);
 	ret &= add_condition("war_score", REAL, COUNTRY);
 	ret &= add_condition("war_with", IDENTIFIER, COUNTRY, NO_SCOPE, NO_IDENTIFIER, COUNTRY_TAG);
+	/* TODO: Undocumented, only seen used in PDM and Victoria 1.02 as "someone_can_form_union_tag = FROM", recognized by the game engine as valid */
+	ret &= add_condition("someone_can_form_union_tag", IDENTIFIER, COUNTRY, NO_SCOPE, NO_IDENTIFIER, COUNTRY_TAG);
 
 	/* State Scope Conditions */
 	ret &= add_condition("controlled_by", IDENTIFIER, STATE, NO_SCOPE, NO_IDENTIFIER, COUNTRY_TAG);
@@ -298,6 +304,7 @@ bool ConditionManager::setup_conditions(DefinitionManager const& definition_mana
 	ret &= add_condition("has_empty_adjacent_province", BOOLEAN, PROVINCE);
 	ret &= add_condition("has_empty_adjacent_state", BOOLEAN, PROVINCE);
 	ret &= add_condition("has_national_minority", BOOLEAN, PROVINCE);
+	/* TODO: Usage returns false always - warn about it? */
 	ret &= add_condition("has_province_flag", IDENTIFIER, PROVINCE, NO_SCOPE, NO_IDENTIFIER, PROVINCE_FLAG);
 	ret &= add_condition("has_province_modifier", IDENTIFIER, PROVINCE, NO_SCOPE, NO_IDENTIFIER, PROVINCE_EVENT_MODIFIER);
 	ret &= add_condition("has_recent_imigration", INTEGER, PROVINCE); //paradox typo
@@ -334,6 +341,32 @@ bool ConditionManager::setup_conditions(DefinitionManager const& definition_mana
 	ret &= add_condition("strata", IDENTIFIER, POP, NO_SCOPE, NO_IDENTIFIER, POP_STRATA);
 	ret &= add_condition("type", IDENTIFIER, POP, NO_SCOPE, NO_IDENTIFIER, POP_TYPE);
 
+	/* Newspaper conditions */
+	ret &= add_condition("tags_eq", COMPLEX, COUNTRY);
+	ret &= add_condition("values_eq", COMPLEX, COUNTRY);
+	ret &= add_condition("strings_eq", COMPLEX, COUNTRY);
+	ret &= add_condition("dates_eq", COMPLEX, COUNTRY);
+	ret &= add_condition("tags_greater", COMPLEX, COUNTRY);
+	ret &= add_condition("values_greater", COMPLEX, COUNTRY);
+	ret &= add_condition("strings_greater", COMPLEX, COUNTRY);
+	ret &= add_condition("dates_greater", COMPLEX, COUNTRY);
+	ret &= add_condition("tags_match", COMPLEX, COUNTRY);
+	ret &= add_condition("values_match", COMPLEX, COUNTRY);
+	ret &= add_condition("strings_match", COMPLEX, COUNTRY);
+	ret &= add_condition("dates_match", COMPLEX, COUNTRY);
+	ret &= add_condition("tags_contains", COMPLEX, COUNTRY);
+	ret &= add_condition("values_contains", COMPLEX, COUNTRY);
+	ret &= add_condition("strings_contains", COMPLEX, COUNTRY);
+	ret &= add_condition("dates_contains", COMPLEX, COUNTRY);
+	ret &= add_condition("length_greater", COMPLEX, COUNTRY);
+	/* Amount printed, NOTE: Seems to be buggy when used on decisions and events */
+	ret &= add_condition("news_printing_count", REAL, COUNTRY);
+
+	/* TODO: the following triggers are not valid in victoria 2 (they return an error in the log). what do? */
+	/*
+ 	ret &= add_condition("have_core_in", IDENTIFIER, COUNTRY, NO_SCOPE, NO_IDENTIFIER, COUNTRY_TAG);
+  	*/
+ 
 	const auto import_identifiers = [this, &ret](
 		std::vector<std::string_view> const& identifiers,
 		value_type_t value_type,
