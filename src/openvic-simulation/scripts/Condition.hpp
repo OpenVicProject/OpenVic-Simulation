@@ -59,11 +59,12 @@ namespace OpenVic {
 		NO_SCOPE    = 0,
 		POP         = 1 << 0,
 		PROVINCE    = 1 << 1,
-		COUNTRY     = 1 << 2,
-		THIS        = 1 << 3, // Indicator bit for scope switching ("use the THIS scope", not a scope in and of itself)
-		FROM        = 1 << 4, // Indicator bit for scope switching ("use the FROM scope", not a scope in and of itself)
-		FULL_SCOPE_MASK   = (1 << 5) - 1, // All possible scope bits (including THIS and FROM)
-		ALL_SCOPES = POP | PROVINCE | COUNTRY // All real scopes (without THIS and FROM)
+		STATE       = 1 << 2,
+		COUNTRY     = 1 << 3,
+		THIS        = 1 << 4, // Indicator bit for scope switching ("use the THIS scope", not a scope in and of itself)
+		FROM        = 1 << 5, // Indicator bit for scope switching ("use the FROM scope", not a scope in and of itself)
+		FULL_SCOPE_MASK   = (1 << 6) - 1, // All possible scope bits (including THIS and FROM)
+		ALL_SCOPES = POP | PROVINCE | STATE | COUNTRY // All real scopes (without THIS and FROM)
 	};
 
 	/* Allows enum types to be used with bitwise operators. */

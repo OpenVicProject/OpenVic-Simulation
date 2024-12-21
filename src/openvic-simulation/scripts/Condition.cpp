@@ -1801,6 +1801,7 @@ bool ConditionManager::setup_conditions(DefinitionManager const& definition_mana
 		"brigades_compare",
 		_parse_condition_node_value_callback<fixed_point_t, COUNTRY>,
 		// TODO - what does this compare against? current scope vs this scope, or a previous/outer current country scope?
+		// brigades_compare first checks if there is a country in THIS scope, if not, then it checks for FROM
 		_execute_condition_node_unimplemented
 	);
 	ret &= add_condition(
@@ -1921,6 +1922,11 @@ bool ConditionManager::setup_conditions(DefinitionManager const& definition_mana
 				}
 			)
 		)
+	);
+	ret &= add_condition(
+		"constructing_cb",
+		_parse_condition_node_value_callback<CountryDefinition const*, COUNTRY | THIS | FROM>,
+		_execute_condition_node_unimplemented
 	);
 	ret &= add_condition(
 		"constructing_cb_progress",
@@ -2098,11 +2104,6 @@ bool ConditionManager::setup_conditions(DefinitionManager const& definition_mana
 		_execute_condition_node_unimplemented
 	);
 	ret &= add_condition(
-		"have_core_in",
-		_parse_condition_node_value_callback<CountryDefinition const*, COUNTRY | THIS | FROM>,
-		_execute_condition_node_unimplemented
-	);
-	ret &= add_condition(
 		"has_country_flag",
 		_parse_condition_node_value_callback<std::string, COUNTRY | PROVINCE>,
 		_execute_condition_node_cast_argument_callback<std::string, scope_t, scope_t, scope_t>(
@@ -2158,6 +2159,8 @@ bool ConditionManager::setup_conditions(DefinitionManager const& definition_mana
 		_execute_condition_node_unimplemented
 	);
 	ret &= add_condition(
+		// checks if the country has lost a war in the last 5 years (losing = making a concession offer,
+		// even giving white peace (but clicking on the "offer" tab) counts as losing)
 		"has_recently_lost_war",
 		_parse_condition_node_value_callback<bool, COUNTRY>,
 		_execute_condition_node_unimplemented
@@ -2223,6 +2226,12 @@ bool ConditionManager::setup_conditions(DefinitionManager const& definition_mana
 	);
 	ret &= add_condition(
 		"is_colonial_crisis",
+		_parse_condition_node_value_callback<bool, COUNTRY>,
+		_execute_condition_node_unimplemented
+	);
+	ret &= add_condition(
+		// TODO - Unused trigger, but is recognized as a valid trigger (does it ever return true?)
+		"is_influence_crisis",
 		_parse_condition_node_value_callback<bool, COUNTRY>,
 		_execute_condition_node_unimplemented
 	);
@@ -2767,6 +2776,7 @@ bool ConditionManager::setup_conditions(DefinitionManager const& definition_mana
 		_execute_condition_node_unimplemented
 	);
 	// Shows up in allow decision tooltips but is always false
+	// TODO - "unit_has_leader = no" is the same as "unit_has_leader = yes"
 	// ret &= add_condition("unit_has_leader", BOOLEAN, COUNTRY);
 	ret &= add_condition(
 		"unit_in_battle",
@@ -2809,6 +2819,12 @@ bool ConditionManager::setup_conditions(DefinitionManager const& definition_mana
 	);
 	ret &= add_condition(
 		"war_with",
+		_parse_condition_node_value_callback<CountryDefinition const*, COUNTRY | THIS | FROM>,
+		_execute_condition_node_unimplemented
+	);
+	// TODO - Undocumented, only seen used in PDM and Victoria 1.02 as "someone_can_form_union_tag = FROM", recognized by the game engine as valid
+	ret &= add_condition(
+		"someone_can_form_union_tag",
 		_parse_condition_node_value_callback<CountryDefinition const*, COUNTRY | THIS | FROM>,
 		_execute_condition_node_unimplemented
 	);
@@ -2909,6 +2925,7 @@ bool ConditionManager::setup_conditions(DefinitionManager const& definition_mana
 		_parse_condition_node_value_callback<bool, PROVINCE>,
 		_execute_condition_node_unimplemented
 	);
+	// TODO - Usage returns false always - warn about it?
 	ret &= add_condition(
 		"has_province_flag",
 		_parse_condition_node_value_callback<std::string, PROVINCE>,
@@ -3324,6 +3341,99 @@ bool ConditionManager::setup_conditions(DefinitionManager const& definition_mana
 			_execute_condition_node_unimplemented
 		);
 	}
+
+	/* Newspaper conditions */
+	ret &= add_condition(
+		"tags_eq",
+		_parse_condition_node_unimplemented,
+		_execute_condition_node_unimplemented
+	);
+	ret &= add_condition(
+		"values_eq",
+		_parse_condition_node_unimplemented,
+		_execute_condition_node_unimplemented
+	);
+	ret &= add_condition(
+		"strings_eq",
+		_parse_condition_node_unimplemented,
+		_execute_condition_node_unimplemented
+	);
+	ret &= add_condition(
+		"dates_eq",
+		_parse_condition_node_unimplemented,
+		_execute_condition_node_unimplemented
+	);
+	ret &= add_condition(
+		"tags_greater",
+		_parse_condition_node_unimplemented,
+		_execute_condition_node_unimplemented
+	);
+	ret &= add_condition(
+		"values_greater",
+		_parse_condition_node_unimplemented,
+		_execute_condition_node_unimplemented
+	);
+	ret &= add_condition(
+		"strings_greater",
+		_parse_condition_node_unimplemented,
+		_execute_condition_node_unimplemented
+	);
+	ret &= add_condition(
+		"dates_greater",
+		_parse_condition_node_unimplemented,
+		_execute_condition_node_unimplemented
+	);
+	ret &= add_condition(
+		"tags_match",
+		_parse_condition_node_unimplemented,
+		_execute_condition_node_unimplemented
+	);
+	ret &= add_condition(
+		"values_match",
+		_parse_condition_node_unimplemented,
+		_execute_condition_node_unimplemented
+	);
+	ret &= add_condition(
+		"strings_match",
+		_parse_condition_node_unimplemented,
+		_execute_condition_node_unimplemented
+	);
+	ret &= add_condition(
+		"dates_match",
+		_parse_condition_node_unimplemented,
+		_execute_condition_node_unimplemented
+	);
+	ret &= add_condition(
+		"tags_contains",
+		_parse_condition_node_unimplemented,
+		_execute_condition_node_unimplemented
+	);
+	ret &= add_condition(
+		"values_contains",
+		_parse_condition_node_unimplemented,
+		_execute_condition_node_unimplemented
+	);
+	ret &= add_condition(
+		"strings_contains",
+		_parse_condition_node_unimplemented,
+		_execute_condition_node_unimplemented
+	);
+	ret &= add_condition(
+		"dates_contains",
+		_parse_condition_node_unimplemented,
+		_execute_condition_node_unimplemented
+	);
+	ret &= add_condition(
+		"length_greater",
+		_parse_condition_node_unimplemented,
+		_execute_condition_node_unimplemented
+	);
+	// Amount printed, NOTE: Seems to be buggy when used on decisions and events
+	ret &= add_condition(
+		"news_printing_count",
+		_parse_condition_node_unimplemented,
+		_execute_condition_node_unimplemented
+	);
 
 	if (
 		add_condition(
