@@ -45,6 +45,8 @@ ProvinceInstance::ProvinceInstance(
 	pop_type_distribution { &pop_type_keys },
 	pops_cache_by_type { &pop_type_keys },
 	ideology_distribution { &ideology_keys },
+	issue_distribution {},
+	vote_distribution { nullptr },
 	culture_distribution {},
 	religion_distribution {},
 	max_supported_regiments { 0 }
@@ -81,6 +83,14 @@ bool ProvinceInstance::set_owner(CountryInstance* new_owner) {
 
 		if (owner != nullptr) {
 			ret &= owner->add_owned_province(*this);
+
+			vote_distribution.set_keys(&owner->get_country_definition()->get_parties());
+		} else {
+			vote_distribution.set_keys(nullptr);
+		}
+
+		for (Pop& pop : pops) {
+			pop.update_location_based_attributes();
 		}
 	}
 
@@ -130,6 +140,52 @@ bool ProvinceInstance::remove_core(CountryInstance& core_to_remove) {
 
 bool ProvinceInstance::is_owner_core() const {
 	return owner != nullptr && cores.contains(owner);
+}
+
+fixed_point_t ProvinceInstance::get_pop_type_proportion(PopType const& pop_type) const {
+	return pop_type_distribution[pop_type];
+}
+
+fixed_point_t ProvinceInstance::get_ideology_support(Ideology const& ideology) const {
+	return ideology_distribution[ideology];
+}
+
+fixed_point_t ProvinceInstance::get_issue_support(Issue const& issue) const {
+	const decltype(issue_distribution)::const_iterator it = issue_distribution.find(&issue);
+
+	if (it != issue_distribution.end()) {
+		return it->second;
+	} else {
+		return fixed_point_t::_0();
+	}
+}
+
+fixed_point_t ProvinceInstance::get_party_support(CountryParty const& party) const {
+	if (vote_distribution.has_keys()) {
+		return vote_distribution[party];
+	} else {
+		return fixed_point_t::_0();
+	}
+}
+
+fixed_point_t ProvinceInstance::get_culture_proportion(Culture const& culture) const {
+	const decltype(culture_distribution)::const_iterator it = culture_distribution.find(&culture);
+
+	if (it != culture_distribution.end()) {
+		return it->second;
+	} else {
+		return fixed_point_t::_0();
+	}
+}
+
+fixed_point_t ProvinceInstance::get_religion_proportion(Religion const& religion) const {
+	const decltype(religion_distribution)::const_iterator it = religion_distribution.find(&religion);
+
+	if (it != religion_distribution.end()) {
+		return it->second;
+	} else {
+		return fixed_point_t::_0();
+	}
 }
 
 bool ProvinceInstance::expand_building(size_t building_index) {
@@ -184,6 +240,8 @@ void ProvinceInstance::_update_pops(DefineManager const& define_manager) {
 
 	pop_type_distribution.clear();
 	ideology_distribution.clear();
+	issue_distribution.clear();
+	vote_distribution.clear();
 	culture_distribution.clear();
 	religion_distribution.clear();
 
@@ -212,7 +270,9 @@ void ProvinceInstance::_update_pops(DefineManager const& define_manager) {
 
 		pop_type_distribution[*pop.get_type()] += pop.get_size();
 		pops_cache_by_type[*pop.get_type()].push_back(&pop);
-		ideology_distribution += pop.get_ideologies();
+		ideology_distribution += pop.get_ideology_distribution();
+		issue_distribution += pop.get_issue_distribution();
+		vote_distribution += pop.get_vote_distribution();
 		culture_distribution[&pop.get_culture()] += pop.get_size();
 		religion_distribution[&pop.get_religion()] += pop.get_size();
 

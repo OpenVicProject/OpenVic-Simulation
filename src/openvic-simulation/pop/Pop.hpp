@@ -68,9 +68,12 @@ namespace OpenVic {
 
 		fixed_point_t PROPERTY(literacy);
 
-		IndexedMap<Ideology, fixed_point_t> PROPERTY(ideologies);
-		fixed_point_map_t<Issue const*> PROPERTY(issues);
-		IndexedMap<CountryParty, fixed_point_t> PROPERTY(votes);
+		// All of these should have a total size equal to the pop size, allowing the distributions from different pops to be
+		// added together with automatic weighting based on their relative sizes. Similarly, the province, state and country
+		// equivalents of these distributions will have a total size equal to their total population size.
+		IndexedMap<Ideology, fixed_point_t> PROPERTY(ideology_distribution);
+		fixed_point_map_t<Issue const*> PROPERTY(issue_distribution);
+		IndexedMap<CountryParty, fixed_point_t> PROPERTY(vote_distribution);
 
 		fixed_point_t PROPERTY(unemployment);
 		fixed_point_t PROPERTY(cash);
@@ -86,7 +89,7 @@ namespace OpenVic {
 
 		size_t PROPERTY(max_supported_regiments);
 
-		Pop(PopBase const& pop_base, decltype(ideologies)::keys_type const& ideology_keys);
+		Pop(PopBase const& pop_base, decltype(ideology_distribution)::keys_type const& ideology_keys);
 
 	public:
 		Pop(Pop const&) = delete;
@@ -98,6 +101,13 @@ namespace OpenVic {
 		bool convert_to_equivalent();
 
 		void set_location(ProvinceInstance const& new_location);
+		void update_location_based_attributes();
+
+		// The values returned by these functions are scaled by pop size, so they must be divided by pop size to get
+		// the support as a proportion of 1.0
+		fixed_point_t get_ideology_support(Ideology const& ideology) const;
+		fixed_point_t get_issue_support(Issue const& issue) const;
+		fixed_point_t get_party_support(CountryParty const& party) const;
 
 		void update_gamestate(
 			DefineManager const& define_manager, CountryInstance const* owner,

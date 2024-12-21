@@ -404,6 +404,17 @@ namespace OpenVic {
 			return *this;
 		}
 
+		constexpr IndexedMap& rescale(fixed_point_t new_total) {
+			const value_type total = get_total();
+			if (total > 0) {
+				for (value_ref_type value : get_values()) {
+					value *= new_total;
+					value /= total;
+				}
+			}
+			return *this;
+		}
+
 		constexpr bool copy(IndexedMap const& other) {
 			if (keys != other.keys) {
 				Logger::error(

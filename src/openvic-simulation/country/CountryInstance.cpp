@@ -107,6 +107,11 @@ CountryInstance::CountryInstance(
 	national_consciousness { 0 },
 	national_militancy { 0 },
 	pop_type_distribution { &pop_type_keys },
+	ideology_distribution { &ideology_keys },
+	issue_distribution {},
+	vote_distribution { nullptr },
+	culture_distribution {},
+	religion_distribution {},
 	national_focus_capacity { 0 },
 
 	/* Trade */
@@ -146,6 +151,8 @@ CountryInstance::CountryInstance(
 	gas_defence_unlock_level { 0 },
 	unit_variant_unlock_levels {} {
 
+	update_country_definition_based_attributes();
+
 	for (BuildingType const& building_type : *building_type_unlock_levels.get_keys()) {
 		if (building_type.is_default_enabled()) {
 			unlock_building_type(building_type);
@@ -175,6 +182,10 @@ std::string_view CountryInstance::get_identifier() const {
 	return country_definition->get_identifier();
 }
 
+void CountryInstance::update_country_definition_based_attributes() {
+	vote_distribution.set_keys(&country_definition->get_parties());
+}
+
 bool CountryInstance::exists() const {
 	return !owned_provinces.empty();
 }
@@ -193,6 +204,52 @@ bool CountryInstance::is_great_power() const {
 
 bool CountryInstance::is_secondary_power() const {
 	return country_status == COUNTRY_STATUS_SECONDARY_POWER;
+}
+
+fixed_point_t CountryInstance::get_pop_type_proportion(PopType const& pop_type) const {
+	return pop_type_distribution[pop_type];
+}
+
+fixed_point_t CountryInstance::get_ideology_support(Ideology const& ideology) const {
+	return ideology_distribution[ideology];
+}
+
+fixed_point_t CountryInstance::get_issue_support(Issue const& issue) const {
+	const decltype(issue_distribution)::const_iterator it = issue_distribution.find(&issue);
+
+	if (it != issue_distribution.end()) {
+		return it->second;
+	} else {
+		return fixed_point_t::_0();
+	}
+}
+
+fixed_point_t CountryInstance::get_party_support(CountryParty const& party) const {
+	if (vote_distribution.has_keys()) {
+		return vote_distribution[party];
+	} else {
+		return fixed_point_t::_0();
+	}
+}
+
+fixed_point_t CountryInstance::get_culture_proportion(Culture const& culture) const {
+	const decltype(culture_distribution)::const_iterator it = culture_distribution.find(&culture);
+
+	if (it != culture_distribution.end()) {
+		return it->second;
+	} else {
+		return fixed_point_t::_0();
+	}
+}
+
+fixed_point_t CountryInstance::get_religion_proportion(Religion const& religion) const {
+	const decltype(religion_distribution)::const_iterator it = religion_distribution.find(&religion);
+
+	if (it != religion_distribution.end()) {
+		return it->second;
+	} else {
+		return fixed_point_t::_0();
+	}
 }
 
 #define ADD_AND_REMOVE(item) \
@@ -363,6 +420,19 @@ template void CountryInstance::add_leader(LeaderBranched<UnitType::branch_t::LAN
 template void CountryInstance::add_leader(LeaderBranched<UnitType::branch_t::NAVAL>&&);
 template bool CountryInstance::remove_leader(LeaderBranched<UnitType::branch_t::LAND> const*);
 template bool CountryInstance::remove_leader(LeaderBranched<UnitType::branch_t::NAVAL> const*);
+
+bool CountryInstance::has_leader_with_name(std::string_view name) const {
+	const auto check_leaders = [this, &name]<UnitType::branch_t Branch>() -> bool {
+		for (LeaderBranched<Branch> const& leader : get_leaders<Branch>()) {
+			if (leader.get_name() == name) {
+				return true;
+			}
+		}
+		return false;
+	};
+
+	return check_leaders.operator()<UnitType::branch_t::LAND>() || check_leaders.operator()<UnitType::branch_t::NAVAL>();
+}
 
 template<UnitType::branch_t Branch>
 bool CountryInstance::modify_unit_type_unlock(UnitTypeBranched<Branch> const& unit_type, unlock_level_t unlock_level_change) {
@@ -821,6 +891,11 @@ void CountryInstance::_update_population() {
 	national_consciousness = 0;
 	national_militancy = 0;
 	pop_type_distribution.clear();
+	ideology_distribution.clear();
+	issue_distribution.clear();
+	vote_distribution.clear();
+	culture_distribution.clear();
+	religion_distribution.clear();
 
 	for (State const* state : states) {
 		total_population += state->get_total_population();
@@ -832,6 +907,11 @@ void CountryInstance::_update_population() {
 		national_militancy += state->get_average_militancy() * state_population;
 
 		pop_type_distribution += state->get_pop_type_distribution();
+		ideology_distribution += state->get_ideology_distribution();
+		issue_distribution += state->get_issue_distribution();
+		vote_distribution += state->get_vote_distribution();
+		culture_distribution += state->get_culture_distribution();
+		religion_distribution += state->get_religion_distribution();
 	}
 
 	if (total_population > 0) {
@@ -1093,17 +1173,13 @@ void CountryInstance::update_gamestate(
 
 	total_score = prestige + industrial_power + military_power;
 
-	if (country_definition != nullptr) {
-		const CountryDefinition::government_colour_map_t::const_iterator it =
-			country_definition->get_alternative_colours().find(government_type);
+	const CountryDefinition::government_colour_map_t::const_iterator it =
+		country_definition->get_alternative_colours().find(government_type);
 
-		if (it != country_definition->get_alternative_colours().end()) {
-			colour = it->second;
-		} else {
-			colour = country_definition->get_colour();
-		}
+	if (it != country_definition->get_alternative_colours().end()) {
+		colour = it->second;
 	} else {
-		colour = ERROR_COLOUR;
+		colour = country_definition->get_colour();
 	}
 
 	if (government_type != nullptr) {
