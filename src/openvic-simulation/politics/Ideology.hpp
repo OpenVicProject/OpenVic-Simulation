@@ -24,6 +24,7 @@ namespace OpenVic {
 	private:
 		IdeologyGroup const& PROPERTY(group);
 		const bool PROPERTY_CUSTOM_PREFIX(uncivilised, is);
+		const bool PROPERTY(can_reduce_consciousness);
 		const bool PROPERTY(can_reduce_militancy);
 		const Date PROPERTY(spawn_date);
 		ConditionalWeight PROPERTY(add_political_reform);
@@ -36,10 +37,18 @@ namespace OpenVic {
 		// TODO - willingness to repeal/pass reforms (and its modifiers)
 
 		Ideology(
-			std::string_view new_identifier, colour_t new_colour, IdeologyGroup const& new_group, bool new_uncivilised,
-			bool new_can_reduce_militancy, Date new_spawn_date, ConditionalWeight&& new_add_political_reform,
-			ConditionalWeight&& new_remove_political_reform, ConditionalWeight&& new_add_social_reform,
-			ConditionalWeight&& new_remove_social_reform, ConditionalWeight&& new_add_military_reform,
+			std::string_view new_identifier,
+			colour_t new_colour,
+			IdeologyGroup const& new_group,
+			bool new_uncivilised,
+			bool new_can_reduce_consciousness,
+			bool new_can_reduce_militancy,
+			Date new_spawn_date,
+			ConditionalWeight&& new_add_political_reform,
+			ConditionalWeight&& new_remove_political_reform,
+			ConditionalWeight&& new_add_social_reform,
+			ConditionalWeight&& new_remove_social_reform,
+			ConditionalWeight&& new_add_military_reform,
 			ConditionalWeight&& new_add_economic_reform
 		);
 
@@ -58,10 +67,18 @@ namespace OpenVic {
 		bool add_ideology_group(std::string_view identifier);
 
 		bool add_ideology(
-			std::string_view identifier, colour_t colour, IdeologyGroup const* group, bool uncivilised,
-			bool can_reduce_militancy, Date spawn_date, ConditionalWeight&& add_political_reform,
-			ConditionalWeight&& remove_political_reform, ConditionalWeight&& add_social_reform,
-			ConditionalWeight&& remove_social_reform, ConditionalWeight&& add_military_reform,
+			std::string_view identifier,
+			colour_t colour,
+			IdeologyGroup const* group,
+			bool uncivilised,
+			bool can_reduce_consciousness,
+			bool can_reduce_militancy,
+			Date spawn_date,
+			ConditionalWeight&& add_political_reform,
+			ConditionalWeight&& remove_political_reform,
+			ConditionalWeight&& add_social_reform,
+			ConditionalWeight&& remove_social_reform,
+			ConditionalWeight&& add_military_reform,
 			ConditionalWeight&& add_economic_reform
 		);
 
