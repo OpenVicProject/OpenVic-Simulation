@@ -79,7 +79,9 @@ namespace OpenVic {
 		CountryDefinition const* PROPERTY(country_definition);
 		colour_t PROPERTY(colour); // Cached to avoid searching government overrides for every province
 		ProvinceInstance const* PROPERTY(capital);
+		bool PROPERTY_CUSTOM_PREFIX(ai, is);
 		bool PROPERTY_CUSTOM_PREFIX(releasable_vassal, is);
+		bool PROPERTY(owns_colonial_province);
 
 		country_status_t PROPERTY(country_status);
 		Date PROPERTY(lose_great_power_date);
@@ -234,6 +236,7 @@ namespace OpenVic {
 		bool can_colonise() const;
 		bool is_great_power() const;
 		bool is_secondary_power() const;
+		bool is_at_war() const;
 
 		// The values returned by these functions are scaled by population size, so they must be divided by population size
 		// to get the support as a proportion of 1.0
@@ -339,9 +342,7 @@ namespace OpenVic {
 			CountryInstanceManager const& country_instance_manager
 		);
 
-		bool apply_history_to_country(
-			CountryHistoryEntry const& entry, MapInstance& map_instance, CountryInstanceManager const& country_instance_manager
-		);
+		bool apply_history_to_country(CountryHistoryEntry const& entry, InstanceManager const& instance_manager);
 
 	private:
 		void _update_production(DefineManager const& define_manager);
@@ -413,10 +414,7 @@ namespace OpenVic {
 			decltype(CountryInstance::tax_rate_by_strata):: keys_type const& strata_keys
 		);
 
-		bool apply_history_to_countries(
-			CountryHistoryManager const& history_manager, Date date, UnitInstanceManager& unit_instance_manager,
-			MapInstance& map_instance
-		);
+		bool apply_history_to_countries(InstanceManager& instance_manager);
 
 		void update_modifier_sums(Date today, StaticModifierCache const& static_modifier_cache);
 		void update_gamestate(

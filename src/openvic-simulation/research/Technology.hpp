@@ -54,13 +54,13 @@ namespace OpenVic {
 		std::optional<CountryInstance::unit_variant_t> PROPERTY(unit_variant);
 		unit_set_t PROPERTY(activated_units);
 		building_set_t PROPERTY(activated_buildings);
-		ConditionalWeight PROPERTY(ai_chance);
+		ConditionalWeightFactorMul PROPERTY(ai_chance);
 
 		Technology(
 			std::string_view new_identifier, TechnologyArea const& new_area, Date::year_t new_year, fixed_point_t new_cost,
 			bool new_unciv_military, std::optional<CountryInstance::unit_variant_t>&& new_unit_variant,
 			unit_set_t&& new_activated_units, building_set_t&& new_activated_buildings, ModifierValue&& new_values,
-			ConditionalWeight&& new_ai_chance
+			ConditionalWeightFactorMul&& new_ai_chance
 		);
 
 		bool parse_scripts(DefinitionManager const& definition_manager);
@@ -91,7 +91,7 @@ namespace OpenVic {
 			std::string_view identifier, TechnologyArea const* area, Date::year_t year, fixed_point_t cost,
 			bool unciv_military, std::optional<CountryInstance::unit_variant_t>&& unit_variant,
 			Technology::unit_set_t&& activated_units, Technology::building_set_t&& activated_buildings,
-			ModifierValue&& values, ConditionalWeight&& ai_chance
+			ModifierValue&& values, ConditionalWeightFactorMul&& ai_chance
 		);
 
 		bool add_technology_school(std::string_view identifier, ModifierValue&& values);
