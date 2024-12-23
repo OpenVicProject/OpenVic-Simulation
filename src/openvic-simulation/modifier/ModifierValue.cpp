@@ -130,7 +130,7 @@ void ModifierValue::multiply_add_exclude_targets(
 		*this += other;
 	} else if (multiplier != fixed_point_t::_0()) {
 		// We could test that excluded_targets != ALL_TARGETS, but in practice it's always
-		// called with an explcit/hardcoded value and so won't ever exclude everything.
+		// called with an explicit/hardcoded value and so won't ever exclude everything.
 		for (effect_map_t::value_type const& value : other.values) {
 			if (ModifierEffect::excludes_targets(value.first->get_targets(), excluded_targets)) {
 				values[value.first] += value.second * multiplier;

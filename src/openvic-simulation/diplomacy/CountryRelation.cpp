@@ -30,24 +30,24 @@ bool CountryRelationManager::remove_country(CountryRelationInstanceProxy country
 }
 
 country_relation_value_t CountryRelationManager::get_country_relation(
-	CountryRelationInstanceProxy country, CountryRelationInstanceProxy recepient
+	CountryRelationInstanceProxy country, CountryRelationInstanceProxy recipient
 ) const {
-	auto it = country_relations.find({ country.country_id, recepient.country_id });
+	auto it = country_relations.find({ country.country_id, recipient.country_id });
 	OV_ERR_FAIL_COND_V(it == country_relations.end(), 0);
 	return it->second;
 }
 
 country_relation_value_t*
-CountryRelationManager::get_country_relation_ptr(CountryRelationInstanceProxy country, CountryRelationInstanceProxy recepient) {
-	auto it = country_relations.find({ country.country_id, recepient.country_id });
+CountryRelationManager::get_country_relation_ptr(CountryRelationInstanceProxy country, CountryRelationInstanceProxy recipient) {
+	auto it = country_relations.find({ country.country_id, recipient.country_id });
 	OV_ERR_FAIL_COND_V(it == country_relations.end(), nullptr);
 	return &it.value();
 }
 
 bool CountryRelationManager::set_country_relation(
-	CountryRelationInstanceProxy country, CountryRelationInstanceProxy recepient, country_relation_value_t value
+	CountryRelationInstanceProxy country, CountryRelationInstanceProxy recipient, country_relation_value_t value
 ) {
-	auto it = country_relations.find({ country.country_id, recepient.country_id });
+	auto it = country_relations.find({ country.country_id, recipient.country_id });
 	OV_ERR_FAIL_COND_V(it == country_relations.end(), false);
 	it.value() = value;
 	return true;

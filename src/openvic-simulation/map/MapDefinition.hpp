@@ -107,7 +107,7 @@ namespace OpenVic {
 		 * It uses a const_cast (the fastest/simplest solution), but this could also be done without it by looking up the
 		 * ProvinceDefinition* using the ProvinceDefinition const*'s index. Requiring a non-const Map ensures that this
 		 * function can only be used where the ProvinceDefinition* could already be accessed by other means, such as the
-		 * index method, preventing misleading code, or in the worst case undefined behaviour. */
+		 * index method, preventing misleading code, or in the worst case undefined behavior. */
 		constexpr ProvinceDefinition* remove_province_definition_const(ProvinceDefinition const* province) {
 			return const_cast<ProvinceDefinition*>(province);
 		}

@@ -36,7 +36,7 @@ bool TerrainTypeManager::generate_modifiers(ModifierManager& modifier_manager) c
 			PROPORTION_DECIMAL, "UA_ATTACK", has_no_effect
 		);
 		ret &= modifier_manager.register_unit_terrain_modifier_effect(
-			this_unit_terrain_effects.defence, ModifierManager::get_flat_identifier("defence", identifier), true,
+			this_unit_terrain_effects.defence, ModifierManager::get_flat_identifier("defence", identifier), true,  // codespell:ignore defence
 			PROPORTION_DECIMAL, "UA_DEFENCE", has_no_effect
 		);
 		ret &= modifier_manager.register_unit_terrain_modifier_effect(

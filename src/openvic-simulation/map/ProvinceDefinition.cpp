@@ -23,7 +23,7 @@ ProvinceDefinition::ProvinceDefinition(
 	port_adjacent_province { nullptr },
 	default_terrain_type { nullptr },
 	adjacencies {},
-	centre {},
+	centre {}, // codespell:ignore centre
 	positions {} {}
 
 bool ProvinceDefinition::operator==(ProvinceDefinition const& other) const {
@@ -105,7 +105,7 @@ bool ProvinceDefinition::load_positions(
 }
 
 fvec2_t ProvinceDefinition::get_text_position() const {
-	return positions.text_position.value_or(centre);
+	return positions.text_position.value_or(centre); // codespell:ignore centre
 }
 
 fixed_point_t ProvinceDefinition::get_text_rotation() const {
@@ -191,25 +191,25 @@ bool ProvinceDefinition::has_adjacency_going_through(ProvinceDefinition const* p
 }
 
 fvec2_t ProvinceDefinition::get_unit_position() const {
-	return positions.unit.value_or(centre);
+	return positions.unit.value_or(centre); // codespell:ignore centre
 }
 
 fvec2_t ProvinceDefinition::get_city_position() const {
-	return positions.city.value_or(centre);
+	return positions.city.value_or(centre); // codespell:ignore centre
 }
 
 fvec2_t ProvinceDefinition::get_town_position() const {
-	return positions.town.value_or(centre);
+	return positions.town.value_or(centre); // codespell:ignore centre
 }
 
 fvec2_t ProvinceDefinition::get_factory_position() const {
-	return positions.factory.value_or(centre);
+	return positions.factory.value_or(centre); // codespell:ignore centre
 }
 
 fvec2_t ProvinceDefinition::get_building_construction_position() const {
-	return positions.building_construction.value_or(centre);
+	return positions.building_construction.value_or(centre); // codespell:ignore centre
 }
 
 fvec2_t ProvinceDefinition::get_military_construction_position() const {
-	return positions.military_construction.value_or(centre);
+	return positions.military_construction.value_or(centre); // codespell:ignore centre
 }

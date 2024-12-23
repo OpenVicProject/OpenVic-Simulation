@@ -20,7 +20,7 @@ namespace OpenVic {
 		/*
 		 * Allowed modifiers for leaders:
 		 * attack - integer
-		 * defence - integer
+		 * defence - integer  // codespell:ignore defence
 		 * morale - %
 		 * organisation - %
 		 * reconnaissance - %

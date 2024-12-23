@@ -581,7 +581,7 @@ bool CountryInstance::modify_gas_defence_unlock(unlock_level_t unlock_level_chan
 	// This catches subtracting below 0 or adding above the int types maximum value
 	if (gas_defence_unlock_level + unlock_level_change < 0) {
 		Logger::error(
-			"Attempted to change unlock level for gas defence in country ", get_identifier(),
+			"Attempted to change unlock level for gas defense in country ", get_identifier(),
 			" to invalid value: current level = ", static_cast<int64_t>(gas_defence_unlock_level), ", change = ",
 			static_cast<int64_t>(unlock_level_change), ", invalid new value = ",
 			static_cast<int64_t>(gas_defence_unlock_level + unlock_level_change)

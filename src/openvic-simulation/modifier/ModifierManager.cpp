@@ -131,7 +131,7 @@ bool ModifierManager::setup_modifier_effects() {
 		modifier_effect_cache.reinforce_rate, "reinforce_rate", true, PROPORTION_DECIMAL, "REINFORCE_TECH"
 	);
 	ret &= register_technology_modifier_effect(
-		modifier_effect_cache.separatism, "seperatism", // paradox typo
+		modifier_effect_cache.separatism, "seperatism", // paradox typo // codespell:ignore seperatism
 		false, PROPORTION_DECIMAL, "SEPARATISM_TECH"
 	);
 	ret &= register_technology_modifier_effect(
@@ -418,7 +418,7 @@ bool ModifierManager::setup_modifier_effects() {
 	ret &= register_base_province_modifier_effect(
 		modifier_effect_cache.combat_width_percentage_change, "combat_width", false, PROPORTION_DECIMAL
 	);
-	ret &= register_terrain_modifier_effect(modifier_effect_cache.defence_terrain, "defence", true, INT, "TRAIT_DEFEND");
+	ret &= register_terrain_modifier_effect(modifier_effect_cache.defence_terrain, "defence", true, INT, "TRAIT_DEFEND"); // codespell:ignore defence
 	ret &= register_technology_modifier_effect(
 		modifier_effect_cache.farm_rgo_throughput_global, "farm_rgo_eff", true, PROPORTION_DECIMAL, "TECH_FARM_OUTPUT"
 	);
@@ -540,7 +540,7 @@ bool ModifierManager::setup_modifier_effects() {
 	/* Military Modifier Effects */
 	ret &= register_leader_modifier_effect(modifier_effect_cache.attack_leader, "attack", true, INT, "TRAIT_ATTACK");
 	ret &= register_leader_modifier_effect(modifier_effect_cache.attrition_leader, "attrition", false, RAW_DECIMAL, "ATTRITION");
-	ret &= register_leader_modifier_effect(modifier_effect_cache.defence_leader, "defence", true, INT, "TRAIT_DEFEND");
+	ret &= register_leader_modifier_effect(modifier_effect_cache.defence_leader, "defence", true, INT, "TRAIT_DEFEND"); // codespell:ignore defence
 	ret &= register_leader_modifier_effect(
 		modifier_effect_cache.experience, "experience", true, PROPORTION_DECIMAL, "TRAIT_EXPERIENCE"
 	);

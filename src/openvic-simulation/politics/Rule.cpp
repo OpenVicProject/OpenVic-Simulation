@@ -40,7 +40,7 @@ bool RuleSet::trim_and_resolve_conflicts(bool log) {
 					if (value) {
 						if (rule != primary_rule) {
 							Logger::error(
-								"Conflicting mutually exclusive rule: ", rule, " superceeded by ", primary_rule, " - removing!"
+								"Conflicting mutually exclusive rule: ", rule, " superseded by ", primary_rule, " - removing!"
 							);
 						}
 					} else {
@@ -193,7 +193,7 @@ node_callback_t RuleManager::expect_rule_set(callback_t<RuleSet&&> ruleset_callb
 				if (rule != nullptr) {
 					return expect_bool(
 						[&ruleset, rule](bool value) -> bool {
-							/* Wrapped in a lambda function so that the rule group is only initialised
+							/* Wrapped in a lambda function so that the rule group is only initialized
 							 * if the value bool is successfully parsed. */
 							return map_callback(ruleset.rule_groups[rule->get_group()], rule)(value);
 						}

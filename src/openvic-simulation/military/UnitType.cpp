@@ -74,7 +74,7 @@ UnitTypeBranched<LAND>::UnitTypeBranched(
 	sprite_mount_attach_node { regiment_type_args.sprite_mount_attach_node },
 	reconnaissance { regiment_type_args.reconnaissance },
 	attack { regiment_type_args.attack },
-	defence { regiment_type_args.defence },
+	defence { regiment_type_args.defence }, // codespell:ignore defence
 	discipline { regiment_type_args.discipline },
 	support { regiment_type_args.support },
 	maneuver { regiment_type_args.maneuver },
@@ -272,7 +272,7 @@ bool UnitTypeManager::load_unit_type_file(
 					expect_identifier(assign_variable_callback(regiment_type_args.sprite_mount_attach_node)),
 				"reconnaissance", ONE_EXACTLY, expect_fixed_point(assign_variable_callback(regiment_type_args.reconnaissance)),
 				"attack", ONE_EXACTLY, expect_fixed_point(assign_variable_callback(regiment_type_args.attack)),
-				"defence", ONE_EXACTLY, expect_fixed_point(assign_variable_callback(regiment_type_args.defence)),
+				"defence", ONE_EXACTLY, expect_fixed_point(assign_variable_callback(regiment_type_args.defence)), // codespell:ignore defence
 				"discipline", ONE_EXACTLY, expect_fixed_point(assign_variable_callback(regiment_type_args.discipline)),
 				"support", ONE_EXACTLY, expect_fixed_point(assign_variable_callback(regiment_type_args.support)),
 				"maneuver", ONE_EXACTLY, expect_fixed_point(assign_variable_callback(regiment_type_args.maneuver)),
@@ -349,7 +349,7 @@ bool UnitTypeManager::generate_modifiers(ModifierManager& modifier_manager) cons
 		ret &= modifier_manager.register_complex_modifier(identifier);
 
 		stat_modifier(unit_type_effects.attack, "attack", true, RAW_DECIMAL, "ATTACK");
-		stat_modifier(unit_type_effects.defence, "defence", true, RAW_DECIMAL, "DEFENCE");
+		stat_modifier(unit_type_effects.defence, "defence", true, RAW_DECIMAL, "DEFENCE"); // codespell:ignore defence
 		stat_modifier(unit_type_effects.default_organisation, "default_organisation", true, RAW_DECIMAL, "DEFAULT_ORG");
 		stat_modifier(unit_type_effects.maximum_speed, "maximum_speed", true, RAW_DECIMAL, "MAXIMUM_SPEED");
 		stat_modifier(unit_type_effects.build_time, "build_time", false, INT, "BUILD_TIME");
@@ -358,7 +358,7 @@ bool UnitTypeManager::generate_modifiers(ModifierManager& modifier_manager) cons
 		);
 
 		if constexpr (std::same_as<decltype(unit_type_effects), ModifierEffectCache::regiment_type_effects_t>) {
-			stat_modifier(unit_type_effects.reconnaissance, "reconnaissance", true, RAW_DECIMAL, "RECONAISSANCE");
+			stat_modifier(unit_type_effects.reconnaissance, "reconnaissance", true, RAW_DECIMAL, "RECONAISSANCE"); // codespell:ignore
 			stat_modifier(unit_type_effects.discipline, "discipline", true, PROPORTION_DECIMAL, "DISCIPLINE");
 			stat_modifier(unit_type_effects.support, "support", true, PROPORTION_DECIMAL, "SUPPORT");
 			stat_modifier(unit_type_effects.maneuver, "maneuver", true, INT, "Maneuver");

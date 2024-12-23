@@ -77,7 +77,7 @@ bool GameManager::start_game_session() {
 
 bool GameManager::update_clock() {
 	if (!instance_manager) {
-		Logger::error("Cannot update clock - instance manager uninitialised!");
+		Logger::error("Cannot update clock - instance manager uninitialized!");
 		return false;
 	}
 

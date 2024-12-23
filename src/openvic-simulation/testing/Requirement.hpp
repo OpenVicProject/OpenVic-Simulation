@@ -13,7 +13,7 @@ namespace OpenVic {
 		bool PROPERTY(pass);
 		bool PROPERTY_RW(tested);
 
-		// Initialised and used during script execution
+		// Initialized and used during script execution
 		std::string PROPERTY(target_value);
 		std::string PROPERTY(actual_value);
 

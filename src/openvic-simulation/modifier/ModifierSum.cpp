@@ -51,7 +51,7 @@ void ModifierSum::add_modifier(
 	using enum ModifierEffect::target_t;
 
 	// We could test that excluded_targets != ALL_TARGETS, but in practice it's always
-	// called with an explcit/hardcoded value and so won't ever exclude everything.
+	// called with an explicit/hardcoded value and so won't ever exclude everything.
 	if (multiplier != fixed_point_t::_0()) {
 		modifiers.emplace_back(&modifier, multiplier, source, excluded_targets);
 		value_sum.multiply_add_exclude_targets(modifier, multiplier, excluded_targets);
@@ -76,7 +76,7 @@ void ModifierSum::add_modifier_sum_exclude_targets(
 	ModifierSum const& modifier_sum, ModifierEffect::target_t excluded_targets
 ) {
 	// We could test that excluded_targets != ALL_TARGETS, but in practice it's always
-	// called with an explcit/hardcoded value and so won't ever exclude everything.
+	// called with an explicit/hardcoded value and so won't ever exclude everything.
 	for (modifier_entry_t const& modifier_entry : modifier_sum.modifiers) {
 		add_modifier(
 			*modifier_entry.modifier, modifier_entry.source, modifier_entry.multiplier,

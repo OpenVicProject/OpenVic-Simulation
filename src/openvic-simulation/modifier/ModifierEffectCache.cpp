@@ -25,7 +25,7 @@ ModifierEffectCache::good_effects_t::good_effects_t()
 
 ModifierEffectCache::unit_type_effects_t::unit_type_effects_t()
   : attack { nullptr },
-	defence { nullptr },
+	defence { nullptr }, // codespell:ignore defence
 	default_organisation { nullptr },
 	maximum_speed { nullptr },
 	build_time { nullptr },
@@ -51,7 +51,7 @@ ModifierEffectCache::ship_type_effects_t::ship_type_effects_t()
 
 ModifierEffectCache::unit_terrain_effects_t::unit_terrain_effects_t()
   : attack  { nullptr },
-	defence  { nullptr },
+	defence  { nullptr }, // codespell:ignore defence
 	attrition { nullptr },
 	movement { nullptr } {}
 

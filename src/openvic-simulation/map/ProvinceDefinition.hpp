@@ -97,7 +97,7 @@ namespace OpenVic {
 
 		std::vector<adjacency_t> PROPERTY(adjacencies);
 		/* Calculated mean pixel position. */
-		fvec2_t PROPERTY(centre);
+		fvec2_t PROPERTY(centre); // codespell:ignore centre
 		province_positions_t positions;
 
 		ProvinceDefinition(std::string_view new_identifier, colour_t new_colour, index_t new_index);

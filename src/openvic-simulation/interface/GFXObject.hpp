@@ -121,10 +121,10 @@ namespace OpenVic::GFX {
 		std::string PROPERTY(texture_arrow_body);
 		std::string PROPERTY(texture_arrow_head);
 
-		fixed_point_t PROPERTY(start); //labelled 'body start width' in file
-		fixed_point_t PROPERTY(stop);  //labelled 'body end width' in file
+		fixed_point_t PROPERTY(start); //labeled 'body start width' in file
+		fixed_point_t PROPERTY(stop);  //labeled 'body end width' in file
 		
-		fvec2_t PROPERTY(dims); //x,y labelled 'arrow length','arrow height' in file
+		fvec2_t PROPERTY(dims); //x,y labeled 'arrow length','arrow height' in file
 		std::string PROPERTY(font);
 		fixed_point_t PROPERTY(scale);
 		bool PROPERTY(no_fade);

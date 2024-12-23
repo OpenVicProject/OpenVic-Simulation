@@ -96,7 +96,7 @@ bool MapmodeManager::generate_mapmode_colours(MapInstance const& map_instance, M
 static constexpr colour_argb_t::value_type ALPHA_VALUE = colour_argb_t::max_value;
 /* White default colour, used in mapmodes including political, revolt risk and party loyaly. */
 static constexpr colour_argb_t DEFAULT_COLOUR_WHITE = (0xFFFFFF_argb).with_alpha(ALPHA_VALUE);
-/* Grey default colour, used in mapmodes including diplomatic, administrative and colonial, recruitment,
+/* Gray default colour, used in mapmodes including diplomatic, administrative and colonial, recruitment,
  * national focus, RGO, population density, sphere of influence, ranking and migration. */
 static constexpr colour_argb_t DEFAULT_COLOUR_GREY = (0x7F7F7F_argb).with_alpha(ALPHA_VALUE);
 

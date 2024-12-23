@@ -253,7 +253,7 @@ bool MapDefinition::set_water_province(std::string_view identifier) {
 	ProvinceDefinition* province = get_province_definition_by_identifier(identifier);
 
 	if (province == nullptr) {
-		Logger::error("Unrecognised water province identifier: ", identifier);
+		Logger::error("Unrecognized water province identifier: ", identifier);
 		return false;
 	}
 	if (province->has_region()) {
@@ -610,7 +610,7 @@ bool MapDefinition::load_map_images(fs::path const& province_path, fs::path cons
 				unrecognised_province_colours.insert(province_colour);
 				if (detailed_errors) {
 					Logger::warning(
-						"Unrecognised province colour ", province_colour, " at ", pos
+						"Unrecognized province colour ", province_colour, " at ", pos
 					);
 				}
 			}
@@ -642,7 +642,7 @@ bool MapDefinition::load_map_images(fs::path const& province_path, fs::path cons
 	}
 
 	if (!unrecognised_province_colours.empty()) {
-		Logger::warning("Province image contains ", unrecognised_province_colours.size(), " unrecognised province colours");
+		Logger::warning("Province image contains ", unrecognised_province_colours.size(), " unrecognized province colours");
 	}
 
 	size_t missing = 0;
@@ -657,7 +657,7 @@ bool MapDefinition::load_map_images(fs::path const& province_path, fs::path cons
 		province->on_map = pixel_count > 0;
 
 		if (province->on_map) {
-			province->centre = pixel_position_sum_per_province[array_index] / pixel_count;
+			province->centre = pixel_position_sum_per_province[array_index] / pixel_count; // codespell:ignore centre
 		} else {
 			if (detailed_errors) {
 				Logger::warning("Province missing from shape image: ", province->to_string());
@@ -839,7 +839,7 @@ bool MapDefinition::load_map_images(fs::path const& province_path, fs::path cons
 		}
 		simplified_points.push_back(points.back());
 
-		// add segment then recursively call if neeeded
+		// add segment then recursively call if needed
 		river.push_back({ size, std::move(simplified_points) });
 		if (river_complete) return;
 		next_segment(new_point, direction, river);
@@ -908,7 +908,7 @@ bool MapDefinition::generate_and_load_province_adjacencies(std::vector<LineObjec
 			}
 			ProvinceDefinition* const from = get_province_definition_by_identifier(from_str);
 			if (from == nullptr) {
-				Logger::error("Unrecognised adjacency from province identifier: \"", from_str, "\"");
+				Logger::error("Unrecognized adjacency from province identifier: \"", from_str, "\"");
 				ret = false;
 				return;
 			}
@@ -916,7 +916,7 @@ bool MapDefinition::generate_and_load_province_adjacencies(std::vector<LineObjec
 			const std::string_view to_str = adjacency.get_value_for(1);
 			ProvinceDefinition* const to = get_province_definition_by_identifier(to_str);
 			if (to == nullptr) {
-				Logger::error("Unrecognised adjacency to province identifier: \"", to_str, "\"");
+				Logger::error("Unrecognized adjacency to province identifier: \"", to_str, "\"");
 				ret = false;
 				return;
 			}

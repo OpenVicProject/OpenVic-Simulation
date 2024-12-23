@@ -36,12 +36,12 @@ bool DiplomaticActionManager::add_cancelable_diplomatic_action(
 }
 
 DiplomaticActionTickCache DiplomaticActionManager::create_diplomatic_action_tick(
-	std::string_view identifier, CountryInstance* sender, CountryInstance* reciever, std::any context_data,
+	std::string_view identifier, CountryInstance* sender, CountryInstance* receiver, std::any context_data,
 	InstanceManager& instance_manager
 ) {
 	auto type = diplomatic_action_types.get_item_by_identifier(identifier);
 
-	DiplomaticActionTickCache result { { instance_manager, sender, reciever, context_data }, type };
+	DiplomaticActionTickCache result { { instance_manager, sender, receiver, context_data }, type };
 	type->visit([&](auto type) {
 		if ((result.allowed_to_commit = type.allowed_to_commit(result.argument))) {
 			result.acceptance = type.get_acceptance(result.argument);
@@ -93,7 +93,7 @@ bool DiplomaticActionManager::setup_diplomatic_actions() {
 			.commit =
 				[](Argument& arg) {
 					auto relation = arg.instance_manager.get_country_relation_manager().get_country_relation_ptr(
-						arg.sender, arg.reciever
+						arg.sender, arg.receiver
 					);
 					if (!relation) {
 						return;
@@ -112,7 +112,7 @@ bool DiplomaticActionManager::setup_diplomatic_actions() {
 			.commit =
 				[](Argument& arg) {
 					auto relation = arg.instance_manager.get_country_relation_manager().get_country_relation_ptr(
-						arg.sender, arg.reciever
+						arg.sender, arg.receiver
 					);
 					if (!relation) {
 						return;

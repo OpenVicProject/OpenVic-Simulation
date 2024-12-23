@@ -272,8 +272,8 @@ node_callback_t NodeTools::expect_text_format(callback_t<text_format_t> callback
 	static const string_map_t<text_format_t> format_map = {
 		{ "left",  left },
 		{ "right", right },
-		{ "centre", centre },
-		{ "center", centre },
+		{ "centre", centre }, // codespell:ignore centre
+		{ "center", centre }, // codespell:ignore centre
 		{ "justified", justified }
 	};
 

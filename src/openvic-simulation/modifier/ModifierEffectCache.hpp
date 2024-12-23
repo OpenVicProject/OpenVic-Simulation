@@ -243,7 +243,7 @@ namespace OpenVic {
 
 		private:
 			ModifierEffect const* PROPERTY(attack);
-			ModifierEffect const* PROPERTY(defence);
+			ModifierEffect const* PROPERTY(defence); // codespell:ignore defence
 			ModifierEffect const* PROPERTY(default_organisation);
 			ModifierEffect const* PROPERTY(maximum_speed);
 			ModifierEffect const* PROPERTY(build_time);
@@ -296,7 +296,7 @@ namespace OpenVic {
 
 		private:
 			ModifierEffect const* PROPERTY(attack);
-			ModifierEffect const* PROPERTY(defence);
+			ModifierEffect const* PROPERTY(defence); // codespell:ignore defence
 			ModifierEffect const* PROPERTY(attrition);
 			ModifierEffect const* PROPERTY(movement);
 

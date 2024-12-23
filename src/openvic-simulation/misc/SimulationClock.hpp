@@ -15,7 +15,7 @@ namespace OpenVic {
 		using state_changed_function_t = std::function<void()>;
 		using speed_t = int8_t;
 
-		/* Minimum number of miliseconds before the simulation advances
+		/* Minimum number of milliseconds before the simulation advances
 		 * (in descending duration order, hence increasing speed order). */
 		static constexpr std::chrono::milliseconds GAME_SPEEDS[] {
 			std::chrono::milliseconds { 3000 }, std::chrono::milliseconds { 2000 }, std::chrono::milliseconds { 1000 },

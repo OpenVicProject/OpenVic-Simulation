@@ -85,11 +85,11 @@ namespace OpenVic {
 		bool remove_country(CountryRelationInstanceProxy country);
 
 		country_relation_value_t
-		get_country_relation(CountryRelationInstanceProxy country, CountryRelationInstanceProxy recepient) const;
+		get_country_relation(CountryRelationInstanceProxy country, CountryRelationInstanceProxy recipient) const;
 		country_relation_value_t*
-		get_country_relation_ptr(CountryRelationInstanceProxy country, CountryRelationInstanceProxy recepient);
+		get_country_relation_ptr(CountryRelationInstanceProxy country, CountryRelationInstanceProxy recipient);
 		bool set_country_relation(
-			CountryRelationInstanceProxy country, CountryRelationInstanceProxy recepient, country_relation_value_t value
+			CountryRelationInstanceProxy country, CountryRelationInstanceProxy recipient, country_relation_value_t value
 		);
 	};
 }

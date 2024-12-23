@@ -74,7 +74,7 @@ namespace OpenVic {
 
 	private:
 		/* Main attributes */
-		// We can always assume country_definition is not null, as it is initialised from a reference and only ever changed
+		// We can always assume country_definition is not null, as it is initialized from a reference and only ever changed
 		// by swapping with another CountryInstance's country_definition.
 		CountryDefinition const* PROPERTY(country_definition);
 		colour_t PROPERTY(colour); // Cached to avoid searching government overrides for every province

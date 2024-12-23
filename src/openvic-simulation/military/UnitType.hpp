@@ -116,7 +116,7 @@ namespace OpenVic {
 			std::string_view sprite_override, sprite_mount, sprite_mount_attach_node;
 			// TODO - represent these as modifier effects, so that they can be combined with tech, inventions,
 			// leader bonuses, etc. and applied to unit instances all in one go (same for ShipTypes below)
-			fixed_point_t reconnaissance = 0, attack = 0, defence = 0, discipline = 0, support = 0, maneuver = 0,
+			fixed_point_t reconnaissance = 0, attack = 0, defence = 0, discipline = 0, support = 0, maneuver = 0, // codespell:ignore defence
 				siege = 0;
 
 			regiment_type_args_t() = default;
@@ -130,7 +130,7 @@ namespace OpenVic {
 		std::string PROPERTY(sprite_mount_attach_node);
 		const fixed_point_t PROPERTY(reconnaissance);
 		const fixed_point_t PROPERTY(attack);
-		const fixed_point_t PROPERTY(defence);
+		const fixed_point_t PROPERTY(defence); // codespell:ignore defence
 		const fixed_point_t PROPERTY(discipline);
 		const fixed_point_t PROPERTY(support);
 		const fixed_point_t PROPERTY(maneuver);

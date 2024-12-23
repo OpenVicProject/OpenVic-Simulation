@@ -199,7 +199,7 @@ bool WargoalTypeManager::load_wargoal_file(ovdl::v2script::Parser const& parser)
 		}
 	)(parser.get_file_node());
 
-	/* load order in which CBs are prioritised by AI */
+	/* load order in which CBs are prioritized by AI */
 	ret &= expect_key(
 		peace_order_symbol,
 		expect_list(
