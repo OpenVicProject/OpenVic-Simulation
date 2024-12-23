@@ -17,7 +17,7 @@ namespace OpenVic {
 		TestScript(std::string_view new_script_name);
 		virtual ~TestScript() = default;
 
-		// expects an overriden method that performs arbitrary code execution
+		// expects an overridden method that performs arbitrary code execution
 		// so that each script uniquely performs tests
 		// for both requirement adding to script and to execute code
 		virtual void add_requirements() = 0;

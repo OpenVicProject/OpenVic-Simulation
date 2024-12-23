@@ -18,7 +18,7 @@ EconomyDefines::EconomyDefines()
 	goods_focus_swap_chance {},
 	num_closed_factories_per_state_lassiez_faire {},
 	min_num_factories_per_state_before_deleting_lassiez_faire {},
-	bankrupcy_duration {},
+	bankruptcy_duration {},
 	second_rank_base_share_factor {},
 	civ_base_share_factor {},
 	unciv_base_share_factor {},
@@ -62,7 +62,7 @@ node_callback_t EconomyDefines::expect_defines() {
 			expect_uint(assign_variable_callback(num_closed_factories_per_state_lassiez_faire)),
 		"MIN_NUM_FACTORIES_PER_STATE_BEFORE_DELETING_LASSIEZ_FAIRE", ONE_EXACTLY,
 			expect_uint(assign_variable_callback(min_num_factories_per_state_before_deleting_lassiez_faire)),
-		"BANKRUPCY_DURATION", ONE_EXACTLY, expect_years(assign_variable_callback(bankrupcy_duration)),
+		"BANKRUPCY_DURATION", ONE_EXACTLY, expect_years(assign_variable_callback(bankruptcy_duration)), // paradox typo
 		"SECOND_RANK_BASE_SHARE_FACTOR", ONE_EXACTLY,
 			expect_fixed_point(assign_variable_callback(second_rank_base_share_factor)),
 		"CIV_BASE_SHARE_FACTOR", ONE_EXACTLY, expect_fixed_point(assign_variable_callback(civ_base_share_factor)),

@@ -22,12 +22,12 @@ TerrainType::TerrainType(
 TerrainTypeMapping::TerrainTypeMapping(
 	std::string_view new_identifier,
 	TerrainType const& new_type,
-	std::vector<index_t>&& new_terrain_indicies,
+	std::vector<index_t>&& new_terrain_indices,
 	index_t new_priority,
 	bool new_has_texture
 ) : HasIdentifier { new_identifier },
 	type { new_type },
-	terrain_indices { std::move(new_terrain_indicies) },
+	terrain_indices { std::move(new_terrain_indices) },
 	priority { new_priority },
 	has_texture { new_has_texture } {}
 
@@ -88,7 +88,7 @@ bool TerrainTypeManager::add_terrain_type(
 bool TerrainTypeManager::add_terrain_type_mapping(
 	std::string_view identifier,
 	TerrainType const* type,
-	std::vector<TerrainTypeMapping::index_t>&& terrain_indicies,
+	std::vector<TerrainTypeMapping::index_t>&& terrain_indices,
 	TerrainTypeMapping::index_t priority,
 	bool has_texture
 ) {
@@ -109,7 +109,7 @@ bool TerrainTypeManager::add_terrain_type_mapping(
 
 	bool ret = true;
 
-	for (TerrainTypeMapping::index_t idx : terrain_indicies) {
+	for (TerrainTypeMapping::index_t idx : terrain_indices) {
 		const terrain_type_mappings_map_t::const_iterator it = terrain_type_mappings_map.find(idx);
 
 		if (it == terrain_type_mappings_map.end()) {
@@ -123,7 +123,7 @@ bool TerrainTypeManager::add_terrain_type_mapping(
 		}
 	}
 
-	ret &= terrain_type_mappings.add_item({ identifier, *type, std::move(terrain_indicies), priority, has_texture });
+	ret &= terrain_type_mappings.add_item({ identifier, *type, std::move(terrain_indices), priority, has_texture });
 
 	return ret;
 }
@@ -168,16 +168,16 @@ bool TerrainTypeManager::_load_terrain_type_mapping(std::string_view mapping_key
 	}
 
 	TerrainType const* type = nullptr;
-	std::vector<TerrainTypeMapping::index_t> terrain_indicies;
+	std::vector<TerrainTypeMapping::index_t> terrain_indices;
 	TerrainTypeMapping::index_t priority = 0;
 	bool has_texture = true;
 
 	bool ret = expect_dictionary_keys(
 		"type", ONE_EXACTLY, expect_terrain_type_identifier(assign_variable_callback_pointer(type)),
-		"color", ONE_EXACTLY, expect_list_reserve_length(terrain_indicies, expect_uint<TerrainTypeMapping::index_t>(
-			[&terrain_indicies](TerrainTypeMapping::index_t val) -> bool {
-				if (std::find(terrain_indicies.begin(), terrain_indicies.end(), val) == terrain_indicies.end()) {
-					terrain_indicies.push_back(val);
+		"color", ONE_EXACTLY, expect_list_reserve_length(terrain_indices, expect_uint<TerrainTypeMapping::index_t>(
+			[&terrain_indices](TerrainTypeMapping::index_t val) -> bool {
+				if (std::find(terrain_indices.begin(), terrain_indices.end(), val) == terrain_indices.end()) {
+					terrain_indices.push_back(val);
 					return true;
 				}
 				Logger::error("Repeat terrain type mapping index: ", val);
@@ -192,7 +192,7 @@ bool TerrainTypeManager::_load_terrain_type_mapping(std::string_view mapping_key
 		Logger::warning("More terrain textures than limit!");
 	}
 
-	ret &= add_terrain_type_mapping(mapping_key, type, std::move(terrain_indicies), priority, has_texture);
+	ret &= add_terrain_type_mapping(mapping_key, type, std::move(terrain_indices), priority, has_texture);
 
 	return true;
 }

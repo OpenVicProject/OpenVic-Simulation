@@ -134,8 +134,8 @@ bool StaticModifierCache::load_static_modifiers(ModifierManager& modifier_manage
 
 	// Country Event modifiers
 	static constexpr IconModifier::icon_t default_icon = 0;
-	static constexpr std::string_view bad_debtor_id = "bad_debter"; //paradox typo
-	static constexpr std::string_view in_bankruptcy_id = "in_bankrupcy"; //paradox typo
+	static constexpr std::string_view bad_debtor_id = "bad_debter"; // paradox typo
+	static constexpr std::string_view in_bankruptcy_id = "in_bankrupcy"; // paradox typo
 	static constexpr std::string_view generalised_debt_default_id = "generalised_debt_default";
 	set_country_event_modifier(bad_debtor_id, default_icon);
 	set_country_event_modifier(in_bankruptcy_id, default_icon);

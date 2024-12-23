@@ -154,13 +154,13 @@ static std::string_view _extract_basic_identifier_prefix_from_path(std::string_v
 	return extract_basic_identifier_prefix(StringUtils::get_filename(path));
 };
 
-Dataloader::path_vector_t Dataloader::lookup_basic_indentifier_prefixed_files_in_dir(
+Dataloader::path_vector_t Dataloader::lookup_basic_identifier_prefixed_files_in_dir(
 	std::string_view path, fs::path const& extension
 ) const {
 	return _lookup_files_in_dir<fs::directory_iterator>(path, extension, _extract_basic_identifier_prefix_from_path);
 }
 
-Dataloader::path_vector_t Dataloader::lookup_basic_indentifier_prefixed_files_in_dir_recursive(
+Dataloader::path_vector_t Dataloader::lookup_basic_identifier_prefixed_files_in_dir_recursive(
 	std::string_view path, fs::path const& extension
 ) const {
 	return _lookup_files_in_dir<fs::recursive_directory_iterator>(path, extension, _extract_basic_identifier_prefix_from_path);
@@ -511,7 +511,7 @@ bool Dataloader::_load_history(DefinitionManager& definition_manager, bool unuse
 
 		static constexpr std::string_view country_history_directory = "history/countries";
 		const path_vector_t country_history_files =
-			lookup_basic_indentifier_prefixed_files_in_dir(country_history_directory, ".txt");
+			lookup_basic_identifier_prefixed_files_in_dir(country_history_directory, ".txt");
 
 		country_history_manager.reserve_more_country_histories(country_history_files.size());
 		deployment_manager.reserve_more_deployments(country_history_files.size());
@@ -555,7 +555,7 @@ bool Dataloader::_load_history(DefinitionManager& definition_manager, bool unuse
 
 		static constexpr std::string_view province_history_directory = "history/provinces";
 		const path_vector_t province_history_files =
-			lookup_basic_indentifier_prefixed_files_in_dir_recursive(province_history_directory, ".txt");
+			lookup_basic_identifier_prefixed_files_in_dir_recursive(province_history_directory, ".txt");
 
 		province_history_manager.reserve_more_province_histories(province_history_files.size());
 

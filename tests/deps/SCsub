@@ -138,7 +138,7 @@ def build_snitch(env):
         "SNITCH_WITH_TIMINGS": True, #"Measure the time taken by each test case -- disable to speed up tests."
         "SNITCH_WITH_SHORTHAND_MACROS": True, #"Use short names for test macros -- disable if this causes conflicts."
         "SNITCH_CONSTEXPR_FLOAT_USE_BITCAST": True, #"Use std::bit_cast if available to implement exact constexpr float-to-string conversion."
-        "SNITCH_APPEND_TO_CHARS": True, #"Use std::to_chars for string conversions -- disable for greater compatability with a slight performance cost."
+        "SNITCH_APPEND_TO_CHARS": True, #"Use std::to_chars for string conversions -- disable for greater compatibility with a slight performance cost."
         "SNITCH_DEFAULT_WITH_COLOR": True, #"Enable terminal colors by default -- can also be controlled by command line interface."
         "SNITCH_DECOMPOSE_SUCCESSFUL_ASSERTIONS": False, #"Enable expression decomposition even for successful assertions -- more expensive."
         "SNITCH_WITH_ALL_REPORTERS": True, #"Allow all built-in reporters to be selected from the command line -- disable for faster compilation."

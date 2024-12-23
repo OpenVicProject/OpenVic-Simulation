@@ -81,10 +81,10 @@ namespace OpenVic {
 		Timespan PROPERTY(colonization_duration);
 		Timespan PROPERTY(colonization_days_between_investment);
 		Timespan PROPERTY(colonization_days_for_initial_investment);
-		fixed_point_t PROPERTY(colonization_protectorate_province_maintainance);
-		fixed_point_t PROPERTY(colonization_colony_province_maintainance);
-		fixed_point_t PROPERTY(colonization_colony_industry_maintainance);
-		fixed_point_t PROPERTY(colonization_colony_railway_maintainance);
+		fixed_point_t PROPERTY(colonization_protectorate_province_maintenance);
+		fixed_point_t PROPERTY(colonization_colony_province_maintenance);
+		fixed_point_t PROPERTY(colonization_colony_industry_maintenance);
+		fixed_point_t PROPERTY(colonization_colony_railway_maintenance);
 		fixed_point_t PROPERTY(colonization_interest_cost_initial);
 		fixed_point_t PROPERTY(colonization_interest_cost_neighbor_modifier);
 		fixed_point_t PROPERTY(colonization_interest_cost);

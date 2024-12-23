@@ -40,17 +40,17 @@ bool DiplomaticActionManager::add_cancelable_diplomatic_action(
 }
 
 DiplomaticActionTickCache DiplomaticActionManager::create_diplomatic_action_tick(
-	std::string_view identifier, CountryInstance* sender, CountryInstance* reciever, std::any context_data,
+	std::string_view identifier, CountryInstance* sender, CountryInstance* receiver, std::any context_data,
 	InstanceManager& instance_manager
 ) {
 	auto type = diplomatic_action_types.get_item_by_identifier(identifier);
 
-	DiplomaticActionTickCache result { { instance_manager, sender, reciever, context_data }, type };
+	DiplomaticActionTickCache result { { instance_manager, sender, receiver, context_data }, type };
 	type->visit([&](auto type) {
 		CountryRelationManager::influence_value_type* influence = nullptr;
 		if (type.influence_cost != 0) {
 			influence = &result.argument.instance_manager.get_country_relation_manager().assign_or_get_influence_with( //
-				result.argument.sender, result.argument.reciever
+				result.argument.sender, result.argument.receiver
 			);
 			if (*influence < type.influence_cost) {
 				return;
@@ -81,7 +81,7 @@ bool DiplomaticActionManager::setup_diplomatic_actions() {
 			.commit =
 				[](Argument& arg) {
 					arg.instance_manager.get_country_relation_manager().set_country_alliance( //
-						arg.sender, arg.reciever, true
+						arg.sender, arg.receiver, true
 					);
 				},
 		}
@@ -92,7 +92,7 @@ bool DiplomaticActionManager::setup_diplomatic_actions() {
 			.commit =
 				[](Argument& arg) {
 					arg.instance_manager.get_country_relation_manager().set_country_alliance( //
-						arg.sender, arg.reciever, false
+						arg.sender, arg.receiver, false
 					);
 				},
 		}
@@ -117,7 +117,7 @@ bool DiplomaticActionManager::setup_diplomatic_actions() {
 			.commit =
 				[](Argument& arg) {
 					arg.instance_manager.get_country_relation_manager().set_has_military_access_to( //
-						arg.sender, arg.reciever, true
+						arg.sender, arg.receiver, true
 					);
 				},
 		}
@@ -128,7 +128,7 @@ bool DiplomaticActionManager::setup_diplomatic_actions() {
 			.commit =
 				[](Argument& arg) {
 					arg.instance_manager.get_country_relation_manager().set_has_military_access_to( //
-						arg.sender, arg.reciever, true
+						arg.sender, arg.receiver, true
 					);
 				},
 		}
@@ -139,7 +139,7 @@ bool DiplomaticActionManager::setup_diplomatic_actions() {
 			.commit =
 				[](Argument& arg) {
 					arg.instance_manager.get_country_relation_manager().assign_or_get_country_relation(
-						arg.sender, arg.reciever
+						arg.sender, arg.receiver
 					) += 25; // TODO: implement defines.diplomacy.INCREASERELATION_RELATION_ON_ACCEPT
 				},
 			.allowed =
@@ -154,7 +154,7 @@ bool DiplomaticActionManager::setup_diplomatic_actions() {
 			.commit =
 				[](Argument& arg) {
 					arg.instance_manager.get_country_relation_manager().assign_or_get_country_relation(
-						arg.sender, arg.reciever
+						arg.sender, arg.receiver
 					) -= 25; // TODO: implement defines.diplomacy.DECREASERELATION_RELATION_ON_ACCEPT
 				},
 			.allowed =
@@ -169,7 +169,7 @@ bool DiplomaticActionManager::setup_diplomatic_actions() {
 			.commit =
 				[](Argument& arg) {
 					arg.instance_manager.get_country_relation_manager().set_war_subsidies_to( //
-						arg.sender, arg.reciever, true
+						arg.sender, arg.receiver, true
 					);
 				},
 		}
@@ -180,7 +180,7 @@ bool DiplomaticActionManager::setup_diplomatic_actions() {
 			.commit =
 				[](Argument& arg) {
 					arg.instance_manager.get_country_relation_manager().set_war_subsidies_to( //
-						arg.sender, arg.reciever, false
+						arg.sender, arg.receiver, false
 					);
 				},
 		}
@@ -191,7 +191,7 @@ bool DiplomaticActionManager::setup_diplomatic_actions() {
 			.commit =
 				[](Argument& arg) {
 					arg.instance_manager.get_country_relation_manager().set_at_war_with( //
-						arg.sender, arg.reciever, true
+						arg.sender, arg.receiver, true
 					);
 				},
 		}
@@ -208,7 +208,7 @@ bool DiplomaticActionManager::setup_diplomatic_actions() {
 			.commit =
 				[](Argument& arg) {
 					arg.instance_manager.get_country_relation_manager().assign_or_get_commands_units( //
-						arg.sender, arg.reciever
+						arg.sender, arg.receiver
 					) = true;
 				},
 		}
@@ -220,7 +220,7 @@ bool DiplomaticActionManager::setup_diplomatic_actions() {
 			.commit =
 				[](Argument& arg) {
 					arg.instance_manager.get_country_relation_manager().set_discredited_date( //
-						arg.sender, arg.reciever, arg.instance_manager.get_today() + 180
+						arg.sender, arg.receiver, arg.instance_manager.get_today() + 180
 					); // TODO: implement defines.diplomacy.DISCREDIT_DAYS
 				},
 		}
@@ -239,7 +239,7 @@ bool DiplomaticActionManager::setup_diplomatic_actions() {
 			.commit =
 				[](Argument& arg) {
 					arg.instance_manager.get_country_relation_manager().set_embassy_banned_date( //
-						arg.sender, arg.reciever, arg.instance_manager.get_today() + Timespan::from_years(1)
+						arg.sender, arg.receiver, arg.instance_manager.get_today() + Timespan::from_years(1)
 					); // TODO: implement defines.diplomacy.BANEMBASSY_DAYS
 				},
 		}
@@ -251,7 +251,7 @@ bool DiplomaticActionManager::setup_diplomatic_actions() {
 			.commit =
 				[](Argument& arg) {
 					arg.instance_manager.get_country_relation_manager().assign_or_get_country_opinion( //
-						arg.sender, arg.reciever
+						arg.sender, arg.receiver
 					)++;
 				},
 			.allowed =
@@ -267,7 +267,7 @@ bool DiplomaticActionManager::setup_diplomatic_actions() {
 			.commit =
 				[](Argument& arg) {
 					--arg.instance_manager.get_country_relation_manager().assign_or_get_country_opinion( //
-						std::any_cast<CountryInstance*>(arg.context_data), arg.reciever
+						std::any_cast<CountryInstance*>(arg.context_data), arg.receiver
 					);
 				},
 			.allowed =
@@ -283,7 +283,7 @@ bool DiplomaticActionManager::setup_diplomatic_actions() {
 			.commit =
 				[](Argument& arg) {
 					arg.instance_manager.get_country_relation_manager().assign_or_get_country_opinion( //
-						arg.sender, arg.reciever
+						arg.sender, arg.receiver
 					) = CountryRelationManager::OpinionType::Sphere;
 				},
 			.allowed =
@@ -299,10 +299,10 @@ bool DiplomaticActionManager::setup_diplomatic_actions() {
 			.commit =
 				[](Argument& arg) {
 					--arg.instance_manager.get_country_relation_manager().assign_or_get_country_opinion( //
-						std::any_cast<CountryInstance*>(arg.context_data), arg.reciever
+						std::any_cast<CountryInstance*>(arg.context_data), arg.receiver
 					);
 					arg.instance_manager.get_country_relation_manager().assign_or_get_country_relation( //
-						arg.sender, arg.reciever
+						arg.sender, arg.receiver
 					) -= 10;
 				},
 			.allowed =
@@ -318,10 +318,10 @@ bool DiplomaticActionManager::setup_diplomatic_actions() {
 			.commit =
 				[](Argument& arg) {
 					--arg.instance_manager.get_country_relation_manager().assign_or_get_country_opinion( //
-						arg.sender, arg.reciever
+						arg.sender, arg.receiver
 					);
 					arg.instance_manager.get_country_relation_manager().assign_or_get_country_relation( //
-						arg.sender, arg.reciever
+						arg.sender, arg.receiver
 					) -= 10;
 					// TODO: implement REMOVEFROMSPHERE_PRESTIGE_COST and REMOVEFROMSPHERE_INFAMY_COST
 				},
@@ -343,7 +343,7 @@ bool DiplomaticActionManager::setup_diplomatic_actions() {
 			.commit =
 				[](Argument& arg) {
 					arg.instance_manager.get_country_relation_manager().set_has_vision( //
-						arg.sender, arg.reciever, true
+						arg.sender, arg.receiver, true
 					);
 				},
 		}
@@ -354,7 +354,7 @@ bool DiplomaticActionManager::setup_diplomatic_actions() {
 			.commit =
 				[](Argument& arg) {
 					arg.instance_manager.get_country_relation_manager().set_has_vision( //
-						arg.sender, arg.reciever, false
+						arg.sender, arg.receiver, false
 					);
 				},
 		}

@@ -147,7 +147,7 @@ bool CountryHistoryMap::_load_history_entry(
 				Deployment const* deployment = nullptr;
 				const bool ret = deployment_manager.load_oob_file(definition_manager, dataloader, path, deployment, false);
 				if (deployment != nullptr) {
-					entry.inital_oob = deployment;
+					entry.initial_oob = deployment;
 				}
 				return ret;
 			}

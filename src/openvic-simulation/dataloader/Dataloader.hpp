@@ -104,8 +104,8 @@ namespace OpenVic {
 		fs::path lookup_image_file(std::string_view path) const;
 		path_vector_t lookup_files_in_dir(std::string_view path, fs::path const& extension) const;
 		path_vector_t lookup_files_in_dir_recursive(std::string_view path, fs::path const& extension) const;
-		path_vector_t lookup_basic_indentifier_prefixed_files_in_dir(std::string_view path, fs::path const& extension) const;
-		path_vector_t lookup_basic_indentifier_prefixed_files_in_dir_recursive(
+		path_vector_t lookup_basic_identifier_prefixed_files_in_dir(std::string_view path, fs::path const& extension) const;
+		path_vector_t lookup_basic_identifier_prefixed_files_in_dir_recursive(
 			std::string_view path, fs::path const& extension
 		) const;
 
@@ -127,7 +127,7 @@ namespace OpenVic {
 	public:
 		enum locale_t : size_t {
 			English, French, German, Polish, Spanish, Italian, Swedish,
-			Czech, Hungarian, Dutch, Portugese, Russian, Finnish, _LocaleCount
+			Czech, Hungarian, Dutch, Portuguese, Russian, Finnish, _LocaleCount
 		};
 		static constexpr char const* locale_names[_LocaleCount] = {
 			"en_GB", "fr_FR", "de_DE", "pl_PL", "es_ES", "it_IT", "sv_SE",

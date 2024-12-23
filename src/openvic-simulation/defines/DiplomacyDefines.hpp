@@ -191,7 +191,7 @@ namespace OpenVic {
 		fixed_point_t PROPERTY(war_prestige_cost_neg_prestige);
 		fixed_point_t PROPERTY(war_prestige_cost_truce);
 		fixed_point_t PROPERTY(war_prestige_cost_honor_alliance);
-		fixed_point_t PROPERTY(war_prestige_cost_honor_guarnatee);
+		fixed_point_t PROPERTY(war_prestige_cost_honor_guarantee);
 		fixed_point_t PROPERTY(war_prestige_cost_uncivilized);
 		fixed_point_t PROPERTY(war_prestige_cost_core);
 		fixed_point_t PROPERTY(war_failed_goal_militancy);

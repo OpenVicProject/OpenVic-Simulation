@@ -857,7 +857,7 @@ bool CountryInstance::can_research_tech(Technology const& technology, Date today
 void CountryInstance::start_research(Technology const& technology, InstanceManager const& instance_manager) {
 	if (OV_unlikely(!can_research_tech(technology, instance_manager.get_today()))) {
 		Logger::warning(
-			"Attemping to start research for country \"", get_identifier(), "\" on technology \"",
+			"Attempting to start research for country \"", get_identifier(), "\" on technology \"",
 			technology.get_identifier(), "\" - cannot research this tech!"
 		);
 		return;
@@ -1855,7 +1855,7 @@ bool CountryInstanceManager::apply_history_to_countries(
 					if (entry_date <= today) {
 						ret &= country_instance.apply_history_to_country(*entry, instance_manager);
 
-						if (entry->get_inital_oob().has_value()) {
+						if (entry->get_initial_oob().has_value()) {
 							oob_history_entry = entry.get();
 						}
 						if (entry->get_consciousness().has_value()) {
@@ -1878,7 +1878,7 @@ bool CountryInstanceManager::apply_history_to_countries(
 
 				if (oob_history_entry != nullptr) {
 					ret &= unit_instance_manager.generate_deployment(
-						map_instance, country_instance, *oob_history_entry->get_inital_oob()
+						map_instance, country_instance, *oob_history_entry->get_initial_oob()
 					);
 				}
 

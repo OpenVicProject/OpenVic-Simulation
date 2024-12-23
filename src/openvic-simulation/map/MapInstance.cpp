@@ -173,7 +173,7 @@ void MapInstance::update_gamestate(const Date today, DefineManager const& define
 void MapInstance::map_tick() {
 	thread_pool.process_province_ticks();
 	//state tick
-	//after provice tick as province tick sets pop employment to 0
+	//after province tick as province tick sets pop employment to 0
 	//state tick will update pop employment via factories
 }
 

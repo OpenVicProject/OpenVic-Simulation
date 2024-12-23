@@ -45,7 +45,7 @@ namespace OpenVic {
 		std::optional<bool> PROPERTY_CUSTOM_PREFIX(civilised, is);
 		std::optional<fixed_point_t> PROPERTY(prestige);
 		ordered_set<Reform const*> PROPERTY(reforms);
-		std::optional<Deployment const*> PROPERTY(inital_oob);
+		std::optional<Deployment const*> PROPERTY(initial_oob);
 		std::optional<TechnologySchool const*> PROPERTY(tech_school);
 		ordered_map<Technology const*, CountryInstance::unlock_level_t> PROPERTY(technologies);
 		ordered_map<Invention const*, bool> PROPERTY(inventions);
