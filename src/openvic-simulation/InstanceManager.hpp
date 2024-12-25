@@ -10,6 +10,7 @@
 #include "openvic-simulation/map/Mapmode.hpp"
 #include "openvic-simulation/military/UnitInstanceGroup.hpp"
 #include "openvic-simulation/misc/SimulationClock.hpp"
+#include "openvic-simulation/politics/PoliticsInstanceManager.hpp"
 #include "openvic-simulation/types/Date.hpp"
 #include "openvic-simulation/types/FlagStrings.hpp"
 
@@ -30,6 +31,7 @@ namespace OpenVic {
 		GoodInstanceManager PROPERTY_REF(good_instance_manager);
 		MarketInstance PROPERTY_REF(market_instance);
 		UnitInstanceManager PROPERTY_REF(unit_instance_manager);
+		PoliticsInstanceManager PROPERTY_REF(politics_instance_manager);
 		/* Near the end so it is freed after other managers that may depend on it,
 		 * e.g. if we want to remove military units from the province they're in when they're destructed. */
 		MapInstance PROPERTY_REF(map_instance);

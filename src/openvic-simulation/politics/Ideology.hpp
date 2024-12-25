@@ -26,7 +26,7 @@ namespace OpenVic {
 		const bool PROPERTY_CUSTOM_PREFIX(uncivilised, is);
 		const bool PROPERTY(can_reduce_consciousness);
 		const bool PROPERTY(can_reduce_militancy);
-		const Date PROPERTY(spawn_date);
+		const std::optional<Date> PROPERTY(spawn_date);
 		ConditionalWeight PROPERTY(add_political_reform);
 		ConditionalWeight PROPERTY(remove_political_reform);
 		ConditionalWeight PROPERTY(add_social_reform);
@@ -43,7 +43,7 @@ namespace OpenVic {
 			bool new_uncivilised,
 			bool new_can_reduce_consciousness,
 			bool new_can_reduce_militancy,
-			Date new_spawn_date,
+			std::optional<Date> new_spawn_date,
 			ConditionalWeight&& new_add_political_reform,
 			ConditionalWeight&& new_remove_political_reform,
 			ConditionalWeight&& new_add_social_reform,
@@ -73,7 +73,7 @@ namespace OpenVic {
 			bool uncivilised,
 			bool can_reduce_consciousness,
 			bool can_reduce_militancy,
-			Date spawn_date,
+			std::optional<Date> spawn_date,
 			ConditionalWeight&& add_political_reform,
 			ConditionalWeight&& remove_political_reform,
 			ConditionalWeight&& add_social_reform,

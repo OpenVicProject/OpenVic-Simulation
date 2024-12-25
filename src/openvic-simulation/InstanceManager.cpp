@@ -11,6 +11,7 @@ InstanceManager::InstanceManager(
 ) : definition_manager { new_definition_manager },
 	global_flags { "global" },
 	market_instance { good_instance_manager },
+	politics_instance_manager { *this },
 	map_instance { new_definition_manager.get_map_definition() },
 	simulation_clock {
 		std::bind(&InstanceManager::tick, this), std::bind(&InstanceManager::update_gamestate, this),

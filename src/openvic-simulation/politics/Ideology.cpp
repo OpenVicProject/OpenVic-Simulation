@@ -14,7 +14,7 @@ Ideology::Ideology(
 	bool new_uncivilised,
 	bool new_can_reduce_consciousness,
 	bool new_can_reduce_militancy,
-	Date new_spawn_date,
+	std::optional<Date> new_spawn_date,
 	ConditionalWeight&& new_add_political_reform,
 	ConditionalWeight&& new_remove_political_reform,
 	ConditionalWeight&& new_add_social_reform,
@@ -61,7 +61,7 @@ bool IdeologyManager::add_ideology(
 	bool uncivilised,
 	bool can_reduce_consciousness,
 	bool can_reduce_militancy,
-	Date spawn_date,
+	std::optional<Date> spawn_date,
 	ConditionalWeight&& add_political_reform,
 	ConditionalWeight&& remove_political_reform,
 	ConditionalWeight&& add_social_reform,
@@ -120,7 +120,7 @@ bool IdeologyManager::load_ideology_file(ast::NodeCPtr root) {
 
 			colour_t colour = colour_t::null();
 			bool uncivilised = true, can_reduce_consciousness = false, can_reduce_militancy = false;
-			Date spawn_date;
+			std::optional<Date> spawn_date;
 			ConditionalWeight add_political_reform { COUNTRY, COUNTRY, NO_SCOPE };
 			ConditionalWeight remove_political_reform { COUNTRY, COUNTRY, NO_SCOPE };
 			ConditionalWeight add_social_reform { COUNTRY, COUNTRY, NO_SCOPE };
@@ -131,7 +131,7 @@ bool IdeologyManager::load_ideology_file(ast::NodeCPtr root) {
 			bool ret = expect_dictionary_keys(
 				"uncivilized", ZERO_OR_ONE, expect_bool(assign_variable_callback(uncivilised)),
 				"color", ONE_EXACTLY, expect_colour(assign_variable_callback(colour)),
-				"date", ZERO_OR_ONE, expect_date(assign_variable_callback(spawn_date)),
+				"date", ZERO_OR_ONE, expect_date(assign_variable_callback_opt(spawn_date)),
 				"can_reduce_consciousness", ZERO_OR_ONE, expect_bool(assign_variable_callback(can_reduce_consciousness)),
 				"can_reduce_militancy", ZERO_OR_ONE, expect_bool(assign_variable_callback(can_reduce_militancy)),
 				"add_political_reform", ONE_EXACTLY, add_political_reform.expect_conditional_weight(ConditionalWeight::BASE),
