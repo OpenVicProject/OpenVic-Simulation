@@ -41,6 +41,7 @@ namespace OpenVic {
 	struct DefineManager;
 	struct ModifierEffectCache;
 	struct StaticModifierCache;
+	struct InstanceManager;
 
 	/* Representation of a country's mutable attributes, with a CountryDefinition that is unique at any single time
 	 * but can be swapped with other CountryInstance's CountryDefinition when switching tags. */
@@ -80,6 +81,7 @@ namespace OpenVic {
 		colour_t PROPERTY(colour); // Cached to avoid searching government overrides for every province
 		ProvinceInstance const* PROPERTY(capital);
 		bool PROPERTY_CUSTOM_PREFIX(releasable_vassal, is);
+		bool PROPERTY(owns_colonial_province);
 
 		country_status_t PROPERTY(country_status);
 		Date PROPERTY(lose_great_power_date);
@@ -90,6 +92,8 @@ namespace OpenVic {
 		ordered_set<ProvinceInstance*> PROPERTY(controlled_provinces);
 		ordered_set<ProvinceInstance*> PROPERTY(core_provinces);
 		ordered_set<State*> PROPERTY(states);
+
+		ordered_set<CountryInstance*> PROPERTY(neighbouring_countries);
 
 		// The total/resultant modifier affecting this country, including owned province contributions.
 		ModifierSum PROPERTY(modifier_sum);
@@ -234,6 +238,7 @@ namespace OpenVic {
 		bool can_colonise() const;
 		bool is_great_power() const;
 		bool is_secondary_power() const;
+		bool is_neighbour(CountryInstance const& country) const;
 
 		// The values returned by these functions are scaled by population size, so they must be divided by population size
 		// to get the support as a proportion of 1.0
@@ -245,20 +250,20 @@ namespace OpenVic {
 		fixed_point_t get_religion_proportion(Religion const& religion) const;
 
 		bool add_owned_province(ProvinceInstance& new_province);
-		bool remove_owned_province(ProvinceInstance& province_to_remove);
-		bool has_owned_province(ProvinceInstance& province) const;
+		bool remove_owned_province(ProvinceInstance const& province_to_remove);
+		bool has_owned_province(ProvinceInstance const& province) const;
 
 		bool add_controlled_province(ProvinceInstance& new_province);
-		bool remove_controlled_province(ProvinceInstance& province_to_remove);
-		bool has_controlled_province(ProvinceInstance& province) const;
+		bool remove_controlled_province(ProvinceInstance const& province_to_remove);
+		bool has_controlled_province(ProvinceInstance const& province) const;
 
 		bool add_core_province(ProvinceInstance& new_core);
-		bool remove_core_province(ProvinceInstance& core_to_remove);
-		bool has_core_province(ProvinceInstance& province) const;
+		bool remove_core_province(ProvinceInstance const& core_to_remove);
+		bool has_core_province(ProvinceInstance const& province) const;
 
 		bool add_state(State& new_state);
-		bool remove_state(State& state_to_remove);
-		bool has_state(State& state) const;
+		bool remove_state(State const& state_to_remove);
+		bool has_state(State const& state) const;
 
 		bool add_accepted_culture(Culture const& new_accepted_culture);
 		bool remove_accepted_culture(Culture const& culture_to_remove);
@@ -282,12 +287,12 @@ namespace OpenVic {
 		template<UnitType::branch_t Branch>
 		bool add_unit_instance_group(UnitInstanceGroup<Branch>& group);
 		template<UnitType::branch_t Branch>
-		bool remove_unit_instance_group(UnitInstanceGroup<Branch>& group);
+		bool remove_unit_instance_group(UnitInstanceGroup<Branch> const& group);
 
 		template<UnitType::branch_t Branch>
 		void add_leader(LeaderBranched<Branch>&& leader);
 		template<UnitType::branch_t Branch>
-		bool remove_leader(LeaderBranched<Branch> const* leader);
+		bool remove_leader(LeaderBranched<Branch> const& leader);
 
 		bool has_leader_with_name(std::string_view name) const;
 
@@ -369,10 +374,7 @@ namespace OpenVic {
 		) const;
 		std::vector<ModifierSum::modifier_entry_t> get_contributing_modifiers(ModifierEffect const& effect) const;
 
-		void update_gamestate(
-			DefineManager const& define_manager, UnitTypeManager const& unit_type_manager,
-			ModifierEffectCache const& modifier_effect_cache
-		);
+		void update_gamestate(InstanceManager& instance_manager);
 		void tick();
 	};
 
@@ -419,10 +421,7 @@ namespace OpenVic {
 		);
 
 		void update_modifier_sums(Date today, StaticModifierCache const& static_modifier_cache);
-		void update_gamestate(
-			Date today, DefineManager const& define_manager, UnitTypeManager const& unit_type_manager,
-			ModifierEffectCache const& modifier_effect_cache
-		);
+		void update_gamestate(InstanceManager& instance_manager);
 		void tick();
 	};
 }

@@ -34,6 +34,8 @@ namespace OpenVic {
 	struct container_hash<std::string_view> : ordered_container_string_hash {};
 	template<>
 	struct container_hash<char const*> : ordered_container_string_hash {};
+	template<typename T>
+	struct container_hash<T*> : std::hash<T const*> {};
 
 	// Useful for contiguous memory
 	template<

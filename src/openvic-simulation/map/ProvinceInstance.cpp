@@ -142,6 +142,10 @@ bool ProvinceInstance::is_owner_core() const {
 	return owner != nullptr && cores.contains(owner);
 }
 
+bool ProvinceInstance::is_colonial_province() const {
+	return colony_status != colony_status_t::STATE;
+}
+
 fixed_point_t ProvinceInstance::get_pop_type_proportion(PopType const& pop_type) const {
 	return pop_type_distribution[pop_type];
 }
@@ -452,8 +456,8 @@ bool ProvinceInstance::add_unit_instance_group(UnitInstanceGroup<Branch>& group)
 }
 
 template<UnitType::branch_t Branch>
-bool ProvinceInstance::remove_unit_instance_group(UnitInstanceGroup<Branch>& group) {
-	if (get_unit_instance_groups<Branch>().erase(static_cast<UnitInstanceGroupBranched<Branch>*>(&group)) > 0) {
+bool ProvinceInstance::remove_unit_instance_group(UnitInstanceGroup<Branch> const& group) {
+	if (get_unit_instance_groups<Branch>().erase(static_cast<UnitInstanceGroupBranched<Branch> const*>(&group)) > 0) {
 		return true;
 	} else {
 		Logger::error(
@@ -466,8 +470,8 @@ bool ProvinceInstance::remove_unit_instance_group(UnitInstanceGroup<Branch>& gro
 
 template bool ProvinceInstance::add_unit_instance_group(UnitInstanceGroup<UnitType::branch_t::LAND>&);
 template bool ProvinceInstance::add_unit_instance_group(UnitInstanceGroup<UnitType::branch_t::NAVAL>&);
-template bool ProvinceInstance::remove_unit_instance_group(UnitInstanceGroup<UnitType::branch_t::LAND>&);
-template bool ProvinceInstance::remove_unit_instance_group(UnitInstanceGroup<UnitType::branch_t::NAVAL>&);
+template bool ProvinceInstance::remove_unit_instance_group(UnitInstanceGroup<UnitType::branch_t::LAND> const&);
+template bool ProvinceInstance::remove_unit_instance_group(UnitInstanceGroup<UnitType::branch_t::NAVAL> const&);
 
 bool ProvinceInstance::setup(BuildingTypeManager const& building_type_manager) {
 	if (buildings_are_locked()) {
