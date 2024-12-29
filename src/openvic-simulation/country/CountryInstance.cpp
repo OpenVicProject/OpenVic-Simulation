@@ -4,7 +4,9 @@
 
 #include "openvic-simulation/country/CountryDefinition.hpp"
 #include "openvic-simulation/defines/Define.hpp"
+#include "openvic-simulation/DefinitionManager.hpp"
 #include "openvic-simulation/history/CountryHistory.hpp"
+#include "openvic-simulation/InstanceManager.hpp"
 #include "openvic-simulation/map/Crime.hpp"
 #include "openvic-simulation/map/MapInstance.hpp"
 #include "openvic-simulation/modifier/ModifierEffectCache.hpp"
@@ -40,6 +42,7 @@ CountryInstance::CountryInstance(
 	colour { ERROR_COLOUR },
 	capital { nullptr },
 	releasable_vassal { true },
+	owns_colonial_province { false },
 	country_status { COUNTRY_STATUS_UNCIVILISED },
 	lose_great_power_date {},
 	total_score { 0 },
@@ -48,6 +51,7 @@ CountryInstance::CountryInstance(
 	controlled_provinces {},
 	core_provinces {},
 	states {},
+	neighbouring_countries {},
 	modifier_sum {},
 	event_modifiers {},
 
@@ -206,6 +210,10 @@ bool CountryInstance::is_secondary_power() const {
 	return country_status == COUNTRY_STATUS_SECONDARY_POWER;
 }
 
+bool CountryInstance::is_neighbour(CountryInstance const& country) const {
+	return neighbouring_countries.contains(&country);
+}
+
 fixed_point_t CountryInstance::get_pop_type_proportion(PopType const& pop_type) const {
 	return pop_type_distribution[pop_type];
 }
@@ -263,7 +271,7 @@ fixed_point_t CountryInstance::get_religion_proportion(Religion const& religion)
 		} \
 		return true; \
 	} \
-	bool CountryInstance::remove_##item(std::remove_pointer_t<decltype(item##s)::value_type>& item_to_remove) { \
+	bool CountryInstance::remove_##item(std::remove_pointer_t<decltype(item##s)::value_type> const& item_to_remove) { \
 		if (item##s.erase(&item_to_remove) == 0) { \
 			Logger::error( \
 				"Attempted to remove " #item " \"", item_to_remove.get_identifier(), "\" from country ", get_identifier(), \
@@ -273,7 +281,7 @@ fixed_point_t CountryInstance::get_religion_proportion(Religion const& religion)
 		} \
 		return true; \
 	} \
-	bool CountryInstance::has_##item(std::remove_pointer_t<decltype(item##s)::value_type>& item) const { \
+	bool CountryInstance::has_##item(std::remove_pointer_t<decltype(item##s)::value_type> const& item) const { \
 		return item##s.contains(&item); \
 	}
 
@@ -378,8 +386,8 @@ bool CountryInstance::add_unit_instance_group(UnitInstanceGroup<Branch>& group) 
 }
 
 template<UnitType::branch_t Branch>
-bool CountryInstance::remove_unit_instance_group(UnitInstanceGroup<Branch>& group) {
-	if (get_unit_instance_groups<Branch>().erase(static_cast<UnitInstanceGroupBranched<Branch>*>(&group)) > 0) {
+bool CountryInstance::remove_unit_instance_group(UnitInstanceGroup<Branch> const& group) {
+	if (get_unit_instance_groups<Branch>().erase(static_cast<UnitInstanceGroupBranched<Branch> const*>(&group)) > 0) {
 		return true;
 	} else {
 		Logger::error(
@@ -392,8 +400,8 @@ bool CountryInstance::remove_unit_instance_group(UnitInstanceGroup<Branch>& grou
 
 template bool CountryInstance::add_unit_instance_group(UnitInstanceGroup<UnitType::branch_t::LAND>&);
 template bool CountryInstance::add_unit_instance_group(UnitInstanceGroup<UnitType::branch_t::NAVAL>&);
-template bool CountryInstance::remove_unit_instance_group(UnitInstanceGroup<UnitType::branch_t::LAND>&);
-template bool CountryInstance::remove_unit_instance_group(UnitInstanceGroup<UnitType::branch_t::NAVAL>&);
+template bool CountryInstance::remove_unit_instance_group(UnitInstanceGroup<UnitType::branch_t::LAND> const&);
+template bool CountryInstance::remove_unit_instance_group(UnitInstanceGroup<UnitType::branch_t::NAVAL> const&);
 
 template<UnitType::branch_t Branch>
 void CountryInstance::add_leader(LeaderBranched<Branch>&& leader) {
@@ -401,9 +409,9 @@ void CountryInstance::add_leader(LeaderBranched<Branch>&& leader) {
 }
 
 template<UnitType::branch_t Branch>
-bool CountryInstance::remove_leader(LeaderBranched<Branch> const* leader) {
+bool CountryInstance::remove_leader(LeaderBranched<Branch> const& leader) {
 	plf::colony<LeaderBranched<Branch>>& leaders = get_leaders<Branch>();
-	const auto it = leaders.get_iterator(leader);
+	const auto it = leaders.get_iterator(&leader);
 	if (it != leaders.end()) {
 		leaders.erase(it);
 		return true;
@@ -411,15 +419,15 @@ bool CountryInstance::remove_leader(LeaderBranched<Branch> const* leader) {
 
 	Logger::error(
 		"Trying to remove non-existent ", Branch == UnitType::branch_t::LAND ? "general" : "admiral", " ",
-		leader != nullptr ? leader->get_name() : "NULL", " from country ", get_identifier()
+		leader.get_name(), " from country ", get_identifier()
 	);
 	return false;
 }
 
 template void CountryInstance::add_leader(LeaderBranched<UnitType::branch_t::LAND>&&);
 template void CountryInstance::add_leader(LeaderBranched<UnitType::branch_t::NAVAL>&&);
-template bool CountryInstance::remove_leader(LeaderBranched<UnitType::branch_t::LAND> const*);
-template bool CountryInstance::remove_leader(LeaderBranched<UnitType::branch_t::NAVAL> const*);
+template bool CountryInstance::remove_leader(LeaderBranched<UnitType::branch_t::LAND> const&);
+template bool CountryInstance::remove_leader(LeaderBranched<UnitType::branch_t::NAVAL> const&);
 
 bool CountryInstance::has_leader_with_name(std::string_view name) const {
 	const auto check_leaders = [this, &name]<UnitType::branch_t Branch>() -> bool {
@@ -1157,10 +1165,29 @@ std::vector<ModifierSum::modifier_entry_t> CountryInstance::get_contributing_mod
 	return modifier_sum.get_contributing_modifiers(effect);
 }
 
-void CountryInstance::update_gamestate(
-	DefineManager const& define_manager, UnitTypeManager const& unit_type_manager,
-	ModifierEffectCache const& modifier_effect_cache
-) {
+void CountryInstance::update_gamestate(InstanceManager& instance_manager) {
+	owns_colonial_province = std::any_of(
+		owned_provinces.begin(), owned_provinces.end(), std::bind_front(&ProvinceInstance::is_colonial_province)
+	);
+
+	MapInstance& map_instance = instance_manager.get_map_instance();
+
+	neighbouring_countries.clear();
+	for (ProvinceInstance const* province : owned_provinces) {
+		for (ProvinceDefinition::adjacency_t const& adjacency : province->get_province_definition().get_adjacencies()) {
+			// TODO - should we limit based on adjacency type? Straits and impassable still work in game,
+			// and water provinces don't have an owner so they'll get caught by the later checks anyway.
+			CountryInstance* neighbour =
+				map_instance.get_province_instance_from_definition(*adjacency.get_to()).get_owner();
+			if (neighbour != nullptr && neighbour != this) {
+				neighbouring_countries.insert(neighbour);
+			}
+		}
+	}
+
+	DefinitionManager const& definition_manager = instance_manager.get_definition_manager();
+	DefineManager const& define_manager = definition_manager.get_define_manager();
+
 	// Order of updates might need to be changed/functions split up to account for dependencies
 	_update_production(define_manager);
 	_update_budget();
@@ -1169,7 +1196,10 @@ void CountryInstance::update_gamestate(
 	_update_population();
 	_update_trade();
 	_update_diplomacy();
-	_update_military(define_manager, unit_type_manager, modifier_effect_cache);
+	_update_military(
+		define_manager, definition_manager.get_military_manager().get_unit_type_manager(),
+		definition_manager.get_modifier_manager().get_modifier_effect_cache()
+	);
 
 	total_score = prestige + industrial_power + military_power;
 
@@ -1410,15 +1440,12 @@ void CountryInstanceManager::update_modifier_sums(Date today, StaticModifierCach
 	}
 }
 
-void CountryInstanceManager::update_gamestate(
-	Date today, DefineManager const& define_manager, UnitTypeManager const& unit_type_manager,
-	ModifierEffectCache const& modifier_effect_cache
-) {
+void CountryInstanceManager::update_gamestate(InstanceManager& instance_manager) {
 	for (CountryInstance& country : country_instances.get_items()) {
-		country.update_gamestate(define_manager, unit_type_manager, modifier_effect_cache);
+		country.update_gamestate(instance_manager);
 	}
 
-	update_rankings(today, define_manager);
+	update_rankings(instance_manager.get_today(), instance_manager.get_definition_manager().get_define_manager());
 }
 
 void CountryInstanceManager::tick() {

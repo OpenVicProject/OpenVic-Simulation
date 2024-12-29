@@ -142,6 +142,8 @@ namespace OpenVic {
 		bool add_core(CountryInstance& new_core);
 		bool remove_core(CountryInstance& core_to_remove);
 		bool is_owner_core() const;
+		// This combines COLONY and PROTECTORATE statuses, as opposed to non-colonial STATE provinces
+		bool is_colonial_province() const;
 
 		// The values returned by these functions are scaled by population size, so they must be divided by population size
 		// to get the support as a proportion of 1.0
@@ -173,7 +175,7 @@ namespace OpenVic {
 		template<UnitType::branch_t Branch>
 		bool add_unit_instance_group(UnitInstanceGroup<Branch>& group);
 		template<UnitType::branch_t Branch>
-		bool remove_unit_instance_group(UnitInstanceGroup<Branch>& group);
+		bool remove_unit_instance_group(UnitInstanceGroup<Branch> const& group);
 
 		bool setup(BuildingTypeManager const& building_type_manager);
 		bool apply_history_to_province(ProvinceHistoryEntry const& entry, CountryInstanceManager& country_manager);
