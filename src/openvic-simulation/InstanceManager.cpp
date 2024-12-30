@@ -79,6 +79,7 @@ bool InstanceManager::setup() {
 		definition_manager.get_economy_manager().get_building_type_manager(),
 		market_instance,
 		definition_manager.get_modifier_manager().get_modifier_effect_cache(),
+		definition_manager.get_pop_manager().get_stratas(),
 		definition_manager.get_pop_manager().get_pop_types(),
 		definition_manager.get_politics_manager().get_ideology_manager().get_ideologies()
 	);
@@ -141,6 +142,7 @@ bool InstanceManager::load_bookmark(Bookmark const* new_bookmark) {
 
 	ret &= map_instance.get_state_manager().generate_states(
 		map_instance,
+		definition_manager.get_pop_manager().get_stratas(),
 		definition_manager.get_pop_manager().get_pop_types(),
 		definition_manager.get_politics_manager().get_ideology_manager().get_ideologies()
 	);

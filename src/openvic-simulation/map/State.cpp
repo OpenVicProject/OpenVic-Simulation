@@ -16,6 +16,7 @@ State::State(
 	ProvinceInstance* new_capital,
 	std::vector<ProvinceInstance*>&& new_provinces,
 	ProvinceInstance::colony_status_t new_colony_status,
+	decltype(population_by_strata)::keys_type const& strata_keys,
 	decltype(pop_type_distribution)::keys_type const& pop_type_keys,
 	decltype(ideology_distribution)::keys_type const& ideology_keys
 ) : state_set { new_state_set },
@@ -23,6 +24,15 @@ State::State(
 	capital { new_capital },
 	provinces { std::move(new_provinces) },
 	colony_status { new_colony_status },
+	total_population { 0 },
+	average_literacy { 0 },
+	average_consciousness { 0 },
+	average_militancy { 0 },
+	population_by_strata { &strata_keys },
+	militancy_by_strata { &strata_keys },
+	life_needs_fulfilled_by_strata { &strata_keys },
+	everyday_needs_fulfilled_by_strata { &strata_keys },
+	luxury_needs_fulfilled_by_strata { &strata_keys },
 	pop_type_distribution { &pop_type_keys },
 	pops_cache_by_type { &pop_type_keys },
 	ideology_distribution { &ideology_keys },
@@ -39,14 +49,6 @@ std::string State::get_identifier() const {
 		state_set.get_region().get_identifier(), "_", owner->get_identifier(), "_",
 		ProvinceInstance::get_colony_status_string(colony_status)
 	);
-}
-
-fixed_point_t State::get_pop_type_proportion(PopType const& pop_type) const {
-	return pop_type_distribution[pop_type];
-}
-
-fixed_point_t State::get_ideology_support(Ideology const& ideology) const {
-	return ideology_distribution[ideology];
 }
 
 fixed_point_t State::get_issue_support(Issue const& issue) const {
@@ -93,6 +95,12 @@ void State::update_gamestate() {
 	average_consciousness = 0;
 	average_militancy = 0;
 
+	population_by_strata.clear();
+	militancy_by_strata.clear();
+	life_needs_fulfilled_by_strata.clear();
+	everyday_needs_fulfilled_by_strata.clear();
+	luxury_needs_fulfilled_by_strata.clear();
+
 	pop_type_distribution.clear();
 	ideology_distribution.clear();
 	issue_distribution.clear();
@@ -114,6 +122,18 @@ void State::update_gamestate() {
 		average_literacy += province->get_average_literacy() * province_population;
 		average_consciousness += province->get_average_consciousness() * province_population;
 		average_militancy += province->get_average_militancy() * province_population;
+
+		population_by_strata += province->get_population_by_strata();
+		militancy_by_strata.mul_add(province->get_militancy_by_strata(), province->get_population_by_strata());
+		life_needs_fulfilled_by_strata.mul_add(
+			province->get_life_needs_fulfilled_by_strata(), province->get_population_by_strata()
+		);
+		everyday_needs_fulfilled_by_strata.mul_add(
+			province->get_everyday_needs_fulfilled_by_strata(), province->get_population_by_strata()
+		);
+		luxury_needs_fulfilled_by_strata.mul_add(
+			province->get_luxury_needs_fulfilled_by_strata(), province->get_population_by_strata()
+		);
 
 		pop_type_distribution += province->get_pop_type_distribution();
 		ideology_distribution += province->get_ideology_distribution();
@@ -138,6 +158,11 @@ void State::update_gamestate() {
 		average_literacy /= total_population;
 		average_consciousness /= total_population;
 		average_militancy /= total_population;
+
+		militancy_by_strata /= population_by_strata;
+		life_needs_fulfilled_by_strata /= population_by_strata;
+		everyday_needs_fulfilled_by_strata /= population_by_strata;
+		luxury_needs_fulfilled_by_strata /= population_by_strata;
 	}
 
 	// TODO - use actual values when State has factory data
@@ -180,6 +205,7 @@ void StateSet::update_gamestate() {
 
 bool StateManager::add_state_set(
 	MapInstance& map_instance, Region const& region,
+	decltype(State::population_by_strata)::keys_type const& strata_keys,
 	decltype(State::pop_type_distribution)::keys_type const& pop_type_keys,
 	decltype(State::ideology_distribution)::keys_type const& ideology_keys
 ) {
@@ -228,10 +254,11 @@ bool StateManager::add_state_set(
 
 		CountryInstance* owner = capital->get_owner();
 
-		State& state = *state_set.states.insert(
+		State& state = *state_set.states.insert({
 			/* TODO: capital province logic */
-			{ state_set, owner, capital, std::move(provinces), capital->get_colony_status(), pop_type_keys, ideology_keys }
-		);
+			state_set, owner, capital, std::move(provinces), capital->get_colony_status(), strata_keys, pop_type_keys,
+			ideology_keys
+		});
 
 		for (ProvinceInstance* province : state.get_provinces()) {
 			province->set_state(&state);
@@ -247,6 +274,7 @@ bool StateManager::add_state_set(
 
 bool StateManager::generate_states(
 	MapInstance& map_instance,
+	decltype(State::population_by_strata)::keys_type const& strata_keys,
 	decltype(State::pop_type_distribution)::keys_type const& pop_type_keys,
 	decltype(State::ideology_distribution)::keys_type const& ideology_keys
 ) {
@@ -260,7 +288,7 @@ bool StateManager::generate_states(
 
 	for (Region const& region : map_definition.get_regions()) {
 		if (!region.get_meta()) {
-			if (add_state_set(map_instance, region, pop_type_keys, ideology_keys)) {
+			if (add_state_set(map_instance, region, strata_keys, pop_type_keys, ideology_keys)) {
 				state_count += state_sets.back().get_state_count();
 			} else {
 				ret = false;

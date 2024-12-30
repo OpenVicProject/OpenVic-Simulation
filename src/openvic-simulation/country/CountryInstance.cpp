@@ -110,6 +110,11 @@ CountryInstance::CountryInstance(
 	total_population { 0 },
 	national_consciousness { 0 },
 	national_militancy { 0 },
+	population_by_strata { &strata_keys },
+	militancy_by_strata { &strata_keys },
+	life_needs_fulfilled_by_strata { &strata_keys },
+	everyday_needs_fulfilled_by_strata { &strata_keys },
+	luxury_needs_fulfilled_by_strata { &strata_keys },
 	pop_type_distribution { &pop_type_keys },
 	ideology_distribution { &ideology_keys },
 	issue_distribution {},
@@ -212,14 +217,6 @@ bool CountryInstance::is_secondary_power() const {
 
 bool CountryInstance::is_neighbour(CountryInstance const& country) const {
 	return neighbouring_countries.contains(&country);
-}
-
-fixed_point_t CountryInstance::get_pop_type_proportion(PopType const& pop_type) const {
-	return pop_type_distribution[pop_type];
-}
-
-fixed_point_t CountryInstance::get_ideology_support(Ideology const& ideology) const {
-	return ideology_distribution[ideology];
 }
 
 fixed_point_t CountryInstance::get_issue_support(Issue const& issue) const {
@@ -898,6 +895,13 @@ void CountryInstance::_update_population() {
 	national_literacy = 0;
 	national_consciousness = 0;
 	national_militancy = 0;
+
+	population_by_strata.clear();
+	militancy_by_strata.clear();
+	life_needs_fulfilled_by_strata.clear();
+	everyday_needs_fulfilled_by_strata.clear();
+	luxury_needs_fulfilled_by_strata.clear();
+
 	pop_type_distribution.clear();
 	ideology_distribution.clear();
 	issue_distribution.clear();
@@ -914,6 +918,18 @@ void CountryInstance::_update_population() {
 		national_consciousness += state->get_average_consciousness() * state_population;
 		national_militancy += state->get_average_militancy() * state_population;
 
+		population_by_strata += state->get_population_by_strata();
+		militancy_by_strata.mul_add(state->get_militancy_by_strata(), state->get_population_by_strata());
+		life_needs_fulfilled_by_strata.mul_add(
+			state->get_life_needs_fulfilled_by_strata(), state->get_population_by_strata()
+		);
+		everyday_needs_fulfilled_by_strata.mul_add(
+			state->get_everyday_needs_fulfilled_by_strata(), state->get_population_by_strata()
+		);
+		luxury_needs_fulfilled_by_strata.mul_add(
+			state->get_luxury_needs_fulfilled_by_strata(), state->get_population_by_strata()
+		);
+
 		pop_type_distribution += state->get_pop_type_distribution();
 		ideology_distribution += state->get_ideology_distribution();
 		issue_distribution += state->get_issue_distribution();
@@ -926,6 +942,11 @@ void CountryInstance::_update_population() {
 		national_literacy /= total_population;
 		national_consciousness /= total_population;
 		national_militancy /= total_population;
+
+		militancy_by_strata /= population_by_strata;
+		life_needs_fulfilled_by_strata /= population_by_strata;
+		everyday_needs_fulfilled_by_strata /= population_by_strata;
+		luxury_needs_fulfilled_by_strata /= population_by_strata;
 	}
 
 	// TODO - update national focus capacity

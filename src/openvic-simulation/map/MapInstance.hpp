@@ -47,6 +47,7 @@ namespace OpenVic {
 			BuildingTypeManager const& building_type_manager,
 			MarketInstance& market_instance,
 			ModifierEffectCache const& modifier_effect_cache,
+			decltype(ProvinceInstance::population_by_strata)::keys_type const& strata_keys,
 			decltype(ProvinceInstance::pop_type_distribution)::keys_type const& pop_type_keys,
 			decltype(ProvinceInstance::ideology_distribution)::keys_type const& ideology_keys
 		);

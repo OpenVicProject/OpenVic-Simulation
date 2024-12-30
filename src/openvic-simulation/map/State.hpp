@@ -29,6 +29,13 @@ namespace OpenVic {
 		fixed_point_t PROPERTY(average_literacy);
 		fixed_point_t PROPERTY(average_consciousness);
 		fixed_point_t PROPERTY(average_militancy);
+
+		IndexedMap<Strata, pop_size_t> PROPERTY(population_by_strata);
+		IndexedMap<Strata, fixed_point_t> PROPERTY(militancy_by_strata);
+		IndexedMap<Strata, fixed_point_t> PROPERTY(life_needs_fulfilled_by_strata);
+		IndexedMap<Strata, fixed_point_t> PROPERTY(everyday_needs_fulfilled_by_strata);
+		IndexedMap<Strata, fixed_point_t> PROPERTY(luxury_needs_fulfilled_by_strata);
+
 		IndexedMap<PopType, pop_size_t> PROPERTY(pop_type_distribution);
 		IndexedMap<PopType, std::vector<Pop*>> PROPERTY(pops_cache_by_type);
 		IndexedMap<Ideology, fixed_point_t> PROPERTY(ideology_distribution);
@@ -47,6 +54,7 @@ namespace OpenVic {
 			ProvinceInstance* new_capital,
 			std::vector<ProvinceInstance*>&& new_provinces,
 			ProvinceInstance::colony_status_t new_colony_status,
+			decltype(population_by_strata)::keys_type const& strata_keys,
 			decltype(pop_type_distribution)::keys_type const& pop_type_keys,
 			decltype(ideology_distribution)::keys_type const& ideology_keys
 		);
@@ -56,12 +64,31 @@ namespace OpenVic {
 
 		// The values returned by these functions are scaled by population size, so they must be divided by population size
 		// to get the support as a proportion of 1.0
-		fixed_point_t get_pop_type_proportion(PopType const& pop_type) const;
-		fixed_point_t get_ideology_support(Ideology const& ideology) const;
+		constexpr fixed_point_t get_pop_type_proportion(PopType const& pop_type) const {
+			return pop_type_distribution[pop_type];
+		}
+		constexpr fixed_point_t get_ideology_support(Ideology const& ideology) const {
+			return ideology_distribution[ideology];
+		}
 		fixed_point_t get_issue_support(Issue const& issue) const;
 		fixed_point_t get_party_support(CountryParty const& party) const;
 		fixed_point_t get_culture_proportion(Culture const& culture) const;
 		fixed_point_t get_religion_proportion(Religion const& religion) const;
+		constexpr pop_size_t get_strata_population(Strata const& strata) const {
+			return population_by_strata[strata];
+		}
+		constexpr fixed_point_t get_strata_militancy(Strata const& strata) const {
+			return militancy_by_strata[strata];
+		}
+		constexpr fixed_point_t get_strata_life_needs_fulfilled(Strata const& strata) const {
+			return life_needs_fulfilled_by_strata[strata];
+		}
+		constexpr fixed_point_t get_strata_everyday_needs_fulfilled(Strata const& strata) const {
+			return everyday_needs_fulfilled_by_strata[strata];
+		}
+		constexpr fixed_point_t get_strata_luxury_needs_fulfilled(Strata const& strata) const {
+			return luxury_needs_fulfilled_by_strata[strata];
+		}
 
 		void update_gamestate();
 	};
@@ -94,6 +121,7 @@ namespace OpenVic {
 
 		bool add_state_set(
 			MapInstance& map_instance, Region const& region,
+			decltype(State::population_by_strata)::keys_type const& strata_keys,
 			decltype(State::pop_type_distribution)::keys_type const& pop_type_keys,
 			decltype(State::ideology_distribution)::keys_type const& ideology_keys
 		);
@@ -104,6 +132,7 @@ namespace OpenVic {
 		 * validated by functions that modify it. */
 		bool generate_states(
 			MapInstance& map_instance,
+			decltype(State::population_by_strata)::keys_type const& strata_keys,
 			decltype(State::pop_type_distribution)::keys_type const& pop_type_keys,
 			decltype(State::ideology_distribution)::keys_type const& ideology_keys
 		);
