@@ -22,6 +22,8 @@ namespace OpenVic {
 		PoliticsInstanceManager(InstanceManager const& new_instance_manager);
 		PoliticsInstanceManager(PoliticsInstanceManager&&) = default;
 
+		void setup_starting_ideologies();
+
 		std::optional<Date> const& get_ideology_spawn_date(Ideology const& ideology) const;
 		bool is_ideology_unlocked(Ideology const& ideology) const;
 		void unlock_ideology(Ideology const& ideology);

@@ -129,6 +129,8 @@ bool InstanceManager::load_bookmark(Bookmark const* new_bookmark) {
 
 	today = bookmark->get_date();
 
+	politics_instance_manager.setup_starting_ideologies();
+
 	bool ret = map_instance.apply_history_to_provinces(
 		definition_manager.get_history_manager().get_province_manager(), today,
 		country_instance_manager,
