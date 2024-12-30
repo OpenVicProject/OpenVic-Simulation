@@ -124,13 +124,13 @@ bool MapInstance::apply_history_to_provinces(
 				}
 
 				if (pop_history_entry == nullptr) {
-					Logger::warning("No pop history entry for province ",province.get_identifier(), " for date ", date.to_string());
+					Logger::warning("No pop history entry for province ", province.get_identifier(), " for date ", date);
 				} else {
-					province.add_pop_vec(pop_history_entry->get_pops());
+					ret &= province.add_pop_vec(pop_history_entry->get_pops());
 					province.setup_pop_test_values(issue_manager);
 				}
 
-				ret&=province.set_rgo_production_type_nullable(rgo_production_type_nullable);
+				ret &= province.set_rgo_production_type_nullable(rgo_production_type_nullable);
 			}
 		}
 	}

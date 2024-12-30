@@ -820,14 +820,10 @@ bool CountryInstance::apply_history_to_country(
 	}
 	apply_foreign_investments(entry.get_foreign_investment(), country_instance_manager);
 
-	// These need to be applied to pops
-	// entry.get_consciousness();
-	// entry.get_nonstate_consciousness();
-	// entry.get_literacy();
-	// entry.get_nonstate_culture_literacy();
-
 	set_optional(releasable_vassal, entry.is_releasable_vassal());
-	// entry.get_colonial_points();
+
+	// TODO - entry.get_colonial_points();
+
 	for (std::string const& flag : entry.get_country_flags()) {
 		ret &= set_flag(flag, true);
 	}
@@ -1425,14 +1421,31 @@ bool CountryInstanceManager::apply_history_to_countries(
 				history_manager.get_country_history(country_instance.get_country_definition());
 
 			if (history_map != nullptr) {
+				static constexpr fixed_point_t DEFAULT_STATE_CULTURE_LITERACY = fixed_point_t::_0_50();
 				CountryHistoryEntry const* oob_history_entry = nullptr;
+				std::optional<fixed_point_t> state_culture_consciousness;
+				std::optional<fixed_point_t> nonstate_culture_consciousness;
+				fixed_point_t state_culture_literacy = DEFAULT_STATE_CULTURE_LITERACY;
+				std::optional<fixed_point_t> nonstate_culture_literacy;
 
 				for (auto const& [entry_date, entry] : history_map->get_entries()) {
 					if (entry_date <= date) {
 						ret &= country_instance.apply_history_to_country(*entry, map_instance, *this);
 
-						if (entry->get_inital_oob()) {
+						if (entry->get_inital_oob().has_value()) {
 							oob_history_entry = entry.get();
+						}
+						if (entry->get_consciousness().has_value()) {
+							state_culture_consciousness = entry->get_consciousness();
+						}
+						if (entry->get_nonstate_consciousness().has_value()) {
+							nonstate_culture_consciousness = entry->get_nonstate_consciousness();
+						}
+						if (entry->get_literacy().has_value()) {
+							state_culture_literacy = *entry->get_literacy();
+						}
+						if (entry->get_nonstate_culture_literacy().has_value()) {
+							nonstate_culture_literacy = entry->get_nonstate_culture_literacy();
 						}
 					} else {
 						// All foreign investments are applied regardless of the bookmark's date
@@ -1444,6 +1457,28 @@ bool CountryInstanceManager::apply_history_to_countries(
 					ret &= unit_instance_manager.generate_deployment(
 						map_instance, country_instance, *oob_history_entry->get_inital_oob()
 					);
+				}
+
+				// TODO - check if better to do "if"s then "for"s, so looping multiple times rather than having lots of
+				// redundant "if" statements?
+				for (ProvinceInstance* province : country_instance.get_owned_provinces()) {
+					for (Pop& pop : province->get_mutable_pops()) {
+						if (country_instance.is_primary_or_accepted_culture(pop.get_culture())) {
+							pop.set_literacy(state_culture_literacy);
+
+							if (state_culture_consciousness.has_value()) {
+								pop.set_consciousness(*state_culture_consciousness);
+							}
+						} else {
+							if (nonstate_culture_literacy.has_value()) {
+								pop.set_literacy(*nonstate_culture_literacy);
+							}
+
+							if (nonstate_culture_consciousness.has_value()) {
+								pop.set_consciousness(*nonstate_culture_consciousness);
+							}
+						}
+					}
 				}
 			} else {
 				Logger::error("Country ", country_instance.get_identifier(), " has no history!");

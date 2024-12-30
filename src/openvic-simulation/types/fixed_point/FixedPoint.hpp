@@ -38,7 +38,7 @@ namespace OpenVic {
 		#include "openvic-simulation/types/fixed_point/FixedPointLUT_sin.hpp"
 
 		static_assert(SIN_LUT_PRECISION == PRECISION);
-		
+
 		// Doesn't account for sign, so -n.abc -> 1 - 0.abc
 		constexpr fixed_point_t get_frac() const {
 			return value & FRAC_MASK;
@@ -83,8 +83,20 @@ namespace OpenVic {
 			return 4;
 		}
 
+		static constexpr fixed_point_t _10() {
+			return 10;
+		}
+
 		static constexpr fixed_point_t _100() {
 			return 100;
+		}
+
+		static constexpr fixed_point_t _0_01() {
+			return _1() / 100;
+		}
+
+		static constexpr fixed_point_t _0_10() {
+			return _1() / 10;
 		}
 
 		static constexpr fixed_point_t _0_20() {

@@ -136,6 +136,9 @@ bool InstanceManager::load_bookmark(Bookmark const* new_bookmark) {
 		definition_manager.get_politics_manager().get_issue_manager()
 	);
 
+	// It is important that province history is applied before country history as province history includes
+	// generating pops which then have stats like literacy and consciousness set by country history.
+
 	ret &= country_instance_manager.apply_history_to_countries(
 		definition_manager.get_history_manager().get_country_manager(), today, unit_instance_manager, map_instance
 	);

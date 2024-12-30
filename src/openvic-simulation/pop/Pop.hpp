@@ -16,8 +16,8 @@ namespace OpenVic {
 		Culture const& PROPERTY_ACCESS(culture, protected);
 		Religion const& PROPERTY_ACCESS(religion, protected);
 		pop_size_t PROPERTY_ACCESS(size, protected);
-		fixed_point_t PROPERTY_ACCESS(militancy, protected);
-		fixed_point_t PROPERTY_ACCESS(consciousness, protected);
+		fixed_point_t PROPERTY_RW_ACCESS(militancy, protected);
+		fixed_point_t PROPERTY_RW_ACCESS(consciousness, protected);
 		RebelType const* PROPERTY_ACCESS(rebel_type, protected);
 
 		PopBase(
@@ -66,7 +66,7 @@ namespace OpenVic {
 		pop_size_t PROPERTY(num_migrated_external);
 		pop_size_t PROPERTY(num_migrated_colonial);
 
-		fixed_point_t PROPERTY(literacy);
+		fixed_point_t PROPERTY_RW(literacy);
 
 		// All of these should have a total size equal to the pop size, allowing the distributions from different pops to be
 		// added together with automatic weighting based on their relative sizes. Similarly, the province, state and country
