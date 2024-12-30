@@ -41,6 +41,7 @@ ProvinceInstance::ProvinceInstance(
 	buildings { "buildings", false },
 	armies {},
 	navies {},
+	land_regiment_count { 0 },
 	pops {},
 	total_population { 0 },
 	average_literacy { 0 },
@@ -443,6 +444,16 @@ bool ProvinceInstance::convert_rgo_worker_pops_to_equivalent(ProductionType cons
 }
 
 void ProvinceInstance::update_gamestate(const Date today, DefineManager const& define_manager) {
+	land_regiment_count = 0;
+	for (ArmyInstance const* army : armies) {
+		land_regiment_count += army->get_unit_count();
+	}
+	for (NavyInstance const* navy : navies) {
+		for (ArmyInstance const* army : navy->get_carried_armies()) {
+			land_regiment_count += army->get_unit_count();
+		}
+	}
+
 	for (BuildingInstance& building : buildings.get_items()) {
 		building.update_gamestate(today);
 	}

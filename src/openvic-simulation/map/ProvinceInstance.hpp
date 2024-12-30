@@ -90,9 +90,14 @@ namespace OpenVic {
 		IdentifierRegistry<BuildingInstance> IDENTIFIER_REGISTRY(building);
 		ordered_set<ArmyInstance*> PROPERTY(armies);
 		ordered_set<NavyInstance*> PROPERTY(navies);
+		// The number of land regiments currently in the province, including those being transported by navies
+		size_t PROPERTY(land_regiment_count);
 
+	public:
 		UNIT_BRANCHED_GETTER(get_unit_instance_groups, armies, navies);
+		UNIT_BRANCHED_GETTER_CONST(get_unit_instance_groups, armies, navies);
 
+	private:
 		plf::colony<Pop> PROPERTY(pops); // TODO - replace with a more easily vectorisable container?
 		pop_size_t PROPERTY(total_population);
 		// TODO - population change (growth + migration), monthly totals + breakdown by source/destination
