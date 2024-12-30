@@ -27,12 +27,12 @@ namespace OpenVic {
 		const bool PROPERTY(can_reduce_consciousness);
 		const bool PROPERTY(can_reduce_militancy);
 		const std::optional<Date> PROPERTY(spawn_date);
-		ConditionalWeight PROPERTY(add_political_reform);
-		ConditionalWeight PROPERTY(remove_political_reform);
-		ConditionalWeight PROPERTY(add_social_reform);
-		ConditionalWeight PROPERTY(remove_social_reform);
-		ConditionalWeight PROPERTY(add_military_reform);
-		ConditionalWeight PROPERTY(add_economic_reform);
+		ConditionalWeightBase PROPERTY(add_political_reform);
+		ConditionalWeightBase PROPERTY(remove_political_reform);
+		ConditionalWeightBase PROPERTY(add_social_reform);
+		ConditionalWeightBase PROPERTY(remove_social_reform);
+		ConditionalWeightBase PROPERTY(add_military_reform);
+		ConditionalWeightBase PROPERTY(add_economic_reform);
 
 		// TODO - willingness to repeal/pass reforms (and its modifiers)
 
@@ -44,12 +44,12 @@ namespace OpenVic {
 			bool new_can_reduce_consciousness,
 			bool new_can_reduce_militancy,
 			std::optional<Date> new_spawn_date,
-			ConditionalWeight&& new_add_political_reform,
-			ConditionalWeight&& new_remove_political_reform,
-			ConditionalWeight&& new_add_social_reform,
-			ConditionalWeight&& new_remove_social_reform,
-			ConditionalWeight&& new_add_military_reform,
-			ConditionalWeight&& new_add_economic_reform
+			ConditionalWeightBase&& new_add_political_reform,
+			ConditionalWeightBase&& new_remove_political_reform,
+			ConditionalWeightBase&& new_add_social_reform,
+			ConditionalWeightBase&& new_remove_social_reform,
+			ConditionalWeightBase&& new_add_military_reform,
+			ConditionalWeightBase&& new_add_economic_reform
 		);
 
 		bool parse_scripts(DefinitionManager const& definition_manager);
@@ -74,12 +74,12 @@ namespace OpenVic {
 			bool can_reduce_consciousness,
 			bool can_reduce_militancy,
 			std::optional<Date> spawn_date,
-			ConditionalWeight&& add_political_reform,
-			ConditionalWeight&& remove_political_reform,
-			ConditionalWeight&& add_social_reform,
-			ConditionalWeight&& remove_social_reform,
-			ConditionalWeight&& add_military_reform,
-			ConditionalWeight&& add_economic_reform
+			ConditionalWeightBase&& add_political_reform,
+			ConditionalWeightBase&& remove_political_reform,
+			ConditionalWeightBase&& add_social_reform,
+			ConditionalWeightBase&& remove_social_reform,
+			ConditionalWeightBase&& add_military_reform,
+			ConditionalWeightBase&& add_economic_reform
 		);
 
 		bool load_ideology_file(ast::NodeCPtr root);

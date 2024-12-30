@@ -20,7 +20,7 @@ Technology::Technology(
 	unit_set_t&& new_activated_units,
 	building_set_t&& new_activated_buildings,
 	ModifierValue&& new_values,
-	ConditionalWeight&& new_ai_chance
+	ConditionalWeightFactorMul&& new_ai_chance
 ) : Modifier { new_identifier, std::move(new_values), modifier_type_t::TECHNOLOGY },
 	area { new_area },
 	year { new_year },
@@ -64,7 +64,7 @@ bool TechnologyManager::add_technology_area(std::string_view identifier, Technol
 bool TechnologyManager::add_technology(
 	std::string_view identifier, TechnologyArea const* area, Date::year_t year, fixed_point_t cost, bool unciv_military,
 	std::optional<CountryInstance::unit_variant_t>&& unit_variant, Technology::unit_set_t&& activated_units,
-	Technology::building_set_t&& activated_buildings, ModifierValue&& values, ConditionalWeight&& ai_chance
+	Technology::building_set_t&& activated_buildings, ModifierValue&& values, ConditionalWeightFactorMul&& ai_chance
 ) {
 	if (identifier.empty()) {
 		Logger::error("Invalid technology identifier - empty!");
@@ -178,7 +178,7 @@ bool TechnologyManager::load_technologies_file(
 		std::optional<CountryInstance::unit_variant_t> unit_variant;
 		Technology::unit_set_t activated_units;
 		Technology::building_set_t activated_buildings;
-		ConditionalWeight ai_chance { COUNTRY, COUNTRY, NO_SCOPE };
+		ConditionalWeightFactorMul ai_chance { COUNTRY, COUNTRY, NO_SCOPE };
 
 		bool ret = NodeTools::expect_dictionary_keys_and_default(
 			modifier_manager.expect_technology_modifier(modifiers),
@@ -191,7 +191,7 @@ bool TechnologyManager::load_technologies_file(
 			"activate_building", ZERO_OR_MORE, building_type_manager.expect_building_type_identifier(
 				set_callback_pointer(activated_buildings)
 			),
-			"ai_chance", ONE_EXACTLY, ai_chance.expect_conditional_weight(ConditionalWeight::FACTOR)
+			"ai_chance", ONE_EXACTLY, ai_chance.expect_conditional_weight()
 		)(tech_value);
 
 		ret &= add_technology(

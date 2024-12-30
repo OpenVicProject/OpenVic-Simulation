@@ -22,9 +22,9 @@ namespace OpenVic {
 		private:
 			std::string PROPERTY(name);
 			EffectScript PROPERTY(effect);
-			ConditionalWeight PROPERTY(ai_chance);
+			ConditionalWeightFactorMul PROPERTY(ai_chance);
 
-			EventOption(std::string_view new_name, EffectScript&& new_effect, ConditionalWeight&& new_ai_chance);
+			EventOption(std::string_view new_name, EffectScript&& new_effect, ConditionalWeightFactorMul&& new_ai_chance);
 
 			bool parse_scripts(DefinitionManager const& definition_manager);
 
@@ -55,7 +55,7 @@ namespace OpenVic {
 		IssueGroup const* PROPERTY(election_issue_group);
 
 		ConditionScript PROPERTY(trigger);
-		ConditionalWeight PROPERTY(mean_time_to_happen);
+		ConditionalWeightTime PROPERTY(mean_time_to_happen);
 		EffectScript PROPERTY(immediate);
 
 		std::vector<EventOption> PROPERTY(options);
@@ -66,7 +66,8 @@ namespace OpenVic {
 			bool new_fire_only_once, bool new_allows_multiple_instances, bool new_news, std::string_view new_news_title,
 			std::string_view new_news_desc_long, std::string_view new_news_desc_medium, std::string_view new_news_desc_short,
 			bool new_election, IssueGroup const* new_election_issue_group, ConditionScript&& new_trigger,
-			ConditionalWeight&& new_mean_time_to_happen, EffectScript&& new_immediate, std::vector<EventOption>&& new_options
+			ConditionalWeightTime&& new_mean_time_to_happen, EffectScript&& new_immediate,
+			std::vector<EventOption>&& new_options
 		);
 
 		bool parse_scripts(DefinitionManager const& definition_manager);
@@ -100,7 +101,7 @@ namespace OpenVic {
 			Event::event_type_t type, bool triggered_only, bool major, bool fire_only_once, bool allows_multiple_instances,
 			bool news, std::string_view news_title, std::string_view news_desc_long, std::string_view news_desc_medium,
 			std::string_view news_desc_short, bool election, IssueGroup const* election_issue_group, ConditionScript&& trigger,
-			ConditionalWeight&& mean_time_to_happen, EffectScript&& immediate, std::vector<Event::EventOption>&& options
+			ConditionalWeightTime&& mean_time_to_happen, EffectScript&& immediate, std::vector<Event::EventOption>&& options
 		);
 
 		bool add_on_action(std::string_view identifier, OnAction::weight_map_t&& new_weighted_events);

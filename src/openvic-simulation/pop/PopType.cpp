@@ -49,8 +49,8 @@ PopType::PopType(
 	fixed_point_t new_research_leadership_optimum,
 	fixed_point_t new_state_administration_multiplier,
 	PopType const* new_equivalent,
-	ConditionalWeight&& new_country_migration_target,
-	ConditionalWeight&& new_migration_target,
+	ConditionalWeightFactorMul&& new_country_migration_target,
+	ConditionalWeightFactorMul&& new_migration_target,
 	poptype_weight_map_t&& new_promote_to,
 	ideology_weight_map_t&& new_ideologies,
 	issue_weight_map_t&& new_issues
@@ -93,10 +93,10 @@ bool PopType::parse_scripts(DefinitionManager const& definition_manager) {
 	bool ret = true;
 	ret &= country_migration_target.parse_scripts(definition_manager);
 	ret &= migration_target.parse_scripts(definition_manager);
-	for (auto [pop_type, weight] : mutable_iterator(promote_to)) {
+	for (auto [pop_type, weight] : promote_to) {
 		ret &= weight.parse_scripts(definition_manager);
 	}
-	for (auto [ideology, weight] : mutable_iterator(ideologies)) {
+	for (auto [ideology, weight] : ideologies) {
 		ret &= weight.parse_scripts(definition_manager);
 	}
 	for (auto [issue, weight] : mutable_iterator(issues)) {
@@ -154,8 +154,8 @@ bool PopManager::add_pop_type(
 	fixed_point_t research_leadership_optimum,
 	fixed_point_t state_administration_multiplier,
 	ast::NodeCPtr equivalent,
-	ConditionalWeight&& country_migration_target,
-	ConditionalWeight&& migration_target,
+	ConditionalWeightFactorMul&& country_migration_target,
+	ConditionalWeightFactorMul&& migration_target,
 	ast::NodeCPtr promote_to_node,
 	PopType::ideology_weight_map_t&& ideologies,
 	ast::NodeCPtr issues_node
@@ -230,7 +230,7 @@ bool PopManager::add_pop_type(
 		nullptr,
 		std::move(country_migration_target),
 		std::move(migration_target),
-		{},
+		{ nullptr },
 		std::move(ideologies),
 		{}
 	});
@@ -310,10 +310,10 @@ bool PopManager::load_pop_type_file(
 	fixed_point_t research_points = 0, leadership_points = 0, research_leadership_optimum = 0,
 		state_administration_multiplier = 0;
 	ast::NodeCPtr equivalent = nullptr;
-	ConditionalWeight country_migration_target { COUNTRY, POP, NO_SCOPE };
-	ConditionalWeight migration_target { PROVINCE, POP, NO_SCOPE };
+	ConditionalWeightFactorMul country_migration_target { COUNTRY, POP, NO_SCOPE };
+	ConditionalWeightFactorMul migration_target { PROVINCE, POP, NO_SCOPE };
 	ast::NodeCPtr promote_to_node = nullptr;
-	PopType::ideology_weight_map_t ideologies;
+	PopType::ideology_weight_map_t ideologies { &ideology_manager.get_ideologies() };
 	ast::NodeCPtr issues_node = nullptr;
 
 	bool ret = expect_dictionary_keys(
@@ -354,15 +354,14 @@ bool PopManager::load_pop_type_file(
 			good_definition_manager.expect_good_definition_decimal_map(move_variable_callback(everyday_needs)),
 		"life_needs", ZERO_OR_ONE,
 			good_definition_manager.expect_good_definition_decimal_map(move_variable_callback(life_needs)),
-		"country_migration_target", ZERO_OR_ONE, country_migration_target.expect_conditional_weight(ConditionalWeight::FACTOR),
-		"migration_target", ZERO_OR_ONE, migration_target.expect_conditional_weight(ConditionalWeight::FACTOR),
+		"country_migration_target", ZERO_OR_ONE, country_migration_target.expect_conditional_weight(),
+		"migration_target", ZERO_OR_ONE, migration_target.expect_conditional_weight(),
 		"promote_to", ZERO_OR_ONE, assign_variable_callback(promote_to_node),
-		"ideologies", ZERO_OR_ONE, ideology_manager.expect_ideology_dictionary_reserve_length(
-			ideologies,
+		"ideologies", ZERO_OR_ONE, ideology_manager.expect_ideology_dictionary(
 			[&filestem, &ideologies](Ideology const& ideology, ast::NodeCPtr node) -> bool {
-				ConditionalWeight weight { POP, POP, NO_SCOPE };
+				ConditionalWeightFactorMul weight { POP, POP, NO_SCOPE };
 
-				bool ret = weight.expect_conditional_weight(ConditionalWeight::FACTOR)(node);
+				bool ret = weight.expect_conditional_weight()(node);
 
 				ret &= map_callback(ideologies, &ideology)(std::move(weight));
 
@@ -432,6 +431,8 @@ bool PopManager::load_delayed_parse_pop_type_data(
 		const auto [rebel_units, equivalent, promote_to_node, issues_node] = delayed_parse_nodes[index];
 		PopType* pop_type = pop_types.get_item_by_index(index);
 
+		pop_type->promote_to.set_keys(&get_pop_types());
+
 		if (rebel_units != nullptr && !unit_type_manager.expect_unit_type_decimal_map(
 			move_variable_callback(pop_type->rebel_units)
 		)(rebel_units)) {
@@ -446,15 +447,14 @@ bool PopManager::load_delayed_parse_pop_type_data(
 			ret = false;
 		}
 
-		if (promote_to_node != nullptr && !expect_pop_type_dictionary_reserve_length(
-			pop_type->promote_to,
+		if (promote_to_node != nullptr && !expect_pop_type_dictionary(
 			[pop_type](PopType const& type, ast::NodeCPtr node) -> bool {
 				if (pop_type == &type) {
 					Logger::error("Pop type ", type, " cannot have promotion weight to itself!");
 					return false;
 				}
-				ConditionalWeight weight { POP, POP, NO_SCOPE };
-				bool ret = weight.expect_conditional_weight(ConditionalWeight::FACTOR)(node);
+				ConditionalWeightFactorAdd weight { POP, POP, NO_SCOPE };
+				bool ret = weight.expect_conditional_weight()(node);
 				ret &= map_callback(pop_type->promote_to, &type)(std::move(weight));
 				return ret;
 			}
@@ -474,8 +474,8 @@ bool PopManager::load_delayed_parse_pop_type_data(
 					Logger::error("Invalid issue in pop type ", pop_type, " issue weights: ", key);
 					return false;
 				}
-				ConditionalWeight weight { POP, POP, NO_SCOPE };
-				bool ret = weight.expect_conditional_weight(ConditionalWeight::FACTOR)(node);
+				ConditionalWeightFactorMul weight { POP, POP, NO_SCOPE };
+				bool ret = weight.expect_conditional_weight()(node);
 				ret &= map_callback(pop_type->issues, issue)(std::move(weight));
 				return ret;
 			}
@@ -490,13 +490,13 @@ bool PopManager::load_delayed_parse_pop_type_data(
 
 bool PopManager::load_pop_type_chances_file(ast::NodeCPtr root) {
 	return expect_dictionary_keys(
-		"promotion_chance", ONE_EXACTLY, promotion_chance.expect_conditional_weight(ConditionalWeight::FACTOR),
-		"demotion_chance", ONE_EXACTLY, demotion_chance.expect_conditional_weight(ConditionalWeight::FACTOR),
-		"migration_chance", ONE_EXACTLY, migration_chance.expect_conditional_weight(ConditionalWeight::FACTOR),
-		"colonialmigration_chance", ONE_EXACTLY, colonialmigration_chance.expect_conditional_weight(ConditionalWeight::FACTOR),
-		"emigration_chance", ONE_EXACTLY, emigration_chance.expect_conditional_weight(ConditionalWeight::FACTOR),
-		"assimilation_chance", ONE_EXACTLY, assimilation_chance.expect_conditional_weight(ConditionalWeight::FACTOR),
-		"conversion_chance", ONE_EXACTLY, conversion_chance.expect_conditional_weight(ConditionalWeight::FACTOR)
+		"promotion_chance", ONE_EXACTLY, promotion_chance.expect_conditional_weight(),
+		"demotion_chance", ONE_EXACTLY, demotion_chance.expect_conditional_weight(),
+		"migration_chance", ONE_EXACTLY, migration_chance.expect_conditional_weight(),
+		"colonialmigration_chance", ONE_EXACTLY, colonialmigration_chance.expect_conditional_weight(),
+		"emigration_chance", ONE_EXACTLY, emigration_chance.expect_conditional_weight(),
+		"assimilation_chance", ONE_EXACTLY, assimilation_chance.expect_conditional_weight(),
+		"conversion_chance", ONE_EXACTLY, conversion_chance.expect_conditional_weight()
 	)(root);
 }
 
