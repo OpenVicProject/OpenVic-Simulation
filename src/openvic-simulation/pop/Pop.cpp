@@ -3,6 +3,7 @@
 #undef KEEP_DO_FOR_ALL_TYPES_OF_INCOME
 
 #include "openvic-simulation/DefinitionManager.hpp"
+#include "openvic-simulation/InstanceManager.hpp"
 
 using namespace OpenVic;
 
@@ -113,6 +114,18 @@ void Pop::setup_pop_test_values(IssueManager const& issue_manager) {
 	luxury_needs_fulfilled = test_range();
 }
 
+void Pop::generate_political_distributions(InstanceManager const& instance_manager) {
+	PoliticsInstanceManager const& politics_instance_manager = instance_manager.get_politics_instance_manager();
+
+	ideology_distribution.clear();
+	for (Ideology const& ideology : *ideology_distribution.get_keys()) {
+		if (politics_instance_manager.is_ideology_unlocked(ideology)) {
+			ideology_distribution[ideology] = type->get_ideologies()[ideology].execute(instance_manager, this, this);
+		}
+	}
+	ideology_distribution.rescale(size);
+}
+
 bool Pop::convert_to_equivalent() {
 	PopType const* const equivalent = get_type()->get_equivalent();
 	if (equivalent == nullptr) {
@@ -171,7 +184,7 @@ fixed_point_t Pop::get_party_support(CountryParty const& party) const {
 }
 
 void Pop::update_gamestate(
-	DefineManager const& define_manager, CountryInstance const* owner, const fixed_point_t pop_size_per_regiment_multiplier
+	InstanceManager const& instance_manager, CountryInstance const* owner, const fixed_point_t pop_size_per_regiment_multiplier
 ) {
 	static constexpr fixed_point_t MIN_MILITANCY = fixed_point_t::_0();
 	static constexpr fixed_point_t MAX_MILITANCY = fixed_point_t::_10();
@@ -185,7 +198,8 @@ void Pop::update_gamestate(
 	literacy = std::clamp(literacy, MIN_LITERACY, MAX_LITERACY);
 
 	if (type->get_can_be_recruited()) {
-		MilitaryDefines const& military_defines = define_manager.get_military_defines();
+		MilitaryDefines const& military_defines =
+			instance_manager.get_definition_manager().get_define_manager().get_military_defines();
 
 		if (
 			size < military_defines.get_min_pop_size_for_regiment() || owner == nullptr ||
@@ -198,6 +212,8 @@ void Pop::update_gamestate(
 			)).to_int64_t() + 1;
 		}
 	}
+
+	generate_political_distributions(instance_manager);
 }
 
 #define DEFINE_ADD_INCOME_FUNCTIONS(name)\

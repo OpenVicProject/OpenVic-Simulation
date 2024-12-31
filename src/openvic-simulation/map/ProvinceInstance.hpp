@@ -130,7 +130,7 @@ namespace OpenVic {
 		);
 
 		void _add_pop(Pop&& pop);
-		void _update_pops(DefineManager const& define_manager);
+		void _update_pops(InstanceManager const& instance_manager);
 		bool convert_rgo_worker_pops_to_equivalent(ProductionType const& production_type);
 
 	public:
@@ -211,7 +211,7 @@ namespace OpenVic {
 		) const;
 		std::vector<ModifierSum::modifier_entry_t> get_contributing_modifiers(ModifierEffect const& effect) const;
 
-		void update_gamestate(const Date today, DefineManager const& define_manager);
+		void update_gamestate(InstanceManager const& instance_manager);
 		void province_tick(const Date today);
 
 		template<UnitType::branch_t Branch>
