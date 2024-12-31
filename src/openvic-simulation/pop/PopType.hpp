@@ -45,9 +45,9 @@ namespace OpenVic {
 
 		using sprite_t = uint8_t;
 		using rebel_units_t = fixed_point_map_t<UnitType const*>;
-		using poptype_weight_map_t = ordered_map<PopType const*, ConditionalWeight>;
-		using ideology_weight_map_t = ordered_map<Ideology const*, ConditionalWeight>;
-		using issue_weight_map_t = ordered_map<Issue const*, ConditionalWeight>;
+		using poptype_weight_map_t = IndexedMap<PopType, ConditionalWeightFactorAdd>;
+		using ideology_weight_map_t = IndexedMap<Ideology, ConditionalWeightFactorMul>;
+		using issue_weight_map_t = ordered_map<Issue const*, ConditionalWeightFactorMul>;
 
 	private:
 		Strata const& PROPERTY(strata);
@@ -79,8 +79,8 @@ namespace OpenVic {
 		const fixed_point_t PROPERTY(state_administration_multiplier);
 		PopType const* PROPERTY(equivalent);
 
-		ConditionalWeight PROPERTY(country_migration_target); /* Scope - country, THIS - pop */
-		ConditionalWeight PROPERTY(migration_target); /* Scope - province, THIS - pop */
+		ConditionalWeightFactorMul PROPERTY(country_migration_target); /* Scope - country, THIS - pop */
+		ConditionalWeightFactorMul PROPERTY(migration_target); /* Scope - province, THIS - pop */
 		poptype_weight_map_t PROPERTY(promote_to); /* Scope - pop */
 		ideology_weight_map_t PROPERTY(ideologies); /* Scope - pop */
 		issue_weight_map_t PROPERTY(issues); /* Scope - province, THIS - country (?) */
@@ -116,8 +116,8 @@ namespace OpenVic {
 			fixed_point_t new_research_leadership_optimum,
 			fixed_point_t new_state_administration_multiplier,
 			PopType const* new_equivalent,
-			ConditionalWeight&& new_country_migration_target,
-			ConditionalWeight&& new_migration_target,
+			ConditionalWeightFactorMul&& new_country_migration_target,
+			ConditionalWeightFactorMul&& new_migration_target,
 			poptype_weight_map_t&& new_promote_to,
 			ideology_weight_map_t&& new_ideologies,
 			issue_weight_map_t&& new_issues
@@ -177,13 +177,13 @@ namespace OpenVic {
 		 * Entries contain: (rebel, equivalent, promote_to, issues) */
 		std::vector<std::tuple<ast::NodeCPtr, ast::NodeCPtr, ast::NodeCPtr, ast::NodeCPtr>> delayed_parse_nodes;
 
-		ConditionalWeight PROPERTY(promotion_chance);
-		ConditionalWeight PROPERTY(demotion_chance);
-		ConditionalWeight PROPERTY(migration_chance);
-		ConditionalWeight PROPERTY(colonialmigration_chance);
-		ConditionalWeight PROPERTY(emigration_chance);
-		ConditionalWeight PROPERTY(assimilation_chance);
-		ConditionalWeight PROPERTY(conversion_chance);
+		ConditionalWeightFactorAdd PROPERTY(promotion_chance);
+		ConditionalWeightFactorAdd PROPERTY(demotion_chance);
+		ConditionalWeightFactorAdd PROPERTY(migration_chance);
+		ConditionalWeightFactorAdd PROPERTY(colonialmigration_chance);
+		ConditionalWeightFactorAdd PROPERTY(emigration_chance);
+		ConditionalWeightFactorAdd PROPERTY(assimilation_chance);
+		ConditionalWeightFactorAdd PROPERTY(conversion_chance);
 
 		PopType::sprite_t PROPERTY(slave_sprite);
 		PopType::sprite_t PROPERTY(administrative_sprite);
@@ -227,8 +227,8 @@ namespace OpenVic {
 			fixed_point_t research_leadership_optimum,
 			fixed_point_t state_administration_multiplier,
 			ast::NodeCPtr equivalent,
-			ConditionalWeight&& country_migration_target,
-			ConditionalWeight&& migration_target,
+			ConditionalWeightFactorMul&& country_migration_target,
+			ConditionalWeightFactorMul&& migration_target,
 			ast::NodeCPtr promote_to_node,
 			PopType::ideology_weight_map_t&& ideologies,
 			ast::NodeCPtr issues_node

@@ -18,7 +18,7 @@ Invention::Invention(
 	bool new_unlock_gas_attack,
 	bool new_unlock_gas_defence,
 	ConditionScript&& new_limit,
-	ConditionalWeight&& new_chance
+	ConditionalWeightBase&& new_chance
 ) : Modifier { new_identifier, std::move(new_values), modifier_type_t::INVENTION },
 	news { new_news },
 	activated_units { std::move(new_activated_units) },
@@ -41,7 +41,7 @@ bool Invention::parse_scripts(DefinitionManager const& definition_manager) {
 bool InventionManager::add_invention(
 	std::string_view identifier, ModifierValue&& values, bool news, Invention::unit_set_t&& activated_units,
 	Invention::building_set_t&& activated_buildings, Invention::crime_set_t&& enabled_crimes,
-	bool unlock_gas_attack, bool unlock_gas_defence, ConditionScript&& limit, ConditionalWeight&& chance
+	bool unlock_gas_attack, bool unlock_gas_defence, ConditionScript&& limit, ConditionalWeightBase&& chance
 ) {
 	if (identifier.empty()) {
 		Logger::error("Invalid invention identifier - empty!");
@@ -77,13 +77,13 @@ bool InventionManager::load_inventions_file(
 			bool news = true; //defaults to true!
 
 			ConditionScript limit { COUNTRY, COUNTRY, NO_SCOPE };
-			ConditionalWeight chance { COUNTRY, COUNTRY, NO_SCOPE };
+			ConditionalWeightBase chance { COUNTRY, COUNTRY, NO_SCOPE };
 
 			bool ret = NodeTools::expect_dictionary_keys_and_default(
 				modifier_manager.expect_base_country_modifier(loose_modifiers),
 				"news", ZERO_OR_ONE, expect_bool(assign_variable_callback(news)),
 				"limit", ONE_EXACTLY, limit.expect_script(),
-				"chance", ONE_EXACTLY, chance.expect_conditional_weight(ConditionalWeight::BASE),
+				"chance", ONE_EXACTLY, chance.expect_conditional_weight(),
 				"effect", ZERO_OR_ONE, NodeTools::expect_dictionary_keys_and_default(
 					modifier_manager.expect_technology_modifier(modifiers),
 					"gas_attack", ZERO_OR_ONE, expect_bool(assign_variable_callback(unlock_gas_attack)),

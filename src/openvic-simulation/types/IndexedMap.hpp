@@ -286,7 +286,9 @@ namespace OpenVic {
 		}
 
 		constexpr void clear() {
-			fill({});
+			for (value_ref_type value : get_values()) {
+				value = {};
+			}
 		}
 
 		constexpr bool has_keys() const {

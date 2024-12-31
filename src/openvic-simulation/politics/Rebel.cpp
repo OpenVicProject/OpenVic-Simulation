@@ -12,10 +12,10 @@ RebelType::RebelType(
 	RebelType::government_map_t&& desired_governments, RebelType::defection_t defection,
 	RebelType::independence_t independence, uint16_t defect_delay, Ideology const* ideology, bool allow_all_cultures,
 	bool allow_all_culture_groups, bool allow_all_religions, bool allow_all_ideologies, bool resilient, bool reinforcing,
-	bool general, bool smart, bool unit_transfer, fixed_point_t occupation_mult, ConditionalWeight&& new_will_rise,
-	ConditionalWeight&& new_spawn_chance, ConditionalWeight&& new_movement_evaluation, ConditionScript&& new_siege_won_trigger,
-	EffectScript&& new_siege_won_effect, ConditionScript&& new_demands_enforced_trigger,
-	EffectScript&& new_demands_enforced_effect
+	bool general, bool smart, bool unit_transfer, fixed_point_t occupation_mult, ConditionalWeightFactorMul&& new_will_rise,
+	ConditionalWeightFactorMul&& new_spawn_chance, ConditionalWeightFactorMul&& new_movement_evaluation,
+	ConditionScript&& new_siege_won_trigger, EffectScript&& new_siege_won_effect,
+	ConditionScript&& new_demands_enforced_trigger, EffectScript&& new_demands_enforced_effect
 ) : HasIdentifier { new_identifier }, icon { icon }, area { area }, break_alliance_on_win { break_alliance_on_win },
 	desired_governments { std::move(desired_governments) }, defection { defection }, independence { independence },
 	defect_delay { defect_delay }, ideology { ideology }, allow_all_cultures { allow_all_cultures },
@@ -44,9 +44,10 @@ bool RebelManager::add_rebel_type(
 	RebelType::government_map_t&& desired_governments, RebelType::defection_t defection,
 	RebelType::independence_t independence, uint16_t defect_delay, Ideology const* ideology, bool allow_all_cultures,
 	bool allow_all_culture_groups, bool allow_all_religions, bool allow_all_ideologies, bool resilient, bool reinforcing,
-	bool general, bool smart, bool unit_transfer, fixed_point_t occupation_mult, ConditionalWeight&& will_rise,
-	ConditionalWeight&& spawn_chance, ConditionalWeight&& movement_evaluation, ConditionScript&& siege_won_trigger,
-	EffectScript&& siege_won_effect, ConditionScript&& demands_enforced_trigger, EffectScript&& demands_enforced_effect
+	bool general, bool smart, bool unit_transfer, fixed_point_t occupation_mult, ConditionalWeightFactorMul&& will_rise,
+	ConditionalWeightFactorMul&& spawn_chance, ConditionalWeightFactorMul&& movement_evaluation,
+	ConditionScript&& siege_won_trigger, EffectScript&& siege_won_effect, ConditionScript&& demands_enforced_trigger,
+	EffectScript&& demands_enforced_effect
 ) {
 	if (new_identifier.empty()) {
 		Logger::error("Invalid rebel type identifier - empty!");
@@ -111,9 +112,9 @@ bool RebelManager::load_rebels_file(
 				allow_all_religions = true, allow_all_ideologies = true, resilient = true, reinforcing = true, general = true,
 				smart = true, unit_transfer = false;
 			fixed_point_t occupation_mult = 0;
-			ConditionalWeight will_rise { POP, COUNTRY, NO_SCOPE };
-			ConditionalWeight spawn_chance { POP, POP, NO_SCOPE };
-			ConditionalWeight movement_evaluation { PROVINCE, PROVINCE, NO_SCOPE };
+			ConditionalWeightFactorMul will_rise { POP, COUNTRY, NO_SCOPE };
+			ConditionalWeightFactorMul spawn_chance { POP, POP, NO_SCOPE };
+			ConditionalWeightFactorMul movement_evaluation { PROVINCE, PROVINCE, NO_SCOPE };
 			ConditionScript siege_won_trigger { PROVINCE, PROVINCE, NO_SCOPE };
 			ConditionScript demands_enforced_trigger { COUNTRY, COUNTRY, NO_SCOPE };
 			EffectScript siege_won_effect, demands_enforced_effect;
@@ -151,9 +152,9 @@ bool RebelManager::load_rebels_file(
 				"smart", ONE_EXACTLY, expect_bool(assign_variable_callback(smart)),
 				"unit_transfer", ONE_EXACTLY, expect_bool(assign_variable_callback(unit_transfer)),
 				"occupation_mult", ONE_EXACTLY, expect_fixed_point(assign_variable_callback(occupation_mult)),
-				"will_rise", ONE_EXACTLY, will_rise.expect_conditional_weight(ConditionalWeight::FACTOR),
-				"spawn_chance", ONE_EXACTLY, spawn_chance.expect_conditional_weight(ConditionalWeight::FACTOR),
-				"movement_evaluation", ONE_EXACTLY, movement_evaluation.expect_conditional_weight(ConditionalWeight::FACTOR),
+				"will_rise", ONE_EXACTLY, will_rise.expect_conditional_weight(),
+				"spawn_chance", ONE_EXACTLY, spawn_chance.expect_conditional_weight(),
+				"movement_evaluation", ONE_EXACTLY, movement_evaluation.expect_conditional_weight(),
 				"siege_won_trigger", ZERO_OR_ONE, siege_won_trigger.expect_script(),
 				"siege_won_effect", ZERO_OR_ONE, siege_won_effect.expect_script(),
 				"demands_enforced_trigger", ZERO_OR_ONE, demands_enforced_trigger.expect_script(),
