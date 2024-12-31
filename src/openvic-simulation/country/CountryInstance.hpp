@@ -96,6 +96,8 @@ namespace OpenVic {
 
 		ordered_set<CountryInstance*> PROPERTY(neighbouring_countries);
 
+		string_map_t<fixed_point_t> PROPERTY(script_variables);
+
 		// The total/resultant modifier affecting this country, including owned province contributions.
 		ModifierSum PROPERTY(modifier_sum);
 		std::vector<ModifierInstance> PROPERTY(event_modifiers);
@@ -247,6 +249,13 @@ namespace OpenVic {
 		bool is_great_power() const;
 		bool is_secondary_power() const;
 		bool is_neighbour(CountryInstance const& country) const;
+
+		// These functions take "std::string const&" rather than "std::string_view" as they're only used with script arguments
+		// which are always stored as "std::string"s and it significantly simplifies mutable value access.
+		fixed_point_t get_script_variable(std::string const& variable_name) const;
+		void set_script_variable(std::string const& variable_name, fixed_point_t value);
+		// Adds the argument value to the existing value of the script variable (initialised to 0 if it doesn't already exist).
+		void change_script_variable(std::string const& variable_name, fixed_point_t value);
 
 		// The values returned by these functions are scaled by population size, so they must be divided by population size
 		// to get the support as a proportion of 1.0

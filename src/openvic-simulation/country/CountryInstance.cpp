@@ -52,6 +52,7 @@ CountryInstance::CountryInstance(
 	core_provinces {},
 	states {},
 	neighbouring_countries {},
+	script_variables {},
 	modifier_sum {},
 	event_modifiers {},
 
@@ -217,6 +218,24 @@ bool CountryInstance::is_secondary_power() const {
 
 bool CountryInstance::is_neighbour(CountryInstance const& country) const {
 	return neighbouring_countries.contains(&country);
+}
+
+fixed_point_t CountryInstance::get_script_variable(std::string const& variable_name) const {
+	const decltype(script_variables)::const_iterator it = script_variables.find(variable_name);
+
+	if (it != script_variables.end()) {
+		return it->second;
+	} else {
+		return fixed_point_t::_0();
+	}
+}
+
+void CountryInstance::set_script_variable(std::string const& variable_name, fixed_point_t value) {
+	script_variables[variable_name] = value;
+}
+
+void CountryInstance::change_script_variable(std::string const& variable_name, fixed_point_t value) {
+	script_variables[variable_name] += value;
 }
 
 fixed_point_t CountryInstance::get_issue_support(Issue const& issue) const {
