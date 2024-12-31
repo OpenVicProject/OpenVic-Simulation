@@ -356,6 +356,23 @@ namespace OpenVic {
 			return *this;
 		}
 
+		constexpr IndexedMap& mul_add(IndexedMap const& other, value_type factor) {
+			const size_t count = std::min(get_values().size(), other.size());
+			for (size_t index = 0; index < count; ++index) {
+				get_values()[index] += other[index] * factor;
+			}
+			return *this;
+		}
+
+		template<typename OtherValue1, typename OtherValue2>
+		constexpr IndexedMap& mul_add(IndexedMap<Key, OtherValue1> const& other1, IndexedMap<Key, OtherValue2> const& other2) {
+			const size_t count = std::min(get_values().size(), std::min(other1.size(), other2.size()));
+			for (size_t index = 0; index < count; ++index) {
+				get_values()[index] += other1[index] * other2[index];
+			}
+			return *this;
+		}
+
 		constexpr IndexedMap& operator*=(value_type factor) {
 			for (value_ref_type value : get_values()) {
 				value *= factor;
@@ -366,6 +383,18 @@ namespace OpenVic {
 		constexpr IndexedMap& operator/=(value_type divisor) {
 			for (value_ref_type value : get_values()) {
 				value /= divisor;
+			}
+			return *this;
+		}
+
+		template<typename OtherValue>
+		constexpr IndexedMap& operator/=(IndexedMap<Key, OtherValue> const& other) {
+			const size_t count = std::min(get_values().size(), other.size());
+			for (size_t index = 0; index < count; ++index) {
+				value_type const& other_value = other[index];
+				if (other_value != OtherValue {}) {
+					get_values()[index] /= other_value;
+				}
 			}
 			return *this;
 		}

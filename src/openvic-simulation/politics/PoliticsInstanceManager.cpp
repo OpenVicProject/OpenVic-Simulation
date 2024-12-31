@@ -10,14 +10,17 @@ using namespace OpenVic;
 PoliticsInstanceManager::PoliticsInstanceManager(InstanceManager const& new_instance_manager)
   : instance_manager { new_instance_manager },
 	politics_manager { instance_manager.get_definition_manager().get_politics_manager() },
-	ideology_spawn_date { &politics_manager.get_ideology_manager().get_ideologies() } {
+	ideology_spawn_date { &politics_manager.get_ideology_manager().get_ideologies() } {}
 
+void PoliticsInstanceManager::setup_starting_ideologies() {
 	const Date today = instance_manager.get_today();
 
 	for (auto [ideology, spawn_date] : ideology_spawn_date) {
 		std::optional<Date> const& defines_spawn_date = ideology.get_spawn_date();
 
-		if (defines_spawn_date.has_value() && *defines_spawn_date >= today) {
+		if (!defines_spawn_date.has_value()) {
+			spawn_date = today;
+		} else if (*defines_spawn_date <= today) {
 			spawn_date = defines_spawn_date;
 		}
 	}

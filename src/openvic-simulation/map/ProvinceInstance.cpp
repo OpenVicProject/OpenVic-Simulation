@@ -20,6 +20,7 @@ ProvinceInstance::ProvinceInstance(
 	MarketInstance& new_market_instance,
 	ModifierEffectCache const& new_modifier_effect_cache,
 	ProvinceDefinition const& new_province_definition,
+	decltype(population_by_strata)::keys_type const& strata_keys,
 	decltype(pop_type_distribution)::keys_type const& pop_type_keys,
 	decltype(ideology_distribution)::keys_type const& ideology_keys
 ) : HasIdentifierAndColour { new_province_definition },
@@ -40,8 +41,17 @@ ProvinceInstance::ProvinceInstance(
 	buildings { "buildings", false },
 	armies {},
 	navies {},
+	land_regiment_count { 0 },
 	pops {},
 	total_population { 0 },
+	average_literacy { 0 },
+	average_consciousness { 0 },
+	average_militancy { 0 },
+	population_by_strata { &strata_keys },
+	militancy_by_strata { &strata_keys },
+	life_needs_fulfilled_by_strata { &strata_keys },
+	everyday_needs_fulfilled_by_strata { &strata_keys },
+	luxury_needs_fulfilled_by_strata { &strata_keys },
 	pop_type_distribution { &pop_type_keys },
 	pops_cache_by_type { &pop_type_keys },
 	ideology_distribution { &ideology_keys },
@@ -52,10 +62,6 @@ ProvinceInstance::ProvinceInstance(
 	max_supported_regiments { 0 }
 	{}
 
-GoodDefinition const* ProvinceInstance::get_rgo_good() const {
-	if (!rgo.is_valid()) { return nullptr; }
-	return &(rgo.get_production_type_nullable()->get_output_good());
-}
 bool ProvinceInstance::set_rgo_production_type_nullable(ProductionType const* rgo_production_type_nullable) {
 	bool is_valid_operation = true;
 	if (rgo_production_type_nullable != nullptr) {
@@ -136,22 +142,6 @@ bool ProvinceInstance::remove_core(CountryInstance& core_to_remove) {
 		);
 		return false;
 	}
-}
-
-bool ProvinceInstance::is_owner_core() const {
-	return owner != nullptr && cores.contains(owner);
-}
-
-bool ProvinceInstance::is_colonial_province() const {
-	return colony_status != colony_status_t::STATE;
-}
-
-fixed_point_t ProvinceInstance::get_pop_type_proportion(PopType const& pop_type) const {
-	return pop_type_distribution[pop_type];
-}
-
-fixed_point_t ProvinceInstance::get_ideology_support(Ideology const& ideology) const {
-	return ideology_distribution[ideology];
 }
 
 fixed_point_t ProvinceInstance::get_issue_support(Issue const& issue) const {
@@ -242,6 +232,12 @@ void ProvinceInstance::_update_pops(DefineManager const& define_manager) {
 	average_consciousness = 0;
 	average_militancy = 0;
 
+	population_by_strata.clear();
+	militancy_by_strata.clear();
+	life_needs_fulfilled_by_strata.clear();
+	everyday_needs_fulfilled_by_strata.clear();
+	luxury_needs_fulfilled_by_strata.clear();
+
 	pop_type_distribution.clear();
 	ideology_distribution.clear();
 	issue_distribution.clear();
@@ -267,18 +263,32 @@ void ProvinceInstance::_update_pops(DefineManager const& define_manager) {
 	for (Pop& pop : pops) {
 		pop.update_gamestate(define_manager, owner, pop_size_per_regiment_multiplier);
 
-		total_population += pop.get_size();
-		average_literacy += pop.get_literacy();
-		average_consciousness += pop.get_consciousness();
-		average_militancy += pop.get_militancy();
+		const pop_size_t pop_size_s = pop.get_size();
+		// TODO - change casting if pop_size_t changes type
+		const fixed_point_t pop_size_f = fixed_point_t::parse(pop_size_s);
 
-		pop_type_distribution[*pop.get_type()] += pop.get_size();
-		pops_cache_by_type[*pop.get_type()].push_back(&pop);
+		total_population += pop_size_s;
+		average_literacy += pop.get_literacy() * pop_size_f;
+		average_consciousness += pop.get_consciousness() * pop_size_f;
+		average_militancy += pop.get_militancy() * pop_size_f;
+
+		PopType const& pop_type = *pop.get_type();
+		Strata const& strata = pop_type.get_strata();
+
+		population_by_strata[strata] += pop_size_s;
+		militancy_by_strata[strata] += pop.get_militancy() * pop_size_f;
+		life_needs_fulfilled_by_strata[strata] += pop.get_life_needs_fulfilled() * pop_size_f;
+		everyday_needs_fulfilled_by_strata[strata] += pop.get_everyday_needs_fulfilled() * pop_size_f;
+		luxury_needs_fulfilled_by_strata[strata] += pop.get_luxury_needs_fulfilled() * pop_size_f;
+
+		pop_type_distribution[pop_type] += pop_size_s;
+		pops_cache_by_type[pop_type].push_back(&pop);
+		// Pop ideology, issue and vote distributions are scaled to pop size so we can add them directly
 		ideology_distribution += pop.get_ideology_distribution();
 		issue_distribution += pop.get_issue_distribution();
 		vote_distribution += pop.get_vote_distribution();
-		culture_distribution[&pop.get_culture()] += pop.get_size();
-		religion_distribution[&pop.get_religion()] += pop.get_size();
+		culture_distribution[&pop.get_culture()] += pop_size_f;
+		religion_distribution[&pop.get_religion()] += pop_size_f;
 
 		max_supported_regiments += pop.get_max_supported_regiments();
 	}
@@ -287,6 +297,11 @@ void ProvinceInstance::_update_pops(DefineManager const& define_manager) {
 		average_literacy /= total_population;
 		average_consciousness /= total_population;
 		average_militancy /= total_population;
+
+		militancy_by_strata /= population_by_strata;
+		life_needs_fulfilled_by_strata /= population_by_strata;
+		everyday_needs_fulfilled_by_strata /= population_by_strata;
+		luxury_needs_fulfilled_by_strata /= population_by_strata;
 	}
 }
 
@@ -429,6 +444,16 @@ bool ProvinceInstance::convert_rgo_worker_pops_to_equivalent(ProductionType cons
 }
 
 void ProvinceInstance::update_gamestate(const Date today, DefineManager const& define_manager) {
+	land_regiment_count = 0;
+	for (ArmyInstance const* army : armies) {
+		land_regiment_count += army->get_unit_count();
+	}
+	for (NavyInstance const* navy : navies) {
+		for (ArmyInstance const* army : navy->get_carried_armies()) {
+			land_regiment_count += army->get_unit_count();
+		}
+	}
+
 	for (BuildingInstance& building : buildings.get_items()) {
 		building.update_gamestate(today);
 	}

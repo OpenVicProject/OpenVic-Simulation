@@ -8,6 +8,7 @@
 #include "openvic-simulation/military/Leader.hpp"
 #include "openvic-simulation/military/UnitInstanceGroup.hpp"
 #include "openvic-simulation/modifier/ModifierSum.hpp"
+#include "openvic-simulation/politics/Ideology.hpp"
 #include "openvic-simulation/politics/Rule.hpp"
 #include "openvic-simulation/pop/PopType.hpp"
 #include "openvic-simulation/types/Date.hpp"
@@ -95,6 +96,8 @@ namespace OpenVic {
 
 		ordered_set<CountryInstance*> PROPERTY(neighbouring_countries);
 
+		string_map_t<fixed_point_t> PROPERTY(script_variables);
+
 		// The total/resultant modifier affecting this country, including owned province contributions.
 		ModifierSum PROPERTY(modifier_sum);
 		std::vector<ModifierInstance> PROPERTY(event_modifiers);
@@ -160,6 +163,13 @@ namespace OpenVic {
 		// TODO - population change over last 30 days
 		fixed_point_t PROPERTY(national_consciousness);
 		fixed_point_t PROPERTY(national_militancy);
+
+		IndexedMap<Strata, pop_size_t> PROPERTY(population_by_strata);
+		IndexedMap<Strata, fixed_point_t> PROPERTY(militancy_by_strata);
+		IndexedMap<Strata, fixed_point_t> PROPERTY(life_needs_fulfilled_by_strata);
+		IndexedMap<Strata, fixed_point_t> PROPERTY(everyday_needs_fulfilled_by_strata);
+		IndexedMap<Strata, fixed_point_t> PROPERTY(luxury_needs_fulfilled_by_strata);
+
 		IndexedMap<PopType, pop_size_t> PROPERTY(pop_type_distribution);
 		IndexedMap<Ideology, fixed_point_t> PROPERTY(ideology_distribution);
 		fixed_point_map_t<Issue const*> PROPERTY(issue_distribution);
@@ -240,14 +250,40 @@ namespace OpenVic {
 		bool is_secondary_power() const;
 		bool is_neighbour(CountryInstance const& country) const;
 
+		// These functions take "std::string const&" rather than "std::string_view" as they're only used with script arguments
+		// which are always stored as "std::string"s and it significantly simplifies mutable value access.
+		fixed_point_t get_script_variable(std::string const& variable_name) const;
+		void set_script_variable(std::string const& variable_name, fixed_point_t value);
+		// Adds the argument value to the existing value of the script variable (initialised to 0 if it doesn't already exist).
+		void change_script_variable(std::string const& variable_name, fixed_point_t value);
+
 		// The values returned by these functions are scaled by population size, so they must be divided by population size
 		// to get the support as a proportion of 1.0
-		fixed_point_t get_pop_type_proportion(PopType const& pop_type) const;
-		fixed_point_t get_ideology_support(Ideology const& ideology) const;
+		constexpr fixed_point_t get_pop_type_proportion(PopType const& pop_type) const {
+			return pop_type_distribution[pop_type];
+		}
+		constexpr fixed_point_t get_ideology_support(Ideology const& ideology) const {
+			return ideology_distribution[ideology];
+		}
 		fixed_point_t get_issue_support(Issue const& issue) const;
 		fixed_point_t get_party_support(CountryParty const& party) const;
 		fixed_point_t get_culture_proportion(Culture const& culture) const;
 		fixed_point_t get_religion_proportion(Religion const& religion) const;
+		constexpr pop_size_t get_strata_population(Strata const& strata) const {
+			return population_by_strata[strata];
+		}
+		constexpr fixed_point_t get_strata_militancy(Strata const& strata) const {
+			return militancy_by_strata[strata];
+		}
+		constexpr fixed_point_t get_strata_life_needs_fulfilled(Strata const& strata) const {
+			return life_needs_fulfilled_by_strata[strata];
+		}
+		constexpr fixed_point_t get_strata_everyday_needs_fulfilled(Strata const& strata) const {
+			return everyday_needs_fulfilled_by_strata[strata];
+		}
+		constexpr fixed_point_t get_strata_luxury_needs_fulfilled(Strata const& strata) const {
+			return luxury_needs_fulfilled_by_strata[strata];
+		}
 
 		bool add_owned_province(ProvinceInstance& new_province);
 		bool remove_owned_province(ProvinceInstance const& province_to_remove);

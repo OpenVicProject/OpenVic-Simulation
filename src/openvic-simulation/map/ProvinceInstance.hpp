@@ -90,15 +90,27 @@ namespace OpenVic {
 		IdentifierRegistry<BuildingInstance> IDENTIFIER_REGISTRY(building);
 		ordered_set<ArmyInstance*> PROPERTY(armies);
 		ordered_set<NavyInstance*> PROPERTY(navies);
+		// The number of land regiments currently in the province, including those being transported by navies
+		size_t PROPERTY(land_regiment_count);
 
+	public:
 		UNIT_BRANCHED_GETTER(get_unit_instance_groups, armies, navies);
+		UNIT_BRANCHED_GETTER_CONST(get_unit_instance_groups, armies, navies);
 
+	private:
 		plf::colony<Pop> PROPERTY(pops); // TODO - replace with a more easily vectorisable container?
 		pop_size_t PROPERTY(total_population);
 		// TODO - population change (growth + migration), monthly totals + breakdown by source/destination
 		fixed_point_t PROPERTY(average_literacy);
 		fixed_point_t PROPERTY(average_consciousness);
 		fixed_point_t PROPERTY(average_militancy);
+
+		IndexedMap<Strata, pop_size_t> PROPERTY(population_by_strata);
+		IndexedMap<Strata, fixed_point_t> PROPERTY(militancy_by_strata);
+		IndexedMap<Strata, fixed_point_t> PROPERTY(life_needs_fulfilled_by_strata);
+		IndexedMap<Strata, fixed_point_t> PROPERTY(everyday_needs_fulfilled_by_strata);
+		IndexedMap<Strata, fixed_point_t> PROPERTY(luxury_needs_fulfilled_by_strata);
+
 		IndexedMap<PopType, pop_size_t> PROPERTY(pop_type_distribution);
 		IndexedMap<PopType, std::vector<Pop*>> PROPERTY(pops_cache_by_type);
 		IndexedMap<Ideology, fixed_point_t> PROPERTY(ideology_distribution);
@@ -112,6 +124,7 @@ namespace OpenVic {
 			MarketInstance& new_market_instance,
 			ModifierEffectCache const& new_modifier_effect_cache,
 			ProvinceDefinition const& new_province_definition,
+			decltype(population_by_strata)::keys_type const& strata_keys,
 			decltype(pop_type_distribution)::keys_type const& pop_type_keys,
 			decltype(ideology_distribution)::keys_type const& ideology_keys
 		);
@@ -133,26 +146,55 @@ namespace OpenVic {
 		constexpr CountryInstance* get_controller() {
 			return controller;
 		}
+		constexpr GoodDefinition const* get_rgo_good() const {
+			if (!rgo.is_valid()) {
+				return nullptr;
+			}
+			return &(rgo.get_production_type_nullable()->get_output_good());
+		}
 
-		GoodDefinition const* get_rgo_good() const;
 		bool set_rgo_production_type_nullable(ProductionType const* rgo_production_type_nullable);
 
 		bool set_owner(CountryInstance* new_owner);
 		bool set_controller(CountryInstance* new_controller);
 		bool add_core(CountryInstance& new_core);
 		bool remove_core(CountryInstance& core_to_remove);
-		bool is_owner_core() const;
+		constexpr bool is_owner_core() const {
+			return owner != nullptr && cores.contains(owner);
+		}
 		// This combines COLONY and PROTECTORATE statuses, as opposed to non-colonial STATE provinces
-		bool is_colonial_province() const;
+		constexpr bool is_colonial_province() const {
+			return colony_status != colony_status_t::STATE;
+		}
 
 		// The values returned by these functions are scaled by population size, so they must be divided by population size
 		// to get the support as a proportion of 1.0
-		fixed_point_t get_pop_type_proportion(PopType const& pop_type) const;
-		fixed_point_t get_ideology_support(Ideology const& ideology) const;
+
+		constexpr fixed_point_t get_pop_type_proportion(PopType const& pop_type) const {
+			return pop_type_distribution[pop_type];
+		}
+		constexpr fixed_point_t get_ideology_support(Ideology const& ideology) const {
+			return ideology_distribution[ideology];
+		}
 		fixed_point_t get_issue_support(Issue const& issue) const;
 		fixed_point_t get_party_support(CountryParty const& party) const;
 		fixed_point_t get_culture_proportion(Culture const& culture) const;
 		fixed_point_t get_religion_proportion(Religion const& religion) const;
+		constexpr pop_size_t get_strata_population(Strata const& strata) const {
+			return population_by_strata[strata];
+		}
+		constexpr fixed_point_t get_strata_militancy(Strata const& strata) const {
+			return militancy_by_strata[strata];
+		}
+		constexpr fixed_point_t get_strata_life_needs_fulfilled(Strata const& strata) const {
+			return life_needs_fulfilled_by_strata[strata];
+		}
+		constexpr fixed_point_t get_strata_everyday_needs_fulfilled(Strata const& strata) const {
+			return everyday_needs_fulfilled_by_strata[strata];
+		}
+		constexpr fixed_point_t get_strata_luxury_needs_fulfilled(Strata const& strata) const {
+			return luxury_needs_fulfilled_by_strata[strata];
+		}
 
 		bool expand_building(size_t building_index);
 

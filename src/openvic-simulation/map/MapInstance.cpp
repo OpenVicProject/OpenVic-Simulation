@@ -45,6 +45,7 @@ bool MapInstance::setup(
 	BuildingTypeManager const& building_type_manager,
 	MarketInstance& market_instance,
 	ModifierEffectCache const& modifier_effect_cache,
+	decltype(ProvinceInstance::population_by_strata)::keys_type const& strata_keys,
 	decltype(ProvinceInstance::pop_type_distribution)::keys_type const& pop_type_keys,
 	decltype(ProvinceInstance::ideology_distribution)::keys_type const& ideology_keys
 ) {
@@ -66,6 +67,7 @@ bool MapInstance::setup(
 			market_instance,
 			modifier_effect_cache,
 			province,
+			strata_keys,
 			pop_type_keys,
 			ideology_keys
 		});
@@ -122,13 +124,13 @@ bool MapInstance::apply_history_to_provinces(
 				}
 
 				if (pop_history_entry == nullptr) {
-					Logger::warning("No pop history entry for province ",province.get_identifier(), " for date ", date.to_string());
+					Logger::warning("No pop history entry for province ", province.get_identifier(), " for date ", date);
 				} else {
-					province.add_pop_vec(pop_history_entry->get_pops());
+					ret &= province.add_pop_vec(pop_history_entry->get_pops());
 					province.setup_pop_test_values(issue_manager);
 				}
 
-				ret&=province.set_rgo_production_type_nullable(rgo_production_type_nullable);
+				ret &= province.set_rgo_production_type_nullable(rgo_production_type_nullable);
 			}
 		}
 	}

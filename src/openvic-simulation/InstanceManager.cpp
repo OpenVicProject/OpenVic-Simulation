@@ -79,6 +79,7 @@ bool InstanceManager::setup() {
 		definition_manager.get_economy_manager().get_building_type_manager(),
 		market_instance,
 		definition_manager.get_modifier_manager().get_modifier_effect_cache(),
+		definition_manager.get_pop_manager().get_stratas(),
 		definition_manager.get_pop_manager().get_pop_types(),
 		definition_manager.get_politics_manager().get_ideology_manager().get_ideologies()
 	);
@@ -128,6 +129,8 @@ bool InstanceManager::load_bookmark(Bookmark const* new_bookmark) {
 
 	today = bookmark->get_date();
 
+	politics_instance_manager.setup_starting_ideologies();
+
 	bool ret = map_instance.apply_history_to_provinces(
 		definition_manager.get_history_manager().get_province_manager(), today,
 		country_instance_manager,
@@ -135,12 +138,16 @@ bool InstanceManager::load_bookmark(Bookmark const* new_bookmark) {
 		definition_manager.get_politics_manager().get_issue_manager()
 	);
 
+	// It is important that province history is applied before country history as province history includes
+	// generating pops which then have stats like literacy and consciousness set by country history.
+
 	ret &= country_instance_manager.apply_history_to_countries(
 		definition_manager.get_history_manager().get_country_manager(), today, unit_instance_manager, map_instance
 	);
 
 	ret &= map_instance.get_state_manager().generate_states(
 		map_instance,
+		definition_manager.get_pop_manager().get_stratas(),
 		definition_manager.get_pop_manager().get_pop_types(),
 		definition_manager.get_politics_manager().get_ideology_manager().get_ideologies()
 	);

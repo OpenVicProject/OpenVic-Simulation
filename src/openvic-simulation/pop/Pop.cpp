@@ -6,6 +6,8 @@
 
 using namespace OpenVic;
 
+static constexpr fixed_point_t DEFAULT_POP_LITERACY = fixed_point_t::_0_10();
+
 PopBase::PopBase(
 	PopType const& new_type, Culture const& new_culture, Religion const& new_religion, pop_size_t new_size,
 	fixed_point_t new_militancy, fixed_point_t new_consciousness, RebelType const* new_rebel_type
@@ -22,6 +24,7 @@ Pop::Pop(PopBase const& pop_base, decltype(ideology_distribution)::keys_type con
 	num_migrated_internal { 0 },
 	num_migrated_external { 0 },
 	num_migrated_colonial { 0 },
+	literacy { DEFAULT_POP_LITERACY },
 	ideology_distribution { &ideology_keys },
 	issue_distribution {},
 	vote_distribution { nullptr },
@@ -170,6 +173,17 @@ fixed_point_t Pop::get_party_support(CountryParty const& party) const {
 void Pop::update_gamestate(
 	DefineManager const& define_manager, CountryInstance const* owner, const fixed_point_t pop_size_per_regiment_multiplier
 ) {
+	static constexpr fixed_point_t MIN_MILITANCY = fixed_point_t::_0();
+	static constexpr fixed_point_t MAX_MILITANCY = fixed_point_t::_10();
+	static constexpr fixed_point_t MIN_CONSCIOUSNESS = fixed_point_t::_0();
+	static constexpr fixed_point_t MAX_CONSCIOUSNESS = fixed_point_t::_10();
+	static constexpr fixed_point_t MIN_LITERACY = fixed_point_t::_0_01();
+	static constexpr fixed_point_t MAX_LITERACY = fixed_point_t::_1();
+
+	militancy = std::clamp(militancy, MIN_MILITANCY, MAX_MILITANCY);
+	consciousness = std::clamp(consciousness, MIN_CONSCIOUSNESS, MAX_CONSCIOUSNESS);
+	literacy = std::clamp(literacy, MIN_LITERACY, MAX_LITERACY);
+
 	if (type->get_can_be_recruited()) {
 		MilitaryDefines const& military_defines = define_manager.get_military_defines();
 
