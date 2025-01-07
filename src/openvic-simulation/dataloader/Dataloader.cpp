@@ -838,11 +838,9 @@ bool Dataloader::_load_song_chances(DefinitionManager& definition_manager) {
 
 	if (path.empty()) {
 		Logger::info("No Songs.txt file to load");
-		song_chance_manager.lock_song_chances();
-		return true;
+	} else {
+		ret &= song_chance_manager.load_songs_file(parse_defines_cached(path).get_file_node());
 	}
-
-	ret &= song_chance_manager.load_songs_file(parse_defines_cached(path).get_file_node());
 
 	song_chance_manager.lock_song_chances();
 

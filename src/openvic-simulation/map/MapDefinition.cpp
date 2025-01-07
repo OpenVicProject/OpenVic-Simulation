@@ -416,39 +416,38 @@ static bool _parse_province_colour(colour_t& colour, std::array<std::string_view
 }
 
 bool MapDefinition::load_province_definitions(std::vector<LineObject> const& lines) {
+	bool ret = true;
+
 	if (lines.empty()) {
 		Logger::error("No header or entries in province definition file!");
-		return false;
-	}
-
-	{
+		ret = false;
+	} else {
 		LineObject const& header = lines.front();
 		if (!_validate_province_definitions_header(header)) {
 			Logger::error(
 				"Non-standard province definition file header - make sure this is not a province definition: ", header
 			);
 		}
-	}
 
-	if (lines.size() <= 1) {
-		Logger::error("No entries in province definition file!");
-		return false;
-	}
+		if (lines.size() <= 1) {
+			Logger::error("No entries in province definition file!");
+			ret = false;
+		} else {
+			reserve_more_province_definitions(lines.size() - 1);
 
-	reserve_more_province_definitions(lines.size() - 1);
-
-	bool ret = true;
-	std::for_each(lines.begin() + 1, lines.end(), [this, &ret](LineObject const& line) -> void {
-		const std::string_view identifier = line.get_value_for(0);
-		if (!identifier.empty()) {
-			colour_t colour = colour_t::null();
-			if (!_parse_province_colour(colour, { line.get_value_for(1), line.get_value_for(2), line.get_value_for(3) })) {
-				Logger::error("Error reading colour in province definition: ", line);
-				ret = false;
-			}
-			ret &= add_province_definition(identifier, colour);
+			std::for_each(lines.begin() + 1, lines.end(), [this, &ret](LineObject const& line) -> void {
+				const std::string_view identifier = line.get_value_for(0);
+				if (!identifier.empty()) {
+					colour_t colour = colour_t::null();
+					if (!_parse_province_colour(colour, { line.get_value_for(1), line.get_value_for(2), line.get_value_for(3) })) {
+						Logger::error("Error reading colour in province definition: ", line);
+						ret = false;
+					}
+					ret &= add_province_definition(identifier, colour);
+				}
+			});
 		}
-	});
+	}
 
 	lock_province_definitions();
 
