@@ -50,27 +50,28 @@ bool MapInstance::setup(
 	decltype(ProvinceInstance::ideology_distribution)::keys_type const& ideology_keys
 ) {
 	if (province_instances_are_locked()) {
-		Logger::error("Cannot setup map - province instances are locked!");
-		return false;
-	}
-	if (!map_definition.province_definitions_are_locked()) {
-		Logger::error("Cannot setup map - province consts are not locked!");
+		Logger::error("Cannot setup map instance - province instances are already locked!");
 		return false;
 	}
 
 	bool ret = true;
 
-	province_instances.reserve(map_definition.get_province_definition_count());
+	if (!map_definition.province_definitions_are_locked()) {
+		Logger::error("Cannot setup map instance - province definitions are not locked!");
+		ret = false;
+	} else {
+		province_instances.reserve(map_definition.get_province_definition_count());
 
-	for (ProvinceDefinition const& province : map_definition.get_province_definitions()) {
-		ret &= province_instances.add_item({
-			market_instance,
-			modifier_effect_cache,
-			province,
-			strata_keys,
-			pop_type_keys,
-			ideology_keys
-		});
+		for (ProvinceDefinition const& province : map_definition.get_province_definitions()) {
+			ret &= province_instances.add_item({
+				market_instance,
+				modifier_effect_cache,
+				province,
+				strata_keys,
+				pop_type_keys,
+				ideology_keys
+			});
+		}
 	}
 
 	province_instances.lock();
