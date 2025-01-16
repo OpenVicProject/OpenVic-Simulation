@@ -56,8 +56,9 @@ namespace OpenVic {
 		std::optional<fixed_point_t> PROPERTY(nonstate_culture_literacy);
 		std::optional<bool> PROPERTY_CUSTOM_PREFIX(releasable_vassal, is);
 		std::optional<fixed_point_t> PROPERTY(colonial_points);
-		string_set_t PROPERTY(country_flags);
-		string_set_t PROPERTY(global_flags);
+		// True for set, false for clear
+		string_map_t<bool> PROPERTY(country_flags);
+		string_map_t<bool> PROPERTY(global_flags);
 		IndexedMap<GovernmentType, GovernmentType const*> PROPERTY(government_flag_overrides);
 		ordered_set<Decision const*> PROPERTY(decisions);
 

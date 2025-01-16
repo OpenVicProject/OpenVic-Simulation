@@ -23,6 +23,16 @@ std::unique_ptr<CountryHistoryEntry> CountryHistoryMap::_make_entry(Date date) c
 	};
 }
 
+static constexpr auto _flag_callback(string_map_t<bool>& flags, bool value) {
+	return [&flags, value](std::string_view flag) -> bool {
+		auto [it, successful] = flags.emplace(flag, value);
+		if (!successful) {
+			it.value() = value;
+		}
+		return true;
+	};
+}
+
 bool CountryHistoryMap::_load_history_entry(
 	DefinitionManager const& definition_manager, Dataloader const& dataloader, DeploymentManager& deployment_manager,
 	CountryHistoryEntry& entry, ast::NodeCPtr root
@@ -215,8 +225,10 @@ bool CountryHistoryMap::_load_history_entry(
 			return ret;
 		},
 		"colonial_points", ZERO_OR_ONE, expect_fixed_point(assign_variable_callback(entry.colonial_points)),
-		"set_country_flag", ZERO_OR_MORE, expect_identifier_or_string(set_callback<std::string_view>(entry.country_flags)),
-		"set_global_flag", ZERO_OR_MORE, expect_identifier_or_string(set_callback<std::string_view>(entry.global_flags))
+		"set_country_flag", ZERO_OR_MORE, expect_identifier_or_string(_flag_callback(entry.country_flags, true)),
+		"clr_country_flag", ZERO_OR_MORE, expect_identifier_or_string(_flag_callback(entry.country_flags, false)),
+		"set_global_flag", ZERO_OR_MORE, expect_identifier_or_string(_flag_callback(entry.global_flags, true)),
+		"clr_global_flag", ZERO_OR_MORE, expect_identifier_or_string(_flag_callback(entry.global_flags, false))
 	)(root);
 }
 

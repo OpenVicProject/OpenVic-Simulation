@@ -53,8 +53,10 @@ namespace OpenVic {
 
 	private:
 		UnitInstanceGroupBranched<Branch>* PROPERTY(unit_instance_group);
+		bool PROPERTY(can_be_used);
 
-		LeaderBranched(LeaderBase const& leader_base) : LeaderBase { leader_base }, unit_instance_group { nullptr } {}
+		LeaderBranched(LeaderBase const& leader_base)
+			: LeaderBase { leader_base }, unit_instance_group { nullptr }, can_be_used { true } {}
 	};
 
 	using General = LeaderBranched<UnitType::branch_t::LAND>;

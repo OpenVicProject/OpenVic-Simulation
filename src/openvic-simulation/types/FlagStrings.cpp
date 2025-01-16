@@ -35,3 +35,17 @@ bool FlagStrings::clear_flag(std::string_view flag, bool warn) {
 bool FlagStrings::has_flag(std::string_view flag) const {
 	return flags.contains(flag);
 }
+
+bool FlagStrings::apply_flag_map(string_map_t<bool> const& flag_map, bool warn) {
+	bool ret = true;
+
+	for (auto const& [flag, set] : flag_map) {
+		if (set) {
+			ret &= set_flag(flag, warn);
+		} else {
+			ret &= clear_flag(flag, warn);
+		}
+	}
+
+	return ret;
+}

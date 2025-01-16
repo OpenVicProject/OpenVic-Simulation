@@ -20,5 +20,9 @@ namespace OpenVic {
 		bool set_flag(std::string_view flag, bool warn);
 		bool clear_flag(std::string_view flag, bool warn);
 		bool has_flag(std::string_view flag) const;
+
+		// Go through the map of flags setting or clearing each based on whether
+		// its value is true or false (used for applying history entries).
+		bool apply_flag_map(string_map_t<bool> const& flag_map, bool warn);
 	};
 }

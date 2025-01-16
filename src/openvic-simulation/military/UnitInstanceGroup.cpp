@@ -237,7 +237,43 @@ bool UnitInstanceManager::generate_unit_instance_group(
 	);
 	ret &= unit_instance_group.set_country(&country);
 
+	if (unit_deployment_group.get_leader_index().has_value()) {
+		plf::colony<LeaderBranched<Branch>>& leaders = country.get_leaders<Branch>();
+		typename plf::colony<LeaderBranched<Branch>>::iterator it = leaders.begin();
+
+		advance(it, *unit_deployment_group.get_leader_index());
+
+		if (it < leaders.end()) {
+			ret &= unit_instance_group.set_leader(&*it);
+		} else {
+			Logger::error(
+				"Invalid leader index ", *unit_deployment_group.get_leader_index(), " for unit group \"",
+				unit_deployment_group.get_name(), "\" for country \"", country.get_identifier(), "\""
+			);
+			ret = false;
+		}
+	}
+
 	return ret;
+}
+
+bool UnitInstanceManager::generate_leader(CountryInstance& country, LeaderBase const& leader) {
+	using enum UnitType::branch_t;
+
+	switch (leader.get_branch()) {
+	case LAND:
+		country.add_leader<LAND>({ leader });
+		return true;
+	case NAVAL:
+		country.add_leader<NAVAL>({ leader });
+		return true;
+	default:
+		Logger::error(
+			"Invalid branch ", static_cast<uint64_t>(leader.get_branch()), " for leader \"", leader.get_name(),
+			"\", cannot add to country ", country.get_identifier()
+		);
+		return false;;
+	}
 }
 
 bool UnitInstanceManager::generate_deployment(
@@ -250,7 +286,11 @@ bool UnitInstanceManager::generate_deployment(
 
 	bool ret = true;
 
-	const auto generate_group = [&]<UnitType::branch_t Branch>() -> void {
+	for (LeaderBase const& leader : deployment->get_leaders()) {
+		ret &= generate_leader(country, leader);
+	}
+
+	const auto generate_group = [this, &map_instance, &country, &ret, deployment]<UnitType::branch_t Branch>() -> void {
 		for (UnitDeploymentGroup<Branch> const& unit_deployment_group : deployment->get_unit_deployment_groups<Branch>()) {
 			ret &= generate_unit_instance_group(map_instance, country, unit_deployment_group);
 		}
@@ -260,23 +300,6 @@ bool UnitInstanceManager::generate_deployment(
 
 	generate_group.template operator()<LAND>();
 	generate_group.template operator()<NAVAL>();
-
-	for (LeaderBase const& leader : deployment->get_leaders()) {
-		switch (leader.get_branch()) {
-		case LAND:
-			country.add_leader<LAND>({ leader });
-			break;
-		case NAVAL:
-			country.add_leader<NAVAL>({ leader });
-			break;
-		default:
-			Logger::error(
-				"Invalid branch ", static_cast<uint64_t>(leader.get_branch()), " for leader \"", leader.get_name(),
-				"\", cannot add to country ", country.get_identifier()
-			);
-			ret = false;
-		}
-	}
 
 	return ret;
 }

@@ -38,7 +38,6 @@ namespace OpenVic {
 	struct Religion;
 	struct BuildingType;
 	struct CountryHistoryEntry;
-	struct MapInstance;
 	struct DefineManager;
 	struct ModifierEffectCache;
 	struct StaticModifierCache;
@@ -203,25 +202,37 @@ namespace OpenVic {
 		size_t PROPERTY(mobilisation_potential_regiment_count);
 		size_t PROPERTY(mobilisation_max_regiment_count);
 		fixed_point_t PROPERTY(mobilisation_impact);
+		fixed_point_t PROPERTY(mobilisation_economy_impact);
 		fixed_point_t PROPERTY(supply_consumption);
 		size_t PROPERTY(ship_count);
 		fixed_point_t PROPERTY(total_consumed_ship_supply);
 		fixed_point_t PROPERTY(max_ship_supply);
 		fixed_point_t PROPERTY(leadership_points);
-		fixed_point_t PROPERTY(war_exhaustion); // in 0-100 range
+		int32_t PROPERTY(create_leader_count);
+		// War exhaustion is stored as a raw decimal rather than a proportion, it is usually in the range 0-100.
+		// The current war exhaustion value should only ever be modified via change_war_exhaustion(delta) which also
+		// clamps the result in the range [0, war_exhaustion_max] straight away, matching the base game's behaviour.
+		fixed_point_t PROPERTY(war_exhaustion);
+		fixed_point_t PROPERTY(war_exhaustion_max);
 		bool PROPERTY_CUSTOM_PREFIX(mobilised, is);
 		bool PROPERTY_CUSTOM_PREFIX(disarmed, is);
+		bool PROPERTY(auto_create_leaders);
+		bool PROPERTY(auto_assign_leaders);
+		fixed_point_t PROPERTY(organisation_regain);
+		fixed_point_t PROPERTY(land_organisation);
+		fixed_point_t PROPERTY(naval_organisation);
+		fixed_point_t PROPERTY(land_unit_start_experience);
+		fixed_point_t PROPERTY(naval_unit_start_experience);
+		fixed_point_t PROPERTY(recruit_time);
+		int32_t PROPERTY(combat_width);
+		int32_t PROPERTY(digin_cap);
+		fixed_point_t PROPERTY(military_tactics);
 		IndexedMap<RegimentType, unlock_level_t> PROPERTY(regiment_type_unlock_levels);
 		RegimentType::allowed_cultures_t PROPERTY(allowed_regiment_cultures);
 		IndexedMap<ShipType, unlock_level_t> PROPERTY(ship_type_unlock_levels);
 		unlock_level_t PROPERTY(gas_attack_unlock_level);
 		unlock_level_t PROPERTY(gas_defence_unlock_level);
 		std::vector<unlock_level_t> PROPERTY(unit_variant_unlock_levels);
-
-		UNIT_BRANCHED_GETTER(get_unit_instance_groups, armies, navies);
-		UNIT_BRANCHED_GETTER(get_leaders, generals, admirals);
-		UNIT_BRANCHED_GETTER_CONST(get_leaders, generals, admirals);
-		UNIT_BRANCHED_GETTER(get_unit_type_unlock_levels, regiment_type_unlock_levels, ship_type_unlock_levels);
 
 		CountryInstance(
 			CountryDefinition const* new_country_definition,
@@ -238,7 +249,44 @@ namespace OpenVic {
 			decltype(tax_rate_by_strata)::keys_type const& strata_keys
 		);
 
+		UNIT_BRANCHED_GETTER(get_unit_instance_groups, armies, navies);
+		UNIT_BRANCHED_GETTER(get_unit_type_unlock_levels, regiment_type_unlock_levels, ship_type_unlock_levels);
+
 	public:
+		UNIT_BRANCHED_GETTER(get_leaders, generals, admirals);
+		UNIT_BRANCHED_GETTER_CONST(get_leaders, generals, admirals);
+
+		inline size_t get_general_count() const {
+			return generals.size();
+		}
+		inline size_t has_generals() const {
+			return !generals.empty();
+		}
+		inline size_t get_admiral_count() const {
+			return admirals.size();
+		}
+		inline size_t has_admirals() const {
+			return !admirals.empty();
+		}
+		inline size_t get_leader_count() const {
+			return get_general_count() + get_admiral_count();
+		}
+		inline size_t has_leaders() const {
+			return has_generals() || has_admirals();
+		}
+		inline size_t get_army_count() const {
+			return armies.size();
+		}
+		inline size_t has_armies() const {
+			return !armies.empty();
+		}
+		inline size_t get_navy_count() const {
+			return navies.size();
+		}
+		inline size_t has_navies() const {
+			return !navies.empty();
+		}
+
 		std::string_view get_identifier() const;
 
 		void update_country_definition_based_attributes();
@@ -248,6 +296,7 @@ namespace OpenVic {
 		bool can_colonise() const;
 		bool is_great_power() const;
 		bool is_secondary_power() const;
+		bool is_at_war() const;
 		bool is_neighbour(CountryInstance const& country) const;
 
 		// These functions take "std::string const&" rather than "std::string_view" as they're only used with script arguments
@@ -320,6 +369,9 @@ namespace OpenVic {
 		void set_military_spending(const StandardSliderValue::int_type new_value);
 		void set_tariff_rate(const StandardSliderValue::int_type new_value);
 
+		// Adds delta to the current war exhaustion value and clamps it to the range [0, war_exhaustion_max].
+		void change_war_exhaustion(fixed_point_t delta);
+
 		template<UnitType::branch_t Branch>
 		bool add_unit_instance_group(UnitInstanceGroup<Branch>& group);
 		template<UnitType::branch_t Branch>
@@ -380,9 +432,7 @@ namespace OpenVic {
 			CountryInstanceManager const& country_instance_manager
 		);
 
-		bool apply_history_to_country(
-			CountryHistoryEntry const& entry, MapInstance& map_instance, CountryInstanceManager const& country_instance_manager
-		);
+		bool apply_history_to_country(CountryHistoryEntry const& entry, InstanceManager& instance_manager);
 
 	private:
 		void _update_production(DefineManager const& define_manager);
@@ -416,10 +466,11 @@ namespace OpenVic {
 
 	struct CountryDefinitionManager;
 	struct CountryHistoryManager;
-	struct UnitInstanceManager;
 
 	struct CountryInstanceManager {
 	private:
+		CountryDefinitionManager const& PROPERTY(country_definition_manager);
+
 		IdentifierRegistry<CountryInstance> IDENTIFIER_REGISTRY(country_instance);
 
 		std::vector<CountryInstance*> PROPERTY(great_powers);
@@ -433,11 +484,14 @@ namespace OpenVic {
 		void update_rankings(Date today, DefineManager const& define_manager);
 
 	public:
+		CountryInstanceManager(CountryDefinitionManager const& new_country_definition_manager);
+
+		IDENTIFIER_REGISTRY_NON_CONST_ACCESSORS(country_instance);
+
 		CountryInstance& get_country_instance_from_definition(CountryDefinition const& country);
 		CountryInstance const& get_country_instance_from_definition(CountryDefinition const& country) const;
 
 		bool generate_country_instances(
-			CountryDefinitionManager const& country_definition_manager,
 			decltype(CountryInstance::building_type_unlock_levels)::keys_type const& building_type_keys,
 			decltype(CountryInstance::technology_unlock_levels)::keys_type const& technology_keys,
 			decltype(CountryInstance::invention_unlock_levels)::keys_type const& invention_keys,
@@ -451,10 +505,7 @@ namespace OpenVic {
 			decltype(CountryInstance::tax_rate_by_strata):: keys_type const& strata_keys
 		);
 
-		bool apply_history_to_countries(
-			CountryHistoryManager const& history_manager, Date date, UnitInstanceManager& unit_instance_manager,
-			MapInstance& map_instance
-		);
+		bool apply_history_to_countries(CountryHistoryManager const& history_manager, InstanceManager& instance_manager);
 
 		void update_modifier_sums(Date today, StaticModifierCache const& static_modifier_cache);
 		void update_gamestate(InstanceManager& instance_manager);

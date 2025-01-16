@@ -9,11 +9,13 @@
 
 namespace OpenVic {
 	struct UnitType;
+	struct LeaderTraitManager;
 
 	struct Modifier : HasIdentifier, ModifierValue {
 		friend struct ModifierManager;
 		friend struct StaticModifierCache;
 		friend struct UnitType;
+		friend struct LeaderTraitManager;
 
 		enum struct modifier_type_t : uint8_t {
 			EVENT, STATIC, TRIGGERED, CRIME, TERRAIN, CLIMATE, CONTINENT, BUILDING, LEADER, UNIT_TERRAIN,

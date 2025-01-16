@@ -157,8 +157,12 @@ namespace OpenVic {
 
 		bool set_owner(CountryInstance* new_owner);
 		bool set_controller(CountryInstance* new_controller);
-		bool add_core(CountryInstance& new_core);
-		bool remove_core(CountryInstance& core_to_remove);
+		// The warn argument controls whether a log message is emitted when a core already does/doesn't exist, e.g. we may
+		// want to know if there are redundant province history instructions setting a core multiple times, but we may not
+		// want to be swamped with log messages by effect scripts which use add_core/remove_core very liberally. Regardless
+		// of warn's value, both functions will still return true if the core in question already does/doesn't exist.
+		bool add_core(CountryInstance& new_core, bool warn);
+		bool remove_core(CountryInstance& core_to_remove, bool warn);
 		constexpr bool is_owner_core() const {
 			return owner != nullptr && cores.contains(owner);
 		}

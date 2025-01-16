@@ -10,6 +10,7 @@ InstanceManager::InstanceManager(
 	SimulationClock::state_changed_function_t clock_state_changed_callback
 ) : definition_manager { new_definition_manager },
 	global_flags { "global" },
+	country_instance_manager { new_definition_manager.get_country_definition_manager() },
 	market_instance { good_instance_manager },
 	politics_instance_manager { *this },
 	map_instance { new_definition_manager.get_map_definition() },
@@ -84,7 +85,6 @@ bool InstanceManager::setup() {
 		definition_manager.get_politics_manager().get_ideology_manager().get_ideologies()
 	);
 	ret &= country_instance_manager.generate_country_instances(
-		definition_manager.get_country_definition_manager(),
 		definition_manager.get_economy_manager().get_building_type_manager().get_building_types(),
 		definition_manager.get_research_manager().get_technology_manager().get_technologies(),
 		definition_manager.get_research_manager().get_invention_manager().get_inventions(),
@@ -142,7 +142,7 @@ bool InstanceManager::load_bookmark(Bookmark const* new_bookmark) {
 	// generating pops which then have stats like literacy and consciousness set by country history.
 
 	ret &= country_instance_manager.apply_history_to_countries(
-		definition_manager.get_history_manager().get_country_manager(), today, unit_instance_manager, map_instance
+		definition_manager.get_history_manager().get_country_manager(), *this
 	);
 
 	ret &= map_instance.get_state_manager().generate_states(

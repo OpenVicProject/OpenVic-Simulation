@@ -188,8 +188,7 @@ namespace OpenVic {
 			}
 
 			const std::string_view new_identifier = ValueInfo::get_identifier(ItemInfo::get_value(item));
-			external_value_type const* old_item = get_item_by_identifier(new_identifier);
-			if (old_item != nullptr) {
+			if (has_identifier(new_identifier)) {
 				return duplicate_callback(name, new_identifier);
 			}
 

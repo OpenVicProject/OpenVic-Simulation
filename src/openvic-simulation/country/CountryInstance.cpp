@@ -146,14 +146,28 @@ CountryInstance::CountryInstance(
 	mobilisation_potential_regiment_count { 0 },
 	mobilisation_max_regiment_count { 0 },
 	mobilisation_impact { 0 },
+	mobilisation_economy_impact { 0 },
 	supply_consumption { 1 },
 	ship_count { 0 },
 	total_consumed_ship_supply { 0 },
 	max_ship_supply { 0 },
 	leadership_points { 0 },
+	create_leader_count { 0 },
 	war_exhaustion { 0 },
+	war_exhaustion_max { 0 },
 	mobilised { false },
 	disarmed { false },
+	auto_create_leaders { true },
+	auto_assign_leaders { true },
+	organisation_regain { 1 },
+	land_organisation { 1 },
+	naval_organisation { 1 },
+	land_unit_start_experience { 0 },
+	naval_unit_start_experience { 0 },
+	recruit_time { 1 },
+	combat_width { 1 },
+	digin_cap { 0 },
+	military_tactics { 1 },
 	regiment_type_unlock_levels { &regiment_type_unlock_levels_keys },
 	allowed_regiment_cultures { RegimentType::allowed_cultures_t::NO_CULTURES },
 	ship_type_unlock_levels { &ship_type_unlock_levels_keys },
@@ -214,6 +228,11 @@ bool CountryInstance::is_great_power() const {
 
 bool CountryInstance::is_secondary_power() const {
 	return country_status == COUNTRY_STATUS_SECONDARY_POWER;
+}
+
+bool CountryInstance::is_at_war() const {
+	// TODO - implement this properly once we have wars
+	return false;
 }
 
 bool CountryInstance::is_neighbour(CountryInstance const& country) const {
@@ -386,6 +405,10 @@ void CountryInstance::set_military_spending(const StandardSliderValue::int_type 
 
 void CountryInstance::set_tariff_rate(const TariffSliderValue::int_type new_value) {
 	tariff_rate.set_value(new_value);
+}
+
+void CountryInstance::change_war_exhaustion(fixed_point_t delta) {
+	war_exhaustion = std::clamp(war_exhaustion + delta, fixed_point_t::_0(), war_exhaustion_max);
 }
 
 template<UnitType::branch_t Branch>
@@ -786,9 +809,7 @@ void CountryInstance::apply_foreign_investments(
 	}
 }
 
-bool CountryInstance::apply_history_to_country(
-	CountryHistoryEntry const& entry, MapInstance& map_instance, CountryInstanceManager const& country_instance_manager
-) {
+bool CountryInstance::apply_history_to_country(CountryHistoryEntry const& entry, InstanceManager& instance_manager) {
 	constexpr auto set_optional = []<typename T>(T& target, std::optional<T> const& source) {
 		if (source) {
 			target = *source;
@@ -812,7 +833,7 @@ bool CountryInstance::apply_history_to_country(
 	set_optional(last_election, entry.get_last_election());
 	ret &= upper_house.copy(entry.get_upper_house());
 	if (entry.get_capital()) {
-		capital = &map_instance.get_province_instance_from_definition(**entry.get_capital());
+		capital = &instance_manager.get_map_instance().get_province_instance_from_definition(**entry.get_capital());
 	}
 	set_optional(government_type, entry.get_government_type());
 	set_optional(plurality, entry.get_plurality());
@@ -837,18 +858,14 @@ bool CountryInstance::apply_history_to_country(
 	for (auto const& [invention, activated] : entry.get_inventions()) {
 		ret &= set_invention_unlock_level(*invention, activated ? 1 : 0);
 	}
-	apply_foreign_investments(entry.get_foreign_investment(), country_instance_manager);
+	apply_foreign_investments(entry.get_foreign_investment(), instance_manager.get_country_instance_manager());
 
 	set_optional(releasable_vassal, entry.is_releasable_vassal());
 
 	// TODO - entry.get_colonial_points();
 
-	for (std::string const& flag : entry.get_country_flags()) {
-		ret &= set_flag(flag, true);
-	}
-	for (std::string const& flag : entry.get_global_flags()) {
-		// TODO - set global flag
-	}
+	ret &= apply_flag_map(entry.get_country_flags(), true);
+	ret &= instance_manager.get_global_flags().apply_flag_map(entry.get_global_flags(), true);
 	government_flag_overrides.write_non_empty_values(entry.get_government_flag_overrides());
 	for (Decision const* decision : entry.get_decisions()) {
 		// TODO - take decision
@@ -980,6 +997,8 @@ void CountryInstance::_update_military(
 	DefineManager const& define_manager, UnitTypeManager const& unit_type_manager,
 	ModifierEffectCache const& modifier_effect_cache
 ) {
+	MilitaryDefines const& military_defines = define_manager.get_military_defines();
+
 	regiment_count = 0;
 
 	for (ArmyInstance const* army : armies) {
@@ -1046,14 +1065,13 @@ void CountryInstance::_update_military(
 	}
 	military_power_from_sea /= 250;
 
-	military_power_from_leaders = fixed_point_t::parse(
-		std::min(generals.size() + admirals.size(), deployed_non_mobilised_regiments)
-	);
+	military_power_from_leaders = fixed_point_t::parse(std::min(get_leader_count(), deployed_non_mobilised_regiments));
 
 	military_power = military_power_from_land + military_power_from_sea + military_power_from_leaders;
 
 	// Mobilisation calculations
 	mobilisation_impact = get_modifier_effect_value_nullcheck(modifier_effect_cache.get_mobilization_impact());
+	mobilisation_economy_impact = get_modifier_effect_value_nullcheck(modifier_effect_cache.get_mobilisation_economy_impact());
 
 	mobilisation_max_regiment_count =
 		((fixed_point_t::_1() + mobilisation_impact) * fixed_point_t::parse(regiment_count)).to_int64_t();
@@ -1063,7 +1081,42 @@ void CountryInstance::_update_military(
 		mobilisation_potential_regiment_count = mobilisation_max_regiment_count;
 	}
 
-	// TODO - update max_ship_supply, leadership_points, war_exhaustion
+	// Limit max war exhaustion to non-negative values. This technically diverges from the base game where
+	// max war exhaustion can be negative, but in such cases the war exhaustion clamping behaviour is
+	// very buggy and regardless it doesn't seem to make any modifier effect contributions.
+	war_exhaustion_max = std::max(
+		get_modifier_effect_value_nullcheck(modifier_effect_cache.get_max_war_exhaustion()), fixed_point_t::_0()
+	);
+
+	organisation_regain = fixed_point_t::_1() +
+		get_modifier_effect_value_nullcheck(modifier_effect_cache.get_org_regain()) +
+		get_modifier_effect_value_nullcheck(modifier_effect_cache.get_morale_global());
+
+	land_organisation = fixed_point_t::_1() +
+		get_modifier_effect_value_nullcheck(modifier_effect_cache.get_land_organisation());
+	naval_organisation = fixed_point_t::_1() +
+		get_modifier_effect_value_nullcheck(modifier_effect_cache.get_naval_organisation());
+
+	land_unit_start_experience = get_modifier_effect_value_nullcheck(modifier_effect_cache.get_regular_experience_level());
+	naval_unit_start_experience = land_unit_start_experience;
+	land_unit_start_experience += get_modifier_effect_value_nullcheck(modifier_effect_cache.get_land_unit_start_experience());
+	naval_unit_start_experience +=
+		get_modifier_effect_value_nullcheck(modifier_effect_cache.get_naval_unit_start_experience());
+
+	recruit_time = fixed_point_t::_1() +
+		get_modifier_effect_value_nullcheck(modifier_effect_cache.get_unit_recruitment_time());
+	combat_width = fixed_point_t::parse(military_defines.get_base_combat_width()) +
+		get_modifier_effect_value_nullcheck(modifier_effect_cache.get_combat_width_additive());
+	digin_cap = get_modifier_effect_value_nullcheck(modifier_effect_cache.get_dig_in_cap());
+	military_tactics = military_defines.get_base_military_tactics() +
+		get_modifier_effect_value_nullcheck(modifier_effect_cache.get_military_tactics());
+
+	if (leadership_points < 0) {
+		leadership_points = 0;
+	}
+	create_leader_count = leadership_points / military_defines.get_leader_recruit_cost();
+
+	// TODO - update max_ship_supply
 }
 
 bool CountryInstance::update_rule_set() {
@@ -1126,7 +1179,10 @@ void CountryInstance::update_modifier_sum(Date today, StaticModifierCache const&
 	modifier_sum.add_modifier(static_modifier_cache.get_infamy(), country_source, infamy);
 	modifier_sum.add_modifier(static_modifier_cache.get_literacy(), country_source, national_literacy);
 	modifier_sum.add_modifier(static_modifier_cache.get_plurality(), country_source, plurality);
-	// TODO - difficulty modifiers, war, peace, debt_default_to, bad_debtor, generalised_debt_default,
+	modifier_sum.add_modifier(
+		is_at_war() ? static_modifier_cache.get_war() : static_modifier_cache.get_peace(), country_source
+	);
+	// TODO - difficulty modifiers, debt_default_to, bad_debtor, generalised_debt_default,
 	//        total_occupation, total_blockaded, in_bankruptcy
 
 	// TODO - handle triggered modifiers
@@ -1382,6 +1438,9 @@ void CountryInstanceManager::update_rankings(Date today, DefineManager const& de
 	}
 }
 
+CountryInstanceManager::CountryInstanceManager(CountryDefinitionManager const& new_country_definition_manager)
+	: country_definition_manager { new_country_definition_manager } {}
+
 CountryInstance& CountryInstanceManager::get_country_instance_from_definition(CountryDefinition const& country) {
 	return country_instances.get_items()[country.get_index()];
 }
@@ -1391,7 +1450,6 @@ CountryInstance const& CountryInstanceManager::get_country_instance_from_definit
 }
 
 bool CountryInstanceManager::generate_country_instances(
-	CountryDefinitionManager const& country_definition_manager,
 	decltype(CountryInstance::building_type_unlock_levels)::keys_type const& building_type_keys,
 	decltype(CountryInstance::technology_unlock_levels)::keys_type const& technology_keys,
 	decltype(CountryInstance::invention_unlock_levels)::keys_type const& invention_keys,
@@ -1429,10 +1487,13 @@ bool CountryInstanceManager::generate_country_instances(
 }
 
 bool CountryInstanceManager::apply_history_to_countries(
-	CountryHistoryManager const& history_manager, Date date, UnitInstanceManager& unit_instance_manager,
-	MapInstance& map_instance
+	CountryHistoryManager const& history_manager, InstanceManager& instance_manager
 ) {
 	bool ret = true;
+
+	const Date today = instance_manager.get_today();
+	UnitInstanceManager& unit_instance_manager = instance_manager.get_unit_instance_manager();
+	MapInstance& map_instance = instance_manager.get_map_instance();
 
 	for (CountryInstance& country_instance : country_instances.get_items()) {
 		if (!country_instance.get_country_definition()->is_dynamic_tag()) {
@@ -1448,8 +1509,8 @@ bool CountryInstanceManager::apply_history_to_countries(
 				std::optional<fixed_point_t> nonstate_culture_literacy;
 
 				for (auto const& [entry_date, entry] : history_map->get_entries()) {
-					if (entry_date <= date) {
-						ret &= country_instance.apply_history_to_country(*entry, map_instance, *this);
+					if (entry_date <= today) {
+						ret &= country_instance.apply_history_to_country(*entry, instance_manager);
 
 						if (entry->get_inital_oob().has_value()) {
 							oob_history_entry = entry.get();
