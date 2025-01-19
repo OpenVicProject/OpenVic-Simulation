@@ -473,8 +473,8 @@ bool ProvinceInstance::add_unit_instance_group(UnitInstanceGroup<Branch>& group)
 		return true;
 	} else {
 		Logger::error(
-			"Trying to add already-existing ", Branch == UnitType::branch_t::LAND ? "army" : "navy", " ",
-			group.get_name(), " to province ", get_identifier()
+			"Trying to add already-existing ", UnitType::get_branched_unit_group_name(Branch), " \"",
+			group.get_name(), "\" to province ", get_identifier()
 		);
 		return false;
 	}
@@ -486,8 +486,8 @@ bool ProvinceInstance::remove_unit_instance_group(UnitInstanceGroup<Branch> cons
 		return true;
 	} else {
 		Logger::error(
-			"Trying to remove non-existent ", Branch == UnitType::branch_t::LAND ? "army" : "navy", " ",
-			group.get_name(), " from province ", get_identifier()
+			"Trying to remove non-existent ", UnitType::get_branched_unit_group_name(Branch), " \"",
+			group.get_name(), "\" from province ", get_identifier()
 		);
 		return false;
 	}

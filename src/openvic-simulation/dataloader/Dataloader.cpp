@@ -1080,6 +1080,10 @@ bool Dataloader::load_defines(DefinitionManager& definition_manager) {
 		Logger::error("Failed to load cultures!");
 		ret = false;
 	}
+	if (!definition_manager.get_pop_manager().get_culture_manager().find_cultural_leader_pictures(*this)) {
+		Logger::error("Failed to find cultural leader pictures!");
+		ret = false;
+	}
 	if (!_load_decisions(definition_manager)) {
 		Logger::error("Failde to load decisions!");
 		ret = false;

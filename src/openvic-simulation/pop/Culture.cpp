@@ -1,8 +1,10 @@
 #include "Culture.hpp"
 
 #include "openvic-simulation/country/CountryDefinition.hpp"
+#include "openvic-simulation/dataloader/Dataloader.hpp"
 #include "openvic-simulation/dataloader/NodeTools.hpp"
 #include "openvic-simulation/types/Colour.hpp"
+#include "openvic-simulation/utility/StringUtils.hpp"
 
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;
@@ -52,7 +54,13 @@ bool CultureManager::add_culture_group(
 		Logger::error("Null graphical culture type for ", identifier);
 		return false;
 	}
-	return culture_groups.add_item({ identifier, leader, *graphical_culture_type, is_overseas, union_country });
+
+	if (culture_groups.add_item({ identifier, leader, *graphical_culture_type, is_overseas, union_country })) {
+		leader_picture_counts.emplace(leader, general_admiral_picture_count_t { 0, 0 });
+		return true;
+	} else {
+		return false;
+	}
 }
 
 bool CultureManager::add_culture(
@@ -191,4 +199,126 @@ bool CultureManager::load_culture_file(CountryDefinitionManager const& country_d
 	)(root);
 	lock_cultures();
 	return ret;
+}
+
+std::string CultureManager::make_leader_picture_name(
+	std::string_view cultural_type, UnitType::branch_t branch, leader_count_t count
+) {
+	if (cultural_type.empty()) {
+		Logger::error("Cannot construct leader picture name - empty cultural type!");
+		return {};
+	}
+
+	static constexpr std::string_view GENERAL_TEXT = "_general_";
+	static constexpr std::string_view ADMIRAL_TEXT = "_admiral_";
+
+	std::string_view const* branch_text;
+
+	using enum UnitType::branch_t;
+
+	switch (branch) {
+		case LAND:
+			branch_text = &GENERAL_TEXT;
+			break;
+		case NAVAL:
+			branch_text = &ADMIRAL_TEXT;
+			break;
+		default:
+			Logger::error("Cannot construct leader picture name - invalid branch type: ", static_cast<uint32_t>(branch));
+			return {};
+	}
+
+	return StringUtils::append_string_views(cultural_type, *branch_text, std::to_string(count));
+}
+
+std::string CultureManager::make_leader_picture_path(std::string_view leader_picture_name) {
+	if (leader_picture_name.empty()) {
+		Logger::error("Cannot construct leader picture path - empty name!");
+		return {};
+	}
+
+	static constexpr std::string_view LEADER_PICTURES_DIR = "gfx/interface/leaders/";
+	static constexpr std::string_view FILE_EXTENSION = ".dds";
+
+	return StringUtils::append_string_views(LEADER_PICTURES_DIR, leader_picture_name, FILE_EXTENSION);
+}
+
+bool CultureManager::find_cultural_leader_pictures(Dataloader const& dataloader) {
+	if (!culture_groups_are_locked()) {
+		Logger::error("Cannot search for cultural leader pictures until culture groups are locked!");
+		return false;
+	}
+
+	bool ret = true;
+
+	for (auto [cultural_type, general_and_admiral_count] : mutable_iterator(leader_picture_counts)) {
+		const auto search = [&dataloader, &cultural_type, &ret](
+			UnitType::branch_t branch, leader_count_t& leader_count
+		) -> void {
+			while (
+				leader_count < std::numeric_limits<leader_count_t>::max() &&
+				!dataloader.lookup_file(
+					make_leader_picture_path(make_leader_picture_name(cultural_type, branch, leader_count)), false
+				).empty()
+			) {
+				leader_count++;
+			}
+
+			if (leader_count < 1) {
+				Logger::error(
+					"No ", UnitType::get_branched_leader_name(branch), " pictures found for cultural type \"",
+					cultural_type, "\"!"
+				);
+				ret = false;
+			}
+		};
+
+		using enum UnitType::branch_t;
+
+		search(LAND, general_and_admiral_count.first);
+		search(NAVAL, general_and_admiral_count.second);
+	}
+
+	return ret;
+}
+
+std::string CultureManager::get_leader_picture_name(std::string_view cultural_type, UnitType::branch_t branch) const {
+	const decltype(leader_picture_counts)::const_iterator it = leader_picture_counts.find(cultural_type);
+	if (it == leader_picture_counts.end()) {
+		Logger::error("Cannot find leader picture counts for cultural type \"", cultural_type, "\"!");
+		return {};
+	}
+
+	leader_count_t desired_picture_count;
+
+	using enum UnitType::branch_t;
+
+	switch (branch) {
+	case LAND:
+		desired_picture_count = it->second.first;
+		break;
+	case NAVAL:
+		desired_picture_count = it->second.second;
+		break;
+	default:
+		Logger::error(
+			"Cannot get \"", cultural_type, "\" leader picture name - invalid branch type: ", static_cast<uint32_t>(branch)
+		);
+		return {};
+	}
+
+	if (desired_picture_count < 1) {
+		Logger::error(
+			"Cannot get \"", cultural_type, "\" ", UnitType::get_branched_leader_name(branch),
+			" picture name - no pictures of this type were found during game loading!"
+		);
+		return {};
+	}
+
+	// This variable determines what index the leader picture name uses. It is static and increments each time it is used,
+	// hopefully resulting in a variety of different leader pictures being seen in-game. This is not necessarily a permanent
+	// solution, for example it may be replaced with randomly generated integers once our RNG system has been finalised.
+	static leader_count_t internal_counter = 0;
+
+	return make_leader_picture_name(cultural_type, branch, internal_counter++ % desired_picture_count);
 }

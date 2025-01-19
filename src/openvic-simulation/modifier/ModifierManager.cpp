@@ -59,7 +59,9 @@ bool ModifierManager::_register_modifier_effect(
 		return false;
 	}
 
-	const bool ret = registry.add_item({ std::move(identifier), is_positive_good, format, targets, localisation_key, has_no_effect });
+	const bool ret = registry.add_item({
+		std::move(identifier), is_positive_good, format, targets, localisation_key, has_no_effect
+	});
 
 	if (ret) {
 		effect_cache = &registry.get_items().back();
@@ -137,7 +139,9 @@ bool ModifierManager::setup_modifier_effects() {
 	ret &= register_technology_modifier_effect(
 		modifier_effect_cache.shared_prestige, "shared_prestige", true, RAW_DECIMAL, "SHARED_PRESTIGE_TECH"
 	);
-	ret &= register_technology_modifier_effect(modifier_effect_cache.tax_eff, "tax_eff", true, PERCENTAGE_DECIMAL, "TECH_TAX_EFF");
+	ret &= register_technology_modifier_effect(
+		modifier_effect_cache.tax_eff, "tax_eff", true, PERCENTAGE_DECIMAL, "TECH_TAX_EFF"
+	);
 
 	/* Country Modifier Effects */
 	ret &= register_technology_modifier_effect(
@@ -147,9 +151,15 @@ bool ModifierManager::setup_modifier_effects() {
 		modifier_effect_cache.administrative_efficiency_modifier, "administrative_efficiency_modifier", true,
 		PROPORTION_DECIMAL, ModifierEffect::make_default_modifier_effect_localisation_key("administrative_efficiency")
 	);
-	ret &= register_technology_modifier_effect(modifier_effect_cache.artisan_input, "artisan_input", false, PROPORTION_DECIMAL,{},has_no_effect);
-	ret &= register_technology_modifier_effect(modifier_effect_cache.artisan_output, "artisan_output", true, PROPORTION_DECIMAL,{},has_no_effect);
-	ret &= register_technology_modifier_effect(	modifier_effect_cache.artisan_throughput, "artisan_throughput", true, PROPORTION_DECIMAL,{},has_no_effect);
+	ret &= register_technology_modifier_effect(
+		modifier_effect_cache.artisan_input, "artisan_input", false, PROPORTION_DECIMAL, {}, has_no_effect
+	);
+	ret &= register_technology_modifier_effect(
+		modifier_effect_cache.artisan_output, "artisan_output", true, PROPORTION_DECIMAL, {}, has_no_effect
+	);
+	ret &= register_technology_modifier_effect(
+		modifier_effect_cache.artisan_throughput, "artisan_throughput", true, PROPORTION_DECIMAL, {}, has_no_effect
+	);
 	ret &= register_base_country_modifier_effect(modifier_effect_cache.badboy, "badboy", false, RAW_DECIMAL);
 	ret &= register_base_country_modifier_effect(
 		modifier_effect_cache.cb_generation_speed_modifier, "cb_generation_speed_modifier", true, PROPORTION_DECIMAL
@@ -194,12 +204,18 @@ bool ModifierManager::setup_modifier_effects() {
 		modifier_effect_cache.education_efficiency_modifier, "education_efficiency_modifier", true, PROPORTION_DECIMAL,
 		ModifierEffect::make_default_modifier_effect_localisation_key("education_efficiency")
 	);
-	ret &= register_shared_tech_country_modifier_effect(modifier_effect_cache.factory_cost, "factory_cost", false, PROPORTION_DECIMAL);
-	ret &= register_shared_tech_country_modifier_effect(modifier_effect_cache.factory_input, "factory_input", false, PROPORTION_DECIMAL);
+	ret &= register_shared_tech_country_modifier_effect(
+		modifier_effect_cache.factory_cost, "factory_cost", false, PROPORTION_DECIMAL
+	);
+	ret &= register_shared_tech_country_modifier_effect(
+		modifier_effect_cache.factory_input, "factory_input", false, PROPORTION_DECIMAL
+	);
 	ret &= register_base_country_modifier_effect(
 		modifier_effect_cache.factory_maintenance, "factory_maintenance", false, PROPORTION_DECIMAL
 	);
-	ret &= register_shared_tech_country_modifier_effect(modifier_effect_cache.factory_output, "factory_output", true, PROPORTION_DECIMAL);
+	ret &= register_shared_tech_country_modifier_effect(
+		modifier_effect_cache.factory_output, "factory_output", true, PROPORTION_DECIMAL
+	);
 	ret &= register_base_country_modifier_effect(
 		modifier_effect_cache.factory_owner_cost, "factory_owner_cost", false, PROPORTION_DECIMAL
 	);
@@ -224,8 +240,12 @@ bool ModifierManager::setup_modifier_effects() {
 		modifier_effect_cache.global_population_growth, "global_population_growth", true, PROPORTION_DECIMAL,
 		ModifierEffect::make_default_modifier_effect_localisation_key("population_growth")
 	);
-	ret &= register_base_country_modifier_effect(modifier_effect_cache.goods_demand, "goods_demand", false, PROPORTION_DECIMAL);
-	ret &= register_base_country_modifier_effect(modifier_effect_cache.import_cost, "import_cost", false, PROPORTION_DECIMAL,{},has_no_effect);
+	ret &= register_base_country_modifier_effect(
+		modifier_effect_cache.goods_demand, "goods_demand", false, PROPORTION_DECIMAL
+	);
+	ret &= register_base_country_modifier_effect(
+		modifier_effect_cache.import_cost, "import_cost", false, PROPORTION_DECIMAL, {}, has_no_effect
+	);
 	ret &= register_technology_modifier_effect(
 		modifier_effect_cache.increase_research, "increase_research", true, PROPORTION_DECIMAL, "INC_RES_TECH"
 	);
@@ -256,7 +276,9 @@ bool ModifierManager::setup_modifier_effects() {
 	ret &= register_base_country_modifier_effect(
 		modifier_effect_cache.land_unit_start_experience, "land_unit_start_experience", true, RAW_DECIMAL
 	);
-	ret &= register_base_country_modifier_effect(modifier_effect_cache.leadership, "leadership", true, RAW_DECIMAL, "LEADERSHIP");
+	ret &= register_base_country_modifier_effect(
+		modifier_effect_cache.leadership, "leadership", true, RAW_DECIMAL, "LEADERSHIP"
+	);
 	ret &= register_base_country_modifier_effect(
 		modifier_effect_cache.leadership_modifier, "leadership_modifier", true, PROPORTION_DECIMAL,
 		ModifierEffect::make_default_modifier_effect_localisation_key("global_leadership_modifier")
@@ -264,8 +286,12 @@ bool ModifierManager::setup_modifier_effects() {
 	ret &= register_base_country_modifier_effect(
 		modifier_effect_cache.literacy_con_impact, "literacy_con_impact", false, PROPORTION_DECIMAL
 	);
-	ret &= register_technology_modifier_effect(modifier_effect_cache.loan_interest_base, "loan_interest", false, PROPORTION_DECIMAL);
-	ret &= register_base_country_modifier_effect(modifier_effect_cache.loan_interest_foreign, "loan_interest", false, PROPORTION_DECIMAL);
+	ret &= register_technology_modifier_effect(
+		modifier_effect_cache.loan_interest_base, "loan_interest", false, PROPORTION_DECIMAL
+	);
+	ret &= register_base_country_modifier_effect(
+		modifier_effect_cache.loan_interest_foreign, "loan_interest", false, PROPORTION_DECIMAL
+	);
 	ret &= register_base_country_modifier_effect(
 		modifier_effect_cache.max_loan_modifier, "max_loan_modifier", true, PROPORTION_DECIMAL,
 		ModifierEffect::make_default_modifier_effect_localisation_key("max_loan_amount")
@@ -308,7 +334,9 @@ bool ModifierManager::setup_modifier_effects() {
 	ret &= register_base_country_modifier_effect(
 		modifier_effect_cache.mobilization_impact, "mobilization_impact", false, PROPORTION_DECIMAL
 	);
-	ret &= register_technology_modifier_effect(modifier_effect_cache.morale_global, "morale", true, PROPORTION_DECIMAL, "MORALE_TECH");
+	ret &= register_technology_modifier_effect(
+		modifier_effect_cache.morale_global, "morale", true, PROPORTION_DECIMAL, "MORALE_TECH"
+	);
 	ret &= register_base_country_modifier_effect(
 		modifier_effect_cache.naval_attack_modifier, "naval_attack_modifier", true, PROPORTION_DECIMAL,
 		ModifierEffect::make_default_modifier_effect_localisation_key("naval_attack")
@@ -334,7 +362,9 @@ bool ModifierManager::setup_modifier_effects() {
 		modifier_effect_cache.non_accepted_pop_militancy_modifier, "non_accepted_pop_militancy_modifier", false, RAW_DECIMAL
 	);
 	ret &= register_base_country_modifier_effect(modifier_effect_cache.org_regain, "org_regain", true, PROPORTION_DECIMAL);
-	ret &= register_base_country_modifier_effect(modifier_effect_cache.pension_level, "pension_level", true, PROPORTION_DECIMAL);
+	ret &= register_base_country_modifier_effect(
+		modifier_effect_cache.pension_level, "pension_level", true, PROPORTION_DECIMAL
+	);
 	ret &= register_technology_modifier_effect(
 		modifier_effect_cache.permanent_prestige, "permanent_prestige", true, RAW_DECIMAL, "PERMANENT_PRESTIGE_TECH"
 	);
@@ -342,11 +372,15 @@ bool ModifierManager::setup_modifier_effects() {
 		modifier_effect_cache.political_reform_desire, "political_reform_desire", false, PROPORTION_DECIMAL
 	);
 
-	ret &= register_technology_modifier_effect(	modifier_effect_cache.poor_savings_modifier, "poor_savings_modifier", true, PROPORTION_DECIMAL,{},has_no_effect);
+	ret &= register_technology_modifier_effect(
+		modifier_effect_cache.poor_savings_modifier, "poor_savings_modifier", true, PROPORTION_DECIMAL, {}, has_no_effect
+	);
 	ret &= register_base_country_modifier_effect(
 		modifier_effect_cache.prestige_monthly_gain, "prestige", true, RAW_DECIMAL
 	);
-	ret &= register_base_country_modifier_effect(modifier_effect_cache.reinforce_speed, "reinforce_speed", true, PROPORTION_DECIMAL);
+	ret &= register_base_country_modifier_effect(
+		modifier_effect_cache.reinforce_speed, "reinforce_speed", true, PROPORTION_DECIMAL
+	);
 	ret &= register_base_country_modifier_effect(modifier_effect_cache.research_points, "research_points", true, RAW_DECIMAL);
 	ret &= register_base_country_modifier_effect(
 		modifier_effect_cache.research_points_modifier, "research_points_modifier", true, PROPORTION_DECIMAL
@@ -354,8 +388,12 @@ bool ModifierManager::setup_modifier_effects() {
 	ret &= register_base_country_modifier_effect(
 		modifier_effect_cache.research_points_on_conquer, "research_points_on_conquer", true, PROPORTION_DECIMAL
 	);
-	ret &= register_shared_tech_country_modifier_effect(modifier_effect_cache.rgo_output, "rgo_output", true, PROPORTION_DECIMAL);
-	ret &= register_shared_tech_country_modifier_effect(modifier_effect_cache.rgo_throughput, "rgo_throughput", true, PROPORTION_DECIMAL);
+	ret &= register_shared_tech_country_modifier_effect(
+		modifier_effect_cache.rgo_output, "rgo_output", true, PROPORTION_DECIMAL
+	);
+	ret &= register_shared_tech_country_modifier_effect(
+		modifier_effect_cache.rgo_throughput, "rgo_throughput", true, PROPORTION_DECIMAL
+	);
 	ret &= register_base_country_modifier_effect(
 		modifier_effect_cache.ruling_party_support, "ruling_party_support", true, PROPORTION_DECIMAL
 	);
@@ -388,7 +426,9 @@ bool ModifierManager::setup_modifier_effects() {
 		modifier_effect_cache.tariff_efficiency_modifier, "tariff_efficiency_modifier", true, PROPORTION_DECIMAL,
 		ModifierEffect::make_default_modifier_effect_localisation_key("tariff_efficiency")
 	);
-	ret &= register_base_country_modifier_effect(modifier_effect_cache.tax_efficiency, "tax_efficiency", true, PROPORTION_DECIMAL);
+	ret &= register_base_country_modifier_effect(
+		modifier_effect_cache.tax_efficiency, "tax_efficiency", true, PROPORTION_DECIMAL
+	);
 	ret &= register_base_country_modifier_effect(
 		modifier_effect_cache.unemployment_benefit, "unemployment_benefit", true, PROPORTION_DECIMAL
 	);
@@ -412,13 +452,15 @@ bool ModifierManager::setup_modifier_effects() {
 		modifier_effect_cache.assimilation_rate, "assimilation_rate", true, PROPORTION_DECIMAL
 	);
 	ret &= register_base_province_modifier_effect(
-		modifier_effect_cache.boost_strongest_party, "boost_strongest_party", false, PROPORTION_DECIMAL,{},has_no_effect
+		modifier_effect_cache.boost_strongest_party, "boost_strongest_party", false, PROPORTION_DECIMAL, {}, has_no_effect
 	);
 	// When applied to provinces (terrain), combat_width is a multiplicative proportional decimal value.
 	ret &= register_base_province_modifier_effect(
 		modifier_effect_cache.combat_width_percentage_change, "combat_width", false, PROPORTION_DECIMAL
 	);
-	ret &= register_terrain_modifier_effect(modifier_effect_cache.defence_terrain, "defence", true, INT, "TRAIT_DEFEND");
+	ret &= register_terrain_modifier_effect(
+		modifier_effect_cache.defence_terrain, "defence", true, RAW_DECIMAL, "TRAIT_DEFEND"
+	);
 	ret &= register_technology_modifier_effect(
 		modifier_effect_cache.farm_rgo_throughput_global, "farm_rgo_eff", true, PROPORTION_DECIMAL, "TECH_FARM_OUTPUT"
 	);
@@ -476,7 +518,9 @@ bool ModifierManager::setup_modifier_effects() {
 		modifier_effect_cache.local_factory_throughput, "local_factory_throughput", true, PROPORTION_DECIMAL,
 		ModifierEffect::make_default_modifier_effect_localisation_key("factory_throughput")
 	);
-	ret &= register_base_province_modifier_effect(modifier_effect_cache.local_repair, "local_repair", true, PROPORTION_DECIMAL);
+	ret &= register_base_province_modifier_effect(
+		modifier_effect_cache.local_repair, "local_repair", true, PROPORTION_DECIMAL
+	);
 	ret &= register_base_province_modifier_effect(
 		modifier_effect_cache.local_rgo_output, "local_rgo_output", true, PROPORTION_DECIMAL,
 		ModifierEffect::make_default_modifier_effect_localisation_key("rgo_output")
@@ -492,7 +536,9 @@ bool ModifierManager::setup_modifier_effects() {
 	ret &= register_base_province_modifier_effect(
 		modifier_effect_cache.local_ship_build, "local_ship_build", false, PROPORTION_DECIMAL
 	);
-	ret &= register_terrain_modifier_effect(modifier_effect_cache.attrition_local, "attrition", false, PROPORTION_DECIMAL, "UA_ATTRITION");
+	ret &= register_terrain_modifier_effect(
+		modifier_effect_cache.attrition_local, "attrition", false, PROPORTION_DECIMAL, "UA_ATTRITION"
+	);
 	ret &= register_base_province_modifier_effect(modifier_effect_cache.max_attrition, "max_attrition", false, RAW_DECIMAL);
 	ret &= register_technology_modifier_effect(
 		modifier_effect_cache.mine_rgo_throughput_global, "mine_rgo_eff", true, PROPORTION_DECIMAL, "TECH_MINE_OUTPUT"
@@ -533,25 +579,37 @@ bool ModifierManager::setup_modifier_effects() {
 	ret &= register_base_province_modifier_effect(
 		modifier_effect_cache.population_growth, "population_growth", true, PROPORTION_DECIMAL
 	);
-	ret &= register_technology_modifier_effect(modifier_effect_cache.supply_limit_global_percentage_change, "supply_limit", true, RAW_DECIMAL);
-	ret &= register_base_country_modifier_effect(modifier_effect_cache.supply_limit_global_base, "supply_limit", true, RAW_DECIMAL);
-	ret &= register_base_province_modifier_effect(modifier_effect_cache.supply_limit_local_base, "supply_limit", true, RAW_DECIMAL);
+	ret &= register_technology_modifier_effect(
+		modifier_effect_cache.supply_limit_global_percentage_change, "supply_limit", true, RAW_DECIMAL
+	);
+	ret &= register_base_country_modifier_effect(
+		modifier_effect_cache.supply_limit_global_base, "supply_limit", true, RAW_DECIMAL
+	);
+	ret &= register_base_province_modifier_effect(
+		modifier_effect_cache.supply_limit_local_base, "supply_limit", true, RAW_DECIMAL
+	);
 
 	/* Military Modifier Effects */
-	ret &= register_leader_modifier_effect(modifier_effect_cache.attack_leader, "attack", true, INT, "TRAIT_ATTACK");
-	ret &= register_leader_modifier_effect(modifier_effect_cache.attrition_leader, "attrition", false, RAW_DECIMAL, "ATTRITION");
-	ret &= register_leader_modifier_effect(modifier_effect_cache.defence_leader, "defence", true, INT, "TRAIT_DEFEND");
+	ret &= register_leader_modifier_effect(modifier_effect_cache.attack_leader, "attack", true, RAW_DECIMAL, "TRAIT_ATTACK");
+	ret &= register_leader_modifier_effect(
+		modifier_effect_cache.attrition_leader, "attrition", false, RAW_DECIMAL, "ATTRITION"
+	);
+	ret &= register_leader_modifier_effect(modifier_effect_cache.defence_leader, "defence", true, RAW_DECIMAL, "TRAIT_DEFEND");
 	ret &= register_leader_modifier_effect(
 		modifier_effect_cache.experience, "experience", true, PROPORTION_DECIMAL, "TRAIT_EXPERIENCE"
 	);
-	ret &= register_leader_modifier_effect(modifier_effect_cache.morale_leader, "morale", true, PROPORTION_DECIMAL, "TRAIT_MORALE");
+	ret &= register_leader_modifier_effect(
+		modifier_effect_cache.morale_leader, "morale", true, PROPORTION_DECIMAL, "TRAIT_MORALE"
+	);
 	ret &= register_leader_modifier_effect(
 		modifier_effect_cache.organisation, "organisation", true, PROPORTION_DECIMAL, "TRAIT_ORGANISATION"
 	);
 	ret &= register_leader_modifier_effect(
 		modifier_effect_cache.reconnaissance, "reconnaissance", true, PROPORTION_DECIMAL, "TRAIT_RECONAISSANCE"
 	);
-	ret &= register_leader_modifier_effect(modifier_effect_cache.reliability, "reliability", true, RAW_DECIMAL, "TRAIT_RELIABILITY");
+	ret &= register_leader_modifier_effect(
+		modifier_effect_cache.reliability, "reliability", true, PROPORTION_DECIMAL, "TRAIT_RELIABILITY"
+	);
 	ret &= register_leader_modifier_effect(modifier_effect_cache.speed, "speed", true, PROPORTION_DECIMAL, "TRAIT_SPEED");
 
 	return ret;
@@ -698,16 +756,17 @@ bool ModifierManager::_add_modifier_cb(
 	return expect_fixed_point(map_callback(modifier_value.values, effect))(value);
 }
 
-NodeTools::key_value_callback_t ModifierManager::_expect_modifier_effect(
+key_value_callback_t ModifierManager::_expect_modifier_effect(
 	modifier_effect_registry_t const& registry,
 	ModifierValue& modifier_value
 ) const {
 	return _expect_modifier_effect_with_fallback(registry, modifier_value, key_value_invalid_callback);
 }
-NodeTools::key_value_callback_t ModifierManager::_expect_modifier_effect_with_fallback(
+
+key_value_callback_t ModifierManager::_expect_modifier_effect_with_fallback(
 	modifier_effect_registry_t const& registry,
 	ModifierValue& modifier_value,
-	const NodeTools::key_value_callback_t fallback
+	const key_value_callback_t fallback
 ) const {
 	return [this, &registry, &modifier_value, fallback](const std::string_view key, const ast::NodeCPtr value) -> bool {
 		if (dryad::node_has_kind<ast::ListValue>(value) && complex_modifiers.contains(key)) {
@@ -717,7 +776,7 @@ NodeTools::key_value_callback_t ModifierManager::_expect_modifier_effect_with_fa
 				return _add_flattened_modifier_cb(modifier_value, key, inner_key, inner_value);
 			})(value);
 		}
-	
+
 		ModifierEffect const* effect = registry.get_item_by_identifier(key);
 		if (effect == nullptr) {
 			return fallback(key, value);
@@ -725,13 +784,16 @@ NodeTools::key_value_callback_t ModifierManager::_expect_modifier_effect_with_fa
 		return _add_modifier_cb(modifier_value, effect, value);
 	};
 }
-NodeTools::key_value_callback_t ModifierManager::_expect_shared_tech_country_modifier_effect(ModifierValue& modifier_value) const {
+
+key_value_callback_t ModifierManager::_expect_shared_tech_country_modifier_effect(ModifierValue& modifier_value) const {
 	return _expect_modifier_effect(shared_tech_country_modifier_effects, modifier_value);
 }
-NodeTools::key_value_callback_t ModifierManager::expect_leader_modifier(ModifierValue& modifier_value) const {
+
+key_value_callback_t ModifierManager::expect_leader_modifier(ModifierValue& modifier_value) const {
 	return _expect_modifier_effect(leader_modifier_effects, modifier_value);
 }
-NodeTools::key_value_callback_t ModifierManager::expect_technology_modifier(ModifierValue& modifier_value) const {
+
+key_value_callback_t ModifierManager::expect_technology_modifier(ModifierValue& modifier_value) const {
 	return [this, &modifier_value](const std::string_view key, const ast::NodeCPtr value) {
 		if (strings_equal_case_insensitive(key, "rebel_org_gain")) { // because of course there's a special one
 			std::string_view faction_identifier;
@@ -751,7 +813,7 @@ NodeTools::key_value_callback_t ModifierManager::expect_technology_modifier(Modi
 			return _add_modifier_cb(modifier_value, modifier_effect_cache.farm_rgo_throughput_global, value)
 				&& _add_modifier_cb(modifier_value, modifier_effect_cache.farm_rgo_output_global, value);
 		}
-		
+
 		if (strings_equal_case_insensitive(key, "mine_rgo_eff")) {
 			return _add_modifier_cb(modifier_value, modifier_effect_cache.mine_rgo_throughput_global, value)
 				&& _add_modifier_cb(modifier_value, modifier_effect_cache.mine_rgo_output_global, value);
@@ -764,7 +826,8 @@ NodeTools::key_value_callback_t ModifierManager::expect_technology_modifier(Modi
 		)(key, value);
 	};
 }
-NodeTools::key_value_callback_t ModifierManager::expect_unit_terrain_modifier(
+
+key_value_callback_t ModifierManager::expect_unit_terrain_modifier(
 	ModifierValue& modifier_value,
 	const std::string_view terrain_type_identifier
 ) const {
@@ -777,21 +840,24 @@ NodeTools::key_value_callback_t ModifierManager::expect_unit_terrain_modifier(
 		return _add_modifier_cb(modifier_value, effect, value);
 	};
 }
-NodeTools::key_value_callback_t ModifierManager::expect_base_country_modifier(ModifierValue& modifier_value) const {
+
+key_value_callback_t ModifierManager::expect_base_country_modifier(ModifierValue& modifier_value) const {
 	return _expect_modifier_effect_with_fallback(
 		base_country_modifier_effects,
 		modifier_value,
 		_expect_shared_tech_country_modifier_effect(modifier_value)
 	);
 }
-NodeTools::key_value_callback_t ModifierManager::expect_base_province_modifier(ModifierValue& modifier_value) const {
+
+key_value_callback_t ModifierManager::expect_base_province_modifier(ModifierValue& modifier_value) const {
 	return _expect_modifier_effect_with_fallback(
 		base_province_modifier_effects,
 		modifier_value,
 		expect_base_country_modifier(modifier_value)
 	);
 }
-NodeTools::key_value_callback_t ModifierManager::expect_terrain_modifier(ModifierValue& modifier_value) const {
+
+key_value_callback_t ModifierManager::expect_terrain_modifier(ModifierValue& modifier_value) const {
 	return _expect_modifier_effect_with_fallback(
 		terrain_modifier_effects,
 		modifier_value,

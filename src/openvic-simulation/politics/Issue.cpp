@@ -190,7 +190,7 @@ bool IssueManager::_load_issue(
 		"war_exhaustion_effect", ZERO_OR_ONE, [](const ast::NodeCPtr _) -> bool {
 			Logger::warning("war_exhaustion_effect does nothing (vanilla issues have it).");
 			return true;
-		 }
+		}
 	)(node);
 
 	ret &= add_issue(

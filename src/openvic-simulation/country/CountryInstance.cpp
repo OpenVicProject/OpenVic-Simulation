@@ -417,8 +417,8 @@ bool CountryInstance::add_unit_instance_group(UnitInstanceGroup<Branch>& group) 
 		return true;
 	} else {
 		Logger::error(
-			"Trying to add already-existing ", Branch == UnitType::branch_t::LAND ? "army" : "navy", " ",
-			group.get_name(), " to country ", get_identifier()
+			"Trying to add already-existing ", UnitType::get_branched_unit_group_name(Branch), " \"",
+			group.get_name(), "\" to country ", get_identifier()
 		);
 		return false;
 	}
@@ -430,8 +430,8 @@ bool CountryInstance::remove_unit_instance_group(UnitInstanceGroup<Branch> const
 		return true;
 	} else {
 		Logger::error(
-			"Trying to remove non-existent ", Branch == UnitType::branch_t::LAND ? "army" : "navy", " ",
-			group.get_name(), " from country ", get_identifier()
+			"Trying to remove non-existent ", UnitType::get_branched_unit_group_name(Branch), " \"",
+			group.get_name(), "\" from country ", get_identifier()
 		);
 		return false;
 	}
@@ -457,8 +457,8 @@ bool CountryInstance::remove_leader(LeaderBranched<Branch> const& leader) {
 	}
 
 	Logger::error(
-		"Trying to remove non-existent ", Branch == UnitType::branch_t::LAND ? "general" : "admiral", " ",
-		leader.get_name(), " from country ", get_identifier()
+		"Trying to remove non-existent ", UnitType::get_branched_leader_name(Branch), " \"",
+		leader.get_name(), "\" from country ", get_identifier()
 	);
 	return false;
 }
@@ -1494,6 +1494,7 @@ bool CountryInstanceManager::apply_history_to_countries(
 	const Date today = instance_manager.get_today();
 	UnitInstanceManager& unit_instance_manager = instance_manager.get_unit_instance_manager();
 	MapInstance& map_instance = instance_manager.get_map_instance();
+	CultureManager const& culture_manager = instance_manager.get_definition_manager().get_pop_manager().get_culture_manager();
 
 	for (CountryInstance& country_instance : country_instances.get_items()) {
 		if (!country_instance.get_country_definition()->is_dynamic_tag()) {
@@ -1535,7 +1536,7 @@ bool CountryInstanceManager::apply_history_to_countries(
 
 				if (oob_history_entry != nullptr) {
 					ret &= unit_instance_manager.generate_deployment(
-						map_instance, country_instance, *oob_history_entry->get_inital_oob()
+						culture_manager, map_instance, country_instance, *oob_history_entry->get_inital_oob()
 					);
 				}
 

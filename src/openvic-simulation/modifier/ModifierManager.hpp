@@ -39,7 +39,7 @@ namespace OpenVic {
 
 		ModifierEffectCache PROPERTY(modifier_effect_cache);
 		StaticModifierCache PROPERTY(static_modifier_cache);
-	
+
 		bool _register_modifier_effect(
 			modifier_effect_registry_t& registry,
 			ModifierEffect::target_t targets,
@@ -51,7 +51,6 @@ namespace OpenVic {
 			const bool has_no_effect
 		);
 
-	
 #define REGISTER_MODIFIER_EFFECT_DEFINITION(MAPPING_TYPE) \
 		bool register_##MAPPING_TYPE##_modifier_effect( \
 			ModifierEffect const*& effect_cache, \
@@ -69,8 +68,8 @@ namespace OpenVic {
 		REGISTER_MODIFIER_EFFECT_DEFINITION(base_country)
 		REGISTER_MODIFIER_EFFECT_DEFINITION(base_province)
 		REGISTER_MODIFIER_EFFECT_DEFINITION(terrain)
-#undef REGISTER_MODIFIER_EFFECT_DEFINITION	
-	
+#undef REGISTER_MODIFIER_EFFECT_DEFINITION
+
 		bool _add_flattened_modifier_cb(
 			ModifierValue& modifier_value,
 			const std::string_view prefix,

@@ -82,7 +82,6 @@ bool StaticModifierCache::load_static_modifiers(ModifierManager& modifier_manage
 				return has_parsed_modifier;
 			}
 		);
-	
 	};
 
 	const auto set_static_province_modifier = [&key_map, &modifier_manager, &ret](
@@ -156,7 +155,6 @@ bool StaticModifierCache::load_static_modifiers(ModifierManager& modifier_manage
 	set_static_province_modifier(occupied);
 	set_static_province_modifier(nationalism);
 	set_static_province_modifier(infrastructure);
-
 
 	ret &= expect_dictionary_key_map_and_default(key_map, key_value_invalid_callback)(root);
 

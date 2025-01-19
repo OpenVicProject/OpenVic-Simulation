@@ -17,9 +17,9 @@ namespace OpenVic {
 		std::string PROPERTY(unit_name);
 		_UnitType const& PROPERTY(unit_type);
 
-		fixed_point_t PROPERTY_RW(organisation);
-		fixed_point_t PROPERTY_RW(morale);
-		fixed_point_t PROPERTY_RW(strength);
+		fixed_point_t PROPERTY(organisation);
+		fixed_point_t PROPERTY(morale);
+		fixed_point_t PROPERTY(strength);
 
 	protected:
 		UnitInstance(std::string_view new_unit_name, _UnitType const& new_unit_type);

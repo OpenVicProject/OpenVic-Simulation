@@ -121,7 +121,7 @@ bool DeploymentManager::load_oob_file(
 			Logger::error("Invalid branch ", static_cast<uint64_t>(leader_branch), " for leader ", leader_name);
 			return false;
 		}
-	
+
 		leaders.push_back(
 			{ leader_name, leader_branch, leader_date, leader_personality, leader_background, leader_prestige, picture }
 		);
