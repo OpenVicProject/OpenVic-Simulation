@@ -17,6 +17,7 @@ namespace OpenVic {
 	 * MAP-4
 	 */
 	struct MapInstance {
+	private:
 		MapDefinition const& PROPERTY(map_definition);
 
 		IdentifierRegistry<ProvinceInstance> IDENTIFIER_REGISTRY_CUSTOM_INDEX_OFFSET(province_instance, 1);

@@ -121,27 +121,27 @@ bool ProvinceInstance::set_controller(CountryInstance* new_controller) {
 	return ret;
 }
 
-bool ProvinceInstance::add_core(CountryInstance& new_core) {
+bool ProvinceInstance::add_core(CountryInstance& new_core, bool warn) {
 	if (cores.emplace(&new_core).second) {
 		return new_core.add_core_province(*this);
-	} else {
-		Logger::error(
-			"Attempted to add core \"", new_core.get_identifier(), "\" to country ", get_identifier(), ": already exists!"
+	} else if (warn) {
+		Logger::warning(
+			"Attempted to add core \"", new_core.get_identifier(), "\" to province ", get_identifier(), ": already exists!"
 		);
-		return false;
 	}
+	return true;
 }
 
-bool ProvinceInstance::remove_core(CountryInstance& core_to_remove) {
+bool ProvinceInstance::remove_core(CountryInstance& core_to_remove, bool warn) {
 	if (cores.erase(&core_to_remove) > 0) {
 		return core_to_remove.remove_core_province(*this);
-	} else {
-		Logger::error(
-			"Attempted to remove core \"", core_to_remove.get_identifier(), "\" from country ", get_identifier(),
+	} else if (warn) {
+		Logger::warning(
+			"Attempted to remove core \"", core_to_remove.get_identifier(), "\" from province ", get_identifier(),
 			": does not exist!"
 		);
-		return false;
 	}
+	return true;
 }
 
 fixed_point_t ProvinceInstance::get_issue_support(Issue const& issue) const {
@@ -545,9 +545,9 @@ bool ProvinceInstance::apply_history_to_province(ProvinceHistoryEntry const& ent
 	set_optional(slave, entry.get_slave());
 	for (auto const& [country, add] : entry.get_cores()) {
 		if (add) {
-			ret &= add_core(country_manager.get_country_instance_from_definition(*country));
+			ret &= add_core(country_manager.get_country_instance_from_definition(*country), true);
 		} else {
-			ret &= remove_core(country_manager.get_country_instance_from_definition(*country));
+			ret &= remove_core(country_manager.get_country_instance_from_definition(*country), true);
 		}
 	}
 

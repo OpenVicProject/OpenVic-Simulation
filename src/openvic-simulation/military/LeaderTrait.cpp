@@ -1,6 +1,8 @@
 #include "LeaderTrait.hpp"
 
 #include "openvic-simulation/dataloader/NodeTools.hpp"
+#include "openvic-simulation/defines/MilitaryDefines.hpp"
+#include "openvic-simulation/modifier/ModifierEffectCache.hpp"
 #include "openvic-simulation/modifier/ModifierManager.hpp"
 
 using namespace OpenVic;
@@ -15,6 +17,44 @@ bool LeaderTrait::is_personality_trait() const {
 
 bool LeaderTrait::is_background_trait() const {
 	return trait_type == trait_type_t::BACKGROUND;
+}
+
+LeaderTraitManager::LeaderTraitManager()
+	: leader_prestige_modifier { "leader_prestige", {}, Modifier::modifier_type_t::LEADER } {}
+
+bool LeaderTraitManager::setup_leader_prestige_modifier(
+	ModifierEffectCache const& modifier_effect_cache, MilitaryDefines const& military_defines
+) {
+	if (!leader_prestige_modifier.empty()) {
+		Logger::error("Leader prestige modifier already set up!");
+		return false;
+	}
+
+	bool ret = true;
+
+	if (military_defines.get_leader_prestige_to_morale_factor() != fixed_point_t::_0()) {
+		if (modifier_effect_cache.get_morale_leader() != nullptr) {
+			leader_prestige_modifier.set_effect(
+				*modifier_effect_cache.get_morale_leader(), military_defines.get_leader_prestige_to_morale_factor()
+			);
+		} else {
+			Logger::error("Cannot set leader prestige modifier morale effect - ModifierEffect is null!");
+			ret = false;
+		}
+	}
+
+	if (military_defines.get_leader_prestige_to_max_org_factor() != fixed_point_t::_0()) {
+		if (modifier_effect_cache.get_organisation() != nullptr) {
+			leader_prestige_modifier.set_effect(
+				*modifier_effect_cache.get_organisation(), military_defines.get_leader_prestige_to_max_org_factor()
+			);
+		} else {
+			Logger::error("Cannot set leader prestige modifier organisation effect - ModifierEffect is null!");
+			ret = false;
+		}
+	}
+
+	return ret;
 }
 
 bool LeaderTraitManager::add_leader_trait(

@@ -113,6 +113,7 @@ namespace OpenVic {
 
 	struct MapInstance;
 	struct Deployment;
+	struct LeaderBase;
 
 	struct UnitInstanceManager {
 	private:
@@ -134,6 +135,7 @@ namespace OpenVic {
 		bool generate_unit_instance_group(
 			MapInstance& map_instance, CountryInstance& country, UnitDeploymentGroup<Branch> const& unit_deployment_group
 		);
+		static bool generate_leader(CountryInstance& country, LeaderBase const& leader);
 
 	public:
 		bool generate_deployment(MapInstance& map_instance, CountryInstance& country, Deployment const* deployment);

@@ -1042,6 +1042,13 @@ bool Dataloader::load_defines(DefinitionManager& definition_manager) {
 		Logger::error("Failed to load leader traits!");
 		ret = false;
 	}
+	if (!definition_manager.get_military_manager().get_leader_trait_manager().setup_leader_prestige_modifier(
+		definition_manager.get_modifier_manager().get_modifier_effect_cache(),
+		definition_manager.get_define_manager().get_military_defines()
+	)) {
+		Logger::error("Failed to set up leader prestige modifier!");
+		ret = false;
+	}
 	if (!definition_manager.get_military_manager().get_wargoal_type_manager().load_wargoal_file(
 		parse_defines_cached(lookup_file(cb_types_file))
 	)) {

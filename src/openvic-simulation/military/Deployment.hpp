@@ -58,9 +58,11 @@ namespace OpenVic {
 		std::string PROPERTY(name);
 		ProvinceDefinition const* PROPERTY(location);
 		std::vector<_Unit> PROPERTY(units);
+		std::optional<size_t> PROPERTY(leader_index);
 
 		UnitDeploymentGroup(
-			std::string_view new_name, ProvinceDefinition const* new_location, std::vector<_Unit>&& new_units
+			std::string_view new_name, ProvinceDefinition const* new_location, std::vector<_Unit>&& new_units,
+			std::optional<size_t> new_leader_index
 		);
 
 	public:
