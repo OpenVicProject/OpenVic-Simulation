@@ -257,15 +257,29 @@ bool UnitInstanceManager::generate_unit_instance_group(
 	return ret;
 }
 
-bool UnitInstanceManager::generate_leader(CountryInstance& country, LeaderBase const& leader) {
+bool UnitInstanceManager::generate_leader(
+	CultureManager const& culture_manager, CountryInstance& country, LeaderBase const& leader
+) {
 	using enum UnitType::branch_t;
+
+	const auto add_leader = [&culture_manager, &country, &leader]<UnitType::branch_t Branch>() -> void {
+		LeaderBranched<Branch> leader_branched { leader };
+
+		if (leader_branched.get_picture().empty() && country.get_primary_culture() != nullptr) {
+			leader_branched.set_picture(culture_manager.get_leader_picture_name(
+				country.get_primary_culture()->get_group().get_leader(), leader.get_branch()
+			));
+		}
+
+		country.add_leader(std::move(leader_branched));
+	};
 
 	switch (leader.get_branch()) {
 	case LAND:
-		country.add_leader<LAND>({ leader });
+		add_leader.template operator()<LAND>();
 		return true;
 	case NAVAL:
-		country.add_leader<NAVAL>({ leader });
+		add_leader.template operator()<NAVAL>();
 		return true;
 	default:
 		Logger::error(
@@ -277,7 +291,7 @@ bool UnitInstanceManager::generate_leader(CountryInstance& country, LeaderBase c
 }
 
 bool UnitInstanceManager::generate_deployment(
-	MapInstance& map_instance, CountryInstance& country, Deployment const* deployment
+	CultureManager const& culture_manager, MapInstance& map_instance, CountryInstance& country, Deployment const* deployment
 ) {
 	if (deployment == nullptr) {
 		Logger::error("Trying to generate null deployment for ", country.get_identifier());
@@ -287,7 +301,7 @@ bool UnitInstanceManager::generate_deployment(
 	bool ret = true;
 
 	for (LeaderBase const& leader : deployment->get_leaders()) {
-		ret &= generate_leader(country, leader);
+		ret &= generate_leader(culture_manager, country, leader);
 	}
 
 	const auto generate_group = [this, &map_instance, &country, &ret, deployment]<UnitType::branch_t Branch>() -> void {

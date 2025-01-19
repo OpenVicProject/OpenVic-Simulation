@@ -1,5 +1,6 @@
 #pragma once
 
+#include "openvic-simulation/military/UnitType.hpp"
 #include "openvic-simulation/types/IdentifierRegistry.hpp"
 
 namespace OpenVic {
@@ -7,6 +8,7 @@ namespace OpenVic {
 	struct CultureManager;
 	struct CountryDefinition;
 	struct CountryDefinitionManager;
+	class Dataloader;
 
 	struct GraphicalCultureType : HasIdentifier {
 		friend struct CultureManager;
@@ -65,12 +67,18 @@ namespace OpenVic {
 	};
 
 	struct CultureManager {
+		using leader_count_t = uint32_t;
+
 	private:
 		IdentifierRegistry<GraphicalCultureType> IDENTIFIER_REGISTRY(graphical_culture_type);
 		IdentifierRegistry<CultureGroup> IDENTIFIER_REGISTRY(culture_group);
 		IdentifierRegistry<Culture> IDENTIFIER_REGISTRY(culture);
 
 		GraphicalCultureType const* PROPERTY(default_graphical_culture_type);
+
+		using general_admiral_picture_count_t = std::pair<leader_count_t, leader_count_t>;
+		// Cultural type string maps to (general picture count, admiral picture count) pair
+		string_map_t<general_admiral_picture_count_t> leader_picture_counts;
 
 		bool _load_culture_group(
 			CountryDefinitionManager const& country_definition_manager, size_t& total_expected_cultures,
@@ -98,5 +106,14 @@ namespace OpenVic {
 
 		bool load_graphical_culture_type_file(ast::NodeCPtr root);
 		bool load_culture_file(CountryDefinitionManager const& country_definition_manager, ast::NodeCPtr root);
+
+		static std::string make_leader_picture_name(
+			std::string_view cultural_type, UnitType::branch_t branch, leader_count_t count
+		);
+		static std::string make_leader_picture_path(std::string_view leader_picture_name);
+
+		bool find_cultural_leader_pictures(Dataloader const& dataloader);
+
+		std::string get_leader_picture_name(std::string_view cultural_type, UnitType::branch_t branch) const;
 	};
 }

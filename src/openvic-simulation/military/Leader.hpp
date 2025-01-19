@@ -35,6 +35,8 @@ namespace OpenVic {
 
 	public:
 		LeaderBase(LeaderBase&&) = default;
+
+		void set_picture(std::string_view new_picture);
 	};
 
 	struct UnitInstanceManager;

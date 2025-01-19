@@ -17,3 +17,7 @@ LeaderBase::LeaderBase(
 	background { new_background },
 	prestige { new_prestige },
 	picture { new_picture } {}
+
+void LeaderBase::set_picture(std::string_view new_picture) {
+	picture = new_picture;
+}
