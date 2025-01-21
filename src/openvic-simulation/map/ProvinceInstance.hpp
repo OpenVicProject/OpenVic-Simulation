@@ -2,6 +2,7 @@
 
 #include <plf_colony.h>
 
+#include "openvic-simulation/country/CountryInstance.hpp"
 #include "openvic-simulation/economy/BuildingInstance.hpp"
 #include "openvic-simulation/economy/production/ProductionType.hpp"
 #include "openvic-simulation/economy/production/ResourceGatheringOperation.hpp"
@@ -20,7 +21,6 @@ namespace OpenVic {
 	struct ProvinceDefinition;
 	struct TerrainType;
 	struct State;
-	struct CountryInstance;
 	struct Crime;
 	struct GoodDefinition;
 	struct Ideology;
@@ -210,10 +210,29 @@ namespace OpenVic {
 		void contribute_country_modifier_sum(ModifierSum const& owner_modifier_sum);
 		fixed_point_t get_modifier_effect_value(ModifierEffect const& effect) const;
 		fixed_point_t get_modifier_effect_value_nullcheck(ModifierEffect const* effect) const;
-		void push_contributing_modifiers(
-			ModifierEffect const& effect, std::vector<ModifierSum::modifier_entry_t>& contributions
-		) const;
-		std::vector<ModifierSum::modifier_entry_t> get_contributing_modifiers(ModifierEffect const& effect) const;
+
+		constexpr void for_each_contributing_modifier(
+			ModifierEffect const& effect, std::invocable<ModifierSum::modifier_entry_t const&> auto callback
+		) const {
+			if constexpr (ADD_OWNER_CONTRIBUTION) {
+				modifier_sum.for_each_contributing_modifier(effect, callback);
+			} else {
+				using enum ModifierEffect::target_t;
+
+				if (owner != nullptr) {
+					if (ModifierEffect::excludes_targets(effect.get_targets(), PROVINCE)) {
+						// Non-province targeted effects are already added to the country modifier sum
+						owner->for_each_contributing_modifier(effect, callback);
+					} else {
+						// Province-targeted effects aren't passed to the country modifier sum
+						modifier_sum.for_each_contributing_modifier(effect, callback);
+						owner->for_each_contributing_modifier(effect, callback);
+					}
+				} else {
+					modifier_sum.for_each_contributing_modifier(effect, callback);
+				}
+			}
+		}
 
 		void update_gamestate(const Date today, DefineManager const& define_manager);
 		void province_tick(const Date today);

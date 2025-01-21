@@ -1073,6 +1073,8 @@ void CountryInstance::_update_military(
 	mobilisation_impact = get_modifier_effect_value_nullcheck(modifier_effect_cache.get_mobilization_impact());
 	mobilisation_economy_impact = get_modifier_effect_value_nullcheck(modifier_effect_cache.get_mobilisation_economy_impact());
 
+	// TODO - use country_defines.get_min_mobilize_limit(); (wiki: "lowest maximum of brigades you can mobilize. (by default 3)")
+
 	mobilisation_max_regiment_count =
 		((fixed_point_t::_1() + mobilisation_impact) * fixed_point_t::parse(regiment_count)).to_int64_t();
 
@@ -1245,16 +1247,6 @@ fixed_point_t CountryInstance::get_modifier_effect_value(ModifierEffect const& e
 
 fixed_point_t CountryInstance::get_modifier_effect_value_nullcheck(ModifierEffect const* effect) const {
 	return modifier_sum.get_effect_nullcheck(effect);
-}
-
-void CountryInstance::push_contributing_modifiers(
-	ModifierEffect const& effect, std::vector<ModifierSum::modifier_entry_t>& contributions
-) const {
-	modifier_sum.push_contributing_modifiers(effect, contributions);
-}
-
-std::vector<ModifierSum::modifier_entry_t> CountryInstance::get_contributing_modifiers(ModifierEffect const& effect) const {
-	return modifier_sum.get_contributing_modifiers(effect);
 }
 
 void CountryInstance::update_gamestate(InstanceManager& instance_manager) {

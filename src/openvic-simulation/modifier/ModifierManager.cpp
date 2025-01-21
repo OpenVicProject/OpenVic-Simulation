@@ -116,7 +116,7 @@ bool ModifierManager::setup_modifier_effects() {
 		modifier_effect_cache.combat_width_additive, "combat_width", false, INT
 	);
 	ret &= register_technology_modifier_effect(
-		modifier_effect_cache.plurality, "plurality", true, PERCENTAGE_DECIMAL, "TECH_PLURALITY"
+		modifier_effect_cache.plurality, "plurality", true, PROPORTION_DECIMAL, "TECH_PLURALITY"
 	);
 	ret &= register_technology_modifier_effect(
 		modifier_effect_cache.pop_growth, "pop_growth", true, PROPORTION_DECIMAL, "TECH_POP_GROWTH"
@@ -308,7 +308,7 @@ bool ModifierManager::setup_modifier_effects() {
 	ret &= register_base_country_modifier_effect(modifier_effect_cache.max_tariff, "max_tariff", true, PROPORTION_DECIMAL);
 	ret &= register_base_country_modifier_effect(modifier_effect_cache.max_tax, "max_tax", true, PROPORTION_DECIMAL);
 	ret &= register_base_country_modifier_effect(
-		modifier_effect_cache.max_war_exhaustion, "max_war_exhaustion", true, PERCENTAGE_DECIMAL, "MAX_WAR_EXHAUSTION"
+		modifier_effect_cache.max_war_exhaustion, "max_war_exhaustion", true, RAW_DECIMAL, "MAX_WAR_EXHAUSTION"
 	);
 	ret &= register_technology_modifier_effect(
 		modifier_effect_cache.military_tactics, "military_tactics", true, PROPORTION_DECIMAL, "MIL_TACTICS_TECH"
