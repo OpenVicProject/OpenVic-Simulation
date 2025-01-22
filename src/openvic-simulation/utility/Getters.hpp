@@ -196,12 +196,12 @@ namespace OpenVic {
  *		CultureGroup const& PROPERTY(group);// CultureGroup const& group;	CultureGroup const& get_group() const;
  *		Province& PROPERTY(province);		// Province& province;			Province const& get_province() const;
  */
-#define PROPERTY(NAME) PROPERTY_ACCESS(NAME, private)
-#define PROPERTY_CUSTOM_PREFIX(NAME, PREFIX) PROPERTY_CUSTOM_NAME(NAME, PREFIX##_##NAME)
-#define PROPERTY_CUSTOM_NAME(NAME, GETTER_NAME) PROPERTY_FULL(NAME, GETTER_NAME, private)
-#define PROPERTY_ACCESS(NAME, ACCESS) PROPERTY_FULL(NAME, get_##NAME, ACCESS)
-#define PROPERTY_FULL(NAME, GETTER_NAME, ACCESS) \
-	NAME; \
+#define PROPERTY(NAME, ...) PROPERTY_ACCESS(NAME, private, __VA_ARGS__)
+#define PROPERTY_CUSTOM_PREFIX(NAME, PREFIX, ...) PROPERTY_CUSTOM_NAME(NAME, PREFIX##_##NAME, __VA_ARGS__)
+#define PROPERTY_CUSTOM_NAME(NAME, GETTER_NAME, ...) PROPERTY_FULL(NAME, GETTER_NAME, private, __VA_ARGS__)
+#define PROPERTY_ACCESS(NAME, ACCESS, ...) PROPERTY_FULL(NAME, get_##NAME, ACCESS, __VA_ARGS__)
+#define PROPERTY_FULL(NAME, GETTER_NAME, ACCESS, ...) \
+	NAME __VA_OPT__(=) __VA_ARGS__; \
 \
 public: \
 	constexpr auto GETTER_NAME() const -> decltype(OpenVic::_get_property<decltype(NAME)>(NAME)) { \
@@ -210,11 +210,11 @@ public: \
 	ACCESS:
 
 // TODO: Special logic to decide argument type and control assignment.
-#define PROPERTY_RW(NAME) PROPERTY_RW_ACCESS(NAME, private)
-#define PROPERTY_RW_CUSTOM_NAME(NAME, GETTER_NAME, SETTER_NAME) PROPERTY_RW_FULL(NAME, GETTER_NAME, SETTER_NAME, private)
-#define PROPERTY_RW_ACCESS(NAME, ACCESS) PROPERTY_RW_FULL(NAME, get_##NAME, set_##NAME, ACCESS)
-#define PROPERTY_RW_FULL(NAME, GETTER_NAME, SETTER_NAME, ACCESS) \
-	PROPERTY_FULL(NAME, GETTER_NAME, ACCESS) \
+#define PROPERTY_RW(NAME, ...) PROPERTY_RW_ACCESS(NAME, private, __VA_ARGS__)
+#define PROPERTY_RW_CUSTOM_NAME(NAME, GETTER_NAME, SETTER_NAME, ...) PROPERTY_RW_FULL(NAME, GETTER_NAME, SETTER_NAME, private, __VA_ARGS__)
+#define PROPERTY_RW_ACCESS(NAME, ACCESS, ...) PROPERTY_RW_FULL(NAME, get_##NAME, set_##NAME, ACCESS, __VA_ARGS__)
+#define PROPERTY_RW_FULL(NAME, GETTER_NAME, SETTER_NAME, ACCESS, ...) \
+	PROPERTY_FULL(NAME, GETTER_NAME, ACCESS, __VA_ARGS__) \
 public: \
 	constexpr void SETTER_NAME(decltype(NAME) new_##NAME) { \
 		NAME = new_##NAME; \
