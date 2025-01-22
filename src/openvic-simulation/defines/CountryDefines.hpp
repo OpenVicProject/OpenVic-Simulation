@@ -64,7 +64,7 @@ namespace OpenVic {
 		fixed_point_t PROPERTY(tech_factor_vassal);
 		fixed_point_t PROPERTY(max_suppression);
 		fixed_point_t PROPERTY(prestige_hit_on_break_country);
-		fixed_point_t PROPERTY(min_mobilize_limit);
+		size_t PROPERTY(min_mobilize_limit);
 		Timespan PROPERTY(pop_growth_country_cache_days);
 		Timespan PROPERTY(newspaper_printing_frequency);
 		Timespan PROPERTY(newspaper_timeout_period);

@@ -390,41 +390,6 @@ fixed_point_t ProvinceInstance::get_modifier_effect_value_nullcheck(ModifierEffe
 	}
 }
 
-void ProvinceInstance::push_contributing_modifiers(
-	ModifierEffect const& effect, std::vector<ModifierSum::modifier_entry_t>& contributions
-) const {
-	if constexpr (ADD_OWNER_CONTRIBUTION) {
-		modifier_sum.push_contributing_modifiers(effect, contributions);
-	} else {
-		using enum ModifierEffect::target_t;
-
-		if (owner != nullptr) {
-			if (ModifierEffect::excludes_targets(effect.get_targets(), PROVINCE)) {
-				// Non-province targeted effects are already added to the country modifier sum
-				owner->push_contributing_modifiers(effect, contributions);
-			} else {
-				// Province-targeted effects aren't passed to the country modifier sum
-				modifier_sum.push_contributing_modifiers(effect, contributions);
-				owner->push_contributing_modifiers(effect, contributions);
-			}
-		} else {
-			modifier_sum.push_contributing_modifiers(effect, contributions);
-		}
-	}
-}
-
-std::vector<ModifierSum::modifier_entry_t> ProvinceInstance::get_contributing_modifiers(ModifierEffect const& effect) const {
-	if constexpr (ADD_OWNER_CONTRIBUTION) {
-		return modifier_sum.get_contributing_modifiers(effect);
-	} else {
-		std::vector<ModifierSum::modifier_entry_t> contributions;
-
-		push_contributing_modifiers(effect, contributions);
-
-		return contributions;
-	}
-}
-
 bool ProvinceInstance::convert_rgo_worker_pops_to_equivalent(ProductionType const& production_type) {
 	bool is_valid_operation = true;
 	std::vector<Job> const& jobs = production_type.get_jobs();

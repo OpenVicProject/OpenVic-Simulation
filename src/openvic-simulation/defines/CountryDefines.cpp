@@ -164,7 +164,7 @@ node_callback_t CountryDefines::expect_defines() {
 		"MAX_SUPPRESSION", ONE_EXACTLY, expect_fixed_point(assign_variable_callback(max_suppression)),
 		"PRESTIGE_HIT_ON_BREAK_COUNTRY", ONE_EXACTLY,
 			expect_fixed_point(assign_variable_callback(prestige_hit_on_break_country)),
-		"MIN_MOBILIZE_LIMIT", ONE_EXACTLY, expect_fixed_point(assign_variable_callback(min_mobilize_limit)),
+		"MIN_MOBILIZE_LIMIT", ONE_EXACTLY, expect_uint(assign_variable_callback(min_mobilize_limit)),
 		"POP_GROWTH_COUNTRY_CACHE_DAYS", ONE_EXACTLY, expect_days(assign_variable_callback(pop_growth_country_cache_days)),
 		"NEWSPAPER_PRINTING_FREQUENCY", ONE_EXACTLY, expect_days(assign_variable_callback(newspaper_printing_frequency)),
 		"NEWSPAPER_TIMEOUT_PERIOD", ONE_EXACTLY, expect_days(assign_variable_callback(newspaper_timeout_period)),
