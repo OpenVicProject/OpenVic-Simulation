@@ -258,13 +258,19 @@ fixed_point_t ResourceGatheringOperation::produce(const pop_size_t total_owner_c
 		+location.get_modifier_effect_value_nullcheck(modifier_effect_cache.get_local_rgo_output());
 
 	if (production_type.is_farm()) {
-		throughput_multiplier += location.get_modifier_effect_value_nullcheck(modifier_effect_cache.get_farm_rgo_throughput_global());
-		output_multilpier += location.get_modifier_effect_value_nullcheck(modifier_effect_cache.get_farm_rgo_output_global())
+		const fixed_point_t throughput_and_output =
+			location.get_modifier_effect_value_nullcheck(modifier_effect_cache.get_farm_rgo_throughput_and_output());
+		throughput_multiplier += throughput_and_output;
+		output_multilpier += throughput_and_output
+			+ location.get_modifier_effect_value_nullcheck(modifier_effect_cache.get_farm_rgo_output_global())
 			+ location.get_modifier_effect_value_nullcheck(modifier_effect_cache.get_farm_rgo_output_local());
 	}
 	if (production_type.is_mine()) {
-		throughput_multiplier += location.get_modifier_effect_value_nullcheck(modifier_effect_cache.get_mine_rgo_throughput_global());
-		output_multilpier += location.get_modifier_effect_value_nullcheck(modifier_effect_cache.get_mine_rgo_output_global())
+		const fixed_point_t throughput_and_output =
+			location.get_modifier_effect_value_nullcheck(modifier_effect_cache.get_mine_rgo_throughput_and_output());
+		throughput_multiplier += throughput_and_output;
+		output_multilpier += throughput_and_output
+			+ location.get_modifier_effect_value_nullcheck(modifier_effect_cache.get_mine_rgo_output_global())
 			+ location.get_modifier_effect_value_nullcheck(modifier_effect_cache.get_mine_rgo_output_local());
 	}
 	auto const& good_effects = modifier_effect_cache.get_good_effects()[production_type.get_output_good()];

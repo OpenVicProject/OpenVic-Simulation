@@ -148,7 +148,7 @@ namespace OpenVic {
 		ModifierEffect const* PROPERTY(boost_strongest_party);
 		ModifierEffect const* PROPERTY(combat_width_percentage_change);
 		ModifierEffect const* PROPERTY(defence_terrain);
-		ModifierEffect const* PROPERTY(farm_rgo_throughput_global);
+		ModifierEffect const* PROPERTY(farm_rgo_throughput_and_output);
 		ModifierEffect const* PROPERTY(farm_rgo_output_global);
 		ModifierEffect const* PROPERTY(farm_rgo_output_local);
 		ModifierEffect const* PROPERTY(farm_rgo_size_fake);
@@ -170,7 +170,7 @@ namespace OpenVic {
 		ModifierEffect const* PROPERTY(local_ship_build);
 		ModifierEffect const* PROPERTY(attrition_local);
 		ModifierEffect const* PROPERTY(max_attrition);
-		ModifierEffect const* PROPERTY(mine_rgo_throughput_global);
+		ModifierEffect const* PROPERTY(mine_rgo_throughput_and_output);
 		ModifierEffect const* PROPERTY(mine_rgo_output_global);
 		ModifierEffect const* PROPERTY(mine_rgo_output_local);
 		ModifierEffect const* PROPERTY(mine_rgo_size_fake);
