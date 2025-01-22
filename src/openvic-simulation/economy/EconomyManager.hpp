@@ -14,8 +14,17 @@ namespace OpenVic {
 		ProductionTypeManager PROPERTY_REF(production_type_manager);
 
 	public:
-		inline bool load_production_types_file(PopManager const& pop_manager, ovdl::v2script::Parser const& parser) {
-			return production_type_manager.load_production_types_file(good_definition_manager, pop_manager, parser);
+		inline bool load_production_types_file(
+			GameRulesManager const& game_rules_manager,
+			PopManager const& pop_manager,
+			ovdl::v2script::Parser const& parser
+		) {
+			return production_type_manager.load_production_types_file(
+				game_rules_manager,
+				good_definition_manager,
+				pop_manager,
+				parser
+			);
 		}
 
 		inline bool load_buildings_file(ModifierManager& modifier_manager, ast::NodeCPtr root) {

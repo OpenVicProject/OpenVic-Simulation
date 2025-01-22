@@ -16,6 +16,7 @@ Job::Job(
 	amount { new_amount } {}
 
 ProductionType::ProductionType(
+	GameRulesManager const& new_game_rules_manager,
 	const std::string_view new_identifier,
 	const std::optional<Job> new_owner,
 	std::vector<Job>&& new_jobs,
@@ -30,6 +31,7 @@ ProductionType::ProductionType(
 	const bool new_is_farm,
 	const bool new_is_mine
 ) : HasIdentifier { new_identifier },
+	game_rules_manager { new_game_rules_manager },
 	owner { new_owner },
 	jobs { std::move(new_jobs) },
 	template_type { new_template_type },
@@ -40,8 +42,8 @@ ProductionType::ProductionType(
 	bonuses { std::move(new_bonuses) },
 	maintenance_requirements { std::move(new_maintenance_requirements) },
 	coastal { new_is_coastal },
-	farm { new_is_farm },
-	mine { new_is_mine } {}
+	_is_farm { new_is_farm },
+	_is_mine { new_is_mine } {}
 
 bool ProductionType::parse_scripts(DefinitionManager const& definition_manager) {
 	bool ret = true;
@@ -94,6 +96,7 @@ node_callback_t ProductionTypeManager::_expect_job_list(
 }
 
 bool ProductionTypeManager::add_production_type(
+	GameRulesManager const& game_rules_manager,
 	const std::string_view identifier,
 	std::optional<Job> owner,
 	std::vector<Job>&& jobs,
@@ -169,6 +172,7 @@ bool ProductionTypeManager::add_production_type(
 	}
 
 	const bool ret = production_types.add_item({
+		game_rules_manager,
 		identifier, owner, std::move(jobs), template_type, base_workforce_size, std::move(input_goods), *output_good,
 		base_output_quantity, std::move(bonuses), std::move(maintenance_requirements), is_coastal, is_farm, is_mine
 	});
@@ -176,8 +180,11 @@ bool ProductionTypeManager::add_production_type(
 	if (ret && (template_type == RGO)) {
 		ProductionType const& production_type = production_types.get_items().back();
 		ProductionType const*& current_rgo_pt = good_to_rgo_production_type[*output_good];
-		if (current_rgo_pt == nullptr || (is_farm && !current_rgo_pt->is_farm())) {
-			// first rgo pt or farms are preferred (over mines) in V2
+		if (current_rgo_pt == nullptr || (
+			(is_farm && !is_mine)
+			&& (!current_rgo_pt->_is_farm || current_rgo_pt->_is_mine)
+		)) {
+			// pure farms are preferred over alternatives. Use first pt otherwise.
 			current_rgo_pt = &production_type;
 		}
 		//else ignore, we already have an rgo pt
@@ -192,7 +199,10 @@ bool ProductionTypeManager::add_production_type(
 }
 
 bool ProductionTypeManager::load_production_types_file(
-	GoodDefinitionManager const& good_definition_manager, PopManager const& pop_manager, ovdl::v2script::Parser const& parser
+	GameRulesManager const& game_rules_manager,
+	GoodDefinitionManager const& good_definition_manager,
+	PopManager const& pop_manager,
+	ovdl::v2script::Parser const& parser
 ) {
 	using namespace std::string_view_literals;
 	auto template_symbol = parser.find_intern("template"sv);
@@ -244,7 +254,7 @@ bool ProductionTypeManager::load_production_types_file(
 
 	reserve_more_production_types(expected_types);
 	ret &= expect_dictionary(
-		[this, &good_definition_manager, &pop_manager, &template_target_map, &template_node_map](
+		[this, &game_rules_manager, &good_definition_manager, &pop_manager, &template_target_map, &template_node_map](
 			std::string_view key, ast::NodeCPtr node) -> bool {
 			using enum ProductionType::template_type_t;
 
@@ -322,6 +332,7 @@ bool ProductionTypeManager::load_production_types_file(
 			ret &= parse_node(node);
 
 			ret &= add_production_type(
+				game_rules_manager,
 				key, owner, std::move(jobs), template_type, base_workforce_size, std::move(input_goods), output_good,
 				base_output_quantity, std::move(bonuses), std::move(maintenance_requirements), is_coastal, is_farm, is_mine
 			);

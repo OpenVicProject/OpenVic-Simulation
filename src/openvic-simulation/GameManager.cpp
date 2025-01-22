@@ -27,7 +27,7 @@ bool GameManager::load_definitions(Dataloader::localisation_callback_t localisat
 
 	bool ret = true;
 
-	if (!dataloader.load_defines(definition_manager)) {
+	if (!dataloader.load_defines(game_rules_manager, definition_manager)) {
 		Logger::error("Failed to load defines!");
 		ret = false;
 	}
@@ -49,7 +49,12 @@ bool GameManager::setup_instance(Bookmark const* bookmark) {
 		Logger::info("Setting up first game instance.");
 	}
 
-	instance_manager.emplace(definition_manager, gamestate_updated_callback, clock_state_changed_callback);
+	instance_manager.emplace(
+		game_rules_manager,
+		definition_manager,
+		gamestate_updated_callback,
+		clock_state_changed_callback
+	);
 
 	bool ret = instance_manager->setup();
 	ret &= instance_manager->load_bookmark(bookmark);

@@ -862,7 +862,10 @@ bool Dataloader::_load_sound_effect_defines(DefinitionManager& definition_manage
 
 }
 
-bool Dataloader::load_defines(DefinitionManager& definition_manager) {
+bool Dataloader::load_defines(
+	GameRulesManager const& game_rules_manager,
+	DefinitionManager& definition_manager
+) {
 	if (roots.empty()) {
 		Logger::error("Cannot load defines - Dataloader has no roots!");
 		return false;
@@ -942,7 +945,9 @@ bool Dataloader::load_defines(DefinitionManager& definition_manager) {
 		Logger::error("Failed to load pop types!");
 		ret = false;
 	}
-	if (!definition_manager.get_economy_manager().load_production_types_file(definition_manager.get_pop_manager(),
+	if (!definition_manager.get_economy_manager().load_production_types_file(
+		game_rules_manager,
+		definition_manager.get_pop_manager(),
 		parse_defines_cached(lookup_file(production_types_file))
 	)) {
 		Logger::error("Failed to load production types!");

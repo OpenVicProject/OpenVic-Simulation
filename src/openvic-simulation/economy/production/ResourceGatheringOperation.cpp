@@ -79,10 +79,11 @@ void ResourceGatheringOperation::initialise_rgo_size_multiplier() {
 	}
 
 	fixed_point_t base_size_modifier = fixed_point_t::_1();
-	if (production_type.is_farm()) {
+	if (production_type.get_is_farm_for_non_tech()) {
 		base_size_modifier += location.get_modifier_effect_value_nullcheck(modifier_effect_cache.get_farm_rgo_size_local());
 	}
-	if (production_type.is_mine()) {
+
+	if (production_type.get_is_mine_for_non_tech()) {
 		base_size_modifier += location.get_modifier_effect_value_nullcheck(modifier_effect_cache.get_mine_rgo_size_local());
 	}
 
@@ -102,18 +103,25 @@ fixed_point_t ResourceGatheringOperation::calculate_size_modifier() const {
 		return fixed_point_t::_1();
 	}
 	ProvinceInstance& location = *location_ptr;
-
 	ProductionType const& production_type = *production_type_nullable;
 
 	fixed_point_t size_modifier = fixed_point_t::_1();
-	if (production_type.is_farm()) {
-		size_modifier += location.get_modifier_effect_value_nullcheck(modifier_effect_cache.get_farm_rgo_size_global())
-			+ location.get_modifier_effect_value_nullcheck(modifier_effect_cache.get_farm_rgo_size_local());
+	if (production_type.get_is_farm_for_tech()) {
+		size_modifier += location.get_modifier_effect_value_nullcheck(modifier_effect_cache.get_farm_rgo_size_global());
 	}
-	if (production_type.is_mine()) {
-		size_modifier += location.get_modifier_effect_value_nullcheck(modifier_effect_cache.get_mine_rgo_size_global())
-			+ location.get_modifier_effect_value_nullcheck(modifier_effect_cache.get_mine_rgo_size_local());
+
+	if (production_type.get_is_farm_for_non_tech()) {
+		size_modifier += location.get_modifier_effect_value_nullcheck(modifier_effect_cache.get_farm_rgo_size_local());
 	}
+
+	if (production_type.get_is_mine_for_tech()) {
+		size_modifier += location.get_modifier_effect_value_nullcheck(modifier_effect_cache.get_mine_rgo_size_global());
+	}
+
+	if (production_type.get_is_mine_for_non_tech()) {
+		size_modifier += location.get_modifier_effect_value_nullcheck(modifier_effect_cache.get_mine_rgo_size_local());
+	}
+
 	auto const& good_effects = modifier_effect_cache.get_good_effects()[production_type.get_output_good()];
 	size_modifier += location.get_modifier_effect_value_nullcheck(good_effects.get_rgo_size());
 	return size_modifier > fixed_point_t::_0() ? size_modifier : fixed_point_t::_0();
@@ -219,6 +227,7 @@ fixed_point_t ResourceGatheringOperation::produce(const pop_size_t total_owner_c
 	if (production_type_nullable == nullptr || max_employee_count_cache <= 0) {
 		return fixed_point_t::_0();
 	}
+
 	ProvinceInstance& location = *location_ptr;
 
 	ProductionType const& production_type = *production_type_nullable;
@@ -257,22 +266,28 @@ fixed_point_t ResourceGatheringOperation::produce(const pop_size_t total_owner_c
 	output_multilpier += location.get_modifier_effect_value_nullcheck(modifier_effect_cache.get_rgo_output())
 		+location.get_modifier_effect_value_nullcheck(modifier_effect_cache.get_local_rgo_output());
 
-	if (production_type.is_farm()) {
-		const fixed_point_t throughput_and_output =
-			location.get_modifier_effect_value_nullcheck(modifier_effect_cache.get_farm_rgo_throughput_and_output());
-		throughput_multiplier += throughput_and_output;
-		output_multilpier += throughput_and_output
-			+ location.get_modifier_effect_value_nullcheck(modifier_effect_cache.get_farm_rgo_output_global())
+	if (production_type.get_is_farm_for_tech()) {
+		const fixed_point_t farm_rgo_throughput_and_output = location.get_modifier_effect_value_nullcheck(modifier_effect_cache.get_farm_rgo_throughput_and_output());
+		throughput_multiplier += farm_rgo_throughput_and_output;
+		output_multilpier += farm_rgo_throughput_and_output;
+	}
+
+	if (production_type.get_is_farm_for_non_tech()) {
+		output_multilpier += location.get_modifier_effect_value_nullcheck(modifier_effect_cache.get_farm_rgo_output_global())
 			+ location.get_modifier_effect_value_nullcheck(modifier_effect_cache.get_farm_rgo_output_local());
 	}
-	if (production_type.is_mine()) {
-		const fixed_point_t throughput_and_output =
-			location.get_modifier_effect_value_nullcheck(modifier_effect_cache.get_mine_rgo_throughput_and_output());
-		throughput_multiplier += throughput_and_output;
-		output_multilpier += throughput_and_output
-			+ location.get_modifier_effect_value_nullcheck(modifier_effect_cache.get_mine_rgo_output_global())
+
+	if (production_type.get_is_mine_for_tech()) {
+		const fixed_point_t mine_rgo_throughput_and_output = location.get_modifier_effect_value_nullcheck(modifier_effect_cache.get_mine_rgo_throughput_and_output());
+		throughput_multiplier += mine_rgo_throughput_and_output;
+		output_multilpier += mine_rgo_throughput_and_output;
+	}
+
+	if (production_type.get_is_mine_for_non_tech()) {
+		output_multilpier += location.get_modifier_effect_value_nullcheck(modifier_effect_cache.get_mine_rgo_output_global())
 			+ location.get_modifier_effect_value_nullcheck(modifier_effect_cache.get_mine_rgo_output_local());
 	}
+
 	auto const& good_effects = modifier_effect_cache.get_good_effects()[production_type.get_output_good()];
 	throughput_multiplier += location.get_modifier_effect_value_nullcheck(good_effects.get_rgo_goods_throughput());
 	output_multilpier += location.get_modifier_effect_value_nullcheck(good_effects.get_rgo_goods_output());
