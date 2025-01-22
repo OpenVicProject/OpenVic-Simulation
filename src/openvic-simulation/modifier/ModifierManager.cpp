@@ -462,13 +462,13 @@ bool ModifierManager::setup_modifier_effects() {
 		modifier_effect_cache.defence_terrain, "defence", true, RAW_DECIMAL, "TRAIT_DEFEND"
 	);
 	ret &= register_technology_modifier_effect(
-		modifier_effect_cache.farm_rgo_throughput_global, "farm_rgo_eff", true, PROPORTION_DECIMAL, "TECH_FARM_OUTPUT"
+		modifier_effect_cache.farm_rgo_throughput_and_output, "farm_rgo_eff", true, PROPORTION_DECIMAL, "TECH_FARM_OUTPUT"
 	);
 	ret &= register_base_country_modifier_effect(
-		modifier_effect_cache.farm_rgo_output_global, "farm_rgo_eff", true, PROPORTION_DECIMAL, "TECH_FARM_OUTPUT"
+		modifier_effect_cache.farm_rgo_output_global, "farm_rgo_eff", true, PROPORTION_DECIMAL, "MODIFIER_FARM_EFFICIENCY"
 	);
 	ret &= register_base_province_modifier_effect(
-		modifier_effect_cache.farm_rgo_output_local, "farm_rgo_eff", true, PROPORTION_DECIMAL, "TECH_FARM_OUTPUT"
+		modifier_effect_cache.farm_rgo_output_local, "farm_rgo_eff", true, PROPORTION_DECIMAL, "MODIFIER_FARM_EFFICIENCY"
 	);
 	ret &= register_base_country_modifier_effect(
 		modifier_effect_cache.farm_rgo_size_fake, "farm_rgo_size", true, PROPORTION_DECIMAL,
@@ -541,13 +541,13 @@ bool ModifierManager::setup_modifier_effects() {
 	);
 	ret &= register_base_province_modifier_effect(modifier_effect_cache.max_attrition, "max_attrition", false, RAW_DECIMAL);
 	ret &= register_technology_modifier_effect(
-		modifier_effect_cache.mine_rgo_throughput_global, "mine_rgo_eff", true, PROPORTION_DECIMAL, "TECH_MINE_OUTPUT"
+		modifier_effect_cache.mine_rgo_throughput_and_output, "mine_rgo_eff", true, PROPORTION_DECIMAL, "TECH_MINE_OUTPUT"
 	);
 	ret &= register_base_country_modifier_effect(
-		modifier_effect_cache.mine_rgo_output_global, "mine_rgo_eff", true, PROPORTION_DECIMAL, "TECH_MINE_OUTPUT"
+		modifier_effect_cache.mine_rgo_output_global, "mine_rgo_eff", true, PROPORTION_DECIMAL, "MODIFIER_MINE_EFFICIENCY"
 	);
 	ret &= register_base_province_modifier_effect(
-		modifier_effect_cache.mine_rgo_output_local, "mine_rgo_eff", true, PROPORTION_DECIMAL, "TECH_MINE_OUTPUT"
+		modifier_effect_cache.mine_rgo_output_local, "mine_rgo_eff", true, PROPORTION_DECIMAL, "MODIFIER_MINE_EFFICIENCY"
 	);
 	ret &= register_base_country_modifier_effect(
 		modifier_effect_cache.mine_rgo_size_fake, "mine_rgo_size", true, PROPORTION_DECIMAL,
@@ -807,16 +807,6 @@ key_value_callback_t ModifierManager::expect_technology_modifier(ModifierValue& 
 			ret &= _add_flattened_modifier_cb(modifier_value, key, faction_identifier, value_node);
 
 			return ret;
-		}
-
-		if (strings_equal_case_insensitive(key, "farm_rgo_eff")) {
-			return _add_modifier_cb(modifier_value, modifier_effect_cache.farm_rgo_throughput_global, value)
-				&& _add_modifier_cb(modifier_value, modifier_effect_cache.farm_rgo_output_global, value);
-		}
-
-		if (strings_equal_case_insensitive(key, "mine_rgo_eff")) {
-			return _add_modifier_cb(modifier_value, modifier_effect_cache.mine_rgo_throughput_global, value)
-				&& _add_modifier_cb(modifier_value, modifier_effect_cache.mine_rgo_output_global, value);
 		}
 
 		return _expect_modifier_effect_with_fallback(
