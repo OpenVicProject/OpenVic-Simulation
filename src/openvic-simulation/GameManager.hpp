@@ -5,10 +5,12 @@
 #include "openvic-simulation/dataloader/Dataloader.hpp"
 #include "openvic-simulation/DefinitionManager.hpp"
 #include "openvic-simulation/InstanceManager.hpp"
+#include "openvic-simulation/misc/GameRulesManager.hpp"
 
 namespace OpenVic {
 	struct GameManager {
 	private:
+		GameRulesManager PROPERTY(game_rules_manager);
 		Dataloader PROPERTY(dataloader);
 		DefinitionManager PROPERTY(definition_manager);
 		std::optional<InstanceManager> instance_manager;

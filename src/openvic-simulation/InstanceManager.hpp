@@ -22,6 +22,7 @@ namespace OpenVic {
 		using gamestate_updated_func_t = std::function<void()>;
 
 	private:
+		GameRulesManager const& game_rules_manager;
 		DefinitionManager const& PROPERTY(definition_manager);
 
 		FlagStrings PROPERTY_REF(global_flags);
@@ -59,7 +60,9 @@ namespace OpenVic {
 
 	public:
 		InstanceManager(
-			DefinitionManager const& new_definition_manager, gamestate_updated_func_t gamestate_updated_callback,
+			GameRulesManager const& new_game_rules_manager,
+			DefinitionManager const& new_definition_manager,
+			gamestate_updated_func_t gamestate_updated_callback,
 			SimulationClock::state_changed_function_t clock_state_changed_callback
 		);
 

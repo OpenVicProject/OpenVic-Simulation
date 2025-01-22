@@ -9,6 +9,7 @@ namespace OpenVic {
 	namespace fs = std::filesystem;
 
 	struct DefinitionManager;
+	struct GameRulesManager;
 	class UIManager;
 
 	template<typename _UniqueFileKey>
@@ -109,7 +110,7 @@ namespace OpenVic {
 
 		/* Load and parse all of the text defines data, including parsing cached condition and effect scripts after all the
 		 * static data is loaded. Paths to the base and mod defines must have been supplied with set_roots.*/
-		bool load_defines(DefinitionManager& definition_manager);
+		bool load_defines(GameRulesManager const& game_rules_manager, DefinitionManager& definition_manager);
 
 	private:
 		/* Parse the cached Nodes of every condition and effect script in the defines.

@@ -3,6 +3,7 @@
 #include <openvic-dataloader/v2script/Parser.hpp>
 
 #include "openvic-simulation/economy/GoodDefinition.hpp"
+#include "openvic-simulation/misc/GameRulesManager.hpp"
 #include "openvic-simulation/pop/PopType.hpp"
 #include "openvic-simulation/scripts/ConditionScript.hpp"
 #include "openvic-simulation/types/IdentifierRegistry.hpp"
@@ -41,6 +42,7 @@ namespace OpenVic {
 		using bonus_t = std::pair<ConditionScript, fixed_point_t>;
 
 	private:
+		GameRulesManager const& game_rules_manager;
 		const std::optional<Job> PROPERTY(owner);
 		std::vector<Job> PROPERTY(jobs);
 		const template_type_t PROPERTY(template_type);
@@ -53,11 +55,10 @@ namespace OpenVic {
 
 		GoodDefinition::good_definition_map_t PROPERTY(maintenance_requirements);
 		const bool PROPERTY_CUSTOM_PREFIX(coastal, is);
-
-		const bool PROPERTY_CUSTOM_PREFIX(farm, is);
-		const bool PROPERTY_CUSTOM_PREFIX(mine, is);
+		const bool _is_farm, _is_mine;
 
 		ProductionType(
+			GameRulesManager const& new_game_rules_manager,
 			const std::string_view new_identifier,
 			const std::optional<Job> new_owner,
 			std::vector<Job>&& new_jobs,
@@ -76,6 +77,26 @@ namespace OpenVic {
 		bool parse_scripts(DefinitionManager const& definition_manager);
 
 	public:
+		constexpr bool get_is_farm_for_tech() const {
+			if (game_rules_manager.get_use_simple_farm_mine_logic()) {
+				return _is_farm;
+			}
+
+			return !_is_mine && _is_farm;	
+		}
+		constexpr bool get_is_farm_for_non_tech() const {
+			return _is_farm;
+		}
+		constexpr bool get_is_mine_for_tech() const {
+			return _is_mine;
+		}
+		constexpr bool get_is_mine_for_non_tech() const {
+			if (game_rules_manager.get_use_simple_farm_mine_logic()) {
+				return _is_mine;
+			}
+
+			return !_is_farm;
+		}
 		ProductionType(ProductionType&&) = default;
 	};
 
@@ -98,6 +119,7 @@ namespace OpenVic {
 		ProductionTypeManager();
 
 		bool add_production_type(
+			GameRulesManager const& game_rules_manager,
 			const std::string_view identifier,
 			std::optional<Job> owner,
 			std::vector<Job>&& jobs,
@@ -114,7 +136,10 @@ namespace OpenVic {
 		);
 
 		bool load_production_types_file(
-			GoodDefinitionManager const& good_definition_manager, PopManager const& pop_manager, ovdl::v2script::Parser const& parser
+			GameRulesManager const& game_rules_manager,
+			GoodDefinitionManager const& good_definition_manager,
+			PopManager const& pop_manager,
+			ovdl::v2script::Parser const& parser
 		);
 
 		bool parse_scripts(DefinitionManager const& definition_manager);

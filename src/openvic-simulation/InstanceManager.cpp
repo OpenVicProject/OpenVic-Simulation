@@ -6,9 +6,12 @@
 using namespace OpenVic;
 
 InstanceManager::InstanceManager(
-	DefinitionManager const& new_definition_manager, gamestate_updated_func_t gamestate_updated_callback,
+	GameRulesManager const& new_game_rules_manager,
+	DefinitionManager const& new_definition_manager,
+	gamestate_updated_func_t gamestate_updated_callback,
 	SimulationClock::state_changed_function_t clock_state_changed_callback
-) : definition_manager { new_definition_manager },
+) : game_rules_manager { new_game_rules_manager },
+	definition_manager { new_definition_manager },
 	global_flags { "global" },
 	country_instance_manager { new_definition_manager.get_country_definition_manager() },
 	market_instance { good_instance_manager },
