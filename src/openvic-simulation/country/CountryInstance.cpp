@@ -25,7 +25,7 @@ static constexpr colour_t ERROR_COLOUR = colour_t::from_integer(0xFF0000);
 
 CountryInstance::CountryInstance(
 #if OV_MODIFIER_CALCULATION_TEST
-	bool new_ADD_OWNER_CONTRIBUTION,
+	update_modifier_sum_rule_t new_UPDATE_MODIFIER_SUM_RULE,
 #endif
 	CountryDefinition const* new_country_definition,
 	decltype(building_type_unlock_levels)::keys_type const& building_type_keys,
@@ -42,7 +42,7 @@ CountryInstance::CountryInstance(
 ) : FlagStrings { "country" },
 	/* Main attributes */
 #if OV_MODIFIER_CALCULATION_TEST
-	ADD_OWNER_CONTRIBUTION { new_ADD_OWNER_CONTRIBUTION },
+	UPDATE_MODIFIER_SUM_RULE { new_UPDATE_MODIFIER_SUM_RULE },
 #endif
 	country_definition { new_country_definition },
 	colour { ERROR_COLOUR },
@@ -1147,16 +1147,31 @@ bool CountryInstance::update_rule_set() {
 	return rule_set.trim_and_resolve_conflicts(true);
 }
 
+static constexpr Modifier const& get_country_status_static_effect(
+	CountryInstance::country_status_t country_status, StaticModifierCache const& static_modifier_cache
+) {
+	using enum CountryInstance::country_status_t;
+
+	switch (country_status) {
+	case COUNTRY_STATUS_GREAT_POWER:     return static_modifier_cache.get_great_power();
+	case COUNTRY_STATUS_SECONDARY_POWER: return static_modifier_cache.get_secondary_power();
+	case COUNTRY_STATUS_CIVILISED:       return static_modifier_cache.get_civilised();
+	default:                             return static_modifier_cache.get_uncivilised();
+	}
+}
+
 void CountryInstance::update_modifier_sum(Date today, StaticModifierCache const& static_modifier_cache) {
 	// Update sum of national modifiers
 	modifier_sum.clear();
 
 	const ModifierSum::modifier_source_t country_source { this };
+	static constexpr fixed_point_t default_multiplier = fixed_point_t::_1();
+	static constexpr ModifierEffect::target_t excluded_targets = ModifierEffect::target_t::PROVINCE;
 
 	// Erase expired event modifiers and add non-expired ones to the sum
 	std::erase_if(event_modifiers, [this, today, &country_source](ModifierInstance const& modifier) -> bool {
 		if (today <= modifier.get_expiry_date()) {
-			modifier_sum.add_modifier(*modifier.get_modifier(), country_source);
+			modifier_sum.add_modifier(*modifier.get_modifier(), country_source, default_multiplier, excluded_targets);
 			return false;
 		} else {
 			return true;
@@ -1164,31 +1179,22 @@ void CountryInstance::update_modifier_sum(Date today, StaticModifierCache const&
 	});
 
 	// Add static modifiers
-	modifier_sum.add_modifier(static_modifier_cache.get_base_modifier(), country_source);
+	modifier_sum.add_modifier(static_modifier_cache.get_base_modifier(), country_source, default_multiplier, excluded_targets);
 
-	switch (country_status) {
-		using enum country_status_t;
-	case COUNTRY_STATUS_GREAT_POWER:
-		modifier_sum.add_modifier(static_modifier_cache.get_great_power(), country_source);
-		break;
-	case COUNTRY_STATUS_SECONDARY_POWER:
-		modifier_sum.add_modifier(static_modifier_cache.get_secondary_power(), country_source);
-		break;
-	case COUNTRY_STATUS_CIVILISED:
-		modifier_sum.add_modifier(static_modifier_cache.get_civilised(), country_source);
-		break;
-	default:
-		modifier_sum.add_modifier(static_modifier_cache.get_uncivilised(), country_source);
-	}
-	if (is_disarmed()) {
-		modifier_sum.add_modifier(static_modifier_cache.get_disarming(), country_source);
-	}
-	modifier_sum.add_modifier(static_modifier_cache.get_war_exhaustion(), country_source, war_exhaustion);
-	modifier_sum.add_modifier(static_modifier_cache.get_infamy(), country_source, infamy);
-	modifier_sum.add_modifier(static_modifier_cache.get_literacy(), country_source, national_literacy);
-	modifier_sum.add_modifier(static_modifier_cache.get_plurality(), country_source, plurality);
 	modifier_sum.add_modifier(
-		is_at_war() ? static_modifier_cache.get_war() : static_modifier_cache.get_peace(), country_source
+		get_country_status_static_effect(country_status, static_modifier_cache),
+		country_source, default_multiplier, excluded_targets
+	);
+	if (is_disarmed()) {
+		modifier_sum.add_modifier(static_modifier_cache.get_disarming(), country_source, default_multiplier, excluded_targets);
+	}
+	modifier_sum.add_modifier(static_modifier_cache.get_war_exhaustion(), country_source, war_exhaustion, excluded_targets);
+	modifier_sum.add_modifier(static_modifier_cache.get_infamy(), country_source, infamy, excluded_targets);
+	modifier_sum.add_modifier(static_modifier_cache.get_literacy(), country_source, national_literacy, excluded_targets);
+	modifier_sum.add_modifier(static_modifier_cache.get_plurality(), country_source, plurality, excluded_targets);
+	modifier_sum.add_modifier(
+		is_at_war() ? static_modifier_cache.get_war() : static_modifier_cache.get_peace(),
+		country_source, default_multiplier, excluded_targets
 	);
 	// TODO - difficulty modifiers, debt_default_to, bad_debtor, generalised_debt_default,
 	//        total_occupation, total_blockaded, in_bankruptcy
@@ -1199,36 +1205,36 @@ void CountryInstance::update_modifier_sum(Date today, StaticModifierCache const&
 		for (Issue const* issue : ruling_party->get_policies().get_values()) {
 			// The ruling party's issues here could be null as they're stored in an IndexedMap which has
 			// values for every IssueGroup regardless of whether or not they have a policy set.
-			modifier_sum.add_modifier_nullcheck(issue, country_source);
+			modifier_sum.add_modifier_nullcheck(issue, country_source, default_multiplier, excluded_targets);
 		}
 	}
 
 	for (Reform const* reform : reforms.get_values()) {
 		// The country's reforms here could be null as they're stored in an IndexedMap which has
 		// values for every ReformGroup regardless of whether or not they have a reform set.
-		modifier_sum.add_modifier_nullcheck(reform, country_source);
+		modifier_sum.add_modifier_nullcheck(reform, country_source, default_multiplier, excluded_targets);
 	}
 
-	modifier_sum.add_modifier_nullcheck(national_value, country_source);
+	modifier_sum.add_modifier_nullcheck(national_value, country_source, default_multiplier, excluded_targets);
 
-	modifier_sum.add_modifier_nullcheck(tech_school, country_source);
+	modifier_sum.add_modifier_nullcheck(tech_school, country_source, default_multiplier, excluded_targets);
 
 	for (Technology const& technology : *technology_unlock_levels.get_keys()) {
 		if (is_technology_unlocked(technology)) {
-			modifier_sum.add_modifier(technology, country_source);
+			modifier_sum.add_modifier(technology, country_source, default_multiplier, excluded_targets);
 		}
 	}
 
 	for (Invention const& invention : *invention_unlock_levels.get_keys()) {
 		if (is_invention_unlocked(invention)) {
-			modifier_sum.add_modifier(invention, country_source);
+			modifier_sum.add_modifier(invention, country_source, default_multiplier, excluded_targets);
 		}
 	}
 
 #if OV_MODIFIER_CALCULATION_TEST
-	if (ADD_OWNER_CONTRIBUTION) {
+	if (UPDATE_MODIFIER_SUM_RULE & PROVINCES_THEN_COUNTRIES) {
 #else
-	if constexpr (ProvinceInstance::ADD_OWNER_CONTRIBUTION) {
+	if constexpr (ProvinceInstance::UPDATE_MODIFIER_SUM_RULE & PROVINCES_THEN_COUNTRIES) {
 #endif
 		// Add province base modifiers (with local province modifier effects removed)
 		for (ProvinceInstance const* province : controlled_provinces) {
@@ -1237,12 +1243,20 @@ void CountryInstance::update_modifier_sum(Date today, StaticModifierCache const&
 
 		// This has to be done after adding all province modifiers to the country's sum, otherwise provinces
 		// earlier in the list wouldn't be affected by modifiers from provinces later in the list.
-		for (ProvinceInstance* province : owned_provinces) {
-			province->contribute_country_modifier_sum(modifier_sum);
-		}
+		// for (ProvinceInstance* province : owned_provinces) {
+		// 	province->contribute_country_modifier_sum(modifier_sum);
+		// }
 	}
 
 	// TODO - calculate stats for each unit type (locked and unlocked)
+}
+
+void CountryInstance::update_modifier_sum_owner() {
+	for (ProvinceInstance* province : owned_provinces) {
+		// modifier_sum shouldn't have any PROVINCE targetted effects in it as we've excluded them from everything we've added,
+		// so we only have to exclude entries sourced from this province.
+		province->contribute_country_modifier_sum(modifier_sum);
+	}
 }
 
 void CountryInstance::contribute_province_modifier_sum(ModifierSum const& province_modifier_sum) {
@@ -1453,7 +1467,7 @@ CountryInstance const& CountryInstanceManager::get_country_instance_from_definit
 
 bool CountryInstanceManager::generate_country_instances(
 #if OV_MODIFIER_CALCULATION_TEST
-	bool ADD_OWNER_CONTRIBUTION,
+	update_modifier_sum_rule_t UPDATE_MODIFIER_SUM_RULE,
 #endif
 	decltype(CountryInstance::building_type_unlock_levels)::keys_type const& building_type_keys,
 	decltype(CountryInstance::technology_unlock_levels)::keys_type const& technology_keys,
@@ -1474,7 +1488,7 @@ bool CountryInstanceManager::generate_country_instances(
 	for (CountryDefinition const& country_definition : country_definition_manager.get_country_definitions()) {
 		ret &= country_instances.add_item({
 #if OV_MODIFIER_CALCULATION_TEST
-			ADD_OWNER_CONTRIBUTION,
+			UPDATE_MODIFIER_SUM_RULE,
 #endif
 			&country_definition,
 			building_type_keys,
@@ -1582,6 +1596,12 @@ bool CountryInstanceManager::apply_history_to_countries(
 void CountryInstanceManager::update_modifier_sums(Date today, StaticModifierCache const& static_modifier_cache) {
 	for (CountryInstance& country : country_instances.get_items()) {
 		country.update_modifier_sum(today, static_modifier_cache);
+	}
+}
+
+void CountryInstanceManager::update_modifier_sums_owners() {
+	for (CountryInstance& country : country_instances.get_items()) {
+		country.update_modifier_sum_owner();
 	}
 }
 

@@ -18,7 +18,7 @@ using namespace OpenVic;
 
 ProvinceInstance::ProvinceInstance(
 #if OV_MODIFIER_CALCULATION_TEST
-	bool new_ADD_OWNER_CONTRIBUTION,
+	update_modifier_sum_rule_t new_UPDATE_MODIFIER_SUM_RULE,
 #endif
 	MarketInstance& new_market_instance,
 	ModifierEffectCache const& new_modifier_effect_cache,
@@ -28,7 +28,7 @@ ProvinceInstance::ProvinceInstance(
 	decltype(ideology_distribution)::keys_type const& ideology_keys
 ) : HasIdentifierAndColour { new_province_definition },
 #if OV_MODIFIER_CALCULATION_TEST
-	ADD_OWNER_CONTRIBUTION { new_ADD_OWNER_CONTRIBUTION },
+	UPDATE_MODIFIER_SUM_RULE { new_UPDATE_MODIFIER_SUM_RULE },
 #endif
 	FlagStrings { "province" },
 	province_definition { new_province_definition },
@@ -358,13 +358,19 @@ void ProvinceInstance::update_modifier_sum(Date today, StaticModifierCache const
 	modifier_sum.add_modifier_nullcheck(terrain_type, province_source);
 
 #if OV_MODIFIER_CALCULATION_TEST
-	if (!ADD_OWNER_CONTRIBUTION) {
+	if (!(UPDATE_MODIFIER_SUM_RULE & PROVINCES_THEN_COUNTRIES)) {
 #else
-	if constexpr (!ADD_OWNER_CONTRIBUTION) {
+	if constexpr (!(UPDATE_MODIFIER_SUM_RULE & PROVINCES_THEN_COUNTRIES)) {
 #endif
 		if (controller != nullptr) {
 			controller->contribute_province_modifier_sum(modifier_sum);
 		}
+	}
+}
+
+void ProvinceInstance::update_modifier_sum_owner() {
+	if (owner != nullptr) {
+		contribute_country_modifier_sum(owner->get_modifier_sum());
 	}
 }
 
@@ -374,23 +380,21 @@ void ProvinceInstance::contribute_country_modifier_sum(ModifierSum const& owner_
 
 fixed_point_t ProvinceInstance::get_modifier_effect_value(ModifierEffect const& effect) const {
 #if OV_MODIFIER_CALCULATION_TEST
-	if (ADD_OWNER_CONTRIBUTION) {
+	if (UPDATE_MODIFIER_SUM_RULE & ADD_OWNER_CONTRIBUTIONS) {
 #else
-	if constexpr (ADD_OWNER_CONTRIBUTION) {
+	if constexpr (UPDATE_MODIFIER_SUM_RULE & ADD_OWNER_CONTRIBUTIONS) {
 #endif
 		return modifier_sum.get_effect(effect);
 	} else {
 		using enum ModifierEffect::target_t;
 
-		if (owner != nullptr) {
-			if (ModifierEffect::excludes_targets(effect.get_targets(), PROVINCE)) {
-				// Non-province targeted effects are already added to the country modifier sum
-				return owner->get_modifier_effect_value(effect);
-			} else {
-				// Province-targeted effects aren't passed to the country modifier sum
-				return owner->get_modifier_effect_value(effect) + modifier_sum.get_effect(effect);
-			}
+		if (owner != nullptr && ModifierEffect::excludes_targets(effect.get_targets(), PROVINCE)) {
+			// Non-province targeted effects are already added to the country modifier sum
+
+			// EXCLUDE SELF SOURCE ?!?!
+			return modifier_sum.get_effect(effect) + owner->get_modifier_effect_value(effect);
 		} else {
+			// Province-targeted effects aren't passed to the country modifier sum or from the country to the province's sum
 			return modifier_sum.get_effect(effect);
 		}
 	}

@@ -1,0 +1,29 @@
+[INFO] main.cpp(78): 
+
+This is file "out_6_4.txt", the output log for a modifier sum test with inputs 6 and 4.
+
+Arguments:
+First: COUNTRIES_THEN_PROVINCES | ADD_OWNER_CONTRIBUTIONS | ADD_OWNER_VIA_PROVINCES
+Second: COUNTRIES_THEN_PROVINCES | DONT_ADD_OWNER_CONTRIBUTIONS | ADD_OWNER_VIA_PROVINCES
+
+[INFO] main.cpp(94): ===== Setting up instance... =====
+[INFO] GameManager.cpp(49): Resetting existing game instance.
+[INFO] IdentifierRegistry.hpp(218): Locked good_instances registry after registering 48 items
+[INFO] IdentifierRegistry.hpp(218): Locked province_instances registry after registering 3248 items
+[INFO] InstanceManager.cpp(139): Loading bookmark GC_NAME with start date 1836.1.1
+[INFO] State.cpp(299): Generated 718 states across 549 state sets.
+[INFO] IdentifierRegistry.hpp(218): Locked good_instances registry after registering 48 items
+[INFO] IdentifierRegistry.hpp(218): Locked province_instances registry after registering 3248 items
+[INFO] InstanceManager.cpp(139): Loading bookmark GC_NAME with start date 1836.1.1
+[INFO] State.cpp(299): Generated 718 states across 549 state sets.
+[INFO] main.cpp(100): ===== Starting game session... =====
+[INFO] InstanceManager.cpp(54): Update: 1836.1.1
+[INFO] main.cpp(253): State updated
+[INFO] InstanceManager.cpp(54): Update: 1836.1.1
+[INFO] main.cpp(253): State updated
+[INFO] main.cpp(107): ===== Ranking system test... =====
+[INFO] main.cpp(143): Comparing resultant modifier calculation methods...
+[INFO] main.cpp(240): 
+
+===== Finished run with return value 1 =====
+

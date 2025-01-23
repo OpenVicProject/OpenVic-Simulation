@@ -77,7 +77,7 @@ namespace OpenVic {
 
 	private:
 #if OV_MODIFIER_CALCULATION_TEST
-		const bool ADD_OWNER_CONTRIBUTION;
+		const update_modifier_sum_rule_t UPDATE_MODIFIER_SUM_RULE;
 #endif
 
 		/* Main attributes */
@@ -242,7 +242,7 @@ namespace OpenVic {
 
 		CountryInstance(
 #if OV_MODIFIER_CALCULATION_TEST
-			bool new_ADD_OWNER_CONTRIBUTION,
+			update_modifier_sum_rule_t new_UPDATE_MODIFIER_SUM_RULE,
 #endif
 			CountryDefinition const* new_country_definition,
 			decltype(building_type_unlock_levels)::keys_type const& building_type_keys,
@@ -461,6 +461,7 @@ namespace OpenVic {
 	public:
 
 		void update_modifier_sum(Date today, StaticModifierCache const& static_modifier_cache);
+		void update_modifier_sum_owner();
 		void contribute_province_modifier_sum(ModifierSum const& province_modifier_sum);
 		fixed_point_t get_modifier_effect_value(ModifierEffect const& effect) const;
 		fixed_point_t get_modifier_effect_value_nullcheck(ModifierEffect const* effect) const;
@@ -503,7 +504,7 @@ namespace OpenVic {
 
 		bool generate_country_instances(
 #if OV_MODIFIER_CALCULATION_TEST
-			bool ADD_OWNER_CONTRIBUTION,
+			update_modifier_sum_rule_t new_UPDATE_MODIFIER_SUM_RULE,
 #endif
 			decltype(CountryInstance::building_type_unlock_levels)::keys_type const& building_type_keys,
 			decltype(CountryInstance::technology_unlock_levels)::keys_type const& technology_keys,
@@ -521,6 +522,7 @@ namespace OpenVic {
 		bool apply_history_to_countries(CountryHistoryManager const& history_manager, InstanceManager& instance_manager);
 
 		void update_modifier_sums(Date today, StaticModifierCache const& static_modifier_cache);
+		void update_modifier_sums_owners();
 		void update_gamestate(InstanceManager& instance_manager);
 		void tick();
 	};

@@ -42,7 +42,9 @@ bool GameManager::load_definitions(Dataloader::localisation_callback_t localisat
 	return ret;
 }
 
-bool GameManager::setup_instance(Bookmark const* bookmark) {
+bool GameManager::setup_instance(
+	Bookmark const* bookmark, update_modifier_sum_rule_t first, update_modifier_sum_rule_t second
+) {
 	if (instance_manager) {
 		Logger::info("Resetting existing game instance.");
 	} else {
@@ -53,13 +55,17 @@ bool GameManager::setup_instance(Bookmark const* bookmark) {
 
 #if OV_MODIFIER_CALCULATION_TEST
 	instance_manager.emplace(
-		true, game_rules_manager, definition_manager, gamestate_updated_callback, clock_state_changed_callback
+		// update_modifier_sum_rule_t { PROVINCES_THEN_COUNTRIES | ADD_OWNER_CONTRIBUTIONS | ADD_OWNER_VIA_PROVINCES },
+		first,
+		game_rules_manager, definition_manager, gamestate_updated_callback, clock_state_changed_callback
 	);
 	ret &= instance_manager->setup();
 	ret &= instance_manager->load_bookmark(bookmark);
 
 	instance_manager_no_add.emplace(
-		false, game_rules_manager, definition_manager, gamestate_updated_callback, clock_state_changed_callback
+		// update_modifier_sum_rule_t { COUNTRIES_THEN_PROVINCES | DONT_ADD_OWNER_CONTRIBUTIONS | ADD_OWNER_VIA_COUNTRIES },
+		second,
+		game_rules_manager, definition_manager, gamestate_updated_callback, clock_state_changed_callback
 	);
 	ret &= instance_manager_no_add->setup();
 	ret &= instance_manager_no_add->load_bookmark(bookmark);

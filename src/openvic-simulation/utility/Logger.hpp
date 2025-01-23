@@ -67,6 +67,15 @@ namespace OpenVic {
 				std::cerr << "[ERROR] " << str;
 			});
 		}
+		static void set_ostream_logger_funcs(std::ostream& stream) {
+			const auto log_func = [&stream](std::string&& str) {
+				stream << "[INFO] " << str;
+			};
+
+			set_info_func(log_func);
+			set_warning_func(log_func);
+			set_error_func(log_func);
+		}
 
 	private:
 		struct log_channel_t {

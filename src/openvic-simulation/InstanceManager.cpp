@@ -7,7 +7,7 @@ using namespace OpenVic;
 
 InstanceManager::InstanceManager(
 #if OV_MODIFIER_CALCULATION_TEST
-	bool new_ADD_OWNER_CONTRIBUTION,
+	update_modifier_sum_rule_t new_UPDATE_MODIFIER_SUM_RULE,
 #endif
 	GameRulesManager const& new_game_rules_manager,
 	DefinitionManager const& new_definition_manager,
@@ -16,7 +16,7 @@ InstanceManager::InstanceManager(
 ) : game_rules_manager { new_game_rules_manager },
 	definition_manager { new_definition_manager },
 #if OV_MODIFIER_CALCULATION_TEST
-	ADD_OWNER_CONTRIBUTION { new_ADD_OWNER_CONTRIBUTION },
+	UPDATE_MODIFIER_SUM_RULE { new_UPDATE_MODIFIER_SUM_RULE },
 #endif
 	global_flags { "global" },
 	country_instance_manager { new_definition_manager.get_country_definition_manager() },
@@ -87,7 +87,7 @@ bool InstanceManager::setup() {
 	bool ret = good_instance_manager.setup(definition_manager.get_economy_manager().get_good_definition_manager());
 	ret &= map_instance.setup(
 #if OV_MODIFIER_CALCULATION_TEST
-		ADD_OWNER_CONTRIBUTION,
+		UPDATE_MODIFIER_SUM_RULE,
 #endif
 		definition_manager.get_economy_manager().get_building_type_manager(),
 		market_instance,
@@ -98,7 +98,7 @@ bool InstanceManager::setup() {
 	);
 	ret &= country_instance_manager.generate_country_instances(
 #if OV_MODIFIER_CALCULATION_TEST
-		ADD_OWNER_CONTRIBUTION,
+		UPDATE_MODIFIER_SUM_RULE,
 #endif
 		definition_manager.get_economy_manager().get_building_type_manager().get_building_types(),
 		definition_manager.get_research_manager().get_technology_manager().get_technologies(),
@@ -220,9 +220,9 @@ bool InstanceManager::expand_selected_province_building(size_t building_index) {
 
 void InstanceManager::update_modifier_sums() {
 #if OV_MODIFIER_CALCULATION_TEST
-	if (ADD_OWNER_CONTRIBUTION) {
+	if (UPDATE_MODIFIER_SUM_RULE & PROVINCES_THEN_COUNTRIES) {
 #else
-	if constexpr (ProvinceInstance::ADD_OWNER_CONTRIBUTION) {
+	if constexpr (ProvinceInstance::UPDATE_MODIFIER_SUM_RULE & PROVINCES_THEN_COUNTRIES) {
 #endif
 		// Calculate local province modifier sums first, then national country modifier sums, then loop over owned provinces
 		// adding their contributions to the owner country's modifier sum and loop over them again to add the country's total
@@ -246,5 +246,19 @@ void InstanceManager::update_modifier_sums() {
 		map_instance.update_modifier_sums(
 			today, definition_manager.get_modifier_manager().get_static_modifier_cache()
 		);
+	}
+
+
+#if OV_MODIFIER_CALCULATION_TEST
+	if (UPDATE_MODIFIER_SUM_RULE & ADD_OWNER_CONTRIBUTIONS) {
+		if (UPDATE_MODIFIER_SUM_RULE & ADD_OWNER_VIA_PROVINCES) {
+#else
+	if constexpr ProvinceInstance::(UPDATE_MODIFIER_SUM_RULE & ADD_OWNER_CONTRIBUTIONS) {
+		if constexpr (ProvinceInstance::UPDATE_MODIFIER_SUM_RULE & ADD_OWNER_VIA_PROVINCES) {
+#endif
+			map_instance.update_modifier_sums_owners();
+		} else {
+			country_instance_manager.update_modifier_sums_owners();
+		}
 	}
 }

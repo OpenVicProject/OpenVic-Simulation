@@ -52,7 +52,7 @@ namespace OpenVic {
 
 		bool load_definitions(Dataloader::localisation_callback_t localisation_callback);
 
-		bool setup_instance(Bookmark const* bookmark);
+		bool setup_instance(Bookmark const* bookmark, update_modifier_sum_rule_t first, update_modifier_sum_rule_t second);
 
 		bool start_game_session();
 

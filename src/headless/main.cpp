@@ -1,3 +1,5 @@
+#include <fstream>
+
 #include <openvic-simulation/country/CountryInstance.hpp>
 #include <openvic-simulation/dataloader/Dataloader.hpp>
 #include <openvic-simulation/economy/GoodDefinition.hpp>
@@ -57,32 +59,42 @@ static void print_rgo(ProvinceInstance const& province) {
 	}
 }
 
-static bool run_headless(Dataloader::path_vector_t const& roots, bool run_tests) {
-	bool ret = true;
+static bool run_modifier_sum_test(
+	GameManager& game_manager, update_modifier_sum_rule_t first, update_modifier_sum_rule_t second
+) {
+	const std::string filename =
+		StringUtils::append_string_views("out_", std::to_string(first), "_", std::to_string(second), ".txt");
 
-	GameManager game_manager { []() {
-		Logger::info("State updated");
-	}, nullptr };
+	std::ofstream file;
+	file.open(filename);
 
-	Logger::info("===== Loading definitions... =====");
-	ret &= game_manager.set_roots(roots);
-	ret &= game_manager.load_definitions(
-		[](std::string_view key, Dataloader::locale_t locale, std::string_view localisation) -> bool {
-			return true;
-		}
+	if (!file || file.fail()) {
+		Logger::error("Failed to open output file \"", filename, "\" for writing, error code = ", errno);
+		return false;
+	}
+
+	Logger::set_ostream_logger_funcs(file);
+
+	Logger::info(
+		"\n\nThis is file \"", filename, "\", the output log for a modifier sum test with inputs ",
+		static_cast<uint32_t>(first), " and ", static_cast<uint32_t>(second), ".\n"
+		"\nArguments:\nFirst: ",
+		first & PROVINCES_THEN_COUNTRIES ? "PROVINCES_THEN_COUNTRIES" : "COUNTRIES_THEN_PROVINCES", " | ",
+		first & ADD_OWNER_CONTRIBUTIONS ? "ADD_OWNER_CONTRIBUTIONS" : "DONT_ADD_OWNER_CONTRIBUTIONS", " | ",
+		first & ADD_OWNER_VIA_PROVINCES ? "ADD_OWNER_VIA_PROVINCES" : "ADD_OWNER_VIA_COUNTRIES",
+		"\nSecond: ",
+		second & PROVINCES_THEN_COUNTRIES ? "PROVINCES_THEN_COUNTRIES" : "COUNTRIES_THEN_PROVINCES", " | ",
+		second & ADD_OWNER_CONTRIBUTIONS ? "ADD_OWNER_CONTRIBUTIONS" : "DONT_ADD_OWNER_CONTRIBUTIONS", " | ",
+		second & ADD_OWNER_VIA_PROVINCES ? "ADD_OWNER_VIA_PROVINCES" : "ADD_OWNER_VIA_COUNTRIES",
+		"\n"
 	);
 
-	if (run_tests) {
-		Testing testing { game_manager.get_definition_manager() };
-		std::cout << std::endl << "Testing Loaded" << std::endl << std::endl;
-		testing.execute_all_scripts();
-		testing.report_results();
-		std::cout << "Testing Executed" << std::endl << std::endl;
-	}
+	bool ret = true;
 
 	Logger::info("===== Setting up instance... =====");
 	ret &= game_manager.setup_instance(
-		game_manager.get_definition_manager().get_history_manager().get_bookmark_manager().get_bookmark_by_index(0)
+		game_manager.get_definition_manager().get_history_manager().get_bookmark_manager().get_bookmark_by_index(0),
+		first, second
 	);
 
 	Logger::info("===== Starting game session... =====");
@@ -94,38 +106,38 @@ static bool run_headless(Dataloader::path_vector_t const& roots, bool run_tests)
 	// TODO - REMOVE TEST CODE
 	Logger::info("===== Ranking system test... =====");
 	if (game_manager.get_instance_manager()) {
-		const auto print_ranking_list = [](std::string_view title, std::vector<CountryInstance*> const& countries) -> void {
-			std::string text;
-			for (CountryInstance const* country : countries) {
-				text += StringUtils::append_string_views(
-					"\n    ", country->get_identifier(),
-					" - Total #", std::to_string(country->get_total_rank()), " (", country->get_total_score().to_string(1),
-					"), Prestige #", std::to_string(country->get_prestige_rank()), " (", country->get_prestige().to_string(1),
-					"), Industry #", std::to_string(country->get_industrial_rank()), " (", country->get_industrial_power().to_string(1),
-					"), Military #", std::to_string(country->get_military_rank()), " (", country->get_military_power().to_string(1), ")"
-				);
-			}
-			Logger::info(title, ":", text);
-		};
+		// const auto print_ranking_list = [](std::string_view title, std::vector<CountryInstance*> const& countries) -> void {
+		// 	std::string text;
+		// 	for (CountryInstance const* country : countries) {
+		// 		text += StringUtils::append_string_views(
+		// 			"\n    ", country->get_identifier(),
+		// 			" - Total #", std::to_string(country->get_total_rank()), " (", country->get_total_score().to_string(1),
+		// 			"), Prestige #", std::to_string(country->get_prestige_rank()), " (", country->get_prestige().to_string(1),
+		// 			"), Industry #", std::to_string(country->get_industrial_rank()), " (", country->get_industrial_power().to_string(1),
+		// 			"), Military #", std::to_string(country->get_military_rank()), " (", country->get_military_power().to_string(1), ")"
+		// 		);
+		// 	}
+		// 	Logger::info(title, ":", text);
+		// };
 
-		CountryInstanceManager const& country_instance_manager =
-			game_manager.get_instance_manager()->get_country_instance_manager();
+		// CountryInstanceManager const& country_instance_manager =
+		// 	game_manager.get_instance_manager()->get_country_instance_manager();
 
-		std::vector<CountryInstance*> const& great_powers = country_instance_manager.get_great_powers();
-		print_ranking_list("Great Powers", great_powers);
-		print_ranking_list("Secondary Powers", country_instance_manager.get_secondary_powers());
-		print_ranking_list("All countries", country_instance_manager.get_total_ranking());
+		// std::vector<CountryInstance*> const& great_powers = country_instance_manager.get_great_powers();
+		// print_ranking_list("Great Powers", great_powers);
+		// print_ranking_list("Secondary Powers", country_instance_manager.get_secondary_powers());
+		// print_ranking_list("All countries", country_instance_manager.get_total_ranking());
 
-		Logger::info("===== RGO test... =====");
-		for (size_t i = 0; i < std::min<size_t>(3, great_powers.size()); ++i) {
-			CountryInstance const& great_power = *great_powers[i];
-			ProvinceInstance const* const capital_province = great_power.get_capital();
-			if (capital_province == nullptr) {
-				Logger::warning(great_power.get_identifier(), " has no capital ProvinceInstance set.");
-			} else {
-				print_rgo(*capital_province);
-			}
-		}
+		// Logger::info("===== RGO test... =====");
+		// for (size_t i = 0; i < std::min<size_t>(3, great_powers.size()); ++i) {
+		// 	CountryInstance const& great_power = *great_powers[i];
+		// 	ProvinceInstance const* const capital_province = great_power.get_capital();
+		// 	if (capital_province == nullptr) {
+		// 		Logger::warning(great_power.get_identifier(), " has no capital ProvinceInstance set.");
+		// 	} else {
+		// 		print_rgo(*capital_province);
+		// 	}
+		// }
 
 #if OV_MODIFIER_CALCULATION_TEST
 		Logger::info("Comparing resultant modifier calculation methods...");
@@ -225,6 +237,50 @@ static bool run_headless(Dataloader::path_vector_t const& roots, bool run_tests)
 		ret = false;
 	}
 
+	Logger::info("\n\n===== Finished run with return value ", ret, " =====\n");
+
+	file.close();
+
+	Logger::set_logger_funcs();
+
+	return ret;
+}
+
+static bool run_headless(Dataloader::path_vector_t const& roots, bool run_tests) {
+	bool ret = true;
+
+	GameManager game_manager { []() {
+		Logger::info("State updated");
+	}, nullptr };
+
+	Logger::info("===== Loading definitions... =====");
+	ret &= game_manager.set_roots(roots);
+	ret &= game_manager.load_definitions(
+		[](std::string_view key, Dataloader::locale_t locale, std::string_view localisation) -> bool {
+			return true;
+		}
+	);
+
+	if (run_tests) {
+		Testing testing { game_manager.get_definition_manager() };
+		std::cout << std::endl << "Testing Loaded" << std::endl << std::endl;
+		testing.execute_all_scripts();
+		testing.report_results();
+		std::cout << "Testing Executed" << std::endl << std::endl;
+	}
+
+	for (uint8_t idx = 0; idx < 64; ++idx) {
+		const update_modifier_sum_rule_t first = static_cast<update_modifier_sum_rule_t>(idx & 7);
+		const update_modifier_sum_rule_t second = static_cast<update_modifier_sum_rule_t>(idx >> 3);
+
+		Logger::info(
+			"===== Running modifier sum test... (", static_cast<uint32_t>(idx), " - ", static_cast<uint32_t>(first), ", ",
+			static_cast<uint32_t>(second), ") ====="
+		);
+		ret &= run_modifier_sum_test(game_manager, first, second);
+		Logger::info("===== Finished modifier sum test =====");
+	}
+
 	return ret;
 }
 
@@ -234,6 +290,31 @@ static bool run_headless(Dataloader::path_vector_t const& roots, bool run_tests)
 
 int main(int argc, char const* argv[]) {
 	Logger::set_logger_funcs();
+
+	// const std::string filename = "output.txt";
+
+	// Logger::info("Trying to open file: ", filename);
+
+	// std::ofstream file;
+	// file.open(filename);
+
+	// if (!file || file.fail()) {
+	// 	Logger::error("Failed to open file: ", filename);
+	// 	return 1;
+	// }
+
+	// Logger::info("Successfully opened file, swtiching logger to file stream...");
+
+	// Logger::set_ostream_logger_funcs(file);
+
+	// Logger::info("Hello world!");
+
+	// file.close();
+
+	// Logger::set_logger_funcs();
+	// Logger::info("Finished!");
+
+	// return 0;
 
 	char const* program_name = StringUtils::get_filename(argc > 0 ? argv[0] : nullptr, "<program>");
 	fs::path root;

@@ -43,7 +43,7 @@ ProvinceDefinition::index_t MapInstance::get_selected_province_index() const {
 
 bool MapInstance::setup(
 #if OV_MODIFIER_CALCULATION_TEST
-	bool ADD_OWNER_CONTRIBUTION,
+	update_modifier_sum_rule_t UPDATE_MODIFIER_SUM_RULE,
 #endif
 	BuildingTypeManager const& building_type_manager,
 	MarketInstance& market_instance,
@@ -68,7 +68,7 @@ bool MapInstance::setup(
 		for (ProvinceDefinition const& province : map_definition.get_province_definitions()) {
 			ret &= province_instances.add_item({
 #if OV_MODIFIER_CALCULATION_TEST
-			ADD_OWNER_CONTRIBUTION,
+				UPDATE_MODIFIER_SUM_RULE,
 #endif
 				market_instance,
 				modifier_effect_cache,
@@ -148,6 +148,12 @@ bool MapInstance::apply_history_to_provinces(
 void MapInstance::update_modifier_sums(const Date today, StaticModifierCache const& static_modifier_cache) {
 	for (ProvinceInstance& province : province_instances.get_items()) {
 		province.update_modifier_sum(today, static_modifier_cache);
+	}
+}
+
+void MapInstance::update_modifier_sums_owners() {
+	for (ProvinceInstance& province : province_instances.get_items()) {
+		province.update_modifier_sum_owner();
 	}
 }
 

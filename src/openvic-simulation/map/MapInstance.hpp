@@ -48,7 +48,7 @@ namespace OpenVic {
 
 		bool setup(
 #if OV_MODIFIER_CALCULATION_TEST
-			bool ADD_OWNER_CONTRIBUTION,
+			update_modifier_sum_rule_t UPDATE_MODIFIER_SUM_RULE,
 #endif
 			BuildingTypeManager const& building_type_manager,
 			MarketInstance& market_instance,
@@ -63,6 +63,7 @@ namespace OpenVic {
 		);
 
 		void update_modifier_sums(const Date today, StaticModifierCache const& static_modifier_cache);
+		void update_modifier_sums_owners();
 		void update_gamestate(const Date today, DefineManager const& define_manager);
 		void map_tick(const Date today);
 		void initialise_for_new_game(const Date today, DefineManager const& define_manager);

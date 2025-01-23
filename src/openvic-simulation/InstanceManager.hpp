@@ -30,7 +30,7 @@ namespace OpenVic {
 		FlagStrings PROPERTY_REF(global_flags);
 
 #if OV_MODIFIER_CALCULATION_TEST
-		const bool ADD_OWNER_CONTRIBUTION;
+		const update_modifier_sum_rule_t UPDATE_MODIFIER_SUM_RULE;
 #endif
 
 		CountryInstanceManager PROPERTY_REF(country_instance_manager);
@@ -67,7 +67,7 @@ namespace OpenVic {
 	public:
 		InstanceManager(
 #if OV_MODIFIER_CALCULATION_TEST
-			bool new_ADD_OWNER_CONTRIBUTION,
+			update_modifier_sum_rule_t new_UPDATE_MODIFIER_SUM_RULE,
 #endif
 			GameRulesManager const& new_game_rules_manager,
 			DefinitionManager const& new_definition_manager,
