@@ -82,6 +82,19 @@ namespace OpenVic {
 		}
 #undef VEC_COMPONENT_SQUARE
 
+#define VEC_COMPONENT_DIST_SQUARE(v) (v - vec.v) * (v - vec.v)
+		template<typename OtherT>
+		constexpr T distance_squared(VEC_TYPE<OtherT> const& vec) const {
+			return FOR_VEC_COMPONENTS(VEC_COMPONENT_DIST_SQUARE, +);
+		}
+#undef VEC_COMPONENT_DIST_SQUARE
+
+#define VEC_COMPONENT_DOT(v) v * vec.v
+		constexpr T dot(VEC_TYPE const& vec) const {
+			return FOR_VEC_COMPONENTS(VEC_COMPONENT_DOT, +);
+		}
+#undef VEC_COMPONENT_DOT
+
 #define VEC_COMPONENT_NONNEGATIVE(v) v >= 0
 		constexpr bool nonnegative() const {
 			return FOR_VEC_COMPONENTS(VEC_COMPONENT_NONNEGATIVE, &&);

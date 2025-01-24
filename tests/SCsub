@@ -1,0 +1,55 @@
+#!/usr/bin/env python
+import os
+import subprocess
+import platform
+import sys
+
+import SCons
+from SCons.Script.SConscript import SConsEnvironment
+
+
+def UnitTestPostAction(target=None, source=None, env=None):
+    print()
+    return subprocess.run([target[0].path]).returncode
+
+def UnitTest(env, **kwargs):
+    test = env.Program(**kwargs)
+    unit_test_action = env.Action(UnitTestPostAction, None)
+    test_post_action = env.AddPostAction(test, unit_test_action)
+    env.NoCache(test)
+    env.AlwaysBuild(test_post_action)
+    return test
+
+SConsEnvironment.UnitTest = UnitTest
+
+Import("env")
+
+BINDIR = "bin"
+
+env.openvic_simulation_tests = {}
+
+# For the reference:
+# - CCFLAGS are compilation flags shared between C and C++
+# - CFLAGS are for C-specific compilation flags
+# - CXXFLAGS are for C++-specific compilation flags
+# - CPPFLAGS are for pre-processor flags
+# - CPPDEFINES are for pre-processor defines
+# - LINKFLAGS are for linking flags
+
+# tweak this if you want to use different folders, or more folders, to store your source code in.
+source_path = "src"
+
+tests_name = "openvic-simulation"
+tests_env = env.Clone()
+tests_env.Append(CPPDEFINES=["OPENVIC_SIMULATION_TESTS"])
+tests_env.Append(CPPPATH=[tests_env.Dir(source_path)])
+tests_env.tests_sources = env.GlobRecursive("*.cpp", [source_path])
+
+SConscript("deps/SCsub", {"env": tests_env })
+
+tests_program = tests_env.UnitTest(
+    source=tests_env.tests_sources,
+    target=os.path.join(BINDIR, tests_name),
+    PROGSUFFIX=".tests" + env["PROGSUFFIX"]
+)
+Default(tests_program)

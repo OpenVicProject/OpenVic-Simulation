@@ -31,6 +31,18 @@ namespace OpenVic::utility {
 #endif
 	}
 
+	static constexpr std::size_t HASH_MURMUR3_SEED = 0x7F07C65;
+
+	inline constexpr std::size_t hash_murmur3(std::size_t key, std::size_t seed = HASH_MURMUR3_SEED) {
+		key ^= seed;
+		key ^= key >> 33;
+		key *= 0xff51afd7ed558ccd;
+		key ^= key >> 33;
+		key *= 0xc4ceb9fe1a85ec53;
+		key ^= key >> 33;
+		return key;
+	}
+
 	template<class T>
 	inline constexpr void hash_combine(std::size_t& s, T const& v) {
 		std::hash<T> h;
