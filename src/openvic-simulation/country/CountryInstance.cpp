@@ -175,6 +175,9 @@ CountryInstance::CountryInstance(
 	gas_defence_unlock_level { 0 },
 	unit_variant_unlock_levels {} {
 
+	// Exclude PROVINCE (local) modifier effects from the country's modifier sum
+	modifier_sum.set_this_excluded_targets(ModifierEffect::target_t::PROVINCE);
+
 	update_country_definition_based_attributes();
 
 	for (BuildingType const& building_type : *building_type_unlock_levels.get_keys()) {
@@ -1029,8 +1032,7 @@ void CountryInstance::_update_military(
 		max_supported_regiment_count += state->get_max_supported_regiments();
 	}
 
-	supply_consumption =
-		fixed_point_t::_1() + get_modifier_effect_value_nullcheck(modifier_effect_cache.get_supply_consumption());
+	supply_consumption = fixed_point_t::_1() + get_modifier_effect_value(*modifier_effect_cache.get_supply_consumption());
 
 	const size_t regular_army_size = std::min(4 * deployed_non_mobilised_regiments, max_supported_regiment_count);
 
@@ -1070,8 +1072,8 @@ void CountryInstance::_update_military(
 	military_power = military_power_from_land + military_power_from_sea + military_power_from_leaders;
 
 	// Mobilisation calculations
-	mobilisation_impact = get_modifier_effect_value_nullcheck(modifier_effect_cache.get_mobilization_impact());
-	mobilisation_economy_impact = get_modifier_effect_value_nullcheck(modifier_effect_cache.get_mobilisation_economy_impact());
+	mobilisation_impact = get_modifier_effect_value(*modifier_effect_cache.get_mobilization_impact());
+	mobilisation_economy_impact = get_modifier_effect_value(*modifier_effect_cache.get_mobilisation_economy_impact());
 
 	// TODO - use country_defines.get_min_mobilize_limit(); (wiki: "lowest maximum of brigades you can mobilize. (by default 3)")
 
@@ -1087,31 +1089,27 @@ void CountryInstance::_update_military(
 	// max war exhaustion can be negative, but in such cases the war exhaustion clamping behaviour is
 	// very buggy and regardless it doesn't seem to make any modifier effect contributions.
 	war_exhaustion_max = std::max(
-		get_modifier_effect_value_nullcheck(modifier_effect_cache.get_max_war_exhaustion()), fixed_point_t::_0()
+		get_modifier_effect_value(*modifier_effect_cache.get_max_war_exhaustion()), fixed_point_t::_0()
 	);
 
 	organisation_regain = fixed_point_t::_1() +
-		get_modifier_effect_value_nullcheck(modifier_effect_cache.get_org_regain()) +
-		get_modifier_effect_value_nullcheck(modifier_effect_cache.get_morale_global());
+		get_modifier_effect_value(*modifier_effect_cache.get_org_regain()) +
+		get_modifier_effect_value(*modifier_effect_cache.get_morale_global());
 
-	land_organisation = fixed_point_t::_1() +
-		get_modifier_effect_value_nullcheck(modifier_effect_cache.get_land_organisation());
-	naval_organisation = fixed_point_t::_1() +
-		get_modifier_effect_value_nullcheck(modifier_effect_cache.get_naval_organisation());
+	land_organisation = fixed_point_t::_1() + get_modifier_effect_value(*modifier_effect_cache.get_land_organisation());
+	naval_organisation = fixed_point_t::_1() + get_modifier_effect_value(*modifier_effect_cache.get_naval_organisation());
 
-	land_unit_start_experience = get_modifier_effect_value_nullcheck(modifier_effect_cache.get_regular_experience_level());
+	land_unit_start_experience = get_modifier_effect_value(*modifier_effect_cache.get_regular_experience_level());
 	naval_unit_start_experience = land_unit_start_experience;
-	land_unit_start_experience += get_modifier_effect_value_nullcheck(modifier_effect_cache.get_land_unit_start_experience());
-	naval_unit_start_experience +=
-		get_modifier_effect_value_nullcheck(modifier_effect_cache.get_naval_unit_start_experience());
+	land_unit_start_experience += get_modifier_effect_value(*modifier_effect_cache.get_land_unit_start_experience());
+	naval_unit_start_experience += get_modifier_effect_value(*modifier_effect_cache.get_naval_unit_start_experience());
 
-	recruit_time = fixed_point_t::_1() +
-		get_modifier_effect_value_nullcheck(modifier_effect_cache.get_unit_recruitment_time());
+	recruit_time = fixed_point_t::_1() + get_modifier_effect_value(*modifier_effect_cache.get_unit_recruitment_time());
 	combat_width = fixed_point_t::parse(military_defines.get_base_combat_width()) +
-		get_modifier_effect_value_nullcheck(modifier_effect_cache.get_combat_width_additive());
-	digin_cap = get_modifier_effect_value_nullcheck(modifier_effect_cache.get_dig_in_cap());
+		get_modifier_effect_value(*modifier_effect_cache.get_combat_width_additive());
+	digin_cap = get_modifier_effect_value(*modifier_effect_cache.get_dig_in_cap());
 	military_tactics = military_defines.get_base_military_tactics() +
-		get_modifier_effect_value_nullcheck(modifier_effect_cache.get_military_tactics());
+		get_modifier_effect_value(*modifier_effect_cache.get_military_tactics());
 
 	if (leadership_points < 0) {
 		leadership_points = 0;
@@ -1141,49 +1139,34 @@ bool CountryInstance::update_rule_set() {
 	return rule_set.trim_and_resolve_conflicts(true);
 }
 
+static constexpr Modifier const& get_country_status_static_effect(
+	CountryInstance::country_status_t country_status, StaticModifierCache const& static_modifier_cache
+) {
+	using enum CountryInstance::country_status_t;
+
+	switch (country_status) {
+	case COUNTRY_STATUS_GREAT_POWER:     return static_modifier_cache.get_great_power();
+	case COUNTRY_STATUS_SECONDARY_POWER: return static_modifier_cache.get_secondary_power();
+	case COUNTRY_STATUS_CIVILISED:       return static_modifier_cache.get_civilised();
+	default:                             return static_modifier_cache.get_uncivilised();
+	}
+}
+
 void CountryInstance::update_modifier_sum(Date today, StaticModifierCache const& static_modifier_cache) {
 	// Update sum of national modifiers
 	modifier_sum.clear();
 
-	const ModifierSum::modifier_source_t country_source { this };
-
-	// Erase expired event modifiers and add non-expired ones to the sum
-	std::erase_if(event_modifiers, [this, today, &country_source](ModifierInstance const& modifier) -> bool {
-		if (today <= modifier.get_expiry_date()) {
-			modifier_sum.add_modifier(*modifier.get_modifier(), country_source);
-			return false;
-		} else {
-			return true;
-		}
-	});
-
 	// Add static modifiers
-	modifier_sum.add_modifier(static_modifier_cache.get_base_modifier(), country_source);
-
-	switch (country_status) {
-		using enum country_status_t;
-	case COUNTRY_STATUS_GREAT_POWER:
-		modifier_sum.add_modifier(static_modifier_cache.get_great_power(), country_source);
-		break;
-	case COUNTRY_STATUS_SECONDARY_POWER:
-		modifier_sum.add_modifier(static_modifier_cache.get_secondary_power(), country_source);
-		break;
-	case COUNTRY_STATUS_CIVILISED:
-		modifier_sum.add_modifier(static_modifier_cache.get_civilised(), country_source);
-		break;
-	default:
-		modifier_sum.add_modifier(static_modifier_cache.get_uncivilised(), country_source);
-	}
+	modifier_sum.add_modifier(static_modifier_cache.get_base_modifier());
+	modifier_sum.add_modifier(get_country_status_static_effect(country_status, static_modifier_cache));
 	if (is_disarmed()) {
-		modifier_sum.add_modifier(static_modifier_cache.get_disarming(), country_source);
+		modifier_sum.add_modifier(static_modifier_cache.get_disarming());
 	}
-	modifier_sum.add_modifier(static_modifier_cache.get_war_exhaustion(), country_source, war_exhaustion);
-	modifier_sum.add_modifier(static_modifier_cache.get_infamy(), country_source, infamy);
-	modifier_sum.add_modifier(static_modifier_cache.get_literacy(), country_source, national_literacy);
-	modifier_sum.add_modifier(static_modifier_cache.get_plurality(), country_source, plurality);
-	modifier_sum.add_modifier(
-		is_at_war() ? static_modifier_cache.get_war() : static_modifier_cache.get_peace(), country_source
-	);
+	modifier_sum.add_modifier(static_modifier_cache.get_war_exhaustion(), war_exhaustion);
+	modifier_sum.add_modifier(static_modifier_cache.get_infamy(), infamy);
+	modifier_sum.add_modifier(static_modifier_cache.get_literacy(), national_literacy);
+	modifier_sum.add_modifier(static_modifier_cache.get_plurality(), plurality);
+	modifier_sum.add_modifier(is_at_war() ? static_modifier_cache.get_war() : static_modifier_cache.get_peace());
 	// TODO - difficulty modifiers, debt_default_to, bad_debtor, generalised_debt_default,
 	//        total_occupation, total_blockaded, in_bankruptcy
 
@@ -1193,60 +1176,59 @@ void CountryInstance::update_modifier_sum(Date today, StaticModifierCache const&
 		for (Issue const* issue : ruling_party->get_policies().get_values()) {
 			// The ruling party's issues here could be null as they're stored in an IndexedMap which has
 			// values for every IssueGroup regardless of whether or not they have a policy set.
-			modifier_sum.add_modifier_nullcheck(issue, country_source);
+			if (issue != nullptr) {
+				modifier_sum.add_modifier(*issue);
+			}
 		}
 	}
 
 	for (Reform const* reform : reforms.get_values()) {
 		// The country's reforms here could be null as they're stored in an IndexedMap which has
 		// values for every ReformGroup regardless of whether or not they have a reform set.
-		modifier_sum.add_modifier_nullcheck(reform, country_source);
+		if (reform != nullptr) {
+			modifier_sum.add_modifier(*reform);
+		}
 	}
 
-	modifier_sum.add_modifier_nullcheck(national_value, country_source);
-
-	modifier_sum.add_modifier_nullcheck(tech_school, country_source);
+	if (tech_school != nullptr) {
+		modifier_sum.add_modifier(*tech_school);
+	}
 
 	for (Technology const& technology : *technology_unlock_levels.get_keys()) {
 		if (is_technology_unlocked(technology)) {
-			modifier_sum.add_modifier(technology, country_source);
+			modifier_sum.add_modifier(technology);
 		}
 	}
 
 	for (Invention const& invention : *invention_unlock_levels.get_keys()) {
 		if (is_invention_unlocked(invention)) {
-			modifier_sum.add_modifier(invention, country_source);
+			modifier_sum.add_modifier(invention);
 		}
 	}
 
-	if constexpr (ProvinceInstance::ADD_OWNER_CONTRIBUTION) {
-		// Add province base modifiers (with local province modifier effects removed)
-		for (ProvinceInstance const* province : controlled_provinces) {
-			contribute_province_modifier_sum(province->get_modifier_sum());
+	// Erase expired event modifiers and add non-expired ones to the sum
+	std::erase_if(event_modifiers, [this, today](ModifierInstance const& modifier) -> bool {
+		if (today <= modifier.get_expiry_date()) {
+			modifier_sum.add_modifier(*modifier.get_modifier());
+			return false;
+		} else {
+			return true;
 		}
+	});
 
-		// This has to be done after adding all province modifiers to the country's sum, otherwise provinces
-		// earlier in the list wouldn't be affected by modifiers from provinces later in the list.
-		for (ProvinceInstance* province : owned_provinces) {
-			province->contribute_country_modifier_sum(modifier_sum);
-		}
+	if (national_value != nullptr) {
+		modifier_sum.add_modifier(*national_value);
 	}
 
 	// TODO - calculate stats for each unit type (locked and unlocked)
 }
 
 void CountryInstance::contribute_province_modifier_sum(ModifierSum const& province_modifier_sum) {
-	using enum ModifierEffect::target_t;
-
-	modifier_sum.add_modifier_sum_exclude_targets(province_modifier_sum, PROVINCE);
+	modifier_sum.add_modifier_sum(province_modifier_sum);
 }
 
 fixed_point_t CountryInstance::get_modifier_effect_value(ModifierEffect const& effect) const {
-	return modifier_sum.get_effect(effect);
-}
-
-fixed_point_t CountryInstance::get_modifier_effect_value_nullcheck(ModifierEffect const* effect) const {
-	return modifier_sum.get_effect_nullcheck(effect);
+	return modifier_sum.get_modifier_effect_value(effect);
 }
 
 void CountryInstance::update_gamestate(InstanceManager& instance_manager) {
@@ -1459,7 +1441,7 @@ bool CountryInstanceManager::generate_country_instances(
 	bool ret = true;
 
 	for (CountryDefinition const& country_definition : country_definition_manager.get_country_definitions()) {
-		ret &= country_instances.add_item({
+		if (country_instances.add_item({
 			&country_definition,
 			building_type_keys,
 			technology_keys,
@@ -1472,7 +1454,14 @@ bool CountryInstanceManager::generate_country_instances(
 			regiment_type_unlock_levels_keys,
 			ship_type_unlock_levels_keys,
 			strata_keys
-		});
+		})) {
+			// We need to update the country's ModifierSum's source here as the country's address is finally stable
+			// after changing between its constructor call and now due to being std::move'd into the registry.
+			CountryInstance& country_instance = get_back_country_instance();
+			country_instance.modifier_sum.set_this_source(&country_instance);
+		} else {
+			ret = false;
+		}
 	}
 
 	return ret;

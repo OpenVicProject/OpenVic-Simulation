@@ -63,14 +63,21 @@ bool MapInstance::setup(
 		province_instances.reserve(map_definition.get_province_definition_count());
 
 		for (ProvinceDefinition const& province : map_definition.get_province_definitions()) {
-			ret &= province_instances.add_item({
+			if (province_instances.add_item({
 				market_instance,
 				modifier_effect_cache,
 				province,
 				strata_keys,
 				pop_type_keys,
 				ideology_keys
-			});
+			})) {
+				// We need to update the province's ModifierSum's source here as the province's address is finally stable
+				// after changing between its constructor call and now due to being std::move'd into the registry.
+				ProvinceInstance& province_instance = get_back_province_instance();
+				province_instance.modifier_sum.set_this_source(&province_instance);
+			} else {
+				ret = false;
+			}
 		}
 	}
 

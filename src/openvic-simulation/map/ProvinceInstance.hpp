@@ -75,12 +75,7 @@ namespace OpenVic {
 		CountryInstance* PROPERTY(controller);
 		ordered_set<CountryInstance*> PROPERTY(cores);
 
-	public:
-		static constexpr bool ADD_OWNER_CONTRIBUTION = true;
-
-	private:
-		// The total/resultant modifier affecting this province, including owner country contributions if
-		// ADD_OWNER_CONTRIBUTION is true.
+		// The total/resultant modifier of local effects on this province (global effects come from the province's owner)
 		ModifierSum PROPERTY(modifier_sum);
 		std::vector<ModifierInstance> PROPERTY(event_modifiers);
 
@@ -207,30 +202,21 @@ namespace OpenVic {
 		size_t get_pop_count() const;
 
 		void update_modifier_sum(Date today, StaticModifierCache const& static_modifier_cache);
-		void contribute_country_modifier_sum(ModifierSum const& owner_modifier_sum);
 		fixed_point_t get_modifier_effect_value(ModifierEffect const& effect) const;
-		fixed_point_t get_modifier_effect_value_nullcheck(ModifierEffect const* effect) const;
-
 		constexpr void for_each_contributing_modifier(
-			ModifierEffect const& effect, std::invocable<ModifierSum::modifier_entry_t const&> auto callback
+			ModifierEffect const& effect, ContributingModifierCallback auto callback
 		) const {
-			if constexpr (ADD_OWNER_CONTRIBUTION) {
-				modifier_sum.for_each_contributing_modifier(effect, callback);
-			} else {
-				using enum ModifierEffect::target_t;
+			using enum ModifierEffect::target_t;
 
-				if (owner != nullptr) {
-					if (ModifierEffect::excludes_targets(effect.get_targets(), PROVINCE)) {
-						// Non-province targeted effects are already added to the country modifier sum
-						owner->for_each_contributing_modifier(effect, callback);
-					} else {
-						// Province-targeted effects aren't passed to the country modifier sum
-						modifier_sum.for_each_contributing_modifier(effect, callback);
-						owner->for_each_contributing_modifier(effect, callback);
-					}
-				} else {
-					modifier_sum.for_each_contributing_modifier(effect, callback);
-				}
+			if (effect.is_local()) {
+				// Province-targeted/local effects come from the province itself, only modifiers applied directly to the
+				// province contribute to these effects.
+				modifier_sum.for_each_contributing_modifier(effect, std::move(callback));
+			} else if (owner != nullptr) {
+				// Non-province targeted/global effects come from the province's owner, even those applied locally
+				// (e.g. via a province event modifier) are passed up to the province's controller and only affect the
+				// province if the controller is also the owner.
+				owner->for_each_contributing_modifier(effect, std::move(callback));
 			}
 		}
 
