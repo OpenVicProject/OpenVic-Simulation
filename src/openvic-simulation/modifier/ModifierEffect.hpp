@@ -52,11 +52,19 @@ namespace OpenVic {
 
 	public:
 		ModifierEffect(ModifierEffect&&) = default;
+
+		// TODO - check if this is an accurate and consistent method of classifying global and local effects
+		inline constexpr bool is_global() const {
+			return excludes_targets(targets, target_t::PROVINCE);
+		}
+		inline constexpr bool is_local() const {
+			return !is_global();
+		}
 	};
 
 	template<> struct enable_bitfield<ModifierEffect::target_t> : std::true_type {};
 
-	constexpr bool ModifierEffect::excludes_targets(target_t targets, target_t excluded_targets) {
+	inline constexpr bool ModifierEffect::excludes_targets(target_t targets, target_t excluded_targets) {
 		using enum target_t;
 
 		return (targets & excluded_targets) == NO_TARGETS;

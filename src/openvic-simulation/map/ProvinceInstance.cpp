@@ -309,82 +309,69 @@ void ProvinceInstance::update_modifier_sum(Date today, StaticModifierCache const
 	// Update sum of direct province modifiers
 	modifier_sum.clear();
 
-	const ModifierSum::modifier_source_t province_source { this };
+	if (terrain_type != nullptr) {
+		modifier_sum.add_modifier(*terrain_type);
+	}
+
+	if (province_definition.get_climate() != nullptr) {
+		modifier_sum.add_modifier(*province_definition.get_climate());
+	}
+
+	if (province_definition.get_continent() != nullptr) {
+		modifier_sum.add_modifier(*province_definition.get_continent());
+	}
+
+	// Add static modifiers
+	if (is_owner_core()) {
+		modifier_sum.add_modifier(static_modifier_cache.get_core());
+	}
+	if (province_definition.is_water()) {
+		modifier_sum.add_modifier(static_modifier_cache.get_sea_zone());
+	} else {
+		modifier_sum.add_modifier(static_modifier_cache.get_land_province());
+
+		modifier_sum.add_modifier(
+			province_definition.is_coastal() ? static_modifier_cache.get_coastal() : static_modifier_cache.get_non_coastal()
+		);
+
+		// TODO - overseas, blockaded, no_adjacent_controlled, has_siege, occupied, nationalism, infrastructure
+	}
 
 	// Erase expired event modifiers and add non-expired ones to the sum
-	std::erase_if(event_modifiers, [this, today, &province_source](ModifierInstance const& modifier) -> bool {
+	std::erase_if(event_modifiers, [this, today](ModifierInstance const& modifier) -> bool {
 		if (today <= modifier.get_expiry_date()) {
-			modifier_sum.add_modifier(*modifier.get_modifier(), province_source);
+			modifier_sum.add_modifier(*modifier.get_modifier());
 			return false;
 		} else {
 			return true;
 		}
 	});
 
-	// Add static modifiers
-	if (is_owner_core()) {
-		modifier_sum.add_modifier(static_modifier_cache.get_core(), province_source);
-	}
-	if (province_definition.is_water()) {
-		modifier_sum.add_modifier(static_modifier_cache.get_sea_zone(), province_source);
-	} else {
-		modifier_sum.add_modifier(static_modifier_cache.get_land_province(), province_source);
-
-		if (province_definition.is_coastal()) {
-			modifier_sum.add_modifier(static_modifier_cache.get_coastal(), province_source);
-		} else {
-			modifier_sum.add_modifier(static_modifier_cache.get_non_coastal(), province_source);
-		}
-
-		// TODO - overseas, blockaded, no_adjacent_controlled, has_siege, occupied, nationalism, infrastructure
-	}
-
 	for (BuildingInstance const& building : buildings.get_items()) {
-		modifier_sum.add_modifier(building.get_building_type(), province_source);
+		modifier_sum.add_modifier(building.get_building_type());
 	}
 
-	modifier_sum.add_modifier_nullcheck(crime, province_source);
-
-	modifier_sum.add_modifier_nullcheck(province_definition.get_continent(), province_source);
-
-	modifier_sum.add_modifier_nullcheck(province_definition.get_climate(), province_source);
-
-	modifier_sum.add_modifier_nullcheck(terrain_type, province_source);
-
-	if constexpr (!ADD_OWNER_CONTRIBUTION) {
-		if (controller != nullptr) {
-			controller->contribute_province_modifier_sum(modifier_sum);
-		}
+	if (crime != nullptr) {
+		modifier_sum.add_modifier(*crime);
 	}
-}
 
-void ProvinceInstance::contribute_country_modifier_sum(ModifierSum const& owner_modifier_sum) {
-	modifier_sum.add_modifier_sum_exclude_source(owner_modifier_sum, this);
+	if (controller != nullptr) {
+		controller->contribute_province_modifier_sum(modifier_sum);
+	}
 }
 
 fixed_point_t ProvinceInstance::get_modifier_effect_value(ModifierEffect const& effect) const {
-	if constexpr (ADD_OWNER_CONTRIBUTION) {
-		return modifier_sum.get_effect(effect);
-	} else {
-		using enum ModifierEffect::target_t;
+	using enum ModifierEffect::target_t;
 
-		if (owner != nullptr) {
-			if (ModifierEffect::excludes_targets(effect.get_targets(), PROVINCE)) {
-				// Non-province targeted effects are already added to the country modifier sum
-				return owner->get_modifier_effect_value(effect);
-			} else {
-				// Province-targeted effects aren't passed to the country modifier sum
-				return owner->get_modifier_effect_value(effect) + modifier_sum.get_effect(effect);
-			}
-		} else {
-			return modifier_sum.get_effect(effect);
-		}
-	}
-}
-
-fixed_point_t ProvinceInstance::get_modifier_effect_value_nullcheck(ModifierEffect const* effect) const {
-	if (effect != nullptr) {
-		return get_modifier_effect_value(*effect);
+	if (effect.is_local()) {
+		// Province-targeted/local effects come from the province itself, only modifiers applied directly to the
+		// province contribute to these effects.
+		return modifier_sum.get_modifier_effect_value(effect);
+	} else if (owner != nullptr) {
+		// Non-province targeted/global effects come from the province's owner, even those applied locally
+		// (e.g. via a province event modifier) are passed up to the province's controller and only affect the
+		// province if the controller is also the owner.
+		return owner->get_modifier_effect_value(effect);
 	} else {
 		return fixed_point_t::_0();
 	}
