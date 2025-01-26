@@ -9,15 +9,27 @@ using namespace OpenVic;
 using namespace OpenVic::NodeTools;
 
 TerrainType::TerrainType(
-	std::string_view new_identifier, colour_t new_colour, ModifierValue&& new_modifier, bool new_is_water
-) : Modifier { new_identifier, std::move(new_modifier), modifier_type_t::TERRAIN }, HasColour { new_colour, false },
+	std::string_view new_identifier,
+	colour_t new_colour,
+	ModifierValue&& new_modifier,
+	fixed_point_t new_movement_cost,
+	bool new_is_water
+) : Modifier { new_identifier, std::move(new_modifier), modifier_type_t::TERRAIN },
+	HasColour { new_colour, false },
+	movement_cost { new_movement_cost },
 	is_water { new_is_water } {}
 
 TerrainTypeMapping::TerrainTypeMapping(
-	std::string_view new_identifier, TerrainType const& new_type, std::vector<index_t>&& new_terrain_indicies,
-	index_t new_priority, bool new_has_texture
-) : HasIdentifier { new_identifier }, type { new_type }, terrain_indices { std::move(new_terrain_indicies) },
-	priority { new_priority }, has_texture { new_has_texture } {}
+	std::string_view new_identifier,
+	TerrainType const& new_type,
+	std::vector<index_t>&& new_terrain_indicies,
+	index_t new_priority,
+	bool new_has_texture
+) : HasIdentifier { new_identifier },
+	type { new_type },
+	terrain_indices { std::move(new_terrain_indicies) },
+	priority { new_priority },
+	has_texture { new_has_texture } {}
 
 bool TerrainTypeManager::generate_modifiers(ModifierManager& modifier_manager) const {
 	using enum ModifierEffect::format_t;
@@ -52,19 +64,33 @@ bool TerrainTypeManager::generate_modifiers(ModifierManager& modifier_manager) c
 }
 
 bool TerrainTypeManager::add_terrain_type(
-	std::string_view identifier, colour_t colour, ModifierValue&& values, bool is_water
+	std::string_view identifier,
+	colour_t colour,
+	ModifierValue&& values,
+	fixed_point_t movement_cost,
+	bool is_water
 ) {
 	if (identifier.empty()) {
 		Logger::error("Invalid terrain type identifier - empty!");
 		return false;
 	}
 
-	return terrain_types.add_item({ identifier, colour, std::move(values), is_water });
+	if (movement_cost < fixed_point_t::_0()) {
+		Logger::error(
+			"Invalid movement cost for terrain type \"", identifier, "\": ", movement_cost, " (cannot be negative!)"
+		);
+		return false;
+	}
+
+	return terrain_types.add_item({ identifier, colour, std::move(values), movement_cost, is_water });
 }
 
 bool TerrainTypeManager::add_terrain_type_mapping(
-	std::string_view identifier, TerrainType const* type, std::vector<TerrainTypeMapping::index_t>&& terrain_indicies,
-	TerrainTypeMapping::index_t priority, bool has_texture
+	std::string_view identifier,
+	TerrainType const* type,
+	std::vector<TerrainTypeMapping::index_t>&& terrain_indicies,
+	TerrainTypeMapping::index_t priority,
+	bool has_texture
 ) {
 	if (!terrain_types_are_locked()) {
 		Logger::error("Cannot register terrain type mappings until terrain types are locked!");
@@ -107,16 +133,18 @@ node_callback_t TerrainTypeManager::_load_terrain_type_categories(ModifierManage
 		const bool ret = expect_dictionary_reserve_length(terrain_types,
 			[this, &modifier_manager](std::string_view type_key, ast::NodeCPtr type_node) -> bool {
 				ModifierValue values;
+				fixed_point_t movement_cost;
 				colour_t colour = colour_t::null();
 				bool is_water = false;
 
 				bool ret = NodeTools::expect_dictionary_keys_and_default(
 					modifier_manager.expect_terrain_modifier(values),
+					"movement_cost", ONE_EXACTLY, expect_fixed_point(assign_variable_callback(movement_cost)),
 					"color", ONE_EXACTLY, expect_colour(assign_variable_callback(colour)),
 					"is_water", ZERO_OR_ONE, expect_bool(assign_variable_callback(is_water))
 				)(type_node);
 
-				ret &= add_terrain_type(type_key, colour, std::move(values), is_water);
+				ret &= add_terrain_type(type_key, colour, std::move(values), movement_cost, is_water);
 
 				return ret;
 			}

@@ -138,10 +138,10 @@ namespace OpenVic::utility {
 	NAME; \
 \
 public: \
-	constexpr decltype(NAME)& get_##NAME() { \
+	[[nodiscard]] constexpr decltype(NAME)& get_##NAME() { \
 		return NAME; \
 	} \
-	constexpr decltype(NAME) const& get_##NAME() const { \
+	[[nodiscard]] constexpr decltype(NAME) const& get_##NAME() const { \
 		return NAME; \
 	} \
 	ACCESS:
@@ -204,7 +204,7 @@ namespace OpenVic {
 	NAME __VA_OPT__(=) __VA_ARGS__; \
 \
 public: \
-	constexpr auto GETTER_NAME() const -> decltype(OpenVic::_get_property<decltype(NAME)>(NAME)) { \
+	[[nodiscard]] constexpr auto GETTER_NAME() const -> decltype(OpenVic::_get_property<decltype(NAME)>(NAME)) { \
 		return OpenVic::_get_property<decltype(NAME)>(NAME); \
 	} \
 	ACCESS:

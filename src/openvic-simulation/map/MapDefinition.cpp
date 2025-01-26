@@ -329,7 +329,7 @@ bool MapDefinition::add_region(std::string_view identifier, std::vector<Province
 	region.lock();
 	if (regions.add_item(std::move(region))) {
 		if (!meta) {
-			Region const& last_region = regions.get_items().back();
+			Region const& last_region = get_back_region();
 			for (ProvinceDefinition const* province : last_region.get_provinces()) {
 				remove_province_definition_const(province)->region = &last_region;
 			}
@@ -1039,7 +1039,7 @@ bool MapDefinition::load_continent_file(ModifierManager const& modifier_manager,
 			continent.lock();
 
 			if (continents.add_item(std::move(continent))) {
-				Continent const& moved_continent = continents.get_items().back();
+				Continent const& moved_continent = get_back_continent();
 				for (ProvinceDefinition const* prov : moved_continent.get_provinces()) {
 					remove_province_definition_const(prov)->continent = &moved_continent;
 				}

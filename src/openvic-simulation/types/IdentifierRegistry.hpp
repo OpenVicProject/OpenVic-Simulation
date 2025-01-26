@@ -259,6 +259,12 @@ namespace OpenVic {
 		}
 
 #define GETTERS(CONST) \
+	constexpr external_value_type CONST& front() CONST { \
+		return ValueInfo::get_external_value(ItemInfo::get_value(items.front())); \
+	} \
+	constexpr external_value_type CONST& back() CONST { \
+		return ValueInfo::get_external_value(ItemInfo::get_value(items.back())); \
+	} \
 	constexpr external_value_type CONST* get_item_by_identifier(std::string_view identifier) CONST { \
 		const typename decltype(identifier_index_map)::const_iterator it = identifier_index_map.find(identifier); \
 		if (it != identifier_index_map.end()) { \
@@ -578,6 +584,12 @@ private:
 	IDENTIFIER_REGISTRY_INTERNAL_SHARED(singular, plural, registry, index_offset,)
 
 #define IDENTIFIER_REGISTRY_INTERNAL_SHARED(singular, plural, registry, index_offset, const_kw) \
+	constexpr decltype(registry)::external_value_type const_kw& get_front_##singular() const_kw { \
+		return registry.front(); \
+	} \
+	constexpr decltype(registry)::external_value_type const_kw& get_back_##singular() const_kw { \
+		return registry.back(); \
+	} \
 	constexpr decltype(registry)::external_value_type const_kw* get_##singular##_by_identifier(std::string_view identifier) const_kw { \
 		return registry.get_item_by_identifier(identifier); \
 	} \

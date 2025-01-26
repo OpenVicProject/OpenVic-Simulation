@@ -64,7 +64,7 @@ bool ModifierManager::_register_modifier_effect(
 	});
 
 	if (ret) {
-		effect_cache = &registry.get_items().back();
+		effect_cache = &registry.back();
 	}
 
 	return ret;
@@ -308,7 +308,7 @@ bool ModifierManager::setup_modifier_effects() {
 	ret &= register_base_country_modifier_effect(modifier_effect_cache.max_tariff, "max_tariff", true, PROPORTION_DECIMAL);
 	ret &= register_base_country_modifier_effect(modifier_effect_cache.max_tax, "max_tax", true, PROPORTION_DECIMAL);
 	ret &= register_base_country_modifier_effect(
-		modifier_effect_cache.max_war_exhaustion, "max_war_exhaustion", true, RAW_DECIMAL, "MAX_WAR_EXHAUSTION"
+		modifier_effect_cache.max_war_exhaustion, "max_war_exhaustion", false, RAW_DECIMAL, "MAX_WAR_EXHAUSTION"
 	);
 	ret &= register_technology_modifier_effect(
 		modifier_effect_cache.military_tactics, "military_tactics", true, PROPORTION_DECIMAL, "MIL_TACTICS_TECH"
@@ -444,7 +444,7 @@ bool ModifierManager::setup_modifier_effects() {
 		modifier_effect_cache.unit_recruitment_time, "unit_recruitment_time", false, PROPORTION_DECIMAL
 	);
 	ret &= register_shared_tech_country_modifier_effect(
-		modifier_effect_cache.war_exhaustion, "war_exhaustion", false, PROPORTION_DECIMAL, "WAR_EXHAUST_BATTLES"
+		modifier_effect_cache.war_exhaustion, "war_exhaustion", false, RAW_DECIMAL, "WAR_EXHAUST_BATTLES"
 	);
 
 	/* Province Modifier Effects */
@@ -560,9 +560,6 @@ bool ModifierManager::setup_modifier_effects() {
 	ret &= register_base_province_modifier_effect(
 		modifier_effect_cache.mine_rgo_size_local, "mine_rgo_size", true, PROPORTION_DECIMAL,
 		ModifierEffect::make_default_modifier_effect_localisation_key("mine_size")
-	);
-	ret &= register_terrain_modifier_effect(
-		modifier_effect_cache.movement_cost_base, "movement_cost", true, PROPORTION_DECIMAL
 	);
 	ret &= register_base_province_modifier_effect(
 		modifier_effect_cache.movement_cost_percentage_change, "movement_cost", false, PROPORTION_DECIMAL

@@ -85,7 +85,7 @@ namespace OpenVic {
 	public:
 		bool add_technology_folder(std::string_view identifier);
 
-		bool add_technology_area(std::string_view identifier, TechnologyFolder const* folder);
+		bool add_technology_area(std::string_view identifier, TechnologyFolder const& folder);
 
 		bool add_technology(
 			std::string_view identifier, TechnologyArea const* area, Date::year_t year, fixed_point_t cost,

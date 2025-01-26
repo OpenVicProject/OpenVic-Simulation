@@ -29,7 +29,7 @@ bool UIManager::add_font(
 	);
 
 	if (universal_colour_codes.empty() && ret) {
-		GFX::Font::colour_codes_t const& loaded_colour_codes = get_fonts().back().get_colour_codes();
+		GFX::Font::colour_codes_t const& loaded_colour_codes = get_back_font().get_colour_codes();
 		if (!loaded_colour_codes.empty()) {
 			universal_colour_codes = loaded_colour_codes;
 			Logger::info("Loaded universal colour codes from font: \"", identifier, "\"");

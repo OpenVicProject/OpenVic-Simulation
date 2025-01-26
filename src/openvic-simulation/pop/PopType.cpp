@@ -329,7 +329,7 @@ bool PopManager::load_pop_type_file(
 					return true;
 				}
 				if (add_strata(identifier)) {
-					strata = &get_stratas().back();
+					strata = &get_back_strata();
 					return true;
 				}
 				return false;

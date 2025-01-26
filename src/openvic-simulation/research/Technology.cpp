@@ -47,18 +47,13 @@ bool TechnologyManager::add_technology_folder(std::string_view identifier) {
 	return technology_folders.add_item({ identifier });
 }
 
-bool TechnologyManager::add_technology_area(std::string_view identifier, TechnologyFolder const* folder) {
+bool TechnologyManager::add_technology_area(std::string_view identifier, TechnologyFolder const& folder) {
 	if (identifier.empty()) {
 		Logger::error("Invalid technology area identifier - empty!");
 		return false;
 	}
 
-	if (folder == nullptr) {
-		Logger::error("Null folder for technology area \"", identifier, "\"!");
-		return false;
-	}
-
-	return technology_areas.add_item({ identifier, *folder });
+	return technology_areas.add_item({ identifier, folder });
 }
 
 bool TechnologyManager::add_technology(
@@ -97,22 +92,21 @@ bool TechnologyManager::load_technology_file_folders_and_areas(ast::NodeCPtr roo
 			const bool ret = expect_dictionary_reserve_length(
 				technology_folders,
 				[this](std::string_view folder_key, ast::NodeCPtr folder_value) -> bool {
-					bool ret = add_technology_folder(folder_key);
-
-					TechnologyFolder const* current_folder = get_technology_folder_by_identifier(folder_key);
-					if (current_folder == nullptr) {
+					if (!add_technology_folder(folder_key)) {
 						Logger::error("Failed to add and retrieve technology folder: \"", folder_key, "\"");
 						return false;
 					}
 
-					ret &= expect_list_reserve_length(
+					TechnologyFolder const& current_folder = get_back_technology_folder();
+
+					return expect_list_reserve_length(
 						technology_areas,
 						expect_identifier(
-							std::bind(&TechnologyManager::add_technology_area, this, std::placeholders::_1, current_folder)
+							[this, &current_folder](std::string_view identifier) -> bool {
+								return add_technology_area(identifier, current_folder);
+							}
 						)
 					)(folder_value);
-
-					return ret;
 				}
 			)(root_value);
 

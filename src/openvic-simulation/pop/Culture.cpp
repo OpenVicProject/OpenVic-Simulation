@@ -97,7 +97,7 @@ bool CultureManager::load_graphical_culture_type_file(ast::NodeCPtr root) {
 	}
 
 	/* Last defined graphical culture type is used as default. */
-	default_graphical_culture_type = &get_graphical_culture_types().back();
+	default_graphical_culture_type = &get_back_graphical_culture_type();
 
 	return ret;
 }

@@ -82,7 +82,7 @@ namespace OpenVic {
 				return _is_farm;
 			}
 
-			return !_is_mine && _is_farm;	
+			return !_is_mine && _is_farm;
 		}
 		constexpr bool get_is_farm_for_non_tech() const {
 			return _is_farm;
