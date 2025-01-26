@@ -230,25 +230,41 @@ namespace OpenVic {
 			return NumberUtils::round_to_int64((value / static_cast<double>(ONE)) * 100000.0) / 100000.0;
 		}
 
-		static std::ostream& print(std::ostream& stream, fixed_point_t val, size_t decimal_places = 0) {
-			if (decimal_places > 0) {
+		static std::ostream& print(std::ostream& stream, fixed_point_t val, int32_t decimal_places = -1) {
+			if (val.is_negative()) {
+				stream << "-";
+				val = -val;
+			}
+			if (decimal_places < 0) {
+				// Add as many decimal places as necessary to represent the number exactly, or none if it's an exact integer
+				stream << val.to_int64_t();
+				val = val.get_frac();
+				if (val != fixed_point_t::_0()) {
+					stream << ".";
+					do {
+						val *= 10;
+						stream << static_cast<char>('0' + val.to_int64_t());
+						val = val.get_frac();
+					} while (val != fixed_point_t::_0());
+				}
+			} else {
+				// Add the specified number of decimal places, potentially 0 (so no decimal point)
 				fixed_point_t err = _0_50();
 				for (size_t i = decimal_places; i > 0; --i) {
 					err /= 10;
 				}
 				val += err;
+				stream << val.to_int64_t();
+				if (decimal_places > 0) {
+					val = val.get_frac();
+					stream << ".";
+					do {
+						val *= 10;
+						stream << static_cast<char>('0' + val.to_int64_t());
+						val = val.get_frac();
+					} while (--decimal_places > 0);
+				}
 			}
-			if (val.is_negative()) {
-				stream << "-";
-			}
-			val = val.abs();
-			stream << val.to_int64_t() << ".";
-			val = val.get_frac();
-			do {
-				val *= 10;
-				stream << static_cast<char>('0' + val.to_int64_t());
-				val = val.get_frac();
-			} while (val > 0 && --decimal_places > 0);
 			return stream;
 		}
 

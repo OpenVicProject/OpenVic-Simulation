@@ -237,7 +237,7 @@ bool DeploymentManager::load_oob_file(
 	}
 
 	if (add_deployment(history_path, std::move(armies), std::move(navies), std::move(leaders))) {
-		deployment = &get_deployments().back();
+		deployment = &get_back_deployment();
 	} else {
 		ret = false;
 	}

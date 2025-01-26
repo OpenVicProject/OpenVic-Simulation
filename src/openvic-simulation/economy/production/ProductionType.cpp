@@ -178,14 +178,13 @@ bool ProductionTypeManager::add_production_type(
 	});
 
 	if (ret && (template_type == RGO)) {
-		ProductionType const& production_type = production_types.get_items().back();
 		ProductionType const*& current_rgo_pt = good_to_rgo_production_type[*output_good];
 		if (current_rgo_pt == nullptr || (
 			(is_farm && !is_mine)
 			&& (!current_rgo_pt->_is_farm || current_rgo_pt->_is_mine)
 		)) {
 			// pure farms are preferred over alternatives. Use first pt otherwise.
-			current_rgo_pt = &production_type;
+			current_rgo_pt = &get_back_production_type();
 		}
 		//else ignore, we already have an rgo pt
 	}
@@ -247,7 +246,6 @@ bool ProductionTypeManager::load_production_types_file(
 			return true;
 		}
 	)(parser.get_file_node());
-
 
 	/* Pass #3: actually load production types */
 	good_to_rgo_production_type.set_keys(&good_definition_manager.get_good_definitions());

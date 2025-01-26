@@ -79,7 +79,7 @@ namespace OpenVic {
 		// by swapping with another CountryInstance's country_definition.
 		CountryDefinition const* PROPERTY(country_definition);
 		colour_t PROPERTY(colour); // Cached to avoid searching government overrides for every province
-		ProvinceInstance const* PROPERTY(capital);
+		ProvinceInstance* PROPERTY(capital);
 		bool PROPERTY_CUSTOM_PREFIX(releasable_vassal, is);
 		bool PROPERTY(owns_colonial_province);
 
@@ -288,6 +288,10 @@ namespace OpenVic {
 		}
 
 		std::string_view get_identifier() const;
+
+		constexpr ProvinceInstance* get_capital() {
+			return capital;
+		}
 
 		void update_country_definition_based_attributes();
 

@@ -41,8 +41,8 @@ TriggeredModifier::TriggeredModifier(
 	ConditionScript&& new_trigger
 ) : IconModifier { new_identifier, std::move(new_values), new_type, new_icon }, trigger { std::move(new_trigger) } {}
 
-bool TriggeredModifier::parse_scripts(DefinitionManager const& definition_manager) {
-	return trigger.parse_script(false, definition_manager);
+bool TriggeredModifier::parse_scripts(DefinitionManager const& definition_manager, bool can_be_null) {
+	return trigger.parse_script(can_be_null, definition_manager);
 }
 
 ModifierInstance::ModifierInstance(Modifier const& new_modifier, Date new_expiry_date)

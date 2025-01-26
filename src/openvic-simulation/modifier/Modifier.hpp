@@ -62,7 +62,7 @@ namespace OpenVic {
 			ConditionScript&& new_trigger
 		);
 
-		bool parse_scripts(DefinitionManager const& definition_manager);
+		bool parse_scripts(DefinitionManager const& definition_manager, bool can_be_null = false);
 
 	public:
 		TriggeredModifier(TriggeredModifier&&) = default;

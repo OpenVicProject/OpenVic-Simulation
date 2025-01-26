@@ -40,7 +40,7 @@ bool CrimeManager::load_crime_modifiers(ModifierManager const& modifier_manager,
 			bool ret = NodeTools::expect_dictionary_keys_and_default(
 				modifier_manager.expect_base_province_modifier(modifier_value),
 				"icon", ZERO_OR_ONE, expect_uint(assign_variable_callback(icon)),
-				"trigger", ONE_EXACTLY, trigger.expect_script(),
+				"trigger", ZERO_OR_ONE, trigger.expect_script(),
 				"active", ZERO_OR_ONE, expect_bool(assign_variable_callback(default_active))
 			)(value);
 
@@ -59,7 +59,10 @@ bool CrimeManager::parse_scripts(DefinitionManager const& definition_manager) {
 	bool ret = true;
 
 	for (Crime& crime : crime_modifiers.get_items()) {
-		ret &= crime.parse_scripts(definition_manager);
+		ret &= crime.parse_scripts(
+			definition_manager,
+			true // Script can be null, meaning this won't emit an error message if the crime has no trigger in its definition
+		);
 	}
 
 	return ret;
