@@ -3,14 +3,14 @@
 #include <string>
 #include <string_view>
 
-#include "openvic-simulation/military/LeaderTrait.hpp"
 #include "openvic-simulation/military/UnitType.hpp"
 #include "openvic-simulation/types/Date.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
-#include "openvic-simulation/utility/Utility.hpp"
+#include "openvic-simulation/utility/Getters.hpp"
 
 namespace OpenVic {
 	struct DeploymentManager;
+	struct LeaderTrait;
 
 	struct LeaderBase {
 		friend struct DeploymentManager;
@@ -54,11 +54,10 @@ namespace OpenVic {
 		friend bool UnitInstanceGroup<Branch>::set_leader(LeaderBranched<Branch>* new_leader);
 
 	private:
-		UnitInstanceGroupBranched<Branch>* PROPERTY(unit_instance_group);
-		bool PROPERTY(can_be_used);
+		UnitInstanceGroupBranched<Branch>* PROPERTY_PTR(unit_instance_group, nullptr);
+		bool PROPERTY(can_be_used, true);
 
-		LeaderBranched(LeaderBase const& leader_base)
-			: LeaderBase { leader_base }, unit_instance_group { nullptr }, can_be_used { true } {}
+		LeaderBranched(LeaderBase const& leader_base) : LeaderBase { leader_base } {}
 	};
 
 	using General = LeaderBranched<UnitType::branch_t::LAND>;

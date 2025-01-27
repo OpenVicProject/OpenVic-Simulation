@@ -39,22 +39,16 @@ namespace OpenVic {
 		MapInstance PROPERTY_REF(map_instance);
 		SimulationClock PROPERTY_REF(simulation_clock);
 
-		bool PROPERTY_CUSTOM_PREFIX(game_instance_setup, is);
-		bool PROPERTY_CUSTOM_PREFIX(game_session_started, is);
+		bool PROPERTY_CUSTOM_PREFIX(game_instance_setup, is, false);
+		bool PROPERTY_CUSTOM_PREFIX(game_session_started, is, false);
 
-		void update_modifier_sums();
-	public:
-		inline constexpr bool is_bookmark_loaded() const {
-			return bookmark != nullptr;
-		}
-
-	private:
-		time_t session_start; /* SS-54, as well as allowing time-tracking */
-		Bookmark const* PROPERTY(bookmark);
+		time_t session_start = 0; /* SS-54, as well as allowing time-tracking */
+		Bookmark const* PROPERTY(bookmark, nullptr);
 		Date PROPERTY(today);
 		gamestate_updated_func_t gamestate_updated;
-		bool gamestate_needs_update, currently_updating_gamestate;
+		bool gamestate_needs_update = false, currently_updating_gamestate = false;
 
+		void update_modifier_sums();
 		void set_gamestate_needs_update();
 		void update_gamestate();
 		void tick();
@@ -66,6 +60,10 @@ namespace OpenVic {
 			gamestate_updated_func_t gamestate_updated_callback,
 			SimulationClock::state_changed_function_t clock_state_changed_callback
 		);
+
+		inline constexpr bool is_bookmark_loaded() const {
+			return bookmark != nullptr;
+		}
 
 		bool setup();
 		bool load_bookmark(Bookmark const* new_bookmark);

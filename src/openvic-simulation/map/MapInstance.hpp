@@ -22,9 +22,9 @@ namespace OpenVic {
 
 		IdentifierRegistry<ProvinceInstance> IDENTIFIER_REGISTRY_CUSTOM_INDEX_OFFSET(province_instance, 1);
 
-		ProvinceInstance* PROPERTY(selected_province); // is it right for this to be mutable? how about using an index instead?
-		pop_size_t PROPERTY(highest_province_population);
-		pop_size_t PROPERTY(total_map_population);
+		ProvinceInstance* PROPERTY_PTR(selected_province, nullptr);
+		pop_size_t PROPERTY(highest_province_population, 0);
+		pop_size_t PROPERTY(total_map_population, 0);
 
 		StateManager PROPERTY_REF(state_manager);
 
@@ -41,7 +41,6 @@ namespace OpenVic {
 		ProvinceInstance const& get_province_instance_from_definition(ProvinceDefinition const& province) const;
 
 		void set_selected_province(ProvinceDefinition::index_t index);
-		ProvinceInstance* get_selected_province();
 		ProvinceDefinition::index_t get_selected_province_index() const;
 
 		bool setup(

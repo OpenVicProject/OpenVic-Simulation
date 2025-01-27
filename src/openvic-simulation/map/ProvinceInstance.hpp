@@ -67,26 +67,26 @@ namespace OpenVic {
 		ProvinceDefinition const& PROPERTY(province_definition);
 
 		TerrainType const* PROPERTY(terrain_type);
-		life_rating_t PROPERTY(life_rating);
-		colony_status_t PROPERTY(colony_status);
-		State* PROPERTY_RW(state);
+		life_rating_t PROPERTY(life_rating, 0);
+		colony_status_t PROPERTY(colony_status, colony_status_t::STATE);
+		State* PROPERTY_PTR(state, nullptr);
 
-		CountryInstance* PROPERTY(owner);
-		CountryInstance* PROPERTY(controller);
+		CountryInstance* PROPERTY_PTR(owner, nullptr);
+		CountryInstance* PROPERTY_PTR(controller, nullptr);
 		ordered_set<CountryInstance*> PROPERTY(cores);
 
 		// The total/resultant modifier of local effects on this province (global effects come from the province's owner)
 		ModifierSum PROPERTY(modifier_sum);
 		std::vector<ModifierInstance> PROPERTY(event_modifiers);
 
-		bool PROPERTY(slave);
-		Crime const* PROPERTY_RW(crime);
+		bool PROPERTY(slave, false);
+		Crime const* PROPERTY_RW(crime, nullptr);
 		ResourceGatheringOperation PROPERTY(rgo);
 		IdentifierRegistry<BuildingInstance> IDENTIFIER_REGISTRY(building);
 		ordered_set<ArmyInstance*> PROPERTY(armies);
 		ordered_set<NavyInstance*> PROPERTY(navies);
 		// The number of land regiments currently in the province, including those being transported by navies
-		size_t PROPERTY(land_regiment_count);
+		size_t PROPERTY(land_regiment_count, 0);
 
 	public:
 		UNIT_BRANCHED_GETTER(get_unit_instance_groups, armies, navies);
@@ -94,7 +94,7 @@ namespace OpenVic {
 
 	private:
 		plf::colony<Pop> PROPERTY(pops); // TODO - replace with a more easily vectorisable container?
-		pop_size_t PROPERTY(total_population);
+		pop_size_t PROPERTY(total_population, 0);
 		// TODO - population change (growth + migration), monthly totals + breakdown by source/destination
 		fixed_point_t PROPERTY(average_literacy);
 		fixed_point_t PROPERTY(average_consciousness);
@@ -113,7 +113,7 @@ namespace OpenVic {
 		IndexedMap<CountryParty, fixed_point_t> PROPERTY(vote_distribution);
 		fixed_point_map_t<Culture const*> PROPERTY(culture_distribution);
 		fixed_point_map_t<Religion const*> PROPERTY(religion_distribution);
-		size_t PROPERTY(max_supported_regiments);
+		size_t PROPERTY(max_supported_regiments, 0);
 
 		ProvinceInstance(
 			MarketInstance& new_market_instance,
@@ -135,12 +135,8 @@ namespace OpenVic {
 			return province_definition;
 		}
 
-		constexpr CountryInstance* get_owner() {
-			return owner;
-		}
-		constexpr CountryInstance* get_controller() {
-			return controller;
-		}
+		void set_state(State* new_state);
+
 		constexpr GoodDefinition const* get_rgo_good() const {
 			if (!rgo.is_valid()) {
 				return nullptr;

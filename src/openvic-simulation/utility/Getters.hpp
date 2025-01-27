@@ -220,3 +220,20 @@ public: \
 		NAME = new_##NAME; \
 	} \
 	ACCESS:
+
+// Generates getters for a non-const pointer variable, one non-const returning a non-const pointer and one const returning
+// a const pointer. Const pointer variables should use PROPERTY which generates only the const pointer getter. By default
+// this will change accessibility back to private after declaring the getter as public; use PROPERTY_PTR_ACCESS to specify
+// a different access modifier. You can optionally specify an initialisation value for the variable.
+#define PROPERTY_PTR(NAME, ...) PROPERTY_PTR_ACCESS(NAME, private, __VA_ARGS__)
+#define PROPERTY_PTR_ACCESS(NAME, ACCESS, ...) \
+	NAME __VA_OPT__(=) __VA_ARGS__; \
+	static_assert(std::is_pointer_v<decltype(NAME)> && !std::is_const_v<std::remove_pointer_t<decltype(NAME)>>); \
+public: \
+	[[nodiscard]] constexpr decltype(NAME) get_##NAME() { \
+		return NAME; \
+	} \
+	[[nodiscard]] constexpr std::add_pointer_t<std::add_const_t<std::remove_pointer_t<decltype(NAME)>>> get_##NAME() const { \
+		return NAME; \
+	} \
+ACCESS:

@@ -20,12 +20,12 @@ namespace OpenVic {
 
 	private:
 		StateSet const& PROPERTY(state_set);
-		CountryInstance* PROPERTY(owner);
-		ProvinceInstance* PROPERTY(capital);
+		CountryInstance* PROPERTY_PTR(owner);
+		ProvinceInstance* PROPERTY_PTR(capital);
 		std::vector<ProvinceInstance*> PROPERTY(provinces);
 		ProvinceInstance::colony_status_t PROPERTY(colony_status);
 
-		pop_size_t PROPERTY(total_population);
+		pop_size_t PROPERTY(total_population, 0);
 		fixed_point_t PROPERTY(average_literacy);
 		fixed_point_t PROPERTY(average_consciousness);
 		fixed_point_t PROPERTY(average_militancy);
@@ -46,7 +46,7 @@ namespace OpenVic {
 
 		fixed_point_t PROPERTY(industrial_power);
 
-		size_t PROPERTY(max_supported_regiments);
+		size_t PROPERTY(max_supported_regiments, 0);
 
 		State(
 			StateSet const& new_state_set,
