@@ -53,8 +53,11 @@ namespace OpenVic {
 			decltype(ProvinceInstance::ideology_distribution)::keys_type const& ideology_keys
 		);
 		bool apply_history_to_provinces(
-			ProvinceHistoryManager const& history_manager, const Date date, CountryInstanceManager& country_manager,
-			IssueManager const& issue_manager
+			ProvinceHistoryManager const& history_manager,
+			const Date date,
+			CountryInstanceManager& country_manager,
+			IssueManager const& issue_manager,
+			ArtisanalProducerFactoryPattern& artisanal_producer_factory_pattern
 		);
 
 		void update_modifier_sums(const Date today, StaticModifierCache const& static_modifier_cache);

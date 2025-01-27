@@ -1,6 +1,9 @@
 #pragma once
 
+#include <memory>
+
 #include "openvic-simulation/country/CountryDefinition.hpp"
+#include "openvic-simulation/economy/production/ArtisanalProducerFactoryPattern.hpp"
 #include "openvic-simulation/pop/PopType.hpp"
 
 namespace OpenVic {
@@ -39,12 +42,18 @@ namespace OpenVic {
 		F(government_salary_military)\
 		F(event_and_decision_income)\
 		F(loan_interest_payments)
-
-	#define DECLARE_POP_INCOME_STORES(income_type)\
-		fixed_point_t PROPERTY(income_type);
-
-	#define DECLARE_POP_INCOME_STORE_FUNCTIONS(name)\
-		void add_##name(const fixed_point_t pop_income);
+	
+	#define DO_FOR_ALL_TYPES_OF_POP_EXPENSES(F)\
+		F(life_needs_expense)\
+		F(everyday_needs_expense)\
+		F(luxury_needs_expense)\
+		F(artisan_inputs_expense)
+	
+	#define DECLARE_POP_MONEY_STORES(money_type)\
+		fixed_point_t PROPERTY(money_type); 
+	
+	#define DECLARE_POP_MONEY_STORE_FUNCTIONS(name)\
+		void add_##name(const fixed_point_t amount);
 
 	/* REQUIREMENTS:
 	 * POP-18, POP-19, POP-20, POP-21, POP-34, POP-35, POP-36, POP-37
@@ -55,6 +64,7 @@ namespace OpenVic {
 		static constexpr pop_size_t MAX_SIZE = std::numeric_limits<pop_size_t>::max();
 
 	private:
+		std::unique_ptr<ArtisanalProducer> artisanal_producer_nullable;
 		ProvinceInstance const* PROPERTY(location);
 
 		/* Last day's size change by source. */
@@ -78,18 +88,25 @@ namespace OpenVic {
 		fixed_point_t PROPERTY(unemployment);
 		fixed_point_t PROPERTY(cash);
 		fixed_point_t PROPERTY(income);
-		fixed_point_t PROPERTY(expenses);
+		fixed_point_t PROPERTY(expenses); //positive value means POP paid for goods. This is displayed * -1 in UI.
 		fixed_point_t PROPERTY(savings);
 		fixed_point_t PROPERTY(life_needs_fulfilled);
 		fixed_point_t PROPERTY(everyday_needs_fulfilled);
 		fixed_point_t PROPERTY(luxury_needs_fulfilled);
 
-		DO_FOR_ALL_TYPES_OF_POP_INCOME(DECLARE_POP_INCOME_STORES);
-		#undef DECLARE_POP_INCOME_STORES
-
+		DO_FOR_ALL_TYPES_OF_POP_INCOME(DECLARE_POP_MONEY_STORES);		
+		DO_FOR_ALL_TYPES_OF_POP_EXPENSES(DECLARE_POP_MONEY_STORES);
+		#undef DECLARE_POP_MONEY_STORES
+		
 		size_t PROPERTY(max_supported_regiments);
 
-		Pop(PopBase const& pop_base, decltype(ideology_distribution)::keys_type const& ideology_keys);
+		Pop(
+			PopBase const& pop_base,
+			decltype(ideology_distribution)::keys_type const& ideology_keys,
+			ArtisanalProducerFactoryPattern& artisanal_producer_factory_pattern
+		);
+
+		std::stringstream get_pop_context_text() const;
 
 	public:
 		Pop(Pop const&) = delete;
@@ -114,12 +131,16 @@ namespace OpenVic {
 			const fixed_point_t pop_size_per_regiment_multiplier
 		);
 
-		DO_FOR_ALL_TYPES_OF_POP_INCOME(DECLARE_POP_INCOME_STORE_FUNCTIONS)
-		#undef DECLARE_POP_INCOME_STORE_FUNCTIONS
-		void clear_all_income();
-
+		DO_FOR_ALL_TYPES_OF_POP_INCOME(DECLARE_POP_MONEY_STORE_FUNCTIONS)
+		DO_FOR_ALL_TYPES_OF_POP_EXPENSES(DECLARE_POP_MONEY_STORE_FUNCTIONS)
+		#undef DECLARE_POP_MONEY_STORE_FUNCTIONS
+		void pop_tick();
 	};
 }
 #ifndef KEEP_DO_FOR_ALL_TYPES_OF_INCOME
 	#undef DO_FOR_ALL_TYPES_OF_POP_INCOME
+#endif
+
+#ifndef KEEP_DO_FOR_ALL_TYPES_OF_EXPENSES
+	#undef DO_FOR_ALL_TYPES_OF_POP_EXPENSES
 #endif

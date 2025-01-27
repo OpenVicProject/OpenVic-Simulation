@@ -11,10 +11,15 @@ InstanceManager::InstanceManager(
 	gamestate_updated_func_t gamestate_updated_callback,
 	SimulationClock::state_changed_function_t clock_state_changed_callback
 ) : game_rules_manager { new_game_rules_manager },
+	market_instance { good_instance_manager },
+	artisanal_producer_factory_pattern {
+		market_instance,
+		new_definition_manager.get_modifier_manager().get_modifier_effect_cache(),
+		new_definition_manager.get_economy_manager().get_production_type_manager()
+	},
 	definition_manager { new_definition_manager },
 	global_flags { "global" },
 	country_instance_manager { new_definition_manager.get_country_definition_manager() },
-	market_instance { good_instance_manager },
 	politics_instance_manager { *this },
 	map_instance { new_definition_manager.get_map_definition() },
 	simulation_clock {
@@ -78,7 +83,10 @@ bool InstanceManager::setup() {
 		return false;
 	}
 
-	bool ret = good_instance_manager.setup(definition_manager.get_economy_manager().get_good_definition_manager());
+	bool ret = good_instance_manager.setup_goods(
+		definition_manager.get_economy_manager().get_good_definition_manager(),
+		game_rules_manager
+	);
 	ret &= map_instance.setup(
 		definition_manager.get_economy_manager().get_building_type_manager(),
 		market_instance,
@@ -133,12 +141,12 @@ bool InstanceManager::load_bookmark(Bookmark const* new_bookmark) {
 	today = bookmark->get_date();
 
 	politics_instance_manager.setup_starting_ideologies();
-
 	bool ret = map_instance.apply_history_to_provinces(
 		definition_manager.get_history_manager().get_province_manager(), today,
 		country_instance_manager,
 		// TODO - the following argument is for generating test pop attributes
-		definition_manager.get_politics_manager().get_issue_manager()
+		definition_manager.get_politics_manager().get_issue_manager(),
+		artisanal_producer_factory_pattern
 	);
 
 	// It is important that province history is applied before country history as province history includes

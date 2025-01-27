@@ -1,8 +1,13 @@
+#include "utility/Utility.hpp"
 #define KEEP_DO_FOR_ALL_TYPES_OF_INCOME
+#define KEEP_DO_FOR_ALL_TYPES_OF_EXPENSES
 #include "Pop.hpp"
 #undef KEEP_DO_FOR_ALL_TYPES_OF_INCOME
+#undef KEEP_DO_FOR_ALL_TYPES_OF_EXPENSES
 
 #include "openvic-simulation/DefinitionManager.hpp"
+#include "openvic-simulation/economy/production/ArtisanalProducer.hpp"
+#include "openvic-simulation/economy/production/ArtisanalProducerFactoryPattern.hpp"
 
 using namespace OpenVic;
 
@@ -14,8 +19,17 @@ PopBase::PopBase(
 ) : type { &new_type }, culture { new_culture }, religion { new_religion }, size { new_size }, militancy { new_militancy },
 	consciousness { new_consciousness }, rebel_type { new_rebel_type } {}
 
-Pop::Pop(PopBase const& pop_base, decltype(ideology_distribution)::keys_type const& ideology_keys)
+Pop::Pop(
+	PopBase const& pop_base,
+	decltype(ideology_distribution)::keys_type const& ideology_keys,
+	ArtisanalProducerFactoryPattern& artisanal_producer_factory_pattern
+)
   : PopBase { pop_base },
+	artisanal_producer_nullable {
+		type->get_is_artisan()
+			? artisanal_producer_factory_pattern.CreateNewArtisanalProducer()
+			: nullptr
+	},
 	location { nullptr },
 	total_change { 0 },
 	num_grown { 0 },
@@ -36,11 +50,12 @@ Pop::Pop(PopBase const& pop_base, decltype(ideology_distribution)::keys_type con
 	life_needs_fulfilled { 0 },
 	everyday_needs_fulfilled { 0 },
 	luxury_needs_fulfilled { 0 },
-	#define INITALIZE_POP_INCOME_STORES(name)\
+	#define INITALIZE_POP_MONEY_STORES(name)\
 		name { 0 },
 
-	DO_FOR_ALL_TYPES_OF_POP_INCOME(INITALIZE_POP_INCOME_STORES)
-	#undef INITALIZE_POP_INCOME_STORES
+	DO_FOR_ALL_TYPES_OF_POP_INCOME(INITALIZE_POP_MONEY_STORES)
+	DO_FOR_ALL_TYPES_OF_POP_EXPENSES(INITALIZE_POP_MONEY_STORES)
+	#undef INITALIZE_POP_MONEY_STORES
 	max_supported_regiments { 0 } {}
 
 void Pop::setup_pop_test_values(IssueManager const& issue_manager) {
@@ -200,20 +215,68 @@ void Pop::update_gamestate(
 	}
 }
 
+std::stringstream Pop::get_pop_context_text() const {
+	std::stringstream pop_context {};
+	pop_context << " location: ";
+	if (OV_unlikely(location == nullptr)) {
+		pop_context << "NULL";
+	} else {
+		pop_context << location->get_identifier();
+	}
+	pop_context << " type: " << type << " culture: " << culture << " religion: " << religion << " size: " << size;
+	return pop_context;
+}
+
 #define DEFINE_ADD_INCOME_FUNCTIONS(name)\
-	void Pop::add_##name(const fixed_point_t pop_income){\
-		name += pop_income;\
-		income += pop_income;\
+	void Pop::add_##name(const fixed_point_t amount){\
+		if (OV_unlikely(amount == 0)) { \
+			Logger::warning("Adding ",#name, " of 0 to pop. Context", get_pop_context_text().str()); \
+			return; \
+		} \
+		if (OV_unlikely(amount < 0)) { \
+			Logger::error("Adding negative ", #name, " of ",amount," to pop. Context", get_pop_context_text().str()); \
+			return; \
+		} \
+		name += amount;\
+		income += amount;\
+		cash += amount;\
 	}
 
 DO_FOR_ALL_TYPES_OF_POP_INCOME(DEFINE_ADD_INCOME_FUNCTIONS)
 #undef DEFINE_ADD_INCOME_FUNCTIONS
 
+#define DEFINE_ADD_EXPENSE_FUNCTIONS(name)\
+	void Pop::add_##name(const fixed_point_t amount){\
+		if (OV_unlikely(amount == 0)) { \
+			Logger::warning("Adding ",#name, " of 0 to pop. Context", get_pop_context_text().str()); \
+			return; \
+		} \
+		name += amount;\
+		expenses += amount;\
+		if (OV_unlikely(expenses < 0)) { \
+			Logger::error("Total expenses became negative (",expenses,") after adding ", #name, " of ",amount," to pop. Context", get_pop_context_text().str()); \
+		} \
+		cash -= amount;\
+		if (OV_unlikely(cash < 0)) { \
+			Logger::error("Total cash became negative (",cash,") after adding ", #name, " of ",amount," to pop. Context", get_pop_context_text().str()); \
+		} \
+	}
+
+DO_FOR_ALL_TYPES_OF_POP_EXPENSES(DEFINE_ADD_EXPENSE_FUNCTIONS)
+#undef DEFINE_ADD_EXPENSE_FUNCTIONS
+
 #define SET_ALL_INCOME_TO_ZERO(name)\
 	name = fixed_point_t::_0();
 
-void Pop::clear_all_income(){
+void Pop::pop_tick() {
 	DO_FOR_ALL_TYPES_OF_POP_INCOME(SET_ALL_INCOME_TO_ZERO)
 	#undef DO_FOR_ALL_TYPES_OF_POP_INCOME
 	#undef SET_ALL_INCOME_TO_ZERO
+
+	if (artisanal_producer_nullable != nullptr) {
+		artisanal_producer_nullable->artisan_tick(*this);
+	}
 }
+
+#undef DO_FOR_ALL_TYPES_OF_POP_INCOME
+#undef DO_FOR_ALL_TYPES_OF_POP_EXPENSES

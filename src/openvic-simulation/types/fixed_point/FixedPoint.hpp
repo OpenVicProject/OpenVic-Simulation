@@ -67,6 +67,10 @@ namespace OpenVic {
 			return -usable_max();
 		}
 
+		static constexpr fixed_point_t epsilon() {
+			return parse_raw(1);
+		}
+
 		static constexpr fixed_point_t _0() {
 			return 0;
 		}
@@ -471,6 +475,14 @@ namespace OpenVic {
 			const fixed_point_t old = *this;
 			value -= ONE;
 			return old;
+		}
+
+		constexpr friend fixed_point_t operator<<(fixed_point_t const& lhs, int32_t const& rhs) {
+			return lhs.value << rhs;
+		}
+
+		constexpr friend fixed_point_t operator>>(fixed_point_t const& lhs, int32_t const& rhs) {
+			return lhs.value >> rhs;
 		}
 
 		constexpr friend fixed_point_t operator*(fixed_point_t const& lhs, fixed_point_t const& rhs) {
