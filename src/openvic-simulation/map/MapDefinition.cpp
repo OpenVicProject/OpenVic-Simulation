@@ -831,7 +831,7 @@ bool MapDefinition::load_map_images(fs::path const& province_path, fs::path cons
 		};
 		std::vector<ivec2_t> simplified_points;
 		simplified_points.push_back(points.front()); // add starting point
-		for (int i = 1; i < points.size()-1; ++i) {
+		for (size_t i = 1; i < points.size()-1; ++i) {
 			if (is_corner_point(points[i-1], points[i], points[i+1])) { // add corner points
 				simplified_points.push_back(points[i]);
 			}

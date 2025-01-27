@@ -1,6 +1,5 @@
 #pragma once
 
-#include <deque>
 #include <memory>
 #include <mutex>
 
@@ -22,10 +21,22 @@ namespace OpenVic {
 
 	private:
 		GoodDefinition const& PROPERTY(good_definition);
-
+		
+		static constexpr int32_t exponential_price_change_shift = 7;
 		std::unique_ptr<std::mutex> buy_lock;
 		std::unique_ptr<std::mutex> sell_lock;
 		GameRulesManager const& game_rules_manager;
+		fixed_point_t absolute_maximum_price;
+		fixed_point_t absolute_minimum_price;
+
+		//only used inside execute_orders()
+		std::vector<fixed_point_t> quantity_bought_per_order;
+		std::vector<fixed_point_t> purchasing_power_per_order;
+
+		//only used during day tick (from actors placing order until execute_orders())
+		std::vector<GoodBuyUpToOrder> buy_up_to_orders;
+		std::vector<GoodMarketSellOrder> market_sell_orders;
+
 		fixed_point_t PROPERTY(price);
 		fixed_point_t PROPERTY(price_change_yesterday);
 		fixed_point_t PROPERTY(max_next_price);
@@ -34,8 +45,6 @@ namespace OpenVic {
 		fixed_point_t PROPERTY(total_demand_yesterday);
 		fixed_point_t PROPERTY(total_supply_yesterday);
 		fixed_point_t PROPERTY(quantity_traded_yesterday);
-		std::deque<GoodBuyUpToOrder> buy_up_to_orders;
-		std::deque<GoodMarketSellOrder> market_sell_orders;
 		ValueHistory<fixed_point_t> PROPERTY(price_history);
 
 		GoodInstance(GoodDefinition const& new_good_definition, GameRulesManager const& new_game_rules_manager);
@@ -50,6 +59,7 @@ namespace OpenVic {
 
 		//not thread safe
 		void execute_orders();
+		void on_use_exponential_price_changes_changed();
 		void record_price_history();
 	};
 

@@ -39,7 +39,7 @@ void ArtisanalProducer::artisan_tick(Pop& pop) {
 				continue;
 			}
 			const fixed_point_t good_bought_fraction = stockpile[input_good_ptr] / desired_quantity;
-			if(good_bought_fraction < inputs_bought_fraction) {
+			if (good_bought_fraction < inputs_bought_fraction) {
 				inputs_bought_fraction = good_bought_fraction;
 				inputs_bought_numerator = stockpile[input_good_ptr];
 				inputs_bought_denominator = desired_quantity;
@@ -54,7 +54,7 @@ void ArtisanalProducer::artisan_tick(Pop& pop) {
 				fixed_point_t& good_stockpile = stockpile[input_good_ptr];
 				//Consume input good
 				good_stockpile = std::max(
-					fixed_point_t::_0(), 
+					fixed_point_t::_0(),
 					good_stockpile - desired_quantity * inputs_bought_numerator / inputs_bought_denominator
 				);
 
@@ -63,7 +63,7 @@ void ArtisanalProducer::artisan_tick(Pop& pop) {
 				}
 			}
 		}
-		
+
 		const fixed_point_t total_cash_to_spend = pop.get_cash();
 		if (total_cash_to_spend > 0 && !goods_to_buy_and_max_price.empty()) {
 			//Figure out the optimal amount of goods to buy based on their price, stockpiled quantiy & demand
@@ -86,7 +86,7 @@ void ArtisanalProducer::artisan_tick(Pop& pop) {
 				} else {
 					max_possible_satisfaction_numerator = total_stockpile_value + total_cash_to_spend;
 					max_possible_satisfaction_denominator = total_demand_value;
-					if(max_possible_satisfaction_numerator > max_possible_satisfaction_denominator) {
+					if (max_possible_satisfaction_numerator > max_possible_satisfaction_denominator) {
 						max_possible_satisfaction_numerator = fixed_point_t::_1();
 						max_possible_satisfaction_denominator = fixed_point_t::_1();
 					}

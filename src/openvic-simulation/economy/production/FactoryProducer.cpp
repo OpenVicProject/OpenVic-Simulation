@@ -50,7 +50,7 @@ fixed_point_t FactoryProducer::get_profitability_yesterday() const {
 fixed_point_t FactoryProducer::get_average_profitability_last_seven_days() const {
 	fixed_point_t sum = 0;
 
-	for (int i = 0; i <= profit_history_current; i++) {
+	for (size_t i = 0; i <= profit_history_current; i++) {
 		sum += daily_profit_history[i];
 	}
 

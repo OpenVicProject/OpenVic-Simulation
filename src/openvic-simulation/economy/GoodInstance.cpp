@@ -1,4 +1,5 @@
 #include "GoodInstance.hpp"
+#include "openvic-simulation/utility/CompilerFeatureTesting.hpp"
 
 using namespace OpenVic;
 
@@ -12,38 +13,41 @@ GoodInstance::GoodInstance(GoodDefinition const& new_good_definition, GameRulesM
 	game_rules_manager { new_game_rules_manager },
 	price { new_good_definition.get_base_price() },
 	is_available { new_good_definition.get_is_available_from_start() },
-	price_history { MONTHS_OF_PRICE_HISTORY, new_good_definition.get_base_price() } {
+	price_history { MONTHS_OF_PRICE_HISTORY, new_good_definition.get_base_price() }
+	{
+		on_use_exponential_price_changes_changed();
+		update_next_price_limits();
+	}
 
-	update_next_price_limits();
+void GoodInstance::on_use_exponential_price_changes_changed() {
+	if (game_rules_manager.get_use_exponential_price_changes()) {
+		absolute_maximum_price = fixed_point_t::usable_max();
+		absolute_minimum_price = fixed_point_t::epsilon() << exponential_price_change_shift;
+	} else {
+		absolute_maximum_price = std::min(
+			good_definition.get_base_price() * 5,
+			fixed_point_t::usable_max()
+		);
+		absolute_minimum_price = std::max(
+			good_definition.get_base_price() * 22 / 100,
+			fixed_point_t::epsilon()
+		);
+	}
 }
 
 void GoodInstance::update_next_price_limits() {
-	if(game_rules_manager.get_use_exponential_price_changes()) {
-		const fixed_point_t max_change = price >> 6;
-		max_next_price = std::min(
-			fixed_point_t::usable_max(),
-			price + max_change
-		);
-		min_next_price = std::max(
-			fixed_point_t::epsilon(),
-			price - max_change
-		);
-	} else {
-		max_next_price = std::min(
-			std::min(
-				good_definition.get_base_price() * 5,
-				fixed_point_t::usable_max()
-			),
-			price + fixed_point_t::_1() / fixed_point_t::_100()
-		);
-		min_next_price = std::max(
-			std::max(
-				good_definition.get_base_price() * 22 / fixed_point_t::_100(),
-				fixed_point_t::epsilon()
-			),
-			price - fixed_point_t::_1() / fixed_point_t::_100()
-		);
-	}
+	const fixed_point_t max_price_change = game_rules_manager.get_use_exponential_price_changes()
+		? price >> exponential_price_change_shift
+		: fixed_point_t::_0_01();
+
+	max_next_price = std::min(
+		absolute_maximum_price,
+		price + max_price_change
+	);
+	min_next_price = std::max(
+		absolute_minimum_price,
+		price - max_price_change
+	);
 }
 
 void GoodInstance::add_buy_up_to_order(GoodBuyUpToOrder&& buy_up_to_order) {
@@ -57,53 +61,225 @@ void GoodInstance::add_market_sell_order(GoodMarketSellOrder&& market_sell_order
 }
 
 void GoodInstance::execute_orders() {
-	//MarketInstance ensured only orders with quantity > 0 are added.
-	//So running total > 0 unless orders are empty.
-	fixed_point_t demand_running_total = fixed_point_t::_0();
-	for (GoodBuyUpToOrder const& buy_up_to_order : buy_up_to_orders) {
-		demand_running_total += buy_up_to_order.get_max_quantity();
-	}
-
-	fixed_point_t supply_running_total = fixed_point_t::_0();
-	for (GoodMarketSellOrder const& market_sell_order : market_sell_orders) {
-		supply_running_total += market_sell_order.get_quantity();
+	if (!is_available) {
+		//price remains the same
+		price_change_yesterday
+			= quantity_traded_yesterday
+			= total_demand_yesterday
+			= total_supply_yesterday
+			= fixed_point_t::_0();
+		try_parallel_for_each(
+			buy_up_to_orders.begin(),
+			buy_up_to_orders.end(),
+			[](GoodBuyUpToOrder const& buy_up_to_order) -> void {
+				buy_up_to_order.get_after_trade()({
+					fixed_point_t::_0(),
+					buy_up_to_order.get_money_to_spend()
+				});
+			}
+		);
+		const SellResult no_sales_result {
+			fixed_point_t::_0(),
+			fixed_point_t::_0()
+		};
+		try_parallel_for_each(
+			market_sell_orders.begin(),
+			market_sell_orders.end(),
+			[&no_sales_result](GoodMarketSellOrder const& market_sell_order) -> void {
+				market_sell_order.get_after_trade()(no_sales_result);
+			}
+		);
+		return;
 	}
 
 	fixed_point_t new_price;
-	if (demand_running_total > supply_running_total) {
-		new_price = max_next_price;
-		quantity_traded_yesterday = supply_running_total;
-	} else if (demand_running_total < supply_running_total) {
-		new_price = min_next_price;
-		quantity_traded_yesterday = demand_running_total;
+	//MarketInstance ensured only orders with quantity > 0 are added.
+	//So running total > 0 unless orders are empty.
+	fixed_point_t demand_sum = fixed_point_t::_0(),
+		supply_sum = fixed_point_t::_0();
+	if (market_sell_orders.empty()) {
+		quantity_traded_yesterday = fixed_point_t::_0();
+		fixed_point_t max_affordable_price = price;
+		for (GoodBuyUpToOrder const& buy_up_to_order : buy_up_to_orders) {
+			const fixed_point_t affordable_price = buy_up_to_order.get_affordable_price();
+			if (affordable_price > max_affordable_price) {
+				max_affordable_price = affordable_price;
+			}
+
+			demand_sum += buy_up_to_order.get_max_quantity();
+
+			constexpr fixed_point_t quantity_bought = fixed_point_t::_0();
+			buy_up_to_order.get_after_trade()({
+				quantity_bought,
+				buy_up_to_order.get_money_to_spend()
+			});
+		}
+
+		if (game_rules_manager.get_use_optimal_pricing()) {
+			new_price = std::min(max_next_price, max_affordable_price);
+		} else {
+			//TODO use Victoria 2's square root mechanic, see https://github.com/OpenVicProject/OpenVic/issues/288
+			if (demand_sum > fixed_point_t::_0()) {
+				new_price = max_next_price;
+			} else {
+				new_price = price;
+			}
+		}
 	} else {
-		quantity_traded_yesterday = demand_running_total;
-		new_price = price;
-	}
+		for (GoodMarketSellOrder const& market_sell_order : market_sell_orders) {
+			supply_sum += market_sell_order.get_quantity();
+		}
 
-	for (GoodBuyUpToOrder const& buy_up_to_order : buy_up_to_orders) {
-		const fixed_point_t money_spend = buy_up_to_order.get_money_to_spend() * quantity_traded_yesterday / demand_running_total;
-		const fixed_point_t quantity_bought = money_spend / new_price;
-		buy_up_to_order.get_after_trade()({
-			quantity_bought,
-			buy_up_to_order.get_money_to_spend() - money_spend
-		});
-	}
+		quantity_bought_per_order.resize(buy_up_to_orders.size());
+		purchasing_power_per_order.resize(buy_up_to_orders.size());
 
-	for (GoodMarketSellOrder const& market_sell_order : market_sell_orders) {
-		const fixed_point_t quantity_sold = market_sell_order.get_quantity() * quantity_traded_yesterday / supply_running_total;
-		market_sell_order.get_after_trade()({
-			quantity_sold,
-			quantity_sold * new_price
-		});
+		fixed_point_t money_left_to_spend_sum = fixed_point_t::_0(); //sum of money_to_spend for all buyers that can't afford their max_quantity
+		fixed_point_t max_quantity_to_buy_sum = fixed_point_t::_0();
+		fixed_point_t purchasing_power_sum = fixed_point_t::_0();
+		fixed_point_t remaining_supply = supply_sum;
+		for (size_t i = 0; i < buy_up_to_orders.size(); i++) {
+			GoodBuyUpToOrder const& buy_up_to_order = buy_up_to_orders[i];
+			if (game_rules_manager.get_use_optimal_pricing()) {
+				const fixed_point_t affordable_price = buy_up_to_order.get_affordable_price();
+				if (affordable_price > min_next_price) {
+					//no point selling lower as it would not attract more buyers
+					min_next_price = affordable_price;
+				}
+			}
+
+			demand_sum += buy_up_to_order.get_max_quantity();
+			const fixed_point_t purchasing_power = purchasing_power_per_order[i] = buy_up_to_order.get_money_to_spend() / max_next_price;
+			if (purchasing_power >= buy_up_to_order.get_max_quantity()) {
+				quantity_bought_per_order[i] = buy_up_to_order.get_max_quantity();
+				max_quantity_to_buy_sum += buy_up_to_order.get_max_quantity();
+				remaining_supply -= buy_up_to_order.get_max_quantity();
+			} else {
+				quantity_bought_per_order[i] = fixed_point_t::_0();
+				max_quantity_to_buy_sum += purchasing_power;
+				money_left_to_spend_sum += buy_up_to_order.get_money_to_spend();
+				purchasing_power_sum += purchasing_power;
+			}
+		}
+
+		if (max_quantity_to_buy_sum >= supply_sum) {
+			//sell for max_next_price
+			if (game_rules_manager.get_use_optimal_pricing()) {
+				new_price = max_next_price;
+			} else {
+				//TODO use Victoria 2's square root mechanic, see https://github.com/OpenVicProject/OpenVic/issues/288
+				new_price = max_next_price;
+			}
+
+			bool someone_bought_max_quantity;
+			do {
+				someone_bought_max_quantity = false;
+				for (size_t i = 0; i < buy_up_to_orders.size(); i++) {
+					GoodBuyUpToOrder const& buy_up_to_order = buy_up_to_orders[i];
+					if (quantity_bought_per_order[i] == buy_up_to_order.get_max_quantity()) {
+						continue;
+					}
+
+					const fixed_point_t distributed_supply
+						= quantity_bought_per_order[i]
+						= remaining_supply * purchasing_power_per_order[i] / purchasing_power_sum;
+					if (distributed_supply >= buy_up_to_order.get_max_quantity()) {
+						someone_bought_max_quantity = true;
+						quantity_bought_per_order[i] = buy_up_to_order.get_max_quantity();
+						remaining_supply -= buy_up_to_order.get_max_quantity();
+						purchasing_power_sum -= purchasing_power_per_order[i];
+					}
+				}
+			} while (someone_bought_max_quantity);
+
+			quantity_traded_yesterday = fixed_point_t::_0();
+			for (size_t i = 0; i < buy_up_to_orders.size(); i++) {
+				GoodBuyUpToOrder const& buy_up_to_order = buy_up_to_orders[i];
+				const fixed_point_t quantity_bought = quantity_bought_per_order[i];
+				quantity_traded_yesterday += quantity_bought;
+				buy_up_to_order.get_after_trade()({
+					quantity_bought,
+					buy_up_to_order.get_money_to_spend() - quantity_bought * new_price
+				});
+			}
+		} else {
+			//sell below max_next_price
+			if (game_rules_manager.get_use_optimal_pricing()) {
+				//drop price while remaining_supply > 0 && new_price > min_next_price
+				while (remaining_supply > 0) {
+					const fixed_point_t possible_price = money_left_to_spend_sum / remaining_supply;
+
+					if (possible_price >= new_price) {
+						//use previous new_price
+						break;
+					}
+
+					if (possible_price < min_next_price) {
+						new_price = min_next_price;
+						break;
+					}
+
+					new_price = possible_price;
+
+					for (size_t i = 0; i < buy_up_to_orders.size(); i++) {
+						GoodBuyUpToOrder const& buy_up_to_order = buy_up_to_orders[i];
+						if (quantity_bought_per_order[i] == buy_up_to_order.get_max_quantity()) {
+							continue;
+						}
+
+						if (buy_up_to_order.get_money_to_spend() >= new_price * buy_up_to_order.get_max_quantity()) {
+							quantity_bought_per_order[i] = buy_up_to_order.get_max_quantity();
+							remaining_supply -= buy_up_to_order.get_max_quantity();
+							money_left_to_spend_sum -= buy_up_to_order.get_money_to_spend();
+						}
+					}
+				}
+			} else {
+				//TODO use Victoria 2's square root mechanic, see https://github.com/OpenVicProject/OpenVic/issues/288
+				if (supply_sum > demand_sum) {
+					new_price = min_next_price;
+				} else {
+					new_price = price;
+				}
+			}
+
+			quantity_traded_yesterday = fixed_point_t::_0();
+			//figure out how much every buyer bought
+			for (size_t i = 0; i < buy_up_to_orders.size(); i++) {
+				GoodBuyUpToOrder const& buy_up_to_order = buy_up_to_orders[i];
+				const fixed_point_t quantity_bought
+					= quantity_bought_per_order[i]
+					= std::min(
+					buy_up_to_order.get_max_quantity(),
+					buy_up_to_order.get_money_to_spend() / new_price
+				);
+
+				quantity_traded_yesterday += quantity_bought;
+				buy_up_to_order.get_after_trade()({
+					quantity_bought,
+					buy_up_to_order.get_money_to_spend() - quantity_bought * new_price
+				});
+			}
+		}
+
+		for (GoodMarketSellOrder const& market_sell_order : market_sell_orders) {
+			const fixed_point_t quantity_sold = market_sell_order.get_quantity() * quantity_traded_yesterday / supply_sum;
+			market_sell_order.get_after_trade()({
+				quantity_sold,
+				quantity_sold * new_price
+			});
+		}
+
+		market_sell_orders.clear();
+		quantity_bought_per_order.clear();
+		purchasing_power_per_order.clear();
 	}
 
 	price_change_yesterday = new_price - price;
-	total_demand_yesterday = demand_running_total;
-	total_supply_yesterday = supply_running_total;
+	total_demand_yesterday = demand_sum;
+	total_supply_yesterday = supply_sum;
 	buy_up_to_orders.clear();
-	market_sell_orders.clear();
 	if (new_price != price) {
+		price = new_price;
 		update_next_price_limits();
 	}
 
