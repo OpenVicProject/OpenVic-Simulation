@@ -43,17 +43,17 @@ namespace OpenVic {
 
 		using key_type = Key;
 		using keys_type = std::vector<key_type>;
-		using key_ref_type = keys_type::const_reference;
-		using key_ptr_type = keys_type::const_pointer;
-		using key_iterator = keys_type::const_iterator;
+		using key_ref_type = typename keys_type::const_reference;
+		using key_ptr_type = typename keys_type::const_pointer;
+		using key_iterator = typename keys_type::const_iterator;
 
 		using value_type = Value;
-		using value_ref_type = values_type::reference;
-		using value_const_ref_type = values_type::const_reference;
-		using value_ptr_type = values_type::pointer;
-		using value_const_ptr_type = values_type::const_pointer;
-		using value_iterator = values_type::iterator;
-		using value_const_iterator = values_type::const_iterator;
+		using value_ref_type = typename values_type::reference;
+		using value_const_ref_type = typename values_type::const_reference;
+		using value_ptr_type = typename values_type::pointer;
+		using value_const_ptr_type = typename values_type::const_pointer;
+		using value_iterator = typename values_type::iterator;
+		using value_const_iterator = typename values_type::const_iterator;
 		using mapped_type = value_type; // To match tsl::ordered_map's mapped_type
 
 		using pair_type = std::pair<key_ref_type, value_ref_type>;
@@ -78,7 +78,7 @@ namespace OpenVic {
 			>;
 
 			using iterator_category = std::random_access_iterator_tag;
-			using difference_type = map_type::keys_type::difference_type;
+			using difference_type = typename map_type::keys_type::difference_type;
 
 		private:
 			key_iterator PROPERTY(key_it);
