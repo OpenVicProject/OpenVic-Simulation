@@ -26,15 +26,7 @@ InstanceManager::InstanceManager(
 		std::bind(&InstanceManager::tick, this), std::bind(&InstanceManager::update_gamestate, this),
 		clock_state_changed_callback ? std::move(clock_state_changed_callback) : []() {}
 	},
-	game_instance_setup { false },
-	game_session_started { false },
-	session_start { 0 },
-	bookmark { nullptr },
-	today {},
-	gamestate_updated { gamestate_updated_callback ? std::move(gamestate_updated_callback) : []() {} },
-	gamestate_needs_update { false },
-	currently_updating_gamestate { false }
-	{}
+	gamestate_updated { gamestate_updated_callback ? std::move(gamestate_updated_callback) : []() {} } {}
 
 void InstanceManager::set_gamestate_needs_update() {
 	if (!currently_updating_gamestate) {

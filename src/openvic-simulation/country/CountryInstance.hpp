@@ -79,14 +79,14 @@ namespace OpenVic {
 		// by swapping with another CountryInstance's country_definition.
 		CountryDefinition const* PROPERTY(country_definition);
 		colour_t PROPERTY(colour); // Cached to avoid searching government overrides for every province
-		ProvinceInstance* PROPERTY(capital);
-		bool PROPERTY_CUSTOM_PREFIX(releasable_vassal, is);
-		bool PROPERTY(owns_colonial_province);
+		ProvinceInstance* PROPERTY_PTR(capital, nullptr);
+		bool PROPERTY_CUSTOM_PREFIX(releasable_vassal, is, true);
+		bool PROPERTY(owns_colonial_province, false);
 
-		country_status_t PROPERTY(country_status);
+		country_status_t PROPERTY(country_status, country_status_t::COUNTRY_STATUS_UNCIVILISED);
 		Date PROPERTY(lose_great_power_date);
 		fixed_point_t PROPERTY(total_score);
-		size_t PROPERTY(total_rank);
+		size_t PROPERTY(total_rank, 0);
 
 		ordered_set<ProvinceInstance*> PROPERTY(owned_provinces);
 		ordered_set<ProvinceInstance*> PROPERTY(controlled_provinces);
@@ -105,7 +105,7 @@ namespace OpenVic {
 		fixed_point_t PROPERTY(industrial_power);
 		std::vector<std::pair<State const*, fixed_point_t>> PROPERTY(industrial_power_from_states);
 		std::vector<std::pair<CountryInstance const*, fixed_point_t>> PROPERTY(industrial_power_from_investments);
-		size_t PROPERTY(industrial_rank);
+		size_t PROPERTY(industrial_rank, 0);
 		fixed_point_map_t<CountryInstance const*> PROPERTY(foreign_investments);
 		IndexedMap<BuildingType, unlock_level_t> PROPERTY(building_type_unlock_levels);
 		// TODO - total amount of each good produced
@@ -126,27 +126,27 @@ namespace OpenVic {
 		/* Technology */
 		IndexedMap<Technology, unlock_level_t> PROPERTY(technology_unlock_levels);
 		IndexedMap<Invention, unlock_level_t> PROPERTY(invention_unlock_levels);
-		Technology const* PROPERTY(current_research);
+		Technology const* PROPERTY(current_research, nullptr);
 		fixed_point_t PROPERTY(invested_research_points);
 		Date PROPERTY(expected_completion_date);
 		fixed_point_t PROPERTY(research_point_stockpile);
 		fixed_point_t PROPERTY(daily_research_points); // TODO - breakdown by source
 		fixed_point_t PROPERTY(national_literacy);
-		TechnologySchool const* PROPERTY(tech_school);
+		TechnologySchool const* PROPERTY(tech_school, nullptr);
 		// TODO - cached possible inventions with %age chance
 
 		/* Politics */
-		NationalValue const* PROPERTY(national_value);
-		GovernmentType const* PROPERTY(government_type);
+		NationalValue const* PROPERTY(national_value, nullptr);
+		GovernmentType const* PROPERTY(government_type, nullptr);
 		Date PROPERTY(last_election);
-		CountryParty const* PROPERTY(ruling_party);
+		CountryParty const* PROPERTY(ruling_party, nullptr);
 		IndexedMap<Ideology, fixed_point_t> PROPERTY(upper_house);
 		IndexedMap<ReformGroup, Reform const*> PROPERTY(reforms);
 		fixed_point_t PROPERTY(total_administrative_multiplier);
 		RuleSet PROPERTY(rule_set);
 		// TODO - national issue support distribution (for just voters and for everyone)
 		IndexedMap<GovernmentType, GovernmentType const*> PROPERTY(government_flag_overrides);
-		GovernmentType const* PROPERTY(flag_government_type);
+		GovernmentType const* PROPERTY(flag_government_type, nullptr);
 		fixed_point_t PROPERTY(suppression_points);
 		fixed_point_t PROPERTY(infamy); // in 0-25+ range
 		fixed_point_t PROPERTY(plurality); // in 0-100 range
@@ -155,10 +155,10 @@ namespace OpenVic {
 		// TODO - rebel movements
 
 		/* Population */
-		Culture const* PROPERTY(primary_culture);
+		Culture const* PROPERTY(primary_culture, nullptr);
 		ordered_set<Culture const*> PROPERTY(accepted_cultures);
-		Religion const* PROPERTY(religion);
-		pop_size_t PROPERTY(total_population);
+		Religion const* PROPERTY(religion, nullptr);
+		pop_size_t PROPERTY(total_population, 0);
 		// TODO - population change over last 30 days
 		fixed_point_t PROPERTY(national_consciousness);
 		fixed_point_t PROPERTY(national_militancy);
@@ -175,7 +175,7 @@ namespace OpenVic {
 		IndexedMap<CountryParty, fixed_point_t> PROPERTY(vote_distribution);
 		fixed_point_map_t<Culture const*> PROPERTY(culture_distribution);
 		fixed_point_map_t<Religion const*> PROPERTY(religion_distribution);
-		size_t PROPERTY(national_focus_capacity)
+		size_t PROPERTY(national_focus_capacity, 0);
 		// TODO - national foci
 
 		/* Trade */
@@ -183,7 +183,7 @@ namespace OpenVic {
 
 		/* Diplomacy */
 		fixed_point_t PROPERTY(prestige);
-		size_t PROPERTY(prestige_rank);
+		size_t PROPERTY(prestige_rank, 0);
 		fixed_point_t PROPERTY(diplomatic_points);
 		// TODO - colonial power, current wars
 
@@ -192,46 +192,46 @@ namespace OpenVic {
 		fixed_point_t PROPERTY(military_power_from_land);
 		fixed_point_t PROPERTY(military_power_from_sea);
 		fixed_point_t PROPERTY(military_power_from_leaders);
-		size_t PROPERTY(military_rank);
+		size_t PROPERTY(military_rank, 0);
 		plf::colony<General> PROPERTY(generals);
 		plf::colony<Admiral> PROPERTY(admirals);
 		ordered_set<ArmyInstance*> PROPERTY(armies);
 		ordered_set<NavyInstance*> PROPERTY(navies);
-		size_t PROPERTY(regiment_count);
-		size_t PROPERTY(max_supported_regiment_count);
-		size_t PROPERTY(mobilisation_potential_regiment_count);
-		size_t PROPERTY(mobilisation_max_regiment_count);
+		size_t PROPERTY(regiment_count, 0);
+		size_t PROPERTY(max_supported_regiment_count, 0);
+		size_t PROPERTY(mobilisation_potential_regiment_count, 0);
+		size_t PROPERTY(mobilisation_max_regiment_count, 0);
 		fixed_point_t PROPERTY(mobilisation_impact);
 		fixed_point_t PROPERTY(mobilisation_economy_impact);
 		fixed_point_t PROPERTY(supply_consumption);
-		size_t PROPERTY(ship_count);
+		size_t PROPERTY(ship_count, 0);
 		fixed_point_t PROPERTY(total_consumed_ship_supply);
 		fixed_point_t PROPERTY(max_ship_supply);
 		fixed_point_t PROPERTY(leadership_points);
-		int32_t PROPERTY(create_leader_count);
+		int32_t PROPERTY(create_leader_count, 0);
 		// War exhaustion is stored as a raw decimal rather than a proportion, it is usually in the range 0-100.
 		// The current war exhaustion value should only ever be modified via change_war_exhaustion(delta) which also
 		// clamps the result in the range [0, war_exhaustion_max] straight away, matching the base game's behaviour.
 		fixed_point_t PROPERTY(war_exhaustion);
 		fixed_point_t PROPERTY(war_exhaustion_max);
-		bool PROPERTY_CUSTOM_PREFIX(mobilised, is);
-		bool PROPERTY_CUSTOM_PREFIX(disarmed, is);
-		bool PROPERTY(auto_create_leaders);
-		bool PROPERTY(auto_assign_leaders);
+		bool PROPERTY_CUSTOM_PREFIX(mobilised, is, false);
+		bool PROPERTY_CUSTOM_PREFIX(disarmed, is, false);
+		bool PROPERTY_RW(auto_create_leaders, true);
+		bool PROPERTY_RW(auto_assign_leaders, true);
 		fixed_point_t PROPERTY(organisation_regain);
 		fixed_point_t PROPERTY(land_organisation);
 		fixed_point_t PROPERTY(naval_organisation);
 		fixed_point_t PROPERTY(land_unit_start_experience);
 		fixed_point_t PROPERTY(naval_unit_start_experience);
 		fixed_point_t PROPERTY(recruit_time);
-		int32_t PROPERTY(combat_width);
-		int32_t PROPERTY(digin_cap);
+		int32_t PROPERTY(combat_width, 1);
+		int32_t PROPERTY(digin_cap, 0);
 		fixed_point_t PROPERTY(military_tactics);
 		IndexedMap<RegimentType, unlock_level_t> PROPERTY(regiment_type_unlock_levels);
-		RegimentType::allowed_cultures_t PROPERTY(allowed_regiment_cultures);
+		RegimentType::allowed_cultures_t PROPERTY(allowed_regiment_cultures, RegimentType::allowed_cultures_t::NO_CULTURES);
 		IndexedMap<ShipType, unlock_level_t> PROPERTY(ship_type_unlock_levels);
-		unlock_level_t PROPERTY(gas_attack_unlock_level);
-		unlock_level_t PROPERTY(gas_defence_unlock_level);
+		unlock_level_t PROPERTY(gas_attack_unlock_level, 0);
+		unlock_level_t PROPERTY(gas_defence_unlock_level, 0);
 		std::vector<unlock_level_t> PROPERTY(unit_variant_unlock_levels);
 
 		CountryInstance(
@@ -288,10 +288,6 @@ namespace OpenVic {
 		}
 
 		std::string_view get_identifier() const;
-
-		constexpr ProvinceInstance* get_capital() {
-			return capital;
-		}
 
 		void update_country_definition_based_attributes();
 

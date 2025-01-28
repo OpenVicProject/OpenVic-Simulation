@@ -9,8 +9,6 @@
 
 using namespace OpenVic;
 
-MovementInfo::MovementInfo() : path {}, movement_progress {} {}
-
 //TODO: pathfinding logic
 MovementInfo::MovementInfo(ProvinceInstance const* starting_province, ProvinceInstance const* target_province)
 	: path { starting_province, target_province }, movement_progress { 0 } {}
@@ -19,10 +17,7 @@ template<UnitType::branch_t Branch>
 UnitInstanceGroup<Branch>::UnitInstanceGroup(
 	std::string_view new_name, std::vector<_UnitInstance*>&& new_units
 ) : name { new_name },
-	units { std::move(new_units) },
-	leader { nullptr },
-	position { nullptr },
-	country { nullptr } {}
+	units { std::move(new_units) } {}
 
 template<UnitType::branch_t Branch>
 size_t UnitInstanceGroup<Branch>::get_unit_count() const {

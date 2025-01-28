@@ -20,9 +20,10 @@ namespace OpenVic {
 		fixed_point_t PROPERTY(movement_progress);
 
 	public:
-		MovementInfo();
+		MovementInfo() = default;
 		// contains/calls pathfinding logic
 		MovementInfo(ProvinceInstance const* starting_province, ProvinceInstance const* target_province);
+		MovementInfo(MovementInfo&&) = default;
 	};
 
 	template<UnitType::branch_t>
@@ -38,13 +39,13 @@ namespace OpenVic {
 	private:
 		std::string PROPERTY(name);
 		std::vector<_UnitInstance*> PROPERTY(units);
-		_Leader* PROPERTY(leader);
+		_Leader* PROPERTY_PTR(leader, nullptr);
 
 		MovementInfo PROPERTY_REF(movement_info);
 
 	protected:
-		ProvinceInstance* PROPERTY_ACCESS(position, protected);
-		CountryInstance* PROPERTY_ACCESS(country, protected);
+		ProvinceInstance* PROPERTY_PTR_ACCESS(position, protected, nullptr);
+		CountryInstance* PROPERTY_PTR_ACCESS(country, protected, nullptr);
 
 		UnitInstanceGroup(
 			std::string_view new_name,

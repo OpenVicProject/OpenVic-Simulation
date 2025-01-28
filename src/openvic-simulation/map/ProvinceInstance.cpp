@@ -28,26 +28,8 @@ ProvinceInstance::ProvinceInstance(
 	FlagStrings { "province" },
 	province_definition { new_province_definition },
 	terrain_type { new_province_definition.get_default_terrain_type() },
-	life_rating { 0 },
-	colony_status { colony_status_t::STATE },
-	state { nullptr },
-	owner { nullptr },
-	controller { nullptr },
-	cores {},
-	modifier_sum {},
-	event_modifiers {},
-	slave { false },
-	crime { nullptr },
 	rgo { new_market_instance, new_modifier_effect_cache, pop_type_keys },
 	buildings { "buildings", false },
-	armies {},
-	navies {},
-	land_regiment_count { 0 },
-	pops {},
-	total_population { 0 },
-	average_literacy { 0 },
-	average_consciousness { 0 },
-	average_militancy { 0 },
 	population_by_strata { &strata_keys },
 	militancy_by_strata { &strata_keys },
 	life_needs_fulfilled_by_strata { &strata_keys },
@@ -56,12 +38,13 @@ ProvinceInstance::ProvinceInstance(
 	pop_type_distribution { &pop_type_keys },
 	pops_cache_by_type { &pop_type_keys },
 	ideology_distribution { &ideology_keys },
-	issue_distribution {},
-	vote_distribution { nullptr },
-	culture_distribution {},
-	religion_distribution {},
-	max_supported_regiments { 0 }
-	{}
+	vote_distribution { nullptr } {}
+
+void ProvinceInstance::set_state(State* new_state) {
+	// TODO - ensure this is removed from old state and added to new state (either here or wherever this is called from)
+	// TODO - update pop factory employment
+	state = new_state;
+}
 
 bool ProvinceInstance::set_rgo_production_type_nullable(ProductionType const* rgo_production_type_nullable) {
 	bool is_valid_operation = true;

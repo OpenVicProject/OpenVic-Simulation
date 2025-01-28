@@ -7,9 +7,7 @@
 
 using namespace OpenVic;
 
-MapInstance::MapInstance(MapDefinition const& new_map_definition)
-  : map_definition { new_map_definition }, selected_province { nullptr }, highest_province_population { 0 },
-	total_map_population { 0 } {}
+MapInstance::MapInstance(MapDefinition const& new_map_definition) : map_definition { new_map_definition } {}
 
 ProvinceInstance& MapInstance::get_province_instance_from_definition(ProvinceDefinition const& province) {
 	return province_instances.get_items()[province.get_index() - 1];
@@ -31,10 +29,6 @@ void MapInstance::set_selected_province(ProvinceDefinition::index_t index) {
 			);
 		}
 	}
-}
-
-ProvinceInstance* MapInstance::get_selected_province() {
-	return selected_province;
 }
 
 ProvinceDefinition::index_t MapInstance::get_selected_province_index() const {

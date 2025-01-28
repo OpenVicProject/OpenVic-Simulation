@@ -24,10 +24,6 @@ State::State(
 	capital { new_capital },
 	provinces { std::move(new_provinces) },
 	colony_status { new_colony_status },
-	total_population { 0 },
-	average_literacy { 0 },
-	average_consciousness { 0 },
-	average_militancy { 0 },
 	population_by_strata { &strata_keys },
 	militancy_by_strata { &strata_keys },
 	life_needs_fulfilled_by_strata { &strata_keys },
@@ -36,13 +32,7 @@ State::State(
 	pop_type_distribution { &pop_type_keys },
 	pops_cache_by_type { &pop_type_keys },
 	ideology_distribution { &ideology_keys },
-	issue_distribution {},
-	vote_distribution { new_owner != nullptr ? &new_owner->get_country_definition()->get_parties() : nullptr },
-	culture_distribution {},
-	religion_distribution {},
-	industrial_power { 0 },
-	max_supported_regiments { 0 }
-	{}
+	vote_distribution { new_owner != nullptr ? &new_owner->get_country_definition()->get_parties() : nullptr } {}
 
 std::string State::get_identifier() const {
 	return StringUtils::append_string_views(
@@ -191,7 +181,7 @@ static bool provinces_belong_in_same_state(ProvinceInstance const* lhs, Province
 	return lhs->get_owner() == rhs->get_owner() && lhs->get_colony_status() == rhs->get_colony_status();
 }
 
-StateSet::StateSet(Region const& new_region) : region { new_region }, states {} {}
+StateSet::StateSet(Region const& new_region) : region { new_region } {}
 
 size_t StateSet::get_state_count() const {
 	return states.size();

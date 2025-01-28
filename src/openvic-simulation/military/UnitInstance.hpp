@@ -40,7 +40,7 @@ namespace OpenVic {
 		friend struct UnitInstanceManager;
 
 	private:
-		Pop* PROPERTY(pop);
+		Pop* PROPERTY_PTR(pop);
 		bool PROPERTY_CUSTOM_PREFIX(mobilised, is);
 
 		UnitInstanceBranched(
