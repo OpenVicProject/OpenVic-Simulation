@@ -272,7 +272,7 @@ namespace OpenVic {
 			return stream;
 		}
 
-		std::string to_string(size_t decimal_places = 0) const {
+		std::string to_string(size_t decimal_places = -1) const {
 			std::stringstream str;
 			print(str, *this, decimal_places);
 			return str.str();

@@ -33,6 +33,7 @@ namespace OpenVic {
 	private:
 		TechnologyFolder const& PROPERTY(folder);
 		std::vector<Technology const*> PROPERTY(technologies);
+		size_t PROPERTY(tech_count, 0);
 
 		TechnologyArea(std::string_view new_identifier, TechnologyFolder const& new_folder);
 
@@ -43,6 +44,7 @@ namespace OpenVic {
 	struct Technology : Modifier {
 		friend struct TechnologyManager;
 
+		using area_index_t = uint8_t;
 		using unit_set_t = ordered_set<UnitType const*>;
 		using building_set_t = ordered_set<BuildingType const*>;
 
@@ -50,6 +52,7 @@ namespace OpenVic {
 		TechnologyArea const& PROPERTY(area);
 		const Date::year_t PROPERTY(year);
 		const fixed_point_t PROPERTY(cost);
+		const area_index_t PROPERTY(index_in_area);
 		const bool PROPERTY(unciv_military);
 		std::optional<CountryInstance::unit_variant_t> PROPERTY(unit_variant);
 		unit_set_t PROPERTY(activated_units);
@@ -57,9 +60,16 @@ namespace OpenVic {
 		ConditionalWeightFactorMul PROPERTY(ai_chance);
 
 		Technology(
-			std::string_view new_identifier, TechnologyArea const& new_area, Date::year_t new_year, fixed_point_t new_cost,
-			bool new_unciv_military, std::optional<CountryInstance::unit_variant_t>&& new_unit_variant,
-			unit_set_t&& new_activated_units, building_set_t&& new_activated_buildings, ModifierValue&& new_values,
+			std::string_view new_identifier,
+			TechnologyArea const& new_area,
+			Date::year_t new_year,
+			fixed_point_t new_cost,
+			area_index_t new_index_in_area,
+			bool new_unciv_military,
+			std::optional<CountryInstance::unit_variant_t>&& new_unit_variant,
+			unit_set_t&& new_activated_units,
+			building_set_t&& new_activated_buildings,
+			ModifierValue&& new_values,
 			ConditionalWeightFactorMul&& new_ai_chance
 		);
 
@@ -88,10 +98,9 @@ namespace OpenVic {
 		bool add_technology_area(std::string_view identifier, TechnologyFolder const& folder);
 
 		bool add_technology(
-			std::string_view identifier, TechnologyArea const* area, Date::year_t year, fixed_point_t cost,
-			bool unciv_military, std::optional<CountryInstance::unit_variant_t>&& unit_variant,
-			Technology::unit_set_t&& activated_units, Technology::building_set_t&& activated_buildings,
-			ModifierValue&& values, ConditionalWeightFactorMul&& ai_chance
+			std::string_view identifier, TechnologyArea* area, Date::year_t year, fixed_point_t cost, bool unciv_military,
+			std::optional<CountryInstance::unit_variant_t>&& unit_variant, Technology::unit_set_t&& activated_units,
+			Technology::building_set_t&& activated_buildings, ModifierValue&& values, ConditionalWeightFactorMul&& ai_chance
 		);
 
 		bool add_technology_school(std::string_view identifier, ModifierValue&& values);

@@ -518,6 +518,14 @@ namespace OpenVic {
 		}
 
 		template<typename T>
+		Callback<T&> auto assign_variable_callback_pointer(T*& var) {
+			return [&var](T& val) -> bool {
+				var = &val;
+				return true;
+			};
+		}
+
+		template<typename T>
 		Callback<T const&> auto assign_variable_callback_pointer(T const*& var) {
 			return [&var](T const& val) -> bool {
 				var = &val;

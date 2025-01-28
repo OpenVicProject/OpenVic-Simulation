@@ -704,6 +704,49 @@ bool CountryInstance::is_primary_or_accepted_culture(Culture const& culture) con
 	return is_primary_culture(culture) || is_accepted_culture(culture);
 }
 
+fixed_point_t CountryInstance::calculate_research_cost(
+	Technology const& technology, ModifierEffectCache const& modifier_effect_cache
+) const {
+	// TODO - what if research bonus is -100%? Divide by 0 -> infinite cost?
+	return technology.get_cost() / (fixed_point_t::_1() + get_modifier_effect_value(
+		*modifier_effect_cache.get_research_bonus_effects()[technology.get_area().get_folder()]
+	));
+}
+
+fixed_point_t CountryInstance::get_research_progress() const {
+	return current_research_cost > fixed_point_t::_0()
+		? invested_research_points / current_research_cost
+		: fixed_point_t::_0();
+}
+
+bool CountryInstance::can_research_tech(Technology const& technology, Date today) const {
+	if (
+		technology.get_year() > today.get_year() || !is_civilised() || is_technology_unlocked(technology) ||
+		&technology == current_research
+	) {
+		return false;
+	}
+
+	const Technology::area_index_t index_in_area = technology.get_index_in_area();
+
+	return index_in_area == 0 || is_technology_unlocked(*technology.get_area().get_technologies()[index_in_area - 1]);
+}
+
+void CountryInstance::start_research(Technology const& technology, InstanceManager const& instance_manager) {
+	if (OV_unlikely(!can_research_tech(technology, instance_manager.get_today()))) {
+		Logger::warning(
+			"Attemping to start research for country \"", get_identifier(), "\" on technology \"",
+			technology.get_identifier(), "\" - cannot research this tech!"
+		);
+		return;
+	}
+
+	current_research = &technology;
+	invested_research_points = fixed_point_t::_0();
+
+	_update_current_tech(instance_manager);
+}
+
 void CountryInstance::apply_foreign_investments(
 	fixed_point_map_t<CountryDefinition const*> const& investments, CountryInstanceManager const& country_instance_manager
 ) {
@@ -817,8 +860,42 @@ void CountryInstance::_update_budget() {
 
 }
 
-void CountryInstance::_update_technology() {
+void CountryInstance::_update_current_tech(InstanceManager const& instance_manager) {
+	DefinitionManager const& definition_manager = instance_manager.get_definition_manager();
 
+	current_research_cost = calculate_research_cost(
+		*current_research, definition_manager.get_modifier_manager().get_modifier_effect_cache()
+	);
+
+	if (daily_research_points > fixed_point_t::_0()) {
+		expected_research_completion_date = instance_manager.get_today() + static_cast<Timespan>(
+			(current_research_cost / daily_research_points).ceil()
+		);
+	} else {
+		expected_research_completion_date = definition_manager.get_define_manager().get_end_date();
+	}
+}
+
+void CountryInstance::_update_technology(InstanceManager const& instance_manager) {
+	if (research_point_stockpile < 0) {
+		research_point_stockpile = 0;
+	}
+
+	ModifierEffectCache const& modifier_effect_cache =
+		instance_manager.get_definition_manager().get_modifier_manager().get_modifier_effect_cache();
+
+	daily_research_points += get_modifier_effect_value(*modifier_effect_cache.get_research_points());
+	daily_research_points *= fixed_point_t::_1() +
+		get_modifier_effect_value(*modifier_effect_cache.get_research_points_modifier()) +
+		get_modifier_effect_value(*modifier_effect_cache.get_increase_research());
+
+	if (daily_research_points < fixed_point_t::_0()) {
+		daily_research_points = fixed_point_t::_0();
+	}
+
+	if (current_research != nullptr) {
+		_update_current_tech(instance_manager);
+	}
 }
 
 void CountryInstance::_update_politics() {
@@ -882,6 +959,31 @@ void CountryInstance::_update_population() {
 		life_needs_fulfilled_by_strata /= population_by_strata;
 		everyday_needs_fulfilled_by_strata /= population_by_strata;
 		luxury_needs_fulfilled_by_strata /= population_by_strata;
+	}
+
+	daily_research_points = fixed_point_t::_0();
+	monthly_leadership_points = fixed_point_t::_0();
+	research_points_from_pop_types.clear();
+	leadership_points_from_pop_types.clear();
+
+	for (auto const& [pop_type, pop_size] : pop_type_distribution) {
+		if (pop_type.get_research_leadership_optimum() > fixed_point_t::_0() && pop_size > 0) {
+			const fixed_point_t factor = std::min(
+				pop_size / (total_population * pop_type.get_research_leadership_optimum()), fixed_point_t::_1()
+			);
+
+			if (pop_type.get_research_points() != fixed_point_t::_0()) {
+				const fixed_point_t research_points = pop_type.get_research_points() * factor;
+				research_points_from_pop_types[&pop_type] = research_points;
+				daily_research_points += research_points;
+			}
+
+			if (pop_type.get_leadership_points() != fixed_point_t::_0()) {
+				const fixed_point_t leadership_points = pop_type.get_leadership_points() * factor;
+				leadership_points_from_pop_types[&pop_type] = leadership_points;
+				monthly_leadership_points = leadership_points;
+			}
+		}
 	}
 
 	// TODO - update national focus capacity
@@ -1011,10 +1113,18 @@ void CountryInstance::_update_military(
 	military_tactics = military_defines.get_base_military_tactics() +
 		get_modifier_effect_value(*modifier_effect_cache.get_military_tactics());
 
-	if (leadership_points < 0) {
-		leadership_points = 0;
+	if (leadership_point_stockpile < 0) {
+		leadership_point_stockpile = 0;
 	}
-	create_leader_count = leadership_points / military_defines.get_leader_recruit_cost();
+	create_leader_count = leadership_point_stockpile / military_defines.get_leader_recruit_cost();
+
+	monthly_leadership_points += get_modifier_effect_value(*modifier_effect_cache.get_leadership());
+	monthly_leadership_points *= fixed_point_t::_1() +
+		get_modifier_effect_value(*modifier_effect_cache.get_leadership_modifier());
+
+	if (monthly_leadership_points < fixed_point_t::_0()) {
+		monthly_leadership_points = fixed_point_t::_0();
+	}
 
 	// TODO - update max_ship_supply
 }
@@ -1132,6 +1242,16 @@ fixed_point_t CountryInstance::get_modifier_effect_value(ModifierEffect const& e
 }
 
 void CountryInstance::update_gamestate(InstanceManager& instance_manager) {
+	if (!is_civilised()) {
+		if (civilisation_progress <= PRIMITIVE_CIVILISATION_PROGRESS) {
+			country_status = COUNTRY_STATUS_PRIMITIVE;
+		} else if (civilisation_progress <= UNCIVILISED_CIVILISATION_PROGRESS) {
+			country_status = COUNTRY_STATUS_UNCIVILISED;
+		} else {
+			country_status = COUNTRY_STATUS_PARTIALLY_CIVILISED;
+		}
+	}
+
 	owns_colonial_province = std::any_of(
 		owned_provinces.begin(), owned_provinces.end(), std::bind_front(&ProvinceInstance::is_colonial_province)
 	);
@@ -1155,17 +1275,24 @@ void CountryInstance::update_gamestate(InstanceManager& instance_manager) {
 	DefineManager const& define_manager = definition_manager.get_define_manager();
 
 	// Order of updates might need to be changed/functions split up to account for dependencies
-	_update_production(define_manager);
-	_update_budget();
-	_update_technology();
-	_update_politics();
+	// Updates population stats (including research and leadership points from pops)
 	_update_population();
-	_update_trade();
-	_update_diplomacy();
+	// Calculates industrial power
+	_update_production(define_manager);
+	// Calculates daily research points and predicts research completion date
+	_update_technology(instance_manager);
+	// Calculates national military modifiers, army and navy stats, daily leadership points
 	_update_military(
-		define_manager, definition_manager.get_military_manager().get_unit_type_manager(),
+		define_manager,
+		definition_manager.get_military_manager().get_unit_type_manager(),
 		definition_manager.get_modifier_manager().get_modifier_effect_cache()
 	);
+
+	// These don't do anything yet
+	_update_budget();
+	_update_politics();
+	_update_trade();
+	_update_diplomacy();
 
 	total_score = prestige + industrial_power + military_power;
 
@@ -1189,8 +1316,51 @@ void CountryInstance::update_gamestate(InstanceManager& instance_manager) {
 	}
 }
 
-void CountryInstance::tick() {
+void CountryInstance::tick(InstanceManager& instance_manager) {
+	DefinitionManager const& definition_manager = instance_manager.get_definition_manager();
+	DefineManager const& define_manager = definition_manager.get_define_manager();
 
+	// Gain daily research points
+	research_point_stockpile += daily_research_points;
+
+	if (current_research != nullptr) {
+		const fixed_point_t research_points_spent = std::min(
+			std::min(research_point_stockpile, current_research_cost - invested_research_points),
+			define_manager.get_economy_defines().get_max_daily_research()
+		);
+
+		research_point_stockpile -= research_points_spent;
+		invested_research_points += research_points_spent;
+
+		if (invested_research_points >= current_research_cost) {
+			unlock_technology(*current_research);
+			current_research = nullptr;
+			invested_research_points = fixed_point_t::_0();
+			current_research_cost = fixed_point_t::_0();
+		}
+	}
+
+	// Apply maximum research point stockpile limit
+	const fixed_point_t max_research_point_stockpile = is_civilised()
+		? daily_research_points * static_cast<int32_t>(Date::DAYS_IN_YEAR)
+		: define_manager.get_country_defines().get_max_research_points();
+	if (research_point_stockpile > max_research_point_stockpile) {
+		research_point_stockpile = max_research_point_stockpile;
+	}
+
+	// Gain monthly leadership points
+	if (instance_manager.get_today().is_month_start()) {
+		leadership_point_stockpile += monthly_leadership_points;
+	}
+
+	// TODO - auto create and auto assign leaders
+
+	// Apply maximum leadership point stockpile limit
+	const fixed_point_t max_leadership_point_stockpile =
+		define_manager.get_military_defines().get_max_leadership_point_stockpile();
+	if (leadership_point_stockpile > max_leadership_point_stockpile) {
+		leadership_point_stockpile = max_leadership_point_stockpile;
+	}
 }
 
 void CountryInstanceManager::update_rankings(Date today, DefineManager const& define_manager) {
@@ -1466,8 +1636,8 @@ void CountryInstanceManager::update_gamestate(InstanceManager& instance_manager)
 	update_rankings(instance_manager.get_today(), instance_manager.get_definition_manager().get_define_manager());
 }
 
-void CountryInstanceManager::tick() {
+void CountryInstanceManager::tick(InstanceManager& instance_manager) {
 	for (CountryInstance& country : country_instances.get_items()) {
-		country.tick();
+		country.tick(instance_manager);
 	}
 }

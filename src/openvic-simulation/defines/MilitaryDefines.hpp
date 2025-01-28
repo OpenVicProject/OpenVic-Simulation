@@ -82,5 +82,10 @@ namespace OpenVic {
 
 		std::string_view get_name() const;
 		NodeTools::node_callback_t expect_defines();
+
+	public:
+		constexpr fixed_point_t get_max_leadership_point_stockpile() const {
+			return leader_recruit_cost * 3;
+		}
 	};
 }

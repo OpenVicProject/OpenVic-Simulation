@@ -299,7 +299,7 @@ namespace OpenVic {
 		} \
 	} \
 	constexpr NodeTools::Callback<std::string_view> auto expect_item_str( \
-		NodeTools::Callback<external_value_type CONST&> auto callback, bool allow_empty, bool warn \
+		NodeTools::Callback<external_value_type CONST&> auto callback, bool allow_empty, bool warn = false \
 	) CONST { \
 		return [this, callback, allow_empty, warn](std::string_view identifier) -> bool { \
 			if (identifier.empty()) { \
@@ -319,17 +319,17 @@ namespace OpenVic {
 		}; \
 	} \
 	constexpr NodeTools::NodeCallback auto expect_item_identifier( \
-		NodeTools::Callback<external_value_type CONST&> auto callback, bool warn \
+		NodeTools::Callback<external_value_type CONST&> auto callback, bool warn = false \
 	) CONST { \
 		return NodeTools::expect_identifier(expect_item_str(callback, false, warn)); \
 	} \
 	constexpr NodeTools::NodeCallback auto expect_item_string( \
-		NodeTools::Callback<external_value_type CONST&> auto callback, bool allow_empty, bool warn \
+		NodeTools::Callback<external_value_type CONST&> auto callback, bool allow_empty, bool warn = false \
 	) CONST { \
 		return NodeTools::expect_string(expect_item_str(callback, allow_empty, warn), allow_empty); \
 	} \
 	constexpr NodeTools::NodeCallback auto expect_item_identifier_or_string( \
-		NodeTools::Callback<external_value_type CONST&> auto callback, bool allow_empty, bool warn \
+		NodeTools::Callback<external_value_type CONST&> auto callback, bool allow_empty, bool warn = false \
 	) CONST { \
 		return NodeTools::expect_identifier_or_string(expect_item_str(callback, allow_empty, warn), allow_empty); \
 	} \
