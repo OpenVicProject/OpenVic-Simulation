@@ -64,6 +64,7 @@ void InstanceManager::tick() {
 
 	// Tick...
 	map_instance.map_tick(today);
+	country_instance_manager.tick(*this);
 	market_instance.execute_orders();
 
 	set_gamestate_needs_update();

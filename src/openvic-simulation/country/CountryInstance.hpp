@@ -65,6 +65,10 @@ namespace OpenVic {
 			COUNTRY_STATUS_PRIMITIVE
 		};
 
+		// Thresholds for different uncivilised country statuses
+		static constexpr fixed_point_t PRIMITIVE_CIVILISATION_PROGRESS = fixed_point_t::parse(15) / 100;
+		static constexpr fixed_point_t UNCIVILISED_CIVILISATION_PROGRESS = fixed_point_t::_0_50();
+
 		using unlock_level_t = int8_t;
 		using unit_variant_t = uint8_t;
 
@@ -84,6 +88,7 @@ namespace OpenVic {
 		bool PROPERTY(owns_colonial_province, false);
 
 		country_status_t PROPERTY(country_status, country_status_t::COUNTRY_STATUS_UNCIVILISED);
+		fixed_point_t PROPERTY(civilisation_progress);
 		Date PROPERTY(lose_great_power_date);
 		fixed_point_t PROPERTY(total_score);
 		size_t PROPERTY(total_rank, 0);
@@ -128,9 +133,11 @@ namespace OpenVic {
 		IndexedMap<Invention, unlock_level_t> PROPERTY(invention_unlock_levels);
 		Technology const* PROPERTY(current_research, nullptr);
 		fixed_point_t PROPERTY(invested_research_points);
-		Date PROPERTY(expected_completion_date);
+		fixed_point_t PROPERTY(current_research_cost);
+		Date PROPERTY(expected_research_completion_date);
 		fixed_point_t PROPERTY(research_point_stockpile);
-		fixed_point_t PROPERTY(daily_research_points); // TODO - breakdown by source
+		fixed_point_t PROPERTY(daily_research_points);
+		fixed_point_map_t<PopType const*> PROPERTY(research_points_from_pop_types);
 		fixed_point_t PROPERTY(national_literacy);
 		TechnologySchool const* PROPERTY(tech_school, nullptr);
 		// TODO - cached possible inventions with %age chance
@@ -207,7 +214,9 @@ namespace OpenVic {
 		size_t PROPERTY(ship_count, 0);
 		fixed_point_t PROPERTY(total_consumed_ship_supply);
 		fixed_point_t PROPERTY(max_ship_supply);
-		fixed_point_t PROPERTY(leadership_points);
+		fixed_point_t PROPERTY(leadership_point_stockpile);
+		fixed_point_t PROPERTY(monthly_leadership_points);
+		fixed_point_map_t<PopType const*> PROPERTY(leadership_points_from_pop_types);
 		int32_t PROPERTY(create_leader_count, 0);
 		// War exhaustion is stored as a raw decimal rather than a proportion, it is usually in the range 0-100.
 		// The current war exhaustion value should only ever be modified via change_war_exhaustion(delta) which also
@@ -426,6 +435,13 @@ namespace OpenVic {
 		bool is_accepted_culture(Culture const& culture) const;
 		bool is_primary_or_accepted_culture(Culture const& culture) const;
 
+		fixed_point_t calculate_research_cost(
+			Technology const& technology, ModifierEffectCache const& modifier_effect_cache
+		) const;
+		fixed_point_t get_research_progress() const;
+		bool can_research_tech(Technology const& technology, Date today) const;
+		void start_research(Technology const& technology, InstanceManager const& instance_manager);
+
 		// Sets the investment of each country in the map (rather than adding to them), leaving the rest unchanged.
 		void apply_foreign_investments(
 			fixed_point_map_t<CountryDefinition const*> const& investments,
@@ -437,7 +453,9 @@ namespace OpenVic {
 	private:
 		void _update_production(DefineManager const& define_manager);
 		void _update_budget();
-		void _update_technology();
+		// Expects current_research to be non-null
+		void _update_current_tech(InstanceManager const& instance_manager);
+		void _update_technology(InstanceManager const& instance_manager);
 		void _update_politics();
 		void _update_population();
 		void _update_trade();
@@ -461,7 +479,7 @@ namespace OpenVic {
 		}
 
 		void update_gamestate(InstanceManager& instance_manager);
-		void tick();
+		void tick(InstanceManager& instance_manager);
 	};
 
 	struct CountryDefinitionManager;
@@ -509,6 +527,6 @@ namespace OpenVic {
 
 		void update_modifier_sums(Date today, StaticModifierCache const& static_modifier_cache);
 		void update_gamestate(InstanceManager& instance_manager);
-		void tick();
+		void tick(InstanceManager& instance_manager);
 	};
 }

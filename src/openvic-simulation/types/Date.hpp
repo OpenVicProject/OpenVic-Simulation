@@ -168,6 +168,10 @@ namespace OpenVic {
 			return (static_cast<Timespan::day_t>(timespan) % DAYS_IN_YEAR) - DAYS_UP_TO_MONTH[get_month() - 1] + 1;
 		}
 
+		constexpr bool is_month_start() const {
+			return get_day() == 1;
+		}
+
 		constexpr bool operator<(Date other) const {
 			return timespan < other.timespan;
 		};

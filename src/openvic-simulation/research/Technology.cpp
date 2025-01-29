@@ -15,6 +15,7 @@ Technology::Technology(
 	TechnologyArea const& new_area,
 	Date::year_t new_year,
 	fixed_point_t new_cost,
+	area_index_t new_index_in_area,
 	bool new_unciv_military,
 	std::optional<CountryInstance::unit_variant_t>&& new_unit_variant,
 	unit_set_t&& new_activated_units,
@@ -25,6 +26,7 @@ Technology::Technology(
 	area { new_area },
 	year { new_year },
 	cost { new_cost },
+	index_in_area { new_index_in_area },
 	unciv_military { new_unciv_military },
 	unit_variant { std::move(new_unit_variant) },
 	activated_units { std::move(new_activated_units) },
@@ -57,7 +59,7 @@ bool TechnologyManager::add_technology_area(std::string_view identifier, Technol
 }
 
 bool TechnologyManager::add_technology(
-	std::string_view identifier, TechnologyArea const* area, Date::year_t year, fixed_point_t cost, bool unciv_military,
+	std::string_view identifier, TechnologyArea* area, Date::year_t year, fixed_point_t cost, bool unciv_military,
 	std::optional<CountryInstance::unit_variant_t>&& unit_variant, Technology::unit_set_t&& activated_units,
 	Technology::building_set_t&& activated_buildings, ModifierValue&& values, ConditionalWeightFactorMul&& ai_chance
 ) {
@@ -71,10 +73,36 @@ bool TechnologyManager::add_technology(
 		return false;
 	}
 
-	return technologies.add_item({
-		identifier, *area, year, cost, unciv_military, std::move(unit_variant), std::move(activated_units),
-		std::move(activated_buildings), std::move(values), std::move(ai_chance)
-	});
+	static constexpr size_t MAX_TECHS_IN_AREA = std::numeric_limits<Technology::area_index_t>::max() + 1;
+
+	const size_t index_in_area = area->get_tech_count();
+
+	if (index_in_area >= MAX_TECHS_IN_AREA) {
+		Logger::error(
+			"Cannot add technology \"", identifier, "\" - too many technologies in area \"", area->get_identifier(),
+			"\"! Each area can have at most ", MAX_TECHS_IN_AREA, " technologies."
+		);
+		return false;
+	}
+
+	if (technologies.add_item({
+		identifier,
+		*area,
+		year,
+		cost,
+		static_cast<Technology::area_index_t>(index_in_area),
+		unciv_military,
+		std::move(unit_variant),
+		std::move(activated_units),
+		std::move(activated_buildings),
+		std::move(values),
+		std::move(ai_chance)
+	})) {
+		area->tech_count++;
+		return true;
+	} else {
+		return false;
+	}
 }
 
 bool TechnologyManager::add_technology_school(std::string_view identifier, ModifierValue&& values) {
@@ -165,7 +193,7 @@ bool TechnologyManager::load_technologies_file(
 		using enum scope_type_t;
 
 		ModifierValue modifiers;
-		TechnologyArea const* area = nullptr;
+		TechnologyArea* area = nullptr;
 		Date::year_t year = 0;
 		fixed_point_t cost = 0;
 		bool unciv_military = false;
@@ -176,12 +204,13 @@ bool TechnologyManager::load_technologies_file(
 
 		bool ret = NodeTools::expect_dictionary_keys_and_default(
 			modifier_manager.expect_technology_modifier(modifiers),
-			"area", ONE_EXACTLY, expect_technology_area_identifier(assign_variable_callback_pointer(area)),
+			"area", ONE_EXACTLY, technology_areas.expect_item_identifier(assign_variable_callback_pointer(area)),
 			"year", ONE_EXACTLY, expect_uint(assign_variable_callback(year)),
 			"cost", ONE_EXACTLY, expect_fixed_point(assign_variable_callback(cost)),
 			"unciv_military", ZERO_OR_ONE, expect_bool(assign_variable_callback(unciv_military)),
 			"unit", ZERO_OR_ONE, expect_uint<decltype(unit_variant)::value_type>(assign_variable_callback_opt(unit_variant)),
-			"activate_unit", ZERO_OR_MORE, unit_type_manager.expect_unit_type_identifier(set_callback_pointer(activated_units)),
+			"activate_unit", ZERO_OR_MORE,
+				unit_type_manager.expect_unit_type_identifier(set_callback_pointer(activated_units)),
 			"activate_building", ZERO_OR_MORE, building_type_manager.expect_building_type_identifier(
 				set_callback_pointer(activated_buildings)
 			),
@@ -242,5 +271,17 @@ bool TechnologyManager::generate_technology_lists() {
 		const_cast<TechnologyArea&>(tech.area).technologies.push_back(&tech);
 	}
 
-	return true;
+	bool ret = true;
+
+	for (TechnologyArea const& area : technology_areas.get_items()) {
+		if (area.get_technologies().size() != area.get_tech_count()) {
+			Logger::error(
+				"Technology area \"", area.get_identifier(), "\" has a mismatch between tech count (", area.get_tech_count(),
+				") and tech list size (", area.get_technologies().size(), ")!"
+			);
+			ret = false;
+		}
+	}
+
+	return ret;
 }
