@@ -157,24 +157,26 @@ void ResourceGatheringOperation::rgo_tick() {
 	}
 
 	output_quantity_yesterday = produce(total_owner_count_in_state_cache);
-	market_instance.place_market_sell_order({
-		production_type.get_output_good(),
-		output_quantity_yesterday,
-		[
-			this,
-			total_worker_count_in_province,
-			owner_pops_cache_nullable,
-			total_owner_count_in_state_cache
-		](const SellResult sell_result) -> void {
-			revenue_yesterday = sell_result.get_money_gained();
-			pay_employees(
-				revenue_yesterday,
+	if (output_quantity_yesterday > 0) {
+		market_instance.place_market_sell_order({
+			production_type.get_output_good(),
+			output_quantity_yesterday,
+			[
+				this,
 				total_worker_count_in_province,
 				owner_pops_cache_nullable,
 				total_owner_count_in_state_cache
-			);
-		}
-	});
+			](const SellResult sell_result) -> void {
+				revenue_yesterday = sell_result.get_money_gained();
+				pay_employees(
+					revenue_yesterday,
+					total_worker_count_in_province,
+					owner_pops_cache_nullable,
+					total_owner_count_in_state_cache
+				);
+			}
+		});
+	}
 }
 
 void ResourceGatheringOperation::hire(const pop_size_t available_worker_count) {

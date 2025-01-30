@@ -135,7 +135,9 @@ void ArtisanalProducer::artisan_tick(Pop& pop) {
 			output_good,
 			current_production,
 			[&pop](const SellResult sell_result) -> void {
-				pop.add_artisanal_income(sell_result.get_money_gained());
+				if (sell_result.get_money_gained() > 0) {
+					pop.add_artisanal_income(sell_result.get_money_gained());
+				}
 			}
 		});
 	}
