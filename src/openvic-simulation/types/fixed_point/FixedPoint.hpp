@@ -49,8 +49,6 @@ namespace OpenVic {
 		constexpr fixed_point_t(int64_t new_value) : value { new_value } {}
 		constexpr fixed_point_t(int32_t new_value) : value { static_cast<int64_t>(new_value) << PRECISION } {}
 
-		constexpr ~fixed_point_t() = default;
-
 		static constexpr fixed_point_t max() {
 			return std::numeric_limits<int64_t>::max();
 		}
