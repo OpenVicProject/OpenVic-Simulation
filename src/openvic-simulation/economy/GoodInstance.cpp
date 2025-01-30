@@ -85,8 +85,8 @@ void GoodInstance::execute_orders() {
 	}
 	
 	for (GoodBuyUpToOrder const& buy_up_to_order : buy_up_to_orders) {
-		const fixed_point_t money_spend = buy_up_to_order.get_money_to_spend() * quantity_traded_yesterday / demand_running_total;
-		const fixed_point_t quantity_bought = money_spend / new_price;
+		const fixed_point_t quantity_bought = buy_up_to_order.get_max_quantity() * quantity_traded_yesterday / demand_running_total;
+		const fixed_point_t money_spend = quantity_bought * new_price;
 		buy_up_to_order.get_after_trade()({
 			quantity_bought,
 			buy_up_to_order.get_money_to_spend() - money_spend
