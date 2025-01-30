@@ -2,6 +2,7 @@
 
 #include <functional>
 #include <iostream>
+#include <mutex>
 #include <queue>
 #include <sstream>
 
@@ -75,9 +76,13 @@ namespace OpenVic {
 			size_t message_count;
 		};
 
+		static inline std::mutex log_mutex;
+
 		template<typename... Args>
 		struct log {
 			log(log_channel_t& log_channel, Args&&... args, source_location const& location) {
+				const std::lock_guard<std::mutex> lock { log_mutex };
+
 				std::stringstream stream;
 				stream << StringUtils::get_filename(location.file_name()) << "("
 					/* Function name removed to reduce clutter. It is already included
