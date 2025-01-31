@@ -234,7 +234,7 @@ namespace OpenVic {
 		fixed_point_t PROPERTY(naval_unit_start_experience);
 		fixed_point_t PROPERTY(recruit_time);
 		int32_t PROPERTY(combat_width, 1);
-		int32_t PROPERTY(digin_cap, 0);
+		int32_t PROPERTY(dig_in_cap, 0);
 		fixed_point_t PROPERTY(military_tactics);
 		IndexedMap<RegimentType, unlock_level_t> PROPERTY(regiment_type_unlock_levels);
 		RegimentType::allowed_cultures_t PROPERTY(allowed_regiment_cultures, RegimentType::allowed_cultures_t::NO_CULTURES);
@@ -258,10 +258,9 @@ namespace OpenVic {
 			decltype(tax_rate_by_strata)::keys_type const& strata_keys
 		);
 
+	public:
 		UNIT_BRANCHED_GETTER(get_unit_instance_groups, armies, navies);
 		UNIT_BRANCHED_GETTER(get_unit_type_unlock_levels, regiment_type_unlock_levels, ship_type_unlock_levels);
-
-	public:
 		UNIT_BRANCHED_GETTER(get_leaders, generals, admirals);
 		UNIT_BRANCHED_GETTER_CONST(get_leaders, generals, admirals);
 

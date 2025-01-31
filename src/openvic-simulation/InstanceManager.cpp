@@ -43,10 +43,13 @@ void InstanceManager::update_gamestate() {
 	currently_updating_gamestate = true;
 
 	Logger::info("Update: ", today);
+
 	update_modifier_sums();
+
 	// Update gamestate...
 	map_instance.update_gamestate(today, definition_manager.get_define_manager());
 	country_instance_manager.update_gamestate(*this);
+	unit_instance_manager.update_gamestate();
 
 	gamestate_updated();
 	gamestate_needs_update = false;
@@ -65,6 +68,7 @@ void InstanceManager::tick() {
 	// Tick...
 	map_instance.map_tick(today);
 	country_instance_manager.tick(*this);
+	unit_instance_manager.tick();
 	market_instance.execute_orders();
 
 	set_gamestate_needs_update();

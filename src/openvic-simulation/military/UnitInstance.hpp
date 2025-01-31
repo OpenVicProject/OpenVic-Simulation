@@ -16,9 +16,8 @@ namespace OpenVic {
 	private:
 		std::string PROPERTY(unit_name);
 		_UnitType const& PROPERTY(unit_type);
-
 		fixed_point_t PROPERTY(organisation);
-		fixed_point_t PROPERTY(morale);
+		fixed_point_t PROPERTY(max_organisation);
 		fixed_point_t PROPERTY(strength);
 
 	protected:
@@ -26,6 +25,10 @@ namespace OpenVic {
 
 	public:
 		UnitInstance(UnitInstance&&) = default;
+
+		inline constexpr fixed_point_t get_max_strength() const {
+			return unit_type.get_max_strength();
+		}
 
 		void set_unit_name(std::string_view new_unit_name);
 	};

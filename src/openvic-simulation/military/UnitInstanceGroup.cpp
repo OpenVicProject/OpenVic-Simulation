@@ -9,15 +9,33 @@
 
 using namespace OpenVic;
 
-//TODO: pathfinding logic
-MovementInfo::MovementInfo(ProvinceInstance const* starting_province, ProvinceInstance const* target_province)
-	: path { starting_province, target_province }, movement_progress { 0 } {}
+using enum UnitType::branch_t;
 
 template<UnitType::branch_t Branch>
 UnitInstanceGroup<Branch>::UnitInstanceGroup(
 	std::string_view new_name, std::vector<_UnitInstance*>&& new_units
 ) : name { new_name },
 	units { std::move(new_units) } {}
+
+template<UnitType::branch_t Branch>
+void UnitInstanceGroup<Branch>::update_gamestate() {
+	total_organisation = fixed_point_t::_0();
+	total_max_organisation = fixed_point_t::_0();
+	total_strength = fixed_point_t::_0();
+	total_max_strength = fixed_point_t::_0();
+
+	for (_UnitInstance const* unit : units) {
+		total_organisation += unit->get_organisation();
+		total_max_organisation += unit->get_max_organisation();
+		total_strength += unit->get_strength();
+		total_max_strength += unit->get_max_strength();
+	}
+}
+
+template<UnitType::branch_t Branch>
+void UnitInstanceGroup<Branch>::tick() {
+
+}
 
 template<UnitType::branch_t Branch>
 size_t UnitInstanceGroup<Branch>::get_unit_count() const {
@@ -137,20 +155,79 @@ bool UnitInstanceGroup<Branch>::set_leader(_Leader* new_leader) {
 	return ret;
 }
 
-template struct OpenVic::UnitInstanceGroup<UnitType::branch_t::LAND>;
-template struct OpenVic::UnitInstanceGroup<UnitType::branch_t::NAVAL>;
+// These values are only needed for the UI, so there's no need to pre-calculate and cache them for every unit on every update.
+template<UnitType::branch_t Branch>
+fixed_point_t UnitInstanceGroup<Branch>::get_organisation_proportion() const {
+	return total_max_organisation != fixed_point_t::_0() ? total_organisation / total_max_organisation : fixed_point_t::_0();
+}
 
-UnitInstanceGroupBranched<UnitType::branch_t::LAND>::UnitInstanceGroupBranched(
+template<UnitType::branch_t Branch>
+fixed_point_t UnitInstanceGroup<Branch>::get_strength_proportion() const {
+	return total_max_strength != fixed_point_t::_0() ? total_strength / total_max_strength : fixed_point_t::_0();
+}
+
+template<UnitType::branch_t Branch>
+fixed_point_t UnitInstanceGroup<Branch>::get_average_organisation() const {
+	return !units.empty() ? total_organisation / static_cast<int32_t>(units.size()) : fixed_point_t::_0();
+}
+
+template<UnitType::branch_t Branch>
+fixed_point_t UnitInstanceGroup<Branch>::get_average_max_organisation() const {
+	return !units.empty() ? total_max_organisation / static_cast<int32_t>(units.size()) : fixed_point_t::_0();
+}
+
+template<UnitType::branch_t Branch>
+bool UnitInstanceGroup<Branch>::is_moving() const {
+	return !path.empty();
+}
+
+template<UnitType::branch_t Branch>
+ProvinceInstance const* UnitInstanceGroup<Branch>::get_movement_destination_province() const {
+	return !path.empty() ? path.back() : nullptr;
+}
+
+template<UnitType::branch_t Branch>
+Date UnitInstanceGroup<Branch>::get_movement_arrival_date() const {
+	// TODO - calculate today + remaining movement cost / unit speed
+	return {};
+}
+
+template<UnitType::branch_t Branch>
+bool UnitInstanceGroup<Branch>::is_in_combat() const {
+	// TODO - check if in combat
+	return false;
+}
+
+template struct OpenVic::UnitInstanceGroup<LAND>;
+template struct OpenVic::UnitInstanceGroup<NAVAL>;
+
+UnitInstanceGroupBranched<LAND>::UnitInstanceGroupBranched(
 	std::string_view new_name,
 	std::vector<RegimentInstance*>&& new_units
 ) : UnitInstanceGroup { new_name, std::move(new_units) } {}
 
-UnitInstanceGroupBranched<UnitType::branch_t::NAVAL>::UnitInstanceGroupBranched(
+void UnitInstanceGroupBranched<LAND>::update_gamestate() {
+	UnitInstanceGroup<LAND>::update_gamestate();
+}
+
+void UnitInstanceGroupBranched<LAND>::tick() {
+	UnitInstanceGroup<LAND>::tick();
+}
+
+UnitInstanceGroupBranched<NAVAL>::UnitInstanceGroupBranched(
 	std::string_view new_name,
 	std::vector<ShipInstance*>&& new_units
 ) : UnitInstanceGroup { new_name, std::move(new_units) } {}
 
-fixed_point_t UnitInstanceGroupBranched<UnitType::branch_t::NAVAL>::get_total_consumed_supply() const {
+void UnitInstanceGroupBranched<NAVAL>::update_gamestate() {
+	UnitInstanceGroup<NAVAL>::update_gamestate();
+}
+
+void UnitInstanceGroupBranched<NAVAL>::tick() {
+	UnitInstanceGroup<NAVAL>::tick();
+}
+
+fixed_point_t UnitInstanceGroupBranched<NAVAL>::get_total_consumed_supply() const {
 	fixed_point_t total_consumed_supply = 0;
 
 	for (ShipInstance const* ship : get_units()) {
@@ -166,13 +243,13 @@ bool UnitInstanceManager::generate_unit_instance(
 ) {
 	unit_instance = &*get_unit_instances<Branch>().insert(
 		[&unit_deployment]() -> UnitInstanceBranched<Branch> {
-			if constexpr (Branch == UnitType::branch_t::LAND) {
+			if constexpr (Branch == LAND) {
 				return {
 					unit_deployment.get_name(), unit_deployment.get_type(),
 					nullptr, // TODO - get pop from Province unit_deployment.get_home()
 					false // Not mobilised
 				};
-			} else if constexpr (Branch == UnitType::branch_t::NAVAL) {
+			} else if constexpr (Branch == NAVAL) {
 				return { unit_deployment.get_name(), unit_deployment.get_type() };
 			}
 		}()
@@ -305,10 +382,26 @@ bool UnitInstanceManager::generate_deployment(
 		}
 	};
 
-	using enum UnitType::branch_t;
-
 	generate_group.template operator()<LAND>();
 	generate_group.template operator()<NAVAL>();
 
 	return ret;
+}
+
+void UnitInstanceManager::update_gamestate() {
+	for (ArmyInstance& army : armies) {
+		army.update_gamestate();
+	}
+	for (NavyInstance& navy : navies) {
+		navy.update_gamestate();
+	}
+}
+
+void UnitInstanceManager::tick() {
+	for (ArmyInstance& army : armies) {
+		army.tick();
+	}
+	for (NavyInstance& navy : navies) {
+		navy.tick();
+	}
 }

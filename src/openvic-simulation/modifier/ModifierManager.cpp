@@ -92,7 +92,7 @@ bool ModifierManager::register_##MAPPING_TYPE##_modifier_effect( \
 }
 
 REGISTER_MODIFIER_EFFECT(leader, UNIT)
-REGISTER_MODIFIER_EFFECT(unit_terrain, COUNTRY)
+REGISTER_MODIFIER_EFFECT(unit_terrain, UNIT)
 REGISTER_MODIFIER_EFFECT(shared_tech_country, COUNTRY)
 REGISTER_MODIFIER_EFFECT(technology, COUNTRY)
 REGISTER_MODIFIER_EFFECT(base_country, COUNTRY)

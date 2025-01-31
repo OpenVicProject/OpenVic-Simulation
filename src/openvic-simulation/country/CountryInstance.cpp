@@ -1109,7 +1109,7 @@ void CountryInstance::_update_military(
 	recruit_time = fixed_point_t::_1() + get_modifier_effect_value(*modifier_effect_cache.get_unit_recruitment_time());
 	combat_width = fixed_point_t::parse(military_defines.get_base_combat_width()) +
 		get_modifier_effect_value(*modifier_effect_cache.get_combat_width_additive());
-	digin_cap = get_modifier_effect_value(*modifier_effect_cache.get_dig_in_cap());
+	dig_in_cap = get_modifier_effect_value(*modifier_effect_cache.get_dig_in_cap());
 	military_tactics = military_defines.get_base_military_tactics() +
 		get_modifier_effect_value(*modifier_effect_cache.get_military_tactics());
 
