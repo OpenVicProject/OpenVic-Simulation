@@ -17,10 +17,6 @@ using namespace ovdl;
 
 using StringUtils::append_string_views;
 
-#if defined(_WIN32) || (defined(__APPLE__) && defined(__MACH__))
-#define FILESYSTEM_CASE_INSENSITIVE
-#endif
-
 #if !defined(_WIN32)
 #define FILESYSTEM_NEEDS_FORWARD_SLASHES
 #endif
@@ -64,15 +60,6 @@ bool Dataloader::set_roots(path_vector_t const& new_roots) {
 fs::path Dataloader::lookup_file(std::string_view path, bool print_error) const {
 	const fs::path filepath { ensure_forward_slash_path(path) };
 
-#if defined(FILESYSTEM_CASE_INSENSITIVE)
-	/* Case-insensitive filesystem */
-	for (fs::path const& root : roots) {
-		const fs::path composed = root / filepath;
-		if (fs::is_regular_file(composed)) {
-			return composed;
-		}
-	}
-#else
 	/* Case-sensitive filesystem */
 	const std::string_view filename = StringUtils::get_filename(path);
 	for (fs::path const& root : roots) {
@@ -90,7 +77,6 @@ fs::path Dataloader::lookup_file(std::string_view path, bool print_error) const 
 			}
 		}
 	}
-#endif
 
 	if (print_error) {
 		Logger::error("Lookup for \"", path, "\" failed!");
