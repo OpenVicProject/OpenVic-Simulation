@@ -31,7 +31,13 @@ def build_colony(env):
     env.Append(CPPPATH=env.colony["INCPATH"])
     env.exposed_includes += env.colony["INCPATH"]
 
+def link_tbb(env):
+    import sys
+    if not env.get("is_msvc", False) and sys.platform != "darwin":
+        env.ParseConfig("pkg-config tbb --cflags --libs")
+
 build_openvic_dataloader(env)
 build_lexy_vdf(env)
 build_ordered_map(env)
 build_colony(env)
+link_tbb(env)
