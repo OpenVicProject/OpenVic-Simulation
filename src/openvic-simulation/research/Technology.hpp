@@ -13,13 +13,13 @@
 namespace OpenVic {
 	struct TechnologyArea;
 
-	struct TechnologyFolder : HasIdentifier {
+	struct TechnologyFolder : HasIdentifier, HasIndex<> {
 		friend struct TechnologyManager;
 
 	private:
 		std::vector<TechnologyArea const*> PROPERTY(technology_areas);
 
-		TechnologyFolder(std::string_view new_identifier);
+		TechnologyFolder(std::string_view new_identifier, index_t new_index);
 
 	public:
 		TechnologyFolder(TechnologyFolder&&) = default;

@@ -5,7 +5,8 @@
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;
 
-TechnologyFolder::TechnologyFolder(std::string_view new_identifier) : HasIdentifier { new_identifier } {}
+TechnologyFolder::TechnologyFolder(std::string_view new_identifier, index_t new_index)
+	: HasIdentifier { new_identifier }, HasIndex { new_index } {}
 
 TechnologyArea::TechnologyArea(std::string_view new_identifier, TechnologyFolder const& new_folder)
 	: HasIdentifier { new_identifier }, folder { new_folder } {}
@@ -46,7 +47,7 @@ bool TechnologyManager::add_technology_folder(std::string_view identifier) {
 		return false;
 	}
 
-	return technology_folders.add_item({ identifier });
+	return technology_folders.add_item({ identifier, get_technology_folder_count() });
 }
 
 bool TechnologyManager::add_technology_area(std::string_view identifier, TechnologyFolder const& folder) {
