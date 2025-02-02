@@ -4,11 +4,14 @@
 
 namespace OpenVic {
 	struct GoodDefinitionManager;
+	struct GoodDefinition;
 
 	struct GoodCategory : HasIdentifier {
 		friend struct GoodDefinitionManager;
 
 	private:
+		std::vector<GoodDefinition const*> PROPERTY(good_definitions);
+
 		GoodCategory(std::string_view new_identifier);
 
 	public:
@@ -58,10 +61,10 @@ namespace OpenVic {
 		IdentifierRegistry<GoodDefinition> IDENTIFIER_REGISTRY(good_definition);
 
 	public:
-		bool add_good_category(std::string_view identifier);
+		bool add_good_category(std::string_view identifier, size_t expected_goods_in_category);
 
 		bool add_good_definition(
-			std::string_view identifier, colour_t colour, GoodCategory const& category, fixed_point_t base_price,
+			std::string_view identifier, colour_t colour, GoodCategory& category, fixed_point_t base_price,
 			bool is_available_from_start, bool is_tradeable, bool is_money, bool has_overseas_penalty
 		);
 

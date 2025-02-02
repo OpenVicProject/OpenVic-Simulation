@@ -37,6 +37,8 @@ namespace OpenVic {
 	struct Culture;
 	struct Religion;
 	struct BuildingType;
+	struct GoodInstance;
+	struct GoodInstanceManager;
 	struct CountryHistoryEntry;
 	struct DefineManager;
 	struct ModifierEffectCache;
@@ -186,7 +188,29 @@ namespace OpenVic {
 		// TODO - national foci
 
 		/* Trade */
-		// TODO - total amount of each good exported and imported
+	public:
+		struct good_data_t {
+			fixed_point_t stockpile_amount;
+			fixed_point_t stockpile_change_yesterday; // positive if we bought, negative if we sold
+
+			bool is_automated = true;
+			bool is_selling = false; // buying if false
+			fixed_point_t stockpile_cutoff;
+
+			fixed_point_t exported_amount; // negative if net importing
+
+			fixed_point_t government_needs;
+			fixed_point_t army_needs;
+			fixed_point_t navy_needs;
+			fixed_point_t production_needs;
+			fixed_point_t overseas_needs;
+			fixed_point_t factory_needs;
+			fixed_point_t pop_needs;
+			fixed_point_t available_amount;
+		};
+
+	private:
+		IndexedMap<GoodInstance, good_data_t> PROPERTY(goods_data);
 
 		/* Diplomacy */
 		fixed_point_t PROPERTY(prestige);
@@ -253,9 +277,11 @@ namespace OpenVic {
 			decltype(government_flag_overrides)::keys_type const& government_type_keys,
 			decltype(crime_unlock_levels)::keys_type const& crime_keys,
 			decltype(pop_type_distribution)::keys_type const& pop_type_keys,
+			decltype(goods_data)::keys_type const& good_instances_keys,
 			decltype(regiment_type_unlock_levels)::keys_type const& regiment_type_unlock_levels_keys,
 			decltype(ship_type_unlock_levels)::keys_type const& ship_type_unlock_levels_keys,
-			decltype(tax_rate_by_strata)::keys_type const& strata_keys
+			decltype(tax_rate_by_strata)::keys_type const& strata_keys,
+			GoodInstanceManager& good_instance_manager
 		);
 
 	public:
@@ -399,8 +425,10 @@ namespace OpenVic {
 		bool unlock_unit_type(UnitType const& unit_type);
 		bool is_unit_type_unlocked(UnitType const& unit_type) const;
 
-		bool modify_building_type_unlock(BuildingType const& building_type, unlock_level_t unlock_level_change);
-		bool unlock_building_type(BuildingType const& building_type);
+		bool modify_building_type_unlock(
+			BuildingType const& building_type, unlock_level_t unlock_level_change, GoodInstanceManager& good_instance_manager
+		);
+		bool unlock_building_type(BuildingType const& building_type, GoodInstanceManager& good_instance_manager);
 		bool is_building_type_unlocked(BuildingType const& building_type) const;
 
 		bool modify_crime_unlock(Crime const& crime, unlock_level_t unlock_level_change);
@@ -419,14 +447,22 @@ namespace OpenVic {
 		bool unlock_unit_variant(unit_variant_t unit_variant);
 		unit_variant_t get_max_unlocked_unit_variant() const;
 
-		bool modify_technology_unlock(Technology const& technology, unlock_level_t unlock_level_change);
-		bool set_technology_unlock_level(Technology const& technology, unlock_level_t unlock_level);
-		bool unlock_technology(Technology const& technology);
+		bool modify_technology_unlock(
+			Technology const& technology, unlock_level_t unlock_level_change, GoodInstanceManager& good_instance_manager
+		);
+		bool set_technology_unlock_level(
+			Technology const& technology, unlock_level_t unlock_level, GoodInstanceManager& good_instance_manager
+		);
+		bool unlock_technology(Technology const& technology, GoodInstanceManager& good_instance_manager);
 		bool is_technology_unlocked(Technology const& technology) const;
 
-		bool modify_invention_unlock(Invention const& invention, unlock_level_t unlock_level_change);
-		bool set_invention_unlock_level(Invention const& invention, unlock_level_t unlock_level);
-		bool unlock_invention(Invention const& invention);
+		bool modify_invention_unlock(
+			Invention const& invention, unlock_level_t unlock_level_change, GoodInstanceManager& good_instance_manager
+		);
+		bool set_invention_unlock_level(
+			Invention const& invention, unlock_level_t unlock_level, GoodInstanceManager& good_instance_manager
+		);
+		bool unlock_invention(Invention const& invention, GoodInstanceManager& good_instance_manager);
 		bool is_invention_unlocked(Invention const& invention) const;
 
 		bool is_primary_culture(Culture const& culture) const;
@@ -517,9 +553,11 @@ namespace OpenVic {
 			decltype(CountryInstance::government_flag_overrides)::keys_type const& government_type_keys,
 			decltype(CountryInstance::crime_unlock_levels)::keys_type const& crime_keys,
 			decltype(CountryInstance::pop_type_distribution)::keys_type const& pop_type_keys,
+			decltype(CountryInstance::goods_data)::keys_type const& good_instances_keys,
 			decltype(CountryInstance::regiment_type_unlock_levels)::keys_type const& regiment_type_unlock_levels_keys,
 			decltype(CountryInstance::ship_type_unlock_levels)::keys_type const& ship_type_unlock_levels_keys,
-			decltype(CountryInstance::tax_rate_by_strata):: keys_type const& strata_keys
+			decltype(CountryInstance::tax_rate_by_strata):: keys_type const& strata_keys,
+			GoodInstanceManager& good_instance_manager
 		);
 
 		bool apply_history_to_countries(CountryHistoryManager const& history_manager, InstanceManager& instance_manager);

@@ -33,9 +33,11 @@ CountryInstance::CountryInstance(
 	decltype(government_flag_overrides)::keys_type const& government_type_keys,
 	decltype(crime_unlock_levels)::keys_type const& crime_keys,
 	decltype(pop_type_distribution)::keys_type const& pop_type_keys,
+	decltype(goods_data)::keys_type const& good_instances_keys,
 	decltype(regiment_type_unlock_levels)::keys_type const& regiment_type_unlock_levels_keys,
 	decltype(ship_type_unlock_levels)::keys_type const& ship_type_unlock_levels_keys,
-	decltype(tax_rate_by_strata)::keys_type const& strata_keys
+	decltype(tax_rate_by_strata)::keys_type const& strata_keys,
+	GoodInstanceManager& good_instance_manager
 ) : FlagStrings { "country" },
 	/* Main attributes */
 	country_definition { new_country_definition },
@@ -68,6 +70,7 @@ CountryInstance::CountryInstance(
 	vote_distribution { nullptr },
 
 	/* Trade */
+	goods_data { &good_instances_keys },
 
 	/* Diplomacy */
 
@@ -82,7 +85,7 @@ CountryInstance::CountryInstance(
 
 	for (BuildingType const& building_type : *building_type_unlock_levels.get_keys()) {
 		if (building_type.is_default_enabled()) {
-			unlock_building_type(building_type);
+			unlock_building_type(building_type, good_instance_manager);
 		}
 	}
 
@@ -448,7 +451,9 @@ bool CountryInstance::is_unit_type_unlocked(UnitType const& unit_type) const {
 	}
 }
 
-bool CountryInstance::modify_building_type_unlock(BuildingType const& building_type, unlock_level_t unlock_level_change) {
+bool CountryInstance::modify_building_type_unlock(
+	BuildingType const& building_type, unlock_level_t unlock_level_change, GoodInstanceManager& good_instance_manager
+) {
 	decltype(building_type_unlock_levels)::value_ref_type unlock_level = building_type_unlock_levels[building_type];
 
 	// This catches subtracting below 0 or adding above the int types maximum value
@@ -464,11 +469,15 @@ bool CountryInstance::modify_building_type_unlock(BuildingType const& building_t
 
 	unlock_level += unlock_level_change;
 
+	if (building_type.get_production_type() != nullptr) {
+		good_instance_manager.enable_good(building_type.get_production_type()->get_output_good());
+	}
+
 	return true;
 }
 
-bool CountryInstance::unlock_building_type(BuildingType const& building_type) {
-	return modify_building_type_unlock(building_type, 1);
+bool CountryInstance::unlock_building_type(BuildingType const& building_type, GoodInstanceManager& good_instance_manager) {
+	return modify_building_type_unlock(building_type, 1, good_instance_manager);
 }
 
 bool CountryInstance::is_building_type_unlocked(BuildingType const& building_type) const {
@@ -594,7 +603,9 @@ CountryInstance::unit_variant_t CountryInstance::get_max_unlocked_unit_variant()
 	return unit_variant_unlock_levels.size();
 }
 
-bool CountryInstance::modify_technology_unlock(Technology const& technology, unlock_level_t unlock_level_change) {
+bool CountryInstance::modify_technology_unlock(
+	Technology const& technology, unlock_level_t unlock_level_change, GoodInstanceManager& good_instance_manager
+) {
 	decltype(technology_unlock_levels)::value_ref_type unlock_level = technology_unlock_levels[technology];
 
 	// This catches subtracting below 0 or adding above the int types maximum value
@@ -621,26 +632,30 @@ bool CountryInstance::modify_technology_unlock(Technology const& technology, unl
 		ret &= modify_unit_type_unlock(*unit, unlock_level_change);
 	}
 	for (BuildingType const* building : technology.get_activated_buildings()) {
-		ret &= modify_building_type_unlock(*building, unlock_level_change);
+		ret &= modify_building_type_unlock(*building, unlock_level_change, good_instance_manager);
 	}
 
 	return ret;
 }
 
-bool CountryInstance::set_technology_unlock_level(Technology const& technology, unlock_level_t unlock_level) {
+bool CountryInstance::set_technology_unlock_level(
+	Technology const& technology, unlock_level_t unlock_level, GoodInstanceManager& good_instance_manager
+) {
 	const unlock_level_t unlock_level_change = unlock_level - technology_unlock_levels[technology];
-	return unlock_level_change != 0 ? modify_technology_unlock(technology, unlock_level_change) : true;
+	return unlock_level_change != 0 ? modify_technology_unlock(technology, unlock_level_change, good_instance_manager) : true;
 }
 
-bool CountryInstance::unlock_technology(Technology const& technology) {
-	return modify_technology_unlock(technology, 1);
+bool CountryInstance::unlock_technology(Technology const& technology, GoodInstanceManager& good_instance_manager) {
+	return modify_technology_unlock(technology, 1, good_instance_manager);
 }
 
 bool CountryInstance::is_technology_unlocked(Technology const& technology) const {
 	return technology_unlock_levels[technology] > 0;
 }
 
-bool CountryInstance::modify_invention_unlock(Invention const& invention, unlock_level_t unlock_level_change) {
+bool CountryInstance::modify_invention_unlock(
+	Invention const& invention, unlock_level_t unlock_level_change, GoodInstanceManager& good_instance_manager
+) {
 	decltype(invention_unlock_levels)::value_ref_type unlock_level = invention_unlock_levels[invention];
 
 	// This catches subtracting below 0 or adding above the int types maximum value
@@ -664,7 +679,7 @@ bool CountryInstance::modify_invention_unlock(Invention const& invention, unlock
 		ret &= modify_unit_type_unlock(*unit, unlock_level_change);
 	}
 	for (BuildingType const* building : invention.get_activated_buildings()) {
-		ret &= modify_building_type_unlock(*building, unlock_level_change);
+		ret &= modify_building_type_unlock(*building, unlock_level_change, good_instance_manager);
 	}
 	for (Crime const* crime : invention.get_enabled_crimes()) {
 		ret &= modify_crime_unlock(*crime, unlock_level_change);
@@ -679,13 +694,15 @@ bool CountryInstance::modify_invention_unlock(Invention const& invention, unlock
 	return ret;
 }
 
-bool CountryInstance::set_invention_unlock_level(Invention const& invention, unlock_level_t unlock_level) {
+bool CountryInstance::set_invention_unlock_level(
+	Invention const& invention, unlock_level_t unlock_level, GoodInstanceManager& good_instance_manager
+) {
 	const unlock_level_t unlock_level_change = unlock_level - invention_unlock_levels[invention];
-	return unlock_level_change != 0 ? modify_invention_unlock(invention, unlock_level_change) : true;
+	return unlock_level_change != 0 ? modify_invention_unlock(invention, unlock_level_change, good_instance_manager) : true;
 }
 
-bool CountryInstance::unlock_invention(Invention const& invention) {
-	return modify_invention_unlock(invention, 1);
+bool CountryInstance::unlock_invention(Invention const& invention, GoodInstanceManager& good_instance_manager) {
+	return modify_invention_unlock(invention, 1, good_instance_manager);
 }
 
 bool CountryInstance::is_invention_unlocked(Invention const& invention) const {
@@ -798,12 +815,16 @@ bool CountryInstance::apply_history_to_country(CountryHistoryEntry const& entry,
 				target[*key] = value;
 			}
 		};
+
+	GoodInstanceManager& good_instance_manager = instance_manager.get_good_instance_manager();
+
 	for (auto const& [technology, level] : entry.get_technologies()) {
-		ret &= set_technology_unlock_level(*technology, level);
+		ret &= set_technology_unlock_level(*technology, level, good_instance_manager);
 	}
 	for (auto const& [invention, activated] : entry.get_inventions()) {
-		ret &= set_invention_unlock_level(*invention, activated ? 1 : 0);
+		ret &= set_invention_unlock_level(*invention, activated ? 1 : 0, good_instance_manager);
 	}
+
 	apply_foreign_investments(entry.get_foreign_investment(), instance_manager.get_country_instance_manager());
 
 	set_optional(releasable_vassal, entry.is_releasable_vassal());
@@ -1333,7 +1354,7 @@ void CountryInstance::tick(InstanceManager& instance_manager) {
 		invested_research_points += research_points_spent;
 
 		if (invested_research_points >= current_research_cost) {
-			unlock_technology(*current_research);
+			unlock_technology(*current_research, instance_manager.get_good_instance_manager());
 			current_research = nullptr;
 			invested_research_points = fixed_point_t::_0();
 			current_research_cost = fixed_point_t::_0();
@@ -1502,9 +1523,11 @@ bool CountryInstanceManager::generate_country_instances(
 	decltype(CountryInstance::government_flag_overrides)::keys_type const& government_type_keys,
 	decltype(CountryInstance::crime_unlock_levels)::keys_type const& crime_keys,
 	decltype(CountryInstance::pop_type_distribution)::keys_type const& pop_type_keys,
+	decltype(CountryInstance::goods_data)::keys_type const& good_instances_keys,
 	decltype(CountryInstance::regiment_type_unlock_levels)::keys_type const& regiment_type_unlock_levels_keys,
 	decltype(CountryInstance::ship_type_unlock_levels)::keys_type const& ship_type_unlock_levels_keys,
-	decltype(CountryInstance::tax_rate_by_strata):: keys_type const& strata_keys
+	decltype(CountryInstance::tax_rate_by_strata):: keys_type const& strata_keys,
+	GoodInstanceManager& good_instance_manager
 ) {
 	reserve_more(country_instances, country_definition_manager.get_country_definition_count());
 
@@ -1521,9 +1544,11 @@ bool CountryInstanceManager::generate_country_instances(
 			government_type_keys,
 			crime_keys,
 			pop_type_keys,
+			good_instances_keys,
 			regiment_type_unlock_levels_keys,
 			ship_type_unlock_levels_keys,
-			strata_keys
+			strata_keys,
+			good_instance_manager
 		})) {
 			// We need to update the country's ModifierSum's source here as the country's address is finally stable
 			// after changing between its constructor call and now due to being std::move'd into the registry.

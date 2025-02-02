@@ -22,11 +22,12 @@ namespace OpenVic {
 		using gamestate_updated_func_t = std::function<void()>;
 
 	private:
+		DefinitionManager const& PROPERTY(definition_manager);
+
 		GameRulesManager const& game_rules_manager;
 		GoodInstanceManager PROPERTY_REF(good_instance_manager);
 		MarketInstance PROPERTY_REF(market_instance);
 		ArtisanalProducerFactoryPattern artisanal_producer_factory_pattern;
-		DefinitionManager const& PROPERTY(definition_manager);
 
 		FlagStrings PROPERTY_REF(global_flags);
 

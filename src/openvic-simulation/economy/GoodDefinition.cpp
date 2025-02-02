@@ -26,16 +26,22 @@ GoodDefinition::GoodDefinition(
 	is_money { new_is_money },
 	counters_overseas_penalty { new_counters_overseas_penalty } {}
 
-bool GoodDefinitionManager::add_good_category(std::string_view identifier) {
+bool GoodDefinitionManager::add_good_category(std::string_view identifier, size_t expected_goods_in_category) {
 	if (identifier.empty()) {
 		Logger::error("Invalid good category identifier - empty!");
 		return false;
 	}
-	return good_categories.add_item({ identifier });
+
+	if (good_categories.add_item({ identifier })) {
+		good_categories.back().good_definitions.reserve(expected_goods_in_category);
+		return true;
+	} else {
+		return false;
+	}
 }
 
 bool GoodDefinitionManager::add_good_definition(
-	std::string_view identifier, colour_t colour, GoodCategory const& category, fixed_point_t base_price,
+	std::string_view identifier, colour_t colour, GoodCategory& category, fixed_point_t base_price,
 	bool is_available_from_start, bool is_tradeable, bool is_money, bool has_overseas_penalty
 ) {
 	if (identifier.empty()) {
@@ -46,46 +52,72 @@ bool GoodDefinitionManager::add_good_definition(
 		Logger::error("Invalid base price for ", identifier, ": ", base_price);
 		return false;
 	}
-	return good_definitions.add_item({
+
+	if (good_definitions.add_item({
 		identifier, colour, get_good_definition_count(), category, base_price, is_available_from_start,
 		is_tradeable, is_money, has_overseas_penalty
-	});
+	})) {
+		category.good_definitions.push_back(&get_back_good_definition());
+		return true;
+	} else {
+		return false;
+	}
 }
 
 bool GoodDefinitionManager::load_goods_file(ast::NodeCPtr root) {
 	size_t total_expected_goods = 0;
+
 	bool ret = expect_dictionary_reserve_length(
 		good_categories,
 		[this, &total_expected_goods](std::string_view key, ast::NodeCPtr value) -> bool {
-			bool ret = expect_length(add_variable_callback(total_expected_goods))(value);
-			ret &= add_good_category(key);
+			size_t expected_goods_in_category = 0;
+
+			bool ret = expect_length(assign_variable_callback(expected_goods_in_category))(value);
+
+			if (add_good_category(key, expected_goods_in_category)) {
+				total_expected_goods += expected_goods_in_category;
+			} else {
+				ret = false;
+			}
+
 			return ret;
 		}
 	)(root);
+
 	lock_good_categories();
 	reserve_more_good_definitions(total_expected_goods);
-	ret &= expect_good_category_dictionary([this](GoodCategory const& good_category, ast::NodeCPtr good_category_value) -> bool {
-		return expect_dictionary([this, &good_category](std::string_view key, ast::NodeCPtr value) -> bool {
-			colour_t colour = colour_t::null();
-			fixed_point_t base_price;
-			bool is_available_from_start = true, is_tradeable = true;
-			bool is_money = false, has_overseas_penalty = false;
 
-			bool ret = expect_dictionary_keys(
-				"color", ONE_EXACTLY, expect_colour(assign_variable_callback(colour)),
-				"cost", ONE_EXACTLY, expect_fixed_point(assign_variable_callback(base_price)),
-				"available_from_start", ZERO_OR_ONE, expect_bool(assign_variable_callback(is_available_from_start)),
-				"tradeable", ZERO_OR_ONE, expect_bool(assign_variable_callback(is_tradeable)),
-				"money", ZERO_OR_ONE, expect_bool(assign_variable_callback(is_money)),
-				"overseas_penalty", ZERO_OR_ONE, expect_bool(assign_variable_callback(has_overseas_penalty))
-			)(value);
-			ret &= add_good_definition(
-				key, colour, good_category, base_price, is_available_from_start, is_tradeable, is_money, has_overseas_penalty
-			);
-			return ret;
-		})(good_category_value);
-	})(root);
+	ret &= good_categories.expect_item_dictionary(
+		[this](GoodCategory& good_category, ast::NodeCPtr good_category_value) -> bool {
+			return expect_dictionary(
+				[this, &good_category](std::string_view key, ast::NodeCPtr value) -> bool {
+					colour_t colour = colour_t::null();
+					fixed_point_t base_price;
+					bool is_available_from_start = true, is_tradeable = true;
+					bool is_money = false, has_overseas_penalty = false;
+
+					bool ret = expect_dictionary_keys(
+						"color", ONE_EXACTLY, expect_colour(assign_variable_callback(colour)),
+						"cost", ONE_EXACTLY, expect_fixed_point(assign_variable_callback(base_price)),
+						"available_from_start", ZERO_OR_ONE, expect_bool(assign_variable_callback(is_available_from_start)),
+						"tradeable", ZERO_OR_ONE, expect_bool(assign_variable_callback(is_tradeable)),
+						"money", ZERO_OR_ONE, expect_bool(assign_variable_callback(is_money)),
+						"overseas_penalty", ZERO_OR_ONE, expect_bool(assign_variable_callback(has_overseas_penalty))
+					)(value);
+
+					ret &= add_good_definition(
+						key, colour, good_category, base_price, is_available_from_start, is_tradeable, is_money,
+						has_overseas_penalty
+					);
+
+					return ret;
+				}
+			)(good_category_value);
+		}
+	)(root);
+
 	lock_good_definitions();
+
 	return ret;
 }
 

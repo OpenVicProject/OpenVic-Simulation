@@ -10,14 +10,15 @@ InstanceManager::InstanceManager(
 	DefinitionManager const& new_definition_manager,
 	gamestate_updated_func_t gamestate_updated_callback,
 	SimulationClock::state_changed_function_t clock_state_changed_callback
-) : game_rules_manager { new_game_rules_manager },
+) : definition_manager { new_definition_manager },
+	game_rules_manager { new_game_rules_manager },
+	good_instance_manager { new_definition_manager.get_economy_manager().get_good_definition_manager() },
 	market_instance { good_instance_manager },
 	artisanal_producer_factory_pattern {
 		market_instance,
 		new_definition_manager.get_modifier_manager().get_modifier_effect_cache(),
 		new_definition_manager.get_economy_manager().get_production_type_manager()
 	},
-	definition_manager { new_definition_manager },
 	global_flags { "global" },
 	country_instance_manager { new_definition_manager.get_country_definition_manager() },
 	politics_instance_manager { *this },
@@ -71,6 +72,10 @@ void InstanceManager::tick() {
 	unit_instance_manager.tick();
 	market_instance.execute_orders();
 
+	if (today.is_month_start()) {
+		market_instance.record_price_history();
+	}
+
 	set_gamestate_needs_update();
 }
 
@@ -81,7 +86,6 @@ bool InstanceManager::setup() {
 	}
 
 	bool ret = good_instance_manager.setup_goods(
-		definition_manager.get_economy_manager().get_good_definition_manager(),
 		game_rules_manager
 	);
 	ret &= map_instance.setup(
@@ -101,9 +105,11 @@ bool InstanceManager::setup() {
 		definition_manager.get_politics_manager().get_government_type_manager().get_government_types(),
 		definition_manager.get_crime_manager().get_crime_modifiers(),
 		definition_manager.get_pop_manager().get_pop_types(),
+		good_instance_manager.get_good_instances(),
 		definition_manager.get_military_manager().get_unit_type_manager().get_regiment_types(),
 		definition_manager.get_military_manager().get_unit_type_manager().get_ship_types(),
-		definition_manager.get_pop_manager().get_stratas()
+		definition_manager.get_pop_manager().get_stratas(),
+		good_instance_manager
 	);
 
 	game_instance_setup = true;
