@@ -45,3 +45,9 @@ void MarketInstance::execute_orders() {
 		}
 	);
 }
+
+void MarketInstance::record_price_history() {
+	for (GoodInstance& good_instance : good_instance_manager.get_good_instances()) {
+		good_instance.record_price_history();
+	}
+}

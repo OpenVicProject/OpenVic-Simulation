@@ -11,6 +11,7 @@
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
 #include "openvic-simulation/types/HasIdentifier.hpp"
 #include "openvic-simulation/types/IdentifierRegistry.hpp"
+#include "openvic-simulation/types/ValueHistory.hpp"
 #include "openvic-simulation/utility/Getters.hpp"
 
 namespace OpenVic {
@@ -20,10 +21,11 @@ namespace OpenVic {
 		friend struct GoodInstanceManager;
 
 	private:
+		GoodDefinition const& PROPERTY(good_definition);
+
 		std::unique_ptr<std::mutex> buy_lock;
 		std::unique_ptr<std::mutex> sell_lock;
 		GameRulesManager const& game_rules_manager;
-		GoodDefinition const& PROPERTY(good_definition);
 		fixed_point_t PROPERTY(price);
 		fixed_point_t PROPERTY(price_change_yesterday);
 		fixed_point_t PROPERTY(max_next_price);
@@ -34,7 +36,8 @@ namespace OpenVic {
 		fixed_point_t PROPERTY(quantity_traded_yesterday);
 		std::deque<GoodBuyUpToOrder> buy_up_to_orders;
 		std::deque<GoodMarketSellOrder> market_sell_orders;
-		
+		ValueHistory<fixed_point_t> PROPERTY(price_history);
+
 		GoodInstance(GoodDefinition const& new_good_definition, GameRulesManager const& new_game_rules_manager);
 
 		void update_next_price_limits();
@@ -47,17 +50,24 @@ namespace OpenVic {
 
 		//not thread safe
 		void execute_orders();
+		void record_price_history();
 	};
 
 	struct GoodInstanceManager {
 	private:
+		GoodDefinitionManager const& PROPERTY(good_definition_manager);
+
 		IdentifierRegistry<GoodInstance> IDENTIFIER_REGISTRY(good_instance);
 
 	public:
+		GoodInstanceManager(GoodDefinitionManager const& new_good_definition_manager);
+
 		IDENTIFIER_REGISTRY_NON_CONST_ACCESSORS(good_instance);
-		bool setup_goods(GoodDefinitionManager const& good_definition_manager, GameRulesManager const& game_rules_manager);
+		bool setup_goods(GameRulesManager const& game_rules_manager);
 
 		GoodInstance& get_good_instance_from_definition(GoodDefinition const& good);
 		GoodInstance const& get_good_instance_from_definition(GoodDefinition const& good) const;
+
+		void enable_good(GoodDefinition const& good);
 	};
 }

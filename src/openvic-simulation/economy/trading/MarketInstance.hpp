@@ -5,7 +5,7 @@
 #include "openvic-simulation/economy/trading/MarketSellOrder.hpp"
 
 namespace OpenVic {
-	struct MarketInstance { 
+	struct MarketInstance {
 	private:
 		GoodInstanceManager& PROPERTY(good_instance_manager);
 	public:
@@ -13,5 +13,6 @@ namespace OpenVic {
 		void place_buy_up_to_order(BuyUpToOrder&& buy_up_to_order);
 		void place_market_sell_order(MarketSellOrder&& market_sell_order);
 		void execute_orders();
+		void record_price_history();
 	};
 }
