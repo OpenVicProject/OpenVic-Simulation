@@ -14,6 +14,7 @@ env.PrependENVPath("PATH", os.getenv("PATH"))
 
 opts = env.SetupOptions()
 
+opts.Add(BoolVariable("run_ovsim_tests", "Build and run the openvic simulation unit tests", env.is_standalone))
 opts.Add(BoolVariable(key="build_ovsim_library", help="Build the openvic simulation library.", default=env.get("build_ovsim_library", not env.is_standalone)))
 opts.Add(BoolVariable("build_ovsim_headless", "Build the openvic simulation headless executable", env.is_standalone))
 
@@ -56,6 +57,9 @@ library_name = "libopenvic-simulation{}{}".format(suffix, env["LIBSUFFIX"])
 
 default_args = []
 
+if env["run_ovsim_tests"]:
+    env["build_ovsim_library"] = True
+
 if env["build_ovsim_library"]:
     library = env.StaticLibrary(target=env.File(os.path.join(BINDIR, library_name)), source=sources)
     default_args += [library]
@@ -85,6 +89,9 @@ if env["build_ovsim_headless"]:
         PROGSUFFIX=".headless" + env["PROGSUFFIX"]
     )
     default_args += [headless_program]
+
+if env["run_ovsim_tests"]:
+    SConscript("tests/SCsub", "env")
 
 # Add compiledb if the option is set
 if env.get("compiledb", False):

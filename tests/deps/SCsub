@@ -1,0 +1,206 @@
+#!/usr/bin/env python
+import os
+import subprocess
+from pathlib import Path
+
+Import("env")
+
+def generate_snitch_config_header(target, source, env):
+    header = []
+    header_filename = "snitch_config.hpp"
+
+    header.append("// THIS FILE IS GENERATED. EDITS WILL BE LOST.")
+    header.append("")
+
+    header_file_path = Path(str(target[0]))
+
+    include_gen_folder = Path(str(header_file_path.parent))
+    include_gen_folder.mkdir(parents=True, exist_ok=True)
+
+    header_guard = "SNITCH_CONFIG_HPP"
+    header.append(f"#ifndef {header_guard}")
+    header.append(f"#define {header_guard}")
+    header.append("")
+    header.append("#include <version> // for C++ feature check macros")
+
+    for key, val in env.config_data.items():
+        if val == True:
+            val = 1
+        elif val == False:
+            val = 0
+        header +=(f'''
+#if !defined({key})
+#   define {key} {val}
+#endif''').split("\n")
+
+    header += ("""
+#if defined(_MSC_VER)
+#    if defined(_KERNEL_MODE) || (defined(_HAS_EXCEPTIONS) && !_HAS_EXCEPTIONS)
+#        define SNITCH_EXCEPTIONS_NOT_AVAILABLE
+#    endif
+#elif defined(__clang__) || defined(__GNUC__)
+#    if !defined(__EXCEPTIONS)
+#        define SNITCH_EXCEPTIONS_NOT_AVAILABLE
+#    endif
+#endif
+
+#if defined(SNITCH_EXCEPTIONS_NOT_AVAILABLE)
+#    undef SNITCH_WITH_EXCEPTIONS
+#    define SNITCH_WITH_EXCEPTIONS 0
+#endif
+
+#if SNITCH_WITH_MULTITHREADING
+#    define SNITCH_THREAD_LOCAL thread_local
+#else
+#    define SNITCH_THREAD_LOCAL
+#endif
+
+#if !defined(__cpp_lib_bit_cast)
+#    undef SNITCH_CONSTEXPR_FLOAT_USE_BITCAST
+#    define SNITCH_CONSTEXPR_FLOAT_USE_BITCAST 0
+#endif
+
+#if (!defined(__cpp_lib_to_chars)) || (defined(_GLIBCXX_RELEASE) && _GLIBCXX_RELEASE <= 11) ||     \
+    (defined(_LIBCPP_VERSION) && _LIBCPP_VERSION <= 14000) ||                                      \
+    (defined(_MSC_VER) && _MSC_VER <= 1924)
+#    undef SNITCH_APPEND_TO_CHARS
+#    define SNITCH_APPEND_TO_CHARS 0
+#endif
+
+#if SNITCH_SHARED_LIBRARY
+#    if defined(_MSC_VER)
+#        if defined(SNITCH_EXPORTS)
+#            define SNITCH_EXPORT __declspec(dllexport)
+#        else
+#            define SNITCH_EXPORT __declspec(dllimport)
+#        endif
+#    elif defined(__clang__) || defined(__GNUC__)
+#        define SNITCH_EXPORT [[gnu::visibility("default")]]
+#    else
+#        define SNITCH_EXPORT
+#    endif
+#else
+#    define SNITCH_EXPORT
+#endif
+    """.split("\n"))
+
+    header.append("")
+    header.append(f"#endif // {header_guard}")
+    header.append("")
+
+    with header_file_path.open("w+", encoding="utf-8") as header_file:
+        header_file.write("\n".join(header))
+
+def build_snitch(env):
+    major_version = 1
+    minor_version = 2
+    patch_version = 5
+    git_run = subprocess.run(["git", "describe", "--tags", "--abbrev=0"], text=True, cwd="snitch/", capture_output=True)
+    if git_run.returncode == 0:
+        tag = git_run.stdout.strip().removeprefix("v").split(".")
+        major_version = tag[0]
+        minor_version = tag[1]
+        patch_version = tag[2]
+
+    SHARED_BUILD = False
+    HEADER_ONLY = False
+    UNITY_BUILD = True
+
+    SNITCH_VERSION = "{}.{}.{}".format(major_version, minor_version, patch_version)
+
+    snitch_env = env.Clone()
+
+    snitch_env.Append(
+        BUILDERS={
+            "GenerateSnitchConfig": snitch_env.Builder(action=generate_snitch_config_header)
+        }
+    )
+
+    snitch_env.config_data = {
+        "SNITCH_ENABLE": True, # Enable snitch at build time.
+        "SNITCH_MAX_TEST_CASES": 5000, #"Maximum number of test cases in a test application."
+        "SNITCH_MAX_NESTED_SECTIONS": 8,#"Maximum depth of nested sections in a test case."
+        "SNITCH_MAX_EXPR_LENGTH": 1024, #"Maximum length of a printed expression when reporting failure."
+        "SNITCH_MAX_MESSAGE_LENGTH": 1024, #"Maximum length of error or status messages."
+        "SNITCH_MAX_TEST_NAME_LENGTH": 1024, #"Maximum length of a test case name."
+        "SNITCH_MAX_TAG_LENGTH": 256, #"Maximum length of a test tag."
+        "SNITCH_MAX_CAPTURES": 8, #"Maximum number of captured expressions in a test case."
+        "SNITCH_MAX_CAPTURE_LENGTH": 256, #"Maximum length of a captured expression."
+        "SNITCH_MAX_UNIQUE_TAGS": 1024, #"Maximum number of unique tags in a test application."
+        "SNITCH_MAX_COMMAND_LINE_ARGS": 1024, #"Maximum number of command line arguments to a test application."
+        "SNITCH_MAX_REGISTERED_REPORTERS": 8, #"Maximum number of registered reporter that can be selected from the command line."
+        "SNITCH_MAX_PATH_LENGTH": 1024, #"Maximum length of a file path when writing output to file."
+        "SNITCH_MAX_REPORTER_SIZE_BYTES": 128, #"Maximum size (in bytes) of a reporter object."
+
+        "SNITCH_DEFINE_MAIN": True, #"Define main() in snitch -- disable to provide your own main() function."
+        "SNITCH_WITH_EXCEPTIONS": False, #"Use exceptions in snitch implementation -- will be forced OFF if exceptions are not available."
+        "SNITCH_WITH_MULTITHREADING": False, #"Make the testing framework thread-safe -- disable if multithreading is not needed."
+        "SNITCH_WITH_TIMINGS": True, #"Measure the time taken by each test case -- disable to speed up tests."
+        "SNITCH_WITH_SHORTHAND_MACROS": True, #"Use short names for test macros -- disable if this causes conflicts."
+        "SNITCH_CONSTEXPR_FLOAT_USE_BITCAST": True, #"Use std::bit_cast if available to implement exact constexpr float-to-string conversion."
+        "SNITCH_APPEND_TO_CHARS": True, #"Use std::to_chars for string conversions -- disable for greater compatability with a slight performance cost."
+        "SNITCH_DEFAULT_WITH_COLOR": True, #"Enable terminal colors by default -- can also be controlled by command line interface."
+        "SNITCH_DECOMPOSE_SUCCESSFUL_ASSERTIONS": False, #"Enable expression decomposition even for successful assertions -- more expensive."
+        "SNITCH_WITH_ALL_REPORTERS": True, #"Allow all built-in reporters to be selected from the command line -- disable for faster compilation."
+        "SNITCH_WITH_TEAMCITY_REPORTER": False, #"Allow the TeamCity reporter to be selected from the command line -- enable if needed."
+        "SNITCH_WITH_CATCH2_XML_REPORTER": False, #"Allow the Catch2 XML reporter to be selected from the command line -- enable if needed."
+
+        "SNITCH_HEADER_ONLY": False, #"Create a single-header header-only version of snitch."
+        "SNITCH_UNITY_BUILD": UNITY_BUILD, #"Build sources as single file instead of separate files (faster full build)."
+        "SNITCH_DO_TEST": True, #"Build tests."
+    }
+
+    snitch_full_version = ""
+    git_run = subprocess.run(["git", "log", "-1", "--format=%h"], text=True, cwd="snitch/", capture_output=True)
+    if git_run.returncode == 0:
+        snitch_full_version = git_run.stdout.strip()
+
+    snitch_full_version = SNITCH_VERSION + (".{}".format(snitch_full_version) if snitch_full_version else "")
+
+    snitch_env.Append(CPPDEFINES=[
+        f'SNITCH_VERSION=\\"{SNITCH_VERSION}\\"',
+        f'SNITCH_FULL_VERSION=\\"{snitch_full_version}\\"',
+        f"SNITCH_VERSION_MAJOR={major_version}",
+        f"SNITCH_VERSION_MINOR={minor_version}",
+        f"SNITCH_VERSION_PATCH={patch_version}"
+    ])
+    snitch_env.Append(CPPDEFINES=["SNITCH_SHARED_LIBRARY=" + ("1" if not HEADER_ONLY and SHARED_BUILD else "0")])
+
+    include_path = "snitch/include"
+    source_path = "snitch/src"
+    unity_source = "snitch.cpp"
+
+    config = snitch_env.GenerateSnitchConfig(snitch_env.File(Path(include_path) / "snitch" / "snitch_config.hpp"), "SCsub")
+
+    snitch_env.Append(CPPPATH=[[snitch_env.Dir(p) for p in [source_path, include_path]]])
+    sources = snitch_env.GlobRecursive("*.cpp", [source_path], Path(source_path) / unity_source)
+
+    if UNITY_BUILD:
+        sources = [snitch_env.File(Path(source_path) / unity_source)]
+
+    env.snitch_sources = sources
+
+    if not HEADER_ONLY:
+        library = None
+        project_name = "snitch"
+        library_name = "lib" + project_name + env["LIBSUFFIX"]
+        if SHARED_BUILD:
+            if snitch_env.get("is_msvc", False):
+                pass
+            else:
+                snitch_env.Append(CXXFLAGS=["-fvisibility=hidden", "-fvisibility-inlines-hidden"])
+
+            library = snitch_env.SharedLibrary(target=Path(source_path) / library_name, source=sources)
+        else:
+            library = snitch_env.StaticLibrary(target=Path(source_path) / library_name, source=sources)
+            env.Append(LIBPATH=[snitch_env.Dir(source_path)])
+            env.Prepend(LIBS=[library_name])
+
+        Default([config, library])
+
+        env.Append(CPPPATH=[snitch_env.Dir(include_path)])
+    else:
+        env.Append(CPPPATH=[[snitch_env.Dir(p) for p in [source_path, include_path]]])
+        Default(config)
+
+build_snitch(env)

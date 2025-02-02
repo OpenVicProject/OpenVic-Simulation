@@ -13,3 +13,7 @@
 [submodule "deps/plf_colony"]
 	path = deps/plf_colony
 	url = https://github.com/mattreecebentley/plf_colony
+[submodule "tests/deps/snitch"]
+	path = tests/deps/snitch
+	url = https://github.com/snitch-org/snitch
+	ignore = dirty
