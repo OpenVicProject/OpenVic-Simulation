@@ -20,7 +20,7 @@ namespace OpenVic {
 		ProductionTypeManager const& production_type_manager;
 
 		void recalculate_unlocked_artisanal_production_types();
-	
+
 	public:
 		ArtisanalProducerFactoryPattern(
 			MarketInstance& new_market_instance,

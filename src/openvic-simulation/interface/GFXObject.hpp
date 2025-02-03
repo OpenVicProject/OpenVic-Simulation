@@ -116,14 +116,14 @@ namespace OpenVic::GFX {
 	// BattleArrow and MapInfo are for the battle planner
 	class BattleArrow final : public Object {
 		friend std::unique_ptr<BattleArrow> std::make_unique<BattleArrow>();
-	
+
 	private:
 		std::string PROPERTY(texture_arrow_body);
 		std::string PROPERTY(texture_arrow_head);
 
 		fixed_point_t PROPERTY(start); //labelled 'body start width' in file
 		fixed_point_t PROPERTY(stop);  //labelled 'body end width' in file
-		
+
 		fvec2_t PROPERTY(dims); //x,y labelled 'arrow length','arrow height' in file
 		std::string PROPERTY(font);
 		fixed_point_t PROPERTY(scale);

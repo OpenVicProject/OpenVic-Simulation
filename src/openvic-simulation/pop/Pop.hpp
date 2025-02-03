@@ -42,16 +42,16 @@ namespace OpenVic {
 		F(government_salary_military)\
 		F(event_and_decision_income)\
 		F(loan_interest_payments)
-	
+
 	#define DO_FOR_ALL_TYPES_OF_POP_EXPENSES(F)\
 		F(life_needs_expense)\
 		F(everyday_needs_expense)\
 		F(luxury_needs_expense)\
 		F(artisan_inputs_expense)
-	
+
 	#define DECLARE_POP_MONEY_STORES(money_type)\
-		fixed_point_t PROPERTY(money_type); 
-	
+		fixed_point_t PROPERTY(money_type);
+
 	#define DECLARE_POP_MONEY_STORE_FUNCTIONS(name)\
 		void add_##name(const fixed_point_t amount);
 
@@ -94,10 +94,10 @@ namespace OpenVic {
 		fixed_point_t PROPERTY(everyday_needs_fulfilled);
 		fixed_point_t PROPERTY(luxury_needs_fulfilled);
 
-		DO_FOR_ALL_TYPES_OF_POP_INCOME(DECLARE_POP_MONEY_STORES);		
+		DO_FOR_ALL_TYPES_OF_POP_INCOME(DECLARE_POP_MONEY_STORES);
 		DO_FOR_ALL_TYPES_OF_POP_EXPENSES(DECLARE_POP_MONEY_STORES);
 		#undef DECLARE_POP_MONEY_STORES
-		
+
 		size_t PROPERTY(max_supported_regiments);
 
 		Pop(
