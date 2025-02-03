@@ -2,6 +2,7 @@
 
 #include <functional>
 
+#include "openvic-simulation/console/ConsoleInstance.hpp"
 #include "openvic-simulation/country/CountryInstance.hpp"
 #include "openvic-simulation/diplomacy/CountryRelation.hpp"
 #include "openvic-simulation/economy/GoodInstance.hpp"
@@ -39,6 +40,7 @@ namespace OpenVic {
 		 * e.g. if we want to remove military units from the province they're in when they're destructed. */
 		MapInstance PROPERTY_REF(map_instance);
 		SimulationClock PROPERTY_REF(simulation_clock);
+		ConsoleInstance PROPERTY_REF(console_instance);
 
 		bool PROPERTY_CUSTOM_PREFIX(game_instance_setup, is, false);
 		bool PROPERTY_CUSTOM_PREFIX(game_session_started, is, false);
@@ -70,6 +72,8 @@ namespace OpenVic {
 		bool load_bookmark(Bookmark const* new_bookmark);
 		bool start_game_session();
 		bool update_clock();
+
+		bool set_today_and_update(Date new_today);
 
 		bool expand_selected_province_building(size_t building_index);
 	};

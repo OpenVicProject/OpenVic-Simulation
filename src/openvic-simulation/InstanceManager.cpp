@@ -1,6 +1,7 @@
 #include "InstanceManager.hpp"
 
 #include "openvic-simulation/DefinitionManager.hpp"
+#include "openvic-simulation/console/ConsoleInstance.hpp"
 #include "openvic-simulation/utility/Logger.hpp"
 
 using namespace OpenVic;
@@ -27,6 +28,7 @@ InstanceManager::InstanceManager(
 		std::bind(&InstanceManager::tick, this), std::bind(&InstanceManager::update_gamestate, this),
 		clock_state_changed_callback ? std::move(clock_state_changed_callback) : []() {}
 	},
+	console_instance { *this },
 	gamestate_updated { gamestate_updated_callback ? std::move(gamestate_updated_callback) : []() {} } {}
 
 void InstanceManager::set_gamestate_needs_update() {
@@ -200,6 +202,18 @@ bool InstanceManager::update_clock() {
 	}
 
 	simulation_clock.conditionally_advance_game();
+	return true;
+}
+
+bool InstanceManager::set_today_and_update(Date new_today) {
+	if (!is_game_session_started()) {
+		Logger::error("Cannot update clock - game session not started!");
+		return false;
+	}
+
+	today = new_today;
+	gamestate_needs_update = true;
+	update_gamestate();
 	return true;
 }
 
