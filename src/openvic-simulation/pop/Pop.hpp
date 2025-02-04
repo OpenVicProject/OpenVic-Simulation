@@ -65,7 +65,7 @@ namespace OpenVic {
 
 	private:
 		std::unique_ptr<ArtisanalProducer> artisanal_producer_nullable;
-		ProvinceInstance const* PROPERTY(location);
+		ProvinceInstance* PROPERTY_PTR(location);
 
 		/* Last day's size change by source. */
 		pop_size_t PROPERTY(total_change);
@@ -117,7 +117,7 @@ namespace OpenVic {
 		void setup_pop_test_values(IssueManager const& issue_manager);
 		bool convert_to_equivalent();
 
-		void set_location(ProvinceInstance const& new_location);
+		void set_location(ProvinceInstance& new_location);
 		void update_location_based_attributes();
 
 		// The values returned by these functions are scaled by pop size, so they must be divided by pop size to get

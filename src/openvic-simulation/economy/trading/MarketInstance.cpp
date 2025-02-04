@@ -1,12 +1,14 @@
 #include "MarketInstance.hpp"
 
+#include "openvic-simulation/defines/CountryDefines.hpp"
 #include "openvic-simulation/utility/CompilerFeatureTesting.hpp"
 #include "openvic-simulation/utility/Utility.hpp"
 
 using namespace OpenVic;
 
-MarketInstance::MarketInstance(GoodInstanceManager& new_good_instance_manager)
-: good_instance_manager { new_good_instance_manager} {}
+MarketInstance::MarketInstance(CountryDefines const& new_country_defines,GoodInstanceManager& new_good_instance_manager)
+:	country_defines { new_country_defines },
+	good_instance_manager { new_good_instance_manager} {}
 
 void MarketInstance::place_buy_up_to_order(BuyUpToOrder&& buy_up_to_order) {
 	GoodDefinition const& good = buy_up_to_order.get_good();
@@ -24,6 +26,14 @@ void MarketInstance::place_market_sell_order(MarketSellOrder&& market_sell_order
 	if (OV_unlikely(market_sell_order.get_quantity() <= 0)) {
 		Logger::error("Received MarketSellOrder for ",good," with quantity ",market_sell_order.get_quantity());
 		market_sell_order.get_after_trade()(SellResult::no_sales_result());
+		return;
+	}
+
+	if (good.get_is_money()) {
+		market_sell_order.get_after_trade()({
+			market_sell_order.get_quantity(),
+			market_sell_order.get_quantity() * country_defines.get_gold_to_worker_pay_rate() * good.get_base_price()
+		});
 		return;
 	}
 

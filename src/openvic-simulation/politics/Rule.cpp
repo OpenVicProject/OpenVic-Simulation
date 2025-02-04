@@ -214,7 +214,7 @@ namespace OpenVic { // so the compiler shuts up (copied from Modifier.cpp)
 	std::ostream& operator<<(std::ostream& stream, RuleSet const& value) {
 		for (auto const& [group, rule_map] : value.rule_groups) {
 			for (auto const& [rule, value] : rule_map) {
-				stream << rule << ": " << (value ? "yes" : "no") << "\n";
+				stream << rule << ": " <<  StringUtils::bool_to_yes_no(value) << "\n";
 			}
 		}
 		return stream;

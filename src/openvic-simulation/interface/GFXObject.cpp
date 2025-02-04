@@ -238,7 +238,7 @@ bool Billboard::_fill_key_map(NodeTools::case_insensitive_key_map_t& key_map) {
 	ret &= add_key_map_entries(key_map,
 		"texturefile", ONE_EXACTLY, expect_string(assign_variable_callback_string(texture_file)),
 		"noOfFrames", ZERO_OR_ONE, expect_uint((callback_t<int>)[this](frame_t frames_read) -> bool {
-			if(frames_read < 1){
+			if (frames_read < 1) {
 				Logger::error("Billboard ", this->get_name(), " had an invalid number of frames ", frames_read, ", setting number of frames to 1");
 				no_of_frames = 1;
 				return false;

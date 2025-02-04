@@ -135,6 +135,10 @@ namespace OpenVic {
 			return province_definition;
 		}
 
+		constexpr CountryInstance* get_country_to_report_economy() {
+			return controller;
+		}
+
 		void set_state(State* new_state);
 
 		constexpr GoodDefinition const* get_rgo_good() const {

@@ -1,6 +1,7 @@
 #include "GoodDefinition.hpp"
 
 #include "openvic-simulation/modifier/ModifierManager.hpp"
+#include "openvic-simulation/utility/StringUtils.hpp"
 
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;
@@ -51,6 +52,13 @@ bool GoodDefinitionManager::add_good_definition(
 	if (base_price <= 0) {
 		Logger::error("Invalid base price for ", identifier, ": ", base_price);
 		return false;
+	}
+
+	if (is_tradeable == is_money) {
+		Logger::warning(
+			"Good ", identifier, " has tradeable:", StringUtils::bool_to_yes_no(is_tradeable), " and money:", StringUtils::bool_to_yes_no(is_money),
+			". Money goods are never tradeable. All other goods are tradeable. Setting tradeable has no effect."
+		);
 	}
 
 	if (good_definitions.add_item({

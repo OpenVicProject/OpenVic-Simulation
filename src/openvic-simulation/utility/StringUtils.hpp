@@ -176,6 +176,10 @@ namespace OpenVic::StringUtils {
 		return result;
 	}
 
+	inline constexpr std::string_view bool_to_yes_no(bool b) {
+		return b ? "yes" : "no";
+	}
+
 	inline constexpr std::string_view get_filename(std::string_view path) {
 		size_t pos = path.size();
 		while (pos > 0 && path[pos - 1] != '/' && path[pos - 1] != '\\') {

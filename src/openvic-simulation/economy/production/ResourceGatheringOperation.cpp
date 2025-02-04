@@ -158,6 +158,11 @@ void ResourceGatheringOperation::rgo_tick() {
 
 	output_quantity_yesterday = produce(total_owner_count_in_state_cache);
 	if (output_quantity_yesterday > 0) {
+		CountryInstance* get_country_to_report_economy_nullable = location.get_country_to_report_economy();
+		if (get_country_to_report_economy_nullable != nullptr) {
+			get_country_to_report_economy_nullable->report_rgo_output(production_type.get_output_good(), output_quantity_yesterday);
+		}
+
 		market_instance.place_market_sell_order({
 			production_type.get_output_good(),
 			output_quantity_yesterday,
