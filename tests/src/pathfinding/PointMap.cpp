@@ -1,5 +1,7 @@
 #include "openvic-simulation/pathfinding/PointMap.hpp"
 
+#include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
+
 #include "Helper.hpp" // IWYU pragma: keep
 #include <snitch/snitch.hpp>
 #include <snitch/snitch_macros_check.hpp>
@@ -71,7 +73,10 @@ TEST_CASE("PointMap Add/Remove", "[point-map][point-map-add-remove]") {
 
 	// Tests for get_closest_position_in_segment.
 	a.connect_points(2, 3);
-	CHECK(a.get_closest_position_in_segment(fvec2_t(fixed_point_t::_0_50())) == fvec2_t(fixed_point_t::_0_50(), 1));
+	CHECK(
+		a.get_closest_position_in_segment(fvec2_t { fixed_point_t::_0_50(), fixed_point_t::_0_50() }) ==
+		fvec2_t { fixed_point_t::_0_50(), 1 }
+	);
 
 	a.connect_points(3, 4);
 	a.connect_points(0, 3);

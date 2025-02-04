@@ -93,6 +93,12 @@ namespace OpenVic::utility {
 	template<typename T, template<typename...> class Z>
 	inline constexpr bool is_specialization_of_v = is_specialization_of<T, Z>::value;
 
+	template<typename T, template<typename...> class Template>
+	concept specialization_of = is_specialization_of_v<T, Template>;
+
+	template<typename T, template<typename...> class Template>
+	concept not_specialization_of = !specialization_of<T, Template>;
+
 	template <template<typename...> class Template, typename... Args>
 	void _derived_from_specialization_impl(Template<Args...> const&);
 

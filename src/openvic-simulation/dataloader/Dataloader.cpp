@@ -1,5 +1,7 @@
 #include "Dataloader.hpp"
 
+#include <system_error>
+
 #include <openvic-dataloader/csv/Parser.hpp>
 #include <openvic-dataloader/detail/CallbackOStream.hpp>
 #include <openvic-dataloader/v2script/Parser.hpp>
@@ -581,10 +583,10 @@ bool Dataloader::_load_history(DefinitionManager& definition_manager, bool unuse
 			definition_manager.get_history_manager().get_bookmark_manager().get_last_bookmark_date();
 
 		for (std::string const& dir : pop_history_dirs) {
-			bool successful = false;
-			const Date date = Date::from_string(dir, &successful);
+			Date::from_chars_result result;
+			const Date date = Date::from_string_log(dir, &result);
 
-			if (successful && date <= last_bookmark_date) {
+			if (result.ec == std::errc{} && date <= last_bookmark_date) {
 				bool non_integer_size = false;
 
 				ret &= apply_to_files(

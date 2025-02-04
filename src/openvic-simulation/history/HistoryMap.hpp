@@ -1,6 +1,7 @@
 #pragma once
 
 #include <memory>
+#include <system_error>
 
 #include "openvic-simulation/dataloader/NodeTools.hpp"
 #include "openvic-simulation/types/Date.hpp"
@@ -62,9 +63,9 @@ namespace OpenVic {
 			ast::NodeCPtr value, NodeTools::key_value_callback_t default_callback = NodeTools::key_value_invalid_callback
 		) {
 			/* Date blocks (loaded into the corresponding HistoryEntry) */
-			bool is_date = false;
-			const Date sub_date { Date::from_string(key, &is_date, true) };
-			if (is_date) {
+			Date::from_chars_result result;
+			const Date sub_date { Date::from_string(key, &result) };
+			if (result.ec == std::errc{}) {
 				if (sub_date < date) {
 					Logger::error("History entry ", sub_date, " defined before parent entry date ", date);
 					return false;
