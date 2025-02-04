@@ -68,25 +68,20 @@ void GoodInstance::execute_orders() {
 			= total_demand_yesterday
 			= total_supply_yesterday
 			= fixed_point_t::_0();
+
 		try_parallel_for_each(
 			buy_up_to_orders.begin(),
 			buy_up_to_orders.end(),
 			[](GoodBuyUpToOrder const& buy_up_to_order) -> void {
-				buy_up_to_order.get_after_trade()({
-					fixed_point_t::_0(),
-					buy_up_to_order.get_money_to_spend()
-				});
+				buy_up_to_order.get_after_trade()(BuyResult::no_purchase_result());
 			}
 		);
-		const SellResult no_sales_result {
-			fixed_point_t::_0(),
-			fixed_point_t::_0()
-		};
+
 		try_parallel_for_each(
 			market_sell_orders.begin(),
 			market_sell_orders.end(),
-			[&no_sales_result](GoodMarketSellOrder const& market_sell_order) -> void {
-				market_sell_order.get_after_trade()(no_sales_result);
+			[](GoodMarketSellOrder const& market_sell_order) -> void {
+				market_sell_order.get_after_trade()(SellResult::no_sales_result());
 			}
 		);
 		return;
@@ -107,12 +102,7 @@ void GoodInstance::execute_orders() {
 			}
 
 			demand_sum += buy_up_to_order.get_max_quantity();
-
-			constexpr fixed_point_t quantity_bought = fixed_point_t::_0();
-			buy_up_to_order.get_after_trade()({
-				quantity_bought,
-				buy_up_to_order.get_money_to_spend()
-			});
+			buy_up_to_order.get_after_trade()(BuyResult::no_purchase_result());
 		}
 
 		if (game_rules_manager.get_use_optimal_pricing()) {
@@ -198,7 +188,7 @@ void GoodInstance::execute_orders() {
 				quantity_traded_yesterday += quantity_bought;
 				buy_up_to_order.get_after_trade()({
 					quantity_bought,
-					buy_up_to_order.get_money_to_spend() - quantity_bought * new_price
+					quantity_bought * new_price
 				});
 			}
 		} else {
@@ -256,7 +246,7 @@ void GoodInstance::execute_orders() {
 				quantity_traded_yesterday += quantity_bought;
 				buy_up_to_order.get_after_trade()({
 					quantity_bought,
-					buy_up_to_order.get_money_to_spend() - quantity_bought * new_price
+					quantity_bought * new_price
 				});
 			}
 		}

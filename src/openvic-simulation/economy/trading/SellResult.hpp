@@ -13,5 +13,9 @@ namespace OpenVic {
 			const fixed_point_t new_money_gained
 		) : quantity_sold { new_quantity_sold },
 			money_gained { new_money_gained } {}
+
+		static constexpr SellResult no_sales_result() {
+			return { fixed_point_t::_0(), fixed_point_t::_0() };
+		}
 	};
 }
