@@ -109,14 +109,15 @@ void ArtisanalProducer::artisan_tick(Pop& pop) {
 				const fixed_point_t max_quantity_to_buy = good_demand - good_stockpile;
 				if (max_quantity_to_buy > 0) {
 					const fixed_point_t money_to_spend = optimal_quantity * max_price;
-					pop.add_artisan_inputs_expense(money_to_spend);
 					market_instance.place_buy_up_to_order({
 						*input_good_ptr,
 						max_quantity_to_buy,
 						money_to_spend,
 						[this, &pop, &good_stockpile](const BuyResult buy_result) -> void {
-							pop.add_artisan_inputs_expense(-buy_result.get_money_left());
-							good_stockpile += buy_result.get_quantity_bought();
+							if (buy_result.get_quantity_bought() > fixed_point_t::_0()) {
+								pop.add_artisan_inputs_expense(buy_result.get_money_spent());
+								good_stockpile += buy_result.get_quantity_bought();
+							}
 						}
 					});
 				}
