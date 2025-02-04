@@ -4,6 +4,7 @@
 #include <array>
 #include <cassert>
 #include <climits>
+#include <cmath>
 #include <cstdint>
 #include <limits>
 #include <string>
@@ -117,7 +118,7 @@ namespace OpenVic {
 		static constexpr auto max_value = colour_traits::component;
 
 		struct empty_value {
-			constexpr empty_value() {}
+			constexpr empty_value() = default;
 			constexpr empty_value(value_type) {}
 			constexpr operator value_type() const {
 				return max_value;
@@ -323,6 +324,28 @@ namespace OpenVic {
 
 		constexpr value_type const& operator[](std::size_t index) const {
 			return _array_access_helper<const value_type>(*this, index);
+		}
+
+		constexpr basic_colour_t invert() const {
+			basic_colour_t new_colour = *this;
+			new_colour.red = max_value - new_colour.red;
+			new_colour.green = max_value - new_colour.green;
+			new_colour.blue = max_value - new_colour.blue;
+			return new_colour;
+		}
+
+		// See https://stackoverflow.com/a/69869976
+		// https://github.com/Myndex/max-contrast/
+		constexpr basic_colour_t contrast() const {
+			constexpr double LUMINANCE_FLIP = 0.342;
+			constexpr double POWER = 2.4;
+			constexpr double RED_MULTIPLIER = 0.2126729;
+			constexpr double GREEN_MULTIPLIER = 0.7151522;
+			constexpr double BLUE_MULTIPLIER = 0.0721750;
+
+			double luminance = std::pow(red / max_value, POWER) * RED_MULTIPLIER +
+				std::pow(green / max_value, POWER) * GREEN_MULTIPLIER + std::pow(blue, POWER) * BLUE_MULTIPLIER;
+			return luminance >= LUMINANCE_FLIP ? basic_colour_t::from_floats(0, 0, 0) : basic_colour_t::from_floats(1, 1, 1);
 		}
 
 	private:
