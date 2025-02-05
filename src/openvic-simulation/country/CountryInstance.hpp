@@ -44,6 +44,7 @@ namespace OpenVic {
 	struct ModifierEffectCache;
 	struct StaticModifierCache;
 	struct InstanceManager;
+	struct ProductionType;
 
 	/* Representation of a country's mutable attributes, with a CountryDefinition that is unique at any single time
 	 * but can be swapped with other CountryInstance's CountryDefinition when switching tags. */
@@ -515,6 +516,9 @@ namespace OpenVic {
 
 		void update_gamestate(InstanceManager& instance_manager);
 		void tick(InstanceManager& instance_manager);
+		void report_artisan_output(ProductionType const& production_type, const fixed_point_t quantity);
+		void report_factory_output(ProductionType const& production_type, const fixed_point_t quantity);
+		void report_rgo_output(GoodDefinition const& good, const fixed_point_t quantity);
 	};
 
 	struct CountryDefinitionManager;

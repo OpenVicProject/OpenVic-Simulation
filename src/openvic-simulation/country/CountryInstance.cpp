@@ -1382,6 +1382,19 @@ void CountryInstance::tick(InstanceManager& instance_manager) {
 	if (leadership_point_stockpile > max_leadership_point_stockpile) {
 		leadership_point_stockpile = max_leadership_point_stockpile;
 	}
+
+	//TODO add gold income from national money goods production
+	//income_from_gold = country_defines.gold_to_cash_rate * sum (total_good_production * good.get_base_price()) for each good with is_money=true
+}
+
+void CountryInstance::report_artisan_output(ProductionType const& production_type, const fixed_point_t quantity) {
+	//TODO record artisan output
+}
+void CountryInstance::report_factory_output(ProductionType const& production_type, const fixed_point_t quantity) {
+	//TODO record factory output
+}
+void CountryInstance::report_rgo_output(GoodDefinition const& good, const fixed_point_t quantity) {
+	//TODO record rgo output
 }
 
 void CountryInstanceManager::update_rankings(Date today, DefineManager const& define_manager) {

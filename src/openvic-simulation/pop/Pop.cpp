@@ -139,7 +139,7 @@ bool Pop::convert_to_equivalent() {
 	return true;
 }
 
-void Pop::set_location(ProvinceInstance const& new_location) {
+void Pop::set_location(ProvinceInstance& new_location) {
 	if (location != &new_location) {
 		location = &new_location;
 

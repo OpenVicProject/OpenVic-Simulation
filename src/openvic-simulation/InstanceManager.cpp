@@ -14,7 +14,7 @@ InstanceManager::InstanceManager(
 ) : definition_manager { new_definition_manager },
 	game_rules_manager { new_game_rules_manager },
 	good_instance_manager { new_definition_manager.get_economy_manager().get_good_definition_manager() },
-	market_instance { good_instance_manager },
+	market_instance { new_definition_manager.get_define_manager().get_country_defines(), good_instance_manager },
 	artisanal_producer_factory_pattern {
 		market_instance,
 		new_definition_manager.get_modifier_manager().get_modifier_effect_cache(),

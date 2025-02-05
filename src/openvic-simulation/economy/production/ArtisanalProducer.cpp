@@ -5,6 +5,7 @@
 #include "openvic-simulation/economy/trading/BuyResult.hpp"
 #include "openvic-simulation/economy/trading/MarketInstance.hpp"
 #include "openvic-simulation/economy/trading/SellResult.hpp"
+#include "openvic-simulation/map/ProvinceInstance.hpp"
 #include "openvic-simulation/modifier/ModifierEffectCache.hpp"
 #include "openvic-simulation/pop/Pop.hpp"
 
@@ -130,10 +131,14 @@ void ArtisanalProducer::artisan_tick(Pop& pop) {
 		* inputs_bought_numerator * pop.get_size()
 		/ (inputs_bought_denominator * production_type.get_base_workforce_size());
 
-	GoodDefinition const& output_good = production_type.get_output_good();
 	if (current_production > 0) {
+		CountryInstance* get_country_to_report_economy_nullable = pop.get_location()->get_country_to_report_economy();
+		if (get_country_to_report_economy_nullable != nullptr) {
+			get_country_to_report_economy_nullable->report_artisan_output(production_type, current_production);
+		}
+
 		market_instance.place_market_sell_order({
-			output_good,
+			production_type.get_output_good(),
 			current_production,
 			[&pop](const SellResult sell_result) -> void {
 				if (sell_result.get_money_gained() > 0) {
