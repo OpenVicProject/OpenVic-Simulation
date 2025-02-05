@@ -48,6 +48,8 @@ void GoodInstance::update_next_price_limits() {
 		absolute_minimum_price,
 		price - max_price_change
 	);
+
+	price_inverse = fixed_point_t::_1() / price;
 }
 
 void GoodInstance::add_buy_up_to_order(GoodBuyUpToOrder&& buy_up_to_order) {
@@ -195,7 +197,7 @@ void GoodInstance::execute_orders() {
 			//sell below max_next_price
 			if (game_rules_manager.get_use_optimal_pricing()) {
 				//drop price while remaining_supply > 0 && new_price > min_next_price
-				while (remaining_supply > 0) {
+				while (remaining_supply > fixed_point_t::_0()) {
 					const fixed_point_t possible_price = money_left_to_spend_sum / remaining_supply;
 
 					if (possible_price >= new_price) {
@@ -272,8 +274,6 @@ void GoodInstance::execute_orders() {
 		price = new_price;
 		update_next_price_limits();
 	}
-
-	price = new_price;
 }
 
 void GoodInstance::record_price_history() {

@@ -6,11 +6,11 @@
 #include "openvic-simulation/economy/BuildingInstance.hpp"
 #include "openvic-simulation/economy/production/ProductionType.hpp"
 #include "openvic-simulation/economy/production/ResourceGatheringOperation.hpp"
-#include "openvic-simulation/economy/trading/MarketInstance.hpp"
 #include "openvic-simulation/military/UnitInstance.hpp"
 #include "openvic-simulation/military/UnitType.hpp"
 #include "openvic-simulation/modifier/ModifierSum.hpp"
 #include "openvic-simulation/pop/Pop.hpp"
+#include "openvic-simulation/pop/PopValuesFromProvince.hpp"
 #include "openvic-simulation/types/FlagStrings.hpp"
 #include "openvic-simulation/types/HasIdentifier.hpp"
 #include "openvic-simulation/types/OrderedContainers.hpp"
@@ -32,6 +32,7 @@ namespace OpenVic {
 	struct IssueManager;
 	struct CountryInstanceManager;
 	struct ModifierEffectCache;
+	struct MarketInstance;
 
 	template<UnitType::branch_t>
 	struct UnitInstanceGroup;
@@ -65,6 +66,7 @@ namespace OpenVic {
 
 	private:
 		ProvinceDefinition const& PROPERTY(province_definition);
+		ModifierEffectCache const& PROPERTY(modifier_effect_cache);
 
 		TerrainType const* PROPERTY(terrain_type);
 		life_rating_t PROPERTY(life_rating, 0);
@@ -94,6 +96,7 @@ namespace OpenVic {
 
 	private:
 		plf::colony<Pop> PROPERTY(pops); // TODO - replace with a more easily vectorisable container?
+		PopValuesFromProvince PROPERTY(shared_pop_values);
 		pop_size_t PROPERTY(total_population, 0);
 		// TODO - population change (growth + migration), monthly totals + breakdown by source/destination
 		fixed_point_t PROPERTY(average_literacy);
@@ -118,6 +121,7 @@ namespace OpenVic {
 		ProvinceInstance(
 			MarketInstance& new_market_instance,
 			ModifierEffectCache const& new_modifier_effect_cache,
+			PopsDefines const& new_pop_defines,
 			ProvinceDefinition const& new_province_definition,
 			decltype(population_by_strata)::keys_type const& strata_keys,
 			decltype(pop_type_distribution)::keys_type const& pop_type_keys,
@@ -198,7 +202,11 @@ namespace OpenVic {
 		bool expand_building(size_t building_index);
 
 		bool add_pop(Pop&& pop);
-		bool add_pop_vec(std::vector<PopBase> const& pop_vec, ArtisanalProducerFactoryPattern& artisanal_producer_factory_pattern);
+		bool add_pop_vec(
+			std::vector<PopBase> const& pop_vec,
+			MarketInstance& market_instance,
+			ArtisanalProducerFactoryPattern& artisanal_producer_factory_pattern
+		);
 		size_t get_pop_count() const;
 
 		void update_modifier_sum(Date today, StaticModifierCache const& static_modifier_cache);

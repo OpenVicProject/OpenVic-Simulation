@@ -20,6 +20,7 @@ using namespace OpenVic;
 ProvinceInstance::ProvinceInstance(
 	MarketInstance& new_market_instance,
 	ModifierEffectCache const& new_modifier_effect_cache,
+	PopsDefines const& new_pop_defines,
 	ProvinceDefinition const& new_province_definition,
 	decltype(population_by_strata)::keys_type const& strata_keys,
 	decltype(pop_type_distribution)::keys_type const& pop_type_keys,
@@ -28,9 +29,11 @@ ProvinceInstance::ProvinceInstance(
 	HasIndex { new_province_definition.get_index() },
 	FlagStrings { "province" },
 	province_definition { new_province_definition },
+	modifier_effect_cache { new_modifier_effect_cache },
 	terrain_type { new_province_definition.get_default_terrain_type() },
-	rgo { new_market_instance, new_modifier_effect_cache, pop_type_keys },
+	rgo { new_market_instance, pop_type_keys },
 	buildings { "buildings", false },
+	shared_pop_values { new_pop_defines, strata_keys },
 	population_by_strata { &strata_keys },
 	militancy_by_strata { &strata_keys },
 	life_needs_fulfilled_by_strata { &strata_keys },
@@ -191,13 +194,18 @@ bool ProvinceInstance::add_pop(Pop&& pop) {
 	}
 }
 
-bool ProvinceInstance::add_pop_vec(std::vector<PopBase> const& pop_vec, ArtisanalProducerFactoryPattern& artisanal_producer_factory_pattern) {
+bool ProvinceInstance::add_pop_vec(
+	std::vector<PopBase> const& pop_vec,
+	MarketInstance& market_instance,
+	ArtisanalProducerFactoryPattern& artisanal_producer_factory_pattern
+) {
 	if (!province_definition.is_water()) {
 		reserve_more(pops, pop_vec.size());
 		for (PopBase const& pop : pop_vec) {
 			_add_pop(Pop {
 				pop,
 				*ideology_distribution.get_keys(),
+				market_instance,
 				artisanal_producer_factory_pattern
 			});
 		}
@@ -402,6 +410,7 @@ void ProvinceInstance::update_gamestate(const Date today, DefineManager const& d
 }
 
 void ProvinceInstance::province_tick(const Date today) {
+	shared_pop_values.update();
 	try_parallel_for_each(
 		pops.begin(),
 		pops.end(),
@@ -453,6 +462,7 @@ bool ProvinceInstance::setup(BuildingTypeManager const& building_type_manager) {
 	}
 
 	rgo.setup_location_ptr(*this);
+	shared_pop_values.set_province(this);
 
 	bool ret = true;
 
