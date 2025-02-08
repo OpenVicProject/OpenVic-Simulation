@@ -3,8 +3,9 @@
 #include <vector>
 
 #include "openvic-simulation/dataloader/NodeTools.hpp"
-#include "openvic-simulation/types/fixed_point/FixedPointMap.hpp"
 #include "openvic-simulation/types/HasIdentifier.hpp"
+#include "openvic-simulation/types/fixed_point/FixedPointMap.hpp"
+#include "openvic-simulation/utility/Deque.hpp"
 #include "openvic-simulation/utility/Getters.hpp"
 #include "openvic-simulation/utility/Logger.hpp"
 
@@ -128,7 +129,7 @@ namespace OpenVic {
 	};
 	template<typename Item>
 	struct RegistryStorageInfoDeque {
-		using storage_type = std::deque<Item>;
+		using storage_type = OpenVic::utility::deque<Item>;
 		using index_type = Item*;
 
 		static constexpr index_type get_back_index(storage_type& items) {
