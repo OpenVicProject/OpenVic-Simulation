@@ -19,6 +19,7 @@
 #include "openvic-simulation/pop/PopType.hpp"
 #include "openvic-simulation/research/ResearchManager.hpp"
 #include "openvic-simulation/scripts/ScriptManager.hpp"
+#include "openvic-simulation/interface/UI.hpp"
 
 namespace OpenVic {
 	struct DefinitionManager {
@@ -42,5 +43,8 @@ namespace OpenVic {
 		ScriptManager PROPERTY_REF(script_manager);
 		SongChanceManager PROPERTY_REF(song_chance_manager);
 		SoundEffectManager PROPERTY_REF(sound_effect_manager);
+
+	public:
+		DefinitionManager();
 	};
 }

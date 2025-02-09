@@ -2,9 +2,9 @@
 
 #include <optional>
 
-#include "openvic-simulation/dataloader/Dataloader.hpp"
 #include "openvic-simulation/DefinitionManager.hpp"
 #include "openvic-simulation/InstanceManager.hpp"
+#include "openvic-simulation/dataloader/Dataloader.hpp"
 #include "openvic-simulation/misc/GameRulesManager.hpp"
 
 namespace OpenVic {

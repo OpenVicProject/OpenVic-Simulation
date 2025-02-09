@@ -146,6 +146,22 @@ public: \
 	} \
 	ACCESS:
 
+/* Create const and non-const getters for a variable, applied to its name in its declaration, e
+ * for example: GameManager& PROPERTY_MOD(game_manager); */
+#define PROPERTY_MOD(NAME) PROPERTY_MOD_FULL(NAME, private)
+#define PROPERTY_MOD_FULL(NAME, ACCESS) \
+	NAME; \
+	static_assert(std::is_reference_v<decltype(NAME)> && !std::is_const_v<std::remove_reference_t<decltype(NAME)>>); \
+\
+public: \
+	[[nodiscard]] constexpr decltype(NAME) get_##NAME() { \
+		return NAME; \
+	} \
+	[[nodiscard]] constexpr std::remove_reference_t<decltype(NAME)> const& get_##NAME() const { \
+		return NAME; \
+	} \
+	ACCESS:
+
 namespace OpenVic {
 	/* Any struct tagged with ov_return_by_value will be returned by value by PROPERTY-generated getter functions,
 	 * instead of by const reference as structs are by default. Use this for small structs which don't contain any

@@ -2,6 +2,7 @@
 
 #include "openvic-simulation/interface/GFXSprite.hpp"
 #include "openvic-simulation/types/TextFormat.hpp"
+#include "openvic-simulation/misc/SoundEffect.hpp"
 
 namespace OpenVic {
 	class UIManager;
@@ -145,8 +146,7 @@ namespace OpenVic::GUI {
 
 		fvec2_t PROPERTY(size);
 		fixed_point_t PROPERTY(rotation); /* In radians, usually one of 0, PI/2 or -PI/2. */
-
-		// TODO - clicksound
+		OpenVic::SoundEffect const* PROPERTY_REF(clicksound);
 
 	protected:
 		Button();
