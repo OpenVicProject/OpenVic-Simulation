@@ -1,7 +1,6 @@
 #pragma once
 
 #include <cctype>
-#include <deque>
 #include <functional>
 #include <memory>
 
@@ -10,6 +9,7 @@
 
 #include "openvic-simulation/utility/StringUtils.hpp"
 #include "openvic-simulation/utility/Utility.hpp"
+#include "openvic-simulation/utility/Deque.hpp"
 
 namespace OpenVic {
 	struct ordered_container_string_hash {
@@ -49,7 +49,7 @@ namespace OpenVic {
 		class Key, class T, class Hash = container_hash<Key>, class KeyEqual = std::equal_to<>,
 		class Allocator = std::allocator<std::pair<Key, T>>, class IndexType = std::uint_least32_t>
 	using deque_ordered_map =
-		tsl::ordered_map<Key, T, Hash, KeyEqual, Allocator, std::deque<std::pair<Key, T>, Allocator>, IndexType>;
+		tsl::ordered_map<Key, T, Hash, KeyEqual, Allocator, OpenVic::utility::deque<std::pair<Key, T>, Allocator>, IndexType>;
 
 	template<
 		class Key, class T, class Hash = container_hash<Key>, class KeyEqual = std::equal_to<>,
@@ -66,7 +66,7 @@ namespace OpenVic {
 	template<
 		class Key, class Hash = container_hash<Key>, class KeyEqual = std::equal_to<>, class Allocator = std::allocator<Key>,
 		class IndexType = std::uint_least32_t>
-	using deque_ordered_set = tsl::ordered_set<Key, Hash, KeyEqual, Allocator, std::deque<Key, Allocator>, IndexType>;
+	using deque_ordered_set = tsl::ordered_set<Key, Hash, KeyEqual, Allocator, OpenVic::utility::deque<Key, Allocator>, IndexType>;
 
 	template<
 		class Key, class Hash = container_hash<Key>, class KeyEqual = std::equal_to<>, class Allocator = std::allocator<Key>,
