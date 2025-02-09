@@ -1,11 +1,14 @@
 #include "UI.hpp"
 
 #include "openvic-simulation/types/Colour.hpp"
+#include "openvic-simulation/DefinitionManager.hpp"
 
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;
 using namespace OpenVic::GFX;
 using namespace OpenVic::GUI;
+
+UIManager::UIManager(DefinitionManager const& manager) : definition_manager(manager) {}
 
 bool UIManager::add_font(
 	std::string_view identifier, colour_argb_t colour, std::string_view fontname, std::string_view charset, uint32_t height,

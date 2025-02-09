@@ -8,6 +8,9 @@
 #include <lexy-vdf/Parser.hpp>
 
 #include "openvic-simulation/DefinitionManager.hpp"
+#include "openvic-simulation/interface/UI.hpp"
+#include "openvic-simulation/misc/GameRulesManager.hpp"
+#include "openvic-simulation/misc/SoundEffect.hpp"
 #include "openvic-simulation/utility/Logger.hpp"
 #include "openvic-simulation/utility/StringUtils.hpp"
 
@@ -840,7 +843,7 @@ bool Dataloader::_load_sound_effect_defines(DefinitionManager& definition_manage
 	bool ret = true;
 	SoundEffectManager& sound_effect_manager = definition_manager.get_sound_effect_manager();
 
-	ret &= sound_effect_manager.load_sound_defines_file(parse_defines(path).get_file_node());
+	ret &= sound_effect_manager.load_sound_defines_file(*this, parse_defines(path).get_file_node());
 
 	sound_effect_manager.lock_sound_effects();
 
@@ -883,6 +886,10 @@ bool Dataloader::load_defines(
 
 	if (!definition_manager.get_mapmode_manager().setup_mapmodes()) {
 		Logger::error("Failed to set up mapmodes!");
+		ret = false;
+	}
+	if (!_load_sound_effect_defines(definition_manager)) {
+		Logger::error("Failed to load sound effect defines");
 		ret = false;
 	}
 	if (!_load_interface_files(definition_manager.get_ui_manager())) {
@@ -1089,10 +1096,6 @@ bool Dataloader::load_defines(
 	}
 	if (!_load_song_chances(definition_manager)) {
 		Logger::error("Error while loading Song chances!");
-		ret = false;
-	}
-	if (!_load_sound_effect_defines(definition_manager)) {
-		Logger::error("Failed to load sound effect defines");
 		ret = false;
 	}
 	if (!definition_manager.get_event_manager().load_on_action_file(
