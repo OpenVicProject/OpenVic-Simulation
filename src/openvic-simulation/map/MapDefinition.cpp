@@ -349,7 +349,7 @@ ProvinceDefinition::index_t MapDefinition::get_index_from_colour(colour_t colour
 }
 
 ProvinceDefinition::index_t MapDefinition::get_province_index_at(ivec2_t pos) const {
-	if (pos.nonnegative() && pos.less_than(dims)) {
+	if (pos.nonnegative() && pos.is_within_bound(dims)) {
 		return province_shape_image[get_pixel_index_from_pos(pos)].index;
 	}
 	return ProvinceDefinition::NULL_INDEX;

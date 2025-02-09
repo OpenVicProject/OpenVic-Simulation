@@ -2,6 +2,7 @@
 
 #include <concepts>
 #include <string_view>
+#include <system_error>
 
 #include <openvic-dataloader/detail/SymbolIntern.hpp>
 #include <openvic-dataloader/detail/Utility.hpp>
@@ -207,15 +208,15 @@ node_callback_t NodeTools::expect_colour(callback_t<colour_t> callback) {
 
 node_callback_t NodeTools::expect_colour_hex(callback_t<colour_argb_t> callback) {
 	return expect_uint<colour_argb_t::integer_type>([callback](colour_argb_t::integer_type val) -> bool {
-		return callback(colour_argb_t::from_integer(val));
+		return callback(colour_argb_t::from_argb(val));
 	}, 16);
 }
 
 callback_t<std::string_view> NodeTools::expect_date_str(callback_t<Date> callback) {
 	return [callback](std::string_view identifier) -> bool {
-		bool successful = false;
-		const Date date = Date::from_string(identifier, &successful);
-		if (successful) {
+		Date::from_chars_result result;
+		const Date date = Date::from_string_log(identifier, &result);
+		if (result.ec == std::errc{}) {
 			return callback(date);
 		}
 		Logger::error("Invalid date identifier text: ", identifier);

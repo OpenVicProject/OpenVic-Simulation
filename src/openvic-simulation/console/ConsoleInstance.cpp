@@ -6,6 +6,7 @@
 #include <optional>
 #include <string>
 #include <string_view>
+#include <system_error>
 
 #include "openvic-simulation/DefinitionManager.hpp"
 #include "openvic-simulation/InstanceManager.hpp"
@@ -286,9 +287,9 @@ std::optional<Date> ConsoleInstance::validate_date(std::string_view value_string
 		return std::nullopt;
 	}
 
-	bool success = true;
-	Date date = Date::from_string(value_string, &success, true);
-	if (!success) {
+	Date::from_chars_result result;
+	Date date = Date::from_string(value_string, &result);
+	if (result.ec != std::errc {}) {
 		write_error("Invalid date");
 		return std::nullopt;
 	}

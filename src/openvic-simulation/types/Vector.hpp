@@ -1,18 +1,35 @@
 #pragma once
 
+#include <cmath>
+
+#include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
+
+namespace OpenVic::_vector_detail {
+	template<typename T>
+	inline T abs(T num) {
+		return std::abs(num);
+	}
+
+	template<>
+	inline fixed_point_t abs<fixed_point_t>(fixed_point_t num) {
+		return num.abs();
+	}
+}
+
 #define VEC_TYPE vec2_t
 #define FOR_VEC_COMPONENTS(F, SEP) F(x) SEP F(y)
+#define FOR_VEC_COMPONENTS_END(F, END_F) F(x) F(y) END_F(y)
 #include "VectorN.inc"
 
 #define VEC_TYPE vec3_t
 #define FOR_VEC_COMPONENTS(F, SEP) F(x) SEP F(y) SEP F(z)
+#define FOR_VEC_COMPONENTS_END(F, END_F) F(x) F(y) F(z) END_F(z)
 #include "VectorN.inc"
 
 #define VEC_TYPE vec4_t
 #define FOR_VEC_COMPONENTS(F, SEP) F(x) SEP F(y) SEP F(z) SEP F(w)
+#define FOR_VEC_COMPONENTS_END(F, END_F) F(x) F(y) F(z) F(w) END_F(w)
 #include "VectorN.inc"
-
-#include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
 
 namespace OpenVic {
 
@@ -21,7 +38,8 @@ namespace OpenVic {
 	static_assert( \
 		sizeof(prefix##vec##size##_t) == size * sizeof(type), \
 		#prefix "vec" #size "_t size does not equal the sum of its parts' sizes" \
-	);
+	);\
+	extern template struct vec##size##_t<type>;
 
 #define MAKE_VEC_ALIASES(prefix, type) \
 	MAKE_VEC_ALIAS(prefix, type, 2) \
@@ -30,6 +48,7 @@ namespace OpenVic {
 
 	MAKE_VEC_ALIASES(i, int32_t)
 	MAKE_VEC_ALIASES(f, fixed_point_t)
+	MAKE_VEC_ALIASES(d, double)
 
 #undef MAKE_VEC_ALIASES
 #undef MAKE_VEC_ALIAS

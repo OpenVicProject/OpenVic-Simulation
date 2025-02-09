@@ -1,5 +1,6 @@
 #pragma once
 
+#include <concepts>
 #include <cstdint>
 #include <cstdlib>
 #include <limits>
@@ -41,24 +42,24 @@ namespace OpenVic {
 
 		// Doesn't account for sign, so -n.abc -> 1 - 0.abc
 		constexpr fixed_point_t get_frac() const {
-			return value & FRAC_MASK;
+			return parse_raw(value & FRAC_MASK);
 		}
 
 	public:
 		constexpr fixed_point_t() : value { 0 } {}
-		constexpr fixed_point_t(int64_t new_value) : value { new_value } {}
+		explicit constexpr fixed_point_t(int64_t new_value) : value { new_value } {}
 		constexpr fixed_point_t(int32_t new_value) : value { static_cast<int64_t>(new_value) << PRECISION } {}
 
 		static constexpr fixed_point_t max() {
-			return std::numeric_limits<int64_t>::max();
+			return parse_raw(std::numeric_limits<int64_t>::max());
 		}
 
 		static constexpr fixed_point_t min() {
-			return std::numeric_limits<int64_t>::min();
+			return parse_raw(std::numeric_limits<int64_t>::min());
 		}
 
 		static constexpr fixed_point_t usable_max() {
-			return static_cast<int64_t>(2147483648LL);
+			return parse_raw(2147483648LL);
 		}
 
 		static constexpr fixed_point_t usable_min() {
@@ -105,6 +106,10 @@ namespace OpenVic {
 			return _1() / 5;
 		}
 
+		static constexpr fixed_point_t _0_25() {
+			return _1() / 4;
+		}
+
 		static constexpr fixed_point_t _0_50() {
 			return _1() / 2;
 		}
@@ -118,7 +123,7 @@ namespace OpenVic {
 		}
 
 		static constexpr fixed_point_t pi() {
-			return static_cast<int64_t>(205887LL);
+			return parse_raw(205887LL);
 		}
 
 		static constexpr fixed_point_t pi2() {
@@ -138,15 +143,15 @@ namespace OpenVic {
 		}
 
 		static constexpr fixed_point_t deg2rad() {
-			return static_cast<int64_t>(1143LL);
+			return parse_raw(1143LL);
 		}
 
 		static constexpr fixed_point_t rad2deg() {
-			return static_cast<int64_t>(3754936LL);
+			return parse_raw(3754936LL);
 		}
 
 		static constexpr fixed_point_t e() {
-			return static_cast<int64_t>(178145LL);
+			return parse_raw(178145LL);
 		}
 
 		constexpr fixed_point_t sin() const {
@@ -163,7 +168,7 @@ namespace OpenVic {
 
 			const int64_t fraction = (num - (index << SIN_LUT_SHIFT)) << SIN_LUT_COUNT_LOG2;
 			const int64_t result = a + (((b - a) * fraction) >> SIN_LUT_PRECISION);
-			return !negative ? result : -result;
+			return !negative ? parse_raw(result) : parse_raw(-result);
 		}
 
 		constexpr fixed_point_t cos() const {
@@ -175,13 +180,13 @@ namespace OpenVic {
 		}
 
 		constexpr fixed_point_t abs() const {
-			return !is_negative() ? value : -value;
+			return !is_negative() ? parse_raw(value) : parse_raw(-value);
 		}
 
 		constexpr fixed_point_t sqrt() const {
 			return !is_negative()
-				? static_cast<int64_t>(NumberUtils::sqrt(static_cast<uint64_t>(value) << PRECISION))
-				: 0;
+				? parse_raw(NumberUtils::sqrt(static_cast<uint64_t>(value) << PRECISION))
+				: _0();
 		}
 
 		constexpr bool is_integer() const {
@@ -189,7 +194,7 @@ namespace OpenVic {
 		}
 
 		constexpr fixed_point_t floor() const {
-			return value & ~FRAC_MASK;
+			return parse_raw(value & ~FRAC_MASK);
 		}
 
 		constexpr fixed_point_t ceil() const {
@@ -277,13 +282,13 @@ namespace OpenVic {
 		}
 
 		// Deterministic
-		static constexpr fixed_point_t parse_raw(int64_t value) {
-			return value;
+		inline static constexpr fixed_point_t parse_raw(int64_t value) {
+			return fixed_point_t { value };
 		}
 
 		// Deterministic
 		static constexpr fixed_point_t parse(int64_t value) {
-			return value << PRECISION;
+			return parse_raw(value << PRECISION);
 		}
 
 		// Deterministic
@@ -360,7 +365,7 @@ namespace OpenVic {
 
 		// Not Deterministic
 		static constexpr fixed_point_t parse_unsafe(float value) {
-			return static_cast<int64_t>(value * ONE + 0.5f * (value < 0 ? -1 : 1));
+			return parse_raw(value * ONE + 0.5f * (value < 0 ? -1 : 1));
 		}
 
 		// Not Deterministic
@@ -374,7 +379,7 @@ namespace OpenVic {
 
 			int64_t integer_value = static_cast<long>(double_value * ONE + 0.5 * (double_value < 0 ? -1 : 1));
 
-			return integer_value;
+			return parse_raw(integer_value);
 		}
 
 		constexpr operator int32_t() const {
@@ -402,23 +407,23 @@ namespace OpenVic {
 		}
 
 		constexpr friend fixed_point_t operator-(fixed_point_t const& obj) {
-			return -obj.value;
+			return parse_raw(-obj.value);
 		}
 
 		constexpr friend fixed_point_t operator+(fixed_point_t const& obj) {
-			return +obj.value;
+			return parse_raw(+obj.value);
 		}
 
 		constexpr friend fixed_point_t operator+(fixed_point_t const& lhs, fixed_point_t const& rhs) {
-			return lhs.value + rhs.value;
+			return parse_raw(lhs.value + rhs.value);
 		}
 
 		constexpr friend fixed_point_t operator+(fixed_point_t const& lhs, int32_t const& rhs) {
-			return lhs.value + (static_cast<int64_t>(rhs) << PRECISION);
+			return parse_raw(lhs.value + (static_cast<int64_t>(rhs) << PRECISION));
 		}
 
 		constexpr friend fixed_point_t operator+(int32_t const& lhs, fixed_point_t const& rhs) {
-			return (static_cast<int64_t>(lhs) << PRECISION) + rhs.value;
+			return parse_raw((static_cast<int64_t>(lhs) << PRECISION) + rhs.value);
 		}
 
 		constexpr fixed_point_t operator+=(fixed_point_t const& obj) {
@@ -432,15 +437,15 @@ namespace OpenVic {
 		}
 
 		constexpr friend fixed_point_t operator-(fixed_point_t const& lhs, fixed_point_t const& rhs) {
-			return lhs.value - rhs.value;
+			return parse_raw(lhs.value - rhs.value);
 		}
 
 		constexpr friend fixed_point_t operator-(fixed_point_t const& lhs, int32_t const& rhs) {
-			return lhs.value - (static_cast<int64_t>(rhs) << PRECISION);
+			return parse_raw(lhs.value - (static_cast<int64_t>(rhs) << PRECISION));
 		}
 
 		constexpr friend fixed_point_t operator-(int32_t const& lhs, fixed_point_t const& rhs) {
-			return (static_cast<int64_t>(lhs) << PRECISION) - rhs.value;
+			return parse_raw((static_cast<int64_t>(lhs) << PRECISION) - rhs.value);
 		}
 
 		constexpr fixed_point_t operator-=(fixed_point_t const& obj) {
@@ -476,23 +481,23 @@ namespace OpenVic {
 		}
 
 		constexpr friend fixed_point_t operator<<(fixed_point_t const& lhs, int32_t const& rhs) {
-			return lhs.value << rhs;
+			return parse_raw(lhs.value << rhs);
 		}
 
 		constexpr friend fixed_point_t operator>>(fixed_point_t const& lhs, int32_t const& rhs) {
-			return lhs.value >> rhs;
+			return parse_raw(lhs.value >> rhs);
 		}
 
 		constexpr friend fixed_point_t operator*(fixed_point_t const& lhs, fixed_point_t const& rhs) {
-			return lhs.value * rhs.value >> PRECISION;
+			return parse_raw(lhs.value * rhs.value >> PRECISION);
 		}
 
 		constexpr friend fixed_point_t operator*(fixed_point_t const& lhs, int32_t const& rhs) {
-			return lhs.value * rhs;
+			return parse_raw(lhs.value * rhs);
 		}
 
 		constexpr friend fixed_point_t operator*(int32_t const& lhs, fixed_point_t const& rhs) {
-			return lhs * rhs.value;
+			return parse_raw(lhs * rhs.value);
 		}
 
 		constexpr fixed_point_t operator*=(fixed_point_t const& obj) {
@@ -507,15 +512,15 @@ namespace OpenVic {
 		}
 
 		constexpr friend fixed_point_t operator/(fixed_point_t const& lhs, fixed_point_t const& rhs) {
-			return (lhs.value << PRECISION) / rhs.value;
+			return parse_raw((lhs.value << PRECISION) / rhs.value);
 		}
 
 		constexpr friend fixed_point_t operator/(fixed_point_t const& lhs, int32_t const& rhs) {
-			return lhs.value / rhs;
+			return parse_raw(lhs.value / rhs);
 		}
 
 		constexpr friend fixed_point_t operator/(int32_t const& lhs, fixed_point_t const& rhs) {
-			return (static_cast<int64_t>(lhs) << (2 * PRECISION)) / rhs.value;
+			return parse_raw((static_cast<int64_t>(lhs) << (2 * PRECISION)) / rhs.value);
 		}
 
 		constexpr fixed_point_t operator/=(fixed_point_t const& obj) {
@@ -529,15 +534,15 @@ namespace OpenVic {
 		}
 
 		constexpr friend fixed_point_t operator%(fixed_point_t const& lhs, fixed_point_t const& rhs) {
-			return lhs.value % rhs.value;
+			return parse_raw(lhs.value % rhs.value);
 		}
 
 		constexpr friend fixed_point_t operator%(fixed_point_t const& lhs, int32_t const& rhs) {
-			return lhs.value % (static_cast<int64_t>(rhs) << PRECISION);
+			return parse_raw(lhs.value % (static_cast<int64_t>(rhs) << PRECISION));
 		}
 
 		constexpr friend fixed_point_t operator%(int32_t const& lhs, fixed_point_t const& rhs) {
-			return (static_cast<int64_t>(lhs) << PRECISION) % rhs.value;
+			return parse_raw((static_cast<int64_t>(lhs) << PRECISION) % rhs.value);
 		}
 
 		constexpr fixed_point_t operator%=(fixed_point_t const& obj) {
@@ -550,80 +555,40 @@ namespace OpenVic {
 			return *this;
 		}
 
-		constexpr friend bool operator<(fixed_point_t const& lhs, fixed_point_t const& rhs) {
-			return lhs.value < rhs.value;
-		}
-
-		constexpr friend bool operator<(fixed_point_t const& lhs, int32_t const& rhs) {
-			return lhs.value < static_cast<int64_t>(rhs) << PRECISION;
-		}
-
-		constexpr friend bool operator<(int32_t const& lhs, fixed_point_t const& rhs) {
-			return static_cast<int64_t>(lhs) << PRECISION < rhs.value;
-		}
-
-		constexpr friend bool operator<=(fixed_point_t const& lhs, fixed_point_t const& rhs) {
-			return lhs.value <= rhs.value;
-		}
-
-		constexpr friend bool operator<=(fixed_point_t const& lhs, int32_t const& rhs) {
-			return lhs.value <= static_cast<int64_t>(rhs) << PRECISION;
-		}
-
-		constexpr friend bool operator<=(int32_t const& lhs, fixed_point_t const& rhs) {
-			return static_cast<int64_t>(lhs) << PRECISION <= rhs.value;
-		}
-
-		constexpr friend bool operator>(fixed_point_t const& lhs, fixed_point_t const& rhs) {
-			return lhs.value > rhs.value;
-		}
-
-		constexpr friend bool operator>(fixed_point_t const& lhs, int32_t const& rhs) {
-			return lhs.value > static_cast<int64_t>(rhs) << PRECISION;
-		}
-
-		constexpr friend bool operator>(int32_t const& lhs, fixed_point_t const& rhs) {
-			return static_cast<int64_t>(lhs) << PRECISION > rhs.value;
-		}
-
-		constexpr friend bool operator>=(fixed_point_t const& lhs, fixed_point_t const& rhs) {
-			return lhs.value >= rhs.value;
-		}
-
-		constexpr friend bool operator>=(fixed_point_t const& lhs, int32_t const& rhs) {
-			return lhs.value >= static_cast<int64_t>(rhs) << PRECISION;
-		}
-
-		constexpr friend bool operator>=(int32_t const& lhs, fixed_point_t const& rhs) {
-			return static_cast<int64_t>(lhs) << PRECISION >= rhs.value;
-		}
-
-		constexpr friend bool operator==(fixed_point_t const& lhs, fixed_point_t const& rhs) {
+		friend constexpr bool operator==(fixed_point_t const& lhs, fixed_point_t const& rhs) {
 			return lhs.value == rhs.value;
 		}
 
-		constexpr friend bool operator==(fixed_point_t const& lhs, int32_t const& rhs) {
-			return lhs.value == static_cast<int64_t>(rhs) << PRECISION;
+		template<std::integral T>
+		constexpr bool operator==(T const& rhs) const {
+			return value == static_cast<int64_t>(rhs) << PRECISION;
 		}
 
-		constexpr friend bool operator==(int32_t const& lhs, fixed_point_t const& rhs) {
-			return static_cast<int64_t>(lhs) << PRECISION == rhs.value;
+		template<std::floating_point T>
+		constexpr bool operator==(T const& rhs) const {
+			if constexpr (std::same_as<T, float>) {
+				return to_float() == rhs;
+			} else {
+				return to_double() == rhs;
+			}
 		}
 
-		constexpr friend bool operator!=(fixed_point_t const& lhs, fixed_point_t const& rhs) {
-			return lhs.value != rhs.value;
-		}
-
-		constexpr friend bool operator!=(fixed_point_t const& lhs, int32_t const& rhs) {
-			return lhs.value != static_cast<int64_t>(rhs) << PRECISION;
-		}
-
-		constexpr friend bool operator!=(int32_t const& lhs, fixed_point_t const& rhs) {
-			return static_cast<int64_t>(lhs) << PRECISION != rhs.value;
-		}
-
-		constexpr friend std::strong_ordering operator<=>(fixed_point_t const& lhs, fixed_point_t const& rhs) {
+		friend constexpr std::strong_ordering operator<=>(fixed_point_t const& lhs, fixed_point_t const& rhs) {
 			return lhs.value <=> rhs.value;
+		}
+
+		template<std::integral T>
+		constexpr std::strong_ordering operator<=>(T const& rhs) const {
+			return value <=> static_cast<int64_t>(rhs) << PRECISION;
+		}
+
+		template<std::floating_point T>
+		constexpr std::partial_ordering operator<=>(T const& rhs) const {
+			if constexpr (std::same_as<T, float>) {
+				return to_float() <=> rhs;
+			} else {
+				return to_double() <=> rhs;
+			}
 		}
 
 	private:
@@ -650,7 +615,7 @@ namespace OpenVic {
 					ret |= 1 << i;
 				}
 			}
-			return ret;
+			return parse_raw(ret);
 		}
 	};
 

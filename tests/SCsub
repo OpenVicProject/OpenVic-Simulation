@@ -12,15 +12,18 @@ def UnitTestPostAction(target=None, source=None, env=None):
     print()
     return subprocess.run([target[0].path]).returncode
 
-def UnitTest(env, **kwargs):
+def BuildUnitTest(env, **kwargs):
     test = env.Program(**kwargs)
-    unit_test_action = env.Action(UnitTestPostAction, None)
-    test_post_action = env.AddPostAction(test, unit_test_action)
     env.NoCache(test)
-    env.AlwaysBuild(test_post_action)
     return test
 
-SConsEnvironment.UnitTest = UnitTest
+def RunUnitTest(env):
+    unit_test_action = env.Action(UnitTestPostAction, None)
+    test_post_action = env.AddPostAction(env.unit_test, unit_test_action)
+    env.AlwaysBuild(test_post_action)
+
+SConsEnvironment.BuildUnitTest = BuildUnitTest
+SConsEnvironment.RunUnitTest = RunUnitTest
 
 Import("env")
 
@@ -47,9 +50,11 @@ tests_env.tests_sources = env.GlobRecursive("*.cpp", [source_path])
 
 SConscript("deps/SCsub", {"env": tests_env })
 
-tests_program = tests_env.UnitTest(
+tests_env.unit_test = tests_env.BuildUnitTest(
     source=tests_env.tests_sources,
     target=os.path.join(BINDIR, tests_name),
     PROGSUFFIX=".tests" + env["PROGSUFFIX"]
 )
-Default(tests_program)
+Default(tests_env.unit_test)
+
+Return("tests_env")

@@ -1,12 +1,8 @@
 #pragma once
 
-#include "openvic-simulation/types/Vector.hpp"
-#include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
-
 #include <snitch/snitch_macros_check_base.hpp>
 #include <snitch/snitch_macros_utility.hpp>
 #include <snitch/snitch_macros_warnings.hpp>
-#include <snitch/snitch_string.hpp>
 
 #define _EXPR(TYPE, EXPECTED, ASSIGN_VALUE, ...) \
 	auto SNITCH_CURRENT_EXPRESSION = \
@@ -61,14 +57,3 @@
 #define CHECK_FALSE_OR_CONTINUE(...) \
 	_OVSIM_CHECK_FALSE_IF("_OR_CONTINUE", __VA_ARGS__); \
 	else continue
-
-namespace snitch {
-	inline static bool append(snitch::small_string_span ss, OpenVic::fixed_point_t const& s) {
-		return append(ss, s.to_double());
-	}
-
-	template<typename T>
-	inline static bool append(snitch::small_string_span ss, OpenVic::vec2_t<T> const& s) {
-		return append(ss, "(", s.x, ",", s.y, ")");
-	}
-}
