@@ -146,7 +146,7 @@ namespace OpenVic::GUI {
 
 		fvec2_t PROPERTY(size);
 		fixed_point_t PROPERTY(rotation); /* In radians, usually one of 0, PI/2 or -PI/2. */
-		OpenVic::SoundEffect const* PROPERTY_REF(clicksound);
+		OpenVic::SoundEffect const* PROPERTY(clicksound, nullptr);
 
 	protected:
 		Button();
