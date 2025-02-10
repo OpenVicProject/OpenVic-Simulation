@@ -109,7 +109,9 @@ namespace OpenVic {
 		static constexpr Timespan::day_t MONTHS_IN_YEAR = DAYS_IN_MONTH.size();
 		static constexpr Timespan::day_t MAX_DAYS_IN_MONTH = *ranges::max_element(DAYS_IN_MONTH);
 
-		static constexpr Timespan::day_t DAYS_IN_YEAR = std::accumulate(DAYS_IN_MONTH.begin(), DAYS_IN_MONTH.end(), 0);
+		static constexpr Timespan::day_t DAYS_IN_YEAR = std::accumulate(
+			DAYS_IN_MONTH.begin(), DAYS_IN_MONTH.end(), Timespan::day_t { 0 }
+		);
 		static_assert(DAYS_IN_YEAR == 365);
 
 		static constexpr std::array<Timespan::day_t, MONTHS_IN_YEAR> DAYS_UP_TO_MONTH = [] {
