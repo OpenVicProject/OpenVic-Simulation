@@ -16,13 +16,11 @@ namespace OpenVic {
 		std::optional<InstanceManager> instance_manager;
 
 		InstanceManager::gamestate_updated_func_t gamestate_updated_callback;
-		SimulationClock::state_changed_function_t clock_state_changed_callback;
 		bool PROPERTY_CUSTOM_PREFIX(definitions_loaded, are);
 
 	public:
 		GameManager(
-			InstanceManager::gamestate_updated_func_t new_gamestate_updated_callback,
-			SimulationClock::state_changed_function_t new_clock_state_changed_callback
+			InstanceManager::gamestate_updated_func_t new_gamestate_updated_callback
 		);
 
 		inline constexpr InstanceManager* get_instance_manager() {

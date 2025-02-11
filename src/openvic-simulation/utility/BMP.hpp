@@ -4,8 +4,6 @@
 #include <fstream>
 #include <vector>
 
-#include "openvic-simulation/types/Colour.hpp"
-
 namespace OpenVic {
 	namespace fs = std::filesystem;
 

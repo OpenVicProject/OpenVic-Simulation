@@ -12,7 +12,6 @@ namespace OpenVic {
 	public:
 		using tick_function_t = std::function<void()>;
 		using update_function_t = std::function<void()>;
-		using state_changed_function_t = std::function<void()>;
 		using speed_t = int8_t;
 
 		/* Minimum number of miliseconds before the simulation advances
@@ -30,18 +29,15 @@ namespace OpenVic {
 		tick_function_t tick_function;
 		/* Refresh game state (triggered with every call to conditionally_advance_game). */
 		update_function_t update_function;
-		/* Callback for when speed or pause state is changed. */
-		state_changed_function_t state_changed_function;
 
 		time_point_t last_tick_time;
-		speed_t PROPERTY_CUSTOM_NAME(current_speed, get_simulation_speed);
-		bool PROPERTY_CUSTOM_PREFIX(paused, is);
+		speed_t PROPERTY_CUSTOM_NAME(current_speed, get_simulation_speed, 0);
+		bool PROPERTY_CUSTOM_PREFIX(paused, is, true);
 
 	public:
 
 		SimulationClock(
-			tick_function_t new_tick_function, update_function_t new_update_function,
-			state_changed_function_t new_state_changed_function
+			tick_function_t new_tick_function, update_function_t new_update_function
 		);
 
 		void set_paused(bool new_paused);

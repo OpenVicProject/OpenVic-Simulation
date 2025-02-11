@@ -231,6 +231,15 @@ namespace OpenVic {
 			return items.size();
 		}
 
+		constexpr size_t capacity() const {
+			if constexpr (storage_type_reservable) {
+				return items.capacity();
+			} else {
+				Logger::error("Cannot check capacity of ", name, " registry - storage_type not reservable!");
+				return size();
+			}
+		}
+
 		constexpr bool empty() const {
 			return items.empty();
 		}
@@ -553,6 +562,10 @@ public: \
 	} \
 	constexpr std::size_t get_##singular##_count() const { \
 		return registry.size(); \
+	} \
+	template<typename = void> \
+	constexpr std::size_t get_##plural##_capacity() const requires(decltype(registry)::storage_type_reservable) { \
+		return registry.capacity(); \
 	} \
 	constexpr bool plural##_empty() const { \
 		return registry.empty(); \

@@ -51,11 +51,13 @@ namespace OpenVic {
 
 	template<typename T>
 	concept Reservable = requires(T& t, size_t size) {
-		{ t.size() } -> std::same_as<size_t>;
+		{ t.capacity() } -> std::same_as<size_t>;
 		t.reserve(size);
 	};
+	// TODO - decide whether to stick with capacity or change back to size
+	// capacity covers everything for sure, but size avoids over-reserving in most cases
 	constexpr void reserve_more(Reservable auto& t, size_t size) {
-		t.reserve(t.size() + size);
+		t.reserve(t.capacity() + size);
 	}
 
 	namespace NodeTools {

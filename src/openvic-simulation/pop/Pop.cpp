@@ -229,14 +229,6 @@ std::stringstream Pop::get_pop_context_text() const {
 
 #define DEFINE_ADD_INCOME_FUNCTIONS(name)\
 	void Pop::add_##name(const fixed_point_t amount){\
-		if (OV_unlikely(amount == 0)) { \
-			Logger::warning("Adding ",#name, " of 0 to pop. Context", get_pop_context_text().str()); \
-			return; \
-		} \
-		if (OV_unlikely(amount < 0)) { \
-			Logger::error("Adding negative ", #name, " of ",amount," to pop. Context", get_pop_context_text().str()); \
-			return; \
-		} \
 		name += amount;\
 		income += amount;\
 		cash += amount;\
@@ -247,19 +239,9 @@ DO_FOR_ALL_TYPES_OF_POP_INCOME(DEFINE_ADD_INCOME_FUNCTIONS)
 
 #define DEFINE_ADD_EXPENSE_FUNCTIONS(name)\
 	void Pop::add_##name(const fixed_point_t amount){\
-		if (OV_unlikely(amount == 0)) { \
-			Logger::warning("Adding ",#name, " of 0 to pop. Context", get_pop_context_text().str()); \
-			return; \
-		} \
 		name += amount;\
 		expenses += amount;\
-		if (OV_unlikely(expenses < 0)) { \
-			Logger::error("Total expenses became negative (",expenses,") after adding ", #name, " of ",amount," to pop. Context", get_pop_context_text().str()); \
-		} \
 		cash -= amount;\
-		if (OV_unlikely(cash < 0)) { \
-			Logger::error("Total cash became negative (",cash,") after adding ", #name, " of ",amount," to pop. Context", get_pop_context_text().str()); \
-		} \
 	}
 
 DO_FOR_ALL_TYPES_OF_POP_EXPENSES(DEFINE_ADD_EXPENSE_FUNCTIONS)

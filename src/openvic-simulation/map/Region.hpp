@@ -40,6 +40,7 @@ namespace OpenVic {
 		void reset();
 		bool empty() const;
 		size_t size() const;
+		size_t capacity() const;
 		void reserve(size_t size);
 		void reserve_more(size_t size);
 		bool contains_province(ProvinceDefinition const* province) const;

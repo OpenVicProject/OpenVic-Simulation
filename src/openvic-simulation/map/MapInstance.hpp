@@ -22,7 +22,6 @@ namespace OpenVic {
 
 		IdentifierRegistry<ProvinceInstance> IDENTIFIER_REGISTRY_CUSTOM_INDEX_OFFSET(province_instance, 1);
 
-		ProvinceInstance* PROPERTY_PTR(selected_province, nullptr);
 		pop_size_t PROPERTY(highest_province_population, 0);
 		pop_size_t PROPERTY(total_map_population, 0);
 
@@ -39,9 +38,6 @@ namespace OpenVic {
 
 		ProvinceInstance& get_province_instance_from_definition(ProvinceDefinition const& province);
 		ProvinceInstance const& get_province_instance_from_definition(ProvinceDefinition const& province) const;
-
-		void set_selected_province(ProvinceDefinition::index_t index);
-		ProvinceDefinition::index_t get_selected_province_index() const;
 
 		bool setup(
 			BuildingTypeManager const& building_type_manager,

@@ -3,28 +3,31 @@
 #include <vector>
 
 #include "openvic-simulation/country/CountryInstance.hpp"
+#include "openvic-simulation/defines/MilitaryDefines.hpp"
 #include "openvic-simulation/map/MapInstance.hpp"
 #include "openvic-simulation/map/ProvinceInstance.hpp"
 #include "openvic-simulation/military/Deployment.hpp"
+#include "openvic-simulation/military/LeaderTrait.hpp"
 
 using namespace OpenVic;
 
 using enum UnitType::branch_t;
 
-template<UnitType::branch_t Branch>
-UnitInstanceGroup<Branch>::UnitInstanceGroup(
-	std::string_view new_name, std::vector<_UnitInstance*>&& new_units
-) : name { new_name },
-	units { std::move(new_units) } {}
+UnitInstanceGroup::UnitInstanceGroup(
+	unique_id_t new_unique_id,
+	UnitType::branch_t new_branch,
+	std::string_view new_name
+) : unique_id { new_unique_id },
+	branch { new_branch },
+	name { new_name } {}
 
-template<UnitType::branch_t Branch>
-void UnitInstanceGroup<Branch>::update_gamestate() {
+void UnitInstanceGroup::update_gamestate() {
 	total_organisation = fixed_point_t::_0();
 	total_max_organisation = fixed_point_t::_0();
 	total_strength = fixed_point_t::_0();
 	total_max_strength = fixed_point_t::_0();
 
-	for (_UnitInstance const* unit : units) {
+	for (UnitInstance const* unit : units) {
 		total_organisation += unit->get_organisation();
 		total_max_organisation += unit->get_max_organisation();
 		total_strength += unit->get_strength();
@@ -32,37 +35,32 @@ void UnitInstanceGroup<Branch>::update_gamestate() {
 	}
 }
 
-template<UnitType::branch_t Branch>
-void UnitInstanceGroup<Branch>::tick() {
+void UnitInstanceGroup::tick() {
 
 }
 
-template<UnitType::branch_t Branch>
-size_t UnitInstanceGroup<Branch>::get_unit_count() const {
+size_t UnitInstanceGroup::get_unit_count() const {
 	return units.size();
 }
 
-template<UnitType::branch_t Branch>
-bool UnitInstanceGroup<Branch>::empty() const {
+bool UnitInstanceGroup::empty() const {
 	return units.empty();
 }
 
-template<UnitType::branch_t Branch>
-size_t UnitInstanceGroup<Branch>::get_unit_category_count(UnitType::unit_category_t unit_category) const {
-	return std::count_if(units.begin(), units.end(), [unit_category](_UnitInstance const* unit) {
+size_t UnitInstanceGroup::get_unit_category_count(UnitType::unit_category_t unit_category) const {
+	return std::count_if(units.begin(), units.end(), [unit_category](UnitInstance const* unit) {
 		return unit->get_unit_type().get_unit_category() == unit_category;
 	});
 }
 
-template<UnitType::branch_t Branch>
-UnitType const* UnitInstanceGroup<Branch>::get_display_unit_type() const {
+UnitType const* UnitInstanceGroup::get_display_unit_type() const {
 	if (units.empty()) {
 		return nullptr;
 	}
 
 	fixed_point_map_t<UnitType const*> weighted_unit_types;
 
-	for (_UnitInstance const* unit : units) {
+	for (UnitInstance const* unit : units) {
 		UnitType const& unit_type = unit->get_unit_type();
 		weighted_unit_types[&unit_type] += unit_type.get_weighted_value();
 	}
@@ -75,13 +73,36 @@ UnitType const* UnitInstanceGroup<Branch>::get_display_unit_type() const {
 	)->first;
 }
 
-template<UnitType::branch_t Branch>
-void UnitInstanceGroup<Branch>::set_name(std::string_view new_name) {
+bool UnitInstanceGroup::add_unit(UnitInstance& unit) {
+	if (unit.get_branch() == branch) {
+		units.push_back(&unit);
+		return true;
+	} else {
+		Logger::error(
+			"Trying to add ", UnitType::get_branch_name(unit.get_branch()), " unit \"", unit.get_name(), "\" to ",
+			UnitType::get_branch_name(branch), " unit group \"", get_name(), "\""
+		);
+		return false;
+	}
+}
+
+bool UnitInstanceGroup::remove_unit(UnitInstance const& unit) {
+	const std::vector<UnitInstance*>::const_iterator it = std::find(units.begin(), units.end(), &unit);
+
+	if (it != units.end()) {
+		units.erase(it);
+		return true;
+	} else {
+		Logger::error("Trying to remove non-existent unit \"", unit.get_name(), "\" from unit group \"", get_name(), "\"");
+		return false;
+	}
+}
+
+void UnitInstanceGroup::set_name(std::string_view new_name) {
 	name = new_name;
 }
 
-template<UnitType::branch_t Branch>
-bool UnitInstanceGroup<Branch>::set_position(ProvinceInstance* new_position) {
+bool UnitInstanceGroup::set_position(ProvinceInstance* new_position) {
 	bool ret = true;
 
 	if (position != new_position) {
@@ -99,8 +120,7 @@ bool UnitInstanceGroup<Branch>::set_position(ProvinceInstance* new_position) {
 	return ret;
 }
 
-template<UnitType::branch_t Branch>
-bool UnitInstanceGroup<Branch>::set_country(CountryInstance* new_country) {
+bool UnitInstanceGroup::set_country(CountryInstance* new_country) {
 	bool ret = true;
 
 	if (country != new_country) {
@@ -118,8 +138,7 @@ bool UnitInstanceGroup<Branch>::set_country(CountryInstance* new_country) {
 	return ret;
 }
 
-template<UnitType::branch_t Branch>
-bool UnitInstanceGroup<Branch>::set_leader(_Leader* new_leader) {
+bool UnitInstanceGroup::set_leader(LeaderInstance* new_leader) {
 	bool ret = true;
 
 	if (leader != new_leader) {
@@ -136,19 +155,41 @@ bool UnitInstanceGroup<Branch>::set_leader(_Leader* new_leader) {
 			}
 		}
 
-		leader = new_leader;
+		leader = nullptr;
 
-		if (leader != nullptr) {
-			if (leader->unit_instance_group != nullptr) {
-				if (leader->unit_instance_group != this) {
-					ret &= leader->unit_instance_group->set_leader(nullptr);
+		if (new_leader != nullptr) {
+			if (OV_unlikely(new_leader->get_branch() != branch)) {
+				Logger::error(
+					"Trying to assign ", UnitType::get_branch_name(new_leader->get_branch()), " leader \"",
+					new_leader->get_name(), "\" to ", UnitType::get_branch_name(branch), " unit group \"", name, "\""
+				);
+				return false;
+			}
+
+			if (OV_unlikely(&new_leader->get_country() != country)) {
+				Logger::error(
+					"Trying to assign ", UnitType::get_branched_leader_name(new_leader->get_branch()), " \"",
+					new_leader->get_name(), "\" of country \"", new_leader->get_country().get_identifier(), "\" to ",
+					UnitType::get_branched_unit_group_name(branch), " \"", name, "\" of country \"",
+					(country != nullptr ? country->get_identifier() : "<NULL>"), "\""
+				);
+				return false;
+			}
+
+			if (new_leader->unit_instance_group != nullptr) {
+				if (new_leader->unit_instance_group != this) {
+					ret &= new_leader->unit_instance_group->set_leader(nullptr);
 				} else {
-					Logger::error("Leader ", leader->get_name(), " already leads group ", name, "!");
+					Logger::error(
+						UnitType::get_branched_leader_name(new_leader->get_branch()), " ", new_leader->get_name(),
+						" already leads ", UnitType::get_branched_unit_group_name(branch), " ", name, "!"
+					);
 					ret = false;
 				}
 			}
 
-			leader->unit_instance_group = static_cast<UnitInstanceGroupBranched<Branch>*>(this);
+			leader = new_leader;
+			leader->unit_instance_group = this;
 		}
 	}
 
@@ -156,106 +197,101 @@ bool UnitInstanceGroup<Branch>::set_leader(_Leader* new_leader) {
 }
 
 // These values are only needed for the UI, so there's no need to pre-calculate and cache them for every unit on every update.
-template<UnitType::branch_t Branch>
-fixed_point_t UnitInstanceGroup<Branch>::get_organisation_proportion() const {
+fixed_point_t UnitInstanceGroup::get_organisation_proportion() const {
 	return total_max_organisation != fixed_point_t::_0() ? total_organisation / total_max_organisation : fixed_point_t::_0();
 }
 
-template<UnitType::branch_t Branch>
-fixed_point_t UnitInstanceGroup<Branch>::get_strength_proportion() const {
+fixed_point_t UnitInstanceGroup::get_strength_proportion() const {
 	return total_max_strength != fixed_point_t::_0() ? total_strength / total_max_strength : fixed_point_t::_0();
 }
 
-template<UnitType::branch_t Branch>
-fixed_point_t UnitInstanceGroup<Branch>::get_average_organisation() const {
+fixed_point_t UnitInstanceGroup::get_average_organisation() const {
 	return !units.empty() ? total_organisation / static_cast<int32_t>(units.size()) : fixed_point_t::_0();
 }
 
-template<UnitType::branch_t Branch>
-fixed_point_t UnitInstanceGroup<Branch>::get_average_max_organisation() const {
+fixed_point_t UnitInstanceGroup::get_average_max_organisation() const {
 	return !units.empty() ? total_max_organisation / static_cast<int32_t>(units.size()) : fixed_point_t::_0();
 }
 
-template<UnitType::branch_t Branch>
-bool UnitInstanceGroup<Branch>::is_moving() const {
+bool UnitInstanceGroup::is_moving() const {
 	return !path.empty();
 }
 
-template<UnitType::branch_t Branch>
-ProvinceInstance const* UnitInstanceGroup<Branch>::get_movement_destination_province() const {
+ProvinceInstance const* UnitInstanceGroup::get_movement_destination_province() const {
 	return !path.empty() ? path.back() : nullptr;
 }
 
-template<UnitType::branch_t Branch>
-Date UnitInstanceGroup<Branch>::get_movement_arrival_date() const {
+Date UnitInstanceGroup::get_movement_arrival_date() const {
 	// TODO - calculate today + remaining movement cost / unit speed
 	return {};
 }
 
-template<UnitType::branch_t Branch>
-bool UnitInstanceGroup<Branch>::is_in_combat() const {
+bool UnitInstanceGroup::is_in_combat() const {
 	// TODO - check if in combat
 	return false;
 }
 
-template struct OpenVic::UnitInstanceGroup<LAND>;
-template struct OpenVic::UnitInstanceGroup<NAVAL>;
-
 UnitInstanceGroupBranched<LAND>::UnitInstanceGroupBranched(
-	std::string_view new_name,
-	std::vector<RegimentInstance*>&& new_units
-) : UnitInstanceGroup { new_name, std::move(new_units) } {}
+	unique_id_t new_unique_id,
+	std::string_view new_name
+) : UnitInstanceGroup { new_unique_id, LAND, new_name } {}
 
 void UnitInstanceGroupBranched<LAND>::update_gamestate() {
-	UnitInstanceGroup<LAND>::update_gamestate();
+	UnitInstanceGroup::update_gamestate();
 }
 
 void UnitInstanceGroupBranched<LAND>::tick() {
-	UnitInstanceGroup<LAND>::tick();
+	UnitInstanceGroup::tick();
 }
 
 UnitInstanceGroupBranched<NAVAL>::UnitInstanceGroupBranched(
-	std::string_view new_name,
-	std::vector<ShipInstance*>&& new_units
-) : UnitInstanceGroup { new_name, std::move(new_units) } {}
+	unique_id_t new_unique_id,
+	std::string_view new_name
+) : UnitInstanceGroup { new_unique_id, NAVAL, new_name } {}
 
 void UnitInstanceGroupBranched<NAVAL>::update_gamestate() {
-	UnitInstanceGroup<NAVAL>::update_gamestate();
+	UnitInstanceGroup::update_gamestate();
 }
 
 void UnitInstanceGroupBranched<NAVAL>::tick() {
-	UnitInstanceGroup<NAVAL>::tick();
+	UnitInstanceGroup::tick();
 }
 
 fixed_point_t UnitInstanceGroupBranched<NAVAL>::get_total_consumed_supply() const {
 	fixed_point_t total_consumed_supply = 0;
 
-	for (ShipInstance const* ship : get_units()) {
-		total_consumed_supply += ship->get_unit_type().get_supply_consumption_score();
+	for (ShipInstance const* ship : get_ship_instances()) {
+		total_consumed_supply += ship->get_ship_type().get_supply_consumption_score();
 	}
 
 	return total_consumed_supply;
 }
 
 template<UnitType::branch_t Branch>
-bool UnitInstanceManager::generate_unit_instance(
-	UnitDeployment<Branch> const& unit_deployment, UnitInstanceBranched<Branch>*& unit_instance
-) {
-	unit_instance = &*get_unit_instances<Branch>().insert(
-		[&unit_deployment]() -> UnitInstanceBranched<Branch> {
+UnitInstanceBranched<Branch>& UnitInstanceManager::generate_unit_instance(UnitDeployment<Branch> const& unit_deployment) {
+	UnitInstanceBranched<Branch>& unit_instance = *get_unit_instances<Branch>().insert(
+		[this, &unit_deployment]() -> UnitInstanceBranched<Branch> {
 			if constexpr (Branch == LAND) {
 				return {
-					unit_deployment.get_name(), unit_deployment.get_type(),
+					unique_id_counter++,
+					unit_deployment.get_name(),
+					unit_deployment.get_type(),
 					nullptr, // TODO - get pop from Province unit_deployment.get_home()
 					false // Not mobilised
 				};
 			} else if constexpr (Branch == NAVAL) {
-				return { unit_deployment.get_name(), unit_deployment.get_type() };
+				return {
+					unique_id_counter++,
+					unit_deployment.get_name(),
+					unit_deployment.get_type()
+				};
 			}
 		}()
 	);
 
-	return true;
+	unit_instance_map.emplace(unit_instance.get_unique_id(), &unit_instance);
+
+	return unit_instance;
 }
 
 template<UnitType::branch_t Branch>
@@ -278,31 +314,16 @@ bool UnitInstanceManager::generate_unit_instance_group(
 		return false;
 	}
 
+	UnitInstanceGroupBranched<Branch>& unit_instance_group = *get_unit_instance_groups<Branch>().insert({
+		unique_id_counter++, unit_deployment_group.get_name()
+	});
+	unit_instance_group_map.emplace(unit_instance_group.get_unique_id(), &unit_instance_group);
+
 	bool ret = true;
 
-	std::vector<UnitInstanceBranched<Branch>*> unit_instances;
-
 	for (UnitDeployment<Branch> const& unit_deployment : unit_deployment_group.get_units()) {
-		UnitInstanceBranched<Branch>* unit_instance = nullptr;
-
-		ret &= generate_unit_instance(unit_deployment, unit_instance);
-
-		if (unit_instance != nullptr) {
-			unit_instances.push_back(unit_instance);
-		}
+		ret &= unit_instance_group.add_unit(generate_unit_instance(unit_deployment));
 	}
-
-	if (unit_instances.empty()) {
-		Logger::error(
-			"Failed to generate any units for unit group \"", unit_deployment_group.get_name(), "\" for country \"",
-			country.get_identifier(), "\""
-		);
-		return false;
-	}
-
-	UnitInstanceGroupBranched<Branch>& unit_instance_group = *get_unit_instance_groups<Branch>().insert({
-		unit_deployment_group.get_name(), std::move(unit_instances)
-	});
 
 	ret &= unit_instance_group.set_position(
 		&map_instance.get_province_instance_from_definition(*unit_deployment_group.get_location())
@@ -310,13 +331,13 @@ bool UnitInstanceManager::generate_unit_instance_group(
 	ret &= unit_instance_group.set_country(&country);
 
 	if (unit_deployment_group.get_leader_index().has_value()) {
-		plf::colony<LeaderBranched<Branch>>& leaders = country.get_leaders<Branch>();
-		typename plf::colony<LeaderBranched<Branch>>::iterator it = leaders.begin();
+		std::vector<LeaderInstance*>& leaders = country.get_leaders<Branch>();
+		typename std::vector<LeaderInstance*>::const_iterator it = leaders.begin();
 
 		advance(it, *unit_deployment_group.get_leader_index());
 
 		if (it < leaders.end()) {
-			ret &= unit_instance_group.set_leader(&*it);
+			ret &= unit_instance_group.set_leader(*it);
 		} else {
 			Logger::error(
 				"Invalid leader index ", *unit_deployment_group.get_leader_index(), " for unit group \"",
@@ -329,41 +350,30 @@ bool UnitInstanceManager::generate_unit_instance_group(
 	return ret;
 }
 
-bool UnitInstanceManager::generate_leader(
-	CultureManager const& culture_manager, CountryInstance& country, LeaderBase const& leader
-) {
-	using enum UnitType::branch_t;
+void UnitInstanceManager::generate_leader(CountryInstance& country, LeaderBase const& leader) {
+	LeaderInstance& leader_instance = *leaders.insert({
+		unique_id_counter++, leader, country
+	});
+	leader_instance_map.emplace(leader_instance.get_unique_id(), &leader_instance);
+	country.add_leader(leader_instance);
 
-	const auto add_leader = [&culture_manager, &country, &leader]<UnitType::branch_t Branch>() -> void {
-		LeaderBranched<Branch> leader_branched { leader };
-
-		if (leader_branched.get_picture().empty() && country.get_primary_culture() != nullptr) {
-			leader_branched.set_picture(culture_manager.get_leader_picture_name(
-				country.get_primary_culture()->get_group().get_leader(), leader.get_branch()
-			));
-		}
-
-		country.add_leader(std::move(leader_branched));
-	};
-
-	switch (leader.get_branch()) {
-	case LAND:
-		add_leader.template operator()<LAND>();
-		return true;
-	case NAVAL:
-		add_leader.template operator()<NAVAL>();
-		return true;
-	default:
-		Logger::error(
-			"Invalid branch ", static_cast<uint64_t>(leader.get_branch()), " for leader \"", leader.get_name(),
-			"\", cannot add to country ", country.get_identifier()
-		);
-		return false;;
+	if (leader_instance.get_picture().empty() && country.get_primary_culture() != nullptr) {
+		leader_instance.set_picture(culture_manager.get_leader_picture_name(
+			country.get_primary_culture()->get_group().get_leader(), leader.get_branch()
+		));
 	}
 }
 
+UnitInstanceManager::UnitInstanceManager(
+	CultureManager const& new_culture_manager,
+	LeaderTraitManager const& new_leader_trait_manager,
+	MilitaryDefines const& new_military_defines
+) : culture_manager { new_culture_manager },
+	leader_trait_manager { new_leader_trait_manager },
+	military_defines { new_military_defines } {}
+
 bool UnitInstanceManager::generate_deployment(
-	CultureManager const& culture_manager, MapInstance& map_instance, CountryInstance& country, Deployment const* deployment
+	MapInstance& map_instance, CountryInstance& country, Deployment const* deployment
 ) {
 	if (deployment == nullptr) {
 		Logger::error("Trying to generate null deployment for ", country.get_identifier());
@@ -373,7 +383,7 @@ bool UnitInstanceManager::generate_deployment(
 	bool ret = true;
 
 	for (LeaderBase const& leader : deployment->get_leaders()) {
-		ret &= generate_leader(culture_manager, country, leader);
+		generate_leader(country, leader);
 	}
 
 	const auto generate_group = [this, &map_instance, &country, &ret, deployment]<UnitType::branch_t Branch>() -> void {
@@ -404,4 +414,110 @@ void UnitInstanceManager::tick() {
 	for (NavyInstance& navy : navies) {
 		navy.tick();
 	}
+}
+
+LeaderInstance* UnitInstanceManager::get_leader_instance_by_unique_id(unique_id_t unique_id) {
+	const decltype(leader_instance_map)::const_iterator it = leader_instance_map.find(unique_id);
+
+	if (it != leader_instance_map.end()) {
+		return it->second;
+	} else {
+		return nullptr;
+	}
+}
+
+UnitInstance* UnitInstanceManager::get_unit_instance_by_unique_id(unique_id_t unique_id) {
+	const decltype(unit_instance_map)::const_iterator it = unit_instance_map.find(unique_id);
+
+	if (it != unit_instance_map.end()) {
+		return it->second;
+	} else {
+		return nullptr;
+	}
+}
+
+UnitInstanceGroup* UnitInstanceManager::get_unit_instance_group_by_unique_id(unique_id_t unique_id) {
+	const decltype(unit_instance_group_map)::const_iterator it = unit_instance_group_map.find(unique_id);
+
+	if (it != unit_instance_group_map.end()) {
+		return it->second;
+	} else {
+		return nullptr;
+	}
+}
+
+bool UnitInstanceManager::create_leader(
+	CountryInstance& country,
+	UnitType::branch_t branch,
+	Date creation_date,
+	std::string_view name,
+	LeaderTrait const* personality,
+	LeaderTrait const* background
+) {
+	const fixed_point_t leader_creation_cost = military_defines.get_leader_recruit_cost();
+	if (country.get_leadership_point_stockpile() < leader_creation_cost) {
+		Logger::error(
+			"Country \"", country.get_identifier(), "\" does not have enough leadership points (",
+			country.get_leadership_point_stockpile().to_string(2), ") to create a ",
+			UnitType::get_branched_leader_name(branch), " (cost: ", leader_creation_cost.to_string(2), ")"
+		);
+		return false;
+	}
+
+	// TODO - replace with RNG
+	static size_t item_selection_counter = 0;
+
+	// Variable for storing a generated name if none is provided
+	std::string name_storage;
+	if (name.empty()) {
+		Culture const* culture = country.get_primary_culture();
+
+		if (culture != nullptr) {
+			std::string_view first_name, connector, last_name;
+
+			if (!culture->get_first_names().empty()) {
+				first_name = culture->get_first_names()[item_selection_counter++ % culture->get_first_names().size()];
+			}
+
+			if (!culture->get_last_names().empty()) {
+				last_name = culture->get_last_names()[item_selection_counter++ % culture->get_last_names().size()];
+			}
+
+			if (!first_name.empty() && !last_name.empty()) {
+				connector = " ";
+			}
+
+			name_storage = StringUtils::append_string_views(first_name, connector, last_name);
+			name = name_storage;
+		}
+	}
+
+	if (personality == nullptr && !leader_trait_manager.get_personality_traits().empty()) {
+		personality = leader_trait_manager.get_personality_traits()[
+			item_selection_counter++ % leader_trait_manager.get_personality_traits().size()
+		];
+	}
+
+	if (background == nullptr && !leader_trait_manager.get_background_traits().empty()) {
+		background = leader_trait_manager.get_background_traits()[
+			item_selection_counter++ % leader_trait_manager.get_background_traits().size()
+		];
+	}
+
+	// TODO - should we abort is personality or background is still nullptr?
+	// Or even if name is empty? Should we add a default name or is empty fine?
+
+	generate_leader(country, {
+		name,
+		branch,
+		creation_date,
+		personality,
+		background,
+		fixed_point_t::_0(), // 0 starting prestige
+		{} // No picture, will be set up by generate_leader
+	});
+
+	country.set_leadership_point_stockpile(country.get_leadership_point_stockpile() - leader_creation_cost);
+
+	return true;
 }

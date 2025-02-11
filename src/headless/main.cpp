@@ -60,7 +60,7 @@ static bool run_headless(Dataloader::path_vector_t const& roots, bool run_tests)
 
 	GameManager game_manager { []() {
 		Logger::info("State updated");
-	}, nullptr };
+	} };
 
 	Logger::info("===== Loading definitions... =====");
 	ret &= game_manager.set_roots(roots);
@@ -136,8 +136,26 @@ static bool run_headless(Dataloader::path_vector_t const& roots, bool run_tests)
 	$ program [-h] [-t] [-b] [path]+
 */
 
+// void test_exp(fixed_point_t x) {
+// 	Logger::info(
+// 		"e ^ ", x, " = ", fixed_point_t::exp_constants(x), " = ", fixed_point_t::exp_sum(x), " = ", exp(x.to_double())
+// 	);
+// }
+
 int main(int argc, char const* argv[]) {
 	Logger::set_logger_funcs();
+
+	// for (int i = -10; i <= 10; ++i) {
+	// 	test_exp(fixed_point_t::parse(i) / 10);
+	// }
+
+	// for (int32_t i = -10; i <= 10; ++i) {
+	// 	const int64_t raw = 498165 + i;
+	// 	const fixed_point_t x = fixed_point_t::parse_raw(raw);
+	// 	Logger::info("raw: ", raw, ", x: ", x, ", exp(x): ", fixed_point_t::exp(x));
+	// }
+
+	// return 0;
 
 	char const* program_name = StringUtils::get_filename(argc > 0 ? argv[0] : nullptr, "<program>");
 	fs::path root;

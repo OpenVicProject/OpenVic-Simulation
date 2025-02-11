@@ -17,25 +17,6 @@ ProvinceInstance const& MapInstance::get_province_instance_from_definition(Provi
 	return province_instances.get_items()[province.get_index() - 1];
 }
 
-void MapInstance::set_selected_province(ProvinceDefinition::index_t index) {
-	if (index == ProvinceDefinition::NULL_INDEX) {
-		selected_province = nullptr;
-	} else {
-		selected_province = get_province_instance_by_index(index);
-		if (selected_province == nullptr) {
-			Logger::error(
-				"Trying to set selected province to an invalid index ", index, " (max index is ",
-				get_province_instance_count(), ")"
-			);
-		}
-	}
-}
-
-ProvinceDefinition::index_t MapInstance::get_selected_province_index() const {
-	return selected_province != nullptr ? selected_province->get_province_definition().get_index()
-		: ProvinceDefinition::NULL_INDEX;
-}
-
 bool MapInstance::setup(
 	BuildingTypeManager const& building_type_manager,
 	MarketInstance& market_instance,

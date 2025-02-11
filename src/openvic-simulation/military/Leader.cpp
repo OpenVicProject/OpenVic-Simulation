@@ -21,3 +21,6 @@ LeaderBase::LeaderBase(
 void LeaderBase::set_picture(std::string_view new_picture) {
 	picture = new_picture;
 }
+
+LeaderInstance::LeaderInstance(unique_id_t new_unique_id, LeaderBase const& leader_base, CountryInstance const& new_country)
+	: LeaderBase { leader_base }, unique_id { new_unique_id }, country { new_country } {}
