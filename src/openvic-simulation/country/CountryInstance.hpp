@@ -5,6 +5,7 @@
 
 #include <plf_colony.h>
 
+#include "openvic-simulation/diplomacy/CountryRelation.hpp"
 #include "openvic-simulation/military/Leader.hpp"
 #include "openvic-simulation/military/UnitInstanceGroup.hpp"
 #include "openvic-simulation/modifier/ModifierSum.hpp"
@@ -12,11 +13,12 @@
 #include "openvic-simulation/politics/Rule.hpp"
 #include "openvic-simulation/pop/PopType.hpp"
 #include "openvic-simulation/types/Date.hpp"
-#include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
 #include "openvic-simulation/types/FlagStrings.hpp"
 #include "openvic-simulation/types/IdentifierRegistry.hpp"
 #include "openvic-simulation/types/IndexedMap.hpp"
+#include "openvic-simulation/types/OrderedContainers.hpp"
 #include "openvic-simulation/types/SliderValue.hpp"
+#include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
 #include "openvic-simulation/utility/Getters.hpp"
 
 namespace OpenVic {
@@ -217,7 +219,11 @@ namespace OpenVic {
 		fixed_point_t PROPERTY(prestige);
 		size_t PROPERTY(prestige_rank, 0);
 		fixed_point_t PROPERTY(diplomatic_points);
-		// TODO - colonial power, current wars
+		// TODO - colonial power
+		vector_ordered_map<CountryInstance const*, CountryRelationManager::relation_value_type*> PROPERTY_REF(relations);
+		vector_ordered_map<CountryInstance const*, bool*> PROPERTY_REF(alliances);
+		vector_ordered_map<CountryInstance const*, bool*> PROPERTY_REF(at_war_with);
+		vector_ordered_map<CountryInstance const*, bool*> PROPERTY_REF(military_access);
 
 		/* Military */
 		fixed_point_t PROPERTY(military_power);
