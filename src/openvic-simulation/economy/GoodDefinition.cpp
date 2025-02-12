@@ -56,7 +56,8 @@ bool GoodDefinitionManager::add_good_definition(
 
 	if (is_tradeable == is_money) {
 		Logger::warning(
-			"Good ", identifier, " has tradeable:", StringUtils::bool_to_yes_no(is_tradeable), " and money:", StringUtils::bool_to_yes_no(is_money),
+			"Good ", identifier, " has tradeable: ", StringUtils::bool_to_yes_no(is_tradeable), " and money: ",
+			StringUtils::bool_to_yes_no(is_money),
 			". Money goods are never tradeable. All other goods are tradeable. Setting tradeable has no effect."
 		);
 	}
