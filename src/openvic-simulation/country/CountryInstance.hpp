@@ -48,7 +48,7 @@ namespace OpenVic {
 
 	/* Representation of a country's mutable attributes, with a CountryDefinition that is unique at any single time
 	 * but can be swapped with other CountryInstance's CountryDefinition when switching tags. */
-	struct CountryInstance : FlagStrings {
+	struct CountryInstance : FlagStrings, HasIndex<> {
 		friend struct CountryInstanceManager;
 
 		/*
@@ -270,6 +270,7 @@ namespace OpenVic {
 
 		CountryInstance(
 			CountryDefinition const* new_country_definition,
+			index_t new_index,
 			decltype(building_type_unlock_levels)::keys_type const& building_type_keys,
 			decltype(technology_unlock_levels)::keys_type const& technology_keys,
 			decltype(invention_unlock_levels)::keys_type const& invention_keys,
@@ -529,6 +530,8 @@ namespace OpenVic {
 		CountryDefinitionManager const& PROPERTY(country_definition_manager);
 
 		IdentifierRegistry<CountryInstance> IDENTIFIER_REGISTRY(country_instance);
+
+		IndexedMap<CountryDefinition, CountryInstance*> PROPERTY(country_definition_to_instance_map);
 
 		std::vector<CountryInstance*> PROPERTY(great_powers);
 		std::vector<CountryInstance*> PROPERTY(secondary_powers);

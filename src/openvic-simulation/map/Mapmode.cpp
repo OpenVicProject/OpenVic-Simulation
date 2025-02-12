@@ -77,8 +77,7 @@ bool MapmodeManager::generate_mapmode_colours(MapInstance const& map_instance, M
 
 	if (map_instance.province_instances_are_locked()) {
 		for (ProvinceInstance const& province : map_instance.get_province_instances()) {
-			target_stripes[province.get_province_definition().get_index()] =
-				mapmode->get_base_stripe_colours(map_instance, province);
+			target_stripes[province.get_index()] = mapmode->get_base_stripe_colours(map_instance, province);
 		}
 	} else {
 		for (
@@ -256,8 +255,7 @@ bool MapmodeManager::setup_mapmodes() {
 		"mapmode_index",
 		[](MapInstance const& map_instance, ProvinceInstance const& province) -> Mapmode::base_stripe_t {
 			const colour_argb_t::value_type f = colour_argb_t::colour_traits::component_from_fraction(
-				province.get_province_definition().get_index(),
-				map_instance.get_map_definition().get_province_definition_count() + 1
+				province.get_index(), map_instance.get_map_definition().get_province_definition_count() + 1
 			);
 			return colour_argb_t::fill_as(f).with_alpha(ALPHA_VALUE);
 		}

@@ -42,7 +42,7 @@ namespace OpenVic {
 	using ArmyInstance = UnitInstanceGroupBranched<UnitType::branch_t::LAND>;
 	using NavyInstance = UnitInstanceGroupBranched<UnitType::branch_t::NAVAL>;
 
-	struct ProvinceInstance : HasIdentifierAndColour, FlagStrings {
+	struct ProvinceInstance : HasIdentifierAndColour, HasIndex<>, FlagStrings {
 		friend struct MapInstance;
 
 		using life_rating_t = int8_t;

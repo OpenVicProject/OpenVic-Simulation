@@ -25,6 +25,7 @@ static constexpr colour_t ERROR_COLOUR = colour_t::from_integer(0xFF0000);
 
 CountryInstance::CountryInstance(
 	CountryDefinition const* new_country_definition,
+	index_t new_index,
 	decltype(building_type_unlock_levels)::keys_type const& building_type_keys,
 	decltype(technology_unlock_levels)::keys_type const& technology_keys,
 	decltype(invention_unlock_levels)::keys_type const& invention_keys,
@@ -39,6 +40,7 @@ CountryInstance::CountryInstance(
 	decltype(tax_rate_by_strata)::keys_type const& strata_keys,
 	GoodInstanceManager& good_instance_manager
 ) : FlagStrings { "country" },
+	HasIndex { new_index },
 	/* Main attributes */
 	country_definition { new_country_definition },
 	colour { ERROR_COLOUR },
@@ -1517,14 +1519,15 @@ void CountryInstanceManager::update_rankings(Date today, DefineManager const& de
 }
 
 CountryInstanceManager::CountryInstanceManager(CountryDefinitionManager const& new_country_definition_manager)
-	: country_definition_manager { new_country_definition_manager } {}
+  : country_definition_manager { new_country_definition_manager },
+	country_definition_to_instance_map { &new_country_definition_manager.get_country_definitions() } {}
 
 CountryInstance& CountryInstanceManager::get_country_instance_from_definition(CountryDefinition const& country) {
-	return country_instances.get_items()[country.get_index()];
+	return *country_definition_to_instance_map[country];
 }
 
 CountryInstance const& CountryInstanceManager::get_country_instance_from_definition(CountryDefinition const& country) const {
-	return country_instances.get_items()[country.get_index()];
+	return *country_definition_to_instance_map[country];
 }
 
 bool CountryInstanceManager::generate_country_instances(
@@ -1549,6 +1552,7 @@ bool CountryInstanceManager::generate_country_instances(
 	for (CountryDefinition const& country_definition : country_definition_manager.get_country_definitions()) {
 		if (country_instances.add_item({
 			&country_definition,
+			get_country_instance_count(),
 			building_type_keys,
 			technology_keys,
 			invention_keys,
@@ -1567,6 +1571,8 @@ bool CountryInstanceManager::generate_country_instances(
 			// after changing between its constructor call and now due to being std::move'd into the registry.
 			CountryInstance& country_instance = get_back_country_instance();
 			country_instance.modifier_sum.set_this_source(&country_instance);
+
+			country_definition_to_instance_map[country_definition] = &country_instance;
 		} else {
 			ret = false;
 		}
