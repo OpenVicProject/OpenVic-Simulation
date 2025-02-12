@@ -890,7 +890,7 @@ void CountryInstance::_update_current_tech(InstanceManager const& instance_manag
 
 	if (daily_research_points > fixed_point_t::_0()) {
 		expected_research_completion_date = instance_manager.get_today() + static_cast<Timespan>(
-			(current_research_cost / daily_research_points).ceil()
+			((current_research_cost - invested_research_points) / daily_research_points).ceil()
 		);
 	} else {
 		expected_research_completion_date = definition_manager.get_define_manager().get_end_date();
