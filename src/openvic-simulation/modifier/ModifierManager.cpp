@@ -577,7 +577,7 @@ bool ModifierManager::setup_modifier_effects() {
 		modifier_effect_cache.population_growth, "population_growth", true, PROPORTION_DECIMAL
 	);
 	ret &= register_technology_modifier_effect(
-		modifier_effect_cache.supply_limit_global_percentage_change, "supply_limit", true, RAW_DECIMAL
+		modifier_effect_cache.supply_limit_global_percentage_change, "supply_limit", true, PROPORTION_DECIMAL
 	);
 	ret &= register_base_country_modifier_effect(
 		modifier_effect_cache.supply_limit_global_base, "supply_limit", true, RAW_DECIMAL
