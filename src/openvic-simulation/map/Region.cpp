@@ -76,6 +76,10 @@ size_t ProvinceSet::size() const {
 	return provinces.size();
 }
 
+size_t ProvinceSet::capacity() const {
+	return provinces.capacity();
+}
+
 void ProvinceSet::reserve(size_t size) {
 	if (locked) {
 		Logger::error("Failed to reserve space for ", size, " items in province set - already locked!");

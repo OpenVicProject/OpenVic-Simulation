@@ -49,13 +49,15 @@ namespace OpenVic {
 	using name_list_t = std::vector<std::string>;
 	std::ostream& operator<<(std::ostream& stream, name_list_t const& name_list);
 
+	// This adds to capacity rather than size so that it can be used multiple times in a row.
+	// If it added to size, it would only reserve enough for max(arguments...)
 	template<typename T>
 	concept Reservable = requires(T& t, size_t size) {
-		{ t.size() } -> std::same_as<size_t>;
+		{ t.capacity() } -> std::same_as<size_t>;
 		t.reserve(size);
 	};
 	constexpr void reserve_more(Reservable auto& t, size_t size) {
-		t.reserve(t.size() + size);
+		t.reserve(t.capacity() + size);
 	}
 
 	namespace NodeTools {

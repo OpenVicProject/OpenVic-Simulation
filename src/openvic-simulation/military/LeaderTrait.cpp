@@ -65,13 +65,46 @@ bool LeaderTraitManager::add_leader_trait(
 		return false;
 	}
 
-	return leader_traits.add_item({ identifier, type, std::move(modifiers) });
+	if (leader_traits.add_item({ identifier, type, std::move(modifiers) })) {
+		using enum LeaderTrait::trait_type_t;
+
+		switch (type) {
+		case PERSONALITY:
+			personality_traits.push_back(&leader_traits.back());
+			break;
+		case BACKGROUND:
+			background_traits.push_back(&leader_traits.back());
+			break;
+		}
+
+		return true;
+	} else {
+		return false;
+	}
 }
 
 bool LeaderTraitManager::load_leader_traits_file(ModifierManager const& modifier_manager, ast::NodeCPtr root) {
+	// Reserve space for the leader traits so we can safely store pointers in personality_traits and
+	// background_traits without the risk of them being invalidated by reallocations of leader_traits.
+	bool ret = expect_dictionary_keys(
+		"personality", ONE_EXACTLY, expect_length(
+			[this](size_t length) -> bool {
+				reserve_more(leader_traits, length);
+				reserve_more(personality_traits, length);
+				return true;
+			}
+		),
+		"background", ONE_EXACTLY, expect_length(
+			[this](size_t length) -> bool {
+				reserve_more(leader_traits, length);
+				reserve_more(background_traits, length);
+				return true;
+			}
+		)
+	)(root);
+
 	const auto trait_callback = [this, &modifier_manager](LeaderTrait::trait_type_t type) -> NodeCallback auto {
-		return expect_dictionary_reserve_length(
-			leader_traits,
+		return expect_dictionary(
 			[this, &modifier_manager, type](std::string_view trait_identifier, ast::NodeCPtr value) -> bool {
 				ModifierValue modifiers;
 
@@ -88,7 +121,7 @@ bool LeaderTraitManager::load_leader_traits_file(ModifierManager const& modifier
 
 	using enum LeaderTrait::trait_type_t;
 
-	const bool ret = expect_dictionary_keys(
+	ret &= expect_dictionary_keys(
 		"personality", ONE_EXACTLY, trait_callback(PERSONALITY),
 		"background", ONE_EXACTLY, trait_callback(BACKGROUND)
 	)(root);
