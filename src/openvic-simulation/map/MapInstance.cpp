@@ -39,6 +39,7 @@ bool MapInstance::setup(
 	BuildingTypeManager const& building_type_manager,
 	MarketInstance& market_instance,
 	ModifierEffectCache const& modifier_effect_cache,
+	PopsDefines const& pop_defines,
 	decltype(ProvinceInstance::population_by_strata)::keys_type const& strata_keys,
 	decltype(ProvinceInstance::pop_type_distribution)::keys_type const& pop_type_keys,
 	decltype(ProvinceInstance::ideology_distribution)::keys_type const& ideology_keys
@@ -60,6 +61,7 @@ bool MapInstance::setup(
 			if (province_instances.add_item({
 				market_instance,
 				modifier_effect_cache,
+				pop_defines,
 				province,
 				strata_keys,
 				pop_type_keys,
@@ -97,6 +99,7 @@ bool MapInstance::apply_history_to_provinces(
 	const Date date,
 	CountryInstanceManager& country_manager,
 	IssueManager const& issue_manager,
+	MarketInstance& market_instance,
 	ArtisanalProducerFactoryPattern& artisanal_producer_factory_pattern
 ) {
 	bool ret = true;
@@ -131,7 +134,11 @@ bool MapInstance::apply_history_to_provinces(
 				if (pop_history_entry == nullptr) {
 					Logger::warning("No pop history entry for province ", province.get_identifier(), " for date ", date);
 				} else {
-					ret &= province.add_pop_vec(pop_history_entry->get_pops(), artisanal_producer_factory_pattern);
+					ret &= province.add_pop_vec(
+						pop_history_entry->get_pops(),
+						market_instance,
+						artisanal_producer_factory_pattern
+					);
 					province.setup_pop_test_values(issue_manager);
 				}
 

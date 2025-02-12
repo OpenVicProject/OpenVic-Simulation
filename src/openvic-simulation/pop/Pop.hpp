@@ -7,8 +7,9 @@
 #include "openvic-simulation/pop/PopType.hpp"
 
 namespace OpenVic {
-	struct DefineManager;
 	struct CountryInstance;
+	struct DefineManager;
+	struct MarketInstance;
 	struct ProvinceInstance;
 
 	struct PopBase {
@@ -49,6 +50,11 @@ namespace OpenVic {
 		F(luxury_needs_expense)\
 		F(artisan_inputs_expense)
 
+	#define DO_FOR_ALL_NEED_CATEGORIES(F)\
+		F(life)\
+		F(everyday)\
+		F(luxury)
+
 	#define DECLARE_POP_MONEY_STORES(money_type)\
 		fixed_point_t PROPERTY(money_type);
 
@@ -64,19 +70,25 @@ namespace OpenVic {
 		static constexpr pop_size_t MAX_SIZE = std::numeric_limits<pop_size_t>::max();
 
 	private:
+		MarketInstance& market_instance;
 		std::unique_ptr<ArtisanalProducer> artisanal_producer_nullable;
-		ProvinceInstance* PROPERTY_PTR(location);
+		fixed_point_t cash_allocated_for_artisanal_spending;
+		fixed_point_t artisanal_produce_left_to_sell;
+		GoodDefinition::good_definition_map_t max_quantity_to_buy_per_good; //TODO pool?
+		GoodDefinition::good_definition_map_t money_to_spend_per_good; //TODO pool?
+		ProvinceInstance* PROPERTY_PTR(location, nullptr);
 
 		/* Last day's size change by source. */
-		pop_size_t PROPERTY(total_change);
-		pop_size_t PROPERTY(num_grown);
-		pop_size_t PROPERTY(num_promoted); // TODO - detailed promotion/demotion info (what to)
-		pop_size_t PROPERTY(num_demoted);
-		pop_size_t PROPERTY(num_migrated_internal); // TODO - detailed migration info (where to)
-		pop_size_t PROPERTY(num_migrated_external);
-		pop_size_t PROPERTY(num_migrated_colonial);
+		pop_size_t PROPERTY(total_change, 0);
+		pop_size_t PROPERTY(num_grown, 0);
+		pop_size_t PROPERTY(num_promoted, 0); // TODO - detailed promotion/demotion info (what to)
+		pop_size_t PROPERTY(num_demoted, 0);
+		pop_size_t PROPERTY(num_migrated_internal, 0); // TODO - detailed migration info (where to)
+		pop_size_t PROPERTY(num_migrated_external, 0);
+		pop_size_t PROPERTY(num_migrated_colonial, 0);
 
-		fixed_point_t PROPERTY_RW(literacy);
+		static constexpr fixed_point_t DEFAULT_POP_LITERACY = fixed_point_t::_0_10();
+		fixed_point_t PROPERTY_RW(literacy, DEFAULT_POP_LITERACY);
 
 		// All of these should have a total size equal to the pop size, allowing the distributions from different pops to be
 		// added together with automatic weighting based on their relative sizes. Similarly, the province, state and country
@@ -90,23 +102,39 @@ namespace OpenVic {
 		fixed_point_t PROPERTY(income);
 		fixed_point_t PROPERTY(expenses); //positive value means POP paid for goods. This is displayed * -1 in UI.
 		fixed_point_t PROPERTY(savings);
-		fixed_point_t PROPERTY(life_needs_fulfilled);
-		fixed_point_t PROPERTY(everyday_needs_fulfilled);
-		fixed_point_t PROPERTY(luxury_needs_fulfilled);
+
+		#define NEED_MEMBERS(need_category)\
+			fixed_point_t need_category##_needs_acquired_quantity, need_category##_needs_desired_quantity; \
+			public: \
+			constexpr fixed_point_t get_##need_category##_needs_fulfilled() const { \
+				if (need_category##_needs_desired_quantity == fixed_point_t::_0()) { \
+					return fixed_point_t::_1(); \
+				} \
+				return need_category##_needs_acquired_quantity / need_category##_needs_desired_quantity; \
+			} \
+			private: \
+			GoodDefinition::good_definition_map_t need_category##_needs {}; \
+			ordered_map<GoodDefinition const*, bool> PROPERTY(need_category##_needs_fulfilled_goods);
+
+		DO_FOR_ALL_NEED_CATEGORIES(NEED_MEMBERS)
+		#undef NEED_MEMBERS
 
 		DO_FOR_ALL_TYPES_OF_POP_INCOME(DECLARE_POP_MONEY_STORES);
 		DO_FOR_ALL_TYPES_OF_POP_EXPENSES(DECLARE_POP_MONEY_STORES);
 		#undef DECLARE_POP_MONEY_STORES
 
-		size_t PROPERTY(max_supported_regiments);
+		size_t PROPERTY(max_supported_regiments, 0);
 
 		Pop(
 			PopBase const& pop_base,
 			decltype(ideology_distribution)::keys_type const& ideology_keys,
+			MarketInstance& new_market_instance,
 			ArtisanalProducerFactoryPattern& artisanal_producer_factory_pattern
 		);
 
 		std::stringstream get_pop_context_text() const;
+		void reserve_needs_fulfilled_goods();
+		void fill_needs_fulfilled_goods_with_false();
 
 	public:
 		Pop(Pop const&) = delete;
@@ -135,6 +163,8 @@ namespace OpenVic {
 		DO_FOR_ALL_TYPES_OF_POP_EXPENSES(DECLARE_POP_MONEY_STORE_FUNCTIONS)
 		#undef DECLARE_POP_MONEY_STORE_FUNCTIONS
 		void pop_tick();
+		void artisanal_buy(GoodDefinition const& good, const fixed_point_t max_quantity_to_buy, const fixed_point_t money_to_spend);
+		void artisanal_sell(const fixed_point_t quantity);
 	};
 }
 #ifndef KEEP_DO_FOR_ALL_TYPES_OF_INCOME
@@ -143,4 +173,8 @@ namespace OpenVic {
 
 #ifndef KEEP_DO_FOR_ALL_TYPES_OF_EXPENSES
 	#undef DO_FOR_ALL_TYPES_OF_POP_EXPENSES
+#endif
+
+#ifndef KEEP_DO_FOR_ALL_NEED_CATEGORIES
+	#undef DO_FOR_ALL_NEED_CATEGORIES
 #endif

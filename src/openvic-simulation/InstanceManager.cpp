@@ -16,7 +16,6 @@ InstanceManager::InstanceManager(
 	good_instance_manager { new_definition_manager.get_economy_manager().get_good_definition_manager() },
 	market_instance { new_definition_manager.get_define_manager().get_country_defines(), good_instance_manager },
 	artisanal_producer_factory_pattern {
-		market_instance,
 		new_definition_manager.get_modifier_manager().get_modifier_effect_cache(),
 		new_definition_manager.get_economy_manager().get_production_type_manager()
 	},
@@ -94,6 +93,7 @@ bool InstanceManager::setup() {
 		definition_manager.get_economy_manager().get_building_type_manager(),
 		market_instance,
 		definition_manager.get_modifier_manager().get_modifier_effect_cache(),
+		definition_manager.get_define_manager().get_pops_defines(),
 		definition_manager.get_pop_manager().get_stratas(),
 		definition_manager.get_pop_manager().get_pop_types(),
 		definition_manager.get_politics_manager().get_ideology_manager().get_ideologies()
@@ -151,6 +151,7 @@ bool InstanceManager::load_bookmark(Bookmark const* new_bookmark) {
 		country_instance_manager,
 		// TODO - the following argument is for generating test pop attributes
 		definition_manager.get_politics_manager().get_issue_manager(),
+		market_instance,
 		artisanal_producer_factory_pattern
 	);
 

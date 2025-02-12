@@ -671,7 +671,15 @@ bool CountryInstance::modify_invention_unlock(
 		return false;
 	}
 
+	const bool invention_was_unlocked = unlock_level > 0;
 	unlock_level += unlock_level_change;
+	if (invention_was_unlocked != (unlock_level > 0)) {
+		if (invention_was_unlocked) {
+			inventions_count--;
+		} else {
+			inventions_count++;
+		}
+	}
 
 	bool ret = true;
 
@@ -1389,14 +1397,24 @@ void CountryInstance::tick(InstanceManager& instance_manager) {
 	//income_from_gold = country_defines.gold_to_cash_rate * sum (total_good_production * good.get_base_price()) for each good with is_money=true
 }
 
+
+void CountryInstance::report_pop_need_consumption(PopType const& pop_type, GoodDefinition const& good, const fixed_point_t quantity) {
+	//TODO
+}
+void CountryInstance::report_artisan_input_consumption(ProductionType const& production_type, GoodDefinition const& good, const fixed_point_t quantity) {
+	//TODO
+}
 void CountryInstance::report_artisan_output(ProductionType const& production_type, const fixed_point_t quantity) {
-	//TODO record artisan output
+	//TODO
+}
+void CountryInstance::report_factory_input_consumption(ProductionType const& production_type, GoodDefinition const& good, const fixed_point_t quantity) {
+	//TODO
 }
 void CountryInstance::report_factory_output(ProductionType const& production_type, const fixed_point_t quantity) {
-	//TODO record factory output
+	//TODO
 }
 void CountryInstance::report_rgo_output(GoodDefinition const& good, const fixed_point_t quantity) {
-	//TODO record rgo output
+	//TODO
 }
 
 CountryInstance::good_data_t& CountryInstance::get_good_data(GoodInstance const& good_instance) {

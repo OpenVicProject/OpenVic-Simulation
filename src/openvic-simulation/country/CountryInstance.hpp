@@ -134,6 +134,7 @@ namespace OpenVic {
 		/* Technology */
 		IndexedMap<Technology, unlock_level_t> PROPERTY(technology_unlock_levels);
 		IndexedMap<Invention, unlock_level_t> PROPERTY(invention_unlock_levels);
+		int32_t PROPERTY(inventions_count);
 		Technology const* PROPERTY(current_research, nullptr);
 		fixed_point_t PROPERTY(invested_research_points);
 		fixed_point_t PROPERTY(current_research_cost);
@@ -518,7 +519,10 @@ namespace OpenVic {
 		void update_gamestate(InstanceManager& instance_manager);
 		void tick(InstanceManager& instance_manager);
 
+		void report_pop_need_consumption(PopType const& pop_type, GoodDefinition const& good, const fixed_point_t quantity);
+		void report_artisan_input_consumption(ProductionType const& production_type, GoodDefinition const& good, const fixed_point_t quantity);
 		void report_artisan_output(ProductionType const& production_type, const fixed_point_t quantity);
+		void report_factory_input_consumption(ProductionType const& production_type, GoodDefinition const& good, const fixed_point_t quantity);
 		void report_factory_output(ProductionType const& production_type, const fixed_point_t quantity);
 		void report_rgo_output(GoodDefinition const& good, const fixed_point_t quantity);
 

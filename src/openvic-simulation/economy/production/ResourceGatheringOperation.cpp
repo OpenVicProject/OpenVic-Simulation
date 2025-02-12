@@ -16,7 +16,6 @@ using namespace OpenVic;
 
 ResourceGatheringOperation::ResourceGatheringOperation(
 	MarketInstance& new_market_instance,
-	ModifierEffectCache const& new_modifier_effect_cache,
 	ProductionType const* new_production_type_nullable,
 	fixed_point_t new_size_multiplier,
 	fixed_point_t new_revenue_yesterday,
@@ -25,7 +24,6 @@ ResourceGatheringOperation::ResourceGatheringOperation(
 	std::vector<Employee>&& new_employees,
 	decltype(employee_count_per_type_cache)::keys_type const& pop_type_keys
 ) : market_instance { new_market_instance },
-	modifier_effect_cache { new_modifier_effect_cache },
 	location_ptr { nullptr },
 	production_type_nullable { new_production_type_nullable },
 	revenue_yesterday { new_revenue_yesterday },
@@ -43,11 +41,9 @@ ResourceGatheringOperation::ResourceGatheringOperation(
 
 ResourceGatheringOperation::ResourceGatheringOperation(
 	MarketInstance& new_market_instance,
-	ModifierEffectCache const& new_modifier_effect_cache,
 	decltype(employee_count_per_type_cache)::keys_type const& pop_type_keys
 ) : ResourceGatheringOperation {
 	new_market_instance,
-	new_modifier_effect_cache,
 	nullptr, fixed_point_t::_0(),
 	fixed_point_t::_0(), fixed_point_t::_0(),
 	fixed_point_t::_0(), {}, pop_type_keys
@@ -69,6 +65,7 @@ void ResourceGatheringOperation::initialise_rgo_size_multiplier() {
 	}
 
 	ProvinceInstance& location = *location_ptr;
+	ModifierEffectCache const& modifier_effect_cache = location.get_modifier_effect_cache();
 	ProductionType const& production_type = *production_type_nullable;
 	std::vector<Job> const& jobs = production_type.get_jobs();
 	IndexedMap<PopType, pop_size_t> const& province_pop_type_distribution = location.get_pop_type_distribution();
@@ -103,6 +100,7 @@ fixed_point_t ResourceGatheringOperation::calculate_size_modifier() const {
 		return fixed_point_t::_1();
 	}
 	ProvinceInstance& location = *location_ptr;
+	ModifierEffectCache const& modifier_effect_cache = location.get_modifier_effect_cache();
 	ProductionType const& production_type = *production_type_nullable;
 
 	fixed_point_t size_modifier = fixed_point_t::_1();
@@ -157,7 +155,7 @@ void ResourceGatheringOperation::rgo_tick() {
 	}
 
 	output_quantity_yesterday = produce(total_owner_count_in_state_cache);
-	if (output_quantity_yesterday > 0) {
+	if (output_quantity_yesterday > fixed_point_t::_0()) {
 		CountryInstance* get_country_to_report_economy_nullable = location.get_country_to_report_economy();
 		if (get_country_to_report_economy_nullable != nullptr) {
 			get_country_to_report_economy_nullable->report_rgo_output(production_type.get_output_good(), output_quantity_yesterday);
@@ -237,6 +235,7 @@ fixed_point_t ResourceGatheringOperation::produce(const pop_size_t total_owner_c
 	}
 
 	ProvinceInstance& location = *location_ptr;
+	ModifierEffectCache const& modifier_effect_cache = location.get_modifier_effect_cache();
 
 	ProductionType const& production_type = *production_type_nullable;
 	fixed_point_t throughput_multiplier = fixed_point_t::_1();
@@ -350,9 +349,13 @@ void ResourceGatheringOperation::pay_employees(
 
 	total_owner_income_cache = 0;
 	total_employee_income_cache = 0;
-	if (revenue <= 0 || total_worker_count_in_province <= 0) {
-		if (revenue < 0) { Logger::error("Negative revenue for province ", location.get_identifier()); }
-		if (total_worker_count_in_province < 0) { Logger::error("Negative total worker count for province ", location.get_identifier()); }
+	if (revenue <= fixed_point_t::_0() || total_worker_count_in_province <= 0) {
+		if (revenue < fixed_point_t::_0()) {
+			Logger::error("Negative revenue for province ", location.get_identifier());
+		}
+		if (total_worker_count_in_province < 0) {
+			Logger::error("Negative total worker count for province ", location.get_identifier());
+		}
 		return;
 	}
 

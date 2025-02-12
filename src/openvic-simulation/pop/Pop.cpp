@@ -1,17 +1,20 @@
-#include "utility/Utility.hpp"
 #define KEEP_DO_FOR_ALL_TYPES_OF_INCOME
 #define KEEP_DO_FOR_ALL_TYPES_OF_EXPENSES
+#define KEEP_DO_FOR_ALL_NEED_CATEGORIES
 #include "Pop.hpp"
 #undef KEEP_DO_FOR_ALL_TYPES_OF_INCOME
 #undef KEEP_DO_FOR_ALL_TYPES_OF_EXPENSES
+#undef KEEP_DO_FOR_ALL_NEED_CATEGORIES
 
-#include "openvic-simulation/DefinitionManager.hpp"
-#include "openvic-simulation/economy/production/ArtisanalProducer.hpp"
+#include "openvic-simulation/defines/Define.hpp"
+#include "openvic-simulation/economy/GoodDefinition.hpp"
 #include "openvic-simulation/economy/production/ArtisanalProducerFactoryPattern.hpp"
+#include "openvic-simulation/economy/trading/MarketInstance.hpp"
+#include "openvic-simulation/map/ProvinceInstance.hpp"
+#include "openvic-simulation/modifier/ModifierEffectCache.hpp"
+#include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
 
 using namespace OpenVic;
-
-static constexpr fixed_point_t DEFAULT_POP_LITERACY = fixed_point_t::_0_10();
 
 PopBase::PopBase(
 	PopType const& new_type, Culture const& new_culture, Religion const& new_religion, pop_size_t new_size,
@@ -22,41 +25,20 @@ PopBase::PopBase(
 Pop::Pop(
 	PopBase const& pop_base,
 	decltype(ideology_distribution)::keys_type const& ideology_keys,
+	MarketInstance& new_market_instance,
 	ArtisanalProducerFactoryPattern& artisanal_producer_factory_pattern
 )
   : PopBase { pop_base },
+	market_instance { new_market_instance },
 	artisanal_producer_nullable {
 		type->get_is_artisan()
-			? artisanal_producer_factory_pattern.CreateNewArtisanalProducer()
+			? artisanal_producer_factory_pattern.CreateNewArtisanalProducer(market_instance.get_good_instance_manager())
 			: nullptr
 	},
-	location { nullptr },
-	total_change { 0 },
-	num_grown { 0 },
-	num_promoted { 0 },
-	num_demoted { 0 },
-	num_migrated_internal { 0 },
-	num_migrated_external { 0 },
-	num_migrated_colonial { 0 },
-	literacy { DEFAULT_POP_LITERACY },
 	ideology_distribution { &ideology_keys },
-	issue_distribution {},
-	vote_distribution { nullptr },
-	unemployment { 0 },
-	cash { 0 },
-	income { 0 },
-	expenses { 0 },
-	savings { 0 },
-	life_needs_fulfilled { 0 },
-	everyday_needs_fulfilled { 0 },
-	luxury_needs_fulfilled { 0 },
-	#define INITALIZE_POP_MONEY_STORES(name)\
-		name { 0 },
-
-	DO_FOR_ALL_TYPES_OF_POP_INCOME(INITALIZE_POP_MONEY_STORES)
-	DO_FOR_ALL_TYPES_OF_POP_EXPENSES(INITALIZE_POP_MONEY_STORES)
-	#undef INITALIZE_POP_MONEY_STORES
-	max_supported_regiments { 0 } {}
+	vote_distribution { nullptr } {
+		reserve_needs_fulfilled_goods();
+	}
 
 void Pop::setup_pop_test_values(IssueManager const& issue_manager) {
 	/* Returns +/- range% of size. */
@@ -123,9 +105,10 @@ void Pop::setup_pop_test_values(IssueManager const& issue_manager) {
 	income = test_range(5);
 	expenses = test_range(5);
 	savings = test_range(15);
-	life_needs_fulfilled = test_range();
-	everyday_needs_fulfilled = test_range();
-	luxury_needs_fulfilled = test_range();
+	life_needs_acquired_quantity = test_range();
+	everyday_needs_acquired_quantity = test_range();
+	luxury_needs_acquired_quantity = test_range();
+	life_needs_desired_quantity = everyday_needs_desired_quantity = luxury_needs_desired_quantity = fixed_point_t::_1();
 }
 
 bool Pop::convert_to_equivalent() {
@@ -136,6 +119,7 @@ bool Pop::convert_to_equivalent() {
 	}
 
 	type = equivalent;
+	reserve_needs_fulfilled_goods();
 	return true;
 }
 
@@ -227,19 +211,40 @@ std::stringstream Pop::get_pop_context_text() const {
 	return pop_context;
 }
 
+void Pop::reserve_needs_fulfilled_goods() {
+	PopType const& type_never_null = *type;
+	#define RESERVE_NEEDS(need_category)\
+		need_category##_needs_fulfilled_goods.reserve(type_never_null.get_##need_category##_needs().size());
+
+	DO_FOR_ALL_NEED_CATEGORIES(RESERVE_NEEDS)
+	#undef RESERVE_NEEDS
+}
+
+void Pop::fill_needs_fulfilled_goods_with_false() {
+	PopType const& type_never_null = *type;
+	#define FILL_WITH_FALSE(need_category)\
+		need_category##_needs_fulfilled_goods.clear(); \
+		for (auto [good, base_demand] : type_never_null.get_##need_category##_needs()) {\
+			need_category##_needs_fulfilled_goods.emplace(good, false); \
+		}
+
+	DO_FOR_ALL_NEED_CATEGORIES(FILL_WITH_FALSE)
+	#undef FILL_WITH_FALSE
+}
+
 #define DEFINE_ADD_INCOME_FUNCTIONS(name)\
 	void Pop::add_##name(const fixed_point_t amount){\
-		if (OV_unlikely(amount == 0)) { \
+		if (OV_unlikely(amount == fixed_point_t::_0())) {\
 			Logger::warning("Adding ",#name, " of 0 to pop. Context", get_pop_context_text().str()); \
 			return; \
 		} \
-		if (OV_unlikely(amount < 0)) { \
+		if (OV_unlikely(amount < fixed_point_t::_0())) {\
 			Logger::error("Adding negative ", #name, " of ",amount," to pop. Context", get_pop_context_text().str()); \
 			return; \
 		} \
-		name += amount;\
-		income += amount;\
-		cash += amount;\
+		name += amount; \
+		income += amount; \
+		cash += amount; \
 	}
 
 DO_FOR_ALL_TYPES_OF_POP_INCOME(DEFINE_ADD_INCOME_FUNCTIONS)
@@ -247,17 +252,17 @@ DO_FOR_ALL_TYPES_OF_POP_INCOME(DEFINE_ADD_INCOME_FUNCTIONS)
 
 #define DEFINE_ADD_EXPENSE_FUNCTIONS(name)\
 	void Pop::add_##name(const fixed_point_t amount){\
-		if (OV_unlikely(amount == 0)) { \
+		if (OV_unlikely(amount == fixed_point_t::_0())) {\
 			Logger::warning("Adding ",#name, " of 0 to pop. Context", get_pop_context_text().str()); \
 			return; \
 		} \
-		name += amount;\
-		expenses += amount;\
-		if (OV_unlikely(expenses < 0)) { \
+		name += amount; \
+		expenses += amount; \
+		if (OV_unlikely(expenses < fixed_point_t::_0())) {\
 			Logger::error("Total expenses became negative (",expenses,") after adding ", #name, " of ",amount," to pop. Context", get_pop_context_text().str()); \
 		} \
-		cash -= amount;\
-		if (OV_unlikely(cash < 0)) { \
+		cash -= amount; \
+		if (OV_unlikely(cash < fixed_point_t::_0())) {\
 			Logger::error("Total cash became negative (",cash,") after adding ", #name, " of ",amount," to pop. Context", get_pop_context_text().str()); \
 		} \
 	}
@@ -273,10 +278,169 @@ void Pop::pop_tick() {
 	#undef DO_FOR_ALL_TYPES_OF_POP_INCOME
 	#undef SET_ALL_INCOME_TO_ZERO
 
+	cash_allocated_for_artisanal_spending = fixed_point_t::_0();
+	max_quantity_to_buy_per_good.clear();
+	money_to_spend_per_good.clear();
+	fill_needs_fulfilled_goods_with_false();
 	if (artisanal_producer_nullable != nullptr) {
+		//execute artisan_tick before needs 
 		artisanal_producer_nullable->artisan_tick(*this);
 	}
+
+	PopType const& type_never_null = *type;
+	ProvinceInstance& location_never_null = *location;
+	PopValuesFromProvince const& shared_values = location_never_null.get_shared_pop_values();
+	PopStrataValuesFromProvince const& shared_strata_values = shared_values.get_effects_per_strata()[type_never_null.get_strata()];
+	PopsDefines const& defines = shared_values.get_defines();
+	const fixed_point_t base_needs_scalar = (
+		fixed_point_t::_1() + 2 * consciousness / defines.get_pdef_base_con()
+	) * size;
+	constexpr int32_t size_denominator = 200000;	
+
+	CountryInstance* get_country_to_report_economy_nullable = location_never_null.get_country_to_report_economy();
+	GoodInstanceManager const& good_instance_manager = market_instance.get_good_instance_manager();
+	#define FILL_NEEDS(need_category)\
+		need_category##_needs.clear(); \
+		const fixed_point_t need_category##_needs_scalar = base_needs_scalar * shared_strata_values.get_shared_##need_category##_needs_scalar(); \
+		fixed_point_t need_category##_needs_price_inverse_sum = fixed_point_t::_0(); \
+		need_category##_needs_acquired_quantity = need_category##_needs_desired_quantity = fixed_point_t::_0(); \
+		for (auto [good_definition, quantity] : type_never_null.get_##need_category##_needs()) { \
+			fixed_point_t max_quantity_to_buy = quantity * need_category##_needs_scalar / size_denominator; \
+			need_category##_needs_desired_quantity += max_quantity_to_buy; \
+			if (artisanal_produce_left_to_sell > fixed_point_t::_0()\
+				&& &artisanal_producer_nullable->get_production_type().get_output_good() == good_definition\
+			) {\
+				const fixed_point_t own_produce_consumed = std::min(artisanal_produce_left_to_sell, max_quantity_to_buy); \
+				artisanal_produce_left_to_sell -= own_produce_consumed; \
+				max_quantity_to_buy -= own_produce_consumed; \
+				need_category##_needs_acquired_quantity += own_produce_consumed; \
+				if (get_country_to_report_economy_nullable != nullptr) { \
+					get_country_to_report_economy_nullable->report_pop_need_consumption(type_never_null, *good_definition, own_produce_consumed); \
+				} \
+			} \
+			if (OV_likely(max_quantity_to_buy > 0)) {\
+				GoodInstance const& good_instance = good_instance_manager.get_good_instance_from_definition(*good_definition); \
+				need_category##_needs_price_inverse_sum += good_instance.get_price_inverse(); \
+				need_category##_needs[good_definition] += max_quantity_to_buy; \
+				max_quantity_to_buy_per_good[good_definition] += max_quantity_to_buy; \
+			} \
+		}
+	
+	DO_FOR_ALL_NEED_CATEGORIES(FILL_NEEDS)
+	#undef FILL_NEEDS
+
+	fixed_point_t cash_left_to_spend = cash - cash_allocated_for_artisanal_spending;
+
+	#define ALLOCATE_FOR_NEEDS(need_category)\
+		if (cash_left_to_spend > fixed_point_t::_0()) {\
+			GoodDefinition::good_definition_map_t money_to_spend_per_good_draft {}; \
+			for (size_t i = 0; i < need_category##_needs.size(); i++) {\
+				auto [good_definition, max_quantity_to_buy] = *need_category##_needs.nth(i); \
+				GoodInstance const& good_instance = good_instance_manager.get_good_instance_from_definition(*good_definition); \
+				const fixed_point_t max_money_to_spend = max_quantity_to_buy * good_instance.get_max_next_price(); \
+				if (money_to_spend_per_good_draft[good_definition] >= max_money_to_spend) {\
+					continue; \
+				} \
+				fixed_point_t cash_available_for_good = cash_left_to_spend * good_instance.get_price_inverse() / need_category##_needs_price_inverse_sum; \
+				if (cash_available_for_good >= max_money_to_spend) {\
+					cash_left_to_spend -= max_money_to_spend; \
+					money_to_spend_per_good_draft[good_definition] = max_money_to_spend; \
+					need_category##_needs_price_inverse_sum -= good_instance.get_price_inverse(); \
+					i = -1; \
+				} else {\
+					money_to_spend_per_good_draft[good_definition] = cash_available_for_good; \
+				} \
+			} \
+			money_to_spend_per_good += money_to_spend_per_good_draft; \
+		}
+
+	DO_FOR_ALL_NEED_CATEGORIES(ALLOCATE_FOR_NEEDS)
+	#undef ALLOCATE_FOR_NEEDS
+
+	for (auto [good_definition, money_to_spend] : money_to_spend_per_good) {
+		const fixed_point_t max_quantity_to_buy = max_quantity_to_buy_per_good[good_definition];
+
+		if (OV_unlikely(max_quantity_to_buy <= fixed_point_t::_0())) {
+			Logger::error("Aborted placing buy order for ",*good_definition," of max_quantity_to_buy 0.");
+			continue;
+		}
+
+		market_instance.place_buy_up_to_order({
+			*good_definition,
+			max_quantity_to_buy,
+			money_to_spend,
+			[this, good_definition](const BuyResult buy_result) -> void {
+				fixed_point_t quantity_left_to_consume = buy_result.get_quantity_bought();
+				if (artisanal_producer_nullable != nullptr) {
+					if (quantity_left_to_consume <= fixed_point_t::_0()) {
+						return;
+					}
+					const fixed_point_t quantity_added_to_stockpile = artisanal_producer_nullable->add_to_stockpile(
+						*good_definition,
+						quantity_left_to_consume
+					);
+
+					if (quantity_added_to_stockpile > fixed_point_t::_0()) {
+						quantity_left_to_consume -= quantity_added_to_stockpile;
+						const fixed_point_t expense = buy_result.get_money_spent() * quantity_added_to_stockpile / buy_result.get_quantity_bought();
+						add_artisan_inputs_expense(expense);
+					}
+				}
+
+				CountryInstance* get_country_to_report_economy_nullable = location->get_country_to_report_economy();
+				#define CONSUME_NEED(need_category)\
+					if (quantity_left_to_consume <= fixed_point_t::_0()) {\
+						return; \
+					} \
+					const GoodDefinition::good_definition_map_t::const_iterator need_category##it = need_category##_needs.find(good_definition); \
+					if (need_category##it != need_category##_needs.end()) {\
+						const fixed_point_t desired_quantity = need_category##it->second; \
+						fixed_point_t consumed_quantity; \
+						if (quantity_left_to_consume >= desired_quantity) {\
+							consumed_quantity = desired_quantity; \
+							need_category##_needs_fulfilled_goods[good_definition] = true; \
+						} else {\
+							consumed_quantity = quantity_left_to_consume; \
+						} \
+						need_category##_needs_acquired_quantity += consumed_quantity; \
+						quantity_left_to_consume -= consumed_quantity; \
+						if (get_country_to_report_economy_nullable != nullptr) { \
+							get_country_to_report_economy_nullable->report_pop_need_consumption(*type, *good_definition, consumed_quantity); \
+						} \
+						const fixed_point_t expense = buy_result.get_money_spent() * consumed_quantity / buy_result.get_quantity_bought(); \
+						add_##need_category##_needs_expense(expense); \
+					}
+				
+				DO_FOR_ALL_NEED_CATEGORIES(CONSUME_NEED)
+				#undef CONSUME_NEED
+			}
+		});
+	}
+
+	if (artisanal_produce_left_to_sell > fixed_point_t::_0()) {
+		market_instance.place_market_sell_order({
+			artisanal_producer_nullable->get_production_type().get_output_good(),
+			artisanal_produce_left_to_sell,
+			[this](const SellResult sell_result) -> void {
+				if (sell_result.get_money_gained() > fixed_point_t::_0()) {
+					add_artisanal_income(sell_result.get_money_gained());
+				}
+			}
+		});
+		artisanal_produce_left_to_sell = fixed_point_t::_0();
+	}
+}
+
+void Pop::artisanal_buy(GoodDefinition const& good, const fixed_point_t max_quantity_to_buy, const fixed_point_t money_to_spend) {
+	cash_allocated_for_artisanal_spending += money_to_spend;
+	max_quantity_to_buy_per_good[&good] += max_quantity_to_buy;
+	money_to_spend_per_good[&good] += money_to_spend;
+}
+
+void Pop::artisanal_sell(const fixed_point_t quantity) {
+	artisanal_produce_left_to_sell = quantity;
 }
 
 #undef DO_FOR_ALL_TYPES_OF_POP_INCOME
 #undef DO_FOR_ALL_TYPES_OF_POP_EXPENSES
+#undef DO_FOR_ALL_NEED_CATEGORIES

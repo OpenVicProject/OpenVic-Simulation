@@ -14,7 +14,6 @@ namespace OpenVic {
 	struct ResourceGatheringOperation {
 	private:
 		MarketInstance& market_instance;
-		ModifierEffectCache const& modifier_effect_cache;
 		ProvinceInstance* location_ptr;
 		ProductionType const* PROPERTY_RW(production_type_nullable);
 		fixed_point_t PROPERTY(revenue_yesterday);
@@ -42,7 +41,6 @@ namespace OpenVic {
 	public:
 		ResourceGatheringOperation(
 			MarketInstance& new_market_instance,
-			ModifierEffectCache const& new_modifier_effect_cache,
 			ProductionType const* new_production_type_nullable,
 			fixed_point_t new_size_multiplier,
 			fixed_point_t new_revenue_yesterday,
@@ -54,7 +52,6 @@ namespace OpenVic {
 
 		ResourceGatheringOperation(
 			MarketInstance& new_market_instance,
-			ModifierEffectCache const& new_modifier_effect_cache,
 			decltype(employee_count_per_type_cache)::keys_type const& pop_type_keys
 		);
 

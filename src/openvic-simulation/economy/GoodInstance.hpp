@@ -29,6 +29,7 @@ namespace OpenVic {
 		fixed_point_t absolute_maximum_price;
 		fixed_point_t absolute_minimum_price;
 
+		//TODO get from pool instead of storing as field
 		//only used inside execute_orders()
 		std::vector<fixed_point_t> quantity_bought_per_order;
 		std::vector<fixed_point_t> purchasing_power_per_order;
@@ -38,6 +39,7 @@ namespace OpenVic {
 		std::vector<GoodMarketSellOrder> market_sell_orders;
 
 		fixed_point_t PROPERTY(price);
+		fixed_point_t PROPERTY(price_inverse);
 		fixed_point_t PROPERTY(price_change_yesterday);
 		fixed_point_t PROPERTY(max_next_price);
 		fixed_point_t PROPERTY(min_next_price);
