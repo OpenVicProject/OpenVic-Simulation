@@ -1397,6 +1397,19 @@ void CountryInstance::report_rgo_output(GoodDefinition const& good, const fixed_
 	//TODO record rgo output
 }
 
+CountryInstance::good_data_t& CountryInstance::get_good_data(GoodInstance const& good_instance) {
+	return goods_data[good_instance];
+}
+CountryInstance::good_data_t const& CountryInstance::get_good_data(GoodInstance const& good_instance) const {
+	return goods_data[good_instance];
+}
+CountryInstance::good_data_t& CountryInstance::get_good_data(GoodDefinition const& good_definition) {
+	return goods_data[good_definition.get_index()];
+}
+CountryInstance::good_data_t const& CountryInstance::get_good_data(GoodDefinition const& good_definition) const {
+	return goods_data[good_definition.get_index()];
+}
+
 void CountryInstanceManager::update_rankings(Date today, DefineManager const& define_manager) {
 	total_ranking.clear();
 

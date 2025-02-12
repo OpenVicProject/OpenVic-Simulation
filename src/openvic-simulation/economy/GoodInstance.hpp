@@ -21,7 +21,7 @@ namespace OpenVic {
 
 	private:
 		GoodDefinition const& PROPERTY(good_definition);
-		
+
 		static constexpr int32_t exponential_price_change_shift = 7;
 		std::unique_ptr<std::mutex> buy_lock;
 		std::unique_ptr<std::mutex> sell_lock;
@@ -52,6 +52,12 @@ namespace OpenVic {
 		void update_next_price_limits();
 	public:
 		GoodInstance(GoodInstance&&) = default;
+
+		// Is the good available for trading? (e.g. should be shown in trade menu)
+		// is_tradeable has no effect on this, only is_money and availability
+		constexpr bool is_trading_good() const {
+			return is_available && !good_definition.get_is_money();
+		}
 
 		//thread safe
 		void add_buy_up_to_order(GoodBuyUpToOrder&& buy_up_to_order);

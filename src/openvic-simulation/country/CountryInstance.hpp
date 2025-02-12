@@ -516,9 +516,15 @@ namespace OpenVic {
 
 		void update_gamestate(InstanceManager& instance_manager);
 		void tick(InstanceManager& instance_manager);
+
 		void report_artisan_output(ProductionType const& production_type, const fixed_point_t quantity);
 		void report_factory_output(ProductionType const& production_type, const fixed_point_t quantity);
 		void report_rgo_output(GoodDefinition const& good, const fixed_point_t quantity);
+
+		good_data_t& get_good_data(GoodInstance const& good_instance);
+		good_data_t const& get_good_data(GoodInstance const& good_instance) const;
+		good_data_t& get_good_data(GoodDefinition const& good_definition);
+		good_data_t const& get_good_data(GoodDefinition const& good_definition) const;
 	};
 
 	struct CountryDefinitionManager;
