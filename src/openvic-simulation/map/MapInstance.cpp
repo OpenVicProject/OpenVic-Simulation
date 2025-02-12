@@ -32,8 +32,7 @@ void MapInstance::set_selected_province(ProvinceDefinition::index_t index) {
 }
 
 ProvinceDefinition::index_t MapInstance::get_selected_province_index() const {
-	return selected_province != nullptr ? selected_province->get_province_definition().get_index()
-		: ProvinceDefinition::NULL_INDEX;
+	return selected_province != nullptr ? selected_province->get_index() : ProvinceDefinition::NULL_INDEX;
 }
 
 bool MapInstance::setup(
