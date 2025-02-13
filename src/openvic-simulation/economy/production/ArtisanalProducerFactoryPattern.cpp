@@ -1,5 +1,5 @@
 #include "ArtisanalProducerFactoryPattern.hpp"
-#include "openvic-simulation/economy/GoodInstance.hpp"
+#include "openvic-simulation/economy/trading/GoodInstance.hpp"
 
 using namespace OpenVic;
 

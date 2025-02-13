@@ -1,7 +1,7 @@
 #include "ArtisanalProducer.hpp"
 
-#include "openvic-simulation/economy/GoodInstance.hpp"
 #include "openvic-simulation/economy/production/ProductionType.hpp"
+#include "openvic-simulation/economy/trading/GoodInstance.hpp"
 #include "openvic-simulation/map/ProvinceInstance.hpp"
 #include "openvic-simulation/modifier/ModifierEffectCache.hpp"
 #include "openvic-simulation/pop/Pop.hpp"

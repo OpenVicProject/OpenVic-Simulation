@@ -1,6 +1,6 @@
 #pragma once
 
-#include "openvic-simulation/economy/GoodInstance.hpp"
+#include "openvic-simulation/economy/trading/GoodInstance.hpp"
 #include "openvic-simulation/economy/trading/BuyUpToOrder.hpp"
 #include "openvic-simulation/economy/trading/MarketSellOrder.hpp"
 
