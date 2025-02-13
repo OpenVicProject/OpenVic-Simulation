@@ -388,10 +388,10 @@ bool ModifierManager::setup_modifier_effects() {
 	ret &= register_base_country_modifier_effect(
 		modifier_effect_cache.research_points_on_conquer, "research_points_on_conquer", true, PROPORTION_DECIMAL
 	);
-	ret &= register_shared_tech_country_modifier_effect(
+	ret &= register_base_country_modifier_effect(
 		modifier_effect_cache.rgo_output, "rgo_output", true, PROPORTION_DECIMAL
 	);
-	ret &= register_shared_tech_country_modifier_effect(
+	ret &= register_base_country_modifier_effect(
 		modifier_effect_cache.rgo_throughput, "rgo_throughput", true, PROPORTION_DECIMAL
 	);
 	ret &= register_base_country_modifier_effect(
