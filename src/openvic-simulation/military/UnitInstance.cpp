@@ -2,28 +2,33 @@
 
 using namespace OpenVic;
 
-template<UnitType::branch_t Branch>
-UnitInstance<Branch>::UnitInstance(std::string_view new_unit_name, _UnitType const& new_unit_type)
-  : unit_name { new_unit_name },
+UnitInstance::UnitInstance(
+	unique_id_t new_unique_id,
+	std::string_view new_name,
+	UnitType const& new_unit_type
+) : unique_id { new_unique_id },
+	name { new_name },
 	unit_type { new_unit_type },
 	organisation { unit_type.get_default_organisation() },
 	max_organisation { organisation },
 	strength { get_max_strength() } {}
 
-template<UnitType::branch_t Branch>
-void UnitInstance<Branch>::set_unit_name(std::string_view new_unit_name) {
-	unit_name = new_unit_name;
+void UnitInstance::set_name(std::string_view new_name) {
+	name = new_name;
 }
 
-template struct OpenVic::UnitInstance<UnitType::branch_t::LAND>;
-template struct OpenVic::UnitInstance<UnitType::branch_t::NAVAL>;
-
 UnitInstanceBranched<UnitType::branch_t::LAND>::UnitInstanceBranched(
-	std::string_view new_name, RegimentType const& new_regiment_type, Pop* new_pop, bool new_mobilised
-) : UnitInstance { new_name, new_regiment_type },
+	unique_id_t new_unique_id,
+	std::string_view new_name,
+	RegimentType const& new_regiment_type,
+	Pop* new_pop,
+	bool new_mobilised
+) : UnitInstance { new_unique_id, new_name, new_regiment_type },
 	pop { new_pop },
 	mobilised { new_mobilised } {}
 
 UnitInstanceBranched<UnitType::branch_t::NAVAL>::UnitInstanceBranched(
-	std::string_view new_name, ShipType const& new_ship_type
-) : UnitInstance { new_name, new_ship_type } {}
+	unique_id_t new_unique_id,
+	std::string_view new_name,
+	ShipType const& new_ship_type
+) : UnitInstance { new_unique_id, new_name, new_ship_type } {}

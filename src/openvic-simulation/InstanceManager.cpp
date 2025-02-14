@@ -21,6 +21,11 @@ InstanceManager::InstanceManager(
 	},
 	global_flags { "global" },
 	country_instance_manager { new_definition_manager.get_country_definition_manager() },
+	unit_instance_manager {
+		new_definition_manager.get_pop_manager().get_culture_manager(),
+		new_definition_manager.get_military_manager().get_leader_trait_manager(),
+		new_definition_manager.get_define_manager().get_military_defines()
+	},
 	politics_instance_manager { *this },
 	map_instance { new_definition_manager.get_map_definition() },
 	simulation_clock {

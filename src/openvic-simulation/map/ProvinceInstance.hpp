@@ -34,7 +34,6 @@ namespace OpenVic {
 	struct ModifierEffectCache;
 	struct MarketInstance;
 
-	template<UnitType::branch_t>
 	struct UnitInstanceGroup;
 
 	template<UnitType::branch_t>
@@ -85,8 +84,8 @@ namespace OpenVic {
 		Crime const* PROPERTY_RW(crime, nullptr);
 		ResourceGatheringOperation PROPERTY(rgo);
 		IdentifierRegistry<BuildingInstance> IDENTIFIER_REGISTRY(building);
-		ordered_set<ArmyInstance*> PROPERTY(armies);
-		ordered_set<NavyInstance*> PROPERTY(navies);
+		std::vector<ArmyInstance*> PROPERTY(armies);
+		std::vector<NavyInstance*> PROPERTY(navies);
 		// The number of land regiments currently in the province, including those being transported by navies
 		size_t PROPERTY(land_regiment_count, 0);
 
@@ -231,10 +230,8 @@ namespace OpenVic {
 		void update_gamestate(const Date today, DefineManager const& define_manager);
 		void province_tick(const Date today);
 
-		template<UnitType::branch_t Branch>
-		bool add_unit_instance_group(UnitInstanceGroup<Branch>& group);
-		template<UnitType::branch_t Branch>
-		bool remove_unit_instance_group(UnitInstanceGroup<Branch> const& group);
+		bool add_unit_instance_group(UnitInstanceGroup& group);
+		bool remove_unit_instance_group(UnitInstanceGroup const& group);
 
 		bool setup(BuildingTypeManager const& building_type_manager);
 		bool apply_history_to_province(ProvinceHistoryEntry const& entry, CountryInstanceManager& country_manager);
