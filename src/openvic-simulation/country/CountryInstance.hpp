@@ -134,7 +134,7 @@ namespace OpenVic {
 		/* Technology */
 		IndexedMap<Technology, unlock_level_t> PROPERTY(technology_unlock_levels);
 		IndexedMap<Invention, unlock_level_t> PROPERTY(invention_unlock_levels);
-		int32_t PROPERTY(inventions_count);
+		int32_t PROPERTY(inventions_count, 0);
 		Technology const* PROPERTY(current_research, nullptr);
 		fixed_point_t PROPERTY(invested_research_points);
 		fixed_point_t PROPERTY(current_research_cost);
@@ -296,31 +296,31 @@ namespace OpenVic {
 		inline size_t get_general_count() const {
 			return generals.size();
 		}
-		inline size_t has_generals() const {
+		inline bool has_generals() const {
 			return !generals.empty();
 		}
 		inline size_t get_admiral_count() const {
 			return admirals.size();
 		}
-		inline size_t has_admirals() const {
+		inline bool has_admirals() const {
 			return !admirals.empty();
 		}
 		inline size_t get_leader_count() const {
 			return get_general_count() + get_admiral_count();
 		}
-		inline size_t has_leaders() const {
+		inline bool has_leaders() const {
 			return has_generals() || has_admirals();
 		}
 		inline size_t get_army_count() const {
 			return armies.size();
 		}
-		inline size_t has_armies() const {
+		inline bool has_armies() const {
 			return !armies.empty();
 		}
 		inline size_t get_navy_count() const {
 			return navies.size();
 		}
-		inline size_t has_navies() const {
+		inline bool has_navies() const {
 			return !navies.empty();
 		}
 
