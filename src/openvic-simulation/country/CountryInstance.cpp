@@ -1348,6 +1348,10 @@ void CountryInstance::update_gamestate(InstanceManager& instance_manager) {
 }
 
 void CountryInstance::tick(InstanceManager& instance_manager) {
+	for (auto pair : goods_data) {
+		pair.second.clear_daily_recorded_data();
+	}
+
 	DefinitionManager const& definition_manager = instance_manager.get_definition_manager();
 	DefineManager const& define_manager = definition_manager.get_define_manager();
 
@@ -1397,24 +1401,42 @@ void CountryInstance::tick(InstanceManager& instance_manager) {
 	//income_from_gold = country_defines.gold_to_cash_rate * sum (total_good_production * good.get_base_price()) for each good with is_money=true
 }
 
+CountryInstance::good_data_t::good_data_t()
+	: lock { std::make_unique<std::mutex>() }
+	{ }
+
+void CountryInstance::good_data_t::clear_daily_recorded_data() {
+	const std::lock_guard<std::mutex> lock_guard { *lock };
+	stockpile_change_yesterday
+		= exported_amount
+		= government_needs
+		= army_needs
+		= navy_needs	
+		= production_needs
+		= overseas_needs
+		= factory_needs
+		= pop_needs
+		= available_amount
+		= fixed_point_t::_0();
+	need_consumption_per_pop_type.clear();
+	input_consumption_per_production_type.clear();
+	production_per_production_type.clear();
+}
 
 void CountryInstance::report_pop_need_consumption(PopType const& pop_type, GoodDefinition const& good, const fixed_point_t quantity) {
-	//TODO
+	good_data_t& good_data = get_good_data(good);
+	const std::lock_guard<std::mutex> lock_guard { *good_data.lock };
+	good_data.need_consumption_per_pop_type[&pop_type] += quantity;
 }
-void CountryInstance::report_artisan_input_consumption(ProductionType const& production_type, GoodDefinition const& good, const fixed_point_t quantity) {
-	//TODO
+void CountryInstance::report_input_consumption(ProductionType const& production_type, GoodDefinition const& good, const fixed_point_t quantity) {
+	good_data_t& good_data = get_good_data(good);
+	const std::lock_guard<std::mutex> lock_guard { *good_data.lock };
+	good_data.input_consumption_per_production_type[&production_type] += quantity;
 }
-void CountryInstance::report_artisan_output(ProductionType const& production_type, const fixed_point_t quantity) {
-	//TODO
-}
-void CountryInstance::report_factory_input_consumption(ProductionType const& production_type, GoodDefinition const& good, const fixed_point_t quantity) {
-	//TODO
-}
-void CountryInstance::report_factory_output(ProductionType const& production_type, const fixed_point_t quantity) {
-	//TODO
-}
-void CountryInstance::report_rgo_output(GoodDefinition const& good, const fixed_point_t quantity) {
-	//TODO
+void CountryInstance::report_output(ProductionType const& production_type, const fixed_point_t quantity) {
+	good_data_t& good_data = get_good_data(production_type.get_output_good());
+	const std::lock_guard<std::mutex> lock_guard { *good_data.lock };
+	good_data.production_per_production_type[&production_type] += quantity;
 }
 
 CountryInstance::good_data_t& CountryInstance::get_good_data(GoodInstance const& good_instance) {
