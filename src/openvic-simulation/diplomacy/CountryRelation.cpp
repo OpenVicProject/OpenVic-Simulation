@@ -1,4 +1,4 @@
-#include "openvic-simulation//diplomacy/CountryRelation.hpp"
+#include "CountryRelation.hpp"
 
 #include <cassert>
 
@@ -10,7 +10,7 @@ using relation_value_type = OpenVic::CountryRelationManager::relation_value_type
 using influence_value_type = OpenVic::CountryRelationManager::influence_value_type;
 using OpinionType = OpenVic::CountryRelationManager::OpinionType;
 
-relation_value_type CRM::get_country_relation( //
+relation_value_type CRM::get_country_relation(
 	CountryInstance const* country, CountryInstance const* recepient
 ) const {
 	decltype(relations)::const_iterator it = relations.find({ country, recepient });
@@ -20,7 +20,7 @@ relation_value_type CRM::get_country_relation( //
 	return it->second;
 }
 
-relation_value_type& CRM::assign_or_get_country_relation( //
+relation_value_type& CRM::assign_or_get_country_relation(
 	CountryInstance* country, CountryInstance* recepient, relation_value_type default_value
 ) {
 	decltype(relations)::iterator it = relations.find({ country, recepient });
@@ -31,7 +31,7 @@ relation_value_type& CRM::assign_or_get_country_relation( //
 	return it.value();
 }
 
-bool CRM::set_country_relation( //
+bool CRM::set_country_relation(
 	CountryInstance* country, CountryInstance* recepient, relation_value_type value
 ) {
 	decltype(relations)::iterator it = relations.find({ country, recepient });
@@ -48,7 +48,7 @@ decltype(CRM::relations)::values_container_type const& CRM::get_country_relation
 	return relations.values_container();
 }
 
-bool CRM::get_country_alliance( //
+bool CRM::get_country_alliance(
 	CountryInstance const* country, CountryInstance const* recepient
 ) const {
 	decltype(alliances)::const_iterator it = alliances.find({ country, recepient });
@@ -58,7 +58,7 @@ bool CRM::get_country_alliance( //
 	return it->second;
 }
 
-bool& CRM::assign_or_get_country_alliance( //
+bool& CRM::assign_or_get_country_alliance(
 	CountryInstance* country, CountryInstance* recepient, bool default_value
 ) {
 	decltype(alliances)::iterator it = alliances.find({ country, recepient });
@@ -69,7 +69,7 @@ bool& CRM::assign_or_get_country_alliance( //
 	return it.value();
 }
 
-bool CRM::set_country_alliance( //
+bool CRM::set_country_alliance(
 	CountryInstance* country, CountryInstance* recepient, bool value
 ) {
 	decltype(alliances)::iterator it = alliances.find({ country, recepient });
@@ -86,7 +86,7 @@ decltype(CRM::alliances)::values_container_type const& CRM::get_country_alliance
 	return alliances.values_container();
 }
 
-bool CRM::get_country_at_war( //
+bool CRM::get_country_at_war(
 	CountryInstance const* country, CountryInstance const* recepient
 ) const {
 	decltype(at_war)::const_iterator it = at_war.find({ country, recepient });
@@ -96,7 +96,7 @@ bool CRM::get_country_at_war( //
 	return it->second;
 }
 
-bool& CRM::assign_or_get_country_at_war( //
+bool& CRM::assign_or_get_country_at_war(
 	CountryInstance* country, CountryInstance* recepient, bool default_value
 ) {
 	decltype(at_war)::iterator it = at_war.find({ country, recepient });
@@ -107,7 +107,7 @@ bool& CRM::assign_or_get_country_at_war( //
 	return it.value();
 }
 
-bool CRM::set_country_at_war( //
+bool CRM::set_country_at_war(
 	CountryInstance* country, CountryInstance* recepient, bool value
 ) {
 	decltype(at_war)::iterator it = at_war.find({ country, recepient });
@@ -125,7 +125,7 @@ decltype(CRM::at_war)::values_container_type const& CRM::get_country_at_war_valu
 	return at_war.values_container();
 }
 
-bool CRM::get_country_military_access( //
+bool CRM::get_country_military_access(
 	CountryInstance const* country, CountryInstance const* recepient
 ) const {
 	decltype(military_access)::const_iterator it = military_access.find({ country, recepient });
@@ -135,7 +135,7 @@ bool CRM::get_country_military_access( //
 	return it->second;
 }
 
-bool& CRM::assign_or_get_country_military_access( //
+bool& CRM::assign_or_get_country_military_access(
 	CountryInstance* country, CountryInstance const* recepient, bool default_value
 ) {
 	decltype(military_access)::iterator it = military_access.find({ country, recepient });
@@ -146,7 +146,7 @@ bool& CRM::assign_or_get_country_military_access( //
 	return it.value();
 }
 
-bool CRM::set_country_military_access( //
+bool CRM::set_country_military_access(
 	CountryInstance* country, CountryInstance const* recepient, bool value
 ) {
 	decltype(military_access)::iterator it = military_access.find({ country, recepient });
@@ -163,7 +163,7 @@ decltype(CRM::military_access)::values_container_type const& CRM::get_country_mi
 	return military_access.values_container();
 }
 
-bool CRM::get_country_war_subsidies( //
+bool CRM::get_country_war_subsidies(
 	CountryInstance const* country, CountryInstance const* recepient
 ) const {
 	decltype(war_subsidies)::const_iterator it = war_subsidies.find({ country, recepient });
@@ -173,7 +173,7 @@ bool CRM::get_country_war_subsidies( //
 	return it->second;
 }
 
-bool& CRM::assign_or_get_country_war_subsidies( //
+bool& CRM::assign_or_get_country_war_subsidies(
 	CountryInstance* country, CountryInstance const* recepient, bool default_value
 ) {
 	decltype(war_subsidies)::iterator it = war_subsidies.find({ country, recepient });
@@ -183,7 +183,7 @@ bool& CRM::assign_or_get_country_war_subsidies( //
 	return it.value();
 }
 
-bool CRM::set_country_war_subsidies( //
+bool CRM::set_country_war_subsidies(
 	CountryInstance* country, CountryInstance const* recepient, bool value
 ) {
 	decltype(war_subsidies)::iterator it = war_subsidies.find({ country, recepient });
@@ -199,7 +199,7 @@ decltype(CRM::war_subsidies)::values_container_type const& CRM::get_country_war_
 	return war_subsidies.values_container();
 }
 
-bool CRM::get_country_command_units( //
+bool CRM::get_country_command_units(
 	CountryInstance const* country, CountryInstance const* recepient
 ) const {
 	decltype(command_units)::const_iterator it = command_units.find({ country, recepient });
@@ -209,7 +209,7 @@ bool CRM::get_country_command_units( //
 	return it->second;
 }
 
-bool& CRM::assign_or_get_country_command_units( //
+bool& CRM::assign_or_get_country_command_units(
 	CountryInstance* country, CountryInstance const* recepient, bool default_value
 ) {
 	decltype(command_units)::iterator it = command_units.find({ country, recepient });
@@ -219,7 +219,7 @@ bool& CRM::assign_or_get_country_command_units( //
 	return it.value();
 }
 
-bool CRM::set_country_command_units( //
+bool CRM::set_country_command_units(
 	CountryInstance* country, CountryInstance const* recepient, bool value
 ) {
 	decltype(command_units)::iterator it = command_units.find({ country, recepient });
@@ -235,7 +235,7 @@ decltype(CRM::command_units)::values_container_type const& CRM::get_country_comm
 	return command_units.values_container();
 }
 
-bool CRM::get_country_vision( //
+bool CRM::get_country_vision(
 	CountryInstance const* country, CountryInstance const* recepient
 ) const {
 	decltype(vision)::const_iterator it = vision.find({ country, recepient });
@@ -245,7 +245,7 @@ bool CRM::get_country_vision( //
 	return it->second;
 }
 
-bool& CRM::assign_or_get_country_vision( //
+bool& CRM::assign_or_get_country_vision(
 	CountryInstance* country, CountryInstance const* recepient, bool default_value
 ) {
 	decltype(vision)::iterator it = vision.find({ country, recepient });
@@ -255,7 +255,7 @@ bool& CRM::assign_or_get_country_vision( //
 	return it.value();
 }
 
-bool CRM::set_country_vision( //
+bool CRM::set_country_vision(
 	CountryInstance* country, CountryInstance const* recepient, bool value
 ) {
 	decltype(vision)::iterator it = vision.find({ country, recepient });
@@ -271,7 +271,7 @@ decltype(CRM::vision)::values_container_type const& CRM::get_country_vision_valu
 	return vision.values_container();
 }
 
-OpinionType CRM::get_country_opinion( //
+OpinionType CRM::get_country_opinion(
 	CountryInstance const* country, CountryInstance const* recepient
 ) const {
 	decltype(opinions)::const_iterator it = opinions.find({ country, recepient });
@@ -281,7 +281,7 @@ OpinionType CRM::get_country_opinion( //
 	return it->second;
 }
 
-OpinionType& CRM::assign_or_get_country_opinion( //
+OpinionType& CRM::assign_or_get_country_opinion(
 	CountryInstance* country, CountryInstance const* recepient, OpinionType default_value
 ) {
 	decltype(opinions)::iterator it = opinions.find({ country, recepient });
@@ -291,7 +291,7 @@ OpinionType& CRM::assign_or_get_country_opinion( //
 	return it.value();
 }
 
-bool CRM::set_country_opinion( //
+bool CRM::set_country_opinion(
 	CountryInstance* country, CountryInstance const* recepient, OpinionType value
 ) {
 	decltype(opinions)::iterator it = opinions.find({ country, recepient });
@@ -307,7 +307,7 @@ decltype(CRM::opinions)::values_container_type const& CRM::get_country_opinion_v
 	return opinions.values_container();
 }
 
-influence_value_type CRM::get_country_influence( //
+influence_value_type CRM::get_country_influence(
 	CountryInstance const* country, CountryInstance const* recepient
 ) const {
 	decltype(influence)::const_iterator it = influence.find({ country, recepient });
@@ -341,7 +341,7 @@ decltype(CRM::influence)::values_container_type const& CRM::get_country_influenc
 	return influence.values_container();
 }
 
-bool CRM::get_country_discredit( //
+bool CRM::get_country_discredit(
 	CountryInstance const* country, CountryInstance const* recepient
 ) const {
 	decltype(discredits)::const_iterator it = discredits.find({ country, recepient });
@@ -351,7 +351,7 @@ bool CRM::get_country_discredit( //
 	return it->second;
 }
 
-bool& CRM::assign_or_get_country_discredit( //
+bool& CRM::assign_or_get_country_discredit(
 	CountryInstance* country, CountryInstance const* recepient, bool default_value
 ) {
 	decltype(discredits)::iterator it = discredits.find({ country, recepient });
@@ -361,7 +361,7 @@ bool& CRM::assign_or_get_country_discredit( //
 	return it.value();
 }
 
-bool CRM::set_country_discredit( //
+bool CRM::set_country_discredit(
 	CountryInstance* country, CountryInstance const* recepient, bool value
 ) {
 	decltype(discredits)::iterator it = discredits.find({ country, recepient });
@@ -377,7 +377,7 @@ decltype(CRM::discredits)::values_container_type const& CRM::get_country_discred
 	return discredits.values_container();
 }
 
-bool CRM::get_country_embassy_ban( //
+bool CRM::get_country_embassy_ban(
 	CountryInstance const* country, CountryInstance const* recepient
 ) const {
 	decltype(embassy_bans)::const_iterator it = embassy_bans.find({ country, recepient });
@@ -387,7 +387,7 @@ bool CRM::get_country_embassy_ban( //
 	return it->second;
 }
 
-bool& CRM::assign_or_get_country_embassy_ban( //
+bool& CRM::assign_or_get_country_embassy_ban(
 	CountryInstance* country, CountryInstance const* recepient, bool default_value
 ) {
 	decltype(embassy_bans)::iterator it = embassy_bans.find({ country, recepient });
@@ -397,7 +397,7 @@ bool& CRM::assign_or_get_country_embassy_ban( //
 	return it.value();
 }
 
-bool CRM::set_country_embassy_ban( //
+bool CRM::set_country_embassy_ban(
 	CountryInstance* country, CountryInstance const* recepient, bool value
 ) {
 	decltype(embassy_bans)::iterator it = embassy_bans.find({ country, recepient });
