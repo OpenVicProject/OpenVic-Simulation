@@ -12,7 +12,6 @@ namespace OpenVic {
 
 	struct ArtisanalProducer {
 	private:
-		GoodInstanceManager const& good_instance_manager;
 		ModifierEffectCache const& modifier_effect_cache;
 		GoodDefinition::good_definition_map_t stockpile;
 
@@ -24,7 +23,6 @@ namespace OpenVic {
 
 	public:
 		ArtisanalProducer(
-			GoodInstanceManager const& new_good_instance_manager,
 			ModifierEffectCache const& new_modifier_effect_cache,
 			GoodDefinition::good_definition_map_t&& new_stockpile,
 			ProductionType const& new_production_type,

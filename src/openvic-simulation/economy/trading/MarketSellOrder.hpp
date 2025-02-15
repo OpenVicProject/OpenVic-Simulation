@@ -1,11 +1,11 @@
 #pragma once
 
-#include "openvic-simulation/economy/GoodDefinition.hpp"
 #include "openvic-simulation/economy/trading/SellResult.hpp"
-#include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
 #include "openvic-simulation/utility/Getters.hpp"
 
 namespace OpenVic {
+	struct GoodDefinition;
+
 	struct GoodMarketSellOrder {
 	private:
 		const fixed_point_t PROPERTY(quantity);

@@ -4,6 +4,7 @@
 
 #include "openvic-simulation/economy/production/Employee.hpp"
 #include "openvic-simulation/economy/production/ProductionType.hpp"
+#include "openvic-simulation/economy/trading/MarketSellOrder.hpp"
 #include "openvic-simulation/economy/trading/SellResult.hpp"
 #include "openvic-simulation/map/ProvinceInstance.hpp"
 #include "openvic-simulation/map/State.hpp"
@@ -161,7 +162,7 @@ void ResourceGatheringOperation::rgo_tick() {
 			get_country_to_report_economy_nullable->report_output(production_type, output_quantity_yesterday);
 		}
 
-		market_instance.place_market_sell_order({
+		market_instance.place_market_sell_order(MarketSellOrder {
 			production_type.get_output_good(),
 			output_quantity_yesterday,
 			[
