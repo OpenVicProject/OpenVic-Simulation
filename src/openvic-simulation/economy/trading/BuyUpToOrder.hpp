@@ -1,7 +1,6 @@
 #pragma once
 
 #include "openvic-simulation/economy/trading/BuyResult.hpp"
-#include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
 #include "openvic-simulation/utility/Getters.hpp"
 
 namespace OpenVic {

@@ -1,6 +1,5 @@
 #include "ArtisanalProducer.hpp"
 
-#include "openvic-simulation/economy/GoodInstance.hpp"
 #include "openvic-simulation/economy/production/ProductionType.hpp"
 #include "openvic-simulation/map/ProvinceInstance.hpp"
 #include "openvic-simulation/modifier/ModifierEffectCache.hpp"
@@ -9,13 +8,11 @@
 using namespace OpenVic;
 
 ArtisanalProducer::ArtisanalProducer(
-	GoodInstanceManager const& new_good_instance_manager,
 	ModifierEffectCache const& new_modifier_effect_cache,
 	GoodDefinition::good_definition_map_t&& new_stockpile,
 	ProductionType const& new_production_type,
 	fixed_point_t new_current_production
-) : good_instance_manager { new_good_instance_manager },
-	modifier_effect_cache { new_modifier_effect_cache },
+) : modifier_effect_cache { new_modifier_effect_cache },
 	stockpile { std::move(new_stockpile) },
 	production_type { new_production_type },
 	current_production { new_current_production }
@@ -45,8 +42,8 @@ void ArtisanalProducer::artisan_tick(Pop& pop) {
 			inputs_bought_numerator = stockpile[input_good_ptr];
 			inputs_bought_denominator = desired_quantity;
 		}
-		GoodInstance const& good = good_instance_manager.get_good_instance_from_definition(*input_good_ptr);
-		goods_to_buy_and_max_price[input_good_ptr] = good.get_max_next_price();
+		
+		goods_to_buy_and_max_price[input_good_ptr] = pop.get_market_instance().get_max_next_price(*input_good_ptr);
 	}
 
 	//Produce output

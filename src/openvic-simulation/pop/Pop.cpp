@@ -9,6 +9,9 @@
 #include "openvic-simulation/defines/Define.hpp"
 #include "openvic-simulation/economy/GoodDefinition.hpp"
 #include "openvic-simulation/economy/production/ArtisanalProducerFactoryPattern.hpp"
+#include "openvic-simulation/economy/trading/BuyResult.hpp"
+#include "openvic-simulation/economy/trading/BuyUpToOrder.hpp"
+#include "openvic-simulation/economy/trading/MarketSellOrder.hpp"
 #include "openvic-simulation/economy/trading/MarketInstance.hpp"
 #include "openvic-simulation/map/ProvinceInstance.hpp"
 #include "openvic-simulation/modifier/ModifierEffectCache.hpp"
@@ -32,7 +35,7 @@ Pop::Pop(
 	market_instance { new_market_instance },
 	artisanal_producer_nullable {
 		type->get_is_artisan()
-			? artisanal_producer_factory_pattern.CreateNewArtisanalProducer(market_instance.get_good_instance_manager())
+			? artisanal_producer_factory_pattern.CreateNewArtisanalProducer()
 			: nullptr
 	},
 	ideology_distribution { &ideology_keys },
@@ -298,7 +301,6 @@ void Pop::pop_tick() {
 	constexpr int32_t size_denominator = 200000;	
 
 	CountryInstance* get_country_to_report_economy_nullable = location_never_null.get_country_to_report_economy();
-	GoodInstanceManager const& good_instance_manager = market_instance.get_good_instance_manager();
 	#define FILL_NEEDS(need_category)\
 		need_category##_needs.clear(); \
 		const fixed_point_t need_category##_needs_scalar = base_needs_scalar * shared_strata_values.get_shared_##need_category##_needs_scalar(); \
@@ -319,8 +321,7 @@ void Pop::pop_tick() {
 				} \
 			} \
 			if (OV_likely(max_quantity_to_buy > 0)) {\
-				GoodInstance const& good_instance = good_instance_manager.get_good_instance_from_definition(*good_definition); \
-				need_category##_needs_price_inverse_sum += good_instance.get_price_inverse(); \
+				need_category##_needs_price_inverse_sum += market_instance.get_price_inverse(*good_definition); \
 				need_category##_needs[good_definition] += max_quantity_to_buy; \
 				max_quantity_to_buy_per_good[good_definition] += max_quantity_to_buy; \
 			} \
@@ -336,16 +337,16 @@ void Pop::pop_tick() {
 			GoodDefinition::good_definition_map_t money_to_spend_per_good_draft {}; \
 			for (size_t i = 0; i < need_category##_needs.size(); i++) {\
 				auto [good_definition, max_quantity_to_buy] = *need_category##_needs.nth(i); \
-				GoodInstance const& good_instance = good_instance_manager.get_good_instance_from_definition(*good_definition); \
-				const fixed_point_t max_money_to_spend = max_quantity_to_buy * good_instance.get_max_next_price(); \
+				const fixed_point_t max_money_to_spend = max_quantity_to_buy * market_instance.get_max_next_price(*good_definition); \
 				if (money_to_spend_per_good_draft[good_definition] >= max_money_to_spend) {\
 					continue; \
 				} \
-				fixed_point_t cash_available_for_good = cash_left_to_spend * good_instance.get_price_inverse() / need_category##_needs_price_inverse_sum; \
+				fixed_point_t price_inverse = market_instance.get_price_inverse(*good_definition); \
+				fixed_point_t cash_available_for_good = cash_left_to_spend * price_inverse / need_category##_needs_price_inverse_sum; \
 				if (cash_available_for_good >= max_money_to_spend) {\
 					cash_left_to_spend -= max_money_to_spend; \
 					money_to_spend_per_good_draft[good_definition] = max_money_to_spend; \
-					need_category##_needs_price_inverse_sum -= good_instance.get_price_inverse(); \
+					need_category##_needs_price_inverse_sum -= price_inverse; \
 					i = -1; \
 				} else {\
 					money_to_spend_per_good_draft[good_definition] = cash_available_for_good; \
@@ -365,7 +366,7 @@ void Pop::pop_tick() {
 			continue;
 		}
 
-		market_instance.place_buy_up_to_order({
+		market_instance.place_buy_up_to_order(BuyUpToOrder {
 			*good_definition,
 			max_quantity_to_buy,
 			money_to_spend,
@@ -418,7 +419,7 @@ void Pop::pop_tick() {
 	}
 
 	if (artisanal_produce_left_to_sell > fixed_point_t::_0()) {
-		market_instance.place_market_sell_order({
+		market_instance.place_market_sell_order(MarketSellOrder {
 			artisanal_producer_nullable->get_production_type().get_output_good(),
 			artisanal_produce_left_to_sell,
 			[this](const SellResult sell_result) -> void {

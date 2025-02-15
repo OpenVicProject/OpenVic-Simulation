@@ -1,21 +1,24 @@
 #include "ArtisanalProducerFactoryPattern.hpp"
+
 #include "openvic-simulation/economy/GoodInstance.hpp"
 
 using namespace OpenVic;
 
 ArtisanalProducerFactoryPattern::ArtisanalProducerFactoryPattern(
+	GoodInstanceManager const& new_good_instance_manager,
 	ModifierEffectCache const& new_modifier_effect_cache,
 	ProductionTypeManager const& new_production_type_manager
 ) : index { -1 },
 	unlocked_artisanal_production_types { },
+	good_instance_manager { new_good_instance_manager },
 	modifier_effect_cache { new_modifier_effect_cache },
 	production_type_manager { new_production_type_manager }
 	{ }
 
-std::unique_ptr<ArtisanalProducer> ArtisanalProducerFactoryPattern::CreateNewArtisanalProducer(GoodInstanceManager const& good_instance_manager) {
+std::unique_ptr<ArtisanalProducer> ArtisanalProducerFactoryPattern::CreateNewArtisanalProducer() {
 	//TODO update unlocked_artisanal_production_types when goods are unlocked
 	if (index == -1) {
-		recalculate_unlocked_artisanal_production_types(good_instance_manager);
+		recalculate_unlocked_artisanal_production_types();
 	}
 
 	if (OV_unlikely(unlocked_artisanal_production_types.size() == 0)) {
@@ -28,7 +31,6 @@ std::unique_ptr<ArtisanalProducer> ArtisanalProducerFactoryPattern::CreateNewArt
 	ProductionType const* random_artisanal_production_type = unlocked_artisanal_production_types[index];
 
 	return std::make_unique<ArtisanalProducer>(
-		good_instance_manager,
 		modifier_effect_cache,
 		GoodDefinition::good_definition_map_t{},
 		*random_artisanal_production_type,
@@ -36,7 +38,7 @@ std::unique_ptr<ArtisanalProducer> ArtisanalProducerFactoryPattern::CreateNewArt
 	);
 }
 
-void ArtisanalProducerFactoryPattern::recalculate_unlocked_artisanal_production_types(GoodInstanceManager const& good_instance_manager) {
+void ArtisanalProducerFactoryPattern::recalculate_unlocked_artisanal_production_types() {
 	unlocked_artisanal_production_types.clear();
 	for (ProductionType const& production_type : production_type_manager.get_production_types()) {
 		if (production_type.get_template_type() == ProductionType::template_type_t::ARTISAN) {
