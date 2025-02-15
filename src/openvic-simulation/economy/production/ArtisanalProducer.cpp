@@ -4,6 +4,7 @@
 #include "openvic-simulation/map/ProvinceInstance.hpp"
 #include "openvic-simulation/modifier/ModifierEffectCache.hpp"
 #include "openvic-simulation/pop/Pop.hpp"
+#include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
 
 using namespace OpenVic;
 
@@ -46,10 +47,11 @@ void ArtisanalProducer::artisan_tick(Pop& pop) {
 			);
 		}
 
-		const fixed_point_t good_bought_fraction = stockpile[input_good_ptr] / desired_quantity;
+		const fixed_point_t stockpiled_quantity = stockpile[input_good_ptr];
+		const fixed_point_t good_bought_fraction = stockpiled_quantity / desired_quantity;
 		if (good_bought_fraction < inputs_bought_fraction) {
 			inputs_bought_fraction = good_bought_fraction;
-			inputs_bought_numerator = stockpile[input_good_ptr];
+			inputs_bought_numerator = stockpiled_quantity;
 			inputs_bought_denominator = desired_quantity;
 		}
 		
@@ -182,9 +184,14 @@ fixed_point_t ArtisanalProducer::add_to_stockpile(GoodDefinition const& good, co
 		return fixed_point_t::_0();
 	}
 
-	fixed_point_t& max_quantity_to_buy = max_quantity_to_buy_per_good[&good];
+	auto it = max_quantity_to_buy_per_good.find(&good);
+	if (it == max_quantity_to_buy_per_good.end()) {
+		return fixed_point_t::_0();
+	}
+
+	fixed_point_t& max_quantity_to_buy = it.value();
 	const fixed_point_t quantity_added_to_stockpile = std::min(quantity, max_quantity_to_buy);
-	stockpile[&good] += quantity_added_to_stockpile;
+	stockpile.at(&good) += quantity_added_to_stockpile;
 	max_quantity_to_buy -= quantity_added_to_stockpile;
 	return quantity_added_to_stockpile;
 }

@@ -13,6 +13,10 @@ MarketInstance::MarketInstance(CountryDefines const& new_country_defines, GoodIn
 :	country_defines { new_country_defines },
 	good_instance_manager { new_good_instance_manager} {}
 
+bool MarketInstance::get_is_available(GoodDefinition const& good_definition) const {
+	return good_instance_manager.get_good_instance_from_definition(good_definition).get_is_available();
+}
+
 fixed_point_t MarketInstance::get_max_next_price(GoodDefinition const& good_definition) const {
 	return good_instance_manager.get_good_instance_from_definition(good_definition).get_max_next_price();
 }

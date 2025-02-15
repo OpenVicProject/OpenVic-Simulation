@@ -5,6 +5,7 @@
 #include "openvic-simulation/country/CountryDefinition.hpp"
 #include "openvic-simulation/economy/production/ArtisanalProducerFactoryPattern.hpp"
 #include "openvic-simulation/pop/PopType.hpp"
+#include "types/fixed_point/FixedPoint.hpp"
 
 namespace OpenVic {
 	struct CountryInstance;
@@ -30,35 +31,35 @@ namespace OpenVic {
 		);
 	};
 
-	#define DO_FOR_ALL_TYPES_OF_POP_INCOME(F)\
-		F(rgo_owner_income)\
-		F(rgo_worker_income)\
-		F(artisanal_income)\
-		F(factory_worker_income)\
-		F(factory_owner_income)\
-		F(unemployment_subsidies)\
-		F(pensions)\
-		F(government_salary_administration)\
-		F(government_salary_education)\
-		F(government_salary_military)\
-		F(event_and_decision_income)\
+	#define DO_FOR_ALL_TYPES_OF_POP_INCOME(F) \
+		F(rgo_owner_income) \
+		F(rgo_worker_income) \
+		F(artisanal_income) \
+		F(factory_worker_income) \
+		F(factory_owner_income) \
+		F(unemployment_subsidies) \
+		F(pensions) \
+		F(government_salary_administration) \
+		F(government_salary_education) \
+		F(government_salary_military) \
+		F(event_and_decision_income) \
 		F(loan_interest_payments)
 
-	#define DO_FOR_ALL_TYPES_OF_POP_EXPENSES(F)\
-		F(life_needs_expense)\
-		F(everyday_needs_expense)\
-		F(luxury_needs_expense)\
+	#define DO_FOR_ALL_TYPES_OF_POP_EXPENSES(F) \
+		F(life_needs_expense) \
+		F(everyday_needs_expense) \
+		F(luxury_needs_expense) \
 		F(artisan_inputs_expense)
 
-	#define DO_FOR_ALL_NEED_CATEGORIES(F)\
-		F(life)\
-		F(everyday)\
+	#define DO_FOR_ALL_NEED_CATEGORIES(F) \
+		F(life) \
+		F(everyday) \
 		F(luxury)
 
-	#define DECLARE_POP_MONEY_STORES(money_type)\
+	#define DECLARE_POP_MONEY_STORES(money_type) \
 		fixed_point_t PROPERTY(money_type);
 
-	#define DECLARE_POP_MONEY_STORE_FUNCTIONS(name)\
+	#define DECLARE_POP_MONEY_STORE_FUNCTIONS(name) \
 		void add_##name(const fixed_point_t amount);
 
 	/* REQUIREMENTS:
@@ -103,7 +104,7 @@ namespace OpenVic {
 		fixed_point_t PROPERTY(expenses); //positive value means POP paid for goods. This is displayed * -1 in UI.
 		fixed_point_t PROPERTY(savings);
 
-		#define NEED_MEMBERS(need_category)\
+		#define NEED_MEMBERS(need_category) \
 			fixed_point_t need_category##_needs_acquired_quantity, need_category##_needs_desired_quantity; \
 			public: \
 			constexpr fixed_point_t get_##need_category##_needs_fulfilled() const { \
@@ -135,6 +136,11 @@ namespace OpenVic {
 		std::stringstream get_pop_context_text() const;
 		void reserve_needs_fulfilled_goods();
 		void fill_needs_fulfilled_goods_with_false();
+		void allocate_for_needs(
+			GoodDefinition::good_definition_map_t const& scaled_needs,
+			fixed_point_t& price_inverse_sum,
+			fixed_point_t& cash_left_to_spend
+		);
 
 	public:
 		Pop(Pop const&) = delete;

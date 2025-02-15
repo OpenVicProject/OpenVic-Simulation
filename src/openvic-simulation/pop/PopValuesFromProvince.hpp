@@ -16,7 +16,7 @@ namespace OpenVic {
 		fixed_point_t PROPERTY(shared_everyday_needs_scalar);
 		fixed_point_t PROPERTY(shared_luxury_needs_scalar);
 	public:
-		void update(PopValuesFromProvince const& parent, Strata const& strata);
+		void update_pop_strata_values_from_province(PopValuesFromProvince const& parent, Strata const& strata);
 	};
 
 	struct PopValuesFromProvince {
@@ -30,6 +30,6 @@ namespace OpenVic {
 			decltype(effects_per_strata)::keys_type const& strata_keys
 		);
 
-		void update();
+		void update_pop_values_from_province();
 	};
 }

@@ -1403,11 +1403,13 @@ void CountryInstance::update_gamestate(InstanceManager& instance_manager) {
 	}
 }
 
-void CountryInstance::tick(InstanceManager& instance_manager) {
+void CountryInstance::country_reset_before_tick() {
 	for (auto pair : goods_data) {
 		pair.second.clear_daily_recorded_data();
 	}
+}
 
+void CountryInstance::country_tick(InstanceManager& instance_manager) {
 	DefinitionManager const& definition_manager = instance_manager.get_definition_manager();
 	DefineManager const& define_manager = definition_manager.get_define_manager();
 
@@ -1812,8 +1814,14 @@ void CountryInstanceManager::update_gamestate(InstanceManager& instance_manager)
 	update_rankings(instance_manager.get_today(), instance_manager.get_definition_manager().get_define_manager());
 }
 
-void CountryInstanceManager::tick(InstanceManager& instance_manager) {
+void CountryInstanceManager::country_manager_reset_before_tick() {
 	for (CountryInstance& country : country_instances.get_items()) {
-		country.tick(instance_manager);
+		country.country_reset_before_tick();
+	}
+}
+
+void CountryInstanceManager::country_manager_tick(InstanceManager& instance_manager) {
+	for (CountryInstance& country : country_instances.get_items()) {
+		country.country_tick(instance_manager);
 	}
 }

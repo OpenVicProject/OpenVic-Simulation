@@ -12,8 +12,6 @@ namespace OpenVic {
 		friend struct GoodInstanceManager;
 
 	private:
-		GoodDefinition const& PROPERTY(good_definition);
-
 		GoodInstance(GoodDefinition const& new_good_definition, GameRulesManager const& new_game_rules_manager);
 
 	public:

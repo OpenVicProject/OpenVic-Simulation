@@ -4,8 +4,7 @@ using namespace OpenVic;
 
 GoodInstance::GoodInstance(GoodDefinition const& new_good_definition, GameRulesManager const& new_game_rules_manager)
   : HasIdentifierAndColour { new_good_definition },
-	GoodMarket { new_game_rules_manager, new_good_definition.get_base_price(), new_good_definition.get_is_available_from_start() },
-	good_definition { new_good_definition }
+	GoodMarket { new_game_rules_manager, new_good_definition }
 	{}
 
 GoodInstanceManager::GoodInstanceManager(GoodDefinitionManager const& new_good_definition_manager)

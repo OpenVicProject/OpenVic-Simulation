@@ -38,7 +38,7 @@ namespace OpenVic {
 	static_assert( \
 		sizeof(prefix##vec##size##_t) == size * sizeof(type), \
 		#prefix "vec" #size "_t size does not equal the sum of its parts' sizes" \
-	);\
+	); \
 	extern template struct vec##size##_t<type>;
 
 #define MAKE_VEC_ALIASES(prefix, type) \

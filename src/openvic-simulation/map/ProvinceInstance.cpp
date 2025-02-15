@@ -410,7 +410,7 @@ void ProvinceInstance::update_gamestate(const Date today, DefineManager const& d
 }
 
 void ProvinceInstance::province_tick(const Date today) {
-	shared_pop_values.update();
+	shared_pop_values.update_pop_values_from_province();
 	try_parallel_for_each(
 		pops.begin(),
 		pops.end(),

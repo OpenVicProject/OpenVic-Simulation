@@ -69,13 +69,15 @@ void InstanceManager::update_gamestate() {
  * SS-98, SS-101
  */
 void InstanceManager::tick() {
+	country_instance_manager.country_manager_reset_before_tick();
+
 	today++;
 
 	Logger::info("Tick: ", today);
 
 	// Tick...
 	map_instance.map_tick(today);
-	country_instance_manager.tick(*this);
+	country_instance_manager.country_manager_tick(*this);
 	unit_instance_manager.tick();
 	market_instance.execute_orders();
 
