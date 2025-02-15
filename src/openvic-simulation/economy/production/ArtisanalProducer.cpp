@@ -57,7 +57,7 @@ void ArtisanalProducer::artisan_tick(Pop& pop) {
 	CountryInstance* get_country_to_report_economy_nullable = pop.get_location()->get_country_to_report_economy();
 	if (current_production > fixed_point_t::_0()) {
 		if (get_country_to_report_economy_nullable != nullptr) {
-			get_country_to_report_economy_nullable->report_artisan_output(production_type, current_production);
+			get_country_to_report_economy_nullable->report_output(production_type, current_production);
 		}
 	}
 
@@ -69,7 +69,7 @@ void ArtisanalProducer::artisan_tick(Pop& pop) {
 			//Consume input good
 			fixed_point_t consumed_quantity = desired_quantity * inputs_bought_numerator / inputs_bought_denominator;
 			if (get_country_to_report_economy_nullable != nullptr) {
-				get_country_to_report_economy_nullable->report_artisan_input_consumption(
+				get_country_to_report_economy_nullable->report_input_consumption(
 					production_type,
 					*input_good_ptr,
 					consumed_quantity

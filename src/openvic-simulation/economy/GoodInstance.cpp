@@ -53,12 +53,12 @@ void GoodInstance::update_next_price_limits() {
 }
 
 void GoodInstance::add_buy_up_to_order(GoodBuyUpToOrder&& buy_up_to_order) {
-	const std::lock_guard<std::mutex> lock {*buy_lock};
+	const std::lock_guard<std::mutex> lock_guard { *buy_lock };
 	buy_up_to_orders.push_back(std::move(buy_up_to_order));
 }
 
 void GoodInstance::add_market_sell_order(GoodMarketSellOrder&& market_sell_order) {
-	const std::lock_guard<std::mutex> lock {*sell_lock};
+	const std::lock_guard<std::mutex> lock_guard { *sell_lock };
 	market_sell_orders.push_back(std::move(market_sell_order));
 }
 

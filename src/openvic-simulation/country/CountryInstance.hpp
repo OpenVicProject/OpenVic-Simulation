@@ -194,6 +194,7 @@ namespace OpenVic {
 		/* Trade */
 	public:
 		struct good_data_t {
+			std::unique_ptr<std::mutex> lock;
 			fixed_point_t stockpile_amount;
 			fixed_point_t stockpile_change_yesterday; // positive if we bought, negative if we sold
 
@@ -211,6 +212,17 @@ namespace OpenVic {
 			fixed_point_t factory_needs;
 			fixed_point_t pop_needs;
 			fixed_point_t available_amount;
+
+			ordered_map<PopType const*, fixed_point_t> need_consumption_per_pop_type;
+			ordered_map<ProductionType const*, fixed_point_t> input_consumption_per_production_type;
+			ordered_map<ProductionType const*, fixed_point_t> production_per_production_type;
+
+			good_data_t();
+			good_data_t(good_data_t&&) = default;
+			good_data_t& operator=(good_data_t&&) = default;
+
+			//thread safe
+			void clear_daily_recorded_data();
 		};
 
 	private:
@@ -517,17 +529,15 @@ namespace OpenVic {
 		void update_gamestate(InstanceManager& instance_manager);
 		void tick(InstanceManager& instance_manager);
 
-		void report_pop_need_consumption(PopType const& pop_type, GoodDefinition const& good, const fixed_point_t quantity);
-		void report_artisan_input_consumption(ProductionType const& production_type, GoodDefinition const& good, const fixed_point_t quantity);
-		void report_artisan_output(ProductionType const& production_type, const fixed_point_t quantity);
-		void report_factory_input_consumption(ProductionType const& production_type, GoodDefinition const& good, const fixed_point_t quantity);
-		void report_factory_output(ProductionType const& production_type, const fixed_point_t quantity);
-		void report_rgo_output(GoodDefinition const& good, const fixed_point_t quantity);
-
 		good_data_t& get_good_data(GoodInstance const& good_instance);
 		good_data_t const& get_good_data(GoodInstance const& good_instance) const;
 		good_data_t& get_good_data(GoodDefinition const& good_definition);
 		good_data_t const& get_good_data(GoodDefinition const& good_definition) const;
+
+		//thread safe
+		void report_pop_need_consumption(PopType const& pop_type, GoodDefinition const& good, const fixed_point_t quantity);
+		void report_input_consumption(ProductionType const& production_type, GoodDefinition const& good, const fixed_point_t quantity);
+		void report_output(ProductionType const& production_type, const fixed_point_t quantity);
 	};
 
 	struct CountryDefinitionManager;
