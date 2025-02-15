@@ -94,6 +94,11 @@ bool DeploymentManager::load_oob_file(
 			"picture", ZERO_OR_ONE, expect_identifier_or_string(assign_variable_callback(picture))
 		)(node);
 
+		if (leader_name.empty()) {
+			Logger::error("Leader has a missing or empty name!");
+			ret = false;
+		}
+
 		if (leader_personality != nullptr && !leader_personality->is_personality_trait()) {
 			Logger::error(
 				"Leader ", leader_name, " has personality ", leader_personality->get_identifier(),

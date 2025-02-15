@@ -424,36 +424,59 @@ void ProvinceInstance::province_tick(const Date today) {
 	rgo.rgo_tick();
 }
 
-template<UnitType::branch_t Branch>
-bool ProvinceInstance::add_unit_instance_group(UnitInstanceGroup<Branch>& group) {
-	if (get_unit_instance_groups<Branch>().emplace(static_cast<UnitInstanceGroupBranched<Branch>*>(&group)).second) {
+bool ProvinceInstance::add_unit_instance_group(UnitInstanceGroup& group) {
+	using enum UnitType::branch_t;
+
+	switch (group.get_branch()) {
+	case LAND:
+		armies.push_back(static_cast<ArmyInstance*>(&group));
 		return true;
-	} else {
+	case NAVAL:
+		navies.push_back(static_cast<NavyInstance*>(&group));
+		return true;
+	default:
 		Logger::error(
-			"Trying to add already-existing ", UnitType::get_branched_unit_group_name(Branch), " \"",
-			group.get_name(), "\" to province ", get_identifier()
+			"Trying to add unit group \"", group.get_name(), "\" with invalid branch ",
+			static_cast<uint32_t>(group.get_branch()), " to province ", get_identifier()
 		);
 		return false;
 	}
 }
 
-template<UnitType::branch_t Branch>
-bool ProvinceInstance::remove_unit_instance_group(UnitInstanceGroup<Branch> const& group) {
-	if (get_unit_instance_groups<Branch>().erase(static_cast<UnitInstanceGroupBranched<Branch> const*>(&group)) > 0) {
-		return true;
-	} else {
+bool ProvinceInstance::remove_unit_instance_group(UnitInstanceGroup const& group) {
+	const auto remove_from_vector = [this, &group]<UnitType::branch_t Branch>(
+		std::vector<UnitInstanceGroupBranched<Branch>*>& unit_instance_groups
+	) -> bool {
+		const typename std::vector<UnitInstanceGroupBranched<Branch>*>::const_iterator it =
+			std::find(unit_instance_groups.begin(), unit_instance_groups.end(), &group);
+
+		if (it != unit_instance_groups.end()) {
+			unit_instance_groups.erase(it);
+			return true;
+		} else {
+			Logger::error(
+				"Trying to remove non-existent ", UnitType::get_branched_unit_group_name(Branch), " \"",
+				group.get_name(), "\" from province ", get_identifier()
+			);
+			return false;
+		}
+	};
+
+	using enum UnitType::branch_t;
+
+	switch (group.get_branch()) {
+	case LAND:
+		return remove_from_vector(armies);
+	case NAVAL:
+		return remove_from_vector(navies);
+	default:
 		Logger::error(
-			"Trying to remove non-existent ", UnitType::get_branched_unit_group_name(Branch), " \"",
-			group.get_name(), "\" from province ", get_identifier()
+			"Trying to remove unit group \"", group.get_name(), "\" with invalid branch ",
+			static_cast<uint32_t>(group.get_branch()), " from province ", get_identifier()
 		);
 		return false;
 	}
 }
-
-template bool ProvinceInstance::add_unit_instance_group(UnitInstanceGroup<UnitType::branch_t::LAND>&);
-template bool ProvinceInstance::add_unit_instance_group(UnitInstanceGroup<UnitType::branch_t::NAVAL>&);
-template bool ProvinceInstance::remove_unit_instance_group(UnitInstanceGroup<UnitType::branch_t::LAND> const&);
-template bool ProvinceInstance::remove_unit_instance_group(UnitInstanceGroup<UnitType::branch_t::NAVAL> const&);
 
 bool ProvinceInstance::setup(BuildingTypeManager const& building_type_manager) {
 	if (buildings_are_locked()) {

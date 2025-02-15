@@ -3,10 +3,6 @@
 #include <utility>
 #include <vector>
 
-#include <plf_colony.h>
-
-#include "openvic-simulation/military/Leader.hpp"
-#include "openvic-simulation/military/UnitInstanceGroup.hpp"
 #include "openvic-simulation/modifier/ModifierSum.hpp"
 #include "openvic-simulation/politics/Ideology.hpp"
 #include "openvic-simulation/politics/Rule.hpp"
@@ -39,6 +35,12 @@ namespace OpenVic {
 	struct BuildingType;
 	struct GoodInstance;
 	struct GoodInstanceManager;
+	struct LeaderInstance;
+	struct UnitInstanceGroup;
+	template<UnitType::branch_t>
+	struct UnitInstanceGroupBranched;
+	using ArmyInstance = UnitInstanceGroupBranched<UnitType::branch_t::LAND>;
+	using NavyInstance = UnitInstanceGroupBranched<UnitType::branch_t::NAVAL>;
 	struct CountryHistoryEntry;
 	struct DefineManager;
 	struct ModifierEffectCache;
@@ -226,10 +228,10 @@ namespace OpenVic {
 		fixed_point_t PROPERTY(military_power_from_sea);
 		fixed_point_t PROPERTY(military_power_from_leaders);
 		size_t PROPERTY(military_rank, 0);
-		plf::colony<General> PROPERTY(generals);
-		plf::colony<Admiral> PROPERTY(admirals);
-		ordered_set<ArmyInstance*> PROPERTY(armies);
-		ordered_set<NavyInstance*> PROPERTY(navies);
+		std::vector<LeaderInstance*> PROPERTY(generals);
+		std::vector<LeaderInstance*> PROPERTY(admirals);
+		std::vector<ArmyInstance*> PROPERTY(armies);
+		std::vector<NavyInstance*> PROPERTY(navies);
 		size_t PROPERTY(regiment_count, 0);
 		size_t PROPERTY(max_supported_regiment_count, 0);
 		size_t PROPERTY(mobilisation_potential_regiment_count, 0);
@@ -240,7 +242,7 @@ namespace OpenVic {
 		size_t PROPERTY(ship_count, 0);
 		fixed_point_t PROPERTY(total_consumed_ship_supply);
 		fixed_point_t PROPERTY(max_ship_supply);
-		fixed_point_t PROPERTY(leadership_point_stockpile);
+		fixed_point_t PROPERTY_RW(leadership_point_stockpile);
 		fixed_point_t PROPERTY(monthly_leadership_points);
 		fixed_point_map_t<PopType const*> PROPERTY(leadership_points_from_pop_types);
 		int32_t PROPERTY(create_leader_count, 0);
@@ -249,7 +251,7 @@ namespace OpenVic {
 		// clamps the result in the range [0, war_exhaustion_max] straight away, matching the base game's behaviour.
 		fixed_point_t PROPERTY(war_exhaustion);
 		fixed_point_t PROPERTY(war_exhaustion_max);
-		bool PROPERTY_CUSTOM_PREFIX(mobilised, is, false);
+		bool PROPERTY_RW_CUSTOM_NAME(mobilised, is_mobilised, set_mobilised, false);
 		bool PROPERTY_CUSTOM_PREFIX(disarmed, is, false);
 		bool PROPERTY_RW(auto_create_leaders, true);
 		bool PROPERTY_RW(auto_assign_leaders, true);
@@ -404,20 +406,16 @@ namespace OpenVic {
 		void set_administration_spending(const StandardSliderValue::int_type new_value);
 		void set_social_spending(const StandardSliderValue::int_type new_value);
 		void set_military_spending(const StandardSliderValue::int_type new_value);
-		void set_tariff_rate(const StandardSliderValue::int_type new_value);
+		void set_tariff_rate(const TariffSliderValue::int_type new_value);
 
 		// Adds delta to the current war exhaustion value and clamps it to the range [0, war_exhaustion_max].
 		void change_war_exhaustion(fixed_point_t delta);
 
-		template<UnitType::branch_t Branch>
-		bool add_unit_instance_group(UnitInstanceGroup<Branch>& group);
-		template<UnitType::branch_t Branch>
-		bool remove_unit_instance_group(UnitInstanceGroup<Branch> const& group);
+		bool add_unit_instance_group(UnitInstanceGroup& group);
+		bool remove_unit_instance_group(UnitInstanceGroup const& group);
 
-		template<UnitType::branch_t Branch>
-		void add_leader(LeaderBranched<Branch>&& leader);
-		template<UnitType::branch_t Branch>
-		bool remove_leader(LeaderBranched<Branch> const& leader);
+		bool add_leader(LeaderInstance& leader);
+		bool remove_leader(LeaderInstance const& leader);
 
 		bool has_leader_with_name(std::string_view name) const;
 
