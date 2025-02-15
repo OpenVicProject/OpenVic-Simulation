@@ -47,6 +47,7 @@ namespace OpenVic {
 	struct StaticModifierCache;
 	struct InstanceManager;
 	struct ProductionType;
+	struct GameRulesManager;
 
 	/* Representation of a country's mutable attributes, with a CountryDefinition that is unique at any single time
 	 * but can be swapped with other CountryInstance's CountryDefinition when switching tags. */
@@ -87,6 +88,9 @@ namespace OpenVic {
 		// We can always assume country_definition is not null, as it is initialised from a reference and only ever changed
 		// by swapping with another CountryInstance's country_definition.
 		CountryDefinition const* PROPERTY(country_definition);
+
+		GameRulesManager const& game_rules_manager;
+
 		colour_t PROPERTY(colour); // Cached to avoid searching government overrides for every province
 		ProvinceInstance* PROPERTY_PTR(capital, nullptr);
 		bool PROPERTY_CUSTOM_PREFIX(releasable_vassal, is, true);
@@ -207,10 +211,9 @@ namespace OpenVic {
 			fixed_point_t government_needs;
 			fixed_point_t army_needs;
 			fixed_point_t navy_needs;
-			fixed_point_t production_needs;
-			fixed_point_t overseas_needs;
-			fixed_point_t factory_needs;
-			fixed_point_t pop_needs;
+			fixed_point_t overseas_maintenance;
+			fixed_point_t factory_demand;
+			fixed_point_t pop_demand;
 			fixed_point_t available_amount;
 
 			ordered_map<PopType const*, fixed_point_t> need_consumption_per_pop_type;
@@ -298,7 +301,8 @@ namespace OpenVic {
 			decltype(regiment_type_unlock_levels)::keys_type const& regiment_type_unlock_levels_keys,
 			decltype(ship_type_unlock_levels)::keys_type const& ship_type_unlock_levels_keys,
 			decltype(tax_rate_by_strata)::keys_type const& strata_keys,
-			GoodInstanceManager& good_instance_manager
+			GameRulesManager const& new_game_rules_manager,
+			GoodInstanceManager& new_good_instance_manager
 		);
 
 	public:
@@ -536,7 +540,9 @@ namespace OpenVic {
 
 		//thread safe
 		void report_pop_need_consumption(PopType const& pop_type, GoodDefinition const& good, const fixed_point_t quantity);
+		void report_pop_need_demand(PopType const& pop_type, GoodDefinition const& good, const fixed_point_t quantity);
 		void report_input_consumption(ProductionType const& production_type, GoodDefinition const& good, const fixed_point_t quantity);
+		void report_input_demand(ProductionType const& production_type, GoodDefinition const& good, const fixed_point_t quantity);
 		void report_output(ProductionType const& production_type, const fixed_point_t quantity);
 	};
 
@@ -582,6 +588,7 @@ namespace OpenVic {
 			decltype(CountryInstance::regiment_type_unlock_levels)::keys_type const& regiment_type_unlock_levels_keys,
 			decltype(CountryInstance::ship_type_unlock_levels)::keys_type const& ship_type_unlock_levels_keys,
 			decltype(CountryInstance::tax_rate_by_strata):: keys_type const& strata_keys,
+			GameRulesManager const& game_rules_manager,
 			GoodInstanceManager& good_instance_manager
 		);
 

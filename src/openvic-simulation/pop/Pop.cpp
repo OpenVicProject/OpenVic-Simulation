@@ -308,6 +308,9 @@ void Pop::pop_tick() {
 		need_category##_needs_acquired_quantity = need_category##_needs_desired_quantity = fixed_point_t::_0(); \
 		for (auto [good_definition, quantity] : type_never_null.get_##need_category##_needs()) { \
 			fixed_point_t max_quantity_to_buy = quantity * need_category##_needs_scalar / size_denominator; \
+			if (get_country_to_report_economy_nullable != nullptr) { \
+				get_country_to_report_economy_nullable->report_pop_need_demand(*type, *good_definition, max_quantity_to_buy); \
+			} \
 			need_category##_needs_desired_quantity += max_quantity_to_buy; \
 			if (artisanal_produce_left_to_sell > fixed_point_t::_0()\
 				&& &artisanal_producer_nullable->get_production_type().get_output_good() == good_definition\

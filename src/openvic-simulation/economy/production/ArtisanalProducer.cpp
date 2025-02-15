@@ -21,6 +21,7 @@ ArtisanalProducer::ArtisanalProducer(
 	}
 
 void ArtisanalProducer::artisan_tick(Pop& pop) {
+	CountryInstance* country_to_report_economy_nullable = pop.get_location()->get_country_to_report_economy();
 	max_quantity_to_buy_per_good.clear();
 
 	//TODO get from pool instead of create & destroy each time
@@ -36,6 +37,15 @@ void ArtisanalProducer::artisan_tick(Pop& pop) {
 		if (desired_quantity == fixed_point_t::_0()) {
 			continue;
 		}
+
+		if (country_to_report_economy_nullable != nullptr) {
+			country_to_report_economy_nullable->report_input_demand(
+				production_type,
+				*input_good_ptr,
+				desired_quantity
+			);
+		}
+
 		const fixed_point_t good_bought_fraction = stockpile[input_good_ptr] / desired_quantity;
 		if (good_bought_fraction < inputs_bought_fraction) {
 			inputs_bought_fraction = good_bought_fraction;
@@ -51,10 +61,9 @@ void ArtisanalProducer::artisan_tick(Pop& pop) {
 		* inputs_bought_numerator * pop.get_size()
 		/ (inputs_bought_denominator * production_type.get_base_workforce_size());
 
-	CountryInstance* get_country_to_report_economy_nullable = pop.get_location()->get_country_to_report_economy();
 	if (current_production > fixed_point_t::_0()) {
-		if (get_country_to_report_economy_nullable != nullptr) {
-			get_country_to_report_economy_nullable->report_output(production_type, current_production);
+		if (country_to_report_economy_nullable != nullptr) {
+			country_to_report_economy_nullable->report_output(production_type, current_production);
 		}
 	}
 
@@ -65,8 +74,8 @@ void ArtisanalProducer::artisan_tick(Pop& pop) {
 
 			//Consume input good
 			fixed_point_t consumed_quantity = desired_quantity * inputs_bought_numerator / inputs_bought_denominator;
-			if (get_country_to_report_economy_nullable != nullptr) {
-				get_country_to_report_economy_nullable->report_input_consumption(
+			if (country_to_report_economy_nullable != nullptr) {
+				country_to_report_economy_nullable->report_input_consumption(
 					production_type,
 					*input_good_ptr,
 					consumed_quantity
