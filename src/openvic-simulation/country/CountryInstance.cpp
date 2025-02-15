@@ -9,6 +9,7 @@
 #include "openvic-simulation/InstanceManager.hpp"
 #include "openvic-simulation/map/Crime.hpp"
 #include "openvic-simulation/map/MapInstance.hpp"
+#include "openvic-simulation/misc/GameRulesManager.hpp"
 #include "openvic-simulation/modifier/ModifierEffectCache.hpp"
 #include "openvic-simulation/modifier/StaticModifierCache.hpp"
 #include "openvic-simulation/politics/Ideology.hpp"
@@ -38,11 +39,13 @@ CountryInstance::CountryInstance(
 	decltype(regiment_type_unlock_levels)::keys_type const& regiment_type_unlock_levels_keys,
 	decltype(ship_type_unlock_levels)::keys_type const& ship_type_unlock_levels_keys,
 	decltype(tax_rate_by_strata)::keys_type const& strata_keys,
-	GoodInstanceManager& good_instance_manager
+	GameRulesManager const& new_game_rules_manager,
+	GoodInstanceManager& new_good_instance_manager
 ) : FlagStrings { "country" },
 	HasIndex { new_index },
 	/* Main attributes */
 	country_definition { new_country_definition },
+	game_rules_manager { new_game_rules_manager },
 	colour { ERROR_COLOUR },
 
 	/* Production */
@@ -87,7 +90,7 @@ CountryInstance::CountryInstance(
 
 	for (BuildingType const& building_type : *building_type_unlock_levels.get_keys()) {
 		if (building_type.is_default_enabled()) {
-			unlock_building_type(building_type, good_instance_manager);
+			unlock_building_type(building_type, new_good_instance_manager);
 		}
 	}
 
@@ -1461,11 +1464,10 @@ void CountryInstance::good_data_t::clear_daily_recorded_data() {
 		= exported_amount
 		= government_needs
 		= army_needs
-		= navy_needs	
-		= production_needs
-		= overseas_needs
-		= factory_needs
-		= pop_needs
+		= navy_needs
+		= overseas_maintenance
+		= factory_demand
+		= pop_demand
 		= available_amount
 		= fixed_point_t::_0();
 	need_consumption_per_pop_type.clear();
@@ -1478,10 +1480,33 @@ void CountryInstance::report_pop_need_consumption(PopType const& pop_type, GoodD
 	const std::lock_guard<std::mutex> lock_guard { *good_data.lock };
 	good_data.need_consumption_per_pop_type[&pop_type] += quantity;
 }
+void CountryInstance::report_pop_need_demand(PopType const& pop_type, GoodDefinition const& good, const fixed_point_t quantity) {
+	good_data_t& good_data = get_good_data(good);
+	const std::lock_guard<std::mutex> lock_guard { *good_data.lock };
+	good_data.pop_demand += quantity;
+}
 void CountryInstance::report_input_consumption(ProductionType const& production_type, GoodDefinition const& good, const fixed_point_t quantity) {
 	good_data_t& good_data = get_good_data(good);
 	const std::lock_guard<std::mutex> lock_guard { *good_data.lock };
 	good_data.input_consumption_per_production_type[&production_type] += quantity;
+}
+void CountryInstance::report_input_demand(ProductionType const& production_type, GoodDefinition const& good, const fixed_point_t quantity) {
+	if (production_type.get_template_type() == ProductionType::template_type_t::ARTISAN) {
+		switch (game_rules_manager.get_artisanal_input_demand_category()) {
+			case demand_category::FactoryNeeds: break;
+			case demand_category::PopNeeds: {
+				good_data_t& good_data = get_good_data(good);
+				const std::lock_guard<std::mutex> lock_guard { *good_data.lock };
+				good_data.pop_demand += quantity;
+				return;
+			}
+			default: return; //demand_category::None
+		}
+	}
+
+	good_data_t& good_data = get_good_data(good);
+	const std::lock_guard<std::mutex> lock_guard { *good_data.lock };
+	good_data.factory_demand += quantity;
 }
 void CountryInstance::report_output(ProductionType const& production_type, const fixed_point_t quantity) {
 	good_data_t& good_data = get_good_data(production_type.get_output_good());
@@ -1646,6 +1671,7 @@ bool CountryInstanceManager::generate_country_instances(
 	decltype(CountryInstance::regiment_type_unlock_levels)::keys_type const& regiment_type_unlock_levels_keys,
 	decltype(CountryInstance::ship_type_unlock_levels)::keys_type const& ship_type_unlock_levels_keys,
 	decltype(CountryInstance::tax_rate_by_strata):: keys_type const& strata_keys,
+	GameRulesManager const& game_rules_manager,
 	GoodInstanceManager& good_instance_manager
 ) {
 	reserve_more(country_instances, country_definition_manager.get_country_definition_count());
@@ -1668,6 +1694,7 @@ bool CountryInstanceManager::generate_country_instances(
 			regiment_type_unlock_levels_keys,
 			ship_type_unlock_levels_keys,
 			strata_keys,
+			game_rules_manager,
 			good_instance_manager
 		})) {
 			// We need to update the country's ModifierSum's source here as the country's address is finally stable
