@@ -362,7 +362,7 @@ void ResourceGatheringOperation::pay_employees(
 
 	fixed_point_t revenue_left = revenue;
 	if (total_owner_count_in_state_cache > 0) {
-		fixed_point_t owner_share = (fixed_point_t::_2() * total_owner_count_in_state_cache / total_worker_count_in_province);
+		fixed_point_t owner_share = fixed_point_t::_2() * total_owner_count_in_state_cache / total_worker_count_in_province;
 		constexpr fixed_point_t upper_limit = fixed_point_t::_0_50();
 		if (owner_share > upper_limit) {
 			owner_share = upper_limit;
@@ -370,7 +370,7 @@ void ResourceGatheringOperation::pay_employees(
 
 		for (Pop* owner_pop_ptr : *owner_pops_cache_nullable) {
 			Pop& owner_pop = *owner_pop_ptr;
-			const fixed_point_t income_for_this_pop = revenue_left * owner_share * owner_pop.get_size() / total_owner_count_in_state_cache;
+			const fixed_point_t income_for_this_pop = revenue_left * (owner_share * owner_pop.get_size()) / total_owner_count_in_state_cache;
 			owner_pop.add_rgo_owner_income(income_for_this_pop);
 			total_owner_income_cache += income_for_this_pop;
 		}

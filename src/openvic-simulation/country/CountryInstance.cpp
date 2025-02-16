@@ -920,8 +920,11 @@ void CountryInstance::_update_production(DefineManager const& define_manager) {
 
 	for (auto const& [country, money_invested] : foreign_investments) {
 		if (country->exists()) {
-			const fixed_point_t investment_industrial_power =
-				money_invested * define_manager.get_country_defines().get_country_investment_industrial_score_factor() / 100;
+			const fixed_point_t investment_industrial_power = fixed_point_t::mul_div(
+				money_invested,
+				define_manager.get_country_defines().get_country_investment_industrial_score_factor(),
+				fixed_point_t::_100()
+			);
 
 			if (investment_industrial_power != 0) {
 				industrial_power += investment_industrial_power;

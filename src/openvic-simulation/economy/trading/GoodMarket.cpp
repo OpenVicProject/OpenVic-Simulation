@@ -173,7 +173,11 @@ void GoodMarket::execute_orders() {
 
 					const fixed_point_t distributed_supply
 						= quantity_bought_per_order[i]
-						= remaining_supply * purchasing_power_per_order[i] / purchasing_power_sum;
+						= fixed_point_t::mul_div(
+							remaining_supply,
+							purchasing_power_per_order[i],
+							purchasing_power_sum
+						);
 					if (distributed_supply >= buy_up_to_order.get_max_quantity()) {
 						someone_bought_max_quantity = true;
 						quantity_bought_per_order[i] = buy_up_to_order.get_max_quantity();
@@ -254,7 +258,11 @@ void GoodMarket::execute_orders() {
 		}
 
 		for (GoodMarketSellOrder const& market_sell_order : market_sell_orders) {
-			const fixed_point_t quantity_sold = market_sell_order.get_quantity() * quantity_traded_yesterday / supply_sum;
+			const fixed_point_t quantity_sold = fixed_point_t::mul_div(
+				market_sell_order.get_quantity(),
+				quantity_traded_yesterday,
+				supply_sum
+			);
 			market_sell_order.get_after_trade()({
 				quantity_sold,
 				quantity_sold * new_price

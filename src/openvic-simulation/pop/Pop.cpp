@@ -345,7 +345,11 @@ void Pop::pop_tick() {
 					continue; \
 				} \
 				fixed_point_t price_inverse = market_instance.get_price_inverse(*good_definition); \
-				fixed_point_t cash_available_for_good = cash_left_to_spend * price_inverse / need_category##_needs_price_inverse_sum; \
+				fixed_point_t cash_available_for_good = fixed_point_t::mul_div( \
+					cash_left_to_spend, \
+					price_inverse, \
+					need_category##_needs_price_inverse_sum \
+				); \
 				if (cash_available_for_good >= max_money_to_spend) {\
 					cash_left_to_spend -= max_money_to_spend; \
 					money_to_spend_per_good_draft[good_definition] = max_money_to_spend; \
@@ -386,7 +390,11 @@ void Pop::pop_tick() {
 
 					if (quantity_added_to_stockpile > fixed_point_t::_0()) {
 						quantity_left_to_consume -= quantity_added_to_stockpile;
-						const fixed_point_t expense = buy_result.get_money_spent() * quantity_added_to_stockpile / buy_result.get_quantity_bought();
+						const fixed_point_t expense = fixed_point_t::mul_div(
+							buy_result.get_money_spent(),
+							quantity_added_to_stockpile,
+							buy_result.get_quantity_bought()
+						);
 						add_artisan_inputs_expense(expense);
 					}
 				}
@@ -411,7 +419,11 @@ void Pop::pop_tick() {
 						if (get_country_to_report_economy_nullable != nullptr) { \
 							get_country_to_report_economy_nullable->report_pop_need_consumption(*type, *good_definition, consumed_quantity); \
 						} \
-						const fixed_point_t expense = buy_result.get_money_spent() * consumed_quantity / buy_result.get_quantity_bought(); \
+						const fixed_point_t expense = fixed_point_t::mul_div( \
+							buy_result.get_money_spent(), \
+							consumed_quantity, \
+							buy_result.get_quantity_bought() \
+						); \
 						add_##need_category##_needs_expense(expense); \
 					}
 				

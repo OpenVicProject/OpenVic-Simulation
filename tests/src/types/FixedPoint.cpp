@@ -204,4 +204,10 @@ TEST_CASE("fixed_point_t Operators", "[fixed_point_t][fixed_point_t-operators]")
 	CHECK(((int32_t)decimal2) == 1);
 	CHECK(((int32_t)decimal3) == 4);
 	CHECK(((int32_t)decimal4) == 3);
+
+	CHECK(fixed_point_t::mul_div(
+		fixed_point_t::parse_raw(2),
+		fixed_point_t::parse_raw(3),
+		fixed_point_t::parse_raw(6)
+	) == fixed_point_t::parse_raw(1));
 }
