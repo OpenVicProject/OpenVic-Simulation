@@ -10,6 +10,7 @@ namespace OpenVic {
 	struct MapmodeManager;
 	struct MapInstance;
 	struct ProvinceInstance;
+	struct CountryInstance;
 
 	struct Mapmode : HasIdentifier, HasIndex<int32_t> {
 		friend struct MapmodeManager;
@@ -23,7 +24,9 @@ namespace OpenVic {
 				: base_colour { base }, stripe_colour { stripe } {}
 			constexpr base_stripe_t(colour_argb_t both) : base_stripe_t { both, both } {}
 		};
-		using colour_func_t = std::function<base_stripe_t(MapInstance const&, ProvinceInstance const&)>;
+		using colour_func_t = std::function<
+			base_stripe_t(MapInstance const&, ProvinceInstance const&, CountryInstance const*, ProvinceInstance const*)
+		>;
 
 	private:
 		// Not const so they don't have to be copied when the Mapmode is moved
@@ -44,7 +47,10 @@ namespace OpenVic {
 
 		Mapmode(Mapmode&&) = default;
 
-		base_stripe_t get_base_stripe_colours(MapInstance const& map_instance, ProvinceInstance const& province) const;
+		base_stripe_t get_base_stripe_colours(
+			MapInstance const& map_instance, ProvinceInstance const& province,
+			CountryInstance const* player_country, ProvinceInstance const* selected_province
+		) const;
 	};
 
 	struct MapmodeManager {
@@ -66,7 +72,11 @@ namespace OpenVic {
 		 * and A = 255 is fully the RGB colour packaged with A. The base and stripe colours for each province are packed
 		 * together adjacently, so each province's entry is 8 bytes long. The list contains ProvinceDefinition::MAX_INDEX + 1
 		 * entries, that is the maximum allowed number of provinces plus one for the index-zero "null province". */
-		bool generate_mapmode_colours(MapInstance const& map_instance, Mapmode const* mapmode, uint8_t* target) const;
+		bool generate_mapmode_colours(
+			MapInstance const& map_instance, Mapmode const* mapmode,
+			CountryInstance const* player_country, ProvinceInstance const* selected_province,
+			uint8_t* target
+		) const;
 
 		bool setup_mapmodes();
 	};

@@ -225,9 +225,8 @@ bool InstanceManager::set_today_and_update(Date new_today) {
 	return true;
 }
 
-bool InstanceManager::expand_selected_province_building(size_t building_index) {
+bool InstanceManager::expand_province_building(ProvinceInstance* province, size_t building_index) {
 	set_gamestate_needs_update();
-	ProvinceInstance* province = map_instance.get_selected_province();
 	if (province == nullptr) {
 		Logger::error("Cannot expand building index ", building_index, " - no province selected!");
 		return false;
