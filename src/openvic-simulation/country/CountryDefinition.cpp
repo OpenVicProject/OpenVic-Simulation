@@ -150,25 +150,29 @@ node_callback_t CountryDefinitionManager::load_country_party(
 		bool ret = expect_dictionary_keys_and_default(
 			[&politics_manager, &policies, &party_name](std::string_view key, ast::NodeCPtr value) -> bool {
 				return politics_manager.get_issue_manager().expect_issue_group_str(
-					[&politics_manager, &policies, value, &party_name](IssueGroup const& group) -> bool {
-						CountryParty::policy_map_t::value_ref_type policy = policies[group];
+					[&politics_manager, &policies, value, &party_name](IssueGroup const& issue_group) -> bool {
+						CountryParty::policy_map_t::value_ref_type policy = policies[issue_group];
 
 						if (policy != nullptr) {
-							Logger::error("Country party ", party_name, " has duplicate entry for ", group.get_identifier());
+							Logger::error(
+								"Country party \"", party_name, "\" has duplicate entry for issue gorup \"",
+								issue_group.get_identifier(), "\""
+							);
 							return false;
 						}
 
 						return politics_manager.get_issue_manager().expect_issue_identifier(
-							[&group, &policy](Issue const& issue) -> bool {
-								if (&issue.get_group() == &group) {
+							[&issue_group, &policy](Issue const& issue) -> bool {
+								if (&issue.get_issue_group() == &issue_group) {
 									policy = &issue;
 									return true;
 								}
 
 								// TODO - change this back to error/false once TGC no longer has this issue
 								Logger::warning(
-									"Invalid policy ", issue.get_identifier(), ", group is ",
-									issue.get_group().get_identifier(), " when ", group.get_identifier(), " was expected."
+									"Invalid policy \"", issue.get_identifier(), "\", group is \"",
+									issue.get_issue_group().get_identifier(), "\" when \"", issue_group.get_identifier(),
+									"\" was expected."
 								);
 								return true;
 							}

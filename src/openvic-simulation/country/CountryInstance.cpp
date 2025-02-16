@@ -273,7 +273,7 @@ bool CountryInstance::add_reform(Reform const& new_reform) {
 
 		reform = &new_reform;
 
-		// TODO - if new_reform.get_reform_group().get_type().is_uncivilised() ?
+		// TODO - if new_reform.get_reform_group().is_uncivilised() ?
 		// TODO - new_reform.get_on_execute_trigger() / new_reform.get_on_execute_effect() ?
 
 		return update_rule_set();

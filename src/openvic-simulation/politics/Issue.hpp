@@ -8,16 +8,24 @@
 
 namespace OpenVic {
 	struct IssueManager;
+	struct Issue;
 
 	// Issue group (i.e. trade_policy)
-	struct IssueGroup : HasIdentifier {
+	struct IssueGroup : HasIdentifier, HasIndex<> {
 		friend struct IssueManager;
 
+	private:
+		std::vector<Issue const*> PROPERTY(issues);
+
 	protected:
-		IssueGroup(std::string_view identifier);
+		IssueGroup(std::string_view identifier, index_t new_index);
 
 	public:
 		IssueGroup(IssueGroup&&) = default;
+
+		constexpr size_t get_issue_count() const {
+			return issues.size();
+		}
 	};
 
 	// Issue (i.e. protectionism)
@@ -25,14 +33,15 @@ namespace OpenVic {
 		friend struct IssueManager;
 
 	private:
-		IssueGroup const& PROPERTY(group);
+		IssueGroup const& PROPERTY(issue_group);
 		RuleSet PROPERTY(rules);
 		const bool PROPERTY_CUSTOM_PREFIX(jingoism, is);
 
 	protected:
 		Issue(
-			std::string_view new_identifier, colour_t new_colour, ModifierValue&& new_values, IssueGroup const& new_group,
-			RuleSet&& new_rules, bool new_jingoism, modifier_type_t new_type = modifier_type_t::ISSUE
+			std::string_view new_identifier, colour_t new_colour, ModifierValue&& new_values,
+			IssueGroup const& new_issue_group, RuleSet&& new_rules, bool new_jingoism,
+			modifier_type_t new_type = modifier_type_t::ISSUE
 		);
 
 	public:
@@ -53,19 +62,36 @@ namespace OpenVic {
 		ReformType(ReformType&&) = default;
 	};
 
+	struct Reform;
+
 	// Reform group (i.e. slavery)
 	struct ReformGroup : IssueGroup {
 		friend struct IssueManager;
 
 	private:
-		ReformType const& PROPERTY(type);
+		ReformType const& PROPERTY(reform_type);
 		const bool PROPERTY_CUSTOM_PREFIX(ordered, is); // next_step_only
 		const bool PROPERTY_CUSTOM_PREFIX(administrative, is);
 
-		ReformGroup(std::string_view new_identifier, ReformType const& new_type, bool new_ordered, bool new_administrative);
+		ReformGroup(
+			std::string_view new_identifier, index_t new_index, ReformType const& new_reform_type, bool new_ordered,
+			bool new_administrative
+		);
 
 	public:
 		ReformGroup(ReformGroup&&) = default;
+
+		constexpr size_t get_reform_count() const {
+			return get_issue_count();
+		}
+
+		std::span<Reform const* const> get_reforms() const {
+			return { reinterpret_cast<Reform const* const*>(get_issues().data()), get_issues().size() };
+		}
+
+		constexpr bool is_uncivilised() const {
+			return reform_type.is_uncivilised();
+		}
 	};
 
 	// Reform (i.e. yes_slavery)
@@ -74,7 +100,6 @@ namespace OpenVic {
 		using tech_cost_t = uint32_t;
 
 	private:
-		ReformGroup const& PROPERTY(reform_group); // stores an already casted reference
 		const size_t PROPERTY(ordinal); // assigned by the parser to allow policy sorting
 		const fixed_point_t PROPERTY(administrative_multiplier);
 		const tech_cost_t PROPERTY(technology_cost);
@@ -83,16 +108,20 @@ namespace OpenVic {
 		EffectScript PROPERTY(on_execute_effect);
 
 		Reform(
-			std::string_view new_identifier, colour_t new_colour, ModifierValue&& new_values, ReformGroup const& new_group,
-			size_t new_ordinal, fixed_point_t new_administrative_multiplier, RuleSet&& new_rules,
-			tech_cost_t new_technology_cost, ConditionScript&& new_allow, ConditionScript&& new_on_execute_trigger,
-			EffectScript&& new_on_execute_effect
+			std::string_view new_identifier, colour_t new_colour, ModifierValue&& new_values,
+			ReformGroup const& new_reform_group, size_t new_ordinal, fixed_point_t new_administrative_multiplier,
+			RuleSet&& new_rules, tech_cost_t new_technology_cost, ConditionScript&& new_allow,
+			ConditionScript&& new_on_execute_trigger, EffectScript&& new_on_execute_effect
 		);
 
 		bool parse_scripts(DefinitionManager const& definition_manager);
 
 	public:
 		Reform(Reform&&) = default;
+
+		constexpr ReformGroup const& get_reform_group() const {
+			return static_cast<ReformGroup const&>(get_issue_group());
+		}
 	};
 
 	// Issue manager - holds the registries
@@ -107,27 +136,27 @@ namespace OpenVic {
 		bool _load_issue_group(size_t& expected_issues, std::string_view identifier, ast::NodeCPtr node);
 		bool _load_issue(
 			ModifierManager const& modifier_manager, RuleManager const& rule_manager, std::string_view identifier,
-			IssueGroup const* group, ast::NodeCPtr node
+			IssueGroup& issue_group, ast::NodeCPtr node
 		);
 		bool _load_reform_group(
-			size_t& expected_reforms, std::string_view identifier, ReformType const* type, ast::NodeCPtr node
+			size_t& expected_reforms, std::string_view identifier, ReformType const* reform_type, ast::NodeCPtr node
 		);
 		bool _load_reform(
 			ModifierManager const& modifier_manager, RuleManager const& rule_manager, size_t ordinal,
-			std::string_view identifier, ReformGroup const* group, ast::NodeCPtr node
+			std::string_view identifier, ReformGroup& reform_group, ast::NodeCPtr node
 		);
 
 	public:
 		bool add_issue_group(std::string_view identifier);
 		bool add_issue(
-			std::string_view identifier, colour_t new_colour, ModifierValue&& values, IssueGroup const* group, RuleSet&& rules,
+			std::string_view identifier, colour_t new_colour, ModifierValue&& values, IssueGroup& issue_group, RuleSet&& rules,
 			bool jingoism
 		);
 		bool add_reform_type(std::string_view identifier, bool uncivilised);
-		bool add_reform_group(std::string_view identifier, ReformType const* type, bool ordered, bool administrative);
+		bool add_reform_group(std::string_view identifier, ReformType const* reform_type, bool ordered, bool administrative);
 		bool add_reform(
-			std::string_view identifier, colour_t new_colour, ModifierValue&& values, ReformGroup const* group, size_t ordinal,
-			fixed_point_t administrative_multiplier, RuleSet&& rules, Reform::tech_cost_t technology_cost,
+			std::string_view identifier, colour_t new_colour, ModifierValue&& values, ReformGroup& reform_group,
+			size_t ordinal, fixed_point_t administrative_multiplier, RuleSet&& rules, Reform::tech_cost_t technology_cost,
 			ConditionScript&& allow, ConditionScript&& on_execute_trigger, EffectScript&& on_execute_effect
 		);
 		bool load_issues_file(ModifierManager const& modifier_manager, RuleManager const& rule_manager, ast::NodeCPtr root);

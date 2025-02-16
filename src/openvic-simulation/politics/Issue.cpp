@@ -6,27 +6,32 @@
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;
 
-IssueGroup::IssueGroup(std::string_view new_identifier) : HasIdentifier { new_identifier } {}
+IssueGroup::IssueGroup(std::string_view new_identifier, index_t new_index)
+	: HasIdentifier { new_identifier }, HasIndex { new_index } {}
 
 Issue::Issue(
-	std::string_view new_identifier, colour_t new_colour, ModifierValue&& new_values, IssueGroup const& new_group,
+	std::string_view new_identifier, colour_t new_colour, ModifierValue&& new_values, IssueGroup const& new_issue_group,
 	RuleSet&& new_rules, bool new_jingoism, modifier_type_t new_type
-) : Modifier { new_identifier, std::move(new_values), new_type }, HasColour { new_colour, false }, group { new_group },
-	rules { std::move(new_rules) }, jingoism { new_jingoism } {}
+) : Modifier { new_identifier, std::move(new_values), new_type }, HasColour { new_colour, false },
+	issue_group { new_issue_group }, rules { std::move(new_rules) }, jingoism { new_jingoism } {}
 
 ReformType::ReformType(std::string_view new_identifier, bool new_uncivilised)
 	: HasIdentifier { new_identifier }, uncivilised { new_uncivilised } {}
 
-ReformGroup::ReformGroup(std::string_view new_identifier, ReformType const& new_type, bool new_ordered, bool new_administrative)
-	: IssueGroup { new_identifier }, type { new_type }, ordered { new_ordered }, administrative { new_administrative } {}
+ReformGroup::ReformGroup(
+	std::string_view new_identifier, index_t new_index, ReformType const& new_reform_type, bool new_ordered,
+	bool new_administrative
+) : IssueGroup { new_identifier, new_index }, reform_type { new_reform_type }, ordered { new_ordered },
+	administrative { new_administrative } {}
 
 Reform::Reform(
-	std::string_view new_identifier, colour_t new_colour, ModifierValue&& new_values, ReformGroup const& new_group,
+	std::string_view new_identifier, colour_t new_colour, ModifierValue&& new_values, ReformGroup const& new_reform_group,
 	size_t new_ordinal, fixed_point_t new_administrative_multiplier, RuleSet&& new_rules, tech_cost_t new_technology_cost,
 	ConditionScript&& new_allow, ConditionScript&& new_on_execute_trigger, EffectScript&& new_on_execute_effect
 ) : Issue {
-		new_identifier, new_colour, std::move(new_values), new_group, std::move(new_rules), false, modifier_type_t::REFORM
-	}, reform_group { new_group }, ordinal { new_ordinal }, administrative_multiplier { new_administrative_multiplier },
+		new_identifier, new_colour, std::move(new_values), new_reform_group, std::move(new_rules), false,
+		modifier_type_t::REFORM
+	}, ordinal { new_ordinal }, administrative_multiplier { new_administrative_multiplier },
 	technology_cost { new_technology_cost }, allow { std::move(new_allow) },
 	on_execute_trigger { std::move(new_on_execute_trigger) }, on_execute_effect { std::move(new_on_execute_effect) } {}
 
@@ -46,11 +51,11 @@ bool IssueManager::add_issue_group(std::string_view identifier) {
 		return false;
 	}
 
-	return issue_groups.add_item({ identifier });
+	return issue_groups.add_item({ identifier, get_issue_group_count() });
 }
 
 bool IssueManager::add_issue(
-	std::string_view identifier, colour_t new_colour, ModifierValue&& values, IssueGroup const* group, RuleSet&& rules,
+	std::string_view identifier, colour_t new_colour, ModifierValue&& values, IssueGroup& issue_group, RuleSet&& rules,
 	bool jingoism
 ) {
 	if (identifier.empty()) {
@@ -58,12 +63,12 @@ bool IssueManager::add_issue(
 		return false;
 	}
 
-	if (group == nullptr) {
-		Logger::error("Null issue group for ", identifier);
+	if (issues.add_item({ identifier, new_colour, std::move(values), issue_group, std::move(rules), jingoism })) {
+		issue_group.issues.push_back(&get_back_issue());
+		return true;
+	} else {
 		return false;
 	}
-
-	return issues.add_item({ identifier, new_colour, std::move(values), *group, std::move(rules), jingoism });
 }
 
 bool IssueManager::add_reform_type(std::string_view identifier, bool uncivilised) {
@@ -75,22 +80,24 @@ bool IssueManager::add_reform_type(std::string_view identifier, bool uncivilised
 	return reform_types.add_item({ identifier, uncivilised });
 }
 
-bool IssueManager::add_reform_group(std::string_view identifier, ReformType const* type, bool ordered, bool administrative) {
+bool IssueManager::add_reform_group(
+	std::string_view identifier, ReformType const* reform_type, bool ordered, bool administrative
+) {
 	if (identifier.empty()) {
 		Logger::error("Invalid issue group identifier - empty!");
 		return false;
 	}
 
-	if (type == nullptr) {
+	if (reform_type == nullptr) {
 		Logger::error("Null issue type for ", identifier);
 		return false;
 	}
 
-	return reform_groups.add_item({ identifier, *type, ordered, administrative });
+	return reform_groups.add_item({ identifier, get_reform_group_count(), *reform_type, ordered, administrative });
 }
 
 bool IssueManager::add_reform(
-	std::string_view identifier, colour_t new_colour, ModifierValue&& values, ReformGroup const* group, size_t ordinal,
+	std::string_view identifier, colour_t new_colour, ModifierValue&& values, ReformGroup& reform_group, size_t ordinal,
 	fixed_point_t administrative_multiplier, RuleSet&& rules, Reform::tech_cost_t technology_cost, ConditionScript&& allow,
 	ConditionScript&& on_execute_trigger, EffectScript&& on_execute_effect
 ) {
@@ -99,12 +106,7 @@ bool IssueManager::add_reform(
 		return false;
 	}
 
-	if (group == nullptr) {
-		Logger::error("Null issue group for ", identifier);
-		return false;
-	}
-
-	if (group->get_type().is_uncivilised()) {
+	if (reform_group.is_uncivilised()) {
 		if (ordinal == 0) {
 			if (technology_cost != 0) {
 				Logger::warning(
@@ -123,17 +125,22 @@ bool IssueManager::add_reform(
 		Logger::warning("Non-zero technology cost ", technology_cost, " found in civilised reform ", identifier, "!");
 	}
 
-	if (administrative_multiplier != 0 && !group->is_administrative()) {
+	if (administrative_multiplier != 0 && !reform_group.is_administrative()) {
 		Logger::warning(
 			"Non-zero administrative multiplier ", administrative_multiplier, " found in reform ", identifier,
-			" belonging to non-administrative group ", group->get_identifier(), "!"
+			" belonging to non-administrative group ", reform_group.get_identifier(), "!"
 		);
 	}
 
-	return reforms.add_item({
-		identifier, new_colour, std::move(values), *group, ordinal, administrative_multiplier, std::move(rules),
+	if (reforms.add_item({
+		identifier, new_colour, std::move(values), reform_group, ordinal, administrative_multiplier, std::move(rules),
 		technology_cost, std::move(allow), std::move(on_execute_trigger), std::move(on_execute_effect)
-	});
+	})) {
+		reform_group.issues.push_back(&get_back_reform());
+		return true;
+	} else {
+		return false;
+	}
 }
 
 bool IssueManager::_load_issue_group(size_t& expected_issues, std::string_view identifier, ast::NodeCPtr node) {
@@ -177,7 +184,7 @@ static constexpr colour_t create_issue_reform_colour(size_t index) {
 
 bool IssueManager::_load_issue(
 	ModifierManager const& modifier_manager, RuleManager const& rule_manager, std::string_view identifier,
-	IssueGroup const* group, ast::NodeCPtr node
+	IssueGroup& issue_group, ast::NodeCPtr node
 ) {
 	ModifierValue values;
 	RuleSet rules;
@@ -194,7 +201,7 @@ bool IssueManager::_load_issue(
 	)(node);
 
 	ret &= add_issue(
-		identifier, create_issue_reform_colour(get_issue_count() + get_reform_count()), std::move(values), group,
+		identifier, create_issue_reform_colour(get_issue_count() + get_reform_count()), std::move(values), issue_group,
 		std::move(rules), jingoism
 	);
 
@@ -202,7 +209,7 @@ bool IssueManager::_load_issue(
 }
 
 bool IssueManager::_load_reform_group(
-	size_t& expected_reforms, std::string_view identifier, ReformType const* type, ast::NodeCPtr node
+	size_t& expected_reforms, std::string_view identifier, ReformType const* reform_type, ast::NodeCPtr node
 ) {
 	bool ordered = false, administrative = false;
 
@@ -212,14 +219,14 @@ bool IssueManager::_load_reform_group(
 		"administrative", ZERO_OR_ONE, expect_bool(assign_variable_callback(administrative))
 	)(node);
 
-	ret &= add_reform_group(identifier, type, ordered, administrative);
+	ret &= add_reform_group(identifier, reform_type, ordered, administrative);
 
 	return ret;
 }
 
 bool IssueManager::_load_reform(
 	ModifierManager const& modifier_manager, RuleManager const& rule_manager, size_t ordinal, std::string_view identifier,
-	ReformGroup const* group, ast::NodeCPtr node
+	ReformGroup& reform_group, ast::NodeCPtr node
 ) {
 	using enum scope_type_t;
 
@@ -244,8 +251,8 @@ bool IssueManager::_load_reform(
 	)(node);
 
 	ret &= add_reform(
-		identifier, create_issue_reform_colour(get_issue_count() + get_reform_count()), std::move(values), group, ordinal,
-		administrative_multiplier, std::move(rules), technology_cost, std::move(allow), std::move(on_execute_trigger),
+		identifier, create_issue_reform_colour(get_issue_count() + get_reform_count()), std::move(values), reform_group,
+		ordinal, administrative_multiplier, std::move(rules), technology_cost, std::move(allow), std::move(on_execute_trigger),
 		std::move(on_execute_effect)
 	);
 
@@ -351,19 +358,30 @@ bool IssueManager::load_issues_file(
 				return expect_dictionary([this, &modifier_manager, &rule_manager](
 					std::string_view group_key, ast::NodeCPtr group_value
 				) -> bool {
-					IssueGroup const* issue_group = get_issue_group_by_identifier(group_key);
+					IssueGroup* issue_group = issue_groups.get_item_by_identifier(group_key);
+
+					if (OV_unlikely(issue_group == nullptr)) {
+						Logger::error("Issue group \"", group_key, "\" not found!");
+						return false;
+					}
 
 					return expect_dictionary([this, &modifier_manager, &rule_manager, issue_group](
 						std::string_view key, ast::NodeCPtr value
 					) -> bool {
-						return _load_issue(modifier_manager, rule_manager, key, issue_group, value);
+						return _load_issue(modifier_manager, rule_manager, key, *issue_group, value);
 					})(group_value);
 				})(type_value);
 			} else {
 				return expect_dictionary([this, &party_issues_found, &modifier_manager, &rule_manager](
 					std::string_view group_key, ast::NodeCPtr group_value
 				) -> bool {
-					ReformGroup const* reform_group = get_reform_group_by_identifier(group_key);
+					ReformGroup* reform_group = reform_groups.get_item_by_identifier(group_key);
+
+					if (OV_unlikely(reform_group == nullptr)) {
+						Logger::error("Reform group \"", group_key, "\" not found!");
+						return false;
+					}
+
 					size_t ordinal = 0;
 
 					return expect_dictionary([this, &modifier_manager, &rule_manager, reform_group, &ordinal](
@@ -373,7 +391,7 @@ bool IssueManager::load_issues_file(
 							return true;
 						}
 
-						return _load_reform(modifier_manager, rule_manager, ordinal++, key, reform_group, value);
+						return _load_reform(modifier_manager, rule_manager, ordinal++, key, *reform_group, value);
 					})(group_value);
 				})(type_value);
 			}
