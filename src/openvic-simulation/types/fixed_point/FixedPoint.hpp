@@ -533,6 +533,11 @@ namespace OpenVic {
 			return *this;
 		}
 
+		//Preserves accuracy. Performing a normal multiplication of small values results in 0.
+		constexpr static fixed_point_t mul_div(fixed_point_t const& a, fixed_point_t const& b, fixed_point_t const& denominator) {
+			return parse_raw(a.value * b.value / denominator.value);
+		}
+
 		constexpr friend fixed_point_t operator%(fixed_point_t const& lhs, fixed_point_t const& rhs) {
 			return parse_raw(lhs.value % rhs.value);
 		}

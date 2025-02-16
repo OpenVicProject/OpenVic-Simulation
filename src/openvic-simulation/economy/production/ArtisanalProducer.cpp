@@ -73,7 +73,11 @@ void ArtisanalProducer::artisan_tick(Pop& pop) {
 			fixed_point_t& good_stockpile = stockpile[input_good_ptr];
 
 			//Consume input good
-			fixed_point_t consumed_quantity = desired_quantity * inputs_bought_numerator / inputs_bought_denominator;
+			fixed_point_t consumed_quantity = fixed_point_t::mul_div(
+				desired_quantity,
+				inputs_bought_numerator,
+				inputs_bought_denominator
+			);
 			if (country_to_report_economy_nullable != nullptr) {
 				country_to_report_economy_nullable->report_input_consumption(
 					production_type,
@@ -138,7 +142,11 @@ void ArtisanalProducer::artisan_tick(Pop& pop) {
 				max_possible_satisfaction_denominator
 			](auto const& pair)->bool {
 				GoodDefinition const* const input_good_ptr = pair.first;
-				const fixed_point_t optimal_quantity = demand[input_good_ptr] * max_possible_satisfaction_numerator / max_possible_satisfaction_denominator;
+				const fixed_point_t optimal_quantity = fixed_point_t::mul_div(
+					demand[input_good_ptr],
+					max_possible_satisfaction_numerator,
+					max_possible_satisfaction_denominator
+				);
 				if (stockpile[input_good_ptr] < optimal_quantity) {
 					return false;
 				}
@@ -151,7 +159,11 @@ void ArtisanalProducer::artisan_tick(Pop& pop) {
 		for (auto const& [input_good_ptr, max_price] : goods_to_buy_and_max_price) {
 			const fixed_point_t good_demand = demand[input_good_ptr];
 			fixed_point_t& good_stockpile = stockpile[input_good_ptr];
-			const fixed_point_t optimal_quantity = good_demand * max_possible_satisfaction_numerator / max_possible_satisfaction_denominator;
+			const fixed_point_t optimal_quantity = fixed_point_t::mul_div(
+				good_demand,
+				max_possible_satisfaction_numerator,
+				max_possible_satisfaction_denominator
+			);
 			const fixed_point_t max_quantity_to_buy = good_demand - good_stockpile;
 			if (max_quantity_to_buy > fixed_point_t::_0()) {
 				const fixed_point_t money_to_spend = optimal_quantity * max_price;
