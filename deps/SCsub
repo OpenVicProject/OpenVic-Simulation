@@ -33,7 +33,7 @@ def build_colony(env):
 
 def link_tbb(env):
     import sys
-    if not env.get("is_msvc", False) and sys.platform != "darwin":
+    if not env.get("is_msvc", False) and not env.get("use_mingw", False) and sys.platform != "darwin":
         env.ParseConfig("pkg-config tbb --cflags --libs")
 
 build_openvic_dataloader(env)
