@@ -48,6 +48,8 @@ namespace OpenVic {
 		Issue(Issue&&) = default;
 	};
 
+	struct ReformGroup;
+
 	// Reform type (i.e. political_issues)
 	struct ReformType : HasIdentifier {
 		friend struct IssueManager;
@@ -55,6 +57,7 @@ namespace OpenVic {
 	private:
 		bool PROPERTY_CUSTOM_PREFIX(uncivilised, is); // whether this group is available to non-westernised countries
 		// in vanilla education, military and economic reforms are hardcoded to true and the rest to false
+		std::vector<ReformGroup const*> PROPERTY(reform_groups);
 
 		ReformType(std::string_view new_identifier, bool new_uncivilised);
 
@@ -139,7 +142,7 @@ namespace OpenVic {
 			IssueGroup& issue_group, ast::NodeCPtr node
 		);
 		bool _load_reform_group(
-			size_t& expected_reforms, std::string_view identifier, ReformType const* reform_type, ast::NodeCPtr node
+			size_t& expected_reforms, std::string_view identifier, ReformType& reform_type, ast::NodeCPtr node
 		);
 		bool _load_reform(
 			ModifierManager const& modifier_manager, RuleManager const& rule_manager, size_t ordinal,
@@ -153,7 +156,7 @@ namespace OpenVic {
 			bool jingoism
 		);
 		bool add_reform_type(std::string_view identifier, bool uncivilised);
-		bool add_reform_group(std::string_view identifier, ReformType const* reform_type, bool ordered, bool administrative);
+		bool add_reform_group(std::string_view identifier, ReformType& reform_type, bool ordered, bool administrative);
 		bool add_reform(
 			std::string_view identifier, colour_t new_colour, ModifierValue&& values, ReformGroup& reform_group,
 			size_t ordinal, fixed_point_t administrative_multiplier, RuleSet&& rules, Reform::tech_cost_t technology_cost,
