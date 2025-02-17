@@ -17,7 +17,6 @@ namespace OpenVic {
 		std::unique_ptr<std::mutex> buy_lock;
 		std::unique_ptr<std::mutex> sell_lock;
 		GameRulesManager const& game_rules_manager;
-		const fixed_point_t base_price;
 		fixed_point_t absolute_maximum_price;
 		fixed_point_t absolute_minimum_price;
 
@@ -31,6 +30,7 @@ namespace OpenVic {
 		std::vector<GoodMarketSellOrder> market_sell_orders;
 
 	protected:
+		GoodDefinition const& PROPERTY_ACCESS(good_definition, protected);
 		bool PROPERTY_ACCESS(is_available, protected);
 
 	private:
@@ -46,7 +46,7 @@ namespace OpenVic {
 
 		void update_next_price_limits();
 	public:
-		GoodMarket(GameRulesManager const& new_game_rules_manager, fixed_point_t new_base_price, bool new_is_available);
+		GoodMarket(GameRulesManager const& new_game_rules_manager, GoodDefinition const& new_good_definition);
 		GoodMarket(GoodMarket&&) = default;
 
 		//thread safe

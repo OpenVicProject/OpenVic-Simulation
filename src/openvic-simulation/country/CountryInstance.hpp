@@ -520,7 +520,6 @@ namespace OpenVic {
 		bool update_rule_set();
 
 	public:
-
 		void update_modifier_sum(Date today, StaticModifierCache const& static_modifier_cache);
 		void contribute_province_modifier_sum(ModifierSum const& province_modifier_sum);
 		fixed_point_t get_modifier_effect_value(ModifierEffect const& effect) const;
@@ -530,8 +529,9 @@ namespace OpenVic {
 			return modifier_sum.for_each_contributing_modifier(effect, std::move(callback));
 		}
 
+		void country_reset_before_tick();
 		void update_gamestate(InstanceManager& instance_manager);
-		void tick(InstanceManager& instance_manager);
+		void country_tick(InstanceManager& instance_manager);
 
 		good_data_t& get_good_data(GoodInstance const& good_instance);
 		good_data_t const& get_good_data(GoodInstance const& good_instance) const;
@@ -596,6 +596,7 @@ namespace OpenVic {
 
 		void update_modifier_sums(Date today, StaticModifierCache const& static_modifier_cache);
 		void update_gamestate(InstanceManager& instance_manager);
-		void tick(InstanceManager& instance_manager);
+		void country_manager_reset_before_tick();
+		void country_manager_tick(InstanceManager& instance_manager);
 	};
 }

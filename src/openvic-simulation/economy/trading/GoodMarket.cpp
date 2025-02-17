@@ -1,19 +1,20 @@
 #include "GoodMarket.hpp"
 
+#include "openvic-simulation/economy/GoodDefinition.hpp"
 #include "openvic-simulation/misc/GameRulesManager.hpp"
 #include "openvic-simulation/utility/CompilerFeatureTesting.hpp"
 
 using namespace OpenVic;
 static constexpr size_t MONTHS_OF_PRICE_HISTORY = 36;
 
-GoodMarket::GoodMarket(GameRulesManager const& new_game_rules_manager, fixed_point_t new_base_price, bool new_is_available)
+GoodMarket::GoodMarket(GameRulesManager const& new_game_rules_manager, GoodDefinition const& new_good_definition)
   : buy_lock { std::make_unique<std::mutex>() },
 	sell_lock { std::make_unique<std::mutex>() },
 	game_rules_manager { new_game_rules_manager },
-	base_price { new_base_price },
-	price { new_base_price },
-	is_available { new_is_available },
-	price_history { MONTHS_OF_PRICE_HISTORY, new_base_price }
+	good_definition { new_good_definition },
+	price { new_good_definition.get_base_price() },
+	is_available { new_good_definition.get_is_available_from_start() },
+	price_history { MONTHS_OF_PRICE_HISTORY, new_good_definition.get_base_price() }
 	{
 		on_use_exponential_price_changes_changed();
 		update_next_price_limits();
@@ -25,11 +26,11 @@ void GoodMarket::on_use_exponential_price_changes_changed() {
 		absolute_minimum_price = fixed_point_t::epsilon() << exponential_price_change_shift;
 	} else {
 		absolute_maximum_price = std::min(
-			base_price * 5,
+			good_definition.get_base_price() * 5,
 			fixed_point_t::usable_max()
 		);
 		absolute_minimum_price = std::max(
-			base_price * 22 / 100,
+			good_definition.get_base_price() * 22 / 100,
 			fixed_point_t::epsilon()
 		);
 	}

@@ -28,7 +28,10 @@ namespace OpenVic {
 			ProductionType const& new_production_type,
 			fixed_point_t new_current_production
 		);
+
 		void artisan_tick(Pop& pop);
+
+		//thread safe
 		//adds to stockpile up to max_quantity_to_buy and returns quantity added to stockpile
 		fixed_point_t add_to_stockpile(GoodDefinition const& good, const fixed_point_t quantity);
 	};
