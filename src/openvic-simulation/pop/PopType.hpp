@@ -8,6 +8,8 @@
 #include "openvic-simulation/types/PopSize.hpp"
 
 namespace OpenVic {
+	struct PopManager;
+	struct PopType;
 	struct UnitType;
 	struct UnitTypeManager;
 	struct RebelManager;
@@ -17,11 +19,13 @@ namespace OpenVic {
 	struct IssueManager;
 	struct PopBase;
 
-	struct Strata : HasIdentifier {
+	struct Strata : HasIdentifier, HasIndex<> {
 		friend struct PopManager;
 
 	private:
-		Strata(std::string_view new_identifier);
+		std::vector<PopType const*> PROPERTY(pop_types);
+
+		Strata(std::string_view new_identifier, index_t new_index);
 
 	public:
 		Strata(Strata&&) = default;
@@ -30,7 +34,7 @@ namespace OpenVic {
 	/* REQUIREMENTS:
 	 * POP-15, POP-16, POP-17, POP-26
 	 */
-	struct PopType : HasIdentifierAndColour {
+	struct PopType : HasIdentifierAndColour, HasIndex<> {
 		friend struct PopManager;
 
 		/* This is a bitfield - PopTypes can have up to one of each income source for each need category. */
@@ -88,6 +92,7 @@ namespace OpenVic {
 		PopType(
 			std::string_view new_identifier,
 			colour_t new_colour,
+			index_t new_index,
 			Strata const& new_strata,
 			sprite_t new_sprite,
 			GoodDefinition::good_definition_map_t&& new_life_needs,
@@ -127,9 +132,17 @@ namespace OpenVic {
 
 	public:
 		PopType(PopType&&) = default;
+
+		constexpr bool has_income_type(income_type_t income_type) const;
 	};
 
 	template<> struct enable_bitfield<PopType::income_type_t> : std::true_type {};
+
+	constexpr bool PopType::has_income_type(income_type_t income_type) const {
+		return (life_needs_income_types & income_type) == income_type
+			|| (everyday_needs_income_types & income_type) == income_type
+			|| (luxury_needs_income_types & income_type) == income_type;
+	}
 
 	/* This returns true if at least one income type is shared by both arguments. */
 	inline constexpr bool share_income_type(PopType::income_type_t lhs, PopType::income_type_t rhs) {
@@ -185,6 +198,10 @@ namespace OpenVic {
 		ConditionalWeightFactorAdd PROPERTY(assimilation_chance);
 		ConditionalWeightFactorAdd PROPERTY(conversion_chance);
 
+		// Used if a PopType's strata is invalid or missing (in the base game invalid stratas default to "middle",
+		// while missing stratas cause a crash upon starting a game).
+		Strata* default_strata = nullptr;
+
 		PopType::sprite_t PROPERTY(slave_sprite);
 		PopType::sprite_t PROPERTY(administrative_sprite);
 
@@ -199,7 +216,7 @@ namespace OpenVic {
 		bool add_pop_type(
 			std::string_view identifier,
 			colour_t new_colour,
-			Strata const* strata,
+			Strata* strata,
 			PopType::sprite_t sprite,
 			GoodDefinition::good_definition_map_t&& life_needs,
 			GoodDefinition::good_definition_map_t&& everyday_needs,
@@ -234,8 +251,9 @@ namespace OpenVic {
 			ast::NodeCPtr issues_node
 		);
 
-		void reserve_all_pop_types(size_t size);
-		void lock_all_pop_types();
+		bool setup_stratas();
+
+		void reserve_pop_types_and_delayed_nodes(size_t size);
 
 		bool load_pop_type_file(
 			std::string_view filestem, GoodDefinitionManager const& good_definition_manager,

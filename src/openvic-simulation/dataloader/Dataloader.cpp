@@ -308,6 +308,9 @@ bool Dataloader::_load_interface_files(UIManager& ui_manager) const {
 
 bool Dataloader::_load_pop_types(DefinitionManager& definition_manager) {
 	PopManager& pop_manager = definition_manager.get_pop_manager();
+
+	bool ret = pop_manager.setup_stratas();
+
 	GoodDefinitionManager const& good_definition_manager =
 		definition_manager.get_economy_manager().get_good_definition_manager();
 	IdeologyManager const& ideology_manager = definition_manager.get_politics_manager().get_ideology_manager();
@@ -316,9 +319,9 @@ bool Dataloader::_load_pop_types(DefinitionManager& definition_manager) {
 
 	const path_vector_t pop_type_files = lookup_files_in_dir(pop_type_directory, ".txt");
 
-	pop_manager.reserve_all_pop_types(pop_type_files.size());
+	pop_manager.reserve_pop_types_and_delayed_nodes(pop_type_files.size());
 
-	bool ret = apply_to_files(
+	ret &= apply_to_files(
 		pop_type_files,
 		[this, &pop_manager, &good_definition_manager, &ideology_manager](fs::path const& file) -> bool {
 			return pop_manager.load_pop_type_file(
@@ -327,7 +330,7 @@ bool Dataloader::_load_pop_types(DefinitionManager& definition_manager) {
 		}
 	);
 
-	pop_manager.lock_all_pop_types();
+	pop_manager.lock_pop_types();
 
 	if (pop_manager.get_slave_sprite() <= 0) {
 		Logger::error("No slave pop type sprite found!");

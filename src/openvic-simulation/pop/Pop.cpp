@@ -325,7 +325,7 @@ void Pop::pop_tick() {
 	money_to_spend_per_good.clear();
 	fill_needs_fulfilled_goods_with_false();
 	if (artisanal_producer_nullable != nullptr) {
-		//execute artisan_tick before needs 
+		//execute artisan_tick before needs
 		artisanal_producer_nullable->artisan_tick(*this);
 	}
 
@@ -337,7 +337,7 @@ void Pop::pop_tick() {
 	const fixed_point_t base_needs_scalar = (
 		fixed_point_t::_1() + 2 * consciousness / defines.get_pdef_base_con()
 	) * size;
-	constexpr int32_t size_denominator = 200000;	
+	constexpr int32_t size_denominator = 200000;
 
 	CountryInstance* country_to_report_economy_nullable = location_never_null.get_country_to_report_economy();
 	#define FILL_NEEDS(need_category) \
@@ -374,7 +374,7 @@ void Pop::pop_tick() {
 				max_quantity_to_buy_per_good[good_definition] += max_quantity_to_buy; \
 			} \
 		}
-	
+
 	DO_FOR_ALL_NEED_CATEGORIES(FILL_NEEDS)
 	#undef FILL_NEEDS
 
@@ -449,7 +449,7 @@ void Pop::pop_tick() {
 						); \
 						add_##need_category##_needs_expense(expense); \
 					}
-				
+
 				DO_FOR_ALL_NEED_CATEGORIES(CONSUME_NEED)
 				#undef CONSUME_NEED
 			}
