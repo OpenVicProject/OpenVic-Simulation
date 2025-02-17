@@ -75,6 +75,6 @@ namespace OpenVic {
 
 		bool set_today_and_update(Date new_today);
 
-		bool expand_selected_province_building(size_t building_index);
+		bool expand_province_building(ProvinceInstance* province, size_t building_index);
 	};
 }
