@@ -84,7 +84,7 @@ void Pop::setup_pop_test_values(IssueManager const& issue_manager) {
 		test_weight(issue_distribution, issue, 3, 6);
 	}
 	for (Reform const& reform : issue_manager.get_reforms()) {
-		if (!reform.get_reform_group().get_type().is_uncivilised()) {
+		if (!reform.get_reform_group().is_uncivilised()) {
 			test_weight(issue_distribution, reform, 3, 6);
 		}
 	}
