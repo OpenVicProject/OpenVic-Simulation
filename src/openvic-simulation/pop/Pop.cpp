@@ -238,11 +238,11 @@ void Pop::fill_needs_fulfilled_goods_with_false() {
 #define DEFINE_ADD_INCOME_FUNCTIONS(name) \
 	void Pop::add_##name(const fixed_point_t amount){ \
 		if (OV_unlikely(amount == fixed_point_t::_0())) { \
-			Logger::warning("Adding ",#name, " of 0 to pop. Context", get_pop_context_text().str()); \
+			Logger::warning("Adding ", #name, " of 0 to pop. Context", get_pop_context_text().str()); \
 			return; \
 		} \
 		if (OV_unlikely(amount < fixed_point_t::_0())) { \
-			Logger::error("Adding negative ", #name, " of ",amount," to pop. Context", get_pop_context_text().str()); \
+			Logger::error("Adding negative ", #name, " of ", amount, " to pop. Context", get_pop_context_text().str()); \
 			return; \
 		} \
 		name += amount; \
@@ -264,11 +264,11 @@ DO_FOR_ALL_TYPES_OF_POP_INCOME(DEFINE_ADD_INCOME_FUNCTIONS)
 		name += amount; \
 		expenses += amount; \
 		if (OV_unlikely(expenses < fixed_point_t::_0())) { \
-			Logger::error("Total expenses became negative (",expenses,") after adding ", #name, " of ", amount, " to pop. Context:", get_pop_context_text().str()); \
+			Logger::error("Total expenses became negative (", expenses, ") after adding ", #name, " of ", amount, " to pop. Context:", get_pop_context_text().str()); \
 		} \
 		cash -= amount; \
 		if (OV_unlikely(cash < fixed_point_t::_0())) { \
-			Logger::error("Total cash became negative (",cash,") after adding ", #name, " of ", amount, " to pop. Context:", get_pop_context_text().str()); \
+			Logger::error("Total cash became negative (", cash, ") after adding ", #name, " of ", amount, " to pop. Context:", get_pop_context_text().str()); \
 		} \
 	}
 

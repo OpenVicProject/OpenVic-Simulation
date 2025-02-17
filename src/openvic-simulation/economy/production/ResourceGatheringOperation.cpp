@@ -185,10 +185,10 @@ void ResourceGatheringOperation::rgo_tick() {
 
 void ResourceGatheringOperation::hire(const pop_size_t available_worker_count) {
 	total_employees_count_cache = 0;
-	total_paid_employees_count_cache=0;
+	total_paid_employees_count_cache = 0;
+	employees.clear(); //TODO implement Victoria 2 hiring logic
+	employee_count_per_type_cache.fill(fixed_point_t::_0());
 	if (production_type_nullable == nullptr) {
-		employees.clear();
-		employee_count_per_type_cache.fill(fixed_point_t::_0());
 		return;
 	}
 	ProvinceInstance& location = *location_ptr;
