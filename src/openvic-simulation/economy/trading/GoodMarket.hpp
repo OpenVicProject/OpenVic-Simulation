@@ -13,6 +13,8 @@ namespace OpenVic {
 
 	struct GoodMarket {
 	private:
+		GoodDefinition const& PROPERTY(good_definition);
+
 		static constexpr int32_t exponential_price_change_shift = 7;
 		std::unique_ptr<std::mutex> buy_lock;
 		std::unique_ptr<std::mutex> sell_lock;
@@ -30,7 +32,6 @@ namespace OpenVic {
 		std::vector<GoodMarketSellOrder> market_sell_orders;
 
 	protected:
-		GoodDefinition const& PROPERTY_ACCESS(good_definition, protected);
 		bool PROPERTY_ACCESS(is_available, protected);
 
 	private:

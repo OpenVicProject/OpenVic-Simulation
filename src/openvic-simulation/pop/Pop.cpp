@@ -257,18 +257,18 @@ DO_FOR_ALL_TYPES_OF_POP_INCOME(DEFINE_ADD_INCOME_FUNCTIONS)
 	void Pop::add_##name(const fixed_point_t amount){ \
 		if (OV_unlikely(amount == fixed_point_t::_0())) { \
 			if (size > 1024) { \
-				Logger::warning("Adding ",#name, " of 0 to pop. Context", get_pop_context_text().str()); \
+				Logger::warning("Adding ", #name, " of 0 to pop. Context:", get_pop_context_text().str()); \
 			} \
 			return; \
 		} \
 		name += amount; \
 		expenses += amount; \
 		if (OV_unlikely(expenses < fixed_point_t::_0())) { \
-			Logger::error("Total expenses became negative (",expenses,") after adding ", #name, " of ",amount," to pop. Context", get_pop_context_text().str()); \
+			Logger::error("Total expenses became negative (",expenses,") after adding ", #name, " of ", amount, " to pop. Context:", get_pop_context_text().str()); \
 		} \
 		cash -= amount; \
 		if (OV_unlikely(cash < fixed_point_t::_0())) { \
-			Logger::error("Total cash became negative (",cash,") after adding ", #name, " of ",amount," to pop. Context", get_pop_context_text().str()); \
+			Logger::error("Total cash became negative (",cash,") after adding ", #name, " of ", amount, " to pop. Context:", get_pop_context_text().str()); \
 		} \
 	}
 
@@ -283,7 +283,7 @@ void Pop::allocate_for_needs(
 	fixed_point_t& price_inverse_sum,
 	fixed_point_t& cash_left_to_spend
 ) {
-	GoodDefinition::good_definition_map_t money_to_spend_per_good_draft {};
+	GoodDefinition::good_definition_map_t money_to_spend_per_good_draft {}; //TODO pool
 	fixed_point_t cash_left_to_spend_draft = cash_left_to_spend;
 	for (size_t i = 0; i < scaled_needs.size(); i++) {
 		auto [good_definition, max_quantity_to_buy] = *scaled_needs.nth(i);
