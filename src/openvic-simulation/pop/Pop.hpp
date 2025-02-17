@@ -5,7 +5,6 @@
 #include "openvic-simulation/country/CountryDefinition.hpp"
 #include "openvic-simulation/economy/production/ArtisanalProducerFactoryPattern.hpp"
 #include "openvic-simulation/pop/PopType.hpp"
-#include "types/fixed_point/FixedPoint.hpp"
 
 namespace OpenVic {
 	struct CountryInstance;

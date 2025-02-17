@@ -20,7 +20,7 @@ namespace OpenVic {
 		// Is the good available for trading? (e.g. should be shown in trade menu)
 		// is_tradeable has no effect on this, only is_money and availability
 		constexpr bool is_trading_good() const {
-			return is_available && !good_definition.get_is_money();
+			return is_available && !get_good_definition().get_is_money();
 		}
 	};
 
