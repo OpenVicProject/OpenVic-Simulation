@@ -2,12 +2,14 @@
 
 #include "openvic-simulation/history/ProvinceHistory.hpp"
 #include "openvic-simulation/map/MapDefinition.hpp"
-#include "openvic-simulation/utility/CompilerFeatureTesting.hpp"
+#include "openvic-simulation/pop/PopValuesFromProvince.hpp"
 #include "openvic-simulation/utility/Logger.hpp"
 
 using namespace OpenVic;
 
-MapInstance::MapInstance(MapDefinition const& new_map_definition) : map_definition { new_map_definition } {}
+MapInstance::MapInstance(MapDefinition const& new_map_definition)
+	: map_definition { new_map_definition }
+	{}
 
 ProvinceInstance& MapInstance::get_province_instance_from_definition(ProvinceDefinition const& province) {
 	return province_instances.get_items()[province.get_index() - 1];
@@ -43,7 +45,6 @@ bool MapInstance::setup(
 			if (province_instances.add_item({
 				market_instance,
 				modifier_effect_cache,
-				pop_defines,
 				province,
 				strata_keys,
 				pop_type_keys,
@@ -71,6 +72,24 @@ bool MapInstance::setup(
 			map_definition.get_province_definition_count(), ")!"
 		);
 		return false;
+	}
+
+	if (ret) {
+		const size_t max_worker_threads = std::thread::hardware_concurrency();
+		const size_t max_threads_including_parent = max_worker_threads + 1;
+		reusable_pop_values_collection.reserve(max_threads_including_parent);
+		threads.reserve(max_worker_threads);
+
+		for (unsigned int i = 0; i < max_worker_threads; i++) {
+			reusable_pop_values_collection.emplace_back(PopValuesFromProvince {
+				pop_defines, strata_keys
+			});
+			threads.emplace_back();
+		}
+
+		reusable_pop_values_collection.emplace_back(PopValuesFromProvince {
+			pop_defines, strata_keys
+		});
 	}
 
 	return ret;
@@ -156,14 +175,44 @@ void MapInstance::update_gamestate(const Date today, DefineManager const& define
 	state_manager.update_gamestate();
 }
 
+#define process_provinces_in_parallel(f) \
+	auto& provinces = province_instances.get_items(); \
+	const auto [quotient, remainder] = std::ldiv(provinces.size(), reusable_pop_values_collection.size()); \
+	auto begin = provinces.begin(); \
+	for (size_t i = 0; i < threads.size(); i++) { \
+		const size_t chunk_size = i < remainder \
+			? quotient + 1 \
+			: quotient; \
+		auto end = begin + chunk_size; \
+		threads[i] = std::thread{ \
+			[ \
+				today, \
+				&reusable_pop_values = reusable_pop_values_collection[i], \
+				begin, \
+				end \
+			]()->void{ \
+				for (auto it = begin; it < end; it++) { \
+					f \
+				}  \
+			} \
+		}; \
+		begin = end; \
+	} \
+	{ \
+		auto parent_thread_end = begin + quotient; \
+		auto& reusable_pop_values = reusable_pop_values_collection.back(); \
+		for (auto it = begin; it < parent_thread_end; it++) { \
+			f \
+		}  \
+	} \
+	for (std::thread& thread : threads) { \
+		if (thread.joinable()) { \
+			thread.join(); \
+		} \
+	}
+
 void MapInstance::map_tick(const Date today) {
-	auto& provinces = province_instances.get_items();
-	parallel_for_each(
-		provinces,
-		[today](ProvinceInstance& province) -> void {
-			province.province_tick(today);
-		}
-	);
+	process_provinces_in_parallel(it->province_tick(today, reusable_pop_values););
 }
 
 void MapInstance::initialise_for_new_game(
@@ -171,12 +220,5 @@ void MapInstance::initialise_for_new_game(
 	DefineManager const& define_manager
 ) {
 	update_gamestate(today, define_manager);
-	auto& provinces = province_instances.get_items();
-	parallel_for_each(
-		provinces,
-		[today](ProvinceInstance& province) -> void {
-			province.initialise_rgo();
-			province.province_tick(today);
-		}
-	);
+	process_provinces_in_parallel(it->initialise_for_new_game(today, reusable_pop_values););
 }

@@ -4,15 +4,16 @@
 #include "openvic-simulation/defines/PopsDefines.hpp"
 #include "openvic-simulation/modifier/ModifierEffectCache.hpp"
 #include "openvic-simulation/map/ProvinceInstance.hpp"
-#include "openvic-simulation/utility/Utility.hpp"
 
 using namespace OpenVic;
 
-void PopStrataValuesFromProvince::update_pop_strata_values_from_province(PopValuesFromProvince const& parent, Strata const& strata) {
-	ProvinceInstance const& province = *parent.get_province();
+void PopStrataValuesFromProvince::update_pop_strata_values_from_province(
+	PopsDefines const& defines,
+	Strata const& strata,
+	ProvinceInstance const& province
+) {
 	ModifierEffectCache const& modifier_effect_cache = province.get_modifier_effect_cache();
 	ModifierEffectCache::strata_effects_t const& strata_effects = modifier_effect_cache.get_strata_effects()[strata];
-	PopsDefines const& defines = parent.get_defines();
 	fixed_point_t shared_base_needs_scalar = defines.get_base_goods_demand()
 		* (fixed_point_t::_1() + province.get_modifier_effect_value(*modifier_effect_cache.get_goods_demand()));
 
@@ -41,13 +42,8 @@ PopValuesFromProvince::PopValuesFromProvince(
 	effects_per_strata { &strata_keys }
 	{}
 
-void PopValuesFromProvince::update_pop_values_from_province() {
-	if (OV_unlikely(province == nullptr)) {
-		OpenVic::Logger::error("PopValuesFromProvince has no province. Check ProvinceInstance::setup correctly sets it.");
-		return;
-	}
-
+void PopValuesFromProvince::update_pop_values_from_province(ProvinceInstance const& province) {
 	for (auto [strata, values] : effects_per_strata) {
-		values.update_pop_strata_values_from_province(*this, strata);
+		values.update_pop_strata_values_from_province(defines, strata, province);
 	}
 }
