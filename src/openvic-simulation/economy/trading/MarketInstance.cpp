@@ -59,9 +59,8 @@ void MarketInstance::place_market_sell_order(MarketSellOrder&& market_sell_order
 
 void MarketInstance::execute_orders() {
 	auto& good_instances = good_instance_manager.get_good_instances();
-	try_parallel_for_each(
-		good_instances.begin(),
-		good_instances.end(),
+	parallel_for_each(
+		good_instances,
 		[](GoodMarket& good_instance) -> void {
 			good_instance.execute_orders();
 		}

@@ -158,9 +158,8 @@ void MapInstance::update_gamestate(const Date today, DefineManager const& define
 
 void MapInstance::map_tick(const Date today) {
 	auto& provinces = province_instances.get_items();
-	try_parallel_for_each(
-		provinces.begin(),
-		provinces.end(),
+	parallel_for_each(
+		provinces,
 		[today](ProvinceInstance& province) -> void {
 			province.province_tick(today);
 		}
@@ -173,9 +172,8 @@ void MapInstance::initialise_for_new_game(
 ) {
 	update_gamestate(today, define_manager);
 	auto& provinces = province_instances.get_items();
-	try_parallel_for_each(
-		provinces.begin(),
-		provinces.end(),
+	parallel_for_each(
+		provinces,
 		[today](ProvinceInstance& province) -> void {
 			province.initialise_rgo();
 			province.province_tick(today);
