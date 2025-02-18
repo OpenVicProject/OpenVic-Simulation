@@ -21,13 +21,17 @@ ArtisanalProducer::ArtisanalProducer(
 		max_quantity_to_buy_per_good.reserve(new_production_type.get_input_goods().size());
 	}
 
-void ArtisanalProducer::artisan_tick(Pop& pop) {
+void ArtisanalProducer::artisan_tick(
+	Pop& pop,
+	GoodDefinition::good_definition_map_t& pop_max_quantity_to_buy_per_good,
+	GoodDefinition::good_definition_map_t& pop_money_to_spend_per_good,
+	GoodDefinition::good_definition_map_t& reusable_map_0,
+	GoodDefinition::good_definition_map_t& reusable_map_1
+) {
 	CountryInstance* country_to_report_economy_nullable = pop.get_location()->get_country_to_report_economy();
 	max_quantity_to_buy_per_good.clear();
-
-	//TODO get from pool instead of create & destroy each time
-	GoodDefinition::good_definition_map_t goods_to_buy_and_max_price { };
-	GoodDefinition::good_definition_map_t demand { };
+	GoodDefinition::good_definition_map_t& goods_to_buy_and_max_price = reusable_map_0;
+	GoodDefinition::good_definition_map_t& demand = reusable_map_1;
 
 	//throughput scalar, the minimum of stockpile / desired_quantity
 	fixed_point_t inputs_bought_fraction = fixed_point_t::_1(),
@@ -172,12 +176,16 @@ void ArtisanalProducer::artisan_tick(Pop& pop) {
 			if (max_quantity_to_buy > fixed_point_t::_0()) {
 				const fixed_point_t money_to_spend = optimal_quantity * max_price;
 				max_quantity_to_buy_per_good[input_good_ptr] = max_quantity_to_buy;
-				pop.artisanal_buy(*input_good_ptr, max_quantity_to_buy, money_to_spend);
+				pop.allocate_cash_for_artisanal_spending(money_to_spend);
+				pop_max_quantity_to_buy_per_good[input_good_ptr] += max_quantity_to_buy;
+				pop_money_to_spend_per_good[input_good_ptr] += money_to_spend;
 			}
 		}
 	}
 
-	pop.artisanal_sell(produce_left_to_sell);
+	pop.report_artisanal_produce(produce_left_to_sell);
+	reusable_map_0.clear();
+	reusable_map_1.clear();
 }
 
 fixed_point_t ArtisanalProducer::add_to_stockpile(GoodDefinition const& good, const fixed_point_t quantity) {

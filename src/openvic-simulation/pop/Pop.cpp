@@ -17,6 +17,7 @@
 #include "openvic-simulation/economy/trading/MarketInstance.hpp"
 #include "openvic-simulation/map/ProvinceInstance.hpp"
 #include "openvic-simulation/modifier/ModifierEffectCache.hpp"
+#include "openvic-simulation/pop/PopValuesFromProvince.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
 #include "openvic-simulation/utility/Utility.hpp"
 
@@ -294,10 +295,12 @@ DO_FOR_ALL_NEED_CATEGORIES(DEFINE_NEEDS_FULFILLED)
 
 void Pop::allocate_for_needs(
 	GoodDefinition::good_definition_map_t const& scaled_needs,
+	GoodDefinition::good_definition_map_t& money_to_spend_per_good,
+	GoodDefinition::good_definition_map_t& reusable_map_0,
 	fixed_point_t& price_inverse_sum,
 	fixed_point_t& cash_left_to_spend
 ) {
-	GoodDefinition::good_definition_map_t money_to_spend_per_good_draft {}; //TODO pool
+	GoodDefinition::good_definition_map_t& money_to_spend_per_good_draft = reusable_map_0;
 	fixed_point_t cash_left_to_spend_draft = cash_left_to_spend;
 	for (size_t i = 0; i < scaled_needs.size(); i++) {
 		auto [good_definition, max_quantity_to_buy] = *scaled_needs.nth(i);
@@ -327,25 +330,45 @@ void Pop::allocate_for_needs(
 		money_to_spend_per_good[good] += money_to_spend;
 		cash_left_to_spend -= money_to_spend;
 	}
+
+	reusable_map_0.clear();
 }
 
-void Pop::pop_tick() {
+void Pop::pop_tick(PopValuesFromProvince& shared_values) {
+	pop_tick_without_cleanup(shared_values);
+	for (auto& map : shared_values.reusable_maps) {
+		map.clear();
+	}
+}
+
+void Pop::pop_tick_without_cleanup(PopValuesFromProvince& shared_values) {
 	DO_FOR_ALL_TYPES_OF_POP_INCOME(SET_ALL_INCOME_TO_ZERO)
 	#undef DO_FOR_ALL_TYPES_OF_POP_INCOME
 	#undef SET_ALL_INCOME_TO_ZERO
 
+	auto& [
+		reusable_map_0,
+		reusable_map_1,
+		reusable_map_2,
+		reusable_map_3
+	] = shared_values.reusable_maps;
+	GoodDefinition::good_definition_map_t& max_quantity_to_buy_per_good = reusable_map_2;
+	GoodDefinition::good_definition_map_t& money_to_spend_per_good = reusable_map_3;
 	cash_allocated_for_artisanal_spending = fixed_point_t::_0();
-	max_quantity_to_buy_per_good.clear();
-	money_to_spend_per_good.clear();
 	fill_needs_fulfilled_goods_with_false();
 	if (artisanal_producer_nullable != nullptr) {
-		//execute artisan_tick before needs
-		artisanal_producer_nullable->artisan_tick(*this);
+		//execute artisan_tick before needs 
+		artisanal_producer_nullable->artisan_tick(
+			*this,
+			max_quantity_to_buy_per_good,
+			money_to_spend_per_good,
+			reusable_map_0,
+			reusable_map_1
+		);
 	}
 
 	PopType const& type_never_null = *type;
 	ProvinceInstance& location_never_null = *location;
-	PopValuesFromProvince const& shared_values = location_never_null.get_shared_pop_values();
 	PopStrataValuesFromProvince const& shared_strata_values = shared_values.get_effects_per_strata()[type_never_null.get_strata()];
 	PopsDefines const& defines = shared_values.get_defines();
 	const fixed_point_t base_needs_scalar = (
@@ -399,7 +422,13 @@ void Pop::pop_tick() {
 
 	#define ALLOCATE_FOR_NEEDS(need_category) \
 		if (cash_left_to_spend > fixed_point_t::_0()) { \
-			allocate_for_needs(need_category##_needs, need_category##_needs_price_inverse_sum, cash_left_to_spend); \
+			allocate_for_needs( \
+				need_category##_needs, \
+				money_to_spend_per_good, \
+				reusable_map_0, \
+				need_category##_needs_price_inverse_sum, \
+				cash_left_to_spend \
+			); \
 		}
 
 	DO_FOR_ALL_NEED_CATEGORIES(ALLOCATE_FOR_NEEDS)
@@ -487,13 +516,11 @@ void Pop::pop_tick() {
 	}
 }
 
-void Pop::artisanal_buy(GoodDefinition const& good, const fixed_point_t max_quantity_to_buy, const fixed_point_t money_to_spend) {
+void Pop::allocate_cash_for_artisanal_spending(fixed_point_t money_to_spend) {
 	cash_allocated_for_artisanal_spending += money_to_spend;
-	max_quantity_to_buy_per_good[&good] += max_quantity_to_buy;
-	money_to_spend_per_good[&good] += money_to_spend;
 }
 
-void Pop::artisanal_sell(const fixed_point_t quantity) {
+void Pop::report_artisanal_produce(const fixed_point_t quantity) {
 	artisanal_produce_left_to_sell = quantity;
 }
 
