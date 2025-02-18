@@ -16,6 +16,7 @@
 #include "openvic-simulation/map/ProvinceInstance.hpp"
 #include "openvic-simulation/modifier/ModifierEffectCache.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
+#include "openvic-simulation/utility/Utility.hpp"
 
 using namespace OpenVic;
 
@@ -344,34 +345,36 @@ void Pop::pop_tick() {
 		need_category##_needs.clear(); \
 		const fixed_point_t need_category##_needs_scalar = base_needs_scalar * shared_strata_values.get_shared_##need_category##_needs_scalar(); \
 		fixed_point_t need_category##_needs_price_inverse_sum = fixed_point_t::_0(); \
-		need_category##_needs_acquired_quantity = need_category##_needs_desired_quantity = fixed_point_t::_0(); \
-		for (auto [good_definition, quantity] : type_never_null.get_##need_category##_needs()) { \
-			if (!market_instance.get_is_available(*good_definition)) { \
-				continue; \
-			} \
-			fixed_point_t max_quantity_to_buy = quantity * need_category##_needs_scalar / size_denominator; \
-			if (max_quantity_to_buy == fixed_point_t::_0()) { \
-				continue; \
-			} \
-			if (country_to_report_economy_nullable != nullptr) { \
-				country_to_report_economy_nullable->report_pop_need_demand(*type, *good_definition, max_quantity_to_buy); \
-			} \
-			need_category##_needs_desired_quantity += max_quantity_to_buy; \
-			if (artisanal_produce_left_to_sell > fixed_point_t::_0() \
-				&& &artisanal_producer_nullable->get_production_type().get_output_good() == good_definition \
-			) { \
-				const fixed_point_t own_produce_consumed = std::min(artisanal_produce_left_to_sell, max_quantity_to_buy); \
-				artisanal_produce_left_to_sell -= own_produce_consumed; \
-				max_quantity_to_buy -= own_produce_consumed; \
-				need_category##_needs_acquired_quantity += own_produce_consumed; \
-				if (country_to_report_economy_nullable != nullptr) { \
-					country_to_report_economy_nullable->report_pop_need_consumption(type_never_null, *good_definition, own_produce_consumed); \
+		if (OV_likely(need_category##_needs_scalar > fixed_point_t::_0())) { \
+			need_category##_needs_acquired_quantity = need_category##_needs_desired_quantity = fixed_point_t::_0(); \
+			for (auto [good_definition, quantity] : type_never_null.get_##need_category##_needs()) { \
+				if (!market_instance.get_is_available(*good_definition)) { \
+					continue; \
 				} \
-			} \
-			if (OV_likely(max_quantity_to_buy > 0)) { \
-				need_category##_needs_price_inverse_sum += market_instance.get_price_inverse(*good_definition); \
-				need_category##_needs[good_definition] += max_quantity_to_buy; \
-				max_quantity_to_buy_per_good[good_definition] += max_quantity_to_buy; \
+				fixed_point_t max_quantity_to_buy = quantity * need_category##_needs_scalar / size_denominator; \
+				if (max_quantity_to_buy == fixed_point_t::_0()) { \
+					continue; \
+				} \
+				if (country_to_report_economy_nullable != nullptr) { \
+					country_to_report_economy_nullable->report_pop_need_demand(*type, *good_definition, max_quantity_to_buy); \
+				} \
+				need_category##_needs_desired_quantity += max_quantity_to_buy; \
+				if (artisanal_produce_left_to_sell > fixed_point_t::_0() \
+					&& &artisanal_producer_nullable->get_production_type().get_output_good() == good_definition \
+				) { \
+					const fixed_point_t own_produce_consumed = std::min(artisanal_produce_left_to_sell, max_quantity_to_buy); \
+					artisanal_produce_left_to_sell -= own_produce_consumed; \
+					max_quantity_to_buy -= own_produce_consumed; \
+					need_category##_needs_acquired_quantity += own_produce_consumed; \
+					if (country_to_report_economy_nullable != nullptr) { \
+						country_to_report_economy_nullable->report_pop_need_consumption(type_never_null, *good_definition, own_produce_consumed); \
+					} \
+				} \
+				if (OV_likely(max_quantity_to_buy > 0)) { \
+					need_category##_needs_price_inverse_sum += market_instance.get_price_inverse(*good_definition); \
+					need_category##_needs[good_definition] += max_quantity_to_buy; \
+					max_quantity_to_buy_per_good[good_definition] += max_quantity_to_buy; \
+				} \
 			} \
 		}
 	
