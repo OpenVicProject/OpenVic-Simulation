@@ -72,17 +72,15 @@ void GoodMarket::execute_orders() {
 			= total_supply_yesterday
 			= fixed_point_t::_0();
 
-		try_parallel_for_each(
-			buy_up_to_orders.begin(),
-			buy_up_to_orders.end(),
+		parallel_for_each(
+			buy_up_to_orders,
 			[](GoodBuyUpToOrder const& buy_up_to_order) -> void {
 				buy_up_to_order.get_after_trade()(BuyResult::no_purchase_result());
 			}
 		);
 
-		try_parallel_for_each(
-			market_sell_orders.begin(),
-			market_sell_orders.end(),
+		parallel_for_each(
+			market_sell_orders,
 			[](GoodMarketSellOrder const& market_sell_order) -> void {
 				market_sell_order.get_after_trade()(SellResult::no_sales_result());
 			}
