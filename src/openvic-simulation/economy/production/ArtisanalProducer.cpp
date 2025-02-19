@@ -54,7 +54,7 @@ void ArtisanalProducer::artisan_tick(Pop& pop) {
 			inputs_bought_numerator = stockpiled_quantity;
 			inputs_bought_denominator = desired_quantity;
 		}
-		
+
 		goods_to_buy_and_max_price[input_good_ptr] = pop.get_market_instance().get_max_next_price(*input_good_ptr);
 	}
 
