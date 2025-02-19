@@ -108,7 +108,9 @@ void ArtisanalProducer::artisan_tick(Pop& pop) {
 		}
 	}
 
-	const fixed_point_t total_cash_to_spend = pop.get_cash();
+	//executed once per pop while nothing else uses it.
+	const fixed_point_t total_cash_to_spend = pop.get_cash().load();
+
 	if (total_cash_to_spend > fixed_point_t::_0() && !goods_to_buy_and_max_price.empty()) {
 		//Figure out the optimal amount of goods to buy based on their price, stockpiled quantiy & demand
 		fixed_point_t max_possible_satisfaction_numerator= fixed_point_t::_1(),

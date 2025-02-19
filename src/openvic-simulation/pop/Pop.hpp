@@ -5,6 +5,7 @@
 #include "openvic-simulation/country/CountryDefinition.hpp"
 #include "openvic-simulation/economy/production/ArtisanalProducerFactoryPattern.hpp"
 #include "openvic-simulation/pop/PopType.hpp"
+#include "openvic-simulation/types/fixed_point/Atomic.hpp"
 
 namespace OpenVic {
 	struct CountryInstance;
@@ -98,22 +99,17 @@ namespace OpenVic {
 		IndexedMap<CountryParty, fixed_point_t> PROPERTY(vote_distribution);
 
 		fixed_point_t PROPERTY(unemployment);
-		fixed_point_t PROPERTY(cash);
 		fixed_point_t PROPERTY(income);
-		fixed_point_t PROPERTY(expenses); //positive value means POP paid for goods. This is displayed * -1 in UI.
 		fixed_point_t PROPERTY(savings);
+		atomic_fixed_point_t PROPERTY(cash);
+		atomic_fixed_point_t PROPERTY(expenses); //positive value means POP paid for goods. This is displayed * -1 in UI.
 
 		#define NEED_MEMBERS(need_category) \
-			fixed_point_t need_category##_needs_acquired_quantity, need_category##_needs_desired_quantity; \
+			atomic_fixed_point_t need_category##_needs_acquired_quantity, need_category##_needs_desired_quantity; \
 			public: \
-			constexpr fixed_point_t get_##need_category##_needs_fulfilled() const { \
-				if (need_category##_needs_desired_quantity == fixed_point_t::_0()) { \
-					return fixed_point_t::_1(); \
-				} \
-				return need_category##_needs_acquired_quantity / need_category##_needs_desired_quantity; \
-			} \
+			fixed_point_t get_##need_category##_needs_fulfilled() const; \
 			private: \
-			GoodDefinition::good_definition_map_t need_category##_needs {}; \
+			GoodDefinition::good_definition_map_t need_category##_needs; \
 			ordered_map<GoodDefinition const*, bool> PROPERTY(need_category##_needs_fulfilled_goods);
 
 		DO_FOR_ALL_NEED_CATEGORIES(NEED_MEMBERS)
@@ -143,7 +139,7 @@ namespace OpenVic {
 
 	public:
 		Pop(Pop const&) = delete;
-		Pop(Pop&&) = default;
+		Pop(Pop&& other);
 		Pop& operator=(Pop const&) = delete;
 		Pop& operator=(Pop&&) = delete;
 
