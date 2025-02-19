@@ -1,5 +1,8 @@
 #include "PopType.hpp"
 
+#include <array>
+#include <string_view>
+
 #include "openvic-simulation/country/CountryDefinition.hpp"
 #include "openvic-simulation/country/CountryInstance.hpp"
 #include "openvic-simulation/map/ProvinceInstance.hpp"
@@ -16,11 +19,13 @@ using namespace OpenVic::NodeTools;
 
 using enum PopType::income_type_t;
 
-Strata::Strata(std::string_view new_identifier) : HasIdentifier { new_identifier } {}
+Strata::Strata(std::string_view new_identifier, index_t new_index)
+	: HasIdentifier { new_identifier }, HasIndex { new_index } {}
 
 PopType::PopType(
 	std::string_view new_identifier,
 	colour_t new_colour,
+	index_t new_index,
 	Strata const& new_strata,
 	sprite_t new_sprite,
 	GoodDefinition::good_definition_map_t&& new_life_needs,
@@ -55,6 +60,7 @@ PopType::PopType(
 	ideology_weight_map_t&& new_ideologies,
 	issue_weight_map_t&& new_issues
 ) : HasIdentifierAndColour { new_identifier, new_colour, false },
+	HasIndex { new_index },
 	strata { new_strata },
 	sprite { new_sprite },
 	life_needs { std::move(new_life_needs) },
@@ -115,18 +121,49 @@ PopManager::PopManager()
 	assimilation_chance { scope_type_t::POP, scope_type_t::POP, scope_type_t::NO_SCOPE },
 	conversion_chance { scope_type_t::POP, scope_type_t::POP, scope_type_t::NO_SCOPE } {}
 
+bool PopManager::setup_stratas() {
+	if (stratas_are_locked()) {
+		Logger::error("Failed to set up stratas - already locked!");
+		return false;
+	}
+
+	static constexpr std::array<std::string_view, 3> STRATA_IDENTIFIERS {
+		"poor", "middle", "rich"
+	};
+
+	reserve_more_stratas(STRATA_IDENTIFIERS.size());
+
+	bool ret = true;
+
+	for (std::string_view identifier : STRATA_IDENTIFIERS) {
+		ret &= add_strata(identifier);
+	}
+
+	lock_stratas();
+
+	// Default strata is middle
+	static constexpr size_t DEFAULT_STRATA_INDEX = 1;
+	default_strata = stratas.get_item_by_identifier(STRATA_IDENTIFIERS[DEFAULT_STRATA_INDEX]);
+
+	if (!ret) {
+		Logger::error("Error while setting up stratas!");
+	}
+
+	return ret;
+}
+
 bool PopManager::add_strata(std::string_view identifier) {
 	if (identifier.empty()) {
 		Logger::error("Invalid strata identifier - empty!");
 		return false;
 	}
-	return stratas.add_item({ identifier });
+	return stratas.add_item({ identifier, get_strata_count() });
 }
 
 bool PopManager::add_pop_type(
 	std::string_view identifier,
 	colour_t colour,
-	Strata const* strata,
+	Strata* strata,
 	PopType::sprite_t sprite,
 	GoodDefinition::good_definition_map_t&& life_needs,
 	GoodDefinition::good_definition_map_t&& everyday_needs,
@@ -197,9 +234,10 @@ bool PopManager::add_pop_type(
 		return false;
 	}
 
-	const bool ret = pop_types.add_item({
+	if (OV_unlikely(!pop_types.add_item({
 		identifier,
 		colour,
+		get_pop_type_count(),
 		*strata,
 		sprite,
 		std::move(life_needs),
@@ -233,36 +271,34 @@ bool PopManager::add_pop_type(
 		{ nullptr },
 		std::move(ideologies),
 		{}
-	});
-
-	if (ret) {
-		delayed_parse_nodes.emplace_back(rebel_units, equivalent, promote_to_node, issues_node);
+	}))) {
+		return false;
 	}
 
-	if (slave_sprite <= 0 && ret && is_slave) {
+	delayed_parse_nodes.emplace_back(rebel_units, equivalent, promote_to_node, issues_node);
+
+	strata->pop_types.push_back(&pop_types.back());
+
+	if (slave_sprite <= 0 && is_slave) {
 		/* Set slave sprite to that of the first is_slave pop type we find. */
 		slave_sprite = sprite;
 	}
-	if (administrative_sprite <= 0 && ret && administrative_efficiency) {
+
+	if (administrative_sprite <= 0 && administrative_efficiency) {
 		/* Set administrative sprite to that of the first administrative_efficiency pop type we find. */
 		administrative_sprite = sprite;
 	}
-	return ret;
+
+	return true;
 }
 
-void PopManager::reserve_all_pop_types(size_t size) {
-	reserve_more_stratas(size);
+void PopManager::reserve_pop_types_and_delayed_nodes(size_t size) {
 	if (pop_types_are_locked()) {
 		Logger::error("Failed to reserve space for ", size, " pop types in PopManager - already locked!");
 	} else {
 		reserve_more_pop_types(size);
 		reserve_more(delayed_parse_nodes, size);
 	}
-}
-
-void PopManager::lock_all_pop_types() {
-	lock_stratas();
-	lock_pop_types();
 }
 
 static NodeCallback auto expect_needs_income(PopType::income_type_t& types) {
@@ -297,7 +333,7 @@ bool PopManager::load_pop_type_file(
 	using enum scope_type_t;
 
 	colour_t colour = colour_t::null();
-	Strata const* strata = nullptr;
+	Strata* strata = default_strata;
 	PopType::sprite_t sprite = 0;
 	GoodDefinition::good_definition_map_t life_needs, everyday_needs, luxury_needs;
 	PopType::income_type_t life_needs_income_types = NO_INCOME_TYPE, everyday_needs_income_types = NO_INCOME_TYPE,
@@ -322,19 +358,7 @@ bool PopManager::load_pop_type_file(
 		"is_artisan", ZERO_OR_ONE, expect_bool(assign_variable_callback(is_artisan)),
 		"max_size", ZERO_OR_ONE, expect_uint(assign_variable_callback(max_size)),
 		"merge_max_size", ZERO_OR_ONE, expect_uint(assign_variable_callback(merge_max_size)),
-		"strata", ONE_EXACTLY, expect_identifier(
-			[this, &strata](std::string_view identifier) -> bool {
-				strata = get_strata_by_identifier(identifier);
-				if (strata != nullptr) {
-					return true;
-				}
-				if (add_strata(identifier)) {
-					strata = &get_back_strata();
-					return true;
-				}
-				return false;
-			}
-		),
+		"strata", ONE_EXACTLY, stratas.expect_item_identifier(assign_variable_callback_pointer(strata)),
 		"state_capital_only", ZERO_OR_ONE, expect_bool(assign_variable_callback(state_capital_only)),
 		"research_points", ZERO_OR_ONE, expect_fixed_point(assign_variable_callback(research_points)),
 		"research_optimum", ZERO_OR_ONE, expect_fixed_point(assign_variable_callback(research_leadership_optimum)),

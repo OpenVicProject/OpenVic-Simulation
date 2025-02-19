@@ -81,19 +81,21 @@ bool IssueManager::add_reform_type(std::string_view identifier, bool uncivilised
 }
 
 bool IssueManager::add_reform_group(
-	std::string_view identifier, ReformType const* reform_type, bool ordered, bool administrative
+	std::string_view identifier, ReformType& reform_type, bool ordered, bool administrative
 ) {
 	if (identifier.empty()) {
 		Logger::error("Invalid issue group identifier - empty!");
 		return false;
 	}
 
-	if (reform_type == nullptr) {
-		Logger::error("Null issue type for ", identifier);
+	if (reform_groups.add_item({
+		identifier, get_reform_group_count(), reform_type, ordered, administrative
+	})) {
+		reform_type.reform_groups.push_back(&get_back_reform_group());
+		return true;
+	} else {
 		return false;
 	}
-
-	return reform_groups.add_item({ identifier, get_reform_group_count(), *reform_type, ordered, administrative });
 }
 
 bool IssueManager::add_reform(
@@ -209,7 +211,7 @@ bool IssueManager::_load_issue(
 }
 
 bool IssueManager::_load_reform_group(
-	size_t& expected_reforms, std::string_view identifier, ReformType const* reform_type, ast::NodeCPtr node
+	size_t& expected_reforms, std::string_view identifier, ReformType& reform_type, ast::NodeCPtr node
 ) {
 	bool ordered = false, administrative = false;
 
@@ -325,11 +327,16 @@ bool IssueManager::load_issues_file(
 					return _load_issue_group(expected_issues, key, value);
 				})(type_value);
 			} else {
-				ReformType const* reform_type = get_reform_type_by_identifier(type_key);
+				ReformType* reform_type = reform_types.get_item_by_identifier(type_key);
+
+				if (OV_unlikely(reform_type == nullptr)) {
+					Logger::error("Reform type \"", type_key, "\" not found!");
+					return false;
+				}
 
 				return expect_dictionary(
 					[this, reform_type, &expected_reforms](std::string_view key, ast::NodeCPtr value) -> bool {
-						return _load_reform_group(expected_reforms, key, reform_type, value);
+						return _load_reform_group(expected_reforms, key, *reform_type, value);
 					}
 				)(type_value);
 			}
