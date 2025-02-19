@@ -39,7 +39,8 @@ Pop::Pop(
 			: nullptr
 	},
 	ideology_distribution { &ideology_keys },
-	vote_distribution { nullptr } {
+	vote_distribution { nullptr },
+	cash_lock { std::make_unique<std::mutex>() } {
 		reserve_needs_fulfilled_goods();
 	}
 
@@ -104,14 +105,17 @@ void Pop::setup_pop_test_values(IssueManager const& issue_manager) {
 	};
 
 	unemployment = test_range();
+	life_needs_acquired_quantity = test_range();
+	everyday_needs_acquired_quantity = test_range();
+	luxury_needs_acquired_quantity = test_range();
+	life_needs_desired_quantity.set_value(fixed_point_t::_1());
+	everyday_needs_desired_quantity.set_value(fixed_point_t::_1());
+	luxury_needs_desired_quantity.set_value(fixed_point_t::_1());
+	const std::lock_guard<std::mutex> lock_guard { *cash_lock };\
 	cash = test_range(20);
 	income = test_range(5);
 	expenses = test_range(5);
 	savings = test_range(15);
-	life_needs_acquired_quantity = test_range();
-	everyday_needs_acquired_quantity = test_range();
-	luxury_needs_acquired_quantity = test_range();
-	life_needs_desired_quantity = everyday_needs_desired_quantity = luxury_needs_desired_quantity = fixed_point_t::_1();
 }
 
 bool Pop::convert_to_equivalent() {
@@ -245,6 +249,7 @@ void Pop::fill_needs_fulfilled_goods_with_false() {
 			Logger::error("Adding negative ", #name, " of ", amount, " to pop. Context", get_pop_context_text().str()); \
 			return; \
 		} \
+		const std::lock_guard<std::mutex> lock_guard { *cash_lock };\
 		name += amount; \
 		income += amount; \
 		cash += amount; \
@@ -261,6 +266,7 @@ DO_FOR_ALL_TYPES_OF_POP_INCOME(DEFINE_ADD_INCOME_FUNCTIONS)
 			} \
 			return; \
 		} \
+		const std::lock_guard<std::mutex> lock_guard { *cash_lock };\
 		name += amount; \
 		expenses += amount; \
 		if (OV_unlikely(expenses < fixed_point_t::_0())) { \
@@ -274,6 +280,16 @@ DO_FOR_ALL_TYPES_OF_POP_INCOME(DEFINE_ADD_INCOME_FUNCTIONS)
 
 DO_FOR_ALL_TYPES_OF_POP_EXPENSES(DEFINE_ADD_EXPENSE_FUNCTIONS)
 #undef DEFINE_ADD_EXPENSE_FUNCTIONS
+
+#define DEFINE_NEEDS_FULFILLED(need_category) \
+	fixed_point_t Pop::get_##need_category##_needs_fulfilled() const { \
+		if (need_category##_needs_desired_quantity.get_value() == fixed_point_t::_0()) { \
+			return fixed_point_t::_1(); \
+		} \
+		return need_category##_needs_acquired_quantity.get_value() / need_category##_needs_desired_quantity.get_value(); \
+	}
+DO_FOR_ALL_NEED_CATEGORIES(DEFINE_NEEDS_FULFILLED)
+#undef DEFINE_NEEDS_FULFILLED
 
 #define SET_ALL_INCOME_TO_ZERO(name) \
 	name = fixed_point_t::_0();
@@ -344,7 +360,8 @@ void Pop::pop_tick() {
 		need_category##_needs.clear(); \
 		const fixed_point_t need_category##_needs_scalar = base_needs_scalar * shared_strata_values.get_shared_##need_category##_needs_scalar(); \
 		fixed_point_t need_category##_needs_price_inverse_sum = fixed_point_t::_0(); \
-		need_category##_needs_acquired_quantity = need_category##_needs_desired_quantity = fixed_point_t::_0(); \
+		need_category##_needs_acquired_quantity.set_value(fixed_point_t::_0()); \
+		need_category##_needs_desired_quantity.set_value(fixed_point_t::_0()); \
 		for (auto [good_definition, quantity] : type_never_null.get_##need_category##_needs()) { \
 			if (!market_instance.get_is_available(*good_definition)) { \
 				continue; \
@@ -378,6 +395,7 @@ void Pop::pop_tick() {
 	DO_FOR_ALL_NEED_CATEGORIES(FILL_NEEDS)
 	#undef FILL_NEEDS
 
+	//No need for cash_lock as this happens before cash is updated via spending
 	fixed_point_t cash_left_to_spend = cash - cash_allocated_for_artisanal_spending;
 
 	#define ALLOCATE_FOR_NEEDS(need_category) \
@@ -433,7 +451,7 @@ void Pop::pop_tick() {
 						fixed_point_t consumed_quantity; \
 						if (quantity_left_to_consume >= desired_quantity) { \
 							consumed_quantity = desired_quantity; \
-							need_category##_needs_fulfilled_goods[good_definition] = true; \
+							need_category##_needs_fulfilled_goods.at(good_definition) = true; \
 						} else { \
 							consumed_quantity = quantity_left_to_consume; \
 						} \

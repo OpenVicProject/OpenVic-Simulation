@@ -14,6 +14,8 @@
 
 namespace OpenVic {
 	struct fixed_point_t {
+		friend struct atomic_fixed_point_t;
+
 		/* PROPERTY generated getter functions will return fixed points by value, rather than const reference. */
 		using ov_return_by_value = void;
 
