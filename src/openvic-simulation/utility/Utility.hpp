@@ -19,6 +19,16 @@
 #define _OV_MKSTR(m_x) _OV_STR(m_x)
 #endif
 
+#ifndef OV_ALWAYS_INLINE
+#if defined(__GNUC__)
+#define OV_ALWAYS_INLINE [[gnu::always_inline]] inline
+#elif defined(_MSC_VER)
+#define OV_ALWAYS_INLINE [[msvc::forceinline]] inline
+#else
+#define OV_ALWAYS_INLINE inline
+#endif // defined(__GNUC__)
+#endif // OV_ALWAYS_INLINE
+
 namespace OpenVic::utility {
 	[[noreturn]] inline void unreachable() {
 		// Uses compiler specific extensions if possible.
