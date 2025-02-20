@@ -1,3 +1,5 @@
+#include <utility>
+
 #define KEEP_DO_FOR_ALL_TYPES_OF_INCOME
 #define KEEP_DO_FOR_ALL_TYPES_OF_EXPENSES
 #define KEEP_DO_FOR_ALL_NEED_CATEGORIES
@@ -43,6 +45,45 @@ Pop::Pop(
 	vote_distribution { nullptr } {
 		reserve_needs_fulfilled_goods();
 	}
+
+#define CATEGORY_HANDLER(need_category)\
+	need_category##_needs_acquired_quantity(other.need_category##_needs_acquired_quantity.load()),\
+	need_category##_needs_desired_quantity(other.need_category##_needs_desired_quantity.load()),
+
+#define INCOME_EXPENSE_HANDLER(money_type) money_type(std::move(other.money_type)),
+
+Pop::Pop(Pop&& other)
+	: PopBase(static_cast<PopBase&&>(other)),
+	  artisanal_producer_nullable{std::move(other.artisanal_producer_nullable)},
+	  cash_allocated_for_artisanal_spending(std::move(other.cash_allocated_for_artisanal_spending)),
+	  artisanal_produce_left_to_sell(std::move(other.artisanal_produce_left_to_sell)),
+	  max_quantity_to_buy_per_good(std::move(other.max_quantity_to_buy_per_good)),
+	  money_to_spend_per_good(std::move(other.money_to_spend_per_good)),
+	  location(std::exchange(other.location, nullptr)),
+	  market_instance { other.market_instance },
+	  total_change(other.total_change),
+	  num_grown(other.num_grown),
+	  num_promoted(other.num_promoted),
+	  num_demoted(other.num_demoted),
+	  num_migrated_internal(other.num_migrated_internal),
+	  num_migrated_external(other.num_migrated_external),
+	  num_migrated_colonial(other.num_migrated_colonial),
+	  literacy(std::move(other.literacy)),
+	  ideology_distribution { std::move(other.ideology_distribution) },
+	  issue_distribution(std::move(other.issue_distribution)),
+	  vote_distribution { std::move(other.vote_distribution) },
+	  unemployment(std::move(other.unemployment)),
+	  income(std::move(other.income)),
+	  savings(std::move(other.savings)),
+	  cash(other.cash.load()),
+	  expenses(other.expenses.load()),
+	  DO_FOR_ALL_NEED_CATEGORIES(CATEGORY_HANDLER)
+	  DO_FOR_ALL_TYPES_OF_POP_INCOME(INCOME_EXPENSE_HANDLER)
+	  DO_FOR_ALL_TYPES_OF_POP_EXPENSES(INCOME_EXPENSE_HANDLER)
+	  max_supported_regiments(other.max_supported_regiments) {}
+
+#undef CATEGORY_HANDLER
+#undef INCOME_EXPENSE_HANDLER
 
 void Pop::setup_pop_test_values(IssueManager const& issue_manager) {
 	/* Returns +/- range% of size. */
@@ -263,18 +304,29 @@ DO_FOR_ALL_TYPES_OF_POP_INCOME(DEFINE_ADD_INCOME_FUNCTIONS)
 			return; \
 		} \
 		name += amount; \
-		expenses += amount; \
-		if (OV_unlikely(expenses < fixed_point_t::_0())) { \
-			Logger::error("Total expenses became negative (", expenses, ") after adding ", #name, " of ", amount, " to pop. Context:", get_pop_context_text().str()); \
+		const fixed_point_t expenses_copy = expenses += amount; \
+		if (OV_unlikely(expenses_copy < fixed_point_t::_0())) { \
+			Logger::error("Total expenses became negative (", expenses_copy, ") after adding ", #name, " of ", amount, " to pop. Context:", get_pop_context_text().str()); \
 		} \
-		cash -= amount; \
-		if (OV_unlikely(cash < fixed_point_t::_0())) { \
-			Logger::error("Total cash became negative (", cash, ") after adding ", #name, " of ", amount, " to pop. Context:", get_pop_context_text().str()); \
+		const fixed_point_t cash_copy = cash -= amount; \
+		if (OV_unlikely(cash_copy < fixed_point_t::_0())) { \
+			Logger::error("Total cash became negative (", cash_copy, ") after adding ", #name, " of ", amount, " to pop. Context:", get_pop_context_text().str()); \
 		} \
 	}
 
 DO_FOR_ALL_TYPES_OF_POP_EXPENSES(DEFINE_ADD_EXPENSE_FUNCTIONS)
 #undef DEFINE_ADD_EXPENSE_FUNCTIONS
+
+#define DEFINE_NEEDS_FULFILLED(need_category) \
+	fixed_point_t Pop::get_##need_category##_needs_fulfilled() const { \
+		const fixed_point_t desired_quantity_copy = need_category##_needs_desired_quantity.load(); \
+		if (desired_quantity_copy == fixed_point_t::_0()) { \
+			return fixed_point_t::_1(); \
+		} \
+		return need_category##_needs_acquired_quantity.load() / desired_quantity_copy; \
+	}
+DO_FOR_ALL_NEED_CATEGORIES(DEFINE_NEEDS_FULFILLED)
+#undef DEFINE_NEEDS_FULFILLED
 
 #define SET_ALL_INCOME_TO_ZERO(name) \
 	name = fixed_point_t::_0();
@@ -381,7 +433,8 @@ void Pop::pop_tick() {
 	DO_FOR_ALL_NEED_CATEGORIES(FILL_NEEDS)
 	#undef FILL_NEEDS
 
-	fixed_point_t cash_left_to_spend = cash - cash_allocated_for_artisanal_spending;
+	//It's safe to use cash as this happens before cash is updated via spending
+	fixed_point_t cash_left_to_spend = cash.load() - cash_allocated_for_artisanal_spending;
 
 	#define ALLOCATE_FOR_NEEDS(need_category) \
 		if (cash_left_to_spend > fixed_point_t::_0()) { \
@@ -436,7 +489,7 @@ void Pop::pop_tick() {
 						fixed_point_t consumed_quantity; \
 						if (quantity_left_to_consume >= desired_quantity) { \
 							consumed_quantity = desired_quantity; \
-							need_category##_needs_fulfilled_goods[good_definition] = true; \
+							need_category##_needs_fulfilled_goods.at(good_definition) = true; \
 						} else { \
 							consumed_quantity = quantity_left_to_consume; \
 						} \
