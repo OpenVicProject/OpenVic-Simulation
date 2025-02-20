@@ -101,11 +101,11 @@ namespace OpenVic {
 		fixed_point_t PROPERTY(unemployment);
 		fixed_point_t PROPERTY(income);
 		fixed_point_t PROPERTY(savings);
-		atomic_fixed_point_t PROPERTY(cash);
-		atomic_fixed_point_t PROPERTY(expenses); //positive value means POP paid for goods. This is displayed * -1 in UI.
+		moveable_atomic_fixed_point_t PROPERTY(cash);
+		moveable_atomic_fixed_point_t PROPERTY(expenses); //positive value means POP paid for goods. This is displayed * -1 in UI.
 
 		#define NEED_MEMBERS(need_category) \
-			atomic_fixed_point_t need_category##_needs_acquired_quantity, need_category##_needs_desired_quantity; \
+			moveable_atomic_fixed_point_t need_category##_needs_acquired_quantity, need_category##_needs_desired_quantity; \
 			public: \
 			fixed_point_t get_##need_category##_needs_fulfilled() const; \
 			private: \
@@ -139,7 +139,7 @@ namespace OpenVic {
 
 	public:
 		Pop(Pop const&) = delete;
-		Pop(Pop&& other);
+		Pop(Pop&&) = default;
 		Pop& operator=(Pop const&) = delete;
 		Pop& operator=(Pop&&) = delete;
 

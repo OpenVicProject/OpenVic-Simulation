@@ -206,4 +206,70 @@ namespace std {
 
 namespace OpenVic {
 	using atomic_fixed_point_t = std::atomic<fixed_point_t>;
+
+	struct moveable_atomic_fixed_point_t {
+	private:
+		atomic_fixed_point_t value;
+
+	public:
+		OV_ALWAYS_INLINE moveable_atomic_fixed_point_t() = default;
+		OV_ALWAYS_INLINE moveable_atomic_fixed_point_t(const atomic_fixed_point_t new_value) : value { new_value.load() } {}
+
+		OV_ALWAYS_INLINE moveable_atomic_fixed_point_t(moveable_atomic_fixed_point_t&& other) {
+			value.store(other.value);
+		}
+
+		OV_ALWAYS_INLINE fixed_point_t get_copy_of_value() const {
+			return value;
+		}
+
+		OV_ALWAYS_INLINE fixed_point_t operator=(fixed_point_t const& rhs) noexcept {
+			return value = rhs;
+		}
+		OV_ALWAYS_INLINE fixed_point_t operator=(fixed_point_t const& rhs) volatile noexcept {
+			return value = rhs;
+		}
+
+		OV_ALWAYS_INLINE fixed_point_t operator++(int) noexcept {
+			return value++;
+		}
+		OV_ALWAYS_INLINE fixed_point_t operator++(int) volatile noexcept {
+			return value++;
+		}
+
+		OV_ALWAYS_INLINE fixed_point_t operator--(int) noexcept {
+			return value--;
+		}
+		OV_ALWAYS_INLINE fixed_point_t operator--(int) volatile noexcept {
+			return value--;
+		}
+
+		OV_ALWAYS_INLINE fixed_point_t operator++() noexcept {
+			return ++value;
+		}
+		OV_ALWAYS_INLINE fixed_point_t operator++() volatile noexcept {
+			return ++value;
+		}
+
+		OV_ALWAYS_INLINE fixed_point_t operator--() noexcept {
+			return --value;
+		}
+		OV_ALWAYS_INLINE fixed_point_t operator--() volatile noexcept {
+			return --value;
+		}
+
+		OV_ALWAYS_INLINE fixed_point_t operator+=(fixed_point_t const& rhs) noexcept {
+			return value += rhs;
+		}
+		OV_ALWAYS_INLINE fixed_point_t operator+=(fixed_point_t const& rhs) volatile noexcept {
+			return value += rhs;
+		}
+
+		OV_ALWAYS_INLINE fixed_point_t operator-=(fixed_point_t const& rhs) noexcept {
+			return value -= rhs;
+		}
+		OV_ALWAYS_INLINE fixed_point_t operator-=(fixed_point_t const& rhs) volatile noexcept {
+			return value -= rhs;
+		}
+	};
 }
