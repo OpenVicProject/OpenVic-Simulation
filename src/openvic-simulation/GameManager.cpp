@@ -3,12 +3,9 @@
 using namespace OpenVic;
 
 GameManager::GameManager(
-	InstanceManager::gamestate_updated_func_t new_gamestate_updated_callback,
-	SimulationClock::state_changed_function_t new_clock_state_changed_callback
+	InstanceManager::gamestate_updated_func_t new_gamestate_updated_callback
 ) : gamestate_updated_callback {
 		new_gamestate_updated_callback ? std::move(new_gamestate_updated_callback) : []() {}
-	}, clock_state_changed_callback {
-		new_clock_state_changed_callback ? std::move(new_clock_state_changed_callback) : []() {}
 	}, definitions_loaded { false } {}
 
 bool GameManager::set_roots(Dataloader::path_vector_t const& roots) {
@@ -52,8 +49,7 @@ bool GameManager::setup_instance(Bookmark const* bookmark) {
 	instance_manager.emplace(
 		game_rules_manager,
 		definition_manager,
-		gamestate_updated_callback,
-		clock_state_changed_callback
+		gamestate_updated_callback
 	);
 
 	bool ret = instance_manager->setup();

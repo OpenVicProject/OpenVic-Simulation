@@ -241,7 +241,7 @@ void Pop::fill_needs_fulfilled_goods_with_false() {
 #define DEFINE_ADD_INCOME_FUNCTIONS(name) \
 	void Pop::add_##name(const fixed_point_t amount){ \
 		if (OV_unlikely(amount == fixed_point_t::_0())) { \
-			Logger::warning("Adding ", #name, " of 0 to pop. Context", get_pop_context_text().str()); \
+			/*Logger::warning("Adding ", #name, " of 0 to pop. Context", get_pop_context_text().str());*/ \
 			return; \
 		} \
 		if (OV_unlikely(amount < fixed_point_t::_0())) { \
@@ -259,9 +259,9 @@ DO_FOR_ALL_TYPES_OF_POP_INCOME(DEFINE_ADD_INCOME_FUNCTIONS)
 #define DEFINE_ADD_EXPENSE_FUNCTIONS(name) \
 	void Pop::add_##name(const fixed_point_t amount){ \
 		if (OV_unlikely(amount == fixed_point_t::_0())) { \
-			if (size > 1024) { \
+			/*if (size > 1024) { \
 				Logger::warning("Adding ", #name, " of 0 to pop. Context:", get_pop_context_text().str()); \
-			} \
+			}*/ \
 			return; \
 		} \
 		name += amount; \

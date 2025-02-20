@@ -5,11 +5,9 @@
 using namespace OpenVic;
 
 SimulationClock::SimulationClock(
-	tick_function_t new_tick_function, update_function_t new_update_function,
-	state_changed_function_t new_state_changed_function
+	tick_function_t new_tick_function, update_function_t new_update_function
 ) : tick_function { new_tick_function ? std::move(new_tick_function) : []() {} },
-	update_function { new_update_function ? std::move(new_update_function) : []() {} },
-	state_changed_function { new_state_changed_function ? std::move(new_state_changed_function) : []() {} } {
+	update_function { new_update_function ? std::move(new_update_function) : []() {} } {
 	reset();
 }
 
@@ -21,14 +19,12 @@ void SimulationClock::set_paused(bool new_paused) {
 
 void SimulationClock::toggle_paused() {
 	paused = !paused;
-	state_changed_function();
 }
 
 void SimulationClock::set_simulation_speed(speed_t speed) {
 	speed = std::clamp(speed, MIN_SPEED, MAX_SPEED);
 	if (current_speed != speed) {
 		current_speed = speed;
-		state_changed_function();
 	}
 }
 
@@ -65,5 +61,4 @@ void SimulationClock::reset() {
 	paused = true;
 	current_speed = 0;
 	last_tick_time = std::chrono::high_resolution_clock::now();
-	state_changed_function();
 }
