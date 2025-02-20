@@ -1,38 +1,22 @@
 #pragma once
 
 #include <algorithm>
-#include <cstdint>
 
+#include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
 #include "openvic-simulation/utility/Getters.hpp"
 
 namespace OpenVic {
-	using slider_value_int_type = int32_t;
 
-	template<slider_value_int_type STRICT_MIN, slider_value_int_type STRICT_MAX>
 	struct SliderValue {
-		using int_type = slider_value_int_type;
-
-		static constexpr int_type strict_min = STRICT_MIN;
-		static constexpr int_type strict_max = STRICT_MAX;
-
-		static_assert(strict_min < strict_max);
-
 	private:
-		int_type PROPERTY(min);
-		int_type PROPERTY(max);
-		int_type PROPERTY(value);
+		fixed_point_t PROPERTY(min);
+		fixed_point_t PROPERTY(max);
+		fixed_point_t PROPERTY(value);
 
 	public:
-		constexpr SliderValue(
-			int_type new_value = (strict_max - strict_min) / 2,
-			int_type new_min = strict_min,
-			int_type new_max = strict_max
-		) {
-			set_bounds(new_max, new_min);
-			set_value(new_value);
-		}
+		constexpr SliderValue() = default;
 
-		constexpr void set_value(int_type new_value) {
+		constexpr void set_value(fixed_point_t new_value) {
 			if (min <= max) {
 				value = std::clamp(new_value, min, max);
 			} else {
@@ -47,9 +31,9 @@ namespace OpenVic {
 			}
 		}
 
-		constexpr void set_bounds(int_type new_max, int_type new_min) {
-			min = std::clamp(new_min, strict_min, strict_max);
-			max = std::clamp(new_max, strict_min, strict_max);
+		constexpr void set_bounds(fixed_point_t new_min, fixed_point_t new_max) {
+			min = new_min;
+			max = new_max;
 			set_value(value);
 		}
 	};
