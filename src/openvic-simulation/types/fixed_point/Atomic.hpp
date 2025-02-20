@@ -15,7 +15,6 @@ namespace std {
 
 		atomic() noexcept = default;
 
-		constexpr atomic(underlying_type v) noexcept : base_type(v) {}
 		constexpr atomic(value_type fp) noexcept : base_type(fp.get_raw_value()) {}
 
 		atomic& operator=(const atomic&) volatile = delete;
@@ -26,34 +25,6 @@ namespace std {
 		}
 		operator value_type() const volatile noexcept {
 			return value_type::parse_raw(base_type::operator underlying_type());
-		}
-
-		operator underlying_type() const noexcept {
-			return operator value_type();
-		}
-		operator underlying_type() const volatile noexcept {
-			return operator value_type();
-		}
-
-		operator int32_t() const noexcept {
-			return operator value_type();
-		}
-		operator int32_t() const volatile noexcept {
-			return operator value_type();
-		}
-
-		operator float() const noexcept {
-			return operator value_type();
-		}
-		operator float() const volatile noexcept {
-			return operator value_type();
-		}
-
-		operator double() const noexcept {
-			return operator value_type();
-		}
-		operator double() const volatile noexcept {
-			return operator value_type();
 		}
 
 		value_type operator=(value_type fp) noexcept {
