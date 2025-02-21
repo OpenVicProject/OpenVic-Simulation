@@ -8,6 +8,7 @@
 #include <variant>
 
 #include "openvic-simulation/country/CountryInstance.hpp"
+#include "openvic-simulation/diplomacy/CountryRelation.hpp"
 #include "openvic-simulation/types/FunctionRef.hpp"
 #include "openvic-simulation/types/IdentifierRegistry.hpp"
 
@@ -38,11 +39,13 @@ namespace OpenVic {
 		}
 
 		struct Initializer {
+			CountryRelationManager::influence_value_type influence_cost = 0;
 			commit_action_func commit;
 			allowed_to_commit_func allowed = allowed_to_commit_default;
 			get_acceptance_func get_acceptance = get_acceptance_default;
 		};
 
+		const CountryRelationManager::influence_value_type influence_cost = 0;
 		const commit_action_func commit_action_caller;
 		const allowed_to_commit_func allowed_to_commit = allowed_to_commit_default;
 		const get_acceptance_func get_acceptance = get_acceptance_default;
@@ -65,13 +68,14 @@ namespace OpenVic {
 		}
 
 		struct Initializer {
+			CountryRelationManager::influence_value_type influence_cost = 0;
 			commit_action_func commit;
 			allowed_to_commit_func allowed = allowed_to_commit_default;
 			get_acceptance_func get_acceptance = get_acceptance_default;
 			allowed_to_cancel_func allowed_cancel = allowed_to_cancel_default;
 
 			operator DiplomaticActionType::Initializer() {
-				return { commit, allowed, get_acceptance };
+				return { influence_cost, commit, allowed, get_acceptance };
 			}
 		};
 
@@ -113,8 +117,8 @@ namespace OpenVic {
 
 	struct DiplomaticActionTickCache {
 		DiplomaticActionType::Argument argument;
-		DiplomaticActionTypeStorage const* type;
-		bool allowed_to_commit;
+		DiplomaticActionTypeStorage const* type = nullptr;
+		bool allowed_to_commit = false;
 		std::int32_t acceptance = -1;
 	};
 
