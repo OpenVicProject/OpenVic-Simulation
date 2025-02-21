@@ -31,9 +31,9 @@ EconomyDefines::EconomyDefines()
 	rgo_supply_demand_factor_fire {},
 	employment_hire_lowest {},
 	employment_fire_lowest {},
-	trade_cap_low_limit_land {},
-	trade_cap_low_limit_naval {},
-	trade_cap_low_limit_constructions {},
+	minimum_land_spending_slider_value {},
+	minimum_naval_spending_slider_value {},
+	minimum_construction_spending_slider_value {},
 	factory_purchase_min_factor {},
 	factory_purchase_drawdown_factor {} {}
 
@@ -81,10 +81,12 @@ node_callback_t EconomyDefines::expect_defines() {
 			expect_fixed_point(assign_variable_callback(rgo_supply_demand_factor_fire)),
 		"EMPLOYMENT_HIRE_LOWEST", ONE_EXACTLY, expect_fixed_point(assign_variable_callback(employment_hire_lowest)),
 		"EMPLOYMENT_FIRE_LOWEST", ONE_EXACTLY, expect_fixed_point(assign_variable_callback(employment_fire_lowest)),
-		"TRADE_CAP_LOW_LIMIT_LAND", ONE_EXACTLY, expect_fixed_point(assign_variable_callback(trade_cap_low_limit_land)),
-		"TRADE_CAP_LOW_LIMIT_NAVAL", ONE_EXACTLY, expect_fixed_point(assign_variable_callback(trade_cap_low_limit_naval)),
+		"TRADE_CAP_LOW_LIMIT_LAND", ONE_EXACTLY,
+			expect_fixed_point(assign_variable_callback(minimum_land_spending_slider_value)),
+		"TRADE_CAP_LOW_LIMIT_NAVAL", ONE_EXACTLY,
+			expect_fixed_point(assign_variable_callback(minimum_naval_spending_slider_value)),
 		"TRADE_CAP_LOW_LIMIT_CONSTRUCTIONS", ONE_EXACTLY,
-			expect_fixed_point(assign_variable_callback(trade_cap_low_limit_constructions)),
+			expect_fixed_point(assign_variable_callback(minimum_construction_spending_slider_value)),
 		"FACTORY_PURCHASE_MIN_FACTOR", ONE_EXACTLY, expect_fixed_point(assign_variable_callback(factory_purchase_min_factor)),
 		"FACTORY_PURCHASE_DRAWDOWN_FACTOR", ONE_EXACTLY,
 			expect_fixed_point(assign_variable_callback(factory_purchase_drawdown_factor))
