@@ -48,6 +48,7 @@ namespace OpenVic {
 	struct InstanceManager;
 	struct ProductionType;
 	struct GameRulesManager;
+	struct EconomyDefines;
 
 	/* Representation of a country's mutable attributes, with a CountryDefinition that is unique at any single time
 	 * but can be swapped with other CountryInstance's CountryDefinition when switching tags. */
@@ -77,11 +78,6 @@ namespace OpenVic {
 
 		using unlock_level_t = int8_t;
 		using unit_variant_t = uint8_t;
-
-		static constexpr slider_value_int_type SLIDER_SIZE = 100;
-
-		using StandardSliderValue = SliderValue<0, SLIDER_SIZE>;
-		using TariffSliderValue = SliderValue<-SLIDER_SIZE, SLIDER_SIZE>;
 
 	private:
 		/* Main attributes */
@@ -126,15 +122,15 @@ namespace OpenVic {
 
 		/* Budget */
 		fixed_point_t PROPERTY(cash_stockpile);
-		IndexedMap<Strata, StandardSliderValue> PROPERTY(tax_rate_by_strata);
-		StandardSliderValue PROPERTY(land_spending);
-		StandardSliderValue PROPERTY(naval_spending);
-		StandardSliderValue PROPERTY(construction_spending);
-		StandardSliderValue PROPERTY(education_spending);
-		StandardSliderValue PROPERTY(administration_spending);
-		StandardSliderValue PROPERTY(social_spending);
-		StandardSliderValue PROPERTY(military_spending);
-		TariffSliderValue PROPERTY(tariff_rate);
+		IndexedMap<Strata, SliderValue> PROPERTY(tax_rate_slider_value_by_strata);
+		SliderValue PROPERTY(land_spending_slider_value);
+		SliderValue PROPERTY(naval_spending_slider_value);
+		SliderValue PROPERTY(construction_spending_slider_value);
+		SliderValue PROPERTY(education_spending_slider_value);
+		SliderValue PROPERTY(administration_spending_slider_value);
+		SliderValue PROPERTY(social_spending_slider_value);
+		SliderValue PROPERTY(military_spending_slider_value);
+		SliderValue PROPERTY(tariff_rate_slider_value);
 		// TODO - cash stockpile change over last 30 days
 
 		/* Technology */
@@ -300,9 +296,10 @@ namespace OpenVic {
 			decltype(goods_data)::keys_type const& good_instances_keys,
 			decltype(regiment_type_unlock_levels)::keys_type const& regiment_type_unlock_levels_keys,
 			decltype(ship_type_unlock_levels)::keys_type const& ship_type_unlock_levels_keys,
-			decltype(tax_rate_by_strata)::keys_type const& strata_keys,
+			decltype(tax_rate_slider_value_by_strata)::keys_type const& strata_keys,
 			GameRulesManager const& new_game_rules_manager,
-			GoodInstanceManager& new_good_instance_manager
+			GoodInstanceManager& new_good_instance_manager,
+			EconomyDefines const& economy_defines
 		);
 
 	public:
@@ -414,15 +411,15 @@ namespace OpenVic {
 		bool set_ruling_party(CountryParty const& new_ruling_party);
 		bool add_reform(Reform const& new_reform);
 
-		void set_strata_tax_rate(Strata const& strata, const StandardSliderValue::int_type new_value);
-		void set_land_spending(const StandardSliderValue::int_type new_value);
-		void set_naval_spending(const StandardSliderValue::int_type new_value);
-		void set_construction_spending(const StandardSliderValue::int_type new_value);
-		void set_education_spending(const StandardSliderValue::int_type new_value);
-		void set_administration_spending(const StandardSliderValue::int_type new_value);
-		void set_social_spending(const StandardSliderValue::int_type new_value);
-		void set_military_spending(const StandardSliderValue::int_type new_value);
-		void set_tariff_rate(const TariffSliderValue::int_type new_value);
+		void set_strata_tax_rate_slider_value(Strata const& strata, const fixed_point_t new_value);
+		void set_land_spending_slider_value(const fixed_point_t new_value);
+		void set_naval_spending_slider_value(const fixed_point_t new_value);
+		void set_construction_spending_slider_value(const fixed_point_t new_value);
+		void set_education_spending_slider_value(const fixed_point_t new_value);
+		void set_administration_spending_slider_value(const fixed_point_t new_value);
+		void set_social_spending_slider_value(const fixed_point_t new_value);
+		void set_military_spending_slider_value(const fixed_point_t new_value);
+		void set_tariff_rate_slider_value(const fixed_point_t new_value);
 
 		// Adds delta to the current war exhaustion value and clamps it to the range [0, war_exhaustion_max].
 		void change_war_exhaustion(fixed_point_t delta);
@@ -504,7 +501,7 @@ namespace OpenVic {
 
 	private:
 		void _update_production(DefineManager const& define_manager);
-		void _update_budget();
+		void _update_budget(ModifierEffectCache const& modifier_effect_cache);
 		// Expects current_research to be non-null
 		void _update_current_tech(InstanceManager const& instance_manager);
 		void _update_technology(InstanceManager const& instance_manager);
@@ -587,9 +584,10 @@ namespace OpenVic {
 			decltype(CountryInstance::goods_data)::keys_type const& good_instances_keys,
 			decltype(CountryInstance::regiment_type_unlock_levels)::keys_type const& regiment_type_unlock_levels_keys,
 			decltype(CountryInstance::ship_type_unlock_levels)::keys_type const& ship_type_unlock_levels_keys,
-			decltype(CountryInstance::tax_rate_by_strata):: keys_type const& strata_keys,
+			decltype(CountryInstance::tax_rate_slider_value_by_strata):: keys_type const& strata_keys,
 			GameRulesManager const& game_rules_manager,
-			GoodInstanceManager& good_instance_manager
+			GoodInstanceManager& good_instance_manager,
+			EconomyDefines const& economy_defines
 		);
 
 		bool apply_history_to_countries(CountryHistoryManager const& history_manager, InstanceManager& instance_manager);

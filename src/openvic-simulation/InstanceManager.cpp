@@ -120,7 +120,8 @@ bool InstanceManager::setup() {
 		definition_manager.get_military_manager().get_unit_type_manager().get_ship_types(),
 		definition_manager.get_pop_manager().get_stratas(),
 		game_rules_manager,
-		good_instance_manager
+		good_instance_manager,
+		definition_manager.get_define_manager().get_economy_defines()
 	);
 
 	game_instance_setup = true;
