@@ -12,6 +12,7 @@
 #include "openvic-simulation/military/UnitInstanceGroup.hpp"
 #include "openvic-simulation/modifier/StaticModifierCache.hpp"
 #include "openvic-simulation/politics/Ideology.hpp"
+#include "openvic-simulation/pop/PopValuesFromProvince.hpp"
 #include "openvic-simulation/utility/CompilerFeatureTesting.hpp"
 #include "openvic-simulation/utility/Logger.hpp"
 
@@ -20,7 +21,6 @@ using namespace OpenVic;
 ProvinceInstance::ProvinceInstance(
 	MarketInstance& new_market_instance,
 	ModifierEffectCache const& new_modifier_effect_cache,
-	PopsDefines const& new_pop_defines,
 	ProvinceDefinition const& new_province_definition,
 	decltype(population_by_strata)::keys_type const& strata_keys,
 	decltype(pop_type_distribution)::keys_type const& pop_type_keys,
@@ -33,7 +33,6 @@ ProvinceInstance::ProvinceInstance(
 	terrain_type { new_province_definition.get_default_terrain_type() },
 	rgo { new_market_instance, pop_type_keys },
 	buildings { "buildings", false },
-	shared_pop_values { new_pop_defines, strata_keys },
 	population_by_strata { &strata_keys },
 	militancy_by_strata { &strata_keys },
 	life_needs_fulfilled_by_strata { &strata_keys },
@@ -409,14 +408,11 @@ void ProvinceInstance::update_gamestate(const Date today, DefineManager const& d
 	_update_pops(define_manager);
 }
 
-void ProvinceInstance::province_tick(const Date today) {
-	shared_pop_values.update_pop_values_from_province();
-	parallel_for_each(
-		pops,
-		[](Pop& pop) -> void {
-			pop.pop_tick();
-		}
-	);
+void ProvinceInstance::province_tick(const Date today, PopValuesFromProvince& reusable_pop_values) {
+	reusable_pop_values.update_pop_values_from_province(*this);
+	for (Pop& pop : pops) {
+		pop.pop_tick(reusable_pop_values);
+	}
 	for (BuildingInstance& building : buildings.get_items()) {
 		building.tick(today);
 	}
@@ -484,7 +480,6 @@ bool ProvinceInstance::setup(BuildingTypeManager const& building_type_manager) {
 	}
 
 	rgo.setup_location_ptr(*this);
-	shared_pop_values.set_province(this);
 
 	bool ret = true;
 
@@ -548,6 +543,11 @@ bool ProvinceInstance::apply_history_to_province(ProvinceHistoryEntry const& ent
 	// TODO: load state buildings - entry.get_state_buildings()
 	// TODO: party loyalties for each POP when implemented on POP side - entry.get_party_loyalties()
 	return ret;
+}
+
+void ProvinceInstance::initialise_for_new_game(const Date today, PopValuesFromProvince& reusable_pop_values) {
+	initialise_rgo();
+	province_tick(today, reusable_pop_values);
 }
 
 void ProvinceInstance::initialise_rgo() {

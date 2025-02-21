@@ -29,7 +29,13 @@ namespace OpenVic {
 			fixed_point_t new_current_production
 		);
 
-		void artisan_tick(Pop& pop);
+		void artisan_tick(
+			Pop& pop,
+			GoodDefinition::good_definition_map_t& pop_max_quantity_to_buy_per_good,
+			GoodDefinition::good_definition_map_t& pop_money_to_spend_per_good,
+			GoodDefinition::good_definition_map_t& reusable_map_0,
+			GoodDefinition::good_definition_map_t& reusable_map_1
+		);
 
 		//thread safe if called once per good and stockpile already has an entry.
 		//adds to stockpile up to max_quantity_to_buy and returns quantity added to stockpile
