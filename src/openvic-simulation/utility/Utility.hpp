@@ -23,7 +23,7 @@
 #if defined(__GNUC__)
 #define OV_ALWAYS_INLINE __attribute__((always_inline)) inline
 #elif defined(_MSC_VER)
-#define OV_ALWAYS_INLINE __forceinline inline
+#define OV_ALWAYS_INLINE __forceinline
 #else
 #define OV_ALWAYS_INLINE inline
 #endif // defined(__GNUC__)
