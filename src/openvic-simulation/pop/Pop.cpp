@@ -259,9 +259,7 @@ DO_FOR_ALL_TYPES_OF_POP_INCOME(DEFINE_ADD_INCOME_FUNCTIONS)
 #define DEFINE_ADD_EXPENSE_FUNCTIONS(name) \
 	void Pop::add_##name(const fixed_point_t amount){ \
 		if (OV_unlikely(amount == fixed_point_t::_0())) { \
-			if (size > 1024) { \
-				Logger::warning("Adding ", #name, " of 0 to pop. Context:", get_pop_context_text().str()); \
-			} \
+			Logger::warning("Adding ", #name, " of 0 to pop. Context:", get_pop_context_text().str()); \
 			return; \
 		} \
 		name += amount; \
@@ -301,7 +299,10 @@ void Pop::allocate_for_needs(
 	fixed_point_t cash_left_to_spend_draft = cash_left_to_spend;
 	for (size_t i = 0; i < scaled_needs.size(); i++) {
 		auto [good_definition, max_quantity_to_buy] = *scaled_needs.nth(i);
-		const fixed_point_t max_money_to_spend = max_quantity_to_buy * market_instance.get_max_next_price(*good_definition);
+		const fixed_point_t max_money_to_spend = market_instance.get_max_money_to_allocate_to_buy_quantity(
+			*good_definition,
+			max_quantity_to_buy
+		);
 		if (money_to_spend_per_good_draft[good_definition] >= max_money_to_spend) {
 			continue;
 		}
@@ -319,7 +320,12 @@ void Pop::allocate_for_needs(
 			price_inverse_sum -= price_inverse;
 			i = -1; //Restart loop and skip maxed out needs. This is required to spread the remaining cash again.
 		} else {
-			money_to_spend_per_good_draft[good_definition] = cash_available_for_good;
+			const fixed_point_t max_possible_quantity_bought = cash_available_for_good / market_instance.get_min_next_price(*good_definition);
+			if (max_possible_quantity_bought < fixed_point_t::epsilon()) {
+				money_to_spend_per_good_draft[good_definition] = fixed_point_t::_0();
+			} else {
+				money_to_spend_per_good_draft[good_definition] = cash_available_for_good;
+			}
 		}
 	}
 

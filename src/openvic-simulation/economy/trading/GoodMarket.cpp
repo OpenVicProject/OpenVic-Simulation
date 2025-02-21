@@ -2,6 +2,7 @@
 
 #include "openvic-simulation/economy/GoodDefinition.hpp"
 #include "openvic-simulation/misc/GameRulesManager.hpp"
+#include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
 #include "openvic-simulation/utility/CompilerFeatureTesting.hpp"
 
 using namespace OpenVic;
@@ -139,7 +140,13 @@ void GoodMarket::execute_orders() {
 			}
 
 			demand_sum += buy_up_to_order.get_max_quantity();
-			const fixed_point_t purchasing_power = purchasing_power_per_order[i] = buy_up_to_order.get_money_to_spend() / max_next_price;
+
+			if (buy_up_to_order.get_money_to_spend() <= fixed_point_t::_0()) {
+				purchasing_power_per_order[i] = quantity_bought_per_order[i] = fixed_point_t::_0();
+				continue;
+			}
+
+			fixed_point_t purchasing_power = purchasing_power_per_order[i] = buy_up_to_order.get_money_to_spend() / max_next_price;
 			if (purchasing_power >= buy_up_to_order.get_max_quantity()) {
 				quantity_bought_per_order[i] = buy_up_to_order.get_max_quantity();
 				max_quantity_to_buy_sum += buy_up_to_order.get_max_quantity();
@@ -190,10 +197,19 @@ void GoodMarket::execute_orders() {
 			for (size_t i = 0; i < buy_up_to_orders.size(); i++) {
 				GoodBuyUpToOrder const& buy_up_to_order = buy_up_to_orders[i];
 				const fixed_point_t quantity_bought = quantity_bought_per_order[i];
-				quantity_traded_yesterday += quantity_bought;
+				fixed_point_t money_spent;
+				if (quantity_bought == fixed_point_t::_0()) {
+					money_spent = fixed_point_t::_0();
+				} else {
+					quantity_traded_yesterday += quantity_bought;
+					money_spent = std::max(
+					   quantity_bought * new_price,
+					   fixed_point_t::epsilon() //we know from purchasing power that you can afford it.
+				   );
+				}
 				buy_up_to_order.get_after_trade()({
 					quantity_bought,
-					quantity_bought * new_price
+					money_spent
 				});
 			}
 		} else {
@@ -248,11 +264,22 @@ void GoodMarket::execute_orders() {
 					buy_up_to_order.get_money_to_spend() / new_price
 				);
 
-				quantity_traded_yesterday += quantity_bought;
-				buy_up_to_order.get_after_trade()({
-					quantity_bought,
-					quantity_bought * new_price
-				});
+				if (quantity_bought <= fixed_point_t::_0()) {
+					buy_up_to_order.get_after_trade()({
+						fixed_point_t::_0(),
+						fixed_point_t::_0()
+					});
+				} else {
+					const fixed_point_t money_spent = std::max(
+						quantity_bought * new_price,
+						fixed_point_t::epsilon()
+					);
+					quantity_traded_yesterday += quantity_bought;
+					buy_up_to_order.get_after_trade()({
+						quantity_bought,
+						money_spent
+					});
+				}
 			}
 		}
 
@@ -262,9 +289,18 @@ void GoodMarket::execute_orders() {
 				quantity_traded_yesterday,
 				supply_sum
 			);
+			fixed_point_t money_gained;
+			if (quantity_sold == fixed_point_t::_0()) {
+				money_gained = fixed_point_t::_0();
+			} else {
+				money_gained = std::max(
+					quantity_sold * new_price,
+					fixed_point_t::epsilon() //round up
+				);
+			}
 			market_sell_order.get_after_trade()({
 				quantity_sold,
-				quantity_sold * new_price
+				money_gained
 			});
 		}
 
