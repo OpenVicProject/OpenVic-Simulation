@@ -8,9 +8,9 @@
 
 namespace std {
 	template<>
-	struct atomic<OpenVic::fixed_point_t> : private atomic<decltype(std::declval<OpenVic::fixed_point_t>().get_raw_value())> {
+	struct atomic<OpenVic::fixed_point_t> : private atomic<OpenVic::fixed_point_t::value_type> {
 		using value_type = OpenVic::fixed_point_t;
-		using underlying_type = decltype(std::declval<value_type>().get_raw_value());
+		using underlying_type = value_type::value_type;
 		using base_type = atomic<underlying_type>;
 
 		atomic() noexcept = default;

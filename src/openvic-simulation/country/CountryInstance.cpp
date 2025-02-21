@@ -38,9 +38,10 @@ CountryInstance::CountryInstance(
 	decltype(goods_data)::keys_type const& good_instances_keys,
 	decltype(regiment_type_unlock_levels)::keys_type const& regiment_type_unlock_levels_keys,
 	decltype(ship_type_unlock_levels)::keys_type const& ship_type_unlock_levels_keys,
-	decltype(tax_rate_by_strata)::keys_type const& strata_keys,
+	decltype(tax_rate_slider_value_by_strata)::keys_type const& strata_keys,
 	GameRulesManager const& new_game_rules_manager,
-	GoodInstanceManager& new_good_instance_manager
+	GoodInstanceManager& new_good_instance_manager,
+	EconomyDefines const& economy_defines
 ) : FlagStrings { "country" },
 	HasIndex { new_index },
 	/* Main attributes */
@@ -52,7 +53,7 @@ CountryInstance::CountryInstance(
 	building_type_unlock_levels { &building_type_keys },
 
 	/* Budget */
-	tax_rate_by_strata { &strata_keys },
+	tax_rate_slider_value_by_strata { &strata_keys },
 
 	/* Technology */
 	technology_unlock_levels { &technology_keys },
@@ -85,6 +86,40 @@ CountryInstance::CountryInstance(
 
 	// Exclude PROVINCE (local) modifier effects from the country's modifier sum
 	modifier_sum.set_this_excluded_targets(ModifierEffect::target_t::PROVINCE);
+
+	// Some sliders need to have their max range limits temporarily set to 1 so they can start with a value of 0.5 or 1.0.
+	// The range limits will be corrected on the first gamestate update, and the values will go to the closest valid point.
+	for (SliderValue& tax_rate_slider_value : tax_rate_slider_value_by_strata.get_values()) {
+		tax_rate_slider_value.set_bounds(fixed_point_t::_0(), fixed_point_t::_1());
+		tax_rate_slider_value.set_value(fixed_point_t::_0_50());
+	}
+
+	// Land, naval and construction spending have minimums defined in EconomyDefines and always have an unmodified max (1.0).
+	land_spending_slider_value.set_bounds(economy_defines.get_minimum_land_spending_slider_value(), fixed_point_t::_1());
+	land_spending_slider_value.set_value(fixed_point_t::_1());
+
+	naval_spending_slider_value.set_bounds(economy_defines.get_minimum_naval_spending_slider_value(), fixed_point_t::_1());
+	naval_spending_slider_value.set_value(fixed_point_t::_1());
+
+	construction_spending_slider_value.set_bounds(
+		economy_defines.get_minimum_construction_spending_slider_value(), fixed_point_t::_1()
+	);
+	construction_spending_slider_value.set_value(fixed_point_t::_1());
+
+	education_spending_slider_value.set_bounds(fixed_point_t::_0(), fixed_point_t::_1());
+	education_spending_slider_value.set_value(fixed_point_t::_0_50());
+
+	administration_spending_slider_value.set_bounds(fixed_point_t::_0(), fixed_point_t::_1());
+	administration_spending_slider_value.set_value(fixed_point_t::_0_50());
+
+	social_spending_slider_value.set_bounds(fixed_point_t::_0(), fixed_point_t::_1());
+	social_spending_slider_value.set_value(fixed_point_t::_1());
+
+	military_spending_slider_value.set_bounds(fixed_point_t::_0(), fixed_point_t::_1());
+	military_spending_slider_value.set_value(fixed_point_t::_0_50());
+
+	tariff_rate_slider_value.set_bounds(fixed_point_t::_0(), fixed_point_t::_0());
+	tariff_rate_slider_value.set_value(fixed_point_t::_0());
 
 	update_country_definition_based_attributes();
 
@@ -282,40 +317,40 @@ bool CountryInstance::add_reform(Reform const& new_reform) {
 	}
 }
 
-void CountryInstance::set_strata_tax_rate(Strata const& strata, const StandardSliderValue::int_type new_value) {
-	tax_rate_by_strata[strata].set_value(new_value);
+void CountryInstance::set_strata_tax_rate_slider_value(Strata const& strata, const fixed_point_t new_value) {
+	tax_rate_slider_value_by_strata[strata].set_value(new_value);
 }
 
-void CountryInstance::set_land_spending(const StandardSliderValue::int_type new_value) {
-	land_spending.set_value(new_value);
+void CountryInstance::set_land_spending_slider_value(const fixed_point_t new_value) {
+	land_spending_slider_value.set_value(new_value);
 }
 
-void CountryInstance::set_naval_spending(const StandardSliderValue::int_type new_value) {
-	naval_spending.set_value(new_value);
+void CountryInstance::set_naval_spending_slider_value(const fixed_point_t new_value) {
+	naval_spending_slider_value.set_value(new_value);
 }
 
-void CountryInstance::set_construction_spending(const StandardSliderValue::int_type new_value) {
-	construction_spending.set_value(new_value);
+void CountryInstance::set_construction_spending_slider_value(const fixed_point_t new_value) {
+	construction_spending_slider_value.set_value(new_value);
 }
 
-void CountryInstance::set_education_spending(const StandardSliderValue::int_type new_value) {
-	education_spending.set_value(new_value);
+void CountryInstance::set_education_spending_slider_value(const fixed_point_t new_value) {
+	education_spending_slider_value.set_value(new_value);
 }
 
-void CountryInstance::set_administration_spending(const StandardSliderValue::int_type new_value) {
-	administration_spending.set_value(new_value);
+void CountryInstance::set_administration_spending_slider_value(const fixed_point_t new_value) {
+	administration_spending_slider_value.set_value(new_value);
 }
 
-void CountryInstance::set_social_spending(const StandardSliderValue::int_type new_value) {
-	social_spending.set_value(new_value);
+void CountryInstance::set_social_spending_slider_value(const fixed_point_t new_value) {
+	social_spending_slider_value.set_value(new_value);
 }
 
-void CountryInstance::set_military_spending(const StandardSliderValue::int_type new_value) {
-	military_spending.set_value(new_value);
+void CountryInstance::set_military_spending_slider_value(const fixed_point_t new_value) {
+	military_spending_slider_value.set_value(new_value);
 }
 
-void CountryInstance::set_tariff_rate(const TariffSliderValue::int_type new_value) {
-	tariff_rate.set_value(new_value);
+void CountryInstance::set_tariff_rate_slider_value(const fixed_point_t new_value) {
+	tariff_rate_slider_value.set_value(new_value);
 }
 
 void CountryInstance::change_war_exhaustion(fixed_point_t delta) {
@@ -943,8 +978,35 @@ void CountryInstance::_update_production(DefineManager const& define_manager) {
 	);
 }
 
-void CountryInstance::_update_budget() {
+static inline constexpr fixed_point_t nonzero_or_one(fixed_point_t const& value) {
+	return value == fixed_point_t::_0() ? fixed_point_t::_1() : value;
+}
 
+void CountryInstance::_update_budget(ModifierEffectCache const& modifier_effect_cache) {
+	const fixed_point_t min_tax = get_modifier_effect_value(*modifier_effect_cache.get_min_tax());
+	const fixed_point_t max_tax = nonzero_or_one(get_modifier_effect_value(*modifier_effect_cache.get_max_tax()));
+
+	for (SliderValue& tax_rate_slider_value : tax_rate_slider_value_by_strata.get_values()) {
+		tax_rate_slider_value.set_bounds(min_tax, max_tax);
+	}
+
+	// Education and administration spending sliders have no min/max modifiers
+
+	social_spending_slider_value.set_bounds(
+		get_modifier_effect_value(*modifier_effect_cache.get_min_social_spending()),
+		nonzero_or_one(get_modifier_effect_value(*modifier_effect_cache.get_max_social_spending()))
+	);
+	military_spending_slider_value.set_bounds(
+		get_modifier_effect_value(*modifier_effect_cache.get_min_military_spending()),
+		nonzero_or_one(get_modifier_effect_value(*modifier_effect_cache.get_max_military_spending()))
+	);
+	tariff_rate_slider_value.set_bounds(
+		get_modifier_effect_value(*modifier_effect_cache.get_min_tariff()),
+		get_modifier_effect_value(*modifier_effect_cache.get_max_tariff())
+	);
+
+	// TODO - make sure we properly update everything dependent on these sliders' values,
+	// as they might change if their sliders' bounds shrink past their previous values.
 }
 
 void CountryInstance::_update_current_tech(InstanceManager const& instance_manager) {
@@ -1360,6 +1422,7 @@ void CountryInstance::update_gamestate(InstanceManager& instance_manager) {
 
 	DefinitionManager const& definition_manager = instance_manager.get_definition_manager();
 	DefineManager const& define_manager = definition_manager.get_define_manager();
+	ModifierEffectCache const& modifier_effect_cache = definition_manager.get_modifier_manager().get_modifier_effect_cache();
 
 	// Order of updates might need to be changed/functions split up to account for dependencies
 	// Updates population stats (including research and leadership points from pops)
@@ -1372,11 +1435,11 @@ void CountryInstance::update_gamestate(InstanceManager& instance_manager) {
 	_update_military(
 		define_manager,
 		definition_manager.get_military_manager().get_unit_type_manager(),
-		definition_manager.get_modifier_manager().get_modifier_effect_cache()
+		modifier_effect_cache
 	);
+	_update_budget(modifier_effect_cache);
 
 	// These don't do anything yet
-	_update_budget();
 	_update_politics();
 	_update_trade();
 	_update_diplomacy();
@@ -1675,9 +1738,10 @@ bool CountryInstanceManager::generate_country_instances(
 	decltype(CountryInstance::goods_data)::keys_type const& good_instances_keys,
 	decltype(CountryInstance::regiment_type_unlock_levels)::keys_type const& regiment_type_unlock_levels_keys,
 	decltype(CountryInstance::ship_type_unlock_levels)::keys_type const& ship_type_unlock_levels_keys,
-	decltype(CountryInstance::tax_rate_by_strata):: keys_type const& strata_keys,
+	decltype(CountryInstance::tax_rate_slider_value_by_strata):: keys_type const& strata_keys,
 	GameRulesManager const& game_rules_manager,
-	GoodInstanceManager& good_instance_manager
+	GoodInstanceManager& good_instance_manager,
+	EconomyDefines const& economy_defines
 ) {
 	reserve_more(country_instances, country_definition_manager.get_country_definition_count());
 
@@ -1700,7 +1764,8 @@ bool CountryInstanceManager::generate_country_instances(
 			ship_type_unlock_levels_keys,
 			strata_keys,
 			game_rules_manager,
-			good_instance_manager
+			good_instance_manager,
+			economy_defines
 		})) {
 			// We need to update the country's ModifierSum's source here as the country's address is finally stable
 			// after changing between its constructor call and now due to being std::move'd into the registry.
