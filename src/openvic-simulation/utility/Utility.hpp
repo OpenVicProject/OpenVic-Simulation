@@ -21,9 +21,9 @@
 
 #ifndef OV_ALWAYS_INLINE
 #if defined(__GNUC__)
-#define OV_ALWAYS_INLINE [[gnu::always_inline]] inline
+#define OV_ALWAYS_INLINE __attribute__((always_inline)) inline
 #elif defined(_MSC_VER)
-#define OV_ALWAYS_INLINE [[msvc::forceinline]] inline
+#define OV_ALWAYS_INLINE __forceinline inline
 #else
 #define OV_ALWAYS_INLINE inline
 #endif // defined(__GNUC__)
