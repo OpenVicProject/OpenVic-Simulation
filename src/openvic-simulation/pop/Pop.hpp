@@ -12,6 +12,7 @@ namespace OpenVic {
 	struct DefineManager;
 	struct MarketInstance;
 	struct ProvinceInstance;
+	struct PopValuesFromProvince;
 
 	struct PopBase {
 		friend PopManager;
@@ -74,8 +75,6 @@ namespace OpenVic {
 		std::unique_ptr<ArtisanalProducer> artisanal_producer_nullable;
 		fixed_point_t cash_allocated_for_artisanal_spending;
 		fixed_point_t artisanal_produce_left_to_sell;
-		GoodDefinition::good_definition_map_t max_quantity_to_buy_per_good; //TODO pool?
-		GoodDefinition::good_definition_map_t money_to_spend_per_good; //TODO pool?
 		ProvinceInstance* PROPERTY_PTR(location, nullptr);
 		MarketInstance& PROPERTY(market_instance);
 
@@ -105,12 +104,12 @@ namespace OpenVic {
 		moveable_atomic_fixed_point_t PROPERTY(expenses); //positive value means POP paid for goods. This is displayed * -1 in UI.
 
 		#define NEED_MEMBERS(need_category) \
-			moveable_atomic_fixed_point_t need_category##_needs_acquired_quantity, need_category##_needs_desired_quantity; \
+				moveable_atomic_fixed_point_t need_category##_needs_acquired_quantity, need_category##_needs_desired_quantity; \
 			public: \
-			fixed_point_t get_##need_category##_needs_fulfilled() const; \
+				fixed_point_t get_##need_category##_needs_fulfilled() const; \
 			private: \
-			GoodDefinition::good_definition_map_t need_category##_needs; \
-			ordered_map<GoodDefinition const*, bool> PROPERTY(need_category##_needs_fulfilled_goods);
+				GoodDefinition::good_definition_map_t PROPERTY(need_category##_needs); /* TODO pool? (if recalculating in UI is acceptable) */ \
+				ordered_map<GoodDefinition const*, bool> PROPERTY(need_category##_needs_fulfilled_goods);
 
 		DO_FOR_ALL_NEED_CATEGORIES(NEED_MEMBERS)
 		#undef NEED_MEMBERS
@@ -133,9 +132,12 @@ namespace OpenVic {
 		void fill_needs_fulfilled_goods_with_false();
 		void allocate_for_needs(
 			GoodDefinition::good_definition_map_t const& scaled_needs,
+			GoodDefinition::good_definition_map_t& money_to_spend_per_good,
+			GoodDefinition::good_definition_map_t& reusable_map_0,
 			fixed_point_t& price_inverse_sum,
 			fixed_point_t& cash_left_to_spend
 		);
+		void pop_tick_without_cleanup(PopValuesFromProvince& shared_values);
 
 	public:
 		Pop(Pop const&) = delete;
@@ -163,9 +165,9 @@ namespace OpenVic {
 		DO_FOR_ALL_TYPES_OF_POP_INCOME(DECLARE_POP_MONEY_STORE_FUNCTIONS)
 		DO_FOR_ALL_TYPES_OF_POP_EXPENSES(DECLARE_POP_MONEY_STORE_FUNCTIONS)
 		#undef DECLARE_POP_MONEY_STORE_FUNCTIONS
-		void pop_tick();
-		void artisanal_buy(GoodDefinition const& good, const fixed_point_t max_quantity_to_buy, const fixed_point_t money_to_spend);
-		void artisanal_sell(const fixed_point_t quantity);
+		void pop_tick(PopValuesFromProvince& shared_values);
+		void allocate_cash_for_artisanal_spending(const fixed_point_t money_to_spend);
+		void report_artisanal_produce(const fixed_point_t quantity);
 	};
 }
 #ifndef KEEP_DO_FOR_ALL_TYPES_OF_INCOME

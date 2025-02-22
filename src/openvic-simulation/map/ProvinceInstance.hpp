@@ -10,7 +10,6 @@
 #include "openvic-simulation/military/UnitType.hpp"
 #include "openvic-simulation/modifier/ModifierSum.hpp"
 #include "openvic-simulation/pop/Pop.hpp"
-#include "openvic-simulation/pop/PopValuesFromProvince.hpp"
 #include "openvic-simulation/types/FlagStrings.hpp"
 #include "openvic-simulation/types/HasIdentifier.hpp"
 #include "openvic-simulation/types/OrderedContainers.hpp"
@@ -95,7 +94,6 @@ namespace OpenVic {
 
 	private:
 		plf::colony<Pop> PROPERTY(pops); // TODO - replace with a more easily vectorisable container?
-		PopValuesFromProvince PROPERTY(shared_pop_values);
 		pop_size_t PROPERTY(total_population, 0);
 		// TODO - population change (growth + migration), monthly totals + breakdown by source/destination
 		fixed_point_t PROPERTY(average_literacy);
@@ -120,7 +118,6 @@ namespace OpenVic {
 		ProvinceInstance(
 			MarketInstance& new_market_instance,
 			ModifierEffectCache const& new_modifier_effect_cache,
-			PopsDefines const& new_pop_defines,
 			ProvinceDefinition const& new_province_definition,
 			decltype(population_by_strata)::keys_type const& strata_keys,
 			decltype(pop_type_distribution)::keys_type const& pop_type_keys,
@@ -130,6 +127,7 @@ namespace OpenVic {
 		void _add_pop(Pop&& pop);
 		void _update_pops(DefineManager const& define_manager);
 		bool convert_rgo_worker_pops_to_equivalent(ProductionType const& production_type);
+		void initialise_rgo();
 
 	public:
 		ProvinceInstance(ProvinceInstance&&) = default;
@@ -228,15 +226,14 @@ namespace OpenVic {
 		}
 
 		void update_gamestate(const Date today, DefineManager const& define_manager);
-		void province_tick(const Date today);
+		void province_tick(const Date today, PopValuesFromProvince& reusable_pop_values);
+		void initialise_for_new_game(const Date today, PopValuesFromProvince& reusable_pop_values);
 
 		bool add_unit_instance_group(UnitInstanceGroup& group);
 		bool remove_unit_instance_group(UnitInstanceGroup const& group);
 
 		bool setup(BuildingTypeManager const& building_type_manager);
 		bool apply_history_to_province(ProvinceHistoryEntry const& entry, CountryInstanceManager& country_manager);
-
-		void initialise_rgo();
 
 		void setup_pop_test_values(IssueManager const& issue_manager);
 		plf::colony<Pop>& get_mutable_pops();
