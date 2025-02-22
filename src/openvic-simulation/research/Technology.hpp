@@ -41,7 +41,7 @@ namespace OpenVic {
 		TechnologyArea(TechnologyArea&&) = default;
 	};
 
-	struct Technology : Modifier {
+	struct Technology : Modifier, HasIndex<> {
 		friend struct TechnologyManager;
 
 		using area_index_t = uint8_t;
@@ -61,6 +61,7 @@ namespace OpenVic {
 
 		Technology(
 			std::string_view new_identifier,
+			index_t new_index,
 			TechnologyArea const& new_area,
 			Date::year_t new_year,
 			fixed_point_t new_cost,

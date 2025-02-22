@@ -13,6 +13,7 @@ TechnologyArea::TechnologyArea(std::string_view new_identifier, TechnologyFolder
 
 Technology::Technology(
 	std::string_view new_identifier,
+	index_t new_index,
 	TechnologyArea const& new_area,
 	Date::year_t new_year,
 	fixed_point_t new_cost,
@@ -24,6 +25,7 @@ Technology::Technology(
 	ModifierValue&& new_values,
 	ConditionalWeightFactorMul&& new_ai_chance
 ) : Modifier { new_identifier, std::move(new_values), modifier_type_t::TECHNOLOGY },
+	HasIndex { new_index },
 	area { new_area },
 	year { new_year },
 	cost { new_cost },
@@ -88,6 +90,7 @@ bool TechnologyManager::add_technology(
 
 	if (technologies.add_item({
 		identifier,
+		get_technology_count(),
 		*area,
 		year,
 		cost,
