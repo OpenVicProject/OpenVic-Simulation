@@ -287,7 +287,7 @@ namespace OpenVic {
 
 		constexpr void clear() {
 			for (value_ref_type value : get_values()) {
-				value = {};
+				value = Value {};
 			}
 		}
 
