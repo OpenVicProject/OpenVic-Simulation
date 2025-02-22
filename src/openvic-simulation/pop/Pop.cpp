@@ -288,7 +288,7 @@ DO_FOR_ALL_TYPES_OF_POP_EXPENSES(DEFINE_ADD_EXPENSE_FUNCTIONS)
 DO_FOR_ALL_NEED_CATEGORIES(DEFINE_NEEDS_FULFILLED)
 #undef DEFINE_NEEDS_FULFILLED
 
-#define SET_ALL_INCOME_TO_ZERO(name) \
+#define SET_TO_ZERO(name) \
 	name = fixed_point_t::_0();
 
 void Pop::allocate_for_needs(
@@ -348,9 +348,10 @@ void Pop::pop_tick(PopValuesFromProvince& shared_values) {
 }
 
 void Pop::pop_tick_without_cleanup(PopValuesFromProvince& shared_values) {
-	DO_FOR_ALL_TYPES_OF_POP_INCOME(SET_ALL_INCOME_TO_ZERO)
-	#undef DO_FOR_ALL_TYPES_OF_POP_INCOME
-	#undef SET_ALL_INCOME_TO_ZERO
+	DO_FOR_ALL_TYPES_OF_POP_INCOME(SET_TO_ZERO)
+	DO_FOR_ALL_TYPES_OF_POP_EXPENSES(SET_TO_ZERO)
+	#undef SET_TO_ZERO
+	income = expenses = fixed_point_t::_0();
 
 	auto& [
 		reusable_map_0,
