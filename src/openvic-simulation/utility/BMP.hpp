@@ -4,8 +4,6 @@
 #include <fstream>
 #include <vector>
 
-#include "openvic-simulation/types/Colour.hpp"
-
 namespace OpenVic {
 	namespace fs = std::filesystem;
 
@@ -29,7 +27,7 @@ namespace OpenVic {
 			int32_t y_resolution_ppm;	// Pixels per meter
 			uint32_t num_colours;		// Number of colours
 			uint32_t important_colours; // Important colours
-		} header;
+		} header {};
 #pragma pack(pop)
 
 	public:
