@@ -42,6 +42,16 @@ namespace OpenVic {
 
 		static_assert(SIN_LUT_PRECISION == PRECISION);
 
+		/* Base e exponential lookup table */
+		#include "openvic-simulation/types/fixed_point/FixedPointLUT_2_16_EXP_e.hpp"
+
+		static_assert(LUT_2_16_EXP_e_DIVISOR == 1 << PRECISION);
+
+		/* Base 2001 exponential lookup table */
+		#include "openvic-simulation/types/fixed_point/FixedPointLUT_2_16_EXP_2001.hpp"
+
+		static_assert(LUT_2_16_EXP_2001_DIVISOR == 1 << PRECISION);
+
 		// Doesn't account for sign, so -n.abc -> 1 - 0.abc
 		constexpr fixed_point_t get_frac() const {
 			return parse_raw(value & FRAC_MASK);
@@ -623,6 +633,38 @@ namespace OpenVic {
 				}
 			}
 			return parse_raw(ret);
+		}
+
+		template<size_t N, std::array<int64_t, N> EXP_LUT>
+		static constexpr fixed_point_t _exp_internal(fixed_point_t const& x) {
+			const bool negative = x.is_negative();
+			value_type bits = negative ? -x.value : x.value;
+			fixed_point_t result = _1();
+
+			for (size_t index = 0; bits != 0 && index < EXP_LUT.size(); ++index, bits >>= 1) {
+				if (bits & 1LL) {
+					result *= parse_raw(EXP_LUT[index]);
+				}
+			}
+
+			if (bits != 0) {
+				Logger::error("Fixed point exponential overflow!");
+			}
+
+			if (negative) {
+				return _1() / result;
+			} else {
+				return result;
+			}
+		}
+
+	public:
+		static inline constexpr fixed_point_t exp(fixed_point_t const& x) {
+			return _exp_internal<LUT_2_16_EXP_e.size(), LUT_2_16_EXP_e>(x);
+		}
+
+		static inline constexpr fixed_point_t exp_2001(fixed_point_t const& x) {
+			return _exp_internal<LUT_2_16_EXP_2001.size(), LUT_2_16_EXP_2001>(x);
 		}
 	};
 

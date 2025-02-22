@@ -48,7 +48,7 @@ COUNT = 9
 
 if __name__ == "__main__":
 
-	parser = ArgumentParser(prog="Fixed Point LUT Generator", description="Fixed-Point number Look-Up Table generator")
+	parser = ArgumentParser(prog="Fixed Point Sin LUT Generator", description="Fixed-Point Sin Look-Up Table generator")
 	parser.add_argument("-p", "--precision", type=int, default=PRECISION, choices=range(1, 65), help="The number of bits after the point (fractional bits)")
 	parser.add_argument("-c", "--count", type=int, default=COUNT, choices=range(1, 65), help="The base 2 log of the number of values in the look-up table (must be <= precision)")
 	args = parser.parse_args()
