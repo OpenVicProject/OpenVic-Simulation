@@ -89,6 +89,7 @@ namespace OpenVic {
 
 		colour_t PROPERTY(colour); // Cached to avoid searching government overrides for every province
 		ProvinceInstance* PROPERTY_PTR(capital, nullptr);
+		bool PROPERTY_RW_CUSTOM_NAME(ai, is_ai, set_ai, true);
 		bool PROPERTY_CUSTOM_PREFIX(releasable_vassal, is, true);
 		bool PROPERTY(owns_colonial_province, false);
 

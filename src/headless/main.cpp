@@ -60,7 +60,7 @@ static bool run_headless(Dataloader::path_vector_t const& roots, bool run_tests)
 
 	GameManager game_manager { []() {
 		Logger::info("State updated");
-	}, nullptr };
+	} };
 
 	Logger::info("===== Loading definitions... =====");
 	ret &= game_manager.set_roots(roots);
