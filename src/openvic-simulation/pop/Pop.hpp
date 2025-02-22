@@ -104,7 +104,7 @@ namespace OpenVic {
 		moveable_atomic_fixed_point_t PROPERTY(expenses); //positive value means POP paid for goods. This is displayed * -1 in UI.
 
 		#define NEED_MEMBERS(need_category) \
-				moveable_atomic_fixed_point_t need_category##_needs_acquired_quantity, need_category##_needs_desired_quantity; \
+			moveable_atomic_fixed_point_t need_category##_needs_acquired_quantity, need_category##_needs_desired_quantity; \
 			public: \
 				fixed_point_t get_##need_category##_needs_fulfilled() const; \
 			private: \

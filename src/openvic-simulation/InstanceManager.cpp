@@ -253,6 +253,10 @@ bool InstanceManager::update_clock() {
 	return true;
 }
 
+void InstanceManager::force_tick_and_update() {
+	simulation_clock.force_advance_game();
+}
+
 bool InstanceManager::set_today_and_update(Date new_today) {
 	if (!is_game_session_started()) {
 		Logger::error("Cannot update clock - game session not started!");

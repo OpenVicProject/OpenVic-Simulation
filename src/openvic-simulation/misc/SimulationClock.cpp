@@ -57,6 +57,12 @@ void SimulationClock::conditionally_advance_game() {
 	update_function();
 }
 
+void SimulationClock::force_advance_game() {
+	last_tick_time = std::chrono::high_resolution_clock::now();
+	tick_function();
+	update_function();
+}
+
 void SimulationClock::reset() {
 	paused = true;
 	current_speed = 0;

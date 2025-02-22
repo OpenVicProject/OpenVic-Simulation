@@ -79,6 +79,7 @@ namespace OpenVic {
 		bool load_bookmark(Bookmark const* new_bookmark);
 		bool start_game_session();
 		bool update_clock();
+		void force_tick_and_update();
 
 		bool set_today_and_update(Date new_today);
 

@@ -372,7 +372,7 @@ void ResourceGatheringOperation::pay_employees(
 			Pop& owner_pop = *owner_pop_ptr;
 			const fixed_point_t income_for_this_pop = std::max(
 				revenue_left * (owner_share * owner_pop.get_size()) / total_owner_count_in_state_cache,
-				fixed_point_t::epsilon() //revenue_left > 0 is already checked, so rounding up
+				fixed_point_t::epsilon() //revenue > 0 is already checked, so rounding up
 			);
 			owner_pop.add_rgo_owner_income(income_for_this_pop);
 			total_owner_income_cache += income_for_this_pop;
@@ -395,7 +395,10 @@ void ResourceGatheringOperation::pay_employees(
 			}
 
 			const pop_size_t employee_size = employee.get_size();
-			const fixed_point_t income_for_this_pop = revenue_left * employee_size / total_paid_employees_count_cache;
+			const fixed_point_t income_for_this_pop = std::max(
+				revenue_left * employee_size / total_paid_employees_count_cache,
+				fixed_point_t::epsilon() //revenue > 0 is already checked, so rounding up
+			);
 			employee_pop.add_rgo_worker_income(income_for_this_pop);
 			total_employee_income_cache += income_for_this_pop;
 		}
