@@ -92,58 +92,58 @@ namespace OpenVic {
 	public:
 		GameActionManager(InstanceManager& new_instance_manager);
 
-		bool execute_game_action(game_action_t const& game_action);
+		bool execute_game_action(game_action_t const& game_action) const;
 
 	private:
 		// Return value indicates whether a gamestate update is needed or not
 		// TODO - replace return bool with value indicating what needs updating in the gamestate and/or UI?
 		// Or send those signals via the InstanceManager&, e.g. if multiple values need to be sent for a single action
-		using game_action_callback_t = bool(GameActionManager::*)(game_action_argument_t const&);
+		using game_action_callback_t = bool(GameActionManager::*)(game_action_argument_t const&) const;
 
 		static std::array<
 			game_action_callback_t, static_cast<size_t>(game_action_type_t::MAX_GAME_ACTION)
 		> GAME_ACTION_CALLBACKS;
 
-		bool game_action_callback_none(game_action_argument_t const& argument);
+		bool game_action_callback_none(game_action_argument_t const& argument) const;
 
 		// Core
-		bool game_action_callback_tick(game_action_argument_t const& argument);
-		bool game_action_callback_set_pause(game_action_argument_t const& argument);
-		bool game_action_callback_set_speed(game_action_argument_t const& argument);
-		bool game_action_callback_set_ai(game_action_argument_t const& argument);
+		bool game_action_callback_tick(game_action_argument_t const& argument) const;
+		bool game_action_callback_set_pause(game_action_argument_t const& argument) const;
+		bool game_action_callback_set_speed(game_action_argument_t const& argument) const;
+		bool game_action_callback_set_ai(game_action_argument_t const& argument) const;
 
 		// Production
-		bool game_action_callback_expand_province_building(game_action_argument_t const& argument);
+		bool game_action_callback_expand_province_building(game_action_argument_t const& argument) const;
 
 		// Budget
-		bool game_action_callback_set_strata_tax(game_action_argument_t const& argument);
-		bool game_action_callback_set_land_spending(game_action_argument_t const& argument);
-		bool game_action_callback_set_naval_spending(game_action_argument_t const& argument);
-		bool game_action_callback_set_construction_spending(game_action_argument_t const& argument);
-		bool game_action_callback_set_education_spending(game_action_argument_t const& argument);
-		bool game_action_callback_set_administration_spending(game_action_argument_t const& argument);
-		bool game_action_callback_set_social_spending(game_action_argument_t const& argument);
-		bool game_action_callback_set_military_spending(game_action_argument_t const& argument);
-		bool game_action_callback_set_tariff_rate(game_action_argument_t const& argument);
+		bool game_action_callback_set_strata_tax(game_action_argument_t const& argument) const;
+		bool game_action_callback_set_land_spending(game_action_argument_t const& argument) const;
+		bool game_action_callback_set_naval_spending(game_action_argument_t const& argument) const;
+		bool game_action_callback_set_construction_spending(game_action_argument_t const& argument) const;
+		bool game_action_callback_set_education_spending(game_action_argument_t const& argument) const;
+		bool game_action_callback_set_administration_spending(game_action_argument_t const& argument) const;
+		bool game_action_callback_set_social_spending(game_action_argument_t const& argument) const;
+		bool game_action_callback_set_military_spending(game_action_argument_t const& argument) const;
+		bool game_action_callback_set_tariff_rate(game_action_argument_t const& argument) const;
 
 		// Technology
-		bool game_action_callback_start_research(game_action_argument_t const& argument);
+		bool game_action_callback_start_research(game_action_argument_t const& argument) const;
 
 		// Politics
 
 		// Population
 
 		// Trade
-		bool game_action_callback_set_good_automated(game_action_argument_t const& argument);
-		bool game_action_callback_set_good_trade_order(game_action_argument_t const& argument);
+		bool game_action_callback_set_good_automated(game_action_argument_t const& argument) const;
+		bool game_action_callback_set_good_trade_order(game_action_argument_t const& argument) const;
 
 		// Diplomacy
 
 		// Military
-		bool game_action_callback_create_leader(game_action_argument_t const& argument);
-		bool game_action_callback_set_use_leader(game_action_argument_t const& argument);
-		bool game_action_callback_set_auto_create_leaders(game_action_argument_t const& argument);
-		bool game_action_callback_set_auto_assign_leaders(game_action_argument_t const& argument);
-		bool game_action_callback_set_mobilise(game_action_argument_t const& argument);
+		bool game_action_callback_create_leader(game_action_argument_t const& argument) const;
+		bool game_action_callback_set_use_leader(game_action_argument_t const& argument) const;
+		bool game_action_callback_set_auto_create_leaders(game_action_argument_t const& argument) const;
+		bool game_action_callback_set_auto_assign_leaders(game_action_argument_t const& argument) const;
+		bool game_action_callback_set_mobilise(game_action_argument_t const& argument) const;
 	};
 }
