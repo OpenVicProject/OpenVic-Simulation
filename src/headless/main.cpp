@@ -129,6 +129,16 @@ static bool run_headless(Dataloader::path_vector_t const& roots, bool run_tests)
 		ret = false;
 	}
 
+	if (ret) {
+		size_t ticks_passed = 0;
+		auto start_time = std::chrono::high_resolution_clock::now();
+		while (ticks_passed++ < 10) {
+			game_manager.get_instance_manager()->force_tick_and_update();
+		}
+		auto end_time = std::chrono::high_resolution_clock::now();
+		Logger::info("Ran ", --ticks_passed, " ticks in ", end_time - start_time);
+	}
+
 	return ret;
 }
 

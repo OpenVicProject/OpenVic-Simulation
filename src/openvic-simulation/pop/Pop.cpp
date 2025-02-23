@@ -445,7 +445,7 @@ void Pop::pop_tick_without_cleanup(PopValuesFromProvince& shared_values) {
 		const fixed_point_t max_quantity_to_buy = max_quantity_to_buy_per_good[good_definition];
 
 		if (OV_unlikely(max_quantity_to_buy <= fixed_point_t::_0())) {
-			Logger::error("Aborted placing buy order for ",*good_definition," of max_quantity_to_buy 0.");
+			Logger::error("Aborted placing buy order for ", *good_definition, " of max_quantity_to_buy 0.");
 			continue;
 		}
 

@@ -50,6 +50,7 @@ namespace OpenVic {
 		bool can_decrease_simulation_speed() const;
 
 		void conditionally_advance_game();
+		void force_advance_game(); //for debug only
 		void reset();
 	};
 }
