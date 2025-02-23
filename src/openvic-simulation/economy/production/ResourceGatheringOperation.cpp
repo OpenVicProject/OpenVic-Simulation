@@ -139,15 +139,15 @@ void ResourceGatheringOperation::rgo_tick() {
 	std::vector<Job> const& jobs = production_type.get_jobs();
 	IndexedMap<PopType, pop_size_t> const& province_pop_type_distribution = location.get_pop_type_distribution();
 
-	pop_size_t total_worker_count_in_province = 0; //not counting equivalents
+	total_worker_count_in_province_cache = 0; //not counting equivalents
 	for (Job const& job : jobs) {
-		total_worker_count_in_province += province_pop_type_distribution[*job.get_pop_type()];
+		total_worker_count_in_province_cache += province_pop_type_distribution[*job.get_pop_type()];
 	}
 
-	hire(total_worker_count_in_province);
+	hire();
 
-	pop_size_t total_owner_count_in_state_cache = 0;
-	std::vector<Pop*> const* owner_pops_cache_nullable = nullptr;
+	total_owner_count_in_state_cache = 0;
+	owner_pops_cache_nullable = nullptr;
 
 	if (production_type.get_owner().has_value()) {
 		PopType const& owner_pop_type = *production_type.get_owner()->get_pop_type();
@@ -155,7 +155,7 @@ void ResourceGatheringOperation::rgo_tick() {
 		owner_pops_cache_nullable = &location.get_state()->get_pops_cache_by_type()[owner_pop_type];
 	}
 
-	output_quantity_yesterday = produce(total_owner_count_in_state_cache);
+	output_quantity_yesterday = produce();
 	if (output_quantity_yesterday > fixed_point_t::_0()) {
 		CountryInstance* get_country_to_report_economy_nullable = location.get_country_to_report_economy();
 		if (get_country_to_report_economy_nullable != nullptr) {
@@ -165,25 +165,20 @@ void ResourceGatheringOperation::rgo_tick() {
 		market_instance.place_market_sell_order(MarketSellOrder {
 			production_type.get_output_good(),
 			output_quantity_yesterday,
-			[
-				this,
-				total_worker_count_in_province,
-				owner_pops_cache_nullable,
-				total_owner_count_in_state_cache
-			](const SellResult sell_result) -> void {
-				revenue_yesterday = sell_result.get_money_gained();
-				pay_employees(
-					revenue_yesterday,
-					total_worker_count_in_province,
-					owner_pops_cache_nullable,
-					total_owner_count_in_state_cache
-				);
-			}
+			this,
+			after_sell
 		});
 	}
 }
 
-void ResourceGatheringOperation::hire(const pop_size_t available_worker_count) {
+void ResourceGatheringOperation::after_sell(void* actor, SellResult const& sell_result) {
+	ResourceGatheringOperation& rgo = *static_cast<ResourceGatheringOperation*>(actor);
+	rgo.revenue_yesterday = sell_result.get_money_gained();
+	rgo.pay_employees();
+}
+
+void ResourceGatheringOperation::hire() {
+	pop_size_t const& available_worker_count = total_worker_count_in_province_cache;
 	total_employees_count_cache = 0;
 	total_paid_employees_count_cache = 0;
 	employees.clear(); //TODO implement Victoria 2 hiring logic
@@ -225,7 +220,7 @@ void ResourceGatheringOperation::hire(const pop_size_t available_worker_count) {
 	}
 }
 
-fixed_point_t ResourceGatheringOperation::produce(const pop_size_t total_owner_count_in_state_cache) {
+fixed_point_t ResourceGatheringOperation::produce() {
 	const fixed_point_t size_modifier = calculate_size_modifier();
 	if (size_modifier == fixed_point_t::_0()){
 		return fixed_point_t::_0();
@@ -340,21 +335,17 @@ fixed_point_t ResourceGatheringOperation::produce(const pop_size_t total_owner_c
 		* output_multiplier * output_from_workers;
 }
 
-void ResourceGatheringOperation::pay_employees(
-	const fixed_point_t revenue,
-	const pop_size_t total_worker_count_in_province,
-	std::vector<Pop*> const* const owner_pops_cache_nullable,
-	const pop_size_t total_owner_count_in_state_cache
-) {
+void ResourceGatheringOperation::pay_employees() {
 	ProvinceInstance& location = *location_ptr;
+	fixed_point_t const& revenue = revenue_yesterday;
 
 	total_owner_income_cache = 0;
 	total_employee_income_cache = 0;
-	if (revenue <= fixed_point_t::_0() || total_worker_count_in_province <= 0) {
+	if (revenue <= fixed_point_t::_0() || total_worker_count_in_province_cache <= 0) {
 		if (revenue < fixed_point_t::_0()) {
 			Logger::error("Negative revenue for province ", location.get_identifier());
 		}
-		if (total_worker_count_in_province < 0) {
+		if (total_worker_count_in_province_cache < 0) {
 			Logger::error("Negative total worker count for province ", location.get_identifier());
 		}
 		return;
@@ -363,7 +354,7 @@ void ResourceGatheringOperation::pay_employees(
 	fixed_point_t revenue_left = revenue;
 	if (total_owner_count_in_state_cache > 0) {
 		fixed_point_t owner_share = std::min(
-			fixed_point_t::_2() * total_owner_count_in_state_cache / total_worker_count_in_province,
+			fixed_point_t::_2() * total_owner_count_in_state_cache / total_worker_count_in_province_cache,
 			fixed_point_t::_0_50()
 		);
 

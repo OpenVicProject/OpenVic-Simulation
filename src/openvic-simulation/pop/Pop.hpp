@@ -13,6 +13,8 @@ namespace OpenVic {
 	struct MarketInstance;
 	struct ProvinceInstance;
 	struct PopValuesFromProvince;
+	struct BuyResult;
+	struct SellResult;
 
 	struct PopBase {
 		friend PopManager;
@@ -138,6 +140,8 @@ namespace OpenVic {
 			fixed_point_t& cash_left_to_spend
 		);
 		void pop_tick_without_cleanup(PopValuesFromProvince& shared_values);
+		static void after_buy(void* actor, BuyResult const& buy_result);
+		static void after_sell(void* actor, SellResult const& sell_result);
 
 	public:
 		Pop(Pop const&) = delete;

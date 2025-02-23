@@ -53,14 +53,14 @@ void GoodMarket::update_next_price_limits() {
 	price_inverse = fixed_point_t::_1() / price;
 }
 
-void GoodMarket::add_buy_up_to_order(GoodBuyUpToOrder&& buy_up_to_order) {
+void GoodMarket::add_buy_up_to_order(GoodBuyUpToOrder const& buy_up_to_order) {
 	const std::lock_guard<std::mutex> lock_guard { *buy_lock };
-	buy_up_to_orders.push_back(std::move(buy_up_to_order));
+	buy_up_to_orders.push_back(buy_up_to_order);
 }
 
-void GoodMarket::add_market_sell_order(GoodMarketSellOrder&& market_sell_order) {
+void GoodMarket::add_market_sell_order(GoodMarketSellOrder const& market_sell_order) {
 	const std::lock_guard<std::mutex> lock_guard { *sell_lock };
-	market_sell_orders.push_back(std::move(market_sell_order));
+	market_sell_orders.push_back(market_sell_order);
 }
 
 void GoodMarket::execute_orders(std::vector<fixed_point_t>& reusable_vector_0, std::vector<fixed_point_t>& reusable_vector_1) {
@@ -73,11 +73,11 @@ void GoodMarket::execute_orders(std::vector<fixed_point_t>& reusable_vector_0, s
 			= fixed_point_t::_0();
 
 		for (GoodBuyUpToOrder const& buy_up_to_order : buy_up_to_orders) {
-			buy_up_to_order.get_after_trade()(BuyResult::no_purchase_result());
+			buy_up_to_order.call_after_trade(BuyResult::no_purchase_result(good_definition));
 		}
 
 		for (GoodMarketSellOrder const& market_sell_order : market_sell_orders) {
-			market_sell_order.get_after_trade()(SellResult::no_sales_result());
+			market_sell_order.call_after_trade(SellResult::no_sales_result());
 		}
 		return;
 	}
@@ -97,7 +97,7 @@ void GoodMarket::execute_orders(std::vector<fixed_point_t>& reusable_vector_0, s
 			}
 
 			demand_sum += buy_up_to_order.get_max_quantity();
-			buy_up_to_order.get_after_trade()(BuyResult::no_purchase_result());
+			buy_up_to_order.call_after_trade(BuyResult::no_purchase_result(good_definition));
 		}
 
 		if (game_rules_manager.get_use_optimal_pricing()) {
@@ -201,7 +201,8 @@ void GoodMarket::execute_orders(std::vector<fixed_point_t>& reusable_vector_0, s
 					   fixed_point_t::epsilon() //we know from purchasing power that you can afford it.
 				   );
 				}
-				buy_up_to_order.get_after_trade()({
+				buy_up_to_order.call_after_trade({
+					good_definition,
 					quantity_bought,
 					money_spent
 				});
@@ -259,17 +260,15 @@ void GoodMarket::execute_orders(std::vector<fixed_point_t>& reusable_vector_0, s
 				);
 
 				if (quantity_bought <= fixed_point_t::_0()) {
-					buy_up_to_order.get_after_trade()({
-						fixed_point_t::_0(),
-						fixed_point_t::_0()
-					});
+					buy_up_to_order.call_after_trade(BuyResult::no_purchase_result(good_definition));
 				} else {
 					const fixed_point_t money_spent = std::max(
 						quantity_bought * new_price,
 						fixed_point_t::epsilon()
 					);
 					quantity_traded_yesterday += quantity_bought;
-					buy_up_to_order.get_after_trade()({
+					buy_up_to_order.call_after_trade({
+						good_definition,
 						quantity_bought,
 						money_spent
 					});
@@ -292,7 +291,7 @@ void GoodMarket::execute_orders(std::vector<fixed_point_t>& reusable_vector_0, s
 					fixed_point_t::epsilon() //round up
 				);
 			}
-			market_sell_order.get_after_trade()({
+			market_sell_order.call_after_trade({
 				quantity_sold,
 				money_gained
 			});

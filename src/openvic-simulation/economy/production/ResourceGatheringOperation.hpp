@@ -10,11 +10,16 @@
 namespace OpenVic {
 	struct ProvinceInstance;
 	struct ModifierEffectCache;
+	struct SellResult;
 
 	struct ResourceGatheringOperation {
 	private:
 		MarketInstance& market_instance;
 		ProvinceInstance* location_ptr;
+		pop_size_t total_owner_count_in_state_cache = 0;
+		pop_size_t total_worker_count_in_province_cache = 0;
+		std::vector<Pop*> const* owner_pops_cache_nullable = nullptr;
+
 		ProductionType const* PROPERTY_RW(production_type_nullable);
 		fixed_point_t PROPERTY(revenue_yesterday);
 		fixed_point_t PROPERTY(output_quantity_yesterday);
@@ -29,14 +34,10 @@ namespace OpenVic {
 		IndexedMap<PopType, pop_size_t> PROPERTY(employee_count_per_type_cache);
 
 		fixed_point_t calculate_size_modifier() const;
-		void hire(const pop_size_t available_worker_count);
-		fixed_point_t produce(const pop_size_t total_owner_count_in_state_cache);
-		void pay_employees(
-			const fixed_point_t revenue,
-			const pop_size_t total_worker_count_in_province,
-			std::vector<Pop*> const* const owner_pops_cache_nullable,
-			const pop_size_t total_owner_count_in_state_cache
-		);
+		void hire();
+		fixed_point_t produce();
+		void pay_employees();
+		static void after_sell(void* actor, SellResult const& sell_result);
 
 	public:
 		ResourceGatheringOperation(
