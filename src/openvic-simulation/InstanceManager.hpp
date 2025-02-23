@@ -29,7 +29,7 @@ namespace OpenVic {
 	private:
 		DefinitionManager const& PROPERTY(definition_manager);
 
-		GameActionManager game_action_manager;
+		const GameActionManager game_action_manager;
 		GameRulesManager const& game_rules_manager;
 		GoodInstanceManager PROPERTY_REF(good_instance_manager);
 		MarketInstance PROPERTY_REF(market_instance);

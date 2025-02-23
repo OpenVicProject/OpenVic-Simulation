@@ -126,11 +126,11 @@ std::array<
 	&GameActionManager::game_action_callback_set_mobilise
 };
 
-bool GameActionManager::execute_game_action(game_action_t const& game_action) {
+bool GameActionManager::execute_game_action(game_action_t const& game_action) const {
 	return (this->*GAME_ACTION_CALLBACKS[static_cast<size_t>(game_action.first)])(game_action.second);
 }
 
-bool GameActionManager::game_action_callback_none(game_action_argument_t const& argument) {
+bool GameActionManager::game_action_callback_none(game_action_argument_t const& argument) const {
 	if (OV_unlikely(!std::holds_alternative<std::monostate>(argument))) {
 		Logger::warning("GAME_ACTION_NONE called with invalid argument: ", game_action_argument_to_string(argument));
 	}
@@ -139,7 +139,7 @@ bool GameActionManager::game_action_callback_none(game_action_argument_t const& 
 }
 
 // Core
-bool GameActionManager::game_action_callback_tick(game_action_argument_t const& argument) {
+bool GameActionManager::game_action_callback_tick(game_action_argument_t const& argument) const {
 	if (OV_unlikely(!std::holds_alternative<std::monostate>(argument))) {
 		Logger::warning("GAME_ACTION_TICK called with invalid argument: ", game_action_argument_to_string(argument));
 	}
@@ -148,7 +148,7 @@ bool GameActionManager::game_action_callback_tick(game_action_argument_t const& 
 	return true;
 }
 
-bool GameActionManager::game_action_callback_set_pause(game_action_argument_t const& argument) {
+bool GameActionManager::game_action_callback_set_pause(game_action_argument_t const& argument) const {
 	bool const* pause = std::get_if<bool>(&argument);
 	if (OV_unlikely(pause == nullptr)) {
 		Logger::error("GAME_ACTION_SET_PAUSE called with invalid argument: ", game_action_argument_to_string(argument));
@@ -162,7 +162,7 @@ bool GameActionManager::game_action_callback_set_pause(game_action_argument_t co
 	return old_pause != instance_manager.get_simulation_clock().is_paused();
 }
 
-bool GameActionManager::game_action_callback_set_speed(game_action_argument_t const& argument) {
+bool GameActionManager::game_action_callback_set_speed(game_action_argument_t const& argument) const {
 	int64_t const* speed = std::get_if<int64_t>(&argument);
 	if (OV_unlikely(speed == nullptr)) {
 		Logger::error("GAME_ACTION_SET_SPEED called with invalid argument: ", game_action_argument_to_string(argument));
@@ -176,7 +176,7 @@ bool GameActionManager::game_action_callback_set_speed(game_action_argument_t co
 	return old_speed != instance_manager.get_simulation_clock().get_simulation_speed();
 }
 
-bool GameActionManager::game_action_callback_set_ai(game_action_argument_t const& argument) {
+bool GameActionManager::game_action_callback_set_ai(game_action_argument_t const& argument) const {
 	std::pair<uint64_t, bool> const* country_ai = std::get_if<std::pair<uint64_t, bool>>(&argument);
 	if (OV_unlikely(country_ai == nullptr)) {
 		Logger::error("GAME_ACTION_SET_AI called with invalid argument: ", game_action_argument_to_string(argument));
@@ -199,7 +199,7 @@ bool GameActionManager::game_action_callback_set_ai(game_action_argument_t const
 }
 
 // Production
-bool GameActionManager::game_action_callback_expand_province_building(game_action_argument_t const& argument) {
+bool GameActionManager::game_action_callback_expand_province_building(game_action_argument_t const& argument) const {
 	std::pair<uint64_t, uint64_t> const* province_building = std::get_if<std::pair<uint64_t, uint64_t>>(&argument);
 	if (OV_unlikely(province_building == nullptr)) {
 		Logger::error(
@@ -219,7 +219,7 @@ bool GameActionManager::game_action_callback_expand_province_building(game_actio
 }
 
 // Budget
-bool GameActionManager::game_action_callback_set_strata_tax(game_action_argument_t const& argument) {
+bool GameActionManager::game_action_callback_set_strata_tax(game_action_argument_t const& argument) const {
 	std::tuple<uint64_t, uint64_t, fixed_point_t> const* country_strata_value =
 		std::get_if<std::tuple<uint64_t, uint64_t, fixed_point_t>>(&argument);
 	if (OV_unlikely(country_strata_value == nullptr)) {
@@ -252,7 +252,7 @@ bool GameActionManager::game_action_callback_set_strata_tax(game_action_argument
 	return old_tax_rate != strata_tax_rate.get_value();
 }
 
-bool GameActionManager::game_action_callback_set_land_spending(game_action_argument_t const& argument) {
+bool GameActionManager::game_action_callback_set_land_spending(game_action_argument_t const& argument) const {
 	std::pair<uint64_t, fixed_point_t> const* country_value = std::get_if<std::pair<uint64_t, fixed_point_t>>(&argument);
 	if (OV_unlikely(country_value == nullptr)) {
 		Logger::error(
@@ -276,7 +276,7 @@ bool GameActionManager::game_action_callback_set_land_spending(game_action_argum
 	return old_land_spending != country->get_land_spending_slider_value().get_value();
 }
 
-bool GameActionManager::game_action_callback_set_naval_spending(game_action_argument_t const& argument) {
+bool GameActionManager::game_action_callback_set_naval_spending(game_action_argument_t const& argument) const {
 	std::pair<uint64_t, fixed_point_t> const* country_value = std::get_if<std::pair<uint64_t, fixed_point_t>>(&argument);
 	if (OV_unlikely(country_value == nullptr)) {
 		Logger::error(
@@ -300,7 +300,7 @@ bool GameActionManager::game_action_callback_set_naval_spending(game_action_argu
 	return old_naval_spending != country->get_naval_spending_slider_value().get_value();
 }
 
-bool GameActionManager::game_action_callback_set_construction_spending(game_action_argument_t const& argument) {
+bool GameActionManager::game_action_callback_set_construction_spending(game_action_argument_t const& argument) const {
 	std::pair<uint64_t, fixed_point_t> const* country_value = std::get_if<std::pair<uint64_t, fixed_point_t>>(&argument);
 	if (OV_unlikely(country_value == nullptr)) {
 		Logger::error(
@@ -324,7 +324,7 @@ bool GameActionManager::game_action_callback_set_construction_spending(game_acti
 	return old_construction_spending != country->get_construction_spending_slider_value().get_value();
 }
 
-bool GameActionManager::game_action_callback_set_education_spending(game_action_argument_t const& argument) {
+bool GameActionManager::game_action_callback_set_education_spending(game_action_argument_t const& argument) const {
 	std::pair<uint64_t, fixed_point_t> const* country_value = std::get_if<std::pair<uint64_t, fixed_point_t>>(&argument);
 	if (OV_unlikely(country_value == nullptr)) {
 		Logger::error(
@@ -348,7 +348,7 @@ bool GameActionManager::game_action_callback_set_education_spending(game_action_
 	return old_education_spending != country->get_education_spending_slider_value().get_value();
 }
 
-bool GameActionManager::game_action_callback_set_administration_spending(game_action_argument_t const& argument) {
+bool GameActionManager::game_action_callback_set_administration_spending(game_action_argument_t const& argument) const {
 	std::pair<uint64_t, fixed_point_t> const* country_value = std::get_if<std::pair<uint64_t, fixed_point_t>>(&argument);
 	if (OV_unlikely(country_value == nullptr)) {
 		Logger::error(
@@ -372,7 +372,7 @@ bool GameActionManager::game_action_callback_set_administration_spending(game_ac
 	return old_administration_spending != country->get_administration_spending_slider_value().get_value();
 }
 
-bool GameActionManager::game_action_callback_set_social_spending(game_action_argument_t const& argument) {
+bool GameActionManager::game_action_callback_set_social_spending(game_action_argument_t const& argument) const {
 	std::pair<uint64_t, fixed_point_t> const* country_value = std::get_if<std::pair<uint64_t, fixed_point_t>>(&argument);
 	if (OV_unlikely(country_value == nullptr)) {
 		Logger::error(
@@ -396,7 +396,7 @@ bool GameActionManager::game_action_callback_set_social_spending(game_action_arg
 	return old_social_spending != country->get_social_spending_slider_value().get_value();
 }
 
-bool GameActionManager::game_action_callback_set_military_spending(game_action_argument_t const& argument) {
+bool GameActionManager::game_action_callback_set_military_spending(game_action_argument_t const& argument) const {
 	std::pair<uint64_t, fixed_point_t> const* country_value = std::get_if<std::pair<uint64_t, fixed_point_t>>(&argument);
 	if (OV_unlikely(country_value == nullptr)) {
 		Logger::error(
@@ -420,7 +420,7 @@ bool GameActionManager::game_action_callback_set_military_spending(game_action_a
 	return old_military_spending != country->get_military_spending_slider_value().get_value();
 }
 
-bool GameActionManager::game_action_callback_set_tariff_rate(game_action_argument_t const& argument) {
+bool GameActionManager::game_action_callback_set_tariff_rate(game_action_argument_t const& argument) const {
 	std::pair<uint64_t, fixed_point_t> const* country_value = std::get_if<std::pair<uint64_t, fixed_point_t>>(&argument);
 	if (OV_unlikely(country_value == nullptr)) {
 		Logger::error("GAME_ACTION_SET_TARIFF_RATE called with invalid argument: ", game_action_argument_to_string(argument));
@@ -443,7 +443,7 @@ bool GameActionManager::game_action_callback_set_tariff_rate(game_action_argumen
 }
 
 // Technology
-bool GameActionManager::game_action_callback_start_research(game_action_argument_t const& argument) {
+bool GameActionManager::game_action_callback_start_research(game_action_argument_t const& argument) const {
 	std::pair<uint64_t, uint64_t> const* country_tech = std::get_if<std::pair<uint64_t, uint64_t>>(&argument);
 	if (OV_unlikely(country_tech == nullptr)) {
 		Logger::error("GAME_ACTION_START_RESEARCH called with invalid argument: ", game_action_argument_to_string(argument));
@@ -480,7 +480,7 @@ bool GameActionManager::game_action_callback_start_research(game_action_argument
 // Population
 
 // Trade
-bool GameActionManager::game_action_callback_set_good_automated(game_action_argument_t const& argument) {
+bool GameActionManager::game_action_callback_set_good_automated(game_action_argument_t const& argument) const {
 	std::tuple<uint64_t, uint64_t, bool> const* country_good_automated =
 		std::get_if<std::tuple<uint64_t, uint64_t, bool>>(&argument);
 	if (OV_unlikely(country_good_automated == nullptr)) {
@@ -517,7 +517,7 @@ bool GameActionManager::game_action_callback_set_good_automated(game_action_argu
 	return old_automated != good_data.is_automated;
 }
 
-bool GameActionManager::game_action_callback_set_good_trade_order(game_action_argument_t const& argument) {
+bool GameActionManager::game_action_callback_set_good_trade_order(game_action_argument_t const& argument) const {
 	std::tuple<uint64_t, uint64_t, bool, fixed_point_t> const* country_good_sell_amount =
 		std::get_if<std::tuple<uint64_t, uint64_t, bool, fixed_point_t>>(&argument);
 	if (OV_unlikely(country_good_sell_amount == nullptr)) {
@@ -578,7 +578,7 @@ bool GameActionManager::game_action_callback_set_good_trade_order(game_action_ar
 // Diplomacy
 
 // Military
-bool GameActionManager::game_action_callback_create_leader(game_action_argument_t const& argument) {
+bool GameActionManager::game_action_callback_create_leader(game_action_argument_t const& argument) const {
 	std::pair<uint64_t, bool> const* country_branch = std::get_if<std::pair<uint64_t, bool>>(&argument);
 	if (OV_unlikely(country_branch == nullptr)) {
 		Logger::error("GAME_ACTION_CREATE_LEADER called with invalid argument: ", game_action_argument_to_string(argument));
@@ -609,7 +609,7 @@ bool GameActionManager::game_action_callback_create_leader(game_action_argument_
 	);
 }
 
-bool GameActionManager::game_action_callback_set_use_leader(game_action_argument_t const& argument) {
+bool GameActionManager::game_action_callback_set_use_leader(game_action_argument_t const& argument) const {
 	std::pair<uint64_t, bool> const* leader_use = std::get_if<std::pair<uint64_t, bool>>(&argument);
 	if (OV_unlikely(leader_use == nullptr)) {
 		Logger::error("GAME_ACTION_SET_USE_LEADER called with invalid argument: ", game_action_argument_to_string(argument));
@@ -630,7 +630,7 @@ bool GameActionManager::game_action_callback_set_use_leader(game_action_argument
 	return old_use != leader->get_can_be_used();
 }
 
-bool GameActionManager::game_action_callback_set_auto_create_leaders(game_action_argument_t const& argument) {
+bool GameActionManager::game_action_callback_set_auto_create_leaders(game_action_argument_t const& argument) const {
 	std::pair<uint64_t, bool> const* country_value = std::get_if<std::pair<uint64_t, bool>>(&argument);
 	if (OV_unlikely(country_value == nullptr)) {
 		Logger::error(
@@ -654,7 +654,7 @@ bool GameActionManager::game_action_callback_set_auto_create_leaders(game_action
 	return old_auto_create != country->get_auto_create_leaders();
 }
 
-bool GameActionManager::game_action_callback_set_auto_assign_leaders(game_action_argument_t const& argument) {
+bool GameActionManager::game_action_callback_set_auto_assign_leaders(game_action_argument_t const& argument) const {
 	std::pair<uint64_t, bool> const* country_value = std::get_if<std::pair<uint64_t, bool>>(&argument);
 	if (OV_unlikely(country_value == nullptr)) {
 		Logger::error(
@@ -678,7 +678,7 @@ bool GameActionManager::game_action_callback_set_auto_assign_leaders(game_action
 	return old_auto_assign != country->get_auto_assign_leaders();
 }
 
-bool GameActionManager::game_action_callback_set_mobilise(game_action_argument_t const& argument) {
+bool GameActionManager::game_action_callback_set_mobilise(game_action_argument_t const& argument) const {
 	std::pair<uint64_t, bool> const* country_mobilise = std::get_if<std::pair<uint64_t, bool>>(&argument);
 	if (OV_unlikely(country_mobilise == nullptr)) {
 		Logger::error("GAME_ACTION_SET_MOBILISE called with invalid argument: ", game_action_argument_to_string(argument));
