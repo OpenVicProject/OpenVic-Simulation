@@ -240,7 +240,7 @@ fixed_point_t ResourceGatheringOperation::produce(const pop_size_t total_owner_c
 
 	ProductionType const& production_type = *production_type_nullable;
 	fixed_point_t throughput_multiplier = fixed_point_t::_1();
-	fixed_point_t output_multilpier = fixed_point_t::_1();
+	fixed_point_t output_multiplier = fixed_point_t::_1();
 
 	std::optional<Job> const& owner = production_type.get_owner();
 	if (owner.has_value()) {
@@ -257,7 +257,7 @@ fixed_point_t ResourceGatheringOperation::produce(const pop_size_t total_owner_c
 		if (total_owner_count_in_state_cache > 0) {
 			switch (owner_job.get_effect_type()) {
 				case Job::effect_t::OUTPUT:
-					output_multilpier += owner_job.get_effect_multiplier() * total_owner_count_in_state_cache / state_population;
+					output_multiplier += owner_job.get_effect_multiplier() * total_owner_count_in_state_cache / state_population;
 					break;
 				case Job::effect_t::THROUGHPUT:
 					throughput_multiplier += owner_job.get_effect_multiplier() * total_owner_count_in_state_cache / state_population;
@@ -271,18 +271,18 @@ fixed_point_t ResourceGatheringOperation::produce(const pop_size_t total_owner_c
 
 	throughput_multiplier += location.get_modifier_effect_value(*modifier_effect_cache.get_rgo_throughput())
 		+ location.get_modifier_effect_value(*modifier_effect_cache.get_local_rgo_throughput());
-	output_multilpier += location.get_modifier_effect_value(*modifier_effect_cache.get_rgo_output())
+	output_multiplier += location.get_modifier_effect_value(*modifier_effect_cache.get_rgo_output())
 		+ location.get_modifier_effect_value(*modifier_effect_cache.get_local_rgo_output());
 
 	if (production_type.get_is_farm_for_tech()) {
 		const fixed_point_t farm_rgo_throughput_and_output =
 			location.get_modifier_effect_value(*modifier_effect_cache.get_farm_rgo_throughput_and_output());
 		throughput_multiplier += farm_rgo_throughput_and_output;
-		output_multilpier += farm_rgo_throughput_and_output;
+		output_multiplier += farm_rgo_throughput_and_output;
 	}
 
 	if (production_type.get_is_farm_for_non_tech()) {
-		output_multilpier += location.get_modifier_effect_value(*modifier_effect_cache.get_farm_rgo_output_global())
+		output_multiplier += location.get_modifier_effect_value(*modifier_effect_cache.get_farm_rgo_output_global())
 			+ location.get_modifier_effect_value(*modifier_effect_cache.get_farm_rgo_output_local());
 	}
 
@@ -290,17 +290,17 @@ fixed_point_t ResourceGatheringOperation::produce(const pop_size_t total_owner_c
 		const fixed_point_t mine_rgo_throughput_and_output =
 			location.get_modifier_effect_value(*modifier_effect_cache.get_mine_rgo_throughput_and_output());
 		throughput_multiplier += mine_rgo_throughput_and_output;
-		output_multilpier += mine_rgo_throughput_and_output;
+		output_multiplier += mine_rgo_throughput_and_output;
 	}
 
 	if (production_type.get_is_mine_for_non_tech()) {
-		output_multilpier += location.get_modifier_effect_value(*modifier_effect_cache.get_mine_rgo_output_global())
+		output_multiplier += location.get_modifier_effect_value(*modifier_effect_cache.get_mine_rgo_output_global())
 			+ location.get_modifier_effect_value(*modifier_effect_cache.get_mine_rgo_output_local());
 	}
 
 	auto const& good_effects = modifier_effect_cache.get_good_effects()[production_type.get_output_good()];
 	throughput_multiplier += location.get_modifier_effect_value(*good_effects.get_rgo_goods_throughput());
-	output_multilpier += location.get_modifier_effect_value(*good_effects.get_rgo_goods_output());
+	output_multiplier += location.get_modifier_effect_value(*good_effects.get_rgo_goods_output());
 
 	fixed_point_t throughput_from_workers = fixed_point_t::_0();
 	fixed_point_t output_from_workers = fixed_point_t::_1();
@@ -337,7 +337,7 @@ fixed_point_t ResourceGatheringOperation::produce(const pop_size_t total_owner_c
 	return production_type.get_base_output_quantity()
 		* size_modifier * size_multiplier
 		* throughput_multiplier * throughput_from_workers
-		* output_multilpier * output_from_workers;
+		* output_multiplier * output_from_workers;
 }
 
 void ResourceGatheringOperation::pay_employees(
@@ -362,11 +362,10 @@ void ResourceGatheringOperation::pay_employees(
 
 	fixed_point_t revenue_left = revenue;
 	if (total_owner_count_in_state_cache > 0) {
-		fixed_point_t owner_share = fixed_point_t::_2() * total_owner_count_in_state_cache / total_worker_count_in_province;
-		constexpr fixed_point_t upper_limit = fixed_point_t::_0_50();
-		if (owner_share > upper_limit) {
-			owner_share = upper_limit;
-		}
+		fixed_point_t owner_share = std::min(
+			fixed_point_t::_2() * total_owner_count_in_state_cache / total_worker_count_in_province,
+			fixed_point_t::_0_50()
+		);
 
 		for (Pop* owner_pop_ptr : *owner_pops_cache_nullable) {
 			Pop& owner_pop = *owner_pop_ptr;
