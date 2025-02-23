@@ -13,7 +13,6 @@
 #include "openvic-simulation/modifier/StaticModifierCache.hpp"
 #include "openvic-simulation/politics/Ideology.hpp"
 #include "openvic-simulation/pop/PopValuesFromProvince.hpp"
-#include "openvic-simulation/utility/CompilerFeatureTesting.hpp"
 #include "openvic-simulation/utility/Logger.hpp"
 
 using namespace OpenVic;

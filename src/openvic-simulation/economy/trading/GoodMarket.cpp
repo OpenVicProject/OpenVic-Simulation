@@ -3,7 +3,6 @@
 #include "openvic-simulation/economy/GoodDefinition.hpp"
 #include "openvic-simulation/misc/GameRulesManager.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
-#include "openvic-simulation/utility/CompilerFeatureTesting.hpp"
 
 using namespace OpenVic;
 static constexpr size_t MONTHS_OF_PRICE_HISTORY = 36;
@@ -64,7 +63,7 @@ void GoodMarket::add_market_sell_order(GoodMarketSellOrder&& market_sell_order) 
 	market_sell_orders.push_back(std::move(market_sell_order));
 }
 
-void GoodMarket::execute_orders() {
+void GoodMarket::execute_orders(std::vector<fixed_point_t>& reusable_vector_0, std::vector<fixed_point_t>& reusable_vector_1) {
 	if (!is_available) {
 		//price remains the same
 		price_change_yesterday
@@ -73,19 +72,13 @@ void GoodMarket::execute_orders() {
 			= total_supply_yesterday
 			= fixed_point_t::_0();
 
-		parallel_for_each(
-			buy_up_to_orders,
-			[](GoodBuyUpToOrder const& buy_up_to_order) -> void {
-				buy_up_to_order.get_after_trade()(BuyResult::no_purchase_result());
-			}
-		);
+		for (GoodBuyUpToOrder const& buy_up_to_order : buy_up_to_orders) {
+			buy_up_to_order.get_after_trade()(BuyResult::no_purchase_result());
+		}
 
-		parallel_for_each(
-			market_sell_orders,
-			[](GoodMarketSellOrder const& market_sell_order) -> void {
-				market_sell_order.get_after_trade()(SellResult::no_sales_result());
-			}
-		);
+		for (GoodMarketSellOrder const& market_sell_order : market_sell_orders) {
+			market_sell_order.get_after_trade()(SellResult::no_sales_result());
+		}
 		return;
 	}
 
@@ -121,7 +114,8 @@ void GoodMarket::execute_orders() {
 		for (GoodMarketSellOrder const& market_sell_order : market_sell_orders) {
 			supply_sum += market_sell_order.get_quantity();
 		}
-
+		std::vector<fixed_point_t>& quantity_bought_per_order = reusable_vector_0;
+		std::vector<fixed_point_t>& purchasing_power_per_order = reusable_vector_1;
 		quantity_bought_per_order.resize(buy_up_to_orders.size());
 		purchasing_power_per_order.resize(buy_up_to_orders.size());
 
@@ -305,8 +299,8 @@ void GoodMarket::execute_orders() {
 		}
 
 		market_sell_orders.clear();
-		quantity_bought_per_order.clear();
-		purchasing_power_per_order.clear();
+		reusable_vector_0.clear();
+		reusable_vector_1.clear();
 	}
 
 	price_change_yesterday = new_price - price;

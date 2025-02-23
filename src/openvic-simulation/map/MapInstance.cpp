@@ -75,21 +75,7 @@ bool MapInstance::setup(
 	}
 
 	if (ret) {
-		const size_t max_worker_threads = std::thread::hardware_concurrency();
-		const size_t max_threads_including_parent = max_worker_threads + 1;
-		reusable_pop_values_collection.reserve(max_threads_including_parent);
-		threads.reserve(max_worker_threads);
-
-		for (size_t i = 0; i < max_worker_threads; i++) {
-			reusable_pop_values_collection.emplace_back(PopValuesFromProvince {
-				pop_defines, strata_keys
-			});
-			threads.emplace_back();
-		}
-
-		reusable_pop_values_collection.emplace_back(PopValuesFromProvince {
-			pop_defines, strata_keys
-		});
+		init_parallel_processor(pop_defines, strata_keys);
 	}
 
 	return ret;
@@ -175,45 +161,9 @@ void MapInstance::update_gamestate(const Date today, DefineManager const& define
 	state_manager.update_gamestate();
 }
 
-void MapInstance::process_provinces_in_parallel(std::invocable<ProvinceInstance&, PopValuesFromProvince&> auto callback) {
-	std::vector<ProvinceInstance>& provinces = province_instances.get_items();
-	const auto [quotient, remainder] = std::ldiv(provinces.size(), reusable_pop_values_collection.size());
-	std::vector<ProvinceInstance>::iterator begin = provinces.begin();
-	for (size_t i = 0; i < threads.size(); i++) {
-		const size_t chunk_size = i < remainder
-			? quotient + 1
-			: quotient;
-			std::vector<ProvinceInstance>::iterator end = begin + chunk_size;
-		threads[i] = std::thread{
-			[
-				&callback,
-				&reusable_pop_values = reusable_pop_values_collection[i],
-				begin,
-				end
-			]()->void{
-				for (std::vector<ProvinceInstance>::iterator it = begin; it < end; it++) {
-					callback(*it, reusable_pop_values);
-				}
-			}
-		};
-		begin = end;
-	}
-	{
-		auto parent_thread_end = begin + quotient;
-		auto& reusable_pop_values = reusable_pop_values_collection.back();
-		for (auto it = begin; it < parent_thread_end; it++) {
-			callback(*it, reusable_pop_values);
-		}
-	}
-	for (std::thread& thread : threads) {
-		if (thread.joinable()) {
-			thread.join();
-		}
-	}
-}
-
 void MapInstance::map_tick(const Date today) {
-	process_provinces_in_parallel(
+	process_in_parallel(
+		province_instances.get_items(),
 		[today](ProvinceInstance& province, PopValuesFromProvince& reusable_pop_values) -> void {
 			province.province_tick(today, reusable_pop_values);
 		}
@@ -225,7 +175,8 @@ void MapInstance::initialise_for_new_game(
 	DefineManager const& define_manager
 ) {
 	update_gamestate(today, define_manager);
-	process_provinces_in_parallel(
+	process_in_parallel(
+		province_instances.get_items(),
 		[today](ProvinceInstance& province, PopValuesFromProvince& reusable_pop_values) -> void {
 			province.initialise_for_new_game(today, reusable_pop_values);
 		}

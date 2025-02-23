@@ -4,14 +4,15 @@
 #include "openvic-simulation/economy/GoodInstance.hpp"
 #include "openvic-simulation/economy/trading/BuyUpToOrder.hpp"
 #include "openvic-simulation/economy/trading/MarketSellOrder.hpp"
-#include "openvic-simulation/utility/CompilerFeatureTesting.hpp"
 #include "openvic-simulation/utility/Utility.hpp"
 
 using namespace OpenVic;
 
 MarketInstance::MarketInstance(CountryDefines const& new_country_defines, GoodInstanceManager& new_good_instance_manager)
 :	country_defines { new_country_defines },
-	good_instance_manager { new_good_instance_manager} {}
+	good_instance_manager { new_good_instance_manager} {
+		init_parallel_processor();
+	}
 
 bool MarketInstance::get_is_available(GoodDefinition const& good_definition) const {
 	return good_instance_manager.get_good_instance_from_definition(good_definition).get_is_available();
@@ -68,11 +69,10 @@ void MarketInstance::place_market_sell_order(MarketSellOrder&& market_sell_order
 }
 
 void MarketInstance::execute_orders() {
-	auto& good_instances = good_instance_manager.get_good_instances();
-	parallel_for_each(
-		good_instances,
-		[](GoodMarket& good_instance) -> void {
-			good_instance.execute_orders();
+	process_in_parallel(
+		good_instance_manager.get_good_instances(),
+		[](GoodMarket& good_instance, std::array<std::vector<fixed_point_t>, VECTORS_FOR_GOODMARKET>& reusable_vectors) -> void {
+			good_instance.execute_orders(reusable_vectors[0], reusable_vectors[1]);
 		}
 	);
 }
