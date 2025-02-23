@@ -1,7 +1,5 @@
 #pragma once
 
-#include <thread>
-
 #include "openvic-simulation/economy/trading/MarketInstance.hpp"
 #include "openvic-simulation/map/ProvinceDefinition.hpp"
 #include "openvic-simulation/map/ProvinceInstance.hpp"
@@ -9,6 +7,7 @@
 #include "openvic-simulation/pop/PopValuesFromProvince.hpp"
 #include "openvic-simulation/types/Date.hpp"
 #include "openvic-simulation/types/IdentifierRegistry.hpp"
+#include "openvic-simulation/utility/ParallelProcessorWithSharesValues.hpp"
 
 namespace OpenVic {
 	struct MapDefinition;
@@ -19,7 +18,7 @@ namespace OpenVic {
 	/* REQUIREMENTS:
 	 * MAP-4
 	 */
-	struct MapInstance {
+	struct MapInstance : private ParallelProcessorWithSharesValues<PopValuesFromProvince> {
 	private:
 		MapDefinition const& PROPERTY(map_definition);
 
@@ -29,11 +28,6 @@ namespace OpenVic {
 		pop_size_t PROPERTY(total_map_population, 0);
 
 		StateManager PROPERTY_REF(state_manager);
-
-		std::vector<PopValuesFromProvince> reusable_pop_values_collection;
-		std::vector<std::thread> threads;
-
-		void process_provinces_in_parallel(std::invocable<ProvinceInstance&, PopValuesFromProvince&> auto callback);
 
 	public:
 		MapInstance(MapDefinition const& new_map_definition);

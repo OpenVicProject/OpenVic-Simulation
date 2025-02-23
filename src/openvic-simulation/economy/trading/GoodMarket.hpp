@@ -22,11 +22,6 @@ namespace OpenVic {
 		fixed_point_t absolute_maximum_price;
 		fixed_point_t absolute_minimum_price;
 
-		//TODO get from pool instead of storing as field
-		//only used inside execute_orders()
-		std::vector<fixed_point_t> quantity_bought_per_order;
-		std::vector<fixed_point_t> purchasing_power_per_order;
-
 		//only used during day tick (from actors placing order until execute_orders())
 		std::vector<GoodBuyUpToOrder> buy_up_to_orders;
 		std::vector<GoodMarketSellOrder> market_sell_orders;
@@ -55,7 +50,7 @@ namespace OpenVic {
 		void add_market_sell_order(GoodMarketSellOrder&& market_sell_order);
 
 		//not thread safe
-		void execute_orders();
+		void execute_orders(std::vector<fixed_point_t>& reusable_vector_0, std::vector<fixed_point_t>& reusable_vector_1);
 		void on_use_exponential_price_changes_changed();
 		void record_price_history();
 	};

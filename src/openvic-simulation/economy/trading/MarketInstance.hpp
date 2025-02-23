@@ -1,6 +1,10 @@
 #pragma once
 
+#include <array>
+#include <vector>
+
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
+#include "openvic-simulation/utility/ParallelProcessorWithSharesValues.hpp"
 
 namespace OpenVic {
 	struct BuyUpToOrder;
@@ -9,7 +13,8 @@ namespace OpenVic {
 	struct GoodInstanceManager;
 	struct MarketSellOrder;
 
-	struct MarketInstance {
+	static constexpr size_t VECTORS_FOR_GOODMARKET = 2;
+	struct MarketInstance : private ParallelProcessorWithSharesValues<std::array<std::vector<fixed_point_t>, VECTORS_FOR_GOODMARKET>> {
 	private:
 		CountryDefines const& country_defines;
 		GoodInstanceManager& good_instance_manager;
