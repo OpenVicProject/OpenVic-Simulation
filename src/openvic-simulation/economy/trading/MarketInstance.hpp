@@ -1,10 +1,6 @@
 #pragma once
 
-#include <array>
-#include <vector>
-
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
-#include "openvic-simulation/utility/ParallelProcessorWithSharesValues.hpp"
 
 namespace OpenVic {
 	struct BuyUpToOrder;
@@ -12,14 +8,22 @@ namespace OpenVic {
 	struct GoodDefinition;
 	struct GoodInstanceManager;
 	struct MarketSellOrder;
+	struct ThreadPool;
 
-	static constexpr size_t VECTORS_FOR_GOODMARKET = 2;
-	struct MarketInstance : private ParallelProcessorWithSharesValues<std::array<std::vector<fixed_point_t>, VECTORS_FOR_GOODMARKET>> {
+	struct MarketInstance {
 	private:
+		ThreadPool& thread_pool;
 		CountryDefines const& country_defines;
 		GoodInstanceManager& good_instance_manager;
 	public:
-		MarketInstance(CountryDefines const& new_country_defines, GoodInstanceManager& new_good_instance_manager);
+		constexpr MarketInstance(
+			ThreadPool& new_thread_pool,
+			CountryDefines const& new_country_defines,
+			GoodInstanceManager& new_good_instance_manager
+		) : thread_pool { new_thread_pool },
+			country_defines { new_country_defines },
+			good_instance_manager { new_good_instance_manager } {}
+
 		bool get_is_available(GoodDefinition const& good_definition) const;
 		fixed_point_t get_max_next_price(GoodDefinition const& good_definition) const;
 		fixed_point_t get_min_next_price(GoodDefinition const& good_definition) const;

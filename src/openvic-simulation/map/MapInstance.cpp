@@ -4,12 +4,9 @@
 #include "openvic-simulation/map/MapDefinition.hpp"
 #include "openvic-simulation/pop/PopValuesFromProvince.hpp"
 #include "openvic-simulation/utility/Logger.hpp"
+#include "openvic-simulation/utility/ThreadPool.hpp"
 
 using namespace OpenVic;
-
-MapInstance::MapInstance(MapDefinition const& new_map_definition)
-	: map_definition { new_map_definition }
-	{}
 
 ProvinceInstance& MapInstance::get_province_instance_from_definition(ProvinceDefinition const& province) {
 	return province_instances.get_items()[province.get_index() - 1];
@@ -23,7 +20,6 @@ bool MapInstance::setup(
 	BuildingTypeManager const& building_type_manager,
 	MarketInstance& market_instance,
 	ModifierEffectCache const& modifier_effect_cache,
-	PopsDefines const& pop_defines,
 	decltype(ProvinceInstance::population_by_strata)::keys_type const& strata_keys,
 	decltype(ProvinceInstance::pop_type_distribution)::keys_type const& pop_type_keys,
 	decltype(ProvinceInstance::ideology_distribution)::keys_type const& ideology_keys
@@ -72,10 +68,6 @@ bool MapInstance::setup(
 			map_definition.get_province_definition_count(), ")!"
 		);
 		return false;
-	}
-
-	if (ret) {
-		init_parallel_processor(pop_defines, strata_keys);
 	}
 
 	return ret;
@@ -161,13 +153,8 @@ void MapInstance::update_gamestate(const Date today, DefineManager const& define
 	state_manager.update_gamestate();
 }
 
-void MapInstance::map_tick(const Date today) {
-	process_in_parallel(
-		province_instances.get_items(),
-		[today](ProvinceInstance& province, PopValuesFromProvince& reusable_pop_values) -> void {
-			province.province_tick(today, reusable_pop_values);
-		}
-	);
+void MapInstance::map_tick() {
+	thread_pool.process_province_ticks();
 }
 
 void MapInstance::initialise_for_new_game(
@@ -175,10 +162,5 @@ void MapInstance::initialise_for_new_game(
 	DefineManager const& define_manager
 ) {
 	update_gamestate(today, define_manager);
-	process_in_parallel(
-		province_instances.get_items(),
-		[today](ProvinceInstance& province, PopValuesFromProvince& reusable_pop_values) -> void {
-			province.initialise_for_new_game(today, reusable_pop_values);
-		}
-	);
+	thread_pool.process_province_initialise_for_new_game();
 }
