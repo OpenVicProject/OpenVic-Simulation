@@ -46,8 +46,8 @@ namespace OpenVic {
 		GoodMarket(GoodMarket&&) = default;
 
 		//thread safe
-		void add_buy_up_to_order(GoodBuyUpToOrder&& buy_up_to_order);
-		void add_market_sell_order(GoodMarketSellOrder&& market_sell_order);
+		void add_buy_up_to_order(GoodBuyUpToOrder const& buy_up_to_order);
+		void add_market_sell_order(GoodMarketSellOrder const& market_sell_order);
 
 		//not thread safe
 		void execute_orders(std::vector<fixed_point_t>& reusable_vector_0, std::vector<fixed_point_t>& reusable_vector_1);

@@ -15,6 +15,7 @@
 #include "openvic-simulation/economy/trading/BuyUpToOrder.hpp"
 #include "openvic-simulation/economy/trading/MarketSellOrder.hpp"
 #include "openvic-simulation/economy/trading/MarketInstance.hpp"
+#include "openvic-simulation/economy/trading/SellResult.hpp"
 #include "openvic-simulation/map/ProvinceInstance.hpp"
 #include "openvic-simulation/modifier/ModifierEffectCache.hpp"
 #include "openvic-simulation/pop/PopValuesFromProvince.hpp"
@@ -364,7 +365,7 @@ void Pop::pop_tick_without_cleanup(PopValuesFromProvince& shared_values) {
 	cash_allocated_for_artisanal_spending = fixed_point_t::_0();
 	fill_needs_fulfilled_goods_with_false();
 	if (artisanal_producer_nullable != nullptr) {
-		//execute artisan_tick before needs 
+		//execute artisan_tick before needs
 		artisanal_producer_nullable->artisan_tick(
 			*this,
 			max_quantity_to_buy_per_good,
@@ -453,59 +454,8 @@ void Pop::pop_tick_without_cleanup(PopValuesFromProvince& shared_values) {
 			*good_definition,
 			max_quantity_to_buy,
 			money_to_spend,
-			[this, good_definition](const BuyResult buy_result) -> void {
-				fixed_point_t quantity_left_to_consume = buy_result.get_quantity_bought();
-				if (artisanal_producer_nullable != nullptr) {
-					if (quantity_left_to_consume <= fixed_point_t::_0()) {
-						return;
-					}
-					const fixed_point_t quantity_added_to_stockpile = artisanal_producer_nullable->add_to_stockpile(
-						*good_definition,
-						quantity_left_to_consume
-					);
-
-					if (quantity_added_to_stockpile > fixed_point_t::_0()) {
-						quantity_left_to_consume -= quantity_added_to_stockpile;
-						const fixed_point_t expense = fixed_point_t::mul_div(
-							buy_result.get_money_spent(),
-							quantity_added_to_stockpile,
-							buy_result.get_quantity_bought()
-						);
-						add_artisan_inputs_expense(expense);
-					}
-				}
-
-				CountryInstance* get_country_to_report_economy_nullable = location->get_country_to_report_economy();
-				#define CONSUME_NEED(need_category) \
-					if (quantity_left_to_consume <= fixed_point_t::_0()) { \
-						return; \
-					} \
-					const GoodDefinition::good_definition_map_t::const_iterator need_category##it = need_category##_needs.find(good_definition); \
-					if (need_category##it != need_category##_needs.end()) { \
-						const fixed_point_t desired_quantity = need_category##it->second; \
-						fixed_point_t consumed_quantity; \
-						if (quantity_left_to_consume >= desired_quantity) { \
-							consumed_quantity = desired_quantity; \
-							need_category##_needs_fulfilled_goods.at(good_definition) = true; \
-						} else { \
-							consumed_quantity = quantity_left_to_consume; \
-						} \
-						need_category##_needs_acquired_quantity += consumed_quantity; \
-						quantity_left_to_consume -= consumed_quantity; \
-						if (get_country_to_report_economy_nullable != nullptr) { \
-							get_country_to_report_economy_nullable->report_pop_need_consumption(*type, *good_definition, consumed_quantity); \
-						} \
-						const fixed_point_t expense = fixed_point_t::mul_div( \
-							buy_result.get_money_spent(), \
-							consumed_quantity, \
-							buy_result.get_quantity_bought() \
-						); \
-						add_##need_category##_needs_expense(expense); \
-					}
-
-				DO_FOR_ALL_NEED_CATEGORIES(CONSUME_NEED)
-				#undef CONSUME_NEED
-			}
+			this,
+			after_buy
 		});
 	}
 
@@ -513,13 +463,75 @@ void Pop::pop_tick_without_cleanup(PopValuesFromProvince& shared_values) {
 		market_instance.place_market_sell_order(MarketSellOrder {
 			artisanal_producer_nullable->get_production_type().get_output_good(),
 			artisanal_produce_left_to_sell,
-			[this](const SellResult sell_result) -> void {
-				if (sell_result.get_money_gained() > fixed_point_t::_0()) {
-					add_artisanal_income(sell_result.get_money_gained());
-				}
-			}
+			this,
+			after_sell
 		});
 		artisanal_produce_left_to_sell = fixed_point_t::_0();
+	}
+}
+
+void Pop::after_buy(void* actor, BuyResult const& buy_result) {
+	Pop& pop = *static_cast<Pop*>(actor);
+	GoodDefinition const& good_definition = buy_result.get_good_definition();
+	const fixed_point_t quantity_bought = buy_result.get_quantity_bought();
+	const fixed_point_t money_spent = buy_result.get_money_spent();
+
+	fixed_point_t quantity_left_to_consume = quantity_bought;
+	if (pop.artisanal_producer_nullable != nullptr) {
+		if (quantity_left_to_consume <= fixed_point_t::_0()) {
+			return;
+		}
+		const fixed_point_t quantity_added_to_stockpile = pop.artisanal_producer_nullable->add_to_stockpile(
+			good_definition,
+			quantity_left_to_consume
+		);
+
+		if (quantity_added_to_stockpile > fixed_point_t::_0()) {
+			quantity_left_to_consume -= quantity_added_to_stockpile;
+			const fixed_point_t expense = fixed_point_t::mul_div(
+				money_spent,
+				quantity_added_to_stockpile,
+				quantity_bought
+			);
+			pop.add_artisan_inputs_expense(expense);
+		}
+	}
+
+	CountryInstance* get_country_to_report_economy_nullable = pop.location->get_country_to_report_economy();
+	#define CONSUME_NEED(need_category) \
+		if (quantity_left_to_consume <= fixed_point_t::_0()) { \
+			return; \
+		} \
+		const GoodDefinition::good_definition_map_t::const_iterator need_category##it = pop.need_category##_needs.find(&good_definition); \
+		if (need_category##it != pop.need_category##_needs.end()) { \
+			const fixed_point_t desired_quantity = need_category##it->second; \
+			fixed_point_t consumed_quantity; \
+			if (quantity_left_to_consume >= desired_quantity) { \
+				consumed_quantity = desired_quantity; \
+				pop.need_category##_needs_fulfilled_goods.at(&good_definition) = true; \
+			} else { \
+				consumed_quantity = quantity_left_to_consume; \
+			} \
+			pop.need_category##_needs_acquired_quantity += consumed_quantity; \
+			quantity_left_to_consume -= consumed_quantity; \
+			if (get_country_to_report_economy_nullable != nullptr) { \
+				get_country_to_report_economy_nullable->report_pop_need_consumption(*pop.type, good_definition, consumed_quantity); \
+			} \
+			const fixed_point_t expense = fixed_point_t::mul_div( \
+				money_spent, \
+				consumed_quantity, \
+				quantity_bought \
+			); \
+			pop.add_##need_category##_needs_expense(expense); \
+		}
+
+	DO_FOR_ALL_NEED_CATEGORIES(CONSUME_NEED)
+	#undef CONSUME_NEED
+}
+
+void Pop::after_sell(void* actor, SellResult const& sell_result) {
+	if (sell_result.get_money_gained() > fixed_point_t::_0()) {
+		static_cast<Pop*>(actor)->add_artisanal_income(sell_result.get_money_gained());
 	}
 }
 
