@@ -1,16 +1,18 @@
 #pragma once
 
 #include <array>
+#include <vector>
 
-#include "openvic-simulation/pop/PopType.hpp"
 #include "openvic-simulation/types/IndexedMap.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
 #include "openvic-simulation/utility/Getters.hpp"
 
 namespace OpenVic {
+	struct GoodDefinition;
 	struct ProvinceInstance;
 	struct PopsDefines;
 	struct PopValuesFromProvince;
+	struct Strata;
 
 	struct PopStrataValuesFromProvince {
 	private:
@@ -28,11 +30,11 @@ namespace OpenVic {
 		IndexedMap<Strata, PopStrataValuesFromProvince> PROPERTY(effects_per_strata);
 	public:
 	 	//public field as mutable references are required.
-		std::array<GoodDefinition::good_definition_map_t, MAPS_FOR_POP> reusable_maps {};
+		std::array<fixed_point_map_t<GoodDefinition const*>, MAPS_FOR_POP> reusable_maps {};
 
 		PopValuesFromProvince(
 			PopsDefines const& new_defines,
-			decltype(effects_per_strata)::keys_type const& strata_keys
+			std::vector<Strata> const& strata_keys
 		);
 		PopValuesFromProvince(PopValuesFromProvince&&) = default;
 

@@ -7,20 +7,21 @@
 #include "openvic-simulation/pop/PopValuesFromProvince.hpp"
 #include "openvic-simulation/types/Date.hpp"
 #include "openvic-simulation/types/IdentifierRegistry.hpp"
-#include "openvic-simulation/utility/ParallelProcessorWithSharesValues.hpp"
 
 namespace OpenVic {
 	struct MapDefinition;
 	struct BuildingTypeManager;
 	struct ProvinceHistoryManager;
 	struct IssueManager;
+	struct ThreadPool;
 
 	/* REQUIREMENTS:
 	 * MAP-4
 	 */
-	struct MapInstance : private ParallelProcessorWithSharesValues<PopValuesFromProvince> {
+	struct MapInstance {
 	private:
 		MapDefinition const& PROPERTY(map_definition);
+		ThreadPool& thread_pool;
 
 		IdentifierRegistry<ProvinceInstance> IDENTIFIER_REGISTRY_CUSTOM_INDEX_OFFSET(province_instance, 1);
 
@@ -30,7 +31,11 @@ namespace OpenVic {
 		StateManager PROPERTY_REF(state_manager);
 
 	public:
-		MapInstance(MapDefinition const& new_map_definition);
+		constexpr MapInstance(
+			MapDefinition const& new_map_definition,
+			ThreadPool& new_thread_pool
+		) : map_definition { new_map_definition },
+			thread_pool { new_thread_pool } {}
 
 		inline explicit constexpr operator MapDefinition const&() const {
 			return map_definition;
@@ -45,11 +50,11 @@ namespace OpenVic {
 			BuildingTypeManager const& building_type_manager,
 			MarketInstance& market_instance,
 			ModifierEffectCache const& modifier_effect_cache,
-			PopsDefines const& pop_defines,
 			decltype(ProvinceInstance::population_by_strata)::keys_type const& strata_keys,
 			decltype(ProvinceInstance::pop_type_distribution)::keys_type const& pop_type_keys,
 			decltype(ProvinceInstance::ideology_distribution)::keys_type const& ideology_keys
 		);
+
 		bool apply_history_to_provinces(
 			ProvinceHistoryManager const& history_manager,
 			const Date date,
@@ -61,7 +66,7 @@ namespace OpenVic {
 
 		void update_modifier_sums(const Date today, StaticModifierCache const& static_modifier_cache);
 		void update_gamestate(const Date today, DefineManager const& define_manager);
-		void map_tick(const Date today);
+		void map_tick();
 		void initialise_for_new_game(const Date today, DefineManager const& define_manager);
 	};
 }

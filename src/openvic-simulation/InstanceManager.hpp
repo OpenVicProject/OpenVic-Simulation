@@ -15,6 +15,7 @@
 #include "openvic-simulation/politics/PoliticsInstanceManager.hpp"
 #include "openvic-simulation/types/Date.hpp"
 #include "openvic-simulation/types/FlagStrings.hpp"
+#include "openvic-simulation/utility/ThreadPool.hpp"
 
 namespace OpenVic {
 
@@ -27,6 +28,7 @@ namespace OpenVic {
 		using gamestate_updated_func_t = std::function<void()>;
 
 	private:
+		ThreadPool thread_pool;
 		DefinitionManager const& PROPERTY(definition_manager);
 
 		const GameActionManager game_action_manager;

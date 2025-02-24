@@ -10,11 +10,16 @@ InstanceManager::InstanceManager(
 	GameRulesManager const& new_game_rules_manager,
 	DefinitionManager const& new_definition_manager,
 	gamestate_updated_func_t gamestate_updated_callback
-) : definition_manager { new_definition_manager },
+) : thread_pool { today },
+	definition_manager { new_definition_manager },
 	game_action_manager { *this },
 	game_rules_manager { new_game_rules_manager },
 	good_instance_manager { new_definition_manager.get_economy_manager().get_good_definition_manager() },
-	market_instance { new_definition_manager.get_define_manager().get_country_defines(), good_instance_manager },
+	market_instance {
+		thread_pool,
+		new_definition_manager.get_define_manager().get_country_defines(),
+		good_instance_manager
+	},
 	artisanal_producer_factory_pattern {
 		good_instance_manager,
 		new_definition_manager.get_modifier_manager().get_modifier_effect_cache(),
@@ -28,7 +33,10 @@ InstanceManager::InstanceManager(
 		new_definition_manager.get_define_manager().get_military_defines()
 	},
 	politics_instance_manager { *this },
-	map_instance { new_definition_manager.get_map_definition() },
+	map_instance {
+		new_definition_manager.get_map_definition(),
+		thread_pool
+	},
 	simulation_clock {
 		[this]() -> void {
 			queue_game_action(game_action_type_t::GAME_ACTION_TICK, {});
@@ -87,7 +95,7 @@ void InstanceManager::tick() {
 	Logger::info("Tick: ", today);
 
 	// Tick...
-	map_instance.map_tick(today);
+	map_instance.map_tick();
 	country_instance_manager.country_manager_tick(*this);
 	unit_instance_manager.tick();
 	market_instance.execute_orders();
@@ -138,7 +146,6 @@ bool InstanceManager::setup() {
 		definition_manager.get_economy_manager().get_building_type_manager(),
 		market_instance,
 		definition_manager.get_modifier_manager().get_modifier_effect_cache(),
-		definition_manager.get_define_manager().get_pops_defines(),
 		definition_manager.get_pop_manager().get_stratas(),
 		definition_manager.get_pop_manager().get_pop_types(),
 		definition_manager.get_politics_manager().get_ideology_manager().get_ideologies()
@@ -159,6 +166,13 @@ bool InstanceManager::setup() {
 		game_rules_manager,
 		good_instance_manager,
 		definition_manager.get_define_manager().get_economy_defines()
+	);
+
+	thread_pool.initialise(
+		definition_manager.get_define_manager().get_pops_defines(),
+		definition_manager.get_pop_manager().get_stratas(),
+		good_instance_manager.get_good_instances(),
+		map_instance.get_province_instances()
 	);
 
 	game_instance_setup = true;
