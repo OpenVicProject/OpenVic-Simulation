@@ -1,5 +1,5 @@
 #pragma once
-#include <iostream>
+#include <memory>
 #include <vector>
 
 #include "openvic-simulation/DefinitionManager.hpp"
@@ -17,12 +17,12 @@ namespace OpenVic {
 
 	public:
 		Testing(DefinitionManager const& definition_manager);
-		~Testing();
 
-		std::vector<TestScript*> test_scripts = std::vector<TestScript*>();
+		std::vector<std::unique_ptr<TestScript>> test_scripts;
 
 		void execute_all_scripts();
 		void report_results();
-		void report_result(std::string req_title, std::ofstream& outfile, std::vector<Requirement*> reqs);
+		void report_result(std::string req_title, std::ofstream& outfile, std::vector<std::unique_ptr<Requirement>>& reqs);
+		void report_result(std::string req_title, std::ofstream& outfile, std::vector<Requirement*>& reqs);
 	};
 }
