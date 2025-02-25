@@ -95,6 +95,11 @@ bool Actor::_set_animation(std::string_view name, std::string_view file, fixed_p
 bool Actor::_fill_key_map(NodeTools::case_insensitive_key_map_t& key_map) {
 	bool ret = Object::_fill_key_map(key_map);
 
+	using namespace std::string_view_literals;
+	static const auto bind_set_animation = [](Actor* self, std::string_view name) {
+		return [self, name](std::string_view file){ return self->_set_animation(name, file, 0); };
+	};
+
 	ret &= add_key_map_entries(key_map,
 		"actorfile", ONE_EXACTLY, expect_string(assign_variable_callback_string(model_file)),
 		"scale", ONE_EXACTLY, expect_fixed_point(assign_variable_callback(scale)),
@@ -116,9 +121,9 @@ bool Actor::_fill_key_map(NodeTools::case_insensitive_key_map_t& key_map) {
 			return true;
 		},
 
-		"idle", ZERO_OR_ONE, expect_string(std::bind(&Actor::_set_animation, this, "idle", std::placeholders::_1, 0)),
-		"move", ZERO_OR_ONE, expect_string(std::bind(&Actor::_set_animation, this, "move", std::placeholders::_1, 0)),
-		"attack", ZERO_OR_ONE, expect_string(std::bind(&Actor::_set_animation, this, "attack", std::placeholders::_1, 0)),
+		"idle", ZERO_OR_ONE, expect_string(bind_set_animation(this, "idle"sv)),
+		"move", ZERO_OR_ONE, expect_string(bind_set_animation(this, "move"sv)),
+		"attack", ZERO_OR_ONE, expect_string(bind_set_animation(this, "attack"sv)),
 		"animation", ZERO_OR_MORE, [this](ast::NodeCPtr node) -> bool {
 			std::string_view name {}, file {};
 			fixed_point_t scroll_time = 0;
