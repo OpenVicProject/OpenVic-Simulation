@@ -53,6 +53,8 @@ CountryInstance::CountryInstance(
 	building_type_unlock_levels { &building_type_keys },
 
 	/* Budget */
+	taxable_income_by_pop_type { &pop_type_keys },
+	effective_tax_rate_by_strata { &strata_keys },
 	tax_rate_slider_value_by_strata { &strata_keys },
 
 	/* Technology */
@@ -982,7 +984,9 @@ static inline constexpr fixed_point_t nonzero_or_one(fixed_point_t const& value)
 	return value == fixed_point_t::_0() ? fixed_point_t::_1() : value;
 }
 
-void CountryInstance::_update_budget(ModifierEffectCache const& modifier_effect_cache) {
+void CountryInstance::_update_budget(DefineManager const& define_manager, ModifierEffectCache const& modifier_effect_cache) {
+	CountryDefines const& country_defines = define_manager.get_country_defines();
+
 	const fixed_point_t min_tax = get_modifier_effect_value(*modifier_effect_cache.get_min_tax());
 	const fixed_point_t max_tax = nonzero_or_one(get_modifier_effect_value(*modifier_effect_cache.get_max_tax()));
 
@@ -1007,6 +1011,14 @@ void CountryInstance::_update_budget(ModifierEffectCache const& modifier_effect_
 
 	// TODO - make sure we properly update everything dependent on these sliders' values,
 	// as they might change if their sliders' bounds shrink past their previous values.
+
+	const fixed_point_t tax_efficiency = country_defines.get_base_country_tax_efficiency() +
+		get_modifier_effect_value(*modifier_effect_cache.get_tax_efficiency()) +
+		get_modifier_effect_value(*modifier_effect_cache.get_tax_eff()) / 100;
+
+	for (auto const& [strata, tax_rate_slider_value] : tax_rate_slider_value_by_strata) {
+		effective_tax_rate_by_strata[strata] = tax_rate_slider_value.get_value() * tax_efficiency;
+	}
 }
 
 void CountryInstance::_update_current_tech(InstanceManager const& instance_manager) {
@@ -1437,7 +1449,7 @@ void CountryInstance::update_gamestate(InstanceManager& instance_manager) {
 		definition_manager.get_military_manager().get_unit_type_manager(),
 		modifier_effect_cache
 	);
-	_update_budget(modifier_effect_cache);
+	_update_budget(define_manager, modifier_effect_cache);
 
 	// These don't do anything yet
 	_update_politics();

@@ -123,6 +123,8 @@ namespace OpenVic {
 
 		/* Budget */
 		fixed_point_t PROPERTY(cash_stockpile);
+		IndexedMap<PopType, fixed_point_t> PROPERTY(taxable_income_by_pop_type);
+		IndexedMap<Strata, fixed_point_t> PROPERTY(effective_tax_rate_by_strata);
 		IndexedMap<Strata, SliderValue> PROPERTY(tax_rate_slider_value_by_strata);
 		SliderValue PROPERTY(land_spending_slider_value);
 		SliderValue PROPERTY(naval_spending_slider_value);
@@ -502,7 +504,7 @@ namespace OpenVic {
 
 	private:
 		void _update_production(DefineManager const& define_manager);
-		void _update_budget(ModifierEffectCache const& modifier_effect_cache);
+		void _update_budget(DefineManager const& define_manager, ModifierEffectCache const& modifier_effect_cache);
 		// Expects current_research to be non-null
 		void _update_current_tech(InstanceManager const& instance_manager);
 		void _update_technology(InstanceManager const& instance_manager);
