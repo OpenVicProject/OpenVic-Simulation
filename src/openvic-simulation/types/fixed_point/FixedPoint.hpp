@@ -1,11 +1,13 @@
 #pragma once
 
+#include <charconv>
 #include <concepts>
 #include <cstdint>
 #include <cstdlib>
 #include <limits>
 #include <sstream>
 #include <string_view>
+#include <system_error>
 
 #include "openvic-simulation/utility/Getters.hpp"
 #include "openvic-simulation/utility/Logger.hpp"
@@ -610,7 +612,11 @@ namespace OpenVic {
 
 	private:
 		static constexpr fixed_point_t parse_integer(char const* str, char const* const end, bool* successful) {
-			int64_t parsed_value = StringUtils::string_to_int64(str, end, successful, 10);
+			int64_t parsed_value = 0;
+			std::from_chars_result result = StringUtils::string_to_int64(str, end, parsed_value);
+			if (successful) {
+				*successful = result.ec == std::errc{};
+			}
 			return parse(parsed_value);
 		}
 
@@ -619,7 +625,11 @@ namespace OpenVic {
 			if (read_end < end) {
 				end = read_end;
 			}
-			uint64_t parsed_value = StringUtils::string_to_uint64(str, end, successful, 10);
+			uint64_t parsed_value;
+			std::from_chars_result result = StringUtils::string_to_uint64(str, end, parsed_value);
+			if (successful) {
+				*successful = result.ec == std::errc{};
+			}
 			while (end++ < read_end) {
 				parsed_value *= 10;
 			}

@@ -2,44 +2,129 @@
 
 #include <algorithm>
 #include <cctype>
+#include <charconv>
 #include <cstdint>
 #include <cstring>
-#include <limits>
 #include <string>
 #include <string_view>
 #include <type_traits>
 
 namespace OpenVic::StringUtils {
+	template<typename T>
+	[[nodiscard]] inline constexpr std::from_chars_result from_chars( //
+		char const* const first, char const* const last, T& raw_value, const int base
+	) noexcept {
+		constexpr auto digit_from_char = [](const char c) noexcept {
+			// convert ['0', '9'] ['A', 'Z'] ['a', 'z'] to [0, 35], everything else to 255
+			static constexpr unsigned char digit_from_byte[] = {
+				255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
+				255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
+				255, 255, 255, 255, 0,	 1,	  2,   3,	4,	 5,	  6,   7,	8,	 9,	  255, 255, 255, 255, 255, 255, 255, 10,
+				11,	 12,  13,  14,	15,	 16,  17,  18,	19,	 20,  21,  22,	23,	 24,  25,  26,	27,	 28,  29,  30,	31,	 32,
+				33,	 34,  35,  255, 255, 255, 255, 255, 255, 10,  11,  12,	13,	 14,  15,  16,	17,	 18,  19,  20,	21,	 22,
+				23,	 24,  25,  26,	27,	 28,  29,  30,	31,	 32,  33,  34,	35,	 255, 255, 255, 255, 255, 255, 255, 255, 255,
+				255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
+				255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
+				255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
+				255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
+				255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
+				255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255
+			};
+			static_assert(std::size(digit_from_byte) == 256);
+
+			return digit_from_byte[static_cast<unsigned char>(c)];
+		};
+
+		if (!std::is_constant_evaluated()) {
+			return std::from_chars(first, last, raw_value, base);
+		}
+
+		bool minus_sign = false;
+
+		const char* next = first;
+
+		if constexpr (std::is_signed_v<T>) {
+			if (next != last && *next == '-') {
+				minus_sign = true;
+				++next;
+			}
+		}
+
+		using unsigned_t = std::make_unsigned_t<T>;
+
+		[[maybe_unused]] constexpr unsigned_t uint_max = static_cast<unsigned_t>(-1);
+		[[maybe_unused]] constexpr unsigned_t int_max = static_cast<unsigned_t>(uint_max >> 1);
+		[[maybe_unused]] constexpr unsigned_t abs_int_min = static_cast<unsigned_t>(int_max + 1);
+
+		unsigned_t risky_val;
+		unsigned_t max_digit;
+
+		if constexpr (std::is_signed_v<T>) {
+			if (minus_sign) {
+				risky_val = static_cast<unsigned_t>(abs_int_min / base);
+				max_digit = static_cast<unsigned_t>(abs_int_min % base);
+			} else {
+				risky_val = static_cast<unsigned_t>(int_max / base);
+				max_digit = static_cast<unsigned_t>(int_max % base);
+			}
+		} else {
+			risky_val = static_cast<unsigned_t>(uint_max / base);
+			max_digit = static_cast<unsigned_t>(uint_max % base);
+		}
+
+		unsigned_t value = 0;
+
+		bool overflowed = false;
+
+		for (; next != last; ++next) {
+			const unsigned char digit = digit_from_char(*next);
+
+			if (digit >= base) {
+				break;
+			}
+
+			if (value < risky_val // never overflows
+				|| (value == risky_val && digit <= max_digit)) { // overflows for certain digits
+				value = static_cast<unsigned_t>(value * base + digit);
+			} else { // value > risky_val always overflows
+				overflowed = true; // keep going, next still needs to be updated, value is now irrelevant
+			}
+		}
+
+		if (next - first == static_cast<std::ptrdiff_t>(minus_sign)) {
+			return { first, std::errc::invalid_argument };
+		}
+
+		if (overflowed) {
+			return { next, std::errc::result_out_of_range };
+		}
+
+		if constexpr (std::is_signed_v<T>) {
+			if (minus_sign) {
+				value = static_cast<unsigned_t>(0 - value);
+			}
+		}
+
+		raw_value = static_cast<T>(value);
+
+		return { next, std::errc {} };
+	}
+
 	/* The constexpr function 'string_to_uint64' will convert a string into a uint64_t integer value.
 	 * The function takes four parameters: the input string (as a pair of pointers marking the start and
-	 * end of the string), a bool pointer for reporting success, and the base for numerical conversion.
+	 * end of the string), the value reference to assign, and the base for numerical conversion.
 	 * The base parameter defaults to 10 (decimal), but it can be any value between 2 and 36. If the base
 	 * given is 0, it will be set to 16 if the string starts with "0x" or "0X", otherwise 8 if the string
-	 * still starts with "0", otherwise 10. The success bool pointer parameter is used to report whether
-	 * or not conversion was successful. It can be nullptr if this information is not needed.
+	 * still starts with "0", otherwise 10. The std::from_chars_result return value is used to report whether
+	 * or not conversion was successful.
 	 */
-	constexpr uint64_t string_to_uint64(char const* str, char const* const end, bool* successful = nullptr, int base = 10) {
-		if (successful != nullptr) {
-			*successful = false;
-		}
-
-		// Base value should be between 2 and 36. If it's not, return 0 as an invalid case.
-		if (str == nullptr || end <= str || base < 0 || base == 1 || base > 36) {
-			return 0;
-		}
-
-		// The result of the conversion will be stored in this variable.
-		uint64_t result = 0;
-
+	 [[nodiscard]] inline constexpr std::from_chars_result string_to_uint64(char const* str, char const* const end, uint64_t& value, int base = 10) {
 		// If base is zero, base is determined by the string prefix.
 		if (base == 0) {
-			if (*str == '0') {
+			if (str && *str == '0') {
 				if (str + 1 != end && (str[1] == 'x' || str[1] == 'X')) {
 					base = 16; // Hexadecimal.
 					str += 2; // Skip '0x' or '0X'
-					if (str == end) {
-						return 0;
-					}
 				} else {
 					base = 8; // Octal.
 				}
@@ -48,106 +133,59 @@ namespace OpenVic::StringUtils {
 			}
 		} else if (base == 16) {
 			// If base is 16 and string starts with '0x' or '0X', skip these characters.
-			if (*str == '0' && str + 1 != end && (str[1] == 'x' || str[1] == 'X')) {
+			if (str && *str == '0' && str + 1 != end && (str[1] == 'x' || str[1] == 'X')) {
 				str += 2;
-				if (str == end) {
-					return 0;
+			}
+		}
+
+		return from_chars(str, end, value, base);
+	}
+
+	[[nodiscard]] inline constexpr std::from_chars_result string_to_uint64(char const* const str, size_t length, uint64_t& value, int base = 10) {
+		return string_to_uint64(str, str + length, value, base);
+	}
+
+	[[nodiscard]] inline constexpr std::from_chars_result string_to_uint64(std::string_view str, uint64_t& value, int base = 10) {
+		return string_to_uint64(str.data(), str.length(), value, base);
+	}
+
+	/* The constexpr function 'string_to_int64' will convert a string into a int64_t integer value.
+	 * The function takes four parameters: the input string (as a pair of pointers marking the start and
+	 * end of the string), the value reference to assign, and the base for numerical conversion.
+	 * The base parameter defaults to 10 (decimal), but it can be any value between 2 and 36. If the base
+	 * given is 0, it will be set to 16 if the string starts with "0x" or "0X", otherwise 8 if the string
+	 * still starts with "0", otherwise 10. The std::from_chars_result return value is used to report whether
+	 * or not conversion was successful.
+	 */
+	[[nodiscard]] inline constexpr std::from_chars_result string_to_int64(char const* str, char const* const end, int64_t& value, int base = 10) {
+		// If base is zero, base is determined by the string prefix.
+		if (base == 0) {
+			if (str && *str == '0') {
+				if (str + 1 != end && (str[1] == 'x' || str[1] == 'X')) {
+					base = 16; // Hexadecimal.
+					str += 2; // Skip '0x' or '0X'
+				} else {
+					base = 8; // Octal.
 				}
-			}
-		}
-
-		// Convert the number in the string.
-		for (; str != end; ++str) {
-			int digit;
-			if (*str >= '0' && *str <= '9') {
-				digit = *str - '0'; // Calculate digit value for '0'-'9'.
-			} else if (*str >= 'a' && *str <= 'z') {
-				digit = *str - 'a' + 10; // Calculate digit value for 'a'-'z'.
-			} else if (*str >= 'A' && *str <= 'Z') {
-				digit = *str - 'A' + 10; // Calculate digit value for 'A'-'Z'.
 			} else {
-				break; // Stop conversion if current character is not a digit.
+				base = 10; // Decimal.
 			}
-
-			if (digit >= base) {
-				break; // Stop conversion if current digit is greater than or equal to the base.
+		} else if (base == 16) {
+			// If base is 16 and string starts with '0x' or '0X', skip these characters.
+			if (str && *str == '0' && str + 1 != end && (str[1] == 'x' || str[1] == 'X')) {
+				str += 2;
 			}
-
-			// Check for overflow on multiplication
-			if (result > std::numeric_limits<uint64_t>::max() / base) {
-				return std::numeric_limits<uint64_t>::max();
-			}
-
-			result *= base;
-
-			// Check for overflow on addition
-			if (result > std::numeric_limits<uint64_t>::max() - digit) {
-				return std::numeric_limits<uint64_t>::max();
-			}
-
-			result += digit;
 		}
 
-		// If successful is not null and the entire string was parsed,
-		// set *successful to true (if not it is already false).
-		if (successful != nullptr && str == end) {
-			*successful = true;
-		}
-
-		return result;
+		return from_chars(str, end, value, base);
 	}
 
-	inline constexpr uint64_t string_to_uint64(char const* str, size_t length, bool* successful = nullptr, int base = 10) {
-		return string_to_uint64(str, str + length, successful, base);
+	[[nodiscard]] inline constexpr std::from_chars_result string_to_int64(char const* str, size_t length, int64_t& value, int base = 10) {
+		return string_to_int64(str, str + length, value, base);
 	}
 
-	inline constexpr uint64_t string_to_uint64(std::string_view str, bool* successful = nullptr, int base = 10) {
-		return string_to_uint64(str.data(), str.length(), successful, base);
-	}
-
-	constexpr int64_t string_to_int64(char const* str, char const* const end, bool* successful = nullptr, int base = 10) {
-		if (successful != nullptr) {
-			*successful = false;
-		}
-
-		if (str == nullptr || end <= str) {
-			return 0;
-		}
-
-		// This flag will be set if the number is negative.
-		bool is_negative = false;
-
-		// Check if there is a sign character.
-		if (*str == '+' || *str == '-') {
-			if (*str == '-') {
-				is_negative = true;
-			}
-			++str;
-			if (str == end) {
-				return 0;
-			}
-		}
-
-		const uint64_t result = string_to_uint64(str, end, successful, base);
-		if (!is_negative) {
-			if (result >= std::numeric_limits<int64_t>::max()) {
-				return std::numeric_limits<int64_t>::max();
-			}
-			return result;
-		} else {
-			if (result > std::numeric_limits<int64_t>::max()) {
-				return std::numeric_limits<int64_t>::min();
-			}
-			return -result;
-		}
-	}
-
-	inline constexpr int64_t string_to_int64(char const* str, size_t length, bool* successful = nullptr, int base = 10) {
-		return string_to_int64(str, str + length, successful, base);
-	}
-
-	inline constexpr int64_t string_to_int64(std::string_view str, bool* successful = nullptr, int base = 10) {
-		return string_to_int64(str.data(), str.length(), successful, base);
+	[[nodiscard]] inline constexpr std::from_chars_result string_to_int64(std::string_view str, int64_t& value, int base = 10) {
+		return string_to_int64(str.data(), str.length(), value, base);
 	}
 
 	inline constexpr bool strings_equal_case_insensitive(std::string_view const& lhs, std::string_view const& rhs) {

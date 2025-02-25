@@ -1,5 +1,6 @@
 #include "NodeTools.hpp"
 
+#include <charconv>
 #include <concepts>
 #include <string_view>
 #include <system_error>
@@ -143,9 +144,9 @@ node_callback_t NodeTools::expect_int_bool(callback_t<bool> callback) {
 
 node_callback_t NodeTools::expect_int64(callback_t<int64_t> callback, int base) {
 	return expect_identifier([callback, base](std::string_view identifier) -> bool {
-		bool successful = false;
-		const int64_t val = StringUtils::string_to_int64(identifier, &successful, base);
-		if (successful) {
+		int64_t val;
+		std::from_chars_result result = StringUtils::string_to_int64(identifier, val, base);
+		if (result.ec == std::errc{}) {
 			return callback(val);
 		}
 		Logger::error("Invalid int identifier text: ", identifier);
@@ -155,9 +156,9 @@ node_callback_t NodeTools::expect_int64(callback_t<int64_t> callback, int base) 
 
 node_callback_t NodeTools::expect_uint64(callback_t<uint64_t> callback, int base) {
 	return expect_identifier([callback, base](std::string_view identifier) -> bool {
-		bool successful = false;
-		const uint64_t val = StringUtils::string_to_uint64(identifier, &successful, base);
-		if (successful) {
+		uint64_t val;
+		std::from_chars_result result = StringUtils::string_to_uint64(identifier, val, base);
+		if (result.ec == std::errc{}) {
 			return callback(val);
 		}
 		Logger::error("Invalid uint identifier text: ", identifier);

@@ -1,4 +1,6 @@
 #include "Event.hpp"
+#include <charconv>
+#include <system_error>
 
 #include "openvic-simulation/dataloader/NodeTools.hpp"
 #include "openvic-simulation/politics/Issue.hpp"
@@ -204,7 +206,9 @@ bool EventManager::load_on_action_file(ast::NodeCPtr root) {
 			weighted_events,
 			[this, &identifier, &weighted_events](std::string_view weight_str, ast::NodeCPtr event_node) -> bool {
 				bool ret = false;
-				uint64_t weight = StringUtils::string_to_uint64(weight_str, &ret);
+				uint64_t weight;
+				std::from_chars_result result = StringUtils::string_to_uint64(weight_str, weight);
+				ret = result.ec == std::errc{};
 				if (!ret) {
 					Logger::error("Invalid weight ", weight_str, " on action ", identifier);
 					return ret;

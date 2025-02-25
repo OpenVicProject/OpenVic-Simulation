@@ -1,6 +1,8 @@
 #include "MapDefinition.hpp"
 
+#include <charconv>
 #include <cstdint>
+#include <system_error>
 #include <vector>
 
 #include "openvic-simulation/dataloader/NodeTools.hpp"
@@ -405,7 +407,9 @@ static bool _parse_province_colour(colour_t& colour, std::array<std::string_view
 			component.remove_suffix(1);
 		}
 		bool successful = false;
-		const uint64_t val = StringUtils::string_to_uint64(component, &successful, 10);
+		uint64_t val;
+		std::from_chars_result result = StringUtils::string_to_uint64(component, val);
+		successful = result.ec == std::errc{};
 		if (successful && val <= colour_t::max_value) {
 			colour[i] = val;
 		} else {
@@ -937,7 +941,9 @@ bool MapDefinition::generate_and_load_province_adjacencies(std::vector<LineObjec
 
 			const std::string_view data_str = adjacency.get_value_for(4);
 			bool successful = false;
-			const uint64_t data_uint = StringUtils::string_to_uint64(data_str, &successful);
+			uint64_t data_uint;
+			std::from_chars_result result = StringUtils::string_to_uint64(data_str, data_uint);
+			successful = result.ec == std::errc{};
 			if (!successful || data_uint > std::numeric_limits<adjacency_t::data_t>::max()) {
 				Logger::error("Invalid adjacency data: \"", data_str, "\"");
 				ret = false;

@@ -53,7 +53,7 @@ namespace OpenVic {
 			return (make_rgb_integer(red, green, blue) << component_bit_size) | (alpha << rgba_alpha_shift);
 		}
 		static constexpr integer_type make_argb_integer(value_type red, value_type green, value_type blue, value_type alpha) {
-			return (alpha << argb_alpha_shift) | make_rgb_integer(red, green, blue);
+			return make_rgb_integer(red, green, blue) | static_cast<integer_type>(alpha << argb_alpha_shift);
 		}
 
 		static constexpr value_type red_from_rgb(integer_type colour) {
