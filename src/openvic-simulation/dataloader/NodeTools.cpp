@@ -27,7 +27,7 @@ using namespace OpenVic::NodeTools;
 
 template<typename T>
 static NodeCallback auto _expect_type(Callback<T const*> auto&& callback) {
-	return [callback = FWD(callback)](ast::NodeCPtr node) -> bool {
+	return [callback = FWD(callback)](ast::NodeCPtr node) mutable -> bool {
 		if (node != nullptr) {
 			T const* cast_node = dryad::node_try_cast<T>(node);
 			if (cast_node != nullptr) {
@@ -45,7 +45,7 @@ using _NodeIterator = typename decltype(std::declval<ast::NodeCPtr>()->children(
 using _NodeStatementRange = dryad::node_range<_NodeIterator, ast::Statement>;
 
 static NodeCallback auto _abstract_statement_node_callback(Callback<_NodeStatementRange> auto&& callback) {
-	return [callback = FWD(callback)](ast::NodeCPtr node) -> bool {
+	return [callback = FWD(callback)](ast::NodeCPtr node) mutable -> bool {
 		if (node != nullptr) {
 			if (auto const* file_tree = dryad::node_try_cast<ast::FileTree>(node)) {
 				return callback(file_tree->statements());
@@ -68,7 +68,7 @@ static NodeCallback auto _abstract_statement_node_callback(Callback<_NodeStateme
 
 template<std::derived_from<ast::FlatValue> T>
 static Callback<T const*> auto _abstract_symbol_node_callback(Callback<ovdl::symbol<char>> auto&& callback, bool allow_empty) {
-	return [callback = FWD(callback), allow_empty](T const* node) -> bool {
+	return [callback = FWD(callback), allow_empty](T const* node) mutable -> bool {
 		if (allow_empty) {
 			return callback(node->value());
 		} else {
@@ -83,9 +83,9 @@ static Callback<T const*> auto _abstract_symbol_node_callback(Callback<ovdl::sym
 }
 
 template<std::derived_from<ast::FlatValue> T>
-static Callback<T const*> auto _abstract_string_node_callback(Callback<std::string_view> auto callback, bool allow_empty) {
+static Callback<T const*> auto _abstract_string_node_callback(Callback<std::string_view> auto&& callback, bool allow_empty) {
 	return _abstract_symbol_node_callback<T>(
-		[callback](ovdl::symbol<char> symbol) -> bool {
+		[callback = FWD(callback)](ovdl::symbol<char> symbol) mutable -> bool {
 			return callback(symbol.view());
 		},
 		allow_empty
@@ -96,16 +96,16 @@ node_callback_t NodeTools::expect_identifier(callback_t<std::string_view> callba
 	return _expect_type<ast::IdentifierValue>(_abstract_string_node_callback<ast::IdentifierValue>(callback, false));
 }
 
-static NodeCallback auto _expect_identifier(Callback<ovdl::symbol<char>> auto callback) {
-	return _expect_type<ast::IdentifierValue>(_abstract_symbol_node_callback<ast::IdentifierValue>(callback, false));
+static NodeCallback auto _expect_identifier(Callback<ovdl::symbol<char>> auto&& callback) {
+	return _expect_type<ast::IdentifierValue>(_abstract_symbol_node_callback<ast::IdentifierValue>(FWD(callback), false));
 }
 
 node_callback_t NodeTools::expect_string(callback_t<std::string_view> callback, bool allow_empty) {
 	return _expect_type<ast::StringValue>(_abstract_string_node_callback<ast::StringValue>(callback, allow_empty));
 }
 
-static NodeCallback auto _expect_string(Callback<ovdl::symbol<char>> auto callback, bool allow_empty) {
-	return _expect_type<ast::StringValue>(_abstract_symbol_node_callback<ast::StringValue>(callback, allow_empty));
+static NodeCallback auto _expect_string(Callback<ovdl::symbol<char>> auto&& callback, bool allow_empty) {
+	return _expect_type<ast::StringValue>(_abstract_symbol_node_callback<ast::StringValue>(FWD(callback), allow_empty));
 }
 
 node_callback_t NodeTools::expect_identifier_or_string(callback_t<std::string_view> callback, bool allow_empty) {
@@ -113,7 +113,7 @@ node_callback_t NodeTools::expect_identifier_or_string(callback_t<std::string_vi
 		if (node != nullptr) {
 			auto const* cast_node = dryad::node_try_cast<ast::FlatValue>(node);
 			if (cast_node != nullptr) {
-				return _abstract_string_node_callback<ast::FlatValue>(callback, allow_empty)(cast_node);
+				return _abstract_string_node_callback<ast::FlatValue>(FWD(callback), allow_empty)(cast_node);
 			}
 			Logger::error(
 				"Invalid node type ", ast::get_type_name(node->kind()), " when expecting ", utility::type_name<ast::IdentifierValue>(), " or ",
@@ -134,7 +134,7 @@ node_callback_t NodeTools::expect_bool(callback_t<bool> callback) {
 }
 
 node_callback_t NodeTools::expect_int_bool(callback_t<bool> callback) {
-	return expect_uint64([callback](uint64_t num) -> bool {
+	return expect_uint64([callback](uint64_t num) mutable -> bool {
 		if (num > 1) {
 			Logger::warning("Found int bool with value >1: ", num);
 		}
@@ -143,7 +143,7 @@ node_callback_t NodeTools::expect_int_bool(callback_t<bool> callback) {
 }
 
 node_callback_t NodeTools::expect_int64(callback_t<int64_t> callback, int base) {
-	return expect_identifier([callback, base](std::string_view identifier) -> bool {
+	return expect_identifier([callback, base](std::string_view identifier) mutable -> bool {
 		int64_t val;
 		std::from_chars_result result = StringUtils::string_to_int64(identifier, val, base);
 		if (result.ec == std::errc{}) {
@@ -155,7 +155,7 @@ node_callback_t NodeTools::expect_int64(callback_t<int64_t> callback, int base) 
 }
 
 node_callback_t NodeTools::expect_uint64(callback_t<uint64_t> callback, int base) {
-	return expect_identifier([callback, base](std::string_view identifier) -> bool {
+	return expect_identifier([callback, base](std::string_view identifier) mutable -> bool {
 		uint64_t val;
 		std::from_chars_result result = StringUtils::string_to_uint64(identifier, val, base);
 		if (result.ec == std::errc{}) {
@@ -167,7 +167,7 @@ node_callback_t NodeTools::expect_uint64(callback_t<uint64_t> callback, int base
 }
 
 callback_t<std::string_view> NodeTools::expect_fixed_point_str(callback_t<fixed_point_t> callback) {
-	return [callback](std::string_view identifier) -> bool {
+	return [callback](std::string_view identifier) mutable -> bool {
 		bool successful = false;
 		const fixed_point_t val = fixed_point_t::parse(identifier.data(), identifier.length(), &successful);
 		if (successful) {
@@ -183,7 +183,7 @@ node_callback_t NodeTools::expect_fixed_point(callback_t<fixed_point_t> callback
 }
 
 node_callback_t NodeTools::expect_colour(callback_t<colour_t> callback) {
-	return [callback](ast::NodeCPtr node) -> bool {
+	return [callback](ast::NodeCPtr node) mutable -> bool {
 		colour_t col = colour_t::null();
 		int32_t components = 0;
 		bool ret = expect_list_of_length(3, expect_fixed_point(
@@ -208,13 +208,13 @@ node_callback_t NodeTools::expect_colour(callback_t<colour_t> callback) {
 }
 
 node_callback_t NodeTools::expect_colour_hex(callback_t<colour_argb_t> callback) {
-	return expect_uint<colour_argb_t::integer_type>([callback](colour_argb_t::integer_type val) -> bool {
+	return expect_uint<colour_argb_t::integer_type>([callback](colour_argb_t::integer_type val) mutable -> bool {
 		return callback(colour_argb_t::from_argb(val));
 	}, 16);
 }
 
 callback_t<std::string_view> NodeTools::expect_date_str(callback_t<Date> callback) {
-	return [callback](std::string_view identifier) -> bool {
+	return [callback](std::string_view identifier) mutable -> bool {
 		Date::from_chars_result result;
 		const Date date = Date::from_string_log(identifier, &result);
 		if (result.ec == std::errc{}) {
@@ -238,26 +238,26 @@ node_callback_t NodeTools::expect_date_identifier_or_string(callback_t<Date> cal
 }
 
 node_callback_t NodeTools::expect_years(callback_t<Timespan> callback) {
-	return expect_int<Timespan::day_t>([callback](Timespan::day_t val) -> bool {
+	return expect_int<Timespan::day_t>([callback](Timespan::day_t val) mutable -> bool {
 		return callback(Timespan::from_years(val));
 	});
 }
 
 node_callback_t NodeTools::expect_months(callback_t<Timespan> callback) {
-	return expect_int<Timespan::day_t>([callback](Timespan::day_t val) -> bool {
+	return expect_int<Timespan::day_t>([callback](Timespan::day_t val) mutable -> bool {
 		return callback(Timespan::from_months(val));
 	});
 }
 
 node_callback_t NodeTools::expect_days(callback_t<Timespan> callback) {
-	return expect_int<Timespan::day_t>([callback](Timespan::day_t val) -> bool {
+	return expect_int<Timespan::day_t>([callback](Timespan::day_t val) mutable -> bool {
 		return callback(Timespan::from_days(val));
 	});
 }
 
 template<typename T, node_callback_t (*expect_func)(callback_t<T>)>
 NodeCallback auto _expect_vec2(Callback<vec2_t<T>> auto&& callback) {
-	return [callback = FWD(callback)](ast::NodeCPtr node) -> bool {
+	return [callback = FWD(callback)](ast::NodeCPtr node) mutable -> bool {
 		vec2_t<T> vec;
 		bool ret = expect_dictionary_keys(
 			"x", ONE_EXACTLY, expect_func(assign_variable_callback(vec.x)),
@@ -297,7 +297,7 @@ node_callback_t NodeTools::expect_fvec2(callback_t<fvec2_t> callback) {
 // seen in some gfx files, these vectors don't have x,y,z,w labels, so are loaded similarly to colours.
 
 node_callback_t NodeTools::expect_fvec3(callback_t<fvec3_t> callback) {
-	return [callback](ast::NodeCPtr node) -> bool {
+	return [callback](ast::NodeCPtr node) mutable -> bool {
 		fvec3_t vec;
 		int32_t components = 0;
 		bool ret = expect_list_of_length(3, expect_fixed_point(
@@ -312,7 +312,7 @@ node_callback_t NodeTools::expect_fvec3(callback_t<fvec3_t> callback) {
 }
 
 node_callback_t NodeTools::expect_fvec4(callback_t<fvec4_t> callback) {
-	return [callback](ast::NodeCPtr node) -> bool {
+	return [callback](ast::NodeCPtr node) mutable -> bool {
 		fvec4_t vec;
 		int32_t components = 0;
 		bool ret = expect_list_of_length(4, expect_fixed_point(
@@ -327,7 +327,7 @@ node_callback_t NodeTools::expect_fvec4(callback_t<fvec4_t> callback) {
 }
 
 node_callback_t NodeTools::expect_assign(key_value_callback_t callback) {
-	return _expect_type<ast::AssignStatement>([callback](ast::AssignStatement const* assign_node) -> bool {
+	return _expect_type<ast::AssignStatement>([callback](ast::AssignStatement const* assign_node) mutable -> bool {
 		std::string_view left;
 		bool ret = expect_identifier(assign_variable_callback(left))(assign_node->left());
 		if (ret) {
@@ -343,7 +343,7 @@ node_callback_t NodeTools::expect_assign(key_value_callback_t callback) {
 }
 
 node_callback_t NodeTools::expect_list_and_length(length_callback_t length_callback, node_callback_t callback) {
-	return _abstract_statement_node_callback([length_callback, callback](_NodeStatementRange list) -> bool {
+	return _abstract_statement_node_callback([length_callback, callback](_NodeStatementRange list) mutable -> bool {
 		bool ret = true;
 		auto dist = ranges::distance(list);
 		size_t size = length_callback(dist);
@@ -392,10 +392,10 @@ node_callback_t NodeTools::expect_list(node_callback_t callback) {
 }
 
 node_callback_t NodeTools::expect_length(callback_t<size_t> callback) {
-	return [callback](ast::NodeCPtr node) -> bool {
+	return [callback](ast::NodeCPtr node) mutable -> bool {
 		bool ret = true;
 		ret &= expect_list_and_length(
-			[callback, &ret](size_t size) -> size_t {
+			[callback, &ret](size_t size) mutable -> size_t {
 				ret &= callback(size);
 				return 0;
 			},
@@ -406,7 +406,7 @@ node_callback_t NodeTools::expect_length(callback_t<size_t> callback) {
 }
 
 template<typename Key>
-static node_callback_t _expect_key(Key key, NodeCallback auto callback, bool* key_found, bool allow_duplicates) {
+static node_callback_t _expect_key(Key key, NodeCallback auto&& callback, bool* key_found, bool allow_duplicates) {
 	if constexpr (std::same_as<Key, ovdl::symbol<char>>) {
 		if (!key) {
 			if (key_found != nullptr) {
@@ -427,7 +427,7 @@ static node_callback_t _expect_key(Key key, NodeCallback auto callback, bool* ke
 		}
 	};
 
-	return _abstract_statement_node_callback([key, callback, key_found, allow_duplicates](_NodeStatementRange list) -> bool {
+	return _abstract_statement_node_callback([key, callback = FWD(callback), key_found, allow_duplicates](_NodeStatementRange list) mutable -> bool {
 		bool ret = true;
 		size_t keys_found = 0;
 		for (auto sub_node : list) {
@@ -493,7 +493,7 @@ node_callback_t NodeTools::expect_dictionary(key_value_callback_t callback) {
 }
 
 node_callback_t NodeTools::name_list_callback(callback_t<name_list_t&&> callback) {
-	return [callback](ast::NodeCPtr node) -> bool {
+	return [callback](ast::NodeCPtr node) mutable -> bool {
 		name_list_t list;
 		bool ret = expect_list_reserve_length(
 			list, expect_identifier_or_string(vector_callback<std::string_view>(list))

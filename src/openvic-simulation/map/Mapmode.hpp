@@ -1,10 +1,10 @@
 #pragma once
 
-#include <functional>
-
 #include "openvic-simulation/types/Colour.hpp"
 #include "openvic-simulation/types/HasIdentifier.hpp"
 #include "openvic-simulation/types/IdentifierRegistry.hpp"
+
+#include <function2/function2.hpp>
 
 namespace OpenVic {
 	struct MapmodeManager;
@@ -24,8 +24,8 @@ namespace OpenVic {
 				: base_colour { base }, stripe_colour { stripe } {}
 			constexpr base_stripe_t(colour_argb_t both) : base_stripe_t { both, both } {}
 		};
-		using colour_func_t = std::function<
-			base_stripe_t(MapInstance const&, ProvinceInstance const&, CountryInstance const*, ProvinceInstance const*)
+		using colour_func_t = fu2::function<
+			base_stripe_t(MapInstance const&, ProvinceInstance const&, CountryInstance const*, ProvinceInstance const*) const
 		>;
 
 	private:

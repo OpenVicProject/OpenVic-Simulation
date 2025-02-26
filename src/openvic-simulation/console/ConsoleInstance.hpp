@@ -14,6 +14,8 @@
 #include "openvic-simulation/types/OrderedContainers.hpp"
 #include "openvic-simulation/utility/Getters.hpp"
 
+#include <function2/function2.hpp>
+
 namespace OpenVic {
 	struct ProvinceInstance;
 	struct CountryInstance;
@@ -32,7 +34,7 @@ namespace OpenVic {
 
 		using execute_command_func_t = FunctionRef<bool(Argument&)>;
 
-		using write_func_t = std::function<void(OpenVic::colour_t, std::string&&)>;
+		using write_func_t = fu2::function_view<void(OpenVic::colour_t, std::string&&)>;
 
 		ConsoleInstance(InstanceManager& instance_manager);
 		ConsoleInstance(InstanceManager& instance_manager, write_func_t&& write_func);

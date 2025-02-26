@@ -75,7 +75,7 @@ bool Scene::_fill_key_map(NodeTools::case_insensitive_key_map_t& key_map, UIMana
 node_callback_t Scene::expect_scene(
 	std::string_view scene_name, callback_t<std::unique_ptr<Scene>&&> callback, UIManager const& ui_manager
 ) {
-	return _expect_instance<Scene, Scene>([scene_name, callback](std::unique_ptr<Scene>&& scene) -> bool {
+	return _expect_instance<Scene, Scene>([scene_name, callback](std::unique_ptr<Scene>&& scene) mutable -> bool {
 		scene->_set_name(scene_name);
 		return callback(std::move(scene));
 	}, ui_manager);

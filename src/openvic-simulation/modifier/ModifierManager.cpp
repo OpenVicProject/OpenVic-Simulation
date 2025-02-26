@@ -763,9 +763,9 @@ key_value_callback_t ModifierManager::_expect_modifier_effect(
 key_value_callback_t ModifierManager::_expect_modifier_effect_with_fallback(
 	modifier_effect_registry_t const& registry,
 	ModifierValue& modifier_value,
-	const key_value_callback_t fallback
+	key_value_callback_t fallback
 ) const {
-	return [this, &registry, &modifier_value, fallback](const std::string_view key, const ast::NodeCPtr value) -> bool {
+	return [this, &registry, &modifier_value, fallback](const std::string_view key, const ast::NodeCPtr value) mutable -> bool {
 		if (dryad::node_has_kind<ast::ListValue>(value) && complex_modifiers.contains(key)) {
 			return expect_dictionary([this, &modifier_value, key](
 				const std::string_view inner_key, const ast::NodeCPtr inner_value

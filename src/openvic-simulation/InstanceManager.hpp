@@ -1,7 +1,5 @@
 #pragma once
 
-#include <functional>
-
 #include "openvic-simulation/console/ConsoleInstance.hpp"
 #include "openvic-simulation/country/CountryInstance.hpp"
 #include "openvic-simulation/diplomacy/CountryRelation.hpp"
@@ -17,6 +15,8 @@
 #include "openvic-simulation/types/FlagStrings.hpp"
 #include "openvic-simulation/utility/ThreadPool.hpp"
 
+#include <function2/function2.hpp>
+
 namespace OpenVic {
 
 	struct DefinitionManager;
@@ -25,7 +25,7 @@ namespace OpenVic {
 	struct InstanceManager {
 		friend GameActionManager;
 
-		using gamestate_updated_func_t = std::function<void()>;
+		using gamestate_updated_func_t = fu2::function_base<true, true, fu2::capacity_can_hold<void*>, false, false, void()>;
 
 	private:
 		ThreadPool thread_pool;

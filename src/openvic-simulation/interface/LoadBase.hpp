@@ -27,7 +27,7 @@ namespace OpenVic {
 		static NodeTools::node_callback_t _expect_value(
 			NodeTools::callback_t<T&&> callback, Context... context
 		) {
-			return [callback, &context...](ast::NodeCPtr node) -> bool {
+			return [callback, &context...](ast::NodeCPtr node) mutable -> bool {
 				T value {};
 				bool ret = value.load(node, context...);
 				ret &= callback(std::move(value));
@@ -39,7 +39,7 @@ namespace OpenVic {
 		static NodeTools::node_callback_t _expect_instance(
 			NodeTools::callback_t<std::unique_ptr<T>&&> callback, Context... context
 		) {
-			return [callback, &context...](ast::NodeCPtr node) -> bool {
+			return [callback, &context...](ast::NodeCPtr node) mutable -> bool {
 				std::unique_ptr<T> instance { std::make_unique<U>() };
 				bool ret = instance->load(node, context...);
 				ret &= callback(std::move(instance));

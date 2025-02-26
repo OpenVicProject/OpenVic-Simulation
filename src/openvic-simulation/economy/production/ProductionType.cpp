@@ -60,7 +60,7 @@ ProductionTypeManager::ProductionTypeManager() :
 node_callback_t ProductionTypeManager::_expect_job(
 	GoodDefinitionManager const& good_definition_manager, PopManager const& pop_manager, callback_t<Job&&> callback
 ) {
-	return [this, &good_definition_manager, &pop_manager, callback](ast::NodeCPtr node) -> bool {
+	return [this, &good_definition_manager, &pop_manager, callback](ast::NodeCPtr node) mutable -> bool {
 		using enum Job::effect_t;
 
 		std::string_view pop_type {};
@@ -87,7 +87,7 @@ node_callback_t ProductionTypeManager::_expect_job_list(
 	GoodDefinitionManager const& good_definition_manager, PopManager const& pop_manager,
 	callback_t<std::vector<Job>&&> callback
 ) {
-	return [this, &good_definition_manager, &pop_manager, callback](ast::NodeCPtr node) -> bool {
+	return [this, &good_definition_manager, &pop_manager, callback](ast::NodeCPtr node) mutable -> bool {
 		std::vector<Job> jobs;
 		bool ret = expect_list(_expect_job(good_definition_manager, pop_manager, vector_callback(jobs)))(node);
 		ret &= callback(std::move(jobs));

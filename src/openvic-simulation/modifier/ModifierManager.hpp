@@ -91,7 +91,7 @@ namespace OpenVic {
 		NodeTools::key_value_callback_t _expect_modifier_effect_with_fallback(
 			modifier_effect_registry_t const& registry,
 			ModifierValue& modifier_value,
-			const NodeTools::key_value_callback_t fallback
+			NodeTools::key_value_callback_t fallback
 		) const;
 
 		NodeTools::key_value_callback_t _expect_shared_tech_country_modifier_effect(ModifierValue& modifier_value) const;

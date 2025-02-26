@@ -703,7 +703,7 @@ bool MapDefinition::load_map_images(fs::path const& province_path, fs::path cons
 		6. if there is no further point, finish the segment
 		7. if the colour value changes to a different river size (>1 && <12), recursively call this function on the next segment
 	*/
-	const std::function<void(ivec2_t, uint8_t, river_t&)> next_segment = [&river_data, &rivers_bmp, &next_segment](ivec2_t last_segment_end, uint8_t last_segment_direction, river_t& river) {
+	const auto next_segment = [&river_data, &rivers_bmp](auto&& self, ivec2_t last_segment_end, uint8_t last_segment_direction, river_t& river) {
 		size_t idx = last_segment_end.x + last_segment_end.y * rivers_bmp.get_width();
 
 		std::vector<ivec2_t> points;
@@ -845,7 +845,7 @@ bool MapDefinition::load_map_images(fs::path const& province_path, fs::path cons
 		// add segment then recursively call if neeeded
 		river.push_back({ size, std::move(simplified_points) });
 		if (river_complete) return;
-		next_segment(new_point, direction, river);
+		self(static_cast<decltype(self)>(self), new_point, direction, river);
 	};
 
 	// find every river source and then run the segment algorithm.
@@ -854,7 +854,7 @@ bool MapDefinition::load_map_images(fs::path const& province_path, fs::path cons
 			if (river_data[x + y * rivers_bmp.get_width()] == START_COLOUR) { // start of a river
 				river_t river;
 
-				next_segment({ x, y }, 0, river);
+				next_segment(next_segment, { x, y }, 0, river);
 
 				rivers.push_back(std::move(river));
 			}

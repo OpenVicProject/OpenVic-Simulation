@@ -459,7 +459,7 @@ callback_t<std::string_view> ConditionManager::expect_parse_identifier(
 	DefinitionManager const& definition_manager, identifier_type_t identifier_type,
 	callback_t<HasIdentifier const*> callback
 ) const {
-	return [this, &definition_manager, identifier_type, callback](std::string_view identifier) -> bool {
+	return [this, &definition_manager, identifier_type, callback](std::string_view identifier) mutable -> bool {
 		HasIdentifier const* identified = nullptr;
 
 		#define EXPECT_CALL(type, name, manager, ...) \
@@ -528,7 +528,7 @@ node_callback_t ConditionManager::expect_condition_node(
 ) const {
 	return [this, &definition_manager, &condition, callback, current_scope, this_scope, from_scope](
 		ast::NodeCPtr node
-	) -> bool {
+	) mutable -> bool {
 		bool ret = false;
 		ConditionNode::value_t value;
 
@@ -733,7 +733,7 @@ node_callback_t ConditionManager::expect_condition_script(
 	DefinitionManager const& definition_manager, scope_type_t initial_scope, scope_type_t this_scope,
 	scope_type_t from_scope, callback_t<ConditionNode&&> callback
 ) const {
-	return [this, &definition_manager, initial_scope, this_scope, from_scope, callback](ast::NodeCPtr node) -> bool {
+	return [this, &definition_manager, initial_scope, this_scope, from_scope, callback](ast::NodeCPtr node) mutable -> bool {
 
 		ConditionNode::condition_list_t conds;
 		bool ret = expect_condition_node_list(

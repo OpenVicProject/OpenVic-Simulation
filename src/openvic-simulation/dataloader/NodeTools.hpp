@@ -19,6 +19,8 @@
 #include "openvic-simulation/utility/Getters.hpp"
 #include "openvic-simulation/utility/TslHelper.hpp"
 
+#include <function2/function2.hpp>
+
 #define MOV(...) static_cast<std::remove_reference_t<decltype(__VA_ARGS__)>&&>(__VA_ARGS__)
 #define FWD(...) static_cast<decltype(__VA_ARGS__)>(__VA_ARGS__)
 
@@ -84,7 +86,7 @@ namespace OpenVic {
 		concept LengthCallback = Functor<Fn, std::size_t, std::size_t>;
 
 		template<typename... Args>
-		using callback_t = std::function<bool(Args...)>;
+		using callback_t = fu2::function_base<true, true, fu2::capacity_default, false, false, bool(Args...)>;
 
 		using node_callback_t = callback_t<ast::NodeCPtr>;
 		constexpr bool success_callback(ast::NodeCPtr) {
@@ -112,7 +114,7 @@ namespace OpenVic {
 
 		template<std::signed_integral T>
 		NodeCallback auto expect_int(callback_t<T>& callback, int base = 10) {
-			return expect_int64([callback](int64_t val) -> bool {
+			return expect_int64([callback](int64_t val) mutable -> bool {
 				if (static_cast<int64_t>(std::numeric_limits<T>::lowest()) <= val &&
 					val <= static_cast<int64_t>(std::numeric_limits<T>::max())) {
 					return callback(val);
@@ -131,7 +133,7 @@ namespace OpenVic {
 
 		template<std::integral T>
 		NodeCallback auto expect_uint(callback_t<T>& callback, int base = 10) {
-			return expect_uint64([callback](uint64_t val) -> bool {
+			return expect_uint64([callback](uint64_t val) mutable -> bool {
 				if (val <= static_cast<uint64_t>(std::numeric_limits<T>::max())) {
 					return callback(val);
 				}
@@ -169,7 +171,7 @@ namespace OpenVic {
 		node_callback_t expect_fvec4(callback_t<fvec4_t> callback);
 		node_callback_t expect_assign(key_value_callback_t callback);
 
-		using length_callback_t = std::function<size_t(size_t)>;
+		using length_callback_t = fu2::function<size_t(size_t)>;
 		constexpr size_t default_length_callback(size_t size) {
 			return size;
 		};
@@ -443,7 +445,7 @@ namespace OpenVic {
 		Callback<std::string_view> auto expect_mapped_string(
 			template_string_map_t<T, Case> const& map, Callback<T> auto&& callback, bool warn = false
 		) {
-			return [&map, callback = FWD(callback), warn](std::string_view string) -> bool {
+			return [&map, callback = FWD(callback), warn](std::string_view string) mutable -> bool {
 				const typename template_string_map_t<T, Case>::const_iterator it = map.find(string);
 				if (it != map.end()) {
 					return callback(it->second);
