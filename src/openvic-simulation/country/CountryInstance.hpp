@@ -48,6 +48,7 @@ namespace OpenVic {
 	struct InstanceManager;
 	struct ProductionType;
 	struct GameRulesManager;
+	struct CountryDefines;
 	struct EconomyDefines;
 
 	/* Representation of a country's mutable attributes, with a CountryDefinition that is unique at any single time
@@ -86,6 +87,7 @@ namespace OpenVic {
 		CountryDefinition const* PROPERTY(country_definition);
 
 		GameRulesManager const& game_rules_manager;
+		CountryDefines const& country_defines;
 
 		colour_t PROPERTY(colour); // Cached to avoid searching government overrides for every province
 		ProvinceInstance* PROPERTY_PTR(capital, nullptr);
@@ -123,6 +125,7 @@ namespace OpenVic {
 
 		/* Budget */
 		fixed_point_t PROPERTY(cash_stockpile);
+		fixed_point_t PROPERTY(gold_income);
 		IndexedMap<PopType, fixed_point_t> PROPERTY(taxable_income_by_pop_type);
 		IndexedMap<Strata, fixed_point_t> PROPERTY(effective_tax_rate_by_strata);
 		IndexedMap<Strata, SliderValue> PROPERTY(tax_rate_slider_value_by_strata);
@@ -302,7 +305,8 @@ namespace OpenVic {
 			decltype(tax_rate_slider_value_by_strata)::keys_type const& strata_keys,
 			GameRulesManager const& new_game_rules_manager,
 			GoodInstanceManager& new_good_instance_manager,
-			EconomyDefines const& economy_defines
+			CountryDefines const& new_country_defines,
+			EconomyDefines const& new_economy_defines
 		);
 
 	public:
@@ -590,6 +594,7 @@ namespace OpenVic {
 			decltype(CountryInstance::tax_rate_slider_value_by_strata):: keys_type const& strata_keys,
 			GameRulesManager const& game_rules_manager,
 			GoodInstanceManager& good_instance_manager,
+			CountryDefines const& country_defines,
 			EconomyDefines const& economy_defines
 		);
 

@@ -5,6 +5,7 @@
 #include "openvic-simulation/country/CountryDefinition.hpp"
 #include "openvic-simulation/defines/Define.hpp"
 #include "openvic-simulation/DefinitionManager.hpp"
+#include "openvic-simulation/economy/production/ProductionType.hpp"
 #include "openvic-simulation/history/CountryHistory.hpp"
 #include "openvic-simulation/InstanceManager.hpp"
 #include "openvic-simulation/map/Crime.hpp"
@@ -41,12 +42,14 @@ CountryInstance::CountryInstance(
 	decltype(tax_rate_slider_value_by_strata)::keys_type const& strata_keys,
 	GameRulesManager const& new_game_rules_manager,
 	GoodInstanceManager& new_good_instance_manager,
-	EconomyDefines const& economy_defines
+	CountryDefines const& new_country_defines,
+	EconomyDefines const& new_economy_defines
 ) : FlagStrings { "country" },
 	HasIndex { new_index },
 	/* Main attributes */
 	country_definition { new_country_definition },
 	game_rules_manager { new_game_rules_manager },
+	country_defines { new_country_defines },
 	colour { ERROR_COLOUR },
 
 	/* Production */
@@ -97,14 +100,14 @@ CountryInstance::CountryInstance(
 	}
 
 	// Land, naval and construction spending have minimums defined in EconomyDefines and always have an unmodified max (1.0).
-	land_spending_slider_value.set_bounds(economy_defines.get_minimum_land_spending_slider_value(), fixed_point_t::_1());
+	land_spending_slider_value.set_bounds(new_economy_defines.get_minimum_land_spending_slider_value(), fixed_point_t::_1());
 	land_spending_slider_value.set_value(fixed_point_t::_1());
 
-	naval_spending_slider_value.set_bounds(economy_defines.get_minimum_naval_spending_slider_value(), fixed_point_t::_1());
+	naval_spending_slider_value.set_bounds(new_economy_defines.get_minimum_naval_spending_slider_value(), fixed_point_t::_1());
 	naval_spending_slider_value.set_value(fixed_point_t::_1());
 
 	construction_spending_slider_value.set_bounds(
-		economy_defines.get_minimum_construction_spending_slider_value(), fixed_point_t::_1()
+		new_economy_defines.get_minimum_construction_spending_slider_value(), fixed_point_t::_1()
 	);
 	construction_spending_slider_value.set_value(fixed_point_t::_1());
 
@@ -1530,8 +1533,22 @@ void CountryInstance::country_tick(InstanceManager& instance_manager) {
 		leadership_point_stockpile = max_leadership_point_stockpile;
 	}
 
-	//TODO add gold income from national money goods production
-	//income_from_gold = country_defines.gold_to_cash_rate * sum (total_good_production * good.get_base_price()) for each good with is_money=true
+	fixed_point_t total_gold_production = fixed_point_t::_0();
+	for (auto const& [good_instance, data] : goods_data) {
+		GoodDefinition const& good_definition = good_instance.get_good_definition();
+		if (!good_definition.get_is_money()) {
+			continue;
+		}
+
+		for (auto const& [production_type, produced_quantity] : data.production_per_production_type) {
+			if (production_type->get_template_type() != ProductionType::template_type_t::RGO) {
+				continue;
+			}
+			total_gold_production += produced_quantity;
+		}
+	}
+	gold_income = country_defines.get_gold_to_cash_rate() * total_gold_production;
+	cash_stockpile += gold_income;
 }
 
 CountryInstance::good_data_t::good_data_t()
@@ -1753,6 +1770,7 @@ bool CountryInstanceManager::generate_country_instances(
 	decltype(CountryInstance::tax_rate_slider_value_by_strata):: keys_type const& strata_keys,
 	GameRulesManager const& game_rules_manager,
 	GoodInstanceManager& good_instance_manager,
+	CountryDefines const& country_defines,
 	EconomyDefines const& economy_defines
 ) {
 	reserve_more(country_instances, country_definition_manager.get_country_definition_count());
@@ -1777,6 +1795,7 @@ bool CountryInstanceManager::generate_country_instances(
 			strata_keys,
 			game_rules_manager,
 			good_instance_manager,
+			country_defines,
 			economy_defines
 		})) {
 			// We need to update the country's ModifierSum's source here as the country's address is finally stable
