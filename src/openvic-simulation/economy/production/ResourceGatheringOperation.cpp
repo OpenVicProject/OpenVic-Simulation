@@ -208,8 +208,13 @@ void ResourceGatheringOperation::hire() {
 		for (Job const& job : jobs) {
 			if (job.get_pop_type() == &pop_type) {
 				const pop_size_t pop_size_to_hire = static_cast<pop_size_t>((proportion_to_hire * pop.get_size()).floor());
+				if (pop_size_to_hire <= 0) {
+					continue;
+				}
+
 				employee_count_per_type_cache[pop_type] += pop_size_to_hire;
 				employees.emplace_back(pop, pop_size_to_hire);
+				pop.hire(pop_size_to_hire);
 				total_employees_count_cache += pop_size_to_hire;
 				if (!pop_type.get_is_slave()) {
 					total_paid_employees_count_cache += pop_size_to_hire;

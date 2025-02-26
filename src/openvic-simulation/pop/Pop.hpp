@@ -6,6 +6,8 @@
 #include "openvic-simulation/economy/production/ArtisanalProducerFactoryPattern.hpp"
 #include "openvic-simulation/pop/PopType.hpp"
 #include "openvic-simulation/types/fixed_point/Atomic.hpp"
+#include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
+#include "openvic-simulation/types/PopSize.hpp"
 
 namespace OpenVic {
 	struct CountryInstance;
@@ -99,7 +101,18 @@ namespace OpenVic {
 		fixed_point_map_t<Issue const*> PROPERTY(issue_distribution);
 		IndexedMap<CountryParty, fixed_point_t> PROPERTY(vote_distribution);
 
-		fixed_point_t PROPERTY(unemployment);
+		pop_size_t employed = 0;
+	public:
+		constexpr pop_size_t get_unemployed() const {
+			return size - employed;
+		}
+		constexpr fixed_point_t get_unemployment_fraction() const {
+			if (!type->get_can_be_unemployed()) {
+				return fixed_point_t::_0();
+			}
+			return fixed_point_t::parse(get_unemployed()) / size;
+		}
+	private:
 		fixed_point_t PROPERTY(income);
 		fixed_point_t PROPERTY(savings);
 		moveable_atomic_fixed_point_t PROPERTY(cash);
@@ -172,6 +185,7 @@ namespace OpenVic {
 		void pop_tick(PopValuesFromProvince& shared_values);
 		void allocate_cash_for_artisanal_spending(const fixed_point_t money_to_spend);
 		void report_artisanal_produce(const fixed_point_t quantity);
+		void hire(pop_size_t count);
 	};
 }
 #ifndef KEEP_DO_FOR_ALL_TYPES_OF_INCOME
