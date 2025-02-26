@@ -165,6 +165,7 @@ bool InstanceManager::setup() {
 		definition_manager.get_pop_manager().get_stratas(),
 		game_rules_manager,
 		good_instance_manager,
+		definition_manager.get_define_manager().get_country_defines(),
 		definition_manager.get_define_manager().get_economy_defines()
 	);
 
