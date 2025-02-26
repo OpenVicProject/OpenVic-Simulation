@@ -76,7 +76,7 @@ namespace OpenVic {
 		const bool PROPERTY(can_invest);
 		const bool PROPERTY(factory);
 		const bool PROPERTY(can_work_factory);
-		const bool PROPERTY(unemployment);
+		const bool PROPERTY(can_be_unemployed);
 		const fixed_point_t PROPERTY(research_points);
 		const fixed_point_t PROPERTY(leadership_points);
 		const fixed_point_t PROPERTY(research_leadership_optimum);
@@ -115,7 +115,7 @@ namespace OpenVic {
 			bool new_can_invest,
 			bool new_factory,
 			bool new_can_work_factory,
-			bool new_unemployment,
+			bool new_can_be_unemployed,
 			fixed_point_t new_research_points,
 			fixed_point_t new_leadership_points,
 			fixed_point_t new_research_leadership_optimum,

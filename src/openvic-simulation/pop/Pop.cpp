@@ -20,6 +20,7 @@
 #include "openvic-simulation/modifier/ModifierEffectCache.hpp"
 #include "openvic-simulation/pop/PopValuesFromProvince.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
+#include "openvic-simulation/utility/Logger.hpp"
 #include "openvic-simulation/utility/Utility.hpp"
 
 using namespace OpenVic;
@@ -108,7 +109,6 @@ void Pop::setup_pop_test_values(IssueManager const& issue_manager) {
 		return (rand() % 256) * max / 256;
 	};
 
-	unemployment = test_range();
 	cash = test_range(20);
 	income = test_range(5);
 	expenses = test_range(5);
@@ -353,6 +353,7 @@ void Pop::pop_tick_without_cleanup(PopValuesFromProvince& shared_values) {
 	DO_FOR_ALL_TYPES_OF_POP_EXPENSES(SET_TO_ZERO)
 	#undef SET_TO_ZERO
 	income = expenses = fixed_point_t::_0();
+	employed = 0;
 
 	auto& [
 		reusable_map_0,
@@ -541,6 +542,18 @@ void Pop::allocate_cash_for_artisanal_spending(fixed_point_t money_to_spend) {
 
 void Pop::report_artisanal_produce(const fixed_point_t quantity) {
 	artisanal_produce_left_to_sell = quantity;
+}
+
+void Pop::hire(pop_size_t count) {
+	if (OV_unlikely(count <= 0)) {
+		Logger::warning("Tried employing non-positive number of pops. ", count, " Context", get_pop_context_text().str());
+	}
+	employed += count;
+	if (OV_unlikely(employed > size)) {
+		Logger::error("Employed count became greater than pop size. ", employed, " Context", get_pop_context_text().str());
+	} else if (OV_unlikely(employed < 0)) {
+		Logger::error("Employed count became negative. ", employed ," Context", get_pop_context_text().str());
+	}
 }
 
 #undef DO_FOR_ALL_TYPES_OF_POP_INCOME
