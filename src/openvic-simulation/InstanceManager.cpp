@@ -168,7 +168,7 @@ bool InstanceManager::setup() {
 		definition_manager.get_define_manager().get_economy_defines()
 	);
 
-	thread_pool.initialise(
+	thread_pool.initialise_threadpool(
 		definition_manager.get_define_manager().get_pops_defines(),
 		definition_manager.get_pop_manager().get_stratas(),
 		good_instance_manager.get_good_instances(),

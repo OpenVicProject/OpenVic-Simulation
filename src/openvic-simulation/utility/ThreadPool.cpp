@@ -19,10 +19,10 @@ void ThreadPool::loop_until_cancelled(
 	while (!is_cancellation_requested) {
 		work_t work_type_copy;
 		{
-			std::unique_lock<std::mutex> lock { mutex };
+			std::unique_lock<std::mutex> thread_lock { thread_mutex };
 			thread_condition.wait(
-				lock,
-				[this, work_type]() -> bool {
+				thread_lock,
+				[this, &work_type]() -> bool {
 					return is_cancellation_requested || work_type != work_t::NONE;
 				}
 			);
@@ -58,7 +58,7 @@ void ThreadPool::loop_until_cancelled(
 		}
 
 		{
-			std::lock_guard<std::mutex> lock { mutex };
+			std::lock_guard<std::mutex> completed_lock { completed_mutex };
 			if (--active_work_count == 0) {
 				completed_condition.notify_one();
 			}
@@ -68,24 +68,28 @@ void ThreadPool::loop_until_cancelled(
 
 void ThreadPool::process_work(const work_t work_type) {
 	{
-		std::unique_lock<std::mutex> lock { mutex };
+		std::unique_lock<std::mutex> thread_lock { thread_mutex };
 		if (is_cancellation_requested) {
 			return;
 		}
 
-		active_work_count = threads.size();
+		{
+			std::lock_guard<std::mutex> completed_lock { completed_mutex };
+			active_work_count = threads.size();
+		}
+
 		for (work_t& work_for_thread : work_per_thread) {
 			work_for_thread = work_type;
 		}
+		thread_condition.notify_all();
 	}
-	thread_condition.notify_all();
 	await_completion();
 }
 
 void ThreadPool::await_completion() {
-	std::unique_lock<std::mutex> lock { mutex };
+	std::unique_lock<std::mutex> completed_lock { completed_mutex };
 	completed_condition.wait(
-		lock,
+		completed_lock,
 		[this]() -> bool {
 			return active_work_count == 0;
 		}
@@ -97,16 +101,16 @@ ThreadPool::ThreadPool(Date const& new_current_date)
 
 ThreadPool::~ThreadPool() {
 	{
-		std::unique_lock<std::mutex> lock { mutex };
+		std::lock_guard<std::mutex> thread_lock { thread_mutex };
 		is_cancellation_requested = true;
+		thread_condition.notify_all();
 	}
-	thread_condition.notify_all();
 	for (std::thread& thread : threads) {
 		thread.join();
 	}
 }
 
-void ThreadPool::initialise(
+void ThreadPool::initialise_threadpool(
 	PopsDefines const& pop_defines,
 	std::vector<Strata> const& strata_keys,
 	std::span<GoodInstance> goods,
@@ -127,7 +131,7 @@ void ThreadPool::initialise(
 	typename std::span<GoodInstance>::iterator goods_begin = goods.begin();
 	typename std::span<ProvinceInstance>::iterator provinces_begin = provinces.begin();
 
-	for (size_t i = 0; i < threads.size(); i++) {
+	for (size_t i = 0; i < max_worker_threads; i++) {
 		const size_t goods_chunk_size = i < goods_remainder
 			? goods_quotient + 1
 			: goods_quotient;

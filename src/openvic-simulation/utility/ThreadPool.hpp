@@ -33,9 +33,8 @@ namespace OpenVic {
 
 		std::vector<std::thread> threads;
 		std::vector<work_t> work_per_thread;
-		std::mutex mutex;
-		std::condition_variable thread_condition;
-		std::condition_variable completed_condition;
+		std::mutex thread_mutex, completed_mutex;
+		std::condition_variable thread_condition, completed_condition;
 		std::atomic<size_t> active_work_count = 0;
 		bool is_cancellation_requested = false;
 		Date const& current_date;
@@ -49,7 +48,7 @@ namespace OpenVic {
 		ThreadPool(Date const& new_current_date);
 		~ThreadPool();
 
-		void initialise(
+		void initialise_threadpool(
 			PopsDefines const& pop_defines,
 			std::vector<Strata> const& strata_keys,
 			std::span<GoodInstance> goods,
