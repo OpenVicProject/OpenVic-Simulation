@@ -598,7 +598,7 @@ namespace OpenVic {
 			EconomyDefines const& economy_defines
 		);
 
-		bool apply_history_to_countries(CountryHistoryManager const& history_manager, InstanceManager& instance_manager);
+		bool apply_history_to_countries(InstanceManager& instance_manager);
 
 		void update_modifier_sums(Date today, StaticModifierCache const& static_modifier_cache);
 		void update_gamestate(InstanceManager& instance_manager);
