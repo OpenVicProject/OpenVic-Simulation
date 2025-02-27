@@ -247,11 +247,13 @@ namespace OpenVic {
 	private:
 		parse_callback_t parse_callback;
 		execute_callback_t execute_callback;
+		void const* PROPERTY(condition_data);
 
 		Condition(
 			std::string_view new_identifier,
 			parse_callback_t&& new_parse_callback,
-			execute_callback_t&& new_execute_callback
+			execute_callback_t&& new_execute_callback,
+			void const* new_condition_data
 		);
 
 	public:
@@ -275,7 +277,8 @@ namespace OpenVic {
 		bool add_condition(
 			std::string_view identifier,
 			Condition::parse_callback_t&& parse_callback,
-			Condition::execute_callback_t&& execute_callback
+			Condition::execute_callback_t&& execute_callback,
+			void const* condition_data = nullptr
 		);
 
 		template<
