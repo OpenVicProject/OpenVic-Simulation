@@ -185,7 +185,7 @@ bool RuleManager::setup_rules(BuildingTypeManager const& building_type_manager) 
 }
 
 node_callback_t RuleManager::expect_rule_set(callback_t<RuleSet&&> ruleset_callback) const {
-	return [this, ruleset_callback](ast::NodeCPtr root) -> bool {
+	return [this, ruleset_callback](ast::NodeCPtr root) mutable -> bool {
 		RuleSet ruleset;
 		bool ret = expect_dictionary(
 			[this, &ruleset](std::string_view rule_key, ast::NodeCPtr rule_value) -> bool {

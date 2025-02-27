@@ -1,10 +1,11 @@
 #pragma once
 
-#include <functional>
 #include <iostream>
 #include <mutex>
 #include <queue>
 #include <sstream>
+
+#include <function2/function2.hpp>
 
 #ifdef __cpp_lib_source_location
 #include <source_location>
@@ -47,7 +48,7 @@ namespace OpenVic {
 #endif
 
 	class Logger final {
-		using log_func_t = std::function<void(std::string&&)>;
+		using log_func_t = fu2::function_view<void(std::string&&)>;
 		using log_queue_t = std::queue<std::string>;
 
 #ifdef __cpp_lib_source_location

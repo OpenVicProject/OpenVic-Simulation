@@ -17,3 +17,9 @@
 	path = tests/deps/snitch
 	url = https://github.com/snitch-org/snitch
 	ignore = dirty
+[submodule "deps/function2"]
+	path = deps/function2
+	url = https://github.com/Naios/function2
+[submodule "deps/std_function/func"]
+	path = deps/std_function/func
+	url = https://github.com/skarupke/std_function

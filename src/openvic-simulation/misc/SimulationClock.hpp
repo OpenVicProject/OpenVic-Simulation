@@ -1,17 +1,18 @@
 #pragma once
 
 #include <chrono>
-#include <functional>
 #include <vector>
 
 #include "openvic-simulation/utility/Getters.hpp"
+
+#include <function2/function2.hpp>
 
 namespace OpenVic {
 	/* Conditionally advances game depending on speed and pause state. */
 	class SimulationClock {
 	public:
-		using tick_function_t = std::function<void()>;
-		using update_function_t = std::function<void()>;
+		using tick_function_t = fu2::function_base<true, true, fu2::capacity_can_hold<void*>, false, false, void()>;
+		using update_function_t = fu2::function_base<true, true, fu2::capacity_can_hold<void*>, false, false, void()>;
 		using speed_t = int8_t;
 
 		/* Minimum number of miliseconds before the simulation advances

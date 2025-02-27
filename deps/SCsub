@@ -31,6 +31,20 @@ def build_colony(env):
     env.Append(CPPPATH=env.colony["INCPATH"])
     env.exposed_includes += env.colony["INCPATH"]
 
+def build_function2(env):
+    include_path = "function2/include"
+    env.function2 = {}
+    env.function2["INCPATH"] = [env.Dir(include_path)]
+    env.Append(CPPPATH=env.function2["INCPATH"])
+    env.exposed_includes += env.function2["INCPATH"]
+
+def build_std_function(env):
+    include_path = "std_function"
+    env.std_function = {}
+    env.std_function["INCPATH"] = [env.Dir(include_path)]
+    env.Append(CPPPATH=env.std_function["INCPATH"])
+    env.exposed_includes += env.std_function["INCPATH"]
+
 def link_tbb(env):
     import sys
     if not env.get("is_msvc", False) and not env.get("use_mingw", False) and sys.platform != "darwin":
@@ -40,4 +54,6 @@ build_openvic_dataloader(env)
 build_lexy_vdf(env)
 build_ordered_map(env)
 build_colony(env)
+build_function2(env)
+build_std_function(env)
 link_tbb(env)

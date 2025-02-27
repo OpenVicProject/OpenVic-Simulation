@@ -132,11 +132,11 @@ bool NationalFocusManager::load_national_foci_file(
 						PROVINCE | COUNTRY, PROVINCE | COUNTRY, NO_SCOPE
 					};
 
-					const auto expect_base_province_modifier_cb = modifier_manager.expect_base_province_modifier(modifiers);
+					auto expect_base_province_modifier_cb = modifier_manager.expect_base_province_modifier(modifiers);
 					bool ret = NodeTools::expect_dictionary_keys_and_default(
 						[&good_definition_manager, &encourage_goods, &pop_manager, &encourage_pop_types, &expect_base_province_modifier_cb](
 							std::string_view key, ast::NodeCPtr value
-						) -> bool {
+						) mutable -> bool {
 							GoodDefinition const* good = good_definition_manager.get_good_definition_by_identifier(key);
 							if (good != nullptr) {
 								return expect_fixed_point(map_callback(encourage_goods, good))(value);
