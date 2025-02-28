@@ -49,6 +49,7 @@ namespace OpenVic {
 		bool setup(
 			BuildingTypeManager const& building_type_manager,
 			MarketInstance& market_instance,
+			GameRulesManager const& game_rules_manager,
 			ModifierEffectCache const& modifier_effect_cache,
 			decltype(ProvinceInstance::population_by_strata)::keys_type const& strata_keys,
 			decltype(ProvinceInstance::pop_type_distribution)::keys_type const& pop_type_keys,

@@ -145,6 +145,7 @@ bool InstanceManager::setup() {
 	ret &= map_instance.setup(
 		definition_manager.get_economy_manager().get_building_type_manager(),
 		market_instance,
+		game_rules_manager,
 		definition_manager.get_modifier_manager().get_modifier_effect_cache(),
 		definition_manager.get_pop_manager().get_stratas(),
 		definition_manager.get_pop_manager().get_pop_types(),
