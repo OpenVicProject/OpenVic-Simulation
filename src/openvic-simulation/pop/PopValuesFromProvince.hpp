@@ -5,6 +5,7 @@
 
 #include "openvic-simulation/types/IndexedMap.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
+#include "openvic-simulation/types/fixed_point/FixedPointMap.hpp"
 #include "openvic-simulation/utility/Getters.hpp"
 
 namespace OpenVic {
@@ -20,7 +21,11 @@ namespace OpenVic {
 		fixed_point_t PROPERTY(shared_everyday_needs_scalar);
 		fixed_point_t PROPERTY(shared_luxury_needs_scalar);
 	public:
-		void update_pop_strata_values_from_province(PopsDefines const& defines, Strata const& strata, ProvinceInstance const& province);
+		void update_pop_strata_values_from_province(
+			PopsDefines const& defines,
+			Strata const& strata,
+			ProvinceInstance const& province
+		);
 	};
 
 	struct PopValuesFromProvince {

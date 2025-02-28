@@ -8,6 +8,7 @@
 #include "openvic-simulation/politics/Rule.hpp"
 #include "openvic-simulation/pop/PopType.hpp"
 #include "openvic-simulation/types/Date.hpp"
+#include "openvic-simulation/types/fixed_point/Atomic.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
 #include "openvic-simulation/types/FlagStrings.hpp"
 #include "openvic-simulation/types/IdentifierRegistry.hpp"
@@ -124,7 +125,8 @@ namespace OpenVic {
 		// TODO - total amount of each good produced
 
 		/* Budget */
-		fixed_point_t PROPERTY(cash_stockpile);
+		moveable_atomic_fixed_point_t PROPERTY(cash_stockpile);
+		std::unique_ptr<std::mutex> taxable_income_mutex;
 		fixed_point_t PROPERTY(gold_income);
 		IndexedMap<PopType, fixed_point_t> PROPERTY(taxable_income_by_pop_type);
 		IndexedMap<Strata, fixed_point_t> PROPERTY(effective_tax_rate_by_strata);
@@ -200,7 +202,7 @@ namespace OpenVic {
 		/* Trade */
 	public:
 		struct good_data_t {
-			std::unique_ptr<std::mutex> lock;
+			std::unique_ptr<std::mutex> mutex;
 			fixed_point_t stockpile_amount;
 			fixed_point_t stockpile_change_yesterday; // positive if we bought, negative if we sold
 
@@ -543,6 +545,7 @@ namespace OpenVic {
 		good_data_t const& get_good_data(GoodDefinition const& good_definition) const;
 
 		//thread safe
+		void report_pop_income_tax(PopType const& pop_type, const fixed_point_t gross_income, const fixed_point_t paid_as_tax);
 		void report_pop_need_consumption(PopType const& pop_type, GoodDefinition const& good, const fixed_point_t quantity);
 		void report_pop_need_demand(PopType const& pop_type, GoodDefinition const& good, const fixed_point_t quantity);
 		void report_input_consumption(ProductionType const& production_type, GoodDefinition const& good, const fixed_point_t quantity);
