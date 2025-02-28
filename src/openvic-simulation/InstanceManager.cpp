@@ -231,14 +231,13 @@ bool InstanceManager::load_bookmark(Bookmark const* new_bookmark) {
 		definition_manager.get_politics_manager().get_ideology_manager().get_ideologies()
 	);
 
-	if (ret) {
-		update_modifier_sums();
-		map_instance.initialise_for_new_game(
-			today,
-			definition_manager.get_define_manager()
-		);
-		market_instance.execute_orders();
-	}
+	update_modifier_sums();
+	country_instance_manager.update_gamestate(*this);
+	map_instance.initialise_for_new_game(
+		today,
+		definition_manager.get_define_manager()
+	);
+	market_instance.execute_orders();
 
 	return ret;
 }
