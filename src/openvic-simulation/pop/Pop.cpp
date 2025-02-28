@@ -240,8 +240,19 @@ void Pop::fill_needs_fulfilled_goods_with_false() {
 	#undef FILL_WITH_FALSE
 }
 
+void Pop::pay_income_tax(fixed_point_t& income) {
+	CountryInstance* const tax_collector_nullable = location->get_country_to_report_economy();
+	if (tax_collector_nullable == nullptr) {
+		return;
+	}
+	const fixed_point_t effective_tax_rate = tax_collector_nullable->get_effective_tax_rate_by_strata()[type->get_strata()];
+	const fixed_point_t tax = effective_tax_rate * income;
+	tax_collector_nullable->report_pop_income_tax(*type, income, tax);
+	income -= tax;
+}
+
 #define DEFINE_ADD_INCOME_FUNCTIONS(name) \
-	void Pop::add_##name(const fixed_point_t amount){ \
+	void Pop::add_##name(fixed_point_t amount){ \
 		if (OV_unlikely(amount == fixed_point_t::_0())) { \
 			Logger::warning("Adding ", #name, " of 0 to pop. Context", get_pop_context_text().str()); \
 			return; \
@@ -250,6 +261,7 @@ void Pop::fill_needs_fulfilled_goods_with_false() {
 			Logger::error("Adding negative ", #name, " of ", amount, " to pop. Context", get_pop_context_text().str()); \
 			return; \
 		} \
+		pay_income_tax(amount); \
 		name += amount; \
 		income += amount; \
 		cash += amount; \

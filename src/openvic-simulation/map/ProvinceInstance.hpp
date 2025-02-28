@@ -136,6 +136,10 @@ namespace OpenVic {
 			return province_definition;
 		}
 
+		constexpr CountryInstance const* get_country_to_report_economy() const {
+			return controller;
+		}
+
 		constexpr CountryInstance* get_country_to_report_economy() {
 			return controller;
 		}

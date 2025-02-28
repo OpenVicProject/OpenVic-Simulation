@@ -65,7 +65,7 @@ namespace OpenVic {
 		fixed_point_t PROPERTY(money_type);
 
 	#define DECLARE_POP_MONEY_STORE_FUNCTIONS(name) \
-		void add_##name(const fixed_point_t amount);
+		void add_##name(fixed_point_t amount);
 
 	/* REQUIREMENTS:
 	 * POP-18, POP-19, POP-20, POP-21, POP-34, POP-35, POP-36, POP-37
@@ -153,6 +153,7 @@ namespace OpenVic {
 			fixed_point_t& cash_left_to_spend
 		);
 		void pop_tick_without_cleanup(PopValuesFromProvince& shared_values);
+		void pay_income_tax(fixed_point_t& income);
 		static void after_buy(void* actor, BuyResult const& buy_result);
 		static void after_sell(void* actor, SellResult const& sell_result);
 
