@@ -88,6 +88,7 @@ TEST_CASE("Date Parse methods", "[Date][Date-parse]") {
 	CHECK(Date::from_string("20.6.13") == Date { 20, 6, 13 });
 	CHECK(Date::from_string("0020.06.13") == Date { 20, 6, 13 });
 	CHECK(Date::from_string("1815.8.20") == Date { 1815, 8, 20 });
+	CHECK(Date::from_string("-1.1.1") == Date { -1, 1, 1 });
 
 	Date::from_chars_result result;
 
@@ -146,13 +147,6 @@ TEST_CASE("Date Parse methods", "[Date][Date-parse]") {
 	CHECK(result.type_first == year_month_sep_sep.data() + 4);
 	CHECK(result.ptr == result.type_first);
 	CHECK(result.ec == std::errc::invalid_argument);
-
-	static constexpr std::string_view negative_year = "-1"sv;
-	CHECK(Date::from_string(negative_year, &result) == Date {});
-	CHECK(result.type == Date::errc_type::year);
-	CHECK(result.type_first == negative_year.data());
-	CHECK(result.ptr == result.type_first);
-	CHECK(result.ec == std::errc::not_supported);
 
 	static constexpr std::string_view zero_month = "0.0"sv;
 	CHECK(Date::from_string(zero_month, &result) == Date {});

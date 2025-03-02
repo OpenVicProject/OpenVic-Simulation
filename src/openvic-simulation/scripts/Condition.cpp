@@ -44,17 +44,12 @@ bool ConditionNode::execute(
 	);
 }
 
-struct print_condition_node_visitor_t {
+struct print_argument_visitor_t {
 	std::ostream& stream;
 	size_t indent = 0;
 	static constexpr size_t indent_width = 2;
 	Condition const* last_condition = nullptr;
 
-	void print(ConditionNode const& node) {
-		last_condition = node.get_condition();
-		stream << last_condition << " = ";
-		std::visit(*this, node.get_argument());
-	}
 	void print_newline_indent() {
 		stream << "\n" << std::setw(indent * indent_width) << "";
 	}
@@ -100,7 +95,7 @@ struct print_condition_node_visitor_t {
 
 			for (ConditionNode const& child : arg) {
 				print_newline_indent();
-				print(child);
+				stream << child;
 			}
 
 			indent--;
@@ -158,10 +153,21 @@ struct print_condition_node_visitor_t {
 	}
 };
 
-std::ostream& OpenVic::operator<<(std::ostream& stream, ConditionNode const& node) {
-	print_condition_node_visitor_t { stream }.print(node);
-
+static std::ostream& print_argument(
+	std::ostream& stream, argument_t const& argument, Condition const* starting_last_condition
+) {
+	std::visit(print_argument_visitor_t { stream }, argument);
 	return stream;
+}
+
+// std::ostream& OpenVic::operator<<(std::ostream& stream, ConditionNode::argument_t const& argument) {
+static std::ostream& operator<<(std::ostream& stream, ConditionNode::argument_t const& argument) {
+	return print_argument(stream, argument, nullptr);
+}
+
+std::ostream& OpenVic::operator<<(std::ostream& stream, ConditionNode const& node) {
+	stream << node.get_condition() << " = ";
+	return print_argument(stream, node.get_argument(), node.get_condition());
 }
 
 Condition::Condition(
@@ -205,9 +211,6 @@ bool ConditionManager::add_condition(
 
 ConditionManager::ConditionManager(DefinitionManager const& new_definition_manager)
 	: root_condition { nullptr }, definition_manager { new_definition_manager } {}
-
-// #define MOV(...) static_cast<std::remove_reference_t<decltype(__VA_ARGS__)>&&>(__VA_ARGS__)
-// #define FWD(...) static_cast<decltype(__VA_ARGS__)>(__VA_ARGS__)
 
 Callback<Condition const&, ast::NodeCPtr> auto ConditionManager::expect_condition_node(
 	scope_type_t current_scope, scope_type_t this_scope,
@@ -997,8 +1000,9 @@ static constexpr auto _execute_condition_node_cast_argument_callback(
 		[](
 			Condition const& condition, InstanceManager const& instance_manager, Args... args, argument_t const& argument
 		) -> bool {
+			// TODO - find a good way to turn T into a string for error messages without RTTI
 			Logger::error(
-				"Error executing condition \"", condition.get_identifier(), "\": ConditionNode missing ", typeid(T).name(),
+				"Error executing condition \"", condition.get_identifier(), "\": ConditionNode missing ", "<TYPE???>",
 				" argument!"
 			);
 			// TODO - see comment below about ensuring consistent negation behaviour
@@ -1041,8 +1045,9 @@ static constexpr auto _execute_condition_node_value_or_this_or_from_callback(
 				return from_callback(condition, instance_manager, current_scope, this_scope);
 			}
 
+			// TODO - find a way to turn T into a string for error messages without RTTI
 			Logger::error(
-				"Error executing condition \"", condition.get_identifier(), "\": ConditionNode missing ", typeid(T).name(),
+				"Error executing condition \"", condition.get_identifier(), "\": ConditionNode missing ", "<TYPE???>",
 				" or THIS or FROM argument!"
 			);
 			// TODO - see comment below about ensuring consistent negation behaviour
@@ -1731,16 +1736,14 @@ bool ConditionManager::setup_conditions() {
 	ret &= add_condition(
 		"world_wars_enabled",
 		_parse_condition_node_value_callback<bool>,
-		_execute_condition_node_unimplemented
-		/*_execute_condition_node_cast_argument_callback<bool, scope_t, scope_t, scope_t>(
+		_execute_condition_node_cast_argument_callback<bool, scope_t, scope_t, scope_t>(
 			[](
 				Condition const& condition, InstanceManager const& instance_manager, scope_t current_scope, scope_t this_scope,
 				scope_t from_scope, bool argument
 			) -> bool {
-				// TODO - check if world wars are enabled == argument
-				return false;
+				return instance_manager.get_politics_instance_manager().get_world_wars_enabled() == argument;
 			}
-		)*/
+		)
 	);
 
 	/* Country Scope Conditions */
@@ -1775,18 +1778,16 @@ bool ConditionManager::setup_conditions() {
 	ret &= add_condition(
 		"alliance_with",
 		_parse_condition_node_value_callback<CountryDefinition const*, COUNTRY | THIS | FROM>,
-		_execute_condition_node_unimplemented
-		/*_execute_condition_node_value_or_convert_this_or_from_callback<CountryInstance>(
+		_execute_condition_node_value_or_convert_this_or_from_callback<CountryInstance>(
 			_execute_condition_node_convert_scope<CountryInstance, CountryInstance const*>(
 				[](
 					Condition const& condition, InstanceManager const& instance_manager, CountryInstance const* current_scope,
 					CountryInstance const* value
 				) -> bool {
-					// TODO - check if *current_scope and *value have alliance
-					return false;
+					return instance_manager.get_country_relation_manager().get_country_alliance(current_scope, value);
 				}
 			)
-		)*/
+		)
 	);
 	ret &= add_condition(
 		"average_consciousness",
@@ -1989,18 +1990,16 @@ bool ConditionManager::setup_conditions() {
 	ret &= add_condition(
 		"civilization_progress",
 		_parse_condition_node_value_callback<fixed_point_t, COUNTRY>,
-		_execute_condition_node_unimplemented
-		/*_execute_condition_node_cast_argument_callback<fixed_point_t, scope_t, scope_t, scope_t>(
+		_execute_condition_node_cast_argument_callback<fixed_point_t, scope_t, scope_t, scope_t>(
 			_execute_condition_node_convert_scope<CountryInstance, scope_t, scope_t, fixed_point_t>(
 				[](
 					Condition const& condition, InstanceManager const& instance_manager, CountryInstance const* current_scope,
 					scope_t this_scope, scope_t from_scope, fixed_point_t argument
 				) -> bool {
-					// TODO - check if civilisation progress of *current_scope is >= argument
-					return false;
+					return current_scope->get_civilisation_progress() >= argument;
 				}
 			)
-		)*/
+		)
 	);
 	ret &= add_condition(
 		"civilized",
@@ -2247,7 +2246,14 @@ bool ConditionManager::setup_conditions() {
 		"great_wars_enabled",
 		// TODO - wiki says this is COUNTRY scope, I see no reason why it can't be global
 		_parse_condition_node_value_callback<bool>,
-		_execute_condition_node_unimplemented
+		_execute_condition_node_cast_argument_callback<bool, scope_t, scope_t, scope_t>(
+			[](
+				Condition const& condition, InstanceManager const& instance_manager, scope_t current_scope, scope_t this_scope,
+				scope_t from_scope, bool argument
+			) -> bool {
+				return instance_manager.get_politics_instance_manager().get_great_wars_enabled() == argument;
+			}
+		)
 	);
 	ret &= add_condition(
 		"has_country_flag",
@@ -2458,11 +2464,22 @@ bool ConditionManager::setup_conditions() {
 		)
 	);
 	ret &= add_condition(
-		// checks if the country has lost a war in the last 5 years (losing = making a concession offer,
-		// even giving white peace (but clicking on the "offer" tab) counts as losing)
+		// checks if the country has lost a war in the last 5 years (losing = accepting a concession offer,
+		// even giving white peace (by clicking on the "offer" tab) counts as losing)
 		"has_recently_lost_war",
 		_parse_condition_node_value_callback<bool, COUNTRY>,
-		_execute_condition_node_unimplemented
+		_execute_condition_node_cast_argument_callback<bool, scope_t, scope_t, scope_t>(
+			_execute_condition_node_convert_scope<CountryInstance, scope_t, scope_t, bool>(
+				[](
+					Condition const& condition, InstanceManager const& instance_manager, CountryInstance const* current_scope,
+					scope_t this_scope, scope_t from_scope, bool argument
+				) -> bool {
+					return (
+						(instance_manager.get_today() - current_scope->get_last_war_loss_date()) < RECENT_TIME_LIMIT
+					) == argument;
+				}
+			)
+		)
 	);
 	ret &= add_condition(
 		"has_unclaimed_cores",
@@ -2666,7 +2683,21 @@ bool ConditionManager::setup_conditions() {
 	ret &= add_condition(
 		"is_next_reform",
 		_parse_condition_node_value_callback<Reform const*, COUNTRY>,
-		_execute_condition_node_unimplemented
+		_execute_condition_node_cast_argument_callback<Reform const*, scope_t, scope_t, scope_t>(
+			_execute_condition_node_convert_scope<CountryInstance, scope_t, scope_t, Reform const*>(
+				[](
+					Condition const& condition, InstanceManager const& instance_manager, CountryInstance const* current_scope,
+					scope_t this_scope, scope_t from_scope, Reform const* argument
+				) -> bool {
+					ReformGroup const& reform_group = argument->get_reform_group();
+					Reform const* current_reform = current_scope->get_reforms()[reform_group];
+
+					// TODO - how should we hanadle current_reform == nullptr? Always false or true, or true if ordinal == 0?
+
+					return current_reform == nullptr && current_reform->get_ordinal() + 1 == argument->get_ordinal();
+				}
+			)
+		)
 	);
 	ret &= add_condition(
 		"is_our_vassal",
@@ -2872,7 +2903,7 @@ bool ConditionManager::setup_conditions() {
 						return false;
 					}
 
-					constexpr bool operator()(CountryInstance const* country) const {
+					bool operator()(CountryInstance const* country) const {
 						return country->get_cash_stockpile().get_copy_of_value() >= argument;
 					}
 					constexpr bool operator()(State const* state) const {
@@ -2883,7 +2914,7 @@ bool ConditionManager::setup_conditions() {
 						CountryInstance const* owner = province->get_owner();
 						return owner != nullptr && (*this)(owner);
 					}
-					constexpr bool operator()(Pop const* pop) const {
+					bool operator()(Pop const* pop) const {
 						return pop->get_cash().get_copy_of_value() >= argument;
 					}
 				};

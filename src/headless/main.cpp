@@ -172,6 +172,25 @@ static bool run_headless(Dataloader::path_vector_t const& roots, bool run_tests)
 
 	Logger::info("National value of ", country.get_identifier(), " is ", country.get_national_value());
 
+	// IssueManager const& issue_manager = game_manager.get_definition_manager().get_politics_manager().get_issue_manager();
+
+	// size_t reform_type_count = 0, reform_group_count = 0, reform_count = 0;
+
+	// for (ReformType const& reform_type : issue_manager.get_reform_types()) {
+	// 	Logger::info("ReformType #", reform_type_count, " = ", reform_type);
+	// 	reform_type_count++;
+	// 	for (ReformGroup const* reform_group : reform_type.get_reform_groups()) {
+	// 		Logger::info("ReformGroup #", reform_group_count, " = ", reform_group);
+	// 		reform_group_count++;
+	// 		for (Reform const* reform : reform_group->get_reforms()) {
+	// 			Logger::info("Reform #", reform_count, " = ", reform);
+	// 			reform_count++;
+	// 		}
+	// 	}
+	// }
+	// Logger::info("Official reform type count = ", issue_manager.get_reform_type_count(), ", reform group count = ", issue_manager.get_reform_group_count(), ", reform count = ", issue_manager.get_reform_count());
+	// Logger::info("Un-official reform type count = ", reform_type_count, ", reform group count = ", reform_group_count, ", reform count = ", reform_count);
+
 	return ret;
 }
 
@@ -179,8 +198,72 @@ static bool run_headless(Dataloader::path_vector_t const& roots, bool run_tests)
 	$ program [-h] [-t] [-b] [path]+
 */
 
+// #define PT(x) Logger::info("pre PT"); Logger::info(#x " = ", (x));
+// #define PD(x) PT((x).get_timespan()); Logger::info("pre PD"); Logger::info(#x " = ", (x));
+
+// #define ACT(x) Logger::info(#x); x;
+
 int main(int argc, char const* argv[]) {
 	Logger::set_logger_funcs();
+
+	// static constexpr Timespan RECENT_TIME_LIMIT = Timespan::from_years(5);
+
+	// PT(RECENT_TIME_LIMIT)
+
+	// ACT(Date last_war_loss_date);
+	// ACT(Date today);
+
+	// auto test_dates = [&today, &last_war_loss_date]() -> void {
+	// 	Logger::info("", last_war_loss_date + 1);
+	// 	PD(last_war_loss_date)
+	// 	PD(today)
+	// 	Logger::info("diff = ", today - last_war_loss_date, ", diff < limit = ", (today - last_war_loss_date) < RECENT_TIME_LIMIT ? "yes" : "no", "\n");
+	// };
+
+	// test_dates();
+
+	// ACT(today += RECENT_TIME_LIMIT);
+
+	// test_dates();
+
+	// ACT(last_war_loss_date++);
+
+	// test_dates();
+
+	// ACT(last_war_loss_date -= 2);
+
+	// test_dates();
+
+	// ACT(today = {}; last_war_loss_date = Date {}; last_war_loss_date -= RECENT_TIME_LIMIT);
+
+	// test_dates();
+
+	// ACT(last_war_loss_date++);
+
+	// test_dates();
+
+	// ACT(last_war_loss_date -= 2);
+
+	// test_dates();
+
+	// // PD(Date {} - RECENT_TIME_LIMIT);
+	// ACT(Date test = Date {} - RECENT_TIME_LIMIT);
+	// PD(test);
+
+	// auto x = Date {} - RECENT_TIME_LIMIT;
+	// // PD(x);
+
+	// Logger::info("\n\n ===== END PROGRAM =====\n\n");
+
+	// for (int i = 0; i < 100; ++i) {
+	// 	Date d = -i;
+	// 	Logger::info(
+	// 		"i = ", i, ", d = ", d, ", raw d = ", d.get_timespan(), ", components = ",
+	// 		static_cast<int32_t>(d.get_year()), ".", static_cast<int32_t>(d.get_month()), ".", static_cast<int32_t>(d.get_day())
+	// 	);
+	// }
+
+	// return 0;
 
 	char const* program_name = StringUtils::get_filename(argc > 0 ? argv[0] : nullptr, "<program>");
 	fs::path root;
