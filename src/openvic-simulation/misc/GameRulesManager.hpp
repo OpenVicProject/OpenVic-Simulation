@@ -19,6 +19,7 @@ namespace OpenVic {
 		bool PROPERTY_RW(use_simple_farm_mine_logic, false);
 		// if changed during a session, call on_use_exponential_price_changes_changed for each GoodInstance.
 		bool PROPERTY_RW(use_exponential_price_changes, false);
+		bool PROPERTY_RW(prevent_negative_administration_efficiency, false);
 		demand_category PROPERTY_RW(artisanal_input_demand_category, demand_category::None);
 		country_to_report_economy_t PROPERTY_RW(country_to_report_economy, country_to_report_economy_t::Owner);
 

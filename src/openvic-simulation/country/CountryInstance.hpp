@@ -3,6 +3,7 @@
 #include <utility>
 #include <vector>
 
+#include "openvic-simulation/country/SharedCountryValues.hpp"
 #include "openvic-simulation/modifier/ModifierSum.hpp"
 #include "openvic-simulation/politics/Ideology.hpp"
 #include "openvic-simulation/politics/Rule.hpp"
@@ -51,6 +52,8 @@ namespace OpenVic {
 	struct GameRulesManager;
 	struct CountryDefines;
 	struct EconomyDefines;
+	struct PopsDefines;
+	struct Pop;
 
 	static constexpr Timespan RECENT_WAR_LOSS_TIME_LIMIT = Timespan::from_years(5);
 
@@ -91,6 +94,7 @@ namespace OpenVic {
 
 		GameRulesManager const& game_rules_manager;
 		CountryDefines const& country_defines;
+		SharedCountryValues const& shared_country_values;
 
 		colour_t PROPERTY(colour); // Cached to avoid searching government overrides for every province
 		ProvinceInstance* PROPERTY_PTR(capital, nullptr);
@@ -131,21 +135,47 @@ namespace OpenVic {
 		// TODO - total amount of each good produced
 
 		/* Budget */
+		// TODO - cash stockpile change over last 30 days
 		moveable_atomic_fixed_point_t PROPERTY(cash_stockpile);
 		std::unique_ptr<std::mutex> taxable_income_mutex;
 		fixed_point_t PROPERTY(gold_income);
 		IndexedMap<PopType, fixed_point_t> PROPERTY(taxable_income_by_pop_type);
 		IndexedMap<Strata, fixed_point_t> PROPERTY(effective_tax_rate_by_strata);
 		IndexedMap<Strata, SliderValue> PROPERTY(tax_rate_slider_value_by_strata);
+
+		fixed_point_t PROPERTY(administrative_efficiency);
+		constexpr fixed_point_t get_corruption_cost_multiplier() const {
+			return 2 - administrative_efficiency;
+		}
+
+		//store per slider per good: desired, bought & cost
+		//store purchase record from last tick and prediction next tick
 		SliderValue PROPERTY(land_spending_slider_value);
 		SliderValue PROPERTY(naval_spending_slider_value);
 		SliderValue PROPERTY(construction_spending_slider_value);
-		SliderValue PROPERTY(education_spending_slider_value);
+
 		SliderValue PROPERTY(administration_spending_slider_value);
-		SliderValue PROPERTY(social_spending_slider_value);
+		fixed_point_t PROPERTY(actual_administration_spending);
+		fixed_point_t PROPERTY(projected_administration_spending_unscaled_by_slider);
+
+		SliderValue PROPERTY(education_spending_slider_value);
+		fixed_point_t PROPERTY(actual_education_spending);
+		fixed_point_t PROPERTY(projected_education_spending_unscaled_by_slider);
+
 		SliderValue PROPERTY(military_spending_slider_value);
+		fixed_point_t PROPERTY(actual_military_spending);
+		fixed_point_t PROPERTY(projected_military_spending_unscaled_by_slider);
+
+		SliderValue PROPERTY(social_spending_slider_value);
+		fixed_point_t PROPERTY(actual_social_spending);
+		fixed_point_t PROPERTY(projected_pensions_spending_unscaled_by_slider);
+		fixed_point_t PROPERTY(projected_unemployment_subsidies_spending_unscaled_by_slider);
+
 		SliderValue PROPERTY(tariff_rate_slider_value);
-		// TODO - cash stockpile change over last 30 days
+		//TODO actual & projected tariff income/expense
+
+		//TODO actual factory subsidies
+		//projected cost is UI only and lists the different factories
 
 		/* Technology */
 		IndexedMap<Technology, unlock_level_t> PROPERTY(technology_unlock_levels);
@@ -316,6 +346,7 @@ namespace OpenVic {
 			decltype(ship_type_unlock_levels)::keys_type const& ship_type_unlock_levels_keys,
 			decltype(tax_rate_slider_value_by_strata)::keys_type const& strata_keys,
 			GameRulesManager const& new_game_rules_manager,
+			SharedCountryValues const& new_shared_country_values,
 			GoodInstanceManager& new_good_instance_manager,
 			CountryDefines const& new_country_defines,
 			EconomyDefines const& new_economy_defines
@@ -523,7 +554,45 @@ namespace OpenVic {
 
 	private:
 		void _update_production(DefineManager const& define_manager);
-		void _update_budget(DefineManager const& define_manager, ModifierEffectCache const& modifier_effect_cache);
+		void _update_budget();
+
+		//base here means not scaled by slider or pop size
+		constexpr fixed_point_t calculate_administration_salary_base(
+			SharedPopTypeValues const& pop_type_values,
+			const fixed_point_t corruption_cost_multiplier
+		) const {
+			return pop_type_values.get_administration_salary_base() * corruption_cost_multiplier;
+		}
+		constexpr fixed_point_t calculate_education_salary_base(
+			SharedPopTypeValues const& pop_type_values,
+			const fixed_point_t corruption_cost_multiplier
+		) const {
+			return pop_type_values.get_education_salary_base() * corruption_cost_multiplier;
+		}
+		constexpr fixed_point_t calculate_military_salary_base(
+			SharedPopTypeValues const& pop_type_values,
+			const fixed_point_t corruption_cost_multiplier
+		) const {
+			return pop_type_values.get_military_salary_base() * corruption_cost_multiplier;
+		}
+		fixed_point_t calculate_pensions_base(
+			ModifierEffectCache const& modifier_effect_cache,
+			SharedPopTypeValues const& pop_type_values
+		) const;
+		fixed_point_t calculate_unemployment_subsidies_base(
+			ModifierEffectCache const& modifier_effect_cache,
+			SharedPopTypeValues const& pop_type_values
+		) const;
+		fixed_point_t calculate_minimum_wage_base(
+			ModifierEffectCache const& modifier_effect_cache,
+			SharedPopTypeValues const& pop_type_values
+		) const;
+		constexpr fixed_point_t calculate_social_income_variant_base(
+			SharedPopTypeValues const& pop_type_values
+		) const {
+			return administrative_efficiency * pop_type_values.get_social_income_variant_base();
+		}
+
 		// Expects current_research to be non-null
 		void _update_current_tech(InstanceManager const& instance_manager);
 		void _update_technology(InstanceManager const& instance_manager);
@@ -548,9 +617,9 @@ namespace OpenVic {
 			return modifier_sum.for_each_contributing_modifier(effect, std::move(callback));
 		}
 
-		void country_reset_before_tick();
 		void update_gamestate(InstanceManager& instance_manager);
-		void country_tick(InstanceManager& instance_manager);
+		void country_tick_before_map(InstanceManager& instance_manager);
+		void country_tick_after_map(InstanceManager& instance_manager);
 
 		good_data_t& get_good_data(GoodInstance const& good_instance);
 		good_data_t const& get_good_data(GoodInstance const& good_instance) const;
@@ -564,6 +633,7 @@ namespace OpenVic {
 		void report_input_consumption(ProductionType const& production_type, GoodDefinition const& good, const fixed_point_t quantity);
 		void report_input_demand(ProductionType const& production_type, GoodDefinition const& good, const fixed_point_t quantity);
 		void report_output(ProductionType const& production_type, const fixed_point_t quantity);
+		void request_salaries_and_welfare(Pop& pop) const;
 	};
 
 	struct CountryDefinitionManager;
@@ -574,6 +644,7 @@ namespace OpenVic {
 		CountryDefinitionManager const& PROPERTY(country_definition_manager);
 
 		IdentifierRegistry<CountryInstance> IDENTIFIER_REGISTRY(country_instance);
+		SharedCountryValues shared_country_values;
 
 		IndexedMap<CountryDefinition, CountryInstance*> PROPERTY(country_definition_to_instance_map);
 
@@ -588,7 +659,13 @@ namespace OpenVic {
 		void update_rankings(Date today, DefineManager const& define_manager);
 
 	public:
-		CountryInstanceManager(CountryDefinitionManager const& new_country_definition_manager);
+		CountryInstanceManager(
+			CountryDefinitionManager const& new_country_definition_manager,
+			ModifierEffectCache const& new_modifier_effect_cache,
+			CountryDefines const& new_country_defines,
+			PopsDefines const& new_pop_defines,
+			std::vector<PopType> const& pop_type_keys
+		);
 
 		IDENTIFIER_REGISTRY_NON_CONST_ACCESSORS(country_instance);
 
@@ -618,7 +695,7 @@ namespace OpenVic {
 
 		void update_modifier_sums(Date today, StaticModifierCache const& static_modifier_cache);
 		void update_gamestate(InstanceManager& instance_manager);
-		void country_manager_reset_before_tick();
-		void country_manager_tick(InstanceManager& instance_manager);
+		void country_manager_tick_before_map(InstanceManager& instance_manager);
+		void country_manager_tick_after_map(InstanceManager& instance_manager);
 	};
 }
