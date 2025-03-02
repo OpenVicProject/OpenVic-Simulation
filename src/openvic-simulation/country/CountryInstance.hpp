@@ -3,6 +3,7 @@
 #include <utility>
 #include <vector>
 
+#include "openvic-simulation/country/SharedCountryValues.hpp"
 #include "openvic-simulation/modifier/ModifierSum.hpp"
 #include "openvic-simulation/politics/Ideology.hpp"
 #include "openvic-simulation/politics/Rule.hpp"
@@ -51,6 +52,7 @@ namespace OpenVic {
 	struct GameRulesManager;
 	struct CountryDefines;
 	struct EconomyDefines;
+	struct PopsDefines;
 
 	/* Representation of a country's mutable attributes, with a CountryDefinition that is unique at any single time
 	 * but can be swapped with other CountryInstance's CountryDefinition when switching tags. */
@@ -131,13 +133,31 @@ namespace OpenVic {
 		IndexedMap<PopType, fixed_point_t> PROPERTY(taxable_income_by_pop_type);
 		IndexedMap<Strata, fixed_point_t> PROPERTY(effective_tax_rate_by_strata);
 		IndexedMap<Strata, SliderValue> PROPERTY(tax_rate_slider_value_by_strata);
+
+		fixed_point_t PROPERTY(administrative_efficiency); //TODO calculate & update
+		constexpr fixed_point_t get_corruption_cost_multiplier() const {
+			return 2 - administrative_efficiency;
+		}
+
+		//store per slider per good: desired, bought & cost
+		//store purchase record from last tick and prediction next tick
 		SliderValue PROPERTY(land_spending_slider_value);
 		SliderValue PROPERTY(naval_spending_slider_value);
 		SliderValue PROPERTY(construction_spending_slider_value);
+
 		SliderValue PROPERTY(education_spending_slider_value);
+		fixed_point_t PROPERTY(projected_education_spending_base);
+
 		SliderValue PROPERTY(administration_spending_slider_value);
+		fixed_point_t PROPERTY(projected_administration_spending_base);
+
 		SliderValue PROPERTY(social_spending_slider_value);
+		fixed_point_t PROPERTY(projected_pensions_spending_base);
+		fixed_point_t PROPERTY(projected_unemployment_subsidies_spending_base);
+
 		SliderValue PROPERTY(military_spending_slider_value);
+		fixed_point_t PROPERTY(projected_military_spending_base);
+
 		SliderValue PROPERTY(tariff_rate_slider_value);
 		// TODO - cash stockpile change over last 30 days
 
@@ -511,6 +531,33 @@ namespace OpenVic {
 	private:
 		void _update_production(DefineManager const& define_manager);
 		void _update_budget(DefineManager const& define_manager, ModifierEffectCache const& modifier_effect_cache);
+
+		fixed_point_t calculate_government_salary(
+			PopType const& pop_type,
+			SharedCountryValues const& shared_country_values
+		) const;
+		fixed_point_t calculate_government_salary_base(
+			PopType const& pop_type,
+			const PopType::income_type_t income_type,
+			SharedCountryValues const& shared_country_values
+		) const;
+		fixed_point_t calculate_pensions_base(
+			PopType const& pop_type,
+			SharedCountryValues const& shared_country_values
+		) const;
+		fixed_point_t calculate_unemployment_subsidies_base(
+			PopType const& pop_type,
+			SharedCountryValues const& shared_country_values
+		) const;
+		fixed_point_t calculate_minimum_wage_base(
+			PopType const& pop_type,
+			SharedCountryValues const& shared_country_values
+		) const;
+		fixed_point_t calculate_social_income_form_base(
+			PopType const& pop_type,
+			SharedCountryValues const& shared_country_values
+		) const;
+
 		// Expects current_research to be non-null
 		void _update_current_tech(InstanceManager const& instance_manager);
 		void _update_technology(InstanceManager const& instance_manager);
@@ -561,6 +608,7 @@ namespace OpenVic {
 		CountryDefinitionManager const& PROPERTY(country_definition_manager);
 
 		IdentifierRegistry<CountryInstance> IDENTIFIER_REGISTRY(country_instance);
+		SharedCountryValues shared_country_values;
 
 		IndexedMap<CountryDefinition, CountryInstance*> PROPERTY(country_definition_to_instance_map);
 
@@ -575,7 +623,12 @@ namespace OpenVic {
 		void update_rankings(Date today, DefineManager const& define_manager);
 
 	public:
-		CountryInstanceManager(CountryDefinitionManager const& new_country_definition_manager);
+		CountryInstanceManager(
+			CountryDefinitionManager const& new_country_definition_manager,
+			ModifierEffectCache const& new_modifier_effect_cache,
+			PopsDefines const& new_pop_defines,
+			std::vector<PopType> const& pop_type_keys
+		);
 
 		IDENTIFIER_REGISTRY_NON_CONST_ACCESSORS(country_instance);
 

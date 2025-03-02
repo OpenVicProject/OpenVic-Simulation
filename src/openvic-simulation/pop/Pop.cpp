@@ -2,11 +2,9 @@
 
 #define KEEP_DO_FOR_ALL_TYPES_OF_INCOME
 #define KEEP_DO_FOR_ALL_TYPES_OF_EXPENSES
-#define KEEP_DO_FOR_ALL_NEED_CATEGORIES
 #include "Pop.hpp"
 #undef KEEP_DO_FOR_ALL_TYPES_OF_INCOME
 #undef KEEP_DO_FOR_ALL_TYPES_OF_EXPENSES
-#undef KEEP_DO_FOR_ALL_NEED_CATEGORIES
 
 #include "openvic-simulation/defines/Define.hpp"
 #include "openvic-simulation/economy/GoodDefinition.hpp"
@@ -18,6 +16,7 @@
 #include "openvic-simulation/economy/trading/SellResult.hpp"
 #include "openvic-simulation/map/ProvinceInstance.hpp"
 #include "openvic-simulation/modifier/ModifierEffectCache.hpp"
+#include "openvic-simulation/pop/PopNeedsMacro.hpp"
 #include "openvic-simulation/pop/PopValuesFromProvince.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
 #include "openvic-simulation/utility/Logger.hpp"
