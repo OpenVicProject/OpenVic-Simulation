@@ -97,6 +97,10 @@ namespace OpenVic {
 		constexpr bool key_value_success_callback(std::string_view, ast::NodeCPtr) {
 			return true;
 		}
+		inline bool key_value_ignore_invalid_callback(std::string_view key, ast::NodeCPtr) {
+			Logger::warning("Invalid dictionary key \"", key , "\" is ignored.");
+			return true;
+		}
 		inline bool key_value_invalid_callback(std::string_view key, ast::NodeCPtr) {
 			Logger::error("Invalid dictionary key: ", key);
 			return false;
@@ -450,7 +454,11 @@ namespace OpenVic {
 				if (it != map.end()) {
 					return callback(it->second);
 				}
-				Logger::warn_or_error(warn, "String not found in map: ", string);
+
+				Logger::warn_or_error(warn, "String not found in map \"", string, "\" valid values are [",
+					StringUtils::string_join(map),
+					"]"
+				);
 				return warn;
 			};
 		}
