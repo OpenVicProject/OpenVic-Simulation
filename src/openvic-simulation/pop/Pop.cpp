@@ -2,11 +2,9 @@
 
 #define KEEP_DO_FOR_ALL_TYPES_OF_INCOME
 #define KEEP_DO_FOR_ALL_TYPES_OF_EXPENSES
-#define KEEP_DO_FOR_ALL_NEED_CATEGORIES
 #include "Pop.hpp"
 #undef KEEP_DO_FOR_ALL_TYPES_OF_INCOME
 #undef KEEP_DO_FOR_ALL_TYPES_OF_EXPENSES
-#undef KEEP_DO_FOR_ALL_NEED_CATEGORIES
 
 #include "openvic-simulation/defines/Define.hpp"
 #include "openvic-simulation/economy/GoodDefinition.hpp"
@@ -18,6 +16,7 @@
 #include "openvic-simulation/economy/trading/SellResult.hpp"
 #include "openvic-simulation/map/ProvinceInstance.hpp"
 #include "openvic-simulation/modifier/ModifierEffectCache.hpp"
+#include "openvic-simulation/pop/PopNeedsMacro.hpp"
 #include "openvic-simulation/pop/PopValuesFromProvince.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
 #include "openvic-simulation/utility/Logger.hpp"
@@ -409,7 +408,6 @@ void Pop::pop_tick_without_cleanup(PopValuesFromProvince& shared_values) {
 	const fixed_point_t base_needs_scalar = (
 		fixed_point_t::_1() + 2 * consciousness / defines.get_pdef_base_con()
 	) * size;
-	constexpr int32_t size_denominator = 200000;
 
 	CountryInstance* country_to_report_economy_nullable = location_never_null.get_country_to_report_economy();
 	#define FILL_NEEDS(need_category) \
