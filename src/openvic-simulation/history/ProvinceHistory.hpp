@@ -11,6 +11,7 @@
 #include "openvic-simulation/types/fixed_point/FixedPointMap.hpp"
 #include "openvic-simulation/types/OrderedContainers.hpp"
 #include "openvic-simulation/utility/Getters.hpp"
+#include "openvic-simulation/politics/Rebel.hpp"
 
 namespace OpenVic {
 	struct ProvinceHistoryMap;
@@ -39,6 +40,7 @@ namespace OpenVic {
 		ordered_map<BuildingType const*, BuildingType::level_t> PROPERTY(state_buildings);
 		fixed_point_map_t<Ideology const*> PROPERTY(party_loyalties);
 		std::vector<PopBase> PROPERTY(pops);
+		std::optional<RebelType const*> PROPERTY(revolt);
 
 		ProvinceHistoryEntry(ProvinceDefinition const& new_province, Date new_date);
 

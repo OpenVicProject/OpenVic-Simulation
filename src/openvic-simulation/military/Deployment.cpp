@@ -1,6 +1,7 @@
 #include "Deployment.hpp"
 
 #include "openvic-simulation/DefinitionManager.hpp" /* gosh don't we all just love circular inclusion :DDD */
+#include "openvic-simulation/military/LeaderTrait.hpp"
 
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;
@@ -87,9 +88,9 @@ bool DeploymentManager::load_oob_file(
 			"date", ONE_EXACTLY, expect_date_identifier_or_string(assign_variable_callback(leader_date)),
 			"type", ONE_EXACTLY, UnitTypeManager::expect_branch_identifier(assign_variable_callback(leader_branch)),
 			"personality", ONE_EXACTLY, definition_manager.get_military_manager().get_leader_trait_manager()
-				.expect_leader_trait_identifier_or_string(assign_variable_callback_pointer(leader_personality)),
+				.expect_leader_trait_identifier_or_string(assign_variable_callback_pointer(leader_personality), false, true),
 			"background", ONE_EXACTLY, definition_manager.get_military_manager().get_leader_trait_manager()
-				.expect_leader_trait_identifier_or_string(assign_variable_callback_pointer(leader_background)),
+				.expect_leader_trait_identifier_or_string(assign_variable_callback_pointer(leader_background), false, true),
 			"prestige", ZERO_OR_ONE, expect_fixed_point(assign_variable_callback(leader_prestige)),
 			"picture", ZERO_OR_ONE, expect_identifier_or_string(assign_variable_callback(picture))
 		)(node);
@@ -99,20 +100,25 @@ bool DeploymentManager::load_oob_file(
 			ret = false;
 		}
 
-		if (leader_personality != nullptr && !leader_personality->is_personality_trait()) {
-			Logger::error(
-				"Leader ", leader_name, " has personality ", leader_personality->get_identifier(),
-				" which is not a personality trait!"
-			);
+		if (leader_name.empty()) {
+			Logger::error("Leader has a missing or empty name!");
 			ret = false;
 		}
 
-		if (leader_background != nullptr && !leader_background->is_background_trait()) {
-			Logger::error(
-				"Leader ", leader_name, " has background ", leader_background->get_identifier(),
-				" which is not a background trait!"
+		// Default cases for leader personality and background match vic2 behaviour of ignoring invalid traits.
+		if (leader_personality != nullptr && !leader_personality->is_personality_trait()) {
+			Logger::warning(
+				"Leader ", leader_name, " has personality \"", leader_personality->get_identifier(),
+				"\" which is not a personality trait!"
 			);
-			ret = false;
+			leader_personality = nullptr;
+		}
+		if (leader_background != nullptr && !leader_background->is_background_trait()) {
+			Logger::warning(
+				"Leader ", leader_name, " has background \"", leader_background->get_identifier(),
+				"\" which is not a background trait!"
+			);
+			leader_background = nullptr;
 		}
 
 		switch (leader_branch) {
