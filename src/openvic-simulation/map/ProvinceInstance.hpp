@@ -32,6 +32,7 @@ namespace OpenVic {
 	struct CountryInstanceManager;
 	struct ModifierEffectCache;
 	struct MarketInstance;
+	struct GameRulesManager;
 
 	struct UnitInstanceGroup;
 
@@ -64,6 +65,7 @@ namespace OpenVic {
 
 	private:
 		ProvinceDefinition const& PROPERTY(province_definition);
+		GameRulesManager const& PROPERTY(game_rules_manager);
 		ModifierEffectCache const& PROPERTY(modifier_effect_cache);
 
 		TerrainType const* PROPERTY(terrain_type);
@@ -73,6 +75,7 @@ namespace OpenVic {
 
 		CountryInstance* PROPERTY_PTR(owner, nullptr);
 		CountryInstance* PROPERTY_PTR(controller, nullptr);
+		CountryInstance* PROPERTY_PTR(country_to_report_economy, nullptr);
 		ordered_set<CountryInstance*> PROPERTY(cores);
 
 		// The total/resultant modifier of local effects on this province (global effects come from the province's owner)
@@ -117,6 +120,7 @@ namespace OpenVic {
 
 		ProvinceInstance(
 			MarketInstance& new_market_instance,
+			GameRulesManager const& new_game_rules_manager,
 			ModifierEffectCache const& new_modifier_effect_cache,
 			ProvinceDefinition const& new_province_definition,
 			decltype(population_by_strata)::keys_type const& strata_keys,
@@ -136,14 +140,6 @@ namespace OpenVic {
 			return province_definition;
 		}
 
-		constexpr CountryInstance const* get_country_to_report_economy() const {
-			return controller;
-		}
-
-		constexpr CountryInstance* get_country_to_report_economy() {
-			return controller;
-		}
-
 		void set_state(State* new_state);
 
 		constexpr GoodDefinition const* get_rgo_good() const {
@@ -157,6 +153,7 @@ namespace OpenVic {
 
 		bool set_owner(CountryInstance* new_owner);
 		bool set_controller(CountryInstance* new_controller);
+
 		// The warn argument controls whether a log message is emitted when a core already does/doesn't exist, e.g. we may
 		// want to know if there are redundant province history instructions setting a core multiple times, but we may not
 		// want to be swamped with log messages by effect scripts which use add_core/remove_core very liberally. Regardless
@@ -169,6 +166,9 @@ namespace OpenVic {
 		// This combines COLONY and PROTECTORATE statuses, as opposed to non-colonial STATE provinces
 		constexpr bool is_colonial_province() const {
 			return colony_status != colony_status_t::STATE;
+		}
+		constexpr bool is_occupied() const {
+			return owner != controller;
 		}
 
 		// The values returned by these functions are scaled by population size, so they must be divided by population size

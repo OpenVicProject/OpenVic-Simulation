@@ -10,6 +10,7 @@
 #include "openvic-simulation/map/Region.hpp"
 #include "openvic-simulation/map/TerrainType.hpp"
 #include "openvic-simulation/military/UnitInstanceGroup.hpp"
+#include "openvic-simulation/misc/GameRulesManager.hpp"
 #include "openvic-simulation/modifier/StaticModifierCache.hpp"
 #include "openvic-simulation/politics/Ideology.hpp"
 #include "openvic-simulation/pop/PopValuesFromProvince.hpp"
@@ -19,6 +20,7 @@ using namespace OpenVic;
 
 ProvinceInstance::ProvinceInstance(
 	MarketInstance& new_market_instance,
+	GameRulesManager const& new_game_rules_manager,
 	ModifierEffectCache const& new_modifier_effect_cache,
 	ProvinceDefinition const& new_province_definition,
 	decltype(population_by_strata)::keys_type const& strata_keys,
@@ -28,6 +30,7 @@ ProvinceInstance::ProvinceInstance(
 	HasIndex { new_province_definition.get_index() },
 	FlagStrings { "province" },
 	province_definition { new_province_definition },
+	game_rules_manager { new_game_rules_manager },
 	modifier_effect_cache { new_modifier_effect_cache },
 	terrain_type { new_province_definition.get_default_terrain_type() },
 	rgo { new_market_instance, pop_type_keys },
@@ -84,6 +87,14 @@ bool ProvinceInstance::set_owner(CountryInstance* new_owner) {
 		for (Pop& pop : pops) {
 			pop.update_location_based_attributes();
 		}
+
+		if (game_rules_manager.get_country_to_report_economy() == country_to_report_economy_t::Owner) {
+			country_to_report_economy = new_owner;
+		} else if (game_rules_manager.get_country_to_report_economy() == country_to_report_economy_t::NeitherWhenOccupied) {
+			country_to_report_economy = is_occupied()
+				? nullptr
+				: owner;
+		}
 	}
 
 	return ret;
@@ -91,6 +102,10 @@ bool ProvinceInstance::set_owner(CountryInstance* new_owner) {
 
 bool ProvinceInstance::set_controller(CountryInstance* new_controller) {
 	bool ret = true;
+
+	if (new_controller == nullptr) {
+		new_controller = owner;
+	}
 
 	if (controller != new_controller) {
 		if (controller != nullptr) {
@@ -101,6 +116,14 @@ bool ProvinceInstance::set_controller(CountryInstance* new_controller) {
 
 		if (controller != nullptr) {
 			ret &= controller->add_controlled_province(*this);
+		}
+
+		if (game_rules_manager.get_country_to_report_economy() == country_to_report_economy_t::Controller) {
+			country_to_report_economy = new_controller;
+		} else if (game_rules_manager.get_country_to_report_economy() == country_to_report_economy_t::NeitherWhenOccupied) {
+			country_to_report_economy = is_occupied()
+				? nullptr
+				: owner;
 		}
 	}
 
