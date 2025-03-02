@@ -18,6 +18,9 @@ namespace OpenVic {
 
 		IndexedMap<Ideology, std::optional<Date>> PROPERTY(ideology_spawn_date);
 
+		bool PROPERTY(great_wars_enabled, false);
+		bool PROPERTY(world_wars_enabled, false);
+
 	public:
 		PoliticsInstanceManager(InstanceManager const& new_instance_manager);
 		PoliticsInstanceManager(PoliticsInstanceManager&&) = default;
@@ -27,5 +30,9 @@ namespace OpenVic {
 		std::optional<Date> const& get_ideology_spawn_date(Ideology const& ideology) const;
 		bool is_ideology_unlocked(Ideology const& ideology) const;
 		void unlock_ideology(Ideology const& ideology);
+
+		// Enabling world wars automatically enables great wars too, although the same doesn't apply to disabling them
+		void set_great_wars_enabled(bool enabled);
+		void set_world_wars_enabled(bool enabled);
 	};
 }

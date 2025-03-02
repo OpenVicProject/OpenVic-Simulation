@@ -55,6 +55,7 @@ size_t UnitInstanceGroup::get_unit_category_count(UnitType::unit_category_t unit
 
 UnitType const* UnitInstanceGroup::get_display_unit_type() const {
 	if (units.empty()) {
+		Logger::error("Unit group ", name, " has no units!");
 		return nullptr;
 	}
 

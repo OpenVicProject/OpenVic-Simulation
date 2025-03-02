@@ -90,43 +90,56 @@ static bool run_headless(Dataloader::path_vector_t const& roots, bool run_tests)
 	ret &= game_manager.update_clock();
 
 	// TODO - REMOVE TEST CODE
-	Logger::info("===== Ranking system test... =====");
-	if (game_manager.get_instance_manager()) {
-		const auto print_ranking_list = [](std::string_view title, std::vector<CountryInstance*> const& countries) -> void {
-			std::string text;
-			for (CountryInstance const* country : countries) {
-				text += StringUtils::append_string_views(
-					"\n    ", country->get_identifier(),
-					" - Total #", std::to_string(country->get_total_rank()), " (", country->get_total_score().to_string(1),
-					"), Prestige #", std::to_string(country->get_prestige_rank()), " (", country->get_prestige().to_string(1),
-					"), Industry #", std::to_string(country->get_industrial_rank()), " (", country->get_industrial_power().to_string(1),
-					"), Military #", std::to_string(country->get_military_rank()), " (", country->get_military_power().to_string(1), ")"
-				);
-			}
-			Logger::info(title, ":", text);
-		};
+	// Logger::info("===== Ranking system test... =====");
+	// if (game_manager.get_instance_manager()) {
+	// 	const auto print_ranking_list = [](std::string_view title, std::vector<CountryInstance*> const& countries) -> void {
+	// 		std::string text;
+	// 		for (CountryInstance const* country : countries) {
+	// 			text += StringUtils::append_string_views(
+	// 				"\n    ", country->get_identifier(),
+	// 				" - Total #", std::to_string(country->get_total_rank()), " (", country->get_total_score().to_string(1),
+	// 				"), Prestige #", std::to_string(country->get_prestige_rank()), " (", country->get_prestige().to_string(1),
+	// 				"), Industry #", std::to_string(country->get_industrial_rank()), " (", country->get_industrial_power().to_string(1),
+	// 				"), Military #", std::to_string(country->get_military_rank()), " (", country->get_military_power().to_string(1), ")"
+	// 			);
+	// 		}
+	// 		Logger::info(title, ":", text);
+	// 	};
 
-		CountryInstanceManager const& country_instance_manager =
-			game_manager.get_instance_manager()->get_country_instance_manager();
+	// 	CountryInstanceManager const& country_instance_manager =
+	// 		game_manager.get_instance_manager()->get_country_instance_manager();
 
-		std::vector<CountryInstance*> const& great_powers = country_instance_manager.get_great_powers();
-		print_ranking_list("Great Powers", great_powers);
-		print_ranking_list("Secondary Powers", country_instance_manager.get_secondary_powers());
-		print_ranking_list("All countries", country_instance_manager.get_total_ranking());
+	// 	std::vector<CountryInstance*> const& great_powers = country_instance_manager.get_great_powers();
+	// 	print_ranking_list("Great Powers", great_powers);
+	// 	print_ranking_list("Secondary Powers", country_instance_manager.get_secondary_powers());
+	// 	print_ranking_list("All countries", country_instance_manager.get_total_ranking());
 
-		Logger::info("===== RGO test... =====");
-		for (size_t i = 0; i < std::min<size_t>(3, great_powers.size()); ++i) {
-			CountryInstance const& great_power = *great_powers[i];
-			ProvinceInstance const* const capital_province = great_power.get_capital();
-			if (capital_province == nullptr) {
-				Logger::warning(great_power.get_identifier(), " has no capital ProvinceInstance set.");
-			} else {
-				print_rgo(*capital_province);
-			}
-		}
-	} else {
-		Logger::error("Instance manager not available!");
-		ret = false;
+	// 	Logger::info("===== RGO test... =====");
+	// 	for (size_t i = 0; i < std::min<size_t>(3, great_powers.size()); ++i) {
+	// 		CountryInstance const& great_power = *great_powers[i];
+	// 		ProvinceInstance const* const capital_province = great_power.get_capital();
+	// 		if (capital_province == nullptr) {
+	// 			Logger::warning(great_power.get_identifier(), " has no capital ProvinceInstance set.");
+	// 		} else {
+	// 			print_rgo(*capital_province);
+	// 		}
+	// 	}
+	// } else {
+	// 	Logger::error("Instance manager not available!");
+	// 	ret = false;
+	// }
+
+	Pop const& pop = *game_manager.get_instance_manager()->get_map_instance().get_province_instance_by_index(300)->get_pops().begin();
+
+	Logger::info(
+		"Pop has type ", pop.get_type()->get_identifier(),
+		", size ", pop.get_size(),
+		", culture ", pop.get_culture().get_identifier(),
+		", religion ", pop.get_religion().get_identifier(),
+		", ideology:"
+	);
+	for (auto [ideology, support] : pop.get_ideology_distribution()) {
+		Logger::info("    ", ideology.get_identifier(), " - ", support);
 	}
 
 	if (ret) {
@@ -139,6 +152,45 @@ static bool run_headless(Dataloader::path_vector_t const& roots, bool run_tests)
 		Logger::info("Ran ", --ticks_passed, " ticks in ", end_time - start_time);
 	}
 
+	ProvinceInstance const& province = *pop.get_location();
+	Logger::info("Province ", province.get_identifier(), " has ", province.get_total_population(), " pops with ideology:");
+	for (auto [ideology, support] : province.get_ideology_distribution()) {
+		Logger::info("    ", ideology.get_identifier(), " - ", support);
+	}
+
+	State const& state = *province.get_state();
+	Logger::info("State ", state.get_identifier(), " has ", state.get_total_population(), " pops with ideology:");
+	for (auto [ideology, support] : state.get_ideology_distribution()) {
+		Logger::info("    ", ideology.get_identifier(), " - ", support);
+	}
+
+	CountryInstance const& country = *state.get_owner();
+	Logger::info("Country ", country.get_identifier(), " has ", country.get_total_population(), " pops with ideology:");
+	for (auto [ideology, support] : country.get_ideology_distribution()) {
+		Logger::info("    ", ideology.get_identifier(), " - ", support);
+	}
+
+	Logger::info("National value of ", country.get_identifier(), " is ", country.get_national_value());
+
+	// IssueManager const& issue_manager = game_manager.get_definition_manager().get_politics_manager().get_issue_manager();
+
+	// size_t reform_type_count = 0, reform_group_count = 0, reform_count = 0;
+
+	// for (ReformType const& reform_type : issue_manager.get_reform_types()) {
+	// 	Logger::info("ReformType #", reform_type_count, " = ", reform_type);
+	// 	reform_type_count++;
+	// 	for (ReformGroup const* reform_group : reform_type.get_reform_groups()) {
+	// 		Logger::info("ReformGroup #", reform_group_count, " = ", reform_group);
+	// 		reform_group_count++;
+	// 		for (Reform const* reform : reform_group->get_reforms()) {
+	// 			Logger::info("Reform #", reform_count, " = ", reform);
+	// 			reform_count++;
+	// 		}
+	// 	}
+	// }
+	// Logger::info("Official reform type count = ", issue_manager.get_reform_type_count(), ", reform group count = ", issue_manager.get_reform_group_count(), ", reform count = ", issue_manager.get_reform_count());
+	// Logger::info("Un-official reform type count = ", reform_type_count, ", reform group count = ", reform_group_count, ", reform count = ", reform_count);
+
 	return ret;
 }
 
@@ -146,8 +198,72 @@ static bool run_headless(Dataloader::path_vector_t const& roots, bool run_tests)
 	$ program [-h] [-t] [-b] [path]+
 */
 
+// #define PT(x) Logger::info("pre PT"); Logger::info(#x " = ", (x));
+// #define PD(x) PT((x).get_timespan()); Logger::info("pre PD"); Logger::info(#x " = ", (x));
+
+// #define ACT(x) Logger::info(#x); x;
+
 int main(int argc, char const* argv[]) {
 	Logger::set_logger_funcs();
+
+	// static constexpr Timespan RECENT_TIME_LIMIT = Timespan::from_years(5);
+
+	// PT(RECENT_TIME_LIMIT)
+
+	// ACT(Date last_war_loss_date);
+	// ACT(Date today);
+
+	// auto test_dates = [&today, &last_war_loss_date]() -> void {
+	// 	Logger::info("", last_war_loss_date + 1);
+	// 	PD(last_war_loss_date)
+	// 	PD(today)
+	// 	Logger::info("diff = ", today - last_war_loss_date, ", diff < limit = ", (today - last_war_loss_date) < RECENT_TIME_LIMIT ? "yes" : "no", "\n");
+	// };
+
+	// test_dates();
+
+	// ACT(today += RECENT_TIME_LIMIT);
+
+	// test_dates();
+
+	// ACT(last_war_loss_date++);
+
+	// test_dates();
+
+	// ACT(last_war_loss_date -= 2);
+
+	// test_dates();
+
+	// ACT(today = {}; last_war_loss_date = Date {}; last_war_loss_date -= RECENT_TIME_LIMIT);
+
+	// test_dates();
+
+	// ACT(last_war_loss_date++);
+
+	// test_dates();
+
+	// ACT(last_war_loss_date -= 2);
+
+	// test_dates();
+
+	// // PD(Date {} - RECENT_TIME_LIMIT);
+	// ACT(Date test = Date {} - RECENT_TIME_LIMIT);
+	// PD(test);
+
+	// auto x = Date {} - RECENT_TIME_LIMIT;
+	// // PD(x);
+
+	// Logger::info("\n\n ===== END PROGRAM =====\n\n");
+
+	// for (int i = 0; i < 100; ++i) {
+	// 	Date d = -i;
+	// 	Logger::info(
+	// 		"i = ", i, ", d = ", d, ", raw d = ", d.get_timespan(), ", components = ",
+	// 		static_cast<int32_t>(d.get_year()), ".", static_cast<int32_t>(d.get_month()), ".", static_cast<int32_t>(d.get_day())
+	// 	);
+	// }
+
+	// return 0;
 
 	char const* program_name = StringUtils::get_filename(argc > 0 ? argv[0] : nullptr, "<program>");
 	fs::path root;
