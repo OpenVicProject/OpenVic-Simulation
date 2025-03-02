@@ -14,7 +14,8 @@
 using namespace OpenVic;
 
 std::string Timespan::to_string() const {
-	static constexpr size_t array_length = fmt::detail::count_digits(uint64_t(std::numeric_limits<day_t>::max()));
+	// Maximum number of digits + 1 for potential minus sign
+	static constexpr size_t array_length = fmt::detail::count_digits(uint64_t(std::numeric_limits<day_t>::max())) + 1;
 
 	std::array<char, array_length> str_array {};
 	std::to_chars_result result = to_chars(str_array.data(), str_array.data() + str_array.size());
@@ -36,7 +37,7 @@ std::ostream& OpenVic::operator<<(std::ostream& out, Timespan const& timespan) {
 std::string Date::to_string(bool pad_year, bool pad_month, bool pad_day) const {
 	static constexpr size_t array_length = //
 		fmt::detail::count_digits(uint64_t(std::numeric_limits<year_t>::max())) +
-		fmt::detail::count_digits(uint64_t(MONTHS_IN_YEAR)) + fmt::detail::count_digits(uint64_t(MAX_DAYS_IN_MONTH)) + 3;
+		fmt::detail::count_digits(uint64_t(MONTHS_IN_YEAR)) + fmt::detail::count_digits(uint64_t(MAX_DAYS_IN_MONTH)) + 4;
 
 	std::array<char, array_length> str_array {};
 	std::to_chars_result result = to_chars(str_array.data(), str_array.data() + str_array.size(), pad_year, pad_month, pad_day);
@@ -55,7 +56,7 @@ std::ostream& OpenVic::operator<<(std::ostream& out, Date date) {
 	static constexpr size_t array_length = //
 		fmt::detail::count_digits(uint64_t(std::numeric_limits<Date::year_t>::max())) +
 		fmt::detail::count_digits(uint64_t(Date::MONTHS_IN_YEAR)) +
-		fmt::detail::count_digits(uint64_t(Date::MAX_DAYS_IN_MONTH)) + 3;
+		fmt::detail::count_digits(uint64_t(Date::MAX_DAYS_IN_MONTH)) + 4;
 
 	std::array<char, array_length> str_array {};
 	std::to_chars_result result = date.to_chars(str_array.data(), str_array.data() + str_array.size(), false, false, false);

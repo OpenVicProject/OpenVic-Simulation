@@ -17,6 +17,7 @@
 #include <range/v3/algorithm/max_element.hpp>
 
 #include "openvic-simulation/utility/ErrorMacros.hpp"
+#include "openvic-simulation/utility/Getters.hpp"
 #include "openvic-simulation/utility/Utility.hpp"
 
 namespace OpenVic {
@@ -73,6 +74,11 @@ namespace OpenVic {
 			--(*this);
 			return old;
 		}
+		constexpr Timespan operator-() const {
+			Timespan ret = *this;
+			ret.days = -ret.days;
+			return ret;
+		}
 
 		constexpr day_t to_int() const {
 			return days;
@@ -95,12 +101,12 @@ namespace OpenVic {
 	std::ostream& operator<<(std::ostream& out, Timespan const& timespan);
 
 	// Represents an in-game date
-	// Note: Current implementation does not account for leap-years, or dates before Year 0
+	// Note: Current implementation does not account for leap-years
 	struct Date {
 		/* PROPERTY generated getter functions will return dates by value, rather than const reference. */
 		using ov_return_by_value = void;
 
-		using year_t = uint16_t;
+		using year_t = int16_t;
 		using month_t = uint8_t;
 		using day_t = uint8_t;
 
@@ -139,14 +145,14 @@ namespace OpenVic {
 		static constexpr char SEPARATOR_CHARACTER = '.';
 
 		static constexpr std::array<std::string_view, MONTHS_IN_YEAR> MONTH_NAMES {
-			"January", "February", "March",		"April",   "May",	   "June", //
-			"July",	   "August",   "September", "October", "November", "December" //
+			"January", "February", "March",     "April",   "May",      "June", //
+			"July",    "August",   "September", "October", "November", "December" //
 		};
 		static constexpr std::string_view INVALID_MONTH_NAME = "Invalid Month";
 
 	private:
 		// Number of days since Jan 1st, Year 0
-		Timespan timespan;
+		Timespan PROPERTY(timespan);
 
 		static constexpr Timespan _date_to_timespan(year_t year, month_t month, day_t day) {
 			month = std::clamp<month_t>(month, 1, MONTHS_IN_YEAR);
@@ -155,19 +161,31 @@ namespace OpenVic {
 		}
 
 	public:
-		// The Timespan is considered to be the number of days since Jan 1st, Year 0
-		constexpr Date(Timespan total_days) : timespan { total_days >= 0 ? total_days : 0 } {}
+		// The Timespan is considered to be the number of days since Jan 1st, Year 0.
+		// Negative Timespans indicate dates before Jan 1st, Year 0.
+		constexpr Date(Timespan new_timespan) : timespan { new_timespan } {}
 		// Year month day specification
 		constexpr Date(year_t year = 0, month_t month = 1, day_t day = 1) : timespan { _date_to_timespan(year, month, day) } {}
 
 		constexpr year_t get_year() const {
-			return static_cast<Timespan::day_t>(timespan) / DAYS_IN_YEAR;
+			return (timespan >= 0
+				? static_cast<Timespan::day_t>(timespan)
+				: static_cast<Timespan::day_t>(timespan) - DAYS_IN_YEAR + 1
+			) / DAYS_IN_YEAR;
 		}
 		constexpr month_t get_month() const {
-			return MONTH_FROM_DAY_IN_YEAR[static_cast<Timespan::day_t>(timespan) % DAYS_IN_YEAR];
+			Timespan::day_t day_in_year = static_cast<Timespan::day_t>(timespan) % DAYS_IN_YEAR;
+			if (day_in_year < 0) {
+				day_in_year += DAYS_IN_YEAR;
+			}
+			return MONTH_FROM_DAY_IN_YEAR[day_in_year];
 		}
 		constexpr day_t get_day() const {
-			return (static_cast<Timespan::day_t>(timespan) % DAYS_IN_YEAR) - DAYS_UP_TO_MONTH[get_month() - 1] + 1;
+			Timespan::day_t day_in_year = static_cast<Timespan::day_t>(timespan) % DAYS_IN_YEAR;
+			if (day_in_year < 0) {
+				day_in_year += DAYS_IN_YEAR;
+			}
+			return day_in_year - DAYS_UP_TO_MONTH[MONTH_FROM_DAY_IN_YEAR[day_in_year] - 1] + 1;
 		}
 
 		constexpr bool is_month_start() const {
@@ -178,6 +196,9 @@ namespace OpenVic {
 		friend constexpr bool operator==(Date const&, Date const&) = default;
 		constexpr Date operator+(Timespan other) const {
 			return timespan + other;
+		}
+		constexpr Date operator-(Timespan other) const {
+			return timespan - other;
 		}
 		constexpr Timespan operator-(Date other) const {
 			return timespan - other.timespan;
@@ -225,7 +246,15 @@ namespace OpenVic {
 		inline std::to_chars_result to_chars( //
 			char* first, char* last, bool pad_year = false, bool pad_month = true, bool pad_day = true
 		) const {
-			const year_t year = get_year();
+			year_t year = get_year();
+			if (year < 0) {
+				if (last <= first) {
+					return { first, std::errc::value_too_large };
+				}
+				*first = '-';
+				first++;
+				year = -year;
+			}
 			if (pad_year) {
 				if (last - first < 4) {
 					return { first, std::errc::value_too_large };
@@ -302,7 +331,7 @@ namespace OpenVic {
 			type_first is set to first
 			May return std::from_chars errors for year, year remains unchanged
 			If year < 0, ec == not_supported and ptr == first, year remains unchanged
-			If year > 65535, ec == value_too_large and ptr == first, year remains unchanged
+			If year > 32767 or year < -32768, ec == value_too_large and ptr == first, year remains unchanged
 			If string only includes a valid year value,
 				ec == result_out_of_range and ptr == first, only year is changed
 			If string doesn't contain a separator,
@@ -335,12 +364,9 @@ namespace OpenVic {
 				return result;
 			}
 
-			if (OV_unlikely(year_check < 0)) {
-				result.ec = std::errc::not_supported;
-				result.ptr = first;
-				return result;
-			}
-			if (OV_unlikely(year_check > std::numeric_limits<year_t>::max())) {
+			if (OV_unlikely(
+				year_check > std::numeric_limits<year_t>::max() || year_check < std::numeric_limits<year_t>::min()
+			)) {
 				result.ec = std::errc::value_too_large;
 				result.ptr = first;
 				return result;
@@ -452,7 +478,7 @@ namespace OpenVic {
 			);
 			OV_ERR_FAIL_COND_V_MSG(
 				from_chars->ec == std::errc::value_too_large && from_chars->type == errc_type::year, date,
-				"Year value was too large."
+				"Year value was too large or too small."
 			);
 			OV_ERR_FAIL_COND_V_MSG(
 				from_chars->ec == std::errc::result_out_of_range && from_chars->type == errc_type::year, date,
