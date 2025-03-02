@@ -26,6 +26,7 @@ namespace OpenVic {
 		void loop_until_cancelled(
 			work_t& work_type,
 			PopsDefines const& pop_defines,
+			SharedCountryValues const& shared_country_values,
 			std::vector<Strata> const& strata_keys,
 			std::span<GoodInstance> goods_chunk,
 			std::span<ProvinceInstance> provinces_chunk
@@ -50,6 +51,7 @@ namespace OpenVic {
 
 		void initialise_threadpool(
 			PopsDefines const& pop_defines,
+			SharedCountryValues const& shared_country_values,
 			std::vector<Strata> const& strata_keys,
 			std::span<GoodInstance> goods,
 			std::span<ProvinceInstance> provinces

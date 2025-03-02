@@ -38,8 +38,10 @@ void PopStrataValuesFromProvince::update_pop_strata_values_from_province(
 
 PopValuesFromProvince::PopValuesFromProvince(
 	PopsDefines const& new_defines,
+	SharedCountryValues const& new_shared_country_values,
 	decltype(effects_per_strata)::keys_type const& strata_keys
 ) : defines { new_defines },
+	shared_country_values { new_shared_country_values },
 	effects_per_strata { &strata_keys }
 	{}
 
