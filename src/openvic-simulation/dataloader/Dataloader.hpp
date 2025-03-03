@@ -1,9 +1,13 @@
 #pragma once
 
+#include <cstdint>
+
 #include <openvic-dataloader/csv/Parser.hpp>
 #include <openvic-dataloader/v2script/Parser.hpp>
 
 #include "openvic-simulation/dataloader/NodeTools.hpp"
+
+#include <function2/function2.hpp>
 
 namespace OpenVic {
 	namespace fs = std::filesystem;
@@ -104,7 +108,10 @@ namespace OpenVic {
 		path_vector_t lookup_basic_indentifier_prefixed_files_in_dir_recursive(
 			std::string_view path, fs::path const& extension
 		) const;
-		bool apply_to_files(path_vector_t const& files, NodeTools::callback_t<fs::path const&> callback) const;
+
+		static constexpr size_t apply_callback_stack_size = sizeof(std::intptr_t) * 4;
+		using apply_files_callback_t = fu2::function_base<true, true, fu2::capacity_fixed<apply_callback_stack_size, 8>, false, false, bool(fs::path const&)>;
+		bool apply_to_files(path_vector_t const& files, apply_files_callback_t callback) const;
 
 		string_set_t lookup_dirs_in_dir(std::string_view path) const;
 
