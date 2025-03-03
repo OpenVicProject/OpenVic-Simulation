@@ -166,7 +166,7 @@ Dataloader::path_vector_t Dataloader::lookup_basic_indentifier_prefixed_files_in
 	return _lookup_files_in_dir<fs::recursive_directory_iterator>(path, extension, _extract_basic_identifier_prefix_from_path);
 }
 
-bool Dataloader::apply_to_files(path_vector_t const& files, callback_t<fs::path const&> callback) const {
+bool Dataloader::apply_to_files(path_vector_t const& files, apply_files_callback_t callback) const {
 	bool ret = true;
 	for (fs::path const& file : files) {
 		if (!callback(file)) {
