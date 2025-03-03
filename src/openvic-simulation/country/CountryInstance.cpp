@@ -2,6 +2,10 @@
 
 #include <cstdint>
 
+#define KEEP_DO_FOR_ALL_NEED_CATEGORIES
+#include "openvic-simulation/pop/Pop.hpp"
+#undef KEEP_DO_FOR_ALL_NEED_CATEGORIES
+
 #include "openvic-simulation/country/CountryDefinition.hpp"
 #include "openvic-simulation/defines/Define.hpp"
 #include "openvic-simulation/DefinitionManager.hpp"
@@ -1025,6 +1029,70 @@ void CountryInstance::_update_budget(DefineManager const& define_manager, Modifi
 	}
 }
 
+fixed_point_t CountryInstance::calculate_government_salary_base(
+	PopType const& pop_type,
+	PopType::income_type_t const& income_type,
+	PopsDefines const& pop_defines
+) const {
+	fixed_point_t total_need_costs = fixed_point_t::_0();
+
+#define ADD_NEED_COSTS(need_category) \
+	if ((pop_type.get_##need_category##_needs_income_types() & income_type) == income_type) { \
+		for (auto const& [good_definition_ptr, quantity] : pop_type.get_##need_category##_needs()) { \
+			GoodInstance const& good_instance = get_good_instance(*good_definition_ptr); \
+			total_need_costs += good_instance.get_price() * quantity; \
+		} \
+	}
+
+	DO_FOR_ALL_NEED_CATEGORIES(ADD_NEED_COSTS)
+#undef ADD_NEED_COSTS
+	const fixed_point_t low_administrative_efficiency_penalty = std::max(
+		fixed_point_t::_1(),
+		2*(fixed_point_t::_1() - administrative_efficiency)
+	);
+	return low_administrative_efficiency_penalty * total_need_costs * pop_defines.get_base_goods_demand();
+}
+fixed_point_t CountryInstance::calculate_pensions_base(
+	PopType const& pop_type,
+	ModifierEffectCache const& modifier_effect_cache,
+	PopsDefines const& pop_defines
+) const {
+	return get_modifier_effect_value(*modifier_effect_cache.get_pension_level())
+		* calculate_social_income_form_base(pop_type, modifier_effect_cache, pop_defines);
+}
+fixed_point_t CountryInstance::calculate_unemployment_subsidies_base(
+	PopType const& pop_type,
+	ModifierEffectCache const& modifier_effect_cache,
+	PopsDefines const& pop_defines
+) const {
+	return get_modifier_effect_value(*modifier_effect_cache.get_unemployment_benefit())
+		* calculate_social_income_form_base(pop_type, modifier_effect_cache, pop_defines);
+}
+fixed_point_t CountryInstance::calculate_minimum_wage_base(
+	PopType const& pop_type,
+	ModifierEffectCache const& modifier_effect_cache,
+	PopsDefines const& pop_defines
+) const {
+	return get_modifier_effect_value(*modifier_effect_cache.get_minimum_wage())
+		* calculate_social_income_form_base(pop_type, modifier_effect_cache, pop_defines);
+}
+fixed_point_t CountryInstance::calculate_social_income_form_base(
+	PopType const& pop_type,
+	ModifierEffectCache const& modifier_effect_cache,
+	PopsDefines const& pop_defines
+) const {
+	fixed_point_t life_need_costs = fixed_point_t::_0();
+	for (auto const& [good_definition_ptr, quantity] : pop_type.get_life_needs()) {
+		GoodInstance const& good_instance = get_good_instance(*good_definition_ptr);
+		life_need_costs += good_instance.get_price() * quantity;
+	}
+	return 2
+		* administrative_efficiency
+		* social_spending_slider_value.get_value()
+		* life_need_costs
+		* pop_defines.get_base_goods_demand();
+}
+
 void CountryInstance::_update_current_tech(InstanceManager const& instance_manager) {
 	DefinitionManager const& definition_manager = instance_manager.get_definition_manager();
 
@@ -1621,6 +1689,9 @@ void CountryInstance::report_output(ProductionType const& production_type, const
 	good_data.production_per_production_type[&production_type] += quantity;
 }
 
+GoodInstance const& CountryInstance::get_good_instance(GoodDefinition const& good_definition) const {
+	return *goods_data.get_key_by_index(good_definition.get_index());
+}
 CountryInstance::good_data_t& CountryInstance::get_good_data(GoodInstance const& good_instance) {
 	return goods_data[good_instance];
 }
@@ -1931,3 +2002,5 @@ void CountryInstanceManager::country_manager_tick(InstanceManager& instance_mana
 		country.country_tick(instance_manager);
 	}
 }
+
+#undef DO_FOR_ALL_NEED_CATEGORIES
