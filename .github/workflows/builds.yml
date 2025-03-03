@@ -59,7 +59,7 @@ jobs:
 
     steps:
       - name: Checkout project
-        uses: actions/checkout@v4.1.1
+        uses: actions/checkout@v4
         with:
           submodules: recursive
 
@@ -71,7 +71,7 @@ jobs:
         continue-on-error: true
 
       - name: Set up Python
-        uses: actions/setup-python@v5.0.0
+        uses: actions/setup-python@v5
         with:
           python-version: "3.x"
 
@@ -105,14 +105,14 @@ jobs:
           Remove-Item bin/* -Include *.exp,*.pdb -Force
 
       - name: Upload library artifact
-        uses: actions/upload-artifact@v4.3.0
+        uses: actions/upload-artifact@v4
         with:
           name: ${{ github.event.repository.name }}-${{ matrix.identifier }}-library
           path: |
             ${{ github.workspace }}/bin/libopenvic-simulation.*
 
       - name: Upload executable artifact
-        uses: actions/upload-artifact@v4.3.0
+        uses: actions/upload-artifact@v4
         with:
           name: ${{ github.event.repository.name }}-${{ matrix.identifier }}-executable
           path: |
@@ -142,7 +142,7 @@ jobs:
     name: 📚 Merge Library Files
     steps:
       - name: Merge Artifacts
-        uses: actions/upload-artifact/merge@v4.3.0
+        uses: actions/upload-artifact/merge@v4
         with:
           delete-merged: true
           name: ${{ github.event.repository.name }}-library
