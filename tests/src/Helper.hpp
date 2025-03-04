@@ -44,6 +44,18 @@
 
 #define CHECK_FALSE_IF(...) _OVSIM_CHECK_FALSE_IF("_IF", __VA_ARGS__)
 
+#define CHECK_RETURN_BOOL(...) \
+	_OVSIM_CHECK_IF("_RETURN_BOOL", __VA_ARGS__) { \
+		return true; \
+	} \
+	else return false;
+
+#define CHECK_FALSE_RETURN_BOOL(...) \
+	_OVSIM_CHECK_FALSE_IF("_RETURN_BOOL", __VA_ARGS__) { \
+		return true; \
+	} \
+	else return false;
+
 #define CHECK_OR_RETURN(...) \
 	_OVSIM_CHECK_IF("_OR_RETURN", __VA_ARGS__); \
 	else return
