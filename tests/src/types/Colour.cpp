@@ -5,24 +5,12 @@
 #include <string_view>
 #include <type_traits>
 
+#include "Colour.hpp" // IWYU pragma: keep
 #include "Helper.hpp" // IWYU pragma: keep
 #include "Numeric.hpp" // IWYU pragma: keep
 #include <snitch/snitch_macros_check.hpp>
 #include <snitch/snitch_macros_misc.hpp>
 #include <snitch/snitch_macros_test_case.hpp>
-
-namespace snitch {
-	template<typename ValueT, typename ColourIntT, typename ColourTraits>
-	inline static bool append( //
-		snitch::small_string_span ss, OpenVic::basic_colour_t<ValueT, ColourIntT, ColourTraits> const& s
-	) {
-		if constexpr (std::decay_t<decltype(s)>::colour_traits::has_alpha) {
-			return append(ss, "(", (int64_t)s.red, ",", (int64_t)s.green, ",", (int64_t)s.blue, ",", (int64_t)s.alpha, ")");
-		} else {
-			return append(ss, "(", (int64_t)s.red, ",", (uint64_t)s.green, ",", (int64_t)s.blue, ")");
-		}
-	}
-}
 
 using namespace OpenVic;
 using namespace std::string_view_literals;
