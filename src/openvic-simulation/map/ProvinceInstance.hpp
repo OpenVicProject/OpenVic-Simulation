@@ -49,6 +49,11 @@ namespace OpenVic {
 
 		enum struct colony_status_t : uint8_t { STATE, PROTECTORATE, COLONY };
 
+		// This combines COLONY and PROTECTORATE statuses, as opposed to non-colonial STATE provinces
+		static constexpr bool is_colonial(colony_status_t colony_status) {
+			return colony_status != colony_status_t::STATE;
+		}
+
 		static constexpr std::string_view get_colony_status_string(colony_status_t colony_status) {
 			using enum colony_status_t;
 			switch (colony_status) {
@@ -83,6 +88,7 @@ namespace OpenVic {
 		std::vector<ModifierInstance> PROPERTY(event_modifiers);
 
 		bool PROPERTY(slave, false);
+		bool PROPERTY(has_empty_adjacent_province, false);
 		Crime const* PROPERTY_RW(crime, nullptr);
 		ResourceGatheringOperation PROPERTY(rgo);
 		IdentifierRegistry<BuildingInstance> IDENTIFIER_REGISTRY(building);
@@ -90,6 +96,7 @@ namespace OpenVic {
 		std::vector<NavyInstance*> PROPERTY(navies);
 		// The number of land regiments currently in the province, including those being transported by navies
 		size_t PROPERTY(land_regiment_count, 0);
+		Timespan PROPERTY(occupation_duration);
 
 	public:
 		UNIT_BRANCHED_GETTER(get_unit_instance_groups, armies, navies);
@@ -129,7 +136,7 @@ namespace OpenVic {
 		);
 
 		void _add_pop(Pop&& pop);
-		void _update_pops(DefineManager const& define_manager);
+		void _update_pops(InstanceManager const& instance_manager);
 		bool convert_rgo_worker_pops_to_equivalent(ProductionType const& production_type);
 		void initialise_rgo();
 
@@ -163,12 +170,14 @@ namespace OpenVic {
 		constexpr bool is_owner_core() const {
 			return owner != nullptr && cores.contains(owner);
 		}
-		// This combines COLONY and PROTECTORATE statuses, as opposed to non-colonial STATE provinces
 		constexpr bool is_colonial_province() const {
-			return colony_status != colony_status_t::STATE;
+			return is_colonial(colony_status);
 		}
 		constexpr bool is_occupied() const {
 			return owner != controller;
+		}
+		constexpr bool is_empty() const {
+			return owner == nullptr;
 		}
 
 		// The values returned by these functions are scaled by population size, so they must be divided by population size
@@ -229,7 +238,7 @@ namespace OpenVic {
 			}
 		}
 
-		void update_gamestate(const Date today, DefineManager const& define_manager);
+		void update_gamestate(InstanceManager const& instance_manager);
 		void province_tick(const Date today, PopValuesFromProvince& reusable_pop_values);
 		void initialise_for_new_game(const Date today, PopValuesFromProvince& reusable_pop_values);
 
