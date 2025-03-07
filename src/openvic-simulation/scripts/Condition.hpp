@@ -55,6 +55,7 @@
 */
 
 namespace OpenVic {
+
 	enum class scope_type_t : uint8_t {
 		NO_SCOPE    = 0,
 		POP         = 1 << 0,
@@ -224,6 +225,9 @@ namespace OpenVic {
 		) const;
 	};
 
+	// TODO - find a way to stop random things getting turned into arguments and using this, e.g. "size_t"s
+	// std::ostream& operator<<(std::ostream& stream, ConditionNode::argument_t const& argument);
+	std::string argument_to_string(ConditionNode::argument_t const& argument);
 	std::ostream& operator<<(std::ostream& stream, ConditionNode const& node);
 
 	// template<typename... Args>

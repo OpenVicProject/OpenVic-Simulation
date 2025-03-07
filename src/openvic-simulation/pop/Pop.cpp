@@ -130,6 +130,12 @@ void Pop::generate_political_distributions(InstanceManager const& instance_manag
 		}
 	}
 	ideology_distribution.rescale(size);
+
+	issue_distribution.clear();
+	for (auto const& [issue, conditional_weight] : type->get_issues()) {
+		issue_distribution[issue] = conditional_weight.execute(instance_manager, this, this);
+	}
+	rescale_fixed_point_map(issue_distribution, size);
 }
 
 bool Pop::convert_to_equivalent() {

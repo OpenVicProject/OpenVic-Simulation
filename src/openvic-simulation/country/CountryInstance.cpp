@@ -1223,6 +1223,19 @@ void CountryInstance::_update_population() {
 		life_needs_fulfilled_by_strata /= population_by_strata;
 		everyday_needs_fulfilled_by_strata /= population_by_strata;
 		luxury_needs_fulfilled_by_strata /= population_by_strata;
+
+		unemployment_fraction = pop_type_unemployed_count.get_total() / total_population;
+
+		const fixed_point_map_const_iterator_t<Culture const*> largest_culture_it = get_largest_item(culture_distribution);
+		largest_culture = largest_culture_it != culture_distribution.end() ? largest_culture_it->first : nullptr;
+
+		const fixed_point_map_const_iterator_t<Religion const*> largest_religion_it = get_largest_item(religion_distribution);
+		largest_religion = largest_religion_it != religion_distribution.end() ? largest_religion_it->first : nullptr;
+	} else {
+		unemployment_fraction = fixed_point_t::_0();
+
+		largest_culture = nullptr;
+		largest_religion = nullptr;
 	}
 
 	daily_research_points = fixed_point_t::_0();
@@ -1269,9 +1282,16 @@ void CountryInstance::_update_military(
 	MilitaryDefines const& military_defines = define_manager.get_military_defines();
 
 	regiment_count = 0;
+	multi_unit_army_count = 0;
 
 	for (ArmyInstance const* army : armies) {
-		regiment_count += army->get_unit_count();
+		const size_t unit_count = army->get_unit_count();
+
+		regiment_count += unit_count;
+
+		if (unit_count > 1) {
+			multi_unit_army_count++;
+		}
 	}
 
 	ship_count = 0;
