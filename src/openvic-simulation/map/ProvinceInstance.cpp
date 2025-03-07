@@ -417,6 +417,15 @@ bool ProvinceInstance::convert_rgo_worker_pops_to_equivalent(ProductionType cons
 }
 
 void ProvinceInstance::update_gamestate(InstanceManager const& instance_manager) {
+	has_empty_adjacent_province = false;
+	MapInstance const& map_instance = instance_manager.get_map_instance();
+	for (ProvinceDefinition::adjacency_t const& adjacency : province_definition.get_adjacencies()) {
+		if (map_instance.get_province_instance_from_definition(*adjacency.get_to()).is_empty()) {
+			has_empty_adjacent_province = true;
+			break;
+		}
+	}
+
 	land_regiment_count = 0;
 	for (ArmyInstance const* army : armies) {
 		land_regiment_count += army->get_unit_count();
@@ -425,6 +434,10 @@ void ProvinceInstance::update_gamestate(InstanceManager const& instance_manager)
 		for (ArmyInstance const* army : navy->get_carried_armies()) {
 			land_regiment_count += army->get_unit_count();
 		}
+	}
+
+	if (!is_occupied()) {
+		occupation_duration = 0;
 	}
 
 	const Date today = instance_manager.get_today();
@@ -436,6 +449,10 @@ void ProvinceInstance::update_gamestate(InstanceManager const& instance_manager)
 }
 
 void ProvinceInstance::province_tick(const Date today, PopValuesFromProvince& reusable_pop_values) {
+	if (is_occupied()) {
+		occupation_duration++;
+	}
+
 	reusable_pop_values.update_pop_values_from_province(*this);
 	for (Pop& pop : pops) {
 		pop.pop_tick(reusable_pop_values);

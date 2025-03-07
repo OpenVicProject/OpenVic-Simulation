@@ -98,6 +98,7 @@ namespace OpenVic {
 		bool PROPERTY(has_unowned_cores, false);
 		fixed_point_t PROPERTY(owned_cores_controlled_proportion);
 		fixed_point_t PROPERTY(occupied_provinces_proportion);
+		size_t PROPERTY(port_count, 0);
 
 		country_status_t PROPERTY(country_status, country_status_t::COUNTRY_STATUS_UNCIVILISED);
 		fixed_point_t PROPERTY(civilisation_progress);
@@ -261,6 +262,7 @@ namespace OpenVic {
 		size_t PROPERTY(max_supported_regiment_count, 0);
 		size_t PROPERTY(mobilisation_potential_regiment_count, 0);
 		size_t PROPERTY(mobilisation_max_regiment_count, 0);
+		size_t PROPERTY(multi_unit_army_count, 0);
 		fixed_point_t PROPERTY(mobilisation_impact);
 		fixed_point_t PROPERTY(mobilisation_economy_impact);
 		fixed_point_t PROPERTY(supply_consumption);

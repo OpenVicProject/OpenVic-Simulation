@@ -1183,9 +1183,16 @@ void CountryInstance::_update_military(
 	MilitaryDefines const& military_defines = define_manager.get_military_defines();
 
 	regiment_count = 0;
+	multi_unit_army_count = 0;
 
 	for (ArmyInstance const* army : armies) {
-		regiment_count += army->get_unit_count();
+		const size_t unit_count = army->get_unit_count();
+
+		regiment_count += unit_count;
+
+		if (unit_count > 1) {
+			multi_unit_army_count++;
+		}
 	}
 
 	ship_count = 0;
@@ -1467,14 +1474,21 @@ void CountryInstance::update_gamestate(InstanceManager& instance_manager) {
 	MapInstance& map_instance = instance_manager.get_map_instance();
 
 	occupied_provinces_proportion = fixed_point_t::_0();
+	port_count = 0;
 	neighbouring_countries.clear();
 
 	for (ProvinceInstance const* province : owned_provinces) {
+		ProvinceDefinition const& province_definition = province->get_province_definition();
+
 		if (province->get_controller() != this) {
 			occupied_provinces_proportion++;
 		}
 
-		for (ProvinceDefinition::adjacency_t const& adjacency : province->get_province_definition().get_adjacencies()) {
+		if (province_definition.has_port()) {
+			port_count++;
+		}
+
+		for (ProvinceDefinition::adjacency_t const& adjacency : province_definition.get_adjacencies()) {
 			// TODO - should we limit based on adjacency type? Straits and impassable still work in game,
 			// and water provinces don't have an owner so they'll get caught by the later checks anyway.
 			CountryInstance* neighbour =

@@ -88,6 +88,7 @@ namespace OpenVic {
 		std::vector<ModifierInstance> PROPERTY(event_modifiers);
 
 		bool PROPERTY(slave, false);
+		bool PROPERTY(has_empty_adjacent_province, false);
 		Crime const* PROPERTY_RW(crime, nullptr);
 		ResourceGatheringOperation PROPERTY(rgo);
 		IdentifierRegistry<BuildingInstance> IDENTIFIER_REGISTRY(building);
@@ -95,6 +96,7 @@ namespace OpenVic {
 		std::vector<NavyInstance*> PROPERTY(navies);
 		// The number of land regiments currently in the province, including those being transported by navies
 		size_t PROPERTY(land_regiment_count, 0);
+		Timespan PROPERTY(occupation_duration);
 
 	public:
 		UNIT_BRANCHED_GETTER(get_unit_instance_groups, armies, navies);
@@ -173,6 +175,9 @@ namespace OpenVic {
 		}
 		constexpr bool is_occupied() const {
 			return owner != controller;
+		}
+		constexpr bool is_empty() const {
+			return owner == nullptr;
 		}
 
 		// The values returned by these functions are scaled by population size, so they must be divided by population size
