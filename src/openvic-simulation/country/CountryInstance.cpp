@@ -1420,7 +1420,15 @@ fixed_point_t CountryInstance::get_modifier_effect_value(ModifierEffect const& e
 }
 
 void CountryInstance::update_gamestate(InstanceManager& instance_manager) {
-	if (!is_civilised()) {
+	DefinitionManager const& definition_manager = instance_manager.get_definition_manager();
+	DefineManager const& define_manager = definition_manager.get_define_manager();
+	ModifierEffectCache const& modifier_effect_cache = definition_manager.get_modifier_manager().get_modifier_effect_cache();
+
+	if (is_civilised()) {
+		civilisation_progress = fixed_point_t::_0();
+	} else {
+		civilisation_progress = get_modifier_effect_value(*modifier_effect_cache.get_civilization_progress_modifier());
+
 		if (civilisation_progress <= PRIMITIVE_CIVILISATION_PROGRESS) {
 			country_status = COUNTRY_STATUS_PRIMITIVE;
 		} else if (civilisation_progress <= UNCIVILISED_CIVILISATION_PROGRESS) {
@@ -1434,10 +1442,38 @@ void CountryInstance::update_gamestate(InstanceManager& instance_manager) {
 		owned_provinces.begin(), owned_provinces.end(), std::bind_front(&ProvinceInstance::is_colonial_province)
 	);
 
+	{
+		has_unowned_cores = false;
+		owned_cores_controlled_proportion = fixed_point_t::_0();
+		int32_t owned_core_province_count = 0;
+
+		for (ProvinceInstance const* core_province : core_provinces) {
+			if (core_province->get_owner() == this) {
+				owned_core_province_count++;
+
+				if (core_province->get_controller() == this) {
+					owned_cores_controlled_proportion++;
+				}
+			} else {
+				has_unowned_cores = true;
+			}
+		}
+
+		if (owned_cores_controlled_proportion != fixed_point_t::_0()) {
+			owned_cores_controlled_proportion /= owned_core_province_count;
+		}
+	}
+
 	MapInstance& map_instance = instance_manager.get_map_instance();
 
+	occupied_provinces_proportion = fixed_point_t::_0();
 	neighbouring_countries.clear();
+
 	for (ProvinceInstance const* province : owned_provinces) {
+		if (province->get_controller() != this) {
+			occupied_provinces_proportion++;
+		}
+
 		for (ProvinceDefinition::adjacency_t const& adjacency : province->get_province_definition().get_adjacencies()) {
 			// TODO - should we limit based on adjacency type? Straits and impassable still work in game,
 			// and water provinces don't have an owner so they'll get caught by the later checks anyway.
@@ -1449,9 +1485,9 @@ void CountryInstance::update_gamestate(InstanceManager& instance_manager) {
 		}
 	}
 
-	DefinitionManager const& definition_manager = instance_manager.get_definition_manager();
-	DefineManager const& define_manager = definition_manager.get_define_manager();
-	ModifierEffectCache const& modifier_effect_cache = definition_manager.get_modifier_manager().get_modifier_effect_cache();
+	if (occupied_provinces_proportion != fixed_point_t::_0()) {
+		occupied_provinces_proportion /= owned_provinces.size();
+	}
 
 	// Order of updates might need to be changed/functions split up to account for dependencies
 	// Updates population stats (including research and leadership points from pops)
@@ -1499,7 +1535,7 @@ void CountryInstance::country_reset_before_tick() {
 	for (auto pair : goods_data) {
 		pair.second.clear_daily_recorded_data();
 	}
-	
+
 	taxable_income_by_pop_type.fill(fixed_point_t::_0());
 }
 
@@ -1704,19 +1740,26 @@ void CountryInstanceManager::update_rankings(Date today, DefineManager const& de
 	// Demote great powers who have been below the max great power rank for longer than the demotion grace period and
 	// remove them from the list. We don't just demote them all and clear the list as when rebuilding we'd need to look
 	// ahead for countries below the max great power rank but still within the demotion grace period.
-	for (CountryInstance* great_power : great_powers) {
-		if (great_power->get_total_rank() > max_great_power_rank && great_power->get_lose_great_power_date() < today) {
-			great_power->country_status = COUNTRY_STATUS_CIVILISED;
+	std::erase_if(great_powers, [max_great_power_rank, today](CountryInstance* great_power) -> bool {
+		if (OV_likely(great_power->get_country_status() == COUNTRY_STATUS_GREAT_POWER)) {
+			if (OV_unlikely(
+				great_power->get_total_rank() > max_great_power_rank && great_power->get_lose_great_power_date() < today
+			)) {
+				great_power->country_status = COUNTRY_STATUS_CIVILISED;
+				return true;
+			} else {
+				return false;
+			}
 		}
-	}
-	std::erase_if(great_powers, [](CountryInstance const* country) -> bool {
-		return country->get_country_status() != COUNTRY_STATUS_GREAT_POWER;
+		return true;
 	});
 
 	// Demote all secondary powers and clear the list. We will rebuilt the whole list from scratch, so there's no need to
 	// keep countries which are still above the max secondary power rank (they might become great powers instead anyway).
 	for (CountryInstance* secondary_power : secondary_powers) {
-		secondary_power->country_status = COUNTRY_STATUS_CIVILISED;
+		if (secondary_power->country_status == COUNTRY_STATUS_SECONDARY_POWER) {
+			secondary_power->country_status = COUNTRY_STATUS_CIVILISED;
+		}
 	}
 	secondary_powers.clear();
 
@@ -1845,7 +1888,11 @@ bool CountryInstanceManager::apply_history_to_countries(InstanceManager& instanc
 	UnitInstanceManager& unit_instance_manager = instance_manager.get_unit_instance_manager();
 	MapInstance& map_instance = instance_manager.get_map_instance();
 
+	const Date starting_last_war_loss_date = today - RECENT_TIME_LIMIT;
+
 	for (CountryInstance& country_instance : country_instances.get_items()) {
+		country_instance.last_war_loss_date = starting_last_war_loss_date;
+
 		if (!country_instance.get_country_definition()->is_dynamic_tag()) {
 			CountryHistoryMap const* history_map =
 				history_manager.get_country_history(country_instance.get_country_definition());
@@ -1931,6 +1978,10 @@ void CountryInstanceManager::update_gamestate(InstanceManager& instance_manager)
 		country.update_gamestate(instance_manager);
 	}
 
+	// TODO - work out how to have ranking effects applied (e.g. static modifiers) applied at game start
+	// we can't just move update_rankings to the top of this function as it will choose initial GPs based on
+	// incomplete scores. Although we should check if the base game includes all info or if it really does choose
+	// starting GPs based purely on stuff like prestige which is set by history before the first game update.
 	update_rankings(instance_manager.get_today(), instance_manager.get_definition_manager().get_define_manager());
 }
 

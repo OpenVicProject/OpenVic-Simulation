@@ -95,6 +95,9 @@ namespace OpenVic {
 		bool PROPERTY_RW_CUSTOM_NAME(ai, is_ai, set_ai, true);
 		bool PROPERTY_CUSTOM_PREFIX(releasable_vassal, is, true);
 		bool PROPERTY(owns_colonial_province, false);
+		bool PROPERTY(has_unowned_cores, false);
+		fixed_point_t PROPERTY(owned_cores_controlled_proportion);
+		fixed_point_t PROPERTY(occupied_provinces_proportion);
 
 		country_status_t PROPERTY(country_status, country_status_t::COUNTRY_STATUS_UNCIVILISED);
 		fixed_point_t PROPERTY(civilisation_progress);
@@ -239,6 +242,9 @@ namespace OpenVic {
 		fixed_point_t PROPERTY(prestige);
 		size_t PROPERTY(prestige_rank, 0);
 		fixed_point_t PROPERTY(diplomatic_points);
+		// The last time this country lost a war, i.e. accepted a peace offer sent from their offer tab or the enemy's demand
+		// tab, even white peace. Used for the "has_recently_lost_war" condition (true if the date is less than 5 years ago).
+		Date PROPERTY(last_war_loss_date);
 		// TODO - colonial power, current wars
 
 		/* Military */
