@@ -11,6 +11,8 @@
 
 #include <dryad/node.hpp>
 
+#include <fmt/core.h>
+
 #include <range/v3/iterator/operations.hpp>
 #include <range/v3/view/enumerate.hpp>
 
@@ -202,7 +204,9 @@ node_callback_t NodeTools::expect_colour(callback_t<colour_t> callback) {
 				}
 			}
 		))(node);
-		ret &= callback(col);
+		if (ret) {
+			ret &= callback(col);
+		}
 		return ret;
 	};
 }
@@ -263,7 +267,9 @@ NodeCallback auto _expect_vec2(Callback<vec2_t<T>> auto&& callback) {
 			"x", ONE_EXACTLY, expect_func(assign_variable_callback(vec.x)),
 			"y", ONE_EXACTLY, expect_func(assign_variable_callback(vec.y))
 		)(node);
-		ret &= callback(vec);
+		if (ret) {
+			ret &= callback(vec);
+		}
 		return ret;
 	};
 }
@@ -306,7 +312,9 @@ node_callback_t NodeTools::expect_fvec3(callback_t<fvec3_t> callback) {
 				return true;
 			}
 		))(node);
-		ret &= callback(vec);
+		if (ret) {
+			ret &= callback(vec);
+		}
 		return ret;
 	};
 }
@@ -321,7 +329,9 @@ node_callback_t NodeTools::expect_fvec4(callback_t<fvec4_t> callback) {
 				return true;
 			}
 		))(node);
-		ret &= callback(vec);
+		if (ret) {
+			ret &= callback(vec);
+		}
 		return ret;
 	};
 }
@@ -345,7 +355,7 @@ node_callback_t NodeTools::expect_assign(key_value_callback_t callback) {
 node_callback_t NodeTools::expect_list_and_length(length_callback_t length_callback, node_callback_t callback) {
 	return _abstract_statement_node_callback([length_callback, callback](_NodeStatementRange list) mutable -> bool {
 		bool ret = true;
-		auto dist = ranges::distance(list);
+		size_t dist = ranges::distance(list);
 		size_t size = length_callback(dist);
 
 		if (size > dist) {
@@ -355,7 +365,7 @@ node_callback_t NodeTools::expect_list_and_length(length_callback_t length_callb
 		}
 		for (auto [index, sub_node] : list | ranges::views::enumerate) {
 			if (index >= size) {
-				break;
+				return ret;
 			}
 			if (auto const* value = dryad::node_try_cast<ast::ValueStatement>(sub_node)) {
 				ret &= callback(value->value());
@@ -369,12 +379,12 @@ node_callback_t NodeTools::expect_list_and_length(length_callback_t length_callb
 
 node_callback_t NodeTools::expect_list_of_length(size_t length, node_callback_t callback) {
 	return [length, callback](ast::NodeCPtr node) -> bool {
-		bool ret = true;
-		ret &= expect_list_and_length(
-			[length, &ret](size_t size) -> size_t {
+		bool size_ret = true;
+		bool ret = expect_list_and_length(
+			[length, &size_ret](size_t size) -> size_t {
 				if (size != length) {
 					Logger::error("List length ", size, " does not match expected length ", length);
-					ret = false;
+					size_ret = false;
 					if (length < size) {
 						return length;
 					}
@@ -383,7 +393,7 @@ node_callback_t NodeTools::expect_list_of_length(size_t length, node_callback_t 
 			},
 			callback
 		)(node);
-		return ret;
+		return ret && size_ret;
 	};
 }
 
@@ -393,15 +403,15 @@ node_callback_t NodeTools::expect_list(node_callback_t callback) {
 
 node_callback_t NodeTools::expect_length(callback_t<size_t> callback) {
 	return [callback](ast::NodeCPtr node) mutable -> bool {
-		bool ret = true;
-		ret &= expect_list_and_length(
-			[callback, &ret](size_t size) mutable -> size_t {
-				ret &= callback(size);
+		bool size_ret = true;
+		bool ret = expect_list_and_length(
+			[callback, &size_ret](size_t size) mutable -> size_t {
+				size_ret &= callback(size);
 				return 0;
 			},
 			success_callback
 		)(node);
-		return ret;
+		return ret && size_ret;
 	};
 }
 
@@ -430,7 +440,7 @@ static node_callback_t _expect_key(Key key, NodeCallback auto&& callback, bool* 
 	return _abstract_statement_node_callback([key, callback = FWD(callback), key_found, allow_duplicates](_NodeStatementRange list) mutable -> bool {
 		bool ret = true;
 		size_t keys_found = 0;
-		for (auto sub_node : list) {
+		for (ast::Statement const* sub_node : list) {
 			auto const* assign_node = dryad::node_try_cast<ast::AssignStatement>(sub_node);
 			if (assign_node == nullptr) {
 				continue;
