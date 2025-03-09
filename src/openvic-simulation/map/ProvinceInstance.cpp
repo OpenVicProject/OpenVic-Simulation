@@ -2,9 +2,11 @@
 
 #include "openvic-simulation/country/CountryInstance.hpp"
 #include "openvic-simulation/defines/Define.hpp"
+#include "openvic-simulation/DefinitionManager.hpp"
 #include "openvic-simulation/economy/production/ProductionType.hpp"
 #include "openvic-simulation/economy/production/ResourceGatheringOperation.hpp"
 #include "openvic-simulation/history/ProvinceHistory.hpp"
+#include "openvic-simulation/InstanceManager.hpp"
 #include "openvic-simulation/map/Crime.hpp"
 #include "openvic-simulation/map/ProvinceDefinition.hpp"
 #include "openvic-simulation/map/Region.hpp"
@@ -41,6 +43,7 @@ ProvinceInstance::ProvinceInstance(
 	everyday_needs_fulfilled_by_strata { &strata_keys },
 	luxury_needs_fulfilled_by_strata { &strata_keys },
 	pop_type_distribution { &pop_type_keys },
+	pop_type_unemployed_count { &pop_type_keys },
 	pops_cache_by_type { &pop_type_keys },
 	ideology_distribution { &ideology_keys },
 	vote_distribution { nullptr } {}
@@ -244,7 +247,7 @@ size_t ProvinceInstance::get_pop_count() const {
 /* REQUIREMENTS:
  * MAP-65, MAP-68, MAP-70, MAP-234
  */
-void ProvinceInstance::_update_pops(DefineManager const& define_manager) {
+void ProvinceInstance::_update_pops(InstanceManager const& instance_manager) {
 	total_population = 0;
 	average_literacy = 0;
 	average_consciousness = 0;
@@ -257,6 +260,7 @@ void ProvinceInstance::_update_pops(DefineManager const& define_manager) {
 	luxury_needs_fulfilled_by_strata.clear();
 
 	pop_type_distribution.clear();
+	pop_type_unemployed_count.clear();
 	ideology_distribution.clear();
 	issue_distribution.clear();
 	vote_distribution.clear();
@@ -269,7 +273,8 @@ void ProvinceInstance::_update_pops(DefineManager const& define_manager) {
 
 	max_supported_regiments = 0;
 
-	MilitaryDefines const& military_defines = define_manager.get_military_defines();
+	MilitaryDefines const& military_defines =
+		instance_manager.get_definition_manager().get_define_manager().get_military_defines();
 
 	using enum colony_status_t;
 
@@ -279,7 +284,7 @@ void ProvinceInstance::_update_pops(DefineManager const& define_manager) {
 		: is_owner_core() ? fixed_point_t::_1() : military_defines.get_pop_size_per_regiment_non_core_multiplier();
 
 	for (Pop& pop : pops) {
-		pop.update_gamestate(define_manager, owner, pop_size_per_regiment_multiplier);
+		pop.update_gamestate(instance_manager, owner, pop_size_per_regiment_multiplier);
 
 		const pop_size_t pop_size_s = pop.get_size();
 		// TODO - change casting if pop_size_t changes type
@@ -300,6 +305,7 @@ void ProvinceInstance::_update_pops(DefineManager const& define_manager) {
 		luxury_needs_fulfilled_by_strata[strata] += pop.get_luxury_needs_fulfilled() * pop_size_f;
 
 		pop_type_distribution[pop_type] += pop_size_s;
+		pop_type_unemployed_count[pop_type] += pop.get_unemployed();
 		pops_cache_by_type[pop_type].push_back(&pop);
 		// Pop ideology, issue and vote distributions are scaled to pop size so we can add them directly
 		ideology_distribution += pop.get_ideology_distribution();
@@ -413,7 +419,23 @@ bool ProvinceInstance::convert_rgo_worker_pops_to_equivalent(ProductionType cons
 	return is_valid_operation;
 }
 
-void ProvinceInstance::update_gamestate(const Date today, DefineManager const& define_manager) {
+void ProvinceInstance::update_gamestate(InstanceManager const& instance_manager) {
+	has_empty_adjacent_province = false;
+	// We assume there are no duplicate province adjacencies, so each adjacency.get_to() is unique in the loop below
+	adjacent_nonempty_land_provinces.clear();
+
+	MapInstance const& map_instance = instance_manager.get_map_instance();
+	for (ProvinceDefinition::adjacency_t const& adjacency : province_definition.get_adjacencies()) {
+		ProvinceDefinition const& province_definition = *adjacency.get_to();
+		ProvinceInstance const& province_instance = map_instance.get_province_instance_from_definition(province_definition);
+
+		if (province_instance.is_empty()) {
+			has_empty_adjacent_province = true;
+		} else if (!province_definition.is_water()) {
+			adjacent_nonempty_land_provinces.push_back(&province_instance);
+		}
+	}
+
 	land_regiment_count = 0;
 	for (ArmyInstance const* army : armies) {
 		land_regiment_count += army->get_unit_count();
@@ -424,13 +446,23 @@ void ProvinceInstance::update_gamestate(const Date today, DefineManager const& d
 		}
 	}
 
+	if (!is_occupied()) {
+		occupation_duration = 0;
+	}
+
+	const Date today = instance_manager.get_today();
+
 	for (BuildingInstance& building : buildings.get_items()) {
 		building.update_gamestate(today);
 	}
-	_update_pops(define_manager);
+	_update_pops(instance_manager);
 }
 
 void ProvinceInstance::province_tick(const Date today, PopValuesFromProvince& reusable_pop_values) {
+	if (is_occupied()) {
+		occupation_duration++;
+	}
+
 	reusable_pop_values.update_pop_values_from_province(*this);
 	for (Pop& pop : pops) {
 		pop.pop_tick(reusable_pop_values);

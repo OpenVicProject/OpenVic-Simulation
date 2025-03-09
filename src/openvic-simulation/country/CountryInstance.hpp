@@ -95,6 +95,10 @@ namespace OpenVic {
 		bool PROPERTY_RW_CUSTOM_NAME(ai, is_ai, set_ai, true);
 		bool PROPERTY_CUSTOM_PREFIX(releasable_vassal, is, true);
 		bool PROPERTY(owns_colonial_province, false);
+		bool PROPERTY(has_unowned_cores, false);
+		fixed_point_t PROPERTY(owned_cores_controlled_proportion);
+		fixed_point_t PROPERTY(occupied_provinces_proportion);
+		size_t PROPERTY(port_count, 0);
 
 		country_status_t PROPERTY(country_status, country_status_t::COUNTRY_STATUS_UNCIVILISED);
 		fixed_point_t PROPERTY(civilisation_progress);
@@ -191,6 +195,7 @@ namespace OpenVic {
 		IndexedMap<Strata, fixed_point_t> PROPERTY(luxury_needs_fulfilled_by_strata);
 
 		IndexedMap<PopType, pop_size_t> PROPERTY(pop_type_distribution);
+		IndexedMap<PopType, pop_size_t> PROPERTY(pop_type_unemployed_count);
 		IndexedMap<Ideology, fixed_point_t> PROPERTY(ideology_distribution);
 		fixed_point_map_t<Issue const*> PROPERTY(issue_distribution);
 		IndexedMap<CountryParty, fixed_point_t> PROPERTY(vote_distribution);
@@ -239,6 +244,9 @@ namespace OpenVic {
 		fixed_point_t PROPERTY(prestige);
 		size_t PROPERTY(prestige_rank, 0);
 		fixed_point_t PROPERTY(diplomatic_points);
+		// The last time this country lost a war, i.e. accepted a peace offer sent from their offer tab or the enemy's demand
+		// tab, even white peace. Used for the "has_recently_lost_war" condition (true if the date is less than 5 years ago).
+		Date PROPERTY(last_war_loss_date);
 		// TODO - colonial power, current wars
 
 		/* Military */
@@ -255,6 +263,7 @@ namespace OpenVic {
 		size_t PROPERTY(max_supported_regiment_count, 0);
 		size_t PROPERTY(mobilisation_potential_regiment_count, 0);
 		size_t PROPERTY(mobilisation_max_regiment_count, 0);
+		size_t PROPERTY(multi_unit_army_count, 0);
 		fixed_point_t PROPERTY(mobilisation_impact);
 		fixed_point_t PROPERTY(mobilisation_economy_impact);
 		fixed_point_t PROPERTY(supply_consumption);
@@ -369,8 +378,11 @@ namespace OpenVic {
 
 		// The values returned by these functions are scaled by population size, so they must be divided by population size
 		// to get the support as a proportion of 1.0
-		constexpr fixed_point_t get_pop_type_proportion(PopType const& pop_type) const {
+		constexpr pop_size_t get_pop_type_proportion(PopType const& pop_type) const {
 			return pop_type_distribution[pop_type];
+		}
+		constexpr pop_size_t get_pop_type_unemployed(PopType const& pop_type) const {
+			return pop_type_unemployed_count[pop_type];
 		}
 		constexpr fixed_point_t get_ideology_support(Ideology const& ideology) const {
 			return ideology_distribution[ideology];
@@ -601,7 +613,7 @@ namespace OpenVic {
 			EconomyDefines const& economy_defines
 		);
 
-		bool apply_history_to_countries(CountryHistoryManager const& history_manager, InstanceManager& instance_manager);
+		bool apply_history_to_countries(InstanceManager& instance_manager);
 
 		void update_modifier_sums(Date today, StaticModifierCache const& static_modifier_cache);
 		void update_gamestate(InstanceManager& instance_manager);

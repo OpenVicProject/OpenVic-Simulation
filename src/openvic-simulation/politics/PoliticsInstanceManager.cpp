@@ -44,3 +44,19 @@ void PoliticsInstanceManager::unlock_ideology(Ideology const& ideology) {
 		);
 	}
 }
+
+void PoliticsInstanceManager::set_great_wars_enabled(bool enabled) {
+	// if (enabled && !great_wars_enabled) {
+		// TODO - trigger "Great Wars discovered!" popup
+	// }
+
+	great_wars_enabled = enabled;
+}
+
+void PoliticsInstanceManager::set_world_wars_enabled(bool enabled) {
+	if (enabled) {
+		set_great_wars_enabled(true);
+	}
+
+	world_wars_enabled = enabled;
+}

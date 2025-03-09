@@ -8,12 +8,26 @@
 
 using namespace OpenVic;
 
+MapInstance::MapInstance(
+	MapDefinition const& new_map_definition,
+	ThreadPool& new_thread_pool
+) : map_definition { new_map_definition },
+	thread_pool { new_thread_pool } {}
+
 ProvinceInstance& MapInstance::get_province_instance_from_definition(ProvinceDefinition const& province) {
 	return province_instances.get_items()[province.get_index() - 1];
 }
 
 ProvinceInstance const& MapInstance::get_province_instance_from_definition(ProvinceDefinition const& province) const {
 	return province_instances.get_items()[province.get_index() - 1];
+}
+
+void MapInstance::enable_canal(canal_index_t canal_index) {
+	enabled_canals.insert(canal_index);
+}
+
+bool MapInstance::is_canal_enabled(canal_index_t canal_index) const {
+	return enabled_canals.contains(canal_index);
 }
 
 bool MapInstance::setup(
@@ -101,7 +115,8 @@ bool MapInstance::apply_history_to_provinces(
 						}
 					} else {
 						province.apply_history_to_province(*entry, country_manager);
-						std::optional<ProductionType const*> const& rgo_production_type_nullable_optional = entry->get_rgo_production_type_nullable();
+						std::optional<ProductionType const*> const& rgo_production_type_nullable_optional =
+							entry->get_rgo_production_type_nullable();
 						if (rgo_production_type_nullable_optional.has_value()) {
 							rgo_production_type_nullable = rgo_production_type_nullable_optional.value();
 						}
@@ -137,12 +152,12 @@ void MapInstance::update_modifier_sums(const Date today, StaticModifierCache con
 	}
 }
 
-void MapInstance::update_gamestate(const Date today, DefineManager const& define_manager) {
+void MapInstance::update_gamestate(InstanceManager const& instance_manager) {
 	highest_province_population = 0;
 	total_map_population = 0;
 
 	for (ProvinceInstance& province : province_instances.get_items()) {
-		province.update_gamestate(today, define_manager);
+		province.update_gamestate(instance_manager);
 
 		// Update population stats
 		const pop_size_t province_population = province.get_total_population();
@@ -162,10 +177,7 @@ void MapInstance::map_tick() {
 	//state tick will update pop employment via factories
 }
 
-void MapInstance::initialise_for_new_game(
-	const Date today,
-	DefineManager const& define_manager
-) {
-	update_gamestate(today, define_manager);
+void MapInstance::initialise_for_new_game(InstanceManager const& instance_manager) {
+	update_gamestate(instance_manager);
 	thread_pool.process_province_initialise_for_new_game();
 }
