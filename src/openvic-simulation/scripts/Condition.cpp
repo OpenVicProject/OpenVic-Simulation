@@ -1548,7 +1548,18 @@ bool ConditionManager::setup_conditions() {
 	ret &= add_condition(
 		"any_neighbor_province",
 		_parse_condition_node_list_callback<PROVINCE, PROVINCE>,
-		_execute_condition_node_unimplemented
+		_execute_condition_node_convert_scope<ProvinceInstance, scope_t, scope_t, argument_t const&>(
+			_execute_condition_node_list_multi_scope_callback<
+				expect_true, require_any, std::vector<ProvinceInstance const*> const&, ProvinceInstance const*
+			>(
+				[](
+					Condition const& condition, InstanceManager const& instance_manager, ProvinceInstance const* current_scope,
+					scope_t this_scope, scope_t from_scope
+				) -> std::vector<ProvinceInstance const*> const& {
+					return current_scope->get_adjacent_nonempty_land_provinces();
+				}
+			)
+		)
 	);
 
 	/* Trigger Province Scopes */
@@ -1713,16 +1724,16 @@ bool ConditionManager::setup_conditions() {
 	ret &= add_condition(
 		"is_canal_enabled",
 		_parse_condition_node_value_callback<integer_t>,
-		_execute_condition_node_unimplemented
-		/*_execute_condition_node_cast_argument_callback<integer_t, scope_t, scope_t, scope_t>(
+		_execute_condition_node_cast_argument_callback<integer_t, scope_t, scope_t, scope_t>(
 			[](
 				Condition const& condition, InstanceManager const& instance_manager, scope_t current_scope, scope_t this_scope,
 				scope_t from_scope, integer_t argument
 			) -> bool {
-				// TODO - check if canal[argument] is enabled
-				return false;
+				return argument >= std::numeric_limits<MapInstance::canal_index_t>::min() &&
+					argument <= std::numeric_limits<MapInstance::canal_index_t>::max() &&
+					instance_manager.get_map_instance().is_canal_enabled(argument);
 			}
-		)*/
+		)
 	);
 	ret &= add_condition(
 		"always",
@@ -3973,7 +3984,19 @@ bool ConditionManager::setup_conditions() {
 	ret &= add_condition(
 		"unemployment_by_type",
 		_parse_condition_node_value_callback<std::pair<PopType const*, fixed_point_t>, PROVINCE>,
-		_execute_condition_node_unimplemented
+		_execute_condition_node_cast_argument_callback<std::pair<PopType const*, fixed_point_t>, scope_t, scope_t, scope_t>(
+			_execute_condition_node_convert_scope<
+				ProvinceInstance, scope_t, scope_t, std::pair<PopType const*, fixed_point_t> const&
+			>(
+				[](
+					Condition const& condition, InstanceManager const& instance_manager, ProvinceInstance const* current_scope,
+					scope_t this_scope, scope_t from_scope, std::pair<PopType const*, fixed_point_t> const& argument
+				) -> bool {
+					return current_scope->get_pop_type_unemployed(*argument.first) >=
+						argument.second * current_scope->get_pop_type_proportion(*argument.first);
+				}
+			)
+		)
 	);
 	ret &= add_condition(
 		"units_in_province", // Counts number of land regiments, including those being transported by navies

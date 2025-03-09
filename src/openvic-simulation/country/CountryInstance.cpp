@@ -78,6 +78,7 @@ CountryInstance::CountryInstance(
 	everyday_needs_fulfilled_by_strata { &strata_keys },
 	luxury_needs_fulfilled_by_strata { &strata_keys },
 	pop_type_distribution { &pop_type_keys },
+	pop_type_unemployed_count { &pop_type_keys },
 	ideology_distribution { &ideology_keys },
 	vote_distribution { nullptr },
 
@@ -1093,6 +1094,7 @@ void CountryInstance::_update_population() {
 	luxury_needs_fulfilled_by_strata.clear();
 
 	pop_type_distribution.clear();
+	pop_type_unemployed_count.clear();
 	ideology_distribution.clear();
 	issue_distribution.clear();
 	vote_distribution.clear();
@@ -1121,6 +1123,7 @@ void CountryInstance::_update_population() {
 		);
 
 		pop_type_distribution += state->get_pop_type_distribution();
+		pop_type_unemployed_count += state->get_pop_type_unemployed_count();
 		ideology_distribution += state->get_ideology_distribution();
 		issue_distribution += state->get_issue_distribution();
 		vote_distribution += state->get_vote_distribution();

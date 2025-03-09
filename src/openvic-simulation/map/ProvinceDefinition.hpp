@@ -31,7 +31,7 @@ namespace OpenVic {
 
 		struct adjacency_t {
 			using data_t = uint8_t;
-			static constexpr data_t NO_CANAL = 0;
+			static constexpr data_t DEFAULT_DATA = 0;
 
 			enum struct type_t : uint8_t {
 				LAND,       /* Between two land provinces */

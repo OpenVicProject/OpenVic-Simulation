@@ -22,8 +22,6 @@ ProvinceDefinition::ProvinceDefinition(
 	port { false },
 	port_adjacent_province { nullptr },
 	default_terrain_type { nullptr },
-	adjacencies {},
-	centre {},
 	positions {} {}
 
 bool ProvinceDefinition::operator==(ProvinceDefinition const& other) const {

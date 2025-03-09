@@ -43,6 +43,7 @@ ProvinceInstance::ProvinceInstance(
 	everyday_needs_fulfilled_by_strata { &strata_keys },
 	luxury_needs_fulfilled_by_strata { &strata_keys },
 	pop_type_distribution { &pop_type_keys },
+	pop_type_unemployed_count { &pop_type_keys },
 	pops_cache_by_type { &pop_type_keys },
 	ideology_distribution { &ideology_keys },
 	vote_distribution { nullptr } {}
@@ -259,6 +260,7 @@ void ProvinceInstance::_update_pops(InstanceManager const& instance_manager) {
 	luxury_needs_fulfilled_by_strata.clear();
 
 	pop_type_distribution.clear();
+	pop_type_unemployed_count.clear();
 	ideology_distribution.clear();
 	issue_distribution.clear();
 	vote_distribution.clear();
@@ -303,6 +305,7 @@ void ProvinceInstance::_update_pops(InstanceManager const& instance_manager) {
 		luxury_needs_fulfilled_by_strata[strata] += pop.get_luxury_needs_fulfilled() * pop_size_f;
 
 		pop_type_distribution[pop_type] += pop_size_s;
+		pop_type_unemployed_count[pop_type] += pop.get_unemployed();
 		pops_cache_by_type[pop_type].push_back(&pop);
 		// Pop ideology, issue and vote distributions are scaled to pop size so we can add them directly
 		ideology_distribution += pop.get_ideology_distribution();
@@ -418,11 +421,18 @@ bool ProvinceInstance::convert_rgo_worker_pops_to_equivalent(ProductionType cons
 
 void ProvinceInstance::update_gamestate(InstanceManager const& instance_manager) {
 	has_empty_adjacent_province = false;
+	// We assume there are no duplicate province adjacencies, so each adjacency.get_to() is unique in the loop below
+	adjacent_nonempty_land_provinces.clear();
+
 	MapInstance const& map_instance = instance_manager.get_map_instance();
 	for (ProvinceDefinition::adjacency_t const& adjacency : province_definition.get_adjacencies()) {
-		if (map_instance.get_province_instance_from_definition(*adjacency.get_to()).is_empty()) {
+		ProvinceDefinition const& province_definition = *adjacency.get_to();
+		ProvinceInstance const& province_instance = map_instance.get_province_instance_from_definition(province_definition);
+
+		if (province_instance.is_empty()) {
 			has_empty_adjacent_province = true;
-			break;
+		} else if (!province_definition.is_water()) {
+			adjacent_nonempty_land_provinces.push_back(&province_instance);
 		}
 	}
 
