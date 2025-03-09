@@ -26,7 +26,13 @@ InstanceManager::InstanceManager(
 		new_definition_manager.get_economy_manager().get_production_type_manager()
 	},
 	global_flags { "global" },
-	country_instance_manager { new_definition_manager.get_country_definition_manager() },
+	country_instance_manager {
+		new_definition_manager.get_country_definition_manager(),
+		new_definition_manager.get_modifier_manager().get_modifier_effect_cache(),
+		new_definition_manager.get_define_manager().get_country_defines(),
+		new_definition_manager.get_define_manager().get_pops_defines(),
+		new_definition_manager.get_pop_manager().get_pop_types()
+	},
 	unit_instance_manager {
 		new_definition_manager.get_pop_manager().get_culture_manager(),
 		new_definition_manager.get_military_manager().get_leader_trait_manager(),
