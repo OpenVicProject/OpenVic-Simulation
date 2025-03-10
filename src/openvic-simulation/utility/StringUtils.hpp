@@ -12,7 +12,7 @@
 namespace OpenVic::StringUtils {
 	template<typename T>
 	[[nodiscard]] inline constexpr std::from_chars_result from_chars( //
-		char const* const first, char const* const last, T& raw_value, const int base
+		char const* const first, char const* const last, T& raw_value, const int base = 10
 	) noexcept {
 		constexpr auto digit_from_char = [](const char c) noexcept {
 			// convert ['0', '9'] ['A', 'Z'] ['a', 'z'] to [0, 35], everything else to 255
