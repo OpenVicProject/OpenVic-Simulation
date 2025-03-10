@@ -202,7 +202,9 @@ node_callback_t NodeTools::expect_colour(callback_t<colour_t> callback) {
 				}
 			}
 		))(node);
-		ret &= callback(col);
+		if (ret) {
+			ret &= callback(col);
+		}
 		return ret;
 	};
 }
@@ -263,7 +265,9 @@ NodeCallback auto _expect_vec2(Callback<vec2_t<T>> auto&& callback) {
 			"x", ONE_EXACTLY, expect_func(assign_variable_callback(vec.x)),
 			"y", ONE_EXACTLY, expect_func(assign_variable_callback(vec.y))
 		)(node);
-		ret &= callback(vec);
+		if (ret) {
+			ret &= callback(vec);
+		}
 		return ret;
 	};
 }
@@ -306,7 +310,9 @@ node_callback_t NodeTools::expect_fvec3(callback_t<fvec3_t> callback) {
 				return true;
 			}
 		))(node);
-		ret &= callback(vec);
+		if (ret) {
+			ret &= callback(vec);
+		}
 		return ret;
 	};
 }
@@ -321,7 +327,9 @@ node_callback_t NodeTools::expect_fvec4(callback_t<fvec4_t> callback) {
 				return true;
 			}
 		))(node);
-		ret &= callback(vec);
+		if (ret) {
+			ret &= callback(vec);
+		}
 		return ret;
 	};
 }
@@ -355,7 +363,7 @@ node_callback_t NodeTools::expect_list_and_length(length_callback_t length_callb
 		}
 		for (auto [index, sub_node] : list | ranges::views::enumerate) {
 			if (index >= size) {
-				break;
+				return ret;
 			}
 			if (auto const* value = dryad::node_try_cast<ast::ValueStatement>(sub_node)) {
 				ret &= callback(value->value());
