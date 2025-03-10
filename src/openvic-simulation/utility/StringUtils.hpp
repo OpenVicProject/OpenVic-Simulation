@@ -3,11 +3,19 @@
 #include <algorithm>
 #include <cctype>
 #include <charconv>
+#include <cstddef>
 #include <cstdint>
 #include <cstring>
+#include <iterator>
 #include <string>
 #include <string_view>
 #include <type_traits>
+#include <utility>
+
+#include <range/v3/view/transform.hpp>
+#include <range/v3/view/join.hpp>
+#include <range/v3/range/conversion.hpp>
+#include <tsl/ordered_map.h>
 
 namespace OpenVic::StringUtils {
 	template<typename T>
@@ -268,6 +276,18 @@ namespace OpenVic::StringUtils {
 	requires(std::is_convertible_v<Args, std::string_view> && ...)
 	inline std::string append_string_views(Args... args) {
 		return _append_string_views(std::string_view { args }...);
+	}
+
+	template<typename T, typename... Args>
+	static std::string string_join(tsl::ordered_map<std::string, T, Args...> const& map, std::string_view delimiter = ", ") {
+		if (map.empty()) {
+			return "";
+		}
+
+		static auto transformer = [](std::pair<std::string_view, T> const& pair) -> std::string_view {
+			return pair.first;
+		};
+		return map | ranges::views::transform(transformer) | ranges::views::join(delimiter) | ranges::to<std::string>();
 	}
 
 	inline constexpr size_t get_extension_pos(std::string_view const& path) {
