@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cctype>
 #include <charconv>
 #include <concepts>
 #include <cstdint>
@@ -306,67 +307,67 @@ namespace OpenVic {
 		}
 
 		// Deterministic
-		static constexpr fixed_point_t parse(char const* str, char const* end, bool* successful = nullptr) {
-			if (successful != nullptr) {
-				*successful = false;
+		constexpr std::from_chars_result from_chars(char const* begin, char const* end) {
+			if (begin == nullptr || begin >= end) {
+				return { begin, std::errc::invalid_argument };
 			}
 
-			if (str == nullptr || str >= end) {
-				return _0();
-			}
-
-			bool negative = false;
-
-			if (*str == '-') {
-				negative = true;
-				++str;
-				if (str == end) {
-					return _0();
+			if (std::tolower(*(end - 1)) == 'f') {
+				--end;
+				if (begin == end) {
+					return { begin, std::errc::invalid_argument };
 				}
 			}
 
-			{
-				const char last_char = *(end - 1);
-				if (last_char == 'f' || last_char == 'F') {
-					--end;
-					if (str == end) {
-						return _0();
-					}
-				}
-			}
-
-			char const* dot_pointer = str;
+			char const* dot_pointer = begin;
 			while (*dot_pointer != '.' && ++dot_pointer != end) {}
-
-			if (dot_pointer == str && dot_pointer + 1 == end) {
-				// Invalid: ".", "+." or "-."
-				return _0();
+			// "."
+			if (dot_pointer == begin && dot_pointer + 1 == end) {
+				return { begin, std::errc::invalid_argument };
 			}
 
 			fixed_point_t result = _0();
-			if (successful != nullptr) {
-				*successful = true;
+			std::from_chars_result from_chars = {};
+			if (dot_pointer != begin) {
+				// Non-empty integer part, may be negative
+				from_chars = from_chars_integer(begin, dot_pointer, result);
 			}
 
-			if (dot_pointer != str) {
-				// Non-empty integer part
-				bool int_successful = false;
-				result += parse_integer(str, dot_pointer, &int_successful);
-				if (!int_successful && successful != nullptr) {
-					*successful = false;
-				}
+			if (from_chars.ec != std::errc{}) {
+				return from_chars;
 			}
 
 			if (dot_pointer + 1 < end) {
-				// Non-empty fractional part
-				bool frac_successful = false;
-				result += parse_fraction(dot_pointer + 1, end, &frac_successful);
-				if (!frac_successful && successful != nullptr) {
-					*successful = false;
-				}
+				// Non-empty fractional part, cannot be negative
+				fixed_point_t adder;
+				from_chars = from_chars_fraction(dot_pointer + 1, end, adder);
+				result += result.is_negative() ? -adder : adder;
 			}
 
-			return negative ? -result : result;
+			if (from_chars.ec != std::errc{}) {
+				return { begin, from_chars.ec };
+			}
+
+			value = result.value;
+			return from_chars;
+		}
+
+		constexpr std::from_chars_result from_chars_with_plus(char const* begin, char const* end) {
+			if (begin && *begin == '+') {
+				begin++;
+			}
+
+			return from_chars(begin, end);
+		}
+
+		// Deterministic
+		static constexpr fixed_point_t parse(char const* str, char const* end, bool* successful = nullptr) {
+			fixed_point_t value = _0();
+			std::from_chars_result result = value.from_chars_with_plus(str, end);
+			if (successful) {
+				*successful = result.ec == std::errc {};
+			}
+			return value;
 		}
 
 		static constexpr fixed_point_t parse(char const* str, size_t length, bool* successful = nullptr) {
@@ -611,25 +612,33 @@ namespace OpenVic {
 		}
 
 	private:
-		static constexpr fixed_point_t parse_integer(char const* str, char const* const end, bool* successful) {
+		// Deterministic
+		// Can produce negative values
+		static constexpr std::from_chars_result from_chars_integer(char const* str, char const* const end, fixed_point_t& value) {
 			int64_t parsed_value = 0;
 			std::from_chars_result result = StringUtils::string_to_int64(str, end, parsed_value);
-			if (successful) {
-				*successful = result.ec == std::errc{};
+			if (result.ec == std::errc{}) {
+				value = parse(parsed_value);
 			}
-			return parse(parsed_value);
+			return result;
 		}
 
-		static constexpr fixed_point_t parse_fraction(char const* str, char const* end, bool* successful) {
-			char const* const read_end = str + PRECISION;
+		// Deterministic
+		// Cannot produce negative values
+		static constexpr std::from_chars_result from_chars_fraction(char const* begin, char const* end, fixed_point_t& value) {
+			char const* const read_end = begin + PRECISION;
 			if (read_end < end) {
 				end = read_end;
 			}
-			uint64_t parsed_value;
-			std::from_chars_result result = StringUtils::string_to_uint64(str, end, parsed_value);
-			if (successful) {
-				*successful = result.ec == std::errc{};
+			if (begin && *begin == '-') {
+				return { begin, std::errc::invalid_argument };
 			}
+			uint64_t parsed_value;
+			std::from_chars_result result = StringUtils::string_to_uint64(begin, end, parsed_value);
+			if (result.ec != std::errc{}) {
+				return result;
+			}
+
 			while (end++ < read_end) {
 				parsed_value *= 10;
 			}
@@ -642,7 +651,8 @@ namespace OpenVic {
 					ret |= 1 << i;
 				}
 			}
-			return parse_raw(ret);
+			value = parse_raw(ret);
+			return result;
 		}
 
 		template<size_t N, std::array<int64_t, N> EXP_LUT>

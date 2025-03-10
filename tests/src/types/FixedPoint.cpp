@@ -4,6 +4,7 @@
 #include <cstdlib>
 #include <numbers>
 #include <string_view>
+#include <system_error>
 
 #include "Approx.hpp"
 #include "Helper.hpp" // IWYU pragma: keep
@@ -117,6 +118,20 @@ TEST_CASE("fixed_point_t Parse methods", "[fixed_point_t][fixed_point_t-parse]")
 	bool fixed_point_str_success;
 	CHECK(fixed_point_t::parse(fixed_point_str, &fixed_point_str_success) == 4.5432_a);
 	CHECK(fixed_point_str_success);
+
+	static constexpr std::string_view neg_fixed_point_str = "-4.5432"sv;
+	CHECK(fixed_point_t::parse(neg_fixed_point_str, &fixed_point_str_success) == -4.5432_a);
+	CHECK(fixed_point_str_success);
+
+	static constexpr std::string_view plus_fixed_point_str = "+4.5432"sv;
+	CHECK(fixed_point_t::parse(plus_fixed_point_str, &fixed_point_str_success) == 4.5432_a);
+	CHECK(fixed_point_str_success);
+
+	fixed_point_t fp = fixed_point_t::_0();
+	CHECK(fp.from_chars(plus_fixed_point_str.data(), plus_fixed_point_str.data() + plus_fixed_point_str.size()).ec == std::errc::invalid_argument);
+	CHECK(fp == 0.0_a);
+	CHECK(fp.from_chars_with_plus(plus_fixed_point_str.data(), plus_fixed_point_str.data() + plus_fixed_point_str.size()).ec == std::errc{});
+	CHECK(fp == 4.5432_a);
 }
 
 TEST_CASE("fixed_point_t Other methods", "[fixed_point_t][fixed_point_t-other]") {
