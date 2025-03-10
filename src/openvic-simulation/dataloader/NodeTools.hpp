@@ -48,7 +48,10 @@ namespace OpenVic {
 #undef NODE_CASE
 	}
 
-	using name_list_t = std::vector<std::string>;
+	struct name_list_t : std::vector<std::string> {
+		using base_type = std::vector<std::string>;
+		using base_type::base_type;
+	};
 	std::ostream& operator<<(std::ostream& stream, name_list_t const& name_list);
 
 	// This adds to capacity rather than size so that it can be used multiple times in a row.
