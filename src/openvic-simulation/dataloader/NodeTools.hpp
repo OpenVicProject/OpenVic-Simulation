@@ -29,9 +29,15 @@ namespace OpenVic {
 		using namespace ovdl::v2script::ast;
 		using NodeCPtr = Node const*;
 
-		constexpr std::string_view get_type_name(NodeKind kind) {
+		static constexpr std::string_view get_type_name(NodeKind kind) {
+#ifdef _MSC_VER // type_name starts with "struct "
+using namespace std::string_view_literals;
+#define NODE_CASE(Node) \
+	case Node: return OpenVic::utility::type_name<ast::Node>().substr("struct "sv.size());
+#else
 #define NODE_CASE(Node) \
 	case Node: return OpenVic::utility::type_name<ast::Node>();
+#endif
 			switch (kind) {
 				using enum NodeKind;
 				NODE_CASE(FileTree);
