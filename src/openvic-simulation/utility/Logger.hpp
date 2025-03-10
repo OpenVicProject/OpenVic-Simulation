@@ -4,6 +4,7 @@
 #include <mutex>
 #include <queue>
 #include <sstream>
+#include <version>
 
 #include <function2/function2.hpp>
 
