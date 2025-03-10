@@ -377,12 +377,12 @@ node_callback_t NodeTools::expect_list_and_length(length_callback_t length_callb
 
 node_callback_t NodeTools::expect_list_of_length(size_t length, node_callback_t callback) {
 	return [length, callback](ast::NodeCPtr node) -> bool {
-		bool ret = true;
-		ret &= expect_list_and_length(
-			[length, &ret](size_t size) -> size_t {
+		bool size_ret = true;
+		bool ret = expect_list_and_length(
+			[length, &size_ret](size_t size) -> size_t {
 				if (size != length) {
 					Logger::error("List length ", size, " does not match expected length ", length);
-					ret = false;
+					size_ret = false;
 					if (length < size) {
 						return length;
 					}
@@ -391,7 +391,7 @@ node_callback_t NodeTools::expect_list_of_length(size_t length, node_callback_t 
 			},
 			callback
 		)(node);
-		return ret;
+		return ret && size_ret;
 	};
 }
 
@@ -401,15 +401,15 @@ node_callback_t NodeTools::expect_list(node_callback_t callback) {
 
 node_callback_t NodeTools::expect_length(callback_t<size_t> callback) {
 	return [callback](ast::NodeCPtr node) mutable -> bool {
-		bool ret = true;
-		ret &= expect_list_and_length(
-			[callback, &ret](size_t size) mutable -> size_t {
-				ret &= callback(size);
+		bool size_ret = true;
+		bool ret = expect_list_and_length(
+			[callback, &size_ret](size_t size) mutable -> size_t {
+				size_ret &= callback(size);
 				return 0;
 			},
 			success_callback
 		)(node);
-		return ret;
+		return ret && size_ret;
 	};
 }
 
