@@ -345,7 +345,7 @@ node_callback_t NodeTools::expect_assign(key_value_callback_t callback) {
 node_callback_t NodeTools::expect_list_and_length(length_callback_t length_callback, node_callback_t callback) {
 	return _abstract_statement_node_callback([length_callback, callback](_NodeStatementRange list) mutable -> bool {
 		bool ret = true;
-		auto dist = ranges::distance(list);
+		size_t dist = ranges::distance(list);
 		size_t size = length_callback(dist);
 
 		if (size > dist) {
@@ -430,7 +430,7 @@ static node_callback_t _expect_key(Key key, NodeCallback auto&& callback, bool* 
 	return _abstract_statement_node_callback([key, callback = FWD(callback), key_found, allow_duplicates](_NodeStatementRange list) mutable -> bool {
 		bool ret = true;
 		size_t keys_found = 0;
-		for (auto sub_node : list) {
+		for (ast::Statement const* sub_node : list) {
 			auto const* assign_node = dryad::node_try_cast<ast::AssignStatement>(sub_node);
 			if (assign_node == nullptr) {
 				continue;
