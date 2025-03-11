@@ -13,10 +13,22 @@ namespace OpenVic {
 		friend struct ModifierManager;
 
 		enum class format_t : uint8_t {
-			PROPORTION_DECIMAL, /* An unscaled fraction/ratio, with 1 being "full"/"whole" */
-			PERCENTAGE_DECIMAL, /* A fraction/ratio scaled so that 100 is "full"/"whole" */
-			RAW_DECIMAL,        /* A continuous quantity, e.g. attack strength */
-			INT                 /* A discrete quantity, e.g. building count limit */
+            PROPORTION_DECIMAL_0DP,
+            PROPORTION_DECIMAL_1DP,
+            PROPORTION_DECIMAL_2DP,
+
+            /* A fraction/ratio scaled so that 100 is "full"/"whole" */
+            PERCENTAGE_DECIMAL, // 2DP, only used for tax_eff
+
+            /* A continuous quantity, e.g. attack strength */
+			RAW_DECIMAL_0DP,
+            RAW_DECIMAL_1DP,
+            RAW_DECIMAL_2DP,
+			RAW_DECIMAL_3DP,
+
+            /* A discrete quantity, e.g. building count limit */
+            INT_0DP,
+            INT_1DP,            /* A discrete quantity, e.g. building count limit */
 		};
 
 		enum class target_t : uint8_t {
