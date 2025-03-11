@@ -136,6 +136,41 @@ static constexpr auto get_colour_mapmode(T const*(P::*get_item)() const) {
 	};
 }
 
+template<HasGetColour BASE_T, HasGetColour STRIPE_T, typename P>
+requires(std::same_as<P, ProvinceDefinition> || std::same_as<P, ProvinceInstance>)
+static constexpr auto get_colour_mapmode(
+	BASE_T const*(P::*get_base_item)() const, STRIPE_T const*(P::*get_stripe_item)() const
+) {
+	return [get_base_item, get_stripe_item](
+		MapInstance const& map_instance, ProvinceInstance const& province,
+		CountryInstance const* player_country, ProvinceInstance const* selected_province
+	) -> Mapmode::base_stripe_t {
+		ProvinceDefinition const& province_definition = province.get_province_definition();
+
+		P const& p = [&province, &province_definition]() -> P const& {
+			if constexpr (std::same_as<P, ProvinceDefinition>) {
+				return province_definition;
+			} else {
+				return province;
+			}
+		}();
+
+		BASE_T const* base_item = (p.*get_base_item)();
+		STRIPE_T const* stripe_item = (p.*get_stripe_item)();
+
+		Mapmode::base_stripe_t result = province_definition.is_water() ? colour_argb_t::null() : DEFAULT_COLOUR_WHITE;
+
+		if (base_item != nullptr) {
+			result.base_colour = colour_argb_t { base_item->get_colour(), ALPHA_VALUE };
+		}
+		if (stripe_item != nullptr) {
+			result.stripe_colour = colour_argb_t { stripe_item->get_colour(), ALPHA_VALUE };
+		}
+
+		return result;
+	};
+}
+
 template<HasGetColour T>
 static constexpr Mapmode::base_stripe_t shaded_mapmode(fixed_point_map_t<T const*> const& map) {
 	const std::pair<fixed_point_map_const_iterator_t<T const*>, fixed_point_map_const_iterator_t<T const*>> largest =
@@ -187,7 +222,9 @@ bool MapmodeManager::setup_mapmodes() {
 		"MAPMODE_1",
 		false // Parchment mapmode not allowed
 	);
-	ret &= add_mapmode("mapmode_political", get_colour_mapmode(&ProvinceInstance::get_owner), "MAPMODE_2");
+	ret &= add_mapmode("mapmode_political", get_colour_mapmode(
+		&ProvinceInstance::get_owner, &ProvinceInstance::get_controller
+	), "MAPMODE_2");
 	ret &= add_mapmode("mapmode_militancy", Mapmode::ERROR_MAPMODE.get_colour_func(), "MAPMODE_3");
 	ret &= add_mapmode("mapmode_diplomatic", Mapmode::ERROR_MAPMODE.get_colour_func(), "MAPMODE_4");
 	ret &= add_mapmode("mapmode_region", get_colour_mapmode(&ProvinceDefinition::get_region), "MAPMODE_5");
