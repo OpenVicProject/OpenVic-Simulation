@@ -131,7 +131,8 @@ bool GoodDefinitionManager::load_goods_file(ast::NodeCPtr root) {
 }
 
 bool GoodDefinitionManager::generate_modifiers(ModifierManager& modifier_manager) const {
-	constexpr bool has_no_effect = true;
+	static constexpr bool HAS_NO_EFFECT = true;
+
 	using enum ModifierEffect::format_t;
 	using enum ModifierEffect::target_t;
 
@@ -142,14 +143,15 @@ bool GoodDefinitionManager::generate_modifiers(ModifierManager& modifier_manager
 
 	bool ret = true;
 
-	ret &= modifier_manager.register_complex_modifier("artisan_goods_input");
-	ret &= modifier_manager.register_complex_modifier("artisan_goods_output");
-	ret &= modifier_manager.register_complex_modifier("artisan_goods_throughput");
+	ret &= modifier_manager.register_complex_modifier("rgo_goods_input");
+	ret &= modifier_manager.register_complex_modifier("rgo_goods_output");
+	ret &= modifier_manager.register_complex_modifier("rgo_goods_throughput");
 	ret &= modifier_manager.register_complex_modifier("factory_goods_input");
 	ret &= modifier_manager.register_complex_modifier("factory_goods_output");
 	ret &= modifier_manager.register_complex_modifier("factory_goods_throughput");
-	ret &= modifier_manager.register_complex_modifier("rgo_goods_output");
-	ret &= modifier_manager.register_complex_modifier("rgo_goods_throughput");
+	ret &= modifier_manager.register_complex_modifier("artisan_goods_input");
+	ret &= modifier_manager.register_complex_modifier("artisan_goods_output");
+	ret &= modifier_manager.register_complex_modifier("artisan_goods_throughput");
 	ret &= modifier_manager.register_complex_modifier("rgo_size");
 
 	for (GoodDefinition const& good : get_good_definitions()) {
@@ -157,12 +159,12 @@ bool GoodDefinitionManager::generate_modifiers(ModifierManager& modifier_manager
 		ModifierEffectCache::good_effects_t& this_good_effects = good_effects[good];
 
 		const auto good_modifier = [&modifier_manager, &ret, &good_identifier](
-			ModifierEffect const*& effect_cache, std::string_view name, bool is_positive_good,
+			ModifierEffect const*& effect_cache, std::string_view name, ModifierEffect::format_t format,
 			std::string_view localisation_key, bool has_no_effect = false
 		) -> void {
 			ret &= modifier_manager.register_technology_modifier_effect(
-				effect_cache, ModifierManager::get_flat_identifier(name, good_identifier), is_positive_good,
-				PROPORTION_DECIMAL, localisation_key, has_no_effect
+				effect_cache, ModifierManager::get_flat_identifier(name, good_identifier),
+				format, localisation_key, has_no_effect
 			);
 		};
 
@@ -173,39 +175,43 @@ bool GoodDefinitionManager::generate_modifiers(ModifierManager& modifier_manager
 		};
 
 		good_modifier(
-			this_good_effects.artisan_goods_input, "artisan_goods_input", false,
-			make_production_localisation_suffix("TECH_INPUT"), has_no_effect
+			this_good_effects.rgo_goods_input, "rgo_goods_input", FORMAT_x100_1DP_PC_NEG,
+			make_production_localisation_suffix("TECH_INPUT"), HAS_NO_EFFECT
 		);
 		good_modifier(
-			this_good_effects.artisan_goods_output, "artisan_goods_output", true,
-			make_production_localisation_suffix("TECH_OUTPUT"), has_no_effect
+			this_good_effects.rgo_goods_output, "rgo_goods_output", FORMAT_x100_1DP_PC_POS,
+			make_production_localisation_suffix("TECH_OUTPUT")
 		);
 		good_modifier(
-			this_good_effects.artisan_goods_throughput, "artisan_goods_throughput", true,
-			make_production_localisation_suffix("TECH_THROUGHPUT"), has_no_effect
+			this_good_effects.rgo_goods_throughput, "rgo_goods_throughput", FORMAT_x100_1DP_PC_POS,
+			make_production_localisation_suffix("TECH_THROUGHPUT")
 		);
 		good_modifier(
-			this_good_effects.factory_goods_input, "factory_goods_input", false,
+			this_good_effects.factory_goods_input, "factory_goods_input", FORMAT_x100_1DP_PC_NEG,
 			make_production_localisation_suffix("TECH_INPUT")
 		);
 		good_modifier(
-			this_good_effects.factory_goods_output, "factory_goods_output", true,
+			this_good_effects.factory_goods_output, "factory_goods_output", FORMAT_x100_1DP_PC_POS,
 			make_production_localisation_suffix("TECH_OUTPUT")
 		);
 		good_modifier(
-			this_good_effects.factory_goods_throughput, "factory_goods_throughput", true,
+			this_good_effects.factory_goods_throughput, "factory_goods_throughput", FORMAT_x100_1DP_PC_POS,
 			make_production_localisation_suffix("TECH_THROUGHPUT")
 		);
 		good_modifier(
-			this_good_effects.rgo_goods_output, "rgo_goods_output", true,
-			make_production_localisation_suffix("TECH_OUTPUT")
+			this_good_effects.artisan_goods_input, "artisan_goods_input", FORMAT_x100_1DP_PC_NEG,
+			make_production_localisation_suffix("TECH_INPUT"), HAS_NO_EFFECT
 		);
 		good_modifier(
-			this_good_effects.rgo_goods_throughput, "rgo_goods_throughput", true,
-			make_production_localisation_suffix("TECH_THROUGHPUT")
+			this_good_effects.artisan_goods_output, "artisan_goods_output", FORMAT_x100_1DP_PC_POS,
+			make_production_localisation_suffix("TECH_OUTPUT"), HAS_NO_EFFECT
 		);
 		good_modifier(
-			this_good_effects.rgo_size, "rgo_size", true,
+			this_good_effects.artisan_goods_throughput, "artisan_goods_throughput", FORMAT_x100_1DP_PC_POS,
+			make_production_localisation_suffix("TECH_THROUGHPUT"), HAS_NO_EFFECT
+		);
+		good_modifier(
+			this_good_effects.rgo_size, "rgo_size", FORMAT_x100_2DP_PC_POS,
 			StringUtils::append_string_views(good_identifier, "_RGO_SIZE")
 		);
 	}

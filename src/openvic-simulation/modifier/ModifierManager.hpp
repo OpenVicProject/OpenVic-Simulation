@@ -27,7 +27,6 @@ namespace OpenVic {
 	private:
 		modifier_effect_registry_t IDENTIFIER_REGISTRY(leader_modifier_effect);
 		modifier_effect_registry_t IDENTIFIER_REGISTRY(unit_terrain_modifier_effect);
-		modifier_effect_registry_t IDENTIFIER_REGISTRY(shared_tech_country_modifier_effect);
 		modifier_effect_registry_t IDENTIFIER_REGISTRY(technology_modifier_effect);
 		modifier_effect_registry_t IDENTIFIER_REGISTRY(base_country_modifier_effect);
 		modifier_effect_registry_t IDENTIFIER_REGISTRY(base_province_modifier_effect);
@@ -45,7 +44,6 @@ namespace OpenVic {
 			ModifierEffect::target_t targets,
 			ModifierEffect const*& effect_cache,
 			const std::string_view identifier,
-			const bool is_positive_good,
 			const ModifierEffect::format_t format,
 			const std::string_view localisation_key,
 			const bool has_no_effect
@@ -55,7 +53,6 @@ namespace OpenVic {
 		bool register_##MAPPING_TYPE##_modifier_effect( \
 			ModifierEffect const*& effect_cache, \
 			std::string_view identifier, \
-			bool is_positive_good, \
 			ModifierEffect::format_t format, \
 			std::string_view localisation_key = {}, \
 			bool has_no_effect = false \
@@ -63,7 +60,6 @@ namespace OpenVic {
 
 		REGISTER_MODIFIER_EFFECT_DEFINITION(leader)
 		REGISTER_MODIFIER_EFFECT_DEFINITION(unit_terrain)
-		REGISTER_MODIFIER_EFFECT_DEFINITION(shared_tech_country)
 		REGISTER_MODIFIER_EFFECT_DEFINITION(technology)
 		REGISTER_MODIFIER_EFFECT_DEFINITION(base_country)
 		REGISTER_MODIFIER_EFFECT_DEFINITION(base_province)
@@ -94,7 +90,6 @@ namespace OpenVic {
 			NodeTools::key_value_callback_t fallback
 		) const;
 
-		NodeTools::key_value_callback_t _expect_shared_tech_country_modifier_effect(ModifierValue& modifier_value) const;
 	public:
 		bool register_complex_modifier(const std::string_view identifier);
 		static std::string get_flat_identifier(const std::string_view complex_modifier_identifier, const std::string_view variant_identifier);

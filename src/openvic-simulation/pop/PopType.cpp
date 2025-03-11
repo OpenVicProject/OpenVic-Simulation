@@ -564,6 +564,8 @@ bool PopManager::generate_modifiers(ModifierManager& modifier_manager) const {
 	using enum ModifierEffect::format_t;
 	using enum ModifierEffect::target_t;
 
+	static constexpr bool HAS_NO_EFFECT = true;
+
 	IndexedMap<Strata, ModifierEffectCache::strata_effects_t>& strata_effects =
 		modifier_manager.modifier_effect_cache.strata_effects;
 
@@ -573,22 +575,22 @@ bool PopManager::generate_modifiers(ModifierManager& modifier_manager) const {
 
 	for (Strata const& strata : get_stratas()) {
 		const auto strata_modifier = [&modifier_manager, &ret, &strata](
-			ModifierEffect const*& effect_cache, std::string_view suffix, bool is_positive_good
+			ModifierEffect const*& effect_cache, std::string_view suffix, ModifierEffect::format_t format,
+			bool has_no_effect = false
 		) -> void {
 			ret &= modifier_manager.register_base_country_modifier_effect(
-				effect_cache, StringUtils::append_string_views(strata.get_identifier(), suffix), is_positive_good,
-				PROPORTION_DECIMAL
+				effect_cache, StringUtils::append_string_views(strata.get_identifier(), suffix), format, {}, has_no_effect
 			);
 		};
 
 		ModifierEffectCache::strata_effects_t& this_strata_effects = strata_effects[strata];
 
-		strata_modifier(this_strata_effects.income_modifier, "_income_modifier", true); // Has no effect in game
-		strata_modifier(this_strata_effects.vote, "_vote", true);
+		strata_modifier(this_strata_effects.income_modifier, "_income_modifier", FORMAT_x100_1DP_PC_POS, HAS_NO_EFFECT);
+		strata_modifier(this_strata_effects.vote, "_vote", FORMAT_x100_1DP_PC_POS);
 
-		strata_modifier(this_strata_effects.life_needs, "_life_needs", false);
-		strata_modifier(this_strata_effects.everyday_needs, "_everyday_needs", false);
-		strata_modifier(this_strata_effects.luxury_needs, "_luxury_needs", false);
+		strata_modifier(this_strata_effects.life_needs, "_life_needs", FORMAT_x100_1DP_PC_NEG);
+		strata_modifier(this_strata_effects.everyday_needs, "_everyday_needs", FORMAT_x100_1DP_PC_NEG);
+		strata_modifier(this_strata_effects.luxury_needs, "_luxury_needs", FORMAT_x100_1DP_PC_NEG);
 	}
 
 	return ret;
