@@ -350,29 +350,29 @@ bool UnitTypeManager::generate_modifiers(ModifierManager& modifier_manager) cons
 
 		ret &= modifier_manager.register_complex_modifier(identifier);
 
-		stat_modifier(unit_type_effects.attack, "attack", true, RAW_DECIMAL, "ATTACK");
-		stat_modifier(unit_type_effects.defence, "defence", true, RAW_DECIMAL, "DEFENCE");
-		stat_modifier(unit_type_effects.default_organisation, "default_organisation", true, RAW_DECIMAL, "DEFAULT_ORG");
-		stat_modifier(unit_type_effects.maximum_speed, "maximum_speed", true, RAW_DECIMAL, "MAXIMUM_SPEED");
-		stat_modifier(unit_type_effects.build_time, "build_time", false, INT, "BUILD_TIME");
+		stat_modifier(unit_type_effects.attack, "attack", true, RAW_DECIMAL_2DP, "ATTACK");
+		stat_modifier(unit_type_effects.defence, "defence", true, RAW_DECIMAL_2DP, "DEFENCE");
+		stat_modifier(unit_type_effects.default_organisation, "default_organisation", true, RAW_DECIMAL_2DP, "DEFAULT_ORG");
+		stat_modifier(unit_type_effects.maximum_speed, "maximum_speed", true, RAW_DECIMAL_2DP, "MAXIMUM_SPEED");
+		stat_modifier(unit_type_effects.build_time, "build_time", false, INT_0DP, "BUILD_TIME"); // dont know what this is
 		stat_modifier(
-			unit_type_effects.supply_consumption, "supply_consumption", false, PROPORTION_DECIMAL, "SUPPLY_CONSUMPTION"
+			unit_type_effects.supply_consumption, "supply_consumption", false, PROPORTION_DECIMAL_0DP, "SUPPLY_CONSUMPTION"
 		);
 
 		if constexpr (std::same_as<decltype(unit_type_effects), ModifierEffectCache::regiment_type_effects_t>) {
-			stat_modifier(unit_type_effects.reconnaissance, "reconnaissance", true, RAW_DECIMAL, "RECONAISSANCE");
-			stat_modifier(unit_type_effects.discipline, "discipline", true, PROPORTION_DECIMAL, "DISCIPLINE");
-			stat_modifier(unit_type_effects.support, "support", true, PROPORTION_DECIMAL, "SUPPORT");
-			stat_modifier(unit_type_effects.maneuver, "maneuver", true, INT, "Maneuver");
-			stat_modifier(unit_type_effects.siege, "siege", true, RAW_DECIMAL, "SIEGE");
+			stat_modifier(unit_type_effects.reconnaissance, "reconnaissance", true, RAW_DECIMAL_2DP, "RECONAISSANCE");
+			stat_modifier(unit_type_effects.discipline, "discipline", true, PROPORTION_DECIMAL_0DP, "DISCIPLINE");
+			stat_modifier(unit_type_effects.support, "support", true, PROPORTION_DECIMAL_0DP, "SUPPORT");
+			stat_modifier(unit_type_effects.maneuver, "maneuver", true, INT_0DP, "Maneuver");
+			stat_modifier(unit_type_effects.siege, "siege", true, RAW_DECIMAL_2DP, "SIEGE");
 		} else if constexpr(std::same_as<decltype(unit_type_effects), ModifierEffectCache::ship_type_effects_t>) {
-			stat_modifier(unit_type_effects.colonial_points, "colonial_points", true, INT, "COLONIAL_POINTS_TECH");
-			stat_modifier(unit_type_effects.supply_consumption_score, "supply_consumption_score", false, INT, "SUPPLY_LOAD");
-			stat_modifier(unit_type_effects.hull, "hull", true, RAW_DECIMAL, "HULL");
-			stat_modifier(unit_type_effects.gun_power, "gun_power", true, RAW_DECIMAL, "GUN_POWER");
-			stat_modifier(unit_type_effects.fire_range, "fire_range", true, RAW_DECIMAL, "FIRE_RANGE");
-			stat_modifier(unit_type_effects.evasion, "evasion", true, PROPORTION_DECIMAL, "EVASION");
-			stat_modifier(unit_type_effects.torpedo_attack, "torpedo_attack", true, RAW_DECIMAL, "TORPEDO_ATTACK");
+			stat_modifier(unit_type_effects.colonial_points, "colonial_points", true, INT_0DP, "COLONIAL_POINTS_TECH"); 
+			stat_modifier(unit_type_effects.supply_consumption_score, "supply_consumption_score", false, INT_0DP, "SUPPLY_LOAD");
+			stat_modifier(unit_type_effects.hull, "hull", true, RAW_DECIMAL_2DP, "HULL");
+			stat_modifier(unit_type_effects.gun_power, "gun_power", true, RAW_DECIMAL_2DP, "GUN_POWER"); // dont know what this is
+			stat_modifier(unit_type_effects.fire_range, "fire_range", true, RAW_DECIMAL_0DP, "FIRE_RANGE");
+			stat_modifier(unit_type_effects.evasion, "evasion", true, PROPORTION_DECIMAL_0DP, "EVASION");
+			stat_modifier(unit_type_effects.torpedo_attack, "torpedo_attack", true, RAW_DECIMAL_2DP, "TORPEDO_ATTACK");
 		} else {
 			/* Unreachable - unit types are only added via add_regiment_type or add_ship_type which set branch to LAND or NAVAL. */
 			Logger::error("Invalid branch for unit ", identifier, " - not LAND or NAVAL!");

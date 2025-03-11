@@ -162,7 +162,7 @@ bool GoodDefinitionManager::generate_modifiers(ModifierManager& modifier_manager
 		) -> void {
 			ret &= modifier_manager.register_technology_modifier_effect(
 				effect_cache, ModifierManager::get_flat_identifier(name, good_identifier), is_positive_good,
-				PROPORTION_DECIMAL, localisation_key, has_no_effect
+				PROPORTION_DECIMAL_2DP, localisation_key, has_no_effect
 			);
 		};
 

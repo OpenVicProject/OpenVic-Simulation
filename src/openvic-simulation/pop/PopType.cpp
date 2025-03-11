@@ -574,7 +574,7 @@ bool PopManager::generate_modifiers(ModifierManager& modifier_manager) const {
 		) -> void {
 			ret &= modifier_manager.register_base_country_modifier_effect(
 				effect_cache, StringUtils::append_string_views(strata.get_identifier(), suffix), is_positive_good,
-				PROPORTION_DECIMAL
+				PROPORTION_DECIMAL_2DP
 			);
 		};
 

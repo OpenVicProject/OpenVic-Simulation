@@ -40,24 +40,24 @@ bool TerrainTypeManager::generate_modifiers(ModifierManager& modifier_manager) c
 
 	constexpr bool has_no_effect = true;
 	bool ret = true;
-	for (TerrainType const& terrain_type : get_terrain_types()) {
+	for (TerrainType const& terrain_type : get_terrain_types()) { 
 		const std::string_view identifier = terrain_type.get_identifier();
 		ModifierEffectCache::unit_terrain_effects_t& this_unit_terrain_effects = unit_terrain_effects[terrain_type];
 		ret &= modifier_manager.register_unit_terrain_modifier_effect(
 			this_unit_terrain_effects.attack, ModifierManager::get_flat_identifier("attack", identifier), true,
-			PROPORTION_DECIMAL, "UA_ATTACK", has_no_effect
+			PROPORTION_DECIMAL_2DP, "UA_ATTACK", has_no_effect
 		);
 		ret &= modifier_manager.register_unit_terrain_modifier_effect(
 			this_unit_terrain_effects.defence, ModifierManager::get_flat_identifier("defence", identifier), true,
-			PROPORTION_DECIMAL, "UA_DEFENCE", has_no_effect
+			PROPORTION_DECIMAL_2DP, "UA_DEFENCE", has_no_effect
 		);
 		ret &= modifier_manager.register_unit_terrain_modifier_effect(
 			this_unit_terrain_effects.attrition, ModifierManager::get_flat_identifier("attrition", identifier), false,
-			RAW_DECIMAL, "UA_ATTRITION", has_no_effect
+			RAW_DECIMAL_0DP, "UA_ATTRITION", has_no_effect
 		);
 		ret &= modifier_manager.register_unit_terrain_modifier_effect(
 			this_unit_terrain_effects.movement, ModifierManager::get_flat_identifier("movement", identifier), true,
-			PROPORTION_DECIMAL, "UA_MOVEMENT"
+			PROPORTION_DECIMAL_2DP, "UA_MOVEMENT"
 		);
 	}
 	return ret;
