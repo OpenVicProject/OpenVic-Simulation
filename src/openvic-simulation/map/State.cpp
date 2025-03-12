@@ -30,6 +30,7 @@ State::State(
 	everyday_needs_fulfilled_by_strata { &strata_keys },
 	luxury_needs_fulfilled_by_strata { &strata_keys },
 	pop_type_distribution { &pop_type_keys },
+	pop_type_unemployed_count { &pop_type_keys },
 	pops_cache_by_type { &pop_type_keys },
 	ideology_distribution { &ideology_keys },
 	vote_distribution { new_owner != nullptr ? &new_owner->get_country_definition()->get_parties() : nullptr } {}
@@ -92,6 +93,7 @@ void State::update_gamestate() {
 	luxury_needs_fulfilled_by_strata.clear();
 
 	pop_type_distribution.clear();
+	pop_type_unemployed_count.clear();
 	ideology_distribution.clear();
 	issue_distribution.clear();
 	vote_distribution.clear();
@@ -126,6 +128,7 @@ void State::update_gamestate() {
 		);
 
 		pop_type_distribution += province->get_pop_type_distribution();
+		pop_type_unemployed_count += province->get_pop_type_unemployed_count();
 		ideology_distribution += province->get_ideology_distribution();
 		issue_distribution += province->get_issue_distribution();
 		vote_distribution += province->get_vote_distribution();

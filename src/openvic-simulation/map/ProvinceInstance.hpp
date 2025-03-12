@@ -110,6 +110,7 @@ namespace OpenVic {
 		IndexedMap<Strata, fixed_point_t> PROPERTY(luxury_needs_fulfilled_by_strata);
 
 		IndexedMap<PopType, pop_size_t> PROPERTY(pop_type_distribution);
+		IndexedMap<PopType, pop_size_t> PROPERTY(pop_type_unemployed_count);
 		IndexedMap<PopType, std::vector<Pop*>> PROPERTY(pops_cache_by_type);
 		IndexedMap<Ideology, fixed_point_t> PROPERTY(ideology_distribution);
 		fixed_point_map_t<Issue const*> PROPERTY(issue_distribution);
@@ -174,8 +175,11 @@ namespace OpenVic {
 		// The values returned by these functions are scaled by population size, so they must be divided by population size
 		// to get the support as a proportion of 1.0
 
-		constexpr fixed_point_t get_pop_type_proportion(PopType const& pop_type) const {
+		constexpr pop_size_t get_pop_type_proportion(PopType const& pop_type) const {
 			return pop_type_distribution[pop_type];
+		}
+		constexpr pop_size_t get_pop_type_unemployed(PopType const& pop_type) const {
+			return pop_type_unemployed_count[pop_type];
 		}
 		constexpr fixed_point_t get_ideology_support(Ideology const& ideology) const {
 			return ideology_distribution[ideology];
