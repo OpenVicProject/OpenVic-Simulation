@@ -87,7 +87,12 @@ bool MapDefinition::add_standard_adjacency(ProvinceDefinition& from, ProvinceDef
 	const bool from_needs_adjacency = !from.is_adjacent_to(&to);
 	const bool to_needs_adjacency = !to.is_adjacent_to(&from);
 
-	if (!from_needs_adjacency && !to_needs_adjacency) {
+	if (from_needs_adjacency != to_needs_adjacency) {
+		Logger::error("Inconsistent adjacency state between provinces ", from, " and ", to);
+		return false;
+	}
+
+	if (!from_needs_adjacency) {
 		return false;
 	}
 
@@ -181,12 +186,12 @@ bool MapDefinition::add_special_adjacency(
 	}
 
 	/* Check canal data */
-	if (data != adjacency_t::NO_CANAL && type != CANAL) {
+	if (data != adjacency_t::DEFAULT_DATA && type != CANAL) {
 		Logger::warning(
 			adjacency_t::get_type_name(type), " adjacency from ", from, " to ", to, " has invalid data ",
 			static_cast<uint32_t>(data)
 		);
-		data = adjacency_t::NO_CANAL;
+		data = adjacency_t::DEFAULT_DATA;
 	}
 
 	const ProvinceDefinition::distance_t distance = calculate_distance_between(from, to);
@@ -222,10 +227,12 @@ bool MapDefinition::add_special_adjacency(
 					);
 					return false;
 				}
-				if (type != existing_adjacency->get_type() && existing_adjacency->get_type() != (type == CANAL ? WATER : LAND)) {
+				if (
+					type != existing_adjacency->get_type() && existing_adjacency->get_type() != (type == CANAL ? WATER : LAND)
+				) {
 					Logger::error(
-						"Cannot convert ", adjacency_t::get_type_name(existing_adjacency->get_type()), " adjacency from ", from,
-						" to ", to, " to type ", adjacency_t::get_type_name(type), "!"
+						"Cannot convert ", adjacency_t::get_type_name(existing_adjacency->get_type()), " adjacency from ",
+						from, " to ", to, " to type ", adjacency_t::get_type_name(type), "!"
 					);
 					return false;
 				}
@@ -824,7 +831,9 @@ bool MapDefinition::load_map_images(fs::path const& province_path, fs::path cons
 			}
 
 			// no further points
-			if (merge) points.push_back(merge_location);
+			if (merge) {
+				points.push_back(merge_location);
+			}
 			river_complete = true;
 			break;
 		}
@@ -844,7 +853,9 @@ bool MapDefinition::load_map_images(fs::path const& province_path, fs::path cons
 
 		// add segment then recursively call if neeeded
 		river.push_back({ size, std::move(simplified_points) });
-		if (river_complete) return;
+		if (river_complete) {
+			return;
+		}
 		self(static_cast<decltype(self)>(self), new_point, direction, river);
 	};
 
