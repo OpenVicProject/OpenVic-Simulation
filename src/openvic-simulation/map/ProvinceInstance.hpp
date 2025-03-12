@@ -83,6 +83,8 @@ namespace OpenVic {
 		std::vector<ModifierInstance> PROPERTY(event_modifiers);
 
 		bool PROPERTY(slave, false);
+		// Used for "minorities = yes/no" condition
+		bool PROPERTY(has_unaccepted_pops, false);
 		Crime const* PROPERTY_RW(crime, nullptr);
 		ResourceGatheringOperation PROPERTY(rgo);
 		IdentifierRegistry<BuildingInstance> IDENTIFIER_REGISTRY(building);
