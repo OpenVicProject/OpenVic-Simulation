@@ -92,6 +92,7 @@ namespace OpenVic {
 		std::vector<NavyInstance*> PROPERTY(navies);
 		// The number of land regiments currently in the province, including those being transported by navies
 		size_t PROPERTY(land_regiment_count, 0);
+		Timespan PROPERTY(occupation_duration);
 
 	public:
 		UNIT_BRANCHED_GETTER(get_unit_instance_groups, armies, navies);

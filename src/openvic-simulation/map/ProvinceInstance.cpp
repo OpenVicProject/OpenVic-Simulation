@@ -433,6 +433,10 @@ void ProvinceInstance::update_gamestate(const Date today, DefineManager const& d
 		}
 	}
 
+	if (!is_occupied()) {
+		occupation_duration = 0;
+	}
+
 	for (BuildingInstance& building : buildings.get_items()) {
 		building.update_gamestate(today);
 	}
@@ -440,6 +444,10 @@ void ProvinceInstance::update_gamestate(const Date today, DefineManager const& d
 }
 
 void ProvinceInstance::province_tick(const Date today, PopValuesFromProvince& reusable_pop_values) {
+	if (is_occupied()) {
+		occupation_duration++;
+	}
+
 	reusable_pop_values.update_pop_values_from_province(*this);
 	for (Pop& pop : pops) {
 		pop.pop_tick(reusable_pop_values);
