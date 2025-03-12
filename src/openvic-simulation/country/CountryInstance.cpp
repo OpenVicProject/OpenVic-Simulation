@@ -1432,17 +1432,80 @@ void CountryInstance::update_gamestate(InstanceManager& instance_manager) {
 		owned_provinces.begin(), owned_provinces.end(), std::bind_front(&ProvinceInstance::is_colonial_province)
 	);
 
+	{
+		has_unowned_cores = false;
+		owned_cores_controlled_proportion = fixed_point_t::_0();
+		int32_t owned_core_province_count = 0;
+
+		for (ProvinceInstance const* core_province : core_provinces) {
+			if (core_province->get_owner() == this) {
+				owned_core_province_count++;
+
+				if (core_province->get_controller() == this) {
+					owned_cores_controlled_proportion++;
+				}
+			} else {
+				has_unowned_cores = true;
+			}
+		}
+
+		if (owned_cores_controlled_proportion != fixed_point_t::_0()) {
+			owned_cores_controlled_proportion /= owned_core_province_count;
+		}
+	}
+
 	MapInstance& map_instance = instance_manager.get_map_instance();
 
+	occupied_provinces_proportion = fixed_point_t::_0();
+	port_count = 0;
 	neighbouring_countries.clear();
-	for (ProvinceInstance const* province : owned_provinces) {
-		for (ProvinceDefinition::adjacency_t const& adjacency : province->get_province_definition().get_adjacencies()) {
+
+	Continent const* capital_continent = capital != nullptr ? capital->get_province_definition().get_continent() : nullptr;
+
+	for (ProvinceInstance* province : owned_provinces) {
+		ProvinceDefinition const& province_definition = province->get_province_definition();
+
+		if (province->get_controller() != this) {
+			occupied_provinces_proportion++;
+		}
+
+		if (province_definition.has_port()) {
+			port_count++;
+		}
+
+		// TODO - ensure connnected_to_capital and is_overseas are updated to false if a province becomes uncolonised
+		province->set_connected_to_capital(false);
+		province->set_is_overseas(province_definition.get_continent() != capital_continent);
+
+		for (ProvinceDefinition::adjacency_t const& adjacency : province_definition.get_adjacencies()) {
 			// TODO - should we limit based on adjacency type? Straits and impassable still work in game,
 			// and water provinces don't have an owner so they'll get caught by the later checks anyway.
-			CountryInstance* neighbour =
-				map_instance.get_province_instance_from_definition(*adjacency.get_to()).get_owner();
+			CountryInstance* neighbour = map_instance.get_province_instance_from_definition(*adjacency.get_to()).get_owner();
 			if (neighbour != nullptr && neighbour != this) {
 				neighbouring_countries.insert(neighbour);
+			}
+		}
+	}
+
+	if (occupied_provinces_proportion != fixed_point_t::_0()) {
+		occupied_provinces_proportion /= owned_provinces.size();
+	}
+
+	if (capital != nullptr) {
+		capital->set_connected_to_capital(true);
+		std::vector<ProvinceInstance const*> province_checklist { capital };
+
+		for (size_t index = 0; index < province_checklist.size(); index++) {
+			ProvinceInstance const& province = *province_checklist[index];
+
+			for (ProvinceDefinition::adjacency_t const& adjacency : province.get_province_definition().get_adjacencies()) {
+				ProvinceInstance& adjacent_province = map_instance.get_province_instance_from_definition(*adjacency.get_to());
+
+				if (adjacent_province.get_owner() == this && !adjacent_province.get_connected_to_capital()) {
+					adjacent_province.set_connected_to_capital(true);
+					adjacent_province.set_is_overseas(false);
+					province_checklist.push_back(&adjacent_province);
+				}
 			}
 		}
 	}
@@ -1493,7 +1556,7 @@ void CountryInstance::country_reset_before_tick() {
 	for (auto pair : goods_data) {
 		pair.second.clear_daily_recorded_data();
 	}
-	
+
 	taxable_income_by_pop_type.fill(fixed_point_t::_0());
 }
 
@@ -1836,9 +1899,10 @@ bool CountryInstanceManager::generate_country_instances(
 	return ret;
 }
 
-bool CountryInstanceManager::apply_history_to_countries(
-	CountryHistoryManager const& history_manager, InstanceManager& instance_manager
-) {
+bool CountryInstanceManager::apply_history_to_countries(InstanceManager& instance_manager) {
+	CountryHistoryManager const& history_manager =
+		instance_manager.get_definition_manager().get_history_manager().get_country_manager();
+
 	bool ret = true;
 
 	const Date today = instance_manager.get_today();

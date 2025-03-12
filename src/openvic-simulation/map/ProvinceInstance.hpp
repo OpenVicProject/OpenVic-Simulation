@@ -49,6 +49,11 @@ namespace OpenVic {
 
 		enum struct colony_status_t : uint8_t { STATE, PROTECTORATE, COLONY };
 
+		// This combines COLONY and PROTECTORATE statuses, as opposed to non-colonial STATE provinces
+		static constexpr bool is_colonial(colony_status_t colony_status) {
+			return colony_status != colony_status_t::STATE;
+		}
+
 		static constexpr std::string_view get_colony_status_string(colony_status_t colony_status) {
 			using enum colony_status_t;
 			switch (colony_status) {
@@ -85,6 +90,10 @@ namespace OpenVic {
 		bool PROPERTY(slave, false);
 		// Used for "minorities = yes/no" condition
 		bool PROPERTY(has_unaccepted_pops, false);
+		bool PROPERTY_RW(connected_to_capital, false);
+		bool PROPERTY_RW(is_overseas, false);
+		bool PROPERTY(has_empty_adjacent_province, false);
+		std::vector<ProvinceInstance const*> PROPERTY(adjacent_nonempty_land_provinces);
 		Crime const* PROPERTY_RW(crime, nullptr);
 		ResourceGatheringOperation PROPERTY(rgo);
 		IdentifierRegistry<BuildingInstance> IDENTIFIER_REGISTRY(building);
@@ -167,12 +176,14 @@ namespace OpenVic {
 		constexpr bool is_owner_core() const {
 			return owner != nullptr && cores.contains(owner);
 		}
-		// This combines COLONY and PROTECTORATE statuses, as opposed to non-colonial STATE provinces
 		constexpr bool is_colonial_province() const {
-			return colony_status != colony_status_t::STATE;
+			return is_colonial(colony_status);
 		}
 		constexpr bool is_occupied() const {
 			return owner != controller;
+		}
+		constexpr bool is_empty() const {
+			return owner == nullptr;
 		}
 
 		// The values returned by these functions are scaled by population size, so they must be divided by population size
@@ -236,7 +247,7 @@ namespace OpenVic {
 			}
 		}
 
-		void update_gamestate(const Date today, DefineManager const& define_manager);
+		void update_gamestate(InstanceManager const& instance_manager);
 		void province_tick(const Date today, PopValuesFromProvince& reusable_pop_values);
 		void initialise_for_new_game(const Date today, PopValuesFromProvince& reusable_pop_values);
 

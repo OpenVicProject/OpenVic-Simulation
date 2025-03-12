@@ -63,6 +63,10 @@ namespace OpenVic {
 	public:
 		std::string get_identifier() const;
 
+		constexpr bool is_colonial_state() const {
+			return ProvinceInstance::is_colonial(colony_status);
+		}
+
 		// The values returned by these functions are scaled by population size, so they must be divided by population size
 		// to get the support as a proportion of 1.0
 		constexpr pop_size_t get_pop_type_proportion(PopType const& pop_type) const {
