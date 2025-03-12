@@ -1834,7 +1834,11 @@ bool CountryInstanceManager::apply_history_to_countries(
 	UnitInstanceManager& unit_instance_manager = instance_manager.get_unit_instance_manager();
 	MapInstance& map_instance = instance_manager.get_map_instance();
 
+	const Date starting_last_war_loss_date = today - RECENT_WAR_LOSS_TIME_LIMIT;
+
 	for (CountryInstance& country_instance : country_instances.get_items()) {
+		country_instance.last_war_loss_date = starting_last_war_loss_date;
+
 		if (!country_instance.get_country_definition()->is_dynamic_tag()) {
 			CountryHistoryMap const* history_map =
 				history_manager.get_country_history(country_instance.get_country_definition());

@@ -52,6 +52,8 @@ namespace OpenVic {
 	struct CountryDefines;
 	struct EconomyDefines;
 
+	static constexpr Timespan RECENT_WAR_LOSS_TIME_LIMIT = Timespan::from_years(5);
+
 	/* Representation of a country's mutable attributes, with a CountryDefinition that is unique at any single time
 	 * but can be swapped with other CountryInstance's CountryDefinition when switching tags. */
 	struct CountryInstance : FlagStrings, HasIndex<> {
@@ -240,6 +242,9 @@ namespace OpenVic {
 		fixed_point_t PROPERTY(prestige);
 		size_t PROPERTY(prestige_rank, 0);
 		fixed_point_t PROPERTY(diplomatic_points);
+		// The last time this country lost a war, i.e. accepted a peace offer sent from their offer tab or the enemy's demand
+		// tab, even white peace. Used for the "has_recently_lost_war" condition (true if the date is less than 5 years ago).
+		Date PROPERTY(last_war_loss_date);
 		// TODO - colonial power, current wars
 
 		/* Military */
