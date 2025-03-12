@@ -40,7 +40,8 @@ bool Element::_fill_key_map(NodeTools::case_insensitive_key_map_t& key_map, UIMa
 }
 
 bool Element::_fill_elements_key_map(
-	NodeTools::case_insensitive_key_map_t& key_map, callback_t<std::unique_ptr<Element>&&> callback, UIManager const& ui_manager
+	NodeTools::case_insensitive_key_map_t& key_map, callback_t<std::unique_ptr<Element>&&> const& callback,
+	UIManager const& ui_manager
 ) {
 	bool ret = true;
 	ret &= add_key_map_entries(key_map,

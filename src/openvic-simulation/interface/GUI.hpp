@@ -42,7 +42,7 @@ namespace OpenVic::GUI {
 
 		bool _fill_key_map(NodeTools::case_insensitive_key_map_t& key_map, UIManager const& ui_manager) override;
 		static bool _fill_elements_key_map(
-			NodeTools::case_insensitive_key_map_t& key_map, NodeTools::callback_t<std::unique_ptr<Element>&&> callback,
+			NodeTools::case_insensitive_key_map_t& key_map, NodeTools::callback_t<std::unique_ptr<Element>&&> const& callback,
 			UIManager const& ui_manager
 		);
 

@@ -1,5 +1,7 @@
 #pragma once
-#include <string>
+
+#include <string_view>
+
 #include "openvic-simulation/utility/Getters.hpp"
 
 namespace OpenVic {
@@ -18,7 +20,7 @@ namespace OpenVic {
 		std::string PROPERTY(actual_value);
 
 	public:
-		Requirement(std::string in_id, std::string in_text, std::string in_acceptance_criteria) {
+		Requirement(std::string_view in_id, std::string_view in_text, std::string_view in_acceptance_criteria) {
 			id = in_id;
 			text = in_text;
 			acceptance_criteria = in_acceptance_criteria;

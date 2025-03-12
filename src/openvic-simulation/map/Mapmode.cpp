@@ -38,9 +38,7 @@ Mapmode::base_stripe_t Mapmode::get_base_stripe_colours(
 }
 
 bool MapmodeManager::add_mapmode(
-	std::string_view identifier,
-	Mapmode::colour_func_t colour_func,
-	std::string_view localisation_key,
+	std::string_view identifier, Mapmode::colour_func_t const& colour_func, std::string_view localisation_key,
 	bool parchment_mapmode_allowed
 ) {
 	if (identifier.empty()) {

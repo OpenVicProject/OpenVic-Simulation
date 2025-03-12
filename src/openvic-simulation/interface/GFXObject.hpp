@@ -19,7 +19,7 @@ namespace OpenVic::GFX {
 		OV_DETAIL_GET_TYPE
 
 		static NodeTools::node_callback_t expect_objects(
-			NodeTools::length_callback_t length_callback, NodeTools::callback_t<std::unique_ptr<Object>&&> callback
+			NodeTools::length_callback_t length_callback, NodeTools::callback_t<std::unique_ptr<Object>&&> const& callback
 		);
 	};
 

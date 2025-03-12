@@ -33,7 +33,7 @@ namespace OpenVic {
 
 		bool set_roots(Dataloader::path_vector_t const& roots);
 
-		bool load_definitions(Dataloader::localisation_callback_t localisation_callback);
+		bool load_definitions(Dataloader::localisation_callback_t const& localisation_callback);
 
 		bool setup_instance(Bookmark const* bookmark);
 

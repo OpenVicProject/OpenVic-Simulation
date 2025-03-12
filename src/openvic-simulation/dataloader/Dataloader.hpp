@@ -89,7 +89,7 @@ namespace OpenVic {
 		///			a non-empty hint_path, performs empty path behavior.
 		/// @return fs::path The root directory of a valid Victoria 2 install, or an empty path.
 		///
-		static fs::path search_for_game_path(fs::path hint_path = {});
+		static fs::path search_for_game_path(fs::path const& hint_path = {});
 
 		/* In reverse-load order, so base defines first and final loaded mod last */
 		bool set_roots(path_vector_t const& new_roots);
@@ -137,7 +137,7 @@ namespace OpenVic {
 		/* Args: key, locale, localisation */
 		using localisation_callback_t = NodeTools::callback_t<std::string_view, locale_t, std::string_view>;
 		bool load_localisation_files(
-			localisation_callback_t callback, std::string_view localisation_dir = "localisation"
+			localisation_callback_t const& callback, std::string_view localisation_dir = "localisation"
 		) const;
 	};
 }

@@ -72,10 +72,10 @@ static bool run_headless(Dataloader::path_vector_t const& roots, bool run_tests)
 
 	if (run_tests) {
 		Testing testing { game_manager.get_definition_manager() };
-		std::cout << std::endl << "Testing Loaded" << std::endl << std::endl;
+		std::cout << '\n' << "Testing Loaded" << '\n' << '\n';
 		testing.execute_all_scripts();
 		testing.report_results();
-		std::cout << "Testing Executed" << std::endl << std::endl;
+		std::cout << "Testing Executed" << '\n' << '\n';
 	}
 
 	Logger::info("===== Setting up instance... =====");
@@ -166,14 +166,14 @@ int main(int argc, char const* argv[]) {
 				if (!root.empty()) {
 					return true;
 				} else {
-					std::cerr << "Empty path after giving \"" << path << "\" to " << path_use
-						<< " command line argument \"" << command << "\"." << std::endl;
+					std::cerr << "Empty path after giving \"" << path << "\" to " << path_use << " command line argument \""
+							  << command << "\"." << '\n';
 				}
 			} else {
-				std::cerr << "Missing path after " << path_use << " command line argument \"" << command << "\"." << std::endl;
+				std::cerr << "Missing path after " << path_use << " command line argument \"" << command << "\"." << '\n';
 			}
 		} else {
-			std::cerr << "Duplicate " << path_use << " command line argument \"-b\"." << std::endl;
+			std::cerr << "Duplicate " << path_use << " command line argument \"-b\"." << '\n';
 		}
 		print_help(std::cerr, program_name);
 		return false;
@@ -201,7 +201,7 @@ int main(int argc, char const* argv[]) {
 	if (root.empty()) {
 		root = Dataloader::search_for_game_path();
 		if (root.empty()) {
-			std::cerr << "Search for base directory path failed!" << std::endl;
+			std::cerr << "Search for base directory path failed!" << '\n';
 			print_help(std::cerr, program_name);
 			return -1;
 		}
@@ -212,16 +212,16 @@ int main(int argc, char const* argv[]) {
 		roots.emplace_back(root / mod_directory / argv[argn++]);
 	}
 
-	std::cout << "!!! HEADLESS SIMULATION START !!!" << std::endl;
+	std::cout << "!!! HEADLESS SIMULATION START !!!" << '\n';
 
 	const bool ret = run_headless(roots, run_tests);
 
-	std::cout << "!!! HEADLESS SIMULATION END !!!" << std::endl;
+	std::cout << "!!! HEADLESS SIMULATION END !!!" << '\n';
 
-	std::cout << "\nLoad returned: " << (ret ? "SUCCESS" : "FAILURE") << std::endl;
+	std::cout << "\nLoad returned: " << (ret ? "SUCCESS" : "FAILURE") << '\n';
 
 	std::cout << "\nLogger Summary: Info = " << Logger::get_info_count() << ", Warning = " << Logger::get_warning_count()
-		<< ", Error = " << Logger::get_error_count() << std::endl;
+			  << ", Error = " << Logger::get_error_count() << '\n';
 
 	return ret ? 0 : -1;
 }

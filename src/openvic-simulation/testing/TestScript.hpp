@@ -1,5 +1,6 @@
 #pragma once
 #include <memory>
+#include <string_view>
 #include <vector>
 
 #include "openvic-simulation/DefinitionManager.hpp"
@@ -26,7 +27,7 @@ namespace OpenVic {
 		// Getters
 		std::vector<std::unique_ptr<Requirement>>& get_requirements();
 		Requirement* get_requirement_at_index(int index);
-		Requirement* get_requirement_by_id(std::string id);
+		Requirement* get_requirement_by_id(std::string_view id);
 		std::vector<Requirement*> get_passed_requirements();
 		std::vector<Requirement*> get_failed_requirements();
 		std::vector<Requirement*> get_untested_requirements();
@@ -37,7 +38,7 @@ namespace OpenVic {
 
 		// Methods
 		void pass_or_fail_req_with_actual_and_target_values(
-			std::string req_name, std::string target_value, std::string actual_value
+			std::string_view req_name, std::string_view target_value, std::string_view actual_value
 		);
 	};
 }

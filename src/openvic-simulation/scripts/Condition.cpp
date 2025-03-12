@@ -708,7 +708,7 @@ static bool top_scope_fallback(std::string_view id, ast::NodeCPtr node) {
 
 node_callback_t ConditionManager::expect_condition_node_list(
 	DefinitionManager const& definition_manager, scope_type_t current_scope, scope_type_t this_scope, scope_type_t from_scope,
-	callback_t<ConditionNode&&> callback, bool top_scope
+	callback_t<ConditionNode&&> const& callback, bool top_scope
 ) const {
 	return [this, &definition_manager, callback, current_scope, this_scope, from_scope, top_scope](ast::NodeCPtr node) -> bool {
 		const auto expect_node = [

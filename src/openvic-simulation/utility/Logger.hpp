@@ -92,7 +92,7 @@ namespace OpenVic {
 					//<< location.line() << ") `" << location.function_name() << "`: ";
 					<< location.line() << "): ";
 				((stream << std::forward<Args>(args)), ...);
-				stream << std::endl;
+				stream << '\n';
 				log_channel.queue.push(stream.str());
 				if (log_channel.func) {
 					do {

@@ -227,15 +227,15 @@ callback_t<std::string_view> NodeTools::expect_date_str(callback_t<Date> callbac
 	};
 }
 
-node_callback_t NodeTools::expect_date(callback_t<Date> callback) {
+node_callback_t NodeTools::expect_date(callback_t<Date> const& callback) {
 	return expect_identifier(expect_date_str(callback));
 }
 
-node_callback_t NodeTools::expect_date_string(callback_t<Date> callback) {
+node_callback_t NodeTools::expect_date_string(callback_t<Date> const& callback) {
 	return expect_string(expect_date_str(callback));
 }
 
-node_callback_t NodeTools::expect_date_identifier_or_string(callback_t<Date> callback) {
+node_callback_t NodeTools::expect_date_identifier_or_string(callback_t<Date> const& callback) {
 	return expect_identifier_or_string(expect_date_str(callback));
 }
 
@@ -375,7 +375,7 @@ node_callback_t NodeTools::expect_list_and_length(length_callback_t length_callb
 	});
 }
 
-node_callback_t NodeTools::expect_list_of_length(size_t length, node_callback_t callback) {
+node_callback_t NodeTools::expect_list_of_length(size_t length, node_callback_t const& callback) {
 	return [length, callback](ast::NodeCPtr node) -> bool {
 		bool size_ret = true;
 		bool ret = expect_list_and_length(
@@ -395,7 +395,7 @@ node_callback_t NodeTools::expect_list_of_length(size_t length, node_callback_t 
 	};
 }
 
-node_callback_t NodeTools::expect_list(node_callback_t callback) {
+node_callback_t NodeTools::expect_list(node_callback_t const& callback) {
 	return expect_list_and_length(default_length_callback, callback);
 }
 
@@ -492,11 +492,13 @@ NodeTools::expect_key(ovdl::symbol<char> key, node_callback_t callback, bool* ke
 	return _expect_key(key, callback, key_found, allow_duplicates);
 }
 
-node_callback_t NodeTools::expect_dictionary_and_length(length_callback_t length_callback, key_value_callback_t callback) {
+node_callback_t NodeTools::expect_dictionary_and_length( //
+	length_callback_t const& length_callback, key_value_callback_t const& callback
+) {
 	return expect_list_and_length(length_callback, expect_assign(callback));
 }
 
-node_callback_t NodeTools::expect_dictionary(key_value_callback_t callback) {
+node_callback_t NodeTools::expect_dictionary(key_value_callback_t const& callback) {
 	return expect_dictionary_and_length(default_length_callback, callback);
 }
 

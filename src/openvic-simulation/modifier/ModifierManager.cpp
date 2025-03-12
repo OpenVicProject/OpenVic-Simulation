@@ -59,9 +59,7 @@ bool ModifierManager::_register_modifier_effect(
 		return false;
 	}
 
-	const bool ret = registry.add_item({
-		std::move(identifier), is_positive_good, format, targets, localisation_key, has_no_effect
-	});
+	const bool ret = registry.add_item({ identifier, is_positive_good, format, targets, localisation_key, has_no_effect });
 
 	if (ret) {
 		effect_cache = &registry.back();
