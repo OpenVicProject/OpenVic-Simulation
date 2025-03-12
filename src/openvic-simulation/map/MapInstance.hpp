@@ -19,6 +19,8 @@ namespace OpenVic {
 	 * MAP-4
 	 */
 	struct MapInstance {
+		using canal_index_t = ProvinceDefinition::adjacency_t::data_t;
+
 	private:
 		MapDefinition const& PROPERTY(map_definition);
 		ThreadPool& thread_pool;
@@ -29,13 +31,14 @@ namespace OpenVic {
 		pop_size_t PROPERTY(total_map_population, 0);
 
 		StateManager PROPERTY_REF(state_manager);
+		// TODO - should this be a vector of bools which we resize to the largest enabled canal index?
+		ordered_set<canal_index_t> PROPERTY(enabled_canals);
 
 	public:
-		constexpr MapInstance(
+		MapInstance(
 			MapDefinition const& new_map_definition,
 			ThreadPool& new_thread_pool
-		) : map_definition { new_map_definition },
-			thread_pool { new_thread_pool } {}
+		);
 
 		inline explicit constexpr operator MapDefinition const&() const {
 			return map_definition;
@@ -45,6 +48,9 @@ namespace OpenVic {
 
 		ProvinceInstance& get_province_instance_from_definition(ProvinceDefinition const& province);
 		ProvinceInstance const& get_province_instance_from_definition(ProvinceDefinition const& province) const;
+
+		void enable_canal(canal_index_t canal_index);
+		bool is_canal_enabled(canal_index_t canal_index) const;
 
 		bool setup(
 			BuildingTypeManager const& building_type_manager,
