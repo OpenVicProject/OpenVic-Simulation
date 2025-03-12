@@ -149,17 +149,14 @@ namespace OpenVic {
 		friend struct UnitTypeManager;
 
 		// Each value is a subset of its predecessor, so smaller values contain larger values
-		enum struct allowed_cultures_t { ALL_CULTURES, ACCEPTED_CULTURES, PRIMARY_CULTURE, NO_CULTURES };
+		// The exact values here must be preserved to allow easy comparison against Pop::culture_status_t
+		enum struct allowed_cultures_t : uint8_t { ALL_CULTURES, ACCEPTED_CULTURES, PRIMARY_CULTURE, NO_CULTURES };
 
-		constexpr static allowed_cultures_t allowed_cultures_get_most_permissive(
+		static constexpr allowed_cultures_t allowed_cultures_get_most_permissive(
 			allowed_cultures_t lhs, allowed_cultures_t rhs
 		) {
 			return std::min(lhs, rhs);
 		}
-
-		static bool allowed_cultures_check_culture_in_country(
-			allowed_cultures_t allowed_cultures, Culture const& culture, CountryInstance const& country
-		);
 
 		struct regiment_type_args_t {
 			allowed_cultures_t allowed_cultures = allowed_cultures_t::ALL_CULTURES;

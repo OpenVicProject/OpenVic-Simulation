@@ -73,6 +73,14 @@ namespace OpenVic {
 	struct Pop : PopBase {
 		friend struct ProvinceInstance;
 
+		enum struct culture_status_t : uint8_t {
+			UNACCEPTED, ACCEPTED, PRIMARY
+		};
+
+		static constexpr bool is_culture_status_allowed(RegimentType::allowed_cultures_t allowed, culture_status_t status) {
+			return static_cast<uint8_t>(allowed) <= static_cast<uint8_t>(status);
+		}
+
 		static constexpr pop_size_t MAX_SIZE = std::numeric_limits<pop_size_t>::max();
 
 	private:
@@ -90,6 +98,8 @@ namespace OpenVic {
 		pop_size_t PROPERTY(num_migrated_internal, 0); // TODO - detailed migration info (where to)
 		pop_size_t PROPERTY(num_migrated_external, 0);
 		pop_size_t PROPERTY(num_migrated_colonial, 0);
+
+		culture_status_t PROPERTY(culture_status, culture_status_t::UNACCEPTED);
 
 		static constexpr fixed_point_t DEFAULT_POP_LITERACY = fixed_point_t::_0_10();
 		fixed_point_t PROPERTY_RW(literacy, DEFAULT_POP_LITERACY);

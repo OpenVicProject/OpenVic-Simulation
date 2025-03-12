@@ -265,6 +265,8 @@ void ProvinceInstance::_update_pops(DefineManager const& define_manager) {
 	culture_distribution.clear();
 	religion_distribution.clear();
 
+	has_unaccepted_pops = false;
+
 	for (std::vector<Pop*>& pops_cache : pops_cache_by_type.get_values()) {
 		pops_cache.clear();
 	}
@@ -312,6 +314,10 @@ void ProvinceInstance::_update_pops(DefineManager const& define_manager) {
 		religion_distribution[&pop.get_religion()] += pop_size_f;
 
 		max_supported_regiments += pop.get_max_supported_regiments();
+
+		if (pop.get_culture_status() == Pop::culture_status_t::UNACCEPTED) {
+			has_unaccepted_pops = true;
+		}
 	}
 
 	if (total_population > 0) {

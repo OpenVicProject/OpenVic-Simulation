@@ -180,6 +180,20 @@ fixed_point_t Pop::get_party_support(CountryParty const& party) const {
 void Pop::update_gamestate(
 	DefineManager const& define_manager, CountryInstance const* owner, const fixed_point_t pop_size_per_regiment_multiplier
 ) {
+	using enum culture_status_t;
+
+	if (owner != nullptr) {
+		if (owner->is_primary_culture(culture)) {
+			culture_status = PRIMARY;
+		} else if (owner->is_accepted_culture(culture)) {
+			culture_status = ACCEPTED;
+		} else {
+			culture_status = UNACCEPTED;
+		}
+	} else {
+		culture_status = UNACCEPTED;
+	}
+
 	static constexpr fixed_point_t MIN_MILITANCY = fixed_point_t::_0();
 	static constexpr fixed_point_t MAX_MILITANCY = fixed_point_t::_10();
 	static constexpr fixed_point_t MIN_CONSCIOUSNESS = fixed_point_t::_0();
@@ -196,7 +210,7 @@ void Pop::update_gamestate(
 
 		if (
 			size < military_defines.get_min_pop_size_for_regiment() || owner == nullptr ||
-			!RegimentType::allowed_cultures_check_culture_in_country(owner->get_allowed_regiment_cultures(), culture, *owner)
+			!is_culture_status_allowed(owner->get_allowed_regiment_cultures(), culture_status)
 		) {
 			max_supported_regiments = 0;
 		} else {
