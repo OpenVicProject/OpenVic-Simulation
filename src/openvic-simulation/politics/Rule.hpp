@@ -1,5 +1,7 @@
 #pragma once
 
+#include <cstdint>
+
 #include "openvic-simulation/types/IdentifierRegistry.hpp"
 #include "openvic-simulation/types/OrderedContainers.hpp"
 

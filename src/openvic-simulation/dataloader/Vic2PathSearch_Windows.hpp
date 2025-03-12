@@ -1,4 +1,5 @@
 #pragma once
+#ifdef _WIN32
 
 #include <concepts>
 #pragma comment(lib, "advapi32.lib")
@@ -149,7 +150,7 @@ namespace OpenVic::Windows {
 	};
 
 	template<either_char_type RCHAR_T, either_char_type CHAR_T, either_char_type CHAR_T2>
-	std::basic_string<RCHAR_T> ReadRegValue(
+	std::basic_string<RCHAR_T> ReadRegValue( //
 		HKEY root, std::basic_string_view<CHAR_T> key, std::basic_string_view<CHAR_T2> name
 	) {
 		RegistryKey registry_key(root, key, name);
@@ -168,3 +169,4 @@ namespace OpenVic::Windows {
 		return ReadRegValue<RCHAR_T>(root, key_sv, name_sv);
 	}
 }
+#endif

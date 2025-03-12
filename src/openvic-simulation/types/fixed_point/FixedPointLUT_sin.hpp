@@ -1,9 +1,15 @@
+// This file was generated using the `misc/scripts/sin_lut_generator.py` script.
 
-static constexpr int32_t SIN_LUT_PRECISION = 16;
-static constexpr int32_t SIN_LUT_COUNT_LOG2 = 9;
+#pragma once
+
+#include <array>
+#include <cstdint>
+
+static constexpr uint32_t SIN_LUT_PRECISION = 16;
+static constexpr uint32_t SIN_LUT_COUNT_LOG2 = 9;
 static constexpr int32_t SIN_LUT_SHIFT = SIN_LUT_PRECISION - SIN_LUT_COUNT_LOG2;
 
-static constexpr int64_t SIN_LUT[(1 << SIN_LUT_COUNT_LOG2) + 1] = {
+static constexpr std::array<int64_t, (1 << SIN_LUT_COUNT_LOG2) + 1>  SIN_LUT = {
 	0, 804, 1608, 2412, 3216, 4019, 4821, 5623, 6424, 7224, 8022, 8820, 9616, 10411, 11204, 11996,
 	12785, 13573, 14359, 15143, 15924, 16703, 17479, 18253, 19024, 19792, 20557, 21320, 22078, 22834, 23586, 24335,
 	25080, 25821, 26558, 27291, 28020, 28745, 29466, 30182, 30893, 31600, 32303, 33000, 33692, 34380, 35062, 35738,

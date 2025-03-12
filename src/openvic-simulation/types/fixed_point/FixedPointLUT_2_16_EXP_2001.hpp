@@ -1,5 +1,12 @@
+// This file was generated using the `misc/scripts/exp_lut_generator.py` script with `-e 2001`.
 
-static constexpr int64_t LUT_2_16_EXP_2001_DIVISOR = 65536;
+#pragma once
+
+#include <array>
+#include <cstddef>
+#include <cstdint>
+
+static constexpr uint64_t LUT_2_16_EXP_2001_DIVISOR = 65536;
 static constexpr size_t LUT_2_16_EXP_2001_SIZE = 19;
 
 static constexpr std::array<int64_t, LUT_2_16_EXP_2001_SIZE> LUT_2_16_EXP_2001 {

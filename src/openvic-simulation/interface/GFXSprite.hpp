@@ -161,7 +161,7 @@ namespace OpenVic::GFX {
 		friend std::unique_ptr<LineChart> std::make_unique<LineChart>();
 
 		ivec2_t PROPERTY(size);
-		uint32_t PROPERTY(linewidth);
+		uint32_t PROPERTY(linewidth, 0);
 
 	protected:
 		LineChart();

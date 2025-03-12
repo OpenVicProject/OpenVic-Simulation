@@ -205,10 +205,10 @@ namespace OpenVic {
 		using const_iterator = base_iterator_t<true>;
 
 	private:
-		keys_type const* PROPERTY(keys);
+		keys_type const* PROPERTY(keys, nullptr);
 
 	public:
-		constexpr IndexedMap(keys_type const* new_keys) : keys { nullptr } {
+		constexpr IndexedMap(keys_type const* new_keys) {
 			set_keys(new_keys);
 		}
 

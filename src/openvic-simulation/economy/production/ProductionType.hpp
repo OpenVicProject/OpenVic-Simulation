@@ -18,7 +18,7 @@ namespace OpenVic {
 		enum struct effect_t { INPUT, OUTPUT, THROUGHPUT };
 
 	private:
-		PopType const* PROPERTY(pop_type);
+		PopType const* PROPERTY(pop_type, nullptr);
 		effect_t PROPERTY(effect_type);
 		fixed_point_t PROPERTY(effect_multiplier);
 		fixed_point_t PROPERTY(amount);
@@ -29,9 +29,6 @@ namespace OpenVic {
 			fixed_point_t new_effect_multiplier,
 			fixed_point_t new_amount
 		);
-
-	public:
-		Job() = default;
 	};
 
 	struct ProductionType : HasIdentifier {

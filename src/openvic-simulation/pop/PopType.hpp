@@ -1,5 +1,7 @@
 #pragma once
 
+#include <cstdint>
+
 #include "openvic-simulation/economy/GoodDefinition.hpp"
 #include "openvic-simulation/pop/Culture.hpp"
 #include "openvic-simulation/pop/Religion.hpp"

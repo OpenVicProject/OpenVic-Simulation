@@ -7,13 +7,13 @@ namespace OpenVic {
 	template<typename... _Context>
 	struct Script {
 	private:
-		ast::NodeCPtr _root;
+		ast::NodeCPtr _root = nullptr;
 
 	protected:
 		virtual bool _parse_script(ast::NodeCPtr root, _Context... context) = 0;
 
 	public:
-		Script() : _root { nullptr } {}
+		Script() {}
 		Script(Script&&) = default;
 
 		constexpr bool has_defines_node() const {
