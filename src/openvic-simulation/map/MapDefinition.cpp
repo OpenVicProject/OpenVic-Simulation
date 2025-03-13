@@ -851,7 +851,7 @@ bool MapDefinition::load_map_images(fs::path const& province_path, fs::path cons
 		}
 		simplified_points.push_back(points.back());
 
-		// add segment then recursively call if neeeded
+		// add segment then recursively call if needed
 		river.push_back({ size, std::move(simplified_points) });
 		if (river_complete) {
 			return;

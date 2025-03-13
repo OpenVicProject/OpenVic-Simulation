@@ -29,7 +29,7 @@ bool DeploymentManager::add_deployment(
 	std::vector<LeaderBase>&& leaders
 ) {
 	if (path.empty()) {
-		Logger::error("Attemped to load order of battle with no path! Something is very wrong!");
+		Logger::error("Attempted to load order of battle with no path! Something is very wrong!");
 		return false;
 	}
 

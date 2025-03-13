@@ -337,7 +337,7 @@ bool UnitTypeManager::generate_modifiers(ModifierManager& modifier_manager) cons
 		);
 
 		if constexpr (std::same_as<decltype(unit_type_effects), ModifierEffectCache::regiment_type_effects_t>) {
-			stat_modifier(unit_type_effects.reconnaissance, "reconnaissance", true, RAW_DECIMAL, "RECONAISSANCE");
+			stat_modifier(unit_type_effects.reconnaissance, "reconnaissance", true, RAW_DECIMAL, "RECONAISSANCE"); // paradox typo
 			stat_modifier(unit_type_effects.discipline, "discipline", true, PROPORTION_DECIMAL, "DISCIPLINE");
 			stat_modifier(unit_type_effects.support, "support", true, PROPORTION_DECIMAL, "SUPPORT");
 			stat_modifier(unit_type_effects.maneuver, "maneuver", true, INT, "Maneuver");

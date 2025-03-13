@@ -362,7 +362,7 @@ bool ConsoleInstance::setup_commands() {
 	};
 
 	result &= add_command("showprovinceid", toggle_province_id);
-	result &= add_command("provid", toggle_province_id);
+	result &= add_command("provid", toggle_province_id); // spellchecker:disable-line
 
 	result &= add_command("date", [](Argument& arg) -> bool {
 		if (!arg.console.validate_argument_size(arg.arguments, 2)) {

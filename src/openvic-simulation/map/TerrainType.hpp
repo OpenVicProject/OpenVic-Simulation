@@ -42,7 +42,7 @@ namespace OpenVic {
 		TerrainTypeMapping(
 			std::string_view new_identifier,
 			TerrainType const& new_type,
-			std::vector<index_t>&& new_terrain_indicies,
+			std::vector<index_t>&& new_terrain_indices,
 			index_t new_priority,
 			bool new_has_texture
 		);
@@ -76,7 +76,7 @@ namespace OpenVic {
 		bool add_terrain_type_mapping(
 			std::string_view identifier,
 			TerrainType const* type,
-			std::vector<TerrainTypeMapping::index_t>&& terrain_indicies,
+			std::vector<TerrainTypeMapping::index_t>&& terrain_indices,
 			TerrainTypeMapping::index_t priority,
 			bool has_texture
 		);

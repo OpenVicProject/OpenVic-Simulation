@@ -117,7 +117,7 @@ void InstanceManager::execute_game_actions() {
 
 	currently_executing_game_actions = true;
 
-	// Temporary gamestate/UI update trigger, to be replaced with a more sophisticated targetted system
+	// Temporary gamestate/UI update trigger, to be replaced with a more sophisticated targeted system
 	bool needs_gamestate_update = false;
 
 	for (game_action_t const& game_action : game_action_queue) {

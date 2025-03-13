@@ -40,7 +40,7 @@ bool RuleSet::trim_and_resolve_conflicts(bool log) {
 					if (value) {
 						if (rule != primary_rule) {
 							Logger::error(
-								"Conflicting mutually exclusive rule: ", rule, " superceeded by ", primary_rule, " - removing!"
+								"Conflicting mutually exclusive rule: ", rule, " superseded by ", primary_rule, " - removing!"
 							);
 						}
 					} else {

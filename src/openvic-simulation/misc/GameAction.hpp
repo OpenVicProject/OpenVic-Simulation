@@ -66,7 +66,7 @@ namespace OpenVic {
 
 		// TODO - Others:
 		//  - select event option
-		//  - set country and intersting or not (buttons upon right clicking on flag icons)
+		//  - set country and interesting or not (buttons upon right clicking on flag icons)
 		//  - upgrade colony status
 		//  - execute commands (or should the console just convert commands which affect gamestate to regular game actions?)
 

@@ -115,7 +115,7 @@ namespace OpenVic {
 			);
 			add_requirement(FS_341);
 			Requirement* SND_10 = new Requirement(
-				"SND_10", "SFX shall be refered to by their filename, without the extension",
+				"SND_10", "SFX shall be referred to by their filename, without the extension",
 				"Sound effects are identified by their filename without extension"
 			);
 			add_requirement(SND_10);
@@ -237,7 +237,7 @@ namespace OpenVic {
 			// TODO: Write test steps for FS_341...
 
 			// SND_10
-			// SFX shall be refered to by their filename, without the extension
+			// SFX shall be referred to by their filename, without the extension
 			// Sound effects are identified by their filename without extension
 
 			// TODO: Write test steps for SND_10...

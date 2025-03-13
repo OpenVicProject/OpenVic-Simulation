@@ -22,7 +22,7 @@ namespace OpenVic {
 		struct Argument {
 			InstanceManager& instance_manager;
 			CountryInstance* sender;
-			CountryInstance* reciever;
+			CountryInstance* receiver;
 			std::any context_data;
 		};
 
@@ -135,7 +135,7 @@ namespace OpenVic {
 		);
 
 		DiplomaticActionTickCache create_diplomatic_action_tick(
-			std::string_view identifier, CountryInstance* sender, CountryInstance* reciever, std::any context_data,
+			std::string_view identifier, CountryInstance* sender, CountryInstance* receiver, std::any context_data,
 			InstanceManager& instance_manager
 		);
 

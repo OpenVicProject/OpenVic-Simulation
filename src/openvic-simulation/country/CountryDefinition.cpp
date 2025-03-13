@@ -155,7 +155,7 @@ node_callback_t CountryDefinitionManager::load_country_party(
 
 						if (policy != nullptr) {
 							Logger::error(
-								"Country party \"", party_name, "\" has duplicate entry for issue gorup \"",
+								"Country party \"", party_name, "\" has duplicate entry for issue group \"",
 								issue_group.get_identifier(), "\""
 							);
 							return false;

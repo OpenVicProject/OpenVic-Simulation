@@ -178,7 +178,7 @@ bool ConditionManager::setup_conditions(DefinitionManager const& definition_mana
 	ret &= add_condition("is_core", IDENTIFIER, COUNTRY, NO_SCOPE, NO_IDENTIFIER, COUNTRY_TAG | PROVINCE_ID);
 	ret &= add_condition("is_culture_group", IDENTIFIER, COUNTRY, NO_SCOPE, NO_IDENTIFIER, COUNTRY_TAG | CULTURE_GROUP);
 	ret &= add_condition("is_ideology_enabled", IDENTIFIER, COUNTRY, NO_SCOPE, NO_IDENTIFIER, IDEOLOGY);
-	ret &= add_condition("is_independant", BOOLEAN, COUNTRY); //paradox typo
+	ret &= add_condition("is_independant", BOOLEAN, COUNTRY); // paradox typo
 	ret &= add_condition("is_liberation_crisis", BOOLEAN, COUNTRY);
 	ret &= add_condition("is_mobilised", BOOLEAN, COUNTRY);
 	ret &= add_condition("is_next_reform", IDENTIFIER, COUNTRY, NO_SCOPE, NO_IDENTIFIER, REFORM);
@@ -300,7 +300,7 @@ bool ConditionManager::setup_conditions(DefinitionManager const& definition_mana
 	ret &= add_condition("has_national_minority", BOOLEAN, PROVINCE);
 	ret &= add_condition("has_province_flag", IDENTIFIER, PROVINCE, NO_SCOPE, NO_IDENTIFIER, PROVINCE_FLAG);
 	ret &= add_condition("has_province_modifier", IDENTIFIER, PROVINCE, NO_SCOPE, NO_IDENTIFIER, PROVINCE_EVENT_MODIFIER);
-	ret &= add_condition("has_recent_imigration", INTEGER, PROVINCE); //paradox typo
+	ret &= add_condition("has_recent_imigration", INTEGER, PROVINCE); // paradox typo
 	ret &= add_condition("is_blockaded", BOOLEAN, PROVINCE);
 	ret &= add_condition("is_accepted_culture", IDENTIFIER | BOOLEAN, PROVINCE, NO_SCOPE, NO_IDENTIFIER, COUNTRY_TAG);
 	ret &= add_condition("is_capital", BOOLEAN, PROVINCE);
