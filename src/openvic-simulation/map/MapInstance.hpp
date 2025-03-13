@@ -72,8 +72,8 @@ namespace OpenVic {
 		);
 
 		void update_modifier_sums(const Date today, StaticModifierCache const& static_modifier_cache);
-		void update_gamestate(const Date today, DefineManager const& define_manager);
+		void update_gamestate(InstanceManager const& instance_manager);
 		void map_tick();
-		void initialise_for_new_game(const Date today, DefineManager const& define_manager);
+		void initialise_for_new_game(InstanceManager const& instance_manager);
 	};
 }

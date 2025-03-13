@@ -2,9 +2,11 @@
 
 #include "openvic-simulation/country/CountryInstance.hpp"
 #include "openvic-simulation/defines/Define.hpp"
+#include "openvic-simulation/DefinitionManager.hpp"
 #include "openvic-simulation/economy/production/ProductionType.hpp"
 #include "openvic-simulation/economy/production/ResourceGatheringOperation.hpp"
 #include "openvic-simulation/history/ProvinceHistory.hpp"
+#include "openvic-simulation/InstanceManager.hpp"
 #include "openvic-simulation/map/Crime.hpp"
 #include "openvic-simulation/map/ProvinceDefinition.hpp"
 #include "openvic-simulation/map/Region.hpp"
@@ -422,7 +424,23 @@ bool ProvinceInstance::convert_rgo_worker_pops_to_equivalent(ProductionType cons
 	return is_valid_operation;
 }
 
-void ProvinceInstance::update_gamestate(const Date today, DefineManager const& define_manager) {
+void ProvinceInstance::update_gamestate(InstanceManager const& instance_manager) {
+	has_empty_adjacent_province = false;
+	// We assume there are no duplicate province adjacencies, so each adjacency.get_to() is unique in the loop below
+	adjacent_nonempty_land_provinces.clear();
+
+	MapInstance const& map_instance = instance_manager.get_map_instance();
+	for (ProvinceDefinition::adjacency_t const& adjacency : province_definition.get_adjacencies()) {
+		ProvinceDefinition const& province_definition = *adjacency.get_to();
+		ProvinceInstance const& province_instance = map_instance.get_province_instance_from_definition(province_definition);
+
+		if (province_instance.is_empty()) {
+			has_empty_adjacent_province = true;
+		} else if (!province_definition.is_water()) {
+			adjacent_nonempty_land_provinces.push_back(&province_instance);
+		}
+	}
+
 	land_regiment_count = 0;
 	for (ArmyInstance const* army : armies) {
 		land_regiment_count += army->get_unit_count();
@@ -437,10 +455,12 @@ void ProvinceInstance::update_gamestate(const Date today, DefineManager const& d
 		occupation_duration = 0;
 	}
 
+	const Date today = instance_manager.get_today();
+
 	for (BuildingInstance& building : buildings.get_items()) {
 		building.update_gamestate(today);
 	}
-	_update_pops(define_manager);
+	_update_pops(instance_manager.get_definition_manager().get_define_manager());
 }
 
 void ProvinceInstance::province_tick(const Date today, PopValuesFromProvince& reusable_pop_values) {
