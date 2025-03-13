@@ -268,7 +268,7 @@ namespace OpenVic {
 
 		NodeTools::node_callback_t expect_condition_node_list(
 			DefinitionManager const& definition_manager, scope_type_t current_scope, scope_type_t this_scope,
-			scope_type_t from_scope, NodeTools::callback_t<ConditionNode&&> callback, bool top_scope = false
+			scope_type_t from_scope, NodeTools::callback_t<ConditionNode&&> const& callback, bool top_scope = false
 		) const;
 
 	public:

@@ -334,7 +334,7 @@ static fs::path _search_for_game_path(fs::path hint_path = {}) {
 	return ""; // The supplied path fits literally none of the criteria
 }
 
-fs::path Dataloader::search_for_game_path(fs::path hint_path) {
+fs::path Dataloader::search_for_game_path(fs::path const& hint_path) {
 	struct fshash {
 		size_t operator()(std::filesystem::path const& p) const noexcept {
 			return std::filesystem::hash_value(p);

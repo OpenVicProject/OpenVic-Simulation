@@ -16,7 +16,7 @@ bool GameManager::set_roots(Dataloader::path_vector_t const& roots) {
 	return true;
 }
 
-bool GameManager::load_definitions(Dataloader::localisation_callback_t localisation_callback) {
+bool GameManager::load_definitions(Dataloader::localisation_callback_t const& localisation_callback) {
 	if (definitions_loaded) {
 		Logger::error("Cannot load definitions - already loaded!");
 		return false;

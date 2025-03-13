@@ -19,22 +19,23 @@ Technology::Technology(
 	fixed_point_t new_cost,
 	area_index_t new_index_in_area,
 	bool new_unciv_military,
-	std::optional<CountryInstance::unit_variant_t>&& new_unit_variant,
+	std::optional<CountryInstance::unit_variant_t> const& new_unit_variant,
 	unit_set_t&& new_activated_units,
 	building_set_t&& new_activated_buildings,
 	ModifierValue&& new_values,
 	ConditionalWeightFactorMul&& new_ai_chance
-) : Modifier { new_identifier, std::move(new_values), modifier_type_t::TECHNOLOGY },
-	HasIndex { new_index },
-	area { new_area },
-	year { new_year },
-	cost { new_cost },
-	index_in_area { new_index_in_area },
-	unciv_military { new_unciv_military },
-	unit_variant { std::move(new_unit_variant) },
-	activated_units { std::move(new_activated_units) },
-	activated_buildings { std::move(new_activated_buildings) },
-	ai_chance { std::move(new_ai_chance) } {}
+)
+	: Modifier { new_identifier, std::move(new_values), modifier_type_t::TECHNOLOGY },
+	  HasIndex { new_index },
+	  area { new_area },
+	  year { new_year },
+	  cost { new_cost },
+	  index_in_area { new_index_in_area },
+	  unciv_military { new_unciv_military },
+	  unit_variant { new_unit_variant },
+	  activated_units { std::move(new_activated_units) },
+	  activated_buildings { std::move(new_activated_buildings) },
+	  ai_chance { std::move(new_ai_chance) } {}
 
 bool Technology::parse_scripts(DefinitionManager const& definition_manager) {
 	return ai_chance.parse_scripts(definition_manager);

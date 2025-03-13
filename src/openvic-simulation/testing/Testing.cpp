@@ -2,6 +2,7 @@
 
 #include <fstream>
 #include <memory>
+#include <string_view>
 
 #include "openvic-simulation/testing/TestScript.hpp"
 
@@ -50,7 +51,9 @@ void Testing::report_results() {
 	test_results.close();
 }
 
-void Testing::report_result(std::string req_title, std::ofstream& outfile, std::vector<std::unique_ptr<Requirement>>& reqs) {
+void Testing::report_result(
+	std::string_view req_title, std::ofstream& outfile, std::vector<std::unique_ptr<Requirement>>& reqs
+) {
 	outfile << "\t" << req_title << '\n';
 	outfile << "\t";
 	for (auto& req : reqs) {
@@ -62,7 +65,7 @@ void Testing::report_result(std::string req_title, std::ofstream& outfile, std::
 	outfile << "\n\n";
 }
 
-void Testing::report_result(std::string req_title, std::ofstream& outfile, std::vector<Requirement*>& reqs) {
+void Testing::report_result(std::string_view req_title, std::ofstream& outfile, std::vector<Requirement*>& reqs) {
 	outfile << "\t" << req_title << '\n';
 	outfile << "\t";
 	for (auto req : reqs) {

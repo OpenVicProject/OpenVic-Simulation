@@ -75,7 +75,7 @@ fs::path Dataloader::lookup_file(std::string_view path, bool print_error) const 
 		std::error_code ec;
 		for (fs::directory_entry const& entry : fs::directory_iterator { composed.parent_path(), ec }) {
 			if (entry.is_regular_file()) {
-				const fs::path file = entry;
+				fs::path const& file = entry;
 				if (StringUtils::strings_equal_case_insensitive(file.filename().string(), filename)) {
 					return file;
 				}
@@ -1171,10 +1171,10 @@ static bool _load_localisation_file(Dataloader::localisation_callback_t callback
 	return ret;
 }
 
-bool Dataloader::load_localisation_files(localisation_callback_t callback, std::string_view localisation_dir) const {
-	return apply_to_files(
+bool Dataloader::load_localisation_files(localisation_callback_t const& callback, std::string_view localisation_dir) const {
+	return apply_to_files( //
 		lookup_files_in_dir(localisation_dir, ".csv"),
-		[callback](fs::path path) -> bool {
+		[callback](fs::path const& path) -> bool {
 			return _load_localisation_file(callback, parse_csv(path).get_lines());
 		}
 	);

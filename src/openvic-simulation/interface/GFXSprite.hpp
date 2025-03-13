@@ -45,7 +45,7 @@ namespace OpenVic::GFX {
 		OV_DETAIL_GET_TYPE
 
 		static NodeTools::node_callback_t expect_sprites(
-			NodeTools::length_callback_t length_callback, NodeTools::callback_t<std::unique_ptr<Sprite>&&> callback
+			NodeTools::length_callback_t length_callback, NodeTools::callback_t<std::unique_ptr<Sprite>&&> const& callback
 		);
 	};
 

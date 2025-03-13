@@ -7,7 +7,9 @@ using namespace OpenVic;
 using namespace OpenVic::GFX;
 using namespace OpenVic::NodeTools;
 
-node_callback_t Object::expect_objects(length_callback_t length_callback, callback_t<std::unique_ptr<Object>&&> callback) {
+node_callback_t Object::expect_objects( //
+	length_callback_t length_callback, callback_t<std::unique_ptr<Object>&&> const& callback
+) {
 	return expect_dictionary_keys_and_length(
 		length_callback,
 

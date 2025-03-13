@@ -191,9 +191,9 @@ using namespace std::string_view_literals;
 		node_callback_t expect_text_format(callback_t<text_format_t> callback);
 
 		callback_t<std::string_view> expect_date_str(callback_t<Date> callback);
-		node_callback_t expect_date(callback_t<Date> callback);
-		node_callback_t expect_date_string(callback_t<Date> callback);
-		node_callback_t expect_date_identifier_or_string(callback_t<Date> callback);
+		node_callback_t expect_date(callback_t<Date> const& callback);
+		node_callback_t expect_date_string(callback_t<Date> const& callback);
+		node_callback_t expect_date_identifier_or_string(callback_t<Date> const& callback);
 		node_callback_t expect_years(callback_t<Timespan> callback);
 		node_callback_t expect_months(callback_t<Timespan> callback);
 		node_callback_t expect_days(callback_t<Timespan> callback);
@@ -210,8 +210,8 @@ using namespace std::string_view_literals;
 		};
 
 		node_callback_t expect_list_and_length(length_callback_t length_callback, node_callback_t callback);
-		node_callback_t expect_list_of_length(size_t length, node_callback_t callback);
-		node_callback_t expect_list(node_callback_t callback);
+		node_callback_t expect_list_of_length(size_t length, node_callback_t const& callback);
+		node_callback_t expect_list(node_callback_t const& callback);
 		node_callback_t expect_length(callback_t<size_t> callback);
 
 		node_callback_t expect_key(
@@ -222,8 +222,10 @@ using namespace std::string_view_literals;
 			std::string_view key, node_callback_t callback, bool* key_found = nullptr, bool allow_duplicates = false
 		);
 
-		node_callback_t expect_dictionary_and_length(length_callback_t length_callback, key_value_callback_t callback);
-		node_callback_t expect_dictionary(key_value_callback_t callback);
+		node_callback_t expect_dictionary_and_length( //
+			length_callback_t const& length_callback, key_value_callback_t const& callback
+		);
+		node_callback_t expect_dictionary(key_value_callback_t const& callback);
 
 		struct dictionary_entry_t {
 			enum class expected_count_t : uint8_t {

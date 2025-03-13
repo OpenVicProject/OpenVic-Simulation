@@ -1,5 +1,6 @@
 #pragma once
 #include <memory>
+#include <string_view>
 #include <vector>
 
 #include "openvic-simulation/DefinitionManager.hpp"
@@ -22,7 +23,9 @@ namespace OpenVic {
 
 		void execute_all_scripts();
 		void report_results();
-		void report_result(std::string req_title, std::ofstream& outfile, std::vector<std::unique_ptr<Requirement>>& reqs);
-		void report_result(std::string req_title, std::ofstream& outfile, std::vector<Requirement*>& reqs);
+		void report_result( //
+			std::string_view req_title, std::ofstream& outfile, std::vector<std::unique_ptr<Requirement>>& reqs
+		);
+		void report_result(std::string_view req_title, std::ofstream& outfile, std::vector<Requirement*>& reqs);
 	};
 }

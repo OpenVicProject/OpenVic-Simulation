@@ -67,7 +67,7 @@ namespace OpenVic {
 			fixed_point_t new_cost,
 			area_index_t new_index_in_area,
 			bool new_unciv_military,
-			std::optional<CountryInstance::unit_variant_t>&& new_unit_variant,
+			std::optional<CountryInstance::unit_variant_t> const& new_unit_variant,
 			unit_set_t&& new_activated_units,
 			building_set_t&& new_activated_buildings,
 			ModifierValue&& new_values,
