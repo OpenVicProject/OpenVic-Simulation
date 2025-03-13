@@ -1473,7 +1473,7 @@ void CountryInstance::update_gamestate(InstanceManager& instance_manager) {
 			port_count++;
 		}
 
-		// TODO - ensure connnected_to_capital and is_overseas are updated to false if a province becomes uncolonised
+		// TODO - ensure connected_to_capital and is_overseas are updated to false if a province becomes uncolonised
 		province->set_connected_to_capital(false);
 		province->set_is_overseas(province_definition.get_continent() != capital_continent);
 
