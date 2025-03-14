@@ -1,9 +1,12 @@
 #include "MapDefinition.hpp"
 
+#include <cctype>
 #include <charconv>
 #include <cstdint>
 #include <system_error>
 #include <vector>
+
+#include <range/v3/algorithm/all_of.hpp>
 
 #include "openvic-simulation/dataloader/NodeTools.hpp"
 #include "openvic-simulation/modifier/ModifierManager.hpp"
@@ -33,9 +36,10 @@ bool MapDefinition::add_province_definition(std::string_view identifier, colour_
 		Logger::error("Invalid province identifier - empty!");
 		return false;
 	}
-	if (!valid_basic_identifier(identifier)) {
+	// Victoria 2 CTDs on non-numeric province ids
+	if (!ranges::all_of(identifier, [](char c) -> bool { return std::isdigit(c); })) {
 		Logger::error(
-			"Invalid province identifier: ", identifier, " (can only contain alphanumeric characters and underscores)"
+			"Invalid province identifier: ", identifier, " (can only contain numeric characters)"
 		);
 		return false;
 	}
