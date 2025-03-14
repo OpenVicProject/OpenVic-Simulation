@@ -6,14 +6,16 @@
 #include <cstdint>
 #include <cstdlib>
 #include <limits>
-#include <sstream>
 #include <string_view>
 #include <system_error>
+
+#include <fmt/core.h>
 
 #include "openvic-simulation/utility/Getters.hpp"
 #include "openvic-simulation/utility/Logger.hpp"
 #include "openvic-simulation/utility/NumberUtils.hpp"
 #include "openvic-simulation/utility/StringUtils.hpp"
+#include "openvic-simulation/utility/Utility.hpp"
 
 namespace OpenVic {
 	struct fixed_point_t {
@@ -252,48 +254,138 @@ namespace OpenVic {
 			return NumberUtils::round_to_int64((value / static_cast<double>(ONE)) * 100000.0) / 100000.0;
 		}
 
-		static std::ostream& print(std::ostream& stream, fixed_point_t val, int32_t decimal_places = -1) {
-			if (val.is_negative()) {
-				stream << "-";
-				val = -val;
+		inline std::to_chars_result to_chars(char* first, char* last, size_t decimal_places = -1) const {
+			if (first == nullptr || first >= last) {
+				return { last, std::errc::value_too_large };
 			}
-			if (decimal_places < 0) {
-				// Add as many decimal places as necessary to represent the number exactly, or none if it's an exact integer
-				stream << val.to_int64_t();
+
+			if (is_negative()) {
+				*first = '-';
+				++first;
+				if (last - first <= 1) {
+					return { last, std::errc::value_too_large };
+				}
+			}
+
+			std::to_chars_result result {};
+			if (decimal_places == static_cast<size_t>(-1)) {
+				result = std::to_chars(first, last, abs().to_int64_t());
+				if (OV_unlikely(result.ec != std::errc {})) {
+					return result;
+				}
+				if (OV_unlikely(last - result.ptr <= 1)) {
+					return result;
+				}
+
+				fixed_point_t frac = abs().get_frac();
+				if (frac != fixed_point_t::_0()) {
+					*result.ptr = '.';
+					++result.ptr;
+					do {
+						if (OV_unlikely(last - result.ptr <= 1)) {
+							return { last, std::errc::value_too_large };
+						}
+						frac *= 10;
+						*result.ptr = static_cast<char>('0' + frac.to_int64_t());
+						++result.ptr;
+						frac = frac.get_frac();
+					} while (frac != fixed_point_t::_0());
+				}
+				return result;
+			}
+
+			// Add the specified number of decimal places, potentially 0 (so no decimal point)
+			fixed_point_t err = _0_50();
+			for (size_t i = decimal_places; i > 0; --i) {
+				err /= 10;
+			}
+			fixed_point_t val = this->abs() + err;
+
+
+			result = std::to_chars(first, last, val.to_int64_t());
+			if (OV_unlikely(result.ec != std::errc {})) {
+				return result;
+			}
+
+			if (decimal_places > 0) {
+				if (OV_unlikely(last - result.ptr <= 1)) {
+					return result;
+				}
 				val = val.get_frac();
-				if (val != fixed_point_t::_0()) {
-					stream << ".";
-					do {
-						val *= 10;
-						stream << static_cast<char>('0' + val.to_int64_t());
-						val = val.get_frac();
-					} while (val != fixed_point_t::_0());
-				}
-			} else {
-				// Add the specified number of decimal places, potentially 0 (so no decimal point)
-				fixed_point_t err = _0_50();
-				for (size_t i = decimal_places; i > 0; --i) {
-					err /= 10;
-				}
-				val += err;
-				stream << val.to_int64_t();
-				if (decimal_places > 0) {
+				*result.ptr = '.';
+				result.ptr++;
+				do {
+					if (OV_unlikely(last - result.ptr <= 1)) {
+						return result;
+					}
+					val *= 10;
+					*result.ptr = static_cast<char>('0' + val.to_int64_t());
+					++result.ptr;
 					val = val.get_frac();
-					stream << ".";
-					do {
-						val *= 10;
-						stream << static_cast<char>('0' + val.to_int64_t());
-						val = val.get_frac();
-					} while (--decimal_places > 0);
-				}
+				} while (--decimal_places > 0);
 			}
-			return stream;
+			return result;
 		}
 
+		struct stack_string;
+		stack_string to_array(size_t decimal_places = -1) const;
+
+		struct stack_string {
+			static constexpr size_t array_length = 25;
+
+		private:
+			std::array<char, array_length> array {};
+			uint8_t string_size = 0;
+
+			constexpr stack_string() = default;
+
+			friend stack_string fixed_point_t::to_array(size_t decimal_places) const;
+
+		public:
+			constexpr const char* data() const {
+				return array.data();
+			}
+
+			constexpr size_t size() const {
+				return string_size;
+			}
+
+			constexpr size_t length() const {
+				return string_size;
+			}
+
+			constexpr decltype(array)::const_iterator begin() const {
+				return array.begin();
+			}
+
+			constexpr decltype(array)::const_iterator end() const {
+				return begin() + size();
+			}
+
+			constexpr decltype(array)::const_reference operator[](size_t index) const {
+				return array[index];
+			}
+
+			constexpr bool empty() const {
+				return size() == 0;
+			}
+
+			operator std::string_view() const {
+				return std::string_view { data(), data() + size() };
+			}
+
+			operator std::string() const {
+				return std::string { data(), size() };
+			}
+		};
+
 		std::string to_string(size_t decimal_places = -1) const {
-			std::stringstream str;
-			print(str, *this, decimal_places);
-			return str.str();
+			stack_string result = to_array(decimal_places);
+			if (OV_unlikely(result.empty())) {
+				return {};
+			}
+
+			return result;
 		}
 
 		// Deterministic
@@ -418,7 +510,12 @@ namespace OpenVic {
 		}
 
 		friend std::ostream& operator<<(std::ostream& stream, fixed_point_t const& obj) {
-			return obj.print(stream, obj);
+			stack_string result = obj.to_array();
+			if (OV_unlikely(result.empty())) {
+				return stream;
+			}
+
+			return stream << static_cast<std::string_view>(result);
 		}
 
 		constexpr friend fixed_point_t operator-(fixed_point_t const& obj) {
@@ -690,3 +787,8 @@ namespace OpenVic {
 
 	static_assert(sizeof(fixed_point_t) == fixed_point_t::SIZE, "fixed_point_t is not 8 bytes");
 }
+
+template<>
+struct fmt::formatter<OpenVic::fixed_point_t> : formatter<string_view> {
+	format_context::iterator format(OpenVic::fixed_point_t fp, format_context& ctx) const;
+};
