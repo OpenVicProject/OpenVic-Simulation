@@ -13,6 +13,7 @@
 #include <system_error>
 
 #include <fmt/core.h>
+#include <fmt/format.h>
 
 #include <range/v3/algorithm/max_element.hpp>
 
@@ -316,6 +317,61 @@ namespace OpenVic {
 			return result;
 		}
 
+		struct stack_string;
+		stack_string to_array(bool pad_year = false, bool pad_month = true, bool pad_day = true) const;
+
+		struct stack_string {
+			static constexpr size_t array_length = //
+				fmt::detail::count_digits(uint64_t(std::numeric_limits<year_t>::max())) +
+				fmt::detail::count_digits(uint64_t(MONTHS_IN_YEAR)) + fmt::detail::count_digits(uint64_t(MAX_DAYS_IN_MONTH)) +
+				4;
+
+		private:
+			std::array<char, array_length> array {};
+			uint8_t string_size = 0;
+
+			constexpr stack_string() = default;
+
+			friend stack_string Date::to_array(bool pad_year, bool pad_month, bool pad_day) const;
+
+		public:
+			constexpr const char* data() const {
+				return array.data();
+			}
+
+			constexpr size_t size() const {
+				return string_size;
+			}
+
+			constexpr size_t length() const {
+				return string_size;
+			}
+
+			constexpr decltype(array)::const_iterator begin() const {
+				return array.begin();
+			}
+
+			constexpr decltype(array)::const_iterator end() const {
+				return begin() + size();
+			}
+
+			constexpr decltype(array)::const_reference operator[](size_t index) const {
+				return array[index];
+			}
+
+			constexpr bool empty() const {
+				return size() == 0;
+			}
+
+			operator std::string_view() const {
+				return std::string_view { data(), data() + size() };
+			}
+
+			operator std::string() const {
+				return std::string { data(), size() };
+			}
+		};
+
 		std::string to_string(bool pad_year = false, bool pad_month = true, bool pad_day = true) const;
 		explicit operator std::string() const;
 
@@ -559,6 +615,11 @@ namespace OpenVic {
 		return num;
 	}
 }
+
+template<>
+struct fmt::formatter<OpenVic::Date> : formatter<string_view> {
+	format_context::iterator format(OpenVic::Date d, format_context& ctx) const;
+};
 
 namespace std {
 	template<>
