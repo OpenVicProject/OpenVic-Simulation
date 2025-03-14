@@ -34,18 +34,20 @@ std::ostream& OpenVic::operator<<(std::ostream& out, Timespan const& timespan) {
 	return out << timespan.to_string();
 }
 
-std::string Date::to_string(bool pad_year, bool pad_month, bool pad_day) const {
-	static constexpr size_t array_length = //
-		fmt::detail::count_digits(uint64_t(std::numeric_limits<year_t>::max())) +
-		fmt::detail::count_digits(uint64_t(MONTHS_IN_YEAR)) + fmt::detail::count_digits(uint64_t(MAX_DAYS_IN_MONTH)) + 4;
+inline Date::stack_string Date::to_array(bool pad_year, bool pad_month, bool pad_day) const {
+	stack_string str {};
+	std::to_chars_result result = to_chars(str.array.data(), str.array.data() + str.array.size(), pad_year, pad_month, pad_day);
+	str.string_size = result.ptr - str.data();
+	return str;
+}
 
-	std::array<char, array_length> str_array {};
-	std::to_chars_result result = to_chars(str_array.data(), str_array.data() + str_array.size(), pad_year, pad_month, pad_day);
-	if (result.ec != std::errc {}) {
+std::string Date::to_string(bool pad_year, bool pad_month, bool pad_day) const {
+	stack_string result = to_array(pad_year, pad_month, pad_day);
+	if (OV_unlikely(result.empty())) {
 		return {};
 	}
 
-	return { str_array.data(), result.ptr };
+	return result;
 }
 
 Date::operator std::string() const {
@@ -53,17 +55,19 @@ Date::operator std::string() const {
 }
 
 std::ostream& OpenVic::operator<<(std::ostream& out, Date date) {
-	static constexpr size_t array_length = //
-		fmt::detail::count_digits(uint64_t(std::numeric_limits<Date::year_t>::max())) +
-		fmt::detail::count_digits(uint64_t(Date::MONTHS_IN_YEAR)) +
-		fmt::detail::count_digits(uint64_t(Date::MAX_DAYS_IN_MONTH)) + 4;
-
-	std::array<char, array_length> str_array {};
-	std::to_chars_result result = date.to_chars(str_array.data(), str_array.data() + str_array.size(), false, false, false);
-	if (result.ec != std::errc {}) {
+	Date::stack_string result = date.to_array(false, false, false);
+	if (OV_unlikely(result.empty())) {
 		return out;
 	}
 
-	std::string_view view { str_array.data(), result.ptr };
-	return out << view;
+	return out << static_cast<std::string_view>(result);
+}
+
+auto fmt::formatter<Date>::format(Date d, format_context& ctx) const -> format_context::iterator {
+	Date::stack_string result = d.to_array();
+	if (OV_unlikely(result.empty())) {
+		return formatter<string_view>::format(string_view {}, ctx);
+	}
+
+	return formatter<string_view>::format(string_view { result.data(), result.size() }, ctx);
 }
