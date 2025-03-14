@@ -1,5 +1,7 @@
 #include "ProvinceDefinition.hpp"
 
+#include <fmt/format.h>
+
 #include "openvic-simulation/dataloader/NodeTools.hpp"
 #include "openvic-simulation/economy/BuildingType.hpp"
 #include "openvic-simulation/map/MapDefinition.hpp"
@@ -29,9 +31,7 @@ bool ProvinceDefinition::operator==(ProvinceDefinition const& other) const {
 }
 
 std::string ProvinceDefinition::to_string() const {
-	std::stringstream stream;
-	stream << "(#" << std::to_string(get_index()) << ", " << get_identifier() << ", 0x" << get_colour() << ")";
-	return stream.str();
+	return fmt::format("(#{}, {}, 0x{})", get_index(), get_identifier(), get_colour());
 }
 
 bool ProvinceDefinition::load_positions(
