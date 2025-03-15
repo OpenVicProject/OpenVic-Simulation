@@ -449,6 +449,7 @@ bool MapDefinition::load_province_definitions(std::vector<LineObject> const& lin
 			ret = false;
 		} else {
 			reserve_more_province_definitions(lines.size() - 1);
+			colour_index_map.reserve(lines.size() - 1);
 
 			std::for_each(lines.begin() + 1, lines.end(), [this, &ret](LineObject const& line) -> void {
 				const std::string_view identifier = line.get_value_for(0);
@@ -461,6 +462,8 @@ bool MapDefinition::load_province_definitions(std::vector<LineObject> const& lin
 					ret &= add_province_definition(identifier, colour);
 				}
 			});
+
+			colour_index_map.shrink_to_fit();
 		}
 	}
 
