@@ -28,7 +28,7 @@
  */
 #define OV_ERR_FAIL_COND_MSG(m_cond, m_msg) \
 	if (OV_unlikely(m_cond)) { \
-		::OpenVic::Logger::error("Condition \"" _OV_STR(m_cond) "\" is true.", m_msg); \
+		::OpenVic::Logger::error("Condition \"" _OV_STR(m_cond) "\" is true. ", m_msg); \
 		return; \
 	} else \
 		((void)0)
@@ -61,7 +61,7 @@
 #define OV_ERR_FAIL_COND_V_MSG(m_cond, m_retval, m_msg) \
 	if (OV_unlikely(m_cond)) { \
 		::OpenVic::Logger::error( \
-			"Condition \"" _OV_STR(m_cond) "\" is true. Returning: " _OV_STR(m_retval), m_msg \
+			"Condition \"" _OV_STR(m_cond) "\" is true. Returning: " _OV_STR(m_retval) " ", m_msg \
 		); \
 		return m_retval; \
 	} else \
