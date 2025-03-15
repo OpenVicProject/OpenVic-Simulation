@@ -101,9 +101,13 @@ std::vector<WarHistory const*> DiplomaticHistoryManager::get_wars(Date date) con
 	for (auto const& war : wars) {
 		Date start {};
 		for (auto const& wargoal : war.wargoals) {
-			if (wargoal.added < start) start = wargoal.added;
+			if (wargoal.added < start) {
+				start = wargoal.added;
+			}
 		}
-		if (start >= date) ret.push_back(&war);
+		if (start >= date) {
+			ret.push_back(&war);
+		}
 	}
 	return ret;
 }

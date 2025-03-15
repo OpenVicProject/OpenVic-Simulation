@@ -24,21 +24,15 @@ ResourceGatheringOperation::ResourceGatheringOperation(
 	fixed_point_t new_unsold_quantity_yesterday,
 	std::vector<Employee>&& new_employees,
 	decltype(employee_count_per_type_cache)::keys_type const& pop_type_keys
-) : market_instance { new_market_instance },
-	location_ptr { nullptr },
-	production_type_nullable { new_production_type_nullable },
-	revenue_yesterday { new_revenue_yesterday },
-	output_quantity_yesterday { new_output_quantity_yesterday },
-	unsold_quantity_yesterday { new_unsold_quantity_yesterday },
-	size_multiplier { new_size_multiplier },
-	employees { std::move(new_employees) },
-	max_employee_count_cache { 0 },
-	total_employees_count_cache { 0 },
-	total_paid_employees_count_cache { 0 },
-	total_owner_income_cache { },
-	total_employee_income_cache { },
-	employee_count_per_type_cache { &pop_type_keys }
-{ }
+)
+	: market_instance { new_market_instance },
+	  production_type_nullable { new_production_type_nullable },
+	  revenue_yesterday { new_revenue_yesterday },
+	  output_quantity_yesterday { new_output_quantity_yesterday },
+	  unsold_quantity_yesterday { new_unsold_quantity_yesterday },
+	  size_multiplier { new_size_multiplier },
+	  employees { std::move(new_employees) },
+	  employee_count_per_type_cache { &pop_type_keys } {}
 
 ResourceGatheringOperation::ResourceGatheringOperation(
 	MarketInstance& new_market_instance,

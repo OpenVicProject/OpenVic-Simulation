@@ -16,7 +16,7 @@ namespace OpenVic {
 		ExpansionState PROPERTY(expansion_state);
 		Date PROPERTY(start_date);
 		Date PROPERTY(end_date);
-		float PROPERTY(expansion_progress);
+		fixed_point_t PROPERTY(expansion_progress, 0);
 
 		bool _can_expand() const;
 
