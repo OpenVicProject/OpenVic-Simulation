@@ -3,46 +3,7 @@
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;
 
-AIDefines::AIDefines()
-  : colony_weight {},
-	administrator_weight {},
-	industryworker_weight {},
-	educator_weight {},
-	soldier_weight {},
-	soldier_fraction {},
-	capitalist_fraction {},
-	production_weight {},
-	spam_penalty {},
-	one_side_max_warscore {},
-	pop_project_investment_max_budget_factor {},
-	relation_limit_no_alliance_offer {},
-	naval_supply_penalty_limit {},
-	chance_build_railroad {},
-	chance_build_naval_base {},
-	chance_build_fort {},
-	chance_invest_pop_proj {},
-	chance_foreign_invest {},
-	tws_awareness_score_low_cap {},
-	tws_awareness_score_aspect {},
-	peace_base_reluctance {},
-	peace_time_duration {},
-	peace_time_factor {},
-	peace_time_factor_no_goals {},
-	peace_war_exhaustion_factor {},
-	peace_war_direction_factor {},
-	peace_war_direction_winning_mult {},
-	peace_force_balance_factor {},
-	peace_ally_base_reluctance_mult {},
-	peace_ally_time_mult {},
-	peace_ally_war_exhaustion_mult {},
-	peace_ally_war_direction_mult {},
-	peace_ally_force_balance_mult {},
-	aggression_base {},
-	aggression_unciv_bonus {},
-	fleet_size {},
-	min_fleets {},
-	max_fleets {},
-	time_before_disband {} {}
+AIDefines::AIDefines() {}
 
 std::string_view AIDefines::get_name() const {
 	return "ai";

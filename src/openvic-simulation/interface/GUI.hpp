@@ -35,7 +35,7 @@ namespace OpenVic::GUI {
 
 	private:
 		fvec2_t PROPERTY(position);
-		orientation_t PROPERTY(orientation);
+		orientation_t PROPERTY(orientation, orientation_t::UPPER_LEFT);
 
 	protected:
 		Element();
@@ -86,8 +86,8 @@ namespace OpenVic::GUI {
 
 		std::string PROPERTY(background); /* The name of a child button who's sprite is used as the background. */
 		fvec2_t PROPERTY(size);
-		bool PROPERTY(moveable);
-		bool PROPERTY(fullscreen);
+		bool PROPERTY(moveable, false);
+		bool PROPERTY(fullscreen, false);
 
 		// TODO - dontRender, horizontalBorder, verticalBorder
 
@@ -106,10 +106,10 @@ namespace OpenVic::GUI {
 	class Icon final : public Element {
 		friend std::unique_ptr<Icon> std::make_unique<Icon>();
 
-		GFX::Sprite const* PROPERTY(sprite);
-		GFX::frame_t PROPERTY(frame);
-		fixed_point_t PROPERTY(scale);
-		fixed_point_t PROPERTY(rotation); /* In radians, usually one of 0, PI/2 or -PI/2. */
+		GFX::Sprite const* PROPERTY(sprite, nullptr);
+		GFX::frame_t PROPERTY(frame, GFX::NO_FRAMES);
+		fixed_point_t PROPERTY(scale, 1);
+		fixed_point_t PROPERTY(rotation, 0); /* In radians, usually one of 0, PI/2 or -PI/2. */
 
 	protected:
 		Icon();
@@ -124,9 +124,9 @@ namespace OpenVic::GUI {
 	};
 
 	class BaseButton : public Element {
-		GFX::Sprite const* PROPERTY(sprite);
+		GFX::Sprite const* PROPERTY(sprite, nullptr);
 		std::string PROPERTY(text);
-		GFX::Font const* PROPERTY(font);
+		GFX::Font const* PROPERTY(font, nullptr);
 		std::string PROPERTY(shortcut);
 
 	protected:
@@ -145,7 +145,7 @@ namespace OpenVic::GUI {
 		friend std::unique_ptr<Button> std::make_unique<Button>();
 
 		fvec2_t PROPERTY(size);
-		fixed_point_t PROPERTY(rotation); /* In radians, usually one of 0, PI/2 or -PI/2. */
+		fixed_point_t PROPERTY(rotation, 0); /* In radians, usually one of 0, PI/2 or -PI/2. */
 		OpenVic::SoundEffect const* PROPERTY(clicksound, nullptr);
 
 	protected:
@@ -180,7 +180,7 @@ namespace OpenVic::GUI {
 		using enum text_format_t;
 
 	private:
-		text_format_t PROPERTY(format);
+		text_format_t PROPERTY(format, text_format_t::left);
 
 	protected:
 		AlignedElement();
@@ -198,7 +198,7 @@ namespace OpenVic::GUI {
 		friend std::unique_ptr<Text> std::make_unique<Text>();
 
 		std::string PROPERTY(text);
-		GFX::Font const* PROPERTY(font);
+		GFX::Font const* PROPERTY(font, nullptr);
 		fvec2_t PROPERTY(max_size); /* Defines keys: maxWidth, maxHeight */
 		fvec2_t PROPERTY(border_size);
 		std::string PROPERTY(texture_file);
@@ -262,7 +262,7 @@ namespace OpenVic::GUI {
 		friend std::unique_ptr<TextEditBox> std::make_unique<TextEditBox>();
 
 		std::string PROPERTY(text);
-		GFX::Font const* PROPERTY(font);
+		GFX::Font const* PROPERTY(font, nullptr);
 		std::string PROPERTY(texture_file);
 		fvec2_t PROPERTY(size);
 		fvec2_t PROPERTY(border_size);
@@ -295,9 +295,9 @@ namespace OpenVic::GUI {
 		fixed_point_t PROPERTY(max_value);
 		fixed_point_t PROPERTY(step_size);
 		fixed_point_t PROPERTY(start_value);
-		bool PROPERTY_CUSTOM_PREFIX(horizontal, is)
+		bool PROPERTY_CUSTOM_PREFIX(horizontal, is, false)
 
-		bool PROPERTY_CUSTOM_PREFIX(range_limited, is);
+		bool PROPERTY_CUSTOM_PREFIX(range_limited, is, false);
 		fixed_point_t PROPERTY(range_limit_min);
 		fixed_point_t PROPERTY(range_limit_max);
 		std::string PROPERTY(range_limit_min_icon_name);

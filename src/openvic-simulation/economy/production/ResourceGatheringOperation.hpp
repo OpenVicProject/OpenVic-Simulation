@@ -15,7 +15,7 @@ namespace OpenVic {
 	struct ResourceGatheringOperation {
 	private:
 		MarketInstance& market_instance;
-		ProvinceInstance* location_ptr;
+		ProvinceInstance* location_ptr = nullptr;
 		pop_size_t total_owner_count_in_state_cache = 0;
 		pop_size_t total_worker_count_in_province_cache = 0;
 		std::vector<Pop*> const* owner_pops_cache_nullable = nullptr;
@@ -26,9 +26,9 @@ namespace OpenVic {
 		fixed_point_t PROPERTY(unsold_quantity_yesterday);
 		fixed_point_t PROPERTY_RW(size_multiplier);
 		std::vector<Employee> PROPERTY(employees);
-		pop_size_t PROPERTY(max_employee_count_cache);
-		pop_size_t PROPERTY(total_employees_count_cache);
-		pop_size_t PROPERTY(total_paid_employees_count_cache);
+		pop_size_t PROPERTY(max_employee_count_cache, 0);
+		pop_size_t PROPERTY(total_employees_count_cache, 0);
+		pop_size_t PROPERTY(total_paid_employees_count_cache, 0);
 		fixed_point_t PROPERTY(total_owner_income_cache);
 		fixed_point_t PROPERTY(total_employee_income_cache);
 		IndexedMap<PopType, pop_size_t> PROPERTY(employee_count_per_type_cache);

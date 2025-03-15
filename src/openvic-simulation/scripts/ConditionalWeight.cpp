@@ -8,11 +8,8 @@ using enum conditional_weight_type_t;
 template<conditional_weight_type_t TYPE>
 ConditionalWeight<TYPE>::ConditionalWeight(
 	scope_type_t new_initial_scope, scope_type_t new_this_scope, scope_type_t new_from_scope
-) : base { fixed_point_t::_0() },
-	condition_weight_items {},
-	initial_scope { new_initial_scope },
-	this_scope { new_this_scope },
-	from_scope { new_from_scope } {}
+)
+	: initial_scope { new_initial_scope }, this_scope { new_this_scope }, from_scope { new_from_scope } {}
 
 template<typename T>
 static NodeCallback auto expect_modifier(

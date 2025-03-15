@@ -173,12 +173,12 @@ namespace OpenVic {
 		std::string PROPERTY(name);
 		const bool log_lock;
 		storage_type PROPERTY_REF(items);
-		bool PROPERTY_CUSTOM_PREFIX(locked, is);
+		bool PROPERTY_CUSTOM_PREFIX(locked, is, false);
 		identifier_index_map_t identifier_index_map;
 
 	public:
 		constexpr UniqueKeyRegistry(std::string_view new_name, bool new_log_lock = true)
-			: name { new_name }, log_lock { new_log_lock }, locked { false } {}
+			: name { new_name }, log_lock { new_log_lock } {}
 
 		constexpr bool add_item(
 			item_type&& item, NodeTools::Callback<std::string_view, std::string_view> auto duplicate_callback
