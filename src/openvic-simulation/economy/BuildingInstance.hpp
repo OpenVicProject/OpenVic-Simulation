@@ -1,6 +1,7 @@
 #pragma once
 
 #include "openvic-simulation/economy/BuildingType.hpp"
+#include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
 
 namespace OpenVic {
 
@@ -16,7 +17,7 @@ namespace OpenVic {
 		ExpansionState PROPERTY(expansion_state);
 		Date PROPERTY(start_date);
 		Date PROPERTY(end_date);
-		float PROPERTY(expansion_progress);
+		fixed_point_t PROPERTY(expansion_progress);
 
 		bool _can_expand() const;
 

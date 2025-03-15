@@ -6,10 +6,7 @@ BuildingInstance::BuildingInstance(BuildingType const& new_building_type, level_
   : HasIdentifier { new_building_type },
 	building_type { new_building_type },
 	level { new_level },
-	expansion_state { ExpansionState::CannotExpand },
-	start_date {},
-	end_date {},
-	expansion_progress { 0.0f } {}
+	expansion_state { ExpansionState::CannotExpand } {}
 
 bool BuildingInstance::_can_expand() const {
 	return level < building_type.get_max_level();
@@ -18,7 +15,7 @@ bool BuildingInstance::_can_expand() const {
 bool BuildingInstance::expand() {
 	if (expansion_state == ExpansionState::CanExpand) {
 		expansion_state = ExpansionState::Preparing;
-		expansion_progress = 0.0f;
+		expansion_progress = 0;
 		return true;
 	}
 	return false;
@@ -34,8 +31,7 @@ void BuildingInstance::update_gamestate(Date today) {
 		end_date = start_date + building_type.get_build_time();
 		break;
 	case ExpansionState::Expanding:
-		expansion_progress =
-			static_cast<float>((today - start_date).to_int()) / static_cast<float>((end_date - start_date).to_int());
+		expansion_progress = fixed_point_t { (today - start_date).to_int() } / (end_date - start_date).to_int();
 		break;
 	default: expansion_state = _can_expand() ? ExpansionState::CanExpand : ExpansionState::CannotExpand;
 	}
