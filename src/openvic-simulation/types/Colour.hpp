@@ -13,10 +13,13 @@
 #include <ostream>
 #include <span>
 #include <string>
+#include <string_view>
 #include <system_error>
 #include <tuple>
 #include <type_traits>
 #include <utility>
+
+#include <fmt/core.h>
 
 #include <range/v3/algorithm/rotate.hpp>
 
@@ -466,17 +469,71 @@ namespace OpenVic {
 			return result;
 		}
 
-		inline std::string to_hex_string(bool alpha = colour_traits::has_alpha) const {
+		struct stack_string {
 			static constexpr size_t bits_per_digit = 4;
 			static constexpr size_t array_length = colour_traits::component_bit_size / bits_per_digit * 4;
 
-			std::array<char, array_length> hex_array {};
-			std::to_chars_result result = to_hex_chars(hex_array.data(), hex_array.data() + hex_array.size(), alpha);
-			if (OV_unlikely(result.ec != std::errc {})) {
+		private:
+			std::array<char, array_length> array {};
+			uint8_t string_size = 0;
+
+			constexpr stack_string() = default;
+
+			friend stack_string basic_colour_t::to_hex_array(bool alpha) const;
+			friend stack_string basic_colour_t::to_argb_hex_array() const;
+
+		public:
+			constexpr const char* data() const {
+				return array.data();
+			}
+
+			constexpr size_t size() const {
+				return string_size;
+			}
+
+			constexpr size_t length() const {
+				return string_size;
+			}
+
+			constexpr decltype(array)::const_iterator begin() const {
+				return array.begin();
+			}
+
+			constexpr decltype(array)::const_iterator end() const {
+				return begin() + size();
+			}
+
+			constexpr decltype(array)::const_reference operator[](size_t index) const {
+				return array[index];
+			}
+
+			constexpr bool empty() const {
+				return size() == 0;
+			}
+
+			operator std::string_view() const {
+				return std::string_view { data(), data() + size() };
+			}
+
+			operator std::string() const {
+				return std::string { data(), size() };
+			}
+		};
+
+		inline stack_string to_hex_array(bool alpha = colour_traits::has_alpha) const {
+			stack_string str {};
+			std::to_chars_result result = to_hex_chars(str.array.data(), str.array.data() + str.array.size(), alpha);
+			str.string_size = result.ptr - str.data();
+			return str;
+		}
+
+		inline std::string to_hex_string(bool alpha = colour_traits::has_alpha) const {
+			stack_string result = to_hex_array(alpha);
+			if (OV_unlikely(result.empty())) {
 				return {};
 			}
 
-			return { hex_array.data(), result.ptr };
+			return result;
 		}
 
 		inline std::to_chars_result to_argb_hex_chars(char* first, char* last) const {
@@ -493,17 +550,20 @@ namespace OpenVic {
 			return result;
 		}
 
-		inline std::string to_argb_hex_string() const {
-			static constexpr size_t bits_per_digit = 4;
-			static constexpr size_t array_length = colour_traits::component_bit_size / bits_per_digit * 4;
+		inline stack_string to_argb_hex_array() const {
+			stack_string str {};
+			std::to_chars_result result = to_argb_hex_chars(str.array.data(), str.array.data() + str.array.size());
+			str.string_size = result.ptr - str.data();
+			return str;
+		}
 
-			std::array<char, array_length> hex_array {};
-			std::to_chars_result result = to_argb_hex_chars(hex_array.data(), hex_array.data() + hex_array.size());
-			if (OV_unlikely(result.ec != std::errc {})) {
+		inline std::string to_argb_hex_string() const {
+			stack_string result = to_argb_hex_array();
+			if (OV_unlikely(result.empty())) {
 				return {};
 			}
 
-			return { hex_array.begin(), hex_array.end() };
+			return result;
 		}
 
 		explicit operator std::string() const {
@@ -511,7 +571,12 @@ namespace OpenVic {
 		}
 
 		friend std::ostream& operator<<(std::ostream& stream, basic_colour_t const& colour) {
-			return stream << static_cast<std::string>(colour);
+			stack_string result = colour.to_hex_array();
+			if (OV_unlikely(result.empty())) {
+				return stream;
+			}
+
+			return stream << static_cast<std::string_view>(result);
 		}
 
 		constexpr bool is_null() const {
@@ -654,6 +719,19 @@ namespace OpenVic {
 		}
 	}
 }
+
+template<typename T>
+struct fmt::formatter<T, std::enable_if_t<OpenVic::utility::specialization_of<T, OpenVic::basic_colour_t>, char>>
+	: formatter<string_view> {
+	auto format(T const& c, format_context& ctx) const {
+		typename T::stack_string result = c.to_hex_array();
+		if (OV_unlikely(result.empty())) {
+			return formatter<string_view>::format(string_view {}, ctx);
+		}
+
+		return formatter<string_view>::format(string_view { result.data(), result.size() }, ctx);
+	}
+};
 
 namespace std {
 	template<typename ValueT, typename ColourIntT, typename ColourTraits>
