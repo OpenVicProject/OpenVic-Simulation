@@ -14,6 +14,7 @@
 #include "openvic-simulation/types/Vector.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
 #include "openvic-simulation/utility/ErrorMacros.hpp"
+#include "openvic-simulation/utility/Utility.hpp"
 
 using namespace OpenVic;
 
@@ -27,6 +28,29 @@ int64_t PointMap::get_available_points() const {
 	}
 
 	return last_free_id;
+}
+
+bool PointMap::try_add_point(
+	points_key_type id, ivec2_t const& position, fixed_point_t weight_scale, std::span<points_key_type> adjacent_points
+) {
+	if constexpr (!std::is_unsigned_v<points_key_type>) {
+		OV_ERR_FAIL_COND_V_MSG(id < 0, false, fmt::format("Can't add a point with negative id: {}.", id));
+	}
+	OV_ERR_FAIL_COND_V_MSG(
+		weight_scale < 0, false, fmt::format("Can't add a point with weight scale less than 0.0: {}.", weight_scale.to_string())
+	);
+
+	if (OV_unlikely(points.contains(id))) {
+		return false;
+	}
+
+	points[id] = Point { .position = position, .weight_scale = weight_scale, .enabled = true };
+
+	for (points_key_type const& adj_id : adjacent_points) {
+		connect_points(id, adj_id);
+	}
+
+	return true;
 }
 
 void PointMap::add_point(
@@ -275,6 +299,10 @@ void PointMap::reserve_space(size_t num_nodes) {
 		fmt::format("New capacity must be greater than current capacity: {}, new was: {}.", points.capacity(), num_nodes)
 	);
 	points.reserve(num_nodes);
+}
+
+void PointMap::shrink_to_fit() {
+	points.shrink_to_fit();
 }
 
 void PointMap::clear() {

@@ -1,5 +1,6 @@
 #include "MapDefinition.hpp"
 
+#include <array>
 #include <cctype>
 #include <charconv>
 #include <cstdint>
@@ -9,12 +10,14 @@
 #include <range/v3/algorithm/all_of.hpp>
 
 #include "openvic-simulation/dataloader/NodeTools.hpp"
+#include "openvic-simulation/map/ProvinceDefinition.hpp"
 #include "openvic-simulation/modifier/ModifierManager.hpp"
 #include "openvic-simulation/types/Colour.hpp"
 #include "openvic-simulation/types/OrderedContainers.hpp"
 #include "openvic-simulation/types/Vector.hpp"
 #include "openvic-simulation/utility/BMP.hpp"
 #include "openvic-simulation/utility/Logger.hpp"
+#include "openvic-simulation/utility/StringUtils.hpp"
 
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;
@@ -83,7 +86,7 @@ using adjacency_t = ProvinceDefinition::adjacency_t;
 
 /* This is called for all adjacent pixel pairs and returns whether or not a new adjacency was add,
  * hence the lack of error messages in the false return cases. */
-bool MapDefinition::add_standard_adjacency(ProvinceDefinition& from, ProvinceDefinition& to) const {
+bool MapDefinition::add_standard_adjacency(ProvinceDefinition& from, ProvinceDefinition& to) {
 	if (from == to) {
 		return false;
 	}
@@ -113,9 +116,39 @@ bool MapDefinition::add_standard_adjacency(ProvinceDefinition& from, ProvinceDef
 		/* Mark the land province as coastal */
 		from.coastal = !from.is_water();
 		to.coastal = !to.is_water();
+
+		if (from.is_water()) {
+			path_map_sea.try_add_point(to.get_index(), { to.centre.x, to.centre.y });
+		} else {
+			path_map_sea.try_add_point(from.get_index(), { from.centre.x, from.centre.y });
+		}
+		/* Connect points on pathfinding map */
+		path_map_sea.connect_points(from.get_index(), to.get_index());
+		/* Land units can use transports to path on the sea */
+		path_map_land.connect_points(from.get_index(), to.get_index());
+		/* Sea points are only valid for land units with a transport */
+		if (from.is_water()) {
+			path_map_land.set_point_disabled(from.get_index());
+		} else {
+			path_map_land.set_point_disabled(to.get_index());
+		}
 	} else if (from.is_water()) {
 		/* Water-to-water adjacency */
 		type = WATER;
+
+		/* Connect points on pathfinding map */
+		path_map_sea.connect_points(from.get_index(), to.get_index());
+		/* Land units can use transports to path on the sea */
+		path_map_land.connect_points(from.get_index(), to.get_index());
+		/* Sea points are only valid for land units with a transport */
+		if (from.is_water()) {
+			path_map_land.set_point_disabled(from.get_index());
+		} else {
+			path_map_land.set_point_disabled(to.get_index());
+		}
+	} else {
+		/* Connect points on pathfinding map */
+		path_map_land.connect_points(from.get_index(), to.get_index());
 	}
 
 	if (from_needs_adjacency) {
@@ -130,7 +163,7 @@ bool MapDefinition::add_standard_adjacency(ProvinceDefinition& from, ProvinceDef
 bool MapDefinition::add_special_adjacency(
 	ProvinceDefinition& from, ProvinceDefinition& to, adjacency_t::type_t type, ProvinceDefinition const* through,
 	adjacency_t::data_t data
-) const {
+) {
 	if (from == to) {
 		Logger::error("Trying to add ", adjacency_t::get_type_name(type), " adjacency from province ", from, " to itself!");
 		return false;
@@ -200,7 +233,7 @@ bool MapDefinition::add_special_adjacency(
 
 	const ProvinceDefinition::distance_t distance = calculate_distance_between(from, to);
 
-	const auto add_adjacency = [distance, type, through, data](
+	const auto add_adjacency = [this, distance, type, through, data](
 		ProvinceDefinition& from, ProvinceDefinition const& to
 	) -> bool {
 		const std::vector<adjacency_t>::iterator existing_adjacency = std::find_if(
@@ -242,6 +275,20 @@ bool MapDefinition::add_special_adjacency(
 				}
 			}
 			*existing_adjacency = { &to, distance, type, through, data };
+			if (from.is_water() && to.is_water()) {
+				path_map_sea.connect_points(from.get_index(), to.get_index());
+			} else {
+				path_map_land.connect_points(from.get_index(), to.get_index());
+			}
+
+			if (from.is_water() || to.is_water()) {
+				path_map_land.connect_points(from.get_index(), to.get_index());
+				if (from.is_water()) {
+					path_map_land.set_point_disabled(from.get_index());
+				} else {
+					path_map_land.set_point_disabled(to.get_index());
+				}
+			}
 			return true;
 		} else if (type == IMPASSABLE) {
 			Logger::warning(
@@ -250,6 +297,20 @@ bool MapDefinition::add_special_adjacency(
 			return true;
 		} else {
 			from.adjacencies.emplace_back(&to, distance, type, through, data);
+			if (from.is_water() && to.is_water()) {
+				path_map_sea.connect_points(from.get_index(), to.get_index());
+			} else {
+				path_map_land.connect_points(from.get_index(), to.get_index());
+			}
+
+			if (from.is_water() || to.is_water()) {
+				path_map_land.connect_points(from.get_index(), to.get_index());
+				if (from.is_water()) {
+					path_map_land.set_point_disabled(from.get_index());
+				} else {
+					path_map_land.set_point_disabled(to.get_index());
+				}
+			}
 			return true;
 		}
 	};
@@ -282,6 +343,7 @@ bool MapDefinition::set_water_province(std::string_view identifier) {
 		return false;
 	}
 	province->water = true;
+	path_map_sea.try_add_point(province->get_index(), path_map_land.get_point_position(province->get_index()));
 	return true;
 }
 
@@ -391,6 +453,8 @@ bool MapDefinition::set_max_provinces(ProvinceDefinition::index_t new_max_provin
 		return false;
 	}
 	max_provinces = new_max_provinces;
+	path_map_land.reserve_space(max_provinces);
+	path_map_sea.reserve_space(max_provinces);
 	return true;
 }
 
@@ -460,6 +524,15 @@ bool MapDefinition::load_province_definitions(std::vector<LineObject> const& lin
 						ret = false;
 					}
 					ret &= add_province_definition(identifier, colour);
+					if (!ret) {
+						return;
+					}
+
+					ProvinceDefinition const& definition = province_definitions.back();
+					ret &= path_map_land.try_add_point(definition.get_index(), { definition.centre.x, definition.centre.y });
+					if (!ret) {
+						Logger::error("Province ", identifier, " could not be added to " _OV_STR(path_map_land));
+					}
 				}
 			});
 
@@ -972,6 +1045,9 @@ bool MapDefinition::generate_and_load_province_adjacencies(std::vector<LineObjec
 			ret &= add_special_adjacency(*from, *to, type, through, data);
 		}
 	);
+
+	path_map_land.shrink_to_fit();
+	path_map_sea.shrink_to_fit();
 	return ret;
 }
 

@@ -4,7 +4,7 @@
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
 
 namespace OpenVic {
-	struct FringePathingNode : public PathingNodeBase<FringePathingNode> {
+	struct FringePathingNode final : public PathingNodeBase<FringePathingNode> {
 		using PathingNodeBase::PathingNodeBase;
 
 		// Used for pathfinding.

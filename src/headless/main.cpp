@@ -1,9 +1,15 @@
+#include <chrono>
+#include <random>
+
+#include <range/v3/view/enumerate.hpp>
+
+#include <openvic-simulation/GameManager.hpp>
 #include <openvic-simulation/country/CountryInstance.hpp>
 #include <openvic-simulation/dataloader/Dataloader.hpp>
 #include <openvic-simulation/economy/GoodDefinition.hpp>
 #include <openvic-simulation/economy/production/ProductionType.hpp>
 #include <openvic-simulation/economy/production/ResourceGatheringOperation.hpp>
-#include <openvic-simulation/GameManager.hpp>
+#include <openvic-simulation/pathfinding/AStarPathing.hpp>
 #include <openvic-simulation/pop/Pop.hpp>
 #include <openvic-simulation/testing/Testing.hpp>
 #include <openvic-simulation/utility/Logger.hpp>
@@ -53,6 +59,54 @@ static void print_rgo(ProvinceInstance const& province) {
 		}
 		Logger::info("", text);
 	}
+}
+
+template<size_t TestCount>
+static std::chrono::nanoseconds run_pathing_test(AStarPathing& pathing) {
+	PointMap const& points = pathing.get_point_map();
+
+	thread_local std::random_device rd;
+	thread_local std::mt19937 gen(rd());
+
+	using it = decltype(points.points_map().end());
+	std::array<std::pair<it, it>, TestCount> from_to_tests;
+	std::array<std::vector<PointMap::points_key_type>, TestCount> test_results;
+
+	for (size_t index = 0; index < TestCount; index++) {
+		it from = points.points_map().begin();
+		it to = points.points_map().begin();
+		std::uniform_int_distribution<> dis(0, points.get_point_count() - 1);
+		std::advance(from, dis(gen));
+		std::advance(to, dis(gen));
+		from_to_tests[index] = { from, to };
+	}
+
+	auto start_time = std::chrono::high_resolution_clock::now();
+	for (auto [index, pair] : from_to_tests | ranges::views::enumerate) {
+		test_results[index] = pathing.get_id_path(pair.first.key(), pair.second.key());
+	}
+	auto end_time = std::chrono::high_resolution_clock::now();
+
+	for (auto [index, test] : test_results | ranges::views::enumerate) {
+		Logger::info("-Start Test ", index + 1, "-");
+		Logger::info("\tFrom: Id ", from_to_tests[index].first.key());
+		for (PointMap::points_key_type const& id : test) {
+			if (id == test.back()) {
+				break;
+			}
+			if (id == test.front()) {
+				continue;
+			}
+			Logger::info("\t\tId ", id);
+		}
+		if (test.empty()) {
+			Logger::info("\t\tFailed to find path");
+		}
+		Logger::info("\tTo: Id ", from_to_tests[index].second.key());
+		Logger::info("-End Test ", index + 1, "-");
+	}
+
+	return end_time - start_time;
 }
 
 static bool run_headless(Dataloader::path_vector_t const& roots, bool run_tests) {
@@ -130,6 +184,19 @@ static bool run_headless(Dataloader::path_vector_t const& roots, bool run_tests)
 	}
 
 	if (ret) {
+		static constexpr size_t TESTS = 10;
+
+		Logger::info("===== Land Pathfinding test... =====");
+		std::chrono::nanoseconds ns = run_pathing_test<TESTS>(game_manager.get_instance_manager()->get_map_instance().get_land_pathing());
+		Logger::info("Ran ", TESTS, " land pathing tests in ", ns);
+
+		Logger::info("===== Sea Pathfinding test... =====");
+		ns = run_pathing_test<TESTS>(game_manager.get_instance_manager()->get_map_instance().get_sea_pathing());
+		Logger::info("Ran ", TESTS, " sea pathing tests in ", ns);
+	}
+
+	if (ret) {
+		Logger::info("===== Game Tick test... =====");
 		size_t ticks_passed = 0;
 		auto start_time = std::chrono::high_resolution_clock::now();
 		while (ticks_passed++ < 10) {

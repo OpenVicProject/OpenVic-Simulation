@@ -10,6 +10,7 @@
 #include "openvic-simulation/map/ProvinceDefinition.hpp"
 #include "openvic-simulation/map/Region.hpp"
 #include "openvic-simulation/map/TerrainType.hpp"
+#include "openvic-simulation/pathfinding/PointMap.hpp"
 #include "openvic-simulation/types/Colour.hpp"
 #include "openvic-simulation/types/IdentifierRegistry.hpp"
 #include "openvic-simulation/types/OrderedContainers.hpp"
@@ -65,6 +66,9 @@ namespace OpenVic {
 
 		ProvinceDefinition::index_t PROPERTY(max_provinces);
 
+		PointMap PROPERTY_REF(path_map_land);
+		PointMap PROPERTY_REF(path_map_sea);
+
 		ProvinceDefinition::index_t get_index_from_colour(colour_t colour) const;
 		bool _generate_standard_province_adjacencies();
 
@@ -85,11 +89,11 @@ namespace OpenVic {
 		ProvinceDefinition::distance_t calculate_distance_between(
 			ProvinceDefinition const& from, ProvinceDefinition const& to
 		) const;
-		bool add_standard_adjacency(ProvinceDefinition& from, ProvinceDefinition& to) const;
+		bool add_standard_adjacency(ProvinceDefinition& from, ProvinceDefinition& to);
 		bool add_special_adjacency(
 			ProvinceDefinition& from, ProvinceDefinition& to, ProvinceDefinition::adjacency_t::type_t type,
 			ProvinceDefinition const* through, ProvinceDefinition::adjacency_t::data_t data
-		) const;
+		);
 
 		bool set_water_province(std::string_view identifier);
 		bool set_water_province_list(std::vector<std::string_view> const& list);

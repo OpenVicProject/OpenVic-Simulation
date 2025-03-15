@@ -4,6 +4,7 @@
 #include "openvic-simulation/map/ProvinceDefinition.hpp"
 #include "openvic-simulation/map/ProvinceInstance.hpp"
 #include "openvic-simulation/map/State.hpp"
+#include "openvic-simulation/pathfinding/AStarPathing.hpp"
 #include "openvic-simulation/pop/PopValuesFromProvince.hpp"
 #include "openvic-simulation/types/Date.hpp"
 #include "openvic-simulation/types/IdentifierRegistry.hpp"
@@ -33,6 +34,9 @@ namespace OpenVic {
 		StateManager PROPERTY_REF(state_manager);
 		// TODO - should this be a vector of bools which we resize to the largest enabled canal index?
 		ordered_set<canal_index_t> PROPERTY(enabled_canals);
+
+		AStarPathing PROPERTY_REF(land_pathing);
+		AStarPathing PROPERTY_REF(sea_pathing);
 
 	public:
 		MapInstance(

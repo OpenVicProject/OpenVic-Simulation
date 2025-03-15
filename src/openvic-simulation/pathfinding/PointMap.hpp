@@ -134,6 +134,11 @@ namespace OpenVic {
 	public:
 		int64_t get_available_points() const;
 
+		bool try_add_point(
+			points_key_type id, ivec2_t const& position, fixed_point_t weight_scale = fixed_point_t::_1(),
+			std::span<points_key_type> adjacent_points = {}
+		);
+
 		void add_point(
 			points_key_type id, ivec2_t const& position, fixed_point_t weight_scale = fixed_point_t::_1(),
 			std::span<points_key_type> adjacent_points = {}
@@ -163,16 +168,17 @@ namespace OpenVic {
 		size_t get_point_count() const;
 		size_t get_point_capacity() const;
 		void reserve_space(size_t num_nodes);
+		void shrink_to_fit();
 		void clear();
 
 		points_key_type get_closest_point(ivec2_t const& point, bool include_disabled = false) const;
 		fvec2_t get_closest_position_in_segment(fvec2_t const& point) const;
 
-		inline constexpr ProxyPoints points_map() const {
+		inline constexpr ProxyPoints const& points_map() const {
 			return points_proxy;
 		}
 
-		inline constexpr ProxySegments segments_set() const {
+		inline constexpr ProxySegments const& segments_set() const {
 			return segments_proxy;
 		}
 	};
