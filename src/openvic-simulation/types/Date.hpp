@@ -20,6 +20,7 @@
 #include "openvic-simulation/utility/ErrorMacros.hpp"
 #include "openvic-simulation/utility/Getters.hpp"
 #include "openvic-simulation/utility/Utility.hpp"
+#include "openvic-simulation/utility/StringUtils.hpp"
 
 namespace OpenVic {
 	// A relative period between points in time, measured in days
@@ -244,7 +245,7 @@ namespace OpenVic {
 			return INVALID_MONTH_NAME;
 		}
 
-		inline std::to_chars_result to_chars( //
+		inline constexpr std::to_chars_result to_chars( //
 			char* first, char* last, bool pad_year = false, bool pad_month = true, bool pad_day = true
 		) const {
 			year_t year = get_year();
@@ -275,7 +276,7 @@ namespace OpenVic {
 				}
 			}
 
-			std::to_chars_result result = std::to_chars(first, last, year);
+			std::to_chars_result result = StringUtils::to_chars(first, last, year);
 			if (OV_unlikely(result.ec != std::errc {})) {
 				return result;
 			}
@@ -294,7 +295,7 @@ namespace OpenVic {
 				*result.ptr = '0';
 				result.ptr++;
 			}
-			result = std::to_chars(result.ptr, last, get_month());
+			result = StringUtils::to_chars(result.ptr, last, get_month());
 			if (OV_unlikely(result.ec != std::errc {})) {
 				return result;
 			}
@@ -308,17 +309,17 @@ namespace OpenVic {
 
 			*result.ptr = SEPARATOR_CHARACTER;
 			result.ptr++;
-			const month_t day = get_day();
+			const day_t day = get_day();
 			if (pad_day && day < 10) {
 				*result.ptr = '0';
 				result.ptr++;
 			}
-			result = std::to_chars(result.ptr, last, get_day());
+			result = StringUtils::to_chars(result.ptr, last, get_day());
 			return result;
 		}
 
 		struct stack_string;
-		stack_string to_array(bool pad_year = false, bool pad_month = true, bool pad_day = true) const;
+		inline constexpr stack_string to_array(bool pad_year = false, bool pad_month = true, bool pad_day = true) const;
 
 		struct stack_string {
 			static constexpr size_t array_length = //
@@ -332,7 +333,7 @@ namespace OpenVic {
 
 			constexpr stack_string() = default;
 
-			friend stack_string Date::to_array(bool pad_year, bool pad_month, bool pad_day) const;
+			friend inline constexpr stack_string Date::to_array(bool pad_year, bool pad_month, bool pad_day) const;
 
 		public:
 			constexpr const char* data() const {
@@ -363,7 +364,7 @@ namespace OpenVic {
 				return size() == 0;
 			}
 
-			operator std::string_view() const {
+			constexpr operator std::string_view() const {
 				return std::string_view { data(), data() + size() };
 			}
 
@@ -409,11 +410,11 @@ namespace OpenVic {
 			If day == 0, ec == not_supported and ptr == day's first, only year and month are changed
 			If day > days in month, ec == value_too_large and ptr == month's first, only year month are changed
 		*/
-		inline static from_chars_result parse_from_chars( //
+		inline static constexpr from_chars_result parse_from_chars( //
 			const char* first, const char* last, year_t& year, month_t& month, day_t& day
 		) {
 			int32_t year_check = year;
-			from_chars_result result = { std::from_chars(first, last, year_check) };
+			from_chars_result result = { StringUtils::from_chars(first, last, year_check) };
 			result.type_first = first;
 			result.type = errc_type::year;
 			if (OV_unlikely(result.ec != std::errc {})) {
@@ -443,7 +444,7 @@ namespace OpenVic {
 			result.ptr++;
 			first = result.ptr;
 			month_t month_check = month;
-			result = { std::from_chars(first, last, month_check) };
+			result = { StringUtils::from_chars(first, last, month_check) };
 			result.type_first = first;
 			result.type = errc_type::month;
 			if (OV_unlikely(result.ec != std::errc {})) {
@@ -477,7 +478,7 @@ namespace OpenVic {
 			result.ptr++;
 			first = result.ptr;
 			day_t day_check = day;
-			result = { std::from_chars(first, last, day_check) };
+			result = { StringUtils::from_chars(first, last, day_check) };
 			result.type_first = first;
 			result.type = errc_type::day;
 			if (OV_unlikely(result.ec != std::errc {})) {
@@ -502,7 +503,7 @@ namespace OpenVic {
 
 	public:
 		// Parsed from string of the form YYYY.MM.DD
-		from_chars_result from_chars(const char* first, const char* last) {
+		constexpr from_chars_result from_chars(const char* first, const char* last) {
 			year_t year = 0;
 			month_t month = 0;
 			day_t day = 0;
@@ -512,7 +513,7 @@ namespace OpenVic {
 		}
 
 		// Parsed from string of the form YYYY.MM.DD
-		static Date from_string(std::string_view str, from_chars_result* from_chars = nullptr) {
+		static constexpr Date from_string(std::string_view str, from_chars_result* from_chars = nullptr) {
 			Date date {};
 			if (from_chars == nullptr) {
 				date.from_chars(str.data(), str.data() + str.size());
@@ -613,6 +614,14 @@ namespace OpenVic {
 	}
 	constexpr Timespan Timespan::from_days(day_t num) {
 		return num;
+	}
+
+	inline constexpr Date::stack_string Date::to_array(bool pad_year, bool pad_month, bool pad_day) const {
+		stack_string str {};
+		std::to_chars_result result =
+			to_chars(str.array.data(), str.array.data() + str.array.size(), pad_year, pad_month, pad_day);
+		str.string_size = result.ptr - str.data();
+		return str;
 	}
 }
 

@@ -21,7 +21,7 @@ namespace OpenVic::testing {
 }
 
 namespace snitch {
-	inline static bool append(snitch::small_string_span ss, OpenVic::fixed_point_t const& s) {
+	[[nodiscard]] inline static constexpr bool append(snitch::small_string_span ss, OpenVic::fixed_point_t const& s) {
 		return append(ss, s.to_double());
 	}
 }

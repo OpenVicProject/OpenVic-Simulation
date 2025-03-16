@@ -12,19 +12,24 @@
 #include <type_traits>
 #include <utility>
 
-#include <range/v3/view/transform.hpp>
-#include <range/v3/view/join.hpp>
-#include <range/v3/range/conversion.hpp>
 #include <tsl/ordered_map.h>
+
+#include <range/v3/range/conversion.hpp>
+#include <range/v3/view/join.hpp>
+#include <range/v3/view/transform.hpp>
 
 namespace OpenVic::StringUtils {
 	template<typename T>
 	[[nodiscard]] inline constexpr std::from_chars_result from_chars( //
 		char const* const first, char const* const last, T& raw_value, const int base = 10
 	) noexcept {
-		constexpr auto digit_from_char = [](const char c) noexcept {
+		if (!std::is_constant_evaluated()) {
+			return std::from_chars(first, last, raw_value, base);
+		}
+
+		constexpr auto digit_from_char = [](const char c) constexpr noexcept {
 			// convert ['0', '9'] ['A', 'Z'] ['a', 'z'] to [0, 35], everything else to 255
-			static constexpr unsigned char digit_from_byte[] = {
+			constexpr unsigned char digit_from_byte[] = {
 				255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
 				255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
 				255, 255, 255, 255, 0,	 1,	  2,   3,	4,	 5,	  6,   7,	8,	 9,	  255, 255, 255, 255, 255, 255, 255, 10,
@@ -42,10 +47,6 @@ namespace OpenVic::StringUtils {
 
 			return digit_from_byte[static_cast<unsigned char>(c)];
 		};
-
-		if (!std::is_constant_evaluated()) {
-			return std::from_chars(first, last, raw_value, base);
-		}
 
 		bool minus_sign = false;
 
@@ -116,6 +117,140 @@ namespace OpenVic::StringUtils {
 		raw_value = static_cast<T>(value);
 
 		return { next, std::errc {} };
+	}
+
+	template<typename T>
+	[[nodiscard]] inline constexpr std::to_chars_result to_chars( //
+		char* first, char* const last, const T raw_value, const int base = 10
+	) noexcept {
+		if (!std::is_constant_evaluated()) {
+			return std::to_chars(first, last, raw_value, base);
+		}
+
+		constexpr char digits[] = //
+			{ //
+			  '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h',
+			  'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z'
+			};
+		static_assert(std::size(digits) == 36);
+
+		using _unsigned = std::make_unsigned_t<T>;
+
+		_unsigned value = static_cast<_unsigned>(raw_value);
+
+		if constexpr (std::is_signed_v<T>) {
+			if (raw_value < 0) {
+				if (first == last) {
+					return { last, std::errc::value_too_large };
+				}
+
+				*first++ = '-';
+
+				value = static_cast<_unsigned>(0 - value);
+			}
+		}
+
+		constexpr std::size_t buffer_size = sizeof(_unsigned) * CHAR_BIT; // enough for base 2
+		char buffer[buffer_size];
+		char* const buffer_end = buffer + buffer_size;
+		char* r_next = buffer_end;
+
+		switch (base) {
+		case 10: { // Derived from _UIntegral_to_buff()
+			// Performance note: Ryu's digit table should be faster here.
+			constexpr bool use_chunks = sizeof(_unsigned) > sizeof(size_t);
+
+			if constexpr (use_chunks) { // For 64-bit numbers on 32-bit platforms, work in chunks to avoid 64-bit
+										 // divisions.
+				while (value > 0xFFFF'FFFFU) {
+					// Performance note: Ryu's division workaround would be faster here.
+					unsigned long chunk = static_cast<unsigned long>(value % 1'000'000'000);
+					value = static_cast<_unsigned>(value / 1'000'000'000);
+
+					for (int _Idx = 0; _Idx != 9; ++_Idx) {
+						*--r_next = static_cast<char>('0' + chunk % 10);
+						chunk /= 10;
+					}
+				}
+			}
+
+			using Truncated = std::conditional_t<use_chunks, unsigned long, _unsigned>;
+
+			Truncated trunc = static_cast<Truncated>(value);
+
+			do {
+				*--r_next = static_cast<char>('0' + trunc % 10);
+				trunc /= 10;
+			} while (trunc != 0);
+			break;
+		}
+
+		case 2:
+			do {
+				*--r_next = static_cast<char>('0' + (value & 0b1));
+				value >>= 1;
+			} while (value != 0);
+			break;
+
+		case 4:
+			do {
+				*--r_next = static_cast<char>('0' + (value & 0b11));
+				value >>= 2;
+			} while (value != 0);
+			break;
+
+		case 8:
+			do {
+				*--r_next = static_cast<char>('0' + (value & 0b111));
+				value >>= 3;
+			} while (value != 0);
+			break;
+
+		case 16:
+			do {
+				*--r_next = digits[value & 0b1111];
+				value >>= 4;
+			} while (value != 0);
+			break;
+
+		case 32:
+			do {
+				*--r_next = digits[value & 0b11111];
+				value >>= 5;
+			} while (value != 0);
+			break;
+
+		default:
+			do {
+				*--r_next = digits[value % base];
+				value = static_cast<_unsigned>(value / base);
+			} while (value != 0);
+			break;
+		}
+
+		const std::ptrdiff_t digits_written = buffer_end - r_next;
+
+		if (last - first < digits_written) {
+			return { last, std::errc::value_too_large };
+		}
+
+		constexpr auto trivial_copy = [](char* dest, char* const src, size_t count) constexpr {
+#if defined(__clang__)
+			static_cast<void>(__builtin_memcpy(dest, src, count));
+#else
+			if (dest != nullptr && src != nullptr && count != 0) {
+				count /= sizeof(char);
+				for (std::size_t i = 0; i < count; ++i) {
+					dest[i] = src[i];
+				}
+			}
+#endif
+		};
+		//[neargye] constexpr copy chars. P1944 fix this?
+		trivial_copy(first, r_next, static_cast<size_t>(digits_written));
+		
+
+		return { first + digits_written, std::errc {} };
 	}
 
 	/* The constexpr function 'string_to_uint64' will convert a string into a uint64_t integer value.

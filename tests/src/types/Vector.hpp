@@ -64,17 +64,17 @@ namespace OpenVic::testing {
 
 namespace snitch {
 	template<typename T>
-	inline static bool append(snitch::small_string_span ss, OpenVic::vec2_t<T> const& s) {
+	[[nodiscard]] inline static constexpr bool append(snitch::small_string_span ss, OpenVic::vec2_t<T> const& s) {
 		return append(ss, "(", s.x, ",", s.y, ")");
 	}
 
 	template<typename T>
-	inline static bool append(snitch::small_string_span ss, OpenVic::vec3_t<T> const& s) {
+	[[nodiscard]] inline static constexpr bool append(snitch::small_string_span ss, OpenVic::vec3_t<T> const& s) {
 		return append(ss, "(", s.x, ",", s.y, ",", s.z, ")");
 	}
 
 	template<typename T>
-	inline static bool append(snitch::small_string_span ss, OpenVic::vec4_t<T> const& s) {
+	[[nodiscard]] inline static constexpr bool append(snitch::small_string_span ss, OpenVic::vec4_t<T> const& s) {
 		return append(ss, "(", s.x, ",", s.y, ",", s.z, ",", s.w, ")");
 	}
 }

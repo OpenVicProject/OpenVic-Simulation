@@ -6,12 +6,13 @@
 
 #include "Helper.hpp" // IWYU pragma: keep
 #include <snitch/snitch_macros_check.hpp>
+#include <snitch/snitch_macros_constexpr.hpp>
 #include <snitch/snitch_macros_misc.hpp>
 #include <snitch/snitch_macros_test_case.hpp>
 
 namespace snitch {
-	inline static bool append(snitch::small_string_span ss, OpenVic::Date const& s) {
-		return append(ss, s.to_string(true));
+	[[nodiscard]] inline static constexpr bool append(snitch::small_string_span ss, OpenVic::Date const& s) {
+		return append(ss, s.to_array(true, true, true));
 	}
 }
 
@@ -19,24 +20,24 @@ using namespace OpenVic;
 using namespace std::string_view_literals;
 
 TEST_CASE("Date Constructor method", "[Date][Date-constructor]") {
-	const Date empty = Date {};
-	const Date zero = Date { 0, 1, 1 };
-	const Date zero_timespan = Date { Timespan { 0 } };
+	static constexpr Date empty = Date {};
+	static constexpr Date zero = Date { 0, 1, 1 };
+	static constexpr Date zero_timespan = Date { Timespan { 0 } };
 
-	CHECK(empty == zero);
-	CHECK(empty == zero_timespan);
+	CONSTEXPR_CHECK(empty == zero);
+	CONSTEXPR_CHECK(empty == zero_timespan);
 
-	const Date _0_1_31 = Date { 0, 1, 31 };
-	const Date _timespan_0_1_31 = Date { Timespan { 30 } };
+	static constexpr Date _0_1_31 = Date { 0, 1, 31 };
+	static constexpr Date _timespan_0_1_31 = Date { Timespan { 30 } };
 
-	CHECK(_0_1_31 == _timespan_0_1_31);
+	CONSTEXPR_CHECK(_0_1_31 == _timespan_0_1_31);
 }
 
 TEST_CASE("Date Operators", "[Date][Date-operators]") {
-	const Date date1 = { 0, 5, 20 };
-	const Date date2 = { 40, 10, 5 };
+	static constexpr Date date1 = { 0, 5, 20 };
+	static constexpr Date date2 = { 40, 10, 5 };
 
-	CHECK((Date {} + (date2 - date1)) == Date { 40, 5, 19 });
+	CONSTEXPR_CHECK((Date {} + (date2 - date1)) == Date { 40, 5, 19 });
 
 	Date date_move = date1;
 	CHECK(date_move++ == Date { 0, 5, 20 });
@@ -46,49 +47,49 @@ TEST_CASE("Date Operators", "[Date][Date-operators]") {
 	CHECK((date_move += 5) == Date { 0, 5, 25 });
 	CHECK((date_move -= 5) == Date { 0, 5, 20 });
 
-	CHECK(date1 < date2);
-	CHECK(date2 > date1);
-	CHECK(date1 != date2);
+	CONSTEXPR_CHECK(date1 < date2);
+	CONSTEXPR_CHECK(date2 > date1);
+	CONSTEXPR_CHECK(date1 != date2);
 }
 
 TEST_CASE("Date Conversion methods", "[Date][Date-conversion]") {
-	const Date date = { 5, 4, 10 };
-	const Date date2 = { 5, 3, 2 };
+	static constexpr Date date = { 5, 4, 10 };
+	static constexpr Date date2 = { 5, 3, 2 };
 
-	CHECK(date.get_year() == 5);
-	CHECK(date.get_month() == 4);
-	CHECK(date.get_month_name() == "April"sv);
-	CHECK(date.get_day() == 10);
+	CONSTEXPR_CHECK(date.get_year() == 5);
+	CONSTEXPR_CHECK(date.get_month() == 4);
+	CONSTEXPR_CHECK(date.get_month_name() == "April"sv);
+	CONSTEXPR_CHECK(date.get_day() == 10);
 
-	CHECK(date.to_string() == "5.04.10");
-	CHECK(date.to_string(true) == "0005.04.10");
-	CHECK(date.to_string(false, false) == "5.4.10");
-	CHECK(date.to_string(true, false) == "0005.4.10");
+	CHECK(date.to_array() == "5.04.10"sv);
+	CHECK(date.to_array(true) == "0005.04.10"sv);
+	CHECK(date.to_array(false, false) == "5.4.10"sv);
+	CHECK(date.to_array(true, false) == "0005.4.10"sv);
 
-	CHECK(date2.to_string() == "5.03.02");
-	CHECK(date2.to_string(true) == "0005.03.02");
-	CHECK(date2.to_string(true, false, false) == "0005.3.2");
-	CHECK(date2.to_string(true, true, false) == "0005.03.2");
-	CHECK(date2.to_string(true, false, true) == "0005.3.02");
-	CHECK(date2.to_string(false, false, false) == "5.3.2");
-	CHECK(date2.to_string(false, false, true) == "5.3.02");
+	CHECK(date2.to_array() == "5.03.02"sv);
+	CHECK(date2.to_array(true) == "0005.03.02"sv);
+	CHECK(date2.to_array(true, false, false) == "0005.3.2"sv);
+	CHECK(date2.to_array(true, true, false) == "0005.03.2"sv);
+	CHECK(date2.to_array(true, false, true) == "0005.3.02"sv);
+	CHECK(date2.to_array(false, false, false) == "5.3.2"sv);
+	CHECK(date2.to_array(false, false, true) == "5.3.02"sv);
 }
 
 TEST_CASE("Date Parse methods", "[Date][Date-parse]") {
-	CHECK(Date::from_string("1.2.3") == Date { 1, 2, 3 });
-	CHECK(Date::from_string("01.2.3") == Date { 1, 2, 3 });
-	CHECK(Date::from_string("1.02.03") == Date { 1, 2, 3 });
-	CHECK(Date::from_string("001.2.3") == Date { 1, 2, 3 });
-	CHECK(Date::from_string("001.02.3") == Date { 1, 2, 3 });
-	CHECK(Date::from_string("001.2.03") == Date { 1, 2, 3 });
-	CHECK(Date::from_string("001.02.03") == Date { 1, 2, 3 });
-	CHECK(Date::from_string("0001.02.3") == Date { 1, 2, 3 });
-	CHECK(Date::from_string("0001.2.03") == Date { 1, 2, 3 });
-	CHECK(Date::from_string("0001.02.03") == Date { 1, 2, 3 });
-	CHECK(Date::from_string("20.6.13") == Date { 20, 6, 13 });
-	CHECK(Date::from_string("0020.06.13") == Date { 20, 6, 13 });
-	CHECK(Date::from_string("1815.8.20") == Date { 1815, 8, 20 });
-	CHECK(Date::from_string("-1.1.1") == Date { -1, 1, 1 });
+	CONSTEXPR_CHECK(Date::from_string("1.2.3") == Date { 1, 2, 3 });
+	CONSTEXPR_CHECK(Date::from_string("01.2.3") == Date { 1, 2, 3 });
+	CONSTEXPR_CHECK(Date::from_string("1.02.03") == Date { 1, 2, 3 });
+	CONSTEXPR_CHECK(Date::from_string("001.2.3") == Date { 1, 2, 3 });
+	CONSTEXPR_CHECK(Date::from_string("001.02.3") == Date { 1, 2, 3 });
+	CONSTEXPR_CHECK(Date::from_string("001.2.03") == Date { 1, 2, 3 });
+	CONSTEXPR_CHECK(Date::from_string("001.02.03") == Date { 1, 2, 3 });
+	CONSTEXPR_CHECK(Date::from_string("0001.02.3") == Date { 1, 2, 3 });
+	CONSTEXPR_CHECK(Date::from_string("0001.2.03") == Date { 1, 2, 3 });
+	CONSTEXPR_CHECK(Date::from_string("0001.02.03") == Date { 1, 2, 3 });
+	CONSTEXPR_CHECK(Date::from_string("20.6.13") == Date { 20, 6, 13 });
+	CONSTEXPR_CHECK(Date::from_string("0020.06.13") == Date { 20, 6, 13 });
+	CONSTEXPR_CHECK(Date::from_string("1815.8.20") == Date { 1815, 8, 20 });
+	CONSTEXPR_CHECK(Date::from_string("-1.1.1") == Date { -1, 1, 1 });
 
 	Date::from_chars_result result;
 
@@ -199,13 +200,13 @@ TEST_CASE("Date Parse methods", "[Date][Date-parse]") {
 }
 
 TEST_CASE("Date Other methods", "[Date][Date-other]") {
-	const Date start = { 5, 3, 2 };
-	const Date end = { 5, 4, 10 };
-	const Date inside = { 5, 3, 5 };
-	const Date outside = { 10, 4, 2 };
+	static constexpr Date start = { 5, 3, 2 };
+	static constexpr Date end = { 5, 4, 10 };
+	static constexpr Date inside = { 5, 3, 5 };
+	static constexpr Date outside = { 10, 4, 2 };
 
-	CHECK(inside.in_range(start, end));
-	CHECK_FALSE(outside.in_range(start, end));
-	CHECK_FALSE(start.is_month_start());
-	CHECK(Date { 532, 6, 1 }.is_month_start());
+	CONSTEXPR_CHECK(inside.in_range(start, end));
+	CONSTEXPR_CHECK_FALSE(outside.in_range(start, end));
+	CONSTEXPR_CHECK_FALSE(start.is_month_start());
+	CONSTEXPR_CHECK(Date { 532, 6, 1 }.is_month_start());
 }

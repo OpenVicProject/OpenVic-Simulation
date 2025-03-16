@@ -6,6 +6,7 @@
 #include <limits>
 
 #include "openvic-simulation/types/Vector.hpp"
+#include "openvic-simulation/utility/Utility.hpp"
 
 #include "Vector.hpp" // IWYU pragma: keep
 #include <snitch/snitch_string.hpp>
@@ -59,21 +60,21 @@ namespace OpenVic::testing {
 		}
 
 		template<std::convertible_to<double> T>
-		bool operator==(T rhs) const {
+		constexpr bool operator==(T rhs) const {
 			return operator==(static_cast<double>(rhs));
 		}
 
-		bool operator==(double rhs) const {
+		constexpr bool operator==(double rhs) const {
 			// Thanks to Richard Harris for his help refining this formula
-			return std::abs(rhs - _value) < _epsilon * (_scale + std::max<double>(std::abs(rhs), std::abs(_value)));
+			return OpenVic::utility::abs(rhs - _value) < _epsilon * (_scale + std::max<double>(OpenVic::utility::abs(rhs), OpenVic::utility::abs(_value)));
 		}
 
 		template<std::convertible_to<double> T>
-		std::partial_ordering operator<=>(T rhs) const {
+		constexpr std::partial_ordering operator<=>(T rhs) const {
 			return operator<=>(static_cast<double>(rhs));
 		}
 
-		std::partial_ordering operator<=>(double rhs) const {
+		constexpr std::partial_ordering operator<=>(double rhs) const {
 			return _value <=> rhs;
 		}
 
@@ -94,7 +95,7 @@ namespace OpenVic::testing {
 }
 
 namespace snitch {
-	inline static bool append(snitch::small_string_span ss, OpenVic::testing::approx const& s) {
+	[[nodiscard]] inline static constexpr bool append(snitch::small_string_span ss, OpenVic::testing::approx const& s) {
 		return append(ss, s._value);
 	}
 }

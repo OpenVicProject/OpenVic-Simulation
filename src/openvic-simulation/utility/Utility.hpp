@@ -1,6 +1,8 @@
 #pragma once
 
 #include <climits>
+#include <cmath>
+#include <concepts>
 #include <functional>
 #include <type_traits>
 
@@ -137,4 +139,13 @@ namespace OpenVic::utility {
 
 	template<typename T, typename T2>
 	concept not_same_as = !std::same_as<T, T2>;
+
+	template<typename T> requires std::integral<T> || std::floating_point<T>
+	[[nodiscard]] inline constexpr T abs(T num) {
+		if (std::is_constant_evaluated()) {
+			return num < 0 ? -num : num;
+		} else {
+			return std::abs(num);
+		}
+	}
 }

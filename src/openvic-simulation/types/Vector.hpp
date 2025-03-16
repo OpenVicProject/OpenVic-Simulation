@@ -3,15 +3,16 @@
 #include <cmath>
 
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
+#include "openvic-simulation/utility/Utility.hpp"
 
 namespace OpenVic::_vector_detail {
 	template<typename T>
-	inline T abs(T num) {
-		return std::abs(num);
+	inline constexpr T abs(T num) {
+		return OpenVic::utility::abs(num);
 	}
 
 	template<>
-	inline fixed_point_t abs<fixed_point_t>(fixed_point_t num) {
+	inline constexpr fixed_point_t abs<fixed_point_t>(fixed_point_t num) {
 		return num.abs();
 	}
 }
