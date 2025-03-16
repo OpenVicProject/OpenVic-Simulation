@@ -134,6 +134,28 @@ TEST_CASE("fixed_point_t Parse methods", "[fixed_point_t][fixed_point_t-parse]")
 	CHECK(fp == 4.5432_a);
 }
 
+TEST_CASE("fixed_point_t string methods", "[fixed_point_t][fixed_point_t-string]") {
+	const fixed_point_t constant_zero = fixed_point_t::_0();
+	const fixed_point_t one = 1;
+	const fixed_point_t constant_one = fixed_point_t::_1();
+	const fixed_point_t neg_one = -1;
+	const fixed_point_t neg_two = -2;
+	const fixed_point_t neg_three = -3;
+	const fixed_point_t _2_55 = fixed_point_t::_1_50() + fixed_point_t::_1() + fixed_point_t::_1() / 20;
+	const fixed_point_t neg_2_55 = -_2_55;
+
+	CHECK(constant_zero.to_array() == "0"sv);
+	CHECK(one.to_array() == "1"sv);
+	CHECK(constant_one.to_array() == "1"sv);
+	CHECK(neg_one.to_array() == "-1"sv);
+	CHECK(neg_two.to_array() == "-2"sv);
+	CHECK(neg_three.to_array() == "-3"sv);
+	CHECK(_2_55.to_array() == "2.54998779296875"sv);
+	CHECK(neg_2_55.to_array() == "-2.54998779296875"sv);
+	CHECK(_2_55.to_array(2) == "2.55"sv);
+	CHECK(neg_2_55.to_array(2) == "-2.55"sv);
+}
+
 TEST_CASE("fixed_point_t Other methods", "[fixed_point_t][fixed_point_t-other]") {
 	CHECK_FALSE(fixed_point_t::_1().is_negative());
 	CHECK(fixed_point_t::minus_one().is_negative());
