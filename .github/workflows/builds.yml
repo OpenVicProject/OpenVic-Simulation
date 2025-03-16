@@ -1,12 +1,12 @@
-name: Builds
+name: 🖥️ Builds
 
-on: [push, pull_request]
+on: [push, pull_request, merge_group]
 
 env:
   GH_BASE_BRANCH: master
 
 concurrency:
-  group: ci-${{github.actor}}-${{github.head_ref || github.run_number}}-${{github.ref}}-macos
+  group: ${{ github.workflow }}|${{ github.ref_name }}
   cancel-in-progress: true
 
 jobs:
@@ -30,7 +30,7 @@ jobs:
         run: |
           if [ "${{ github.event_name }}" == "pull_request" ]; then
             files=$(git diff-tree --no-commit-id --name-only -r HEAD^1..HEAD 2> /dev/null || true)
-          elif [ "${{ github.event_name }}" == "push" -a "${{ github.event.forced }}" == "false" -a "${{ github.event.created }}" == "false" ]; then
+          elif [ "${{ github.event_name }}" == "push" -a "${{ github.event.created }}" == "false" ]; then
             files=$(git diff-tree --no-commit-id --name-only -r ${{ github.event.before }}..${{ github.event.after }} 2> /dev/null || true)
           fi
           echo "$files" >> changed.txt
