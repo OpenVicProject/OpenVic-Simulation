@@ -109,6 +109,12 @@ namespace OpenVic {
 			return 100;
 		}
 
+		// Blame Apple for this being here
+		template<std::integral T>
+		constexpr friend fixed_point_t operator/(fixed_point_t const& lhs, T const& rhs) {
+			return parse_raw(lhs.value / rhs);
+		}
+
 		static constexpr fixed_point_t _0_01() {
 			return _1() / 100;
 		}
@@ -234,6 +240,11 @@ namespace OpenVic {
 
 		constexpr int32_t to_int32_t() const {
 			return static_cast<int32_t>(to_int64_t());
+		}
+
+		template<std::integral T>
+		constexpr T to() const {
+			return static_cast<T>(to_int64_t());
 		}
 
 		constexpr float to_float() const {
@@ -433,11 +444,13 @@ namespace OpenVic {
 			return parse_raw(lhs.value + rhs.value);
 		}
 
-		constexpr friend fixed_point_t operator+(fixed_point_t const& lhs, int32_t const& rhs) {
+		template<std::integral T>
+		constexpr friend fixed_point_t operator+(fixed_point_t const& lhs, T const& rhs) {
 			return parse_raw(lhs.value + (static_cast<value_type>(rhs) << PRECISION));
 		}
 
-		constexpr friend fixed_point_t operator+(int32_t const& lhs, fixed_point_t const& rhs) {
+		template<std::integral T>
+		constexpr friend fixed_point_t operator+(T const& lhs, fixed_point_t const& rhs) {
 			return parse_raw((static_cast<value_type>(lhs) << PRECISION) + rhs.value);
 		}
 
@@ -446,7 +459,8 @@ namespace OpenVic {
 			return *this;
 		}
 
-		constexpr fixed_point_t operator+=(int32_t const& obj) {
+		template<std::integral T>
+		constexpr fixed_point_t operator+=(T const& obj) {
 			value += (static_cast<value_type>(obj) << PRECISION);
 			return *this;
 		}
@@ -455,11 +469,13 @@ namespace OpenVic {
 			return parse_raw(lhs.value - rhs.value);
 		}
 
-		constexpr friend fixed_point_t operator-(fixed_point_t const& lhs, int32_t const& rhs) {
+		template<std::integral T>
+		constexpr friend fixed_point_t operator-(fixed_point_t const& lhs, T const& rhs) {
 			return parse_raw(lhs.value - (static_cast<value_type>(rhs) << PRECISION));
 		}
 
-		constexpr friend fixed_point_t operator-(int32_t const& lhs, fixed_point_t const& rhs) {
+		template<std::integral T>
+		constexpr friend fixed_point_t operator-(T const& lhs, fixed_point_t const& rhs) {
 			return parse_raw((static_cast<value_type>(lhs) << PRECISION) - rhs.value);
 		}
 
@@ -468,7 +484,8 @@ namespace OpenVic {
 			return *this;
 		}
 
-		constexpr fixed_point_t operator-=(int32_t const& obj) {
+		template<std::integral T>
+		constexpr fixed_point_t operator-=(T const& obj) {
 			value -= (static_cast<value_type>(obj) << PRECISION);
 			return *this;
 		}
@@ -495,11 +512,13 @@ namespace OpenVic {
 			return old;
 		}
 
-		constexpr friend fixed_point_t operator<<(fixed_point_t const& lhs, int32_t const& rhs) {
+		template<std::integral T>
+		constexpr friend fixed_point_t operator<<(fixed_point_t const& lhs, T const& rhs) {
 			return parse_raw(lhs.value << rhs);
 		}
 
-		constexpr friend fixed_point_t operator>>(fixed_point_t const& lhs, int32_t const& rhs) {
+		template<std::integral T>
+		constexpr friend fixed_point_t operator>>(fixed_point_t const& lhs, T const& rhs) {
 			return parse_raw(lhs.value >> rhs);
 		}
 
@@ -507,11 +526,13 @@ namespace OpenVic {
 			return parse_raw(lhs.value * rhs.value >> PRECISION);
 		}
 
-		constexpr friend fixed_point_t operator*(fixed_point_t const& lhs, int32_t const& rhs) {
+		template<std::integral T>
+		constexpr friend fixed_point_t operator*(fixed_point_t const& lhs, T const& rhs) {
 			return parse_raw(lhs.value * rhs);
 		}
 
-		constexpr friend fixed_point_t operator*(int32_t const& lhs, fixed_point_t const& rhs) {
+		template<std::integral T>
+		constexpr friend fixed_point_t operator*(T const& lhs, fixed_point_t const& rhs) {
 			return parse_raw(lhs * rhs.value);
 		}
 
@@ -521,7 +542,8 @@ namespace OpenVic {
 			return *this;
 		}
 
-		constexpr fixed_point_t operator*=(int32_t const& obj) {
+		template<std::integral T>
+		constexpr fixed_point_t operator*=(T const& obj) {
 			value *= obj;
 			return *this;
 		}
@@ -530,11 +552,8 @@ namespace OpenVic {
 			return parse_raw((lhs.value << PRECISION) / rhs.value);
 		}
 
-		constexpr friend fixed_point_t operator/(fixed_point_t const& lhs, int32_t const& rhs) {
-			return parse_raw(lhs.value / rhs);
-		}
-
-		constexpr friend fixed_point_t operator/(int32_t const& lhs, fixed_point_t const& rhs) {
+		template<std::integral T>
+		constexpr friend fixed_point_t operator/(T const& lhs, fixed_point_t const& rhs) {
 			return parse_raw((static_cast<value_type>(lhs) << (2 * PRECISION)) / rhs.value);
 		}
 
@@ -543,7 +562,8 @@ namespace OpenVic {
 			return *this;
 		}
 
-		constexpr fixed_point_t operator/=(int32_t const& obj) {
+		template<std::integral T>
+		constexpr fixed_point_t operator/=(T const& obj) {
 			value /= obj;
 			return *this;
 		}
@@ -557,11 +577,13 @@ namespace OpenVic {
 			return parse_raw(lhs.value % rhs.value);
 		}
 
-		constexpr friend fixed_point_t operator%(fixed_point_t const& lhs, int32_t const& rhs) {
+		template<std::integral T>
+		constexpr friend fixed_point_t operator%(fixed_point_t const& lhs, T const& rhs) {
 			return parse_raw(lhs.value % (static_cast<value_type>(rhs) << PRECISION));
 		}
 
-		constexpr friend fixed_point_t operator%(int32_t const& lhs, fixed_point_t const& rhs) {
+		template<std::integral T>
+		constexpr friend fixed_point_t operator%(T const& lhs, fixed_point_t const& rhs) {
 			return parse_raw((static_cast<value_type>(lhs) << PRECISION) % rhs.value);
 		}
 
@@ -570,7 +592,8 @@ namespace OpenVic {
 			return *this;
 		}
 
-		constexpr fixed_point_t operator%=(int32_t const& obj) {
+		template<std::integral T>
+		constexpr fixed_point_t operator%=(T const& obj) {
 			value %= (static_cast<value_type>(obj) << PRECISION);
 			return *this;
 		}
