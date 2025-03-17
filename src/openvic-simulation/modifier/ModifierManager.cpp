@@ -323,7 +323,7 @@ bool ModifierManager::setup_modifier_effects() {
 	ret &= register_base_country_modifier_effect(modifier_effect_cache.min_tax, "min_tax", true, PROPORTION_DECIMAL_1DP);
 	ret &= register_base_country_modifier_effect(
 		modifier_effect_cache.minimum_wage, "minimum_wage", true, PROPORTION_DECIMAL_1DP,
-		ModifierEffect::make_default_modifier_effect_localisation_key("minimun_wage") // paradox typo
+		ModifierEffect::make_default_modifier_effect_localisation_key("minimun_wage")
 	);
 	ret &= register_shared_tech_country_modifier_effect(
 		modifier_effect_cache.mobilisation_economy_impact, "mobilisation_economy_impact", false, PROPORTION_DECIMAL_1DP
@@ -602,7 +602,7 @@ bool ModifierManager::setup_modifier_effects() {
 		modifier_effect_cache.organisation, "organisation", true, PROPORTION_DECIMAL_1DP, "TRAIT_ORGANISATION"
 	);
 	ret &= register_leader_modifier_effect(
-		modifier_effect_cache.reconnaissance, "reconnaissance", true, PROPORTION_DECIMAL_1DP, "TRAIT_RECONAISSANCE" // paradox typo
+		modifier_effect_cache.reconnaissance, "reconnaissance", true, PROPORTION_DECIMAL_1DP, "TRAIT_RECONAISSANCE"
 	);
 	ret &= register_leader_modifier_effect(
 		modifier_effect_cache.reliability, "reliability", true, PROPORTION_DECIMAL_1DP, "TRAIT_RELIABILITY"
