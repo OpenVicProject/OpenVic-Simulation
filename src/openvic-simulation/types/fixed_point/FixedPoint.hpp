@@ -3,6 +3,7 @@
 #include <cctype>
 #include <charconv>
 #include <concepts>
+#include <cstddef>
 #include <cstdint>
 #include <cstdlib>
 #include <limits>
@@ -111,10 +112,42 @@ namespace OpenVic {
 			return 100;
 		}
 
-		// Blame Apple for this being here
+		// Standard for constexpr requires this here
 		template<std::integral T>
 		constexpr friend fixed_point_t operator/(fixed_point_t const& lhs, T const& rhs) {
 			return parse_raw(lhs.value / rhs);
+		}
+
+		template<std::integral T>
+		constexpr friend fixed_point_t operator/(T const& lhs, fixed_point_t const& rhs) {
+			return parse_raw((static_cast<value_type>(lhs) << (2 * PRECISION)) / rhs.value);
+		}
+
+		template<std::integral T>
+		constexpr fixed_point_t operator/=(T const& obj) {
+			value /= obj;
+			return *this;
+		}
+
+		template<std::integral T>
+		constexpr friend fixed_point_t operator*(fixed_point_t const& lhs, T const& rhs) {
+			return parse_raw(lhs.value * rhs);
+		}
+
+		template<std::integral T>
+		constexpr fixed_point_t operator*=(T const& obj) {
+			value *= obj;
+			return *this;
+		}
+
+		template<std::integral T>
+		constexpr friend fixed_point_t operator+(fixed_point_t const& lhs, T const& rhs) {
+			return parse_raw(lhs.value + (static_cast<value_type>(rhs) << PRECISION));
+		}
+
+		template<std::integral T>
+		constexpr std::strong_ordering operator<=>(T const& rhs) const {
+			return value <=> static_cast<value_type>(rhs) << PRECISION;
 		}
 
 		static constexpr fixed_point_t _0_01() {
@@ -265,7 +298,7 @@ namespace OpenVic {
 			return NumberUtils::round_to_int64((value / static_cast<double>(ONE)) * 100000.0) / 100000.0;
 		}
 
-		inline std::to_chars_result to_chars(char* first, char* last, size_t decimal_places = -1) const {
+		inline constexpr std::to_chars_result to_chars(char* first, char* last, size_t decimal_places = -1) const {
 			if (first == nullptr || first >= last) {
 				return { last, std::errc::value_too_large };
 			}
@@ -280,7 +313,7 @@ namespace OpenVic {
 
 			std::to_chars_result result {};
 			if (decimal_places == static_cast<size_t>(-1)) {
-				result = std::to_chars(first, last, abs().to_int64_t());
+				result = StringUtils::to_chars(first, last, abs().to_int64_t());
 				if (OV_unlikely(result.ec != std::errc {})) {
 					return result;
 				}
@@ -313,7 +346,7 @@ namespace OpenVic {
 			fixed_point_t val = this->abs() + err;
 
 
-			result = std::to_chars(first, last, val.to_int64_t());
+			result = StringUtils::to_chars(first, last, val.to_int64_t());
 			if (OV_unlikely(result.ec != std::errc {})) {
 				return result;
 			}
@@ -339,7 +372,7 @@ namespace OpenVic {
 		}
 
 		struct stack_string;
-		stack_string to_array(size_t decimal_places = -1) const;
+		inline constexpr stack_string to_array(size_t decimal_places = -1) const;
 
 		struct stack_string {
 			static constexpr size_t array_length = 25;
@@ -350,7 +383,7 @@ namespace OpenVic {
 
 			constexpr stack_string() = default;
 
-			friend stack_string fixed_point_t::to_array(size_t decimal_places) const;
+			friend inline constexpr stack_string fixed_point_t::to_array(size_t decimal_places) const;
 
 		public:
 			constexpr const char* data() const {
@@ -381,7 +414,7 @@ namespace OpenVic {
 				return size() == 0;
 			}
 
-			operator std::string_view() const {
+			constexpr operator std::string_view() const {
 				return std::string_view { data(), data() + size() };
 			}
 
@@ -415,7 +448,7 @@ namespace OpenVic {
 				return { begin, std::errc::invalid_argument };
 			}
 
-			if (std::tolower(*(end - 1)) == 'f') {
+			if (char const& c = *(end - 1); c == 'f' || c == 'F') {
 				--end;
 				if (begin == end) {
 					return { begin, std::errc::invalid_argument };
@@ -458,6 +491,9 @@ namespace OpenVic {
 		constexpr std::from_chars_result from_chars_with_plus(char const* begin, char const* end) {
 			if (begin && *begin == '+') {
 				begin++;
+				if (begin < end && *begin == '-') {
+					return std::from_chars_result { begin, std::errc::invalid_argument };
+				}
 			}
 
 			return from_chars(begin, end);
@@ -477,7 +513,7 @@ namespace OpenVic {
 			return parse(str, str + length, successful);
 		}
 
-		static fixed_point_t parse(std::string_view str, bool* successful = nullptr) {
+		static constexpr fixed_point_t parse(std::string_view str, bool* successful = nullptr) {
 			return parse(str.data(), str.length(), successful);
 		}
 
@@ -539,11 +575,6 @@ namespace OpenVic {
 
 		constexpr friend fixed_point_t operator+(fixed_point_t const& lhs, fixed_point_t const& rhs) {
 			return parse_raw(lhs.value + rhs.value);
-		}
-
-		template<std::integral T>
-		constexpr friend fixed_point_t operator+(fixed_point_t const& lhs, T const& rhs) {
-			return parse_raw(lhs.value + (static_cast<value_type>(rhs) << PRECISION));
 		}
 
 		template<std::integral T>
@@ -624,11 +655,6 @@ namespace OpenVic {
 		}
 
 		template<std::integral T>
-		constexpr friend fixed_point_t operator*(fixed_point_t const& lhs, T const& rhs) {
-			return parse_raw(lhs.value * rhs);
-		}
-
-		template<std::integral T>
 		constexpr friend fixed_point_t operator*(T const& lhs, fixed_point_t const& rhs) {
 			return parse_raw(lhs * rhs.value);
 		}
@@ -639,29 +665,12 @@ namespace OpenVic {
 			return *this;
 		}
 
-		template<std::integral T>
-		constexpr fixed_point_t operator*=(T const& obj) {
-			value *= obj;
-			return *this;
-		}
-
 		constexpr friend fixed_point_t operator/(fixed_point_t const& lhs, fixed_point_t const& rhs) {
 			return parse_raw((lhs.value << PRECISION) / rhs.value);
 		}
 
-		template<std::integral T>
-		constexpr friend fixed_point_t operator/(T const& lhs, fixed_point_t const& rhs) {
-			return parse_raw((static_cast<value_type>(lhs) << (2 * PRECISION)) / rhs.value);
-		}
-
 		constexpr fixed_point_t operator/=(fixed_point_t const& obj) {
 			value = (value << PRECISION) / obj.value;
-			return *this;
-		}
-
-		template<std::integral T>
-		constexpr fixed_point_t operator/=(T const& obj) {
-			value /= obj;
 			return *this;
 		}
 
@@ -717,11 +726,6 @@ namespace OpenVic {
 			return lhs.value <=> rhs.value;
 		}
 
-		template<std::integral T>
-		constexpr std::strong_ordering operator<=>(T const& rhs) const {
-			return value <=> static_cast<value_type>(rhs) << PRECISION;
-		}
-
 		template<std::floating_point T>
 		constexpr std::partial_ordering operator<=>(T const& rhs) const {
 			if constexpr (std::same_as<T, float>) {
@@ -746,20 +750,18 @@ namespace OpenVic {
 		// Deterministic
 		// Cannot produce negative values
 		static constexpr std::from_chars_result from_chars_fraction(char const* begin, char const* end, fixed_point_t& value) {
-			char const* const read_end = begin + PRECISION;
-			if (read_end < end) {
-				end = read_end;
-			}
 			if (begin && *begin == '-') {
 				return { begin, std::errc::invalid_argument };
 			}
+
+			end = end - begin > PRECISION ? begin + PRECISION : end;
 			uint64_t parsed_value;
 			std::from_chars_result result = StringUtils::string_to_uint64(begin, end, parsed_value);
 			if (result.ec != std::errc{}) {
 				return result;
 			}
 
-			while (end++ < read_end) {
+			for (ptrdiff_t remaining_shift = PRECISION - (end - begin); remaining_shift > 0; remaining_shift--) {
 				parsed_value *= 10;
 			}
 			uint64_t decimal = NumberUtils::pow(static_cast<uint64_t>(10), PRECISION);
@@ -809,6 +811,13 @@ namespace OpenVic {
 	};
 
 	static_assert(sizeof(fixed_point_t) == fixed_point_t::SIZE, "fixed_point_t is not 8 bytes");
+
+	inline constexpr fixed_point_t::stack_string fixed_point_t::to_array(size_t decimal_places) const {
+		stack_string str {};
+		std::to_chars_result result = to_chars(str.array.data(), str.array.data() + str.array.size(), decimal_places);
+		str.string_size = result.ptr - str.data();
+		return str;
+	}
 }
 
 template<>

@@ -24,6 +24,7 @@
 #include <range/v3/algorithm/rotate.hpp>
 
 #include "openvic-simulation/utility/Utility.hpp"
+#include "openvic-simulation/utility/StringUtils.hpp"
 
 namespace OpenVic {
 	template<typename ValueT, typename IntT, bool HasAlpha = true>
@@ -222,8 +223,9 @@ namespace OpenVic {
 			};
 		}
 
-		static constexpr basic_colour_t
-		from_floats(float r, float g, float b, float a = colour_traits::alpha_to_float(max_value))
+		static constexpr basic_colour_t from_floats( //
+			float r, float g, float b, float a = colour_traits::alpha_to_float(max_value)
+		)
 		requires(colour_traits::has_alpha)
 		{
 			return {
@@ -242,11 +244,11 @@ namespace OpenVic {
 		inline static constexpr std::from_chars_result parse_from_chars( //
 			const char* first, const char* last, integer_type& value
 		) {
-			if (first < last && first[0] == '0' && (first + 1 < last) && std::tolower(first[1]) == 'x') {
+			if (first < last && first[0] == '0' && (first + 1 < last) && (first[1] == 'x' || first[1] == 'X')) {
 				first += 2;
 			}
 
-			std::from_chars_result result = std::from_chars(first, last, value, 16);
+			std::from_chars_result result = StringUtils::from_chars(first, last, value, 16);
 			return result;
 		}
 
@@ -437,10 +439,10 @@ namespace OpenVic {
 			return colour_traits::alpha_to_float(alpha);
 		}
 
-		inline std::to_chars_result to_hex_chars(char* first, char* last, bool alpha = colour_traits::has_alpha) const {
-			static constexpr size_t component_str_width = (std::bit_width(max_value) + 3) / 4;
+		inline constexpr std::to_chars_result to_hex_chars(char* first, char* last, bool alpha = colour_traits::has_alpha) const {
+			constexpr size_t component_str_width = (std::bit_width(max_value) + 3) / 4;
 
-			std::to_chars_result result = std::to_chars(first, last, alpha ? as_rgba() : as_rgb(), 16);
+			std::to_chars_result result = StringUtils::to_chars(first, last, alpha ? as_rgba() : as_rgb(), 16);
 			if (OV_unlikely(result.ec != std::errc {})) {
 				return result;
 			}
@@ -454,7 +456,7 @@ namespace OpenVic {
 
 			std::span span { first, result.ptr };
 			for (char& c : span) {
-				c = std::toupper(c);
+				c = c >= 'a' && c <= 'z' ? (c - 32) : c;
 			}
 
 			if (span.size() < required_size) {
@@ -479,8 +481,8 @@ namespace OpenVic {
 
 			constexpr stack_string() = default;
 
-			friend stack_string basic_colour_t::to_hex_array(bool alpha) const;
-			friend stack_string basic_colour_t::to_argb_hex_array() const;
+			friend inline constexpr stack_string basic_colour_t::to_hex_array(bool alpha) const;
+			friend inline constexpr stack_string basic_colour_t::to_argb_hex_array() const;
 
 		public:
 			constexpr const char* data() const {
@@ -511,7 +513,7 @@ namespace OpenVic {
 				return size() == 0;
 			}
 
-			operator std::string_view() const {
+			constexpr operator std::string_view() const {
 				return std::string_view { data(), data() + size() };
 			}
 
@@ -520,7 +522,7 @@ namespace OpenVic {
 			}
 		};
 
-		inline stack_string to_hex_array(bool alpha = colour_traits::has_alpha) const {
+		inline constexpr stack_string to_hex_array(bool alpha = colour_traits::has_alpha) const {
 			stack_string str {};
 			std::to_chars_result result = to_hex_chars(str.array.data(), str.array.data() + str.array.size(), alpha);
 			str.string_size = result.ptr - str.data();
@@ -536,8 +538,8 @@ namespace OpenVic {
 			return result;
 		}
 
-		inline std::to_chars_result to_argb_hex_chars(char* first, char* last) const {
-			static constexpr size_t component_str_width = (std::bit_width(max_value) + 3) / 4;
+		inline constexpr std::to_chars_result to_argb_hex_chars(char* first, char* last) const {
+			constexpr size_t component_str_width = (std::bit_width(max_value) + 3) / 4;
 
 			std::to_chars_result result = to_hex_chars(first, last, true);
 			if (result.ec != std::errc {}) {
@@ -550,7 +552,7 @@ namespace OpenVic {
 			return result;
 		}
 
-		inline stack_string to_argb_hex_array() const {
+		inline constexpr stack_string to_argb_hex_array() const {
 			stack_string str {};
 			std::to_chars_result result = to_argb_hex_chars(str.array.data(), str.array.data() + str.array.size());
 			str.string_size = result.ptr - str.data();
@@ -619,7 +621,7 @@ namespace OpenVic {
 
 		// See https://stackoverflow.com/a/69869976
 		// https://github.com/Myndex/max-contrast/
-		constexpr basic_colour_t contrast() const {
+		basic_colour_t contrast() const {
 			constexpr double LUMINANCE_FLIP = 0.342;
 			constexpr double POWER = 2.4;
 			constexpr double RED_MULTIPLIER = 0.2126729;

@@ -34,13 +34,6 @@ std::ostream& OpenVic::operator<<(std::ostream& out, Timespan const& timespan) {
 	return out << timespan.to_string();
 }
 
-inline Date::stack_string Date::to_array(bool pad_year, bool pad_month, bool pad_day) const {
-	stack_string str {};
-	std::to_chars_result result = to_chars(str.array.data(), str.array.data() + str.array.size(), pad_year, pad_month, pad_day);
-	str.string_size = result.ptr - str.data();
-	return str;
-}
-
 std::string Date::to_string(bool pad_year, bool pad_month, bool pad_day) const {
 	stack_string result = to_array(pad_year, pad_month, pad_day);
 	if (OV_unlikely(result.empty())) {
