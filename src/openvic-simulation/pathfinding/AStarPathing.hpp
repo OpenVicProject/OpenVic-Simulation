@@ -9,7 +9,7 @@
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
 
 namespace OpenVic {
-	struct AStarPathingNode : public PathingNodeBase<AStarPathingNode> {
+	struct AStarPathingNode final : public PathingNodeBase<AStarPathingNode> {
 		using PathingNodeBase::PathingNodeBase;
 
 		// Used for pathfinding.
