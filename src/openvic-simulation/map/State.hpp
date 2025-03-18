@@ -112,9 +112,9 @@ namespace OpenVic {
 		Region const& PROPERTY(region);
 		states_t PROPERTY(states);
 
+	public:
 		StateSet(Region const& new_region);
 
-	public:
 		size_t get_state_count() const;
 
 		void update_gamestate();

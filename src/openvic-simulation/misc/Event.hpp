@@ -24,11 +24,10 @@ namespace OpenVic {
 			EffectScript PROPERTY(effect);
 			ConditionalWeightFactorMul PROPERTY(ai_chance);
 
-			EventOption(std::string_view new_name, EffectScript&& new_effect, ConditionalWeightFactorMul&& new_ai_chance);
-
 			bool parse_scripts(DefinitionManager const& definition_manager);
 
 		public:
+			EventOption(std::string_view new_name, EffectScript&& new_effect, ConditionalWeightFactorMul&& new_ai_chance);
 			EventOption(EventOption const&) = delete;
 			EventOption(EventOption&&) = default;
 			EventOption& operator=(EventOption const&) = delete;
@@ -96,6 +95,8 @@ namespace OpenVic {
 		IdentifierRegistry<OnAction> IDENTIFIER_REGISTRY(on_action);
 
 	public:
+		EventManager();
+
 		bool register_event(
 			std::string_view identifier, std::string_view title, std::string_view description, std::string_view image,
 			Event::event_type_t type, bool triggered_only, bool major, bool fire_only_once, bool allows_multiple_instances,

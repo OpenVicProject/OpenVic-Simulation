@@ -477,7 +477,7 @@ void Pop::pop_tick_without_cleanup(PopValuesFromProvince& shared_values) {
 			continue;
 		}
 
-		market_instance.place_buy_up_to_order(BuyUpToOrder {
+		market_instance.place_buy_up_to_order({
 			*good_definition,
 			max_quantity_to_buy,
 			money_to_spend,
@@ -487,7 +487,7 @@ void Pop::pop_tick_without_cleanup(PopValuesFromProvince& shared_values) {
 	}
 
 	if (artisanal_produce_left_to_sell > fixed_point_t::_0()) {
-		market_instance.place_market_sell_order(MarketSellOrder {
+		market_instance.place_market_sell_order({
 			artisanal_producer_nullable->get_production_type().get_output_good(),
 			artisanal_produce_left_to_sell,
 			this,
