@@ -4,6 +4,7 @@
 #include <functional>
 #include <optional>
 #include <type_traits>
+#include <vector>
 
 #include <openvic-dataloader/detail/SymbolIntern.hpp>
 #include <openvic-dataloader/v2script/AbstractSyntaxTree.hpp>
@@ -120,7 +121,10 @@ using namespace std::string_view_literals;
 		constexpr bool key_value_success_callback(std::string_view, ast::NodeCPtr) {
 			return true;
 		}
-
+		inline bool key_value_warn_callback(std::string_view key, ast::NodeCPtr) {
+			Logger::warning("Invalid dictionary key: ", key);
+			return true;
+		}
 		inline bool key_value_invalid_callback(std::string_view key, ast::NodeCPtr) {
 			Logger::error("Invalid dictionary key: ", key);
 			return false;
@@ -638,6 +642,8 @@ using namespace std::string_view_literals;
 				return true;
 			};
 		}
+
+		callback_t<std::string_view> vector_callback_string(std::vector<std::string>& vec);
 
 		template<typename T, typename U, typename... SetArgs>
 		Callback<T> auto set_callback(tsl::ordered_set<U, SetArgs...>& set, bool warn = false) {

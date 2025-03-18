@@ -151,13 +151,13 @@ bool ModifierManager::setup_modifier_effects() {
 		modifier_effect_cache.administrative_efficiency_modifier, "administrative_efficiency_modifier", true,
 		PROPORTION_DECIMAL, ModifierEffect::make_default_modifier_effect_localisation_key("administrative_efficiency")
 	);
-	ret &= register_technology_modifier_effect(
+	ret &= register_shared_tech_country_modifier_effect(
 		modifier_effect_cache.artisan_input, "artisan_input", false, PROPORTION_DECIMAL, {}, has_no_effect
 	);
-	ret &= register_technology_modifier_effect(
+	ret &= register_shared_tech_country_modifier_effect(
 		modifier_effect_cache.artisan_output, "artisan_output", true, PROPORTION_DECIMAL, {}, has_no_effect
 	);
-	ret &= register_technology_modifier_effect(
+	ret &= register_shared_tech_country_modifier_effect(
 		modifier_effect_cache.artisan_throughput, "artisan_throughput", true, PROPORTION_DECIMAL, {}, has_no_effect
 	);
 	ret &= register_base_country_modifier_effect(modifier_effect_cache.badboy, "badboy", false, RAW_DECIMAL);
@@ -757,7 +757,7 @@ key_value_callback_t ModifierManager::_expect_modifier_effect(
 	modifier_effect_registry_t const& registry,
 	ModifierValue& modifier_value
 ) const {
-	return _expect_modifier_effect_with_fallback(registry, modifier_value, key_value_invalid_callback);
+	return _expect_modifier_effect_with_fallback(registry, modifier_value, key_value_warn_callback);
 }
 
 key_value_callback_t ModifierManager::_expect_modifier_effect_with_fallback(
@@ -822,7 +822,7 @@ key_value_callback_t ModifierManager::expect_unit_terrain_modifier(
 		const std::string flat_identifier = get_flat_identifier(key, terrain_type_identifier);
 		ModifierEffect const* effect = unit_terrain_modifier_effects.get_item_by_identifier(flat_identifier);
 		if (effect == nullptr) {
-			return key_value_invalid_callback(flat_identifier, value);
+			return key_value_warn_callback(flat_identifier, value);
 		}
 		return _add_modifier_cb(modifier_value, effect, value);
 	};
