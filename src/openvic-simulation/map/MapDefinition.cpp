@@ -8,6 +8,7 @@
 #include <vector>
 
 #include <range/v3/algorithm/all_of.hpp>
+#include <range/v3/view/adjacent_remove_if.hpp>
 
 #include "openvic-simulation/dataloader/NodeTools.hpp"
 #include "openvic-simulation/map/ProvinceDefinition.hpp"
@@ -18,11 +19,13 @@
 #include "openvic-simulation/utility/BMP.hpp"
 #include "openvic-simulation/utility/Logger.hpp"
 #include "openvic-simulation/utility/StringUtils.hpp"
+#include "openvic-simulation/utility/Utility.hpp"
 
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;
 
-MapDefinition::MapDefinition() : dims { 0, 0 }, max_provinces { ProvinceDefinition::MAX_INDEX } {}
+MapDefinition::MapDefinition() : dims { 0, 0 }, max_provinces { ProvinceDefinition::MAX_INDEX } {
+}
 
 RiverSegment::RiverSegment(uint8_t new_size, std::vector<ivec2_t>&& new_points)
 	: size { new_size }, points { std::move(new_points) } {}
@@ -790,37 +793,42 @@ bool MapDefinition::load_map_images(fs::path const& province_path, fs::path cons
 		6. if there is no further point, finish the segment
 		7. if the colour value changes to a different river size (>1 && <12), recursively call this function on the next segment
 	*/
-	const auto next_segment = [&river_data, &rivers_bmp](auto&& self, ivec2_t last_segment_end, uint8_t last_segment_direction, river_t& river) {
+	static const auto next_segment = [&river_data, &rivers_bmp](auto&& self, ivec2_t last_segment_end, uint8_t last_segment_direction, river_t& river) {
 		size_t idx = last_segment_end.x + last_segment_end.y * rivers_bmp.get_width();
 
-		std::vector<ivec2_t> points;
+		// Ensures that if ever multithreaded, only one vector is used per thread
+		// Else acts like static
+		thread_local std::vector<ivec2_t> points;
+		// Default max vanilla river points is 444
+		points.reserve(256);
+
 		uint8_t direction = 0;
 
 		// check pixel above
 		if (last_segment_end.y > 0 && last_segment_direction != 1) { // check for bounds & ignore direction
 			if (river_data[idx - rivers_bmp.get_width()] < 12) {
-				points.push_back({ last_segment_end.x, last_segment_end.y - 1 });
+				points.emplace_back(last_segment_end.x, last_segment_end.y - 1);
 				direction = 2;
 			}
 		}
 		// check pixel to right
 		if (last_segment_end.x < rivers_bmp.get_width() - 1 && last_segment_direction != 4) {
 			if (river_data[idx + 1] < 12) {
-				points.push_back({ last_segment_end.x + 1, last_segment_end.y });
+				points.emplace_back(last_segment_end.x + 1, last_segment_end.y);
 				direction = 3;
 			}
 		}
 		// check pixel below
 		if (last_segment_end.y < rivers_bmp.get_height() - 1 && last_segment_direction != 2) {
 			if (river_data[idx + rivers_bmp.get_width()] < 12) {
-				points.push_back({ last_segment_end.x, last_segment_end.y + 1 });
+				points.emplace_back(last_segment_end.x, last_segment_end.y + 1);
 				direction = 1;
 			}
 		}
 		// check pixel to left
 		if (last_segment_end.x > 0 && last_segment_direction != 3) {
 			if (river_data[idx - 1] < 12) {
-				points.push_back({ last_segment_end.x - 1, last_segment_end.y });
+				points.emplace_back(last_segment_end.x - 1, last_segment_end.y);
 				direction = 4;
 			}
 		}
@@ -852,7 +860,7 @@ bool MapDefinition::load_map_images(fs::path const& province_path, fs::path cons
 			// check pixel above
 			if (points.back().y > 0 && direction != 1) { // check for bounds & ignore direction
 				if (river_data[idx - rivers_bmp.get_width()] == size + 1) { // now checking if size changes too
-					points.push_back({ points.back().x, points.back().y - 1 });
+					points.emplace_back(points.back().x, points.back().y - 1);
 					direction = 2;
 					continue;
 				} else if (river_data[idx - rivers_bmp.get_width()] == MERGE_COLOUR) { // check for merge node
@@ -867,7 +875,7 @@ bool MapDefinition::load_map_images(fs::path const& province_path, fs::path cons
 			// check pixel to right
 			if (points.back().x < rivers_bmp.get_width() - 1 && direction != 4) {
 				if (river_data[idx + 1] == size + 1) {
-					points.push_back({ points.back().x + 1, points.back().y });
+					points.emplace_back(points.back().x + 1, points.back().y);
 					direction = 3;
 					continue;
 				} else if (river_data[idx + 1] == MERGE_COLOUR) {
@@ -882,7 +890,7 @@ bool MapDefinition::load_map_images(fs::path const& province_path, fs::path cons
 			// check pixel below
 			if (points.back().y < rivers_bmp.get_height() - 1 && direction != 2) {
 				if (river_data[idx + rivers_bmp.get_width()] == size + 1) {
-					points.push_back({ points.back().x, points.back().y + 1 });
+					points.emplace_back(points.back().x, points.back().y + 1);
 					direction = 1;
 					continue;
 				} else if (river_data[idx + rivers_bmp.get_width()] == MERGE_COLOUR) {
@@ -897,7 +905,7 @@ bool MapDefinition::load_map_images(fs::path const& province_path, fs::path cons
 			// check pixel to left
 			if (points.back().x > 0 && direction != 3) {
 				if (river_data[idx - 1] == size + 1) {
-					points.push_back({ points.back().x - 1, points.back().y });
+					points.emplace_back(points.back().x - 1, points.back().y);
 					direction = 4;
 					continue;
 				} else if (river_data[idx - 1] == MERGE_COLOUR) {
@@ -919,25 +927,24 @@ bool MapDefinition::load_map_images(fs::path const& province_path, fs::path cons
 		}
 
 		// save memory & simplify by storing only start, corner, and end points.
-		const auto is_corner_point = [](ivec2_t previous, ivec2_t current, ivec2_t next) {
+		static const auto is_corner_point = [](ivec2_t const& previous, ivec2_t const& current, ivec2_t const& next) {
 			return ((current.x - previous.x) * (next.y - current.y)) != ((current.y - previous.y) * (next.x - current.x)); // slope is fun
 		};
-		std::vector<ivec2_t> simplified_points;
-		simplified_points.push_back(points.front()); // add starting point
-		for (size_t i = 1; i < points.size()-1; ++i) {
-			if (is_corner_point(points[i-1], points[i], points[i+1])) { // add corner points
-				simplified_points.push_back(points[i]);
-			}
-		}
-		simplified_points.push_back(points.back());
+
+		// Erase-remove idiom for is_corner_point
+		points.erase(utility::remove_if_dual_adjacent(points.begin(), points.end(), std::not_fn(is_corner_point)), points.end());
 
 		// add segment then recursively call if needed
-		river.push_back({ size, std::move(simplified_points) });
+		river.emplace_back(size, std::move(points));
 		if (river_complete) {
 			return;
 		}
-		self(static_cast<decltype(self)>(self), new_point, direction, river);
+		self(self, new_point, direction, river);
 	};
+
+	// Default vanilla rivers is 905
+	// Eliminates reallocations at the cost of memory usage
+	rivers.reserve(905);
 
 	// find every river source and then run the segment algorithm.
 	for (int y = 0; y < rivers_bmp.get_height(); ++y) {
@@ -951,6 +958,7 @@ bool MapDefinition::load_map_images(fs::path const& province_path, fs::path cons
 			}
 		}
 	}
+
 	Logger::info("Generated ", rivers.size(), " rivers.");
 
 	return ret;

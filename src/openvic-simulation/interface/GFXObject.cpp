@@ -88,7 +88,7 @@ bool Actor::_set_animation(std::string_view name, std::string_view file, fixed_p
 		return true;
 	}
 
-	animation->emplace(Animation { file, scroll_time });
+	animation->emplace(file, scroll_time);
 	return true;
 }
 
@@ -99,6 +99,9 @@ bool Actor::_fill_key_map(NodeTools::case_insensitive_key_map_t& key_map) {
 	static const auto bind_set_animation = [](Actor* self, std::string_view name) {
 		return [self, name](std::string_view file){ return self->_set_animation(name, file, 0); };
 	};
+
+	// Default max vanilla attachments is 1, 3 is the max I've seen in mods
+	attachments.reserve(1);
 
 	ret &= add_key_map_entries(key_map,
 		"actorfile", ONE_EXACTLY, expect_string(assign_variable_callback_string(model_file)),
@@ -117,7 +120,7 @@ bool Actor::_fill_key_map(NodeTools::case_insensitive_key_map_t& key_map) {
 				return false;
 			}
 
-			attachments.push_back({ actor_name, attach_node, attach_id });
+			attachments.emplace_back(actor_name, attach_node, attach_id);
 			return true;
 		},
 

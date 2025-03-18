@@ -65,15 +65,25 @@ bool DeploymentManager::load_oob_file(
 		}
 	}
 
-	std::vector<ArmyDeployment> armies;
-	std::vector<NavyDeployment> navies;
-	std::vector<LeaderBase> leaders;
+	// Ensures that if ever multithreaded, only one vector is used per thread
+	// Else acts like static
+	thread_local std::vector<ArmyDeployment> armies;
+	// Default max vanilla armies is 15, 23 is the max I've seen in mods
+	armies.reserve(8);
+
+	thread_local std::vector<NavyDeployment> navies;
+	// Default max vanilla navies is 14, 13 is the max I've seen in mods
+	navies.reserve(8);
+
+	thread_local std::vector<LeaderBase> leaders;
+	// Default max vanilla leaders is 17, 23 is the max I've seen in mods
+	leaders.reserve(8);
 
 	size_t general_count = 0, admiral_count = 0;
 
 	using enum UnitType::branch_t;
 
-	const auto leader_callback = [&leaders, &definition_manager, &general_count, &admiral_count](ast::NodeCPtr node) -> bool {
+	const auto leader_callback = [&definition_manager, &general_count, &admiral_count](ast::NodeCPtr node) -> bool {
 		std::string_view leader_name {};
 		UnitType::branch_t leader_branch = INVALID_BRANCH;
 		Date leader_date {};
@@ -127,8 +137,8 @@ bool DeploymentManager::load_oob_file(
 			return false;
 		}
 
-		leaders.push_back(
-			{ leader_name, leader_branch, leader_date, leader_personality, leader_background, leader_prestige, picture }
+		leaders.emplace_back(
+			leader_name, leader_branch, leader_date, leader_personality, leader_background, leader_prestige, picture
 		);
 
 		return ret;
@@ -137,7 +147,7 @@ bool DeploymentManager::load_oob_file(
 	bool ret = expect_dictionary_keys_and_default(
 		key_value_success_callback, // TODO: load SOI information
 		"leader", ZERO_OR_MORE, leader_callback,
-		"army", ZERO_OR_MORE, [&armies, &general_count, &definition_manager, &leader_callback](ast::NodeCPtr node) -> bool {
+		"army", ZERO_OR_MORE, [&general_count, &definition_manager, &leader_callback](ast::NodeCPtr node) -> bool {
 			std::string_view army_name {};
 			ProvinceDefinition const* army_location = nullptr;
 			std::vector<RegimentDeployment> army_regiments {};
@@ -171,23 +181,21 @@ bool DeploymentManager::load_oob_file(
 						return false;
 					}
 
-					army_regiments.push_back({ regiment_name, *regiment_type, regiment_home });
+					army_regiments.emplace_back(regiment_name, *regiment_type, regiment_home);
 
 					return ret;
 				},
 				"leader", ZERO_OR_ONE, leader_callback
 			)(node);
 
-			armies.push_back(
-				{
-					army_name, army_location, std::move(army_regiments),
-					starting_general_count < general_count ? std::optional { general_count - 1 } : std::nullopt
-				}
+			armies.emplace_back(
+				army_name, army_location, std::move(army_regiments),
+				starting_general_count < general_count ? std::optional { general_count - 1 } : std::nullopt
 			);
 
 			return ret;
 		},
-		"navy", ZERO_OR_MORE, [&navies, &admiral_count, &definition_manager, &leader_callback](ast::NodeCPtr node) -> bool {
+		"navy", ZERO_OR_MORE, [&admiral_count, &definition_manager, &leader_callback](ast::NodeCPtr node) -> bool {
 			std::string_view navy_name {};
 			ProvinceDefinition const* navy_location = nullptr;
 			std::vector<ShipDeployment> navy_ships {};
@@ -214,18 +222,16 @@ bool DeploymentManager::load_oob_file(
 						return false;
 					}
 
-					navy_ships.push_back({ ship_name, *ship_type });
+					navy_ships.emplace_back(ship_name, *ship_type);
 
 					return ret;
 				},
 				"leader", ZERO_OR_ONE, leader_callback
 			)(node);
 
-			navies.push_back(
-				{
-					navy_name, navy_location, std::move(navy_ships),
-					starting_admiral_count < admiral_count ? std::optional { admiral_count - 1 } : std::nullopt
-				}
+			navies.emplace_back(
+				navy_name, navy_location, std::move(navy_ships),
+				starting_admiral_count < admiral_count ? std::optional { admiral_count - 1 } : std::nullopt
 			);
 
 			return ret;

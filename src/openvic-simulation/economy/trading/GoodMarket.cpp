@@ -53,14 +53,14 @@ void GoodMarket::update_next_price_limits() {
 	price_inverse = fixed_point_t::_1() / price;
 }
 
-void GoodMarket::add_buy_up_to_order(GoodBuyUpToOrder const& buy_up_to_order) {
+void GoodMarket::add_buy_up_to_order(GoodBuyUpToOrder&& buy_up_to_order) {
 	const std::lock_guard<std::mutex> lock_guard { *buy_lock };
-	buy_up_to_orders.push_back(buy_up_to_order);
+	buy_up_to_orders.push_back(std::move(buy_up_to_order));
 }
 
-void GoodMarket::add_market_sell_order(GoodMarketSellOrder const& market_sell_order) {
+void GoodMarket::add_market_sell_order(GoodMarketSellOrder&& market_sell_order) {
 	const std::lock_guard<std::mutex> lock_guard { *sell_lock };
-	market_sell_orders.push_back(market_sell_order);
+	market_sell_orders.push_back(std::move(market_sell_order));
 }
 
 void GoodMarket::execute_orders(std::vector<fixed_point_t>& reusable_vector_0, std::vector<fixed_point_t>& reusable_vector_1) {
