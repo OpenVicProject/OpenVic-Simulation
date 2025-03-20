@@ -18,6 +18,15 @@
 #include "openvic-simulation/utility/StringUtils.hpp"
 #include "openvic-simulation/utility/Utility.hpp"
 
+/* Sin lookup table */
+#include "openvic-simulation/types/fixed_point/FixedPointLUT_sin.hpp"
+
+/* Base e exponential lookup table */
+#include "openvic-simulation/types/fixed_point/FixedPointLUT_2_16_EXP_e.hpp"
+
+/* Base 2001 exponential lookup table */
+#include "openvic-simulation/types/fixed_point/FixedPointLUT_2_16_EXP_2001.hpp"
+
 namespace OpenVic {
 	struct fixed_point_t {
 		/* PROPERTY generated getter functions will return fixed points by value, rather than const reference. */
@@ -43,20 +52,9 @@ namespace OpenVic {
 	private:
 		value_type PROPERTY_RW_CUSTOM_NAME(value, get_raw_value, set_raw_value);
 
-		/* Sin lookup table */
-		#include "openvic-simulation/types/fixed_point/FixedPointLUT_sin.hpp"
-
-		static_assert(SIN_LUT_PRECISION == PRECISION);
-
-		/* Base e exponential lookup table */
-		#include "openvic-simulation/types/fixed_point/FixedPointLUT_2_16_EXP_e.hpp"
-
-		static_assert(LUT_2_16_EXP_e_DIVISOR == 1 << PRECISION);
-
-		/* Base 2001 exponential lookup table */
-		#include "openvic-simulation/types/fixed_point/FixedPointLUT_2_16_EXP_2001.hpp"
-
-		static_assert(LUT_2_16_EXP_2001_DIVISOR == 1 << PRECISION);
+		static_assert(_detail::LUT::SIN_PRECISION == PRECISION);
+		static_assert(_detail::LUT::_2_16_EXP_e_DIVISOR == 1 << PRECISION);
+		static_assert(_detail::LUT::_2_16_EXP_2001_DIVISOR == 1 << PRECISION);
 
 		// Doesn't account for sign, so -n.abc -> 1 - 0.abc
 		constexpr fixed_point_t get_frac() const {
@@ -211,6 +209,8 @@ namespace OpenVic {
 		}
 
 		constexpr fixed_point_t sin() const {
+			using namespace _detail::LUT;
+
 			value_type num = (*this % pi2() * one_div_pi2()).get_raw_value();
 
 			const bool negative = num < 0;
@@ -218,12 +218,12 @@ namespace OpenVic {
 				num = -num;
 			}
 
-			const value_type index = num >> SIN_LUT_SHIFT;
-			const value_type a = SIN_LUT[index];
-			const value_type b = SIN_LUT[index + 1];
+			const value_type index = num >> SIN_SHIFT;
+			const value_type a = SIN[index];
+			const value_type b = SIN[index + 1];
 
-			const value_type fraction = (num - (index << SIN_LUT_SHIFT)) << SIN_LUT_COUNT_LOG2;
-			const value_type result = a + (((b - a) * fraction) >> SIN_LUT_PRECISION);
+			const value_type fraction = (num - (index << SIN_SHIFT)) << SIN_COUNT_LOG2;
+			const value_type result = a + (((b - a) * fraction) >> SIN_PRECISION);
 			return !negative ? parse_raw(result) : parse_raw(-result);
 		}
 
@@ -802,11 +802,11 @@ namespace OpenVic {
 
 	public:
 		static inline constexpr fixed_point_t exp(fixed_point_t const& x) {
-			return _exp_internal<LUT_2_16_EXP_e.size(), LUT_2_16_EXP_e>(x);
+			return _exp_internal<_detail::LUT::_2_16_EXP_e.size(), _detail::LUT::_2_16_EXP_e>(x);
 		}
 
 		static inline constexpr fixed_point_t exp_2001(fixed_point_t const& x) {
-			return _exp_internal<LUT_2_16_EXP_2001.size(), LUT_2_16_EXP_2001>(x);
+			return _exp_internal<_detail::LUT::_2_16_EXP_2001.size(), _detail::LUT::_2_16_EXP_2001>(x);
 		}
 	};
 
