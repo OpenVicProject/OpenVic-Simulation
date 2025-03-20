@@ -171,7 +171,8 @@ ModifierEffectCache::ModifierEffectCache()
 	unciv_economic_modifier { nullptr },
 	unciv_military_modifier { nullptr },
 	unit_recruitment_time { nullptr },
-	war_exhaustion { nullptr },
+	war_exhaustion_from_battles { nullptr },
+	war_exhaustion_monthly { nullptr },
 
 	/* Province Modifier Effects */
 	assimilation_rate { nullptr },
