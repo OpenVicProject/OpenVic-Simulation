@@ -38,9 +38,8 @@ namespace OpenVic::GFX {
 			std::string PROPERTY(attach_node);
 			attach_id_t PROPERTY(attach_id);
 
-			Attachment(std::string_view new_actor_name, std::string_view new_attach_node, attach_id_t new_attach_id);
-
 		public:
+			Attachment(std::string_view new_actor_name, std::string_view new_attach_node, attach_id_t new_attach_id);
 			Attachment(Attachment&&) = default;
 		};
 
@@ -50,9 +49,8 @@ namespace OpenVic::GFX {
 			std::string PROPERTY(file);
 			fixed_point_t PROPERTY(scroll_time);
 
-			Animation(std::string_view new_file, fixed_point_t new_scroll_time);
-
 		public:
+			Animation(std::string_view new_file, fixed_point_t new_scroll_time);
 			Animation(Animation&&) = default;
 		};
 

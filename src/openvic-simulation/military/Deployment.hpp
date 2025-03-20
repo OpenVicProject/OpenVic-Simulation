@@ -24,9 +24,8 @@ namespace OpenVic {
 		RegimentType const& PROPERTY(type);
 		ProvinceDefinition const* PROPERTY(home);
 
-		UnitDeployment(std::string_view new_name, RegimentType const& new_type, ProvinceDefinition const* new_home);
-
 	public:
+		UnitDeployment(std::string_view new_name, RegimentType const& new_type, ProvinceDefinition const* new_home);
 		UnitDeployment(UnitDeployment&&) = default;
 	};
 
@@ -40,9 +39,8 @@ namespace OpenVic {
 		std::string PROPERTY(name);
 		ShipType const& PROPERTY(type);
 
-		UnitDeployment(std::string_view new_name, ShipType const& new_type);
-
 	public:
+		UnitDeployment(std::string_view new_name, ShipType const& new_type);
 		UnitDeployment(UnitDeployment&&) = default;
 	};
 
@@ -60,12 +58,11 @@ namespace OpenVic {
 		std::vector<_Unit> PROPERTY(units);
 		std::optional<size_t> PROPERTY(leader_index);
 
+	public:
 		UnitDeploymentGroup(
 			std::string_view new_name, ProvinceDefinition const* new_location, std::vector<_Unit>&& new_units,
 			std::optional<size_t> new_leader_index
 		);
-
-	public:
 		UnitDeploymentGroup(UnitDeploymentGroup&&) = default;
 	};
 

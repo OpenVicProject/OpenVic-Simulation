@@ -111,6 +111,16 @@ std::vector<WarHistory const*> DiplomaticHistoryManager::get_wars(Date date) con
 bool DiplomaticHistoryManager::load_diplomacy_history_file(
 	CountryDefinitionManager const& country_definition_manager, ast::NodeCPtr root
 ) {
+	// Default vanilla alliances is 2, 54 is the max I've seen in mods
+	// Eliminates reallocations at the cost of memory usage
+	alliances.reserve(16);
+	// Default vanilla subjects is 42, 152 is the max I've seen in mods
+	// Eliminates reallocations at the cost of memory usage
+	subjects.reserve(64);
+	// Default vanilla reparations is 0, yet to see a mod use it
+	// Eliminates reallocations at the cost of memory usage
+	reparations.reserve(1);
+
 	return expect_dictionary_keys(
 		"alliance", ZERO_OR_MORE, [this, &country_definition_manager](ast::NodeCPtr node) -> bool {
 			CountryDefinition const* first = nullptr;
@@ -129,7 +139,7 @@ bool DiplomaticHistoryManager::load_diplomacy_history_file(
 				"end_date", ZERO_OR_ONE, expect_date_identifier_or_string(assign_variable_callback(end))
 			)(node);
 
-			alliances.push_back({ first, second, { start, end } });
+			alliances.emplace_back(first, second, Period { start, end });
 			return ret;
 		},
 		"vassal", ZERO_OR_MORE, [this, &country_definition_manager](ast::NodeCPtr node) -> bool {
@@ -149,7 +159,7 @@ bool DiplomaticHistoryManager::load_diplomacy_history_file(
 				"end_date", ZERO_OR_ONE, expect_date_identifier_or_string(assign_variable_callback(end))
 			)(node);
 
-			subjects.push_back({ overlord, subject, SubjectHistory::type_t::VASSAL, { start, end } });
+			subjects.emplace_back(overlord, subject, SubjectHistory::type_t::VASSAL, Period { start, end });
 			return ret;
 		},
 		"union", ZERO_OR_MORE, [this, &country_definition_manager](ast::NodeCPtr node) -> bool {
@@ -169,7 +179,7 @@ bool DiplomaticHistoryManager::load_diplomacy_history_file(
 				"end_date", ZERO_OR_ONE, expect_date_identifier_or_string(assign_variable_callback(end))
 			)(node);
 
-			subjects.push_back({ overlord, subject, SubjectHistory::type_t::UNION, { start, end } });
+			subjects.emplace_back(overlord, subject, SubjectHistory::type_t::UNION, Period { start, end });
 			return ret;
 		},
 		"substate", ZERO_OR_MORE, [this, &country_definition_manager](ast::NodeCPtr node) -> bool {
@@ -189,7 +199,7 @@ bool DiplomaticHistoryManager::load_diplomacy_history_file(
 				"end_date", ZERO_OR_ONE, expect_date_identifier_or_string(assign_variable_callback(end))
 			)(node);
 
-			subjects.push_back({ overlord, subject, SubjectHistory::type_t::SUBSTATE, { start, end } });
+			subjects.emplace_back(overlord, subject, SubjectHistory::type_t::SUBSTATE, Period { start, end });
 			return ret;
 		},
 		"reparations", ZERO_OR_MORE, [this, &country_definition_manager](ast::NodeCPtr node) -> bool {
@@ -209,7 +219,7 @@ bool DiplomaticHistoryManager::load_diplomacy_history_file(
 				"end_date", ZERO_OR_ONE, expect_date_identifier_or_string(assign_variable_callback(end))
 			)(node);
 
-			reparations.push_back({ receiver, sender, { start, end } });
+			reparations.emplace_back(receiver, sender, Period { start, end });
 			return ret;
 		}
 	)(root);
@@ -217,13 +227,29 @@ bool DiplomaticHistoryManager::load_diplomacy_history_file(
 
 bool DiplomaticHistoryManager::load_war_history_file(DefinitionManager const& definition_manager, ast::NodeCPtr root) {
 	std::string_view name {};
-	std::vector<WarHistory::war_participant_t> attackers {};
-	std::vector<WarHistory::war_participant_t> defenders {};
-	std::vector<WarHistory::added_wargoal_t> wargoals {};
+
+	// Ensures that if ever multithreaded, only one vector is used per thread
+	// Else acts like static
+	thread_local std::vector<WarHistory::war_participant_t> attackers;
+	// Default max vanilla attackers is 1, 1 is the max I've seen in mods
+	// Eliminates reallocations
+	attackers.reserve(1);
+
+	thread_local std::vector<WarHistory::war_participant_t> defenders;
+	// Default max vanilla defenders is 1, 1 is the max I've seen in mods
+	// Eliminates reallocations
+	defenders.reserve(1);
+
+	thread_local std::vector<WarHistory::added_wargoal_t> wargoals;
+	// Default max vanilla wargoals is 2, 2 is the max I've seen in mods
+	// Eliminates reallocations
+	wargoals.reserve(1);
+
 	Date current_date {};
 
+
 	bool ret = expect_dictionary_keys_and_default(
-		[&definition_manager, &attackers, &defenders, &wargoals, &current_date, &name](
+		[&definition_manager, &current_date, &name](
 			std::string_view key, ast::NodeCPtr node
 		) -> bool {
 			bool ret = expect_date_str(assign_variable_callback(current_date))(key);
@@ -231,7 +257,7 @@ bool DiplomaticHistoryManager::load_war_history_file(DefinitionManager const& de
 			ret &= expect_dictionary_keys(
 				"add_attacker", ZERO_OR_MORE,
 					definition_manager.get_country_definition_manager().expect_country_definition_identifier(
-						[&attackers, &current_date, &name](CountryDefinition const& country) -> bool {
+						[&current_date, &name](CountryDefinition const& country) -> bool {
 							for (auto const& attacker : attackers) {
 								if (attacker.get_country() == &country) {
 									Logger::error(
@@ -243,13 +269,13 @@ bool DiplomaticHistoryManager::load_war_history_file(DefinitionManager const& de
 								}
 							}
 
-							attackers.push_back({ &country, { current_date, {} } });
+							attackers.emplace_back(&country, Period { current_date, {} });
 							return true;
 						}
 					),
 				"add_defender", ZERO_OR_MORE,
 					definition_manager.get_country_definition_manager().expect_country_definition_identifier(
-						[&defenders, &current_date, &name](CountryDefinition const& country) -> bool {
+						[&current_date, &name](CountryDefinition const& country) -> bool {
 							for (auto const& defender : defenders) {
 								if (defender.get_country() == &country) {
 									Logger::error(
@@ -261,13 +287,13 @@ bool DiplomaticHistoryManager::load_war_history_file(DefinitionManager const& de
 								}
 							}
 
-							defenders.push_back({ &country, { current_date, {} } });
+							defenders.emplace_back(&country, Period { current_date, {} });
 							return true;
 						}
 					),
 				"rem_attacker", ZERO_OR_MORE,
 					definition_manager.get_country_definition_manager().expect_country_definition_identifier(
-						[&attackers, &current_date, &name](CountryDefinition const& country) -> bool {
+						[&current_date, &name](CountryDefinition const& country) -> bool {
 							WarHistory::war_participant_t* participant_to_remove = nullptr;
 
 							for (auto& attacker : attackers) {
@@ -291,7 +317,7 @@ bool DiplomaticHistoryManager::load_war_history_file(DefinitionManager const& de
 					),
 				"rem_defender", ZERO_OR_MORE,
 					definition_manager.get_country_definition_manager().expect_country_definition_identifier(
-						[&defenders, &current_date, &name](CountryDefinition const& country) -> bool {
+						[&current_date, &name](CountryDefinition const& country) -> bool {
 							WarHistory::war_participant_t* participant_to_remove = nullptr;
 
 							for (auto& defender : defenders) {
@@ -313,7 +339,7 @@ bool DiplomaticHistoryManager::load_war_history_file(DefinitionManager const& de
 							return participant_to_remove->period.try_set_end(current_date);
 						}
 					),
-				"war_goal", ZERO_OR_MORE, [&definition_manager, &wargoals, &current_date](ast::NodeCPtr value) -> bool {
+				"war_goal", ZERO_OR_MORE, [&definition_manager, &current_date](ast::NodeCPtr value) -> bool {
 					CountryDefinition const* actor = nullptr;
 					CountryDefinition const* receiver = nullptr;
 					WargoalType const* type = nullptr;
@@ -341,7 +367,7 @@ bool DiplomaticHistoryManager::load_war_history_file(DefinitionManager const& de
 							)
 					)(value);
 
-					wargoals.push_back({ current_date, actor, receiver, type, third_party, target });
+					wargoals.emplace_back(current_date, actor, receiver, type, third_party, target);
 					return ret;
 				}
 			)(node);
@@ -351,7 +377,7 @@ bool DiplomaticHistoryManager::load_war_history_file(DefinitionManager const& de
 		"name", ZERO_OR_ONE, expect_string(assign_variable_callback(name))
 	)(root);
 
-	wars.push_back({ name, std::move(attackers), std::move(defenders), std::move(wargoals) });
+	wars.emplace_back(name, std::move(attackers), std::move(defenders), std::move(wargoals));
 
 	return ret;
 }

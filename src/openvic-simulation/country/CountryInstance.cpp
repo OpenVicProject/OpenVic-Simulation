@@ -1832,7 +1832,10 @@ void CountryInstanceManager::update_rankings(Date today, DefineManager const& de
 
 CountryInstanceManager::CountryInstanceManager(CountryDefinitionManager const& new_country_definition_manager)
   : country_definition_manager { new_country_definition_manager },
-	country_definition_to_instance_map { &new_country_definition_manager.get_country_definitions() } {}
+	country_definition_to_instance_map { &new_country_definition_manager.get_country_definitions() } {
+		great_powers.reserve(16);
+		secondary_powers.reserve(16);
+	}
 
 CountryInstance& CountryInstanceManager::get_country_instance_from_definition(CountryDefinition const& country) {
 	return *country_definition_to_instance_map[country];

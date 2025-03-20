@@ -29,16 +29,14 @@ namespace OpenVic {
 		fixed_point_t PROPERTY(prestige);
 		std::string PROPERTY(picture);
 
-	private:
-		LeaderBase(
-			std::string_view new_name, UnitType::branch_t new_branch, Date new_date, LeaderTrait const* new_personality,
-			LeaderTrait const* new_background, fixed_point_t new_prestige, std::string_view new_picture
-		);
-
 	protected:
 		LeaderBase(LeaderBase const&) = default;
 
 	public:
+		LeaderBase(
+			std::string_view new_name, UnitType::branch_t new_branch, Date new_date, LeaderTrait const* new_personality,
+			LeaderTrait const* new_background, fixed_point_t new_prestige, std::string_view new_picture
+		);
 		LeaderBase(LeaderBase&&) = default;
 
 		void set_picture(std::string_view new_picture);

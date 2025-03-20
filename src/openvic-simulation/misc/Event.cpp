@@ -48,6 +48,11 @@ bool Event::parse_scripts(DefinitionManager const& definition_manager) {
 OnAction::OnAction(std::string_view new_identifier, weight_map_t&& new_weighted_events)
 	: HasIdentifier { new_identifier }, weighted_events { std::move(new_weighted_events) } {}
 
+EventManager::EventManager() {
+	// Default total vanilla events is 1064
+	events.reserve(1064);
+}
+
 bool EventManager::register_event(
 	std::string_view identifier, std::string_view title, std::string_view description, std::string_view image,
 	Event::event_type_t type, bool triggered_only, bool major, bool fire_only_once, bool allows_multiple_instances, bool news,
@@ -146,7 +151,12 @@ bool EventManager::load_event_file(IssueManager const& issue_manager, ast::NodeC
 			ConditionScript trigger { initial_scope, COUNTRY, NO_SCOPE };
 			ConditionalWeightTime mean_time_to_happen { initial_scope, COUNTRY, NO_SCOPE };
 			EffectScript immediate;
-			std::vector<Event::EventOption> options;
+
+			// Ensures that if ever multithreaded, only one vector is used per thread
+			// Else acts like static
+			thread_local std::vector<Event::EventOption> options;
+			// Default max vanilla options is 5
+			options.reserve(2);
 
 			bool ret = expect_dictionary_keys(
 				"id", ONE_EXACTLY, expect_identifier(assign_variable_callback(identifier)),
@@ -165,7 +175,7 @@ bool EventManager::load_event_file(IssueManager const& issue_manager, ast::NodeC
 				"election", ZERO_OR_ONE, expect_bool(assign_variable_callback(election)),
 				"issue_group", ZERO_OR_ONE,
 					issue_manager.expect_issue_group_identifier(assign_variable_callback_pointer(election_issue_group)),
-				"option", ONE_OR_MORE, [&options, initial_scope](ast::NodeCPtr node) -> bool {
+				"option", ONE_OR_MORE, [initial_scope](ast::NodeCPtr node) -> bool {
 					std::string_view name;
 					EffectScript effect;
 					ConditionalWeightFactorMul ai_chance {
@@ -182,13 +192,14 @@ bool EventManager::load_event_file(IssueManager const& issue_manager, ast::NodeC
 
 					ret &= effect.expect_script()(node);
 
-					options.push_back({ name, std::move(effect), std::move(ai_chance) });
+					options.emplace_back(name, std::move(effect), std::move(ai_chance));
 					return ret;
 				},
 				"trigger", ZERO_OR_ONE, trigger.expect_script(),
 				"mean_time_to_happen", ZERO_OR_ONE, mean_time_to_happen.expect_conditional_weight(),
 				"immediate", ZERO_OR_MORE, immediate.expect_script()
 			)(value);
+
 			ret &= register_event(
 				identifier, title, description, image, type, triggered_only, major, fire_only_once, allows_multiple_instances,
 				news, news_title, news_desc_long, news_desc_medium, news_desc_short, election, election_issue_group,
