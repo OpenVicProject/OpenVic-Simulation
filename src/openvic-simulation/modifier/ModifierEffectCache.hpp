@@ -141,7 +141,8 @@ namespace OpenVic {
 		ModifierEffect const* PROPERTY(unciv_economic_modifier);
 		ModifierEffect const* PROPERTY(unciv_military_modifier);
 		ModifierEffect const* PROPERTY(unit_recruitment_time);
-		ModifierEffect const* PROPERTY(war_exhaustion);
+		ModifierEffect const* PROPERTY(war_exhaustion_from_battles);
+		ModifierEffect const* PROPERTY(war_exhaustion_monthly);
 
 		/* Province Modifier Effects */
 		ModifierEffect const* PROPERTY(assimilation_rate);

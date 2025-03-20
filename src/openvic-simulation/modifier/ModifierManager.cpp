@@ -443,8 +443,11 @@ bool ModifierManager::setup_modifier_effects() {
 	ret &= register_base_country_modifier_effect(
 		modifier_effect_cache.unit_recruitment_time, "unit_recruitment_time", false, PROPORTION_DECIMAL
 	);
-	ret &= register_shared_tech_country_modifier_effect(
-		modifier_effect_cache.war_exhaustion, "war_exhaustion", false, RAW_DECIMAL, "WAR_EXHAUST_BATTLES"
+	ret &= register_technology_modifier_effect(
+		modifier_effect_cache.war_exhaustion_from_battles, "war_exhaustion", false, RAW_DECIMAL, "WAR_EXHAUST_BATTLES"
+	);
+	ret &= register_base_country_modifier_effect(
+		modifier_effect_cache.war_exhaustion_monthly, "war_exhaustion", false, RAW_DECIMAL, "WAR_EXHAUSTION"
 	);
 
 	/* Province Modifier Effects */
