@@ -1,3 +1,5 @@
+[![🖥️ Builds](https://github.com/OpenVicProject/OpenVic-Simulation/actions/workflows/builds.yml/badge.svg)](https://github.com/OpenVicProject/OpenVic-Simulation/actions/workflows/builds.yml)
+
 # OpenVic-Simulation
 Repo of the OpenVic-Simulation Library for [OpenVic](https://github.com/OpenVicProject/OpenVic)
 
