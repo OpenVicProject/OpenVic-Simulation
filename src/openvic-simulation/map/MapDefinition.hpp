@@ -29,9 +29,8 @@ namespace OpenVic {
 		const uint8_t PROPERTY(size);
 		std::vector<ivec2_t> PROPERTY(points);
 
-		RiverSegment(uint8_t new_size, std::vector<ivec2_t>&& new_points);
-
 	public:
+		RiverSegment(uint8_t new_size, std::vector<ivec2_t>&& new_points);
 		RiverSegment(RiverSegment&&) = default;
 	};
 

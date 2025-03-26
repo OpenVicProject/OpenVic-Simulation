@@ -235,7 +235,7 @@ bool StateManager::add_state_set(
 		 * or it was used to create a new state and the program arrived here normally. */
 	}
 
-	state_sets.push_back({ region });
+	state_sets.emplace_back(region);
 
 	StateSet& state_set = state_sets.back();
 

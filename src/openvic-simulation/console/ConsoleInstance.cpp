@@ -116,7 +116,7 @@ bool ConsoleInstance::execute(std::string_view command) {
 			}
 		}
 
-		arguments.push_back(std::string_view { arg_start, arg_end });
+		arguments.emplace_back(arg_start, arg_end);
 
 		// Accessing command.end() is UB
 		if (it == command.end()) {

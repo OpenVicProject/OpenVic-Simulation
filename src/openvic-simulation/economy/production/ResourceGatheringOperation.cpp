@@ -162,7 +162,7 @@ void ResourceGatheringOperation::rgo_tick() {
 			get_country_to_report_economy_nullable->report_output(production_type, output_quantity_yesterday);
 		}
 
-		market_instance.place_market_sell_order(MarketSellOrder {
+		market_instance.place_market_sell_order({
 			production_type.get_output_good(),
 			output_quantity_yesterday,
 			this,
