@@ -108,7 +108,11 @@ def build_snitch(env):
 
     SNITCH_VERSION = "{}.{}.{}".format(major_version, minor_version, patch_version)
 
-    snitch_env = env.Clone()
+    snitch_env = None
+    try:
+        snitch_env = env.snitch_env
+    except(AttributeError):
+        snitch_env = env.Clone()
 
     snitch_env.Append(
         BUILDERS={
@@ -202,5 +206,7 @@ def build_snitch(env):
     else:
         env.Append(CPPPATH=[[snitch_env.Dir(p) for p in [source_path, include_path]]])
         Default(config)
+
+    env.snitch_env = snitch_env
 
 build_snitch(env)

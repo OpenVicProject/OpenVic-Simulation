@@ -1,0 +1,35 @@
+#!/usr/bin/env python
+import os
+import subprocess
+from pathlib import Path
+
+Import("env")
+Import("parent_env")
+
+
+def build_nanobench(env):
+    nanobench_env = env.Clone()
+
+    include_path = "nanobench/src/include"
+    source_path = "nanobench/src/test/app"
+    nanobench_env.Append(CPPPATH=[nanobench_env.Dir(include_path)])
+    sources = nanobench_env.GlobRecursive("nanobench.cpp", [source_path])
+
+    library_name = "libnanobench" + env["LIBSUFFIX"]
+    library = nanobench_env.StaticLibrary(target=os.path.join(source_path, library_name), source=sources)
+    Default(library)
+
+    env.Append(CPPPATH=[nanobench_env.Dir(include_path)])
+    env.Append(LIBPATH=[nanobench_env.Dir(source_path)])
+    env.Prepend(LIBS=[library_name])
+
+def build_snitch(env, parent_env):
+    try:
+        parent_env.snitch_env
+        SConscript("../../deps/SCsub", {"env": parent_env })
+    except(AttributeError):
+        SConscript("../../deps/SCsub", {"env": env })
+
+
+build_nanobench(env)
+build_snitch(env, parent_env)

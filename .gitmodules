@@ -23,3 +23,6 @@
 [submodule "deps/std_function/func"]
 	path = deps/std_function/func
 	url = https://github.com/skarupke/std_function
+[submodule "tests/benchmarks/deps/nanobench"]
+	path = tests/benchmarks/deps/nanobench
+	url = https://github.com/Spartan322/nanobench

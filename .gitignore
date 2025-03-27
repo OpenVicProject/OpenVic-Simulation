@@ -66,6 +66,7 @@ bin/*
 *.exp
 
 tests/bin/*
+tests/benchmarks/bin/*
 
 # Build configuarion.
 /custom.py
