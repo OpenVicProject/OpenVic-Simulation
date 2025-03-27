@@ -16,6 +16,8 @@ opts = env.SetupOptions()
 
 opts.Add(BoolVariable("build_ovsim_tests", "Build the openvic simulation unit tests", env.is_standalone))
 opts.Add(BoolVariable("run_ovsim_tests", "Run the openvic simulation unit tests", False))
+opts.Add(BoolVariable("build_ovsim_benchmarks", "Build the openvic simulation benchmarks", False))
+opts.Add(BoolVariable("run_ovsim_benchmarks", "Run the openvic simulation benchmarks", False))
 opts.Add(BoolVariable(key="build_ovsim_library", help="Build the openvic simulation library.", default=env.get("build_ovsim_library", not env.is_standalone)))
 opts.Add(BoolVariable("build_ovsim_headless", "Build the openvic simulation headless executable", env.is_standalone))
 
@@ -61,7 +63,10 @@ default_args = []
 if env["run_ovsim_tests"]:
     env["build_ovsim_tests"] = True
 
-if env["build_ovsim_tests"]:
+if env["run_ovsim_benchmarks"]:
+    env["build_ovsim_benchmarks"] = True
+
+if env["build_ovsim_tests"] or env["build_ovsim_benchmarks"]:
     env["build_ovsim_library"] = True
 
 if env["build_ovsim_library"]:
@@ -99,6 +104,12 @@ if env["build_ovsim_tests"]:
 
     if env["run_ovsim_tests"]:
         tests_env.RunUnitTest()
+
+if env["build_ovsim_benchmarks"]:
+    benchmarks_env = SConscript("tests/benchmarks/SCsub", { "env": tests_env if env["build_ovsim_tests"] else env })
+
+    if env["run_ovsim_benchmarks"]:
+        benchmarks_env.RunBenchmarks()
 
 # Add compiledb if the option is set
 if env.get("compiledb", False):
