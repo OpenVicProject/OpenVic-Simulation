@@ -177,8 +177,6 @@ ModifierEffectCache::ModifierEffectCache()
 	/* Province Modifier Effects */
 	assimilation_rate { nullptr },
 	boost_strongest_party { nullptr },
-	combat_width_percentage_change { nullptr },
-	defence_terrain { nullptr },
 	farm_rgo_throughput_and_output { nullptr },
 	farm_rgo_output_global { nullptr },
 	farm_rgo_output_local { nullptr },

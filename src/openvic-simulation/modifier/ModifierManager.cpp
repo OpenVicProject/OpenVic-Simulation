@@ -457,13 +457,6 @@ bool ModifierManager::setup_modifier_effects() {
 	ret &= register_base_province_modifier_effect(
 		modifier_effect_cache.boost_strongest_party, "boost_strongest_party", false, PROPORTION_DECIMAL, {}, has_no_effect
 	);
-	// When applied to provinces (terrain), combat_width is a multiplicative proportional decimal value.
-	ret &= register_base_province_modifier_effect(
-		modifier_effect_cache.combat_width_percentage_change, "combat_width", false, PROPORTION_DECIMAL
-	);
-	ret &= register_terrain_modifier_effect(
-		modifier_effect_cache.defence_terrain, "defence", true, RAW_DECIMAL, "TRAIT_DEFEND"
-	);
 	ret &= register_technology_modifier_effect(
 		modifier_effect_cache.farm_rgo_throughput_and_output, "farm_rgo_eff", true, PROPORTION_DECIMAL, "TECH_FARM_OUTPUT"
 	);

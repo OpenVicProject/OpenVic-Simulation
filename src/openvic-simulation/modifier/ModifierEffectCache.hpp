@@ -147,8 +147,6 @@ namespace OpenVic {
 		/* Province Modifier Effects */
 		ModifierEffect const* PROPERTY(assimilation_rate);
 		ModifierEffect const* PROPERTY(boost_strongest_party);
-		ModifierEffect const* PROPERTY(combat_width_percentage_change);
-		ModifierEffect const* PROPERTY(defence_terrain);
 		ModifierEffect const* PROPERTY(farm_rgo_throughput_and_output);
 		ModifierEffect const* PROPERTY(farm_rgo_output_global);
 		ModifierEffect const* PROPERTY(farm_rgo_output_local);

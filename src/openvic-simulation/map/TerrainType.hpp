@@ -14,6 +14,8 @@ namespace OpenVic {
 	private:
 		ModifierValue PROPERTY(modifier);
 		fixed_point_t PROPERTY(movement_cost);
+		fixed_point_t PROPERTY(defence_bonus);
+		fixed_point_t PROPERTY(combat_width_percentage_change);
 		const bool PROPERTY(is_water);
 
 		TerrainType(
@@ -21,6 +23,8 @@ namespace OpenVic {
 			colour_t new_colour,
 			ModifierValue&& new_modifier,
 			fixed_point_t new_movement_cost,
+			fixed_point_t new_defence_bonus,
+			fixed_point_t new_combat_width_percentage_change,
 			bool new_is_water
 		);
 
@@ -70,6 +74,8 @@ namespace OpenVic {
 			colour_t colour,
 			ModifierValue&& values,
 			fixed_point_t movement_cost,
+			fixed_point_t defence_bonus,
+			fixed_point_t combat_width_percentage_change,
 			bool is_water
 		);
 

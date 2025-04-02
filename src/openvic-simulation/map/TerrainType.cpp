@@ -13,10 +13,14 @@ TerrainType::TerrainType(
 	colour_t new_colour,
 	ModifierValue&& new_modifier,
 	fixed_point_t new_movement_cost,
+	fixed_point_t new_defence_bonus,
+	fixed_point_t new_combat_width_percentage_change,
 	bool new_is_water
 ) : Modifier { new_identifier, std::move(new_modifier), modifier_type_t::TERRAIN },
 	HasColour { new_colour, false },
 	movement_cost { new_movement_cost },
+	defence_bonus { new_defence_bonus },
+	combat_width_percentage_change { new_combat_width_percentage_change },
 	is_water { new_is_water } {}
 
 TerrainTypeMapping::TerrainTypeMapping(
@@ -68,6 +72,8 @@ bool TerrainTypeManager::add_terrain_type(
 	colour_t colour,
 	ModifierValue&& values,
 	fixed_point_t movement_cost,
+	fixed_point_t defence_bonus,
+	fixed_point_t combat_width_percentage_change,
 	bool is_water
 ) {
 	if (identifier.empty()) {
@@ -82,7 +88,9 @@ bool TerrainTypeManager::add_terrain_type(
 		return false;
 	}
 
-	return terrain_types.add_item({ identifier, colour, std::move(values), movement_cost, is_water });
+	return terrain_types.add_item({
+		identifier, colour, std::move(values), movement_cost, defence_bonus, combat_width_percentage_change, is_water
+	});
 }
 
 bool TerrainTypeManager::add_terrain_type_mapping(
@@ -133,18 +141,22 @@ node_callback_t TerrainTypeManager::_load_terrain_type_categories(ModifierManage
 		const bool ret = expect_dictionary_reserve_length(terrain_types,
 			[this, &modifier_manager](std::string_view type_key, ast::NodeCPtr type_node) -> bool {
 				ModifierValue values;
-				fixed_point_t movement_cost;
+				fixed_point_t movement_cost, defence_bonus, combat_width_percentage_change;
 				colour_t colour = colour_t::null();
 				bool is_water = false;
 
 				bool ret = NodeTools::expect_dictionary_keys_and_default(
 					modifier_manager.expect_terrain_modifier(values),
 					"movement_cost", ONE_EXACTLY, expect_fixed_point(assign_variable_callback(movement_cost)),
+					"defence", ZERO_OR_ONE, expect_fixed_point(assign_variable_callback(defence_bonus)),
+					"combat_width", ZERO_OR_ONE, expect_fixed_point(assign_variable_callback(combat_width_percentage_change)),
 					"color", ONE_EXACTLY, expect_colour(assign_variable_callback(colour)),
 					"is_water", ZERO_OR_ONE, expect_bool(assign_variable_callback(is_water))
 				)(type_node);
 
-				ret &= add_terrain_type(type_key, colour, std::move(values), movement_cost, is_water);
+				ret &= add_terrain_type(
+					type_key, colour, std::move(values), movement_cost, defence_bonus, combat_width_percentage_change, is_water
+				);
 
 				return ret;
 			}
