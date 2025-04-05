@@ -38,12 +38,15 @@ namespace OpenVic {
 
 		IndexedMap<PopType, pop_size_t> PROPERTY(pop_type_distribution);
 		IndexedMap<PopType, pop_size_t> PROPERTY(pop_type_unemployed_count);
+		fixed_point_t PROPERTY(unemployment_fraction);
 		IndexedMap<PopType, std::vector<Pop*>> PROPERTY(pops_cache_by_type);
 		IndexedMap<Ideology, fixed_point_t> PROPERTY(ideology_distribution);
 		fixed_point_map_t<Issue const*> PROPERTY(issue_distribution);
 		IndexedMap<CountryParty, fixed_point_t> PROPERTY(vote_distribution);
 		fixed_point_map_t<Culture const*> PROPERTY(culture_distribution);
 		fixed_point_map_t<Religion const*> PROPERTY(religion_distribution);
+		Culture const* PROPERTY(largest_culture, nullptr);
+		Religion const* PROPERTY(largest_religion, nullptr);
 
 		fixed_point_t PROPERTY(industrial_power);
 
