@@ -4,6 +4,7 @@
 
 #include "openvic-simulation/country/CountryDefinition.hpp"
 #include "openvic-simulation/economy/production/ArtisanalProducerFactoryPattern.hpp"
+#include "openvic-simulation/pop/PopNeedsMacro.hpp"
 #include "openvic-simulation/pop/PopType.hpp"
 #include "openvic-simulation/types/fixed_point/Atomic.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
@@ -55,11 +56,6 @@ namespace OpenVic {
 		F(everyday_needs_expense) \
 		F(luxury_needs_expense) \
 		F(artisan_inputs_expense)
-
-	#define DO_FOR_ALL_NEED_CATEGORIES(F) \
-		F(life) \
-		F(everyday) \
-		F(luxury)
 
 	#define DECLARE_POP_MONEY_STORES(money_type) \
 		fixed_point_t PROPERTY(money_type);
@@ -113,6 +109,8 @@ namespace OpenVic {
 
 		pop_size_t employed = 0;
 	public:
+		static constexpr pop_size_t size_denominator = 200000;
+
 		constexpr pop_size_t get_unemployed() const {
 			return size - employed;
 		}
@@ -207,6 +205,4 @@ namespace OpenVic {
 	#undef DO_FOR_ALL_TYPES_OF_POP_EXPENSES
 #endif
 
-#ifndef KEEP_DO_FOR_ALL_NEED_CATEGORIES
-	#undef DO_FOR_ALL_NEED_CATEGORIES
-#endif
+#undef DO_FOR_ALL_NEED_CATEGORIES

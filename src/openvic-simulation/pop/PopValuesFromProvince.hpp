@@ -13,6 +13,7 @@ namespace OpenVic {
 	struct ProvinceInstance;
 	struct PopsDefines;
 	struct PopValuesFromProvince;
+	struct SharedCountryValues;
 	struct Strata;
 
 	struct PopStrataValuesFromProvince {
@@ -32,6 +33,7 @@ namespace OpenVic {
 	private:
 		static constexpr size_t MAPS_FOR_POP = 4;
 		PopsDefines const& PROPERTY(defines);
+		SharedCountryValues const& PROPERTY(shared_country_values);
 		IndexedMap<Strata, PopStrataValuesFromProvince> PROPERTY(effects_per_strata);
 	public:
 	 	//public field as mutable references are required.
@@ -39,6 +41,7 @@ namespace OpenVic {
 
 		PopValuesFromProvince(
 			PopsDefines const& new_defines,
+			SharedCountryValues const& new_shared_country_values,
 			std::vector<Strata> const& strata_keys
 		);
 		PopValuesFromProvince(PopValuesFromProvince&&) = default;
