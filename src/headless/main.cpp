@@ -144,43 +144,56 @@ static bool run_headless(Dataloader::path_vector_t const& roots, bool run_tests)
 	ret &= game_manager.update_clock();
 
 	// TODO - REMOVE TEST CODE
-	Logger::info("===== Ranking system test... =====");
-	if (game_manager.get_instance_manager()) {
-		const auto print_ranking_list = [](std::string_view title, std::vector<CountryInstance*> const& countries) -> void {
-			std::string text;
-			for (CountryInstance const* country : countries) {
-				text += StringUtils::append_string_views(
-					"\n    ", country->get_identifier(),
-					" - Total #", std::to_string(country->get_total_rank()), " (", country->get_total_score().to_string(1),
-					"), Prestige #", std::to_string(country->get_prestige_rank()), " (", country->get_prestige().to_string(1),
-					"), Industry #", std::to_string(country->get_industrial_rank()), " (", country->get_industrial_power().to_string(1),
-					"), Military #", std::to_string(country->get_military_rank()), " (", country->get_military_power().to_string(1), ")"
-				);
-			}
-			Logger::info(title, ":", text);
-		};
+	// Logger::info("===== Ranking system test... =====");
+	// if (game_manager.get_instance_manager()) {
+	// 	const auto print_ranking_list = [](std::string_view title, std::vector<CountryInstance*> const& countries) -> void {
+	// 		std::string text;
+	// 		for (CountryInstance const* country : countries) {
+	// 			text += StringUtils::append_string_views(
+	// 				"\n    ", country->get_identifier(),
+	// 				" - Total #", std::to_string(country->get_total_rank()), " (", country->get_total_score().to_string(1),
+	// 				"), Prestige #", std::to_string(country->get_prestige_rank()), " (", country->get_prestige().to_string(1),
+	// 				"), Industry #", std::to_string(country->get_industrial_rank()), " (", country->get_industrial_power().to_string(1),
+	// 				"), Military #", std::to_string(country->get_military_rank()), " (", country->get_military_power().to_string(1), ")"
+	// 			);
+	// 		}
+	// 		Logger::info(title, ":", text);
+	// 	};
 
-		CountryInstanceManager const& country_instance_manager =
-			game_manager.get_instance_manager()->get_country_instance_manager();
+	// 	CountryInstanceManager const& country_instance_manager =
+	// 		game_manager.get_instance_manager()->get_country_instance_manager();
 
-		std::vector<CountryInstance*> const& great_powers = country_instance_manager.get_great_powers();
-		print_ranking_list("Great Powers", great_powers);
-		print_ranking_list("Secondary Powers", country_instance_manager.get_secondary_powers());
-		print_ranking_list("All countries", country_instance_manager.get_total_ranking());
+	// 	std::vector<CountryInstance*> const& great_powers = country_instance_manager.get_great_powers();
+	// 	print_ranking_list("Great Powers", great_powers);
+	// 	print_ranking_list("Secondary Powers", country_instance_manager.get_secondary_powers());
+	// 	print_ranking_list("All countries", country_instance_manager.get_total_ranking());
 
-		Logger::info("===== RGO test... =====");
-		for (size_t i = 0; i < std::min<size_t>(3, great_powers.size()); ++i) {
-			CountryInstance const& great_power = *great_powers[i];
-			ProvinceInstance const* const capital_province = great_power.get_capital();
-			if (capital_province == nullptr) {
-				Logger::warning(great_power.get_identifier(), " has no capital ProvinceInstance set.");
-			} else {
-				print_rgo(*capital_province);
-			}
-		}
-	} else {
-		Logger::error("Instance manager not available!");
-		ret = false;
+	// 	Logger::info("===== RGO test... =====");
+	// 	for (size_t i = 0; i < std::min<size_t>(3, great_powers.size()); ++i) {
+	// 		CountryInstance const& great_power = *great_powers[i];
+	// 		ProvinceInstance const* const capital_province = great_power.get_capital();
+	// 		if (capital_province == nullptr) {
+	// 			Logger::warning(great_power.get_identifier(), " has no capital ProvinceInstance set.");
+	// 		} else {
+	// 			print_rgo(*capital_province);
+	// 		}
+	// 	}
+	// } else {
+	// 	Logger::error("Instance manager not available!");
+	// 	ret = false;
+	// }
+
+	Pop const& pop = *game_manager.get_instance_manager()->get_map_instance().get_province_instance_by_index(300)->get_pops().begin();
+
+	Logger::info(
+		"Pop has type ", pop.get_type()->get_identifier(),
+		", size ", pop.get_size(),
+		", culture ", pop.get_culture().get_identifier(),
+		", religion ", pop.get_religion().get_identifier(),
+		", ideology:"
+	);
+	for (auto [ideology, support] : pop.get_ideology_distribution()) {
+		Logger::info("    ", ideology.get_identifier(), " - ", support);
 	}
 
 	if (ret) {
@@ -205,6 +218,26 @@ static bool run_headless(Dataloader::path_vector_t const& roots, bool run_tests)
 		auto end_time = std::chrono::high_resolution_clock::now();
 		Logger::info("Ran ", --ticks_passed, " ticks in ", end_time - start_time);
 	}
+
+	ProvinceInstance const& province = *pop.get_location();
+	Logger::info("Province ", province.get_identifier(), " has ", province.get_total_population(), " pops with ideology:");
+	for (auto [ideology, support] : province.get_ideology_distribution()) {
+		Logger::info("    ", ideology.get_identifier(), " - ", support);
+	}
+
+	State const& state = *province.get_state();
+	Logger::info("State ", state.get_identifier(), " has ", state.get_total_population(), " pops with ideology:");
+	for (auto [ideology, support] : state.get_ideology_distribution()) {
+		Logger::info("    ", ideology.get_identifier(), " - ", support);
+	}
+
+	CountryInstance const& country = *state.get_owner();
+	Logger::info("Country ", country.get_identifier(), " has ", country.get_total_population(), " pops with ideology:");
+	for (auto [ideology, support] : country.get_ideology_distribution()) {
+		Logger::info("    ", ideology.get_identifier(), " - ", support);
+	}
+
+	Logger::info("National value of ", country.get_identifier(), " is ", country.get_national_value());
 
 	return ret;
 }
