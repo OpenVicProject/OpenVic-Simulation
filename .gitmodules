@@ -26,3 +26,6 @@
 [submodule "tests/benchmarks/deps/nanobench"]
 	path = tests/benchmarks/deps/nanobench
 	url = https://github.com/Spartan322/nanobench
+[submodule "deps/lauf"]
+	path = deps/lauf
+	url = https://github.com/OpenVicProject/lauf
