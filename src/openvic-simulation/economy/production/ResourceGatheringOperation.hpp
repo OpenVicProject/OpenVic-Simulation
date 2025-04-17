@@ -36,8 +36,8 @@ namespace OpenVic {
 		fixed_point_t calculate_size_modifier() const;
 		void hire();
 		fixed_point_t produce();
-		void pay_employees();
-		static void after_sell(void* actor, SellResult const& sell_result);
+		void pay_employees(std::vector<fixed_point_t>& reusable_vector);
+		static void after_sell(void* actor, SellResult const& sell_result, std::vector<fixed_point_t>& reusable_vector);
 
 	public:
 		ResourceGatheringOperation(
