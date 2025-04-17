@@ -44,7 +44,7 @@ PopType::PopType(
 	bool new_is_slave,
 	bool new_can_be_recruited,
 	bool new_can_reduce_consciousness,
-	bool new_administrative_efficiency,
+	bool new_is_administrator,
 	bool new_can_invest,
 	bool new_factory,
 	bool new_can_work_factory,
@@ -66,9 +66,9 @@ PopType::PopType(
 	life_needs { std::move(new_life_needs) },
 	everyday_needs { std::move(new_everyday_needs) },
 	luxury_needs { std::move(new_luxury_needs) },
-	life_needs_income_types { std::move(new_life_needs_income_types) },
-	everyday_needs_income_types { std::move(new_everyday_needs_income_types) },
-	luxury_needs_income_types { std::move(new_luxury_needs_income_types) },
+	life_needs_income_types { new_life_needs_income_types },
+	everyday_needs_income_types { new_everyday_needs_income_types },
+	luxury_needs_income_types { new_luxury_needs_income_types },
 	rebel_units { std::move(new_rebel_units) },
 	max_size { new_max_size },
 	merge_max_size { new_merge_max_size },
@@ -79,7 +79,7 @@ PopType::PopType(
 	is_slave { new_is_slave },
 	can_be_recruited { new_can_be_recruited },
 	can_reduce_consciousness { new_can_reduce_consciousness },
-	administrative_efficiency { new_administrative_efficiency },
+	is_administrator { new_is_administrator },
 	can_invest { new_can_invest },
 	factory { new_factory },
 	can_work_factory { new_can_work_factory },
@@ -305,21 +305,24 @@ static NodeCallback auto expect_needs_income(PopType::income_type_t& types) {
 	static const string_map_t<PopType::income_type_t> income_type_map {
 		{ "administration", ADMINISTRATION },
 		{ "education", EDUCATION },
-		{ "military", MILITARY },
-		{ "reforms", REFORMS }
+		{ "military", MILITARY }
 	};
-	return expect_dictionary_keys(
-		"type", ONE_OR_MORE, expect_identifier(expect_mapped_string(income_type_map,
+
+	constexpr bool is_warning = true;
+	return expect_dictionary_keys_and_default_map(
+		map_key_value_ignore_invalid_callback<template_key_map_t<StringMapCaseSensitive>>,
+		"type", ONE_OR_MORE, expect_identifier(expect_mapped_string(
+			income_type_map,
 			[&types](PopType::income_type_t type) -> bool {
-				if (!share_income_type(types, type)) {
+				if (OV_unlikely(share_income_type(types, type))) {
+					Logger::warning("Duplicate pop income type ", type, " is treated as single income.");
+				} else {
 					types |= type;
-					return true;
 				}
-				Logger::error("Duplicate income type ", type, " in pop type income types!");
-				return false;
-			}
-		)),
-		"weight", ZERO_OR_ONE, success_callback /* Has no effect in game */
+				return true;
+			},
+			is_warning
+		))
 	);
 }
 

@@ -42,9 +42,7 @@ namespace OpenVic {
 			NO_INCOME_TYPE  = 0,
 			ADMINISTRATION  = 1 << 0,
 			EDUCATION       = 1 << 1,
-			MILITARY        = 1 << 2,
-			REFORMS         = 1 << 3,
-			MAX_INCOME_TYPE = (1 << 4) - 1
+			MILITARY        = 1 << 2
 		};
 
 		using sprite_t = uint8_t;
@@ -72,7 +70,7 @@ namespace OpenVic {
 		const bool PROPERTY(is_slave);
 		const bool PROPERTY(can_be_recruited);
 		const bool PROPERTY(can_reduce_consciousness);
-		const bool PROPERTY(administrative_efficiency);
+		const bool PROPERTY(is_administrator);
 		const bool PROPERTY(can_invest);
 		const bool PROPERTY(factory);
 		const bool PROPERTY(can_work_factory);
@@ -111,7 +109,7 @@ namespace OpenVic {
 			bool new_is_slave,
 			bool new_can_be_recruited,
 			bool new_can_reduce_consciousness,
-			bool new_administrative_efficiency,
+			bool new_is_administrator,
 			bool new_can_invest,
 			bool new_factory,
 			bool new_can_work_factory,
@@ -168,7 +166,6 @@ namespace OpenVic {
 		BUILD_STRING(ADMINISTRATION);
 		BUILD_STRING(EDUCATION);
 		BUILD_STRING(MILITARY);
-		BUILD_STRING(REFORMS);
 #undef BUILD_STRING
 		if (!type_found) {
 			stream << "INVALID INCOME TYPE";

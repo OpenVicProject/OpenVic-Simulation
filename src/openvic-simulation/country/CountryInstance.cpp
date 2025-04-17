@@ -2,6 +2,7 @@
 
 #include <cstdint>
 
+#include "openvic-simulation/country/SharedCountryValues.hpp"
 #include "openvic-simulation/country/CountryDefinition.hpp"
 #include "openvic-simulation/defines/Define.hpp"
 #include "openvic-simulation/DefinitionManager.hpp"
@@ -14,9 +15,12 @@
 #include "openvic-simulation/modifier/ModifierEffectCache.hpp"
 #include "openvic-simulation/modifier/StaticModifierCache.hpp"
 #include "openvic-simulation/politics/Ideology.hpp"
+#include "openvic-simulation/pop/Pop.hpp"
+#include "openvic-simulation/pop/PopType.hpp"
 #include "openvic-simulation/research/Invention.hpp"
 #include "openvic-simulation/research/Technology.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
+#include "openvic-simulation/types/PopSize.hpp"
 #include "openvic-simulation/types/SliderValue.hpp"
 
 using namespace OpenVic;
@@ -41,6 +45,7 @@ CountryInstance::CountryInstance(
 	decltype(ship_type_unlock_levels)::keys_type const& ship_type_unlock_levels_keys,
 	decltype(tax_rate_slider_value_by_strata)::keys_type const& strata_keys,
 	GameRulesManager const& new_game_rules_manager,
+	SharedCountryValues const& new_shared_country_values,
 	GoodInstanceManager& new_good_instance_manager,
 	CountryDefines const& new_country_defines,
 	EconomyDefines const& new_economy_defines
@@ -49,6 +54,7 @@ CountryInstance::CountryInstance(
 	/* Main attributes */
 	country_definition { new_country_definition },
 	game_rules_manager { new_game_rules_manager },
+	shared_country_values { new_shared_country_values },
 	country_defines { new_country_defines },
 	colour { ERROR_COLOUR },
 
@@ -989,8 +995,9 @@ static inline constexpr fixed_point_t nonzero_or_one(fixed_point_t const& value)
 	return value == fixed_point_t::_0() ? fixed_point_t::_1() : value;
 }
 
-void CountryInstance::_update_budget(DefineManager const& define_manager, ModifierEffectCache const& modifier_effect_cache) {
-	CountryDefines const& country_defines = define_manager.get_country_defines();
+void CountryInstance::_update_budget() {
+	CountryDefines const& country_defines = shared_country_values.get_country_defines();
+	ModifierEffectCache const& modifier_effect_cache = shared_country_values.get_modifier_effect_cache();
 
 	const fixed_point_t min_tax = get_modifier_effect_value(*modifier_effect_cache.get_min_tax());
 	const fixed_point_t max_tax = nonzero_or_one(get_modifier_effect_value(*modifier_effect_cache.get_max_tax()));
@@ -1017,13 +1024,89 @@ void CountryInstance::_update_budget(DefineManager const& define_manager, Modifi
 	// TODO - make sure we properly update everything dependent on these sliders' values,
 	// as they might change if their sliders' bounds shrink past their previous values.
 
-	const fixed_point_t tax_efficiency = country_defines.get_base_country_tax_efficiency() +
-		get_modifier_effect_value(*modifier_effect_cache.get_tax_efficiency()) +
-		get_modifier_effect_value(*modifier_effect_cache.get_tax_eff()) / 100;
+	const fixed_point_t tax_efficiency = country_defines.get_base_country_tax_efficiency()
+		+ get_modifier_effect_value(*modifier_effect_cache.get_tax_efficiency())
+		+ get_modifier_effect_value(*modifier_effect_cache.get_tax_eff()) / 100;
 
 	for (auto const& [strata, tax_rate_slider_value] : tax_rate_slider_value_by_strata) {
 		effective_tax_rate_by_strata[strata] = tax_rate_slider_value.get_value() * tax_efficiency;
 	}
+
+	/*
+	In Victoria 2, administration efficiency is updated in the UI immediately.
+	However the corruption_cost_multiplier is only updated after 2 ticks.
+
+	OpenVic immediately updates both.
+	*/
+
+	if (total_population == 0) {
+		administrative_efficiency = fixed_point_t::_0();
+	} else {
+		pop_size_t administrators = 0;
+		for (auto const& [pop_type, size] : pop_type_distribution) {
+			if (pop_type.get_is_administrator()) {
+				administrators += size;
+			}
+		}
+
+		administrative_efficiency = std::min(
+			administrators
+			* (fixed_point_t::_1() + get_modifier_effect_value(*modifier_effect_cache.get_administrative_efficiency()))
+			* (fixed_point_t::_1() + get_modifier_effect_value(*modifier_effect_cache.get_administrative_efficiency_modifier()))
+			/ total_population,
+			fixed_point_t::_1()
+		);
+
+		if (game_rules_manager.get_prevent_negative_administration_efficiency()) {
+			administrative_efficiency = std::max(fixed_point_t::_0(), administrative_efficiency);
+		}
+	}
+
+	projected_administration_spending_unscaled_by_slider
+		= projected_education_spending_unscaled_by_slider
+		= projected_military_spending_unscaled_by_slider
+		= projected_pensions_spending_unscaled_by_slider
+		= projected_unemployment_subsidies_spending_unscaled_by_slider
+		= fixed_point_t::_0();
+
+	const fixed_point_t corruption_cost_multiplier = get_corruption_cost_multiplier();
+	for (auto const& [pop_type, size] : pop_type_distribution) {
+		SharedPopTypeValues const& pop_type_values = shared_country_values.get_shared_pop_type_values()[pop_type];
+		projected_administration_spending_unscaled_by_slider += size * calculate_administration_salary_base(pop_type_values, corruption_cost_multiplier);
+		projected_education_spending_unscaled_by_slider += size * calculate_education_salary_base(pop_type_values, corruption_cost_multiplier);
+		projected_military_spending_unscaled_by_slider += size * calculate_military_salary_base(pop_type_values, corruption_cost_multiplier);
+		projected_pensions_spending_unscaled_by_slider += size * calculate_pensions_base(modifier_effect_cache, pop_type_values);
+		projected_unemployment_subsidies_spending_unscaled_by_slider += pop_type_unemployed_count[pop_type]
+			* calculate_unemployment_subsidies_base(modifier_effect_cache, pop_type_values);
+	}
+
+	projected_administration_spending_unscaled_by_slider /= Pop::size_denominator;
+	projected_education_spending_unscaled_by_slider /= Pop::size_denominator;
+	projected_military_spending_unscaled_by_slider /= Pop::size_denominator;
+	projected_pensions_spending_unscaled_by_slider /= Pop::size_denominator;
+	projected_unemployment_subsidies_spending_unscaled_by_slider /= Pop::size_denominator;
+}
+
+fixed_point_t CountryInstance::calculate_pensions_base(
+	ModifierEffectCache const& modifier_effect_cache,
+	SharedPopTypeValues const& pop_type_values
+) const {
+	return get_modifier_effect_value(*modifier_effect_cache.get_pension_level())
+		* calculate_social_income_variant_base(pop_type_values);
+}
+fixed_point_t CountryInstance::calculate_unemployment_subsidies_base(
+	ModifierEffectCache const& modifier_effect_cache,
+	SharedPopTypeValues const& pop_type_values
+) const {
+	return get_modifier_effect_value(*modifier_effect_cache.get_unemployment_benefit())
+		* calculate_social_income_variant_base(pop_type_values);
+}
+fixed_point_t CountryInstance::calculate_minimum_wage_base(
+	ModifierEffectCache const& modifier_effect_cache,
+	SharedPopTypeValues const& pop_type_values
+) const {
+	return get_modifier_effect_value(*modifier_effect_cache.get_minimum_wage())
+		* calculate_social_income_variant_base(pop_type_values);
 }
 
 void CountryInstance::_update_current_tech(InstanceManager const& instance_manager) {
@@ -1412,7 +1495,7 @@ fixed_point_t CountryInstance::get_modifier_effect_value(ModifierEffect const& e
 void CountryInstance::update_gamestate(InstanceManager& instance_manager) {
 	DefinitionManager const& definition_manager = instance_manager.get_definition_manager();
 	DefineManager const& define_manager = definition_manager.get_define_manager();
-	ModifierEffectCache const& modifier_effect_cache = definition_manager.get_modifier_manager().get_modifier_effect_cache();
+	ModifierEffectCache const& modifier_effect_cache = shared_country_values.get_modifier_effect_cache();
 
 	if (is_civilised()) {
 		civilisation_progress = fixed_point_t::_0();
@@ -1523,7 +1606,7 @@ void CountryInstance::update_gamestate(InstanceManager& instance_manager) {
 		definition_manager.get_military_manager().get_unit_type_manager(),
 		modifier_effect_cache
 	);
-	_update_budget(define_manager, modifier_effect_cache);
+	_update_budget();
 
 	// These don't do anything yet
 	_update_politics();
@@ -1552,15 +1635,73 @@ void CountryInstance::update_gamestate(InstanceManager& instance_manager) {
 	}
 }
 
-void CountryInstance::country_reset_before_tick() {
-	for (auto pair : goods_data) {
-		pair.second.clear_daily_recorded_data();
+void CountryInstance::country_tick_before_map(InstanceManager& instance_manager) {
+	//TODO AI sliders
+	//TODO stockpile management
+
+	const fixed_point_t projected_administration_spending = administration_spending_slider_value.get_value() * projected_administration_spending_unscaled_by_slider;
+	const fixed_point_t projected_education_spending = education_spending_slider_value.get_value() * projected_education_spending_unscaled_by_slider;
+	const fixed_point_t projected_military_spending = military_spending_slider_value.get_value() * projected_military_spending_unscaled_by_slider;
+	const fixed_point_t projected_social_spending = social_spending_slider_value.get_value() * (
+		projected_pensions_spending_unscaled_by_slider
+		+ projected_unemployment_subsidies_spending_unscaled_by_slider
+	);
+
+	const fixed_point_t projected_spending = projected_administration_spending
+		+ projected_education_spending
+		+ projected_military_spending
+		+ projected_social_spending;
+	// + tariffs (if negative)
+	// + reparations + war subsidies
+	// + stockpile costs
+	// + industrial subsidies
+	// + loan interest
+
+	fixed_point_t available_funds = cash_stockpile.get_copy_of_value();
+	if (projected_spending <= available_funds) {
+		actual_administration_spending = projected_administration_spending;
+		actual_education_spending = projected_education_spending;
+		actual_military_spending = projected_military_spending;
+		actual_social_spending = projected_social_spending;
+	} else {
+		//TODO try take loan (callback?)
+		//update available_funds with loan
+
+		if (available_funds < projected_education_spending) {
+			actual_education_spending = available_funds;
+			actual_administration_spending = actual_military_spending = actual_social_spending = fixed_point_t::_0();
+		} else {
+			available_funds -= projected_education_spending;
+			actual_education_spending = projected_education_spending;
+
+			if (available_funds < projected_administration_spending) {
+				actual_administration_spending = available_funds;
+				actual_military_spending = actual_social_spending = fixed_point_t::_0();
+			} else {
+				available_funds -= projected_administration_spending;
+				actual_administration_spending = projected_administration_spending;
+
+				if (available_funds < projected_social_spending) {
+					actual_social_spending = available_funds;
+					actual_military_spending = fixed_point_t::_0();
+				} else {
+					available_funds -= projected_social_spending;
+					actual_social_spending = projected_social_spending;
+
+					actual_military_spending = std::min(available_funds, projected_military_spending);
+				}
+			}
+		}
+	}
+
+	for (auto& data : goods_data.get_values()) {
+		data.clear_daily_recorded_data();
 	}
 
 	taxable_income_by_pop_type.fill(fixed_point_t::_0());
 }
 
-void CountryInstance::country_tick(InstanceManager& instance_manager) {
+void CountryInstance::country_tick_after_map(InstanceManager& instance_manager) {
 	DefinitionManager const& definition_manager = instance_manager.get_definition_manager();
 	DefineManager const& define_manager = definition_manager.get_define_manager();
 
@@ -1689,6 +1830,71 @@ void CountryInstance::report_output(ProductionType const& production_type, const
 	good_data_t& good_data = get_good_data(production_type.get_output_good());
 	const std::lock_guard<std::mutex> lock_guard { *good_data.mutex };
 	good_data.production_per_production_type[&production_type] += quantity;
+}
+
+void CountryInstance::request_salaries_and_welfare(Pop& pop) const {
+	PopType const& pop_type = *pop.get_type();
+	const pop_size_t pop_size = pop.get_size();
+	const fixed_point_t corruption_cost_multiplier = get_corruption_cost_multiplier();
+	SharedPopTypeValues const& pop_type_values = shared_country_values.get_shared_pop_type_values()[pop_type];
+	ModifierEffectCache const& modifier_effect_cache = shared_country_values.get_modifier_effect_cache();
+
+	if (actual_administration_spending > fixed_point_t::_0()) {
+		const fixed_point_t administration_salary = fixed_point_t::mul_div(
+			pop_size * calculate_administration_salary_base(pop_type_values, corruption_cost_multiplier),
+			actual_administration_spending,
+			projected_administration_spending_unscaled_by_slider
+		);
+		if (administration_salary > fixed_point_t::_0()) {
+			pop.add_government_salary_administration(administration_salary);
+		}
+	}
+	
+	if (actual_education_spending > fixed_point_t::_0()) {
+		const fixed_point_t education_salary = fixed_point_t::mul_div(
+			pop_size * calculate_education_salary_base(pop_type_values, corruption_cost_multiplier),
+			actual_education_spending,
+			projected_education_spending_unscaled_by_slider
+		);
+		if (education_salary > fixed_point_t::_0()) {
+			pop.add_government_salary_education(education_salary);
+		}
+	}
+	
+	if (actual_military_spending > fixed_point_t::_0()) {
+		const fixed_point_t military_salary = fixed_point_t::mul_div(
+			pop_size * calculate_military_salary_base(pop_type_values, corruption_cost_multiplier),
+			actual_military_spending,
+			projected_military_spending_unscaled_by_slider
+		);
+		if (military_salary > fixed_point_t::_0()) {
+			pop.add_government_salary_military(military_salary);
+		}
+	}
+	
+	if (actual_social_spending > fixed_point_t::_0()) {
+		const fixed_point_t projected_social_spending_unscaled_by_slider =
+			projected_pensions_spending_unscaled_by_slider
+			+ projected_unemployment_subsidies_spending_unscaled_by_slider;
+
+		const fixed_point_t pension_income = fixed_point_t::mul_div(
+			pop_size * calculate_pensions_base(modifier_effect_cache, pop_type_values),
+			actual_social_spending,
+			projected_social_spending_unscaled_by_slider
+		);
+		if (pension_income > fixed_point_t::_0()) {
+			pop.add_pensions(pension_income);
+		}
+
+		const fixed_point_t unemployment_subsidies = fixed_point_t::mul_div(
+			pop.get_unemployed() * calculate_unemployment_subsidies_base(modifier_effect_cache, pop_type_values),
+			actual_social_spending,
+			projected_social_spending_unscaled_by_slider
+		);
+		if (unemployment_subsidies > fixed_point_t::_0()) {
+			pop.add_unemployment_subsidies(unemployment_subsidies);
+		}
+	}
 }
 
 CountryInstance::good_data_t& CountryInstance::get_good_data(GoodInstance const& good_instance) {
@@ -1830,9 +2036,22 @@ void CountryInstanceManager::update_rankings(Date today, DefineManager const& de
 	}
 }
 
-CountryInstanceManager::CountryInstanceManager(CountryDefinitionManager const& new_country_definition_manager)
+CountryInstanceManager::CountryInstanceManager(
+	CountryDefinitionManager const& new_country_definition_manager,
+	ModifierEffectCache const& new_modifier_effect_cache,
+	CountryDefines const& new_country_defines,
+	PopsDefines const& new_pop_defines,
+	std::vector<PopType> const& pop_type_keys
+)
   : country_definition_manager { new_country_definition_manager },
-	country_definition_to_instance_map { &new_country_definition_manager.get_country_definitions() } {
+	country_definition_to_instance_map { &new_country_definition_manager.get_country_definitions() },
+	shared_country_values {
+		new_modifier_effect_cache,
+		new_country_defines,
+		new_pop_defines,
+		pop_type_keys
+	}
+	{
 		great_powers.reserve(16);
 		secondary_powers.reserve(16);
 	}
@@ -1884,6 +2103,7 @@ bool CountryInstanceManager::generate_country_instances(
 			ship_type_unlock_levels_keys,
 			strata_keys,
 			game_rules_manager,
+			shared_country_values,
 			good_instance_manager,
 			country_defines,
 			economy_defines
@@ -2009,14 +2229,19 @@ void CountryInstanceManager::update_gamestate(InstanceManager& instance_manager)
 	update_rankings(instance_manager.get_today(), instance_manager.get_definition_manager().get_define_manager());
 }
 
-void CountryInstanceManager::country_manager_reset_before_tick() {
+void CountryInstanceManager::country_manager_tick_before_map(InstanceManager& instance_manager) {
+	//TODO parallellise?
 	for (CountryInstance& country : country_instances.get_items()) {
-		country.country_reset_before_tick();
+		country.country_tick_before_map(instance_manager);
 	}
 }
 
-void CountryInstanceManager::country_manager_tick(InstanceManager& instance_manager) {
+void CountryInstanceManager::country_manager_tick_after_map(InstanceManager& instance_manager) {
+	//TODO parallellise?
+	//TODO update and pay government salaries and social spending
 	for (CountryInstance& country : country_instances.get_items()) {
-		country.country_tick(instance_manager);
+		country.country_tick_after_map(instance_manager);
 	}
+	
+	shared_country_values.update_costs(instance_manager.get_good_instance_manager());
 }

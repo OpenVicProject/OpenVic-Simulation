@@ -128,11 +128,20 @@ using namespace std::string_view_literals;
 
 		template<IsOrderedMap Map>
 		inline bool map_key_value_invalid_callback(Map const& key_map, std::string_view key, ast::NodeCPtr) {
-			Logger::error("Invalid dictionary key \"", key, "\" valid values are [",
+			Logger::error("Invalid dictionary key \"", key, "\". Valid values are [",
 				StringUtils::string_join(key_map),
 				"]"
 			);
 			return false;
+		}
+
+		template<IsOrderedMap Map>
+		inline bool map_key_value_ignore_invalid_callback(Map const& key_map, std::string_view key, ast::NodeCPtr) {
+			Logger::warning("Invalid dictionary key \"", key, "\" is ignored. Valid values are [",
+				StringUtils::string_join(key_map),
+				"]"
+			);
+			return true;
 		}
 
 		node_callback_t expect_identifier(callback_t<std::string_view> callback);

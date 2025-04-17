@@ -26,7 +26,13 @@ InstanceManager::InstanceManager(
 		new_definition_manager.get_economy_manager().get_production_type_manager()
 	},
 	global_flags { "global" },
-	country_instance_manager { new_definition_manager.get_country_definition_manager() },
+	country_instance_manager {
+		new_definition_manager.get_country_definition_manager(),
+		new_definition_manager.get_modifier_manager().get_modifier_effect_cache(),
+		new_definition_manager.get_define_manager().get_country_defines(),
+		new_definition_manager.get_define_manager().get_pops_defines(),
+		new_definition_manager.get_pop_manager().get_pop_types()
+	},
 	unit_instance_manager {
 		new_definition_manager.get_pop_manager().get_culture_manager(),
 		new_definition_manager.get_military_manager().get_leader_trait_manager(),
@@ -88,15 +94,15 @@ void InstanceManager::update_gamestate() {
  * SS-98, SS-101
  */
 void InstanceManager::tick() {
-	country_instance_manager.country_manager_reset_before_tick();
 
 	today++;
 
 	Logger::info("Tick: ", today);
 
 	// Tick...
+	country_instance_manager.country_manager_tick_before_map(*this);
 	map_instance.map_tick();
-	country_instance_manager.country_manager_tick(*this);
+	country_instance_manager.country_manager_tick_after_map(*this);
 	unit_instance_manager.tick();
 	market_instance.execute_orders();
 

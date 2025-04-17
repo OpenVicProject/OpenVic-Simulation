@@ -2,11 +2,9 @@
 
 #define KEEP_DO_FOR_ALL_TYPES_OF_INCOME
 #define KEEP_DO_FOR_ALL_TYPES_OF_EXPENSES
-#define KEEP_DO_FOR_ALL_NEED_CATEGORIES
 #include "Pop.hpp"
 #undef KEEP_DO_FOR_ALL_TYPES_OF_INCOME
 #undef KEEP_DO_FOR_ALL_TYPES_OF_EXPENSES
-#undef KEEP_DO_FOR_ALL_NEED_CATEGORIES
 
 #include "openvic-simulation/defines/Define.hpp"
 #include "openvic-simulation/economy/GoodDefinition.hpp"
@@ -18,6 +16,7 @@
 #include "openvic-simulation/economy/trading/SellResult.hpp"
 #include "openvic-simulation/map/ProvinceInstance.hpp"
 #include "openvic-simulation/modifier/ModifierEffectCache.hpp"
+#include "openvic-simulation/pop/PopNeedsMacro.hpp"
 #include "openvic-simulation/pop/PopValuesFromProvince.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
 #include "openvic-simulation/utility/Logger.hpp"
@@ -379,6 +378,15 @@ void Pop::pop_tick_without_cleanup(PopValuesFromProvince& shared_values) {
 	DO_FOR_ALL_TYPES_OF_POP_EXPENSES(SET_TO_ZERO)
 	#undef SET_TO_ZERO
 	income = expenses = fixed_point_t::_0();
+
+	ProvinceInstance& location_never_null = *location;
+	CountryInstance* country_to_report_economy_nullable = location_never_null.get_country_to_report_economy();
+
+	if (country_to_report_economy_nullable != nullptr) {
+		country_to_report_economy_nullable->request_salaries_and_welfare(*this);
+	}
+
+	//unemployment subsidies are based on yesterdays unemployment
 	employed = 0;
 
 	auto& [
@@ -403,15 +411,12 @@ void Pop::pop_tick_without_cleanup(PopValuesFromProvince& shared_values) {
 	}
 
 	PopType const& type_never_null = *type;
-	ProvinceInstance& location_never_null = *location;
 	PopStrataValuesFromProvince const& shared_strata_values = shared_values.get_effects_per_strata()[type_never_null.get_strata()];
 	PopsDefines const& defines = shared_values.get_defines();
 	const fixed_point_t base_needs_scalar = (
 		fixed_point_t::_1() + 2 * consciousness / defines.get_pdef_base_con()
 	) * size;
-	constexpr int32_t size_denominator = 200000;
 
-	CountryInstance* country_to_report_economy_nullable = location_never_null.get_country_to_report_economy();
 	#define FILL_NEEDS(need_category) \
 		need_category##_needs.clear(); \
 		const fixed_point_t need_category##_needs_scalar = base_needs_scalar * shared_strata_values.get_shared_##need_category##_needs_scalar(); \
