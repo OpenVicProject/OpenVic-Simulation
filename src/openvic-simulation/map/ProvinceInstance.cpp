@@ -463,19 +463,23 @@ void ProvinceInstance::update_gamestate(InstanceManager const& instance_manager)
 	_update_pops(instance_manager.get_definition_manager().get_define_manager());
 }
 
-void ProvinceInstance::province_tick(const Date today, PopValuesFromProvince& reusable_pop_values) {
+void ProvinceInstance::province_tick(
+	const Date today,
+	PopValuesFromProvince& reusable_pop_values,
+	std::vector<fixed_point_t>& reusable_vector
+) {
 	if (is_occupied()) {
 		occupation_duration++;
 	}
 
 	reusable_pop_values.update_pop_values_from_province(*this);
 	for (Pop& pop : pops) {
-		pop.pop_tick(reusable_pop_values);
+		pop.pop_tick(reusable_pop_values, reusable_vector);
 	}
 	for (BuildingInstance& building : buildings.get_items()) {
 		building.tick(today);
 	}
-	rgo.rgo_tick();
+	rgo.rgo_tick(reusable_vector);
 }
 
 bool ProvinceInstance::add_unit_instance_group(UnitInstanceGroup& group) {
@@ -604,9 +608,13 @@ bool ProvinceInstance::apply_history_to_province(ProvinceHistoryEntry const& ent
 	return ret;
 }
 
-void ProvinceInstance::initialise_for_new_game(const Date today, PopValuesFromProvince& reusable_pop_values) {
+void ProvinceInstance::initialise_for_new_game(
+	const Date today,
+	PopValuesFromProvince& reusable_pop_values,
+	std::vector<fixed_point_t>& reusable_vector
+) {
 	initialise_rgo();
-	province_tick(today, reusable_pop_values);
+	province_tick(today, reusable_pop_values, reusable_vector);
 }
 
 void ProvinceInstance::initialise_rgo() {

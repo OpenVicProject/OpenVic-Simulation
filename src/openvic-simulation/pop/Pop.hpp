@@ -160,10 +160,11 @@ namespace OpenVic {
 			fixed_point_t& price_inverse_sum,
 			fixed_point_t& cash_left_to_spend
 		);
-		void pop_tick_without_cleanup(PopValuesFromProvince& shared_values);
+		void pop_tick_without_cleanup(PopValuesFromProvince& shared_values, std::vector<fixed_point_t>& reusable_vector);
 		void pay_income_tax(fixed_point_t& income);
 		static void after_buy(void* actor, BuyResult const& buy_result);
-		static void after_sell(void* actor, SellResult const& sell_result);
+		//matching GoodMarketSellOrder::callback_t
+		static void after_sell(void* actor, SellResult const& sell_result, std::vector<fixed_point_t>& reusable_vector);
 
 	public:
 		Pop(Pop const&) = delete;
@@ -191,7 +192,7 @@ namespace OpenVic {
 		DO_FOR_ALL_TYPES_OF_POP_INCOME(DECLARE_POP_MONEY_STORE_FUNCTIONS)
 		DO_FOR_ALL_TYPES_OF_POP_EXPENSES(DECLARE_POP_MONEY_STORE_FUNCTIONS)
 		#undef DECLARE_POP_MONEY_STORE_FUNCTIONS
-		void pop_tick(PopValuesFromProvince& shared_values);
+		void pop_tick(PopValuesFromProvince& shared_values, std::vector<fixed_point_t>& reusable_vector);
 		void allocate_cash_for_artisanal_spending(const fixed_point_t money_to_spend);
 		void report_artisanal_produce(const fixed_point_t quantity);
 		void hire(pop_size_t count);

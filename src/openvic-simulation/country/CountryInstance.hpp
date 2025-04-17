@@ -634,6 +634,7 @@ namespace OpenVic {
 		void report_input_demand(ProductionType const& production_type, GoodDefinition const& good, const fixed_point_t quantity);
 		void report_output(ProductionType const& production_type, const fixed_point_t quantity);
 		void request_salaries_and_welfare(Pop& pop) const;
+		fixed_point_t calculate_minimum_wage_base(PopType const& pop_type) const;
 	};
 
 	struct CountryDefinitionManager;
