@@ -561,7 +561,7 @@ void Pop::after_buy(void* actor, BuyResult const& buy_result) {
 	#undef CONSUME_NEED
 }
 
-void Pop::after_sell(void* actor, SellResult const& sell_result) {
+void Pop::after_sell(void* actor, SellResult const& sell_result, std::vector<fixed_point_t>& reusable_vector) {
 	if (sell_result.get_money_gained() > fixed_point_t::_0()) {
 		static_cast<Pop*>(actor)->add_artisanal_income(sell_result.get_money_gained());
 	}

@@ -77,7 +77,7 @@ void GoodMarket::execute_orders(std::vector<fixed_point_t>& reusable_vector_0, s
 		}
 
 		for (GoodMarketSellOrder const& market_sell_order : market_sell_orders) {
-			market_sell_order.call_after_trade(SellResult::no_sales_result());
+			market_sell_order.call_after_trade(SellResult::no_sales_result(), reusable_vector_0);
 		}
 		return;
 	}
@@ -275,6 +275,8 @@ void GoodMarket::execute_orders(std::vector<fixed_point_t>& reusable_vector_0, s
 				}
 			}
 		}
+		reusable_vector_0.clear();
+		reusable_vector_1.clear();
 
 		for (GoodMarketSellOrder const& market_sell_order : market_sell_orders) {
 			const fixed_point_t quantity_sold = fixed_point_t::mul_div(
@@ -291,15 +293,16 @@ void GoodMarket::execute_orders(std::vector<fixed_point_t>& reusable_vector_0, s
 					fixed_point_t::epsilon() //round up
 				);
 			}
-			market_sell_order.call_after_trade({
-				quantity_sold,
-				money_gained
-			});
+			market_sell_order.call_after_trade(
+				{
+					quantity_sold,
+					money_gained
+				},
+				reusable_vector_0
+			);
 		}
 
 		market_sell_orders.clear();
-		reusable_vector_0.clear();
-		reusable_vector_1.clear();
 	}
 
 	price_change_yesterday = new_price - price;

@@ -163,7 +163,7 @@ namespace OpenVic {
 		void pop_tick_without_cleanup(PopValuesFromProvince& shared_values);
 		void pay_income_tax(fixed_point_t& income);
 		static void after_buy(void* actor, BuyResult const& buy_result);
-		static void after_sell(void* actor, SellResult const& sell_result);
+		static void after_sell(void* actor, SellResult const& sell_result, std::vector<fixed_point_t>& reusable_vector);
 
 	public:
 		Pop(Pop const&) = delete;
