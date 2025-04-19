@@ -1326,7 +1326,8 @@ void CountryInstance::_update_military(
 
 	// Mobilisation calculations
 	mobilisation_impact = get_modifier_effect_value(*modifier_effect_cache.get_mobilization_impact());
-	mobilisation_economy_impact = get_modifier_effect_value(*modifier_effect_cache.get_mobilisation_economy_impact());
+	mobilisation_economy_impact = get_modifier_effect_value(*modifier_effect_cache.get_mobilisation_economy_impact_tech()) +
+		get_modifier_effect_value(*modifier_effect_cache.get_mobilisation_economy_impact_country());
 
 	// TODO - use country_defines.get_min_mobilize_limit(); (wiki: "lowest maximum of brigades you can mobilize. (by default 3)")
 
@@ -1849,7 +1850,7 @@ void CountryInstance::request_salaries_and_welfare(Pop& pop) const {
 			pop.add_government_salary_administration(administration_salary);
 		}
 	}
-	
+
 	if (actual_education_spending > fixed_point_t::_0()) {
 		const fixed_point_t education_salary = fixed_point_t::mul_div(
 			pop_size * calculate_education_salary_base(pop_type_values, corruption_cost_multiplier),
@@ -1860,7 +1861,7 @@ void CountryInstance::request_salaries_and_welfare(Pop& pop) const {
 			pop.add_government_salary_education(education_salary);
 		}
 	}
-	
+
 	if (actual_military_spending > fixed_point_t::_0()) {
 		const fixed_point_t military_salary = fixed_point_t::mul_div(
 			pop_size * calculate_military_salary_base(pop_type_values, corruption_cost_multiplier),
@@ -1871,7 +1872,7 @@ void CountryInstance::request_salaries_and_welfare(Pop& pop) const {
 			pop.add_government_salary_military(military_salary);
 		}
 	}
-	
+
 	if (actual_social_spending > fixed_point_t::_0()) {
 		const fixed_point_t projected_social_spending_unscaled_by_slider =
 			projected_pensions_spending_unscaled_by_slider
@@ -2242,6 +2243,6 @@ void CountryInstanceManager::country_manager_tick_after_map(InstanceManager& ins
 	for (CountryInstance& country : country_instances.get_items()) {
 		country.country_tick_after_map(instance_manager);
 	}
-	
+
 	shared_country_values.update_costs(instance_manager.get_good_instance_manager());
 }

@@ -316,43 +316,50 @@ bool UnitTypeManager::generate_modifiers(ModifierManager& modifier_manager) cons
 		using enum ModifierEffect::format_t;
 
 		const auto stat_modifier = [&modifier_manager, &ret, &identifier](
-			ModifierEffect const*& effect_cache, std::string_view suffix, bool is_positive_good,
+			ModifierEffect const*& effect_cache, std::string_view suffix,
 			ModifierEffect::format_t format, std::string_view localisation_key
 		) -> void {
 			ret &= modifier_manager.register_technology_modifier_effect(
-				effect_cache, ModifierManager::get_flat_identifier(identifier, suffix), is_positive_good, format,
+				effect_cache, ModifierManager::get_flat_identifier(identifier, suffix), format,
 				StringUtils::append_string_views("$", identifier, "$: $", localisation_key, "$")
 			);
 		};
 
 		ret &= modifier_manager.register_complex_modifier(identifier);
 
-		stat_modifier(unit_type_effects.attack, "attack", true, RAW_DECIMAL, "ATTACK");
-		stat_modifier(unit_type_effects.defence, "defence", true, RAW_DECIMAL, "DEFENCE");
-		stat_modifier(unit_type_effects.default_organisation, "default_organisation", true, RAW_DECIMAL, "DEFAULT_ORG");
-		stat_modifier(unit_type_effects.maximum_speed, "maximum_speed", true, RAW_DECIMAL, "MAXIMUM_SPEED");
-		stat_modifier(unit_type_effects.build_time, "build_time", false, INT, "BUILD_TIME");
-		stat_modifier(
-			unit_type_effects.supply_consumption, "supply_consumption", false, PROPORTION_DECIMAL, "SUPPLY_CONSUMPTION"
-		);
-
+		// These are ordered following how they appear in the base game, hence the broken up land effects.
+		stat_modifier(unit_type_effects.default_organisation, "default_organisation", FORMAT_x1_1DP_POS, "DEFAULT_ORG");
+		stat_modifier(unit_type_effects.build_time, "build_time", FORMAT_x1_0DP_DAYS_NEG, "BUILD_TIME");
 		if constexpr (std::same_as<decltype(unit_type_effects), ModifierEffectCache::regiment_type_effects_t>) {
-			stat_modifier(unit_type_effects.reconnaissance, "reconnaissance", true, RAW_DECIMAL, "RECONAISSANCE"); // paradox typo
-			stat_modifier(unit_type_effects.discipline, "discipline", true, PROPORTION_DECIMAL, "DISCIPLINE");
-			stat_modifier(unit_type_effects.support, "support", true, PROPORTION_DECIMAL, "SUPPORT");
-			stat_modifier(unit_type_effects.maneuver, "maneuver", true, INT, "Maneuver");
-			stat_modifier(unit_type_effects.siege, "siege", true, RAW_DECIMAL, "SIEGE");
-		} else if constexpr(std::same_as<decltype(unit_type_effects), ModifierEffectCache::ship_type_effects_t>) {
-			stat_modifier(unit_type_effects.colonial_points, "colonial_points", true, INT, "COLONIAL_POINTS_TECH");
-			stat_modifier(unit_type_effects.supply_consumption_score, "supply_consumption_score", false, INT, "SUPPLY_LOAD");
-			stat_modifier(unit_type_effects.hull, "hull", true, RAW_DECIMAL, "HULL");
-			stat_modifier(unit_type_effects.gun_power, "gun_power", true, RAW_DECIMAL, "GUN_POWER");
-			stat_modifier(unit_type_effects.fire_range, "fire_range", true, RAW_DECIMAL, "FIRE_RANGE");
-			stat_modifier(unit_type_effects.evasion, "evasion", true, PROPORTION_DECIMAL, "EVASION");
-			stat_modifier(unit_type_effects.torpedo_attack, "torpedo_attack", true, RAW_DECIMAL, "TORPEDO_ATTACK");
-		} else {
-			/* Unreachable - unit types are only added via add_regiment_type or add_ship_type which set branch to LAND or NAVAL. */
-			Logger::error("Invalid branch for unit ", identifier, " - not LAND or NAVAL!");
+			stat_modifier(
+				unit_type_effects.reconnaissance, "reconnaissance", FORMAT_x1_2DP_POS, "RECONAISSANCE" // paradox typo
+			);
+			stat_modifier(unit_type_effects.siege, "siege", FORMAT_x1_2DP_POS, "SIEGE");
+		}
+		stat_modifier(unit_type_effects.attack, "attack", FORMAT_x1_2DP_POS, "ATTACK");
+		stat_modifier(unit_type_effects.defence, "defence", FORMAT_x1_2DP_POS, "DEFENCE");
+		if constexpr (std::same_as<decltype(unit_type_effects), ModifierEffectCache::regiment_type_effects_t>) {
+			stat_modifier(unit_type_effects.discipline, "discipline", FORMAT_x100_0DP_PC_POS, "DISCIPLINE");
+			stat_modifier(unit_type_effects.support, "support", FORMAT_x100_0DP_PC_POS, "SUPPORT");
+			stat_modifier(unit_type_effects.maneuver, "maneuver", FORMAT_x1_0DP_POS, "Maneuver");
+		}
+		stat_modifier(unit_type_effects.maximum_speed, "maximum_speed", FORMAT_x1_2DP_SPEED_POS, "MAXIMUM_SPEED");
+		if constexpr(std::same_as<decltype(unit_type_effects), ModifierEffectCache::ship_type_effects_t>) {
+			stat_modifier(unit_type_effects.gun_power, "gun_power", FORMAT_x1_2DP_POS, "GUN_POWER");
+			stat_modifier(unit_type_effects.torpedo_attack, "torpedo_attack", FORMAT_x1_2DP_POS, "TORPEDO_ATTACK");
+			stat_modifier(unit_type_effects.hull, "hull", FORMAT_x1_2DP_POS, "HULL");
+			stat_modifier(unit_type_effects.fire_range, "fire_range", FORMAT_x100_0DP_POS, "FIRE_RANGE");
+			stat_modifier(unit_type_effects.evasion, "evasion", FORMAT_x100_0DP_PC_POS, "EVASION");
+		}
+		stat_modifier(
+			unit_type_effects.supply_consumption, "supply_consumption", FORMAT_x100_0DP_PC_NEG, "SUPPLY_CONSUMPTION"
+		);
+		if constexpr(std::same_as<decltype(unit_type_effects), ModifierEffectCache::ship_type_effects_t>) {
+			stat_modifier(
+				unit_type_effects.supply_consumption_score, "supply_consumption_score", FORMAT_x1_0DP_NEG, "SUPPLY_LOAD"
+			);
+			// Works but doesn't appear in tooltips in the base game
+			stat_modifier(unit_type_effects.colonial_points, "colonial_points", FORMAT_x1_0DP_POS, "COLONIAL_POINTS_TECH");
 		}
 	};
 

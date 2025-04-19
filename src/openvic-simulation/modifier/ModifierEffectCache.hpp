@@ -33,167 +33,179 @@ namespace OpenVic {
 
 	private:
 		/* Tech/inventions only */
-		ModifierEffect const* PROPERTY(cb_creation_speed);
-		ModifierEffect const* PROPERTY(combat_width_additive);
-		ModifierEffect const* PROPERTY(plurality);
-		ModifierEffect const* PROPERTY(pop_growth);
-		ModifierEffect const* PROPERTY(prestige_gain_multiplier);
-		ModifierEffect const* PROPERTY(regular_experience_level);
-		ModifierEffect const* PROPERTY(reinforce_rate);
-		ModifierEffect const* PROPERTY(separatism);
-		ModifierEffect const* PROPERTY(shared_prestige);
-		ModifierEffect const* PROPERTY(tax_eff);
+		ModifierEffect const* PROPERTY(cb_creation_speed, nullptr);
+		ModifierEffect const* PROPERTY(combat_width_additive, nullptr);
+		ModifierEffect const* PROPERTY(plurality, nullptr);
+		ModifierEffect const* PROPERTY(pop_growth, nullptr);
+		ModifierEffect const* PROPERTY(prestige_gain_multiplier, nullptr);
+		ModifierEffect const* PROPERTY(regular_experience_level, nullptr);
+		ModifierEffect const* PROPERTY(reinforce_rate, nullptr);
+		ModifierEffect const* PROPERTY(separatism, nullptr);
+		ModifierEffect const* PROPERTY(shared_prestige, nullptr);
+		ModifierEffect const* PROPERTY(tax_eff, nullptr);
 
 		/* Country Modifier Effects */
-		ModifierEffect const* PROPERTY(administrative_efficiency);
-		ModifierEffect const* PROPERTY(administrative_efficiency_modifier);
-		ModifierEffect const* PROPERTY(artisan_input);
-		ModifierEffect const* PROPERTY(artisan_output);
-		ModifierEffect const* PROPERTY(artisan_throughput);
-		ModifierEffect const* PROPERTY(badboy);
-		ModifierEffect const* PROPERTY(cb_generation_speed_modifier);
-		ModifierEffect const* PROPERTY(civilization_progress_modifier);
-		ModifierEffect const* PROPERTY(colonial_life_rating);
-		ModifierEffect const* PROPERTY(colonial_migration);
-		ModifierEffect const* PROPERTY(colonial_points);
-		ModifierEffect const* PROPERTY(colonial_prestige);
-		ModifierEffect const* PROPERTY(core_pop_consciousness_modifier);
-		ModifierEffect const* PROPERTY(core_pop_militancy_modifier);
-		ModifierEffect const* PROPERTY(dig_in_cap);
-		ModifierEffect const* PROPERTY(diplomatic_points);
-		ModifierEffect const* PROPERTY(diplomatic_points_modifier);
-		ModifierEffect const* PROPERTY(education_efficiency);
-		ModifierEffect const* PROPERTY(education_efficiency_modifier);
-		ModifierEffect const* PROPERTY(factory_cost);
-		ModifierEffect const* PROPERTY(factory_input);
-		ModifierEffect const* PROPERTY(factory_maintenance);
-		ModifierEffect const* PROPERTY(factory_output);
-		ModifierEffect const* PROPERTY(factory_owner_cost);
-		ModifierEffect const* PROPERTY(factory_throughput);
-		ModifierEffect const* PROPERTY(global_assimilation_rate);
-		ModifierEffect const* PROPERTY(global_immigrant_attract);
-		ModifierEffect const* PROPERTY(global_pop_consciousness_modifier);
-		ModifierEffect const* PROPERTY(global_pop_militancy_modifier);
-		ModifierEffect const* PROPERTY(global_population_growth);
-		ModifierEffect const* PROPERTY(goods_demand);
-		ModifierEffect const* PROPERTY(import_cost);
-		ModifierEffect const* PROPERTY(increase_research);
-		ModifierEffect const* PROPERTY(influence);
-		ModifierEffect const* PROPERTY(influence_modifier);
-		ModifierEffect const* PROPERTY(issue_change_speed);
-		ModifierEffect const* PROPERTY(land_attack_modifier);
-		ModifierEffect const* PROPERTY(land_attrition);
-		ModifierEffect const* PROPERTY(land_defense_modifier);
-		ModifierEffect const* PROPERTY(land_organisation);
-		ModifierEffect const* PROPERTY(land_unit_start_experience);
-		ModifierEffect const* PROPERTY(leadership);
-		ModifierEffect const* PROPERTY(leadership_modifier);
-		ModifierEffect const* PROPERTY(literacy_con_impact);
-		ModifierEffect const* PROPERTY(loan_interest_base);
-		ModifierEffect const* PROPERTY(loan_interest_foreign);
-		ModifierEffect const* PROPERTY(max_loan_modifier);
-		ModifierEffect const* PROPERTY(max_military_spending);
-		ModifierEffect const* PROPERTY(max_national_focus);
-		ModifierEffect const* PROPERTY(max_social_spending);
-		ModifierEffect const* PROPERTY(max_tariff);
-		ModifierEffect const* PROPERTY(max_tax);
-		ModifierEffect const* PROPERTY(max_war_exhaustion);
-		ModifierEffect const* PROPERTY(military_tactics);
-		ModifierEffect const* PROPERTY(min_military_spending);
-		ModifierEffect const* PROPERTY(min_social_spending);
-		ModifierEffect const* PROPERTY(min_tariff);
-		ModifierEffect const* PROPERTY(min_tax);
-		ModifierEffect const* PROPERTY(minimum_wage);
-		ModifierEffect const* PROPERTY(mobilisation_economy_impact);
-		ModifierEffect const* PROPERTY(mobilisation_size);
-		ModifierEffect const* PROPERTY(mobilization_impact);
-		ModifierEffect const* PROPERTY(morale_global);
-		ModifierEffect const* PROPERTY(naval_attack_modifier);
-		ModifierEffect const* PROPERTY(naval_attrition);
-		ModifierEffect const* PROPERTY(naval_defense_modifier);
-		ModifierEffect const* PROPERTY(naval_organisation);
-		ModifierEffect const* PROPERTY(naval_unit_start_experience);
-		ModifierEffect const* PROPERTY(non_accepted_pop_consciousness_modifier);
-		ModifierEffect const* PROPERTY(non_accepted_pop_militancy_modifier);
-		ModifierEffect const* PROPERTY(org_regain);
-		ModifierEffect const* PROPERTY(pension_level);
-		ModifierEffect const* PROPERTY(permanent_prestige);
-		ModifierEffect const* PROPERTY(political_reform_desire);
-		ModifierEffect const* PROPERTY(poor_savings_modifier);
-		ModifierEffect const* PROPERTY(prestige_monthly_gain);
-		ModifierEffect const* PROPERTY(reinforce_speed);
-		ModifierEffect const* PROPERTY(research_points);
-		ModifierEffect const* PROPERTY(research_points_modifier);
-		ModifierEffect const* PROPERTY(research_points_on_conquer);
-		ModifierEffect const* PROPERTY(rgo_output);
-		ModifierEffect const* PROPERTY(rgo_throughput);
-		ModifierEffect const* PROPERTY(ruling_party_support);
-		ModifierEffect const* PROPERTY(self_unciv_economic_modifier);
-		ModifierEffect const* PROPERTY(self_unciv_military_modifier);
-		ModifierEffect const* PROPERTY(social_reform_desire);
-		ModifierEffect const* PROPERTY(soldier_to_pop_loss);
-		ModifierEffect const* PROPERTY(supply_consumption);
-		ModifierEffect const* PROPERTY(supply_range);
-		ModifierEffect const* PROPERTY(suppression_points_modifier);
-		ModifierEffect const* PROPERTY(tariff_efficiency_modifier);
-		ModifierEffect const* PROPERTY(tax_efficiency);
-		ModifierEffect const* PROPERTY(unemployment_benefit);
-		ModifierEffect const* PROPERTY(unciv_economic_modifier);
-		ModifierEffect const* PROPERTY(unciv_military_modifier);
-		ModifierEffect const* PROPERTY(unit_recruitment_time);
-		ModifierEffect const* PROPERTY(war_exhaustion_from_battles);
-		ModifierEffect const* PROPERTY(war_exhaustion_monthly);
+		ModifierEffect const* PROPERTY(administrative_efficiency, nullptr);
+		ModifierEffect const* PROPERTY(administrative_efficiency_modifier, nullptr);
+		ModifierEffect const* PROPERTY(artisan_input_tech, nullptr);
+		ModifierEffect const* PROPERTY(artisan_input_country, nullptr);
+		ModifierEffect const* PROPERTY(artisan_output_tech, nullptr);
+		ModifierEffect const* PROPERTY(artisan_output_country, nullptr);
+		ModifierEffect const* PROPERTY(artisan_throughput_tech, nullptr);
+		ModifierEffect const* PROPERTY(artisan_throughput_country, nullptr);
+		ModifierEffect const* PROPERTY(badboy, nullptr);
+		ModifierEffect const* PROPERTY(cb_generation_speed_modifier, nullptr);
+		ModifierEffect const* PROPERTY(civilization_progress_modifier, nullptr);
+		ModifierEffect const* PROPERTY(colonial_life_rating, nullptr);
+		ModifierEffect const* PROPERTY(colonial_migration, nullptr);
+		ModifierEffect const* PROPERTY(colonial_points, nullptr);
+		ModifierEffect const* PROPERTY(colonial_prestige, nullptr);
+		ModifierEffect const* PROPERTY(core_pop_consciousness_modifier, nullptr);
+		ModifierEffect const* PROPERTY(core_pop_militancy_modifier, nullptr);
+		ModifierEffect const* PROPERTY(dig_in_cap, nullptr);
+		ModifierEffect const* PROPERTY(diplomatic_points, nullptr);
+		ModifierEffect const* PROPERTY(diplomatic_points_modifier, nullptr);
+		ModifierEffect const* PROPERTY(education_efficiency, nullptr);
+		ModifierEffect const* PROPERTY(education_efficiency_modifier, nullptr);
+		ModifierEffect const* PROPERTY(factory_cost_country, nullptr);
+		ModifierEffect const* PROPERTY(factory_cost_tech, nullptr);
+		ModifierEffect const* PROPERTY(factory_input_tech, nullptr);
+		ModifierEffect const* PROPERTY(factory_input_country, nullptr);
+		ModifierEffect const* PROPERTY(factory_maintenance, nullptr);
+		ModifierEffect const* PROPERTY(factory_output_tech, nullptr);
+		ModifierEffect const* PROPERTY(factory_output_country, nullptr);
+		ModifierEffect const* PROPERTY(factory_owner_cost, nullptr);
+		ModifierEffect const* PROPERTY(factory_throughput_tech, nullptr);
+		ModifierEffect const* PROPERTY(factory_throughput_country, nullptr);
+		ModifierEffect const* PROPERTY(global_assimilation_rate, nullptr);
+		ModifierEffect const* PROPERTY(global_immigrant_attract, nullptr);
+		ModifierEffect const* PROPERTY(global_pop_consciousness_modifier, nullptr);
+		ModifierEffect const* PROPERTY(global_pop_militancy_modifier, nullptr);
+		ModifierEffect const* PROPERTY(global_population_growth, nullptr);
+		ModifierEffect const* PROPERTY(goods_demand, nullptr);
+		ModifierEffect const* PROPERTY(import_cost, nullptr);
+		ModifierEffect const* PROPERTY(increase_research, nullptr);
+		ModifierEffect const* PROPERTY(influence, nullptr);
+		ModifierEffect const* PROPERTY(influence_modifier, nullptr);
+		ModifierEffect const* PROPERTY(issue_change_speed, nullptr);
+		ModifierEffect const* PROPERTY(land_attack_modifier, nullptr);
+		ModifierEffect const* PROPERTY(land_attrition, nullptr);
+		ModifierEffect const* PROPERTY(land_defense_modifier, nullptr);
+		ModifierEffect const* PROPERTY(land_organisation, nullptr);
+		ModifierEffect const* PROPERTY(land_unit_start_experience, nullptr);
+		ModifierEffect const* PROPERTY(leadership, nullptr);
+		ModifierEffect const* PROPERTY(leadership_modifier, nullptr);
+		ModifierEffect const* PROPERTY(literacy_con_impact, nullptr);
+		ModifierEffect const* PROPERTY(loan_interest_base, nullptr);
+		ModifierEffect const* PROPERTY(loan_interest_foreign, nullptr);
+		ModifierEffect const* PROPERTY(max_loan_modifier, nullptr);
+		ModifierEffect const* PROPERTY(max_military_spending, nullptr);
+		ModifierEffect const* PROPERTY(max_national_focus, nullptr);
+		ModifierEffect const* PROPERTY(max_social_spending, nullptr);
+		ModifierEffect const* PROPERTY(max_tariff, nullptr);
+		ModifierEffect const* PROPERTY(max_tax, nullptr);
+		ModifierEffect const* PROPERTY(max_war_exhaustion, nullptr);
+		ModifierEffect const* PROPERTY(military_tactics, nullptr);
+		ModifierEffect const* PROPERTY(min_military_spending, nullptr);
+		ModifierEffect const* PROPERTY(min_social_spending, nullptr);
+		ModifierEffect const* PROPERTY(min_tariff, nullptr);
+		ModifierEffect const* PROPERTY(min_tax, nullptr);
+		ModifierEffect const* PROPERTY(minimum_wage, nullptr);
+		ModifierEffect const* PROPERTY(mobilisation_economy_impact_tech, nullptr);
+		ModifierEffect const* PROPERTY(mobilisation_economy_impact_country, nullptr);
+		ModifierEffect const* PROPERTY(mobilisation_size_tech, nullptr);
+		ModifierEffect const* PROPERTY(mobilisation_size_country, nullptr);
+		ModifierEffect const* PROPERTY(mobilization_impact, nullptr);
+		ModifierEffect const* PROPERTY(morale_global, nullptr);
+		ModifierEffect const* PROPERTY(naval_attack_modifier, nullptr);
+		ModifierEffect const* PROPERTY(naval_attrition, nullptr);
+		ModifierEffect const* PROPERTY(naval_defense_modifier, nullptr);
+		ModifierEffect const* PROPERTY(naval_organisation, nullptr);
+		ModifierEffect const* PROPERTY(naval_unit_start_experience, nullptr);
+		ModifierEffect const* PROPERTY(non_accepted_pop_consciousness_modifier, nullptr);
+		ModifierEffect const* PROPERTY(non_accepted_pop_militancy_modifier, nullptr);
+		ModifierEffect const* PROPERTY(org_regain, nullptr);
+		ModifierEffect const* PROPERTY(pension_level, nullptr);
+		ModifierEffect const* PROPERTY(permanent_prestige, nullptr);
+		ModifierEffect const* PROPERTY(political_reform_desire, nullptr);
+		ModifierEffect const* PROPERTY(poor_savings_modifier, nullptr);
+		ModifierEffect const* PROPERTY(prestige_monthly_gain, nullptr);
+		ModifierEffect const* PROPERTY(reinforce_speed, nullptr);
+		ModifierEffect const* PROPERTY(research_points, nullptr);
+		ModifierEffect const* PROPERTY(research_points_modifier, nullptr);
+		ModifierEffect const* PROPERTY(research_points_on_conquer, nullptr);
+		ModifierEffect const* PROPERTY(rgo_output_tech, nullptr);
+		ModifierEffect const* PROPERTY(rgo_output_country, nullptr);
+		ModifierEffect const* PROPERTY(rgo_throughput_tech, nullptr);
+		ModifierEffect const* PROPERTY(rgo_throughput_country, nullptr);
+		ModifierEffect const* PROPERTY(ruling_party_support, nullptr);
+		ModifierEffect const* PROPERTY(self_unciv_economic_modifier, nullptr);
+		ModifierEffect const* PROPERTY(self_unciv_military_modifier, nullptr);
+		ModifierEffect const* PROPERTY(social_reform_desire, nullptr);
+		ModifierEffect const* PROPERTY(soldier_to_pop_loss, nullptr);
+		ModifierEffect const* PROPERTY(supply_consumption, nullptr);
+		ModifierEffect const* PROPERTY(supply_range, nullptr);
+		ModifierEffect const* PROPERTY(suppression_points_modifier_tech, nullptr);
+		ModifierEffect const* PROPERTY(suppression_points_modifier_country, nullptr);
+		ModifierEffect const* PROPERTY(tariff_efficiency_modifier, nullptr);
+		ModifierEffect const* PROPERTY(tax_efficiency, nullptr);
+		ModifierEffect const* PROPERTY(unemployment_benefit, nullptr);
+		ModifierEffect const* PROPERTY(unciv_economic_modifier, nullptr);
+		ModifierEffect const* PROPERTY(unciv_military_modifier, nullptr);
+		ModifierEffect const* PROPERTY(unit_recruitment_time, nullptr);
+		ModifierEffect const* PROPERTY(war_exhaustion_from_battles, nullptr);
+		ModifierEffect const* PROPERTY(war_exhaustion_monthly, nullptr);
 
 		/* Province Modifier Effects */
-		ModifierEffect const* PROPERTY(assimilation_rate);
-		ModifierEffect const* PROPERTY(boost_strongest_party);
-		ModifierEffect const* PROPERTY(farm_rgo_throughput_and_output);
-		ModifierEffect const* PROPERTY(farm_rgo_output_global);
-		ModifierEffect const* PROPERTY(farm_rgo_output_local);
-		ModifierEffect const* PROPERTY(farm_rgo_size_fake);
-		ModifierEffect const* PROPERTY(farm_rgo_size_global);
-		ModifierEffect const* PROPERTY(farm_rgo_size_local);
-		ModifierEffect const* PROPERTY(immigrant_attract);
-		ModifierEffect const* PROPERTY(immigrant_push);
-		ModifierEffect const* PROPERTY(life_rating);
-		ModifierEffect const* PROPERTY(local_artisan_input);
-		ModifierEffect const* PROPERTY(local_artisan_output);
-		ModifierEffect const* PROPERTY(local_artisan_throughput);
-		ModifierEffect const* PROPERTY(local_factory_input);
-		ModifierEffect const* PROPERTY(local_factory_output);
-		ModifierEffect const* PROPERTY(local_factory_throughput);
-		ModifierEffect const* PROPERTY(local_repair);
-		ModifierEffect const* PROPERTY(local_rgo_output);
-		ModifierEffect const* PROPERTY(local_rgo_throughput);
-		ModifierEffect const* PROPERTY(local_ruling_party_support);
-		ModifierEffect const* PROPERTY(local_ship_build);
-		ModifierEffect const* PROPERTY(attrition_local);
-		ModifierEffect const* PROPERTY(max_attrition);
-		ModifierEffect const* PROPERTY(mine_rgo_throughput_and_output);
-		ModifierEffect const* PROPERTY(mine_rgo_output_global);
-		ModifierEffect const* PROPERTY(mine_rgo_output_local);
-		ModifierEffect const* PROPERTY(mine_rgo_size_fake);
-		ModifierEffect const* PROPERTY(mine_rgo_size_global);
-		ModifierEffect const* PROPERTY(mine_rgo_size_local);
-		ModifierEffect const* PROPERTY(movement_cost_percentage_change);
-		ModifierEffect const* PROPERTY(number_of_voters);
-		ModifierEffect const* PROPERTY(pop_consciousness_modifier);
-		ModifierEffect const* PROPERTY(pop_militancy_modifier);
-		ModifierEffect const* PROPERTY(population_growth);
-		ModifierEffect const* PROPERTY(supply_limit_global_percentage_change);
-		ModifierEffect const* PROPERTY(supply_limit_global_base);
-		ModifierEffect const* PROPERTY(supply_limit_local_base);
+		ModifierEffect const* PROPERTY(assimilation_rate, nullptr);
+		ModifierEffect const* PROPERTY(boost_strongest_party, nullptr);
+		ModifierEffect const* PROPERTY(farm_rgo_throughput_and_output, nullptr);
+		ModifierEffect const* PROPERTY(farm_rgo_output_global, nullptr);
+		ModifierEffect const* PROPERTY(farm_rgo_output_local, nullptr);
+		ModifierEffect const* PROPERTY(farm_rgo_size_fake, nullptr);
+		ModifierEffect const* PROPERTY(farm_rgo_size_global, nullptr);
+		ModifierEffect const* PROPERTY(farm_rgo_size_local, nullptr);
+		ModifierEffect const* PROPERTY(immigrant_attract, nullptr);
+		ModifierEffect const* PROPERTY(immigrant_push, nullptr);
+		ModifierEffect const* PROPERTY(life_rating, nullptr);
+		ModifierEffect const* PROPERTY(local_artisan_input, nullptr);
+		ModifierEffect const* PROPERTY(local_artisan_output, nullptr);
+		ModifierEffect const* PROPERTY(local_artisan_throughput, nullptr);
+		ModifierEffect const* PROPERTY(local_factory_input, nullptr);
+		ModifierEffect const* PROPERTY(local_factory_output, nullptr);
+		ModifierEffect const* PROPERTY(local_factory_throughput, nullptr);
+		ModifierEffect const* PROPERTY(local_repair, nullptr);
+		ModifierEffect const* PROPERTY(local_rgo_output, nullptr);
+		ModifierEffect const* PROPERTY(local_rgo_throughput, nullptr);
+		ModifierEffect const* PROPERTY(local_ruling_party_support, nullptr);
+		ModifierEffect const* PROPERTY(local_ship_build, nullptr);
+		ModifierEffect const* PROPERTY(attrition_local, nullptr);
+		ModifierEffect const* PROPERTY(max_attrition, nullptr);
+		ModifierEffect const* PROPERTY(mine_rgo_throughput_and_output, nullptr);
+		ModifierEffect const* PROPERTY(mine_rgo_output_global, nullptr);
+		ModifierEffect const* PROPERTY(mine_rgo_output_local, nullptr);
+		ModifierEffect const* PROPERTY(mine_rgo_size_fake, nullptr);
+		ModifierEffect const* PROPERTY(mine_rgo_size_global, nullptr);
+		ModifierEffect const* PROPERTY(mine_rgo_size_local, nullptr);
+		ModifierEffect const* PROPERTY(movement_cost_percentage_change, nullptr);
+		ModifierEffect const* PROPERTY(number_of_voters, nullptr);
+		ModifierEffect const* PROPERTY(pop_consciousness_modifier, nullptr);
+		ModifierEffect const* PROPERTY(pop_militancy_modifier, nullptr);
+		ModifierEffect const* PROPERTY(population_growth, nullptr);
+		ModifierEffect const* PROPERTY(supply_limit_global_percentage_change, nullptr);
+		ModifierEffect const* PROPERTY(supply_limit_global_base, nullptr);
+		ModifierEffect const* PROPERTY(supply_limit_local_base, nullptr);
 
 		/* Military Modifier Effects */
-		ModifierEffect const* PROPERTY(attack_leader);
-		ModifierEffect const* PROPERTY(attrition_leader);
-		ModifierEffect const* PROPERTY(defence_leader);
-		ModifierEffect const* PROPERTY(experience);
-		ModifierEffect const* PROPERTY(morale_leader);
-		ModifierEffect const* PROPERTY(organisation);
-		ModifierEffect const* PROPERTY(reconnaissance);
-		ModifierEffect const* PROPERTY(reliability);
-		ModifierEffect const* PROPERTY(speed);
+		ModifierEffect const* PROPERTY(attack_leader, nullptr);
+		ModifierEffect const* PROPERTY(attrition_leader, nullptr);
+		ModifierEffect const* PROPERTY(defence_leader, nullptr);
+		ModifierEffect const* PROPERTY(experience, nullptr);
+		ModifierEffect const* PROPERTY(morale_leader, nullptr);
+		ModifierEffect const* PROPERTY(organisation, nullptr);
+		ModifierEffect const* PROPERTY(reconnaissance, nullptr);
+		ModifierEffect const* PROPERTY(reliability, nullptr);
+		ModifierEffect const* PROPERTY(speed, nullptr);
 
 		/* BuildingType Effects */
 	public:
@@ -201,11 +213,11 @@ namespace OpenVic {
 			friend struct BuildingTypeManager;
 
 		private:
-			ModifierEffect const* PROPERTY(min_level);
-			ModifierEffect const* PROPERTY(max_level);
+			ModifierEffect const* PROPERTY(min_level, nullptr);
+			ModifierEffect const* PROPERTY(max_level, nullptr);
 
 		public:
-			building_type_effects_t();
+			building_type_effects_t() = default;
 		};
 
 	private:
@@ -217,18 +229,19 @@ namespace OpenVic {
 			friend struct GoodDefinitionManager;
 
 		private:
-			ModifierEffect const* PROPERTY(artisan_goods_input);
-			ModifierEffect const* PROPERTY(artisan_goods_output);
-			ModifierEffect const* PROPERTY(artisan_goods_throughput);
-			ModifierEffect const* PROPERTY(factory_goods_input);
-			ModifierEffect const* PROPERTY(factory_goods_output);
-			ModifierEffect const* PROPERTY(factory_goods_throughput);
-			ModifierEffect const* PROPERTY(rgo_goods_output);
-			ModifierEffect const* PROPERTY(rgo_goods_throughput);
-			ModifierEffect const* PROPERTY(rgo_size);
+			ModifierEffect const* PROPERTY(artisan_goods_input, nullptr);
+			ModifierEffect const* PROPERTY(artisan_goods_output, nullptr);
+			ModifierEffect const* PROPERTY(artisan_goods_throughput, nullptr);
+			ModifierEffect const* PROPERTY(factory_goods_input, nullptr);
+			ModifierEffect const* PROPERTY(factory_goods_output, nullptr);
+			ModifierEffect const* PROPERTY(factory_goods_throughput, nullptr);
+			ModifierEffect const* PROPERTY(rgo_goods_input, nullptr);
+			ModifierEffect const* PROPERTY(rgo_goods_output, nullptr);
+			ModifierEffect const* PROPERTY(rgo_goods_throughput, nullptr);
+			ModifierEffect const* PROPERTY(rgo_size, nullptr);
 
 		public:
-			good_effects_t();
+			good_effects_t() = default;
 		};
 
 	private:
@@ -240,45 +253,45 @@ namespace OpenVic {
 			friend struct UnitTypeManager;
 
 		private:
-			ModifierEffect const* PROPERTY(attack);
-			ModifierEffect const* PROPERTY(defence);
-			ModifierEffect const* PROPERTY(default_organisation);
-			ModifierEffect const* PROPERTY(maximum_speed);
-			ModifierEffect const* PROPERTY(build_time);
-			ModifierEffect const* PROPERTY(supply_consumption);
+			ModifierEffect const* PROPERTY(attack, nullptr);
+			ModifierEffect const* PROPERTY(defence, nullptr);
+			ModifierEffect const* PROPERTY(default_organisation, nullptr);
+			ModifierEffect const* PROPERTY(maximum_speed, nullptr);
+			ModifierEffect const* PROPERTY(build_time, nullptr);
+			ModifierEffect const* PROPERTY(supply_consumption, nullptr);
 
 		protected:
-			unit_type_effects_t();
+			unit_type_effects_t() = default;
 		};
 
 		struct regiment_type_effects_t : unit_type_effects_t {
 			friend struct UnitTypeManager;
 
 		private:
-			ModifierEffect const* PROPERTY(reconnaissance);
-			ModifierEffect const* PROPERTY(discipline);
-			ModifierEffect const* PROPERTY(support);
-			ModifierEffect const* PROPERTY(maneuver);
-			ModifierEffect const* PROPERTY(siege);
+			ModifierEffect const* PROPERTY(reconnaissance, nullptr);
+			ModifierEffect const* PROPERTY(discipline, nullptr);
+			ModifierEffect const* PROPERTY(support, nullptr);
+			ModifierEffect const* PROPERTY(maneuver, nullptr);
+			ModifierEffect const* PROPERTY(siege, nullptr);
 
 		public:
-			regiment_type_effects_t();
+			regiment_type_effects_t() = default;
 		};
 
 		struct ship_type_effects_t : unit_type_effects_t {
 			friend struct UnitTypeManager;
 
 		private:
-			ModifierEffect const* PROPERTY(colonial_points);
-			ModifierEffect const* PROPERTY(supply_consumption_score);
-			ModifierEffect const* PROPERTY(hull);
-			ModifierEffect const* PROPERTY(gun_power);
-			ModifierEffect const* PROPERTY(fire_range);
-			ModifierEffect const* PROPERTY(evasion);
-			ModifierEffect const* PROPERTY(torpedo_attack);
+			ModifierEffect const* PROPERTY(colonial_points, nullptr);
+			ModifierEffect const* PROPERTY(supply_consumption_score, nullptr);
+			ModifierEffect const* PROPERTY(hull, nullptr);
+			ModifierEffect const* PROPERTY(gun_power, nullptr);
+			ModifierEffect const* PROPERTY(fire_range, nullptr);
+			ModifierEffect const* PROPERTY(evasion, nullptr);
+			ModifierEffect const* PROPERTY(torpedo_attack, nullptr);
 
 		public:
-			ship_type_effects_t();
+			ship_type_effects_t() = default;
 		};
 
 	private:
@@ -293,20 +306,20 @@ namespace OpenVic {
 			friend struct TerrainTypeManager;
 
 		private:
-			ModifierEffect const* PROPERTY(attack);
-			ModifierEffect const* PROPERTY(defence);
-			ModifierEffect const* PROPERTY(attrition);
-			ModifierEffect const* PROPERTY(movement);
+			ModifierEffect const* PROPERTY(attack, nullptr);
+			ModifierEffect const* PROPERTY(defence, nullptr);
+			ModifierEffect const* PROPERTY(attrition, nullptr);
+			ModifierEffect const* PROPERTY(movement, nullptr);
 
 		public:
-			unit_terrain_effects_t();
+			unit_terrain_effects_t() = default;
 		};
 
 	private:
 		IndexedMap<TerrainType, unit_terrain_effects_t> PROPERTY(unit_terrain_effects);
 
 		/* Rebel Effects */
-		ModifierEffect const* PROPERTY(rebel_org_gain_all);
+		ModifierEffect const* PROPERTY(rebel_org_gain_all, nullptr);
 		IndexedMap<RebelType, ModifierEffect const*> PROPERTY(rebel_org_gain_effects);
 
 		/* Pop Effects */
@@ -315,14 +328,14 @@ namespace OpenVic {
 			friend struct PopManager;
 
 		private:
-			ModifierEffect const* PROPERTY(income_modifier);
-			ModifierEffect const* PROPERTY(vote);
-			ModifierEffect const* PROPERTY(life_needs);
-			ModifierEffect const* PROPERTY(everyday_needs);
-			ModifierEffect const* PROPERTY(luxury_needs);
+			ModifierEffect const* PROPERTY(income_modifier, nullptr);
+			ModifierEffect const* PROPERTY(vote, nullptr);
+			ModifierEffect const* PROPERTY(life_needs, nullptr);
+			ModifierEffect const* PROPERTY(everyday_needs, nullptr);
+			ModifierEffect const* PROPERTY(luxury_needs, nullptr);
 
 		public:
-			strata_effects_t();
+			strata_effects_t() = default;
 		};
 
 	private:
