@@ -130,12 +130,12 @@ bool BuildingTypeManager::load_buildings_file(
 		static constexpr std::string_view min_prefix = "min_build_";
 		ret &= modifier_manager.register_technology_modifier_effect(
 			this_building_type_effects.max_level, StringUtils::append_string_views(max_prefix, building_type.get_identifier()),
-			true, INT, StringUtils::append_string_views("$", building_type.get_identifier(), "$ $TECH_MAX_LEVEL$")
+			FORMAT_x1_0DP_POS, StringUtils::append_string_views("$", building_type.get_identifier(), "$ $TECH_MAX_LEVEL$")
 		);
 		// TODO - add custom localisation for "min_build_$building_type$" modifiers
 		ret &= modifier_manager.register_terrain_modifier_effect(
 			this_building_type_effects.min_level, StringUtils::append_string_views(min_prefix, building_type.get_identifier()),
-			false, INT
+			FORMAT_x1_0DP_NEG
 		);
 
 		if (building_type.is_in_province()) {

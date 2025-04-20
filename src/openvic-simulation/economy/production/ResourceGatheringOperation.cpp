@@ -260,9 +260,13 @@ fixed_point_t ResourceGatheringOperation::produce() {
 		}
 	}
 
-	throughput_multiplier += location.get_modifier_effect_value(*modifier_effect_cache.get_rgo_throughput())
+	// TODO - work out how best to avoid repeated lookups of the same effects,
+	// e.g. by caching total non-local effect values at the CountryInstance level
+	throughput_multiplier += location.get_modifier_effect_value(*modifier_effect_cache.get_rgo_throughput_tech())
+		+ location.get_modifier_effect_value(*modifier_effect_cache.get_rgo_throughput_country())
 		+ location.get_modifier_effect_value(*modifier_effect_cache.get_local_rgo_throughput());
-	output_multiplier += location.get_modifier_effect_value(*modifier_effect_cache.get_rgo_output())
+	output_multiplier += location.get_modifier_effect_value(*modifier_effect_cache.get_rgo_output_tech())
+		+ location.get_modifier_effect_value(*modifier_effect_cache.get_rgo_output_country())
 		+ location.get_modifier_effect_value(*modifier_effect_cache.get_local_rgo_output());
 
 	if (production_type.get_is_farm_for_tech()) {
