@@ -248,8 +248,16 @@ namespace OpenVic {
 		}
 
 		void update_gamestate(InstanceManager const& instance_manager);
-		void province_tick(const Date today, PopValuesFromProvince& reusable_pop_values);
-		void initialise_for_new_game(const Date today, PopValuesFromProvince& reusable_pop_values);
+		void province_tick(
+			const Date today,
+			PopValuesFromProvince& reusable_pop_values,
+			std::vector<fixed_point_t>& reusable_vector
+		);
+		void initialise_for_new_game(
+			const Date today,
+			PopValuesFromProvince& reusable_pop_values,
+			std::vector<fixed_point_t>& reusable_vector
+		);
 
 		bool add_unit_instance_group(UnitInstanceGroup& group);
 		bool remove_unit_instance_group(UnitInstanceGroup const& group);

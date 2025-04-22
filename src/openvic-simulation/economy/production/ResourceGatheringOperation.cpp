@@ -118,7 +118,7 @@ fixed_point_t ResourceGatheringOperation::calculate_size_modifier() const {
 	return size_modifier > fixed_point_t::_0() ? size_modifier : fixed_point_t::_0();
 }
 
-void ResourceGatheringOperation::rgo_tick() {
+void ResourceGatheringOperation::rgo_tick(std::vector<fixed_point_t>& reusable_vector) {
 	ProvinceInstance& location = *location_ptr;
 	if (production_type_nullable == nullptr || location.get_owner() == nullptr) {
 		output_quantity_yesterday = 0;
@@ -148,24 +148,27 @@ void ResourceGatheringOperation::rgo_tick() {
 
 	output_quantity_yesterday = produce();
 	if (output_quantity_yesterday > fixed_point_t::_0()) {
-		CountryInstance* get_country_to_report_economy_nullable = location.get_country_to_report_economy();
-		if (get_country_to_report_economy_nullable != nullptr) {
-			get_country_to_report_economy_nullable->report_output(production_type, output_quantity_yesterday);
+		CountryInstance* country_to_report_economy_nullable = location.get_country_to_report_economy();
+		if (country_to_report_economy_nullable != nullptr) {
+			country_to_report_economy_nullable->report_output(production_type, output_quantity_yesterday);
 		}
 
-		market_instance.place_market_sell_order({
-			production_type.get_output_good(),
-			output_quantity_yesterday,
-			this,
-			after_sell
-		});
+		market_instance.place_market_sell_order(
+			{
+				production_type.get_output_good(),
+				output_quantity_yesterday,
+				this,
+				after_sell,
+			},
+			reusable_vector
+		);
 	}
 }
 
-void ResourceGatheringOperation::after_sell(void* actor, SellResult const& sell_result) {
+void ResourceGatheringOperation::after_sell(void* actor, SellResult const& sell_result, std::vector<fixed_point_t>& reusable_vector) {
 	ResourceGatheringOperation& rgo = *static_cast<ResourceGatheringOperation*>(actor);
 	rgo.revenue_yesterday = sell_result.get_money_gained();
-	rgo.pay_employees();
+	rgo.pay_employees(reusable_vector);
 }
 
 void ResourceGatheringOperation::hire() {
@@ -335,7 +338,7 @@ fixed_point_t ResourceGatheringOperation::produce() {
 		* output_multiplier * output_from_workers;
 }
 
-void ResourceGatheringOperation::pay_employees() {
+void ResourceGatheringOperation::pay_employees(std::vector<fixed_point_t>& reusable_vector) {
 	ProvinceInstance& location = *location_ptr;
 	fixed_point_t const& revenue = revenue_yesterday;
 
@@ -351,49 +354,107 @@ void ResourceGatheringOperation::pay_employees() {
 		return;
 	}
 
-	fixed_point_t revenue_left = revenue;
-	if (total_owner_count_in_state_cache > 0) {
-		fixed_point_t owner_share = std::min(
-			fixed_point_t::_2() * total_owner_count_in_state_cache / total_worker_count_in_province_cache,
-			fixed_point_t::_0_50()
-		);
-
-		for (Pop* owner_pop_ptr : *owner_pops_cache_nullable) {
-			Pop& owner_pop = *owner_pop_ptr;
-			const fixed_point_t income_for_this_pop = std::max(
-				revenue_left * (owner_share * owner_pop.get_size()) / total_owner_count_in_state_cache,
-				fixed_point_t::epsilon() //revenue > 0 is already checked, so rounding up
-			);
-			owner_pop.add_rgo_owner_income(income_for_this_pop);
-			total_owner_income_cache += income_for_this_pop;
+	CountryInstance const* const country_to_report_economy_nullable = location.get_country_to_report_economy();
+	fixed_point_t total_minimum_wage = fixed_point_t::_0();
+	if (country_to_report_economy_nullable != nullptr) {
+		CountryInstance const& country_to_report_economy = *country_to_report_economy_nullable;
+		for (Employee& employee : employees) {
+			total_minimum_wage += employee.update_minimum_wage(country_to_report_economy);
 		}
-		revenue_left *= (fixed_point_t::_1() - owner_share);
 	}
 
-	if (total_paid_employees_count_cache > 0) {
+	if (revenue <= total_minimum_wage) {
 		for (Employee& employee : employees) {
-			Pop& employee_pop = employee.pop;
-
-			PopType const* employee_pop_type = employee_pop.get_type();
-			if (employee_pop_type == nullptr) {
-				Logger::error("employee has nullptr pop_type.");
-				return;
-			}
-
-			if (employee_pop_type->get_is_slave()) {
-				continue;
-			}
-
-			const pop_size_t employee_size = employee.get_size();
 			const fixed_point_t income_for_this_pop = std::max(
-				revenue_left * employee_size / total_paid_employees_count_cache,
+				fixed_point_t::mul_div(
+					revenue,
+					employee.get_minimum_wage_cached(),
+					total_minimum_wage
+				),
 				fixed_point_t::epsilon() //revenue > 0 is already checked, so rounding up
 			);
+			Pop& employee_pop = employee.get_pop();
 			employee_pop.add_rgo_worker_income(income_for_this_pop);
 			total_employee_income_cache += income_for_this_pop;
 		}
 	} else {
-		//scenario slaves only
-		//Money is removed from system in Victoria 2.
+		fixed_point_t revenue_left = revenue;
+		if (total_owner_count_in_state_cache > 0) {
+			const fixed_point_t upper_limit = std::min(
+				fixed_point_t::_0_50(),
+				fixed_point_t::_1() - total_minimum_wage / revenue_left
+			);
+			const fixed_point_t owner_share = std::min(
+				fixed_point_t::_2() * total_owner_count_in_state_cache / total_worker_count_in_province_cache,
+				upper_limit
+			);
+
+			for (Pop* owner_pop_ptr : *owner_pops_cache_nullable) {
+				Pop& owner_pop = *owner_pop_ptr;
+				const fixed_point_t income_for_this_pop = std::max(
+					revenue_left * (owner_share * owner_pop.get_size()) / total_owner_count_in_state_cache,
+					fixed_point_t::epsilon() //revenue > 0 is already checked, so rounding up
+				);
+				owner_pop.add_rgo_owner_income(income_for_this_pop);
+				total_owner_income_cache += income_for_this_pop;
+			}
+			revenue_left -= total_owner_income_cache;
+		}
+
+		if (total_paid_employees_count_cache == 0) {
+			//scenario slaves only
+			//Money is removed from system in Victoria 2.
+		} else {
+			std::vector<fixed_point_t>& incomes = reusable_vector;
+			incomes.resize(employees.size());
+
+			pop_size_t count_workers_to_be_paid = total_paid_employees_count_cache;
+			for (size_t i = 0; i < employees.size(); i++) {
+				Employee& employee = employees[i];
+				Pop& employee_pop = employee.get_pop();
+
+				PopType const* employee_pop_type = employee_pop.get_type();
+				if (employee_pop_type == nullptr) {
+					Logger::error("employee has nullptr pop_type.");
+					return;
+				}
+
+				if (employee_pop_type->get_is_slave()) {
+					continue;
+				}
+				
+				const fixed_point_t minimum_wage = employee.get_minimum_wage_cached();
+				if (minimum_wage > fixed_point_t::_0() && incomes[i] == minimum_wage) {
+					continue;
+				}
+
+				const pop_size_t employee_size = employee.get_size();
+				const fixed_point_t income_for_this_pop = std::max(
+					revenue_left * employee_size / count_workers_to_be_paid,
+					fixed_point_t::epsilon() //revenue > 0 is already checked, so rounding up
+				);
+
+				if (income_for_this_pop < minimum_wage) {
+					incomes[i] = minimum_wage;
+					revenue_left -= minimum_wage;
+					count_workers_to_be_paid -= employee_size;
+					i = -1; //Restart loop and skip minimum incomes. This is required to spread the remaining revenue again.
+				} else {
+					incomes[i] = income_for_this_pop;
+				}
+			}
+
+			for (size_t i = 0; i < employees.size(); i++) {
+				Employee& employee = employees[i];
+				Pop& employee_pop = employee.get_pop();
+				const fixed_point_t income_for_this_pop = incomes[i];
+				if (income_for_this_pop > fixed_point_t::_0()) {
+					employee_pop.add_rgo_worker_income(income_for_this_pop);
+					total_employee_income_cache += income_for_this_pop;
+				}
+			}
+
+			reusable_vector.clear();
+		}
 	}
 }

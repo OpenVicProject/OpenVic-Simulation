@@ -1,5 +1,7 @@
 #pragma once
 
+#include <vector>
+
 #include "openvic-simulation/economy/trading/SellResult.hpp"
 #include "openvic-simulation/utility/Getters.hpp"
 
@@ -8,7 +10,7 @@ namespace OpenVic {
 
 	struct GoodMarketSellOrder {
 		using actor_t = void*;
-		using callback_t = void (*)(actor_t, SellResult const&);
+		using callback_t = void (*)(actor_t, SellResult const&, std::vector<fixed_point_t>&);
 
 	private:
 		const fixed_point_t PROPERTY(quantity);
@@ -25,8 +27,8 @@ namespace OpenVic {
 			after_trade { new_after_trade }
 			{}
 
-		constexpr void call_after_trade(SellResult const& sell_result) const {
-			after_trade(actor, sell_result);
+		constexpr void call_after_trade(SellResult const& sell_result, std::vector<fixed_point_t>& reusable_vector) const {
+			after_trade(actor, sell_result, reusable_vector);
 		}
 	};
 

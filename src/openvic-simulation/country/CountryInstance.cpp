@@ -1040,7 +1040,7 @@ void CountryInstance::_update_budget() {
 	*/
 
 	if (total_population == 0) {
-		administrative_efficiency = fixed_point_t::_0();
+		administrative_efficiency = fixed_point_t::_1();
 	} else {
 		pop_size_t administrators = 0;
 		for (auto const& [pop_type, size] : pop_type_distribution) {
@@ -1898,6 +1898,17 @@ void CountryInstance::request_salaries_and_welfare(Pop& pop) const {
 	}
 }
 
+fixed_point_t CountryInstance::calculate_minimum_wage_base(PopType const& pop_type) const {
+	if (pop_type.get_is_slave()) {
+		return fixed_point_t::_0();
+	}
+
+	return calculate_minimum_wage_base(
+		shared_country_values.get_modifier_effect_cache(),
+		shared_country_values.get_shared_pop_type_values()[pop_type]
+	);
+}
+
 CountryInstance::good_data_t& CountryInstance::get_good_data(GoodInstance const& good_instance) {
 	return goods_data[good_instance];
 }
@@ -2208,7 +2219,7 @@ bool CountryInstanceManager::apply_history_to_countries(InstanceManager& instanc
 			}
 		}
 	}
-
+	shared_country_values.update_costs(instance_manager.get_good_instance_manager());
 	return ret;
 }
 

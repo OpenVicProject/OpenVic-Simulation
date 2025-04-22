@@ -30,7 +30,7 @@ namespace OpenVic {
 		fixed_point_t get_max_money_to_allocate_to_buy_quantity(GoodDefinition const& good_definition, const fixed_point_t quantity) const;
 		fixed_point_t get_price_inverse(GoodDefinition const& good_definition) const;
 		void place_buy_up_to_order(BuyUpToOrder&& buy_up_to_order);
-		void place_market_sell_order(MarketSellOrder&& market_sell_order);
+		void place_market_sell_order(MarketSellOrder&& market_sell_order, std::vector<fixed_point_t>& reusable_vector);
 		void execute_orders();
 		void record_price_history();
 	};

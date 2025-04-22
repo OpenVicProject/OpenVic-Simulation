@@ -43,19 +43,22 @@ void MarketInstance::place_buy_up_to_order(BuyUpToOrder&& buy_up_to_order) {
 	good_instance.add_buy_up_to_order(std::move(buy_up_to_order));
 }
 
-void MarketInstance::place_market_sell_order(MarketSellOrder&& market_sell_order) {
+void MarketInstance::place_market_sell_order(MarketSellOrder&& market_sell_order, std::vector<fixed_point_t>& reusable_vector) {
 	GoodDefinition const& good = market_sell_order.get_good();
 	if (OV_unlikely(market_sell_order.get_quantity() <= 0)) {
 		Logger::error("Received MarketSellOrder for ", good, " with quantity ", market_sell_order.get_quantity());
-		market_sell_order.call_after_trade(SellResult::no_sales_result());
+		market_sell_order.call_after_trade(SellResult::no_sales_result(), reusable_vector);
 		return;
 	}
 
 	if (good.get_is_money()) {
-		market_sell_order.call_after_trade({
-			market_sell_order.get_quantity(),
-			market_sell_order.get_quantity() * country_defines.get_gold_to_worker_pay_rate() * good.get_base_price()
-		});
+		market_sell_order.call_after_trade(
+			{
+				market_sell_order.get_quantity(),
+				market_sell_order.get_quantity() * country_defines.get_gold_to_worker_pay_rate() * good.get_base_price()
+			},
+			reusable_vector
+		);
 		return;
 	}
 

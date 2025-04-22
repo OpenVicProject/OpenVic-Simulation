@@ -47,12 +47,12 @@ void ThreadPool::loop_until_cancelled(
 				break;
 			case work_t::PROVINCE_TICK:
 				for (ProvinceInstance& province : provinces_chunk) {
-					province.province_tick(current_date, reusable_pop_values);
+					province.province_tick(current_date, reusable_pop_values, reusable_vector_0);
 				}
 				break;
 			case work_t::PROVINCE_INITIALISE_FOR_NEW_GAME:
 				for (ProvinceInstance& province : provinces_chunk) {
-					province.initialise_for_new_game(current_date, reusable_pop_values);
+					province.initialise_for_new_game(current_date, reusable_pop_values, reusable_vector_0);
 				}
 				break;
 		}
