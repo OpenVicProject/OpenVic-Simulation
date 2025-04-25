@@ -10,6 +10,7 @@
 #include "openvic-simulation/types/Date.hpp"
 
 namespace OpenVic {
+	struct CountryInstance;
 	struct GoodInstance;
 	struct PopsDefines;
 	struct Strata;
@@ -26,6 +27,7 @@ namespace OpenVic {
 		void loop_until_cancelled(
 			work_t& work_type,
 			PopsDefines const& pop_defines,
+			std::vector<CountryInstance> const& country_keys,
 			std::vector<Strata> const& strata_keys,
 			std::span<GoodInstance> goods_chunk,
 			std::span<ProvinceInstance> provinces_chunk
@@ -50,6 +52,7 @@ namespace OpenVic {
 
 		void initialise_threadpool(
 			PopsDefines const& pop_defines,
+			std::vector<CountryInstance> const& country_keys,
 			std::vector<Strata> const& strata_keys,
 			std::span<GoodInstance> goods,
 			std::span<ProvinceInstance> provinces

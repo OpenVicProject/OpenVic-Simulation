@@ -6,9 +6,11 @@
 #include "openvic-simulation/economy/trading/BuyUpToOrder.hpp"
 #include "openvic-simulation/economy/trading/MarketSellOrder.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
+#include "openvic-simulation/types/IndexedMap.hpp"
 #include "openvic-simulation/types/ValueHistory.hpp"
 
 namespace OpenVic {
+	struct CountryInstance;
 	struct GameRulesManager;
 
 	struct GoodMarket {
@@ -25,6 +27,13 @@ namespace OpenVic {
 		//only used during day tick (from actors placing order until execute_orders())
 		std::vector<GoodBuyUpToOrder> buy_up_to_orders;
 		std::vector<GoodMarketSellOrder> market_sell_orders;
+
+		void execute_buy_orders(
+			const fixed_point_t new_price,
+			IndexedMap<CountryInstance, fixed_point_t> const& actual_bought_per_country,
+			IndexedMap<CountryInstance, fixed_point_t> const& supply_per_country,
+			std::vector<fixed_point_t> const& quantity_bought_per_order
+		);
 
 	protected:
 		bool PROPERTY_ACCESS(is_available, protected);
@@ -50,7 +59,12 @@ namespace OpenVic {
 		void add_market_sell_order(GoodMarketSellOrder&& market_sell_order);
 
 		//not thread safe
-		void execute_orders(std::vector<fixed_point_t>& reusable_vector_0, std::vector<fixed_point_t>& reusable_vector_1);
+		void execute_orders(
+			IndexedMap<CountryInstance, fixed_point_t>& reusable_country_map_0,
+			IndexedMap<CountryInstance, fixed_point_t>& reusable_country_map_1,
+			std::vector<fixed_point_t>& reusable_vector_0,
+			std::vector<fixed_point_t>& reusable_vector_1
+		);
 		void on_use_exponential_price_changes_changed();
 		void record_price_history();
 	};

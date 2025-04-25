@@ -6,6 +6,7 @@
 #include "openvic-simulation/utility/Getters.hpp"
 
 namespace OpenVic {
+	struct CountryInstance;
 	struct GoodDefinition;
 
 	struct GoodMarketSellOrder {
@@ -13,16 +14,19 @@ namespace OpenVic {
 		using callback_t = void (*)(actor_t, SellResult const&, std::vector<fixed_point_t>&);
 
 	private:
+		CountryInstance const* const PROPERTY(country_nullable);
 		const fixed_point_t PROPERTY(quantity);
-		actor_t actor;
-		callback_t after_trade;
+		const actor_t actor;
+		const callback_t after_trade;
 
 	public:
 		constexpr GoodMarketSellOrder(
+			CountryInstance const* const new_country_nullable,
 			const fixed_point_t new_quantity,
-			actor_t new_actor,
-			callback_t new_after_trade
-		) : quantity { new_quantity },
+			const actor_t new_actor,
+			const callback_t new_after_trade
+		) : country_nullable { new_country_nullable },
+			quantity { new_quantity },
 			actor { new_actor },
 			after_trade { new_after_trade }
 			{}
@@ -39,10 +43,16 @@ namespace OpenVic {
 	public:
 		constexpr MarketSellOrder(
 			GoodDefinition const& new_good,
+			CountryInstance const* const new_country_nullable,
 			const fixed_point_t new_quantity,
-			actor_t new_actor,
-			callback_t new_after_trade
-		) : GoodMarketSellOrder { new_quantity, new_actor, new_after_trade },
+			const actor_t new_actor,
+			const callback_t new_after_trade
+		) : GoodMarketSellOrder {
+				new_country_nullable,
+				new_quantity,
+				new_actor,
+				new_after_trade
+			},
 			good { new_good }
 			{}
 	};

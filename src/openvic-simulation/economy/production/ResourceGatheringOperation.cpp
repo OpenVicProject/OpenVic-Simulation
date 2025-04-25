@@ -148,7 +148,7 @@ void ResourceGatheringOperation::rgo_tick(std::vector<fixed_point_t>& reusable_v
 
 	output_quantity_yesterday = produce();
 	if (output_quantity_yesterday > fixed_point_t::_0()) {
-		CountryInstance* country_to_report_economy_nullable = location.get_country_to_report_economy();
+		CountryInstance* const country_to_report_economy_nullable = location.get_country_to_report_economy();
 		if (country_to_report_economy_nullable != nullptr) {
 			country_to_report_economy_nullable->report_output(production_type, output_quantity_yesterday);
 		}
@@ -156,6 +156,7 @@ void ResourceGatheringOperation::rgo_tick(std::vector<fixed_point_t>& reusable_v
 		market_instance.place_market_sell_order(
 			{
 				production_type.get_output_good(),
+				country_to_report_economy_nullable,
 				output_quantity_yesterday,
 				this,
 				after_sell,

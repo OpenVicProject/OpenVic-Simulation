@@ -136,9 +136,9 @@ namespace OpenVic {
 
 		/* Budget */
 		// TODO - cash stockpile change over last 30 days
+		fixed_point_t PROPERTY(gold_income);
 		moveable_atomic_fixed_point_t PROPERTY(cash_stockpile);
 		std::unique_ptr<std::mutex> taxable_income_mutex;
-		fixed_point_t PROPERTY(gold_income);
 		IndexedMap<PopType, fixed_point_t> PROPERTY(taxable_income_by_pop_type);
 		IndexedMap<Strata, fixed_point_t> PROPERTY(effective_tax_rate_by_strata);
 		IndexedMap<Strata, SliderValue> PROPERTY(tax_rate_slider_value_by_strata);
@@ -172,7 +172,10 @@ namespace OpenVic {
 		fixed_point_t PROPERTY(projected_unemployment_subsidies_spending_unscaled_by_slider);
 
 		SliderValue PROPERTY(tariff_rate_slider_value);
-		//TODO actual & projected tariff income/expense
+		fixed_point_t PROPERTY(effective_tariff_rate);
+		std::unique_ptr<std::mutex> import_value_mutex;
+		fixed_point_t PROPERTY(import_value); //>= 0
+		fixed_point_t PROPERTY(actual_net_tariffs);
 
 		//TODO actual factory subsidies
 		//projected cost is UI only and lists the different factories
@@ -635,6 +638,7 @@ namespace OpenVic {
 		void report_output(ProductionType const& production_type, const fixed_point_t quantity);
 		void request_salaries_and_welfare(Pop& pop) const;
 		fixed_point_t calculate_minimum_wage_base(PopType const& pop_type) const;
+		fixed_point_t apply_tariff(const fixed_point_t money_spent_on_imports);
 	};
 
 	struct CountryDefinitionManager;

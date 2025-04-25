@@ -178,6 +178,7 @@ bool InstanceManager::setup() {
 
 	thread_pool.initialise_threadpool(
 		definition_manager.get_define_manager().get_pops_defines(),
+		country_instance_manager.get_country_instances(),
 		definition_manager.get_pop_manager().get_stratas(),
 		good_instance_manager.get_good_instances(),
 		map_instance.get_province_instances()

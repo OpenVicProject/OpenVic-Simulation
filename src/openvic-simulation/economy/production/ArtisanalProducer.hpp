@@ -31,6 +31,7 @@ namespace OpenVic {
 
 		void artisan_tick(
 			Pop& pop,
+			const fixed_point_t max_cost_multiplier,
 			GoodDefinition::good_definition_map_t& pop_max_quantity_to_buy_per_good,
 			GoodDefinition::good_definition_map_t& pop_money_to_spend_per_good,
 			GoodDefinition::good_definition_map_t& reusable_map_0,
