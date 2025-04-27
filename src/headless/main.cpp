@@ -117,9 +117,12 @@ static bool run_headless(fs::path const& root, std::vector<std::string>& mods, b
 	Dataloader::path_vector_t roots = { root };
 	Dataloader::path_vector_t replace_paths = {};
 
-	GameManager game_manager { []() {
-		Logger::info("State updated");
-	} };
+	GameManager game_manager {
+		[] {
+			Logger::info("State updated");
+		},
+		nullptr, nullptr
+	};
 
 	Logger::info("Commit hash: ", GameManager::get_commit_hash());
 
