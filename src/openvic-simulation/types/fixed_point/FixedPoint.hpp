@@ -13,6 +13,8 @@
 #include <fmt/base.h>
 #include <fmt/format.h>
 
+#include <zpp_bits.h>
+
 #include "openvic-simulation/types/StackString.hpp"
 #include "openvic-simulation/utility/Getters.hpp"
 #include "openvic-simulation/utility/Logger.hpp"
@@ -36,6 +38,8 @@ namespace OpenVic {
 		using ov_return_by_value = void;
 		using value_type = int64_t;
 
+		friend zpp::bits::access;
+		using serialize = zpp::bits::members<1>;
 
 		static constexpr size_t SIZE = 8;
 

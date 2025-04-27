@@ -30,3 +30,9 @@
 	path = deps/memory
 	url = https://github.com/foonathan/memory
 	ignore = dirty
+[submodule "deps/reliable"]
+	path = deps/reliable
+	url = https://github.com/mas-bandwidth/reliable
+[submodule "deps/zpp_bits"]
+	path = deps/zpp_bits
+	url = https://github.com/eyalz800/zpp_bits

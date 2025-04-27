@@ -111,6 +111,50 @@ def build_memory(env):
 
     env.exposed_includes += env.memory["INCPATH"]
 
+def build_reliable(env):
+    import os
+
+    if env["optimize"] in ["none", "debug"]:
+        env.Append(CPPDEFINES=["RELIABLE_DEBUG"])
+    else:
+        env.Append(CPPDEFINES=["RELIABLE_RELEASE"])
+    reliable_env = env.Clone()
+
+    include_path = "reliable"
+    include_dir = reliable_env.Dir(include_path)
+    sources = [os.path.join(include_path, "reliable.c")]
+    env.reliable_sources = sources
+    library_name = "libreliable" + env["LIBSUFFIX"]
+    library = reliable_env.StaticLibrary(target=os.path.join(include_path, library_name), source=sources)
+    Default(library)
+
+    env.reliable = {}
+    env.reliable["INCPATH"] = [include_dir]
+
+    env.Append(CPPPATH=env.reliable["INCPATH"])
+    if env.get("is_msvc", False):
+        env.Append(CXXFLAGS=["/external:I", include_dir, "/external:W0"])
+    else:
+        env.Append(CXXFLAGS=["-isystem", include_dir])
+    env.Append(LIBPATH=include_dir)
+    env.Prepend(LIBS=[library_name])
+
+    env.exposed_includes += env.reliable["INCPATH"]
+
+def build_zpp_bits(env):
+    if env["optimize"] in ["none", "debug"]:
+        env.Append(CPPDEFINES=[("ZPP_BITS_INLINE_MODE", 0)])
+    elif env["optimize"] == "speed":
+        env.Append(CPPDEFINES=[("ZPP_BITS_INLINE_DECODE_VARINT", 1)])
+
+    include_path = "zpp_bits"
+    include_dir = env.Dir(include_path)
+
+    env.zpp_bits = {}
+    env.zpp_bits["INCPATH"] = [include_dir]
+
+    env.Append(CPPPATH=env.zpp_bits["INCPATH"])
+
 def link_tbb(env):
     import sys
     if not env.get("is_msvc", False) and not env.get("use_mingw", False) and sys.platform != "darwin":
@@ -123,4 +167,6 @@ build_colony(env)
 build_function2(env)
 build_std_function(env)
 build_memory(env)
+build_reliable(env)
+build_zpp_bits(env)
 link_tbb(env)

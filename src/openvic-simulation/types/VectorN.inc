@@ -52,6 +52,10 @@ namespace OpenVic {
 			T components[size];
 		};
 
+		constexpr static auto serialize(auto& archive, auto& self) {
+			return archive(self.components);
+		}
+
 		constexpr iterator begin() {
 			return iterator(components);
 		}

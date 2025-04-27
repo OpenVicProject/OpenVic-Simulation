@@ -6,6 +6,8 @@
 #include <string_view>
 #include <system_error>
 
+#include <range/v3/algorithm/fill.hpp>
+
 #include "Approx.hpp"
 #include "Helper.hpp" // IWYU pragma: keep
 #include "Numeric.hpp" // IWYU pragma: keep
@@ -166,6 +168,23 @@ TEST_CASE("fixed_point_t Parse methods", "[fixed_point_t][fixed_point_t-parse]")
 		std::errc {}
 	);
 	CHECK(fp == 4.5432_a);
+}
+
+TEST_CASE(
+	"fixed_point_t zpp::bits out then in",
+	"[fixed_point_t][fixed_point_t-out-in][utility][zpp::bits][zpp::bits-out-in-fixed_point_t]"
+) {
+	static constexpr fixed_point_t neg_2_55 = -(fixed_point_t::_1_50 + fixed_point_t::_1 + fixed_point_t::_1 / 20);
+
+	std::array<uint8_t, sizeof(neg_2_55)> buffer; // NOLINT
+	zpp::bits::out out(buffer);
+	CHECK(out(neg_2_55) == std::errc {});
+
+	zpp::bits::in in(buffer);
+
+	fixed_point_t should_neg_2_55;
+	CHECK(in(should_neg_2_55) == std::errc {});
+	CHECK(should_neg_2_55 == neg_2_55);
 }
 
 TEST_CASE("fixed_point_t string methods", "[fixed_point_t][fixed_point_t-string]") {

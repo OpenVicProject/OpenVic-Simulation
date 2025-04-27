@@ -1,6 +1,8 @@
 #include <cmath>
 #include <cstdlib>
 
+#include <range/v3/algorithm/fill.hpp>
+
 #include "openvic-simulation/types/Vector.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
 
@@ -52,6 +54,23 @@ TEMPLATE_LIST_TEST_CASE("vec2_t Operators", "[vec2_t][vec2_t-operators]", Vector
 	CONSTEXPR_CHECK(int2 < int1);
 
 	CHECK_FALSE(vec2_t<TestType> { 421, 2160 }.is_within_bound(vec2_t<TestType> { 5616, 2160 }));
+}
+
+TEMPLATE_LIST_TEST_CASE(
+	"vec2_t zpp::bits out then in", "[vec2_t][vec2_t-out-in][utility][zpp::bits][zpp::bits-out-in-vec2_t]",
+	VectorValueTypes
+) {
+	static constexpr vec2_t<TestType> int1 = vec2_t<TestType>(4, 10);
+
+	std::array<uint8_t, sizeof(int1)> buffer; // NOLINT
+	zpp::bits::out out(buffer);
+	CHECK(out(int1) == std::errc {});
+
+	zpp::bits::in in(buffer);
+
+	vec2_t<TestType> should_4_10;
+	CHECK(in(should_4_10) == std::errc {});
+	CHECK(should_4_10 == int1);
 }
 
 TEMPLATE_LIST_TEST_CASE("vec2_t Rounding methods", "[vec2_t][vec2_t-rounding]", VectorValueTypes) {

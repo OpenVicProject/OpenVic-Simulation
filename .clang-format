@@ -72,6 +72,8 @@ InsertBraces: true
 MaxEmptyLinesToKeep: 2
 RequiresClausePosition: OwnLine
 IncludeCategories:
+  - Regex: ^<zpp_bits\.h>
+    Priority: 9
   - Regex: <[[:alnum:]_]+>
     Priority: 1
   - Regex: <[[:alnum:]_]+[.]h>
@@ -89,6 +91,6 @@ IncludeCategories:
   - Regex: ^<range
     Priority: 8
   - Regex: ^"openvic-simulation/
-    Priority: 9
-  - Regex: .*
     Priority: 10
+  - Regex: .*
+    Priority: 11

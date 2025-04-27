@@ -4,6 +4,8 @@
 #include <cstdlib>
 #include <string_view>
 
+#include <range/v3/algorithm/fill.hpp>
+
 #include "Helper.hpp" // IWYU pragma: keep
 #include <snitch/snitch_macros_check.hpp>
 #include <snitch/snitch_macros_constexpr.hpp>
@@ -77,6 +79,20 @@ TEST_CASE("Date Conversion methods", "[Date][Date-conversion]") {
 	CHECK(date2.to_array(true, false, true) == "0005.3.02"sv);
 	CHECK(date2.to_array(false, false, false) == "5.3.2"sv);
 	CHECK(date2.to_array(false, false, true) == "5.3.02"sv);
+}
+
+TEST_CASE("Date zpp::bits out then in", "[Date][Date-out-in][utility][zpp::bits][zpp::bits-out-in-Date]") {
+	static constexpr Date date = { 5, 4, 10 };
+
+	std::array<uint8_t, sizeof(date)> buffer; // NOLINT
+	zpp::bits::out out(buffer);
+	CHECK(out(date) == std::errc {});
+
+	zpp::bits::in in(buffer);
+
+	Date should_5_4_10;
+	CHECK(in(should_5_4_10) == std::errc {});
+	CHECK(should_5_4_10 == date);
 }
 
 TEST_CASE("Date Parse methods", "[Date][Date-parse]") {

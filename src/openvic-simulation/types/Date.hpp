@@ -16,6 +16,8 @@
 
 #include <range/v3/algorithm/max_element.hpp>
 
+#include <zpp_bits.h>
+
 #include "openvic-simulation/types/StackString.hpp"
 #include "openvic-simulation/utility/ErrorMacros.hpp"
 #include "openvic-simulation/utility/Getters.hpp"
@@ -29,6 +31,9 @@ namespace OpenVic {
 		using ov_return_by_value = void;
 
 		using day_t = int64_t;
+
+		friend zpp::bits::access;
+		using serialize = zpp::bits::members<1>;
 
 	private:
 		day_t days;
@@ -111,6 +116,9 @@ namespace OpenVic {
 		using year_t = int16_t;
 		using month_t = uint8_t;
 		using day_t = uint8_t;
+
+		friend zpp::bits::access;
+		using serialize = zpp::bits::members<1>;
 
 		static constexpr std::array DAYS_IN_MONTH =
 			std::to_array<Timespan::day_t>({ 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 });

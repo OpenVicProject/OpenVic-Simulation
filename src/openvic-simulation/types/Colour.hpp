@@ -25,6 +25,8 @@
 
 #include <range/v3/algorithm/rotate.hpp>
 
+#include <zpp_bits.h>
+
 #include "openvic-simulation/types/StackString.hpp"
 #include "openvic-simulation/utility/StringUtils.hpp"
 #include "openvic-simulation/utility/Utility.hpp"
@@ -170,6 +172,9 @@ namespace OpenVic {
 		OV_NO_UNIQUE_ADDRESS _alpha_t alpha;
 
 		static constexpr std::integral_constant<std::size_t, std::is_same_v<decltype(alpha), value_type> ? 4 : 3> size = {};
+
+		friend zpp::bits::access;
+		using serialize = zpp::bits::members<size()>;
 
 		static constexpr basic_colour_t fill_as(value_type value) {
 			if constexpr (colour_traits::has_alpha) {
