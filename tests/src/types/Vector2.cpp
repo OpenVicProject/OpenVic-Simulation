@@ -3,6 +3,7 @@
 
 #include "openvic-simulation/types/Vector.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
+#include "openvic-simulation/utility/Marshal.hpp"
 
 #include "Approx.hpp"
 #include "Helper.hpp" // IWYU pragma: keep
@@ -52,6 +53,19 @@ TEMPLATE_LIST_TEST_CASE("vec2_t Operators", "[vec2_t][vec2_t-operators]", Vector
 	CONSTEXPR_CHECK(int2 < int1);
 
 	CHECK_FALSE(vec2_t<TestType> { 421, 2160 }.is_within_bound(vec2_t<TestType> { 5616, 2160 }));
+}
+
+TEMPLATE_LIST_TEST_CASE(
+	"vec2_t Marshal encode then decode", "[vec2_t][vec2_t-encode-decode][utility][Marshal][Marshal-encode-decode-vec2_t]",
+	VectorValueTypes
+) {
+	static constexpr vec2_t<TestType> int1 = vec2_t<TestType>(4, 10);
+
+	std::array<uint8_t, sizeof(int1)> buffer; // NOLINT
+	size_t decode_count;
+	CHECK(utility::encode(int1, buffer) == buffer.size());
+	CHECK(int1 == utility::decode<vec2_t<TestType>>(buffer, decode_count));
+	CHECK(decode_count == buffer.size());
 }
 
 TEMPLATE_LIST_TEST_CASE("vec2_t Rounding methods", "[vec2_t][vec2_t-rounding]", VectorValueTypes) {

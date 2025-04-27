@@ -7,6 +7,7 @@
 #include "Colour.hpp" // IWYU pragma: keep
 #include "Helper.hpp" // IWYU pragma: keep
 #include "Numeric.hpp" // IWYU pragma: keep
+#include "utility/Marshal.hpp"
 #include <snitch/snitch_macros_check.hpp>
 #include <snitch/snitch_macros_constexpr.hpp>
 #include <snitch/snitch_macros_misc.hpp>
@@ -61,6 +62,18 @@ TEMPLATE_LIST_TEST_CASE("basic_colour_t Conversion methods", "[basic_colour_t][b
 	CONSTEXPR_CHECK(cyan.to_hex_array(true) == "00FFFFFF"sv);
 	CONSTEXPR_CHECK(cyan.to_hex_array(false) == "00FFFF"sv);
 	CONSTEXPR_CHECK(cyan.to_argb_hex_array() == "FF00FFFF"sv);
+}
+
+TEMPLATE_LIST_TEST_CASE(
+	"basic_colour_t Marshal encode then decode",
+	"[basic_colour_t][basic_colour_t-encode-decode][utility][Marshal][Marshal-encode-decode-basic_colour_t]", ColourTypes
+) {
+	static constexpr TestType cyan = TestType::from_floats(0, 1, 1);
+
+	std::array<uint8_t, sizeof(uint32_t)> buffer; // NOLINT
+	utility::encode(cyan, buffer);
+	size_t decode_count;
+	CHECK(cyan == utility::decode<TestType>(buffer, decode_count));
 }
 
 TEMPLATE_LIST_TEST_CASE("basic_colour_t Parse methods", "[basic_colour_t][basic_colour_t-parse]", ColourTypes) {
