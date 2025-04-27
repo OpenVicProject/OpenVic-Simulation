@@ -3,10 +3,18 @@
 using namespace OpenVic;
 
 GameManager::GameManager(
-	InstanceManager::gamestate_updated_func_t new_gamestate_updated_callback
+	InstanceManager::gamestate_updated_func_t new_gamestate_updated_callback,
+	elapsed_msec_getter_func_t new_get_elapsed_time_callback
 ) : gamestate_updated_callback {
 		new_gamestate_updated_callback ? std::move(new_gamestate_updated_callback) : []() {}
-	}, definitions_loaded { false } {}
+	}, definitions_loaded { false } {
+	if (new_get_elapsed_time_callback) {
+		get_elapsed_time_callback = { std::move(new_get_elapsed_time_callback) };
+	} else if(!get_elapsed_time_callback) {
+		Logger::error("get_elapsed_time_callback has not been set");
+		std::abort();
+	}
+}
 
 bool GameManager::set_roots(Dataloader::path_vector_t const& roots) {
 	if (!dataloader.set_roots(roots)) {
@@ -83,4 +91,8 @@ bool GameManager::update_clock() {
 	}
 
 	return instance_manager->update_clock();
+}
+
+uint64_t GameManager::get_elapsed_milliseconds() {
+	return get_elapsed_time_callback();
 }

@@ -111,10 +111,16 @@ static std::chrono::nanoseconds run_pathing_test(AStarPathing& pathing) {
 
 static bool run_headless(Dataloader::path_vector_t const& roots, bool run_tests) {
 	bool ret = true;
+	static auto elapsed_time_begin = std::chrono::high_resolution_clock::now();
 
-	GameManager game_manager { []() {
-		Logger::info("State updated");
-	} };
+	GameManager game_manager {
+		[]() {
+			Logger::info("State updated");
+		},
+		[] {
+			return std::chrono::duration_cast<std::chrono::milliseconds>(elapsed_time_begin.time_since_epoch()).count();
+		}
+	};
 
 	Logger::info("===== Loading definitions... =====");
 	ret &= game_manager.set_roots(roots);
