@@ -3,6 +3,7 @@
 #include <string_view>
 
 #include "openvic-simulation/types/Date.hpp"
+#include "openvic-simulation/utility/Marshal.hpp"
 
 #include "Helper.hpp" // IWYU pragma: keep
 #include <snitch/snitch_macros_check.hpp>
@@ -65,4 +66,9 @@ TEST_CASE("Timespan Conversion methods", "[Timespan][Timespan-conversion]") {
 
 	CONSTEXPR_CHECK(timespan1.to_int() == 10);
 	CHECK(timespan1.to_string() == "10"sv);
+
+	std::array<uint8_t, sizeof(timespan1)> buffer; // NOLINT
+	utility::encode(timespan1, buffer);
+	size_t decode_count;
+	CHECK(timespan1 == utility::decode<Timespan>(buffer, decode_count));
 }
