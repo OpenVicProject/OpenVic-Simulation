@@ -477,7 +477,7 @@ namespace OpenVic {
 				// Non-empty fractional part, cannot be negative
 				fixed_point_t adder;
 				from_chars = from_chars_fraction(dot_pointer + 1, end, adder);
-				result += result.is_negative() ? -adder : adder;
+				result += result.is_negative() || (*begin == '-' && result == _0()) ? -adder : adder;
 			}
 
 			if (from_chars.ec != std::errc{}) {

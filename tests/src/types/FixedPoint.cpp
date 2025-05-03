@@ -131,6 +131,16 @@ TEST_CASE("fixed_point_t Parse methods", "[fixed_point_t][fixed_point_t-parse]")
 	CHECK(fixed_point_t::parse(plus_fixed_point_str, &fixed_point_str_success) == 4.5432_a);
 	CHECK(fixed_point_str_success);
 
+	static constexpr std::string_view neg_zero_fixed_point_str = "-0"sv;
+	CONSTEXPR_CHECK(fixed_point_t::parse(neg_zero_fixed_point_str) == 0);
+	CHECK(fixed_point_t::parse(neg_zero_fixed_point_str, &fixed_point_str_success) == 0);
+	CHECK(fixed_point_str_success);
+
+	static constexpr std::string_view neg_0_25_fixed_point_str = "-0.25"sv;
+	CONSTEXPR_CHECK(fixed_point_t::parse(neg_0_25_fixed_point_str) == -0.25_a);
+	CHECK(fixed_point_t::parse(neg_0_25_fixed_point_str, &fixed_point_str_success) == -0.25_a);
+	CHECK(fixed_point_str_success);
+
 	fixed_point_t fp = fixed_point_t::_0();
 	CHECK(
 		fp.from_chars(plus_fixed_point_str.data(), plus_fixed_point_str.data() + plus_fixed_point_str.size()).ec ==
@@ -153,6 +163,8 @@ TEST_CASE("fixed_point_t string methods", "[fixed_point_t][fixed_point_t-string]
 	static constexpr fixed_point_t neg_three = -3;
 	static constexpr fixed_point_t _2_55 = fixed_point_t::_1_50() + fixed_point_t::_1() + fixed_point_t::_1() / 20;
 	static constexpr fixed_point_t neg_2_55 = -_2_55;
+	static constexpr fixed_point_t _0_55 = fixed_point_t::_0_50() + fixed_point_t::_1() / 20;
+	static constexpr fixed_point_t neg_0_55 = -_0_55;
 
 	CONSTEXPR_CHECK(constant_zero.to_array() == "0"sv);
 	CONSTEXPR_CHECK(one.to_array() == "1"sv);
@@ -164,6 +176,8 @@ TEST_CASE("fixed_point_t string methods", "[fixed_point_t][fixed_point_t-string]
 	CONSTEXPR_CHECK(neg_2_55.to_array() == "-2.54998779296875"sv);
 	CONSTEXPR_CHECK(_2_55.to_array(2) == "2.55"sv);
 	CONSTEXPR_CHECK(neg_2_55.to_array(2) == "-2.55"sv);
+	CONSTEXPR_CHECK(_0_55.to_array(2) == "0.55"sv);
+	CONSTEXPR_CHECK(neg_0_55.to_array(2) == "-0.55"sv);
 }
 
 TEST_CASE("fixed_point_t Other methods", "[fixed_point_t][fixed_point_t-other]") {
