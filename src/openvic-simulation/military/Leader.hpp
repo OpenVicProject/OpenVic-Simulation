@@ -21,13 +21,13 @@ namespace OpenVic {
 		friend struct UnitInstanceManager;
 
 	private:
-		std::string PROPERTY(name);
+		memory::string PROPERTY(name);
 		const UnitType::branch_t PROPERTY(branch); /* type in defines */
 		const Date PROPERTY(date);
 		LeaderTrait const* PROPERTY(personality);
 		LeaderTrait const* PROPERTY(background);
 		fixed_point_t PROPERTY(prestige);
-		std::string PROPERTY(picture);
+		memory::string PROPERTY(picture);
 
 	protected:
 		LeaderBase(LeaderBase const&) = default;

@@ -52,13 +52,13 @@ namespace OpenVic {
 		using log_func_t = fu2::function_view<void(std::string&&)>;
 		using log_queue_t = std::queue<std::string>;
 
+	public:
 #ifdef __cpp_lib_source_location
 		using source_location = std::source_location;
 #else
 		using source_location = OpenVic::source_location;
 #endif
 
-	public:
 		static void set_logger_funcs() {
 			set_info_func([](std::string&& str) {
 				std::cout << "[INFO] " << str;

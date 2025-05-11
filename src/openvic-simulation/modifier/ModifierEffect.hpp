@@ -94,7 +94,7 @@ namespace OpenVic {
 
 		static constexpr bool excludes_targets(target_t targets, target_t excluded_target);
 
-		static std::string target_to_string(target_t target);
+		static memory::string target_to_string(target_t target);
 
 		static std::string make_default_modifier_effect_localisation_key(std::string_view identifier);
 

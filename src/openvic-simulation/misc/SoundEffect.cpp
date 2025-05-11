@@ -13,7 +13,7 @@ SoundEffect::SoundEffect( //
 bool SoundEffectManager::_load_sound_define(Dataloader const& dataloader, std::string_view sfx_identifier, ast::NodeCPtr root) {
 	std::filesystem::path file {};
 	auto file_callback = [&dataloader, &file](std::string_view val) -> bool {
-		std::string lookup = StringUtils::append_string_views("sound/", val);
+		memory::string lookup = StringUtils::append_string_views("sound/", val);
 		file = dataloader.lookup_file(lookup, false);
 		if (file.empty()) {
 			Logger::warning("Lookup for \"", lookup, "\" failed!");

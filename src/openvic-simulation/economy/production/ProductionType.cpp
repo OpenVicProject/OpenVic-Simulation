@@ -19,13 +19,13 @@ ProductionType::ProductionType(
 	GameRulesManager const& new_game_rules_manager,
 	const std::string_view new_identifier,
 	const std::optional<Job> new_owner,
-	std::vector<Job>&& new_jobs,
+	memory::vector<Job>&& new_jobs,
 	const template_type_t new_template_type,
 	const pop_size_t new_base_workforce_size,
 	GoodDefinition::good_definition_map_t&& new_input_goods,
 	GoodDefinition const& new_output_good,
 	const fixed_point_t new_base_output_quantity,
-	std::vector<bonus_t>&& new_bonuses,
+	memory::vector<bonus_t>&& new_bonuses,
 	GoodDefinition::good_definition_map_t&& new_maintenance_requirements,
 	const bool new_is_coastal,
 	const bool new_is_farm,
@@ -85,10 +85,10 @@ node_callback_t ProductionTypeManager::_expect_job(
 
 node_callback_t ProductionTypeManager::_expect_job_list(
 	GoodDefinitionManager const& good_definition_manager, PopManager const& pop_manager,
-	callback_t<std::vector<Job>&&> callback
+	callback_t<memory::vector<Job>&&> callback
 ) {
 	return [this, &good_definition_manager, &pop_manager, callback](ast::NodeCPtr node) mutable -> bool {
-		std::vector<Job> jobs;
+		memory::vector<Job> jobs;
 		bool ret = expect_list(_expect_job(good_definition_manager, pop_manager, vector_callback(jobs)))(node);
 		ret &= callback(std::move(jobs));
 		return ret;
@@ -99,13 +99,13 @@ bool ProductionTypeManager::add_production_type(
 	GameRulesManager const& game_rules_manager,
 	const std::string_view identifier,
 	std::optional<Job> owner,
-	std::vector<Job>&& jobs,
+	memory::vector<Job>&& jobs,
 	const ProductionType::template_type_t template_type,
 	const pop_size_t base_workforce_size,
 	GoodDefinition::good_definition_map_t&& input_goods,
 	GoodDefinition const* const output_good,
 	const fixed_point_t base_output_quantity,
-	std::vector<ProductionType::bonus_t>&& bonuses,
+	memory::vector<ProductionType::bonus_t>&& bonuses,
 	GoodDefinition::good_definition_map_t&& maintenance_requirements,
 	const bool is_coastal,
 	const bool is_farm,
@@ -261,13 +261,13 @@ bool ProductionTypeManager::load_production_types_file(
 			}
 
 			std::optional<Job> owner;
-			std::vector<Job> jobs;
+			memory::vector<Job> jobs;
 			ProductionType::template_type_t template_type { FACTORY };
 			GoodDefinition const* output_good = nullptr;
 			pop_size_t base_workforce_size = 0;
 			GoodDefinition::good_definition_map_t input_goods, maintenance_requirements;
 			fixed_point_t base_output_quantity = 0;
-			std::vector<ProductionType::bonus_t> bonuses;
+			memory::vector<ProductionType::bonus_t> bonuses;
 			bool is_coastal = false, is_farm = false, is_mine = false;
 
 			bool ret = true;

@@ -4,7 +4,11 @@
 
 #include "openvic-simulation/pathfinding/PointMap.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
+#include "openvic-simulation/utility/Containers.hpp"
 #include "openvic-simulation/utility/ErrorMacros.hpp"
+
+#include <foonathan/memory/default_allocator.hpp>
+#include <foonathan/memory/std_allocator.hpp>
 
 namespace OpenVic {
 	template<typename ValueT, typename KeyT = PointMap::points_key_type>
@@ -12,7 +16,8 @@ namespace OpenVic {
 		using search_key_type = KeyT;
 		using search_value_type = ValueT;
 		using search_pair_type = std::pair<search_key_type, search_value_type>;
-		using search_allocator_type = std::allocator<search_pair_type>;
+		using search_allocator_type =
+			foonathan::memory::std_allocator<search_pair_type, memory::tracker<foonathan::memory::default_allocator>>;
 		using search_container_type = std::vector<search_pair_type, search_allocator_type>;
 		using search_map_type = tsl::ordered_map<
 			search_key_type, search_value_type, //
@@ -100,7 +105,7 @@ namespace OpenVic {
 			last_closest_point = search.end();
 		}
 
-		std::vector<ivec2_t> get_point_path( //
+		memory::vector<ivec2_t> get_point_path( //
 			PointMap::points_key_type from_id, PointMap::points_key_type to_id, bool allow_partial_path = false
 		) {
 			search_iterator from_it = search.find(from_id);
@@ -111,8 +116,8 @@ namespace OpenVic {
 				}
 			}
 			OV_ERR_FAIL_COND_V_MSG(
-				from_it == search.end(), std::vector<ivec2_t>(),
-				fmt::format("Can't get point path. Point with id: {} doesn't exist.", from_id)
+				from_it == search.end(), memory::vector<ivec2_t>(),
+				memory::fmt::format("Can't get point path. Point with id: {} doesn't exist.", from_id)
 			);
 
 			search_iterator to_it = search.find(to_id);
@@ -123,18 +128,18 @@ namespace OpenVic {
 				}
 			}
 			OV_ERR_FAIL_COND_V_MSG(
-				to_it == search.end(), std::vector<ivec2_t>(),
-				fmt::format("Can't get point path. Point with id: {} doesn't exist.", to_id)
+				to_it == search.end(), memory::vector<ivec2_t>(),
+				memory::fmt::format("Can't get point path. Point with id: {} doesn't exist.", to_id)
 			);
 
 			if (from_it == to_it) {
-				return std::vector<ivec2_t> { 1, from_it.value().point->position };
+				return memory::vector<ivec2_t> { 1, from_it.value().point->position };
 			}
 
 			bool found_route = _solve(from_it, to_it, current_pass++, allow_partial_path);
 			if (!found_route) {
 				if (!allow_partial_path || last_closest_point == search.end()) {
-					return std::vector<ivec2_t>();
+					return memory::vector<ivec2_t>();
 				}
 
 				// Use closest point instead.
@@ -148,7 +153,7 @@ namespace OpenVic {
 				p = p.value().prev_point;
 			}
 
-			std::vector<ivec2_t> path;
+			memory::vector<ivec2_t> path;
 			path.resize(pc);
 
 			{
@@ -167,7 +172,7 @@ namespace OpenVic {
 			return path;
 		}
 
-		std::vector<PointMap::points_key_type> get_id_path( //
+		memory::vector<PointMap::points_key_type> get_id_path( //
 			PointMap::points_key_type from_id, PointMap::points_key_type to_id, bool allow_partial_path = false
 		) {
 			search_iterator from_it = search.find(from_id);
@@ -178,8 +183,8 @@ namespace OpenVic {
 				}
 			}
 			OV_ERR_FAIL_COND_V_MSG(
-				from_it == search.end(), std::vector<PointMap::points_key_type>(),
-				fmt::format("Can't get id path. Point with id: {} doesn't exist.", from_id)
+				from_it == search.end(), memory::vector<PointMap::points_key_type>(),
+				memory::fmt::format("Can't get id path. Point with id: {} doesn't exist.", from_id)
 			);
 
 			search_iterator to_it = search.find(to_id);
@@ -190,18 +195,18 @@ namespace OpenVic {
 				}
 			}
 			OV_ERR_FAIL_COND_V_MSG(
-				to_it == search.end(), std::vector<PointMap::points_key_type>(),
-				fmt::format("Can't get id path. Point with id: {} doesn't exist.", to_id)
+				to_it == search.end(), memory::vector<PointMap::points_key_type>(),
+				memory::fmt::format("Can't get id path. Point with id: {} doesn't exist.", to_id)
 			);
 
 			if (from_it == to_it) {
-				return std::vector<PointMap::points_key_type> { 1, from_id };
+				return memory::vector<PointMap::points_key_type> { 1, from_id };
 			}
 
 			bool found_route = _solve(from_it, to_it, current_pass++, allow_partial_path);
 			if (!found_route) {
 				if (!allow_partial_path || last_closest_point == search.end()) {
-					return std::vector<PointMap::points_key_type>();
+					return memory::vector<PointMap::points_key_type>();
 				}
 
 				// Use closest point instead.
@@ -215,7 +220,7 @@ namespace OpenVic {
 				p = p.value().prev_point;
 			}
 
-			std::vector<PointMap::points_key_type> path;
+			memory::vector<PointMap::points_key_type> path;
 			path.resize(pc);
 
 			{
