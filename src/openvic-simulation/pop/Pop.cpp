@@ -380,10 +380,15 @@ void Pop::pop_tick_without_cleanup(PopValuesFromProvince& shared_values, std::ve
 	income = expenses = fixed_point_t::_0();
 
 	ProvinceInstance& location_never_null = *location;
-	CountryInstance* country_to_report_economy_nullable = location_never_null.get_country_to_report_economy();
+	CountryInstance* const country_to_report_economy_nullable = location_never_null.get_country_to_report_economy();
 
+	fixed_point_t max_cost_multiplier = fixed_point_t::_1();
 	if (country_to_report_economy_nullable != nullptr) {
 		country_to_report_economy_nullable->request_salaries_and_welfare(*this);
+		const fixed_point_t tariff_rate = country_to_report_economy_nullable->get_effective_tariff_rate();
+		if (tariff_rate > fixed_point_t::_0()) {
+			max_cost_multiplier += tariff_rate; //max (domestic cost, imported cost)
+		}
 	}
 
 	//unemployment subsidies are based on yesterdays unemployment
@@ -403,6 +408,7 @@ void Pop::pop_tick_without_cleanup(PopValuesFromProvince& shared_values, std::ve
 		//execute artisan_tick before needs
 		artisanal_producer_nullable->artisan_tick(
 			*this,
+			max_cost_multiplier,
 			max_quantity_to_buy_per_good,
 			money_to_spend_per_good,
 			reusable_map_0,
@@ -458,7 +464,8 @@ void Pop::pop_tick_without_cleanup(PopValuesFromProvince& shared_values, std::ve
 	#undef FILL_NEEDS
 
 	//It's safe to use cash as this happens before cash is updated via spending
-	fixed_point_t cash_left_to_spend = cash.get_copy_of_value() - cash_allocated_for_artisanal_spending;
+	fixed_point_t cash_left_to_spend = cash.get_copy_of_value() / max_cost_multiplier
+		- cash_allocated_for_artisanal_spending;
 
 	#define ALLOCATE_FOR_NEEDS(need_category) \
 		if (cash_left_to_spend > fixed_point_t::_0()) { \
@@ -484,6 +491,7 @@ void Pop::pop_tick_without_cleanup(PopValuesFromProvince& shared_values, std::ve
 
 		market_instance.place_buy_up_to_order({
 			*good_definition,
+			country_to_report_economy_nullable,
 			max_quantity_to_buy,
 			money_to_spend,
 			this,
@@ -495,6 +503,7 @@ void Pop::pop_tick_without_cleanup(PopValuesFromProvince& shared_values, std::ve
 		market_instance.place_market_sell_order(
 			{
 				artisanal_producer_nullable->get_production_type().get_output_good(),
+				country_to_report_economy_nullable,
 				artisanal_produce_left_to_sell,
 				this,
 				after_sell
@@ -506,11 +515,23 @@ void Pop::pop_tick_without_cleanup(PopValuesFromProvince& shared_values, std::ve
 }
 
 void Pop::after_buy(void* actor, BuyResult const& buy_result) {
-	Pop& pop = *static_cast<Pop*>(actor);
-	GoodDefinition const& good_definition = buy_result.get_good_definition();
 	const fixed_point_t quantity_bought = buy_result.get_quantity_bought();
-	const fixed_point_t money_spent = buy_result.get_money_spent();
 
+	if (quantity_bought == fixed_point_t::_0()) {
+		return;
+	}
+
+	Pop& pop = *static_cast<Pop*>(actor);	
+	ProvinceInstance& location_never_null = *pop.get_location();
+	CountryInstance* const country_to_report_economy_nullable = location_never_null.get_country_to_report_economy();
+
+	fixed_point_t money_spent = buy_result.get_money_spent_total();
+	if (country_to_report_economy_nullable != nullptr) {
+		const fixed_point_t tariff = country_to_report_economy_nullable->apply_tariff(buy_result.get_money_spent_on_imports());
+		money_spent += tariff;
+	}
+
+	GoodDefinition const& good_definition = buy_result.get_good_definition();
 	fixed_point_t quantity_left_to_consume = quantity_bought;
 	if (pop.artisanal_producer_nullable != nullptr) {
 		if (quantity_left_to_consume <= fixed_point_t::_0()) {

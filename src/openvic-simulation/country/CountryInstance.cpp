@@ -66,6 +66,7 @@ CountryInstance::CountryInstance(
 	taxable_income_by_pop_type { &pop_type_keys },
 	effective_tax_rate_by_strata { &strata_keys },
 	tax_rate_slider_value_by_strata { &strata_keys },
+	import_value_mutex { std::make_unique<std::mutex>() },
 
 	/* Technology */
 	technology_unlock_levels { &technology_keys },
@@ -1062,6 +1063,8 @@ void CountryInstance::_update_budget() {
 		}
 	}
 
+	effective_tariff_rate = administrative_efficiency * tariff_rate_slider_value.get_value();
+
 	projected_administration_spending_unscaled_by_slider
 		= projected_education_spending_unscaled_by_slider
 		= projected_military_spending_unscaled_by_slider
@@ -1699,6 +1702,7 @@ void CountryInstance::country_tick_before_map(InstanceManager& instance_manager)
 		data.clear_daily_recorded_data();
 	}
 
+	actual_net_tariffs = import_value = fixed_point_t::_0();
 	taxable_income_by_pop_type.fill(fixed_point_t::_0());
 }
 
@@ -1907,6 +1911,14 @@ fixed_point_t CountryInstance::calculate_minimum_wage_base(PopType const& pop_ty
 		shared_country_values.get_modifier_effect_cache(),
 		shared_country_values.get_shared_pop_type_values()[pop_type]
 	);
+}
+
+fixed_point_t CountryInstance::apply_tariff(const fixed_point_t money_spent_on_imports) {
+	const fixed_point_t tariff = effective_tariff_rate * money_spent_on_imports;
+	const std::lock_guard<std::mutex> lock_guard { *import_value_mutex };
+	import_value += money_spent_on_imports;
+	actual_net_tariffs += tariff;
+	return tariff;
 }
 
 CountryInstance::good_data_t& CountryInstance::get_good_data(GoodInstance const& good_instance) {

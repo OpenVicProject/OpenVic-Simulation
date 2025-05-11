@@ -24,6 +24,7 @@ ArtisanalProducer::ArtisanalProducer(
 
 void ArtisanalProducer::artisan_tick(
 	Pop& pop,
+	const fixed_point_t max_cost_multiplier,
 	GoodDefinition::good_definition_map_t& pop_max_quantity_to_buy_per_good,
 	GoodDefinition::good_definition_map_t& pop_money_to_spend_per_good,
 	GoodDefinition::good_definition_map_t& reusable_map_0,
@@ -114,7 +115,7 @@ void ArtisanalProducer::artisan_tick(
 	}
 
 	//executed once per pop while nothing else uses it.
-	const fixed_point_t total_cash_to_spend = pop.get_cash().get_copy_of_value();
+	const fixed_point_t total_cash_to_spend = pop.get_cash().get_copy_of_value() / max_cost_multiplier;
 	MarketInstance const& market_instance = pop.get_market_instance();
 
 	if (total_cash_to_spend > fixed_point_t::_0() && !goods_to_buy_and_max_price.empty()) {
