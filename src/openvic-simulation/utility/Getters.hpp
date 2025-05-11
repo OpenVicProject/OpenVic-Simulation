@@ -8,6 +8,8 @@
 #include <type_traits>
 #include <utility>
 
+#include "openvic-simulation/utility/Containers.hpp"
+
 namespace OpenVic::utility {
 	template<std::size_t... Idxs>
 	constexpr auto substring_as_array(std::string_view str, std::index_sequence<Idxs...>) {
@@ -182,7 +184,7 @@ namespace OpenVic {
 		if constexpr (std::is_reference_v<decl>) {
 			/* Return const reference */
 			return property;
-		} else if constexpr (std::same_as<T, std::string>) {
+		} else if constexpr (std::same_as<T, std::string> || std::same_as<T, memory::string>) {
 			/* Return std::string_view looking at std::string */
 			return std::string_view { property };
 		} else if constexpr (std::integral<T> || std::floating_point<T> || std::is_enum_v<T> || ReturnByValue<T>) {

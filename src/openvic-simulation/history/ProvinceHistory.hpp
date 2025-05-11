@@ -1,15 +1,15 @@
 #pragma once
 
 #include <optional>
-#include <vector>
 
 #include "openvic-simulation/economy/BuildingType.hpp"
 #include "openvic-simulation/history/HistoryMap.hpp"
 #include "openvic-simulation/map/ProvinceInstance.hpp"
 #include "openvic-simulation/pop/PopType.hpp"
 #include "openvic-simulation/types/Date.hpp"
-#include "openvic-simulation/types/fixed_point/FixedPointMap.hpp"
 #include "openvic-simulation/types/OrderedContainers.hpp"
+#include "openvic-simulation/types/fixed_point/FixedPointMap.hpp"
+#include "openvic-simulation/utility/Containers.hpp"
 #include "openvic-simulation/utility/Getters.hpp"
 
 namespace OpenVic {
@@ -24,6 +24,7 @@ namespace OpenVic {
 	struct ProvinceHistoryEntry : HistoryEntry {
 		friend struct ProvinceHistoryMap;
 
+		ProvinceHistoryEntry(ProvinceDefinition const& new_province, Date new_date);
 	private:
 		ProvinceDefinition const& PROPERTY(province);
 
@@ -38,9 +39,7 @@ namespace OpenVic {
 		ordered_map<BuildingType const*, BuildingType::level_t> PROPERTY(province_buildings);
 		ordered_map<BuildingType const*, BuildingType::level_t> PROPERTY(state_buildings);
 		fixed_point_map_t<Ideology const*> PROPERTY(party_loyalties);
-		std::vector<PopBase> PROPERTY(pops);
-
-		ProvinceHistoryEntry(ProvinceDefinition const& new_province, Date new_date);
+		memory::vector<PopBase> PROPERTY(pops);
 
 		bool _load_province_pop_history(
 			DefinitionManager const& definition_manager, ast::NodeCPtr root, bool *non_integer_size
@@ -58,14 +57,13 @@ namespace OpenVic {
 	protected:
 		ProvinceHistoryMap(ProvinceDefinition const& new_province);
 
-		std::unique_ptr<ProvinceHistoryEntry> _make_entry(Date date) const override;
-		bool _load_history_entry(
-			DefinitionManager const& definition_manager, ProvinceHistoryEntry& entry, ast::NodeCPtr root
-		) override;
+		memory::unique_ptr<ProvinceHistoryEntry> _make_entry(Date date) const override;
+		bool _load_history_entry(DefinitionManager const& definition_manager, ProvinceHistoryEntry& entry, ast::NodeCPtr root)
+			override;
 
 	private:
 		bool _load_province_pop_history(
-			DefinitionManager const& definition_manager, Date date, ast::NodeCPtr root, bool *non_integer_size
+			DefinitionManager const& definition_manager, Date date, ast::NodeCPtr root, bool* non_integer_size
 		);
 	};
 
@@ -91,7 +89,7 @@ namespace OpenVic {
 			DefinitionManager const& definition_manager, ProvinceDefinition const& province, ast::NodeCPtr root
 		);
 		bool load_pop_history_file(
-			DefinitionManager const& definition_manager, Date date, ast::NodeCPtr root, bool *non_integer_size
+			DefinitionManager const& definition_manager, Date date, ast::NodeCPtr root, bool* non_integer_size
 		);
 	};
 }
