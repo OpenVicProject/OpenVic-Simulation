@@ -13,6 +13,7 @@
 
 #include "openvic-simulation/pathfinding/PointMap.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
+#include "openvic-simulation/utility/Containers.hpp"
 
 using namespace OpenVic;
 
@@ -25,7 +26,7 @@ bool FringePathing::_solve(search_iterator begin_point, search_iterator end_poin
 
 	bool found_route = false;
 
-	std::vector<search_iterator> fringe;
+	memory::vector<search_iterator> fringe;
 	fringe.reserve(20);
 
 	begin_point.value().g_score = 0;

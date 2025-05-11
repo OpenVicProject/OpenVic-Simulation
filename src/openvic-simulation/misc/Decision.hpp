@@ -13,11 +13,11 @@ namespace OpenVic {
 	private:
 		const bool PROPERTY_CUSTOM_PREFIX(alert, has);
 		const bool PROPERTY_CUSTOM_PREFIX(news, is);
-		std::string PROPERTY(news_title);
-		std::string PROPERTY(news_desc_long);
-		std::string PROPERTY(news_desc_medium);
-		std::string PROPERTY(news_desc_short);
-		std::string PROPERTY(picture);
+		memory::string PROPERTY(news_title);
+		memory::string PROPERTY(news_desc_long);
+		memory::string PROPERTY(news_desc_medium);
+		memory::string PROPERTY(news_desc_short);
+		memory::string PROPERTY(picture);
 		ConditionScript PROPERTY(potential);
 		ConditionScript PROPERTY(allow);
 		ConditionalWeightFactorMul PROPERTY(ai_will_do);

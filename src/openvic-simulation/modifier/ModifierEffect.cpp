@@ -4,7 +4,7 @@
 
 using namespace OpenVic;
 
-std::string ModifierEffect::target_to_string(target_t target) {
+memory::string ModifierEffect::target_to_string(target_t target) {
 	using enum target_t;
 
 	if (target == NO_TARGETS) {
@@ -17,7 +17,7 @@ std::string ModifierEffect::target_to_string(target_t target) {
 
 	static constexpr std::string_view SEPARATOR = " | ";
 
-	std::string ret;
+	memory::string ret;
 
 	const auto append_target = [target, &ret](target_t check_target, std::string_view target_str) -> void {
 		if (!ModifierEffect::excludes_targets(target, check_target)) {
@@ -36,7 +36,7 @@ std::string ModifierEffect::target_to_string(target_t target) {
 	return ret;
 }
 
-std::string ModifierEffect::make_default_modifier_effect_localisation_key(std::string_view identifier) {
+memory::string ModifierEffect::make_default_modifier_effect_localisation_key(std::string_view identifier) {
 	return "MODIFIER_" + StringUtils::string_toupper(identifier);
 }
 

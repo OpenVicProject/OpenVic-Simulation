@@ -7,7 +7,11 @@
 #include "openvic-simulation/pathfinding/PointMap.hpp"
 #include "openvic-simulation/types/Signal.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
+#include "openvic-simulation/utility/Containers.hpp"
 #include "openvic-simulation/utility/ErrorMacros.hpp"
+
+#include <foonathan/memory/default_allocator.hpp>
+#include <foonathan/memory/std_allocator.hpp>
 
 namespace OpenVic {
 	template<typename ValueT, typename KeyT = PointMap::points_key_type>
@@ -15,7 +19,8 @@ namespace OpenVic {
 		using search_key_type = KeyT;
 		using search_value_type = ValueT;
 		using search_pair_type = std::pair<search_key_type, search_value_type>;
-		using search_allocator_type = std::allocator<search_pair_type>;
+		using search_allocator_type =
+			foonathan::memory::std_allocator<search_pair_type, memory::tracker<foonathan::memory::default_allocator>>;
 		using search_container_type = std::vector<search_pair_type, search_allocator_type>;
 		using search_map_type = tsl::ordered_map<
 			search_key_type, search_value_type, //
@@ -129,12 +134,12 @@ namespace OpenVic {
 					it = search.insert({ id, { ptr } }).first;
 				}
 			}
-			OV_ERR_FAIL_COND_V_MSG(it == search.end(), it, fmt::format("Can't get point by id: {} doesn't exist.", id));
+			OV_ERR_FAIL_COND_V_MSG(it == search.end(), it, memory::fmt::format("Can't get point by id: {} doesn't exist.", id));
 			return it;
 		}
 
 		template<typename T, typename Projection = std::identity>
-		inline std::vector<T> generate_path_result(search_iterator from_it, search_iterator to_it, Projection projection = {}) {
+		inline memory::vector<T> generate_path_result(search_iterator from_it, search_iterator to_it, Projection projection = {}) {
 			search_iterator p = to_it;
 			int64_t pc = 1; // Begin point
 			while (p != from_it) {
@@ -142,7 +147,7 @@ namespace OpenVic {
 				p = p.value().prev_point;
 			}
 
-			std::vector<T> path;
+			memory::vector<T> path;
 			path.resize(pc);
 
 			{
@@ -161,29 +166,29 @@ namespace OpenVic {
 			return path;
 		}
 
-		std::vector<ivec2_t> get_point_path( //
+		memory::vector<ivec2_t> get_point_path( //
 			PointMap::points_key_type from_id, PointMap::points_key_type to_id, bool allow_partial_path = false
 		) {
-			OV_ERR_FAIL_COND_V(point_map == nullptr, std::vector<ivec2_t>());
+			OV_ERR_FAIL_COND_V(point_map == nullptr, memory::vector<ivec2_t>());
 
 			search_iterator from_it = get_iterator_by_id(from_id);
-			OV_ERR_FAIL_COND_V(from_it == search.end(), std::vector<ivec2_t>());
+			OV_ERR_FAIL_COND_V(from_it == search.end(), memory::vector<ivec2_t>());
 
 			if (!_is_point_enabled(from_it)) {
-				return std::vector<ivec2_t>();
+				return memory::vector<ivec2_t>();
 			}
 
 			search_iterator to_it = get_iterator_by_id(to_id);
-			OV_ERR_FAIL_COND_V(to_it == search.end(), std::vector<ivec2_t>());
+			OV_ERR_FAIL_COND_V(to_it == search.end(), memory::vector<ivec2_t>());
 
 			if (from_it == to_it) {
-				return std::vector<ivec2_t> { 1, from_it.value().point->position };
+				return memory::vector<ivec2_t> { 1, from_it.value().point->position };
 			}
 
 			bool found_route = _solve(from_it, to_it, current_pass++, allow_partial_path);
 			if (!found_route) {
 				if (!allow_partial_path || last_closest_point == search.end()) {
-					return std::vector<ivec2_t>();
+					return memory::vector<ivec2_t>();
 				}
 
 				// Use closest point instead.
@@ -195,29 +200,29 @@ namespace OpenVic {
 			});
 		}
 
-		std::vector<PointMap::points_key_type> get_id_path( //
+		memory::vector<PointMap::points_key_type> get_id_path( //
 			PointMap::points_key_type from_id, PointMap::points_key_type to_id, bool allow_partial_path = false
 		) {
-			OV_ERR_FAIL_COND_V(point_map == nullptr, std::vector<PointMap::points_key_type>());
+			OV_ERR_FAIL_COND_V(point_map == nullptr, memory::vector<PointMap::points_key_type>());
 
 			search_iterator from_it = get_iterator_by_id(from_id);
-			OV_ERR_FAIL_COND_V(from_it == search.end(), std::vector<PointMap::points_key_type>());
+			OV_ERR_FAIL_COND_V(from_it == search.end(), memory::vector<PointMap::points_key_type>());
 
 			if (!_is_point_enabled(from_it)) {
-				return std::vector<PointMap::points_key_type>();
+				return memory::vector<PointMap::points_key_type>();
 			}
 
 			search_iterator to_it = get_iterator_by_id(to_id);
-			OV_ERR_FAIL_COND_V(to_it == search.end(), std::vector<PointMap::points_key_type>());
+			OV_ERR_FAIL_COND_V(to_it == search.end(), memory::vector<PointMap::points_key_type>());
 
 			if (from_it == to_it) {
-				return std::vector<PointMap::points_key_type> { 1, from_id };
+				return memory::vector<PointMap::points_key_type> { 1, from_id };
 			}
 
 			bool found_route = _solve(from_it, to_it, current_pass++, allow_partial_path);
 			if (!found_route) {
 				if (!allow_partial_path || last_closest_point == search.end()) {
-					return std::vector<PointMap::points_key_type>();
+					return memory::vector<PointMap::points_key_type>();
 				}
 
 				// Use closest point instead.

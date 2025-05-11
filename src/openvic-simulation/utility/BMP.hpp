@@ -3,7 +3,8 @@
 #include <filesystem>
 #include <fstream>
 #include <span>
-#include <vector>
+
+#include "openvic-simulation/utility/Containers.hpp"
 
 namespace OpenVic {
 	namespace fs = std::filesystem;
@@ -38,8 +39,8 @@ namespace OpenVic {
 		std::ifstream file;
 		bool header_validated = false, palette_read = false, pixel_data_read = false;
 		uint32_t palette_size = 0;
-		std::vector<palette_colour_t> palette;
-		std::vector<uint8_t> pixel_data;
+		memory::vector<palette_colour_t> palette;
+		memory::vector<uint8_t> pixel_data;
 
 	public:
 		static constexpr uint32_t PALETTE_COLOUR_SIZE = sizeof(palette_colour_t);

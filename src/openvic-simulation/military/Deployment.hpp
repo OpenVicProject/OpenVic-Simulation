@@ -8,6 +8,7 @@
 #include "openvic-simulation/military/UnitType.hpp"
 #include "openvic-simulation/types/HasIdentifier.hpp"
 #include "openvic-simulation/utility/Getters.hpp"
+#include "openvic-simulation/utility/Containers.hpp"
 
 namespace OpenVic {
 	struct ProvinceDefinition;
@@ -20,7 +21,7 @@ namespace OpenVic {
 		friend struct DeploymentManager;
 
 	private:
-		std::string PROPERTY(name);
+		memory::string PROPERTY(name);
 		RegimentType const& PROPERTY(type);
 		ProvinceDefinition const* PROPERTY(home);
 
@@ -36,7 +37,7 @@ namespace OpenVic {
 		friend struct DeploymentManager;
 
 	private:
-		std::string PROPERTY(name);
+		memory::string PROPERTY(name);
 		ShipType const& PROPERTY(type);
 
 	public:
@@ -53,14 +54,14 @@ namespace OpenVic {
 		using _Unit = UnitDeployment<Branch>;
 
 	private:
-		std::string PROPERTY(name);
+		memory::string PROPERTY(name);
 		ProvinceDefinition const* PROPERTY(location);
-		std::vector<_Unit> PROPERTY(units);
+		memory::vector<_Unit> PROPERTY(units);
 		std::optional<size_t> PROPERTY(leader_index);
 
 	public:
 		UnitDeploymentGroup(
-			std::string_view new_name, ProvinceDefinition const* new_location, std::vector<_Unit>&& new_units,
+			std::string_view new_name, ProvinceDefinition const* new_location, memory::vector<_Unit>&& new_units,
 			std::optional<size_t> new_leader_index
 		);
 		UnitDeploymentGroup(UnitDeploymentGroup&&) = default;
@@ -73,13 +74,13 @@ namespace OpenVic {
 		friend struct DeploymentManager;
 
 	private:
-		std::vector<ArmyDeployment> PROPERTY(armies);
-		std::vector<NavyDeployment> PROPERTY(navies);
-		std::vector<LeaderBase> PROPERTY(leaders);
+		memory::vector<ArmyDeployment> PROPERTY(armies);
+		memory::vector<NavyDeployment> PROPERTY(navies);
+		memory::vector<LeaderBase> PROPERTY(leaders);
 
 		Deployment(
-			std::string_view new_path, std::vector<ArmyDeployment>&& new_armies, std::vector<NavyDeployment>&& new_navies,
-			std::vector<LeaderBase>&& new_leaders
+			std::string_view new_path, memory::vector<ArmyDeployment>&& new_armies, memory::vector<NavyDeployment>&& new_navies,
+			memory::vector<LeaderBase>&& new_leaders
 		);
 
 	public:
@@ -98,8 +99,8 @@ namespace OpenVic {
 
 	public:
 		bool add_deployment(
-			std::string_view path, std::vector<ArmyDeployment>&& armies, std::vector<NavyDeployment>&& navies,
-			std::vector<LeaderBase>&& leaders
+			std::string_view path, memory::vector<ArmyDeployment>&& armies, memory::vector<NavyDeployment>&& navies,
+			memory::vector<LeaderBase>&& leaders
 		);
 
 		bool load_oob_file(

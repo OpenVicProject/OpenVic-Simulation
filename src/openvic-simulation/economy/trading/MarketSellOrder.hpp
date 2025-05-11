@@ -4,6 +4,7 @@
 
 #include "openvic-simulation/economy/trading/SellResult.hpp"
 #include "openvic-simulation/utility/Getters.hpp"
+#include "openvic-simulation/utility/Containers.hpp"
 
 namespace OpenVic {
 	struct CountryInstance;
@@ -11,7 +12,7 @@ namespace OpenVic {
 
 	struct GoodMarketSellOrder {
 		using actor_t = void*;
-		using callback_t = void (*)(actor_t, SellResult const&, std::vector<fixed_point_t>&);
+		using callback_t = void (*)(actor_t, SellResult const&, memory::vector<fixed_point_t>&);
 
 	private:
 		CountryInstance const* const PROPERTY(country_nullable);
@@ -31,7 +32,7 @@ namespace OpenVic {
 			after_trade { new_after_trade }
 			{}
 
-		constexpr void call_after_trade(SellResult const& sell_result, std::vector<fixed_point_t>& reusable_vector) const {
+		constexpr void call_after_trade(SellResult const& sell_result, memory::vector<fixed_point_t>& reusable_vector) const {
 			after_trade(actor, sell_result, reusable_vector);
 		}
 	};

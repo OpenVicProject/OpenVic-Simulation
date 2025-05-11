@@ -7,6 +7,7 @@
 #include "openvic-simulation/history/Period.hpp"
 #include "openvic-simulation/types/Date.hpp"
 #include "openvic-simulation/utility/Getters.hpp"
+#include "openvic-simulation/utility/Containers.hpp"
 
 namespace OpenVic {
 	struct DiplomaticHistoryManager;
@@ -50,17 +51,17 @@ namespace OpenVic {
 		static_assert(std::is_trivially_move_constructible_v<war_participant_t>);
 
 		WarHistory(
-			std::string_view new_war_name, std::vector<war_participant_t>&& new_attackers,
-			std::vector<war_participant_t>&& new_defenders, std::vector<added_wargoal_t>&& new_wargoals
+			std::string_view new_war_name, memory::vector<war_participant_t>&& new_attackers,
+			memory::vector<war_participant_t>&& new_defenders, memory::vector<added_wargoal_t>&& new_wargoals
 		);
 
 	private:
 		/* Edge cases where this is empty/undef for some reason,
 		 * probably need to just generate war names like usual for that. */
-		std::string PROPERTY(war_name);
-		std::vector<war_participant_t> PROPERTY(attackers);
-		std::vector<war_participant_t> PROPERTY(defenders);
-		std::vector<added_wargoal_t> PROPERTY(wargoals);
+		memory::string PROPERTY(war_name);
+		memory::vector<war_participant_t> PROPERTY(attackers);
+		memory::vector<war_participant_t> PROPERTY(defenders);
+		memory::vector<added_wargoal_t> PROPERTY(wargoals);
 	};
 
 	struct AllianceHistory {
@@ -113,10 +114,10 @@ namespace OpenVic {
 
 	struct DiplomaticHistoryManager {
 	private:
-		std::vector<AllianceHistory> alliances;
-		std::vector<ReparationsHistory> reparations;
-		std::vector<SubjectHistory> subjects;
-		std::vector<WarHistory> wars;
+		memory::vector<AllianceHistory> alliances;
+		memory::vector<ReparationsHistory> reparations;
+		memory::vector<SubjectHistory> subjects;
+		memory::vector<WarHistory> wars;
 		bool locked = false;
 
 	public:
@@ -126,12 +127,12 @@ namespace OpenVic {
 		void lock_diplomatic_history();
 		bool is_locked() const;
 
-		std::vector<AllianceHistory const*> get_alliances(Date date) const;
-		std::vector<ReparationsHistory const*> get_reparations(Date date) const;
-		std::vector<SubjectHistory const*> get_subjects(Date date) const;
+		memory::vector<AllianceHistory const*> get_alliances(Date date) const;
+		memory::vector<ReparationsHistory const*> get_reparations(Date date) const;
+		memory::vector<SubjectHistory const*> get_subjects(Date date) const;
 		/* Returns all wars that begin before date. NOTE: Some wargoals may be added or countries may join after date,
 		 * should be checked for by functions that use get_wars() */
-		std::vector<WarHistory const*> get_wars(Date date) const;
+		memory::vector<WarHistory const*> get_wars(Date date) const;
 
 		bool load_diplomacy_history_file(CountryDefinitionManager const& country_definition_manager, ast::NodeCPtr root);
 		bool load_war_history_file(DefinitionManager const& definition_manager, ast::NodeCPtr root);
