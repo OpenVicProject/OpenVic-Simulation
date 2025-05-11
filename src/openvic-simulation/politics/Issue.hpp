@@ -5,6 +5,7 @@
 #include "openvic-simulation/scripts/ConditionScript.hpp"
 #include "openvic-simulation/scripts/EffectScript.hpp"
 #include "openvic-simulation/types/IdentifierRegistry.hpp"
+#include "openvic-simulation/utility/Containers.hpp"
 
 namespace OpenVic {
 	struct IssueManager;
@@ -15,7 +16,7 @@ namespace OpenVic {
 		friend struct IssueManager;
 
 	private:
-		std::vector<Issue const*> PROPERTY(issues);
+		memory::vector<Issue const*> PROPERTY(issues);
 
 	protected:
 		IssueGroup(std::string_view identifier, index_t new_index);
@@ -57,7 +58,7 @@ namespace OpenVic {
 	private:
 		bool PROPERTY_CUSTOM_PREFIX(uncivilised, is); // whether this group is available to non-westernised countries
 		// in vanilla education, military and economic reforms are hardcoded to true and the rest to false
-		std::vector<ReformGroup const*> PROPERTY(reform_groups);
+		memory::vector<ReformGroup const*> PROPERTY(reform_groups);
 
 		ReformType(std::string_view new_identifier, bool new_uncivilised);
 

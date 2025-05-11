@@ -170,7 +170,7 @@ bool GoodDefinitionManager::generate_modifiers(ModifierManager& modifier_manager
 
 		const auto make_production_localisation_suffix = [&good_identifier](
 			std::string_view localisation_suffix
-		) -> std::string {
+		) -> memory::string {
 			return StringUtils::append_string_views("$", good_identifier, "$ $", localisation_suffix, "$");
 		};
 

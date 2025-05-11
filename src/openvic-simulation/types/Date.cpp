@@ -13,7 +13,7 @@
 
 using namespace OpenVic;
 
-std::string Timespan::to_string() const {
+memory::string Timespan::to_string() const {
 	// Maximum number of digits + 1 for potential minus sign
 	static constexpr size_t array_length = fmt::detail::count_digits(uint64_t(std::numeric_limits<day_t>::max())) + 1;
 
@@ -26,7 +26,7 @@ std::string Timespan::to_string() const {
 	return { str_array.data(), result.ptr };
 }
 
-Timespan::operator std::string() const {
+Timespan::operator memory::string() const {
 	return to_string();
 }
 
@@ -34,7 +34,7 @@ std::ostream& OpenVic::operator<<(std::ostream& out, Timespan const& timespan) {
 	return out << timespan.to_string();
 }
 
-std::string Date::to_string(bool pad_year, bool pad_month, bool pad_day) const {
+memory::string Date::to_string(bool pad_year, bool pad_month, bool pad_day) const {
 	stack_string result = to_array(pad_year, pad_month, pad_day);
 	if (OV_unlikely(result.empty())) {
 		return {};
@@ -43,7 +43,7 @@ std::string Date::to_string(bool pad_year, bool pad_month, bool pad_day) const {
 	return result;
 }
 
-Date::operator std::string() const {
+Date::operator memory::string() const {
 	return to_string();
 }
 

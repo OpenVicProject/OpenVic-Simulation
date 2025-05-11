@@ -8,6 +8,7 @@
 #include "openvic-simulation/scripts/ConditionScript.hpp"
 #include "openvic-simulation/types/IdentifierRegistry.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
+#include "openvic-simulation/utility/Containers.hpp"
 
 namespace OpenVic {
 	struct ProductionTypeManager;
@@ -44,14 +45,14 @@ namespace OpenVic {
 	private:
 		GameRulesManager const& game_rules_manager;
 		const std::optional<Job> PROPERTY(owner);
-		std::vector<Job> PROPERTY(jobs);
+		memory::vector<Job> PROPERTY(jobs);
 		const template_type_t PROPERTY(template_type);
 		const pop_size_t PROPERTY(base_workforce_size);
 
 		GoodDefinition::good_definition_map_t PROPERTY(input_goods);
 		GoodDefinition const& PROPERTY(output_good);
 		const fixed_point_t PROPERTY(base_output_quantity);
-		std::vector<bonus_t> PROPERTY(bonuses);
+		memory::vector<bonus_t> PROPERTY(bonuses);
 
 		GoodDefinition::good_definition_map_t PROPERTY(maintenance_requirements);
 		const bool PROPERTY_CUSTOM_PREFIX(coastal, is);
@@ -61,13 +62,13 @@ namespace OpenVic {
 			GameRulesManager const& new_game_rules_manager,
 			const std::string_view new_identifier,
 			const std::optional<Job> new_owner,
-			std::vector<Job>&& new_jobs,
+			memory::vector<Job>&& new_jobs,
 			const template_type_t new_template_type,
 			const pop_size_t new_base_workforce_size,
 			GoodDefinition::good_definition_map_t&& new_input_goods,
 			GoodDefinition const& new_output_good,
 			const fixed_point_t new_base_output_quantity,
-			std::vector<bonus_t>&& new_bonuses,
+			memory::vector<bonus_t>&& new_bonuses,
 			GoodDefinition::good_definition_map_t&& new_maintenance_requirements,
 			const bool new_is_coastal,
 			const bool new_is_farm,
@@ -112,7 +113,7 @@ namespace OpenVic {
 		);
 		NodeTools::node_callback_t _expect_job_list(
 			GoodDefinitionManager const& good_definition_manager, PopManager const& pop_manager,
-			NodeTools::callback_t<std::vector<Job>&&> callback
+			NodeTools::callback_t<memory::vector<Job>&&> callback
 		);
 
 	public:
@@ -122,13 +123,13 @@ namespace OpenVic {
 			GameRulesManager const& game_rules_manager,
 			const std::string_view identifier,
 			std::optional<Job> owner,
-			std::vector<Job>&& jobs,
+			memory::vector<Job>&& jobs,
 			const ProductionType::template_type_t template_type,
 			const pop_size_t base_workforce_size,
 			GoodDefinition::good_definition_map_t&& input_goods,
 			GoodDefinition const* const output_good,
 			const fixed_point_t base_output_quantity,
-			std::vector<ProductionType::bonus_t>&& bonuses,
+			memory::vector<ProductionType::bonus_t>&& bonuses,
 			GoodDefinition::good_definition_map_t&& maintenance_requirements,
 			const bool is_coastal,
 			const bool is_farm,

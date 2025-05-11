@@ -241,7 +241,7 @@ bool TechnologyManager::generate_modifiers(ModifierManager& modifier_manager) co
 	bool ret = true;
 
 	for (TechnologyFolder const& folder : get_technology_folders()) {
-		const std::string modifier_identifier = StringUtils::append_string_views(folder.get_identifier(), "_research_bonus");
+		const memory::string modifier_identifier = StringUtils::append_string_views(folder.get_identifier(), "_research_bonus");
 
 		ret &= modifier_manager.register_base_country_modifier_effect(
 			research_bonus_effects[folder], modifier_identifier, FORMAT_x100_1DP_PC_POS, modifier_identifier

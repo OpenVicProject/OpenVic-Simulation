@@ -5,9 +5,10 @@
 #include "openvic-simulation/country/CountryInstance.hpp"
 #include "openvic-simulation/history/HistoryMap.hpp"
 #include "openvic-simulation/types/Date.hpp"
-#include "openvic-simulation/types/fixed_point/FixedPointMap.hpp"
 #include "openvic-simulation/types/IndexedMap.hpp"
 #include "openvic-simulation/types/OrderedContainers.hpp"
+#include "openvic-simulation/types/fixed_point/FixedPointMap.hpp"
+#include "openvic-simulation/utility/Containers.hpp"
 
 namespace OpenVic {
 	struct CountryHistoryMap;
@@ -28,7 +29,6 @@ namespace OpenVic {
 
 	struct CountryHistoryEntry : HistoryEntry {
 		friend struct CountryHistoryMap;
-
 	private:
 		CountryDefinition const& PROPERTY(country);
 
@@ -62,6 +62,7 @@ namespace OpenVic {
 		IndexedMap<GovernmentType, GovernmentType const*> PROPERTY(government_flag_overrides);
 		ordered_set<Decision const*> PROPERTY(decisions);
 
+	public:
 		CountryHistoryEntry(
 			CountryDefinition const& new_country, Date new_date, decltype(upper_house)::keys_span_type ideology_keys,
 			decltype(government_flag_overrides)::keys_span_type government_type_keys
@@ -86,7 +87,7 @@ namespace OpenVic {
 			decltype(government_type_keys) new_government_type_keys
 		);
 
-		std::unique_ptr<CountryHistoryEntry> _make_entry(Date date) const override;
+		memory::unique_ptr<CountryHistoryEntry> _make_entry(Date date) const override;
 		bool _load_history_entry(
 			DefinitionManager const& definition_manager, Dataloader const& dataloader, DeploymentManager& deployment_manager,
 			CountryHistoryEntry& entry, ast::NodeCPtr root

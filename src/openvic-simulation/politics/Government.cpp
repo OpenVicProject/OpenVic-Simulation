@@ -6,7 +6,7 @@ using namespace OpenVic;
 using namespace OpenVic::NodeTools;
 
 GovernmentType::GovernmentType(
-	std::string_view new_identifier, std::vector<Ideology const*>&& new_ideologies, bool new_elections,
+	std::string_view new_identifier, memory::vector<Ideology const*>&& new_ideologies, bool new_elections,
 	bool new_appoint_ruling_party, Timespan new_term_duration, std::string_view new_flag_type_identifier
 ) : HasIdentifier { new_identifier }, ideologies { std::move(new_ideologies) }, elections { new_elections },
 	appoint_ruling_party { new_appoint_ruling_party }, term_duration { new_term_duration },
@@ -17,7 +17,7 @@ bool GovernmentType::is_ideology_compatible(Ideology const* ideology) const {
 }
 
 bool GovernmentTypeManager::add_government_type(
-	std::string_view identifier, std::vector<Ideology const*>&& ideologies, bool elections, bool appoint_ruling_party,
+	std::string_view identifier, memory::vector<Ideology const*>&& ideologies, bool elections, bool appoint_ruling_party,
 	Timespan term_duration, std::string_view flag_type
 ) {
 	const LogScope log_scope { fmt::format("government type {}", identifier) };
@@ -54,7 +54,7 @@ bool GovernmentTypeManager::load_government_types_file(IdeologyManager const& id
 	bool ret = expect_dictionary_reserve_length(
 		government_types,
 		[this, &ideology_manager](std::string_view government_type_identifier, ast::NodeCPtr government_type_value) -> bool {
-			std::vector<Ideology const*> ideologies;
+			memory::vector<Ideology const*> ideologies;
 			bool elections = false, appoint_ruling_party = false;
 			Timespan term_duration = 0;
 			std::string_view flag_type_identifier;
@@ -119,7 +119,7 @@ bool GovernmentTypeManager::load_government_types_file(IdeologyManager const& id
 }
 
 bool GovernmentTypeManager::is_valid_flag_type(std::string_view type) const {
-	return std::any_of(flag_types.begin(), flag_types.end(), [type](std::string const& flag_type) -> bool {
+	return std::any_of(flag_types.begin(), flag_types.end(), [type](memory::string const& flag_type) -> bool {
 		return flag_type == type;
 	});
 }

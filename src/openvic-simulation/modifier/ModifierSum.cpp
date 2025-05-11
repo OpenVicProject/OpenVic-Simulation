@@ -16,7 +16,7 @@ std::string_view modifier_entry_t::source_to_string(modifier_source_t const& sou
 	);
 }
 
-std::string modifier_entry_t::to_string() const {
+memory::string modifier_entry_t::to_string() const {
 	return StringUtils::append_string_views(
 		"[", modifier.get_identifier(), ", ", multiplier.to_string(), ", ", source_to_string(source), ", ",
 		ModifierEffect::target_to_string(excluded_targets), "]"

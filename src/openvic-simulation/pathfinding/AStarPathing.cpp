@@ -15,6 +15,7 @@
 #include "openvic-simulation/military/UnitInstanceGroup.hpp"
 #include "openvic-simulation/pathfinding/PointMap.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
+#include "openvic-simulation/utility/Containers.hpp"
 #include "openvic-simulation/utility/Utility.hpp"
 
 using namespace OpenVic;
@@ -28,7 +29,7 @@ bool AStarPathing::_solve(search_iterator begin_point, search_iterator end_point
 
 	bool found_route = false;
 
-	std::vector<search_iterator> open_list;
+	memory::vector<search_iterator> open_list;
 	open_list.reserve(20);
 
 	begin_point.value().g_score = 0;

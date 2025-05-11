@@ -7,6 +7,7 @@
 
 #include "openvic-simulation/types/EnumBitfield.hpp"
 #include "openvic-simulation/types/IdentifierRegistry.hpp"
+#include "openvic-simulation/utility/Containers.hpp"
 
 namespace OpenVic {
 	struct ConditionManager;
@@ -218,13 +219,13 @@ namespace OpenVic {
 		friend struct ConditionManager;
 		friend struct ConditionScript;
 
-		using string_t = std::string;
+		using string_t = memory::string;
 		using boolean_t = bool;
 		using double_boolean_t = std::pair<bool, bool>;
 		using integer_t = uint64_t;
 		using real_t = fixed_point_t;
-		using identifier_real_t = std::pair<std::string, real_t>;
-		using condition_list_t = std::vector<ConditionNode>;
+		using identifier_real_t = std::pair<memory::string, real_t>;
+		using condition_list_t = memory::vector<ConditionNode>;
 		using value_t = std::variant<
 			string_t, boolean_t, double_boolean_t, integer_t, real_t, identifier_real_t, condition_list_t
 		>;

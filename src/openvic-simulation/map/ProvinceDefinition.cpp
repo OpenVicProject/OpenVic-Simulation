@@ -5,6 +5,7 @@
 #include "openvic-simulation/dataloader/NodeTools.hpp"
 #include "openvic-simulation/economy/BuildingType.hpp"
 #include "openvic-simulation/map/MapDefinition.hpp"
+#include "openvic-simulation/utility/Containers.hpp"
 
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;
@@ -16,8 +17,8 @@ ProvinceDefinition::ProvinceDefinition(
 ) : HasIdentifierAndColour { new_identifier, new_colour, true },
 	HasIndex { new_index } {}
 
-std::string ProvinceDefinition::to_string() const {
-	return fmt::format("(#{}, {}, 0x{})", get_index(), get_identifier(), get_colour());
+memory::string ProvinceDefinition::to_string() const {
+	return memory::fmt::format("(#{}, {}, 0x{})", get_index(), get_identifier(), get_colour());
 }
 
 bool ProvinceDefinition::load_positions(
@@ -140,7 +141,7 @@ std::string_view ProvinceDefinition::adjacency_t::get_type_name(type_t type) {
 }
 
 ProvinceDefinition::adjacency_t const* ProvinceDefinition::get_adjacency_to(ProvinceDefinition const* province) const {
-	const std::vector<adjacency_t>::const_iterator it = std::find_if(adjacencies.begin(), adjacencies.end(),
+	const memory::vector<adjacency_t>::const_iterator it = std::find_if(adjacencies.begin(), adjacencies.end(),
 		[province](adjacency_t const& adj) -> bool { return adj.get_to() == province; }
 	);
 	if (it != adjacencies.end()) {
@@ -156,10 +157,10 @@ bool ProvinceDefinition::is_adjacent_to(ProvinceDefinition const* province) cons
 	);
 }
 
-std::vector<ProvinceDefinition::adjacency_t const*> ProvinceDefinition::get_adjacencies_going_through(
+memory::vector<ProvinceDefinition::adjacency_t const*> ProvinceDefinition::get_adjacencies_going_through(
 	ProvinceDefinition const* province
 ) const {
-	std::vector<adjacency_t const*> ret;
+	memory::vector<adjacency_t const*> ret;
 	for (adjacency_t const& adj : adjacencies) {
 		if (adj.get_through() == province) {
 			ret.push_back(&adj);

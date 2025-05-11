@@ -4,6 +4,7 @@
 
 #include "openvic-simulation/dataloader/NodeTools.hpp"
 #include "openvic-simulation/politics/Issue.hpp"
+#include "openvic-simulation/utility/Containers.hpp"
 
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;
@@ -25,7 +26,7 @@ Event::Event(
 	bool new_allows_multiple_instances, bool new_news, std::string_view new_news_title, std::string_view new_news_desc_long,
 	std::string_view new_news_desc_medium, std::string_view new_news_desc_short, bool new_election,
 	IssueGroup const* new_election_issue_group, ConditionScript&& new_trigger, ConditionalWeightTime&& new_mean_time_to_happen,
-	EffectScript&& new_immediate, std::vector<EventOption>&& new_options
+	EffectScript&& new_immediate, memory::vector<EventOption>&& new_options
 ) : HasIdentifier { new_identifier }, title { new_title }, description { new_description }, image { new_image },
 	type { new_type }, triggered_only { new_triggered_only }, major { new_major }, fire_only_once { new_fire_only_once },
 	allows_multiple_instances { new_allows_multiple_instances }, news { new_news }, news_title { new_news_title },
@@ -58,7 +59,7 @@ bool EventManager::register_event(
 	Event::event_type_t type, bool triggered_only, bool major, bool fire_only_once, bool allows_multiple_instances, bool news,
 	std::string_view news_title, std::string_view news_desc_long, std::string_view news_desc_medium,
 	std::string_view news_desc_short, bool election, IssueGroup const* election_issue_group, ConditionScript&& trigger,
-	ConditionalWeightTime&& mean_time_to_happen, EffectScript&& immediate, std::vector<Event::EventOption>&& options
+	ConditionalWeightTime&& mean_time_to_happen, EffectScript&& immediate, memory::vector<Event::EventOption>&& options
 ) {
 	if (identifier.empty()) {
 		Logger::error("Invalid event ID - empty!");
@@ -154,7 +155,7 @@ bool EventManager::load_event_file(IssueManager const& issue_manager, ast::NodeC
 
 			// Ensures that if ever multithreaded, only one vector is used per thread
 			// Else acts like static
-			thread_local std::vector<Event::EventOption> options;
+			thread_local memory::vector<Event::EventOption> options;
 			// Default max vanilla options is 5
 			options.reserve(2);
 

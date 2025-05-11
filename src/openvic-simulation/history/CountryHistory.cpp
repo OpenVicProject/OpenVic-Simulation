@@ -18,10 +18,8 @@ CountryHistoryMap::CountryHistoryMap(
 	decltype(government_type_keys) new_government_type_keys
 ) : country { new_country }, ideology_keys { new_ideology_keys }, government_type_keys { new_government_type_keys } {}
 
-std::unique_ptr<CountryHistoryEntry> CountryHistoryMap::_make_entry(Date date) const {
-	return std::unique_ptr<CountryHistoryEntry> {
-		new CountryHistoryEntry { country, date, ideology_keys, government_type_keys }
-	};
+memory::unique_ptr<CountryHistoryEntry> CountryHistoryMap::_make_entry(Date date) const {
+	return memory::make_unique<CountryHistoryEntry>(country, date, ideology_keys, government_type_keys);
 }
 
 static constexpr auto _flag_callback(string_map_t<bool>& flags, bool value) {

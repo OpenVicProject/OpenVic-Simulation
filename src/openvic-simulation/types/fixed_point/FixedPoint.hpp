@@ -17,6 +17,7 @@
 #include "openvic-simulation/utility/NumberUtils.hpp"
 #include "openvic-simulation/utility/StringUtils.hpp"
 #include "openvic-simulation/utility/Utility.hpp"
+#include "openvic-simulation/utility/Containers.hpp"
 
 /* Sin lookup table */
 #include "openvic-simulation/types/fixed_point/FixedPointLUT_sin.hpp"
@@ -354,12 +355,12 @@ namespace OpenVic {
 				return std::string_view { data(), data() + size() };
 			}
 
-			operator std::string() const {
-				return std::string { data(), size() };
+			operator memory::string() const {
+				return memory::string { data(), size() };
 			}
 		};
 
-		std::string to_string(size_t decimal_places = -1) const {
+		memory::string to_string(size_t decimal_places = -1) const {
 			stack_string result = to_array(decimal_places);
 			if (OV_unlikely(result.empty())) {
 				return {};
@@ -488,7 +489,7 @@ namespace OpenVic {
 			return to_double();
 		}
 
-		operator std::string() const {
+		operator memory::string() const {
 			return to_string();
 		}
 

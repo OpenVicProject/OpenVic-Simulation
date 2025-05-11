@@ -15,7 +15,7 @@ ConditionalWeight<TYPE>::ConditionalWeight(
 
 template<typename T>
 static NodeCallback auto expect_modifier(
-	std::vector<T>& items, scope_type_t initial_scope, scope_type_t this_scope, scope_type_t from_scope
+	memory::vector<T>& items, scope_type_t initial_scope, scope_type_t this_scope, scope_type_t from_scope
 ) {
 	return [&items, initial_scope, this_scope, from_scope](ast::NodeCPtr node) -> bool {
 		fixed_point_t weight = 0;
@@ -113,7 +113,7 @@ struct parse_scripts_visitor_t {
 		return std::visit(*this, item);
 	}
 	template<typename T>
-	bool operator()(std::vector<T>& items) const {
+	bool operator()(memory::vector<T>& items) const {
 		bool ret = true;
 		for (T& item : items) {
 			ret &= (*this)(item);

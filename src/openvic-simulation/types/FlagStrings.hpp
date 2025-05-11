@@ -11,7 +11,7 @@ namespace OpenVic {
 	struct FlagStrings {
 	private:
 		string_set_t PROPERTY(flags);
-		std::string name;
+		memory::string name;
 
 	public:
 		FlagStrings(std::string_view new_name);

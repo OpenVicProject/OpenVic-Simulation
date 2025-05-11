@@ -6,6 +6,7 @@
 #include "openvic-simulation/types/Date.hpp"
 #include "openvic-simulation/types/IdentifierRegistry.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
+#include "openvic-simulation/utility/Containers.hpp"
 
 namespace OpenVic {
 
@@ -34,15 +35,15 @@ namespace OpenVic {
 				sail = false, steam = false, capital = false, port = false;
 			ProductionType const* production_type = nullptr;
 			naval_capacity_t naval_capacity = 0;
-			std::vector<fixed_point_t> colonial_points;
+			memory::vector<fixed_point_t> colonial_points;
 
 			building_type_args_t() = default;
 			building_type_args_t(building_type_args_t&&) = default;
 		};
 
 	private:
-		std::string PROPERTY(type);
-		std::string PROPERTY(on_completion); // probably sound played on completion
+		memory::string PROPERTY(type);
+		memory::string PROPERTY(on_completion); // probably sound played on completion
 		fixed_point_t PROPERTY(completion_size);
 		level_t PROPERTY(max_level);
 		GoodDefinition::good_definition_map_t PROPERTY(goods_cost);
@@ -59,7 +60,7 @@ namespace OpenVic {
 		level_t PROPERTY(fort_level); // fort bonus step-per-level
 
 		naval_capacity_t PROPERTY(naval_capacity);
-		std::vector<fixed_point_t> PROPERTY(colonial_points);
+		memory::vector<fixed_point_t> PROPERTY(colonial_points);
 		bool PROPERTY_CUSTOM_PREFIX(in_province, is); // province
 		bool PROPERTY(one_per_state);
 		fixed_point_t PROPERTY(colonial_range);
@@ -84,7 +85,7 @@ namespace OpenVic {
 	private:
 		IdentifierRegistry<BuildingType> IDENTIFIER_REGISTRY(building_type);
 		string_set_t PROPERTY(building_type_types);
-		std::vector<BuildingType const*> PROPERTY(province_building_types);
+		memory::vector<BuildingType const*> PROPERTY(province_building_types);
 		BuildingType const* PROPERTY(port_building_type);
 
 	public:

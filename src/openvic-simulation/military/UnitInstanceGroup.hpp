@@ -12,6 +12,7 @@
 #include "openvic-simulation/military/UnitType.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
 #include "openvic-simulation/utility/Getters.hpp"
+#include "openvic-simulation/utility/Containers.hpp"
 
 namespace OpenVic {
 
@@ -23,8 +24,8 @@ namespace OpenVic {
 	private:
 		const unique_id_t PROPERTY(unique_id);
 		const UnitType::branch_t PROPERTY(branch);
-		std::string PROPERTY(name);
-		std::vector<UnitInstance*> PROPERTY(units);
+		memory::string PROPERTY(name);
+		memory::vector<UnitInstance*> PROPERTY(units);
 		LeaderInstance* PROPERTY_PTR(leader, nullptr);
 		ProvinceInstance* PROPERTY_PTR(position, nullptr);
 		CountryInstance* PROPERTY_PTR(country, nullptr);
@@ -37,7 +38,7 @@ namespace OpenVic {
 		// Movement attributes
 		// Ordered list of provinces making up the path the unit is trying to move along,
 		// the front province should always be adjacent to the unit's current position.
-		std::vector<ProvinceInstance*> PROPERTY(path);
+		memory::vector<ProvinceInstance*> PROPERTY(path);
 		// Measured in distance travelled, increases each day by unit speed (after modifiers have been applied) until
 		// it reaches the required distance/movement cost to move to the next province in the path.
 		fixed_point_t PROPERTY(movement_progress);
@@ -126,7 +127,7 @@ namespace OpenVic {
 		friend struct UnitInstanceManager;
 
 	private:
-		std::vector<ArmyInstance*> PROPERTY(carried_armies);
+		memory::vector<ArmyInstance*> PROPERTY(carried_armies);
 
 		UnitInstanceGroupBranched(
 			unique_id_t new_unique_id,

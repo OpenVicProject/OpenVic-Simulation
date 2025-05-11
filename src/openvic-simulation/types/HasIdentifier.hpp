@@ -30,7 +30,7 @@ namespace OpenVic {
 	 */
 	class HasIdentifier {
 		/* Not const so it can be moved rather than needing to be copied. */
-		std::string PROPERTY(identifier);
+		memory::string PROPERTY(identifier);
 
 	protected:
 		HasIdentifier(std::string_view new_identifier): identifier { new_identifier } {

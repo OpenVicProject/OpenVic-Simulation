@@ -6,6 +6,7 @@
 #include "openvic-simulation/dataloader/NodeTools.hpp"
 #include "openvic-simulation/scripts/ConditionScript.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
+#include "openvic-simulation/utility/Containers.hpp"
 
 namespace OpenVic {
 	enum class conditional_weight_type_t : uint8_t {
@@ -21,7 +22,7 @@ namespace OpenVic {
 	}
 
 	using condition_weight_t = std::pair<fixed_point_t, ConditionScript>;
-	using condition_weight_group_t = std::vector<condition_weight_t>;
+	using condition_weight_group_t = memory::vector<condition_weight_t>;
 	using condition_weight_item_t = std::variant<condition_weight_t, condition_weight_group_t>;
 
 	template<conditional_weight_type_t TYPE>
@@ -29,7 +30,7 @@ namespace OpenVic {
 
 	private:
 		fixed_point_t PROPERTY(base, 0);
-		std::vector<condition_weight_item_t> PROPERTY(condition_weight_items);
+		memory::vector<condition_weight_item_t> PROPERTY(condition_weight_items);
 		scope_type_t PROPERTY(initial_scope);
 		scope_type_t PROPERTY(this_scope);
 		scope_type_t PROPERTY(from_scope);

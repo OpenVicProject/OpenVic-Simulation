@@ -7,6 +7,7 @@
 #include "openvic-simulation/modifier/ModifierValue.hpp"
 #include "openvic-simulation/modifier/Modifier.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
+#include "openvic-simulation/utility/Containers.hpp"
 
 namespace OpenVic {
 	struct CountryInstance;
@@ -62,7 +63,7 @@ namespace OpenVic {
 			return province != nullptr ? *province : nullptr;
 		}
 
-		std::string to_string() const;
+		memory::string to_string() const;
 
 		constexpr fixed_point_t get_modifier_effect_value(
 			ModifierEffect const& effect, bool* effect_found = nullptr
@@ -94,7 +95,7 @@ namespace OpenVic {
 		// Targets to be excluded from all modifiers added to the sum, combined with any explicit exclusions.
 		ModifierEffect::target_t PROPERTY_RW(this_excluded_targets, ModifierEffect::target_t::NO_TARGETS);
 
-		std::vector<modifier_entry_t> PROPERTY(modifiers);
+		memory::vector<modifier_entry_t> PROPERTY(modifiers);
 		ModifierValue PROPERTY(value_sum);
 
 	public:

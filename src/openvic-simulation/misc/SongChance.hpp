@@ -11,7 +11,7 @@ namespace OpenVic {
 		friend struct SongChanceManager;
 
 	private:
-		std::string PROPERTY(file_name);
+		memory::string PROPERTY(file_name);
 		ConditionalWeightFactorMul PROPERTY(chance);
 
 		SongChance(size_t new_index, std::string_view new_filename, ConditionalWeightFactorMul&& new_chance);

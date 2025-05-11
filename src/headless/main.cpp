@@ -15,9 +15,19 @@
 #include <openvic-simulation/pathfinding/AStarPathing.hpp>
 #include <openvic-simulation/pop/Pop.hpp>
 #include <openvic-simulation/testing/Testing.hpp>
+#include <openvic-simulation/utility/Containers.hpp>
 #include <openvic-simulation/utility/Logger.hpp>
+#include <openvic-simulation/utility/MemoryTracker.hpp>
 
 using namespace OpenVic;
+
+inline static void print_bytes(std::string_view prefix, const Logger::source_location& location = Logger::source_location::current()) {
+#ifdef DEBUG_ENABLED // memory tracking will return 0 without DEBUG_ENABLED
+	Logger::info<std::string_view&, const char(&)[16], uint64_t&&, const char(&)[7]>(
+		prefix, " Memory Usage: ", OpenVic::utility::MemoryTracker::get_memory_usage(), " Bytes", location
+	);
+#endif
+}
 
 static void print_help(std::ostream& stream, char const* program_name) {
 	stream
@@ -41,7 +51,7 @@ static void print_rgo(ProvinceInstance const& province) {
 	} else {
 		ProductionType const& production_type = *production_type_nullable;
 		GoodDefinition const& output_good = production_type.get_output_good();
-		std::string text = StringUtils::append_string_views(
+		memory::string text = StringUtils::append_string_views(
 			"\n\t", province.get_identifier(),
 			" - good: ", output_good.get_identifier(),
 			", production_type: ", production_type.get_identifier(),
@@ -73,7 +83,7 @@ static std::chrono::nanoseconds run_pathing_test(AStarPathing& pathing) {
 
 	using it = decltype(points.points_map().end());
 	std::array<std::pair<it, it>, TestCount> from_to_tests;
-	std::array<std::vector<PointMap::points_key_type>, TestCount> test_results;
+	std::array<memory::vector<PointMap::points_key_type>, TestCount> test_results;
 
 	for (size_t index = 0; index < TestCount; index++) {
 		it from = points.points_map().begin();
@@ -112,7 +122,7 @@ static std::chrono::nanoseconds run_pathing_test(AStarPathing& pathing) {
 	return end_time - start_time;
 }
 
-static bool run_headless(fs::path const& root, std::vector<std::string>& mods, bool run_tests) {
+static bool run_headless(fs::path const& root, memory::vector<memory::string>& mods, bool run_tests) {
 	bool ret = true;
 	Dataloader::path_vector_t roots = { root };
 	Dataloader::path_vector_t replace_paths = {};
@@ -142,6 +152,8 @@ static bool run_headless(fs::path const& root, std::vector<std::string>& mods, b
 		}
 	);
 
+	print_bytes("Definition Setup");
+
 	if (run_tests) {
 		Testing testing { game_manager.get_definition_manager() };
 		std::cout << std::endl << "Testing Loaded" << std::endl << std::endl;
@@ -155,17 +167,21 @@ static bool run_headless(fs::path const& root, std::vector<std::string>& mods, b
 		game_manager.get_definition_manager().get_history_manager().get_bookmark_manager().get_bookmark_by_index(0)
 	);
 
+	print_bytes("Instance Setup");
+
 	Logger::info("===== Starting game session... =====");
 	ret &= game_manager.start_game_session();
 
 	// This triggers a gamestate update
 	ret &= game_manager.update_clock();
 
+	print_bytes("Game Session Post-Start");
+
 	// TODO - REMOVE TEST CODE
 	Logger::info("===== Ranking system test... =====");
 	if (game_manager.get_instance_manager()) {
-		const auto print_ranking_list = [](std::string_view title, std::vector<CountryInstance*> const& countries) -> void {
-			std::string text;
+		const auto print_ranking_list = [](std::string_view title, memory::vector<CountryInstance*> const& countries) -> void {
+			memory::string text;
 			for (CountryInstance const* country : countries) {
 				text += StringUtils::append_string_views(
 					"\n    ", country->get_identifier(),
@@ -181,7 +197,7 @@ static bool run_headless(fs::path const& root, std::vector<std::string>& mods, b
 		CountryInstanceManager const& country_instance_manager =
 			game_manager.get_instance_manager()->get_country_instance_manager();
 
-		std::vector<CountryInstance*> const& great_powers = country_instance_manager.get_great_powers();
+		OpenVic::memory::vector<CountryInstance*> const& great_powers = country_instance_manager.get_great_powers();
 		print_ranking_list("Great Powers", great_powers);
 		print_ranking_list("Secondary Powers", country_instance_manager.get_secondary_powers());
 		print_ranking_list("All countries", country_instance_manager.get_total_ranking());
@@ -219,10 +235,13 @@ static bool run_headless(fs::path const& root, std::vector<std::string>& mods, b
 		auto start_time = std::chrono::high_resolution_clock::now();
 		while (ticks_passed++ < 10) {
 			game_manager.get_instance_manager()->force_tick_and_update();
+			print_bytes("Tick Finished");
 		}
 		auto end_time = std::chrono::high_resolution_clock::now();
 		Logger::info("Ran ", --ticks_passed, " ticks in ", end_time - start_time);
 	}
+
+	Logger::info("Max Memory Usage: ", OpenVic::utility::MemoryTracker::get_max_memory_usage(), " Bytes");
 
 	return ret;
 }
@@ -236,7 +255,7 @@ int main(int argc, char const* argv[]) {
 
 	char const* program_name = StringUtils::get_filename(argc > 0 ? argv[0] : nullptr, "<program>");
 	fs::path root;
-	std::vector<std::string> mods;
+	memory::vector<memory::string> mods;
 	mods.reserve(argc);
 	bool run_tests = false;
 	int argn = 0;

@@ -4,11 +4,13 @@
 #include <ostream>
 #include <vector>
 
+#include "openvic-simulation/utility/Containers.hpp"
+
 namespace OpenVic {
 
 	template<typename T>
-	struct ValueHistory : private std::vector<T> {
-		using base_type = std::vector<T>;
+	struct ValueHistory : private memory::vector<T> {
+		using base_type = memory::vector<T>;
 
 		using typename base_type::iterator;
 		using typename base_type::const_iterator;

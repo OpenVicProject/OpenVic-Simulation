@@ -651,7 +651,7 @@ bool ModifierManager::register_complex_modifier(const std::string_view identifie
 	}
 }
 
-std::string ModifierManager::get_flat_identifier(
+memory::string ModifierManager::get_flat_identifier(
 	const std::string_view complex_modifier_identifier,
 	const std::string_view variant_identifier
 ) {
@@ -762,7 +762,7 @@ bool ModifierManager::_add_flattened_modifier_cb(
 	const std::string_view key,
 	const ast::NodeCPtr value
 ) const {
-	const std::string flat_identifier = get_flat_identifier(prefix, key);
+	const memory::string flat_identifier = get_flat_identifier(prefix, key);
 	ModifierEffect const* effect = technology_modifier_effects.get_item_by_identifier(flat_identifier);
 	if (effect != nullptr) {
 		return _add_modifier_cb(modifier_value, effect, value);
@@ -844,7 +844,7 @@ key_value_callback_t ModifierManager::expect_unit_terrain_modifier(
 	const std::string_view terrain_type_identifier
 ) const {
 	return [this, &modifier_value, terrain_type_identifier](const std::string_view key, const ast::NodeCPtr value) -> bool {
-		const std::string flat_identifier = get_flat_identifier(key, terrain_type_identifier);
+		const memory::string flat_identifier = get_flat_identifier(key, terrain_type_identifier);
 		ModifierEffect const* effect = unit_terrain_modifier_effects.get_item_by_identifier(flat_identifier);
 		if (effect == nullptr) {
 			return key_value_warn_callback(flat_identifier, value);

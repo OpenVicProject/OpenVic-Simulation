@@ -4,9 +4,10 @@
 #include <charconv>
 #include <cstdint>
 #include <optional>
-#include <string>
 #include <string_view>
 #include <system_error>
+
+#include <fmt/format.h>
 
 #include "openvic-simulation/DefinitionManager.hpp"
 #include "openvic-simulation/InstanceManager.hpp"
@@ -19,6 +20,7 @@
 #include "openvic-simulation/research/Technology.hpp"
 #include "openvic-simulation/types/Colour.hpp"
 #include "openvic-simulation/types/Date.hpp"
+#include "openvic-simulation/utility/Containers.hpp"
 #include "openvic-simulation/utility/ErrorMacros.hpp"
 
 using namespace OpenVic;
@@ -32,15 +34,15 @@ ConsoleInstance::ConsoleInstance(InstanceManager& instance_manager, write_func_t
 	setup_commands();
 }
 
-void ConsoleInstance::write(std::string&& message) {
-	write_func(current_colour, std::move(message));
+void ConsoleInstance::write(std::string_view message) {
+	write_func(current_colour, message);
 }
 
 void ConsoleInstance::set_write_func(write_func_t&& new_write_func) {
 	write_func = std::move(new_write_func);
 }
 
-void ConsoleInstance::default_write_func(OpenVic::colour_t colour, std::string&& message) {
+void ConsoleInstance::default_write_func(OpenVic::colour_t colour, std::string_view message) {
 	fmt::print("{}", fmt::styled(message, fmt::bg(fmt::rgb(colour.contrast().as_rgb())) | fmt::fg(fmt::rgb(colour.as_rgb()))));
 }
 
@@ -49,7 +51,7 @@ bool ConsoleInstance::execute(std::string_view command) {
 		return false;
 	}
 
-	std::vector<std::string_view> arguments;
+	memory::vector<std::string_view> arguments;
 	arguments.reserve(4);
 
 	for (std::string_view::const_iterator it = command.begin(); it < command.end(); it++) {
@@ -142,7 +144,7 @@ bool ConsoleInstance::execute(std::string_view command) {
 	return cmd_it.value()(arg);
 }
 
-bool ConsoleInstance::add_command(std::string&& identifier, execute_command_func_t execute) {
+bool ConsoleInstance::add_command(memory::string&& identifier, execute_command_func_t execute) {
 	OV_ERR_FAIL_COND_V_MSG(identifier.empty(), false, "Invalid command identifier - empty!");
 	return commands.try_emplace(std::move(identifier), execute).second;
 }

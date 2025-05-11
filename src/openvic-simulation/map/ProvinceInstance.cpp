@@ -19,6 +19,7 @@
 #include "openvic-simulation/politics/Ideology.hpp"
 #include "openvic-simulation/pop/PopValuesFromProvince.hpp"
 #include "openvic-simulation/utility/Logger.hpp"
+#include "openvic-simulation/utility/Containers.hpp"
 
 using namespace OpenVic;
 
@@ -270,7 +271,7 @@ void ProvinceInstance::_update_pops(DefineManager const& define_manager) {
 
 	has_unaccepted_pops = false;
 
-	for (std::vector<Pop*>& pops_cache : pops_cache_by_type.get_values()) {
+	for (memory::vector<Pop*>& pops_cache : pops_cache_by_type.get_values()) {
 		pops_cache.clear();
 	}
 
@@ -468,7 +469,7 @@ void ProvinceInstance::update_gamestate(InstanceManager const& instance_manager)
 void ProvinceInstance::province_tick(
 	const Date today,
 	PopValuesFromProvince& reusable_pop_values,
-	std::vector<fixed_point_t>& reusable_vector
+	memory::vector<fixed_point_t>& reusable_vector
 ) {
 	if (is_occupied()) {
 		occupation_duration++;
@@ -505,9 +506,9 @@ bool ProvinceInstance::add_unit_instance_group(UnitInstanceGroup& group) {
 
 bool ProvinceInstance::remove_unit_instance_group(UnitInstanceGroup const& group) {
 	const auto remove_from_vector = [this, &group]<UnitType::branch_t Branch>(
-		std::vector<UnitInstanceGroupBranched<Branch>*>& unit_instance_groups
+		memory::vector<UnitInstanceGroupBranched<Branch>*>& unit_instance_groups
 	) -> bool {
-		const typename std::vector<UnitInstanceGroupBranched<Branch>*>::const_iterator it =
+		const typename memory::vector<UnitInstanceGroupBranched<Branch>*>::const_iterator it =
 			std::find(unit_instance_groups.begin(), unit_instance_groups.end(), &group);
 
 		if (it != unit_instance_groups.end()) {
@@ -613,7 +614,7 @@ bool ProvinceInstance::apply_history_to_province(ProvinceHistoryEntry const& ent
 void ProvinceInstance::initialise_for_new_game(
 	const Date today,
 	PopValuesFromProvince& reusable_pop_values,
-	std::vector<fixed_point_t>& reusable_vector
+	memory::vector<fixed_point_t>& reusable_vector
 ) {
 	initialise_rgo();
 	province_tick(today, reusable_pop_values, reusable_vector);

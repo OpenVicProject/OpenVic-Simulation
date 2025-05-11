@@ -8,6 +8,7 @@
 #include "openvic-simulation/map/ProvinceInstance.hpp"
 #include "openvic-simulation/pop/PopType.hpp"
 #include "openvic-simulation/utility/Getters.hpp"
+#include "openvic-simulation/utility/Containers.hpp"
 
 namespace OpenVic {
 	struct StateManager;
@@ -22,7 +23,7 @@ namespace OpenVic {
 		StateSet const& PROPERTY(state_set);
 		CountryInstance* PROPERTY_PTR(owner);
 		ProvinceInstance* PROPERTY_PTR(capital);
-		std::vector<ProvinceInstance*> PROPERTY(provinces);
+		memory::vector<ProvinceInstance*> PROPERTY(provinces);
 		ProvinceInstance::colony_status_t PROPERTY(colony_status);
 
 		pop_size_t PROPERTY(total_population, 0);
@@ -39,7 +40,7 @@ namespace OpenVic {
 
 		IndexedMap<PopType, pop_size_t> PROPERTY(pop_type_distribution);
 		IndexedMap<PopType, pop_size_t> PROPERTY(pop_type_unemployed_count);
-		IndexedMap<PopType, std::vector<Pop*>> PROPERTY(pops_cache_by_type);
+		IndexedMap<PopType, memory::vector<Pop*>> PROPERTY(pops_cache_by_type);
 		IndexedMap<Ideology, fixed_point_t> PROPERTY(ideology_distribution);
 		fixed_point_map_t<Issue const*> PROPERTY(issue_distribution);
 		IndexedMap<CountryParty, fixed_point_t> PROPERTY(vote_distribution);
@@ -54,7 +55,7 @@ namespace OpenVic {
 			StateSet const& new_state_set,
 			CountryInstance* new_owner,
 			ProvinceInstance* new_capital,
-			std::vector<ProvinceInstance*>&& new_provinces,
+			memory::vector<ProvinceInstance*>&& new_provinces,
 			ProvinceInstance::colony_status_t new_colony_status,
 			decltype(population_by_strata)::keys_span_type strata_keys,
 			decltype(pop_type_distribution)::keys_span_type pop_type_keys,
@@ -62,7 +63,7 @@ namespace OpenVic {
 		);
 
 	public:
-		std::string get_identifier() const;
+		memory::string get_identifier() const;
 
 		constexpr bool is_colonial_state() const {
 			return ProvinceInstance::is_colonial(colony_status);
@@ -126,7 +127,7 @@ namespace OpenVic {
 	/* Contains all current states.*/
 	struct StateManager {
 	private:
-		std::vector<StateSet> PROPERTY(state_sets);
+		memory::vector<StateSet> PROPERTY(state_sets);
 
 		bool add_state_set(
 			MapInstance& map_instance, Region const& region,

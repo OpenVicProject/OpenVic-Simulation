@@ -2,7 +2,6 @@
 
 #include <optional>
 #include <span>
-#include <string>
 #include <string_view>
 
 #include <fmt/color.h>
@@ -12,6 +11,7 @@
 #include "openvic-simulation/types/Date.hpp"
 #include "openvic-simulation/types/FunctionRef.hpp"
 #include "openvic-simulation/types/OrderedContainers.hpp"
+#include "openvic-simulation/utility/Containers.hpp"
 #include "openvic-simulation/utility/Getters.hpp"
 
 #include <function2/function2.hpp>
@@ -34,22 +34,22 @@ namespace OpenVic {
 
 		using execute_command_func_t = FunctionRef<bool(Argument&)>;
 
-		using write_func_t = fu2::function_view<void(OpenVic::colour_t, std::string&&)>;
+		using write_func_t = fu2::function_view<void(OpenVic::colour_t, std::string_view)>;
 
 		ConsoleInstance(InstanceManager& instance_manager);
 		ConsoleInstance(InstanceManager& instance_manager, write_func_t&& write_func);
 
-		void write(std::string&& message);
+		void write(std::string_view message);
 		void set_write_func(write_func_t&& new_write_func);
-		static void default_write_func(OpenVic::colour_t colour, std::string&& message);
+		static void default_write_func(OpenVic::colour_t colour, std::string_view message);
 
 		void vwrite(fmt::string_view fmt, fmt::format_args args) {
-			write(fmt::vformat(fmt, args));
+			write(memory::fmt::vformat(fmt, args));
 		}
 
 		void vwrite(colour_t colour, fmt::string_view fmt, fmt::format_args args) {
 			std::swap(colour, current_colour);
-			write(fmt::vformat(fmt, args));
+			write(memory::fmt::vformat(fmt, args));
 			std::swap(colour, current_colour);
 		}
 
@@ -60,7 +60,7 @@ namespace OpenVic {
 
 		template<typename... T>
 		FMT_INLINE void writeln(fmt::format_string<T...> fmt, T&&... args) {
-			write("{}\n", fmt::vformat(fmt, fmt::make_format_args(args...)));
+			write("{}\n", memory::fmt::vformat(fmt, fmt::make_format_args(args...)));
 		}
 
 		template<typename... T>
@@ -70,17 +70,17 @@ namespace OpenVic {
 
 		template<typename... T>
 		FMT_INLINE void writeln(colour_t colour, fmt::format_string<T...> fmt, T&&... args) {
-			write(colour, "{}\n", fmt::vformat(fmt, fmt::make_format_args(args...)));
+			write(colour, "{}\n", memory::fmt::vformat(fmt, fmt::make_format_args(args...)));
 		}
 
 		template<typename... T>
 		FMT_INLINE void write_error(fmt::format_string<T...> fmt, T&&... args) {
-			write(colour_t::from_floats(1, 0, 0), "{}\n", fmt::vformat(fmt, fmt::make_format_args(args...)));
+			write(colour_t::from_floats(1, 0, 0), "{}\n", memory::fmt::vformat(fmt, fmt::make_format_args(args...)));
 		}
 
 		bool execute(std::string_view command);
 
-		bool add_command(std::string&& identifier, execute_command_func_t execute);
+		bool add_command(memory::string&& identifier, execute_command_func_t execute);
 
 		bool validate_argument_size(std::span<std::string_view> arguments, size_t size);
 		std::optional<int64_t> validate_integer(std::string_view value_string);

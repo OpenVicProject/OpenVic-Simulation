@@ -90,7 +90,18 @@ namespace OpenVic {
 	};
 	template<typename Value>
 	struct RegistryItemInfoInstance {
-		using item_type = std::unique_ptr<Value>;
+		using item_type = memory::unique_ptr<Value>;
+
+		static constexpr Value& get_value(item_type& item) {
+			return *item.get();
+		}
+		static constexpr Value const& get_value(item_type const& item) {
+			return *item.get();
+		}
+	};
+	template<typename Value>
+	struct RegistryItemInfoBaseInstance {
+		using item_type = memory::unique_base_ptr<Value>;
 
 		static constexpr Value& get_value(item_type& item) {
 			return *item.get();
@@ -114,7 +125,7 @@ namespace OpenVic {
 		};
 	template<typename Item>
 	struct RegistryStorageInfoVector {
-		using storage_type = std::vector<Item>;
+		using storage_type = memory::vector<Item>;
 		using index_type = std::size_t;
 
 		static constexpr index_type get_back_index(storage_type& items) {
@@ -129,7 +140,7 @@ namespace OpenVic {
 	};
 	template<typename Item>
 	struct RegistryStorageInfoDeque {
-		using storage_type = OpenVic::utility::deque<Item>;
+		using storage_type = memory::deque<Item>;
 		using index_type = Item*;
 
 		static constexpr index_type get_back_index(storage_type& items) {
@@ -170,7 +181,7 @@ namespace OpenVic {
 		static constexpr bool storage_type_reservable = Reservable<storage_type>;
 
 	private:
-		std::string PROPERTY(name);
+		memory::string PROPERTY(name);
 		const bool log_lock;
 		storage_type PROPERTY_REF(items);
 		bool PROPERTY_CUSTOM_PREFIX(locked, is, false);
@@ -444,8 +455,8 @@ namespace OpenVic {
 			return index < size();
 		}
 
-		std::vector<std::string_view> get_item_identifiers() const {
-			std::vector<std::string_view> identifiers;
+		memory::vector<std::string_view> get_item_identifiers() const {
+			memory::vector<std::string_view> identifiers;
 			identifiers.reserve(items.size());
 			for (typename identifier_index_map_t::value_type const& entry : identifier_index_map) {
 				identifiers.push_back(entry.first);
@@ -499,6 +510,14 @@ namespace OpenVic {
 		RegistryStorageInfo<StorageInfo, typename RegistryItemInfoInstance<typename ValueInfo::internal_value_type>::item_type>
 	using InstanceRegistry = UniqueKeyRegistry<ValueInfo, RegistryItemInfoInstance, StorageInfo, Case>;
 
+	template<
+		RegistryValueInfo ValueInfo, template<typename> typename StorageInfo = RegistryStorageInfoVector,
+		StringMapCase Case = StringMapCaseSensitive
+	>
+	requires
+		RegistryStorageInfo<StorageInfo, typename RegistryItemInfoBaseInstance<typename ValueInfo::internal_value_type>::item_type>
+	using BaseInstanceRegistry = UniqueKeyRegistry<ValueInfo, RegistryItemInfoBaseInstance, StorageInfo, Case>;
+
 	/* HasGetIdentifier Specialisations */
 	template<
 		HasGetIdentifier Value, template<typename> typename StorageInfo = RegistryStorageInfoVector,
@@ -519,6 +538,12 @@ namespace OpenVic {
 	>
 	using IdentifierInstanceRegistry = InstanceRegistry<RegistryValueInfoHasGetIdentifier<Value>, StorageInfo, Case>;
 
+	template<
+		HasGetIdentifier Value, template<typename> typename StorageInfo = RegistryStorageInfoVector,
+		StringMapCase Case = StringMapCaseSensitive
+	>
+	using IdentifierBaseInstanceRegistry = BaseInstanceRegistry<RegistryValueInfoHasGetIdentifier<Value>, StorageInfo, Case>;
+
 	/* Case-Insensitive HasGetIdentifier Specialisations */
 	template<HasGetIdentifier Value, template<typename> typename StorageInfo = RegistryStorageInfoVector>
 	using CaseInsensitiveIdentifierRegistry = IdentifierRegistry<Value, StorageInfo, StringMapCaseInsensitive>;
@@ -528,6 +553,9 @@ namespace OpenVic {
 
 	template<HasGetIdentifier Value, template<typename> typename StorageInfo = RegistryStorageInfoVector>
 	using CaseInsensitiveIdentifierInstanceRegistry = IdentifierInstanceRegistry<Value, StorageInfo, StringMapCaseInsensitive>;
+
+	template<HasGetIdentifier Value, template<typename> typename StorageInfo = RegistryStorageInfoVector>
+	using CaseInsensitiveIdentifierBaseInstanceRegistry = IdentifierBaseInstanceRegistry<Value, StorageInfo, StringMapCaseInsensitive>;
 
 /* Macros to generate declaration and constant accessor methods for a UniqueKeyRegistry member variable. */
 
@@ -570,7 +598,7 @@ public: \
 	constexpr bool plural##_empty() const { \
 		return registry.empty(); \
 	} \
-	std::vector<std::string_view> get_##singular##_identifiers() const { \
+	memory::vector<std::string_view> get_##singular##_identifiers() const { \
 		return registry.get_item_identifiers(); \
 	} \
 	template<NodeTools::FunctorConvertible<fixed_point_t, fixed_point_t> FixedPointFunctor = std::identity> \

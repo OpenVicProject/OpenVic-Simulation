@@ -17,6 +17,7 @@
 #include "openvic-simulation/types/OrderedContainers.hpp"
 #include "openvic-simulation/types/Vector.hpp"
 #include "openvic-simulation/utility/BMP.hpp"
+#include "openvic-simulation/utility/Containers.hpp"
 
 namespace OpenVic {
 	namespace fs = std::filesystem;
@@ -29,10 +30,10 @@ namespace OpenVic {
 
 	private:
 		const uint8_t PROPERTY(size);
-		std::vector<ivec2_t> PROPERTY(points);
+		memory::vector<ivec2_t> PROPERTY(points);
 
 	public:
-		RiverSegment(uint8_t new_size, std::vector<ivec2_t>&& new_points);
+		RiverSegment(uint8_t new_size, memory::vector<ivec2_t>&& new_points);
 		RiverSegment(RiverSegment&&) = default;
 	};
 
@@ -51,7 +52,7 @@ namespace OpenVic {
 
 	private:
 		using colour_index_map_t = ordered_map<colour_t, ProvinceDefinition::index_t>;
-		using river_t = std::vector<RiverSegment>;
+		using river_t = memory::vector<RiverSegment>;
 
 		IdentifierRegistry<ProvinceDefinition> IDENTIFIER_REGISTRY_CUSTOM_INDEX_OFFSET(province_definition, 1);
 		IdentifierRegistry<Region> IDENTIFIER_REGISTRY(region);
@@ -60,11 +61,11 @@ namespace OpenVic {
 		ProvinceSet water_provinces;
 		TerrainTypeManager PROPERTY_REF(terrain_type_manager);
 
-		std::vector<river_t> PROPERTY(rivers); // TODO: calculate provinces affected by crossing
+		memory::vector<river_t> PROPERTY(rivers); // TODO: calculate provinces affected by crossing
 		void _trace_river(BMP& rivers_bmp, ivec2_t start, river_t& river);
 
 		ivec2_t PROPERTY(dims, { 0, 0 });
-		std::vector<shape_pixel_t> PROPERTY(province_shape_image);
+		memory::vector<shape_pixel_t> PROPERTY(province_shape_image);
 		colour_index_map_t colour_index_map;
 
 		ProvinceDefinition::index_t PROPERTY(max_provinces, ProvinceDefinition::MAX_INDEX);
@@ -99,7 +100,7 @@ namespace OpenVic {
 		);
 
 		bool set_water_province(std::string_view identifier);
-		bool set_water_province_list(std::vector<std::string_view> const& list);
+		bool set_water_province_list(memory::vector<std::string_view> const& list);
 		void lock_water_provinces();
 
 		size_t get_land_province_count() const;
@@ -123,12 +124,12 @@ namespace OpenVic {
 		ProvinceDefinition const* get_province_definition_at(ivec2_t pos) const;
 		bool set_max_provinces(ProvinceDefinition::index_t new_max_provinces);
 
-		bool add_region(std::string_view identifier, std::vector<ProvinceDefinition const*>&& provinces, colour_t colour);
+		bool add_region(std::string_view identifier, memory::vector<ProvinceDefinition const*>&& provinces, colour_t colour);
 
 		bool load_province_definitions(std::span<const ovdl::csv::LineObject> lines);
 		/* Must be loaded after adjacencies so we know what provinces are coastal, and so can have a port */
 		bool load_province_positions(BuildingTypeManager const& building_type_manager, ast::NodeCPtr root);
-		static bool load_region_colours(ast::NodeCPtr root, std::vector<colour_t>& colours);
+		static bool load_region_colours(ast::NodeCPtr root, memory::vector<colour_t>& colours);
 		bool load_region_file(ast::NodeCPtr root, std::span<const colour_t> colours);
 		bool load_map_images(fs::path const& province_path, fs::path const& terrain_path, fs::path const& rivers_path, bool detailed_errors);
 		bool generate_and_load_province_adjacencies(std::span<const ovdl::csv::LineObject> additional_adjacencies);

@@ -15,6 +15,7 @@
 #include "openvic-simulation/types/FlagStrings.hpp"
 #include "openvic-simulation/types/HasIdentifier.hpp"
 #include "openvic-simulation/types/OrderedContainers.hpp"
+#include "openvic-simulation/utility/Containers.hpp"
 
 namespace OpenVic {
 	struct DefineManager;
@@ -87,7 +88,7 @@ namespace OpenVic {
 
 		// The total/resultant modifier of local effects on this province (global effects come from the province's owner)
 		ModifierSum PROPERTY(modifier_sum);
-		std::vector<ModifierInstance> PROPERTY(event_modifiers);
+		memory::vector<ModifierInstance> PROPERTY(event_modifiers);
 
 		bool PROPERTY(slave, false);
 		// Used for "minorities = yes/no" condition
@@ -95,12 +96,12 @@ namespace OpenVic {
 		bool PROPERTY_RW(connected_to_capital, false);
 		bool PROPERTY_RW(is_overseas, false);
 		bool PROPERTY(has_empty_adjacent_province, false);
-		std::vector<ProvinceInstance const*> PROPERTY(adjacent_nonempty_land_provinces);
+		memory::vector<ProvinceInstance const*> PROPERTY(adjacent_nonempty_land_provinces);
 		Crime const* PROPERTY_RW(crime, nullptr);
 		ResourceGatheringOperation PROPERTY(rgo);
 		IdentifierRegistry<BuildingInstance> IDENTIFIER_REGISTRY(building, false);
-		std::vector<ArmyInstance*> PROPERTY(armies);
-		std::vector<NavyInstance*> PROPERTY(navies);
+		memory::vector<ArmyInstance*> PROPERTY(armies);
+		memory::vector<NavyInstance*> PROPERTY(navies);
 		// The number of land regiments currently in the province, including those being transported by navies
 		size_t PROPERTY(land_regiment_count, 0);
 		Timespan PROPERTY(occupation_duration);
@@ -126,7 +127,7 @@ namespace OpenVic {
 
 		IndexedMap<PopType, pop_size_t> PROPERTY(pop_type_distribution);
 		IndexedMap<PopType, pop_size_t> PROPERTY(pop_type_unemployed_count);
-		IndexedMap<PopType, std::vector<Pop*>> PROPERTY(pops_cache_by_type);
+		IndexedMap<PopType, memory::vector<Pop*>> PROPERTY(pops_cache_by_type);
 		IndexedMap<Ideology, fixed_point_t> PROPERTY(ideology_distribution);
 		fixed_point_map_t<Issue const*> PROPERTY(issue_distribution);
 		IndexedMap<CountryParty, fixed_point_t> PROPERTY(vote_distribution);
@@ -254,12 +255,12 @@ namespace OpenVic {
 		void province_tick(
 			const Date today,
 			PopValuesFromProvince& reusable_pop_values,
-			std::vector<fixed_point_t>& reusable_vector
+			memory::vector<fixed_point_t>& reusable_vector
 		);
 		void initialise_for_new_game(
 			const Date today,
 			PopValuesFromProvince& reusable_pop_values,
-			std::vector<fixed_point_t>& reusable_vector
+			memory::vector<fixed_point_t>& reusable_vector
 		);
 
 		bool add_unit_instance_group(UnitInstanceGroup& group);

@@ -8,6 +8,7 @@
 
 #include "openvic-simulation/pop/PopValuesFromProvince.hpp"
 #include "openvic-simulation/types/Date.hpp"
+#include "openvic-simulation/utility/Containers.hpp"
 
 namespace OpenVic {
 	struct CountryInstance;
@@ -33,8 +34,8 @@ namespace OpenVic {
 			std::span<ProvinceInstance> provinces_chunk
 		);
 
-		std::vector<std::thread> threads;
-		std::vector<work_t> work_per_thread;
+		memory::vector<std::thread> threads;
+		memory::vector<work_t> work_per_thread;
 		std::mutex thread_mutex, completed_mutex;
 		std::condition_variable thread_condition, completed_condition;
 		std::atomic<size_t> active_work_count = 0;

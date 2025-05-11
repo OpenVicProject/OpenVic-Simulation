@@ -25,6 +25,7 @@
 
 #include "openvic-simulation/utility/Utility.hpp"
 #include "openvic-simulation/utility/StringUtils.hpp"
+#include "openvic-simulation/utility/Containers.hpp"
 
 namespace OpenVic {
 	template<typename ValueT, typename IntT, bool HasAlpha = true>
@@ -517,8 +518,8 @@ namespace OpenVic {
 				return std::string_view { data(), data() + size() };
 			}
 
-			operator std::string() const {
-				return std::string { data(), size() };
+			operator memory::string() const {
+				return memory::string { data(), size() };
 			}
 		};
 
@@ -529,7 +530,7 @@ namespace OpenVic {
 			return str;
 		}
 
-		inline std::string to_hex_string(bool alpha = colour_traits::has_alpha) const {
+		inline memory::string to_hex_string(bool alpha = colour_traits::has_alpha) const {
 			stack_string result = to_hex_array(alpha);
 			if (OV_unlikely(result.empty())) {
 				return {};
@@ -559,7 +560,7 @@ namespace OpenVic {
 			return str;
 		}
 
-		inline std::string to_argb_hex_string() const {
+		inline memory::string to_argb_hex_string() const {
 			stack_string result = to_argb_hex_array();
 			if (OV_unlikely(result.empty())) {
 				return {};
@@ -568,7 +569,7 @@ namespace OpenVic {
 			return result;
 		}
 
-		explicit operator std::string() const {
+		explicit operator memory::string() const {
 			return to_hex_string();
 		}
 
