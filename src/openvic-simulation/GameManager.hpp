@@ -38,7 +38,7 @@ namespace OpenVic {
 
 		bool set_roots(Dataloader::path_span_t roots, Dataloader::path_span_t replace_paths);
 
-		bool load_mod_descriptors(std::span<const std::string> descriptors);
+		bool load_mod_descriptors(std::span<const memory::string> descriptors);
 
 		bool load_definitions(Dataloader::localisation_callback_t localisation_callback);
 

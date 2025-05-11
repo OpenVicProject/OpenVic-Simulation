@@ -6,6 +6,7 @@
 #include "openvic-simulation/scripts/ConditionalWeight.hpp"
 #include "openvic-simulation/types/HasIdentifier.hpp"
 #include "openvic-simulation/types/PopSize.hpp"
+#include "openvic-simulation/utility/Containers.hpp"
 
 namespace OpenVic {
 	struct PopManager;
@@ -23,7 +24,7 @@ namespace OpenVic {
 		friend struct PopManager;
 
 	private:
-		std::vector<PopType const*> PROPERTY(pop_types);
+		memory::vector<PopType const*> PROPERTY(pop_types);
 
 		Strata(std::string_view new_identifier, index_t new_index);
 
@@ -185,7 +186,7 @@ namespace OpenVic {
 		 * necessary defines are loaded. The nodes will remain valid as PopType files' Parser objects are already cached to
 		 * preserve their condition script nodes until all other defines are loaded and the scripts can be parsed.
 		 * Entries contain: (rebel, equivalent, promote_to, issues) */
-		std::vector<std::tuple<ast::NodeCPtr, ast::NodeCPtr, ast::NodeCPtr, ast::NodeCPtr>> delayed_parse_nodes;
+		memory::vector<std::tuple<ast::NodeCPtr, ast::NodeCPtr, ast::NodeCPtr, ast::NodeCPtr>> delayed_parse_nodes;
 
 		ConditionalWeightFactorAdd PROPERTY(promotion_chance);
 		ConditionalWeightFactorAdd PROPERTY(demotion_chance);
@@ -261,7 +262,7 @@ namespace OpenVic {
 		bool load_pop_type_chances_file(ast::NodeCPtr root);
 
 		bool load_pop_bases_into_vector(
-			RebelManager const& rebel_manager, std::vector<PopBase>& vec, PopType const& type, ast::NodeCPtr pop_node,
+			RebelManager const& rebel_manager, memory::vector<PopBase>& vec, PopType const& type, ast::NodeCPtr pop_node,
 			bool *non_integer_size
 		) const;
 

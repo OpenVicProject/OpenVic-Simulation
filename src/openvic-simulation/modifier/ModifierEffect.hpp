@@ -94,15 +94,15 @@ namespace OpenVic {
 
 		static constexpr bool excludes_targets(target_t targets, target_t excluded_target);
 
-		static std::string target_to_string(target_t target);
+		static memory::string target_to_string(target_t target);
 
-		static std::string make_default_modifier_effect_localisation_key(std::string_view identifier);
+		static memory::string make_default_modifier_effect_localisation_key(std::string_view identifier);
 
 	private:
 		const bool PROPERTY_CUSTOM_PREFIX(no_effect, has);
 		const format_t PROPERTY(format);
 		const target_t PROPERTY(targets);
-		std::string PROPERTY(localisation_key);
+		memory::string PROPERTY(localisation_key);
 
 		// TODO - format/precision, e.g. 80% vs 0.8 vs 0.800, 2 vs 2.0 vs 200%
 
