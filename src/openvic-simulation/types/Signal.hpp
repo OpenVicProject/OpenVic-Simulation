@@ -14,6 +14,7 @@
 
 #include "openvic-simulation/types/CowPtr.hpp"
 #include "openvic-simulation/types/NullMutex.hpp"
+#include "openvic-simulation/utility/Containers.hpp"
 #include "openvic-simulation/utility/Utility.hpp"
 
 // Based heavily on https://github.com/palacaze/sigslot and https://github.com/mousebyte/sigslot20
@@ -319,12 +320,12 @@ namespace OpenVic::_detail::signal {
 #ifdef DEBUG_ENABLED
 	template<typename B, typename D, typename... Args>
 	inline std::shared_ptr<B> make_shared(Args&&... args) {
-		return std::shared_ptr<B>(static_cast<B*>(new D(std::forward<Args>(args)...)));
+		return std::shared_ptr<B>(static_cast<B*>(memory::make_new<D>(std::forward<Args>(args)...)));
 	}
 #else
 	template<typename B, typename D, typename... Args>
 	inline std::shared_ptr<B> make_shared(Args&&... args) {
-		return std::static_pointer_cast<B>(std::make_shared<D>(std::forward<Args>(args)...));
+		return std::static_pointer_cast<B>(memory::make_shared<D>(std::forward<Args>(args)...));
 	}
 #endif
 
@@ -529,7 +530,7 @@ namespace OpenVic::_detail::signal {
 		}
 
 		Lockable mutex;
-		std::vector<scoped_connection> connections;
+		memory::vector<scoped_connection> connections;
 	};
 
 	using observer_st = basic_observer<null_mutex>;
@@ -785,20 +786,20 @@ namespace OpenVic::_detail::signal {
 		using is_thread_safe = std::bool_constant<!std::same_as<L, null_mutex>>;
 
 		template<typename U, typename L>
-		using cow_type = std::conditional_t<is_thread_safe<L>::value, cow_ptr<U>, U>;
+		using cow_type = std::conditional_t<is_thread_safe<L>::value, memory::cow_ptr<U>, U>;
 
 		template<typename U, typename L>
-		using cow_copy_type = std::conditional_t<is_thread_safe<L>::value, cow_ptr<U>, U const&>;
+		using cow_copy_type = std::conditional_t<is_thread_safe<L>::value, memory::cow_ptr<U>, U const&>;
 
 		using lock_type = std::unique_lock<Lockable>;
 		using slot_base = basic_slot<Args...>;
 		using slot_ptr = _detail::signal::slot_ptr<Args...>;
-		using slots_type = std::vector<slot_ptr>;
+		using slots_type = memory::vector<slot_ptr>;
 		struct group_type {
 			slots_type slts;
 			group_id gid;
 		};
-		using list_type = std::vector<group_type>; // kept ordered by ascending gid
+		using list_type = memory::vector<group_type>; // kept ordered by ascending gid
 
 	public:
 		using arg_list = std::tuple<Args...>;

@@ -95,7 +95,7 @@ bool UIManager::load_gfx_file(ast::NodeCPtr root) {
 	return expect_dictionary_keys(
 		"spriteTypes", ZERO_OR_ONE, Sprite::expect_sprites(
 			NodeTools::reserve_length_callback(sprites),
-			[this](std::unique_ptr<Sprite>&& sprite) -> bool {
+			[this](memory::unique_base_ptr<Sprite>&& sprite) -> bool {
 				/* TODO - more checks on duplicates (the false here reduces them from
 				 * errors to warnings). The repeats in vanilla are identical (simple
 				 * texture sprites with the same name referring to the same asset),
@@ -125,7 +125,7 @@ bool UIManager::load_gfx_file(ast::NodeCPtr root) {
 
 		"objectTypes", ZERO_OR_ONE, Object::expect_objects(
 			NodeTools::reserve_length_callback(objects),
-			[this](std::unique_ptr<Object>&& object) -> bool {
+			[this](memory::unique_base_ptr<Object>&& object) -> bool {
 				/* There are various models with the same name but slight differences, e.g. Prussian and German variants
 				 * of PrussianGCCavalry (the latter added in a spritepack). Currently we default to using the first loaded
 				 * model of each name, but we may want to switch to using the last loaded or allow multiple models per name
@@ -146,7 +146,7 @@ bool UIManager::load_gui_file(std::string_view scene_name, ast::NodeCPtr root) {
 	return expect_dictionary_keys(
 		"guiTypes", ZERO_OR_ONE, Scene::expect_scene(
 			scene_name,
-			[this](std::unique_ptr<Scene>&& scene) -> bool {
+			[this](memory::unique_base_ptr<Scene>&& scene) -> bool {
 				return scenes.add_item(std::move(scene));
 			},
 			*this

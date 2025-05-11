@@ -21,6 +21,7 @@
 #include "openvic-simulation/utility/Getters.hpp"
 #include "openvic-simulation/utility/Utility.hpp"
 #include "openvic-simulation/utility/StringUtils.hpp"
+#include "openvic-simulation/utility/Containers.hpp"
 
 namespace OpenVic {
 	// A relative period between points in time, measured in days
@@ -93,8 +94,8 @@ namespace OpenVic {
 			return std::to_chars(first, last, days);
 		}
 
-		std::string to_string() const;
-		explicit operator std::string() const;
+		memory::string to_string() const;
+		explicit operator memory::string() const;
 
 		static constexpr Timespan from_years(day_t num);
 		static constexpr Timespan from_months(day_t num);
@@ -368,13 +369,13 @@ namespace OpenVic {
 				return std::string_view { data(), data() + size() };
 			}
 
-			operator std::string() const {
-				return std::string { data(), size() };
+			operator memory::string() const {
+				return memory::string { data(), size() };
 			}
 		};
 
-		std::string to_string(bool pad_year = false, bool pad_month = true, bool pad_day = true) const;
-		explicit operator std::string() const;
+		memory::string to_string(bool pad_year = false, bool pad_month = true, bool pad_day = true) const;
+		explicit operator memory::string() const;
 
 		enum class errc_type : uint8_t { day, month, year };
 		struct from_chars_result : std::from_chars_result {
@@ -544,7 +545,7 @@ namespace OpenVic {
 			OV_ERR_FAIL_COND_V_MSG(
 				from_chars->ec == std::errc::invalid_argument && from_chars->type == errc_type::year &&
 					from_chars->ptr != from_chars->type_first,
-				date, fmt::format("Year value was missing a separator (\"{}\").", SEPARATOR_CHARACTER)
+				date, memory::fmt::format("Year value was missing a separator (\"{}\").", SEPARATOR_CHARACTER)
 			);
 			OV_ERR_FAIL_COND_V_MSG(
 				from_chars->ec == std::errc::invalid_argument && from_chars->type == errc_type::month &&
@@ -558,7 +559,7 @@ namespace OpenVic {
 			OV_ERR_FAIL_COND_V_MSG(
 				from_chars->ec == std::errc::value_too_large && from_chars->type == errc_type::month &&
 					from_chars->ptr == from_chars->type_first,
-				date, fmt::format("Month value cannot be larger than {}.", MONTHS_IN_YEAR)
+				date, memory::fmt::format("Month value cannot be larger than {}.", MONTHS_IN_YEAR)
 			);
 			OV_ERR_FAIL_COND_V_MSG(
 				from_chars->ec == std::errc::result_out_of_range && from_chars->type == errc_type::month, date,
@@ -567,7 +568,7 @@ namespace OpenVic {
 			OV_ERR_FAIL_COND_V_MSG(
 				from_chars->ec == std::errc::invalid_argument && from_chars->type == errc_type::month &&
 					from_chars->ptr != from_chars->type_first,
-				date, fmt::format("Month value was missing a separator (\"{}\").", SEPARATOR_CHARACTER)
+				date, memory::fmt::format("Month value was missing a separator (\"{}\").", SEPARATOR_CHARACTER)
 			);
 			OV_ERR_FAIL_COND_V_MSG(
 				from_chars->ec == std::errc::invalid_argument && from_chars->type == errc_type::day &&
@@ -581,7 +582,7 @@ namespace OpenVic {
 				from_chars->ec == std::errc::value_too_large && from_chars->type == errc_type::day &&
 					from_chars->ptr == from_chars->type_first,
 				date,
-				fmt::format("Day value cannot be larger than {} for {}.", DAYS_IN_MONTH[date.get_month() - 1], date.get_month())
+				memory::fmt::format("Day value cannot be larger than {} for {}.", DAYS_IN_MONTH[date.get_month() - 1], date.get_month())
 			);
 
 			return date;

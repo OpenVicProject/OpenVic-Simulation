@@ -7,6 +7,7 @@
 #include "openvic-simulation/types/EnumBitfield.hpp"
 #include "openvic-simulation/types/IdentifierRegistry.hpp"
 #include "openvic-simulation/utility/Getters.hpp"
+#include "openvic-simulation/utility/Containers.hpp"
 
 namespace OpenVic {
 	struct WargoalTypeManager;
@@ -56,7 +57,7 @@ namespace OpenVic {
 		};
 
 	private:
-		std::string PROPERTY(war_name);
+		memory::string PROPERTY(war_name);
 		const Timespan PROPERTY(available_length);
 		const Timespan PROPERTY(truce_length);
 		const sprite_t PROPERTY(sprite_index);
@@ -100,7 +101,7 @@ namespace OpenVic {
 	struct WargoalTypeManager {
 	private:
 		IdentifierRegistry<WargoalType> IDENTIFIER_REGISTRY(wargoal_type);
-		std::vector<WargoalType const*> PROPERTY(peace_priorities);
+		memory::vector<WargoalType const*> PROPERTY(peace_priorities);
 
 	public:
 		bool add_wargoal_type(

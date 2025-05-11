@@ -8,18 +8,20 @@
 
 #include <Windows.h>
 
+#include "openvic-simulation/utility/Containers.hpp"
+
 namespace OpenVic::Windows {
-	inline std::wstring convert(std::string_view as) {
+	inline memory::wstring convert(std::string_view as) {
 		// deal with trivial case of empty string
 		if (as.empty()) {
-			return std::wstring();
+			return memory::wstring();
 		}
 
 		// determine required length of new string
 		size_t length = ::MultiByteToWideChar(CP_UTF8, 0, as.data(), (int)as.length(), 0, 0);
 
 		// construct new string of required length
-		std::wstring ret(length, L'\0');
+		memory::wstring ret(length, L'\0');
 
 		// convert old string to new string
 		::MultiByteToWideChar(CP_UTF8, 0, as.data(), (int)as.length(), &ret[0], (int)ret.length());
@@ -28,17 +30,17 @@ namespace OpenVic::Windows {
 		return ret;
 	}
 
-	inline std::string convert(std::wstring_view as) {
+	inline memory::string convert(std::wstring_view as) {
 		// deal with trivial case of empty string
 		if (as.empty()) {
-			return std::string();
+			return memory::string();
 		}
 
 		// determine required length of new string
 		size_t length = ::WideCharToMultiByte(CP_UTF8, 0, as.data(), (int)as.length(), 0, 0, NULL, NULL);
 
 		// construct new string of required length
-		std::string ret(length, '\0');
+		memory::string ret(length, '\0');
 
 		// convert old string to new string
 		::WideCharToMultiByte(CP_UTF8, 0, as.data(), (int)as.length(), &ret[0], (int)ret.length(), NULL, NULL);
@@ -129,14 +131,14 @@ namespace OpenVic::Windows {
 				close_key();
 				return result;
 			}
-			_value = std::wstring(data_size / sizeof(wchar_t), L'\0');
+			_value = memory::wstring(data_size / sizeof(wchar_t), L'\0');
 			result = RegQueryValueExW(
 				_key_handle, wide_value.data(), NULL, NULL, reinterpret_cast<LPBYTE>(_value.data()), &data_size
 			);
 			close_key();
 
 			std::size_t first_null = _value.find_first_of(L'\0');
-			if (first_null != std::string::npos) {
+			if (first_null != memory::string::npos) {
 				_value.resize(first_null);
 			}
 
@@ -145,11 +147,11 @@ namespace OpenVic::Windows {
 
 	private:
 		HKEY _key_handle = nullptr;
-		std::wstring _value;
+		memory::wstring _value;
 	};
 
 	template<either_char_type RCHAR_T, either_char_type CHAR_T, either_char_type CHAR_T2>
-	std::basic_string<RCHAR_T> ReadRegValue(
+	memory::basic_string<RCHAR_T> ReadRegValue( //
 		HKEY root, std::basic_string_view<CHAR_T> key, std::basic_string_view<CHAR_T2> name
 	) {
 		RegistryKey registry_key(root, key, name);
@@ -161,7 +163,7 @@ namespace OpenVic::Windows {
 	}
 
 	template<either_char_type RCHAR_T, either_char_type CHAR_T, either_char_type CHAR_T2>
-	std::basic_string<RCHAR_T> ReadRegValue(HKEY root, CHAR_T const* key, CHAR_T2 const* name) {
+	memory::basic_string<RCHAR_T> ReadRegValue(HKEY root, CHAR_T const* key, CHAR_T2 const* name) {
 		auto key_sv = std::basic_string_view(key);
 		auto name_sv = std::basic_string_view(name);
 

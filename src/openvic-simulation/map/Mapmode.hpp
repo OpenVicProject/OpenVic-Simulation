@@ -31,7 +31,7 @@ namespace OpenVic {
 	private:
 		// Not const so they don't have to be copied when the Mapmode is moved
 		colour_func_t PROPERTY(colour_func);
-		std::string PROPERTY(localisation_key);
+		memory::string PROPERTY(localisation_key);
 		const bool PROPERTY_CUSTOM_PREFIX(parchment_mapmode_allowed, is);
 
 		Mapmode(

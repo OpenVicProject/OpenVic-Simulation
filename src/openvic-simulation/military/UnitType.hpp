@@ -99,7 +99,7 @@ namespace OpenVic {
 	private:
 		const branch_t PROPERTY(branch); /* type in defines */
 		const icon_t PROPERTY(icon);
-		std::string PROPERTY(sprite);
+		memory::string PROPERTY(sprite);
 		const bool PROPERTY_CUSTOM_PREFIX(active, is);
 		unit_category_t PROPERTY(unit_category);
 		const bool PROPERTY_CUSTOM_PREFIX(floating_flag, has);
@@ -110,8 +110,8 @@ namespace OpenVic {
 		const fixed_point_t PROPERTY(maximum_speed);
 		const fixed_point_t PROPERTY(weighted_value);
 
-		std::string PROPERTY(move_sound);
-		std::string PROPERTY(select_sound);
+		memory::string PROPERTY(move_sound);
+		memory::string PROPERTY(select_sound);
 
 		const Timespan PROPERTY(build_time);
 		GoodDefinition::good_definition_map_t PROPERTY(build_cost);
@@ -172,9 +172,9 @@ namespace OpenVic {
 
 	private:
 		const allowed_cultures_t PROPERTY(allowed_cultures);
-		std::string PROPERTY(sprite_override);
-		std::string PROPERTY(sprite_mount);
-		std::string PROPERTY(sprite_mount_attach_node);
+		memory::string PROPERTY(sprite_override);
+		memory::string PROPERTY(sprite_mount);
+		memory::string PROPERTY(sprite_mount_attach_node);
 		const fixed_point_t PROPERTY(reconnaissance);
 		const fixed_point_t PROPERTY(attack);
 		const fixed_point_t PROPERTY(defence);

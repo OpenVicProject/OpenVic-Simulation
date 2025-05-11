@@ -9,7 +9,7 @@ namespace OpenVic {
 	template<typename... _Context>
 	struct Script {
 	private:
-		std::vector<ast::NodeCPtr> _root_nodes;
+		memory::vector<ast::NodeCPtr> _root_nodes;
 
 	protected:
 		virtual bool _parse_script(std::span<const ast::NodeCPtr> nodes, _Context... context) = 0;

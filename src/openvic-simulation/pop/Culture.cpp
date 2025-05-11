@@ -208,7 +208,7 @@ bool CultureManager::load_culture_file(CountryDefinitionManager const& country_d
 	return ret;
 }
 
-std::string CultureManager::make_leader_picture_name(
+memory::string CultureManager::make_leader_picture_name(
 	std::string_view cultural_type, UnitType::branch_t branch, leader_count_t count
 ) {
 	if (cultural_type.empty()) {
@@ -238,7 +238,7 @@ std::string CultureManager::make_leader_picture_name(
 	return StringUtils::append_string_views(cultural_type, *branch_text, std::to_string(count));
 }
 
-std::string CultureManager::make_leader_picture_path(std::string_view leader_picture_name) {
+memory::string CultureManager::make_leader_picture_path(std::string_view leader_picture_name) {
 	if (leader_picture_name.empty()) {
 		Logger::error("Cannot construct leader picture path - empty name!");
 		return {};
@@ -289,7 +289,7 @@ bool CultureManager::find_cultural_leader_pictures(Dataloader const& dataloader)
 	return ret;
 }
 
-std::string CultureManager::get_leader_picture_name(std::string_view cultural_type, UnitType::branch_t branch) const {
+memory::string CultureManager::get_leader_picture_name(std::string_view cultural_type, UnitType::branch_t branch) const {
 	const decltype(leader_picture_counts)::const_iterator it = leader_picture_counts.find(cultural_type);
 	if (it == leader_picture_counts.end()) {
 		Logger::error("Cannot find leader picture counts for cultural type \"", cultural_type, "\"!");

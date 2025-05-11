@@ -18,11 +18,11 @@ namespace OpenVic {
 	public:
 		Testing(DefinitionManager const& definition_manager);
 
-		std::vector<std::unique_ptr<TestScript>> test_scripts;
+		memory::vector<memory::unique_base_ptr<TestScript>> test_scripts;
 
 		void execute_all_scripts();
 		void report_results();
-		void report_result(std::string req_title, std::ofstream& outfile, std::vector<std::unique_ptr<Requirement>>& reqs);
-		void report_result(std::string req_title, std::ofstream& outfile, std::vector<Requirement*>& reqs);
+		void report_result(memory::string req_title, std::ofstream& outfile, memory::vector<memory::unique_ptr<Requirement>>& reqs);
+		void report_result(memory::string req_title, std::ofstream& outfile, memory::vector<Requirement*>& reqs);
 	};
 }

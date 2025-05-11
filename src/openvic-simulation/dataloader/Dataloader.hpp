@@ -8,6 +8,7 @@
 
 #include "openvic-simulation/dataloader/NodeTools.hpp"
 #include "openvic-simulation/dataloader/ModManager.hpp"
+#include "openvic-simulation/utility/Containers.hpp"
 
 #include <function2/function2.hpp>
 
@@ -25,13 +26,13 @@ namespace OpenVic {
 
 	class Dataloader {
 	public:
-		using path_vector_t = std::vector<fs::path>;
+		using path_vector_t = memory::vector<fs::path>;
 		using path_span_t = std::span<const fs::path>;
 
 	private:
 		path_vector_t PROPERTY(roots);
 		path_vector_t PROPERTY(replace_paths);
-		std::vector<ovdl::v2script::Parser> cached_parsers;
+		memory::vector<ovdl::v2script::Parser> cached_parsers;
 
 		bool _load_interface_files(UIManager& ui_manager) const;
 		bool _load_pop_types(DefinitionManager& definition_manager);
@@ -126,7 +127,7 @@ namespace OpenVic {
 		string_set_t lookup_dirs_in_dir(std::string_view path) const;
 
 		/* Load all mod descriptors passed by the user. Importantly, loads dependencies and replace_paths for us to check. */
-		bool load_mod_descriptors(std::span<const std::string> descriptors, ModManager& mod_manager);
+		bool load_mod_descriptors(std::span<const memory::string> descriptors, ModManager& mod_manager);
 
 		/* Load and parse all of the text defines data, including parsing cached condition and effect scripts after all the
 		 * static data is loaded. Paths to the base and mod defines must have been supplied with set_roots.*/
