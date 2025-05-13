@@ -247,7 +247,7 @@ size_t ProvinceInstance::get_pop_count() const {
 /* REQUIREMENTS:
  * MAP-65, MAP-68, MAP-70, MAP-234
  */
-void ProvinceInstance::_update_pops(DefineManager const& define_manager) {
+void ProvinceInstance::_update_pops(InstanceManager const& instance_manager) {
 	total_population = 0;
 	average_literacy = 0;
 	average_consciousness = 0;
@@ -275,7 +275,8 @@ void ProvinceInstance::_update_pops(DefineManager const& define_manager) {
 
 	max_supported_regiments = 0;
 
-	MilitaryDefines const& military_defines = define_manager.get_military_defines();
+	MilitaryDefines const& military_defines =
+		instance_manager.get_definition_manager().get_define_manager().get_military_defines();
 
 	using enum colony_status_t;
 
@@ -285,7 +286,7 @@ void ProvinceInstance::_update_pops(DefineManager const& define_manager) {
 		: is_owner_core() ? fixed_point_t::_1() : military_defines.get_pop_size_per_regiment_non_core_multiplier();
 
 	for (Pop& pop : pops) {
-		pop.update_gamestate(define_manager, owner, pop_size_per_regiment_multiplier);
+		pop.update_gamestate(instance_manager, owner, pop_size_per_regiment_multiplier);
 
 		const pop_size_t pop_size_s = pop.get_size();
 		// TODO - change casting if pop_size_t changes type
@@ -331,6 +332,19 @@ void ProvinceInstance::_update_pops(DefineManager const& define_manager) {
 		life_needs_fulfilled_by_strata /= population_by_strata;
 		everyday_needs_fulfilled_by_strata /= population_by_strata;
 		luxury_needs_fulfilled_by_strata /= population_by_strata;
+
+		unemployment_fraction = pop_type_unemployed_count.get_total() / total_population;
+
+		const fixed_point_map_const_iterator_t<Culture const*> largest_culture_it = get_largest_item(culture_distribution);
+		largest_culture = largest_culture_it != culture_distribution.end() ? largest_culture_it->first : nullptr;
+
+		const fixed_point_map_const_iterator_t<Religion const*> largest_religion_it = get_largest_item(religion_distribution);
+		largest_religion = largest_religion_it != religion_distribution.end() ? largest_religion_it->first : nullptr;
+	} else {
+		unemployment_fraction = fixed_point_t::_0();
+
+		largest_culture = nullptr;
+		largest_religion = nullptr;
 	}
 }
 
@@ -460,7 +474,7 @@ void ProvinceInstance::update_gamestate(InstanceManager const& instance_manager)
 	for (BuildingInstance& building : buildings.get_items()) {
 		building.update_gamestate(today);
 	}
-	_update_pops(instance_manager.get_definition_manager().get_define_manager());
+	_update_pops(instance_manager);
 }
 
 void ProvinceInstance::province_tick(

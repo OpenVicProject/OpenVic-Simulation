@@ -231,11 +231,15 @@ namespace OpenVic {
 
 		IndexedMap<PopType, pop_size_t> PROPERTY(pop_type_distribution);
 		IndexedMap<PopType, pop_size_t> PROPERTY(pop_type_unemployed_count);
+		fixed_point_t PROPERTY(unemployment_fraction);
 		IndexedMap<Ideology, fixed_point_t> PROPERTY(ideology_distribution);
 		fixed_point_map_t<Issue const*> PROPERTY(issue_distribution);
 		IndexedMap<CountryParty, fixed_point_t> PROPERTY(vote_distribution);
 		fixed_point_map_t<Culture const*> PROPERTY(culture_distribution);
 		fixed_point_map_t<Religion const*> PROPERTY(religion_distribution);
+		Culture const* PROPERTY(largest_culture, nullptr);
+		Religion const* PROPERTY(largest_religion, nullptr);
+
 		size_t PROPERTY(national_focus_capacity, 0);
 		// TODO - national foci
 
@@ -298,6 +302,7 @@ namespace OpenVic {
 		size_t PROPERTY(max_supported_regiment_count, 0);
 		size_t PROPERTY(mobilisation_potential_regiment_count, 0);
 		size_t PROPERTY(mobilisation_max_regiment_count, 0);
+		size_t PROPERTY(multi_unit_army_count, 0);
 		fixed_point_t PROPERTY(mobilisation_impact);
 		fixed_point_t PROPERTY(mobilisation_economy_impact);
 		fixed_point_t PROPERTY(supply_consumption);

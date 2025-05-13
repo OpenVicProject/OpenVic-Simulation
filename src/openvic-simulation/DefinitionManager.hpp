@@ -45,6 +45,6 @@ namespace OpenVic {
 		SoundEffectManager PROPERTY_REF(sound_effect_manager);
 
 	public:
-		DefinitionManager();
+		DefinitionManager() : ui_manager { *this }, script_manager { *this } {}
 	};
 }

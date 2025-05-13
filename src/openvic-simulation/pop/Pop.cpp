@@ -7,6 +7,7 @@
 #undef KEEP_DO_FOR_ALL_TYPES_OF_EXPENSES
 
 #include "openvic-simulation/defines/Define.hpp"
+#include "openvic-simulation/DefinitionManager.hpp"
 #include "openvic-simulation/economy/GoodDefinition.hpp"
 #include "openvic-simulation/economy/production/ArtisanalProducerFactoryPattern.hpp"
 #include "openvic-simulation/economy/trading/BuyResult.hpp"
@@ -14,6 +15,7 @@
 #include "openvic-simulation/economy/trading/MarketSellOrder.hpp"
 #include "openvic-simulation/economy/trading/MarketInstance.hpp"
 #include "openvic-simulation/economy/trading/SellResult.hpp"
+#include "openvic-simulation/InstanceManager.hpp"
 #include "openvic-simulation/map/ProvinceInstance.hpp"
 #include "openvic-simulation/modifier/ModifierEffectCache.hpp"
 #include "openvic-simulation/pop/PopNeedsMacro.hpp"
@@ -118,6 +120,24 @@ void Pop::setup_pop_test_values(IssueManager const& issue_manager) {
 	life_needs_desired_quantity = everyday_needs_desired_quantity = luxury_needs_desired_quantity = fixed_point_t::_1();
 }
 
+void Pop::generate_political_distributions(InstanceManager const& instance_manager) {
+	PoliticsInstanceManager const& politics_instance_manager = instance_manager.get_politics_instance_manager();
+
+	ideology_distribution.clear();
+	for (Ideology const& ideology : *ideology_distribution.get_keys()) {
+		if (politics_instance_manager.is_ideology_unlocked(ideology)) {
+			ideology_distribution[ideology] = type->get_ideologies()[ideology].execute(instance_manager, this, this);
+		}
+	}
+	ideology_distribution.rescale(size);
+
+	issue_distribution.clear();
+	for (auto const& [issue, conditional_weight] : type->get_issues()) {
+		issue_distribution[issue] = conditional_weight.execute(instance_manager, this, this);
+	}
+	rescale_fixed_point_map(issue_distribution, size);
+}
+
 bool Pop::convert_to_equivalent() {
 	PopType const* const equivalent = get_type()->get_equivalent();
 	if (equivalent == nullptr) {
@@ -177,7 +197,7 @@ fixed_point_t Pop::get_party_support(CountryParty const& party) const {
 }
 
 void Pop::update_gamestate(
-	DefineManager const& define_manager, CountryInstance const* owner, const fixed_point_t pop_size_per_regiment_multiplier
+	InstanceManager const& instance_manager, CountryInstance const* owner, const fixed_point_t pop_size_per_regiment_multiplier
 ) {
 	using enum culture_status_t;
 
@@ -205,7 +225,8 @@ void Pop::update_gamestate(
 	literacy = std::clamp(literacy, MIN_LITERACY, MAX_LITERACY);
 
 	if (type->get_can_be_recruited()) {
-		MilitaryDefines const& military_defines = define_manager.get_military_defines();
+		MilitaryDefines const& military_defines =
+			instance_manager.get_definition_manager().get_define_manager().get_military_defines();
 
 		if (
 			size < military_defines.get_min_pop_size_for_regiment() || owner == nullptr ||
@@ -218,6 +239,8 @@ void Pop::update_gamestate(
 			)).to_int64_t() + 1;
 		}
 	}
+
+	generate_political_distributions(instance_manager);
 }
 
 std::stringstream Pop::get_pop_context_text() const {
