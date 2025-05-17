@@ -14,7 +14,7 @@ namespace OpenVic {
 	struct UnitInstance {
 	private:
 		const unique_id_t PROPERTY(unique_id);
-		std::string PROPERTY(name);
+		memory::string PROPERTY(name);
 		UnitType const& PROPERTY(unit_type);
 		fixed_point_t PROPERTY(organisation);
 		fixed_point_t PROPERTY(max_organisation);

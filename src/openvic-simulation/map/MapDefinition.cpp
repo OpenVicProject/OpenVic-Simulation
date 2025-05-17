@@ -20,6 +20,7 @@
 #include "openvic-simulation/utility/Logger.hpp"
 #include "openvic-simulation/utility/StringUtils.hpp"
 #include "openvic-simulation/utility/Utility.hpp"
+#include "openvic-simulation/utility/Containers.hpp"
 
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;
@@ -27,7 +28,7 @@ using namespace OpenVic::NodeTools;
 MapDefinition::MapDefinition() : dims { 0, 0 }, max_provinces { ProvinceDefinition::MAX_INDEX } {
 }
 
-RiverSegment::RiverSegment(uint8_t new_size, std::vector<ivec2_t>&& new_points)
+RiverSegment::RiverSegment(uint8_t new_size, memory::vector<ivec2_t>&& new_points)
 	: size { new_size }, points { std::move(new_points) } {}
 
 bool MapDefinition::add_province_definition(std::string_view identifier, colour_t colour) {
@@ -239,7 +240,7 @@ bool MapDefinition::add_special_adjacency(
 	const auto add_adjacency = [this, distance, type, through, data](
 		ProvinceDefinition& from, ProvinceDefinition const& to
 	) -> bool {
-		const std::vector<adjacency_t>::iterator existing_adjacency = std::find_if(
+		const memory::vector<adjacency_t>::iterator existing_adjacency = std::find_if(
 			from.adjacencies.begin(), from.adjacencies.end(),
 			[&to](adjacency_t const& adj) -> bool { return adj.get_to() == &to; }
 		);
@@ -350,7 +351,7 @@ bool MapDefinition::set_water_province(std::string_view identifier) {
 	return true;
 }
 
-bool MapDefinition::set_water_province_list(std::vector<std::string_view> const& list) {
+bool MapDefinition::set_water_province_list(memory::vector<std::string_view> const& list) {
 	if (water_provinces.is_locked()) {
 		Logger::error("The map's water provinces have already been locked!");
 		return false;
@@ -377,7 +378,7 @@ size_t MapDefinition::get_water_province_count() const {
 	return water_provinces.size();
 }
 
-bool MapDefinition::add_region(std::string_view identifier, std::vector<ProvinceDefinition const*>&& provinces, colour_t colour) {
+bool MapDefinition::add_region(std::string_view identifier, memory::vector<ProvinceDefinition const*>&& provinces, colour_t colour) {
 	if (identifier.empty()) {
 		Logger::error("Invalid region identifier - empty!");
 		return false;
@@ -464,7 +465,7 @@ bool MapDefinition::set_max_provinces(ProvinceDefinition::index_t new_max_provin
 using namespace ovdl::csv;
 
 static bool _validate_province_definitions_header(LineObject const& header) {
-	static const std::vector<std::string> standard_header { "province", "red", "green", "blue" };
+	static const memory::vector<memory::string> standard_header { "province", "red", "green", "blue" };
 	for (size_t i = 0; i < standard_header.size(); ++i) {
 		const std::string_view val = header.get_value_for(i);
 		if (i == 0 && val.empty()) {
@@ -556,7 +557,7 @@ bool MapDefinition::load_province_positions(BuildingTypeManager const& building_
 	)(root);
 }
 
-bool MapDefinition::load_region_colours(ast::NodeCPtr root, std::vector<colour_t>& colours) {
+bool MapDefinition::load_region_colours(ast::NodeCPtr root, memory::vector<colour_t>& colours) {
 	return expect_dictionary_reserve_length(
 		colours,
 		[&colours](std::string_view key, ast::NodeCPtr value) -> bool {
@@ -568,11 +569,11 @@ bool MapDefinition::load_region_colours(ast::NodeCPtr root, std::vector<colour_t
 	})(root);
 }
 
-bool MapDefinition::load_region_file(ast::NodeCPtr root, std::vector<colour_t> const& colours) {
+bool MapDefinition::load_region_file(ast::NodeCPtr root, memory::vector<colour_t> const& colours) {
 	const bool ret = expect_dictionary_reserve_length(
 		regions,
 		[this, &colours](std::string_view region_identifier, ast::NodeCPtr region_node) -> bool {
-			std::vector<ProvinceDefinition const*> provinces;
+			memory::vector<ProvinceDefinition const*> provinces;
 
 			bool ret = expect_list_reserve_length(
 				provinces, expect_province_definition_identifier(vector_callback_pointer(provinces))
@@ -667,13 +668,13 @@ bool MapDefinition::load_map_images(fs::path const& province_path, fs::path cons
 	uint8_t const* province_data = province_bmp.get_pixel_data().data();
 	uint8_t const* terrain_data = terrain_bmp.get_pixel_data().data();
 
-	std::vector<fixed_point_map_t<TerrainType const*>> terrain_type_pixels_list(province_definitions.size());
+	memory::vector<fixed_point_map_t<TerrainType const*>> terrain_type_pixels_list(province_definitions.size());
 
 	bool ret = true;
 	ordered_set<colour_t> unrecognised_province_colours;
 
-	std::vector<fixed_point_t> pixels_per_province(province_definitions.size());
-	std::vector<fvec2_t> pixel_position_sum_per_province(province_definitions.size());
+	memory::vector<fixed_point_t> pixels_per_province(province_definitions.size());
+	memory::vector<fvec2_t> pixel_position_sum_per_province(province_definitions.size());
 
 	for (ivec2_t pos {}; pos.y < get_height(); ++pos.y) {
 		for (pos.x = 0; pos.x < get_width(); ++pos.x) {
@@ -798,7 +799,7 @@ bool MapDefinition::load_map_images(fs::path const& province_path, fs::path cons
 
 		// Ensures that if ever multithreaded, only one vector is used per thread
 		// Else acts like static
-		thread_local std::vector<ivec2_t> points;
+		thread_local memory::vector<ivec2_t> points;
 		// Default max vanilla river points is 444
 		points.reserve(256);
 
@@ -1127,7 +1128,7 @@ bool MapDefinition::load_continent_file(ModifierManager const& modifier_manager,
 			}
 
 			ModifierValue values;
-			std::vector<ProvinceDefinition const*> prov_list;
+			memory::vector<ProvinceDefinition const*> prov_list;
 			bool ret = NodeTools::expect_dictionary_keys_and_default(
 				modifier_manager.expect_base_province_modifier(values),
 				"provinces", ONE_EXACTLY, expect_list_reserve_length(prov_list, expect_province_definition_identifier(

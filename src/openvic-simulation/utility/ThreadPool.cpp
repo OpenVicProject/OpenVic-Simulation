@@ -3,20 +3,21 @@
 #include "openvic-simulation/economy/GoodInstance.hpp"
 #include "openvic-simulation/economy/trading/GoodMarket.hpp"
 #include "openvic-simulation/map/ProvinceInstance.hpp"
+#include "openvic-simulation/utility/Containers.hpp"
 
 using namespace OpenVic;
 
 void ThreadPool::loop_until_cancelled(
 	work_t& work_type,
 	PopsDefines const& pop_defines,
-	std::vector<CountryInstance> const& country_keys,
-	std::vector<Strata> const& strata_keys,
+	memory::vector<CountryInstance> const& country_keys,
+	memory::vector<Strata> const& strata_keys,
 	std::span<GoodInstance> goods_chunk,
 	std::span<ProvinceInstance> provinces_chunk
 ) {
 	IndexedMap<CountryInstance, fixed_point_t> reusable_country_map_0 { &country_keys },
 		reusable_country_map_1 { &country_keys};
-	std::vector<fixed_point_t> reusable_vector_0 {}, reusable_vector_1 {};
+	memory::vector<fixed_point_t> reusable_vector_0 {}, reusable_vector_1 {};
 	PopValuesFromProvince reusable_pop_values { pop_defines, strata_keys };
 
 	while (!is_cancellation_requested) {
@@ -117,8 +118,8 @@ ThreadPool::~ThreadPool() {
 
 void ThreadPool::initialise_threadpool(
 	PopsDefines const& pop_defines,
-	std::vector<CountryInstance> const& country_keys,
-	std::vector<Strata> const& strata_keys,
+	memory::vector<CountryInstance> const& country_keys,
+	memory::vector<Strata> const& strata_keys,
 	std::span<GoodInstance> goods,
 	std::span<ProvinceInstance> provinces
 ) {

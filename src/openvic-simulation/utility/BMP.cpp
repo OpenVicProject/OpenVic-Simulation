@@ -4,6 +4,7 @@
 
 #include "openvic-simulation/types/OrderedContainers.hpp"
 #include "openvic-simulation/utility/Logger.hpp"
+#include "openvic-simulation/utility/Containers.hpp"
 
 using namespace OpenVic;
 
@@ -181,7 +182,7 @@ uint16_t BMP::get_bits_per_pixel() const {
 	return header.bits_per_pixel;
 }
 
-std::vector<BMP::palette_colour_t> const& BMP::get_palette() const {
+memory::vector<BMP::palette_colour_t> const& BMP::get_palette() const {
 	if (!palette_read) {
 		Logger::warning("Trying to get BMP palette before loading");
 	}
@@ -218,7 +219,7 @@ bool BMP::read_pixel_data() {
 	return pixel_data_read;
 }
 
-std::vector<uint8_t> const& BMP::get_pixel_data() const {
+memory::vector<uint8_t> const& BMP::get_pixel_data() const {
 	if (!pixel_data_read) {
 		Logger::warning("Trying to get BMP pixel data before loading");
 	}

@@ -18,6 +18,7 @@
 #include "openvic-simulation/types/Vector.hpp"
 #include "openvic-simulation/utility/Getters.hpp"
 #include "openvic-simulation/utility/TslHelper.hpp"
+#include "openvic-simulation/utility/Containers.hpp"
 
 #include <function2/function2.hpp>
 
@@ -54,8 +55,8 @@ using namespace std::string_view_literals;
 #undef NODE_CASE
 	}
 
-	struct name_list_t : std::vector<std::string> {
-		using base_type = std::vector<std::string>;
+	struct name_list_t : memory::vector<memory::string> {
+		using base_type = memory::vector<memory::string>;
 		using base_type::base_type;
 	};
 	std::ostream& operator<<(std::ostream& stream, name_list_t const& name_list);
@@ -567,7 +568,7 @@ using namespace std::string_view_literals;
 			};
 		}
 
-		callback_t<std::string_view> assign_variable_callback_string(std::string& var);
+		callback_t<std::string_view> assign_variable_callback_string(memory::string& var);
 
 		template<typename T>
 		Callback<T&&> auto move_variable_callback(T& var) {
@@ -628,7 +629,7 @@ using namespace std::string_view_literals;
 		}
 
 		template<typename T, typename U>
-		Callback<T> auto vector_callback(std::vector<U>& vec) {
+		Callback<T> auto vector_callback(memory::vector<U>& vec) {
 			return [&vec](T val) -> bool {
 				vec.emplace_back(std::move(val));
 				return true;
@@ -636,12 +637,12 @@ using namespace std::string_view_literals;
 		}
 
 		template<typename T>
-		Callback<T> auto vector_callback(std::vector<T>& vec) {
+		Callback<T> auto vector_callback(memory::vector<T>& vec) {
 			return vector_callback<T, T>(vec);
 		}
 
 		template<typename T>
-		Callback<T&> auto vector_callback_pointer(std::vector<T*>& vec) {
+		Callback<T&> auto vector_callback_pointer(memory::vector<T*>& vec) {
 			return [&vec](T& val) -> bool {
 				vec.emplace_back(&val);
 				return true;
