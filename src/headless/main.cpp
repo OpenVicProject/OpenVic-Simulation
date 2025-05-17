@@ -116,6 +116,8 @@ static bool run_headless(Dataloader::path_vector_t const& roots, bool run_tests)
 		Logger::info("State updated");
 	} };
 
+	Logger::info("Commit hash: ", GameManager::get_commit_hash());
+
 	Logger::info("===== Loading definitions... =====");
 	ret &= game_manager.set_roots(roots);
 	ret &= game_manager.load_definitions(

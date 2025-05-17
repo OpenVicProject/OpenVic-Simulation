@@ -87,3 +87,6 @@ src/openvic-simulation/testing/test_results/results.txt
 
 # ccls
 .ccls-cache
+
+# Generated source files
+src/openvic-simulation/gen/*
