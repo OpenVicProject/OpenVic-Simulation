@@ -303,6 +303,12 @@ DO_FOR_ALL_TYPES_OF_POP_INCOME(DEFINE_ADD_INCOME_FUNCTIONS)
 DO_FOR_ALL_TYPES_OF_POP_EXPENSES(DEFINE_ADD_EXPENSE_FUNCTIONS)
 #undef DEFINE_ADD_EXPENSE_FUNCTIONS
 
+void Pop::add_import_subsidies(const fixed_point_t amount) {
+	//It's not income, otherwise we'd pay income tax.
+	//It's not a negative expense, otherwise total expense might go negative.
+	cash += amount;
+}
+
 #define DEFINE_NEEDS_FULFILLED(need_category) \
 	fixed_point_t Pop::get_##need_category##_needs_fulfilled() const { \
 		const fixed_point_t desired_quantity_copy = need_category##_needs_desired_quantity.get_copy_of_value(); \
@@ -384,7 +390,7 @@ void Pop::pop_tick_without_cleanup(PopValuesFromProvince& shared_values, std::ve
 
 	fixed_point_t max_cost_multiplier = fixed_point_t::_1();
 	if (country_to_report_economy_nullable != nullptr) {
-		country_to_report_economy_nullable->request_salaries_and_welfare(*this);
+		country_to_report_economy_nullable->request_salaries_and_welfare_and_import_subsidies(*this);
 		const fixed_point_t tariff_rate = country_to_report_economy_nullable->get_effective_tariff_rate();
 		if (tariff_rate > fixed_point_t::_0()) {
 			max_cost_multiplier += tariff_rate; //max (domestic cost, imported cost)
@@ -393,6 +399,8 @@ void Pop::pop_tick_without_cleanup(PopValuesFromProvince& shared_values, std::ve
 
 	//unemployment subsidies are based on yesterdays unemployment
 	employed = 0;
+	//import subsidies are based on yesterday
+	yesterdays_import_value = fixed_point_t::_0();
 
 	auto& [
 		reusable_map_0,
@@ -526,6 +534,7 @@ void Pop::after_buy(void* actor, BuyResult const& buy_result) {
 	CountryInstance* const country_to_report_economy_nullable = location_never_null.get_country_to_report_economy();
 
 	fixed_point_t money_spent = buy_result.get_money_spent_total();
+	pop.yesterdays_import_value += buy_result.get_money_spent_on_imports();
 	if (country_to_report_economy_nullable != nullptr) {
 		const fixed_point_t tariff = country_to_report_economy_nullable->apply_tariff(buy_result.get_money_spent_on_imports());
 		money_spent += tariff;

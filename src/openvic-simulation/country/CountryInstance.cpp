@@ -66,7 +66,7 @@ CountryInstance::CountryInstance(
 	taxable_income_by_pop_type { &pop_type_keys },
 	effective_tax_rate_by_strata { &strata_keys },
 	tax_rate_slider_value_by_strata { &strata_keys },
-	import_value_mutex { std::make_unique<std::mutex>() },
+	actual_net_tariffs_mutex { std::make_unique<std::mutex>() },
 
 	/* Technology */
 	technology_unlock_levels { &technology_keys },
@@ -1088,6 +1088,9 @@ void CountryInstance::_update_budget() {
 	projected_military_spending_unscaled_by_slider /= Pop::size_denominator;
 	projected_pensions_spending_unscaled_by_slider /= Pop::size_denominator;
 	projected_unemployment_subsidies_spending_unscaled_by_slider /= Pop::size_denominator;
+	projected_import_subsidies = has_import_subsidies()
+		? -effective_tariff_rate * yesterdays_import_value
+		: fixed_point_t::_0();
 }
 
 fixed_point_t CountryInstance::calculate_pensions_base(
@@ -1156,6 +1159,7 @@ void CountryInstance::_update_politics() {
 
 void CountryInstance::_update_population() {
 	total_population = 0;
+	yesterdays_import_value = fixed_point_t::_0();
 	national_literacy = 0;
 	national_consciousness = 0;
 	national_militancy = 0;
@@ -1176,6 +1180,7 @@ void CountryInstance::_update_population() {
 
 	for (State const* state : states) {
 		total_population += state->get_total_population();
+		yesterdays_import_value += state->get_yesterdays_import_value();
 
 		// TODO - change casting if pop_size_t changes type
 		const fixed_point_t state_population = fixed_point_t::parse(state->get_total_population());
@@ -1654,19 +1659,21 @@ void CountryInstance::country_tick_before_map(InstanceManager& instance_manager)
 	const fixed_point_t projected_spending = projected_administration_spending
 		+ projected_education_spending
 		+ projected_military_spending
-		+ projected_social_spending;
-	// + tariffs (if negative)
+		+ projected_social_spending
+		+ projected_import_subsidies;
 	// + reparations + war subsidies
 	// + stockpile costs
 	// + industrial subsidies
 	// + loan interest
 
 	fixed_point_t available_funds = cash_stockpile.get_copy_of_value();
+	fixed_point_t actual_import_subsidies;
 	if (projected_spending <= available_funds) {
 		actual_administration_spending = projected_administration_spending;
 		actual_education_spending = projected_education_spending;
 		actual_military_spending = projected_military_spending;
 		actual_social_spending = projected_social_spending;
+		actual_import_subsidies = projected_import_subsidies;
 	} else {
 		//TODO try take loan (callback?)
 		//update available_funds with loan
@@ -1692,7 +1699,15 @@ void CountryInstance::country_tick_before_map(InstanceManager& instance_manager)
 					available_funds -= projected_social_spending;
 					actual_social_spending = projected_social_spending;
 
-					actual_military_spending = std::min(available_funds, projected_military_spending);
+					if (available_funds < projected_military_spending) {
+						actual_military_spending = available_funds;
+						actual_import_subsidies = fixed_point_t::_0();
+					} else {
+						available_funds -= projected_military_spending;
+						actual_military_spending = projected_military_spending;
+
+						actual_import_subsidies = std::min(available_funds, projected_import_subsidies);
+					}
 				}
 			}
 		}
@@ -1702,7 +1717,11 @@ void CountryInstance::country_tick_before_map(InstanceManager& instance_manager)
 		data.clear_daily_recorded_data();
 	}
 
-	actual_net_tariffs = import_value = fixed_point_t::_0();
+	if (has_import_subsidies()) {
+		actual_net_tariffs = -actual_import_subsidies;
+	} else {
+		actual_net_tariffs = fixed_point_t::_0();
+	}
 	taxable_income_by_pop_type.fill(fixed_point_t::_0());
 }
 
@@ -1837,7 +1856,7 @@ void CountryInstance::report_output(ProductionType const& production_type, const
 	good_data.production_per_production_type[&production_type] += quantity;
 }
 
-void CountryInstance::request_salaries_and_welfare(Pop& pop) const {
+void CountryInstance::request_salaries_and_welfare_and_import_subsidies(Pop& pop) const {
 	PopType const& pop_type = *pop.get_type();
 	const pop_size_t pop_size = pop.get_size();
 	const fixed_point_t corruption_cost_multiplier = get_corruption_cost_multiplier();
@@ -1900,6 +1919,16 @@ void CountryInstance::request_salaries_and_welfare(Pop& pop) const {
 			pop.add_unemployment_subsidies(unemployment_subsidies);
 		}
 	}
+
+	if (actual_net_tariffs < fixed_point_t::_0()) {
+		const fixed_point_t import_subsidies = fixed_point_t::mul_div(
+			effective_tariff_rate // < 0
+				* pop.get_yesterdays_import_value().get_copy_of_value(),
+			actual_net_tariffs, // < 0
+			projected_import_subsidies // > 0
+		); //effective_tariff_rate * actual_net_tariffs cancel out the negative
+		pop.add_import_subsidies(import_subsidies);
+	}
 }
 
 fixed_point_t CountryInstance::calculate_minimum_wage_base(PopType const& pop_type) const {
@@ -1914,9 +1943,12 @@ fixed_point_t CountryInstance::calculate_minimum_wage_base(PopType const& pop_ty
 }
 
 fixed_point_t CountryInstance::apply_tariff(const fixed_point_t money_spent_on_imports) {
+	if (effective_tariff_rate <= fixed_point_t::_0()) {
+		return fixed_point_t::_0();
+	}
+
 	const fixed_point_t tariff = effective_tariff_rate * money_spent_on_imports;
-	const std::lock_guard<std::mutex> lock_guard { *import_value_mutex };
-	import_value += money_spent_on_imports;
+	const std::lock_guard<std::mutex> lock_guard { *actual_net_tariffs_mutex };
 	actual_net_tariffs += tariff;
 	return tariff;
 }
@@ -2262,7 +2294,6 @@ void CountryInstanceManager::country_manager_tick_before_map(InstanceManager& in
 
 void CountryInstanceManager::country_manager_tick_after_map(InstanceManager& instance_manager) {
 	//TODO parallellise?
-	//TODO update and pay government salaries and social spending
 	for (CountryInstance& country : country_instances.get_items()) {
 		country.country_tick_after_map(instance_manager);
 	}

@@ -171,11 +171,15 @@ namespace OpenVic {
 		fixed_point_t PROPERTY(projected_pensions_spending_unscaled_by_slider);
 		fixed_point_t PROPERTY(projected_unemployment_subsidies_spending_unscaled_by_slider);
 
+		fixed_point_t PROPERTY(yesterdays_import_value); //>= 0
 		SliderValue PROPERTY(tariff_rate_slider_value);
 		fixed_point_t PROPERTY(effective_tariff_rate);
-		std::unique_ptr<std::mutex> import_value_mutex;
-		fixed_point_t PROPERTY(import_value); //>= 0
+		std::unique_ptr<std::mutex> actual_net_tariffs_mutex;
+		fixed_point_t PROPERTY(projected_import_subsidies);
 		fixed_point_t PROPERTY(actual_net_tariffs);
+		constexpr bool has_import_subsidies() const {
+			return effective_tariff_rate < fixed_point_t::_0();
+		}
 
 		//TODO actual factory subsidies
 		//projected cost is UI only and lists the different factories
@@ -636,7 +640,7 @@ namespace OpenVic {
 		void report_input_consumption(ProductionType const& production_type, GoodDefinition const& good, const fixed_point_t quantity);
 		void report_input_demand(ProductionType const& production_type, GoodDefinition const& good, const fixed_point_t quantity);
 		void report_output(ProductionType const& production_type, const fixed_point_t quantity);
-		void request_salaries_and_welfare(Pop& pop) const;
+		void request_salaries_and_welfare_and_import_subsidies(Pop& pop) const;
 		fixed_point_t calculate_minimum_wage_base(PopType const& pop_type) const;
 		fixed_point_t apply_tariff(const fixed_point_t money_spent_on_imports);
 	};

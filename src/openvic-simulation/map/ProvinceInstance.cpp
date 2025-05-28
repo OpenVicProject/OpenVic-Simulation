@@ -249,6 +249,7 @@ size_t ProvinceInstance::get_pop_count() const {
  */
 void ProvinceInstance::_update_pops(DefineManager const& define_manager) {
 	total_population = 0;
+	yesterdays_import_value = fixed_point_t::_0();
 	average_literacy = 0;
 	average_consciousness = 0;
 	average_militancy = 0;
@@ -292,6 +293,7 @@ void ProvinceInstance::_update_pops(DefineManager const& define_manager) {
 		const fixed_point_t pop_size_f = fixed_point_t::parse(pop_size_s);
 
 		total_population += pop_size_s;
+		yesterdays_import_value += pop.get_yesterdays_import_value().get_copy_of_value();
 		average_literacy += pop.get_literacy() * pop_size_f;
 		average_consciousness += pop.get_consciousness() * pop_size_f;
 		average_militancy += pop.get_militancy() * pop_size_f;

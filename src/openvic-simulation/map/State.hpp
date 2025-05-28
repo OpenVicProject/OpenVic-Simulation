@@ -26,6 +26,7 @@ namespace OpenVic {
 		ProvinceInstance::colony_status_t PROPERTY(colony_status);
 
 		pop_size_t PROPERTY(total_population, 0);
+		fixed_point_t PROPERTY(yesterdays_import_value);
 		fixed_point_t PROPERTY(average_literacy);
 		fixed_point_t PROPERTY(average_consciousness);
 		fixed_point_t PROPERTY(average_militancy);

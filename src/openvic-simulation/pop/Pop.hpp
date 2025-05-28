@@ -61,7 +61,7 @@ namespace OpenVic {
 		fixed_point_t PROPERTY(money_type);
 
 	#define DECLARE_POP_MONEY_STORE_FUNCTIONS(name) \
-		void add_##name(fixed_point_t amount);
+		void add_##name(const fixed_point_t amount);
 
 	/* REQUIREMENTS:
 	 * POP-18, POP-19, POP-20, POP-21, POP-34, POP-35, POP-36, POP-37
@@ -125,6 +125,7 @@ namespace OpenVic {
 		fixed_point_t PROPERTY(savings);
 		moveable_atomic_fixed_point_t PROPERTY(cash);
 		moveable_atomic_fixed_point_t PROPERTY(expenses); //positive value means POP paid for goods. This is displayed * -1 in UI.
+		moveable_atomic_fixed_point_t PROPERTY(yesterdays_import_value);
 
 		#define NEED_MEMBERS(need_category) \
 			moveable_atomic_fixed_point_t need_category##_needs_acquired_quantity, need_category##_needs_desired_quantity; \
@@ -191,6 +192,7 @@ namespace OpenVic {
 
 		DO_FOR_ALL_TYPES_OF_POP_INCOME(DECLARE_POP_MONEY_STORE_FUNCTIONS)
 		DO_FOR_ALL_TYPES_OF_POP_EXPENSES(DECLARE_POP_MONEY_STORE_FUNCTIONS)
+		DECLARE_POP_MONEY_STORE_FUNCTIONS(import_subsidies)
 		#undef DECLARE_POP_MONEY_STORE_FUNCTIONS
 		void pop_tick(PopValuesFromProvince& shared_values, std::vector<fixed_point_t>& reusable_vector);
 		void allocate_cash_for_artisanal_spending(const fixed_point_t money_to_spend);
