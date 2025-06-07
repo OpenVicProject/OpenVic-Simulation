@@ -82,6 +82,7 @@ fixed_point_t State::get_religion_proportion(Religion const& religion) const {
 
 void State::update_gamestate() {
 	total_population = 0;
+	yesterdays_import_value = fixed_point_t::_0();
 	average_literacy = 0;
 	average_consciousness = 0;
 	average_militancy = 0;
@@ -108,6 +109,7 @@ void State::update_gamestate() {
 
 	for (ProvinceInstance const* const province : provinces) {
 		total_population += province->get_total_population();
+		yesterdays_import_value += province->get_yesterdays_import_value();
 
 		// TODO - change casting if pop_size_t changes type
 		const fixed_point_t province_population = fixed_point_t::parse(province->get_total_population());

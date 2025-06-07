@@ -110,6 +110,7 @@ namespace OpenVic {
 	private:
 		plf::colony<Pop> PROPERTY(pops); // TODO - replace with a more easily vectorisable container?
 		pop_size_t PROPERTY(total_population, 0);
+		fixed_point_t PROPERTY(yesterdays_import_value);
 		// TODO - population change (growth + migration), monthly totals + breakdown by source/destination
 		fixed_point_t PROPERTY(average_literacy);
 		fixed_point_t PROPERTY(average_consciousness);
