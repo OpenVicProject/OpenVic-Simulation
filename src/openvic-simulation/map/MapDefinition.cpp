@@ -4,6 +4,7 @@
 #include <cctype>
 #include <charconv>
 #include <cstdint>
+#include <span>
 #include <system_error>
 #include <vector>
 
@@ -497,7 +498,7 @@ static bool _parse_province_colour(colour_t& colour, std::array<std::string_view
 	return ret;
 }
 
-bool MapDefinition::load_province_definitions(std::vector<LineObject> const& lines) {
+bool MapDefinition::load_province_definitions(std::span<const LineObject> lines) {
 	bool ret = true;
 
 	if (lines.empty()) {
@@ -568,7 +569,7 @@ bool MapDefinition::load_region_colours(ast::NodeCPtr root, std::vector<colour_t
 	})(root);
 }
 
-bool MapDefinition::load_region_file(ast::NodeCPtr root, std::vector<colour_t> const& colours) {
+bool MapDefinition::load_region_file(ast::NodeCPtr root, std::span<const colour_t> colours) {
 	const bool ret = expect_dictionary_reserve_length(
 		regions,
 		[this, &colours](std::string_view region_identifier, ast::NodeCPtr region_node) -> bool {
@@ -992,7 +993,7 @@ bool MapDefinition::_generate_standard_province_adjacencies() {
 	return changed;
 }
 
-bool MapDefinition::generate_and_load_province_adjacencies(std::vector<LineObject> const& additional_adjacencies) {
+bool MapDefinition::generate_and_load_province_adjacencies(std::span<const LineObject> additional_adjacencies) {
 	bool ret = _generate_standard_province_adjacencies();
 	if (!ret) {
 		Logger::error("Failed to generate standard province adjacencies!");

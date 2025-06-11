@@ -2,6 +2,7 @@
 
 #include <filesystem>
 #include <fstream>
+#include <span>
 #include <vector>
 
 namespace OpenVic {
@@ -56,7 +57,7 @@ namespace OpenVic {
 		int32_t get_width() const;
 		int32_t get_height() const;
 		uint16_t get_bits_per_pixel() const;
-		std::vector<palette_colour_t> const& get_palette() const;
-		std::vector<uint8_t> const& get_pixel_data() const;
+		std::span<const palette_colour_t> get_palette() const;
+		std::span<const uint8_t> get_pixel_data() const;
 	};
 }

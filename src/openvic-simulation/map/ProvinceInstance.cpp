@@ -1,5 +1,7 @@
 #include "ProvinceInstance.hpp"
 
+#include <span>
+
 #include "openvic-simulation/country/CountryInstance.hpp"
 #include "openvic-simulation/defines/Define.hpp"
 #include "openvic-simulation/DefinitionManager.hpp"
@@ -219,7 +221,7 @@ bool ProvinceInstance::add_pop(Pop&& pop) {
 }
 
 bool ProvinceInstance::add_pop_vec(
-	std::vector<PopBase> const& pop_vec,
+	std::span<const PopBase> pop_vec,
 	MarketInstance& market_instance,
 	ArtisanalProducerFactoryPattern& artisanal_producer_factory_pattern
 ) {
@@ -410,7 +412,7 @@ fixed_point_t ProvinceInstance::get_modifier_effect_value(ModifierEffect const& 
 
 bool ProvinceInstance::convert_rgo_worker_pops_to_equivalent(ProductionType const& production_type) {
 	bool is_valid_operation = true;
-	std::vector<Job> const& jobs = production_type.get_jobs();
+	std::span<const Job> jobs = production_type.get_jobs();
 	for (Pop& pop : pops) {
 		for (Job const& job : jobs) {
 			PopType const* const job_pop_type = job.get_pop_type();
