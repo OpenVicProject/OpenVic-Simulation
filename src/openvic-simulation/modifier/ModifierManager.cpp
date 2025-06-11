@@ -787,7 +787,7 @@ key_value_callback_t ModifierManager::_expect_modifier_effect(
 	modifier_effect_registry_t const& registry,
 	ModifierValue& modifier_value
 ) const {
-	return _expect_modifier_effect_with_fallback(registry, modifier_value, key_value_invalid_callback);
+	return _expect_modifier_effect_with_fallback(registry, modifier_value, key_value_warn_callback);
 }
 
 key_value_callback_t ModifierManager::_expect_modifier_effect_with_fallback(
@@ -847,7 +847,7 @@ key_value_callback_t ModifierManager::expect_unit_terrain_modifier(
 		const std::string flat_identifier = get_flat_identifier(key, terrain_type_identifier);
 		ModifierEffect const* effect = unit_terrain_modifier_effects.get_item_by_identifier(flat_identifier);
 		if (effect == nullptr) {
-			return key_value_invalid_callback(flat_identifier, value);
+			return key_value_warn_callback(flat_identifier, value);
 		}
 		return _add_modifier_cb(modifier_value, effect, value);
 	};

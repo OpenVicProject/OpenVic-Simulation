@@ -58,7 +58,7 @@ bool GovernmentTypeManager::load_government_types_file(IdeologyManager const& id
 			size_t total_expected_ideologies = 0;
 			bool ret = expect_dictionary_keys_and_default(
 				increment_callback(total_expected_ideologies),
-				"election", ONE_EXACTLY, expect_bool(assign_variable_callback(elections)),
+				"election", ZERO_OR_ONE, expect_bool(assign_variable_callback(elections)),
 				"duration", ZERO_OR_ONE, expect_months(assign_variable_callback(term_duration)),
 				"appoint_ruling_party", ONE_EXACTLY, expect_bool(assign_variable_callback(appoint_ruling_party)),
 				"flagType", ZERO_OR_ONE, expect_identifier(assign_variable_callback(flag_type_identifier))

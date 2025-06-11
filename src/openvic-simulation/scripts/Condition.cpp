@@ -188,6 +188,7 @@ bool ConditionManager::setup_conditions(DefinitionManager const& definition_mana
 	ret &= add_condition("is_secondary_power", BOOLEAN, COUNTRY);
 	ret &= add_condition("is_sphere_leader_of", IDENTIFIER, COUNTRY, NO_SCOPE, NO_IDENTIFIER, COUNTRY_TAG);
 	ret &= add_condition("is_substate", BOOLEAN, COUNTRY);
+	ret &= add_condition("is_subject", BOOLEAN, COUNTRY);
 	ret &= add_condition("is_vassal", BOOLEAN, COUNTRY);
 	ret &= add_condition("literacy", REAL, COUNTRY);
 	ret &= add_condition("lost_national", REAL, COUNTRY);
@@ -680,7 +681,15 @@ node_callback_t ConditionManager::expect_condition_node(
 		}
 
 		if (!ret) {
-			Logger::error("Could not parse condition node ", identifier);
+			Logger::warning("Could not parse condition node ", identifier, ", will always evaluate to false!");
+			Condition const* always_condition = conditions.get_item_by_identifier("always");
+			return callback({
+				always_condition,
+				std::move(ConditionNode::value_t(false)),
+				true,
+				key_item,
+				value_item
+			});
 		}
 
 		ret &= callback({
@@ -711,21 +720,22 @@ node_callback_t ConditionManager::expect_condition_node_list(
 	callback_t<ConditionNode&&> callback, bool top_scope
 ) const {
 	return [this, &definition_manager, callback, current_scope, this_scope, from_scope, top_scope](ast::NodeCPtr node) -> bool {
-		const auto expect_node = [
-			this, &definition_manager, callback, current_scope, this_scope, from_scope
-		](Condition const& condition, ast::NodeCPtr node) -> bool {
+		const auto expect_node = [this, &definition_manager, callback, current_scope, this_scope, from_scope]
+		(Condition const& condition, ast::NodeCPtr node) -> bool {
 			return expect_condition_node(
 				definition_manager, condition, current_scope, this_scope, from_scope, callback
 			)(node);
 		};
+		const auto invalid_condition_node = [this, &expect_node, top_scope](std::string_view id, ast::NodeCPtr node) -> bool {
+			if (top_scope && id == "factor") { return true; }
+			Logger::warning("Condition ", id, " does not exist in scope at condition node: ", node, ", and will always evaluate to false!"); // TODO: make this error message more useful by pinning down node to an actual file or something
+			return true;
+		};
 
-		bool ret = conditions.expect_item_dictionary_and_default(
-			top_scope ? top_scope_fallback : key_value_invalid_callback, expect_node
+		return conditions.expect_item_dictionary_and_default(
+			invalid_condition_node,
+			expect_node
 		)(node);
-		if (!ret) {
-			Logger::error("Error parsing condition node:\n", node);
-		}
-		return ret;
 	};
 }
 

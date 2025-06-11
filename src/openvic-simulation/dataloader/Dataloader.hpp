@@ -1,11 +1,13 @@
 #pragma once
 
 #include <cstdint>
+#include <string_view>
 
 #include <openvic-dataloader/csv/Parser.hpp>
 #include <openvic-dataloader/v2script/Parser.hpp>
 
 #include "openvic-simulation/dataloader/NodeTools.hpp"
+#include "openvic-simulation/dataloader/ModManager.hpp"
 
 #include <function2/function2.hpp>
 
@@ -27,6 +29,7 @@ namespace OpenVic {
 
 	private:
 		path_vector_t PROPERTY(roots);
+		path_vector_t PROPERTY(replace_paths);
 		std::vector<ovdl::v2script::Parser> cached_parsers;
 
 		bool _load_interface_files(UIManager& ui_manager) const;
@@ -42,6 +45,8 @@ namespace OpenVic {
 		bool _load_sound_effect_defines(DefinitionManager& definition_manager) const;
 		bool _load_decisions(DefinitionManager& definition_manager);
 		bool _load_history(DefinitionManager& definition_manager, bool unused_history_file_warnings) const;
+
+		bool should_ignore_path(fs::path const& path, path_vector_t const& replace_paths) const;
 
 		/* _DirIterator is fs::directory_iterator or fs::recursive_directory_iterator. _UniqueKey is the type of a callable
 		 * which converts a string_view filepath with root removed into a string_view unique key. Any path whose key is empty
@@ -91,8 +96,12 @@ namespace OpenVic {
 		///
 		static fs::path search_for_game_path(fs::path hint_path = {});
 
-		/* In reverse-load order, so base defines first and final loaded mod last */
-		bool set_roots(path_vector_t const& new_roots);
+		/// @brief Sets the directories the dataloader should pull content from.
+		///
+		/// @param new_roots Dataloader roots in reverse-load order, so base defines first and final loaded mod last
+		/// @param new_replace_paths All base define paths that should be ignored entirely in favour of mods.
+		/// @return True if successful, false if failed.
+		bool set_roots(path_vector_t const& new_roots, path_vector_t const& new_replace_paths);
 
 		/* REQUIREMENTS:
 		 * DAT-24
@@ -114,6 +123,9 @@ namespace OpenVic {
 		bool apply_to_files(path_vector_t const& files, apply_files_callback_t callback) const;
 
 		string_set_t lookup_dirs_in_dir(std::string_view path) const;
+
+		/* Load all mod descriptors passed by the user. Importantly, loads dependencies and replace_paths for us to check. */
+		bool load_mod_descriptors(std::span<const std::string> descriptors, ModManager& mod_manager);
 
 		/* Load and parse all of the text defines data, including parsing cached condition and effect scripts after all the
 		 * static data is loaded. Paths to the base and mod defines must have been supplied with set_roots.*/

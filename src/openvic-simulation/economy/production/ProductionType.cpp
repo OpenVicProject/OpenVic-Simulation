@@ -220,8 +220,7 @@ bool ProductionTypeManager::load_production_types_file(
 
 			std::string_view template_id = "";
 			bool found_template = false;
-			const bool ret =
-				expect_key(template_symbol, expect_identifier(assign_variable_callback(template_id)), &found_template)(value);
+			const bool ret = expect_key(template_symbol, expect_identifier(assign_variable_callback(template_id)), &found_template)(value);
 			if (found_template) {
 				if (ret) {
 					templates.emplace(template_id);
@@ -229,6 +228,12 @@ bool ProductionTypeManager::load_production_types_file(
 				} else {
 					Logger::error("Failed get template identifier for ", key);
 					return false;
+				}
+			} else {
+				// this registers templates too, works in some mods (PDM/DoD) that have templates that are unused but aren't factories themselves
+				if (key.ends_with(template_symbol.view())) {
+					templates.emplace(key);
+					template_target_map.emplace(key, key);
 				}
 			}
 			return true;

@@ -183,7 +183,11 @@ bool TerrainTypeManager::_load_terrain_type_mapping(std::string_view mapping_key
 	TerrainTypeMapping::index_t priority = 0;
 	bool has_texture = true;
 
-	bool ret = expect_dictionary_keys(
+	bool ret = expect_dictionary_keys_and_default(
+		[mapping_key](std::string_view key, ast::NodeCPtr value) -> bool {
+			Logger::warning("Invalid key ", key, " in terrain mapping ", mapping_key);
+			return true;
+		},
 		"type", ONE_EXACTLY, expect_terrain_type_identifier(assign_variable_callback_pointer(type)),
 		"color", ONE_EXACTLY, expect_list_reserve_length(terrain_indices, expect_uint<TerrainTypeMapping::index_t>(
 			[&terrain_indices](TerrainTypeMapping::index_t val) -> bool {

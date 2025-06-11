@@ -2,6 +2,8 @@
 
 #include <string_view>
 
+#include <openvic-dataloader/v2script/AbstractSyntaxTree.hpp>
+
 #include "openvic-simulation/dataloader/Dataloader.hpp"
 #include "openvic-simulation/dataloader/NodeTools.hpp"
 #include "openvic-simulation/DefinitionManager.hpp"
@@ -11,7 +13,7 @@
 #include "openvic-simulation/pop/Culture.hpp"
 #include "openvic-simulation/types/Colour.hpp"
 #include "openvic-simulation/types/IdentifierRegistry.hpp"
-#include <openvic-dataloader/v2script/AbstractSyntaxTree.hpp>
+#include "openvic-simulation/utility/Logger.hpp"
 
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;
@@ -129,13 +131,19 @@ bool CountryDefinitionManager::load_countries(
 }
 
 bool CountryDefinitionManager::load_country_colours(ast::NodeCPtr root) {
-	return country_definitions.expect_item_dictionary([](CountryDefinition& country, ast::NodeCPtr colour_node) -> bool {
-		return expect_dictionary_keys(
-			"color1", ONE_EXACTLY, expect_colour(assign_variable_callback(country.primary_unit_colour)),
-			"color2", ONE_EXACTLY, expect_colour(assign_variable_callback(country.secondary_unit_colour)),
-			"color3", ONE_EXACTLY, expect_colour(assign_variable_callback(country.tertiary_unit_colour))
-		)(colour_node);
-	})(root);
+	return country_definitions.expect_item_dictionary_and_default(
+		[](std::string_view key, ast::NodeCPtr value) -> bool {
+			Logger::warning("country_colors.txt references country tag ", key, " which is not defined!");
+			return true;
+		},
+		[](CountryDefinition& country, ast::NodeCPtr colour_node) -> bool {
+			return expect_dictionary_keys(
+				"color1", ONE_EXACTLY, expect_colour(assign_variable_callback(country.primary_unit_colour)),
+				"color2", ONE_EXACTLY, expect_colour(assign_variable_callback(country.secondary_unit_colour)),
+				"color3", ONE_EXACTLY, expect_colour(assign_variable_callback(country.tertiary_unit_colour))
+			)(colour_node);
+		}
+	)(root);
 }
 
 node_callback_t CountryDefinitionManager::load_country_party(

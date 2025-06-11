@@ -4,6 +4,7 @@
 #include "openvic-simulation/dataloader/NodeTools.hpp"
 #include "openvic-simulation/interface/UI.hpp"
 #include "openvic-simulation/misc/SoundEffect.hpp"
+#include "openvic-simulation/types/IdentifierRegistry.hpp"
 
 using namespace OpenVic;
 using namespace OpenVic::GUI;
@@ -85,7 +86,7 @@ Window::Window() : background {}, size {}, moveable { false }, fullscreen { fals
 
 bool Window::_fill_key_map(NodeTools::case_insensitive_key_map_t& key_map, UIManager const& ui_manager) {
 	bool ret = Element::_fill_elements_key_map(key_map, [this](std::unique_ptr<Element>&& element) -> bool {
-		return window_elements.add_item(std::move(element));
+		return window_elements.add_item(std::move(element), duplicate_warning_callback);
 	}, ui_manager);
 	ret &= Element::_fill_key_map(key_map, ui_manager);
 	ret &= add_key_map_entries(key_map,
