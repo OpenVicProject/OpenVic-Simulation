@@ -172,7 +172,7 @@ void ProvinceHistoryManager::reserve_more_province_histories(size_t size) {
 }
 
 void ProvinceHistoryManager::lock_province_histories(MapDefinition const& map_definition, bool detailed_errors) {
-	std::vector<ProvinceDefinition> const& provinces = map_definition.get_province_definitions();
+	std::span<const ProvinceDefinition> provinces = map_definition.get_province_definitions();
 
 	std::vector<bool> province_checklist(provinces.size());
 	for (auto [province, history_map] : mutable_iterator(province_histories)) {

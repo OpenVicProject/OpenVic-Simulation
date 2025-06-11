@@ -393,7 +393,7 @@ void GoodMarket::execute_buy_orders(
 	const fixed_point_t new_price,
 	IndexedMap<CountryInstance, fixed_point_t> const& actual_bought_per_country,
 	IndexedMap<CountryInstance, fixed_point_t> const& supply_per_country,
-	std::vector<fixed_point_t> const& quantity_bought_per_order
+	std::span<const fixed_point_t> quantity_bought_per_order
 ) {
 	quantity_traded_yesterday = fixed_point_t::_0();
 	for (size_t i = 0; i < buy_up_to_orders.size(); i++) {

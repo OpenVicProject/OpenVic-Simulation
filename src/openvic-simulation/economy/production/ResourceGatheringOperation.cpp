@@ -1,5 +1,6 @@
 #include "ResourceGatheringOperation.hpp"
 
+#include <span>
 #include <vector>
 
 #include "openvic-simulation/economy/production/Employee.hpp"
@@ -68,7 +69,7 @@ void ResourceGatheringOperation::initialise_rgo_size_multiplier() {
 	ProvinceInstance& location = *location_ptr;
 	ModifierEffectCache const& modifier_effect_cache = location.get_modifier_effect_cache();
 	ProductionType const& production_type = *production_type_nullable;
-	std::vector<Job> const& jobs = production_type.get_jobs();
+	std::span<const Job> jobs = production_type.get_jobs();
 	IndexedMap<PopType, pop_size_t> const& province_pop_type_distribution = location.get_pop_type_distribution();
 
 	pop_size_t total_worker_count_in_province = 0; //not counting equivalents
@@ -127,7 +128,7 @@ void ResourceGatheringOperation::rgo_tick(std::vector<fixed_point_t>& reusable_v
 	}
 
 	ProductionType const& production_type = *production_type_nullable;
-	std::vector<Job> const& jobs = production_type.get_jobs();
+	std::span<const Job> jobs = production_type.get_jobs();
 	IndexedMap<PopType, pop_size_t> const& province_pop_type_distribution = location.get_pop_type_distribution();
 
 	total_worker_count_in_province_cache = 0; //not counting equivalents
@@ -197,7 +198,7 @@ void ResourceGatheringOperation::hire() {
 		proportion_to_hire = max_worker_count_real / available_worker_count_real;
 	}
 
-	std::vector<Job> const& jobs = production_type.get_jobs();
+	std::span<const Job> jobs = production_type.get_jobs();
 	for (Pop& pop : location.get_mutable_pops()){
 		PopType const& pop_type = *pop.get_type();
 		for (Job const& job : jobs) {
