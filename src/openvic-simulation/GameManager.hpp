@@ -1,6 +1,7 @@
 #pragma once
 
 #include <optional>
+#include <span>
 #include <string_view>
 
 #include "openvic-simulation/DefinitionManager.hpp"
@@ -9,11 +10,17 @@
 #include "openvic-simulation/dataloader/Dataloader.hpp"
 #include "openvic-simulation/misc/GameRulesManager.hpp"
 #include "openvic-simulation/gen/commit_info.gen.hpp"
+#include "openvic-simulation/multiplayer/ChatManager.hpp"
+#include "openvic-simulation/multiplayer/ClientManager.hpp"
+#include "openvic-simulation/multiplayer/HostManager.hpp"
 #include "openvic-simulation/utility/ForwardableSpan.hpp"
 
 #include <function2/function2.hpp>
 
 namespace OpenVic {
+	struct HostManager;
+	struct ClientManager;
+
 	struct GameManager {
 		using elapsed_time_getter_func_t = fu2::function_base<true, true, fu2::capacity_none, false, false, uint64_t() const>;
 
@@ -31,6 +38,10 @@ namespace OpenVic {
 		bool PROPERTY_CUSTOM_PREFIX(definitions_loaded, are);
 		bool PROPERTY_CUSTOM_PREFIX(mod_descriptors_loaded, are);
 
+		memory::unique_ptr<HostManager> host_manager;
+		memory::unique_ptr<ClientManager> client_manager;
+		ChatManager PROPERTY_REF(chat_manager);
+
 		bool _get_mod_dependencies(Mod const* mod, memory::vector<Mod const*>& load_list);
 
 	public:
@@ -46,6 +57,22 @@ namespace OpenVic {
 
 		inline constexpr InstanceManager const* get_instance_manager() const {
 			return instance_manager ? &*instance_manager : nullptr;
+		}
+
+		inline HostManager* get_host_manager() {
+			return host_manager.get();
+		}
+
+		inline HostManager const* get_host_manager() const {
+			return host_manager.get();
+		}
+
+		inline ClientManager* get_client_manager() {
+			return client_manager.get();
+		}
+
+		inline ClientManager const* get_client_manager() const {
+			return client_manager.get();
 		}
 
 		inline bool set_base_path(Dataloader::path_span_t base_path) {
@@ -69,6 +96,9 @@ namespace OpenVic {
 		bool start_game_session();
 
 		bool update_clock();
+
+		void create_client();
+		void create_host(std::string_view session_name = "");
 
 		static constexpr std::string_view get_commit_hash() {
 			return SIM_COMMIT_HASH;
