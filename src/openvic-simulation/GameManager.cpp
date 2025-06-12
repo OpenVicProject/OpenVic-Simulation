@@ -1,6 +1,10 @@
 #include "GameManager.hpp"
 
 #include <chrono>
+#include <string>
+
+#include "openvic-simulation/multiplayer/ClientManager.hpp"
+#include "openvic-simulation/multiplayer/HostManager.hpp"
 
 using namespace OpenVic;
 
@@ -123,6 +127,17 @@ bool GameManager::update_clock() {
 	}
 
 	return instance_manager->update_clock();
+}
+
+void GameManager::create_client() {
+	client_manager = std::make_unique<ClientManager>(this);
+}
+
+void GameManager::create_host(std::string session_name) {
+	host_manager = std::make_unique<HostManager>(this);
+	if (!session_name.empty()) {
+		host_manager->get_host_session().set_game_name(session_name);
+	}
 }
 
 uint64_t GameManager::get_elapsed_microseconds() {
