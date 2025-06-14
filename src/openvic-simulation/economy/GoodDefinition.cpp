@@ -139,7 +139,7 @@ bool GoodDefinitionManager::generate_modifiers(ModifierManager& modifier_manager
 	IndexedMap<GoodDefinition, ModifierEffectCache::good_effects_t>& good_effects =
 		modifier_manager.modifier_effect_cache.good_effects;
 
-	good_effects.set_keys(&get_good_definitions());
+	good_effects.set_keys(get_good_definitions());
 
 	bool ret = true;
 

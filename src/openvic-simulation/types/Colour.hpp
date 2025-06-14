@@ -164,7 +164,7 @@ namespace OpenVic {
 		value_type red;
 		value_type green;
 		value_type blue;
-		[[no_unique_address]] _alpha_t alpha;
+		OV_NO_UNIQUE_ADDRESS _alpha_t alpha;
 
 		static constexpr std::integral_constant<std::size_t, std::is_same_v<decltype(alpha), value_type> ? 4 : 3> size = {};
 

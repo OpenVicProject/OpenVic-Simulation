@@ -21,7 +21,7 @@ bool GameManager::load_mod_descriptors(std::span<const std::string> descriptors)
 	return true;
 }
 
-bool GameManager::set_roots(Dataloader::path_vector_t const& roots, Dataloader::path_vector_t const& replace_paths) {
+bool GameManager::set_roots(Dataloader::path_span_t roots, Dataloader::path_span_t replace_paths) {
 	if (!dataloader.set_roots(roots, replace_paths)) {
 		Logger::error("Failed to set dataloader roots!");
 		return false;

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <optional>
+#include <span>
 
 #include "openvic-simulation/DefinitionManager.hpp"
 #include "openvic-simulation/InstanceManager.hpp"
@@ -35,7 +36,7 @@ namespace OpenVic {
 			return instance_manager ? &*instance_manager : nullptr;
 		}
 
-		bool set_roots(Dataloader::path_vector_t const& roots, Dataloader::path_vector_t const& replace_paths);
+		bool set_roots(Dataloader::path_span_t roots, Dataloader::path_span_t replace_paths);
 
 		bool load_mod_descriptors(std::span<const std::string> descriptors);
 

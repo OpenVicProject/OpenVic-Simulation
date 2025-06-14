@@ -48,12 +48,12 @@ namespace OpenVic {
 			fixed_point_t new_output_quantity_yesterday,
 			fixed_point_t new_unsold_quantity_yesterday,
 			std::vector<Employee>&& new_employees,
-			decltype(employee_count_per_type_cache)::keys_type const& pop_type_keys
+			decltype(employee_count_per_type_cache)::keys_span_type pop_type_keys
 		);
 
 		ResourceGatheringOperation(
 			MarketInstance& new_market_instance,
-			decltype(employee_count_per_type_cache)::keys_type const& pop_type_keys
+			decltype(employee_count_per_type_cache)::keys_span_type pop_type_keys
 		);
 
 		constexpr bool is_valid() const {

@@ -118,7 +118,7 @@ bool BuildingTypeManager::load_buildings_file(
 	IndexedMap<BuildingType, ModifierEffectCache::building_type_effects_t>& building_type_effects =
 		modifier_manager.modifier_effect_cache.building_type_effects;
 
-	building_type_effects.set_keys(&get_building_types());
+	building_type_effects.set_keys(get_building_types());
 
 	for (BuildingType const& building_type : get_building_types()) {
 		using enum ModifierEffect::format_t;

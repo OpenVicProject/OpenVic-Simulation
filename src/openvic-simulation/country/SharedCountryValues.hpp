@@ -42,7 +42,7 @@ namespace OpenVic {
 			ModifierEffectCache const& new_modifier_effect_cache,
 			CountryDefines const& new_country_defines,
 			PopsDefines const& new_pop_defines,
-			decltype(shared_pop_type_values)::keys_type const& pop_type_keys
+			decltype(shared_pop_type_values)::keys_span_type pop_type_keys
 		);
 		SharedCountryValues(SharedCountryValues&&) = default;
 

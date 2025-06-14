@@ -56,9 +56,9 @@ namespace OpenVic {
 			ProvinceInstance* new_capital,
 			std::vector<ProvinceInstance*>&& new_provinces,
 			ProvinceInstance::colony_status_t new_colony_status,
-			decltype(population_by_strata)::keys_type const& strata_keys,
-			decltype(pop_type_distribution)::keys_type const& pop_type_keys,
-			decltype(ideology_distribution)::keys_type const& ideology_keys
+			decltype(population_by_strata)::keys_span_type strata_keys,
+			decltype(pop_type_distribution)::keys_span_type pop_type_keys,
+			decltype(ideology_distribution)::keys_span_type ideology_keys
 		);
 
 	public:
@@ -130,9 +130,9 @@ namespace OpenVic {
 
 		bool add_state_set(
 			MapInstance& map_instance, Region const& region,
-			decltype(State::population_by_strata)::keys_type const& strata_keys,
-			decltype(State::pop_type_distribution)::keys_type const& pop_type_keys,
-			decltype(State::ideology_distribution)::keys_type const& ideology_keys
+			decltype(State::population_by_strata)::keys_span_type strata_keys,
+			decltype(State::pop_type_distribution)::keys_span_type pop_type_keys,
+			decltype(State::ideology_distribution)::keys_span_type ideology_keys
 		);
 
 	public:
@@ -141,9 +141,9 @@ namespace OpenVic {
 		 * validated by functions that modify it. */
 		bool generate_states(
 			MapInstance& map_instance,
-			decltype(State::population_by_strata)::keys_type const& strata_keys,
-			decltype(State::pop_type_distribution)::keys_type const& pop_type_keys,
-			decltype(State::ideology_distribution)::keys_type const& ideology_keys
+			decltype(State::population_by_strata)::keys_span_type strata_keys,
+			decltype(State::pop_type_distribution)::keys_span_type pop_type_keys,
+			decltype(State::ideology_distribution)::keys_span_type ideology_keys
 		);
 
 		void reset();

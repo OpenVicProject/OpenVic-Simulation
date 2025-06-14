@@ -268,7 +268,7 @@ bool PopManager::add_pop_type(
 		nullptr,
 		std::move(country_migration_target),
 		std::move(migration_target),
-		{ nullptr },
+		{},
 		std::move(ideologies),
 		{}
 	}))) {
@@ -352,7 +352,7 @@ bool PopManager::load_pop_type_file(
 	ConditionalWeightFactorMul country_migration_target { COUNTRY, POP, NO_SCOPE };
 	ConditionalWeightFactorMul migration_target { PROVINCE, POP, NO_SCOPE };
 	ast::NodeCPtr promote_to_node = nullptr;
-	PopType::ideology_weight_map_t ideologies { &ideology_manager.get_ideologies() };
+	PopType::ideology_weight_map_t ideologies { ideology_manager.get_ideologies() };
 	ast::NodeCPtr issues_node = nullptr;
 
 	bool ret = expect_dictionary_keys(
@@ -458,7 +458,7 @@ bool PopManager::load_delayed_parse_pop_type_data(
 		const auto [rebel_units, equivalent, promote_to_node, issues_node] = delayed_parse_nodes[index];
 		PopType* pop_type = pop_types.get_item_by_index(index);
 
-		pop_type->promote_to.set_keys(&get_pop_types());
+		pop_type->promote_to.set_keys(get_pop_types());
 
 		if (rebel_units != nullptr && !unit_type_manager.expect_unit_type_decimal_map(
 			move_variable_callback(pop_type->rebel_units)
@@ -574,7 +574,7 @@ bool PopManager::generate_modifiers(ModifierManager& modifier_manager) const {
 	IndexedMap<Strata, ModifierEffectCache::strata_effects_t>& strata_effects =
 		modifier_manager.modifier_effect_cache.strata_effects;
 
-	strata_effects.set_keys(&get_stratas());
+	strata_effects.set_keys(get_stratas());
 
 	bool ret = true;
 

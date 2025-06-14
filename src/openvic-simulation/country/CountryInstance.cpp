@@ -6,6 +6,7 @@
 #include "openvic-simulation/country/CountryDefinition.hpp"
 #include "openvic-simulation/defines/Define.hpp"
 #include "openvic-simulation/DefinitionManager.hpp"
+#include "openvic-simulation/economy/BuildingType.hpp"
 #include "openvic-simulation/economy/production/ProductionType.hpp"
 #include "openvic-simulation/history/CountryHistory.hpp"
 #include "openvic-simulation/InstanceManager.hpp"
@@ -32,18 +33,18 @@ static constexpr colour_t ERROR_COLOUR = colour_t::from_integer(0xFF0000);
 CountryInstance::CountryInstance(
 	CountryDefinition const* new_country_definition,
 	index_t new_index,
-	decltype(building_type_unlock_levels)::keys_type const& building_type_keys,
-	decltype(technology_unlock_levels)::keys_type const& technology_keys,
-	decltype(invention_unlock_levels)::keys_type const& invention_keys,
-	decltype(upper_house)::keys_type const& ideology_keys,
-	decltype(reforms)::keys_type const& reform_keys,
-	decltype(government_flag_overrides)::keys_type const& government_type_keys,
-	decltype(crime_unlock_levels)::keys_type const& crime_keys,
-	decltype(pop_type_distribution)::keys_type const& pop_type_keys,
-	decltype(goods_data)::keys_type const& good_instances_keys,
-	decltype(regiment_type_unlock_levels)::keys_type const& regiment_type_unlock_levels_keys,
-	decltype(ship_type_unlock_levels)::keys_type const& ship_type_unlock_levels_keys,
-	decltype(tax_rate_slider_value_by_strata)::keys_type const& strata_keys,
+	decltype(building_type_unlock_levels)::keys_span_type building_type_keys,
+	decltype(technology_unlock_levels)::keys_span_type technology_keys,
+	decltype(invention_unlock_levels)::keys_span_type invention_keys,
+	decltype(upper_house)::keys_span_type ideology_keys,
+	decltype(reforms)::keys_span_type reform_keys,
+	decltype(government_flag_overrides)::keys_span_type government_type_keys,
+	decltype(crime_unlock_levels)::keys_span_type crime_keys,
+	decltype(pop_type_distribution)::keys_span_type pop_type_keys,
+	decltype(goods_data)::keys_span_type good_instances_keys,
+	decltype(regiment_type_unlock_levels)::keys_span_type regiment_type_unlock_levels_keys,
+	decltype(ship_type_unlock_levels)::keys_span_type ship_type_unlock_levels_keys,
+	decltype(tax_rate_slider_value_by_strata)::keys_span_type strata_keys,
 	GameRulesManager const& new_game_rules_manager,
 	SharedCountryValues const& new_shared_country_values,
 	GoodInstanceManager& new_good_instance_manager,
@@ -59,44 +60,43 @@ CountryInstance::CountryInstance(
 	colour { ERROR_COLOUR },
 
 	/* Production */
-	building_type_unlock_levels { &building_type_keys },
+	building_type_unlock_levels { building_type_keys },
 
 	/* Budget */
 	taxable_income_mutex { std::make_unique<std::mutex>() },
-	taxable_income_by_pop_type { &pop_type_keys },
-	effective_tax_rate_by_strata { &strata_keys },
-	tax_rate_slider_value_by_strata { &strata_keys },
+	taxable_income_by_pop_type { pop_type_keys },
+	effective_tax_rate_by_strata { strata_keys },
+	tax_rate_slider_value_by_strata { strata_keys },
 	actual_net_tariffs_mutex { std::make_unique<std::mutex>() },
 
 	/* Technology */
-	technology_unlock_levels { &technology_keys },
-	invention_unlock_levels { &invention_keys },
+	technology_unlock_levels { technology_keys },
+	invention_unlock_levels { invention_keys },
 
 	/* Politics */
-	upper_house { &ideology_keys },
-	reforms { &reform_keys },
-	government_flag_overrides { &government_type_keys },
-	crime_unlock_levels { &crime_keys },
+	upper_house { ideology_keys },
+	reforms { reform_keys },
+	government_flag_overrides { government_type_keys },
+	crime_unlock_levels { crime_keys },
 
 	/* Population */
-	population_by_strata { &strata_keys },
-	militancy_by_strata { &strata_keys },
-	life_needs_fulfilled_by_strata { &strata_keys },
-	everyday_needs_fulfilled_by_strata { &strata_keys },
-	luxury_needs_fulfilled_by_strata { &strata_keys },
-	pop_type_distribution { &pop_type_keys },
-	pop_type_unemployed_count { &pop_type_keys },
-	ideology_distribution { &ideology_keys },
-	vote_distribution { nullptr },
+	population_by_strata { strata_keys },
+	militancy_by_strata { strata_keys },
+	life_needs_fulfilled_by_strata { strata_keys },
+	everyday_needs_fulfilled_by_strata { strata_keys },
+	luxury_needs_fulfilled_by_strata { strata_keys },
+	pop_type_distribution { pop_type_keys },
+	pop_type_unemployed_count { pop_type_keys },
+	ideology_distribution { ideology_keys },
 
 	/* Trade */
-	goods_data { &good_instances_keys },
+	goods_data { good_instances_keys },
 
 	/* Diplomacy */
 
 	/* Military */
-	regiment_type_unlock_levels { &regiment_type_unlock_levels_keys },
-	ship_type_unlock_levels { &ship_type_unlock_levels_keys } {
+	regiment_type_unlock_levels { regiment_type_unlock_levels_keys },
+	ship_type_unlock_levels { ship_type_unlock_levels_keys } {
 
 	// Exclude PROVINCE (local) modifier effects from the country's modifier sum
 	modifier_sum.set_this_excluded_targets(ModifierEffect::target_t::PROVINCE);
@@ -137,25 +137,25 @@ CountryInstance::CountryInstance(
 
 	update_country_definition_based_attributes();
 
-	for (BuildingType const& building_type : *building_type_unlock_levels.get_keys()) {
+	for (BuildingType const& building_type : building_type_unlock_levels.get_keys()) {
 		if (building_type.is_default_enabled()) {
 			unlock_building_type(building_type, new_good_instance_manager);
 		}
 	}
 
-	for (Crime const& crime : *crime_unlock_levels.get_keys()) {
+	for (Crime const& crime : crime_unlock_levels.get_keys()) {
 		if (crime.is_default_active()) {
 			unlock_crime(crime);
 		}
 	}
 
-	for (RegimentType const& regiment_type : *regiment_type_unlock_levels.get_keys()) {
+	for (RegimentType const& regiment_type : regiment_type_unlock_levels.get_keys()) {
 		if (regiment_type.is_active()) {
 			unlock_unit_type(regiment_type);
 		}
 	}
 
-	for (ShipType const& ship_type : *ship_type_unlock_levels.get_keys()) {
+	for (ShipType const& ship_type : ship_type_unlock_levels.get_keys()) {
 		if (ship_type.is_active()) {
 			unlock_unit_type(ship_type);
 		}
@@ -167,7 +167,7 @@ std::string_view CountryInstance::get_identifier() const {
 }
 
 void CountryInstance::update_country_definition_based_attributes() {
-	vote_distribution.set_keys(&country_definition->get_parties());
+	vote_distribution.set_keys(country_definition->get_parties());
 }
 
 bool CountryInstance::exists() const {
@@ -1464,13 +1464,13 @@ void CountryInstance::update_modifier_sum(Date today, StaticModifierCache const&
 		modifier_sum.add_modifier(*tech_school);
 	}
 
-	for (Technology const& technology : *technology_unlock_levels.get_keys()) {
+	for (Technology const& technology : technology_unlock_levels.get_keys()) {
 		if (is_technology_unlocked(technology)) {
 			modifier_sum.add_modifier(technology);
 		}
 	}
 
-	for (Invention const& invention : *invention_unlock_levels.get_keys()) {
+	for (Invention const& invention : invention_unlock_levels.get_keys()) {
 		if (is_invention_unlocked(invention)) {
 			modifier_sum.add_modifier(invention);
 		}
@@ -2097,10 +2097,10 @@ CountryInstanceManager::CountryInstanceManager(
 	ModifierEffectCache const& new_modifier_effect_cache,
 	CountryDefines const& new_country_defines,
 	PopsDefines const& new_pop_defines,
-	std::vector<PopType> const& pop_type_keys
+	std::span<const PopType> pop_type_keys
 )
   : country_definition_manager { new_country_definition_manager },
-	country_definition_to_instance_map { &new_country_definition_manager.get_country_definitions() },
+	country_definition_to_instance_map { new_country_definition_manager.get_country_definitions() },
 	shared_country_values {
 		new_modifier_effect_cache,
 		new_country_defines,
@@ -2121,18 +2121,18 @@ CountryInstance const& CountryInstanceManager::get_country_instance_from_definit
 }
 
 bool CountryInstanceManager::generate_country_instances(
-	decltype(CountryInstance::building_type_unlock_levels)::keys_type const& building_type_keys,
-	decltype(CountryInstance::technology_unlock_levels)::keys_type const& technology_keys,
-	decltype(CountryInstance::invention_unlock_levels)::keys_type const& invention_keys,
-	decltype(CountryInstance::upper_house)::keys_type const& ideology_keys,
-	decltype(CountryInstance::reforms)::keys_type const& reform_keys,
-	decltype(CountryInstance::government_flag_overrides)::keys_type const& government_type_keys,
-	decltype(CountryInstance::crime_unlock_levels)::keys_type const& crime_keys,
-	decltype(CountryInstance::pop_type_distribution)::keys_type const& pop_type_keys,
-	decltype(CountryInstance::goods_data)::keys_type const& good_instances_keys,
-	decltype(CountryInstance::regiment_type_unlock_levels)::keys_type const& regiment_type_unlock_levels_keys,
-	decltype(CountryInstance::ship_type_unlock_levels)::keys_type const& ship_type_unlock_levels_keys,
-	decltype(CountryInstance::tax_rate_slider_value_by_strata):: keys_type const& strata_keys,
+	decltype(CountryInstance::building_type_unlock_levels)::keys_span_type building_type_keys,
+	decltype(CountryInstance::technology_unlock_levels)::keys_span_type technology_keys,
+	decltype(CountryInstance::invention_unlock_levels)::keys_span_type invention_keys,
+	decltype(CountryInstance::upper_house)::keys_span_type ideology_keys,
+	decltype(CountryInstance::reforms)::keys_span_type reform_keys,
+	decltype(CountryInstance::government_flag_overrides)::keys_span_type government_type_keys,
+	decltype(CountryInstance::crime_unlock_levels)::keys_span_type crime_keys,
+	decltype(CountryInstance::pop_type_distribution)::keys_span_type pop_type_keys,
+	decltype(CountryInstance::goods_data)::keys_span_type good_instances_keys,
+	decltype(CountryInstance::regiment_type_unlock_levels)::keys_span_type regiment_type_unlock_levels_keys,
+	decltype(CountryInstance::ship_type_unlock_levels)::keys_span_type ship_type_unlock_levels_keys,
+	decltype(CountryInstance::tax_rate_slider_value_by_strata):: keys_span_type strata_keys,
 	GameRulesManager const& game_rules_manager,
 	GoodInstanceManager& good_instance_manager,
 	CountryDefines const& country_defines,
