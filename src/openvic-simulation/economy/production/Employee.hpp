@@ -5,7 +5,7 @@
 namespace OpenVic {
 	struct Employee {
 	private:
-		Pop& PROPERTY_REF(pop);
+		Pop& PROPERTY_MOD(pop);
 		pop_size_t PROPERTY_RW(size);
 		fixed_point_t PROPERTY_RW(minimum_wage_cached);
 	public:
