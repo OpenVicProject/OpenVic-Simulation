@@ -16,24 +16,24 @@ State::State(
 	ProvinceInstance* new_capital,
 	std::vector<ProvinceInstance*>&& new_provinces,
 	ProvinceInstance::colony_status_t new_colony_status,
-	decltype(population_by_strata)::keys_type const& strata_keys,
-	decltype(pop_type_distribution)::keys_type const& pop_type_keys,
-	decltype(ideology_distribution)::keys_type const& ideology_keys
+	decltype(population_by_strata)::keys_span_type strata_keys,
+	decltype(pop_type_distribution)::keys_span_type pop_type_keys,
+	decltype(ideology_distribution)::keys_span_type ideology_keys
 ) : state_set { new_state_set },
 	owner { new_owner },
 	capital { new_capital },
 	provinces { std::move(new_provinces) },
 	colony_status { new_colony_status },
-	population_by_strata { &strata_keys },
-	militancy_by_strata { &strata_keys },
-	life_needs_fulfilled_by_strata { &strata_keys },
-	everyday_needs_fulfilled_by_strata { &strata_keys },
-	luxury_needs_fulfilled_by_strata { &strata_keys },
-	pop_type_distribution { &pop_type_keys },
-	pop_type_unemployed_count { &pop_type_keys },
-	pops_cache_by_type { &pop_type_keys },
-	ideology_distribution { &ideology_keys },
-	vote_distribution { new_owner != nullptr ? &new_owner->get_country_definition()->get_parties() : nullptr } {}
+	population_by_strata { strata_keys },
+	militancy_by_strata { strata_keys },
+	life_needs_fulfilled_by_strata { strata_keys },
+	everyday_needs_fulfilled_by_strata { strata_keys },
+	luxury_needs_fulfilled_by_strata { strata_keys },
+	pop_type_distribution { pop_type_keys },
+	pop_type_unemployed_count { pop_type_keys },
+	pops_cache_by_type { pop_type_keys },
+	ideology_distribution { ideology_keys },
+	vote_distribution { new_owner != nullptr ? new_owner->get_country_definition()->get_parties() : decltype(vote_distribution)::keys_span_type {} } {}
 
 std::string State::get_identifier() const {
 	return StringUtils::append_string_views(
@@ -200,9 +200,9 @@ void StateSet::update_gamestate() {
 
 bool StateManager::add_state_set(
 	MapInstance& map_instance, Region const& region,
-	decltype(State::population_by_strata)::keys_type const& strata_keys,
-	decltype(State::pop_type_distribution)::keys_type const& pop_type_keys,
-	decltype(State::ideology_distribution)::keys_type const& ideology_keys
+	decltype(State::population_by_strata)::keys_span_type strata_keys,
+	decltype(State::pop_type_distribution)::keys_span_type pop_type_keys,
+	decltype(State::ideology_distribution)::keys_span_type ideology_keys
 ) {
 	if (region.get_meta()) {
 		Logger::error("Cannot use meta region \"", region.get_identifier(), "\" as state template!");
@@ -269,9 +269,9 @@ bool StateManager::add_state_set(
 
 bool StateManager::generate_states(
 	MapInstance& map_instance,
-	decltype(State::population_by_strata)::keys_type const& strata_keys,
-	decltype(State::pop_type_distribution)::keys_type const& pop_type_keys,
-	decltype(State::ideology_distribution)::keys_type const& ideology_keys
+	decltype(State::population_by_strata)::keys_span_type strata_keys,
+	decltype(State::pop_type_distribution)::keys_span_type pop_type_keys,
+	decltype(State::ideology_distribution)::keys_span_type ideology_keys
 ) {
 	MapDefinition const& map_definition = map_instance.get_map_definition();
 

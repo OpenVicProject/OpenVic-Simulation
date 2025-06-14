@@ -196,7 +196,7 @@ bool RebelManager::generate_modifiers(ModifierManager& modifier_manager) const {
 	IndexedMap<RebelType, ModifierEffect const*>& rebel_org_gain_effects =
 		modifier_manager.modifier_effect_cache.rebel_org_gain_effects;
 
-	rebel_org_gain_effects.set_keys(&get_rebel_types());
+	rebel_org_gain_effects.set_keys(get_rebel_types());
 
 	for (RebelType const& rebel_type : get_rebel_types()) {
 		ret &= modifier_manager.register_technology_modifier_effect(

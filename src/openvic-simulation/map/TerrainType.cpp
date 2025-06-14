@@ -40,7 +40,7 @@ bool TerrainTypeManager::generate_modifiers(ModifierManager& modifier_manager) c
 	IndexedMap<TerrainType, ModifierEffectCache::unit_terrain_effects_t>& unit_terrain_effects =
 		modifier_manager.modifier_effect_cache.unit_terrain_effects;
 
-	unit_terrain_effects.set_keys(&get_terrain_types());
+	unit_terrain_effects.set_keys(get_terrain_types());
 
 	bool ret = true;
 	for (TerrainType const& terrain_type : get_terrain_types()) {

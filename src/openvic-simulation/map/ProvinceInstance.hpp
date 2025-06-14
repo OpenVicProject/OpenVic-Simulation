@@ -139,9 +139,9 @@ namespace OpenVic {
 			GameRulesManager const& new_game_rules_manager,
 			ModifierEffectCache const& new_modifier_effect_cache,
 			ProvinceDefinition const& new_province_definition,
-			decltype(population_by_strata)::keys_type const& strata_keys,
-			decltype(pop_type_distribution)::keys_type const& pop_type_keys,
-			decltype(ideology_distribution)::keys_type const& ideology_keys
+			decltype(population_by_strata)::keys_span_type strata_keys,
+			decltype(pop_type_distribution)::keys_span_type pop_type_keys,
+			decltype(ideology_distribution)::keys_span_type ideology_keys
 		);
 
 		void _add_pop(Pop&& pop);

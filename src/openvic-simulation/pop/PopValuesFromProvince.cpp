@@ -38,9 +38,9 @@ void PopStrataValuesFromProvince::update_pop_strata_values_from_province(
 
 PopValuesFromProvince::PopValuesFromProvince(
 	PopsDefines const& new_defines,
-	decltype(effects_per_strata)::keys_type const& strata_keys
+	decltype(effects_per_strata)::keys_span_type strata_keys
 ) : defines { new_defines },
-	effects_per_strata { &strata_keys }
+	effects_per_strata { strata_keys }
 	{}
 
 void PopValuesFromProvince::update_pop_values_from_province(ProvinceInstance const& province) {

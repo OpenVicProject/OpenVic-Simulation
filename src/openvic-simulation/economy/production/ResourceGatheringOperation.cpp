@@ -24,7 +24,7 @@ ResourceGatheringOperation::ResourceGatheringOperation(
 	fixed_point_t new_output_quantity_yesterday,
 	fixed_point_t new_unsold_quantity_yesterday,
 	std::vector<Employee>&& new_employees,
-	decltype(employee_count_per_type_cache)::keys_type const& pop_type_keys
+	decltype(employee_count_per_type_cache)::keys_span_type pop_type_keys
 ) : market_instance { new_market_instance },
 	location_ptr { nullptr },
 	production_type_nullable { new_production_type_nullable },
@@ -38,12 +38,12 @@ ResourceGatheringOperation::ResourceGatheringOperation(
 	total_paid_employees_count_cache { 0 },
 	total_owner_income_cache { },
 	total_employee_income_cache { },
-	employee_count_per_type_cache { &pop_type_keys }
+	employee_count_per_type_cache { pop_type_keys }
 { }
 
 ResourceGatheringOperation::ResourceGatheringOperation(
 	MarketInstance& new_market_instance,
-	decltype(employee_count_per_type_cache)::keys_type const& pop_type_keys
+	decltype(employee_count_per_type_cache)::keys_span_type pop_type_keys
 ) : ResourceGatheringOperation {
 	new_market_instance,
 	nullptr, fixed_point_t::_0(),

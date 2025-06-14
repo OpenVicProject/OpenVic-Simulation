@@ -12,11 +12,11 @@ SharedCountryValues::SharedCountryValues(
 	ModifierEffectCache const& new_modifier_effect_cache,
 	CountryDefines const& new_country_defines,
 	PopsDefines const& new_pop_defines,
-	decltype(shared_pop_type_values)::keys_type const& pop_type_keys
+	decltype(shared_pop_type_values)::keys_span_type pop_type_keys
 ) : modifier_effect_cache { new_modifier_effect_cache },
 	country_defines { new_country_defines },
 	pop_defines { new_pop_defines },
-	shared_pop_type_values { &pop_type_keys }
+	shared_pop_type_values { pop_type_keys }
 	{}
 
 void SharedCountryValues::update_costs(GoodInstanceManager const& good_instance_manager) {
