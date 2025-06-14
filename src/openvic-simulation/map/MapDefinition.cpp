@@ -640,35 +640,35 @@ void MapDefinition::_trace_river(BMP& rivers_bmp, ivec2_t start, river_t& river)
 				direction_t new_direction;
 			};
 			static constexpr std::array<Neighbour, 4> neighbours = {{
-                { {0, -1}, UP, DOWN },  // Down
-                { {1,  0}, LEFT, RIGHT },  // Right
-                { {0,  1}, DOWN, UP },  // Up
-                { {-1, 0}, RIGHT, LEFT },  // Left
-            }};
+				{ {0, -1}, UP, DOWN },  // Down
+				{ {1,  0}, LEFT, RIGHT },  // Right
+				{ {0,  1}, DOWN, UP },  // Up
+				{ {-1, 0}, RIGHT, LEFT },  // Left
+			}};
 
 			for (const auto& neighbour : neighbours) {
-                ivec2_t neighbour_pos = { segment.point.x + neighbour.offset.x, segment.point.y + neighbour.offset.y };
-                if (neighbour_pos.x < 0 || neighbour_pos.y < 0  || 
-                    neighbour_pos.x >= rivers_bmp.get_width()  ||
-					neighbour_pos.y >= rivers_bmp.get_height() ||
-                    segment.direction == neighbour.old_direction) continue;
+				ivec2_t neighbour_pos = { segment.point.x + neighbour.offset.x, segment.point.y + neighbour.offset.y };
+				if (neighbour_pos.x < 0 || neighbour_pos.y < 0 || neighbour_pos.x >= rivers_bmp.get_width() ||
+					neighbour_pos.y >= rivers_bmp.get_height() || segment.direction == neighbour.old_direction) {
+					continue;
+				}
 
-                uint8_t neighbour_color = river_data[neighbour_pos.x + neighbour_pos.y * rivers_bmp.get_width()];
-                if (neighbour_color == size + 1) {
-                    points.emplace_back(neighbour_pos);
-                    segment.point = neighbour_pos;
-                    segment.direction = neighbour.new_direction;
-                    new_segment_found = false;
-                    break;
-                } else if (neighbour_color == MERGE_COLOUR) {
-                    merge_found = true;
-                    merge_point = neighbour_pos;
-                } else if (neighbour_color > 1 && neighbour_color < 12) {
-                    new_segment_point = neighbour_pos;
-                    new_segment_direction = neighbour.new_direction;
-                    new_segment_found = true;
-                }
-            }
+				uint8_t neighbour_color = river_data[neighbour_pos.x + neighbour_pos.y * rivers_bmp.get_width()];
+				if (neighbour_color == size + 1) {
+					points.emplace_back(neighbour_pos);
+					segment.point = neighbour_pos;
+					segment.direction = neighbour.new_direction;
+					new_segment_found = false;
+					break;
+				} else if (neighbour_color == MERGE_COLOUR) {
+					merge_found = true;
+					merge_point = neighbour_pos;
+				} else if (neighbour_color > 1 && neighbour_color < 12) {
+					new_segment_point = neighbour_pos;
+					new_segment_direction = neighbour.new_direction;
+					new_segment_found = true;
+				}
+			}
 
 			if (merge_found) {
 				points.emplace_back(merge_point);
@@ -681,7 +681,9 @@ void MapDefinition::_trace_river(BMP& rivers_bmp, ivec2_t start, river_t& river)
 				break;
 			}
 
-			if (!new_segment_found) break; // no neighbours left to check, end segment
+			if (!new_segment_found) {
+				break; // no neighbours left to check, end segment
+			}
 		}
 
 		// simplify points to only include first, last, and corners
@@ -692,11 +694,11 @@ void MapDefinition::_trace_river(BMP& rivers_bmp, ivec2_t start, river_t& river)
 		simplified_points.emplace_back(points.front());
 		if (points.size() != 1) {
 			for (int i = 1; i < points.size() - 1; ++i) {
-            	if (is_corner_point(points[i - 1], points[i], points[i + 1])) {
-                	simplified_points.emplace_back(points[i]);
-            	}
-        	}
-        	simplified_points.emplace_back(points.back());
+				if (is_corner_point(points[i - 1], points[i], points[i + 1])) {
+					simplified_points.emplace_back(points[i]);
+				}
+			}
+			simplified_points.emplace_back(points.back());
 		}
 
 		river.push_back({ size, std::move(simplified_points) });
