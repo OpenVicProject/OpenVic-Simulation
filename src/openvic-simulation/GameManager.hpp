@@ -1,6 +1,8 @@
 #pragma once
 
+#include <memory>
 #include <optional>
+#include <string>
 
 #include "openvic-simulation/DefinitionManager.hpp"
 #include "openvic-simulation/InstanceManager.hpp"
@@ -8,10 +10,15 @@
 #include "openvic-simulation/dataloader/Dataloader.hpp"
 #include "openvic-simulation/misc/GameRulesManager.hpp"
 #include "openvic-simulation/gen/commit_info.gen.hpp"
+#include "openvic-simulation/multiplayer/ClientManager.hpp"
+#include "openvic-simulation/multiplayer/HostManager.hpp"
 
 #include <function2/function2.hpp>
 
 namespace OpenVic {
+	struct HostManager;
+	struct ClientManager;
+
 	struct GameManager {
 		using elapsed_time_getter_func_t = fu2::function_base<true, true, fu2::capacity_none, false, false, uint64_t() const>;
 
@@ -29,6 +36,9 @@ namespace OpenVic {
 		bool PROPERTY_CUSTOM_PREFIX(definitions_loaded, are);
 		bool PROPERTY_CUSTOM_PREFIX(mod_descriptors_loaded, are);
 
+		std::unique_ptr<HostManager> host_manager;
+		std::unique_ptr<ClientManager> client_manager;
+
 	public:
 		GameManager(
 			InstanceManager::gamestate_updated_func_t new_gamestate_updated_callback,
@@ -44,6 +54,22 @@ namespace OpenVic {
 			return instance_manager ? &*instance_manager : nullptr;
 		}
 
+		inline HostManager* get_host_manager() {
+			return host_manager.get();
+		}
+
+		inline HostManager const* get_host_manager() const {
+			return host_manager.get();
+		}
+
+		inline ClientManager* get_client_manager() {
+			return client_manager.get();
+		}
+
+		inline ClientManager const* get_client_manager() const {
+			return client_manager.get();
+		}
+
 		bool set_roots(Dataloader::path_vector_t const& roots, Dataloader::path_vector_t const& replace_paths);
 
 		bool load_mod_descriptors(std::span<const std::string> descriptors);
@@ -55,6 +81,9 @@ namespace OpenVic {
 		bool start_game_session();
 
 		bool update_clock();
+
+		void create_client();
+		void create_host(std::string session_name = "");
 
 		static constexpr std::string_view get_commit_hash() {
 			return SIM_COMMIT_HASH;
