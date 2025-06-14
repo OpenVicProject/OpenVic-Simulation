@@ -10,7 +10,7 @@ using namespace OpenVic;
 PoliticsInstanceManager::PoliticsInstanceManager(InstanceManager const& new_instance_manager)
   : instance_manager { new_instance_manager },
 	politics_manager { instance_manager.get_definition_manager().get_politics_manager() },
-	ideology_spawn_date { &politics_manager.get_ideology_manager().get_ideologies() } {}
+	ideology_spawn_date { politics_manager.get_ideology_manager().get_ideologies() } {}
 
 void PoliticsInstanceManager::setup_starting_ideologies() {
 	const Date today = instance_manager.get_today();

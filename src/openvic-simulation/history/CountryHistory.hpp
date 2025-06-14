@@ -63,8 +63,8 @@ namespace OpenVic {
 		ordered_set<Decision const*> PROPERTY(decisions);
 
 		CountryHistoryEntry(
-			CountryDefinition const& new_country, Date new_date, decltype(upper_house)::keys_type const& ideology_keys,
-			decltype(government_flag_overrides)::keys_type const& government_type_keys
+			CountryDefinition const& new_country, Date new_date, decltype(upper_house)::keys_span_type ideology_keys,
+			decltype(government_flag_overrides)::keys_span_type government_type_keys
 		);
 	};
 
@@ -77,8 +77,8 @@ namespace OpenVic {
 
 	private:
 		CountryDefinition const& PROPERTY(country);
-		decltype(CountryHistoryEntry::upper_house)::keys_type const& PROPERTY(ideology_keys);
-		decltype(CountryHistoryEntry::government_flag_overrides)::keys_type const& PROPERTY(government_type_keys);
+		decltype(CountryHistoryEntry::upper_house)::keys_span_type PROPERTY(ideology_keys);
+		decltype(CountryHistoryEntry::government_flag_overrides)::keys_span_type PROPERTY(government_type_keys);
 
 	protected:
 		CountryHistoryMap(

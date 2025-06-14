@@ -39,7 +39,7 @@ namespace OpenVic {
 
 		PopValuesFromProvince(
 			PopsDefines const& new_defines,
-			std::vector<Strata> const& strata_keys
+			decltype(effects_per_strata)::keys_span_type strata_keys
 		);
 		PopValuesFromProvince(PopValuesFromProvince&&) = default;
 
