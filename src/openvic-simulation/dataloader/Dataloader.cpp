@@ -15,6 +15,7 @@
 #include "openvic-simulation/misc/SoundEffect.hpp"
 #include "openvic-simulation/utility/Logger.hpp"
 #include "openvic-simulation/utility/StringUtils.hpp"
+#include "openvic-simulation/utility/Containers.hpp"
 
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;
@@ -162,7 +163,7 @@ Dataloader::path_vector_t Dataloader::_lookup_files_in_dir(
 			if (entry.is_regular_file()) {
 				fs::path file = entry;
 				if (extension.empty() || file.extension() == extension) {
-					const std::string full_path = file.string();
+					const memory::string full_path = file.string<char>(memory::string::allocator_type{});
 					std::string_view relative_path = full_path;
 					relative_path.remove_prefix(root_len);
 					relative_path = StringUtils::remove_leading_slashes(relative_path);
@@ -238,11 +239,11 @@ string_set_t Dataloader::lookup_dirs_in_dir(std::string_view path) const {
 template<std::derived_from<detail::BasicParser> Parser, bool (*parse_func)(Parser&)>
 static Parser _run_ovdl_parser(fs::path const& path) {
 	Parser parser;
-	std::string buffer;
+	memory::string buffer;
 	auto error_log_stream = detail::make_callback_stream<char>(
 		[](void const* s, std::streamsize n, void* user_data) -> std::streamsize {
 			if (s != nullptr && n > 0 && user_data != nullptr) {
-				static_cast<std::string*>(user_data)->append(static_cast<char const*>(s), n);
+				static_cast<memory::string*>(user_data)->append(static_cast<char const*>(s), n);
 				return n;
 			} else {
 				Logger::error("Invalid input to parser error log callback: ", s, " / ", n, " / ", user_data);
@@ -306,7 +307,7 @@ void Dataloader::free_cache() {
 	cached_parsers.clear();
 }
 
-bool Dataloader::load_mod_descriptors(std::span<const std::string> descriptors, ModManager& mod_manager) {
+bool Dataloader::load_mod_descriptors(std::span<const memory::string> descriptors, ModManager& mod_manager) {
 	bool ret = true;
 
 	for (std::string_view descriptor_path : descriptors) {
@@ -333,7 +334,7 @@ bool Dataloader::_load_interface_files(UIManager& ui_manager) const {
 	ui_manager.lock_gfx_registries();
 
 	/* Hard-coded GUI file names, might be replaced with a dynamic system but everything should still be loaded on startup. */
-	static const std::vector<std::string_view> gui_files {
+	static const memory::vector<std::string_view> gui_files {
 		/* Contains generic listbox scrollbar */
 		"core",
 
@@ -578,7 +579,7 @@ bool Dataloader::_load_history(DefinitionManager& definition_manager, bool unuse
 		ret &= apply_to_files(
 			country_history_files,
 			[this, &definition_manager, &country_history_manager, unused_history_file_warnings](fs::path const& file) -> bool {
-				const std::string filename = file.stem().string();
+				const memory::string filename = file.stem().string<char>(memory::string::allocator_type{});
 				const std::string_view country_id = extract_basic_identifier_prefix(filename);
 
 				CountryDefinition const* country =
@@ -623,7 +624,7 @@ bool Dataloader::_load_history(DefinitionManager& definition_manager, bool unuse
 			[this, &definition_manager, &province_history_manager, &map_definition, unused_history_file_warnings](
 				fs::path const& file
 			) -> bool {
-				const std::string filename = file.stem().string();
+				const memory::string filename = file.stem().string<char>(memory::string::allocator_type{});
 				const std::string_view province_id = extract_basic_identifier_prefix(filename);
 
 				ProvinceDefinition const* province = map_definition.get_province_definition_by_identifier(province_id);
@@ -647,7 +648,7 @@ bool Dataloader::_load_history(DefinitionManager& definition_manager, bool unuse
 		const Date last_bookmark_date =
 			definition_manager.get_history_manager().get_bookmark_manager().get_last_bookmark_date();
 
-		for (std::string const& dir : pop_history_dirs) {
+		for (memory::string const& dir : pop_history_dirs) {
 			Date::from_chars_result result;
 			const Date date = Date::from_string_log(dir, &result);
 
@@ -751,7 +752,7 @@ bool Dataloader::_load_map_dir(DefinitionManager& definition_manager) const {
 	/* Parser stored so the filename string_views persist until the end of this function. */
 	const v2script::Parser parser = parse_defines(lookup_file(append_string_views(map_directory, defaults_filename)));
 
-	std::vector<std::string_view> water_province_identifiers;
+	memory::vector<std::string_view> water_province_identifiers;
 
 #define APPLY_TO_MAP_PATHS(F) \
 	F(definitions) \
@@ -808,7 +809,7 @@ bool Dataloader::_load_map_dir(DefinitionManager& definition_manager) const {
 	}
 
 	{
-		std::vector<colour_t> colours;
+		memory::vector<colour_t> colours;
 		if (!MapDefinition::load_region_colours(parse_defines(lookup_file(region_colours)).get_file_node(), colours)) {
 			Logger::error("Failed to load region colours file!");
 			ret = false;
@@ -1213,7 +1214,7 @@ bool Dataloader::parse_scripts(DefinitionManager& definition_manager) const {
 
 #undef PARSE_SCRIPTS
 
-static bool _load_localisation_file(Dataloader::localisation_callback_t callback, std::vector<csv::LineObject> const& lines) {
+static bool _load_localisation_file(Dataloader::localisation_callback_t callback, std::span<const csv::LineObject> lines) {
 	bool ret = true;
 	for (csv::LineObject const& line : lines) {
 		const std::string_view key = line.get_value_for(0);

@@ -7,6 +7,7 @@
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPointMap.hpp"
 #include "openvic-simulation/utility/Getters.hpp"
+#include "openvic-simulation/utility/Containers.hpp"
 
 namespace OpenVic {
 	struct GoodDefinition;
@@ -39,7 +40,7 @@ namespace OpenVic {
 
 		PopValuesFromProvince(
 			PopsDefines const& new_defines,
-			std::vector<Strata> const& strata_keys
+			memory::vector<Strata> const& strata_keys
 		);
 		PopValuesFromProvince(PopValuesFromProvince&&) = default;
 
