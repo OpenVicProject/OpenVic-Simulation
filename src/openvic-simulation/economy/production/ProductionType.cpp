@@ -54,7 +54,6 @@ bool ProductionType::parse_scripts(DefinitionManager const& definition_manager) 
 }
 
 ProductionTypeManager::ProductionTypeManager() :
-	good_to_rgo_production_type { nullptr },
 	rgo_owner_sprite { 0 } {}
 
 node_callback_t ProductionTypeManager::_expect_job(
@@ -253,7 +252,7 @@ bool ProductionTypeManager::load_production_types_file(
 	)(parser.get_file_node());
 
 	/* Pass #3: actually load production types */
-	good_to_rgo_production_type.set_keys(&good_definition_manager.get_good_definitions());
+	good_to_rgo_production_type.set_keys(good_definition_manager.get_good_definitions());
 
 	reserve_more_production_types(expected_types);
 	ret &= expect_dictionary(

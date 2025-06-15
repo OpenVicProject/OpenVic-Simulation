@@ -32,6 +32,16 @@
 #endif // defined(__GNUC__)
 #endif // OV_ALWAYS_INLINE
 
+#ifndef OV_NO_UNIQUE_ADDRESS
+#if __has_cpp_attribute(msvc::no_unique_address)
+#define OV_NO_UNIQUE_ADDRESS [[msvc::no_unique_address]]
+#elif __has_cpp_attribute(no_unique_address)
+#define OV_NO_UNIQUE_ADDRESS [[no_unique_address]]
+#else
+#define OV_NO_UNIQUE_ADDRESS
+#endif
+#endif // OV_NO_UNIQUE_ADDRESS
+
 namespace OpenVic::utility {
 	[[noreturn]] inline void unreachable() {
 		// Uses compiler specific extensions if possible.
@@ -120,7 +130,19 @@ namespace OpenVic::utility {
 		_derived_from_specialization_impl<Template>(t);
 	};
 
-	inline constexpr auto three_way(auto&& left, auto&& right) {
+	template<typename T>
+	concept boolean_convertible = std::convertible_to<T, bool>;
+
+	template<typename T>
+	concept boolean_testable = boolean_convertible<T> && requires(T&& __t) {
+		{ !static_cast<T&&>(__t) } -> boolean_convertible;
+	};
+
+	[[nodiscard]] inline constexpr auto three_way(auto&& left, auto&& right)
+		requires requires {
+			{ left < right } -> boolean_testable;
+			{ right < left } -> boolean_testable;
+		} {
 		// This is Apple's fault again
 		#if __cpp_lib_three_way_comparison >= 201907L
 		if constexpr (std::three_way_comparable_with<std::decay_t<decltype(left)>, std::decay_t<decltype(right)>>) {
@@ -130,7 +152,7 @@ namespace OpenVic::utility {
 		{
 			if (left < right) {
 				return std::weak_ordering::less;
-			} else if (left > right) {
+			} else if (right < left) {
 				return std::weak_ordering::greater;
 			} else {
 				return std::weak_ordering::equivalent;

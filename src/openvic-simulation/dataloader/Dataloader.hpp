@@ -26,6 +26,7 @@ namespace OpenVic {
 	class Dataloader {
 	public:
 		using path_vector_t = std::vector<fs::path>;
+		using path_span_t = std::span<const fs::path>;
 
 	private:
 		path_vector_t PROPERTY(roots);
@@ -46,7 +47,7 @@ namespace OpenVic {
 		bool _load_decisions(DefinitionManager& definition_manager);
 		bool _load_history(DefinitionManager& definition_manager, bool unused_history_file_warnings) const;
 
-		bool should_ignore_path(fs::path const& path, path_vector_t const& replace_paths) const;
+		bool should_ignore_path(fs::path const& path, path_span_t replace_paths) const;
 
 		/* _DirIterator is fs::directory_iterator or fs::recursive_directory_iterator. _UniqueKey is the type of a callable
 		 * which converts a string_view filepath with root removed into a string_view unique key. Any path whose key is empty
@@ -101,7 +102,7 @@ namespace OpenVic {
 		/// @param new_roots Dataloader roots in reverse-load order, so base defines first and final loaded mod last
 		/// @param new_replace_paths All base define paths that should be ignored entirely in favour of mods.
 		/// @return True if successful, false if failed.
-		bool set_roots(path_vector_t const& new_roots, path_vector_t const& new_replace_paths);
+		bool set_roots(path_span_t new_roots, path_span_t new_replace_paths);
 
 		/* REQUIREMENTS:
 		 * DAT-24
@@ -120,7 +121,7 @@ namespace OpenVic {
 
 		static constexpr size_t apply_callback_stack_size = sizeof(std::intptr_t) * 4;
 		using apply_files_callback_t = fu2::function_base<true, true, fu2::capacity_fixed<apply_callback_stack_size, 8>, false, false, bool(fs::path const&)>;
-		bool apply_to_files(path_vector_t const& files, apply_files_callback_t callback) const;
+		bool apply_to_files(path_span_t files, apply_files_callback_t callback) const;
 
 		string_set_t lookup_dirs_in_dir(std::string_view path) const;
 

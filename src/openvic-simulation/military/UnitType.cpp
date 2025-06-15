@@ -368,7 +368,7 @@ bool UnitTypeManager::generate_modifiers(ModifierManager& modifier_manager) cons
 	IndexedMap<RegimentType, ModifierEffectCache::regiment_type_effects_t>& regiment_type_effects =
 		modifier_manager.modifier_effect_cache.regiment_type_effects;
 
-	regiment_type_effects.set_keys(&get_regiment_types());
+	regiment_type_effects.set_keys(get_regiment_types());
 
 	for (RegimentType const& regiment_type : get_regiment_types()) {
 		generate_stat_modifiers(regiment_type_effects[regiment_type], regiment_type.get_identifier());
@@ -379,7 +379,7 @@ bool UnitTypeManager::generate_modifiers(ModifierManager& modifier_manager) cons
 	IndexedMap<ShipType, ModifierEffectCache::ship_type_effects_t>& ship_type_effects =
 		modifier_manager.modifier_effect_cache.ship_type_effects;
 
-	ship_type_effects.set_keys(&get_ship_types());
+	ship_type_effects.set_keys(get_ship_types());
 
 	for (ShipType const& ship_type : get_ship_types()) {
 		generate_stat_modifiers(ship_type_effects[ship_type], ship_type.get_identifier());

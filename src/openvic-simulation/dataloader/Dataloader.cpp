@@ -35,7 +35,7 @@ static fs::path ensure_forward_slash_path(std::string_view path) {
 #endif
 }
 
-bool Dataloader::set_roots(path_vector_t const& new_roots, path_vector_t const& new_replace_paths) {
+bool Dataloader::set_roots(path_span_t new_roots, path_span_t new_replace_paths) {
 	if (!roots.empty()) {
 		Logger::warning("Overriding existing dataloader roots!");
 		roots.clear();
@@ -46,7 +46,7 @@ bool Dataloader::set_roots(path_vector_t const& new_roots, path_vector_t const& 
 		Logger::info("Adding replace path: ", replace_path);
 		replace_paths.push_back(replace_path);
 	}
-	for (std::reverse_iterator<path_vector_t::const_iterator> it = new_roots.crbegin(); it != new_roots.crend(); ++it) {
+	for (decltype(new_roots)::reverse_iterator it = new_roots.rbegin(); it != new_roots.rend(); ++it) {
 		if (std::find(roots.begin(), roots.end(), *it) == roots.end()) {
 			if (fs::is_directory(*it)) {
 				Logger::info("Adding dataloader root: ", *it);
@@ -130,7 +130,7 @@ fs::path Dataloader::lookup_image_file(std::string_view path) const {
 	return lookup_file(path);
 }
 
-bool Dataloader::should_ignore_path(fs::path const& path, path_vector_t const& replace_paths) const {
+bool Dataloader::should_ignore_path(fs::path const& path, path_span_t replace_paths) const {
 	bool ignore = false;
 	for (fs::path const& replace_path : replace_paths) {
 		if (path.string().starts_with(replace_path.string())) {
@@ -210,7 +210,7 @@ Dataloader::path_vector_t Dataloader::lookup_basic_identifier_prefixed_files_in_
 	return _lookup_files_in_dir<fs::recursive_directory_iterator>(path, extension, _extract_basic_identifier_prefix_from_path);
 }
 
-bool Dataloader::apply_to_files(path_vector_t const& files, apply_files_callback_t callback) const {
+bool Dataloader::apply_to_files(path_span_t files, apply_files_callback_t callback) const {
 	bool ret = true;
 	for (fs::path const& file : files) {
 		if (!callback(file)) {

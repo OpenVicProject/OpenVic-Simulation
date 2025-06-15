@@ -4,6 +4,7 @@
 #include <vector>
 
 #include "openvic-simulation/types/fixed_point/FixedPointMap.hpp"
+#include "openvic-simulation/utility/ForwardableSpan.hpp"
 #include "openvic-simulation/utility/Getters.hpp"
 #include "openvic-simulation/utility/Logger.hpp"
 #include "openvic-simulation/utility/Utility.hpp"
@@ -43,9 +44,10 @@ namespace OpenVic {
 
 		using key_type = Key;
 		using keys_type = std::vector<key_type>;
+		using keys_span_type = OpenVic::utility::forwardable_span<const key_type>;
 		using key_ref_type = typename keys_type::const_reference;
 		using key_ptr_type = typename keys_type::const_pointer;
-		using key_iterator = typename keys_type::const_iterator;
+		using key_iterator = typename keys_span_type::iterator;
 
 		using value_type = Value;
 		using value_ref_type = typename values_type::reference;
@@ -205,10 +207,12 @@ namespace OpenVic {
 		using const_iterator = base_iterator_t<true>;
 
 	private:
-		keys_type const* PROPERTY(keys);
+		OpenVic::utility::forwardable_span<const key_type> PROPERTY(keys, {});
 
 	public:
-		constexpr IndexedMap(keys_type const* new_keys) : keys { nullptr } {
+		constexpr IndexedMap() = default;
+
+		constexpr IndexedMap(OpenVic::utility::forwardable_span<const key_type> new_keys) : IndexedMap() {
 			set_keys(new_keys);
 		}
 
@@ -227,7 +231,7 @@ namespace OpenVic {
 
 		iterator begin() {
 			if (has_keys()) {
-				return { keys->cbegin(), get_values().begin() };
+				return { keys.begin(), get_values().begin() };
 			} else {
 				return {};
 			}
@@ -235,7 +239,7 @@ namespace OpenVic {
 
 		iterator end() {
 			if (has_keys()) {
-				return { keys->cend(), get_values().end() };
+				return { keys.end(), get_values().end() };
 			} else {
 				return {};
 			}
@@ -243,7 +247,7 @@ namespace OpenVic {
 
 		const_iterator cbegin() const {
 			if (has_keys()) {
-				return { keys->cbegin(), get_values().cbegin() };
+				return { keys.begin(), get_values().cbegin() };
 			} else {
 				return {};
 			}
@@ -251,7 +255,7 @@ namespace OpenVic {
 
 		const_iterator cend() const {
 			if (has_keys()) {
-				return { keys->cend(), get_values().cend() };
+				return { keys.end(), get_values().cend() };
 			} else {
 				return {};
 			}
@@ -266,19 +270,19 @@ namespace OpenVic {
 		}
 
 		pair_type front() {
-			return { keys->front(), get_values().front() };
+			return { keys.front(), get_values().front() };
 		}
 
 		const_pair_type front() const {
-			return { keys->front(), get_values().front() };
+			return { keys.front(), get_values().front() };
 		}
 
 		pair_type back() {
-			return { keys->back(), get_values().back() };
+			return { keys.back(), get_values().back() };
 		}
 
 		const_pair_type back() const {
-			return { keys->back(), get_values().back() };
+			return { keys.back(), get_values().back() };
 		}
 
 		constexpr void fill(value_const_ref_type value) {
@@ -292,21 +296,21 @@ namespace OpenVic {
 		}
 
 		constexpr bool has_keys() const {
-			return keys != nullptr;
+			return !keys.empty();
 		}
 
-		constexpr void set_keys(keys_type const* new_keys) {
-			if (keys != new_keys) {
+		constexpr void set_keys(OpenVic::utility::forwardable_span<const key_type> new_keys) {
+			if (keys.data() != new_keys.data()) {
 				keys = new_keys;
 
-				values_type::resize(has_keys() ? keys->size() : 0);
+				values_type::resize(has_keys() ? keys.size() : 0);
 				clear();
 			}
 		}
 
 		constexpr size_t get_index_from_item(key_ref_type key) const {
-			if (has_keys() && keys->data() <= &key && &key <= &keys->back()) {
-				return std::distance(keys->data(), &key);
+			if (has_keys() && keys.data() <= &key && &key <= &keys.back()) {
+				return std::distance(keys.data(), &key);
 			} else {
 				return 0;
 			}
@@ -335,7 +339,7 @@ namespace OpenVic {
 		}
 
 		constexpr key_ptr_type get_key_by_index(size_t index) const {
-			if (has_keys() && index < keys->size()) {
+			if (has_keys() && index < keys.size()) {
 				return &(*this)(index);
 			} else {
 				return nullptr;
@@ -447,7 +451,7 @@ namespace OpenVic {
 		}
 
 		constexpr bool copy(IndexedMap const& other) {
-			if (keys != other.keys) {
+			if (keys.data() != other.keys.data()) {
 				Logger::error(
 					"Trying to copy IndexedMaps with different keys with sizes: from ", other.size(), " to ",
 					get_values().size()

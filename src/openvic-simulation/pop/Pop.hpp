@@ -146,7 +146,7 @@ namespace OpenVic {
 
 		Pop(
 			PopBase const& pop_base,
-			decltype(ideology_distribution)::keys_type const& ideology_keys,
+			decltype(ideology_distribution)::keys_span_type ideology_keys,
 			MarketInstance& new_market_instance,
 			ArtisanalProducerFactoryPattern& artisanal_producer_factory_pattern
 		);

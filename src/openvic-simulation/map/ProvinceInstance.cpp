@@ -27,9 +27,9 @@ ProvinceInstance::ProvinceInstance(
 	GameRulesManager const& new_game_rules_manager,
 	ModifierEffectCache const& new_modifier_effect_cache,
 	ProvinceDefinition const& new_province_definition,
-	decltype(population_by_strata)::keys_type const& strata_keys,
-	decltype(pop_type_distribution)::keys_type const& pop_type_keys,
-	decltype(ideology_distribution)::keys_type const& ideology_keys
+	decltype(population_by_strata)::keys_span_type strata_keys,
+	decltype(pop_type_distribution)::keys_span_type pop_type_keys,
+	decltype(ideology_distribution)::keys_span_type ideology_keys
 ) : HasIdentifierAndColour { new_province_definition },
 	HasIndex { new_province_definition.get_index() },
 	FlagStrings { "province" },
@@ -39,16 +39,15 @@ ProvinceInstance::ProvinceInstance(
 	terrain_type { new_province_definition.get_default_terrain_type() },
 	rgo { new_market_instance, pop_type_keys },
 	buildings { "buildings", false },
-	population_by_strata { &strata_keys },
-	militancy_by_strata { &strata_keys },
-	life_needs_fulfilled_by_strata { &strata_keys },
-	everyday_needs_fulfilled_by_strata { &strata_keys },
-	luxury_needs_fulfilled_by_strata { &strata_keys },
-	pop_type_distribution { &pop_type_keys },
-	pop_type_unemployed_count { &pop_type_keys },
-	pops_cache_by_type { &pop_type_keys },
-	ideology_distribution { &ideology_keys },
-	vote_distribution { nullptr } {}
+	population_by_strata { strata_keys },
+	militancy_by_strata { strata_keys },
+	life_needs_fulfilled_by_strata { strata_keys },
+	everyday_needs_fulfilled_by_strata { strata_keys },
+	luxury_needs_fulfilled_by_strata { strata_keys },
+	pop_type_distribution { pop_type_keys },
+	pop_type_unemployed_count { pop_type_keys },
+	pops_cache_by_type { pop_type_keys },
+	ideology_distribution { ideology_keys } {}
 
 void ProvinceInstance::set_state(State* new_state) {
 	// TODO - ensure this is removed from old state and added to new state (either here or wherever this is called from)
@@ -84,9 +83,9 @@ bool ProvinceInstance::set_owner(CountryInstance* new_owner) {
 		if (owner != nullptr) {
 			ret &= owner->add_owned_province(*this);
 
-			vote_distribution.set_keys(&owner->get_country_definition()->get_parties());
+			vote_distribution.set_keys(owner->get_country_definition()->get_parties());
 		} else {
-			vote_distribution.set_keys(nullptr);
+			vote_distribution.set_keys({});
 		}
 
 		for (Pop& pop : pops) {
@@ -230,7 +229,7 @@ bool ProvinceInstance::add_pop_vec(
 		for (PopBase const& pop : pop_vec) {
 			_add_pop(Pop {
 				pop,
-				*ideology_distribution.get_keys(),
+				ideology_distribution.get_keys(),
 				market_instance,
 				artisanal_producer_factory_pattern
 			});

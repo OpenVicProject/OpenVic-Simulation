@@ -153,7 +153,7 @@ node_callback_t CountryDefinitionManager::load_country_party(
 		std::string_view party_name;
 		Date start_date, end_date;
 		Ideology const* ideology = nullptr;
-		CountryParty::policy_map_t policies { &politics_manager.get_issue_manager().get_issue_groups() };
+		CountryParty::policy_map_t policies { politics_manager.get_issue_manager().get_issue_groups() };
 
 		bool ret = expect_dictionary_keys_and_default(
 			[&politics_manager, &policies, &party_name](std::string_view key, ast::NodeCPtr value) -> bool {

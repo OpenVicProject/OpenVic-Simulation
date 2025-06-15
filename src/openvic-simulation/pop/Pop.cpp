@@ -32,7 +32,7 @@ PopBase::PopBase(
 
 Pop::Pop(
 	PopBase const& pop_base,
-	decltype(ideology_distribution)::keys_type const& ideology_keys,
+	decltype(ideology_distribution)::keys_span_type ideology_keys,
 	MarketInstance& new_market_instance,
 	ArtisanalProducerFactoryPattern& artisanal_producer_factory_pattern
 )
@@ -43,8 +43,7 @@ Pop::Pop(
 			? artisanal_producer_factory_pattern.CreateNewArtisanalProducer()
 			: nullptr
 	},
-	ideology_distribution { &ideology_keys },
-	vote_distribution { nullptr } {
+	ideology_distribution { ideology_keys } {
 		reserve_needs_fulfilled_goods();
 	}
 
@@ -79,7 +78,7 @@ void Pop::setup_pop_test_values(IssueManager const& issue_manager) {
 
 	/* All entries equally weighted for testing. */
 	ideology_distribution.clear();
-	for (Ideology const& ideology : *ideology_distribution.get_keys()) {
+	for (Ideology const& ideology : ideology_distribution.get_keys()) {
 		test_weight(ideology_distribution, ideology, 1, 5);
 	}
 	ideology_distribution.rescale(size);
@@ -97,7 +96,7 @@ void Pop::setup_pop_test_values(IssueManager const& issue_manager) {
 
 	if (vote_distribution.has_keys()) {
 		vote_distribution.clear();
-		for (CountryParty const& party : *vote_distribution.get_keys()) {
+		for (CountryParty const& party : vote_distribution.get_keys()) {
 			test_weight(vote_distribution, party, 4, 10);
 		}
 		vote_distribution.rescale(size);
@@ -143,7 +142,7 @@ void Pop::update_location_based_attributes() {
 		CountryInstance const* owner = location->get_owner();
 
 		if (owner != nullptr) {
-			vote_distribution.set_keys(&owner->get_country_definition()->get_parties());
+			vote_distribution.set_keys(owner->get_country_definition()->get_parties());
 
 			// TODO - calculate vote distribution
 
@@ -151,7 +150,7 @@ void Pop::update_location_based_attributes() {
 		}
 	}
 
-	vote_distribution.set_keys(nullptr);
+	vote_distribution.set_keys({});
 }
 
 fixed_point_t Pop::get_ideology_support(Ideology const& ideology) const {
