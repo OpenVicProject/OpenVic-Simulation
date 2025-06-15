@@ -13,6 +13,7 @@
 #include "openvic-simulation/types/FunctionRef.hpp"
 #include "openvic-simulation/types/OrderedContainers.hpp"
 #include "openvic-simulation/utility/Getters.hpp"
+#include "openvic-simulation/utility/Containers.hpp"
 
 #include <function2/function2.hpp>
 
@@ -34,22 +35,24 @@ namespace OpenVic {
 
 		using execute_command_func_t = FunctionRef<bool(Argument&)>;
 
-		using write_func_t = fu2::function_view<void(OpenVic::colour_t, std::string&&)>;
+		using write_func_t = fu2::function_view<void(OpenVic::colour_t, std::string_view)>;
 
 		ConsoleInstance(InstanceManager& instance_manager);
 		ConsoleInstance(InstanceManager& instance_manager, write_func_t&& write_func);
 
-		void write(std::string&& message);
+		void write(memory::string&& message);
 		void set_write_func(write_func_t&& new_write_func);
-		static void default_write_func(OpenVic::colour_t colour, std::string&& message);
+		static void default_write_func(OpenVic::colour_t colour, std::string_view message);
+
+		static memory::string vformat(fmt::string_view fmt, fmt::format_args args);
 
 		void vwrite(fmt::string_view fmt, fmt::format_args args) {
-			write(fmt::vformat(fmt, args));
+			write(vformat(fmt, args));
 		}
 
 		void vwrite(colour_t colour, fmt::string_view fmt, fmt::format_args args) {
 			std::swap(colour, current_colour);
-			write(fmt::vformat(fmt, args));
+			write(vformat(fmt, args));
 			std::swap(colour, current_colour);
 		}
 
@@ -80,7 +83,7 @@ namespace OpenVic {
 
 		bool execute(std::string_view command);
 
-		bool add_command(std::string&& identifier, execute_command_func_t execute);
+		bool add_command(memory::string&& identifier, execute_command_func_t execute);
 
 		bool validate_argument_size(std::span<std::string_view> arguments, size_t size);
 		std::optional<int64_t> validate_integer(std::string_view value_string);

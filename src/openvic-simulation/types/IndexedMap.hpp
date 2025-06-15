@@ -8,12 +8,13 @@
 #include "openvic-simulation/utility/Getters.hpp"
 #include "openvic-simulation/utility/Logger.hpp"
 #include "openvic-simulation/utility/Utility.hpp"
+#include "openvic-simulation/utility/Containers.hpp"
 
 namespace OpenVic {
 
 	template<utility::not_same_as<bool> Value>
-	struct fixed_size_vector : private std::vector<Value> {
-		using base_type = std::vector<Value>;
+	struct fixed_size_vector : private memory::vector<Value> {
+		using base_type = memory::vector<Value>;
 
 		using typename base_type::iterator;
 		using typename base_type::const_iterator;
@@ -43,7 +44,7 @@ namespace OpenVic {
 		using values_type::data;
 
 		using key_type = Key;
-		using keys_type = std::vector<key_type>;
+		using keys_type = memory::vector<key_type>;
 		using keys_span_type = OpenVic::utility::forwardable_span<const key_type>;
 		using key_ref_type = typename keys_type::const_reference;
 		using key_ptr_type = typename keys_type::const_pointer;

@@ -37,10 +37,10 @@ namespace OpenVic {
 
 		template<std::derived_from<LoadBase<Context...>> T, std::derived_from<T> U>
 		static NodeTools::node_callback_t _expect_instance(
-			NodeTools::callback_t<std::unique_ptr<T>&&> callback, Context... context
+			NodeTools::callback_t<memory::unique_base_ptr<T>&&> callback, Context... context
 		) {
 			return [callback, &context...](ast::NodeCPtr node) mutable -> bool {
-				std::unique_ptr<T> instance { std::make_unique<U>() };
+				memory::unique_base_ptr<T> instance { memory::make_unique<U>() };
 				bool ret = instance->load(node, context...);
 				ret &= callback(std::move(instance));
 				return ret;
@@ -52,7 +52,7 @@ namespace OpenVic {
 
 	template<typename... Context>
 	class Named : public LoadBase<Context...> {
-		std::string PROPERTY(name);
+		memory::string PROPERTY(name);
 
 	protected:
 		Named() = default;
@@ -100,4 +100,8 @@ namespace OpenVic {
 	template<typename Value, typename... Context>
 	requires std::derived_from<Value, Named<Context...>>
 	using NamedInstanceRegistry = InstanceRegistry<RegistryValueInfoNamed<Value, Context...>>;
+
+	template<typename Value, typename... Context>
+	requires std::derived_from<Value, Named<Context...>>
+	using NamedBaseInstanceRegistry = BaseInstanceRegistry<RegistryValueInfoNamed<Value, Context...>>;
 }

@@ -8,6 +8,7 @@
 #include "openvic-simulation/types/HasIdentifier.hpp"
 #include "openvic-simulation/types/OrderedContainers.hpp"
 #include "openvic-simulation/types/Vector.hpp"
+#include "openvic-simulation/utility/Containers.hpp"
 
 namespace OpenVic {
 
@@ -95,7 +96,7 @@ namespace OpenVic {
 		/* Terrain type calculated from terrain image */
 		TerrainType const* PROPERTY(default_terrain_type);
 
-		std::vector<adjacency_t> PROPERTY(adjacencies);
+		memory::vector<adjacency_t> PROPERTY(adjacencies);
 		/* Calculated mean pixel position. */
 		fvec2_t PROPERTY(centre);
 		province_positions_t positions;
@@ -106,7 +107,7 @@ namespace OpenVic {
 		ProvinceDefinition(ProvinceDefinition&&) = default;
 
 		bool operator==(ProvinceDefinition const& other) const;
-		std::string to_string() const;
+		memory::string to_string() const;
 
 		inline constexpr bool has_region() const {
 			return region != nullptr;
@@ -127,7 +128,7 @@ namespace OpenVic {
 
 		adjacency_t const* get_adjacency_to(ProvinceDefinition const* province) const;
 		bool is_adjacent_to(ProvinceDefinition const* province) const;
-		std::vector<adjacency_t const*> get_adjacencies_going_through(ProvinceDefinition const* province) const;
+		memory::vector<adjacency_t const*> get_adjacencies_going_through(ProvinceDefinition const* province) const;
 		bool has_adjacency_going_through(ProvinceDefinition const* province) const;
 
 		fvec2_t get_unit_position() const;

@@ -2,8 +2,6 @@
 
 #include <iostream>
 #include <mutex>
-#include <queue>
-#include <sstream>
 #include <version>
 
 #include <function2/function2.hpp>
@@ -12,6 +10,7 @@
 #include <source_location>
 #endif
 
+#include "openvic-simulation/utility/Containers.hpp"
 #include "openvic-simulation/utility/StringUtils.hpp"
 
 namespace OpenVic {
@@ -49,24 +48,24 @@ namespace OpenVic {
 #endif
 
 	class Logger final {
-		using log_func_t = fu2::function_view<void(std::string&&)>;
-		using log_queue_t = std::queue<std::string>;
+		using log_func_t = fu2::function_view<void(memory::string&&)>;
+		using log_queue_t = memory::queue<memory::string>;
 
+	public:
 #ifdef __cpp_lib_source_location
 		using source_location = std::source_location;
 #else
 		using source_location = OpenVic::source_location;
 #endif
 
-	public:
 		static void set_logger_funcs() {
-			set_info_func([](std::string&& str) {
+			set_info_func([](memory::string&& str) {
 				std::cout << "[INFO] " << str;
 			});
-			set_warning_func([](std::string&& str) {
+			set_warning_func([](memory::string&& str) {
 				std::cerr << "[WARNING] " << str;
 			});
-			set_error_func([](std::string&& str) {
+			set_error_func([](memory::string&& str) {
 				std::cerr << "[ERROR] " << str;
 			});
 		}
@@ -85,7 +84,7 @@ namespace OpenVic {
 			log(log_channel_t& log_channel, Args&&... args, source_location const& location) {
 				const std::lock_guard<std::mutex> lock { log_mutex };
 
-				std::stringstream stream;
+				memory::stringstream stream;
 				stream << StringUtils::get_filename(location.file_name()) << "("
 					/* Function name removed to reduce clutter. It is already included
 					* in Godot's print functions, so this was repeating it. */
