@@ -132,7 +132,7 @@ jobs:
         with:
           platform: ${{ matrix.platform }}
           target: ${{ matrix.target }}
-          sconsflags: arch=${{ matrix.arch }} build_ovsim_library=yes run_ovsim_tests=yes
+          sconsflags: arch=${{ matrix.arch }} build_ovsim_library=yes run_ovsim_tests=yes build_ovsim_benchmarks=yes
 
       - name: Delete compilation files
         if: ${{ matrix.platform == 'windows' }}
