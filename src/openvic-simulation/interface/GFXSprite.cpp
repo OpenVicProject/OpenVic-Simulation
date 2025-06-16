@@ -28,7 +28,7 @@ node_callback_t Sprite::expect_sprites(length_callback_t length_callback, callba
 	);
 }
 
-TextureSprite::TextureSprite() : texture_file {} {}
+TextureSprite::TextureSprite() {}
 
 bool TextureSprite::_fill_key_map(case_insensitive_key_map_t& key_map) {
 	bool ret = Sprite::_fill_key_map(key_map);
@@ -42,7 +42,7 @@ bool TextureSprite::_fill_key_map(case_insensitive_key_map_t& key_map) {
 	return ret;
 }
 
-IconTextureSprite::IconTextureSprite() : no_of_frames { NO_FRAMES } {}
+IconTextureSprite::IconTextureSprite() {}
 
 bool IconTextureSprite::_fill_key_map(case_insensitive_key_map_t& key_map) {
 	bool ret = TextureSprite::_fill_key_map(key_map);
@@ -56,7 +56,7 @@ bool IconTextureSprite::_fill_key_map(case_insensitive_key_map_t& key_map) {
 	return ret;
 }
 
-TileTextureSprite::TileTextureSprite() : size {} {}
+TileTextureSprite::TileTextureSprite() {}
 
 bool TileTextureSprite::_fill_key_map(case_insensitive_key_map_t& key_map) {
 	bool ret = TextureSprite::_fill_key_map(key_map);
@@ -66,7 +66,7 @@ bool TileTextureSprite::_fill_key_map(case_insensitive_key_map_t& key_map) {
 	return ret;
 }
 
-CorneredTileTextureSprite::CorneredTileTextureSprite() : size {}, border_size {} {}
+CorneredTileTextureSprite::CorneredTileTextureSprite() {}
 
 bool CorneredTileTextureSprite::_fill_key_map(case_insensitive_key_map_t& key_map) {
 	bool ret = TextureSprite::_fill_key_map(key_map);
@@ -77,7 +77,7 @@ bool CorneredTileTextureSprite::_fill_key_map(case_insensitive_key_map_t& key_ma
 	return ret;
 }
 
-ProgressBar::ProgressBar() : back_colour {}, back_texture_file {}, progress_colour {}, progress_texture_file {}, size {} {}
+ProgressBar::ProgressBar() {}
 
 bool ProgressBar::_fill_key_map(case_insensitive_key_map_t& key_map) {
 	bool ret = Sprite::_fill_key_map(key_map);
@@ -96,7 +96,7 @@ bool ProgressBar::_fill_key_map(case_insensitive_key_map_t& key_map) {
 	return ret;
 }
 
-PieChart::PieChart() : size {} {}
+PieChart::PieChart() {}
 
 bool PieChart::_fill_key_map(case_insensitive_key_map_t& key_map) {
 	bool ret = Sprite::_fill_key_map(key_map);
@@ -104,7 +104,7 @@ bool PieChart::_fill_key_map(case_insensitive_key_map_t& key_map) {
 	return ret;
 }
 
-LineChart::LineChart() : size {}, linewidth {} {}
+LineChart::LineChart() {}
 
 bool LineChart::_fill_key_map(case_insensitive_key_map_t& key_map) {
 	bool ret = Sprite::_fill_key_map(key_map);
@@ -117,7 +117,7 @@ bool LineChart::_fill_key_map(case_insensitive_key_map_t& key_map) {
 	return ret;
 }
 
-MaskedFlag::MaskedFlag() : overlay_file {}, mask_file {} {}
+MaskedFlag::MaskedFlag() {}
 
 bool MaskedFlag::_fill_key_map(case_insensitive_key_map_t& key_map) {
 	bool ret = Sprite::_fill_key_map(key_map);

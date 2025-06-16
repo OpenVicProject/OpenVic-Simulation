@@ -63,11 +63,11 @@ namespace OpenVic {
 		std::vector<river_t> PROPERTY(rivers); // TODO: calculate provinces affected by crossing
 		void _trace_river(BMP& rivers_bmp, ivec2_t start, river_t& river);
 
-		ivec2_t PROPERTY(dims);
+		ivec2_t PROPERTY(dims, { 0, 0 });
 		std::vector<shape_pixel_t> PROPERTY(province_shape_image);
 		colour_index_map_t colour_index_map;
 
-		ProvinceDefinition::index_t PROPERTY(max_provinces);
+		ProvinceDefinition::index_t PROPERTY(max_provinces, ProvinceDefinition::MAX_INDEX);
 
 		PointMap PROPERTY_REF(path_map_land);
 		PointMap PROPERTY_REF(path_map_sea);

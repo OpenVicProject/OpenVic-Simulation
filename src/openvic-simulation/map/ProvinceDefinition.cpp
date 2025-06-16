@@ -14,17 +14,7 @@ ProvinceDefinition::ProvinceDefinition(
 	colour_t new_colour,
 	index_t new_index
 ) : HasIdentifierAndColour { new_identifier, new_colour, true },
-	HasIndex { new_index },
-	region { nullptr },
-	climate { nullptr },
-	continent { nullptr },
-	on_map { false },
-	water { false },
-	coastal { false },
-	port { false },
-	port_adjacent_province { nullptr },
-	default_terrain_type { nullptr },
-	positions {} {}
+	HasIndex { new_index } {}
 
 std::string ProvinceDefinition::to_string() const {
 	return fmt::format("(#{}, {}, 0x{})", get_index(), get_identifier(), get_colour());

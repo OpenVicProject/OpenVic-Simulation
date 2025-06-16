@@ -30,8 +30,9 @@ namespace OpenVic::NumberUtils {
 		uint64_t c = 0;
 		uint64_t d = 1ull << 62;
 
-		while (d > n)
+		while (d > n) {
 			d >>= 2;
+		}
 
 		for (; d != 0; d >>= 2) {
 			if (x >= c + d) {

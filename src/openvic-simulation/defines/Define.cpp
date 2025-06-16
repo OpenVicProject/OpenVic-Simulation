@@ -5,7 +5,7 @@
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;
 
-DefineManager::DefineManager() : start_date {}, end_date {} {}
+DefineManager::DefineManager() {}
 
 bool DefineManager::load_defines_file(ast::NodeCPtr root) {
 	bool ret = expect_dictionary_keys(
