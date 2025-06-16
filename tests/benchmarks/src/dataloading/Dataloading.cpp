@@ -12,7 +12,7 @@ TEST_CASE("Dataloading benchmark", "[benchmarks][benchmark-dataloading]") {
 	ankerl::nanobench::Bench().epochs(10).run("Dataloading", [&] {
 		OpenVic::GameManager game_manager { []() {} };
 
-		game_manager.set_roots(roots);
+		game_manager.set_roots(roots, {});
 		game_manager.load_definitions(
 			[](std::string_view key, Dataloader::locale_t locale, std::string_view localisation) -> bool {
 				return true;
