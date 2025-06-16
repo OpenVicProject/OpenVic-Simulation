@@ -47,9 +47,9 @@ namespace OpenVic {
 		fixed_point_t PROPERTY(peace_ally_force_balance_mult);
 		fixed_point_t PROPERTY(aggression_base);
 		fixed_point_t PROPERTY(aggression_unciv_bonus);
-		size_t PROPERTY(fleet_size);
-		size_t PROPERTY(min_fleets);
-		size_t PROPERTY(max_fleets);
+		size_t PROPERTY(fleet_size, 0);
+		size_t PROPERTY(min_fleets, 0);
+		size_t PROPERTY(max_fleets, 0);
 		Timespan PROPERTY(time_before_disband);
 
 		AIDefines();

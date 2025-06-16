@@ -68,7 +68,7 @@ namespace OpenVic::GFX {
 	class IconTextureSprite final : public TextureSprite {
 		friend std::unique_ptr<IconTextureSprite> std::make_unique<IconTextureSprite>();
 
-		frame_t PROPERTY(no_of_frames);
+		frame_t PROPERTY(no_of_frames, NO_FRAMES);
 
 	protected:
 		IconTextureSprite();
@@ -143,7 +143,7 @@ namespace OpenVic::GFX {
 	class PieChart final : public Sprite {
 		friend std::unique_ptr<PieChart> std::make_unique<PieChart>();
 
-		uint32_t PROPERTY(size);
+		uint32_t PROPERTY(size, 0);
 
 	protected:
 		PieChart();
@@ -161,7 +161,7 @@ namespace OpenVic::GFX {
 		friend std::unique_ptr<LineChart> std::make_unique<LineChart>();
 
 		ivec2_t PROPERTY(size);
-		uint32_t PROPERTY(linewidth);
+		uint32_t PROPERTY(linewidth, 0);
 
 	protected:
 		LineChart();

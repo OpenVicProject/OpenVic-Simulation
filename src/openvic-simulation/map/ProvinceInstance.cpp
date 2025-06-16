@@ -38,7 +38,6 @@ ProvinceInstance::ProvinceInstance(
 	modifier_effect_cache { new_modifier_effect_cache },
 	terrain_type { new_province_definition.get_default_terrain_type() },
 	rgo { new_market_instance, pop_type_keys },
-	buildings { "buildings", false },
 	population_by_strata { strata_keys },
 	militancy_by_strata { strata_keys },
 	life_needs_fulfilled_by_strata { strata_keys },

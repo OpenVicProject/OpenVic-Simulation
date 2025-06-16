@@ -55,7 +55,7 @@ namespace OpenVic::GFX {
 		};
 
 	private:
-		fixed_point_t PROPERTY(scale);
+		fixed_point_t PROPERTY(scale, 1);
 		std::string PROPERTY(model_file);
 		std::optional<Animation> PROPERTY(idle_animation);
 		std::optional<Animation> PROPERTY(move_animation);
@@ -82,7 +82,7 @@ namespace OpenVic::GFX {
 
 	private:
 		//Named<> already handles the name property
-		fixed_point_t PROPERTY(size);
+		fixed_point_t PROPERTY(size, 5);
 		//texture_file is unused, body_texture_file determines the appearance of the arrow
 		std::string PROPERTY(texture_file); //unused
 		std::string PROPERTY(body_texture_file);
@@ -91,10 +91,10 @@ namespace OpenVic::GFX {
 		colour_t PROPERTY(back_colour);
 		colour_t PROPERTY(progress_colour);
 
-		fixed_point_t PROPERTY(end_at); //how should float be repd? >> fixed_point handles it
-		fixed_point_t PROPERTY(height);
-		uint64_t PROPERTY(arrow_type); //TODO: what does this do?
-		fixed_point_t PROPERTY(heading); //also float
+		fixed_point_t PROPERTY(end_at, 1); //how should float be repd? >> fixed_point handles it
+		fixed_point_t PROPERTY(height, 1);
+		uint64_t PROPERTY(arrow_type, 0); //TODO: what does this do?
+		fixed_point_t PROPERTY(heading, 1); //also float
 
 		std::string PROPERTY(effect_file);
 
@@ -119,13 +119,13 @@ namespace OpenVic::GFX {
 		std::string PROPERTY(texture_arrow_body);
 		std::string PROPERTY(texture_arrow_head);
 
-		fixed_point_t PROPERTY(start); //labelled 'body start width' in file
-		fixed_point_t PROPERTY(stop);  //labelled 'body end width' in file
+		fixed_point_t PROPERTY(start, 1); //labelled 'body start width' in file
+		fixed_point_t PROPERTY(stop, 1);  //labelled 'body end width' in file
 
-		fvec2_t PROPERTY(dims); //x,y labelled 'arrow length','arrow height' in file
+		fvec2_t PROPERTY(dims, { 1, 1 }); //x,y labelled 'arrow length','arrow height' in file
 		std::string PROPERTY(font);
-		fixed_point_t PROPERTY(scale);
-		bool PROPERTY(no_fade);
+		fixed_point_t PROPERTY(scale, 1);
+		bool PROPERTY(no_fade, false);
 		fixed_point_t PROPERTY(texture_loop);
 
 	protected:
@@ -145,7 +145,7 @@ namespace OpenVic::GFX {
 
 	private:
 		std::string PROPERTY(texture_file);
-		fixed_point_t PROPERTY(scale);
+		fixed_point_t PROPERTY(scale, 1);
 
 	protected:
 		MapInfo();
@@ -166,15 +166,15 @@ namespace OpenVic::GFX {
 	private:
 		std::string PROPERTY(texture_file);
 		//TODO: pulseSpeed, fadeout be ints or fixed points? assume fixed_point_t to start
-		fixed_point_t PROPERTY(size);
-		fixed_point_t PROPERTY(spin);
-		bool PROPERTY(pulsating);
-		fixed_point_t PROPERTY(pulse_lowest);
-		fixed_point_t PROPERTY(pulse_speed);
-		bool PROPERTY(additative);
-		fixed_point_t PROPERTY(expanding);
-		fixed_point_t PROPERTY(duration); //0 means it stays indefinitely (also the default value)
-		fixed_point_t PROPERTY(fadeout); //appears to have no effect
+		fixed_point_t PROPERTY(size, 1);
+		fixed_point_t PROPERTY(spin, 1);
+		bool PROPERTY(pulsating, false);
+		fixed_point_t PROPERTY(pulse_lowest, 1);
+		fixed_point_t PROPERTY(pulse_speed, 1);
+		bool PROPERTY(additative, false);
+		fixed_point_t PROPERTY(expanding, 1);
+		fixed_point_t PROPERTY(duration, 0); //0 means it stays indefinitely (also the default value)
+		fixed_point_t PROPERTY(fadeout, 0); //appears to have no effect
 
 	protected:
 		Projection();
@@ -195,8 +195,8 @@ namespace OpenVic::GFX {
 
 	private:
 		std::string PROPERTY(texture_file);
-		fixed_point_t PROPERTY(scale);
-		frame_t PROPERTY(no_of_frames);
+		fixed_point_t PROPERTY(scale, 1);
+		frame_t PROPERTY(no_of_frames, 1);
 
 	protected:
 		Billboard();
@@ -246,11 +246,11 @@ namespace OpenVic::GFX {
 		fvec2_t PROPERTY(text_position);
 		fvec2_t PROPERTY(size);
 
-		text_format_t PROPERTY(format);
+		text_format_t PROPERTY(format, text_format_t::left);
 		//end textblock
 
-		fixed_point_t PROPERTY(speed);
-		fixed_point_t PROPERTY(scale);
+		fixed_point_t PROPERTY(speed, 1);
+		fixed_point_t PROPERTY(scale, 1);
 		fvec3_t PROPERTY(position);
 
 	protected:

@@ -249,10 +249,10 @@ using namespace std::string_view_literals;
 				ONE_OR_MORE = _MUST_APPEAR | _CAN_REPEAT
 			} expected_count;
 			node_callback_t callback;
-			size_t count;
+			size_t count = 0;
 
 			dictionary_entry_t(expected_count_t new_expected_count, node_callback_t&& new_callback)
-				: expected_count { new_expected_count }, callback { MOV(new_callback) }, count { 0 } {}
+				: expected_count { new_expected_count }, callback { MOV(new_callback) } {}
 
 			constexpr bool must_appear() const {
 				return static_cast<uint8_t>(expected_count) & static_cast<uint8_t>(expected_count_t::_MUST_APPEAR);

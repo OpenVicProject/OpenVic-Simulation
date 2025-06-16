@@ -24,8 +24,8 @@ namespace OpenVic {
 		fixed_point_t PROPERTY(province_size_divider);
 		fixed_point_t PROPERTY(capitalist_build_factory_state_employment_percent);
 		fixed_point_t PROPERTY(goods_focus_swap_chance);
-		size_t PROPERTY(num_closed_factories_per_state_lassiez_faire);
-		size_t PROPERTY(min_num_factories_per_state_before_deleting_lassiez_faire);
+		size_t PROPERTY(num_closed_factories_per_state_lassiez_faire, 0);
+		size_t PROPERTY(min_num_factories_per_state_before_deleting_lassiez_faire, 0);
 		Timespan PROPERTY(bankruptcy_duration);
 		fixed_point_t PROPERTY(second_rank_base_share_factor);
 		fixed_point_t PROPERTY(civ_base_share_factor);

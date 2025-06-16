@@ -1,6 +1,7 @@
 #include <nanobench.h>
 
-#include "GameManager.hpp"
+#include "openvic-simulation/GameManager.hpp"
+
 #include <snitch/snitch_macros_test_case.hpp>
 
 using namespace OpenVic;
