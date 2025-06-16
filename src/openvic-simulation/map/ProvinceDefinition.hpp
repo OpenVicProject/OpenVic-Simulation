@@ -84,21 +84,21 @@ namespace OpenVic {
 
 	private:
 		/* Immutable attributes (unchanged after initial game load) */
-		Region const* PROPERTY(region);
-		Climate const* PROPERTY(climate);
-		Continent const* PROPERTY(continent);
-		bool PROPERTY(on_map);
-		bool PROPERTY_CUSTOM_PREFIX(water, is);
-		bool PROPERTY_CUSTOM_PREFIX(coastal, is);
-		bool PROPERTY_CUSTOM_PREFIX(port, has);
-		ProvinceDefinition const* PROPERTY(port_adjacent_province);
+		Region const* PROPERTY(region, nullptr);
+		Climate const* PROPERTY(climate, nullptr);
+		Continent const* PROPERTY(continent, nullptr);
+		bool PROPERTY(on_map, false);
+		bool PROPERTY_CUSTOM_PREFIX(water, is, false);
+		bool PROPERTY_CUSTOM_PREFIX(coastal, is, false);
+		bool PROPERTY_CUSTOM_PREFIX(port, has, false);
+		ProvinceDefinition const* PROPERTY(port_adjacent_province, nullptr);
 		/* Terrain type calculated from terrain image */
-		TerrainType const* PROPERTY(default_terrain_type);
+		TerrainType const* PROPERTY(default_terrain_type, nullptr);
 
 		std::vector<adjacency_t> PROPERTY(adjacencies);
 		/* Calculated mean pixel position. */
 		fvec2_t PROPERTY(centre);
-		province_positions_t positions;
+		province_positions_t positions {};
 
 		ProvinceDefinition(std::string_view new_identifier, colour_t new_colour, index_t new_index);
 

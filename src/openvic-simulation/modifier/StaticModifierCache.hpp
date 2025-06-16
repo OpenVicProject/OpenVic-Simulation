@@ -4,6 +4,49 @@
 #include "openvic-simulation/modifier/Modifier.hpp"
 #include "openvic-simulation/utility/Getters.hpp"
 
+#define COUNTRY_DIFFICULTY_MODIFIER_LIST(F, ID_F) \
+	F(very_easy_player) \
+	F(easy_player) \
+	F(hard_player) \
+	F(very_hard_player) \
+	F(very_easy_ai) \
+	F(easy_ai) \
+	F(hard_ai) \
+	F(very_hard_ai) \
+
+#define COUNTRY_MODIFIER_LIST(F, ID_F) \
+	ID_F(base_modifier, base_values) \
+	F(war) \
+	F(peace) \
+	F(disarming) \
+	F(war_exhaustion) \
+	ID_F(infamy, badboy) \
+	F(debt_default_to) \
+	F(great_power) \
+	F(secondary_power) \
+	ID_F(civilised, civ_nation) \
+	ID_F(uncivilised, unciv_nation) \
+	ID_F(literacy, average_literacy) \
+	F(plurality) \
+	F(total_occupation) \
+	F(total_blockaded)
+
+// Province modifiers
+#define PROVINCE_MODIFIER_LIST(F, ID_F) \
+	F(overseas) \
+	F(coastal) \
+	F(non_coastal) \
+	F(coastal_sea) \
+	F(sea_zone) \
+	F(land_province) \
+	F(blockaded) \
+	F(no_adjacent_controlled) \
+	F(core) \
+	F(has_siege) \
+	F(occupied) \
+	F(nationalism) \
+	F(infrastructure)
+
 namespace OpenVic {
 	struct ModifierManager;
 
@@ -11,51 +54,20 @@ namespace OpenVic {
 		friend struct ModifierManager;
 
 	private:
-		// Country modifiers
-		Modifier PROPERTY(very_easy_player);
-		Modifier PROPERTY(easy_player);
-		Modifier PROPERTY(hard_player);
-		Modifier PROPERTY(very_hard_player);
-		Modifier PROPERTY(very_easy_ai);
-		Modifier PROPERTY(easy_ai);
-		Modifier PROPERTY(hard_ai);
-		Modifier PROPERTY(very_hard_ai);
+		#define DEFINE_PROPERTY_ID(PROP, ID) Modifier PROPERTY(PROP, { #ID, {}, Modifier::modifier_type_t::STATIC });
+		#define DEFINE_PROPERTY(PROP) DEFINE_PROPERTY_ID(PROP, PROP)
 
-		Modifier PROPERTY(base_modifier);
-		Modifier PROPERTY(war);
-		Modifier PROPERTY(peace);
-		Modifier PROPERTY(disarming);
-		Modifier PROPERTY(war_exhaustion);
-		Modifier PROPERTY(infamy);
-		Modifier PROPERTY(debt_default_to);
-		Modifier PROPERTY(great_power);
-		Modifier PROPERTY(secondary_power);
-		Modifier PROPERTY(civilised);
-		Modifier PROPERTY(uncivilised);
-		Modifier PROPERTY(literacy);
-		Modifier PROPERTY(plurality);
-		Modifier PROPERTY(total_occupation);
-		Modifier PROPERTY(total_blockaded);
+		COUNTRY_DIFFICULTY_MODIFIER_LIST(DEFINE_PROPERTY, DEFINE_PROPERTY_ID)
+		COUNTRY_MODIFIER_LIST(DEFINE_PROPERTY, DEFINE_PROPERTY_ID)
+		PROVINCE_MODIFIER_LIST(DEFINE_PROPERTY, DEFINE_PROPERTY_ID)
+
+		#undef DEFINE_PROPERTY
+		#undef DEFINE_PROPERTY_NAME
 
 		// Country event modifiers
-		Modifier const* PROPERTY(in_bankruptcy);
-		Modifier const* PROPERTY(bad_debtor);
-		Modifier const* PROPERTY(generalised_debt_default); //possibly, as it's used to trigger gunboat CB
-
-		// Province modifiers
-		Modifier PROPERTY(overseas);
-		Modifier PROPERTY(coastal);
-		Modifier PROPERTY(non_coastal);
-		Modifier PROPERTY(coastal_sea);
-		Modifier PROPERTY(sea_zone);
-		Modifier PROPERTY(land_province);
-		Modifier PROPERTY(blockaded);
-		Modifier PROPERTY(no_adjacent_controlled);
-		Modifier PROPERTY(core);
-		Modifier PROPERTY(has_siege);
-		Modifier PROPERTY(occupied);
-		Modifier PROPERTY(nationalism);
-		Modifier PROPERTY(infrastructure);
+		Modifier const* PROPERTY(in_bankruptcy, nullptr);
+		Modifier const* PROPERTY(bad_debtor, nullptr);
+		Modifier const* PROPERTY(generalised_debt_default, nullptr); //possibly, as it's used to trigger gunboat CB
 
 		StaticModifierCache();
 

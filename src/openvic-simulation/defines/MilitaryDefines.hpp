@@ -16,9 +16,9 @@ namespace OpenVic {
 		Timespan PROPERTY(dig_in_increase_each_days);
 		fixed_point_t PROPERTY(reinforce_speed);
 		fixed_point_t PROPERTY(combat_difficulty_impact);
-		size_t PROPERTY(base_combat_width);
-		pop_size_t PROPERTY(min_pop_size_for_regiment);
-		pop_size_t PROPERTY(pop_size_per_regiment);
+		size_t PROPERTY(base_combat_width, 0);
+		pop_size_t PROPERTY(min_pop_size_for_regiment, 0);
+		pop_size_t PROPERTY(pop_size_per_regiment, 0);
 		fixed_point_t PROPERTY(soldier_to_pop_damage);
 		fixed_point_t PROPERTY(land_speed_modifier);
 		fixed_point_t PROPERTY(naval_speed_modifier);
@@ -28,7 +28,7 @@ namespace OpenVic {
 		fixed_point_t PROPERTY(pop_size_per_regiment_protectorate_multiplier);
 		fixed_point_t PROPERTY(pop_size_per_regiment_colony_multiplier);
 		fixed_point_t PROPERTY(pop_size_per_regiment_non_core_multiplier);
-		size_t PROPERTY(gas_attack_modifier);
+		size_t PROPERTY(gas_attack_modifier, 0);
 		fixed_point_t PROPERTY(combatloss_war_exhaustion);
 		fixed_point_t PROPERTY(leader_max_random_prestige);
 		fixed_point_t PROPERTY(leader_age_death_factor);
@@ -54,7 +54,7 @@ namespace OpenVic {
 		fixed_point_t PROPERTY(naval_combat_damaged_target_selection);
 		fixed_point_t PROPERTY(naval_combat_stacking_target_change);
 		fixed_point_t PROPERTY(naval_combat_stacking_target_select);
-		size_t PROPERTY(naval_combat_max_targets);
+		size_t PROPERTY(naval_combat_max_targets, 0);
 		fixed_point_t PROPERTY(ai_bigship_proportion);
 		fixed_point_t PROPERTY(ai_lightship_proportion);
 		fixed_point_t PROPERTY(ai_transport_proportion);
@@ -67,8 +67,8 @@ namespace OpenVic {
 		fixed_point_t PROPERTY(ai_blockade_range);
 		fixed_point_t PROPERTY(recon_unit_ratio);
 		fixed_point_t PROPERTY(engineer_unit_ratio);
-		size_t PROPERTY(siege_brigades_min);
-		size_t PROPERTY(siege_brigades_max);
+		size_t PROPERTY(siege_brigades_min, 0);
+		size_t PROPERTY(siege_brigades_max, 0);
 		fixed_point_t PROPERTY(siege_brigades_bonus);
 		fixed_point_t PROPERTY(recon_siege_effect);
 		fixed_point_t PROPERTY(siege_attrition);

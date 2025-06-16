@@ -5,8 +5,7 @@ using namespace OpenVic;
 BuildingInstance::BuildingInstance(BuildingType const& new_building_type, level_t new_level)
   : HasIdentifier { new_building_type },
 	building_type { new_building_type },
-	level { new_level },
-	expansion_state { ExpansionState::CannotExpand } {}
+	level { new_level } {}
 
 bool BuildingInstance::_can_expand() const {
 	return level < building_type.get_max_level();

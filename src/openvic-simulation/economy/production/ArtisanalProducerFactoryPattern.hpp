@@ -10,7 +10,7 @@
 namespace OpenVic {
 	struct ArtisanalProducerFactoryPattern {
 	private:
-		int32_t index;
+		int32_t index = -1;
 		std::vector<ProductionType const*> unlocked_artisanal_production_types;
 		GoodInstanceManager const& good_instance_manager;
 		ModifierEffectCache const& modifier_effect_cache;

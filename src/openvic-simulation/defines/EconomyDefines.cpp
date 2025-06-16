@@ -3,39 +3,7 @@
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;
 
-EconomyDefines::EconomyDefines()
-  : max_daily_research {},
-	loan_base_interest {},
-	bankruptcy_external_loan_duration {},
-	bankruptcy_factor {},
-	shadowy_financiers_max_loan_amount {},
-	max_loan_cap_from_banks {},
-	gunboat_low_tax_cap {},
-	gunboat_high_tax_cap {},
-	gunboat_fleet_size_factor {},
-	province_size_divider {},
-	capitalist_build_factory_state_employment_percent {},
-	goods_focus_swap_chance {},
-	num_closed_factories_per_state_lassiez_faire {},
-	min_num_factories_per_state_before_deleting_lassiez_faire {},
-	bankruptcy_duration {},
-	second_rank_base_share_factor {},
-	civ_base_share_factor {},
-	unciv_base_share_factor {},
-	factory_paychecks_leftover_factor {},
-	max_factory_money_save {},
-	small_debt_limit {},
-	factory_upgrade_employee_factor {},
-	rgo_supply_demand_factor_hire_hi {},
-	rgo_supply_demand_factor_hire_lo {},
-	rgo_supply_demand_factor_fire {},
-	employment_hire_lowest {},
-	employment_fire_lowest {},
-	minimum_land_spending_slider_value {},
-	minimum_naval_spending_slider_value {},
-	minimum_construction_spending_slider_value {},
-	factory_purchase_min_factor {},
-	factory_purchase_drawdown_factor {} {}
+EconomyDefines::EconomyDefines() {}
 
 std::string_view EconomyDefines::get_name() const {
 	return "economy";

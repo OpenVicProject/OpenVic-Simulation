@@ -14,7 +14,7 @@ namespace OpenVic {
 		BuildingType const& PROPERTY(building_type);
 
 		level_t PROPERTY_RW(level);
-		ExpansionState PROPERTY(expansion_state);
+		ExpansionState PROPERTY(expansion_state, ExpansionState::CannotExpand);
 		Date PROPERTY(start_date);
 		Date PROPERTY(end_date);
 		fixed_point_t PROPERTY(expansion_progress);
