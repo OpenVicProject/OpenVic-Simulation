@@ -153,8 +153,8 @@ void ThreadPool::initialise_threadpool(
 				this,
 				&work_for_thread = work_per_thread[i],
 				&pop_defines,
-				&country_keys,
-				&strata_keys,
+				country_keys,
+				strata_keys,
 				goods_begin, goods_end,
 				provinces_begin, provinces_end
 			]() -> void {
