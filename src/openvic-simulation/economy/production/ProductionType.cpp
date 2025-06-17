@@ -2,6 +2,9 @@
 
 #include <openvic-dataloader/v2script/Parser.hpp>
 
+#include "openvic-simulation/dataloader/NodeTools.hpp"
+#include "openvic-simulation/utility/ErrorMacros.hpp"
+
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;
 
@@ -207,6 +210,10 @@ bool ProductionTypeManager::load_production_types_file(
 	if (!template_symbol) {
 		Logger::error("template could not be interned.");
 	}
+	auto output_goods_symbol = parser.find_intern("output_goods"sv);
+	if (!output_goods_symbol) {
+		Logger::error("output_goods could not be interned.");
+	}
 
 	size_t expected_types = 0;
 
@@ -214,27 +221,39 @@ bool ProductionTypeManager::load_production_types_file(
 	ordered_set<std::string_view> templates;
 	ordered_map<std::string_view, std::string_view> template_target_map;
 	bool ret = expect_dictionary(
-		[this, &expected_types, &templates, &template_target_map, &template_symbol](std::string_view key, ast::NodeCPtr value) -> bool {
+		[this, &expected_types, &templates, &template_target_map, &template_symbol, &output_goods_symbol]
+		(std::string_view key, ast::NodeCPtr value) -> bool {
 			expected_types++;
 
 			std::string_view template_id = "";
-			bool found_template = false;
-			const bool ret = expect_key(template_symbol, expect_identifier(assign_variable_callback(template_id)), &found_template)(value);
-			if (found_template) {
-				if (ret) {
-					templates.emplace(template_id);
-					template_target_map.emplace(key, template_id);
-				} else {
-					Logger::error("Failed get template identifier for ", key);
-					return false;
-				}
+			bool has_found_template = false;
+			const bool is_parsing_template_success = expect_key(
+				template_symbol,
+				expect_identifier(assign_variable_callback(template_id)),
+				&has_found_template
+			)(value);
+
+			if (has_found_template) {
+				OV_ERR_FAIL_COND_V_MSG(
+					!is_parsing_template_success,
+					false,
+					fmt::format("Failed get template identifier for {}", key)
+				);
+				templates.emplace(template_id);
+				template_target_map.emplace(key, template_id);
 			} else {
-				// this registers templates too, works in some mods (PDM/DoD) that have templates that are unused but aren't factories themselves
-				if (key.ends_with(template_symbol.view())) {
+				bool has_found_output_goods = false;
+				expect_key(
+					output_goods_symbol, 
+					success_callback,
+					&has_found_output_goods
+				)(value);
+				if (!has_found_output_goods) {
+					//assume it's a template
 					templates.emplace(key);
-					template_target_map.emplace(key, key);
 				}
 			}
+
 			return true;
 		}
 	)(parser.get_file_node());
