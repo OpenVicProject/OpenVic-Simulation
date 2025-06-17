@@ -335,7 +335,7 @@ namespace OpenVic {
 		}
 
 		constexpr key_ref_type operator()(size_t index) const {
-			return (*keys)[index];
+			return keys[index];
 		}
 
 		constexpr key_ptr_type get_key_by_index(size_t index) const {
