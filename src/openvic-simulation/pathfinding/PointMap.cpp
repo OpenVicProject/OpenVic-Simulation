@@ -34,10 +34,10 @@ bool PointMap::try_add_point(
 	points_key_type id, ivec2_t const& position, fixed_point_t weight_scale, std::span<points_key_type> adjacent_points
 ) {
 	if constexpr (!std::is_unsigned_v<points_key_type>) {
-		OV_ERR_FAIL_COND_V_MSG(id < 0, false, fmt::format("Can't add a point with negative id: {}.", id));
+		OV_ERR_FAIL_COND_V_MSG(id < 0, false, memory::fmt::format("Can't add a point with negative id: {}.", id));
 	}
 	OV_ERR_FAIL_COND_V_MSG(
-		weight_scale < 0, false, fmt::format("Can't add a point with weight scale less than 0.0: {}.", weight_scale.to_string())
+		weight_scale < 0, false, memory::fmt::format("Can't add a point with weight scale less than 0.0: {}.", weight_scale.to_string())
 	);
 
 	if (OV_unlikely(points.contains(id))) {
@@ -57,10 +57,10 @@ void PointMap::add_point(
 	points_key_type id, ivec2_t const& position, fixed_point_t weight_scale, std::span<points_key_type> adjacent_points
 ) {
 	if constexpr (!std::is_unsigned_v<points_key_type>) {
-		OV_ERR_FAIL_COND_MSG(id < 0, fmt::format("Can't add a point with negative id: {}.", id));
+		OV_ERR_FAIL_COND_MSG(id < 0, memory::fmt::format("Can't add a point with negative id: {}.", id));
 	}
 	OV_ERR_FAIL_COND_MSG(
-		weight_scale < 0, fmt::format("Can't add a point with weight scale less than 0.0: {}.", weight_scale.to_string())
+		weight_scale < 0, memory::fmt::format("Can't add a point with weight scale less than 0.0: {}.", weight_scale.to_string())
 	);
 
 	points_iterator found_pt = points.find(id);
@@ -79,7 +79,7 @@ void PointMap::add_point(
 
 PointMap::Point const* PointMap::get_point(points_key_type id) const {
 	points_const_iterator it = points.find(id);
-	OV_ERR_FAIL_COND_V_MSG(it == points.end(), nullptr, fmt::format("Can't get a point. Point with id: {} doesn't exist.", id));
+	OV_ERR_FAIL_COND_V_MSG(it == points.end(), nullptr, memory::fmt::format("Can't get a point. Point with id: {} doesn't exist.", id));
 
 	return &it.value();
 }
@@ -96,7 +96,7 @@ PointMap::Point const* PointMap::try_get_point(points_key_type id) const {
 ivec2_t PointMap::get_point_position(points_key_type id) const {
 	points_const_iterator it = points.find(id);
 	OV_ERR_FAIL_COND_V_MSG(
-		it == points.end(), ivec2_t(), fmt::format("Can't get point's position. Point with id: {} doesn't exist.", id)
+		it == points.end(), ivec2_t(), memory::fmt::format("Can't get point's position. Point with id: {} doesn't exist.", id)
 	);
 
 	return it.value().position;
@@ -104,7 +104,7 @@ ivec2_t PointMap::get_point_position(points_key_type id) const {
 
 void PointMap::set_point_position(points_key_type id, ivec2_t const& position) {
 	points_iterator it = points.find(id);
-	OV_ERR_FAIL_COND_MSG(it == points.end(), fmt::format("Can't set point's position. Point with id: {} doesn't exist.", id));
+	OV_ERR_FAIL_COND_MSG(it == points.end(), memory::fmt::format("Can't set point's position. Point with id: {} doesn't exist.", id));
 
 	it.value().position = position;
 }
@@ -112,7 +112,7 @@ void PointMap::set_point_position(points_key_type id, ivec2_t const& position) {
 fixed_point_t PointMap::get_point_weight_scale(points_key_type id) const {
 	points_const_iterator it = points.find(id);
 	OV_ERR_FAIL_COND_V_MSG(
-		it == points.end(), 0, fmt::format("Can't get point's weight scale. Point with id: {} doesn't exist.", id)
+		it == points.end(), 0, memory::fmt::format("Can't get point's weight scale. Point with id: {} doesn't exist.", id)
 	);
 
 	return it.value().weight_scale;
@@ -121,10 +121,10 @@ fixed_point_t PointMap::get_point_weight_scale(points_key_type id) const {
 void PointMap::set_point_weight_scale(points_key_type id, fixed_point_t weight_scale) {
 	points_iterator it = points.find(id);
 	OV_ERR_FAIL_COND_MSG(
-		it == points.end(), fmt::format("Can't set point's weight scale. Point with id: {} doesn't exist.", id)
+		it == points.end(), memory::fmt::format("Can't set point's weight scale. Point with id: {} doesn't exist.", id)
 	);
 	OV_ERR_FAIL_COND_MSG(
-		weight_scale < 0, fmt::format("Can't set point's weight scale less than 0.0: {}.", weight_scale.to_double())
+		weight_scale < 0, memory::fmt::format("Can't set point's weight scale less than 0.0: {}.", weight_scale.to_double())
 	);
 
 	it.value().weight_scale = weight_scale;
@@ -132,7 +132,7 @@ void PointMap::set_point_weight_scale(points_key_type id, fixed_point_t weight_s
 
 void PointMap::remove_point(points_key_type id) {
 	points_iterator it = points.find(id);
-	OV_ERR_FAIL_COND_MSG(it == points.end(), fmt::format("Can't remove point. Point with id: {} doesn't exist.", id));
+	OV_ERR_FAIL_COND_MSG(it == points.end(), memory::fmt::format("Can't remove point. Point with id: {} doesn't exist.", id));
 
 	for (points_key_type const& neighbor_id : it.value().neighbors) {
 		Point& neighbor = points.find(neighbor_id).value();
@@ -166,14 +166,14 @@ std::span<const PointMap::points_key_type> PointMap::get_point_connections(point
 	points_const_iterator it = points.find(id);
 	OV_ERR_FAIL_COND_V_MSG(
 		it == points.end(), std::span<const points_key_type>(),
-		fmt::format("Can't get point's connections. Point with id: {} doesn't exist.", id)
+		memory::fmt::format("Can't get point's connections. Point with id: {} doesn't exist.", id)
 	);
 
 	return std::span<const points_key_type> { it.value().neighbors.values_container() };
 }
 
-std::vector<PointMap::points_key_type> PointMap::get_point_ids() {
-	std::vector<points_key_type> point_list;
+memory::vector<PointMap::points_key_type> PointMap::get_point_ids() {
+	memory::vector<points_key_type> point_list;
 	point_list.reserve(points.size());
 
 	for (points_const_iterator it = points.begin(); it != points.end(); it++) {
@@ -186,7 +186,7 @@ std::vector<PointMap::points_key_type> PointMap::get_point_ids() {
 void PointMap::set_point_disabled(points_key_type id, bool disabled) {
 	points_iterator it = points.find(id);
 	OV_ERR_FAIL_COND_MSG(
-		it == points.end(), fmt::format("Can't set if point is disabled. Point with id: {} doesn't exist.", id)
+		it == points.end(), memory::fmt::format("Can't set if point is disabled. Point with id: {} doesn't exist.", id)
 	);
 
 	it.value().enabled = !disabled;
@@ -195,20 +195,20 @@ void PointMap::set_point_disabled(points_key_type id, bool disabled) {
 bool PointMap::is_point_disabled(points_key_type id) const {
 	points_const_iterator it = points.find(id);
 	OV_ERR_FAIL_COND_V_MSG(
-		it == points.end(), false, fmt::format("Can't get if point is disabled. Point with id: {} doesn't exist.", id)
+		it == points.end(), false, memory::fmt::format("Can't get if point is disabled. Point with id: {} doesn't exist.", id)
 	);
 
 	return !it.value().enabled;
 }
 
 void PointMap::connect_points(points_key_type id, points_key_type with_id, bool bidirectional) {
-	OV_ERR_FAIL_COND_MSG(id == with_id, fmt::format("Can't connect point with id: {} to itself.", id));
+	OV_ERR_FAIL_COND_MSG(id == with_id, memory::fmt::format("Can't connect point with id: {} to itself.", id));
 
 	points_iterator from_it = points.find(id);
-	OV_ERR_FAIL_COND_MSG(from_it == points.end(), fmt::format("Can't connect points. Point with id: {} doesn't exist.", id));
+	OV_ERR_FAIL_COND_MSG(from_it == points.end(), memory::fmt::format("Can't connect points. Point with id: {} doesn't exist.", id));
 
 	points_iterator to_it = points.find(with_id);
-	OV_ERR_FAIL_COND_MSG(to_it == points.end(), fmt::format("Can't connect points. Point with id: {} doesn't exist.", with_id));
+	OV_ERR_FAIL_COND_MSG(to_it == points.end(), memory::fmt::format("Can't connect points. Point with id: {} doesn't exist.", with_id));
 
 	from_it.value().neighbors.insert(to_it.key());
 
@@ -239,11 +239,11 @@ void PointMap::connect_points(points_key_type id, points_key_type with_id, bool 
 
 void PointMap::disconnect_points(points_key_type id, points_key_type with_id, bool bidirectional) {
 	points_iterator from_it = points.find(id);
-	OV_ERR_FAIL_COND_MSG(from_it == points.end(), fmt::format("Can't disconnect points. Point with id: {} doesn't exist.", id));
+	OV_ERR_FAIL_COND_MSG(from_it == points.end(), memory::fmt::format("Can't disconnect points. Point with id: {} doesn't exist.", id));
 
 	points_iterator to_it = points.find(with_id);
 	OV_ERR_FAIL_COND_MSG(
-		to_it == points.end(), fmt::format("Can't disconnect points. Point with id: {} doesn't exist.", with_id)
+		to_it == points.end(), memory::fmt::format("Can't disconnect points. Point with id: {} doesn't exist.", with_id)
 	);
 
 	Segment s { id, with_id };
@@ -293,10 +293,10 @@ size_t PointMap::get_point_capacity() const {
 }
 
 void PointMap::reserve_space(size_t num_nodes) {
-	OV_ERR_FAIL_COND_MSG(num_nodes <= 0, fmt::format("New capacity must be greater than 0, new was: {}.", num_nodes));
+	OV_ERR_FAIL_COND_MSG(num_nodes <= 0, memory::fmt::format("New capacity must be greater than 0, new was: {}.", num_nodes));
 	OV_ERR_FAIL_COND_MSG(
 		num_nodes < points.capacity(),
-		fmt::format("New capacity must be greater than current capacity: {}, new was: {}.", points.capacity(), num_nodes)
+		memory::fmt::format("New capacity must be greater than current capacity: {}, new was: {}.", points.capacity(), num_nodes)
 	);
 	points.reserve(num_nodes);
 }

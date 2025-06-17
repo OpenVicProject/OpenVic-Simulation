@@ -6,6 +6,7 @@
 #include "openvic-simulation/economy/trading/MarketSellOrder.hpp"
 #include "openvic-simulation/utility/ThreadPool.hpp"
 #include "openvic-simulation/utility/Utility.hpp"
+#include "openvic-simulation/utility/Containers.hpp"
 
 using namespace OpenVic;
 
@@ -43,7 +44,7 @@ void MarketInstance::place_buy_up_to_order(BuyUpToOrder&& buy_up_to_order) {
 	good_instance.add_buy_up_to_order(std::move(buy_up_to_order));
 }
 
-void MarketInstance::place_market_sell_order(MarketSellOrder&& market_sell_order, std::vector<fixed_point_t>& reusable_vector) {
+void MarketInstance::place_market_sell_order(MarketSellOrder&& market_sell_order, memory::vector<fixed_point_t>& reusable_vector) {
 	GoodDefinition const& good = market_sell_order.get_good();
 	if (OV_unlikely(market_sell_order.get_quantity() <= 0)) {
 		Logger::error("Received MarketSellOrder for ", good, " with quantity ", market_sell_order.get_quantity());

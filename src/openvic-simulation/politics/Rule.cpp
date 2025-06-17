@@ -2,11 +2,12 @@
 
 #include "openvic-simulation/economy/BuildingType.hpp"
 #include "openvic-simulation/utility/TslHelper.hpp"
+#include "openvic-simulation/utility/Containers.hpp"
 
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;
 
-static std::string make_default_rule_localisation_key(std::string_view identifier) {
+static memory::string make_default_rule_localisation_key(std::string_view identifier) {
 	return "RULE_" + StringUtils::string_toupper(identifier);
 }
 
@@ -149,7 +150,7 @@ bool RuleManager::setup_rules(BuildingTypeManager const& building_type_manager) 
 
 	using enum Rule::rule_group_t;
 
-	static const ordered_map<Rule::rule_group_t, std::vector<std::string_view>> hardcoded_rules {
+	static const ordered_map<Rule::rule_group_t, memory::vector<std::string_view>> hardcoded_rules {
 		{ ECONOMY, {
 			"build_railway", "build_factory", "expand_factory", "open_factory", "destroy_factory", "pop_build_factory",
 			"pop_expand_factory", "pop_open_factory", "can_subsidise", "factory_priority", "delete_factory_if_no_input",
