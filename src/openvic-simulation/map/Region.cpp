@@ -99,5 +99,5 @@ bool ProvinceSet::contains_province(ProvinceDefinition const* province) const {
 ProvinceSetModifier::ProvinceSetModifier(std::string_view new_identifier, ModifierValue&& new_values, modifier_type_t new_type)
 	: Modifier { new_identifier, std::move(new_values), new_type } {}
 
-Region::Region(std::string_view new_identifier, colour_t new_colour, bool new_meta)
-	: HasIdentifierAndColour { new_identifier, new_colour, false }, meta { new_meta } {}
+Region::Region(std::string_view new_identifier, colour_t new_colour, bool new_is_meta)
+	: HasIdentifierAndColour { new_identifier, new_colour, false }, is_meta { new_is_meta } {}

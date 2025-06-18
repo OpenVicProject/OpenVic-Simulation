@@ -237,6 +237,16 @@ bool InstanceManager::load_bookmark(Bookmark const* new_bookmark) {
 		definition_manager.get_politics_manager().get_ideology_manager().get_ideologies()
 	);
 
+	bool all_has_state = true;
+	for (ProvinceInstance const& province_instance : map_instance.get_province_instances()) {
+		if (!province_instance.get_province_definition().is_water() && OV_unlikely(province_instance.get_state() == nullptr)) {
+			all_has_state = false;
+			Logger::error(fmt::format("Province {} has no state.", province_instance.get_identifier()));
+			continue;
+		}
+	}
+	OV_ERR_FAIL_COND_V_MSG(!all_has_state, false, "At least one land province has no state");
+
 	update_modifier_sums();
 	country_instance_manager.update_gamestate(*this);
 	map_instance.initialise_for_new_game(*this);

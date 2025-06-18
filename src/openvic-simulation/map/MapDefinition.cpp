@@ -386,18 +386,42 @@ bool MapDefinition::add_region(std::string_view identifier, std::vector<Province
 	bool ret = true;
 
 	// mods like DoD + TGC use meta regions of water provinces
-	const bool meta = provinces.empty() ||
-		std::any_of(provinces.begin(), provinces.end(), std::bind_front(&ProvinceDefinition::has_region)) ||
-		std::any_of(provinces.begin(), provinces.end(), std::bind_front(&ProvinceDefinition::is_water));
+	bool is_meta = provinces.empty();
+	size_t valid_provinces_count { provinces.size() };
+	for (ProvinceDefinition const* const province_definition_ptr : provinces) {
+		ProvinceDefinition const& province_definition = *province_definition_ptr;
+		if (OV_unlikely(province_definition.has_region())) {
+			Logger::warning(
+				"Province ", province_definition.get_identifier(), " is assigned to multiple regions, including ", province_definition.get_region()->get_identifier(),
+				" and ", identifier, ". First defined region wins."
+			);
+			valid_provinces_count--;
+		}
 
-	Region region { identifier, colour, meta };
-	ret &= region.add_provinces(provinces);
+		is_meta |= province_definition.is_water();
+	}
+
+	Region region { identifier, colour, is_meta };
+
+	if (OV_likely(valid_provinces_count == provinces.size())) {
+		ret &= region.add_provinces(provinces);
+	} else {
+		region.reserve(valid_provinces_count);
+		for (ProvinceDefinition const* const province_definition_ptr : provinces) {
+			if (!province_definition_ptr->has_region()) {
+				region.add_province(province_definition_ptr);
+			}
+		}
+	}
+
 	region.lock();
 	if (regions.add_item(std::move(region))) {
-		if (!meta) {
+		if (OV_unlikely(is_meta)) {
+			Logger::info("Region ", identifier, " is meta.");
+		} else {
 			Region const& last_region = get_back_region();
-			for (ProvinceDefinition const* province : last_region.get_provinces()) {
-				remove_province_definition_const(province)->region = &last_region;
+			for (ProvinceDefinition const* province_definition : last_region.get_provinces()) {
+				remove_province_definition_const(province_definition)->region = &last_region;
 			}
 		}
 	} else {

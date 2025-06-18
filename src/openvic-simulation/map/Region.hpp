@@ -62,12 +62,11 @@ namespace OpenVic {
 
 	private:
 		/* A meta region cannot be the template for a state.
-		 * Any region containing a province already listed in a
-		 * previously defined region is considered a meta region.
+		 * Any region without provinces or containing water provinces is considered a meta region.
 		 */
-		const bool PROPERTY(meta);
+		const bool PROPERTY(is_meta);
 
-		Region(std::string_view new_identifier, colour_t new_colour, bool new_meta);
+		Region(std::string_view new_identifier, colour_t new_colour, bool new_is_meta);
 
 	public:
 		Region(Region&&) = default;

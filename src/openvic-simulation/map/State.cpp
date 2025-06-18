@@ -7,6 +7,7 @@
 #include "openvic-simulation/map/Region.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
 #include "openvic-simulation/utility/StringUtils.hpp"
+#include "openvic-simulation/utility/ErrorMacros.hpp"
 
 using namespace OpenVic;
 
@@ -204,15 +205,8 @@ bool StateManager::add_state_set(
 	decltype(State::pop_type_distribution)::keys_span_type pop_type_keys,
 	decltype(State::ideology_distribution)::keys_span_type ideology_keys
 ) {
-	if (region.get_meta()) {
-		Logger::error("Cannot use meta region \"", region.get_identifier(), "\" as state template!");
-		return false;
-	}
-
-	if (region.empty()) {
-		Logger::error("Cannot use empty region \"", region.get_identifier(), "\" as state template!");
-		return false;
-	}
+	OV_ERR_FAIL_COND_V_MSG(region.get_is_meta(), false, fmt::format("Cannot use meta region \"{}\" as state template!", region.get_identifier()));
+	OV_ERR_FAIL_COND_V_MSG(region.empty(), false, fmt::format("Cannot use empty region \"{}\" as state template!", region.get_identifier()));
 
 	std::vector<std::vector<ProvinceInstance*>> temp_provinces;
 
@@ -282,7 +276,7 @@ bool StateManager::generate_states(
 	size_t state_count = 0;
 
 	for (Region const& region : map_definition.get_regions()) {
-		if (!region.get_meta()) {
+		if (!region.get_is_meta()) {
 			if (add_state_set(map_instance, region, strata_keys, pop_type_keys, ideology_keys)) {
 				state_count += state_sets.back().get_state_count();
 			} else {
