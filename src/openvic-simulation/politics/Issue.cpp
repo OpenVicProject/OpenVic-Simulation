@@ -244,7 +244,7 @@ bool IssueManager::_load_reform(
 		modifier_manager.expect_base_country_modifier(values),
 		"administrative_multiplier", ZERO_OR_ONE, expect_fixed_point(assign_variable_callback(administrative_multiplier)),
 		"technology_cost", ZERO_OR_ONE, expect_uint(assign_variable_callback(technology_cost)),
-		"allow", ZERO_OR_ONE, allow.expect_script(),
+		"allow", ZERO_OR_MORE, allow.expect_script(),
 		"rules", ZERO_OR_ONE, rule_manager.expect_rule_set(move_variable_callback(rules)),
 		"on_execute", ZERO_OR_ONE, expect_dictionary_keys(
 			"trigger", ZERO_OR_ONE, on_execute_trigger.expect_script(),

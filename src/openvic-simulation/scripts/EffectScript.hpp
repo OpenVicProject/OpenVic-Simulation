@@ -7,6 +7,6 @@ namespace OpenVic {
 
 	struct EffectScript final : Script<DefinitionManager const&> {
 	protected:
-		bool _parse_script(ast::NodeCPtr root, DefinitionManager const& definition_manager) override;
+		bool _parse_script(std::span<const ast::NodeCPtr> nodes, DefinitionManager const& definition_manager) override;
 	};
 }

@@ -739,14 +739,14 @@ node_callback_t ConditionManager::expect_condition_node_list(
 	};
 }
 
-node_callback_t ConditionManager::expect_condition_script(
+bool ConditionManager::expect_condition_script(
 	DefinitionManager const& definition_manager, scope_type_t initial_scope, scope_type_t this_scope,
-	scope_type_t from_scope, callback_t<ConditionNode&&> callback
+	scope_type_t from_scope, NodeTools::callback_t<ConditionNode&&> callback, std::span<const ast::NodeCPtr> nodes
 ) const {
-	return [this, &definition_manager, initial_scope, this_scope, from_scope, callback](ast::NodeCPtr node) mutable -> bool {
-
-		ConditionNode::condition_list_t conds;
-		bool ret = expect_condition_node_list(
+	ConditionNode::condition_list_t conds;
+	bool ret = true;
+	for (const ast::NodeCPtr node : nodes) {
+		ret &= expect_condition_node_list(
 			definition_manager,
 			initial_scope,
 			this_scope,
@@ -754,9 +754,9 @@ node_callback_t ConditionManager::expect_condition_script(
 			NodeTools::vector_callback(conds),
 			true
 		)(node);
+	}
 
-		ret &= callback({ root_condition, std::move(conds), true });
+	ret &= callback({ root_condition, std::move(conds), true });
 
-		return ret;
-	};
+	return ret;
 }
