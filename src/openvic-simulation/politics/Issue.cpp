@@ -2,6 +2,7 @@
 
 #include "openvic-simulation/modifier/ModifierManager.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
+#include "openvic-simulation/utility/LogScope.hpp"
 
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;
@@ -146,6 +147,7 @@ bool IssueManager::add_reform(
 }
 
 bool IssueManager::_load_issue_group(size_t& expected_issues, std::string_view identifier, ast::NodeCPtr node) {
+	const LogScope log_scope { fmt::format("issue group {}", identifier) };
 	return expect_length(add_variable_callback(expected_issues))(node)
 		& add_issue_group(identifier);
 }
@@ -188,6 +190,8 @@ bool IssueManager::_load_issue(
 	ModifierManager const& modifier_manager, RuleManager const& rule_manager, std::string_view identifier,
 	IssueGroup& issue_group, ast::NodeCPtr node
 ) {
+	const LogScope log_scope { fmt::format("issue {}", identifier) };
+
 	ModifierValue values;
 	RuleSet rules;
 	bool jingoism = false;
@@ -213,6 +217,7 @@ bool IssueManager::_load_issue(
 bool IssueManager::_load_reform_group(
 	size_t& expected_reforms, std::string_view identifier, ReformType& reform_type, ast::NodeCPtr node
 ) {
+	const LogScope log_scope { fmt::format("reform group {}", identifier) };
 	bool ordered = false, administrative = false;
 
 	bool ret = expect_dictionary_keys_and_default(
@@ -230,6 +235,7 @@ bool IssueManager::_load_reform(
 	ModifierManager const& modifier_manager, RuleManager const& rule_manager, size_t ordinal, std::string_view identifier,
 	ReformGroup& reform_group, ast::NodeCPtr node
 ) {
+	const LogScope log_scope { fmt::format("reform {}", identifier) };
 	using enum scope_type_t;
 
 	ModifierValue values;
@@ -273,6 +279,7 @@ bool IssueManager::_load_reform(
 bool IssueManager::load_issues_file(
 	ModifierManager const& modifier_manager, RuleManager const& rule_manager, ast::NodeCPtr root
 ) {
+	const LogScope log_scope { "common/issues.txt" };
 	bool party_issues_found = false;
 	size_t expected_issue_groups = 0;
 	size_t expected_reform_groups = 0;
