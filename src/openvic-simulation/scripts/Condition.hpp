@@ -1,6 +1,7 @@
 #pragma once
 
 #include <ostream>
+#include <span>
 #include <string_view>
 #include <variant>
 
@@ -273,9 +274,9 @@ namespace OpenVic {
 	public:
 		bool setup_conditions(DefinitionManager const& definition_manager);
 
-		NodeTools::node_callback_t expect_condition_script(
+		bool expect_condition_script(
 			DefinitionManager const& definition_manager, scope_type_t initial_scope, scope_type_t this_scope,
-			scope_type_t from_scope, NodeTools::callback_t<ConditionNode&&> callback
+			scope_type_t from_scope, NodeTools::callback_t<ConditionNode&&> callback, std::span<const ast::NodeCPtr> nodes
 		) const;
 	};
 }

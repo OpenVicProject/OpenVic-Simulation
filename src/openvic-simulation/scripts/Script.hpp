@@ -1,5 +1,7 @@
 #pragma once
 
+#include <vector>
+
 #include "openvic-simulation/dataloader/NodeTools.hpp"
 
 namespace OpenVic {
@@ -7,32 +9,38 @@ namespace OpenVic {
 	template<typename... _Context>
 	struct Script {
 	private:
-		ast::NodeCPtr _root;
+		std::vector<ast::NodeCPtr> _root_nodes;
 
 	protected:
-		virtual bool _parse_script(ast::NodeCPtr root, _Context... context) = 0;
+		virtual bool _parse_script(std::span<const ast::NodeCPtr> nodes, _Context... context) = 0;
 
 	public:
-		Script() : _root { nullptr } {}
+		Script() = default;
 		Script(Script&&) = default;
 
 		constexpr bool has_defines_node() const {
-			return _root != nullptr;
+			return !_root_nodes.empty();
 		}
 
 		constexpr NodeTools::NodeCallback auto expect_script() {
-			return NodeTools::assign_variable_callback(_root);
+			return NodeTools::vector_callback(_root_nodes);
 		}
 
 		bool parse_script(bool can_be_null, _Context... context) {
-			if (_root == nullptr) {
+			if (_root_nodes.empty()) {
 				if (!can_be_null) {
-					Logger::error("Null/missing script node!");
+					Logger::error("Missing script node!");
 				}
 				return can_be_null;
 			}
-			const bool ret = _parse_script(_root, context...);
-			_root = nullptr;
+
+			if (_root_nodes.size() > 1) {
+				Logger::warning("Multiple root nodes");
+			}
+
+			const bool ret = _parse_script(_root_nodes, context...);
+			_root_nodes.clear();
+			_root_nodes.shrink_to_fit();
 			return ret;
 		}
 	};
