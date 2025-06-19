@@ -9,6 +9,7 @@
 #include <tsl/ordered_set.h>
 
 #include "openvic-simulation/types/EnumBitfield.hpp"
+#include "openvic-simulation/types/Signal.hpp"
 #include "openvic-simulation/types/Vector.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
 #include "openvic-simulation/utility/Utility.hpp"
@@ -132,6 +133,12 @@ namespace OpenVic {
 		mutable points_key_type last_free_id = 0;
 
 	public:
+		mutable signal_property<PointMap, points_key_type> point_invalidated;
+		mutable signal_property<PointMap> points_pointers_invalidated;
+		mutable signal_property<PointMap> destroyed;
+
+		~PointMap();
+
 		int64_t get_available_points() const;
 
 		bool try_add_point(
