@@ -21,7 +21,7 @@ _STL_DISABLE_CLANG_WARNINGS
 #pragma push_macro("new")
 #undef new
 
-namespace OpenVic::utility::detail::__deque {
+namespace OpenVic::utility::_detail::deque {
 	using namespace ::std;
 
 	template<class _Mydeque>
@@ -1874,7 +1874,7 @@ namespace OpenVic::utility::detail::__deque {
 #if _HAS_CXX17
 	namespace pmr {
 		_EXPORT_STD template<class _Ty>
-		using deque = ::OpenVic::utility::detail::__deque::deque<_Ty, _STD pmr::polymorphic_allocator<_Ty>>;
+		using deque = ::OpenVic::utility::_detail::deque::deque<_Ty, _STD pmr::polymorphic_allocator<_Ty>>;
 	} // namespace pmr
 #endif // _HAS_CXX17
 }
@@ -1887,11 +1887,11 @@ _STL_RESTORE_CLANG_WARNINGS
 
 namespace OpenVic::utility {
 	template<class T, class Allocator = std::allocator<T>>
-	using deque = ::OpenVic::utility::detail::__deque::deque<T, Allocator>;
+	using deque = ::OpenVic::utility::_detail::deque::deque<T, Allocator>;
 
 	namespace pmr {
 		template<class T>
-		using deque = ::OpenVic::utility::detail::__deque::pmr::deque<T>;
+		using deque = ::OpenVic::utility::_detail::deque::pmr::deque<T>;
 	}
 }
 

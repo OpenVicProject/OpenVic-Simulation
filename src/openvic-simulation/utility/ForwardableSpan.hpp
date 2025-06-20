@@ -11,7 +11,7 @@
 
 #include "openvic-simulation/utility/Utility.hpp"
 
-namespace OpenVic::utility::_detail::_forwardable_span {
+namespace OpenVic::utility::_detail::forwardable_span {
 	static constexpr std::size_t dynamic_extent = std::numeric_limits<std::size_t>::max();
 
 	template<class T, std::size_t Extent = dynamic_extent>
@@ -457,10 +457,10 @@ namespace OpenVic::utility::_detail::_forwardable_span {
 }
 
 namespace OpenVic::utility {
-	static constexpr std::size_t dynamic_extent = _detail::_forwardable_span::dynamic_extent;
+	static constexpr std::size_t dynamic_extent = _detail::forwardable_span::dynamic_extent;
 
 	template<class T, std::size_t Extent = dynamic_extent>
-	using forwardable_span = _detail::_forwardable_span::span<T, Extent>;
+	using forwardable_span = _detail::forwardable_span::span<T, Extent>;
 }
 
 namespace std {

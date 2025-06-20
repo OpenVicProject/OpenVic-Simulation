@@ -5,7 +5,7 @@
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
 #include "openvic-simulation/utility/Utility.hpp"
 
-namespace OpenVic::_vector_detail {
+namespace OpenVic::_detail::vecn_t {
 	template<typename T>
 	inline constexpr T abs(T num) {
 		return OpenVic::utility::abs(num);
