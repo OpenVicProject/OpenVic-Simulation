@@ -73,7 +73,7 @@ namespace OpenVic {
 		}
 #undef VEC_COMPONENT_CAST
 
-#define VEC_COMPONENT_ABS(v) ::OpenVic::_vector_detail::abs(v)
+#define VEC_COMPONENT_ABS(v) ::OpenVic::_detail::vecn_t::abs(v)
 		constexpr VEC_TYPE abs() const {
 			return { FOR_VEC_COMPONENTS(VEC_COMPONENT_ABS, COMMA) };
 		}
