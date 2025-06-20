@@ -1,5 +1,7 @@
 #include "Government.hpp"
 
+#include "openvic-simulation/utility/LogScope.hpp"
+
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;
 
@@ -18,6 +20,7 @@ bool GovernmentTypeManager::add_government_type(
 	std::string_view identifier, std::vector<Ideology const*>&& ideologies, bool elections, bool appoint_ruling_party,
 	Timespan term_duration, std::string_view flag_type
 ) {
+	const LogScope log_scope { fmt::format("government type {}", identifier) };
 	if (identifier.empty()) {
 		Logger::error("Invalid government type identifier - empty!");
 		return false;
@@ -47,6 +50,7 @@ bool GovernmentTypeManager::add_government_type(
 
 /* REQUIREMENTS: FS-525, SIM-27 */
 bool GovernmentTypeManager::load_government_types_file(IdeologyManager const& ideology_manager, ast::NodeCPtr root) {
+	const LogScope log_scope { "common/governments.txt" };
 	bool ret = expect_dictionary_reserve_length(
 		government_types,
 		[this, &ideology_manager](std::string_view government_type_identifier, ast::NodeCPtr government_type_value) -> bool {

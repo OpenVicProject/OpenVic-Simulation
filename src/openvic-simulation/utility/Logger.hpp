@@ -1,9 +1,12 @@
 #pragma once
 
+#include <cstddef>
 #include <iostream>
 #include <mutex>
 #include <queue>
 #include <sstream>
+#include <string_view>
+#include <vector>
 #include <version>
 
 #include <function2/function2.hpp>
@@ -58,19 +61,6 @@ namespace OpenVic {
 		using source_location = OpenVic::source_location;
 #endif
 
-	public:
-		static void set_logger_funcs() {
-			set_info_func([](std::string&& str) {
-				std::cout << "[INFO] " << str;
-			});
-			set_warning_func([](std::string&& str) {
-				std::cerr << "[WARNING] " << str;
-			});
-			set_error_func([](std::string&& str) {
-				std::cerr << "[ERROR] " << str;
-			});
-		}
-
 	private:
 		struct log_channel_t {
 			log_func_t func;
@@ -79,10 +69,19 @@ namespace OpenVic {
 		};
 
 		static inline std::mutex log_mutex;
+		thread_local inline static std::vector<std::string_view> log_scope_stack {};
+		thread_local inline static size_t log_scope_index_plus_one = 0;
 
 		template<typename... Args>
 		struct log {
 			log(log_channel_t& log_channel, Args&&... args, source_location const& location) {
+				if (log_scope_index_plus_one < log_scope_stack.size()) {
+					const std::string_view log_scope = log_scope_stack[log_scope_index_plus_one];
+					log_scope_index_plus_one++;
+					//recursive
+					info(std::string(log_scope_index_plus_one, '>'), " Enter scope: ", log_scope);
+				}
+
 				const std::lock_guard<std::mutex> lock { log_mutex };
 
 				std::stringstream stream;
@@ -104,6 +103,38 @@ namespace OpenVic {
 				}
 			}
 		};
+
+	public:
+		static void enter_log_scope(const std::string_view log_scope) {
+			log_scope_stack.push_back(log_scope);
+		}
+		static void exit_log_scope(const std::string_view log_scope) {
+			const std::string_view to_pop = log_scope_stack.back();
+			if (to_pop != log_scope) {
+				error("Tried exiting log scope \"", log_scope, "\" but \"", to_pop, "\" would be removed instead. No log scope was removed instead.");
+				return;
+			}
+			log_scope_stack.pop_back();
+
+			const size_t max_log_scope_index_plus_one = log_scope_stack.size();
+			if (max_log_scope_index_plus_one < log_scope_index_plus_one) {
+				const std::string prefix = std::string(log_scope_index_plus_one, '<');
+				log_scope_index_plus_one = max_log_scope_index_plus_one;
+				info(prefix, " Exit scope: ", log_scope);
+			}
+		}
+
+		static void set_logger_funcs() {
+			set_info_func([](std::string&& str) {
+				std::cout << "[INFO] " << str;
+			});
+			set_warning_func([](std::string&& str) {
+				std::cerr << "[WARNING] " << str;
+			});
+			set_error_func([](std::string&& str) {
+				std::cerr << "[ERROR] " << str;
+			});
+		}
 
 #define LOG_FUNC(name) \
 private: \

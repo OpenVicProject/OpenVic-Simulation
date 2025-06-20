@@ -525,7 +525,7 @@ using namespace std::string_view_literals;
 				if (it != map.end()) {
 					return callback(it->second);
 				}
-				Logger::warn_or_error(warn, "String not found in map \"", string, "\" valid values are [",
+				Logger::warn_or_error(warn, "\"", string, "\" is not a valid key. Valid keys: [",
 					StringUtils::string_join(map),
 					"]"
 				);

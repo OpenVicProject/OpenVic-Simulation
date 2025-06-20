@@ -1,6 +1,7 @@
 #include "Ideology.hpp"
 
 #include "openvic-simulation/types/Colour.hpp"
+#include "openvic-simulation/utility/LogScope.hpp"
 
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;
@@ -46,6 +47,7 @@ bool Ideology::parse_scripts(DefinitionManager const& definition_manager) {
 }
 
 bool IdeologyManager::add_ideology_group(std::string_view identifier) {
+	const LogScope log_scope { fmt::format("ideology group {}", identifier) };
 	if (identifier.empty()) {
 		Logger::error("Invalid ideology group identifier - empty!");
 		return false;
@@ -69,6 +71,7 @@ bool IdeologyManager::add_ideology(
 	ConditionalWeightBase&& add_military_reform,
 	ConditionalWeightBase&& add_economic_reform
 ) {
+	const LogScope log_scope { fmt::format("ideology {}", identifier) };
 	if (identifier.empty()) {
 		Logger::error("Invalid ideology identifier - empty!");
 		return false;
@@ -100,6 +103,7 @@ bool IdeologyManager::add_ideology(
  * POL-9, POL-10, POL-11, POL-12, POL-13, POL-14, POL-15
  */
 bool IdeologyManager::load_ideology_file(ast::NodeCPtr root) {
+	const LogScope log_scope { "common/ideologies.txt" };
 	size_t expected_ideologies = 0;
 	bool ret = expect_dictionary_reserve_length(
 		ideology_groups,

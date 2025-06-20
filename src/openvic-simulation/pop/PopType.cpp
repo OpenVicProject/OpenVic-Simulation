@@ -12,6 +12,7 @@
 #include "openvic-simulation/politics/Issue.hpp"
 #include "openvic-simulation/politics/Rebel.hpp"
 #include "openvic-simulation/utility/Logger.hpp"
+#include "openvic-simulation/utility/LogScope.hpp"
 #include "openvic-simulation/utility/TslHelper.hpp"
 
 using namespace OpenVic;
@@ -333,6 +334,7 @@ bool PopManager::load_pop_type_file(
 	std::string_view filestem, GoodDefinitionManager const& good_definition_manager, IdeologyManager const& ideology_manager,
 	ast::NodeCPtr root
 ) {
+	const LogScope log_scope { fmt::format("poptypes/{}.txt", filestem) };
 	using enum scope_type_t;
 
 	colour_t colour = colour_t::null();
