@@ -1,5 +1,7 @@
 #pragma once
 
+#include <functional>
+
 #include <fmt/core.h>
 
 #include "openvic-simulation/pathfinding/PointMap.hpp"
@@ -100,32 +102,58 @@ namespace OpenVic {
 			last_closest_point = search.end();
 		}
 
+		inline search_iterator get_iterator_by_id(PointMap::points_key_type id) {
+			search_iterator it = search.find(id);
+			if (it == search.end()) {
+				PointMap::points_value_type const* ptr = point_map->try_get_point(id);
+				if (ptr != nullptr) {
+					it = search.insert({ id, { ptr } }).first;
+				}
+			}
+			OV_ERR_FAIL_COND_V_MSG(it == search.end(), it, fmt::format("Can't get point by id: {} doesn't exist.", id));
+			return it;
+		}
+
+		template<typename T, typename Projection = std::identity>
+		inline std::vector<T> generate_path_result(search_iterator from_it, search_iterator to_it, Projection projection = {}) {
+			search_iterator p = to_it;
+			int64_t pc = 1; // Begin point
+			while (p != from_it) {
+				pc++;
+				p = p.value().prev_point;
+			}
+
+			std::vector<T> path;
+			path.resize(pc);
+
+			{
+				T* w = path.data();
+
+				search_iterator p2 = to_it;
+				int64_t idx = pc - 1;
+				while (p2 != from_it) {
+					w[idx--] = std::invoke(projection, p2);
+					p2 = p2.value().prev_point;
+				}
+
+				w[0] = std::invoke(projection, p2); // Assign first
+			}
+
+			return path;
+		}
+
 		std::vector<ivec2_t> get_point_path( //
 			PointMap::points_key_type from_id, PointMap::points_key_type to_id, bool allow_partial_path = false
 		) {
-			search_iterator from_it = search.find(from_id);
-			if (from_it == search.end()) {
-				PointMap::points_value_type const* from_ptr = point_map->try_get_point(from_id);
-				if (from_ptr != nullptr) {
-					from_it = search.insert({ from_id, { .point = from_ptr } }).first;
-				}
-			}
-			OV_ERR_FAIL_COND_V_MSG(
-				from_it == search.end(), std::vector<ivec2_t>(),
-				fmt::format("Can't get point path. Point with id: {} doesn't exist.", from_id)
-			);
+			search_iterator from_it = get_iterator_by_id(from_id);
+			OV_ERR_FAIL_COND_V(from_it == search.end(), std::vector<ivec2_t>());
 
-			search_iterator to_it = search.find(to_id);
-			if (to_it == search.end()) {
-				PointMap::points_value_type const* to_ptr = point_map->try_get_point(to_id);
-				if (to_ptr != nullptr) {
-					to_it = search.insert({ to_id, { .point = to_ptr } }).first;
-				}
+			if (!_is_point_enabled(from_it)) {
+				return std::vector<ivec2_t>();
 			}
-			OV_ERR_FAIL_COND_V_MSG(
-				to_it == search.end(), std::vector<ivec2_t>(),
-				fmt::format("Can't get point path. Point with id: {} doesn't exist.", to_id)
-			);
+
+			search_iterator to_it = get_iterator_by_id(to_id);
+			OV_ERR_FAIL_COND_V(to_it == search.end(), std::vector<ivec2_t>());
 
 			if (from_it == to_it) {
 				return std::vector<ivec2_t> { 1, from_it.value().point->position };
@@ -141,58 +169,23 @@ namespace OpenVic {
 				to_it = last_closest_point;
 			}
 
-			search_iterator p = to_it;
-			int64_t pc = 1; // Begin point
-			while (p != from_it) {
-				pc++;
-				p = p.value().prev_point;
-			}
-
-			std::vector<ivec2_t> path;
-			path.resize(pc);
-
-			{
-				ivec2_t* w = path.data();
-
-				search_iterator p2 = to_it;
-				int64_t idx = pc - 1;
-				while (p2 != from_it) {
-					w[idx--] = p2.value().point->position;
-					p2 = p2.value().prev_point;
-				}
-
-				w[0] = p2.value().point->position; // Assign first
-			}
-
-			return path;
+			return generate_path_result<ivec2_t>(from_it, to_it, [](search_iterator it) -> ivec2_t {
+				return it.value().point->position;
+			});
 		}
 
 		std::vector<PointMap::points_key_type> get_id_path( //
 			PointMap::points_key_type from_id, PointMap::points_key_type to_id, bool allow_partial_path = false
 		) {
-			search_iterator from_it = search.find(from_id);
-			if (from_it == search.end()) {
-				PointMap::points_value_type const* from_ptr = point_map->try_get_point(from_id);
-				if (from_ptr != nullptr) {
-					from_it = search.insert({ from_id, { from_ptr } }).first;
-				}
-			}
-			OV_ERR_FAIL_COND_V_MSG(
-				from_it == search.end(), std::vector<PointMap::points_key_type>(),
-				fmt::format("Can't get id path. Point with id: {} doesn't exist.", from_id)
-			);
+			search_iterator from_it = get_iterator_by_id(from_id);
+			OV_ERR_FAIL_COND_V(from_it == search.end(), std::vector<PointMap::points_key_type>());
 
-			search_iterator to_it = search.find(to_id);
-			if (to_it == search.end()) {
-				PointMap::points_value_type const* to_ptr = point_map->try_get_point(to_id);
-				if (to_ptr != nullptr) {
-					to_it = search.insert({ to_id, { to_ptr } }).first;
-				}
+			if (!_is_point_enabled(from_it)) {
+				return std::vector<PointMap::points_key_type>();
 			}
-			OV_ERR_FAIL_COND_V_MSG(
-				to_it == search.end(), std::vector<PointMap::points_key_type>(),
-				fmt::format("Can't get id path. Point with id: {} doesn't exist.", to_id)
-			);
+
+			search_iterator to_it = get_iterator_by_id(to_id);
+			OV_ERR_FAIL_COND_V(to_it == search.end(), std::vector<PointMap::points_key_type>());
 
 			if (from_it == to_it) {
 				return std::vector<PointMap::points_key_type> { 1, from_id };
@@ -208,30 +201,7 @@ namespace OpenVic {
 				to_it = last_closest_point;
 			}
 
-			search_iterator p = to_it;
-			size_t pc = 1; // Begin point
-			while (p != from_it) {
-				pc++;
-				p = p.value().prev_point;
-			}
-
-			std::vector<PointMap::points_key_type> path;
-			path.resize(pc);
-
-			{
-				PointMap::points_key_type* w = path.data();
-
-				p = to_it;
-				size_t idx = pc - 1;
-				while (p != from_it) {
-					w[idx--] = p.key();
-					p = p.value().prev_point;
-				}
-
-				w[0] = p.key(); // Assign first
-			}
-
-			return path;
+			return generate_path_result<PointMap::points_key_type>(from_it, to_it, &search_iterator::key);
 		}
 	};
 }
