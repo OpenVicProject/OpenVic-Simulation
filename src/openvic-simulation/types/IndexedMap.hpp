@@ -10,34 +10,36 @@
 #include "openvic-simulation/utility/Utility.hpp"
 
 namespace OpenVic {
+	namespace _detail::IndexedMap {
+		// Hides most vector methods, makes resize protected, only exposes accessor methods
+		template<utility::not_same_as<bool> Value>
+		struct internal_resize_vector : private std::vector<Value> {
+			using base_type = std::vector<Value>;
 
-	template<utility::not_same_as<bool> Value>
-	struct fixed_size_vector : private std::vector<Value> {
-		using base_type = std::vector<Value>;
+			using typename base_type::const_iterator;
+			using typename base_type::const_pointer;
+			using typename base_type::const_reference;
+			using typename base_type::iterator;
+			using typename base_type::pointer;
+			using typename base_type::reference;
+			using base_type::operator[];
+			using base_type::back;
+			using base_type::begin;
+			using base_type::cbegin;
+			using base_type::cend;
+			using base_type::data;
+			using base_type::end;
+			using base_type::front;
+			using base_type::size;
 
-		using typename base_type::iterator;
-		using typename base_type::const_iterator;
-		using typename base_type::reference;
-		using typename base_type::const_reference;
-		using typename base_type::pointer;
-		using typename base_type::const_pointer;
-		using base_type::operator[];
-		using base_type::data;
-		using base_type::size;
-		using base_type::begin;
-		using base_type::end;
-		using base_type::cbegin;
-		using base_type::cend;
-		using base_type::front;
-		using base_type::back;
-
-	protected:
-		using base_type::resize;
-	};
+		protected:
+			using base_type::resize;
+		};
+	}
 
 	template<utility::not_same_as<bool> Key, utility::not_same_as<bool> Value>
-	struct IndexedMap : public fixed_size_vector<Value> {
-		using values_type = fixed_size_vector<Value>;
+	struct IndexedMap : public _detail::IndexedMap::internal_resize_vector<Value> {
+		using values_type = _detail::IndexedMap::internal_resize_vector<Value>;
 
 		using values_type::operator[];
 		using values_type::data;
@@ -75,9 +77,7 @@ namespace OpenVic {
 			using value_type = pair_type;
 
 			using key_iterator = map_type::key_iterator;
-			using value_iterator = typename std::conditional_t<
-				CONST, map_type::value_const_iterator, map_type::value_iterator
-			>;
+			using value_iterator = typename std::conditional_t<CONST, map_type::value_const_iterator, map_type::value_iterator>;
 
 			using iterator_category = std::random_access_iterator_tag;
 			using difference_type = typename map_type::keys_type::difference_type;
@@ -489,9 +489,8 @@ namespace OpenVic {
 	};
 
 	template<typename FPMKey, std::derived_from<FPMKey> IMKey>
-	constexpr fixed_point_map_t<FPMKey const*>& operator+=(
-		fixed_point_map_t<FPMKey const*>& lhs, IndexedMap<IMKey, fixed_point_t> const& rhs
-	) {
+	constexpr fixed_point_map_t<FPMKey const*>&
+	operator+=(fixed_point_map_t<FPMKey const*>& lhs, IndexedMap<IMKey, fixed_point_t> const& rhs) {
 		for (size_t index = 0; index < rhs.size(); index++) {
 			typename IndexedMap<IMKey, fixed_point_t>::value_const_ref_type value = rhs[index];
 			if (value != 0) {
@@ -504,9 +503,7 @@ namespace OpenVic {
 	/* Result is determined by comparing the first pair of unequal values,
 	 * iterating from the highest index downward. */
 	template<typename Key, typename Value>
-	constexpr bool sorted_indexed_map_less_than(
-		IndexedMap<Key, Value> const& lhs, IndexedMap<Key, Value> const& rhs
-	) {
+	constexpr bool sorted_indexed_map_less_than(IndexedMap<Key, Value> const& lhs, IndexedMap<Key, Value> const& rhs) {
 		if (lhs.get_keys() != rhs.get_keys() || lhs.size() != rhs.size()) {
 			Logger::error("Trying to compare IndexedMaps with different keys/sizes: ", lhs.size(), " vs ", rhs.size());
 			return false;
