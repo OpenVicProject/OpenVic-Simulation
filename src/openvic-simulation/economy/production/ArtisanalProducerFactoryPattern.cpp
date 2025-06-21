@@ -34,7 +34,7 @@ std::unique_ptr<ArtisanalProducer> ArtisanalProducerFactoryPattern::CreateNewArt
 		modifier_effect_cache,
 		GoodDefinition::good_definition_map_t{},
 		*random_artisanal_production_type,
-		fixed_point_t::_0()
+		0
 	);
 }
 

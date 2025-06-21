@@ -66,49 +66,32 @@ namespace OpenVic {
 		explicit constexpr fixed_point_t(value_type new_value) : value { new_value } {}
 		constexpr fixed_point_t(int32_t new_value) : value { static_cast<value_type>(new_value) << PRECISION } {}
 
-		static constexpr fixed_point_t max() {
-			return parse_raw(std::numeric_limits<value_type>::max());
-		}
-
-		static constexpr fixed_point_t min() {
-			return parse_raw(std::numeric_limits<value_type>::min());
-		}
-
-		static constexpr fixed_point_t usable_max() {
-			return parse_raw(2147483648LL);
-		}
-
-		static constexpr fixed_point_t usable_min() {
-			return -usable_max();
-		}
-
-		static constexpr fixed_point_t epsilon() {
-			return parse_raw(1);
-		}
-
-		static constexpr fixed_point_t _0() {
-			return 0;
-		}
-
-		static constexpr fixed_point_t _1() {
-			return 1;
-		}
-
-		static constexpr fixed_point_t _2() {
-			return 2;
-		}
-
-		static constexpr fixed_point_t _4() {
-			return 4;
-		}
-
-		static constexpr fixed_point_t _10() {
-			return 10;
-		}
-
-		static constexpr fixed_point_t _100() {
-			return 100;
-		}
+		static const fixed_point_t max;
+		static const fixed_point_t min;
+		static const fixed_point_t usable_max;
+		static const fixed_point_t usable_min;
+		static const fixed_point_t epsilon;
+		static const fixed_point_t _0;
+		static const fixed_point_t _1;
+		static const fixed_point_t _2;
+		static const fixed_point_t _4;
+		static const fixed_point_t _10;
+		static const fixed_point_t _100;
+		static const fixed_point_t _0_01;
+		static const fixed_point_t _0_10;
+		static const fixed_point_t _0_20;
+		static const fixed_point_t _0_25;
+		static const fixed_point_t _0_50;
+		static const fixed_point_t _1_50;
+		static const fixed_point_t minus_one;
+		static const fixed_point_t pi;
+		static const fixed_point_t pi2;
+		static const fixed_point_t pi_quarter;
+		static const fixed_point_t pi_half;
+		static const fixed_point_t one_div_pi2;
+		static const fixed_point_t deg2rad;
+		static const fixed_point_t rad2deg;
+		static const fixed_point_t e;
 
 		// Standard for constexpr requires this here
 		template<std::integral T>
@@ -148,70 +131,10 @@ namespace OpenVic {
 			return value <=> static_cast<value_type>(rhs) << PRECISION;
 		}
 
-		static constexpr fixed_point_t _0_01() {
-			return _1() / 100;
-		}
-
-		static constexpr fixed_point_t _0_10() {
-			return _1() / 10;
-		}
-
-		static constexpr fixed_point_t _0_20() {
-			return _1() / 5;
-		}
-
-		static constexpr fixed_point_t _0_25() {
-			return _1() / 4;
-		}
-
-		static constexpr fixed_point_t _0_50() {
-			return _1() / 2;
-		}
-
-		static constexpr fixed_point_t _1_50() {
-			return _1() + _0_50();
-		}
-
-		static constexpr fixed_point_t minus_one() {
-			return -1;
-		}
-
-		static constexpr fixed_point_t pi() {
-			return parse_raw(205887LL);
-		}
-
-		static constexpr fixed_point_t pi2() {
-			return pi() * 2;
-		}
-
-		static constexpr fixed_point_t pi_quarter() {
-			return pi() / 4;
-		}
-
-		static constexpr fixed_point_t pi_half() {
-			return pi() / 2;
-		}
-
-		static constexpr fixed_point_t one_div_pi2() {
-			return 1 / pi2();
-		}
-
-		static constexpr fixed_point_t deg2rad() {
-			return parse_raw(1143LL);
-		}
-
-		static constexpr fixed_point_t rad2deg() {
-			return parse_raw(3754936LL);
-		}
-
-		static constexpr fixed_point_t e() {
-			return parse_raw(178145LL);
-		}
-
 		constexpr fixed_point_t sin() const {
 			using namespace _detail::LUT;
 
-			value_type num = (*this % pi2() * one_div_pi2()).get_raw_value();
+			value_type num = (*this % pi2 * one_div_pi2).get_raw_value();
 
 			const bool negative = num < 0;
 			if (negative) {
@@ -228,7 +151,7 @@ namespace OpenVic {
 		}
 
 		constexpr fixed_point_t cos() const {
-			return (*this + pi_half()).sin();
+			return (*this + pi_half).sin();
 		}
 
 		constexpr bool is_negative() const {
@@ -242,7 +165,7 @@ namespace OpenVic {
 		constexpr fixed_point_t sqrt() const {
 			return !is_negative()
 				? parse_raw(NumberUtils::sqrt(static_cast<uint64_t>(value) << PRECISION))
-				: _0();
+				: _0;
 		}
 
 		constexpr bool is_integer() const {
@@ -261,12 +184,12 @@ namespace OpenVic {
 		 * for example 1.0 rounded to a multiple of 0.01 is 0.99945068359375 for down and 1.0094451904296875 for up. */
 		constexpr fixed_point_t round_down_to_multiple(fixed_point_t factor) const {
 			const fixed_point_t remainder = *this % factor;
-			return *this - remainder - (remainder < 0 ? factor : _0());
+			return *this - remainder - (remainder < 0 ? factor : _0);
 		}
 
 		constexpr fixed_point_t round_up_to_multiple(fixed_point_t factor) const {
 			const fixed_point_t remainder = *this % factor;
-			return *this - remainder + (remainder > 0 ? factor : _0());
+			return *this - remainder + (remainder > 0 ? factor : _0);
 		}
 
 		constexpr int64_t to_int64_t() const {
@@ -322,7 +245,7 @@ namespace OpenVic {
 				}
 
 				fixed_point_t frac = abs().get_frac();
-				if (frac != fixed_point_t::_0()) {
+				if (frac != _0) {
 					*result.ptr = '.';
 					++result.ptr;
 					do {
@@ -333,13 +256,13 @@ namespace OpenVic {
 						*result.ptr = static_cast<char>('0' + frac.to_int64_t());
 						++result.ptr;
 						frac = frac.get_frac();
-					} while (frac != fixed_point_t::_0());
+					} while (frac != _0);
 				}
 				return result;
 			}
 
 			// Add the specified number of decimal places, potentially 0 (so no decimal point)
-			fixed_point_t err = _0_50();
+			fixed_point_t err = _0_50;
 			for (size_t i = decimal_places; i > 0; --i) {
 				err /= 10;
 			}
@@ -462,7 +385,7 @@ namespace OpenVic {
 				return { begin, std::errc::invalid_argument };
 			}
 
-			fixed_point_t result = _0();
+			fixed_point_t result = 0;
 			std::from_chars_result from_chars = {};
 			if (dot_pointer != begin) {
 				// Non-empty integer part, may be negative
@@ -477,7 +400,7 @@ namespace OpenVic {
 				// Non-empty fractional part, cannot be negative
 				fixed_point_t adder;
 				from_chars = from_chars_fraction(dot_pointer + 1, end, adder);
-				result += result.is_negative() || (*begin == '-' && result == _0()) ? -adder : adder;
+				result += result.is_negative() || (*begin == '-' && result == _0) ? -adder : adder;
 			}
 
 			if (from_chars.ec != std::errc{}) {
@@ -501,7 +424,7 @@ namespace OpenVic {
 
 		// Deterministic
 		static constexpr fixed_point_t parse(char const* str, char const* end, bool* successful = nullptr) {
-			fixed_point_t value = _0();
+			fixed_point_t value = 0;
 			std::from_chars_result result = value.from_chars_with_plus(str, end);
 			if (successful) {
 				*successful = result.ec == std::errc {};
@@ -781,7 +704,7 @@ namespace OpenVic {
 		static constexpr fixed_point_t _exp_internal(fixed_point_t const& x) {
 			const bool negative = x.is_negative();
 			value_type bits = negative ? -x.value : x.value;
-			fixed_point_t result = _1();
+			fixed_point_t result = _1;
 
 			for (size_t index = 0; bits != 0 && index < EXP_LUT.size(); ++index, bits >>= 1) {
 				if (bits & 1LL) {
@@ -794,7 +717,7 @@ namespace OpenVic {
 			}
 
 			if (negative) {
-				return _1() / result;
+				return _1 / result;
 			} else {
 				return result;
 			}
@@ -818,6 +741,33 @@ namespace OpenVic {
 		str.string_size = result.ptr - str.data();
 		return str;
 	}
+
+	inline constexpr fixed_point_t fixed_point_t::max = parse_raw(std::numeric_limits<value_type>::max());
+	inline constexpr fixed_point_t fixed_point_t::min = parse_raw(std::numeric_limits<value_type>::min());
+	inline constexpr fixed_point_t fixed_point_t::usable_max = parse_raw(2147483648LL);
+	inline constexpr fixed_point_t fixed_point_t::usable_min = -usable_max;
+	inline constexpr fixed_point_t fixed_point_t::epsilon = parse_raw(1);
+	inline constexpr fixed_point_t fixed_point_t::_0 = 0;
+	inline constexpr fixed_point_t fixed_point_t::_1 = 1;
+	inline constexpr fixed_point_t fixed_point_t::_2 = 2;
+	inline constexpr fixed_point_t fixed_point_t::_4 = 4;
+	inline constexpr fixed_point_t fixed_point_t::_10 = 10;
+	inline constexpr fixed_point_t fixed_point_t::_100 = 100;
+	inline constexpr fixed_point_t fixed_point_t::_0_01 = _1 / 100;
+	inline constexpr fixed_point_t fixed_point_t::_0_10 = _1 / 10;
+	inline constexpr fixed_point_t fixed_point_t::_0_20 = _1 / 5;
+	inline constexpr fixed_point_t fixed_point_t::_0_25 = _1 / 4;
+	inline constexpr fixed_point_t fixed_point_t::_0_50 = _1 / 2;
+	inline constexpr fixed_point_t fixed_point_t::_1_50 = _1 + _0_50;
+	inline constexpr fixed_point_t fixed_point_t::minus_one = -1;
+	inline constexpr fixed_point_t fixed_point_t::pi = parse_raw(205887LL);
+	inline constexpr fixed_point_t fixed_point_t::pi2 = pi * 2;
+	inline constexpr fixed_point_t fixed_point_t::pi_quarter = pi / 4;
+	inline constexpr fixed_point_t fixed_point_t::pi_half = pi / 2;
+	inline constexpr fixed_point_t fixed_point_t::one_div_pi2 = 1 / pi2;
+	inline constexpr fixed_point_t fixed_point_t::deg2rad = parse_raw(1143LL);
+	inline constexpr fixed_point_t fixed_point_t::rad2deg = parse_raw(3754936LL);
+	inline constexpr fixed_point_t fixed_point_t::e = parse_raw(178145LL);
 }
 
 template<>

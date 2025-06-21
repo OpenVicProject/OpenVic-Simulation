@@ -440,7 +440,7 @@ TEST_CASE(
 	auto callback = [](FlatValue const* ptr, fixed_point_t val) -> bool {
 		std::string_view sv = ptr->value().view();
 
-		fixed_point_t check = fixed_point_t::_0();
+		fixed_point_t check = 0;
 		std::from_chars_result result = check.from_chars(sv.data(), sv.data() + sv.size());
 		CHECK_IF(result.ec == std::errc {});
 		else {
@@ -494,7 +494,7 @@ TEST_CASE("NodeTools expect colour functions", "[NodeTools][NodeTools-expect-fun
 			if (auto const* value = dryad::node_try_cast<ValueStatement>(sub_node)) {
 				if (auto const* id = dryad::node_try_cast<IdentifierValue>(value->value())) {
 					std::string_view sv = id->value().view();
-					fixed_point_t fp = fixed_point_t::_0();
+					fixed_point_t fp = 0;
 					std::from_chars_result result = fp.from_chars(sv.data(), sv.data() + sv.size());
 					CHECK_OR_CONTINUE(result.ec == std::errc {});
 					if (fp <= 1) {

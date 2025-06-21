@@ -81,7 +81,7 @@ namespace OpenVic {
 
 		// Thresholds for different uncivilised country statuses
 		static constexpr fixed_point_t PRIMITIVE_CIVILISATION_PROGRESS = fixed_point_t::parse(15) / 100;
-		static constexpr fixed_point_t UNCIVILISED_CIVILISATION_PROGRESS = fixed_point_t::_0_50();
+		static constexpr fixed_point_t UNCIVILISED_CIVILISATION_PROGRESS = fixed_point_t::_0_50;
 
 		using unlock_level_t = int8_t;
 		using unit_variant_t = uint8_t;
@@ -178,7 +178,7 @@ namespace OpenVic {
 		fixed_point_t PROPERTY(projected_import_subsidies);
 		fixed_point_t PROPERTY(actual_net_tariffs);
 		constexpr bool has_import_subsidies() const {
-			return effective_tariff_rate < fixed_point_t::_0();
+			return effective_tariff_rate < fixed_point_t::_0;
 		}
 
 		//TODO actual factory subsidies
