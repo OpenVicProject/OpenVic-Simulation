@@ -163,7 +163,7 @@ fixed_point_t ProvinceInstance::get_issue_support(Issue const& issue) const {
 	if (it != issue_distribution.end()) {
 		return it->second;
 	} else {
-		return fixed_point_t::_0();
+		return 0;
 	}
 }
 
@@ -171,7 +171,7 @@ fixed_point_t ProvinceInstance::get_party_support(CountryParty const& party) con
 	if (vote_distribution.has_keys()) {
 		return vote_distribution[party];
 	} else {
-		return fixed_point_t::_0();
+		return 0;
 	}
 }
 
@@ -181,7 +181,7 @@ fixed_point_t ProvinceInstance::get_culture_proportion(Culture const& culture) c
 	if (it != culture_distribution.end()) {
 		return it->second;
 	} else {
-		return fixed_point_t::_0();
+		return 0;
 	}
 }
 
@@ -191,7 +191,7 @@ fixed_point_t ProvinceInstance::get_religion_proportion(Religion const& religion
 	if (it != religion_distribution.end()) {
 		return it->second;
 	} else {
-		return fixed_point_t::_0();
+		return 0;
 	}
 }
 
@@ -250,7 +250,7 @@ size_t ProvinceInstance::get_pop_count() const {
  */
 void ProvinceInstance::_update_pops(DefineManager const& define_manager) {
 	total_population = 0;
-	yesterdays_import_value = fixed_point_t::_0();
+	yesterdays_import_value = 0;
 	average_literacy = 0;
 	average_consciousness = 0;
 	average_militancy = 0;
@@ -284,7 +284,7 @@ void ProvinceInstance::_update_pops(DefineManager const& define_manager) {
 	const fixed_point_t pop_size_per_regiment_multiplier =
 		colony_status == PROTECTORATE ? military_defines.get_pop_size_per_regiment_protectorate_multiplier()
 		: colony_status == COLONY ? military_defines.get_pop_size_per_regiment_colony_multiplier()
-		: is_owner_core() ? fixed_point_t::_1() : military_defines.get_pop_size_per_regiment_non_core_multiplier();
+		: is_owner_core() ? fixed_point_t::_1 : military_defines.get_pop_size_per_regiment_non_core_multiplier();
 
 	for (Pop& pop : pops) {
 		pop.update_gamestate(define_manager, owner, pop_size_per_regiment_multiplier);
@@ -405,7 +405,7 @@ fixed_point_t ProvinceInstance::get_modifier_effect_value(ModifierEffect const& 
 		// province if the controller is also the owner.
 		return owner->get_modifier_effect_value(effect);
 	} else {
-		return fixed_point_t::_0();
+		return 0;
 	}
 }
 

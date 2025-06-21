@@ -8,7 +8,7 @@ using enum conditional_weight_type_t;
 template<conditional_weight_type_t TYPE>
 ConditionalWeight<TYPE>::ConditionalWeight(
 	scope_type_t new_initial_scope, scope_type_t new_this_scope, scope_type_t new_from_scope
-) : base { fixed_point_t::_0() },
+) : base { fixed_point_t::_0 },
 	condition_weight_items {},
 	initial_scope { new_initial_scope },
 	this_scope { new_this_scope },
@@ -51,7 +51,7 @@ node_callback_t ConditionalWeight<TYPE>::expect_conditional_weight() {
 	} else if constexpr (TYPE == TIME) {
 		const auto time_callback = [this](std::string_view key, Timespan (*to_timespan)(Timespan::day_t)) -> auto {
 			return [this, key, to_timespan](uint32_t value) -> bool {
-				if (base == fixed_point_t::_0()) {
+				if (base == fixed_point_t::_0) {
 					base = fixed_point_t::parse((*to_timespan)(value).to_int());
 					return true;
 				} else {

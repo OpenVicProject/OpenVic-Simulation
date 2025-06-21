@@ -46,9 +46,9 @@ ResourceGatheringOperation::ResourceGatheringOperation(
 	decltype(employee_count_per_type_cache)::keys_span_type pop_type_keys
 ) : ResourceGatheringOperation {
 	new_market_instance,
-	nullptr, fixed_point_t::_0(),
-	fixed_point_t::_0(), fixed_point_t::_0(),
-	fixed_point_t::_0(), {}, pop_type_keys
+	nullptr, 0,
+	0, 0,
+	0, {}, pop_type_keys
 } {}
 
 void ResourceGatheringOperation::setup_location_ptr(ProvinceInstance& location) {
@@ -61,8 +61,8 @@ void ResourceGatheringOperation::setup_location_ptr(ProvinceInstance& location) 
 
 void ResourceGatheringOperation::initialise_rgo_size_multiplier() {
 	if (production_type_nullable == nullptr) {
-		size_multiplier = fixed_point_t::_0();
-		max_employee_count_cache = fixed_point_t::_0();
+		size_multiplier = 0;
+		max_employee_count_cache = 0;
 		return;
 	}
 
@@ -79,10 +79,10 @@ void ResourceGatheringOperation::initialise_rgo_size_multiplier() {
 
 	const fixed_point_t size_modifier = calculate_size_modifier();
 	const fixed_point_t base_workforce_size = production_type.get_base_workforce_size();
-	if (size_modifier == fixed_point_t::_0()) {
+	if (size_modifier == fixed_point_t::_0) {
 		size_multiplier = 0;
 	} else {
-		size_multiplier = ((total_worker_count_in_province / (size_modifier * base_workforce_size)).ceil() * fixed_point_t::_1_50()).floor();
+		size_multiplier = ((total_worker_count_in_province / (size_modifier * base_workforce_size)).ceil() * fixed_point_t::_1_50).floor();
 	}
 
 	max_employee_count_cache = (size_modifier * size_multiplier * base_workforce_size).floor();
@@ -90,13 +90,13 @@ void ResourceGatheringOperation::initialise_rgo_size_multiplier() {
 
 fixed_point_t ResourceGatheringOperation::calculate_size_modifier() const {
 	if (production_type_nullable == nullptr) {
-		return fixed_point_t::_1();
+		return 1;
 	}
 	ProvinceInstance& location = *location_ptr;
 	ModifierEffectCache const& modifier_effect_cache = location.get_modifier_effect_cache();
 	ProductionType const& production_type = *production_type_nullable;
 
-	fixed_point_t size_modifier = fixed_point_t::_1();
+	fixed_point_t size_modifier = 1;
 	if (production_type.get_is_farm_for_tech()) {
 		size_modifier += location.get_modifier_effect_value(*modifier_effect_cache.get_farm_rgo_size_global());
 	}
@@ -116,7 +116,7 @@ fixed_point_t ResourceGatheringOperation::calculate_size_modifier() const {
 	size_modifier += location.get_modifier_effect_value(
 		*modifier_effect_cache.get_good_effects()[production_type.get_output_good()].get_rgo_size()
 	);
-	return size_modifier > fixed_point_t::_0() ? size_modifier : fixed_point_t::_0();
+	return size_modifier > fixed_point_t::_0 ? size_modifier : fixed_point_t::_0;
 }
 
 void ResourceGatheringOperation::rgo_tick(std::vector<fixed_point_t>& reusable_vector) {
@@ -148,7 +148,7 @@ void ResourceGatheringOperation::rgo_tick(std::vector<fixed_point_t>& reusable_v
 	}
 
 	output_quantity_yesterday = produce();
-	if (output_quantity_yesterday > fixed_point_t::_0()) {
+	if (output_quantity_yesterday > fixed_point_t::_0) {
 		CountryInstance* const country_to_report_economy_nullable = location.get_country_to_report_economy();
 		if (country_to_report_economy_nullable != nullptr) {
 			country_to_report_economy_nullable->report_output(production_type, output_quantity_yesterday);
@@ -178,7 +178,7 @@ void ResourceGatheringOperation::hire() {
 	total_employees_count_cache = 0;
 	total_paid_employees_count_cache = 0;
 	employees.clear(); //TODO implement Victoria 2 hiring logic
-	employee_count_per_type_cache.fill(fixed_point_t::_0());
+	employee_count_per_type_cache.fill(0);
 	if (production_type_nullable == nullptr) {
 		return;
 	}
@@ -191,7 +191,7 @@ void ResourceGatheringOperation::hire() {
 	fixed_point_t proportion_to_hire;
 	if (max_employee_count_cache >= available_worker_count) {
 		//hire everyone
-		proportion_to_hire = fixed_point_t::_1();
+		proportion_to_hire = 1;
 	} else {
 		//hire all pops proportionally
 		const fixed_point_t max_worker_count_real = max_employee_count_cache, available_worker_count_real = available_worker_count;
@@ -223,27 +223,27 @@ void ResourceGatheringOperation::hire() {
 
 fixed_point_t ResourceGatheringOperation::produce() {
 	const fixed_point_t size_modifier = calculate_size_modifier();
-	if (size_modifier == fixed_point_t::_0()){
-		return fixed_point_t::_0();
+	if (size_modifier == fixed_point_t::_0){
+		return 0;
 	}
 
 	if (production_type_nullable == nullptr || max_employee_count_cache <= 0) {
-		return fixed_point_t::_0();
+		return 0;
 	}
 
 	ProvinceInstance& location = *location_ptr;
 	ModifierEffectCache const& modifier_effect_cache = location.get_modifier_effect_cache();
 
 	ProductionType const& production_type = *production_type_nullable;
-	fixed_point_t throughput_multiplier = fixed_point_t::_1();
-	fixed_point_t output_multiplier = fixed_point_t::_1();
+	fixed_point_t throughput_multiplier = 1;
+	fixed_point_t output_multiplier = 1;
 
 	std::optional<Job> const& owner = production_type.get_owner();
 	if (owner.has_value()) {
 		State const* state_ptr = location.get_state();
 		if (state_ptr == nullptr) {
 			Logger::error("Province ", location.get_identifier(), " has no state.");
-			return fixed_point_t::_0();
+			return 0;
 		}
 
 		State const& state = *state_ptr;
@@ -302,8 +302,8 @@ fixed_point_t ResourceGatheringOperation::produce() {
 	throughput_multiplier += location.get_modifier_effect_value(*good_effects.get_rgo_goods_throughput());
 	output_multiplier += location.get_modifier_effect_value(*good_effects.get_rgo_goods_output());
 
-	fixed_point_t throughput_from_workers = fixed_point_t::_0();
-	fixed_point_t output_from_workers = fixed_point_t::_1();
+	fixed_point_t throughput_from_workers = 0;
+	fixed_point_t output_from_workers = 1;
 
 	for (auto const& [pop_type, employees_of_type] : employee_count_per_type_cache) {
 		for (Job const& job : production_type.get_jobs()) {
@@ -315,7 +315,7 @@ fixed_point_t ResourceGatheringOperation::produce() {
 			fixed_point_t relative_to_workforce =
 				fixed_point_t::parse(employees_of_type) / fixed_point_t::parse(max_employee_count_cache);
 			const fixed_point_t amount = job.get_amount();
-			if (effect_multiplier != fixed_point_t::_1() && relative_to_workforce > amount) {
+			if (effect_multiplier != fixed_point_t::_1 && relative_to_workforce > amount) {
 				relative_to_workforce = amount;
 			}
 			switch (job.get_effect_type()) {
@@ -346,8 +346,8 @@ void ResourceGatheringOperation::pay_employees(std::vector<fixed_point_t>& reusa
 
 	total_owner_income_cache = 0;
 	total_employee_income_cache = 0;
-	if (revenue <= fixed_point_t::_0() || total_worker_count_in_province_cache <= 0) {
-		if (revenue < fixed_point_t::_0()) {
+	if (revenue <= fixed_point_t::_0 || total_worker_count_in_province_cache <= 0) {
+		if (revenue < fixed_point_t::_0) {
 			Logger::error("Negative revenue for province ", location.get_identifier());
 		}
 		if (total_worker_count_in_province_cache < 0) {
@@ -357,7 +357,7 @@ void ResourceGatheringOperation::pay_employees(std::vector<fixed_point_t>& reusa
 	}
 
 	CountryInstance const* const country_to_report_economy_nullable = location.get_country_to_report_economy();
-	fixed_point_t total_minimum_wage = fixed_point_t::_0();
+	fixed_point_t total_minimum_wage = 0;
 	if (country_to_report_economy_nullable != nullptr) {
 		CountryInstance const& country_to_report_economy = *country_to_report_economy_nullable;
 		for (Employee& employee : employees) {
@@ -373,7 +373,7 @@ void ResourceGatheringOperation::pay_employees(std::vector<fixed_point_t>& reusa
 					employee.get_minimum_wage_cached(),
 					total_minimum_wage
 				),
-				fixed_point_t::epsilon() //revenue > 0 is already checked, so rounding up
+				fixed_point_t::epsilon //revenue > 0 is already checked, so rounding up
 			);
 			Pop& employee_pop = employee.get_pop();
 			employee_pop.add_rgo_worker_income(income_for_this_pop);
@@ -383,11 +383,11 @@ void ResourceGatheringOperation::pay_employees(std::vector<fixed_point_t>& reusa
 		fixed_point_t revenue_left = revenue;
 		if (total_owner_count_in_state_cache > 0) {
 			const fixed_point_t upper_limit = std::min(
-				fixed_point_t::_0_50(),
-				fixed_point_t::_1() - total_minimum_wage / revenue_left
+				fixed_point_t::_0_50,
+				fixed_point_t::_1 - total_minimum_wage / revenue_left
 			);
 			const fixed_point_t owner_share = std::min(
-				fixed_point_t::_2() * total_owner_count_in_state_cache / total_worker_count_in_province_cache,
+				fixed_point_t::_2 * total_owner_count_in_state_cache / total_worker_count_in_province_cache,
 				upper_limit
 			);
 
@@ -395,7 +395,7 @@ void ResourceGatheringOperation::pay_employees(std::vector<fixed_point_t>& reusa
 				Pop& owner_pop = *owner_pop_ptr;
 				const fixed_point_t income_for_this_pop = std::max(
 					revenue_left * (owner_share * owner_pop.get_size()) / total_owner_count_in_state_cache,
-					fixed_point_t::epsilon() //revenue > 0 is already checked, so rounding up
+					fixed_point_t::epsilon //revenue > 0 is already checked, so rounding up
 				);
 				owner_pop.add_rgo_owner_income(income_for_this_pop);
 				total_owner_income_cache += income_for_this_pop;
@@ -426,14 +426,14 @@ void ResourceGatheringOperation::pay_employees(std::vector<fixed_point_t>& reusa
 				}
 				
 				const fixed_point_t minimum_wage = employee.get_minimum_wage_cached();
-				if (minimum_wage > fixed_point_t::_0() && incomes[i] == minimum_wage) {
+				if (minimum_wage > fixed_point_t::_0 && incomes[i] == minimum_wage) {
 					continue;
 				}
 
 				const pop_size_t employee_size = employee.get_size();
 				const fixed_point_t income_for_this_pop = std::max(
 					revenue_left * employee_size / count_workers_to_be_paid,
-					fixed_point_t::epsilon() //revenue > 0 is already checked, so rounding up
+					fixed_point_t::epsilon //revenue > 0 is already checked, so rounding up
 				);
 
 				if (income_for_this_pop < minimum_wage) {
@@ -450,7 +450,7 @@ void ResourceGatheringOperation::pay_employees(std::vector<fixed_point_t>& reusa
 				Employee& employee = employees[i];
 				Pop& employee_pop = employee.get_pop();
 				const fixed_point_t income_for_this_pop = incomes[i];
-				if (income_for_this_pop > fixed_point_t::_0()) {
+				if (income_for_this_pop > fixed_point_t::_0) {
 					employee_pop.add_rgo_worker_income(income_for_this_pop);
 					total_employee_income_cache += income_for_this_pop;
 				}

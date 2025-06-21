@@ -569,7 +569,7 @@ bool GameActionManager::game_action_callback_set_good_trade_order(game_action_ar
 			" for ", good_data.is_selling ? "selling" : "buying", " good \"", good->get_identifier(), "\" in country \"",
 			country->get_identifier(), "\". Setting to 0."
 		);
-		good_data.stockpile_cutoff = fixed_point_t::_0();
+		good_data.stockpile_cutoff = 0;
 	}
 
 	return old_is_selling != good_data.is_selling || old_stockpile_cutoff != good_data.stockpile_cutoff;

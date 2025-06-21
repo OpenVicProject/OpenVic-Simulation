@@ -12,29 +12,29 @@
 using namespace OpenVic;
 
 TEST_CASE("atomic_fixed_point_t Constructor methods", "[atomic_fixed_point_t][atomic_fixed_point_t-constructor]") {
-	CHECK(atomic_fixed_point_t {} == fixed_point_t::_0());
-	CHECK(atomic_fixed_point_t { fixed_point_t::_1() } == fixed_point_t::_1());
+	CHECK(atomic_fixed_point_t {} == fixed_point_t::_0);
+	CHECK(atomic_fixed_point_t { fixed_point_t::_1 } == fixed_point_t::_1);
 }
 
 TEST_CASE("atomic_fixed_point_t Operators", "[atomic_fixed_point_t][atomic_fixed_point_t-operators]") {
-	atomic_fixed_point_t a { fixed_point_t::_0() };
+	atomic_fixed_point_t a { fixed_point_t::_0 };
 
-	CHECK(a++ == fixed_point_t::_0());
-	CHECK(a == fixed_point_t::_1());
+	CHECK(a++ == fixed_point_t::_0);
+	CHECK(a == fixed_point_t::_1);
 
-	CHECK(++a == fixed_point_t::_2());
+	CHECK(++a == fixed_point_t::_2);
 
-	CHECK(a-- == fixed_point_t::_2());
-	CHECK(a == fixed_point_t::_1());
+	CHECK(a-- == fixed_point_t::_2);
+	CHECK(a == fixed_point_t::_1);
 
-	CHECK(--a == fixed_point_t::_0());
+	CHECK(--a == fixed_point_t::_0);
 
-	CHECK((a = fixed_point_t::_10()) == fixed_point_t::_10());
-	CHECK(a == fixed_point_t::_10());
+	CHECK((a = fixed_point_t::_10) == fixed_point_t::_10);
+	CHECK(a == fixed_point_t::_10);
 }
 
 TEST_CASE("atomic_fixed_point_t Atomic Behavior", "[atomic_fixed_point_t][atomic_fixed_point_t-atomic-behavior]") {
-	atomic_fixed_point_t b { fixed_point_t::_0() };
+	atomic_fixed_point_t b { fixed_point_t::_0 };
 	std::vector<std::thread> pool;
 	for (size_t outer_index = 0; outer_index < 16; ++outer_index) {
 		pool.emplace_back([&b]() {

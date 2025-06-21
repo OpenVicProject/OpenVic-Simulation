@@ -80,22 +80,22 @@ TEST_CASE("dvec3_t Length methods", "[vec3_t][dvec3_t][dvec3_t-length]") {
 }
 
 TEST_CASE("fvec3_t Operators", "[vec3_t][fvec3_t][fvec3_t-operators]") {
-	static constexpr fixed_point_t _2_30 = fixed_point_t::_2() + fixed_point_t::_0_20() + fixed_point_t::_0_10();
-	static constexpr fixed_point_t _4_90 = fixed_point_t::_4() + fixed_point_t::_0_50() + fixed_point_t::_0_20() * 2;
+	static constexpr fixed_point_t _2_30 = fixed_point_t::_2 + fixed_point_t::_0_20 + fixed_point_t::_0_10;
+	static constexpr fixed_point_t _4_90 = fixed_point_t::_4 + fixed_point_t::_0_50 + fixed_point_t::_0_20 * 2;
 	static constexpr fixed_point_t _7_80 = //
-		fixed_point_t::_4() + fixed_point_t::_2() + fixed_point_t::_1() + fixed_point_t::_0_50() + fixed_point_t::_0_20() +
-		fixed_point_t::_0_10();
-	static constexpr fixed_point_t _1_20 = fixed_point_t::_0_20() * 6;
-	static constexpr fixed_point_t _3_40 = fixed_point_t::_0_20() * 17;
-	static constexpr fixed_point_t _5_60 = fixed_point_t::_4() + fixed_point_t::_1_50() + fixed_point_t::_0_10();
-	static constexpr fixed_point_t _0_75 = fixed_point_t::_0_25() * 3;
-	static constexpr fixed_point_t _0_125 = fixed_point_t::_1() / 8;
-	static constexpr fixed_point_t _0_625 = fixed_point_t::_0_50() + _0_125;
+		fixed_point_t::_4 + fixed_point_t::_2 + fixed_point_t::_1 + fixed_point_t::_0_50 + fixed_point_t::_0_20 +
+		fixed_point_t::_0_10;
+	static constexpr fixed_point_t _1_20 = fixed_point_t::_0_20 * 6;
+	static constexpr fixed_point_t _3_40 = fixed_point_t::_0_20 * 17;
+	static constexpr fixed_point_t _5_60 = fixed_point_t::_4 + fixed_point_t::_1_50 + fixed_point_t::_0_10;
+	static constexpr fixed_point_t _0_75 = fixed_point_t::_0_25 * 3;
+	static constexpr fixed_point_t _0_125 = fixed_point_t::_1 / 8;
+	static constexpr fixed_point_t _0_625 = fixed_point_t::_0_50 + _0_125;
 
 	static constexpr fvec3_t decimal1 = { _2_30, _4_90, _7_80 };
 	static constexpr fvec3_t decimal2 = { _1_20, _3_40, _5_60 };
-	static constexpr fvec3_t power1 = { _0_75, fixed_point_t::_1_50(), _0_625 };
-	static constexpr fvec3_t power2 = { fixed_point_t::_0_50(), _0_125, fixed_point_t::_0_25() };
+	static constexpr fvec3_t power1 = { _0_75, fixed_point_t::_1_50, _0_625 };
+	static constexpr fvec3_t power2 = { fixed_point_t::_0_50, _0_125, fixed_point_t::_0_25 };
 	static constexpr fvec3_t int1 = fvec3_t(4, 5, 9);
 	static constexpr fvec3_t int2 = fvec3_t(1, 2, 3);
 

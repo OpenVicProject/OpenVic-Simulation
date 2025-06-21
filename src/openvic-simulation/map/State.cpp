@@ -49,7 +49,7 @@ fixed_point_t State::get_issue_support(Issue const& issue) const {
 	if (it != issue_distribution.end()) {
 		return it->second;
 	} else {
-		return fixed_point_t::_0();
+		return 0;
 	}
 }
 
@@ -57,7 +57,7 @@ fixed_point_t State::get_party_support(CountryParty const& party) const {
 	if (vote_distribution.has_keys()) {
 		return vote_distribution[party];
 	} else {
-		return fixed_point_t::_0();
+		return 0;
 	}
 }
 
@@ -67,7 +67,7 @@ fixed_point_t State::get_culture_proportion(Culture const& culture) const {
 	if (it != culture_distribution.end()) {
 		return it->second;
 	} else {
-		return fixed_point_t::_0();
+		return 0;
 	}
 }
 
@@ -77,13 +77,13 @@ fixed_point_t State::get_religion_proportion(Religion const& religion) const {
 	if (it != religion_distribution.end()) {
 		return it->second;
 	} else {
-		return fixed_point_t::_0();
+		return 0;
 	}
 }
 
 void State::update_gamestate() {
 	total_population = 0;
-	yesterdays_import_value = fixed_point_t::_0();
+	yesterdays_import_value = 0;
 	average_literacy = 0;
 	average_consciousness = 0;
 	average_militancy = 0;
@@ -167,8 +167,8 @@ void State::update_gamestate() {
 	const int32_t potential_employment_in_state = 0; // sum of (factory level * production method base_workforce_size)
 
 	fixed_point_t workforce_scalar;
-	constexpr fixed_point_t min_workforce_scalar = fixed_point_t::_0_20();
-	constexpr fixed_point_t max_workforce_scalar = fixed_point_t::_4();
+	constexpr fixed_point_t min_workforce_scalar = fixed_point_t::_0_20;
+	constexpr fixed_point_t max_workforce_scalar = 4;
 	if (potential_employment_in_state <= 0) {
 		workforce_scalar = min_workforce_scalar;
 	} else {
