@@ -23,7 +23,7 @@ namespace OpenVic {
 			money_spent_on_imports { new_money_spent_on_imports } {}
 
 		static constexpr BuyResult no_purchase_result(GoodDefinition const& good_definition) {
-			return { good_definition, fixed_point_t::_0(), fixed_point_t::_0(), fixed_point_t::_0() };
+			return { good_definition, 0, 0, 0 };
 		}
 	};
 }

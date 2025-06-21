@@ -97,7 +97,7 @@ namespace OpenVic {
 
 		culture_status_t PROPERTY(culture_status, culture_status_t::UNACCEPTED);
 
-		static constexpr fixed_point_t DEFAULT_POP_LITERACY = fixed_point_t::_0_10();
+		static constexpr fixed_point_t DEFAULT_POP_LITERACY = fixed_point_t::_0_10;
 		fixed_point_t PROPERTY_RW(literacy, DEFAULT_POP_LITERACY);
 
 		// All of these should have a total size equal to the pop size, allowing the distributions from different pops to be
@@ -116,7 +116,7 @@ namespace OpenVic {
 		}
 		constexpr fixed_point_t get_unemployment_fraction() const {
 			if (!type->get_can_be_unemployed()) {
-				return fixed_point_t::_0();
+				return 0;
 			}
 			return fixed_point_t::parse(get_unemployed()) / size;
 		}

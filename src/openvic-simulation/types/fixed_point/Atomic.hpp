@@ -35,31 +35,31 @@ namespace std {
 		}
 
 		value_type operator++(int) noexcept {
-			return value_type::parse_raw(base_type::fetch_add(value_type::_1().get_raw_value()));
+			return value_type::parse_raw(base_type::fetch_add(value_type::_1.get_raw_value()));
 		}
 		value_type operator++(int) volatile noexcept {
-			return value_type::parse_raw(base_type::fetch_add(value_type::_1().get_raw_value()));
+			return value_type::parse_raw(base_type::fetch_add(value_type::_1.get_raw_value()));
 		}
 
 		value_type operator--(int) noexcept {
-			return value_type::parse_raw(base_type::fetch_sub(value_type::_1().get_raw_value()));
+			return value_type::parse_raw(base_type::fetch_sub(value_type::_1.get_raw_value()));
 		}
 		value_type operator--(int) volatile noexcept {
-			return value_type::parse_raw(base_type::fetch_sub(value_type::_1().get_raw_value()));
+			return value_type::parse_raw(base_type::fetch_sub(value_type::_1.get_raw_value()));
 		}
 
 		value_type operator++() noexcept {
-			return value_type::parse_raw(base_type::operator+=(value_type::_1().get_raw_value()));
+			return value_type::parse_raw(base_type::operator+=(value_type::_1.get_raw_value()));
 		}
 		value_type operator++() volatile noexcept {
-			return value_type::parse_raw(base_type::operator+=(value_type::_1().get_raw_value()));
+			return value_type::parse_raw(base_type::operator+=(value_type::_1.get_raw_value()));
 		}
 
 		value_type operator--() noexcept {
-			return value_type::parse_raw(base_type::operator-=(value_type::_1().get_raw_value()));
+			return value_type::parse_raw(base_type::operator-=(value_type::_1.get_raw_value()));
 		}
 		value_type operator--() volatile noexcept {
-			return value_type::parse_raw(base_type::operator-=(value_type::_1().get_raw_value()));
+			return value_type::parse_raw(base_type::operator-=(value_type::_1.get_raw_value()));
 		}
 
 		value_type operator+=(value_type fp) noexcept {

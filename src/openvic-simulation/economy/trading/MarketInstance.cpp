@@ -24,7 +24,7 @@ fixed_point_t MarketInstance::get_min_next_price(GoodDefinition const& good_defi
 fixed_point_t MarketInstance::get_max_money_to_allocate_to_buy_quantity(GoodDefinition const& good_definition, const fixed_point_t quantity) const {
 	//round up so money_to_spend >= max_next_price * max_quantity_to_buy;
 	//always add epsilon as money_to_spend == max_next_price * max_quantity_to_buy is rare and this is cheaper for performance.
-	return quantity * get_max_next_price(good_definition) + fixed_point_t::epsilon();
+	return quantity * get_max_next_price(good_definition) + fixed_point_t::epsilon;
 }
 
 fixed_point_t MarketInstance::get_price_inverse(GoodDefinition const& good_definition) const {

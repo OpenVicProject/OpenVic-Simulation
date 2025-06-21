@@ -74,7 +74,7 @@ namespace OpenVic {
 			if (effect_found != nullptr) {
 				*effect_found = false;
 			}
-			return fixed_point_t::_0();
+			return 0;
 		}
 	};
 
@@ -112,7 +112,7 @@ namespace OpenVic {
 
 		void add_modifier(
 			Modifier const& modifier,
-			fixed_point_t multiplier = fixed_point_t::_1(),
+			fixed_point_t multiplier = 1,
 			modifier_entry_t::modifier_source_t const& source = {},
 			ModifierEffect::target_t excluded_targets = ModifierEffect::target_t::NO_TARGETS
 		);
@@ -129,7 +129,7 @@ namespace OpenVic {
 			for (modifier_entry_t const& modifier_entry : modifiers) {
 				const fixed_point_t contribution = modifier_entry.get_modifier_effect_value(effect);
 
-				if (contribution != fixed_point_t::_0()) {
+				if (contribution != fixed_point_t::_0) {
 					callback(modifier_entry, contribution);
 				}
 			}

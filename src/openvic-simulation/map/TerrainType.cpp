@@ -80,7 +80,7 @@ bool TerrainTypeManager::add_terrain_type(
 		return false;
 	}
 
-	if (movement_cost < fixed_point_t::_0()) {
+	if (movement_cost < fixed_point_t::_0) {
 		Logger::error(
 			"Invalid movement cost for terrain type \"", identifier, "\": ", movement_cost, " (cannot be negative!)"
 		);

@@ -114,7 +114,7 @@ void Pop::setup_pop_test_values(IssueManager const& issue_manager) {
 	life_needs_acquired_quantity = test_range();
 	everyday_needs_acquired_quantity = test_range();
 	luxury_needs_acquired_quantity = test_range();
-	life_needs_desired_quantity = everyday_needs_desired_quantity = luxury_needs_desired_quantity = fixed_point_t::_1();
+	life_needs_desired_quantity = everyday_needs_desired_quantity = luxury_needs_desired_quantity = 1;
 }
 
 bool Pop::convert_to_equivalent() {
@@ -163,7 +163,7 @@ fixed_point_t Pop::get_issue_support(Issue const& issue) const {
 	if (it != issue_distribution.end()) {
 		return it->second;
 	} else {
-		return fixed_point_t::_0();
+		return 0;
 	}
 }
 
@@ -171,7 +171,7 @@ fixed_point_t Pop::get_party_support(CountryParty const& party) const {
 	if (vote_distribution.has_keys()) {
 		return vote_distribution[party];
 	} else {
-		return fixed_point_t::_0();
+		return 0;
 	}
 }
 
@@ -192,12 +192,12 @@ void Pop::update_gamestate(
 		culture_status = UNACCEPTED;
 	}
 
-	static constexpr fixed_point_t MIN_MILITANCY = fixed_point_t::_0();
-	static constexpr fixed_point_t MAX_MILITANCY = fixed_point_t::_10();
-	static constexpr fixed_point_t MIN_CONSCIOUSNESS = fixed_point_t::_0();
-	static constexpr fixed_point_t MAX_CONSCIOUSNESS = fixed_point_t::_10();
-	static constexpr fixed_point_t MIN_LITERACY = fixed_point_t::_0_01();
-	static constexpr fixed_point_t MAX_LITERACY = fixed_point_t::_1();
+	static constexpr fixed_point_t MIN_MILITANCY = 0;
+	static constexpr fixed_point_t MAX_MILITANCY = 10;
+	static constexpr fixed_point_t MIN_CONSCIOUSNESS = 0;
+	static constexpr fixed_point_t MAX_CONSCIOUSNESS = 10;
+	static constexpr fixed_point_t MIN_LITERACY = fixed_point_t::_0_01;
+	static constexpr fixed_point_t MAX_LITERACY = 1;
 
 	militancy = std::clamp(militancy, MIN_MILITANCY, MAX_MILITANCY);
 	consciousness = std::clamp(consciousness, MIN_CONSCIOUSNESS, MAX_CONSCIOUSNESS);
@@ -265,11 +265,11 @@ void Pop::pay_income_tax(fixed_point_t& income) {
 
 #define DEFINE_ADD_INCOME_FUNCTIONS(name) \
 	void Pop::add_##name(fixed_point_t amount){ \
-		if (OV_unlikely(amount == fixed_point_t::_0())) { \
+		if (OV_unlikely(amount == fixed_point_t::_0)) { \
 			Logger::warning("Adding ", #name, " of 0 to pop. Context", get_pop_context_text().str()); \
 			return; \
 		} \
-		if (OV_unlikely(amount < fixed_point_t::_0())) { \
+		if (OV_unlikely(amount < fixed_point_t::_0)) { \
 			Logger::error("Adding negative ", #name, " of ", amount, " to pop. Context", get_pop_context_text().str()); \
 			return; \
 		} \
@@ -284,17 +284,17 @@ DO_FOR_ALL_TYPES_OF_POP_INCOME(DEFINE_ADD_INCOME_FUNCTIONS)
 
 #define DEFINE_ADD_EXPENSE_FUNCTIONS(name) \
 	void Pop::add_##name(const fixed_point_t amount){ \
-		if (OV_unlikely(amount == fixed_point_t::_0())) { \
+		if (OV_unlikely(amount == fixed_point_t::_0)) { \
 			Logger::warning("Adding ", #name, " of 0 to pop. Context:", get_pop_context_text().str()); \
 			return; \
 		} \
 		name += amount; \
 		const fixed_point_t expenses_copy = expenses += amount; \
-		if (OV_unlikely(expenses_copy < fixed_point_t::_0())) { \
+		if (OV_unlikely(expenses_copy < fixed_point_t::_0)) { \
 			Logger::error("Total expenses became negative (", expenses_copy, ") after adding ", #name, " of ", amount, " to pop. Context:", get_pop_context_text().str()); \
 		} \
 		const fixed_point_t cash_copy = cash -= amount; \
-		if (OV_unlikely(cash_copy < fixed_point_t::_0())) { \
+		if (OV_unlikely(cash_copy < fixed_point_t::_0)) { \
 			Logger::error("Total cash became negative (", cash_copy, ") after adding ", #name, " of ", amount, " to pop. Context:", get_pop_context_text().str()); \
 		} \
 	}
@@ -311,8 +311,8 @@ void Pop::add_import_subsidies(const fixed_point_t amount) {
 #define DEFINE_NEEDS_FULFILLED(need_category) \
 	fixed_point_t Pop::get_##need_category##_needs_fulfilled() const { \
 		const fixed_point_t desired_quantity_copy = need_category##_needs_desired_quantity.get_copy_of_value(); \
-		if (desired_quantity_copy == fixed_point_t::_0()) { \
-			return fixed_point_t::_1(); \
+		if (desired_quantity_copy == fixed_point_t::_0) { \
+			return 1; \
 		} \
 		return need_category##_needs_acquired_quantity.get_copy_of_value() / desired_quantity_copy; \
 	}
@@ -320,7 +320,7 @@ DO_FOR_ALL_NEED_CATEGORIES(DEFINE_NEEDS_FULFILLED)
 #undef DEFINE_NEEDS_FULFILLED
 
 #define SET_TO_ZERO(name) \
-	name = fixed_point_t::_0();
+	name = 0;
 
 void Pop::allocate_for_needs(
 	GoodDefinition::good_definition_map_t const& scaled_needs,
@@ -355,8 +355,8 @@ void Pop::allocate_for_needs(
 			i = -1; //Restart loop and skip maxed out needs. This is required to spread the remaining cash again.
 		} else {
 			const fixed_point_t max_possible_quantity_bought = cash_available_for_good / market_instance.get_min_next_price(*good_definition);
-			if (max_possible_quantity_bought < fixed_point_t::epsilon()) {
-				money_to_spend_per_good_draft[good_definition] = fixed_point_t::_0();
+			if (max_possible_quantity_bought < fixed_point_t::epsilon) {
+				money_to_spend_per_good_draft[good_definition] = 0;
 			} else {
 				money_to_spend_per_good_draft[good_definition] = cash_available_for_good;
 			}
@@ -382,16 +382,16 @@ void Pop::pop_tick_without_cleanup(PopValuesFromProvince& shared_values, std::ve
 	DO_FOR_ALL_TYPES_OF_POP_INCOME(SET_TO_ZERO)
 	DO_FOR_ALL_TYPES_OF_POP_EXPENSES(SET_TO_ZERO)
 	#undef SET_TO_ZERO
-	income = expenses = fixed_point_t::_0();
+	income = expenses = 0;
 
 	ProvinceInstance& location_never_null = *location;
 	CountryInstance* const country_to_report_economy_nullable = location_never_null.get_country_to_report_economy();
 
-	fixed_point_t max_cost_multiplier = fixed_point_t::_1();
+	fixed_point_t max_cost_multiplier = 1;
 	if (country_to_report_economy_nullable != nullptr) {
 		country_to_report_economy_nullable->request_salaries_and_welfare_and_import_subsidies(*this);
 		const fixed_point_t tariff_rate = country_to_report_economy_nullable->get_effective_tariff_rate();
-		if (tariff_rate > fixed_point_t::_0()) {
+		if (tariff_rate > fixed_point_t::_0) {
 			max_cost_multiplier += tariff_rate; //max (domestic cost, imported cost)
 		}
 	}
@@ -399,7 +399,7 @@ void Pop::pop_tick_without_cleanup(PopValuesFromProvince& shared_values, std::ve
 	//unemployment subsidies are based on yesterdays unemployment
 	employed = 0;
 	//import subsidies are based on yesterday
-	yesterdays_import_value = fixed_point_t::_0();
+	yesterdays_import_value = 0;
 
 	auto& [
 		reusable_map_0,
@@ -409,7 +409,7 @@ void Pop::pop_tick_without_cleanup(PopValuesFromProvince& shared_values, std::ve
 	] = shared_values.reusable_maps;
 	GoodDefinition::good_definition_map_t& max_quantity_to_buy_per_good = reusable_map_2;
 	GoodDefinition::good_definition_map_t& money_to_spend_per_good = reusable_map_3;
-	cash_allocated_for_artisanal_spending = fixed_point_t::_0();
+	cash_allocated_for_artisanal_spending = 0;
 	fill_needs_fulfilled_goods_with_false();
 	if (artisanal_producer_nullable != nullptr) {
 		//execute artisan_tick before needs
@@ -427,28 +427,28 @@ void Pop::pop_tick_without_cleanup(PopValuesFromProvince& shared_values, std::ve
 	PopStrataValuesFromProvince const& shared_strata_values = shared_values.get_effects_per_strata()[type_never_null.get_strata()];
 	PopsDefines const& defines = shared_values.get_defines();
 	const fixed_point_t base_needs_scalar = (
-		fixed_point_t::_1() + 2 * consciousness / defines.get_pdef_base_con()
+		fixed_point_t::_1 + 2 * consciousness / defines.get_pdef_base_con()
 	) * size;
 
 	#define FILL_NEEDS(need_category) \
 		need_category##_needs.clear(); \
 		const fixed_point_t need_category##_needs_scalar = base_needs_scalar * shared_strata_values.get_shared_##need_category##_needs_scalar(); \
-		fixed_point_t need_category##_needs_price_inverse_sum = fixed_point_t::_0(); \
-		if (OV_likely(need_category##_needs_scalar > fixed_point_t::_0())) { \
-			need_category##_needs_acquired_quantity = need_category##_needs_desired_quantity = fixed_point_t::_0(); \
+		fixed_point_t need_category##_needs_price_inverse_sum = 0; \
+		if (OV_likely(need_category##_needs_scalar > fixed_point_t::_0)) { \
+			need_category##_needs_acquired_quantity = need_category##_needs_desired_quantity = 0; \
 			for (auto [good_definition, quantity] : type_never_null.get_##need_category##_needs()) { \
 				if (!market_instance.get_is_available(*good_definition)) { \
 					continue; \
 				} \
 				fixed_point_t max_quantity_to_buy = quantity * need_category##_needs_scalar / size_denominator; \
-				if (max_quantity_to_buy == fixed_point_t::_0()) { \
+				if (max_quantity_to_buy == fixed_point_t::_0) { \
 					continue; \
 				} \
 				if (country_to_report_economy_nullable != nullptr) { \
 					country_to_report_economy_nullable->report_pop_need_demand(*type, *good_definition, max_quantity_to_buy); \
 				} \
 				need_category##_needs_desired_quantity += max_quantity_to_buy; \
-				if (artisanal_produce_left_to_sell > fixed_point_t::_0() \
+				if (artisanal_produce_left_to_sell > fixed_point_t::_0 \
 					&& &artisanal_producer_nullable->get_production_type().get_output_good() == good_definition \
 				) { \
 					const fixed_point_t own_produce_consumed = std::min(artisanal_produce_left_to_sell, max_quantity_to_buy); \
@@ -475,7 +475,7 @@ void Pop::pop_tick_without_cleanup(PopValuesFromProvince& shared_values, std::ve
 		- cash_allocated_for_artisanal_spending;
 
 	#define ALLOCATE_FOR_NEEDS(need_category) \
-		if (cash_left_to_spend > fixed_point_t::_0()) { \
+		if (cash_left_to_spend > fixed_point_t::_0) { \
 			allocate_for_needs( \
 				need_category##_needs, \
 				money_to_spend_per_good, \
@@ -491,7 +491,7 @@ void Pop::pop_tick_without_cleanup(PopValuesFromProvince& shared_values, std::ve
 	for (auto [good_definition, money_to_spend] : money_to_spend_per_good) {
 		const fixed_point_t max_quantity_to_buy = max_quantity_to_buy_per_good[good_definition];
 
-		if (OV_unlikely(max_quantity_to_buy <= fixed_point_t::_0())) {
+		if (OV_unlikely(max_quantity_to_buy <= fixed_point_t::_0)) {
 			Logger::error("Aborted placing buy order for ", *good_definition, " of max_quantity_to_buy 0.");
 			continue;
 		}
@@ -506,7 +506,7 @@ void Pop::pop_tick_without_cleanup(PopValuesFromProvince& shared_values, std::ve
 		});
 	}
 
-	if (artisanal_produce_left_to_sell > fixed_point_t::_0()) {
+	if (artisanal_produce_left_to_sell > fixed_point_t::_0) {
 		market_instance.place_market_sell_order(
 			{
 				artisanal_producer_nullable->get_production_type().get_output_good(),
@@ -517,14 +517,14 @@ void Pop::pop_tick_without_cleanup(PopValuesFromProvince& shared_values, std::ve
 			},
 			reusable_vector
 		);
-		artisanal_produce_left_to_sell = fixed_point_t::_0();
+		artisanal_produce_left_to_sell = 0;
 	}
 }
 
 void Pop::after_buy(void* actor, BuyResult const& buy_result) {
 	const fixed_point_t quantity_bought = buy_result.get_quantity_bought();
 
-	if (quantity_bought == fixed_point_t::_0()) {
+	if (quantity_bought == fixed_point_t::_0) {
 		return;
 	}
 
@@ -542,7 +542,7 @@ void Pop::after_buy(void* actor, BuyResult const& buy_result) {
 	GoodDefinition const& good_definition = buy_result.get_good_definition();
 	fixed_point_t quantity_left_to_consume = quantity_bought;
 	if (pop.artisanal_producer_nullable != nullptr) {
-		if (quantity_left_to_consume <= fixed_point_t::_0()) {
+		if (quantity_left_to_consume <= fixed_point_t::_0) {
 			return;
 		}
 		const fixed_point_t quantity_added_to_stockpile = pop.artisanal_producer_nullable->add_to_stockpile(
@@ -550,7 +550,7 @@ void Pop::after_buy(void* actor, BuyResult const& buy_result) {
 			quantity_left_to_consume
 		);
 
-		if (quantity_added_to_stockpile > fixed_point_t::_0()) {
+		if (quantity_added_to_stockpile > fixed_point_t::_0) {
 			quantity_left_to_consume -= quantity_added_to_stockpile;
 			const fixed_point_t expense = fixed_point_t::mul_div(
 				money_spent,
@@ -563,7 +563,7 @@ void Pop::after_buy(void* actor, BuyResult const& buy_result) {
 
 	CountryInstance* get_country_to_report_economy_nullable = pop.location->get_country_to_report_economy();
 	#define CONSUME_NEED(need_category) \
-		if (quantity_left_to_consume <= fixed_point_t::_0()) { \
+		if (quantity_left_to_consume <= fixed_point_t::_0) { \
 			return; \
 		} \
 		const GoodDefinition::good_definition_map_t::const_iterator need_category##it = pop.need_category##_needs.find(&good_definition); \
@@ -594,7 +594,7 @@ void Pop::after_buy(void* actor, BuyResult const& buy_result) {
 }
 
 void Pop::after_sell(void* actor, SellResult const& sell_result, std::vector<fixed_point_t>& reusable_vector) {
-	if (sell_result.get_money_gained() > fixed_point_t::_0()) {
+	if (sell_result.get_money_gained() > fixed_point_t::_0) {
 		static_cast<Pop*>(actor)->add_artisanal_income(sell_result.get_money_gained());
 	}
 }

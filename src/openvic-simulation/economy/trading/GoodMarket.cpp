@@ -23,16 +23,16 @@ GoodMarket::GoodMarket(GameRulesManager const& new_game_rules_manager, GoodDefin
 
 void GoodMarket::on_use_exponential_price_changes_changed() {
 	if (game_rules_manager.get_use_exponential_price_changes()) {
-		absolute_maximum_price = fixed_point_t::usable_max();
-		absolute_minimum_price = fixed_point_t::epsilon() << exponential_price_change_shift;
+		absolute_maximum_price = fixed_point_t::usable_max;
+		absolute_minimum_price = fixed_point_t::epsilon << exponential_price_change_shift;
 	} else {
 		absolute_maximum_price = std::min(
 			good_definition.get_base_price() * 5,
-			fixed_point_t::usable_max()
+			fixed_point_t::usable_max
 		);
 		absolute_minimum_price = std::max(
 			good_definition.get_base_price() * 22 / 100,
-			fixed_point_t::epsilon()
+			fixed_point_t::epsilon
 		);
 	}
 }
@@ -40,7 +40,7 @@ void GoodMarket::on_use_exponential_price_changes_changed() {
 void GoodMarket::update_next_price_limits() {
 	const fixed_point_t max_price_change = game_rules_manager.get_use_exponential_price_changes()
 		? price >> exponential_price_change_shift
-		: fixed_point_t::_0_01();
+		: fixed_point_t::_0_01;
 
 	max_next_price = std::min(
 		absolute_maximum_price,
@@ -51,7 +51,7 @@ void GoodMarket::update_next_price_limits() {
 		price - max_price_change
 	);
 
-	price_inverse = fixed_point_t::_1() / price;
+	price_inverse = fixed_point_t::_1 / price;
 }
 
 void GoodMarket::add_buy_up_to_order(GoodBuyUpToOrder&& buy_up_to_order) {
@@ -76,7 +76,7 @@ void GoodMarket::execute_orders(
 			= quantity_traded_yesterday
 			= total_demand_yesterday
 			= total_supply_yesterday
-			= fixed_point_t::_0();
+			= 0;
 
 		for (GoodBuyUpToOrder const& buy_up_to_order : buy_up_to_orders) {
 			buy_up_to_order.call_after_trade(BuyResult::no_purchase_result(good_definition));
@@ -91,10 +91,10 @@ void GoodMarket::execute_orders(
 	fixed_point_t new_price;
 	//MarketInstance ensured only orders with quantity > 0 are added.
 	//So running total > 0 unless orders are empty.
-	fixed_point_t demand_sum = fixed_point_t::_0(),
-		supply_sum = fixed_point_t::_0();
+	fixed_point_t demand_sum = 0,
+		supply_sum = 0;
 	if (market_sell_orders.empty()) {
-		quantity_traded_yesterday = fixed_point_t::_0();
+		quantity_traded_yesterday = 0;
 		fixed_point_t max_affordable_price = price;
 		for (GoodBuyUpToOrder const& buy_up_to_order : buy_up_to_orders) {
 			const fixed_point_t affordable_price = buy_up_to_order.get_affordable_price();
@@ -110,7 +110,7 @@ void GoodMarket::execute_orders(
 			new_price = std::min(max_next_price, max_affordable_price);
 		} else {
 			//TODO use Victoria 2's square root mechanic, see https://github.com/OpenVicProject/OpenVic/issues/288
-			if (demand_sum > fixed_point_t::_0()) {
+			if (demand_sum > fixed_point_t::_0) {
 				new_price = max_next_price;
 			} else {
 				new_price = price;
@@ -131,9 +131,9 @@ void GoodMarket::execute_orders(
 		quantity_bought_per_order.resize(buy_up_to_orders.size());
 		purchasing_power_per_order.resize(buy_up_to_orders.size());
 
-		fixed_point_t money_left_to_spend_sum = fixed_point_t::_0(); //sum of money_to_spend for all buyers that can't afford their max_quantity
-		fixed_point_t max_quantity_to_buy_sum = fixed_point_t::_0();
-		fixed_point_t purchasing_power_sum = fixed_point_t::_0();
+		fixed_point_t money_left_to_spend_sum = 0; //sum of money_to_spend for all buyers that can't afford their max_quantity
+		fixed_point_t max_quantity_to_buy_sum = 0;
+		fixed_point_t purchasing_power_sum = 0;
 		for (size_t i = 0; i < buy_up_to_orders.size(); i++) {
 			GoodBuyUpToOrder const& buy_up_to_order = buy_up_to_orders[i];
 			const fixed_point_t max_quantity = buy_up_to_order.get_max_quantity();
@@ -149,8 +149,8 @@ void GoodMarket::execute_orders(
 
 			demand_sum += max_quantity;
 
-			if (money_to_spend <= fixed_point_t::_0()) {
-				purchasing_power_per_order[i] = fixed_point_t::_0();
+			if (money_to_spend <= fixed_point_t::_0) {
+				purchasing_power_per_order[i] = 0;
 				continue;
 			}
 
@@ -227,7 +227,7 @@ void GoodMarket::execute_orders(
 			//sell below max_next_price
 			if (game_rules_manager.get_use_optimal_pricing()) {
 				//drop price while remaining_supply > 0 && new_price > min_next_price
-				while (remaining_supply > fixed_point_t::_0()) {
+				while (remaining_supply > fixed_point_t::_0) {
 					const fixed_point_t possible_price = money_left_to_spend_sum / remaining_supply;
 
 					if (possible_price >= new_price) {
@@ -297,12 +297,12 @@ void GoodMarket::execute_orders(
 			for (GoodMarketSellOrder const& market_sell_order : market_sell_orders) {
 				const fixed_point_t quantity_sold = market_sell_order.get_quantity();
 				fixed_point_t money_gained;
-				if (quantity_sold == fixed_point_t::_0()) {
-					money_gained = fixed_point_t::_0();
+				if (quantity_sold == fixed_point_t::_0) {
+					money_gained = 0;
 				} else {
 					money_gained = std::max(
 						quantity_sold * new_price,
-						fixed_point_t::epsilon() //round up
+						fixed_point_t::epsilon //round up
 					);
 				}
 				market_sell_order.call_after_trade(
@@ -315,7 +315,7 @@ void GoodMarket::execute_orders(
 			}
 		} else {
 			//quantity is evenly divided after taking domestic buyers into account
-			fixed_point_t total_quantity_traded_domestically = fixed_point_t::_0();
+			fixed_point_t total_quantity_traded_domestically = 0;
 			for (auto const& [country, actual_bought] : actual_bought_per_country) {
 				const fixed_point_t supply = supply_per_country[country];
 				const fixed_point_t traded_domestically = std::min(supply, actual_bought);
@@ -331,7 +331,7 @@ void GoodMarket::execute_orders(
 				fixed_point_t quantity_offered_as_export;
 				CountryInstance const* const country_nullable = market_sell_order.get_country_nullable();
 				if (country_nullable == nullptr) {
-					quantity_sold_domestically = fixed_point_t::_0();
+					quantity_sold_domestically = 0;
 					quantity_offered_as_export = quantity_offered;
 				} else {
 					const fixed_point_t total_bought_domestically = actual_bought_per_country[*country_nullable];
@@ -354,12 +354,12 @@ void GoodMarket::execute_orders(
 
 				const fixed_point_t quantity_sold = quantity_sold_domestically + fair_share_of_exports;
 				fixed_point_t money_gained;
-				if (quantity_sold == fixed_point_t::_0()) {
-					money_gained = fixed_point_t::_0();
+				if (quantity_sold == fixed_point_t::_0) {
+					money_gained = 0;
 				} else {
 					money_gained = std::max(
 						quantity_sold * new_price,
-						fixed_point_t::epsilon() //round up
+						fixed_point_t::epsilon //round up
 					);
 				}
 				market_sell_order.call_after_trade(
@@ -395,18 +395,18 @@ void GoodMarket::execute_buy_orders(
 	IndexedMap<CountryInstance, fixed_point_t> const& supply_per_country,
 	std::span<const fixed_point_t> quantity_bought_per_order
 ) {
-	quantity_traded_yesterday = fixed_point_t::_0();
+	quantity_traded_yesterday = 0;
 	for (size_t i = 0; i < buy_up_to_orders.size(); i++) {
 		GoodBuyUpToOrder const& buy_up_to_order = buy_up_to_orders[i];
 		const fixed_point_t quantity_bought = quantity_bought_per_order[i];
 
-		if (quantity_bought == fixed_point_t::_0()) {
+		if (quantity_bought == fixed_point_t::_0) {
 			buy_up_to_order.call_after_trade(BuyResult::no_purchase_result(good_definition));
 		} else {
 			quantity_traded_yesterday += quantity_bought;
 			const fixed_point_t money_spent_total = std::max(
 				quantity_bought * new_price,
-				fixed_point_t::epsilon() //we know from purchasing power that you can afford it.
+				fixed_point_t::epsilon //we know from purchasing power that you can afford it.
 			);
 
 			fixed_point_t money_spent_on_imports;			
@@ -421,7 +421,7 @@ void GoodMarket::execute_buy_orders(
 
 				if (supply_in_my_country >= actual_bought_in_my_country) {
 					//no imports
-					money_spent_on_imports = fixed_point_t::_0();
+					money_spent_on_imports = 0;
 				} else {
 					const fixed_point_t money_spent_domestically = fixed_point_t::mul_div(
 						money_spent_total,

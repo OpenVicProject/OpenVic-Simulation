@@ -74,8 +74,8 @@ TEST_CASE("PointMap Add/Remove", "[point-map][point-map-add-remove]") {
 	// Tests for get_closest_position_in_segment.
 	a.connect_points(2, 3);
 	CHECK(
-		a.get_closest_position_in_segment(fvec2_t { fixed_point_t::_0_50(), fixed_point_t::_0_50() }) ==
-		fvec2_t { fixed_point_t::_0_50(), 1 }
+		a.get_closest_position_in_segment(fvec2_t { fixed_point_t::_0_50, fixed_point_t::_0_50 }) ==
+		fvec2_t { fixed_point_t::_0_50, 1 }
 	);
 
 	a.connect_points(3, 4);
@@ -85,11 +85,11 @@ TEST_CASE("PointMap Add/Remove", "[point-map][point-map-add-remove]") {
 	a.disconnect_points(4, 3, false);
 	a.disconnect_points(3, 4, false);
 
-	static constexpr fixed_point_t _1_75 = fixed_point_t::_1() / 4 * 7;
-	static constexpr fixed_point_t _0_75 = fixed_point_t::_1() / 4 * 3;
+	static constexpr fixed_point_t _1_75 = fixed_point_t::_1 / 4 * 7;
+	static constexpr fixed_point_t _0_75 = fixed_point_t::_1 / 4 * 3;
 	// Remaining edges: <2, 3>, <0, 3>, <1, 4> (directed).
-	CHECK(a.get_closest_position_in_segment(fvec2_t(2, fixed_point_t::_0_50())) == fvec2_t(_1_75, _0_75));
-	CHECK(a.get_closest_position_in_segment(fvec2_t(-1, fixed_point_t::_0_20())) == fvec2_t(0));
+	CHECK(a.get_closest_position_in_segment(fvec2_t(2, fixed_point_t::_0_50)) == fvec2_t(_1_75, _0_75));
+	CHECK(a.get_closest_position_in_segment(fvec2_t(-1, fixed_point_t::_0_20)) == fvec2_t(0));
 	CHECK(a.get_closest_position_in_segment(fvec2_t(3, 2)) == fvec2_t(2, 1));
 
 	std::srand(0);

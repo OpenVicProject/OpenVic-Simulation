@@ -37,7 +37,7 @@ namespace OpenVic {
 	constexpr fixed_point_map_t<T>& fixed_point_map_mul_add(
 		fixed_point_map_t<T>& lhs, fixed_point_map_t<T> const& rhs, fixed_point_t factor
 	) {
-		if (factor != fixed_point_t::_0()) {
+		if (factor != fixed_point_t::_0) {
 			for (auto const& [key, value] : rhs) {
 				lhs[key] += value * factor;
 			}
