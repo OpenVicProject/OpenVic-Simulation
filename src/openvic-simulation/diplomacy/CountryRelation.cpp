@@ -111,7 +111,6 @@ bool CRM::set_at_war_with( //
 	} else {
 		it.value() = value;
 	}
-	it.value() = value;
 	return true;
 }
 
