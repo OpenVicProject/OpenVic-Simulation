@@ -46,6 +46,7 @@ CountryInstance::CountryInstance(
 	decltype(ship_type_unlock_levels)::keys_span_type ship_type_unlock_levels_keys,
 	decltype(tax_rate_slider_value_by_strata)::keys_span_type strata_keys,
 	GameRulesManager const& new_game_rules_manager,
+	CountryRelationManager& new_country_relations_manager,
 	SharedCountryValues const& new_shared_country_values,
 	GoodInstanceManager& new_good_instance_manager,
 	CountryDefines const& new_country_defines,
@@ -55,6 +56,7 @@ CountryInstance::CountryInstance(
 	/* Main attributes */
 	country_definition { new_country_definition },
 	game_rules_manager { new_game_rules_manager },
+	country_relations_manager { new_country_relations_manager },
 	shared_country_values { new_shared_country_values },
 	country_defines { new_country_defines },
 	colour { ERROR_COLOUR },
@@ -191,12 +193,123 @@ bool CountryInstance::is_secondary_power() const {
 }
 
 bool CountryInstance::is_at_war() const {
-	// TODO - implement this properly once we have wars
-	return false;
+	return !war_enemies.empty();
 }
 
 bool CountryInstance::is_neighbour(CountryInstance const& country) const {
 	return neighbouring_countries.contains(&country);
+}
+
+CountryRelationManager::relation_value_type CountryInstance::get_relations_with(CountryInstance const& country) const {
+	return country_relations_manager.get_country_relation(this, &country);
+}
+
+void CountryInstance::set_relations_with(CountryInstance& country, CountryRelationManager::relation_value_type relations) {
+	country_relations_manager.set_country_relation(this, &country, relations);
+}
+
+bool CountryInstance::has_alliance_with(CountryInstance const& country) const {
+	return country_relations_manager.get_country_alliance(this, &country);
+}
+
+void CountryInstance::set_alliance_with(CountryInstance& country, bool alliance) {
+	country_relations_manager.set_country_alliance(this, &country, alliance);
+}
+
+bool CountryInstance::is_at_war_with(CountryInstance const& country) const {
+	return war_enemies.contains(&country);
+}
+
+void CountryInstance::set_at_war_with(CountryInstance& country, bool at_war) {
+	country_relations_manager.set_at_war_with(this, &country, at_war);
+	if (at_war) {
+		war_enemies.insert(&country);
+		country.war_enemies.insert(this);
+	} else {
+		war_enemies.unordered_erase(&country);
+		country.war_enemies.unordered_erase(this);
+	}
+}
+
+bool CountryInstance::has_military_access_to(CountryInstance const& country) const {
+	return country_relations_manager.get_has_military_access_to(this, &country);
+}
+
+void CountryInstance::set_military_access_to(CountryInstance& country, bool access) {
+	country_relations_manager.set_has_military_access_to(this, &country, access);
+}
+
+bool CountryInstance::is_sending_war_subsidy_to(CountryInstance const& country) const {
+	return country_relations_manager.get_war_subsidies_to(this, &country);
+}
+
+void CountryInstance::set_sending_war_subsidy_to(CountryInstance& country, bool sending) {
+	country_relations_manager.set_war_subsidies_to(this, &country, sending);
+}
+
+bool CountryInstance::is_commanding_units(CountryInstance const& country) const {
+	return country_relations_manager.get_commands_units(this, &country);
+}
+
+void CountryInstance::set_commanding_units(CountryInstance& country, bool commanding) {
+	country_relations_manager.set_commands_units(this, &country, commanding);
+}
+
+bool CountryInstance::has_vision_of(CountryInstance const& country) const {
+	return country_relations_manager.get_has_vision(this, &country);
+}
+
+void CountryInstance::set_has_vision_of(CountryInstance& country, bool vision) {
+	country_relations_manager.set_has_vision(this, &country, vision);
+}
+
+CountryRelationManager::OpinionType CountryInstance::get_opinion_of(CountryInstance const& country) const {
+	return country_relations_manager.get_country_opinion(this, &country);
+}
+
+void CountryInstance::set_opinion_of(CountryInstance& country, CountryRelationManager::OpinionType opinion) {
+	country_relations_manager.set_country_opinion(this, &country, opinion);
+}
+
+void CountryInstance::increase_opinion_of(CountryInstance& country) {
+	CountryRelationManager::OpinionType opinion = country_relations_manager.get_country_opinion(this, &country);
+	opinion++;
+	country_relations_manager.set_country_opinion(this, &country, opinion);
+}
+
+void CountryInstance::decrease_opinion_of(CountryInstance& country) {
+	CountryRelationManager::OpinionType opinion = country_relations_manager.get_country_opinion(this, &country);
+	opinion--;
+	country_relations_manager.set_country_opinion(this, &country, opinion);
+}
+
+CountryRelationManager::influence_value_type CountryInstance::get_influence_with(CountryInstance const& country) const {
+	return country_relations_manager.get_influence_with(this, &country);
+}
+
+void CountryInstance::set_influence_with(CountryInstance& country, CountryRelationManager::influence_value_type influence) {
+	country_relations_manager.set_influence_with(this, &country, influence);
+}
+
+std::optional<Date> CountryInstance::get_decredited_from_date(CountryInstance const& country) const {
+	return country_relations_manager.get_discredited_date(this, &country);
+}
+
+void CountryInstance::set_discredited_from(CountryInstance& country, Date until) {
+	country_relations_manager.set_discredited_date(this, &country, until);
+}
+
+std::optional<Date> CountryInstance::get_embass_banned_from_date(CountryInstance const& country) const {
+	return country_relations_manager.get_embassy_banned_date(this, &country);
+}
+
+void CountryInstance::set_embassy_banned_from(CountryInstance& country, Date until) {
+	country_relations_manager.set_embassy_banned_date(this, &country, until);
+}
+
+bool CountryInstance::can_units_enter(CountryInstance const& country) const {
+	// TODO: include war allies, puppets
+	return is_at_war_with(country) || has_military_access_to(country);
 }
 
 fixed_point_t CountryInstance::get_script_variable(std::string const& variable_name) const {
@@ -2134,6 +2247,7 @@ bool CountryInstanceManager::generate_country_instances(
 	decltype(CountryInstance::ship_type_unlock_levels)::keys_span_type ship_type_unlock_levels_keys,
 	decltype(CountryInstance::tax_rate_slider_value_by_strata):: keys_span_type strata_keys,
 	GameRulesManager const& game_rules_manager,
+	CountryRelationManager& country_relations_manager,
 	GoodInstanceManager& good_instance_manager,
 	CountryDefines const& country_defines,
 	EconomyDefines const& economy_defines
@@ -2159,6 +2273,7 @@ bool CountryInstanceManager::generate_country_instances(
 			ship_type_unlock_levels_keys,
 			strata_keys,
 			game_rules_manager,
+			country_relations_manager,
 			shared_country_values,
 			good_instance_manager,
 			country_defines,

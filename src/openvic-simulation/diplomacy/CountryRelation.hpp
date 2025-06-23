@@ -231,7 +231,7 @@ constexpr OpenVic::CountryRelationManager::OpinionType& operator--(OpenVic::Coun
 	type = static_cast<OpenVic::CountryRelationManager::OpinionType>(static_cast<underlying_type>(type) - 1);
 	type = static_cast<underlying_type>(type) <
 			static_cast<underlying_type>(OpenVic::CountryRelationManager::OpinionType::Hostile) //
-		? OpenVic::CountryRelationManager::OpinionType::Sphere
+		? OpenVic::CountryRelationManager::OpinionType::Hostile
 		: type;
 	return type;
 }

@@ -4,6 +4,7 @@
 #include <vector>
 
 #include "openvic-simulation/country/SharedCountryValues.hpp"
+#include "openvic-simulation/diplomacy/CountryRelation.hpp"
 #include "openvic-simulation/modifier/ModifierSum.hpp"
 #include "openvic-simulation/politics/Ideology.hpp"
 #include "openvic-simulation/politics/Rule.hpp"
@@ -14,6 +15,7 @@
 #include "openvic-simulation/types/FlagStrings.hpp"
 #include "openvic-simulation/types/IdentifierRegistry.hpp"
 #include "openvic-simulation/types/IndexedMap.hpp"
+#include "openvic-simulation/types/OrderedContainers.hpp"
 #include "openvic-simulation/types/SliderValue.hpp"
 #include "openvic-simulation/utility/Getters.hpp"
 
@@ -93,6 +95,7 @@ namespace OpenVic {
 		CountryDefinition const* PROPERTY(country_definition);
 
 		GameRulesManager const& game_rules_manager;
+		CountryRelationManager& country_relations_manager;
 		CountryDefines const& country_defines;
 		SharedCountryValues const& shared_country_values;
 
@@ -286,6 +289,7 @@ namespace OpenVic {
 		// The last time this country lost a war, i.e. accepted a peace offer sent from their offer tab or the enemy's demand
 		// tab, even white peace. Used for the "has_recently_lost_war" condition (true if the date is less than 5 years ago).
 		Date PROPERTY(last_war_loss_date);
+		vector_ordered_set<CountryInstance const*> PROPERTY(war_enemies);
 		// TODO - colonial power, current wars
 
 		/* Military */
@@ -353,6 +357,7 @@ namespace OpenVic {
 			decltype(ship_type_unlock_levels)::keys_span_type ship_type_unlock_levels_keys,
 			decltype(tax_rate_slider_value_by_strata)::keys_span_type strata_keys,
 			GameRulesManager const& new_game_rules_manager,
+			CountryRelationManager& new_country_relations_manager,
 			SharedCountryValues const& new_shared_country_values,
 			GoodInstanceManager& new_good_instance_manager,
 			CountryDefines const& new_country_defines,
@@ -407,6 +412,51 @@ namespace OpenVic {
 		bool is_secondary_power() const;
 		bool is_at_war() const;
 		bool is_neighbour(CountryInstance const& country) const;
+
+		// Double-sided diplomacy functions
+
+		CountryRelationManager::relation_value_type get_relations_with(CountryInstance const& country) const;
+		void set_relations_with(CountryInstance& country, CountryRelationManager::relation_value_type relations);
+
+		bool has_alliance_with(CountryInstance const& country) const;
+		void set_alliance_with(CountryInstance& country, bool alliance = true);
+
+		bool is_at_war_with(CountryInstance const& country) const;
+		// Low-level setter function, should not be used to declare or join wars
+		// Should generally be the basis for higher-level war functions
+		void set_at_war_with(CountryInstance& country, bool at_war = true);
+
+		// Single-sided diplomacy functions
+
+		// Only detects military access diplomacy, do not use to validate troop movement
+		// Prefer can_units_enter
+		bool has_military_access_to(CountryInstance const& country) const;
+		void set_military_access_to(CountryInstance& country, bool access = true);
+
+		bool is_sending_war_subsidy_to(CountryInstance const& country) const;
+		void set_sending_war_subsidy_to(CountryInstance& country, bool sending = true);
+
+		bool is_commanding_units(CountryInstance const& country) const;
+		void set_commanding_units(CountryInstance& country, bool commanding = true);
+
+		bool has_vision_of(CountryInstance const& country) const;
+		void set_has_vision_of(CountryInstance& country, bool vision = true);
+
+		CountryRelationManager::OpinionType get_opinion_of(CountryInstance const& country) const;
+		void set_opinion_of(CountryInstance& country, CountryRelationManager::OpinionType opinion);
+		void increase_opinion_of(CountryInstance& country);
+		void decrease_opinion_of(CountryInstance& country);
+
+		CountryRelationManager::influence_value_type get_influence_with(CountryInstance const& country) const;
+		void set_influence_with(CountryInstance& country, CountryRelationManager::influence_value_type influence);
+
+		std::optional<Date> get_decredited_from_date(CountryInstance const& country) const;
+		void set_discredited_from(CountryInstance& country, Date until);
+
+		std::optional<Date> get_embass_banned_from_date(CountryInstance const& country) const;
+		void set_embassy_banned_from(CountryInstance& country, Date until);
+
+		bool can_units_enter(CountryInstance const& country) const;
 
 		// These functions take "std::string const&" rather than "std::string_view" as they're only used with script arguments
 		// which are always stored as "std::string"s and it significantly simplifies mutable value access.
@@ -695,6 +745,7 @@ namespace OpenVic {
 			decltype(CountryInstance::ship_type_unlock_levels)::keys_span_type ship_type_unlock_levels_keys,
 			decltype(CountryInstance::tax_rate_slider_value_by_strata):: keys_span_type strata_keys,
 			GameRulesManager const& game_rules_manager,
+			CountryRelationManager& country_relations_manager,
 			GoodInstanceManager& good_instance_manager,
 			CountryDefines const& country_defines,
 			EconomyDefines const& economy_defines
