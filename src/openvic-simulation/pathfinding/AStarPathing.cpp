@@ -8,8 +8,14 @@
 #include <range/v3/algorithm/find.hpp>
 #include <range/v3/algorithm/heap_algorithm.hpp>
 
+#include "openvic-simulation/country/CountryInstance.hpp"
+#include "openvic-simulation/map/MapDefinition.hpp"
+#include "openvic-simulation/map/MapInstance.hpp"
+#include "openvic-simulation/map/ProvinceInstance.hpp"
+#include "openvic-simulation/military/UnitInstanceGroup.hpp"
 #include "openvic-simulation/pathfinding/PointMap.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
+#include "openvic-simulation/utility/Utility.hpp"
 
 using namespace OpenVic;
 
@@ -90,4 +96,35 @@ bool AStarPathing::_solve(search_iterator begin_point, search_iterator end_point
 	}
 
 	return found_route;
+}
+
+ArmyAStarPathing::ArmyAStarPathing(MapInstance const& map)
+	: map_instance(map), AStarPathing(&map.get_map_definition().get_path_map_land()) {}
+
+bool ArmyAStarPathing::_is_point_enabled(search_const_iterator it) const {
+	if (!AStarPathing::_is_point_enabled(it)) {
+		return false;
+	}
+
+	if (OV_unlikely(army_instance == nullptr)) {
+		return true;
+	}
+
+	if (army_instance->is_exiled()) {
+		return true;
+	}
+
+	ProvinceInstance const* province = map_instance.get_province_instance_by_index(it->first);
+
+	if (OV_unlikely(province == nullptr)) {
+		return true;
+	}
+
+	CountryInstance const* province_owner = province->get_owner();
+
+	if (OV_unlikely(province_owner == nullptr)) {
+		return true;
+	}
+
+	return army_instance->get_country()->can_units_enter(*province_owner);
 }

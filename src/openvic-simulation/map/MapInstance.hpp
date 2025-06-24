@@ -35,7 +35,7 @@ namespace OpenVic {
 		// TODO - should this be a vector of bools which we resize to the largest enabled canal index?
 		ordered_set<canal_index_t> PROPERTY(enabled_canals);
 
-		AStarPathing PROPERTY_REF(land_pathing);
+		ArmyAStarPathing PROPERTY_REF(land_pathing);
 		AStarPathing PROPERTY_REF(sea_pathing);
 
 	public:
