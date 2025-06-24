@@ -207,12 +207,12 @@ namespace OpenVic {
 		using const_iterator = base_iterator_t<true>;
 
 	private:
-		OpenVic::utility::forwardable_span<const key_type> PROPERTY(keys, {});
+		keys_span_type PROPERTY(keys, {});
 
 	public:
 		constexpr IndexedMap() = default;
 
-		constexpr IndexedMap(OpenVic::utility::forwardable_span<const key_type> new_keys) : IndexedMap() {
+		constexpr IndexedMap(keys_span_type new_keys) : IndexedMap() {
 			set_keys(new_keys);
 		}
 
@@ -299,7 +299,7 @@ namespace OpenVic {
 			return !keys.empty();
 		}
 
-		constexpr void set_keys(OpenVic::utility::forwardable_span<const key_type> new_keys) {
+		constexpr void set_keys(keys_span_type new_keys) {
 			if (keys.data() != new_keys.data()) {
 				keys = new_keys;
 
