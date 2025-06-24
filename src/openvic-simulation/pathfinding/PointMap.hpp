@@ -142,12 +142,12 @@ namespace OpenVic {
 		int64_t get_available_points() const;
 
 		bool try_add_point(
-			points_key_type id, ivec2_t const& position, fixed_point_t weight_scale = fixed_point_t::_1(),
+			points_key_type id, ivec2_t const& position, fixed_point_t weight_scale = 1,
 			std::span<points_key_type> adjacent_points = {}
 		);
 
 		void add_point(
-			points_key_type id, ivec2_t const& position, fixed_point_t weight_scale = fixed_point_t::_1(),
+			points_key_type id, ivec2_t const& position, fixed_point_t weight_scale = 1,
 			std::span<points_key_type> adjacent_points = {}
 		);
 

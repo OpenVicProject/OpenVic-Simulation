@@ -372,7 +372,7 @@ static fvec2_t get_closest_point_to_segment(fvec2_t const& p_point, std::span<iv
 }
 
 fvec2_t PointMap::get_closest_position_in_segment(fvec2_t const& point) const {
-	fixed_point_t closest_dist = fixed_point_t::max();
+	fixed_point_t closest_dist = fixed_point_t::max;
 	fvec2_t closest_point;
 
 	for (Segment const& E : segments) {

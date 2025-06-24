@@ -25,13 +25,13 @@ bool DefineManager::load_defines_file(ast::NodeCPtr root) {
 
 	// TODO - move to MilitaryDefines?
 
-	if (military_defines.get_leader_recruit_cost() <= fixed_point_t::_0()) {
+	if (military_defines.get_leader_recruit_cost() <= fixed_point_t::_0) {
 		Logger::error(
 			"Invalid leader recruit cost: ", military_defines.get_leader_recruit_cost(),
 			" - must be greater than 0, changing to 1"
 		);
 		ret = false;
-		military_defines.leader_recruit_cost = fixed_point_t::_1();
+		military_defines.leader_recruit_cost = 1;
 	}
 
 	return ret;

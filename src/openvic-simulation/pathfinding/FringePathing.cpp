@@ -34,7 +34,7 @@ bool FringePathing::_solve(search_iterator begin_point, search_iterator end_poin
 	fringe.push_back(begin_point);
 
 	fixed_point_t f_limit = begin_point.value().f_score;
-	fixed_point_t next_f_limit = fixed_point_t::max();
+	fixed_point_t next_f_limit = fixed_point_t::max;
 
 	while (!fringe.empty() && !found_route) {
 		ranges::pop_heap(fringe, FringeSort {});
@@ -47,7 +47,7 @@ bool FringePathing::_solve(search_iterator begin_point, search_iterator end_poin
 
 		if (p.value().f_score > f_limit) {
 			f_limit = next_f_limit;
-			next_f_limit = fixed_point_t::max();
+			next_f_limit = fixed_point_t::max;
 			fringe.push_back(p);
 			ranges::push_heap(fringe, FringeSort {});
 			continue;

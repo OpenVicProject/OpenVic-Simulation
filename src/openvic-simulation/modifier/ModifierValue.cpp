@@ -14,7 +14,7 @@ ModifierValue& ModifierValue::operator=(ModifierValue&&) = default;
 
 void ModifierValue::trim() {
 	erase_if(values, [](effect_map_t::value_type const& value) -> bool {
-		return value.second == fixed_point_t::_0();
+		return value.second == fixed_point_t::_0;
 	});
 }
 
@@ -42,7 +42,7 @@ fixed_point_t ModifierValue::get_effect(ModifierEffect const& effect, bool* effe
 	if (effect_found != nullptr) {
 		*effect_found = false;
 	}
-	return fixed_point_t::_0();
+	return 0;
 }
 
 bool ModifierValue::has_effect(ModifierEffect const& effect) const {
@@ -115,9 +115,9 @@ void ModifierValue::multiply_add_exclude_targets(
 ) {
 	using enum ModifierEffect::target_t;
 
-	if (multiplier == fixed_point_t::_1() && excluded_targets == NO_TARGETS) {
+	if (multiplier == fixed_point_t::_1 && excluded_targets == NO_TARGETS) {
 		*this += other;
-	} else if (multiplier != fixed_point_t::_0()) {
+	} else if (multiplier != fixed_point_t::_0) {
 		// We could test that excluded_targets != ALL_TARGETS, but in practice it's always
 		// called with an explcit/hardcoded value and so won't ever exclude everything.
 		for (effect_map_t::value_type const& value : other.values) {

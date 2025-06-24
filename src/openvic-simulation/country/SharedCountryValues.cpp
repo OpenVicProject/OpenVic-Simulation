@@ -26,11 +26,11 @@ void SharedCountryValues::update_costs(GoodInstanceManager const& good_instance_
 }
 
 void SharedPopTypeValues::update_costs(PopType const& pop_type, PopsDefines const& pop_defines, GoodInstanceManager const& good_instance_manager) {
-	administration_salary_base = education_salary_base = military_salary_base = fixed_point_t::_0();
+	administration_salary_base = education_salary_base = military_salary_base = 0;
 	using enum PopType::income_type_t;
 
 	#define UPDATE_NEED_COSTS(need_category) \
-		base_##need_category##_need_costs = fixed_point_t::_0(); \
+		base_##need_category##_need_costs = 0; \
 		for (auto const& [good_definition_ptr, quantity] : pop_type.get_##need_category##_needs()) { \
 			GoodInstance const& good_instance = good_instance_manager.get_good_instance_from_definition(*good_definition_ptr); \
 			base_##need_category##_need_costs += good_instance.get_price() * quantity; \
