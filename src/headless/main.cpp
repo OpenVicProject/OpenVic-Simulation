@@ -133,19 +133,16 @@ static bool run_headless(fs::path const& root, memory::vector<memory::string>& m
 
 	Logger::info("Commit hash: ", GameManager::get_commit_hash());
 
+	Logger::info("===== Setting base path... =====");
+	ret &= game_manager.set_base_path(roots);
+
 	Logger::info("===== Loading mod descriptors... =====");
-	ret &= game_manager.load_mod_descriptors(mods);
-	for (auto const& mod : game_manager.get_mod_manager().get_mods()) {
-		roots.emplace_back(root / mod.get_dataloader_root_path());
-		for (std::string_view path : mod.get_replace_paths()) {
-			if (std::find(replace_paths.begin(), replace_paths.end(), path) == replace_paths.end()) {
-				replace_paths.emplace_back(path);
-			} 
-		}
-	}
+	ret &= game_manager.load_mod_descriptors();
+
+	Logger::info("===== Loading mods... =====");
+	ret &= game_manager.load_mods(roots, replace_paths, mods);
 
 	Logger::info("===== Loading definitions... =====");
-	ret &= game_manager.set_roots(roots, replace_paths);
 	ret &= game_manager.load_definitions(
 		[](std::string_view key, Dataloader::locale_t locale, std::string_view localisation) -> bool {
 			return true;
