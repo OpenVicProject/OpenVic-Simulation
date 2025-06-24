@@ -99,6 +99,8 @@ namespace OpenVic {
 		NavyInstance* PROPERTY_PTR(transport_navy, nullptr);
 		dig_in_level_t PROPERTY(dig_in_level, 0);
 
+		bool PROPERTY_RW_CUSTOM_NAME(exiled, is_exiled, set_is_exiled, false);
+
 		UnitInstanceGroupBranched(
 			unique_id_t new_unique_id,
 			std::string_view new_name

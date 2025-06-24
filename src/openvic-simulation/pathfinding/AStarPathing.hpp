@@ -5,10 +5,15 @@
 #include <tsl/ordered_map.h>
 #include <tsl/ordered_set.h>
 
+#include "openvic-simulation/military/UnitType.hpp"
 #include "openvic-simulation/pathfinding/PathingBase.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
 
 namespace OpenVic {
+	struct MapInstance;
+	template<UnitType::branch_t>
+	struct UnitInstanceGroupBranched;
+
 	struct AStarPathingNode final : public PathingNodeBase<AStarPathingNode> {
 		using PathingNodeBase::PathingNodeBase;
 
@@ -50,5 +55,15 @@ namespace OpenVic {
 		virtual bool _solve( //
 			search_iterator begin_point, search_iterator end_point, uint64_t pass, bool allow_partial_path
 		) override;
+	};
+
+	struct ArmyAStarPathing final : public AStarPathing {
+		ArmyAStarPathing(MapInstance const& map);
+
+	protected:
+		UnitInstanceGroupBranched<UnitType::branch_t::LAND> const* PROPERTY_RW_ACCESS(army_instance, protected, nullptr);
+		MapInstance const& PROPERTY(map_instance);
+
+		virtual bool _is_point_enabled(search_const_iterator it) const override;
 	};
 }
