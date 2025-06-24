@@ -1,5 +1,6 @@
 #include "Dataloader.hpp"
 
+#include <string_view>
 #include <system_error>
 
 #include <openvic-dataloader/csv/Parser.hpp>
@@ -37,7 +38,7 @@ static fs::path ensure_forward_slash_path(std::string_view path) {
 
 bool Dataloader::set_roots(path_span_t new_roots, path_span_t new_replace_paths) {
 	if (!roots.empty()) {
-		Logger::warning("Overriding existing dataloader roots!");
+		Logger::info("Overriding existing dataloader roots!");
 		roots.clear();
 		replace_paths.clear();
 	}
@@ -149,7 +150,7 @@ Dataloader::path_vector_t Dataloader::_lookup_files_in_dir(
 	path_vector_t ret;
 	struct file_entry_t {
 		fs::path file;
-		fs::path const* root;
+		fs::path const* root = nullptr;
 	};
 	string_map_t<file_entry_t> found_files;
 	for (fs::path const& root : roots) {
@@ -306,15 +307,15 @@ void Dataloader::free_cache() {
 	cached_parsers.clear();
 }
 
-bool Dataloader::load_mod_descriptors(std::span<const std::string> descriptors, ModManager& mod_manager) {
-	bool ret = true;
-
-	for (std::string_view descriptor_path : descriptors) {
-		if (!mod_manager.load_mod_file(parse_defines(ensure_forward_slash_path(descriptor_path)).get_file_node())) {
-			Logger::error("Failed to load ", descriptor_path);
-			ret = false;
-		}
-	}
+bool Dataloader::load_mod_descriptors(ModManager& mod_manager) const {
+       static constexpr std::string_view mod_directory = "mod";
+       
+       bool ret = apply_to_files(
+            lookup_files_in_dir(mod_directory, ".mod"),
+            [&mod_manager](fs::path const& file) -> bool {
+                return mod_manager.load_mod_file(parse_defines(file).get_file_node());
+            }
+       );
 
 	mod_manager.lock_mods();
 
