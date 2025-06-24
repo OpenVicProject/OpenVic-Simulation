@@ -25,8 +25,6 @@ namespace OpenVic {
 	};
 
 	/** A* Pathfinding implementation
-
-		Requires that any pointer invalidation in PointMap must call reset_search()
 	 */
 	struct AStarPathing : public PathingBase<AStarPathingNode> {
 		using PathingBase::PathingBase;

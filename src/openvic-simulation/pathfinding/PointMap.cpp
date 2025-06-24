@@ -18,6 +18,10 @@
 
 using namespace OpenVic;
 
+PointMap::~PointMap() {
+	destroyed();
+}
+
 int64_t PointMap::get_available_points() const {
 	if (points.contains(last_free_id)) {
 		int64_t cur_new_id = last_free_id + 1;
@@ -44,7 +48,11 @@ bool PointMap::try_add_point(
 		return false;
 	}
 
+	size_t prev_capacity = get_point_capacity();
 	points[id] = Point { .position = position, .weight_scale = weight_scale, .enabled = true };
+	if (OV_unlikely(prev_capacity != get_point_capacity())) {
+		points_pointers_invalidated();
+	}
 
 	for (points_key_type const& adj_id : adjacent_points) {
 		connect_points(id, adj_id);
@@ -66,7 +74,11 @@ void PointMap::add_point(
 	points_iterator found_pt = points.find(id);
 
 	if (found_pt == points.end()) {
+		size_t prev_capacity = get_point_capacity();
 		points[id] = Point { .position = position, .weight_scale = weight_scale, .enabled = true };
+		if (OV_unlikely(get_point_capacity() != prev_capacity)) {
+			points_pointers_invalidated();
+		}
 	} else {
 		found_pt.value().position = position;
 		found_pt.value().weight_scale = weight_scale;
@@ -156,6 +168,7 @@ void PointMap::remove_point(points_key_type id) {
 
 	points.unordered_erase(it);
 	last_free_id = id;
+	point_invalidated(id);
 }
 
 bool PointMap::has_point(points_key_type id) const {
@@ -295,20 +308,23 @@ size_t PointMap::get_point_capacity() const {
 void PointMap::reserve_space(size_t num_nodes) {
 	OV_ERR_FAIL_COND_MSG(num_nodes <= 0, fmt::format("New capacity must be greater than 0, new was: {}.", num_nodes));
 	OV_ERR_FAIL_COND_MSG(
-		num_nodes < points.capacity(),
+		num_nodes <= points.capacity(),
 		fmt::format("New capacity must be greater than current capacity: {}, new was: {}.", points.capacity(), num_nodes)
 	);
 	points.reserve(num_nodes);
+	points_pointers_invalidated();
 }
 
 void PointMap::shrink_to_fit() {
 	points.shrink_to_fit();
+	points_pointers_invalidated();
 }
 
 void PointMap::clear() {
 	last_free_id = 0;
 	segments.clear();
 	points.clear();
+	points_pointers_invalidated();
 }
 
 PointMap::points_key_type PointMap::get_closest_point(ivec2_t const& point, bool include_disabled) const {

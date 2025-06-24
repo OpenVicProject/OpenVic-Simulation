@@ -20,8 +20,6 @@ namespace OpenVic {
 	};
 
 	/** Fringe Pathfinding implementation
-
-		Requires that any pointer invalidation in PointMap must call reset_search()
 	 */
 	struct FringePathing : public PathingBase<FringePathingNode> {
 		using PathingBase::PathingBase;

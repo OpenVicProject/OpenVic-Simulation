@@ -5,6 +5,7 @@
 #include <fmt/core.h>
 
 #include "openvic-simulation/pathfinding/PointMap.hpp"
+#include "openvic-simulation/types/Signal.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
 #include "openvic-simulation/utility/ErrorMacros.hpp"
 
@@ -34,7 +35,7 @@ namespace OpenVic {
 	};
 
 	template<typename ValueT, typename KeyT = PointMap::points_key_type>
-	struct PathingBase {
+	struct PathingBase : observer {
 		using search_node_type = PathingNodeBase<ValueT, KeyT>;
 		using search_key_type = search_node_type::search_key_type;
 		using search_value_type = search_node_type::search_value_type;
@@ -69,12 +70,30 @@ namespace OpenVic {
 			search_iterator begin_point, search_iterator end_point, uint64_t pass, bool allow_partial_path
 		) = 0;
 
+		void _on_point_invalidated(search_key_type id) {
+			search_const_iterator it = search.find(id);
+			if (it != search.end()) {
+				search.unordered_erase(it);
+			}
+		}
+
+		void _on_point_map_destroyed() {
+			point_map = nullptr;
+		}
+
 	public:
 		PathingBase(PointMap const* map) : point_map(map) {
 			reserve_space(point_map->get_point_count());
+			point_map->point_invalidated.connect(&PathingBase::_on_point_invalidated, this);
+			point_map->points_pointers_invalidated.connect(&PathingBase::reset_search, this);
+			point_map->destroyed.connect(&PathingBase::_on_point_map_destroyed, this);
 		}
 
 		PathingBase(PointMap const& map) : PathingBase(&map) {}
+
+		virtual ~PathingBase() {
+			this->disconnect_all();
+		}
 
 		PointMap const& get_point_map() const {
 			return *point_map;
@@ -145,6 +164,8 @@ namespace OpenVic {
 		std::vector<ivec2_t> get_point_path( //
 			PointMap::points_key_type from_id, PointMap::points_key_type to_id, bool allow_partial_path = false
 		) {
+			OV_ERR_FAIL_COND_V(point_map == nullptr, std::vector<ivec2_t>());
+
 			search_iterator from_it = get_iterator_by_id(from_id);
 			OV_ERR_FAIL_COND_V(from_it == search.end(), std::vector<ivec2_t>());
 
@@ -177,6 +198,8 @@ namespace OpenVic {
 		std::vector<PointMap::points_key_type> get_id_path( //
 			PointMap::points_key_type from_id, PointMap::points_key_type to_id, bool allow_partial_path = false
 		) {
+			OV_ERR_FAIL_COND_V(point_map == nullptr, std::vector<PointMap::points_key_type>());
+
 			search_iterator from_it = get_iterator_by_id(from_id);
 			OV_ERR_FAIL_COND_V(from_it == search.end(), std::vector<PointMap::points_key_type>());
 
