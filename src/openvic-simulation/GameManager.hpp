@@ -1,7 +1,7 @@
 #pragma once
 
 #include <optional>
-#include <span>
+#include <string_view>
 
 #include "openvic-simulation/DefinitionManager.hpp"
 #include "openvic-simulation/InstanceManager.hpp"
@@ -23,6 +23,8 @@ namespace OpenVic {
 		bool PROPERTY_CUSTOM_PREFIX(definitions_loaded, are);
 		bool PROPERTY_CUSTOM_PREFIX(mod_descriptors_loaded, are);
 
+		bool _get_mod_dependencies(Mod const* mod, std::vector<Mod const*>& load_list);
+
 	public:
 		GameManager(
 			InstanceManager::gamestate_updated_func_t new_gamestate_updated_callback
@@ -36,9 +38,15 @@ namespace OpenVic {
 			return instance_manager ? &*instance_manager : nullptr;
 		}
 
-		bool set_roots(Dataloader::path_span_t roots, Dataloader::path_span_t replace_paths);
+		inline bool set_base_path(Dataloader::path_span_t base_path) {
+			OV_ERR_FAIL_COND_V_MSG(base_path.size() > 1, "more than one dataloader base path provided", false);
+			OV_ERR_FAIL_COND_V_MSG(!dataloader.set_roots(base_path, {}), "failed to set dataloader base path", false);
+			return true;
+		};
 
-		bool load_mod_descriptors(std::span<const std::string> descriptors);
+		bool load_mod_descriptors();
+
+		bool load_mods(Dataloader::path_vector_t& roots, Dataloader::path_vector_t& replace_paths, std::span<std::string> requested_mods);
 
 		bool load_definitions(Dataloader::localisation_callback_t localisation_callback);
 
