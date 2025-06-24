@@ -504,7 +504,7 @@ namespace OpenVic {
 	 * iterating from the highest index downward. */
 	template<typename Key, typename Value>
 	constexpr bool sorted_indexed_map_less_than(IndexedMap<Key, Value> const& lhs, IndexedMap<Key, Value> const& rhs) {
-		if (lhs.get_keys() != rhs.get_keys() || lhs.size() != rhs.size()) {
+		if (lhs.get_keys().data() != rhs.get_keys().data() || lhs.size() != rhs.size()) {
 			Logger::error("Trying to compare IndexedMaps with different keys/sizes: ", lhs.size(), " vs ", rhs.size());
 			return false;
 		}
