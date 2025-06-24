@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstddef>
 #include <string_view>
 #include <vector>
 
@@ -25,13 +26,18 @@ namespace OpenVic {
 	};
 
 	struct ModManager {
-	
+
 	private:
 		IdentifierRegistry<Mod> IDENTIFIER_REGISTRY(mod);
+		std::vector<Mod const*> loaded_mods;
+		bool mods_loaded = false;
 
 	public:
 		ModManager();
 
 		bool load_mod_file(ast::NodeCPtr root);
+		void set_loaded_mods(std::vector<Mod const*>&& new_loaded_mods);
+		std::vector<Mod const*> const& get_loaded_mods() const;
+		size_t get_loaded_mod_count() const;
 	};
 } // namespace OpenVic
