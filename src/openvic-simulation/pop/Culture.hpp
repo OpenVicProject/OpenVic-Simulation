@@ -24,7 +24,7 @@ namespace OpenVic {
 		friend struct CultureManager;
 
 	private:
-		std::string PROPERTY(leader);
+		memory::string PROPERTY(leader);
 		GraphicalCultureType const& PROPERTY(unit_graphical_culture_type);
 		bool PROPERTY(is_overseas);
 		CountryDefinition const* PROPERTY(union_country);
@@ -107,13 +107,13 @@ namespace OpenVic {
 		bool load_graphical_culture_type_file(ast::NodeCPtr root);
 		bool load_culture_file(CountryDefinitionManager const& country_definition_manager, ast::NodeCPtr root);
 
-		static std::string make_leader_picture_name(
+		static memory::string make_leader_picture_name(
 			std::string_view cultural_type, UnitType::branch_t branch, leader_count_t count
 		);
-		static std::string make_leader_picture_path(std::string_view leader_picture_name);
+		static memory::string make_leader_picture_path(std::string_view leader_picture_name);
 
 		bool find_cultural_leader_pictures(Dataloader const& dataloader);
 
-		std::string get_leader_picture_name(std::string_view cultural_type, UnitType::branch_t branch) const;
+		memory::string get_leader_picture_name(std::string_view cultural_type, UnitType::branch_t branch) const;
 	};
 }

@@ -4,13 +4,14 @@
 #include "openvic-simulation/economy/GoodDefinition.hpp"
 #include "openvic-simulation/misc/GameRulesManager.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
+#include "openvic-simulation/utility/Containers.hpp"
 
 using namespace OpenVic;
 static constexpr size_t MONTHS_OF_PRICE_HISTORY = 36;
 
 GoodMarket::GoodMarket(GameRulesManager const& new_game_rules_manager, GoodDefinition const& new_good_definition)
-  : buy_lock { std::make_unique<std::mutex>() },
-	sell_lock { std::make_unique<std::mutex>() },
+  : buy_lock { memory::make_unique<std::mutex>() },
+	sell_lock { memory::make_unique<std::mutex>() },
 	game_rules_manager { new_game_rules_manager },
 	good_definition { new_good_definition },
 	price { new_good_definition.get_base_price() },
@@ -67,8 +68,8 @@ void GoodMarket::add_market_sell_order(GoodMarketSellOrder&& market_sell_order) 
 void GoodMarket::execute_orders(
 	IndexedMap<CountryInstance, fixed_point_t>& reusable_country_map_0,
 	IndexedMap<CountryInstance, fixed_point_t>& reusable_country_map_1,
-	std::vector<fixed_point_t>& reusable_vector_0,
-	std::vector<fixed_point_t>& reusable_vector_1
+	memory::vector<fixed_point_t>& reusable_vector_0,
+	memory::vector<fixed_point_t>& reusable_vector_1
 ) {
 	if (!is_available) {
 		//price remains the same
@@ -126,8 +127,8 @@ void GoodMarket::execute_orders(
 			}
 			supply_sum += market_sell_order.get_quantity();
 		}
-		std::vector<fixed_point_t>& quantity_bought_per_order = reusable_vector_0;
-		std::vector<fixed_point_t>& purchasing_power_per_order = reusable_vector_1;
+		memory::vector<fixed_point_t>& quantity_bought_per_order = reusable_vector_0;
+		memory::vector<fixed_point_t>& purchasing_power_per_order = reusable_vector_1;
 		quantity_bought_per_order.resize(buy_up_to_orders.size());
 		purchasing_power_per_order.resize(buy_up_to_orders.size());
 

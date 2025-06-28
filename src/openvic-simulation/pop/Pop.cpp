@@ -21,6 +21,7 @@
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
 #include "openvic-simulation/utility/Logger.hpp"
 #include "openvic-simulation/utility/Utility.hpp"
+#include "openvic-simulation/utility/Containers.hpp"
 
 using namespace OpenVic;
 
@@ -219,8 +220,8 @@ void Pop::update_gamestate(
 	}
 }
 
-std::stringstream Pop::get_pop_context_text() const {
-	std::stringstream pop_context {};
+memory::stringstream Pop::get_pop_context_text() const {
+	memory::stringstream pop_context {};
 	pop_context << " location: ";
 	if (OV_unlikely(location == nullptr)) {
 		pop_context << "NULL";
@@ -371,14 +372,14 @@ void Pop::allocate_for_needs(
 	reusable_map_0.clear();
 }
 
-void Pop::pop_tick(PopValuesFromProvince& shared_values, std::vector<fixed_point_t>& reusable_vector) {
+void Pop::pop_tick(PopValuesFromProvince& shared_values, memory::vector<fixed_point_t>& reusable_vector) {
 	pop_tick_without_cleanup(shared_values, reusable_vector);
 	for (auto& map : shared_values.reusable_maps) {
 		map.clear();
 	}
 }
 
-void Pop::pop_tick_without_cleanup(PopValuesFromProvince& shared_values, std::vector<fixed_point_t>& reusable_vector) {
+void Pop::pop_tick_without_cleanup(PopValuesFromProvince& shared_values, memory::vector<fixed_point_t>& reusable_vector) {
 	DO_FOR_ALL_TYPES_OF_POP_INCOME(SET_TO_ZERO)
 	DO_FOR_ALL_TYPES_OF_POP_EXPENSES(SET_TO_ZERO)
 	#undef SET_TO_ZERO
@@ -593,7 +594,7 @@ void Pop::after_buy(void* actor, BuyResult const& buy_result) {
 	#undef CONSUME_NEED
 }
 
-void Pop::after_sell(void* actor, SellResult const& sell_result, std::vector<fixed_point_t>& reusable_vector) {
+void Pop::after_sell(void* actor, SellResult const& sell_result, memory::vector<fixed_point_t>& reusable_vector) {
 	if (sell_result.get_money_gained() > fixed_point_t::_0) {
 		static_cast<Pop*>(actor)->add_artisanal_income(sell_result.get_money_gained());
 	}
