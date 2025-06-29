@@ -3,6 +3,7 @@
 #include <string_view>
 
 #include "openvic-simulation/modifier/ModifierManager.hpp"
+#include "openvic-simulation/utility/LogScope.hpp"
 
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;
@@ -28,6 +29,7 @@ RebelType::RebelType(
 	demands_enforced_effect { std::move(new_demands_enforced_effect) } {}
 
 bool RebelType::parse_scripts(DefinitionManager const& definition_manager) {
+	const LogScope log_scope { fmt::format("rebel type type {}", get_identifier()) };
 	bool ret = true;
 	ret &= will_rise.parse_scripts(definition_manager);
 	ret &= spawn_chance.parse_scripts(definition_manager);
@@ -66,6 +68,8 @@ bool RebelManager::add_rebel_type(
 bool RebelManager::load_rebels_file(
 	IdeologyManager const& ideology_manager, GovernmentTypeManager const& government_type_manager, ast::NodeCPtr root
 ) {
+	const LogScope log_scope { "common/rebel_types.txt" };
+
 	static const string_map_t<RebelType::area_t> area_map = {
 		{ "nation", RebelType::area_t::NATION },
 		{ "nation_religion", RebelType::area_t::NATION_RELIGION },
@@ -100,6 +104,8 @@ bool RebelManager::load_rebels_file(
 		rebel_types,
 		[this, &ideology_manager, &government_type_manager](std::string_view identifier, ast::NodeCPtr node) -> bool {
 			using enum scope_type_t;
+
+			const LogScope log_scope { fmt::format("rebel type type {}", identifier) };
 
 			RebelType::icon_t icon = 0;
 			RebelType::area_t area = RebelType::area_t::ALL;
