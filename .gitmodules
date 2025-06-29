@@ -26,3 +26,6 @@
 [submodule "tests/benchmarks/deps/nanobench"]
 	path = tests/benchmarks/deps/nanobench
 	url = https://github.com/Spartan322/nanobench
+[submodule "deps/reliable"]
+	path = deps/reliable
+	url = https://github.com/mas-bandwidth/reliable
