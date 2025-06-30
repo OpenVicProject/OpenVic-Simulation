@@ -1163,11 +1163,17 @@ void CountryInstance::_update_budget() {
 			}
 		}
 
+		const fixed_point_t desired_administrator_percentage = country_defines.get_max_bureaucracy_percentage()
+			+ total_administrative_multiplier * country_defines.get_bureaucracy_percentage_increment();
+		const fixed_point_t desired_administrators = desired_administrator_percentage * total_population;
+
 		administrative_efficiency = std::min(
-			administrators
-			* (fixed_point_t::_1 + get_modifier_effect_value(*modifier_effect_cache.get_administrative_efficiency()))
-			* (fixed_point_t::_1 + get_modifier_effect_value(*modifier_effect_cache.get_administrative_efficiency_modifier()))
-			/ total_population,
+			fixed_point_t::mul_div(
+				administrators,
+				fixed_point_t::_1 + get_modifier_effect_value(*modifier_effect_cache.get_administrative_efficiency()),
+				desired_administrators
+			)
+			* (fixed_point_t::_1 + get_modifier_effect_value(*modifier_effect_cache.get_administrative_efficiency_modifier())),
 			fixed_point_t::_1
 		);
 
