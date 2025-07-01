@@ -13,6 +13,7 @@
 #include <vector>
 
 #include "openvic-simulation/types/CowPtr.hpp"
+#include "openvic-simulation/types/CowVector.hpp"
 #include "openvic-simulation/types/NullMutex.hpp"
 #include "openvic-simulation/utility/Utility.hpp"
 
@@ -784,12 +785,6 @@ namespace OpenVic::_detail::signal {
 		template<typename L>
 		using is_thread_safe = std::bool_constant<!std::same_as<L, null_mutex>>;
 
-		template<typename U, typename L>
-		using cow_type = std::conditional_t<is_thread_safe<L>::value, cow_ptr<U>, U>;
-
-		template<typename U, typename L>
-		using cow_copy_type = std::conditional_t<is_thread_safe<L>::value, cow_ptr<U>, U const&>;
-
 		using lock_type = std::unique_lock<Lockable>;
 		using slot_base = basic_slot<Args...>;
 		using slot_ptr = _detail::signal::slot_ptr<Args...>;
@@ -799,6 +794,16 @@ namespace OpenVic::_detail::signal {
 			group_id gid;
 		};
 		using list_type = std::vector<group_type>; // kept ordered by ascending gid
+
+		template<typename L>
+		using cow_type = std::conditional_t<
+			is_thread_safe<L>::value, cow_vector<typename list_type::value_type, typename list_type::allocator_type>,
+			list_type>;
+
+		template<typename L>
+		using cow_copy_type = std::conditional_t<
+			is_thread_safe<L>::value, cow_vector<typename list_type::value_type, typename list_type::allocator_type>,
+			list_type const&>;
 
 	public:
 		using arg_list = std::tuple<Args...>;
@@ -849,7 +854,7 @@ namespace OpenVic::_detail::signal {
 
 			// Reference to the slots to execute them out of the lock
 			// a copy may occur if another thread writes to it.
-			cow_copy_type<list_type, Lockable> ref = slots_reference();
+			cow_copy_type<Lockable> ref = slots_reference();
 
 			size_t index = 0;
 			for (group_type const& g : cow::read(ref)) {
@@ -1193,7 +1198,7 @@ namespace OpenVic::_detail::signal {
 		 * Safety: thread safe
 		 */
 		size_t slot_count() {
-			cow_copy_type<list_type, Lockable> ref = slots_reference();
+			cow_copy_type<Lockable> ref = slots_reference();
 			size_t count = 0;
 			for (group_type const& g : cow::read(ref)) {
 				count += g.slts.size();
@@ -1229,7 +1234,7 @@ namespace OpenVic::_detail::signal {
 
 	private:
 		// used to get a reference to the slots for reading
-		inline cow_copy_type<list_type, Lockable> slots_reference() const {
+		inline cow_copy_type<Lockable> slots_reference() const {
 			lock_type lock(mutex);
 			return slots;
 		}
@@ -1245,10 +1250,10 @@ namespace OpenVic::_detail::signal {
 			const group_id gid = s->group();
 
 			lock_type lock(mutex);
-			list_type& groups = cow::write(slots);
+			auto& groups = cow::write(slots);
 
 			// find the group
-			typename list_type::iterator it = groups.begin();
+			typename std::remove_reference_t<decltype(groups)>::iterator it = groups.begin();
 			while (it != groups.end() && it->gid < gid) {
 				it++;
 			}
@@ -1267,7 +1272,7 @@ namespace OpenVic::_detail::signal {
 		template<typename Cond>
 		size_t disconnect_if(Cond&& cond) {
 			lock_type lock(mutex);
-			list_type& groups = cow::write(slots);
+			auto& groups = cow::write(slots);
 
 			size_t count = 0;
 
@@ -1296,7 +1301,7 @@ namespace OpenVic::_detail::signal {
 
 	private:
 		mutable Lockable mutex;
-		cow_type<list_type, Lockable> slots;
+		cow_type<Lockable> slots;
 		std::atomic_bool is_blocked;
 	};
 
