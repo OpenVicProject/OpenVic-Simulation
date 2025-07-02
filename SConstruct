@@ -36,6 +36,13 @@ Default(
         env.Run(env.git_builder), name_prefix="sim"
     )
 )
+Default(
+    env.CommandNoCache(
+        "src/openvic-simulation/gen/license_info.gen.hpp",
+        ["#COPYRIGHT", "#LICENSE.md"],
+        env.Run(env.license_builder), name_prefix="sim"
+    )
+)
 
 # For future reference:
 # - CCFLAGS are compilation flags shared between C and C++
