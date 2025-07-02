@@ -45,6 +45,61 @@ def build_std_function(env):
     env.Append(CPPPATH=env.std_function["INCPATH"])
     env.exposed_includes += env.std_function["INCPATH"]
 
+def build_lauf(env):
+    import os
+
+    if env.get("use_clang_cl", False) or env["CXX"] == "clang++" or (not env.get("is_msvc", False) and env["optimize"] != "none"):
+        env.Append(CPPDEFINES=["LAUF_HAS_TAIL_CALL_ELIMINATION=1"])
+
+    lauf_env = env.Clone()
+
+    if lauf_env.get("is_msvc", False):
+        lauf_env.Append(CXXFLAGS=["/WX", "/W3", "/D", "_CRT_SECURE_NO_WARNINGS"])
+        if lauf_env.get("use_clang_cl"):
+            lauf_env.Append(CXXFLAGS=["-Wno-return-type-c-linkage", "-fomit-frame-pointer"])
+            lauf_env.Append(CXXFLAGS=["/wd5105"])
+        else:
+            lauf_env.Append(CXXFLAGS=["/Oy"])
+    else:
+        lauf_env.Append(CXXFLAGS=["-pedantic-errors", "-Werror", "-Wall", "-Wextra", "-Wconversion", "-Wsign-conversion", "-fomit-frame-pointer"])
+        if lauf_env["CXX"] == "clang++":
+            lauf_env.Append(CXXFLAGS=["-Wno-return-type-c-linkage"])
+            lauf_env.Append(CXXFLAGS=["-Wno-shift-op-parentheses", "-Wno-parentheses-equality"])
+        else:
+            lauf_env.Append(
+                CXXFLAGS=[
+                    "-Wno-parentheses",
+                    "-Wno-unused-local-typedefs",
+                    "-Wno-array-bounds",  # , "-Wno-maybe-uninitialized", "-Wno-restrict"
+                ]
+            )
+
+    lexy_include_path = "openvic-dataloader/deps/lexy/include"
+    include_path = "lauf/include"
+    source_path = "lauf/src"
+    lauf_env.Append(CPPPATH=[[lauf_env.Dir(p) for p in [lexy_include_path, source_path, include_path]]])
+    sources = lauf_env.GlobRecursive("*.cpp", [source_path])
+    env.lauf_sources = sources
+
+    library_name = "liblauf" + env["LIBSUFFIX"]
+    library = lauf_env.StaticLibrary(target=os.path.join(source_path, library_name), source=sources)
+    Default(library)
+
+    include_dir = lauf_env.Dir(include_path)
+    source_dir = lauf_env.Dir(source_path)
+
+    env.lauf = {}
+    env.lauf["INCPATH"] = [env.Dir(include_path)]
+
+    env.Append(CPPPATH=env.lauf["INCPATH"])
+    if env.get("is_msvc", False):
+        env.Append(CXXFLAGS=["/external:I", include_dir, "/external:W0"])
+    else:
+        env.Append(CXXFLAGS=["-isystem", include_dir])
+    env.Append(LIBPATH=[source_dir])
+    env.Prepend(LIBS=[library_name])
+    env.exposed_includes += env.lauf["INCPATH"]
+
 def link_tbb(env):
     import sys
     if not env.get("is_msvc", False) and not env.get("use_mingw", False) and sys.platform != "darwin":
@@ -56,4 +111,5 @@ build_ordered_map(env)
 build_colony(env)
 build_function2(env)
 build_std_function(env)
+build_lauf(env)
 link_tbb(env)
