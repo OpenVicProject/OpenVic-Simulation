@@ -29,26 +29,13 @@ SConscript("deps/SCsub", "env")
 
 env.openvic_simulation = {}
 
-def version_git_info_builder(target, source, env):
-    with open(str(target[0]), "wt", encoding="utf-8", newline="\n") as file:
-        file.write("/* THIS FILE IS GENERATED. EDITS WILL BE LOST. */\n\n")
-        file.write(
-            """\
-#pragma once
-
-#include <cstdint>
-#include <string_view>
-
-namespace OpenVic {{
-	static constexpr std::string_view SIM_COMMIT_HASH = "{git_hash}";
-	static constexpr const uint64_t SIM_COMMIT_TIMESTAMP = {git_timestamp}ull;
-}}
-""".format(**source[0].read())
-        )
-
-result = env.Command("src/openvic-simulation/gen/commit_info.gen.hpp", env.Value(env.get_git_info()), env.Action(version_git_info_builder, "$GENCOMSTR"))
-env.NoCache(result)
-Default(result)
+Default(
+    env.CommandNoCache(
+        "src/openvic-simulation/gen/commit_info.gen.hpp",
+        env.Value(env.get_git_info()),
+        env.Run(env.git_builder), name_prefix="sim"
+    )
+)
 
 # For future reference:
 # - CCFLAGS are compilation flags shared between C and C++
