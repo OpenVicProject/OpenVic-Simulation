@@ -6,19 +6,5 @@ updates:
       interval: "daily"
     allow:
       - dependency-name: "deps/openvic-dataloader"
-      - dependency-name: "deps/lexy-vdf"
-    labels:
-      - "dependencies"
-      - "submodules"
-      - "topic:dataloader"
-
-  - package-ecosystem: "gitsubmodule"
-    directory: "/"
-    schedule:
-      interval: "daily"
-    allow:
       - dependency-name: "scripts"
-    labels:
-      - "dependencies"
-      - "submodules"
-      - "topic:buildsystem"
+      - dependency-name: "deps/lexy-vdf"
