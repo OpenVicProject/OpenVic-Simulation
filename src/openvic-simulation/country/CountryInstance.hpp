@@ -456,7 +456,8 @@ namespace OpenVic {
 		std::optional<Date> get_embass_banned_from_date(CountryInstance const& country) const;
 		void set_embassy_banned_from(CountryInstance& country, Date until);
 
-		bool can_units_enter(CountryInstance const& country) const;
+		bool can_army_units_enter(CountryInstance const& country) const;
+		bool can_navy_units_enter(CountryInstance const& country) const;
 
 		// These functions take "std::string const&" rather than "std::string_view" as they're only used with script arguments
 		// which are always stored as "std::string"s and it significantly simplifies mutable value access.
