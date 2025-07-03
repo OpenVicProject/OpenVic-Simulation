@@ -309,7 +309,7 @@ void CountryInstance::set_embassy_banned_from(CountryInstance& country, Date unt
 
 bool CountryInstance::can_army_units_enter(CountryInstance const& country) const {
 	// TODO: include war allies, puppets
-	return is_at_war_with(country) || has_military_access_to(country);
+	return this == &country || is_at_war_with(country) || has_military_access_to(country);
 }
 
 bool CountryInstance::can_navy_units_enter(CountryInstance const& country) const {
