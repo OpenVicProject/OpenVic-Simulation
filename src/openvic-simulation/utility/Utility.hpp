@@ -4,6 +4,7 @@
 #include <cmath>
 #include <concepts>
 #include <functional>
+#include <memory>
 #include <type_traits>
 #include <utility>
 
@@ -199,5 +200,107 @@ namespace OpenVic::utility {
 			return begin;
 		}
 		return end;
+	}
+
+	template<typename Allocator, typename T, typename Value = std::remove_cvref_t<typename Allocator::value_type>>
+	concept move_insertable_allocator_for =
+		requires(Allocator& alloc, Value* value, T move) { std::allocator_traits<Allocator>::construct(alloc, value, move); };
+
+	template<typename Allocator>
+	struct enable_copy_insertable : std::false_type {};
+
+	template<typename Allocator>
+	concept copy_insertable_allocator = enable_copy_insertable<Allocator>::value ||
+		move_insertable_allocator_for<Allocator, typename Allocator::value_type const&>;
+
+	template<typename T>
+	struct enable_copy_insertable<std::allocator<T>> : std::is_copy_constructible<T> {};
+
+	template<typename Allocator>
+	struct enable_move_insertable : std::false_type {};
+
+	template<typename Allocator>
+	concept move_insertable_allocator =
+		enable_move_insertable<Allocator>::value || move_insertable_allocator_for<Allocator, typename Allocator::value_type>;
+
+	template<typename T>
+	struct enable_move_insertable<std::allocator<T>> : std::is_move_constructible<T> {};
+
+	template<typename InputIt, typename Sentinel, typename ForwardIt, typename Allocator>
+	constexpr ForwardIt uninitialized_copy(InputIt first, Sentinel last, ForwardIt result, Allocator& alloc) {
+		if constexpr (specialization_of<Allocator, std::allocator>) {
+			return std::uninitialized_copy(first, last, result);
+		} else {
+			using traits = std::allocator_traits<Allocator>;
+			for (; first != last; ++first, (void)++result) {
+				traits::construct(alloc, std::addressof(*result), *first);
+			}
+			return result;
+		}
+	}
+
+	template<typename InputIt, typename Sentinel, typename ForwardIt, typename Allocator>
+	constexpr ForwardIt uninitialized_move(InputIt first, Sentinel last, ForwardIt result, Allocator& alloc) {
+		if constexpr (specialization_of<Allocator, std::allocator>) {
+			return std::uninitialized_move(first, last, result);
+		} else {
+			return uninitialized_copy(std::make_move_iterator(first), std::make_move_iterator(last), result, alloc);
+		}
+	}
+
+	template<typename ForwardIt, typename Size, typename T, typename Allocator>
+	constexpr ForwardIt uninitialized_fill_n(ForwardIt first, Size n, T const& value, Allocator& alloc) {
+		if constexpr (specialization_of<Allocator, std::allocator>) {
+			return std::uninitialized_fill_n(first, n, value);
+		} else {
+			using traits = std::allocator_traits<Allocator>;
+			for (; n > 0; --n, ++first) {
+				traits::construct(alloc, std::addressof(*first), value);
+			}
+			return first;
+		}
+	}
+
+	template<typename ForwardIt, typename Size, typename T, typename Allocator>
+	constexpr ForwardIt uninitialized_default_n(ForwardIt first, Size n, Allocator& alloc) {
+		if constexpr (specialization_of<Allocator, std::allocator>) {
+			return std::uninitialized_value_construct_n(first, n);
+		} else {
+			using traits = std::allocator_traits<Allocator>;
+			for (; n > 0; --n, ++first) {
+				traits::construct(alloc, std::addressof(*first));
+			}
+			return first;
+		}
+	}
+
+	template<typename ForwardIt, typename Allocator>
+	constexpr inline void destroy(ForwardIt first, ForwardIt last, Allocator& alloc) {
+		if constexpr (specialization_of<Allocator, std::allocator>) {
+			std::destroy(first, last);
+		} else {
+			using traits = std::allocator_traits<Allocator>;
+			for (; first != last; ++first) {
+				traits::destroy(alloc, std::addressof(*first));
+			}
+		}
+	}
+
+	template<typename T>
+	struct is_trivially_relocatable : std::bool_constant<std::is_trivially_copyable_v<T>> {};
+
+	template<typename T>
+	static constexpr bool is_trivially_relocatable_v = is_trivially_relocatable<T>::value;
+}
+
+namespace OpenVic::cow {
+	template<typename T>
+	T const& read(T const& v) {
+		return v;
+	}
+
+	template<typename T>
+	T& write(T& v) {
+		return v;
 	}
 }

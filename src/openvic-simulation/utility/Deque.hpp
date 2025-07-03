@@ -1908,3 +1908,10 @@ namespace OpenVic::utility {
 	}
 }
 #endif
+
+#include "openvic-simulation/utility/Utility.hpp"
+
+namespace OpenVic::utility {
+	template<typename T>
+	struct is_trivially_relocatable<deque<T>> : std::true_type {};
+}
