@@ -125,8 +125,8 @@ namespace OpenVic {
 
 		string_set_t lookup_dirs_in_dir(std::string_view path) const;
 
-		/* Load all mod descriptors passed by the user. Importantly, loads dependencies and replace_paths for us to check. */
-		bool load_mod_descriptors(std::span<const std::string> descriptors, ModManager& mod_manager);
+		/* Load all mod descriptors present in the mod/ directory. Importantly, loads dependencies and replace_paths for us to check. */
+		bool load_mod_descriptors(ModManager& mod_manager) const;
 
 		/* Load and parse all of the text defines data, including parsing cached condition and effect scripts after all the
 		 * static data is loaded. Paths to the base and mod defines must have been supplied with set_roots.*/

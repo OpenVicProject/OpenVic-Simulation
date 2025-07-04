@@ -30,19 +30,33 @@ bool ModManager::load_mod_file(ast::NodeCPtr root) {
 		"dependencies", ZERO_OR_ONE, expect_list_reserve_length(dependencies, expect_string(vector_callback_string(dependencies)))
 	)(root);
 
-	std::vector<std::string_view> previous_mods = mods.get_item_identifiers();
-	for (std::string_view dependency : dependencies) {
-		if (std::find(previous_mods.begin(), previous_mods.end(), dependency) == previous_mods.end()) {
-			ret = false;
-			Logger::error("Mod ", identifier, " has unmet dependency ", dependency);
-		}
-	}
-
 	if (ret) {
+		Logger::info("Loaded mod descriptor for \"", identifier, "\"");
 		ret &= mods.add_item(
 			{ identifier, path, user_dir, std::move(replace_paths), std::move(dependencies) }
 		);
 	}
 
 	return ret;
+}
+
+void ModManager::set_loaded_mods(std::vector<Mod const*>&& new_loaded_mods) {
+	if (mods_loaded) {
+		Logger::error("Second call to ModManager::set_loaded_mods... this shouldn't happen!");
+		return;
+	}
+
+	loaded_mods = std::move(new_loaded_mods);
+	mods_loaded = true;
+	for (Mod const* mod : loaded_mods) {
+		Logger::info("Loading mod \"", mod->get_identifier(), "\" at path ", mod->get_dataloader_root_path());
+	}
+}
+
+std::vector<Mod const*> const& ModManager::get_loaded_mods() const {
+	return loaded_mods;
+}
+
+size_t ModManager::get_loaded_mod_count() const {
+	return loaded_mods.size();
 }
