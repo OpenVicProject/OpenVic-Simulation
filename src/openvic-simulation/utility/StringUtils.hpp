@@ -18,6 +18,8 @@
 #include <range/v3/view/join.hpp>
 #include <range/v3/view/transform.hpp>
 
+#include "openvic-simulation/utility/Containers.hpp"
+
 namespace OpenVic::StringUtils {
 	template<typename T>
 	[[nodiscard]] inline constexpr std::from_chars_result from_chars( //
@@ -341,16 +343,16 @@ namespace OpenVic::StringUtils {
 		return std::equal(lhs.begin(), lhs.end(), rhs.begin(), rhs.end(), ichar_equals);
 	}
 
-	inline constexpr std::string string_tolower(std::string_view str) {
-		std::string result { str };
+	inline memory::string string_tolower(std::string_view str) {
+		memory::string result { str };
 		std::transform(result.begin(), result.end(), result.begin(),
 			[](unsigned char c) -> unsigned char { return std::tolower(c); }
 		);
 		return result;
 	}
 
-	inline constexpr std::string string_toupper(std::string_view str) {
-		std::string result { str };
+	inline memory::string string_toupper(std::string_view str) {
+		memory::string result { str };
 		std::transform(result.begin(), result.end(), result.begin(),
 			[](unsigned char c) -> unsigned char { return std::toupper(c); }
 		);
@@ -378,8 +380,8 @@ namespace OpenVic::StringUtils {
 		return default_path;
 	}
 
-	inline std::string make_forward_slash_path(std::string_view path) {
-		std::string ret { path };
+	inline memory::string make_forward_slash_path(std::string_view path) {
+		memory::string ret { path };
 		std::replace(ret.begin(), ret.end(), '\\', '/');
 		for (char& c : ret) {
 			if (c == '\\') {
@@ -400,8 +402,8 @@ namespace OpenVic::StringUtils {
 
 	template<typename... Args>
 	requires(std::is_same_v<std::string_view, Args> && ...)
-	inline std::string _append_string_views(Args... args) {
-		std::string ret;
+	inline memory::string _append_string_views(Args... args) {
+		memory::string ret;
 		ret.reserve((args.size() + ...));
 		(ret.append(args), ...);
 		return ret;
@@ -409,12 +411,12 @@ namespace OpenVic::StringUtils {
 
 	template<typename... Args>
 	requires(std::is_convertible_v<Args, std::string_view> && ...)
-	inline std::string append_string_views(Args... args) {
+	inline memory::string append_string_views(Args... args) {
 		return _append_string_views(std::string_view { args }...);
 	}
 
 	template<typename T, typename... Args>
-	static std::string string_join(tsl::ordered_map<std::string, T, Args...> const& map, std::string_view delimiter = ", ") {
+	static memory::string string_join(tsl::ordered_map<memory::string, T, Args...> const& map, std::string_view delimiter = ", ") {
 		if (map.empty()) {
 			return "";
 		}
@@ -422,7 +424,7 @@ namespace OpenVic::StringUtils {
 		static auto transformer = [](std::pair<std::string_view, T> const& pair) -> std::string_view {
 			return pair.first;
 		};
-		return map | ranges::views::transform(transformer) | ranges::views::join(delimiter) | ranges::to<std::string>();
+		return map | ranges::views::transform(transformer) | ranges::views::join(delimiter) | ranges::to<memory::string>();
 	}
 
 	inline constexpr size_t get_extension_pos(std::string_view const& path) {

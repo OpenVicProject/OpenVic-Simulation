@@ -5,6 +5,7 @@
 #include "openvic-simulation/map/ProvinceDefinition.hpp"
 #include "openvic-simulation/utility/Logger.hpp"
 #include "openvic-simulation/dataloader/NodeTools.hpp"
+#include "openvic-simulation/utility/Containers.hpp"
 
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;
@@ -14,8 +15,8 @@ ProvinceHistoryEntry::ProvinceHistoryEntry(ProvinceDefinition const& new_provinc
 
 ProvinceHistoryMap::ProvinceHistoryMap(ProvinceDefinition const& new_province) : province { new_province } {}
 
-std::unique_ptr<ProvinceHistoryEntry> ProvinceHistoryMap::_make_entry(Date date) const {
-	return std::unique_ptr<ProvinceHistoryEntry> { new ProvinceHistoryEntry { province, date } };
+memory::unique_ptr<ProvinceHistoryEntry> ProvinceHistoryMap::_make_entry(Date date) const {
+	return memory::make_unique<ProvinceHistoryEntry>(province, date);
 }
 
 bool ProvinceHistoryMap::_load_history_entry(
@@ -175,7 +176,7 @@ void ProvinceHistoryManager::reserve_more_province_histories(size_t size) {
 void ProvinceHistoryManager::lock_province_histories(MapDefinition const& map_definition, bool detailed_errors) {
 	std::span<const ProvinceDefinition> provinces = map_definition.get_province_definitions();
 
-	std::vector<bool> province_checklist(provinces.size());
+	memory::vector<bool> province_checklist(provinces.size());
 	for (auto [province, history_map] : mutable_iterator(province_histories)) {
 		province_checklist[province->get_index() - 1] = true;
 

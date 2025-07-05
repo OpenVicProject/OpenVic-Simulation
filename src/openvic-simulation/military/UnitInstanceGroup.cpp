@@ -8,6 +8,7 @@
 #include "openvic-simulation/map/ProvinceInstance.hpp"
 #include "openvic-simulation/military/Deployment.hpp"
 #include "openvic-simulation/military/LeaderTrait.hpp"
+#include "openvic-simulation/utility/Containers.hpp"
 
 using namespace OpenVic;
 
@@ -87,7 +88,7 @@ bool UnitInstanceGroup::add_unit(UnitInstance& unit) {
 }
 
 bool UnitInstanceGroup::remove_unit(UnitInstance const& unit) {
-	const std::vector<UnitInstance*>::const_iterator it = std::find(units.begin(), units.end(), &unit);
+	const memory::vector<UnitInstance*>::const_iterator it = std::find(units.begin(), units.end(), &unit);
 
 	if (it != units.end()) {
 		units.erase(it);
@@ -331,8 +332,8 @@ bool UnitInstanceManager::generate_unit_instance_group(
 	ret &= unit_instance_group.set_country(&country);
 
 	if (unit_deployment_group.get_leader_index().has_value()) {
-		std::vector<LeaderInstance*>& leaders = country.get_leaders<Branch>();
-		typename std::vector<LeaderInstance*>::const_iterator it = leaders.begin();
+		memory::vector<LeaderInstance*>& leaders = country.get_leaders<Branch>();
+		typename memory::vector<LeaderInstance*>::const_iterator it = leaders.begin();
 
 		advance(it, *unit_deployment_group.get_leader_index());
 
@@ -470,7 +471,7 @@ bool UnitInstanceManager::create_leader(
 	static size_t item_selection_counter = 0;
 
 	// Variable for storing a generated name if none is provided
-	std::string name_storage;
+	memory::string name_storage;
 	if (name.empty()) {
 		Culture const* culture = country.get_primary_culture();
 

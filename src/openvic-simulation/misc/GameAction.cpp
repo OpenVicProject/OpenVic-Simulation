@@ -2,6 +2,7 @@
 
 #include "openvic-simulation/DefinitionManager.hpp"
 #include "openvic-simulation/InstanceManager.hpp"
+#include "utility/Containers.hpp"
 
 using namespace OpenVic;
 
@@ -46,8 +47,8 @@ struct game_action_argument_print_visitor_t {
 	}
 };
 
-std::string OpenVic::game_action_argument_to_string(game_action_argument_t const& argument) {
-	std::stringstream stream;
+memory::string OpenVic::game_action_argument_to_string(game_action_argument_t const& argument) {
+	memory::stringstream stream;
 
 	std::visit(game_action_argument_print_visitor_t { stream }, argument);
 
