@@ -14,7 +14,7 @@ MapInstance::MapInstance(
 ) : map_definition { new_map_definition },
 	thread_pool { new_thread_pool },
 	land_pathing { *this },
-	sea_pathing { map_definition.get_path_map_sea() } {}
+	sea_pathing { *this } {}
 
 ProvinceInstance& MapInstance::get_province_instance_from_definition(ProvinceDefinition const& province) {
 	return province_instances.get_items()[province.get_index() - 1];

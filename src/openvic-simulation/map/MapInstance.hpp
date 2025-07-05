@@ -36,7 +36,7 @@ namespace OpenVic {
 		ordered_set<canal_index_t> PROPERTY(enabled_canals);
 
 		ArmyAStarPathing PROPERTY_REF(land_pathing);
-		AStarPathing PROPERTY_REF(sea_pathing);
+		NavyAStarPathing PROPERTY_REF(sea_pathing);
 
 	public:
 		MapInstance(

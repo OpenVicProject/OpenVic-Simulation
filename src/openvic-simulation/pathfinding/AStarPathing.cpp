@@ -126,5 +126,36 @@ bool ArmyAStarPathing::_is_point_enabled(search_const_iterator it) const {
 		return true;
 	}
 
-	return army_instance->get_country()->can_units_enter(*province_owner);
+	return army_instance->get_country()->can_army_units_enter(*province_owner);
+}
+
+NavyAStarPathing::NavyAStarPathing(MapInstance const& map)
+	: map_instance(map), AStarPathing(&map.get_map_definition().get_path_map_land()) {}
+
+bool NavyAStarPathing::_is_point_enabled(search_const_iterator it) const {
+	if (!AStarPathing::_is_point_enabled(it)) {
+		return false;
+	}
+
+	if (OV_unlikely(navy_instance == nullptr)) {
+		return true;
+	}
+
+	ProvinceInstance const* province = map_instance.get_province_instance_by_index(it->first);
+
+	if (OV_unlikely(province == nullptr)) {
+		return true;
+	}
+
+	if (OV_likely(province->get_province_definition().is_water())) {
+		return true;
+	}
+
+	CountryInstance const* province_controller = province->get_controller();
+
+	if (OV_unlikely(province_controller == nullptr)) {
+		return true;
+	}
+
+	return navy_instance->get_country()->can_navy_units_enter(*province_controller);
 }

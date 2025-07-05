@@ -64,4 +64,14 @@ namespace OpenVic {
 
 		virtual bool _is_point_enabled(search_const_iterator it) const override;
 	};
+
+	struct NavyAStarPathing final : public AStarPathing {
+		NavyAStarPathing(MapInstance const& map);
+
+	protected:
+		UnitInstanceGroupBranched<UnitType::branch_t::NAVAL> const* PROPERTY_RW_ACCESS(navy_instance, protected, nullptr);
+		MapInstance const& PROPERTY(map_instance);
+
+		virtual bool _is_point_enabled(search_const_iterator it) const override;
+	};
 }
