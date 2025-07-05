@@ -43,6 +43,19 @@ Default(
         env.Run(env.license_builder), name_prefix="sim"
     )
 )
+Default(
+    env.CommandNoCache(
+        "src/openvic-simulation/gen/author_info.gen.hpp",
+        "#AUTHORS.md",
+        env.Run(env.author_builder), name_prefix="sim",
+        sections = {
+            "Senior Developers": "AUTHORS_SENIOR_DEVELOPERS",
+            "Developers": "AUTHORS_DEVELOPERS",
+            "Contributors": "AUTHORS_CONTRIBUTORS",
+            "Consultants": "AUTHORS_CONSULTANTS"
+        }
+    )
+)
 
 # For future reference:
 # - CCFLAGS are compilation flags shared between C and C++
