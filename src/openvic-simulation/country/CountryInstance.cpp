@@ -2005,7 +2005,7 @@ void CountryInstance::request_salaries_and_welfare_and_import_subsidies(Pop& pop
 			pop_size * calculate_administration_salary_base(pop_type_values, corruption_cost_multiplier),
 			actual_administration_spending,
 			projected_administration_spending_unscaled_by_slider
-		);
+		) / Pop::size_denominator;
 		if (administration_salary > fixed_point_t::_0) {
 			pop.add_government_salary_administration(administration_salary);
 		}
@@ -2016,7 +2016,7 @@ void CountryInstance::request_salaries_and_welfare_and_import_subsidies(Pop& pop
 			pop_size * calculate_education_salary_base(pop_type_values, corruption_cost_multiplier),
 			actual_education_spending,
 			projected_education_spending_unscaled_by_slider
-		);
+		) / Pop::size_denominator;
 		if (education_salary > fixed_point_t::_0) {
 			pop.add_government_salary_education(education_salary);
 		}
@@ -2027,7 +2027,7 @@ void CountryInstance::request_salaries_and_welfare_and_import_subsidies(Pop& pop
 			pop_size * calculate_military_salary_base(pop_type_values, corruption_cost_multiplier),
 			actual_military_spending,
 			projected_military_spending_unscaled_by_slider
-		);
+		) / Pop::size_denominator;
 		if (military_salary > fixed_point_t::_0) {
 			pop.add_government_salary_military(military_salary);
 		}
@@ -2042,7 +2042,7 @@ void CountryInstance::request_salaries_and_welfare_and_import_subsidies(Pop& pop
 			pop_size * calculate_pensions_base(modifier_effect_cache, pop_type_values),
 			actual_social_spending,
 			projected_social_spending_unscaled_by_slider
-		);
+		) / Pop::size_denominator;
 		if (pension_income > fixed_point_t::_0) {
 			pop.add_pensions(pension_income);
 		}
@@ -2051,7 +2051,7 @@ void CountryInstance::request_salaries_and_welfare_and_import_subsidies(Pop& pop
 			pop.get_unemployed() * calculate_unemployment_subsidies_base(modifier_effect_cache, pop_type_values),
 			actual_social_spending,
 			projected_social_spending_unscaled_by_slider
-		);
+		) / Pop::size_denominator;
 		if (unemployment_subsidies > fixed_point_t::_0) {
 			pop.add_unemployment_subsidies(unemployment_subsidies);
 		}
