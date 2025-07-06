@@ -26,10 +26,6 @@ ProvinceDefinition::ProvinceDefinition(
 	default_terrain_type { nullptr },
 	positions {} {}
 
-bool ProvinceDefinition::operator==(ProvinceDefinition const& other) const {
-	return this == &other;
-}
-
 std::string ProvinceDefinition::to_string() const {
 	return fmt::format("(#{}, {}, 0x{})", get_index(), get_identifier(), get_colour());
 }

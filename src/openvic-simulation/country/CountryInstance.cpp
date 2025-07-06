@@ -309,12 +309,12 @@ void CountryInstance::set_embassy_banned_from(CountryInstance& country, Date unt
 
 bool CountryInstance::can_army_units_enter(CountryInstance const& country) const {
 	// TODO: include war allies, puppets
-	return this == &country || is_at_war_with(country) || has_military_access_to(country);
+	return *this == country || is_at_war_with(country) || has_military_access_to(country);
 }
 
 bool CountryInstance::can_navy_units_enter(CountryInstance const& country) const {
 	// TODO: include war allies, puppets
-	return this == &country || has_military_access_to(country);
+	return *this == country || has_military_access_to(country);
 }
 
 fixed_point_t CountryInstance::get_script_variable(std::string const& variable_name) const {
@@ -968,8 +968,10 @@ fixed_point_t CountryInstance::get_research_progress() const {
 
 bool CountryInstance::can_research_tech(Technology const& technology, Date today) const {
 	if (
-		technology.get_year() > today.get_year() || !is_civilised() || is_technology_unlocked(technology) ||
-		&technology == current_research
+		technology.get_year() > today.get_year()
+		|| !is_civilised()
+		|| is_technology_unlocked(technology)
+		|| (current_research && technology == *current_research)
 	) {
 		return false;
 	}

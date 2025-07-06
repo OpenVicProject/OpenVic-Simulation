@@ -24,7 +24,7 @@ namespace OpenVic {
 	 * MAP-5, MAP-7, MAP-8, MAP-43, MAP-47
 	 * POP-22
 	 */
-	struct ProvinceDefinition : HasIdentifierAndColour, HasIndex<uint16_t> {
+	struct ProvinceDefinition : HasIdentifierAndColour, HasIndex<ProvinceDefinition, uint16_t> {
 		friend struct MapDefinition;
 
 		using distance_t = fixed_point_t; // should this go inside adjacency_t?
@@ -105,7 +105,6 @@ namespace OpenVic {
 	public:
 		ProvinceDefinition(ProvinceDefinition&&) = default;
 
-		bool operator==(ProvinceDefinition const& other) const;
 		std::string to_string() const;
 
 		inline constexpr bool has_region() const {

@@ -478,7 +478,7 @@ bool PopManager::load_delayed_parse_pop_type_data(
 
 		if (promote_to_node != nullptr && !expect_pop_type_dictionary(
 			[pop_type](PopType const& type, ast::NodeCPtr node) -> bool {
-				if (pop_type == &type) {
+				if (pop_type && type == *pop_type) {
 					Logger::error("Pop type ", type, " cannot have promotion weight to itself!");
 					return false;
 				}

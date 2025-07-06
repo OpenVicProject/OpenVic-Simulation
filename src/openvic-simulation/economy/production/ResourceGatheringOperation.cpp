@@ -202,7 +202,8 @@ void ResourceGatheringOperation::hire() {
 	for (Pop& pop : location.get_mutable_pops()){
 		PopType const& pop_type = *pop.get_type();
 		for (Job const& job : jobs) {
-			if (job.get_pop_type() == &pop_type) {
+			PopType const* const job_pop_type = job.get_pop_type();
+			if (job_pop_type && *job_pop_type == pop_type) {
 				const pop_size_t pop_size_to_hire = static_cast<pop_size_t>((proportion_to_hire * pop.get_size()).floor());
 				if (pop_size_to_hire <= 0) {
 					continue;

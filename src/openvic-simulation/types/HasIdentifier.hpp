@@ -105,11 +105,10 @@ namespace OpenVic {
 	template<typename T>
 	concept HasGetIdentifierAndGetColour = HasGetIdentifier<T> && HasGetColour<T>;
 
-	template<std::integral T = size_t>
+	template<typename TypeTag, std::integral IndexT = size_t>
 	class HasIndex {
 	public:
-		using index_t = T;
-
+		using index_t = IndexT;
 	private:
 		const index_t PROPERTY(index);
 
@@ -121,6 +120,9 @@ namespace OpenVic {
 		HasIndex(HasIndex&&) = default;
 		HasIndex& operator=(HasIndex const&) = delete;
 		HasIndex& operator=(HasIndex&&) = delete;
+		constexpr bool operator==(HasIndex const& rhs) const {
+			return index == rhs.index;
+		}
 	};
 
 	template<typename T>
