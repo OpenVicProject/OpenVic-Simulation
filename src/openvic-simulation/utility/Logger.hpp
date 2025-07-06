@@ -69,8 +69,8 @@ namespace OpenVic {
 		};
 
 		static inline std::mutex log_mutex;
-		thread_local inline static std::vector<std::string_view> log_scope_stack {};
-		thread_local inline static size_t log_scope_index_plus_one = 0;
+		static thread_local std::vector<std::string_view> log_scope_stack;
+		static thread_local size_t log_scope_index_plus_one;
 
 		template<typename... Args>
 		struct log {
