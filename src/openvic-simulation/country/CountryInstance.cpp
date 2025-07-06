@@ -373,6 +373,17 @@ fixed_point_t CountryInstance::get_religion_proportion(Religion const& religion)
 	}
 }
 
+fixed_point_t CountryInstance::get_strata_taxable_income(Strata const& strata) const {
+	fixed_point_t running_total = 0;
+	for (auto const& [pop_type, taxable_income] : taxable_income_by_pop_type) {
+		if (pop_type.get_strata() == strata) {
+			running_total += taxable_income;
+		}
+	}
+	
+	return running_total;
+}
+
 #define ADD_AND_REMOVE(item) \
 	bool CountryInstance::add_##item(std::remove_pointer_t<decltype(item##s)::value_type>& new_item) { \
 		if (!item##s.emplace(&new_item).second) { \

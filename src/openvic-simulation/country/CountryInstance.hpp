@@ -496,6 +496,7 @@ namespace OpenVic {
 		constexpr fixed_point_t get_strata_luxury_needs_fulfilled(Strata const& strata) const {
 			return luxury_needs_fulfilled_by_strata[strata];
 		}
+		fixed_point_t get_strata_taxable_income(Strata const& strata) const;
 
 		bool add_owned_province(ProvinceInstance& new_province);
 		bool remove_owned_province(ProvinceInstance const& province_to_remove);
