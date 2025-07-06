@@ -258,11 +258,12 @@ bool DiplomaticHistoryManager::load_war_history_file(DefinitionManager const& de
 				"add_attacker", ZERO_OR_MORE,
 					definition_manager.get_country_definition_manager().expect_country_definition_identifier(
 						[&current_date, &name](CountryDefinition const& country) -> bool {
-							for (auto const& attacker : attackers) {
-								if (attacker.get_country() == &country) {
+							for (WarHistory::war_participant_t const& attacker : attackers) {
+								CountryDefinition const* const attacker_country = attacker.get_country();
+								if (attacker_country && *attacker_country == country) {
 									Logger::error(
 										"In history of war ", name, " at date ", current_date.to_string(),
-										": Attempted to add attacking country ", attacker.get_country()->get_identifier(),
+										": Attempted to add attacking country ", attacker_country->get_identifier(),
 										" which is already present!"
 									);
 									return false;
@@ -276,11 +277,12 @@ bool DiplomaticHistoryManager::load_war_history_file(DefinitionManager const& de
 				"add_defender", ZERO_OR_MORE,
 					definition_manager.get_country_definition_manager().expect_country_definition_identifier(
 						[&current_date, &name](CountryDefinition const& country) -> bool {
-							for (auto const& defender : defenders) {
-								if (defender.get_country() == &country) {
+							for (WarHistory::war_participant_t const& defender : defenders) {
+								CountryDefinition const* const defender_country = defender.get_country();
+								if (defender_country && *defender_country == country) {
 									Logger::error(
 										"In history of war ", name, " at date ", current_date.to_string(),
-										": Attempted to add defending country ", defender.get_country()->get_identifier(),
+										": Attempted to add defending country ", defender_country->get_identifier(),
 										" which is already present!"
 									);
 									return false;
@@ -296,8 +298,9 @@ bool DiplomaticHistoryManager::load_war_history_file(DefinitionManager const& de
 						[&current_date, &name](CountryDefinition const& country) -> bool {
 							WarHistory::war_participant_t* participant_to_remove = nullptr;
 
-							for (auto& attacker : attackers) {
-								if (attacker.country == &country) {
+							for (WarHistory::war_participant_t& attacker : attackers) {
+								CountryDefinition const* const attacker_country = attacker.get_country();
+								if (attacker_country && *attacker_country == country) {
 									participant_to_remove = &attacker;
 									break;
 								}
@@ -320,8 +323,9 @@ bool DiplomaticHistoryManager::load_war_history_file(DefinitionManager const& de
 						[&current_date, &name](CountryDefinition const& country) -> bool {
 							WarHistory::war_participant_t* participant_to_remove = nullptr;
 
-							for (auto& defender : defenders) {
-								if (defender.country == &country) {
+							for (WarHistory::war_participant_t& defender : defenders) {
+								CountryDefinition const* const defender_country = defender.get_country();
+								if (defender_country && *defender_country == country) {
 									participant_to_remove = &defender;
 									break;
 								}

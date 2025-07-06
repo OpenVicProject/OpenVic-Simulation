@@ -11,7 +11,7 @@ namespace OpenVic {
 	struct Issue;
 
 	// Issue group (i.e. trade_policy)
-	struct IssueGroup : HasIdentifier, HasIndex<> {
+	struct IssueGroup : HasIdentifier, HasIndex<IssueGroup> {
 		friend struct IssueManager;
 
 	private:

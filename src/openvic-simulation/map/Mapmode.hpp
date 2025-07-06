@@ -12,7 +12,7 @@ namespace OpenVic {
 	struct ProvinceInstance;
 	struct CountryInstance;
 
-	struct Mapmode : HasIdentifier, HasIndex<int32_t> {
+	struct Mapmode : HasIdentifier, HasIndex<Mapmode, int32_t> {
 		friend struct MapmodeManager;
 
 		/* Bottom 32 bits are the base colour, top 32 are the stripe colour, both in ARGB format with the alpha channels

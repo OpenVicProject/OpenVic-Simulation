@@ -93,7 +93,7 @@ void ArtisanalProducer::artisan_tick(
 					consumed_quantity
 				);
 			}
-			if (input_good_ptr == &production_type.get_output_good()) {
+			if (*input_good_ptr == production_type.get_output_good()) {
 				if (OV_unlikely(consumed_quantity > produce_left_to_sell)) {
 					consumed_quantity -= produce_left_to_sell;
 					produce_left_to_sell = 0;

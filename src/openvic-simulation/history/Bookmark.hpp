@@ -9,7 +9,7 @@
 namespace OpenVic {
 	struct BookmarkManager;
 
-	struct Bookmark : HasIdentifier, HasIndex<> {
+	struct Bookmark : HasIdentifier, HasIndex<Bookmark> {
 		friend struct BookmarkManager;
 
 	private:

@@ -13,7 +13,7 @@
 namespace OpenVic {
 	struct TechnologyArea;
 
-	struct TechnologyFolder : HasIdentifier, HasIndex<> {
+	struct TechnologyFolder : HasIdentifier, HasIndex<TechnologyFolder> {
 		friend struct TechnologyManager;
 
 	private:
@@ -41,7 +41,7 @@ namespace OpenVic {
 		TechnologyArea(TechnologyArea&&) = default;
 	};
 
-	struct Technology : Modifier, HasIndex<> {
+	struct Technology : Modifier, HasIndex<Technology> {
 		friend struct TechnologyManager;
 
 		using area_index_t = uint8_t;

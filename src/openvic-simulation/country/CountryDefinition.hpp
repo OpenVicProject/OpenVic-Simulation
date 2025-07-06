@@ -42,7 +42,7 @@ namespace OpenVic {
 	};
 
 	/* Generic information about a TAG */
-	struct CountryDefinition : HasIdentifierAndColour, HasIndex<> {
+	struct CountryDefinition : HasIdentifierAndColour, HasIndex<CountryDefinition> {
 		friend struct CountryDefinitionManager;
 
 		using unit_names_map_t = ordered_map<UnitType const*, name_list_t>;

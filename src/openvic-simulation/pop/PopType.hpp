@@ -19,7 +19,7 @@ namespace OpenVic {
 	struct IssueManager;
 	struct PopBase;
 
-	struct Strata : HasIdentifier, HasIndex<> {
+	struct Strata : HasIdentifier, HasIndex<Strata> {
 		friend struct PopManager;
 
 	private:
@@ -34,7 +34,7 @@ namespace OpenVic {
 	/* REQUIREMENTS:
 	 * POP-15, POP-16, POP-17, POP-26
 	 */
-	struct PopType : HasIdentifierAndColour, HasIndex<> {
+	struct PopType : HasIdentifierAndColour, HasIndex<PopType> {
 		friend struct PopManager;
 
 		/* This is a bitfield - PopTypes can have up to one of each income source for each need category. */

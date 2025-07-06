@@ -343,7 +343,7 @@ bool MapmodeManager::setup_mapmodes() {
 				if (selected_province != nullptr) {
 					ProvinceDefinition const& selected_province_definition = selected_province->get_province_definition();
 
-					if (selected_province == &province) {
+					if (*selected_province == province) {
 						return (0xFFFFFF_argb).with_alpha(ALPHA_VALUE);
 					}
 

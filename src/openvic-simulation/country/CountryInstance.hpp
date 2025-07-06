@@ -61,7 +61,7 @@ namespace OpenVic {
 
 	/* Representation of a country's mutable attributes, with a CountryDefinition that is unique at any single time
 	 * but can be swapped with other CountryInstance's CountryDefinition when switching tags. */
-	struct CountryInstance : FlagStrings, HasIndex<> {
+	struct CountryInstance : FlagStrings, HasIndex<CountryInstance> {
 		friend struct CountryInstanceManager;
 
 		/*

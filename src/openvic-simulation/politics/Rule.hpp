@@ -8,7 +8,7 @@ namespace OpenVic {
 	struct BuildingTypeManager;
 
 	/* The index of the Rule within its group, used to determine precedence in mutually exclusive rule groups. */
-	struct Rule : HasIdentifier, HasIndex<> {
+	struct Rule : HasIdentifier, HasIndex<Rule> {
 		friend struct RuleManager;
 
 		enum class rule_group_t : uint8_t {
