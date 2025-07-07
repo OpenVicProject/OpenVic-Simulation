@@ -21,6 +21,7 @@
 #include "openvic-simulation/research/Invention.hpp"
 #include "openvic-simulation/research/Technology.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
+#include "openvic-simulation/types/IndexedMap.hpp"
 #include "openvic-simulation/types/PopSize.hpp"
 #include "openvic-simulation/types/SliderValue.hpp"
 
@@ -1171,19 +1172,34 @@ void CountryInstance::_update_budget() {
 	OpenVic immediately updates both.
 	*/
 
-	if (total_population == 0) {
-		administrative_efficiency = 1;
-	} else {
-		pop_size_t administrators = 0;
-		for (auto const& [pop_type, size] : pop_type_distribution) {
+	pop_size_t total_non_colonial_population = 0;
+	pop_size_t administrators = 0;
+	for (State const* const state_ptr : states) {
+		if (state_ptr == nullptr) {
+			continue;
+		}
+
+		State const& state = *state_ptr;
+		if (state.is_colonial_state()) {
+			continue;
+		}
+
+		IndexedMap<PopType, pop_size_t> const& state_pop_type_distribution = state.get_pop_type_distribution();
+
+		for (auto const& [pop_type, size] : state_pop_type_distribution) {
 			if (pop_type.get_is_administrator()) {
 				administrators += size;
 			}
 		}
+		total_non_colonial_population += state.get_total_population();
+	}
 
+	if (total_non_colonial_population == 0) {
+		administrative_efficiency = fixed_point_t::_1;
+	} else {
 		const fixed_point_t desired_administrator_percentage = country_defines.get_max_bureaucracy_percentage()
 			+ total_administrative_multiplier * country_defines.get_bureaucracy_percentage_increment();
-		const fixed_point_t desired_administrators = desired_administrator_percentage * total_population;
+		const fixed_point_t desired_administrators = desired_administrator_percentage * total_non_colonial_population;
 
 		administrative_efficiency = std::min(
 			fixed_point_t::mul_div(
