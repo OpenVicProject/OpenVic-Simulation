@@ -6,6 +6,7 @@
 #include "openvic-simulation/dataloader/NodeTools.hpp"
 #include "openvic-simulation/types/HasIdentifier.hpp"
 #include "openvic-simulation/types/IdentifierRegistry.hpp"
+#include "openvic-simulation/utility/ErrorMacros.hpp"
 
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;
@@ -22,7 +23,8 @@ bool ModManager::load_mod_file(ast::NodeCPtr root) {
 	std::vector<std::string> replace_paths;
 	std::vector<std::string> dependencies;
 
-	bool ret = NodeTools::expect_dictionary_keys(
+	bool ret = NodeTools::expect_dictionary_keys_and_default(
+		key_value_success_callback,
 		"name", ONE_EXACTLY, expect_string(assign_variable_callback(identifier)),
 		"path", ONE_EXACTLY, expect_string(assign_variable_callback(path)),
 		"user_dir", ZERO_OR_ONE, expect_string(assign_variable_callback_opt(user_dir)),
@@ -30,19 +32,32 @@ bool ModManager::load_mod_file(ast::NodeCPtr root) {
 		"dependencies", ZERO_OR_ONE, expect_list_reserve_length(dependencies, expect_string(vector_callback_string(dependencies)))
 	)(root);
 
-	std::vector<std::string_view> previous_mods = mods.get_item_identifiers();
-	for (std::string_view dependency : dependencies) {
-		if (std::find(previous_mods.begin(), previous_mods.end(), dependency) == previous_mods.end()) {
-			ret = false;
-			Logger::error("Mod ", identifier, " has unmet dependency ", dependency);
-		}
-	}
-
 	if (ret) {
+		Logger::info("Loaded mod descriptor for \"", identifier, "\"");
 		ret &= mods.add_item(
 			{ identifier, path, user_dir, std::move(replace_paths), std::move(dependencies) }
 		);
+	} else {
+		Logger::warning("Invalid mod descriptor with identifier \"", identifier, "\" could not be loaded!");
 	}
 
-	return ret;
+	return true;
+}
+
+void ModManager::set_loaded_mods(std::vector<Mod const*>&& new_loaded_mods) {
+	OV_ERR_FAIL_COND_MSG(mods_loaded, "set_loaded_mods called twice");
+
+	loaded_mods = std::move(new_loaded_mods);
+	mods_loaded = true;
+	for (Mod const* mod : loaded_mods) {
+		Logger::info("Loading mod \"", mod->get_identifier(), "\" at path ", mod->get_dataloader_root_path());
+	}
+}
+
+std::vector<Mod const*> const& ModManager::get_loaded_mods() const {
+	return loaded_mods;
+}
+
+size_t ModManager::get_loaded_mod_count() const {
+	return loaded_mods.size();
 }
