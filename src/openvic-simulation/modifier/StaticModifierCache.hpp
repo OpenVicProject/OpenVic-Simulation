@@ -15,7 +15,6 @@
 	F(very_hard_ai) \
 
 #define COUNTRY_MODIFIER_LIST(F, ID_F) \
-	ID_F(base_modifier, base_values) \
 	F(war) \
 	F(peace) \
 	F(disarming) \
@@ -23,7 +22,7 @@
 	ID_F(infamy, badboy) \
 	F(debt_default_to) \
 	F(great_power) \
-	F(secondary_power) \
+	ID_F(secondary_power, second_power) \
 	ID_F(civilised, civ_nation) \
 	ID_F(uncivilised, unciv_nation) \
 	ID_F(literacy, average_literacy) \
@@ -63,6 +62,8 @@ namespace OpenVic {
 
 		#undef DEFINE_PROPERTY
 		#undef DEFINE_PROPERTY_NAME
+
+		Modifier PROPERTY(base_modifier, { "base_values", {}, Modifier::modifier_type_t::STATIC });
 
 		// Country event modifiers
 		Modifier const* PROPERTY(in_bankruptcy, nullptr);
