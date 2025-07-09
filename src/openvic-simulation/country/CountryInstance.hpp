@@ -153,8 +153,8 @@ namespace OpenVic {
 
 		//store per slider per good: desired, bought & cost
 		//store purchase record from last tick and prediction next tick
-		SliderValue PROPERTY(land_spending_slider_value);
-		SliderValue PROPERTY(naval_spending_slider_value);
+		SliderValue PROPERTY(army_spending_slider_value);
+		SliderValue PROPERTY(navy_spending_slider_value);
 		SliderValue PROPERTY(construction_spending_slider_value);
 
 		SliderValue PROPERTY(administration_spending_slider_value);
@@ -524,8 +524,8 @@ namespace OpenVic {
 		bool add_reform(Reform const& new_reform);
 
 		void set_strata_tax_rate_slider_value(Strata const& strata, const fixed_point_t new_value);
-		void set_land_spending_slider_value(const fixed_point_t new_value);
-		void set_naval_spending_slider_value(const fixed_point_t new_value);
+		void set_army_spending_slider_value(const fixed_point_t new_value);
+		void set_navy_spending_slider_value(const fixed_point_t new_value);
 		void set_construction_spending_slider_value(const fixed_point_t new_value);
 		void set_education_spending_slider_value(const fixed_point_t new_value);
 		void set_administration_spending_slider_value(const fixed_point_t new_value);

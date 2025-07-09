@@ -29,8 +29,8 @@ namespace OpenVic {
 
 		// Budget
 		GAME_ACTION_SET_STRATA_TAX,
-		GAME_ACTION_SET_LAND_SPENDING,
-		GAME_ACTION_SET_NAVAL_SPENDING,
+		GAME_ACTION_SET_ARMY_SPENDING,
+		GAME_ACTION_SET_NAVY_SPENDING,
 		GAME_ACTION_SET_CONSTRUCTION_SPENDING,
 		GAME_ACTION_SET_EDUCATION_SPENDING,
 		GAME_ACTION_SET_ADMINISTRATION_SPENDING,
@@ -117,8 +117,8 @@ namespace OpenVic {
 
 		// Budget
 		bool game_action_callback_set_strata_tax(game_action_argument_t const& argument) const;
-		bool game_action_callback_set_land_spending(game_action_argument_t const& argument) const;
-		bool game_action_callback_set_naval_spending(game_action_argument_t const& argument) const;
+		bool game_action_callback_set_army_spending(game_action_argument_t const& argument) const;
+		bool game_action_callback_set_navy_spending(game_action_argument_t const& argument) const;
 		bool game_action_callback_set_construction_spending(game_action_argument_t const& argument) const;
 		bool game_action_callback_set_education_spending(game_action_argument_t const& argument) const;
 		bool game_action_callback_set_administration_spending(game_action_argument_t const& argument) const;
