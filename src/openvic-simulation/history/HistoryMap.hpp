@@ -1,6 +1,5 @@
 #pragma once
 
-#include <memory>
 #include <system_error>
 
 #include "openvic-simulation/dataloader/NodeTools.hpp"
@@ -60,8 +59,13 @@ namespace OpenVic {
 		}
 
 		bool _load_history_sub_entry_callback(
-			DefinitionManager const& definition_manager, Args... args, Date date, ast::NodeCPtr root, std::string_view key,
-			ast::NodeCPtr value, NodeTools::key_value_callback_t default_callback = NodeTools::key_value_invalid_callback
+			DefinitionManager const& definition_manager,
+			Args... args,
+			Date date,
+			ast::NodeCPtr root,
+			NodeTools::template_key_map_t<StringMapCaseSensitive> const& key_map,
+			std::string_view key,
+			ast::NodeCPtr value
 		) {
 			/* Date blocks (loaded into the corresponding HistoryEntry) */
 			Date::from_chars_result result;
@@ -80,8 +84,8 @@ namespace OpenVic {
 					return false;
 				}
 			}
-
-			return default_callback(key, value);
+			
+			return NodeTools::map_key_value_invalid_callback<NodeTools::template_key_map_t<StringMapCaseSensitive>>(key_map, key, value);
 		}
 
 		/* Returns history entry at specific date, if date doesn't have an entry creates one, if that fails returns nullptr. */

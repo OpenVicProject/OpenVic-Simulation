@@ -71,9 +71,17 @@ bool CountryHistoryMap::_load_history_entry(
 		};
 	};
 
-	return expect_dictionary_keys_and_default(
-		[this, &definition_manager, &dataloader, &deployment_manager, &issue_manager, &technology_manager, &invention_manager,
-			&country_definition_manager, &entry](std::string_view key, ast::NodeCPtr value) -> bool {
+	return expect_dictionary_keys_and_default_map(
+		[
+			this, &definition_manager, &dataloader,
+			&deployment_manager, &issue_manager,
+			&technology_manager, &invention_manager,
+			&country_definition_manager, &entry
+		](
+			template_key_map_t<StringMapCaseSensitive> const& key_map,
+			std::string_view key,
+			ast::NodeCPtr value
+		) -> bool {
 			ReformGroup const* reform_group = issue_manager.get_reform_group_by_identifier(key);
 			if (reform_group != nullptr) {
 				return issue_manager.expect_reform_identifier([&entry, reform_group](Reform const& reform) -> bool {
@@ -112,7 +120,7 @@ bool CountryHistoryMap::_load_history_entry(
 			}
 
 			return _load_history_sub_entry_callback(
-				definition_manager, dataloader, deployment_manager, entry.get_date(), value, key, value
+				definition_manager, dataloader, deployment_manager, entry.get_date(), value, key_map, key, value
 			);
 		},
 		"capital", ZERO_OR_ONE, definition_manager.get_map_definition().expect_province_definition_identifier(
