@@ -174,19 +174,9 @@ namespace OpenVic {
 	}
 
 	namespace cow {
-		template<typename T>
-		T const& read(T const& v) {
-			return v;
-		}
-
 		template<utility::specialization_of<cow_ptr> T>
 		typename T::element_type const& read(T& v) {
 			return v.read();
-		}
-
-		template<typename T>
-		T& write(T& v) {
-			return v;
 		}
 
 		template<utility::specialization_of<cow_ptr> T>
