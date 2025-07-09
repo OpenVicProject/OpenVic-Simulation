@@ -200,6 +200,19 @@ namespace OpenVic {
 			return static_cast<int32_t>(to_int64_t());
 		}
 
+		//away from zero
+		constexpr int64_t to_int64_t_rounded() const {
+			const fixed_point_t fp = *this;
+			if (fp >= 0) {
+				return (fp + _0_50).value >> PRECISION;
+			} else {
+				return (fp - _0_50).value >> PRECISION;
+			}
+		}
+		constexpr int32_t to_int32_t_rounded() const {
+			return static_cast<int32_t>(to_int64_t_rounded());
+		}
+
 		template<std::integral T>
 		constexpr T to() const {
 			return static_cast<T>(to_int64_t());
