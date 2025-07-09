@@ -10,7 +10,7 @@ using namespace OpenVic;
 using namespace OpenVic::GUI;
 using namespace OpenVic::NodeTools;
 
-Position::Position() : position {} {}
+Position::Position() {}
 
 bool Position::_fill_key_map(NodeTools::case_insensitive_key_map_t& key_map) {
 	bool ret = Named::_fill_key_map(key_map);
@@ -20,7 +20,7 @@ bool Position::_fill_key_map(NodeTools::case_insensitive_key_map_t& key_map) {
 	return ret;
 }
 
-Element::Element() : position {}, orientation { orientation_t::UPPER_LEFT } {}
+Element::Element() {}
 
 bool Element::_fill_key_map(NodeTools::case_insensitive_key_map_t& key_map, UIManager const& ui_manager) {
 	bool ret = Named::_fill_key_map(key_map, ui_manager);
@@ -82,7 +82,7 @@ node_callback_t Scene::expect_scene(
 	}, ui_manager);
 }
 
-Window::Window() : background {}, size {}, moveable { false }, fullscreen { false } {}
+Window::Window() {}
 
 bool Window::_fill_key_map(NodeTools::case_insensitive_key_map_t& key_map, UIManager const& ui_manager) {
 	bool ret = Element::_fill_elements_key_map(key_map, [this](std::unique_ptr<Element>&& element) -> bool {
@@ -104,7 +104,7 @@ bool Window::_fill_key_map(NodeTools::case_insensitive_key_map_t& key_map, UIMan
 	return ret;
 }
 
-Icon::Icon() : sprite { nullptr }, frame { GFX::NO_FRAMES }, scale { 1 }, rotation { 0 } {}
+Icon::Icon() {}
 
 bool Icon::_fill_key_map(NodeTools::case_insensitive_key_map_t& key_map, UIManager const& ui_manager) {
 	bool ret = Element::_fill_key_map(key_map, ui_manager);
@@ -120,7 +120,7 @@ bool Icon::_fill_key_map(NodeTools::case_insensitive_key_map_t& key_map, UIManag
 	return ret;
 }
 
-BaseButton::BaseButton() : sprite { nullptr }, text {}, font { nullptr } {}
+BaseButton::BaseButton() {}
 
 bool BaseButton::_fill_key_map(NodeTools::case_insensitive_key_map_t& key_map, UIManager const& ui_manager) {
 	bool ret = Element::_fill_key_map(key_map, ui_manager);
@@ -144,7 +144,7 @@ bool BaseButton::_fill_key_map(NodeTools::case_insensitive_key_map_t& key_map, U
 	return ret;
 }
 
-Button::Button() : size {}, rotation { 0 } {}
+Button::Button() {}
 
 bool Button::_fill_key_map(NodeTools::case_insensitive_key_map_t& key_map, UIManager const& ui_manager) {
 	bool ret = BaseButton::_fill_key_map(key_map, ui_manager);
@@ -164,7 +164,7 @@ bool Checkbox::_fill_key_map(NodeTools::case_insensitive_key_map_t& key_map, UIM
 	return ret;
 }
 
-AlignedElement::AlignedElement() : format { text_format_t::left } {}
+AlignedElement::AlignedElement() {}
 
 bool AlignedElement::_fill_key_map(NodeTools::case_insensitive_key_map_t& key_map, UIManager const& ui_manager) {
 	bool ret = Element::_fill_key_map(key_map, ui_manager);
@@ -174,7 +174,7 @@ bool AlignedElement::_fill_key_map(NodeTools::case_insensitive_key_map_t& key_ma
 	return ret;
 }
 
-Text::Text() : text {}, font { nullptr }, max_size {}, border_size {} {}
+Text::Text() {}
 
 bool Text::_fill_key_map(NodeTools::case_insensitive_key_map_t& key_map, UIManager const& ui_manager) {
 	bool ret = AlignedElement::_fill_key_map(key_map, ui_manager);
@@ -192,7 +192,7 @@ bool Text::_fill_key_map(NodeTools::case_insensitive_key_map_t& key_map, UIManag
 	return ret;
 }
 
-OverlappingElementsBox::OverlappingElementsBox() : size {}, spacing {} {}
+OverlappingElementsBox::OverlappingElementsBox() {}
 
 bool OverlappingElementsBox::_fill_key_map(NodeTools::case_insensitive_key_map_t& key_map, UIManager const& ui_manager) {
 	bool ret = AlignedElement::_fill_key_map(key_map, ui_manager);
@@ -203,7 +203,7 @@ bool OverlappingElementsBox::_fill_key_map(NodeTools::case_insensitive_key_map_t
 	return ret;
 }
 
-ListBox::ListBox() : size {}, scrollbar_offset {}, items_offset {}, spacing {}, scrollbar_name {} {}
+ListBox::ListBox() {}
 
 bool ListBox::_fill_key_map(NodeTools::case_insensitive_key_map_t& key_map, UIManager const& ui_manager) {
 	bool ret = Element::_fill_key_map(key_map, ui_manager);
@@ -222,7 +222,7 @@ bool ListBox::_fill_key_map(NodeTools::case_insensitive_key_map_t& key_map, UIMa
 	return ret;
 }
 
-TextEditBox::TextEditBox() : text {}, font { nullptr }, texture_file {}, size {}, border_size {} {}
+TextEditBox::TextEditBox() {}
 
 bool TextEditBox::_fill_key_map(NodeTools::case_insensitive_key_map_t& key_map, UIManager const& ui_manager) {
 	bool ret = Element::_fill_key_map(key_map, ui_manager);
@@ -236,10 +236,7 @@ bool TextEditBox::_fill_key_map(NodeTools::case_insensitive_key_map_t& key_map, 
 	return ret;
 }
 
-Scrollbar::Scrollbar()
-  : slider_button_name {}, track_button_name {}, less_button_name{}, more_button_name {}, size {}, border_size {},
-	min_value {}, max_value {}, step_size {}, start_value {}, horizontal { false }, range_limited { false },
-	range_limit_min {}, range_limit_max {}, range_limit_min_icon_name {}, range_limit_max_icon_name {} {
+Scrollbar::Scrollbar() {
 	scrollbar_elements.reserve(4); /* Space for 4 buttons, might need 2 more for range limit icons. */
 }
 

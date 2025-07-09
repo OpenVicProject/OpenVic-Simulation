@@ -28,8 +28,7 @@
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;
 
-MapDefinition::MapDefinition() : dims { 0, 0 }, max_provinces { ProvinceDefinition::MAX_INDEX } {
-}
+MapDefinition::MapDefinition() {}
 
 RiverSegment::RiverSegment(uint8_t new_size, std::vector<ivec2_t>&& new_points)
 	: size { new_size }, points { std::move(new_points) } {}

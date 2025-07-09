@@ -9,9 +9,7 @@ using namespace OpenVic;
 static constexpr size_t MONTHS_OF_PRICE_HISTORY = 36;
 
 GoodMarket::GoodMarket(GameRulesManager const& new_game_rules_manager, GoodDefinition const& new_good_definition)
-  : buy_lock { std::make_unique<std::mutex>() },
-	sell_lock { std::make_unique<std::mutex>() },
-	game_rules_manager { new_game_rules_manager },
+  : game_rules_manager { new_game_rules_manager },
 	good_definition { new_good_definition },
 	price { new_good_definition.get_base_price() },
 	is_available { new_good_definition.get_is_available_from_start() },

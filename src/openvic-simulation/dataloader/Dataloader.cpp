@@ -149,7 +149,7 @@ Dataloader::path_vector_t Dataloader::_lookup_files_in_dir(
 	path_vector_t ret;
 	struct file_entry_t {
 		fs::path file;
-		fs::path const* root;
+		fs::path const* root = nullptr;
 	};
 	string_map_t<file_entry_t> found_files;
 	for (fs::path const& root : roots) {

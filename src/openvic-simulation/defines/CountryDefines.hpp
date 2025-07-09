@@ -20,7 +20,7 @@ namespace OpenVic {
 		fixed_point_t PROPERTY(base_country_admin_efficiency);
 		fixed_point_t PROPERTY(gold_to_cash_rate);
 		fixed_point_t PROPERTY(gold_to_worker_pay_rate);
-		size_t PROPERTY(great_power_rank);
+		size_t PROPERTY(great_power_rank, 0);
 		Timespan PROPERTY(lose_great_power_grace_days);
 		fixed_point_t PROPERTY(infamy_containment_limit);
 		fixed_point_t PROPERTY(max_bureaucracy_percentage);
@@ -33,9 +33,9 @@ namespace OpenVic {
 		Timespan PROPERTY(campaign_event_min_duration); // NOT USED
 		Timespan PROPERTY(campaign_event_state_duration_modifier); // NOT USED
 		Timespan PROPERTY(campaign_duration);
-		size_t PROPERTY(secondary_power_rank);
+		size_t PROPERTY(secondary_power_rank, 0);
 		fixed_point_t PROPERTY(colony_to_state_prestige_gain);
-		ProvinceInstance::life_rating_t PROPERTY(colonial_liferating);
+		ProvinceInstance::life_rating_t PROPERTY(colonial_liferating, 0);
 		fixed_point_t PROPERTY(base_greatpower_daily_influence);
 		fixed_point_t PROPERTY(ai_support_reform);
 		fixed_point_t PROPERTY(base_monthly_diplopoints);
@@ -64,7 +64,7 @@ namespace OpenVic {
 		fixed_point_t PROPERTY(tech_factor_vassal);
 		fixed_point_t PROPERTY(max_suppression);
 		fixed_point_t PROPERTY(prestige_hit_on_break_country);
-		size_t PROPERTY(min_mobilize_limit);
+		size_t PROPERTY(min_mobilize_limit, 0);
 		Timespan PROPERTY(pop_growth_country_cache_days);
 		Timespan PROPERTY(newspaper_printing_frequency);
 		Timespan PROPERTY(newspaper_timeout_period);

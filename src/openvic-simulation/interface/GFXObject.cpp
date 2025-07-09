@@ -1,5 +1,5 @@
 #include "GFXObject.hpp"
-#include <cstdint>
+
 #include "openvic-simulation/dataloader/NodeTools.hpp"
 #include "openvic-simulation/utility/Logger.hpp"
 
@@ -55,7 +55,7 @@ Actor::Attachment::Attachment(std::string_view new_actor_name, std::string_view 
 Actor::Animation::Animation(std::string_view new_file, fixed_point_t new_scroll_time)
   : file { new_file }, scroll_time { new_scroll_time } {}
 
-Actor::Actor() : model_file {}, scale { 1 }, idle_animation {}, move_animation {}, attack_animation {} {}
+Actor::Actor() {}
 
 bool Actor::_set_animation(std::string_view name, std::string_view file, fixed_point_t scroll_time) {
 	std::optional<Animation>* animation = nullptr;
@@ -148,9 +148,7 @@ bool Actor::_fill_key_map(NodeTools::case_insensitive_key_map_t& key_map) {
 }
 
 /* arrows.gfx */
-ArrowType::ArrowType() : size { 5 }, texture_file {}, body_texture_file {},
-back_colour {}, progress_colour {}, end_at { 1 }, height { 1 }, arrow_type { 0 },
-heading { 1 }, effect_file {} {}
+ArrowType::ArrowType() {}
 
 bool ArrowType::_fill_key_map(NodeTools::case_insensitive_key_map_t& key_map) {
 	bool ret = Object::_fill_key_map(key_map);
@@ -172,8 +170,7 @@ bool ArrowType::_fill_key_map(NodeTools::case_insensitive_key_map_t& key_map) {
 }
 
 /* battlearrow.gfx */
-BattleArrow::BattleArrow() : texture_arrow_body {}, texture_arrow_head {}, start { 1 }, stop { 1 },
- dims { 1,1 }, font {}, scale { 1 }, no_fade { false }, texture_loop {} {}
+BattleArrow::BattleArrow() {}
 
 bool BattleArrow::_fill_key_map(NodeTools::case_insensitive_key_map_t& key_map) {
 	bool ret = Object::_fill_key_map(key_map);
@@ -194,7 +191,7 @@ bool BattleArrow::_fill_key_map(NodeTools::case_insensitive_key_map_t& key_map) 
 	return ret;
 }
 
-MapInfo::MapInfo() : texture_file {}, scale { 1 } {}
+MapInfo::MapInfo() {}
 
 bool MapInfo::_fill_key_map(NodeTools::case_insensitive_key_map_t& key_map) {
 	bool ret = Object::_fill_key_map(key_map);
@@ -208,10 +205,7 @@ bool MapInfo::_fill_key_map(NodeTools::case_insensitive_key_map_t& key_map) {
 }
 
 /* MapItems.gfx */
-Projection::Projection() :
-	texture_file {}, size { 1 }, spin { 1 },
-	pulsating { false }, pulse_lowest { 1 }, pulse_speed { 1 },
-	additative { false }, expanding { 1 }, duration { 0 }, fadeout { 0 } {}
+Projection::Projection() {}
 
 //TODO: Verify...
 // whether pulseSpeed is fixedpoint_t or int
@@ -238,7 +232,7 @@ bool Projection::_fill_key_map(NodeTools::case_insensitive_key_map_t& key_map) {
 }
 
 
-Billboard::Billboard() : texture_file {}, scale { 1 }, no_of_frames { 1 } {}
+Billboard::Billboard() {}
 
 bool Billboard::_fill_key_map(NodeTools::case_insensitive_key_map_t& key_map) {
 	bool ret = Object::_fill_key_map(key_map);
@@ -263,7 +257,7 @@ bool Billboard::_fill_key_map(NodeTools::case_insensitive_key_map_t& key_map) {
 	return ret;
 }
 
-ProgressBar3d::ProgressBar3d() : back_colour {}, progress_colour {}, size {}, effect_file {} {}
+ProgressBar3d::ProgressBar3d() {}
 
 bool ProgressBar3d::_fill_key_map(NodeTools::case_insensitive_key_map_t& key_map) {
 	bool ret = Object::_fill_key_map(key_map);
@@ -280,8 +274,7 @@ bool ProgressBar3d::_fill_key_map(NodeTools::case_insensitive_key_map_t& key_map
 
 
 /* core.gfx */
-AnimatedMapText::AnimatedMapText() :
-speed { 1 }, scale { 1 }, position {} {}
+AnimatedMapText::AnimatedMapText() {}
 
 bool AnimatedMapText::_fill_key_map(NodeTools::case_insensitive_key_map_t& key_map) {
 	bool ret = Object::_fill_key_map(key_map);

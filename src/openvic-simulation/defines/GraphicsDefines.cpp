@@ -3,18 +3,7 @@
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;
 
-GraphicsDefines::GraphicsDefines()
-  : cities_sprawl_offset {},
-	cities_sprawl_width {},
-	cities_sprawl_height {},
-	cities_sprawl_iterations {},
-	cities_mesh_pool_size_for_country {},
-	cities_mesh_pool_size_for_culture {},
-	cities_mesh_pool_size_for_generic {},
-	cities_mesh_types_count {},
-	cities_mesh_sizes_count {},
-	cities_special_buildings_pool_size {},
-	cities_size_max_population_k {} {}
+GraphicsDefines::GraphicsDefines() {}
 
 std::string_view GraphicsDefines::get_name() const {
 	return "graphics";

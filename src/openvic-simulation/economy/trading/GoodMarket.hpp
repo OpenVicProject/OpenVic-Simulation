@@ -18,8 +18,8 @@ namespace OpenVic {
 		GoodDefinition const& PROPERTY(good_definition);
 
 		static constexpr int32_t exponential_price_change_shift = 7;
-		std::unique_ptr<std::mutex> buy_lock;
-		std::unique_ptr<std::mutex> sell_lock;
+		std::unique_ptr<std::mutex> buy_lock = std::make_unique<std::mutex>();
+		std::unique_ptr<std::mutex> sell_lock = std::make_unique<std::mutex>();
 		GameRulesManager const& game_rules_manager;
 		fixed_point_t absolute_maximum_price;
 		fixed_point_t absolute_minimum_price;

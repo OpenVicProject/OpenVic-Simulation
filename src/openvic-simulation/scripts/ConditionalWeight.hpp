@@ -28,7 +28,7 @@ namespace OpenVic {
 	struct ConditionalWeight {
 
 	private:
-		fixed_point_t PROPERTY(base);
+		fixed_point_t PROPERTY(base, 0);
 		std::vector<condition_weight_item_t> PROPERTY(condition_weight_items);
 		scope_type_t PROPERTY(initial_scope);
 		scope_type_t PROPERTY(this_scope);

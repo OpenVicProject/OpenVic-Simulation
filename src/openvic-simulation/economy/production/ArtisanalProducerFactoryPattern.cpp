@@ -5,15 +5,11 @@
 using namespace OpenVic;
 
 ArtisanalProducerFactoryPattern::ArtisanalProducerFactoryPattern(
-	GoodInstanceManager const& new_good_instance_manager,
-	ModifierEffectCache const& new_modifier_effect_cache,
+	GoodInstanceManager const& new_good_instance_manager, ModifierEffectCache const& new_modifier_effect_cache,
 	ProductionTypeManager const& new_production_type_manager
-) : index { -1 },
-	unlocked_artisanal_production_types { },
-	good_instance_manager { new_good_instance_manager },
-	modifier_effect_cache { new_modifier_effect_cache },
-	production_type_manager { new_production_type_manager }
-	{ }
+)
+	: good_instance_manager { new_good_instance_manager }, modifier_effect_cache { new_modifier_effect_cache },
+	  production_type_manager { new_production_type_manager } {}
 
 std::unique_ptr<ArtisanalProducer> ArtisanalProducerFactoryPattern::CreateNewArtisanalProducer() {
 	//TODO update unlocked_artisanal_production_types when goods are unlocked

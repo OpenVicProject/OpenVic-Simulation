@@ -1,6 +1,9 @@
 #pragma once
 
+#include <cstdint>
+
 #include "openvic-simulation/utility/Getters.hpp"
+
 namespace OpenVic {
 	enum struct country_to_report_economy_t : uint8_t {
 		Owner,

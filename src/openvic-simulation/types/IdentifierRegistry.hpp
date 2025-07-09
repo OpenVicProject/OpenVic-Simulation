@@ -173,12 +173,12 @@ namespace OpenVic {
 		std::string PROPERTY(name);
 		const bool log_lock;
 		storage_type PROPERTY_REF(items);
-		bool PROPERTY_CUSTOM_PREFIX(locked, is);
+		bool PROPERTY_CUSTOM_PREFIX(locked, is, false);
 		identifier_index_map_t identifier_index_map;
 
 	public:
 		constexpr UniqueKeyRegistry(std::string_view new_name, bool new_log_lock = true)
-			: name { new_name }, log_lock { new_log_lock }, locked { false } {}
+			: name { new_name }, log_lock { new_log_lock } {}
 
 		constexpr bool add_item(
 			item_type&& item, NodeTools::Callback<std::string_view, std::string_view> auto duplicate_callback
@@ -531,17 +531,17 @@ namespace OpenVic {
 
 /* Macros to generate declaration and constant accessor methods for a UniqueKeyRegistry member variable. */
 
-#define IDENTIFIER_REGISTRY(name) \
-	IDENTIFIER_REGISTRY_CUSTOM_PLURAL(name, name##s)
+#define IDENTIFIER_REGISTRY(name, ...) \
+	IDENTIFIER_REGISTRY_CUSTOM_PLURAL(name, name##s __VA_OPT__(,) __VA_ARGS__)
 
-#define IDENTIFIER_REGISTRY_CUSTOM_PLURAL(singular, plural) \
-	IDENTIFIER_REGISTRY_FULL_CUSTOM(singular, plural, plural, plural, 0)
+#define IDENTIFIER_REGISTRY_CUSTOM_PLURAL(singular, plural, ...) \
+	IDENTIFIER_REGISTRY_FULL_CUSTOM(singular, plural, plural, plural, 0 __VA_OPT__(,) __VA_ARGS__)
 
-#define IDENTIFIER_REGISTRY_CUSTOM_INDEX_OFFSET(name, index_offset) \
-	IDENTIFIER_REGISTRY_FULL_CUSTOM(name, name##s, name##s, name##s, index_offset)
+#define IDENTIFIER_REGISTRY_CUSTOM_INDEX_OFFSET(name, index_offset, ...) \
+	IDENTIFIER_REGISTRY_FULL_CUSTOM(name, name##s, name##s, name##s, index_offset __VA_OPT__(,) __VA_ARGS__)
 
-#define IDENTIFIER_REGISTRY_FULL_CUSTOM(singular, plural, registry, debug_name, index_offset) \
-	registry { #debug_name }; \
+#define IDENTIFIER_REGISTRY_FULL_CUSTOM(singular, plural, registry, debug_name, index_offset, ...) \
+	registry { #debug_name __VA_OPT__(,) __VA_ARGS__ }; \
 public: \
 	constexpr void lock_##plural() { \
 		registry.lock(); \

@@ -355,7 +355,7 @@ namespace OpenVic {
 		Timespan PROPERTY(tws_grace_period_days);
 		fixed_point_t PROPERTY(tws_cb_limit_default);
 		fixed_point_t PROPERTY(tws_fulfilled_idle_space);
-		size_t PROPERTY(tws_battle_min_count);
+		size_t PROPERTY(tws_battle_min_count, 0);
 		fixed_point_t PROPERTY(tws_battle_max_aspect);
 		fixed_point_t PROPERTY(large_population_influence_penalty);
 		fixed_point_t PROPERTY(lone_backer_prestige_factor);
