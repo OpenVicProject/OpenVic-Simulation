@@ -18,6 +18,11 @@ Comment: Lexy-based VDF Parser
 Copyright: 2023-present lexy-vdf contributors
 License: Expat
 
+Files: deps/memory/*
+Comment: foonathan/memory
+Copyright: 2015-2023 Jonathan Müller and foonathan/memory contributors
+License: Zlib
+
 Files: deps/openvic-dataloader/*
 Comment: OpenVic Dataloader
 Copyright: 2023-present Dataloader contributors
