@@ -92,7 +92,7 @@ namespace OpenVic {
 
 	public:
 		bool register_complex_modifier(const std::string_view identifier);
-		static std::string get_flat_identifier(const std::string_view complex_modifier_identifier, const std::string_view variant_identifier);
+		static memory::string get_flat_identifier(const std::string_view complex_modifier_identifier, const std::string_view variant_identifier);
 
 		bool setup_modifier_effects();
 

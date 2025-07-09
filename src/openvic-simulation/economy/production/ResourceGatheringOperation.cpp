@@ -13,13 +13,18 @@
 #include "openvic-simulation/pop/Pop.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
 #include "openvic-simulation/utility/Logger.hpp"
+#include "openvic-simulation/utility/Containers.hpp"
 
 using namespace OpenVic;
 
 ResourceGatheringOperation::ResourceGatheringOperation(
-	MarketInstance& new_market_instance, ProductionType const* new_production_type_nullable, fixed_point_t new_size_multiplier,
-	fixed_point_t new_revenue_yesterday, fixed_point_t new_output_quantity_yesterday,
-	fixed_point_t new_unsold_quantity_yesterday, std::vector<Employee>&& new_employees,
+	MarketInstance& new_market_instance,
+	ProductionType const* new_production_type_nullable,
+	fixed_point_t new_size_multiplier,
+	fixed_point_t new_revenue_yesterday,
+	fixed_point_t new_output_quantity_yesterday,
+	fixed_point_t new_unsold_quantity_yesterday,
+	memory::vector<Employee>&& new_employees,
 	decltype(employee_count_per_type_cache)::keys_span_type pop_type_keys
 )
 	: market_instance { new_market_instance },
@@ -105,7 +110,7 @@ fixed_point_t ResourceGatheringOperation::calculate_size_modifier() const {
 	return size_modifier > fixed_point_t::_0 ? size_modifier : fixed_point_t::_0;
 }
 
-void ResourceGatheringOperation::rgo_tick(std::vector<fixed_point_t>& reusable_vector) {
+void ResourceGatheringOperation::rgo_tick(memory::vector<fixed_point_t>& reusable_vector) {
 	ProvinceInstance& location = *location_ptr;
 	if (production_type_nullable == nullptr || location.get_owner() == nullptr) {
 		output_quantity_yesterday = 0;
@@ -153,7 +158,7 @@ void ResourceGatheringOperation::rgo_tick(std::vector<fixed_point_t>& reusable_v
 	}
 }
 
-void ResourceGatheringOperation::after_sell(void* actor, SellResult const& sell_result, std::vector<fixed_point_t>& reusable_vector) {
+void ResourceGatheringOperation::after_sell(void* actor, SellResult const& sell_result, memory::vector<fixed_point_t>& reusable_vector) {
 	ResourceGatheringOperation& rgo = *static_cast<ResourceGatheringOperation*>(actor);
 	rgo.revenue_yesterday = sell_result.get_money_gained();
 	rgo.pay_employees(reusable_vector);
@@ -327,7 +332,7 @@ fixed_point_t ResourceGatheringOperation::produce() {
 		* output_multiplier * output_from_workers;
 }
 
-void ResourceGatheringOperation::pay_employees(std::vector<fixed_point_t>& reusable_vector) {
+void ResourceGatheringOperation::pay_employees(memory::vector<fixed_point_t>& reusable_vector) {
 	ProvinceInstance& location = *location_ptr;
 	fixed_point_t const& revenue = revenue_yesterday;
 
@@ -394,7 +399,7 @@ void ResourceGatheringOperation::pay_employees(std::vector<fixed_point_t>& reusa
 			//scenario slaves only
 			//Money is removed from system in Victoria 2.
 		} else {
-			std::vector<fixed_point_t>& incomes = reusable_vector;
+			memory::vector<fixed_point_t>& incomes = reusable_vector;
 			incomes.resize(employees.size());
 
 			pop_size_t count_workers_to_be_paid = total_paid_employees_count_cache;

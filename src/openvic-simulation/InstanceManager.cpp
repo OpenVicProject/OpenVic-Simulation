@@ -242,7 +242,7 @@ bool InstanceManager::load_bookmark(Bookmark const* new_bookmark) {
 	for (ProvinceInstance const& province_instance : map_instance.get_province_instances()) {
 		if (!province_instance.get_province_definition().is_water() && OV_unlikely(province_instance.get_state() == nullptr)) {
 			all_has_state = false;
-			Logger::error(fmt::format("Province {} has no state.", province_instance.get_identifier()));
+			Logger::error(memory::fmt::format("Province {} has no state.", province_instance.get_identifier()));
 			continue;
 		}
 	}

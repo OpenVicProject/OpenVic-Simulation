@@ -9,6 +9,7 @@
 #include "openvic-simulation/scripts/ConditionalWeight.hpp"
 #include "openvic-simulation/types/Date.hpp"
 #include "openvic-simulation/types/OrderedContainers.hpp"
+#include "openvic-simulation/utility/Containers.hpp"
 
 namespace OpenVic {
 	struct TechnologyArea;
@@ -17,7 +18,7 @@ namespace OpenVic {
 		friend struct TechnologyManager;
 
 	private:
-		std::vector<TechnologyArea const*> PROPERTY(technology_areas);
+		memory::vector<TechnologyArea const*> PROPERTY(technology_areas);
 
 		TechnologyFolder(std::string_view new_identifier, index_t new_index);
 
@@ -32,7 +33,7 @@ namespace OpenVic {
 
 	private:
 		TechnologyFolder const& PROPERTY(folder);
-		std::vector<Technology const*> PROPERTY(technologies);
+		memory::vector<Technology const*> PROPERTY(technologies);
 		size_t PROPERTY(tech_count, 0);
 
 		TechnologyArea(std::string_view new_identifier, TechnologyFolder const& new_folder);

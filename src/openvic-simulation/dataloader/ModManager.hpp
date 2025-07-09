@@ -13,12 +13,12 @@ namespace OpenVic {
 		friend struct ModManager;
 
 	private:
-		const std::string PROPERTY(dataloader_root_path);
-		const std::optional<std::string> PROPERTY(user_dir);
-		const std::vector<std::string> PROPERTY(replace_paths);
-		const std::vector<std::string> PROPERTY(dependencies);
+		const memory::string PROPERTY(dataloader_root_path);
+		const std::optional<memory::string> PROPERTY(user_dir);
+		const memory::vector<memory::string> PROPERTY(replace_paths);
+		const memory::vector<memory::string> PROPERTY(dependencies);
 
-		Mod(std::string_view new_identifier, std::string_view new_path, std::optional<std::string_view> new_user_dir, std::vector<std::string> new_replace_paths, std::vector<std::string> new_dependencies);
+		Mod(std::string_view new_identifier, std::string_view new_path, std::optional<std::string_view> new_user_dir, memory::vector<memory::string> new_replace_paths, memory::vector<memory::string> new_dependencies);
 
 	public:
 		Mod(Mod&&) = default;

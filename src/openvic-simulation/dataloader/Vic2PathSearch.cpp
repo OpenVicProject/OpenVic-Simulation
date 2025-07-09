@@ -7,6 +7,7 @@
 
 #include "openvic-simulation/types/OrderedContainers.hpp"
 #include "openvic-simulation/utility/ConstexprIntToStr.hpp"
+#include "openvic-simulation/utility/Containers.hpp"
 #include "openvic-simulation/utility/Logger.hpp"
 
 #include "Dataloader.hpp"
@@ -104,10 +105,10 @@ static fs::path _search_for_game_path(fs::path hint_path = {}) {
 
 #pragma warning(push)
 #pragma warning(disable : 4996)
-		static const fs::path prog_files = std::string(std::getenv("ProgramFiles"));
+		static const fs::path prog_files = memory::string(std::getenv("ProgramFiles"));
 		hint_path = prog_files / "Steam";
 		if (!fs::is_directory(hint_path, error_code)) {
-			static const fs::path prog_files_x86 = std::string(std::getenv("ProgramFiles(x86)"));
+			static const fs::path prog_files_x86 = memory::string(std::getenv("ProgramFiles(x86)"));
 			hint_path = prog_files_x86 / "Steam";
 			if (!fs::is_directory(hint_path, error_code)) {
 				Logger::warning("Could not find path for Steam installation on Windows.");
@@ -181,11 +182,11 @@ static fs::path _search_for_game_path(fs::path hint_path = {}) {
 		(is_libraryfolders_vdf || filename_equals(libraryfolders, current_path))) {
 		lexy_vdf::Parser parser;
 
-		std::string buffer;
+		memory::string buffer;
 		auto error_log_stream = detail::make_callback_stream<char>(
 			[](void const* s, std::streamsize n, void* user_data) -> std::streamsize {
 				if (s != nullptr && n > 0 && user_data != nullptr) {
-					static_cast<std::string*>(user_data)->append(static_cast<char const*>(s), n);
+					static_cast<memory::string*>(user_data)->append(static_cast<char const*>(s), n);
 					return n;
 				} else {
 					Logger::warning("Invalid input to parser error log callback: ", s, " / ", n, " / ", user_data);

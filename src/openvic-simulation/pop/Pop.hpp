@@ -1,7 +1,5 @@
 #pragma once
 
-#include <memory>
-
 #include "openvic-simulation/country/CountryDefinition.hpp"
 #include "openvic-simulation/economy/production/ArtisanalProducerFactoryPattern.hpp"
 #include "openvic-simulation/pop/PopNeedsMacro.hpp"
@@ -9,6 +7,7 @@
 #include "openvic-simulation/types/fixed_point/Atomic.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
 #include "openvic-simulation/types/PopSize.hpp"
+#include "openvic-simulation/utility/Containers.hpp"
 
 namespace OpenVic {
 	struct CountryInstance;
@@ -80,7 +79,7 @@ namespace OpenVic {
 		static constexpr pop_size_t MAX_SIZE = std::numeric_limits<pop_size_t>::max();
 
 	private:
-		std::unique_ptr<ArtisanalProducer> artisanal_producer_nullable;
+		memory::unique_ptr<ArtisanalProducer> artisanal_producer_nullable;
 		fixed_point_t cash_allocated_for_artisanal_spending;
 		fixed_point_t artisanal_produce_left_to_sell;
 		ProvinceInstance* PROPERTY_PTR(location, nullptr);
@@ -151,7 +150,7 @@ namespace OpenVic {
 			ArtisanalProducerFactoryPattern& artisanal_producer_factory_pattern
 		);
 
-		std::stringstream get_pop_context_text() const;
+		memory::stringstream get_pop_context_text() const;
 		void reserve_needs_fulfilled_goods();
 		void fill_needs_fulfilled_goods_with_false();
 		void allocate_for_needs(
@@ -161,11 +160,11 @@ namespace OpenVic {
 			fixed_point_t& price_inverse_sum,
 			fixed_point_t& cash_left_to_spend
 		);
-		void pop_tick_without_cleanup(PopValuesFromProvince& shared_values, std::vector<fixed_point_t>& reusable_vector);
+		void pop_tick_without_cleanup(PopValuesFromProvince& shared_values, memory::vector<fixed_point_t>& reusable_vector);
 		void pay_income_tax(fixed_point_t& income);
 		static void after_buy(void* actor, BuyResult const& buy_result);
 		//matching GoodMarketSellOrder::callback_t
-		static void after_sell(void* actor, SellResult const& sell_result, std::vector<fixed_point_t>& reusable_vector);
+		static void after_sell(void* actor, SellResult const& sell_result, memory::vector<fixed_point_t>& reusable_vector);
 
 	public:
 		Pop(Pop const&) = delete;
@@ -194,7 +193,7 @@ namespace OpenVic {
 		DO_FOR_ALL_TYPES_OF_POP_EXPENSES(DECLARE_POP_MONEY_STORE_FUNCTIONS)
 		DECLARE_POP_MONEY_STORE_FUNCTIONS(import_subsidies)
 		#undef DECLARE_POP_MONEY_STORE_FUNCTIONS
-		void pop_tick(PopValuesFromProvince& shared_values, std::vector<fixed_point_t>& reusable_vector);
+		void pop_tick(PopValuesFromProvince& shared_values, memory::vector<fixed_point_t>& reusable_vector);
 		void allocate_cash_for_artisanal_spending(const fixed_point_t money_to_spend);
 		void report_artisanal_produce(const fixed_point_t quantity);
 		void hire(pop_size_t count);

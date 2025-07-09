@@ -5,6 +5,7 @@
 #include <vector>
 
 #include "openvic-simulation/modifier/Modifier.hpp"
+#include "openvic-simulation/utility/Containers.hpp"
 
 namespace OpenVic {
 
@@ -12,7 +13,7 @@ namespace OpenVic {
 
 	struct ProvinceSet {
 	private:
-		std::vector<ProvinceDefinition const*> PROPERTY(provinces);
+		memory::vector<ProvinceDefinition const*> PROPERTY(provinces);
 		bool locked = false;
 
 	public:

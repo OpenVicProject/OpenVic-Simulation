@@ -13,8 +13,8 @@ namespace OpenVic {
 		friend struct BookmarkManager;
 
 	private:
-		std::string PROPERTY(name);
-		std::string PROPERTY(description);
+		memory::string PROPERTY(name);
+		memory::string PROPERTY(description);
 		const Date PROPERTY(date);
 		const fvec2_t PROPERTY(initial_camera_position);
 

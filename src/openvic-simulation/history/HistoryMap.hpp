@@ -6,6 +6,7 @@
 #include "openvic-simulation/dataloader/NodeTools.hpp"
 #include "openvic-simulation/types/Date.hpp"
 #include "openvic-simulation/types/OrderedContainers.hpp"
+#include "openvic-simulation/utility/Containers.hpp"
 
 namespace OpenVic {
 
@@ -30,7 +31,7 @@ namespace OpenVic {
 		using entry_type = _Entry;
 
 	private:
-		ordered_map<Date, std::unique_ptr<entry_type>> PROPERTY(entries);
+		ordered_map<Date, memory::unique_ptr<entry_type>> PROPERTY(entries);
 
 		bool _try_load_history_entry(
 			DefinitionManager const& definition_manager, Args... args, Date date, ast::NodeCPtr root
@@ -46,7 +47,7 @@ namespace OpenVic {
 	protected:
 		HistoryMap() = default;
 
-		virtual std::unique_ptr<entry_type> _make_entry(Date date) const = 0;
+		virtual memory::unique_ptr<entry_type> _make_entry(Date date) const = 0;
 
 		virtual bool _load_history_entry(
 			DefinitionManager const& definition_manager, Args... args, entry_type& entry, ast::NodeCPtr root
@@ -105,13 +106,13 @@ namespace OpenVic {
 
 	public:
 		void sort_entries() {
-			std::vector<Date> keys;
+			memory::vector<Date> keys;
 			keys.reserve(entries.size());
 			for (typename decltype(entries)::value_type const& entry : entries) {
 				keys.push_back(entry.first);
 			}
 			std::sort(keys.begin(), keys.end());
-			ordered_map<Date, std::unique_ptr<entry_type>> new_entries;
+			ordered_map<Date, memory::unique_ptr<entry_type>> new_entries;
 			for (Date const& key : keys) {
 				new_entries.emplace(key, std::move(entries[key]));
 			}

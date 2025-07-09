@@ -41,7 +41,7 @@ bool Element::_fill_key_map(NodeTools::case_insensitive_key_map_t& key_map, UIMa
 }
 
 bool Element::_fill_elements_key_map(
-	NodeTools::case_insensitive_key_map_t& key_map, callback_t<std::unique_ptr<Element>&&> callback, UIManager const& ui_manager
+	NodeTools::case_insensitive_key_map_t& key_map, callback_t<memory::unique_base_ptr<Element>&&> callback, UIManager const& ui_manager
 ) {
 	bool ret = true;
 	ret &= add_key_map_entries(key_map,
@@ -62,7 +62,7 @@ bool Element::_fill_elements_key_map(
 }
 
 bool Scene::_fill_key_map(NodeTools::case_insensitive_key_map_t& key_map, UIManager const& ui_manager) {
-	bool ret = Element::_fill_elements_key_map(key_map, [this](std::unique_ptr<Element>&& element) -> bool {
+	bool ret = Element::_fill_elements_key_map(key_map, [this](memory::unique_base_ptr<Element>&& element) -> bool {
 		return scene_elements.add_item(std::move(element));
 	}, ui_manager);
 	ret &= add_key_map_entry(key_map,
@@ -74,9 +74,9 @@ bool Scene::_fill_key_map(NodeTools::case_insensitive_key_map_t& key_map, UIMana
 }
 
 node_callback_t Scene::expect_scene(
-	std::string_view scene_name, callback_t<std::unique_ptr<Scene>&&> callback, UIManager const& ui_manager
+	std::string_view scene_name, callback_t<memory::unique_base_ptr<Scene>&&> callback, UIManager const& ui_manager
 ) {
-	return _expect_instance<Scene, Scene>([scene_name, callback](std::unique_ptr<Scene>&& scene) mutable -> bool {
+	return _expect_instance<Scene, Scene>([scene_name, callback](memory::unique_base_ptr<Scene>&& scene) mutable -> bool {
 		scene->_set_name(scene_name);
 		return callback(std::move(scene));
 	}, ui_manager);
@@ -85,7 +85,7 @@ node_callback_t Scene::expect_scene(
 Window::Window() {}
 
 bool Window::_fill_key_map(NodeTools::case_insensitive_key_map_t& key_map, UIManager const& ui_manager) {
-	bool ret = Element::_fill_elements_key_map(key_map, [this](std::unique_ptr<Element>&& element) -> bool {
+	bool ret = Element::_fill_elements_key_map(key_map, [this](memory::unique_base_ptr<Element>&& element) -> bool {
 		return window_elements.add_item(std::move(element), duplicate_warning_callback);
 	}, ui_manager);
 	ret &= Element::_fill_key_map(key_map, ui_manager);
@@ -242,7 +242,7 @@ Scrollbar::Scrollbar() {
 
 bool Scrollbar::_fill_key_map(NodeTools::case_insensitive_key_map_t& key_map, UIManager const& ui_manager) {
 	bool ret = Element::_fill_key_map(key_map, ui_manager);
-	const auto add_element = [this](std::unique_ptr<Element>&& element) -> bool {
+	const auto add_element = [this](memory::unique_base_ptr<Element>&& element) -> bool {
 		return scrollbar_elements.add_item(std::move(element));
 	};
 	ret &= add_key_map_entries(key_map,

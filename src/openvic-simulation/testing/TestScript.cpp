@@ -8,22 +8,22 @@ using namespace OpenVic;
 TestScript::TestScript(std::string_view new_script_name) : script_name { new_script_name } {}
 
 // Getters
-std::vector<std::unique_ptr<Requirement>>& TestScript::get_requirements() {
+memory::vector<memory::unique_ptr<Requirement>>& TestScript::get_requirements() {
 	return requirements;
 }
 Requirement* TestScript::get_requirement_at_index(int index) {
 	return requirements[index].get();
 }
-Requirement* TestScript::get_requirement_by_id(std::string id) {
+Requirement* TestScript::get_requirement_by_id(memory::string id) {
 	for (auto& req : requirements) {
 		if (req->get_id() == id) {
 			return req.get();
 		}
 	}
-	return new Requirement("NULL", "NULL", "NULL"); // edge case of failing to find
+	return nullptr; // edge case of failing to find
 }
-std::vector<Requirement*> TestScript::get_passed_requirements() {
-	std::vector<Requirement*> passed_requirements = std::vector<Requirement*>();
+memory::vector<Requirement*> TestScript::get_passed_requirements() {
+	memory::vector<Requirement*> passed_requirements = memory::vector<Requirement*>();
 	for (auto& req : requirements) {
 		if (req->get_pass()) {
 			passed_requirements.push_back(req.get());
@@ -31,8 +31,8 @@ std::vector<Requirement*> TestScript::get_passed_requirements() {
 	}
 	return passed_requirements;
 }
-std::vector<Requirement*> TestScript::get_failed_requirements() {
-	std::vector<Requirement*> failed_requirements = std::vector<Requirement*>();
+memory::vector<Requirement*> TestScript::get_failed_requirements() {
+	memory::vector<Requirement*> failed_requirements = memory::vector<Requirement*>();
 	for (auto& req : requirements) {
 		if (!req->get_pass() && req->get_tested()) {
 			failed_requirements.push_back(req.get());
@@ -40,8 +40,8 @@ std::vector<Requirement*> TestScript::get_failed_requirements() {
 	}
 	return failed_requirements;
 }
-std::vector<Requirement*> TestScript::get_untested_requirements() {
-	std::vector<Requirement*> untested_requirements = std::vector<Requirement*>();
+memory::vector<Requirement*> TestScript::get_untested_requirements() {
+	memory::vector<Requirement*> untested_requirements = memory::vector<Requirement*>();
 	for (auto& req : requirements) {
 		if (!req->get_tested()) {
 			untested_requirements.push_back(req.get());
@@ -51,18 +51,21 @@ std::vector<Requirement*> TestScript::get_untested_requirements() {
 }
 
 // Setters
-void TestScript::set_requirements(std::vector<std::unique_ptr<Requirement>>&& in_requirements) {
+void TestScript::set_requirements(memory::vector<memory::unique_ptr<Requirement>>&& in_requirements) {
 	requirements = std::move(in_requirements);
 }
-void TestScript::add_requirement(Requirement* req) {
-	requirements.push_back(std::unique_ptr<Requirement>{ req });
+void TestScript::add_requirement(memory::unique_ptr<Requirement>&& req) {
+	requirements.push_back(std::move(req));
 }
 
 // Methods
 void TestScript::pass_or_fail_req_with_actual_and_target_values(
-	std::string req_name, std::string target_value, std::string actual_value
+	memory::string req_name, memory::string target_value, memory::string actual_value
 ) {
 	Requirement* req = get_requirement_by_id(req_name);
+	if (req == nullptr){
+		return;
+	}
 	req->set_target_value(target_value);
 	req->set_actual_value(actual_value);
 	if (target_value == actual_value) {

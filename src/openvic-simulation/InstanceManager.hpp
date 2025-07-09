@@ -14,6 +14,7 @@
 #include "openvic-simulation/types/Date.hpp"
 #include "openvic-simulation/types/FlagStrings.hpp"
 #include "openvic-simulation/utility/ThreadPool.hpp"
+#include "openvic-simulation/utility/Containers.hpp"
 
 #include <function2/function2.hpp>
 
@@ -56,7 +57,7 @@ namespace OpenVic {
 		Bookmark const* PROPERTY(bookmark, nullptr);
 		Date PROPERTY(today);
 		gamestate_updated_func_t gamestate_updated;
-		std::vector<game_action_t> game_action_queue;
+		memory::vector<game_action_t> game_action_queue;
 		bool gamestate_needs_update = false, currently_updating_gamestate = false, currently_executing_game_actions = false;
 
 		void update_modifier_sums();

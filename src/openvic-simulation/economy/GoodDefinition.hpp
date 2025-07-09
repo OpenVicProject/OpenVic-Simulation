@@ -1,6 +1,7 @@
 #pragma once
 
 #include "openvic-simulation/types/IdentifierRegistry.hpp"
+#include "openvic-simulation/utility/Containers.hpp"
 
 namespace OpenVic {
 	struct GoodDefinitionManager;
@@ -10,7 +11,7 @@ namespace OpenVic {
 		friend struct GoodDefinitionManager;
 
 	private:
-		std::vector<GoodDefinition const*> PROPERTY(good_definitions);
+		memory::vector<GoodDefinition const*> PROPERTY(good_definitions);
 
 		GoodCategory(std::string_view new_identifier);
 

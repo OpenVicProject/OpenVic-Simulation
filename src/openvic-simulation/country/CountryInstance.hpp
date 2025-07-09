@@ -18,6 +18,7 @@
 #include "openvic-simulation/types/OrderedContainers.hpp"
 #include "openvic-simulation/types/SliderValue.hpp"
 #include "openvic-simulation/utility/Getters.hpp"
+#include "openvic-simulation/utility/Containers.hpp"
 
 namespace OpenVic {
 	struct CountryInstanceManager;
@@ -126,12 +127,12 @@ namespace OpenVic {
 
 		// The total/resultant modifier affecting this country, including owned province contributions.
 		ModifierSum PROPERTY(modifier_sum);
-		std::vector<ModifierInstance> PROPERTY(event_modifiers);
+		memory::vector<ModifierInstance> PROPERTY(event_modifiers);
 
 		/* Production */
 		fixed_point_t PROPERTY(industrial_power);
-		std::vector<std::pair<State const*, fixed_point_t>> PROPERTY(industrial_power_from_states);
-		std::vector<std::pair<CountryInstance const*, fixed_point_t>> PROPERTY(industrial_power_from_investments);
+		memory::vector<std::pair<State const*, fixed_point_t>> PROPERTY(industrial_power_from_states);
+		memory::vector<std::pair<CountryInstance const*, fixed_point_t>> PROPERTY(industrial_power_from_investments);
 		size_t PROPERTY(industrial_rank, 0);
 		fixed_point_map_t<CountryInstance const*> PROPERTY(foreign_investments);
 		IndexedMap<BuildingType, unlock_level_t> PROPERTY(building_type_unlock_levels);
@@ -141,7 +142,7 @@ namespace OpenVic {
 		// TODO - cash stockpile change over last 30 days
 		fixed_point_t PROPERTY(gold_income);
 		moveable_atomic_fixed_point_t PROPERTY(cash_stockpile);
-		std::unique_ptr<std::mutex> taxable_income_mutex;
+		memory::unique_ptr<std::mutex> taxable_income_mutex;
 		IndexedMap<PopType, fixed_point_t> PROPERTY(taxable_income_by_pop_type);
 		IndexedMap<Strata, fixed_point_t> PROPERTY(effective_tax_rate_by_strata);
 		IndexedMap<Strata, SliderValue> PROPERTY(tax_rate_slider_value_by_strata);
@@ -177,7 +178,7 @@ namespace OpenVic {
 		fixed_point_t PROPERTY(yesterdays_import_value); //>= 0
 		SliderValue PROPERTY(tariff_rate_slider_value);
 		fixed_point_t PROPERTY(effective_tariff_rate);
-		std::unique_ptr<std::mutex> actual_net_tariffs_mutex;
+		memory::unique_ptr<std::mutex> actual_net_tariffs_mutex;
 		fixed_point_t PROPERTY(projected_import_subsidies);
 		fixed_point_t PROPERTY(actual_net_tariffs);
 		constexpr bool has_import_subsidies() const {
@@ -249,7 +250,7 @@ namespace OpenVic {
 		/* Trade */
 	public:
 		struct good_data_t {
-			std::unique_ptr<std::mutex> mutex;
+			memory::unique_ptr<std::mutex> mutex;
 			fixed_point_t stockpile_amount;
 			fixed_point_t stockpile_change_yesterday; // positive if we bought, negative if we sold
 
@@ -298,10 +299,10 @@ namespace OpenVic {
 		fixed_point_t PROPERTY(military_power_from_sea);
 		fixed_point_t PROPERTY(military_power_from_leaders);
 		size_t PROPERTY(military_rank, 0);
-		std::vector<LeaderInstance*> PROPERTY(generals);
-		std::vector<LeaderInstance*> PROPERTY(admirals);
-		std::vector<ArmyInstance*> PROPERTY(armies);
-		std::vector<NavyInstance*> PROPERTY(navies);
+		memory::vector<LeaderInstance*> PROPERTY(generals);
+		memory::vector<LeaderInstance*> PROPERTY(admirals);
+		memory::vector<ArmyInstance*> PROPERTY(armies);
+		memory::vector<NavyInstance*> PROPERTY(navies);
 		size_t PROPERTY(regiment_count, 0);
 		size_t PROPERTY(max_supported_regiment_count, 0);
 		size_t PROPERTY(mobilisation_potential_regiment_count, 0);
@@ -339,7 +340,7 @@ namespace OpenVic {
 		IndexedMap<ShipType, unlock_level_t> PROPERTY(ship_type_unlock_levels);
 		unlock_level_t PROPERTY(gas_attack_unlock_level, 0);
 		unlock_level_t PROPERTY(gas_defence_unlock_level, 0);
-		std::vector<unlock_level_t> PROPERTY(unit_variant_unlock_levels);
+		memory::vector<unlock_level_t> PROPERTY(unit_variant_unlock_levels);
 
 		CountryInstance(
 			CountryDefinition const* new_country_definition,
@@ -461,10 +462,10 @@ namespace OpenVic {
 
 		// These functions take "std::string const&" rather than "std::string_view" as they're only used with script arguments
 		// which are always stored as "std::string"s and it significantly simplifies mutable value access.
-		fixed_point_t get_script_variable(std::string const& variable_name) const;
-		void set_script_variable(std::string const& variable_name, fixed_point_t value);
+		fixed_point_t get_script_variable(memory::string const& variable_name) const;
+		void set_script_variable(memory::string const& variable_name, fixed_point_t value);
 		// Adds the argument value to the existing value of the script variable (initialised to 0 if it doesn't already exist).
-		void change_script_variable(std::string const& variable_name, fixed_point_t value);
+		void change_script_variable(memory::string const& variable_name, fixed_point_t value);
 
 		// The values returned by these functions are scaled by population size, so they must be divided by population size
 		// to get the support as a proportion of 1.0
@@ -709,13 +710,13 @@ namespace OpenVic {
 
 		IndexedMap<CountryDefinition, CountryInstance*> PROPERTY(country_definition_to_instance_map);
 
-		std::vector<CountryInstance*> PROPERTY(great_powers);
-		std::vector<CountryInstance*> PROPERTY(secondary_powers);
+		memory::vector<CountryInstance*> PROPERTY(great_powers);
+		memory::vector<CountryInstance*> PROPERTY(secondary_powers);
 
-		std::vector<CountryInstance*> PROPERTY(total_ranking);
-		std::vector<CountryInstance*> PROPERTY(prestige_ranking);
-		std::vector<CountryInstance*> PROPERTY(industrial_power_ranking);
-		std::vector<CountryInstance*> PROPERTY(military_power_ranking);
+		memory::vector<CountryInstance*> PROPERTY(total_ranking);
+		memory::vector<CountryInstance*> PROPERTY(prestige_ranking);
+		memory::vector<CountryInstance*> PROPERTY(industrial_power_ranking);
+		memory::vector<CountryInstance*> PROPERTY(military_power_ranking);
 
 		void update_rankings(Date today, DefineManager const& define_manager);
 

@@ -3,8 +3,6 @@
 #include <cstddef>
 #include <iostream>
 #include <mutex>
-#include <queue>
-#include <sstream>
 #include <string_view>
 #include <vector>
 #include <version>
@@ -15,6 +13,7 @@
 #include <source_location>
 #endif
 
+#include "openvic-simulation/utility/Containers.hpp"
 #include "openvic-simulation/utility/StringUtils.hpp"
 
 namespace OpenVic {
@@ -52,9 +51,10 @@ namespace OpenVic {
 #endif
 
 	class Logger final {
-		using log_func_t = fu2::function_view<void(std::string&&)>;
-		using log_queue_t = std::queue<std::string>;
+		using log_func_t = fu2::function_view<void(memory::string&&)>;
+		using log_queue_t = memory::queue<memory::string>;
 
+	public:
 #ifdef __cpp_lib_source_location
 		using source_location = std::source_location;
 #else
@@ -69,7 +69,7 @@ namespace OpenVic {
 		};
 
 		static inline std::mutex log_mutex;
-		static thread_local std::vector<std::string_view> log_scope_stack;
+		static thread_local memory::vector<std::string_view> log_scope_stack;
 		static thread_local size_t log_scope_index_plus_one;
 
 		template<typename... Args>
@@ -84,7 +84,7 @@ namespace OpenVic {
 
 				const std::lock_guard<std::mutex> lock { log_mutex };
 
-				std::stringstream stream;
+				memory::stringstream stream;
 				stream << StringUtils::get_filename(location.file_name()) << "("
 					/* Function name removed to reduce clutter. It is already included
 					* in Godot's print functions, so this was repeating it. */
@@ -125,13 +125,13 @@ namespace OpenVic {
 		}
 
 		static void set_logger_funcs() {
-			set_info_func([](std::string&& str) {
+			set_info_func([](memory::string&& str) {
 				std::cout << "[INFO] " << str;
 			});
-			set_warning_func([](std::string&& str) {
+			set_warning_func([](memory::string&& str) {
 				std::cerr << "[WARNING] " << str;
 			});
-			set_error_func([](std::string&& str) {
+			set_error_func([](memory::string&& str) {
 				std::cerr << "[ERROR] " << str;
 			});
 		}

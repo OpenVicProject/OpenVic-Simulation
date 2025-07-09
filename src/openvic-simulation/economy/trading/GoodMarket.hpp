@@ -8,6 +8,7 @@
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
 #include "openvic-simulation/types/IndexedMap.hpp"
 #include "openvic-simulation/types/ValueHistory.hpp"
+#include "openvic-simulation/utility/Containers.hpp"
 
 namespace OpenVic {
 	struct CountryInstance;
@@ -18,15 +19,15 @@ namespace OpenVic {
 		GoodDefinition const& PROPERTY(good_definition);
 
 		static constexpr int32_t exponential_price_change_shift = 7;
-		std::unique_ptr<std::mutex> buy_lock = std::make_unique<std::mutex>();
-		std::unique_ptr<std::mutex> sell_lock = std::make_unique<std::mutex>();
+		memory::unique_ptr<std::mutex> buy_lock = memory::make_unique<std::mutex>();
+		memory::unique_ptr<std::mutex> sell_lock = memory::make_unique<std::mutex>();
 		GameRulesManager const& game_rules_manager;
 		fixed_point_t absolute_maximum_price;
 		fixed_point_t absolute_minimum_price;
 
 		//only used during day tick (from actors placing order until execute_orders())
-		std::vector<GoodBuyUpToOrder> buy_up_to_orders;
-		std::vector<GoodMarketSellOrder> market_sell_orders;
+		memory::vector<GoodBuyUpToOrder> buy_up_to_orders;
+		memory::vector<GoodMarketSellOrder> market_sell_orders;
 
 		void execute_buy_orders(
 			const fixed_point_t new_price,
@@ -62,8 +63,8 @@ namespace OpenVic {
 		void execute_orders(
 			IndexedMap<CountryInstance, fixed_point_t>& reusable_country_map_0,
 			IndexedMap<CountryInstance, fixed_point_t>& reusable_country_map_1,
-			std::vector<fixed_point_t>& reusable_vector_0,
-			std::vector<fixed_point_t>& reusable_vector_1
+			memory::vector<fixed_point_t>& reusable_vector_0,
+			memory::vector<fixed_point_t>& reusable_vector_1
 		);
 		void on_use_exponential_price_changes_changed();
 		void record_price_history();

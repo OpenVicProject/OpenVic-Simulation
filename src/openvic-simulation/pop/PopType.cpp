@@ -14,6 +14,7 @@
 #include "openvic-simulation/utility/Logger.hpp"
 #include "openvic-simulation/utility/LogScope.hpp"
 #include "openvic-simulation/utility/TslHelper.hpp"
+#include "openvic-simulation/utility/Containers.hpp"
 
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;
@@ -530,7 +531,7 @@ bool PopManager::load_pop_type_chances_file(ast::NodeCPtr root) {
 }
 
 bool PopManager::load_pop_bases_into_vector(
-	RebelManager const& rebel_manager, std::vector<PopBase>& vec, PopType const& type, ast::NodeCPtr pop_node,
+	RebelManager const& rebel_manager, memory::vector<PopBase>& vec, PopType const& type, ast::NodeCPtr pop_node,
 	bool *non_integer_size
 ) const {
 	Culture const* culture = nullptr;

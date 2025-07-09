@@ -7,9 +7,13 @@
 #include <tsl/ordered_map.h>
 #include <tsl/ordered_set.h>
 
+#include "openvic-simulation/utility/Containers.hpp"
+#include "openvic-simulation/utility/Deque.hpp"
 #include "openvic-simulation/utility/StringUtils.hpp"
 #include "openvic-simulation/utility/Utility.hpp"
-#include "openvic-simulation/utility/Deque.hpp"
+
+#include <foonathan/memory/default_allocator.hpp>
+#include <foonathan/memory/std_allocator.hpp>
 
 namespace OpenVic {
 	struct ordered_container_string_hash {
@@ -23,6 +27,9 @@ namespace OpenVic {
 		[[nodiscard]] size_t operator()(std::string const& txt) const {
 			return std::hash<std::string> {}(txt);
 		}
+		[[nodiscard]] size_t operator()(memory::string const& txt) const {
+			return std::hash<std::string_view> {}(txt);
+		}
 	};
 
 	template<typename T>
@@ -30,6 +37,8 @@ namespace OpenVic {
 
 	template<>
 	struct container_hash<std::string> : ordered_container_string_hash {};
+	template<>
+	struct container_hash<memory::string> : ordered_container_string_hash {};
 	template<>
 	struct container_hash<std::string_view> : ordered_container_string_hash {};
 	template<>
@@ -40,38 +49,45 @@ namespace OpenVic {
 	// Useful for contiguous memory
 	template<
 		class Key, class T, class Hash = container_hash<Key>, class KeyEqual = std::equal_to<>,
-		class Allocator = std::allocator<std::pair<Key, T>>, class IndexType = std::uint_least32_t>
+		class RawAllocator = foonathan::memory::default_allocator, class IndexType = std::uint_least32_t,
+		class Allocator = foonathan::memory::std_allocator<std::pair<Key, T>, memory::tracker<RawAllocator>>>
 	using vector_ordered_map =
 		tsl::ordered_map<Key, T, Hash, KeyEqual, Allocator, std::vector<std::pair<Key, T>, Allocator>, IndexType>;
 
 	// Useful for stable memory addresses (so long as you don't remove or insert values)
 	template<
 		class Key, class T, class Hash = container_hash<Key>, class KeyEqual = std::equal_to<>,
-		class Allocator = std::allocator<std::pair<Key, T>>, class IndexType = std::uint_least32_t>
+		class RawAllocator = foonathan::memory::default_allocator, class IndexType = std::uint_least32_t,
+		class Allocator = foonathan::memory::std_allocator<std::pair<Key, T>, memory::tracker<RawAllocator>>>
 	using deque_ordered_map =
 		tsl::ordered_map<Key, T, Hash, KeyEqual, Allocator, OpenVic::utility::deque<std::pair<Key, T>, Allocator>, IndexType>;
 
 	template<
 		class Key, class T, class Hash = container_hash<Key>, class KeyEqual = std::equal_to<>,
-		class Allocator = std::allocator<std::pair<Key, T>>, class IndexType = std::uint_least32_t>
-	using ordered_map = vector_ordered_map<Key, T, Hash, KeyEqual, Allocator, IndexType>;
+		class RawAllocator = foonathan::memory::default_allocator, class IndexType = std::uint_least32_t,
+		class Allocator = foonathan::memory::std_allocator<std::pair<Key, T>, memory::tracker<RawAllocator>>>
+	using ordered_map = vector_ordered_map<Key, T, Hash, KeyEqual, RawAllocator, IndexType, Allocator>;
 
 	// Useful for contiguous memory
 	template<
-		class Key, class Hash = container_hash<Key>, class KeyEqual = std::equal_to<>, class Allocator = std::allocator<Key>,
-		class IndexType = std::uint_least32_t>
+		class Key, class Hash = container_hash<Key>, class KeyEqual = std::equal_to<>,
+		class RawAllocator = foonathan::memory::default_allocator, class IndexType = std::uint_least32_t,
+		class Allocator = foonathan::memory::std_allocator<Key, memory::tracker<RawAllocator>>>
 	using vector_ordered_set = tsl::ordered_set<Key, Hash, KeyEqual, Allocator, std::vector<Key, Allocator>, IndexType>;
 
 	// Useful for stable memory addresses (so long as you don't remove or insert values)
 	template<
-		class Key, class Hash = container_hash<Key>, class KeyEqual = std::equal_to<>, class Allocator = std::allocator<Key>,
-		class IndexType = std::uint_least32_t>
-	using deque_ordered_set = tsl::ordered_set<Key, Hash, KeyEqual, Allocator, OpenVic::utility::deque<Key, Allocator>, IndexType>;
+		class Key, class Hash = container_hash<Key>, class KeyEqual = std::equal_to<>,
+		class RawAllocator = foonathan::memory::default_allocator, class IndexType = std::uint_least32_t,
+		class Allocator = foonathan::memory::std_allocator<Key, memory::tracker<RawAllocator>>>
+	using deque_ordered_set =
+		tsl::ordered_set<Key, Hash, KeyEqual, Allocator, OpenVic::utility::deque<Key, Allocator>, IndexType>;
 
 	template<
-		class Key, class Hash = container_hash<Key>, class KeyEqual = std::equal_to<>, class Allocator = std::allocator<Key>,
-		class IndexType = std::uint_least32_t>
-	using ordered_set = vector_ordered_set<Key, Hash, KeyEqual, Allocator, IndexType>;
+		class Key, class Hash = container_hash<Key>, class KeyEqual = std::equal_to<>,
+		class RawAllocator = foonathan::memory::default_allocator, class IndexType = std::uint_least32_t,
+		class Allocator = foonathan::memory::std_allocator<Key, memory::tracker<RawAllocator>>>
+	using ordered_set = vector_ordered_set<Key, Hash, KeyEqual, RawAllocator, IndexType, Allocator>;
 
 	template<typename T>
 	concept IsOrderedMap = utility::is_derived_from_specialization_of<T, tsl::ordered_map>;
@@ -129,6 +145,9 @@ namespace OpenVic {
 		[[nodiscard]] constexpr size_t operator()(std::string const& txt) const {
 			return _hash_bytes_case_insensitive(txt.data(), txt.length());
 		}
+		[[nodiscard]] constexpr size_t operator()(memory::string const& txt) const {
+			return _hash_bytes_case_insensitive(txt.data(), txt.length());
+		}
 	};
 
 	struct case_insensitive_string_equal {
@@ -140,30 +159,42 @@ namespace OpenVic {
 	};
 
 	// Useful for contiguous memory
-	template<class Key, class T, class Allocator = std::allocator<std::pair<Key, T>>, class IndexType = std::uint_least32_t>
-	using case_insensitive_vector_ordered_map =
-		vector_ordered_map<Key, T, case_insensitive_string_hash, case_insensitive_string_equal, Allocator, IndexType>;
+	template<
+		class Key, class T, class RawAllocator = foonathan::memory::default_allocator, class IndexType = std::uint_least32_t,
+		class Allocator = foonathan::memory::std_allocator<std::pair<Key, T>, memory::tracker<RawAllocator>>>
+	using case_insensitive_vector_ordered_map = vector_ordered_map<
+		Key, T, case_insensitive_string_hash, case_insensitive_string_equal, RawAllocator, IndexType, Allocator>;
 
 	// Useful for stable memory addresses (so long as you don't remove or insert values)
-	template<class Key, class T, class Allocator = std::allocator<std::pair<Key, T>>, class IndexType = std::uint_least32_t>
-	using case_insensitive_deque_ordered_map =
-		deque_ordered_map<Key, T, case_insensitive_string_hash, case_insensitive_string_equal, Allocator, IndexType>;
+	template<
+		class Key, class T, class RawAllocator = foonathan::memory::default_allocator, class IndexType = std::uint_least32_t,
+		class Allocator = foonathan::memory::std_allocator<std::pair<Key, T>, memory::tracker<RawAllocator>>>
+	using case_insensitive_deque_ordered_map = deque_ordered_map<
+		Key, T, case_insensitive_string_hash, case_insensitive_string_equal, RawAllocator, IndexType, Allocator>;
 
-	template<class Key, class T, class Allocator = std::allocator<std::pair<Key, T>>, class IndexType = std::uint_least32_t>
-	using case_insensitive_ordered_map = case_insensitive_vector_ordered_map<Key, T, Allocator, IndexType>;
+	template<
+		class Key, class T, class RawAllocator = foonathan::memory::default_allocator, class IndexType = std::uint_least32_t,
+		class Allocator = foonathan::memory::std_allocator<std::pair<Key, T>, memory::tracker<RawAllocator>>>
+	using case_insensitive_ordered_map = case_insensitive_vector_ordered_map<Key, T, RawAllocator, IndexType, Allocator>;
 
 	// Useful for contiguous memory
-	template<class Key, class Allocator = std::allocator<Key>, class IndexType = std::uint_least32_t>
-	using case_insensitive_vector_ordered_set =
-		vector_ordered_set<Key, case_insensitive_string_hash, case_insensitive_string_equal, Allocator, IndexType>;
+	template<
+		class Key, class RawAllocator = foonathan::memory::default_allocator, class IndexType = std::uint_least32_t,
+		class Allocator = foonathan::memory::std_allocator<Key, memory::tracker<RawAllocator>>>
+	using case_insensitive_vector_ordered_set = vector_ordered_set<
+		Key, case_insensitive_string_hash, case_insensitive_string_equal, RawAllocator, IndexType, Allocator>;
 
 	// Useful for stable memory addresses (so long as you don't remove or insert values)
-	template<class Key, class Allocator = std::allocator<Key>, class IndexType = std::uint_least32_t>
+	template<
+		class Key, class RawAllocator = foonathan::memory::default_allocator, class IndexType = std::uint_least32_t,
+		class Allocator = foonathan::memory::std_allocator<Key, memory::tracker<RawAllocator>>>
 	using case_insensitive_deque_ordered_set =
-		deque_ordered_set<Key, case_insensitive_string_hash, case_insensitive_string_equal, Allocator, IndexType>;
+		deque_ordered_set<Key, case_insensitive_string_hash, case_insensitive_string_equal, RawAllocator, IndexType, Allocator>;
 
-	template<class Key, class Allocator = std::allocator<Key>, class IndexType = std::uint_least32_t>
-	using case_insensitive_ordered_set = case_insensitive_vector_ordered_set<Key, Allocator, IndexType>;
+	template<
+		class Key, class RawAllocator = foonathan::memory::default_allocator, class IndexType = std::uint_least32_t,
+		class Allocator = foonathan::memory::std_allocator<Key, memory::tracker<RawAllocator>>>
+	using case_insensitive_ordered_set = case_insensitive_vector_ordered_set<Key, RawAllocator, IndexType, Allocator>;
 
 	template<typename Case>
 	concept StringMapCase = requires(std::string_view identifier) {
@@ -171,7 +202,7 @@ namespace OpenVic {
 		{ typename Case::equal {}(identifier, identifier) } -> std::same_as<bool>;
 	};
 	struct StringMapCaseSensitive {
-		using hash = container_hash<std::string>;
+		using hash = container_hash<memory::string>;
 		using equal = std::equal_to<>;
 	};
 	struct StringMapCaseInsensitive {
@@ -191,7 +222,7 @@ namespace OpenVic {
 
 	/* Template for map with string keys, supporting search by string_view without creating an intermediate string. */
 	template<typename T, StringMapCase Case>
-	using template_string_map_t = template_case_container_t<ordered_map, Case, std::string, T>;
+	using template_string_map_t = template_case_container_t<ordered_map, Case, memory::string, T>;
 
 	template<typename T>
 	using string_map_t = template_string_map_t<T, StringMapCaseSensitive>;
@@ -200,7 +231,7 @@ namespace OpenVic {
 
 	/* Template for set with string elements, supporting search by string_view without creating an intermediate string. */
 	template<StringMapCase Case>
-	using template_string_set_t = template_case_container_t<ordered_set, Case, std::string>;
+	using template_string_set_t = template_case_container_t<ordered_set, Case, memory::string>;
 
 	using string_set_t = template_string_set_t<StringMapCaseSensitive>;
 	using case_insensitive_string_set_t = template_string_set_t<StringMapCaseInsensitive>;

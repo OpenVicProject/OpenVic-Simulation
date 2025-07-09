@@ -6,6 +6,7 @@
 
 #include "openvic-simulation/pathfinding/PointMap.hpp"
 #include "openvic-simulation/types/Vector.hpp"
+#include "openvic-simulation/utility/Containers.hpp"
 
 #include "Helper.hpp"
 #include <snitch/snitch_macros_misc.hpp>
@@ -119,7 +120,7 @@ namespace OpenVic::testing {
 					if (u != v) {
 						CAPTURE(u);
 						CAPTURE(v);
-						std::vector<PointMap::points_key_type> route = a.get_id_path(u, v);
+						memory::vector<PointMap::points_key_type> route = a.get_id_path(u, v);
 						if (!std::isinf(dist[u][v])) {
 							// Reachable.
 							{

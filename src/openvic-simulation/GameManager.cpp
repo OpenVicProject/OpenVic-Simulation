@@ -8,7 +8,7 @@ GameManager::GameManager(
 		new_gamestate_updated_callback ? std::move(new_gamestate_updated_callback) : []() {}
 	}, definitions_loaded { false }, mod_descriptors_loaded { false } {}
 
-bool GameManager::load_mod_descriptors(std::span<const std::string> descriptors) {
+bool GameManager::load_mod_descriptors(std::span<const memory::string> descriptors) {
 	if (mod_descriptors_loaded) {
 		Logger::error("Cannot load mod descriptors - already loaded!");
 		return false;

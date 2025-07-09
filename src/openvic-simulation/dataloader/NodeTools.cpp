@@ -516,20 +516,20 @@ std::ostream& OpenVic::operator<<(std::ostream& stream, name_list_t const& name_
 	stream << '[';
 	if (!name_list.empty()) {
 		stream << name_list.front();
-		std::for_each(name_list.begin() + 1, name_list.end(), [&stream](std::string const& name) -> void {
+		std::for_each(name_list.begin() + 1, name_list.end(), [&stream](memory::string const& name) -> void {
 			stream << ", " << name;
 		});
 	}
 	return stream << ']';
 }
 
-callback_t<std::string_view> NodeTools::assign_variable_callback_string(std::string& var) {
+callback_t<std::string_view> NodeTools::assign_variable_callback_string(memory::string& var) {
 	return assign_variable_callback_cast<std::string_view>(var);
 }
 
-callback_t<std::string_view> NodeTools::vector_callback_string(std::vector<std::string>& vec) {
+callback_t<std::string_view> NodeTools::vector_callback_string(memory::vector<memory::string>& vec) {
 	return [&vec](std::string_view val) -> bool {
-		vec.emplace_back(std::string(val));
+		vec.emplace_back(memory::string(val));
 		return true;
 	};
 }

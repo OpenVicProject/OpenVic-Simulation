@@ -8,13 +8,14 @@
 #include "openvic-simulation/utility/Getters.hpp"
 #include "openvic-simulation/utility/Logger.hpp"
 #include "openvic-simulation/utility/Utility.hpp"
+#include "openvic-simulation/utility/Containers.hpp"
 
 namespace OpenVic {
 	namespace _detail::IndexedMap {
 		// Hides most vector methods, makes resize protected, only exposes accessor methods
 		template<utility::not_same_as<bool> Value>
-		struct internal_resize_vector : private std::vector<Value> {
-			using base_type = std::vector<Value>;
+		struct internal_resize_vector : private memory::vector<Value> {
+			using base_type = memory::vector<Value>;
 
 			using typename base_type::const_iterator;
 			using typename base_type::const_pointer;
@@ -45,7 +46,7 @@ namespace OpenVic {
 		using values_type::data;
 
 		using key_type = Key;
-		using keys_type = std::vector<key_type>;
+		using keys_type = memory::vector<key_type>;
 		using keys_span_type = OpenVic::utility::forwardable_span<const key_type>;
 		using key_ref_type = typename keys_type::const_reference;
 		using key_ptr_type = typename keys_type::const_pointer;

@@ -1,6 +1,7 @@
 #include "DiplomaticHistory.hpp"
 
 #include "openvic-simulation/DefinitionManager.hpp"
+#include "openvic-simulation/utility/Containers.hpp"
 
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;
@@ -22,9 +23,9 @@ WarHistory::war_participant_t::war_participant_t(
 
 WarHistory::WarHistory(
 	std::string_view new_war_name,
-	std::vector<war_participant_t>&& new_attackers,
-	std::vector<war_participant_t>&& new_defenders,
-	std::vector<added_wargoal_t>&& new_wargoals
+	memory::vector<war_participant_t>&& new_attackers,
+	memory::vector<war_participant_t>&& new_defenders,
+	memory::vector<added_wargoal_t>&& new_wargoals
 ) : war_name { new_war_name }, attackers { std::move(new_attackers) }, defenders { std::move(new_defenders) },
 	wargoals { std::move(new_wargoals) } {}
 
@@ -66,8 +67,8 @@ bool DiplomaticHistoryManager::is_locked() const {
 	return locked;
 }
 
-std::vector<AllianceHistory const*> DiplomaticHistoryManager::get_alliances(Date date) const {
-	std::vector<AllianceHistory const*> ret {};
+memory::vector<AllianceHistory const*> DiplomaticHistoryManager::get_alliances(Date date) const {
+	memory::vector<AllianceHistory const*> ret {};
 	for (auto const& alliance : alliances) {
 		if (alliance.period.is_date_in_period(date)) {
 			ret.push_back(&alliance);
@@ -76,8 +77,8 @@ std::vector<AllianceHistory const*> DiplomaticHistoryManager::get_alliances(Date
 	return ret;
 }
 
-std::vector<ReparationsHistory const*> DiplomaticHistoryManager::get_reparations(Date date) const {
-	std::vector<ReparationsHistory const*> ret {};
+memory::vector<ReparationsHistory const*> DiplomaticHistoryManager::get_reparations(Date date) const {
+	memory::vector<ReparationsHistory const*> ret {};
 	for (auto const& reparation : reparations) {
 		if (reparation.period.is_date_in_period(date)) {
 			ret.push_back(&reparation);
@@ -86,8 +87,8 @@ std::vector<ReparationsHistory const*> DiplomaticHistoryManager::get_reparations
 	return ret;
 }
 
-std::vector<SubjectHistory const*> DiplomaticHistoryManager::get_subjects(Date date) const {
-	std::vector<SubjectHistory const*> ret {};
+memory::vector<SubjectHistory const*> DiplomaticHistoryManager::get_subjects(Date date) const {
+	memory::vector<SubjectHistory const*> ret {};
 	for (auto const& subject : subjects) {
 		if (subject.period.is_date_in_period(date)) {
 			ret.push_back(&subject);
@@ -96,8 +97,8 @@ std::vector<SubjectHistory const*> DiplomaticHistoryManager::get_subjects(Date d
 	return ret;
 }
 
-std::vector<WarHistory const*> DiplomaticHistoryManager::get_wars(Date date) const {
-	std::vector<WarHistory const*> ret;
+memory::vector<WarHistory const*> DiplomaticHistoryManager::get_wars(Date date) const {
+	memory::vector<WarHistory const*> ret;
 	for (auto const& war : wars) {
 		Date start {};
 		for (auto const& wargoal : war.wargoals) {
@@ -234,17 +235,17 @@ bool DiplomaticHistoryManager::load_war_history_file(DefinitionManager const& de
 
 	// Ensures that if ever multithreaded, only one vector is used per thread
 	// Else acts like static
-	thread_local std::vector<WarHistory::war_participant_t> attackers;
+	thread_local memory::vector<WarHistory::war_participant_t> attackers;
 	// Default max vanilla attackers is 1, 1 is the max I've seen in mods
 	// Eliminates reallocations
 	attackers.reserve(1);
 
-	thread_local std::vector<WarHistory::war_participant_t> defenders;
+	thread_local memory::vector<WarHistory::war_participant_t> defenders;
 	// Default max vanilla defenders is 1, 1 is the max I've seen in mods
 	// Eliminates reallocations
 	defenders.reserve(1);
 
-	thread_local std::vector<WarHistory::added_wargoal_t> wargoals;
+	thread_local memory::vector<WarHistory::added_wargoal_t> wargoals;
 	// Default max vanilla wargoals is 2, 2 is the max I've seen in mods
 	// Eliminates reallocations
 	wargoals.reserve(1);

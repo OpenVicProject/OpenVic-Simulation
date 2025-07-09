@@ -2,6 +2,7 @@
 
 #include "openvic-simulation/dataloader/NodeTools.hpp"
 #include "openvic-simulation/DefinitionManager.hpp"
+#include "openvic-simulation/utility/Containers.hpp"
 
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;
@@ -336,7 +337,7 @@ bool ConditionManager::setup_conditions(DefinitionManager const& definition_mana
 	ret &= add_condition("type", IDENTIFIER, POP, NO_SCOPE, NO_IDENTIFIER, POP_TYPE);
 
 	const auto import_identifiers = [this, &ret](
-		std::vector<std::string_view> const& identifiers,
+		memory::vector<std::string_view> const& identifiers,
 		value_type_t value_type,
 		scope_type_t scope,
 		scope_type_t scope_change = NO_SCOPE,

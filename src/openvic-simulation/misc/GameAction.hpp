@@ -79,7 +79,7 @@ namespace OpenVic {
 		std::tuple<uint64_t, uint64_t, bool>, std::tuple<uint64_t, uint64_t, bool, fixed_point_t>
 	>;
 
-	std::string game_action_argument_to_string(game_action_argument_t const& argument);
+	memory::string game_action_argument_to_string(game_action_argument_t const& argument);
 
 	using game_action_t = std::pair<game_action_type_t, game_action_argument_t>;
 

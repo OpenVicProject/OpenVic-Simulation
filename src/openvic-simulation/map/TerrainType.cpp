@@ -4,6 +4,7 @@
 
 #include "openvic-simulation/modifier/ModifierManager.hpp"
 #include "openvic-simulation/types/Colour.hpp"
+#include "openvic-simulation/utility/Containers.hpp"
 
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;
@@ -26,7 +27,7 @@ TerrainType::TerrainType(
 TerrainTypeMapping::TerrainTypeMapping(
 	std::string_view new_identifier,
 	TerrainType const& new_type,
-	std::vector<index_t>&& new_terrain_indices,
+	memory::vector<index_t>&& new_terrain_indices,
 	index_t new_priority,
 	bool new_has_texture
 ) : HasIdentifier { new_identifier },
@@ -95,7 +96,7 @@ bool TerrainTypeManager::add_terrain_type(
 bool TerrainTypeManager::add_terrain_type_mapping(
 	std::string_view identifier,
 	TerrainType const* type,
-	std::vector<TerrainTypeMapping::index_t>&& terrain_indices,
+	memory::vector<TerrainTypeMapping::index_t>&& terrain_indices,
 	TerrainTypeMapping::index_t priority,
 	bool has_texture
 ) {
@@ -179,7 +180,7 @@ bool TerrainTypeManager::_load_terrain_type_mapping(std::string_view mapping_key
 	}
 
 	TerrainType const* type = nullptr;
-	std::vector<TerrainTypeMapping::index_t> terrain_indices;
+	memory::vector<TerrainTypeMapping::index_t> terrain_indices;
 	TerrainTypeMapping::index_t priority = 0;
 	bool has_texture = true;
 

@@ -7,18 +7,18 @@ namespace OpenVic {
 	class Requirement {
 
 		// Loaded during construction
-		std::string PROPERTY(id);
-		std::string PROPERTY(text);
-		std::string PROPERTY(acceptance_criteria);
+		memory::string PROPERTY(id);
+		memory::string PROPERTY(text);
+		memory::string PROPERTY(acceptance_criteria);
 		bool PROPERTY(pass);
 		bool PROPERTY_RW(tested);
 
 		// Initialised and used during script execution
-		std::string PROPERTY(target_value);
-		std::string PROPERTY(actual_value);
+		memory::string PROPERTY(target_value);
+		memory::string PROPERTY(actual_value);
 
 	public:
-		Requirement(std::string in_id, std::string in_text, std::string in_acceptance_criteria) {
+		Requirement(memory::string in_id, memory::string in_text, memory::string in_acceptance_criteria) {
 			id = in_id;
 			text = in_text;
 			acceptance_criteria = in_acceptance_criteria;

@@ -2,6 +2,7 @@
 
 #include "openvic-simulation/DefinitionManager.hpp" /* gosh don't we all just love circular inclusion :DDD */
 #include "openvic-simulation/military/LeaderTrait.hpp"
+#include "openvic-simulation/utility/Containers.hpp"
 
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;
@@ -15,19 +16,19 @@ UnitDeployment<UnitType::branch_t::NAVAL>::UnitDeployment(std::string_view new_n
 
 template<UnitType::branch_t Branch>
 UnitDeploymentGroup<Branch>::UnitDeploymentGroup(
-	std::string_view new_name, ProvinceDefinition const* new_location, std::vector<_Unit>&& new_units,
+	std::string_view new_name, ProvinceDefinition const* new_location, memory::vector<_Unit>&& new_units,
 	std::optional<size_t> new_leader_index
 ) : name { new_name }, location { new_location }, units { std::move(new_units) }, leader_index { new_leader_index } {}
 
 Deployment::Deployment(
-	std::string_view new_path, std::vector<ArmyDeployment>&& new_armies, std::vector<NavyDeployment>&& new_navies,
-	std::vector<LeaderBase>&& new_leaders
+	std::string_view new_path, memory::vector<ArmyDeployment>&& new_armies, memory::vector<NavyDeployment>&& new_navies,
+	memory::vector<LeaderBase>&& new_leaders
 ) : HasIdentifier { new_path }, armies { std::move(new_armies) }, navies { std::move(new_navies) },
 	leaders { std::move(new_leaders) } {}
 
 bool DeploymentManager::add_deployment(
-	std::string_view path, std::vector<ArmyDeployment>&& armies, std::vector<NavyDeployment>&& navies,
-	std::vector<LeaderBase>&& leaders
+	std::string_view path, memory::vector<ArmyDeployment>&& armies, memory::vector<NavyDeployment>&& navies,
+	memory::vector<LeaderBase>&& leaders
 ) {
 	if (path.empty()) {
 		Logger::error("Attempted to load order of battle with no path! Something is very wrong!");
@@ -68,15 +69,15 @@ bool DeploymentManager::load_oob_file(
 
 	// Ensures that if ever multithreaded, only one vector is used per thread
 	// Else acts like static
-	thread_local std::vector<ArmyDeployment> armies;
+	thread_local memory::vector<ArmyDeployment> armies;
 	// Default max vanilla armies is 15, 23 is the max I've seen in mods
 	armies.reserve(8);
 
-	thread_local std::vector<NavyDeployment> navies;
+	thread_local memory::vector<NavyDeployment> navies;
 	// Default max vanilla navies is 14, 13 is the max I've seen in mods
 	navies.reserve(8);
 
-	thread_local std::vector<LeaderBase> leaders;
+	thread_local memory::vector<LeaderBase> leaders;
 	// Default max vanilla leaders is 17, 23 is the max I've seen in mods
 	leaders.reserve(8);
 
@@ -158,7 +159,7 @@ bool DeploymentManager::load_oob_file(
 		"army", ZERO_OR_MORE, [&general_count, &definition_manager, &leader_callback](ast::NodeCPtr node) -> bool {
 			std::string_view army_name {};
 			ProvinceDefinition const* army_location = nullptr;
-			std::vector<RegimentDeployment> army_regiments {};
+			memory::vector<RegimentDeployment> army_regiments {};
 
 			const size_t starting_general_count = general_count;
 
@@ -206,7 +207,7 @@ bool DeploymentManager::load_oob_file(
 		"navy", ZERO_OR_MORE, [&admiral_count, &definition_manager, &leader_callback](ast::NodeCPtr node) -> bool {
 			std::string_view navy_name {};
 			ProvinceDefinition const* navy_location = nullptr;
-			std::vector<ShipDeployment> navy_ships {};
+			memory::vector<ShipDeployment> navy_ships {};
 
 			const size_t starting_admiral_count = admiral_count;
 

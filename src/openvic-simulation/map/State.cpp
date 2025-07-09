@@ -7,6 +7,7 @@
 #include "openvic-simulation/map/Region.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
 #include "openvic-simulation/utility/StringUtils.hpp"
+#include "openvic-simulation/utility/Containers.hpp"
 #include "openvic-simulation/utility/ErrorMacros.hpp"
 
 using namespace OpenVic;
@@ -15,7 +16,7 @@ State::State(
 	StateSet const& new_state_set,
 	CountryInstance* new_owner,
 	ProvinceInstance* new_capital,
-	std::vector<ProvinceInstance*>&& new_provinces,
+	memory::vector<ProvinceInstance*>&& new_provinces,
 	ProvinceInstance::colony_status_t new_colony_status,
 	decltype(population_by_strata)::keys_span_type strata_keys,
 	decltype(pop_type_distribution)::keys_span_type pop_type_keys,
@@ -36,7 +37,7 @@ State::State(
 	ideology_distribution { ideology_keys },
 	vote_distribution { new_owner != nullptr ? new_owner->get_country_definition()->get_parties() : decltype(vote_distribution)::keys_span_type {} } {}
 
-std::string State::get_identifier() const {
+memory::string State::get_identifier() const {
 	return StringUtils::append_string_views(
 		state_set.get_region().get_identifier(), "_", owner->get_identifier(), "_",
 		ProvinceInstance::get_colony_status_string(colony_status)
@@ -102,7 +103,7 @@ void State::update_gamestate() {
 	culture_distribution.clear();
 	religion_distribution.clear();
 
-	for (std::vector<Pop*>& pops_cache : pops_cache_by_type.get_values()) {
+	for (memory::vector<Pop*>& pops_cache : pops_cache_by_type.get_values()) {
 		pops_cache.clear();
 	}
 
@@ -139,7 +140,7 @@ void State::update_gamestate() {
 		religion_distribution += province->get_religion_distribution();
 
 		for (auto const& [pop_type, province_pops_of_type] : province->get_pops_cache_by_type()) {
-			std::vector<Pop*>& state_pops_of_type = pops_cache_by_type[pop_type];
+			memory::vector<Pop*>& state_pops_of_type = pops_cache_by_type[pop_type];
 			state_pops_of_type.insert(
 				state_pops_of_type.end(),
 				province_pops_of_type.begin(),
@@ -205,17 +206,17 @@ bool StateManager::add_state_set(
 	decltype(State::pop_type_distribution)::keys_span_type pop_type_keys,
 	decltype(State::ideology_distribution)::keys_span_type ideology_keys
 ) {
-	OV_ERR_FAIL_COND_V_MSG(region.get_is_meta(), false, fmt::format("Cannot use meta region \"{}\" as state template!", region.get_identifier()));
-	OV_ERR_FAIL_COND_V_MSG(region.empty(), false, fmt::format("Cannot use empty region \"{}\" as state template!", region.get_identifier()));
+	OV_ERR_FAIL_COND_V_MSG(region.get_is_meta(), false, memory::fmt::format("Cannot use meta region \"{}\" as state template!", region.get_identifier()));
+	OV_ERR_FAIL_COND_V_MSG(region.empty(), false, memory::fmt::format("Cannot use empty region \"{}\" as state template!", region.get_identifier()));
 
-	std::vector<std::vector<ProvinceInstance*>> temp_provinces;
+	memory::vector<memory::vector<ProvinceInstance*>> temp_provinces;
 
 	for (ProvinceDefinition const* province : region.get_provinces()) {
 
 		ProvinceInstance* province_instance = &map_instance.get_province_instance_from_definition(*province);
 
 		// add to existing state if shared owner & status...
-		for (std::vector<ProvinceInstance*>& provinces : temp_provinces) {
+		for (memory::vector<ProvinceInstance*>& provinces : temp_provinces) {
 			if (provinces_belong_in_same_state(provinces.front(), province_instance)) {
 				provinces.push_back(province_instance);
 				// jump to the end of the outer loop, skipping the new state code
@@ -238,7 +239,7 @@ bool StateManager::add_state_set(
 	// Reserve space for the maximum number of states (one per province)
 	state_set.states.reserve(region.size());
 
-	for (std::vector<ProvinceInstance*>& provinces : temp_provinces) {
+	for (memory::vector<ProvinceInstance*>& provinces : temp_provinces) {
 		ProvinceInstance* capital = provinces.front();
 
 		CountryInstance* owner = capital->get_owner();

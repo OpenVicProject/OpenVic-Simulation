@@ -24,6 +24,7 @@
 #include "openvic-simulation/types/IndexedMap.hpp"
 #include "openvic-simulation/types/PopSize.hpp"
 #include "openvic-simulation/types/SliderValue.hpp"
+#include "openvic-simulation/utility/Containers.hpp"
 
 using namespace OpenVic;
 
@@ -66,11 +67,11 @@ CountryInstance::CountryInstance(
 	building_type_unlock_levels { building_type_keys },
 
 	/* Budget */
-	taxable_income_mutex { std::make_unique<std::mutex>() },
+	taxable_income_mutex { memory::make_unique<std::mutex>() },
 	taxable_income_by_pop_type { pop_type_keys },
 	effective_tax_rate_by_strata { strata_keys },
 	tax_rate_slider_value_by_strata { strata_keys },
-	actual_net_tariffs_mutex { std::make_unique<std::mutex>() },
+	actual_net_tariffs_mutex { memory::make_unique<std::mutex>() },
 
 	/* Technology */
 	technology_unlock_levels { technology_keys },
@@ -318,7 +319,7 @@ bool CountryInstance::can_navy_units_enter(CountryInstance const& country) const
 	return *this == country || has_military_access_to(country);
 }
 
-fixed_point_t CountryInstance::get_script_variable(std::string const& variable_name) const {
+fixed_point_t CountryInstance::get_script_variable(memory::string const& variable_name) const {
 	const decltype(script_variables)::const_iterator it = script_variables.find(variable_name);
 
 	if (it != script_variables.end()) {
@@ -328,11 +329,11 @@ fixed_point_t CountryInstance::get_script_variable(std::string const& variable_n
 	}
 }
 
-void CountryInstance::set_script_variable(std::string const& variable_name, fixed_point_t value) {
+void CountryInstance::set_script_variable(memory::string const& variable_name, fixed_point_t value) {
 	script_variables[variable_name] = value;
 }
 
-void CountryInstance::change_script_variable(std::string const& variable_name, fixed_point_t value) {
+void CountryInstance::change_script_variable(memory::string const& variable_name, fixed_point_t value) {
 	script_variables[variable_name] += value;
 }
 
@@ -522,9 +523,9 @@ bool CountryInstance::add_unit_instance_group(UnitInstanceGroup& group) {
 
 bool CountryInstance::remove_unit_instance_group(UnitInstanceGroup const& group) {
 	const auto remove_from_vector = [this, &group]<UnitType::branch_t Branch>(
-		std::vector<UnitInstanceGroupBranched<Branch>*>& unit_instance_groups
+		memory::vector<UnitInstanceGroupBranched<Branch>*>& unit_instance_groups
 	) -> bool {
-		const typename std::vector<UnitInstanceGroupBranched<Branch>*>::const_iterator it =
+		const typename memory::vector<UnitInstanceGroupBranched<Branch>*>::const_iterator it =
 			std::find(unit_instance_groups.begin(), unit_instance_groups.end(), &group);
 
 		if (it != unit_instance_groups.end()) {
@@ -577,7 +578,7 @@ bool CountryInstance::add_leader(LeaderInstance& leader) {
 bool CountryInstance::remove_leader(LeaderInstance const& leader) {
 	using enum UnitType::branch_t;
 
-	std::vector<LeaderInstance*>* leaders;
+	memory::vector<LeaderInstance*>* leaders;
 
 	switch (leader.get_branch()) {
 	case LAND:
@@ -594,7 +595,7 @@ bool CountryInstance::remove_leader(LeaderInstance const& leader) {
 		return false;
 	}
 
-	const typename std::vector<LeaderInstance*>::const_iterator it = std::find(leaders->begin(), leaders->end(), &leader);
+	const typename memory::vector<LeaderInstance*>::const_iterator it = std::find(leaders->begin(), leaders->end(), &leader);
 
 	if (it != leaders->end()) {
 		leaders->erase(it);
@@ -609,7 +610,7 @@ bool CountryInstance::remove_leader(LeaderInstance const& leader) {
 }
 
 bool CountryInstance::has_leader_with_name(std::string_view name) const {
-	const auto check_leaders = [&name](std::vector<LeaderInstance*> const& leaders) -> bool {
+	const auto check_leaders = [&name](memory::vector<LeaderInstance*> const& leaders) -> bool {
 		for (LeaderInstance const* leader : leaders) {
 			if (leader->get_name() == name) {
 				return true;
@@ -1738,7 +1739,7 @@ void CountryInstance::update_gamestate(InstanceManager& instance_manager) {
 
 	if (capital != nullptr) {
 		capital->set_connected_to_capital(true);
-		std::vector<ProvinceInstance const*> province_checklist { capital };
+		memory::vector<ProvinceInstance const*> province_checklist { capital };
 
 		for (size_t index = 0; index < province_checklist.size(); index++) {
 			ProvinceInstance const& province = *province_checklist[index];
@@ -1944,7 +1945,7 @@ void CountryInstance::country_tick_after_map(InstanceManager& instance_manager) 
 }
 
 CountryInstance::good_data_t::good_data_t()
-	: mutex { std::make_unique<std::mutex>() }
+	: mutex { memory::make_unique<std::mutex>() }
 	{ }
 
 void CountryInstance::good_data_t::clear_daily_recorded_data() {

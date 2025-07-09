@@ -4,6 +4,7 @@
 #include "openvic-simulation/interface/LoadBase.hpp"
 #include "openvic-simulation/types/TextFormat.hpp"
 #include "openvic-simulation/types/Vector.hpp"
+#include "openvic-simulation/utility/Containers.hpp"
 
 namespace OpenVic::GFX {
 
@@ -19,13 +20,11 @@ namespace OpenVic::GFX {
 		OV_DETAIL_GET_TYPE
 
 		static NodeTools::node_callback_t expect_objects(
-			NodeTools::length_callback_t length_callback, NodeTools::callback_t<std::unique_ptr<Object>&&> callback
+			NodeTools::length_callback_t length_callback, NodeTools::callback_t<memory::unique_base_ptr<Object>&&> callback
 		);
 	};
 
 	class Actor final : public Object {
-		friend std::unique_ptr<Actor> std::make_unique<Actor>();
-
 	public:
 		class Attachment {
 			friend class Actor;
@@ -34,8 +33,8 @@ namespace OpenVic::GFX {
 			using attach_id_t = uint32_t;
 
 		private:
-			std::string PROPERTY(actor_name);
-			std::string PROPERTY(attach_node);
+			memory::string PROPERTY(actor_name);
+			memory::string PROPERTY(attach_node);
 			attach_id_t PROPERTY(attach_id);
 
 		public:
@@ -46,7 +45,7 @@ namespace OpenVic::GFX {
 		class Animation {
 			friend class Actor;
 
-			std::string PROPERTY(file);
+			memory::string PROPERTY(file);
 			fixed_point_t PROPERTY(scroll_time);
 
 		public:
@@ -56,20 +55,19 @@ namespace OpenVic::GFX {
 
 	private:
 		fixed_point_t PROPERTY(scale, 1);
-		std::string PROPERTY(model_file);
+		memory::string PROPERTY(model_file);
 		std::optional<Animation> PROPERTY(idle_animation);
 		std::optional<Animation> PROPERTY(move_animation);
 		std::optional<Animation> PROPERTY(attack_animation);
-		std::vector<Attachment> PROPERTY(attachments);
+		memory::vector<Attachment> PROPERTY(attachments);
 
 		bool _set_animation(std::string_view name, std::string_view file, fixed_point_t scroll_time);
 
 	protected:
-		Actor();
-
 		bool _fill_key_map(NodeTools::case_insensitive_key_map_t& key_map) override;
 
 	public:
+		Actor();
 		Actor(Actor&&) = default;
 		virtual ~Actor() = default;
 
@@ -78,14 +76,11 @@ namespace OpenVic::GFX {
 
 	/* arrows.gfx */
 	class ArrowType final : public Object {
-		friend std::unique_ptr<ArrowType> std::make_unique<ArrowType>();
-
-	private:
 		//Named<> already handles the name property
 		fixed_point_t PROPERTY(size, 5);
 		//texture_file is unused, body_texture_file determines the appearance of the arrow
-		std::string PROPERTY(texture_file); //unused
-		std::string PROPERTY(body_texture_file);
+		memory::string PROPERTY(texture_file); //unused
+		memory::string PROPERTY(body_texture_file);
 		//colours dont appear to be used
 		//TODO: Verify these property names for color and colortwo are correct
 		colour_t PROPERTY(back_colour);
@@ -96,14 +91,13 @@ namespace OpenVic::GFX {
 		uint64_t PROPERTY(arrow_type, 0); //TODO: what does this do?
 		fixed_point_t PROPERTY(heading, 1); //also float
 
-		std::string PROPERTY(effect_file);
+		memory::string PROPERTY(effect_file);
 
 	protected:
-		ArrowType();
-
 		bool _fill_key_map(NodeTools::case_insensitive_key_map_t& key_map) override;
 
 	public:
+		ArrowType();
 		ArrowType(ArrowType&&) = default;
 		virtual ~ArrowType() = default;
 
@@ -113,27 +107,23 @@ namespace OpenVic::GFX {
 	/* battlearrow.gfx */
 	// BattleArrow and MapInfo are for the battle planner
 	class BattleArrow final : public Object {
-		friend std::unique_ptr<BattleArrow> std::make_unique<BattleArrow>();
-
-	private:
-		std::string PROPERTY(texture_arrow_body);
-		std::string PROPERTY(texture_arrow_head);
+		memory::string PROPERTY(texture_arrow_body);
+		memory::string PROPERTY(texture_arrow_head);
 
 		fixed_point_t PROPERTY(start, 1); //labelled 'body start width' in file
 		fixed_point_t PROPERTY(stop, 1);  //labelled 'body end width' in file
 
 		fvec2_t PROPERTY(dims, { 1, 1 }); //x,y labelled 'arrow length','arrow height' in file
-		std::string PROPERTY(font);
+		memory::string PROPERTY(font);
 		fixed_point_t PROPERTY(scale, 1);
 		bool PROPERTY(no_fade, false);
 		fixed_point_t PROPERTY(texture_loop);
 
 	protected:
-		BattleArrow();
-
 		bool _fill_key_map(NodeTools::case_insensitive_key_map_t& key_map) override;
 
 	public:
+		BattleArrow();
 		BattleArrow(BattleArrow&&) = default;
 		virtual ~BattleArrow() = default;
 
@@ -141,18 +131,14 @@ namespace OpenVic::GFX {
 	};
 
 	class MapInfo final : public Object {
-		friend std::unique_ptr<MapInfo> std::make_unique<MapInfo>();
-
-	private:
-		std::string PROPERTY(texture_file);
+		memory::string PROPERTY(texture_file);
 		fixed_point_t PROPERTY(scale, 1);
 
 	protected:
-		MapInfo();
-
 		bool _fill_key_map(NodeTools::case_insensitive_key_map_t& key_map) override;
 
 	public:
+		MapInfo();
 		MapInfo(MapInfo&&) = default;
 		virtual ~MapInfo() = default;
 
@@ -161,10 +147,7 @@ namespace OpenVic::GFX {
 
 	/* mapitems.gfx */
 	class Projection final : public Object {
-		friend std::unique_ptr<Projection> std::make_unique<Projection>();
-
-	private:
-		std::string PROPERTY(texture_file);
+		memory::string PROPERTY(texture_file);
 		//TODO: pulseSpeed, fadeout be ints or fixed points? assume fixed_point_t to start
 		fixed_point_t PROPERTY(size, 1);
 		fixed_point_t PROPERTY(spin, 1);
@@ -177,11 +160,10 @@ namespace OpenVic::GFX {
 		fixed_point_t PROPERTY(fadeout, 0); //appears to have no effect
 
 	protected:
-		Projection();
-
 		bool _fill_key_map(NodeTools::case_insensitive_key_map_t& key_map) override;
 
 	public:
+		Projection();
 		Projection(Projection&&) = default;
 		virtual ~Projection() = default;
 
@@ -191,19 +173,15 @@ namespace OpenVic::GFX {
 	using frame_t = int32_t; /* Keep this as int32_t to simplify interfacing with Godot */
 
 	class Billboard final : public Object {
-		friend std::unique_ptr<Billboard> std::make_unique<Billboard>();
-
-	private:
-		std::string PROPERTY(texture_file);
+		memory::string PROPERTY(texture_file);
 		fixed_point_t PROPERTY(scale, 1);
 		frame_t PROPERTY(no_of_frames, 1);
 
 	protected:
-		Billboard();
-
 		bool _fill_key_map(NodeTools::case_insensitive_key_map_t& key_map) override;
 
 	public:
+		Billboard();
 		Billboard(Billboard&&) = default;
 		virtual ~Billboard() = default;
 
@@ -211,20 +189,16 @@ namespace OpenVic::GFX {
 	};
 
 	class ProgressBar3d final : public Object {
-		friend std::unique_ptr<ProgressBar3d> std::make_unique<ProgressBar3d>();
-
-	private:
 		colour_t PROPERTY(back_colour);
 		colour_t PROPERTY(progress_colour);
 		ivec2_t PROPERTY(size);
-		std::string PROPERTY(effect_file);
+		memory::string PROPERTY(effect_file);
 
 	protected:
-		ProgressBar3d();
-
 		bool _fill_key_map(NodeTools::case_insensitive_key_map_t& key_map) override;
 
 	public:
+		ProgressBar3d();
 		ProgressBar3d(ProgressBar3d&&) = default;
 		virtual ~ProgressBar3d() = default;
 
@@ -233,15 +207,13 @@ namespace OpenVic::GFX {
 
 	/* Core.gfx */
 	class AnimatedMapText final : public Object {
-		friend std::unique_ptr<AnimatedMapText> std::make_unique<AnimatedMapText>();
-
 		using enum text_format_t;
 
 	private:
 		//textblock
-		std::string PROPERTY(text);
+		memory::string PROPERTY(text);
 		colour_t PROPERTY(colour);
-		std::string PROPERTY(font);
+		memory::string PROPERTY(font);
 
 		fvec2_t PROPERTY(text_position);
 		fvec2_t PROPERTY(size);
@@ -254,11 +226,10 @@ namespace OpenVic::GFX {
 		fvec3_t PROPERTY(position);
 
 	protected:
-		AnimatedMapText();
-
 		bool _fill_key_map(NodeTools::case_insensitive_key_map_t& key_map) override;
 
 	public:
+		AnimatedMapText();
 		AnimatedMapText(AnimatedMapText&&) = default;
 		virtual ~AnimatedMapText() = default;
 
