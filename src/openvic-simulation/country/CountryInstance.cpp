@@ -111,12 +111,12 @@ CountryInstance::CountryInstance(
 		tax_rate_slider_value.set_value(fixed_point_t::_0_50);
 	}
 
-	// Land, naval and construction spending have minimums defined in EconomyDefines and always have an unmodified max (1.0).
-	land_spending_slider_value.set_bounds(new_economy_defines.get_minimum_land_spending_slider_value(), 1);
-	land_spending_slider_value.set_value(1);
+	// army, navy and construction spending have minimums defined in EconomyDefines and always have an unmodified max (1.0).
+	army_spending_slider_value.set_bounds(new_economy_defines.get_minimum_army_spending_slider_value(), 1);
+	army_spending_slider_value.set_value(1);
 
-	naval_spending_slider_value.set_bounds(new_economy_defines.get_minimum_naval_spending_slider_value(), 1);
-	naval_spending_slider_value.set_value(1);
+	navy_spending_slider_value.set_bounds(new_economy_defines.get_minimum_navy_spending_slider_value(), 1);
+	navy_spending_slider_value.set_value(1);
 
 	construction_spending_slider_value.set_bounds(
 		new_economy_defines.get_minimum_construction_spending_slider_value(), 1
@@ -465,12 +465,12 @@ void CountryInstance::set_strata_tax_rate_slider_value(Strata const& strata, con
 	tax_rate_slider_value_by_strata[strata].set_value(new_value);
 }
 
-void CountryInstance::set_land_spending_slider_value(const fixed_point_t new_value) {
-	land_spending_slider_value.set_value(new_value);
+void CountryInstance::set_army_spending_slider_value(const fixed_point_t new_value) {
+	army_spending_slider_value.set_value(new_value);
 }
 
-void CountryInstance::set_naval_spending_slider_value(const fixed_point_t new_value) {
-	naval_spending_slider_value.set_value(new_value);
+void CountryInstance::set_navy_spending_slider_value(const fixed_point_t new_value) {
+	navy_spending_slider_value.set_value(new_value);
 }
 
 void CountryInstance::set_construction_spending_slider_value(const fixed_point_t new_value) {

@@ -39,8 +39,8 @@ namespace OpenVic {
 		fixed_point_t PROPERTY(rgo_supply_demand_factor_fire);
 		fixed_point_t PROPERTY(employment_hire_lowest);
 		fixed_point_t PROPERTY(employment_fire_lowest);
-		fixed_point_t PROPERTY(minimum_land_spending_slider_value);
-		fixed_point_t PROPERTY(minimum_naval_spending_slider_value);
+		fixed_point_t PROPERTY(minimum_army_spending_slider_value);
+		fixed_point_t PROPERTY(minimum_navy_spending_slider_value);
 		fixed_point_t PROPERTY(minimum_construction_spending_slider_value);
 		fixed_point_t PROPERTY(factory_purchase_min_factor);
 		fixed_point_t PROPERTY(factory_purchase_drawdown_factor);

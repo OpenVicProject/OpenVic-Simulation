@@ -80,10 +80,10 @@ std::array<
 	// Budget
 	// GAME_ACTION_SET_STRATA_TAX
 	&GameActionManager::game_action_callback_set_strata_tax,
-	// GAME_ACTION_SET_LAND_SPENDING
-	&GameActionManager::game_action_callback_set_land_spending,
-	// GAME_ACTION_SET_NAVAL_SPENDING
-	&GameActionManager::game_action_callback_set_naval_spending,
+	// GAME_ACTION_SET_ARMY_SPENDING
+	&GameActionManager::game_action_callback_set_army_spending,
+	// GAME_ACTION_SET_NAVY_SPENDING
+	&GameActionManager::game_action_callback_set_navy_spending,
 	// GAME_ACTION_SET_CONSTRUCTION_SPENDING
 	&GameActionManager::game_action_callback_set_construction_spending,
 	// GAME_ACTION_SET_EDUCATION_SPENDING
@@ -252,11 +252,11 @@ bool GameActionManager::game_action_callback_set_strata_tax(game_action_argument
 	return old_tax_rate != strata_tax_rate.get_value();
 }
 
-bool GameActionManager::game_action_callback_set_land_spending(game_action_argument_t const& argument) const {
+bool GameActionManager::game_action_callback_set_army_spending(game_action_argument_t const& argument) const {
 	std::pair<uint64_t, fixed_point_t> const* country_value = std::get_if<std::pair<uint64_t, fixed_point_t>>(&argument);
 	if (OV_unlikely(country_value == nullptr)) {
 		Logger::error(
-			"GAME_ACTION_SET_LAND_SPENDING called with invalid argument: ", game_action_argument_to_string(argument)
+			"GAME_ACTION_SET_ARMY_SPENDING called with invalid argument: ", game_action_argument_to_string(argument)
 		);
 		return false;
 	}
@@ -265,22 +265,22 @@ bool GameActionManager::game_action_callback_set_land_spending(game_action_argum
 		instance_manager.get_country_instance_manager().get_country_instance_by_index(country_value->first);
 
 	if (OV_unlikely(country == nullptr)) {
-		Logger::error("GAME_ACTION_SET_LAND_SPENDING called with invalid country index: ", country_value->first);
+		Logger::error("GAME_ACTION_SET_ARMY_SPENDING called with invalid country index: ", country_value->first);
 		return false;
 	}
 
-	const fixed_point_t old_land_spending = country->get_land_spending_slider_value().get_value();
+	const fixed_point_t old_army_spending = country->get_army_spending_slider_value().get_value();
 
-	country->set_land_spending_slider_value(country_value->second);
+	country->set_army_spending_slider_value(country_value->second);
 
-	return old_land_spending != country->get_land_spending_slider_value().get_value();
+	return old_army_spending != country->get_army_spending_slider_value().get_value();
 }
 
-bool GameActionManager::game_action_callback_set_naval_spending(game_action_argument_t const& argument) const {
+bool GameActionManager::game_action_callback_set_navy_spending(game_action_argument_t const& argument) const {
 	std::pair<uint64_t, fixed_point_t> const* country_value = std::get_if<std::pair<uint64_t, fixed_point_t>>(&argument);
 	if (OV_unlikely(country_value == nullptr)) {
 		Logger::error(
-			"GAME_ACTION_SET_NAVAL_SPENDING called with invalid argument: ", game_action_argument_to_string(argument)
+			"GAME_ACTION_SET_NAVY_SPENDING called with invalid argument: ", game_action_argument_to_string(argument)
 		);
 		return false;
 	}
@@ -289,15 +289,15 @@ bool GameActionManager::game_action_callback_set_naval_spending(game_action_argu
 		instance_manager.get_country_instance_manager().get_country_instance_by_index(country_value->first);
 
 	if (OV_unlikely(country == nullptr)) {
-		Logger::error("GAME_ACTION_SET_NAVAL_SPENDING called with invalid country index: ", country_value->first);
+		Logger::error("GAME_ACTION_SET_NAVY_SPENDING called with invalid country index: ", country_value->first);
 		return false;
 	}
 
-	const fixed_point_t old_naval_spending = country->get_naval_spending_slider_value().get_value();
+	const fixed_point_t old_navy_spending = country->get_navy_spending_slider_value().get_value();
 
-	country->set_naval_spending_slider_value(country_value->second);
+	country->set_navy_spending_slider_value(country_value->second);
 
-	return old_naval_spending != country->get_naval_spending_slider_value().get_value();
+	return old_navy_spending != country->get_navy_spending_slider_value().get_value();
 }
 
 bool GameActionManager::game_action_callback_set_construction_spending(game_action_argument_t const& argument) const {
