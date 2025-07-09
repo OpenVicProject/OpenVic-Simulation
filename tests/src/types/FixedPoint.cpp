@@ -99,6 +99,20 @@ TEST_CASE("fixed_point_t Rounding methods", "[fixed_point_t][fixed_point_t-round
 	CONSTEXPR_CHECK(_2_55.round_up_to_multiple(5) == 5);
 	CONSTEXPR_CHECK(_2_55.round_down_to_multiple(fixed_point_t::_0_25) == 2.50_a);
 	CONSTEXPR_CHECK(_2_55.round_up_to_multiple(fixed_point_t::_1_50) == 3);
+
+	CONSTEXPR_CHECK((fixed_point_t::_0_50 - fixed_point_t::epsilon).to_int32_t_rounded() == 0);
+	CONSTEXPR_CHECK(fixed_point_t::_0_50.to_int32_t_rounded() == 1);
+	CONSTEXPR_CHECK((-fixed_point_t::_0_50).to_int32_t_rounded() == -1);
+	CONSTEXPR_CHECK(fixed_point_t::_1_50.to_int32_t_rounded() == 2);
+	CONSTEXPR_CHECK((-fixed_point_t::_1_50).to_int32_t_rounded() == -2);
+	CONSTEXPR_CHECK(_2_55.to_int32_t_rounded() == 3);
+
+	CONSTEXPR_CHECK((fixed_point_t::_0_50 - fixed_point_t::epsilon).to_int64_t_rounded() == 0);
+	CONSTEXPR_CHECK(fixed_point_t::_0_50.to_int64_t_rounded() == 1);
+	CONSTEXPR_CHECK((-fixed_point_t::_0_50).to_int64_t_rounded() == -1);
+	CONSTEXPR_CHECK(fixed_point_t::_1_50.to_int64_t_rounded() == 2);
+	CONSTEXPR_CHECK((-fixed_point_t::_1_50).to_int64_t_rounded() == -2);
+	CONSTEXPR_CHECK(_2_55.to_int64_t_rounded() == 3);
 }
 
 TEST_CASE("fixed_point_t Parse methods", "[fixed_point_t][fixed_point_t-parse]") {
