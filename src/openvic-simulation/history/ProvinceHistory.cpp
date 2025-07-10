@@ -64,9 +64,12 @@ bool ProvinceHistoryMap::_load_history_entry(
 	constexpr bool allow_empty_true = true;
 	constexpr bool do_warn = true;
 
-	return expect_dictionary_keys_and_default(
+	return expect_dictionary_keys_and_default_map(
 		[this, &definition_manager, &building_type_manager, &entry](
-			std::string_view key, ast::NodeCPtr value) -> bool {
+			template_key_map_t<StringMapCaseSensitive> const& key_map,
+			std::string_view key,
+			ast::NodeCPtr value
+		) -> bool {
 			// used for province buildings like forts or railroads
 			BuildingType const* building_type = building_type_manager.get_building_type_by_identifier(key);
 			if (building_type != nullptr) {
@@ -85,7 +88,7 @@ bool ProvinceHistoryMap::_load_history_entry(
 				}
 			}
 
-			return _load_history_sub_entry_callback(definition_manager, entry.get_date(), value, key, value);
+			return _load_history_sub_entry_callback(definition_manager, entry.get_date(), value, key_map, key, value);
 		},
 		"owner", ZERO_OR_ONE, country_definition_manager.expect_country_definition_identifier(
 			assign_variable_callback_pointer_opt(entry.owner, true)
