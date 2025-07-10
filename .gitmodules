@@ -29,3 +29,4 @@
 [submodule "deps/memory"]
 	path = deps/memory
 	url = https://github.com/foonathan/memory
+	ignore = dirty
