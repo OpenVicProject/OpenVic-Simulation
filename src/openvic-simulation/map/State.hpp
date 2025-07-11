@@ -108,7 +108,7 @@ namespace OpenVic {
 	struct StateSet {
 		friend struct StateManager;
 
-		using states_t = plf::colony<State>;
+		using states_t = memory::colony<State>;
 
 	private:
 		Region const& PROPERTY(region);

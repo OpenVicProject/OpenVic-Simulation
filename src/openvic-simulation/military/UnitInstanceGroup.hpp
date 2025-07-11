@@ -175,17 +175,17 @@ namespace OpenVic {
 
 		// TODO - maps from unique_ids to leader/unit/unit group pointers (one big map or multiple maps?)
 
-		plf::colony<LeaderInstance> PROPERTY(leaders);
+		memory::colony<LeaderInstance> PROPERTY(leaders);
 		ordered_map<unique_id_t, LeaderInstance*> PROPERTY(leader_instance_map);
 
-		plf::colony<RegimentInstance> PROPERTY(regiments);
-		plf::colony<ShipInstance> PROPERTY(ships);
+		memory::colony<RegimentInstance> PROPERTY(regiments);
+		memory::colony<ShipInstance> PROPERTY(ships);
 		ordered_map<unique_id_t, UnitInstance*> PROPERTY(unit_instance_map);
 
 		UNIT_BRANCHED_GETTER(get_unit_instances, regiments, ships);
 
-		plf::colony<ArmyInstance> PROPERTY(armies);
-		plf::colony<NavyInstance> PROPERTY(navies);
+		memory::colony<ArmyInstance> PROPERTY(armies);
+		memory::colony<NavyInstance> PROPERTY(navies);
 		ordered_map<unique_id_t, UnitInstanceGroup*> PROPERTY(unit_instance_group_map);
 
 		UNIT_BRANCHED_GETTER(get_unit_instance_groups, armies, navies);
