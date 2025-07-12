@@ -2,7 +2,6 @@
 
 #include <algorithm>
 #include <cassert>
-#include <string>
 #include <string_view>
 #include <ostream>
 
@@ -104,29 +103,4 @@ namespace OpenVic {
 
 	template<typename T>
 	concept HasGetIdentifierAndGetColour = HasGetIdentifier<T> && HasGetColour<T>;
-
-	template<typename TypeTag, std::integral IndexT = size_t>
-	class HasIndex {
-	public:
-		using index_t = IndexT;
-	private:
-		const index_t PROPERTY(index);
-
-	protected:
-		HasIndex(index_t new_index) : index { new_index } {}
-		HasIndex(HasIndex const&) = default;
-
-	public:
-		HasIndex(HasIndex&&) = default;
-		HasIndex& operator=(HasIndex const&) = delete;
-		HasIndex& operator=(HasIndex&&) = delete;
-		constexpr bool operator==(HasIndex const& rhs) const {
-			return index == rhs.index;
-		}
-	};
-
-	template<typename T>
-	concept HasGetIndex = requires(T const& t) {
-		{ t.get_index() } -> std::integral;
-	};
 }
