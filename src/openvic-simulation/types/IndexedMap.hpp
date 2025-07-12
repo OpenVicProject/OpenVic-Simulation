@@ -4,6 +4,7 @@
 #include <vector>
 
 #include "openvic-simulation/types/fixed_point/FixedPointMap.hpp"
+#include "openvic-simulation/types/HasIdentifier.hpp"
 #include "openvic-simulation/utility/ForwardableSpan.hpp"
 #include "openvic-simulation/utility/Getters.hpp"
 #include "openvic-simulation/utility/Logger.hpp"
@@ -310,10 +311,14 @@ namespace OpenVic {
 		}
 
 		constexpr size_t get_index_from_item(key_ref_type key) const {
-			if (has_keys() && keys.data() <= &key && &key <= &keys.back()) {
-				return std::distance(keys.data(), &key);
+			if constexpr (std::is_base_of<OpenVic::HasIndex<Key>, Key>::value) {
+				return key.get_index();
 			} else {
-				return 0;
+				if (has_keys() && keys.data() <= &key && &key <= &keys.back()) {
+					return std::distance(keys.data(), &key);
+				} else {
+					return 0;
+				}
 			}
 		}
 
