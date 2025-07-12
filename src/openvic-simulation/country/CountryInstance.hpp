@@ -144,6 +144,7 @@ namespace OpenVic {
 		moveable_atomic_fixed_point_t PROPERTY(cash_stockpile);
 		memory::unique_ptr<std::mutex> taxable_income_mutex;
 		IndexedMap<PopType, fixed_point_t> PROPERTY(taxable_income_by_pop_type);
+		fixed_point_t PROPERTY(tax_efficiency);
 		IndexedMap<Strata, fixed_point_t> PROPERTY(effective_tax_rate_by_strata);
 		IndexedMap<Strata, SliderValue> PROPERTY(tax_rate_slider_value_by_strata);
 
@@ -614,6 +615,7 @@ namespace OpenVic {
 
 	private:
 		void _update_production(DefineManager const& define_manager);
+		void _update_effective_tax_rate_by_strata(Strata const& strata);
 		void _update_budget();
 
 		//base here means not scaled by slider or pop size

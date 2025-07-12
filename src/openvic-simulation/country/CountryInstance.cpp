@@ -464,6 +464,7 @@ bool CountryInstance::add_reform(Reform const& new_reform) {
 
 void CountryInstance::set_strata_tax_rate_slider_value(Strata const& strata, const fixed_point_t new_value) {
 	tax_rate_slider_value_by_strata[strata].set_value(new_value);
+	_update_effective_tax_rate_by_strata(strata);
 }
 
 void CountryInstance::set_army_spending_slider_value(const fixed_point_t new_value) {
@@ -1158,12 +1159,12 @@ void CountryInstance::_update_budget() {
 	// TODO - make sure we properly update everything dependent on these sliders' values,
 	// as they might change if their sliders' bounds shrink past their previous values.
 
-	const fixed_point_t tax_efficiency = country_defines.get_base_country_tax_efficiency()
+	tax_efficiency = country_defines.get_base_country_tax_efficiency()
 		+ get_modifier_effect_value(*modifier_effect_cache.get_tax_efficiency())
 		+ get_modifier_effect_value(*modifier_effect_cache.get_tax_eff()) / 100;
 
-	for (auto const& [strata, tax_rate_slider_value] : tax_rate_slider_value_by_strata) {
-		effective_tax_rate_by_strata[strata] = tax_rate_slider_value.get_value() * tax_efficiency;
+	for (Strata const& strata : tax_rate_slider_value_by_strata.get_keys()) {
+		_update_effective_tax_rate_by_strata(strata);
 	}
 
 	/*
@@ -1245,6 +1246,11 @@ void CountryInstance::_update_budget() {
 	projected_import_subsidies = has_import_subsidies()
 		? -effective_tariff_rate * yesterdays_import_value
 		: fixed_point_t::_0;
+}
+
+void CountryInstance::_update_effective_tax_rate_by_strata(Strata const& strata) {
+	const fixed_point_t tax_rate = tax_rate_slider_value_by_strata[strata].get_value();
+	effective_tax_rate_by_strata[strata] = tax_rate * tax_efficiency;
 }
 
 fixed_point_t CountryInstance::calculate_pensions_base(
