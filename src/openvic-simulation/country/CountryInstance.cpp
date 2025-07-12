@@ -1883,6 +1883,15 @@ void CountryInstance::country_tick_before_map(InstanceManager& instance_manager)
 		actual_net_tariffs = 0;
 	}
 	taxable_income_by_pop_type.fill(0);
+	const fixed_point_t total_expenses = actual_import_subsidies
+		+ actual_administration_spending
+		+ actual_education_spending
+		+ actual_military_spending
+		+ actual_social_spending;
+		//TODO: + factory subsidies
+		//TODO: + interest
+		//TODO: + diplomatic costs
+	cash_stockpile -= total_expenses;
 }
 
 void CountryInstance::country_tick_after_map(InstanceManager& instance_manager) {
