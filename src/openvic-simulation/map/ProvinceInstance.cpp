@@ -630,6 +630,6 @@ void ProvinceInstance::setup_pop_test_values(IssueManager const& issue_manager) 
 	}
 }
 
-plf::colony<Pop>& ProvinceInstance::get_mutable_pops() {
+memory::colony<Pop>& ProvinceInstance::get_mutable_pops() {
 	return pops;
 }

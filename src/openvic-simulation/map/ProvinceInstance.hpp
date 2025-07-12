@@ -111,7 +111,7 @@ namespace OpenVic {
 		UNIT_BRANCHED_GETTER_CONST(get_unit_instance_groups, armies, navies);
 
 	private:
-		plf::colony<Pop> PROPERTY(pops); // TODO - replace with a more easily vectorisable container?
+		memory::colony<Pop> PROPERTY(pops); // TODO - replace with a more easily vectorisable container?
 		pop_size_t PROPERTY(total_population, 0);
 		fixed_point_t PROPERTY(yesterdays_import_value);
 		// TODO - population change (growth + migration), monthly totals + breakdown by source/destination
@@ -270,6 +270,6 @@ namespace OpenVic {
 		bool apply_history_to_province(ProvinceHistoryEntry const& entry, CountryInstanceManager& country_manager);
 
 		void setup_pop_test_values(IssueManager const& issue_manager);
-		plf::colony<Pop>& get_mutable_pops();
+		memory::colony<Pop>& get_mutable_pops();
 	};
 }
