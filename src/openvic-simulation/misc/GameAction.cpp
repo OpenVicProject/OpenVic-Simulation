@@ -244,13 +244,8 @@ bool GameActionManager::game_action_callback_set_strata_tax(game_action_argument
 		return false;
 	}
 
-	SliderValue const& strata_tax_rate = country->get_tax_rate_slider_value_by_strata()[*strata];
-
-	const fixed_point_t old_tax_rate = strata_tax_rate.get_value();
-
 	country->set_strata_tax_rate_slider_value(*strata, std::get<2>(*country_strata_value));
-
-	return old_tax_rate != strata_tax_rate.get_value();
+	return false;
 }
 
 bool GameActionManager::game_action_callback_set_army_spending(game_action_argument_t const& argument) const {
@@ -270,11 +265,8 @@ bool GameActionManager::game_action_callback_set_army_spending(game_action_argum
 		return false;
 	}
 
-	const fixed_point_t old_army_spending = country->get_army_spending_slider_value().get_value();
-
 	country->set_army_spending_slider_value(country_value->second);
-
-	return old_army_spending != country->get_army_spending_slider_value().get_value();
+	return false;
 }
 
 bool GameActionManager::game_action_callback_set_navy_spending(game_action_argument_t const& argument) const {
@@ -294,11 +286,8 @@ bool GameActionManager::game_action_callback_set_navy_spending(game_action_argum
 		return false;
 	}
 
-	const fixed_point_t old_navy_spending = country->get_navy_spending_slider_value().get_value();
-
 	country->set_navy_spending_slider_value(country_value->second);
-
-	return old_navy_spending != country->get_navy_spending_slider_value().get_value();
+	return false;
 }
 
 bool GameActionManager::game_action_callback_set_construction_spending(game_action_argument_t const& argument) const {
@@ -318,11 +307,8 @@ bool GameActionManager::game_action_callback_set_construction_spending(game_acti
 		return false;
 	}
 
-	const fixed_point_t old_construction_spending = country->get_construction_spending_slider_value().get_value();
-
 	country->set_construction_spending_slider_value(country_value->second);
-
-	return old_construction_spending != country->get_construction_spending_slider_value().get_value();
+	return false;
 }
 
 bool GameActionManager::game_action_callback_set_education_spending(game_action_argument_t const& argument) const {
@@ -342,11 +328,8 @@ bool GameActionManager::game_action_callback_set_education_spending(game_action_
 		return false;
 	}
 
-	const fixed_point_t old_education_spending = country->get_education_spending_slider_value().get_value();
-
 	country->set_education_spending_slider_value(country_value->second);
-
-	return old_education_spending != country->get_education_spending_slider_value().get_value();
+	return false;
 }
 
 bool GameActionManager::game_action_callback_set_administration_spending(game_action_argument_t const& argument) const {
@@ -366,11 +349,8 @@ bool GameActionManager::game_action_callback_set_administration_spending(game_ac
 		return false;
 	}
 
-	const fixed_point_t old_administration_spending = country->get_administration_spending_slider_value().get_value();
-
 	country->set_administration_spending_slider_value(country_value->second);
-
-	return old_administration_spending != country->get_administration_spending_slider_value().get_value();
+	return false;
 }
 
 bool GameActionManager::game_action_callback_set_social_spending(game_action_argument_t const& argument) const {
@@ -390,11 +370,8 @@ bool GameActionManager::game_action_callback_set_social_spending(game_action_arg
 		return false;
 	}
 
-	const fixed_point_t old_social_spending = country->get_social_spending_slider_value().get_value();
-
 	country->set_social_spending_slider_value(country_value->second);
-
-	return old_social_spending != country->get_social_spending_slider_value().get_value();
+	return false;
 }
 
 bool GameActionManager::game_action_callback_set_military_spending(game_action_argument_t const& argument) const {
@@ -414,11 +391,8 @@ bool GameActionManager::game_action_callback_set_military_spending(game_action_a
 		return false;
 	}
 
-	const fixed_point_t old_military_spending = country->get_military_spending_slider_value().get_value();
-
 	country->set_military_spending_slider_value(country_value->second);
-
-	return old_military_spending != country->get_military_spending_slider_value().get_value();
+	return false;
 }
 
 bool GameActionManager::game_action_callback_set_tariff_rate(game_action_argument_t const& argument) const {
@@ -436,11 +410,8 @@ bool GameActionManager::game_action_callback_set_tariff_rate(game_action_argumen
 		return false;
 	}
 
-	const fixed_point_t old_tariff_rate = country->get_tariff_rate_slider_value().get_value();
-
 	country->set_tariff_rate_slider_value(country_value->second);
-
-	return old_tariff_rate != country->get_tariff_rate_slider_value().get_value();
+	return false;
 }
 
 // Technology
