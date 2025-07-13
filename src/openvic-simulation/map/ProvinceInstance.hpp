@@ -227,6 +227,7 @@ namespace OpenVic {
 		bool add_pop(Pop&& pop);
 		bool add_pop_vec(
 			std::span<const PopBase> pop_vec,
+			utility::forwardable_span<const GoodDefinition> good_definition_keys,
 			MarketInstance& market_instance,
 			ArtisanalProducerFactoryPattern& artisanal_producer_factory_pattern
 		);

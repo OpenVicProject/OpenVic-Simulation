@@ -221,6 +221,7 @@ bool ProvinceInstance::add_pop(Pop&& pop) {
 
 bool ProvinceInstance::add_pop_vec(
 	std::span<const PopBase> pop_vec,
+	utility::forwardable_span<const GoodDefinition> good_definition_keys,
 	MarketInstance& market_instance,
 	ArtisanalProducerFactoryPattern& artisanal_producer_factory_pattern
 ) {
@@ -230,6 +231,7 @@ bool ProvinceInstance::add_pop_vec(
 			_add_pop(Pop {
 				pop,
 				ideology_distribution.get_keys(),
+				good_definition_keys,
 				market_instance,
 				artisanal_producer_factory_pattern
 			});

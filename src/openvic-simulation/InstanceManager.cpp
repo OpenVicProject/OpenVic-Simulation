@@ -170,6 +170,7 @@ bool InstanceManager::setup() {
 		definition_manager.get_military_manager().get_unit_type_manager().get_regiment_types(),
 		definition_manager.get_military_manager().get_unit_type_manager().get_ship_types(),
 		definition_manager.get_pop_manager().get_stratas(),
+		country_instance_manager.get_country_definition_manager().get_country_definitions(),
 		game_rules_manager,
 		country_relation_manager,
 		good_instance_manager,
@@ -181,6 +182,7 @@ bool InstanceManager::setup() {
 		definition_manager.get_define_manager().get_pops_defines(),
 		country_instance_manager.get_country_instances(),
 		definition_manager.get_pop_manager().get_stratas(),
+		good_instance_manager.get_good_definition_manager().get_good_definitions(),
 		good_instance_manager.get_good_instances(),
 		map_instance.get_province_instances()
 	);
@@ -222,6 +224,7 @@ bool InstanceManager::load_bookmark(Bookmark const* new_bookmark) {
 		country_instance_manager,
 		// TODO - the following argument is for generating test pop attributes
 		definition_manager.get_politics_manager().get_issue_manager(),
+		good_instance_manager.get_good_definition_manager().get_good_definitions(),
 		market_instance,
 		artisanal_producer_factory_pattern
 	);

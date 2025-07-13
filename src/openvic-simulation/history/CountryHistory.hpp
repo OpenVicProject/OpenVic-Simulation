@@ -7,7 +7,6 @@
 #include "openvic-simulation/types/Date.hpp"
 #include "openvic-simulation/types/IndexedMap.hpp"
 #include "openvic-simulation/types/OrderedContainers.hpp"
-#include "openvic-simulation/types/fixed_point/FixedPointMap.hpp"
 #include "openvic-simulation/utility/Containers.hpp"
 
 namespace OpenVic {
@@ -49,7 +48,7 @@ namespace OpenVic {
 		std::optional<TechnologySchool const*> PROPERTY(tech_school);
 		ordered_map<Technology const*, CountryInstance::unlock_level_t> PROPERTY(technologies);
 		ordered_map<Invention const*, bool> PROPERTY(inventions);
-		fixed_point_map_t<CountryDefinition const*> PROPERTY(foreign_investment);
+		IndexedMap<CountryDefinition, fixed_point_t> PROPERTY(foreign_investment);
 		std::optional<fixed_point_t> PROPERTY(consciousness);
 		std::optional<fixed_point_t> PROPERTY(nonstate_consciousness);
 		std::optional<fixed_point_t> PROPERTY(literacy);

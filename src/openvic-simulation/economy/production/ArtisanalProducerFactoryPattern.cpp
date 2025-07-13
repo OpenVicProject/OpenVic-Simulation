@@ -28,7 +28,7 @@ memory::unique_ptr<ArtisanalProducer> ArtisanalProducerFactoryPattern::CreateNew
 
 	return memory::make_unique<ArtisanalProducer>(
 		modifier_effect_cache,
-		GoodDefinition::good_definition_map_t{},
+		GoodDefinition::good_definition_map_t{ good_instance_manager.get_good_definition_manager().get_good_definitions() },
 		*random_artisanal_production_type,
 		0
 	);

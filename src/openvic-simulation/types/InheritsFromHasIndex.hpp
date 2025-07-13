@@ -61,4 +61,6 @@ namespace OpenVic {
 	
 	template <typename T>
 	struct InheritsFromHasIndex : public _detail::is_has_index_with_tag_final<T, T> {};
+	template <typename T>
+	concept NotHasIndexWithTag = !_detail::is_has_index_with_tag_final<T, T>::value;
 }

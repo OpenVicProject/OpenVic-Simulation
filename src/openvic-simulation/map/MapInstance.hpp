@@ -71,6 +71,7 @@ namespace OpenVic {
 			const Date date,
 			CountryInstanceManager& country_manager,
 			IssueManager const& issue_manager,
+			utility::forwardable_span<const GoodDefinition> good_definition_keys,
 			MarketInstance& market_instance,
 			ArtisanalProducerFactoryPattern& artisanal_producer_factory_pattern
 		);

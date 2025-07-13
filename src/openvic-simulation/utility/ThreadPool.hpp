@@ -4,7 +4,6 @@
 #include <cstdint>
 #include <mutex>
 #include <thread>
-#include <vector>
 
 #include "openvic-simulation/pop/PopValuesFromProvince.hpp"
 #include "openvic-simulation/types/Date.hpp"
@@ -12,6 +11,7 @@
 
 namespace OpenVic {
 	struct CountryInstance;
+	struct GoodDefinition;
 	struct GoodInstance;
 	struct PopsDefines;
 	struct Strata;
@@ -28,8 +28,9 @@ namespace OpenVic {
 		void loop_until_cancelled(
 			work_t& work_type,
 			PopsDefines const& pop_defines,
-			std::span<const CountryInstance> country_keys,
-			std::span<const Strata> strata_keys,
+			utility::forwardable_span<const CountryInstance> country_keys,
+			utility::forwardable_span<const Strata> strata_keys,
+			utility::forwardable_span<const GoodDefinition> good_definition_keys,
 			std::span<GoodInstance> goods_chunk,
 			std::span<ProvinceInstance> provinces_chunk
 		);
@@ -53,8 +54,9 @@ namespace OpenVic {
 
 		void initialise_threadpool(
 			PopsDefines const& pop_defines,
-			std::span<const CountryInstance> country_keys,
-			std::span<const Strata> strata_keys,
+			utility::forwardable_span<const CountryInstance> country_keys,
+			utility::forwardable_span<const Strata> strata_keys,
+			utility::forwardable_span<const GoodDefinition> good_definition_keys,
 			std::span<GoodInstance> goods,
 			std::span<ProvinceInstance> provinces
 		);

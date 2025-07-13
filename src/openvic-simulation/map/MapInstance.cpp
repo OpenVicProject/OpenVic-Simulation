@@ -96,6 +96,7 @@ bool MapInstance::apply_history_to_provinces(
 	const Date date,
 	CountryInstanceManager& country_manager,
 	IssueManager const& issue_manager,
+	utility::forwardable_span<const GoodDefinition> good_definition_keys,
 	MarketInstance& market_instance,
 	ArtisanalProducerFactoryPattern& artisanal_producer_factory_pattern
 ) {
@@ -134,6 +135,7 @@ bool MapInstance::apply_history_to_provinces(
 				} else {
 					ret &= province.add_pop_vec(
 						pop_history_entry->get_pops(),
+						good_definition_keys,
 						market_instance,
 						artisanal_producer_factory_pattern
 					);

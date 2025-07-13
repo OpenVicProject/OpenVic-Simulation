@@ -134,7 +134,7 @@ namespace OpenVic {
 		memory::vector<std::pair<State const*, fixed_point_t>> PROPERTY(industrial_power_from_states);
 		memory::vector<std::pair<CountryInstance const*, fixed_point_t>> PROPERTY(industrial_power_from_investments);
 		size_t PROPERTY(industrial_rank, 0);
-		fixed_point_map_t<CountryInstance const*> PROPERTY(foreign_investments);
+		IndexedMap<CountryDefinition, fixed_point_t> PROPERTY(foreign_investments);
 		IndexedMap<BuildingType, unlock_level_t> PROPERTY(building_type_unlock_levels);
 		// TODO - total amount of each good produced
 
@@ -199,7 +199,7 @@ namespace OpenVic {
 		Date PROPERTY(expected_research_completion_date);
 		fixed_point_t PROPERTY(research_point_stockpile);
 		fixed_point_t PROPERTY(daily_research_points);
-		fixed_point_map_t<PopType const*> PROPERTY(research_points_from_pop_types);
+		IndexedMap<PopType, fixed_point_t> PROPERTY(research_points_from_pop_types);
 		fixed_point_t PROPERTY(national_literacy);
 		TechnologySchool const* PROPERTY(tech_school, nullptr);
 		// TODO - cached possible inventions with %age chance
@@ -316,7 +316,7 @@ namespace OpenVic {
 		fixed_point_t PROPERTY(max_ship_supply);
 		fixed_point_t PROPERTY_RW(leadership_point_stockpile);
 		fixed_point_t PROPERTY(monthly_leadership_points);
-		fixed_point_map_t<PopType const*> PROPERTY(leadership_points_from_pop_types);
+		IndexedMap<PopType, fixed_point_t> PROPERTY(leadership_points_from_pop_types);
 		int32_t PROPERTY(create_leader_count, 0);
 		// War exhaustion is stored as a raw decimal rather than a proportion, it is usually in the range 0-100.
 		// The current war exhaustion value should only ever be modified via change_war_exhaustion(delta) which also
@@ -358,6 +358,7 @@ namespace OpenVic {
 			decltype(regiment_type_unlock_levels)::keys_span_type regiment_type_unlock_levels_keys,
 			decltype(ship_type_unlock_levels)::keys_span_type ship_type_unlock_levels_keys,
 			decltype(tax_rate_slider_value_by_strata)::keys_span_type strata_keys,
+			decltype(foreign_investments)::keys_span_type country_definition_keys,
 			GameRulesManager const& new_game_rules_manager,
 			CountryRelationManager& new_country_relations_manager,
 			SharedCountryValues const& new_shared_country_values,
@@ -606,15 +607,15 @@ namespace OpenVic {
 		void start_research(Technology const& technology, InstanceManager const& instance_manager);
 
 		// Sets the investment of each country in the map (rather than adding to them), leaving the rest unchanged.
-		void apply_foreign_investments(
-			fixed_point_map_t<CountryDefinition const*> const& investments,
-			CountryInstanceManager const& country_instance_manager
-		);
+		void apply_foreign_investments(IndexedMap<CountryDefinition, fixed_point_t> const& investments);
 
 		bool apply_history_to_country(CountryHistoryEntry const& entry, InstanceManager& instance_manager);
 
 	private:
-		void _update_production(DefineManager const& define_manager);
+		void _update_production(
+			CountryInstanceManager const& country_instance_manager,
+			DefineManager const& define_manager
+		);
 		void _update_effective_tax_rate_by_strata(Strata const& strata);
 		void _update_budget();
 
@@ -749,6 +750,7 @@ namespace OpenVic {
 			decltype(CountryInstance::regiment_type_unlock_levels)::keys_span_type regiment_type_unlock_levels_keys,
 			decltype(CountryInstance::ship_type_unlock_levels)::keys_span_type ship_type_unlock_levels_keys,
 			decltype(CountryInstance::tax_rate_slider_value_by_strata):: keys_span_type strata_keys,
+			decltype(CountryInstance::foreign_investments)::keys_span_type country_definition_keys,
 			GameRulesManager const& game_rules_manager,
 			CountryRelationManager& country_relations_manager,
 			GoodInstanceManager& good_instance_manager,

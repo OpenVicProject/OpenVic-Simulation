@@ -1,6 +1,8 @@
 #pragma once
 
 #include "openvic-simulation/types/IdentifierRegistry.hpp"
+#include "openvic-simulation/types/IndexedMap.hpp"
+#include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
 #include "openvic-simulation/utility/Containers.hpp"
 
 namespace OpenVic {
@@ -34,7 +36,7 @@ namespace OpenVic {
 	struct GoodDefinition : HasIdentifierAndColour, HasIndex<GoodDefinition> {
 		friend struct GoodDefinitionManager;
 
-		using good_definition_map_t = fixed_point_map_t<GoodDefinition const*>;
+		using good_definition_map_t = IndexedMap<GoodDefinition, fixed_point_t>;
 
 	private:
 		GoodCategory const& PROPERTY(category);

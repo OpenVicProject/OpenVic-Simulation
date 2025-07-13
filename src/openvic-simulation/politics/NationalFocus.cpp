@@ -23,8 +23,8 @@ NationalFocus::NationalFocus(
 	Ideology const* new_loyalty_ideology,
 	fixed_point_t new_loyalty_value,
 	fixed_point_t new_encourage_railroads,
-	fixed_point_map_t<GoodDefinition const*>&& new_encourage_goods,
-	fixed_point_map_t<PopType const*>&& new_encourage_pop_types,
+	IndexedMap<GoodDefinition, fixed_point_t>&& new_encourage_goods,
+	IndexedMap<PopType, fixed_point_t>&& new_encourage_pop_types,
 	ConditionScript&& new_limit
 ) : Modifier { new_identifier, std::move(new_modifiers), modifier_type_t::NATIONAL_FOCUS },
 	group { new_group },
@@ -66,8 +66,8 @@ inline bool NationalFocusManager::add_national_focus(
 	Ideology const* loyalty_ideology,
 	fixed_point_t loyalty_value,
 	fixed_point_t encourage_railroads,
-	fixed_point_map_t<GoodDefinition const*>&& encourage_goods,
-	fixed_point_map_t<PopType const*>&& encourage_pop_types,
+	IndexedMap<GoodDefinition, fixed_point_t>&& encourage_goods,
+	IndexedMap<PopType, fixed_point_t>&& encourage_pop_types,
 	ConditionScript&& limit
 ) {
 	const LogScope log_scope { fmt::format("national focus {}", identifier) };
@@ -131,8 +131,8 @@ bool NationalFocusManager::load_national_foci_file(
 					Ideology const* loyalty_ideology = nullptr;
 					fixed_point_t loyalty_value = 0;
 					fixed_point_t encourage_railroads = 0;
-					fixed_point_map_t<GoodDefinition const*> encourage_goods;
-					fixed_point_map_t<PopType const*> encourage_pop_types;
+					IndexedMap<GoodDefinition, fixed_point_t> encourage_goods { good_definition_manager.get_good_definitions() };
+					IndexedMap<PopType, fixed_point_t> encourage_pop_types { pop_manager.get_pop_types() };
 					ConditionScript limit {
 						PROVINCE | COUNTRY, PROVINCE | COUNTRY, NO_SCOPE
 					};

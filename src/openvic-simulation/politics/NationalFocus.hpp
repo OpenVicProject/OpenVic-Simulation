@@ -32,8 +32,8 @@ namespace OpenVic {
 		Ideology const* PROPERTY(loyalty_ideology);
 		fixed_point_t PROPERTY(loyalty_value);
 		fixed_point_t PROPERTY(encourage_railroads);
-		fixed_point_map_t<GoodDefinition const*> PROPERTY(encourage_goods);
-		fixed_point_map_t<PopType const*> PROPERTY(encourage_pop_types);
+		IndexedMap<GoodDefinition, fixed_point_t> PROPERTY(encourage_goods);
+		IndexedMap<PopType, fixed_point_t> PROPERTY(encourage_pop_types);
 		ConditionScript PROPERTY(limit);
 
 		NationalFocus(
@@ -48,8 +48,8 @@ namespace OpenVic {
 			Ideology const* new_loyalty_ideology,
 			fixed_point_t new_loyalty_value,
 			fixed_point_t new_encourage_railroads,
-			fixed_point_map_t<GoodDefinition const*>&& new_encourage_goods,
-			fixed_point_map_t<PopType const*>&& new_encourage_pop_types,
+			IndexedMap<GoodDefinition, fixed_point_t>&& new_encourage_goods,
+			IndexedMap<PopType, fixed_point_t>&& new_encourage_pop_types,
 			ConditionScript&& new_limit
 		);
 
@@ -83,8 +83,8 @@ namespace OpenVic {
 			Ideology const* loyalty_ideology,
 			fixed_point_t loyalty_value,
 			fixed_point_t encourage_railroads,
-			fixed_point_map_t<GoodDefinition const*>&& encourage_goods,
-			fixed_point_map_t<PopType const*>&& encourage_pop_types,
+			IndexedMap<GoodDefinition, fixed_point_t>&& encourage_goods,
+			IndexedMap<PopType, fixed_point_t>&& encourage_pop_types,
 			ConditionScript&& limit
 		);
 

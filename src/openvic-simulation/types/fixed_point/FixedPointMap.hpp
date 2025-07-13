@@ -1,17 +1,18 @@
 #pragma once
 
-#include "openvic-simulation/types/OrderedContainers.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
+#include "openvic-simulation/types/InheritsFromHasIndex.hpp"
+#include "openvic-simulation/types/OrderedContainers.hpp"
 
 namespace OpenVic {
-
-	template<typename T>
+	// use IndexedMap<T, fixed_point_t> if you inherit from HasIndex<T, Any>
+	template<NotHasIndexWithTag T>
 	using fixed_point_map_t = ordered_map<T, fixed_point_t>;
 
-	template<typename T>
+	template<NotHasIndexWithTag T>
 	using fixed_point_map_value_t = typename fixed_point_map_t<T>::value_type;
 
-	template<typename T>
+	template<NotHasIndexWithTag T>
 	using fixed_point_map_const_iterator_t = typename fixed_point_map_t<T>::const_iterator;
 
 	template<typename T, std::derived_from<T> U>

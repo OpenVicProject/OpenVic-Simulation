@@ -47,6 +47,7 @@ CountryInstance::CountryInstance(
 	decltype(regiment_type_unlock_levels)::keys_span_type regiment_type_unlock_levels_keys,
 	decltype(ship_type_unlock_levels)::keys_span_type ship_type_unlock_levels_keys,
 	decltype(tax_rate_slider_value_by_strata)::keys_span_type strata_keys,
+	decltype(foreign_investments)::keys_span_type country_definition_keys,
 	GameRulesManager const& new_game_rules_manager,
 	CountryRelationManager& new_country_relations_manager,
 	SharedCountryValues const& new_shared_country_values,
@@ -64,6 +65,7 @@ CountryInstance::CountryInstance(
 	colour { ERROR_COLOUR },
 
 	/* Production */
+	foreign_investments { country_definition_keys },
 	building_type_unlock_levels { building_type_keys },
 
 	/* Budget */
@@ -76,6 +78,7 @@ CountryInstance::CountryInstance(
 	/* Technology */
 	technology_unlock_levels { technology_keys },
 	invention_unlock_levels { invention_keys },
+	research_points_from_pop_types { pop_type_keys },
 
 	/* Politics */
 	upper_house { ideology_keys },
@@ -99,6 +102,7 @@ CountryInstance::CountryInstance(
 	/* Diplomacy */
 
 	/* Military */
+	leadership_points_from_pop_types { pop_type_keys },
 	regiment_type_unlock_levels { regiment_type_unlock_levels_keys },
 	ship_type_unlock_levels { ship_type_unlock_levels_keys } {
 
@@ -1010,11 +1014,9 @@ void CountryInstance::start_research(Technology const& technology, InstanceManag
 	_update_current_tech(instance_manager);
 }
 
-void CountryInstance::apply_foreign_investments(
-	fixed_point_map_t<CountryDefinition const*> const& investments, CountryInstanceManager const& country_instance_manager
-) {
+void CountryInstance::apply_foreign_investments(IndexedMap<CountryDefinition, fixed_point_t> const& investments) {
 	for (auto const& [country, money_invested] : investments) {
-		foreign_investments[&country_instance_manager.get_country_instance_from_definition(*country)] = money_invested;
+		foreign_investments[country] = money_invested;
 	}
 }
 
@@ -1071,7 +1073,7 @@ bool CountryInstance::apply_history_to_country(CountryHistoryEntry const& entry,
 		ret &= set_invention_unlock_level(*invention, activated ? 1 : 0, good_instance_manager);
 	}
 
-	apply_foreign_investments(entry.get_foreign_investment(), instance_manager.get_country_instance_manager());
+	apply_foreign_investments(entry.get_foreign_investment());
 
 	set_optional(releasable_vassal, entry.is_releasable_vassal());
 
@@ -1087,7 +1089,10 @@ bool CountryInstance::apply_history_to_country(CountryHistoryEntry const& entry,
 	return ret;
 }
 
-void CountryInstance::_update_production(DefineManager const& define_manager) {
+void CountryInstance::_update_production(
+	CountryInstanceManager const& country_instance_manager,
+	DefineManager const& define_manager
+) {
 	// Calculate industrial power from states and foreign investments
 	industrial_power = 0;
 	industrial_power_from_states.clear();
@@ -1101,8 +1106,9 @@ void CountryInstance::_update_production(DefineManager const& define_manager) {
 		}
 	}
 
-	for (auto const& [country, money_invested] : foreign_investments) {
-		if (country->exists()) {
+	for (auto const& [country_definition, money_invested] : foreign_investments) {
+		CountryInstance const& country_instance = country_instance_manager.get_country_instance_from_definition(country_definition);
+		if (country_instance.exists()) {
 			const fixed_point_t investment_industrial_power = fixed_point_t::mul_div(
 				money_invested,
 				define_manager.get_country_defines().get_country_investment_industrial_score_factor(),
@@ -1111,7 +1117,7 @@ void CountryInstance::_update_production(DefineManager const& define_manager) {
 
 			if (investment_industrial_power != 0) {
 				industrial_power += investment_industrial_power;
-				industrial_power_from_investments.emplace_back(country, investment_industrial_power);
+				industrial_power_from_investments.emplace_back(&country_instance, investment_industrial_power);
 			}
 		}
 	}
@@ -1393,13 +1399,13 @@ void CountryInstance::_update_population() {
 
 			if (pop_type.get_research_points() != fixed_point_t::_0) {
 				const fixed_point_t research_points = pop_type.get_research_points() * factor;
-				research_points_from_pop_types[&pop_type] = research_points;
+				research_points_from_pop_types[pop_type] = research_points;
 				daily_research_points += research_points;
 			}
 
 			if (pop_type.get_leadership_points() != fixed_point_t::_0) {
 				const fixed_point_t leadership_points = pop_type.get_leadership_points() * factor;
-				leadership_points_from_pop_types[&pop_type] = leadership_points;
+				leadership_points_from_pop_types[pop_type] = leadership_points;
 				monthly_leadership_points = leadership_points;
 			}
 		}
@@ -1766,7 +1772,7 @@ void CountryInstance::update_gamestate(InstanceManager& instance_manager) {
 	// Updates population stats (including research and leadership points from pops)
 	_update_population();
 	// Calculates industrial power
-	_update_production(define_manager);
+	_update_production(instance_manager.get_country_instance_manager(), define_manager);
 	// Calculates daily research points and predicts research completion date
 	_update_technology(instance_manager);
 	// Calculates national military modifiers, army and navy stats, daily leadership points
@@ -2293,6 +2299,7 @@ bool CountryInstanceManager::generate_country_instances(
 	decltype(CountryInstance::regiment_type_unlock_levels)::keys_span_type regiment_type_unlock_levels_keys,
 	decltype(CountryInstance::ship_type_unlock_levels)::keys_span_type ship_type_unlock_levels_keys,
 	decltype(CountryInstance::tax_rate_slider_value_by_strata):: keys_span_type strata_keys,
+	decltype(CountryInstance::foreign_investments)::keys_span_type country_definition_keys,
 	GameRulesManager const& game_rules_manager,
 	CountryRelationManager& country_relations_manager,
 	GoodInstanceManager& good_instance_manager,
@@ -2319,6 +2326,7 @@ bool CountryInstanceManager::generate_country_instances(
 			regiment_type_unlock_levels_keys,
 			ship_type_unlock_levels_keys,
 			strata_keys,
+			country_definition_keys,
 			game_rules_manager,
 			country_relations_manager,
 			shared_country_values,
@@ -2388,7 +2396,7 @@ bool CountryInstanceManager::apply_history_to_countries(InstanceManager& instanc
 						}
 					} else {
 						// All foreign investments are applied regardless of the bookmark's date
-						country_instance.apply_foreign_investments(entry->get_foreign_investment(), *this);
+						country_instance.apply_foreign_investments(entry->get_foreign_investment());
 					}
 				}
 

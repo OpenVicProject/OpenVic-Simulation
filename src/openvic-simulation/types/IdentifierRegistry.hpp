@@ -4,10 +4,12 @@
 
 #include "openvic-simulation/dataloader/NodeTools.hpp"
 #include "openvic-simulation/types/HasIdentifier.hpp"
+#include "openvic-simulation/types/InheritsFromHasIndex.hpp"
+#include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPointMap.hpp"
-#include "openvic-simulation/utility/Deque.hpp"
 #include "openvic-simulation/utility/Getters.hpp"
 #include "openvic-simulation/utility/Logger.hpp"
+#include "openvic-simulation/utility/Utility.hpp"
 
 namespace OpenVic {
 	/* Callbacks for trying to add duplicate keys via UniqueKeyRegistry::add_item */
@@ -468,10 +470,11 @@ namespace OpenVic {
 		 * with the resulting map move-returned via `callback`. The values can be transformed by providing
 		 * a fixed point to fixed point function fixed_point_functor, which will be applied to ever parsed value. */
 		template<NodeTools::FunctorConvertible<fixed_point_t, fixed_point_t> FixedPointFunctor = std::identity>
-		constexpr NodeTools::NodeCallback auto expect_item_decimal_map(
+		constexpr NodeTools::NodeCallback auto expect_item_decimal_ordered_map(
 			NodeTools::Callback<fixed_point_map_t<external_value_type const*>&&> auto callback,
 			FixedPointFunctor fixed_point_functor = {}
-		) const {
+		) const
+		requires (NotHasIndexWithTag<external_value_type>) {
 			return [this, callback, fixed_point_functor](ast::NodeCPtr node) -> bool {
 				fixed_point_map_t<external_value_type const*> map;
 
@@ -480,6 +483,36 @@ namespace OpenVic {
 						return NodeTools::expect_fixed_point(
 							[&map, fixed_point_functor, &key](fixed_point_t val) -> bool {
 								map.emplace(&key, fixed_point_functor(val));
+								return true;
+							}
+						)(value);
+					}
+				)(node);
+
+				ret &= callback(std::move(map));
+
+				return ret;
+			};
+		}
+
+		template<NodeTools::FunctorConvertible<fixed_point_t, fixed_point_t> FixedPointFunctor = std::identity>
+		constexpr NodeTools::NodeCallback auto expect_item_decimal_indexed_map(
+			NodeTools::Callback<IndexedMap<external_value_type, fixed_point_t>&&> auto callback,
+			FixedPointFunctor fixed_point_functor = {}
+		) const
+		requires (InheritsFromHasIndex<external_value_type>::value) {
+			return [this, callback, fixed_point_functor](ast::NodeCPtr node) -> bool {
+				if (OV_unlikely(!is_locked())) {
+					Logger::warning("Assertion failed. Creating IndexedMap from keys that aren't locked yet.");
+				}
+
+				IndexedMap<external_value_type, fixed_point_t> map { get_items() };
+
+				bool ret = expect_item_dictionary(
+					[&map, fixed_point_functor](external_value_type const& key, ast::NodeCPtr value) -> bool {
+						return NodeTools::expect_fixed_point(
+							[&map, fixed_point_functor, &key](fixed_point_t val) -> bool {
+								map[key] = fixed_point_functor(val);
 								return true;
 							}
 						)(value);
@@ -605,8 +638,17 @@ public: \
 	constexpr NodeTools::NodeCallback auto expect_##singular##_decimal_map( \
 		NodeTools::Callback<fixed_point_map_t<decltype(registry)::external_value_type const*>&&> auto callback, \
 		FixedPointFunctor fixed_point_functor = {} \
-	) const { \
-		return registry.expect_item_decimal_map(callback, fixed_point_functor); \
+	) const \
+	requires (NotHasIndexWithTag<decltype(registry)::external_value_type>) { \
+		return registry.expect_item_decimal_ordered_map(callback, fixed_point_functor); \
+	} \
+	template<NodeTools::FunctorConvertible<fixed_point_t, fixed_point_t> FixedPointFunctor = std::identity> \
+	constexpr NodeTools::NodeCallback auto expect_##singular##_decimal_map( \
+		NodeTools::Callback<IndexedMap<decltype(registry)::external_value_type, fixed_point_t>&&> auto callback, \
+		FixedPointFunctor fixed_point_functor = {} \
+	) const \
+	requires (InheritsFromHasIndex<decltype(registry)::external_value_type>::value) { \
+		return registry.expect_item_decimal_indexed_map(callback, fixed_point_functor); \
 	} \
 	IDENTIFIER_REGISTRY_INTERNAL_SHARED(singular, plural, registry, index_offset, const) \
 private:

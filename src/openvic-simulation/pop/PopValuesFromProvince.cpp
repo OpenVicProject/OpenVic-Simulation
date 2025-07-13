@@ -38,10 +38,15 @@ void PopStrataValuesFromProvince::update_pop_strata_values_from_province(
 
 PopValuesFromProvince::PopValuesFromProvince(
 	PopsDefines const& new_defines,
-	decltype(effects_per_strata)::keys_span_type strata_keys
+	decltype(effects_per_strata)::keys_span_type strata_keys,
+	decltype(reusable_maps)::value_type::keys_span_type good_definition_keys
 ) : defines { new_defines },
 	effects_per_strata { strata_keys }
-	{}
+	{
+		for (size_t i = 0; i < reusable_maps.size(); i++) {
+			reusable_maps[i] = decltype(reusable_maps)::value_type { good_definition_keys };
+		}
+	}
 
 void PopValuesFromProvince::update_pop_values_from_province(ProvinceInstance const& province) {
 	for (auto [strata, values] : effects_per_strata) {

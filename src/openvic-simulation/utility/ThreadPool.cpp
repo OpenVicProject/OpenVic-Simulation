@@ -10,15 +10,20 @@ using namespace OpenVic;
 void ThreadPool::loop_until_cancelled(
 	work_t& work_type,
 	PopsDefines const& pop_defines,
-	std::span<const CountryInstance> country_keys,
-	std::span<const Strata> strata_keys,
+	utility::forwardable_span<const CountryInstance> country_keys,
+	utility::forwardable_span<const Strata> strata_keys,
+	utility::forwardable_span<const GoodDefinition> good_definition_keys,
 	std::span<GoodInstance> goods_chunk,
 	std::span<ProvinceInstance> provinces_chunk
 ) {
 	IndexedMap<CountryInstance, fixed_point_t> reusable_country_map_0 { country_keys },
 		reusable_country_map_1 { country_keys };
 	memory::vector<fixed_point_t> reusable_vector_0 {}, reusable_vector_1 {};
-	PopValuesFromProvince reusable_pop_values { pop_defines, strata_keys };
+	PopValuesFromProvince reusable_pop_values { 
+		pop_defines,
+		strata_keys,
+		good_definition_keys
+	};
 
 	while (!is_cancellation_requested) {
 		work_t work_type_copy;
@@ -118,8 +123,9 @@ ThreadPool::~ThreadPool() {
 
 void ThreadPool::initialise_threadpool(
 	PopsDefines const& pop_defines,
-	std::span<const CountryInstance> country_keys,
-	std::span<const Strata> strata_keys,
+	utility::forwardable_span<const CountryInstance> country_keys,
+	utility::forwardable_span<const Strata> strata_keys,
+	utility::forwardable_span<const GoodDefinition> good_definition_keys,
 	std::span<GoodInstance> goods,
 	std::span<ProvinceInstance> provinces
 ) {
@@ -156,6 +162,7 @@ void ThreadPool::initialise_threadpool(
 				&pop_defines,
 				country_keys,
 				strata_keys,
+				good_definition_keys,
 				goods_begin, goods_end,
 				provinces_begin, provinces_end
 			]() -> void {
@@ -164,6 +171,7 @@ void ThreadPool::initialise_threadpool(
 					pop_defines,
 					country_keys,
 					strata_keys,
+					good_definition_keys,
 					std::span<GoodInstance>{ goods_begin, goods_end },
 					std::span<ProvinceInstance>{ provinces_begin, provinces_end }
 				);

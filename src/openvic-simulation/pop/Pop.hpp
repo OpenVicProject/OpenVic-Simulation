@@ -8,6 +8,7 @@
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
 #include "openvic-simulation/types/PopSize.hpp"
 #include "openvic-simulation/utility/Containers.hpp"
+#include "economy/GoodDefinition.hpp"
 
 namespace OpenVic {
 	struct CountryInstance;
@@ -146,6 +147,7 @@ namespace OpenVic {
 		Pop(
 			PopBase const& pop_base,
 			decltype(ideology_distribution)::keys_span_type ideology_keys,
+			utility::forwardable_span<const GoodDefinition> good_definition_keys,
 			MarketInstance& new_market_instance,
 			ArtisanalProducerFactoryPattern& artisanal_producer_factory_pattern
 		);
