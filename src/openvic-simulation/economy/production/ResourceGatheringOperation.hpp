@@ -62,6 +62,7 @@ namespace OpenVic {
 		}
 		void setup_location_ptr(ProvinceInstance& location);
 		void initialise_rgo_size_multiplier();
+		static constexpr size_t VECTORS_FOR_RGO_TICK = 1;
 		void rgo_tick(memory::vector<fixed_point_t>& reusable_vector);
 	};
 }

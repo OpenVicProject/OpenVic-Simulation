@@ -469,7 +469,10 @@ void ProvinceInstance::update_gamestate(InstanceManager const& instance_manager)
 void ProvinceInstance::province_tick(
 	const Date today,
 	PopValuesFromProvince& reusable_pop_values,
-	memory::vector<fixed_point_t>& reusable_vector
+	utility::forwardable_span<
+		memory::vector<fixed_point_t>,
+		VECTORS_FOR_PROVINCE_TICK
+	> reusable_vectors
 ) {
 	if (is_occupied()) {
 		occupation_duration++;
@@ -477,12 +480,12 @@ void ProvinceInstance::province_tick(
 
 	reusable_pop_values.update_pop_values_from_province(*this);
 	for (Pop& pop : pops) {
-		pop.pop_tick(reusable_pop_values, reusable_vector);
+		pop.pop_tick(reusable_pop_values, reusable_vectors);
 	}
 	for (BuildingInstance& building : buildings.get_items()) {
 		building.tick(today);
 	}
-	rgo.rgo_tick(reusable_vector);
+	rgo.rgo_tick(reusable_vectors[0]);
 }
 
 bool ProvinceInstance::add_unit_instance_group(UnitInstanceGroup& group) {
@@ -614,10 +617,13 @@ bool ProvinceInstance::apply_history_to_province(ProvinceHistoryEntry const& ent
 void ProvinceInstance::initialise_for_new_game(
 	const Date today,
 	PopValuesFromProvince& reusable_pop_values,
-	memory::vector<fixed_point_t>& reusable_vector
+	utility::forwardable_span<
+		memory::vector<fixed_point_t>,
+		VECTORS_FOR_PROVINCE_TICK
+	> reusable_vectors
 ) {
 	initialise_rgo();
-	province_tick(today, reusable_pop_values, reusable_vector);
+	province_tick(today, reusable_pop_values, reusable_vectors);
 }
 
 void ProvinceInstance::initialise_rgo() {

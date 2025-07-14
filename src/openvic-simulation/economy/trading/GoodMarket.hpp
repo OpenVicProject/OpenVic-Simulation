@@ -1,6 +1,5 @@
 #pragma once
 
-#include <memory>
 #include <mutex>
 
 #include "openvic-simulation/economy/trading/BuyUpToOrder.hpp"
@@ -9,6 +8,7 @@
 #include "openvic-simulation/types/IndexedMap.hpp"
 #include "openvic-simulation/types/ValueHistory.hpp"
 #include "openvic-simulation/utility/Containers.hpp"
+#include "openvic-simulation/utility/ForwardableSpan.hpp"
 
 namespace OpenVic {
 	struct CountryInstance;
@@ -60,11 +60,14 @@ namespace OpenVic {
 		void add_market_sell_order(GoodMarketSellOrder&& market_sell_order);
 
 		//not thread safe
+		static constexpr size_t VECTORS_FOR_EXECUTE_ORDERS = 2;
 		void execute_orders(
 			IndexedMap<CountryInstance, fixed_point_t>& reusable_country_map_0,
 			IndexedMap<CountryInstance, fixed_point_t>& reusable_country_map_1,
-			memory::vector<fixed_point_t>& reusable_vector_0,
-			memory::vector<fixed_point_t>& reusable_vector_1
+			utility::forwardable_span<
+				memory::vector<fixed_point_t>,
+				VECTORS_FOR_EXECUTE_ORDERS
+			> reusable_vectors
 		);
 		void on_use_exponential_price_changes_changed();
 		void record_price_history();

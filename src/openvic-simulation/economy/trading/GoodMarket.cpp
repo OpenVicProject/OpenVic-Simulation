@@ -66,8 +66,10 @@ void GoodMarket::add_market_sell_order(GoodMarketSellOrder&& market_sell_order) 
 void GoodMarket::execute_orders(
 	IndexedMap<CountryInstance, fixed_point_t>& reusable_country_map_0,
 	IndexedMap<CountryInstance, fixed_point_t>& reusable_country_map_1,
-	memory::vector<fixed_point_t>& reusable_vector_0,
-	memory::vector<fixed_point_t>& reusable_vector_1
+	utility::forwardable_span<
+		memory::vector<fixed_point_t>,
+		VECTORS_FOR_EXECUTE_ORDERS
+	> reusable_vectors
 ) {
 	if (!is_available) {
 		//price remains the same
@@ -82,7 +84,7 @@ void GoodMarket::execute_orders(
 		}
 
 		for (GoodMarketSellOrder const& market_sell_order : market_sell_orders) {
-			market_sell_order.call_after_trade(SellResult::no_sales_result(), reusable_vector_0);
+			market_sell_order.call_after_trade(SellResult::no_sales_result(), reusable_vectors[0]);
 		}
 		return;
 	}
@@ -125,8 +127,8 @@ void GoodMarket::execute_orders(
 			}
 			supply_sum += market_sell_order.get_quantity();
 		}
-		memory::vector<fixed_point_t>& quantity_bought_per_order = reusable_vector_0;
-		memory::vector<fixed_point_t>& purchasing_power_per_order = reusable_vector_1;
+		memory::vector<fixed_point_t>& quantity_bought_per_order = reusable_vectors[0];
+		memory::vector<fixed_point_t>& purchasing_power_per_order = reusable_vectors[1];
 		quantity_bought_per_order.resize(buy_up_to_orders.size());
 		purchasing_power_per_order.resize(buy_up_to_orders.size());
 
@@ -287,8 +289,10 @@ void GoodMarket::execute_orders(
 				quantity_bought_per_order
 			);
 		}
-		reusable_vector_0.clear();
-		reusable_vector_1.clear();
+
+		for (auto& reusable_vector : reusable_vectors) {
+			reusable_vector.clear();
+		}
 
 		//figure out how much of each order was sold
 		if (quantity_traded_yesterday == supply_sum) {
@@ -309,7 +313,7 @@ void GoodMarket::execute_orders(
 						quantity_sold,
 						money_gained
 					},
-					reusable_vector_0
+					reusable_vectors[0]
 				);
 			}
 		} else {
@@ -366,7 +370,7 @@ void GoodMarket::execute_orders(
 						quantity_sold,
 						money_gained
 					},
-					reusable_vector_0
+					reusable_vectors[0]
 				);
 			}
 		}

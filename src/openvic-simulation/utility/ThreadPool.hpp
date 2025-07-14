@@ -4,13 +4,14 @@
 #include <cstdint>
 #include <mutex>
 #include <thread>
-#include <vector>
 
 #include "openvic-simulation/pop/PopValuesFromProvince.hpp"
 #include "openvic-simulation/types/Date.hpp"
 #include "openvic-simulation/utility/Containers.hpp"
+#include "openvic-simulation/utility/ForwardableSpan.hpp"
 
 namespace OpenVic {
+	struct GoodDefinition;
 	struct CountryInstance;
 	struct GoodInstance;
 	struct PopsDefines;
@@ -28,10 +29,11 @@ namespace OpenVic {
 		void loop_until_cancelled(
 			work_t& work_type,
 			PopsDefines const& pop_defines,
-			std::span<const CountryInstance> country_keys,
-			std::span<const Strata> strata_keys,
-			std::span<GoodInstance> goods_chunk,
-			std::span<ProvinceInstance> provinces_chunk
+			utility::forwardable_span<const CountryInstance> country_keys,
+			utility::forwardable_span<const GoodDefinition> good_keys,
+			utility::forwardable_span<const Strata> strata_keys,
+			utility::forwardable_span<GoodInstance> goods_chunk,
+			utility::forwardable_span<ProvinceInstance> provinces_chunk
 		);
 
 		memory::vector<std::thread> threads;
@@ -53,10 +55,11 @@ namespace OpenVic {
 
 		void initialise_threadpool(
 			PopsDefines const& pop_defines,
-			std::span<const CountryInstance> country_keys,
-			std::span<const Strata> strata_keys,
-			std::span<GoodInstance> goods,
-			std::span<ProvinceInstance> provinces
+			utility::forwardable_span<const CountryInstance> country_keys,
+			utility::forwardable_span<const GoodDefinition> good_keys,
+			utility::forwardable_span<const Strata> strata_keys,			
+			utility::forwardable_span<GoodInstance> goods,
+			utility::forwardable_span<ProvinceInstance> provinces
 		);
 
 		void process_good_execute_orders();
