@@ -92,7 +92,7 @@ namespace OpenVic {
 	[[nodiscard]] OV_ALWAYS_INLINE constexpr auto operator<=>( //
 		basic_iterator<PtrL, ContainerTag> const& lhs, basic_iterator<PtrR, ContainerTag> const& rhs
 	) {
-		return three_way(lhs.base(), rhs.base());
+		return utility::three_way(lhs.base(), rhs.base());
 	}
 
 	template<typename Ptr, typename ContainerTag>
@@ -110,7 +110,7 @@ namespace OpenVic {
 	[[nodiscard]] OV_ALWAYS_INLINE constexpr auto operator<=>( //
 		basic_iterator<Ptr, ContainerTag> const& lhs, basic_iterator<Ptr, ContainerTag> const& rhs
 	) {
-		return three_way(lhs.base(), rhs.base());
+		return utility::three_way(lhs.base(), rhs.base());
 	}
 
 	template<typename ItL, typename ItR, typename ContainerTag>

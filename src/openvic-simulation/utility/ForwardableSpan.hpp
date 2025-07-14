@@ -9,6 +9,7 @@
 #include <ranges>
 #include <type_traits>
 
+#include "openvic-simulation/types/BasicIterator.hpp"
 #include "openvic-simulation/utility/Utility.hpp"
 
 namespace OpenVic::utility::_detail::forwardable_span {
@@ -52,116 +53,6 @@ namespace OpenVic::utility::_detail::forwardable_span {
 	concept span_compatible_sentinel_for =
 		std::sized_sentinel_for<Sentinel, It> && !std::is_convertible_v<Sentinel, std::size_t>;
 
-	template<typename Pointer>
-	struct _iterator {
-		using iterator_type = Pointer;
-		using value_type = typename std::iterator_traits<iterator_type>::value_type;
-		using difference_type = typename std::iterator_traits<iterator_type>::difference_type;
-		using pointer = typename std::iterator_traits<iterator_type>::pointer;
-		using reference = typename std::iterator_traits<iterator_type>::reference;
-		using iterator_category = typename std::iterator_traits<iterator_type>::iterator_category;
-		using iterator_concept = std::contiguous_iterator_tag;
-
-		OV_ALWAYS_INLINE constexpr _iterator() = default;
-		OV_ALWAYS_INLINE constexpr _iterator(Pointer const& ptr) : _current { ptr } {}
-
-		template<typename It>
-		requires std::is_convertible_v<It, Pointer>
-		OV_ALWAYS_INLINE constexpr _iterator(_iterator<It> const& i) : _current(i.base()) {}
-
-
-		[[nodiscard]] OV_ALWAYS_INLINE constexpr reference operator*() const {
-			return *_current;
-		}
-
-		[[nodiscard]] OV_ALWAYS_INLINE constexpr pointer operator->() const {
-			return _current;
-		}
-
-		OV_ALWAYS_INLINE constexpr _iterator& operator++() {
-			++_current;
-			return *this;
-		}
-
-		OV_ALWAYS_INLINE constexpr _iterator operator++(int) {
-			return _iterator(_current++);
-		}
-
-		OV_ALWAYS_INLINE constexpr _iterator& operator--() {
-			--_current;
-			return *this;
-		}
-
-		OV_ALWAYS_INLINE constexpr _iterator operator--(int) {
-			return _iterator(_current--);
-		}
-
-		[[nodiscard]] OV_ALWAYS_INLINE constexpr reference operator[](difference_type index) const {
-			return _current[index];
-		}
-
-		OV_ALWAYS_INLINE constexpr _iterator& operator+=(difference_type index) {
-			_current += index;
-			return *this;
-		}
-
-		[[nodiscard]] OV_ALWAYS_INLINE constexpr _iterator operator+(difference_type index) const {
-			return _iterator(_current + index);
-		}
-
-		OV_ALWAYS_INLINE constexpr _iterator& operator-=(difference_type index) {
-			_current -= index;
-			return *this;
-		}
-
-		[[nodiscard]] OV_ALWAYS_INLINE constexpr _iterator operator-(difference_type index) const {
-			return _iterator(_current - index);
-		}
-
-		[[nodiscard]] OV_ALWAYS_INLINE constexpr iterator_type const& base() const {
-			return _current;
-		}
-
-	protected:
-		iterator_type _current {};
-	};
-
-	template<typename PtrL, typename PtrR>
-	[[nodiscard]] OV_ALWAYS_INLINE constexpr bool operator==( //
-		_iterator<PtrL> const& lhs, _iterator<PtrR> const& rhs
-	)
-	requires requires {
-		{ lhs.base() == rhs.base() } -> std::convertible_to<bool>;
-	}
-	{
-		return lhs.base() == rhs.base();
-	}
-
-	template<typename PtrL, typename PtrR>
-	[[nodiscard]] OV_ALWAYS_INLINE constexpr auto operator<=>( //
-		_iterator<PtrL> const& lhs, _iterator<PtrR> const& rhs
-	) {
-		return three_way(lhs.base(), rhs.base());
-	}
-
-	template<typename Ptr>
-	[[nodiscard]] OV_ALWAYS_INLINE constexpr bool operator==( //
-		_iterator<Ptr> const& lhs, _iterator<Ptr> const& rhs
-	)
-	requires requires {
-		{ lhs.base() == rhs.base() } -> std::convertible_to<bool>;
-	}
-	{
-		return lhs.base() == rhs.base();
-	}
-
-	template<typename Ptr>
-	[[nodiscard]] OV_ALWAYS_INLINE constexpr auto operator<=>( //
-		_iterator<Ptr> const& lhs, _iterator<Ptr> const& rhs
-	) {
-		return three_way(lhs.base(), rhs.base());
-	}
-
 	template<size_t Extent>
 	struct extent_storage {
 		constexpr extent_storage([[maybe_unused]] std::size_t n) {
@@ -202,7 +93,7 @@ namespace OpenVic::utility::_detail::forwardable_span {
 		using const_pointer = T const*;
 		using reference = T&;
 		using const_reference = T const&;
-		using iterator = _iterator<pointer>;
+		using iterator = basic_iterator<std::conditional_t<std::is_const_v<T>, const_pointer, pointer>, value_type*>;
 		using reverse_iterator = std::reverse_iterator<iterator>;
 
 	private:
