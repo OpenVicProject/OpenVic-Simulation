@@ -16,6 +16,7 @@
 #include "openvic-simulation/types/HasIdentifier.hpp"
 #include "openvic-simulation/types/OrderedContainers.hpp"
 #include "openvic-simulation/utility/Containers.hpp"
+#include "openvic-simulation/utility/ForwardableSpan.hpp"
 
 namespace OpenVic {
 	struct DefineManager;
@@ -252,15 +253,25 @@ namespace OpenVic {
 		}
 
 		void update_gamestate(InstanceManager const& instance_manager);
+		static constexpr size_t VECTORS_FOR_PROVINCE_TICK = std::max(
+			ResourceGatheringOperation::VECTORS_FOR_RGO_TICK,
+			Pop::VECTORS_FOR_POP_TICK
+		);
 		void province_tick(
 			const Date today,
 			PopValuesFromProvince& reusable_pop_values,
-			memory::vector<fixed_point_t>& reusable_vector
+			utility::forwardable_span<
+				memory::vector<fixed_point_t>,
+				VECTORS_FOR_PROVINCE_TICK
+			> reusable_vectors
 		);
 		void initialise_for_new_game(
 			const Date today,
 			PopValuesFromProvince& reusable_pop_values,
-			memory::vector<fixed_point_t>& reusable_vector
+			utility::forwardable_span<
+				memory::vector<fixed_point_t>,
+				VECTORS_FOR_PROVINCE_TICK
+			> reusable_vectors
 		);
 
 		bool add_unit_instance_group(UnitInstanceGroup& group);

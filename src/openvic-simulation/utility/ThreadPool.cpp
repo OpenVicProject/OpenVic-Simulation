@@ -10,15 +10,21 @@ using namespace OpenVic;
 void ThreadPool::loop_until_cancelled(
 	work_t& work_type,
 	PopsDefines const& pop_defines,
-	std::span<const CountryInstance> country_keys,
-	std::span<const Strata> strata_keys,
-	std::span<GoodInstance> goods_chunk,
-	std::span<ProvinceInstance> provinces_chunk
+	utility::forwardable_span<const CountryInstance> country_keys,
+	utility::forwardable_span<const GoodDefinition> good_keys,
+	utility::forwardable_span<const Strata> strata_keys,
+	utility::forwardable_span<GoodInstance> goods_chunk,
+	utility::forwardable_span<ProvinceInstance> provinces_chunk
 ) {
 	IndexedMap<CountryInstance, fixed_point_t> reusable_country_map_0 { country_keys },
 		reusable_country_map_1 { country_keys };
-	memory::vector<fixed_point_t> reusable_vector_0 {}, reusable_vector_1 {};
-	PopValuesFromProvince reusable_pop_values { pop_defines, strata_keys };
+	static constexpr size_t VECTOR_COUNT = std::max(
+		GoodMarket::VECTORS_FOR_EXECUTE_ORDERS,
+		ProvinceInstance::VECTORS_FOR_PROVINCE_TICK
+	);
+	std::array<memory::vector<fixed_point_t>, VECTOR_COUNT> reusable_vectors;
+	std::span<memory::vector<fixed_point_t>, VECTOR_COUNT> reusable_vectors_span = std::span(reusable_vectors);
+	PopValuesFromProvince reusable_pop_values { pop_defines, good_keys, strata_keys };
 
 	while (!is_cancellation_requested) {
 		work_t work_type_copy;
@@ -46,19 +52,26 @@ void ThreadPool::loop_until_cancelled(
 					good.execute_orders(
 						reusable_country_map_0,
 						reusable_country_map_1,
-						reusable_vector_0,
-						reusable_vector_1
+						reusable_vectors_span.first<GoodMarket::VECTORS_FOR_EXECUTE_ORDERS>()
 					);
 				}
 				break;
 			case work_t::PROVINCE_TICK:
 				for (ProvinceInstance& province : provinces_chunk) {
-					province.province_tick(current_date, reusable_pop_values, reusable_vector_0);
+					province.province_tick(
+						current_date,
+						reusable_pop_values,
+						reusable_vectors_span.first<ProvinceInstance::VECTORS_FOR_PROVINCE_TICK>()
+					);
 				}
 				break;
 			case work_t::PROVINCE_INITIALISE_FOR_NEW_GAME:
 				for (ProvinceInstance& province : provinces_chunk) {
-					province.initialise_for_new_game(current_date, reusable_pop_values, reusable_vector_0);
+					province.initialise_for_new_game(
+						current_date,
+						reusable_pop_values,
+						reusable_vectors_span.first<ProvinceInstance::VECTORS_FOR_PROVINCE_TICK>()
+					);
 				}
 				break;
 		}
@@ -118,10 +131,11 @@ ThreadPool::~ThreadPool() {
 
 void ThreadPool::initialise_threadpool(
 	PopsDefines const& pop_defines,
-	std::span<const CountryInstance> country_keys,
-	std::span<const Strata> strata_keys,
-	std::span<GoodInstance> goods,
-	std::span<ProvinceInstance> provinces
+	utility::forwardable_span<const CountryInstance> country_keys,
+	utility::forwardable_span<const GoodDefinition> good_keys,
+	utility::forwardable_span<const Strata> strata_keys,
+	utility::forwardable_span<GoodInstance> goods,
+	utility::forwardable_span<ProvinceInstance> provinces
 ) {
 	if (threads.size() > 0) {
 		Logger::error("Attempted to initialise ThreadPool again.");
@@ -134,9 +148,8 @@ void ThreadPool::initialise_threadpool(
 
 	const auto [goods_quotient, goods_remainder] = std::ldiv(goods.size(), max_worker_threads);
 	const auto [provinces_quotient, provinces_remainder] = std::ldiv(provinces.size(), max_worker_threads);
-
-	typename std::span<GoodInstance>::iterator goods_begin = goods.begin();
-	typename std::span<ProvinceInstance>::iterator provinces_begin = provinces.begin();
+	auto goods_begin = goods.begin();
+	auto provinces_begin = provinces.begin();
 
 	for (size_t i = 0; i < max_worker_threads; i++) {
 		const size_t goods_chunk_size = i < goods_remainder
@@ -146,8 +159,8 @@ void ThreadPool::initialise_threadpool(
 			? provinces_quotient + 1
 			: provinces_quotient;
 
-		typename std::span<GoodInstance>::iterator goods_end = goods_begin + goods_chunk_size;
-		typename std::span<ProvinceInstance>::iterator provinces_end = provinces_begin + provinces_chunk_size;
+		auto goods_end = goods_begin + goods_chunk_size;
+		auto provinces_end = provinces_begin + provinces_chunk_size;
 
 		threads.emplace_back(
 			[
@@ -155,6 +168,7 @@ void ThreadPool::initialise_threadpool(
 				&work_for_thread = work_per_thread[i],
 				&pop_defines,
 				country_keys,
+				good_keys,
 				strata_keys,
 				goods_begin, goods_end,
 				provinces_begin, provinces_end
@@ -163,6 +177,7 @@ void ThreadPool::initialise_threadpool(
 					work_for_thread,
 					pop_defines,
 					country_keys,
+					good_keys,
 					strata_keys,
 					std::span<GoodInstance>{ goods_begin, goods_end },
 					std::span<ProvinceInstance>{ provinces_begin, provinces_end }

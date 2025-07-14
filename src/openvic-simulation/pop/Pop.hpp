@@ -8,6 +8,7 @@
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
 #include "openvic-simulation/types/PopSize.hpp"
 #include "openvic-simulation/utility/Containers.hpp"
+#include "openvic-simulation/utility/ForwardableSpan.hpp"
 
 namespace OpenVic {
 	struct CountryInstance;
@@ -109,6 +110,7 @@ namespace OpenVic {
 		pop_size_t employed = 0;
 	public:
 		static constexpr pop_size_t size_denominator = 200000;
+		static constexpr size_t VECTORS_FOR_POP_TICK = 5;
 
 		constexpr pop_size_t get_unemployed() const {
 			return size - employed;
@@ -155,12 +157,18 @@ namespace OpenVic {
 		void fill_needs_fulfilled_goods_with_false();
 		void allocate_for_needs(
 			GoodDefinition::good_definition_map_t const& scaled_needs,
-			GoodDefinition::good_definition_map_t& money_to_spend_per_good,
-			GoodDefinition::good_definition_map_t& reusable_map_0,
+			utility::forwardable_span<fixed_point_t> money_to_spend_per_good,
+			memory::vector<fixed_point_t>& reusable_vector,
 			fixed_point_t& price_inverse_sum,
 			fixed_point_t& cash_left_to_spend
 		);
-		void pop_tick_without_cleanup(PopValuesFromProvince& shared_values, memory::vector<fixed_point_t>& reusable_vector);
+		void pop_tick_without_cleanup(
+			PopValuesFromProvince& shared_values,
+			utility::forwardable_span<
+				memory::vector<fixed_point_t>,
+				VECTORS_FOR_POP_TICK
+			> reusable_vectors
+		);
 		void pay_income_tax(fixed_point_t& income);
 		static void after_buy(void* actor, BuyResult const& buy_result);
 		//matching GoodMarketSellOrder::callback_t
@@ -193,7 +201,14 @@ namespace OpenVic {
 		DO_FOR_ALL_TYPES_OF_POP_EXPENSES(DECLARE_POP_MONEY_STORE_FUNCTIONS)
 		DECLARE_POP_MONEY_STORE_FUNCTIONS(import_subsidies)
 		#undef DECLARE_POP_MONEY_STORE_FUNCTIONS
-		void pop_tick(PopValuesFromProvince& shared_values, memory::vector<fixed_point_t>& reusable_vector);
+
+		void pop_tick(
+			PopValuesFromProvince& shared_values,
+			utility::forwardable_span<
+				memory::vector<fixed_point_t>,
+				VECTORS_FOR_POP_TICK
+			> reusable_vectors
+		);
 		void allocate_cash_for_artisanal_spending(const fixed_point_t money_to_spend);
 		void report_artisanal_produce(const fixed_point_t quantity);
 		void hire(pop_size_t count);

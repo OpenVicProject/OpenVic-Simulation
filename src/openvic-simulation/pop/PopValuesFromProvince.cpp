@@ -38,8 +38,10 @@ void PopStrataValuesFromProvince::update_pop_strata_values_from_province(
 
 PopValuesFromProvince::PopValuesFromProvince(
 	PopsDefines const& new_defines,
+	decltype(reusable_goods_mask)::keys_span_type good_keys,
 	decltype(effects_per_strata)::keys_span_type strata_keys
 ) : defines { new_defines },
+	reusable_goods_mask { good_keys },
 	effects_per_strata { strata_keys }
 	{}
 

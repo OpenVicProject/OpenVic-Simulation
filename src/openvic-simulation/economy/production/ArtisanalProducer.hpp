@@ -32,10 +32,11 @@ namespace OpenVic {
 		void artisan_tick(
 			Pop& pop,
 			const fixed_point_t max_cost_multiplier,
-			GoodDefinition::good_definition_map_t& pop_max_quantity_to_buy_per_good,
-			GoodDefinition::good_definition_map_t& pop_money_to_spend_per_good,
-			GoodDefinition::good_definition_map_t& reusable_map_0,
-			GoodDefinition::good_definition_map_t& reusable_map_1
+			IndexedMap<GoodDefinition, char>& reusable_goods_mask,
+			memory::vector<fixed_point_t>& pop_max_quantity_to_buy_per_good,
+			memory::vector<fixed_point_t>& pop_money_to_spend_per_good,
+			memory::vector<fixed_point_t>& reusable_map_0,
+			memory::vector<fixed_point_t>& reusable_map_1
 		);
 
 		//thread safe if called once per good and stockpile already has an entry.
