@@ -1,5 +1,4 @@
 #include <cstddef>
-#include <utility>
 
 #define KEEP_DO_FOR_ALL_TYPES_OF_INCOME
 #define KEEP_DO_FOR_ALL_TYPES_OF_EXPENSES
@@ -423,7 +422,7 @@ void Pop::pop_tick_without_cleanup(
 	employed = 0;
 	//import subsidies are based on yesterday
 	yesterdays_import_value = 0;
-	std::span<const GoodDefinition> const& good_keys = shared_values.reusable_goods_mask.get_keys();
+	utility::forwardable_span<const GoodDefinition> good_keys = shared_values.reusable_goods_mask.get_keys();
 	memory::vector<fixed_point_t>& reusable_vector_0 = reusable_vectors[0];
 	memory::vector<fixed_point_t>& reusable_vector_1 = reusable_vectors[1];
 	memory::vector<fixed_point_t>& max_quantity_to_buy_per_good = reusable_vectors[2];

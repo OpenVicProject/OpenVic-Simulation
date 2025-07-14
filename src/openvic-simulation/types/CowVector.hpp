@@ -130,7 +130,7 @@ namespace OpenVic {
 				self_writer = this->write();
 				tmp_writer = tmp.write();
 
-				self_writer->_assign_aux(
+				self_writer._assign_aux(
 					std::make_move_iterator(tmp_writer.begin()), std::make_move_iterator(tmp_writer.end()),
 					std::random_access_iterator_tag()
 				);
