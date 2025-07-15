@@ -10,6 +10,7 @@ IdeologyGroup::IdeologyGroup(std::string_view new_identifier) : HasIdentifier { 
 
 Ideology::Ideology(
 	std::string_view new_identifier,
+	index_t new_index,
 	colour_t new_colour,
 	IdeologyGroup const& new_group,
 	bool new_uncivilised,
@@ -23,6 +24,7 @@ Ideology::Ideology(
 	ConditionalWeightBase&& new_add_military_reform,
 	ConditionalWeightBase&& new_add_economic_reform
 ) : HasIdentifierAndColour { new_identifier, new_colour, false },
+	HasIndex { new_index },
 	group { new_group },
 	uncivilised { new_uncivilised },
 	can_reduce_consciousness { new_can_reduce_consciousness },
@@ -82,8 +84,10 @@ bool IdeologyManager::add_ideology(
 		return false;
 	}
 
+	const Ideology::index_t new_index = ideologies.size();
 	return ideologies.add_item({
 		identifier,
+		new_index,
 		colour,
 		*group,
 		uncivilised,
