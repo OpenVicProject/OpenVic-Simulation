@@ -16,7 +16,7 @@ namespace OpenVic {
 		IdeologyGroup(IdeologyGroup&&) = default;
 	};
 
-	struct Ideology : HasIdentifierAndColour {
+	struct Ideology : HasIdentifierAndColour, HasIndex<Ideology> {
 		friend struct IdeologyManager;
 
 		static constexpr colour_t NO_IDEOLOGY_COLOUR = colour_t::fill_as(colour_t::max_value);
@@ -38,6 +38,7 @@ namespace OpenVic {
 
 		Ideology(
 			std::string_view new_identifier,
+			index_t new_index,
 			colour_t new_colour,
 			IdeologyGroup const& new_group,
 			bool new_uncivilised,
