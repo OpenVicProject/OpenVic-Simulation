@@ -209,7 +209,7 @@ bool GameActionManager::game_action_callback_expand_province_building(game_actio
 		return false;
 	}
 
-	ProvinceInstance* province = instance_manager.get_map_instance().get_province_instance_by_index(province_building->first);
+	ProvinceInstance* province = instance_manager.get_map_instance().get_province_instance_by_index_1_based(province_building->first);
 
 	if (OV_unlikely(province == nullptr)) {
 		Logger::error("GAME_ACTION_EXPAND_PROVINCE_BUILDING called with invalid province index: ", province_building->first);
