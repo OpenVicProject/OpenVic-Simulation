@@ -148,9 +148,9 @@ namespace OpenVic {
 		IndexedMap<Strata, fixed_point_t> PROPERTY(effective_tax_rate_by_strata);
 		IndexedMap<Strata, SliderValue> PROPERTY(tax_rate_slider_value_by_strata);
 
-		fixed_point_t PROPERTY(administrative_efficiency);
+		fixed_point_t PROPERTY(administrative_efficiency_from_administrators);
 		constexpr fixed_point_t get_corruption_cost_multiplier() const {
-			return 2 - administrative_efficiency;
+			return 2 - administrative_efficiency_from_administrators;
 		}
 
 		//store per slider per good: desired, bought & cost
@@ -404,6 +404,7 @@ namespace OpenVic {
 		}
 
 		std::string_view get_identifier() const;
+		fixed_point_t get_tariff_efficiency() const;
 
 		void update_country_definition_based_attributes();
 
@@ -652,7 +653,7 @@ namespace OpenVic {
 		constexpr fixed_point_t calculate_social_income_variant_base(
 			SharedPopTypeValues const& pop_type_values
 		) const {
-			return administrative_efficiency * pop_type_values.get_social_income_variant_base();
+			return administrative_efficiency_from_administrators * pop_type_values.get_social_income_variant_base();
 		}
 
 		// Expects current_research to be non-null
