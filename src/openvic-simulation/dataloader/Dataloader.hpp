@@ -102,8 +102,9 @@ namespace OpenVic {
 		///
 		/// @param new_roots Dataloader roots in reverse-load order, so base defines first and final loaded mod last
 		/// @param new_replace_paths All base define paths that should be ignored entirely in favour of mods.
+		/// @param warn_on_override Whether or not to log a warning if roots are overridden.
 		/// @return True if successful, false if failed.
-		bool set_roots(path_span_t new_roots, path_span_t new_replace_paths);
+		bool set_roots(path_span_t new_roots, path_span_t new_replace_paths, bool warn_on_override = true);
 
 		/* REQUIREMENTS:
 		 * DAT-24
@@ -126,8 +127,8 @@ namespace OpenVic {
 
 		string_set_t lookup_dirs_in_dir(std::string_view path) const;
 
-		/* Load all mod descriptors passed by the user. Importantly, loads dependencies and replace_paths for us to check. */
-		bool load_mod_descriptors(std::span<const memory::string> descriptors, ModManager& mod_manager);
+		/* Load all mod descriptors present in the mod/ directory. Importantly, loads dependencies and replace_paths for us to check. */
+		bool load_mod_descriptors(ModManager& mod_manager) const;
 
 		/* Load and parse all of the text defines data, including parsing cached condition and effect scripts after all the
 		 * static data is loaded. Paths to the base and mod defines must have been supplied with set_roots.*/
