@@ -10,6 +10,7 @@ namespace OpenVic {
 	public:
 		using index_t = IndexT;
 	private:
+		// always 0-based, this may be used for indexing arrays
 		const index_t PROPERTY(index);
 
 	protected:

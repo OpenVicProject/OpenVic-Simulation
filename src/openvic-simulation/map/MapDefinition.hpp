@@ -45,7 +45,7 @@ namespace OpenVic {
 #pragma pack(push, 1)
 		/* Used to represent tightly packed 3-byte integer pixel information. */
 		struct shape_pixel_t {
-			ProvinceDefinition::index_t index;
+			ProvinceDefinition::index_t index_1_based;
 			TerrainTypeMapping::index_t terrain;
 		};
 #pragma pack(pop)
@@ -73,7 +73,7 @@ namespace OpenVic {
 		PointMap PROPERTY_REF(path_map_land);
 		PointMap PROPERTY_REF(path_map_sea);
 
-		ProvinceDefinition::index_t get_index_from_colour(colour_t colour) const;
+		ProvinceDefinition::index_t get_index_1_based_from_colour(colour_t colour) const;
 		bool _generate_standard_province_adjacencies();
 
 		inline constexpr int32_t get_pixel_index_from_pos(ivec2_t pos) const {
@@ -106,7 +106,7 @@ namespace OpenVic {
 		size_t get_land_province_count() const;
 		size_t get_water_province_count() const;
 
-		ProvinceDefinition::index_t get_province_index_at(ivec2_t pos) const;
+		ProvinceDefinition::index_t get_province_index_1_based_at(ivec2_t pos) const;
 
 	private:
 		ProvinceDefinition* get_province_definition_at(ivec2_t pos);

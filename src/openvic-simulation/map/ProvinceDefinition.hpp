@@ -112,6 +112,10 @@ namespace OpenVic {
 			return region != nullptr;
 		}
 
+		constexpr index_t get_index_1_based() const {
+			return get_index()+1;
+		}
+
 		/* The positions' y coordinates need to be inverted. */
 		bool load_positions(
 			MapDefinition const& map_definition, BuildingTypeManager const& building_type_manager, ast::NodeCPtr root
