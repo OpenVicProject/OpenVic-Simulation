@@ -170,6 +170,13 @@ std::string_view CountryInstance::get_identifier() const {
 	return country_definition->get_identifier();
 }
 
+fixed_point_t CountryInstance::get_tariff_efficiency() const {
+	return std::min(
+		fixed_point_t::_1,
+		administrative_efficiency_from_administrators + country_defines.get_base_country_tax_efficiency()
+	);
+}
+
 void CountryInstance::update_country_definition_based_attributes() {
 	vote_distribution.set_keys(country_definition->get_parties());
 }
@@ -1197,13 +1204,13 @@ void CountryInstance::_update_budget() {
 	}
 
 	if (total_non_colonial_population == 0) {
-		administrative_efficiency = fixed_point_t::_1;
+		administrative_efficiency_from_administrators = fixed_point_t::_1;
 	} else {
 		const fixed_point_t desired_administrator_percentage = country_defines.get_max_bureaucracy_percentage()
 			+ total_administrative_multiplier * country_defines.get_bureaucracy_percentage_increment();
 		const fixed_point_t desired_administrators = desired_administrator_percentage * total_non_colonial_population;
 
-		administrative_efficiency = std::min(
+		administrative_efficiency_from_administrators = std::min(
 			fixed_point_t::mul_div(
 				administrators,
 				fixed_point_t::_1 + get_modifier_effect_value(*modifier_effect_cache.get_administrative_efficiency()),
@@ -1214,11 +1221,11 @@ void CountryInstance::_update_budget() {
 		);
 
 		if (game_rules_manager.get_prevent_negative_administration_efficiency()) {
-			administrative_efficiency = std::max(fixed_point_t::_0, administrative_efficiency);
+			administrative_efficiency_from_administrators = std::max(fixed_point_t::_0, administrative_efficiency_from_administrators);
 		}
 	}
 
-	effective_tariff_rate = administrative_efficiency * tariff_rate_slider_value.get_value();
+	effective_tariff_rate = administrative_efficiency_from_administrators * tariff_rate_slider_value.get_value();
 
 	projected_administration_spending_unscaled_by_slider
 		= projected_education_spending_unscaled_by_slider
