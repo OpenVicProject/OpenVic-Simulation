@@ -152,6 +152,8 @@ namespace OpenVic {
 		constexpr fixed_point_t get_corruption_cost_multiplier() const {
 			return 2 - administrative_efficiency_from_administrators;
 		}
+		fixed_point_t PROPERTY(administrator_percentage);
+		fixed_point_t PROPERTY(desired_administrator_percentage);
 
 		//store per slider per good: desired, bought & cost
 		//store purchase record from last tick and prediction next tick

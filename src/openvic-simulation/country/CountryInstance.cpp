@@ -1203,13 +1203,16 @@ void CountryInstance::_update_budget() {
 		total_non_colonial_population += state.get_total_population();
 	}
 
+	desired_administrator_percentage = country_defines.get_max_bureaucracy_percentage()
+		+ total_administrative_multiplier * country_defines.get_bureaucracy_percentage_increment();
+
 	if (total_non_colonial_population == 0) {
 		administrative_efficiency_from_administrators = fixed_point_t::_1;
-	} else {
-		const fixed_point_t desired_administrator_percentage = country_defines.get_max_bureaucracy_percentage()
-			+ total_administrative_multiplier * country_defines.get_bureaucracy_percentage_increment();
-		const fixed_point_t desired_administrators = desired_administrator_percentage * total_non_colonial_population;
+		administrator_percentage = fixed_point_t::_0;
+	} else {		
+		administrator_percentage = administrators / total_non_colonial_population;
 
+		const fixed_point_t desired_administrators = desired_administrator_percentage * total_non_colonial_population;
 		administrative_efficiency_from_administrators = std::min(
 			fixed_point_t::mul_div(
 				administrators,
