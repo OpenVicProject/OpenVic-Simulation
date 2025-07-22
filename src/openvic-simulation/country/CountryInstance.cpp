@@ -1210,7 +1210,7 @@ void CountryInstance::_update_budget() {
 		administrative_efficiency_from_administrators = fixed_point_t::_1;
 		administrator_percentage = fixed_point_t::_0;
 	} else {		
-		administrator_percentage = administrators / total_non_colonial_population;
+		administrator_percentage = fixed_point_t::parse(administrators) / total_non_colonial_population;
 
 		const fixed_point_t desired_administrators = desired_administrator_percentage * total_non_colonial_population;
 		administrative_efficiency_from_administrators = std::min(
