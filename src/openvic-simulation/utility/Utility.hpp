@@ -1,10 +1,14 @@
 #pragma once
 
+#include <algorithm>
+#include <bit>
 #include <climits>
 #include <cmath>
 #include <concepts>
+#include <cstdint>
 #include <functional>
 #include <memory>
+#include <span>
 #include <type_traits>
 #include <utility>
 
@@ -123,13 +127,47 @@ namespace OpenVic::utility {
 	template<typename T, template<typename...> class Template>
 	concept not_specialization_of = !specialization_of<T, Template>;
 
-	template <template<typename...> class Template, typename... Args>
+	template<template<typename...> class Template, typename... Args>
 	void _derived_from_specialization_impl(Template<Args...> const&);
 
-	template <typename T, template<typename...> class Template>
-	concept is_derived_from_specialization_of = requires(T const& t) {
-		_derived_from_specialization_impl<Template>(t);
-	};
+	template<typename T, template<typename...> class Template>
+	concept is_derived_from_specialization_of = requires(T const& t) { _derived_from_specialization_impl<Template>(t); };
+
+	template<typename T>
+	struct is_specialization_of_std_array : std::false_type {};
+
+	template<typename T, size_t S>
+	struct is_specialization_of_std_array<std::array<T, S>> : std::true_type {};
+
+	template<typename T>
+	inline constexpr bool is_specialization_of_std_array_v = is_specialization_of_std_array<T>::value;
+
+	template<typename T>
+	concept specialization_of_std_array = is_specialization_of_std_array_v<T>;
+
+	template<typename T, typename Check>
+	struct is_specialization_of_std_array_of : std::false_type {};
+
+	template<typename T, size_t S>
+	struct is_specialization_of_std_array_of<std::array<T, S>, T> : std::true_type {};
+
+	template<typename T, typename Check>
+	inline constexpr bool is_specialization_of_std_array_of_v = is_specialization_of_std_array_of<T, Check>::value;
+
+	template<typename T, typename Check>
+	concept specialization_of_std_array_of = is_specialization_of_std_array_of_v<T, Check>;
+
+	template<typename T>
+	struct is_specialization_of_span : std::false_type {};
+
+	template<typename T, size_t S>
+	struct is_specialization_of_span<std::span<T, S>> : std::true_type {};
+
+	template<typename T>
+	inline constexpr bool is_specialization_of_span_v = is_specialization_of_span<T>::value;
+
+	template<typename T>
+	concept specialization_of_span = is_specialization_of_span_v<T>;
 
 	template<typename T>
 	concept boolean_convertible = std::convertible_to<T, bool>;
@@ -140,16 +178,17 @@ namespace OpenVic::utility {
 	};
 
 	[[nodiscard]] inline constexpr auto three_way(auto&& left, auto&& right)
-		requires requires {
-			{ left < right } -> boolean_testable;
-			{ right < left } -> boolean_testable;
-		} {
-		// This is Apple's fault again
-		#if __cpp_lib_three_way_comparison >= 201907L
+	requires requires {
+		{ left < right } -> boolean_testable;
+		{ right < left } -> boolean_testable;
+	}
+	{
+// This is Apple's fault again
+#if __cpp_lib_three_way_comparison >= 201907L
 		if constexpr (std::three_way_comparable_with<std::decay_t<decltype(left)>, std::decay_t<decltype(right)>>) {
 			return left <=> right;
 		} else
-		#endif
+#endif
 		{
 			if (left < right) {
 				return std::weak_ordering::less;
@@ -164,7 +203,8 @@ namespace OpenVic::utility {
 	template<typename T, typename T2>
 	concept not_same_as = !std::same_as<T, T2>;
 
-	template<typename T> requires std::integral<T> || std::floating_point<T>
+	template<typename T>
+	requires std::integral<T> || std::floating_point<T>
 	[[nodiscard]] inline constexpr T abs(T num) {
 		if (std::is_constant_evaluated()) {
 			return num < 0 ? -num : num;
@@ -179,7 +219,7 @@ namespace OpenVic::utility {
 			return end;
 		}
 		++begin;
-		for (;begin != end - 1; ++begin) {
+		for (; begin != end - 1; ++begin) {
 			if (predicate(*(begin - 1), *begin, *(begin + 1))) {
 				return begin;
 			}
@@ -201,6 +241,65 @@ namespace OpenVic::utility {
 		}
 		return end;
 	}
+
+#if defined(__GNUC__)
+	template<typename T>
+	OV_ALWAYS_INLINE static T byteswap(T x) {
+		if constexpr (sizeof(T) == 1) {
+			return x;
+		} else if constexpr (sizeof(T) == 2) {
+			return __builtin_bswap16(x);
+		} else if constexpr (sizeof(T) == 4) {
+			return __builtin_bswap32(x);
+		} else if constexpr (sizeof(T) == 8) {
+			return __builtin_bswap64(x);
+		} else {
+			static_assert(std::has_unique_object_representations_v<T>, "T may not have padding bits");
+			uint8_t value_representation[sizeof(T)] = std::bit_cast<uint8_t[sizeof(T)]>(x);
+			std::ranges::reverse(value_representation);
+			return std::bit_cast<T>(value_representation);
+		}
+	}
+#elif defined(_MSC_VER)
+	template<typename T>
+	OV_ALWAYS_INLINE static T byteswap(T x) {
+		if constexpr (sizeof(T) == 1) {
+			return x;
+		} else if constexpr (sizeof(T) == 2) {
+			return _byteswap_ushort(x);
+		} else if constexpr (sizeof(T) == 4) {
+			return _byteswap_ulong(x);
+		} else if constexpr (sizeof(T) == 8) {
+			return _byteswap_uint64(x);
+		} else {
+			static_assert(std::has_unique_object_representations_v<T>, "T may not have padding bits");
+			uint8_t value_representation[sizeof(T)] = std::bit_cast<uint8_t[sizeof(T)]>(x);
+			std::ranges::reverse(value_representation);
+			return std::bit_cast<T>(value_representation);
+		}
+	}
+#else
+	template<typename T>
+	OV_ALWAYS_INLINE static T byteswap(T x) {
+		if constexpr (sizeof(T) == 1) {
+			return x;
+		} else if constexpr (sizeof(T) == 2) {
+			return (x >> 8) | (x << 8);
+		} else if constexpr (sizeof(T) == 4) {
+			return ((x << 24) | ((x << 8) & 0x00FF0000) | ((x >> 8) & 0x0000FF00) | (x >> 24));
+		} else if constexpr (sizeof(T) == 8) {
+			x = (x & 0x00000000FFFFFFFF) << 32 | (x & 0xFFFFFFFF00000000) >> 32;
+			x = (x & 0x0000FFFF0000FFFF) << 16 | (x & 0xFFFF0000FFFF0000) >> 16;
+			x = (x & 0x00FF00FF00FF00FF) << 8 | (x & 0xFF00FF00FF00FF00) >> 8;
+			return x;
+		} else {
+			static_assert(std::has_unique_object_representations_v<T>, "T may not have padding bits");
+			uint8_t value_representation[sizeof(T)] = std::bit_cast<uint8_t[sizeof(T)]>(x);
+			std::ranges::reverse(value_representation);
+			return std::bit_cast<T>(value_representation);
+		}
+	}
+#endif
 
 	template<typename Allocator, typename T, typename Value = std::remove_cvref_t<typename Allocator::value_type>>
 	concept move_insertable_allocator_for =
