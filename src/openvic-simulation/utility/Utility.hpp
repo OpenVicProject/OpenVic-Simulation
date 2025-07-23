@@ -6,6 +6,7 @@
 #include <cmath>
 #include <concepts>
 #include <cstdint>
+#include <filesystem>
 #include <functional>
 #include <memory>
 #include <span>
@@ -390,6 +391,18 @@ namespace OpenVic::utility {
 
 	template<typename T>
 	static constexpr bool is_trivially_relocatable_v = is_trivially_relocatable<T>::value;
+
+	OV_ALWAYS_INLINE static std::FILE* fopen(std::filesystem::path::value_type const* filename, char const* mode) {
+#ifdef _MSC_VER
+		wchar_t max_valid_modes[6] {};
+		for (size_t index = 0; mode[index] != 0; index++) {
+			max_valid_modes[index] = static_cast<wchar_t>(mode[index]);
+		}
+		return _wfopen(filename, max_valid_modes);
+#else
+		return std::fopen(filename, mode);
+#endif
+	}
 }
 
 namespace OpenVic::cow {
