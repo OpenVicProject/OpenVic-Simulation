@@ -58,17 +58,17 @@ bool MapDefinition::add_province_definition(std::string_view identifier, colour_
 		return false;
 	}
 	ProvinceDefinition new_province {
-		identifier, colour, static_cast<ProvinceDefinition::index_t>(province_definitions.size() + 1)
+		identifier, colour, static_cast<ProvinceDefinition::index_t>(province_definitions.size())
 	};
-	const ProvinceDefinition::index_t index = get_index_from_colour(colour);
-	if (index != ProvinceDefinition::NULL_INDEX) {
+	const ProvinceDefinition::index_t index_1_based = get_index_1_based_from_colour(colour);
+	if (index_1_based != ProvinceDefinition::NULL_INDEX) {
 		Logger::error(
-			"Duplicate province colours: ", get_province_definition_by_index(index)->to_string(), " and ",
+			"Duplicate province colours: ", get_province_definition_by_index_1_based(index_1_based)->to_string(), " and ",
 			new_province.to_string()
 		);
 		return false;
 	}
-	colour_index_map[new_province.get_colour()] = new_province.get_index();
+	colour_index_map[new_province.get_colour()] = new_province.get_index_1_based();
 	return province_definitions.add_item(std::move(new_province));
 }
 
@@ -125,37 +125,37 @@ bool MapDefinition::add_standard_adjacency(ProvinceDefinition& from, ProvinceDef
 		to.coastal = !to.is_water();
 
 		if (from.is_water()) {
-			path_map_sea.try_add_point(to.get_index(), { to.centre.x, to.centre.y });
+			path_map_sea.try_add_point(to.get_index_1_based(), { to.centre.x, to.centre.y });
 		} else {
-			path_map_sea.try_add_point(from.get_index(), { from.centre.x, from.centre.y });
+			path_map_sea.try_add_point(from.get_index_1_based(), { from.centre.x, from.centre.y });
 		}
 		/* Connect points on pathfinding map */
-		path_map_sea.connect_points(from.get_index(), to.get_index());
+		path_map_sea.connect_points(from.get_index_1_based(), to.get_index_1_based());
 		/* Land units can use transports to path on the sea */
-		path_map_land.connect_points(from.get_index(), to.get_index());
+		path_map_land.connect_points(from.get_index_1_based(), to.get_index_1_based());
 		/* Sea points are only valid for land units with a transport */
 		if (from.is_water()) {
-			path_map_land.set_point_disabled(from.get_index());
+			path_map_land.set_point_disabled(from.get_index_1_based());
 		} else {
-			path_map_land.set_point_disabled(to.get_index());
+			path_map_land.set_point_disabled(to.get_index_1_based());
 		}
 	} else if (from.is_water()) {
 		/* Water-to-water adjacency */
 		type = WATER;
 
 		/* Connect points on pathfinding map */
-		path_map_sea.connect_points(from.get_index(), to.get_index());
+		path_map_sea.connect_points(from.get_index_1_based(), to.get_index_1_based());
 		/* Land units can use transports to path on the sea */
-		path_map_land.connect_points(from.get_index(), to.get_index());
+		path_map_land.connect_points(from.get_index_1_based(), to.get_index_1_based());
 		/* Sea points are only valid for land units with a transport */
 		if (from.is_water()) {
-			path_map_land.set_point_disabled(from.get_index());
+			path_map_land.set_point_disabled(from.get_index_1_based());
 		} else {
-			path_map_land.set_point_disabled(to.get_index());
+			path_map_land.set_point_disabled(to.get_index_1_based());
 		}
 	} else {
 		/* Connect points on pathfinding map */
-		path_map_land.connect_points(from.get_index(), to.get_index());
+		path_map_land.connect_points(from.get_index_1_based(), to.get_index_1_based());
 	}
 
 	if (from_needs_adjacency) {
@@ -283,17 +283,17 @@ bool MapDefinition::add_special_adjacency(
 			}
 			*existing_adjacency = { &to, distance, type, through, data };
 			if (from.is_water() && to.is_water()) {
-				path_map_sea.connect_points(from.get_index(), to.get_index());
+				path_map_sea.connect_points(from.get_index_1_based(), to.get_index_1_based());
 			} else {
-				path_map_land.connect_points(from.get_index(), to.get_index());
+				path_map_land.connect_points(from.get_index_1_based(), to.get_index_1_based());
 			}
 
 			if (from.is_water() || to.is_water()) {
-				path_map_land.connect_points(from.get_index(), to.get_index());
+				path_map_land.connect_points(from.get_index_1_based(), to.get_index_1_based());
 				if (from.is_water()) {
-					path_map_land.set_point_disabled(from.get_index());
+					path_map_land.set_point_disabled(from.get_index_1_based());
 				} else {
-					path_map_land.set_point_disabled(to.get_index());
+					path_map_land.set_point_disabled(to.get_index_1_based());
 				}
 			}
 			return true;
@@ -305,17 +305,17 @@ bool MapDefinition::add_special_adjacency(
 		} else {
 			from.adjacencies.emplace_back(&to, distance, type, through, data);
 			if (from.is_water() && to.is_water()) {
-				path_map_sea.connect_points(from.get_index(), to.get_index());
+				path_map_sea.connect_points(from.get_index_1_based(), to.get_index_1_based());
 			} else {
-				path_map_land.connect_points(from.get_index(), to.get_index());
+				path_map_land.connect_points(from.get_index_1_based(), to.get_index_1_based());
 			}
 
 			if (from.is_water() || to.is_water()) {
-				path_map_land.connect_points(from.get_index(), to.get_index());
+				path_map_land.connect_points(from.get_index_1_based(), to.get_index_1_based());
 				if (from.is_water()) {
-					path_map_land.set_point_disabled(from.get_index());
+					path_map_land.set_point_disabled(from.get_index_1_based());
 				} else {
-					path_map_land.set_point_disabled(to.get_index());
+					path_map_land.set_point_disabled(to.get_index_1_based());
 				}
 			}
 			return true;
@@ -346,7 +346,7 @@ bool MapDefinition::set_water_province(std::string_view identifier) {
 		return false;
 	}
 	province->water = true;
-	path_map_sea.try_add_point(province->get_index(), path_map_land.get_point_position(province->get_index()));
+	path_map_sea.try_add_point(province->get_index_1_based(), path_map_land.get_point_position(province->get_index_1_based()));
 	return true;
 }
 
@@ -430,7 +430,7 @@ bool MapDefinition::add_region(std::string_view identifier, memory::vector<Provi
 	return ret;
 }
 
-ProvinceDefinition::index_t MapDefinition::get_index_from_colour(colour_t colour) const {
+ProvinceDefinition::index_t MapDefinition::get_index_1_based_from_colour(colour_t colour) const {
 	const colour_index_map_t::const_iterator it = colour_index_map.find(colour);
 	if (it != colour_index_map.end()) {
 		return it->second;
@@ -438,19 +438,19 @@ ProvinceDefinition::index_t MapDefinition::get_index_from_colour(colour_t colour
 	return ProvinceDefinition::NULL_INDEX;
 }
 
-ProvinceDefinition::index_t MapDefinition::get_province_index_at(ivec2_t pos) const {
+ProvinceDefinition::index_t MapDefinition::get_province_index_1_based_at(ivec2_t pos) const {
 	if (pos.nonnegative() && pos.is_within_bound(dims)) {
-		return province_shape_image[get_pixel_index_from_pos(pos)].index;
+		return province_shape_image[get_pixel_index_from_pos(pos)].index_1_based;
 	}
 	return ProvinceDefinition::NULL_INDEX;
 }
 
 ProvinceDefinition* MapDefinition::get_province_definition_at(ivec2_t pos) {
-	return get_province_definition_by_index(get_province_index_at(pos));
+	return get_province_definition_by_index_1_based(get_province_index_1_based_at(pos));
 }
 
 ProvinceDefinition const* MapDefinition::get_province_definition_at(ivec2_t pos) const {
-	return get_province_definition_by_index(get_province_index_at(pos));
+	return get_province_definition_by_index_1_based(get_province_index_1_based_at(pos));
 }
 
 bool MapDefinition::set_max_provinces(ProvinceDefinition::index_t new_max_provinces) {
@@ -544,7 +544,7 @@ bool MapDefinition::load_province_definitions(std::span<const LineObject> lines)
 					}
 
 					ProvinceDefinition const& definition = province_definitions.back();
-					ret &= path_map_land.try_add_point(definition.get_index(), { definition.centre.x, definition.centre.y });
+					ret &= path_map_land.try_add_point(definition.get_index_1_based(), { definition.centre.x, definition.centre.y });
 					if (!ret) {
 						Logger::error("Province ", identifier, " could not be added to " _OV_STR(path_map_land));
 					}
@@ -810,12 +810,12 @@ bool MapDefinition::load_map_images(fs::path const& province_path, fs::path cons
 		for (pos.x = 0; pos.x < get_width(); ++pos.x) {
 			const size_t pixel_index = get_pixel_index_from_pos(pos);
 			const colour_t province_colour = colour_at(province_data, pixel_index);
-			ProvinceDefinition::index_t province_index = ProvinceDefinition::NULL_INDEX;
+			ProvinceDefinition::index_t province_index_1_based = ProvinceDefinition::NULL_INDEX;
 
 			if (pos.x > 0) {
 				const size_t jdx = pixel_index - 1;
 				if (colour_at(province_data, jdx) == province_colour) {
-					province_index = province_shape_image[jdx].index;
+					province_index_1_based = province_shape_image[jdx].index_1_based;
 					goto index_found;
 				}
 			}
@@ -823,14 +823,14 @@ bool MapDefinition::load_map_images(fs::path const& province_path, fs::path cons
 			if (pos.y > 0) {
 				const size_t jdx = pixel_index - get_width();
 				if (colour_at(province_data, jdx) == province_colour) {
-					province_index = province_shape_image[jdx].index;
+					province_index_1_based = province_shape_image[jdx].index_1_based;
 					goto index_found;
 				}
 			}
 
-			province_index = get_index_from_colour(province_colour);
+			province_index_1_based = get_index_1_based_from_colour(province_colour);
 
-			if (province_index == ProvinceDefinition::NULL_INDEX && !unrecognised_province_colours.contains(province_colour)) {
+			if (province_index_1_based == ProvinceDefinition::NULL_INDEX && !unrecognised_province_colours.contains(province_colour)) {
 				unrecognised_province_colours.insert(province_colour);
 				if (detailed_errors) {
 					Logger::warning(
@@ -840,10 +840,10 @@ bool MapDefinition::load_map_images(fs::path const& province_path, fs::path cons
 			}
 
 		index_found:
-			province_shape_image[pixel_index].index = province_index;
+			province_shape_image[pixel_index].index_1_based = province_index_1_based;
 
-			if (province_index != ProvinceDefinition::NULL_INDEX) {
-				const ProvinceDefinition::index_t array_index = province_index - 1;
+			if (province_index_1_based != ProvinceDefinition::NULL_INDEX) {
+				const ProvinceDefinition::index_t array_index = province_index_1_based - 1;
 				pixels_per_province[array_index]++;
 				pixel_position_sum_per_province[array_index] += static_cast<fvec2_t>(pos);
 			}
@@ -851,8 +851,8 @@ bool MapDefinition::load_map_images(fs::path const& province_path, fs::path cons
 			const TerrainTypeMapping::index_t terrain = terrain_data[pixel_index];
 			TerrainTypeMapping const* mapping = terrain_type_manager.get_terrain_type_mapping_for(terrain);
 			if (mapping != nullptr) {
-				if (province_index != ProvinceDefinition::NULL_INDEX) {
-					terrain_type_pixels_list[province_index - 1][&mapping->get_type()]++;
+				if (province_index_1_based != ProvinceDefinition::NULL_INDEX) {
+					terrain_type_pixels_list[province_index_1_based - 1][&mapping->get_type()]++;
 				}
 				if (mapping->get_has_texture() && terrain < terrain_type_manager.get_terrain_texture_limit()) {
 					province_shape_image[pixel_index].terrain = terrain + 1;

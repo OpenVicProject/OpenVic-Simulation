@@ -208,7 +208,7 @@ ProvinceInstance* ConsoleInstance::validate_province_index(std::string_view valu
 		return nullptr;
 	}
 
-	ProvinceInstance* province = instance_manager.get_map_instance().get_province_instance_by_index(*result);
+	ProvinceInstance* province = instance_manager.get_map_instance().get_province_instance_by_index_1_based(*result);
 
 	if (province == nullptr) {
 		write_error("Unknown province id");

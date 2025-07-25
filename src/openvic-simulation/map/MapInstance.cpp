@@ -17,11 +17,11 @@ MapInstance::MapInstance(
 	sea_pathing { *this } {}
 
 ProvinceInstance& MapInstance::get_province_instance_from_definition(ProvinceDefinition const& province) {
-	return province_instances.get_items()[province.get_index() - 1];
+	return province_instances.get_items()[province.get_index()];
 }
 
 ProvinceInstance const& MapInstance::get_province_instance_from_definition(ProvinceDefinition const& province) const {
-	return province_instances.get_items()[province.get_index() - 1];
+	return province_instances.get_items()[province.get_index()];
 }
 
 void MapInstance::enable_canal(canal_index_t canal_index) {
