@@ -38,7 +38,7 @@ TerrainTypeMapping::TerrainTypeMapping(
 
 bool TerrainTypeManager::generate_modifiers(ModifierManager& modifier_manager) const {
 	using enum ModifierEffect::format_t;
-	IndexedMap<TerrainType, ModifierEffectCache::unit_terrain_effects_t>& unit_terrain_effects =
+	IndexedMap<TerrainType, unit_terrain_effects_t>& unit_terrain_effects =
 		modifier_manager.modifier_effect_cache.unit_terrain_effects;
 
 	unit_terrain_effects.set_keys(get_terrain_types());
@@ -46,7 +46,7 @@ bool TerrainTypeManager::generate_modifiers(ModifierManager& modifier_manager) c
 	bool ret = true;
 	for (TerrainType const& terrain_type : get_terrain_types()) {
 		const std::string_view identifier = terrain_type.get_identifier();
-		ModifierEffectCache::unit_terrain_effects_t& this_unit_terrain_effects = unit_terrain_effects[terrain_type];
+		unit_terrain_effects_t& this_unit_terrain_effects = unit_terrain_effects[terrain_type];
 		ret &= modifier_manager.register_unit_terrain_modifier_effect(
 			this_unit_terrain_effects.attack, ModifierManager::get_flat_identifier("attack", identifier),
 			FORMAT_x100_1DP_PC_POS, "UA_ATTACK"

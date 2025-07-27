@@ -34,6 +34,9 @@ namespace OpenVic {
 			using base_type::size;
 
 		protected:
+			using base_type::clear;
+			using base_type::emplace_back;
+			using base_type::reserve;
 			using base_type::resize;
 		};
 	}
@@ -213,9 +216,17 @@ namespace OpenVic {
 	public:
 		constexpr IndexedMap() = default;
 
-		constexpr IndexedMap(keys_span_type new_keys) : IndexedMap() {
-			set_keys(new_keys);
+		constexpr IndexedMap(
+			keys_span_type new_keys,
+			std::function<value_type(key_type const&)> const& value_generator
+		) : IndexedMap() {
+			set_keys(new_keys, value_generator);
 		}
+		constexpr IndexedMap(keys_span_type new_keys)
+			requires std::is_default_constructible_v<value_type>
+			: IndexedMap() {
+			set_keys(new_keys);
+		}		
 
 		IndexedMap(IndexedMap const&) = default;
 		IndexedMap(IndexedMap&&) = default;
@@ -290,9 +301,16 @@ namespace OpenVic {
 			std::fill(get_values().begin(), get_values().end(), value);
 		}
 
-		constexpr void clear() {
-			for (value_ref_type value : get_values()) {
-				value = Value {};
+		constexpr void clear()
+			requires std::is_default_constructible_v<value_type> {
+			clear([](key_type const& key)->value_type{ return Value{}; });
+		}
+
+		constexpr void clear(std::function<value_type(key_type const&)> const& value_generator) {
+			values_type& values = get_values();
+			for (size_t i = 0; i < values.size(); i++) {
+				key_type const& key = keys[i];
+				values[i] = std::move(value_generator(key));
 			}
 		}
 
@@ -300,12 +318,25 @@ namespace OpenVic {
 			return !keys.empty();
 		}
 
-		constexpr void set_keys(keys_span_type new_keys) {
+		constexpr void set_keys(keys_span_type new_keys)
+			requires std::is_default_constructible_v<value_type> {
+			if (keys.data() != new_keys.data()) {
+				keys = new_keys;
+				values_type::resize(has_keys() ? keys.size() : 0);
+			}
+		}
+		constexpr void set_keys(
+			keys_span_type new_keys,
+			std::function<value_type(key_type const&)> const& value_generator
+		) {
 			if (keys.data() != new_keys.data()) {
 				keys = new_keys;
 
-				values_type::resize(has_keys() ? keys.size() : 0);
-				clear();
+				values_type::clear();
+				values_type::reserve(has_keys() ? keys.size() : 0);
+				for (key_type const& key : keys) {
+					values_type::emplace_back(std::move(value_generator(key)));
+				}
 			}
 		}
 

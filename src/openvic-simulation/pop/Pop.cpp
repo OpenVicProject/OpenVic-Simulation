@@ -69,7 +69,9 @@ void Pop::setup_pop_test_values(IssueManager const& issue_manager) {
 		[]<typename T, typename U>(T& map, U const& key, int32_t min, int32_t max) -> void {
 			const int32_t value = rand() % (max + 1);
 			if (value >= min) {
-				if constexpr (utility::is_specialization_of_v<T, IndexedMap>) {
+				if constexpr (utility::is_specialization_of_v<T, IndexedFlatMap>) {
+					map.set(key, value);
+				} else if constexpr (utility::is_specialization_of_v<T, IndexedMap>) {
 					map[key] = value;
 				} else {
 					map.emplace(&key, value);
@@ -78,7 +80,7 @@ void Pop::setup_pop_test_values(IssueManager const& issue_manager) {
 		};
 
 	/* All entries equally weighted for testing. */
-	ideology_distribution.clear();
+	ideology_distribution.fill(fixed_point_t::_0);
 	for (Ideology const& ideology : ideology_distribution.get_keys()) {
 		test_weight(ideology_distribution, ideology, 1, 5);
 	}
@@ -155,7 +157,7 @@ void Pop::update_location_based_attributes() {
 }
 
 fixed_point_t Pop::get_ideology_support(Ideology const& ideology) const {
-	return ideology_distribution[ideology];
+	return ideology_distribution.at(ideology);
 }
 
 fixed_point_t Pop::get_issue_support(Issue const& issue) const {
@@ -258,7 +260,7 @@ void Pop::pay_income_tax(fixed_point_t& income) {
 	if (tax_collector_nullable == nullptr) {
 		return;
 	}
-	const fixed_point_t effective_tax_rate = tax_collector_nullable->get_effective_tax_rate_by_strata()[type->get_strata()];
+	const fixed_point_t effective_tax_rate = tax_collector_nullable->get_effective_tax_rate_by_strata(type->get_strata()).get();
 	const fixed_point_t tax = effective_tax_rate * income;
 	tax_collector_nullable->report_pop_income_tax(*type, income, tax);
 	income -= tax;
@@ -407,12 +409,12 @@ void Pop::pop_tick_without_cleanup(
 	income = expenses = 0;
 
 	ProvinceInstance& location_never_null = *location;
-	CountryInstance* const country_to_report_economy_nullable = location_never_null.get_country_to_report_economy();
+	CountryInstance* country_to_report_economy_nullable = location_never_null.get_country_to_report_economy();
 
 	fixed_point_t max_cost_multiplier = 1;
 	if (country_to_report_economy_nullable != nullptr) {
 		country_to_report_economy_nullable->request_salaries_and_welfare_and_import_subsidies(*this);
-		const fixed_point_t tariff_rate = country_to_report_economy_nullable->get_effective_tariff_rate();
+		const fixed_point_t tariff_rate = country_to_report_economy_nullable->effective_tariff_rate.get();
 		if (tariff_rate > fixed_point_t::_0) {
 			max_cost_multiplier += tariff_rate; //max (domestic cost, imported cost)
 		}

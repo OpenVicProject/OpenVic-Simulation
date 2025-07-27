@@ -13,6 +13,7 @@
 
 #include "openvic-simulation/types/Colour.hpp"
 #include "openvic-simulation/types/Date.hpp"
+#include "openvic-simulation/types/IndexedFlatMap.hpp"
 #include "openvic-simulation/types/IndexedMap.hpp"
 #include "openvic-simulation/types/OrderedContainers.hpp"
 #include "openvic-simulation/types/TextFormat.hpp"
@@ -687,6 +688,25 @@ using namespace std::string_view_literals;
 				}
 				Logger::warn_or_error(warn, "Duplicate map entry with key: \"", key, "\"");
 				return warn;
+			};
+		}
+
+		template<typename Key, typename Value>
+		Callback<Value> auto map_callback(
+			IndexedFlatMap<Key, Value>& map, Key const* key, bool warn = false
+		) requires std::movable<Value> {
+			return [&map, key, warn](Value value) -> bool {
+				if (key == nullptr) {
+					Logger::error("Null key in map_callback");
+					return false;
+				}
+				bool ret = true;
+				if (map.at(*key) != Value {}) {
+					Logger::warn_or_error(warn, "Duplicate map entry with key: \"", key, "\"");
+					ret = warn;
+				}
+				map.set(*key, std::move(value));
+				return ret;
 			};
 		}
 

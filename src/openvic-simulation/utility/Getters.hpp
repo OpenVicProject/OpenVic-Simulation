@@ -255,3 +255,13 @@ public: \
 		return NAME; \
 	} \
 ACCESS:
+
+#define SPAN_PROPERTY(NAME) SPAN_PROPERTY_ACCESS(NAME, private)
+#define SPAN_PROPERTY_ACCESS(NAME, ACCESS) \
+	NAME; \
+\
+public: \
+	[[nodiscard]] constexpr auto get_##NAME() const -> OpenVic::utility::forwardable_span<decltype(NAME)::value_type const> { \
+		return NAME; \
+	} \
+	ACCESS:

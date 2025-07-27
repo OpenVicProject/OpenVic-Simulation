@@ -1,7 +1,6 @@
 #include "ResourceGatheringOperation.hpp"
 
 #include <span>
-#include <vector>
 
 #include "openvic-simulation/economy/production/Employee.hpp"
 #include "openvic-simulation/economy/production/ProductionType.hpp"
@@ -12,6 +11,7 @@
 #include "openvic-simulation/modifier/ModifierEffectCache.hpp"
 #include "openvic-simulation/pop/Pop.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
+#include "openvic-simulation/types/IndexedFlatMap.hpp"
 #include "openvic-simulation/utility/Logger.hpp"
 #include "openvic-simulation/utility/Containers.hpp"
 
@@ -61,11 +61,11 @@ void ResourceGatheringOperation::initialise_rgo_size_multiplier() {
 	ModifierEffectCache const& modifier_effect_cache = location.get_modifier_effect_cache();
 	ProductionType const& production_type = *production_type_nullable;
 	std::span<const Job> jobs = production_type.get_jobs();
-	IndexedMap<PopType, pop_size_t> const& province_pop_type_distribution = location.get_pop_type_distribution();
+	IndexedFlatMap<PopType, pop_size_t> const& province_pop_type_distribution = location.get_pop_type_distribution();
 
 	pop_size_t total_worker_count_in_province = 0; //not counting equivalents
 	for (Job const& job : jobs) {
-		total_worker_count_in_province += province_pop_type_distribution[*job.get_pop_type()];
+		total_worker_count_in_province += province_pop_type_distribution.at(*job.get_pop_type());
 	}
 
 	const fixed_point_t size_modifier = calculate_size_modifier();
@@ -120,11 +120,11 @@ void ResourceGatheringOperation::rgo_tick(memory::vector<fixed_point_t>& reusabl
 
 	ProductionType const& production_type = *production_type_nullable;
 	std::span<const Job> jobs = production_type.get_jobs();
-	IndexedMap<PopType, pop_size_t> const& province_pop_type_distribution = location.get_pop_type_distribution();
+	IndexedFlatMap<PopType, pop_size_t> const& province_pop_type_distribution = location.get_pop_type_distribution();
 
 	total_worker_count_in_province_cache = 0; //not counting equivalents
 	for (Job const& job : jobs) {
-		total_worker_count_in_province_cache += province_pop_type_distribution[*job.get_pop_type()];
+		total_worker_count_in_province_cache += province_pop_type_distribution.at(*job.get_pop_type());
 	}
 
 	hire();
@@ -134,8 +134,8 @@ void ResourceGatheringOperation::rgo_tick(memory::vector<fixed_point_t>& reusabl
 
 	if (production_type.get_owner().has_value()) {
 		PopType const& owner_pop_type = *production_type.get_owner()->get_pop_type();
-		total_owner_count_in_state_cache = location.get_state()->get_pop_type_distribution()[owner_pop_type];
-		owner_pops_cache_nullable = &location.get_state()->get_pops_cache_by_type()[owner_pop_type];
+		total_owner_count_in_state_cache = location.get_state()->get_pop_type_distribution().at(owner_pop_type);
+		owner_pops_cache_nullable = &location.get_state()->get_pops_cache_by_type().at(owner_pop_type);
 	}
 
 	output_quantity_yesterday = produce();
@@ -348,10 +348,10 @@ void ResourceGatheringOperation::pay_employees(memory::vector<fixed_point_t>& re
 		return;
 	}
 
-	CountryInstance const* const country_to_report_economy_nullable = location.get_country_to_report_economy();
+	CountryInstance* const country_to_report_economy_nullable = location.get_country_to_report_economy();
 	fixed_point_t total_minimum_wage = 0;
 	if (country_to_report_economy_nullable != nullptr) {
-		CountryInstance const& country_to_report_economy = *country_to_report_economy_nullable;
+		CountryInstance& country_to_report_economy = *country_to_report_economy_nullable;
 		for (Employee& employee : employees) {
 			total_minimum_wage += employee.update_minimum_wage(country_to_report_economy);
 		}

@@ -5,6 +5,7 @@
 #include "openvic-simulation/country/CountryInstance.hpp"
 #include "openvic-simulation/history/HistoryMap.hpp"
 #include "openvic-simulation/types/Date.hpp"
+#include "openvic-simulation/types/IndexedFlatMap.hpp"
 #include "openvic-simulation/types/IndexedMap.hpp"
 #include "openvic-simulation/types/OrderedContainers.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPointMap.hpp"
@@ -37,7 +38,7 @@ namespace OpenVic {
 		std::optional<Religion const*> PROPERTY(religion);
 		std::optional<CountryParty const*> PROPERTY(ruling_party);
 		std::optional<Date> PROPERTY(last_election);
-		IndexedMap<Ideology, fixed_point_t> PROPERTY(upper_house);
+		IndexedFlatMap<Ideology, fixed_point_t> PROPERTY(upper_house);
 		std::optional<ProvinceDefinition const*> PROPERTY(capital);
 		std::optional<GovernmentType const*> PROPERTY(government_type);
 		std::optional<fixed_point_t> PROPERTY(plurality);
@@ -106,7 +107,7 @@ namespace OpenVic {
 		void lock_country_histories();
 		bool is_locked() const;
 
-		CountryHistoryMap const* get_country_history(CountryDefinition const* country) const;
+		CountryHistoryMap const* get_country_history(CountryDefinition const& country) const;
 
 		bool load_country_history_file(
 			DefinitionManager& definition_manager, Dataloader const& dataloader, CountryDefinition const& country,

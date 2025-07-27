@@ -255,15 +255,15 @@ void ProvinceInstance::_update_pops(DefineManager const& define_manager) {
 	average_consciousness = 0;
 	average_militancy = 0;
 
-	population_by_strata.clear();
-	militancy_by_strata.clear();
-	life_needs_fulfilled_by_strata.clear();
-	everyday_needs_fulfilled_by_strata.clear();
-	luxury_needs_fulfilled_by_strata.clear();
+	population_by_strata.fill(0);
+	militancy_by_strata.fill(fixed_point_t::_0);
+	life_needs_fulfilled_by_strata.fill(fixed_point_t::_0);
+	everyday_needs_fulfilled_by_strata.fill(fixed_point_t::_0);
+	luxury_needs_fulfilled_by_strata.fill(fixed_point_t::_0);
 
-	pop_type_distribution.clear();
-	pop_type_unemployed_count.clear();
-	ideology_distribution.clear();
+	pop_type_distribution.fill(fixed_point_t::_0);
+	pop_type_unemployed_count.fill(fixed_point_t::_0);
+	ideology_distribution.fill(fixed_point_t::_0);
 	issue_distribution.clear();
 	vote_distribution.clear();
 	culture_distribution.clear();
@@ -302,15 +302,15 @@ void ProvinceInstance::_update_pops(DefineManager const& define_manager) {
 		PopType const& pop_type = *pop.get_type();
 		Strata const& strata = pop_type.get_strata();
 
-		population_by_strata[strata] += pop_size_s;
-		militancy_by_strata[strata] += pop.get_militancy() * pop_size_f;
-		life_needs_fulfilled_by_strata[strata] += pop.get_life_needs_fulfilled() * pop_size_f;
-		everyday_needs_fulfilled_by_strata[strata] += pop.get_everyday_needs_fulfilled() * pop_size_f;
-		luxury_needs_fulfilled_by_strata[strata] += pop.get_luxury_needs_fulfilled() * pop_size_f;
+		population_by_strata.at(strata) += pop_size_s;
+		militancy_by_strata.at(strata) += pop.get_militancy() * pop_size_f;
+		life_needs_fulfilled_by_strata.at(strata) += pop.get_life_needs_fulfilled() * pop_size_f;
+		everyday_needs_fulfilled_by_strata.at(strata) += pop.get_everyday_needs_fulfilled() * pop_size_f;
+		luxury_needs_fulfilled_by_strata.at(strata) += pop.get_luxury_needs_fulfilled() * pop_size_f;
 
-		pop_type_distribution[pop_type] += pop_size_s;
-		pop_type_unemployed_count[pop_type] += pop.get_unemployed();
-		pops_cache_by_type[pop_type].push_back(&pop);
+		pop_type_distribution.at(pop_type) += pop_size_s;
+		pop_type_unemployed_count.at(pop_type) += pop.get_unemployed();
+		pops_cache_by_type.at(pop_type).push_back(&pop);
 		// Pop ideology, issue and vote distributions are scaled to pop size so we can add them directly
 		ideology_distribution += pop.get_ideology_distribution();
 		issue_distribution += pop.get_issue_distribution();
@@ -330,10 +330,10 @@ void ProvinceInstance::_update_pops(DefineManager const& define_manager) {
 		average_consciousness /= total_population;
 		average_militancy /= total_population;
 
-		militancy_by_strata /= population_by_strata;
-		life_needs_fulfilled_by_strata /= population_by_strata;
-		everyday_needs_fulfilled_by_strata /= population_by_strata;
-		luxury_needs_fulfilled_by_strata /= population_by_strata;
+		militancy_by_strata.divide_assign_handle_zero<pop_size_t>(population_by_strata, &ProvinceInstance::div_by_zero_return_0);
+		life_needs_fulfilled_by_strata.divide_assign_handle_zero<pop_size_t>(population_by_strata, &ProvinceInstance::div_by_zero_return_0);
+		everyday_needs_fulfilled_by_strata.divide_assign_handle_zero<pop_size_t>(population_by_strata, &ProvinceInstance::div_by_zero_return_0);
+		luxury_needs_fulfilled_by_strata.divide_assign_handle_zero<pop_size_t>(population_by_strata, &ProvinceInstance::div_by_zero_return_0);
 	}
 }
 

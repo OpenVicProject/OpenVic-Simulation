@@ -506,9 +506,17 @@ namespace OpenVic::_detail::signal {
 
 	template<typename Lockable>
 	struct basic_observer : private observer_type {
+		basic_observer() = default;
+		basic_observer(basic_observer&& other) noexcept
+			: observer_type(),
+			connections { std::move(other.connections) } { }
 		virtual ~basic_observer() = default;
 
 	protected:
+		constexpr bool has_no_connections() const {
+			return connections.empty();
+		}
+
 		/**
 		 * Disconnect all signals connected to this object.
 		 *
@@ -530,7 +538,7 @@ namespace OpenVic::_detail::signal {
 			connections.emplace_back(std::move(conn));
 		}
 
-		Lockable mutex;
+		Lockable mutex{};
 		memory::vector<scoped_connection> connections;
 	};
 
@@ -1301,7 +1309,7 @@ namespace OpenVic::_detail::signal {
 		}
 
 	private:
-		mutable Lockable mutex;
+		mutable Lockable mutex{};
 		cow_type<Lockable> slots;
 		std::atomic_bool is_blocked;
 	};

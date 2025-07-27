@@ -21,6 +21,7 @@
 #include "openvic-simulation/research/Invention.hpp"
 #include "openvic-simulation/research/Technology.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
+#include "openvic-simulation/types/IndexedFlatMap.hpp"
 #include "openvic-simulation/types/IndexedMap.hpp"
 #include "openvic-simulation/types/PopSize.hpp"
 #include "openvic-simulation/types/SliderValue.hpp"
@@ -32,7 +33,24 @@ using enum CountryInstance::country_status_t;
 
 static constexpr colour_t ERROR_COLOUR = colour_t::from_integer(0xFF0000);
 
+//CountryInstance may be moved. Thus we can't rely on `this`.
+template<typename T>
+static std::function<T()> create_lambda_capture_this(
+	CountryInstanceManager& country_instance_manager,
+	const CountryInstance::index_t index,
+	std::function<T(CountryInstance&)> method
+) {
+	return [
+		index,
+		&country_instance_manager,
+		method=std::move(method)
+	]()mutable->T {
+		return method(*country_instance_manager.get_country_instance_by_index(index));
+	};
+}
+
 CountryInstance::CountryInstance(
+	CountryInstanceManager& country_instance_manager,
 	CountryDefinition const* new_country_definition,
 	index_t new_index,
 	decltype(building_type_unlock_levels)::keys_span_type building_type_keys,
@@ -62,6 +80,33 @@ CountryInstance::CountryInstance(
 	shared_country_values { new_shared_country_values },
 	country_defines { new_country_defines },
 	colour { ERROR_COLOUR },
+	flag_government_type {
+		create_lambda_capture_this<GovernmentType const*>(
+			country_instance_manager,
+			new_index, 
+			[](CountryInstance& ref)->GovernmentType const* {
+				GovernmentType const* const government_type = ref.government_type.get();
+				IndexedMap<GovernmentType, GovernmentType const*> const& flag_overrides = ref.get_government_flag_overrides();
+				if (government_type == nullptr) {
+					return nullptr;
+				} else {
+					GovernmentType const* const flag_override = flag_overrides[*government_type];
+					return flag_override == nullptr
+						? government_type
+						: flag_override;
+				}
+			}
+		)
+	},
+	total_score {
+		create_lambda_capture_this<fixed_point_t>(
+			country_instance_manager,
+			new_index, 
+			[](CountryInstance& ref)->fixed_point_t {
+				return ref.prestige.get() + ref.industrial_power.get() + ref.military_power.get();
+			}
+		)
+	},
 
 	/* Production */
 	building_type_unlock_levels { building_type_keys },
@@ -69,10 +114,89 @@ CountryInstance::CountryInstance(
 	/* Budget */
 	taxable_income_mutex { memory::make_unique<std::mutex>() },
 	taxable_income_by_pop_type { pop_type_keys },
-	effective_tax_rate_by_strata { strata_keys },
+	effective_tax_rate_by_strata { strata_keys, [new_index,&country_instance_manager]
+		(Strata const& strata) mutable->DerivedState<fixed_point_t>{
+		return DerivedState<fixed_point_t>{
+			create_lambda_capture_this<fixed_point_t>(
+				country_instance_manager,
+				new_index, 
+				[&strata](CountryInstance& ref)->fixed_point_t {
+					return ref.tax_rate_slider_value_by_strata.at(strata).get_current_value() * ref.tax_efficiency.get();
+				}
+			)
+		};
+	} },
 	tax_rate_slider_value_by_strata { strata_keys },
 	actual_net_tariffs_mutex { memory::make_unique<std::mutex>() },
-
+	desired_administrator_percentage {
+		create_lambda_capture_this<fixed_point_t>(
+			country_instance_manager,
+			new_index, 
+			[](CountryInstance& ref)->fixed_point_t {
+				return ref.country_defines.get_max_bureaucracy_percentage()
+					+ ref.total_administrative_multiplier.get() * ref.country_defines.get_bureaucracy_percentage_increment();
+			}
+		)
+	},
+	corruption_cost_multiplier {
+		create_lambda_capture_this<fixed_point_t>(
+			country_instance_manager,
+			new_index, 
+			[](CountryInstance& ref)->fixed_point_t {
+				return 2 - ref.administrative_efficiency_from_administrators.get();
+			}
+		)
+	},
+	tariff_efficiency {
+		create_lambda_capture_this<fixed_point_t>(
+			country_instance_manager,
+			new_index, 
+			[](CountryInstance& ref)->fixed_point_t {
+				return std::min(
+					fixed_point_t::_1,
+					ref.administrative_efficiency_from_administrators.get() + ref.country_defines.get_base_country_tax_efficiency()
+				);
+			}
+		)
+	},
+	effective_tariff_rate {
+		create_lambda_capture_this<fixed_point_t>(
+			country_instance_manager,
+			new_index, 
+			[](CountryInstance& ref)->fixed_point_t {
+				return ref.administrative_efficiency_from_administrators.get() * ref.tariff_rate_slider_value.get_current_value();
+			}
+		)
+	},
+	has_import_subsidies {
+		create_lambda_capture_this<bool>(
+			country_instance_manager,
+			new_index, 
+			[](CountryInstance& ref)->bool {
+				return ref.effective_tariff_rate.get() < fixed_point_t::_0;
+			}
+		)
+	},
+	projected_import_subsidies {
+		create_lambda_capture_this<fixed_point_t>(
+			country_instance_manager,
+			new_index, 
+			[](CountryInstance& ref)->fixed_point_t {
+				return ref.has_import_subsidies.get()
+					? -ref.effective_tariff_rate.get() * ref.yesterdays_import_value.get()
+					: fixed_point_t::_0;
+			}
+		)
+	},
+	projected_social_spending_unscaled_by_slider {
+		create_lambda_capture_this<fixed_point_t>(
+			country_instance_manager,
+			new_index, 
+			[](CountryInstance& ref)->fixed_point_t {
+				return ref.projected_pensions_spending_unscaled_by_slider.get() + ref.projected_unemployment_subsidies_spending_unscaled_by_slider.get();
+			}
+		)
+	},
 	/* Technology */
 	technology_unlock_levels { technology_keys },
 	invention_unlock_levels { invention_keys },
@@ -99,9 +223,20 @@ CountryInstance::CountryInstance(
 	/* Diplomacy */
 
 	/* Military */
+	military_power {
+		create_lambda_capture_this<fixed_point_t>(
+			country_instance_manager,
+			new_index, 
+			[](CountryInstance& ref)->fixed_point_t {
+				return ref.military_power_from_land.get()
+					+ ref.military_power_from_sea.get()
+					+ ref.military_power_from_leaders.get();
+			}
+		)
+	},
 	regiment_type_unlock_levels { regiment_type_unlock_levels_keys },
-	ship_type_unlock_levels { ship_type_unlock_levels_keys } {
-
+	ship_type_unlock_levels { ship_type_unlock_levels_keys }
+{
 	// Exclude PROVINCE (local) modifier effects from the country's modifier sum
 	modifier_sum.set_this_excluded_targets(ModifierEffect::target_t::PROVINCE);
 
@@ -139,7 +274,7 @@ CountryInstance::CountryInstance(
 	tariff_rate_slider_value.set_bounds(0, 0);
 	tariff_rate_slider_value.set_value(0);
 
-	update_country_definition_based_attributes();
+	_update_country_definition_based_attributes();
 
 	for (BuildingType const& building_type : building_type_unlock_levels.get_keys()) {
 		if (building_type.is_default_enabled()) {
@@ -170,14 +305,7 @@ std::string_view CountryInstance::get_identifier() const {
 	return country_definition->get_identifier();
 }
 
-fixed_point_t CountryInstance::get_tariff_efficiency() const {
-	return std::min(
-		fixed_point_t::_1,
-		administrative_efficiency_from_administrators + country_defines.get_base_country_tax_efficiency()
-	);
-}
-
-void CountryInstance::update_country_definition_based_attributes() {
+void CountryInstance::_update_country_definition_based_attributes() {
 	vote_distribution.set_keys(country_definition->get_parties());
 }
 
@@ -428,7 +556,7 @@ ADD_AND_REMOVE(accepted_culture)
 
 bool CountryInstance::set_upper_house(Ideology const* ideology, fixed_point_t popularity) {
 	if (ideology != nullptr) {
-		upper_house[*ideology] = popularity;
+		upper_house.set(*ideology, popularity);
 		return true;
 	} else {
 		Logger::error("Trying to set null ideology in upper house of ", get_identifier());
@@ -470,8 +598,8 @@ bool CountryInstance::add_reform(Reform const& new_reform) {
 }
 
 void CountryInstance::set_strata_tax_rate_slider_value(Strata const& strata, const fixed_point_t new_value) {
-	tax_rate_slider_value_by_strata[strata].set_value(new_value);
-	_update_effective_tax_rate_by_strata(strata);
+	SliderValue& slider = tax_rate_slider_value_by_strata.at(strata);
+	slider.set_value(new_value);
 }
 
 void CountryInstance::set_army_spending_slider_value(const fixed_point_t new_value) {
@@ -1031,6 +1159,14 @@ bool CountryInstance::apply_history_to_country(CountryHistoryEntry const& entry,
 			target = *source;
 		}
 	};
+	constexpr auto set_optional_state = []<typename T>(
+		MutableState<T>& target,
+		std::optional<T> const& source
+	) {
+		if (source) {
+			target.set(*source);
+		}
+	};
 
 	bool ret = true;
 
@@ -1047,17 +1183,17 @@ bool CountryInstance::apply_history_to_country(CountryHistoryEntry const& entry,
 		ret &= set_ruling_party(**entry.get_ruling_party());
 	}
 	set_optional(last_election, entry.get_last_election());
-	ret &= upper_house.copy(entry.get_upper_house());
+	upper_house.copy_values_from(entry.get_upper_house());
 	if (entry.get_capital()) {
 		capital = &instance_manager.get_map_instance().get_province_instance_from_definition(**entry.get_capital());
 	}
-	set_optional(government_type, entry.get_government_type());
+	set_optional_state(government_type, entry.get_government_type());
 	set_optional(plurality, entry.get_plurality());
 	set_optional(national_value, entry.get_national_value());
 	if (entry.is_civilised()) {
 		country_status = *entry.is_civilised() ? COUNTRY_STATUS_CIVILISED : COUNTRY_STATUS_UNCIVILISED;
 	}
-	set_optional(prestige, entry.get_prestige());
+	set_optional_state(prestige, entry.get_prestige());
 	for (Reform const* reform : entry.get_reforms()) {
 		ret &= add_reform(*reform);
 	}
@@ -1096,14 +1232,14 @@ bool CountryInstance::apply_history_to_country(CountryHistoryEntry const& entry,
 
 void CountryInstance::_update_production(DefineManager const& define_manager) {
 	// Calculate industrial power from states and foreign investments
-	industrial_power = 0;
+	fixed_point_t industrial_power_running_total = 0;
 	industrial_power_from_states.clear();
 	industrial_power_from_investments.clear();
 
 	for (State const* state : states) {
 		const fixed_point_t state_industrial_power = state->get_industrial_power();
 		if (state_industrial_power != 0) {
-			industrial_power += state_industrial_power;
+			industrial_power_running_total += state_industrial_power;
 			industrial_power_from_states.emplace_back(state, state_industrial_power);
 		}
 	}
@@ -1117,11 +1253,13 @@ void CountryInstance::_update_production(DefineManager const& define_manager) {
 			);
 
 			if (investment_industrial_power != 0) {
-				industrial_power += investment_industrial_power;
+				industrial_power_running_total += investment_industrial_power;
 				industrial_power_from_investments.emplace_back(country, investment_industrial_power);
 			}
 		}
 	}
+
+	industrial_power.set(industrial_power_running_total);
 
 	std::sort(
 		industrial_power_from_states.begin(), industrial_power_from_states.end(),
@@ -1166,13 +1304,11 @@ void CountryInstance::_update_budget() {
 	// TODO - make sure we properly update everything dependent on these sliders' values,
 	// as they might change if their sliders' bounds shrink past their previous values.
 
-	tax_efficiency = country_defines.get_base_country_tax_efficiency()
+	tax_efficiency.set(
+		country_defines.get_base_country_tax_efficiency()
 		+ get_modifier_effect_value(*modifier_effect_cache.get_tax_efficiency())
-		+ get_modifier_effect_value(*modifier_effect_cache.get_tax_eff()) / 100;
-
-	for (Strata const& strata : tax_rate_slider_value_by_strata.get_keys()) {
-		_update_effective_tax_rate_by_strata(strata);
-	}
+		+ get_modifier_effect_value(*modifier_effect_cache.get_tax_eff()) / 100
+	);
 
 	/*
 	In Victoria 2, administration efficiency is updated in the UI immediately.
@@ -1193,7 +1329,7 @@ void CountryInstance::_update_budget() {
 			continue;
 		}
 
-		IndexedMap<PopType, pop_size_t> const& state_pop_type_distribution = state.get_pop_type_distribution();
+		IndexedFlatMap<PopType, pop_size_t> const& state_pop_type_distribution = state.get_pop_type_distribution();
 
 		for (auto const& [pop_type, size] : state_pop_type_distribution) {
 			if (pop_type.get_is_administrator()) {
@@ -1203,17 +1339,14 @@ void CountryInstance::_update_budget() {
 		total_non_colonial_population += state.get_total_population();
 	}
 
-	desired_administrator_percentage = country_defines.get_max_bureaucracy_percentage()
-		+ total_administrative_multiplier * country_defines.get_bureaucracy_percentage_increment();
-
 	if (total_non_colonial_population == 0) {
-		administrative_efficiency_from_administrators = fixed_point_t::_1;
-		administrator_percentage = fixed_point_t::_0;
+		administrative_efficiency_from_administrators.set(fixed_point_t::_1);
+		administrator_percentage.set(fixed_point_t::_0);
 	} else {		
-		administrator_percentage = fixed_point_t::parse(administrators) / total_non_colonial_population;
+		administrator_percentage.set(fixed_point_t::parse(administrators) / total_non_colonial_population);
 
-		const fixed_point_t desired_administrators = desired_administrator_percentage * total_non_colonial_population;
-		administrative_efficiency_from_administrators = std::min(
+		const fixed_point_t desired_administrators = desired_administrator_percentage.get() * total_non_colonial_population;
+		administrative_efficiency_from_administrators.set(std::min(
 			fixed_point_t::mul_div(
 				administrators,
 				fixed_point_t::_1 + get_modifier_effect_value(*modifier_effect_cache.get_administrative_efficiency()),
@@ -1221,68 +1354,77 @@ void CountryInstance::_update_budget() {
 			)
 			* (fixed_point_t::_1 + get_modifier_effect_value(*modifier_effect_cache.get_administrative_efficiency_modifier())),
 			fixed_point_t::_1
-		);
+		));
 
 		if (game_rules_manager.get_prevent_negative_administration_efficiency()) {
-			administrative_efficiency_from_administrators = std::max(fixed_point_t::_0, administrative_efficiency_from_administrators);
+			administrative_efficiency_from_administrators.set(
+				std::max(
+					fixed_point_t::_0,
+					administrative_efficiency_from_administrators.get_untracked()
+				)
+			);
 		}
 	}
 
-	effective_tariff_rate = administrative_efficiency_from_administrators * tariff_rate_slider_value.get_value();
+	fixed_point_t projected_administration_spending_unscaled_by_slider_running_total = 0;
+	fixed_point_t projected_education_spending_unscaled_by_slider_running_total = 0;
+	fixed_point_t projected_military_spending_unscaled_by_slider_running_total = 0;
+	fixed_point_t projected_pensions_spending_unscaled_by_slider_running_total = 0;
+	fixed_point_t projected_unemployment_subsidies_spending_unscaled_by_slider_running_total = 0;
 
-	projected_administration_spending_unscaled_by_slider
-		= projected_education_spending_unscaled_by_slider
-		= projected_military_spending_unscaled_by_slider
-		= projected_pensions_spending_unscaled_by_slider
-		= projected_unemployment_subsidies_spending_unscaled_by_slider
-		= 0;
-
-	const fixed_point_t corruption_cost_multiplier = get_corruption_cost_multiplier();
+	const fixed_point_t corruption_cost_multiplier_value = corruption_cost_multiplier.get();
 	for (auto const& [pop_type, size] : pop_type_distribution) {
 		SharedPopTypeValues const& pop_type_values = shared_country_values.get_shared_pop_type_values(pop_type);
-		projected_administration_spending_unscaled_by_slider += size * calculate_administration_salary_base(pop_type_values, corruption_cost_multiplier);
-		projected_education_spending_unscaled_by_slider += size * calculate_education_salary_base(pop_type_values, corruption_cost_multiplier);
-		projected_military_spending_unscaled_by_slider += size * calculate_military_salary_base(pop_type_values, corruption_cost_multiplier);
-		projected_pensions_spending_unscaled_by_slider += size * calculate_pensions_base(modifier_effect_cache, pop_type_values);
-		projected_unemployment_subsidies_spending_unscaled_by_slider += pop_type_unemployed_count[pop_type]
+		projected_administration_spending_unscaled_by_slider_running_total += size * calculate_administration_salary_base(pop_type_values, corruption_cost_multiplier_value);
+		projected_education_spending_unscaled_by_slider_running_total += size * calculate_education_salary_base(pop_type_values, corruption_cost_multiplier_value);
+		projected_military_spending_unscaled_by_slider_running_total += size * calculate_military_salary_base(pop_type_values, corruption_cost_multiplier_value);
+		projected_pensions_spending_unscaled_by_slider_running_total += size * calculate_pensions_base(modifier_effect_cache, pop_type_values);
+		projected_unemployment_subsidies_spending_unscaled_by_slider_running_total += pop_type_unemployed_count.at(pop_type)
 			* calculate_unemployment_subsidies_base(modifier_effect_cache, pop_type_values);
 	}
 
-	projected_administration_spending_unscaled_by_slider /= Pop::size_denominator;
-	projected_education_spending_unscaled_by_slider /= Pop::size_denominator;
-	projected_military_spending_unscaled_by_slider /= Pop::size_denominator;
-	projected_pensions_spending_unscaled_by_slider /= Pop::size_denominator;
-	projected_unemployment_subsidies_spending_unscaled_by_slider /= Pop::size_denominator;
-	projected_import_subsidies = has_import_subsidies()
-		? -effective_tariff_rate * yesterdays_import_value
-		: fixed_point_t::_0;
-}
-
-void CountryInstance::_update_effective_tax_rate_by_strata(Strata const& strata) {
-	const fixed_point_t tax_rate = tax_rate_slider_value_by_strata[strata].get_value();
-	effective_tax_rate_by_strata[strata] = tax_rate * tax_efficiency;
+	projected_administration_spending_unscaled_by_slider.set(
+		projected_administration_spending_unscaled_by_slider_running_total / Pop::size_denominator
+	);
+	projected_education_spending_unscaled_by_slider.set(
+		projected_education_spending_unscaled_by_slider_running_total / Pop::size_denominator
+	);
+	projected_military_spending_unscaled_by_slider.set(
+		projected_military_spending_unscaled_by_slider_running_total / Pop::size_denominator
+	);
+	projected_pensions_spending_unscaled_by_slider.set(
+		projected_pensions_spending_unscaled_by_slider_running_total / Pop::size_denominator
+	);
+	projected_unemployment_subsidies_spending_unscaled_by_slider.set(
+		projected_unemployment_subsidies_spending_unscaled_by_slider_running_total / Pop::size_denominator
+	);
 }
 
 fixed_point_t CountryInstance::calculate_pensions_base(
 	ModifierEffectCache const& modifier_effect_cache,
 	SharedPopTypeValues const& pop_type_values
-) const {
+) {
 	return get_modifier_effect_value(*modifier_effect_cache.get_pension_level())
 		* calculate_social_income_variant_base(pop_type_values);
 }
 fixed_point_t CountryInstance::calculate_unemployment_subsidies_base(
 	ModifierEffectCache const& modifier_effect_cache,
 	SharedPopTypeValues const& pop_type_values
-) const {
+) {
 	return get_modifier_effect_value(*modifier_effect_cache.get_unemployment_benefit())
 		* calculate_social_income_variant_base(pop_type_values);
 }
 fixed_point_t CountryInstance::calculate_minimum_wage_base(
 	ModifierEffectCache const& modifier_effect_cache,
 	SharedPopTypeValues const& pop_type_values
-) const {
+) {
 	return get_modifier_effect_value(*modifier_effect_cache.get_minimum_wage())
 		* calculate_social_income_variant_base(pop_type_values);
+}
+fixed_point_t CountryInstance::calculate_social_income_variant_base(
+	SharedPopTypeValues const& pop_type_values
+) {
+	return administrative_efficiency_from_administrators.get() * pop_type_values.get_social_income_variant_base();
 }
 
 void CountryInstance::_update_current_tech(InstanceManager const& instance_manager) {
@@ -1329,20 +1471,20 @@ void CountryInstance::_update_politics() {
 
 void CountryInstance::_update_population() {
 	total_population = 0;
-	yesterdays_import_value = 0;
+	fixed_point_t yesterdays_import_value_running_total = 0;
 	national_literacy = 0;
 	national_consciousness = 0;
 	national_militancy = 0;
 
-	population_by_strata.clear();
-	militancy_by_strata.clear();
-	life_needs_fulfilled_by_strata.clear();
-	everyday_needs_fulfilled_by_strata.clear();
-	luxury_needs_fulfilled_by_strata.clear();
+	population_by_strata.fill(0);
+	militancy_by_strata.fill(fixed_point_t::_0);
+	life_needs_fulfilled_by_strata.fill(fixed_point_t::_0);
+	everyday_needs_fulfilled_by_strata.fill(fixed_point_t::_0);
+	luxury_needs_fulfilled_by_strata.fill(fixed_point_t::_0);
 
-	pop_type_distribution.clear();
-	pop_type_unemployed_count.clear();
-	ideology_distribution.clear();
+	pop_type_distribution.fill(fixed_point_t::_0);
+	pop_type_unemployed_count.fill(fixed_point_t::_0);
+	ideology_distribution.fill(fixed_point_t::_0);
 	issue_distribution.clear();
 	vote_distribution.clear();
 	culture_distribution.clear();
@@ -1350,7 +1492,7 @@ void CountryInstance::_update_population() {
 
 	for (State const* state : states) {
 		total_population += state->get_total_population();
-		yesterdays_import_value += state->get_yesterdays_import_value();
+		yesterdays_import_value_running_total += state->get_yesterdays_import_value();
 
 		// TODO - change casting if pop_size_t changes type
 		const fixed_point_t state_population = fixed_point_t::parse(state->get_total_population());
@@ -1379,15 +1521,17 @@ void CountryInstance::_update_population() {
 		religion_distribution += state->get_religion_distribution();
 	}
 
+	yesterdays_import_value.set(yesterdays_import_value_running_total);
+
 	if (total_population > 0) {
 		national_literacy /= total_population;
 		national_consciousness /= total_population;
 		national_militancy /= total_population;
 
-		militancy_by_strata /= population_by_strata;
-		life_needs_fulfilled_by_strata /= population_by_strata;
-		everyday_needs_fulfilled_by_strata /= population_by_strata;
-		luxury_needs_fulfilled_by_strata /= population_by_strata;
+		militancy_by_strata.divide_assign_handle_zero<pop_size_t>(population_by_strata, &CountryInstance::div_by_zero_return_0);
+		life_needs_fulfilled_by_strata.divide_assign_handle_zero<pop_size_t>(population_by_strata, &CountryInstance::div_by_zero_return_0);
+		everyday_needs_fulfilled_by_strata.divide_assign_handle_zero<pop_size_t>(population_by_strata, &CountryInstance::div_by_zero_return_0);
+		luxury_needs_fulfilled_by_strata.divide_assign_handle_zero<pop_size_t>(population_by_strata, &CountryInstance::div_by_zero_return_0);
 	}
 
 	daily_research_points = 0;
@@ -1475,14 +1619,13 @@ void CountryInstance::_update_military(
 		) * regiment_type.get_discipline();
 	}
 
-	military_power_from_land = supply_consumption * fixed_point_t::parse(regular_army_size) * sum_of_regiment_type_stats
-		/ fixed_point_t::parse(7 * (1 + unit_type_manager.get_regiment_type_count()));
+	military_power_from_land.set(
+		(disarmed ? define_manager.get_diplomacy_defines().get_disarmed_penalty() : fixed_point_t::_1)
+		* supply_consumption * fixed_point_t::parse(regular_army_size) * sum_of_regiment_type_stats
+		/ fixed_point_t::parse(7 * (1 + unit_type_manager.get_regiment_type_count()))
+	);
 
-	if (disarmed) {
-		military_power_from_land *= define_manager.get_diplomacy_defines().get_disarmed_penalty();
-	}
-
-	military_power_from_sea = 0;
+	fixed_point_t military_power_from_sea_running_total = 0;
 	for (NavyInstance const* navy : navies) {
 		for (ShipInstance const* ship : navy->get_ship_instances()) {
 			ShipType const& ship_type = ship->get_ship_type();
@@ -1491,16 +1634,16 @@ void CountryInstance::_update_military(
 
 				// TODO - include gun power and hull modifiers + naval attack and defense modifiers
 
-				military_power_from_sea += (ship_type.get_gun_power() /*+ naval_attack_modifier*/)
+				military_power_from_sea_running_total += (ship_type.get_gun_power() /*+ naval_attack_modifier*/)
 					* (ship_type.get_hull() /* + naval_defense_modifier*/);
 			}
 		}
 	}
-	military_power_from_sea /= 250;
+	military_power_from_sea.set(military_power_from_sea_running_total / 250);
 
-	military_power_from_leaders = fixed_point_t::parse(std::min(get_leader_count(), deployed_non_mobilised_regiments));
-
-	military_power = military_power_from_land + military_power_from_sea + military_power_from_leaders;
+	military_power_from_leaders.set(
+		fixed_point_t::parse(std::min(get_leader_count(), deployed_non_mobilised_regiments))
+	);
 
 	// Mobilisation calculations
 	mobilisation_impact = get_modifier_effect_value(*modifier_effect_cache.get_mobilization_impact());
@@ -1792,25 +1935,13 @@ void CountryInstance::update_gamestate(InstanceManager& instance_manager) {
 	_update_trade();
 	_update_diplomacy();
 
-	total_score = prestige + industrial_power + military_power;
-
 	const CountryDefinition::government_colour_map_t::const_iterator it =
-		country_definition->get_alternative_colours().find(government_type);
+		country_definition->get_alternative_colours().find(government_type.get_untracked());
 
 	if (it != country_definition->get_alternative_colours().end()) {
 		colour = it->second;
 	} else {
 		colour = country_definition->get_colour();
-	}
-
-	if (government_type != nullptr) {
-		flag_government_type = government_flag_overrides[*government_type];
-
-		if (flag_government_type == nullptr) {
-			flag_government_type = government_type;
-		}
-	} else {
-		flag_government_type = nullptr;
 	}
 }
 
@@ -1818,19 +1949,24 @@ void CountryInstance::country_tick_before_map(InstanceManager& instance_manager)
 	//TODO AI sliders
 	//TODO stockpile management
 
-	const fixed_point_t projected_administration_spending = administration_spending_slider_value.get_value() * projected_administration_spending_unscaled_by_slider;
-	const fixed_point_t projected_education_spending = education_spending_slider_value.get_value() * projected_education_spending_unscaled_by_slider;
-	const fixed_point_t projected_military_spending = military_spending_slider_value.get_value() * projected_military_spending_unscaled_by_slider;
-	const fixed_point_t projected_social_spending = social_spending_slider_value.get_value() * (
-		projected_pensions_spending_unscaled_by_slider
-		+ projected_unemployment_subsidies_spending_unscaled_by_slider
+	const fixed_point_t projected_administration_spending = administration_spending_slider_value.get_current_value()
+		* projected_administration_spending_unscaled_by_slider.get_untracked();
+	const fixed_point_t projected_education_spending = education_spending_slider_value.get_current_value()
+		* projected_education_spending_unscaled_by_slider.get_untracked();
+	const fixed_point_t projected_military_spending = military_spending_slider_value.get_current_value()
+		* projected_military_spending_unscaled_by_slider.get_untracked();
+	const fixed_point_t projected_social_spending = social_spending_slider_value.get_current_value()
+		* (
+		projected_pensions_spending_unscaled_by_slider.get_untracked()
+		+ projected_unemployment_subsidies_spending_unscaled_by_slider.get_untracked()
 	);
 
+	const fixed_point_t projected_import_subsidies_copy = projected_import_subsidies.get();
 	const fixed_point_t projected_spending = projected_administration_spending
 		+ projected_education_spending
 		+ projected_military_spending
 		+ projected_social_spending
-		+ projected_import_subsidies;
+		+ projected_import_subsidies_copy;
 	// + reparations + war subsidies
 	// + stockpile costs
 	// + industrial subsidies
@@ -1839,44 +1975,47 @@ void CountryInstance::country_tick_before_map(InstanceManager& instance_manager)
 	fixed_point_t available_funds = cash_stockpile.get_copy_of_value();
 	fixed_point_t actual_import_subsidies;
 	if (projected_spending <= available_funds) {
-		actual_administration_spending = projected_administration_spending;
-		actual_education_spending = projected_education_spending;
-		actual_military_spending = projected_military_spending;
-		actual_social_spending = projected_social_spending;
-		actual_import_subsidies = projected_import_subsidies;
+		actual_administration_spending.set(projected_administration_spending);
+		actual_education_spending.set(projected_education_spending);
+		actual_military_spending.set(projected_military_spending);
+		actual_social_spending.set(projected_social_spending);
+		actual_import_subsidies = projected_import_subsidies_copy;
 	} else {
 		//TODO try take loan (callback?)
 		//update available_funds with loan
 
 		if (available_funds < projected_education_spending) {
-			actual_education_spending = available_funds;
-			actual_administration_spending = actual_military_spending = actual_social_spending = 0;
+			actual_education_spending.set(available_funds);
+			actual_administration_spending.set(0);
+			actual_military_spending.set(0);
+			actual_social_spending.set(0);
 		} else {
 			available_funds -= projected_education_spending;
-			actual_education_spending = projected_education_spending;
+			actual_education_spending.set(projected_education_spending);
 
 			if (available_funds < projected_administration_spending) {
-				actual_administration_spending = available_funds;
-				actual_military_spending = actual_social_spending = 0;
+				actual_administration_spending.set(available_funds);
+				actual_military_spending.set(0);
+				actual_social_spending.set(0);
 			} else {
 				available_funds -= projected_administration_spending;
-				actual_administration_spending = projected_administration_spending;
+				actual_administration_spending.set(projected_administration_spending);
 
 				if (available_funds < projected_social_spending) {
-					actual_social_spending = available_funds;
-					actual_military_spending = 0;
+					actual_social_spending.set(available_funds);
+					actual_military_spending.set(0);
 				} else {
 					available_funds -= projected_social_spending;
-					actual_social_spending = projected_social_spending;
+					actual_social_spending.set(projected_social_spending);
 
 					if (available_funds < projected_military_spending) {
-						actual_military_spending = available_funds;
+						actual_military_spending.set(available_funds);
 						actual_import_subsidies = 0;
 					} else {
 						available_funds -= projected_military_spending;
-						actual_military_spending = projected_military_spending;
+						actual_military_spending.set(projected_military_spending);
 
-						actual_import_subsidies = std::min(available_funds, projected_import_subsidies);
+						actual_import_subsidies = std::min(available_funds, projected_import_subsidies_copy);
 					}
 				}
 			}
@@ -1887,17 +2026,17 @@ void CountryInstance::country_tick_before_map(InstanceManager& instance_manager)
 		data.clear_daily_recorded_data();
 	}
 
-	if (has_import_subsidies()) {
-		actual_net_tariffs = -actual_import_subsidies;
-	} else {
-		actual_net_tariffs = 0;
-	}
+	actual_net_tariffs.set(
+		has_import_subsidies.get()
+		? -actual_import_subsidies
+		: fixed_point_t::_0
+	);
 	taxable_income_by_pop_type.fill(0);
 	const fixed_point_t total_expenses = actual_import_subsidies
-		+ actual_administration_spending
-		+ actual_education_spending
-		+ actual_military_spending
-		+ actual_social_spending;
+		+ actual_administration_spending.get_untracked()
+		+ actual_education_spending.get_untracked()
+		+ actual_military_spending.get_untracked()
+		+ actual_social_spending.get_untracked();
 		//TODO: + factory subsidies
 		//TODO: + interest
 		//TODO: + diplomatic costs
@@ -1965,8 +2104,9 @@ void CountryInstance::country_tick_after_map(InstanceManager& instance_manager) 
 		}
 	}
 
-	gold_income = country_defines.get_gold_to_cash_rate() * total_gold_production;
-	cash_stockpile += gold_income;
+	const fixed_point_t gold_income_value = country_defines.get_gold_to_cash_rate() * total_gold_production;
+	gold_income.set(gold_income_value);
+	cash_stockpile += gold_income_value;
 }
 
 CountryInstance::good_data_t::good_data_t()
@@ -1992,7 +2132,7 @@ void CountryInstance::good_data_t::clear_daily_recorded_data() {
 
 void CountryInstance::report_pop_income_tax(PopType const& pop_type, const fixed_point_t gross_income, const fixed_point_t paid_as_tax) {
 	const std::lock_guard<std::mutex> lock_guard { *taxable_income_mutex };
-	taxable_income_by_pop_type[pop_type] += gross_income;
+	taxable_income_by_pop_type.at(pop_type) += gross_income;
 	cash_stockpile += paid_as_tax;
 }
 
@@ -2035,55 +2175,57 @@ void CountryInstance::report_output(ProductionType const& production_type, const
 	good_data.production_per_production_type[&production_type] += quantity;
 }
 
-void CountryInstance::request_salaries_and_welfare_and_import_subsidies(Pop& pop) const {
+void CountryInstance::request_salaries_and_welfare_and_import_subsidies(Pop& pop) {
 	PopType const& pop_type = *pop.get_type();
 	const pop_size_t pop_size = pop.get_size();
-	const fixed_point_t corruption_cost_multiplier = get_corruption_cost_multiplier();
+	const fixed_point_t corruption_cost_multiplier_value = corruption_cost_multiplier.get();
 	SharedPopTypeValues const& pop_type_values = shared_country_values.get_shared_pop_type_values(pop_type);
 	ModifierEffectCache const& modifier_effect_cache = shared_country_values.get_modifier_effect_cache();
 
-	if (actual_administration_spending > fixed_point_t::_0) {
+	const fixed_point_t actual_administration_spending_value;
+	if (actual_administration_spending_value > fixed_point_t::_0) {
 		const fixed_point_t administration_salary = fixed_point_t::mul_div(
-			pop_size * calculate_administration_salary_base(pop_type_values, corruption_cost_multiplier),
-			actual_administration_spending,
-			projected_administration_spending_unscaled_by_slider
+			pop_size * calculate_administration_salary_base(pop_type_values, corruption_cost_multiplier_value),
+			actual_administration_spending_value,
+			projected_administration_spending_unscaled_by_slider.get_untracked()
 		) / Pop::size_denominator;
 		if (administration_salary > fixed_point_t::_0) {
 			pop.add_government_salary_administration(administration_salary);
 		}
 	}
 
-	if (actual_education_spending > fixed_point_t::_0) {
+	const fixed_point_t actual_education_spending_value;
+	if (actual_education_spending_value > fixed_point_t::_0) {
 		const fixed_point_t education_salary = fixed_point_t::mul_div(
-			pop_size * calculate_education_salary_base(pop_type_values, corruption_cost_multiplier),
-			actual_education_spending,
-			projected_education_spending_unscaled_by_slider
+			pop_size * calculate_education_salary_base(pop_type_values, corruption_cost_multiplier_value),
+			actual_education_spending_value,
+			projected_education_spending_unscaled_by_slider.get_untracked()
 		) / Pop::size_denominator;
 		if (education_salary > fixed_point_t::_0) {
 			pop.add_government_salary_education(education_salary);
 		}
 	}
 
-	if (actual_military_spending > fixed_point_t::_0) {
+	const fixed_point_t actual_military_spending_value;
+	if (actual_military_spending_value > fixed_point_t::_0) {
 		const fixed_point_t military_salary = fixed_point_t::mul_div(
-			pop_size * calculate_military_salary_base(pop_type_values, corruption_cost_multiplier),
-			actual_military_spending,
-			projected_military_spending_unscaled_by_slider
+			pop_size * calculate_military_salary_base(pop_type_values, corruption_cost_multiplier_value),
+			actual_military_spending_value,
+			projected_military_spending_unscaled_by_slider.get_untracked()
 		) / Pop::size_denominator;
 		if (military_salary > fixed_point_t::_0) {
 			pop.add_government_salary_military(military_salary);
 		}
 	}
 
-	if (actual_social_spending > fixed_point_t::_0) {
-		const fixed_point_t projected_social_spending_unscaled_by_slider =
-			projected_pensions_spending_unscaled_by_slider
-			+ projected_unemployment_subsidies_spending_unscaled_by_slider;
+	const fixed_point_t actual_social_spending_value = actual_social_spending.get_untracked();
+	if (actual_social_spending_value > fixed_point_t::_0) {
+		const fixed_point_t projected_social_spending_unscaled_by_slider_value = projected_social_spending_unscaled_by_slider.get();
 
 		const fixed_point_t pension_income = fixed_point_t::mul_div(
 			pop_size * calculate_pensions_base(modifier_effect_cache, pop_type_values),
-			actual_social_spending,
-			projected_social_spending_unscaled_by_slider
+			actual_social_spending_value,
+			projected_social_spending_unscaled_by_slider_value
 		) / Pop::size_denominator;
 		if (pension_income > fixed_point_t::_0) {
 			pop.add_pensions(pension_income);
@@ -2091,26 +2233,27 @@ void CountryInstance::request_salaries_and_welfare_and_import_subsidies(Pop& pop
 
 		const fixed_point_t unemployment_subsidies = fixed_point_t::mul_div(
 			pop.get_unemployed() * calculate_unemployment_subsidies_base(modifier_effect_cache, pop_type_values),
-			actual_social_spending,
-			projected_social_spending_unscaled_by_slider
+			actual_social_spending_value,
+			projected_social_spending_unscaled_by_slider_value
 		) / Pop::size_denominator;
 		if (unemployment_subsidies > fixed_point_t::_0) {
 			pop.add_unemployment_subsidies(unemployment_subsidies);
 		}
 	}
 
-	if (actual_net_tariffs < fixed_point_t::_0) {
+	const fixed_point_t actual_net_tariffs_value = actual_net_tariffs.get_untracked();
+	if (actual_net_tariffs_value < fixed_point_t::_0) {
 		const fixed_point_t import_subsidies = fixed_point_t::mul_div(
-			effective_tariff_rate // < 0
+			effective_tariff_rate.get() // < 0
 				* pop.get_yesterdays_import_value().get_copy_of_value(),
-			actual_net_tariffs, // < 0
-			projected_import_subsidies // > 0
+			actual_net_tariffs_value, // < 0
+			projected_import_subsidies.get() // > 0
 		); //effective_tariff_rate * actual_net_tariffs cancel out the negative
 		pop.add_import_subsidies(import_subsidies);
 	}
 }
 
-fixed_point_t CountryInstance::calculate_minimum_wage_base(PopType const& pop_type) const {
+fixed_point_t CountryInstance::calculate_minimum_wage_base(PopType const& pop_type) {
 	if (pop_type.get_is_slave()) {
 		return 0;
 	}
@@ -2122,11 +2265,12 @@ fixed_point_t CountryInstance::calculate_minimum_wage_base(PopType const& pop_ty
 }
 
 fixed_point_t CountryInstance::apply_tariff(const fixed_point_t money_spent_on_imports) {
-	if (effective_tariff_rate <= fixed_point_t::_0) {
+	const fixed_point_t effective_tariff_rate_value = effective_tariff_rate.get();
+	if (effective_tariff_rate_value <= fixed_point_t::_0) {
 		return 0;
 	}
 
-	const fixed_point_t tariff = effective_tariff_rate * money_spent_on_imports;
+	const fixed_point_t tariff = effective_tariff_rate_value * money_spent_on_imports;
 	const std::lock_guard<std::mutex> lock_guard { *actual_net_tariffs_mutex };
 	actual_net_tariffs += tariff;
 	return tariff;
@@ -2160,28 +2304,28 @@ void CountryInstanceManager::update_rankings(Date today, DefineManager const& de
 
 	std::sort(
 		total_ranking.begin(), total_ranking.end(),
-		[](CountryInstance const* a, CountryInstance const* b) -> bool {
+		[](CountryInstance* a, CountryInstance* b) -> bool {
 			const bool a_civilised = a->is_civilised();
 			const bool b_civilised = b->is_civilised();
-			return a_civilised != b_civilised ? a_civilised : a->get_total_score() > b->get_total_score();
+			return a_civilised != b_civilised ? a_civilised : a->total_score.get() > b->total_score.get();
 		}
 	);
 	std::sort(
 		prestige_ranking.begin(), prestige_ranking.end(),
 		[](CountryInstance const* a, CountryInstance const* b) -> bool {
-			return a->get_prestige() > b->get_prestige();
+			return a->prestige.get_untracked() > b->prestige.get_untracked();
 		}
 	);
 	std::sort(
 		industrial_power_ranking.begin(), industrial_power_ranking.end(),
 		[](CountryInstance const* a, CountryInstance const* b) -> bool {
-			return a->get_industrial_power() > b->get_industrial_power();
+			return a->industrial_power.get_untracked() > b->industrial_power.get_untracked();
 		}
 	);
 	std::sort(
 		military_power_ranking.begin(), military_power_ranking.end(),
-		[](CountryInstance const* a, CountryInstance const* b) -> bool {
-			return a->get_military_power() > b->get_military_power();
+		[](CountryInstance* a, CountryInstance* b) -> bool {
+			return a->military_power.get() > b->military_power.get();
 		}
 	);
 
@@ -2324,6 +2468,7 @@ bool CountryInstanceManager::generate_country_instances(
 
 	for (CountryDefinition const& country_definition : country_definition_manager.get_country_definitions()) {
 		if (country_instances.add_item({
+			*this,
 			&country_definition,
 			get_country_instance_count(),
 			building_type_keys,
@@ -2374,73 +2519,76 @@ bool CountryInstanceManager::apply_history_to_countries(InstanceManager& instanc
 	for (CountryInstance& country_instance : country_instances.get_items()) {
 		country_instance.last_war_loss_date = starting_last_war_loss_date;
 
-		if (!country_instance.get_country_definition()->is_dynamic_tag()) {
-			CountryHistoryMap const* history_map =
-				history_manager.get_country_history(country_instance.get_country_definition());
+		CountryDefinition const& definition = *country_instance.country_definition;
+		if (definition.is_dynamic_tag()) {
+			continue;
+		}
 
-			if (history_map != nullptr) {
-				static constexpr fixed_point_t DEFAULT_STATE_CULTURE_LITERACY = fixed_point_t::_0_50;
-				CountryHistoryEntry const* oob_history_entry = nullptr;
-				std::optional<fixed_point_t> state_culture_consciousness;
-				std::optional<fixed_point_t> nonstate_culture_consciousness;
-				fixed_point_t state_culture_literacy = DEFAULT_STATE_CULTURE_LITERACY;
-				std::optional<fixed_point_t> nonstate_culture_literacy;
+		CountryHistoryMap const* history_map = history_manager.get_country_history(definition);
 
-				for (auto const& [entry_date, entry] : history_map->get_entries()) {
-					if (entry_date <= today) {
-						ret &= country_instance.apply_history_to_country(*entry, instance_manager);
+		if (history_map == nullptr) {
+			Logger::error("Country ", country_instance.get_identifier(), " has no history!");
+			ret = false;
+			continue;
+		}
 
-						if (entry->get_initial_oob().has_value()) {
-							oob_history_entry = entry.get();
-						}
-						if (entry->get_consciousness().has_value()) {
-							state_culture_consciousness = entry->get_consciousness();
-						}
-						if (entry->get_nonstate_consciousness().has_value()) {
-							nonstate_culture_consciousness = entry->get_nonstate_consciousness();
-						}
-						if (entry->get_literacy().has_value()) {
-							state_culture_literacy = *entry->get_literacy();
-						}
-						if (entry->get_nonstate_culture_literacy().has_value()) {
-							nonstate_culture_literacy = entry->get_nonstate_culture_literacy();
-						}
-					} else {
-						// All foreign investments are applied regardless of the bookmark's date
-						country_instance.apply_foreign_investments(entry->get_foreign_investment(), *this);
-					}
+		static constexpr fixed_point_t DEFAULT_STATE_CULTURE_LITERACY = fixed_point_t::_0_50;
+		CountryHistoryEntry const* oob_history_entry = nullptr;
+		std::optional<fixed_point_t> state_culture_consciousness;
+		std::optional<fixed_point_t> nonstate_culture_consciousness;
+		fixed_point_t state_culture_literacy = DEFAULT_STATE_CULTURE_LITERACY;
+		std::optional<fixed_point_t> nonstate_culture_literacy;
+
+		for (auto const& [entry_date, entry] : history_map->get_entries()) {
+			if (entry_date <= today) {
+				ret &= country_instance.apply_history_to_country(*entry, instance_manager);
+
+				if (entry->get_initial_oob().has_value()) {
+					oob_history_entry = entry.get();
 				}
-
-				if (oob_history_entry != nullptr) {
-					ret &= unit_instance_manager.generate_deployment(
-						map_instance, country_instance, *oob_history_entry->get_initial_oob()
-					);
+				if (entry->get_consciousness().has_value()) {
+					state_culture_consciousness = entry->get_consciousness();
 				}
-
-				// TODO - check if better to do "if"s then "for"s, so looping multiple times rather than having lots of
-				// redundant "if" statements?
-				for (ProvinceInstance* province : country_instance.get_owned_provinces()) {
-					for (Pop& pop : province->get_mutable_pops()) {
-						if (country_instance.is_primary_or_accepted_culture(pop.get_culture())) {
-							pop.set_literacy(state_culture_literacy);
-
-							if (state_culture_consciousness.has_value()) {
-								pop.set_consciousness(*state_culture_consciousness);
-							}
-						} else {
-							if (nonstate_culture_literacy.has_value()) {
-								pop.set_literacy(*nonstate_culture_literacy);
-							}
-
-							if (nonstate_culture_consciousness.has_value()) {
-								pop.set_consciousness(*nonstate_culture_consciousness);
-							}
-						}
-					}
+				if (entry->get_nonstate_consciousness().has_value()) {
+					nonstate_culture_consciousness = entry->get_nonstate_consciousness();
+				}
+				if (entry->get_literacy().has_value()) {
+					state_culture_literacy = *entry->get_literacy();
+				}
+				if (entry->get_nonstate_culture_literacy().has_value()) {
+					nonstate_culture_literacy = entry->get_nonstate_culture_literacy();
 				}
 			} else {
-				Logger::error("Country ", country_instance.get_identifier(), " has no history!");
-				ret = false;
+				// All foreign investments are applied regardless of the bookmark's date
+				country_instance.apply_foreign_investments(entry->get_foreign_investment(), *this);
+			}
+		}
+
+		if (oob_history_entry != nullptr) {
+			ret &= unit_instance_manager.generate_deployment(
+				map_instance, country_instance, *oob_history_entry->get_initial_oob()
+			);
+		}
+
+		// TODO - check if better to do "if"s then "for"s, so looping multiple times rather than having lots of
+		// redundant "if" statements?
+		for (ProvinceInstance* province : country_instance.get_owned_provinces()) {
+			for (Pop& pop : province->get_mutable_pops()) {
+				if (country_instance.is_primary_or_accepted_culture(pop.get_culture())) {
+					pop.set_literacy(state_culture_literacy);
+
+					if (state_culture_consciousness.has_value()) {
+						pop.set_consciousness(*state_culture_consciousness);
+					}
+				} else {
+					if (nonstate_culture_literacy.has_value()) {
+						pop.set_literacy(*nonstate_culture_literacy);
+					}
+
+					if (nonstate_culture_consciousness.has_value()) {
+						pop.set_consciousness(*nonstate_culture_consciousness);
+					}
+				}
 			}
 		}
 	}

@@ -574,7 +574,7 @@ bool PopManager::generate_modifiers(ModifierManager& modifier_manager) const {
 
 	static constexpr bool HAS_NO_EFFECT = true;
 
-	IndexedMap<Strata, ModifierEffectCache::strata_effects_t>& strata_effects =
+	IndexedMap<Strata, strata_effects_t>& strata_effects =
 		modifier_manager.modifier_effect_cache.strata_effects;
 
 	strata_effects.set_keys(get_stratas());
@@ -591,7 +591,7 @@ bool PopManager::generate_modifiers(ModifierManager& modifier_manager) const {
 			);
 		};
 
-		ModifierEffectCache::strata_effects_t& this_strata_effects = strata_effects[strata];
+		strata_effects_t& this_strata_effects = strata_effects[strata];
 
 		strata_modifier(this_strata_effects.income_modifier, "_income_modifier", FORMAT_x100_1DP_PC_POS, HAS_NO_EFFECT);
 		strata_modifier(this_strata_effects.vote, "_vote", FORMAT_x100_1DP_PC_POS);

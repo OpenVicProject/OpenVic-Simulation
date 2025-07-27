@@ -20,6 +20,109 @@ namespace OpenVic {
 	struct TechnologyFolder;
 	struct TerrainTypeManager;
 	struct TerrainType;
+	
+	struct building_type_effects_t {
+		friend struct BuildingTypeManager;
+
+	private:
+		ModifierEffect const* PROPERTY(min_level, nullptr);
+		ModifierEffect const* PROPERTY(max_level, nullptr);
+
+	public:
+		building_type_effects_t() = default;
+	};
+
+	
+	struct good_effects_t {
+		friend struct GoodDefinitionManager;
+
+	private:
+		ModifierEffect const* PROPERTY(artisan_goods_input, nullptr);
+		ModifierEffect const* PROPERTY(artisan_goods_output, nullptr);
+		ModifierEffect const* PROPERTY(artisan_goods_throughput, nullptr);
+		ModifierEffect const* PROPERTY(factory_goods_input, nullptr);
+		ModifierEffect const* PROPERTY(factory_goods_output, nullptr);
+		ModifierEffect const* PROPERTY(factory_goods_throughput, nullptr);
+		ModifierEffect const* PROPERTY(rgo_goods_input, nullptr);
+		ModifierEffect const* PROPERTY(rgo_goods_output, nullptr);
+		ModifierEffect const* PROPERTY(rgo_goods_throughput, nullptr);
+		ModifierEffect const* PROPERTY(rgo_size, nullptr);
+
+	public:
+		good_effects_t() = default;
+	};
+	
+	struct unit_type_effects_t {
+		friend struct UnitTypeManager;
+
+	private:
+		ModifierEffect const* PROPERTY(attack, nullptr);
+		ModifierEffect const* PROPERTY(defence, nullptr);
+		ModifierEffect const* PROPERTY(default_organisation, nullptr);
+		ModifierEffect const* PROPERTY(maximum_speed, nullptr);
+		ModifierEffect const* PROPERTY(build_time, nullptr);
+		ModifierEffect const* PROPERTY(supply_consumption, nullptr);
+
+	protected:
+		unit_type_effects_t() = default;
+	};
+
+	struct regiment_type_effects_t : unit_type_effects_t {
+		friend struct UnitTypeManager;
+
+	private:
+		ModifierEffect const* PROPERTY(reconnaissance, nullptr);
+		ModifierEffect const* PROPERTY(discipline, nullptr);
+		ModifierEffect const* PROPERTY(support, nullptr);
+		ModifierEffect const* PROPERTY(maneuver, nullptr);
+		ModifierEffect const* PROPERTY(siege, nullptr);
+
+	public:
+		regiment_type_effects_t() = default;
+	};
+
+	struct ship_type_effects_t : unit_type_effects_t {
+		friend struct UnitTypeManager;
+
+	private:
+		ModifierEffect const* PROPERTY(colonial_points, nullptr);
+		ModifierEffect const* PROPERTY(supply_consumption_score, nullptr);
+		ModifierEffect const* PROPERTY(hull, nullptr);
+		ModifierEffect const* PROPERTY(gun_power, nullptr);
+		ModifierEffect const* PROPERTY(fire_range, nullptr);
+		ModifierEffect const* PROPERTY(evasion, nullptr);
+		ModifierEffect const* PROPERTY(torpedo_attack, nullptr);
+
+	public:
+		ship_type_effects_t() = default;
+	};
+	
+	struct strata_effects_t {
+		friend struct PopManager;
+
+	private:
+		ModifierEffect const* PROPERTY(income_modifier, nullptr);
+		ModifierEffect const* PROPERTY(vote, nullptr);
+		ModifierEffect const* PROPERTY(life_needs, nullptr);
+		ModifierEffect const* PROPERTY(everyday_needs, nullptr);
+		ModifierEffect const* PROPERTY(luxury_needs, nullptr);
+
+	public:
+		strata_effects_t() = default;
+	};
+
+	struct unit_terrain_effects_t {
+		friend struct TerrainTypeManager;
+
+	private:
+		ModifierEffect const* PROPERTY(attack, nullptr);
+		ModifierEffect const* PROPERTY(defence, nullptr);
+		ModifierEffect const* PROPERTY(attrition, nullptr);
+		ModifierEffect const* PROPERTY(movement, nullptr);
+
+	public:
+		unit_terrain_effects_t() = default;
+	};
 
 	struct ModifierEffectCache {
 		friend struct ModifierManager;
@@ -207,115 +310,14 @@ namespace OpenVic {
 		ModifierEffect const* PROPERTY(reliability, nullptr);
 		ModifierEffect const* PROPERTY(speed, nullptr);
 
-		/* BuildingType Effects */
-	public:
-		struct building_type_effects_t {
-			friend struct BuildingTypeManager;
-
-		private:
-			ModifierEffect const* PROPERTY(min_level, nullptr);
-			ModifierEffect const* PROPERTY(max_level, nullptr);
-
-		public:
-			building_type_effects_t() = default;
-		};
-
-	private:
 		IndexedMap<BuildingType, building_type_effects_t> PROPERTY(building_type_effects);
-
-		/* GoodDefinition Effects */
-	public:
-		struct good_effects_t {
-			friend struct GoodDefinitionManager;
-
-		private:
-			ModifierEffect const* PROPERTY(artisan_goods_input, nullptr);
-			ModifierEffect const* PROPERTY(artisan_goods_output, nullptr);
-			ModifierEffect const* PROPERTY(artisan_goods_throughput, nullptr);
-			ModifierEffect const* PROPERTY(factory_goods_input, nullptr);
-			ModifierEffect const* PROPERTY(factory_goods_output, nullptr);
-			ModifierEffect const* PROPERTY(factory_goods_throughput, nullptr);
-			ModifierEffect const* PROPERTY(rgo_goods_input, nullptr);
-			ModifierEffect const* PROPERTY(rgo_goods_output, nullptr);
-			ModifierEffect const* PROPERTY(rgo_goods_throughput, nullptr);
-			ModifierEffect const* PROPERTY(rgo_size, nullptr);
-
-		public:
-			good_effects_t() = default;
-		};
-
-	private:
 		IndexedMap<GoodDefinition, good_effects_t> PROPERTY(good_effects);
 
 		/* UnitType Effects */
-	public:
-		struct unit_type_effects_t {
-			friend struct UnitTypeManager;
-
-		private:
-			ModifierEffect const* PROPERTY(attack, nullptr);
-			ModifierEffect const* PROPERTY(defence, nullptr);
-			ModifierEffect const* PROPERTY(default_organisation, nullptr);
-			ModifierEffect const* PROPERTY(maximum_speed, nullptr);
-			ModifierEffect const* PROPERTY(build_time, nullptr);
-			ModifierEffect const* PROPERTY(supply_consumption, nullptr);
-
-		protected:
-			unit_type_effects_t() = default;
-		};
-
-		struct regiment_type_effects_t : unit_type_effects_t {
-			friend struct UnitTypeManager;
-
-		private:
-			ModifierEffect const* PROPERTY(reconnaissance, nullptr);
-			ModifierEffect const* PROPERTY(discipline, nullptr);
-			ModifierEffect const* PROPERTY(support, nullptr);
-			ModifierEffect const* PROPERTY(maneuver, nullptr);
-			ModifierEffect const* PROPERTY(siege, nullptr);
-
-		public:
-			regiment_type_effects_t() = default;
-		};
-
-		struct ship_type_effects_t : unit_type_effects_t {
-			friend struct UnitTypeManager;
-
-		private:
-			ModifierEffect const* PROPERTY(colonial_points, nullptr);
-			ModifierEffect const* PROPERTY(supply_consumption_score, nullptr);
-			ModifierEffect const* PROPERTY(hull, nullptr);
-			ModifierEffect const* PROPERTY(gun_power, nullptr);
-			ModifierEffect const* PROPERTY(fire_range, nullptr);
-			ModifierEffect const* PROPERTY(evasion, nullptr);
-			ModifierEffect const* PROPERTY(torpedo_attack, nullptr);
-
-		public:
-			ship_type_effects_t() = default;
-		};
-
-	private:
 		regiment_type_effects_t PROPERTY(army_base_effects);
 		IndexedMap<RegimentType, regiment_type_effects_t> PROPERTY(regiment_type_effects);
 		ship_type_effects_t PROPERTY(navy_base_effects);
 		IndexedMap<ShipType, ship_type_effects_t> PROPERTY(ship_type_effects);
-
-		/* Unit terrain Effects */
-	public:
-		struct unit_terrain_effects_t {
-			friend struct TerrainTypeManager;
-
-		private:
-			ModifierEffect const* PROPERTY(attack, nullptr);
-			ModifierEffect const* PROPERTY(defence, nullptr);
-			ModifierEffect const* PROPERTY(attrition, nullptr);
-			ModifierEffect const* PROPERTY(movement, nullptr);
-
-		public:
-			unit_terrain_effects_t() = default;
-		};
-
-	private:
 		IndexedMap<TerrainType, unit_terrain_effects_t> PROPERTY(unit_terrain_effects);
 
 		/* Rebel Effects */
@@ -323,22 +325,6 @@ namespace OpenVic {
 		IndexedMap<RebelType, ModifierEffect const*> PROPERTY(rebel_org_gain_effects);
 
 		/* Pop Effects */
-	public:
-		struct strata_effects_t {
-			friend struct PopManager;
-
-		private:
-			ModifierEffect const* PROPERTY(income_modifier, nullptr);
-			ModifierEffect const* PROPERTY(vote, nullptr);
-			ModifierEffect const* PROPERTY(life_needs, nullptr);
-			ModifierEffect const* PROPERTY(everyday_needs, nullptr);
-			ModifierEffect const* PROPERTY(luxury_needs, nullptr);
-
-		public:
-			strata_effects_t() = default;
-		};
-
-	private:
 		IndexedMap<Strata, strata_effects_t> PROPERTY(strata_effects);
 
 		/* Technology Effects */
