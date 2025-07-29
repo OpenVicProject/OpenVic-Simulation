@@ -38,6 +38,11 @@ Comment: plf::colony
 Copyright: 2019, mattreecebentley
 License: Zlib
 
+Files: src/openvic-simulation/types/Signal.hpp
+Comment: sigslot
+Copyright: 2017, Pierre-Antoine Lacaze
+License: Expat
+
 Files: tests/deps/snitch/*
 Comment: snitch
 Copyright: 2022-present snitch-org
