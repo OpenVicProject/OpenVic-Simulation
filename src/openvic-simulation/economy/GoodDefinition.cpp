@@ -136,7 +136,7 @@ bool GoodDefinitionManager::generate_modifiers(ModifierManager& modifier_manager
 	using enum ModifierEffect::format_t;
 	using enum ModifierEffect::target_t;
 
-	IndexedMap<GoodDefinition, ModifierEffectCache::good_effects_t>& good_effects =
+	IndexedMap<GoodDefinition, good_effects_t>& good_effects =
 		modifier_manager.modifier_effect_cache.good_effects;
 
 	good_effects.set_keys(get_good_definitions());
@@ -156,7 +156,7 @@ bool GoodDefinitionManager::generate_modifiers(ModifierManager& modifier_manager
 
 	for (GoodDefinition const& good : get_good_definitions()) {
 		const std::string_view good_identifier = good.get_identifier();
-		ModifierEffectCache::good_effects_t& this_good_effects = good_effects[good];
+		good_effects_t& this_good_effects = good_effects[good];
 
 		const auto good_modifier = [&modifier_manager, &ret, &good_identifier](
 			ModifierEffect const*& effect_cache, std::string_view name, ModifierEffect::format_t format,

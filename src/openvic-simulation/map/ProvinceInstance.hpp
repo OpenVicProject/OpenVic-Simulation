@@ -14,6 +14,7 @@
 #include "openvic-simulation/pop/Pop.hpp"
 #include "openvic-simulation/types/FlagStrings.hpp"
 #include "openvic-simulation/types/HasIdentifier.hpp"
+#include "openvic-simulation/types/IndexedFlatMap.hpp"
 #include "openvic-simulation/types/OrderedContainers.hpp"
 #include "openvic-simulation/utility/Containers.hpp"
 #include "openvic-simulation/utility/ForwardableSpan.hpp"
@@ -102,11 +103,15 @@ namespace OpenVic {
 		Crime const* PROPERTY_RW(crime, nullptr);
 		ResourceGatheringOperation PROPERTY(rgo);
 		IdentifierRegistry<BuildingInstance> IDENTIFIER_REGISTRY(building, false);
-		memory::vector<ArmyInstance*> PROPERTY(armies);
-		memory::vector<NavyInstance*> PROPERTY(navies);
+		memory::vector<ArmyInstance*> SPAN_PROPERTY(armies);
+		memory::vector<NavyInstance*> SPAN_PROPERTY(navies);
 		// The number of land regiments currently in the province, including those being transported by navies
 		size_t PROPERTY(land_regiment_count, 0);
 		Timespan PROPERTY(occupation_duration);
+
+		constexpr static fixed_point_t& div_by_zero_return_0(fixed_point_t& lhs, pop_size_t const& rhs) {
+			return lhs = fixed_point_t::_0;
+		}
 
 	public:
 		UNIT_BRANCHED_GETTER(get_unit_instance_groups, armies, navies);
@@ -121,16 +126,16 @@ namespace OpenVic {
 		fixed_point_t PROPERTY(average_consciousness);
 		fixed_point_t PROPERTY(average_militancy);
 
-		IndexedMap<Strata, pop_size_t> PROPERTY(population_by_strata);
-		IndexedMap<Strata, fixed_point_t> PROPERTY(militancy_by_strata);
-		IndexedMap<Strata, fixed_point_t> PROPERTY(life_needs_fulfilled_by_strata);
-		IndexedMap<Strata, fixed_point_t> PROPERTY(everyday_needs_fulfilled_by_strata);
-		IndexedMap<Strata, fixed_point_t> PROPERTY(luxury_needs_fulfilled_by_strata);
+		IndexedFlatMap<Strata, pop_size_t> PROPERTY(population_by_strata);
+		IndexedFlatMap<Strata, fixed_point_t> PROPERTY(militancy_by_strata);
+		IndexedFlatMap<Strata, fixed_point_t> PROPERTY(life_needs_fulfilled_by_strata);
+		IndexedFlatMap<Strata, fixed_point_t> PROPERTY(everyday_needs_fulfilled_by_strata);
+		IndexedFlatMap<Strata, fixed_point_t> PROPERTY(luxury_needs_fulfilled_by_strata);
 
-		IndexedMap<PopType, pop_size_t> PROPERTY(pop_type_distribution);
-		IndexedMap<PopType, pop_size_t> PROPERTY(pop_type_unemployed_count);
-		IndexedMap<PopType, memory::vector<Pop*>> PROPERTY(pops_cache_by_type);
-		IndexedMap<Ideology, fixed_point_t> PROPERTY(ideology_distribution);
+		IndexedFlatMap<PopType, pop_size_t> PROPERTY(pop_type_distribution);
+		IndexedFlatMap<PopType, pop_size_t> PROPERTY(pop_type_unemployed_count);
+		IndexedFlatMap<PopType, memory::vector<Pop*>> PROPERTY(pops_cache_by_type);
+		IndexedFlatMap<Ideology, fixed_point_t> PROPERTY(ideology_distribution);
 		fixed_point_map_t<Issue const*> PROPERTY(issue_distribution);
 		IndexedMap<CountryParty, fixed_point_t> PROPERTY(vote_distribution);
 		fixed_point_map_t<Culture const*> PROPERTY(culture_distribution);
@@ -196,32 +201,32 @@ namespace OpenVic {
 		// to get the support as a proportion of 1.0
 
 		constexpr pop_size_t get_pop_type_proportion(PopType const& pop_type) const {
-			return pop_type_distribution[pop_type];
+			return pop_type_distribution.at(pop_type);
 		}
 		constexpr pop_size_t get_pop_type_unemployed(PopType const& pop_type) const {
-			return pop_type_unemployed_count[pop_type];
+			return pop_type_unemployed_count.at(pop_type);
 		}
 		constexpr fixed_point_t get_ideology_support(Ideology const& ideology) const {
-			return ideology_distribution[ideology];
+			return ideology_distribution.at(ideology);
 		}
 		fixed_point_t get_issue_support(Issue const& issue) const;
 		fixed_point_t get_party_support(CountryParty const& party) const;
 		fixed_point_t get_culture_proportion(Culture const& culture) const;
 		fixed_point_t get_religion_proportion(Religion const& religion) const;
 		constexpr pop_size_t get_strata_population(Strata const& strata) const {
-			return population_by_strata[strata];
+			return population_by_strata.at(strata);
 		}
 		constexpr fixed_point_t get_strata_militancy(Strata const& strata) const {
-			return militancy_by_strata[strata];
+			return militancy_by_strata.at(strata);
 		}
 		constexpr fixed_point_t get_strata_life_needs_fulfilled(Strata const& strata) const {
-			return life_needs_fulfilled_by_strata[strata];
+			return life_needs_fulfilled_by_strata.at(strata);
 		}
 		constexpr fixed_point_t get_strata_everyday_needs_fulfilled(Strata const& strata) const {
-			return everyday_needs_fulfilled_by_strata[strata];
+			return everyday_needs_fulfilled_by_strata.at(strata);
 		}
 		constexpr fixed_point_t get_strata_luxury_needs_fulfilled(Strata const& strata) const {
-			return luxury_needs_fulfilled_by_strata[strata];
+			return luxury_needs_fulfilled_by_strata.at(strata);
 		}
 
 		bool expand_building(size_t building_index);

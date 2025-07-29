@@ -115,7 +115,7 @@ bool BuildingTypeManager::load_buildings_file(
 	)(root);
 	lock_building_types();
 
-	IndexedMap<BuildingType, ModifierEffectCache::building_type_effects_t>& building_type_effects =
+	IndexedMap<BuildingType, building_type_effects_t>& building_type_effects =
 		modifier_manager.modifier_effect_cache.building_type_effects;
 
 	building_type_effects.set_keys(get_building_types());
@@ -124,7 +124,7 @@ bool BuildingTypeManager::load_buildings_file(
 		using enum ModifierEffect::format_t;
 		using enum ModifierEffect::target_t;
 
-		ModifierEffectCache::building_type_effects_t& this_building_type_effects = building_type_effects[building_type];
+		building_type_effects_t& this_building_type_effects = building_type_effects[building_type];
 
 		static constexpr std::string_view max_prefix = "max_";
 		static constexpr std::string_view min_prefix = "min_build_";

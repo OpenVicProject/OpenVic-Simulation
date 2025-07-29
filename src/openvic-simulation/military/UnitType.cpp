@@ -311,7 +311,7 @@ bool UnitTypeManager::generate_modifiers(ModifierManager& modifier_manager) cons
 	bool ret = true;
 
 	const auto generate_stat_modifiers = [&modifier_manager, &ret](
-		std::derived_from<ModifierEffectCache::unit_type_effects_t> auto unit_type_effects, std::string_view identifier
+		std::derived_from<unit_type_effects_t> auto unit_type_effects, std::string_view identifier
 	) -> void {
 		using enum ModifierEffect::format_t;
 
@@ -330,7 +330,7 @@ bool UnitTypeManager::generate_modifiers(ModifierManager& modifier_manager) cons
 		// These are ordered following how they appear in the base game, hence the broken up land effects.
 		stat_modifier(unit_type_effects.default_organisation, "default_organisation", FORMAT_x1_1DP_POS, "DEFAULT_ORG");
 		stat_modifier(unit_type_effects.build_time, "build_time", FORMAT_x1_0DP_DAYS_NEG, "BUILD_TIME");
-		if constexpr (std::same_as<decltype(unit_type_effects), ModifierEffectCache::regiment_type_effects_t>) {
+		if constexpr (std::same_as<decltype(unit_type_effects), regiment_type_effects_t>) {
 			stat_modifier(
 				unit_type_effects.reconnaissance, "reconnaissance", FORMAT_x1_2DP_POS, "RECONAISSANCE" // paradox typo
 			);
@@ -338,13 +338,13 @@ bool UnitTypeManager::generate_modifiers(ModifierManager& modifier_manager) cons
 		}
 		stat_modifier(unit_type_effects.attack, "attack", FORMAT_x1_2DP_POS, "ATTACK");
 		stat_modifier(unit_type_effects.defence, "defence", FORMAT_x1_2DP_POS, "DEFENCE");
-		if constexpr (std::same_as<decltype(unit_type_effects), ModifierEffectCache::regiment_type_effects_t>) {
+		if constexpr (std::same_as<decltype(unit_type_effects), regiment_type_effects_t>) {
 			stat_modifier(unit_type_effects.discipline, "discipline", FORMAT_x100_0DP_PC_POS, "DISCIPLINE");
 			stat_modifier(unit_type_effects.support, "support", FORMAT_x100_0DP_PC_POS, "SUPPORT");
 			stat_modifier(unit_type_effects.maneuver, "maneuver", FORMAT_x1_0DP_POS, "Maneuver");
 		}
 		stat_modifier(unit_type_effects.maximum_speed, "maximum_speed", FORMAT_x1_2DP_SPEED_POS, "MAXIMUM_SPEED");
-		if constexpr(std::same_as<decltype(unit_type_effects), ModifierEffectCache::ship_type_effects_t>) {
+		if constexpr(std::same_as<decltype(unit_type_effects), ship_type_effects_t>) {
 			stat_modifier(unit_type_effects.gun_power, "gun_power", FORMAT_x1_2DP_POS, "GUN_POWER");
 			stat_modifier(unit_type_effects.torpedo_attack, "torpedo_attack", FORMAT_x1_2DP_POS, "TORPEDO_ATTACK");
 			stat_modifier(unit_type_effects.hull, "hull", FORMAT_x1_2DP_POS, "HULL");
@@ -354,7 +354,7 @@ bool UnitTypeManager::generate_modifiers(ModifierManager& modifier_manager) cons
 		stat_modifier(
 			unit_type_effects.supply_consumption, "supply_consumption", FORMAT_x100_0DP_PC_NEG, "SUPPLY_CONSUMPTION"
 		);
-		if constexpr(std::same_as<decltype(unit_type_effects), ModifierEffectCache::ship_type_effects_t>) {
+		if constexpr(std::same_as<decltype(unit_type_effects), ship_type_effects_t>) {
 			stat_modifier(
 				unit_type_effects.supply_consumption_score, "supply_consumption_score", FORMAT_x1_0DP_NEG, "SUPPLY_LOAD"
 			);
@@ -365,7 +365,7 @@ bool UnitTypeManager::generate_modifiers(ModifierManager& modifier_manager) cons
 
 	generate_stat_modifiers(modifier_manager.modifier_effect_cache.army_base_effects, "army_base");
 
-	IndexedMap<RegimentType, ModifierEffectCache::regiment_type_effects_t>& regiment_type_effects =
+	IndexedMap<RegimentType, regiment_type_effects_t>& regiment_type_effects =
 		modifier_manager.modifier_effect_cache.regiment_type_effects;
 
 	regiment_type_effects.set_keys(get_regiment_types());
@@ -376,7 +376,7 @@ bool UnitTypeManager::generate_modifiers(ModifierManager& modifier_manager) cons
 
 	generate_stat_modifiers(modifier_manager.modifier_effect_cache.navy_base_effects, "navy_base");
 
-	IndexedMap<ShipType, ModifierEffectCache::ship_type_effects_t>& ship_type_effects =
+	IndexedMap<ShipType, ship_type_effects_t>& ship_type_effects =
 		modifier_manager.modifier_effect_cache.ship_type_effects;
 
 	ship_type_effects.set_keys(get_ship_types());

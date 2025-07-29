@@ -1,7 +1,8 @@
 #pragma once
 
 #include "openvic-simulation/pop/PopNeedsMacro.hpp"
-#include "openvic-simulation/types/IndexedMap.hpp"
+#include "openvic-simulation/pop/PopType.hpp"
+#include "openvic-simulation/types/IndexedFlatMap.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
 #include "openvic-simulation/utility/Getters.hpp"
 
@@ -10,7 +11,6 @@ namespace OpenVic {
 	struct GoodInstanceManager;
 	struct ModifierEffectCache;
 	struct PopsDefines;
-	struct PopType;
 
 	struct SharedPopTypeValues {
 	private:
@@ -35,7 +35,7 @@ namespace OpenVic {
 		ModifierEffectCache const& PROPERTY(modifier_effect_cache);
 		CountryDefines const& PROPERTY(country_defines);
 		PopsDefines const& pop_defines;
-		IndexedMap<PopType, SharedPopTypeValues> PROPERTY(shared_pop_type_values);
+		IndexedFlatMap<PopType, SharedPopTypeValues> PROPERTY(shared_pop_type_values);
 
 	public:
 		SharedCountryValues(
@@ -46,6 +46,9 @@ namespace OpenVic {
 		);
 		SharedCountryValues(SharedCountryValues&&) = default;
 
+		constexpr SharedPopTypeValues const& get_shared_pop_type_values(PopType const& pop_type) const {
+			return shared_pop_type_values.at(pop_type);
+		}
 		void update_costs(GoodInstanceManager const& good_instance_manager);
 	};
 }

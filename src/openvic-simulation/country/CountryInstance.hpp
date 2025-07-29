@@ -1,7 +1,6 @@
 #pragma once
 
 #include <utility>
-#include <vector>
 
 #include "openvic-simulation/country/SharedCountryValues.hpp"
 #include "openvic-simulation/diplomacy/CountryRelation.hpp"
@@ -19,6 +18,8 @@
 #include "openvic-simulation/types/SliderValue.hpp"
 #include "openvic-simulation/utility/Getters.hpp"
 #include "openvic-simulation/utility/Containers.hpp"
+#include "openvic-simulation/utility/reactive/DerivedState.hpp"
+#include "openvic-simulation/utility/reactive/MutableState.hpp"
 
 namespace OpenVic {
 	struct CountryInstanceManager;
@@ -113,7 +114,6 @@ namespace OpenVic {
 		country_status_t PROPERTY(country_status, country_status_t::COUNTRY_STATUS_UNCIVILISED);
 		fixed_point_t PROPERTY(civilisation_progress);
 		Date PROPERTY(lose_great_power_date);
-		fixed_point_t PROPERTY(total_score);
 		size_t PROPERTY(total_rank, 0);
 
 		ordered_set<ProvinceInstance*> PROPERTY(owned_provinces);
@@ -130,7 +130,7 @@ namespace OpenVic {
 		memory::vector<ModifierInstance> PROPERTY(event_modifiers);
 
 		/* Production */
-		fixed_point_t PROPERTY(industrial_power);
+		MutableState<fixed_point_t> PROPERTY(industrial_power);
 		memory::vector<std::pair<State const*, fixed_point_t>> PROPERTY(industrial_power_from_states);
 		memory::vector<std::pair<CountryInstance const*, fixed_point_t>> PROPERTY(industrial_power_from_investments);
 		size_t PROPERTY(industrial_rank, 0);
@@ -140,20 +140,21 @@ namespace OpenVic {
 
 		/* Budget */
 		// TODO - cash stockpile change over last 30 days
-		fixed_point_t PROPERTY(gold_income);
+		MutableState<fixed_point_t> STATE_PROPERTY(gold_income);
 		moveable_atomic_fixed_point_t PROPERTY(cash_stockpile);
 		memory::unique_ptr<std::mutex> taxable_income_mutex;
-		IndexedMap<PopType, fixed_point_t> PROPERTY(taxable_income_by_pop_type);
-		fixed_point_t PROPERTY(tax_efficiency);
-		IndexedMap<Strata, fixed_point_t> PROPERTY(effective_tax_rate_by_strata);
-		IndexedMap<Strata, SliderValue> PROPERTY(tax_rate_slider_value_by_strata);
-
-		fixed_point_t PROPERTY(administrative_efficiency_from_administrators);
-		constexpr fixed_point_t get_corruption_cost_multiplier() const {
-			return 2 - administrative_efficiency_from_administrators;
+		IndexedFlatMap<PopType, fixed_point_t> PROPERTY(taxable_income_by_pop_type);
+		MutableState<fixed_point_t> STATE_PROPERTY(tax_efficiency);
+		IndexedFlatMap<Strata, DerivedState<fixed_point_t>> effective_tax_rate_by_strata;
+	public:
+		DerivedState<fixed_point_t>& get_effective_tax_rate_by_strata(Strata const& strata) {
+			return effective_tax_rate_by_strata.at(strata);
 		}
-		fixed_point_t PROPERTY(administrator_percentage);
-		fixed_point_t PROPERTY(desired_administrator_percentage);
+	private:
+		IndexedFlatMap<Strata, SliderValue> PROPERTY(tax_rate_slider_value_by_strata);
+
+		MutableState<fixed_point_t> STATE_PROPERTY(administrative_efficiency_from_administrators);
+		MutableState<fixed_point_t> STATE_PROPERTY(administrator_percentage);
 
 		//store per slider per good: desired, bought & cost
 		//store purchase record from last tick and prediction next tick
@@ -162,31 +163,26 @@ namespace OpenVic {
 		SliderValue PROPERTY(construction_spending_slider_value);
 
 		SliderValue PROPERTY(administration_spending_slider_value);
-		fixed_point_t PROPERTY(actual_administration_spending);
-		fixed_point_t PROPERTY(projected_administration_spending_unscaled_by_slider);
+		MutableState<fixed_point_t> STATE_PROPERTY(actual_administration_spending);
+		MutableState<fixed_point_t> STATE_PROPERTY(projected_administration_spending_unscaled_by_slider);
 
 		SliderValue PROPERTY(education_spending_slider_value);
-		fixed_point_t PROPERTY(actual_education_spending);
-		fixed_point_t PROPERTY(projected_education_spending_unscaled_by_slider);
+		MutableState<fixed_point_t> STATE_PROPERTY(actual_education_spending);
+		MutableState<fixed_point_t> STATE_PROPERTY(projected_education_spending_unscaled_by_slider);
 
 		SliderValue PROPERTY(military_spending_slider_value);
-		fixed_point_t PROPERTY(actual_military_spending);
-		fixed_point_t PROPERTY(projected_military_spending_unscaled_by_slider);
+		MutableState<fixed_point_t> STATE_PROPERTY(actual_military_spending);
+		MutableState<fixed_point_t> STATE_PROPERTY(projected_military_spending_unscaled_by_slider);
 
 		SliderValue PROPERTY(social_spending_slider_value);
-		fixed_point_t PROPERTY(actual_social_spending);
-		fixed_point_t PROPERTY(projected_pensions_spending_unscaled_by_slider);
-		fixed_point_t PROPERTY(projected_unemployment_subsidies_spending_unscaled_by_slider);
+		MutableState<fixed_point_t> STATE_PROPERTY(actual_social_spending);
+		MutableState<fixed_point_t> STATE_PROPERTY(projected_pensions_spending_unscaled_by_slider);
+		MutableState<fixed_point_t> STATE_PROPERTY(projected_unemployment_subsidies_spending_unscaled_by_slider);
 
-		fixed_point_t PROPERTY(yesterdays_import_value); //>= 0
+		MutableState<fixed_point_t> STATE_PROPERTY(yesterdays_import_value); //>= 0
 		SliderValue PROPERTY(tariff_rate_slider_value);
-		fixed_point_t PROPERTY(effective_tariff_rate);
 		memory::unique_ptr<std::mutex> actual_net_tariffs_mutex;
-		fixed_point_t PROPERTY(projected_import_subsidies);
-		fixed_point_t PROPERTY(actual_net_tariffs);
-		constexpr bool has_import_subsidies() const {
-			return effective_tariff_rate < fixed_point_t::_0;
-		}
+		MutableState<fixed_point_t> STATE_PROPERTY(actual_net_tariffs);
 
 		//TODO actual factory subsidies
 		//projected cost is UI only and lists the different factories
@@ -208,16 +204,15 @@ namespace OpenVic {
 
 		/* Politics */
 		NationalValue const* PROPERTY(national_value, nullptr);
-		GovernmentType const* PROPERTY(government_type, nullptr);
+		MutableState<GovernmentType const*> PROPERTY(government_type, MutableState<GovernmentType const*>{nullptr});
 		Date PROPERTY(last_election);
 		CountryParty const* PROPERTY(ruling_party, nullptr);
-		IndexedMap<Ideology, fixed_point_t> PROPERTY(upper_house);
+		IndexedFlatMap<Ideology, fixed_point_t> PROPERTY(upper_house);
 		IndexedMap<ReformGroup, Reform const*> PROPERTY(reforms);
-		fixed_point_t PROPERTY(total_administrative_multiplier);
+		MutableState<fixed_point_t> STATE_PROPERTY(total_administrative_multiplier);
 		RuleSet PROPERTY(rule_set);
 		// TODO - national issue support distribution (for just voters and for everyone)
 		IndexedMap<GovernmentType, GovernmentType const*> PROPERTY(government_flag_overrides);
-		GovernmentType const* PROPERTY(flag_government_type, nullptr);
 		fixed_point_t PROPERTY(suppression_points);
 		fixed_point_t PROPERTY(infamy); // in 0-25+ range
 		fixed_point_t PROPERTY(plurality); // in 0-100 range
@@ -234,15 +229,19 @@ namespace OpenVic {
 		fixed_point_t PROPERTY(national_consciousness);
 		fixed_point_t PROPERTY(national_militancy);
 
-		IndexedMap<Strata, pop_size_t> PROPERTY(population_by_strata);
-		IndexedMap<Strata, fixed_point_t> PROPERTY(militancy_by_strata);
-		IndexedMap<Strata, fixed_point_t> PROPERTY(life_needs_fulfilled_by_strata);
-		IndexedMap<Strata, fixed_point_t> PROPERTY(everyday_needs_fulfilled_by_strata);
-		IndexedMap<Strata, fixed_point_t> PROPERTY(luxury_needs_fulfilled_by_strata);
+		IndexedFlatMap<Strata, pop_size_t> PROPERTY(population_by_strata);
+		IndexedFlatMap<Strata, fixed_point_t> PROPERTY(militancy_by_strata);
+		IndexedFlatMap<Strata, fixed_point_t> PROPERTY(life_needs_fulfilled_by_strata);
+		IndexedFlatMap<Strata, fixed_point_t> PROPERTY(everyday_needs_fulfilled_by_strata);
+		IndexedFlatMap<Strata, fixed_point_t> PROPERTY(luxury_needs_fulfilled_by_strata);
 
-		IndexedMap<PopType, pop_size_t> PROPERTY(pop_type_distribution);
-		IndexedMap<PopType, pop_size_t> PROPERTY(pop_type_unemployed_count);
-		IndexedMap<Ideology, fixed_point_t> PROPERTY(ideology_distribution);
+		constexpr static fixed_point_t& div_by_zero_return_0(fixed_point_t& lhs, pop_size_t const& rhs) {
+			return lhs = fixed_point_t::_0;
+		}
+
+		IndexedFlatMap<PopType, pop_size_t> PROPERTY(pop_type_distribution);
+		IndexedFlatMap<PopType, pop_size_t> PROPERTY(pop_type_unemployed_count);
+		IndexedFlatMap<Ideology, fixed_point_t> PROPERTY(ideology_distribution);
 		fixed_point_map_t<Issue const*> PROPERTY(issue_distribution);
 		IndexedMap<CountryParty, fixed_point_t> PROPERTY(vote_distribution);
 		fixed_point_map_t<Culture const*> PROPERTY(culture_distribution);
@@ -287,7 +286,7 @@ namespace OpenVic {
 		IndexedMap<GoodInstance, good_data_t> PROPERTY(goods_data);
 
 		/* Diplomacy */
-		fixed_point_t PROPERTY(prestige);
+		MutableState<fixed_point_t> PROPERTY(prestige);
 		size_t PROPERTY(prestige_rank, 0);
 		fixed_point_t PROPERTY(diplomatic_points);
 		// The last time this country lost a war, i.e. accepted a peace offer sent from their offer tab or the enemy's demand
@@ -297,15 +296,14 @@ namespace OpenVic {
 		// TODO - colonial power, current wars
 
 		/* Military */
-		fixed_point_t PROPERTY(military_power);
-		fixed_point_t PROPERTY(military_power_from_land);
-		fixed_point_t PROPERTY(military_power_from_sea);
-		fixed_point_t PROPERTY(military_power_from_leaders);
+		MutableState<fixed_point_t> PROPERTY(military_power_from_land);
+		MutableState<fixed_point_t> PROPERTY(military_power_from_sea);
+		MutableState<fixed_point_t> PROPERTY(military_power_from_leaders);
 		size_t PROPERTY(military_rank, 0);
-		memory::vector<LeaderInstance*> PROPERTY(generals);
-		memory::vector<LeaderInstance*> PROPERTY(admirals);
-		memory::vector<ArmyInstance*> PROPERTY(armies);
-		memory::vector<NavyInstance*> PROPERTY(navies);
+		memory::vector<LeaderInstance*> SPAN_PROPERTY(generals);
+		memory::vector<LeaderInstance*> SPAN_PROPERTY(admirals);
+		memory::vector<ArmyInstance*> SPAN_PROPERTY(armies);
+		memory::vector<NavyInstance*> SPAN_PROPERTY(navies);
 		size_t PROPERTY(regiment_count, 0);
 		size_t PROPERTY(max_supported_regiment_count, 0);
 		size_t PROPERTY(mobilisation_potential_regiment_count, 0);
@@ -346,6 +344,7 @@ namespace OpenVic {
 		memory::vector<unlock_level_t> PROPERTY(unit_variant_unlock_levels);
 
 		CountryInstance(
+			CountryInstanceManager& country_instance_manager,
 			CountryDefinition const* new_country_definition,
 			index_t new_index,
 			decltype(building_type_unlock_levels)::keys_span_type building_type_keys,
@@ -369,6 +368,17 @@ namespace OpenVic {
 		);
 
 	public:
+		DerivedState<GovernmentType const*> flag_government_type;
+		DerivedState<fixed_point_t> total_score;
+		DerivedState<fixed_point_t> military_power;
+		DerivedState<fixed_point_t> desired_administrator_percentage;
+		DerivedState<fixed_point_t> corruption_cost_multiplier;
+		DerivedState<fixed_point_t> tariff_efficiency;
+		DerivedState<fixed_point_t> projected_social_spending_unscaled_by_slider;
+		DerivedState<fixed_point_t> effective_tariff_rate;
+		DerivedState<fixed_point_t> projected_import_subsidies;
+		DerivedState<bool> has_import_subsidies;
+
 		UNIT_BRANCHED_GETTER(get_unit_instance_groups, armies, navies);
 		UNIT_BRANCHED_GETTER(get_unit_type_unlock_levels, regiment_type_unlock_levels, ship_type_unlock_levels);
 		UNIT_BRANCHED_GETTER(get_leaders, generals, admirals);
@@ -406,9 +416,6 @@ namespace OpenVic {
 		}
 
 		std::string_view get_identifier() const;
-		fixed_point_t get_tariff_efficiency() const;
-
-		void update_country_definition_based_attributes();
 
 		bool exists() const;
 		bool is_civilised() const;
@@ -474,32 +481,32 @@ namespace OpenVic {
 		// The values returned by these functions are scaled by population size, so they must be divided by population size
 		// to get the support as a proportion of 1.0
 		constexpr pop_size_t get_pop_type_proportion(PopType const& pop_type) const {
-			return pop_type_distribution[pop_type];
+			return pop_type_distribution.at(pop_type);
 		}
 		constexpr pop_size_t get_pop_type_unemployed(PopType const& pop_type) const {
-			return pop_type_unemployed_count[pop_type];
+			return pop_type_unemployed_count.at(pop_type);
 		}
 		constexpr fixed_point_t get_ideology_support(Ideology const& ideology) const {
-			return ideology_distribution[ideology];
+			return ideology_distribution.at(ideology);
 		}
 		fixed_point_t get_issue_support(Issue const& issue) const;
 		fixed_point_t get_party_support(CountryParty const& party) const;
 		fixed_point_t get_culture_proportion(Culture const& culture) const;
 		fixed_point_t get_religion_proportion(Religion const& religion) const;
 		constexpr pop_size_t get_strata_population(Strata const& strata) const {
-			return population_by_strata[strata];
+			return population_by_strata.at(strata);
 		}
 		constexpr fixed_point_t get_strata_militancy(Strata const& strata) const {
-			return militancy_by_strata[strata];
+			return militancy_by_strata.at(strata);
 		}
 		constexpr fixed_point_t get_strata_life_needs_fulfilled(Strata const& strata) const {
-			return life_needs_fulfilled_by_strata[strata];
+			return life_needs_fulfilled_by_strata.at(strata);
 		}
 		constexpr fixed_point_t get_strata_everyday_needs_fulfilled(Strata const& strata) const {
-			return everyday_needs_fulfilled_by_strata[strata];
+			return everyday_needs_fulfilled_by_strata.at(strata);
 		}
 		constexpr fixed_point_t get_strata_luxury_needs_fulfilled(Strata const& strata) const {
-			return luxury_needs_fulfilled_by_strata[strata];
+			return luxury_needs_fulfilled_by_strata.at(strata);
 		}
 		fixed_point_t get_strata_taxable_income(Strata const& strata) const;
 
@@ -617,8 +624,8 @@ namespace OpenVic {
 		bool apply_history_to_country(CountryHistoryEntry const& entry, InstanceManager& instance_manager);
 
 	private:
+		void _update_country_definition_based_attributes();
 		void _update_production(DefineManager const& define_manager);
-		void _update_effective_tax_rate_by_strata(Strata const& strata);
 		void _update_budget();
 
 		//base here means not scaled by slider or pop size
@@ -643,20 +650,18 @@ namespace OpenVic {
 		fixed_point_t calculate_pensions_base(
 			ModifierEffectCache const& modifier_effect_cache,
 			SharedPopTypeValues const& pop_type_values
-		) const;
+		);
 		fixed_point_t calculate_unemployment_subsidies_base(
 			ModifierEffectCache const& modifier_effect_cache,
 			SharedPopTypeValues const& pop_type_values
-		) const;
+		);
 		fixed_point_t calculate_minimum_wage_base(
 			ModifierEffectCache const& modifier_effect_cache,
 			SharedPopTypeValues const& pop_type_values
-		) const;
-		constexpr fixed_point_t calculate_social_income_variant_base(
+		);
+		fixed_point_t calculate_social_income_variant_base(
 			SharedPopTypeValues const& pop_type_values
-		) const {
-			return administrative_efficiency_from_administrators * pop_type_values.get_social_income_variant_base();
-		}
+		);
 
 		// Expects current_research to be non-null
 		void _update_current_tech(InstanceManager const& instance_manager);
@@ -698,8 +703,8 @@ namespace OpenVic {
 		void report_input_consumption(ProductionType const& production_type, GoodDefinition const& good, const fixed_point_t quantity);
 		void report_input_demand(ProductionType const& production_type, GoodDefinition const& good, const fixed_point_t quantity);
 		void report_output(ProductionType const& production_type, const fixed_point_t quantity);
-		void request_salaries_and_welfare_and_import_subsidies(Pop& pop) const;
-		fixed_point_t calculate_minimum_wage_base(PopType const& pop_type) const;
+		void request_salaries_and_welfare_and_import_subsidies(Pop& pop);
+		fixed_point_t calculate_minimum_wage_base(PopType const& pop_type);
 		fixed_point_t apply_tariff(const fixed_point_t money_spent_on_imports);
 	};
 
@@ -715,13 +720,13 @@ namespace OpenVic {
 
 		IndexedMap<CountryDefinition, CountryInstance*> PROPERTY(country_definition_to_instance_map);
 
-		memory::vector<CountryInstance*> PROPERTY(great_powers);
-		memory::vector<CountryInstance*> PROPERTY(secondary_powers);
+		memory::vector<CountryInstance*> SPAN_PROPERTY(great_powers);
+		memory::vector<CountryInstance*> SPAN_PROPERTY(secondary_powers);
 
-		memory::vector<CountryInstance*> PROPERTY(total_ranking);
-		memory::vector<CountryInstance*> PROPERTY(prestige_ranking);
-		memory::vector<CountryInstance*> PROPERTY(industrial_power_ranking);
-		memory::vector<CountryInstance*> PROPERTY(military_power_ranking);
+		memory::vector<CountryInstance*> SPAN_PROPERTY(total_ranking);
+		memory::vector<CountryInstance*> SPAN_PROPERTY(prestige_ranking);
+		memory::vector<CountryInstance*> SPAN_PROPERTY(industrial_power_ranking);
+		memory::vector<CountryInstance*> SPAN_PROPERTY(military_power_ranking);
 
 		void update_rankings(Date today, DefineManager const& define_manager);
 
