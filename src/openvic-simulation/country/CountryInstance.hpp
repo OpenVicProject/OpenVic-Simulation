@@ -302,10 +302,10 @@ namespace OpenVic {
 		fixed_point_t PROPERTY(military_power_from_sea);
 		fixed_point_t PROPERTY(military_power_from_leaders);
 		size_t PROPERTY(military_rank, 0);
-		memory::vector<LeaderInstance*> PROPERTY(generals);
-		memory::vector<LeaderInstance*> PROPERTY(admirals);
-		memory::vector<ArmyInstance*> PROPERTY(armies);
-		memory::vector<NavyInstance*> PROPERTY(navies);
+		memory::vector<LeaderInstance*> SPAN_PROPERTY(generals);
+		memory::vector<LeaderInstance*> SPAN_PROPERTY(admirals);
+		memory::vector<ArmyInstance*> SPAN_PROPERTY(armies);
+		memory::vector<NavyInstance*> SPAN_PROPERTY(navies);
 		size_t PROPERTY(regiment_count, 0);
 		size_t PROPERTY(max_supported_regiment_count, 0);
 		size_t PROPERTY(mobilisation_potential_regiment_count, 0);
@@ -715,13 +715,13 @@ namespace OpenVic {
 
 		IndexedMap<CountryDefinition, CountryInstance*> PROPERTY(country_definition_to_instance_map);
 
-		memory::vector<CountryInstance*> PROPERTY(great_powers);
-		memory::vector<CountryInstance*> PROPERTY(secondary_powers);
+		memory::vector<CountryInstance*> SPAN_PROPERTY(great_powers);
+		memory::vector<CountryInstance*> SPAN_PROPERTY(secondary_powers);
 
-		memory::vector<CountryInstance*> PROPERTY(total_ranking);
-		memory::vector<CountryInstance*> PROPERTY(prestige_ranking);
-		memory::vector<CountryInstance*> PROPERTY(industrial_power_ranking);
-		memory::vector<CountryInstance*> PROPERTY(military_power_ranking);
+		memory::vector<CountryInstance*> SPAN_PROPERTY(total_ranking);
+		memory::vector<CountryInstance*> SPAN_PROPERTY(prestige_ranking);
+		memory::vector<CountryInstance*> SPAN_PROPERTY(industrial_power_ranking);
+		memory::vector<CountryInstance*> SPAN_PROPERTY(military_power_ranking);
 
 		void update_rankings(Date today, DefineManager const& define_manager);
 
