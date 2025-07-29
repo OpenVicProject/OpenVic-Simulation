@@ -23,7 +23,7 @@ namespace OpenVic {
 		StateSet const& PROPERTY(state_set);
 		CountryInstance* PROPERTY_PTR(owner);
 		ProvinceInstance* PROPERTY_PTR(capital);
-		memory::vector<ProvinceInstance*> PROPERTY(provinces);
+		memory::vector<ProvinceInstance*> SPAN_PROPERTY(provinces);
 		ProvinceInstance::colony_status_t PROPERTY(colony_status);
 
 		pop_size_t PROPERTY(total_population, 0);

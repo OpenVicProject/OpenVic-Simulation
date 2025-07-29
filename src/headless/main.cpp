@@ -180,7 +180,7 @@ static bool run_headless(fs::path const& root, memory::vector<memory::string>& m
 	// TODO - REMOVE TEST CODE
 	Logger::info("===== Ranking system test... =====");
 	if (game_manager.get_instance_manager()) {
-		const auto print_ranking_list = [](std::string_view title, memory::vector<CountryInstance*> const& countries) -> void {
+		const auto print_ranking_list = [](std::string_view title, OpenVic::utility::forwardable_span<CountryInstance* const> countries) -> void {
 			memory::string text;
 			for (CountryInstance const* country : countries) {
 				text += StringUtils::append_string_views(
@@ -197,7 +197,7 @@ static bool run_headless(fs::path const& root, memory::vector<memory::string>& m
 		CountryInstanceManager const& country_instance_manager =
 			game_manager.get_instance_manager()->get_country_instance_manager();
 
-		OpenVic::memory::vector<CountryInstance*> const& great_powers = country_instance_manager.get_great_powers();
+		OpenVic::utility::forwardable_span<CountryInstance* const> great_powers = country_instance_manager.get_great_powers();
 		print_ranking_list("Great Powers", great_powers);
 		print_ranking_list("Secondary Powers", country_instance_manager.get_secondary_powers());
 		print_ranking_list("All countries", country_instance_manager.get_total_ranking());
