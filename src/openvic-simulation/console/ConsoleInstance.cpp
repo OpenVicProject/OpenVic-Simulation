@@ -197,21 +197,21 @@ std::optional<bool> ConsoleInstance::validate_boolean(std::string_view value_str
 	return std::nullopt;
 }
 
-ProvinceInstance* ConsoleInstance::validate_province_index(std::string_view value_string) {
-	if (value_string.empty()) {
-		write_error("Please specify province id");
+ProvinceInstance* ConsoleInstance::validate_province_number(std::string_view province_number_string) {
+	if (province_number_string.empty()) {
+		write_error("Please specify province number");
 		return nullptr;
 	}
 
-	std::optional<uint64_t> result = validate_unsigned_integer(value_string);
-	if (!result) {
+	std::optional<uint64_t> province_number = validate_unsigned_integer(province_number_string);
+	if (!province_number) {
 		return nullptr;
 	}
 
-	ProvinceInstance* province = instance_manager.get_map_instance().get_province_instance_by_index_1_based(*result);
+	ProvinceInstance* province = instance_manager.get_map_instance().get_province_instance_from_number(*province_number);
 
 	if (province == nullptr) {
-		write_error("Unknown province id");
+		write_error("Unknown province number");
 	}
 	return province;
 }
@@ -359,7 +359,7 @@ bool ConsoleInstance::setup_commands() {
 	bool result = true;
 
 	constexpr auto toggle_province_id = [](Argument& arg) -> bool {
-		// TODO: toggle province id display
+		// TODO: toggle province number display
 		return true;
 	};
 

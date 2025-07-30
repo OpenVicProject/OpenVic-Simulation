@@ -115,7 +115,7 @@ bool ArmyAStarPathing::_is_point_enabled(search_const_iterator it) const {
 		return true;
 	}
 
-	ProvinceInstance const* province = map_instance.get_province_instance_by_index_1_based(it->first);
+	ProvinceInstance const* province = map_instance.get_province_instance_from_number(it->first);
 
 	if (OV_unlikely(province == nullptr)) {
 		return true;
@@ -142,7 +142,7 @@ bool NavyAStarPathing::_is_point_enabled(search_const_iterator it) const {
 		return true;
 	}
 
-	ProvinceInstance const* province = map_instance.get_province_instance_by_index_1_based(it->first);
+	ProvinceInstance const* province = map_instance.get_province_instance_from_number(it->first);
 
 	if (OV_unlikely(province == nullptr)) {
 		return true;

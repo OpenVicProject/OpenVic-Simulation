@@ -18,7 +18,7 @@ ProvinceDefinition::ProvinceDefinition(
 	HasIndex { new_index } {}
 
 memory::string ProvinceDefinition::to_string() const {
-	return memory::fmt::format("(#{}, {}, 0x{})", get_index_1_based(), get_identifier(), get_colour());
+	return memory::fmt::format("(#{}, {}, 0x{})", get_province_number(), get_identifier(), get_colour());
 }
 
 bool ProvinceDefinition::load_positions(

@@ -1,6 +1,5 @@
 #pragma once
 
-#include "openvic-simulation/economy/trading/MarketInstance.hpp"
 #include "openvic-simulation/map/ProvinceDefinition.hpp"
 #include "openvic-simulation/map/ProvinceInstance.hpp"
 #include "openvic-simulation/map/State.hpp"
@@ -11,6 +10,7 @@
 
 namespace OpenVic {
 	struct MapDefinition;
+	struct MarketInstance;
 	struct BuildingTypeManager;
 	struct ProvinceHistoryManager;
 	struct IssueManager;
@@ -26,7 +26,7 @@ namespace OpenVic {
 		MapDefinition const& PROPERTY(map_definition);
 		ThreadPool& thread_pool;
 
-		IdentifierRegistry<ProvinceInstance> IDENTIFIER_REGISTRY_CUSTOM_INDEX_OFFSET(province_instance, 1);
+		IdentifierRegistry<ProvinceInstance> IDENTIFIER_REGISTRY(province_instance);
 
 		pop_size_t PROPERTY(highest_province_population, 0);
 		pop_size_t PROPERTY(total_map_population, 0);
@@ -48,10 +48,16 @@ namespace OpenVic {
 			return map_definition;
 		}
 
-		IDENTIFIER_REGISTRY_NON_CONST_ACCESSORS_CUSTOM_INDEX_OFFSET(province_instance, 1);
+		IDENTIFIER_REGISTRY_NON_CONST_ACCESSORS(province_instance);
 
 		ProvinceInstance& get_province_instance_from_definition(ProvinceDefinition const& province);
 		ProvinceInstance const& get_province_instance_from_definition(ProvinceDefinition const& province) const;
+		ProvinceInstance* get_province_instance_from_number(
+			decltype(std::declval<ProvinceDefinition>().get_province_number())province_number
+		);
+		ProvinceInstance const* get_province_instance_from_number(
+			decltype(std::declval<ProvinceDefinition>().get_province_number())province_number
+		) const;
 
 		void enable_canal(canal_index_t canal_index);
 		bool is_canal_enabled(canal_index_t canal_index) const;

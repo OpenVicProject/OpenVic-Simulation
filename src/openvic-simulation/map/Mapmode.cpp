@@ -85,7 +85,7 @@ bool MapmodeManager::generate_mapmode_colours(
 
 	if (map_instance.province_instances_are_locked()) {
 		for (ProvinceInstance const& province : map_instance.get_province_instances()) {
-			target_stripes[province.get_province_definition().get_index_1_based()] = mapmode->get_base_stripe_colours(
+			target_stripes[province.get_province_definition().get_province_number()] = mapmode->get_base_stripe_colours(
 				map_instance, province, player_country, selected_province
 			);
 		}
@@ -327,7 +327,7 @@ bool MapmodeManager::setup_mapmodes() {
 				CountryInstance const* player_country, ProvinceInstance const* selected_province
 			) -> Mapmode::base_stripe_t {
 				const colour_argb_t::value_type f = colour_argb_t::colour_traits::component_from_fraction(
-					province.get_province_definition().get_index_1_based(), map_instance.get_map_definition().get_province_definition_count() + 1
+					province.get_province_definition().get_province_number(), map_instance.get_map_definition().get_province_definition_count() + 1
 				);
 				return colour_argb_t::fill_as(f).with_alpha(ALPHA_VALUE);
 			}

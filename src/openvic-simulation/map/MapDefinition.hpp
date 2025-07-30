@@ -4,7 +4,6 @@
 #include <filesystem>
 #include <span>
 #include <string_view>
-#include <vector>
 
 #include <openvic-dataloader/csv/LineObject.hpp>
 
@@ -45,7 +44,7 @@ namespace OpenVic {
 #pragma pack(push, 1)
 		/* Used to represent tightly packed 3-byte integer pixel information. */
 		struct shape_pixel_t {
-			ProvinceDefinition::index_t index_1_based;
+			ProvinceDefinition::index_t province_number;
 			TerrainTypeMapping::index_t terrain;
 		};
 #pragma pack(pop)
@@ -54,7 +53,7 @@ namespace OpenVic {
 		using colour_index_map_t = ordered_map<colour_t, ProvinceDefinition::index_t>;
 		using river_t = memory::vector<RiverSegment>;
 
-		IdentifierRegistry<ProvinceDefinition> IDENTIFIER_REGISTRY_CUSTOM_INDEX_OFFSET(province_definition, 1);
+		IdentifierRegistry<ProvinceDefinition> IDENTIFIER_REGISTRY(province_definition);
 		IdentifierRegistry<Region> IDENTIFIER_REGISTRY(region);
 		IdentifierRegistry<Climate> IDENTIFIER_REGISTRY(climate);
 		IdentifierRegistry<Continent> IDENTIFIER_REGISTRY(continent);
@@ -73,17 +72,24 @@ namespace OpenVic {
 		PointMap PROPERTY_REF(path_map_land);
 		PointMap PROPERTY_REF(path_map_sea);
 
-		ProvinceDefinition::index_t get_index_1_based_from_colour(colour_t colour) const;
+		ProvinceDefinition::index_t get_province_number_from_colour(colour_t colour) const;
 		bool _generate_standard_province_adjacencies();
 
 		inline constexpr int32_t get_pixel_index_from_pos(ivec2_t pos) const {
 			return pos.x + pos.y * dims.x;
 		}
 
-		IDENTIFIER_REGISTRY_NON_CONST_ACCESSORS_CUSTOM_INDEX_OFFSET(province_definition, 1);
+		IDENTIFIER_REGISTRY_NON_CONST_ACCESSORS(province_definition);
 
 	public:
 		MapDefinition();
+
+		ProvinceDefinition* get_province_definition_from_number(
+			decltype(std::declval<ProvinceDefinition>().get_province_number())province_number
+		);
+		ProvinceDefinition const* get_province_definition_from_number(
+			decltype(std::declval<ProvinceDefinition>().get_province_number())province_number
+		) const;
 
 		inline constexpr int32_t get_width() const { return dims.x; }
 		inline constexpr int32_t get_height() const { return dims.y; }
@@ -106,7 +112,7 @@ namespace OpenVic {
 		size_t get_land_province_count() const;
 		size_t get_water_province_count() const;
 
-		ProvinceDefinition::index_t get_province_index_1_based_at(ivec2_t pos) const;
+		ProvinceDefinition::index_t get_province_number_at(ivec2_t pos) const;
 
 	private:
 		ProvinceDefinition* get_province_definition_at(ivec2_t pos);
