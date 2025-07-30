@@ -5,6 +5,7 @@
 #include "openvic-simulation/country/CountryInstance.hpp"
 #include "openvic-simulation/defines/Define.hpp"
 #include "openvic-simulation/DefinitionManager.hpp"
+#include "openvic-simulation/economy/BuildingType.hpp"
 #include "openvic-simulation/economy/production/ProductionType.hpp"
 #include "openvic-simulation/economy/production/ResourceGatheringOperation.hpp"
 #include "openvic-simulation/history/ProvinceHistory.hpp"
@@ -556,8 +557,9 @@ bool ProvinceInstance::setup(BuildingTypeManager const& building_type_manager) {
 		if (building_type_manager.building_types_are_locked()) {
 			buildings.reserve(building_type_manager.get_province_building_types().size());
 
-			for (BuildingType const* building_type : building_type_manager.get_province_building_types()) {
-				ret &= buildings.add_item({ *building_type });
+			for (BuildingType const* building_type_ptr : building_type_manager.get_province_building_types()) {
+				BuildingType const& building_type = *building_type_ptr;
+				ret &= buildings.emplace_item(building_type.get_identifier(), building_type);
 			}
 		} else {
 			Logger::error("Cannot generate buildings until building types are locked!");

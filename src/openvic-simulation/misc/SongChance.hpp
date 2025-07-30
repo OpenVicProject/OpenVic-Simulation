@@ -14,11 +14,10 @@ namespace OpenVic {
 		memory::string PROPERTY(file_name);
 		ConditionalWeightFactorMul PROPERTY(chance);
 
-		SongChance(size_t new_index, std::string_view new_filename, ConditionalWeightFactorMul&& new_chance);
-
 		bool parse_scripts(DefinitionManager const& definition_manager);
 
 	public:
+		SongChance(size_t new_index, std::string_view new_filename, ConditionalWeightFactorMul&& new_chance);
 		SongChance(SongChance&&) = default;
 	};
 

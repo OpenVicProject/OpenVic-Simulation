@@ -9,17 +9,12 @@
 #include "openvic-simulation/utility/Containers.hpp"
 
 namespace OpenVic {
-
-	struct BuildingTypeManager;
-
 	/* REQUIREMENTS:
 	 * MAP-11, MAP-72, MAP-73
 	 * MAP-12, MAP-75, MAP-76
 	 * MAP-13, MAP-78, MAP-79
 	 */
 	struct BuildingType : Modifier {
-		friend struct BuildingTypeManager;
-
 		using level_t = int16_t;
 		using naval_capacity_t = uint64_t;
 
@@ -73,9 +68,8 @@ namespace OpenVic {
 		bool PROPERTY(capital); // only in naval base
 		bool PROPERTY_CUSTOM_PREFIX(port, is); // only in naval base
 
-		BuildingType(std::string_view identifier, building_type_args_t& building_type_args);
-
 	public:
+		BuildingType(std::string_view identifier, building_type_args_t& building_type_args);
 		BuildingType(BuildingType&&) = default;
 	};
 

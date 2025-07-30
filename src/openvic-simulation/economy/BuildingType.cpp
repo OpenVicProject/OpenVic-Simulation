@@ -44,7 +44,7 @@ bool BuildingTypeManager::add_building_type(
 		return false;
 	}
 
-	const bool ret = building_types.add_item({ identifier, building_type_args });
+	const bool ret = building_types.emplace_item( identifier, identifier, building_type_args );
 
 	if (ret) {
 		building_type_types.emplace(building_type_args.type);

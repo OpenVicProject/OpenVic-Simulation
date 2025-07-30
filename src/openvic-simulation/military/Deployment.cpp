@@ -35,7 +35,10 @@ bool DeploymentManager::add_deployment(
 		return false;
 	}
 
-	return deployments.add_item({ path, std::move(armies), std::move(navies), std::move(leaders) });
+	return deployments.emplace_item(
+		path,
+		path, std::move(armies), std::move(navies), std::move(leaders)
+	);
 }
 
 bool DeploymentManager::load_oob_file(

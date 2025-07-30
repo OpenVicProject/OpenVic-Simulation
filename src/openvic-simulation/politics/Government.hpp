@@ -4,11 +4,7 @@
 #include "openvic-simulation/utility/Containers.hpp"
 
 namespace OpenVic {
-	struct GovernmentTypeManager;
-
 	struct GovernmentType : HasIdentifier {
-		friend struct GovernmentTypeManager;
-
 	private:
 		memory::vector<Ideology const*> PROPERTY(ideologies);
 		const bool PROPERTY_CUSTOM_PREFIX(elections, holds);
@@ -16,12 +12,11 @@ namespace OpenVic {
 		const Timespan PROPERTY(term_duration);
 		memory::string PROPERTY_CUSTOM_NAME(flag_type_identifier, get_flag_type);
 
+	public:
 		GovernmentType(
 			std::string_view new_identifier, memory::vector<Ideology const*>&& new_ideologies, bool new_elections,
 			bool new_appoint_ruling_party, Timespan new_term_duration, std::string_view new_flag_type_identifier
 		);
-
-	public:
 		GovernmentType(GovernmentType&&) = default;
 
 		bool is_ideology_compatible(Ideology const* ideology) const;

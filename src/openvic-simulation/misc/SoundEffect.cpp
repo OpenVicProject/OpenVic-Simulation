@@ -35,7 +35,10 @@ bool SoundEffectManager::_load_sound_define(Dataloader const& dataloader, std::s
 		Logger::warning("Sound filename ", sfx_identifier, " was empty!");
 	}
 
-	ret &= sound_effects.add_item({ sfx_identifier, std::move(file), volume });
+	ret &= sound_effects.emplace_item(
+		sfx_identifier,
+		sfx_identifier, std::move(file), volume
+	);
 	return ret;
 }
 

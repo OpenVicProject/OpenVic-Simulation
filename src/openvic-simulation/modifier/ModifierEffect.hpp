@@ -1,6 +1,5 @@
 #pragma once
 
-#include <string>
 #include <string_view>
 
 #include "openvic-simulation/types/EnumBitfield.hpp"
@@ -10,8 +9,6 @@ namespace OpenVic {
 	struct ModifierManager;
 
 	struct ModifierEffect : HasIdentifier {
-		friend struct ModifierManager;
-
 		static constexpr size_t FORMAT_MULTIPLIER_BIT_COUNT = 2;
 		static constexpr size_t FORMAT_DECIMAL_PLACES_BIT_COUNT = 2;
 		static constexpr size_t FORMAT_SUFFIX_BIT_COUNT = 2;
@@ -106,12 +103,11 @@ namespace OpenVic {
 
 		// TODO - format/precision, e.g. 80% vs 0.8 vs 0.800, 2 vs 2.0 vs 200%
 
+	public:
 		ModifierEffect(
 			std::string_view new_identifier, format_t new_format, target_t new_targets,
 			std::string_view new_localisation_key, bool new_has_no_effect
 		);
-
-	public:
 		ModifierEffect(ModifierEffect&&) = default;
 
 		// TODO - check if this is an accurate and consistent method of classifying global and local effects

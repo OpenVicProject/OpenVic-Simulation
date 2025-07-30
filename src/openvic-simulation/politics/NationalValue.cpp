@@ -15,7 +15,10 @@ bool NationalValueManager::add_national_value(std::string_view identifier, Modif
 		return false;
 	}
 
-	return national_values.add_item({ identifier, std::move(modifiers) });
+	return national_values.emplace_item(
+		identifier,
+		identifier, std::move(modifiers)
+	);
 }
 
 bool NationalValueManager::load_national_values_file(ModifierManager const& modifier_manager, ast::NodeCPtr root) {

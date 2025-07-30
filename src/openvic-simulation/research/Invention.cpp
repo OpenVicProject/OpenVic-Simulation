@@ -48,10 +48,11 @@ bool InventionManager::add_invention(
 		return false;
 	}
 
-	return inventions.add_item({
+	return inventions.emplace_item(
+		identifier,
 		identifier, std::move(values), news, std::move(activated_units), std::move(activated_buildings),
 		std::move(enabled_crimes), unlock_gas_attack, unlock_gas_defence, std::move(limit), std::move(chance)
-	});
+	);
 }
 
 bool InventionManager::load_inventions_file(

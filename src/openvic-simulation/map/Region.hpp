@@ -2,13 +2,11 @@
 
 #include <ranges>
 #include <string_view>
-#include <vector>
 
 #include "openvic-simulation/modifier/Modifier.hpp"
 #include "openvic-simulation/utility/Containers.hpp"
 
 namespace OpenVic {
-
 	struct ProvinceDefinition;
 
 	struct ProvinceSet {
@@ -48,10 +46,8 @@ namespace OpenVic {
 	};
 
 	struct ProvinceSetModifier : Modifier, ProvinceSet {
-		friend struct MapDefinition;
-	private:
-		ProvinceSetModifier(std::string_view new_identifier, ModifierValue&& new_values, modifier_type_t new_type);
 	public:
+		ProvinceSetModifier(std::string_view new_identifier, ModifierValue&& new_values, modifier_type_t new_type);
 		ProvinceSetModifier(ProvinceSetModifier&&) = default;
 	};
 
@@ -59,17 +55,14 @@ namespace OpenVic {
 	 * MAP-6, MAP-44, MAP-48
 	 */
 	struct Region : HasIdentifierAndColour, ProvinceSet {
-		friend struct MapDefinition;
-
 	private:
 		/* A meta region cannot be the template for a state.
 		 * Any region without provinces or containing water provinces is considered a meta region.
 		 */
 		const bool PROPERTY(is_meta);
 
-		Region(std::string_view new_identifier, colour_t new_colour, bool new_is_meta);
-
 	public:
+		Region(std::string_view new_identifier, colour_t new_colour, bool new_is_meta);
 		Region(Region&&) = default;
 	};
 }

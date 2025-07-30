@@ -21,8 +21,10 @@ bool CrimeManager::add_crime_modifier(
 		return false;
 	}
 
-	return crime_modifiers.add_item(
-		{ identifier, std::move(values), icon, std::move(trigger), default_active }, duplicate_warning_callback
+	return crime_modifiers.emplace_item(
+		identifier,
+		duplicate_warning_callback,
+		identifier, std::move(values), icon, std::move(trigger), default_active
 	);
 }
 

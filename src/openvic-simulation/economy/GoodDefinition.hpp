@@ -12,10 +12,8 @@ namespace OpenVic {
 
 	private:
 		memory::vector<GoodDefinition const*> PROPERTY(good_definitions);
-
-		GoodCategory(std::string_view new_identifier);
-
 	public:
+		GoodCategory(std::string_view new_identifier);
 		GoodCategory(GoodCategory&&) = default;
 	};
 
@@ -32,8 +30,6 @@ namespace OpenVic {
 	 * ECON-250, ECON-251, ECON-252, ECON-253, ECON-254, ECON-255, ECON-256, ECON-257, ECON-258, ECON-259, ECON-260, ECON-261
 	 */
 	struct GoodDefinition : HasIdentifierAndColour, HasIndex<GoodDefinition> {
-		friend struct GoodDefinitionManager;
-
 		using good_definition_map_t = fixed_point_map_t<GoodDefinition const*>;
 
 	private:
@@ -44,13 +40,12 @@ namespace OpenVic {
 		const bool PROPERTY(is_money);
 		const bool PROPERTY(counters_overseas_penalty);
 
+	public:
 		GoodDefinition(
 			std::string_view new_identifier, colour_t new_colour, index_t new_index, GoodCategory const& new_category,
 			fixed_point_t new_base_price, bool new_is_available_from_start, bool new_is_tradeable, bool new_is_money,
 			bool new_counters_overseas_penalty
 		);
-
-	public:
 		GoodDefinition(GoodDefinition&&) = default;
 	};
 

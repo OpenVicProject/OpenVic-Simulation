@@ -11,10 +11,8 @@ namespace OpenVic {
 	struct GoodInstance : HasIdentifierAndColour, GoodMarket {
 		friend struct GoodInstanceManager;
 
-	private:
-		GoodInstance(GoodDefinition const& new_good_definition, GameRulesManager const& new_game_rules_manager);
-
 	public:
+		GoodInstance(GoodDefinition const& new_good_definition, GameRulesManager const& new_game_rules_manager);
 		GoodInstance(GoodInstance&&) = default;
 
 		// Is the good available for trading? (e.g. should be shown in trade menu)

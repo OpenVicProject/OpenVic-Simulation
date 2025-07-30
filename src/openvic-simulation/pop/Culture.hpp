@@ -4,7 +4,6 @@
 #include "openvic-simulation/types/IdentifierRegistry.hpp"
 
 namespace OpenVic {
-
 	struct CultureManager;
 	struct CountryDefinition;
 	struct CountryDefinitionManager;
@@ -13,10 +12,8 @@ namespace OpenVic {
 	struct GraphicalCultureType : HasIdentifier {
 		friend struct CultureManager;
 
-	private:
-		GraphicalCultureType(std::string_view new_identifier);
-
 	public:
+		GraphicalCultureType(std::string_view new_identifier);
 		GraphicalCultureType(GraphicalCultureType&&) = default;
 	};
 
@@ -29,13 +26,12 @@ namespace OpenVic {
 		bool PROPERTY(is_overseas);
 		CountryDefinition const* PROPERTY(union_country);
 
+	public:
 		CultureGroup(
 			std::string_view new_identifier, std::string_view new_leader,
 			GraphicalCultureType const& new_unit_graphical_culture_type, bool new_is_overseas,
 			CountryDefinition const* new_union_country
 		);
-
-	public:
 		CultureGroup(CultureGroup&&) = default;
 
 		constexpr bool has_union_country() const {
@@ -44,8 +40,6 @@ namespace OpenVic {
 	};
 
 	struct Culture : HasIdentifierAndColour {
-		friend struct CultureManager;
-
 	private:
 		CultureGroup const& PROPERTY(group);
 		name_list_t PROPERTY(first_names);
@@ -53,12 +47,11 @@ namespace OpenVic {
 		fixed_point_t PROPERTY(radicalism);
 		CountryDefinition const* PROPERTY(primary_country);
 
+	public:
 		Culture(
 			std::string_view new_identifier, colour_t new_colour, CultureGroup const& new_group, name_list_t&& new_first_names,
 			name_list_t&& new_last_names, fixed_point_t new_radicalism, CountryDefinition const* new_primary_country
 		);
-
-	public:
 		Culture(Culture&&) = default;
 
 		constexpr bool has_union_country() const {

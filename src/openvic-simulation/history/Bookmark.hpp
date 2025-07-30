@@ -1,16 +1,11 @@
 #pragma once
 
-#include <cstdint>
-
 #include <openvic-dataloader/v2script/AbstractSyntaxTree.hpp>
 
 #include "openvic-simulation/types/IdentifierRegistry.hpp"
 
 namespace OpenVic {
-	struct BookmarkManager;
-
 	struct Bookmark : HasIdentifier, HasIndex<Bookmark> {
-		friend struct BookmarkManager;
 
 	private:
 		memory::string PROPERTY(name);
@@ -18,6 +13,7 @@ namespace OpenVic {
 		const Date PROPERTY(date);
 		const fvec2_t PROPERTY(initial_camera_position);
 
+	public:
 		Bookmark(
 			index_t new_index,
 			std::string_view new_name,
@@ -25,8 +21,6 @@ namespace OpenVic {
 			Date new_date,
 			fvec2_t new_initial_camera_position
 		);
-
-	public:
 		Bookmark(Bookmark&&) = default;
 	};
 

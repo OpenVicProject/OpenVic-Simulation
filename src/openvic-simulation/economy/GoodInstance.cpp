@@ -21,7 +21,7 @@ bool GoodInstanceManager::setup_goods(GameRulesManager const& game_rules_manager
 	bool ret = true;
 
 	for (GoodDefinition const& good : good_definition_manager.get_good_definitions()) {
-		ret &= good_instances.add_item({ good, game_rules_manager });
+		ret &= good_instances.emplace_item(good.get_identifier(), good, game_rules_manager);
 	}
 
 	lock_good_instances();

@@ -345,6 +345,7 @@ namespace OpenVic {
 		unlock_level_t PROPERTY(gas_defence_unlock_level, 0);
 		memory::vector<unlock_level_t> PROPERTY(unit_variant_unlock_levels);
 
+	public:
 		CountryInstance(
 			CountryDefinition const* new_country_definition,
 			index_t new_index,
@@ -368,7 +369,6 @@ namespace OpenVic {
 			EconomyDefines const& new_economy_defines
 		);
 
-	public:
 		UNIT_BRANCHED_GETTER(get_unit_instance_groups, armies, navies);
 		UNIT_BRANCHED_GETTER(get_unit_type_unlock_levels, regiment_type_unlock_levels, ship_type_unlock_levels);
 		UNIT_BRANCHED_GETTER(get_leaders, generals, admirals);

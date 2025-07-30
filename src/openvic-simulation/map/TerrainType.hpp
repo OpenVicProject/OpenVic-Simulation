@@ -5,13 +5,9 @@
 #include "openvic-simulation/utility/Containers.hpp"
 
 namespace OpenVic {
-	struct TerrainTypeManager;
-
 	// Using HasColour rather than HasIdentifierAndColour to avoid needing virtual inheritance
 	// (extending Modifier is more useful than extending HasIdentifierAndColour).
 	struct TerrainType : Modifier, HasColour {
-		friend struct TerrainTypeManager;
-
 	private:
 		ModifierValue PROPERTY(modifier);
 		fixed_point_t PROPERTY(movement_cost);
@@ -19,6 +15,7 @@ namespace OpenVic {
 		fixed_point_t PROPERTY(combat_width_percentage_change);
 		const bool PROPERTY(is_water);
 
+	public:
 		TerrainType(
 			std::string_view new_identifier,
 			colour_t new_colour,
@@ -28,14 +25,10 @@ namespace OpenVic {
 			fixed_point_t new_combat_width_percentage_change,
 			bool new_is_water
 		);
-
-	public:
 		TerrainType(TerrainType&&) = default;
 	};
 
 	struct TerrainTypeMapping : HasIdentifier {
-		friend struct TerrainTypeManager;
-
 		using index_t = uint8_t;
 
 	private:
@@ -44,6 +37,7 @@ namespace OpenVic {
 		const index_t PROPERTY(priority);
 		const bool PROPERTY(has_texture);
 
+	public:
 		TerrainTypeMapping(
 			std::string_view new_identifier,
 			TerrainType const& new_type,
@@ -51,8 +45,6 @@ namespace OpenVic {
 			index_t new_priority,
 			bool new_has_texture
 		);
-
-	public:
 		TerrainTypeMapping(TerrainTypeMapping&&) = default;
 	};
 

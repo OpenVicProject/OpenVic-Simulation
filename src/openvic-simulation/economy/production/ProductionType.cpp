@@ -173,11 +173,11 @@ bool ProductionTypeManager::add_production_type(
 		}
 	}
 
-	const bool ret = production_types.add_item({
-		game_rules_manager,
-		identifier, owner, std::move(jobs), template_type, base_workforce_size, std::move(input_goods), *output_good,
+	const bool ret = production_types.emplace_item(
+		identifier,
+		game_rules_manager, identifier, owner, std::move(jobs), template_type, base_workforce_size, std::move(input_goods), *output_good,
 		base_output_quantity, std::move(bonuses), std::move(maintenance_requirements), is_coastal, is_farm, is_mine
-	});
+	);
 
 	if (ret && (template_type == RGO)) {
 		ProductionType const*& current_rgo_pt = good_to_rgo_production_type[*output_good];

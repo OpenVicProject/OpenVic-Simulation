@@ -35,18 +35,14 @@ namespace OpenVic {
 	};
 
 	struct IconModifier : Modifier {
-		friend struct ModifierManager;
-
 		using icon_t = uint8_t;
 
 	private:
 		/* A modifier can have no icon (zero). */
 		const icon_t PROPERTY(icon);
 
-	protected:
-		IconModifier(std::string_view new_identifier, ModifierValue&& new_values, modifier_type_t new_type, icon_t new_icon);
-
 	public:
+		IconModifier(std::string_view new_identifier, ModifierValue&& new_values, modifier_type_t new_type, icon_t new_icon);
 		IconModifier(IconModifier&&) = default;
 	};
 
@@ -57,14 +53,13 @@ namespace OpenVic {
 		ConditionScript trigger;
 
 	protected:
+		bool parse_scripts(DefinitionManager const& definition_manager, bool can_be_null = false);
+
+	public:
 		TriggeredModifier(
 			std::string_view new_identifier, ModifierValue&& new_values, modifier_type_t new_type, icon_t new_icon,
 			ConditionScript&& new_trigger
 		);
-
-		bool parse_scripts(DefinitionManager const& definition_manager, bool can_be_null = false);
-
-	public:
 		TriggeredModifier(TriggeredModifier&&) = default;
 	};
 

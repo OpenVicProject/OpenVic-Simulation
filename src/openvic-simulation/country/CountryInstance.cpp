@@ -2323,7 +2323,8 @@ bool CountryInstanceManager::generate_country_instances(
 	bool ret = true;
 
 	for (CountryDefinition const& country_definition : country_definition_manager.get_country_definitions()) {
-		if (country_instances.add_item({
+		if (country_instances.emplace_item(
+			country_definition.get_identifier(),
 			&country_definition,
 			get_country_instance_count(),
 			building_type_keys,
@@ -2344,7 +2345,7 @@ bool CountryInstanceManager::generate_country_instances(
 			good_instance_manager,
 			country_defines,
 			economy_defines
-		})) {
+		)) {
 			// We need to update the country's ModifierSum's source here as the country's address is finally stable
 			// after changing between its constructor call and now due to being std::move'd into the registry.
 			CountryInstance& country_instance = get_back_country_instance();

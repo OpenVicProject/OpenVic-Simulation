@@ -8,10 +8,7 @@
 #include "openvic-simulation/utility/Containers.hpp"
 
 namespace OpenVic {
-	struct LeaderTraitManager;
-
 	struct LeaderTrait : Modifier {
-		friend struct LeaderTraitManager;
 
 		enum class trait_type_t { PERSONALITY, BACKGROUND };
 
@@ -31,9 +28,8 @@ namespace OpenVic {
 		 * reliability - decimal, mil gain or loss for associated POPs
 		 */
 
-		LeaderTrait(std::string_view new_identifier, trait_type_t new_type, ModifierValue&& new_modifiers);
-
 	public:
+		LeaderTrait(std::string_view new_identifier, trait_type_t new_type, ModifierValue&& new_modifiers);
 		LeaderTrait(LeaderTrait&&) = default;
 
 		bool is_personality_trait() const;

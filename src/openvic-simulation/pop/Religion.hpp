@@ -4,22 +4,13 @@
 #include "openvic-simulation/types/IdentifierRegistry.hpp"
 
 namespace OpenVic {
-
-	struct ReligionManager;
-
 	struct ReligionGroup : HasIdentifier {
-		friend struct ReligionManager;
-
-	private:
-		ReligionGroup(std::string_view new_identifier);
-
 	public:
+		ReligionGroup(std::string_view new_identifier);
 		ReligionGroup(ReligionGroup&&) = default;
 	};
 
 	struct Religion : HasIdentifierAndColour {
-		friend struct ReligionManager;
-
 		using icon_t = uint8_t;
 
 	private:
@@ -27,12 +18,11 @@ namespace OpenVic {
 		const icon_t PROPERTY(icon);
 		const bool PROPERTY(pagan);
 
+	public:
 		Religion(
 			std::string_view new_identifier, colour_t new_colour, ReligionGroup const& new_group, icon_t new_icon,
 			bool new_pagan
 		);
-
-	public:
 		Religion(Religion&&) = default;
 	};
 

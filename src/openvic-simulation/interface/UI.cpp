@@ -1,8 +1,9 @@
 #include "UI.hpp"
 
-#include "openvic-simulation/types/Colour.hpp"
 #include "openvic-simulation/DefinitionManager.hpp"
 #include "openvic-simulation/dataloader/NodeTools.hpp"
+#include "openvic-simulation/types/Colour.hpp"
+#include "openvic-simulation/types/IdentifierRegistry.hpp"
 
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;
@@ -27,9 +28,10 @@ bool UIManager::add_font(
 		Logger::error("Invalid fontname for font ", identifier, " - empty!");
 		return false;
 	}
-	const bool ret = fonts.add_item(
-		{ identifier, colour, fontname, charset, height, std::move(colour_codes) },
-		duplicate_warning_callback
+	const bool ret = fonts.emplace_item(
+		identifier,
+		duplicate_warning_callback,
+		identifier, colour, fontname, charset, height, std::move(colour_codes)
 	);
 
 	if (universal_colour_codes.empty() && ret) {
@@ -116,7 +118,7 @@ bool UIManager::load_gfx_file(ast::NodeCPtr root) {
 				 *   - texture sprite appearing twice identically in the same file (temp_frontend.gfx),
 				 *     both below a comment saying "OLD STUFF BELOW.."
 				 */
-				return sprites.add_item(std::move(sprite), duplicate_warning_callback);
+				return sprites.emplace_via_move(std::move(sprite), duplicate_warning_callback);
 			}
 		),
 
@@ -130,7 +132,7 @@ bool UIManager::load_gfx_file(ast::NodeCPtr root) {
 				 * of PrussianGCCavalry (the latter added in a spritepack). Currently we default to using the first loaded
 				 * model of each name, but we may want to switch to using the last loaded or allow multiple models per name
 				 * (e.g. by grouping them per gfx file). */
-				return objects.add_item(std::move(object), duplicate_warning_callback);
+				return objects.emplace_via_move(std::move(object), duplicate_warning_callback);
 			}
 		),
 
@@ -147,7 +149,7 @@ bool UIManager::load_gui_file(std::string_view scene_name, ast::NodeCPtr root) {
 		"guiTypes", ZERO_OR_ONE, Scene::expect_scene(
 			scene_name,
 			[this](memory::unique_base_ptr<Scene>&& scene) -> bool {
-				return scenes.add_item(std::move(scene));
+				return scenes.emplace_via_move(std::move(scene));
 			},
 			*this
 		)

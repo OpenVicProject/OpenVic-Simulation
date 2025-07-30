@@ -146,8 +146,6 @@ namespace OpenVic {
 
 	template<>
 	struct UnitTypeBranched<UnitType::branch_t::LAND> : UnitType {
-		friend struct UnitTypeManager;
-
 		// Each value is a subset of its predecessor, so smaller values contain larger values
 		// The exact values here must be preserved to allow easy comparison against Pop::culture_status_t
 		enum struct allowed_cultures_t : uint8_t { ALL_CULTURES, ACCEPTED_CULTURES, PRIMARY_CULTURE, NO_CULTURES };
@@ -183,11 +181,10 @@ namespace OpenVic {
 		const fixed_point_t PROPERTY(maneuver);
 		const fixed_point_t PROPERTY(siege);
 
+	public:
 		UnitTypeBranched(
 			std::string_view new_identifier, unit_type_args_t& unit_args, regiment_type_args_t const& regiment_type_args
 		);
-
-	public:
 		UnitTypeBranched(UnitTypeBranched&&) = default;
 	};
 
@@ -195,8 +192,6 @@ namespace OpenVic {
 
 	template<>
 	struct UnitTypeBranched<UnitType::branch_t::NAVAL> : UnitType {
-		friend struct UnitTypeManager;
-
 		struct ship_type_args_t {
 			icon_t naval_icon = 0;
 			bool sail = false, transport = false, capital = false, build_overseas = false;
@@ -226,9 +221,8 @@ namespace OpenVic {
 		const fixed_point_t PROPERTY(evasion);
 		const fixed_point_t PROPERTY(torpedo_attack);
 
-		UnitTypeBranched(std::string_view new_identifier, unit_type_args_t& unit_args, ship_type_args_t const& ship_type_args);
-
 	public:
+		UnitTypeBranched(std::string_view new_identifier, unit_type_args_t& unit_args, ship_type_args_t const& ship_type_args);
 		UnitTypeBranched(UnitTypeBranched&&) = default;
 	};
 

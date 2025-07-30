@@ -80,6 +80,9 @@ namespace OpenVic {
 		EffectScript PROPERTY(on_add);
 		EffectScript PROPERTY(on_po_accepted);
 
+		bool parse_scripts(DefinitionManager const& definition_manager);
+
+	public:
 		WargoalType(
 			std::string_view new_identifier, std::string_view new_war_name, Timespan new_available_length,
 			Timespan new_truce_length, sprite_t new_sprite_index, bool new_triggered_only, bool new_civil_war,
@@ -89,10 +92,6 @@ namespace OpenVic {
 			ConditionScript&& new_allowed_substate_regions, ConditionScript&& new_allowed_states_in_crisis,
 			ConditionScript&& new_allowed_countries, EffectScript&& new_on_add, EffectScript&& new_on_po_accepted
 		);
-
-		bool parse_scripts(DefinitionManager const& definition_manager);
-
-	public:
 		WargoalType(WargoalType&&) = default;
 	};
 

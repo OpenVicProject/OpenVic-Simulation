@@ -65,22 +65,25 @@ bool LeaderTraitManager::add_leader_trait(
 		return false;
 	}
 
-	if (leader_traits.add_item({ identifier, type, std::move(modifiers) })) {
-		using enum LeaderTrait::trait_type_t;
-
-		switch (type) {
-		case PERSONALITY:
-			personality_traits.push_back(&leader_traits.back());
-			break;
-		case BACKGROUND:
-			background_traits.push_back(&leader_traits.back());
-			break;
-		}
-
-		return true;
-	} else {
+	if (!leader_traits.emplace_item(
+		identifier,
+		identifier, type, std::move(modifiers)
+	)) {
 		return false;
 	}
+
+	using enum LeaderTrait::trait_type_t;
+
+	switch (type) {
+	case PERSONALITY:
+		personality_traits.push_back(&leader_traits.back());
+		break;
+	case BACKGROUND:
+		background_traits.push_back(&leader_traits.back());
+		break;
+	}
+
+	return true;
 }
 
 bool LeaderTraitManager::load_leader_traits_file(ModifierManager const& modifier_manager, ast::NodeCPtr root) {

@@ -56,14 +56,10 @@ bool ConditionManager::add_condition(
 		}
 	}
 
-	return conditions.add_item({
+	return conditions.emplace_item(
 		identifier,
-		value_type,
-		scope,
-		scope_change,
-		key_identifier_type,
-		value_identifier_type
-	});
+		identifier, value_type,	scope, scope_change, key_identifier_type, value_identifier_type
+	);
 }
 
 bool ConditionManager::setup_conditions(DefinitionManager const& definition_manager) {

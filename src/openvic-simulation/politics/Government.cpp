@@ -36,9 +36,10 @@ bool GovernmentTypeManager::add_government_type(
 		return false;
 	}
 
-	const bool ret = government_types.add_item({
+	const bool ret = government_types.emplace_item(
+		identifier,
 		identifier, std::move(ideologies), elections, appoint_ruling_party, term_duration, flag_type
-	});
+	);
 
 	/* flag_type can be empty here for default/non-ideological flag */
 	if (ret) {

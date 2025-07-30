@@ -26,7 +26,10 @@ Bookmark::Bookmark(
 bool BookmarkManager::add_bookmark(
 	std::string_view name, std::string_view description, Date date, fvec2_t initial_camera_position
 ) {
-	return bookmarks.add_item({ bookmarks.size(), name, description, date, initial_camera_position });
+	return bookmarks.emplace_item(
+		name,
+		bookmarks.size(), name, description, date, initial_camera_position
+	);
 }
 
 bool BookmarkManager::load_bookmark_file(fixed_point_t map_height, ast::NodeCPtr root) {

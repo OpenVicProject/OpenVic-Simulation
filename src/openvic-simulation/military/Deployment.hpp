@@ -1,8 +1,6 @@
 #pragma once
 
-#include <string>
 #include <string_view>
-#include <vector>
 
 #include "openvic-simulation/military/Leader.hpp"
 #include "openvic-simulation/military/UnitType.hpp"
@@ -71,19 +69,16 @@ namespace OpenVic {
 	using NavyDeployment = UnitDeploymentGroup<UnitType::branch_t::NAVAL>;
 
 	struct Deployment : HasIdentifier {
-		friend struct DeploymentManager;
-
 	private:
 		memory::vector<ArmyDeployment> PROPERTY(armies);
 		memory::vector<NavyDeployment> PROPERTY(navies);
 		memory::vector<LeaderBase> PROPERTY(leaders);
 
+	public:
 		Deployment(
 			std::string_view new_path, memory::vector<ArmyDeployment>&& new_armies, memory::vector<NavyDeployment>&& new_navies,
 			memory::vector<LeaderBase>&& new_leaders
 		);
-
-	public:
 		Deployment(Deployment&&) = default;
 
 		UNIT_BRANCHED_GETTER_CONST(get_unit_deployment_groups, armies, navies);

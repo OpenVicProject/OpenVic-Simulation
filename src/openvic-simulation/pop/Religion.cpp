@@ -23,7 +23,7 @@ bool ReligionManager::add_religion_group(std::string_view identifier) {
 		Logger::error("Invalid religion group identifier - empty!");
 		return false;
 	}
-	return religion_groups.add_item({ identifier });
+	return religion_groups.emplace_item(identifier, identifier);
 }
 
 bool ReligionManager::add_religion(
@@ -41,7 +41,10 @@ bool ReligionManager::add_religion(
 		Logger::error("Invalid religion icon for ", identifier, ": ", icon);
 		return false;
 	}
-	return religions.add_item({ identifier, colour, group, icon, pagan });
+	return religions.emplace_item(
+		identifier,
+		identifier, colour, group, icon, pagan
+	);
 }
 
 /* REQUIREMENTS:
