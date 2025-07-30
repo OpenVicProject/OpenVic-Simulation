@@ -86,7 +86,7 @@ namespace OpenVic {
 		std::optional<int64_t> validate_integer(std::string_view value_string);
 		std::optional<uint64_t> validate_unsigned_integer(std::string_view value_string);
 		std::optional<bool> validate_boolean(std::string_view value_string);
-		ProvinceInstance* validate_province_index(std::string_view value_string);
+		ProvinceInstance* validate_province_number(std::string_view value_string);
 		CountryInstance* validate_country_tag(std::string_view value_string);
 		Event const* validate_event_id(std::string_view value_string);
 		UnitType const* validate_unit(std::string_view value_string);

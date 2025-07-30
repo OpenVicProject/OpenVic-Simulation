@@ -1,10 +1,12 @@
 #include "MapInstance.hpp"
+#include <optional>
 
 #include "openvic-simulation/history/ProvinceHistory.hpp"
 #include "openvic-simulation/map/MapDefinition.hpp"
 #include "openvic-simulation/pop/PopValuesFromProvince.hpp"
 #include "openvic-simulation/utility/Logger.hpp"
 #include "openvic-simulation/utility/ThreadPool.hpp"
+#include "map/ProvinceDefinition.hpp"
 
 using namespace OpenVic;
 
@@ -19,9 +21,19 @@ MapInstance::MapInstance(
 ProvinceInstance& MapInstance::get_province_instance_from_definition(ProvinceDefinition const& province) {
 	return province_instances.get_items()[province.get_index()];
 }
-
 ProvinceInstance const& MapInstance::get_province_instance_from_definition(ProvinceDefinition const& province) const {
 	return province_instances.get_items()[province.get_index()];
+}
+
+ProvinceInstance* MapInstance::get_province_instance_from_number(
+	decltype(std::declval<ProvinceDefinition>().get_province_number())province_number
+) {
+	return province_instances.get_item_by_index(ProvinceDefinition::get_index_from_province_number(province_number));
+}
+ProvinceInstance const* MapInstance::get_province_instance_from_number(
+	decltype(std::declval<ProvinceDefinition>().get_province_number())province_number
+) const {
+	return province_instances.get_item_by_index(ProvinceDefinition::get_index_from_province_number(province_number));
 }
 
 void MapInstance::enable_canal(canal_index_t canal_index) {

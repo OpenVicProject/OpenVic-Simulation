@@ -559,17 +559,14 @@ namespace OpenVic {
 
 /* Macros to generate declaration and constant accessor methods for a UniqueKeyRegistry member variable. */
 
-#define IDENTIFIER_REGISTRY(name, ...) \
-	IDENTIFIER_REGISTRY_CUSTOM_PLURAL(name, name##s __VA_OPT__(,) __VA_ARGS__)
+#define IDENTIFIER_REGISTRY(name) \
+	IDENTIFIER_REGISTRY_CUSTOM_PLURAL(name, name##s)
 
-#define IDENTIFIER_REGISTRY_CUSTOM_PLURAL(singular, plural, ...) \
-	IDENTIFIER_REGISTRY_FULL_CUSTOM(singular, plural, plural, plural, 0 __VA_OPT__(,) __VA_ARGS__)
+#define IDENTIFIER_REGISTRY_CUSTOM_PLURAL(singular, plural) \
+	IDENTIFIER_REGISTRY_FULL_CUSTOM(singular, plural, plural, plural)
 
-#define IDENTIFIER_REGISTRY_CUSTOM_INDEX_OFFSET(name, index_offset, ...) \
-	IDENTIFIER_REGISTRY_FULL_CUSTOM(name, name##s, name##s, name##s, index_offset __VA_OPT__(,) __VA_ARGS__)
-
-#define IDENTIFIER_REGISTRY_FULL_CUSTOM(singular, plural, registry, debug_name, index_offset, ...) \
-	registry { #debug_name __VA_OPT__(,) __VA_ARGS__ }; \
+#define IDENTIFIER_REGISTRY_FULL_CUSTOM(singular, plural, registry, debug_name) \
+	registry { #debug_name }; \
 public: \
 	constexpr void lock_##plural() { \
 		registry.lock(); \
@@ -608,7 +605,7 @@ public: \
 	) const { \
 		return registry.expect_item_decimal_map(callback, fixed_point_functor); \
 	} \
-	IDENTIFIER_REGISTRY_INTERNAL_SHARED(singular, plural, registry, index_offset, const) \
+	IDENTIFIER_REGISTRY_INTERNAL_SHARED(singular, plural, registry, const) \
 private:
 
 /* Macros to generate non-constant accessor methods for a UniqueKeyRegistry member variable. */
@@ -617,21 +614,12 @@ private:
 	IDENTIFIER_REGISTRY_NON_CONST_ACCESSORS_CUSTOM_PLURAL(name, name##s)
 
 #define IDENTIFIER_REGISTRY_NON_CONST_ACCESSORS_CUSTOM_PLURAL(singular, plural) \
-	IDENTIFIER_REGISTRY_NON_CONST_ACCESSORS_FULL_CUSTOM(singular, plural, plural, plural, 0)
+	IDENTIFIER_REGISTRY_NON_CONST_ACCESSORS_FULL_CUSTOM(singular, plural, plural, plural)
 
-#define IDENTIFIER_REGISTRY_NON_CONST_ACCESSORS_CUSTOM_INDEX_OFFSET(name, index_offset) \
-	IDENTIFIER_REGISTRY_NON_CONST_ACCESSORS_FULL_CUSTOM(name, name##s, name##s, name##s, index_offset)
+#define IDENTIFIER_REGISTRY_NON_CONST_ACCESSORS_FULL_CUSTOM(singular, plural, registry, debug_name) \
+	IDENTIFIER_REGISTRY_INTERNAL_SHARED(singular, plural, registry,)
 
-#define IDENTIFIER_REGISTRY_NON_CONST_ACCESSORS_FULL_CUSTOM(singular, plural, registry, debug_name, index_offset) \
-	IDENTIFIER_REGISTRY_INTERNAL_SHARED(singular, plural, registry, index_offset,)
-
-#define IF_NON_ZERO(value, conditional_part) IF_NON_ZERO_##value(conditional_part)
-#define IF_NON_ZERO_0(conditional_part)
-#define IF_NON_ZERO_1(conditional_part) conditional_part
-#define CONCAT_FORCE_EXPAND(a, b) a##b
-#define CONCAT_TOKENS(a, b) CONCAT_FORCE_EXPAND(a, b)
-
-#define IDENTIFIER_REGISTRY_INTERNAL_SHARED(singular, plural, registry, index_offset, const_kw) \
+#define IDENTIFIER_REGISTRY_INTERNAL_SHARED(singular, plural, registry, const_kw) \
 	constexpr decltype(registry)::external_value_type const_kw& get_front_##singular() const_kw { \
 		return registry.front(); \
 	} \
@@ -645,15 +633,8 @@ private:
 	constexpr T const_kw* get_cast_##singular##_by_identifier(std::string_view identifier) const_kw { \
 		return registry.get_cast_item_by_identifier<T>(identifier); \
 	} \
-IF_NON_ZERO(index_offset, \
-	constexpr decltype(registry)::external_value_type const_kw* get_##singular##_by_index_0_based(std::size_t index_0_based) const_kw { \
-		return index_0_based >= 0 ? registry.get_item_by_index(index_0_based) : nullptr; \
-	} \
-) \
-	constexpr decltype(registry)::external_value_type const_kw* \
-	CONCAT_TOKENS(get_##singular##_by_index, IF_NON_ZERO(index_offset, _##index_offset##_based)) \
-	(std::size_t index) const_kw { \
-		return index >= index_offset ? registry.get_item_by_index(index - index_offset) : nullptr; \
+	constexpr decltype(registry)::external_value_type const_kw* get_##singular##_by_index(std::size_t index) const_kw { \
+		return index >= 0 ? registry.get_item_by_index(index) : nullptr; \
 	} \
 	constexpr decltype(registry)::storage_type const_kw& get_##plural() const_kw { \
 		return registry.get_items(); \
