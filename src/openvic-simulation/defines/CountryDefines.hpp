@@ -1,9 +1,9 @@
 #pragma once
 
 #include "openvic-simulation/dataloader/NodeTools.hpp"
-#include "openvic-simulation/map/ProvinceInstance.hpp"
 #include "openvic-simulation/types/Date.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
+#include "openvic-simulation/types/ProvinceLifeRating.hpp"
 #include "openvic-simulation/utility/Getters.hpp"
 
 namespace OpenVic {
@@ -40,7 +40,7 @@ namespace OpenVic {
 		Timespan PROPERTY(campaign_duration);
 		size_t PROPERTY(secondary_power_rank, 0);
 		fixed_point_t PROPERTY(colony_to_state_prestige_gain);
-		ProvinceInstance::life_rating_t PROPERTY(colonial_liferating, 0);
+		life_rating_t PROPERTY(colonial_liferating, 0);
 		fixed_point_t PROPERTY(base_greatpower_daily_influence);
 		fixed_point_t PROPERTY(ai_support_reform);
 		fixed_point_t PROPERTY(base_monthly_diplopoints);

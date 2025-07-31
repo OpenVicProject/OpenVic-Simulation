@@ -182,7 +182,14 @@ bool CountryHistoryMap::_load_history_entry(
 		"oob", ZERO_OR_ONE, expect_identifier_or_string(
 			[&definition_manager, &deployment_manager, &dataloader, &entry](std::string_view path) -> bool {
 				Deployment const* deployment = nullptr;
-				const bool ret = deployment_manager.load_oob_file(definition_manager, dataloader, path, deployment, false);
+				const bool ret = deployment_manager.load_oob_file(
+					dataloader,
+					definition_manager.get_map_definition(),
+					definition_manager.get_military_manager(),
+					path,
+					deployment,
+					false
+				);
 				if (deployment != nullptr) {
 					entry.initial_oob = deployment;
 				}

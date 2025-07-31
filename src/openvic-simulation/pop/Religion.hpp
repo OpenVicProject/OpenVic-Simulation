@@ -1,6 +1,7 @@
 #pragma once
 
 #include "openvic-simulation/dataloader/NodeTools.hpp"
+#include "openvic-simulation/types/HasIdentifier.hpp"
 #include "openvic-simulation/types/IdentifierRegistry.hpp"
 
 namespace OpenVic {

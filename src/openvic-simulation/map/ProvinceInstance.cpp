@@ -1,26 +1,15 @@
 #include "ProvinceInstance.hpp"
 
-#include <span>
-
+#include "openvic-simulation/country/CountryDefinition.hpp"
 #include "openvic-simulation/country/CountryInstance.hpp"
 #include "openvic-simulation/defines/Define.hpp"
 #include "openvic-simulation/DefinitionManager.hpp"
-#include "openvic-simulation/economy/BuildingType.hpp"
+#include "openvic-simulation/economy/production/Employee.hpp"
 #include "openvic-simulation/economy/production/ProductionType.hpp"
-#include "openvic-simulation/economy/production/ResourceGatheringOperation.hpp"
-#include "openvic-simulation/history/ProvinceHistory.hpp"
 #include "openvic-simulation/InstanceManager.hpp"
-#include "openvic-simulation/map/Crime.hpp"
 #include "openvic-simulation/map/ProvinceDefinition.hpp"
-#include "openvic-simulation/map/Region.hpp"
-#include "openvic-simulation/map/TerrainType.hpp"
-#include "openvic-simulation/military/UnitInstanceGroup.hpp"
 #include "openvic-simulation/misc/GameRulesManager.hpp"
 #include "openvic-simulation/modifier/StaticModifierCache.hpp"
-#include "openvic-simulation/politics/Ideology.hpp"
-#include "openvic-simulation/pop/PopValuesFromProvince.hpp"
-#include "openvic-simulation/utility/Logger.hpp"
-#include "openvic-simulation/utility/Containers.hpp"
 
 using namespace OpenVic;
 
@@ -54,6 +43,13 @@ void ProvinceInstance::set_state(State* new_state) {
 	// TODO - ensure this is removed from old state and added to new state (either here or wherever this is called from)
 	// TODO - update pop factory employment
 	state = new_state;
+}
+
+GoodDefinition const* ProvinceInstance::get_rgo_good() const {
+	if (!rgo.is_valid()) {
+		return nullptr;
+	}
+	return &(rgo.get_production_type_nullable()->get_output_good());
 }
 
 bool ProvinceInstance::set_rgo_production_type_nullable(ProductionType const* rgo_production_type_nullable) {
@@ -158,7 +154,17 @@ bool ProvinceInstance::remove_core(CountryInstance& core_to_remove, bool warn) {
 	return true;
 }
 
-fixed_point_t ProvinceInstance::get_issue_support(Issue const& issue) const {
+pop_size_t ProvinceInstance::get_pop_type_proportion(PopType const& pop_type) const {
+	return pop_type_distribution[pop_type];
+}
+pop_size_t ProvinceInstance::get_pop_type_unemployed(PopType const& pop_type) const {
+	return pop_type_unemployed_count[pop_type];
+}
+fixed_point_t ProvinceInstance::get_ideology_support(Ideology const& ideology) const {
+	return ideology_distribution[ideology];
+}
+
+fixed_point_t ProvinceInstance::get_issue_support(BaseIssue const& issue) const {
 	const decltype(issue_distribution)::const_iterator it = issue_distribution.find(&issue);
 
 	if (it != issue_distribution.end()) {
@@ -194,6 +200,22 @@ fixed_point_t ProvinceInstance::get_religion_proportion(Religion const& religion
 	} else {
 		return 0;
 	}
+}
+
+pop_size_t ProvinceInstance::get_strata_population(Strata const& strata) const {
+	return population_by_strata[strata];
+}
+fixed_point_t ProvinceInstance::get_strata_militancy(Strata const& strata) const {
+	return militancy_by_strata[strata];
+}
+fixed_point_t ProvinceInstance::get_strata_life_needs_fulfilled(Strata const& strata) const {
+	return life_needs_fulfilled_by_strata[strata];
+}
+fixed_point_t ProvinceInstance::get_strata_everyday_needs_fulfilled(Strata const& strata) const {
+	return everyday_needs_fulfilled_by_strata[strata];
+}
+fixed_point_t ProvinceInstance::get_strata_luxury_needs_fulfilled(Strata const& strata) const {
+	return luxury_needs_fulfilled_by_strata[strata];
 }
 
 bool ProvinceInstance::expand_building(size_t building_index) {
@@ -410,6 +432,19 @@ fixed_point_t ProvinceInstance::get_modifier_effect_value(ModifierEffect const& 
 	}
 }
 
+void ProvinceInstance::for_each_contributing_modifier(ModifierEffect const& effect, ContributingModifierCallback auto callback) const {
+	if (effect.is_local()) {
+		// Province-targeted/local effects come from the province itself, only modifiers applied directly to the
+		// province contribute to these effects.
+		modifier_sum.for_each_contributing_modifier(effect, std::move(callback));
+	} else if (owner != nullptr) {
+		// Non-province targeted/global effects come from the province's owner, even those applied locally
+		// (e.g. via a province event modifier) are passed up to the province's controller and only affect the
+		// province if the controller is also the owner.
+		owner->for_each_contributing_modifier(effect, std::move(callback));
+	}
+}
+
 bool ProvinceInstance::convert_rgo_worker_pops_to_equivalent(ProductionType const& production_type) {
 	bool is_valid_operation = true;
 	std::span<const Job> jobs = production_type.get_jobs();
@@ -490,7 +525,7 @@ void ProvinceInstance::province_tick(
 }
 
 bool ProvinceInstance::add_unit_instance_group(UnitInstanceGroup& group) {
-	using enum UnitType::branch_t;
+	using enum unit_branch_t;
 
 	switch (group.get_branch()) {
 	case LAND:
@@ -509,7 +544,7 @@ bool ProvinceInstance::add_unit_instance_group(UnitInstanceGroup& group) {
 }
 
 bool ProvinceInstance::remove_unit_instance_group(UnitInstanceGroup const& group) {
-	const auto remove_from_vector = [this, &group]<UnitType::branch_t Branch>(
+	const auto remove_from_vector = [this, &group]<unit_branch_t Branch>(
 		memory::vector<UnitInstanceGroupBranched<Branch>*>& unit_instance_groups
 	) -> bool {
 		const typename memory::vector<UnitInstanceGroupBranched<Branch>*>::const_iterator it =
@@ -520,14 +555,14 @@ bool ProvinceInstance::remove_unit_instance_group(UnitInstanceGroup const& group
 			return true;
 		} else {
 			Logger::error(
-				"Trying to remove non-existent ", UnitType::get_branched_unit_group_name(Branch), " \"",
+				"Trying to remove non-existent ", get_branched_unit_group_name(Branch), " \"",
 				group.get_name(), "\" from province ", get_identifier()
 			);
 			return false;
 		}
 	};
 
-	using enum UnitType::branch_t;
+	using enum unit_branch_t;
 
 	switch (group.get_branch()) {
 	case LAND:

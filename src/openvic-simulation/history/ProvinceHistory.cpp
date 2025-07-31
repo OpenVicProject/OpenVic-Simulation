@@ -1,10 +1,10 @@
 #include "ProvinceHistory.hpp"
 
+#include "openvic-simulation/dataloader/NodeTools.hpp"
 #include "openvic-simulation/DefinitionManager.hpp"
 #include "openvic-simulation/economy/GoodDefinition.hpp"
 #include "openvic-simulation/map/ProvinceDefinition.hpp"
 #include "openvic-simulation/utility/Logger.hpp"
-#include "openvic-simulation/dataloader/NodeTools.hpp"
 #include "openvic-simulation/utility/Containers.hpp"
 
 using namespace OpenVic;
@@ -29,8 +29,8 @@ bool ProvinceHistoryMap::_load_history_entry(
 	IdeologyManager const& ideology_manager = definition_manager.get_politics_manager().get_ideology_manager();
 	TerrainTypeManager const& terrain_type_manager = definition_manager.get_map_definition().get_terrain_type_manager();
 
-	using enum ProvinceInstance::colony_status_t;
-	static const string_map_t<ProvinceInstance::colony_status_t> colony_status_map {
+	using enum colony_status_t;
+	static const string_map_t<colony_status_t> colony_status_map {
 		{ "0", STATE }, { "1", PROTECTORATE }, { "2", COLONY }
 	};
 
@@ -74,7 +74,7 @@ bool ProvinceHistoryMap::_load_history_entry(
 			BuildingType const* building_type = building_type_manager.get_building_type_by_identifier(key);
 			if (building_type != nullptr) {
 				if (building_type->is_in_province()) {
-					return expect_uint<BuildingType::level_t>(
+					return expect_uint<building_level_t>(
 						/* This is set to warn to prevent vanilla from always having errors because
 						 * of a duplicate railroad entry in the 1861.1.1 history of Manchester (278). */
 						map_callback(entry.province_buildings, building_type, true)
@@ -122,7 +122,7 @@ bool ProvinceHistoryMap::_load_history_entry(
 				allow_empty_true, //could be explicitly setting trade_goods to null
 				do_warn //could be typo in good identifier
 			),
-		"life_rating", ZERO_OR_ONE, expect_uint<ProvinceInstance::life_rating_t>(assign_variable_callback(entry.life_rating)),
+		"life_rating", ZERO_OR_ONE, expect_uint<life_rating_t>(assign_variable_callback(entry.life_rating)),
 		"terrain", ZERO_OR_ONE, terrain_type_manager.expect_terrain_type_identifier(
 			assign_variable_callback_pointer_opt(entry.terrain_type)
 		),

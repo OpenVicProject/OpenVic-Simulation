@@ -1,10 +1,13 @@
 #include "State.hpp"
 
+#include "openvic-simulation/country/CountryDefinition.hpp" // for ->get_parties()
 #include "openvic-simulation/country/CountryInstance.hpp"
 #include "openvic-simulation/map/MapDefinition.hpp"
 #include "openvic-simulation/map/MapInstance.hpp"
 #include "openvic-simulation/map/ProvinceInstance.hpp"
 #include "openvic-simulation/map/Region.hpp"
+#include "openvic-simulation/politics/Ideology.hpp"
+#include "openvic-simulation/pop/PopType.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
 #include "openvic-simulation/utility/StringUtils.hpp"
 #include "openvic-simulation/utility/Containers.hpp"
@@ -17,7 +20,7 @@ State::State(
 	CountryInstance* new_owner,
 	ProvinceInstance* new_capital,
 	memory::vector<ProvinceInstance*>&& new_provinces,
-	ProvinceInstance::colony_status_t new_colony_status,
+	colony_status_t new_colony_status,
 	decltype(population_by_strata)::keys_span_type strata_keys,
 	decltype(pop_type_distribution)::keys_span_type pop_type_keys,
 	decltype(ideology_distribution)::keys_span_type ideology_keys
@@ -44,7 +47,17 @@ memory::string State::get_identifier() const {
 	);
 }
 
-fixed_point_t State::get_issue_support(Issue const& issue) const {
+pop_size_t State::get_pop_type_proportion(PopType const& pop_type) const {
+	return pop_type_distribution[pop_type];
+}
+pop_size_t State::get_pop_type_unemployed(PopType const& pop_type) const {
+	return pop_type_unemployed_count[pop_type];
+}
+fixed_point_t State::get_ideology_support(Ideology const& ideology) const {
+	return ideology_distribution[ideology];
+}
+
+fixed_point_t State::get_issue_support(BaseIssue const& issue) const {
 	const decltype(issue_distribution)::const_iterator it = issue_distribution.find(&issue);
 
 	if (it != issue_distribution.end()) {
@@ -80,6 +93,22 @@ fixed_point_t State::get_religion_proportion(Religion const& religion) const {
 	} else {
 		return 0;
 	}
+}
+
+pop_size_t State::get_strata_population(Strata const& strata) const {
+	return population_by_strata[strata];
+}
+fixed_point_t State::get_strata_militancy(Strata const& strata) const {
+	return militancy_by_strata[strata];
+}
+fixed_point_t State::get_strata_life_needs_fulfilled(Strata const& strata) const {
+	return life_needs_fulfilled_by_strata[strata];
+}
+fixed_point_t State::get_strata_everyday_needs_fulfilled(Strata const& strata) const {
+	return everyday_needs_fulfilled_by_strata[strata];
+}
+fixed_point_t State::get_strata_luxury_needs_fulfilled(Strata const& strata) const {
+	return luxury_needs_fulfilled_by_strata[strata];
 }
 
 void State::update_gamestate() {

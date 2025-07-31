@@ -1,9 +1,9 @@
 #pragma once
 
 #include "openvic-simulation/dataloader/NodeTools.hpp"
-#include "openvic-simulation/map/ProvinceInstance.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
 #include "openvic-simulation/types/PopSize.hpp"
+#include "openvic-simulation/types/ProvinceLifeRating.hpp"
 #include "openvic-simulation/utility/Getters.hpp"
 
 namespace OpenVic {
@@ -24,7 +24,7 @@ namespace OpenVic {
 		fixed_point_t PROPERTY(luxury_threshold);
 		fixed_point_t PROPERTY(base_goods_demand);
 		fixed_point_t PROPERTY(base_popgrowth);
-		ProvinceInstance::life_rating_t PROPERTY(min_life_rating_for_growth, 0);
+		life_rating_t PROPERTY(min_life_rating_for_growth, 0);
 		fixed_point_t PROPERTY(life_rating_growth_bonus);
 		fixed_point_t PROPERTY(life_need_starvation_limit);
 		fixed_point_t PROPERTY(mil_lack_everyday_need);

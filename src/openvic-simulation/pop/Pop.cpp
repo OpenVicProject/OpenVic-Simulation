@@ -6,9 +6,14 @@
 #undef KEEP_DO_FOR_ALL_TYPES_OF_INCOME
 #undef KEEP_DO_FOR_ALL_TYPES_OF_EXPENSES
 
+#include "openvic-simulation/country/CountryParty.hpp"
+#include "openvic-simulation/country/CountryDefinition.hpp" //for ->get_parties()
+#include "openvic-simulation/country/CountryInstance.hpp"
 #include "openvic-simulation/defines/Define.hpp"
 #include "openvic-simulation/economy/GoodDefinition.hpp"
+#include "openvic-simulation/economy/production/ArtisanalProducer.hpp"
 #include "openvic-simulation/economy/production/ArtisanalProducerFactoryPattern.hpp"
+#include "openvic-simulation/economy/production/ProductionType.hpp"
 #include "openvic-simulation/economy/trading/BuyResult.hpp"
 #include "openvic-simulation/economy/trading/BuyUpToOrder.hpp"
 #include "openvic-simulation/economy/trading/MarketSellOrder.hpp"
@@ -16,12 +21,17 @@
 #include "openvic-simulation/economy/trading/SellResult.hpp"
 #include "openvic-simulation/map/ProvinceInstance.hpp"
 #include "openvic-simulation/modifier/ModifierEffectCache.hpp"
+#include "openvic-simulation/politics/Ideology.hpp"
+#include "openvic-simulation/politics/IssueManager.hpp"
+#include "openvic-simulation/pop/Culture.hpp"
 #include "openvic-simulation/pop/PopNeedsMacro.hpp"
+#include "openvic-simulation/pop/PopType.hpp"
 #include "openvic-simulation/pop/PopValuesFromProvince.hpp"
+#include "openvic-simulation/pop/Religion.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
+#include "openvic-simulation/utility/Containers.hpp"
 #include "openvic-simulation/utility/Logger.hpp"
 #include "openvic-simulation/utility/Utility.hpp"
-#include "openvic-simulation/utility/Containers.hpp"
 
 using namespace OpenVic;
 
@@ -47,6 +57,13 @@ Pop::Pop(
 	ideology_distribution { ideology_keys } {
 		reserve_needs_fulfilled_goods();
 	}
+
+fixed_point_t Pop::get_unemployment_fraction() const {
+	if (!type->get_can_be_unemployed()) {
+		return 0;
+	}
+	return fixed_point_t::parse(get_unemployed()) / size;
+}
 
 void Pop::setup_pop_test_values(IssueManager const& issue_manager) {
 	/* Returns +/- range% of size. */
@@ -85,7 +102,7 @@ void Pop::setup_pop_test_values(IssueManager const& issue_manager) {
 	ideology_distribution.rescale(size);
 
 	issue_distribution.clear();
-	for (Issue const& issue : issue_manager.get_issues()) {
+	for (BaseIssue const& issue : issue_manager.get_party_policies()) {
 		test_weight(issue_distribution, issue, 3, 6);
 	}
 	for (Reform const& reform : issue_manager.get_reforms()) {
@@ -158,7 +175,7 @@ fixed_point_t Pop::get_ideology_support(Ideology const& ideology) const {
 	return ideology_distribution[ideology];
 }
 
-fixed_point_t Pop::get_issue_support(Issue const& issue) const {
+fixed_point_t Pop::get_issue_support(BaseIssue const& issue) const {
 	const decltype(issue_distribution)::const_iterator it = issue_distribution.find(&issue);
 
 	if (it != issue_distribution.end()) {
@@ -324,7 +341,7 @@ DO_FOR_ALL_NEED_CATEGORIES(DEFINE_NEEDS_FULFILLED)
 	name = 0;
 
 void Pop::allocate_for_needs(
-	GoodDefinition::good_definition_map_t const& scaled_needs,
+	fixed_point_map_t<GoodDefinition const*> const& scaled_needs,
 	utility::forwardable_span<fixed_point_t> money_to_spend_per_good,
 	memory::vector<fixed_point_t>& reusable_vector,
 	fixed_point_t& price_inverse_sum,
@@ -591,7 +608,7 @@ void Pop::after_buy(void* actor, BuyResult const& buy_result) {
 		if (quantity_left_to_consume <= fixed_point_t::_0) { \
 			return; \
 		} \
-		const GoodDefinition::good_definition_map_t::const_iterator need_category##it = pop.need_category##_needs.find(&good_definition); \
+		const fixed_point_map_t<GoodDefinition const*>::const_iterator need_category##it = pop.need_category##_needs.find(&good_definition); \
 		if (need_category##it != pop.need_category##_needs.end()) { \
 			const fixed_point_t desired_quantity = need_category##it->second; \
 			fixed_point_t consumed_quantity; \

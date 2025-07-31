@@ -9,7 +9,7 @@ FactoryProducer::FactoryProducer(
 	fixed_point_t new_output_quantity_yesterday,
 	fixed_point_t new_unsold_quantity_yesterday,
 	ordered_map<Pop*, pop_size_t>&& new_employees,
-	GoodDefinition::good_definition_map_t&& new_stockpile,
+	fixed_point_map_t<GoodDefinition const*>&& new_stockpile,
 	fixed_point_t new_budget,
 	fixed_point_t new_balance_yesterday,
 	fixed_point_t new_received_investments_yesterday,

@@ -2,7 +2,7 @@
 
 #include "openvic-simulation/politics/Government.hpp"
 #include "openvic-simulation/politics/Ideology.hpp"
-#include "openvic-simulation/politics/Issue.hpp"
+#include "openvic-simulation/politics/IssueManager.hpp"
 #include "openvic-simulation/politics/NationalFocus.hpp"
 #include "openvic-simulation/politics/NationalValue.hpp"
 #include "openvic-simulation/politics/Rebel.hpp"

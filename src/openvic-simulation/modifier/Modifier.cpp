@@ -19,7 +19,7 @@ std::string_view Modifier::modifier_type_to_string(modifier_type_t type) {
 	_CASE(UNIT_TERRAIN)
 	_CASE(NATIONAL_VALUE)
 	_CASE(NATIONAL_FOCUS)
-	_CASE(ISSUE)
+	_CASE(PARTY_POLICY)
 	_CASE(REFORM)
 	_CASE(TECHNOLOGY)
 	_CASE(INVENTION)

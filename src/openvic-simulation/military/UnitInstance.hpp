@@ -1,12 +1,11 @@
 #pragma once
 
-#include <concepts>
-#include <string>
 #include <string_view>
 
-#include "openvic-simulation/military/Leader.hpp"
 #include "openvic-simulation/military/UnitType.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
+#include "openvic-simulation/types/UnitBranchType.hpp"
+#include "openvic-simulation/types/UniqueId.hpp"
 #include "openvic-simulation/utility/Getters.hpp"
 
 namespace OpenVic {
@@ -34,7 +33,7 @@ namespace OpenVic {
 			return unit_type.get_max_strength();
 		}
 
-		inline constexpr UnitType::branch_t get_branch() const {
+		inline constexpr unit_branch_t get_branch() const {
 			return unit_type.get_branch();
 		}
 
@@ -43,11 +42,8 @@ namespace OpenVic {
 
 	struct Pop;
 
-	template<UnitType::branch_t>
-	struct UnitInstanceBranched;
-
 	template<>
-	struct UnitInstanceBranched<UnitType::branch_t::LAND> : UnitInstance {
+	struct UnitInstanceBranched<unit_branch_t::LAND> : UnitInstance {
 		friend struct UnitInstanceManager;
 
 	private:
@@ -70,10 +66,8 @@ namespace OpenVic {
 		}
 	};
 
-	using RegimentInstance = UnitInstanceBranched<UnitType::branch_t::LAND>;
-
 	template<>
-	struct UnitInstanceBranched<UnitType::branch_t::NAVAL> : UnitInstance {
+	struct UnitInstanceBranched<unit_branch_t::NAVAL> : UnitInstance {
 		friend struct UnitInstanceManager;
 
 	private:
@@ -90,6 +84,4 @@ namespace OpenVic {
 			return static_cast<ShipType const&>(get_unit_type());
 		}
 	};
-
-	using ShipInstance = UnitInstanceBranched<UnitType::branch_t::NAVAL>;
 }

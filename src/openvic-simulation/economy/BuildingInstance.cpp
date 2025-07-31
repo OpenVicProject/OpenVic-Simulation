@@ -2,7 +2,7 @@
 
 using namespace OpenVic;
 
-BuildingInstance::BuildingInstance(BuildingType const& new_building_type, level_t new_level)
+BuildingInstance::BuildingInstance(BuildingType const& new_building_type, building_level_t new_level)
   : HasIdentifier { new_building_type },
 	building_type { new_building_type },
 	level { new_level } {}

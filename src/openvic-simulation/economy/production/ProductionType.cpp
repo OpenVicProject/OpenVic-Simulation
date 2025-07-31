@@ -3,6 +3,10 @@
 #include <openvic-dataloader/v2script/Parser.hpp>
 
 #include "openvic-simulation/dataloader/NodeTools.hpp"
+#include "openvic-simulation/economy/GoodDefinition.hpp"
+#include "openvic-simulation/misc/GameRulesManager.hpp"
+#include "openvic-simulation/pop/PopManager.hpp"
+#include "openvic-simulation/pop/PopType.hpp"
 #include "openvic-simulation/utility/ErrorMacros.hpp"
 
 using namespace OpenVic;
@@ -25,11 +29,11 @@ ProductionType::ProductionType(
 	memory::vector<Job>&& new_jobs,
 	const template_type_t new_template_type,
 	const pop_size_t new_base_workforce_size,
-	GoodDefinition::good_definition_map_t&& new_input_goods,
+	fixed_point_map_t<GoodDefinition const*>&& new_input_goods,
 	GoodDefinition const& new_output_good,
 	const fixed_point_t new_base_output_quantity,
 	memory::vector<bonus_t>&& new_bonuses,
-	GoodDefinition::good_definition_map_t&& new_maintenance_requirements,
+	fixed_point_map_t<GoodDefinition const*>&& new_maintenance_requirements,
 	const bool new_is_coastal,
 	const bool new_is_farm,
 	const bool new_is_mine
@@ -47,6 +51,22 @@ ProductionType::ProductionType(
 	coastal { new_is_coastal },
 	_is_farm { new_is_farm },
 	_is_mine { new_is_mine } {}
+
+
+bool ProductionType::get_is_farm_for_tech() const {
+	if (game_rules_manager.get_use_simple_farm_mine_logic()) {
+		return _is_farm;
+	}
+
+	return !_is_mine && _is_farm;
+}
+bool ProductionType::get_is_mine_for_non_tech() const {
+	if (game_rules_manager.get_use_simple_farm_mine_logic()) {
+		return _is_mine;
+	}
+
+	return !_is_farm;
+}
 
 bool ProductionType::parse_scripts(DefinitionManager const& definition_manager) {
 	bool ret = true;
@@ -104,11 +124,11 @@ bool ProductionTypeManager::add_production_type(
 	memory::vector<Job>&& jobs,
 	const ProductionType::template_type_t template_type,
 	const pop_size_t base_workforce_size,
-	GoodDefinition::good_definition_map_t&& input_goods,
+	fixed_point_map_t<GoodDefinition const*>&& input_goods,
 	GoodDefinition const* const output_good,
 	const fixed_point_t base_output_quantity,
 	memory::vector<ProductionType::bonus_t>&& bonuses,
-	GoodDefinition::good_definition_map_t&& maintenance_requirements,
+	fixed_point_map_t<GoodDefinition const*>&& maintenance_requirements,
 	const bool is_coastal,
 	const bool is_farm,
 	const bool is_mine
@@ -288,7 +308,7 @@ bool ProductionTypeManager::load_production_types_file(
 			ProductionType::template_type_t template_type { FACTORY };
 			GoodDefinition const* output_good = nullptr;
 			pop_size_t base_workforce_size = 0;
-			GoodDefinition::good_definition_map_t input_goods, maintenance_requirements;
+			fixed_point_map_t<GoodDefinition const*> input_goods, maintenance_requirements;
 			fixed_point_t base_output_quantity = 0;
 			memory::vector<ProductionType::bonus_t> bonuses;
 			bool is_coastal = false, is_farm = false, is_mine = false;

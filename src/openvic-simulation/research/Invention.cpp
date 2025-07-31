@@ -9,6 +9,7 @@ using namespace OpenVic;
 using namespace OpenVic::NodeTools;
 
 Invention::Invention(
+	index_t new_index,
 	std::string_view new_identifier,
 	ModifierValue&& new_values,
 	bool new_news,
@@ -19,7 +20,8 @@ Invention::Invention(
 	bool new_unlock_gas_defence,
 	ConditionScript&& new_limit,
 	ConditionalWeightBase&& new_chance
-) : Modifier { new_identifier, std::move(new_values), modifier_type_t::INVENTION },
+) : HasIndex<Invention> { new_index },
+	Modifier { new_identifier, std::move(new_values), modifier_type_t::INVENTION },
 	news { new_news },
 	activated_units { std::move(new_activated_units) },
 	activated_buildings { std::move(new_activated_buildings) },
@@ -50,7 +52,8 @@ bool InventionManager::add_invention(
 
 	return inventions.emplace_item(
 		identifier,
-		identifier, std::move(values), news, std::move(activated_units), std::move(activated_buildings),
+		get_invention_count(), identifier,
+		std::move(values), news, std::move(activated_units), std::move(activated_buildings),
 		std::move(enabled_crimes), unlock_gas_attack, unlock_gas_defence, std::move(limit), std::move(chance)
 	);
 }

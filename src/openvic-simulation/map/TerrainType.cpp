@@ -10,6 +10,7 @@ using namespace OpenVic;
 using namespace OpenVic::NodeTools;
 
 TerrainType::TerrainType(
+	index_t new_index,
 	std::string_view new_identifier,
 	colour_t new_colour,
 	ModifierValue&& new_modifier,
@@ -17,7 +18,8 @@ TerrainType::TerrainType(
 	fixed_point_t new_defence_bonus,
 	fixed_point_t new_combat_width_percentage_change,
 	bool new_is_water
-) : Modifier { new_identifier, std::move(new_modifier), modifier_type_t::TERRAIN },
+) : HasIndex<TerrainType> { new_index },
+	Modifier { new_identifier, std::move(new_modifier), modifier_type_t::TERRAIN },
 	HasColour { new_colour, false },
 	movement_cost { new_movement_cost },
 	defence_bonus { new_defence_bonus },
@@ -90,7 +92,8 @@ bool TerrainTypeManager::add_terrain_type(
 
 	return terrain_types.emplace_item(
 		identifier,
-		identifier, colour, std::move(values), movement_cost, defence_bonus, combat_width_percentage_change, is_water
+		get_terrain_type_count(), identifier,
+		colour, std::move(values), movement_cost, defence_bonus, combat_width_percentage_change, is_water
 	);
 }
 

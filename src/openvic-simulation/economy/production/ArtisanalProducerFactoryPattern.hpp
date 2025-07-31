@@ -1,14 +1,16 @@
 #pragma once
 
 #include <cstdint>
-#include <memory>
 
-#include "openvic-simulation/economy/production/ArtisanalProducer.hpp"
-#include "openvic-simulation/economy/production/ProductionType.hpp"
 #include "openvic-simulation/modifier/ModifierEffectCache.hpp"
 #include "openvic-simulation/utility/Containers.hpp"
 
 namespace OpenVic {
+	struct ArtisanalProducer;
+	struct GoodInstanceManager;
+	struct ProductionType;
+	struct ProductionTypeManager;
+
 	struct ArtisanalProducerFactoryPattern {
 	private:
 		int32_t index = -1;

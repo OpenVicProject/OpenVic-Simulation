@@ -1,21 +1,27 @@
 #pragma once
 
+#include <optional>
 #include <string_view>
 
 #include "openvic-simulation/military/Leader.hpp"
-#include "openvic-simulation/military/UnitType.hpp"
+#include "openvic-simulation/military/UnitBranchedGetterMacro.hpp"
 #include "openvic-simulation/types/HasIdentifier.hpp"
-#include "openvic-simulation/utility/Getters.hpp"
+#include "openvic-simulation/types/IdentifierRegistry.hpp"
+#include "openvic-simulation/types/UnitBranchType.hpp"
 #include "openvic-simulation/utility/Containers.hpp"
+#include "openvic-simulation/utility/Getters.hpp"
 
 namespace OpenVic {
+	class Dataloader;
+	struct MapDefinition;
+	struct MilitaryManager;
 	struct ProvinceDefinition;
 
-	template<UnitType::branch_t>
+	template<unit_branch_t>
 	struct UnitDeployment;
 
 	template<>
-	struct UnitDeployment<UnitType::branch_t::LAND> {
+	struct UnitDeployment<unit_branch_t::LAND> {
 		friend struct DeploymentManager;
 
 	private:
@@ -28,10 +34,10 @@ namespace OpenVic {
 		UnitDeployment(UnitDeployment&&) = default;
 	};
 
-	using RegimentDeployment = UnitDeployment<UnitType::branch_t::LAND>;
+	using RegimentDeployment = UnitDeployment<unit_branch_t::LAND>;
 
 	template<>
-	struct UnitDeployment<UnitType::branch_t::NAVAL> {
+	struct UnitDeployment<unit_branch_t::NAVAL> {
 		friend struct DeploymentManager;
 
 	private:
@@ -43,9 +49,9 @@ namespace OpenVic {
 		UnitDeployment(UnitDeployment&&) = default;
 	};
 
-	using ShipDeployment = UnitDeployment<UnitType::branch_t::NAVAL>;
+	using ShipDeployment = UnitDeployment<unit_branch_t::NAVAL>;
 
-	template<UnitType::branch_t Branch>
+	template<unit_branch_t Branch>
 	struct UnitDeploymentGroup {
 		friend struct DeploymentManager;
 
@@ -65,8 +71,8 @@ namespace OpenVic {
 		UnitDeploymentGroup(UnitDeploymentGroup&&) = default;
 	};
 
-	using ArmyDeployment = UnitDeploymentGroup<UnitType::branch_t::LAND>;
-	using NavyDeployment = UnitDeploymentGroup<UnitType::branch_t::NAVAL>;
+	using ArmyDeployment = UnitDeploymentGroup<unit_branch_t::LAND>;
+	using NavyDeployment = UnitDeploymentGroup<unit_branch_t::NAVAL>;
 
 	struct Deployment : HasIdentifier {
 	private:
@@ -76,16 +82,15 @@ namespace OpenVic {
 
 	public:
 		Deployment(
-			std::string_view new_path, memory::vector<ArmyDeployment>&& new_armies, memory::vector<NavyDeployment>&& new_navies,
+			std::string_view new_path,
+			memory::vector<ArmyDeployment>&& new_armies,
+			memory::vector<NavyDeployment>&& new_navies,
 			memory::vector<LeaderBase>&& new_leaders
 		);
 		Deployment(Deployment&&) = default;
 
 		UNIT_BRANCHED_GETTER_CONST(get_unit_deployment_groups, armies, navies);
 	};
-
-	struct DefinitionManager;
-	class Dataloader;
 
 	struct DeploymentManager {
 	private:
@@ -94,15 +99,25 @@ namespace OpenVic {
 
 	public:
 		bool add_deployment(
-			std::string_view path, memory::vector<ArmyDeployment>&& armies, memory::vector<NavyDeployment>&& navies,
+			std::string_view path,
+			memory::vector<ArmyDeployment>&& armies,
+			memory::vector<NavyDeployment>&& navies,
 			memory::vector<LeaderBase>&& leaders
 		);
 
 		bool load_oob_file(
-			DefinitionManager const& definition_manager, Dataloader const& dataloader, std::string_view history_path,
-			Deployment const*& deployment, bool fail_on_missing
+			Dataloader const& dataloader,
+			MapDefinition const& map_definition,
+			MilitaryManager const& military_manager,
+			std::string_view history_path,
+			Deployment const*& deployment,
+			bool fail_on_missing
 		);
 
 		size_t get_missing_oob_file_count() const;
 	};
 }
+
+#undef _UNIT_BRANCHED_GETTER
+#undef UNIT_BRANCHED_GETTER
+#undef UNIT_BRANCHED_GETTER_CONST

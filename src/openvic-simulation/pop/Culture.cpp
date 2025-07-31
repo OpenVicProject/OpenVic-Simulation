@@ -216,7 +216,7 @@ bool CultureManager::load_culture_file(CountryDefinitionManager const& country_d
 }
 
 memory::string CultureManager::make_leader_picture_name(
-	std::string_view cultural_type, UnitType::branch_t branch, leader_count_t count
+	std::string_view cultural_type, unit_branch_t branch, leader_count_t count
 ) {
 	if (cultural_type.empty()) {
 		Logger::error("Cannot construct leader picture name - empty cultural type!");
@@ -228,7 +228,7 @@ memory::string CultureManager::make_leader_picture_name(
 
 	std::string_view const* branch_text;
 
-	using enum UnitType::branch_t;
+	using enum unit_branch_t;
 
 	switch (branch) {
 		case LAND:
@@ -267,7 +267,7 @@ bool CultureManager::find_cultural_leader_pictures(Dataloader const& dataloader)
 
 	for (auto [cultural_type, general_and_admiral_count] : mutable_iterator(leader_picture_counts)) {
 		const auto search = [&dataloader, &cultural_type, &ret](
-			UnitType::branch_t branch, leader_count_t& leader_count
+			unit_branch_t branch, leader_count_t& leader_count
 		) -> void {
 			while (
 				leader_count < std::numeric_limits<leader_count_t>::max() &&
@@ -280,14 +280,14 @@ bool CultureManager::find_cultural_leader_pictures(Dataloader const& dataloader)
 
 			if (leader_count < 1) {
 				Logger::error(
-					"No ", UnitType::get_branched_leader_name(branch), " pictures found for cultural type \"",
+					"No ", get_branched_leader_name(branch), " pictures found for cultural type \"",
 					cultural_type, "\"!"
 				);
 				ret = false;
 			}
 		};
 
-		using enum UnitType::branch_t;
+		using enum unit_branch_t;
 
 		search(LAND, general_and_admiral_count.first);
 		search(NAVAL, general_and_admiral_count.second);
@@ -296,7 +296,7 @@ bool CultureManager::find_cultural_leader_pictures(Dataloader const& dataloader)
 	return ret;
 }
 
-memory::string CultureManager::get_leader_picture_name(std::string_view cultural_type, UnitType::branch_t branch) const {
+memory::string CultureManager::get_leader_picture_name(std::string_view cultural_type, unit_branch_t branch) const {
 	const decltype(leader_picture_counts)::const_iterator it = leader_picture_counts.find(cultural_type);
 	if (it == leader_picture_counts.end()) {
 		Logger::error("Cannot find leader picture counts for cultural type \"", cultural_type, "\"!");
@@ -305,7 +305,7 @@ memory::string CultureManager::get_leader_picture_name(std::string_view cultural
 
 	leader_count_t desired_picture_count;
 
-	using enum UnitType::branch_t;
+	using enum unit_branch_t;
 
 	switch (branch) {
 	case LAND:
@@ -323,7 +323,7 @@ memory::string CultureManager::get_leader_picture_name(std::string_view cultural
 
 	if (desired_picture_count < 1) {
 		Logger::error(
-			"Cannot get \"", cultural_type, "\" ", UnitType::get_branched_leader_name(branch),
+			"Cannot get \"", cultural_type, "\" ", get_branched_leader_name(branch),
 			" picture name - no pictures of this type were found during game loading!"
 		);
 		return {};

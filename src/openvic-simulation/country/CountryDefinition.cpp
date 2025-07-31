@@ -9,7 +9,7 @@
 #include "openvic-simulation/DefinitionManager.hpp"
 #include "openvic-simulation/politics/Government.hpp"
 #include "openvic-simulation/politics/Ideology.hpp"
-#include "openvic-simulation/politics/Issue.hpp"
+#include "openvic-simulation/politics/PartyPolicy.hpp"
 #include "openvic-simulation/pop/Culture.hpp"
 #include "openvic-simulation/types/Colour.hpp"
 #include "openvic-simulation/types/IdentifierRegistry.hpp"
@@ -17,19 +17,6 @@
 
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;
-
-CountryParty::CountryParty(
-	std::string_view new_identifier, Date new_start_date, Date new_end_date, Ideology const* new_ideology,
-	policy_map_t&& new_policies
-) : HasIdentifierAndColour {
-		new_identifier,
-		new_ideology != nullptr ? new_ideology->get_colour() : Ideology::NO_IDEOLOGY_COLOUR,
-		false
-	},
-	start_date { new_start_date },
-	end_date { new_end_date },
-	ideology { new_ideology },
-	policies { std::move(new_policies) } {}
 
 CountryDefinition::CountryDefinition(
 	std::string_view new_identifier,
@@ -154,33 +141,33 @@ node_callback_t CountryDefinitionManager::load_country_party(
 		std::string_view party_name;
 		Date start_date, end_date;
 		Ideology const* ideology = nullptr;
-		CountryParty::policy_map_t policies { politics_manager.get_issue_manager().get_issue_groups() };
+		IndexedMap<PartyPolicyGroup, PartyPolicy const*> policies { politics_manager.get_issue_manager().get_party_policy_groups() };
 
 		bool ret = expect_dictionary_keys_and_default(
 			[&politics_manager, &policies, &party_name](std::string_view key, ast::NodeCPtr value) -> bool {
-				return politics_manager.get_issue_manager().expect_issue_group_str(
-					[&politics_manager, &policies, value, &party_name](IssueGroup const& issue_group) -> bool {
-						CountryParty::policy_map_t::value_ref_type policy = policies[issue_group];
+				return politics_manager.get_issue_manager().expect_party_policy_group_str(
+					[&politics_manager, &policies, value, &party_name](PartyPolicyGroup const& party_policy_group) -> bool {
+						PartyPolicy const* policy = policies[party_policy_group];
 
 						if (policy != nullptr) {
 							Logger::error(
-								"Country party \"", party_name, "\" has duplicate entry for issue group \"",
-								issue_group.get_identifier(), "\""
+								"Country party \"", party_name, "\" has duplicate entry for party policy group \"",
+								party_policy_group.get_identifier(), "\""
 							);
 							return false;
 						}
 
-						return politics_manager.get_issue_manager().expect_issue_identifier(
-							[&issue_group, &policy](Issue const& issue) -> bool {
-								if (&issue.get_issue_group() == &issue_group) {
-									policy = &issue;
+						return politics_manager.get_issue_manager().expect_party_policy_identifier(
+							[&party_policy_group, &policy](PartyPolicy const& party_policy) -> bool {
+								if (&party_policy.get_issue_group() == &party_policy_group) {
+									policy = &party_policy;
 									return true;
 								}
 
 								// TODO - change this back to error/false once TGC no longer has this issue
 								Logger::warning(
-									"Invalid policy \"", issue.get_identifier(), "\", group is \"",
-									issue.get_issue_group().get_identifier(), "\" when \"", issue_group.get_identifier(),
+									"Invalid party policy \"", party_policy.get_identifier(), "\", group is \"",
+									party_policy.get_issue_group().get_identifier(), "\" when \"", party_policy_group.get_identifier(),
 									"\" was expected."
 								);
 								return true;

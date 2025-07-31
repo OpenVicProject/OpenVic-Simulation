@@ -1,10 +1,12 @@
 #pragma once
 
-#include "openvic-simulation/economy/GoodDefinition.hpp"
+#include "openvic-simulation/types/IndexedMap.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
+#include "openvic-simulation/types/fixed_point/FixedPointMap.hpp"
 #include "openvic-simulation/utility/Getters.hpp"
 
 namespace OpenVic {
+	struct GoodDefinition;
 	struct GoodInstanceManager;
 	struct ModifierEffectCache;
 	struct Pop;
@@ -13,10 +15,10 @@ namespace OpenVic {
 	struct ArtisanalProducer {
 	private:
 		ModifierEffectCache const& modifier_effect_cache;
-		GoodDefinition::good_definition_map_t stockpile;
+		fixed_point_map_t<GoodDefinition const*> stockpile;
 
 		//only used during day tick (from artisan_tick() until MarketInstance.execute_orders())
-		GoodDefinition::good_definition_map_t max_quantity_to_buy_per_good;
+		fixed_point_map_t<GoodDefinition const*> max_quantity_to_buy_per_good;
 
 		ProductionType const& PROPERTY(production_type);
 		fixed_point_t PROPERTY(current_production);
@@ -24,7 +26,7 @@ namespace OpenVic {
 	public:
 		ArtisanalProducer(
 			ModifierEffectCache const& new_modifier_effect_cache,
-			GoodDefinition::good_definition_map_t&& new_stockpile,
+			fixed_point_map_t<GoodDefinition const*>&& new_stockpile,
 			ProductionType const& new_production_type,
 			fixed_point_t new_current_production
 		);

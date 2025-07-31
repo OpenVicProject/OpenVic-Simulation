@@ -2,6 +2,8 @@
 
 #include <string_view>
 
+#include "openvic-simulation/politics/Government.hpp"
+#include "openvic-simulation/politics/Ideology.hpp"
 #include "openvic-simulation/modifier/ModifierManager.hpp"
 #include "openvic-simulation/utility/LogScope.hpp"
 
@@ -9,7 +11,8 @@ using namespace OpenVic;
 using namespace OpenVic::NodeTools;
 
 RebelType::RebelType(
-	std::string_view new_identifier, RebelType::icon_t icon, RebelType::area_t area, bool break_alliance_on_win,
+	index_t new_index, std::string_view new_identifier,
+	RebelType::icon_t icon, RebelType::area_t area, bool break_alliance_on_win,
 	RebelType::government_map_t&& desired_governments, RebelType::defection_t defection,
 	RebelType::independence_t independence, uint16_t defect_delay, Ideology const* ideology, bool allow_all_cultures,
 	bool allow_all_culture_groups, bool allow_all_religions, bool allow_all_ideologies, bool resilient, bool reinforcing,
@@ -17,7 +20,9 @@ RebelType::RebelType(
 	ConditionalWeightFactorMul&& new_spawn_chance, ConditionalWeightFactorMul&& new_movement_evaluation,
 	ConditionScript&& new_siege_won_trigger, EffectScript&& new_siege_won_effect,
 	ConditionScript&& new_demands_enforced_trigger, EffectScript&& new_demands_enforced_effect
-) : HasIdentifier { new_identifier }, icon { icon }, area { area }, break_alliance_on_win { break_alliance_on_win },
+) : HasIndex<RebelType> { new_index },
+	HasIdentifier { new_identifier },
+	icon { icon }, area { area }, break_alliance_on_win { break_alliance_on_win },
 	desired_governments { std::move(desired_governments) }, defection { defection }, independence { independence },
 	defect_delay { defect_delay }, ideology { ideology }, allow_all_cultures { allow_all_cultures },
 	allow_all_culture_groups { allow_all_culture_groups }, allow_all_religions { allow_all_religions },
@@ -58,7 +63,8 @@ bool RebelManager::add_rebel_type(
 
 	return rebel_types.emplace_item(
 		new_identifier,
-		new_identifier, icon, area, break_alliance_on_win, std::move(desired_governments), defection, independence,
+		get_rebel_type_count(), new_identifier,
+		icon, area, break_alliance_on_win, std::move(desired_governments), defection, independence,
 		defect_delay, ideology, allow_all_cultures, allow_all_culture_groups, allow_all_religions, allow_all_ideologies,
 		resilient, reinforcing, general, smart, unit_transfer, occupation_mult, std::move(will_rise), std::move(spawn_chance),
 		std::move(movement_evaluation), std::move(siege_won_trigger), std::move(siege_won_effect),
@@ -200,9 +206,7 @@ bool RebelManager::generate_modifiers(ModifierManager& modifier_manager) const {
 		FORMAT_x100_2DP_PC_NEG, "TECH_REBEL_ORG_GAIN"
 	);
 
-	IndexedMap<RebelType, ModifierEffect const*>& rebel_org_gain_effects =
-		modifier_manager.modifier_effect_cache.rebel_org_gain_effects;
-
+	auto& rebel_org_gain_effects = modifier_manager.modifier_effect_cache.rebel_org_gain_effects;
 	rebel_org_gain_effects.set_keys(get_rebel_types());
 
 	for (RebelType const& rebel_type : get_rebel_types()) {

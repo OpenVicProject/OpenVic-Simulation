@@ -4,22 +4,24 @@
 
 #include "openvic-simulation/economy/BuildingType.hpp"
 #include "openvic-simulation/history/HistoryMap.hpp"
-#include "openvic-simulation/map/ProvinceInstance.hpp"
-#include "openvic-simulation/pop/PopType.hpp"
+#include "openvic-simulation/pop/Pop.hpp"
+#include "openvic-simulation/types/BuildingLevel.hpp"
+#include "openvic-simulation/types/ColonyStatus.hpp"
 #include "openvic-simulation/types/Date.hpp"
 #include "openvic-simulation/types/OrderedContainers.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPointMap.hpp"
+#include "openvic-simulation/types/ProvinceLifeRating.hpp"
 #include "openvic-simulation/utility/Containers.hpp"
 #include "openvic-simulation/utility/Getters.hpp"
 
 namespace OpenVic {
-	struct ProvinceHistoryMap;
-	struct ProvinceDefinition;
 	struct CountryDefinition;
-	struct GoodDefinition;
-	struct TerrainType;
-	struct Ideology;
 	struct DefinitionManager;
+	struct GoodDefinition;
+	struct Ideology;
+	struct ProvinceDefinition;
+	struct ProvinceHistoryMap;
+	struct TerrainType;
 
 	struct ProvinceHistoryEntry : HistoryEntry {
 		friend struct ProvinceHistoryMap;
@@ -30,14 +32,14 @@ namespace OpenVic {
 
 		std::optional<CountryDefinition const*> PROPERTY(owner);
 		std::optional<CountryDefinition const*> PROPERTY(controller);
-		std::optional<ProvinceInstance::colony_status_t> PROPERTY(colonial);
+		std::optional<colony_status_t> PROPERTY(colonial);
 		std::optional<bool> PROPERTY(slave);
 		ordered_map<CountryDefinition const*, bool> PROPERTY(cores);
 		std::optional<ProductionType const*> PROPERTY(rgo_production_type_nullable);
-		std::optional<ProvinceInstance::life_rating_t> PROPERTY(life_rating);
+		std::optional<life_rating_t> PROPERTY(life_rating);
 		std::optional<TerrainType const*> PROPERTY(terrain_type);
-		ordered_map<BuildingType const*, BuildingType::level_t> PROPERTY(province_buildings);
-		ordered_map<BuildingType const*, BuildingType::level_t> PROPERTY(state_buildings);
+		ordered_map<BuildingType const*, building_level_t> PROPERTY(province_buildings);
+		ordered_map<BuildingType const*, building_level_t> PROPERTY(state_buildings);
 		fixed_point_map_t<Ideology const*> PROPERTY(party_loyalties);
 		memory::vector<PopBase> PROPERTY(pops);
 

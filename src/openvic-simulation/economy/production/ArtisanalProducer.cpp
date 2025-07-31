@@ -2,8 +2,10 @@
 
 #include <cstddef>
 
+#include "openvic-simulation/country/CountryInstance.hpp"
 #include "openvic-simulation/economy/GoodDefinition.hpp"
 #include "openvic-simulation/economy/production/ProductionType.hpp"
+#include "openvic-simulation/economy/trading/MarketInstance.hpp"
 #include "openvic-simulation/map/ProvinceInstance.hpp"
 #include "openvic-simulation/modifier/ModifierEffectCache.hpp"
 #include "openvic-simulation/pop/Pop.hpp"
@@ -13,7 +15,7 @@ using namespace OpenVic;
 
 ArtisanalProducer::ArtisanalProducer(
 	ModifierEffectCache const& new_modifier_effect_cache,
-	GoodDefinition::good_definition_map_t&& new_stockpile,
+	fixed_point_map_t<GoodDefinition const*>&& new_stockpile,
 	ProductionType const& new_production_type,
 	fixed_point_t new_current_production
 ) : modifier_effect_cache { new_modifier_effect_cache },
@@ -35,7 +37,7 @@ void ArtisanalProducer::artisan_tick(
 ) {
 	CountryInstance* country_to_report_economy_nullable = pop.get_location()->get_country_to_report_economy();
 	max_quantity_to_buy_per_good.clear();
-	GoodDefinition::good_definition_map_t const& input_goods = production_type.get_input_goods();
+	fixed_point_map_t<GoodDefinition const*> const& input_goods = production_type.get_input_goods();
 	memory::vector<fixed_point_t>& max_price_per_input = reusable_map_0;
 	max_price_per_input.resize(input_goods.size(), 0);
 	memory::vector<fixed_point_t>& demand_per_input = reusable_map_1;

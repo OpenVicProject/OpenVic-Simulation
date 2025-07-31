@@ -4,6 +4,7 @@
 #include "openvic-simulation/defines/PopsDefines.hpp"
 #include "openvic-simulation/modifier/ModifierEffectCache.hpp"
 #include "openvic-simulation/map/ProvinceInstance.hpp"
+#include "openvic-simulation/pop/PopType.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
 
 using namespace OpenVic;

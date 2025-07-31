@@ -1,15 +1,25 @@
 #include "Government.hpp"
 
+#include "openvic-simulation/politics/Ideology.hpp"
 #include "openvic-simulation/utility/LogScope.hpp"
 
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;
 
 GovernmentType::GovernmentType(
-	std::string_view new_identifier, memory::vector<Ideology const*>&& new_ideologies, bool new_elections,
-	bool new_appoint_ruling_party, Timespan new_term_duration, std::string_view new_flag_type_identifier
-) : HasIdentifier { new_identifier }, ideologies { std::move(new_ideologies) }, elections { new_elections },
-	appoint_ruling_party { new_appoint_ruling_party }, term_duration { new_term_duration },
+	index_t new_index,
+	std::string_view new_identifier,
+	memory::vector<Ideology const*>&& new_ideologies,
+	bool new_elections,
+	bool new_appoint_ruling_party,
+	Timespan new_term_duration,
+	std::string_view new_flag_type_identifier
+) : HasIndex<GovernmentType> { new_index },
+	HasIdentifier { new_identifier },
+	ideologies { std::move(new_ideologies) },
+	elections { new_elections },
+	appoint_ruling_party { new_appoint_ruling_party },
+	term_duration { new_term_duration },
 	flag_type_identifier { new_flag_type_identifier } {}
 
 bool GovernmentType::is_ideology_compatible(Ideology const* ideology) const {
@@ -38,7 +48,7 @@ bool GovernmentTypeManager::add_government_type(
 
 	const bool ret = government_types.emplace_item(
 		identifier,
-		identifier, std::move(ideologies), elections, appoint_ruling_party, term_duration, flag_type
+		get_government_type_count(), identifier, std::move(ideologies), elections, appoint_ruling_party, term_duration, flag_type
 	);
 
 	/* flag_type can be empty here for default/non-ideological flag */

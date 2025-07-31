@@ -2,13 +2,17 @@
 
 #include <cstdint>
 
-#include "openvic-simulation/economy/GoodDefinition.hpp"
-#include "openvic-simulation/economy/production/ProductionType.hpp"
-#include "openvic-simulation/pop/Pop.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
+#include "openvic-simulation/types/fixed_point/FixedPointMap.hpp"
+#include "openvic-simulation/types/OrderedContainers.hpp"
+#include "openvic-simulation/types/PopSize.hpp"
 #include "openvic-simulation/utility/Getters.hpp"
 
 namespace OpenVic {
+	struct GoodDefinition;
+	struct ProductionType;
+	struct Pop;
+
 	struct FactoryProducer {
 	private:
 		static constexpr uint8_t DAYS_OF_HISTORY = 7;
@@ -22,7 +26,7 @@ namespace OpenVic {
 		fixed_point_t PROPERTY(unsold_quantity_yesterday);
 		fixed_point_t PROPERTY(size_multiplier);
 		ordered_map<Pop*, pop_size_t> PROPERTY(employees);
-		GoodDefinition::good_definition_map_t PROPERTY(stockpile);
+		fixed_point_map_t<GoodDefinition const*> PROPERTY(stockpile);
 		fixed_point_t PROPERTY(budget);
 		fixed_point_t PROPERTY(balance_yesterday);
 		fixed_point_t PROPERTY(received_investments_yesterday);
@@ -37,7 +41,7 @@ namespace OpenVic {
 		FactoryProducer(
 			ProductionType const& new_production_type, fixed_point_t new_size_multiplier, fixed_point_t new_revenue_yesterday,
 			fixed_point_t new_output_quantity_yesterday, fixed_point_t new_unsold_quantity_yesterday,
-			ordered_map<Pop*, pop_size_t>&& new_employees, GoodDefinition::good_definition_map_t&& new_stockpile,
+			ordered_map<Pop*, pop_size_t>&& new_employees, fixed_point_map_t<GoodDefinition const*>&& new_stockpile,
 			fixed_point_t new_budget, fixed_point_t new_balance_yesterday, fixed_point_t new_received_investments_yesterday,
 			fixed_point_t new_market_spendings_yesterday, fixed_point_t new_paychecks_yesterday, uint32_t new_unprofitable_days,
 			uint32_t new_subsidised_days, uint32_t new_days_without_input, uint8_t new_hiring_priority,

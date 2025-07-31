@@ -4,15 +4,16 @@
 #include "openvic-simulation/dataloader/NodeTools.hpp"
 #include "openvic-simulation/map/TerrainType.hpp"
 #include "openvic-simulation/modifier/ModifierManager.hpp"
+#include "types/UnitBranchType.hpp"
 
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;
 
-using enum UnitType::branch_t;
+using enum unit_branch_t;
 using enum UnitType::unit_category_t;
 
 UnitType::UnitType(
-	std::string_view new_identifier, branch_t new_branch, unit_type_args_t& unit_args
+	std::string_view new_identifier, unit_branch_t new_branch, unit_type_args_t& unit_args
 ) : HasIdentifier { new_identifier },
 	branch { new_branch },
 	icon { unit_args.icon },
@@ -43,8 +44,10 @@ UnitType::UnitType(
 }
 
 UnitTypeBranched<LAND>::UnitTypeBranched(
-	std::string_view new_identifier, unit_type_args_t& unit_args, regiment_type_args_t const& regiment_type_args
+	index_t new_index, std::string_view new_identifier,
+	unit_type_args_t& unit_args, regiment_type_args_t const& regiment_type_args
 ) : UnitType { new_identifier, LAND, unit_args },
+	HasIndex<UnitTypeBranched<unit_branch_t::LAND>> { new_index },
 	allowed_cultures { regiment_type_args.allowed_cultures },
 	sprite_override { regiment_type_args.sprite_override },
 	sprite_mount { regiment_type_args.sprite_mount },
@@ -58,8 +61,10 @@ UnitTypeBranched<LAND>::UnitTypeBranched(
 	siege { regiment_type_args.siege } {}
 
 UnitTypeBranched<NAVAL>::UnitTypeBranched(
-	std::string_view new_identifier, unit_type_args_t& unit_args, ship_type_args_t const& ship_type_args
+	index_t new_index, std::string_view new_identifier,
+	unit_type_args_t& unit_args, ship_type_args_t const& ship_type_args
 ) : UnitType { new_identifier, NAVAL, unit_args },
+	HasIndex<UnitTypeBranched<unit_branch_t::NAVAL>> { new_index },
 	naval_icon { ship_type_args.naval_icon },
 	sail { ship_type_args.sail },
 	transport { ship_type_args.transport },
@@ -124,7 +129,8 @@ bool UnitTypeManager::add_regiment_type(
 
 	bool ret = regiment_types.emplace_item(
 		identifier,
-		identifier, unit_args, std::move(regiment_type_args)
+		get_regiment_type_count(), identifier,
+		unit_args, std::move(regiment_type_args)
 	);
 	if (ret) {
 		// Cannot use get_back_regiment_type() as we need non-const but don't want to generate all non-const functions.
@@ -156,7 +162,8 @@ bool UnitTypeManager::add_ship_type(
 
 	bool ret = ship_types.emplace_item(
 		identifier,
-		identifier, unit_args, ship_type_args
+		get_ship_type_count(), identifier,
+		unit_args, ship_type_args
 	);
 	if (ret) {
 		// Cannot use get_back_ship_type() as we need non-const but don't want to generate all non-const functions.
@@ -179,7 +186,7 @@ bool UnitTypeManager::load_unit_type_file(
 		std::string_view key, ast::NodeCPtr value
 	) -> bool {
 
-		UnitType::branch_t branch = INVALID_BRANCH;
+		unit_branch_t branch = INVALID_BRANCH;
 
 		bool ret = expect_key(type_symbol, expect_branch_identifier(assign_variable_callback(branch)))(value);
 
@@ -265,11 +272,11 @@ bool UnitTypeManager::load_unit_type_file(
 			);
 
 			if (is_restricted_to_accepted_cultures) {
-				regiment_type_args.allowed_cultures = RegimentType::allowed_cultures_t::ACCEPTED_CULTURES;
+				regiment_type_args.allowed_cultures = regiment_allowed_cultures_t::ACCEPTED_CULTURES;
 			} else if (is_restricted_to_primary_culture) {
-				regiment_type_args.allowed_cultures = RegimentType::allowed_cultures_t::PRIMARY_CULTURE;
+				regiment_type_args.allowed_cultures = regiment_allowed_cultures_t::PRIMARY_CULTURE;
 			} else {
-				regiment_type_args.allowed_cultures = RegimentType::allowed_cultures_t::ALL_CULTURES;
+				regiment_type_args.allowed_cultures = regiment_allowed_cultures_t::ALL_CULTURES;
 			}
 
 			ret &= expect_dictionary_key_map_and_default(key_map, add_terrain_modifier_value)(value);

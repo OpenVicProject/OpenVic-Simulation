@@ -1,5 +1,6 @@
 #include "Technology.hpp"
 
+#include "openvic-simulation/economy/BuildingType.hpp"
 #include "openvic-simulation/modifier/ModifierManager.hpp"
 
 using namespace OpenVic;
@@ -19,7 +20,7 @@ Technology::Technology(
 	fixed_point_t new_cost,
 	area_index_t new_index_in_area,
 	bool new_unciv_military,
-	std::optional<CountryInstance::unit_variant_t>&& new_unit_variant,
+	std::optional<unit_variant_t>&& new_unit_variant,
 	unit_set_t&& new_activated_units,
 	building_set_t&& new_activated_buildings,
 	ModifierValue&& new_values,
@@ -69,7 +70,7 @@ bool TechnologyManager::add_technology_area(std::string_view identifier, Technol
 
 bool TechnologyManager::add_technology(
 	std::string_view identifier, TechnologyArea* area, Date::year_t year, fixed_point_t cost, bool unciv_military,
-	std::optional<CountryInstance::unit_variant_t>&& unit_variant, Technology::unit_set_t&& activated_units,
+	std::optional<unit_variant_t>&& unit_variant, Technology::unit_set_t&& activated_units,
 	Technology::building_set_t&& activated_buildings, ModifierValue&& values, ConditionalWeightFactorMul&& ai_chance
 ) {
 	if (identifier.empty()) {
@@ -211,7 +212,7 @@ bool TechnologyManager::load_technologies_file(
 		Date::year_t year = 0;
 		fixed_point_t cost = 0;
 		bool unciv_military = false;
-		std::optional<CountryInstance::unit_variant_t> unit_variant;
+		std::optional<unit_variant_t> unit_variant;
 		Technology::unit_set_t activated_units;
 		Technology::building_set_t activated_buildings;
 		ConditionalWeightFactorMul ai_chance { COUNTRY, COUNTRY, NO_SCOPE };

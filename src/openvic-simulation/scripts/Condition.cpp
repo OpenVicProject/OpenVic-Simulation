@@ -129,7 +129,7 @@ bool ConditionManager::setup_conditions(DefinitionManager const& definition_mana
 	ret &= add_condition("capital", IDENTIFIER, COUNTRY, NO_SCOPE, NO_IDENTIFIER, PROVINCE_ID);
 	ret &= add_condition("casus_belli", IDENTIFIER, COUNTRY, NO_SCOPE, NO_IDENTIFIER, COUNTRY_TAG);
 	ret &= add_condition("check_variable", COMPLEX, COUNTRY, NO_SCOPE, NO_IDENTIFIER, VARIABLE);
-	ret &= add_condition("citizenship_policy", IDENTIFIER, COUNTRY, NO_SCOPE, NO_IDENTIFIER, ISSUE);
+	ret &= add_condition("citizenship_policy", IDENTIFIER, COUNTRY, NO_SCOPE, NO_IDENTIFIER, PARTY_POLICY);
 	ret &= add_condition("civilization_progress", REAL, COUNTRY);
 	ret &= add_condition("civilized", BOOLEAN, COUNTRY);
 	ret &= add_condition("colonial_nation", BOOLEAN, COUNTRY);
@@ -144,7 +144,7 @@ bool ConditionManager::setup_conditions(DefinitionManager const& definition_mana
 	ret &= add_condition("culture", IDENTIFIER, COUNTRY, NO_SCOPE, NO_IDENTIFIER, CULTURE);
 	ret &= add_condition("culture_has_union_tag", BOOLEAN, COUNTRY);
 	ret &= add_condition("diplomatic_influence", COMPLEX, COUNTRY);
-	ret &= add_condition("economic_policy", IDENTIFIER, COUNTRY, NO_SCOPE, NO_IDENTIFIER, ISSUE);
+	ret &= add_condition("economic_policy", IDENTIFIER, COUNTRY, NO_SCOPE, NO_IDENTIFIER, PARTY_POLICY);
 	ret &= add_condition("education_spending", REAL, COUNTRY);
 	ret &= add_condition("election", BOOLEAN, COUNTRY);
 	ret &= add_condition("exists", IDENTIFIER | BOOLEAN, COUNTRY, NO_SCOPE, NO_IDENTIFIER, COUNTRY_TAG);
@@ -233,7 +233,7 @@ bool ConditionManager::setup_conditions(DefinitionManager const& definition_mana
 	ret &= add_condition("recruited_percentage", REAL, COUNTRY);
 	ret &= add_condition("relation", COMPLEX, COUNTRY);
 	ret &= add_condition("religion", IDENTIFIER, COUNTRY, NO_SCOPE, NO_IDENTIFIER, RELIGION);
-	ret &= add_condition("religious_policy", IDENTIFIER, COUNTRY, NO_SCOPE, NO_IDENTIFIER, ISSUE);
+	ret &= add_condition("religious_policy", IDENTIFIER, COUNTRY, NO_SCOPE, NO_IDENTIFIER, PARTY_POLICY);
 	ret &= add_condition("revanchism", REAL, COUNTRY);
 	ret &= add_condition("revolt_percentage", REAL, COUNTRY);
 	ret &= add_condition("rich_strata_militancy", REAL, COUNTRY);
@@ -260,7 +260,7 @@ bool ConditionManager::setup_conditions(DefinitionManager const& definition_mana
 	ret &= add_condition("total_pops", INTEGER, COUNTRY);
 	ret &= add_condition("total_sea_battles", INTEGER, COUNTRY);
 	ret &= add_condition("total_sunk_by_us", INTEGER, COUNTRY);
-	ret &= add_condition("trade_policy", IDENTIFIER, COUNTRY, NO_SCOPE, NO_IDENTIFIER, ISSUE);
+	ret &= add_condition("trade_policy", IDENTIFIER, COUNTRY, NO_SCOPE, NO_IDENTIFIER, PARTY_POLICY);
 	ret &= add_condition("treasury", REAL, COUNTRY);
 	ret &= add_condition("truce_with", IDENTIFIER, COUNTRY, NO_SCOPE, NO_IDENTIFIER, COUNTRY_TAG);
 	ret &= add_condition("unemployment", REAL, COUNTRY);
@@ -270,7 +270,7 @@ bool ConditionManager::setup_conditions(DefinitionManager const& definition_mana
 	ret &= add_condition("vassal_of", IDENTIFIER, COUNTRY, NO_SCOPE, NO_IDENTIFIER, COUNTRY_TAG);
 	ret &= add_condition("war", BOOLEAN, COUNTRY);
 	ret &= add_condition("war_exhaustion", REAL, COUNTRY);
-	ret &= add_condition("war_policy", IDENTIFIER, COUNTRY, NO_SCOPE, NO_IDENTIFIER, ISSUE);
+	ret &= add_condition("war_policy", IDENTIFIER, COUNTRY, NO_SCOPE, NO_IDENTIFIER, PARTY_POLICY);
 	ret &= add_condition("war_score", REAL, COUNTRY);
 	ret &= add_condition("war_with", IDENTIFIER, COUNTRY, NO_SCOPE, NO_IDENTIFIER, COUNTRY_TAG);
 
@@ -326,7 +326,7 @@ bool ConditionManager::setup_conditions(DefinitionManager const& definition_mana
 	ret &= add_condition("life_needs", REAL, POP);
 	ret &= add_condition("luxury_needs", REAL, POP);
 	ret &= add_condition("political_movement", BOOLEAN, POP);
-	ret &= add_condition("pop_majority_issue", IDENTIFIER, POP, NO_SCOPE, NO_IDENTIFIER, ISSUE);
+	ret &= add_condition("pop_majority_issue", IDENTIFIER, POP, NO_SCOPE, NO_IDENTIFIER, PARTY_POLICY);
 	ret &= add_condition("pop_type", IDENTIFIER, POP, NO_SCOPE, NO_IDENTIFIER, POP_TYPE);
 	ret &= add_condition("social_movement", BOOLEAN, POP);
 	ret &= add_condition("strata", IDENTIFIER, POP, NO_SCOPE, NO_IDENTIFIER, POP_STRATA);
@@ -405,11 +405,11 @@ bool ConditionManager::setup_conditions(DefinitionManager const& definition_mana
 	);
 
 	import_identifiers(
-		definition_manager.get_politics_manager().get_issue_manager().get_issue_identifiers(),
+		definition_manager.get_politics_manager().get_issue_manager().get_party_policy_identifiers(),
 		REAL,
 		COUNTRY,
 		NO_SCOPE,
-		ISSUE,
+		PARTY_POLICY,
 		NO_IDENTIFIER
 	);
 
@@ -490,7 +490,7 @@ callback_t<std::string_view> ConditionManager::expect_parse_identifier(
 		EXPECT_CALL(IDEOLOGY, ideology, definition_manager.get_politics_manager().get_ideology_manager());
 		EXPECT_CALL(REFORM_GROUP, reform_group, definition_manager.get_politics_manager().get_issue_manager());
 		EXPECT_CALL(REFORM, reform, definition_manager.get_politics_manager().get_issue_manager());
-		EXPECT_CALL(ISSUE, issue, definition_manager.get_politics_manager().get_issue_manager());
+		EXPECT_CALL(PARTY_POLICY, party_policy, definition_manager.get_politics_manager().get_issue_manager());
 		EXPECT_CALL(POP_TYPE, pop_type, definition_manager.get_pop_manager());
 		EXPECT_CALL(POP_STRATA, strata, definition_manager.get_pop_manager());
 		EXPECT_CALL(TECHNOLOGY, technology, definition_manager.get_research_manager().get_technology_manager());

@@ -1,6 +1,5 @@
 #pragma once
 
-#include <string>
 #include <string_view>
 
 #include "openvic-simulation/types/OrderedContainers.hpp"

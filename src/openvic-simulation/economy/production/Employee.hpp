@@ -1,8 +1,12 @@
 #pragma once
 
-#include "openvic-simulation/pop/Pop.hpp"
+#include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
+#include "openvic-simulation/types/PopSize.hpp"
 
 namespace OpenVic {
+	struct CountryInstance;
+	struct Pop;
+
 	struct Employee {
 	private:
 		Pop& PROPERTY_MOD(pop);

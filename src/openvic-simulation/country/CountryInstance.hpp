@@ -1,62 +1,69 @@
 #pragma once
 
 #include <utility>
-#include <vector>
 
 #include "openvic-simulation/country/SharedCountryValues.hpp"
 #include "openvic-simulation/diplomacy/CountryRelation.hpp"
+#include "openvic-simulation/military/UnitBranchedGetterMacro.hpp"
 #include "openvic-simulation/modifier/ModifierSum.hpp"
-#include "openvic-simulation/politics/Ideology.hpp"
 #include "openvic-simulation/politics/Rule.hpp"
-#include "openvic-simulation/pop/PopType.hpp"
 #include "openvic-simulation/types/Date.hpp"
 #include "openvic-simulation/types/fixed_point/Atomic.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
 #include "openvic-simulation/types/FlagStrings.hpp"
+#include "openvic-simulation/types/HasIndex.hpp"
 #include "openvic-simulation/types/IdentifierRegistry.hpp"
 #include "openvic-simulation/types/IndexedMap.hpp"
 #include "openvic-simulation/types/OrderedContainers.hpp"
+#include "openvic-simulation/types/PopSize.hpp"
 #include "openvic-simulation/types/SliderValue.hpp"
+#include "openvic-simulation/types/TechnologyUnlockLevel.hpp"
+#include "openvic-simulation/types/UnitBranchType.hpp"
+#include "openvic-simulation/types/UnitVariant.hpp"
 #include "openvic-simulation/utility/Getters.hpp"
 #include "openvic-simulation/utility/Containers.hpp"
 
 namespace OpenVic {
-	struct CountryInstanceManager;
+	struct BaseIssue;
+	struct BuildingType;
 	struct CountryDefinition;
-	struct ProvinceInstance;
-	struct State;
-	struct Technology;
-	struct Invention;
-	struct TechnologySchool;
-	struct NationalValue;
-	struct GovernmentType;
+	struct CountryDefines;
+	struct CountryHistoryEntry;
+	struct CountryInstanceManager;
 	struct CountryParty;
-	struct Ideology;
-	struct ReformGroup;
-	struct Reform;
+	struct CountryRelationManager;
 	struct Crime;
 	struct Culture;
-	struct Religion;
-	struct BuildingType;
+	struct DefineManager;
+	struct EconomyDefines;
+	struct GameRulesManager;
+	struct GoodDefinition;
 	struct GoodInstance;
 	struct GoodInstanceManager;
-	struct LeaderInstance;
-	struct UnitInstanceGroup;
-	template<UnitType::branch_t>
-	struct UnitInstanceGroupBranched;
-	using ArmyInstance = UnitInstanceGroupBranched<UnitType::branch_t::LAND>;
-	using NavyInstance = UnitInstanceGroupBranched<UnitType::branch_t::NAVAL>;
-	struct CountryHistoryEntry;
-	struct DefineManager;
-	struct ModifierEffectCache;
-	struct StaticModifierCache;
+	struct GovernmentType;
+	struct Ideology;
 	struct InstanceManager;
-	struct ProductionType;
-	struct GameRulesManager;
-	struct CountryDefines;
-	struct EconomyDefines;
-	struct PopsDefines;
+	struct Invention;
+	struct LeaderInstance;
+	struct ModifierEffectCache;
+	struct NationalValue;
 	struct Pop;
+	struct PopType;
+	struct PopsDefines;
+	struct ProductionType;
+	struct ProvinceInstance;
+	struct Reform;
+	struct ReformGroup;
+	struct Religion;
+	struct SharedCountryValues;
+	struct SharedPopTypeValues;
+	struct State;
+	struct StaticModifierCache;
+	struct Strata;
+	struct Technology;
+	struct TechnologySchool;
+	struct UnitInstanceGroup;
+	struct UnitTypeManager;
 
 	static constexpr Timespan RECENT_WAR_LOSS_TIME_LIMIT = Timespan::from_years(5);
 
@@ -85,9 +92,6 @@ namespace OpenVic {
 		// Thresholds for different uncivilised country statuses
 		static constexpr fixed_point_t PRIMITIVE_CIVILISATION_PROGRESS = fixed_point_t::parse(15) / 100;
 		static constexpr fixed_point_t UNCIVILISED_CIVILISATION_PROGRESS = fixed_point_t::_0_50;
-
-		using unlock_level_t = int8_t;
-		using unit_variant_t = uint8_t;
 
 	private:
 		/* Main attributes */
@@ -135,7 +139,7 @@ namespace OpenVic {
 		memory::vector<std::pair<CountryInstance const*, fixed_point_t>> PROPERTY(industrial_power_from_investments);
 		size_t PROPERTY(industrial_rank, 0);
 		fixed_point_map_t<CountryInstance const*> PROPERTY(foreign_investments);
-		IndexedMap<BuildingType, unlock_level_t> PROPERTY(building_type_unlock_levels);
+		IndexedMap<BuildingType, technology_unlock_level_t> PROPERTY(building_type_unlock_levels);
 		// TODO - total amount of each good produced
 
 		/* Budget */
@@ -192,8 +196,8 @@ namespace OpenVic {
 		//projected cost is UI only and lists the different factories
 
 		/* Technology */
-		IndexedMap<Technology, unlock_level_t> PROPERTY(technology_unlock_levels);
-		IndexedMap<Invention, unlock_level_t> PROPERTY(invention_unlock_levels);
+		IndexedMap<Technology, technology_unlock_level_t> PROPERTY(technology_unlock_levels);
+		IndexedMap<Invention, technology_unlock_level_t> PROPERTY(invention_unlock_levels);
 		int32_t PROPERTY(inventions_count, 0);
 		Technology const* PROPERTY(current_research, nullptr);
 		fixed_point_t PROPERTY(invested_research_points);
@@ -222,7 +226,7 @@ namespace OpenVic {
 		fixed_point_t PROPERTY(infamy); // in 0-25+ range
 		fixed_point_t PROPERTY(plurality); // in 0-100 range
 		fixed_point_t PROPERTY(revanchism);
-		IndexedMap<Crime, unlock_level_t> PROPERTY(crime_unlock_levels);
+		IndexedMap<Crime, technology_unlock_level_t> PROPERTY(crime_unlock_levels);
 		// TODO - rebel movements
 
 		/* Population */
@@ -243,7 +247,7 @@ namespace OpenVic {
 		IndexedMap<PopType, pop_size_t> PROPERTY(pop_type_distribution);
 		IndexedMap<PopType, pop_size_t> PROPERTY(pop_type_unemployed_count);
 		IndexedMap<Ideology, fixed_point_t> PROPERTY(ideology_distribution);
-		fixed_point_map_t<Issue const*> PROPERTY(issue_distribution);
+		fixed_point_map_t<BaseIssue const*> PROPERTY(issue_distribution);
 		IndexedMap<CountryParty, fixed_point_t> PROPERTY(vote_distribution);
 		fixed_point_map_t<Culture const*> PROPERTY(culture_distribution);
 		fixed_point_map_t<Religion const*> PROPERTY(religion_distribution);
@@ -338,12 +342,12 @@ namespace OpenVic {
 		int32_t PROPERTY(combat_width, 1);
 		int32_t PROPERTY(dig_in_cap, 0);
 		fixed_point_t PROPERTY(military_tactics);
-		IndexedMap<RegimentType, unlock_level_t> PROPERTY(regiment_type_unlock_levels);
-		RegimentType::allowed_cultures_t PROPERTY(allowed_regiment_cultures, RegimentType::allowed_cultures_t::NO_CULTURES);
-		IndexedMap<ShipType, unlock_level_t> PROPERTY(ship_type_unlock_levels);
-		unlock_level_t PROPERTY(gas_attack_unlock_level, 0);
-		unlock_level_t PROPERTY(gas_defence_unlock_level, 0);
-		memory::vector<unlock_level_t> PROPERTY(unit_variant_unlock_levels);
+		IndexedMap<RegimentType, technology_unlock_level_t> PROPERTY(regiment_type_unlock_levels);
+		regiment_allowed_cultures_t PROPERTY(allowed_regiment_cultures, regiment_allowed_cultures_t::NO_CULTURES);
+		IndexedMap<ShipType, technology_unlock_level_t> PROPERTY(ship_type_unlock_levels);
+		technology_unlock_level_t PROPERTY(gas_attack_unlock_level, 0);
+		technology_unlock_level_t PROPERTY(gas_defence_unlock_level, 0);
+		memory::vector<technology_unlock_level_t> PROPERTY(unit_variant_unlock_levels);
 
 	public:
 		CountryInstance(
@@ -473,34 +477,18 @@ namespace OpenVic {
 
 		// The values returned by these functions are scaled by population size, so they must be divided by population size
 		// to get the support as a proportion of 1.0
-		constexpr pop_size_t get_pop_type_proportion(PopType const& pop_type) const {
-			return pop_type_distribution[pop_type];
-		}
-		constexpr pop_size_t get_pop_type_unemployed(PopType const& pop_type) const {
-			return pop_type_unemployed_count[pop_type];
-		}
-		constexpr fixed_point_t get_ideology_support(Ideology const& ideology) const {
-			return ideology_distribution[ideology];
-		}
-		fixed_point_t get_issue_support(Issue const& issue) const;
+		pop_size_t get_pop_type_proportion(PopType const& pop_type) const;
+		pop_size_t get_pop_type_unemployed(PopType const& pop_type) const;
+		fixed_point_t get_ideology_support(Ideology const& ideology) const;
+		fixed_point_t get_issue_support(BaseIssue const& issue) const;
 		fixed_point_t get_party_support(CountryParty const& party) const;
 		fixed_point_t get_culture_proportion(Culture const& culture) const;
 		fixed_point_t get_religion_proportion(Religion const& religion) const;
-		constexpr pop_size_t get_strata_population(Strata const& strata) const {
-			return population_by_strata[strata];
-		}
-		constexpr fixed_point_t get_strata_militancy(Strata const& strata) const {
-			return militancy_by_strata[strata];
-		}
-		constexpr fixed_point_t get_strata_life_needs_fulfilled(Strata const& strata) const {
-			return life_needs_fulfilled_by_strata[strata];
-		}
-		constexpr fixed_point_t get_strata_everyday_needs_fulfilled(Strata const& strata) const {
-			return everyday_needs_fulfilled_by_strata[strata];
-		}
-		constexpr fixed_point_t get_strata_luxury_needs_fulfilled(Strata const& strata) const {
-			return luxury_needs_fulfilled_by_strata[strata];
-		}
+		pop_size_t get_strata_population(Strata const& strata) const;
+		fixed_point_t get_strata_militancy(Strata const& strata) const;
+		fixed_point_t get_strata_life_needs_fulfilled(Strata const& strata) const;
+		fixed_point_t get_strata_everyday_needs_fulfilled(Strata const& strata) const;
+		fixed_point_t get_strata_luxury_needs_fulfilled(Strata const& strata) const;
 		fixed_point_t get_strata_taxable_income(Strata const& strata) const;
 
 		bool add_owned_province(ProvinceInstance& new_province);
@@ -549,49 +537,49 @@ namespace OpenVic {
 
 		bool has_leader_with_name(std::string_view name) const;
 
-		template<UnitType::branch_t Branch>
-		bool modify_unit_type_unlock(UnitTypeBranched<Branch> const& unit_type, unlock_level_t unlock_level_change);
+		template<unit_branch_t Branch>
+		bool modify_unit_type_unlock(UnitTypeBranched<Branch> const& unit_type, technology_unlock_level_t unlock_level_change);
 
-		bool modify_unit_type_unlock(UnitType const& unit_type, unlock_level_t unlock_level_change);
+		bool modify_unit_type_unlock(UnitType const& unit_type, technology_unlock_level_t unlock_level_change);
 		bool unlock_unit_type(UnitType const& unit_type);
 		bool is_unit_type_unlocked(UnitType const& unit_type) const;
 
 		bool modify_building_type_unlock(
-			BuildingType const& building_type, unlock_level_t unlock_level_change, GoodInstanceManager& good_instance_manager
+			BuildingType const& building_type, technology_unlock_level_t unlock_level_change, GoodInstanceManager& good_instance_manager
 		);
 		bool unlock_building_type(BuildingType const& building_type, GoodInstanceManager& good_instance_manager);
 		bool is_building_type_unlocked(BuildingType const& building_type) const;
 
-		bool modify_crime_unlock(Crime const& crime, unlock_level_t unlock_level_change);
+		bool modify_crime_unlock(Crime const& crime, technology_unlock_level_t unlock_level_change);
 		bool unlock_crime(Crime const& crime);
 		bool is_crime_unlocked(Crime const& crime) const;
 
-		bool modify_gas_attack_unlock(unlock_level_t unlock_level_change);
+		bool modify_gas_attack_unlock(technology_unlock_level_t unlock_level_change);
 		bool unlock_gas_attack();
 		bool is_gas_attack_unlocked() const;
 
-		bool modify_gas_defence_unlock(unlock_level_t unlock_level_change);
+		bool modify_gas_defence_unlock(technology_unlock_level_t unlock_level_change);
 		bool unlock_gas_defence();
 		bool is_gas_defence_unlocked() const;
 
-		bool modify_unit_variant_unlock(unit_variant_t unit_variant, unlock_level_t unlock_level_change);
+		bool modify_unit_variant_unlock(unit_variant_t unit_variant, technology_unlock_level_t unlock_level_change);
 		bool unlock_unit_variant(unit_variant_t unit_variant);
 		unit_variant_t get_max_unlocked_unit_variant() const;
 
 		bool modify_technology_unlock(
-			Technology const& technology, unlock_level_t unlock_level_change, GoodInstanceManager& good_instance_manager
+			Technology const& technology, technology_unlock_level_t unlock_level_change, GoodInstanceManager& good_instance_manager
 		);
 		bool set_technology_unlock_level(
-			Technology const& technology, unlock_level_t unlock_level, GoodInstanceManager& good_instance_manager
+			Technology const& technology, technology_unlock_level_t unlock_level, GoodInstanceManager& good_instance_manager
 		);
 		bool unlock_technology(Technology const& technology, GoodInstanceManager& good_instance_manager);
 		bool is_technology_unlocked(Technology const& technology) const;
 
 		bool modify_invention_unlock(
-			Invention const& invention, unlock_level_t unlock_level_change, GoodInstanceManager& good_instance_manager
+			Invention const& invention, technology_unlock_level_t unlock_level_change, GoodInstanceManager& good_instance_manager
 		);
 		bool set_invention_unlock_level(
-			Invention const& invention, unlock_level_t unlock_level, GoodInstanceManager& good_instance_manager
+			Invention const& invention, technology_unlock_level_t unlock_level, GoodInstanceManager& good_instance_manager
 		);
 		bool unlock_invention(Invention const& invention, GoodInstanceManager& good_instance_manager);
 		bool is_invention_unlocked(Invention const& invention) const;
@@ -767,3 +755,7 @@ namespace OpenVic {
 		void country_manager_tick_after_map(InstanceManager& instance_manager);
 	};
 }
+
+#undef _UNIT_BRANCHED_GETTER
+#undef UNIT_BRANCHED_GETTER
+#undef UNIT_BRANCHED_GETTER_CONST
