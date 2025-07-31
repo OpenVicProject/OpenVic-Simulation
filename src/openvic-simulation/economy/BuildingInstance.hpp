@@ -4,7 +4,6 @@
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
 
 namespace OpenVic {
-
 	struct BuildingInstance : HasIdentifier { // used in the actual game
 		using level_t = BuildingType::level_t;
 

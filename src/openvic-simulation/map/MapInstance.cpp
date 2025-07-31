@@ -66,23 +66,19 @@ bool MapInstance::setup(
 	} else {
 		province_instances.reserve(map_definition.get_province_definition_count());
 
-		for (ProvinceDefinition const& province : map_definition.get_province_definitions()) {
-			if (province_instances.add_item({
-				market_instance,
-				game_rules_manager,
-				modifier_effect_cache,
-				province,
-				strata_keys,
-				pop_type_keys,
-				ideology_keys
-			})) {
-				// We need to update the province's ModifierSum's source here as the province's address is finally stable
-				// after changing between its constructor call and now due to being std::move'd into the registry.
-				ProvinceInstance& province_instance = get_back_province_instance();
-				province_instance.modifier_sum.set_this_source(&province_instance);
-			} else {
+		for (ProvinceDefinition const& province_definition : map_definition.get_province_definitions()) {
+			if (!province_instances.emplace_item(
+				province_definition.get_identifier(),
+				market_instance, game_rules_manager, modifier_effect_cache, province_definition, strata_keys, pop_type_keys, ideology_keys
+			)) {
 				ret = false;
+				continue;
 			}
+
+			// We need to update the province's ModifierSum's source here as the province's address is finally stable
+			// after changing between its constructor call and now due to being std::move'd into the registry.
+			ProvinceInstance& province_instance = get_back_province_instance();
+			province_instance.modifier_sum.set_this_source(&province_instance);
 		}
 	}
 

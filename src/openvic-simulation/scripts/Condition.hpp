@@ -205,13 +205,12 @@ namespace OpenVic {
 		const identifier_type_t PROPERTY(key_identifier_type);
 		const identifier_type_t PROPERTY(value_identifier_type);
 
+	public:
 		Condition(
 			std::string_view new_identifier, value_type_t new_value_type, scope_type_t new_scope,
 			scope_type_t new_scope_change, identifier_type_t new_key_identifier_type,
 			identifier_type_t new_value_identifier_type
 		);
-
-	public:
 		Condition(Condition&&) = default;
 	};
 

@@ -8,19 +8,13 @@
 namespace OpenVic {
 	class Dataloader;
 
-	/*For interface/Sound.sfx */
-	class SoundEffectManager;
-
 	struct SoundEffect : HasIdentifier {
-		friend class SoundEffectManager;
-
 	private:
 		std::filesystem::path PROPERTY(file);
 		fixed_point_t PROPERTY(volume);
 
-		SoundEffect(std::string_view new_identifier, std::filesystem::path&& new_file, fixed_point_t new_volume);
-
 	public:
+		SoundEffect(std::string_view new_identifier, std::filesystem::path&& new_file, fixed_point_t new_volume);
 		SoundEffect(SoundEffect&&) = default;
 	};
 

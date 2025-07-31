@@ -56,13 +56,14 @@ bool RebelManager::add_rebel_type(
 		return false;
 	}
 
-	return rebel_types.add_item({
+	return rebel_types.emplace_item(
+		new_identifier,
 		new_identifier, icon, area, break_alliance_on_win, std::move(desired_governments), defection, independence,
 		defect_delay, ideology, allow_all_cultures, allow_all_culture_groups, allow_all_religions, allow_all_ideologies,
 		resilient, reinforcing, general, smart, unit_transfer, occupation_mult, std::move(will_rise), std::move(spawn_chance),
 		std::move(movement_evaluation), std::move(siege_won_trigger), std::move(siege_won_effect),
 		std::move(demands_enforced_trigger), std::move(demands_enforced_effect)
-	});
+	);
 }
 
 bool RebelManager::load_rebels_file(

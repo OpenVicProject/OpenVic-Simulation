@@ -60,6 +60,9 @@ namespace OpenVic {
 		ConditionScript PROPERTY(demands_enforced_trigger);
 		EffectScript PROPERTY(demands_enforced_effect);
 
+		bool parse_scripts(DefinitionManager const& definition_manager);
+
+	public:
 		RebelType(
 			std::string_view new_identifier, RebelType::icon_t icon, RebelType::area_t area, bool break_alliance_on_win,
 			RebelType::government_map_t&& desired_governments, RebelType::defection_t defection,
@@ -71,10 +74,6 @@ namespace OpenVic {
 			EffectScript&& new_siege_won_effect, ConditionScript&& new_demands_enforced_trigger,
 			EffectScript&& new_demands_enforced_effect
 		);
-
-		bool parse_scripts(DefinitionManager const& definition_manager);
-
-	public:
 		RebelType(RebelType&&) = default;
 	};
 

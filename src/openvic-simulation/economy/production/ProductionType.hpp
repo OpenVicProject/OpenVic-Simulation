@@ -57,7 +57,9 @@ namespace OpenVic {
 		GoodDefinition::good_definition_map_t PROPERTY(maintenance_requirements);
 		const bool PROPERTY_CUSTOM_PREFIX(coastal, is);
 		const bool _is_farm, _is_mine;
+		bool parse_scripts(DefinitionManager const& definition_manager);
 
+	public:
 		ProductionType(
 			GameRulesManager const& new_game_rules_manager,
 			const std::string_view new_identifier,
@@ -75,9 +77,6 @@ namespace OpenVic {
 			const bool new_is_mine
 		);
 
-		bool parse_scripts(DefinitionManager const& definition_manager);
-
-	public:
 		constexpr bool get_is_farm_for_tech() const {
 			if (game_rules_manager.get_use_simple_farm_mine_logic()) {
 				return _is_farm;

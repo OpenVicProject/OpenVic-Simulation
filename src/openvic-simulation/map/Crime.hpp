@@ -3,18 +3,19 @@
 #include "openvic-simulation/modifier/Modifier.hpp"
 
 namespace OpenVic {
+	struct CrimeManager;
+
 	struct Crime final : TriggeredModifier {
 		friend struct CrimeManager;
 
 	private:
 		const bool PROPERTY_CUSTOM_PREFIX(default_active, is);
 
+	public:
 		Crime(
 			std::string_view new_identifier, ModifierValue&& new_values, icon_t new_icon, ConditionScript&& new_trigger,
 			bool new_default_active
 		);
-
-	public:
 		Crime(Crime&&) = default;
 	};
 

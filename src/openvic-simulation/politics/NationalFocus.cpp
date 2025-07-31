@@ -51,7 +51,7 @@ inline bool NationalFocusManager::add_national_focus_group(std::string_view iden
 		return false;
 	}
 
-	return national_focus_groups.add_item({ identifier });
+	return national_focus_groups.emplace_item(identifier, identifier);
 }
 
 inline bool NationalFocusManager::add_national_focus(
@@ -88,11 +88,12 @@ inline bool NationalFocusManager::add_national_focus(
 		);
 	}
 
-	return national_foci.add_item({
+	return national_foci.emplace_item(
+		identifier,
 		identifier, group, icon, has_flashpoint, flashpoint_tension, own_provinces, outliner_show_as_percent,
 		std::move(modifiers), loyalty_ideology, loyalty_value, encourage_railroads, std::move(encourage_goods),
 		std::move(encourage_pop_types), std::move(limit)
-	});
+	);
 }
 
 bool NationalFocusManager::load_national_foci_file(

@@ -142,7 +142,10 @@ bool RuleManager::add_rule(std::string_view identifier, Rule::rule_group_t group
 		Logger::error("Invalid rule identifier - empty!");
 		return false;
 	}
-	return rules.add_item({ identifier, group, rule_group_sizes[group]++, localisation_key });
+	return rules.emplace_item(
+		identifier,
+		identifier, group, rule_group_sizes[group]++, localisation_key
+	);
 }
 
 bool RuleManager::setup_rules(BuildingTypeManager const& building_type_manager) {

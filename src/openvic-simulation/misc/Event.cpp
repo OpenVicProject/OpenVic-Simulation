@@ -108,11 +108,13 @@ bool EventManager::register_event(
 
 	// TODO - error if is_triggered_only with triggers or MTTH defined
 
-	return events.add_item({
+	return events.emplace_item(
+		identifier,
+		duplicate_warning_callback,
 		identifier, title, description, image, type, triggered_only, major, fire_only_once, allows_multiple_instances, news,
 		news_title, news_desc_long, news_desc_medium, news_desc_short, election, election_issue_group, std::move(trigger),
 		std::move(mean_time_to_happen), std::move(immediate), std::move(options)
-	}, duplicate_warning_callback);
+	);
 }
 
 bool EventManager::add_on_action(std::string_view identifier, OnAction::weight_map_t&& weighted_events) {
@@ -121,7 +123,10 @@ bool EventManager::add_on_action(std::string_view identifier, OnAction::weight_m
 		return false;
 	}
 
-	return on_actions.add_item({ identifier, std::move(weighted_events) });
+	return on_actions.emplace_item(
+		identifier,
+		identifier, std::move(weighted_events)
+	);
 }
 
 bool EventManager::load_event_file(IssueManager const& issue_manager, ast::NodeCPtr root) {

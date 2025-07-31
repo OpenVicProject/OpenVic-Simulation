@@ -5,7 +5,6 @@
 #include "openvic-simulation/dataloader/NodeTools.hpp"
 #include "openvic-simulation/types/HasIdentifier.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPointMap.hpp"
-#include "openvic-simulation/utility/Deque.hpp"
 #include "openvic-simulation/utility/Getters.hpp"
 #include "openvic-simulation/utility/Logger.hpp"
 
@@ -191,8 +190,13 @@ namespace OpenVic {
 		constexpr UniqueKeyRegistry(std::string_view new_name, bool new_log_lock = true)
 			: name { new_name }, log_lock { new_log_lock } {}
 
-		constexpr bool add_item(
-			item_type&& item, NodeTools::Callback<std::string_view, std::string_view> auto duplicate_callback
+		constexpr bool emplace_via_move(item_type&& item) {
+			return emplace_via_move(std::move(item), duplicate_fail_callback);
+		}
+
+		constexpr bool emplace_via_move(
+			item_type&& item,
+			NodeTools::Callback<std::string_view, std::string_view> auto duplicate_callback
 		) {
 			if (locked) {
 				Logger::error("Cannot add item to the ", name, " registry - locked!");
@@ -217,8 +221,47 @@ namespace OpenVic {
 			return true;
 		}
 
-		constexpr bool add_item(item_type&& item) {
-			return add_item(std::move(item), duplicate_fail_callback);
+		template<typename... Args>
+		constexpr bool emplace_item(
+			const std::string_view new_identifier,
+			NodeTools::Callback<std::string_view, std::string_view> auto duplicate_callback,
+			Args&&... args
+		) {
+			if (locked) {
+				Logger::error("Cannot add item to the ", name, " registry - locked!");
+				return false;
+			}
+
+			if (has_identifier(new_identifier)) {
+				return duplicate_callback(name, new_identifier);
+			}
+
+			items.emplace_back(std::forward<Args>(args)...);
+
+			const index_type index = StorageInfo::get_back_index(items);
+
+			/* Get item's identifier via index rather than using new_identifier, as it may have been invalidated item's move. */
+			identifier_index_map.emplace(
+				ValueInfo::get_identifier(ItemInfo::get_value(StorageInfo::get_item_from_index(items, index))),
+				StorageInfo::get_back_index(items)
+			);
+
+			return true;
+		}
+		
+		constexpr bool emplace_via_copy(item_type const& item_to_copy) {
+			return emplace_item(
+				ValueInfo::get_identifier(ItemInfo::get_value(item_to_copy)),
+				item_to_copy
+			);
+		}
+
+		template<typename... Args>
+		constexpr bool emplace_item(
+			const std::string_view new_identifier,
+			Args&&... args
+		) {
+			return emplace_item(new_identifier, duplicate_fail_callback, std::forward<Args>(args)...);
 		}
 
 		constexpr void lock() {

@@ -9,8 +9,6 @@ namespace OpenVic {
 
 	/* The index of the Rule within its group, used to determine precedence in mutually exclusive rule groups. */
 	struct Rule : HasIdentifier, HasIndex<Rule> {
-		friend struct RuleManager;
-
 		enum class rule_group_t : uint8_t {
 			ECONOMY, CITIZENSHIP, SLAVERY, UPPER_HOUSE, VOTING
 		};
@@ -30,11 +28,10 @@ namespace OpenVic {
 		const rule_group_t PROPERTY(group);
 		memory::string PROPERTY(localisation_key);
 
+	public:
 		Rule(
 			std::string_view new_identifier, rule_group_t new_group, index_t new_index, std::string_view new_localisation_key
 		);
-
-	public:
 		Rule(Rule&&) = default;
 	};
 

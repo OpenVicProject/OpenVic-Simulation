@@ -57,9 +57,10 @@ bool ModifierManager::_register_modifier_effect(
 		return false;
 	}
 
-	const bool ret = registry.add_item({
-		std::move(identifier), format, targets, localisation_key, has_no_effect
-	});
+	const bool ret = registry.emplace_item(
+		identifier,
+		identifier, format, targets, localisation_key, has_no_effect
+	);
 
 	if (ret) {
 		effect_cache = &registry.back();
@@ -670,8 +671,10 @@ bool ModifierManager::add_event_modifier(
 		return false;
 	}
 
-	return event_modifiers.add_item(
-		{ identifier, std::move(values), type, icon }, duplicate_warning_callback
+	return event_modifiers.emplace_item(
+		identifier,
+		duplicate_warning_callback,
+		identifier, std::move(values), type, icon 
 	);
 }
 
@@ -713,9 +716,10 @@ bool ModifierManager::add_triggered_modifier(
 		return false;
 	}
 
-	return triggered_modifiers.add_item(
-		{ identifier, std::move(values), TRIGGERED, icon, std::move(trigger) },
-		duplicate_warning_callback
+	return triggered_modifiers.emplace_item(
+		identifier,
+		duplicate_warning_callback,
+		identifier, std::move(values), TRIGGERED, icon, std::move(trigger)
 	);
 }
 

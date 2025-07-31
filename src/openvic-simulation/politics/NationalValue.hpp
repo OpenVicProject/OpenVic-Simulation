@@ -7,12 +7,8 @@ namespace OpenVic {
 	struct NationalValueManager;
 
 	struct NationalValue : Modifier {
-		friend struct NationalValueManager;
-
-	private:
-		NationalValue(std::string_view new_identifier, ModifierValue&& new_modifiers);
-
 	public:
+		NationalValue(std::string_view new_identifier, ModifierValue&& new_modifiers);
 		NationalValue(NationalValue&&) = default;
 	};
 

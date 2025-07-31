@@ -6,16 +6,18 @@
 #include "openvic-simulation/types/OrderedContainers.hpp"
 
 namespace OpenVic {
-	struct UnitType;
-	struct BuildingType;
-	struct Crime;
 
-	struct UnitTypeManager;
+	struct BuildingType;
 	struct BuildingTypeManager;
+	struct Crime;
 	struct CrimeManager;
+	struct InventionManager;
+	struct UnitType;
+	struct UnitTypeManager;
 
 	struct Invention : Modifier {
 		friend struct InventionManager;
+
 		//TODO implement limit and chance
 		using unit_set_t = ordered_set<UnitType const*>;
 		using building_set_t = ordered_set<BuildingType const*>;
@@ -31,6 +33,9 @@ namespace OpenVic {
 		ConditionScript PROPERTY(limit);
 		ConditionalWeightBase PROPERTY(chance);
 
+		bool parse_scripts(DefinitionManager const& definition_manager);
+
+	public:
 		Invention(
 			std::string_view new_identifier,
 			ModifierValue&& new_values,
@@ -43,10 +48,6 @@ namespace OpenVic {
 			ConditionScript&& new_limit,
 			ConditionalWeightBase&& new_chance
 		);
-
-		bool parse_scripts(DefinitionManager const& definition_manager);
-
-	public:
 		Invention(Invention&&) = default;
 	};
 

@@ -88,9 +88,10 @@ bool TerrainTypeManager::add_terrain_type(
 		return false;
 	}
 
-	return terrain_types.add_item({
+	return terrain_types.emplace_item(
+		identifier,
 		identifier, colour, std::move(values), movement_cost, defence_bonus, combat_width_percentage_change, is_water
-	});
+	);
 }
 
 bool TerrainTypeManager::add_terrain_type_mapping(
@@ -131,7 +132,10 @@ bool TerrainTypeManager::add_terrain_type_mapping(
 		}
 	}
 
-	ret &= terrain_type_mappings.add_item({ identifier, *type, std::move(terrain_indices), priority, has_texture });
+	ret &= terrain_type_mappings.emplace_item(
+		identifier,
+		identifier, *type, std::move(terrain_indices), priority, has_texture
+	);
 
 	return ret;
 }

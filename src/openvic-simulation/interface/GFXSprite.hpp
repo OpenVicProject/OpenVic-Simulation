@@ -2,15 +2,9 @@
 
 #include "openvic-simulation/interface/LoadBase.hpp"
 
-namespace OpenVic {
-	class UIManager;
-}
-
 namespace OpenVic::GFX {
 
 	struct Font : HasIdentifierAndAlphaColour {
-		friend class OpenVic::UIManager;
-
 		using colour_codes_t = ordered_map<char, colour_t>;
 
 	private:
@@ -21,12 +15,11 @@ namespace OpenVic::GFX {
 
 		// TODO - effect
 
+	public:
 		Font(
 			std::string_view new_identifier, colour_argb_t new_colour, std::string_view new_fontname,
 			std::string_view new_charset, uint32_t new_height, colour_codes_t&& new_colour_codes
 		);
-
-	public:
 		Font(Font&&) = default;
 	};
 

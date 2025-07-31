@@ -26,9 +26,8 @@ namespace OpenVic {
 	private:
 		memory::vector<PopType const*> PROPERTY(pop_types);
 
-		Strata(std::string_view new_identifier, index_t new_index);
-
 	public:
+		Strata(std::string_view new_identifier, index_t new_index);
 		Strata(Strata&&) = default;
 	};
 
@@ -88,6 +87,9 @@ namespace OpenVic {
 		ideology_weight_map_t PROPERTY(ideologies); /* Scope - pop */
 		issue_weight_map_t PROPERTY(issues); /* Scope - province, THIS - country (?) */
 
+		bool parse_scripts(DefinitionManager const& definition_manager);
+
+	public:
 		PopType(
 			std::string_view new_identifier,
 			colour_t new_colour,
@@ -126,10 +128,6 @@ namespace OpenVic {
 			ideology_weight_map_t&& new_ideologies,
 			issue_weight_map_t&& new_issues
 		);
-
-		bool parse_scripts(DefinitionManager const& definition_manager);
-
-	public:
 		PopType(PopType&&) = default;
 
 		constexpr bool has_income_type(income_type_t income_type) const;

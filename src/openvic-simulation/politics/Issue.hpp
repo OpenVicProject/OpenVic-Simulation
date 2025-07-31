@@ -18,10 +18,8 @@ namespace OpenVic {
 	private:
 		memory::vector<Issue const*> PROPERTY(issues);
 
-	protected:
-		IssueGroup(std::string_view identifier, index_t new_index);
-
 	public:
+		IssueGroup(std::string_view identifier, index_t new_index);
 		IssueGroup(IssueGroup&&) = default;
 
 		constexpr size_t get_issue_count() const {
@@ -31,21 +29,17 @@ namespace OpenVic {
 
 	// Issue (i.e. protectionism)
 	struct Issue : Modifier, HasColour {
-		friend struct IssueManager;
-
 	private:
 		IssueGroup const& PROPERTY(issue_group);
 		RuleSet PROPERTY(rules);
 		const bool PROPERTY_CUSTOM_PREFIX(jingoism, is);
 
-	protected:
+	public:
 		Issue(
 			std::string_view new_identifier, colour_t new_colour, ModifierValue&& new_values,
 			IssueGroup const& new_issue_group, RuleSet&& new_rules, bool new_jingoism,
 			modifier_type_t new_type = modifier_type_t::ISSUE
 		);
-
-	public:
 		Issue(Issue&&) = default;
 	};
 
@@ -60,9 +54,8 @@ namespace OpenVic {
 		// in vanilla education, military and economic reforms are hardcoded to true and the rest to false
 		memory::vector<ReformGroup const*> PROPERTY(reform_groups);
 
-		ReformType(std::string_view new_identifier, bool new_uncivilised);
-
 	public:
+		ReformType(std::string_view new_identifier, bool new_uncivilised);
 		ReformType(ReformType&&) = default;
 	};
 
@@ -70,19 +63,17 @@ namespace OpenVic {
 
 	// Reform group (i.e. slavery)
 	struct ReformGroup : IssueGroup {
-		friend struct IssueManager;
 
 	private:
 		ReformType const& PROPERTY(reform_type);
 		const bool PROPERTY_CUSTOM_PREFIX(ordered, is); // next_step_only
 		const bool PROPERTY_CUSTOM_PREFIX(administrative, is);
 
+	public:
 		ReformGroup(
 			std::string_view new_identifier, index_t new_index, ReformType const& new_reform_type, bool new_ordered,
 			bool new_administrative
 		);
-
-	public:
 		ReformGroup(ReformGroup&&) = default;
 
 		constexpr size_t get_reform_count() const {
@@ -111,16 +102,15 @@ namespace OpenVic {
 		ConditionScript PROPERTY(on_execute_trigger);
 		EffectScript PROPERTY(on_execute_effect);
 
+		bool parse_scripts(DefinitionManager const& definition_manager);
+
+	public:
 		Reform(
 			std::string_view new_identifier, colour_t new_colour, ModifierValue&& new_values,
 			ReformGroup const& new_reform_group, size_t new_ordinal, fixed_point_t new_administrative_multiplier,
 			RuleSet&& new_rules, tech_cost_t new_technology_cost, ConditionScript&& new_allow,
 			ConditionScript&& new_on_execute_trigger, EffectScript&& new_on_execute_effect
 		);
-
-		bool parse_scripts(DefinitionManager const& definition_manager);
-
-	public:
 		Reform(Reform&&) = default;
 
 		constexpr ReformGroup const& get_reform_group() const {

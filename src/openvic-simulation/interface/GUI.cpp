@@ -63,11 +63,11 @@ bool Element::_fill_elements_key_map(
 
 bool Scene::_fill_key_map(NodeTools::case_insensitive_key_map_t& key_map, UIManager const& ui_manager) {
 	bool ret = Element::_fill_elements_key_map(key_map, [this](memory::unique_base_ptr<Element>&& element) -> bool {
-		return scene_elements.add_item(std::move(element));
+		return scene_elements.emplace_via_move(std::move(element));
 	}, ui_manager);
 	ret &= add_key_map_entry(key_map,
 		"positionType", ZERO_OR_MORE, Position::_expect_value<Position>([this](Position&& position) -> bool {
-			return scene_positions.add_item(std::move(position));
+			return scene_positions.emplace_via_move(std::move(position));
 		})
 	);
 	return ret;
@@ -86,7 +86,7 @@ Window::Window() {}
 
 bool Window::_fill_key_map(NodeTools::case_insensitive_key_map_t& key_map, UIManager const& ui_manager) {
 	bool ret = Element::_fill_elements_key_map(key_map, [this](memory::unique_base_ptr<Element>&& element) -> bool {
-		return window_elements.add_item(std::move(element), duplicate_warning_callback);
+		return window_elements.emplace_via_move(std::move(element), duplicate_warning_callback);
 	}, ui_manager);
 	ret &= Element::_fill_key_map(key_map, ui_manager);
 	ret &= add_key_map_entries(key_map,
@@ -243,7 +243,7 @@ Scrollbar::Scrollbar() {
 bool Scrollbar::_fill_key_map(NodeTools::case_insensitive_key_map_t& key_map, UIManager const& ui_manager) {
 	bool ret = Element::_fill_key_map(key_map, ui_manager);
 	const auto add_element = [this](memory::unique_base_ptr<Element>&& element) -> bool {
-		return scrollbar_elements.add_item(std::move(element));
+		return scrollbar_elements.emplace_via_move(std::move(element));
 	};
 	ret &= add_key_map_entries(key_map,
 		"slider", ONE_EXACTLY, expect_string(assign_variable_callback_string(slider_button_name)),

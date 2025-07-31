@@ -159,7 +159,10 @@ bool PopManager::add_strata(std::string_view identifier) {
 		Logger::error("Invalid strata identifier - empty!");
 		return false;
 	}
-	return stratas.add_item({ identifier, get_strata_count() });
+	return stratas.emplace_item(
+		identifier,
+		identifier, get_strata_count()
+	);
 }
 
 bool PopManager::add_pop_type(
@@ -236,7 +239,8 @@ bool PopManager::add_pop_type(
 		return false;
 	}
 
-	if (OV_unlikely(!pop_types.add_item({
+	if (OV_unlikely(!pop_types.emplace_item(
+		identifier,
 		identifier,
 		colour,
 		get_pop_type_count(),
@@ -248,7 +252,7 @@ bool PopManager::add_pop_type(
 		life_needs_income_types,
 		everyday_needs_income_types,
 		luxury_needs_income_types,
-		{},
+		PopType::rebel_units_t{},
 		max_size,
 		merge_max_size,
 		state_capital_only,
@@ -267,13 +271,13 @@ bool PopManager::add_pop_type(
 		leadership_points,
 		research_leadership_optimum,
 		state_administration_multiplier,
-		nullptr,
+		static_cast<PopType const*>(nullptr),
 		std::move(country_migration_target),
 		std::move(migration_target),
-		{},
+		PopType::poptype_weight_map_t{},
 		std::move(ideologies),
-		{}
-	}))) {
+		PopType::issue_weight_map_t{}
+	))) {
 		return false;
 	}
 

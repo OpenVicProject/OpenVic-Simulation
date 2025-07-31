@@ -44,10 +44,12 @@ bool DecisionManager::add_decision(
 		}
 	}
 
-	return decisions.add_item({
+	return decisions.emplace_item(
+		identifier,
+		duplicate_warning_callback,
 		identifier, alert, news, news_title, news_desc_long, news_desc_medium, news_desc_short, picture, std::move(potential),
 		std::move(allow), std::move(ai_will_do), std::move(effect)
-	}, duplicate_warning_callback);
+	);
 }
 
 bool DecisionManager::load_decision_file(ast::NodeCPtr root) {

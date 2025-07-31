@@ -22,8 +22,6 @@ namespace OpenVic {
 	struct CountryDefinitionManager;
 
 	struct CountryParty : HasIdentifierAndColour {
-		friend struct CountryDefinitionManager;
-
 		using policy_map_t = IndexedMap<IssueGroup, Issue const*>;
 
 	private:
@@ -32,19 +30,18 @@ namespace OpenVic {
 		Ideology const* PROPERTY(ideology); // Can be nullptr, shows up as "No Ideology" in game
 		policy_map_t PROPERTY(policies);
 
+	public:
 		CountryParty(
 			std::string_view new_identifier, Date new_start_date, Date new_end_date, Ideology const* new_ideology,
 			policy_map_t&& new_policies
 		);
-
-	public:
 		CountryParty(CountryParty&&) = default;
 	};
 
 	/* Generic information about a TAG */
 	struct CountryDefinition : HasIdentifierAndColour, HasIndex<CountryDefinition> {
 		friend struct CountryDefinitionManager;
-
+		
 		using unit_names_map_t = ordered_map<UnitType const*, name_list_t>;
 		using government_colour_map_t = ordered_map<GovernmentType const*, colour_t>;
 
@@ -61,14 +58,14 @@ namespace OpenVic {
 		colour_t PROPERTY(tertiary_unit_colour);
 		// Unit colours not const due to being added after construction
 
+
+	public:
 		CountryDefinition(
 			std::string_view new_identifier, colour_t new_colour, index_t new_index,
 			GraphicalCultureType const& new_graphical_culture, IdentifierRegistry<CountryParty>&& new_parties,
 			unit_names_map_t&& new_unit_names, bool new_dynamic_tag, government_colour_map_t&& new_alternative_colours,
 			colour_t new_primary_unit_colour, colour_t new_secondary_unit_colour, colour_t new_tertiary_unit_colour
 		);
-
-	public:
 		CountryDefinition(CountryDefinition&&) = default;
 
 		// TODO - get_colour including alternative colours

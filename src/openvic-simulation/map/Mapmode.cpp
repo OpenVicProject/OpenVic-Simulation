@@ -51,13 +51,10 @@ bool MapmodeManager::add_mapmode(
 		Logger::error("Mapmode colour function is null for identifier: ", identifier);
 		return false;
 	}
-	return mapmodes.add_item({
+	return mapmodes.emplace_item(
 		identifier,
-		static_cast<Mapmode::index_t>(mapmodes.size()),
-		colour_func,
-		localisation_key,
-		parchment_mapmode_allowed
-	});
+		identifier, static_cast<Mapmode::index_t>(mapmodes.size()), colour_func, localisation_key, parchment_mapmode_allowed
+	);
 }
 
 bool MapmodeManager::generate_mapmode_colours(

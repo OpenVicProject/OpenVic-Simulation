@@ -60,6 +60,9 @@ namespace OpenVic {
 
 		memory::vector<EventOption> PROPERTY(options);
 
+		bool parse_scripts(DefinitionManager const& definition_manager);
+
+	public:
 		Event(
 			std::string_view new_identifier, std::string_view new_title, std::string_view new_description,
 			std::string_view new_image, event_type_t new_type, bool new_triggered_only, bool new_major,
@@ -69,24 +72,17 @@ namespace OpenVic {
 			ConditionalWeightTime&& new_mean_time_to_happen, EffectScript&& new_immediate,
 			memory::vector<EventOption>&& new_options
 		);
-
-		bool parse_scripts(DefinitionManager const& definition_manager);
-
-	public:
 		Event(Event&&) = default;
 	};
 
 	struct OnAction : HasIdentifier {
-		friend struct EventManager;
-
 		using weight_map_t = ordered_map<Event const*, uint64_t>;
 
 	private:
 		weight_map_t PROPERTY(weighted_events);
 
-		OnAction(std::string_view new_identifier, weight_map_t&& new_weighted_events);
-
 	public:
+		OnAction(std::string_view new_identifier, weight_map_t&& new_weighted_events);
 		OnAction(OnAction&&) = default;
 	};
 

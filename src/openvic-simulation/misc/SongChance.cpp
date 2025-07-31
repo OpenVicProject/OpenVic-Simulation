@@ -31,7 +31,10 @@ bool SongChanceManager::load_songs_file(ast::NodeCPtr root) {
 				"chance", ONE_EXACTLY, chance.expect_conditional_weight()
 			)(value);
 
-			ret &= song_chances.add_item({ song_chances.size(), name, std::move(chance) });
+			ret &= song_chances.emplace_item(
+				name,
+				song_chances.size(), name, std::move(chance)
+			);
 			return ret;
 		}
 	)(root);

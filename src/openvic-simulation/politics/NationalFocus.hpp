@@ -9,9 +9,7 @@ namespace OpenVic {
 	struct NationalFocusManager;
 
 	struct NationalFocusGroup : HasIdentifier {
-		friend struct NationalFocusManager;
-
-	private:
+	public:
 		NationalFocusGroup(std::string_view new_identifier);
 	};
 
@@ -36,6 +34,9 @@ namespace OpenVic {
 		fixed_point_map_t<PopType const*> PROPERTY(encourage_pop_types);
 		ConditionScript PROPERTY(limit);
 
+		bool parse_scripts(DefinitionManager const& definition_manager);
+
+	public:
 		NationalFocus(
 			std::string_view new_identifier,
 			NationalFocusGroup const& new_group,
@@ -52,10 +53,6 @@ namespace OpenVic {
 			fixed_point_map_t<PopType const*>&& new_encourage_pop_types,
 			ConditionScript&& new_limit
 		);
-
-		bool parse_scripts(DefinitionManager const& definition_manager);
-
-	public:
 		NationalFocus(NationalFocus&&) = default;
 	};
 

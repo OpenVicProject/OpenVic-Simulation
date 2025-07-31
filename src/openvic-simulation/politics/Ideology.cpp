@@ -55,7 +55,7 @@ bool IdeologyManager::add_ideology_group(std::string_view identifier) {
 		return false;
 	}
 
-	return ideology_groups.add_item({ identifier });
+	return ideology_groups.emplace_item(identifier, identifier);
 }
 
 bool IdeologyManager::add_ideology(
@@ -85,7 +85,8 @@ bool IdeologyManager::add_ideology(
 	}
 
 	const Ideology::index_t new_index = ideologies.size();
-	return ideologies.add_item({
+	return ideologies.emplace_item(
+		identifier,
 		identifier,
 		new_index,
 		colour,
@@ -100,7 +101,7 @@ bool IdeologyManager::add_ideology(
 		std::move(remove_social_reform),
 		std::move(add_military_reform),
 		std::move(add_economic_reform)
-	});
+	);
 }
 
 /* REQUIREMENTS:

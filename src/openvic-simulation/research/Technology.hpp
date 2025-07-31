@@ -13,6 +13,7 @@
 
 namespace OpenVic {
 	struct TechnologyArea;
+	struct TechnologyManager;
 
 	struct TechnologyFolder : HasIdentifier, HasIndex<TechnologyFolder> {
 		friend struct TechnologyManager;
@@ -20,9 +21,8 @@ namespace OpenVic {
 	private:
 		memory::vector<TechnologyArea const*> PROPERTY(technology_areas);
 
-		TechnologyFolder(std::string_view new_identifier, index_t new_index);
-
 	public:
+		TechnologyFolder(std::string_view new_identifier, index_t new_index);
 		TechnologyFolder(TechnologyFolder&&) = default;
 	};
 
@@ -36,9 +36,8 @@ namespace OpenVic {
 		memory::vector<Technology const*> PROPERTY(technologies);
 		size_t PROPERTY(tech_count, 0);
 
-		TechnologyArea(std::string_view new_identifier, TechnologyFolder const& new_folder);
-
 	public:
+		TechnologyArea(std::string_view new_identifier, TechnologyFolder const& new_folder);
 		TechnologyArea(TechnologyArea&&) = default;
 	};
 
@@ -60,6 +59,9 @@ namespace OpenVic {
 		building_set_t PROPERTY(activated_buildings);
 		ConditionalWeightFactorMul PROPERTY(ai_chance);
 
+		bool parse_scripts(DefinitionManager const& definition_manager);
+
+	public:
 		Technology(
 			std::string_view new_identifier,
 			index_t new_index,
@@ -74,17 +76,11 @@ namespace OpenVic {
 			ModifierValue&& new_values,
 			ConditionalWeightFactorMul&& new_ai_chance
 		);
-
-		bool parse_scripts(DefinitionManager const& definition_manager);
-
-	public:
 		Technology(Technology&&) = default;
 	};
 
 	struct TechnologySchool : Modifier {
-		friend struct TechnologyManager;
-
-	private:
+	public:
 		TechnologySchool(std::string_view new_identifier, ModifierValue&& new_values);
 	};
 

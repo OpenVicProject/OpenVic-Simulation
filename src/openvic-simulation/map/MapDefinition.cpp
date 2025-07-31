@@ -65,19 +65,25 @@ bool MapDefinition::add_province_definition(std::string_view identifier, colour_
 		Logger::error("Invalid province colour for ", identifier, " - null! (", colour, ")");
 		return false;
 	}
-	ProvinceDefinition new_province {
-		identifier, colour, static_cast<ProvinceDefinition::index_t>(province_definitions.size())
-	};
 	const ProvinceDefinition::index_t province_number = get_province_number_from_colour(colour);
 	if (province_number != ProvinceDefinition::NULL_INDEX) {
 		Logger::error(
 			"Duplicate province colours: ", get_province_definition_from_number(province_number)->to_string(), " and ",
-			new_province.to_string()
+			identifier
 		);
 		return false;
 	}
+
+	if (!province_definitions.emplace_item(
+		identifier,
+		identifier, colour, static_cast<ProvinceDefinition::index_t>(province_definitions.size())
+	)) {
+		return false;
+	}
+
+	ProvinceDefinition const& new_province = province_definitions.back();
 	colour_index_map[new_province.get_colour()] = new_province.get_province_number();
-	return province_definitions.add_item(std::move(new_province));
+	return true;
 }
 
 ProvinceDefinition::distance_t MapDefinition::calculate_distance_between(
@@ -409,7 +415,14 @@ bool MapDefinition::add_region(std::string_view identifier, memory::vector<Provi
 		is_meta |= province_definition.is_water();
 	}
 
-	Region region { identifier, colour, is_meta };
+	if (!regions.emplace_item(
+		identifier,
+		identifier, colour, is_meta
+	)) {
+		return false;
+	}
+
+	Region& region = regions.back();
 
 	if (OV_likely(valid_provinces_count == provinces.size())) {
 		ret &= region.add_provinces(provinces);
@@ -423,17 +436,12 @@ bool MapDefinition::add_region(std::string_view identifier, memory::vector<Provi
 	}
 
 	region.lock();
-	if (regions.add_item(std::move(region))) {
-		if (OV_unlikely(is_meta)) {
-			Logger::info("Region ", identifier, " is meta.");
-		} else {
-			Region const& last_region = get_back_region();
-			for (ProvinceDefinition const* province_definition : last_region.get_provinces()) {
-				remove_province_definition_const(province_definition)->region = &last_region;
-			}
-		}
+	if (OV_unlikely(is_meta)) {
+		Logger::info("Region ", identifier, " is meta.");
 	} else {
-		ret = false;
+		for (ProvinceDefinition const* province_definition : region.get_provinces()) {
+			remove_province_definition_const(province_definition)->region = &region;
+		}
 	}
 	return ret;
 }
@@ -1048,7 +1056,10 @@ bool MapDefinition::load_climate_file(ModifierManager const& modifier_manager, a
 					modifier_manager.expect_base_province_modifier(values)
 				)(node);
 
-				ret &= climates.add_item({ identifier, std::move(values), Modifier::modifier_type_t::CLIMATE });
+				ret &= climates.emplace_item(
+					identifier,
+					identifier, std::move(values), Modifier::modifier_type_t::CLIMATE
+				);
 			} else {
 				ret &= expect_list_reserve_length(*cur_climate, expect_province_definition_identifier(
 					[cur_climate, &identifier](ProvinceDefinition& province) {
@@ -1113,17 +1124,19 @@ bool MapDefinition::load_continent_file(ModifierManager const& modifier_manager,
 				))
 			)(node);
 
-			Continent continent { identifier, std::move(values), Modifier::modifier_type_t::CONTINENT };
+			if (!continents.emplace_item(
+				identifier,
+				identifier, std::move(values), Modifier::modifier_type_t::CONTINENT
+			)) {
+				return false;
+			}
+
+			Continent& continent = continents.back();
 			continent.add_provinces(prov_list);
 			continent.lock();
 
-			if (continents.add_item(std::move(continent))) {
-				Continent const& moved_continent = get_back_continent();
-				for (ProvinceDefinition const* prov : moved_continent.get_provinces()) {
-					remove_province_definition_const(prov)->continent = &moved_continent;
-				}
-			} else {
-				ret = false;
+			for (ProvinceDefinition const* prov : continent.get_provinces()) {
+				remove_province_definition_const(prov)->continent = &continent;
 			}
 
 			return ret;

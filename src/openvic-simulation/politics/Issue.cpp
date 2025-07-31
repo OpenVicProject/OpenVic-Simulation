@@ -52,7 +52,10 @@ bool IssueManager::add_issue_group(std::string_view identifier) {
 		return false;
 	}
 
-	return issue_groups.add_item({ identifier, get_issue_group_count() });
+	return issue_groups.emplace_item(
+		identifier,
+		identifier, get_issue_group_count()
+	);
 }
 
 bool IssueManager::add_issue(
@@ -64,12 +67,15 @@ bool IssueManager::add_issue(
 		return false;
 	}
 
-	if (issues.add_item({ identifier, new_colour, std::move(values), issue_group, std::move(rules), jingoism })) {
-		issue_group.issues.push_back(&get_back_issue());
-		return true;
-	} else {
+	if (!issues.emplace_item(
+		identifier,
+		identifier, new_colour, std::move(values), issue_group, std::move(rules), jingoism
+	)) {
 		return false;
 	}
+
+	issue_group.issues.push_back(&get_back_issue());
+	return true;
 }
 
 bool IssueManager::add_reform_type(std::string_view identifier, bool uncivilised) {
@@ -78,7 +84,10 @@ bool IssueManager::add_reform_type(std::string_view identifier, bool uncivilised
 		return false;
 	}
 
-	return reform_types.add_item({ identifier, uncivilised });
+	return reform_types.emplace_item(
+		identifier,
+		identifier, uncivilised
+	);
 }
 
 bool IssueManager::add_reform_group(
@@ -89,14 +98,15 @@ bool IssueManager::add_reform_group(
 		return false;
 	}
 
-	if (reform_groups.add_item({
+	if (!reform_groups.emplace_item(
+		identifier,
 		identifier, get_reform_group_count(), reform_type, ordered, administrative
-	})) {
-		reform_type.reform_groups.push_back(&get_back_reform_group());
-		return true;
-	} else {
+	)) {
 		return false;
 	}
+
+	reform_type.reform_groups.push_back(&get_back_reform_group());
+	return true;
 }
 
 bool IssueManager::add_reform(
@@ -135,15 +145,16 @@ bool IssueManager::add_reform(
 		);
 	}
 
-	if (reforms.add_item({
+	if (!reforms.emplace_item(
+		identifier,
 		identifier, new_colour, std::move(values), reform_group, ordinal, administrative_multiplier, std::move(rules),
 		technology_cost, std::move(allow), std::move(on_execute_trigger), std::move(on_execute_effect)
-	})) {
-		reform_group.issues.push_back(&get_back_reform());
-		return true;
-	} else {
+	)) {
 		return false;
 	}
+
+	reform_group.issues.push_back(&get_back_reform());
+	return true;
 }
 
 bool IssueManager::_load_issue_group(size_t& expected_issues, std::string_view identifier, ast::NodeCPtr node) {

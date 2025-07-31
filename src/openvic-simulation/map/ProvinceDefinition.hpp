@@ -101,9 +101,8 @@ namespace OpenVic {
 		fvec2_t PROPERTY(centre);
 		province_positions_t positions {};
 
-		ProvinceDefinition(std::string_view new_identifier, colour_t new_colour, index_t new_index);
-
 	public:
+		ProvinceDefinition(std::string_view new_identifier, colour_t new_colour, index_t new_index);
 		ProvinceDefinition(ProvinceDefinition&&) = default;
 
 		memory::string to_string() const;

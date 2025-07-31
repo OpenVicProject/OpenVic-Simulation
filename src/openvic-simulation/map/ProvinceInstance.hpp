@@ -137,6 +137,12 @@ namespace OpenVic {
 		fixed_point_map_t<Religion const*> PROPERTY(religion_distribution);
 		size_t PROPERTY(max_supported_regiments, 0);
 
+		void _add_pop(Pop&& pop);
+		void _update_pops(DefineManager const& define_manager);
+		bool convert_rgo_worker_pops_to_equivalent(ProductionType const& production_type);
+		void initialise_rgo();
+
+	public:
 		ProvinceInstance(
 			MarketInstance& new_market_instance,
 			GameRulesManager const& new_game_rules_manager,
@@ -146,13 +152,6 @@ namespace OpenVic {
 			decltype(pop_type_distribution)::keys_span_type pop_type_keys,
 			decltype(ideology_distribution)::keys_span_type ideology_keys
 		);
-
-		void _add_pop(Pop&& pop);
-		void _update_pops(DefineManager const& define_manager);
-		bool convert_rgo_worker_pops_to_equivalent(ProductionType const& production_type);
-		void initialise_rgo();
-
-	public:
 		ProvinceInstance(ProvinceInstance&&) = default;
 
 		inline explicit constexpr operator ProvinceDefinition const&() const {

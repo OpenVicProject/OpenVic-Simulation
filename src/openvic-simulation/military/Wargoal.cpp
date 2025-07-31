@@ -62,12 +62,13 @@ bool WargoalTypeManager::add_wargoal_type(
 		Logger::warning("Invalid sprite for wargoal ", identifier, " - 0");
 	}
 
-	return wargoal_types.add_item({
+	return wargoal_types.emplace_item(
+		identifier,
 		identifier, war_name, available_length, truce_length, sprite_index, triggered_only, civil_war, constructing, crisis,
 		great_war_obligatory, mutual, all_allowed_states, always, std::move(modifiers), peace_options, std::move(can_use),
 		std::move(is_valid), std::move(allowed_states), std::move(allowed_substate_regions),
 		std::move(allowed_states_in_crisis), std::move(allowed_countries), std::move(on_add), std::move(on_po_accepted)
-	});
+	);
 }
 
 bool WargoalTypeManager::load_wargoal_file(ovdl::v2script::Parser const& parser) {

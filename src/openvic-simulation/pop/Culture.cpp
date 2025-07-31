@@ -32,7 +32,10 @@ bool CultureManager::add_graphical_culture_type(std::string_view identifier) {
 		Logger::error("Invalid culture group identifier - empty!");
 		return false;
 	}
-	return graphical_culture_types.add_item({ identifier });
+	return graphical_culture_types.emplace_item(
+		identifier,
+		identifier
+	);
 }
 
 bool CultureManager::add_culture_group(
@@ -62,12 +65,15 @@ bool CultureManager::add_culture_group(
 		leader = default_leader;
 		Logger::warning("In culture \"", identifier, "\" - group leader is undefined, set to default of: \"", default_leader, "\".");
 	}
-	if (culture_groups.add_item({ identifier, leader, *graphical_culture_type, is_overseas, union_country })) {
-		leader_picture_counts.emplace(leader, general_admiral_picture_count_t { 0, 0 });
-		return true;
-	} else {
+	if (!culture_groups.emplace_item(
+		identifier,
+		identifier, leader, *graphical_culture_type, is_overseas, union_country
+	)) {
 		return false;
 	}
+	
+	leader_picture_counts.emplace(leader, general_admiral_picture_count_t { 0, 0 });
+	return true;
 }
 
 bool CultureManager::add_culture(
@@ -85,9 +91,10 @@ bool CultureManager::add_culture(
 
 	// TODO - check radicalism range
 
-	return cultures.add_item({
+	return cultures.emplace_item(
+		identifier,
 		identifier, colour, group, std::move(first_names), std::move(last_names), radicalism, primary_country
-	});
+	);
 }
 
 bool CultureManager::load_graphical_culture_type_file(ast::NodeCPtr root) {

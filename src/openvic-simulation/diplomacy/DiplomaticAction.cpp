@@ -26,7 +26,7 @@ bool DiplomaticActionManager::add_diplomatic_action(
 		Logger::error("Invalid diplomatic action identifier - empty!");
 		return false;
 	}
-	return diplomatic_action_types.add_item({ identifier, DiplomaticActionType { std::move(initializer) } });
+	return diplomatic_action_types.emplace_item( identifier, identifier, DiplomaticActionType { std::move(initializer) } );
 }
 
 bool DiplomaticActionManager::add_cancelable_diplomatic_action(
@@ -36,7 +36,7 @@ bool DiplomaticActionManager::add_cancelable_diplomatic_action(
 		Logger::error("Invalid cancelable diplomatic action identifier - empty!");
 		return false;
 	}
-	return diplomatic_action_types.add_item({ identifier, CancelableDiplomaticActionType { std::move(initializer) } });
+	return diplomatic_action_types.emplace_item( identifier, identifier, CancelableDiplomaticActionType { std::move(initializer) } );
 }
 
 DiplomaticActionTickCache DiplomaticActionManager::create_diplomatic_action_tick(

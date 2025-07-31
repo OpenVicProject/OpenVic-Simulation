@@ -122,10 +122,13 @@ bool UnitTypeManager::add_regiment_type(
 		return false;
 	}
 
-	bool ret = regiment_types.add_item({ identifier, unit_args, std::move(regiment_type_args) });
+	bool ret = regiment_types.emplace_item(
+		identifier,
+		identifier, unit_args, std::move(regiment_type_args)
+	);
 	if (ret) {
 		// Cannot use get_back_regiment_type() as we need non-const but don't want to generate all non-const functions.
-		ret &= unit_types.add_item(&regiment_types.back());
+		ret &= unit_types.emplace_via_copy(&regiment_types.back());
 	}
 	return ret;
 }
@@ -151,10 +154,13 @@ bool UnitTypeManager::add_ship_type(
 		return false;
 	}
 
-	bool ret = ship_types.add_item({ identifier, unit_args, ship_type_args });
+	bool ret = ship_types.emplace_item(
+		identifier,
+		identifier, unit_args, ship_type_args
+	);
 	if (ret) {
 		// Cannot use get_back_ship_type() as we need non-const but don't want to generate all non-const functions.
-		ret &= unit_types.add_item(&ship_types.back());
+		ret &= unit_types.emplace_via_copy(&ship_types.back());
 	}
 	return ret;
 }

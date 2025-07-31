@@ -13,8 +13,6 @@ namespace OpenVic {
 	struct CountryInstance;
 
 	struct Mapmode : HasIdentifier, HasIndex<Mapmode, int32_t> {
-		friend struct MapmodeManager;
-
 		/* Bottom 32 bits are the base colour, top 32 are the stripe colour, both in ARGB format with the alpha channels
 		 * controlling interpolation with the terrain colour (0 = all terrain, 255 = all corresponding RGB) */
 		struct base_stripe_t {
@@ -34,6 +32,9 @@ namespace OpenVic {
 		memory::string PROPERTY(localisation_key);
 		const bool PROPERTY_CUSTOM_PREFIX(parchment_mapmode_allowed, is);
 
+	public:
+		static const Mapmode ERROR_MAPMODE;
+
 		Mapmode(
 			std::string_view new_identifier,
 			index_t new_index,
@@ -41,10 +42,6 @@ namespace OpenVic {
 			std::string_view new_localisation_key = {},
 			bool new_parchment_mapmode_allowed = true
 		);
-
-	public:
-		static const Mapmode ERROR_MAPMODE;
-
 		Mapmode(Mapmode&&) = default;
 
 		base_stripe_t get_base_stripe_colours(

@@ -49,7 +49,10 @@ bool TechnologyManager::add_technology_folder(std::string_view identifier) {
 		return false;
 	}
 
-	return technology_folders.add_item({ identifier, get_technology_folder_count() });
+	return technology_folders.emplace_item(
+		identifier,
+		identifier, get_technology_folder_count()
+	);
 }
 
 bool TechnologyManager::add_technology_area(std::string_view identifier, TechnologyFolder const& folder) {
@@ -58,7 +61,10 @@ bool TechnologyManager::add_technology_area(std::string_view identifier, Technol
 		return false;
 	}
 
-	return technology_areas.add_item({ identifier, folder });
+	return technology_areas.emplace_item(
+		identifier,
+		identifier, folder
+	);
 }
 
 bool TechnologyManager::add_technology(
@@ -88,7 +94,8 @@ bool TechnologyManager::add_technology(
 		return false;
 	}
 
-	if (technologies.add_item({
+	if (!technologies.emplace_item(
+		identifier,
 		identifier,
 		get_technology_count(),
 		*area,
@@ -101,12 +108,12 @@ bool TechnologyManager::add_technology(
 		std::move(activated_buildings),
 		std::move(values),
 		std::move(ai_chance)
-	})) {
-		area->tech_count++;
-		return true;
-	} else {
+	)) {
 		return false;
 	}
+
+	area->tech_count++;
+	return true;
 }
 
 bool TechnologyManager::add_technology_school(std::string_view identifier, ModifierValue&& values) {
@@ -115,7 +122,10 @@ bool TechnologyManager::add_technology_school(std::string_view identifier, Modif
 		return false;
 	}
 
-	return technology_schools.add_item({ identifier, std::move(values) });
+	return technology_schools.emplace_item(
+		identifier,
+		identifier, std::move(values)
+	);
 }
 
 bool TechnologyManager::load_technology_file_folders_and_areas(ast::NodeCPtr root) {

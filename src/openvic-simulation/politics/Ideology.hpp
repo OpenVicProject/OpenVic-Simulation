@@ -7,12 +7,8 @@ namespace OpenVic {
 	struct IdeologyManager;
 
 	struct IdeologyGroup : HasIdentifier {
-		friend struct IdeologyManager;
-
-	private:
-		IdeologyGroup(std::string_view new_identifier);
-
 	public:
+		IdeologyGroup(std::string_view new_identifier);
 		IdeologyGroup(IdeologyGroup&&) = default;
 	};
 
@@ -36,6 +32,9 @@ namespace OpenVic {
 
 		// TODO - willingness to repeal/pass reforms (and its modifiers)
 
+		bool parse_scripts(DefinitionManager const& definition_manager);
+
+	public:
 		Ideology(
 			std::string_view new_identifier,
 			index_t new_index,
@@ -52,10 +51,6 @@ namespace OpenVic {
 			ConditionalWeightBase&& new_add_military_reform,
 			ConditionalWeightBase&& new_add_economic_reform
 		);
-
-		bool parse_scripts(DefinitionManager const& definition_manager);
-
-	public:
 		Ideology(Ideology&&) = default;
 	};
 
