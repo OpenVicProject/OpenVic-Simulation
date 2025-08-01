@@ -2,17 +2,22 @@
 
 #include <cstdint>
 
-#include "openvic-simulation/politics/Government.hpp"
-#include "openvic-simulation/politics/Ideology.hpp"
 #include "openvic-simulation/scripts/ConditionalWeight.hpp"
 #include "openvic-simulation/scripts/EffectScript.hpp"
+#include "openvic-simulation/types/HasIdentifier.hpp"
+#include "openvic-simulation/types/HasIndex.hpp"
 #include "openvic-simulation/types/IdentifierRegistry.hpp"
 #include "openvic-simulation/types/OrderedContainers.hpp"
 
 namespace OpenVic {
+	struct GovernmentType;
+	struct GovernmentTypeManager;
+	struct Ideology;
+	struct IdeologyManager;
+	struct ModifierManager;
 	struct RebelManager;
 
-	struct RebelType : HasIdentifier {
+	struct RebelType : HasIndex<RebelType>, HasIdentifier {
 		friend struct RebelManager;
 
 		using government_map_t = ordered_map<GovernmentType const*, GovernmentType const*>;
@@ -64,7 +69,8 @@ namespace OpenVic {
 
 	public:
 		RebelType(
-			std::string_view new_identifier, RebelType::icon_t icon, RebelType::area_t area, bool break_alliance_on_win,
+			index_t new_index, std::string_view new_identifier,
+			RebelType::icon_t icon, RebelType::area_t area, bool break_alliance_on_win,
 			RebelType::government_map_t&& desired_governments, RebelType::defection_t defection,
 			RebelType::independence_t independence, uint16_t defect_delay, Ideology const* ideology, bool allow_all_cultures,
 			bool allow_all_culture_groups, bool allow_all_religions, bool allow_all_ideologies, bool resilient,
@@ -76,8 +82,6 @@ namespace OpenVic {
 		);
 		RebelType(RebelType&&) = default;
 	};
-
-	struct ModifierManager;
 
 	struct RebelManager {
 	private:

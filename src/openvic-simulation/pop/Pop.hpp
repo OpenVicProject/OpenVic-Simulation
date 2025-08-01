@@ -1,22 +1,33 @@
 #pragma once
 
-#include "openvic-simulation/country/CountryDefinition.hpp"
-#include "openvic-simulation/economy/production/ArtisanalProducerFactoryPattern.hpp"
+#include "openvic-simulation/economy/production/ArtisanalProducer.hpp"
 #include "openvic-simulation/pop/PopNeedsMacro.hpp"
-#include "openvic-simulation/pop/PopType.hpp"
 #include "openvic-simulation/types/fixed_point/Atomic.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
+#include "openvic-simulation/types/IndexedMap.hpp"
 #include "openvic-simulation/types/PopSize.hpp"
+#include "openvic-simulation/types/UnitBranchType.hpp"
 #include "openvic-simulation/utility/Containers.hpp"
 #include "openvic-simulation/utility/ForwardableSpan.hpp"
 
 namespace OpenVic {
-	struct CountryInstance;
-	struct DefineManager;
-	struct MarketInstance;
-	struct ProvinceInstance;
-	struct PopValuesFromProvince;
+	struct ArtisanalProducerFactoryPattern;
+	struct BaseIssue;
 	struct BuyResult;
+	struct CountryInstance;
+	struct CountryParty;
+	struct Culture;
+	struct DefineManager;
+	struct GoodDefinition;
+	struct Ideology;
+	struct IssueManager;
+	struct MarketInstance;
+	struct PopManager;
+	struct PopType;
+	struct PopValuesFromProvince;
+	struct ProvinceInstance;
+	struct RebelType;
+	struct Religion;
 	struct SellResult;
 
 	struct PopBase {
@@ -73,7 +84,7 @@ namespace OpenVic {
 			UNACCEPTED, ACCEPTED, PRIMARY
 		};
 
-		static constexpr bool is_culture_status_allowed(RegimentType::allowed_cultures_t allowed, culture_status_t status) {
+		static constexpr bool is_culture_status_allowed(regiment_allowed_cultures_t allowed, culture_status_t status) {
 			return static_cast<uint8_t>(allowed) <= static_cast<uint8_t>(status);
 		}
 
@@ -104,7 +115,7 @@ namespace OpenVic {
 		// added together with automatic weighting based on their relative sizes. Similarly, the province, state and country
 		// equivalents of these distributions will have a total size equal to their total population size.
 		IndexedMap<Ideology, fixed_point_t> PROPERTY(ideology_distribution);
-		fixed_point_map_t<Issue const*> PROPERTY(issue_distribution);
+		fixed_point_map_t<BaseIssue const*> PROPERTY(issue_distribution);
 		IndexedMap<CountryParty, fixed_point_t> PROPERTY(vote_distribution);
 
 		pop_size_t employed = 0;
@@ -115,12 +126,7 @@ namespace OpenVic {
 		constexpr pop_size_t get_unemployed() const {
 			return size - employed;
 		}
-		constexpr fixed_point_t get_unemployment_fraction() const {
-			if (!type->get_can_be_unemployed()) {
-				return 0;
-			}
-			return fixed_point_t::parse(get_unemployed()) / size;
-		}
+		fixed_point_t get_unemployment_fraction() const;
 	private:
 		fixed_point_t PROPERTY(income);
 		fixed_point_t PROPERTY(savings);
@@ -133,7 +139,7 @@ namespace OpenVic {
 			public: \
 				fixed_point_t get_##need_category##_needs_fulfilled() const; \
 			private: \
-				GoodDefinition::good_definition_map_t PROPERTY(need_category##_needs); /* TODO pool? (if recalculating in UI is acceptable) */ \
+				fixed_point_map_t<GoodDefinition const*> PROPERTY(need_category##_needs); /* TODO pool? (if recalculating in UI is acceptable) */ \
 				ordered_map<GoodDefinition const*, bool> PROPERTY(need_category##_needs_fulfilled_goods);
 
 		DO_FOR_ALL_NEED_CATEGORIES(NEED_MEMBERS)
@@ -156,7 +162,7 @@ namespace OpenVic {
 		void reserve_needs_fulfilled_goods();
 		void fill_needs_fulfilled_goods_with_false();
 		void allocate_for_needs(
-			GoodDefinition::good_definition_map_t const& scaled_needs,
+			fixed_point_map_t<GoodDefinition const*> const& scaled_needs,
 			utility::forwardable_span<fixed_point_t> money_to_spend_per_good,
 			memory::vector<fixed_point_t>& reusable_vector,
 			fixed_point_t& price_inverse_sum,
@@ -189,7 +195,7 @@ namespace OpenVic {
 		// The values returned by these functions are scaled by pop size, so they must be divided by pop size to get
 		// the support as a proportion of 1.0
 		fixed_point_t get_ideology_support(Ideology const& ideology) const;
-		fixed_point_t get_issue_support(Issue const& issue) const;
+		fixed_point_t get_issue_support(BaseIssue const& issue) const;
 		fixed_point_t get_party_support(CountryParty const& party) const;
 
 		void update_gamestate(

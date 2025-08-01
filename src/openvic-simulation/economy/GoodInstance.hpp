@@ -1,14 +1,16 @@
 #pragma once
 
-#include "openvic-simulation/economy/GoodDefinition.hpp"
 #include "openvic-simulation/economy/trading/GoodMarket.hpp"
+#include "openvic-simulation/types/HasIndex.hpp"
 #include "openvic-simulation/types/HasIdentifier.hpp"
 #include "openvic-simulation/types/IdentifierRegistry.hpp"
 
 namespace OpenVic {
+	struct GoodDefinition;
+	struct GoodDefinitionManager;
 	struct GoodInstanceManager;
 
-	struct GoodInstance : HasIdentifierAndColour, GoodMarket {
+	struct GoodInstance : HasIdentifierAndColour, HasIndex<GoodInstance>, GoodMarket {
 		friend struct GoodInstanceManager;
 
 	public:
@@ -17,9 +19,7 @@ namespace OpenVic {
 
 		// Is the good available for trading? (e.g. should be shown in trade menu)
 		// is_tradeable has no effect on this, only is_money and availability
-		constexpr bool is_trading_good() const {
-			return is_available && !get_good_definition().get_is_money();
-		}
+		bool is_trading_good() const;
 	};
 
 	struct GoodInstanceManager {

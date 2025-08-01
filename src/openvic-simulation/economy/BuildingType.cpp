@@ -1,13 +1,17 @@
 #include "BuildingType.hpp"
 
+#include "openvic-simulation/economy/production/ProductionType.hpp"
 #include "openvic-simulation/modifier/ModifierManager.hpp"
 
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;
 
 BuildingType::BuildingType(
-	std::string_view identifier, building_type_args_t& building_type_args
-) : Modifier { identifier, std::move(building_type_args.modifier), modifier_type_t::BUILDING },
+	index_t new_index,
+	std::string_view identifier,
+	building_type_args_t& building_type_args
+) : HasIndex<BuildingType> { new_index },
+	Modifier { identifier, std::move(building_type_args.modifier), modifier_type_t::BUILDING },
 	type { building_type_args.type },
 	on_completion { building_type_args.on_completion },
 	completion_size { building_type_args.completion_size },
@@ -44,7 +48,10 @@ bool BuildingTypeManager::add_building_type(
 		return false;
 	}
 
-	const bool ret = building_types.emplace_item( identifier, identifier, building_type_args );
+	const bool ret = building_types.emplace_item(
+		identifier,
+		get_building_type_count(), identifier, building_type_args
+	);
 
 	if (ret) {
 		building_type_types.emplace(building_type_args.type);
@@ -115,9 +122,7 @@ bool BuildingTypeManager::load_buildings_file(
 	)(root);
 	lock_building_types();
 
-	IndexedMap<BuildingType, ModifierEffectCache::building_type_effects_t>& building_type_effects =
-		modifier_manager.modifier_effect_cache.building_type_effects;
-
+	auto& building_type_effects = modifier_manager.modifier_effect_cache.building_type_effects;
 	building_type_effects.set_keys(get_building_types());
 
 	for (BuildingType const& building_type : get_building_types()) {

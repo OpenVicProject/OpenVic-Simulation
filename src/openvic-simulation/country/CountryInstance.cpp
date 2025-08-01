@@ -344,7 +344,16 @@ void CountryInstance::change_script_variable(memory::string const& variable_name
 	script_variables[variable_name] += value;
 }
 
-fixed_point_t CountryInstance::get_issue_support(Issue const& issue) const {
+pop_size_t CountryInstance::get_pop_type_proportion(PopType const& pop_type) const {
+	return pop_type_distribution[pop_type];
+}
+pop_size_t CountryInstance::get_pop_type_unemployed(PopType const& pop_type) const {
+	return pop_type_unemployed_count[pop_type];
+}
+fixed_point_t CountryInstance::get_ideology_support(Ideology const& ideology) const {
+	return ideology_distribution[ideology];
+}
+fixed_point_t CountryInstance::get_issue_support(BaseIssue const& issue) const {
 	const decltype(issue_distribution)::const_iterator it = issue_distribution.find(&issue);
 
 	if (it != issue_distribution.end()) {
@@ -353,7 +362,6 @@ fixed_point_t CountryInstance::get_issue_support(Issue const& issue) const {
 		return 0;
 	}
 }
-
 fixed_point_t CountryInstance::get_party_support(CountryParty const& party) const {
 	if (vote_distribution.has_keys()) {
 		return vote_distribution[party];
@@ -361,7 +369,6 @@ fixed_point_t CountryInstance::get_party_support(CountryParty const& party) cons
 		return 0;
 	}
 }
-
 fixed_point_t CountryInstance::get_culture_proportion(Culture const& culture) const {
 	const decltype(culture_distribution)::const_iterator it = culture_distribution.find(&culture);
 
@@ -371,7 +378,6 @@ fixed_point_t CountryInstance::get_culture_proportion(Culture const& culture) co
 		return 0;
 	}
 }
-
 fixed_point_t CountryInstance::get_religion_proportion(Religion const& religion) const {
 	const decltype(religion_distribution)::const_iterator it = religion_distribution.find(&religion);
 
@@ -381,7 +387,21 @@ fixed_point_t CountryInstance::get_religion_proportion(Religion const& religion)
 		return 0;
 	}
 }
-
+pop_size_t CountryInstance::get_strata_population(Strata const& strata) const {
+	return population_by_strata[strata];
+}
+fixed_point_t CountryInstance::get_strata_militancy(Strata const& strata) const {
+	return militancy_by_strata[strata];
+}
+fixed_point_t CountryInstance::get_strata_life_needs_fulfilled(Strata const& strata) const {
+	return life_needs_fulfilled_by_strata[strata];
+}
+fixed_point_t CountryInstance::get_strata_everyday_needs_fulfilled(Strata const& strata) const {
+	return everyday_needs_fulfilled_by_strata[strata];
+}
+fixed_point_t CountryInstance::get_strata_luxury_needs_fulfilled(Strata const& strata) const {
+	return luxury_needs_fulfilled_by_strata[strata];
+}
 fixed_point_t CountryInstance::get_strata_taxable_income(Strata const& strata) const {
 	fixed_point_t running_total = 0;
 	for (auto const& [pop_type, taxable_income] : taxable_income_by_pop_type) {
@@ -451,7 +471,7 @@ bool CountryInstance::add_reform(Reform const& new_reform) {
 	decltype(reforms)::value_ref_type reform = reforms[reform_group];
 
 	if (reform != &new_reform) {
-		if (reform_group.is_administrative()) {
+		if (reform_group.get_is_administrative()) {
 			if (reform != nullptr) {
 				total_administrative_multiplier -= reform->get_administrative_multiplier();
 			}
@@ -511,7 +531,7 @@ void CountryInstance::change_war_exhaustion(fixed_point_t delta) {
 }
 
 bool CountryInstance::add_unit_instance_group(UnitInstanceGroup& group) {
-	using enum UnitType::branch_t;
+	using enum unit_branch_t;
 
 	switch (group.get_branch()) {
 	case LAND:
@@ -530,7 +550,7 @@ bool CountryInstance::add_unit_instance_group(UnitInstanceGroup& group) {
 }
 
 bool CountryInstance::remove_unit_instance_group(UnitInstanceGroup const& group) {
-	const auto remove_from_vector = [this, &group]<UnitType::branch_t Branch>(
+	const auto remove_from_vector = [this, &group]<unit_branch_t Branch>(
 		memory::vector<UnitInstanceGroupBranched<Branch>*>& unit_instance_groups
 	) -> bool {
 		const typename memory::vector<UnitInstanceGroupBranched<Branch>*>::const_iterator it =
@@ -541,14 +561,14 @@ bool CountryInstance::remove_unit_instance_group(UnitInstanceGroup const& group)
 			return true;
 		} else {
 			Logger::error(
-				"Trying to remove non-existent ", UnitType::get_branched_unit_group_name(Branch), " \"",
+				"Trying to remove non-existent ", get_branched_unit_group_name(Branch), " \"",
 				group.get_name(), "\" from country ", get_identifier()
 			);
 			return false;
 		}
 	};
 
-	using enum UnitType::branch_t;
+	using enum unit_branch_t;
 
 	switch (group.get_branch()) {
 	case LAND:
@@ -565,7 +585,7 @@ bool CountryInstance::remove_unit_instance_group(UnitInstanceGroup const& group)
 }
 
 bool CountryInstance::add_leader(LeaderInstance& leader) {
-	using enum UnitType::branch_t;
+	using enum unit_branch_t;
 
 	switch (leader.get_branch()) {
 	case LAND:
@@ -584,7 +604,7 @@ bool CountryInstance::add_leader(LeaderInstance& leader) {
 }
 
 bool CountryInstance::remove_leader(LeaderInstance const& leader) {
-	using enum UnitType::branch_t;
+	using enum unit_branch_t;
 
 	memory::vector<LeaderInstance*>* leaders;
 
@@ -610,7 +630,7 @@ bool CountryInstance::remove_leader(LeaderInstance const& leader) {
 		return true;
 	} else {
 		Logger::error(
-			"Trying to remove non-existent ", UnitType::get_branched_leader_name(leader.get_branch()), " \"",
+			"Trying to remove non-existent ", get_branched_leader_name(leader.get_branch()), " \"",
 			leader.get_name(), "\" from country ", get_identifier()
 		);
 		return false;
@@ -630,11 +650,11 @@ bool CountryInstance::has_leader_with_name(std::string_view name) const {
 	return check_leaders(generals) || check_leaders(admirals);
 }
 
-template<UnitType::branch_t Branch>
-bool CountryInstance::modify_unit_type_unlock(UnitTypeBranched<Branch> const& unit_type, unlock_level_t unlock_level_change) {
-	IndexedMap<UnitTypeBranched<Branch>, unlock_level_t>& unlocked_unit_types = get_unit_type_unlock_levels<Branch>();
+template<unit_branch_t Branch>
+bool CountryInstance::modify_unit_type_unlock(UnitTypeBranched<Branch> const& unit_type, technology_unlock_level_t unlock_level_change) {
+	IndexedMap<UnitTypeBranched<Branch>, technology_unlock_level_t>& unlocked_unit_types = get_unit_type_unlock_levels<Branch>();
 
-	typename IndexedMap<UnitTypeBranched<Branch>, unlock_level_t>::value_ref_type unlock_level =
+	typename IndexedMap<UnitTypeBranched<Branch>, technology_unlock_level_t>::value_ref_type unlock_level =
 		unlocked_unit_types[unit_type];
 
 	// This catches subtracting below 0 or adding above the int types maximum value
@@ -653,11 +673,11 @@ bool CountryInstance::modify_unit_type_unlock(UnitTypeBranched<Branch> const& un
 	return true;
 }
 
-template bool CountryInstance::modify_unit_type_unlock(UnitTypeBranched<UnitType::branch_t::LAND> const&, unlock_level_t);
-template bool CountryInstance::modify_unit_type_unlock(UnitTypeBranched<UnitType::branch_t::NAVAL> const&, unlock_level_t);
+template bool CountryInstance::modify_unit_type_unlock(UnitTypeBranched<unit_branch_t::LAND> const&, technology_unlock_level_t);
+template bool CountryInstance::modify_unit_type_unlock(UnitTypeBranched<unit_branch_t::NAVAL> const&, technology_unlock_level_t);
 
-bool CountryInstance::modify_unit_type_unlock(UnitType const& unit_type, unlock_level_t unlock_level_change) {
-	using enum UnitType::branch_t;
+bool CountryInstance::modify_unit_type_unlock(UnitType const& unit_type, technology_unlock_level_t unlock_level_change) {
+	using enum unit_branch_t;
 
 	switch (unit_type.get_branch()) {
 	case LAND:
@@ -678,7 +698,7 @@ bool CountryInstance::unlock_unit_type(UnitType const& unit_type) {
 }
 
 bool CountryInstance::is_unit_type_unlocked(UnitType const& unit_type) const {
-	using enum UnitType::branch_t;
+	using enum unit_branch_t;
 
 	switch (unit_type.get_branch()) {
 	case LAND:
@@ -695,7 +715,7 @@ bool CountryInstance::is_unit_type_unlocked(UnitType const& unit_type) const {
 }
 
 bool CountryInstance::modify_building_type_unlock(
-	BuildingType const& building_type, unlock_level_t unlock_level_change, GoodInstanceManager& good_instance_manager
+	BuildingType const& building_type, technology_unlock_level_t unlock_level_change, GoodInstanceManager& good_instance_manager
 ) {
 	decltype(building_type_unlock_levels)::value_ref_type unlock_level = building_type_unlock_levels[building_type];
 
@@ -727,7 +747,7 @@ bool CountryInstance::is_building_type_unlocked(BuildingType const& building_typ
 	return building_type_unlock_levels[building_type] > 0;
 }
 
-bool CountryInstance::modify_crime_unlock(Crime const& crime, unlock_level_t unlock_level_change) {
+bool CountryInstance::modify_crime_unlock(Crime const& crime, technology_unlock_level_t unlock_level_change) {
 	decltype(crime_unlock_levels)::value_ref_type unlock_level = crime_unlock_levels[crime];
 
 	// This catches subtracting below 0 or adding above the int types maximum value
@@ -754,7 +774,7 @@ bool CountryInstance::is_crime_unlocked(Crime const& crime) const {
 	return crime_unlock_levels[crime] > 0;
 }
 
-bool CountryInstance::modify_gas_attack_unlock(unlock_level_t unlock_level_change) {
+bool CountryInstance::modify_gas_attack_unlock(technology_unlock_level_t unlock_level_change) {
 	// This catches subtracting below 0 or adding above the int types maximum value
 	if (gas_attack_unlock_level + unlock_level_change < 0) {
 		Logger::error(
@@ -779,7 +799,7 @@ bool CountryInstance::is_gas_attack_unlocked() const {
 	return gas_attack_unlock_level > 0;
 }
 
-bool CountryInstance::modify_gas_defence_unlock(unlock_level_t unlock_level_change) {
+bool CountryInstance::modify_gas_defence_unlock(technology_unlock_level_t unlock_level_change) {
 	// This catches subtracting below 0 or adding above the int types maximum value
 	if (gas_defence_unlock_level + unlock_level_change < 0) {
 		Logger::error(
@@ -804,7 +824,7 @@ bool CountryInstance::is_gas_defence_unlocked() const {
 	return gas_defence_unlock_level > 0;
 }
 
-bool CountryInstance::modify_unit_variant_unlock(unit_variant_t unit_variant, unlock_level_t unlock_level_change) {
+bool CountryInstance::modify_unit_variant_unlock(unit_variant_t unit_variant, technology_unlock_level_t unlock_level_change) {
 	if (unit_variant < 1) {
 		Logger::error("Trying to modify unlock level for default unit variant 0");
 		return false;
@@ -814,7 +834,7 @@ bool CountryInstance::modify_unit_variant_unlock(unit_variant_t unit_variant, un
 		unit_variant_unlock_levels.resize(unit_variant);
 	}
 
-	unlock_level_t& unlock_level = unit_variant_unlock_levels[unit_variant - 1];
+	technology_unlock_level_t& unlock_level = unit_variant_unlock_levels[unit_variant - 1];
 
 	bool ret = true;
 
@@ -842,12 +862,12 @@ bool CountryInstance::unlock_unit_variant(unit_variant_t unit_variant) {
 	return modify_unit_variant_unlock(unit_variant, 1);
 }
 
-CountryInstance::unit_variant_t CountryInstance::get_max_unlocked_unit_variant() const {
+unit_variant_t CountryInstance::get_max_unlocked_unit_variant() const {
 	return unit_variant_unlock_levels.size();
 }
 
 bool CountryInstance::modify_technology_unlock(
-	Technology const& technology, unlock_level_t unlock_level_change, GoodInstanceManager& good_instance_manager
+	Technology const& technology, technology_unlock_level_t unlock_level_change, GoodInstanceManager& good_instance_manager
 ) {
 	decltype(technology_unlock_levels)::value_ref_type unlock_level = technology_unlock_levels[technology];
 
@@ -882,9 +902,9 @@ bool CountryInstance::modify_technology_unlock(
 }
 
 bool CountryInstance::set_technology_unlock_level(
-	Technology const& technology, unlock_level_t unlock_level, GoodInstanceManager& good_instance_manager
+	Technology const& technology, technology_unlock_level_t unlock_level, GoodInstanceManager& good_instance_manager
 ) {
-	const unlock_level_t unlock_level_change = unlock_level - technology_unlock_levels[technology];
+	const technology_unlock_level_t unlock_level_change = unlock_level - technology_unlock_levels[technology];
 	return unlock_level_change != 0 ? modify_technology_unlock(technology, unlock_level_change, good_instance_manager) : true;
 }
 
@@ -897,7 +917,7 @@ bool CountryInstance::is_technology_unlocked(Technology const& technology) const
 }
 
 bool CountryInstance::modify_invention_unlock(
-	Invention const& invention, unlock_level_t unlock_level_change, GoodInstanceManager& good_instance_manager
+	Invention const& invention, technology_unlock_level_t unlock_level_change, GoodInstanceManager& good_instance_manager
 ) {
 	decltype(invention_unlock_levels)::value_ref_type unlock_level = invention_unlock_levels[invention];
 
@@ -946,9 +966,9 @@ bool CountryInstance::modify_invention_unlock(
 }
 
 bool CountryInstance::set_invention_unlock_level(
-	Invention const& invention, unlock_level_t unlock_level, GoodInstanceManager& good_instance_manager
+	Invention const& invention, technology_unlock_level_t unlock_level, GoodInstanceManager& good_instance_manager
 ) {
-	const unlock_level_t unlock_level_change = unlock_level - invention_unlock_levels[invention];
+	const technology_unlock_level_t unlock_level_change = unlock_level - invention_unlock_levels[invention];
 	return unlock_level_change != 0 ? modify_invention_unlock(invention, unlock_level_change, good_instance_manager) : true;
 }
 
@@ -1563,9 +1583,9 @@ bool CountryInstance::update_rule_set() {
 	rule_set.clear();
 
 	if (ruling_party != nullptr) {
-		for (Issue const* issue : ruling_party->get_policies().get_values()) {
-			if (issue != nullptr) {
-				rule_set |= issue->get_rules();
+		for (PartyPolicy const* party_policy : ruling_party->get_policies().get_values()) {
+			if (party_policy != nullptr) {
+				rule_set |= party_policy->get_rules();
 			}
 		}
 	}
@@ -1613,11 +1633,11 @@ void CountryInstance::update_modifier_sum(Date today, StaticModifierCache const&
 	// TODO - handle triggered modifiers
 
 	if (ruling_party != nullptr) {
-		for (Issue const* issue : ruling_party->get_policies().get_values()) {
+		for (PartyPolicy const* party_policy : ruling_party->get_policies().get_values()) {
 			// The ruling party's issues here could be null as they're stored in an IndexedMap which has
-			// values for every IssueGroup regardless of whether or not they have a policy set.
-			if (issue != nullptr) {
-				modifier_sum.add_modifier(*issue);
+			// values for every PartyPolicyGroup regardless of whether or not they have a policy set.
+			if (party_policy != nullptr) {
+				modifier_sum.add_modifier(*party_policy);
 			}
 		}
 	}

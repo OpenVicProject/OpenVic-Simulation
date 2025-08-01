@@ -7,8 +7,8 @@
 #include "openvic-simulation/utility/Containers.hpp"
 
 namespace OpenVic {
+	struct BaseIssueGroup;
 	struct EventManager;
-	struct IssueGroup;
 	struct IssueManager;
 
 	struct Event : HasIdentifier {
@@ -52,7 +52,7 @@ namespace OpenVic {
 		memory::string PROPERTY(news_desc_short);
 
 		bool PROPERTY_CUSTOM_PREFIX(election, is);
-		IssueGroup const* PROPERTY(election_issue_group);
+		BaseIssueGroup const* PROPERTY(election_issue_group);
 
 		ConditionScript PROPERTY(trigger);
 		ConditionalWeightTime PROPERTY(mean_time_to_happen);
@@ -68,7 +68,7 @@ namespace OpenVic {
 			std::string_view new_image, event_type_t new_type, bool new_triggered_only, bool new_major,
 			bool new_fire_only_once, bool new_allows_multiple_instances, bool new_news, std::string_view new_news_title,
 			std::string_view new_news_desc_long, std::string_view new_news_desc_medium, std::string_view new_news_desc_short,
-			bool new_election, IssueGroup const* new_election_issue_group, ConditionScript&& new_trigger,
+			bool new_election, BaseIssueGroup const* new_election_issue_group, ConditionScript&& new_trigger,
 			ConditionalWeightTime&& new_mean_time_to_happen, EffectScript&& new_immediate,
 			memory::vector<EventOption>&& new_options
 		);
@@ -98,7 +98,7 @@ namespace OpenVic {
 			std::string_view identifier, std::string_view title, std::string_view description, std::string_view image,
 			Event::event_type_t type, bool triggered_only, bool major, bool fire_only_once, bool allows_multiple_instances,
 			bool news, std::string_view news_title, std::string_view news_desc_long, std::string_view news_desc_medium,
-			std::string_view news_desc_short, bool election, IssueGroup const* election_issue_group, ConditionScript&& trigger,
+			std::string_view news_desc_short, bool election, BaseIssueGroup const* election_issue_group, ConditionScript&& trigger,
 			ConditionalWeightTime&& mean_time_to_happen, EffectScript&& immediate, memory::vector<Event::EventOption>&& options
 		);
 

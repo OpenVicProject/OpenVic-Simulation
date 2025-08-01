@@ -8,9 +8,13 @@
 #include "openvic-simulation/dataloader/NodeTools.hpp"
 #include "openvic-simulation/economy/GoodDefinition.hpp"
 #include "openvic-simulation/modifier/Modifier.hpp"
+#include "openvic-simulation/military/UnitBranchedGetterMacro.hpp"
 #include "openvic-simulation/types/Date.hpp"
+#include "openvic-simulation/types/HasIdentifier.hpp"
+#include "openvic-simulation/types/HasIndex.hpp"
 #include "openvic-simulation/types/IdentifierRegistry.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
+#include "openvic-simulation/types/UnitBranchType.hpp"
 
 namespace OpenVic {
 	struct TerrainType;
@@ -21,57 +25,6 @@ namespace OpenVic {
 	struct UnitType : HasIdentifier {
 		using icon_t = uint32_t;
 		using terrain_modifiers_t = ordered_map<TerrainType const*, Modifier>;
-
-		enum struct branch_t : uint8_t { INVALID_BRANCH, LAND, NAVAL };
-
-		static constexpr std::string_view get_branch_name(branch_t branch) {
-			using enum branch_t;
-
-			switch (branch) {
-			case LAND:
-				return "land";
-			case NAVAL:
-				return "naval";
-			default:
-				return "INVALID BRANCH";
-			}
-		}
-		static constexpr std::string_view get_branched_unit_name(branch_t branch) {
-			using enum branch_t;
-
-			switch (branch) {
-			case LAND:
-				return "regiment";
-			case NAVAL:
-				return "ship";
-			default:
-				return "INVALID UNIT BRANCH";
-			}
-		}
-		static constexpr std::string_view get_branched_unit_group_name(branch_t branch) {
-			using enum branch_t;
-
-			switch (branch) {
-			case LAND:
-				return "army";
-			case NAVAL:
-				return "navy";
-			default:
-				return "INVALID UNIT GROUP BRANCH";
-			}
-		}
-		static constexpr std::string_view get_branched_leader_name(branch_t branch) {
-			using enum branch_t;
-
-			switch (branch) {
-			case LAND:
-				return "general";
-			case NAVAL:
-				return "admiral";
-			default:
-				return "INVALID LEADER BRANCH";
-			}
-		}
 
 		enum struct unit_category_t : uint8_t {
 			INVALID_UNIT_CATEGORY, INFANTRY, CAVALRY, SUPPORT, SPECIAL, BIG_SHIP, LIGHT_SHIP, TRANSPORT
@@ -89,7 +42,7 @@ namespace OpenVic {
 			fixed_point_t max_strength = 0, default_organisation = 0, maximum_speed = 0, weighted_value = 0,
 				supply_consumption = 0;
 			Timespan build_time;
-			GoodDefinition::good_definition_map_t build_cost, supply_cost;
+			fixed_point_map_t<GoodDefinition const*> build_cost, supply_cost;
 			terrain_modifier_values_t terrain_modifier_values;
 
 			unit_type_args_t() = default;
@@ -97,7 +50,7 @@ namespace OpenVic {
 		};
 
 	private:
-		const branch_t PROPERTY(branch); /* type in defines */
+		const unit_branch_t PROPERTY(branch); /* type in defines */
 		const icon_t PROPERTY(icon);
 		memory::string PROPERTY(sprite);
 		const bool PROPERTY_CUSTOM_PREFIX(active, is);
@@ -114,50 +67,30 @@ namespace OpenVic {
 		memory::string PROPERTY(select_sound);
 
 		const Timespan PROPERTY(build_time);
-		GoodDefinition::good_definition_map_t PROPERTY(build_cost);
+		fixed_point_map_t<GoodDefinition const*> PROPERTY(build_cost);
 		const fixed_point_t PROPERTY(supply_consumption);
-		GoodDefinition::good_definition_map_t PROPERTY(supply_cost);
+		fixed_point_map_t<GoodDefinition const*> PROPERTY(supply_cost);
 
 		terrain_modifiers_t PROPERTY(terrain_modifiers);
 
 	protected:
 		/* Non-const reference unit_args so variables can be moved from it. */
-		UnitType(std::string_view new_identifier, branch_t new_branch, unit_type_args_t& unit_args);
+		UnitType(std::string_view new_identifier, unit_branch_t new_branch, unit_type_args_t& unit_args);
 
 	public:
 		UnitType(UnitType&&) = default;
 	};
 
-#define _UNIT_BRANCHED_GETTER(name, land, naval, const) \
-	template<UnitType::branch_t Branch> \
-	constexpr auto const& name() const { \
-		if constexpr (Branch == UnitType::branch_t::LAND) { \
-			return land; \
-		} else if constexpr (Branch == UnitType::branch_t::NAVAL) { \
-			return naval; \
-		} \
-	}
-
-#define UNIT_BRANCHED_GETTER(name, land, naval) _UNIT_BRANCHED_GETTER(name, land, naval, )
-#define UNIT_BRANCHED_GETTER_CONST(name, land, naval) _UNIT_BRANCHED_GETTER(name, land, naval, const)
-
-	template<UnitType::branch_t>
-	struct UnitTypeBranched;
-
 	template<>
-	struct UnitTypeBranched<UnitType::branch_t::LAND> : UnitType {
-		// Each value is a subset of its predecessor, so smaller values contain larger values
-		// The exact values here must be preserved to allow easy comparison against Pop::culture_status_t
-		enum struct allowed_cultures_t : uint8_t { ALL_CULTURES, ACCEPTED_CULTURES, PRIMARY_CULTURE, NO_CULTURES };
-
-		static constexpr allowed_cultures_t allowed_cultures_get_most_permissive(
-			allowed_cultures_t lhs, allowed_cultures_t rhs
+	struct UnitTypeBranched<unit_branch_t::LAND> : UnitType, HasIndex<UnitTypeBranched<unit_branch_t::LAND>> {
+		static constexpr regiment_allowed_cultures_t allowed_cultures_get_most_permissive(
+			regiment_allowed_cultures_t lhs, regiment_allowed_cultures_t rhs
 		) {
 			return std::min(lhs, rhs);
 		}
 
 		struct regiment_type_args_t {
-			allowed_cultures_t allowed_cultures = allowed_cultures_t::ALL_CULTURES;
+			regiment_allowed_cultures_t allowed_cultures = regiment_allowed_cultures_t::ALL_CULTURES;
 			std::string_view sprite_override, sprite_mount, sprite_mount_attach_node;
 			// TODO - represent these as modifier effects, so that they can be combined with tech, inventions,
 			// leader bonuses, etc. and applied to unit instances all in one go (same for ShipTypes below)
@@ -169,7 +102,7 @@ namespace OpenVic {
 		};
 
 	private:
-		const allowed_cultures_t PROPERTY(allowed_cultures);
+		const regiment_allowed_cultures_t PROPERTY(allowed_cultures);
 		memory::string PROPERTY(sprite_override);
 		memory::string PROPERTY(sprite_mount);
 		memory::string PROPERTY(sprite_mount_attach_node);
@@ -183,15 +116,14 @@ namespace OpenVic {
 
 	public:
 		UnitTypeBranched(
-			std::string_view new_identifier, unit_type_args_t& unit_args, regiment_type_args_t const& regiment_type_args
+			index_t new_index, std::string_view new_identifier,
+			unit_type_args_t& unit_args, regiment_type_args_t const& regiment_type_args
 		);
 		UnitTypeBranched(UnitTypeBranched&&) = default;
 	};
 
-	using RegimentType = UnitTypeBranched<UnitType::branch_t::LAND>;
-
 	template<>
-	struct UnitTypeBranched<UnitType::branch_t::NAVAL> : UnitType {
+	struct UnitTypeBranched<unit_branch_t::NAVAL> : UnitType, HasIndex<UnitTypeBranched<unit_branch_t::NAVAL>> {
 		struct ship_type_args_t {
 			icon_t naval_icon = 0;
 			bool sail = false, transport = false, capital = false, build_overseas = false;
@@ -222,11 +154,12 @@ namespace OpenVic {
 		const fixed_point_t PROPERTY(torpedo_attack);
 
 	public:
-		UnitTypeBranched(std::string_view new_identifier, unit_type_args_t& unit_args, ship_type_args_t const& ship_type_args);
+		UnitTypeBranched(
+			index_t new_index, std::string_view new_identifier,
+			unit_type_args_t& unit_args, ship_type_args_t const& ship_type_args
+		);
 		UnitTypeBranched(UnitTypeBranched&&) = default;
 	};
-
-	using ShipType = UnitTypeBranched<UnitType::branch_t::NAVAL>;
 
 	struct UnitTypeManager {
 	private:
@@ -248,15 +181,15 @@ namespace OpenVic {
 		);
 
 		static NodeTools::Callback<std::string_view> auto expect_branch_str(
-			NodeTools::Callback<UnitType::branch_t> auto callback
+			NodeTools::Callback<unit_branch_t> auto callback
 		) {
-			using enum UnitType::branch_t;
-			static const string_map_t<UnitType::branch_t> branch_map {
+			using enum unit_branch_t;
+			static const string_map_t<unit_branch_t> branch_map {
 				{ "land", LAND }, { "naval", NAVAL }, { "sea", NAVAL }
 			};
 			return NodeTools::expect_mapped_string(branch_map, callback);
 		}
-		static NodeTools::NodeCallback auto expect_branch_identifier(NodeTools::Callback<UnitType::branch_t> auto callback) {
+		static NodeTools::NodeCallback auto expect_branch_identifier(NodeTools::Callback<unit_branch_t> auto callback) {
 			return NodeTools::expect_identifier(expect_branch_str(callback));
 		}
 
@@ -267,3 +200,7 @@ namespace OpenVic {
 		bool generate_modifiers(ModifierManager& modifier_manager) const;
 	};
 }
+
+#undef _UNIT_BRANCHED_GETTER
+#undef UNIT_BRANCHED_GETTER
+#undef UNIT_BRANCHED_GETTER_CONST

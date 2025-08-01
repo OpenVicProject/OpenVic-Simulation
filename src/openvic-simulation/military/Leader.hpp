@@ -1,17 +1,14 @@
 #pragma once
 
-#include <cstdint>
-#include <string>
 #include <string_view>
 
-#include "openvic-simulation/military/UnitType.hpp"
 #include "openvic-simulation/types/Date.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
+#include "openvic-simulation/types/UnitBranchType.hpp"
+#include "openvic-simulation/types/UniqueId.hpp"
 #include "openvic-simulation/utility/Getters.hpp"
 
 namespace OpenVic {
-	using unique_id_t = uint64_t;
-
 	struct DeploymentManager;
 	struct UnitInstanceManager;
 	struct LeaderTrait;
@@ -22,7 +19,7 @@ namespace OpenVic {
 
 	private:
 		memory::string PROPERTY(name);
-		const UnitType::branch_t PROPERTY(branch); /* type in defines */
+		const unit_branch_t PROPERTY(branch); /* type in defines */
 		const Date PROPERTY(date);
 		LeaderTrait const* PROPERTY(personality);
 		LeaderTrait const* PROPERTY(background);
@@ -34,7 +31,7 @@ namespace OpenVic {
 
 	public:
 		LeaderBase(
-			std::string_view new_name, UnitType::branch_t new_branch, Date new_date, LeaderTrait const* new_personality,
+			std::string_view new_name, unit_branch_t new_branch, Date new_date, LeaderTrait const* new_personality,
 			LeaderTrait const* new_background, fixed_point_t new_prestige, std::string_view new_picture
 		);
 		LeaderBase(LeaderBase&&) = default;

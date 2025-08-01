@@ -76,7 +76,7 @@ bool MapDefinition::add_province_definition(std::string_view identifier, colour_
 
 	if (!province_definitions.emplace_item(
 		identifier,
-		identifier, colour, static_cast<ProvinceDefinition::index_t>(province_definitions.size())
+		identifier, colour, get_province_definition_count()
 	)) {
 		return false;
 	}

@@ -5,6 +5,8 @@
 #include "openvic-simulation/map/MapInstance.hpp"
 #include "openvic-simulation/map/ProvinceDefinition.hpp"
 #include "openvic-simulation/map/ProvinceInstance.hpp"
+#include "openvic-simulation/pop/Culture.hpp" //for get_colour
+#include "openvic-simulation/pop/Religion.hpp" //for get_colour
 
 using namespace OpenVic;
 using namespace OpenVic::colour_literals;
@@ -53,7 +55,7 @@ bool MapmodeManager::add_mapmode(
 	}
 	return mapmodes.emplace_item(
 		identifier,
-		identifier, static_cast<Mapmode::index_t>(mapmodes.size()), colour_func, localisation_key, parchment_mapmode_allowed
+		identifier, get_mapmode_count(), colour_func, localisation_key, parchment_mapmode_allowed
 	);
 }
 

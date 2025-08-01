@@ -1,63 +1,51 @@
 #pragma once
 
-#include <span>
-
 #include <plf_colony.h>
 
-#include "openvic-simulation/country/CountryInstance.hpp"
 #include "openvic-simulation/economy/BuildingInstance.hpp"
-#include "openvic-simulation/economy/production/ProductionType.hpp"
 #include "openvic-simulation/economy/production/ResourceGatheringOperation.hpp"
-#include "openvic-simulation/military/UnitInstance.hpp"
-#include "openvic-simulation/military/UnitType.hpp"
+#include "openvic-simulation/military/UnitBranchedGetterMacro.hpp"
 #include "openvic-simulation/modifier/ModifierSum.hpp"
 #include "openvic-simulation/pop/Pop.hpp"
+#include "openvic-simulation/types/ColonyStatus.hpp"
 #include "openvic-simulation/types/FlagStrings.hpp"
 #include "openvic-simulation/types/HasIdentifier.hpp"
+#include "openvic-simulation/types/HasIndex.hpp"
 #include "openvic-simulation/types/OrderedContainers.hpp"
+#include "openvic-simulation/types/ProvinceLifeRating.hpp"
+#include "openvic-simulation/types/UnitBranchType.hpp"
 #include "openvic-simulation/utility/Containers.hpp"
 #include "openvic-simulation/utility/ForwardableSpan.hpp"
 
 namespace OpenVic {
-	struct DefineManager;
-	struct MapInstance;
-	struct ProvinceDefinition;
-	struct TerrainType;
-	struct State;
+	struct BaseIssue;
+	struct BuildingTypeManager;
+	struct CountryInstance;
+	struct CountryInstanceManager;
+	struct CountryParty;
 	struct Crime;
+	struct Culture;
+	struct DefineManager;
+	struct GameRulesManager;
 	struct GoodDefinition;
 	struct Ideology;
-	struct Culture;
-	struct Religion;
-	struct StaticModifierCache;
-	struct BuildingTypeManager;
-	struct ProvinceHistoryEntry;
+	struct InstanceManager;
 	struct IssueManager;
-	struct CountryInstanceManager;
-	struct ModifierEffectCache;
+	struct MapInstance;
 	struct MarketInstance;
-	struct GameRulesManager;
-
+	struct ModifierEffectCache;
+	struct ProvinceDefinition;
+	struct ProvinceHistoryEntry;
+	struct Religion;
+	struct State;
+	struct StaticModifierCache;
+	struct Strata;
+	struct TerrainType;
 	struct UnitInstanceGroup;
-
-	template<UnitType::branch_t>
-	struct UnitInstanceGroupBranched;
-
-	using ArmyInstance = UnitInstanceGroupBranched<UnitType::branch_t::LAND>;
-	using NavyInstance = UnitInstanceGroupBranched<UnitType::branch_t::NAVAL>;
 
 	//HasIndex index_t must match ProvinceDefinition's index_t
 	struct ProvinceInstance : HasIdentifierAndColour, HasIndex<ProvinceInstance, uint16_t>, FlagStrings {
 		friend struct MapInstance;
-
-		using life_rating_t = int8_t;
-
-		enum struct colony_status_t : uint8_t { STATE, PROTECTORATE, COLONY };
-
-		// This combines COLONY and PROTECTORATE statuses, as opposed to non-colonial STATE provinces
-		static constexpr bool is_colonial(colony_status_t colony_status) {
-			return colony_status != colony_status_t::STATE;
-		}
 
 		static constexpr std::string_view get_colony_status_string(colony_status_t colony_status) {
 			using enum colony_status_t;
@@ -131,7 +119,7 @@ namespace OpenVic {
 		IndexedMap<PopType, pop_size_t> PROPERTY(pop_type_unemployed_count);
 		IndexedMap<PopType, memory::vector<Pop*>> PROPERTY(pops_cache_by_type);
 		IndexedMap<Ideology, fixed_point_t> PROPERTY(ideology_distribution);
-		fixed_point_map_t<Issue const*> PROPERTY(issue_distribution);
+		fixed_point_map_t<BaseIssue const*> PROPERTY(issue_distribution);
 		IndexedMap<CountryParty, fixed_point_t> PROPERTY(vote_distribution);
 		fixed_point_map_t<Culture const*> PROPERTY(culture_distribution);
 		fixed_point_map_t<Religion const*> PROPERTY(religion_distribution);
@@ -160,13 +148,7 @@ namespace OpenVic {
 
 		void set_state(State* new_state);
 
-		constexpr GoodDefinition const* get_rgo_good() const {
-			if (!rgo.is_valid()) {
-				return nullptr;
-			}
-			return &(rgo.get_production_type_nullable()->get_output_good());
-		}
-
+		GoodDefinition const* get_rgo_good() const;
 		bool set_rgo_production_type_nullable(ProductionType const* rgo_production_type_nullable);
 
 		bool set_owner(CountryInstance* new_owner);
@@ -194,34 +176,18 @@ namespace OpenVic {
 		// The values returned by these functions are scaled by population size, so they must be divided by population size
 		// to get the support as a proportion of 1.0
 
-		constexpr pop_size_t get_pop_type_proportion(PopType const& pop_type) const {
-			return pop_type_distribution[pop_type];
-		}
-		constexpr pop_size_t get_pop_type_unemployed(PopType const& pop_type) const {
-			return pop_type_unemployed_count[pop_type];
-		}
-		constexpr fixed_point_t get_ideology_support(Ideology const& ideology) const {
-			return ideology_distribution[ideology];
-		}
-		fixed_point_t get_issue_support(Issue const& issue) const;
+		pop_size_t get_pop_type_proportion(PopType const& pop_type) const;
+		pop_size_t get_pop_type_unemployed(PopType const& pop_type) const;
+		fixed_point_t get_ideology_support(Ideology const& ideology) const;
+		fixed_point_t get_issue_support(BaseIssue const& issue) const;
 		fixed_point_t get_party_support(CountryParty const& party) const;
 		fixed_point_t get_culture_proportion(Culture const& culture) const;
 		fixed_point_t get_religion_proportion(Religion const& religion) const;
-		constexpr pop_size_t get_strata_population(Strata const& strata) const {
-			return population_by_strata[strata];
-		}
-		constexpr fixed_point_t get_strata_militancy(Strata const& strata) const {
-			return militancy_by_strata[strata];
-		}
-		constexpr fixed_point_t get_strata_life_needs_fulfilled(Strata const& strata) const {
-			return life_needs_fulfilled_by_strata[strata];
-		}
-		constexpr fixed_point_t get_strata_everyday_needs_fulfilled(Strata const& strata) const {
-			return everyday_needs_fulfilled_by_strata[strata];
-		}
-		constexpr fixed_point_t get_strata_luxury_needs_fulfilled(Strata const& strata) const {
-			return luxury_needs_fulfilled_by_strata[strata];
-		}
+		pop_size_t get_strata_population(Strata const& strata) const;
+		fixed_point_t get_strata_militancy(Strata const& strata) const;
+		fixed_point_t get_strata_life_needs_fulfilled(Strata const& strata) const;
+		fixed_point_t get_strata_everyday_needs_fulfilled(Strata const& strata) const;
+		fixed_point_t get_strata_luxury_needs_fulfilled(Strata const& strata) const;
 
 		bool expand_building(size_t building_index);
 
@@ -235,22 +201,7 @@ namespace OpenVic {
 
 		void update_modifier_sum(Date today, StaticModifierCache const& static_modifier_cache);
 		fixed_point_t get_modifier_effect_value(ModifierEffect const& effect) const;
-		constexpr void for_each_contributing_modifier(
-			ModifierEffect const& effect, ContributingModifierCallback auto callback
-		) const {
-			using enum ModifierEffect::target_t;
-
-			if (effect.is_local()) {
-				// Province-targeted/local effects come from the province itself, only modifiers applied directly to the
-				// province contribute to these effects.
-				modifier_sum.for_each_contributing_modifier(effect, std::move(callback));
-			} else if (owner != nullptr) {
-				// Non-province targeted/global effects come from the province's owner, even those applied locally
-				// (e.g. via a province event modifier) are passed up to the province's controller and only affect the
-				// province if the controller is also the owner.
-				owner->for_each_contributing_modifier(effect, std::move(callback));
-			}
-		}
+		void for_each_contributing_modifier(ModifierEffect const& effect, ContributingModifierCallback auto callback) const;
 
 		void update_gamestate(InstanceManager const& instance_manager);
 		static constexpr size_t VECTORS_FOR_PROVINCE_TICK = std::max(
@@ -284,3 +235,7 @@ namespace OpenVic {
 		memory::colony<Pop>& get_mutable_pops();
 	};
 }
+
+#undef _UNIT_BRANCHED_GETTER
+#undef UNIT_BRANCHED_GETTER
+#undef UNIT_BRANCHED_GETTER_CONST

@@ -2,7 +2,6 @@
 
 #include <cstdint>
 #include <filesystem>
-#include <span>
 #include <string_view>
 
 #include <openvic-dataloader/csv/LineObject.hpp>

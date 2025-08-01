@@ -1,9 +1,6 @@
 #pragma once
 
-#include <span>
-#include <string>
 #include <string_view>
-#include <vector>
 
 #include <plf_colony.h>
 
@@ -11,11 +8,13 @@
 #include "openvic-simulation/military/UnitInstance.hpp"
 #include "openvic-simulation/military/UnitType.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
+#include "openvic-simulation/types/UnitBranchType.hpp"
 #include "openvic-simulation/utility/Getters.hpp"
 #include "openvic-simulation/utility/Containers.hpp"
 
-namespace OpenVic {
+#include "openvic-simulation/military/UnitBranchedGetterMacro.hpp" //below other imports that undef the macros
 
+namespace OpenVic {
 	struct ProvinceInstance;
 	struct CountryInstance;
 	struct MapInstance;
@@ -23,7 +22,7 @@ namespace OpenVic {
 	struct UnitInstanceGroup {
 	private:
 		const unique_id_t PROPERTY(unique_id);
-		const UnitType::branch_t PROPERTY(branch);
+		const unit_branch_t PROPERTY(branch);
 		memory::string PROPERTY(name);
 		memory::vector<UnitInstance*> SPAN_PROPERTY(units);
 		LeaderInstance* PROPERTY_PTR(leader, nullptr);
@@ -46,7 +45,7 @@ namespace OpenVic {
 	protected:
 		UnitInstanceGroup(
 			unique_id_t new_unique_id,
-			UnitType::branch_t new_branch,
+			unit_branch_t new_branch,
 			std::string_view new_name
 		);
 
@@ -84,14 +83,8 @@ namespace OpenVic {
 		bool is_in_combat() const;
 	};
 
-	template<UnitType::branch_t>
-	struct UnitInstanceGroupBranched;
-
-	using ArmyInstance = UnitInstanceGroupBranched<UnitType::branch_t::LAND>;
-	using NavyInstance = UnitInstanceGroupBranched<UnitType::branch_t::NAVAL>;
-
 	template<>
-	struct UnitInstanceGroupBranched<UnitType::branch_t::LAND> : UnitInstanceGroup {
+	struct UnitInstanceGroupBranched<unit_branch_t::LAND> : UnitInstanceGroup {
 		friend struct UnitInstanceManager;
 
 		using dig_in_level_t = uint8_t;
@@ -123,7 +116,7 @@ namespace OpenVic {
 	};
 
 	template<>
-	struct UnitInstanceGroupBranched<UnitType::branch_t::NAVAL> : UnitInstanceGroup {
+	struct UnitInstanceGroupBranched<unit_branch_t::NAVAL> : UnitInstanceGroup {
 		friend struct UnitInstanceManager;
 
 	private:
@@ -150,10 +143,10 @@ namespace OpenVic {
 		fixed_point_t get_total_consumed_supply() const;
 	};
 
-	template<UnitType::branch_t>
+	template<unit_branch_t>
 	struct UnitDeployment;
 
-	template<UnitType::branch_t>
+	template<unit_branch_t>
 	struct UnitDeploymentGroup;
 
 	struct MapInstance;
@@ -190,9 +183,9 @@ namespace OpenVic {
 
 		UNIT_BRANCHED_GETTER(get_unit_instance_groups, armies, navies);
 
-		template<UnitType::branch_t Branch>
+		template<unit_branch_t Branch>
 		UnitInstanceBranched<Branch>& generate_unit_instance(UnitDeployment<Branch> const& unit_deployment);
-		template<UnitType::branch_t Branch>
+		template<unit_branch_t Branch>
 		bool generate_unit_instance_group(
 			MapInstance& map_instance, CountryInstance& country, UnitDeploymentGroup<Branch> const& unit_deployment_group
 		);
@@ -220,7 +213,7 @@ namespace OpenVic {
 		// If the country does not have enough leadership points, the function will return false and no leader will be created.
 		bool create_leader(
 			CountryInstance& country,
-			UnitType::branch_t branch,
+			unit_branch_t branch,
 			Date creation_date,
 			std::string_view name = {},
 			LeaderTrait const* personality = nullptr,
@@ -228,3 +221,7 @@ namespace OpenVic {
 		);
 	};
 }
+
+#undef _UNIT_BRANCHED_GETTER
+#undef UNIT_BRANCHED_GETTER
+#undef UNIT_BRANCHED_GETTER_CONST

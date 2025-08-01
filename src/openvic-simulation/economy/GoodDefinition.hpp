@@ -1,5 +1,7 @@
 #pragma once
 
+#include "openvic-simulation/types/HasIdentifier.hpp"
+#include "openvic-simulation/types/HasIndex.hpp"
 #include "openvic-simulation/types/IdentifierRegistry.hpp"
 #include "openvic-simulation/utility/Containers.hpp"
 
@@ -30,8 +32,6 @@ namespace OpenVic {
 	 * ECON-250, ECON-251, ECON-252, ECON-253, ECON-254, ECON-255, ECON-256, ECON-257, ECON-258, ECON-259, ECON-260, ECON-261
 	 */
 	struct GoodDefinition : HasIdentifierAndColour, HasIndex<GoodDefinition> {
-		using good_definition_map_t = fixed_point_map_t<GoodDefinition const*>;
-
 	private:
 		GoodCategory const& PROPERTY(category);
 		const fixed_point_t PROPERTY(base_price);

@@ -2,6 +2,7 @@
 
 #include "openvic-simulation/types/Colour.hpp"
 #include "openvic-simulation/types/HasIdentifier.hpp"
+#include "openvic-simulation/types/HasIndex.hpp"
 #include "openvic-simulation/types/IdentifierRegistry.hpp"
 
 #include <function2/function2.hpp>

@@ -1,7 +1,6 @@
 #pragma once
 
 #include <optional>
-#include <vector>
 
 #include "openvic-simulation/dataloader/NodeTools.hpp"
 #include "openvic-simulation/history/Period.hpp"

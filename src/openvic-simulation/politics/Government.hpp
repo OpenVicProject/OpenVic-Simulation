@@ -1,10 +1,16 @@
 #pragma once
 
-#include "openvic-simulation/politics/Ideology.hpp"
+#include "openvic-simulation/types/Date.hpp"
+#include "openvic-simulation/types/HasIdentifier.hpp"
+#include "openvic-simulation/types/HasIndex.hpp"
+#include "openvic-simulation/types/IdentifierRegistry.hpp"
 #include "openvic-simulation/utility/Containers.hpp"
 
 namespace OpenVic {
-	struct GovernmentType : HasIdentifier {
+	struct Ideology;
+	struct IdeologyManager;
+
+	struct GovernmentType : HasIndex<GovernmentType>, HasIdentifier {
 	private:
 		memory::vector<Ideology const*> PROPERTY(ideologies);
 		const bool PROPERTY_CUSTOM_PREFIX(elections, holds);
@@ -14,8 +20,13 @@ namespace OpenVic {
 
 	public:
 		GovernmentType(
-			std::string_view new_identifier, memory::vector<Ideology const*>&& new_ideologies, bool new_elections,
-			bool new_appoint_ruling_party, Timespan new_term_duration, std::string_view new_flag_type_identifier
+			index_t new_index,
+			std::string_view new_identifier,
+			memory::vector<Ideology const*>&& new_ideologies,
+			bool new_elections,
+			bool new_appoint_ruling_party,
+			Timespan new_term_duration,
+			std::string_view new_flag_type_identifier
 		);
 		GovernmentType(GovernmentType&&) = default;
 
@@ -37,4 +48,4 @@ namespace OpenVic {
 
 		bool is_valid_flag_type(std::string_view type) const;
 	};
-} // namespace OpenVic
+}

@@ -52,7 +52,7 @@ namespace OpenVic {
 		IDEOLOGY        = 1 << 7,
 		REFORM_GROUP    = 1 << 8,
 		REFORM          = 1 << 9,
-		ISSUE           = 1 << 10,
+		PARTY_POLICY    = 1 << 10,
 		POP_TYPE        = 1 << 11,
 		POP_STRATA      = 1 << 12,
 		TECHNOLOGY      = 1 << 13,
@@ -165,7 +165,7 @@ namespace OpenVic {
 		BUILD_STRING(IDEOLOGY);
 		BUILD_STRING(REFORM_GROUP);
 		BUILD_STRING(REFORM);
-		BUILD_STRING(ISSUE);
+		BUILD_STRING(PARTY_POLICY);
 		BUILD_STRING(POP_TYPE);
 		BUILD_STRING(POP_STRATA);
 		BUILD_STRING(TECHNOLOGY);

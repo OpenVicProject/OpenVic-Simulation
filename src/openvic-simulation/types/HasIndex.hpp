@@ -14,7 +14,7 @@ namespace OpenVic {
 		const index_t PROPERTY(index);
 
 	protected:
-		HasIndex(index_t new_index) : index { new_index } {}
+		constexpr HasIndex(index_t new_index) : index { new_index } {}
 		HasIndex(HasIndex const&) = default;
 
 	public:

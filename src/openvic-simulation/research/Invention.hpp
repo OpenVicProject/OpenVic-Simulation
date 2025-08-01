@@ -2,6 +2,7 @@
 
 #include "openvic-simulation/modifier/Modifier.hpp"
 #include "openvic-simulation/scripts/ConditionalWeight.hpp"
+#include "openvic-simulation/types/HasIndex.hpp"
 #include "openvic-simulation/types/IdentifierRegistry.hpp"
 #include "openvic-simulation/types/OrderedContainers.hpp"
 
@@ -15,7 +16,7 @@ namespace OpenVic {
 	struct UnitType;
 	struct UnitTypeManager;
 
-	struct Invention : Modifier {
+	struct Invention : HasIndex<Invention>, Modifier {
 		friend struct InventionManager;
 
 		//TODO implement limit and chance
@@ -37,6 +38,7 @@ namespace OpenVic {
 
 	public:
 		Invention(
+			index_t new_index,
 			std::string_view new_identifier,
 			ModifierValue&& new_values,
 			bool new_news,

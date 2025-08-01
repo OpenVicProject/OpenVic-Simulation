@@ -8,15 +8,16 @@
 #include "openvic-simulation/map/ProvinceInstance.hpp"
 #include "openvic-simulation/military/Deployment.hpp"
 #include "openvic-simulation/military/LeaderTrait.hpp"
+#include "openvic-simulation/pop/Culture.hpp"
 #include "openvic-simulation/utility/Containers.hpp"
 
 using namespace OpenVic;
 
-using enum UnitType::branch_t;
+using enum unit_branch_t;
 
 UnitInstanceGroup::UnitInstanceGroup(
 	unique_id_t new_unique_id,
-	UnitType::branch_t new_branch,
+	unit_branch_t new_branch,
 	std::string_view new_name
 ) : unique_id { new_unique_id },
 	branch { new_branch },
@@ -80,8 +81,8 @@ bool UnitInstanceGroup::add_unit(UnitInstance& unit) {
 		return true;
 	} else {
 		Logger::error(
-			"Trying to add ", UnitType::get_branch_name(unit.get_branch()), " unit \"", unit.get_name(), "\" to ",
-			UnitType::get_branch_name(branch), " unit group \"", get_name(), "\""
+			"Trying to add ", get_branch_name(unit.get_branch()), " unit \"", unit.get_name(), "\" to ",
+			get_branch_name(branch), " unit group \"", get_name(), "\""
 		);
 		return false;
 	}
@@ -161,17 +162,17 @@ bool UnitInstanceGroup::set_leader(LeaderInstance* new_leader) {
 		if (new_leader != nullptr) {
 			if (OV_unlikely(new_leader->get_branch() != branch)) {
 				Logger::error(
-					"Trying to assign ", UnitType::get_branch_name(new_leader->get_branch()), " leader \"",
-					new_leader->get_name(), "\" to ", UnitType::get_branch_name(branch), " unit group \"", name, "\""
+					"Trying to assign ", get_branch_name(new_leader->get_branch()), " leader \"",
+					new_leader->get_name(), "\" to ", get_branch_name(branch), " unit group \"", name, "\""
 				);
 				return false;
 			}
 
 			if (OV_unlikely(&new_leader->get_country() != country)) {
 				Logger::error(
-					"Trying to assign ", UnitType::get_branched_leader_name(new_leader->get_branch()), " \"",
+					"Trying to assign ", get_branched_leader_name(new_leader->get_branch()), " \"",
 					new_leader->get_name(), "\" of country \"", new_leader->get_country().get_identifier(), "\" to ",
-					UnitType::get_branched_unit_group_name(branch), " \"", name, "\" of country \"",
+					get_branched_unit_group_name(branch), " \"", name, "\" of country \"",
 					(country != nullptr ? country->get_identifier() : "<NULL>"), "\""
 				);
 				return false;
@@ -182,8 +183,8 @@ bool UnitInstanceGroup::set_leader(LeaderInstance* new_leader) {
 					ret &= new_leader->unit_instance_group->set_leader(nullptr);
 				} else {
 					Logger::error(
-						UnitType::get_branched_leader_name(new_leader->get_branch()), " ", new_leader->get_name(),
-						" already leads ", UnitType::get_branched_unit_group_name(branch), " ", name, "!"
+						get_branched_leader_name(new_leader->get_branch()), " ", new_leader->get_name(),
+						" already leads ", get_branched_unit_group_name(branch), " ", name, "!"
 					);
 					ret = false;
 				}
@@ -268,7 +269,7 @@ fixed_point_t UnitInstanceGroupBranched<NAVAL>::get_total_consumed_supply() cons
 	return total_consumed_supply;
 }
 
-template<UnitType::branch_t Branch>
+template<unit_branch_t Branch>
 UnitInstanceBranched<Branch>& UnitInstanceManager::generate_unit_instance(UnitDeployment<Branch> const& unit_deployment) {
 	UnitInstanceBranched<Branch>& unit_instance = *get_unit_instances<Branch>().insert(
 		[this, &unit_deployment]() -> UnitInstanceBranched<Branch> {
@@ -295,7 +296,7 @@ UnitInstanceBranched<Branch>& UnitInstanceManager::generate_unit_instance(UnitDe
 	return unit_instance;
 }
 
-template<UnitType::branch_t Branch>
+template<unit_branch_t Branch>
 bool UnitInstanceManager::generate_unit_instance_group(
 	MapInstance& map_instance, CountryInstance& country, UnitDeploymentGroup<Branch> const& unit_deployment_group
 ) {
@@ -387,7 +388,7 @@ bool UnitInstanceManager::generate_deployment(
 		generate_leader(country, leader);
 	}
 
-	const auto generate_group = [this, &map_instance, &country, &ret, deployment]<UnitType::branch_t Branch>() -> void {
+	const auto generate_group = [this, &map_instance, &country, &ret, deployment]<unit_branch_t Branch>() -> void {
 		for (UnitDeploymentGroup<Branch> const& unit_deployment_group : deployment->get_unit_deployment_groups<Branch>()) {
 			ret &= generate_unit_instance_group(map_instance, country, unit_deployment_group);
 		}
@@ -449,7 +450,7 @@ UnitInstanceGroup* UnitInstanceManager::get_unit_instance_group_by_unique_id(uni
 
 bool UnitInstanceManager::create_leader(
 	CountryInstance& country,
-	UnitType::branch_t branch,
+	unit_branch_t branch,
 	Date creation_date,
 	std::string_view name,
 	LeaderTrait const* personality,
@@ -460,7 +461,7 @@ bool UnitInstanceManager::create_leader(
 		Logger::error(
 			"Country \"", country.get_identifier(), "\" does not have enough leadership points (",
 			country.get_leadership_point_stockpile().to_string(2), ") to create a ",
-			UnitType::get_branched_leader_name(branch), " (cost: ", leader_creation_cost.to_string(2), ")"
+			get_branched_leader_name(branch), " (cost: ", leader_creation_cost.to_string(2), ")"
 		);
 		return false;
 	}

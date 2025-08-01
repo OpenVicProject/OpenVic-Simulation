@@ -576,7 +576,7 @@ bool GameActionManager::game_action_callback_create_leader(game_action_argument_
 
 	return instance_manager.get_unit_instance_manager().create_leader(
 		*country,
-		country_branch->second ? UnitType::branch_t::LAND : UnitType::branch_t::NAVAL,
+		country_branch->second ? unit_branch_t::LAND : unit_branch_t::NAVAL,
 		instance_manager.get_today()
 	);
 }

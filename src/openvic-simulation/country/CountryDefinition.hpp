@@ -4,39 +4,20 @@
 
 #include <openvic-dataloader/v2script/AbstractSyntaxTree.hpp>
 
-#include "openvic-simulation/dataloader/Dataloader.hpp"
-#include "openvic-simulation/military/UnitType.hpp"
-#include "openvic-simulation/politics/Government.hpp"
-#include "openvic-simulation/politics/Ideology.hpp"
-#include "openvic-simulation/politics/Issue.hpp"
-#include "openvic-simulation/politics/PoliticsManager.hpp"
-#include "openvic-simulation/pop/Culture.hpp"
-#include "openvic-simulation/types/Colour.hpp"
-#include "openvic-simulation/types/Date.hpp"
+#include "openvic-simulation/country/CountryParty.hpp"
+#include "openvic-simulation/types/HasIdentifier.hpp"
+#include "openvic-simulation/types/HasIndex.hpp"
 #include "openvic-simulation/types/IdentifierRegistry.hpp"
-#include "openvic-simulation/types/IndexedMap.hpp"
 #include "openvic-simulation/types/OrderedContainers.hpp"
 
 namespace OpenVic {
-	struct DefinitionManager;
 	struct CountryDefinitionManager;
-
-	struct CountryParty : HasIdentifierAndColour {
-		using policy_map_t = IndexedMap<IssueGroup, Issue const*>;
-
-	private:
-		const Date PROPERTY(start_date);
-		const Date PROPERTY(end_date);
-		Ideology const* PROPERTY(ideology); // Can be nullptr, shows up as "No Ideology" in game
-		policy_map_t PROPERTY(policies);
-
-	public:
-		CountryParty(
-			std::string_view new_identifier, Date new_start_date, Date new_end_date, Ideology const* new_ideology,
-			policy_map_t&& new_policies
-		);
-		CountryParty(CountryParty&&) = default;
-	};
+	class Dataloader;
+	struct DefinitionManager;
+	struct GraphicalCultureType;
+	struct GovernmentType;
+	struct PoliticsManager;
+	struct UnitType;
 
 	/* Generic information about a TAG */
 	struct CountryDefinition : HasIdentifierAndColour, HasIndex<CountryDefinition> {

@@ -13,6 +13,7 @@
 namespace OpenVic {
 	struct CountryInstance;
 	struct GameRulesManager;
+	struct GoodDefinition;
 
 	struct GoodMarket {
 	private:

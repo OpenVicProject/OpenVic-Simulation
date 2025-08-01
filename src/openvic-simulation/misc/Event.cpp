@@ -3,7 +3,8 @@
 #include <system_error>
 
 #include "openvic-simulation/dataloader/NodeTools.hpp"
-#include "openvic-simulation/politics/Issue.hpp"
+#include "openvic-simulation/politics/BaseIssue.hpp"
+#include "openvic-simulation/politics/IssueManager.hpp"
 #include "openvic-simulation/utility/Containers.hpp"
 
 using namespace OpenVic;
@@ -25,7 +26,7 @@ Event::Event(
 	std::string_view new_image, event_type_t new_type, bool new_triggered_only, bool new_major, bool new_fire_only_once,
 	bool new_allows_multiple_instances, bool new_news, std::string_view new_news_title, std::string_view new_news_desc_long,
 	std::string_view new_news_desc_medium, std::string_view new_news_desc_short, bool new_election,
-	IssueGroup const* new_election_issue_group, ConditionScript&& new_trigger, ConditionalWeightTime&& new_mean_time_to_happen,
+	BaseIssueGroup const* new_election_issue_group, ConditionScript&& new_trigger, ConditionalWeightTime&& new_mean_time_to_happen,
 	EffectScript&& new_immediate, memory::vector<EventOption>&& new_options
 ) : HasIdentifier { new_identifier }, title { new_title }, description { new_description }, image { new_image },
 	type { new_type }, triggered_only { new_triggered_only }, major { new_major }, fire_only_once { new_fire_only_once },
@@ -58,7 +59,7 @@ bool EventManager::register_event(
 	std::string_view identifier, std::string_view title, std::string_view description, std::string_view image,
 	Event::event_type_t type, bool triggered_only, bool major, bool fire_only_once, bool allows_multiple_instances, bool news,
 	std::string_view news_title, std::string_view news_desc_long, std::string_view news_desc_medium,
-	std::string_view news_desc_short, bool election, IssueGroup const* election_issue_group, ConditionScript&& trigger,
+	std::string_view news_desc_short, bool election, BaseIssueGroup const* election_issue_group, ConditionScript&& trigger,
 	ConditionalWeightTime&& mean_time_to_happen, EffectScript&& immediate, memory::vector<Event::EventOption>&& options
 ) {
 	if (identifier.empty()) {
@@ -153,7 +154,7 @@ bool EventManager::load_event_file(IssueManager const& issue_manager, ast::NodeC
 				news_desc_short;
 			bool triggered_only = false, major = false, fire_only_once = false, allows_multiple_instances = false,
 				news = false, election = false;
-			IssueGroup const* election_issue_group = nullptr;
+			BaseIssueGroup const* election_issue_group = nullptr;
 			ConditionScript trigger { initial_scope, COUNTRY, NO_SCOPE };
 			ConditionalWeightTime mean_time_to_happen { initial_scope, COUNTRY, NO_SCOPE };
 			EffectScript immediate;
@@ -179,8 +180,7 @@ bool EventManager::load_event_file(IssueManager const& issue_manager, ast::NodeC
 				"news_desc_medium", ZERO_OR_ONE, expect_identifier_or_string(assign_variable_callback(news_desc_medium)),
 				"news_desc_short", ZERO_OR_ONE, expect_identifier_or_string(assign_variable_callback(news_desc_short)),
 				"election", ZERO_OR_ONE, expect_bool(assign_variable_callback(election)),
-				"issue_group", ZERO_OR_ONE,
-					issue_manager.expect_issue_group_identifier(assign_variable_callback_pointer(election_issue_group)),
+				"issue_group", ZERO_OR_ONE, issue_manager.expect_base_issue_group_identifier(assign_variable_callback_pointer(election_issue_group)),
 				"option", ONE_OR_MORE, [initial_scope](ast::NodeCPtr node) -> bool {
 					std::string_view name;
 					EffectScript effect;

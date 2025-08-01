@@ -1,4 +1,5 @@
 #include "MapInstance.hpp"
+
 #include <optional>
 
 #include "openvic-simulation/history/ProvinceHistory.hpp"
@@ -6,7 +7,10 @@
 #include "openvic-simulation/pop/PopValuesFromProvince.hpp"
 #include "openvic-simulation/utility/Logger.hpp"
 #include "openvic-simulation/utility/ThreadPool.hpp"
-#include "map/ProvinceDefinition.hpp"
+
+#if defined(__GLIBCXX__) || defined(__GLIBCPP__) //libstdc++ requires a complete type when emplacing the province instance.
+#include "openvic-simulation/economy/trading/MarketInstance.hpp"
+#endif
 
 using namespace OpenVic;
 

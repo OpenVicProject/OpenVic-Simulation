@@ -1,6 +1,8 @@
 #include "ArtisanalProducerFactoryPattern.hpp"
 
 #include "openvic-simulation/economy/GoodInstance.hpp"
+#include "openvic-simulation/economy/production/ArtisanalProducer.hpp"
+#include "openvic-simulation/economy/production/ProductionType.hpp"
 
 using namespace OpenVic;
 
@@ -28,7 +30,7 @@ memory::unique_ptr<ArtisanalProducer> ArtisanalProducerFactoryPattern::CreateNew
 
 	return memory::make_unique<ArtisanalProducer>(
 		modifier_effect_cache,
-		GoodDefinition::good_definition_map_t{},
+		fixed_point_map_t<GoodDefinition const*>{},
 		*random_artisanal_production_type,
 		0
 	);

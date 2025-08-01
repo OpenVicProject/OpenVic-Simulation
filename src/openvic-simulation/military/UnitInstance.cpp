@@ -17,7 +17,7 @@ void UnitInstance::set_name(std::string_view new_name) {
 	name = new_name;
 }
 
-UnitInstanceBranched<UnitType::branch_t::LAND>::UnitInstanceBranched(
+UnitInstanceBranched<unit_branch_t::LAND>::UnitInstanceBranched(
 	unique_id_t new_unique_id,
 	std::string_view new_name,
 	RegimentType const& new_regiment_type,
@@ -27,7 +27,7 @@ UnitInstanceBranched<UnitType::branch_t::LAND>::UnitInstanceBranched(
 	pop { new_pop },
 	mobilised { new_mobilised } {}
 
-UnitInstanceBranched<UnitType::branch_t::NAVAL>::UnitInstanceBranched(
+UnitInstanceBranched<unit_branch_t::NAVAL>::UnitInstanceBranched(
 	unique_id_t new_unique_id,
 	std::string_view new_name,
 	ShipType const& new_ship_type
