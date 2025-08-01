@@ -13,13 +13,13 @@ namespace OpenVic {
 		effect_map_t PROPERTY(values);
 
 	public:
-		ModifierValue();
-		ModifierValue(effect_map_t&& new_values);
-		ModifierValue(ModifierValue const&);
-		ModifierValue(ModifierValue&&);
+		ModifierValue() {};
+		ModifierValue(effect_map_t&& new_values) : values { std::move(new_values) } {};
+		ModifierValue(ModifierValue const&) = default;
+		ModifierValue(ModifierValue&&) = default;
 
-		ModifierValue& operator=(ModifierValue const&);
-		ModifierValue& operator=(ModifierValue&&);
+		ModifierValue& operator=(ModifierValue const&) = default;
+		ModifierValue& operator=(ModifierValue&&) = default;
 
 		/* Removes effect entries with a value of zero. */
 		void trim();

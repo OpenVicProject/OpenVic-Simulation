@@ -74,7 +74,7 @@ namespace OpenVic {
 		void free_cache();
 
 	public:
-		Dataloader() = default;
+		constexpr Dataloader() {};
 
 		/// @brief Searches for the Victoria 2 install directory
 		///

@@ -44,7 +44,7 @@ namespace OpenVic {
 		}
 
 	protected:
-		HistoryMap() = default;
+		constexpr HistoryMap() {};
 
 		virtual memory::unique_ptr<entry_type> _make_entry(Date date) const = 0;
 

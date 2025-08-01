@@ -99,7 +99,7 @@ namespace OpenVic {
 		ModifierValue PROPERTY(value_sum);
 
 	public:
-		ModifierSum() = default;
+		ModifierSum() {};
 		ModifierSum(ModifierSum const&) = default;
 		ModifierSum(ModifierSum&&) = default;
 		ModifierSum& operator=(ModifierSum const&) = default;

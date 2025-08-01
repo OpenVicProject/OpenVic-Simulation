@@ -393,7 +393,7 @@ namespace OpenVic::_detail::signal {
 	};
 
 	struct connection_blocker {
-		connection_blocker() = default;
+		constexpr connection_blocker() {};
 		~connection_blocker() {
 			release();
 		}
@@ -427,7 +427,7 @@ namespace OpenVic::_detail::signal {
 	};
 
 	struct connection {
-		connection() = default;
+		constexpr connection() {};
 		virtual ~connection() = default;
 
 		connection(connection const&) = default;
@@ -479,7 +479,7 @@ namespace OpenVic::_detail::signal {
 	};
 
 	struct scoped_connection final : public connection {
-		scoped_connection() = default;
+		constexpr scoped_connection() {};
 		~scoped_connection() override {
 			disconnect();
 		}

@@ -11,7 +11,7 @@ namespace OpenVic::GFX {
 
 	class Object : public Named<> {
 	protected:
-		Object() = default;
+		constexpr Object() {};
 
 	public:
 		Object(Object&&) = default;

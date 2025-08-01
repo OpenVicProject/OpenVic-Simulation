@@ -45,7 +45,7 @@ namespace OpenVic {
 	public:
 		static constexpr uint32_t PALETTE_COLOUR_SIZE = sizeof(palette_colour_t);
 
-		BMP() = default;
+		BMP() {};
 		~BMP();
 
 		bool open(fs::path const& filepath);

@@ -14,7 +14,7 @@ namespace OpenVic {
 		fixed_point_t PROPERTY(value);
 
 	public:
-		constexpr SliderValue() = default;
+		constexpr SliderValue() {};
 
 		constexpr void set_value(fixed_point_t new_value) {
 			if (min <= max) {

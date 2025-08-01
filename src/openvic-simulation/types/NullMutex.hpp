@@ -2,7 +2,7 @@
 
 namespace OpenVic {
 	struct null_mutex {
-		null_mutex() = default;
+		constexpr null_mutex() {};
 		~null_mutex() = default;
 		null_mutex(null_mutex const&) = delete;
 		null_mutex& operator=(null_mutex const&) = delete;

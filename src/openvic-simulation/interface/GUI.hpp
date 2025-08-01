@@ -64,7 +64,7 @@ namespace OpenVic::GUI {
 		bool _fill_key_map(NodeTools::case_insensitive_key_map_t& key_map, UIManager const& ui_manager) override;
 
 	public:
-		Scene() = default;
+		constexpr Scene() {};
 		Scene(Scene&&) = default;
 		virtual ~Scene() = default;
 
@@ -153,7 +153,7 @@ namespace OpenVic::GUI {
 		bool _fill_key_map(NodeTools::case_insensitive_key_map_t& key_map, UIManager const& ui_manager) override;
 
 	public:
-		Checkbox() = default;
+		Checkbox() {};
 		Checkbox(Checkbox&&) = default;
 		virtual ~Checkbox() = default;
 

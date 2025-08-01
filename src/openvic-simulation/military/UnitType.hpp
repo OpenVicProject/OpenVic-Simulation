@@ -45,7 +45,7 @@ namespace OpenVic {
 			fixed_point_map_t<GoodDefinition const*> build_cost, supply_cost;
 			terrain_modifier_values_t terrain_modifier_values;
 
-			unit_type_args_t() = default;
+			unit_type_args_t() {};
 			unit_type_args_t(unit_type_args_t&&) = default;
 		};
 
@@ -97,7 +97,7 @@ namespace OpenVic {
 			fixed_point_t reconnaissance = 0, attack = 0, defence = 0, discipline = 0, support = 0, maneuver = 0,
 				siege = 0;
 
-			regiment_type_args_t() = default;
+			constexpr regiment_type_args_t() {};
 			regiment_type_args_t(regiment_type_args_t&&) = default;
 		};
 
@@ -132,7 +132,7 @@ namespace OpenVic {
 			fixed_point_t colonial_points = 0, supply_consumption_score = 0, hull = 0, gun_power = 0, fire_range = 0,
 				evasion = 0, torpedo_attack = 0;
 
-			ship_type_args_t() = default;
+			constexpr ship_type_args_t() {};
 			ship_type_args_t(ship_type_args_t&&) = default;
 		};
 

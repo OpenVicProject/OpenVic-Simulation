@@ -8,7 +8,7 @@ namespace OpenVic {
 	template<typename... Context>
 	class LoadBase {
 	protected:
-		LoadBase() = default;
+		constexpr LoadBase() {};
 
 		virtual bool _fill_key_map(NodeTools::case_insensitive_key_map_t&, Context...) = 0;
 
@@ -55,7 +55,7 @@ namespace OpenVic {
 		memory::string PROPERTY(name);
 
 	protected:
-		Named() = default;
+		constexpr Named() {};
 
 		virtual bool _fill_key_map(NodeTools::case_insensitive_key_map_t& key_map, Context...) override {
 			using namespace OpenVic::NodeTools;

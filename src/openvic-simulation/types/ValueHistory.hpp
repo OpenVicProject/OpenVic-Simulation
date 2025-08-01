@@ -36,7 +36,7 @@ namespace OpenVic {
 		using base_type::front;
 		using base_type::back;
 
-		ValueHistory() = default;
+		constexpr ValueHistory() {};
 		ValueHistory(size_t history_size, T const& fill_value = {}) : base_type(history_size, fill_value) {}
 		ValueHistory(ValueHistory&&) = default;
 

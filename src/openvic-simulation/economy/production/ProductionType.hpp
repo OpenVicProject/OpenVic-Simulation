@@ -36,7 +36,7 @@ namespace OpenVic {
 		);
 
 	public:
-		Job() = default;
+		constexpr Job() {};
 	};
 
 	struct ProductionType : HasIdentifier {

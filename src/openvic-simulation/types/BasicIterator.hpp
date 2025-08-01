@@ -15,7 +15,7 @@ namespace OpenVic {
 		using iterator_category = typename std::iterator_traits<iterator_type>::iterator_category;
 		using iterator_concept = std::contiguous_iterator_tag;
 
-		OV_ALWAYS_INLINE constexpr basic_iterator() = default;
+		OV_ALWAYS_INLINE constexpr basic_iterator() {};
 		OV_ALWAYS_INLINE constexpr basic_iterator(Pointer const& ptr) : _current { ptr } {}
 
 		template<std::convertible_to<Pointer> It>

@@ -79,7 +79,7 @@ namespace OpenVic {
 		ProvinceHistoryMap* _get_or_make_province_history(ProvinceDefinition const& province);
 
 	public:
-		ProvinceHistoryManager() = default;
+		ProvinceHistoryManager() {};
 
 		void reserve_more_province_histories(size_t size);
 		void lock_province_histories(MapDefinition const& map_definition, bool detailed_errors);

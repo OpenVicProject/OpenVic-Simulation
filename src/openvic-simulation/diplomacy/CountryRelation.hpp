@@ -104,7 +104,7 @@ namespace OpenVic {
 			uint16_t value;
 
 		public:
-			constexpr influence_value_type() = default;
+			constexpr influence_value_type() {};
 			constexpr influence_value_type(uint16_t value) : value(std::min(value, MAX_VALUE)) {}
 
 #define BIN_OPERATOR(OP) \

@@ -28,7 +28,7 @@ namespace OpenVic::GFX {
 
 	class Sprite : public Named<> {
 	protected:
-		Sprite() = default;
+		constexpr Sprite() {};
 
 	public:
 		Sprite(Sprite&&) = default;
