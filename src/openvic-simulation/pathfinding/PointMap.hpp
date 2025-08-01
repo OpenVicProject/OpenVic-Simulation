@@ -46,7 +46,7 @@ namespace OpenVic {
 				return key == s.key;
 			}
 
-			inline constexpr Segment() = default;
+			inline constexpr Segment() {};
 			inline constexpr Segment(points_key_type from, points_key_type to) {
 				if (from < to) {
 					key.first = from;

@@ -127,7 +127,7 @@ namespace OpenVic {
 		IdentifierRegistry<DiplomaticActionTypeStorage> IDENTIFIER_REGISTRY(diplomatic_action_type);
 
 	public:
-		DiplomaticActionManager() = default;
+		constexpr DiplomaticActionManager() {};
 
 		bool add_diplomatic_action(std::string_view identifier, DiplomaticActionType::Initializer&& initializer);
 		bool add_cancelable_diplomatic_action(

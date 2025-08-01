@@ -28,7 +28,7 @@ namespace OpenVic {
 		using search_iterator = search_map_type::iterator;
 		using search_const_iterator = search_map_type::const_iterator;
 
-		PathingNodeBase() = default;
+		constexpr PathingNodeBase() {};
 		PathingNodeBase(PointMap::points_value_type const* p) {
 			point = p;
 		}

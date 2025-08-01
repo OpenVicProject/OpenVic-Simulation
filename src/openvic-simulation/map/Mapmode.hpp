@@ -56,7 +56,7 @@ namespace OpenVic {
 		IdentifierRegistry<Mapmode> IDENTIFIER_REGISTRY(mapmode);
 
 	public:
-		MapmodeManager() = default;
+		constexpr MapmodeManager() {};
 
 		bool add_mapmode(
 			std::string_view identifier,

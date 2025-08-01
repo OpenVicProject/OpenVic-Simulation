@@ -100,7 +100,7 @@ namespace OpenVic {
 		bool locked = false;
 
 	public:
-		CountryHistoryManager() = default;
+		CountryHistoryManager() {};
 
 		void reserve_more_country_histories(size_t size);
 		void lock_country_histories();

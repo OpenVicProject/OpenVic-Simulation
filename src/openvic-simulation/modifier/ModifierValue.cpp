@@ -4,14 +4,6 @@
 
 using namespace OpenVic;
 
-ModifierValue::ModifierValue() = default;
-ModifierValue::ModifierValue(effect_map_t&& new_values) : values { std::move(new_values) } {}
-ModifierValue::ModifierValue(ModifierValue const&) = default;
-ModifierValue::ModifierValue(ModifierValue&&) = default;
-
-ModifierValue& ModifierValue::operator=(ModifierValue const&) = default;
-ModifierValue& ModifierValue::operator=(ModifierValue&&) = default;
-
 void ModifierValue::trim() {
 	erase_if(values, [](effect_map_t::value_type const& value) -> bool {
 		return value.second == fixed_point_t::_0;

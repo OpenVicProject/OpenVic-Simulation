@@ -5,7 +5,7 @@
 
 namespace OpenVic {
 	struct spin_mutex {
-		spin_mutex() = default;
+		constexpr spin_mutex() {};
 		~spin_mutex() = default;
 		spin_mutex(spin_mutex const&) = delete;
 		spin_mutex& operator=(spin_mutex const&) = delete;

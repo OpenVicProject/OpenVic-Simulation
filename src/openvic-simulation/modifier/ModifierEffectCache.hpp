@@ -217,7 +217,7 @@ namespace OpenVic {
 			ModifierEffect const* PROPERTY(max_level, nullptr);
 
 		public:
-			building_type_effects_t() = default;
+			constexpr building_type_effects_t() {};
 		};
 
 	private:
@@ -241,7 +241,7 @@ namespace OpenVic {
 			ModifierEffect const* PROPERTY(rgo_size, nullptr);
 
 		public:
-			good_effects_t() = default;
+			constexpr good_effects_t() {};
 		};
 
 	private:
@@ -261,7 +261,7 @@ namespace OpenVic {
 			ModifierEffect const* PROPERTY(supply_consumption, nullptr);
 
 		protected:
-			unit_type_effects_t() = default;
+			constexpr unit_type_effects_t() {};
 		};
 
 		struct regiment_type_effects_t : unit_type_effects_t {
@@ -275,7 +275,7 @@ namespace OpenVic {
 			ModifierEffect const* PROPERTY(siege, nullptr);
 
 		public:
-			regiment_type_effects_t() = default;
+			constexpr regiment_type_effects_t() {};
 		};
 
 		struct ship_type_effects_t : unit_type_effects_t {
@@ -291,7 +291,7 @@ namespace OpenVic {
 			ModifierEffect const* PROPERTY(torpedo_attack, nullptr);
 
 		public:
-			ship_type_effects_t() = default;
+			constexpr ship_type_effects_t() {};
 		};
 
 	private:
@@ -312,7 +312,7 @@ namespace OpenVic {
 			ModifierEffect const* PROPERTY(movement, nullptr);
 
 		public:
-			unit_terrain_effects_t() = default;
+			constexpr unit_terrain_effects_t() {};
 		};
 
 	private:
@@ -335,7 +335,7 @@ namespace OpenVic {
 			ModifierEffect const* PROPERTY(luxury_needs, nullptr);
 
 		public:
-			strata_effects_t() = default;
+			constexpr strata_effects_t() {};
 		};
 
 	private:

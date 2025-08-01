@@ -332,7 +332,7 @@ namespace OpenVic {
 			std::array<char, array_length> array {};
 			uint8_t string_size = 0;
 
-			constexpr stack_string() = default;
+			constexpr stack_string() {};
 
 			friend inline constexpr stack_string Date::to_array(bool pad_year, bool pad_month, bool pad_day) const;
 

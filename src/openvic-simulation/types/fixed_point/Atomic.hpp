@@ -212,7 +212,7 @@ namespace OpenVic {
 		atomic_fixed_point_t value;
 
 	public:
-		OV_ALWAYS_INLINE moveable_atomic_fixed_point_t() = default;
+		OV_ALWAYS_INLINE constexpr moveable_atomic_fixed_point_t() {};
 		OV_ALWAYS_INLINE moveable_atomic_fixed_point_t(const atomic_fixed_point_t new_value) : value { new_value.load() } {}
 
 		OV_ALWAYS_INLINE moveable_atomic_fixed_point_t(moveable_atomic_fixed_point_t&& other) {

@@ -36,7 +36,7 @@ namespace OpenVic {
 			naval_capacity_t naval_capacity = 0;
 			memory::vector<fixed_point_t> colonial_points;
 
-			building_type_args_t() = default;
+			building_type_args_t() {};
 			building_type_args_t(building_type_args_t&&) = default;
 		};
 

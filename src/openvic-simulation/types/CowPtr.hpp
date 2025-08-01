@@ -176,7 +176,7 @@ namespace OpenVic {
 
 	private:
 		struct payload {
-			payload() = default;
+			constexpr payload() {};
 
 			template<typename... Args>
 			explicit payload(Args&&... args) : value(std::forward<Args>(args)...) {}

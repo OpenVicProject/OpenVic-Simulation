@@ -15,7 +15,7 @@ namespace OpenVic {
 		virtual bool _parse_script(std::span<const ast::NodeCPtr> nodes, _Context... context) = 0;
 
 	public:
-		Script() = default;
+		constexpr Script() {};
 		Script(Script&&) = default;
 
 		constexpr bool has_defines_node() const {

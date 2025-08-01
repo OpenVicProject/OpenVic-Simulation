@@ -47,7 +47,7 @@ namespace OpenVic {
 		rule_group_map_t PROPERTY(rule_groups);
 
 	public:
-		RuleSet() = default;
+		RuleSet() {};
 		RuleSet(rule_group_map_t&& new_rule_groups);
 		RuleSet(RuleSet const&) = default;
 		RuleSet(RuleSet&&) = default;

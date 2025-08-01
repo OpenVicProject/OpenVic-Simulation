@@ -151,7 +151,7 @@ namespace OpenVic {
 		static constexpr auto max_value = colour_traits::component;
 
 		struct empty_value {
-			constexpr empty_value() = default;
+			constexpr empty_value() {};
 			constexpr empty_value(value_type) {}
 			constexpr operator value_type() const {
 				return max_value;
@@ -480,7 +480,7 @@ namespace OpenVic {
 			std::array<char, array_length> array {};
 			uint8_t string_size = 0;
 
-			constexpr stack_string() = default;
+			constexpr stack_string() {};
 
 			friend inline constexpr stack_string basic_colour_t::to_hex_array(bool alpha) const;
 			friend inline constexpr stack_string basic_colour_t::to_argb_hex_array() const;
