@@ -1239,7 +1239,7 @@ void CountryInstance::_update_budget() {
 
 	const fixed_point_t corruption_cost_multiplier = get_corruption_cost_multiplier();
 	for (auto const& [pop_type, size] : pop_type_distribution) {
-		SharedPopTypeValues const& pop_type_values = shared_country_values.get_shared_pop_type_values()[pop_type];
+		SharedPopTypeValues const& pop_type_values = shared_country_values.get_shared_pop_type_values(pop_type);
 		projected_administration_spending_unscaled_by_slider += size * calculate_administration_salary_base(pop_type_values, corruption_cost_multiplier);
 		projected_education_spending_unscaled_by_slider += size * calculate_education_salary_base(pop_type_values, corruption_cost_multiplier);
 		projected_military_spending_unscaled_by_slider += size * calculate_military_salary_base(pop_type_values, corruption_cost_multiplier);
@@ -2039,7 +2039,7 @@ void CountryInstance::request_salaries_and_welfare_and_import_subsidies(Pop& pop
 	PopType const& pop_type = *pop.get_type();
 	const pop_size_t pop_size = pop.get_size();
 	const fixed_point_t corruption_cost_multiplier = get_corruption_cost_multiplier();
-	SharedPopTypeValues const& pop_type_values = shared_country_values.get_shared_pop_type_values()[pop_type];
+	SharedPopTypeValues const& pop_type_values = shared_country_values.get_shared_pop_type_values(pop_type);
 	ModifierEffectCache const& modifier_effect_cache = shared_country_values.get_modifier_effect_cache();
 
 	if (actual_administration_spending > fixed_point_t::_0) {
@@ -2117,7 +2117,7 @@ fixed_point_t CountryInstance::calculate_minimum_wage_base(PopType const& pop_ty
 
 	return calculate_minimum_wage_base(
 		shared_country_values.get_modifier_effect_cache(),
-		shared_country_values.get_shared_pop_type_values()[pop_type]
+		shared_country_values.get_shared_pop_type_values(pop_type)
 	);
 }
 
