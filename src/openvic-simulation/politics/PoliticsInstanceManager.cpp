@@ -27,7 +27,7 @@ void PoliticsInstanceManager::setup_starting_ideologies() {
 }
 
 std::optional<Date> const& PoliticsInstanceManager::get_ideology_spawn_date(Ideology const& ideology) const {
-	return ideology_spawn_date[ideology];
+	return ideology_spawn_date.at(ideology);
 }
 
 bool PoliticsInstanceManager::is_ideology_unlocked(Ideology const& ideology) const {
@@ -35,7 +35,7 @@ bool PoliticsInstanceManager::is_ideology_unlocked(Ideology const& ideology) con
 }
 
 void PoliticsInstanceManager::unlock_ideology(Ideology const& ideology) {
-	std::optional<Date>& spawn_date = ideology_spawn_date[ideology];
+	std::optional<Date>& spawn_date = ideology_spawn_date.at(ideology);
 	if (!spawn_date.has_value()) {
 		spawn_date = instance_manager.get_today();
 	} else {

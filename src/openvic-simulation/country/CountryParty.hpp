@@ -2,7 +2,8 @@
 
 #include "openvic-simulation/types/Date.hpp"
 #include "openvic-simulation/types/HasIdentifier.hpp"
-#include "openvic-simulation/types/IndexedMap.hpp"
+#include "openvic-simulation/types/IndexedFlatMap.hpp"
+#include "openvic-simulation/types/IndexedFlatMapMacro.hpp"
 
 namespace OpenVic {
 	struct Ideology;
@@ -14,7 +15,7 @@ namespace OpenVic {
 		const Date PROPERTY(start_date);
 		const Date PROPERTY(end_date);
 		Ideology const* PROPERTY(ideology); // Can be nullptr, shows up as "No Ideology" in game
-		IndexedMap<PartyPolicyGroup, PartyPolicy const*> PROPERTY(policies);
+		IndexedFlatMap_PROPERTY(PartyPolicyGroup, PartyPolicy const*, policies);
 
 	public:
 		CountryParty(
@@ -27,3 +28,5 @@ namespace OpenVic {
 		CountryParty(CountryParty&&) = default;
 	};
 }
+#undef IndexedFlatMap_PROPERTY
+#undef IndexedFlatMap_PROPERTY_ACCESS

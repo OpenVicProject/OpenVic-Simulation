@@ -1,4 +1,7 @@
+#include <concepts>
 #include <cstddef>
+#include <cstdint>
+#include <ranges>
 
 #define KEEP_DO_FOR_ALL_TYPES_OF_INCOME
 #define KEEP_DO_FOR_ALL_TYPES_OF_EXPENSES
@@ -29,6 +32,8 @@
 #include "openvic-simulation/pop/PopValuesFromProvince.hpp"
 #include "openvic-simulation/pop/Religion.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
+#include "openvic-simulation/types/IndexedFlatMap.hpp"
+#include "openvic-simulation/types/OrderedContainers.hpp"
 #include "openvic-simulation/utility/Containers.hpp"
 #include "openvic-simulation/utility/Logger.hpp"
 #include "openvic-simulation/utility/Utility.hpp"
@@ -82,42 +87,52 @@ void Pop::setup_pop_test_values(IssueManager const& issue_manager) {
 		num_grown + num_promoted + num_demoted + num_migrated_internal + num_migrated_external + num_migrated_colonial;
 
 	/* Generates a number between 0 and max (inclusive) and sets map[&key] to it if it's at least min. */
-	auto test_weight =
-		[]<typename T, typename U>(T& map, U const& key, int32_t min, int32_t max) -> void {
+	auto test_weight_indexed = []<typename U>(IndexedFlatMap<U, fixed_point_t>& map, U const& key, int32_t min, int32_t max) -> void {
+		const int32_t value = rand() % (max + 1);
+		if (value >= min) {
+			map.set(key, value);
+		}
+	};
+	auto test_weight_ordered = []<typename T, typename U>(ordered_map<T const*, fixed_point_t>& map, U const& key, int32_t min, int32_t max) -> void {
+		if constexpr (std::is_convertible_v<U const*, T const*> || std::is_convertible_v<U, T const*>) {
 			const int32_t value = rand() % (max + 1);
 			if (value >= min) {
-				if constexpr (utility::is_specialization_of_v<T, IndexedMap>) {
-					map[key] = value;
+				if constexpr (std::is_pointer_v<U>) {
+					map.insert_or_assign(key, value);
 				} else {
-					map.emplace(&key, value);
+					map.insert_or_assign(&key, value);
 				}
 			}
-		};
+		} else {
+			// Optional: Handle the case where the conversion is not possible, perhaps with a static_assert.
+			static_assert(std::is_convertible_v<U const*, T const*> || std::is_convertible_v<U, T const*>, "Type U is not convertible to T const*.");
+		}
+	};
 
 	/* All entries equally weighted for testing. */
-	ideology_distribution.clear();
+	ideology_distribution.fill(0);
 	for (Ideology const& ideology : ideology_distribution.get_keys()) {
-		test_weight(ideology_distribution, ideology, 1, 5);
+		test_weight_indexed(ideology_distribution, ideology, 1, 5);
 	}
 	ideology_distribution.rescale(size);
 
 	issue_distribution.clear();
 	for (BaseIssue const& issue : issue_manager.get_party_policies()) {
-		test_weight(issue_distribution, issue, 3, 6);
+		test_weight_ordered(issue_distribution, issue, 3, 6);
 	}
 	for (Reform const& reform : issue_manager.get_reforms()) {
 		if (!reform.get_reform_group().is_uncivilised()) {
-			test_weight(issue_distribution, reform, 3, 6);
+			test_weight_ordered(issue_distribution, reform, 3, 6);
 		}
 	}
 	rescale_fixed_point_map(issue_distribution, size);
 
-	if (vote_distribution.has_keys()) {
-		vote_distribution.clear();
-		for (CountryParty const& party : vote_distribution.get_keys()) {
-			test_weight(vote_distribution, party, 4, 10);
+	if (!vote_distribution.empty()) {
+		for (auto& [party, value] : vote_distribution) {
+			vote_distribution[party] = 0;
+			test_weight_ordered(vote_distribution, party, 4, 10);
 		}
-		vote_distribution.rescale(size);
+		rescale_fixed_point_map(vote_distribution, size);
 	}
 
 	/* Returns a fixed point between 0 and max. */
@@ -156,23 +171,25 @@ void Pop::set_location(ProvinceInstance& new_location) {
 }
 
 void Pop::update_location_based_attributes() {
-	if (location != nullptr) {
-		CountryInstance const* owner = location->get_owner();
-
-		if (owner != nullptr) {
-			vote_distribution.set_keys(owner->get_country_definition()->get_parties());
-
-			// TODO - calculate vote distribution
-
-			return;
-		}
+	vote_distribution.clear();
+	if (location == nullptr) {
+		return;
 	}
-
-	vote_distribution.set_keys({});
+	CountryInstance const* owner = location->get_owner();
+	if (owner == nullptr) {
+		return;
+	}
+	auto view = owner->get_country_definition()->get_parties() | std::views::transform(
+		[](CountryParty const& key) {
+			return std::make_pair(&key, fixed_point_t::_0);
+		}
+	);
+	vote_distribution.insert(view.begin(), view.end());
+	// TODO - calculate vote distribution
 }
 
 fixed_point_t Pop::get_ideology_support(Ideology const& ideology) const {
-	return ideology_distribution[ideology];
+	return ideology_distribution.at(ideology);
 }
 
 fixed_point_t Pop::get_issue_support(BaseIssue const& issue) const {
@@ -186,11 +203,11 @@ fixed_point_t Pop::get_issue_support(BaseIssue const& issue) const {
 }
 
 fixed_point_t Pop::get_party_support(CountryParty const& party) const {
-	if (vote_distribution.has_keys()) {
-		return vote_distribution[party];
-	} else {
+	const decltype(vote_distribution)::const_iterator it = vote_distribution.find(&party);
+	if (it == vote_distribution.end()) {
 		return 0;
 	}
+	return it.value();
 }
 
 void Pop::update_gamestate(
@@ -275,7 +292,7 @@ void Pop::pay_income_tax(fixed_point_t& income) {
 	if (tax_collector_nullable == nullptr) {
 		return;
 	}
-	const fixed_point_t effective_tax_rate = tax_collector_nullable->get_effective_tax_rate_by_strata()[type->get_strata()];
+	const fixed_point_t effective_tax_rate = tax_collector_nullable->get_effective_tax_rate_by_strata().at(type->get_strata());
 	const fixed_point_t tax = effective_tax_rate * income;
 	tax_collector_nullable->report_pop_income_tax(*type, income, tax);
 	income -= tax;
@@ -462,7 +479,7 @@ void Pop::pop_tick_without_cleanup(
 	}
 
 	PopType const& type_never_null = *type;
-	PopStrataValuesFromProvince const& shared_strata_values = shared_values.get_effects_per_strata()[type_never_null.get_strata()];
+	PopStrataValuesFromProvince const& shared_strata_values = shared_values.get_effects_per_strata().at(type_never_null.get_strata());
 	PopsDefines const& defines = shared_values.get_defines();
 	const fixed_point_t base_needs_scalar = (
 		fixed_point_t::_1 + 2 * consciousness / defines.get_pdef_base_con()

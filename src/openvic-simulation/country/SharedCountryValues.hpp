@@ -1,8 +1,8 @@
 #pragma once
 
 #include "openvic-simulation/pop/PopNeedsMacro.hpp"
-#include "openvic-simulation/pop/PopType.hpp"
 #include "openvic-simulation/types/IndexedFlatMap.hpp"
+#include "openvic-simulation/types/IndexedFlatMapMacro.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
 #include "openvic-simulation/utility/Getters.hpp"
 
@@ -11,6 +11,7 @@ namespace OpenVic {
 	struct GoodInstanceManager;
 	struct ModifierEffectCache;
 	struct PopsDefines;
+	struct PopType;
 
 	struct SharedPopTypeValues {
 	private:
@@ -35,7 +36,7 @@ namespace OpenVic {
 		ModifierEffectCache const& PROPERTY(modifier_effect_cache);
 		CountryDefines const& PROPERTY(country_defines);
 		PopsDefines const& pop_defines;
-		IndexedFlatMap<PopType, SharedPopTypeValues> PROPERTY(shared_pop_type_values);
+		IndexedFlatMap_PROPERTY(PopType, SharedPopTypeValues, shared_pop_type_values);
 
 	public:
 		SharedCountryValues(
@@ -45,12 +46,11 @@ namespace OpenVic {
 			decltype(shared_pop_type_values)::keys_span_type pop_type_keys
 		);
 		SharedCountryValues(SharedCountryValues&&) = default;
-
-		constexpr SharedPopTypeValues const& get_shared_pop_type_values(PopType const& pop_type) const {
-			return shared_pop_type_values.at(pop_type);
-		}
+		SharedPopTypeValues const& get_shared_pop_type_values(PopType const& pop_type) const;
 		void update_costs(GoodInstanceManager const& good_instance_manager);
 	};
 }
 
 #undef DO_FOR_ALL_NEED_CATEGORIES
+#undef IndexedFlatMap_PROPERTY
+#undef IndexedFlatMap_PROPERTY_ACCESS

@@ -13,7 +13,7 @@
 
 #include "openvic-simulation/types/Colour.hpp"
 #include "openvic-simulation/types/Date.hpp"
-#include "openvic-simulation/types/IndexedMap.hpp"
+#include "openvic-simulation/types/IndexedFlatMap.hpp"
 #include "openvic-simulation/types/OrderedContainers.hpp"
 #include "openvic-simulation/types/TextFormat.hpp"
 #include "openvic-simulation/types/Vector.hpp"
@@ -692,14 +692,14 @@ using namespace std::string_view_literals;
 
 		template<typename Key, typename Value>
 		Callback<Value> auto map_callback(
-			IndexedMap<Key, Value>& map, Key const* key, bool warn = false
+			IndexedFlatMap<Key, Value>& map, Key const* key, bool warn = false
 		) {
 			return [&map, key, warn](Value value) -> bool {
 				if (key == nullptr) {
 					Logger::error("Null key in map_callback");
 					return false;
 				}
-				typename IndexedMap<Key, Value>::value_ref_type map_value = map[*key];
+				Value& map_value = map.at(*key);
 				bool ret = true;
 				if (map_value != Value {}) {
 					Logger::warn_or_error(warn, "Duplicate map entry with key: \"", key, "\"");

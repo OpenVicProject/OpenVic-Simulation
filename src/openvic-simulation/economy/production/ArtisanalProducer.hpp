@@ -1,6 +1,6 @@
 #pragma once
 
-#include "openvic-simulation/types/IndexedMap.hpp"
+#include "openvic-simulation/types/IndexedFlatMap.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPointMap.hpp"
 #include "openvic-simulation/utility/Getters.hpp"
@@ -34,7 +34,7 @@ namespace OpenVic {
 		void artisan_tick(
 			Pop& pop,
 			const fixed_point_t max_cost_multiplier,
-			IndexedMap<GoodDefinition, char>& reusable_goods_mask,
+			IndexedFlatMap<GoodDefinition, char>& reusable_goods_mask,
 			memory::vector<fixed_point_t>& pop_max_quantity_to_buy_per_good,
 			memory::vector<fixed_point_t>& pop_money_to_spend_per_good,
 			memory::vector<fixed_point_t>& reusable_map_0,

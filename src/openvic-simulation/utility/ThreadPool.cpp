@@ -1,5 +1,6 @@
 #include "ThreadPool.hpp"
 
+#include "openvic-simulation/country/CountryInstance.hpp"
 #include "openvic-simulation/economy/GoodInstance.hpp"
 #include "openvic-simulation/economy/trading/GoodMarket.hpp"
 #include "openvic-simulation/map/ProvinceInstance.hpp"
@@ -16,7 +17,7 @@ void ThreadPool::loop_until_cancelled(
 	utility::forwardable_span<GoodInstance> goods_chunk,
 	utility::forwardable_span<ProvinceInstance> provinces_chunk
 ) {
-	IndexedMap<CountryInstance, fixed_point_t> reusable_country_map_0 { country_keys },
+	IndexedFlatMap<CountryInstance, fixed_point_t> reusable_country_map_0 { country_keys },
 		reusable_country_map_1 { country_keys };
 	static constexpr size_t VECTOR_COUNT = std::max(
 		GoodMarket::VECTORS_FOR_EXECUTE_ORDERS,

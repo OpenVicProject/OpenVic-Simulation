@@ -200,7 +200,7 @@ bool ProductionTypeManager::add_production_type(
 	);
 
 	if (ret && (template_type == RGO)) {
-		ProductionType const*& current_rgo_pt = good_to_rgo_production_type[*output_good];
+		ProductionType const*& current_rgo_pt = good_to_rgo_production_type.at(*output_good);
 		if (current_rgo_pt == nullptr || (
 			(is_farm && !is_mine)
 			&& (!current_rgo_pt->_is_farm || current_rgo_pt->_is_mine)
@@ -291,7 +291,7 @@ bool ProductionTypeManager::load_production_types_file(
 	)(parser.get_file_node());
 
 	/* Pass #3: actually load production types */
-	good_to_rgo_production_type.set_keys(good_definition_manager.get_good_definitions());
+	good_to_rgo_production_type = std::move(decltype(good_to_rgo_production_type){good_definition_manager.get_good_definitions()});
 
 	reserve_more_production_types(expected_types);
 	ret &= expect_dictionary(

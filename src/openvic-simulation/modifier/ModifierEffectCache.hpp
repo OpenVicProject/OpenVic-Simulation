@@ -1,7 +1,8 @@
 #pragma once
 
 #include "openvic-simulation/military/UnitType.hpp"
-#include "openvic-simulation/types/IndexedMap.hpp"
+#include "openvic-simulation/types/IndexedFlatMap.hpp"
+#include "openvic-simulation/types/IndexedFlatMapMacro.hpp"
 #include "openvic-simulation/utility/Getters.hpp"
 
 namespace OpenVic {
@@ -221,7 +222,7 @@ namespace OpenVic {
 		};
 
 	private:
-		IndexedMap<BuildingType, building_type_effects_t> PROPERTY(building_type_effects);
+		IndexedFlatMap_PROPERTY(BuildingType, building_type_effects_t, building_type_effects);
 
 		/* GoodDefinition Effects */
 	public:
@@ -245,7 +246,7 @@ namespace OpenVic {
 		};
 
 	private:
-		IndexedMap<GoodDefinition, good_effects_t> PROPERTY(good_effects);
+		IndexedFlatMap_PROPERTY(GoodDefinition, good_effects_t, good_effects);
 
 		/* UnitType Effects */
 	public:
@@ -296,9 +297,9 @@ namespace OpenVic {
 
 	private:
 		regiment_type_effects_t PROPERTY(army_base_effects);
-		IndexedMap<RegimentType, regiment_type_effects_t> PROPERTY(regiment_type_effects);
+		IndexedFlatMap_PROPERTY(RegimentType, regiment_type_effects_t, regiment_type_effects);
 		ship_type_effects_t PROPERTY(navy_base_effects);
-		IndexedMap<ShipType, ship_type_effects_t> PROPERTY(ship_type_effects);
+		IndexedFlatMap_PROPERTY(ShipType, ship_type_effects_t, ship_type_effects);
 
 		/* Unit terrain Effects */
 	public:
@@ -316,11 +317,11 @@ namespace OpenVic {
 		};
 
 	private:
-		IndexedMap<TerrainType, unit_terrain_effects_t> PROPERTY(unit_terrain_effects);
+		IndexedFlatMap_PROPERTY(TerrainType, unit_terrain_effects_t, unit_terrain_effects);
 
 		/* Rebel Effects */
 		ModifierEffect const* PROPERTY(rebel_org_gain_all, nullptr);
-		IndexedMap<RebelType, ModifierEffect const*> PROPERTY(rebel_org_gain_effects);
+		IndexedFlatMap_PROPERTY(RebelType, ModifierEffect const*, rebel_org_gain_effects);
 
 		/* Pop Effects */
 	public:
@@ -339,10 +340,10 @@ namespace OpenVic {
 		};
 
 	private:
-		IndexedMap<Strata, strata_effects_t> PROPERTY(strata_effects);
+		IndexedFlatMap_PROPERTY(Strata, strata_effects_t, strata_effects);
 
 		/* Technology Effects */
-		IndexedMap<TechnologyFolder, ModifierEffect const*> PROPERTY(research_bonus_effects);
+		IndexedFlatMap_PROPERTY(TechnologyFolder, ModifierEffect const*, research_bonus_effects);
 
 		ModifierEffectCache();
 
@@ -350,3 +351,5 @@ namespace OpenVic {
 		ModifierEffectCache(ModifierEffectCache&&) = default;
 	};
 }
+#undef IndexedFlatMap_PROPERTY
+#undef IndexedFlatMap_PROPERTY_ACCESS

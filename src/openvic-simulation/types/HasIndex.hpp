@@ -21,6 +21,7 @@ namespace OpenVic {
 		HasIndex(HasIndex&&) = default;
 		HasIndex& operator=(HasIndex const&) = delete;
 		HasIndex& operator=(HasIndex&&) = delete;
+
 		constexpr bool operator==(HasIndex const& rhs) const {
 			return index == rhs.index;
 		}

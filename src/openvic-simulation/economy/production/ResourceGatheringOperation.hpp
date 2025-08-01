@@ -2,7 +2,8 @@
 
 #include "openvic-simulation/economy/production/Employee.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
-#include "openvic-simulation/types/IndexedMap.hpp"
+#include "openvic-simulation/types/IndexedFlatMap.hpp"
+#include "openvic-simulation/types/IndexedFlatMapMacro.hpp"
 #include "openvic-simulation/types/PopSize.hpp"
 #include "openvic-simulation/utility/Getters.hpp"
 #include "openvic-simulation/utility/Containers.hpp"
@@ -35,7 +36,7 @@ namespace OpenVic {
 		pop_size_t PROPERTY(total_paid_employees_count_cache, 0);
 		fixed_point_t PROPERTY(total_owner_income_cache);
 		fixed_point_t PROPERTY(total_employee_income_cache);
-		IndexedMap<PopType, pop_size_t> PROPERTY(employee_count_per_type_cache);
+		IndexedFlatMap_PROPERTY(PopType, pop_size_t, employee_count_per_type_cache);
 
 		fixed_point_t calculate_size_modifier() const;
 		void hire();
@@ -69,3 +70,5 @@ namespace OpenVic {
 		void rgo_tick(memory::vector<fixed_point_t>& reusable_vector);
 	};
 }
+#undef IndexedFlatMap_PROPERTY
+#undef IndexedFlatMap_PROPERTY_ACCESS
