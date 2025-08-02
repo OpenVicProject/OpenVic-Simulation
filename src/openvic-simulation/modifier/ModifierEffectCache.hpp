@@ -1,8 +1,8 @@
 #pragma once
 
-#include "openvic-simulation/military/UnitType.hpp"
-#include "openvic-simulation/types/IndexedFlatMap.hpp"
+#include "openvic-simulation/types/IndexedFlatMap.hpp" //for macro
 #include "openvic-simulation/types/IndexedFlatMapMacro.hpp"
+#include "openvic-simulation/types/UnitBranchType.hpp"
 #include "openvic-simulation/utility/Getters.hpp"
 
 namespace OpenVic {
@@ -344,8 +344,7 @@ namespace OpenVic {
 
 		/* Technology Effects */
 		IndexedFlatMap_PROPERTY(TechnologyFolder, ModifierEffect const*, research_bonus_effects);
-
-		ModifierEffectCache();
+		ModifierEffectCache() {}
 
 	public:
 		ModifierEffectCache(ModifierEffectCache&&) = default;

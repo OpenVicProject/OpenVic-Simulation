@@ -1,4 +1,4 @@
-#include <concepts>
+#include <concepts> //used in lambda
 #include <cstddef>
 #include <cstdint>
 #include <ranges>
@@ -34,6 +34,7 @@
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
 #include "openvic-simulation/types/IndexedFlatMap.hpp"
 #include "openvic-simulation/types/OrderedContainers.hpp"
+#include "openvic-simulation/types/OrderedContainersMath.hpp"
 #include "openvic-simulation/utility/Containers.hpp"
 #include "openvic-simulation/utility/Logger.hpp"
 #include "openvic-simulation/utility/Utility.hpp"
@@ -48,7 +49,7 @@ PopBase::PopBase(
 
 Pop::Pop(
 	PopBase const& pop_base,
-	decltype(ideology_distribution)::keys_span_type ideology_keys,
+	decltype(supporter_equivalents_by_ideology)::keys_span_type ideology_keys,
 	MarketInstance& new_market_instance,
 	ArtisanalProducerFactoryPattern& artisanal_producer_factory_pattern
 )
@@ -59,7 +60,7 @@ Pop::Pop(
 			? artisanal_producer_factory_pattern.CreateNewArtisanalProducer()
 			: nullptr
 	},
-	ideology_distribution { ideology_keys } {
+	supporter_equivalents_by_ideology { ideology_keys } {
 		reserve_needs_fulfilled_goods();
 	}
 
@@ -110,29 +111,29 @@ void Pop::setup_pop_test_values(IssueManager const& issue_manager) {
 	};
 
 	/* All entries equally weighted for testing. */
-	ideology_distribution.fill(0);
-	for (Ideology const& ideology : ideology_distribution.get_keys()) {
-		test_weight_indexed(ideology_distribution, ideology, 1, 5);
+	supporter_equivalents_by_ideology.fill(0);
+	for (Ideology const& ideology : supporter_equivalents_by_ideology.get_keys()) {
+		test_weight_indexed(supporter_equivalents_by_ideology, ideology, 1, 5);
 	}
-	ideology_distribution.rescale(size);
+	supporter_equivalents_by_ideology.rescale(size);
 
-	issue_distribution.clear();
+	supporter_equivalents_by_issue.clear();
 	for (BaseIssue const& issue : issue_manager.get_party_policies()) {
-		test_weight_ordered(issue_distribution, issue, 3, 6);
+		test_weight_ordered(supporter_equivalents_by_issue, issue, 3, 6);
 	}
 	for (Reform const& reform : issue_manager.get_reforms()) {
 		if (!reform.get_reform_group().is_uncivilised()) {
-			test_weight_ordered(issue_distribution, reform, 3, 6);
+			test_weight_ordered(supporter_equivalents_by_issue, reform, 3, 6);
 		}
 	}
-	rescale_fixed_point_map(issue_distribution, size);
+	rescale_fixed_point_map(supporter_equivalents_by_issue, size);
 
-	if (!vote_distribution.empty()) {
-		for (auto& [party, value] : vote_distribution) {
-			vote_distribution[party] = 0;
-			test_weight_ordered(vote_distribution, party, 4, 10);
+	if (!vote_equivalents_by_party.empty()) {
+		for (auto& [party, value] : vote_equivalents_by_party) {
+			vote_equivalents_by_party[party] = 0;
+			test_weight_ordered(vote_equivalents_by_party, party, 4, 10);
 		}
-		rescale_fixed_point_map(vote_distribution, size);
+		rescale_fixed_point_map(vote_equivalents_by_party, size);
 	}
 
 	/* Returns a fixed point between 0 and max. */
@@ -171,7 +172,7 @@ void Pop::set_location(ProvinceInstance& new_location) {
 }
 
 void Pop::update_location_based_attributes() {
-	vote_distribution.clear();
+	vote_equivalents_by_party.clear();
 	if (location == nullptr) {
 		return;
 	}
@@ -184,27 +185,27 @@ void Pop::update_location_based_attributes() {
 			return std::make_pair(&key, fixed_point_t::_0);
 		}
 	);
-	vote_distribution.insert(view.begin(), view.end());
+	vote_equivalents_by_party.insert(view.begin(), view.end());
 	// TODO - calculate vote distribution
 }
 
-fixed_point_t Pop::get_ideology_support(Ideology const& ideology) const {
-	return ideology_distribution.at(ideology);
+fixed_point_t Pop::get_supporter_equivalents_by_ideology(Ideology const& ideology) const {
+	return supporter_equivalents_by_ideology.at(ideology);
 }
 
-fixed_point_t Pop::get_issue_support(BaseIssue const& issue) const {
-	const decltype(issue_distribution)::const_iterator it = issue_distribution.find(&issue);
+fixed_point_t Pop::get_supporter_equivalents_by_issue(BaseIssue const& issue) const {
+	const decltype(supporter_equivalents_by_issue)::const_iterator it = supporter_equivalents_by_issue.find(&issue);
 
-	if (it != issue_distribution.end()) {
+	if (it != supporter_equivalents_by_issue.end()) {
 		return it->second;
 	} else {
 		return 0;
 	}
 }
 
-fixed_point_t Pop::get_party_support(CountryParty const& party) const {
-	const decltype(vote_distribution)::const_iterator it = vote_distribution.find(&party);
-	if (it == vote_distribution.end()) {
+fixed_point_t Pop::get_vote_equivalents_by_party(CountryParty const& party) const {
+	const decltype(vote_equivalents_by_party)::const_iterator it = vote_equivalents_by_party.find(&party);
+	if (it == vote_equivalents_by_party.end()) {
 		return 0;
 	}
 	return it.value();
@@ -292,7 +293,7 @@ void Pop::pay_income_tax(fixed_point_t& income) {
 	if (tax_collector_nullable == nullptr) {
 		return;
 	}
-	const fixed_point_t effective_tax_rate = tax_collector_nullable->get_effective_tax_rate_by_strata().at(type->get_strata());
+	const fixed_point_t effective_tax_rate = tax_collector_nullable->get_effective_tax_rate_by_strata(type->get_strata());
 	const fixed_point_t tax = effective_tax_rate * income;
 	tax_collector_nullable->report_pop_income_tax(*type, income, tax);
 	income -= tax;
@@ -479,7 +480,7 @@ void Pop::pop_tick_without_cleanup(
 	}
 
 	PopType const& type_never_null = *type;
-	PopStrataValuesFromProvince const& shared_strata_values = shared_values.get_effects_per_strata().at(type_never_null.get_strata());
+	PopStrataValuesFromProvince const& shared_strata_values = shared_values.get_effects_by_strata(type_never_null.get_strata());
 	PopsDefines const& defines = shared_values.get_defines();
 	const fixed_point_t base_needs_scalar = (
 		fixed_point_t::_1 + 2 * consciousness / defines.get_pdef_base_con()

@@ -25,15 +25,6 @@ namespace OpenVic {
 	}
 
 	template<typename T>
-	constexpr fixed_point_map_t<T>& operator+=(fixed_point_map_t<T>& lhs, fixed_point_map_t<T> const& rhs) {
-		for (auto const& [key, value] : rhs) {
-			lhs[key] += value;
-		}
-
-		return lhs;
-	}
-
-	template<typename T>
 	constexpr fixed_point_map_t<T>& fixed_point_map_mul_add(
 		fixed_point_map_t<T>& lhs, fixed_point_map_t<T> const& rhs, fixed_point_t factor
 	) {
@@ -56,15 +47,6 @@ namespace OpenVic {
 	}
 
 	template<typename T>
-	constexpr fixed_point_map_t<T>& operator*=(fixed_point_map_t<T>& lhs, fixed_point_t rhs) {
-		for (auto [key, value] : mutable_iterator(lhs)) {
-			value *= rhs;
-		}
-
-		return lhs;
-	}
-
-	template<typename T>
 	constexpr fixed_point_map_t<T> operator*(fixed_point_map_t<T> const& lhs, fixed_point_t rhs) {
 		fixed_point_map_t<T> result = lhs;
 
@@ -76,15 +58,6 @@ namespace OpenVic {
 	template<typename T>
 	constexpr fixed_point_map_t<T> operator*(fixed_point_t lhs, fixed_point_map_t<T> const& rhs) {
 		return rhs * lhs;
-	}
-
-	template<typename T>
-	constexpr fixed_point_map_t<T>& operator/=(fixed_point_map_t<T>& lhs, fixed_point_t rhs) {
-		for (auto [key, value] : mutable_iterator(lhs)) {
-			value /= rhs;
-		}
-
-		return lhs;
 	}
 
 	template<typename T>
@@ -123,17 +96,6 @@ namespace OpenVic {
 	}
 
 	template<typename T>
-	constexpr fixed_point_t get_total(fixed_point_map_t<T> const& map) {
-		fixed_point_t total = 0;
-
-		for (auto const& [key, value] : map) {
-			total += value;
-		}
-
-		return total;
-	}
-
-	template<typename T>
 	constexpr void normalise_fixed_point_map(fixed_point_map_t<T>& map) {
 		const fixed_point_t total = get_total(map);
 
@@ -152,46 +114,5 @@ namespace OpenVic {
 				value /= total;
 			}
 		}
-	}
-
-	template<typename T>
-	constexpr fixed_point_map_const_iterator_t<T> get_largest_item(fixed_point_map_t<T> const& map) {
-		constexpr auto pred =
-			[](fixed_point_map_value_t<T> const& lhs, fixed_point_map_value_t<T> const& rhs) -> bool {
-				return lhs.second < rhs.second;
-			};
-
-		return std::max_element(map.begin(), map.end(), pred);
-	}
-
-	/* This function includes a key comparator to choose between entries with equal values. */
-	template<typename T>
-	constexpr fixed_point_map_const_iterator_t<T> get_largest_item_tie_break(
-		fixed_point_map_t<T> const& map, const auto key_pred
-	) {
-		constexpr auto pred =
-			[key_pred](fixed_point_map_value_t<T> const& lhs, fixed_point_map_value_t<T> const& rhs) -> bool {
-				return lhs.second < rhs.second || (lhs.second == rhs.second && key_pred(lhs.first, rhs.first));
-			};
-
-		return std::max_element(map.begin(), map.end(), pred);
-	}
-
-	template<typename T>
-	constexpr std::pair<fixed_point_map_const_iterator_t<T>, fixed_point_map_const_iterator_t<T>> get_largest_two_items(
-		fixed_point_map_t<T> const& map
-	) {
-		fixed_point_map_const_iterator_t<T> largest = map.end(), second_largest = map.end();
-
-		for (fixed_point_map_const_iterator_t<T> it = map.begin(); it != map.end(); ++it) {
-			if (largest == map.end() || it->second > largest->second) {
-				second_largest = largest;
-				largest = it;
-			} else if (second_largest == map.end() || it->second > second_largest->second) {
-				second_largest = it;
-			}
-		}
-
-		return std::make_pair(std::move(largest), std::move(second_largest));
 	}
 }

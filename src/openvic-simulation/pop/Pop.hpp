@@ -96,6 +96,8 @@ namespace OpenVic {
 		memory::unique_ptr<ArtisanalProducer> artisanal_producer_nullable;
 		fixed_point_t cash_allocated_for_artisanal_spending;
 		fixed_point_t artisanal_produce_left_to_sell;
+		pop_size_t employed = 0;
+
 		ProvinceInstance* PROPERTY_PTR(location, nullptr);
 		MarketInstance& PROPERTY(market_instance);
 
@@ -116,12 +118,16 @@ namespace OpenVic {
 		// All of these should have a total size equal to the pop size, allowing the distributions from different pops to be
 		// added together with automatic weighting based on their relative sizes. Similarly, the province, state and country
 		// equivalents of these distributions will have a total size equal to their total population size.
-		IndexedFlatMap_PROPERTY(Ideology, fixed_point_t, ideology_distribution);
-		fixed_point_map_t<BaseIssue const*> PROPERTY(issue_distribution);
-		fixed_point_map_t<CountryParty const*> PROPERTY(vote_distribution);
-
-		pop_size_t employed = 0;
+		IndexedFlatMap_PROPERTY(Ideology, fixed_point_t, supporter_equivalents_by_ideology);
+		fixed_point_map_t<BaseIssue const*> PROPERTY(supporter_equivalents_by_issue);
+		fixed_point_map_t<CountryParty const*> PROPERTY(vote_equivalents_by_party);
+	
 	public:
+		// The values returned by these functions are scaled by pop size, so they must be divided by pop size to get
+		// the support as a proportion of 1.0
+		fixed_point_t get_supporter_equivalents_by_issue(BaseIssue const& issue) const;
+		fixed_point_t get_vote_equivalents_by_party(CountryParty const& party) const;
+
 		static constexpr pop_size_t size_denominator = 200000;
 		static constexpr size_t VECTORS_FOR_POP_TICK = 5;
 
@@ -155,7 +161,7 @@ namespace OpenVic {
 
 		Pop(
 			PopBase const& pop_base,
-			decltype(ideology_distribution)::keys_span_type ideology_keys,
+			decltype(supporter_equivalents_by_ideology)::keys_span_type ideology_keys,
 			MarketInstance& new_market_instance,
 			ArtisanalProducerFactoryPattern& artisanal_producer_factory_pattern
 		);
@@ -193,12 +199,6 @@ namespace OpenVic {
 
 		void set_location(ProvinceInstance& new_location);
 		void update_location_based_attributes();
-
-		// The values returned by these functions are scaled by pop size, so they must be divided by pop size to get
-		// the support as a proportion of 1.0
-		fixed_point_t get_ideology_support(Ideology const& ideology) const;
-		fixed_point_t get_issue_support(BaseIssue const& issue) const;
-		fixed_point_t get_party_support(CountryParty const& party) const;
 
 		void update_gamestate(
 			DefineManager const& define_manager, CountryInstance const* owner,

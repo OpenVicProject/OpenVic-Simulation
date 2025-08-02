@@ -38,7 +38,7 @@ namespace OpenVic {
 		std::optional<Religion const*> PROPERTY(religion);
 		std::optional<CountryParty const*> PROPERTY(ruling_party);
 		std::optional<Date> PROPERTY(last_election);
-		IndexedFlatMap_PROPERTY(Ideology, fixed_point_t, upper_house);
+		IndexedFlatMap_PROPERTY(Ideology, fixed_point_t, upper_house_proportion_by_ideology);
 		std::optional<ProvinceDefinition const*> PROPERTY(capital);
 		std::optional<GovernmentType const*> PROPERTY(government_type);
 		std::optional<fixed_point_t> PROPERTY(plurality);
@@ -60,13 +60,13 @@ namespace OpenVic {
 		// True for set, false for clear
 		string_map_t<bool> PROPERTY(country_flags);
 		string_map_t<bool> PROPERTY(global_flags);
-		IndexedFlatMap_PROPERTY(GovernmentType, GovernmentType const*, government_flag_overrides);
+		IndexedFlatMap_PROPERTY(GovernmentType, GovernmentType const*, flag_overrides_by_government_type);
 		ordered_set<Decision const*> PROPERTY(decisions);
 
 	public:
 		CountryHistoryEntry(
-			CountryDefinition const& new_country, Date new_date, decltype(upper_house)::keys_span_type ideology_keys,
-			decltype(government_flag_overrides)::keys_span_type government_type_keys
+			CountryDefinition const& new_country, Date new_date, decltype(upper_house_proportion_by_ideology)::keys_span_type ideology_keys,
+			decltype(flag_overrides_by_government_type)::keys_span_type government_type_keys
 		);
 	};
 
@@ -79,8 +79,8 @@ namespace OpenVic {
 
 	private:
 		CountryDefinition const& PROPERTY(country);
-		decltype(CountryHistoryEntry::upper_house)::keys_span_type PROPERTY(ideology_keys);
-		decltype(CountryHistoryEntry::government_flag_overrides)::keys_span_type PROPERTY(government_type_keys);
+		decltype(CountryHistoryEntry::upper_house_proportion_by_ideology)::keys_span_type PROPERTY(ideology_keys);
+		decltype(CountryHistoryEntry::flag_overrides_by_government_type)::keys_span_type PROPERTY(government_type_keys);
 
 	protected:
 		CountryHistoryMap(

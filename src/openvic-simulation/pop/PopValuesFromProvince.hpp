@@ -28,7 +28,7 @@ namespace OpenVic {
 	struct PopValuesFromProvince {
 	private:
 		PopsDefines const& PROPERTY(defines);
-		IndexedFlatMap_PROPERTY(Strata, PopStrataValuesFromProvince, effects_per_strata);
+		IndexedFlatMap_PROPERTY(Strata, PopStrataValuesFromProvince, effects_by_strata);
 	public:
 	 	//public field as mutable references are required.
 		IndexedFlatMap<GoodDefinition, char> reusable_goods_mask;
@@ -36,7 +36,7 @@ namespace OpenVic {
 		PopValuesFromProvince(
 			PopsDefines const& new_defines,
 			decltype(reusable_goods_mask)::keys_span_type good_keys,
-			decltype(effects_per_strata)::keys_span_type strata_keys
+			decltype(effects_by_strata)::keys_span_type strata_keys
 		);
 		PopValuesFromProvince(PopValuesFromProvince&&) = default;
 

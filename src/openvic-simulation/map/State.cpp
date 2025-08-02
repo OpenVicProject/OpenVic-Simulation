@@ -9,6 +9,7 @@
 #include "openvic-simulation/politics/Ideology.hpp"
 #include "openvic-simulation/pop/PopType.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
+#include "openvic-simulation/types/OrderedContainersMath.hpp"
 #include "openvic-simulation/utility/StringUtils.hpp"
 #include "openvic-simulation/utility/Containers.hpp"
 #include "openvic-simulation/utility/ErrorMacros.hpp"
@@ -22,8 +23,8 @@ State::State(
 	memory::vector<ProvinceInstance*>&& new_provinces,
 	colony_status_t new_colony_status,
 	decltype(population_by_strata)::keys_span_type strata_keys,
-	decltype(pop_type_distribution)::keys_span_type pop_type_keys,
-	decltype(ideology_distribution)::keys_span_type ideology_keys
+	decltype(population_by_type)::keys_span_type pop_type_keys,
+	decltype(supporter_equivalents_by_ideology)::keys_span_type ideology_keys
 ) : state_set { new_state_set },
 	owner { new_owner },
 	capital { new_capital },
@@ -34,18 +35,18 @@ State::State(
 	life_needs_fulfilled_by_strata { strata_keys },
 	everyday_needs_fulfilled_by_strata { strata_keys },
 	luxury_needs_fulfilled_by_strata { strata_keys },
-	pop_type_distribution { pop_type_keys },
-	pop_type_unemployed_count { pop_type_keys },
+	population_by_type { pop_type_keys },
+	unemployed_pops_by_type { pop_type_keys },
 	pops_cache_by_type { pop_type_keys },
-	ideology_distribution { ideology_keys } {
+	supporter_equivalents_by_ideology { ideology_keys } {
 		if (new_owner != nullptr) {
-			vote_distribution.clear();
+			vote_equivalents_by_party.clear();
 			auto view = new_owner->get_country_definition()->get_parties() | std::views::transform(
 				[](CountryParty const& key) {
 					return std::make_pair(&key, fixed_point_t::_0);
 				}
 			);
-			vote_distribution.insert(view.begin(), view.end());
+			vote_equivalents_by_party.insert(view.begin(), view.end());
 		}
 	}
 
@@ -56,67 +57,65 @@ memory::string State::get_identifier() const {
 	);
 }
 
-pop_size_t State::get_pop_type_proportion(PopType const& pop_type) const {
-	return pop_type_distribution.at(pop_type);
+memory::vector<Pop*> const& State::get_pops_cache_by_type(PopType const& pop_type) const {
+	return pops_cache_by_type.at(pop_type);
 }
-pop_size_t State::get_pop_type_unemployed(PopType const& pop_type) const {
-	return pop_type_unemployed_count.at(pop_type);
+pop_size_t State::get_population_by_type(PopType const& pop_type) const {
+	return population_by_type.at(pop_type);
 }
-fixed_point_t State::get_ideology_support(Ideology const& ideology) const {
-	return ideology_distribution.at(ideology);
+pop_size_t State::get_unemployed_pops_by_type(PopType const& pop_type) const {
+	return unemployed_pops_by_type.at(pop_type);
 }
+fixed_point_t State::get_supporter_equivalents_by_ideology(Ideology const& ideology) const {
+	return supporter_equivalents_by_ideology.at(ideology);
+}
+fixed_point_t State::get_supporter_equivalents_by_issue(BaseIssue const& issue) const {
+	const decltype(supporter_equivalents_by_issue)::const_iterator it = supporter_equivalents_by_issue.find(&issue);
 
-fixed_point_t State::get_issue_support(BaseIssue const& issue) const {
-	const decltype(issue_distribution)::const_iterator it = issue_distribution.find(&issue);
-
-	if (it != issue_distribution.end()) {
+	if (it != supporter_equivalents_by_issue.end()) {
 		return it->second;
 	} else {
 		return 0;
 	}
 }
-
-fixed_point_t State::get_party_support(CountryParty const& party) const {
-	const decltype(vote_distribution)::const_iterator it = vote_distribution.find(&party);
-	if (it == vote_distribution.end()) {
+fixed_point_t State::get_vote_equivalents_by_party(CountryParty const& party) const {
+	const decltype(vote_equivalents_by_party)::const_iterator it = vote_equivalents_by_party.find(&party);
+	if (it == vote_equivalents_by_party.end()) {
 		return 0;
 	}
 	return it.value();
 }
+fixed_point_t State::get_population_by_culture(Culture const& culture) const {
+	const decltype(population_by_culture)::const_iterator it = population_by_culture.find(&culture);
 
-fixed_point_t State::get_culture_proportion(Culture const& culture) const {
-	const decltype(culture_distribution)::const_iterator it = culture_distribution.find(&culture);
-
-	if (it != culture_distribution.end()) {
+	if (it != population_by_culture.end()) {
 		return it->second;
 	} else {
 		return 0;
 	}
 }
+fixed_point_t State::get_population_by_religion(Religion const& religion) const {
+	const decltype(population_by_religion)::const_iterator it = population_by_religion.find(&religion);
 
-fixed_point_t State::get_religion_proportion(Religion const& religion) const {
-	const decltype(religion_distribution)::const_iterator it = religion_distribution.find(&religion);
-
-	if (it != religion_distribution.end()) {
+	if (it != population_by_religion.end()) {
 		return it->second;
 	} else {
 		return 0;
 	}
 }
-
-pop_size_t State::get_strata_population(Strata const& strata) const {
+pop_size_t State::get_population_by_strata(Strata const& strata) const {
 	return population_by_strata.at(strata);
 }
-fixed_point_t State::get_strata_militancy(Strata const& strata) const {
+fixed_point_t State::get_militancy_by_strata(Strata const& strata) const {
 	return militancy_by_strata.at(strata);
 }
-fixed_point_t State::get_strata_life_needs_fulfilled(Strata const& strata) const {
+fixed_point_t State::get_life_needs_fulfilled_by_strata(Strata const& strata) const {
 	return life_needs_fulfilled_by_strata.at(strata);
 }
-fixed_point_t State::get_strata_everyday_needs_fulfilled(Strata const& strata) const {
+fixed_point_t State::get_everyday_needs_fulfilled_by_strata(Strata const& strata) const {
 	return everyday_needs_fulfilled_by_strata.at(strata);
 }
-fixed_point_t State::get_strata_luxury_needs_fulfilled(Strata const& strata) const {
+fixed_point_t State::get_luxury_needs_fulfilled_by_strata(Strata const& strata) const {
 	return luxury_needs_fulfilled_by_strata.at(strata);
 }
 
@@ -133,13 +132,13 @@ void State::update_gamestate() {
 	everyday_needs_fulfilled_by_strata.fill(0);
 	luxury_needs_fulfilled_by_strata.fill(0);
 
-	pop_type_distribution.fill(0);
-	pop_type_unemployed_count.fill(0);
-	ideology_distribution.fill(0);
-	issue_distribution.clear();
-	vote_distribution.clear();
-	culture_distribution.clear();
-	religion_distribution.clear();
+	population_by_type.fill(0);
+	unemployed_pops_by_type.fill(0);
+	supporter_equivalents_by_ideology.fill(0);
+	supporter_equivalents_by_issue.clear();
+	vote_equivalents_by_party.clear();
+	population_by_culture.clear();
+	population_by_religion.clear();
 
 	for (memory::vector<Pop*>& pops_cache : pops_cache_by_type.get_values()) {
 		pops_cache.clear();
@@ -169,13 +168,13 @@ void State::update_gamestate() {
 			province->get_luxury_needs_fulfilled_by_strata(), province->get_population_by_strata()
 		);
 
-		pop_type_distribution += province->get_pop_type_distribution();
-		pop_type_unemployed_count += province->get_pop_type_unemployed_count();
-		ideology_distribution += province->get_ideology_distribution();
-		issue_distribution += province->get_issue_distribution();
-		vote_distribution += province->get_vote_distribution();
-		culture_distribution += province->get_culture_distribution();
-		religion_distribution += province->get_religion_distribution();
+		population_by_type += province->get_population_by_type();
+		unemployed_pops_by_type += province->get_unemployed_pops_by_type();
+		supporter_equivalents_by_ideology += province->get_supporter_equivalents_by_ideology();
+		supporter_equivalents_by_issue += province->get_supporter_equivalents_by_issue();
+		vote_equivalents_by_party += province->get_vote_equivalents_by_party();
+		population_by_culture += province->get_population_by_culture();
+		population_by_religion += province->get_population_by_religion();
 
 		for (auto const& [pop_type, province_pops_of_type] : province->get_pops_cache_by_type()) {
 			memory::vector<Pop*>& state_pops_of_type = pops_cache_by_type.at(pop_type);
@@ -259,8 +258,8 @@ void StateSet::update_gamestate() {
 bool StateManager::add_state_set(
 	MapInstance& map_instance, Region const& region,
 	decltype(State::population_by_strata)::keys_span_type strata_keys,
-	decltype(State::pop_type_distribution)::keys_span_type pop_type_keys,
-	decltype(State::ideology_distribution)::keys_span_type ideology_keys
+	decltype(State::population_by_type)::keys_span_type pop_type_keys,
+	decltype(State::supporter_equivalents_by_ideology)::keys_span_type ideology_keys
 ) {
 	OV_ERR_FAIL_COND_V_MSG(region.get_is_meta(), false, memory::fmt::format("Cannot use meta region \"{}\" as state template!", region.get_identifier()));
 	OV_ERR_FAIL_COND_V_MSG(region.empty(), false, memory::fmt::format("Cannot use empty region \"{}\" as state template!", region.get_identifier()));
@@ -321,8 +320,8 @@ bool StateManager::add_state_set(
 bool StateManager::generate_states(
 	MapInstance& map_instance,
 	decltype(State::population_by_strata)::keys_span_type strata_keys,
-	decltype(State::pop_type_distribution)::keys_span_type pop_type_keys,
-	decltype(State::ideology_distribution)::keys_span_type ideology_keys
+	decltype(State::population_by_type)::keys_span_type pop_type_keys,
+	decltype(State::supporter_equivalents_by_ideology)::keys_span_type ideology_keys
 ) {
 	MapDefinition const& map_definition = map_instance.get_map_definition();
 

@@ -4,7 +4,7 @@
 
 #include "openvic-simulation/scripts/ConditionScript.hpp"
 #include "openvic-simulation/types/IdentifierRegistry.hpp"
-#include "openvic-simulation/types/IndexedFlatMap.hpp"  //for property
+#include "openvic-simulation/types/IndexedFlatMap.hpp"  //for macro
 #include "openvic-simulation/types/IndexedFlatMapMacro.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
 #include "openvic-simulation/types/PopSize.hpp"
