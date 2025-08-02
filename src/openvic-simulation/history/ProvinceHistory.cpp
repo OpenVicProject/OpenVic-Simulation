@@ -110,7 +110,7 @@ bool ProvinceHistoryMap::_load_history_entry(
 		"trade_goods", ZERO_OR_ONE,
 			good_definition_manager.expect_good_definition_identifier_or_string(
 				[&definition_manager, &entry](GoodDefinition const& rgo_good) ->bool {
-					entry.rgo_production_type_nullable = definition_manager.get_economy_manager().get_production_type_manager().get_good_to_rgo_production_type()[rgo_good];
+					entry.rgo_production_type_nullable = definition_manager.get_economy_manager().get_production_type_manager().get_good_to_rgo_production_type().at(rgo_good);
 					if (entry.rgo_production_type_nullable == nullptr) {
 						Logger::error(entry.province.get_identifier(), " has trade_goods ", rgo_good.get_identifier(), " which has no rgo production type defined.");
 						//we expect the good to have an rgo production type

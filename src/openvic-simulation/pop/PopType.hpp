@@ -41,8 +41,8 @@ namespace OpenVic {
 		};
 
 		using rebel_units_t = fixed_point_map_t<UnitType const*>;
-		using poptype_weight_map_t = IndexedMap<PopType, ConditionalWeightFactorAdd>;
-		using ideology_weight_map_t = IndexedMap<Ideology, ConditionalWeightFactorMul>;
+		using poptype_weight_map_t = IndexedFlatMap<PopType, ConditionalWeightFactorAdd>;
+		using ideology_weight_map_t = IndexedFlatMap<Ideology, ConditionalWeightFactorMul>;
 		using issue_weight_map_t = ordered_map<BaseIssue const*, ConditionalWeightFactorMul>;
 
 	private:

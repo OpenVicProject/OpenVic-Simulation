@@ -29,7 +29,7 @@ ArtisanalProducer::ArtisanalProducer(
 void ArtisanalProducer::artisan_tick(
 	Pop& pop,
 	const fixed_point_t max_cost_multiplier,
-	IndexedMap<GoodDefinition, char>& reusable_goods_mask,
+	IndexedFlatMap<GoodDefinition, char>& reusable_goods_mask,
 	memory::vector<fixed_point_t>& pop_max_quantity_to_buy_per_good,
 	memory::vector<fixed_point_t>& pop_money_to_spend_per_good,
 	memory::vector<fixed_point_t>& reusable_map_0,
@@ -76,7 +76,7 @@ void ArtisanalProducer::artisan_tick(
 		}
 
 		max_price_per_input[i] = pop.get_market_instance().get_max_next_price(input_good);
-		reusable_goods_mask[input_good] = true;
+		reusable_goods_mask.set(input_good, true);
 		distinct_goods_to_buy++;
 	}
 
@@ -128,7 +128,7 @@ void ArtisanalProducer::artisan_tick(
 			);
 
 			if (good_stockpile >= desired_quantity) {
-				reusable_goods_mask[input_good] = false;
+				reusable_goods_mask.set(input_good, false);
 				distinct_goods_to_buy--;
 			}
 		}
@@ -150,7 +150,7 @@ void ArtisanalProducer::artisan_tick(
 			fixed_point_t total_stockpile_value = 0;
 			for (auto it = input_goods.begin(); it < input_goods.end(); it++) {
 				GoodDefinition const& input_good = *it.key();
-				if (!reusable_goods_mask[input_good]) {
+				if (!reusable_goods_mask.at(input_good)) {
 					continue;
 				}
 				const ptrdiff_t i = it - input_goods.begin();
@@ -175,7 +175,7 @@ void ArtisanalProducer::artisan_tick(
 
 			for (auto it = input_goods.begin(); it < input_goods.end(); it++) {
 				GoodDefinition const& input_good = *it.key();
-				char& mask = reusable_goods_mask[input_good];
+				char& mask = reusable_goods_mask.at(input_good);
 				if (!mask) {
 					continue;
 				}
@@ -199,7 +199,7 @@ void ArtisanalProducer::artisan_tick(
 		//Place buy orders for each input
 		for (auto it = input_goods.begin(); it < input_goods.end(); it++) {
 			GoodDefinition const& input_good = *it.key();
-			if (!reusable_goods_mask[input_good]) {
+			if (!reusable_goods_mask.at(input_good)) {
 				continue;
 			}
 			const ptrdiff_t index_in_input_goods = it - input_goods.begin();
@@ -233,7 +233,7 @@ void ArtisanalProducer::artisan_tick(
 	pop.report_artisanal_produce(produce_left_to_sell);
 	reusable_map_0.clear();
 	reusable_map_1.clear();
-	reusable_goods_mask.clear();
+	reusable_goods_mask.fill(0);
 }
 
 fixed_point_t ArtisanalProducer::add_to_stockpile(GoodDefinition const& good, const fixed_point_t quantity) {

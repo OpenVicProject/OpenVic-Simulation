@@ -37,8 +37,17 @@ State::State(
 	pop_type_distribution { pop_type_keys },
 	pop_type_unemployed_count { pop_type_keys },
 	pops_cache_by_type { pop_type_keys },
-	ideology_distribution { ideology_keys },
-	vote_distribution { new_owner != nullptr ? new_owner->get_country_definition()->get_parties() : decltype(vote_distribution)::keys_span_type {} } {}
+	ideology_distribution { ideology_keys } {
+		if (new_owner != nullptr) {
+			vote_distribution.clear();
+			auto view = new_owner->get_country_definition()->get_parties() | std::views::transform(
+				[](CountryParty const& key) {
+					return std::make_pair(&key, fixed_point_t::_0);
+				}
+			);
+			vote_distribution.insert(view.begin(), view.end());
+		}
+	}
 
 memory::string State::get_identifier() const {
 	return StringUtils::append_string_views(
@@ -48,13 +57,13 @@ memory::string State::get_identifier() const {
 }
 
 pop_size_t State::get_pop_type_proportion(PopType const& pop_type) const {
-	return pop_type_distribution[pop_type];
+	return pop_type_distribution.at(pop_type);
 }
 pop_size_t State::get_pop_type_unemployed(PopType const& pop_type) const {
-	return pop_type_unemployed_count[pop_type];
+	return pop_type_unemployed_count.at(pop_type);
 }
 fixed_point_t State::get_ideology_support(Ideology const& ideology) const {
-	return ideology_distribution[ideology];
+	return ideology_distribution.at(ideology);
 }
 
 fixed_point_t State::get_issue_support(BaseIssue const& issue) const {
@@ -68,11 +77,11 @@ fixed_point_t State::get_issue_support(BaseIssue const& issue) const {
 }
 
 fixed_point_t State::get_party_support(CountryParty const& party) const {
-	if (vote_distribution.has_keys()) {
-		return vote_distribution[party];
-	} else {
+	const decltype(vote_distribution)::const_iterator it = vote_distribution.find(&party);
+	if (it == vote_distribution.end()) {
 		return 0;
 	}
+	return it.value();
 }
 
 fixed_point_t State::get_culture_proportion(Culture const& culture) const {
@@ -96,19 +105,19 @@ fixed_point_t State::get_religion_proportion(Religion const& religion) const {
 }
 
 pop_size_t State::get_strata_population(Strata const& strata) const {
-	return population_by_strata[strata];
+	return population_by_strata.at(strata);
 }
 fixed_point_t State::get_strata_militancy(Strata const& strata) const {
-	return militancy_by_strata[strata];
+	return militancy_by_strata.at(strata);
 }
 fixed_point_t State::get_strata_life_needs_fulfilled(Strata const& strata) const {
-	return life_needs_fulfilled_by_strata[strata];
+	return life_needs_fulfilled_by_strata.at(strata);
 }
 fixed_point_t State::get_strata_everyday_needs_fulfilled(Strata const& strata) const {
-	return everyday_needs_fulfilled_by_strata[strata];
+	return everyday_needs_fulfilled_by_strata.at(strata);
 }
 fixed_point_t State::get_strata_luxury_needs_fulfilled(Strata const& strata) const {
-	return luxury_needs_fulfilled_by_strata[strata];
+	return luxury_needs_fulfilled_by_strata.at(strata);
 }
 
 void State::update_gamestate() {
@@ -118,15 +127,15 @@ void State::update_gamestate() {
 	average_consciousness = 0;
 	average_militancy = 0;
 
-	population_by_strata.clear();
-	militancy_by_strata.clear();
-	life_needs_fulfilled_by_strata.clear();
-	everyday_needs_fulfilled_by_strata.clear();
-	luxury_needs_fulfilled_by_strata.clear();
+	population_by_strata.fill(0);
+	militancy_by_strata.fill(0);
+	life_needs_fulfilled_by_strata.fill(0);
+	everyday_needs_fulfilled_by_strata.fill(0);
+	luxury_needs_fulfilled_by_strata.fill(0);
 
-	pop_type_distribution.clear();
-	pop_type_unemployed_count.clear();
-	ideology_distribution.clear();
+	pop_type_distribution.fill(0);
+	pop_type_unemployed_count.fill(0);
+	ideology_distribution.fill(0);
 	issue_distribution.clear();
 	vote_distribution.clear();
 	culture_distribution.clear();
@@ -169,7 +178,7 @@ void State::update_gamestate() {
 		religion_distribution += province->get_religion_distribution();
 
 		for (auto const& [pop_type, province_pops_of_type] : province->get_pops_cache_by_type()) {
-			memory::vector<Pop*>& state_pops_of_type = pops_cache_by_type[pop_type];
+			memory::vector<Pop*>& state_pops_of_type = pops_cache_by_type.at(pop_type);
 			state_pops_of_type.insert(
 				state_pops_of_type.end(),
 				province_pops_of_type.begin(),
@@ -185,10 +194,28 @@ void State::update_gamestate() {
 		average_consciousness /= total_population;
 		average_militancy /= total_population;
 
-		militancy_by_strata /= population_by_strata;
-		life_needs_fulfilled_by_strata /= population_by_strata;
-		everyday_needs_fulfilled_by_strata /= population_by_strata;
-		luxury_needs_fulfilled_by_strata /= population_by_strata;
+		static const fu2::function<fixed_point_t&(fixed_point_t&, pop_size_t const&)> handle_div_by_zero = [](
+			fixed_point_t& lhs,
+			pop_size_t const& rhs
+		)->fixed_point_t& {
+			return lhs = fixed_point_t::_0;
+		};
+		militancy_by_strata.divide_assign_handle_zero(
+			population_by_strata,
+			handle_div_by_zero
+		);
+		life_needs_fulfilled_by_strata.divide_assign_handle_zero(
+			population_by_strata,
+			handle_div_by_zero
+		);
+		everyday_needs_fulfilled_by_strata.divide_assign_handle_zero(
+			population_by_strata,
+			handle_div_by_zero
+		);
+		luxury_needs_fulfilled_by_strata.divide_assign_handle_zero(
+			population_by_strata,
+			handle_div_by_zero
+		);
 	}
 
 	// TODO - use actual values when State has factory data

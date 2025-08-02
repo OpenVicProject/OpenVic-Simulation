@@ -4,7 +4,8 @@
 
 #include "openvic-simulation/history/HistoryMap.hpp"
 #include "openvic-simulation/types/Date.hpp"
-#include "openvic-simulation/types/IndexedMap.hpp"
+#include "openvic-simulation/types/IndexedFlatMap.hpp"
+#include "openvic-simulation/types/IndexedFlatMapMacro.hpp"
 #include "openvic-simulation/types/OrderedContainers.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPointMap.hpp"
 #include "openvic-simulation/types/TechnologyUnlockLevel.hpp"
@@ -37,7 +38,7 @@ namespace OpenVic {
 		std::optional<Religion const*> PROPERTY(religion);
 		std::optional<CountryParty const*> PROPERTY(ruling_party);
 		std::optional<Date> PROPERTY(last_election);
-		IndexedMap<Ideology, fixed_point_t> PROPERTY(upper_house);
+		IndexedFlatMap_PROPERTY(Ideology, fixed_point_t, upper_house);
 		std::optional<ProvinceDefinition const*> PROPERTY(capital);
 		std::optional<GovernmentType const*> PROPERTY(government_type);
 		std::optional<fixed_point_t> PROPERTY(plurality);
@@ -59,7 +60,7 @@ namespace OpenVic {
 		// True for set, false for clear
 		string_map_t<bool> PROPERTY(country_flags);
 		string_map_t<bool> PROPERTY(global_flags);
-		IndexedMap<GovernmentType, GovernmentType const*> PROPERTY(government_flag_overrides);
+		IndexedFlatMap_PROPERTY(GovernmentType, GovernmentType const*, government_flag_overrides);
 		ordered_set<Decision const*> PROPERTY(decisions);
 
 	public:
@@ -114,5 +115,6 @@ namespace OpenVic {
 			decltype(CountryHistoryMap::government_type_keys) government_type_keys, ast::NodeCPtr root
 		);
 	};
-
 }
+#undef IndexedFlatMap_PROPERTY
+#undef IndexedFlatMap_PROPERTY_ACCESS

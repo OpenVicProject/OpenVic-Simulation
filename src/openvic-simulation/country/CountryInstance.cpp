@@ -21,7 +21,7 @@
 #include "openvic-simulation/research/Invention.hpp"
 #include "openvic-simulation/research/Technology.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
-#include "openvic-simulation/types/IndexedMap.hpp"
+#include "openvic-simulation/types/IndexedFlatMap.hpp"
 #include "openvic-simulation/types/PopSize.hpp"
 #include "openvic-simulation/types/SliderValue.hpp"
 #include "openvic-simulation/utility/Containers.hpp"
@@ -178,7 +178,13 @@ fixed_point_t CountryInstance::get_tariff_efficiency() const {
 }
 
 void CountryInstance::update_country_definition_based_attributes() {
-	vote_distribution.set_keys(country_definition->get_parties());
+	vote_distribution.clear();
+	auto view = country_definition->get_parties() | std::views::transform(
+		[](CountryParty const& key) {
+			return std::make_pair(&key, fixed_point_t::_0);
+		}
+	);
+	vote_distribution.insert(view.begin(), view.end());
 }
 
 bool CountryInstance::exists() const {
@@ -345,13 +351,13 @@ void CountryInstance::change_script_variable(memory::string const& variable_name
 }
 
 pop_size_t CountryInstance::get_pop_type_proportion(PopType const& pop_type) const {
-	return pop_type_distribution[pop_type];
+	return pop_type_distribution.at(pop_type);
 }
 pop_size_t CountryInstance::get_pop_type_unemployed(PopType const& pop_type) const {
-	return pop_type_unemployed_count[pop_type];
+	return pop_type_unemployed_count.at(pop_type);
 }
 fixed_point_t CountryInstance::get_ideology_support(Ideology const& ideology) const {
-	return ideology_distribution[ideology];
+	return ideology_distribution.at(ideology);
 }
 fixed_point_t CountryInstance::get_issue_support(BaseIssue const& issue) const {
 	const decltype(issue_distribution)::const_iterator it = issue_distribution.find(&issue);
@@ -363,11 +369,11 @@ fixed_point_t CountryInstance::get_issue_support(BaseIssue const& issue) const {
 	}
 }
 fixed_point_t CountryInstance::get_party_support(CountryParty const& party) const {
-	if (vote_distribution.has_keys()) {
-		return vote_distribution[party];
-	} else {
+	const decltype(vote_distribution)::const_iterator it = vote_distribution.find(&party);
+	if (it == vote_distribution.end()) {
 		return 0;
 	}
+	return it.value();
 }
 fixed_point_t CountryInstance::get_culture_proportion(Culture const& culture) const {
 	const decltype(culture_distribution)::const_iterator it = culture_distribution.find(&culture);
@@ -388,19 +394,19 @@ fixed_point_t CountryInstance::get_religion_proportion(Religion const& religion)
 	}
 }
 pop_size_t CountryInstance::get_strata_population(Strata const& strata) const {
-	return population_by_strata[strata];
+	return population_by_strata.at(strata);
 }
 fixed_point_t CountryInstance::get_strata_militancy(Strata const& strata) const {
-	return militancy_by_strata[strata];
+	return militancy_by_strata.at(strata);
 }
 fixed_point_t CountryInstance::get_strata_life_needs_fulfilled(Strata const& strata) const {
-	return life_needs_fulfilled_by_strata[strata];
+	return life_needs_fulfilled_by_strata.at(strata);
 }
 fixed_point_t CountryInstance::get_strata_everyday_needs_fulfilled(Strata const& strata) const {
-	return everyday_needs_fulfilled_by_strata[strata];
+	return everyday_needs_fulfilled_by_strata.at(strata);
 }
 fixed_point_t CountryInstance::get_strata_luxury_needs_fulfilled(Strata const& strata) const {
-	return luxury_needs_fulfilled_by_strata[strata];
+	return luxury_needs_fulfilled_by_strata.at(strata);
 }
 fixed_point_t CountryInstance::get_strata_taxable_income(Strata const& strata) const {
 	fixed_point_t running_total = 0;
@@ -448,7 +454,7 @@ ADD_AND_REMOVE(accepted_culture)
 
 bool CountryInstance::set_upper_house(Ideology const* ideology, fixed_point_t popularity) {
 	if (ideology != nullptr) {
-		upper_house[*ideology] = popularity;
+		upper_house.set(*ideology, popularity);
 		return true;
 	} else {
 		Logger::error("Trying to set null ideology in upper house of ", get_identifier());
@@ -468,7 +474,7 @@ bool CountryInstance::set_ruling_party(CountryParty const& new_ruling_party) {
 
 bool CountryInstance::add_reform(Reform const& new_reform) {
 	ReformGroup const& reform_group = new_reform.get_reform_group();
-	decltype(reforms)::value_ref_type reform = reforms[reform_group];
+	Reform const*& reform = reforms.at(reform_group);
 
 	if (reform != &new_reform) {
 		if (reform_group.get_is_administrative()) {
@@ -490,7 +496,7 @@ bool CountryInstance::add_reform(Reform const& new_reform) {
 }
 
 void CountryInstance::set_strata_tax_rate_slider_value(Strata const& strata, const fixed_point_t new_value) {
-	tax_rate_slider_value_by_strata[strata].set_value(new_value);
+	tax_rate_slider_value_by_strata.at(strata).set_value(new_value);
 	_update_effective_tax_rate_by_strata(strata);
 }
 
@@ -652,10 +658,8 @@ bool CountryInstance::has_leader_with_name(std::string_view name) const {
 
 template<unit_branch_t Branch>
 bool CountryInstance::modify_unit_type_unlock(UnitTypeBranched<Branch> const& unit_type, technology_unlock_level_t unlock_level_change) {
-	IndexedMap<UnitTypeBranched<Branch>, technology_unlock_level_t>& unlocked_unit_types = get_unit_type_unlock_levels<Branch>();
-
-	typename IndexedMap<UnitTypeBranched<Branch>, technology_unlock_level_t>::value_ref_type unlock_level =
-		unlocked_unit_types[unit_type];
+	IndexedFlatMap<UnitTypeBranched<Branch>, technology_unlock_level_t>& unlocked_unit_types = get_unit_type_unlock_levels<Branch>();
+	technology_unlock_level_t& unlock_level = unlocked_unit_types.at(unit_type);
 
 	// This catches subtracting below 0 or adding above the int types maximum value
 	if (unlock_level + unlock_level_change < 0) {
@@ -702,9 +706,9 @@ bool CountryInstance::is_unit_type_unlocked(UnitType const& unit_type) const {
 
 	switch (unit_type.get_branch()) {
 	case LAND:
-		return regiment_type_unlock_levels[static_cast<UnitTypeBranched<LAND> const&>(unit_type)] > 0;
+		return regiment_type_unlock_levels.at(static_cast<UnitTypeBranched<LAND> const&>(unit_type)) > 0;
 	case NAVAL:
-		return ship_type_unlock_levels[static_cast<UnitTypeBranched<NAVAL> const&>(unit_type)] > 0;
+		return ship_type_unlock_levels.at(static_cast<UnitTypeBranched<NAVAL> const&>(unit_type)) > 0;
 	default:
 		Logger::error(
 			"Attempted to check if unit type \"", unit_type.get_identifier(), "\" with invalid branch ",
@@ -717,7 +721,7 @@ bool CountryInstance::is_unit_type_unlocked(UnitType const& unit_type) const {
 bool CountryInstance::modify_building_type_unlock(
 	BuildingType const& building_type, technology_unlock_level_t unlock_level_change, GoodInstanceManager& good_instance_manager
 ) {
-	decltype(building_type_unlock_levels)::value_ref_type unlock_level = building_type_unlock_levels[building_type];
+	technology_unlock_level_t& unlock_level = building_type_unlock_levels.at(building_type);
 
 	// This catches subtracting below 0 or adding above the int types maximum value
 	if (unlock_level + unlock_level_change < 0) {
@@ -744,11 +748,11 @@ bool CountryInstance::unlock_building_type(BuildingType const& building_type, Go
 }
 
 bool CountryInstance::is_building_type_unlocked(BuildingType const& building_type) const {
-	return building_type_unlock_levels[building_type] > 0;
+	return building_type_unlock_levels.at(building_type) > 0;
 }
 
 bool CountryInstance::modify_crime_unlock(Crime const& crime, technology_unlock_level_t unlock_level_change) {
-	decltype(crime_unlock_levels)::value_ref_type unlock_level = crime_unlock_levels[crime];
+	technology_unlock_level_t& unlock_level = crime_unlock_levels.at(crime);
 
 	// This catches subtracting below 0 or adding above the int types maximum value
 	if (unlock_level + unlock_level_change < 0) {
@@ -771,7 +775,7 @@ bool CountryInstance::unlock_crime(Crime const& crime) {
 }
 
 bool CountryInstance::is_crime_unlocked(Crime const& crime) const {
-	return crime_unlock_levels[crime] > 0;
+	return crime_unlock_levels.at(crime) > 0;
 }
 
 bool CountryInstance::modify_gas_attack_unlock(technology_unlock_level_t unlock_level_change) {
@@ -869,7 +873,7 @@ unit_variant_t CountryInstance::get_max_unlocked_unit_variant() const {
 bool CountryInstance::modify_technology_unlock(
 	Technology const& technology, technology_unlock_level_t unlock_level_change, GoodInstanceManager& good_instance_manager
 ) {
-	decltype(technology_unlock_levels)::value_ref_type unlock_level = technology_unlock_levels[technology];
+	technology_unlock_level_t& unlock_level = technology_unlock_levels.at(technology);
 
 	// This catches subtracting below 0 or adding above the int types maximum value
 	if (unlock_level + unlock_level_change < 0) {
@@ -904,7 +908,7 @@ bool CountryInstance::modify_technology_unlock(
 bool CountryInstance::set_technology_unlock_level(
 	Technology const& technology, technology_unlock_level_t unlock_level, GoodInstanceManager& good_instance_manager
 ) {
-	const technology_unlock_level_t unlock_level_change = unlock_level - technology_unlock_levels[technology];
+	const technology_unlock_level_t unlock_level_change = unlock_level - technology_unlock_levels.at(technology);
 	return unlock_level_change != 0 ? modify_technology_unlock(technology, unlock_level_change, good_instance_manager) : true;
 }
 
@@ -913,13 +917,13 @@ bool CountryInstance::unlock_technology(Technology const& technology, GoodInstan
 }
 
 bool CountryInstance::is_technology_unlocked(Technology const& technology) const {
-	return technology_unlock_levels[technology] > 0;
+	return technology_unlock_levels.at(technology) > 0;
 }
 
 bool CountryInstance::modify_invention_unlock(
 	Invention const& invention, technology_unlock_level_t unlock_level_change, GoodInstanceManager& good_instance_manager
 ) {
-	decltype(invention_unlock_levels)::value_ref_type unlock_level = invention_unlock_levels[invention];
+	technology_unlock_level_t& unlock_level = invention_unlock_levels.at(invention);
 
 	// This catches subtracting below 0 or adding above the int types maximum value
 	if (unlock_level + unlock_level_change < 0) {
@@ -968,7 +972,7 @@ bool CountryInstance::modify_invention_unlock(
 bool CountryInstance::set_invention_unlock_level(
 	Invention const& invention, technology_unlock_level_t unlock_level, GoodInstanceManager& good_instance_manager
 ) {
-	const technology_unlock_level_t unlock_level_change = unlock_level - invention_unlock_levels[invention];
+	const technology_unlock_level_t unlock_level_change = unlock_level - invention_unlock_levels.at(invention);
 	return unlock_level_change != 0 ? modify_invention_unlock(invention, unlock_level_change, good_instance_manager) : true;
 }
 
@@ -977,7 +981,7 @@ bool CountryInstance::unlock_invention(Invention const& invention, GoodInstanceM
 }
 
 bool CountryInstance::is_invention_unlocked(Invention const& invention) const {
-	return invention_unlock_levels[invention] > 0;
+	return invention_unlock_levels.at(invention) > 0;
 }
 
 bool CountryInstance::is_primary_culture(Culture const& culture) const {
@@ -997,7 +1001,7 @@ fixed_point_t CountryInstance::calculate_research_cost(
 ) const {
 	// TODO - what if research bonus is -100%? Divide by 0 -> infinite cost?
 	return technology.get_cost() / (fixed_point_t::_1 + get_modifier_effect_value(
-		*modifier_effect_cache.get_research_bonus_effects()[technology.get_area().get_folder()]
+		*modifier_effect_cache.get_research_bonus_effects().at(technology.get_area().get_folder())
 	));
 }
 
@@ -1067,7 +1071,7 @@ bool CountryInstance::apply_history_to_country(CountryHistoryEntry const& entry,
 		ret &= set_ruling_party(**entry.get_ruling_party());
 	}
 	set_optional(last_election, entry.get_last_election());
-	ret &= upper_house.copy(entry.get_upper_house());
+	upper_house.copy_values_from(entry.get_upper_house());
 	if (entry.get_capital()) {
 		capital = &instance_manager.get_map_instance().get_province_instance_from_definition(**entry.get_capital());
 	}
@@ -1083,7 +1087,7 @@ bool CountryInstance::apply_history_to_country(CountryHistoryEntry const& entry,
 	}
 	set_optional(tech_school, entry.get_tech_school());
 	constexpr auto set_bool_map_to_indexed_map =
-		[]<typename T>(IndexedMap<T, bool>& target, ordered_map<T const*, bool> source) {
+		[]<typename T>(IndexedFlatMap<T, bool>& target, ordered_map<T const*, bool> source) {
 			for (auto const& [key, value] : source) {
 				target[*key] = value;
 			}
@@ -1106,7 +1110,7 @@ bool CountryInstance::apply_history_to_country(CountryHistoryEntry const& entry,
 
 	ret &= apply_flag_map(entry.get_country_flags(), true);
 	ret &= instance_manager.get_global_flags().apply_flag_map(entry.get_global_flags(), true);
-	government_flag_overrides.write_non_empty_values(entry.get_government_flag_overrides());
+	government_flag_overrides.copy_values_from(entry.get_government_flag_overrides());
 	for (Decision const* decision : entry.get_decisions()) {
 		// TODO - take decision
 	}
@@ -1213,7 +1217,7 @@ void CountryInstance::_update_budget() {
 			continue;
 		}
 
-		IndexedMap<PopType, pop_size_t> const& state_pop_type_distribution = state.get_pop_type_distribution();
+		IndexedFlatMap<PopType, pop_size_t> const& state_pop_type_distribution = state.get_pop_type_distribution();
 
 		for (auto const& [pop_type, size] : state_pop_type_distribution) {
 			if (pop_type.get_is_administrator()) {
@@ -1264,7 +1268,7 @@ void CountryInstance::_update_budget() {
 		projected_education_spending_unscaled_by_slider += size * calculate_education_salary_base(pop_type_values, corruption_cost_multiplier);
 		projected_military_spending_unscaled_by_slider += size * calculate_military_salary_base(pop_type_values, corruption_cost_multiplier);
 		projected_pensions_spending_unscaled_by_slider += size * calculate_pensions_base(modifier_effect_cache, pop_type_values);
-		projected_unemployment_subsidies_spending_unscaled_by_slider += pop_type_unemployed_count[pop_type]
+		projected_unemployment_subsidies_spending_unscaled_by_slider += pop_type_unemployed_count.at(pop_type)
 			* calculate_unemployment_subsidies_base(modifier_effect_cache, pop_type_values);
 	}
 
@@ -1279,8 +1283,8 @@ void CountryInstance::_update_budget() {
 }
 
 void CountryInstance::_update_effective_tax_rate_by_strata(Strata const& strata) {
-	const fixed_point_t tax_rate = tax_rate_slider_value_by_strata[strata].get_value();
-	effective_tax_rate_by_strata[strata] = tax_rate * tax_efficiency;
+	const fixed_point_t tax_rate = tax_rate_slider_value_by_strata.at(strata).get_value();
+	effective_tax_rate_by_strata.set(strata, tax_rate * tax_efficiency);
 }
 
 fixed_point_t CountryInstance::calculate_pensions_base(
@@ -1354,15 +1358,15 @@ void CountryInstance::_update_population() {
 	national_consciousness = 0;
 	national_militancy = 0;
 
-	population_by_strata.clear();
-	militancy_by_strata.clear();
-	life_needs_fulfilled_by_strata.clear();
-	everyday_needs_fulfilled_by_strata.clear();
-	luxury_needs_fulfilled_by_strata.clear();
+	population_by_strata.fill(fixed_point_t::_0);
+	militancy_by_strata.fill(fixed_point_t::_0);
+	life_needs_fulfilled_by_strata.fill(fixed_point_t::_0);
+	everyday_needs_fulfilled_by_strata.fill(fixed_point_t::_0);
+	luxury_needs_fulfilled_by_strata.fill(fixed_point_t::_0);
 
-	pop_type_distribution.clear();
-	pop_type_unemployed_count.clear();
-	ideology_distribution.clear();
+	pop_type_distribution.fill(fixed_point_t::_0);
+	pop_type_unemployed_count.fill(fixed_point_t::_0);
+	ideology_distribution.fill(fixed_point_t::_0);
 	issue_distribution.clear();
 	vote_distribution.clear();
 	culture_distribution.clear();
@@ -1404,10 +1408,28 @@ void CountryInstance::_update_population() {
 		national_consciousness /= total_population;
 		national_militancy /= total_population;
 
-		militancy_by_strata /= population_by_strata;
-		life_needs_fulfilled_by_strata /= population_by_strata;
-		everyday_needs_fulfilled_by_strata /= population_by_strata;
-		luxury_needs_fulfilled_by_strata /= population_by_strata;
+		static const fu2::function<fixed_point_t&(fixed_point_t&, pop_size_t const&)> handle_div_by_zero = [](
+			fixed_point_t& lhs,
+			pop_size_t const& rhs
+		)->fixed_point_t& {
+			return lhs = fixed_point_t::_0;
+		};
+		militancy_by_strata.divide_assign_handle_zero(
+			population_by_strata,
+			handle_div_by_zero
+		);
+		life_needs_fulfilled_by_strata.divide_assign_handle_zero(
+			population_by_strata,
+			handle_div_by_zero
+		);
+		everyday_needs_fulfilled_by_strata.divide_assign_handle_zero(
+			population_by_strata,
+			handle_div_by_zero
+		);
+		luxury_needs_fulfilled_by_strata.divide_assign_handle_zero(
+			population_by_strata,
+			handle_div_by_zero
+		);
 	}
 
 	daily_research_points = 0;
@@ -1634,7 +1656,7 @@ void CountryInstance::update_modifier_sum(Date today, StaticModifierCache const&
 
 	if (ruling_party != nullptr) {
 		for (PartyPolicy const* party_policy : ruling_party->get_policies().get_values()) {
-			// The ruling party's issues here could be null as they're stored in an IndexedMap which has
+			// The ruling party's issues here could be null as they're stored in an IndexedFlatMap which has
 			// values for every PartyPolicyGroup regardless of whether or not they have a policy set.
 			if (party_policy != nullptr) {
 				modifier_sum.add_modifier(*party_policy);
@@ -1643,7 +1665,7 @@ void CountryInstance::update_modifier_sum(Date today, StaticModifierCache const&
 	}
 
 	for (Reform const* reform : reforms.get_values()) {
-		// The country's reforms here could be null as they're stored in an IndexedMap which has
+		// The country's reforms here could be null as they're stored in an IndexedFlatMap which has
 		// values for every ReformGroup regardless of whether or not they have a reform set.
 		if (reform != nullptr) {
 			modifier_sum.add_modifier(*reform);
@@ -1824,7 +1846,7 @@ void CountryInstance::update_gamestate(InstanceManager& instance_manager) {
 	}
 
 	if (government_type != nullptr) {
-		flag_government_type = government_flag_overrides[*government_type];
+		flag_government_type = government_flag_overrides.at(*government_type);
 
 		if (flag_government_type == nullptr) {
 			flag_government_type = government_type;
@@ -2012,7 +2034,7 @@ void CountryInstance::good_data_t::clear_daily_recorded_data() {
 
 void CountryInstance::report_pop_income_tax(PopType const& pop_type, const fixed_point_t gross_income, const fixed_point_t paid_as_tax) {
 	const std::lock_guard<std::mutex> lock_guard { *taxable_income_mutex };
-	taxable_income_by_pop_type[pop_type] += gross_income;
+	taxable_income_by_pop_type.at(pop_type) += gross_income;
 	cash_stockpile += paid_as_tax;
 }
 
@@ -2153,16 +2175,16 @@ fixed_point_t CountryInstance::apply_tariff(const fixed_point_t money_spent_on_i
 }
 
 CountryInstance::good_data_t& CountryInstance::get_good_data(GoodInstance const& good_instance) {
-	return goods_data[good_instance];
+	return goods_data.at(good_instance);
 }
 CountryInstance::good_data_t const& CountryInstance::get_good_data(GoodInstance const& good_instance) const {
-	return goods_data[good_instance];
+	return goods_data.at(good_instance);
 }
 CountryInstance::good_data_t& CountryInstance::get_good_data(GoodDefinition const& good_definition) {
-	return goods_data[good_definition.get_index()];
+	return goods_data.at_index(good_definition.get_index());
 }
 CountryInstance::good_data_t const& CountryInstance::get_good_data(GoodDefinition const& good_definition) const {
-	return goods_data[good_definition.get_index()];
+	return goods_data.at_index(good_definition.get_index());
 }
 
 void CountryInstanceManager::update_rankings(Date today, DefineManager const& define_manager) {
@@ -2312,11 +2334,11 @@ CountryInstanceManager::CountryInstanceManager(
 	}
 
 CountryInstance& CountryInstanceManager::get_country_instance_from_definition(CountryDefinition const& country) {
-	return *country_definition_to_instance_map[country];
+	return *country_definition_to_instance_map.at(country);
 }
 
 CountryInstance const& CountryInstanceManager::get_country_instance_from_definition(CountryDefinition const& country) const {
-	return *country_definition_to_instance_map[country];
+	return *country_definition_to_instance_map.at(country);
 }
 
 bool CountryInstanceManager::generate_country_instances(
@@ -2371,7 +2393,7 @@ bool CountryInstanceManager::generate_country_instances(
 			CountryInstance& country_instance = get_back_country_instance();
 			country_instance.modifier_sum.set_this_source(&country_instance);
 
-			country_definition_to_instance_map[country_definition] = &country_instance;
+			country_definition_to_instance_map.set(country_definition, &country_instance);
 		} else {
 			ret = false;
 		}

@@ -4,7 +4,9 @@
 
 #include "openvic-simulation/types/ColonyStatus.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
-#include "openvic-simulation/types/IndexedMap.hpp"
+#include "openvic-simulation/types/fixed_point/FixedPointMap.hpp"
+#include "openvic-simulation/types/IndexedFlatMap.hpp"
+#include "openvic-simulation/types/IndexedFlatMapMacro.hpp"
 #include "openvic-simulation/types/PopSize.hpp"
 #include "openvic-simulation/utility/Containers.hpp"
 #include "openvic-simulation/utility/ForwardableSpan.hpp"
@@ -40,18 +42,18 @@ namespace OpenVic {
 		fixed_point_t PROPERTY(average_consciousness);
 		fixed_point_t PROPERTY(average_militancy);
 
-		IndexedMap<Strata, pop_size_t> PROPERTY(population_by_strata);
-		IndexedMap<Strata, fixed_point_t> PROPERTY(militancy_by_strata);
-		IndexedMap<Strata, fixed_point_t> PROPERTY(life_needs_fulfilled_by_strata);
-		IndexedMap<Strata, fixed_point_t> PROPERTY(everyday_needs_fulfilled_by_strata);
-		IndexedMap<Strata, fixed_point_t> PROPERTY(luxury_needs_fulfilled_by_strata);
+		IndexedFlatMap_PROPERTY(Strata, pop_size_t, population_by_strata);
+		IndexedFlatMap_PROPERTY(Strata, fixed_point_t, militancy_by_strata);
+		IndexedFlatMap_PROPERTY(Strata, fixed_point_t, life_needs_fulfilled_by_strata);
+		IndexedFlatMap_PROPERTY(Strata, fixed_point_t, everyday_needs_fulfilled_by_strata);
+		IndexedFlatMap_PROPERTY(Strata, fixed_point_t, luxury_needs_fulfilled_by_strata);
 
-		IndexedMap<PopType, pop_size_t> PROPERTY(pop_type_distribution);
-		IndexedMap<PopType, pop_size_t> PROPERTY(pop_type_unemployed_count);
-		IndexedMap<PopType, memory::vector<Pop*>> PROPERTY(pops_cache_by_type);
-		IndexedMap<Ideology, fixed_point_t> PROPERTY(ideology_distribution);
+		IndexedFlatMap_PROPERTY(PopType, pop_size_t, pop_type_distribution);
+		IndexedFlatMap_PROPERTY(PopType, pop_size_t, pop_type_unemployed_count);
+		IndexedFlatMap<PopType, memory::vector<Pop*>> PROPERTY(pops_cache_by_type);
+		IndexedFlatMap_PROPERTY(Ideology, fixed_point_t, ideology_distribution);
 		fixed_point_map_t<BaseIssue const*> PROPERTY(issue_distribution);
-		IndexedMap<CountryParty, fixed_point_t> PROPERTY(vote_distribution);
+		fixed_point_map_t<CountryParty const*> PROPERTY(vote_distribution);
 		fixed_point_map_t<Culture const*> PROPERTY(culture_distribution);
 		fixed_point_map_t<Religion const*> PROPERTY(religion_distribution);
 
@@ -144,3 +146,5 @@ namespace OpenVic {
 		void update_gamestate();
 	};
 }
+#undef IndexedFlatMap_PROPERTY
+#undef IndexedFlatMap_PROPERTY_ACCESS

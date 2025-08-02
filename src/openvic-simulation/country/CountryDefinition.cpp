@@ -141,13 +141,13 @@ node_callback_t CountryDefinitionManager::load_country_party(
 		std::string_view party_name;
 		Date start_date, end_date;
 		Ideology const* ideology = nullptr;
-		IndexedMap<PartyPolicyGroup, PartyPolicy const*> policies { politics_manager.get_issue_manager().get_party_policy_groups() };
+		IndexedFlatMap<PartyPolicyGroup, PartyPolicy const*> policies { politics_manager.get_issue_manager().get_party_policy_groups() };
 
 		bool ret = expect_dictionary_keys_and_default(
 			[&politics_manager, &policies, &party_name](std::string_view key, ast::NodeCPtr value) -> bool {
 				return politics_manager.get_issue_manager().expect_party_policy_group_str(
 					[&politics_manager, &policies, value, &party_name](PartyPolicyGroup const& party_policy_group) -> bool {
-						PartyPolicy const* policy = policies[party_policy_group];
+						PartyPolicy const*& policy = policies.at(party_policy_group);
 
 						if (policy != nullptr) {
 							Logger::error(

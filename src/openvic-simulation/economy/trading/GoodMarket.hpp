@@ -5,7 +5,7 @@
 #include "openvic-simulation/economy/trading/BuyUpToOrder.hpp"
 #include "openvic-simulation/economy/trading/MarketSellOrder.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
-#include "openvic-simulation/types/IndexedMap.hpp"
+#include "openvic-simulation/types/IndexedFlatMap.hpp"
 #include "openvic-simulation/types/ValueHistory.hpp"
 #include "openvic-simulation/utility/Containers.hpp"
 #include "openvic-simulation/utility/ForwardableSpan.hpp"
@@ -32,8 +32,8 @@ namespace OpenVic {
 
 		void execute_buy_orders(
 			const fixed_point_t new_price,
-			IndexedMap<CountryInstance, fixed_point_t> const& actual_bought_per_country,
-			IndexedMap<CountryInstance, fixed_point_t> const& supply_per_country,
+			IndexedFlatMap<CountryInstance, fixed_point_t> const& actual_bought_per_country,
+			IndexedFlatMap<CountryInstance, fixed_point_t> const& supply_per_country,
 			std::span<const fixed_point_t> quantity_bought_per_order
 		);
 
@@ -63,8 +63,8 @@ namespace OpenVic {
 		//not thread safe
 		static constexpr size_t VECTORS_FOR_EXECUTE_ORDERS = 2;
 		void execute_orders(
-			IndexedMap<CountryInstance, fixed_point_t>& reusable_country_map_0,
-			IndexedMap<CountryInstance, fixed_point_t>& reusable_country_map_1,
+			IndexedFlatMap<CountryInstance, fixed_point_t>& reusable_country_map_0,
+			IndexedFlatMap<CountryInstance, fixed_point_t>& reusable_country_map_1,
 			utility::forwardable_span<
 				memory::vector<fixed_point_t>,
 				VECTORS_FOR_EXECUTE_ORDERS

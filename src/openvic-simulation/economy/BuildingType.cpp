@@ -1,6 +1,7 @@
 #include "BuildingType.hpp"
 
 #include "openvic-simulation/economy/production/ProductionType.hpp"
+#include "openvic-simulation/modifier/ModifierEffectCache.hpp"
 #include "openvic-simulation/modifier/ModifierManager.hpp"
 
 using namespace OpenVic;
@@ -123,13 +124,15 @@ bool BuildingTypeManager::load_buildings_file(
 	lock_building_types();
 
 	auto& building_type_effects = modifier_manager.modifier_effect_cache.building_type_effects;
-	building_type_effects.set_keys(get_building_types());
+	building_type_effects = std::move(
+		decltype(ModifierEffectCache::building_type_effects){get_building_types()}
+	);
 
 	for (BuildingType const& building_type : get_building_types()) {
 		using enum ModifierEffect::format_t;
 		using enum ModifierEffect::target_t;
 
-		ModifierEffectCache::building_type_effects_t& this_building_type_effects = building_type_effects[building_type];
+		ModifierEffectCache::building_type_effects_t& this_building_type_effects = building_type_effects.at(building_type);
 
 		static constexpr std::string_view max_prefix = "max_";
 		static constexpr std::string_view min_prefix = "min_build_";

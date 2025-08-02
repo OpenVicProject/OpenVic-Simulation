@@ -367,7 +367,7 @@ bool PopManager::load_delayed_parse_pop_type_data(
 		const auto [rebel_units, equivalent, promote_to_node, issues_node] = delayed_parse_nodes[index];
 		PopType* pop_type = pop_types.get_item_by_index(index);
 
-		pop_type->promote_to.set_keys(get_pop_types());
+		pop_type->promote_to = std::move(decltype(PopType::promote_to){get_pop_types()});
 
 		if (rebel_units != nullptr && !unit_type_manager.expect_unit_type_decimal_map(
 			move_variable_callback(pop_type->rebel_units)
@@ -477,10 +477,10 @@ bool PopManager::generate_modifiers(ModifierManager& modifier_manager) const {
 
 	static constexpr bool HAS_NO_EFFECT = true;
 
-	IndexedMap<Strata, ModifierEffectCache::strata_effects_t>& strata_effects =
+	IndexedFlatMap<Strata, ModifierEffectCache::strata_effects_t>& strata_effects =
 		modifier_manager.modifier_effect_cache.strata_effects;
 
-	strata_effects.set_keys(get_stratas());
+	strata_effects = std::move(decltype(ModifierEffectCache::strata_effects){get_stratas()});
 
 	bool ret = true;
 
@@ -494,7 +494,7 @@ bool PopManager::generate_modifiers(ModifierManager& modifier_manager) const {
 			);
 		};
 
-		ModifierEffectCache::strata_effects_t& this_strata_effects = strata_effects[strata];
+		ModifierEffectCache::strata_effects_t& this_strata_effects = strata_effects.at(strata);
 
 		strata_modifier(this_strata_effects.income_modifier, "_income_modifier", FORMAT_x100_1DP_PC_POS, HAS_NO_EFFECT);
 		strata_modifier(this_strata_effects.vote, "_vote", FORMAT_x100_1DP_PC_POS);

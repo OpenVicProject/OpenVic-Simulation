@@ -4,6 +4,8 @@
 
 #include "openvic-simulation/scripts/ConditionScript.hpp"
 #include "openvic-simulation/types/IdentifierRegistry.hpp"
+#include "openvic-simulation/types/IndexedFlatMap.hpp"  //for property
+#include "openvic-simulation/types/IndexedFlatMapMacro.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
 #include "openvic-simulation/types/PopSize.hpp"
 #include "openvic-simulation/types/PopSprite.hpp"
@@ -96,7 +98,7 @@ namespace OpenVic {
 	private:
 		IdentifierRegistry<ProductionType> IDENTIFIER_REGISTRY(production_type);
 		pop_sprite_t PROPERTY(rgo_owner_sprite);
-		IndexedMap<GoodDefinition, ProductionType const*> PROPERTY(good_to_rgo_production_type);
+		IndexedFlatMap_PROPERTY(GoodDefinition, ProductionType const*, good_to_rgo_production_type);
 
 		NodeTools::node_callback_t _expect_job(
 			GoodDefinitionManager const& good_definition_manager, PopManager const& pop_manager,
@@ -137,3 +139,5 @@ namespace OpenVic {
 		bool parse_scripts(DefinitionManager const& definition_manager);
 	};
 }
+#undef IndexedFlatMap_PROPERTY
+#undef IndexedFlatMap_PROPERTY_ACCESS

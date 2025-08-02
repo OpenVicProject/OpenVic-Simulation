@@ -4,7 +4,7 @@
 #include "openvic-simulation/economy/GoodInstance.hpp"
 #include "openvic-simulation/pop/PopNeedsMacro.hpp"
 #include "openvic-simulation/pop/PopType.hpp"
-#include "openvic-simulation/types/IndexedMap.hpp"
+#include "openvic-simulation/types/IndexedFlatMap.hpp"
 
 using namespace OpenVic;
 
@@ -18,6 +18,10 @@ SharedCountryValues::SharedCountryValues(
 	pop_defines { new_pop_defines },
 	shared_pop_type_values { pop_type_keys }
 	{}
+
+SharedPopTypeValues const& SharedCountryValues::get_shared_pop_type_values(PopType const& pop_type) const {
+	return shared_pop_type_values.at(pop_type);
+}
 
 void SharedCountryValues::update_costs(GoodInstanceManager const& good_instance_manager) {
 	for (auto [pop_type, value] : shared_pop_type_values) {

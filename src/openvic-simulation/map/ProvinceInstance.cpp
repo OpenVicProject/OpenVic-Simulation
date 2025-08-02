@@ -77,12 +77,16 @@ bool ProvinceInstance::set_owner(CountryInstance* new_owner) {
 
 		owner = new_owner;
 
+		vote_distribution.clear();
 		if (owner != nullptr) {
 			ret &= owner->add_owned_province(*this);
 
-			vote_distribution.set_keys(owner->get_country_definition()->get_parties());
-		} else {
-			vote_distribution.set_keys({});
+			auto view = owner->get_country_definition()->get_parties() | std::views::transform(
+				[](CountryParty const& key) {
+					return std::make_pair(&key, fixed_point_t::_0);
+				}
+			);
+			vote_distribution.insert(view.begin(), view.end());
 		}
 
 		for (Pop& pop : pops) {
@@ -155,13 +159,13 @@ bool ProvinceInstance::remove_core(CountryInstance& core_to_remove, bool warn) {
 }
 
 pop_size_t ProvinceInstance::get_pop_type_proportion(PopType const& pop_type) const {
-	return pop_type_distribution[pop_type];
+	return pop_type_distribution.at(pop_type);
 }
 pop_size_t ProvinceInstance::get_pop_type_unemployed(PopType const& pop_type) const {
-	return pop_type_unemployed_count[pop_type];
+	return pop_type_unemployed_count.at(pop_type);
 }
 fixed_point_t ProvinceInstance::get_ideology_support(Ideology const& ideology) const {
-	return ideology_distribution[ideology];
+	return ideology_distribution.at(ideology);
 }
 
 fixed_point_t ProvinceInstance::get_issue_support(BaseIssue const& issue) const {
@@ -175,11 +179,11 @@ fixed_point_t ProvinceInstance::get_issue_support(BaseIssue const& issue) const 
 }
 
 fixed_point_t ProvinceInstance::get_party_support(CountryParty const& party) const {
-	if (vote_distribution.has_keys()) {
-		return vote_distribution[party];
-	} else {
+	const decltype(vote_distribution)::const_iterator it = vote_distribution.find(&party);
+	if (it == vote_distribution.end()) {
 		return 0;
 	}
+	return it.value();
 }
 
 fixed_point_t ProvinceInstance::get_culture_proportion(Culture const& culture) const {
@@ -203,19 +207,19 @@ fixed_point_t ProvinceInstance::get_religion_proportion(Religion const& religion
 }
 
 pop_size_t ProvinceInstance::get_strata_population(Strata const& strata) const {
-	return population_by_strata[strata];
+	return population_by_strata.at(strata);
 }
 fixed_point_t ProvinceInstance::get_strata_militancy(Strata const& strata) const {
-	return militancy_by_strata[strata];
+	return militancy_by_strata.at(strata);
 }
 fixed_point_t ProvinceInstance::get_strata_life_needs_fulfilled(Strata const& strata) const {
-	return life_needs_fulfilled_by_strata[strata];
+	return life_needs_fulfilled_by_strata.at(strata);
 }
 fixed_point_t ProvinceInstance::get_strata_everyday_needs_fulfilled(Strata const& strata) const {
-	return everyday_needs_fulfilled_by_strata[strata];
+	return everyday_needs_fulfilled_by_strata.at(strata);
 }
 fixed_point_t ProvinceInstance::get_strata_luxury_needs_fulfilled(Strata const& strata) const {
-	return luxury_needs_fulfilled_by_strata[strata];
+	return luxury_needs_fulfilled_by_strata.at(strata);
 }
 
 bool ProvinceInstance::expand_building(size_t building_index) {
@@ -278,15 +282,15 @@ void ProvinceInstance::_update_pops(DefineManager const& define_manager) {
 	average_consciousness = 0;
 	average_militancy = 0;
 
-	population_by_strata.clear();
-	militancy_by_strata.clear();
-	life_needs_fulfilled_by_strata.clear();
-	everyday_needs_fulfilled_by_strata.clear();
-	luxury_needs_fulfilled_by_strata.clear();
+	population_by_strata.fill(0);
+	militancy_by_strata.fill(0);
+	life_needs_fulfilled_by_strata.fill(0);
+	everyday_needs_fulfilled_by_strata.fill(0);
+	luxury_needs_fulfilled_by_strata.fill(0);
 
-	pop_type_distribution.clear();
-	pop_type_unemployed_count.clear();
-	ideology_distribution.clear();
+	pop_type_distribution.fill(0);
+	pop_type_unemployed_count.fill(0);
+	ideology_distribution.fill(0);
 	issue_distribution.clear();
 	vote_distribution.clear();
 	culture_distribution.clear();
@@ -325,15 +329,15 @@ void ProvinceInstance::_update_pops(DefineManager const& define_manager) {
 		PopType const& pop_type = *pop.get_type();
 		Strata const& strata = pop_type.get_strata();
 
-		population_by_strata[strata] += pop_size_s;
-		militancy_by_strata[strata] += pop.get_militancy() * pop_size_f;
-		life_needs_fulfilled_by_strata[strata] += pop.get_life_needs_fulfilled() * pop_size_f;
-		everyday_needs_fulfilled_by_strata[strata] += pop.get_everyday_needs_fulfilled() * pop_size_f;
-		luxury_needs_fulfilled_by_strata[strata] += pop.get_luxury_needs_fulfilled() * pop_size_f;
+		population_by_strata.at(strata) += pop_size_s;
+		militancy_by_strata.at(strata) += pop.get_militancy() * pop_size_f;
+		life_needs_fulfilled_by_strata.at(strata) += pop.get_life_needs_fulfilled() * pop_size_f;
+		everyday_needs_fulfilled_by_strata.at(strata) += pop.get_everyday_needs_fulfilled() * pop_size_f;
+		luxury_needs_fulfilled_by_strata.at(strata) += pop.get_luxury_needs_fulfilled() * pop_size_f;
 
-		pop_type_distribution[pop_type] += pop_size_s;
-		pop_type_unemployed_count[pop_type] += pop.get_unemployed();
-		pops_cache_by_type[pop_type].push_back(&pop);
+		pop_type_distribution.at(pop_type) += pop_size_s;
+		pop_type_unemployed_count.at(pop_type) += pop.get_unemployed();
+		pops_cache_by_type.at(pop_type).push_back(&pop);
 		// Pop ideology, issue and vote distributions are scaled to pop size so we can add them directly
 		ideology_distribution += pop.get_ideology_distribution();
 		issue_distribution += pop.get_issue_distribution();
@@ -353,10 +357,28 @@ void ProvinceInstance::_update_pops(DefineManager const& define_manager) {
 		average_consciousness /= total_population;
 		average_militancy /= total_population;
 
-		militancy_by_strata /= population_by_strata;
-		life_needs_fulfilled_by_strata /= population_by_strata;
-		everyday_needs_fulfilled_by_strata /= population_by_strata;
-		luxury_needs_fulfilled_by_strata /= population_by_strata;
+		static const fu2::function<fixed_point_t&(fixed_point_t&, pop_size_t const&)> handle_div_by_zero = [](
+			fixed_point_t& lhs,
+			pop_size_t const& rhs
+		)->fixed_point_t& {
+			return lhs = fixed_point_t::_0;
+		};
+		militancy_by_strata.divide_assign_handle_zero(
+			population_by_strata,
+			handle_div_by_zero
+		);
+		life_needs_fulfilled_by_strata.divide_assign_handle_zero(
+			population_by_strata,
+			handle_div_by_zero
+		);
+		everyday_needs_fulfilled_by_strata.divide_assign_handle_zero(
+			population_by_strata,
+			handle_div_by_zero
+		);
+		luxury_needs_fulfilled_by_strata.divide_assign_handle_zero(
+			population_by_strata,
+			handle_div_by_zero
+		);
 	}
 }
 

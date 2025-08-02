@@ -244,10 +244,10 @@ bool TechnologyManager::generate_modifiers(ModifierManager& modifier_manager) co
 	using enum ModifierEffect::format_t;
 	using enum ModifierEffect::target_t;
 
-	IndexedMap<TechnologyFolder, ModifierEffect const*>& research_bonus_effects =
+	IndexedFlatMap<TechnologyFolder, ModifierEffect const*>& research_bonus_effects =
 		modifier_manager.modifier_effect_cache.research_bonus_effects;
 
-	research_bonus_effects.set_keys(get_technology_folders());
+	research_bonus_effects = std::move(decltype(ModifierEffectCache::research_bonus_effects){get_technology_folders()});
 
 	bool ret = true;
 
@@ -255,7 +255,7 @@ bool TechnologyManager::generate_modifiers(ModifierManager& modifier_manager) co
 		const memory::string modifier_identifier = StringUtils::append_string_views(folder.get_identifier(), "_research_bonus");
 
 		ret &= modifier_manager.register_base_country_modifier_effect(
-			research_bonus_effects[folder], modifier_identifier, FORMAT_x100_1DP_PC_POS, modifier_identifier
+			research_bonus_effects.at(folder), modifier_identifier, FORMAT_x100_1DP_PC_POS, modifier_identifier
 		);
 	}
 

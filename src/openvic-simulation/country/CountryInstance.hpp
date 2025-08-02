@@ -13,7 +13,7 @@
 #include "openvic-simulation/types/FlagStrings.hpp"
 #include "openvic-simulation/types/HasIndex.hpp"
 #include "openvic-simulation/types/IdentifierRegistry.hpp"
-#include "openvic-simulation/types/IndexedMap.hpp"
+#include "openvic-simulation/types/IndexedFlatMap.hpp"
 #include "openvic-simulation/types/OrderedContainers.hpp"
 #include "openvic-simulation/types/PopSize.hpp"
 #include "openvic-simulation/types/SliderValue.hpp"
@@ -22,6 +22,8 @@
 #include "openvic-simulation/types/UnitVariant.hpp"
 #include "openvic-simulation/utility/Getters.hpp"
 #include "openvic-simulation/utility/Containers.hpp"
+
+#include "openvic-simulation/types/IndexedFlatMapMacro.hpp" //below other imports that undef the macros
 
 namespace OpenVic {
 	struct BaseIssue;
@@ -139,7 +141,7 @@ namespace OpenVic {
 		memory::vector<std::pair<CountryInstance const*, fixed_point_t>> PROPERTY(industrial_power_from_investments);
 		size_t PROPERTY(industrial_rank, 0);
 		fixed_point_map_t<CountryInstance const*> PROPERTY(foreign_investments);
-		IndexedMap<BuildingType, technology_unlock_level_t> PROPERTY(building_type_unlock_levels);
+		IndexedFlatMap_PROPERTY(BuildingType, technology_unlock_level_t, building_type_unlock_levels);
 		// TODO - total amount of each good produced
 
 		/* Budget */
@@ -147,10 +149,10 @@ namespace OpenVic {
 		fixed_point_t PROPERTY(gold_income);
 		moveable_atomic_fixed_point_t PROPERTY(cash_stockpile);
 		memory::unique_ptr<std::mutex> taxable_income_mutex;
-		IndexedMap<PopType, fixed_point_t> PROPERTY(taxable_income_by_pop_type);
+		IndexedFlatMap_PROPERTY(PopType, fixed_point_t, taxable_income_by_pop_type);
 		fixed_point_t PROPERTY(tax_efficiency);
-		IndexedMap<Strata, fixed_point_t> PROPERTY(effective_tax_rate_by_strata);
-		IndexedMap<Strata, SliderValue> PROPERTY(tax_rate_slider_value_by_strata);
+		IndexedFlatMap_PROPERTY(Strata, fixed_point_t, effective_tax_rate_by_strata);
+		IndexedFlatMap_PROPERTY(Strata, SliderValue, tax_rate_slider_value_by_strata);
 
 		fixed_point_t PROPERTY(administrative_efficiency_from_administrators);
 		constexpr fixed_point_t get_corruption_cost_multiplier() const {
@@ -196,8 +198,8 @@ namespace OpenVic {
 		//projected cost is UI only and lists the different factories
 
 		/* Technology */
-		IndexedMap<Technology, technology_unlock_level_t> PROPERTY(technology_unlock_levels);
-		IndexedMap<Invention, technology_unlock_level_t> PROPERTY(invention_unlock_levels);
+		IndexedFlatMap_PROPERTY(Technology, technology_unlock_level_t, technology_unlock_levels);
+		IndexedFlatMap_PROPERTY(Invention, technology_unlock_level_t, invention_unlock_levels);
 		int32_t PROPERTY(inventions_count, 0);
 		Technology const* PROPERTY(current_research, nullptr);
 		fixed_point_t PROPERTY(invested_research_points);
@@ -215,18 +217,18 @@ namespace OpenVic {
 		GovernmentType const* PROPERTY(government_type, nullptr);
 		Date PROPERTY(last_election);
 		CountryParty const* PROPERTY(ruling_party, nullptr);
-		IndexedMap<Ideology, fixed_point_t> PROPERTY(upper_house);
-		IndexedMap<ReformGroup, Reform const*> PROPERTY(reforms);
+		IndexedFlatMap_PROPERTY(Ideology, fixed_point_t, upper_house);
+		IndexedFlatMap_PROPERTY(ReformGroup, Reform const*, reforms);
 		fixed_point_t PROPERTY(total_administrative_multiplier);
 		RuleSet PROPERTY(rule_set);
 		// TODO - national issue support distribution (for just voters and for everyone)
-		IndexedMap<GovernmentType, GovernmentType const*> PROPERTY(government_flag_overrides);
+		IndexedFlatMap_PROPERTY(GovernmentType, GovernmentType const*, government_flag_overrides);
 		GovernmentType const* PROPERTY(flag_government_type, nullptr);
 		fixed_point_t PROPERTY(suppression_points);
 		fixed_point_t PROPERTY(infamy); // in 0-25+ range
 		fixed_point_t PROPERTY(plurality); // in 0-100 range
 		fixed_point_t PROPERTY(revanchism);
-		IndexedMap<Crime, technology_unlock_level_t> PROPERTY(crime_unlock_levels);
+		IndexedFlatMap_PROPERTY(Crime, technology_unlock_level_t, crime_unlock_levels);
 		// TODO - rebel movements
 
 		/* Population */
@@ -238,17 +240,17 @@ namespace OpenVic {
 		fixed_point_t PROPERTY(national_consciousness);
 		fixed_point_t PROPERTY(national_militancy);
 
-		IndexedMap<Strata, pop_size_t> PROPERTY(population_by_strata);
-		IndexedMap<Strata, fixed_point_t> PROPERTY(militancy_by_strata);
-		IndexedMap<Strata, fixed_point_t> PROPERTY(life_needs_fulfilled_by_strata);
-		IndexedMap<Strata, fixed_point_t> PROPERTY(everyday_needs_fulfilled_by_strata);
-		IndexedMap<Strata, fixed_point_t> PROPERTY(luxury_needs_fulfilled_by_strata);
+		IndexedFlatMap_PROPERTY(Strata, pop_size_t, population_by_strata);
+		IndexedFlatMap_PROPERTY(Strata, fixed_point_t, militancy_by_strata);
+		IndexedFlatMap_PROPERTY(Strata, fixed_point_t, life_needs_fulfilled_by_strata);
+		IndexedFlatMap_PROPERTY(Strata, fixed_point_t, everyday_needs_fulfilled_by_strata);
+		IndexedFlatMap_PROPERTY(Strata, fixed_point_t, luxury_needs_fulfilled_by_strata);
 
-		IndexedMap<PopType, pop_size_t> PROPERTY(pop_type_distribution);
-		IndexedMap<PopType, pop_size_t> PROPERTY(pop_type_unemployed_count);
-		IndexedMap<Ideology, fixed_point_t> PROPERTY(ideology_distribution);
+		IndexedFlatMap_PROPERTY(PopType, pop_size_t, pop_type_distribution);
+		IndexedFlatMap_PROPERTY(PopType, pop_size_t, pop_type_unemployed_count);
+		IndexedFlatMap_PROPERTY(Ideology, fixed_point_t, ideology_distribution);
 		fixed_point_map_t<BaseIssue const*> PROPERTY(issue_distribution);
-		IndexedMap<CountryParty, fixed_point_t> PROPERTY(vote_distribution);
+		fixed_point_map_t<CountryParty const*> PROPERTY(vote_distribution);
 		fixed_point_map_t<Culture const*> PROPERTY(culture_distribution);
 		fixed_point_map_t<Religion const*> PROPERTY(religion_distribution);
 		size_t PROPERTY(national_focus_capacity, 0);
@@ -288,7 +290,7 @@ namespace OpenVic {
 		};
 
 	private:
-		IndexedMap<GoodInstance, good_data_t> PROPERTY(goods_data);
+		IndexedFlatMap_PROPERTY(GoodInstance, good_data_t, goods_data);
 
 		/* Diplomacy */
 		fixed_point_t PROPERTY(prestige);
@@ -342,9 +344,9 @@ namespace OpenVic {
 		int32_t PROPERTY(combat_width, 1);
 		int32_t PROPERTY(dig_in_cap, 0);
 		fixed_point_t PROPERTY(military_tactics);
-		IndexedMap<RegimentType, technology_unlock_level_t> PROPERTY(regiment_type_unlock_levels);
+		IndexedFlatMap_PROPERTY(RegimentType, technology_unlock_level_t, regiment_type_unlock_levels);
 		regiment_allowed_cultures_t PROPERTY(allowed_regiment_cultures, regiment_allowed_cultures_t::NO_CULTURES);
-		IndexedMap<ShipType, technology_unlock_level_t> PROPERTY(ship_type_unlock_levels);
+		IndexedFlatMap_PROPERTY(ShipType, technology_unlock_level_t, ship_type_unlock_levels);
 		technology_unlock_level_t PROPERTY(gas_attack_unlock_level, 0);
 		technology_unlock_level_t PROPERTY(gas_defence_unlock_level, 0);
 		memory::vector<technology_unlock_level_t> PROPERTY(unit_variant_unlock_levels);
@@ -701,7 +703,7 @@ namespace OpenVic {
 		IdentifierRegistry<CountryInstance> IDENTIFIER_REGISTRY(country_instance);
 		SharedCountryValues shared_country_values;
 
-		IndexedMap<CountryDefinition, CountryInstance*> PROPERTY(country_definition_to_instance_map);
+		IndexedFlatMap_PROPERTY(CountryDefinition, CountryInstance*, country_definition_to_instance_map);
 
 		memory::vector<CountryInstance*> SPAN_PROPERTY(great_powers);
 		memory::vector<CountryInstance*> SPAN_PROPERTY(secondary_powers);
@@ -759,3 +761,5 @@ namespace OpenVic {
 #undef _UNIT_BRANCHED_GETTER
 #undef UNIT_BRANCHED_GETTER
 #undef UNIT_BRANCHED_GETTER_CONST
+#undef IndexedFlatMap_PROPERTY
+#undef IndexedFlatMap_PROPERTY_ACCESS

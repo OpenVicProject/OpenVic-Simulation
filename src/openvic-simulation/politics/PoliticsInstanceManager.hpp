@@ -3,7 +3,8 @@
 #include <optional>
 
 #include "openvic-simulation/types/Date.hpp"
-#include "openvic-simulation/types/IndexedMap.hpp"
+#include "openvic-simulation/types/IndexedFlatMap.hpp"
+#include "openvic-simulation/types/IndexedFlatMapMacro.hpp"
 #include "openvic-simulation/utility/Getters.hpp"
 
 namespace OpenVic {
@@ -16,7 +17,7 @@ namespace OpenVic {
 		InstanceManager const& PROPERTY(instance_manager);
 		PoliticsManager const& PROPERTY(politics_manager);
 
-		IndexedMap<Ideology, std::optional<Date>> PROPERTY(ideology_spawn_date);
+		IndexedFlatMap<Ideology, std::optional<Date>> PROPERTY(ideology_spawn_date);
 
 		bool PROPERTY(great_wars_enabled, false);
 		bool PROPERTY(world_wars_enabled, false);
@@ -36,3 +37,5 @@ namespace OpenVic {
 		void set_world_wars_enabled(bool enabled);
 	};
 }
+#undef IndexedFlatMap_PROPERTY
+#undef IndexedFlatMap_PROPERTY_ACCESS
