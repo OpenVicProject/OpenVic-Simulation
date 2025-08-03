@@ -2,6 +2,11 @@ name: Dependabot Auto-Label
 on:
   pull_request:
     types: [opened, labeled]
+    branches: [master]
+    paths:
+      - deps/openvic-dataloader
+      - deps/lexy-vdf
+      - scripts
 
 permissions:
   pull-requests: write
