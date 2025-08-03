@@ -110,7 +110,9 @@ namespace OpenVic {
 		);
 
 	public:
-		ProductionTypeManager();
+		constexpr ProductionTypeManager()
+			: rgo_owner_sprite { 0 },
+			good_to_rgo_production_type { decltype(good_to_rgo_production_type)::create_empty() } {}
 
 		bool add_production_type(
 			GameRulesManager const& game_rules_manager,

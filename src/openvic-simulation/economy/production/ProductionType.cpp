@@ -76,8 +76,6 @@ bool ProductionType::parse_scripts(DefinitionManager const& definition_manager) 
 	return ret;
 }
 
-ProductionTypeManager::ProductionTypeManager() :
-	rgo_owner_sprite { 0 } {}
 
 ProductionType const* ProductionTypeManager::get_good_to_rgo_production_type(GoodDefinition const& key) const {
 	return good_to_rgo_production_type.at(key);
