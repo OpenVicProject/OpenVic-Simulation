@@ -2,7 +2,6 @@
 
 #include <cctype>
 #include <functional>
-#include <memory>
 
 #include <tsl/ordered_map.h>
 #include <tsl/ordered_set.h>

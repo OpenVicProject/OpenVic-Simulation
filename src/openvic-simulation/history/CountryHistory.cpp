@@ -3,15 +3,25 @@
 #include "openvic-simulation/country/CountryDefinition.hpp"
 #include "openvic-simulation/DefinitionManager.hpp"
 #include "openvic-simulation/dataloader/NodeTools.hpp"
+#include "openvic-simulation/politics/Government.hpp"
+#include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
 
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;
 
 CountryHistoryEntry::CountryHistoryEntry(
-	CountryDefinition const& new_country, Date new_date, decltype(upper_house)::keys_span_type ideology_keys,
-	decltype(government_flag_overrides)::keys_span_type government_type_keys
-) : HistoryEntry { new_date }, country { new_country }, upper_house { ideology_keys },
-	government_flag_overrides { government_type_keys } {}
+	CountryDefinition const& new_country, Date new_date, decltype(upper_house_proportion_by_ideology)::keys_span_type ideology_keys,
+	decltype(flag_overrides_by_government_type)::keys_span_type government_type_keys
+) : HistoryEntry { new_date }, country { new_country }, upper_house_proportion_by_ideology { ideology_keys },
+	flag_overrides_by_government_type { government_type_keys } {}
+
+fixed_point_t CountryHistoryEntry::get_upper_house_proportion_by_ideology(Ideology const& key) const {
+	return upper_house_proportion_by_ideology.at(key);
+}
+
+GovernmentType const* CountryHistoryEntry::get_flag_overrides_by_government_type(GovernmentType const& key) const {
+	return flag_overrides_by_government_type.at(key);
+}
 
 CountryHistoryMap::CountryHistoryMap(
 	CountryDefinition const& new_country, decltype(ideology_keys) new_ideology_keys,
@@ -176,7 +186,7 @@ bool CountryHistoryMap::_load_history_entry(
 		"last_election", ZERO_OR_ONE, expect_date(assign_variable_callback(entry.last_election)),
 		"upper_house", ZERO_OR_ONE, politics_manager.get_ideology_manager().expect_ideology_dictionary(
 			[&entry](Ideology const& ideology, ast::NodeCPtr value) -> bool {
-				return expect_fixed_point(map_callback(entry.upper_house, &ideology))(value);
+				return expect_fixed_point(map_callback(entry.upper_house_proportion_by_ideology, &ideology))(value);
 			}
 		),
 		"oob", ZERO_OR_ONE, expect_identifier_or_string(
@@ -241,8 +251,8 @@ bool CountryHistoryMap::_load_history_entry(
 							 * an error, so no need to output another one here. */
 							if (government_type != nullptr && flag_override_government_type != nullptr) {
 								ret &= map_callback(
-									entry.government_flag_overrides, government_type)(flag_override_government_type
-								);
+									entry.flag_overrides_by_government_type, government_type
+								)(flag_override_government_type);
 							}
 							return ret;
 						} else {

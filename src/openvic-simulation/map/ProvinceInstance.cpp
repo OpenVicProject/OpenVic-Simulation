@@ -10,6 +10,7 @@
 #include "openvic-simulation/map/ProvinceDefinition.hpp"
 #include "openvic-simulation/misc/GameRulesManager.hpp"
 #include "openvic-simulation/modifier/StaticModifierCache.hpp"
+#include "openvic-simulation/types/OrderedContainersMath.hpp"
 
 using namespace OpenVic;
 
@@ -19,8 +20,8 @@ ProvinceInstance::ProvinceInstance(
 	ModifierEffectCache const& new_modifier_effect_cache,
 	ProvinceDefinition const& new_province_definition,
 	decltype(population_by_strata)::keys_span_type strata_keys,
-	decltype(pop_type_distribution)::keys_span_type pop_type_keys,
-	decltype(ideology_distribution)::keys_span_type ideology_keys
+	decltype(population_by_type)::keys_span_type pop_type_keys,
+	decltype(supporter_equivalents_by_ideology)::keys_span_type ideology_keys
 ) : HasIdentifierAndColour { new_province_definition },
 	HasIndex { new_province_definition.get_index() },
 	FlagStrings { "province" },
@@ -34,10 +35,10 @@ ProvinceInstance::ProvinceInstance(
 	life_needs_fulfilled_by_strata { strata_keys },
 	everyday_needs_fulfilled_by_strata { strata_keys },
 	luxury_needs_fulfilled_by_strata { strata_keys },
-	pop_type_distribution { pop_type_keys },
-	pop_type_unemployed_count { pop_type_keys },
+	population_by_type { pop_type_keys },
+	unemployed_pops_by_type { pop_type_keys },
 	pops_cache_by_type { pop_type_keys },
-	ideology_distribution { ideology_keys } {}
+	supporter_equivalents_by_ideology { ideology_keys } {}
 
 void ProvinceInstance::set_state(State* new_state) {
 	// TODO - ensure this is removed from old state and added to new state (either here or wherever this is called from)
@@ -77,7 +78,7 @@ bool ProvinceInstance::set_owner(CountryInstance* new_owner) {
 
 		owner = new_owner;
 
-		vote_distribution.clear();
+		vote_equivalents_by_party.clear();
 		if (owner != nullptr) {
 			ret &= owner->add_owned_province(*this);
 
@@ -86,7 +87,7 @@ bool ProvinceInstance::set_owner(CountryInstance* new_owner) {
 					return std::make_pair(&key, fixed_point_t::_0);
 				}
 			);
-			vote_distribution.insert(view.begin(), view.end());
+			vote_equivalents_by_party.insert(view.begin(), view.end());
 		}
 
 		for (Pop& pop : pops) {
@@ -157,68 +158,62 @@ bool ProvinceInstance::remove_core(CountryInstance& core_to_remove, bool warn) {
 	}
 	return true;
 }
-
-pop_size_t ProvinceInstance::get_pop_type_proportion(PopType const& pop_type) const {
-	return pop_type_distribution.at(pop_type);
+pop_size_t ProvinceInstance::get_population_by_type(PopType const& pop_type) const {
+	return population_by_type.at(pop_type);
 }
-pop_size_t ProvinceInstance::get_pop_type_unemployed(PopType const& pop_type) const {
-	return pop_type_unemployed_count.at(pop_type);
+pop_size_t ProvinceInstance::get_unemployed_pops_by_type(PopType const& pop_type) const {
+	return unemployed_pops_by_type.at(pop_type);
 }
-fixed_point_t ProvinceInstance::get_ideology_support(Ideology const& ideology) const {
-	return ideology_distribution.at(ideology);
+fixed_point_t ProvinceInstance::get_supporter_equivalents_by_ideology(Ideology const& ideology) const {
+	return supporter_equivalents_by_ideology.at(ideology);
 }
+fixed_point_t ProvinceInstance::get_supporter_equivalents_by_issue(BaseIssue const& issue) const {
+	const decltype(supporter_equivalents_by_issue)::const_iterator it = supporter_equivalents_by_issue.find(&issue);
 
-fixed_point_t ProvinceInstance::get_issue_support(BaseIssue const& issue) const {
-	const decltype(issue_distribution)::const_iterator it = issue_distribution.find(&issue);
-
-	if (it != issue_distribution.end()) {
+	if (it != supporter_equivalents_by_issue.end()) {
 		return it->second;
 	} else {
 		return 0;
 	}
 }
-
-fixed_point_t ProvinceInstance::get_party_support(CountryParty const& party) const {
-	const decltype(vote_distribution)::const_iterator it = vote_distribution.find(&party);
-	if (it == vote_distribution.end()) {
+fixed_point_t ProvinceInstance::get_vote_equivalents_by_party(CountryParty const& party) const {
+	const decltype(vote_equivalents_by_party)::const_iterator it = vote_equivalents_by_party.find(&party);
+	if (it == vote_equivalents_by_party.end()) {
 		return 0;
 	}
 	return it.value();
 }
+fixed_point_t ProvinceInstance::get_population_by_culture(Culture const& culture) const {
+	const decltype(population_by_culture)::const_iterator it = population_by_culture.find(&culture);
 
-fixed_point_t ProvinceInstance::get_culture_proportion(Culture const& culture) const {
-	const decltype(culture_distribution)::const_iterator it = culture_distribution.find(&culture);
-
-	if (it != culture_distribution.end()) {
+	if (it != population_by_culture.end()) {
 		return it->second;
 	} else {
 		return 0;
 	}
 }
+fixed_point_t ProvinceInstance::get_population_by_religion(Religion const& religion) const {
+	const decltype(population_by_religion)::const_iterator it = population_by_religion.find(&religion);
 
-fixed_point_t ProvinceInstance::get_religion_proportion(Religion const& religion) const {
-	const decltype(religion_distribution)::const_iterator it = religion_distribution.find(&religion);
-
-	if (it != religion_distribution.end()) {
+	if (it != population_by_religion.end()) {
 		return it->second;
 	} else {
 		return 0;
 	}
 }
-
-pop_size_t ProvinceInstance::get_strata_population(Strata const& strata) const {
+pop_size_t ProvinceInstance::get_population_by_strata(Strata const& strata) const {
 	return population_by_strata.at(strata);
 }
-fixed_point_t ProvinceInstance::get_strata_militancy(Strata const& strata) const {
+fixed_point_t ProvinceInstance::get_militancy_by_strata(Strata const& strata) const {
 	return militancy_by_strata.at(strata);
 }
-fixed_point_t ProvinceInstance::get_strata_life_needs_fulfilled(Strata const& strata) const {
+fixed_point_t ProvinceInstance::get_life_needs_fulfilled_by_strata(Strata const& strata) const {
 	return life_needs_fulfilled_by_strata.at(strata);
 }
-fixed_point_t ProvinceInstance::get_strata_everyday_needs_fulfilled(Strata const& strata) const {
+fixed_point_t ProvinceInstance::get_everyday_needs_fulfilled_by_strata(Strata const& strata) const {
 	return everyday_needs_fulfilled_by_strata.at(strata);
 }
-fixed_point_t ProvinceInstance::get_strata_luxury_needs_fulfilled(Strata const& strata) const {
+fixed_point_t ProvinceInstance::get_luxury_needs_fulfilled_by_strata(Strata const& strata) const {
 	return luxury_needs_fulfilled_by_strata.at(strata);
 }
 
@@ -256,7 +251,7 @@ bool ProvinceInstance::add_pop_vec(
 		for (PopBase const& pop : pop_vec) {
 			_add_pop(Pop {
 				pop,
-				ideology_distribution.get_keys(),
+				supporter_equivalents_by_ideology.get_keys(),
 				market_instance,
 				artisanal_producer_factory_pattern
 			});
@@ -288,13 +283,13 @@ void ProvinceInstance::_update_pops(DefineManager const& define_manager) {
 	everyday_needs_fulfilled_by_strata.fill(0);
 	luxury_needs_fulfilled_by_strata.fill(0);
 
-	pop_type_distribution.fill(0);
-	pop_type_unemployed_count.fill(0);
-	ideology_distribution.fill(0);
-	issue_distribution.clear();
-	vote_distribution.clear();
-	culture_distribution.clear();
-	religion_distribution.clear();
+	population_by_type.fill(0);
+	unemployed_pops_by_type.fill(0);
+	supporter_equivalents_by_ideology.fill(0);
+	supporter_equivalents_by_issue.clear();
+	vote_equivalents_by_party.clear();
+	population_by_culture.clear();
+	population_by_religion.clear();
 
 	has_unaccepted_pops = false;
 
@@ -316,34 +311,32 @@ void ProvinceInstance::_update_pops(DefineManager const& define_manager) {
 	for (Pop& pop : pops) {
 		pop.update_gamestate(define_manager, owner, pop_size_per_regiment_multiplier);
 
-		const pop_size_t pop_size_s = pop.get_size();
-		// TODO - change casting if pop_size_t changes type
-		const fixed_point_t pop_size_f = fixed_point_t::parse(pop_size_s);
+		const pop_size_t pop_size = pop.get_size();
 
-		total_population += pop_size_s;
+		total_population += pop_size;
 		yesterdays_import_value += pop.get_yesterdays_import_value().get_copy_of_value();
-		average_literacy += pop.get_literacy() * pop_size_f;
-		average_consciousness += pop.get_consciousness() * pop_size_f;
-		average_militancy += pop.get_militancy() * pop_size_f;
+		average_literacy += pop.get_literacy() * pop_size;
+		average_consciousness += pop.get_consciousness() * pop_size;
+		average_militancy += pop.get_militancy() * pop_size;
 
 		PopType const& pop_type = *pop.get_type();
 		Strata const& strata = pop_type.get_strata();
 
-		population_by_strata.at(strata) += pop_size_s;
-		militancy_by_strata.at(strata) += pop.get_militancy() * pop_size_f;
-		life_needs_fulfilled_by_strata.at(strata) += pop.get_life_needs_fulfilled() * pop_size_f;
-		everyday_needs_fulfilled_by_strata.at(strata) += pop.get_everyday_needs_fulfilled() * pop_size_f;
-		luxury_needs_fulfilled_by_strata.at(strata) += pop.get_luxury_needs_fulfilled() * pop_size_f;
+		population_by_strata.at(strata) += pop_size;
+		militancy_by_strata.at(strata) += pop.get_militancy() * pop_size;
+		life_needs_fulfilled_by_strata.at(strata) += pop.get_life_needs_fulfilled() * pop_size;
+		everyday_needs_fulfilled_by_strata.at(strata) += pop.get_everyday_needs_fulfilled() * pop_size;
+		luxury_needs_fulfilled_by_strata.at(strata) += pop.get_luxury_needs_fulfilled() * pop_size;
 
-		pop_type_distribution.at(pop_type) += pop_size_s;
-		pop_type_unemployed_count.at(pop_type) += pop.get_unemployed();
+		population_by_type.at(pop_type) += pop_size;
+		unemployed_pops_by_type.at(pop_type) += pop.get_unemployed();
 		pops_cache_by_type.at(pop_type).push_back(&pop);
 		// Pop ideology, issue and vote distributions are scaled to pop size so we can add them directly
-		ideology_distribution += pop.get_ideology_distribution();
-		issue_distribution += pop.get_issue_distribution();
-		vote_distribution += pop.get_vote_distribution();
-		culture_distribution[&pop.get_culture()] += pop_size_f;
-		religion_distribution[&pop.get_religion()] += pop_size_f;
+		supporter_equivalents_by_ideology += pop.get_supporter_equivalents_by_ideology();
+		supporter_equivalents_by_issue += pop.get_supporter_equivalents_by_issue();
+		vote_equivalents_by_party += pop.get_vote_equivalents_by_party();
+		population_by_culture[&pop.get_culture()] += pop_size;
+		population_by_religion[&pop.get_religion()] += pop_size;
 
 		max_supported_regiments += pop.get_max_supported_regiments();
 

@@ -103,8 +103,14 @@ namespace OpenVic {
 		UNIT_BRANCHED_GETTER_CONST(get_unit_instance_groups, armies, navies);
 
 	private:
-		memory::colony<Pop> PROPERTY(pops); // TODO - replace with a more easily vectorisable container?
+		memory::colony<Pop> PROPERTY(pops); // TODO - replace with a more easily vectorisable container?		
 		pop_size_t PROPERTY(total_population, 0);
+		void _add_pop(Pop&& pop);
+		void _update_pops(DefineManager const& define_manager);
+		bool convert_rgo_worker_pops_to_equivalent(ProductionType const& production_type);
+		void initialise_rgo();
+
+		size_t PROPERTY(max_supported_regiments, 0);
 		fixed_point_t PROPERTY(yesterdays_import_value);
 		// TODO - population change (growth + migration), monthly totals + breakdown by source/destination
 		fixed_point_t PROPERTY(average_literacy);
@@ -117,30 +123,31 @@ namespace OpenVic {
 		IndexedFlatMap_PROPERTY(Strata, fixed_point_t, everyday_needs_fulfilled_by_strata);
 		IndexedFlatMap_PROPERTY(Strata, fixed_point_t, luxury_needs_fulfilled_by_strata);
 
-		IndexedFlatMap_PROPERTY(PopType, pop_size_t, pop_type_distribution);
-		IndexedFlatMap_PROPERTY(PopType, pop_size_t, pop_type_unemployed_count);
-		IndexedFlatMap<PopType, memory::vector<Pop*>> PROPERTY(pops_cache_by_type);
-		IndexedFlatMap_PROPERTY(Ideology, fixed_point_t, ideology_distribution);
-		fixed_point_map_t<BaseIssue const*> PROPERTY(issue_distribution);
-		fixed_point_map_t<CountryParty const*> PROPERTY(vote_distribution);
-		fixed_point_map_t<Culture const*> PROPERTY(culture_distribution);
-		fixed_point_map_t<Religion const*> PROPERTY(religion_distribution);
-		size_t PROPERTY(max_supported_regiments, 0);
-
-		void _add_pop(Pop&& pop);
-		void _update_pops(DefineManager const& define_manager);
-		bool convert_rgo_worker_pops_to_equivalent(ProductionType const& production_type);
-		void initialise_rgo();
-
+		IndexedFlatMap_PROPERTY(PopType, pop_size_t, population_by_type);
+		IndexedFlatMap_PROPERTY(PopType, pop_size_t, unemployed_pops_by_type);
+		IndexedFlatMap_PROPERTY(PopType, memory::vector<Pop*>, pops_cache_by_type);
+		IndexedFlatMap_PROPERTY(Ideology, fixed_point_t, supporter_equivalents_by_ideology);
+		fixed_point_map_t<BaseIssue const*> PROPERTY(supporter_equivalents_by_issue);
+		fixed_point_map_t<CountryParty const*> PROPERTY(vote_equivalents_by_party);
+		ordered_map<Culture const*, pop_size_t> PROPERTY(population_by_culture);
+		ordered_map<Religion const*, pop_size_t> PROPERTY(population_by_religion);
 	public:
+		// The values returned by these functions are scaled by population size, so they must be divided by population size
+		// to get the support as a proportion of 1.0
+		fixed_point_t get_supporter_equivalents_by_issue(Ideology const& ideology) const;
+		fixed_point_t get_supporter_equivalents_by_issue(BaseIssue const& issue) const;
+		fixed_point_t get_vote_equivalents_by_party(CountryParty const& party) const;
+		fixed_point_t get_population_by_culture(Culture const& culture) const;
+		fixed_point_t get_population_by_religion(Religion const& religion) const;
+
 		ProvinceInstance(
 			MarketInstance& new_market_instance,
 			GameRulesManager const& new_game_rules_manager,
 			ModifierEffectCache const& new_modifier_effect_cache,
 			ProvinceDefinition const& new_province_definition,
 			decltype(population_by_strata)::keys_span_type strata_keys,
-			decltype(pop_type_distribution)::keys_span_type pop_type_keys,
-			decltype(ideology_distribution)::keys_span_type ideology_keys
+			decltype(population_by_type)::keys_span_type pop_type_keys,
+			decltype(supporter_equivalents_by_ideology)::keys_span_type ideology_keys
 		);
 		ProvinceInstance(ProvinceInstance&&) = default;
 
@@ -174,22 +181,6 @@ namespace OpenVic {
 		constexpr bool is_empty() const {
 			return owner == nullptr;
 		}
-
-		// The values returned by these functions are scaled by population size, so they must be divided by population size
-		// to get the support as a proportion of 1.0
-
-		pop_size_t get_pop_type_proportion(PopType const& pop_type) const;
-		pop_size_t get_pop_type_unemployed(PopType const& pop_type) const;
-		fixed_point_t get_ideology_support(Ideology const& ideology) const;
-		fixed_point_t get_issue_support(BaseIssue const& issue) const;
-		fixed_point_t get_party_support(CountryParty const& party) const;
-		fixed_point_t get_culture_proportion(Culture const& culture) const;
-		fixed_point_t get_religion_proportion(Religion const& religion) const;
-		pop_size_t get_strata_population(Strata const& strata) const;
-		fixed_point_t get_strata_militancy(Strata const& strata) const;
-		fixed_point_t get_strata_life_needs_fulfilled(Strata const& strata) const;
-		fixed_point_t get_strata_everyday_needs_fulfilled(Strata const& strata) const;
-		fixed_point_t get_strata_luxury_needs_fulfilled(Strata const& strata) const;
 
 		bool expand_building(size_t building_index);
 

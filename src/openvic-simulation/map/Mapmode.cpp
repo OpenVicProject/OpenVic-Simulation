@@ -7,6 +7,7 @@
 #include "openvic-simulation/map/ProvinceInstance.hpp"
 #include "openvic-simulation/pop/Culture.hpp" //for get_colour
 #include "openvic-simulation/pop/Religion.hpp" //for get_colour
+#include "openvic-simulation/types/OrderedContainersMath.hpp"
 
 using namespace OpenVic;
 using namespace OpenVic::colour_literals;
@@ -170,10 +171,11 @@ static constexpr auto get_colour_mapmode(
 	};
 }
 
-template<HasGetColour T>
-static constexpr Mapmode::base_stripe_t shaded_mapmode(fixed_point_map_t<T const*> const& map) {
-	const std::pair<fixed_point_map_const_iterator_t<T const*>, fixed_point_map_const_iterator_t<T const*>> largest =
-		get_largest_two_items(map);
+template<HasGetColour KeyType, typename ValueType>
+static constexpr Mapmode::base_stripe_t shaded_mapmode(
+	ordered_map<KeyType const*, ValueType> const& map
+) {
+	const auto largest = get_largest_two_items(map);
 	if (largest.first != map.end()) {
 		const colour_argb_t base_colour = colour_argb_t { largest.first->first->get_colour(), ALPHA_VALUE };
 		if (largest.second != map.end()) {
@@ -188,8 +190,8 @@ static constexpr Mapmode::base_stripe_t shaded_mapmode(fixed_point_map_t<T const
 	return colour_argb_t::null();
 }
 
-template<HasGetColour T>
-static constexpr auto shaded_mapmode(fixed_point_map_t<T const*> const&(ProvinceInstance::*get_map)() const) {
+template<HasGetColour KeyType, typename ValueType>
+static constexpr auto shaded_mapmode(ordered_map<KeyType const*, ValueType> const&(ProvinceInstance::*get_map)() const) {
 	return [get_map](
 		MapInstance const& map_instance, ProvinceInstance const& province,
 		CountryInstance const* player_country, ProvinceInstance const* selected_province
@@ -276,7 +278,7 @@ bool MapmodeManager::setup_mapmodes() {
 		},
 		"MAPMODE_12"
 	);
-	ret &= add_mapmode("mapmode_culture", shaded_mapmode(&ProvinceInstance::get_culture_distribution), "MAPMODE_13");
+	ret &= add_mapmode("mapmode_culture", shaded_mapmode(&ProvinceInstance::get_population_by_culture), "MAPMODE_13");
 	ret &= add_mapmode("mapmode_sphere", Mapmode::ERROR_MAPMODE.get_colour_func(), "MAPMODE_14");
 	ret &= add_mapmode("mapmode_supply", Mapmode::ERROR_MAPMODE.get_colour_func(), "MAPMODE_15");
 	ret &= add_mapmode("mapmode_party_loyalty", Mapmode::ERROR_MAPMODE.get_colour_func(), "MAPMODE_16");
@@ -331,7 +333,7 @@ bool MapmodeManager::setup_mapmodes() {
 				return colour_argb_t::fill_as(f).with_alpha(ALPHA_VALUE);
 			}
 		);
-		ret &= add_mapmode("mapmode_religion", shaded_mapmode(&ProvinceInstance::get_religion_distribution));
+		ret &= add_mapmode("mapmode_religion", shaded_mapmode(&ProvinceInstance::get_population_by_religion));
 		ret &= add_mapmode("mapmode_terrain_type", get_colour_mapmode(&ProvinceInstance::get_terrain_type));
 		ret &= add_mapmode(
 			"mapmode_adjacencies",

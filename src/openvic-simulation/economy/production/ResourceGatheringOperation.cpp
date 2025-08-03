@@ -11,6 +11,7 @@
 #include "openvic-simulation/pop/Pop.hpp"
 #include "openvic-simulation/pop/PopType.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
+#include "openvic-simulation/types/PopSize.hpp"
 #include "openvic-simulation/utility/Logger.hpp"
 #include "openvic-simulation/utility/Containers.hpp"
 
@@ -41,6 +42,10 @@ ResourceGatheringOperation::ResourceGatheringOperation(
 	0, {}, pop_type_keys
 } {}
 
+pop_size_t ResourceGatheringOperation::get_employee_count_per_type_cache(PopType const& key) const {
+	return employee_count_per_type_cache.at(key);
+}
+
 void ResourceGatheringOperation::setup_location_ptr(ProvinceInstance& location) {
 	if (location_ptr != nullptr) {
 		Logger::error("RGO already has a location_ptr pointing to province ", location_ptr->get_identifier());
@@ -60,11 +65,10 @@ void ResourceGatheringOperation::initialise_rgo_size_multiplier() {
 	ModifierEffectCache const& modifier_effect_cache = location.get_modifier_effect_cache();
 	ProductionType const& production_type = *production_type_nullable;
 	std::span<const Job> jobs = production_type.get_jobs();
-	IndexedFlatMap<PopType, pop_size_t> const& province_pop_type_distribution = location.get_pop_type_distribution();
 
 	pop_size_t total_worker_count_in_province = 0; //not counting equivalents
 	for (Job const& job : jobs) {
-		total_worker_count_in_province += province_pop_type_distribution.at(*job.get_pop_type());
+		total_worker_count_in_province += location.get_population_by_type(*job.get_pop_type());
 	}
 
 	const fixed_point_t size_modifier = calculate_size_modifier();
@@ -104,7 +108,7 @@ fixed_point_t ResourceGatheringOperation::calculate_size_modifier() const {
 	}
 
 	size_modifier += location.get_modifier_effect_value(
-		*modifier_effect_cache.get_good_effects().at(production_type.get_output_good()).get_rgo_size()
+		*modifier_effect_cache.get_good_effects(production_type.get_output_good()).get_rgo_size()
 	);
 	return size_modifier > fixed_point_t::_0 ? size_modifier : fixed_point_t::_0;
 }
@@ -119,11 +123,10 @@ void ResourceGatheringOperation::rgo_tick(memory::vector<fixed_point_t>& reusabl
 
 	ProductionType const& production_type = *production_type_nullable;
 	std::span<const Job> jobs = production_type.get_jobs();
-	IndexedFlatMap<PopType, pop_size_t> const& province_pop_type_distribution = location.get_pop_type_distribution();
 
 	total_worker_count_in_province_cache = 0; //not counting equivalents
 	for (Job const& job : jobs) {
-		total_worker_count_in_province_cache += province_pop_type_distribution.at(*job.get_pop_type());
+		total_worker_count_in_province_cache += location.get_population_by_type(*job.get_pop_type());
 	}
 
 	hire();
@@ -133,8 +136,8 @@ void ResourceGatheringOperation::rgo_tick(memory::vector<fixed_point_t>& reusabl
 
 	if (production_type.get_owner().has_value()) {
 		PopType const& owner_pop_type = *production_type.get_owner()->get_pop_type();
-		total_owner_count_in_state_cache = location.get_state()->get_pop_type_distribution().at(owner_pop_type);
-		owner_pops_cache_nullable = &location.get_state()->get_pops_cache_by_type().at(owner_pop_type);
+		total_owner_count_in_state_cache = location.get_state()->get_population_by_type(owner_pop_type);
+		owner_pops_cache_nullable = &location.get_state()->get_pops_cache_by_type(owner_pop_type);
 	}
 
 	output_quantity_yesterday = produce();
@@ -289,7 +292,7 @@ fixed_point_t ResourceGatheringOperation::produce() {
 			+ location.get_modifier_effect_value(*modifier_effect_cache.get_mine_rgo_output_local());
 	}
 
-	auto const& good_effects = modifier_effect_cache.get_good_effects().at(production_type.get_output_good());
+	auto const& good_effects = modifier_effect_cache.get_good_effects(production_type.get_output_good());
 	throughput_multiplier += location.get_modifier_effect_value(*good_effects.get_rgo_goods_throughput());
 	output_multiplier += location.get_modifier_effect_value(*good_effects.get_rgo_goods_output());
 

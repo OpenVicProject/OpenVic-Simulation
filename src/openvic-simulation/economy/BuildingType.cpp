@@ -1,5 +1,6 @@
 #include "BuildingType.hpp"
 
+#include "openvic-simulation/economy/GoodDefinition.hpp"
 #include "openvic-simulation/economy/production/ProductionType.hpp"
 #include "openvic-simulation/modifier/ModifierEffectCache.hpp"
 #include "openvic-simulation/modifier/ModifierManager.hpp"

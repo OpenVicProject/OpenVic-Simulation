@@ -46,7 +46,6 @@ namespace OpenVic {
 			decltype(shared_pop_type_values)::keys_span_type pop_type_keys
 		);
 		SharedCountryValues(SharedCountryValues&&) = default;
-		SharedPopTypeValues const& get_shared_pop_type_values(PopType const& pop_type) const;
 		void update_costs(GoodInstanceManager const& good_instance_manager);
 	};
 }

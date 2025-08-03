@@ -217,12 +217,12 @@ namespace OpenVic {
 		GovernmentType const* PROPERTY(government_type, nullptr);
 		Date PROPERTY(last_election);
 		CountryParty const* PROPERTY(ruling_party, nullptr);
-		IndexedFlatMap_PROPERTY(Ideology, fixed_point_t, upper_house);
+		IndexedFlatMap_PROPERTY(Ideology, fixed_point_t, upper_house_proportion_by_ideology);
 		IndexedFlatMap_PROPERTY(ReformGroup, Reform const*, reforms);
 		fixed_point_t PROPERTY(total_administrative_multiplier);
 		RuleSet PROPERTY(rule_set);
 		// TODO - national issue support distribution (for just voters and for everyone)
-		IndexedFlatMap_PROPERTY(GovernmentType, GovernmentType const*, government_flag_overrides);
+		IndexedFlatMap_PROPERTY(GovernmentType, GovernmentType const*, flag_overrides_by_government_type);
 		GovernmentType const* PROPERTY(flag_government_type, nullptr);
 		fixed_point_t PROPERTY(suppression_points);
 		fixed_point_t PROPERTY(infamy); // in 0-25+ range
@@ -232,6 +232,7 @@ namespace OpenVic {
 		// TODO - rebel movements
 
 		/* Population */
+		size_t PROPERTY(national_focus_capacity, 0);
 		Culture const* PROPERTY(primary_culture, nullptr);
 		ordered_set<Culture const*> PROPERTY(accepted_cultures);
 		Religion const* PROPERTY(religion, nullptr);
@@ -246,18 +247,26 @@ namespace OpenVic {
 		IndexedFlatMap_PROPERTY(Strata, fixed_point_t, everyday_needs_fulfilled_by_strata);
 		IndexedFlatMap_PROPERTY(Strata, fixed_point_t, luxury_needs_fulfilled_by_strata);
 
-		IndexedFlatMap_PROPERTY(PopType, pop_size_t, pop_type_distribution);
-		IndexedFlatMap_PROPERTY(PopType, pop_size_t, pop_type_unemployed_count);
-		IndexedFlatMap_PROPERTY(Ideology, fixed_point_t, ideology_distribution);
-		fixed_point_map_t<BaseIssue const*> PROPERTY(issue_distribution);
-		fixed_point_map_t<CountryParty const*> PROPERTY(vote_distribution);
-		fixed_point_map_t<Culture const*> PROPERTY(culture_distribution);
-		fixed_point_map_t<Religion const*> PROPERTY(religion_distribution);
-		size_t PROPERTY(national_focus_capacity, 0);
+		IndexedFlatMap_PROPERTY(PopType, pop_size_t, population_by_type);
+		IndexedFlatMap_PROPERTY(PopType, pop_size_t, unemployed_pops_by_type);
+		IndexedFlatMap_PROPERTY(Ideology, fixed_point_t, supporter_equivalents_by_ideology);
+		fixed_point_map_t<BaseIssue const*> PROPERTY(supporter_equivalents_by_issue);
+		fixed_point_map_t<CountryParty const*> PROPERTY(vote_equivalents_by_party);
+		ordered_map<Culture const*, pop_size_t> PROPERTY(population_by_culture);
+		ordered_map<Religion const*, pop_size_t> PROPERTY(population_by_religion);
+	public:
+		// The values returned by these functions are scaled by population size, so they must be divided by population size
+		// to get the support as a proportion of 1.0
+		fixed_point_t get_supporter_equivalents_by_issue(Ideology const& ideology) const;
+		fixed_point_t get_supporter_equivalents_by_issue(BaseIssue const& issue) const;
+		fixed_point_t get_vote_equivalents_by_party(CountryParty const& party) const;
+		fixed_point_t get_population_by_culture(Culture const& culture) const;
+		fixed_point_t get_population_by_religion(Religion const& religion) const;
+		fixed_point_t get_taxable_income_by_strata(Strata const& strata) const;
+
 		// TODO - national foci
 
 		/* Trade */
-	public:
 		struct good_data_t {
 			memory::unique_ptr<std::mutex> mutex;
 			fixed_point_t stockpile_amount;
@@ -358,11 +367,11 @@ namespace OpenVic {
 			decltype(building_type_unlock_levels)::keys_span_type building_type_keys,
 			decltype(technology_unlock_levels)::keys_span_type technology_keys,
 			decltype(invention_unlock_levels)::keys_span_type invention_keys,
-			decltype(upper_house)::keys_span_type ideology_keys,
+			decltype(upper_house_proportion_by_ideology)::keys_span_type ideology_keys,
 			decltype(reforms)::keys_span_type reform_keys,
-			decltype(government_flag_overrides)::keys_span_type government_type_keys,
+			decltype(flag_overrides_by_government_type)::keys_span_type government_type_keys,
 			decltype(crime_unlock_levels)::keys_span_type crime_keys,
-			decltype(pop_type_distribution)::keys_span_type pop_type_keys,
+			decltype(population_by_type)::keys_span_type pop_type_keys,
 			decltype(goods_data)::keys_span_type good_instances_keys,
 			decltype(regiment_type_unlock_levels)::keys_span_type regiment_type_unlock_levels_keys,
 			decltype(ship_type_unlock_levels)::keys_span_type ship_type_unlock_levels_keys,
@@ -477,22 +486,6 @@ namespace OpenVic {
 		// Adds the argument value to the existing value of the script variable (initialised to 0 if it doesn't already exist).
 		void change_script_variable(memory::string const& variable_name, fixed_point_t value);
 
-		// The values returned by these functions are scaled by population size, so they must be divided by population size
-		// to get the support as a proportion of 1.0
-		pop_size_t get_pop_type_proportion(PopType const& pop_type) const;
-		pop_size_t get_pop_type_unemployed(PopType const& pop_type) const;
-		fixed_point_t get_ideology_support(Ideology const& ideology) const;
-		fixed_point_t get_issue_support(BaseIssue const& issue) const;
-		fixed_point_t get_party_support(CountryParty const& party) const;
-		fixed_point_t get_culture_proportion(Culture const& culture) const;
-		fixed_point_t get_religion_proportion(Religion const& religion) const;
-		pop_size_t get_strata_population(Strata const& strata) const;
-		fixed_point_t get_strata_militancy(Strata const& strata) const;
-		fixed_point_t get_strata_life_needs_fulfilled(Strata const& strata) const;
-		fixed_point_t get_strata_everyday_needs_fulfilled(Strata const& strata) const;
-		fixed_point_t get_strata_luxury_needs_fulfilled(Strata const& strata) const;
-		fixed_point_t get_strata_taxable_income(Strata const& strata) const;
-
 		bool add_owned_province(ProvinceInstance& new_province);
 		bool remove_owned_province(ProvinceInstance const& province_to_remove);
 		bool has_owned_province(ProvinceInstance const& province) const;
@@ -513,8 +506,6 @@ namespace OpenVic {
 		bool remove_accepted_culture(Culture const& culture_to_remove);
 		bool has_accepted_culture(Culture const& culture) const;
 
-		/* Set a party's popularity in the upper house. */
-		bool set_upper_house(Ideology const* ideology, fixed_point_t popularity);
 		bool set_ruling_party(CountryParty const& new_ruling_party);
 		bool add_reform(Reform const& new_reform);
 
@@ -733,11 +724,11 @@ namespace OpenVic {
 			decltype(CountryInstance::building_type_unlock_levels)::keys_span_type building_type_keys,
 			decltype(CountryInstance::technology_unlock_levels)::keys_span_type technology_keys,
 			decltype(CountryInstance::invention_unlock_levels)::keys_span_type invention_keys,
-			decltype(CountryInstance::upper_house)::keys_span_type ideology_keys,
+			decltype(CountryInstance::upper_house_proportion_by_ideology)::keys_span_type ideology_keys,
 			decltype(CountryInstance::reforms)::keys_span_type reform_keys,
-			decltype(CountryInstance::government_flag_overrides)::keys_span_type government_type_keys,
+			decltype(CountryInstance::flag_overrides_by_government_type)::keys_span_type government_type_keys,
 			decltype(CountryInstance::crime_unlock_levels)::keys_span_type crime_keys,
-			decltype(CountryInstance::pop_type_distribution)::keys_span_type pop_type_keys,
+			decltype(CountryInstance::population_by_type)::keys_span_type pop_type_keys,
 			decltype(CountryInstance::goods_data)::keys_span_type good_instances_keys,
 			decltype(CountryInstance::regiment_type_unlock_levels)::keys_span_type regiment_type_unlock_levels_keys,
 			decltype(CountryInstance::ship_type_unlock_levels)::keys_span_type ship_type_unlock_levels_keys,
