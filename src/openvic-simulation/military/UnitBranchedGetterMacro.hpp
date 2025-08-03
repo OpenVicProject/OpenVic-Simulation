@@ -1,4 +1,4 @@
-// depends on #include "openvic-simulation/types/UnitBranchType.hpp"
+#include "openvic-simulation/types/UnitBranchType.hpp" // IWYU pragma: keep for unit_branch_t
 
 #define _UNIT_BRANCHED_GETTER(name, land, naval, const) \
 	template<unit_branch_t Branch> \

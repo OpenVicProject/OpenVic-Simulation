@@ -1,4 +1,4 @@
-#include "openvic-simulation/types/Vector.hpp" // IWYU pragma: keep
+#include "Vector.hpp" // IWYU pragma: keep
 
 namespace OpenVic {
 #define MAKE_VEC_ALIAS(prefix, type, size) template struct vec##size##_t<type>;

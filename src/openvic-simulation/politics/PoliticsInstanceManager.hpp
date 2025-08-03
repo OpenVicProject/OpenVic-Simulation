@@ -3,7 +3,6 @@
 #include <optional>
 
 #include "openvic-simulation/types/Date.hpp"
-#include "openvic-simulation/types/IndexedFlatMap.hpp" //for macro
 #include "openvic-simulation/types/IndexedFlatMapMacro.hpp"
 #include "openvic-simulation/utility/Getters.hpp"
 

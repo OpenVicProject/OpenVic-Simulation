@@ -1,5 +1,5 @@
-// depends on #include "openvic-simulation/types/IndexedFlatMap.hpp"
-// depends on #include "openvic-simulation/utility/Getters.hpp"
+#include "openvic-simulation/types/IndexedFlatMap.hpp" // IWYU pragma: keep for field type
+#include "openvic-simulation/utility/Getters.hpp" // IWYU pragma: keep for _get_property
 
 #define IndexedFlatMap_PROPERTY(KEYTYPE, VALUETYPE, NAME) IndexedFlatMap_PROPERTY_ACCESS(KEYTYPE, VALUETYPE, NAME, private)
 #define IndexedFlatMap_PROPERTY_ACCESS(KEYTYPE, VALUETYPE, NAME, ACCESS) \

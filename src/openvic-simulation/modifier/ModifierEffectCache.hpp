@@ -1,6 +1,5 @@
 #pragma once
 
-#include "openvic-simulation/types/IndexedFlatMap.hpp" //for macro
 #include "openvic-simulation/types/IndexedFlatMapMacro.hpp"
 #include "openvic-simulation/types/UnitBranchType.hpp"
 #include "openvic-simulation/utility/Getters.hpp"

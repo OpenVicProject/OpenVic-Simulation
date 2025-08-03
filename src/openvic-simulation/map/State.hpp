@@ -5,7 +5,6 @@
 #include "openvic-simulation/pop/PopsAggregate.hpp"
 #include "openvic-simulation/types/ColonyStatus.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
-#include "openvic-simulation/types/IndexedFlatMap.hpp" //for macro
 #include "openvic-simulation/types/IndexedFlatMapMacro.hpp"
 #include "openvic-simulation/utility/Containers.hpp"
 #include "openvic-simulation/utility/ForwardableSpan.hpp"
