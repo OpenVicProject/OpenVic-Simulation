@@ -84,7 +84,7 @@ fixed_point_t PopsAggregate::get_luxury_needs_fulfilled_by_strata(Strata const& 
 void PopsAggregate::clear_pops_aggregate() {
 	total_population = 0;
 	max_supported_regiment_count = 0;
-	yesterdays_import_value = fixed_point_t::_0;
+	_yesterdays_import_value_running_total = fixed_point_t::_0;
 
 	average_literacy = fixed_point_t::_0;
 	average_consciousness = fixed_point_t::_0;
@@ -105,10 +105,10 @@ void PopsAggregate::clear_pops_aggregate() {
 	population_by_religion.clear();
 }
 
-void PopsAggregate::add_pops_aggregate(PopsAggregate const& part) {
+void PopsAggregate::add_pops_aggregate(PopsAggregate& part) {
 	total_population += part.get_total_population();
 	max_supported_regiment_count += part.get_max_supported_regiment_count();
-	yesterdays_import_value += part.get_yesterdays_import_value();
+	_yesterdays_import_value_running_total += part.get_yesterdays_import_value_untracked();
 
 	// TODO - change casting if pop_size_t changes type
 	const fixed_point_t part_population = fixed_point_t::parse(part.get_total_population());
@@ -165,6 +165,7 @@ void PopsAggregate::add_pops_aggregate(Pop const& pop) {
 	population_by_religion[&pop.get_religion()] += pop_size;
 
 	max_supported_regiment_count += pop.get_max_supported_regiments();
+	yesterdays_import_value.set(_yesterdays_import_value_running_total);
 }
 
 void PopsAggregate::normalise_pops_aggregate() {

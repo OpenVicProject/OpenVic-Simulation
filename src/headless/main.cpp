@@ -179,13 +179,13 @@ static bool run_headless(fs::path const& root, memory::vector<memory::string>& m
 	if (game_manager.get_instance_manager()) {
 		const auto print_ranking_list = [](std::string_view title, OpenVic::utility::forwardable_span<CountryInstance* const> countries) -> void {
 			memory::string text;
-			for (CountryInstance const* country : countries) {
+			for (CountryInstance* country : countries) {
 				text += StringUtils::append_string_views(
 					"\n    ", country->get_identifier(),
-					" - Total #", std::to_string(country->get_total_rank()), " (", country->get_total_score().to_string(1),
-					"), Prestige #", std::to_string(country->get_prestige_rank()), " (", country->get_prestige().to_string(1),
-					"), Industry #", std::to_string(country->get_industrial_rank()), " (", country->get_industrial_power().to_string(1),
-					"), Military #", std::to_string(country->get_military_rank()), " (", country->get_military_power().to_string(1), ")"
+					" - Total #", std::to_string(country->get_total_rank()), " (", country->total_score.get_untracked().to_string(1),
+					"), Prestige #", std::to_string(country->get_prestige_rank()), " (", country->get_prestige_untracked().to_string(1),
+					"), Industry #", std::to_string(country->get_industrial_rank()), " (", country->get_industrial_power_untracked().to_string(1),
+					"), Military #", std::to_string(country->get_military_rank()), " (", country->military_power.get_untracked().to_string(1), ")"
 				);
 			}
 			Logger::info(title, ":", text);

@@ -21,6 +21,8 @@
 #include "openvic-simulation/types/UnitVariant.hpp"
 #include "openvic-simulation/utility/Getters.hpp"
 #include "openvic-simulation/utility/Containers.hpp"
+#include "openvic-simulation/utility/reactive/DerivedState.hpp"
+#include "openvic-simulation/utility/reactive/MutableState.hpp"
 
 #include "openvic-simulation/types/IndexedFlatMapMacro.hpp" //below other imports that undef the macros
 
@@ -100,7 +102,7 @@ namespace OpenVic {
 		GameRulesManager const& game_rules_manager;
 		CountryRelationManager& country_relations_manager;
 		CountryDefines const& country_defines;
-		SharedCountryValues const& shared_country_values;
+		SharedCountryValues& shared_country_values;
 
 		colour_t PROPERTY(colour); // Cached to avoid searching government overrides for every province
 		ProvinceInstance* PROPERTY_PTR(capital, nullptr);
@@ -115,7 +117,6 @@ namespace OpenVic {
 		country_status_t PROPERTY(country_status, country_status_t::COUNTRY_STATUS_UNCIVILISED);
 		fixed_point_t PROPERTY(civilisation_progress);
 		Date PROPERTY(lose_great_power_date);
-		fixed_point_t PROPERTY(total_score);
 		size_t PROPERTY(total_rank, 0);
 
 		ordered_set<ProvinceInstance*> PROPERTY(owned_provinces);
@@ -132,7 +133,7 @@ namespace OpenVic {
 		memory::vector<ModifierInstance> PROPERTY(event_modifiers);
 
 		/* Production */
-		fixed_point_t PROPERTY(industrial_power);
+		STATE_PROPERTY(fixed_point_t, industrial_power);
 		memory::vector<std::pair<State const*, fixed_point_t>> PROPERTY(industrial_power_from_states);
 		memory::vector<std::pair<CountryInstance const*, fixed_point_t>> PROPERTY(industrial_power_from_investments);
 		size_t PROPERTY(industrial_rank, 0);
@@ -142,20 +143,19 @@ namespace OpenVic {
 
 		/* Budget */
 		// TODO - cash stockpile change over last 30 days
-		fixed_point_t PROPERTY(gold_income);
+		STATE_PROPERTY(fixed_point_t, gold_income);
 		atomic_fixed_point_t PROPERTY(cash_stockpile);
 		std::mutex taxable_income_mutex;
 		IndexedFlatMap_PROPERTY(PopType, fixed_point_t, taxable_income_by_pop_type);
-		fixed_point_t PROPERTY(tax_efficiency);
-		IndexedFlatMap_PROPERTY(Strata, fixed_point_t, effective_tax_rate_by_strata);
+		STATE_PROPERTY(fixed_point_t, tax_efficiency);
+		IndexedFlatMap<Strata, DerivedState<fixed_point_t>> PROPERTY(effective_tax_rate_by_strata);
+	public:
+		DerivedState<fixed_point_t>& get_effective_tax_rate_by_strata(Strata const& strata);
+	private:
 		IndexedFlatMap_PROPERTY(Strata, SliderValue, tax_rate_slider_value_by_strata);
 
-		fixed_point_t PROPERTY(administrative_efficiency_from_administrators);
-		constexpr fixed_point_t get_corruption_cost_multiplier() const {
-			return 2 - administrative_efficiency_from_administrators;
-		}
-		fixed_point_t PROPERTY(administrator_percentage);
-		fixed_point_t PROPERTY(desired_administrator_percentage);
+		STATE_PROPERTY(fixed_point_t, administrative_efficiency_from_administrators);
+		STATE_PROPERTY(fixed_point_t, administrator_percentage);
 
 		//store per slider per good: desired, bought & cost
 		//store purchase record from last tick and prediction next tick
@@ -164,30 +164,31 @@ namespace OpenVic {
 		SliderValue PROPERTY(construction_spending_slider_value);
 
 		SliderValue PROPERTY(administration_spending_slider_value);
-		fixed_point_t PROPERTY(actual_administration_spending);
-		fixed_point_t PROPERTY(projected_administration_spending_unscaled_by_slider);
+		STATE_PROPERTY(fixed_point_t, projected_administration_spending_unscaled_by_slider);
+		STATE_PROPERTY(fixed_point_t, actual_administration_spending);
 
 		SliderValue PROPERTY(education_spending_slider_value);
-		fixed_point_t PROPERTY(actual_education_spending);
-		fixed_point_t PROPERTY(projected_education_spending_unscaled_by_slider);
+		STATE_PROPERTY(fixed_point_t, projected_education_spending_unscaled_by_slider);
+		STATE_PROPERTY(fixed_point_t, actual_education_spending);
 
 		SliderValue PROPERTY(military_spending_slider_value);
-		fixed_point_t PROPERTY(actual_military_spending);
-		fixed_point_t PROPERTY(projected_military_spending_unscaled_by_slider);
+		STATE_PROPERTY(fixed_point_t, projected_military_spending_unscaled_by_slider);
+		STATE_PROPERTY(fixed_point_t, actual_military_spending);
 
 		SliderValue PROPERTY(social_spending_slider_value);
-		fixed_point_t PROPERTY(actual_social_spending);
-		fixed_point_t PROPERTY(projected_pensions_spending_unscaled_by_slider);
-		fixed_point_t PROPERTY(projected_unemployment_subsidies_spending_unscaled_by_slider);
+		STATE_PROPERTY(fixed_point_t, projected_pensions_spending_unscaled_by_slider);
+		STATE_PROPERTY(fixed_point_t, projected_unemployment_subsidies_spending_unscaled_by_slider);
+		STATE_PROPERTY(fixed_point_t, actual_social_spending);
+		
+		//base here means not scaled by slider or pop size
+		IndexedFlatMap<PopType, DerivedState<fixed_point_t>> administration_salary_base_by_pop_type;
+		IndexedFlatMap<PopType, DerivedState<fixed_point_t>> education_salary_base_by_pop_type;
+		IndexedFlatMap<PopType, DerivedState<fixed_point_t>> military_salary_base_by_pop_type;
+		IndexedFlatMap<PopType, DerivedState<fixed_point_t>> social_income_variant_base_by_pop_type;
 
 		SliderValue PROPERTY(tariff_rate_slider_value);
-		fixed_point_t PROPERTY(effective_tariff_rate);
 		std::mutex actual_net_tariffs_mutex;
-		fixed_point_t PROPERTY(projected_import_subsidies);
-		fixed_point_t PROPERTY(actual_net_tariffs);
-		constexpr bool has_import_subsidies() const {
-			return effective_tariff_rate < fixed_point_t::_0;
-		}
+		MutableState<fixed_point_t> actual_net_tariffs;
 
 		//TODO actual factory subsidies
 		//projected cost is UI only and lists the different factories
@@ -195,33 +196,32 @@ namespace OpenVic {
 		/* Technology */
 		IndexedFlatMap_PROPERTY(Technology, technology_unlock_level_t, technology_unlock_levels);
 		IndexedFlatMap_PROPERTY(Invention, technology_unlock_level_t, invention_unlock_levels);
-		int32_t PROPERTY(inventions_count, 0);
-		Technology const* PROPERTY(current_research, nullptr);
-		fixed_point_t PROPERTY(invested_research_points);
-		fixed_point_t PROPERTY(current_research_cost);
-		Date PROPERTY(expected_research_completion_date);
-		fixed_point_t PROPERTY(research_point_stockpile);
-		fixed_point_t PROPERTY(daily_research_points);
+		STATE_PROPERTY(int32_t, inventions_count);
+		STATE_PROPERTY(Technology const*, current_research);
+		STATE_PROPERTY(fixed_point_t, invested_research_points);
+		STATE_PROPERTY(fixed_point_t, current_research_cost);
+		STATE_PROPERTY(Date, expected_research_completion_date);
+		STATE_PROPERTY(fixed_point_t, research_point_stockpile);
+		STATE_PROPERTY(fixed_point_t, daily_research_points);
 		fixed_point_map_t<PopType const*> PROPERTY(research_points_from_pop_types);
-		TechnologySchool const* PROPERTY(tech_school, nullptr);
+		STATE_PROPERTY(TechnologySchool const*, tech_school);
 		// TODO - cached possible inventions with %age chance
 
 		/* Politics */
-		NationalValue const* PROPERTY(national_value, nullptr);
-		GovernmentType const* PROPERTY(government_type, nullptr);
+		STATE_PROPERTY(NationalValue const*, national_value);
+		STATE_PROPERTY(GovernmentType const*, government_type);
 		Date PROPERTY(last_election);
-		CountryParty const* PROPERTY(ruling_party, nullptr);
+		STATE_PROPERTY(CountryParty const*, ruling_party);
 		IndexedFlatMap_PROPERTY(Ideology, fixed_point_t, upper_house_proportion_by_ideology);
 		IndexedFlatMap_PROPERTY(ReformGroup, Reform const*, reforms);
-		fixed_point_t PROPERTY(total_administrative_multiplier);
+		STATE_PROPERTY(fixed_point_t, total_administrative_multiplier);
 		RuleSet PROPERTY(rule_set);
 		// TODO - national issue support distribution (for just voters and for everyone)
 		IndexedFlatMap_PROPERTY(GovernmentType, GovernmentType const*, flag_overrides_by_government_type);
-		GovernmentType const* PROPERTY(flag_government_type, nullptr);
-		fixed_point_t PROPERTY(suppression_points);
-		fixed_point_t PROPERTY(infamy); // in 0-25+ range
-		fixed_point_t PROPERTY(plurality); // in 0-100 range
-		fixed_point_t PROPERTY(revanchism);
+		STATE_PROPERTY(fixed_point_t, suppression_points);
+		STATE_PROPERTY(fixed_point_t, infamy); // in 0-25+ range
+		STATE_PROPERTY(fixed_point_t, plurality); // in 0-100 range
+		STATE_PROPERTY(fixed_point_t, revanchism);
 		IndexedFlatMap_PROPERTY(Crime, technology_unlock_level_t, crime_unlock_levels);
 		// TODO - rebel movements
 
@@ -233,6 +233,23 @@ namespace OpenVic {
 		// TODO - population change over last 30 days
 
 	public:
+		DerivedState<GovernmentType const*> flag_government_type;
+		DerivedState<fixed_point_t> total_score;
+		DerivedState<fixed_point_t> military_power;
+		DerivedState<fixed_point_t> research_progress;
+		DerivedState<fixed_point_t> desired_administrator_percentage;
+		DerivedState<fixed_point_t> corruption_cost_multiplier;
+		DerivedState<fixed_point_t> tariff_efficiency;
+		DerivedState<fixed_point_t> effective_tariff_rate;
+		DerivedState<fixed_point_t> projected_administration_spending;
+		DerivedState<fixed_point_t> projected_education_spending;
+		DerivedState<fixed_point_t> projected_military_spending;
+		DerivedState<fixed_point_t> projected_social_spending;
+		DerivedState<fixed_point_t> projected_social_spending_unscaled_by_slider;
+		DerivedState<fixed_point_t> projected_import_subsidies;
+		DerivedState<fixed_point_t> projected_spending;
+		DerivedState<bool> has_import_subsidies;
+		
 		fixed_point_t get_taxable_income_by_strata(Strata const& strata) const;
 		// TODO - national foci
 
@@ -272,7 +289,7 @@ namespace OpenVic {
 		IndexedFlatMap_PROPERTY(GoodInstance, good_data_t, goods_data);
 
 		/* Diplomacy */
-		fixed_point_t PROPERTY(prestige);
+		STATE_PROPERTY(fixed_point_t, prestige);
 		size_t PROPERTY(prestige_rank, 0);
 		fixed_point_t PROPERTY(diplomatic_points);
 		// The last time this country lost a war, i.e. accepted a peace offer sent from their offer tab or the enemy's demand
@@ -282,10 +299,9 @@ namespace OpenVic {
 		// TODO - colonial power, current wars
 
 		/* Military */
-		fixed_point_t PROPERTY(military_power);
-		fixed_point_t PROPERTY(military_power_from_land);
-		fixed_point_t PROPERTY(military_power_from_sea);
-		fixed_point_t PROPERTY(military_power_from_leaders);
+		STATE_PROPERTY(fixed_point_t, military_power_from_land);
+		STATE_PROPERTY(fixed_point_t, military_power_from_sea);
+		STATE_PROPERTY(fixed_point_t, military_power_from_leaders);
 		size_t PROPERTY(military_rank, 0);
 		memory::vector<LeaderInstance*> SPAN_PROPERTY(generals);
 		memory::vector<LeaderInstance*> SPAN_PROPERTY(admirals);
@@ -347,7 +363,7 @@ namespace OpenVic {
 			utility::forwardable_span<const Ideology> ideology_keys,
 			GameRulesManager const* new_game_rules_manager,
 			CountryRelationManager* new_country_relations_manager,
-			SharedCountryValues const* new_shared_country_values,
+			SharedCountryValues* new_shared_country_values,
 			GoodInstanceManager* new_good_instance_manager,
 			CountryDefines const* new_country_defines,
 			EconomyDefines const* new_economy_defines
@@ -558,7 +574,6 @@ namespace OpenVic {
 		fixed_point_t calculate_research_cost(
 			Technology const& technology, ModifierEffectCache const& modifier_effect_cache
 		) const;
-		fixed_point_t get_research_progress() const;
 		bool can_research_tech(Technology const& technology, Date today) const;
 		void start_research(Technology const& technology, InstanceManager const& instance_manager);
 
@@ -572,45 +587,21 @@ namespace OpenVic {
 
 	private:
 		void _update_production(DefineManager const& define_manager);
-		void _update_effective_tax_rate_by_strata(Strata const& strata);
 		void _update_budget();
 
 		//base here means not scaled by slider or pop size
-		constexpr fixed_point_t calculate_administration_salary_base(
-			SharedPopTypeValues const& pop_type_values,
-			const fixed_point_t corruption_cost_multiplier
-		) const {
-			return pop_type_values.get_administration_salary_base() * corruption_cost_multiplier;
-		}
-		constexpr fixed_point_t calculate_education_salary_base(
-			SharedPopTypeValues const& pop_type_values,
-			const fixed_point_t corruption_cost_multiplier
-		) const {
-			return pop_type_values.get_education_salary_base() * corruption_cost_multiplier;
-		}
-		constexpr fixed_point_t calculate_military_salary_base(
-			SharedPopTypeValues const& pop_type_values,
-			const fixed_point_t corruption_cost_multiplier
-		) const {
-			return pop_type_values.get_military_salary_base() * corruption_cost_multiplier;
-		}
 		fixed_point_t calculate_pensions_base(
 			ModifierEffectCache const& modifier_effect_cache,
-			SharedPopTypeValues const& pop_type_values
-		) const;
+			PopType const& pop_type
+		);
 		fixed_point_t calculate_unemployment_subsidies_base(
 			ModifierEffectCache const& modifier_effect_cache,
-			SharedPopTypeValues const& pop_type_values
-		) const;
+			PopType const& pop_type
+		);
 		fixed_point_t calculate_minimum_wage_base(
 			ModifierEffectCache const& modifier_effect_cache,
-			SharedPopTypeValues const& pop_type_values
-		) const;
-		constexpr fixed_point_t calculate_social_income_variant_base(
-			SharedPopTypeValues const& pop_type_values
-		) const {
-			return administrative_efficiency_from_administrators * pop_type_values.get_social_income_variant_base();
-		}
+			PopType const& pop_type
+		);
 
 		// Expects current_research to be non-null
 		void _update_current_tech(InstanceManager const& instance_manager);
@@ -652,8 +643,8 @@ namespace OpenVic {
 		void report_input_consumption(ProductionType const& production_type, GoodDefinition const& good, const fixed_point_t quantity);
 		void report_input_demand(ProductionType const& production_type, GoodDefinition const& good, const fixed_point_t quantity);
 		void report_output(ProductionType const& production_type, const fixed_point_t quantity);
-		void request_salaries_and_welfare_and_import_subsidies(Pop& pop) const;
-		fixed_point_t calculate_minimum_wage_base(PopType const& pop_type) const;
+		void request_salaries_and_welfare_and_import_subsidies(Pop& pop);
+		fixed_point_t calculate_minimum_wage_base(PopType const& pop_type);
 		fixed_point_t apply_tariff(const fixed_point_t money_spent_on_imports);
 	};
 

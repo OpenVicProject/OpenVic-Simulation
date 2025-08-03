@@ -24,8 +24,8 @@ void PopStrataValuesFromProvince::update_pop_strata_values_from_province(
 	CountryInstance const* const owner_nullable = province.get_owner();
 	if (owner_nullable != nullptr) {
 		CountryInstance const& owner = *owner_nullable;
-		shared_base_needs_scalar *= fixed_point_t::_1 + owner.get_plurality() / 100;
-		invention_needs_scalar += owner.get_inventions_count() * defines.get_invention_impact_on_demand();
+		shared_base_needs_scalar *= fixed_point_t::_1 + owner.get_plurality_untracked() / 100;
+		invention_needs_scalar += owner.get_inventions_count_untracked() * defines.get_invention_impact_on_demand();
 	}
 
 	shared_life_needs_scalar = shared_base_needs_scalar

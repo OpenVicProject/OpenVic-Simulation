@@ -33,11 +33,11 @@ namespace OpenVic {
 		ProvinceInstance* PROPERTY_PTR(capital);
 		memory::vector<ProvinceInstance*> SPAN_PROPERTY(provinces);
 		colony_status_t PROPERTY(colony_status);
-
-		IndexedFlatMap_PROPERTY(PopType, memory::vector<Pop*>, pops_cache_by_type);
-	private:
 		fixed_point_t PROPERTY(industrial_power);
 
+		IndexedFlatMap_PROPERTY(PopType, memory::vector<Pop*>, pops_cache_by_type);
+
+	public:
 		State(
 			StateSet const& new_state_set,
 			CountryInstance* new_owner,
@@ -48,8 +48,11 @@ namespace OpenVic {
 			utility::forwardable_span<const PopType> pop_type_keys,
 			utility::forwardable_span<const Ideology> ideology_keys
 		);
+		State(State&&) = delete;
+		State(State const&) = delete;
+		State& operator=(State&&) = delete;
+		State& operator=(State const&) = delete;
 
-	public:
 		memory::string get_identifier() const;
 
 		constexpr bool is_colonial_state() const {

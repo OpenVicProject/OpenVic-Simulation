@@ -350,10 +350,10 @@ void ResourceGatheringOperation::pay_employees(memory::vector<fixed_point_t>& re
 		return;
 	}
 
-	CountryInstance const* const country_to_report_economy_nullable = location.get_country_to_report_economy();
+	CountryInstance* const country_to_report_economy_nullable = location.get_country_to_report_economy();
 	fixed_point_t total_minimum_wage = 0;
 	if (country_to_report_economy_nullable != nullptr) {
-		CountryInstance const& country_to_report_economy = *country_to_report_economy_nullable;
+		CountryInstance& country_to_report_economy = *country_to_report_economy_nullable;
 		for (Employee& employee : employees) {
 			total_minimum_wage += employee.update_minimum_wage(country_to_report_economy);
 		}

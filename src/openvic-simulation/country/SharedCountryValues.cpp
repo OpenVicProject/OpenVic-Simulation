@@ -19,18 +19,20 @@ SharedCountryValues::SharedCountryValues(
 	shared_pop_type_values { pop_type_keys }
 	{}
 
-SharedPopTypeValues const& SharedCountryValues::get_shared_pop_type_values(PopType const& pop_type) const {
+SharedPopTypeValues& SharedCountryValues::get_shared_pop_type_values(PopType const& pop_type) {
 	return shared_pop_type_values.at(pop_type);
 }
 
 void SharedCountryValues::update_costs(GoodInstanceManager const& good_instance_manager) {
-	for (auto [pop_type, value] : shared_pop_type_values) {
-		value.update_costs(pop_type, pop_defines, good_instance_manager);
+	for (SharedPopTypeValues& value : shared_pop_type_values.get_values()) {
+		value.update_costs(pop_defines, good_instance_manager);
 	}
 }
 
-void SharedPopTypeValues::update_costs(PopType const& pop_type, PopsDefines const& pop_defines, GoodInstanceManager const& good_instance_manager) {
-	administration_salary_base = education_salary_base = military_salary_base = 0;
+void SharedPopTypeValues::update_costs(PopsDefines const& pop_defines, GoodInstanceManager const& good_instance_manager) {
+	fixed_point_t administration_salary_base_running_total = 0;
+	fixed_point_t education_salary_base_running_total = 0;
+	fixed_point_t military_salary_base_running_total = 0;
 	using enum PopType::income_type_t;
 
 	#define UPDATE_NEED_COSTS(need_category) \
@@ -41,17 +43,22 @@ void SharedPopTypeValues::update_costs(PopType const& pop_type, PopsDefines cons
 		} \
 		base_##need_category##_need_costs *= pop_defines.get_base_goods_demand(); \
 		if ((pop_type.get_##need_category##_needs_income_types() & ADMINISTRATION) == ADMINISTRATION) { \
-			administration_salary_base += base_##need_category##_need_costs; \
+			administration_salary_base_running_total += base_##need_category##_need_costs; \
 		} \
 		if ((pop_type.get_##need_category##_needs_income_types() & EDUCATION) == EDUCATION) { \
-			education_salary_base += base_##need_category##_need_costs; \
+			education_salary_base_running_total += base_##need_category##_need_costs; \
 		} \
 		if ((pop_type.get_##need_category##_needs_income_types() & MILITARY) == MILITARY) { \
-			military_salary_base += base_##need_category##_need_costs; \
+			military_salary_base_running_total += base_##need_category##_need_costs; \
 		}
 
 	DO_FOR_ALL_NEED_CATEGORIES(UPDATE_NEED_COSTS)
 	#undef UPDATE_NEED_COSTS
+
+	administration_salary_base.set(administration_salary_base_running_total);
+	education_salary_base.set(education_salary_base_running_total);
+	military_salary_base.set(military_salary_base_running_total);
+	social_income_variant_base.set(2 * base_life_need_costs);
 }
 
 #undef DO_FOR_ALL_NEED_CATEGORIES
