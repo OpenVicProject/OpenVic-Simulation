@@ -166,7 +166,13 @@ namespace OpenVic {
 			return true;
 		}
 
+		constexpr IndexedFlatMap() : values(), keys(), min_index(0), max_index(0) {}
+
 	public:
+		static constexpr IndexedFlatMap create_empty() {
+			return {};
+		}
+
 		/**
 		* @brief Constructs an IndexedFlatMap based on a provided span of ordered and continuous keys
 		* and a key-based generator.
@@ -220,12 +226,6 @@ namespace OpenVic {
 			// Resize and default-construct elements
 			values.resize(expected_capacity);
 		}
-
-		/**
-		* @brief Default constructor, creates an empty map.
-		* Useful for returning an invalid state on error in other operations.
-		*/
-		IndexedFlatMap() : values(), keys(), min_index(0), max_index(0) {}
 
 		/**
 		* @brief Sets the value associated with a key using copy assignment.

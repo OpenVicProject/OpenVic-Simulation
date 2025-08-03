@@ -174,7 +174,7 @@ bool PopManager::add_pop_type(
 		static_cast<PopType const*>(nullptr),
 		std::move(country_migration_target),
 		std::move(migration_target),
-		PopType::poptype_weight_map_t{},
+		PopType::poptype_weight_map_t { PopType::poptype_weight_map_t::create_empty() },
 		std::move(ideologies),
 		PopType::issue_weight_map_t{}
 	))) {
