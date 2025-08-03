@@ -53,9 +53,9 @@ bool MapInstance::setup(
 	MarketInstance& market_instance,
 	GameRulesManager const& game_rules_manager,
 	ModifierEffectCache const& modifier_effect_cache,
-	decltype(ProvinceInstance::population_by_strata)::keys_span_type strata_keys,
-	decltype(ProvinceInstance::population_by_type)::keys_span_type pop_type_keys,
-	decltype(ProvinceInstance::supporter_equivalents_by_ideology)::keys_span_type ideology_keys
+	utility::forwardable_span<const Strata> strata_keys,
+	utility::forwardable_span<const PopType> pop_type_keys,
+	utility::forwardable_span<const Ideology> ideology_keys
 ) {
 	if (province_instances_are_locked()) {
 		Logger::error("Cannot setup map instance - province instances are already locked!");

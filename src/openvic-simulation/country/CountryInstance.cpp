@@ -15,14 +15,12 @@
 #include "openvic-simulation/misc/GameRulesManager.hpp"
 #include "openvic-simulation/modifier/ModifierEffectCache.hpp"
 #include "openvic-simulation/modifier/StaticModifierCache.hpp"
-#include "openvic-simulation/politics/Ideology.hpp"
 #include "openvic-simulation/pop/Pop.hpp"
 #include "openvic-simulation/pop/PopType.hpp"
 #include "openvic-simulation/research/Invention.hpp"
 #include "openvic-simulation/research/Technology.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
 #include "openvic-simulation/types/IndexedFlatMap.hpp"
-#include "openvic-simulation/types/OrderedContainersMath.hpp"
 #include "openvic-simulation/types/PopSize.hpp"
 #include "openvic-simulation/types/SliderValue.hpp"
 #include "openvic-simulation/utility/Containers.hpp"
@@ -39,15 +37,15 @@ CountryInstance::CountryInstance(
 	decltype(building_type_unlock_levels)::keys_span_type building_type_keys,
 	decltype(technology_unlock_levels)::keys_span_type technology_keys,
 	decltype(invention_unlock_levels)::keys_span_type invention_keys,
-	decltype(upper_house_proportion_by_ideology)::keys_span_type ideology_keys,
 	decltype(reforms)::keys_span_type reform_keys,
 	decltype(flag_overrides_by_government_type)::keys_span_type government_type_keys,
 	decltype(crime_unlock_levels)::keys_span_type crime_keys,
-	decltype(population_by_type)::keys_span_type pop_type_keys,
 	decltype(goods_data)::keys_span_type good_instances_keys,
 	decltype(regiment_type_unlock_levels)::keys_span_type regiment_type_unlock_levels_keys,
 	decltype(ship_type_unlock_levels)::keys_span_type ship_type_unlock_levels_keys,
-	decltype(tax_rate_slider_value_by_strata)::keys_span_type strata_keys,
+	utility::forwardable_span<const Strata> strata_keys,
+	utility::forwardable_span<const PopType> pop_type_keys,
+	utility::forwardable_span<const Ideology> ideology_keys,
 	GameRulesManager const& new_game_rules_manager,
 	CountryRelationManager& new_country_relations_manager,
 	SharedCountryValues const& new_shared_country_values,
@@ -56,6 +54,7 @@ CountryInstance::CountryInstance(
 	EconomyDefines const& new_economy_defines
 ) : FlagStrings { "country" },
 	HasIndex { new_index },
+	PopsAggregate { strata_keys, pop_type_keys, ideology_keys },
 	/* Main attributes */
 	country_definition { new_country_definition },
 	game_rules_manager { new_game_rules_manager },
@@ -83,16 +82,6 @@ CountryInstance::CountryInstance(
 	reforms { reform_keys },
 	flag_overrides_by_government_type { government_type_keys },
 	crime_unlock_levels { crime_keys },
-
-	/* Population */
-	population_by_strata { strata_keys },
-	militancy_by_strata { strata_keys },
-	life_needs_fulfilled_by_strata { strata_keys },
-	everyday_needs_fulfilled_by_strata { strata_keys },
-	luxury_needs_fulfilled_by_strata { strata_keys },
-	population_by_type { pop_type_keys },
-	unemployed_pops_by_type { pop_type_keys },
-	supporter_equivalents_by_ideology { ideology_keys },
 
 	/* Trade */
 	goods_data { good_instances_keys },
@@ -179,13 +168,7 @@ fixed_point_t CountryInstance::get_tariff_efficiency() const {
 }
 
 void CountryInstance::update_country_definition_based_attributes() {
-	vote_equivalents_by_party.clear();
-	auto view = country_definition->get_parties() | std::views::transform(
-		[](CountryParty const& key) {
-			return std::make_pair(&key, fixed_point_t::_0);
-		}
-	);
-	vote_equivalents_by_party.insert(view.begin(), view.end());
+	update_parties_for_votes(country_definition);
 }
 
 bool CountryInstance::exists() const {
@@ -351,64 +334,6 @@ void CountryInstance::change_script_variable(memory::string const& variable_name
 	script_variables[variable_name] += value;
 }
 
-pop_size_t CountryInstance::get_population_by_type(PopType const& pop_type) const {
-	return population_by_type.at(pop_type);
-}
-pop_size_t CountryInstance::get_unemployed_pops_by_type(PopType const& pop_type) const {
-	return unemployed_pops_by_type.at(pop_type);
-}
-fixed_point_t CountryInstance::get_supporter_equivalents_by_ideology(Ideology const& ideology) const {
-	return supporter_equivalents_by_ideology.at(ideology);
-}
-fixed_point_t CountryInstance::get_supporter_equivalents_by_issue(BaseIssue const& issue) const {
-	const decltype(supporter_equivalents_by_issue)::const_iterator it = supporter_equivalents_by_issue.find(&issue);
-
-	if (it != supporter_equivalents_by_issue.end()) {
-		return it->second;
-	} else {
-		return 0;
-	}
-}
-fixed_point_t CountryInstance::get_vote_equivalents_by_party(CountryParty const& party) const {
-	const decltype(vote_equivalents_by_party)::const_iterator it = vote_equivalents_by_party.find(&party);
-	if (it == vote_equivalents_by_party.end()) {
-		return 0;
-	}
-	return it.value();
-}
-fixed_point_t CountryInstance::get_population_by_culture(Culture const& culture) const {
-	const decltype(population_by_culture)::const_iterator it = population_by_culture.find(&culture);
-
-	if (it != population_by_culture.end()) {
-		return it->second;
-	} else {
-		return 0;
-	}
-}
-fixed_point_t CountryInstance::get_population_by_religion(Religion const& religion) const {
-	const decltype(population_by_religion)::const_iterator it = population_by_religion.find(&religion);
-
-	if (it != population_by_religion.end()) {
-		return it->second;
-	} else {
-		return 0;
-	}
-}
-pop_size_t CountryInstance::get_population_by_strata(Strata const& strata) const {
-	return population_by_strata.at(strata);
-}
-fixed_point_t CountryInstance::get_militancy_by_strata(Strata const& strata) const {
-	return militancy_by_strata.at(strata);
-}
-fixed_point_t CountryInstance::get_life_needs_fulfilled_by_strata(Strata const& strata) const {
-	return life_needs_fulfilled_by_strata.at(strata);
-}
-fixed_point_t CountryInstance::get_everyday_needs_fulfilled_by_strata(Strata const& strata) const {
-	return everyday_needs_fulfilled_by_strata.at(strata);
-}
-fixed_point_t CountryInstance::get_luxury_needs_fulfilled_by_strata(Strata const& strata) const {
-	return luxury_needs_fulfilled_by_strata.at(strata);
-}
 fixed_point_t CountryInstance::get_taxable_income_by_strata(Strata const& strata) const {
 	fixed_point_t running_total = 0;
 	for (auto const& [pop_type, taxable_income] : taxable_income_by_pop_type) {
@@ -1259,13 +1184,13 @@ void CountryInstance::_update_budget() {
 		= 0;
 
 	const fixed_point_t corruption_cost_multiplier = get_corruption_cost_multiplier();
-	for (auto const& [pop_type, size] : population_by_type) {
+	for (auto const& [pop_type, size] : get_population_by_type()) {
 		SharedPopTypeValues const& pop_type_values = shared_country_values.get_shared_pop_type_values(pop_type);
 		projected_administration_spending_unscaled_by_slider += size * calculate_administration_salary_base(pop_type_values, corruption_cost_multiplier);
 		projected_education_spending_unscaled_by_slider += size * calculate_education_salary_base(pop_type_values, corruption_cost_multiplier);
 		projected_military_spending_unscaled_by_slider += size * calculate_military_salary_base(pop_type_values, corruption_cost_multiplier);
 		projected_pensions_spending_unscaled_by_slider += size * calculate_pensions_base(modifier_effect_cache, pop_type_values);
-		projected_unemployment_subsidies_spending_unscaled_by_slider += unemployed_pops_by_type.at(pop_type)
+		projected_unemployment_subsidies_spending_unscaled_by_slider += get_unemployed_pops_by_type(pop_type)
 			* calculate_unemployment_subsidies_base(modifier_effect_cache, pop_type_values);
 	}
 
@@ -1275,7 +1200,7 @@ void CountryInstance::_update_budget() {
 	projected_pensions_spending_unscaled_by_slider /= Pop::size_denominator;
 	projected_unemployment_subsidies_spending_unscaled_by_slider /= Pop::size_denominator;
 	projected_import_subsidies = has_import_subsidies()
-		? -effective_tariff_rate * yesterdays_import_value
+		? -effective_tariff_rate * get_yesterdays_import_value()
 		: fixed_point_t::_0;
 }
 
@@ -1349,95 +1274,23 @@ void CountryInstance::_update_politics() {
 }
 
 void CountryInstance::_update_population() {
-	total_population = 0;
-	yesterdays_import_value = 0;
-	national_literacy = 0;
-	national_consciousness = 0;
-	national_militancy = 0;
-
-	population_by_strata.fill(0);
-	militancy_by_strata.fill(0);
-	life_needs_fulfilled_by_strata.fill(0);
-	everyday_needs_fulfilled_by_strata.fill(0);
-	luxury_needs_fulfilled_by_strata.fill(0);
-
-	population_by_type.fill(0);
-	unemployed_pops_by_type.fill(0);
-	supporter_equivalents_by_ideology.fill(0);
-	supporter_equivalents_by_issue.clear();
-	vote_equivalents_by_party.clear();
-	population_by_culture.clear();
-	population_by_religion.clear();
+	clear_pops_aggregate();
 
 	for (State const* state : states) {
-		total_population += state->get_total_population();
-		yesterdays_import_value += state->get_yesterdays_import_value();
-
-		// TODO - change casting if pop_size_t changes type
-		const fixed_point_t state_population = fixed_point_t::parse(state->get_total_population());
-		national_literacy += state->get_average_literacy() * state_population;
-		national_consciousness += state->get_average_consciousness() * state_population;
-		national_militancy += state->get_average_militancy() * state_population;
-
-		population_by_strata += state->get_population_by_strata();
-		militancy_by_strata.mul_add(state->get_militancy_by_strata(), state->get_population_by_strata());
-		life_needs_fulfilled_by_strata.mul_add(
-			state->get_life_needs_fulfilled_by_strata(), state->get_population_by_strata()
-		);
-		everyday_needs_fulfilled_by_strata.mul_add(
-			state->get_everyday_needs_fulfilled_by_strata(), state->get_population_by_strata()
-		);
-		luxury_needs_fulfilled_by_strata.mul_add(
-			state->get_luxury_needs_fulfilled_by_strata(), state->get_population_by_strata()
-		);
-
-		population_by_type += state->get_population_by_type();
-		unemployed_pops_by_type += state->get_unemployed_pops_by_type();
-		supporter_equivalents_by_ideology += state->get_supporter_equivalents_by_ideology();
-		supporter_equivalents_by_issue += state->get_supporter_equivalents_by_issue();
-		vote_equivalents_by_party += state->get_vote_equivalents_by_party();
-		population_by_culture += state->get_population_by_culture();
-		population_by_religion += state->get_population_by_religion();
+		add_pops_aggregate(*state);
 	}
 
-	if (total_population > 0) {
-		national_literacy /= total_population;
-		national_consciousness /= total_population;
-		national_militancy /= total_population;
-
-		static const fu2::function<fixed_point_t&(fixed_point_t&, pop_size_t const&)> handle_div_by_zero = [](
-			fixed_point_t& lhs,
-			pop_size_t const& rhs
-		)->fixed_point_t& {
-			return lhs = fixed_point_t::_0;
-		};
-		militancy_by_strata.divide_assign_handle_zero(
-			population_by_strata,
-			handle_div_by_zero
-		);
-		life_needs_fulfilled_by_strata.divide_assign_handle_zero(
-			population_by_strata,
-			handle_div_by_zero
-		);
-		everyday_needs_fulfilled_by_strata.divide_assign_handle_zero(
-			population_by_strata,
-			handle_div_by_zero
-		);
-		luxury_needs_fulfilled_by_strata.divide_assign_handle_zero(
-			population_by_strata,
-			handle_div_by_zero
-		);
-	}
+	normalise_pops_aggregate();
 
 	daily_research_points = 0;
 	monthly_leadership_points = 0;
 	research_points_from_pop_types.clear();
 	leadership_points_from_pop_types.clear();
 
-	for (auto const& [pop_type, pop_size] : population_by_type) {
+	for (auto const& [pop_type, pop_size] : get_population_by_type()) {
 		if (pop_type.get_research_leadership_optimum() > fixed_point_t::_0 && pop_size > 0) {
 			const fixed_point_t factor = std::min(
-				pop_size / (total_population * pop_type.get_research_leadership_optimum()), fixed_point_t::_1
+				pop_size / (get_total_population() * pop_type.get_research_leadership_optimum()), fixed_point_t::_1
 			);
 
 			if (pop_type.get_research_points() != fixed_point_t::_0) {
@@ -1497,14 +1350,9 @@ void CountryInstance::_update_military(
 		}
 	}
 
-	max_supported_regiment_count = 0;
-	for (State const* state : states) {
-		max_supported_regiment_count += state->get_max_supported_regiments();
-	}
-
 	supply_consumption = fixed_point_t::_1 + get_modifier_effect_value(*modifier_effect_cache.get_supply_consumption());
 
-	const size_t regular_army_size = std::min(4 * deployed_non_mobilised_regiments, max_supported_regiment_count);
+	const size_t regular_army_size = std::min(4 * deployed_non_mobilised_regiments, get_max_supported_regiment_count());
 
 	fixed_point_t sum_of_regiment_type_stats = 0;
 	for (RegimentType const& regiment_type : unit_type_manager.get_regiment_types()) {
@@ -1643,7 +1491,7 @@ void CountryInstance::update_modifier_sum(Date today, StaticModifierCache const&
 	}
 	modifier_sum.add_modifier(static_modifier_cache.get_war_exhaustion(), war_exhaustion);
 	modifier_sum.add_modifier(static_modifier_cache.get_infamy(), infamy);
-	modifier_sum.add_modifier(static_modifier_cache.get_literacy(), national_literacy);
+	modifier_sum.add_modifier(static_modifier_cache.get_literacy(), get_average_literacy());
 	modifier_sum.add_modifier(static_modifier_cache.get_plurality(), plurality);
 	modifier_sum.add_modifier(is_at_war() ? static_modifier_cache.get_war() : static_modifier_cache.get_peace());
 	// TODO - difficulty modifiers, debt_default_to, bad_debtor, generalised_debt_default,
@@ -2342,15 +2190,15 @@ bool CountryInstanceManager::generate_country_instances(
 	decltype(CountryInstance::building_type_unlock_levels)::keys_span_type building_type_keys,
 	decltype(CountryInstance::technology_unlock_levels)::keys_span_type technology_keys,
 	decltype(CountryInstance::invention_unlock_levels)::keys_span_type invention_keys,
-	decltype(CountryInstance::upper_house_proportion_by_ideology)::keys_span_type ideology_keys,
 	decltype(CountryInstance::reforms)::keys_span_type reform_keys,
 	decltype(CountryInstance::flag_overrides_by_government_type)::keys_span_type government_type_keys,
 	decltype(CountryInstance::crime_unlock_levels)::keys_span_type crime_keys,
-	decltype(CountryInstance::population_by_type)::keys_span_type pop_type_keys,
 	decltype(CountryInstance::goods_data)::keys_span_type good_instances_keys,
 	decltype(CountryInstance::regiment_type_unlock_levels)::keys_span_type regiment_type_unlock_levels_keys,
 	decltype(CountryInstance::ship_type_unlock_levels)::keys_span_type ship_type_unlock_levels_keys,
-	decltype(CountryInstance::tax_rate_slider_value_by_strata):: keys_span_type strata_keys,
+	utility::forwardable_span<const Strata> strata_keys,
+	utility::forwardable_span<const PopType> pop_type_keys,
+	utility::forwardable_span<const Ideology> ideology_keys,
 	GameRulesManager const& game_rules_manager,
 	CountryRelationManager& country_relations_manager,
 	GoodInstanceManager& good_instance_manager,
@@ -2369,15 +2217,15 @@ bool CountryInstanceManager::generate_country_instances(
 			building_type_keys,
 			technology_keys,
 			invention_keys,
-			ideology_keys,
 			reform_keys,
 			government_type_keys,
 			crime_keys,
-			pop_type_keys,
 			good_instances_keys,
 			regiment_type_unlock_levels_keys,
 			ship_type_unlock_levels_keys,
 			strata_keys,
+			pop_type_keys,
+			ideology_keys,
 			game_rules_manager,
 			country_relations_manager,
 			shared_country_values,

@@ -7,6 +7,7 @@
 #include "openvic-simulation/military/UnitBranchedGetterMacro.hpp"
 #include "openvic-simulation/modifier/ModifierSum.hpp"
 #include "openvic-simulation/politics/Rule.hpp"
+#include "openvic-simulation/pop/PopsAggregate.hpp"
 #include "openvic-simulation/types/Date.hpp"
 #include "openvic-simulation/types/fixed_point/Atomic.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
@@ -71,7 +72,7 @@ namespace OpenVic {
 
 	/* Representation of a country's mutable attributes, with a CountryDefinition that is unique at any single time
 	 * but can be swapped with other CountryInstance's CountryDefinition when switching tags. */
-	struct CountryInstance : FlagStrings, HasIndex<CountryInstance> {
+	struct CountryInstance : FlagStrings, HasIndex<CountryInstance>, PopsAggregate {
 		friend struct CountryInstanceManager;
 
 		/*
@@ -184,7 +185,6 @@ namespace OpenVic {
 		fixed_point_t PROPERTY(projected_pensions_spending_unscaled_by_slider);
 		fixed_point_t PROPERTY(projected_unemployment_subsidies_spending_unscaled_by_slider);
 
-		fixed_point_t PROPERTY(yesterdays_import_value); //>= 0
 		SliderValue PROPERTY(tariff_rate_slider_value);
 		fixed_point_t PROPERTY(effective_tariff_rate);
 		memory::unique_ptr<std::mutex> actual_net_tariffs_mutex;
@@ -208,7 +208,6 @@ namespace OpenVic {
 		fixed_point_t PROPERTY(research_point_stockpile);
 		fixed_point_t PROPERTY(daily_research_points);
 		fixed_point_map_t<PopType const*> PROPERTY(research_points_from_pop_types);
-		fixed_point_t PROPERTY(national_literacy);
 		TechnologySchool const* PROPERTY(tech_school, nullptr);
 		// TODO - cached possible inventions with %age chance
 
@@ -236,34 +235,10 @@ namespace OpenVic {
 		Culture const* PROPERTY(primary_culture, nullptr);
 		ordered_set<Culture const*> PROPERTY(accepted_cultures);
 		Religion const* PROPERTY(religion, nullptr);
-		pop_size_t PROPERTY(total_population, 0);
 		// TODO - population change over last 30 days
-		fixed_point_t PROPERTY(national_consciousness);
-		fixed_point_t PROPERTY(national_militancy);
 
-		IndexedFlatMap_PROPERTY(Strata, pop_size_t, population_by_strata);
-		IndexedFlatMap_PROPERTY(Strata, fixed_point_t, militancy_by_strata);
-		IndexedFlatMap_PROPERTY(Strata, fixed_point_t, life_needs_fulfilled_by_strata);
-		IndexedFlatMap_PROPERTY(Strata, fixed_point_t, everyday_needs_fulfilled_by_strata);
-		IndexedFlatMap_PROPERTY(Strata, fixed_point_t, luxury_needs_fulfilled_by_strata);
-
-		IndexedFlatMap_PROPERTY(PopType, pop_size_t, population_by_type);
-		IndexedFlatMap_PROPERTY(PopType, pop_size_t, unemployed_pops_by_type);
-		IndexedFlatMap_PROPERTY(Ideology, fixed_point_t, supporter_equivalents_by_ideology);
-		fixed_point_map_t<BaseIssue const*> PROPERTY(supporter_equivalents_by_issue);
-		fixed_point_map_t<CountryParty const*> PROPERTY(vote_equivalents_by_party);
-		ordered_map<Culture const*, pop_size_t> PROPERTY(population_by_culture);
-		ordered_map<Religion const*, pop_size_t> PROPERTY(population_by_religion);
 	public:
-		// The values returned by these functions are scaled by population size, so they must be divided by population size
-		// to get the support as a proportion of 1.0
-		fixed_point_t get_supporter_equivalents_by_issue(Ideology const& ideology) const;
-		fixed_point_t get_supporter_equivalents_by_issue(BaseIssue const& issue) const;
-		fixed_point_t get_vote_equivalents_by_party(CountryParty const& party) const;
-		fixed_point_t get_population_by_culture(Culture const& culture) const;
-		fixed_point_t get_population_by_religion(Religion const& religion) const;
 		fixed_point_t get_taxable_income_by_strata(Strata const& strata) const;
-
 		// TODO - national foci
 
 		/* Trade */
@@ -322,7 +297,6 @@ namespace OpenVic {
 		memory::vector<ArmyInstance*> SPAN_PROPERTY(armies);
 		memory::vector<NavyInstance*> SPAN_PROPERTY(navies);
 		size_t PROPERTY(regiment_count, 0);
-		size_t PROPERTY(max_supported_regiment_count, 0);
 		size_t PROPERTY(mobilisation_potential_regiment_count, 0);
 		size_t PROPERTY(mobilisation_max_regiment_count, 0);
 		fixed_point_t PROPERTY(mobilisation_impact);
@@ -367,15 +341,15 @@ namespace OpenVic {
 			decltype(building_type_unlock_levels)::keys_span_type building_type_keys,
 			decltype(technology_unlock_levels)::keys_span_type technology_keys,
 			decltype(invention_unlock_levels)::keys_span_type invention_keys,
-			decltype(upper_house_proportion_by_ideology)::keys_span_type ideology_keys,
 			decltype(reforms)::keys_span_type reform_keys,
 			decltype(flag_overrides_by_government_type)::keys_span_type government_type_keys,
 			decltype(crime_unlock_levels)::keys_span_type crime_keys,
-			decltype(population_by_type)::keys_span_type pop_type_keys,
 			decltype(goods_data)::keys_span_type good_instances_keys,
 			decltype(regiment_type_unlock_levels)::keys_span_type regiment_type_unlock_levels_keys,
 			decltype(ship_type_unlock_levels)::keys_span_type ship_type_unlock_levels_keys,
-			decltype(tax_rate_slider_value_by_strata)::keys_span_type strata_keys,
+			utility::forwardable_span<const Strata> strata_keys,
+			utility::forwardable_span<const PopType> pop_type_keys,
+			utility::forwardable_span<const Ideology> ideology_keys,
 			GameRulesManager const& new_game_rules_manager,
 			CountryRelationManager& new_country_relations_manager,
 			SharedCountryValues const& new_shared_country_values,
@@ -724,15 +698,15 @@ namespace OpenVic {
 			decltype(CountryInstance::building_type_unlock_levels)::keys_span_type building_type_keys,
 			decltype(CountryInstance::technology_unlock_levels)::keys_span_type technology_keys,
 			decltype(CountryInstance::invention_unlock_levels)::keys_span_type invention_keys,
-			decltype(CountryInstance::upper_house_proportion_by_ideology)::keys_span_type ideology_keys,
 			decltype(CountryInstance::reforms)::keys_span_type reform_keys,
 			decltype(CountryInstance::flag_overrides_by_government_type)::keys_span_type government_type_keys,
 			decltype(CountryInstance::crime_unlock_levels)::keys_span_type crime_keys,
-			decltype(CountryInstance::population_by_type)::keys_span_type pop_type_keys,
 			decltype(CountryInstance::goods_data)::keys_span_type good_instances_keys,
 			decltype(CountryInstance::regiment_type_unlock_levels)::keys_span_type regiment_type_unlock_levels_keys,
 			decltype(CountryInstance::ship_type_unlock_levels)::keys_span_type ship_type_unlock_levels_keys,
-			decltype(CountryInstance::tax_rate_slider_value_by_strata):: keys_span_type strata_keys,
+			utility::forwardable_span<const Strata> strata_keys,
+			utility::forwardable_span<const PopType> pop_type_keys,
+			utility::forwardable_span<const Ideology> ideology_keys,
 			GameRulesManager const& game_rules_manager,
 			CountryRelationManager& country_relations_manager,
 			GoodInstanceManager& good_instance_manager,
