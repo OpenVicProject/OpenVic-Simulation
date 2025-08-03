@@ -1,4 +1,4 @@
-#include <concepts> //used in lambda
+#include <concepts> // IWYU pragma: keep for lambda
 #include <cstddef>
 #include <cstdint>
 #include <ranges>
@@ -10,7 +10,7 @@
 #undef KEEP_DO_FOR_ALL_TYPES_OF_EXPENSES
 
 #include "openvic-simulation/country/CountryParty.hpp"
-#include "openvic-simulation/country/CountryDefinition.hpp" //for ->get_parties()
+#include "openvic-simulation/country/CountryDefinition.hpp"
 #include "openvic-simulation/country/CountryInstance.hpp"
 #include "openvic-simulation/defines/Define.hpp"
 #include "openvic-simulation/economy/GoodDefinition.hpp"
@@ -32,9 +32,9 @@
 #include "openvic-simulation/pop/PopValuesFromProvince.hpp"
 #include "openvic-simulation/pop/Religion.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
+#include "openvic-simulation/types/fixed_point/FixedPointMap.hpp"
 #include "openvic-simulation/types/IndexedFlatMap.hpp"
 #include "openvic-simulation/types/OrderedContainers.hpp"
-#include "openvic-simulation/types/OrderedContainersMath.hpp"
 #include "openvic-simulation/utility/Containers.hpp"
 #include "openvic-simulation/utility/Logger.hpp"
 #include "openvic-simulation/utility/Utility.hpp"
@@ -180,7 +180,12 @@ void Pop::update_location_based_attributes() {
 	if (owner == nullptr) {
 		return;
 	}
-	auto view = owner->get_country_definition()->get_parties() | std::views::transform(
+	CountryDefinition const* country_definition = owner ->get_country_definition();
+	if (country_definition == nullptr) {
+		return;
+	}
+
+	auto view = country_definition->get_parties() | std::views::transform(
 		[](CountryParty const& key) {
 			return std::make_pair(&key, fixed_point_t::_0);
 		}

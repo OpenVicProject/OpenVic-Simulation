@@ -2,7 +2,7 @@
 
 #include "openvic-simulation/country/CountryInstance.hpp"
 #include "openvic-simulation/defines/PopsDefines.hpp"
-#include "openvic-simulation/economy/GoodDefinition.hpp" // for constructor requirement
+#include "openvic-simulation/economy/GoodDefinition.hpp" // IWYU pragma: keep for constructor requirement
 #include "openvic-simulation/modifier/ModifierEffectCache.hpp"
 #include "openvic-simulation/map/ProvinceInstance.hpp"
 #include "openvic-simulation/pop/PopType.hpp"

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "openvic-simulation/utility/Logger.hpp" // IWYU pragma: keep
+#include "openvic-simulation/utility/Logger.hpp" // IWYU pragma: keep for macros
 #include "openvic-simulation/utility/Utility.hpp"
 
 /**
