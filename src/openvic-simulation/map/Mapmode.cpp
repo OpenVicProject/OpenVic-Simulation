@@ -5,9 +5,10 @@
 #include "openvic-simulation/map/MapInstance.hpp"
 #include "openvic-simulation/map/ProvinceDefinition.hpp"
 #include "openvic-simulation/map/ProvinceInstance.hpp"
-#include "openvic-simulation/pop/Culture.hpp" //for get_colour
-#include "openvic-simulation/pop/Religion.hpp" //for get_colour
+#include "openvic-simulation/pop/Culture.hpp"
+#include "openvic-simulation/pop/Religion.hpp"
 #include "openvic-simulation/types/OrderedContainersMath.hpp"
+#include "openvic-simulation/types/PopSize.hpp"
 
 using namespace OpenVic;
 using namespace OpenVic::colour_literals;
@@ -278,7 +279,7 @@ bool MapmodeManager::setup_mapmodes() {
 		},
 		"MAPMODE_12"
 	);
-	ret &= add_mapmode("mapmode_culture", shaded_mapmode(&ProvinceInstance::get_population_by_culture), "MAPMODE_13");
+	ret &= add_mapmode("mapmode_culture", shaded_mapmode<Culture,pop_size_t>(&ProvinceInstance::get_population_by_culture), "MAPMODE_13");
 	ret &= add_mapmode("mapmode_sphere", Mapmode::ERROR_MAPMODE.get_colour_func(), "MAPMODE_14");
 	ret &= add_mapmode("mapmode_supply", Mapmode::ERROR_MAPMODE.get_colour_func(), "MAPMODE_15");
 	ret &= add_mapmode("mapmode_party_loyalty", Mapmode::ERROR_MAPMODE.get_colour_func(), "MAPMODE_16");
@@ -333,7 +334,7 @@ bool MapmodeManager::setup_mapmodes() {
 				return colour_argb_t::fill_as(f).with_alpha(ALPHA_VALUE);
 			}
 		);
-		ret &= add_mapmode("mapmode_religion", shaded_mapmode(&ProvinceInstance::get_population_by_religion));
+		ret &= add_mapmode("mapmode_religion", shaded_mapmode<Religion, pop_size_t>(&ProvinceInstance::get_population_by_religion));
 		ret &= add_mapmode("mapmode_terrain_type", get_colour_mapmode(&ProvinceInstance::get_terrain_type));
 		ret &= add_mapmode(
 			"mapmode_adjacencies",
