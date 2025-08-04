@@ -69,8 +69,8 @@ namespace OpenVic {
 		ordered_map<KeyType, LhsValueType>& lhs,
 		RhsValueType const& rhs
 	) requires AddAssignable<LhsValueType,RhsValueType> {
-		for (auto& [key, lhs_value] : lhs) {
-			lhs_value += rhs;
+		for (typename decltype(lhs)::iterator it = lhs.begin(); it != lhs.end(); ++it) {
+			it.value() += rhs;
 		}
 		return lhs;
 	}
@@ -80,8 +80,8 @@ namespace OpenVic {
 		ordered_map<KeyType, LhsValueType>& lhs,
 		RhsValueType const& rhs
 	) requires SubtractAssignable<LhsValueType,RhsValueType> {
-		for (auto& [key, lhs_value] : lhs) {
-			lhs_value -= rhs;
+		for (typename decltype(lhs)::iterator it = lhs.begin(); it != lhs.end(); ++it) {
+			it.value() -= rhs;
 		}
 		return lhs;
 	}
@@ -91,8 +91,8 @@ namespace OpenVic {
 		ordered_map<KeyType, LhsValueType>& lhs,
 		RhsValueType const& rhs
 	) requires MultiplyAssignable<LhsValueType,RhsValueType> {
-		for (auto& [key, lhs_value] : lhs) {
-			lhs_value *= rhs;
+		for (typename decltype(lhs)::iterator it = lhs.begin(); it != lhs.end(); ++it) {
+			it.value() *= rhs;
 		}
 		return lhs;
 	}
@@ -102,8 +102,8 @@ namespace OpenVic {
 		ordered_map<KeyType, LhsValueType>& lhs,
 		RhsValueType const& rhs
 	) requires DivideAssignable<LhsValueType,RhsValueType> {
-		for (auto& [key, lhs_value] : lhs) {
-			lhs_value /= rhs;
+		for (auto it = lhs.begin(); it != lhs.end(); ++it) {
+			it.value() /= rhs;
 		}
 		return lhs;
 	}
@@ -113,7 +113,7 @@ namespace OpenVic {
 		ordered_map<KeyType, ValueType> const& map
 	) requires AddAssignable<ValueType> && std::is_default_constructible_v<ValueType> {
 		ValueType running_total {};
-		for (auto& [key, value] : map) {
+		for (auto const& [key, value] : map) {
 			running_total += value;
 		}
 		return running_total;
