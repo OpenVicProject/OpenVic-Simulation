@@ -78,6 +78,7 @@ namespace OpenVic {
 		State* PROPERTY_PTR(state, nullptr);
 
 		CountryInstance* PROPERTY_PTR(owner, nullptr);
+		ModifierSum const& get_owner_modifier_sum() const;
 		CountryInstance* PROPERTY_PTR(controller, nullptr);
 		CountryInstance* PROPERTY_PTR(country_to_report_economy, nullptr);
 		ordered_set<CountryInstance*> PROPERTY(cores);
@@ -169,8 +170,19 @@ namespace OpenVic {
 
 		void update_modifier_sum(Date today, StaticModifierCache const& static_modifier_cache);
 		fixed_point_t get_modifier_effect_value(ModifierEffect const& effect) const;
-		void for_each_contributing_modifier(ModifierEffect const& effect, ContributingModifierCallback auto callback) const;
 
+		void for_each_contributing_modifier(ModifierEffect const& effect, ContributingModifierCallback auto callback) const {
+			if (effect.is_local()) {
+				// Province-targeted/local effects come from the province itself, only modifiers applied directly to the
+				// province contribute to these effects.
+				modifier_sum.for_each_contributing_modifier(effect, std::move(callback));
+			} else if (owner != nullptr) {
+				// Non-province targeted/global effects come from the province's owner, even those applied locally
+				// (e.g. via a province event modifier) are passed up to the province's controller and only affect the
+				// province if the controller is also the owner.
+				get_owner_modifier_sum().for_each_contributing_modifier(effect, std::move(callback));
+			}
+		}
 		void update_gamestate(InstanceManager const& instance_manager);
 		static constexpr size_t VECTORS_FOR_PROVINCE_TICK = std::max(
 			ResourceGatheringOperation::VECTORS_FOR_RGO_TICK,
