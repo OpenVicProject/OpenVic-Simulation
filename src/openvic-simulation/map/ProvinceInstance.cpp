@@ -32,6 +32,10 @@ ProvinceInstance::ProvinceInstance(
 	rgo { new_market_instance, pop_type_keys },
 	pops_cache_by_type { pop_type_keys } {}
 
+ModifierSum const& ProvinceInstance::get_owner_modifier_sum() const {
+	return owner->get_modifier_sum();
+}
+
 memory::vector<Pop*> const& ProvinceInstance::get_pops_cache_by_type(PopType const& key) const {
 	return pops_cache_by_type.at(key);
 }
@@ -297,19 +301,6 @@ fixed_point_t ProvinceInstance::get_modifier_effect_value(ModifierEffect const& 
 		return owner->get_modifier_effect_value(effect);
 	} else {
 		return 0;
-	}
-}
-
-void ProvinceInstance::for_each_contributing_modifier(ModifierEffect const& effect, ContributingModifierCallback auto callback) const {
-	if (effect.is_local()) {
-		// Province-targeted/local effects come from the province itself, only modifiers applied directly to the
-		// province contribute to these effects.
-		modifier_sum.for_each_contributing_modifier(effect, std::move(callback));
-	} else if (owner != nullptr) {
-		// Non-province targeted/global effects come from the province's owner, even those applied locally
-		// (e.g. via a province event modifier) are passed up to the province's controller and only affect the
-		// province if the controller is also the owner.
-		owner->for_each_contributing_modifier(effect, std::move(callback));
 	}
 }
 
