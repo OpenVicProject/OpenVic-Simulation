@@ -116,16 +116,21 @@ namespace OpenVic {
 
 		IndexedFlatMap_PROPERTY(PopType, memory::vector<Pop*>, pops_cache_by_type);
 	public:
+		//pointers instead of references to allow construction via std::tuple
 		ProvinceInstance(
-			MarketInstance& new_market_instance,
-			GameRulesManager const& new_game_rules_manager,
-			ModifierEffectCache const& new_modifier_effect_cache,
-			ProvinceDefinition const& new_province_definition,
+			MarketInstance* new_market_instance,
+			GameRulesManager const* new_game_rules_manager,
+			ModifierEffectCache const* new_modifier_effect_cache,
+			ProvinceDefinition const* new_province_definition,
 			utility::forwardable_span<const Strata> strata_keys,
 			utility::forwardable_span<const PopType> pop_type_keys,
-			utility::forwardable_span<const Ideology> ideology_keys
+			utility::forwardable_span<const Ideology> ideology_keys,
+			BuildingTypeManager const* building_type_manager
 		);
-		ProvinceInstance(ProvinceInstance&&) = default;
+		ProvinceInstance(ProvinceInstance const&) = delete;
+		ProvinceInstance& operator=(ProvinceInstance const&) = delete;
+		ProvinceInstance(ProvinceInstance&&) = delete;
+		ProvinceInstance& operator=(ProvinceInstance&&) = delete;
 
 		inline explicit constexpr operator ProvinceDefinition const&() const {
 			return province_definition;
@@ -208,7 +213,6 @@ namespace OpenVic {
 		bool add_unit_instance_group(UnitInstanceGroup& group);
 		bool remove_unit_instance_group(UnitInstanceGroup const& group);
 
-		bool setup(BuildingTypeManager const& building_type_manager);
 		bool apply_history_to_province(ProvinceHistoryEntry const& entry, CountryInstanceManager& country_manager);
 
 		void setup_pop_test_values(IssueManager const& issue_manager);

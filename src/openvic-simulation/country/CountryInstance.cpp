@@ -1,6 +1,8 @@
 #include "CountryInstance.hpp"
 
+#include <cstddef>
 #include <cstdint>
+#include <tuple>
 
 #include "openvic-simulation/country/SharedCountryValues.hpp"
 #include "openvic-simulation/country/CountryDefinition.hpp"
@@ -33,7 +35,6 @@ static constexpr colour_t ERROR_COLOUR = colour_t::from_integer(0xFF0000);
 
 CountryInstance::CountryInstance(
 	CountryDefinition const* new_country_definition,
-	index_t new_index,
 	decltype(building_type_unlock_levels)::keys_span_type building_type_keys,
 	decltype(technology_unlock_levels)::keys_span_type technology_keys,
 	decltype(invention_unlock_levels)::keys_span_type invention_keys,
@@ -46,32 +47,30 @@ CountryInstance::CountryInstance(
 	utility::forwardable_span<const Strata> strata_keys,
 	utility::forwardable_span<const PopType> pop_type_keys,
 	utility::forwardable_span<const Ideology> ideology_keys,
-	GameRulesManager const& new_game_rules_manager,
-	CountryRelationManager& new_country_relations_manager,
-	SharedCountryValues const& new_shared_country_values,
-	GoodInstanceManager& new_good_instance_manager,
-	CountryDefines const& new_country_defines,
-	EconomyDefines const& new_economy_defines
+	GameRulesManager const* new_game_rules_manager,
+	CountryRelationManager* new_country_relations_manager,
+	SharedCountryValues const* new_shared_country_values,
+	GoodInstanceManager* new_good_instance_manager,
+	CountryDefines const* new_country_defines,
+	EconomyDefines const* new_economy_defines
 ) : FlagStrings { "country" },
-	HasIndex { new_index },
+	HasIndex { new_country_definition->get_index() },
 	PopsAggregate { strata_keys, pop_type_keys, ideology_keys },
 	/* Main attributes */
-	country_definition { new_country_definition },
-	game_rules_manager { new_game_rules_manager },
-	country_relations_manager { new_country_relations_manager },
-	shared_country_values { new_shared_country_values },
-	country_defines { new_country_defines },
+	country_definition { *new_country_definition },
+	game_rules_manager { *new_game_rules_manager },
+	country_relations_manager { *new_country_relations_manager },
+	shared_country_values { *new_shared_country_values },
+	country_defines { *new_country_defines },
 	colour { ERROR_COLOUR },
 
 	/* Production */
 	building_type_unlock_levels { building_type_keys },
 
 	/* Budget */
-	taxable_income_mutex { memory::make_unique<std::mutex>() },
 	taxable_income_by_pop_type { pop_type_keys },
 	effective_tax_rate_by_strata { strata_keys },
 	tax_rate_slider_value_by_strata { strata_keys },
-	actual_net_tariffs_mutex { memory::make_unique<std::mutex>() },
 
 	/* Technology */
 	technology_unlock_levels { technology_keys },
@@ -91,7 +90,7 @@ CountryInstance::CountryInstance(
 	/* Military */
 	regiment_type_unlock_levels { regiment_type_unlock_levels_keys },
 	ship_type_unlock_levels { ship_type_unlock_levels_keys } {
-
+	modifier_sum.set_this_source(this);
 	// Exclude PROVINCE (local) modifier effects from the country's modifier sum
 	modifier_sum.set_this_excluded_targets(ModifierEffect::target_t::PROVINCE);
 
@@ -103,14 +102,14 @@ CountryInstance::CountryInstance(
 	}
 
 	// army, navy and construction spending have minimums defined in EconomyDefines and always have an unmodified max (1.0).
-	army_spending_slider_value.set_bounds(new_economy_defines.get_minimum_army_spending_slider_value(), 1);
+	army_spending_slider_value.set_bounds(new_economy_defines->get_minimum_army_spending_slider_value(), 1);
 	army_spending_slider_value.set_value(1);
 
-	navy_spending_slider_value.set_bounds(new_economy_defines.get_minimum_navy_spending_slider_value(), 1);
+	navy_spending_slider_value.set_bounds(new_economy_defines->get_minimum_navy_spending_slider_value(), 1);
 	navy_spending_slider_value.set_value(1);
 
 	construction_spending_slider_value.set_bounds(
-		new_economy_defines.get_minimum_construction_spending_slider_value(), 1
+		new_economy_defines->get_minimum_construction_spending_slider_value(), 1
 	);
 	construction_spending_slider_value.set_value(1);
 
@@ -129,11 +128,11 @@ CountryInstance::CountryInstance(
 	tariff_rate_slider_value.set_bounds(0, 0);
 	tariff_rate_slider_value.set_value(0);
 
-	update_country_definition_based_attributes();
+	update_parties_for_votes(new_country_definition);
 
 	for (BuildingType const& building_type : building_type_unlock_levels.get_keys()) {
 		if (building_type.is_default_enabled()) {
-			unlock_building_type(building_type, new_good_instance_manager);
+			unlock_building_type(building_type, *new_good_instance_manager);
 		}
 	}
 
@@ -157,7 +156,7 @@ CountryInstance::CountryInstance(
 }
 
 std::string_view CountryInstance::get_identifier() const {
-	return country_definition->get_identifier();
+	return country_definition.get_identifier();
 }
 
 fixed_point_t CountryInstance::get_tariff_efficiency() const {
@@ -165,10 +164,6 @@ fixed_point_t CountryInstance::get_tariff_efficiency() const {
 		fixed_point_t::_1,
 		administrative_efficiency_from_administrators + country_defines.get_base_country_tax_efficiency()
 	);
-}
-
-void CountryInstance::update_country_definition_based_attributes() {
-	update_parties_for_votes(country_definition);
 }
 
 bool CountryInstance::exists() const {
@@ -967,7 +962,7 @@ void CountryInstance::apply_foreign_investments(
 	fixed_point_map_t<CountryDefinition const*> const& investments, CountryInstanceManager const& country_instance_manager
 ) {
 	for (auto const& [country, money_invested] : investments) {
-		foreign_investments[&country_instance_manager.get_country_instance_from_definition(*country)] = money_invested;
+		foreign_investments[&country_instance_manager.get_country_instance_by_definition(*country)] = money_invested;
 	}
 }
 
@@ -995,7 +990,7 @@ bool CountryInstance::apply_history_to_country(CountryHistoryEntry const& entry,
 	set_optional(last_election, entry.get_last_election());
 	upper_house_proportion_by_ideology.copy_values_from(entry.get_upper_house_proportion_by_ideology());
 	if (entry.get_capital()) {
-		capital = &instance_manager.get_map_instance().get_province_instance_from_definition(**entry.get_capital());
+		capital = &instance_manager.get_map_instance().get_province_instance_by_definition(**entry.get_capital());
 	}
 	set_optional(government_type, entry.get_government_type());
 	set_optional(plurality, entry.get_plurality());
@@ -1629,7 +1624,7 @@ void CountryInstance::update_gamestate(InstanceManager& instance_manager) {
 		for (ProvinceDefinition::adjacency_t const& adjacency : province_definition.get_adjacencies()) {
 			// TODO - should we limit based on adjacency type? Straits and impassable still work in game,
 			// and water provinces don't have an owner so they'll get caught by the later checks anyway.
-			CountryInstance* neighbour = map_instance.get_province_instance_from_definition(*adjacency.get_to()).get_owner();
+			CountryInstance* neighbour = map_instance.get_province_instance_by_definition(*adjacency.get_to()).get_owner();
 			if (neighbour != nullptr && neighbour != this) {
 				neighbouring_countries.insert(neighbour);
 			}
@@ -1648,7 +1643,7 @@ void CountryInstance::update_gamestate(InstanceManager& instance_manager) {
 			ProvinceInstance const& province = *province_checklist[index];
 
 			for (ProvinceDefinition::adjacency_t const& adjacency : province.get_province_definition().get_adjacencies()) {
-				ProvinceInstance& adjacent_province = map_instance.get_province_instance_from_definition(*adjacency.get_to());
+				ProvinceInstance& adjacent_province = map_instance.get_province_instance_by_definition(*adjacency.get_to());
 
 				if (adjacent_province.get_owner() == this && !adjacent_province.get_connected_to_capital()) {
 					adjacent_province.set_connected_to_capital(true);
@@ -1682,12 +1677,12 @@ void CountryInstance::update_gamestate(InstanceManager& instance_manager) {
 	total_score = prestige + industrial_power + military_power;
 
 	const CountryDefinition::government_colour_map_t::const_iterator it =
-		country_definition->get_alternative_colours().find(government_type);
+		country_definition.get_alternative_colours().find(government_type);
 
-	if (it != country_definition->get_alternative_colours().end()) {
+	if (it != country_definition.get_alternative_colours().end()) {
 		colour = it->second;
 	} else {
-		colour = country_definition->get_colour();
+		colour = country_definition.get_colour();
 	}
 
 	if (government_type != nullptr) {
@@ -1723,7 +1718,7 @@ void CountryInstance::country_tick_before_map(InstanceManager& instance_manager)
 	// + industrial subsidies
 	// + loan interest
 
-	fixed_point_t available_funds = cash_stockpile.get_copy_of_value();
+	fixed_point_t available_funds = cash_stockpile;
 	fixed_point_t actual_import_subsidies;
 	if (projected_spending <= available_funds) {
 		actual_administration_spending = projected_administration_spending;
@@ -1878,7 +1873,7 @@ void CountryInstance::good_data_t::clear_daily_recorded_data() {
 }
 
 void CountryInstance::report_pop_income_tax(PopType const& pop_type, const fixed_point_t gross_income, const fixed_point_t paid_as_tax) {
-	const std::lock_guard<std::mutex> lock_guard { *taxable_income_mutex };
+	const std::lock_guard<std::mutex> lock_guard { taxable_income_mutex };
 	taxable_income_by_pop_type.at(pop_type) += gross_income;
 	cash_stockpile += paid_as_tax;
 }
@@ -2014,7 +2009,7 @@ fixed_point_t CountryInstance::apply_tariff(const fixed_point_t money_spent_on_i
 	}
 
 	const fixed_point_t tariff = effective_tariff_rate * money_spent_on_imports;
-	const std::lock_guard<std::mutex> lock_guard { *actual_net_tariffs_mutex };
+	const std::lock_guard<std::mutex> lock_guard { actual_net_tariffs_mutex };
 	actual_net_tariffs += tariff;
 	return tariff;
 }
@@ -2035,7 +2030,7 @@ CountryInstance::good_data_t const& CountryInstance::get_good_data(GoodDefinitio
 void CountryInstanceManager::update_rankings(Date today, DefineManager const& define_manager) {
 	total_ranking.clear();
 
-	for (CountryInstance& country : country_instances.get_items()) {
+	for (CountryInstance& country : get_country_instances()) {
 		if (country.exists()) {
 			total_ranking.push_back(&country);
 		}
@@ -2162,31 +2157,7 @@ CountryInstanceManager::CountryInstanceManager(
 	CountryDefinitionManager const& new_country_definition_manager,
 	ModifierEffectCache const& new_modifier_effect_cache,
 	CountryDefines const& new_country_defines,
-	PopsDefines const& new_pop_defines,
-	std::span<const PopType> pop_type_keys
-)
-  : country_definition_manager { new_country_definition_manager },
-	country_definition_to_instance_map { new_country_definition_manager.get_country_definitions() },
-	shared_country_values {
-		new_modifier_effect_cache,
-		new_country_defines,
-		new_pop_defines,
-		pop_type_keys
-	}
-	{
-		great_powers.reserve(16);
-		secondary_powers.reserve(16);
-	}
-
-CountryInstance& CountryInstanceManager::get_country_instance_from_definition(CountryDefinition const& country) {
-	return *country_definition_to_instance_map.at(country);
-}
-
-CountryInstance const& CountryInstanceManager::get_country_instance_from_definition(CountryDefinition const& country) const {
-	return *country_definition_to_instance_map.at(country);
-}
-
-bool CountryInstanceManager::generate_country_instances(
+	PopsDefines const& new_pop_defines,			
 	decltype(CountryInstance::building_type_unlock_levels)::keys_span_type building_type_keys,
 	decltype(CountryInstance::technology_unlock_levels)::keys_span_type technology_keys,
 	decltype(CountryInstance::invention_unlock_levels)::keys_span_type invention_keys,
@@ -2202,18 +2173,19 @@ bool CountryInstanceManager::generate_country_instances(
 	GameRulesManager const& game_rules_manager,
 	CountryRelationManager& country_relations_manager,
 	GoodInstanceManager& good_instance_manager,
-	CountryDefines const& country_defines,
 	EconomyDefines const& economy_defines
-) {
-	reserve_more(country_instances, country_definition_manager.get_country_definition_count());
-
-	bool ret = true;
-
-	for (CountryDefinition const& country_definition : country_definition_manager.get_country_definitions()) {
-		if (country_instances.emplace_item(
-			country_definition.get_identifier(),
-			&country_definition,
-			get_country_instance_count(),
+)
+  : country_definition_manager { new_country_definition_manager },
+	shared_country_values {
+		new_modifier_effect_cache,
+		new_country_defines,
+		new_pop_defines,
+		pop_type_keys
+	},
+	country_instance_by_definition {
+		new_country_definition_manager.get_country_definitions(),
+		[
+			this,
 			building_type_keys,
 			technology_keys,
 			invention_keys,
@@ -2226,25 +2198,68 @@ bool CountryInstanceManager::generate_country_instances(
 			strata_keys,
 			pop_type_keys,
 			ideology_keys,
-			game_rules_manager,
-			country_relations_manager,
-			shared_country_values,
-			good_instance_manager,
-			country_defines,
-			economy_defines
-		)) {
-			// We need to update the country's ModifierSum's source here as the country's address is finally stable
-			// after changing between its constructor call and now due to being std::move'd into the registry.
-			CountryInstance& country_instance = get_back_country_instance();
-			country_instance.modifier_sum.set_this_source(&country_instance);
-
-			country_definition_to_instance_map.set(country_definition, &country_instance);
-		} else {
-			ret = false;
+			game_rules_manager_ptr=&game_rules_manager,
+			country_relations_manager_ptr=&country_relations_manager,
+			good_instance_manager_ptr=&good_instance_manager,
+			new_country_defines_ptr=&new_country_defines,
+			economy_defines_ptr=&economy_defines
+		](CountryDefinition const& country_definition)->auto{
+			return std::make_tuple(
+				&country_definition,
+				building_type_keys,
+				technology_keys,
+				invention_keys,
+				reform_keys,
+				government_type_keys,
+				crime_keys,
+				good_instances_keys,
+				regiment_type_unlock_levels_keys,
+				ship_type_unlock_levels_keys,
+				strata_keys,
+				pop_type_keys,
+				ideology_keys,
+				game_rules_manager_ptr,
+				country_relations_manager_ptr,
+				&shared_country_values,
+				good_instance_manager_ptr,
+				new_country_defines_ptr,
+				economy_defines_ptr
+			);
 		}
 	}
+{
+	assert(new_country_definition_manager.country_definitions_are_locked());
+	great_powers.reserve(16);
+	secondary_powers.reserve(16);
+}
 
-	return ret;
+CountryInstance* CountryInstanceManager::get_country_instance_by_identifier(std::string_view identifier) {
+	CountryDefinition const* country_definition = country_definition_manager.get_country_definition_by_identifier(identifier);
+	return country_definition == nullptr
+		? nullptr
+		: &get_country_instance_by_definition(*country_definition);
+}
+CountryInstance const* CountryInstanceManager::get_country_instance_by_identifier(std::string_view identifier) const {
+	CountryDefinition const* country_definition = country_definition_manager.get_country_definition_by_identifier(identifier);
+	return country_definition == nullptr
+		? nullptr
+		: &get_country_instance_by_definition(*country_definition);
+}
+CountryInstance* CountryInstanceManager::get_country_instance_by_index(typename CountryInstance::index_t index) {
+	return country_instance_by_definition.contains_index(index)
+		? &country_instance_by_definition.at_index(index)
+		: nullptr;
+}
+CountryInstance const* CountryInstanceManager::get_country_instance_by_index(typename CountryInstance::index_t index) const {
+	return country_instance_by_definition.contains_index(index)
+		? &country_instance_by_definition.at_index(index)
+		: nullptr;
+}
+CountryInstance& CountryInstanceManager::get_country_instance_by_definition(CountryDefinition const& country_definition) {
+	return country_instance_by_definition.at(country_definition);
+}
+CountryInstance const& CountryInstanceManager::get_country_instance_by_definition(CountryDefinition const& country_definition) const {
+	return country_instance_by_definition.at(country_definition);
 }
 
 bool CountryInstanceManager::apply_history_to_countries(InstanceManager& instance_manager) {
@@ -2259,12 +2274,13 @@ bool CountryInstanceManager::apply_history_to_countries(InstanceManager& instanc
 
 	const Date starting_last_war_loss_date = today - RECENT_WAR_LOSS_TIME_LIMIT;
 
-	for (CountryInstance& country_instance : country_instances.get_items()) {
+	for (CountryInstance& country_instance : get_country_instances()) {
 		country_instance.last_war_loss_date = starting_last_war_loss_date;
 
-		if (!country_instance.get_country_definition()->is_dynamic_tag()) {
-			CountryHistoryMap const* history_map =
-				history_manager.get_country_history(country_instance.get_country_definition());
+		if (!country_instance.get_country_definition().is_dynamic_tag()) {
+			CountryHistoryMap const* history_map = history_manager.get_country_history(
+				country_instance.get_country_definition()
+			);
 
 			if (history_map != nullptr) {
 				static constexpr fixed_point_t DEFAULT_STATE_CULTURE_LITERACY = fixed_point_t::_0_50;
@@ -2337,13 +2353,13 @@ bool CountryInstanceManager::apply_history_to_countries(InstanceManager& instanc
 }
 
 void CountryInstanceManager::update_modifier_sums(Date today, StaticModifierCache const& static_modifier_cache) {
-	for (CountryInstance& country : country_instances.get_items()) {
+	for (CountryInstance& country : get_country_instances()) {
 		country.update_modifier_sum(today, static_modifier_cache);
 	}
 }
 
 void CountryInstanceManager::update_gamestate(InstanceManager& instance_manager) {
-	for (CountryInstance& country : country_instances.get_items()) {
+	for (CountryInstance& country : get_country_instances()) {
 		country.update_gamestate(instance_manager);
 	}
 
@@ -2356,14 +2372,14 @@ void CountryInstanceManager::update_gamestate(InstanceManager& instance_manager)
 
 void CountryInstanceManager::country_manager_tick_before_map(InstanceManager& instance_manager) {
 	//TODO parallellise?
-	for (CountryInstance& country : country_instances.get_items()) {
+	for (CountryInstance& country : get_country_instances()) {
 		country.country_tick_before_map(instance_manager);
 	}
 }
 
 void CountryInstanceManager::country_manager_tick_after_map(InstanceManager& instance_manager) {
 	//TODO parallellise?
-	for (CountryInstance& country : country_instances.get_items()) {
+	for (CountryInstance& country : get_country_instances()) {
 		country.country_tick_after_map(instance_manager);
 	}
 

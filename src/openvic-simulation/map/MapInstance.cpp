@@ -1,6 +1,7 @@
 #include "MapInstance.hpp"
 
 #include <optional>
+#include <tuple>
 
 #include "openvic-simulation/history/ProvinceHistory.hpp"
 #include "openvic-simulation/map/MapDefinition.hpp"
@@ -16,28 +17,80 @@ using namespace OpenVic;
 
 MapInstance::MapInstance(
 	MapDefinition const& new_map_definition,
-	ThreadPool& new_thread_pool
+	BuildingTypeManager const& building_type_manager,
+	GameRulesManager const& game_rules_manager,
+	ModifierEffectCache const& modifier_effect_cache,
+	MarketInstance& market_instance,
+	ThreadPool& new_thread_pool,
+	utility::forwardable_span<const Strata> strata_keys,
+	utility::forwardable_span<const PopType> pop_type_keys,
+	utility::forwardable_span<const Ideology> ideology_keys
 ) : map_definition { new_map_definition },
 	thread_pool { new_thread_pool },
 	land_pathing { *this },
-	sea_pathing { *this } {}
+	sea_pathing { *this },
+	province_instance_by_definition(
+		new_map_definition.get_province_definitions(),
+		[
+			market_instance_ptr=&market_instance,
+			game_rules_manager_ptr=&game_rules_manager,
+			modifier_effect_cache_ptr=&modifier_effect_cache,
+			strata_keys,
+			pop_type_keys,
+			ideology_keys,
+			building_type_manager_ptr=&building_type_manager
+		](ProvinceDefinition const& province_definition) -> auto {
+			return std::make_tuple(
+				market_instance_ptr,
+				game_rules_manager_ptr,
+				modifier_effect_cache_ptr,
+				&province_definition,
+				strata_keys,
+				pop_type_keys,
+				ideology_keys,
+				building_type_manager_ptr
+			);
+		}
+	) { assert(new_map_definition.province_definitions_are_locked()); }
 
-ProvinceInstance& MapInstance::get_province_instance_from_definition(ProvinceDefinition const& province) {
-	return province_instances.get_items()[province.get_index()];
+ProvinceInstance* MapInstance::get_province_instance_by_identifier(std::string_view identifier) {
+	ProvinceDefinition const* province_definition = map_definition.get_province_definition_by_identifier(identifier);
+	return province_definition == nullptr
+		? nullptr
+		: &get_province_instance_by_definition(*province_definition);
 }
-ProvinceInstance const& MapInstance::get_province_instance_from_definition(ProvinceDefinition const& province) const {
-	return province_instances.get_items()[province.get_index()];
+ProvinceInstance const* MapInstance::get_province_instance_by_identifier(std::string_view identifier) const {
+	ProvinceDefinition const* province_definition = map_definition.get_province_definition_by_identifier(identifier);
+	return province_definition == nullptr
+		? nullptr
+		: &get_province_instance_by_definition(*province_definition);
+}
+ProvinceInstance* MapInstance::get_province_instance_by_index(typename ProvinceInstance::index_t index) {
+	return province_instance_by_definition.contains_index(index)
+		? &province_instance_by_definition.at_index(index)
+		: nullptr;
+}
+ProvinceInstance const* MapInstance::get_province_instance_by_index(typename ProvinceInstance::index_t index) const {
+	return province_instance_by_definition.contains_index(index)
+		? &province_instance_by_definition.at_index(index)
+		: nullptr;
+}
+ProvinceInstance& MapInstance::get_province_instance_by_definition(ProvinceDefinition const& province_definition) {
+	return province_instance_by_definition.at(province_definition);
+}
+ProvinceInstance const& MapInstance::get_province_instance_by_definition(ProvinceDefinition const& province_definition) const {
+	return province_instance_by_definition.at(province_definition);
 }
 
 ProvinceInstance* MapInstance::get_province_instance_from_number(
 	decltype(std::declval<ProvinceDefinition>().get_province_number())province_number
 ) {
-	return province_instances.get_item_by_index(ProvinceDefinition::get_index_from_province_number(province_number));
+	return get_province_instance_by_index(ProvinceDefinition::get_index_from_province_number(province_number));
 }
 ProvinceInstance const* MapInstance::get_province_instance_from_number(
 	decltype(std::declval<ProvinceDefinition>().get_province_number())province_number
 ) const {
-	return province_instances.get_item_by_index(ProvinceDefinition::get_index_from_province_number(province_number));
+	return get_province_instance_by_index(ProvinceDefinition::get_index_from_province_number(province_number));
 }
 
 void MapInstance::enable_canal(canal_index_t canal_index) {
@@ -46,61 +99,6 @@ void MapInstance::enable_canal(canal_index_t canal_index) {
 
 bool MapInstance::is_canal_enabled(canal_index_t canal_index) const {
 	return enabled_canals.contains(canal_index);
-}
-
-bool MapInstance::setup(
-	BuildingTypeManager const& building_type_manager,
-	MarketInstance& market_instance,
-	GameRulesManager const& game_rules_manager,
-	ModifierEffectCache const& modifier_effect_cache,
-	utility::forwardable_span<const Strata> strata_keys,
-	utility::forwardable_span<const PopType> pop_type_keys,
-	utility::forwardable_span<const Ideology> ideology_keys
-) {
-	if (province_instances_are_locked()) {
-		Logger::error("Cannot setup map instance - province instances are already locked!");
-		return false;
-	}
-
-	bool ret = true;
-
-	if (!map_definition.province_definitions_are_locked()) {
-		Logger::error("Cannot setup map instance - province definitions are not locked!");
-		ret = false;
-	} else {
-		province_instances.reserve(map_definition.get_province_definition_count());
-
-		for (ProvinceDefinition const& province_definition : map_definition.get_province_definitions()) {
-			if (!province_instances.emplace_item(
-				province_definition.get_identifier(),
-				market_instance, game_rules_manager, modifier_effect_cache, province_definition, strata_keys, pop_type_keys, ideology_keys
-			)) {
-				ret = false;
-				continue;
-			}
-
-			// We need to update the province's ModifierSum's source here as the province's address is finally stable
-			// after changing between its constructor call and now due to being std::move'd into the registry.
-			ProvinceInstance& province_instance = get_back_province_instance();
-			province_instance.modifier_sum.set_this_source(&province_instance);
-		}
-	}
-
-	province_instances.lock();
-
-	for (ProvinceInstance& province : province_instances.get_items()) {
-		ret &= province.setup(building_type_manager);
-	}
-
-	if (get_province_instance_count() != map_definition.get_province_definition_count()) {
-		Logger::error(
-			"ProvinceInstance count (", get_province_instance_count(), ") does not match ProvinceDefinition count (",
-			map_definition.get_province_definition_count(), ")!"
-		);
-		return false;
-	}
-
-	return ret;
 }
 
 bool MapInstance::apply_history_to_provinces(
@@ -113,7 +111,7 @@ bool MapInstance::apply_history_to_provinces(
 ) {
 	bool ret = true;
 
-	for (ProvinceInstance& province : province_instances.get_items()) {
+	for (ProvinceInstance& province : get_province_instances()) {
 		ProvinceDefinition const& province_definition = province.get_province_definition();
 		if (!province_definition.is_water()) {
 			ProvinceHistoryMap const* history_map = history_manager.get_province_history(&province_definition);
@@ -161,7 +159,7 @@ bool MapInstance::apply_history_to_provinces(
 }
 
 void MapInstance::update_modifier_sums(const Date today, StaticModifierCache const& static_modifier_cache) {
-	for (ProvinceInstance& province : province_instances.get_items()) {
+	for (ProvinceInstance& province : get_province_instances()) {
 		province.update_modifier_sum(today, static_modifier_cache);
 	}
 }
@@ -170,7 +168,7 @@ void MapInstance::update_gamestate(InstanceManager const& instance_manager) {
 	highest_province_population = 0;
 	total_map_population = 0;
 
-	for (ProvinceInstance& province : province_instances.get_items()) {
+	for (ProvinceInstance& province : get_province_instances()) {
 		province.update_gamestate(instance_manager);
 
 		// Update population stats

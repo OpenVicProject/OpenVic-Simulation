@@ -3,6 +3,8 @@
 #include <atomic>
 #include <cstddef>
 
+#include <foonathan/memory/tracking.hpp>
+
 namespace OpenVic::utility {
 	struct MemoryTracker {
 		void on_node_allocation(void* mem, std::size_t size, std::size_t) {
@@ -45,4 +47,15 @@ namespace OpenVic::utility {
 		inline static std::atomic_uint64_t _memory_usage = 0;
 		inline static std::atomic_uint64_t _max_memory_usage = 0;
 	};
+}
+
+namespace OpenVic::memory {
+	template<class RawAllocator>
+	using tracker =
+#ifdef DEBUG_ENABLED
+		foonathan::memory::tracked_allocator<OpenVic::utility::MemoryTracker, RawAllocator>
+#else
+		RawAllocator
+#endif
+		;
 }

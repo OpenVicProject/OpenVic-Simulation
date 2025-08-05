@@ -84,20 +84,10 @@ bool MapmodeManager::generate_mapmode_colours(
 
 	target_stripes[ProvinceDefinition::NULL_INDEX] = colour_argb_t::null();
 
-	if (map_instance.province_instances_are_locked()) {
-		for (ProvinceInstance const& province : map_instance.get_province_instances()) {
-			target_stripes[province.get_province_definition().get_province_number()] = mapmode->get_base_stripe_colours(
-				map_instance, province, player_country, selected_province
-			);
-		}
-	} else {
-		for (
-			size_t index = ProvinceDefinition::NULL_INDEX + 1;
-			index <= map_instance.get_map_definition().get_province_definition_count();
-			++index
-		) {
-			target_stripes[index] = colour_argb_t::null();
-		}
+	for (ProvinceInstance const& province : map_instance.get_province_instances()) {
+		target_stripes[province.get_province_definition().get_province_number()] = mapmode->get_base_stripe_colours(
+			map_instance, province, player_country, selected_province
+		);
 	}
 
 	return ret;

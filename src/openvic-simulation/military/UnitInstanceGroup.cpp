@@ -329,7 +329,7 @@ bool UnitInstanceManager::generate_unit_instance_group(
 	}
 
 	ret &= unit_instance_group.set_position(
-		&map_instance.get_province_instance_from_definition(*unit_deployment_group.get_location())
+		&map_instance.get_province_instance_by_definition(*unit_deployment_group.get_location())
 	);
 	ret &= unit_instance_group.set_country(&country);
 

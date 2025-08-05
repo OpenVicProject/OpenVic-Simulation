@@ -180,12 +180,9 @@ void Pop::update_location_based_attributes() {
 	if (owner == nullptr) {
 		return;
 	}
-	CountryDefinition const* country_definition = owner ->get_country_definition();
-	if (country_definition == nullptr) {
-		return;
-	}
+	CountryDefinition const& country_definition = owner ->get_country_definition();
 
-	auto view = country_definition->get_parties() | std::views::transform(
+	auto view = country_definition.get_parties() | std::views::transform(
 		[](CountryParty const& key) {
 			return std::make_pair(&key, fixed_point_t::_0);
 		}

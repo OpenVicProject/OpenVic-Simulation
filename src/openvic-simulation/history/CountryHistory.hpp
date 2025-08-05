@@ -107,7 +107,7 @@ namespace OpenVic {
 		void lock_country_histories();
 		bool is_locked() const;
 
-		CountryHistoryMap const* get_country_history(CountryDefinition const* country) const;
+		CountryHistoryMap const* get_country_history(CountryDefinition const& country) const;
 
 		bool load_country_history_file(
 			DefinitionManager& definition_manager, Dataloader const& dataloader, CountryDefinition const& country,

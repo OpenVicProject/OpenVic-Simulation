@@ -40,7 +40,7 @@ void ArtisanalProducerFactoryPattern::recalculate_unlocked_artisanal_production_
 	unlocked_artisanal_production_types.clear();
 	for (ProductionType const& production_type : production_type_manager.get_production_types()) {
 		if (production_type.get_template_type() == ProductionType::template_type_t::ARTISAN) {
-			GoodInstance const& good_instance = good_instance_manager.get_good_instance_from_definition(
+			GoodInstance const& good_instance = good_instance_manager.get_good_instance_by_definition(
 				production_type.get_output_good()
 			);
 			if (!good_instance.get_is_available()) {

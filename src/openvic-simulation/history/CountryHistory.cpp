@@ -307,12 +307,8 @@ bool CountryHistoryManager::is_locked() const {
 	return locked;
 }
 
-CountryHistoryMap const* CountryHistoryManager::get_country_history(CountryDefinition const* country) const {
-	if (country == nullptr) {
-		Logger::error("Attempted to access history of null country");
-		return nullptr;
-	}
-	decltype(country_histories)::const_iterator country_registry = country_histories.find(country);
+CountryHistoryMap const* CountryHistoryManager::get_country_history(CountryDefinition const& country) const {
+	decltype(country_histories)::const_iterator country_registry = country_histories.find(&country);
 	if (country_registry != country_histories.end()) {
 		return &country_registry->second;
 	} else {
