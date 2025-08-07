@@ -14,23 +14,39 @@
 using namespace OpenVic;
 
 ProvinceInstance::ProvinceInstance(
-	MarketInstance& new_market_instance,
-	GameRulesManager const& new_game_rules_manager,
-	ModifierEffectCache const& new_modifier_effect_cache,
-	ProvinceDefinition const& new_province_definition,
+	MarketInstance* new_market_instance,
+	GameRulesManager const* new_game_rules_manager,
+	ModifierEffectCache const* new_modifier_effect_cache,
+	ProvinceDefinition const* new_province_definition,
 	utility::forwardable_span<const Strata> strata_keys,
 	utility::forwardable_span<const PopType> pop_type_keys,
-	utility::forwardable_span<const Ideology> ideology_keys
-) : HasIdentifierAndColour { new_province_definition },
-	HasIndex { new_province_definition.get_index() },
+	utility::forwardable_span<const Ideology> ideology_keys,
+	BuildingTypeManager const* building_type_manager
+) : HasIdentifierAndColour { *new_province_definition },
+	HasIndex { new_province_definition->get_index() },
 	FlagStrings { "province" },
 	PopsAggregate { strata_keys, pop_type_keys, ideology_keys },
-	province_definition { new_province_definition },
-	game_rules_manager { new_game_rules_manager },
-	modifier_effect_cache { new_modifier_effect_cache },
-	terrain_type { new_province_definition.get_default_terrain_type() },
-	rgo { new_market_instance, pop_type_keys },
-	pops_cache_by_type { pop_type_keys } {}
+	province_definition { *new_province_definition },
+	game_rules_manager { *new_game_rules_manager },
+	modifier_effect_cache { *new_modifier_effect_cache },
+	terrain_type { new_province_definition->get_default_terrain_type() },
+	rgo { *new_market_instance, pop_type_keys },
+	pops_cache_by_type { pop_type_keys }
+{
+	modifier_sum.set_this_source(this);
+	rgo.setup_location_ptr(*this);
+	if (!province_definition.is_water()) {
+		assert(building_type_manager->building_types_are_locked());
+		buildings.reserve(building_type_manager->get_province_building_types().size());
+
+		for (BuildingType const* building_type_ptr : building_type_manager->get_province_building_types()) {
+			BuildingType const& building_type = *building_type_ptr;
+			buildings.emplace_item(building_type.get_identifier(), building_type);
+		}
+	}
+
+	lock_buildings();
+}
 
 ModifierSum const& ProvinceInstance::get_owner_modifier_sum() const {
 	return owner->get_modifier_sum();
@@ -330,7 +346,7 @@ void ProvinceInstance::update_gamestate(InstanceManager const& instance_manager)
 	MapInstance const& map_instance = instance_manager.get_map_instance();
 	for (ProvinceDefinition::adjacency_t const& adjacency : province_definition.get_adjacencies()) {
 		ProvinceDefinition const& province_definition = *adjacency.get_to();
-		ProvinceInstance const& province_instance = map_instance.get_province_instance_from_definition(province_definition);
+		ProvinceInstance const& province_instance = map_instance.get_province_instance_by_definition(province_definition);
 
 		if (province_instance.is_empty()) {
 			has_empty_adjacent_province = true;
@@ -437,35 +453,6 @@ bool ProvinceInstance::remove_unit_instance_group(UnitInstanceGroup const& group
 	}
 }
 
-bool ProvinceInstance::setup(BuildingTypeManager const& building_type_manager) {
-	if (buildings_are_locked()) {
-		Logger::error("Cannot setup province ", get_identifier(), " - buildings already locked!");
-		return false;
-	}
-
-	rgo.setup_location_ptr(*this);
-
-	bool ret = true;
-
-	if (!province_definition.is_water()) {
-		if (building_type_manager.building_types_are_locked()) {
-			buildings.reserve(building_type_manager.get_province_building_types().size());
-
-			for (BuildingType const* building_type_ptr : building_type_manager.get_province_building_types()) {
-				BuildingType const& building_type = *building_type_ptr;
-				ret &= buildings.emplace_item(building_type.get_identifier(), building_type);
-			}
-		} else {
-			Logger::error("Cannot generate buildings until building types are locked!");
-			ret = false;
-		}
-	}
-
-	lock_buildings();
-
-	return ret;
-}
-
 bool ProvinceInstance::apply_history_to_province(ProvinceHistoryEntry const& entry, CountryInstanceManager& country_manager) {
 	bool ret = true;
 
@@ -476,18 +463,18 @@ bool ProvinceInstance::apply_history_to_province(ProvinceHistoryEntry const& ent
 	};
 
 	if (entry.get_owner()) {
-		ret &= set_owner(&country_manager.get_country_instance_from_definition(**entry.get_owner()));
+		ret &= set_owner(&country_manager.get_country_instance_by_definition(**entry.get_owner()));
 	}
 	if (entry.get_controller()) {
-		ret &= set_controller(&country_manager.get_country_instance_from_definition(**entry.get_controller()));
+		ret &= set_controller(&country_manager.get_country_instance_by_definition(**entry.get_controller()));
 	}
 	set_optional(colony_status, entry.get_colonial());
 	set_optional(slave, entry.get_slave());
 	for (auto const& [country, add] : entry.get_cores()) {
 		if (add) {
-			ret &= add_core(country_manager.get_country_instance_from_definition(*country), true);
+			ret &= add_core(country_manager.get_country_instance_by_definition(*country), true);
 		} else {
-			ret &= remove_core(country_manager.get_country_instance_from_definition(*country), true);
+			ret &= remove_core(country_manager.get_country_instance_by_definition(*country), true);
 		}
 	}
 

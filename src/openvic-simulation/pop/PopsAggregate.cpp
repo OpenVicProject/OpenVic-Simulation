@@ -173,11 +173,11 @@ void PopsAggregate::normalise_pops_aggregate() {
 		average_consciousness /= total_population;
 		average_militancy /= total_population;
 
-		static const fu2::function<fixed_point_t&(fixed_point_t&, pop_size_t const&)> handle_div_by_zero = [](
+		static const fu2::function<void(fixed_point_t&, pop_size_t const&)> handle_div_by_zero = [](
 			fixed_point_t& lhs,
 			pop_size_t const& rhs
-		)->fixed_point_t& {
-			return lhs = fixed_point_t::_0;
+		)->void {
+			lhs = fixed_point_t::_0;
 		};
 		militancy_by_strata.divide_assign_handle_zero(
 			population_by_strata,
@@ -216,5 +216,5 @@ void PopsAggregate::update_parties_for_votes(CountryInstance const* country_inst
 		vote_equivalents_by_party.clear();
 		return;
 	}
-	update_parties_for_votes(country_instance->get_country_definition());
+	update_parties_for_votes(&country_instance->get_country_definition());
 }

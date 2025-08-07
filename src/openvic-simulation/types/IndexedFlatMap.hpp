@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cassert>
 #include <concepts>
 #include <cstddef>
 #include <iterator>
@@ -7,10 +8,12 @@
 
 #include <function2/function2.hpp>
 
+#include "openvic-simulation/types/FixedVector.hpp"
 #include "openvic-simulation/utility/Getters.hpp"
 #include "openvic-simulation/utility/ForwardableSpan.hpp"
 #include "openvic-simulation/utility/MathConcepts.hpp"
 #include "openvic-simulation/utility/Logger.hpp"
+#include "openvic-simulation/utility/Utility.hpp"
 
 namespace OpenVic {
 	template <typename T>
@@ -39,7 +42,11 @@ namespace OpenVic {
 	template <typename KeyType, typename ValueType>
 	struct IndexedFlatMap {
 		using keys_span_type = OpenVic::utility::forwardable_span<const KeyType>;
-		using values_vector_type = memory::vector<ValueType>;
+		using values_vector_type = std::conditional_t<
+            std::is_move_constructible_v<ValueType> || std::is_copy_constructible_v<ValueType>,
+            memory::vector<ValueType>,
+            memory::FixedVector<ValueType>
+        >;
 
 	private:
 		values_vector_type values;
@@ -55,19 +62,21 @@ namespace OpenVic {
 		*/
 		constexpr size_t get_internal_index_from_key(KeyType const& key) const {
 			static_assert(HasGetIndex<KeyType>);
-			if (key.get_index() < min_index || key.get_index() > max_index) {
+			const size_t index = key.get_index();
+			if (index < min_index || index > max_index) {
 				Logger::error(
 					"DEVELOPER FATAL: OpenVic::IndexedFlatMap<",
 					utility::type_name<KeyType>(),",",
 					utility::type_name<ValueType>(),
-					"> attempted to access key with index ", std::to_string(key.get_index()),
+					"> attempted to access key with index ", std::to_string(index),
 					" which is outside the map's defined range [",
 					std::to_string(min_index), ", ",
 					std::to_string(max_index), "].\n"
 				);
+				assert(index >= min_index && index <= max_index);
 				return 0;
 			}
-			return key.get_index() - min_index;
+			return index - min_index;
 		}
 
 		/**
@@ -101,6 +110,7 @@ namespace OpenVic {
 					"Expected capacity ", std::to_string(expected_capacity),
 					" but got ", std::to_string(new_keys.size()), " keys."
 				);
+				assert(new_keys.size() == expected_capacity);
 				return false;
 			}
 
@@ -114,6 +124,7 @@ namespace OpenVic {
 						"Expected index ", std::to_string(min_index + i),
 						" but got ", std::to_string(new_keys[i].get_index()), " at position ", std::to_string(i), "."
 					);
+					assert(new_keys[i].get_index() == min_index + i);
 					return false;
 				}
 			}
@@ -131,10 +142,12 @@ namespace OpenVic {
 
 			const size_t min_shared_index = std::max(other.get_min_index(), min_index);
 			const size_t max_shared_index = std::min(other.get_max_index(), max_index);
-			const size_t shared_count = max_shared_index - min_shared_index;
-			if (shared_count < 1) {
+
+			if (min_shared_index > max_shared_index) {
 				return {};
 			}
+
+			const size_t shared_count = 1 + max_shared_index - min_shared_index;
 			const size_t other_keys_offset = min_shared_index - other.get_min_index();
 			return {other.get_keys().data() + other_keys_offset, shared_count};
 		}
@@ -159,21 +172,30 @@ namespace OpenVic {
 					") to be a subset of the left-hand map's index range (",
 					std::to_string(min_index), "-", std::to_string(max_index), ")."
 				);
+				assert(other.get_min_index() >= min_index && other.get_max_index() <= max_index);
 				return false;
 			}
 
 			// There is no check for keys.data() being identical as KeyType objects are considered functionally equivalent if their get_index() values match.
 			return true;
 		}
+		
+		//vector
+		constexpr IndexedFlatMap()
+		requires std::is_move_constructible_v<ValueType> || std::is_copy_constructible_v<ValueType>
+		: values(), keys(), min_index(0), max_index(0) {}
 
-		constexpr IndexedFlatMap() : values(), keys(), min_index(0), max_index(0) {}
+		//FixedVector
+		constexpr IndexedFlatMap()
+		requires (!std::is_move_constructible_v<ValueType>) && (!std::is_copy_constructible_v<ValueType>)
+		: values(0), keys(), min_index(0), max_index(0) {}
 
 	public:
 		static constexpr IndexedFlatMap create_empty() {
 			return {};
 		}
 
-		/**
+		/** vector
 		* @brief Constructs an IndexedFlatMap based on a provided span of ordered and continuous keys
 		* and a key-based generator.
 		* The map's range [min_idx, max_idx] is determined by the first and last key in the span.
@@ -182,49 +204,236 @@ namespace OpenVic {
 		* ordered by their index and continuous (i.e., `new_keys[i+1].getIndex() == new_keys[i].getIndex() + 1`).
 		* The `IndexedFlatMap` stores a reference to this span; the caller is responsible
 		* for ensuring the underlying data outlives this map instance.
-		* @param value_generator A callable that takes a `KeyType const&` and returns a `ValueType`.
+		* @param value_generator A callable that takes a `KeyType const&` and returns a single argument to construct `ValueType`.
 		* This is used to generate values for each key in the provided span.
 		*/
+		template<typename GeneratorTemplateType>
+		requires (std::is_move_constructible_v<ValueType> || std::is_copy_constructible_v<ValueType>)
+		//value_generator(key) doesn't return std:tuple<...>
+		&& (!utility::is_specialization_of_v<std::remove_cvref_t<std::invoke_result_t<GeneratorTemplateType, KeyType const&>>, std::tuple>)
+		//ValueType(value_generator(key)) is valid constructor call
+		&& std::constructible_from<ValueType, decltype(std::declval<GeneratorTemplateType>()(std::declval<KeyType const&>()))>
 		IndexedFlatMap(
 			keys_span_type new_keys,
-			fu2::function<ValueType(KeyType const&)> value_generator
-		) : keys(new_keys) {
+			GeneratorTemplateType value_generator
+		) : keys(new_keys),
+			min_index { new_keys.front().get_index() },
+			max_index { new_keys.back().get_index() },
+			values() {
 			static_assert(HasGetIndex<KeyType>);
 			if (!validate_new_keys(new_keys)) {
-				keys = {};
 				return;
 			}
-			min_index = keys.front().get_index();
-			max_index = keys.back().get_index();
-			size_t expected_capacity = max_index - min_index + 1;
-			values.reserve(expected_capacity);
+
+			values.reserve(new_keys.size());
 			for (KeyType const& key : keys) {
-				values.emplace_back(value_generator(key));
+				values.emplace_back(
+					std::forward<decltype(std::declval<GeneratorTemplateType>()(std::declval<KeyType const&>()))>(
+						value_generator(key)
+					)
+				);
 			}
 		}
 
-		/**
+		/** FixedVector
+		* @brief Constructs an IndexedFlatMap based on a provided span of ordered and continuous keys
+		* and a key-based generator.
+		* The map's range [min_idx, max_idx] is determined by the first and last key in the span.
+		* All elements are initialized using the `value_generator`.
+		* @param new_keys A `std::span<const KeyType>` of KeyType objects. These keys MUST be
+		* ordered by their index and continuous (i.e., `new_keys[i+1].getIndex() == new_keys[i].getIndex() + 1`).
+		* The `IndexedFlatMap` stores a reference to this span; the caller is responsible
+		* for ensuring the underlying data outlives this map instance.
+		* @param value_generator A callable that takes a `KeyType const&` and returns a single argument to construct `ValueType`.
+		* This is used to generate values for each key in the provided span.
+		*/
+		template<typename GeneratorTemplateType>
+		requires (!std::is_move_constructible_v<ValueType>) && (!std::is_copy_constructible_v<ValueType>)
+		//value_generator(key) doesn't return std:tuple<...>
+		&& (!utility::is_specialization_of_v<std::remove_cvref_t<std::invoke_result_t<GeneratorTemplateType, KeyType const&>>, std::tuple>)
+		//ValueType(value_generator(key)) is valid constructor call
+		&& std::constructible_from<ValueType, decltype(std::declval<GeneratorTemplateType>()(std::declval<KeyType const&>()))>
+		IndexedFlatMap(
+			keys_span_type new_keys,
+			GeneratorTemplateType value_generator
+		) : keys(new_keys),
+			min_index { new_keys.front().get_index() },
+			max_index { new_keys.back().get_index() },
+			values(new_keys.size()) {
+			static_assert(HasGetIndex<KeyType>);
+			if (!validate_new_keys(new_keys)) {
+				return;
+			}
+
+			for (KeyType const& key : keys) {
+				values.emplace_back(
+					std::forward<decltype(std::declval<GeneratorTemplateType>()(std::declval<KeyType const&>()))>(
+						value_generator(key)
+					)
+				);
+			}
+		}
+
+		/** vector
+		* @brief Constructs an IndexedFlatMap based on a provided span of ordered and continuous keys
+		* and a key-based generator.
+		* The map's range [min_idx, max_idx] is determined by the first and last key in the span.
+		* All elements are initialized using the `value_generator`.
+		* @param new_keys A `std::span<const KeyType>` of KeyType objects. These keys MUST be
+		* ordered by their index and continuous (i.e., `new_keys[i+1].getIndex() == new_keys[i].getIndex() + 1`).
+		* The `IndexedFlatMap` stores a reference to this span; the caller is responsible
+		* for ensuring the underlying data outlives this map instance.
+		* @param value_generator A callable that takes a `KeyType const&` and returns arguments to construct `ValueType`.
+		* This is used to generate values for each key in the provided span.
+		*/
+		template<typename GeneratorTemplateType>
+		requires (std::is_move_constructible_v<ValueType> || std::is_copy_constructible_v<ValueType>)
+		//value_generator(key) returns tuple
+		&& utility::is_specialization_of_v<std::remove_cvref_t<std::invoke_result_t<GeneratorTemplateType, KeyType const&>>, std::tuple>
+		//ValueType(...value_generator(key)) is valid constructor call
+		&& requires(GeneratorTemplateType&& value_generator) { {
+			std::apply(
+				[](auto&&... args) {
+					ValueType obj{std::forward<decltype(args)>(args)...};
+				},
+				value_generator(std::declval<KeyType const&>())
+			)
+		}; }
+		IndexedFlatMap(
+			keys_span_type new_keys,
+			GeneratorTemplateType&& value_generator
+		) : keys(new_keys),
+			min_index { new_keys.front().get_index() },
+			max_index { new_keys.back().get_index() },
+			values() {
+			static_assert(HasGetIndex<KeyType>);
+			if (!validate_new_keys(new_keys)) {
+				return;
+			}
+
+			values.reserve(new_keys.size());
+			for (KeyType const& key : keys) {
+				std::apply(
+					[this](auto&&... args) {
+						values.emplace_back(std::forward<decltype(args)>(args)...);
+					},
+					value_generator(key)
+				);
+			}
+		}
+
+		/** FixedVector
+		* @brief Constructs an IndexedFlatMap based on a provided span of ordered and continuous keys
+		* and a key-based generator.
+		* The map's range [min_idx, max_idx] is determined by the first and last key in the span.
+		* All elements are initialized using the `value_generator`.
+		* @param new_keys A `std::span<const KeyType>` of KeyType objects. These keys MUST be
+		* ordered by their index and continuous (i.e., `new_keys[i+1].getIndex() == new_keys[i].getIndex() + 1`).
+		* The `IndexedFlatMap` stores a reference to this span; the caller is responsible
+		* for ensuring the underlying data outlives this map instance.
+		* @param value_generator A callable that takes a `KeyType const&` and returns arguments to construct `ValueType`.
+		* This is used to generate values for each key in the provided span.
+		*/
+		template<typename GeneratorTemplateType>
+		requires (!std::is_move_constructible_v<ValueType>) && (!std::is_copy_constructible_v<ValueType>)
+		//value_generator(key) returns tuple
+		&& utility::is_specialization_of_v<std::remove_cvref_t<std::invoke_result_t<GeneratorTemplateType, KeyType const&>>, std::tuple>
+		//ValueType(...value_generator(key)) is valid constructor call
+		&& requires(GeneratorTemplateType value_generator) { {
+			std::apply(
+				[](auto&&... args) {
+					ValueType obj{std::forward<decltype(args)>(args)...};
+				},
+				value_generator(std::declval<KeyType const&>())
+			)
+		}; }
+		IndexedFlatMap(
+			keys_span_type new_keys,
+			GeneratorTemplateType value_generator
+		) : keys(new_keys),
+			min_index { new_keys.front().get_index() },
+			max_index { new_keys.back().get_index() },
+			values(new_keys.size()) {
+			static_assert(HasGetIndex<KeyType>);
+			if (!validate_new_keys(new_keys)) {
+				return;
+			}
+
+			for (KeyType const& key : keys) {
+				std::apply(
+					[this](auto&&... args) {
+						values.emplace_back(std::forward<decltype(args)>(args)...);
+					},
+					value_generator(key)
+				);
+			}
+		}
+
+		/** vector
 		* @brief Constructs an IndexedFlatMap based on a provided span of ordered and continuous keys.
-		* All elements are default-constructed upon creation.
+		* All elements are constructed by passing `KeyType const&` or default-constructed if there is no constructor taking `KeyType const&`.
 		* @param new_keys A `std::span<const KeyType>` of KeyType objects. These keys MUST be
 		* ordered by their index and continuous (i.e., `new_keys[i+1].getIndex() == new_keys[i].getIndex() + 1`).
 		* The `IndexedFlatMap` stores a reference to this span; the caller is responsible
 		* for ensuring the underlying data outlives this map instance.
 		*
-		* @note This constructor requires `ValueType` to be `std::default_initializable`.
+		* @note This constructor requires `ValueType` to be `std::default_initializable || std::constructible_from<ValueType, KeyType const&>`.
 		*/
-		IndexedFlatMap(keys_span_type new_keys) requires std::default_initializable<ValueType>
-		: keys(new_keys) {
+		IndexedFlatMap(keys_span_type new_keys)
+		requires (std::is_move_constructible_v<ValueType> || std::is_copy_constructible_v<ValueType>)
+		&& (std::default_initializable<ValueType> || std::constructible_from<ValueType, KeyType const&>)
+			: keys(new_keys),
+			min_index { new_keys.front().get_index() },
+			max_index { new_keys.back().get_index() },
+			values() {
 			static_assert(HasGetIndex<KeyType>);
 			if (!validate_new_keys(new_keys)) {
-				keys = {};
 				return;
 			}
-			min_index = keys.front().get_index();
-			max_index = keys.back().get_index();
-			size_t expected_capacity = max_index - min_index + 1;
-			// Resize and default-construct elements
-			values.resize(expected_capacity);
+
+			if constexpr (std::constructible_from<ValueType, KeyType const&>) {
+				values.reserve(new_keys.size());
+				for (KeyType const& key : keys) {
+					values.emplace_back(key);
+				}
+			} else {
+				// Resize and default-construct elements
+				values.resize(new_keys.size());
+			}
+		}
+
+		/** FixedVector
+		* @brief Constructs an IndexedFlatMap based on a provided span of ordered and continuous keys.
+		* All elements are constructed by passing `KeyType const&` or default-constructed if there is no constructor taking `KeyType const&`.
+		* @param new_keys A `std::span<const KeyType>` of KeyType objects. These keys MUST be
+		* ordered by their index and continuous (i.e., `new_keys[i+1].getIndex() == new_keys[i].getIndex() + 1`).
+		* The `IndexedFlatMap` stores a reference to this span; the caller is responsible
+		* for ensuring the underlying data outlives this map instance.
+		*
+		* @note This constructor requires `ValueType` to be `std::default_initializable || std::constructible_from<ValueType, KeyType const&>`.
+		*/
+		IndexedFlatMap(keys_span_type new_keys)
+		requires (!std::is_move_constructible_v<ValueType>) && (!std::is_copy_constructible_v<ValueType>)
+		&& (std::default_initializable<ValueType> || std::constructible_from<ValueType, KeyType const&>)
+			: keys(new_keys),
+			min_index { new_keys.front().get_index() },
+			max_index { new_keys.back().get_index() },
+			values(new_keys.size()) {
+			static_assert(HasGetIndex<KeyType>);
+			if (!validate_new_keys(new_keys)) {
+				return;
+			}
+
+			if constexpr (std::constructible_from<ValueType, KeyType const&>) {
+				for (KeyType const& key : keys) {
+					values.emplace_back(key);
+				}
+			} else {
+				// Resize and default-construct elements
+				for (KeyType const& key : keys) {
+					values.emplace_back();
+				}
+			}
 		}
 
 		/**
@@ -269,8 +478,9 @@ namespace OpenVic {
 					std::to_string(min_index), ", ",
 					std::to_string(max_index), "].\n"
 				);
+				assert(index >= min_index && index <= max_index);
 			}
-			return values[index];
+			return values[index - min_index];
 		}
 
 		constexpr ValueType const& at_index(const size_t index) const {
@@ -284,13 +494,17 @@ namespace OpenVic {
 					std::to_string(min_index), ", ",
 					std::to_string(max_index), "].\n"
 				);
+				assert(index >= min_index && index <= max_index);
 			}
-			return values[index];
+			return values[index - min_index];
 		}
 
 		constexpr bool contains(KeyType const& key) const {
 			static_assert(HasGetIndex<KeyType>);
-			size_t external_index = key.get_index();
+			return contains_index(key.get_index());
+		}
+
+		constexpr bool contains_index(const size_t external_index) const {
 			return external_index >= min_index && external_index <= max_index;
 		}
 
@@ -465,6 +679,7 @@ namespace OpenVic {
 							utility::type_name<ValueType>(),
 							"> division by zero detected at key index ", std::to_string(key.get_index()), "."
 						);
+						assert(other.at(key) != static_cast<ValueType>(0));
 						//continue and let it throw
 					}
 					return this->at(key) / other.at(key);
@@ -541,6 +756,7 @@ namespace OpenVic {
 					utility::type_name<ValueType>(),
 					"> division by zero for scalar operation."
 				);
+				assert(scalar != static_cast<ValueType>(0));
 				//continue and let it throw
 			}
 			return IndexedFlatMap(keys, [&](KeyType const& key) {
@@ -607,6 +823,7 @@ namespace OpenVic {
 						utility::type_name<ValueType>(),
 						"> compound division by zero detected at key index ", std::to_string(key.get_index()), "."
 					);
+					assert(other.at(key) != static_cast<ValueType>(0));
 					//continue and let it throw
 				}
 				this->at(key) /= other.at(key);
@@ -617,7 +834,7 @@ namespace OpenVic {
 		template <typename OtherValueType>
 		IndexedFlatMap& divide_assign_handle_zero(
 			IndexedFlatMap<KeyType,OtherValueType> const& other,
-			fu2::function<ValueType&(ValueType&, OtherValueType const&)> handle_div_by_zero
+			fu2::function<void(ValueType&, OtherValueType const&)> handle_div_by_zero
 		) requires DivideAssignable<ValueType,OtherValueType> {
 			static_assert(HasGetIndex<KeyType>);
 			if (!check_subset_span_match(other)) {
@@ -678,6 +895,7 @@ namespace OpenVic {
 					utility::type_name<ValueType>(),
 					"> compound division by zero for scalar operation."
 				);
+				assert(scalar != static_cast<ValueType>(0));
 				//continue and let it throw
 			}
 			for (ValueType& val : values) {
@@ -687,14 +905,10 @@ namespace OpenVic {
 		}
 
 		template <typename OtherValueType,typename ScalarType>
-		constexpr IndexedFlatMap& mul_add(IndexedFlatMap<KeyType,OtherValueType> const& other, ScalarType const& factor)
-		requires (
-			AddAssignable<ValueType,OtherValueType>
-			&& Multipliable<OtherValueType,ScalarType,OtherValueType>
-		) || (
-			AddAssignable<ValueType,ScalarType>
-			&& Multipliable<OtherValueType,ScalarType,ScalarType>
-		) {
+		constexpr IndexedFlatMap& mul_add(
+			IndexedFlatMap<KeyType,OtherValueType> const& other,
+			ScalarType const& factor
+		) requires MulAddAssignable<ValueType,OtherValueType,ScalarType> {
 			static_assert(HasGetIndex<KeyType>);
 			for (KeyType const& key : get_shared_keys(other)) {
 				at(key) += other.at(key) * factor;
@@ -707,13 +921,7 @@ namespace OpenVic {
 		constexpr IndexedFlatMap& mul_add(
 			IndexedFlatMap<KeyType,ValueTypeA> const& a,
 			IndexedFlatMap<KeyType,ValueTypeB> const& b
-		) requires (
-			AddAssignable<ValueType,ValueTypeA>
-			&& Multipliable<ValueTypeA,ValueTypeB,ValueTypeA>
-		) || (
-			AddAssignable<ValueType,ValueTypeB>
-			&& Multipliable<ValueTypeA,ValueTypeB,ValueTypeB>
-		) {
+		) requires MulAddAssignable<ValueType,ValueTypeA,ValueTypeB> {
 			static_assert(HasGetIndex<KeyType>);
 			if (a.get_min_index() != b.get_min_index() || a.get_max_index() != b.get_max_index()) {
 				Logger::error(
@@ -722,6 +930,7 @@ namespace OpenVic {
 					utility::type_name<ValueType>(),
 					"> attempted mul_add where a and b don't have the same keys. This is not implemented."
 				);
+				assert(a.get_min_index() == b.get_min_index() && a.get_max_index() == b.get_max_index());
 			}
 
 			for (KeyType const& key : get_shared_keys(a)) {
@@ -953,6 +1162,7 @@ namespace OpenVic {
 					utility::type_name<ValueType>(),
 					"> scalar division by zero detected at key index ", std::to_string(key.get_index()), "."
 				);
+				assert(map.at(key) != static_cast<ValueType>(0));
 				//continue and let it throw
 			}
 			return scalar / map.at(key);

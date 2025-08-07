@@ -13,10 +13,8 @@
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
 #include "openvic-simulation/types/FlagStrings.hpp"
 #include "openvic-simulation/types/HasIndex.hpp"
-#include "openvic-simulation/types/IdentifierRegistry.hpp"
 #include "openvic-simulation/types/IndexedFlatMap.hpp"
 #include "openvic-simulation/types/OrderedContainers.hpp"
-#include "openvic-simulation/types/PopSize.hpp"
 #include "openvic-simulation/types/SliderValue.hpp"
 #include "openvic-simulation/types/TechnologyUnlockLevel.hpp"
 #include "openvic-simulation/types/UnitBranchType.hpp"
@@ -97,10 +95,7 @@ namespace OpenVic {
 		static constexpr fixed_point_t UNCIVILISED_CIVILISATION_PROGRESS = fixed_point_t::_0_50;
 
 	private:
-		/* Main attributes */
-		// We can always assume country_definition is not null, as it is initialised from a reference and only ever changed
-		// by swapping with another CountryInstance's country_definition.
-		CountryDefinition const* PROPERTY(country_definition);
+		CountryDefinition const& PROPERTY(country_definition);
 
 		GameRulesManager const& game_rules_manager;
 		CountryRelationManager& country_relations_manager;
@@ -148,8 +143,8 @@ namespace OpenVic {
 		/* Budget */
 		// TODO - cash stockpile change over last 30 days
 		fixed_point_t PROPERTY(gold_income);
-		moveable_atomic_fixed_point_t PROPERTY(cash_stockpile);
-		memory::unique_ptr<std::mutex> taxable_income_mutex;
+		atomic_fixed_point_t PROPERTY(cash_stockpile);
+		std::mutex taxable_income_mutex;
 		IndexedFlatMap_PROPERTY(PopType, fixed_point_t, taxable_income_by_pop_type);
 		fixed_point_t PROPERTY(tax_efficiency);
 		IndexedFlatMap_PROPERTY(Strata, fixed_point_t, effective_tax_rate_by_strata);
@@ -187,7 +182,7 @@ namespace OpenVic {
 
 		SliderValue PROPERTY(tariff_rate_slider_value);
 		fixed_point_t PROPERTY(effective_tariff_rate);
-		memory::unique_ptr<std::mutex> actual_net_tariffs_mutex;
+		std::mutex actual_net_tariffs_mutex;
 		fixed_point_t PROPERTY(projected_import_subsidies);
 		fixed_point_t PROPERTY(actual_net_tariffs);
 		constexpr bool has_import_subsidies() const {
@@ -335,9 +330,9 @@ namespace OpenVic {
 		memory::vector<technology_unlock_level_t> PROPERTY(unit_variant_unlock_levels);
 
 	public:
+		//pointers instead of references to allow construction via std::tuple
 		CountryInstance(
 			CountryDefinition const* new_country_definition,
-			index_t new_index,
 			decltype(building_type_unlock_levels)::keys_span_type building_type_keys,
 			decltype(technology_unlock_levels)::keys_span_type technology_keys,
 			decltype(invention_unlock_levels)::keys_span_type invention_keys,
@@ -350,13 +345,17 @@ namespace OpenVic {
 			utility::forwardable_span<const Strata> strata_keys,
 			utility::forwardable_span<const PopType> pop_type_keys,
 			utility::forwardable_span<const Ideology> ideology_keys,
-			GameRulesManager const& new_game_rules_manager,
-			CountryRelationManager& new_country_relations_manager,
-			SharedCountryValues const& new_shared_country_values,
-			GoodInstanceManager& new_good_instance_manager,
-			CountryDefines const& new_country_defines,
-			EconomyDefines const& new_economy_defines
+			GameRulesManager const* new_game_rules_manager,
+			CountryRelationManager* new_country_relations_manager,
+			SharedCountryValues const* new_shared_country_values,
+			GoodInstanceManager* new_good_instance_manager,
+			CountryDefines const* new_country_defines,
+			EconomyDefines const* new_economy_defines
 		);
+		CountryInstance(CountryInstance const&) = delete;
+		CountryInstance& operator=(CountryInstance const&) = delete;
+		CountryInstance(CountryInstance&&) = delete;
+		CountryInstance& operator=(CountryInstance&&) = delete;
 
 		UNIT_BRANCHED_GETTER(get_unit_instance_groups, armies, navies);
 		UNIT_BRANCHED_GETTER(get_unit_type_unlock_levels, regiment_type_unlock_levels, ship_type_unlock_levels);
@@ -664,11 +663,9 @@ namespace OpenVic {
 	struct CountryInstanceManager {
 	private:
 		CountryDefinitionManager const& PROPERTY(country_definition_manager);
-
-		IdentifierRegistry<CountryInstance> IDENTIFIER_REGISTRY(country_instance);
 		SharedCountryValues shared_country_values;
 
-		IndexedFlatMap_PROPERTY(CountryDefinition, CountryInstance*, country_definition_to_instance_map);
+		IndexedFlatMap_PROPERTY(CountryDefinition, CountryInstance, country_instance_by_definition);
 
 		memory::vector<CountryInstance*> SPAN_PROPERTY(great_powers);
 		memory::vector<CountryInstance*> SPAN_PROPERTY(secondary_powers);
@@ -685,16 +682,7 @@ namespace OpenVic {
 			CountryDefinitionManager const& new_country_definition_manager,
 			ModifierEffectCache const& new_modifier_effect_cache,
 			CountryDefines const& new_country_defines,
-			PopsDefines const& new_pop_defines,
-			std::span<const PopType> pop_type_keys
-		);
-
-		IDENTIFIER_REGISTRY_NON_CONST_ACCESSORS(country_instance);
-
-		CountryInstance& get_country_instance_from_definition(CountryDefinition const& country);
-		CountryInstance const& get_country_instance_from_definition(CountryDefinition const& country) const;
-
-		bool generate_country_instances(
+			PopsDefines const& new_pop_defines,			
 			decltype(CountryInstance::building_type_unlock_levels)::keys_span_type building_type_keys,
 			decltype(CountryInstance::technology_unlock_levels)::keys_span_type technology_keys,
 			decltype(CountryInstance::invention_unlock_levels)::keys_span_type invention_keys,
@@ -710,9 +698,21 @@ namespace OpenVic {
 			GameRulesManager const& game_rules_manager,
 			CountryRelationManager& country_relations_manager,
 			GoodInstanceManager& good_instance_manager,
-			CountryDefines const& country_defines,
 			EconomyDefines const& economy_defines
 		);
+
+		constexpr OpenVic::utility::forwardable_span<CountryInstance> get_country_instances() {
+			return country_instance_by_definition.get_values();
+		}
+
+		constexpr OpenVic::utility::forwardable_span<const CountryInstance> get_country_instances() const {
+			return country_instance_by_definition.get_values();
+		}
+		CountryInstance* get_country_instance_by_identifier(std::string_view identifier);
+		CountryInstance const* get_country_instance_by_identifier(std::string_view identifier) const;
+		CountryInstance* get_country_instance_by_index(typename CountryInstance::index_t index);
+		CountryInstance const* get_country_instance_by_index(typename CountryInstance::index_t index) const;
+		CountryInstance& get_country_instance_by_definition(CountryDefinition const& country_definition); //const variant comes from IndexedFlatMap_PROPERTY
 
 		bool apply_history_to_countries(InstanceManager& instance_manager);
 

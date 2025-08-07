@@ -116,7 +116,7 @@ bool StateManager::add_state_set(
 
 	for (ProvinceDefinition const* province : region.get_provinces()) {
 
-		ProvinceInstance* province_instance = &map_instance.get_province_instance_from_definition(*province);
+		ProvinceInstance* province_instance = &map_instance.get_province_instance_by_definition(*province);
 
 		// add to existing state if shared owner & status...
 		for (memory::vector<ProvinceInstance*>& provinces : temp_provinces) {

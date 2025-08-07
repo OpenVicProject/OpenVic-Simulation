@@ -14,7 +14,10 @@ InstanceManager::InstanceManager(
 	definition_manager { new_definition_manager },
 	game_action_manager { *this },
 	game_rules_manager { new_game_rules_manager },
-	good_instance_manager { new_definition_manager.get_economy_manager().get_good_definition_manager() },
+	good_instance_manager {
+		new_definition_manager.get_economy_manager().get_good_definition_manager(),
+		new_game_rules_manager
+	},
 	market_instance {
 		thread_pool,
 		new_definition_manager.get_define_manager().get_country_defines(),
@@ -31,7 +34,22 @@ InstanceManager::InstanceManager(
 		new_definition_manager.get_modifier_manager().get_modifier_effect_cache(),
 		new_definition_manager.get_define_manager().get_country_defines(),
 		new_definition_manager.get_define_manager().get_pops_defines(),
-		new_definition_manager.get_pop_manager().get_pop_types()
+		definition_manager.get_economy_manager().get_building_type_manager().get_building_types(),
+		definition_manager.get_research_manager().get_technology_manager().get_technologies(),
+		definition_manager.get_research_manager().get_invention_manager().get_inventions(),
+		definition_manager.get_politics_manager().get_issue_manager().get_reform_groups(),
+		definition_manager.get_politics_manager().get_government_type_manager().get_government_types(),
+		definition_manager.get_crime_manager().get_crime_modifiers(),
+		good_instance_manager.get_good_instances(),
+		definition_manager.get_military_manager().get_unit_type_manager().get_regiment_types(),
+		definition_manager.get_military_manager().get_unit_type_manager().get_ship_types(),
+		definition_manager.get_pop_manager().get_stratas(),
+		definition_manager.get_pop_manager().get_pop_types(),
+		definition_manager.get_politics_manager().get_ideology_manager().get_ideologies(),
+		new_game_rules_manager,
+		country_relation_manager,
+		good_instance_manager,
+		definition_manager.get_define_manager().get_economy_defines()
 	},
 	unit_instance_manager {
 		new_definition_manager.get_pop_manager().get_culture_manager(),
@@ -41,7 +59,14 @@ InstanceManager::InstanceManager(
 	politics_instance_manager { *this },
 	map_instance {
 		new_definition_manager.get_map_definition(),
-		thread_pool
+		definition_manager.get_economy_manager().get_building_type_manager(),
+		new_game_rules_manager,
+		definition_manager.get_modifier_manager().get_modifier_effect_cache(),
+		market_instance,
+		thread_pool,
+		definition_manager.get_pop_manager().get_stratas(),
+		definition_manager.get_pop_manager().get_pop_types(),
+		definition_manager.get_politics_manager().get_ideology_manager().get_ideologies()
 	},
 	simulation_clock {
 		[this]() -> void {
@@ -145,38 +170,6 @@ bool InstanceManager::setup() {
 		return false;
 	}
 
-	bool ret = good_instance_manager.setup_goods(
-		game_rules_manager
-	);
-	ret &= map_instance.setup(
-		definition_manager.get_economy_manager().get_building_type_manager(),
-		market_instance,
-		game_rules_manager,
-		definition_manager.get_modifier_manager().get_modifier_effect_cache(),
-		definition_manager.get_pop_manager().get_stratas(),
-		definition_manager.get_pop_manager().get_pop_types(),
-		definition_manager.get_politics_manager().get_ideology_manager().get_ideologies()
-	);
-	ret &= country_instance_manager.generate_country_instances(
-		definition_manager.get_economy_manager().get_building_type_manager().get_building_types(),
-		definition_manager.get_research_manager().get_technology_manager().get_technologies(),
-		definition_manager.get_research_manager().get_invention_manager().get_inventions(),
-		definition_manager.get_politics_manager().get_issue_manager().get_reform_groups(),
-		definition_manager.get_politics_manager().get_government_type_manager().get_government_types(),
-		definition_manager.get_crime_manager().get_crime_modifiers(),
-		good_instance_manager.get_good_instances(),
-		definition_manager.get_military_manager().get_unit_type_manager().get_regiment_types(),
-		definition_manager.get_military_manager().get_unit_type_manager().get_ship_types(),
-		definition_manager.get_pop_manager().get_stratas(),
-		definition_manager.get_pop_manager().get_pop_types(),
-		definition_manager.get_politics_manager().get_ideology_manager().get_ideologies(),
-		game_rules_manager,
-		country_relation_manager,
-		good_instance_manager,
-		definition_manager.get_define_manager().get_country_defines(),
-		definition_manager.get_define_manager().get_economy_defines()
-	);
-
 	thread_pool.initialise_threadpool(
 		definition_manager.get_define_manager().get_pops_defines(),
 		country_instance_manager.get_country_instances(),
@@ -188,7 +181,7 @@ bool InstanceManager::setup() {
 
 	game_instance_setup = true;
 
-	return ret;
+	return true;
 }
 
 bool InstanceManager::load_bookmark(Bookmark const* new_bookmark) {

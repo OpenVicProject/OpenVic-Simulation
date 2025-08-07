@@ -27,15 +27,6 @@
 
 namespace OpenVic::memory {
 	template<class RawAllocator>
-	using tracker =
-#ifdef DEBUG_ENABLED
-		foonathan::memory::tracked_allocator<OpenVic::utility::MemoryTracker, RawAllocator>
-#else
-		RawAllocator
-#endif
-		;
-
-	template<class RawAllocator>
 	tracker<RawAllocator> make_tracked_allocator( //
 		RawAllocator&& alloc
 	) {

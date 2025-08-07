@@ -20,8 +20,8 @@ namespace OpenVic {
 		GoodDefinition const& PROPERTY(good_definition);
 
 		static constexpr int32_t exponential_price_change_shift = 7;
-		memory::unique_ptr<std::mutex> buy_lock = memory::make_unique<std::mutex>();
-		memory::unique_ptr<std::mutex> sell_lock = memory::make_unique<std::mutex>();
+		std::mutex buy_lock;
+		std::mutex sell_lock;
 		GameRulesManager const& game_rules_manager;
 		fixed_point_t absolute_maximum_price;
 		fixed_point_t absolute_minimum_price;
@@ -54,7 +54,10 @@ namespace OpenVic {
 		void update_next_price_limits();
 	public:
 		GoodMarket(GameRulesManager const& new_game_rules_manager, GoodDefinition const& new_good_definition);
-		GoodMarket(GoodMarket&&) = default;
+		GoodMarket(GoodMarket const&) = delete;
+		GoodMarket& operator=(GoodMarket const&) = delete;
+		GoodMarket(GoodMarket&&) = delete;
+		GoodMarket& operator=(GoodMarket&&) = delete;
 
 		//thread safe
 		void add_buy_up_to_order(GoodBuyUpToOrder&& buy_up_to_order);
