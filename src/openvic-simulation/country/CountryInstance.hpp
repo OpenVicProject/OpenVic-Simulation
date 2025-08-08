@@ -443,6 +443,9 @@ namespace OpenVic {
 		CountryRelationManager::influence_value_type get_influence_with(CountryInstance const& country) const;
 		void set_influence_with(CountryInstance& country, CountryRelationManager::influence_value_type influence);
 
+		CountryRelationManager::influence_priority_value_type get_influence_priority_with(CountryInstance const& country) const;
+		void set_influence_priority_with(CountryInstance& country, CountryRelationManager::influence_priority_value_type influence);
+
 		std::optional<Date> get_decredited_from_date(CountryInstance const& country) const;
 		void set_discredited_from(CountryInstance& country, Date until);
 

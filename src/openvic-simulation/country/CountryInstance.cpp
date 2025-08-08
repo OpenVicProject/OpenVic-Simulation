@@ -285,6 +285,14 @@ void CountryInstance::set_influence_with(CountryInstance& country, CountryRelati
 	country_relations_manager.set_influence_with(this, &country, influence);
 }
 
+CountryRelationManager::influence_priority_value_type CountryInstance::get_influence_priority_with(CountryInstance const& country) const {
+	return country_relations_manager.get_influence_priority_with(this, &country);
+}
+
+void CountryInstance::set_influence_priority_with(CountryInstance& country, CountryRelationManager::influence_priority_value_type influence) {
+	country_relations_manager.set_influence_priority_with(this, &country, influence);
+}
+
 std::optional<Date> CountryInstance::get_decredited_from_date(CountryInstance const& country) const {
 	return country_relations_manager.get_discredited_date(this, &country);
 }
