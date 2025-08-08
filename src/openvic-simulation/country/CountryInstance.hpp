@@ -197,21 +197,21 @@ namespace OpenVic {
 		IndexedFlatMap_PROPERTY(Technology, technology_unlock_level_t, technology_unlock_levels);
 		IndexedFlatMap_PROPERTY(Invention, technology_unlock_level_t, invention_unlock_levels);
 		STATE_PROPERTY(int32_t, inventions_count);
-		STATE_PROPERTY(Technology const*, current_research);
+		STATE_PROPERTY(Technology const*, current_research, nullptr);
 		STATE_PROPERTY(fixed_point_t, invested_research_points);
 		STATE_PROPERTY(fixed_point_t, current_research_cost);
 		STATE_PROPERTY(Date, expected_research_completion_date);
 		STATE_PROPERTY(fixed_point_t, research_point_stockpile);
 		STATE_PROPERTY(fixed_point_t, daily_research_points);
 		fixed_point_map_t<PopType const*> PROPERTY(research_points_from_pop_types);
-		STATE_PROPERTY(TechnologySchool const*, tech_school);
+		STATE_PROPERTY(TechnologySchool const*, tech_school, nullptr);
 		// TODO - cached possible inventions with %age chance
 
 		/* Politics */
-		STATE_PROPERTY(NationalValue const*, national_value);
-		STATE_PROPERTY(GovernmentType const*, government_type);
+		STATE_PROPERTY(NationalValue const*, national_value, nullptr);
+		STATE_PROPERTY(GovernmentType const*, government_type, nullptr);
 		Date PROPERTY(last_election);
-		STATE_PROPERTY(CountryParty const*, ruling_party);
+		STATE_PROPERTY(CountryParty const*, ruling_party, nullptr);
 		IndexedFlatMap_PROPERTY(Ideology, fixed_point_t, upper_house_proportion_by_ideology);
 		IndexedFlatMap_PROPERTY(ReformGroup, Reform const*, reforms);
 		STATE_PROPERTY(fixed_point_t, total_administrative_multiplier);
