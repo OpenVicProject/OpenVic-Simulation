@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cassert>
+#include <cstddef>
 #include <memory>
 #include <utility>
 
@@ -12,20 +13,30 @@ namespace OpenVic::_detail {
 	class FixedVector {
 	private:
 		using allocator_traits = std::allocator_traits<Allocator>;
-		const size_t fixed_capacity;
-		size_t current_size;
-		OV_NO_UNIQUE_ADDRESS Allocator allocator;
-		T* const data_start_ptr;
+		const size_t _max_size;
+		size_t _size;
+		OV_NO_UNIQUE_ADDRESS Allocator _allocator;
+		T* const _data_start_ptr;
 
 	public:
-		constexpr size_t size() const { return current_size; }
-		constexpr size_t capacity() const { return fixed_capacity; }
+		using const_reference = T const&;
+		using difference_type = ptrdiff_t;
+		using reference = T&;
+		using size_type = size_t;
+		using value_type = T;
+
+		constexpr size_t size() const { return _size; }
+		constexpr size_t capacity() const { return _max_size; }
+		constexpr size_t max_size() const { return _max_size; }
+		constexpr T* data() { return _data_start_ptr; }
+		constexpr T const* data() const { return _data_start_ptr; }
+		constexpr bool empty() const { return _size == 0; }
 
 		explicit FixedVector(const size_t capacity)
-			: fixed_capacity(capacity),
-			current_size(0),
-			allocator(),
-			data_start_ptr(allocator_traits::allocate(allocator, capacity)) {}
+			: _max_size(capacity),
+			_size(0),
+			_allocator(),
+			_data_start_ptr(allocator_traits::allocate(_allocator, capacity)) {}
 
 		//Generator (size_t i) -> U (where T is constructable from U)
 		template<typename GeneratorTemplateType>
@@ -34,13 +45,13 @@ namespace OpenVic::_detail {
 		// The type must be constructible from the generator's single return value
 		&& std::constructible_from<T, decltype(std::declval<GeneratorTemplateType>()(std::declval<size_t>()))>
 		FixedVector(size_t capacity, GeneratorTemplateType&& generator)
-			: fixed_capacity(capacity),
-			current_size(capacity),
-			allocator(),
-			data_start_ptr(allocator_traits::allocate(allocator, capacity)) {
+			: _max_size(capacity),
+			_size(capacity),
+			_allocator(),
+			_data_start_ptr(allocator_traits::allocate(_allocator, capacity)) {
 			for (size_t i = 0; i < capacity; ++i) {
 				allocator_traits::construct(
-					allocator,
+					_allocator,
 					begin()+i,
 					generator(i)
 				);
@@ -62,16 +73,16 @@ namespace OpenVic::_detail {
 				)
 			};
 		}
-		FixedVector(size_t capacity, GeneratorTemplateType&& generator)
-			: fixed_capacity(capacity),
-			current_size(capacity),
-			allocator(),
-			data_start_ptr(allocator_traits::allocate(allocator, capacity)) {
-			for (size_t i = 0; i < capacity; ++i) {
+		FixedVector(size_t max_size, GeneratorTemplateType&& generator)
+			: _max_size(max_size),
+			_size(max_size),
+			_allocator(),
+			_data_start_ptr(allocator_traits::allocate(_allocator, max_size)) {
+			for (size_t i = 0; i < max_size; ++i) {
 				std::apply(
 					[this, i](auto&&... args) {
 						allocator_traits::construct(
-							allocator,
+							_allocator,
 							begin()+i,
 							std::forward<decltype(args)>(args)...
 						);
@@ -88,67 +99,78 @@ namespace OpenVic::_detail {
 
 		~FixedVector() {
 			clear();
-			allocator_traits::deallocate(allocator, data_start_ptr, fixed_capacity);
+			allocator_traits::deallocate(_allocator, _data_start_ptr, _max_size);
 		}
 		
 		using iterator = T*;
 		using const_iterator = const T*;
 
-		iterator begin() { return data_start_ptr; }
-		const_iterator begin() const { return data_start_ptr; }
-		const_iterator cbegin() const { return data_start_ptr; }
+		iterator begin() { return _data_start_ptr; }
+		const_iterator begin() const { return _data_start_ptr; }
+		const_iterator cbegin() const { return _data_start_ptr; }
 
-		iterator end() { return begin() + current_size; }
-		const_iterator end() const { return begin() + current_size; }
-		const_iterator cend() const { return cbegin() + current_size; }
+		iterator end() { return begin() + _size; }
+		const_iterator end() const { return begin() + _size; }
+		const_iterator cend() const { return cbegin() + _size; }
+		
+		using reverse_iterator = std::reverse_iterator<iterator>;
+		using const_reverse_iterator = std::reverse_iterator<const_iterator>;
+
+		reverse_iterator rbegin() { return reverse_iterator(end()); }
+		const_reverse_iterator rbegin() const { return const_reverse_iterator(end()); }
+		const_reverse_iterator crbegin() const { return const_reverse_iterator(end()); }
+
+		reverse_iterator rend() { return reverse_iterator(begin()); }
+		const_reverse_iterator rend() const { return const_reverse_iterator(begin()); }
+		const_reverse_iterator crend() const { return const_reverse_iterator(begin()); }
 
 		T& operator[](size_t index) {
-			assert(index < current_size && "Index out of bounds.");
-			return data_start_ptr[index];
+			assert(index < _size && "Index out of bounds.");
+			return _data_start_ptr[index];
 		}
 		const T& operator[](size_t index) const {
-			assert(index < current_size && "Index out of bounds.");
-			return data_start_ptr[index];
+			assert(index < _size && "Index out of bounds.");
+			return _data_start_ptr[index];
 		}
 
 		T& front() {
-			assert(current_size > 0 && "Container is empty.");
+			assert(!empty());
 			return *begin();
 		}
 		const T& front() const {
-			assert(current_size > 0 && "Container is empty.");
+			assert(!empty());
 			return *cbegin();
 		}
 		T& back() {
-			assert(current_size > 0 && "Container is empty.");
+			assert(!empty());
 			return *(end()-1);
 		}
 		const T& back() const {
-			assert(current_size > 0 && "Container is empty.");
+			assert(!empty());
 			return *(cend()-1);
 		}
 
 		template <typename... Args>
 		iterator emplace_back(Args&&... args) {
-			if (current_size >= fixed_capacity) {
+			if (_size >= _max_size) {
 				return end();
 			}
 			allocator_traits::construct(
-				allocator,
-				begin() + current_size,
+				_allocator,
+				begin() + _size,
 				std::forward<Args>(args)...
 			);
-			++current_size;
+			++_size;
 			return end()-1;
 		}
 
 		void pop_back() {
-    		if (current_size > 0) {
+    		if (_size > 0) {
 				allocator_traits::destroy(
-					allocator,
+					_allocator,
 					end() - 1
 				);
-				--current_size;
+				--_size;
 			}
 		}
 
@@ -156,11 +178,11 @@ namespace OpenVic::_detail {
 			for (iterator it = end(); it != begin(); ) {
 				--it;
 				allocator_traits::destroy(
-					allocator,
+					_allocator,
 					it
 				);
 			}
-			current_size = 0;
+			_size = 0;
 		}
 	};
 }

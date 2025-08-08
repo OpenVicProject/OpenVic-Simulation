@@ -72,6 +72,7 @@ TEST_CASE("FixedVector Construction and basic accessors","[FixedVector]") {
 	// Initial state check
 	CHECK(vec.size() == 0);
 	CHECK(vec.capacity() == capacity);
+	CHECK(vec.max_size() == capacity);
 	CHECK(vec.begin() == vec.end());
 }
 
@@ -84,6 +85,7 @@ TEST_CASE("FixedVector Generator constructor (single value)","[FixedVector]") {
 
 	REQUIRE(vec.size() == capacity);
 	REQUIRE(vec.capacity() == capacity);
+	REQUIRE(vec.max_size() == capacity);
 
 	for (size_t i = 0; i < capacity; ++i) {
 		CHECK(vec[i] == ComplexType{static_cast<int>(i), std::to_string(i)});
@@ -99,6 +101,7 @@ TEST_CASE("FixedVector Generator constructor (tuple)","[FixedVector]") {
 
 	REQUIRE(vec.size() == capacity);
 	REQUIRE(vec.capacity() == capacity);
+	REQUIRE(vec.max_size() == capacity);
 
 	for (size_t i = 0; i < capacity; ++i) {
 		CHECK(vec[i] == ComplexType{static_cast<int>(i), std::to_string(i)});
