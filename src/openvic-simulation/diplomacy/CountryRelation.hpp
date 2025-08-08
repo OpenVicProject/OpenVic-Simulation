@@ -169,6 +169,8 @@ namespace OpenVic {
 			Sphere
 		};
 
+		using influence_priority_value_type = uint8_t;
+
 	private:
 #define RELATION_PAIR_MAP(PAIR_TYPE, VALUE_TYPE, NAME, FUNC_NAME, RECIPIENT_CONST) \
 	vector_ordered_map<PAIR_TYPE, VALUE_TYPE> NAME; \
@@ -193,6 +195,7 @@ private:
 		RELATION_PAIR_MAP(CountryInstancePair, bool, vision, has_vision, const);
 		RELATION_PAIR_MAP(CountryInstancePair, OpinionType, opinions, country_opinion, const);
 		RELATION_PAIR_MAP(CountryInstancePair, influence_value_type, influence, influence_with, const);
+		RELATION_PAIR_MAP(CountryInstancePair, influence_priority_value_type, influence_priority, influence_priority_with, const);
 
 		vector_ordered_map<CountryInstancePair, Date> discredits;
 		vector_ordered_map<CountryInstancePair, Date> embassy_bans;
