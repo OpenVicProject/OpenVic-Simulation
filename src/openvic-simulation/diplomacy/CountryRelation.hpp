@@ -154,6 +154,10 @@ namespace OpenVic {
 			BIN_OPERATOR_EQ(%);
 
 #undef BIN_OPERATOR_EQ
+
+			explicit constexpr operator decltype(value)() const {
+				return value;
+			}
 		};
 
 		enum class OpinionType : int8_t {
