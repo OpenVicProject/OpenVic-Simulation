@@ -296,6 +296,7 @@ namespace OpenVic {
 		// tab, even white peace. Used for the "has_recently_lost_war" condition (true if the date is less than 5 years ago).
 		Date PROPERTY(last_war_loss_date);
 		vector_ordered_set<CountryInstance const*> PROPERTY(war_enemies);
+		STATE_PROPERTY(CountryInstance const*, sphere_owner, nullptr);
 		// TODO - colonial power, current wars
 
 		/* Military */

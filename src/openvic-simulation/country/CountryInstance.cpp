@@ -8,6 +8,7 @@
 #include "openvic-simulation/country/CountryDefinition.hpp"
 #include "openvic-simulation/defines/Define.hpp"
 #include "openvic-simulation/DefinitionManager.hpp"
+#include "openvic-simulation/diplomacy/CountryRelation.hpp"
 #include "openvic-simulation/economy/BuildingType.hpp"
 #include "openvic-simulation/economy/production/ProductionType.hpp"
 #include "openvic-simulation/history/CountryHistory.hpp"
@@ -26,6 +27,7 @@
 #include "openvic-simulation/types/PopSize.hpp"
 #include "openvic-simulation/types/SliderValue.hpp"
 #include "openvic-simulation/utility/Containers.hpp"
+#include "openvic-simulation/utility/Utility.hpp"
 
 using namespace OpenVic;
 
@@ -373,19 +375,27 @@ CountryRelationManager::OpinionType CountryInstance::get_opinion_of(CountryInsta
 }
 
 void CountryInstance::set_opinion_of(CountryInstance& country, CountryRelationManager::OpinionType opinion) {
+	if (OV_unlikely(country.sphere_owner.get_untracked() != nullptr && opinion == CountryRelationManager::OpinionType::Sphere)) {
+		Logger::warning("Attempting to add, '", country.get_identifier() ,"' to a sphere when it is already included in a sphere.");
+	}
 	country_relations_manager.set_country_opinion(this, &country, opinion);
+	if (opinion == CountryRelationManager::OpinionType::Sphere) {
+		country.sphere_owner.set(this);
+	} else if (country.sphere_owner.get_untracked() == this) {
+		country.sphere_owner.set(nullptr);
+	}
 }
 
 void CountryInstance::increase_opinion_of(CountryInstance& country) {
 	CountryRelationManager::OpinionType opinion = country_relations_manager.get_country_opinion(this, &country);
 	opinion++;
-	country_relations_manager.set_country_opinion(this, &country, opinion);
+	set_opinion_of(country, opinion);
 }
 
 void CountryInstance::decrease_opinion_of(CountryInstance& country) {
 	CountryRelationManager::OpinionType opinion = country_relations_manager.get_country_opinion(this, &country);
 	opinion--;
-	country_relations_manager.set_country_opinion(this, &country, opinion);
+	set_opinion_of(country, opinion);
 }
 
 CountryRelationManager::influence_value_type CountryInstance::get_influence_with(CountryInstance const& country) const {
