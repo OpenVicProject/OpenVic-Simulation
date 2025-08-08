@@ -5,6 +5,7 @@
 #include <compare>
 #include <cstdint>
 #include <optional>
+#include <string_view>
 #include <tuple>
 #include <type_traits>
 
@@ -214,6 +215,19 @@ private:
 		decltype(embassy_bans.values_container()) get_embassy_banned_date_values() const;
 
 #undef RELATION_PAIR_MAP
+
+		static constexpr std::string_view get_opinion_identifier(OpinionType type) {
+			switch (type) {
+				using namespace std::string_view_literals;
+				using enum OpinionType;
+			case Hostile:  return "REL_HOSTILE"sv;
+			case Opposed:  return "REL_OPPOSED"sv;
+			case Neutral:  return "REL_NEUTRAL"sv;
+			case Cordial:  return "REL_CORDIAL"sv;
+			case Friendly: return "REL_FRIENDLY"sv;
+			case Sphere:   return "REL_SPHERE_OF_INFLUENCE"sv;
+			}
+		}
 	};
 }
 
