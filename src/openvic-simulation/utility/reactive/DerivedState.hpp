@@ -61,6 +61,13 @@ namespace OpenVic {
 		DerivedState& operator=(DerivedState&&) = delete;
 		DerivedState& operator=(DerivedState const&) = delete;
 
+		template<typename ConnectTemplateType>
+		requires std::invocable<ConnectTemplateType, signal<T>>
+		[[nodiscard]] T const& get(ConnectTemplateType&& connect) {
+			recalculate_if_dirty();
+			connect(changed);
+			return cached_value;
+		}
 		[[nodiscard]] T const& get(DependencyTracker& tracker) {
 			recalculate_if_dirty();
 			tracker.track(changed);
@@ -79,22 +86,22 @@ namespace OpenVic {
 		}
 
 		template<typename... Ts>
-		[[nodiscard]] connection connect(Ts&&... args) const {
+		[[nodiscard]] connection connect(Ts&&... args) {
 			return changed.connect(std::forward<Ts>(args)...);
 		}
 
 		template<typename... Ts>
-		[[nodiscard]] connection connect_extended(Ts&&... args) const {
+		[[nodiscard]] connection connect_extended(Ts&&... args) {
 			return changed.connect_extended(std::forward<Ts>(args)...);
 		}
 
 		template<typename... Ts>
-		[[nodiscard]] scoped_connection connect_scoped(Ts&&... args) const {
+		[[nodiscard]] scoped_connection connect_scoped(Ts&&... args) {
 			return changed.connect_scoped(std::forward<Ts>(args)...);
 		}
 
 		template<typename... Ts>
-		void disconnect(Ts&&... args) const {
+		void disconnect(Ts&&... args) {
 			return changed.disconnect(std::forward<Ts>(args)...);
 		}
 	};
