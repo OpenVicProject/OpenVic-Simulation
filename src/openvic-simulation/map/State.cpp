@@ -5,6 +5,7 @@
 #include "openvic-simulation/map/MapInstance.hpp"
 #include "openvic-simulation/map/ProvinceInstance.hpp"
 #include "openvic-simulation/map/Region.hpp"
+#include "openvic-simulation/pop/Pop.hpp"
 #include "openvic-simulation/pop/PopType.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
 #include "openvic-simulation/utility/StringUtils.hpp"
@@ -50,7 +51,7 @@ void State::update_gamestate() {
 		pops_cache.clear();
 	}
 
-	for (ProvinceInstance const* const province : provinces) {
+	for (ProvinceInstance* const province : provinces) {
 		add_pops_aggregate(*province);
 
 		for (auto const& [pop_type, province_pops_of_type] : province->get_pops_cache_by_type()) {
@@ -147,11 +148,12 @@ bool StateManager::add_state_set(
 
 		CountryInstance* owner = capital->get_owner();
 
-		State& state = *state_set.states.insert({
+		State& state = *state_set.states.emplace(
 			/* TODO: capital province logic */
-			state_set, owner, capital, std::move(provinces), capital->get_colony_status(), strata_keys, pop_type_keys,
-			ideology_keys
-		});
+			state_set, owner, capital,
+			std::move(provinces), capital->get_colony_status(),
+			strata_keys, pop_type_keys, ideology_keys
+		);
 
 		for (ProvinceInstance* province : state.get_provinces()) {
 			province->set_state(&state);

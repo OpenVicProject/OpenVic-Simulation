@@ -1,8 +1,11 @@
 #pragma once
 
 #include "openvic-simulation/scripts/ConditionalWeight.hpp"
+#include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
+#include "openvic-simulation/types/fixed_point/FixedPointMap.hpp"
 #include "openvic-simulation/types/HasIdentifier.hpp"
 #include "openvic-simulation/types/HasIndex.hpp"
+#include "openvic-simulation/types/IndexedFlatMap.hpp"
 #include "openvic-simulation/types/PopSize.hpp"
 #include "openvic-simulation/types/PopSprite.hpp"
 #include "openvic-simulation/utility/Containers.hpp"

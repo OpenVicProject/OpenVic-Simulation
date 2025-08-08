@@ -506,9 +506,9 @@ namespace OpenVic::_detail::signal {
 
 	template<typename Lockable>
 	struct basic_observer : private observer_type {
+	protected:
 		virtual ~basic_observer() = default;
 
-	protected:
 		/**
 		 * Disconnect all signals connected to this object.
 		 *

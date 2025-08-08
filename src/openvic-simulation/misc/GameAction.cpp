@@ -440,11 +440,11 @@ bool GameActionManager::game_action_callback_start_research(game_action_argument
 		return false;
 	}
 
-	Technology const* old_research = country->get_current_research();
+	Technology const* old_research = country->get_current_research_untracked();
 
 	country->start_research(*technology, instance_manager);
 
-	return old_research != country->get_current_research();
+	return old_research != country->get_current_research_untracked();
 }
 
 // Politics

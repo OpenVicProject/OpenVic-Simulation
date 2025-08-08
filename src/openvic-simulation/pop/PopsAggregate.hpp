@@ -7,6 +7,7 @@
 #include "openvic-simulation/types/OrderedContainers.hpp"
 #include "openvic-simulation/types/PopSize.hpp"
 #include "openvic-simulation/utility/Getters.hpp"
+#include "openvic-simulation/utility/reactive/MutableState.hpp"
 
 namespace OpenVic {
 	struct BaseIssue;
@@ -24,7 +25,8 @@ namespace OpenVic {
 	private:
 		pop_size_t PROPERTY(total_population, 0);
 		size_t PROPERTY(max_supported_regiment_count, 0);
-		fixed_point_t PROPERTY(yesterdays_import_value); //>= 0
+		fixed_point_t _yesterdays_import_value_running_total;
+		STATE_PROPERTY(fixed_point_t, yesterdays_import_value); //>= 0
 
 		// TODO - population change (growth + migration), monthly totals + breakdown by source/destination
 		fixed_point_t PROPERTY(average_literacy);
@@ -53,7 +55,7 @@ namespace OpenVic {
 		);
 
 		void clear_pops_aggregate();
-		void add_pops_aggregate(PopsAggregate const& part);
+		void add_pops_aggregate(PopsAggregate& part);
 		void add_pops_aggregate(Pop const& pop);
 		void normalise_pops_aggregate();
 		void update_parties_for_votes(CountryDefinition const* country_definition);

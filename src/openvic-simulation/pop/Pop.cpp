@@ -295,7 +295,7 @@ void Pop::pay_income_tax(fixed_point_t& income) {
 	if (tax_collector_nullable == nullptr) {
 		return;
 	}
-	const fixed_point_t effective_tax_rate = tax_collector_nullable->get_effective_tax_rate_by_strata(type->get_strata());
+	const fixed_point_t effective_tax_rate = tax_collector_nullable->get_effective_tax_rate_by_strata(type->get_strata()).get_untracked();
 	const fixed_point_t tax = effective_tax_rate * income;
 	tax_collector_nullable->report_pop_income_tax(*type, income, tax);
 	income -= tax;
@@ -449,7 +449,7 @@ void Pop::pop_tick_without_cleanup(
 	fixed_point_t max_cost_multiplier = 1;
 	if (country_to_report_economy_nullable != nullptr) {
 		country_to_report_economy_nullable->request_salaries_and_welfare_and_import_subsidies(*this);
-		const fixed_point_t tariff_rate = country_to_report_economy_nullable->get_effective_tariff_rate();
+		const fixed_point_t tariff_rate = country_to_report_economy_nullable->effective_tariff_rate.get_untracked();
 		if (tariff_rate > fixed_point_t::_0) {
 			max_cost_multiplier += tariff_rate; //max (domestic cost, imported cost)
 		}
