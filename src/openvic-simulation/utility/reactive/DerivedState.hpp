@@ -62,7 +62,7 @@ namespace OpenVic {
 		DerivedState& operator=(DerivedState const&) = delete;
 
 		template<typename ConnectTemplateType>
-		requires std::invocable<ConnectTemplateType, signal<T>&>
+		requires std::invocable<ConnectTemplateType, signal<>&>
 		[[nodiscard]] T const& get(ConnectTemplateType&& connect) {
 			recalculate_if_dirty();
 			connect(changed);
