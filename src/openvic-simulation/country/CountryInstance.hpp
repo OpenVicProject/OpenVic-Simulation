@@ -418,9 +418,6 @@ namespace OpenVic {
 		}
 
 		std::string_view get_identifier() const;
-		fixed_point_t get_tariff_efficiency() const;
-
-		void update_country_definition_based_attributes();
 
 		bool exists() const;
 		bool is_civilised() const;
