@@ -1300,26 +1300,36 @@ void CountryInstance::_update_budget() {
 		);
 	}
 
-	projected_administration_spending_unscaled_by_slider.set(fixed_point_t::_0);
-	projected_education_spending_unscaled_by_slider.set(fixed_point_t::_0);
-	projected_military_spending_unscaled_by_slider.set(fixed_point_t::_0);
-	projected_pensions_spending_unscaled_by_slider.set(fixed_point_t::_0);
-	projected_unemployment_subsidies_spending_unscaled_by_slider.set(fixed_point_t::_0);
+	fixed_point_t projected_administration_spending_unscaled_by_slider_running_total = 0;
+	fixed_point_t projected_education_spending_unscaled_by_slider_running_total = 0;
+	fixed_point_t projected_military_spending_unscaled_by_slider_running_total = 0;
+	fixed_point_t projected_pensions_spending_unscaled_by_slider_running_total = 0;
+	fixed_point_t projected_unemployment_subsidies_spending_unscaled_by_slider_running_total = 0;
 
 	for (auto const& [pop_type, size] : get_population_by_type()) {
-		projected_administration_spending_unscaled_by_slider += size * administration_salary_base_by_pop_type.at(pop_type).get_untracked();
-		projected_education_spending_unscaled_by_slider += size * education_salary_base_by_pop_type.at(pop_type).get_untracked();
-		projected_military_spending_unscaled_by_slider += size * military_salary_base_by_pop_type.at(pop_type).get_untracked();
-		projected_pensions_spending_unscaled_by_slider += size * calculate_pensions_base(modifier_effect_cache, pop_type);
-		projected_unemployment_subsidies_spending_unscaled_by_slider += get_unemployed_pops_by_type(pop_type)
+		projected_administration_spending_unscaled_by_slider_running_total += size * administration_salary_base_by_pop_type.at(pop_type).get_untracked();
+		projected_education_spending_unscaled_by_slider_running_total += size * education_salary_base_by_pop_type.at(pop_type).get_untracked();
+		projected_military_spending_unscaled_by_slider_running_total += size * military_salary_base_by_pop_type.at(pop_type).get_untracked();
+		projected_pensions_spending_unscaled_by_slider_running_total += size * calculate_pensions_base(modifier_effect_cache, pop_type);
+		projected_unemployment_subsidies_spending_unscaled_by_slider_running_total += get_unemployed_pops_by_type(pop_type)
 			* calculate_unemployment_subsidies_base(modifier_effect_cache, pop_type);
 	}
 
-	projected_administration_spending_unscaled_by_slider /= Pop::size_denominator;
-	projected_education_spending_unscaled_by_slider /= Pop::size_denominator;
-	projected_military_spending_unscaled_by_slider /= Pop::size_denominator;
-	projected_pensions_spending_unscaled_by_slider /= Pop::size_denominator;
-	projected_unemployment_subsidies_spending_unscaled_by_slider /= Pop::size_denominator;
+	projected_administration_spending_unscaled_by_slider.set(
+		projected_administration_spending_unscaled_by_slider_running_total / Pop::size_denominator
+	);
+	projected_education_spending_unscaled_by_slider.set(
+		projected_education_spending_unscaled_by_slider_running_total / Pop::size_denominator
+	);
+	projected_military_spending_unscaled_by_slider.set(
+		projected_military_spending_unscaled_by_slider_running_total / Pop::size_denominator
+	);
+	projected_pensions_spending_unscaled_by_slider.set(
+		projected_pensions_spending_unscaled_by_slider_running_total / Pop::size_denominator
+	);
+	projected_unemployment_subsidies_spending_unscaled_by_slider.set(
+		projected_unemployment_subsidies_spending_unscaled_by_slider_running_total / Pop::size_denominator
+	);
 }
 
 fixed_point_t CountryInstance::calculate_pensions_base(
