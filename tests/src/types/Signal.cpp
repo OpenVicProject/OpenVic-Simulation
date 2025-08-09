@@ -658,3 +658,22 @@ TEST_CASE("signal loop", "[signal][signal-loop]") {
 	CHECK(i1.val() == 1);
 	CHECK(i2.val() == 1);
 }
+
+TEST_CASE("signal multiple emits", "[signal][signal-multiple-emits]") {
+	std::stringstream s;
+
+	OpenVic::signal<std::string> signal;
+	connection conn = signal.connect([&s](auto a, auto... args) {
+		using result_t = int[];
+		s << a;
+		result_t r {
+			1,
+			((void)(s << args), 1)...,
+		};
+		(void)r;
+	});
+	signal("Hello");
+	signal(" world!");
+
+	CHECK(s.str() == "Hello world!");
+}
