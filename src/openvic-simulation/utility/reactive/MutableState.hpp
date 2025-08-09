@@ -31,7 +31,7 @@ namespace OpenVic {
 		}
 	public:
 		template<typename ConnectTemplateType>
-		requires std::invocable<ConnectTemplateType, signal<T>>
+		requires std::invocable<ConnectTemplateType, signal<T>&>
 		[[nodiscard]] T const& get(ConnectTemplateType&& connect) {
 			connect(changed);
 			return value;
@@ -46,9 +46,9 @@ namespace OpenVic {
 		
 		//special case where connection may be discarded as the observer handles it
 		template<typename Pmf, OpenVic::_detail::signal::Observer Ptr>
-		requires OpenVic::_detail::signal::Callable<Pmf, Ptr>
+		requires OpenVic::_detail::signal::Callable<Pmf, Ptr, T>
 		connection connect_using_observer(Pmf&& pmf, Ptr&& ptr, OpenVic::_detail::signal::group_id gid = 0) {
-			return changed.connect(pmf, ptr, gid);
+			return changed.connect(std::forward<Pmf>(pmf), std::forward<Ptr>(ptr), gid);
 		}
 
 		template<typename... Ts>
@@ -145,7 +145,7 @@ public: \
 		return NAME; \
 	} \
 	template<typename ConnectTemplateType> \
-	requires std::invocable<ConnectTemplateType, signal<T>> \
+	requires std::invocable<ConnectTemplateType, signal<T>&> \
 	[[nodiscard]] T const& get_##NAME(ConnectTemplateType&& connect) { \
 		return NAME.get(std::forward(connect)); \
 	} \

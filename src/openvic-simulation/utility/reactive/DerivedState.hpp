@@ -62,7 +62,7 @@ namespace OpenVic {
 		DerivedState& operator=(DerivedState const&) = delete;
 
 		template<typename ConnectTemplateType>
-		requires std::invocable<ConnectTemplateType, signal<T>>
+		requires std::invocable<ConnectTemplateType, signal<T>&>
 		[[nodiscard]] T const& get(ConnectTemplateType&& connect) {
 			recalculate_if_dirty();
 			connect(changed);
@@ -82,7 +82,7 @@ namespace OpenVic {
 		template<typename Pmf, OpenVic::_detail::signal::Observer Ptr>
 		requires OpenVic::_detail::signal::Callable<Pmf, Ptr>
 		connection connect_using_observer(Pmf&& pmf, Ptr&& ptr, OpenVic::_detail::signal::group_id gid = 0) {
-			return changed.connect(pmf, ptr, gid);
+			return changed.connect(std::forward<Pmf>(pmf), std::forward<Ptr>(ptr), gid);
 		}
 
 		template<typename... Ts>
