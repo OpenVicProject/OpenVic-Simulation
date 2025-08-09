@@ -22,10 +22,10 @@
 #include "openvic-simulation/pop/PopType.hpp"
 #include "openvic-simulation/research/Invention.hpp"
 #include "openvic-simulation/research/Technology.hpp"
+#include "openvic-simulation/types/ClampedValue.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
 #include "openvic-simulation/types/IndexedFlatMap.hpp"
 #include "openvic-simulation/types/PopSize.hpp"
-#include "openvic-simulation/types/SliderValue.hpp"
 #include "openvic-simulation/utility/Containers.hpp"
 #include "openvic-simulation/utility/Utility.hpp"
 
@@ -216,7 +216,7 @@ CountryInstance::CountryInstance(
 
 	// Some sliders need to have their max range limits temporarily set to 1 so they can start with a value of 0.5 or 1.0.
 	// The range limits will be corrected on the first gamestate update, and the values will go to the closest valid point.
-	for (SliderValue& tax_rate_slider_value : tax_rate_slider_value_by_strata.get_values()) {
+	for (ClampedValue& tax_rate_slider_value : tax_rate_slider_value_by_strata.get_values()) {
 		tax_rate_slider_value.set_bounds(0, 1);
 		tax_rate_slider_value.set_value(fixed_point_t::_0_50);
 	}
@@ -471,7 +471,11 @@ fixed_point_t CountryInstance::get_taxable_income_by_strata(Strata const& strata
 DerivedState<fixed_point_t>& CountryInstance::get_effective_tax_rate_by_strata(Strata const& strata) {
 	return effective_tax_rate_by_strata.at(strata);
 }
-SliderValue const& CountryInstance::get_tax_rate_slider_value_by_strata(Strata const& strata) const {
+
+ReadOnlyClampedValue& CountryInstance::get_tax_rate_slider_value_by_strata(Strata const& strata) {
+	return tax_rate_slider_value_by_strata.at(strata);
+}
+ReadOnlyClampedValue const& CountryInstance::get_tax_rate_slider_value_by_strata(Strata const& strata) const {
 	return tax_rate_slider_value_by_strata.at(strata);
 }
 
@@ -1215,7 +1219,7 @@ void CountryInstance::_update_budget() {
 	const fixed_point_t min_tax = get_modifier_effect_value(*modifier_effect_cache.get_min_tax());
 	const fixed_point_t max_tax = nonzero_or_one(get_modifier_effect_value(*modifier_effect_cache.get_max_tax()));
 
-	for (SliderValue& tax_rate_slider_value : tax_rate_slider_value_by_strata.get_values()) {
+	for (ClampedValue& tax_rate_slider_value : tax_rate_slider_value_by_strata.get_values()) {
 		tax_rate_slider_value.set_bounds(min_tax, max_tax);
 	}
 

@@ -8,6 +8,7 @@
 #include "openvic-simulation/modifier/ModifierSum.hpp"
 #include "openvic-simulation/politics/Rule.hpp"
 #include "openvic-simulation/pop/PopsAggregate.hpp"
+#include "openvic-simulation/types/ClampedValue.hpp"
 #include "openvic-simulation/types/Date.hpp"
 #include "openvic-simulation/types/fixed_point/Atomic.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
@@ -15,7 +16,6 @@
 #include "openvic-simulation/types/HasIndex.hpp"
 #include "openvic-simulation/types/IndexedFlatMap.hpp"
 #include "openvic-simulation/types/OrderedContainers.hpp"
-#include "openvic-simulation/types/SliderValue.hpp"
 #include "openvic-simulation/types/TechnologyUnlockLevel.hpp"
 #include "openvic-simulation/types/UnitBranchType.hpp"
 #include "openvic-simulation/types/UnitVariant.hpp"
@@ -152,30 +152,37 @@ namespace OpenVic {
 	public:
 		DerivedState<fixed_point_t>& get_effective_tax_rate_by_strata(Strata const& strata);
 	private:
-		IndexedFlatMap_PROPERTY(Strata, SliderValue, tax_rate_slider_value_by_strata);
+		IndexedFlatMap<Strata, ClampedValue> tax_rate_slider_value_by_strata;
+	public:
+		[[nodiscard]] constexpr IndexedFlatMap<Strata, ClampedValue> const& get_tax_rate_slider_value_by_strata() const {
+			return tax_rate_slider_value_by_strata;
+		}
+		[[nodiscard]] ReadOnlyClampedValue& get_tax_rate_slider_value_by_strata(Strata const& strata);
+		[[nodiscard]] ReadOnlyClampedValue const& get_tax_rate_slider_value_by_strata(Strata const& strata) const;
+	private:
 
 		STATE_PROPERTY(fixed_point_t, administrative_efficiency_from_administrators);
 		STATE_PROPERTY(fixed_point_t, administrator_percentage);
 
 		//store per slider per good: desired, bought & cost
 		//store purchase record from last tick and prediction next tick
-		SliderValue PROPERTY(army_spending_slider_value);
-		SliderValue PROPERTY(navy_spending_slider_value);
-		SliderValue PROPERTY(construction_spending_slider_value);
+		CLAMPED_PROPERTY(army_spending_slider_value);
+		CLAMPED_PROPERTY(navy_spending_slider_value);
+		CLAMPED_PROPERTY(construction_spending_slider_value);
 
-		SliderValue PROPERTY(administration_spending_slider_value);
+		CLAMPED_PROPERTY(administration_spending_slider_value);
 		STATE_PROPERTY(fixed_point_t, projected_administration_spending_unscaled_by_slider);
 		STATE_PROPERTY(fixed_point_t, actual_administration_spending);
 
-		SliderValue PROPERTY(education_spending_slider_value);
+		CLAMPED_PROPERTY(education_spending_slider_value);
 		STATE_PROPERTY(fixed_point_t, projected_education_spending_unscaled_by_slider);
 		STATE_PROPERTY(fixed_point_t, actual_education_spending);
 
-		SliderValue PROPERTY(military_spending_slider_value);
+		CLAMPED_PROPERTY(military_spending_slider_value);
 		STATE_PROPERTY(fixed_point_t, projected_military_spending_unscaled_by_slider);
 		STATE_PROPERTY(fixed_point_t, actual_military_spending);
 
-		SliderValue PROPERTY(social_spending_slider_value);
+		CLAMPED_PROPERTY(social_spending_slider_value);
 		STATE_PROPERTY(fixed_point_t, projected_pensions_spending_unscaled_by_slider);
 		STATE_PROPERTY(fixed_point_t, projected_unemployment_subsidies_spending_unscaled_by_slider);
 		STATE_PROPERTY(fixed_point_t, actual_social_spending);
@@ -186,7 +193,7 @@ namespace OpenVic {
 		IndexedFlatMap<PopType, DerivedState<fixed_point_t>> military_salary_base_by_pop_type;
 		IndexedFlatMap<PopType, DerivedState<fixed_point_t>> social_income_variant_base_by_pop_type;
 
-		SliderValue PROPERTY(tariff_rate_slider_value);
+		CLAMPED_PROPERTY(tariff_rate_slider_value);
 		std::mutex actual_net_tariffs_mutex;
 		MutableState<fixed_point_t> actual_net_tariffs;
 
@@ -723,3 +730,5 @@ namespace OpenVic {
 #undef UNIT_BRANCHED_GETTER_CONST
 #undef IndexedFlatMap_PROPERTY
 #undef IndexedFlatMap_PROPERTY_ACCESS
+#undef CLAMPED_PROPERTY
+#undef CLAMPED_PROPERTY_ACCESS
