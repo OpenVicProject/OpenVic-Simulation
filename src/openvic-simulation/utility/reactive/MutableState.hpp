@@ -147,7 +147,7 @@ public: \
 	template<typename ConnectTemplateType> \
 	requires std::invocable<ConnectTemplateType, signal<T>&> \
 	[[nodiscard]] T const& get_##NAME(ConnectTemplateType&& connect) { \
-		return NAME.get(std::forward(connect)); \
+		return NAME.get(std::forward<ConnectTemplateType>(connect)); \
 	} \
 	[[nodiscard]] T get_##NAME(DependencyTracker& tracker) { \
 		return NAME.get(tracker); \
