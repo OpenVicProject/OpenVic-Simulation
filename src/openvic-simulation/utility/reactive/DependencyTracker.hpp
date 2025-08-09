@@ -2,8 +2,6 @@
 
 #include <mutex>
 
-#include <function2/function2.hpp>
-
 #include "openvic-simulation/types/Signal.hpp"
 
 namespace OpenVic {
