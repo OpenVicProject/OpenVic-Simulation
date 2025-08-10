@@ -91,6 +91,9 @@ bool ProvinceInstance::set_owner(CountryInstance* new_owner) {
 		if (owner != nullptr) {
 			ret &= owner->remove_owned_province(*this);
 		}
+		if (new_owner != nullptr) {
+			ret &= new_owner->add_owned_province(*this);
+		}
 
 		owner = new_owner;
 
@@ -123,12 +126,12 @@ bool ProvinceInstance::set_controller(CountryInstance* new_controller) {
 		if (controller != nullptr) {
 			ret &= controller->remove_controlled_province(*this);
 		}
+		if (new_controller != nullptr) {
+			ret &= new_controller->add_controlled_province(*this);
+		}
 
 		controller = new_controller;
 
-		if (controller != nullptr) {
-			ret &= controller->add_controlled_province(*this);
-		}
 
 		if (game_rules_manager.get_country_to_report_economy() == country_to_report_economy_t::Controller) {
 			country_to_report_economy = new_controller;
