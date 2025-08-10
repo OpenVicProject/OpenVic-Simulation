@@ -4,6 +4,8 @@
 #include <cstdlib>
 #include <string_view>
 
+#include "openvic-simulation/utility/Marshal.hpp"
+
 #include "Helper.hpp" // IWYU pragma: keep
 #include <snitch/snitch_macros_check.hpp>
 #include <snitch/snitch_macros_constexpr.hpp>
@@ -73,6 +75,15 @@ TEST_CASE("Date Conversion methods", "[Date][Date-conversion]") {
 	CHECK(date2.to_array(true, false, true) == "0005.3.02"sv);
 	CHECK(date2.to_array(false, false, false) == "5.3.2"sv);
 	CHECK(date2.to_array(false, false, true) == "5.3.02"sv);
+}
+
+TEST_CASE("Date Marshal encode then decode", "[Date][Date-encode-decode][utility][Marshal][Marshal-encode-decode-Date]") {
+	static constexpr Date date = { 5, 4, 10 };
+
+	std::array<uint8_t, sizeof(date)> buffer; // NOLINT
+	utility::encode(date, buffer);
+	size_t decode_count;
+	CHECK(date == utility::decode<Date>(buffer, decode_count));
 }
 
 TEST_CASE("Date Parse methods", "[Date][Date-parse]") {
