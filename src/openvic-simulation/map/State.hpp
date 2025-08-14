@@ -28,8 +28,9 @@ namespace OpenVic {
 		friend struct StateManager;
 
 	private:
+		CountryInstance* previous_country_ptr = nullptr;	
+
 		StateSet const& PROPERTY(state_set);
-		CountryInstance* PROPERTY_PTR(owner);
 		ProvinceInstance* PROPERTY_PTR(capital);
 		memory::vector<ProvinceInstance*> SPAN_PROPERTY(provinces);
 		colony_status_t PROPERTY(colony_status);
@@ -37,10 +38,11 @@ namespace OpenVic {
 
 		IndexedFlatMap_PROPERTY(PopType, memory::vector<Pop*>, pops_cache_by_type);
 
+		void _update_country();
+
 	public:
 		State(
 			StateSet const& new_state_set,
-			CountryInstance* new_owner,
 			ProvinceInstance* new_capital,
 			memory::vector<ProvinceInstance*>&& new_provinces,
 			colony_status_t new_colony_status,
@@ -54,6 +56,7 @@ namespace OpenVic {
 		State& operator=(State const&) = delete;
 
 		memory::string get_identifier() const;
+		CountryInstance* get_owner() const;
 
 		constexpr bool is_colonial_state() const {
 			return is_colonial(colony_status);
