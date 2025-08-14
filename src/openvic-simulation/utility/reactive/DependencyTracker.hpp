@@ -15,13 +15,16 @@ namespace OpenVic {
 				return;
 			}
 
-			const std::lock_guard<std::mutex> lock_guard { is_dirty_lock };
-			if (is_dirty) {
-				return;
+			{
+				const std::lock_guard<std::mutex> lock_guard { is_dirty_lock };
+				if (is_dirty) {
+					return;
+				}
+
+				disconnect_all();
+				is_dirty = true;
 			}
 
-			disconnect_all();
-			is_dirty = true;
 			changed();
 		}
 	protected:
