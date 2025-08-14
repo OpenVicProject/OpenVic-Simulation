@@ -602,14 +602,14 @@ namespace OpenVic {
 
 /* Macros to generate declaration and constant accessor methods for a UniqueKeyRegistry member variable. */
 
-#define IDENTIFIER_REGISTRY(name) \
-	IDENTIFIER_REGISTRY_CUSTOM_PLURAL(name, name##s)
+#define IDENTIFIER_REGISTRY(name, ...) \
+	IDENTIFIER_REGISTRY_CUSTOM_PLURAL(name, name##s, __VA_ARGS__)
 
-#define IDENTIFIER_REGISTRY_CUSTOM_PLURAL(singular, plural) \
-	IDENTIFIER_REGISTRY_FULL_CUSTOM(singular, plural, plural, plural)
+#define IDENTIFIER_REGISTRY_CUSTOM_PLURAL(singular, plural, ...) \
+	IDENTIFIER_REGISTRY_FULL_CUSTOM(singular, plural, plural, plural, __VA_ARGS__)
 
-#define IDENTIFIER_REGISTRY_FULL_CUSTOM(singular, plural, registry, debug_name) \
-	registry { #debug_name }; \
+#define IDENTIFIER_REGISTRY_FULL_CUSTOM(singular, plural, registry, debug_name, ...) \
+	registry { #debug_name __VA_OPT__(,) __VA_ARGS__ }; \
 public: \
 	constexpr void lock_##plural() { \
 		registry.lock(); \
