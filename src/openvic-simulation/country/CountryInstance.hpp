@@ -19,6 +19,7 @@
 #include "openvic-simulation/types/TechnologyUnlockLevel.hpp"
 #include "openvic-simulation/types/UnitBranchType.hpp"
 #include "openvic-simulation/types/UnitVariant.hpp"
+#include "openvic-simulation/types/ValueHistory.hpp"
 #include "openvic-simulation/utility/Getters.hpp"
 #include "openvic-simulation/utility/Containers.hpp"
 #include "openvic-simulation/utility/reactive/DerivedState.hpp"
@@ -142,7 +143,8 @@ namespace OpenVic {
 		// TODO - total amount of each good produced
 
 		/* Budget */
-		// TODO - cash stockpile change over last 30 days
+		fixed_point_t cache_stockpile_start_of_tick;
+		ValueHistory<fixed_point_t> PROPERTY(balance_history);
 		STATE_PROPERTY(fixed_point_t, gold_income);
 		atomic_fixed_point_t PROPERTY(cash_stockpile);
 		std::mutex taxable_income_mutex;
