@@ -96,7 +96,7 @@ namespace OpenVic {
 		memory::vector<ProvinceInstance const*> PROPERTY(adjacent_nonempty_land_provinces);
 		Crime const* PROPERTY_RW(crime, nullptr);
 		ResourceGatheringOperation PROPERTY(rgo);
-		IdentifierRegistry<BuildingInstance> IDENTIFIER_REGISTRY(building);
+		IdentifierRegistry<BuildingInstance> IDENTIFIER_REGISTRY(building, false);
 		memory::vector<ArmyInstance*> SPAN_PROPERTY(armies);
 		memory::vector<NavyInstance*> SPAN_PROPERTY(navies);
 		// The number of land regiments currently in the province, including those being transported by navies
