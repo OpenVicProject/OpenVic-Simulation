@@ -40,8 +40,8 @@ namespace OpenVic {
 		}
 
 		inline bool set_base_path(Dataloader::path_span_t base_path) {
-			OV_ERR_FAIL_COND_V_MSG(base_path.size() > 1, "more than one dataloader base path provided", false);
-			OV_ERR_FAIL_COND_V_MSG(!dataloader.set_roots(base_path, {}), "failed to set dataloader base path", false);
+			OV_ERR_FAIL_COND_V_MSG(base_path.size() > 1, false, "Too many base paths were provided, only one should be set.");
+			OV_ERR_FAIL_COND_V_MSG(!dataloader.set_roots(base_path, {}), false, "Failed to set Dataloader's base path");
 			return true;
 		};
 
