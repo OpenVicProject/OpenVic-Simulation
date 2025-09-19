@@ -1,4 +1,3 @@
-
 #include "BaseMultiplayerManager.hpp"
 
 #include "openvic-simulation/multiplayer/PacketType.hpp"

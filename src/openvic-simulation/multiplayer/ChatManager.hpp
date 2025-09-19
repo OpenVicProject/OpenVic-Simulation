@@ -4,8 +4,8 @@
 #include <cstdint>
 #include <string_view>
 
-#include "openvic-simulation/multiplayer/BaseMultiplayerManager.hpp"
-#include "openvic-simulation/multiplayer/ClientManager.hpp"
+#include "openvic-simulation/multiplayer/Constants.hpp"
+#include "openvic-simulation/multiplayer/PacketType.hpp"
 #include "openvic-simulation/types/Signal.hpp"
 #include "openvic-simulation/utility/Marshal.hpp"
 
@@ -13,29 +13,31 @@ namespace OpenVic {
 	struct GameManager;
 	struct ChatManager;
 	struct ChatMessageLog;
+	struct BaseMultiplayerManager;
+	struct ClientManager;
 
 	struct ChatGroup {
-		using index_t = size_t;
+		using index_type = size_t;
 
 		ChatGroup(ChatGroup const&) = delete;
 		ChatGroup& operator=(ChatGroup const&) = delete;
 		ChatGroup(ChatGroup&&) = default;
 		ChatGroup& operator=(ChatGroup&& lhs) = default;
 
-		std::span<const BaseMultiplayerManager::client_id_type> get_clients() const {
+		std::span<const client_id_type> get_clients() const {
 			return clients;
 		}
 
-		operator index_t() const {
+		operator index_type() const {
 			return index;
 		}
 
 	private:
 		friend struct ChatManager;
-		ChatGroup(index_t index, memory::vector<BaseMultiplayerManager::client_id_type>&& clients);
+		ChatGroup(index_type index, memory::vector<client_id_type>&& clients);
 
-		memory::vector<BaseMultiplayerManager::client_id_type> clients;
-		index_t PROPERTY(index);
+		memory::vector<client_id_type> clients;
+		index_type PROPERTY(index);
 	};
 
 	struct ChatManager {
@@ -44,17 +46,23 @@ namespace OpenVic {
 		struct MessageData {
 			MessageType type = MessageType::NONE;
 			memory::string message;
-			uint64_t from_index = BaseMultiplayerManager::HOST_ID;
+			union {
+				client_id_type to_client = MP_HOST_ID;
+				ChatGroup::index_type to_group;
+			};
 
 			template<std::endian Endian>
 			size_t encode(std::span<uint8_t> span) const {
 				size_t offset = utility::encode(type, span, utility::endian_tag<Endian>);
 				if (type != MessageType::PUBLIC) {
-					offset += utility::encode<
-						uint16_t>(from_index, !span.empty() ? span.subspan(offset) : span, utility::endian_tag<Endian>);
+					offset += //
+						utility::encode<uint16_t, Endian>(
+							to_client, //
+							span.empty() ? span : span.subspan(offset) //
+						);
 				}
 
-				return utility::encode(message, !span.empty() ? span.subspan(offset) : span, utility::endian_tag<Endian>) +
+				return utility::encode(message, span.empty() ? span : span.subspan(offset), utility::endian_tag<Endian>) +
 					offset;
 			}
 
@@ -63,14 +71,15 @@ namespace OpenVic {
 				MessageType type = utility::decode<MessageType, Endian>(span, r_decode_count);
 				size_t offset = r_decode_count;
 
-				uint64_t from_index = BaseMultiplayerManager::HOST_ID;
+				// Depending on type, either client_id_type or ChatGroup::index_type
+				decltype(to_client) to_index = MP_HOST_ID;
 				if (type != MessageType::PUBLIC) {
-					from_index = utility::decode<uint16_t>(span.subspan(offset), r_decode_count);
+					to_index = utility::decode<uint16_t, Endian>(span.subspan(offset), r_decode_count);
 					offset += r_decode_count;
 				}
 
 				MessageData data {
-					type, utility::decode<decltype(message), Endian>(span.subspan(offset), r_decode_count), from_index //
+					type, utility::decode<decltype(message), Endian>(span.subspan(offset), r_decode_count), to_index //
 				};
 				r_decode_count += offset;
 				return data;
@@ -79,32 +88,32 @@ namespace OpenVic {
 
 		ChatManager(ClientManager* client_manager = nullptr);
 
-		bool send_private_message(BaseMultiplayerManager::client_id_type to, memory::string&& message);
-		bool send_private_message(BaseMultiplayerManager::client_id_type to, std::string_view message);
+		bool send_private_message(client_id_type to, memory::string&& message);
+		bool send_private_message(client_id_type to, std::string_view message);
 		bool send_public_message(memory::string&& message);
 		bool send_public_message(std::string_view message);
 		bool send_group_message(ChatGroup const& group, memory::string&& message);
-		bool send_group_message(ChatGroup::index_t group_id, memory::string&& message);
+		bool send_group_message(ChatGroup::index_type group_id, memory::string&& message);
 		bool send_group_message(ChatGroup const& group, std::string_view message);
-		bool send_group_message(ChatGroup::index_t group_id, std::string_view message);
+		bool send_group_message(ChatGroup::index_type group_id, std::string_view message);
 
 		signal_property<ChatManager, ChatMessageLog const&> message_logged;
 
 		ChatMessageLog const& log_message(
-			BaseMultiplayerManager::client_id_type from, MessageData&& message,
+			client_id_type from, MessageData&& message,
 			std::chrono::time_point<std::chrono::system_clock> timestamp = std::chrono::system_clock::now()
 		);
 		memory::vector<ChatMessageLog> const& get_message_logs() const;
 
 		signal_property<ChatManager, ChatGroup const&> group_created;
-		// group, old clients
-		signal_property<ChatManager, ChatGroup const&, memory::vector<BaseMultiplayerManager::client_id_type>&> group_modified;
-		signal_property<ChatManager, ChatGroup::index_t> group_deleted;
+		signal_property<ChatManager, ChatGroup const& /* group */, memory::vector<client_id_type>& /* old clients */>
+			group_modified;
+		signal_property<ChatManager, ChatGroup::index_type> group_deleted;
 
-		void create_group(memory::vector<BaseMultiplayerManager::client_id_type>&& clients);
-		void set_group(ChatGroup::index_t group, memory::vector<BaseMultiplayerManager::client_id_type>&& clients);
-		ChatGroup const& get_group(ChatGroup::index_t group_index) const;
-		void delete_group(ChatGroup::index_t group_id);
+		void create_group(memory::vector<client_id_type>&& clients);
+		void set_group(ChatGroup::index_type group, memory::vector<client_id_type>&& clients);
+		ChatGroup const& get_group(ChatGroup::index_type group_index) const;
+		void delete_group(ChatGroup::index_type group_id);
 
 	private:
 		ClientManager* PROPERTY_PTR(client_manager);
@@ -120,26 +129,26 @@ namespace OpenVic {
 		friend bool PacketTypes::add_chat_group_process_callback( //
 			BaseMultiplayerManager* multiplayer_manager, PacketSpan packet
 		);
-		void _create_group(memory::vector<BaseMultiplayerManager::client_id_type>&& clients);
+		void _create_group(memory::vector<client_id_type>&& clients);
 
 		friend bool PacketTypes::modify_chat_group_process_callback( //
 			BaseMultiplayerManager* multiplayer_manager, PacketSpan packet
 		);
-		void _set_group(ChatGroup::index_t group, memory::vector<BaseMultiplayerManager::client_id_type>&& clients);
+		void _set_group(ChatGroup::index_type group, memory::vector<client_id_type>&& clients);
 
 		friend bool PacketTypes::delete_chat_group_process_callback( //
 			BaseMultiplayerManager* multiplayer_manager, PacketSpan packet
 		);
-		void _delete_group(ChatGroup::index_t group_id);
+		void _delete_group(ChatGroup::index_type group_id);
 	};
 
 	struct ChatMessageLog {
-		BaseMultiplayerManager::client_id_type from_id = BaseMultiplayerManager::HOST_ID;
+		client_id_type from_id = MP_HOST_ID;
 		ChatManager::MessageData data;
 		int64_t timestamp = 0;
 
 		ChatMessageLog() = default;
-		ChatMessageLog(BaseMultiplayerManager::client_id_type from, ChatManager::MessageData data, int64_t timestamp)
+		ChatMessageLog(client_id_type from, ChatManager::MessageData data, int64_t timestamp)
 			: from_id { from }, data { data }, timestamp { timestamp } {}
 
 		template<std::endian Endian>

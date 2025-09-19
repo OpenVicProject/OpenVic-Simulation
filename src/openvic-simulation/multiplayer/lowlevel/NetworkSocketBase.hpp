@@ -4,6 +4,7 @@
 #include <cstdint>
 #include <string_view>
 
+#include "openvic-simulation/multiplayer/lowlevel/Constants.hpp"
 #include "openvic-simulation/multiplayer/lowlevel/IpAddress.hpp"
 #include "openvic-simulation/multiplayer/lowlevel/NetworkError.hpp"
 #include "openvic-simulation/multiplayer/lowlevel/NetworkResolver.hpp"
@@ -24,7 +25,7 @@ namespace OpenVic {
 			UDP,
 		};
 
-		using port_type = uint16_t;
+		using port_type = socket_port_type;
 
 		virtual ~NetworkSocketBase() = default;
 

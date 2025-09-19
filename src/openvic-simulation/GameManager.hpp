@@ -13,6 +13,7 @@
 #include "openvic-simulation/multiplayer/ChatManager.hpp"
 #include "openvic-simulation/multiplayer/ClientManager.hpp"
 #include "openvic-simulation/multiplayer/HostManager.hpp"
+#include "openvic-simulation/player/PlayerManager.hpp"
 #include "openvic-simulation/utility/ForwardableSpan.hpp"
 
 #include <function2/function2.hpp>

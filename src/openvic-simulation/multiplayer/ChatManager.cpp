@@ -1,4 +1,3 @@
-
 #include "ChatManager.hpp"
 
 #include <chrono>
@@ -11,7 +10,7 @@
 
 using namespace OpenVic;
 
-ChatGroup::ChatGroup(index_t index, memory::vector<BaseMultiplayerManager::client_id_type>&& clients)
+ChatGroup::ChatGroup(index_type index, memory::vector<BaseMultiplayerManager::client_id_type>&& clients)
 	: index { index }, clients { std::move(clients) } {}
 
 ChatManager::ChatManager(ClientManager* client_manager) : client_manager { client_manager } {}
@@ -19,7 +18,7 @@ ChatManager::ChatManager(ClientManager* client_manager) : client_manager { clien
 bool ChatManager::send_private_message(BaseMultiplayerManager::client_id_type to, memory::string&& message) {
 	MessageData data { MessageType::PRIVATE, std::move(message), to };
 
-	ChatMessageLog const& log = log_message(client_manager->get_client_id(), std::move(data));
+	ChatMessageLog const& log = log_message(client_manager->get_player()->get_client_id(), std::move(data));
 	bool was_sent = client_manager->broadcast_packet(PacketTypes::send_chat_message, &log);
 	return was_sent;
 }
@@ -31,7 +30,7 @@ bool ChatManager::send_private_message(BaseMultiplayerManager::client_id_type to
 bool ChatManager::send_public_message(memory::string&& message) {
 	MessageData data { MessageType::PUBLIC, std::move(message) };
 
-	ChatMessageLog const& log = log_message(client_manager->get_client_id(), std::move(data));
+	ChatMessageLog const& log = log_message(client_manager->get_player()->get_client_id(), std::move(data));
 	bool was_sent = client_manager->broadcast_packet(PacketTypes::send_chat_message, &log);
 	return was_sent;
 }
@@ -43,12 +42,12 @@ bool ChatManager::send_public_message(std::string_view message) {
 bool ChatManager::send_group_message(ChatGroup const& group, memory::string&& message) {
 	MessageData data { MessageType::GROUP, std::move(message), group.get_index() };
 
-	ChatMessageLog const& log = log_message(client_manager->get_client_id(), std::move(data));
+	ChatMessageLog const& log = log_message(client_manager->get_player()->get_client_id(), std::move(data));
 	bool was_sent = client_manager->broadcast_packet(PacketTypes::send_chat_message, &log);
 	return was_sent;
 }
 
-bool ChatManager::send_group_message(ChatGroup::index_t group_id, memory::string&& message) {
+bool ChatManager::send_group_message(ChatGroup::index_type group_id, memory::string&& message) {
 	OV_ERR_FAIL_INDEX_V(group_id, groups.size(), false);
 	return send_group_message(groups[group_id], std::move(message));
 }
@@ -57,7 +56,7 @@ bool ChatManager::send_group_message(ChatGroup const& group, std::string_view me
 	return send_group_message(group, memory::string { message });
 }
 
-bool ChatManager::send_group_message(ChatGroup::index_t group_id, std::string_view message) {
+bool ChatManager::send_group_message(ChatGroup::index_type group_id, std::string_view message) {
 	return send_group_message(group_id, memory::string { message });
 }
 
@@ -96,22 +95,22 @@ void ChatManager::_create_group(memory::vector<BaseMultiplayerManager::client_id
 	group_created(last);
 }
 
-void ChatManager::set_group(ChatGroup::index_t group_id, memory::vector<BaseMultiplayerManager::client_id_type>&& clients) {
+void ChatManager::set_group(ChatGroup::index_type group_id, memory::vector<BaseMultiplayerManager::client_id_type>&& clients) {
 	OV_ERR_FAIL_INDEX(group_id, groups.size());
 	client_manager->broadcast_packet(PacketTypes::modify_chat_group, PacketChatGroupModifyData { group_id, clients });
 }
 
-void ChatManager::_set_group(ChatGroup::index_t group_id, memory::vector<BaseMultiplayerManager::client_id_type>&& clients) {
+void ChatManager::_set_group(ChatGroup::index_type group_id, memory::vector<BaseMultiplayerManager::client_id_type>&& clients) {
 	ChatGroup& group = groups[group_id];
 	std::swap(group.clients, clients);
 	group_modified(group, clients);
 }
 
-ChatGroup const& ChatManager::get_group(ChatGroup::index_t group_index) const {
+ChatGroup const& ChatManager::get_group(ChatGroup::index_type group_index) const {
 	return groups.at(group_index);
 }
 
-void ChatManager::delete_group(ChatGroup::index_t group_id) {
+void ChatManager::delete_group(ChatGroup::index_type group_id) {
 	OV_ERR_FAIL_INDEX(group_id, groups.size());
 	client_manager->broadcast_packet(
 		PacketTypes::delete_chat_group,
@@ -119,7 +118,7 @@ void ChatManager::delete_group(ChatGroup::index_t group_id) {
 	);
 }
 
-void ChatManager::_delete_group(ChatGroup::index_t group_id) {
+void ChatManager::_delete_group(ChatGroup::index_type group_id) {
 	groups.erase(groups.begin() + group_id);
 	group_deleted(group_id);
 }

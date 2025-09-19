@@ -1,4 +1,3 @@
-
 #include "HostManager.hpp"
 
 #include <chrono>
@@ -33,8 +32,8 @@ HostManager::~HostManager() {
 	this->disconnect_all();
 }
 
-void HostManager::_on_session_changed(HostSession const& session) {
-	broadcast_packet(PacketTypes::update_host_session, &session);
+void HostManager::_on_session_changed() {
+	broadcast_packet(PacketTypes::update_host_session, &host_session);
 }
 
 bool HostManager::listen(NetworkSocket::port_type port, HostnameAddress const& bind_address) {

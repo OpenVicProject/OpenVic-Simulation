@@ -145,11 +145,11 @@ bool PacketTypes::send_chat_message_send_callback(
 
 bool PacketTypes::send_chat_message_process_callback(BaseMultiplayerManager* multiplayer_manager, PacketSpan packet) {
 	GameManager* game_manager = multiplayer_manager->get_game_manager();
-	ClientManager* client = game_manager->get_client_manager();
+	ClientManager* client_manager = game_manager->get_client_manager();
 
 	size_t index = packet.index();
 	uint16_t from_id = packet.read<decltype(from_id)>();
-	if (client && client->get_client_id() == from_id) {
+	if (client_manager && client_manager->get_player()->get_client_id() == from_id) {
 		return true;
 	}
 
@@ -184,7 +184,7 @@ bool PacketTypes::modify_chat_group_send_callback(
 }
 
 bool PacketTypes::modify_chat_group_process_callback(BaseMultiplayerManager* multiplayer_manager, PacketSpan packet) {
-	ChatGroup::index_t group_index = packet.read<decltype(group_index)>();
+	ChatGroup::index_type group_index = packet.read<decltype(group_index)>();
 
 	multiplayer_manager->get_game_manager()->get_chat_manager()->_set_group(
 		group_index, packet.read<memory::vector<BaseMultiplayerManager::client_id_type>>()
@@ -195,7 +195,7 @@ bool PacketTypes::modify_chat_group_process_callback(BaseMultiplayerManager* mul
 bool PacketTypes::delete_chat_group_send_callback(
 	BaseMultiplayerManager const* multiplayer_manager, PacketType::argument_type argument, PacketBuilder<>& builder
 ) {
-	ChatGroup::index_t const* group_id_ptr = std::get_if<delete_chat_group.packet_id>(&argument);
+	ChatGroup::index_type const* group_id_ptr = std::get_if<delete_chat_group.packet_id>(&argument);
 	OV_ERR_FAIL_NULL_V(group_id_ptr, false);
 
 	builder.put_back(*group_id_ptr);
@@ -203,7 +203,7 @@ bool PacketTypes::delete_chat_group_send_callback(
 }
 
 bool PacketTypes::delete_chat_group_process_callback(BaseMultiplayerManager* multiplayer_manager, PacketSpan packet) {
-	multiplayer_manager->get_game_manager()->get_chat_manager()->_delete_group(packet.read<ChatGroup::index_t>());
+	multiplayer_manager->get_game_manager()->get_chat_manager()->_delete_group(packet.read<ChatGroup::index_type>());
 	return true;
 }
 

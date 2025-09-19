@@ -142,7 +142,8 @@ TEST_CASE("ChatManager send_group_message", "[ChatManager][ChatManager-send_grou
 		return client_manager_1->poll() > 0;
 	});
 
-	chat_manager.create_group({ client_manager_0->get_client_id(), client_manager_1->get_client_id() });
+	chat_manager.create_group({ client_manager_0->get_player()->get_client_id(),
+								client_manager_1->get_player()->get_client_id() });
 
 	wait_for_condition([&]() {
 		return host_manager->poll() > 0;
@@ -160,20 +161,20 @@ TEST_CASE("ChatManager send_group_message", "[ChatManager][ChatManager-send_grou
 	ChatGroup const& local_group = chat_manager.get_group(0);
 	CHECK(local_group.get_index() == 0);
 	CHECK(local_group.get_clients().size() == 2);
-	CHECK(local_group.get_clients()[0] == client_manager_0->get_client_id());
-	CHECK(local_group.get_clients()[1] == client_manager_1->get_client_id());
+	CHECK(local_group.get_clients()[0] == client_manager_0->get_player()->get_client_id());
+	CHECK(local_group.get_clients()[1] == client_manager_1->get_player()->get_client_id());
 
 	ChatGroup const& group_0 = chat_manager_0.get_group(0);
 	CHECK(group_0.get_index() == 0);
 	CHECK(group_0.get_clients().size() == 2);
-	CHECK(group_0.get_clients()[0] == client_manager_0->get_client_id());
-	CHECK(group_0.get_clients()[1] == client_manager_1->get_client_id());
+	CHECK(group_0.get_clients()[0] == client_manager_0->get_player()->get_client_id());
+	CHECK(group_0.get_clients()[1] == client_manager_1->get_player()->get_client_id());
 
 	ChatGroup const& group_1 = chat_manager_1.get_group(0);
 	CHECK(group_1.get_index() == 0);
 	CHECK(group_1.get_clients().size() == 2);
-	CHECK(group_1.get_clients()[0] == client_manager_0->get_client_id());
-	CHECK(group_1.get_clients()[1] == client_manager_1->get_client_id());
+	CHECK(group_1.get_clients()[0] == client_manager_0->get_player()->get_client_id());
+	CHECK(group_1.get_clients()[1] == client_manager_1->get_player()->get_client_id());
 
 	static constexpr std::string_view hello_world = "Hello World";
 
@@ -289,7 +290,8 @@ TEST_CASE("ChatManager set_group", "[ChatManager][ChatManager-set_group]") {
 		return client_manager_1->poll() > 0;
 	});
 
-	chat_manager.create_group({ client_manager_0->get_client_id(), client_manager_1->get_client_id() });
+	chat_manager.create_group({ client_manager_0->get_player()->get_client_id(),
+								client_manager_1->get_player()->get_client_id() });
 
 	wait_for_condition([&]() {
 		return host_manager->poll() > 0;
@@ -307,22 +309,24 @@ TEST_CASE("ChatManager set_group", "[ChatManager][ChatManager-set_group]") {
 	ChatGroup const& local_group = chat_manager.get_group(0);
 	CHECK(local_group.get_index() == 0);
 	CHECK(local_group.get_clients().size() == 2);
-	CHECK(local_group.get_clients()[0] == client_manager_0->get_client_id());
-	CHECK(local_group.get_clients()[1] == client_manager_1->get_client_id());
+	CHECK(local_group.get_clients()[0] == client_manager_0->get_player()->get_client_id());
+	CHECK(local_group.get_clients()[1] == client_manager_1->get_player()->get_client_id());
 
 	ChatGroup const& group_0 = chat_manager_0.get_group(0);
 	CHECK(group_0.get_index() == 0);
 	CHECK(group_0.get_clients().size() == 2);
-	CHECK(group_0.get_clients()[0] == client_manager_0->get_client_id());
-	CHECK(group_0.get_clients()[1] == client_manager_1->get_client_id());
+	CHECK(group_0.get_clients()[0] == client_manager_0->get_player()->get_client_id());
+	CHECK(group_0.get_clients()[1] == client_manager_1->get_player()->get_client_id());
 
 	ChatGroup const& group_1 = chat_manager_1.get_group(0);
 	CHECK(group_1.get_index() == 0);
 	CHECK(group_1.get_clients().size() == 2);
-	CHECK(group_1.get_clients()[0] == client_manager_0->get_client_id());
-	CHECK(group_1.get_clients()[1] == client_manager_1->get_client_id());
+	CHECK(group_1.get_clients()[0] == client_manager_0->get_player()->get_client_id());
+	CHECK(group_1.get_clients()[1] == client_manager_1->get_player()->get_client_id());
 
-	chat_manager.set_group(local_group, { client_manager->get_client_id(), client_manager_1->get_client_id() });
+	chat_manager.set_group(
+		local_group, { client_manager->get_player()->get_client_id(), client_manager_1->get_player()->get_client_id() }
+	);
 
 	wait_for_condition([&]() {
 		return host_manager->poll() > 0;
@@ -339,18 +343,18 @@ TEST_CASE("ChatManager set_group", "[ChatManager][ChatManager-set_group]") {
 
 	CHECK(local_group.get_index() == 0);
 	CHECK(local_group.get_clients().size() == 2);
-	CHECK(local_group.get_clients()[0] == client_manager->get_client_id());
-	CHECK(local_group.get_clients()[1] == client_manager_1->get_client_id());
+	CHECK(local_group.get_clients()[0] == client_manager->get_player()->get_client_id());
+	CHECK(local_group.get_clients()[1] == client_manager_1->get_player()->get_client_id());
 
 	CHECK(group_0.get_index() == 0);
 	CHECK(group_0.get_clients().size() == 2);
-	CHECK(group_0.get_clients()[0] == client_manager->get_client_id());
-	CHECK(group_0.get_clients()[1] == client_manager_1->get_client_id());
+	CHECK(group_0.get_clients()[0] == client_manager->get_player()->get_client_id());
+	CHECK(group_0.get_clients()[1] == client_manager_1->get_player()->get_client_id());
 
 	CHECK(group_1.get_index() == 0);
 	CHECK(group_1.get_clients().size() == 2);
-	CHECK(group_1.get_clients()[0] == client_manager->get_client_id());
-	CHECK(group_1.get_clients()[1] == client_manager_1->get_client_id());
+	CHECK(group_1.get_clients()[0] == client_manager->get_player()->get_client_id());
+	CHECK(group_1.get_clients()[1] == client_manager_1->get_player()->get_client_id());
 
 	client_manager->close();
 	client_manager_0->close();

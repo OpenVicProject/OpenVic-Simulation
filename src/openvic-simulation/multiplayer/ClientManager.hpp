@@ -1,12 +1,11 @@
 #pragma once
 
 #include <future>
-#include <limits>
 #include <optional>
 
 #include "openvic-simulation/multiplayer/BaseMultiplayerManager.hpp"
+#include "openvic-simulation/multiplayer/Constants.hpp"
 #include "openvic-simulation/multiplayer/lowlevel/HostnameAddress.hpp"
-#include "openvic-simulation/multiplayer/lowlevel/NetworkSocket.hpp"
 #include "openvic-simulation/multiplayer/lowlevel/ReliableUdpClient.hpp"
 #include "openvic-simulation/multiplayer/lowlevel/TcpPacketStream.hpp"
 #include "openvic-simulation/utility/Containers.hpp"
@@ -17,14 +16,14 @@ namespace OpenVic {
 	struct ClientManager final : BaseMultiplayerManager {
 		using BaseMultiplayerManager::BaseMultiplayerManager;
 
-		bool connect_to(HostnameAddress const& address, NetworkSocket::port_type port);
+		bool connect_to(HostnameAddress const& address, socket_port_type port);
 
 		bool broadcast_packet(PacketType const& type, PacketType::argument_type argument) override;
 		bool send_packet(client_id_type client_id, PacketType const& type, PacketType::argument_type argument) override;
 		int64_t poll() override;
 		void close() override;
 
-		bool connect_to_resource_server(std::optional<NetworkSocket::port_type> port = std::nullopt);
+		bool connect_to_resource_server(std::optional<socket_port_type> port = std::nullopt);
 		std::future<void> poll_resource_server();
 
 		bool is_running_as_host() const;
@@ -34,12 +33,12 @@ namespace OpenVic {
 			return type_tag;
 		}
 
-		static constexpr client_id_type INVALID_CLIENT_ID = std::numeric_limits<client_id_type>::max() - 1;
+		static constexpr client_id_type INVALID_CLIENT_ID = MP_INVALID_CLIENT_ID;
 
 	private:
 		ReliableUdpClient PROPERTY_REF(client);
 		TcpPacketStream resource_client;
-		client_id_type PROPERTY(client_id, INVALID_CLIENT_ID);
+		Player const* PROPERTY(player, &Player::INVALID_PLAYER);
 
 		friend bool PacketTypes::update_host_session_process_callback(BaseMultiplayerManager* game_manager, PacketSpan packet);
 

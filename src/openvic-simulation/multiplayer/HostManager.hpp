@@ -74,7 +74,7 @@ namespace OpenVic {
 		memory::vector<uint8_t> get_packet_cache_for(client_id_type client_id, sequence_type sequence_value);
 		void remove_from_cache_for(client_id_type client_id, sequence_type sequence_value);
 
-		void _on_session_changed(HostSession const& session);
+		void _on_session_changed();
 
 		memory::vector<memory::unique_ptr<TcpPacketStream>> resource_clients;
 

@@ -2,9 +2,10 @@
 
 #include <cstdint>
 
+#include "openvic-simulation/multiplayer/Constants.hpp"
 #include "openvic-simulation/multiplayer/HostSession.hpp"
 #include "openvic-simulation/multiplayer/PacketType.hpp"
-#include "openvic-simulation/multiplayer/lowlevel/ReliableUdpClient.hpp"
+#include "openvic-simulation/multiplayer/lowlevel/Constants.hpp"
 #include "openvic-simulation/types/RingBuffer.hpp"
 #include "openvic-simulation/utility/Containers.hpp"
 #include "openvic-simulation/utility/Getters.hpp"
@@ -16,10 +17,10 @@ namespace OpenVic {
 		BaseMultiplayerManager(GameManager* game_manager = nullptr);
 		virtual ~BaseMultiplayerManager() = default;
 
-		using client_id_type = uint64_t;
-		using sequence_type = ReliableUdpClient::sequence_type;
+		using client_id_type = OpenVic::client_id_type;
+		using sequence_type = reliable_udp_sequence_type;
 
-		static constexpr client_id_type HOST_ID = static_cast<client_id_type>(~0);
+		static constexpr client_id_type HOST_ID = MP_HOST_ID;
 
 		virtual bool broadcast_packet(PacketType const& type, PacketType::argument_type argument);
 		virtual bool send_packet(client_id_type client_id, PacketType const& type, PacketType::argument_type argument);

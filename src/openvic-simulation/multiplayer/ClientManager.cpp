@@ -1,4 +1,3 @@
-
 #include "ClientManager.hpp"
 
 #include <cstdio>
@@ -75,10 +74,11 @@ int64_t ClientManager::poll() {
 	}
 
 	PacketSpan span = client.packet_span();
-	if (client_id == INVALID_CLIENT_ID) {
+	if (player == nullptr) {
 		OV_ERR_FAIL_COND_V(client.get_current_sequence_value() != 0, -1);
-		client_id = span.read<decltype(client_id)>();
+		client_id_type client_id = span.read<decltype(client_id)>();
 		OV_ERR_FAIL_COND_V(client_id == INVALID_CLIENT_ID, -1);
+		player = host_session.add_player(client_id, "");
 		return poll();
 	}
 
