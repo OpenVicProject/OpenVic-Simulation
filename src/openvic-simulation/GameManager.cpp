@@ -14,6 +14,17 @@ GameManager::GameManager(
 		new_gamestate_updated_callback ? std::move(new_gamestate_updated_callback) : []() {}
 	}, definitions_loaded { false }, mod_descriptors_loaded { false } {}
 
+GameManager::~GameManager() {
+	if (instance_manager) {
+		Logger::error(
+			"Destroying GameManager with an active InstanceManager! "
+			"Calling end_game_session() to ensure proper cleanup and execute any required special end-of-session actions."
+		);
+
+		end_game_session();
+	}
+}
+
 bool GameManager::load_mod_descriptors() {
 	if (mod_descriptors_loaded) {
 		Logger::error("Cannot load mod descriptors - already loaded!");
@@ -159,10 +170,11 @@ bool GameManager::load_definitions(Dataloader::localisation_callback_t localisat
 
 bool GameManager::setup_instance(Bookmark const* bookmark) {
 	if (instance_manager) {
-		Logger::info("Resetting existing game instance.");
-	} else {
-		Logger::info("Setting up first game instance.");
+		Logger::error("Trying to setup a new game instance while one is already setup!");
+		return false;
 	}
+
+	Logger::info("Initialising new game instance.");
 
 	instance_manager.emplace(
 		game_rules_manager,
@@ -170,10 +182,23 @@ bool GameManager::setup_instance(Bookmark const* bookmark) {
 		gamestate_updated_callback
 	);
 
+	Logger::info("Setting up new game instance.");
+
 	bool ret = instance_manager->setup();
+
+	Logger::info("Loading bookmark \"", bookmark, "\" for new game instance.");
+
 	ret &= instance_manager->load_bookmark(bookmark);
 
 	return ret;
+}
+
+bool GameManager::is_game_instance_setup() const {
+	return instance_manager && instance_manager->is_game_instance_setup();
+}
+
+bool GameManager::is_bookmark_loaded() const {
+	return instance_manager && instance_manager->is_bookmark_loaded();
 }
 
 bool GameManager::start_game_session() {
@@ -191,7 +216,30 @@ bool GameManager::start_game_session() {
 		Logger::warning("Starting game session with no bookmark loaded!");
 	}
 
+	Logger::info("Starting game session.");
+
 	return instance_manager->start_game_session();
+}
+
+bool GameManager::end_game_session() {
+	if (!instance_manager) {
+		Logger::error("Cannot end game session - instance manager not initialised!");
+		return false;
+	}
+
+	if (!instance_manager->is_game_instance_setup() || !instance_manager->is_game_session_started()) {
+		Logger::warning("Trying to end game session that hasn't yet finished setting up and/or actually started!");
+	}
+
+	Logger::info("Ending game session.");
+
+	instance_manager.reset();
+
+	return true;
+}
+
+bool GameManager::is_game_session_active() const {
+	return instance_manager && instance_manager->is_game_session_started();
 }
 
 bool GameManager::update_clock() {
