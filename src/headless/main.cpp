@@ -76,12 +76,23 @@ static void print_rgo(ProvinceInstance const& province) {
 	}
 }
 
+using pathing_rng_t = std::mt19937;
+using pathing_rng_seed_t = pathing_rng_t::result_type;
+
 template<size_t TestCount>
-static std::chrono::nanoseconds run_pathing_test(AStarPathing& pathing) {
+static std::chrono::nanoseconds run_pathing_test(AStarPathing& pathing, std::optional<pathing_rng_seed_t> seed) {
 	PointMap const& points = pathing.get_point_map();
 
-	thread_local std::random_device rd;
-	thread_local std::mt19937 gen(rd());
+	if (!seed.has_value()) {
+		thread_local std::random_device rd;
+		seed = rd();
+
+		Logger::info("Running ", TestCount, " pathing tests with randomly generated seed: ", seed.value());
+	} else {
+		Logger::info("Running ", TestCount, " pathing tests with fixed seed: ", seed.value());
+	}
+
+	thread_local pathing_rng_t gen { seed.value() };
 
 	using it = decltype(points.points_map().end());
 	std::array<std::pair<it, it>, TestCount> from_to_tests;
@@ -218,13 +229,19 @@ static bool run_headless(fs::path const& root, memory::vector<memory::string>& m
 
 	if (ret) {
 		static constexpr size_t TESTS = 10;
+		// Set to std::nullopt to use a different random seed on each run
+		static constexpr std::optional<pathing_rng_seed_t> LAND_SEED = 1836, SEA_SEED = 1861;
 
 		Logger::info("===== Land Pathfinding test... =====");
-		std::chrono::nanoseconds ns = run_pathing_test<TESTS>(game_manager.get_instance_manager()->get_map_instance().get_land_pathing());
+		std::chrono::nanoseconds ns = run_pathing_test<TESTS>(
+			game_manager.get_instance_manager()->get_map_instance().get_land_pathing(), LAND_SEED
+		);
 		Logger::info("Ran ", TESTS, " land pathing tests in ", ns);
 
 		Logger::info("===== Sea Pathfinding test... =====");
-		ns = run_pathing_test<TESTS>(game_manager.get_instance_manager()->get_map_instance().get_sea_pathing());
+		ns = run_pathing_test<TESTS>(
+			game_manager.get_instance_manager()->get_map_instance().get_sea_pathing(), SEA_SEED
+		);
 		Logger::info("Ran ", TESTS, " sea pathing tests in ", ns);
 	}
 
