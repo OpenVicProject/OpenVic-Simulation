@@ -8,8 +8,11 @@
 #include "openvic-simulation/dataloader/NodeTools.hpp"
 
 namespace OpenVic {
+	struct ModManager;
+
 	struct Mod : HasIdentifier {
 	private:
+		ModManager const& PROPERTY(mod_manager);
 		const memory::string PROPERTY(dataloader_root_path);
 		const std::optional<memory::string> PROPERTY(user_dir);
 		const memory::vector<memory::string> PROPERTY(replace_paths);
@@ -17,6 +20,7 @@ namespace OpenVic {
 
 	public:
 		Mod(
+			ModManager const& manager,
 			std::string_view new_identifier,
 			std::string_view new_path,
 			std::optional<std::string_view> new_user_dir,
@@ -24,6 +28,8 @@ namespace OpenVic {
 			memory::vector<memory::string> new_dependencies
 		);
 		Mod(Mod&&) = default;
+
+		vector_ordered_set<Mod const*> generate_dependency_list(bool* success = nullptr) const;
 	};
 
 	struct ModManager {
