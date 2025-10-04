@@ -16,7 +16,6 @@ using namespace OpenVic;
 
 State::State(
 	StateSet const& new_state_set,
-	CountryInstance* new_owner,
 	ProvinceInstance* new_capital,
 	memory::vector<ProvinceInstance*>&& new_provinces,
 	colony_status_t new_colony_status,
@@ -25,19 +24,31 @@ State::State(
 	utility::forwardable_span<const Ideology> ideology_keys
 ) : PopsAggregate { strata_keys, pop_type_keys, ideology_keys },
 	state_set { new_state_set },
-	owner { new_owner },
 	capital { new_capital },
 	provinces { std::move(new_provinces) },
 	colony_status { new_colony_status },
-	pops_cache_by_type { pop_type_keys } {
-		update_parties_for_votes(new_owner);
-	}
+	pops_cache_by_type { pop_type_keys }
+{
+	_update_country();
+}
 
 memory::string State::get_identifier() const {
+	CountryInstance const* const owner_ptr = get_owner();
 	return StringUtils::append_string_views(
-		state_set.get_region().get_identifier(), "_", owner->get_identifier(), "_",
+		state_set.get_region().get_identifier(),
+		"_",
+		owner_ptr == nullptr
+			? "NoCountry"
+			: owner_ptr->get_identifier(),
+		"_",
 		ProvinceInstance::get_colony_status_string(colony_status)
 	);
+}
+
+CountryInstance* State::get_owner() const {
+	return capital == nullptr
+		? static_cast<CountryInstance*>(nullptr)
+		: capital->get_owner();
 }
 
 memory::vector<Pop*> const& State::get_pops_cache_by_type(PopType const& pop_type) const {
@@ -84,6 +95,25 @@ void State::update_gamestate() {
 	}
 
 	industrial_power = total_factory_levels_in_state * workforce_scalar;
+	_update_country();
+}
+
+void State::_update_country() {
+	CountryInstance* const owner_ptr = get_owner();
+	if (owner_ptr == previous_country_ptr) { 
+		return;
+	}
+	
+	update_parties_for_votes(owner_ptr);
+	if (previous_country_ptr != nullptr) {
+		previous_country_ptr->remove_state(*this);
+	}
+
+	if (owner_ptr != nullptr) {
+		owner_ptr->add_state(*this);
+	}
+
+	previous_country_ptr = owner_ptr;
 }
 
 /* Whether two provinces in the same region should be grouped into the same state or not.
@@ -146,21 +176,15 @@ bool StateManager::add_state_set(
 	for (memory::vector<ProvinceInstance*>& provinces : temp_provinces) {
 		ProvinceInstance* capital = provinces.front();
 
-		CountryInstance* owner = capital->get_owner();
-
 		State& state = *state_set.states.emplace(
 			/* TODO: capital province logic */
-			state_set, owner, capital,
+			state_set, capital,
 			std::move(provinces), capital->get_colony_status(),
 			strata_keys, pop_type_keys, ideology_keys
 		);
 
 		for (ProvinceInstance* province : state.get_provinces()) {
 			province->set_state(&state);
-		}
-
-		if (owner != nullptr) {
-			owner->add_state(state);
 		}
 	}
 
