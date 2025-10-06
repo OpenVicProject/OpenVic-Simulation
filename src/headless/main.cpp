@@ -21,7 +21,7 @@
 
 using namespace OpenVic;
 
-inline static void print_bytes(std::string_view prefix, const Logger::source_location& location = Logger::source_location::current()) {
+inline static void print_bytes(std::string_view prefix, const std::source_location& location = std::source_location::current()) {
 #ifdef DEBUG_ENABLED // memory tracking will return 0 without DEBUG_ENABLED
 	Logger::info<std::string_view&, const char(&)[16], uint64_t&&, const char(&)[7]>(
 		prefix, " Memory Usage: ", OpenVic::utility::MemoryTracker::get_memory_usage(), " Bytes", location
