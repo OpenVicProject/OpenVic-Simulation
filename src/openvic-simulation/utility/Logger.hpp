@@ -3,63 +3,20 @@
 #include <cstddef>
 #include <iostream>
 #include <mutex>
+#include <source_location>
 #include <string_view>
 #include <vector>
 #include <version>
 
 #include <function2/function2.hpp>
 
-#ifdef __cpp_lib_source_location
-#include <source_location>
-#endif
-
 #include "openvic-simulation/utility/Containers.hpp"
 #include "openvic-simulation/utility/StringUtils.hpp"
 
 namespace OpenVic {
-
-#ifndef __cpp_lib_source_location
-#include <string>
-	// Implementation of std::source_location for compilers that do not support it
-	// Note: uses non-standard extensions that are supported by Clang, GCC, and MSVC
-	// https://clang.llvm.org/docs/LanguageExtensions.html#source-location-builtins
-	// https://stackoverflow.com/a/67970107
-	class source_location {
-		std::string _file;
-		int _line;
-		std::string _function;
-
-		source_location(std::string f, int l, std::string n) : _file(f), _line(l), _function(n) {}
-
-	public:
-		static source_location current(
-			std::string f = __builtin_FILE(), int l = __builtin_LINE(), std::string n = __builtin_FUNCTION()
-		) {
-			return source_location(f, l, n);
-		}
-
-		inline char const* file_name() const {
-			return _file.c_str();
-		}
-		inline int line() const {
-			return _line;
-		}
-		inline char const* function_name() const {
-			return _function.c_str();
-		}
-	};
-#endif
-
 	class Logger final {
 		using log_func_t = fu2::function_view<void(memory::string&&)>;
 		using log_queue_t = memory::queue<memory::string>;
-
-	public:
-#ifdef __cpp_lib_source_location
-		using source_location = std::source_location;
-#else
-		using source_location = OpenVic::source_location;
-#endif
 
 	private:
 		struct log_channel_t {
@@ -74,7 +31,7 @@ namespace OpenVic {
 
 		template<typename... Args>
 		struct log {
-			log(log_channel_t& log_channel, Args&&... args, source_location const& location) {
+			log(log_channel_t& log_channel, Args&&... args, std::source_location const& location) {
 				if (log_scope_index_plus_one < log_scope_stack.size()) {
 					const std::string_view log_scope = log_scope_stack[log_scope_index_plus_one];
 					log_scope_index_plus_one++;
@@ -149,7 +106,7 @@ public: \
 	} \
 	template<typename... Args> \
 	struct name { \
-		name(Args&&... args, source_location const& location = source_location::current()) { \
+		name(Args&&... args, std::source_location const& location = std::source_location::current()) { \
 			log<Args...> { name##_channel, std::forward<Args>(args)..., location }; \
 		} \
 	}; \
