@@ -41,7 +41,7 @@ bool PointMap::try_add_point(
 		OV_ERR_FAIL_COND_V_MSG(id < 0, false, memory::fmt::format("Can't add a point with negative id: {}.", id));
 	}
 	OV_ERR_FAIL_COND_V_MSG(
-		weight_scale < 0, false, memory::fmt::format("Can't add a point with weight scale less than 0.0: {}.", weight_scale.to_string())
+		weight_scale < 0, false, memory::fmt::format("Can't add a point with weight scale less than 0.0: {}.", weight_scale)
 	);
 
 	if (OV_unlikely(points.contains(id))) {
@@ -68,7 +68,7 @@ void PointMap::add_point(
 		OV_ERR_FAIL_COND_MSG(id < 0, memory::fmt::format("Can't add a point with negative id: {}.", id));
 	}
 	OV_ERR_FAIL_COND_MSG(
-		weight_scale < 0, memory::fmt::format("Can't add a point with weight scale less than 0.0: {}.", weight_scale.to_string())
+		weight_scale < 0, memory::fmt::format("Can't add a point with weight scale less than 0.0: {}.", weight_scale)
 	);
 
 	points_iterator found_pt = points.find(id);

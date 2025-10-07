@@ -1,14 +1,13 @@
 #include "IssueManager.hpp"
 
 #include "openvic-simulation/modifier/ModifierManager.hpp"
-#include "openvic-simulation/utility/LogScope.hpp"
 
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;
 
 bool IssueManager::add_party_policy_group(std::string_view identifier) {
 	if (identifier.empty()) {
-		Logger::error("Invalid party policy group identifier - empty!");
+		spdlog::error_s("Invalid party policy group identifier - empty!");
 		return false;
 	}
 
@@ -23,7 +22,7 @@ bool IssueManager::add_party_policy(
 	bool jingoism
 ) {
 	if (identifier.empty()) {
-		Logger::error("Invalid party policy identifier - empty!");
+		spdlog::error_s("Invalid party policy identifier - empty!");
 		return false;
 	}
 
@@ -41,7 +40,7 @@ bool IssueManager::add_party_policy(
 
 bool IssueManager::add_reform_type(std::string_view identifier, bool uncivilised) {
 	if (identifier.empty()) {
-		Logger::error("Invalid issue type identifier - empty!");
+		spdlog::error_s("Invalid issue type identifier - empty!");
 		return false;
 	}
 
@@ -55,7 +54,7 @@ bool IssueManager::add_reform_group(
 	std::string_view identifier, ReformType& reform_type, bool ordered, bool administrative
 ) {
 	if (identifier.empty()) {
-		Logger::error("Invalid issue group identifier - empty!");
+		spdlog::error_s("Invalid issue group identifier - empty!");
 		return false;
 	}
 
@@ -76,33 +75,37 @@ bool IssueManager::add_reform(
 	ConditionScript&& on_execute_trigger, EffectScript&& on_execute_effect
 ) {
 	if (identifier.empty()) {
-		Logger::error("Invalid issue identifier - empty!");
+		spdlog::error_s("Invalid issue identifier - empty!");
 		return false;
 	}
 
 	if (reform_group.is_uncivilised()) {
 		if (ordinal == 0) {
 			if (technology_cost != 0) {
-				Logger::warning(
-					"Non-zero technology cost ", technology_cost, " found in ordinal 0 uncivilised reform ", identifier, "!"
+				spdlog::warn_s(
+					"Non-zero technology cost {} found in ordinal 0 uncivilised reform {}!",
+					technology_cost, identifier
 				);
 			}
 		} else {
 			if (technology_cost <= 0) {
-				Logger::warning(
-					"Non-positive technology cost ", technology_cost, " found in ordinal ", ordinal,
-					" uncivilised reform ", identifier, "!"
+				spdlog::warn_s(
+					"Non-positive technology cost {} found in ordinal {} uncivilised reform {}!",
+					technology_cost, ordinal, identifier
 				);
 			}
 		}
 	} else if (technology_cost != 0) {
-		Logger::warning("Non-zero technology cost ", technology_cost, " found in civilised reform ", identifier, "!");
+		spdlog::warn_s(
+			"Non-zero technology cost {} found in civilised reform {}!",
+			technology_cost, identifier
+		);
 	}
 
 	if (administrative_multiplier != 0 && !reform_group.get_is_administrative()) {
-		Logger::warning(
-			"Non-zero administrative multiplier ", administrative_multiplier, " found in reform ", identifier,
-			" belonging to non-administrative group ", reform_group.get_identifier(), "!"
+		spdlog::warn_s(
+			"Non-zero administrative multiplier {} found in reform {} belonging to non-administrative group {}!",
+			administrative_multiplier, identifier, reform_group
 		);
 	}
 
@@ -120,7 +123,7 @@ bool IssueManager::add_reform(
 }
 
 bool IssueManager::_load_party_policy_group(size_t& expected_party_policies, std::string_view identifier, ast::NodeCPtr node) {
-	const LogScope log_scope { fmt::format("party policy group {}", identifier) };
+	spdlog::scope scope { fmt::format("party policy group {}", identifier) };
 	return expect_length(add_variable_callback(expected_party_policies))(node)
 		& add_party_policy_group(identifier);
 }
@@ -163,7 +166,7 @@ bool IssueManager::_load_party_policy(
 	ModifierManager const& modifier_manager, RuleManager const& rule_manager, std::string_view identifier,
 	PartyPolicyGroup& party_policy_group, ast::NodeCPtr node
 ) {
-	const LogScope log_scope { fmt::format("party policy {}", identifier) };
+	spdlog::scope scope { fmt::format("party policy {}", identifier) };
 
 	ModifierValue values;
 	RuleSet rules;
@@ -174,7 +177,7 @@ bool IssueManager::_load_party_policy(
 		"is_jingoism", ZERO_OR_ONE, expect_bool(assign_variable_callback(is_jingoism)),
 		"rules", ZERO_OR_ONE, rule_manager.expect_rule_set(move_variable_callback(rules)),
 		"war_exhaustion_effect", ZERO_OR_ONE, [](const ast::NodeCPtr _) -> bool {
-			Logger::warning("war_exhaustion_effect does nothing (vanilla issues have it).");
+			spdlog::warn_s("war_exhaustion_effect does nothing (vanilla issues have it).");
 			return true;
 		}
 	)(node);
@@ -190,7 +193,7 @@ bool IssueManager::_load_party_policy(
 bool IssueManager::_load_reform_group(
 	size_t& expected_reforms, std::string_view identifier, ReformType& reform_type, ast::NodeCPtr node
 ) {
-	const LogScope log_scope { fmt::format("reform group {}", identifier) };
+	spdlog::scope scope { fmt::format("reform group {}", identifier) };
 	bool ordered = false, administrative = false;
 
 	bool ret = expect_dictionary_keys_and_default(
@@ -208,7 +211,7 @@ bool IssueManager::_load_reform(
 	ModifierManager const& modifier_manager, RuleManager const& rule_manager, size_t ordinal, std::string_view identifier,
 	ReformGroup& reform_group, ast::NodeCPtr node
 ) {
-	const LogScope log_scope { fmt::format("reform {}", identifier) };
+	spdlog::scope scope { fmt::format("reform {}", identifier) };
 	using enum scope_type_t;
 
 	ModifierValue values;
@@ -252,7 +255,7 @@ bool IssueManager::_load_reform(
 bool IssueManager::load_issues_file(
 	ModifierManager const& modifier_manager, RuleManager const& rule_manager, ast::NodeCPtr root
 ) {
-	const LogScope log_scope { "common/issues.txt" };
+	spdlog::scope scope { "common/issues.txt" };
 	bool party_issues_found = false;
 	size_t expected_party_policy_groups = 0;
 	size_t expected_reform_groups = 0;
@@ -266,7 +269,7 @@ bool IssueManager::load_issues_file(
 			if (key == "party_issues") {
 				if (party_issues_found) {
 					/* Error emitted here allowing later passes to return true with no error message. */
-					Logger::error("Duplicate party issues found!");
+					spdlog::error_s("Duplicate party issues found!");
 					return false;
 				}
 				party_issues_found = true;
@@ -310,7 +313,7 @@ bool IssueManager::load_issues_file(
 				ReformType* reform_type = reform_types.get_item_by_identifier(type_key);
 
 				if (OV_unlikely(reform_type == nullptr)) {
-					Logger::error("Reform type \"", type_key, "\" not found!");
+					spdlog::error_s("Reform type \"{}\" not found!", type_key);
 					return false;
 				}
 
@@ -348,7 +351,7 @@ bool IssueManager::load_issues_file(
 					PartyPolicyGroup* party_policy_group = party_policy_groups.get_item_by_identifier(group_key);
 
 					if (OV_unlikely(party_policy_group == nullptr)) {
-						Logger::error("Party policy group \"", group_key, "\" not found!");
+						spdlog::error_s("Party policy group \"{}\" not found!", group_key);
 						return false;
 					}
 
@@ -365,7 +368,7 @@ bool IssueManager::load_issues_file(
 					ReformGroup* reform_group = reform_groups.get_item_by_identifier(group_key);
 
 					if (OV_unlikely(reform_group == nullptr)) {
-						Logger::error("Reform group \"", group_key, "\" not found!");
+						spdlog::error_s("Reform group \"{}\" not found!", group_key);
 						return false;
 					}
 

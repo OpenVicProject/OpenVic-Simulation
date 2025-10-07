@@ -380,7 +380,7 @@ CountryRelationManager::OpinionType CountryInstance::get_opinion_of(CountryInsta
 
 void CountryInstance::set_opinion_of(CountryInstance& country, CountryRelationManager::OpinionType opinion) {
 	if (OV_unlikely(country.sphere_owner.get_untracked() != nullptr && opinion == CountryRelationManager::OpinionType::Sphere)) {
-		Logger::warning("Attempting to add, '", country.get_identifier() ,"' to a sphere when it is already included in a sphere.");
+		spdlog::warn_s("Attempting to add '{}' to a sphere when it is already included in a sphere.", country);
 	}
 	country_relations_manager.set_country_opinion(this, &country, opinion);
 	if (opinion == CountryRelationManager::OpinionType::Sphere) {
@@ -486,9 +486,9 @@ ReadOnlyClampedValue const& CountryInstance::get_tax_rate_slider_value_by_strata
 #define ADD_AND_REMOVE(item) \
 	bool CountryInstance::add_##item(std::remove_pointer_t<decltype(item##s)::value_type>& new_item) { \
 		if (!item##s.emplace(&new_item).second) { \
-			Logger::error( \
-				"Attempted to add " #item " \"", new_item.get_identifier(), "\" to country ", get_identifier(), \
-				": already present!" \
+			spdlog::error( \
+				"Attempted to add " #item " \"{}\" to country {}: already present!", \
+				new_item, *this \
 			); \
 			return false; \
 		} \
@@ -496,9 +496,9 @@ ReadOnlyClampedValue const& CountryInstance::get_tax_rate_slider_value_by_strata
 	} \
 	bool CountryInstance::remove_##item(std::remove_pointer_t<decltype(item##s)::value_type> const& item_to_remove) { \
 		if (item##s.erase(&item_to_remove) == 0) { \
-			Logger::error( \
-				"Attempted to remove " #item " \"", item_to_remove.get_identifier(), "\" from country ", get_identifier(), \
-				": not present!" \
+			spdlog::error( \
+				"Attempted to remove " #item " \"{}\" from country {}: not present!", \
+				item_to_remove, *this \
 			); \
 			return false; \
 		} \
@@ -600,9 +600,9 @@ bool CountryInstance::add_unit_instance_group(UnitInstanceGroup& group) {
 		navies.push_back(static_cast<NavyInstance*>(&group));
 		return true;
 	default:
-		Logger::error(
-			"Trying to add unit group \"", group.get_name(), "\" with invalid branch ",
-			static_cast<uint32_t>(group.get_branch()), " to country ", get_identifier()
+		spdlog::error_s(
+			"Trying to add unit group \"{}\" with invalid branch {} to country {}",
+			group.get_name(), static_cast<uint32_t>(group.get_branch()), *this
 		);
 		return false;
 	}
@@ -619,9 +619,9 @@ bool CountryInstance::remove_unit_instance_group(UnitInstanceGroup const& group)
 			unit_instance_groups.erase(it);
 			return true;
 		} else {
-			Logger::error(
-				"Trying to remove non-existent ", get_branched_unit_group_name(Branch), " \"",
-				group.get_name(), "\" from country ", get_identifier()
+			spdlog::error_s(
+				"Trying to remove non-existent {} \"{}\" from country {}",
+				get_branched_unit_group_name(Branch), group.get_name(), *this
 			);
 			return false;
 		}
@@ -635,9 +635,9 @@ bool CountryInstance::remove_unit_instance_group(UnitInstanceGroup const& group)
 	case NAVAL:
 		return remove_from_vector(navies);
 	default:
-		Logger::error(
-			"Trying to remove unit group \"", group.get_name(), "\" with invalid branch ",
-			static_cast<uint32_t>(group.get_branch()), " from country ", get_identifier()
+		spdlog::error_s(
+			"Trying to remove unit group \"{}\" with invalid branch {} from country {}",
+			group.get_name(), static_cast<uint32_t>(group.get_branch()), *this
 		);
 		return false;
 	}
@@ -654,9 +654,9 @@ bool CountryInstance::add_leader(LeaderInstance& leader) {
 		admirals.push_back(&leader);
 		return true;
 	default:
-		Logger::error(
-			"Trying to add leader \"", leader.get_name(), "\" with invalid branch ",
-			static_cast<uint32_t>(leader.get_branch()), " to country ", get_identifier()
+		spdlog::error_s(
+			"Trying to add leader \"{}\" with invalid branch {} to country {}",
+			leader.get_name(), static_cast<uint32_t>(leader.get_branch()), *this
 		);
 		return false;
 	}
@@ -675,9 +675,9 @@ bool CountryInstance::remove_leader(LeaderInstance const& leader) {
 		leaders = &admirals;
 		break;
 	default:
-		Logger::error(
-			"Trying to remove leader \"", leader.get_name(), "\" with invalid branch ",
-			static_cast<uint32_t>(leader.get_branch()), " from country ", get_identifier()
+		spdlog::error_s(
+			"Trying to remove leader \"{}\" with invalid branch {} from country {}",
+			leader.get_name(), static_cast<uint32_t>(leader.get_branch()), *this
 		);
 		return false;
 	}
@@ -688,9 +688,9 @@ bool CountryInstance::remove_leader(LeaderInstance const& leader) {
 		leaders->erase(it);
 		return true;
 	} else {
-		Logger::error(
-			"Trying to remove non-existent ", get_branched_leader_name(leader.get_branch()), " \"",
-			leader.get_name(), "\" from country ", get_identifier()
+		spdlog::error_s(
+			"Trying to remove non-existent {} \"{}\" from country {}",
+			 get_branched_leader_name(leader.get_branch()), leader.get_name(), *this
 		);
 		return false;
 	}
@@ -716,11 +716,10 @@ bool CountryInstance::modify_unit_type_unlock(UnitTypeBranched<Branch> const& un
 
 	// This catches subtracting below 0 or adding above the int types maximum value
 	if (unlock_level + unlock_level_change < 0) {
-		Logger::error(
-			"Attempted to change unlock level for unit type ", unit_type.get_identifier(), " in country ",
-			get_identifier(), " to invalid value: current level = ", static_cast<int64_t>(unlock_level), ", change = ",
-			static_cast<int64_t>(unlock_level_change), ", invalid new value = ",
-			static_cast<int64_t>(unlock_level + unlock_level_change)
+		spdlog::error_s(
+			"Attempted to change unlock level for unit type {} in country {} to invalid value: current level = {}, change = {}, invalid new value = {}",
+			 unit_type, *this, static_cast<int64_t>(unlock_level),
+			 static_cast<int64_t>(unlock_level_change), static_cast<int64_t>(unlock_level + unlock_level_change)
 		);
 		return false;
 	}
@@ -770,9 +769,9 @@ bool CountryInstance::modify_unit_type_unlock(UnitType const& unit_type, technol
 	case NAVAL:
 		return modify_unit_type_unlock(static_cast<UnitTypeBranched<NAVAL> const&>(unit_type), unlock_level_change);
 	default:
-		Logger::error(
-			"Attempted to change unlock level for unit type \"", unit_type.get_identifier(), "\" with invalid branch ",
-			static_cast<uint32_t>(unit_type.get_branch()), " is unlocked for country ", get_identifier()
+		spdlog::error_s(
+			"Attempted to change unlock level for unit type \"{}\" with invalid branch {} is unlocked for country {}",
+			unit_type, static_cast<uint32_t>(unit_type.get_branch()), *this
 		);
 		return false;
 	}
@@ -791,9 +790,9 @@ bool CountryInstance::is_unit_type_unlocked(UnitType const& unit_type) const {
 	case NAVAL:
 		return ship_type_unlock_levels.at(static_cast<UnitTypeBranched<NAVAL> const&>(unit_type)) > 0;
 	default:
-		Logger::error(
-			"Attempted to check if unit type \"", unit_type.get_identifier(), "\" with invalid branch ",
-			static_cast<uint32_t>(unit_type.get_branch()), " is unlocked for country ", get_identifier()
+		spdlog::error_s(
+			"Attempted to check if unit type \"{}\" with invalid branch {} is unlocked for country {}",
+			unit_type, static_cast<uint32_t>(unit_type.get_branch()), *this
 		);
 		return false;
 	}
@@ -806,10 +805,9 @@ bool CountryInstance::modify_building_type_unlock(
 
 	// This catches subtracting below 0 or adding above the int types maximum value
 	if (unlock_level + unlock_level_change < 0) {
-		Logger::error(
-			"Attempted to change unlock level for building type ", building_type.get_identifier(), " in country ",
-			get_identifier(), " to invalid value: current level = ", static_cast<int64_t>(unlock_level), ", change = ",
-			static_cast<int64_t>(unlock_level_change), ", invalid new value = ",
+		spdlog::error_s(
+			"Attempted to change unlock level for building type {} in country {} to invalid value: current level = {}, change = {}, invalid new value = {}",
+			building_type, *this, static_cast<int64_t>(unlock_level), static_cast<int64_t>(unlock_level_change), 
 			static_cast<int64_t>(unlock_level + unlock_level_change)
 		);
 		return false;
@@ -837,11 +835,10 @@ bool CountryInstance::modify_crime_unlock(Crime const& crime, technology_unlock_
 
 	// This catches subtracting below 0 or adding above the int types maximum value
 	if (unlock_level + unlock_level_change < 0) {
-		Logger::error(
-			"Attempted to change unlock level for crime ", crime.get_identifier(), " in country ",
-			get_identifier(), " to invalid value: current level = ", static_cast<int64_t>(unlock_level), ", change = ",
-			static_cast<int64_t>(unlock_level_change), ", invalid new value = ",
-			static_cast<int64_t>(unlock_level + unlock_level_change)
+		spdlog::error_s(
+			"Attempted to change unlock level for crime {} in country {} to invalid value: current level = {}, change = {}, invalid new value = {}",
+			crime, *this, static_cast<int64_t>(unlock_level),
+			static_cast<int64_t>(unlock_level_change), static_cast<int64_t>(unlock_level + unlock_level_change)
 		);
 		return false;
 	}
@@ -862,11 +859,10 @@ bool CountryInstance::is_crime_unlocked(Crime const& crime) const {
 bool CountryInstance::modify_gas_attack_unlock(technology_unlock_level_t unlock_level_change) {
 	// This catches subtracting below 0 or adding above the int types maximum value
 	if (gas_attack_unlock_level + unlock_level_change < 0) {
-		Logger::error(
-			"Attempted to change unlock level for gas attack in country ", get_identifier(),
-			" to invalid value: current level = ", static_cast<int64_t>(gas_attack_unlock_level), ", change = ",
-			static_cast<int64_t>(unlock_level_change), ", invalid new value = ",
-			static_cast<int64_t>(gas_attack_unlock_level + unlock_level_change)
+		spdlog::error_s(
+			"Attempted to change unlock level for gas attack in country {} to invalid value: current level = {}, change = {}, invalid new value = {}",
+			*this, static_cast<int64_t>(gas_attack_unlock_level),
+			static_cast<int64_t>(unlock_level_change), static_cast<int64_t>(gas_attack_unlock_level + unlock_level_change)
 		);
 		return false;
 	}
@@ -887,11 +883,10 @@ bool CountryInstance::is_gas_attack_unlocked() const {
 bool CountryInstance::modify_gas_defence_unlock(technology_unlock_level_t unlock_level_change) {
 	// This catches subtracting below 0 or adding above the int types maximum value
 	if (gas_defence_unlock_level + unlock_level_change < 0) {
-		Logger::error(
-			"Attempted to change unlock level for gas defence in country ", get_identifier(),
-			" to invalid value: current level = ", static_cast<int64_t>(gas_defence_unlock_level), ", change = ",
-			static_cast<int64_t>(unlock_level_change), ", invalid new value = ",
-			static_cast<int64_t>(gas_defence_unlock_level + unlock_level_change)
+		spdlog::error_s(
+			"Attempted to change unlock level for gas defence in country {} to invalid value: current level = {}, change = {}, invalid new value = {}",
+			*this, static_cast<int64_t>(gas_defence_unlock_level),
+			static_cast<int64_t>(unlock_level_change), static_cast<int64_t>(gas_defence_unlock_level + unlock_level_change)
 		);
 		return false;
 	}
@@ -911,7 +906,7 @@ bool CountryInstance::is_gas_defence_unlocked() const {
 
 bool CountryInstance::modify_unit_variant_unlock(unit_variant_t unit_variant, technology_unlock_level_t unlock_level_change) {
 	if (unit_variant < 1) {
-		Logger::error("Trying to modify unlock level for default unit variant 0");
+		spdlog::error_s("Trying to modify unlock level for default unit variant 0");
 		return false;
 	}
 
@@ -925,11 +920,10 @@ bool CountryInstance::modify_unit_variant_unlock(unit_variant_t unit_variant, te
 
 	// This catches subtracting below 0 or adding above the int types maximum value
 	if (unlock_level + unlock_level_change < 0) {
-		Logger::error(
-			"Attempted to change unlock level for unit variant ", static_cast<uint64_t>(unit_variant), " in country ",
-			get_identifier(), " to invalid value: current level = ", static_cast<int64_t>(unlock_level), ", change = ",
-			static_cast<int64_t>(unlock_level_change), ", invalid new value = ",
-			static_cast<int64_t>(unlock_level + unlock_level_change)
+		spdlog::error_s(
+			"Attempted to change unlock level for unit variant {} in country {} to invalid value: current level = {}, change = {}, invalid new value = {}",
+			static_cast<uint64_t>(unit_variant), *this, static_cast<int64_t>(unlock_level),
+			static_cast<int64_t>(unlock_level_change), static_cast<int64_t>(unlock_level + unlock_level_change)
 		);
 		ret = false;
 	} else {
@@ -958,11 +952,10 @@ bool CountryInstance::modify_technology_unlock(
 
 	// This catches subtracting below 0 or adding above the int types maximum value
 	if (unlock_level + unlock_level_change < 0) {
-		Logger::error(
-			"Attempted to change unlock level for technology ", technology.get_identifier(), " in country ",
-			get_identifier(), " to invalid value: current level = ", static_cast<int64_t>(unlock_level), ", change = ",
-			static_cast<int64_t>(unlock_level_change), ", invalid new value = ",
-			static_cast<int64_t>(unlock_level + unlock_level_change)
+		spdlog::error_s(
+			"Attempted to change unlock level for technology {} in country {} to invalid value: current level = {}, change = {}, invalid new value = {}",
+			technology, *this, static_cast<int64_t>(unlock_level),
+			static_cast<int64_t>(unlock_level_change), static_cast<int64_t>(unlock_level + unlock_level_change)
 		);
 		return false;
 	}
@@ -1008,11 +1001,10 @@ bool CountryInstance::modify_invention_unlock(
 
 	// This catches subtracting below 0 or adding above the int types maximum value
 	if (unlock_level + unlock_level_change < 0) {
-		Logger::error(
-			"Attempted to change unlock level for invention ", invention.get_identifier(), " in country ",
-			get_identifier(), " to invalid value: current level = ", static_cast<int64_t>(unlock_level), ", change = ",
-			static_cast<int64_t>(unlock_level_change), ", invalid new value = ",
-			static_cast<int64_t>(unlock_level + unlock_level_change)
+		spdlog::error_s(
+			"Attempted to change unlock level for invention {} in country {} to invalid value: current level = {}, change = {}, invalid new value = {}",
+			invention, *this, static_cast<int64_t>(unlock_level),
+			static_cast<int64_t>(unlock_level_change), static_cast<int64_t>(unlock_level + unlock_level_change)
 		);
 		return false;
 	}
@@ -1104,9 +1096,9 @@ bool CountryInstance::can_research_tech(Technology const& technology, Date today
 
 void CountryInstance::start_research(Technology const& technology, InstanceManager const& instance_manager) {
 	if (OV_unlikely(!can_research_tech(technology, instance_manager.get_today()))) {
-		Logger::warning(
-			"Attempting to start research for country \"", get_identifier(), "\" on technology \"",
-			technology.get_identifier(), "\" - cannot research this tech!"
+		spdlog::warn_s(
+			"Attempting to start research for country \"{}\" on technology \"{}\" - cannot research this tech!",
+			*this, technology
 		);
 		return;
 	}
@@ -2508,7 +2500,7 @@ bool CountryInstanceManager::apply_history_to_countries(InstanceManager& instanc
 					}
 				}
 			} else {
-				Logger::error("Country ", country_instance.get_identifier(), " has no history!");
+				spdlog::error_s("Country {} has no history!", country_instance);
 				ret = false;
 			}
 		}
@@ -2549,4 +2541,8 @@ void CountryInstanceManager::country_manager_tick_after_map(InstanceManager& ins
 	}
 
 	shared_country_values.update_costs(instance_manager.get_good_instance_manager());
+}
+
+fmt::format_context::iterator fmt::formatter<CountryInstance>::format(const CountryInstance& instance, format_context& ctx) const {
+	return formatter<string_view>::format(instance.get_identifier(), ctx);
 }
