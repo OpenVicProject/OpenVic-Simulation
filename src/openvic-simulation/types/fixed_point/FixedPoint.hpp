@@ -423,7 +423,7 @@ namespace OpenVic {
 			double double_value = std::strtod(value, &endpointer);
 
 			if (*endpointer != '\0') {
-				Logger::error("Unsafe fixed point parse failed to parse the end of a string: \"", endpointer, "\"");
+				spdlog::error_s("Unsafe fixed point parse failed to parse the end of a string: \"{}\"", endpointer);
 			}
 
 			value_type integer_value = static_cast<long>(double_value * ONE + 0.5 * (double_value < 0 ? -1 : 1));
@@ -685,7 +685,7 @@ namespace OpenVic {
 			}
 
 			if (bits != 0) {
-				Logger::error("Fixed point exponential overflow!");
+				spdlog::error_s("Fixed point exponential overflow!");
 			}
 
 			if (negative) {

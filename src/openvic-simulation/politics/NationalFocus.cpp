@@ -4,7 +4,7 @@
 #include "openvic-simulation/modifier/ModifierManager.hpp"
 #include "openvic-simulation/politics/Ideology.hpp"
 #include "openvic-simulation/pop/PopManager.hpp"
-#include "openvic-simulation/utility/LogScope.hpp"
+#include "openvic-simulation/utility/FormatValidate.hpp"
 
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;
@@ -41,13 +41,13 @@ NationalFocus::NationalFocus(
 	limit { std::move(new_limit) } {}
 
 bool NationalFocus::parse_scripts(DefinitionManager const& definition_manager) {
-	const LogScope log_scope { fmt::format("national focus {}", get_identifier()) };
+	spdlog::scope scope { fmt::format("national focus {}", get_identifier()) };
 	return limit.parse_script(true, definition_manager);
 }
 
 inline bool NationalFocusManager::add_national_focus_group(std::string_view identifier) {
 	if (identifier.empty()) {
-		Logger::error("No identifier for national focus group!");
+		spdlog::error_s("No identifier for national focus group!");
 		return false;
 	}
 
@@ -70,21 +70,21 @@ inline bool NationalFocusManager::add_national_focus(
 	fixed_point_map_t<PopType const*>&& encourage_pop_types,
 	ConditionScript&& limit
 ) {
-	const LogScope log_scope { fmt::format("national focus {}", identifier) };
+	spdlog::scope scope { fmt::format("national focus {}", identifier) };
 	if (identifier.empty()) {
-		Logger::error("No identifier for national focus!");
+		spdlog::error_s("No identifier for national focus!");
 		return false;
 	}
 
 	if (icon < 1) {
-		Logger::error("Invalid icon ", icon, " for national focus ", identifier);
+		spdlog::error_s("Invalid icon {} for national focus {}", icon, identifier);
 		return false;
 	}
 
 	if ((loyalty_ideology == nullptr) != (loyalty_value == 0)) {
-		Logger::warning(
-			"Party loyalty incorrectly defined for national focus ", identifier, ": ideology = ", loyalty_ideology,
-			", value = ", loyalty_value
+		spdlog::warn_s(
+			"Party loyalty incorrectly defined for national focus {}: ideology = {}, value = {}",
+			identifier, ovfmt::validate(loyalty_ideology), loyalty_value
 		);
 	}
 
@@ -100,7 +100,7 @@ bool NationalFocusManager::load_national_foci_file(
 	PopManager const& pop_manager, IdeologyManager const& ideology_manager,
 	GoodDefinitionManager const& good_definition_manager, ModifierManager const& modifier_manager, ast::NodeCPtr root
 ) {
-	const LogScope log_scope { "common/national_focus.txt" };
+	spdlog::scope scope { "common/national_focus.txt" };
 	size_t expected_national_foci = 0;
 
 	bool ret = expect_dictionary_reserve_length(
@@ -122,7 +122,7 @@ bool NationalFocusManager::load_national_foci_file(
 				[this, &group, &pop_manager, &ideology_manager, &good_definition_manager, &modifier_manager](
 					std::string_view identifier, ast::NodeCPtr node
 				) -> bool {
-					const LogScope log_scope { fmt::format("national focus {}", identifier) };
+					spdlog::scope scope { fmt::format("national focus {}", identifier) };
 					using enum scope_type_t;
 
 					uint8_t icon = 0;

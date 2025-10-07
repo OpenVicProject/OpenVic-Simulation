@@ -11,12 +11,15 @@
 
 #include <tsl/ordered_set.h>
 
+#include <spdlog/common.h>
+
 #include "openvic-simulation/types/Colour.hpp"
 #include "openvic-simulation/types/Date.hpp"
 #include "openvic-simulation/types/IndexedFlatMap.hpp"
 #include "openvic-simulation/types/OrderedContainers.hpp"
 #include "openvic-simulation/types/TextFormat.hpp"
 #include "openvic-simulation/types/Vector.hpp"
+#include "openvic-simulation/utility/FormatValidate.hpp"
 #include "openvic-simulation/utility/Getters.hpp"
 #include "openvic-simulation/utility/TslHelper.hpp"
 #include "openvic-simulation/utility/Containers.hpp"
@@ -123,28 +126,28 @@ using namespace std::string_view_literals;
 			return true;
 		}
 		inline bool key_value_warn_callback(std::string_view key, ast::NodeCPtr) {
-			Logger::warning("Invalid dictionary key: ", key);
+			spdlog::warn_s("Invalid dictionary key: {}", key);
 			return true;
 		}
 		inline bool key_value_invalid_callback(std::string_view key, ast::NodeCPtr) {
-			Logger::error("Invalid dictionary key: ", key);
+			spdlog::error_s("Invalid dictionary key: {}", key);
 			return false;
 		}
 
 		template<IsOrderedMap Map>
 		inline bool map_key_value_invalid_callback(Map const& key_map, std::string_view key, ast::NodeCPtr) {
-			Logger::error("Invalid dictionary key \"", key, "\". Valid values are [",
-				StringUtils::string_join(key_map),
-				"]"
+			spdlog::error_s(
+				"Invalid dictionary key \"{}\". Valid values are [{}]",
+				key, StringUtils::string_join(key_map)
 			);
 			return false;
 		}
 
 		template<IsOrderedMap Map>
 		inline bool map_key_value_ignore_invalid_callback(Map const& key_map, std::string_view key, ast::NodeCPtr) {
-			Logger::warning("Invalid dictionary key \"", key, "\" is ignored. Valid values are [",
-				StringUtils::string_join(key_map),
-				"]"
+			spdlog::warn_s(
+				"Invalid dictionary key \"{}\" is ignored. Valid values are [{}]",
+				key, StringUtils::string_join(key_map)
 			);
 			return true;
 		}
@@ -166,9 +169,11 @@ using namespace std::string_view_literals;
 					val <= static_cast<int64_t>(std::numeric_limits<T>::max())) {
 					return callback(val);
 				}
-				Logger::error(
-					"Invalid int: ", val, " (valid range: [", static_cast<int64_t>(std::numeric_limits<T>::lowest()), ", ",
-					static_cast<int64_t>(std::numeric_limits<T>::max()), "])"
+				spdlog::error_s(
+					"Invalid int: {} (valid range: [{}, {}])",
+					val,
+					static_cast<int64_t>(std::numeric_limits<T>::lowest()),
+					static_cast<int64_t>(std::numeric_limits<T>::max())
 				);
 				return false;
 			}, base);
@@ -184,8 +189,9 @@ using namespace std::string_view_literals;
 				if (val <= static_cast<uint64_t>(std::numeric_limits<T>::max())) {
 					return callback(val);
 				}
-				Logger::error(
-					"Invalid uint: ", val, " (valid range: [0, ", static_cast<uint64_t>(std::numeric_limits<T>::max()), "])"
+				spdlog::error_s(
+					"Invalid uint: {} (valid range: [0, {}])",
+					val, static_cast<uint64_t>(std::numeric_limits<T>::max()) 
 				);
 				return false;
 			}, base);
@@ -279,14 +285,14 @@ using namespace std::string_view_literals;
 				key_map.emplace(key, dictionary_entry_t { expected_count, MOV(callback) });
 				return true;
 			}
-			Logger::error("Duplicate expected dictionary key: ", key);
+			spdlog::error_s("Duplicate expected dictionary key: {}", key);
 			return false;
 		}
 
 		template<IsOrderedMap Map>
 		bool remove_key_map_entry(Map&& key_map, std::string_view key) {
 			if (key_map.erase(key) == 0) {
-				Logger::error("Failed to find dictionary key to remove: ", key);
+				spdlog::error_s("Failed to find dictionary key to remove: {}", key);
 				return false;
 			}
 			return true;
@@ -303,13 +309,13 @@ using namespace std::string_view_literals;
 				}
 				dictionary_entry_t& entry = it.value();
 				if (++entry.count > 1 && !entry.can_repeat()) {
-					Logger::error("Invalid repeat of dictionary key: ", key);
+					spdlog::error_s("Invalid repeat of dictionary key: {}", key);
 					return false;
 				}
 				if (entry.callback(value)) {
 					return true;
 				} else {
-					Logger::error("Callback failed for dictionary key: ", key);
+					spdlog::error_s("Callback failed for dictionary key: {}", key);
 					return false;
 				}
 			};
@@ -321,7 +327,7 @@ using namespace std::string_view_literals;
 			for (auto key_entry : mutable_iterator(key_map)) {
 				dictionary_entry_t& entry = key_entry.second;
 				if (entry.must_appear() && entry.count < 1) {
-					Logger::error("Mandatory dictionary key not present: ", key_entry.first);
+					spdlog::error_s("Mandatory dictionary key not present: {}", key_entry.first);
 					ret = false;
 				}
 				entry.count = 0;
@@ -526,9 +532,10 @@ using namespace std::string_view_literals;
 				if (it != map.end()) {
 					return callback(it->second);
 				}
-				Logger::warn_or_error(warn, "\"", string, "\" is not a valid key. Valid keys: [",
-					StringUtils::string_join(map),
-					"]"
+				spdlog::log_s(
+					warn ? spdlog::level::warn : spdlog::level::err,
+					"\"{}\" is not a valid key. Valid keys: [{}]",
+					string, StringUtils::string_join(map)
 				);
 				return warn;
 			};
@@ -564,7 +571,7 @@ using namespace std::string_view_literals;
 		) {
 			return [&var, allow_overwrite](T const& val) -> bool {
 				if (!allow_overwrite && var.has_value()) {
-					Logger::error("Cannot assign value to already-initialised optional!");
+					spdlog::error_s("Cannot assign value to already-initialised optional!");
 					return false;
 				}
 				var = val;
@@ -624,7 +631,7 @@ using namespace std::string_view_literals;
 		) {
 			return [&var, allow_overwrite](T const& val) -> bool {
 				if (!allow_overwrite && var.has_value()) {
-					Logger::error("Cannot assign pointer value to already-initialised optional!");
+					spdlog::error_s("Cannot assign pointer value to already-initialised optional!");
 					return false;
 				}
 				var = &val;
@@ -661,7 +668,10 @@ using namespace std::string_view_literals;
 				if (set.emplace(std::move(val)).second) {
 					return true;
 				}
-				Logger::warn_or_error(warn, "Duplicate set entry: \"", val, "\"");
+				spdlog::log_s(
+					warn ? spdlog::level::warn : spdlog::level::err,
+					"Duplicate set entry: \"{}\"", val
+				);
 				return warn;
 			};
 		}
@@ -672,7 +682,11 @@ using namespace std::string_view_literals;
 				if (set.emplace(&val).second) {
 					return true;
 				}
-				Logger::warn_or_error(warn, "Duplicate set entry: \"", &val, "\"");
+				spdlog::log_s(
+					warn ? spdlog::level::warn : spdlog::level::err,
+					"Duplicate set entry: \"{}\"",
+					val
+				);
 				return warn;
 			};
 		}
@@ -685,7 +699,17 @@ using namespace std::string_view_literals;
 				if (map.emplace(key, std::move(value)).second) {
 					return true;
 				}
-				Logger::warn_or_error(warn, "Duplicate map entry with key: \"", key, "\"");
+				if constexpr(std::is_pointer_v<Key>) {
+					spdlog::log_s(
+						warn ? spdlog::level::warn : spdlog::level::err,
+						"Duplicate map entry with key: \"{}\"", ovfmt::validate(key)
+					);
+				} else {
+					spdlog::log_s(
+						warn ? spdlog::level::warn : spdlog::level::err,
+						"Duplicate map entry with key: \"{}\"", key
+					);
+				}
 				return warn;
 			};
 		}
@@ -696,13 +720,13 @@ using namespace std::string_view_literals;
 		) {
 			return [&map, key, warn](Value value) -> bool {
 				if (key == nullptr) {
-					Logger::error("Null key in map_callback");
+					spdlog::error_s("Null key in map_callback");
 					return false;
 				}
 				Value& map_value = map.at(*key);
 				bool ret = true;
 				if (map_value != Value {}) {
-					Logger::warn_or_error(warn, "Duplicate map entry with key: \"", key, "\"");
+					spdlog::log_s(warn ? spdlog::level::warn : spdlog::level::err, "Duplicate map entry with key: \"{}\"", *key);
 					ret = warn;
 				}
 				map_value = std::move(value);
