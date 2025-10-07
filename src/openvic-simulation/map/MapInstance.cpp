@@ -140,7 +140,7 @@ bool MapInstance::apply_history_to_provinces(
 				}
 
 				if (pop_history_entry == nullptr) {
-					Logger::warning("No pop history entry for province ", province.get_identifier(), " for date ", date);
+					spdlog::warn_s("No pop history entry for province {} for date {}", province, date);
 				} else {
 					ret &= province.add_pop_vec(
 						pop_history_entry->get_pops(),

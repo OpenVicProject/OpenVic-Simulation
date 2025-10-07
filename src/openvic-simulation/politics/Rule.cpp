@@ -2,7 +2,9 @@
 
 #include "openvic-simulation/economy/BuildingType.hpp"
 #include "openvic-simulation/utility/TslHelper.hpp"
+#include "openvic-simulation/types/HasIdentifier.hpp"
 #include "openvic-simulation/utility/Containers.hpp"
+#include "openvic-simulation/utility/FormatValidate.hpp"
 
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;
@@ -40,12 +42,13 @@ bool RuleSet::trim_and_resolve_conflicts(bool log) {
 				for (auto const& [rule, value] : rule_map) {
 					if (value) {
 						if (rule != primary_rule) {
-							Logger::error(
-								"Conflicting mutually exclusive rule: ", rule, " superseded by ", primary_rule, " - removing!"
+							spdlog::error_s(
+								"Conflicting mutually exclusive rule: {} superseded by {} - removing!",
+								ovfmt::validate(rule), ovfmt::validate(primary_rule)
 							);
 						}
 					} else {
-						Logger::warning("Disabled mutually exclusive rule: ", rule, " - removing!");
+						spdlog::warn_s("Disabled mutually exclusive rule: {} - removing!", ovfmt::validate(rule));
 					}
 				}
 			}
@@ -139,7 +142,7 @@ RuleSet RuleSet::operator|(RuleSet const& right) const {
 
 bool RuleManager::add_rule(std::string_view identifier, Rule::rule_group_t group, std::string_view localisation_key) {
 	if (identifier.empty()) {
-		Logger::error("Invalid rule identifier - empty!");
+		spdlog::error_s("Invalid rule identifier - empty!");
 		return false;
 	}
 	return rules.emplace_item(
@@ -203,7 +206,7 @@ node_callback_t RuleManager::expect_rule_set(callback_t<RuleSet&&> ruleset_callb
 						}
 					)(rule_value);
 				} else {
-					Logger::error("Invalid rule identifier: ", rule_key);
+					spdlog::error_s("Invalid rule identifier: {}", rule_key);
 					return false;
 				}
 			}

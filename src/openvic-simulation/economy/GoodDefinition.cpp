@@ -29,7 +29,7 @@ GoodDefinition::GoodDefinition(
 
 bool GoodDefinitionManager::add_good_category(std::string_view identifier, size_t expected_goods_in_category) {
 	if (identifier.empty()) {
-		Logger::error("Invalid good category identifier - empty!");
+		spdlog::error_s("Invalid good category identifier - empty!");
 		return false;
 	}
 
@@ -46,19 +46,18 @@ bool GoodDefinitionManager::add_good_definition(
 	bool is_available_from_start, bool is_tradeable, bool is_money, bool has_overseas_penalty
 ) {
 	if (identifier.empty()) {
-		Logger::error("Invalid good identifier - empty!");
+		spdlog::error_s("Invalid good identifier - empty!");
 		return false;
 	}
 	if (base_price <= 0) {
-		Logger::error("Invalid base price for ", identifier, ": ", base_price);
+		spdlog::error_s("Invalid base price for {}: {}", identifier, base_price);
 		return false;
 	}
 
 	if (is_tradeable == is_money) {
-		Logger::warning(
-			"Good ", identifier, " has tradeable: ", StringUtils::bool_to_yes_no(is_tradeable), " and money: ",
-			StringUtils::bool_to_yes_no(is_money),
-			". Money goods are never tradeable. All other goods are tradeable. Setting tradeable has no effect."
+		spdlog::warn_s(
+			"Good {} has tradeable: {} and money: {}. Money goods are never tradeable. All other goods are tradeable. Setting tradeable has no effect.",
+			identifier, StringUtils::bool_to_yes_no(is_tradeable), StringUtils::bool_to_yes_no(is_money)
 		);
 	}
 

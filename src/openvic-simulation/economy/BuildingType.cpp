@@ -46,7 +46,7 @@ bool BuildingTypeManager::add_building_type(
 	std::string_view identifier, BuildingType::building_type_args_t& building_type_args
 ) {
 	if (identifier.empty()) {
-		Logger::error("Invalid building identifier - empty!");
+		spdlog::error_s("Invalid building identifier - empty!");
 		return false;
 	}
 
@@ -86,9 +86,9 @@ bool BuildingTypeManager::load_buildings_file(
 				"time", ONE_EXACTLY, expect_days(assign_variable_callback(building_type_args.build_time)),
 				"visibility", ONE_EXACTLY, expect_bool([key](bool visibility) -> bool {
 					if (!visibility) {
-						Logger::warning(
-							"Visibility is \"no\" for building type \"", key,
-							"\", the building will still be visible as this option has no effect!"
+						spdlog::warn_s(
+							"Visibility is \"no\" for building type \"{}\", the building will still be visible as this option has no effect!",
+							key
 						);
 					}
 					return true;
@@ -156,15 +156,15 @@ bool BuildingTypeManager::load_buildings_file(
 				if (port_building_type == nullptr) {
 					port_building_type = &building_type;
 				} else {
-					Logger::error(
-						"Building type ", building_type.get_identifier(), " is marked as a port, but we are already using ",
-						port_building_type->get_identifier(), " as the port building type!"
+					spdlog::error_s(
+						"Building type {} is marked as a port, but we are already using {} as the port building type!",
+						building_type, *port_building_type
 					);
 					ret = false;
 				}
 			} else {
-				Logger::error(
-					"Building type ", building_type.get_identifier(), " is marked as a port, but is not a province building!"
+				spdlog::error_s(
+					"Building type {} is marked as a port, but is not a province building!", building_type
 				);
 				ret = false;
 			}
@@ -172,17 +172,17 @@ bool BuildingTypeManager::load_buildings_file(
 	}
 
 	if (port_building_type == nullptr) {
-		Logger::error("No port building type found!");
+		spdlog::error_s("No port building type found!");
 		ret = false;
 	}
 
 	if (province_building_types.empty()) {
-		Logger::error("No province building types found!");
+		spdlog::error_s("No province building types found!");
 		ret = false;
 	} else {
-		Logger::info(
-			"Found ", province_building_types.size(), " province building types out of ", get_building_type_count(),
-			" total building types"
+		SPDLOG_INFO(
+			"Found {} province building types out of {} total building types",
+			province_building_types.size(), get_building_type_count()
 		);
 	}
 

@@ -47,7 +47,7 @@ TechnologySchool::TechnologySchool(std::string_view new_identifier, ModifierValu
 
 bool TechnologyManager::add_technology_folder(std::string_view identifier) {
 	if (identifier.empty()) {
-		Logger::error("Invalid technology folder identifier - empty!");
+		spdlog::error_s("Invalid technology folder identifier - empty!");
 		return false;
 	}
 
@@ -59,7 +59,7 @@ bool TechnologyManager::add_technology_folder(std::string_view identifier) {
 
 bool TechnologyManager::add_technology_area(std::string_view identifier, TechnologyFolder const& folder) {
 	if (identifier.empty()) {
-		Logger::error("Invalid technology area identifier - empty!");
+		spdlog::error_s("Invalid technology area identifier - empty!");
 		return false;
 	}
 
@@ -75,12 +75,12 @@ bool TechnologyManager::add_technology(
 	Technology::building_set_t&& activated_buildings, ModifierValue&& values, ConditionalWeightFactorMul&& ai_chance
 ) {
 	if (identifier.empty()) {
-		Logger::error("Invalid technology identifier - empty!");
+		spdlog::error_s("Invalid technology identifier - empty!");
 		return false;
 	}
 
 	if (area == nullptr) {
-		Logger::error("Null area for technology \"", identifier, "\"!");
+		spdlog::error_s("Null area for technology \"{}\"!", identifier);
 		return false;
 	}
 
@@ -89,9 +89,9 @@ bool TechnologyManager::add_technology(
 	const size_t index_in_area = area->get_tech_count();
 
 	if (index_in_area >= MAX_TECHS_IN_AREA) {
-		Logger::error(
-			"Cannot add technology \"", identifier, "\" - too many technologies in area \"", area->get_identifier(),
-			"\"! Each area can have at most ", MAX_TECHS_IN_AREA, " technologies."
+		spdlog::error_s(
+			"Cannot add technology \"{}\" - too many technologies in area \"{}\"! Each area can have at most {} technologies.",
+			identifier, *area, MAX_TECHS_IN_AREA
 		);
 		return false;
 	}
@@ -120,7 +120,7 @@ bool TechnologyManager::add_technology(
 
 bool TechnologyManager::add_technology_school(std::string_view identifier, ModifierValue&& values) {
 	if (identifier.empty()) {
-		Logger::error("Invalid modifier effect identifier - empty!");
+		spdlog::error_s("Invalid technology school identifier - empty!");
 		return false;
 	}
 
@@ -137,7 +137,7 @@ bool TechnologyManager::load_technology_file_folders_and_areas(ast::NodeCPtr roo
 				technology_folders,
 				[this](std::string_view folder_key, ast::NodeCPtr folder_value) -> bool {
 					if (!add_technology_folder(folder_key)) {
-						Logger::error("Failed to add and retrieve technology folder: \"", folder_key, "\"");
+						spdlog::error_s("Failed to add and retrieve technology folder: \"{}\"", folder_key);
 						return false;
 					}
 
@@ -169,7 +169,7 @@ bool TechnologyManager::load_technology_file_schools(
 	ModifierManager const& modifier_manager, ast::NodeCPtr root
 ) {
 	if (!technology_folders.is_locked() || !technology_areas.is_locked()) {
-		Logger::error("Cannot load technology schools until technology folders and areas are locked!");
+		spdlog::error_s("Cannot load technology schools until technology folders and areas are locked!");
 		return false;
 	}
 	return expect_dictionary_keys(
@@ -275,7 +275,7 @@ bool TechnologyManager::parse_scripts(DefinitionManager const& definition_manage
 
 bool TechnologyManager::generate_technology_lists() {
 	if (!technology_folders.is_locked() || !technology_areas.is_locked() || !technologies.is_locked()) {
-		Logger::error("Cannot generate technology lists until technology folders, areas, and technologies are locked!");
+		spdlog::error_s("Cannot generate technology lists until technology folders, areas, and technologies are locked!");
 		return false;
 	}
 
@@ -291,9 +291,9 @@ bool TechnologyManager::generate_technology_lists() {
 
 	for (TechnologyArea const& area : technology_areas.get_items()) {
 		if (area.get_technologies().size() != area.get_tech_count()) {
-			Logger::error(
-				"Technology area \"", area.get_identifier(), "\" has a mismatch between tech count (", area.get_tech_count(),
-				") and tech list size (", area.get_technologies().size(), ")!"
+			spdlog::error_s(
+				"Technology area \"{}\" has a mismatch between tech count ({}) and tech list size ({})!",
+				area, area.get_tech_count(), area.get_technologies().size()
 			);
 			ret = false;
 		}

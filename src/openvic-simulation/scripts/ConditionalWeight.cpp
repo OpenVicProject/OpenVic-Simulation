@@ -22,7 +22,7 @@ static NodeCallback auto expect_modifier(
 		bool successful = false;
 		bool ret = expect_key("factor", expect_fixed_point(assign_variable_callback(weight)), &successful)(node);
 		if (!successful) {
-			Logger::info("ConditionalWeight modifier missing factor key!");
+			SPDLOG_INFO("ConditionalWeight modifier missing factor key!");
 			return false;
 		}
 		ConditionScript condition { initial_scope, this_scope, from_scope };
@@ -54,9 +54,10 @@ node_callback_t ConditionalWeight<TYPE>::expect_conditional_weight() {
 					base = fixed_point_t::parse((*to_timespan)(value).to_int());
 					return true;
 				} else {
-					Logger::error(
-						"ConditionalWeight cannot have multiple base values - trying to set base to ", value, " ", key,
-						" when it already has a value equivalent to ", base, " days!"
+					spdlog::error_s(
+						"ConditionalWeight cannot have multiple base values - "
+						"trying to set base to {} {} when it already has a value equivalent to {} days!",
+						value, key, base
 					);
 					return false;
 				}
@@ -75,8 +76,8 @@ node_callback_t ConditionalWeight<TYPE>::expect_conditional_weight() {
 
 	if (!successfully_set_up_base_keys) {
 		return [](ast::NodeCPtr node) -> bool {
-			Logger::error(
-				"Failed to set up base keys for ConditionalWeight with base value: ", static_cast<uint32_t>(TYPE)
+			spdlog::error_s(
+				"Failed to set up base keys for ConditionalWeight with base value: {}", static_cast<uint32_t>(TYPE)
 			);
 			return false;
 		};
@@ -96,7 +97,7 @@ node_callback_t ConditionalWeight<TYPE>::expect_conditional_weight() {
 				condition_weight_items.emplace_back(std::move(items));
 				return ret;
 			} else {
-				Logger::error("ConditionalWeight group must have at least one modifier!");
+				spdlog::error_s("ConditionalWeight group must have at least one modifier!");
 				return false;
 			}
 		}

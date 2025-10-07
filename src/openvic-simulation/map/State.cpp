@@ -140,8 +140,8 @@ bool StateManager::add_state_set(
 	utility::forwardable_span<const PopType> pop_type_keys,
 	utility::forwardable_span<const Ideology> ideology_keys
 ) {
-	OV_ERR_FAIL_COND_V_MSG(region.get_is_meta(), false, memory::fmt::format("Cannot use meta region \"{}\" as state template!", region.get_identifier()));
-	OV_ERR_FAIL_COND_V_MSG(region.empty(), false, memory::fmt::format("Cannot use empty region \"{}\" as state template!", region.get_identifier()));
+	OV_ERR_FAIL_COND_V_MSG(region.get_is_meta(), false, memory::fmt::format("Cannot use meta region \"{}\" as state template!", region));
+	OV_ERR_FAIL_COND_V_MSG(region.empty(), false, memory::fmt::format("Cannot use empty region \"{}\" as state template!", region));
 
 	memory::vector<memory::vector<ProvinceInstance*>> temp_provinces;
 
@@ -215,7 +215,7 @@ bool StateManager::generate_states(
 		}
 	}
 
-	Logger::info("Generated ", state_count, " states across ", state_sets.size(), " state sets.");
+	SPDLOG_INFO("Generated {} states across {} state sets.", state_count, state_sets.size());
 
 	return ret;
 }
@@ -228,4 +228,8 @@ void StateManager::update_gamestate() {
 	for (StateSet& state_set : state_sets) {
 		state_set.update_gamestate();
 	}
+}
+
+fmt::format_context::iterator fmt::formatter<State>::format(State const& state, fmt::format_context& ctx) const {
+	return formatter<string_view>::format(state.get_identifier(), ctx);
 }

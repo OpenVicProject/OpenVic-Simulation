@@ -67,17 +67,17 @@ bool Actor::_set_animation(std::string_view name, std::string_view file, fixed_p
 	} else if (name == "attack") {
 		animation = &attack_animation;
 	} else {
-		Logger::error(
-			"Unknown animation type \"", name, "\" for actor ", get_name(), " (with file ", file, " and scroll time ",
-			scroll_time, ")"
+		spdlog::error_s(
+			"Unknown animation type \"{}\" for actor {} (with file {} and scroll time {})",
+			name, get_name(), file, scroll_time
 		);
 		return false;
 	}
 
 	if (animation->has_value()) {
-		Logger::error(
-			"Duplicate ", name, " animation for actor ", get_name(), ": ", file, " with scroll time ",
-			scroll_time, " (already set to ", (*animation)->file, " with scroll time ", (*animation)->scroll_time, ")"
+		spdlog::error_s(
+			"Duplicate {} animation for actor {}: {} with scroll time {} (already set to {} with scroll time {})",
+			name, get_name(), file, scroll_time, (*animation)->file, (*animation)->scroll_time
 		);
 		return false;
 	}
@@ -116,7 +116,7 @@ bool Actor::_fill_key_map(NodeTools::case_insensitive_key_map_t& key_map) {
 				"node", ONE_EXACTLY, expect_string(assign_variable_callback(attach_node)),
 				"attachId", ONE_EXACTLY, expect_uint(assign_variable_callback(attach_id))
 			)(node)) {
-				Logger::error("Failed to load attachment for actor ", get_name());
+				spdlog::error_s("Failed to load attachment for actor {}", get_name());
 				return false;
 			}
 
@@ -136,7 +136,7 @@ bool Actor::_fill_key_map(NodeTools::case_insensitive_key_map_t& key_map) {
 				"file", ONE_EXACTLY, expect_string(assign_variable_callback(file)),
 				"defaultAnimationTime", ONE_EXACTLY, expect_fixed_point(assign_variable_callback(scroll_time))
 			)(node)) {
-				Logger::error("Failed to load animation for actor ", get_name());
+				spdlog::error_s("Failed to load animation for actor {}", get_name());
 				return false;
 			}
 
@@ -241,7 +241,10 @@ bool Billboard::_fill_key_map(NodeTools::case_insensitive_key_map_t& key_map) {
 		"texturefile", ONE_EXACTLY, expect_string(assign_variable_callback_string(texture_file)),
 		"noOfFrames", ZERO_OR_ONE, expect_uint((callback_t<int>)[this](frame_t frames_read) -> bool {
 			if (frames_read < 1) {
-				Logger::error("Billboard ", this->get_name(), " had an invalid number of frames ", frames_read, ", setting number of frames to 1");
+				spdlog::error_s(
+					"Billboard {} had an invalid number of frames {}, setting number of frames to 1",
+					this->get_name(), frames_read
+				);
 				no_of_frames = 1;
 				return false;
 			}

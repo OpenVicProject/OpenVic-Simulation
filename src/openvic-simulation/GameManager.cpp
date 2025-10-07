@@ -7,6 +7,8 @@
 #include <range/v3/algorithm/contains.hpp>
 #include <range/v3/algorithm/find_if.hpp>
 
+#include <spdlog/spdlog.h>
+
 #include "openvic-simulation/dataloader/Dataloader.hpp"
 #include "openvic-simulation/types/OrderedContainers.hpp"
 #include "openvic-simulation/utility/Logger.hpp"
@@ -40,13 +42,13 @@ GameManager::GameManager(
 	}
 
 	if (bool(new_get_elapsed_usec_callback) != bool(new_get_elapsed_msec_callback)) {
-		Logger::warning("Only one of the elapsed time callbacks was set.");
+		spdlog::warn_s("Only one of the elapsed time callbacks was set.");
 	}
 }
 
 GameManager::~GameManager() {
 	if (instance_manager) {
-		Logger::error(
+		spdlog::error_s(
 			"Destroying GameManager with an active InstanceManager! "
 			"Calling end_game_session() to ensure proper cleanup and execute any required special end-of-session actions."
 		);
@@ -57,12 +59,12 @@ GameManager::~GameManager() {
 
 bool GameManager::load_mod_descriptors() {
 	if (mod_descriptors_loaded) {
-		Logger::error("Cannot load mod descriptors - already loaded!");
+		spdlog::error_s("Cannot load mod descriptors - already loaded!");
 		return false;
 	}
 
 	if (!dataloader.load_mod_descriptors(mod_manager)) {
-		Logger::error("Failed to load mod descriptors!");
+		spdlog::critical_s("Failed to load mod descriptors!");
 		return false;
 	}
 	return true;
@@ -88,7 +90,7 @@ bool GameManager::load_mods(memory::vector<memory::string> const& mods_to_find) 
 		);
 
 		if (it == mod_manager.get_mods().end()) {
-			Logger::error("Requested mod \"", requested_mod, "\" does not exist!");
+			spdlog::warn_s("Requested mod \"{}\" does not exist!", requested_mod);
 			ret = false;
 			continue;
 		}
@@ -133,11 +135,11 @@ bool GameManager::load_mods(memory::vector<memory::string> const& mods_to_find) 
 		mod_manager.set_loaded_mods(load_list.release());
 	} else {
 		mod_manager.set_loaded_mods({});
-		Logger::error("Mod loading failed, loading base only!");
+		spdlog::error_s("Mod loading failed, loading base only!");
 	}
 
 	if (!dataloader.set_roots(roots, replace_paths.values_container(), false)) {
-		Logger::error("Failed to set dataloader roots!");
+		spdlog::critical_s("Failed to set dataloader roots!");
 		ret = false;
 	}
 
@@ -146,19 +148,19 @@ bool GameManager::load_mods(memory::vector<memory::string> const& mods_to_find) 
 
 bool GameManager::load_definitions(Dataloader::localisation_callback_t localisation_callback) {
 	if (definitions_loaded) {
-		Logger::error("Cannot load definitions - already loaded!");
+		spdlog::error_s("Cannot load definitions - already loaded!");
 		return false;
 	}
 
 	bool ret = true;
 
 	if (!dataloader.load_defines(game_rules_manager, definition_manager)) {
-		Logger::error("Failed to load defines!");
+		spdlog::critical_s("Failed to load defines!");
 		ret = false;
 	}
 
 	if (!dataloader.load_localisation_files(localisation_callback)) {
-		Logger::error("Failed to load localisation!");
+		spdlog::error_s("Failed to load localisation!");
 		ret = false;
 	}
 
@@ -169,11 +171,11 @@ bool GameManager::load_definitions(Dataloader::localisation_callback_t localisat
 
 bool GameManager::setup_instance(Bookmark const* bookmark) {
 	if (instance_manager) {
-		Logger::error("Trying to setup a new game instance while one is already setup!");
+		spdlog::error_s("Trying to setup a new game instance while one is already setup!");
 		return false;
 	}
 
-	Logger::info("Initialising new game instance.");
+	SPDLOG_INFO("Initialising new game instance.");
 
 	instance_manager.emplace(
 		game_rules_manager,
@@ -181,11 +183,11 @@ bool GameManager::setup_instance(Bookmark const* bookmark) {
 		gamestate_updated_callback
 	);
 
-	Logger::info("Setting up new game instance.");
+	SPDLOG_INFO("Setting up new game instance.");
 
 	bool ret = instance_manager->setup();
 
-	Logger::info("Loading bookmark \"", bookmark, "\" for new game instance.");
+	SPDLOG_INFO("Loading bookmark \"{}\" for new game instance.", bookmark ? bookmark->get_identifier() : "<NULL>");
 
 	ret &= instance_manager->load_bookmark(bookmark);
 
@@ -202,35 +204,35 @@ bool GameManager::is_bookmark_loaded() const {
 
 bool GameManager::start_game_session() {
 	if (!instance_manager || !instance_manager->is_game_instance_setup()) {
-		Logger::error("Cannot start game session - instance manager not set up!");
+		spdlog::error_s("Cannot start game session - instance manager not set up!");
 		return false;
 	}
 
 	if (instance_manager->is_game_session_started()) {
-		Logger::error("Cannot start game session - session already started!");
+		spdlog::error_s("Cannot start game session - session already started!");
 		return false;
 	}
 
 	if (!instance_manager->is_bookmark_loaded()) {
-		Logger::warning("Starting game session with no bookmark loaded!");
+		spdlog::warn_s("Starting game session with no bookmark loaded!");
 	}
 
-	Logger::info("Starting game session.");
+	SPDLOG_INFO("Starting game session.");
 
 	return instance_manager->start_game_session();
 }
 
 bool GameManager::end_game_session() {
 	if (!instance_manager) {
-		Logger::error("Cannot end game session - instance manager not initialised!");
+		spdlog::error_s("Cannot end game session - instance manager not initialised!");
 		return false;
 	}
 
 	if (!instance_manager->is_game_instance_setup() || !instance_manager->is_game_session_started()) {
-		Logger::warning("Trying to end game session that hasn't yet finished setting up and/or actually started!");
+		spdlog::warn_s("Trying to end game session that hasn't yet finished setting up and/or actually started!");
 	}
 
-	Logger::info("Ending game session.");
+	SPDLOG_INFO("Ending game session.");
 
 	instance_manager.reset();
 
@@ -243,7 +245,7 @@ bool GameManager::is_game_session_active() const {
 
 bool GameManager::update_clock() {
 	if (!instance_manager) {
-		Logger::error("Cannot update clock - instance manager uninitialised!");
+		spdlog::error_s("Cannot update clock - instance manager uninitialised!");
 		return false;
 	}
 

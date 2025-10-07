@@ -46,7 +46,7 @@ bool InventionManager::add_invention(
 	bool unlock_gas_attack, bool unlock_gas_defence, ConditionScript&& limit, ConditionalWeightBase&& chance
 ) {
 	if (identifier.empty()) {
-		Logger::error("Invalid invention identifier - empty!");
+		spdlog::error_s("Invalid invention identifier - empty!");
 		return false;
 	}
 

@@ -48,7 +48,7 @@ pop_size_t ResourceGatheringOperation::get_employee_count_per_type_cache(PopType
 
 void ResourceGatheringOperation::setup_location_ptr(ProvinceInstance& location) {
 	if (location_ptr != nullptr) {
-		Logger::error("RGO already has a location_ptr pointing to province ", location_ptr->get_identifier());
+		spdlog::error_s("RGO already has a location_ptr pointing to province {}", *location_ptr);
 	}
 
 	location_ptr = &location;
@@ -236,7 +236,7 @@ fixed_point_t ResourceGatheringOperation::produce() {
 	if (owner.has_value()) {
 		State const* state_ptr = location.get_state();
 		if (state_ptr == nullptr) {
-			Logger::error("Province ", location.get_identifier(), " has no state.");
+			spdlog::error_s("Province {} has no state.", location);
 			return 0;
 		}
 
@@ -253,7 +253,7 @@ fixed_point_t ResourceGatheringOperation::produce() {
 					throughput_multiplier += owner_job.get_effect_multiplier() * total_owner_count_in_state_cache / state_population;
 					break;
 				default:
-					Logger::error("Invalid job effect in RGO ",production_type.get_identifier());
+					spdlog::error_s("Invalid job effect in RGO {}", production_type);
 					break;
 			}
 		}
@@ -320,7 +320,7 @@ fixed_point_t ResourceGatheringOperation::produce() {
 					throughput_from_workers += effect_multiplier * relative_to_workforce;
 					break;
 				default:
-					Logger::error("Invalid job effect in RGO ",production_type.get_identifier());
+					spdlog::error_s("Invalid job effect in RGO {}", production_type);
 					break;
 			}
 		}
@@ -342,10 +342,10 @@ void ResourceGatheringOperation::pay_employees(memory::vector<fixed_point_t>& re
 	total_employee_income_cache = 0;
 	if (revenue <= fixed_point_t::_0 || total_worker_count_in_province_cache <= 0) {
 		if (revenue < fixed_point_t::_0) {
-			Logger::error("Negative revenue for province ", location.get_identifier());
+			spdlog::error_s("Negative revenue for province {}", location);
 		}
 		if (total_worker_count_in_province_cache < 0) {
-			Logger::error("Negative total worker count for province ", location.get_identifier());
+			spdlog::error_s("Negative total worker count for province {}", location);
 		}
 		return;
 	}
@@ -411,7 +411,7 @@ void ResourceGatheringOperation::pay_employees(memory::vector<fixed_point_t>& re
 
 				PopType const* employee_pop_type = employee_pop.get_type();
 				if (employee_pop_type == nullptr) {
-					Logger::error("employee has nullptr pop_type.");
+					spdlog::error_s("employee has nullptr pop_type.");
 					return;
 				}
 

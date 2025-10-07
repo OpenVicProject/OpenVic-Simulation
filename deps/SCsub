@@ -111,6 +111,60 @@ def build_memory(env):
 
     env.exposed_includes += env.memory["INCPATH"]
 
+def build_spdlog(env):
+    import os
+
+    spdlog_level = "SPDLOG_LEVEL_INFO"
+    if "SPDLOG_LEVEL" in os.environ:
+        spdlog_level = os.environ["SPDLOG_LEVEL"].upper()
+        if not spdlog_level.startswith("SPDLOG_LEVEL_"):
+            spdlog_level = "SPDLOG_LEVEL_" + spdlog_level
+        if not spdlog_level in [
+            "SPDLOG_LEVEL_TRACE",
+            "SPDLOG_LEVEL_DEBUG",
+            "SPDLOG_LEVEL_INFO",
+            "SPDLOG_LEVEL_WARN",
+            "SPDLOG_LEVEL_ERROR",
+            "SPDLOG_LEVEL_CRITICAL",
+            "SPDLOG_LEVEL_OFF"
+        ]:
+            print("SPDLOG_LEVEL can only be trace, debug, info, warn, error, critical, or off")
+            exit(255)
+    elif env["dev_build"]:
+        spdlog_level = "SPDLOG_LEVEL_DEBUG"
+    elif env["target"] == "template_release" or env["optimize"] in ["speed", "size"]:
+        spdlog_level = "SPDLOG_LEVEL_WARN"
+
+    env.Append(CPPDEFINES=[("SPDLOG_ACTIVE_LEVEL", spdlog_level), "SPDLOG_FMT_EXTERNAL", "SPDLOG_COMPILED_LIB", "SPDLOG_NO_EXCEPTIONS"])
+    if env["platform"] != "macos":
+        env.Append(CPPDEFINES=["SPDLOG_FWRITE_UNLOCKED"])
+    spdlog_env = env.Clone()
+
+    include_path = "spdlog/include"
+    source_path = "spdlog/src"
+    source_dir = spdlog_env.Dir(source_path)
+
+    env.spdlog = {}
+    env.spdlog["INCPATH"] = [spdlog_env.Dir(include_path)]
+
+    spdlog_env.Append(CPPPATH=[source_dir, env.spdlog["INCPATH"]])
+    sources = env.GlobRecursive("*.cpp", [source_path])
+    env.spdlog_sources = sources
+
+    library_name = "libspdlog" + env["LIBSUFFIX"]
+    library = spdlog_env.StaticLibrary(target=os.path.join(source_path, library_name), source=sources)
+    Default(library)
+
+    env.Append(CPPPATH=[env.spdlog["INCPATH"]])
+    if env.get("is_msvc", False):
+        env.Append(CXXFLAGS=["/external:I", env.spdlog["INCPATH"][0], "/external:W0"])
+    else:
+        env.Append(CXXFLAGS=["-isystem", env.spdlog["INCPATH"][0]])
+    env.Append(LIBPATH=[source_dir])
+    env.Prepend(LIBS=[library_name])
+
+    env.exposed_includes += env.spdlog["INCPATH"]
+
 def link_tbb(env):
     import sys
     if not env.get("is_msvc", False) and not env.get("use_mingw", False) and sys.platform != "darwin":
@@ -123,4 +177,5 @@ build_colony(env)
 build_function2(env)
 build_std_function(env)
 build_memory(env)
+build_spdlog(env)
 link_tbb(env)

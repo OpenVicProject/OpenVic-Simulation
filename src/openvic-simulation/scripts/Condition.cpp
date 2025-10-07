@@ -1,5 +1,7 @@
 #include "Condition.hpp"
 
+#include <fmt/format.h>
+
 #include "openvic-simulation/dataloader/NodeTools.hpp"
 #include "openvic-simulation/DefinitionManager.hpp"
 #include "openvic-simulation/utility/Containers.hpp"
@@ -31,28 +33,34 @@ bool ConditionManager::add_condition(
 	identifier_type_t key_identifier_type, identifier_type_t value_identifier_type
 ) {
 	if (identifier.empty()) {
-		Logger::error("Invalid condition identifier - empty!");
+		spdlog::error_s("Invalid condition identifier - empty!");
 		return false;
 	}
 
 	if (value_type == NO_TYPE || value_type > MAX_VALUE) {
-		Logger::error("Condition ", identifier, " has invalid value type: ", static_cast<uint64_t>(value_type));
+		spdlog::error_s(
+			"Condition {} has invalid value type: {}",
+			identifier, static_cast<uint64_t>(value_type)
+		);
 		return false;
 	}
 	if (scope == NO_SCOPE || scope > MAX_SCOPE) {
-		Logger::error("Condition ", identifier, " has invalid scope: ", static_cast<uint64_t>(scope));
+		spdlog::error_s(
+			"Condition {} has invalid scope: {}",
+			identifier, static_cast<uint64_t>(scope)
+		);
 		return false;
 	}
 
 	if (share_value_type(value_type, IDENTIFIER) && value_identifier_type == NO_IDENTIFIER) {
-		Logger::error("Condition ", identifier, " has no identifier type!");
+		spdlog::error_s("Condition {} has no identifier type!", identifier);
 		return false;
 	}
 
 	// don't perform the check for complex types
 	if (!share_value_type(value_type, COMPLEX)) {
 		if (!share_value_type(value_type, IDENTIFIER) && value_identifier_type != NO_IDENTIFIER) {
-			Logger::warning("Condition ", identifier, " specified an identifier type, but doesn't have an identifier!");
+			spdlog::warn_s("Condition {} specified an identifier type, but doesn't have an identifier!", identifier);
 		}
 	}
 
@@ -446,7 +454,7 @@ bool ConditionManager::setup_conditions(DefinitionManager const& definition_mana
 	root_condition = get_condition_by_identifier(condition_root_identifier);
 
 	if (root_condition == nullptr) {
-		Logger::error("Failed to find root condition: ", condition_root_identifier);
+		spdlog::error_s("Failed to find root condition: {}", condition_root_identifier);
 		ret = false;
 	}
 
@@ -549,8 +557,9 @@ node_callback_t ConditionManager::expect_condition_node(
 				assign_variable_callback(keyval)
 			)(id);
 			if (log && !ret) {
-				Logger::error(
-					"Invalid identifier ", id, " expected to have type ", item_type, " found during condition node parsing!"
+				spdlog::error_s(
+					"Invalid identifier {} expected to have type {} found during condition node parsing!",
+					id, fmt::underlying(item_type)
 				);
 			}
 			return keyval;
@@ -636,7 +645,7 @@ node_callback_t ConditionManager::expect_condition_node(
 					value = ConditionNode::string_t { worker };
 				}
 			} else {
-				Logger::error("Attempted to parse unknown complex condition ", identifier, "!");
+				spdlog::error_s("Attempted to parse unknown complex condition {}!", identifier);
 			}
 
 			#undef EXPECT_PAIR
@@ -663,9 +672,9 @@ node_callback_t ConditionManager::expect_condition_node(
 		}
 
 		if (!share_scope_type(scope, effective_current_scope) && effective_current_scope > scope) {
-			Logger::warning(
-				"Condition or scope ", identifier, " was found in wrong scope ", effective_current_scope, ", expected ",
-				scope, "!"
+			spdlog::warn_s(
+				"Condition or scope {} was found in wrong scope {}, expected {}!",
+				identifier, fmt::underlying(effective_current_scope), fmt::underlying(scope)
 			);
 			ret = false;
 		}
@@ -678,7 +687,7 @@ node_callback_t ConditionManager::expect_condition_node(
 		}
 
 		if (!ret) {
-			Logger::warning("Could not parse condition node ", identifier, ", will always evaluate to false!");
+			spdlog::warn_s("Could not parse condition node {}, will always evaluate to false!", identifier);
 			Condition const* always_condition = conditions.get_item_by_identifier("always");
 			return callback({
 				always_condition,
@@ -707,7 +716,7 @@ static bool top_scope_fallback(std::string_view id, ast::NodeCPtr node) {
 	if (id == "factor") {
 		return true;
 	} else {
-		Logger::error("Unknown node \"", id, "\" found while parsing conditions!");
+		spdlog::error_s("Unknown node \"{}\" found while parsing conditions!", id);
 		return false;
 	}
 };
@@ -725,7 +734,33 @@ node_callback_t ConditionManager::expect_condition_node_list(
 		};
 		const auto invalid_condition_node = [this, &expect_node, top_scope](std::string_view id, ast::NodeCPtr node) -> bool {
 			if (top_scope && id == "factor") { return true; }
-			Logger::warning("Condition ", id, " does not exist in scope at condition node: ", node, ", and will always evaluate to false!"); // TODO: make this error message more useful by pinning down node to an actual file or something
+			if (ast::FlatValue const* node_name = dryad::node_try_cast<ast::FlatValue>(node); node_name && node_name->value()) {
+				spdlog::warn_s(
+					"Condition {} does not exist in scope at condition node: {}, and will always evaluate to false!",
+					id, node_name->value().view()
+				); // TODO: make this error message more useful by pinning down node to an actual file or something
+			} else if (ast::ListValue const* list_values = dryad::node_try_cast<ast::ListValue>(node); list_values) {
+				for (ast::Statement const* statement : list_values->statements()) {
+					dryad::visit_node(statement,
+						[&](ast::AssignStatement const* assign){
+							if (ast::FlatValue const* node_name = dryad::node_try_cast<ast::FlatValue>(assign->left()); node_name && node_name->value()) {
+								spdlog::warn_s(
+									"Condition {} does not exist in scope at condition node: {}, and will always evaluate to false!",
+									id, node_name->value().view()
+								); // TODO: make this error message more useful by pinning down node to an actual file or something
+							}
+						},
+						[&](ast::ValueStatement const* value) {
+							if (ast::FlatValue const* node_name = dryad::node_try_cast<ast::FlatValue>(value->value()); node_name && node_name->value()) {
+								spdlog::warn_s(
+									"Condition {} does not exist in scope at condition node: {}, and will always evaluate to false!",
+									id, node_name->value().view()
+								); // TODO: make this error message more useful by pinning down node to an actual file or something
+							}
+						}
+					);
+				}
+			}
 			return true;
 		};
 

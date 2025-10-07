@@ -1,131 +1,227 @@
 #pragma once
 
 #include <cstddef>
-#include <iostream>
-#include <mutex>
+#include <memory>
 #include <source_location>
 #include <string_view>
-#include <vector>
-#include <version>
 
-#include <function2/function2.hpp>
+#include <spdlog/common.h>
+#include <spdlog/logger.h>
+#include <spdlog/spdlog.h>
 
 #include "openvic-simulation/utility/Containers.hpp"
-#include "openvic-simulation/utility/StringUtils.hpp"
 
-namespace OpenVic {
-	class Logger final {
-		using log_func_t = fu2::function_view<void(memory::string&&)>;
-		using log_queue_t = memory::queue<memory::string>;
+namespace spdlog {
+	template<typename... Args>
+	struct log_s {
+		log_s(
+			level::level_enum level, format_string_t<Args...> fmt, Args&&... args,
+			std::source_location const& location = std::source_location::current()
+		) {
+			memory_buf_t buf;
+			fmt::vformat_to(fmt::appender(buf), fmt, fmt::make_format_args(args...));
 
-	private:
-		struct log_channel_t {
-			log_func_t func;
-			log_queue_t queue;
-			size_t message_count;
-		};
-
-		static inline std::mutex log_mutex;
-		static thread_local memory::vector<std::string_view> log_scope_stack;
-		static thread_local size_t log_scope_index_plus_one;
-
-		template<typename... Args>
-		struct log {
-			log(log_channel_t& log_channel, Args&&... args, std::source_location const& location) {
-				if (log_scope_index_plus_one < log_scope_stack.size()) {
-					const std::string_view log_scope = log_scope_stack[log_scope_index_plus_one];
-					log_scope_index_plus_one++;
-					//recursive
-					info(std::string(log_scope_index_plus_one, '>'), " Enter scope: ", log_scope);
-				}
-
-				const std::lock_guard<std::mutex> lock { log_mutex };
-
-				memory::stringstream stream;
-				stream << StringUtils::get_filename(location.file_name()) << "("
-					/* Function name removed to reduce clutter. It is already included
-					* in Godot's print functions, so this was repeating it. */
-					//<< location.line() << ") `" << location.function_name() << "`: ";
-					<< location.line() << "): ";
-				((stream << std::forward<Args>(args)), ...);
-				stream << std::endl;
-				log_channel.queue.push(stream.str());
-				if (log_channel.func) {
-					do {
-						log_channel.func(std::move(log_channel.queue.front()));
-						log_channel.queue.pop();
-						/* Only count printed messages, so that message_count matches what is seen in the console. */
-						log_channel.message_count++;
-					} while (!log_channel.queue.empty());
-				}
-			}
-		};
-
-	public:
-		static void enter_log_scope(const std::string_view log_scope) {
-			log_scope_stack.push_back(log_scope);
-		}
-		static void exit_log_scope(const std::string_view log_scope) {
-			const std::string_view to_pop = log_scope_stack.back();
-			if (to_pop != log_scope) {
-				error("Tried exiting log scope \"", log_scope, "\" but \"", to_pop, "\" would be removed instead. No log scope was removed instead.");
-				return;
-			}
-			log_scope_stack.pop_back();
-
-			const size_t max_log_scope_index_plus_one = log_scope_stack.size();
-			if (max_log_scope_index_plus_one < log_scope_index_plus_one) {
-				const std::string prefix = std::string(log_scope_index_plus_one, '<');
-				log_scope_index_plus_one = max_log_scope_index_plus_one;
-				info(prefix, " Exit scope: ", log_scope);
-			}
+			default_logger_raw()->log(
+				source_loc { location.file_name(), static_cast<int>(location.line()), location.function_name() }, level,
+				string_view_t(buf.data(), buf.size())
+			);
 		}
 
-		static void set_logger_funcs() {
-			set_info_func([](memory::string&& str) {
-				std::cout << "[INFO] " << str;
-			});
-			set_warning_func([](memory::string&& str) {
-				std::cerr << "[WARNING] " << str;
-			});
-			set_error_func([](memory::string&& str) {
-				std::cerr << "[ERROR] " << str;
-			});
+		log_s(
+			std::shared_ptr<logger> const& logger, level::level_enum level, format_string_t<Args...> fmt, Args&&... args,
+			std::source_location const& location = std::source_location::current()
+		) {
+			memory_buf_t buf;
+			fmt::vformat_to(fmt::appender(buf), fmt, fmt::make_format_args(args...));
+
+			logger->log(
+				source_loc { location.file_name(), static_cast<int>(location.line()), location.function_name() }, level,
+				string_view_t(buf.data(), buf.size())
+			);
+		}
+	};
+
+	template<typename... Args>
+	log_s(level::level_enum level, format_string_t<Args...> fmt, Args&&... args) -> log_s<Args...>;
+	template<typename... Args>
+	log_s( //
+		std::shared_ptr<logger> const& logger, level::level_enum level, format_string_t<Args...> fmt, Args&&... args
+	) -> log_s<Args...>;
+
+	template<typename T>
+	struct log_s<T> {
+		log_s(
+			level::level_enum level, format_string_t<T> fmt, T&& arg,
+			std::source_location const& location = std::source_location::current()
+		) {
+			default_logger_raw()->log(
+				source_loc { location.file_name(), static_cast<int>(location.line()), location.function_name() }, level, fmt,
+				std::forward<T>(arg)
+			);
+		}
+		log_s(level::level_enum level, T&& arg, std::source_location const& location = std::source_location::current()) {
+			default_logger_raw()->log(
+				source_loc { location.file_name(), static_cast<int>(location.line()), location.function_name() }, level,
+				std::forward<T>(arg)
+			);
 		}
 
-#define LOG_FUNC(name) \
-private: \
-	static inline log_channel_t name##_channel {}; \
-\
-public: \
-	static inline void set_##name##_func(log_func_t log_func) { \
-		name##_channel.func = log_func; \
-	} \
-	static inline size_t get_##name##_count() { \
-		return name##_channel.message_count; \
-	} \
+		log_s(
+			std::shared_ptr<logger> const& logger, level::level_enum level, format_string_t<T> fmt, T&& arg,
+			std::source_location const& location = std::source_location::current()
+		) {
+			logger->log(
+				source_loc { location.file_name(), static_cast<int>(location.line()), location.function_name() }, level, fmt,
+				std::forward<T>(arg)
+			);
+		}
+
+		log_s(
+			std::shared_ptr<logger> const& logger, level::level_enum level, T&& arg,
+			std::source_location const& location = std::source_location::current()
+		) {
+			logger->log(
+				source_loc { location.file_name(), static_cast<int>(location.line()), location.function_name() }, level,
+				std::forward<T>(arg)
+			);
+		}
+	};
+
+	template<typename T>
+	log_s(level::level_enum lvl, T&& msg) -> log_s<T>;
+	template<typename T>
+	log_s(std::shared_ptr<logger> const& logger, level::level_enum lvl, T&& msg) -> log_s<T>;
+
+#define DEFINE_LOG_LEVEL(NAME, LEVEL) \
 	template<typename... Args> \
-	struct name { \
-		name(Args&&... args, std::source_location const& location = std::source_location::current()) { \
-			log<Args...> { name##_channel, std::forward<Args>(args)..., location }; \
+	struct NAME { \
+		NAME( \
+			format_string_t<Args...> fmt, Args&&... args, \
+			std::source_location const& location = std::source_location::current() \
+		) { \
+			memory_buf_t buf; \
+			fmt::vformat_to(fmt::appender(buf), fmt, fmt::make_format_args(args...)); \
+\
+			default_logger_raw()->log( \
+				source_loc { location.file_name(), static_cast<int>(location.line()), location.function_name() }, LEVEL, \
+				string_view_t(buf.data(), buf.size()) \
+			); \
+		} \
+\
+		NAME( \
+			std::shared_ptr<logger> const& logger, format_string_t<Args...> fmt, Args&&... args, \
+			std::source_location const& location = std::source_location::current() \
+		) { \
+			memory_buf_t buf; \
+			fmt::vformat_to(fmt::appender(buf), fmt, fmt::make_format_args(args...)); \
+\
+			logger->log( \
+				source_loc { location.file_name(), static_cast<int>(location.line()), location.function_name() }, LEVEL, \
+				string_view_t(buf.data(), buf.size()) \
+			); \
 		} \
 	}; \
+\
 	template<typename... Args> \
-	name(Args&&...) -> name<Args...>;
+	NAME(format_string_t<Args...> fmt, Args&&... args) -> NAME<Args...>; \
+	template<typename... Args> \
+	NAME(std::shared_ptr<logger> const& logger, format_string_t<Args...> fmt, Args&&... args) -> NAME<Args...>; \
+\
+	template<typename T> \
+	struct NAME<T> { \
+		NAME(format_string_t<T> fmt, T&& arg, std::source_location const& location = std::source_location::current()) { \
+			default_logger_raw()->log( \
+				source_loc { location.file_name(), static_cast<int>(location.line()), location.function_name() }, LEVEL, fmt, \
+				std::forward<T>(arg) \
+			); \
+		} \
+		NAME(T&& arg, std::source_location const& location = std::source_location::current()) { \
+			default_logger_raw()->log( \
+				source_loc { location.file_name(), static_cast<int>(location.line()), location.function_name() }, LEVEL, \
+				std::forward<T>(arg) \
+			); \
+		} \
+\
+		NAME( \
+			std::shared_ptr<logger> const& logger, format_string_t<T> fmt, T&& arg, \
+			std::source_location const& location = std::source_location::current() \
+		) { \
+			logger->log( \
+				source_loc { location.file_name(), static_cast<int>(location.line()), location.function_name() }, LEVEL, fmt, \
+				std::forward<T>(arg) \
+			); \
+		} \
+\
+		NAME( \
+			std::shared_ptr<logger> const& logger, T&& arg, \
+			std::source_location const& location = std::source_location::current() \
+		) { \
+			logger->log( \
+				source_loc { location.file_name(), static_cast<int>(location.line()), location.function_name() }, LEVEL, \
+				std::forward<T>(arg) \
+			); \
+		} \
+	}; \
+\
+	template<typename T> \
+	NAME(T&& msg) -> NAME<T>; \
+	template<typename T> \
+	NAME(std::shared_ptr<logger> const& logger, T&& msg) -> NAME<T>;
 
-		LOG_FUNC(info)
-		LOG_FUNC(warning)
-		LOG_FUNC(error)
+	DEFINE_LOG_LEVEL(warn_s, ::spdlog::level::warn);
+	DEFINE_LOG_LEVEL(error_s, ::spdlog::level::err);
+	DEFINE_LOG_LEVEL(critical_s, ::spdlog::level::critical);
 
-#undef LOG_FUNC
+#undef DEFINE_LOG_LEVEL
 
-		template<typename... Args>
-		static inline constexpr void warn_or_error(bool warn, Args&&... args) {
-			if (warn) {
-				warning(std::forward<Args>(args)...);
-			} else {
-				error(std::forward<Args>(args)...);
+	struct scope {
+		using string = OpenVic::memory::string;
+
+		scope(scope const&) = delete;
+		scope& operator=(scope const&) = delete;
+		scope(scope&&) = delete;
+		scope& operator=(scope&&) = delete;
+
+		scope(std::string_view text) : _logger { spdlog::default_logger_raw()->clone(std::string { text }) } {
+			if (stack.empty()) {
+				stack.emplace(spdlog::default_logger());
+			}
+			spdlog::set_default_logger(_logger);
+			stack.emplace(_logger);
+		}
+
+		~scope() {
+			std::shared_ptr<spdlog::logger> back = stack.top();
+			if (back->name() != _logger->name()) {
+				error(
+					"Tried exiting scope \"{}\" but \"{}\" would be removed instead. No scope was removed.", _logger->name(),
+					back->name()
+				);
+				return;
+			}
+			stack.pop();
+			spdlog::set_default_logger(stack.top());
+
+			size_t scope_size = stack.size();
+			if (scope_size < stack_index) {
+				stack_index = scope_size;
+#if SPDLOG_ACTIVE_LEVEL <= SPDLOG_LEVEL_INFO
+				info("{}< Exit scope", stack_index);
+#endif
 			}
 		}
+
+		std::shared_ptr<spdlog::logger>& logger() {
+			return _logger;
+		}
+		std::shared_ptr<spdlog::logger> const& logger() const {
+			return _logger;
+		}
+
+	private:
+		std::shared_ptr<spdlog::logger> _logger;
+
+		inline static thread_local OpenVic::memory::stack<std::shared_ptr<spdlog::logger>> stack;
+		inline static thread_local size_t stack_index;
 	};
 }

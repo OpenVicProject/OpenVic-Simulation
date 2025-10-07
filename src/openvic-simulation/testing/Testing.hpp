@@ -1,6 +1,9 @@
 #pragma once
+
 #include <memory>
 #include <vector>
+
+#include <spdlog/spdlog.h>
 
 #include "openvic-simulation/DefinitionManager.hpp"
 #include "openvic-simulation/testing/TestScript.hpp"
@@ -14,15 +17,16 @@
 namespace OpenVic {
 
 	class Testing {
+		std::shared_ptr<spdlog::logger> logger;
 
 	public:
-		Testing(DefinitionManager const& definition_manager);
+		Testing(DefinitionManager const& definition_manager, std::shared_ptr<spdlog::logger>& logger);
 
 		memory::vector<memory::unique_base_ptr<TestScript>> test_scripts;
 
 		void execute_all_scripts();
 		void report_results();
-		void report_result(memory::string req_title, std::ofstream& outfile, memory::vector<memory::unique_ptr<Requirement>>& reqs);
-		void report_result(memory::string req_title, std::ofstream& outfile, memory::vector<Requirement*>& reqs);
+		void report_result(memory::string req_title, memory::vector<memory::unique_ptr<Requirement>>& reqs);
+		void report_result(memory::string req_title, memory::vector<Requirement*>& reqs);
 	};
 }

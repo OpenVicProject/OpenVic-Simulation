@@ -1,7 +1,6 @@
 #include "Government.hpp"
 
 #include "openvic-simulation/politics/Ideology.hpp"
-#include "openvic-simulation/utility/LogScope.hpp"
 
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;
@@ -30,19 +29,19 @@ bool GovernmentTypeManager::add_government_type(
 	std::string_view identifier, memory::vector<Ideology const*>&& ideologies, bool elections, bool appoint_ruling_party,
 	Timespan term_duration, std::string_view flag_type
 ) {
-	const LogScope log_scope { fmt::format("government type {}", identifier) };
+	spdlog::scope scope { fmt::format("government type {}", identifier) };
 	if (identifier.empty()) {
-		Logger::error("Invalid government type identifier - empty!");
+		spdlog::error_s("Invalid government type identifier - empty!");
 		return false;
 	}
 
 	if (ideologies.empty()) {
-		Logger::error("No compatible ideologies defined for government type ", identifier);
+		spdlog::error_s("No compatible ideologies defined for government type {}", identifier);
 		return false;
 	}
 
 	if (elections && term_duration < 0) {
-		Logger::error("No or invalid term duration for government type ", identifier);
+		spdlog::error_s("No or invalid term duration for government type {}", identifier);
 		return false;
 	}
 
@@ -61,7 +60,7 @@ bool GovernmentTypeManager::add_government_type(
 
 /* REQUIREMENTS: FS-525, SIM-27 */
 bool GovernmentTypeManager::load_government_types_file(IdeologyManager const& ideology_manager, ast::NodeCPtr root) {
-	const LogScope log_scope { "common/governments.txt" };
+	spdlog::scope scope { "common/governments.txt" };
 	bool ret = expect_dictionary_reserve_length(
 		government_types,
 		[this, &ideology_manager](std::string_view government_type_identifier, ast::NodeCPtr government_type_value) -> bool {
@@ -90,9 +89,9 @@ bool GovernmentTypeManager::load_government_types_file(IdeologyManager const& id
 					}
 					Ideology const* ideology = ideology_manager.get_ideology_by_identifier(key);
 					if (ideology == nullptr) {
-						Logger::error(
-							"When loading government type ", government_type_identifier, ", specified ideology ", key,
-							" is invalid!"
+						spdlog::error_s(
+							"When loading government type {}, specified ideology {} is invalid!",
+							government_type_identifier, key
 						);
 						return false;
 					}
@@ -102,15 +101,15 @@ bool GovernmentTypeManager::load_government_types_file(IdeologyManager const& id
 								ideologies.push_back(ideology);
 								return true;
 							}
-							Logger::error(
-								"Government type ", government_type_identifier, " marked as supporting ideology ",
-								ideology->get_identifier()
+							spdlog::error_s(
+								"Government type {} marked as supporting ideology {}",
+								government_type_identifier, *ideology
 							);
 							return false;
 						}
-						Logger::error(
-							"Government type ", government_type_identifier, " redundantly marked as not supporting ideology ",
-							ideology->get_identifier(), " multiple times"
+						spdlog::error_s(
+							"Government type {} redundantly marked as not supporting ideology {} multiple times",
+							government_type_identifier, *ideology
 						);
 						return false;
 					})(value);

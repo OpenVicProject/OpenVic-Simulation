@@ -32,27 +32,27 @@ bool ModifierManager::_register_modifier_effect(
 	using enum ModifierEffect::target_t;
 
 	if (identifier.empty()) {
-		Logger::error("Invalid modifier effect identifier - empty!");
+		spdlog::error_s("Invalid modifier effect identifier - empty!");
 		return false;
 	}
 
 	if (targets == NO_TARGETS) {
-		Logger::error("Invalid targets for modifier effect \"", identifier, "\" - none!");
+		spdlog::error_s("Invalid targets for modifier effect \"{}\" - none!", identifier);
 		return false;
 	}
 
 	if (!NumberUtils::is_power_of_two(static_cast<uint64_t>(targets))) {
-		Logger::error(
-			"Invalid targets for modifier effect \"", identifier, "\" - ", ModifierEffect::target_to_string(targets),
-			" (can only contain one target)"
+		spdlog::error_s(
+			"Invalid targets for modifier effect \"{}\" - {} (can only contain one target)",
+			identifier, ModifierEffect::target_to_string(targets)
 		);
 		return false;
 	}
 
 	if (effect_cache != nullptr) {
-		Logger::error(
-			"Cache variable for modifier effect \"", identifier, "\" is already filled with modifier effect \"",
-			effect_cache->get_identifier(), "\""
+		spdlog::error_s(
+			"Cache variable for modifier effect \"{}\" is already filled with modifier effect \"{}\"",
+			identifier, *effect_cache
 		);
 		return false;
 	}
@@ -647,7 +647,7 @@ bool ModifierManager::register_complex_modifier(const std::string_view identifie
 	if (complex_modifiers.emplace(identifier).second) {
 		return true;
 	} else {
-		Logger::error("Duplicate complex modifier: ", identifier);
+		spdlog::error_s("Duplicate complex modifier: {}", identifier);
 		return false;
 	}
 }
@@ -667,7 +667,7 @@ bool ModifierManager::add_event_modifier(
 ) {
 
 	if (identifier.empty()) {
-		Logger::error("Invalid event modifier effect identifier - empty!");
+		spdlog::error_s("Invalid event modifier effect identifier - empty!");
 		return false;
 	}
 
@@ -712,7 +712,7 @@ bool ModifierManager::add_triggered_modifier(
 	using enum Modifier::modifier_type_t;
 
 	if (identifier.empty()) {
-		Logger::error("Invalid triggered modifier effect identifier - empty!");
+		spdlog::error_s("Invalid triggered modifier effect identifier - empty!");
 		return false;
 	}
 
@@ -771,7 +771,7 @@ bool ModifierManager::_add_flattened_modifier_cb(
 	if (effect != nullptr) {
 		return _add_modifier_cb(modifier_value, effect, value);
 	} else {
-		Logger::error("Could not find flattened modifier: ", flat_identifier);
+		spdlog::error_s("Could not find flattened modifier: {}", flat_identifier);
 		return false;
 	}
 };
@@ -782,7 +782,7 @@ bool ModifierManager::_add_modifier_cb(
 	const ast::NodeCPtr value
 ) const {
 	if (effect->has_no_effect()) {
-		Logger::warning("This modifier does nothing: ", effect->get_identifier());
+		spdlog::warn_s("This modifier does nothing: {}", *effect);
 	}
 	return expect_fixed_point(map_callback(modifier_value.values, effect))(value);
 }

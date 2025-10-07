@@ -64,14 +64,13 @@ namespace OpenVic {
 			static_assert(HasGetIndex<KeyType>);
 			const size_t index = key.get_index();
 			if (index < min_index || index > max_index) {
-				Logger::error(
-					"DEVELOPER FATAL: OpenVic::IndexedFlatMap<",
-					utility::type_name<KeyType>(),",",
+				spdlog::error_s(
+					"DEVELOPER: OpenVic::IndexedFlatMap<{},{}> attempted to access key with index {} which is outside the map's defined range [{}, {}].",
+					utility::type_name<KeyType>(),
 					utility::type_name<ValueType>(),
-					"> attempted to access key with index ", std::to_string(index),
-					" which is outside the map's defined range [",
-					std::to_string(min_index), ", ",
-					std::to_string(max_index), "].\n"
+					index,
+					min_index,
+					max_index
 				);
 				assert(index >= min_index && index <= max_index);
 				return 0;
@@ -88,11 +87,9 @@ namespace OpenVic {
 		static bool validate_new_keys(keys_span_type new_keys) {
 			static_assert(HasGetIndex<KeyType>);
 			if (new_keys.empty()) {
-				Logger::warning(
-					"DEVELOPER WARNING: OpenVic::IndexedFlatMap<",
-					utility::type_name<KeyType>(),",",
-					utility::type_name<ValueType>(),
-					"> should not be constructed with empty key span."
+				spdlog::warn_s(
+					"DEVELOPER: OpenVic::IndexedFlatMap<{}, {}> should not be constructed with empty key span.",
+					utility::type_name<KeyType>(), utility::type_name<ValueType>()
 				);
 				return false;
 			}
@@ -102,13 +99,12 @@ namespace OpenVic {
 			const size_t expected_capacity = max_index - min_index + 1;
 
 			if (new_keys.size() != expected_capacity) {
-				Logger::error(
-					"DEVELOPER FATAL: OpenVic::IndexedFlatMap<",
-					utility::type_name<KeyType>(),",",
+				spdlog::error_s(
+					"DEVELOPER: OpenVic::IndexedFlatMap<{},{}> must be constructed with a continuous span of keys with incremental indices. Expected capacity {} but got {} keys.",
+					utility::type_name<KeyType>(),
 					utility::type_name<ValueType>(),
-					"> must be constructed with a continuous span of keys with incremental indices.\n",
-					"Expected capacity ", std::to_string(expected_capacity),
-					" but got ", std::to_string(new_keys.size()), " keys."
+					expected_capacity,
+					new_keys.size()
 				);
 				assert(new_keys.size() == expected_capacity);
 				return false;
@@ -116,13 +112,14 @@ namespace OpenVic {
 
 			for (size_t i = 0; i < new_keys.size(); ++i) {
 				if (new_keys[i].get_index() != min_index + i) {
-					Logger::error(
-						"DEVELOPER FATAL: OpenVic::IndexedFlatMap<",
-						utility::type_name<KeyType>(),",",
+					spdlog::error_s(
+						"DEVELOPER: OpenVic::IndexedFlatMap<{},{}> must be constructed with a continuous span of keys with incremental indices. "
+						"Expected index {} but got {} at position {}.",
+						utility::type_name<KeyType>(),
 						utility::type_name<ValueType>(),
-						"> must be constructed with a continuous span of keys with incremental indices.\n",
-						"Expected index ", std::to_string(min_index + i),
-						" but got ", std::to_string(new_keys[i].get_index()), " at position ", std::to_string(i), "."
+						min_index + i,
+						new_keys[i].get_index(),
+						i
 					);
 					assert(new_keys[i].get_index() == min_index + i);
 					return false;
@@ -163,14 +160,15 @@ namespace OpenVic {
 		bool check_subset_span_match(IndexedFlatMap<KeyType,OtherValueType> const& other) const {
 			// Check if 'other's index range is contained within 'this's index range
 			if (!(other.get_min_index() >= min_index && other.get_max_index() <= max_index)) {
-				Logger::error(
-					"DEVELOPER FATAL: OpenVic::IndexedFlatMap<",
-					utility::type_name<KeyType>(),",",
+				spdlog::error_s(
+					"DEVELOPER: OpenVic::IndexedFlatMap<{},{}> subset operation requires the right-hand map's index range "
+					"({}-{}) to be a subset of the left-hand map's index range ({}-{}).",
+					utility::type_name<KeyType>(),
 					utility::type_name<ValueType>(),
-					"> subset operation requires the right-hand map's index range (",
-					std::to_string(other.get_min_index()), "-", std::to_string(other.get_max_index()),
-					") to be a subset of the left-hand map's index range (",
-					std::to_string(min_index), "-", std::to_string(max_index), ")."
+					other.get_min_index(),
+					other.get_max_index(),
+					min_index,
+					max_index
 				);
 				assert(other.get_min_index() >= min_index && other.get_max_index() <= max_index);
 				return false;
@@ -469,14 +467,13 @@ namespace OpenVic {
 
 		constexpr ValueType& at_index(const size_t index) {
 			if (index < min_index || index > max_index) {
-				Logger::error(
-					"DEVELOPER FATAL: OpenVic::IndexedFlatMap<",
-					utility::type_name<KeyType>(),",",
+				spdlog::error_s(
+					"DEVELOPER: OpenVic::IndexedFlatMap<{},{}> attempted to access index {} which is outside the map's defined range [{}, {}].",
+					utility::type_name<KeyType>(),
 					utility::type_name<ValueType>(),
-					"> attempted to access index ", std::to_string(index),
-					" which is outside the map's defined range [",
-					std::to_string(min_index), ", ",
-					std::to_string(max_index), "].\n"
+					index,
+					min_index,
+					max_index
 				);
 				assert(index >= min_index && index <= max_index);
 			}
@@ -485,14 +482,13 @@ namespace OpenVic {
 
 		constexpr ValueType const& at_index(const size_t index) const {
 			if (index < min_index || index > max_index) {
-				Logger::error(
-					"DEVELOPER FATAL: OpenVic::IndexedFlatMap<",
-					utility::type_name<KeyType>(),",",
+				spdlog::error_s(
+					"DEVELOPER: OpenVic::IndexedFlatMap<{},{}> attempted to access index {} which is outside the map's defined range [{}, {}].",
+					utility::type_name<KeyType>(),
 					utility::type_name<ValueType>(),
-					"> attempted to access index ", std::to_string(index),
-					" which is outside the map's defined range [",
-					std::to_string(min_index), ", ",
-					std::to_string(max_index), "].\n"
+					index,
+					min_index,
+					max_index
 				);
 				assert(index >= min_index && index <= max_index);
 			}
@@ -677,11 +673,11 @@ namespace OpenVic {
 				// Add a basic division by zero check for each element
 				if (other.contains(key)) {
 					if (other.at(key) == static_cast<ValueType>(0)) {
-						Logger::error(
-							"DEVELOPER FATAL: OpenVic::IndexedFlatMap<",
-							utility::type_name<KeyType>(),",",
+						spdlog::error_s(
+							"DEVELOPER: OpenVic::IndexedFlatMap<{},{}> division by zero detected at key index {}.",
+							utility::type_name<KeyType>(),
 							utility::type_name<ValueType>(),
-							"> division by zero detected at key index ", std::to_string(key.get_index()), "."
+							key.get_index()
 						);
 						assert(other.at(key) != static_cast<ValueType>(0));
 						//continue and let it throw
@@ -754,11 +750,10 @@ namespace OpenVic {
 		requires Divisible<ValueType,ScalarType,ValueType> {
 			static_assert(HasGetIndex<KeyType>);
 			if (scalar == static_cast<ValueType>(0)) {
-				Logger::error(
-					"DEVELOPER FATAL: OpenVic::IndexedFlatMap<",
-					utility::type_name<KeyType>(),",",
-					utility::type_name<ValueType>(),
-					"> division by zero for scalar operation."
+				spdlog::error_s(
+					"DEVELOPER: OpenVic::IndexedFlatMap<{},{}> division by zero for scalar operation.",
+					utility::type_name<KeyType>(),
+					utility::type_name<ValueType>()
 				);
 				assert(scalar != static_cast<ValueType>(0));
 				//continue and let it throw
@@ -821,11 +816,11 @@ namespace OpenVic {
 
 			for (KeyType const& key : other.get_keys()) {
 				if (other.at(key) == static_cast<ValueType>(0)) {
-					Logger::error(
-						"DEVELOPER FATAL: OpenVic::IndexedFlatMap<",
-						utility::type_name<KeyType>(),",",
+					spdlog::error_s(
+						"DEVELOPER: OpenVic::IndexedFlatMap<{},{}> compound division by zero detected at key index {}.",
+						utility::type_name<KeyType>(),
 						utility::type_name<ValueType>(),
-						"> compound division by zero detected at key index ", std::to_string(key.get_index()), "."
+						key.get_index()
 					);
 					assert(other.at(key) != static_cast<ValueType>(0));
 					//continue and let it throw
@@ -893,11 +888,10 @@ namespace OpenVic {
 		IndexedFlatMap& operator/=(ScalarType const& scalar)
 		requires DivideAssignable<ValueType,ScalarType> {
 			if (scalar == static_cast<ValueType>(0)) {
-				Logger::error(
-					"DEVELOPER FATAL: OpenVic::IndexedFlatMap<",
-					utility::type_name<KeyType>(),",",
-					utility::type_name<ValueType>(),
-					"> compound division by zero for scalar operation."
+				spdlog::error_s(
+					"DEVELOPER: OpenVic::IndexedFlatMap<{},{}> compound division by zero for scalar operation.",
+					utility::type_name<KeyType>(),
+					utility::type_name<ValueType>()
 				);
 				assert(scalar != static_cast<ValueType>(0));
 				//continue and let it throw
@@ -928,11 +922,10 @@ namespace OpenVic {
 		) requires MulAddAssignable<ValueType,ValueTypeA,ValueTypeB> {
 			static_assert(HasGetIndex<KeyType>);
 			if (a.get_min_index() != b.get_min_index() || a.get_max_index() != b.get_max_index()) {
-				Logger::error(
-					"DEVELOPER FATAL: OpenVic::IndexedFlatMap<",
-					utility::type_name<KeyType>(),",",
-					utility::type_name<ValueType>(),
-					"> attempted mul_add where a and b don't have the same keys. This is not implemented."
+				spdlog::error_s(
+					"DEVELOPER: OpenVic::IndexedFlatMap<{},{}> attempted mul_add where a and b don't have the same keys. This is not implemented.",
+					utility::type_name<KeyType>(),
+					utility::type_name<ValueType>()
 				);
 				assert(a.get_min_index() == b.get_min_index() && a.get_max_index() == b.get_max_index());
 			}
@@ -1160,11 +1153,11 @@ namespace OpenVic {
 		static_assert(HasGetIndex<KeyType>);
 		return IndexedFlatMap<KeyType, ValueType>(map.get_keys(), [&](KeyType const& key) {
 			if (map.at(key) == static_cast<ValueType>(0)) {
-				Logger::error(
-					"DEVELOPER FATAL: OpenVic::IndexedFlatMap<",
-					utility::type_name<KeyType>(),",",
+				spdlog::error_s(
+					"DEVELOPER: OpenVic::IndexedFlatMap<{},{}> scalar division by zero detected at key index {}.",
+					utility::type_name<KeyType>(),
 					utility::type_name<ValueType>(),
-					"> scalar division by zero detected at key index ", std::to_string(key.get_index()), "."
+					key.get_index()
 				);
 				assert(map.at(key) != static_cast<ValueType>(0));
 				//continue and let it throw

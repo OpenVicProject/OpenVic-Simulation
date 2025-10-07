@@ -2,6 +2,8 @@
 
 #include <plf_colony.h>
 
+#include <fmt/base.h>
+
 #include "openvic-simulation/pop/PopsAggregate.hpp"
 #include "openvic-simulation/types/ColonyStatus.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
@@ -114,5 +116,11 @@ namespace OpenVic {
 		void update_gamestate();
 	};
 }
+
+template<>
+struct fmt::formatter<OpenVic::State> : fmt::formatter<string_view> {
+	format_context::iterator format(OpenVic::State const& state, fmt::format_context& ctx) const;
+};
+
 #undef IndexedFlatMap_PROPERTY
 #undef IndexedFlatMap_PROPERTY_ACCESS

@@ -95,17 +95,20 @@ void UnitTypeManager::lock_all_unit_types() {
 
 static bool _check_shared_parameters(std::string_view identifier, UnitType::unit_type_args_t const& unit_args) {
 	if (identifier.empty()) {
-		Logger::error("Invalid unit identifier - empty!");
+		spdlog::error_s("Invalid unit identifier - empty!");
 		return false;
 	}
 
 	if (unit_args.icon < 0) {
-		Logger::error("Invalid icon for unit ", identifier, " - ", unit_args.icon, " (must be >= 0)");
+		spdlog::error_s(
+			"Invalid icon for unit {} - {} (must be >= 0)",
+			identifier, unit_args.icon
+		);
 		return false;
 	}
 
 	if (unit_args.unit_category == INVALID_UNIT_CATEGORY) {
-		Logger::error("Invalid unit type for unit ", identifier, "!");
+		spdlog::error_s("Invalid unit type for unit {}!", identifier);
 		return false;
 	}
 
@@ -124,7 +127,7 @@ bool UnitTypeManager::add_regiment_type(
 	// TODO check that sprite_override, sprite_mount, and sprite_mount_attach_node exist
 
 	if (ship_types.has_identifier(identifier)) {
-		Logger::error("Land unit ", identifier, " already exists as a naval unit!");
+		spdlog::error_s("Land unit {} already exists as a naval unit!", identifier);
 		return false;
 	}
 
@@ -148,16 +151,16 @@ bool UnitTypeManager::add_ship_type(
 	}
 
 	if (ship_type_args.naval_icon <= 0) {
-		Logger::error("Invalid naval icon identifier - ", ship_type_args.naval_icon, " (must be positive)");
+		spdlog::error_s("Invalid naval icon identifier - {} (must be positive)", ship_type_args.naval_icon);
 		return false;
 	}
 
 	if (ship_type_args.supply_consumption_score <= 0) {
-		Logger::warning("Supply consumption score for ", identifier, " is not positive!");
+		spdlog::warn_s("Supply consumption score for {} is not positive!", identifier);
 	}
 
 	if (regiment_types.has_identifier(identifier)) {
-		Logger::error("Naval unit ", identifier, " already exists as a land unit!");
+		spdlog::error_s("Naval unit {} already exists as a land unit!", identifier);
 		return false;
 	}
 
@@ -180,7 +183,7 @@ bool UnitTypeManager::load_unit_type_file(
 	using namespace std::string_view_literals;
 	auto type_symbol = parser.find_intern("type"sv);
 	if (!type_symbol) {
-		Logger::error("type could not be interned.");
+		spdlog::error_s("type could not be interned.");
 	}
 
 	return expect_dictionary([this, &good_definition_manager, &terrain_type_manager, &modifier_manager, &type_symbol](
@@ -194,7 +197,7 @@ bool UnitTypeManager::load_unit_type_file(
 		/* We shouldn't just check ret as it can be false even if branch was successfully parsed,
 		 * but more than one instance of the key was found. */
 		if (branch != LAND && branch != NAVAL) {
-			Logger::error("Failed to read branch for unit: ", key);
+			spdlog::error_s("Failed to read branch for unit: {}", key);
 			return false;
 		}
 
@@ -315,7 +318,7 @@ bool UnitTypeManager::load_unit_type_file(
 		}
 		default:
 			/* Unreachable - an earlier check terminates the function if branch isn't LAND or NAVAL. */
-			Logger::error("Unknown branch for unit ", key, ": ", static_cast<int>(branch));
+			spdlog::error_s("Unknown branch for unit {}: {}", key, static_cast<int>(branch));
 			return false;
 		}
 	})(parser.get_file_node());
