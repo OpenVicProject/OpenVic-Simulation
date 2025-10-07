@@ -11,6 +11,10 @@ SimulationClock::SimulationClock(
 	reset();
 }
 
+SimulationClock::time_point_t SimulationClock::get_now() const {
+	return clock_t::now();
+}
+
 void SimulationClock::set_paused(bool new_paused) {
 	if (paused != new_paused) {
 		toggle_paused();
@@ -46,11 +50,9 @@ bool SimulationClock::can_decrease_simulation_speed() const {
 
 void SimulationClock::conditionally_advance_game() {
 	if (!paused) {
-		const time_point_t current_time = std::chrono::high_resolution_clock::now();
-		const std::chrono::milliseconds time_since_last_tick =
-			std::chrono::duration_cast<std::chrono::milliseconds>(current_time - last_tick_time);
-		if (time_since_last_tick >= GAME_SPEEDS[current_speed]) {
-			last_tick_time = current_time;
+		const time_point_t current_time = get_now();
+		if (next_tick_time <= current_time) {
+			next_tick_time = current_time + GAME_SPEEDS[current_speed];
 			tick_function();
 		}
 	}
@@ -58,7 +60,7 @@ void SimulationClock::conditionally_advance_game() {
 }
 
 void SimulationClock::force_advance_game() {
-	last_tick_time = std::chrono::high_resolution_clock::now();
+	next_tick_time = get_now() + GAME_SPEEDS[current_speed];
 	tick_function();
 	update_function();
 }
@@ -66,5 +68,5 @@ void SimulationClock::force_advance_game() {
 void SimulationClock::reset() {
 	paused = true;
 	current_speed = 0;
-	last_tick_time = std::chrono::high_resolution_clock::now();
+	next_tick_time = get_now();
 }

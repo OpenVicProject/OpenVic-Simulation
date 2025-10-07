@@ -24,9 +24,12 @@
 
 using namespace OpenVic;
 
-inline static void print_bytes(std::string_view prefix, const std::source_location& location = std::source_location::current()) {
+template<typename Prefix>
+inline static void print_memory_usage(
+	Prefix const& prefix, std::source_location const& location = std::source_location::current()
+) {
 #ifdef DEBUG_ENABLED // memory tracking will return 0 without DEBUG_ENABLED
-	Logger::info<std::string_view&, const char(&)[16], uint64_t&&, const char(&)[7]>(
+	Logger::info<Prefix const&, const char(&)[16], uint64_t&&, const char(&)[7]>(
 		prefix, " Memory Usage: ", OpenVic::utility::MemoryTracker::get_memory_usage(), " Bytes", location
 	);
 #endif
@@ -76,8 +79,12 @@ static void print_rgo(ProvinceInstance const& province) {
 	}
 }
 
+using testing_clock_t = std::chrono::high_resolution_clock;
+using test_time_point_t = testing_clock_t::time_point;
+using test_duration_t = testing_clock_t::duration;
+
 template<size_t TestCount>
-static std::chrono::nanoseconds run_pathing_test(AStarPathing& pathing) {
+static test_duration_t run_pathing_test(AStarPathing& pathing) {
 	PointMap const& points = pathing.get_point_map();
 
 	thread_local std::random_device rd;
@@ -96,11 +103,11 @@ static std::chrono::nanoseconds run_pathing_test(AStarPathing& pathing) {
 		from_to_tests[index] = { from, to };
 	}
 
-	auto start_time = std::chrono::high_resolution_clock::now();
+	const test_time_point_t start_time = testing_clock_t::now();
 	for (auto [index, pair] : from_to_tests | ranges::views::enumerate) {
 		test_results[index] = pathing.get_id_path(pair.first.key(), pair.second.key());
 	}
-	auto end_time = std::chrono::high_resolution_clock::now();
+	const test_time_point_t end_time = testing_clock_t::now();
 
 	for (auto [index, test] : test_results | ranges::views::enumerate) {
 		Logger::info("-Start Test ", index + 1, "-");
@@ -151,7 +158,7 @@ static bool run_headless(fs::path const& root, memory::vector<memory::string>& m
 		}
 	);
 
-	print_bytes("Definition Setup");
+	print_memory_usage("Definition Setup");
 
 	if (run_tests) {
 		Testing testing { game_manager.get_definition_manager() };
@@ -166,7 +173,7 @@ static bool run_headless(fs::path const& root, memory::vector<memory::string>& m
 		game_manager.get_definition_manager().get_history_manager().get_bookmark_manager().get_bookmark_by_index(0)
 	);
 
-	print_bytes("Instance Setup");
+	print_memory_usage("Instance Setup");
 
 	Logger::info("===== Starting game session... =====");
 	ret &= game_manager.start_game_session();
@@ -174,7 +181,7 @@ static bool run_headless(fs::path const& root, memory::vector<memory::string>& m
 	// This triggers a gamestate update
 	ret &= game_manager.update_clock();
 
-	print_bytes("Game Session Post-Start");
+	print_memory_usage("Game Session Post-Start");
 
 	// TODO - REMOVE TEST CODE
 	Logger::info("===== Ranking system test... =====");
@@ -219,25 +226,60 @@ static bool run_headless(fs::path const& root, memory::vector<memory::string>& m
 	if (ret) {
 		static constexpr size_t TESTS = 10;
 
+		using test_time_units_t = std::chrono::milliseconds;
+
 		Logger::info("===== Land Pathfinding test... =====");
-		std::chrono::nanoseconds ns = run_pathing_test<TESTS>(game_manager.get_instance_manager()->get_map_instance().get_land_pathing());
-		Logger::info("Ran ", TESTS, " land pathing tests in ", ns);
+		test_duration_t duration = std::chrono::duration_cast<test_time_units_t>(run_pathing_test<TESTS>(
+			game_manager.get_instance_manager()->get_map_instance().get_land_pathing()
+		));
+		Logger::info("Ran ", TESTS, " land pathing tests in ", duration);
 
 		Logger::info("===== Sea Pathfinding test... =====");
-		ns = run_pathing_test<TESTS>(game_manager.get_instance_manager()->get_map_instance().get_sea_pathing());
-		Logger::info("Ran ", TESTS, " sea pathing tests in ", ns);
+		duration = std::chrono::duration_cast<test_time_units_t>(run_pathing_test<TESTS>(
+			game_manager.get_instance_manager()->get_map_instance().get_sea_pathing()
+		));
+		Logger::info("Ran ", TESTS, " sea pathing tests in ", duration);
 	}
 
 	if (ret) {
+		static constexpr size_t TICK_COUNT = 10;
+
 		Logger::info("===== Game Tick test... =====");
 		size_t ticks_passed = 0;
-		auto start_time = std::chrono::high_resolution_clock::now();
-		while (ticks_passed++ < 10) {
+		test_duration_t min_tick_duration = test_duration_t::max(), max_tick_duration = test_duration_t::min(),
+			total_tick_duration;
+		const test_time_point_t start_time = testing_clock_t::now();
+		while (++ticks_passed < TICK_COUNT) {
+			const test_time_point_t tick_start = testing_clock_t::now();
 			game_manager.get_instance_manager()->force_tick_and_update();
-			print_bytes("Tick Finished");
+			const test_time_point_t tick_end = testing_clock_t::now();
+
+			const test_duration_t tick_duration = tick_end - tick_start;
+
+			min_tick_duration = std::min(min_tick_duration, tick_duration);
+			max_tick_duration = std::max(max_tick_duration, tick_duration);
+
+			total_tick_duration += tick_duration;
+
+			print_memory_usage(memory::fmt::format("Tick ", ticks_passed, " finished"));
 		}
-		auto end_time = std::chrono::high_resolution_clock::now();
-		Logger::info("Ran ", --ticks_passed, " ticks in ", end_time - start_time);
+		const test_time_point_t end_time = testing_clock_t::now();
+		const test_duration_t duration = end_time - start_time;
+
+		if (ticks_passed != 0 && duration != test_duration_t::zero()) {
+			const test_duration_t tick_tps = total_tick_duration / ticks_passed;
+			const test_duration_t total_tps = duration / ticks_passed;
+			Logger::info(
+				"Ran ", ticks_passed, " / ", TICK_COUNT, " ticks, total time ", duration, " at, ", total_tps,
+				" per tick, tick time only ", total_tick_duration, " at ", tick_tps,  " per tick. Tick lengths ranged from ",
+				min_tick_duration, " to ", max_tick_duration, "."
+			);
+		} else {
+			Logger::error(
+				"No ticks passed (", ticks_passed, ", expected ", TICK_COUNT, ") or zero duration measured (", duration, ")!"
+			);
+			ret = false;
+		}
 	}
 
 	Logger::info("===== Ending game session... =====");
@@ -266,7 +308,8 @@ int main(int argc, char const* argv[]) {
 	 * message and the help text are displayed, along with returning false to signify the program should exit.
 	 */
 	const auto _read = [&root, &argn, argc, argv, program_name](
-		std::string_view command, std::string_view path_use, auto path_transform) -> bool {
+		std::string_view command, std::string_view path_use, std::invocable<fs::path> auto path_transform
+	) -> bool {
 		if (root.empty()) {
 			if (++argn < argc) {
 				char const* path = argv[argn];
