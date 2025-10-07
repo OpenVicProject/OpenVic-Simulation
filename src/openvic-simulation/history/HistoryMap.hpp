@@ -72,15 +72,15 @@ namespace OpenVic {
 			const Date sub_date { Date::from_string(key, &result) };
 			if (result.ec == std::errc{}) {
 				if (sub_date < date) {
-					Logger::warning("History entry ", sub_date, " defined before parent entry date ", date);
+					spdlog::warn_s("History entry {} defined before parent entry date {}", sub_date, date);
 				}
 				if (sub_date == date) {
-					Logger::warning("History entry ", sub_date, " defined with same date as parent entry");
+					spdlog::warn_s("History entry {} defined with same date as parent entry", sub_date);
 				}
 				if (_try_load_history_entry(definition_manager, args..., sub_date, value)) {
 					return true;
 				} else {
-					Logger::error("Failed to load history entry at date ", sub_date);
+					spdlog::error_s("Failed to load history entry at date {}", sub_date);
 					return false;
 				}
 			}
@@ -92,7 +92,7 @@ namespace OpenVic {
 		entry_type* _get_or_make_entry(DefinitionManager const& definition_manager, Date date) {
 			const Date end_date = _HistoryMapHelperFuncs::_get_end_date(definition_manager);
 			if (date > end_date) {
-				Logger::error("History entry ", date, " defined after end date ", end_date);
+				spdlog::error_s("History entry {} defined after end date {}", date, end_date);
 				return nullptr;
 			}
 			typename decltype(entries)::iterator it = entries.find(date);
@@ -101,7 +101,7 @@ namespace OpenVic {
 				if (result.second) {
 					it = result.first;
 				} else {
-					Logger::error("Failed to create history entry at date ", date);
+					spdlog::error_s("Failed to create history entry at date {}", date);
 					return nullptr;
 				}
 			}
