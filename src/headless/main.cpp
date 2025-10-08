@@ -3,6 +3,9 @@
 #include <random>
 #include <string>
 
+#include <fmt/base.h>
+#include <fmt/chrono.h>
+
 #include <range/v3/view/enumerate.hpp>
 
 #include <openvic-simulation/GameManager.hpp>
@@ -29,15 +32,14 @@ inline static void print_bytes(std::string_view prefix, const std::source_locati
 #endif
 }
 
-static void print_help(std::ostream& stream, char const* program_name) {
-	stream
-		<< "Usage: " << program_name << " [-h] [-t] [-b <path>] [path]+\n"
-		<< "    -h : Print this help message and exit the program.\n"
-		<< "    -t : Run tests after loading defines.\n"
-		<< "    -b : Use the following path as the base directory (instead of searching for one).\n"
-		<< "    -s : Use the following path as a hint to search for a base directory.\n"
-		<< "Any following paths are read as mods (/path/to/my/MODNAME.mod), with priority starting at one above the base directory.\n"
-		<< "(Paths with spaces need to be enclosed in \"quotes\").\n";
+static void print_help(FILE* file, char const* program_name) {
+	fmt::println(file, "Usage: {} [-h] [-t] [-b <path>] [path]+", program_name);
+	fmt::println(file, "    -h : Print this help message and exit the program.");
+	fmt::println(file, "    -t : Run tests after loading defines.");
+	fmt::println(file, "    -b : Use the following path as the base directory (instead of searching for one).");
+	fmt::println(file, "    -s : Use the following path as a hint to search for a base directory.");
+	fmt::println(file, "Any following paths are read as mods (/path/to/my/MODNAME.mod), with priority starting at one above the base directory.");
+	fmt::println(file, "(Paths with spaces need to be enclosed in \"quotes\").");
 }
 
 static void print_rgo(ProvinceInstance const& province) {
@@ -269,23 +271,34 @@ int main(int argc, char const* argv[]) {
 				if (!root.empty()) {
 					return true;
 				} else {
-					std::cerr << "Empty path after giving \"" << path << "\" to " << path_use
-						<< " command line argument \"" << command << "\"." << std::endl;
+					fmt::println(
+						stderr,
+						"Empty path after giving \"{}\" to {} command line argument \"{}\".",
+						path, path_use, command
+					);
 				}
 			} else {
-				std::cerr << "Missing path after " << path_use << " command line argument \"" << command << "\"." << std::endl;
+				fmt::println(
+					stderr,
+					"Missing path after {} command line argument \"{}\".",
+					path_use, command
+				);
 			}
 		} else {
-			std::cerr << "Duplicate " << path_use << " command line argument \"-b\"." << std::endl;
+			fmt::println(
+				stderr,
+				"Duplicate {} command line argument \"-b\".",
+				path_use
+			);
 		}
-		print_help(std::cerr, program_name);
+		print_help(stderr, program_name);
 		return false;
 	};
 
 	while (++argn < argc) {
 		char const* arg = argv[argn];
 		if (strcmp(arg, "-h") == 0) {
-			print_help(std::cout, program_name);
+			print_help(stdout, program_name);
 			return 0;
 		} else if (strcmp(arg, "-t") == 0) {
 			run_tests = true;
@@ -304,8 +317,8 @@ int main(int argc, char const* argv[]) {
 	if (root.empty()) {
 		root = Dataloader::search_for_game_path();
 		if (root.empty()) {
-			std::cerr << "Search for base directory path failed!" << std::endl;
-			print_help(std::cerr, program_name);
+			fmt::println(stderr, "Search for base directory path failed!");
+			print_help(stderr, program_name);
 			return -1;
 		}
 	}
