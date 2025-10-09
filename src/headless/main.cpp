@@ -240,6 +240,9 @@ static bool run_headless(fs::path const& root, memory::vector<memory::string>& m
 		Logger::info("Ran ", --ticks_passed, " ticks in ", end_time - start_time);
 	}
 
+	Logger::info("===== Ending game session... =====");
+	ret &= game_manager.end_game_session();
+
 	Logger::info("Max Memory Usage: ", OpenVic::utility::MemoryTracker::get_max_memory_usage(), " Bytes");
 
 	return ret;

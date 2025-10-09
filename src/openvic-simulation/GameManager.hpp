@@ -30,6 +30,7 @@ namespace OpenVic {
 		GameManager(
 			InstanceManager::gamestate_updated_func_t new_gamestate_updated_callback
 		);
+		~GameManager();
 
 		inline constexpr InstanceManager* get_instance_manager() {
 			return instance_manager ? &*instance_manager : nullptr;
@@ -56,8 +57,12 @@ namespace OpenVic {
 		bool load_definitions(Dataloader::localisation_callback_t localisation_callback);
 
 		bool setup_instance(Bookmark const* bookmark);
+		bool is_game_instance_setup() const;
+		bool is_bookmark_loaded() const;
 
 		bool start_game_session();
+		bool end_game_session();
+		bool is_game_session_active() const;
 
 		bool update_clock();
 
