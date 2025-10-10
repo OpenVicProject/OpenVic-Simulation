@@ -70,6 +70,7 @@ CountryInstance::CountryInstance(
 	building_type_unlock_levels { building_type_keys },
 
 	/* Budget */
+	balance_history{30, 0},
 	taxable_income_by_pop_type { pop_type_keys },
 	effective_tax_rate_by_strata {
 		strata_keys,
@@ -1835,7 +1836,7 @@ void CountryInstance::country_tick_before_map(InstanceManager& instance_manager)
 	// + industrial subsidies
 	// + loan interest
 
-	fixed_point_t available_funds = cash_stockpile;
+	fixed_point_t available_funds = cache_stockpile_start_of_tick = cash_stockpile;
 	fixed_point_t actual_import_subsidies;
 	const fixed_point_t projected_administration_spending_copy = projected_administration_spending.get_untracked();
 	const fixed_point_t projected_education_spending_copy = projected_education_spending.get_untracked();
@@ -1979,6 +1980,8 @@ void CountryInstance::country_tick_after_map(InstanceManager& instance_manager) 
 	const fixed_point_t gold_income_value = country_defines.get_gold_to_cash_rate() * total_gold_production;;
 	gold_income.set(gold_income_value);
 	cash_stockpile += gold_income_value;
+	const fixed_point_t yesterdays_balance = cash_stockpile - cache_stockpile_start_of_tick;
+	balance_history.push_back(yesterdays_balance);
 }
 
 CountryInstance::good_data_t::good_data_t()
