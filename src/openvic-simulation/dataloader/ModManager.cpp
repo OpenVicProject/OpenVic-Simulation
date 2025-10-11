@@ -46,7 +46,7 @@ bool ModManager::load_mod_file(ast::NodeCPtr root) {
 		return true;
 	}
 
-	Logger::info("Loaded mod descriptor for \"", identifier, "\"");
+	SPDLOG_INFO("Loaded mod descriptor for \"{}\"", identifier);
 	mods.emplace_item(
 		identifier,
 		identifier, path, user_dir, std::move(replace_paths), std::move(dependencies)
@@ -60,7 +60,7 @@ void ModManager::set_loaded_mods(memory::vector<Mod const*>&& new_loaded_mods) {
 	loaded_mods = std::move(new_loaded_mods);
 	mods_loaded = true;
 	for (Mod const* mod : loaded_mods) {
-		Logger::info("Loading mod \"", mod->get_identifier(), "\" at path ", mod->get_dataloader_root_path());
+		SPDLOG_INFO("Loading mod \"{}\" at path {}", mod->get_identifier(), mod->get_dataloader_root_path());
 	}
 }
 

@@ -15,12 +15,12 @@ bool Period::is_date_in_period(Date date) const {
 
 bool Period::try_set_end(Date date) {
 	if (end_date.has_value()) {
-		Logger::error("Period already has end date ", end_date.value());
+		spdlog::error_s("Period already has end date {}", end_date.value());
 		return false;
 	}
 
 	if (date < start_date) {
-		Logger::error("Proposed end date ", date, " is before start date ", start_date);
+		spdlog::error_s("Proposed end date {} is before start date {}", date, start_date);
 		return false;
 	}
 

@@ -191,7 +191,7 @@ bool StateManager::generate_states(
 		}
 	}
 
-	Logger::info("Generated ", state_count, " states across ", state_sets.size(), " state sets.");
+	SPDLOG_INFO("Generated {} states across {} state sets.", state_count, state_sets.size());
 
 	return ret;
 }
