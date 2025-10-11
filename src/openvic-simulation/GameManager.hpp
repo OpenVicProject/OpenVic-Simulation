@@ -24,8 +24,6 @@ namespace OpenVic {
 		bool PROPERTY_CUSTOM_PREFIX(definitions_loaded, are);
 		bool PROPERTY_CUSTOM_PREFIX(mod_descriptors_loaded, are);
 
-		bool _get_mod_dependencies(Mod const* mod, memory::vector<Mod const*>& load_list);
-
 	public:
 		GameManager(
 			InstanceManager::gamestate_updated_func_t new_gamestate_updated_callback

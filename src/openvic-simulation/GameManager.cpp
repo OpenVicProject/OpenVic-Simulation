@@ -1,6 +1,5 @@
 #include "GameManager.hpp"
 
-#include <cstddef>
 #include <string_view>
 
 #include "openvic-simulation/dataloader/Dataloader.hpp"
@@ -38,35 +37,6 @@ bool GameManager::load_mod_descriptors() {
 	return true;
 }
 
-bool GameManager::_get_mod_dependencies(Mod const* mod, memory::vector<Mod const*>& dep_list) {
-	static constexpr size_t MAX_RECURSE = 16;
-	size_t current_recurse = 0;
-
-	static auto dep_cycle = [this, &current_recurse](auto self, Mod const* mod, memory::vector<Mod const*>& dep_list) -> bool {
-		bool ret = true;
-		for (std::string_view dep_identifier : mod->get_dependencies()) {
-			if (!mod_manager.has_mod_identifier(dep_identifier)) {
-				Logger::error("Mod \"", mod->get_identifier(), "\" has unmet dependency \"", dep_identifier, "\" and cannot be loaded!");
-				return false;
-			}
-			Mod const* dep = mod_manager.get_mod_by_identifier(dep_identifier);
-			/* The poor man's cycle checking (cycles should be very rare and hard to accomplish with vic2 modding, this is a failsafe) */
-			if (current_recurse == MAX_RECURSE) {
-				Logger::error("Mod \"", mod->get_identifier(), "\" has cyclical or broken dependency chain and cannot be loaded!");
-				return false;
-			} else {
-				current_recurse++;
-				ret &= self(self, dep, dep_list); /* recursively search for mod dependencies */
-			}
-			if (std::find(dep_list.begin(), dep_list.end(), dep) == dep_list.end()) {
-				dep_list.emplace_back(dep);
-			}
-		}
-		return ret;
-	};
-	return dep_cycle(dep_cycle, mod, dep_list);
-}
-
 bool GameManager::load_mods(
 	Dataloader::path_vector_t& roots,
 	Dataloader::path_vector_t& replace_paths,
@@ -78,7 +48,7 @@ bool GameManager::load_mods(
 
 	bool ret = true;
 
-	memory::vector<Mod const*> load_list;
+	vector_ordered_set<Mod const*> load_list;
 
 	/* Check loaded mod descriptors for requested mods, using either full name or user directory name
 	 * (Historical Project Mod 0.4.6 or HPM both valid, for example), and load them plus their dependencies.
@@ -99,21 +69,24 @@ bool GameManager::load_mods(
 		}
 
 		Mod const* mod_ptr = &*it;
-		memory::vector<Mod const*> dependencies;
-		if(!_get_mod_dependencies(mod_ptr, dependencies)) {
-			ret = false;
+		vector_ordered_set<Mod const*> dependencies = mod_ptr->generate_dependency_list(&ret);
+		if(!ret) {
 			continue;
 		}
 
 		/* Add mod plus dependencies to load_list in proper order. */
-		load_list.reserve(1 + dependencies.size());
-		for (Mod const* dep : dependencies) {
-			if (ret && std::find(load_list.begin(), load_list.end(), dep) == load_list.end()) {
-				load_list.emplace_back(dep);
+		if (load_list.empty()) {
+			load_list = std::move(dependencies);
+		} else {
+			for (Mod const* dep : dependencies) {
+				if (!load_list.contains(dep)) {
+					load_list.emplace(dep);
+				}
 			}
 		}
-		if (ret && std::find(load_list.begin(), load_list.end(), mod_ptr) == load_list.end()) {
-			load_list.emplace_back(mod_ptr);
+
+		if (!load_list.contains(mod_ptr)) {
+			load_list.emplace(mod_ptr);
 		}
 	}
 
@@ -129,7 +102,7 @@ bool GameManager::load_mods(
 
 	/* Load only vanilla and push an error if mod loading failed. */
 	if (ret) {
-		mod_manager.set_loaded_mods(std::move(load_list));
+		mod_manager.set_loaded_mods(std::move(load_list.release()));
 	} else {
 		mod_manager.set_loaded_mods({});
 		replace_paths.clear();
