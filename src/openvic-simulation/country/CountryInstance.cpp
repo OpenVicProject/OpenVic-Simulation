@@ -16,6 +16,7 @@
 #include "openvic-simulation/map/Crime.hpp"
 #include "openvic-simulation/map/MapInstance.hpp"
 #include "openvic-simulation/misc/GameRulesManager.hpp"
+#include "openvic-simulation/military/UnitType.hpp"
 #include "openvic-simulation/modifier/ModifierEffectCache.hpp"
 #include "openvic-simulation/modifier/StaticModifierCache.hpp"
 #include "openvic-simulation/pop/Pop.hpp"
@@ -26,6 +27,7 @@
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
 #include "openvic-simulation/types/IndexedFlatMap.hpp"
 #include "openvic-simulation/types/PopSize.hpp"
+#include "openvic-simulation/types/UnitBranchType.hpp"
 #include "openvic-simulation/utility/Containers.hpp"
 #include "openvic-simulation/utility/Utility.hpp"
 
@@ -722,7 +724,35 @@ bool CountryInstance::modify_unit_type_unlock(UnitTypeBranched<Branch> const& un
 		return false;
 	}
 
-	unlock_level += unlock_level_change;
+	if constexpr (Branch != unit_branch_t::LAND) {
+		unlock_level += unlock_level_change;
+	} else {
+		bool was_unlocked = is_unit_type_unlocked(unit_type);
+		unlock_level += unlock_level_change;
+		bool is_unlocked = is_unit_type_unlocked(unit_type);
+
+		if (was_unlocked != is_unlocked) {
+			if (was_unlocked) {
+				//recalculate entirely
+				allowed_regiment_cultures = regiment_allowed_cultures_t::NO_CULTURES;
+				for (RegimentType const& regiment_type : unlocked_unit_types.get_keys()) {
+					if (!is_unit_type_unlocked(regiment_type)) {
+						continue;
+					}
+
+					allowed_regiment_cultures = RegimentType::allowed_cultures_get_most_permissive(
+						allowed_regiment_cultures,
+						regiment_type.get_allowed_cultures()
+					);
+				}
+			} else {
+				allowed_regiment_cultures = RegimentType::allowed_cultures_get_most_permissive(
+					allowed_regiment_cultures,
+					unit_type.get_allowed_cultures()
+				);
+			}
+		}
+	}
 
 	return true;
 }

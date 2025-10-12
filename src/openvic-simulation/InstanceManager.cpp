@@ -243,8 +243,8 @@ bool InstanceManager::load_bookmark(Bookmark const* new_bookmark) {
 	OV_ERR_FAIL_COND_V_MSG(!all_has_state, false, "At least one land province has no state");
 
 	update_modifier_sums();
-	country_instance_manager.update_gamestate(*this);
 	map_instance.initialise_for_new_game(*this);
+	country_instance_manager.update_gamestate(*this);
 	market_instance.execute_orders();
 
 	return ret;
