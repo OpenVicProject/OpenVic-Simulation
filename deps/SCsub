@@ -2,6 +2,7 @@
 
 Import("env")
 
+
 def build_openvic_dataloader(env):
     ovdl_env = SConscript("openvic-dataloader/SConstruct")
     env.Append(LIBPATH=ovdl_env.openvic_dataloader["LIBPATH"])
@@ -10,12 +11,14 @@ def build_openvic_dataloader(env):
     env.openvic_dataloader = ovdl_env.openvic_dataloader
     env.exposed_includes += env.openvic_dataloader["INCPATH"]
 
+
 def build_lexy_vdf(env):
     lvdf_env = SConscript("lexy-vdf/SConstruct")
     env.Append(LIBPATH=lvdf_env.lexy_vdf["LIBPATH"])
     env.Prepend(LIBS=lvdf_env.lexy_vdf["LIBS"])
     env.Append(CPPPATH=lvdf_env.lexy_vdf["INCPATH"])
     env.lexy_vdf = lvdf_env.lexy_vdf
+
 
 def build_ordered_map(env):
     include_path = "ordered-map/include"
@@ -24,12 +27,14 @@ def build_ordered_map(env):
     env.Append(CPPPATH=env.ordered_map["INCPATH"])
     env.exposed_includes += env.ordered_map["INCPATH"]
 
+
 def build_colony(env):
     include_path = "plf_colony"
     env.colony = {}
     env.colony["INCPATH"] = [env.Dir(include_path)]
     env.Append(CPPPATH=env.colony["INCPATH"])
     env.exposed_includes += env.colony["INCPATH"]
+
 
 def build_function2(env):
     include_path = "function2/include"
@@ -38,6 +43,7 @@ def build_function2(env):
     env.Append(CPPPATH=env.function2["INCPATH"])
     env.exposed_includes += env.function2["INCPATH"]
 
+
 def build_std_function(env):
     include_path = "std_function"
     env.std_function = {}
@@ -45,27 +51,33 @@ def build_std_function(env):
     env.Append(CPPPATH=env.std_function["INCPATH"])
     env.exposed_includes += env.std_function["INCPATH"]
 
+
 def build_memory(env):
     import os
     from pathlib import Path
+
     import methods
 
     include_path = "memory/include"
     inner_include_path = include_path + "/foonathan/memory"
     source_path = "memory/src"
 
-    env.Append(CPPDEFINES=[
-        f'FOONATHAN_MEMORY=1',
-        f"FOONATHAN_MEMORY_VERSION_MAJOR=0",
-        f"FOONATHAN_MEMORY_VERSION_MINOR=7",
-        f"FOONATHAN_MEMORY_VERSION_PATCH=4"
-    ])
+    env.Append(
+        CPPDEFINES=[
+            ("FOONATHAN_MEMORY", 1),
+            ("FOONATHAN_MEMORY_VERSION_MAJOR", 0),
+            ("FOONATHAN_MEMORY_VERSION_MINOR", 7),
+            ("FOONATHAN_MEMORY_VERSION_PATCH", 4),
+        ]
+    )
 
     memory_env = env.Clone()
     memory_env.Append(
         BUILDERS={
             "GenerateMemoryConfig": memory_env.Builder(action=methods.generate_memory_config_header),
-            "GenerateMemoryContainerNodeSizes": memory_env.Builder(action=methods.generate_memory_container_size_header)
+            "GenerateMemoryContainerNodeSizes": memory_env.Builder(
+                action=methods.generate_memory_container_size_header
+            ),
         }
     )
 
@@ -81,13 +93,17 @@ def build_memory(env):
         "FOONATHAN_MEMORY_EXTERN_TEMPLATE": 1,
         "FOONATHAN_MEMORY_TEMPORARY_STACK_MODE": 2,
     }
-    
+
     config = memory_env.GenerateMemoryConfig(memory_env.File(Path(inner_include_path) / "config_impl.hpp"), "SCsub")
-    node_size_impl = memory_env.GenerateMemoryContainerNodeSizes(memory_env.File(Path(inner_include_path) / "detail" / "container_node_sizes_impl.hpp"), "SCsub")
+    node_size_impl = memory_env.GenerateMemoryContainerNodeSizes(
+        memory_env.File(Path(inner_include_path) / "detail" / "container_node_sizes_impl.hpp"), "SCsub"
+    )
 
     if memory_env.get("is_msvc", False):
         if memory_env.get("use_clang_cl"):
-            memory_env.Append(CXXFLAGS=["-pedantic-errors", "-Werror", "-Wall", "-Wextra", "-Wconversion", "-Wsign-conversion"])
+            memory_env.Append(
+                CXXFLAGS=["-pedantic-errors", "-Werror", "-Wall", "-Wextra", "-Wconversion", "-Wsign-conversion"]
+            )
         else:
             memory_env.Append(CXXFLAGS=["/WX", "/W3", "/D", "_CRT_SECURE_NO_WARNINGS"])
     else:
@@ -111,6 +127,7 @@ def build_memory(env):
 
     env.exposed_includes += env.memory["INCPATH"]
 
+
 def build_spdlog(env):
     import os
 
@@ -119,14 +136,14 @@ def build_spdlog(env):
         spdlog_level = os.environ["SPDLOG_LEVEL"].upper()
         if not spdlog_level.startswith("SPDLOG_LEVEL_"):
             spdlog_level = "SPDLOG_LEVEL_" + spdlog_level
-        if not spdlog_level in [
+        if spdlog_level not in [
             "SPDLOG_LEVEL_TRACE",
             "SPDLOG_LEVEL_DEBUG",
             "SPDLOG_LEVEL_INFO",
             "SPDLOG_LEVEL_WARN",
             "SPDLOG_LEVEL_ERROR",
             "SPDLOG_LEVEL_CRITICAL",
-            "SPDLOG_LEVEL_OFF"
+            "SPDLOG_LEVEL_OFF",
         ]:
             print("SPDLOG_LEVEL can only be trace, debug, info, warn, error, critical, or off")
             exit(255)
@@ -135,7 +152,14 @@ def build_spdlog(env):
     elif env["target"] == "template_release" or env["optimize"] in ["speed", "size"]:
         spdlog_level = "SPDLOG_LEVEL_WARN"
 
-    env.Append(CPPDEFINES=[("SPDLOG_ACTIVE_LEVEL", spdlog_level), "SPDLOG_FMT_EXTERNAL", "SPDLOG_COMPILED_LIB", "SPDLOG_NO_EXCEPTIONS"])
+    env.Append(
+        CPPDEFINES=[
+            ("SPDLOG_ACTIVE_LEVEL", spdlog_level),
+            "SPDLOG_FMT_EXTERNAL",
+            "SPDLOG_COMPILED_LIB",
+            "SPDLOG_NO_EXCEPTIONS",
+        ]
+    )
     if env["platform"] != "macos":
         env.Append(CPPDEFINES=["SPDLOG_FWRITE_UNLOCKED"])
     spdlog_env = env.Clone()
@@ -165,10 +189,13 @@ def build_spdlog(env):
 
     env.exposed_includes += env.spdlog["INCPATH"]
 
+
 def link_tbb(env):
     import sys
+
     if not env.get("is_msvc", False) and not env.get("use_mingw", False) and sys.platform != "darwin":
         env.ParseConfig("pkg-config tbb --cflags --libs")
+
 
 build_openvic_dataloader(env)
 build_lexy_vdf(env)
