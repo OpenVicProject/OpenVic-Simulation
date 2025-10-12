@@ -1,13 +1,12 @@
 #!/usr/bin/env python
-import os
 import subprocess
 from pathlib import Path
 
 Import("env")
 
+
 def generate_snitch_config_header(target, source, env):
     header = []
-    header_filename = "snitch_config.hpp"
 
     header.append("// THIS FILE IS GENERATED. EDITS WILL BE LOST.")
     header.append("")
@@ -24,16 +23,18 @@ def generate_snitch_config_header(target, source, env):
     header.append("#include <version> // for C++ feature check macros")
 
     for key, val in env.config_data.items():
-        if val == True:
+        if val is True:
             val = 1
-        elif val == False:
+        elif val is False:
             val = 0
-        header +=(f'''
+        header += (
+            f"""
 #if !defined({key})
 #   define {key} {val}
-#endif''').split("\n")
+#endif"""
+        ).split("\n")
 
-    header += ("""
+    header += """
 #if defined(_MSC_VER)
 #    if defined(_KERNEL_MODE) || (defined(_HAS_EXCEPTIONS) && !_HAS_EXCEPTIONS)
 #        define SNITCH_EXCEPTIONS_NOT_AVAILABLE
@@ -82,7 +83,7 @@ def generate_snitch_config_header(target, source, env):
 #else
 #    define SNITCH_EXPORT
 #endif
-    """.split("\n"))
+    """.split("\n")
 
     header.append("")
     header.append(f"#endif // {header_guard}")
@@ -90,6 +91,7 @@ def generate_snitch_config_header(target, source, env):
 
     with header_file_path.open("w+", encoding="utf-8") as header_file:
         header_file.write("\n".join(header))
+
 
 def build_snitch(env):
     major_version = 1
@@ -111,47 +113,41 @@ def build_snitch(env):
     snitch_env = None
     try:
         snitch_env = env.snitch_env
-    except(AttributeError):
+    except AttributeError:
         snitch_env = env.Clone()
 
-    snitch_env.Append(
-        BUILDERS={
-            "GenerateSnitchConfig": snitch_env.Builder(action=generate_snitch_config_header)
-        }
-    )
+    snitch_env.Append(BUILDERS={"GenerateSnitchConfig": snitch_env.Builder(action=generate_snitch_config_header)})
 
     snitch_env.config_data = {
-        "SNITCH_ENABLE": True, # Enable snitch at build time.
-        "SNITCH_MAX_TEST_CASES": 5000, #"Maximum number of test cases in a test application."
-        "SNITCH_MAX_NESTED_SECTIONS": 8,#"Maximum depth of nested sections in a test case."
-        "SNITCH_MAX_EXPR_LENGTH": 1024, #"Maximum length of a printed expression when reporting failure."
-        "SNITCH_MAX_MESSAGE_LENGTH": 1024, #"Maximum length of error or status messages."
-        "SNITCH_MAX_TEST_NAME_LENGTH": 1024, #"Maximum length of a test case name."
-        "SNITCH_MAX_TAG_LENGTH": 256, #"Maximum length of a test tag."
-        "SNITCH_MAX_CAPTURES": 8, #"Maximum number of captured expressions in a test case."
-        "SNITCH_MAX_CAPTURE_LENGTH": 256, #"Maximum length of a captured expression."
-        "SNITCH_MAX_UNIQUE_TAGS": 1024, #"Maximum number of unique tags in a test application."
-        "SNITCH_MAX_COMMAND_LINE_ARGS": 1024, #"Maximum number of command line arguments to a test application."
-        "SNITCH_MAX_REGISTERED_REPORTERS": 8, #"Maximum number of registered reporter that can be selected from the command line."
-        "SNITCH_MAX_PATH_LENGTH": 1024, #"Maximum length of a file path when writing output to file."
-        "SNITCH_MAX_REPORTER_SIZE_BYTES": 128, #"Maximum size (in bytes) of a reporter object."
-
-        "SNITCH_DEFINE_MAIN": True, #"Define main() in snitch -- disable to provide your own main() function."
-        "SNITCH_WITH_EXCEPTIONS": False, #"Use exceptions in snitch implementation -- will be forced OFF if exceptions are not available."
-        "SNITCH_WITH_MULTITHREADING": False, #"Make the testing framework thread-safe -- disable if multithreading is not needed."
-        "SNITCH_WITH_TIMINGS": True, #"Measure the time taken by each test case -- disable to speed up tests."
-        "SNITCH_WITH_SHORTHAND_MACROS": True, #"Use short names for test macros -- disable if this causes conflicts."
-        "SNITCH_CONSTEXPR_FLOAT_USE_BITCAST": True, #"Use std::bit_cast if available to implement exact constexpr float-to-string conversion."
-        "SNITCH_APPEND_TO_CHARS": True, #"Use std::to_chars for string conversions -- disable for greater compatibility with a slight performance cost."
-        "SNITCH_DEFAULT_WITH_COLOR": True, #"Enable terminal colors by default -- can also be controlled by command line interface."
-        "SNITCH_DECOMPOSE_SUCCESSFUL_ASSERTIONS": False, #"Enable expression decomposition even for successful assertions -- more expensive."
-        "SNITCH_WITH_ALL_REPORTERS": True, #"Allow all built-in reporters to be selected from the command line -- disable for faster compilation."
-        "SNITCH_WITH_TEAMCITY_REPORTER": False, #"Allow the TeamCity reporter to be selected from the command line -- enable if needed."
-        "SNITCH_WITH_CATCH2_XML_REPORTER": False, #"Allow the Catch2 XML reporter to be selected from the command line -- enable if needed."
-
-        "SNITCH_HEADER_ONLY": False, #"Create a single-header header-only version of snitch."
-        "SNITCH_UNITY_BUILD": UNITY_BUILD, #"Build sources as single file instead of separate files (faster full build)."
-        "SNITCH_DO_TEST": True, #"Build tests."
+        "SNITCH_ENABLE": True,  # Enable snitch at build time.
+        "SNITCH_MAX_TEST_CASES": 5000,  # "Maximum number of test cases in a test application."
+        "SNITCH_MAX_NESTED_SECTIONS": 8,  # "Maximum depth of nested sections in a test case."
+        "SNITCH_MAX_EXPR_LENGTH": 1024,  # "Maximum length of a printed expression when reporting failure."
+        "SNITCH_MAX_MESSAGE_LENGTH": 1024,  # "Maximum length of error or status messages."
+        "SNITCH_MAX_TEST_NAME_LENGTH": 1024,  # "Maximum length of a test case name."
+        "SNITCH_MAX_TAG_LENGTH": 256,  # "Maximum length of a test tag."
+        "SNITCH_MAX_CAPTURES": 8,  # "Maximum number of captured expressions in a test case."
+        "SNITCH_MAX_CAPTURE_LENGTH": 256,  # "Maximum length of a captured expression."
+        "SNITCH_MAX_UNIQUE_TAGS": 1024,  # "Maximum number of unique tags in a test application."
+        "SNITCH_MAX_COMMAND_LINE_ARGS": 1024,  # "Maximum number of command line arguments to a test application."
+        "SNITCH_MAX_REGISTERED_REPORTERS": 8,  # "Maximum number of registered reporter that can be selected from the command line."
+        "SNITCH_MAX_PATH_LENGTH": 1024,  # "Maximum length of a file path when writing output to file."
+        "SNITCH_MAX_REPORTER_SIZE_BYTES": 128,  # "Maximum size (in bytes) of a reporter object."
+        "SNITCH_DEFINE_MAIN": True,  # "Define main() in snitch -- disable to provide your own main() function."
+        "SNITCH_WITH_EXCEPTIONS": False,  # "Use exceptions in snitch implementation -- will be forced OFF if exceptions are not available."
+        "SNITCH_WITH_MULTITHREADING": False,  # "Make the testing framework thread-safe -- disable if multithreading is not needed."
+        "SNITCH_WITH_TIMINGS": True,  # "Measure the time taken by each test case -- disable to speed up tests."
+        "SNITCH_WITH_SHORTHAND_MACROS": True,  # "Use short names for test macros -- disable if this causes conflicts."
+        "SNITCH_CONSTEXPR_FLOAT_USE_BITCAST": True,  # "Use std::bit_cast if available to implement exact constexpr float-to-string conversion."
+        "SNITCH_APPEND_TO_CHARS": True,  # "Use std::to_chars for string conversions -- disable for greater compatibility with a slight performance cost."
+        "SNITCH_DEFAULT_WITH_COLOR": True,  # "Enable terminal colors by default -- can also be controlled by command line interface."
+        "SNITCH_DECOMPOSE_SUCCESSFUL_ASSERTIONS": False,  # "Enable expression decomposition even for successful assertions -- more expensive."
+        "SNITCH_WITH_ALL_REPORTERS": True,  # "Allow all built-in reporters to be selected from the command line -- disable for faster compilation."
+        "SNITCH_WITH_TEAMCITY_REPORTER": False,  # "Allow the TeamCity reporter to be selected from the command line -- enable if needed."
+        "SNITCH_WITH_CATCH2_XML_REPORTER": False,  # "Allow the Catch2 XML reporter to be selected from the command line -- enable if needed."
+        "SNITCH_HEADER_ONLY": False,  # "Create a single-header header-only version of snitch."
+        "SNITCH_UNITY_BUILD": UNITY_BUILD,  # "Build sources as single file instead of separate files (faster full build)."
+        "SNITCH_DO_TEST": True,  # "Build tests."
     }
 
     snitch_full_version = ""
@@ -161,20 +157,24 @@ def build_snitch(env):
 
     snitch_full_version = SNITCH_VERSION + (".{}".format(snitch_full_version) if snitch_full_version else "")
 
-    snitch_env.Append(CPPDEFINES=[
-        f'SNITCH_VERSION=\\"{SNITCH_VERSION}\\"',
-        f'SNITCH_FULL_VERSION=\\"{snitch_full_version}\\"',
-        f"SNITCH_VERSION_MAJOR={major_version}",
-        f"SNITCH_VERSION_MINOR={minor_version}",
-        f"SNITCH_VERSION_PATCH={patch_version}"
-    ])
-    snitch_env.Append(CPPDEFINES=["SNITCH_SHARED_LIBRARY=" + ("1" if not HEADER_ONLY and SHARED_BUILD else "0")])
+    snitch_env.Append(
+        CPPDEFINES=[
+            ("SNITCH_VERSION", f'\\"{SNITCH_VERSION}\\"'),
+            ("SNITCH_FULL_VERSION", f'\\"{snitch_full_version}\\"'),
+            ("SNITCH_VERSION_MAJOR", major_version),
+            ("SNITCH_VERSION_MINOR", minor_version),
+            ("SNITCH_VERSION_PATCH", patch_version),
+        ]
+    )
+    snitch_env.Append(CPPDEFINES=[("SNITCH_SHARED_LIBRARY", 1 if not HEADER_ONLY and SHARED_BUILD else 0)])
 
     include_path = "snitch/include"
     source_path = "snitch/src"
     unity_source = "snitch.cpp"
 
-    config = snitch_env.GenerateSnitchConfig(snitch_env.File(Path(include_path) / "snitch" / "snitch_config.hpp"), "SCsub")
+    config = snitch_env.GenerateSnitchConfig(
+        snitch_env.File(Path(include_path) / "snitch" / "snitch_config.hpp"), "SCsub"
+    )
 
     snitch_env.Append(CPPPATH=[[snitch_env.Dir(p) for p in [source_path, include_path]]])
     sources = snitch_env.GlobRecursive("*.cpp", [source_path], Path(source_path) / unity_source)
@@ -208,5 +208,6 @@ def build_snitch(env):
         Default(config)
 
     env.snitch_env = snitch_env
+
 
 build_snitch(env)
