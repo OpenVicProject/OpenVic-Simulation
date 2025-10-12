@@ -120,17 +120,18 @@ namespace fmt {
 	template<typename T>
 	struct validate_view {
 		T const* ptr;
+		string_view invalid_string;
 	};
 
 	template<typename T>
-	validate_view<T> validate(T const* ptr) {
-		return { ptr };
+	validate_view<T> validate(T const* ptr, string_view invalid_string = "<NULL>") {
+		return { ptr, invalid_string };
 	}
 
 	template <typename T>
 	struct formatter<validate_view<T>> : formatter<T> {
 		auto format(const validate_view<T>& value, format_context& ctx) const {
-			return value.ptr ? formatter<T>::format(*value.ptr, ctx) : formatter<string_view>{}.format("<NULL>", ctx);
+			return value.ptr ? formatter<T>::format(*value.ptr, ctx) : formatter<string_view>{}.format(value.invalid_string, ctx);
 		}
 	};
 }

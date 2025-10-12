@@ -1,58 +1,16 @@
 #include "GameAction.hpp"
 
+#include <fmt/std.h>
+#include <fmt/ranges.h>
+
 #include "openvic-simulation/DefinitionManager.hpp"
 #include "openvic-simulation/InstanceManager.hpp"
 #include "utility/Containers.hpp"
 
 using namespace OpenVic;
 
-struct game_action_argument_print_visitor_t {
-	std::ostream& stream;
-
-	void operator()(std::monostate) {
-		stream << "monostate";
-	}
-
-	void operator()(bool b) {
-		stream << (b ? "true" : "false");
-	}
-
-	template<typename T1, typename T2>
-	void operator()(std::pair<T1, T2> const& x) {
-		stream << "(";
-		(*this)(x.first);
-		stream << ", ";
-		(*this)(x.second);
-		stream << ")";
-	}
-
-	template<size_t N = 0, typename... T>
-	void operator()(std::tuple<T...> const& x) {
-		if constexpr (N == 0) {
-			stream << "(";
-		}
-
-		(*this)(std::get<N>(x));
-
-		if constexpr (N + 1 < sizeof...(T)) {
-			stream << ", ";
-			(*this).operator()<N + 1, T...>(x);
-		} else {
-			stream << ")";
-		}
-	}
-
-	void operator()(auto x) {
-		stream << x;
-	}
-};
-
 memory::string OpenVic::game_action_argument_to_string(game_action_argument_t const& argument) {
-	memory::stringstream stream;
-
-	std::visit(game_action_argument_print_visitor_t { stream }, argument);
-
-	return stream.str();
+	return memory::fmt::format("{}", argument);
 }
 
 GameActionManager::GameActionManager(InstanceManager& new_instance_manager)
