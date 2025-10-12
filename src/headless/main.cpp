@@ -2,7 +2,6 @@
 #include <filesystem>
 #include <memory>
 #include <random>
-#include <string>
 
 #include <fmt/base.h>
 #include <fmt/chrono.h>
@@ -11,18 +10,15 @@
 
 #include <spdlog/common.h>
 #include <spdlog/logger.h>
-#include <spdlog/sinks/basic_file_sink.h>
 #include <spdlog/sinks/callback_sink.h>
 
 #include <openvic-simulation/GameManager.hpp>
 #include <openvic-simulation/country/CountryInstance.hpp>
 #include <openvic-simulation/dataloader/Dataloader.hpp>
-#include <openvic-simulation/dataloader/ModManager.hpp>
 #include <openvic-simulation/economy/GoodDefinition.hpp>
 #include <openvic-simulation/economy/production/ProductionType.hpp>
 #include <openvic-simulation/economy/production/ResourceGatheringOperation.hpp>
 #include <openvic-simulation/pathfinding/AStarPathing.hpp>
-#include <openvic-simulation/pop/Pop.hpp>
 #include <openvic-simulation/testing/Testing.hpp>
 #include <openvic-simulation/utility/Containers.hpp>
 #include <openvic-simulation/utility/Logger.hpp>
@@ -53,7 +49,11 @@ static void print_help(FILE* file, char const* program_name) {
 	fmt::println(file, "    -t : Run tests after loading defines.");
 	fmt::println(file, "    -b : Use the following path as the base directory (instead of searching for one).");
 	fmt::println(file, "    -s : Use the following path as a hint to search for a base directory.");
-	fmt::println(file, "Any following paths are read as mods (/path/to/my/MODNAME.mod), with priority starting at one above the base directory.");
+	fmt::println(
+		file,
+		"Any following paths are read as mods (/path/to/my/MODNAME.mod), with priority starting at one above the base "
+		"directory."
+	);
 	fmt::println(file, "(Paths with spaces need to be enclosed in \"quotes\").");
 }
 
@@ -183,17 +183,16 @@ static bool run_headless(fs::path const& root, memory::vector<memory::string>& m
 	Dataloader::path_vector_t roots = { root };
 	Dataloader::path_vector_t replace_paths = {};
 
-	spdlog::sink_ptr counter_sink =
-		std::make_shared<spdlog::sinks::callback_sink_st>([](spdlog::details::log_msg const& msg) {
-			switch (msg.level) {
-				using namespace spdlog::level;
-			case info:	   info_count++; break;
-			case warn:	   warning_count++; break;
-			case err:	   error_count++; break;
-			case critical: critical_count++; break;
-			default:	   break;
-			}
-		});
+	spdlog::sink_ptr counter_sink = std::make_shared<spdlog::sinks::callback_sink_st>([](spdlog::details::log_msg const& msg) {
+		switch (msg.level) {
+			using namespace spdlog::level;
+		case info:	   info_count++; break;
+		case warn:	   warning_count++; break;
+		case err:	   error_count++; break;
+		case critical: critical_count++; break;
+		default:	   break;
+		}
+	});
 
 	SinkGuard guard(spdlog::default_logger(), counter_sink);
 
@@ -201,7 +200,7 @@ static bool run_headless(fs::path const& root, memory::vector<memory::string>& m
 		[] {
 			SPDLOG_INFO("State updated");
 		},
-		nullptr, nullptr
+		nullptr, nullptr //
 	};
 
 	SPDLOG_INFO("Commit hash: {}", GameManager::get_commit_hash());
@@ -257,13 +256,14 @@ static bool run_headless(fs::path const& root, memory::vector<memory::string>& m
 	// TODO - REMOVE TEST CODE
 	SPDLOG_INFO("===== Ranking system test... =====");
 	if (game_manager.get_instance_manager()) {
-		const auto print_ranking_list = [](std::string_view title, OpenVic::utility::forwardable_span<CountryInstance* const> countries) -> void {
-			std::string countries_str;
+		const auto print_ranking_list = [ //
+		](std::string_view title, OpenVic::utility::forwardable_span<CountryInstance* const> countries) -> void {
+			memory::string countries_str;
 			for (CountryInstance* country : countries) {
 				countries_str += fmt::format(
-					"\n\t{} - Total #{} ({}), Prestige #{} ({}), Industry #{} ({}), Military #{} ({})",
-					*country,
-					country->get_total_rank(), country->total_score.get_untracked().to_string(1),
+					"\n\t{} - Total #{} ({}), Prestige #{} ({}), Industry #{} ({}), Military #{} ({})", //
+					*country, //
+					country->get_total_rank(), country->total_score.get_untracked().to_string(1), //
 					country->get_prestige_rank(), country->get_prestige_untracked().to_string(1),
 					country->get_industrial_rank(), country->get_industrial_power_untracked().to_string(1),
 					country->get_military_rank(), country->military_power.get_untracked().to_string(1)
@@ -302,16 +302,18 @@ static bool run_headless(fs::path const& root, memory::vector<memory::string>& m
 
 		using test_time_units_t = std::chrono::milliseconds;
 
+		MapInstance& map_instance = game_manager.get_instance_manager()->get_map_instance();
+
 		SPDLOG_INFO("===== Land Pathfinding test... =====");
-		test_duration_t duration = std::chrono::duration_cast<test_time_units_t>(run_pathing_test<TESTS>(
-			game_manager.get_instance_manager()->get_map_instance().get_land_pathing(), LAND_SEED
-		));
+		test_duration_t duration = std::chrono::duration_cast<test_time_units_t>( //
+			run_pathing_test<TESTS>(map_instance.get_land_pathing(), LAND_SEED)
+		);
 		SPDLOG_INFO("Ran {} land pathing tests in {}", TESTS, duration);
 
 		SPDLOG_INFO("===== Sea Pathfinding test... =====");
-		duration = std::chrono::duration_cast<test_time_units_t>(run_pathing_test<TESTS>(
-			game_manager.get_instance_manager()->get_map_instance().get_sea_pathing(), SEA_SEED
-		));
+		duration = std::chrono::duration_cast<test_time_units_t>( //
+			run_pathing_test<TESTS>(map_instance.get_sea_pathing(), SEA_SEED)
+		);
 		SPDLOG_INFO("Ran {} sea pathing tests in {}", TESTS, duration);
 	}
 
@@ -320,7 +322,8 @@ static bool run_headless(fs::path const& root, memory::vector<memory::string>& m
 
 		SPDLOG_INFO("===== Game Tick test... =====");
 		size_t ticks_passed = 0;
-		test_duration_t min_tick_duration = test_duration_t::max(), max_tick_duration = test_duration_t::min(),
+		test_duration_t min_tick_duration = test_duration_t::max(), //
+			max_tick_duration = test_duration_t::min(), //
 			total_tick_duration;
 		const test_time_point_t start_time = testing_clock_t::now();
 		while (++ticks_passed < TICK_COUNT) {
@@ -346,13 +349,12 @@ static bool run_headless(fs::path const& root, memory::vector<memory::string>& m
 			SPDLOG_INFO(
 				"Ran {} / {} ticks, total time {} at {} per tick, tick time only {} at {} per tick. "
 				"Tick lengths ranged from {} to {}.",
-				ticks_passed, TICK_COUNT, duration, total_tps,
-				total_tick_duration, tick_tps, min_tick_duration, max_tick_duration
+				ticks_passed, TICK_COUNT, duration, total_tps, total_tick_duration, tick_tps, //
+				min_tick_duration, max_tick_duration
 			);
 		} else {
 			spdlog::error_s(
-				"No ticks passed ({}, expected {}) or zero duration measured ({})!",
-				ticks_passed, TICK_COUNT, duration
+				"No ticks passed ({}, expected {}) or zero duration measured ({})!", ticks_passed, TICK_COUNT, duration
 			);
 			ret = false;
 		}
@@ -381,9 +383,9 @@ int main(int argc, char const* argv[]) {
 	/* Reads the next argument and converts it to a path via path_transform. If reading or converting fails, an error
 	 * message and the help text are displayed, along with returning false to signify the program should exit.
 	 */
-	const auto _read = [&root, &argn, argc, argv, program_name](
-		std::string_view command, std::string_view path_use, std::invocable<fs::path> auto path_transform
-	) -> bool {
+	const auto _read = [&root, &argn, argc, argv,
+						program_name //
+	](std::string_view command, std::string_view path_use, std::invocable<fs::path> auto path_transform) -> bool {
 		if (root.empty()) {
 			if (++argn < argc) {
 				char const* path = argv[argn];
@@ -392,24 +394,14 @@ int main(int argc, char const* argv[]) {
 					return true;
 				} else {
 					fmt::println(
-						stderr,
-						"Empty path after giving \"{}\" to {} command line argument \"{}\".",
-						path, path_use, command
+						stderr, "Empty path after giving \"{}\" to {} command line argument \"{}\".", path, path_use, command
 					);
 				}
 			} else {
-				fmt::println(
-					stderr,
-					"Missing path after {} command line argument \"{}\".",
-					path_use, command
-				);
+				fmt::println(stderr, "Missing path after {} command line argument \"{}\".", path_use, command);
 			}
 		} else {
-			fmt::println(
-				stderr,
-				"Duplicate {} command line argument \"-b\".",
-				path_use
-			);
+			fmt::println(stderr, "Duplicate {} command line argument \"-b\".", path_use);
 		}
 		print_help(stderr, program_name);
 		return false;
