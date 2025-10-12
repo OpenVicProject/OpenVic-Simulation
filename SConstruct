@@ -1,10 +1,6 @@
 #!/usr/bin/env python
 
 import os
-import platform
-import sys
-
-import SCons
 
 BINDIR = "bin"
 
@@ -18,7 +14,13 @@ opts.Add(BoolVariable("build_ovsim_tests", "Build the openvic simulation unit te
 opts.Add(BoolVariable("run_ovsim_tests", "Run the openvic simulation unit tests", False))
 opts.Add(BoolVariable("build_ovsim_benchmarks", "Build the openvic simulation benchmarks", False))
 opts.Add(BoolVariable("run_ovsim_benchmarks", "Run the openvic simulation benchmarks", False))
-opts.Add(BoolVariable(key="build_ovsim_library", help="Build the openvic simulation library.", default=env.get("build_ovsim_library", not env.is_standalone)))
+opts.Add(
+    BoolVariable(
+        key="build_ovsim_library",
+        help="Build the openvic simulation library.",
+        default=env.get("build_ovsim_library", not env.is_standalone),
+    )
+)
 opts.Add(BoolVariable("build_ovsim_headless", "Build the openvic simulation headless executable", env.is_standalone))
 
 env.FinalizeOptions()
@@ -33,27 +35,30 @@ Default(
     env.CommandNoCache(
         "src/openvic-simulation/gen/commit_info.gen.hpp",
         env.Value(env.get_git_info()),
-        env.Run(env.git_builder), name_prefix="sim"
+        env.Run(env.git_builder),
+        name_prefix="sim",
     )
 )
 Default(
     env.CommandNoCache(
         "src/openvic-simulation/gen/license_info.gen.hpp",
         ["#COPYRIGHT", "#LICENSE.md"],
-        env.Run(env.license_builder), name_prefix="sim"
+        env.Run(env.license_builder),
+        name_prefix="sim",
     )
 )
 Default(
     env.CommandNoCache(
         "src/openvic-simulation/gen/author_info.gen.hpp",
         "#AUTHORS.md",
-        env.Run(env.author_builder), name_prefix="sim",
-        sections = {
+        env.Run(env.author_builder),
+        name_prefix="sim",
+        sections={
             "Senior Developers": "AUTHORS_SENIOR_DEVELOPERS",
             "Developers": "AUTHORS_DEVELOPERS",
             "Contributors": "AUTHORS_CONTRIBUTORS",
-            "Consultants": "AUTHORS_CONSULTANTS"
-        }
+            "Consultants": "AUTHORS_CONSULTANTS",
+        },
     )
 )
 
@@ -123,7 +128,7 @@ if env["build_ovsim_headless"]:
     headless_program = headless_env.Program(
         target=os.path.join(BINDIR, headless_name),
         source=headless_env.headless_sources,
-        PROGSUFFIX=".headless" + env["PROGSUFFIX"]
+        PROGSUFFIX=".headless" + env["PROGSUFFIX"],
     )
     default_args += [headless_program]
 
@@ -134,7 +139,7 @@ if env["build_ovsim_tests"]:
         tests_env.RunUnitTest()
 
 if env["build_ovsim_benchmarks"]:
-    benchmarks_env = SConscript("tests/benchmarks/SCsub", { "env": tests_env if env["build_ovsim_tests"] else env })
+    benchmarks_env = SConscript("tests/benchmarks/SCsub", {"env": tests_env if env["build_ovsim_tests"] else env})
 
     if env["run_ovsim_benchmarks"]:
         benchmarks_env.RunBenchmarks()
