@@ -38,7 +38,7 @@ UnitType::UnitType(
 
 	for (auto [terrain, modifier_value] : mutable_iterator(unit_args.terrain_modifier_values)) {
 		terrain_modifiers.emplace(terrain, Modifier {
-			StringUtils::append_string_views(new_identifier, " ", terrain->get_identifier()), std::move(modifier_value),
+			memory::fmt::format("{} {}", new_identifier, *terrain), std::move(modifier_value),
 			UNIT_TERRAIN
 		});
 	}
@@ -338,7 +338,7 @@ bool UnitTypeManager::generate_modifiers(ModifierManager& modifier_manager) cons
 		) -> void {
 			ret &= modifier_manager.register_technology_modifier_effect(
 				effect_cache, ModifierManager::get_flat_identifier(identifier, suffix), format,
-				StringUtils::append_string_views("$", identifier, "$: $", localisation_key, "$")
+				memory::fmt::format("${}$: ${}$", identifier, localisation_key)
 			);
 		};
 
