@@ -168,10 +168,10 @@ bool GoodDefinitionManager::generate_modifiers(ModifierManager& modifier_manager
 			);
 		};
 
-		const auto make_production_localisation_suffix = [&good_identifier](
+		const auto make_production_localisation_suffix = [&good](
 			std::string_view localisation_suffix
 		) -> memory::string {
-			return StringUtils::append_string_views("$", good_identifier, "$ $", localisation_suffix, "$");
+			return memory::fmt::format("${}$ ${}$", good, localisation_suffix);
 		};
 
 		good_modifier(
@@ -212,7 +212,7 @@ bool GoodDefinitionManager::generate_modifiers(ModifierManager& modifier_manager
 		);
 		good_modifier(
 			this_good_effects.rgo_size, "rgo_size", FORMAT_x100_2DP_PC_POS,
-			StringUtils::append_string_views(good_identifier, "_RGO_SIZE")
+			memory::fmt::format("{}_RGO_SIZE", good)
 		);
 	}
 
