@@ -1,5 +1,8 @@
 #include "GameManager.hpp"
 
+#include <chrono>
+
+#include <cstddef>
 #include <string_view>
 
 #include "openvic-simulation/dataloader/Dataloader.hpp"
@@ -7,11 +10,36 @@
 
 using namespace OpenVic;
 
+static std::chrono::time_point elapsed_time_begin = std::chrono::high_resolution_clock::now();
+
+GameManager::elapsed_time_getter_func_t GameManager::get_elapsed_usec_time_callback = []() -> uint64_t {
+	std::chrono::time_point current = std::chrono::high_resolution_clock::now();
+	return std::chrono::duration_cast<std::chrono::microseconds>(current - elapsed_time_begin).count();
+};
+
+GameManager::elapsed_time_getter_func_t GameManager::get_elapsed_msec_time_callback = []() -> uint64_t {
+	std::chrono::time_point current = std::chrono::high_resolution_clock::now();
+	return std::chrono::duration_cast<std::chrono::milliseconds>(current - elapsed_time_begin).count();
+};
+
 GameManager::GameManager(
-	InstanceManager::gamestate_updated_func_t new_gamestate_updated_callback
+	InstanceManager::gamestate_updated_func_t new_gamestate_updated_callback,
+	elapsed_time_getter_func_t new_get_elapsed_usec_callback,
+	elapsed_time_getter_func_t new_get_elapsed_msec_callback
 ) : gamestate_updated_callback {
 		new_gamestate_updated_callback ? std::move(new_gamestate_updated_callback) : []() {}
-	}, definitions_loaded { false }, mod_descriptors_loaded { false } {}
+	}, definitions_loaded { false }, mod_descriptors_loaded { false } {
+	if (new_get_elapsed_usec_callback) {
+		get_elapsed_usec_time_callback = { std::move(new_get_elapsed_usec_callback) };
+	}
+	if (new_get_elapsed_msec_callback) {
+		get_elapsed_msec_time_callback = { std::move(new_get_elapsed_msec_callback) };
+	}
+
+	if (bool(new_get_elapsed_usec_callback) != bool(new_get_elapsed_msec_callback)) {
+		Logger::warning("Only one of the elapsed time callbacks was set.");
+	}
+}
 
 GameManager::~GameManager() {
 	if (instance_manager) {
@@ -222,4 +250,12 @@ bool GameManager::update_clock() {
 	}
 
 	return instance_manager->update_clock();
+}
+
+uint64_t GameManager::get_elapsed_microseconds() {
+	return get_elapsed_usec_time_callback();
+}
+
+uint64_t GameManager::get_elapsed_milliseconds() {
+	return get_elapsed_msec_time_callback();
 }

@@ -11,9 +11,16 @@
 #include "openvic-simulation/gen/commit_info.gen.hpp"
 #include "openvic-simulation/utility/ForwardableSpan.hpp"
 
+#include <function2/function2.hpp>
+
 namespace OpenVic {
 	struct GameManager {
+		using elapsed_time_getter_func_t = fu2::function_base<true, true, fu2::capacity_none, false, false, uint64_t() const>;
+
 	private:
+		static elapsed_time_getter_func_t get_elapsed_usec_time_callback;
+		static elapsed_time_getter_func_t get_elapsed_msec_time_callback;
+
 		GameRulesManager PROPERTY(game_rules_manager);
 		Dataloader PROPERTY(dataloader);
 		DefinitionManager PROPERTY(definition_manager);
@@ -26,7 +33,9 @@ namespace OpenVic {
 
 	public:
 		GameManager(
-			InstanceManager::gamestate_updated_func_t new_gamestate_updated_callback
+			InstanceManager::gamestate_updated_func_t new_gamestate_updated_callback,
+			elapsed_time_getter_func_t new_get_elapsed_usec_callback,
+			elapsed_time_getter_func_t new_get_elapsed_msec_callback
 		);
 		~GameManager();
 
@@ -71,5 +80,8 @@ namespace OpenVic {
 		static constexpr uint64_t get_commit_timestamp() {
 			return SIM_COMMIT_TIMESTAMP;
 		}
+
+		static uint64_t get_elapsed_microseconds();
+		static uint64_t get_elapsed_milliseconds();
 	};
 }
