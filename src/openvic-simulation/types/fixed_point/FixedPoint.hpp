@@ -12,6 +12,7 @@
 
 #include <fmt/core.h>
 
+#include "openvic-simulation/types/StackString.hpp"
 #include "openvic-simulation/utility/Getters.hpp"
 #include "openvic-simulation/utility/Logger.hpp"
 #include "openvic-simulation/utility/NumberUtils.hpp"
@@ -311,53 +312,10 @@ namespace OpenVic {
 		struct stack_string;
 		inline constexpr stack_string to_array(size_t decimal_places = -1) const;
 
-		struct stack_string {
-			static constexpr size_t array_length = 25;
-
-		private:
-			std::array<char, array_length> array {};
-			uint8_t string_size = 0;
-
-			constexpr stack_string() {};
-
+		struct stack_string final : StackString<25> {
+		protected:
+			using StackString::StackString;
 			friend inline constexpr stack_string fixed_point_t::to_array(size_t decimal_places) const;
-
-		public:
-			constexpr const char* data() const {
-				return array.data();
-			}
-
-			constexpr size_t size() const {
-				return string_size;
-			}
-
-			constexpr size_t length() const {
-				return string_size;
-			}
-
-			constexpr decltype(array)::const_iterator begin() const {
-				return array.begin();
-			}
-
-			constexpr decltype(array)::const_iterator end() const {
-				return begin() + size();
-			}
-
-			constexpr decltype(array)::const_reference operator[](size_t index) const {
-				return array[index];
-			}
-
-			constexpr bool empty() const {
-				return size() == 0;
-			}
-
-			constexpr operator std::string_view() const {
-				return std::string_view { data(), data() + size() };
-			}
-
-			operator memory::string() const {
-				return memory::string { data(), size() };
-			}
 		};
 
 		memory::string to_string(size_t decimal_places = -1) const {
@@ -751,8 +709,8 @@ namespace OpenVic {
 
 	inline constexpr fixed_point_t::stack_string fixed_point_t::to_array(size_t decimal_places) const {
 		stack_string str {};
-		std::to_chars_result result = to_chars(str.array.data(), str.array.data() + str.array.size(), decimal_places);
-		str.string_size = result.ptr - str.data();
+		std::to_chars_result result = to_chars(str._array.data(), str._array.data() + str._array.size(), decimal_places);
+		str._string_size = result.ptr - str.data();
 		return str;
 	}
 

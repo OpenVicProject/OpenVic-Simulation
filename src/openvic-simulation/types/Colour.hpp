@@ -23,9 +23,9 @@
 
 #include <range/v3/algorithm/rotate.hpp>
 
-#include "openvic-simulation/utility/Utility.hpp"
+#include "openvic-simulation/types/StackString.hpp"
 #include "openvic-simulation/utility/StringUtils.hpp"
-#include "openvic-simulation/utility/Containers.hpp"
+#include "openvic-simulation/utility/Utility.hpp"
 
 namespace OpenVic {
 	template<typename ValueT, typename IntT, bool HasAlpha = true>
@@ -472,61 +472,17 @@ namespace OpenVic {
 			return result;
 		}
 
-		struct stack_string {
-			static constexpr size_t bits_per_digit = 4;
-			static constexpr size_t array_length = colour_traits::component_bit_size / bits_per_digit * 4;
-
-		private:
-			std::array<char, array_length> array {};
-			uint8_t string_size = 0;
-
-			constexpr stack_string() {};
-
+		struct stack_string final : StackString<colour_traits::component_bit_size / /*bits_per_digit*/ 4 * 4> {
+		protected:
+			using StackString<colour_traits::component_bit_size / /*bits_per_digit*/ 4 * 4>::StackString;
 			friend inline constexpr stack_string basic_colour_t::to_hex_array(bool alpha) const;
 			friend inline constexpr stack_string basic_colour_t::to_argb_hex_array() const;
-
-		public:
-			constexpr const char* data() const {
-				return array.data();
-			}
-
-			constexpr size_t size() const {
-				return string_size;
-			}
-
-			constexpr size_t length() const {
-				return string_size;
-			}
-
-			constexpr decltype(array)::const_iterator begin() const {
-				return array.begin();
-			}
-
-			constexpr decltype(array)::const_iterator end() const {
-				return begin() + size();
-			}
-
-			constexpr decltype(array)::const_reference operator[](size_t index) const {
-				return array[index];
-			}
-
-			constexpr bool empty() const {
-				return size() == 0;
-			}
-
-			constexpr operator std::string_view() const {
-				return std::string_view { data(), data() + size() };
-			}
-
-			operator memory::string() const {
-				return memory::string { data(), size() };
-			}
 		};
 
 		inline constexpr stack_string to_hex_array(bool alpha = colour_traits::has_alpha) const {
 			stack_string str {};
-			std::to_chars_result result = to_hex_chars(str.array.data(), str.array.data() + str.array.size(), alpha);
-			str.string_size = result.ptr - str.data();
+			std::to_chars_result result = to_hex_chars(str._array.data(), str._array.data() + str._array.size(), alpha);
+			str._string_size = result.ptr - str.data();
 			return str;
 		}
 
@@ -555,8 +511,8 @@ namespace OpenVic {
 
 		inline constexpr stack_string to_argb_hex_array() const {
 			stack_string str {};
-			std::to_chars_result result = to_argb_hex_chars(str.array.data(), str.array.data() + str.array.size());
-			str.string_size = result.ptr - str.data();
+			std::to_chars_result result = to_argb_hex_chars(str._array.data(), str._array.data() + str._array.size());
+			str._string_size = result.ptr - str.data();
 			return str;
 		}
 

@@ -17,11 +17,11 @@
 
 #include <range/v3/algorithm/max_element.hpp>
 
+#include "openvic-simulation/types/StackString.hpp"
 #include "openvic-simulation/utility/ErrorMacros.hpp"
 #include "openvic-simulation/utility/Getters.hpp"
-#include "openvic-simulation/utility/Utility.hpp"
 #include "openvic-simulation/utility/StringUtils.hpp"
-#include "openvic-simulation/utility/Containers.hpp"
+#include "openvic-simulation/utility/Utility.hpp"
 
 namespace OpenVic {
 	// A relative period between points in time, measured in days
@@ -322,56 +322,13 @@ namespace OpenVic {
 		struct stack_string;
 		inline constexpr stack_string to_array(bool pad_year = false, bool pad_month = true, bool pad_day = true) const;
 
-		struct stack_string {
-			static constexpr size_t array_length = //
-				fmt::detail::count_digits(uint64_t(std::numeric_limits<year_t>::max())) +
-				fmt::detail::count_digits(uint64_t(MONTHS_IN_YEAR)) + fmt::detail::count_digits(uint64_t(MAX_DAYS_IN_MONTH)) +
-				4;
-
-		private:
-			std::array<char, array_length> array {};
-			uint8_t string_size = 0;
-
-			constexpr stack_string() {};
-
+		struct stack_string final : StackString<
+										fmt::detail::count_digits(uint64_t(std::numeric_limits<year_t>::max())) +
+										fmt::detail::count_digits(uint64_t(MONTHS_IN_YEAR)) +
+										fmt::detail::count_digits(uint64_t(MAX_DAYS_IN_MONTH)) + 4> {
+		protected:
+			using StackString::StackString;
 			friend inline constexpr stack_string Date::to_array(bool pad_year, bool pad_month, bool pad_day) const;
-
-		public:
-			constexpr const char* data() const {
-				return array.data();
-			}
-
-			constexpr size_t size() const {
-				return string_size;
-			}
-
-			constexpr size_t length() const {
-				return string_size;
-			}
-
-			constexpr decltype(array)::const_iterator begin() const {
-				return array.begin();
-			}
-
-			constexpr decltype(array)::const_iterator end() const {
-				return begin() + size();
-			}
-
-			constexpr decltype(array)::const_reference operator[](size_t index) const {
-				return array[index];
-			}
-
-			constexpr bool empty() const {
-				return size() == 0;
-			}
-
-			constexpr operator std::string_view() const {
-				return std::string_view { data(), data() + size() };
-			}
-
-			operator memory::string() const {
-				return memory::string { data(), size() };
-			}
 		};
 
 		memory::string to_string(bool pad_year = false, bool pad_month = true, bool pad_day = true) const;
@@ -620,8 +577,8 @@ namespace OpenVic {
 	inline constexpr Date::stack_string Date::to_array(bool pad_year, bool pad_month, bool pad_day) const {
 		stack_string str {};
 		std::to_chars_result result =
-			to_chars(str.array.data(), str.array.data() + str.array.size(), pad_year, pad_month, pad_day);
-		str.string_size = result.ptr - str.data();
+			to_chars(str._array.data(), str._array.data() + str._array.size(), pad_year, pad_month, pad_day);
+		str._string_size = result.ptr - str.data();
 		return str;
 	}
 }
