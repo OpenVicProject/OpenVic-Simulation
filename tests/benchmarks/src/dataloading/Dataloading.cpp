@@ -11,7 +11,7 @@ TEST_CASE("Dataloading benchmark", "[benchmarks][benchmark-dataloading]") {
 	Dataloader::path_vector_t roots { root };
 
 	ankerl::nanobench::Bench().epochs(10).run("Dataloading", [&] {
-		OpenVic::GameManager game_manager { []() {} };
+		OpenVic::GameManager game_manager { []() {}, nullptr, nullptr };
 
 		game_manager.set_base_path(roots);
 		game_manager.load_definitions(
