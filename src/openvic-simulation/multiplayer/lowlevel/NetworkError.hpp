@@ -1,0 +1,32 @@
+#pragma once
+
+#include <cstdint>
+
+namespace OpenVic {
+	enum class NetworkError : uint8_t {
+		OK,
+		FAILED,
+		UNAVAILABLE,
+		UNCONFIGURED,
+		UNAUTHORIZED,
+		OUT_OF_MEMORY,
+		LOCKED,
+		EMPTY_BUFFER,
+		BUG,
+
+		ALREADY_OPEN,
+		NOT_OPEN,
+		INVALID_PARAMETER,
+		SOCKET_ERROR,
+		BROADCAST_CHANGE_FAILED,
+		UNSUPPORTED,
+		BUSY,
+
+		WOULD_BLOCK,
+		IS_CONNECTED,
+		IN_PROGRESS,
+		ADDRESS_INVALID_OR_UNAVAILABLE,
+		BUFFER_TOO_SMALL,
+		OTHER,
+	};
+}
