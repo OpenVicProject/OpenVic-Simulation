@@ -6,6 +6,7 @@
 
 #include <reliable.h>
 
+#include "openvic-simulation/multiplayer/lowlevel/Constants.hpp"
 #include "openvic-simulation/multiplayer/lowlevel/NetworkError.hpp"
 #include "openvic-simulation/multiplayer/lowlevel/UdpClient.hpp"
 
@@ -13,7 +14,7 @@ namespace OpenVic {
 	struct ReliableUdpClient : UdpClient {
 		ReliableUdpClient(reliable_config_t config = { .name = "client" });
 
-		using sequence_type = uint16_t;
+		using sequence_type = reliable_udp_sequence_type;
 
 		NetworkError store_packet(IpAddress p_ip, NetworkSocket::port_type p_port, std::span<uint8_t> p_buf) override;
 

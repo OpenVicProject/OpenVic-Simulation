@@ -1,11 +1,13 @@
 #include "GameManager.hpp"
 
 #include <chrono>
-
 #include <cstddef>
 #include <string_view>
 
 #include "openvic-simulation/dataloader/Dataloader.hpp"
+#include "openvic-simulation/multiplayer/ClientManager.hpp"
+#include "openvic-simulation/multiplayer/HostManager.hpp"
+#include "openvic-simulation/utility/Containers.hpp"
 #include "openvic-simulation/utility/Logger.hpp"
 
 using namespace OpenVic;
@@ -250,6 +252,54 @@ bool GameManager::update_clock() {
 	}
 
 	return instance_manager->update_clock();
+}
+
+void GameManager::create_client() {
+	client_manager = memory::make_unique<ClientManager>(this);
+	chat_manager = memory::make_unique<ChatManager>(client_manager.get());
+}
+
+void GameManager::create_host(memory::string session_name) {
+	host_manager = memory::make_unique<HostManager>(this);
+	if (!session_name.empty()) {
+		host_manager->get_host_session().set_game_name(session_name);
+	}
+}
+
+void GameManager::threaded_poll_network() {
+	const int MAX_POLL_WAIT_MSEC = 100;
+	const int SLEEP_DURATION_USEC = 1000;
+
+	if (host_manager) {
+		const uint64_t time = GameManager::get_elapsed_milliseconds();
+		while (!(host_manager->poll() > 0) && (GameManager::get_elapsed_milliseconds() - time) < MAX_POLL_WAIT_MSEC) {
+			std::this_thread::sleep_for(std::chrono::microseconds { SLEEP_DURATION_USEC });
+		}
+	}
+
+	if (client_manager) {
+		const uint64_t time = GameManager::get_elapsed_milliseconds();
+		while (!(client_manager->poll() > 0) && (GameManager::get_elapsed_milliseconds() - time) < MAX_POLL_WAIT_MSEC) {
+			std::this_thread::sleep_for(std::chrono::microseconds { SLEEP_DURATION_USEC });
+		}
+
+		if (host_manager) {
+			// TODO: create local ClientManager that doesn't send network data to HostManager
+			// In the case that client_manager sends something, host_manager may handle it
+			const uint64_t time = GameManager::get_elapsed_milliseconds();
+			while (!(host_manager->poll() > 0) && (GameManager::get_elapsed_milliseconds() - time) < MAX_POLL_WAIT_MSEC / 4) {
+				std::this_thread::sleep_for(std::chrono::microseconds { SLEEP_DURATION_USEC / 4 });
+			}
+		}
+	}
+}
+
+void GameManager::delete_client() {
+	client_manager.reset();
+}
+
+void GameManager::delete_host() {
+	host_manager.reset();
 }
 
 uint64_t GameManager::get_elapsed_microseconds() {
