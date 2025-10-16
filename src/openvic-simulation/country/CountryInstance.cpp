@@ -35,6 +35,7 @@ using namespace OpenVic;
 
 using enum CountryInstance::country_status_t;
 
+static constexpr size_t DAYS_OF_BALANCE_HISTORY = 30;
 static constexpr colour_t ERROR_COLOUR = colour_t::from_integer(0xFF0000);
 
 CountryInstance::CountryInstance(
@@ -72,7 +73,7 @@ CountryInstance::CountryInstance(
 	building_type_unlock_levels { building_type_keys },
 
 	/* Budget */
-	balance_history{30, 0},
+	balance_history{DAYS_OF_BALANCE_HISTORY},
 	taxable_income_by_pop_type { pop_type_keys },
 	effective_tax_rate_by_strata {
 		strata_keys,
