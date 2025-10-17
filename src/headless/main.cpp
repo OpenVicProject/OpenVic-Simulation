@@ -162,7 +162,7 @@ static bool run_headless(fs::path const& root, memory::vector<memory::string>& m
 	ret &= game_manager.load_mod_descriptors();
 
 	Logger::info("===== Loading mods... =====");
-	ret &= game_manager.load_mods(roots, replace_paths, mods);
+	ret &= game_manager.load_mods(mods);
 
 	Logger::info("===== Loading definitions... =====");
 	ret &= game_manager.load_definitions(

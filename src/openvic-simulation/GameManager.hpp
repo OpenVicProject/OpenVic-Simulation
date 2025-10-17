@@ -9,7 +9,7 @@
 #include "openvic-simulation/dataloader/Dataloader.hpp"
 #include "openvic-simulation/misc/GameRulesManager.hpp"
 #include "openvic-simulation/gen/commit_info.gen.hpp"
-#include "openvic-simulation/utility/ForwardableSpan.hpp"
+#include "openvic-simulation/utility/Containers.hpp"
 
 #include <function2/function2.hpp>
 
@@ -55,11 +55,7 @@ namespace OpenVic {
 
 		bool load_mod_descriptors();
 
-		bool load_mods(
-			Dataloader::path_vector_t& roots,
-			Dataloader::path_vector_t& replace_paths,
-			utility::forwardable_span<const memory::string> requested_mods
-		);
+		bool load_mods(memory::vector<memory::string> const& mods_to_find);
 
 		bool load_definitions(Dataloader::localisation_callback_t localisation_callback);
 
