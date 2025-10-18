@@ -1,6 +1,5 @@
 #include "Testing.hpp"
 
-#include <fstream>
 #include <memory>
 
 #include "openvic-simulation/testing/TestScript.hpp"
@@ -8,7 +7,7 @@
 
 using namespace OpenVic;
 
-Testing::Testing(DefinitionManager const& definition_manager) {
+Testing::Testing(DefinitionManager const& definition_manager, std::shared_ptr<spdlog::logger>& logger) : logger { logger } {
 
 	// Constructor for the tests will add requirements
 	// Then execute the script
@@ -31,46 +30,38 @@ void Testing::execute_all_scripts() {
 }
 
 void Testing::report_results() {
-	std::ofstream test_results;
-	// _mkdir("../src/openvic - simulation/testing/test_results"); - replace with compatible version (boost?)
-	test_results.open("../src/openvic-simulation/testing/test_results/results.txt");
 	for (auto& test_script : test_scripts) {
 		memory::vector<memory::unique_ptr<Requirement>>& reqs = test_script->get_requirements();
 		memory::vector<Requirement*> passed_reqs = test_script->get_passed_requirements();
 		memory::vector<Requirement*> failed_reqs = test_script->get_failed_requirements();
 		memory::vector<Requirement*> untested_reqs = test_script->get_untested_requirements();
 
-		test_results << test_script->get_script_name() << ":" << '\n';
-		report_result("Requirements for Test", test_results, reqs);
-		report_result("Passed Requirements", test_results, passed_reqs);
-		report_result("Failed Requirements", test_results, failed_reqs);
-		report_result("Untested Requirements", test_results, untested_reqs);
-
-		test_results << "\n\n";
+		logger->info("{}:", test_script->get_script_name());
+		report_result("Requirements for Test", reqs);
+		report_result("Passed Requirements", passed_reqs);
+		report_result("Failed Requirements", failed_reqs);
+		report_result("Untested Requirements", untested_reqs);
 	}
-	test_results.close();
 }
 
-void Testing::report_result(memory::string req_title, std::ofstream& outfile, memory::vector<memory::unique_ptr<Requirement>>& reqs) {
-	outfile << "\t" << req_title << '\n';
-	outfile << "\t";
+void Testing::report_result(memory::string req_title, memory::vector<memory::unique_ptr<Requirement>>& reqs) {
+	logger->info("\t{}", req_title);
 	for (auto& req : reqs) {
-		outfile << req->get_id() << " ";
+		logger->info("\t\t{} ", req->get_id());
 	}
 	if (reqs.size() < 1) {
-		outfile << "None";
+		logger->info("\t\tNone");
 	}
-	outfile << "\n\n";
+	logger->info("");
 }
 
-void Testing::report_result(memory::string req_title, std::ofstream& outfile, memory::vector<Requirement*>& reqs) {
-	outfile << "\t" << req_title << '\n';
-	outfile << "\t";
+void Testing::report_result(memory::string req_title, memory::vector<Requirement*>& reqs) {
+	logger->info("\t{}", req_title);
 	for (auto req : reqs) {
-		outfile << req->get_id() << " ";
+		logger->info("\t\t{} ", req->get_id());
 	}
 	if (reqs.size() < 1) {
-		outfile << "None";
+		logger->info("\t\tNone");
 	}
-	outfile << "\n\n";
+	logger->info("");
 }

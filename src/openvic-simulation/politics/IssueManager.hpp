@@ -53,14 +53,20 @@ namespace OpenVic {
 			return NodeTools::expect_identifier(
 				[this, callback, warn](std::string_view identifier) -> bool {
 					if (identifier.empty()) {
-						Logger::warn_or_error(warn, "Invalid base issue group identifier: empty!");
+						spdlog::log_s(
+							warn ? spdlog::level::warn : spdlog::level::err,
+							"Invalid base issue group identifier: empty!"
+						);
 						return warn;
 					}
 					BaseIssueGroup const* item = get_base_issue_group_by_identifier(identifier);
 					if (item != nullptr) {
 						return callback(*item);
 					}
-					Logger::warn_or_error(warn, "Invalid base issue group identifier: ", identifier);
+					spdlog::log_s(
+						warn ? spdlog::level::warn : spdlog::level::err,
+						"Invalid base issue group identifier: {}", identifier
+					);
 					return warn;
 				}
 			);

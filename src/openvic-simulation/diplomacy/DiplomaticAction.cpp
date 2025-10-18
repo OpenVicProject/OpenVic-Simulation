@@ -23,7 +23,7 @@ bool DiplomaticActionManager::add_diplomatic_action(
 	std::string_view identifier, DiplomaticActionType::Initializer&& initializer
 ) {
 	if (identifier.empty()) {
-		Logger::error("Invalid diplomatic action identifier - empty!");
+		spdlog::error_s("Invalid diplomatic action identifier - empty!");
 		return false;
 	}
 	return diplomatic_action_types.emplace_item( identifier, identifier, DiplomaticActionType { std::move(initializer) } );
@@ -33,7 +33,7 @@ bool DiplomaticActionManager::add_cancelable_diplomatic_action(
 	std::string_view identifier, CancelableDiplomaticActionType::Initializer&& initializer
 ) {
 	if (identifier.empty()) {
-		Logger::error("Invalid cancelable diplomatic action identifier - empty!");
+		spdlog::error_s("Invalid cancelable diplomatic action identifier - empty!");
 		return false;
 	}
 	return diplomatic_action_types.emplace_item( identifier, identifier, CancelableDiplomaticActionType { std::move(initializer) } );

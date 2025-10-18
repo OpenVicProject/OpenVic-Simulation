@@ -3,6 +3,8 @@
 #include <cstring>
 #include <span>
 
+#include <fmt/std.h>
+
 #include "openvic-simulation/types/OrderedContainers.hpp"
 #include "openvic-simulation/utility/Logger.hpp"
 #include "openvic-simulation/utility/Containers.hpp"
@@ -17,7 +19,7 @@ bool BMP::open(fs::path const& filepath) {
 	reset();
 	file.open(filepath, std::ios::binary);
 	if (file.fail()) {
-		Logger::error("Failed to open BMP file \"", filepath, "\"");
+		spdlog::error_s("Failed to open BMP file \"{}\"", filepath);
 		close();
 		return false;
 	}
@@ -26,21 +28,21 @@ bool BMP::open(fs::path const& filepath) {
 
 bool BMP::read_header() {
 	if (header_validated) {
-		Logger::error("BMP header already validated!");
+		spdlog::error_s("BMP header already validated!");
 		return false;
 	}
 	if (!file.is_open()) {
-		Logger::error("Cannot read BMP header before opening a file");
+		spdlog::error_s("Cannot read BMP header before opening a file");
 		return false;
 	}
 	file.seekg(0, std::ios::beg);
 	if (file.fail()) {
-		Logger::error("Failed to move to the beginning of the BMP file!");
+		spdlog::error_s("Failed to move to the beginning of the BMP file!");
 		return false;
 	}
 	file.read(reinterpret_cast<char*>(&header), sizeof(header));
 	if (file.fail()) {
-		Logger::error("Failed to read BMP header!");
+		spdlog::error_s("Failed to read BMP header!");
 		return false;
 	}
 
@@ -49,41 +51,53 @@ bool BMP::read_header() {
 	// Validate constants
 	static constexpr uint16_t BMP_SIGNATURE = 0x4d42;
 	if (header.signature != BMP_SIGNATURE) {
-		Logger::error("Invalid BMP signature: ", header.signature, " (must be ", BMP_SIGNATURE, ")");
+		spdlog::error_s(
+			"Invalid BMP signature: {} (must be {})",
+			header.signature, BMP_SIGNATURE
+		);
 		header_validated = false;
 	}
 	static constexpr uint32_t DIB_HEADER_SIZE = 40;
 	if (header.dib_header_size != DIB_HEADER_SIZE) {
-		Logger::error("Invalid BMP DIB header size: ", header.dib_header_size, " (must be ", DIB_HEADER_SIZE, ")");
+		spdlog::error_s(
+			"Invalid BMP DIB header size: {} (must be {})",
+			header.dib_header_size, DIB_HEADER_SIZE
+		);
 		header_validated = false;
 	}
 	static constexpr uint16_t NUM_PLANES = 1;
 	if (header.num_planes != NUM_PLANES) {
-		Logger::error("Invalid BMP plane count: ", header.num_planes, " (must be ", NUM_PLANES, ")");
+		spdlog::error_s(
+			"Invalid BMP plane count: {} (must be {})",
+			header.num_planes, NUM_PLANES
+		);
 		header_validated = false;
 	}
 	static constexpr uint16_t COMPRESSION = 0; // Only support uncompressed BMPs
 	if (header.compression != COMPRESSION) {
-		Logger::error("Invalid BMP compression method: ", header.compression, " (must be ", COMPRESSION, ")");
+		spdlog::error_s(
+			"Invalid BMP compression method: {} (must be {})",
+			header.compression, COMPRESSION
+		);
 		header_validated = false;
 	}
 
 	// Validate sizes and dimensions
 	if (header.image_size_bytes > 0 && header.file_size != header.offset + header.image_size_bytes) {
-		Logger::error(
-			"Invalid BMP memory sizes: file size = ", header.file_size, " != ", header.offset + header.image_size_bytes, " = ",
-			header.offset, " + ", header.image_size_bytes, " = image data offset + image data size"
+		spdlog::error_s(
+			"Invalid BMP memory sizes: file size = {} != {} = {} + {} = image data offset + image data size",
+			header.file_size, header.offset + header.image_size_bytes, header.offset, header.image_size_bytes
 		);
 		header_validated = false;
 	}
 	// TODO - support negative widths (i.e. horizontal flip)
 	if (header.width_px <= 0) {
-		Logger::error("Invalid BMP width: ", header.width_px, " (must be positive)");
+		spdlog::error_s("Invalid BMP width: {} (must be positive)", header.width_px);
 		header_validated = false;
 	}
 	// TODO - support negative heights (i.e. vertical flip)
 	if (header.height_px <= 0) {
-		Logger::error("Invalid BMP height: ", header.height_px, " (must be positive)");
+		spdlog::error_s("Invalid BMP height: {} (must be positive)", header.height_px);
 		header_validated = false;
 	}
 	// TODO - validate x_resolution_ppm
@@ -94,16 +108,19 @@ bool BMP::read_header() {
 #define STR(x) #x
 	static const ordered_set<uint16_t> BITS_PER_PIXEL { VALID_BITS_PER_PIXEL };
 	if (!BITS_PER_PIXEL.contains(header.bits_per_pixel)) {
-		Logger::error("Invalid BMP bits per pixel: ", header.bits_per_pixel, " (must be one of " STR(VALID_BITS_PER_PIXEL) ")");
+		spdlog::error_s(
+			"Invalid BMP bits per pixel: {} (must be one of " STR(VALID_BITS_PER_PIXEL) ")",
+			header.bits_per_pixel
+		);
 		header_validated = false;
 	}
 #undef VALID_BITS_PER_PIXEL
 #undef STR
 	static constexpr uint16_t PALETTE_BITS_PER_PIXEL_LIMIT = 8;
 	if (header.num_colours != 0 && header.bits_per_pixel > PALETTE_BITS_PER_PIXEL_LIMIT) {
-		Logger::error(
-			"Invalid BMP palette size: ", header.num_colours, " (should be 0 as bits per pixel is ", header.bits_per_pixel,
-			" > ", PALETTE_BITS_PER_PIXEL_LIMIT, ")"
+		spdlog::error_s(
+			"Invalid BMP palette size: {} (should be 0 as bits per pixel is {} > {})",
+			header.num_colours, header.bits_per_pixel, PALETTE_BITS_PER_PIXEL_LIMIT
 		);
 		header_validated = false;
 	}
@@ -116,7 +133,10 @@ bool BMP::read_header() {
 
 	const uint32_t expected_offset = palette_size * PALETTE_COLOUR_SIZE + sizeof(header);
 	if (header.offset != expected_offset) {
-		Logger::error("Invalid BMP image data offset: ", header.offset, " (should be ", expected_offset, ")");
+		spdlog::error_s(
+			"Invalid BMP image data offset: {} (should be {})",
+			header.offset, expected_offset
+		);
 		header_validated = false;
 	}
 
@@ -125,30 +145,30 @@ bool BMP::read_header() {
 
 bool BMP::read_palette() {
 	if (palette_read) {
-		Logger::error("BMP palette already read!");
+		spdlog::error_s("BMP palette already read!");
 		return false;
 	}
 	if (!file.is_open()) {
-		Logger::error("Cannot read BMP palette before opening a file");
+		spdlog::error_s("Cannot read BMP palette before opening a file");
 		return false;
 	}
 	if (!header_validated) {
-		Logger::error("Cannot read palette before BMP header is validated!");
+		spdlog::error_s("Cannot read palette before BMP header is validated!");
 		return false;
 	}
 	if (palette_size == 0) {
-		Logger::error("Cannot read BMP palette - header indicates this file doesn't have one");
+		spdlog::error_s("Cannot read BMP palette - header indicates this file doesn't have one");
 		return false;
 	}
 	file.seekg(sizeof(header), std::ios::beg);
 	if (file.fail()) {
-		Logger::error("Failed to move to the palette in the BMP file!");
+		spdlog::error_s("Failed to move to the palette in the BMP file!");
 		return false;
 	}
 	palette.resize(palette_size);
 	file.read(reinterpret_cast<char*>(palette.data()), palette_size * PALETTE_COLOUR_SIZE);
 	if (file.fail()) {
-		Logger::error("Failed to read BMP header!");
+		spdlog::error_s("Failed to read BMP palette!");
 		palette.clear();
 		return false;
 	}
@@ -185,34 +205,34 @@ uint16_t BMP::get_bits_per_pixel() const {
 
 std::span<const BMP::palette_colour_t> BMP::get_palette() const {
 	if (!palette_read) {
-		Logger::warning("Trying to get BMP palette before loading");
+		spdlog::warn_s("Trying to get BMP palette before loading");
 	}
 	return palette;
 }
 
 bool BMP::read_pixel_data() {
 	if (pixel_data_read) {
-		Logger::error("BMP pixel data already read!");
+		spdlog::error_s("BMP pixel data already read!");
 		return false;
 	}
 	if (!file.is_open()) {
-		Logger::error("Cannot read BMP pixel data before opening a file");
+		spdlog::error_s("Cannot read BMP pixel data before opening a file");
 		return false;
 	}
 	if (!header_validated) {
-		Logger::error("Cannot read pixel data before BMP header is validated!");
+		spdlog::error_s("Cannot read pixel data before BMP header is validated!");
 		return false;
 	}
 	file.seekg(header.offset, std::ios::beg);
 	if (file.fail()) {
-		Logger::error("Failed to move to the pixel data in the BMP file!");
+		spdlog::error_s("Failed to move to the pixel data in the BMP file!");
 		return false;
 	}
 	const size_t pixel_data_size = get_width() * get_height() * header.bits_per_pixel / CHAR_BIT;
 	pixel_data.resize(pixel_data_size);
 	file.read(reinterpret_cast<char*>(pixel_data.data()), pixel_data_size);
 	if (file.fail()) {
-		Logger::error("Failed to read BMP pixel data!");
+		spdlog::error_s("Failed to read BMP pixel data!");
 		pixel_data.clear();
 		return false;
 	}
@@ -222,7 +242,7 @@ bool BMP::read_pixel_data() {
 
 std::span<const uint8_t> BMP::get_pixel_data() const {
 	if (!pixel_data_read) {
-		Logger::warning("Trying to get BMP pixel data before loading");
+		spdlog::warn_s("Trying to get BMP pixel data before loading");
 	}
 	return pixel_data;
 }

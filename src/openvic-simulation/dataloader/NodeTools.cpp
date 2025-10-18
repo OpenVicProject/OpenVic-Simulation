@@ -34,9 +34,12 @@ static NodeCallback auto _expect_type(Callback<T const*> auto&& callback) {
 			if (cast_node != nullptr) {
 				return callback(cast_node);
 			}
-			Logger::error("Invalid node type ", ast::get_type_name(node->kind()), " when expecting ", utility::type_name<T>());
+			spdlog::error_s(
+				"Invalid node type {} when expecting {}",
+				ast::get_type_name(node->kind()), utility::type_name<T>()
+			);
 		} else {
-			Logger::error("Null node when expecting ", utility::type_name<T>());
+			spdlog::error_s("Null node when expecting {}", utility::type_name<T>());
 		}
 		return false;
 	};
@@ -54,13 +57,14 @@ static NodeCallback auto _abstract_statement_node_callback(Callback<_NodeStateme
 			if (auto const* list_value = dryad::node_try_cast<ast::ListValue>(node)) {
 				return callback(list_value->statements());
 			}
-			Logger::error(
-				"Invalid node type ", ast::get_type_name(node->kind()), " when expecting ", utility::type_name<ast::FileTree>(), " or ",
-				utility::type_name<ast::ListValue>()
+			spdlog::error_s(
+				"Invalid node type {} when expecting {} or {}",
+				ast::get_type_name(node->kind()), utility::type_name<ast::FileTree>(), utility::type_name<ast::ListValue>()
 			);
 		} else {
-			Logger::error(
-				"Null node when expecting ", utility::type_name<ast::FileTree>(), " or ", utility::type_name<ast::ListValue>()
+			spdlog::error_s(
+				"Null node when expecting {} or {}",
+				utility::type_name<ast::FileTree>(), utility::type_name<ast::ListValue>()
 			);
 		}
 		return false;
@@ -76,7 +80,7 @@ static Callback<T const*> auto _abstract_symbol_node_callback(Callback<ovdl::sym
 			if (node->value()) {
 				return callback(node->value());
 			} else {
-				Logger::error("Invalid string value - empty!");
+				spdlog::error_s("Invalid string value - empty!");
 				return false;
 			}
 		}
@@ -116,13 +120,14 @@ node_callback_t NodeTools::expect_identifier_or_string(callback_t<std::string_vi
 			if (cast_node != nullptr) {
 				return _abstract_string_node_callback<ast::FlatValue>(FWD(callback), allow_empty)(cast_node);
 			}
-			Logger::error(
-				"Invalid node type ", ast::get_type_name(node->kind()), " when expecting ", utility::type_name<ast::IdentifierValue>(), " or ",
-				utility::type_name<ast::StringValue>()
+			spdlog::error_s(
+				"Invalid node type {} when expecting {} or {}",
+				ast::get_type_name(node->kind()), utility::type_name<ast::IdentifierValue>(), utility::type_name<ast::StringValue>()
 			);
 		} else {
-			Logger::error(
-				"Null node when expecting ", utility::type_name<ast::IdentifierValue>(), " or ", utility::type_name<ast::StringValue>()
+			spdlog::error_s(
+				"Null node when expecting {} or {}",
+				utility::type_name<ast::IdentifierValue>(), utility::type_name<ast::StringValue>()
 			);
 		}
 		return false;
@@ -137,7 +142,7 @@ node_callback_t NodeTools::expect_bool(callback_t<bool> callback) {
 node_callback_t NodeTools::expect_int_bool(callback_t<bool> callback) {
 	return expect_uint64([callback](uint64_t num) mutable -> bool {
 		if (num > 1) {
-			Logger::warning("Found int bool with value >1: ", num);
+			spdlog::warn_s("Found int bool with value >1: {}", num);
 		}
 		return callback(num != 0);
 	});
@@ -150,7 +155,7 @@ node_callback_t NodeTools::expect_int64(callback_t<int64_t> callback, int base) 
 		if (result.ec == std::errc{}) {
 			return callback(val);
 		}
-		Logger::error("Invalid int identifier text: ", identifier);
+		spdlog::error_s("Invalid int identifier text: {}", identifier);
 		return false;
 	});
 }
@@ -162,7 +167,7 @@ node_callback_t NodeTools::expect_uint64(callback_t<uint64_t> callback, int base
 		if (result.ec == std::errc{}) {
 			return callback(val);
 		}
-		Logger::error("Invalid uint identifier text: ", identifier);
+		spdlog::error_s("Invalid uint identifier text: {}", identifier);
 		return false;
 	});
 }
@@ -174,7 +179,7 @@ callback_t<std::string_view> NodeTools::expect_fixed_point_str(callback_t<fixed_
 		if (successful) {
 			return callback(val);
 		}
-		Logger::error("Invalid fixed point identifier text: ", identifier);
+		spdlog::error_s("Invalid fixed point identifier text: {}", identifier);
 		return false;
 	};
 }
@@ -190,13 +195,16 @@ node_callback_t NodeTools::expect_colour(callback_t<colour_t> callback) {
 		bool ret = expect_list_of_length(3, expect_fixed_point(
 			[&col, &components](fixed_point_t val) -> bool {
 				if (val < 0 || val > 255) {
-					Logger::error("Invalid colour component #", components++, ": ", val);
+					spdlog::error_s(
+						"Invalid colour component #{}: {}",
+						components++, val
+					);
 					return false;
 				} else {
 					if (val <= 1) {
 						val *= 255;
 					} else if (!val.is_integer()) {
-						Logger::warning("Fractional part of colour component #", components, " will be truncated: ", val);
+						spdlog::warn_s("Fractional part of colour component #{} will be truncated: {}", components, val);
 					}
 					col[components++] = val.to_int64_t();
 					return true;
@@ -223,7 +231,7 @@ callback_t<std::string_view> NodeTools::expect_date_str(callback_t<Date> callbac
 		if (result.ec == std::errc{}) {
 			return callback(date);
 		}
-		Logger::error("Invalid date identifier text: ", identifier);
+		spdlog::error_s("Invalid date identifier text: {}", identifier);
 		return false;
 	};
 }
@@ -342,10 +350,10 @@ node_callback_t NodeTools::expect_assign(key_value_callback_t callback) {
 		if (ret) {
 			ret &= callback(left, assign_node->right());
 			if (!ret) {
-				Logger::error("Callback failed for assign node with key: ", left);
+				spdlog::error_s("Callback failed for assign node with key: {}", left);
 			}
 		} else {
-			Logger::error("Callback key failed for assign node with key: ", left);
+			spdlog::error_s("Callback key failed for assign node with key: {}", left);
 		}
 		return ret;
 	});
@@ -358,7 +366,10 @@ node_callback_t NodeTools::expect_list_and_length(length_callback_t length_callb
 		size_t size = length_callback(dist);
 
 		if (size > dist) {
-			Logger::error("Trying to read more values than the list contains: ", size, " > ", dist);
+			spdlog::error_s(
+				"Trying to read more values than the list contains: {} > {}",
+				size, dist
+			);
 			size = dist;
 			ret = false;
 		}
@@ -382,7 +393,10 @@ node_callback_t NodeTools::expect_list_of_length(size_t length, node_callback_t 
 		bool ret = expect_list_and_length(
 			[length, &size_ret](size_t size) -> size_t {
 				if (size != length) {
-					Logger::error("List length ", size, " does not match expected length ", length);
+					spdlog::error_s(
+						"List length {} does not match expected length {}",
+						size, length
+					);
 					size_ret = false;
 					if (length < size) {
 						return length;
@@ -422,7 +436,7 @@ static node_callback_t _expect_key(Key key, NodeCallback auto&& callback, bool* 
 				*key_found = false;
 			}
 			return [](ast::NodeCPtr) -> bool {
-				Logger::error("Failed to find expected interned key.");
+				spdlog::error_s("Failed to find expected interned key.");
 				return false;
 			};
 		}
@@ -468,7 +482,7 @@ static node_callback_t _expect_key(Key key, NodeCallback auto&& callback, bool* 
 			if (key_found != nullptr) {
 				*key_found = false;
 			} else {
-				Logger::error("Failed to find expected key: \"", key_str, "\"");
+				spdlog::error_s("Failed to find expected key: \"{}\"", key_str);
 			}
 			ret = false;
 		} else {
@@ -476,7 +490,10 @@ static node_callback_t _expect_key(Key key, NodeCallback auto&& callback, bool* 
 				*key_found = true;
 			}
 			if (!allow_duplicates && keys_found > 1) {
-				Logger::error("Found ", keys_found, " instances of key: \"", key_str, "\" (expected 1)");
+				spdlog::error_s(
+					"Found {} instances of key: \"{}\" (expected 1)",
+					keys_found, key_str
+				);
 				ret = false;
 			}
 		}
