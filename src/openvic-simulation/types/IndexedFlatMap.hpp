@@ -524,6 +524,10 @@ namespace OpenVic {
 			return keys.size();
 		}
 
+		constexpr bool empty() const {
+			return keys.empty();
+		}
+
 		constexpr size_t get_min_index() const {
 			return min_index;
 		}
