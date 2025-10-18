@@ -1,11 +1,14 @@
 #include "GameManager.hpp"
 
 #include <chrono>
-
 #include <cstddef>
 #include <string_view>
 
+#include <range/v3/algorithm/contains.hpp>
+#include <range/v3/algorithm/find_if.hpp>
+
 #include "openvic-simulation/dataloader/Dataloader.hpp"
+#include "openvic-simulation/types/OrderedContainers.hpp"
 #include "openvic-simulation/utility/Logger.hpp"
 
 using namespace OpenVic;
@@ -65,12 +68,8 @@ bool GameManager::load_mod_descriptors() {
 	return true;
 }
 
-bool GameManager::load_mods(
-	Dataloader::path_vector_t& roots,
-	Dataloader::path_vector_t& replace_paths,
-	utility::forwardable_span<const memory::string> requested_mods
-) {
-	if (requested_mods.empty()) {
+bool GameManager::load_mods(memory::vector<memory::string> const& mods_to_find) {
+	if (mods_to_find.empty()) {
 		return true;
 	}
 
@@ -81,10 +80,8 @@ bool GameManager::load_mods(
 	/* Check loaded mod descriptors for requested mods, using either full name or user directory name
 	 * (Historical Project Mod 0.4.6 or HPM both valid, for example), and load them plus their dependencies.
 	 */
-	for (std::string_view requested_mod : requested_mods) {
-		auto it = std::find_if(
-			mod_manager.get_mods().begin(),
-			mod_manager.get_mods().end(),
+	for (std::string_view requested_mod : mods_to_find) {
+		memory::vector<Mod>::const_iterator it = ranges::find_if(mod_manager.get_mods(),
 			[&requested_mod](Mod const& mod) -> bool {
 				return mod.get_identifier() == requested_mod || mod.get_user_dir() == requested_mod;
 			}
@@ -118,27 +115,28 @@ bool GameManager::load_mods(
 		}
 	}
 
+	Dataloader::path_vector_t roots = dataloader.get_roots();
+	roots.reserve(load_list.size() + roots.size());
+
+	vector_ordered_set<fs::path> replace_paths;
+
 	/* Actually registers all roots and replace paths to be loaded by the game. */
 	for (Mod const* mod : load_list) {
 		roots.emplace_back(roots[0] / mod->get_dataloader_root_path());
 		for (std::string_view path : mod->get_replace_paths()) {
-			if (std::find(replace_paths.begin(), replace_paths.end(), path) == replace_paths.end()) {
-				replace_paths.emplace_back(path);
-			}
+			replace_paths.emplace(path);
 		}
 	}
 
 	/* Load only vanilla and push an error if mod loading failed. */
 	if (ret) {
-		mod_manager.set_loaded_mods(std::move(load_list.release()));
+		mod_manager.set_loaded_mods(load_list.release());
 	} else {
 		mod_manager.set_loaded_mods({});
-		replace_paths.clear();
-		roots.erase(roots.begin()+1, roots.end());
 		Logger::error("Mod loading failed, loading base only!");
 	}
 
-	if (!dataloader.set_roots(roots, replace_paths, false)) {
+	if (!dataloader.set_roots(roots, replace_paths.values_container(), false)) {
 		Logger::error("Failed to set dataloader roots!");
 		ret = false;
 	}
