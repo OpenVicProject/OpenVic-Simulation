@@ -84,13 +84,13 @@ void InstanceManager::set_gamestate_needs_update() {
 	if (!currently_updating_gamestate) {
 		gamestate_needs_update = true;
 	} else {
-		Logger::error("Attempted to queue a gamestate update already updating the gamestate!");
+		spdlog::error_s("Attempted to queue a gamestate update already updating the gamestate!");
 	}
 }
 
 void InstanceManager::update_gamestate() {
 	if (currently_updating_gamestate) {
-		Logger::error("Attempted to update gamestate while already updating gamestate!");
+		spdlog::error_s("Attempted to update gamestate while already updating gamestate!");
 		return;
 	}
 
@@ -100,7 +100,7 @@ void InstanceManager::update_gamestate() {
 
 	currently_updating_gamestate = true;
 
-	Logger::info("Update: ", today);
+	SPDLOG_INFO("Update: {}", today);
 
 	update_modifier_sums();
 
@@ -122,7 +122,7 @@ void InstanceManager::tick() {
 
 	today++;
 
-	Logger::info("Tick: ", today);
+	SPDLOG_INFO("Tick: {}", today);
 
 	// Tick...
 	country_instance_manager.country_manager_tick_before_map(*this);
@@ -138,7 +138,7 @@ void InstanceManager::tick() {
 
 void InstanceManager::execute_game_actions() {
 	if (currently_executing_game_actions) {
-		Logger::error("Attempted to execute game actions while already executing game actions!");
+		spdlog::error_s("Attempted to execute game actions while already executing game actions!");
 		return;
 	}
 
@@ -166,7 +166,7 @@ void InstanceManager::execute_game_actions() {
 
 bool InstanceManager::setup() {
 	if (is_game_instance_setup()) {
-		Logger::error("Cannot setup game instance - already set up!");
+		spdlog::error_s("Cannot setup game instance - already set up!");
 		return false;
 	}
 
@@ -186,26 +186,26 @@ bool InstanceManager::setup() {
 
 bool InstanceManager::load_bookmark(Bookmark const* new_bookmark) {
 	if (is_bookmark_loaded()) {
-		Logger::error("Cannot load bookmark - already loaded!");
+		spdlog::error_s("Cannot load bookmark - already loaded!");
 		return false;
 	}
 
 	if (!is_game_instance_setup()) {
-		Logger::error("Cannot load bookmark - game instance not set up!");
+		spdlog::error_s("Cannot load bookmark - game instance not set up!");
 		return false;
 	}
 
 	if (new_bookmark == nullptr) {
-		Logger::error("Cannot load bookmark - null!");
+		spdlog::critical_s("Cannot load bookmark - null!");
 		return false;
 	}
 
 	bookmark = new_bookmark;
 
-	Logger::info("Loading bookmark ", bookmark->get_name(), " with start date ", bookmark->get_date());
+	SPDLOG_INFO("Loading bookmark {} with start date {}", bookmark->get_name(), bookmark->get_date());
 
 	if (!definition_manager.get_define_manager().in_game_period(bookmark->get_date())) {
-		Logger::warning("Bookmark date ", bookmark->get_date(), " is not in the game's time period!");
+		spdlog::warn_s("Bookmark date {} is not in the game's time period!", bookmark->get_date());
 	}
 
 	today = bookmark->get_date();
@@ -236,7 +236,7 @@ bool InstanceManager::load_bookmark(Bookmark const* new_bookmark) {
 	for (ProvinceInstance const& province_instance : map_instance.get_province_instances()) {
 		if (!province_instance.get_province_definition().is_water() && OV_unlikely(province_instance.get_state() == nullptr)) {
 			all_has_state = false;
-			Logger::error(memory::fmt::format("Province {} has no state.", province_instance.get_identifier()));
+			spdlog::error_s("Province {} has no state.", province_instance);
 			continue;
 		}
 	}
@@ -252,7 +252,7 @@ bool InstanceManager::load_bookmark(Bookmark const* new_bookmark) {
 
 bool InstanceManager::start_game_session() {
 	if (is_game_session_started()) {
-		Logger::error("Cannot start game session - already started!");
+		spdlog::error_s("Cannot start game session - already started!");
 		return false;
 	}
 
@@ -267,7 +267,7 @@ bool InstanceManager::start_game_session() {
 
 bool InstanceManager::update_clock() {
 	if (!is_game_session_started()) {
-		Logger::error("Cannot update clock - game session not started!");
+		spdlog::error_s("Cannot update clock - game session not started!");
 		return false;
 	}
 
@@ -281,7 +281,7 @@ void InstanceManager::force_tick_and_update() {
 
 bool InstanceManager::set_today_and_update(Date new_today) {
 	if (!is_game_session_started()) {
-		Logger::error("Cannot update clock - game session not started!");
+		spdlog::error_s("Cannot update clock - game session not started!");
 		return false;
 	}
 
@@ -307,12 +307,12 @@ void InstanceManager::update_modifier_sums() {
 
 bool InstanceManager::queue_game_action(game_action_type_t type, game_action_argument_t&& argument) {
 	if (currently_executing_game_actions) {
-		Logger::error("Attempted to queue a game action while already executing game actions!");
+		spdlog::error_s("Attempted to queue a game action while already executing game actions!");
 		return false;
 	}
 
 	if (type >= game_action_type_t::MAX_GAME_ACTION) {
-		Logger::error("Invalid game action type ", static_cast<uint64_t>(type));
+		spdlog::critical_s("Invalid game action type {}", static_cast<uint64_t>(type));
 		return false;
 	}
 

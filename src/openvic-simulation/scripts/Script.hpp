@@ -29,13 +29,13 @@ namespace OpenVic {
 		bool parse_script(bool can_be_null, _Context... context) {
 			if (_root_nodes.empty()) {
 				if (!can_be_null) {
-					Logger::error("Missing script node!");
+					spdlog::error_s("Missing script node!");
 				}
 				return can_be_null;
 			}
 
 			if (_root_nodes.size() > 1) {
-				Logger::warning("Multiple root nodes");
+				spdlog::warn_s("Multiple root nodes");
 			}
 
 			const bool ret = _parse_script(_root_nodes, context...);
