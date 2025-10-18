@@ -39,8 +39,9 @@ void PoliticsInstanceManager::unlock_ideology(Ideology const& ideology) {
 	if (!spawn_date.has_value()) {
 		spawn_date = instance_manager.get_today();
 	} else {
-		Logger::warning(
-			"Cannot unlock ideology \"", ideology.get_identifier(), "\" - it was already unlocked on: ", *spawn_date
+		spdlog::warn_s(
+			"Cannot unlock ideology \"{}\" - it was already unlocked on: {}",
+			ideology, *spawn_date
 		);
 	}
 }

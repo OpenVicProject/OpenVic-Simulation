@@ -17,15 +17,18 @@ bool UIManager::add_font(
 	Font::colour_codes_t&& colour_codes
 ) {
 	if (identifier.empty()) {
-		Logger::error("Invalid font identifier - empty!");
+		spdlog::error_s("Invalid font identifier - empty!");
 		return false;
 	}
 	if (colour.alpha == colour_argb_t::colour_traits::null) {
-		Logger::error("Invalid colour for font ", identifier, " - completely transparent! (", colour, ")");
+		spdlog::error_s(
+			"Invalid colour for font {} - completely transparent! ({})",
+			identifier, colour
+		);
 		return false;
 	}
 	if (fontname.empty()) {
-		Logger::error("Invalid fontname for font ", identifier, " - empty!");
+		spdlog::error_s("Invalid fontname for font {} - empty!", identifier);
 		return false;
 	}
 	const bool ret = fonts.emplace_item(
@@ -38,7 +41,7 @@ bool UIManager::add_font(
 		GFX::Font::colour_codes_t const& loaded_colour_codes = get_back_font().get_colour_codes();
 		if (!loaded_colour_codes.empty()) {
 			universal_colour_codes = loaded_colour_codes;
-			Logger::info("Loaded universal colour codes from font: \"", identifier, "\"");
+			SPDLOG_INFO("Loaded universal colour codes from font: \"{}\"", identifier);
 		}
 	}
 
@@ -60,7 +63,7 @@ bool UIManager::_load_font(ast::NodeCPtr node) {
 		"colorcodes", ZERO_OR_ONE, expect_dictionary(
 			[&colour_codes](std::string_view key, ast::NodeCPtr value) -> bool {
 				if (key.size() != 1) {
-					Logger::error("Invalid colour code key: \"", key, "\" (expected single character)");
+					spdlog::error_s("Invalid colour code key: \"{}\" (expected single character)", key);
 					return false;
 				}
 				return expect_colour(map_callback(colour_codes, key.front()))(value);
@@ -79,7 +82,10 @@ NodeCallback auto UIManager::_load_fonts(std::string_view font_key) {
 		fonts,
 		[this, font_key](std::string_view key, ast::NodeCPtr node) -> bool {
 			if (key != font_key) {
-				Logger::error("Invalid key: \"", key, "\" (expected ", font_key, ")");
+				spdlog::error_s(
+					"Invalid key: \"{}\" (expected {})",
+					key, font_key
+				);
 				return false;
 			}
 			return _load_font(node);
@@ -142,7 +148,7 @@ bool UIManager::load_gfx_file(ast::NodeCPtr root) {
 
 bool UIManager::load_gui_file(std::string_view scene_name, ast::NodeCPtr root) {
 	if (!sprites_are_locked()) {
-		Logger::error("Cannot load GUI files until GFX files (i.e. Sprites) are locked!");
+		spdlog::error_s("Cannot load GUI files until GFX files (i.e. Sprites) are locked!");
 		return false;
 	}
 	return expect_dictionary_keys(

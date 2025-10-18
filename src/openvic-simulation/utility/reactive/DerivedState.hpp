@@ -28,12 +28,12 @@ namespace OpenVic {
 			T value = calculate(*this);
 
 			if (has_no_connections()) {
-				Logger::warning(
-					"DEVELOPER WARNING: OpenVic::DerivedState<",
-					OpenVic::utility::type_name<T>(),
-					"> has no reactive dependencies. Its value will never change again.",
-					"If it should be reactive, ensure 'calculate' accesses its dependencies. ",
-					"Alternatively use a plain variable or MutableState<T>."
+				spdlog::warn_s(
+					"DEVELOPER: OpenVic::DerivedState<{}> has no reactive dependencies. "
+					"Its value will never change again. "
+					"If it should be reactive, ensure 'calculate' accesses its dependencies. "
+					"Alternatively use a plain variable or MutableState<T>.",
+					OpenVic::utility::type_name<T>()
 				);
 			}
 

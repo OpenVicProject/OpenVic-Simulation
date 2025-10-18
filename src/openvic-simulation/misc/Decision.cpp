@@ -28,19 +28,19 @@ bool DecisionManager::add_decision(
 	ConditionScript&& allow, ConditionalWeightFactorMul&& ai_will_do, EffectScript&& effect
 ) {
 	if (identifier.empty()) {
-		Logger::error("Invalid decision identifier - empty!");
+		spdlog::error_s("Invalid decision identifier - empty!");
 		return false;
 	}
 
 	if (news) {
 		if (news_desc_long.empty() || news_desc_medium.empty() || news_desc_short.empty()) {
-			Logger::warning(
-				"Decision with ID ", identifier, " is a news decision but doesn't have long, medium and short descriptions!"
+			spdlog::warn_s(
+				"Decision with ID {} is a news decision but doesn't have long, medium and short descriptions!", identifier
 			);
 		}
 	} else {
 		if (!news_title.empty() || !news_desc_long.empty() || !news_desc_medium.empty() || !news_desc_short.empty()) {
-			Logger::warning("Decision with ID ", identifier, " is not a news decision but has news strings specified!");
+			spdlog::warn_s("Decision with ID {} is not a news decision but has news strings specified!", identifier);
 		}
 	}
 

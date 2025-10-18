@@ -64,7 +64,7 @@ namespace OpenVic {
 
 		void _set_name(std::string_view new_name) {
 			if (!name.empty()) {
-				Logger::warning("Overriding scene name ", name, " with ", new_name);
+				spdlog::warn_s("Overriding scene name {} with {}", name, new_name);
 			}
 			name = new_name;
 		}

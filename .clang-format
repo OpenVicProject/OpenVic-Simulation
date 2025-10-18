@@ -86,9 +86,11 @@ IncludeCategories:
     Priority: 6
   - Regex: ^<fmt/
     Priority: 7
-  - Regex: ^<range
+  - Regex: ^<spdlog/
     Priority: 8
-  - Regex: ^"openvic-simulation/
+  - Regex: ^<range
     Priority: 9
-  - Regex: .*
+  - Regex: ^"openvic-simulation/
     Priority: 10
+  - Regex: .*
+    Priority: 11

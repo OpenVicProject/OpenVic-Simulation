@@ -4,6 +4,10 @@
 #include <cassert>
 #include <string_view>
 #include <ostream>
+#include <type_traits>
+
+#include <fmt/base.h>
+#include <fmt/format.h>
 
 #include "openvic-simulation/types/Colour.hpp"
 #include "openvic-simulation/utility/Getters.hpp"
@@ -103,4 +107,30 @@ namespace OpenVic {
 
 	template<typename T>
 	concept HasGetIdentifierAndGetColour = HasGetIdentifier<T> && HasGetColour<T>;
+}
+
+template<typename T>
+struct fmt::formatter<T, std::enable_if_t<std::is_base_of_v<OpenVic::HasIdentifier, T>, char>> : fmt::formatter<string_view> {
+	auto format(const T& has_id, format_context& ctx) const {
+		return formatter<string_view>::format(has_id.get_identifier(), ctx);
+	}
+};
+
+namespace fmt {
+	template<typename T>
+	struct validate_view {
+		T const* ptr;
+	};
+
+	template<typename T>
+	validate_view<T> validate(T const* ptr) {
+		return { ptr };
+	}
+
+	template <typename T>
+	struct formatter<validate_view<T>> : formatter<T> {
+		auto format(const validate_view<T>& value, format_context& ctx) const {
+			return value.ptr ? formatter<T>::format(*value.ptr, ctx) : formatter<string_view>{}.format("<NULL>", ctx);
+		}
+	};
 }

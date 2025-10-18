@@ -48,11 +48,11 @@ bool MapmodeManager::add_mapmode(
 	bool parchment_mapmode_allowed
 ) {
 	if (identifier.empty()) {
-		Logger::error("Invalid mapmode identifier - empty!");
+		spdlog::error_s("Invalid mapmode identifier - empty!");
 		return false;
 	}
 	if (colour_func == nullptr) {
-		Logger::error("Mapmode colour function is null for identifier: ", identifier);
+		spdlog::error_s("Mapmode colour function is null for identifier: {}", identifier);
 		return false;
 	}
 	return mapmodes.emplace_item(
@@ -67,15 +67,15 @@ bool MapmodeManager::generate_mapmode_colours(
 	uint8_t* target
 ) const {
 	if (target == nullptr) {
-		Logger::error("Mapmode colour target pointer is null!");
+		spdlog::error_s("Mapmode colour target pointer is null!");
 		return false;
 	}
 
 	bool ret = true;
 	if (mapmode == nullptr) {
 		mapmode = &Mapmode::ERROR_MAPMODE;
-		Logger::error(
-			"Trying to generate mapmode colours using null mapmode! Defaulting to \"", mapmode->get_identifier(), "\""
+		spdlog::error_s(
+			"Trying to generate mapmode colours using null mapmode! Defaulting to \"{}\"", *mapmode
 		);
 		ret = false;
 	}
@@ -193,7 +193,7 @@ static constexpr auto shaded_mapmode(ordered_map<KeyType const*, ValueType> cons
 
 bool MapmodeManager::setup_mapmodes() {
 	if (mapmodes_are_locked()) {
-		Logger::error("Cannot setup mapmodes - already locked!");
+		spdlog::error_s("Cannot setup mapmodes - already locked!");
 		return false;
 	}
 

@@ -139,7 +139,7 @@ void ThreadPool::initialise_threadpool(
 	utility::forwardable_span<ProvinceInstance> provinces
 ) {
 	if (threads.size() > 0) {
-		Logger::error("Attempted to initialise ThreadPool again.");
+		spdlog::error_s("Attempted to initialise ThreadPool again.");
 		return;
 	}
 
