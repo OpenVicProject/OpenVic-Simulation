@@ -2,6 +2,8 @@
 
 #include <cmath>
 
+#include <fmt/format.h>
+
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
 #include "openvic-simulation/utility/Utility.hpp"
 

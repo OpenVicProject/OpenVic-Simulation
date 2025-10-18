@@ -16,7 +16,7 @@ bool SoundEffectManager::_load_sound_define(Dataloader const& dataloader, std::s
 		memory::string lookup = StringUtils::append_string_views("sound/", val);
 		file = dataloader.lookup_file(lookup, false);
 		if (file.empty()) {
-			Logger::warning("Lookup for \"", lookup, "\" failed!");
+			spdlog::warn_s("Lookup for \"{}\" failed!", lookup);
 		}
 		return true;
 	};
@@ -28,11 +28,11 @@ bool SoundEffectManager::_load_sound_define(Dataloader const& dataloader, std::s
 	)(root);
 
 	if (sfx_identifier.empty()) {
-		Logger::error("Invalid sound identifier - empty!");
+		spdlog::error_s("Invalid sound identifier - empty!");
 		return false;
 	}
 	if (file.empty()) {
-		Logger::warning("Sound filename ", sfx_identifier, " was empty!");
+		spdlog::warn_s("Sound filename {} was empty!", sfx_identifier);
 	}
 
 	ret &= sound_effects.emplace_item(
