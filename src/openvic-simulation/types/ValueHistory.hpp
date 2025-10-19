@@ -23,6 +23,7 @@ namespace OpenVic {
 		using typename base_type::difference_type;
 		using base_type::operator[];
 		using base_type::size;
+		using base_type::capacity;
 		using base_type::empty;
 		using base_type::begin;
 		using base_type::end;
