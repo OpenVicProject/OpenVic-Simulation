@@ -29,6 +29,7 @@
 #include "openvic-simulation/types/PopSize.hpp"
 #include "openvic-simulation/types/UnitBranchType.hpp"
 #include "openvic-simulation/utility/Containers.hpp"
+#include <openvic-simulation/utility/Logger.hpp>
 #include "openvic-simulation/utility/Utility.hpp"
 
 using namespace OpenVic;
@@ -1868,79 +1869,80 @@ void CountryInstance::country_tick_before_map(InstanceManager& instance_manager)
 	// + loan interest
 
 	fixed_point_t available_funds = cache_stockpile_start_of_tick = cash_stockpile;
-	fixed_point_t actual_import_subsidies;
 	const fixed_point_t projected_administration_spending_copy = projected_administration_spending.get_untracked();
 	const fixed_point_t projected_education_spending_copy = projected_education_spending.get_untracked();
 	const fixed_point_t projected_military_spending_copy = projected_military_spending.get_untracked();
 	const fixed_point_t projected_social_spending_copy = projected_social_spending.get_untracked();
 	const fixed_point_t projected_import_subsidies_copy = projected_import_subsidies.get_untracked();
 	if (projected_spending.get_untracked() <= available_funds) {
-		actual_administration_spending.set(projected_administration_spending_copy);
-		actual_education_spending.set(projected_education_spending_copy);
-		actual_military_spending.set(projected_military_spending_copy);
-		actual_social_spending.set(projected_social_spending_copy);
-		actual_import_subsidies = projected_import_subsidies_copy;
+		actual_administration_budget = projected_administration_spending_copy;
+		actual_education_budget = projected_education_spending_copy;
+		actual_military_budget = projected_military_spending_copy;
+		actual_social_budget = projected_social_spending_copy;
+		actual_import_subsidies_budget = projected_import_subsidies_copy;
 	} else {
 		//TODO try take loan (callback?)
 		//update available_funds with loan
 
 		if (available_funds < projected_education_spending_copy) {
-			actual_education_spending.set(available_funds);
-			actual_administration_spending.set(0);
-			actual_military_spending.set(0);
-			actual_social_spending.set(0);
+			actual_education_budget = available_funds;
+			actual_administration_budget = 0;
+			actual_military_budget = 0;
+			actual_social_budget = 0;
+			actual_import_subsidies_budget = 0;
 		} else {
 			available_funds -= projected_education_spending_copy;
-			actual_education_spending.set(projected_education_spending_copy);
+			actual_education_budget = projected_education_spending_copy;
 
 			if (available_funds < projected_administration_spending_copy) {
-				actual_administration_spending.set(available_funds);
-				actual_military_spending.set(0);
-				actual_social_spending.set(0);
+				actual_administration_budget = available_funds;
+				actual_military_budget = 0;
+				actual_social_budget = 0;
+				actual_import_subsidies_budget = 0;
 			} else {
 				available_funds -= projected_administration_spending_copy;
-				actual_administration_spending.set(projected_administration_spending_copy);
+				actual_administration_budget = projected_administration_spending_copy;
 
 				if (available_funds < projected_social_spending_copy) {
-					actual_social_spending.set(available_funds);
-					actual_military_spending.set(0);
+					actual_social_budget = available_funds;
+					actual_military_budget = 0;
+					actual_import_subsidies_budget = 0;
 				} else {
 					available_funds -= projected_social_spending_copy;
-					actual_social_spending.set(projected_social_spending_copy);
+					actual_social_budget = projected_social_spending_copy;
 
 					if (available_funds < projected_military_spending_copy) {
-						actual_military_spending.set(available_funds);
-						actual_import_subsidies = 0;
+						actual_military_budget = available_funds;
+						actual_import_subsidies_budget = 0;
 					} else {
 						available_funds -= projected_military_spending_copy;
-						actual_military_spending.set(projected_military_spending_copy);
+						actual_military_budget = projected_military_spending_copy;
 
-						actual_import_subsidies = std::min(available_funds, projected_import_subsidies_copy);
+						actual_import_subsidies_budget = std::min(available_funds, projected_import_subsidies_copy);
 					}
 				}
 			}
 		}
 	}
 
+	was_administration_budget_cut_yesterday = actual_administration_budget < projected_administration_spending_copy;
+	was_education_budget_cut_yesterday = actual_education_budget < projected_education_spending_copy;
+	was_military_budget_cut_yesterday = actual_military_budget < projected_military_spending_copy;
+	was_social_budget_cut_yesterday = actual_social_budget < projected_social_spending_copy;
+	was_import_subsidies_budget_cut_yesterday = actual_import_subsidies_budget < projected_import_subsidies_copy;
+
 	for (auto& data : goods_data.get_values()) {
 		data.clear_daily_recorded_data();
 	}
-
-	actual_net_tariffs.set(
-		has_import_subsidies.get_untracked()
-		? -actual_import_subsidies
-		: fixed_point_t::_0
-	);
 	taxable_income_by_pop_type.fill(0);
-	const fixed_point_t total_expenses = actual_import_subsidies
-		+ actual_administration_spending.get_untracked()
-		+ actual_education_spending.get_untracked()
-		+ actual_military_spending.get_untracked()
-		+ actual_social_spending.get_untracked();
-		//TODO: + factory subsidies
-		//TODO: + interest
-		//TODO: + diplomatic costs
-	cash_stockpile -= total_expenses;
+	actual_administration_spending
+		= actual_education_spending
+		= actual_military_spending
+		= actual_pensions_spending
+		= actual_unemployment_subsidies_spending
+		= actual_import_subsidies_spending
+		= actual_tariff_income
+	 	= 0;
 }
 
 void CountryInstance::country_tick_after_map(InstanceManager& instance_manager) {
@@ -2007,6 +2009,59 @@ void CountryInstance::country_tick_after_map(InstanceManager& instance_manager) 
 			total_gold_production += produced_quantity;
 		}
 	}
+
+	const fixed_point_t actual_administration_spending_copy = actual_administration_spending.load();
+	if (OV_unlikely(actual_administration_spending_copy > actual_administration_budget)) {
+		Logger::error(
+			"Country ", get_identifier(), " has overspend on administration. Spending ", actual_administration_spending_copy,
+			" instead of the allocated ", actual_administration_budget ," This indicates a severe bug in the economy code."
+		);
+	}
+	cash_stockpile -= actual_administration_spending;
+
+	const fixed_point_t actual_education_spending_copy = actual_education_spending.load();
+	if (OV_unlikely(actual_education_spending_copy > actual_education_budget)) {
+		Logger::error(
+			"Country ", get_identifier(), " has overspend on education. Spending ", actual_education_spending_copy,
+			" instead of the allocated ", actual_education_budget ," This indicates a severe bug in the economy code."
+		);
+	}
+	cash_stockpile -= actual_education_spending;
+
+	const fixed_point_t actual_military_spending_copy = actual_military_spending.load();
+	if (OV_unlikely(actual_military_spending_copy > actual_military_budget)) {
+		Logger::error(
+			"Country ", get_identifier(), " has overspend on military. Spending ", actual_military_spending_copy,
+			" instead of the allocated ", actual_military_budget ," This indicates a severe bug in the economy code."
+		);
+	}
+	cash_stockpile -= actual_military_spending;
+
+	const fixed_point_t actual_social_spending_copy = actual_pensions_spending.load() + actual_unemployment_subsidies_spending.load();
+	if (OV_unlikely(actual_social_spending_copy > actual_social_budget)) {
+		Logger::error(
+			"Country ", get_identifier(), " has overspend on pensions and/or unemployment subsidies. Spending ", actual_pensions_spending.load(),
+			" on pensions and ", actual_unemployment_subsidies_spending.load() ," on unemployment subsidies instead of the total allocated ", actual_social_budget ," This indicates a severe bug in the economy code."
+		);
+	}
+	cash_stockpile -= actual_pensions_spending;
+	cash_stockpile -= actual_unemployment_subsidies_spending;
+
+	const fixed_point_t actual_import_subsidies_spending_copy = actual_import_subsidies_spending.load();
+	if (OV_unlikely(actual_import_subsidies_spending_copy > actual_import_subsidies_budget)) {
+		Logger::error(
+			"Country ", get_identifier(), " has overspend on import subsidies. Spending ", actual_import_subsidies_spending_copy,
+			" instead of the allocated ", actual_import_subsidies_budget ," This indicates a severe bug in the economy code."
+		);
+	}
+	cash_stockpile -= actual_import_subsidies_spending;
+
+	const fixed_point_t cash_stockpile_copy = cash_stockpile.load();
+	if (OV_unlikely(cash_stockpile_copy < 0)) {
+		Logger::error("Country ", get_identifier(), " has overspend resulting in a cash stockpile of ", cash_stockpile_copy, " This indicates a severe bug in the economy code.");
+	}
+
+	cash_stockpile += actual_tariff_income;
 
 	const fixed_point_t gold_income_value = country_defines.get_gold_to_cash_rate() * total_gold_production;;
 	gold_income.set(gold_income_value);
@@ -2087,72 +2142,73 @@ void CountryInstance::request_salaries_and_welfare_and_import_subsidies(Pop& pop
 	SharedPopTypeValues const& pop_type_values = shared_country_values.get_shared_pop_type_values(pop_type);
 	ModifierEffectCache const& modifier_effect_cache = shared_country_values.get_modifier_effect_cache();
 
-	const fixed_point_t actual_administration_spending_value = actual_administration_spending.get_untracked();
-	if (actual_administration_spending_value > fixed_point_t::_0) {
+	if (actual_administration_budget > fixed_point_t::_0) {
 		const fixed_point_t administration_salary = fixed_point_t::mul_div(
 			pop_size * administration_salary_base_by_pop_type.at(pop_type).get_untracked(),
-			actual_administration_spending_value,
+			actual_administration_budget,
 			projected_administration_spending_unscaled_by_slider.get_untracked()
 		) / Pop::size_denominator;
 		if (administration_salary > fixed_point_t::_0) {
 			pop.add_government_salary_administration(administration_salary);
+			actual_administration_spending += administration_salary;
 		}
 	}
 
-	const fixed_point_t actual_education_spending_value = actual_education_spending.get_untracked();
-	if (actual_education_spending_value > fixed_point_t::_0) {
+	if (actual_education_budget > fixed_point_t::_0) {
 		const fixed_point_t education_salary = fixed_point_t::mul_div(
 			pop_size * education_salary_base_by_pop_type.at(pop_type).get_untracked(),
-			actual_education_spending_value,
+			actual_education_budget,
 			projected_education_spending_unscaled_by_slider.get_untracked()
 		) / Pop::size_denominator;
 		if (education_salary > fixed_point_t::_0) {
 			pop.add_government_salary_education(education_salary);
+			actual_education_spending += education_salary;
 		}
 	}
 
-	const fixed_point_t actual_military_spending_value = actual_military_spending.get_untracked();
-	if (actual_military_spending_value > fixed_point_t::_0) {
+	if (actual_military_budget > fixed_point_t::_0) {
 		const fixed_point_t military_salary = fixed_point_t::mul_div(
 			pop_size * military_salary_base_by_pop_type.at(pop_type).get_untracked(),
-			actual_military_spending_value,
+			actual_military_budget,
 			projected_military_spending_unscaled_by_slider.get_untracked()
 		) / Pop::size_denominator;
 		if (military_salary > fixed_point_t::_0) {
 			pop.add_government_salary_military(military_salary);
+			actual_military_spending += military_salary;
 		}
 	}
 
-	const fixed_point_t actual_social_spending_value = actual_social_spending.get_untracked();
-	if (actual_social_spending_value > fixed_point_t::_0) {
+	if (actual_social_budget > fixed_point_t::_0) {
 		const fixed_point_t pension_income = fixed_point_t::mul_div(
 			pop_size * calculate_pensions_base(modifier_effect_cache, pop_type),
-			actual_social_spending_value,
+			actual_social_budget,
 			projected_social_spending_unscaled_by_slider.get_untracked()
 		) / Pop::size_denominator;
 		if (pension_income > fixed_point_t::_0) {
 			pop.add_pensions(pension_income);
+			actual_pensions_spending += pension_income;
 		}
 
 		const fixed_point_t unemployment_subsidies = fixed_point_t::mul_div(
 			pop.get_unemployed() * calculate_unemployment_subsidies_base(modifier_effect_cache, pop_type),
-			actual_social_spending_value,
+			actual_social_budget,
 			projected_social_spending_unscaled_by_slider.get_untracked()
 		) / Pop::size_denominator;
 		if (unemployment_subsidies > fixed_point_t::_0) {
 			pop.add_unemployment_subsidies(unemployment_subsidies);
+			actual_unemployment_subsidies_spending += unemployment_subsidies;
 		}
 	}
 
-	const fixed_point_t actual_net_tariffs_value = actual_net_tariffs.get_untracked();
-	if (actual_net_tariffs_value < fixed_point_t::_0) {
+	if (actual_import_subsidies_budget > fixed_point_t::_0) {
 		const fixed_point_t import_subsidies = fixed_point_t::mul_div(
 			effective_tariff_rate.get_untracked() // < 0
 				* pop.get_yesterdays_import_value().get_copy_of_value(),
-			actual_net_tariffs_value, // < 0
+			actual_import_subsidies_budget, // < 0
 			projected_import_subsidies.get_untracked() // > 0
 		); //effective_tariff_rate * actual_net_tariffs cancel out the negative
 		pop.add_import_subsidies(import_subsidies);
+		actual_import_subsidies_spending += import_subsidies;
 	}
 }
 
@@ -2174,8 +2230,7 @@ fixed_point_t CountryInstance::apply_tariff(const fixed_point_t money_spent_on_i
 	}
 
 	const fixed_point_t tariff = effective_tariff_rate_value * money_spent_on_imports;
-	const std::lock_guard<std::mutex> lock_guard { actual_net_tariffs_mutex };
-	actual_net_tariffs += tariff;
+	actual_tariff_income += tariff;
 	return tariff;
 }
 
