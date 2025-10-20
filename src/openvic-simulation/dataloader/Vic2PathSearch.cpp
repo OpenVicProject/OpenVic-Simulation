@@ -180,6 +180,7 @@ static fs::path _search_for_game_path(fs::path hint_path) {
 		// All platforms that reach this point do not seem to even have unofficial Steam support
 #else
 		spdlog::warn_s("Could not find path for Steam installation on unsupported platform.");
+		return {};
 #endif
 	}
 
