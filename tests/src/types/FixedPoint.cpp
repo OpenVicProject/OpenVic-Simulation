@@ -285,3 +285,125 @@ TEST_CASE("fixed_point_t Operators", "[fixed_point_t][fixed_point_t-operators]")
 		fixed_point_t::parse_raw(1)
 	);
 }
+
+TEST_CASE("fixed_point_t Formatting", "[fixed_point_t][fixed_point_t-formatting]") {
+	static constexpr fixed_point_t decimal1 = fixed_point_t::_2 + fixed_point_t::_0_20 + fixed_point_t::_0_10;
+	static constexpr fixed_point_t int1 = 4;
+
+	CHECK(fmt::format("{}", decimal1) == "2.29998779296875"sv);
+	CHECK(fmt::format("{}", int1) == "4"sv);
+
+	CHECK(fmt::format("{:.0}", decimal1) == "2"sv);
+	CHECK(fmt::format("{:.0}", int1) == "4"sv);
+	CHECK(fmt::format("{:.0}", -decimal1) == "-2"sv);
+	CHECK(fmt::format("{:.0}", -int1) == "-4"sv);
+	CHECK(fmt::format("{:.1}", decimal1) == "2.3"sv);
+	CHECK(fmt::format("{:.1}", int1) == "4.0"sv);
+	CHECK(fmt::format("{:.1}", -decimal1) == "-2.3"sv);
+	CHECK(fmt::format("{:.1}", -int1) == "-4.0"sv);
+	CHECK(fmt::format("{:.2}", decimal1) == "2.30"sv);
+	CHECK(fmt::format("{:.2}", int1) == "4.00"sv);
+	CHECK(fmt::format("{:.2}", -decimal1) == "-2.30"sv);
+	CHECK(fmt::format("{:.2}", -int1) == "-4.00"sv);
+	CHECK(fmt::format("{:.3}", decimal1) == "2.300"sv);
+	CHECK(fmt::format("{:.3}", int1) == "4.000"sv);
+	CHECK(fmt::format("{:.3}", -decimal1) == "-2.300"sv);
+	CHECK(fmt::format("{:.3}", -int1) == "-4.000"sv);
+	CHECK(fmt::format("{:.4}", decimal1) == "2.3000"sv);
+	CHECK(fmt::format("{:.4}", int1) == "4.0000"sv);
+	CHECK(fmt::format("{:.4}", -decimal1) == "-2.3000"sv);
+	CHECK(fmt::format("{:.4}", -int1) == "-4.0000"sv);
+	CHECK(fmt::format("{:.5}", decimal1) == "2.29998"sv);
+	CHECK(fmt::format("{:.5}", int1) == "4.00000"sv);
+	CHECK(fmt::format("{:.5}", -decimal1) == "-2.29998"sv);
+	CHECK(fmt::format("{:.5}", -int1) == "-4.00000"sv);
+
+	CHECK(fmt::format("{: .0}", decimal1) == " 2"sv);
+	CHECK(fmt::format("{: .0}", int1) == " 4"sv);
+	CHECK(fmt::format("{: .0}", -decimal1) == "-2"sv);
+	CHECK(fmt::format("{: .0}", -int1) == "-4"sv);
+	CHECK(fmt::format("{: .1}", decimal1) == " 2.3"sv);
+	CHECK(fmt::format("{: .1}", int1) == " 4.0"sv);
+	CHECK(fmt::format("{: .1}", -decimal1) == "-2.3"sv);
+	CHECK(fmt::format("{: .1}", -int1) == "-4.0"sv);
+	CHECK(fmt::format("{: .2}", decimal1) == " 2.30"sv);
+	CHECK(fmt::format("{: .2}", int1) == " 4.00"sv);
+	CHECK(fmt::format("{: .2}", -decimal1) == "-2.30"sv);
+	CHECK(fmt::format("{: .2}", -int1) == "-4.00"sv);
+	CHECK(fmt::format("{: .3}", decimal1) == " 2.300"sv);
+	CHECK(fmt::format("{: .3}", int1) == " 4.000"sv);
+	CHECK(fmt::format("{: .3}", -decimal1) == "-2.300"sv);
+	CHECK(fmt::format("{: .3}", -int1) == "-4.000"sv);
+	CHECK(fmt::format("{: .4}", decimal1) == " 2.3000"sv);
+	CHECK(fmt::format("{: .4}", int1) == " 4.0000"sv);
+	CHECK(fmt::format("{: .4}", -decimal1) == "-2.3000"sv);
+	CHECK(fmt::format("{: .4}", -int1) == "-4.0000"sv);
+	CHECK(fmt::format("{: .5}", decimal1) == " 2.29998"sv);
+	CHECK(fmt::format("{: .5}", int1) == " 4.00000"sv);
+	CHECK(fmt::format("{: .5}", -decimal1) == "-2.29998"sv);
+	CHECK(fmt::format("{: .5}", -int1) == "-4.00000"sv);
+
+	CHECK(fmt::format("{:+.0}", decimal1) == "+2"sv);
+	CHECK(fmt::format("{:+.0}", int1) == "+4"sv);
+	CHECK(fmt::format("{:+.0}", -decimal1) == "-2"sv);
+	CHECK(fmt::format("{:+.0}", -int1) == "-4"sv);
+	CHECK(fmt::format("{:+.1}", decimal1) == "+2.3"sv);
+	CHECK(fmt::format("{:+.1}", int1) == "+4.0"sv);
+	CHECK(fmt::format("{:+.1}", -decimal1) == "-2.3"sv);
+	CHECK(fmt::format("{:+.1}", -int1) == "-4.0"sv);
+	CHECK(fmt::format("{:+.2}", decimal1) == "+2.30"sv);
+	CHECK(fmt::format("{:+.2}", int1) == "+4.00"sv);
+	CHECK(fmt::format("{:+.2}", -decimal1) == "-2.30"sv);
+	CHECK(fmt::format("{:+.2}", -int1) == "-4.00"sv);
+	CHECK(fmt::format("{:+.3}", decimal1) == "+2.300"sv);
+	CHECK(fmt::format("{:+.3}", int1) == "+4.000"sv);
+	CHECK(fmt::format("{:+.3}", -decimal1) == "-2.300"sv);
+	CHECK(fmt::format("{:+.3}", -int1) == "-4.000"sv);
+	CHECK(fmt::format("{:+.4}", decimal1) == "+2.3000"sv);
+	CHECK(fmt::format("{:+.4}", int1) == "+4.0000"sv);
+	CHECK(fmt::format("{:+.4}", -decimal1) == "-2.3000"sv);
+	CHECK(fmt::format("{:+.4}", -int1) == "-4.0000"sv);
+	CHECK(fmt::format("{:+.5}", decimal1) == "+2.29998"sv);
+	CHECK(fmt::format("{:+.5}", int1) == "+4.00000"sv);
+	CHECK(fmt::format("{:+.5}", -decimal1) == "-2.29998"sv);
+	CHECK(fmt::format("{:+.5}", -int1) == "-4.00000"sv);
+
+	CHECK(fmt::format("{:A< 10.5}", decimal1) == " 2.29998AA"sv);
+	CHECK(fmt::format("{:A< 10.5}", int1) == " 4.00000AA"sv);
+	CHECK(fmt::format("{:A> 10.5}", decimal1) == "AA 2.29998"sv);
+	CHECK(fmt::format("{:A> 10.5}", int1) == "AA 4.00000"sv);
+	CHECK(fmt::format("{:A^ 10.5}", decimal1) == "A 2.29998A"sv);
+	CHECK(fmt::format("{:A^ 10.5}", int1) == "A 4.00000A"sv);
+
+	CHECK(fmt::format("{:A<10.5}", decimal1) == "2.29998AAA"sv);
+	CHECK(fmt::format("{:A<10.5}", int1) == "4.00000AAA"sv);
+	CHECK(fmt::format("{:A>10.5}", decimal1) == "AAA2.29998"sv);
+	CHECK(fmt::format("{:A>10.5}", int1) == "AAA4.00000"sv);
+	CHECK(fmt::format("{:A^10.5}", decimal1) == "A2.29998AA"sv);
+	CHECK(fmt::format("{:A^10.5}", int1) == "A4.00000AA"sv);
+
+	CHECK(fmt::format("{:A<10.5}", -decimal1) == "-2.29998AA"sv);
+	CHECK(fmt::format("{:A<10.5}", -int1) == "-4.00000AA"sv);
+	CHECK(fmt::format("{:A>10.5}", -decimal1) == "AA-2.29998"sv);
+	CHECK(fmt::format("{:A>10.5}", -int1) == "AA-4.00000"sv);
+	CHECK(fmt::format("{:A^10.5}", -decimal1) == "A-2.29998A"sv);
+	CHECK(fmt::format("{:A^10.5}", -int1) == "A-4.00000A"sv);
+
+	int prec = 8;
+	int width = 12;
+	CHECK(fmt::format("{:A^{}.{}}", -decimal1, width, prec) == "-2.29998779A"sv);
+	++prec;
+	CHECK(fmt::format("{:A^{}.{}}", -decimal1, width, prec) == "-2.299987792"sv);
+	++width;
+	CHECK(fmt::format("{:A^{}.{}}", -decimal1, width, prec) == "-2.299987792A"sv);
+	prec -= 2;
+	CHECK(fmt::format("{:A^{}.{}}", -decimal1, width, prec) == "A-2.2999877AA"sv);
+	width += 2;
+	CHECK(fmt::format("{:A^{}.{}}", -decimal1, width, prec) == "AA-2.2999877AAA"sv);
+	CHECK(fmt::format("{0:A^{2}.{1}}", -decimal1, prec, width) == "AA-2.2999877AAA"sv);
+
+	CHECK(fmt::format("{:010.5}", -decimal1) == "-002.29998"sv);
+	CHECK(fmt::format("{:010.5}", decimal1) == "0002.29998"sv);
+	CHECK(fmt::format("{: 010.5}", decimal1) == " 002.29998"sv);
+	CHECK(fmt::format("{:+010.5}", decimal1) == "+002.29998"sv);
+}
