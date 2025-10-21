@@ -226,7 +226,7 @@ void ArtisanalProducer::artisan_tick(
 		}
 
 		if (OV_unlikely(debug_cash_left < fixed_point_t::_0)) {
-			Logger::error("Artisan allocated more cash than the pop has. debug_cash_left: ", debug_cash_left);
+			spdlog::error_s("Artisan allocated more cash than the pop has. debug_cash_left: {}", debug_cash_left);
 		}
 	}
 
@@ -238,7 +238,10 @@ void ArtisanalProducer::artisan_tick(
 
 fixed_point_t ArtisanalProducer::add_to_stockpile(GoodDefinition const& good, const fixed_point_t quantity) {
 	if (OV_unlikely(quantity < fixed_point_t::_0)) {
-		Logger::error("Attempted to add negative quantity ",quantity," of ", good.get_identifier(), " to stockpile.");
+		spdlog::error_s(
+			"Attempted to add negative quantity {} of {} to stockpile.",
+			quantity, good
+		);
 		return 0;
 	}
 

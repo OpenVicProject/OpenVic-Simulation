@@ -20,7 +20,7 @@ Religion::Religion(
 
 bool ReligionManager::add_religion_group(std::string_view identifier) {
 	if (identifier.empty()) {
-		Logger::error("Invalid religion group identifier - empty!");
+		spdlog::error_s("Invalid religion group identifier - empty!");
 		return false;
 	}
 	return religion_groups.emplace_item(identifier, identifier);
@@ -30,15 +30,15 @@ bool ReligionManager::add_religion(
 	std::string_view identifier, colour_t colour, ReligionGroup const& group, Religion::icon_t icon, bool pagan
 ) {
 	if (!religion_groups.is_locked()) {
-		Logger::error("Cannot register religions until religion groups are locked!");
+		spdlog::error_s("Cannot register religions until religion groups are locked!");
 		return false;
 	}
 	if (identifier.empty()) {
-		Logger::error("Invalid religion identifier - empty!");
+		spdlog::error_s("Invalid religion identifier - empty!");
 		return false;
 	}
 	if (icon <= 0) {
-		Logger::error("Invalid religion icon for ", identifier, ": ", icon);
+		spdlog::error_s("Invalid religion icon for {}: {}", identifier, icon);
 		return false;
 	}
 	return religions.emplace_item(

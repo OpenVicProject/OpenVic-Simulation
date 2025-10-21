@@ -8,12 +8,15 @@ FlagStrings::FlagStrings(std::string_view new_name) : name { new_name } {}
 
 bool FlagStrings::set_flag(std::string_view flag, bool warn) {
 	if (flag.empty()) {
-		Logger::error("Attempted to set empty ", name, " flag!");
+		spdlog::error_s("Attempted to set empty {} flag!", name);
 		return false;
 	}
 
 	if (!flags.emplace(flag).second && warn) {
-		Logger::warning("Attempted to set ", name, " flag \"", flag, "\": already set!");
+		spdlog::warn_s(
+			"Attempted to set {} flag \"{}\": already set!",
+			name, flag
+		);
 	}
 
 	return true;
@@ -21,12 +24,15 @@ bool FlagStrings::set_flag(std::string_view flag, bool warn) {
 
 bool FlagStrings::clear_flag(std::string_view flag, bool warn) {
 	if (flag.empty()) {
-		Logger::error("Attempted to clear empty ", name, " flag!");
+		spdlog::error_s("Attempted to clear empty {} flag!", name);
 		return false;
 	}
 
 	if (flags.erase(flag) == 0 && warn) {
-		Logger::warning("Attempted to clear ", name, " flag \"", flag, "\": not set!");
+		spdlog::warn_s(
+			"Attempted to clear {} flag \"{}\": not set!",
+			name, flag
+		);
 	}
 
 	return true;

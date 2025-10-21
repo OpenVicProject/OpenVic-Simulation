@@ -37,7 +37,7 @@ bool BookmarkManager::load_bookmark_file(fixed_point_t map_height, ast::NodeCPtr
 		bookmarks,
 		[this, map_height](std::string_view key, ast::NodeCPtr value) -> bool {
 			if (key != "bookmark") {
-				Logger::error("Invalid bookmark declaration ", key);
+				spdlog::error_s("Invalid bookmark declaration {}", key);
 				return false;
 			}
 
