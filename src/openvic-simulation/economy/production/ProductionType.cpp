@@ -136,22 +136,22 @@ bool ProductionTypeManager::add_production_type(
 	const bool is_mine
 ) {
 	if (identifier.empty()) {
-		Logger::error("Invalid production type identifier - empty!");
+		spdlog::error_s("Invalid production type identifier - empty!");
 		return false;
 	}
 
 	if (base_workforce_size <= 0) {
-		Logger::error("Base workforce size ('workforce') for production type ", identifier, " was 0 or unset!");
+		spdlog::error_s("Base workforce size ('workforce') for production type {} was 0 or unset!", identifier);
 		return false;
 	}
 
 	if (base_output_quantity <= 0) {
-		Logger::error("Base output quantity ('value') for production type ", identifier, " was 0 or unset!");
+		spdlog::error_s("Base output quantity ('value') for production type {} was 0 or unset!", identifier);
 		return false;
 	}
 
 	if (output_good == nullptr) {
-		Logger::error("Output good for production type ", identifier, " was null!");
+		spdlog::error_s("Output good for production type {} was null!", identifier);
 		return false;
 	}
 
@@ -159,37 +159,41 @@ bool ProductionTypeManager::add_production_type(
 
 	if (template_type == ARTISAN) {
 		if (owner.has_value()) {
-			Logger::warning(
-				"Artisanal production type ", identifier, " should not have an owner - it is being ignored."
+			spdlog::warn_s(
+				"Artisanal production type {} should not have an owner - it is being ignored.", identifier
 			);
 			owner.reset();
 		}
 
 		if (!jobs.empty()) {
-			Logger::warning(
-				"Artisanal production type ", identifier, " should not have employees - ", jobs.size(), " are being ignored."
+			spdlog::warn_s(
+				"Artisanal production type {} should not have employees - {} are being ignored.",
+				identifier, jobs.size()
 			);
 			jobs.clear();
 		}
 	} else {
 		if (!owner.has_value()) {
-			Logger::error("Production type ", identifier, " is missing an owner.");
+			spdlog::error_s("Production type {} is missing an owner.", identifier);
 			return false;
 		}
 
 		if (owner->get_pop_type() == nullptr) {
-			Logger::error("Production type ", identifier, " owner has an invalid pop type.");
+			spdlog::error_s("Production type {} owner has an invalid pop type.", identifier);
 			return false;
 		}
 
 		if (jobs.empty()) {
-			Logger::error("Production type ", identifier, " lacks jobs ('employees').");
+			spdlog::error_s("Production type {} lacks jobs ('employees').", identifier);
 			return false;
 		}
 
 		for (size_t i = 0; i < jobs.size(); i++) {
 			if (jobs[i].get_pop_type() == nullptr) {
-				Logger::error("Production type ", identifier, " has invalid pop type in employees[", i, "].");
+				spdlog::error_s(
+					"Production type {} has invalid pop type in employees[{}].",
+					identifier, i
+				);
 				return false;
 			}
 		}
@@ -230,11 +234,11 @@ bool ProductionTypeManager::load_production_types_file(
 	using namespace std::string_view_literals;
 	auto template_symbol = parser.find_intern("template"sv);
 	if (!template_symbol) {
-		Logger::error("template could not be interned.");
+		spdlog::error_s("template could not be interned.");
 	}
 	auto output_goods_symbol = parser.find_intern("output_goods"sv);
 	if (!output_goods_symbol) {
-		Logger::error("output_goods could not be interned.");
+		spdlog::error_s("output_goods could not be interned.");
 	}
 
 	size_t expected_types = 0;
@@ -365,7 +369,10 @@ bool ProductionTypeManager::load_production_types_file(
 					if (node_it != template_node_map.end()) {
 						ret &= parse_node(node_it->second);
 					} else {
-						Logger::error("Missing template ", template_id, " for production type ", key, "!");
+						spdlog::error_s(
+							"Missing template {} for production type {}!",
+							template_id, key
+						);
 						ret = false;
 					}
 				}
@@ -387,7 +394,7 @@ bool ProductionTypeManager::load_production_types_file(
 	production_types.lock();
 
 	if (rgo_owner_sprite <= 0) {
-		Logger::error("No RGO owner pop type sprite found!");
+		spdlog::error_s("No RGO owner pop type sprite found!");
 		ret = false;
 	}
 
