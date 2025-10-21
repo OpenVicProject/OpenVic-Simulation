@@ -88,6 +88,44 @@ TEMPLATE_LIST_TEST_CASE("basic_colour_t Other methods", "[basic_colour_t][basic_
 	CONSTEXPR_CHECK(blue.with_blue(0) == TestType::from_floats(0.2, 0.2, 0));
 }
 
+TEMPLATE_LIST_TEST_CASE("basic_colour_t Formatting", "[basic_colour_t][basic_colour_t-formatting]", ColourTypes) {
+	static constexpr TestType blue = TestType::from_floats(0.2, 0.2, 1);
+
+	CHECK(fmt::format("{:s}", blue) == "3333FF"sv);
+	CHECK(fmt::format("{:a}", blue) == "FF3333FF"sv);
+	CHECK(fmt::format("{:r}", blue) == "3333FFFF"sv);
+
+	CHECK(fmt::format("{:Q<16r}", blue) == "3333FFFFQQQQQQQQ"sv);
+	CHECK(fmt::format("{:Q^16r}", blue) == "QQQQ3333FFFFQQQQ"sv);
+	CHECK(fmt::format("{:Q>16r}", blue) == "QQQQQQQQ3333FFFF"sv);
+
+	int width = 16;
+	CHECK(fmt::format("{:Q>{}r}", blue, width) == "QQQQQQQQ3333FFFF"sv);
+	width -= 2;
+	CHECK(fmt::format("{:Q>{}r}", blue, width) == "QQQQQQ3333FFFF"sv);
+	width += 6;
+	CHECK(fmt::format("{:Q>{}r}", blue, width) == "QQQQQQQQQQQQ3333FFFF"sv);
+	CHECK(fmt::format("{1:Q>{0}r}", width, blue) == "QQQQQQQQQQQQ3333FFFF"sv);
+
+	CHECK(fmt::format("{:vs}", blue) == "(51, 51, 255)"sv);
+	CHECK(fmt::format("{:va}", blue) == "(255, 51, 51, 255)"sv);
+	CHECK(fmt::format("{:vr}", blue) == "(51, 51, 255, 255)"sv);
+
+	CHECK(fmt::format("{:nvs}", blue) == "51, 51, 255"sv);
+	CHECK(fmt::format("{:nva}", blue) == "255, 51, 51, 255"sv);
+	CHECK(fmt::format("{:nvr}", blue) == "51, 51, 255, 255"sv);
+
+	CHECK(fmt::format("{:ns}", blue) == "51, 51, 255"sv);
+	CHECK(fmt::format("{:na}", blue) == "255, 51, 51, 255"sv);
+	CHECK(fmt::format("{:nr}", blue) == "51, 51, 255, 255"sv);
+
+	CHECK(fmt::format("{:#s}", blue) == "#3333FF"sv);
+	CHECK(fmt::format("{:xa}", blue) == "ff3333ff"sv);
+	CHECK(fmt::format("{:Xr}", blue) == "3333FFFF"sv);
+	CHECK(fmt::format("{:#xs}", blue) == "0x3333ff"sv);
+	CHECK(fmt::format("{:#Xa}", blue) == "0XFF3333FF"sv);
+}
+
 TEST_CASE("colour_rgb_t Constructor methods", "[basic_colour_t][colour_rgb_t][colour_rgb_t-constructor]") {
 	static constexpr colour_rgb_t blue_rgb = colour_rgb_t(
 		63.0 / 255 * 255, //
@@ -170,6 +208,27 @@ TEST_CASE("colour_rgb_t Parse methods", "[basic_colour_t][colour_rgb_t][colour_r
 	CONSTEXPR_CHECK(colour_rgb_t::from_string(hex_yellow_rgb) == yellow);
 }
 
+TEST_CASE("colour_rgb_t Formatting", "[basic_colour_t][colour_rgb_t][colour_rgb_t-formatting]") {
+	static constexpr colour_rgb_t blue = colour_rgb_t::from_floats(0.2, 0.2, 1);
+
+	CHECK(fmt::format("{}", blue) == "3333FF"sv);
+	CHECK(fmt::format("{:n}", blue) == "51, 51, 255"sv);
+	CHECK(fmt::format("{::}", blue) == "(51, 51, 255)"sv);
+	CHECK(fmt::format("{:i}", blue) == "(51, 51, 255)"sv);
+	CHECK(fmt::format("{:f}", blue) == "(0.2, 0.2, 1)"sv);
+
+	CHECK(fmt::format("{:t}", blue) == "3333FF"sv);
+	CHECK(fmt::format("{:vt}", blue) == "(51, 51, 255)"sv);
+	CHECK(fmt::format("{:nvt}", blue) == "51, 51, 255"sv);
+	CHECK(fmt::format("{:nt}", blue) == "51, 51, 255"sv);
+
+	CHECK(fmt::format("{:#}", blue) == "#3333FF"sv);
+	CHECK(fmt::format("{:x}", blue) == "3333ff"sv);
+	CHECK(fmt::format("{:X}", blue) == "3333FF"sv);
+	CHECK(fmt::format("{:#x}", blue) == "0x3333ff"sv);
+	CHECK(fmt::format("{:#X}", blue) == "0X3333FF"sv);
+}
+
 TEST_CASE("colour_argb_t Operators", "[basic_colour_t][colour_argb_t][colour_argb_t-operators]") {
 	static constexpr colour_argb_t blue = colour_argb_t::from_floats(0.2, 0.2, 1);
 	static constexpr colour_argb_t transparent = colour_argb_t::from_floats(0.2, 0.2, 1, 0);
@@ -195,4 +254,25 @@ TEST_CASE("colour_argb_t Other methods", "[basic_colour_t][colour_argb_t][colour
 	static constexpr colour_argb_t blue = colour_argb_t::from_floats(0.2, 0.2, 1);
 
 	CONSTEXPR_CHECK(blue.with_alpha(1) == colour_argb_t::from_floats(0.2, 0.2, 1, 1.0 / 255));
+}
+
+TEST_CASE("colour_argb_t Formatting", "[basic_colour_t][colour_argb_t][colour_argb_t-formatting]") {
+	static constexpr colour_argb_t blue = colour_argb_t::from_floats(0.2, 0.2, 1);
+
+	CHECK(fmt::format("{}", blue) == "3333FFFF"sv);
+	CHECK(fmt::format("{:n}", blue) == "51, 51, 255, 255"sv);
+	CHECK(fmt::format("{::}", blue) == "(51, 51, 255, 255)"sv);
+	CHECK(fmt::format("{:i}", blue) == "(51, 51, 255, 255)"sv);
+	CHECK(fmt::format("{:f}", blue) == "(0.2, 0.2, 1, 1)"sv);
+
+	CHECK(fmt::format("{:t}", blue) == "3333FFFF"sv);
+	CHECK(fmt::format("{:vt}", blue) == "(51, 51, 255, 255)"sv);
+	CHECK(fmt::format("{:nvt}", blue) == "51, 51, 255, 255"sv);
+	CHECK(fmt::format("{:nt}", blue) == "51, 51, 255, 255"sv);
+
+	CHECK(fmt::format("{:#}", blue) == "#3333FFFF"sv);
+	CHECK(fmt::format("{:x}", blue) == "3333ffff"sv);
+	CHECK(fmt::format("{:X}", blue) == "3333FFFF"sv);
+	CHECK(fmt::format("{:#x}", blue) == "0x3333ffff"sv);
+	CHECK(fmt::format("{:#X}", blue) == "0X3333FFFF"sv);
 }

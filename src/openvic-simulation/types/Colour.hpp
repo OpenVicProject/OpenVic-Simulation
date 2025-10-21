@@ -19,7 +19,9 @@
 #include <type_traits>
 #include <utility>
 
-#include <fmt/core.h>
+#include <fmt/base.h>
+#include <fmt/format.h>
+#include <fmt/ranges.h>
 
 #include <range/v3/algorithm/rotate.hpp>
 
@@ -679,17 +681,254 @@ namespace OpenVic {
 	}
 }
 
-template<typename T>
-struct fmt::formatter<T, std::enable_if_t<OpenVic::utility::specialization_of<T, OpenVic::basic_colour_t>, char>>
-	: formatter<string_view> {
-	auto format(T const& c, format_context& ctx) const {
-		typename T::stack_string result = c.to_hex_array();
-		if (OV_unlikely(result.empty())) {
-			return formatter<string_view>::format(string_view {}, ctx);
+template<OpenVic::utility::specialization_of<OpenVic::basic_colour_t> T>
+class fmt::detail::is_tuple_like_<T> {
+public:
+	static constexpr const bool value = false;
+};
+
+template<OpenVic::utility::specialization_of<OpenVic::basic_colour_t> T>
+struct fmt::formatter<T> {
+	constexpr void set_brackets(basic_string_view<char> open, basic_string_view<char> close) {
+		_opening_bracket = open;
+		_closing_bracket = close;
+	}
+
+	constexpr void set_separator(basic_string_view<char> sep) {
+		_separator = sep;
+	}
+
+	constexpr format_parse_context::iterator parse(format_parse_context& ctx) {
+		format_parse_context::iterator it = ctx.begin(), end = ctx.end();
+		if (it == end || *it == '}') {
+			return it;
 		}
 
-		return formatter<string_view>::format(string_view { result.data(), result.size() }, ctx);
+		it = detail::parse_align(it, end, _specs);
+		if (it == end) {
+			return it;
+		}
+
+		if (*it == '#') {
+			_specs.set_alt();
+			++it;
+			if (it == end) {
+				return it;
+			}
+		}
+
+		char c = *it;
+		if ((c >= '0' && c <= '9') || c == '{') {
+			it = detail::parse_width(it, end, _specs, _specs.width_ref, ctx);
+			if (it == end) {
+				return it;
+			}
+		}
+
+		switch (*it) {
+		case 'X': _specs.set_upper(); [[fallthrough]];
+		case 'x':
+			_specs.set_type(presentation_type::hex);
+			++it;
+			break;
+		}
+		if (it == end) {
+			return it;
+		}
+
+		switch (*it) {
+		case 'n':
+			set_brackets({}, {});
+			_value_format_type = value_format_type::value;
+			++it;
+			break;
+		}
+		if (it == end) {
+			return it;
+		}
+
+		switch (*it) {
+		case 'v':
+			_value_format_type = value_format_type::value;
+			++it;
+			break;
+		case 'i':
+			_value_format_type = value_format_type::integer;
+			++it;
+			break;
+		case 'f':
+			_value_format_type = value_format_type::floating;
+			++it;
+			break;
+		}
+
+		if (it != end) {
+			switch (*it) {
+			case 't':
+				_alpha_handle_type = alpha_handle_type::follow_type;
+				++it;
+				break;
+			case 's':
+				_alpha_handle_type = alpha_handle_type::no_alpha;
+				++it;
+				break;
+			case 'a':
+				_alpha_handle_type = alpha_handle_type::argb;
+				++it;
+				break;
+			case 'r':
+				_alpha_handle_type = alpha_handle_type::rgba;
+				++it;
+				break;
+			}
+		}
+
+		if (it != end && (*it == ':' || _value_format_type != value_format_type::none)) {
+			if (_specs.align() != align::none) {
+				report_error("invalid format specifier");
+			}
+			
+			if (_specs.alt()) {
+				report_error("invalid format specifier");
+			}
+
+			if (_specs.width != 0 || _specs.dynamic_width() != arg_id_kind::none) {
+				report_error("invalid format specifier");
+			}
+
+			if (_specs.upper()) {
+				report_error("invalid format specifier");
+			}
+
+			if (_specs.type() == presentation_type::hex) {
+				report_error("invalid format specifier");
+			}
+
+			if (*it == ':') {
+				++it;
+			}
+			ctx.advance_to(it);
+
+			switch (_value_format_type) {
+			case value_format_type::none:	  _value_format_type = value_format_type::value; [[fallthrough]];
+			case value_format_type::value:	  return _colour_value.parse(ctx);
+			case value_format_type::integer:  return _integer.parse(ctx);
+			case value_format_type::floating: return _floating.parse(ctx);
+			}
+		}
+
+		if (_value_format_type != value_format_type::none) {
+			report_error("invalid format specifier");
+		}
+
+		return it;
 	}
+
+	format_context::iterator format(T const& colour, format_context& ctx) const {
+		format_specs specs { _specs };
+		if (_specs.dynamic()) {
+			detail::handle_dynamic_spec(_specs.dynamic_width(), specs.width, _specs.width_ref, ctx);
+		}
+
+		format_context::iterator out = ctx.out();
+
+		if (_value_format_type == value_format_type::none) {
+			typename T::stack_string result = [&]() -> typename T::stack_string {
+				switch (_alpha_handle_type) {
+				default:
+				case alpha_handle_type::follow_type: return colour.to_hex_array();
+				case alpha_handle_type::no_alpha:	 return colour.to_hex_array(false);
+				case alpha_handle_type::argb:		 return colour.to_argb_hex_array();
+				case alpha_handle_type::rgba:		 return colour.to_hex_array(true);
+				}
+			}();
+
+			if (result.empty()) {
+				return out;
+			}
+
+			if (_specs.type() == presentation_type::hex) {
+				bool upper = _specs.upper();
+				if (_specs.alt()) {
+					if (upper) {
+						out = detail::write(out, "0X");
+					} else {
+						out = detail::write(out, "0x");
+					}
+				}
+				
+				if (!upper) {
+					std::array<char, T::stack_string::array_length> lower;
+					size_t i = 0;
+					for (char& c : lower) {
+						c = std::tolower(result[i]);
+						if (c == '\0') {
+							break;
+						}
+						++i;
+					}
+					return detail::write(out, string_view { lower.data(), i }, specs, ctx.locale());
+				}
+			} else if (_specs.alt()) {
+				*out++ = '#'; 
+			}
+
+			return detail::write(out, string_view { result.data(), result.size() }, specs, ctx.locale());
+		}
+
+		auto write_value = [&](T::value_type const& comp) {
+			ctx.advance_to(out);
+			switch (_value_format_type) {
+			case value_format_type::value:	  _colour_value.format(comp, ctx); break;
+			case value_format_type::integer:  _integer.format(comp, ctx); break;
+			case value_format_type::floating: _floating.format(double(comp) / T::max_value, ctx); break;
+			}
+		};
+
+		out = detail::copy<char>(_opening_bracket, out);
+		size_t size = colour.size();
+		if (size == 4) {
+			switch (_alpha_handle_type) {
+			case alpha_handle_type::argb:
+				write_value(colour[--size]);
+				out = detail::copy<char>(_separator, out);
+				break;
+			case alpha_handle_type::no_alpha: --size; break;
+			default:						  break;
+			}
+		} else if (_alpha_handle_type == alpha_handle_type::argb) {
+			write_value(T::max_value);
+			out = detail::copy<char>(_separator, out);
+		}
+
+		size_t i = 0;
+		for (; i < size; ++i) {
+			if (i > 0) {
+				out = detail::copy<char>(_separator, out);
+			}
+			write_value(colour[i]);
+		}
+
+		if (i == 3 && _alpha_handle_type == alpha_handle_type::rgba) {
+			out = detail::copy<char>(_separator, out);
+			write_value(T::max_value);
+		}
+
+		return detail::copy<char>(_closing_bracket, out);
+	}
+
+private:
+	fmt::detail::dynamic_format_specs<char> _specs;
+	fmt::formatter<typename T::value_type> _colour_value;
+	fmt::formatter<unsigned long long> _integer;
+	fmt::formatter<double> _floating;
+
+	enum value_format_type { none, value, integer, floating } _value_format_type = value_format_type::none;
+	enum alpha_handle_type { follow_type, no_alpha, argb, rgba } _alpha_handle_type = alpha_handle_type::follow_type;
+
+	basic_string_view<char> _separator = detail::string_literal<char, ',', ' '> {};
+	basic_string_view<char> _opening_bracket = detail::string_literal<char, '('> {};
+	basic_string_view<char> _closing_bracket = detail::string_literal<char, ')'> {};
 };
 
 namespace std {
