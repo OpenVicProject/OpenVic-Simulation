@@ -35,7 +35,7 @@ bool DeploymentManager::add_deployment(
 	memory::vector<LeaderBase>&& leaders
 ) {
 	if (path.empty()) {
-		Logger::error("Attempted to load order of battle with no path! Something is very wrong!");
+		spdlog::error_s("Attempted to load order of battle with no path! Something is very wrong!");
 		return false;
 	}
 
@@ -55,7 +55,7 @@ bool DeploymentManager::load_oob_file(
 ) {
 	deployment = get_deployment_by_identifier(history_path);
 	if (deployment != nullptr) {
-		Logger::warning("Loading an already-loaded OOB file with path ", history_path);
+		spdlog::warn_s("Loading an already-loaded OOB file with path {}", history_path);
 		return true;
 	}
 
@@ -71,7 +71,7 @@ bool DeploymentManager::load_oob_file(
 	if (lookedup_path.empty()) {
 		missing_oob_files.emplace(history_path);
 		if (fail_on_missing) {
-			Logger::warning("Could not find OOB file ", history_path, "!");
+			spdlog::warn_s("Could not find OOB file {}!", history_path);
 			return false;
 		} else {
 			return true;
@@ -120,27 +120,22 @@ bool DeploymentManager::load_oob_file(
 		)(node);
 
 		if (leader_name.empty()) {
-			Logger::error("Leader has a missing or empty name!");
-			ret = false;
-		}
-
-		if (leader_name.empty()) {
-			Logger::error("Leader has a missing or empty name!");
+			spdlog::error_s("Leader has a missing or empty name!");
 			ret = false;
 		}
 
 		// Default cases for leader personality and background match vic2 behaviour of ignoring invalid traits.
 		if (leader_personality != nullptr && !leader_personality->is_personality_trait()) {
-			Logger::warning(
-				"Leader ", leader_name, " has personality \"", leader_personality->get_identifier(),
-				"\" which is not a personality trait!"
+			spdlog::warn_s(
+				"Leader {} has personality \"{}\" which is not a personality trait!",
+				leader_name, *leader_personality
 			);
 			leader_personality = nullptr;
 		}
 		if (leader_background != nullptr && !leader_background->is_background_trait()) {
-			Logger::warning(
-				"Leader ", leader_name, " has background \"", leader_background->get_identifier(),
-				"\" which is not a background trait!"
+			spdlog::warn_s(
+				"Leader {} has background \"{}\" which is not a background trait!",
+				leader_name, *leader_background
 			);
 			leader_background = nullptr;
 		}
@@ -153,7 +148,7 @@ bool DeploymentManager::load_oob_file(
 			++admiral_count;
 			break;
 		default:
-			Logger::error("Invalid branch ", static_cast<uint64_t>(leader_branch), " for leader ", leader_name);
+			spdlog::error_s("Invalid branch {} for leader {}", static_cast<uint64_t>(leader_branch), leader_name);
 			return false;
 		}
 
@@ -193,11 +188,11 @@ bool DeploymentManager::load_oob_file(
 					)(node);
 
 					if (regiment_home == nullptr) {
-						Logger::warning("RegimentDeployment ", regiment_name, " has no home province!");
+						spdlog::warn_s("RegimentDeployment {} has no home province!", regiment_name);
 					}
 
 					if (regiment_type == nullptr) {
-						Logger::error("RegimentDeployment ", regiment_name, " has no type!");
+						spdlog::error_s("RegimentDeployment {} has no type!", regiment_name);
 						return false;
 					}
 
@@ -238,7 +233,7 @@ bool DeploymentManager::load_oob_file(
 					)(node);
 
 					if (ship_type == nullptr) {
-						Logger::error("ShipDeployment ", ship_name, " has no type!");
+						spdlog::error_s("ShipDeployment {} has no type!", ship_name);
 						return false;
 					}
 
@@ -259,9 +254,12 @@ bool DeploymentManager::load_oob_file(
 	)(Dataloader::parse_defines(lookedup_path).get_file_node());
 
 	if (general_count + admiral_count != leaders.size()) {
-		Logger::error(
-			"Mismatch in sum (#", general_count + admiral_count, ") of general (#", general_count, ") and admiral (#",
-			admiral_count, ") counts when compared to loaded leader count (#", leaders.size(), ") for OOB file ",
+		spdlog::error_s(
+			"Mismatch in sum (#{}) of general (#{}) and admiral (#{}) counts when compared to loaded leader count (#{}) for OOB file {}",
+			general_count + admiral_count,
+			general_count,
+			admiral_count,
+			leaders.size(),
 			history_path
 		);
 		return false;

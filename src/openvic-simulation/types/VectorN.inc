@@ -320,6 +320,19 @@ namespace OpenVic {
 	};
 }
 
+#define VEC_COMPONENT_FORMAT(v) ctx.advance_to(out); out = formatter<T>{}.format(value.v, ctx);
+template<typename T>
+struct fmt::formatter<OpenVic::VEC_TYPE<T>>	: formatter<string_view> {
+	auto format(OpenVic::VEC_TYPE<T> const& value, format_context& ctx) const {
+		auto out = ctx.out();
+		out = detail::copy<char>(fmt::string_view{"("}, out);
+		FOR_VEC_COMPONENTS(VEC_COMPONENT_FORMAT, out = detail::copy<char>(fmt::string_view{", "}, out);)
+		out = detail::copy<char>(fmt::string_view{")"}, out);
+		return out;
+	}
+};
+#undef VEC_COMPONENT_FORMAT
+
 #undef COMMA
 
 #undef FOR_VEC_COMPONENTS
