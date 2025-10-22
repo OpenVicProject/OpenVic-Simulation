@@ -10,7 +10,8 @@
 #include <string_view>
 #include <system_error>
 
-#include <fmt/core.h>
+#include <fmt/base.h>
+#include <fmt/format.h>
 
 #include "openvic-simulation/types/StackString.hpp"
 #include "openvic-simulation/utility/Getters.hpp"
@@ -743,6 +744,29 @@ namespace OpenVic {
 }
 
 template<>
-struct fmt::formatter<OpenVic::fixed_point_t> : formatter<string_view> {
+struct fmt::formatter<OpenVic::fixed_point_t> {
+	constexpr format_parse_context::iterator parse(format_parse_context& ctx) {
+		if (ctx.begin() == ctx.end() || *ctx.begin() == '}') {
+			return ctx.begin();
+		}
+
+		format_parse_context::iterator end = parse_format_specs(ctx.begin(), ctx.end(), _specs, ctx, detail::type::double_type);
+
+		if (_specs.type() == presentation_type::general) {
+			report_error("OpenVic::fixed_point_t does not support 'g' or 'G' specifiers");
+		} else if (_specs.type() == presentation_type::exp) {
+			report_error("OpenVic::fixed_point_t does not support 'e' or 'E' specifiers");
+		} else if (_specs.type() == presentation_type::fixed) {
+			report_error("OpenVic::fixed_point_t does not support 'f' or 'F' specifiers");
+		} else if (_specs.type() == presentation_type::hexfloat) {
+			report_error("OpenVic::fixed_point_t does not support 'a' or 'A' specifiers");
+		}
+
+		return end;
+	}
+
 	format_context::iterator format(OpenVic::fixed_point_t fp, format_context& ctx) const;
+
+private:
+	fmt::detail::dynamic_format_specs<char> _specs;
 };
