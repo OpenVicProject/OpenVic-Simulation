@@ -60,6 +60,10 @@ TEST_CASE("Date Conversion methods", "[Date][Date-conversion]") {
 	CONSTEXPR_CHECK(date.get_month() == 4);
 	CONSTEXPR_CHECK(date.get_month_name() == "April"sv);
 	CONSTEXPR_CHECK(date.get_day() == 10);
+	CONSTEXPR_CHECK(date.get_day_of_year() == 99);
+	CONSTEXPR_CHECK(date.get_day_of_week() == 1);
+	CONSTEXPR_CHECK(date.get_weekday_name() == "Monday"sv);
+	CONSTEXPR_CHECK(date.get_week_of_year() == 15);
 
 	CHECK(date.to_array() == "5.04.10"sv);
 	CHECK(date.to_array(true) == "0005.04.10"sv);
@@ -209,4 +213,39 @@ TEST_CASE("Date Other methods", "[Date][Date-other]") {
 	CONSTEXPR_CHECK_FALSE(outside.in_range(start, end));
 	CONSTEXPR_CHECK_FALSE(start.is_month_start());
 	CONSTEXPR_CHECK(Date { 532, 6, 1 }.is_month_start());
+}
+
+TEST_CASE("Date Formatting", "[Date][Date-formatting]") {
+	static constexpr Date date = { 10, 4, 2 };
+
+	CHECK(fmt::format("{}", date) == "10.04.02"sv);
+	CHECK(fmt::format("{:%Y.%m.%d}", date) == "0010.04.02"sv);
+	CHECK(fmt::format("{:%-Y.%m.%d}", date) == "10.04.02"sv);
+	CHECK(fmt::format("{:%Y-%m-%d}", date) == "0010-04-02"sv);
+	CHECK(fmt::format("{:%y %C %G %g}", date) == "10 00 0010 10"sv);
+	CHECK(fmt::format("{:%a %A %w %u}", date) == "Fri Friday 5 5"sv);
+	CHECK(fmt::format("{:%b %h %B %m}", date) == "Apr Apr April 04"sv);
+	CHECK(fmt::format("{:%U %W %V %j %d %e}", date) == "13 13 13 092 02  2"sv);
+	CHECK(fmt::format("{:%x %D %F}", date) == "02/04/10 04/02/10 0010-04-02"sv);
+	CHECK(fmt::format("{:%t%%%x %n}", date) == "\t%02/04/10 \n"sv);
+
+	static constexpr Date date2 = { 3, 2, 5 };
+
+	CHECK(fmt::format("{}", date2) == "3.02.05"sv);
+	CHECK(fmt::format("{:%Y.%m.%d}", date2) == "0003.02.05"sv);
+	CHECK(fmt::format("{:%-Y.%m.%d}", date2) == "3.02.05"sv);
+	CHECK(fmt::format("{:%Y-%m-%d}", date2) == "0003-02-05"sv);
+	CHECK(fmt::format("{:%y %C %G %g}", date2) == "03 00 0003 03"sv);
+	CHECK(fmt::format("{:%a %A %w %u}", date2) == "Fri Friday 5 5"sv);
+	CHECK(fmt::format("{:%b %h %B %m}", date2) == "Feb Feb February 02"sv);
+	CHECK(fmt::format("{:%U %W %V %j %d %e}", date2) == "05 05 05 036 05  5"sv);
+	CHECK(fmt::format("{:%x %D %F}", date2) == "05/02/03 02/05/03 0003-02-05"sv);
+	CHECK(fmt::format("{:%t%%%x %n}", date2) == "\t%05/02/03 \n"sv);
+	CHECK(fmt::format("{:%a %A %w %u}", date2 + 1) == "Sat Saturday 6 6"sv);
+
+	CHECK(fmt::format("{:%w %u}", date2 + 2) == "0 7"sv);
+
+	CHECK(fmt::format("{:%C}", Date { 1320, 5, 4 }) == "13"sv);
+	CHECK(fmt::format("{:%C}", Date { 2320, 5, 4 }) == "23"sv);
+	CHECK(fmt::format("{:%C}", Date { 2560, 5, 4 }) == "25"sv);
 }
