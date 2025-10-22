@@ -1,5 +1,7 @@
 #include "PopManager.hpp"
 
+#include <fmt/format.h>
+
 #include "openvic-simulation/economy/GoodDefinition.hpp"
 #include "openvic-simulation/politics/Ideology.hpp"
 #include "openvic-simulation/politics/IssueManager.hpp"
@@ -7,8 +9,8 @@
 #include "openvic-simulation/pop/Pop.hpp"
 #include "openvic-simulation/military/UnitType.hpp"
 #include "openvic-simulation/modifier/ModifierManager.hpp"
+#include "openvic-simulation/utility/FormatValidate.hpp"
 #include "openvic-simulation/utility/Logger.hpp"
-#include "openvic-simulation/utility/LogScope.hpp"
 
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;
@@ -25,7 +27,7 @@ PopManager::PopManager()
 
 bool PopManager::setup_stratas() {
 	if (stratas_are_locked()) {
-		Logger::error("Failed to set up stratas - already locked!");
+		spdlog::error_s("Failed to set up stratas - already locked!");
 		return false;
 	}
 
@@ -48,7 +50,7 @@ bool PopManager::setup_stratas() {
 	default_strata = stratas.get_item_by_identifier(STRATA_IDENTIFIERS[DEFAULT_STRATA_INDEX]);
 
 	if (!ret) {
-		Logger::error("Error while setting up stratas!");
+		spdlog::error_s("Error while setting up stratas!");
 	}
 
 	return ret;
@@ -56,7 +58,7 @@ bool PopManager::setup_stratas() {
 
 bool PopManager::add_strata(std::string_view identifier) {
 	if (identifier.empty()) {
-		Logger::error("Invalid strata identifier - empty!");
+		spdlog::error_s("Invalid strata identifier - empty!");
 		return false;
 	}
 	return stratas.emplace_item(
@@ -103,38 +105,47 @@ bool PopManager::add_pop_type(
 	ast::NodeCPtr issues_node
 ) {
 	if (identifier.empty()) {
-		Logger::error("Invalid pop type identifier - empty!");
+		spdlog::error_s("Invalid pop type identifier - empty!");
 		return false;
 	}
 	if (strata == nullptr) {
-		Logger::error("Invalid pop type strata for ", identifier, " - null!");
+		spdlog::error_s("Invalid pop type strata for {} - null!", identifier);
 		return false;
 	}
 	if (sprite <= 0) {
-		Logger::error("Invalid pop type sprite index for ", identifier, ": ", sprite, " (must be positive)");
+		spdlog::error_s(
+			"Invalid pop type sprite index for {}: {} (must be positive)",
+			identifier, sprite
+		);
 		return false;
 	}
 	if (max_size <= 0) {
-		Logger::error("Invalid pop type max size for ", identifier, ": ", max_size, " (must be positive)");
+		spdlog::error_s(
+			"Invalid pop type max size for {}: {} (must be positive)",
+			identifier, max_size
+		);
 		return false;
 	}
 	if (merge_max_size <= 0) {
-		Logger::error("Invalid pop type merge max size for ", identifier, ": ", merge_max_size, " (must be positive)");
+		spdlog::error_s(
+			"Invalid pop type merge max size for {}: {} (must be positive)",
+			identifier, merge_max_size
+		);
 		return false;
 	}
 
 	if (research_leadership_optimum < 0) {
-		Logger::error(
-			"Invalid pop type research/leadership optimum for ", identifier, ": ", research_leadership_optimum,
-			" (cannot be negative)"
+		spdlog::error_s(
+			"Invalid pop type research/leadership optimum for {}: {} (cannot be negative)",
+			identifier, research_leadership_optimum
 		);
 		return false;
 	}
 	if ((research_points != 0 || leadership_points != 0) != (research_leadership_optimum > 0)) {
-		Logger::error(
-			"Invalid pop type research/leadership points and optimum for ", identifier, ": research = ", research_points,
-			", leadership = ", leadership_points, ", optimum = ", research_leadership_optimum,
-			" (optimum is positive if and only if at least one of research and leadership is non-zero)"
+		spdlog::error_s(
+			"Invalid pop type research/leadership points and optimum for {}: research = {}, leadership = {}, optimum = {} "
+			"(optimum is positive if and only if at least one of research and leadership is non-zero)",
+			identifier, research_points, leadership_points, research_leadership_optimum
 		);
 		return false;
 	}
@@ -200,7 +211,7 @@ bool PopManager::add_pop_type(
 
 void PopManager::reserve_pop_types_and_delayed_nodes(size_t size) {
 	if (pop_types_are_locked()) {
-		Logger::error("Failed to reserve space for ", size, " pop types in PopManager - already locked!");
+		spdlog::error_s("Failed to reserve space for {} pop types in PopManager - already locked!", size);
 	} else {
 		reserve_more_pop_types(size);
 		reserve_more(delayed_parse_nodes, size);
@@ -222,7 +233,7 @@ static NodeCallback auto expect_needs_income(PopType::income_type_t& types) {
 			income_type_map,
 			[&types](PopType::income_type_t type) -> bool {
 				if (OV_unlikely(share_income_type(types, type))) {
-					Logger::warning("Duplicate pop income type ", type, " is treated as single income.");
+					spdlog::warn_s("Duplicate pop income type {} is treated as single income.", fmt::underlying(type));
 				} else {
 					types |= type;
 				}
@@ -240,7 +251,7 @@ bool PopManager::load_pop_type_file(
 	std::string_view filestem, GoodDefinitionManager const& good_definition_manager, IdeologyManager const& ideology_manager,
 	ast::NodeCPtr root
 ) {
-	const LogScope log_scope { fmt::format("poptypes/{}.txt", filestem) };
+	spdlog::scope scope { fmt::format("poptypes/{}.txt", filestem) };
 	using enum scope_type_t;
 	using enum PopType::income_type_t;
 
@@ -372,21 +383,21 @@ bool PopManager::load_delayed_parse_pop_type_data(
 		if (rebel_units != nullptr && !unit_type_manager.expect_unit_type_decimal_map(
 			move_variable_callback(pop_type->rebel_units)
 		)(rebel_units)) {
-			Logger::error("Errors parsing rebel unit distribution for pop type ", pop_type, "!");
+			spdlog::error_s("Errors parsing rebel unit distribution for pop type {}!", ovfmt::validate(pop_type));
 			ret = false;
 		}
 
 		if (equivalent != nullptr && !expect_pop_type_identifier(
 			assign_variable_callback_pointer(pop_type->equivalent)
 		)(equivalent)) {
-			Logger::error("Errors parsing equivalent pop type for pop type ", pop_type, "!");
+			spdlog::error_s("Errors parsing equivalent pop type for pop type {}!", ovfmt::validate(pop_type));
 			ret = false;
 		}
 
 		if (promote_to_node != nullptr && !expect_pop_type_dictionary(
 			[pop_type](PopType const& type, ast::NodeCPtr node) -> bool {
 				if (pop_type && type == *pop_type) {
-					Logger::error("Pop type ", type, " cannot have promotion weight to itself!");
+					spdlog::error_s("Pop type {} cannot have promotion weight to itself!", type);
 					return false;
 				}
 				ConditionalWeightFactorAdd weight { POP, POP, NO_SCOPE };
@@ -395,7 +406,7 @@ bool PopManager::load_delayed_parse_pop_type_data(
 				return ret;
 			}
 		)(promote_to_node)) {
-			Logger::error("Errors parsing promotion weights for pop type ", pop_type, "!");
+			spdlog::error_s("Errors parsing promotion weights for pop type {}!", ovfmt::validate(pop_type));
 			ret = false;
 		}
 
@@ -404,7 +415,7 @@ bool PopManager::load_delayed_parse_pop_type_data(
 			[pop_type, &issue_manager](std::string_view key, ast::NodeCPtr node) -> bool {
 				BaseIssue const* issue = issue_manager.get_base_issue_by_identifier(key);
 				if (issue == nullptr) {
-					Logger::error("Invalid issue in pop type ", pop_type, " issue weights: ", key);
+					spdlog::error_s("Invalid issue in pop type {} issue weights: {}", ovfmt::validate(pop_type), key);
 					return false;
 				}
 				ConditionalWeightFactorMul weight { POP, POP, NO_SCOPE };
@@ -413,7 +424,7 @@ bool PopManager::load_delayed_parse_pop_type_data(
 				return ret;
 			}
 		)(issues_node)) {
-			Logger::error("Errors parsing issue weights for pop type ", pop_type, "!");
+			spdlog::error_s("Errors parsing issue weights for pop type {}!", ovfmt::validate(pop_type));
 			ret = false;
 		}
 	}
@@ -457,15 +468,16 @@ bool PopManager::load_pop_bases_into_vector(
 		*non_integer_size = true;
 	}
 	if (culture == nullptr || religion == nullptr) {
-		Logger::warning("No/invalid culture or religion defined for pop of size ", size, ", ignored!");
+		spdlog::warn_s("No/invalid culture or religion defined for pop of size {}, ignored!", size);
 		return true;
 	}
 
 	if (culture != nullptr && religion != nullptr && size >= 1 && size <= std::numeric_limits<pop_size_t>::max()) {
 		vec.emplace_back(PopBase { type, *culture, *religion, size.to_int32_t(), militancy, consciousness, rebel_type });
 	} else {
-		Logger::warning(
-			"Some pop arguments are invalid: culture = ", culture, ", religion = ", religion, ", size = ", size
+		spdlog::warn_s(
+			"Some pop arguments are invalid: culture = {}, religion = {}, size = {}",
+			ovfmt::validate(culture), ovfmt::validate(religion), size
 		);
 	}
 	return ret;

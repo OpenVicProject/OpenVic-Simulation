@@ -154,7 +154,7 @@ void Pop::setup_pop_test_values(IssueManager const& issue_manager) {
 bool Pop::convert_to_equivalent() {
 	PopType const* const equivalent = get_type()->get_equivalent();
 	if (equivalent == nullptr) {
-		Logger::error("Tried to convert pop of type ", get_type()->get_identifier(), " to equivalent, but there is no equivalent.");
+		spdlog::error_s("Tried to convert pop of type {} to equivalent, but there is no equivalent.", *get_type());
 		return false;
 	}
 
@@ -304,11 +304,11 @@ void Pop::pay_income_tax(fixed_point_t& income) {
 #define DEFINE_ADD_INCOME_FUNCTIONS(name) \
 	void Pop::add_##name(fixed_point_t amount){ \
 		if (OV_unlikely(amount == fixed_point_t::_0)) { \
-			Logger::warning("Adding ", #name, " of 0 to pop. Context", get_pop_context_text().str()); \
+			spdlog::warn_s("Adding " #name " of 0 to pop. Context{}", get_pop_context_text().str()); \
 			return; \
 		} \
 		if (OV_unlikely(amount < fixed_point_t::_0)) { \
-			Logger::error("Adding negative ", #name, " of ", amount, " to pop. Context", get_pop_context_text().str()); \
+			spdlog::error_s("Adding negative " #name " of {} to pop. Context{}", amount, get_pop_context_text().str()); \
 			return; \
 		} \
 		pay_income_tax(amount); \
@@ -323,17 +323,23 @@ DO_FOR_ALL_TYPES_OF_POP_INCOME(DEFINE_ADD_INCOME_FUNCTIONS)
 #define DEFINE_ADD_EXPENSE_FUNCTIONS(name) \
 	void Pop::add_##name(const fixed_point_t amount){ \
 		if (OV_unlikely(amount == fixed_point_t::_0)) { \
-			Logger::warning("Adding ", #name, " of 0 to pop. Context:", get_pop_context_text().str()); \
+			spdlog::warn_s("Adding " #name " of 0 to pop. Context:{}", get_pop_context_text().str()); \
 			return; \
 		} \
 		name += amount; \
 		const fixed_point_t expenses_copy = expenses += amount; \
 		if (OV_unlikely(expenses_copy < fixed_point_t::_0)) { \
-			Logger::error("Total expenses became negative (", expenses_copy, ") after adding ", #name, " of ", amount, " to pop. Context:", get_pop_context_text().str()); \
+			spdlog::error_s( \
+				"Total expenses became negative ({}) after adding " #name " of {} to pop. Context:{}", \
+				expenses_copy, amount, get_pop_context_text().str() \
+			); \
 		} \
 		const fixed_point_t cash_copy = cash -= amount; \
 		if (OV_unlikely(cash_copy < fixed_point_t::_0)) { \
-			Logger::error("Total cash became negative (", cash_copy, ") after adding ", #name, " of ", amount, " to pop. Context:", get_pop_context_text().str()); \
+			spdlog::error_s( \
+				"Total cash became negative ({}) after adding " #name " of {} to pop. Context:{}", \
+				cash_copy, amount, get_pop_context_text().str() \
+			); \
 		} \
 	}
 
@@ -671,13 +677,22 @@ void Pop::report_artisanal_produce(const fixed_point_t quantity) {
 
 void Pop::hire(pop_size_t count) {
 	if (OV_unlikely(count <= 0)) {
-		Logger::warning("Tried employing non-positive number of pops. ", count, " Context", get_pop_context_text().str());
+		spdlog::warn_s(
+			"Tried employing non-positive number of pops. {} Context{}",
+			count, get_pop_context_text().str()
+		);
 	}
 	employed += count;
 	if (OV_unlikely(employed > size)) {
-		Logger::error("Employed count became greater than pop size. ", employed, " Context", get_pop_context_text().str());
+		spdlog::error_s(
+			"Employed count became greater than pop size. {} Context{}",
+			employed, get_pop_context_text().str()
+		);
 	} else if (OV_unlikely(employed < 0)) {
-		Logger::error("Employed count became negative. ", employed ," Context", get_pop_context_text().str());
+		spdlog::error_s(
+			"Employed count became negative. {} Context{}",
+			employed, get_pop_context_text().str()
+		);
 	}
 }
 

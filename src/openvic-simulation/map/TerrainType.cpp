@@ -4,6 +4,8 @@
 
 #include "openvic-simulation/modifier/ModifierManager.hpp"
 #include "openvic-simulation/types/Colour.hpp"
+#include "openvic-simulation/types/HasIdentifier.hpp"
+#include "openvic-simulation/utility/FormatValidate.hpp"
 #include "openvic-simulation/utility/Containers.hpp"
 
 using namespace OpenVic;
@@ -79,13 +81,14 @@ bool TerrainTypeManager::add_terrain_type(
 	bool is_water
 ) {
 	if (identifier.empty()) {
-		Logger::error("Invalid terrain type identifier - empty!");
+		spdlog::error_s("Invalid terrain type identifier - empty!");
 		return false;
 	}
 
 	if (movement_cost < fixed_point_t::_0) {
-		Logger::error(
-			"Invalid movement cost for terrain type \"", identifier, "\": ", movement_cost, " (cannot be negative!)"
+		spdlog::error_s(
+			"Invalid movement cost for terrain type \"{}\": {} (cannot be negative!)",
+			identifier, movement_cost
 		);
 		return false;
 	}
@@ -105,17 +108,17 @@ bool TerrainTypeManager::add_terrain_type_mapping(
 	bool has_texture
 ) {
 	if (!terrain_types_are_locked()) {
-		Logger::error("Cannot register terrain type mappings until terrain types are locked!");
+		spdlog::error_s("Cannot register terrain type mappings until terrain types are locked!");
 		return false;
 	}
 
 	if (identifier.empty()) {
-		Logger::error("Invalid terrain type mapping identifier - empty!");
+		spdlog::error_s("Invalid terrain type mapping identifier - empty!");
 		return false;
 	}
 
 	if (type == nullptr) {
-		Logger::error("Null terrain type for mapping ", identifier);
+		spdlog::error_s("Null terrain type for mapping {}", identifier);
 		return false;
 	}
 
@@ -127,9 +130,9 @@ bool TerrainTypeManager::add_terrain_type_mapping(
 		if (it == terrain_type_mappings_map.end()) {
 			terrain_type_mappings_map.emplace(idx, terrain_type_mappings.size());
 		} else {
-			Logger::error(
-				"Terrain index ", static_cast<size_t>(idx), " cannot map to ", identifier, " as it already maps to ",
-				terrain_type_mappings.get_item_by_index(it->second)
+			spdlog::error_s(
+				"Terrain index {} cannot map to {} as it already maps to {}",
+				static_cast<size_t>(idx), identifier, ovfmt::validate(terrain_type_mappings.get_item_by_index(it->second))
 			);
 			ret = false;
 		}
@@ -177,12 +180,12 @@ node_callback_t TerrainTypeManager::_load_terrain_type_categories(ModifierManage
 
 bool TerrainTypeManager::_load_terrain_type_mapping(std::string_view mapping_key, ast::NodeCPtr mapping_value) {
 	if (terrain_texture_limit <= 0) {
-		Logger::error("Cannot define terrain type mapping before terrain texture limit: ", mapping_key);
+		spdlog::error_s("Cannot define terrain type mapping before terrain texture limit: {}", mapping_key);
 		return false;
 	}
 
 	if (!terrain_types_are_locked()) {
-		Logger::error("Cannot define terrain type mapping before categories: ", mapping_key);
+		spdlog::error_s("Cannot define terrain type mapping before categories: {}", mapping_key);
 		return false;
 	}
 
@@ -193,7 +196,7 @@ bool TerrainTypeManager::_load_terrain_type_mapping(std::string_view mapping_key
 
 	bool ret = expect_dictionary_keys_and_default(
 		[mapping_key](std::string_view key, ast::NodeCPtr value) -> bool {
-			Logger::warning("Invalid key ", key, " in terrain mapping ", mapping_key);
+			spdlog::warn_s("Invalid key {} in terrain mapping {}", key, mapping_key);
 			return true;
 		},
 		"type", ONE_EXACTLY, expect_terrain_type_identifier(assign_variable_callback_pointer(type)),
@@ -203,7 +206,7 @@ bool TerrainTypeManager::_load_terrain_type_mapping(std::string_view mapping_key
 					terrain_indices.push_back(val);
 					return true;
 				}
-				Logger::error("Repeat terrain type mapping index: ", val);
+				spdlog::error_s("Repeat terrain type mapping index: {}", val);
 				return false;
 			}
 		)),
@@ -212,7 +215,7 @@ bool TerrainTypeManager::_load_terrain_type_mapping(std::string_view mapping_key
 	)(mapping_value);
 
 	if (has_texture && ++terrain_texture_count == terrain_texture_limit + 1) {
-		Logger::warning("More terrain textures than limit!");
+		spdlog::warn_s("More terrain textures than limit!");
 	}
 
 	ret &= add_terrain_type_mapping(mapping_key, type, std::move(terrain_indices), priority, has_texture);

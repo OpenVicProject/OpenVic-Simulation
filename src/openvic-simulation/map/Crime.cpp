@@ -22,7 +22,7 @@ bool CrimeManager::add_crime_modifier(
 	bool default_active
 ) {
 	if (identifier.empty()) {
-		Logger::error("Invalid crime modifier effect identifier - empty!");
+		spdlog::error_s("Invalid crime modifier effect identifier - empty!");
 		return false;
 	}
 

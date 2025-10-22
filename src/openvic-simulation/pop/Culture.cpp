@@ -29,7 +29,7 @@ CultureManager::CultureManager() : default_graphical_culture_type { nullptr } {}
 
 bool CultureManager::add_graphical_culture_type(std::string_view identifier) {
 	if (identifier.empty()) {
-		Logger::error("Invalid culture group identifier - empty!");
+		spdlog::error_s("Invalid graphical culture type identifier - empty!");
 		return false;
 	}
 	return graphical_culture_types.emplace_item(
@@ -43,15 +43,15 @@ bool CultureManager::add_culture_group(
 	CountryDefinition const* union_country
 ) {
 	if (!graphical_culture_types.is_locked()) {
-		Logger::error("Cannot register culture groups until graphical culture types are locked!");
+		spdlog::error_s("Cannot register culture groups until graphical culture types are locked!");
 		return false;
 	}
 	if (OV_unlikely(identifier.empty())) {
-		Logger::error("Invalid culture group identifier - empty!");
+		spdlog::error_s("Invalid culture group identifier - empty!");
 		return false;
 	}
 	if (graphical_culture_type == nullptr) {
-		Logger::error("Null graphical culture type for ", identifier);
+		spdlog::error_s("Null graphical culture type for {}", identifier);
 		return false;
 	}
 
@@ -63,7 +63,10 @@ bool CultureManager::add_culture_group(
 			default_leader = culture_groups.front().leader;
 		}
 		leader = default_leader;
-		Logger::warning("In culture \"", identifier, "\" - group leader is undefined, set to default of: \"", default_leader, "\".");
+		spdlog::warn_s(
+			"In culture group \"{}\" - group leader is undefined, set to default of: \"{}\".",
+			identifier, default_leader
+		);
 	}
 	if (!culture_groups.emplace_item(
 		identifier,
@@ -81,11 +84,11 @@ bool CultureManager::add_culture(
 	name_list_t&& last_names, fixed_point_t radicalism, CountryDefinition const* primary_country
 ) {
 	if (!culture_groups.is_locked()) {
-		Logger::error("Cannot register cultures until culture groups are locked!");
+		spdlog::error_s("Cannot register cultures until culture groups are locked!");
 		return false;
 	}
 	if (identifier.empty()) {
-		Logger::error("Invalid culture identifier - empty!");
+		spdlog::error_s("Invalid culture identifier - empty!");
 		return false;
 	}
 
@@ -106,7 +109,7 @@ bool CultureManager::load_graphical_culture_type_file(ast::NodeCPtr root) {
 	lock_graphical_culture_types();
 
 	if (graphical_culture_types_empty()) {
-		Logger::error("Cannot set default graphical culture type - none loaded!");
+		spdlog::error_s("Cannot set default graphical culture type - none loaded!");
 		return false;
 	}
 
@@ -183,7 +186,7 @@ bool CultureManager::_load_culture(
  */
 bool CultureManager::load_culture_file(CountryDefinitionManager const& country_definition_manager, ast::NodeCPtr root) {
 	if (!graphical_culture_types.is_locked()) {
-		Logger::error("Cannot load culture groups until graphical culture types are locked!");
+		spdlog::error_s("Cannot load culture groups until graphical culture types are locked!");
 		return false;
 	}
 
@@ -219,7 +222,7 @@ memory::string CultureManager::make_leader_picture_name(
 	std::string_view cultural_type, unit_branch_t branch, leader_count_t count
 ) {
 	if (cultural_type.empty()) {
-		Logger::error("Cannot construct leader picture name - empty cultural type!");
+		spdlog::error_s("Cannot construct leader picture name - empty cultural type!");
 		return {};
 	}
 
@@ -238,7 +241,7 @@ memory::string CultureManager::make_leader_picture_name(
 			branch_text = &ADMIRAL_TEXT;
 			break;
 		default:
-			Logger::error("Cannot construct leader picture name - invalid branch type: ", static_cast<uint32_t>(branch));
+			spdlog::error_s("Cannot construct leader picture name - invalid branch type: {}", static_cast<uint32_t>(branch));
 			return {};
 	}
 
@@ -247,7 +250,7 @@ memory::string CultureManager::make_leader_picture_name(
 
 memory::string CultureManager::make_leader_picture_path(std::string_view leader_picture_name) {
 	if (leader_picture_name.empty()) {
-		Logger::error("Cannot construct leader picture path - empty name!");
+		spdlog::error_s("Cannot construct leader picture path - empty name!");
 		return {};
 	}
 
@@ -259,7 +262,7 @@ memory::string CultureManager::make_leader_picture_path(std::string_view leader_
 
 bool CultureManager::find_cultural_leader_pictures(Dataloader const& dataloader) {
 	if (!culture_groups_are_locked()) {
-		Logger::error("Cannot search for cultural leader pictures until culture groups are locked!");
+		spdlog::error_s("Cannot search for cultural leader pictures until culture groups are locked!");
 		return false;
 	}
 
@@ -279,9 +282,9 @@ bool CultureManager::find_cultural_leader_pictures(Dataloader const& dataloader)
 			}
 
 			if (leader_count < 1) {
-				Logger::error(
-					"No ", get_branched_leader_name(branch), " pictures found for cultural type \"",
-					cultural_type, "\"!"
+				spdlog::error_s(
+					"No {} pictures found for cultural type \"{}\"!",
+					get_branched_leader_name(branch), cultural_type
 				);
 				ret = false;
 			}
@@ -299,7 +302,7 @@ bool CultureManager::find_cultural_leader_pictures(Dataloader const& dataloader)
 memory::string CultureManager::get_leader_picture_name(std::string_view cultural_type, unit_branch_t branch) const {
 	const decltype(leader_picture_counts)::const_iterator it = leader_picture_counts.find(cultural_type);
 	if (it == leader_picture_counts.end()) {
-		Logger::error("Cannot find leader picture counts for cultural type \"", cultural_type, "\"!");
+		spdlog::error_s("Cannot find leader picture counts for cultural type \"{}\"!", cultural_type);
 		return {};
 	}
 
@@ -315,16 +318,17 @@ memory::string CultureManager::get_leader_picture_name(std::string_view cultural
 		desired_picture_count = it->second.second;
 		break;
 	default:
-		Logger::error(
-			"Cannot get \"", cultural_type, "\" leader picture name - invalid branch type: ", static_cast<uint32_t>(branch)
+		spdlog::error_s(
+			"Cannot get \"{}\" leader picture name - invalid branch type: {}",
+			cultural_type, static_cast<uint32_t>(branch)
 		);
 		return {};
 	}
 
 	if (desired_picture_count < 1) {
-		Logger::error(
-			"Cannot get \"", cultural_type, "\" ", get_branched_leader_name(branch),
-			" picture name - no pictures of this type were found during game loading!"
+		spdlog::error_s(
+			"Cannot get \"{}\" {} picture name - no pictures of this type were found during game loading!",
+			cultural_type, get_branched_leader_name(branch)
 		);
 		return {};
 	}

@@ -7,6 +7,7 @@
 #include "openvic-simulation/types/IdentifierRegistry.hpp"
 #include "openvic-simulation/types/OrderedContainers.hpp"
 #include "openvic-simulation/utility/ErrorMacros.hpp"
+#include "openvic-simulation/utility/FormatValidate.hpp"
 
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;
@@ -36,13 +37,19 @@ vector_ordered_set<Mod const*> Mod::generate_dependency_list(bool* success) cons
 		bool ret = true;
 		for (std::string_view dep_identifier : mod->get_dependencies()) {
 			if (!mod_manager.has_mod_identifier(dep_identifier)) {
-				Logger::error("Mod \"", mod->get_identifier(), "\" has unmet dependency \"", dep_identifier, "\" and cannot be loaded!");
+				spdlog::error_s(
+					"Mod \"{}\" has unmet dependency \"{}\" and cannot be loaded!",
+					ovfmt::validate(mod), dep_identifier
+				);
 				return false;
 			}
 			Mod const* dep = mod_manager.get_mod_by_identifier(dep_identifier);
 			/* The poor man's cycle checking (cycles should be very rare and hard to accomplish with vic2 modding, this is a failsafe) */
 			if (current_recurse == MAX_RECURSE) {
-				Logger::error("Mod \"", mod->get_identifier(), "\" has cyclical or broken dependency chain and cannot be loaded!");
+				spdlog::error_s(
+					"Mod \"{}\" has cyclical or broken dependency chain and cannot be loaded!",
+					ovfmt::validate(mod)
+				);
 				return false;
 			} else {
 				current_recurse++;
@@ -85,7 +92,7 @@ bool ModManager::load_mod_file(ast::NodeCPtr root) {
 		return true;
 	}
 
-	Logger::info("Loaded mod descriptor for \"", identifier, "\"");
+	SPDLOG_INFO("Loaded mod descriptor for \"{}\"", identifier);
 	mods.emplace_item(
 		identifier,
 		*this, identifier, path, user_dir, std::move(replace_paths), std::move(dependencies)
@@ -99,7 +106,7 @@ void ModManager::set_loaded_mods(memory::vector<Mod const*>&& new_loaded_mods) {
 	loaded_mods = std::move(new_loaded_mods);
 	mods_loaded = true;
 	for (Mod const* mod : loaded_mods) {
-		Logger::info("Loading mod \"", mod->get_identifier(), "\" at path ", mod->get_dataloader_root_path());
+		SPDLOG_INFO("Loading mod \"{}\" at path {}", *mod, mod->get_dataloader_root_path());
 	}
 }
 

@@ -49,17 +49,17 @@ bool WargoalTypeManager::add_wargoal_type(
 	ConditionScript&& allowed_countries, EffectScript&& on_add, EffectScript&& on_po_accepted
 ) {
 	if (identifier.empty()) {
-		Logger::error("Invalid wargoal identifier - empty!");
+		spdlog::error_s("Invalid wargoal identifier - empty!");
 		return false;
 	}
 
 	if (war_name.empty()) {
-		Logger::error("Invalid war name for wargoal ", identifier, " - empty!");
+		spdlog::error_s("Invalid war name for wargoal {} - empty!", identifier);
 		return false;
 	}
 
 	if (sprite_index == 0) {
-		Logger::warning("Invalid sprite for wargoal ", identifier, " - 0");
+		spdlog::warn_s("Invalid sprite for wargoal {} - 0", identifier);
 	}
 
 	return wargoal_types.emplace_item(
@@ -75,7 +75,7 @@ bool WargoalTypeManager::load_wargoal_file(ovdl::v2script::Parser const& parser)
 	using namespace std::string_view_literals;
 	ovdl::symbol<char> peace_order_symbol = parser.find_intern("peace_order"sv);
 	if (!peace_order_symbol) {
-		Logger::error("peace_order could not be interned.");
+		spdlog::error_s("peace_order could not be interned.");
 	}
 
 	bool ret = expect_dictionary_reserve_length(
@@ -139,13 +139,16 @@ bool WargoalTypeManager::load_wargoal_file(ovdl::v2script::Parser const& parser)
 								if (modifiers.emplace(peace_modifier, val).second) {
 									return true;
 								}
-								Logger::error("Duplicate peace modifier ", key, " in wargoal ", identifier, "!");
+								spdlog::error_s(
+									"Duplicate peace modifier {} in wargoal {}!",
+									key, identifier
+								);
 								return false;
 							}
 						)(value);
 					}
 
-					Logger::error("Modifier ", key, " in wargoal ", identifier, " is invalid.");
+					spdlog::error_s("Modifier {} in wargoal {} is invalid.", key, identifier);
 					return false;
 				},
 				"war_name", ONE_EXACTLY, expect_identifier_or_string(assign_variable_callback(war_name)),
@@ -209,7 +212,7 @@ bool WargoalTypeManager::load_wargoal_file(ovdl::v2script::Parser const& parser)
 					if (std::find(peace_priorities.begin(), peace_priorities.end(), &wargoal) == peace_priorities.end()) {
 						peace_priorities.push_back(&wargoal);
 					} else {
-						Logger::warning("Wargoal ", wargoal.get_identifier(), " is already in the peace priority list!");
+						spdlog::warn_s("Wargoal {} is already in the peace priority list!", wargoal);
 					}
 					return true;
 				},
