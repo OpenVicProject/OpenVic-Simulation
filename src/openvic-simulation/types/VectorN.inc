@@ -35,6 +35,11 @@ namespace OpenVic {
 
 		using type = T;
 
+		using iterator = basic_iterator<type*, VEC_TYPE>;
+		using const_iterator = basic_iterator<type const*, VEC_TYPE>;
+		using reverse_iterator = std::reverse_iterator<iterator>;
+		using const_reverse_iterator = std::reverse_iterator<const_iterator>;
+
 #define VEC_COMPONENT_ONE(v) 1
 		static constexpr std::integral_constant<std::size_t, FOR_VEC_COMPONENTS(VEC_COMPONENT_ONE, +)> size = {};
 #undef VEC_COMPONENT_ONE
@@ -46,6 +51,54 @@ namespace OpenVic {
 
 			T components[size];
 		};
+
+		constexpr iterator begin() {
+			return iterator(components);
+		}
+
+		constexpr const_iterator begin() const {
+			return const_iterator(components);
+		}
+
+		constexpr const_iterator cbegin() const {
+			return begin();
+		}
+
+		constexpr iterator end() {
+			return iterator(components + size());
+		}
+
+		constexpr const_iterator end() const {
+			return const_iterator(components + size());
+		}
+
+		constexpr const_iterator cend() const {
+			return end();
+		}
+
+		constexpr reverse_iterator rbegin() {
+			return reverse_iterator(end());
+		}
+
+		constexpr const_reverse_iterator rbegin() const {
+			return const_reverse_iterator(end());
+		}
+
+		constexpr const_reverse_iterator crbegin() const {
+			return rbegin();
+		}
+
+		constexpr reverse_iterator rend() {
+			return reverse_iterator(begin());
+		}
+
+		constexpr const_reverse_iterator rend() const {
+			return const_reverse_iterator(begin());
+		}
+
+		constexpr const_reverse_iterator crend() const {
+			return rend();
+		}
 
 #define VEC_CONSTRUCTOR_ARG(v) T new_##v
 #define VEC_CONSTRUCTOR_INITIALISE(v) v { new_##v }

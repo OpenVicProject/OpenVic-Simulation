@@ -1,7 +1,9 @@
 #pragma once
 
 #include <cmath>
+#include <iterator>
 
+#include "openvic-simulation/types/BasicIterator.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
 #include "openvic-simulation/utility/Utility.hpp"
 
