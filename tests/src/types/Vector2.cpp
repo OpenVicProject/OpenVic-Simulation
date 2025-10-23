@@ -73,6 +73,40 @@ TEMPLATE_LIST_TEST_CASE("vec2_t Linear algebra methods", "[vec2_t][vec2_t-linear
 	CONSTEXPR_CHECK(vec2_t<TestType>(-a.x, a.y).dot(vec2_t<TestType>(b.x, -b.y)) == -47);
 }
 
+TEMPLATE_LIST_TEST_CASE("vec2_t Iterator", "[vec2_t][vec2_t-iterator]", VectorValueTypes) {
+	static constexpr vec2_t<TestType> vector1 = vec2_t<TestType>(5, 4);
+
+	CONSTEXPR_CHECK(vector1.begin() == typename vec2_t<TestType>::const_iterator(vector1.components));
+	CONSTEXPR_CHECK(vector1.end() == typename vec2_t<TestType>::const_iterator(vector1.components + vector1.size()));
+	CONSTEXPR_CHECK(vector1.cbegin() == typename vec2_t<TestType>::const_iterator(vector1.components));
+	CONSTEXPR_CHECK(vector1.cend() == typename vec2_t<TestType>::const_iterator(vector1.components + vector1.size()));
+	CONSTEXPR_CHECK(vector1.rbegin() == typename vec2_t<TestType>::const_reverse_iterator(vector1.end()));
+	CONSTEXPR_CHECK(vector1.rend() == typename vec2_t<TestType>::const_reverse_iterator(vector1.begin()));
+	CONSTEXPR_CHECK(vector1.crbegin() == typename vec2_t<TestType>::const_reverse_iterator(vector1.end()));
+	CONSTEXPR_CHECK(vector1.crend() == typename vec2_t<TestType>::const_reverse_iterator(vector1.begin()));
+
+	for (size_t i = 0; TestType const& v : vector1) {
+		CHECK(vector1[i] == v);
+		++i;
+	}
+
+	vec2_t<TestType> vector2 = vector1;
+	CONSTEXPR_CHECK(vector2.begin() == typename vec2_t<TestType>::iterator(vector2.components));
+	CONSTEXPR_CHECK(vector2.end() == typename vec2_t<TestType>::iterator(vector2.components + vector2.size()));
+	CONSTEXPR_CHECK(vector2.cbegin() == typename vec2_t<TestType>::const_iterator(vector2.components));
+	CONSTEXPR_CHECK(vector2.cend() == typename vec2_t<TestType>::const_iterator(vector2.components + vector2.size()));
+	CONSTEXPR_CHECK(vector2.rbegin() == typename vec2_t<TestType>::reverse_iterator(vector2.end()));
+	CONSTEXPR_CHECK(vector2.rend() == typename vec2_t<TestType>::reverse_iterator(vector2.begin()));
+	CONSTEXPR_CHECK(vector2.crbegin() == typename vec2_t<TestType>::const_reverse_iterator(vector2.end()));
+	CONSTEXPR_CHECK(vector2.crend() == typename vec2_t<TestType>::const_reverse_iterator(vector2.begin()));
+
+	for (TestType& v : vector2) {
+		v *= 2;
+	}
+
+	CHECK(vector2 == vector1 * 2);
+}
+
 TEST_CASE("fvec2_t Length methods", "[vec2_t][fvec2_t][fvec2_t-length]") {
 	static constexpr fvec2_t vector1 = fvec2_t(10, 10);
 	static constexpr fvec2_t vector2 = fvec2_t(20, 30);
