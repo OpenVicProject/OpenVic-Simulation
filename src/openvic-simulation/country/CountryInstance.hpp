@@ -174,20 +174,29 @@ namespace OpenVic {
 
 		CLAMPED_PROPERTY(administration_spending_slider_value);
 		STATE_PROPERTY(fixed_point_t, projected_administration_spending_unscaled_by_slider);
-		STATE_PROPERTY(fixed_point_t, actual_administration_spending);
+		fixed_point_t actual_administration_budget;
+		bool PROPERTY(was_administration_budget_cut_yesterday, false);
+		atomic_fixed_point_t PROPERTY(actual_administration_spending);
 
 		CLAMPED_PROPERTY(education_spending_slider_value);
 		STATE_PROPERTY(fixed_point_t, projected_education_spending_unscaled_by_slider);
-		STATE_PROPERTY(fixed_point_t, actual_education_spending);
+		fixed_point_t actual_education_budget;
+		bool PROPERTY(was_education_budget_cut_yesterday, false);
+		atomic_fixed_point_t PROPERTY(actual_education_spending);
 
 		CLAMPED_PROPERTY(military_spending_slider_value);
 		STATE_PROPERTY(fixed_point_t, projected_military_spending_unscaled_by_slider);
-		STATE_PROPERTY(fixed_point_t, actual_military_spending);
+		fixed_point_t actual_military_budget;
+		bool PROPERTY(was_military_budget_cut_yesterday, false);
+		atomic_fixed_point_t PROPERTY(actual_military_spending);
 
 		CLAMPED_PROPERTY(social_spending_slider_value);
 		STATE_PROPERTY(fixed_point_t, projected_pensions_spending_unscaled_by_slider);
 		STATE_PROPERTY(fixed_point_t, projected_unemployment_subsidies_spending_unscaled_by_slider);
-		STATE_PROPERTY(fixed_point_t, actual_social_spending);
+		fixed_point_t actual_social_budget;
+		bool PROPERTY(was_social_budget_cut_yesterday, false);
+		atomic_fixed_point_t PROPERTY(actual_pensions_spending);
+		atomic_fixed_point_t PROPERTY(actual_unemployment_subsidies_spending);
 		
 		//base here means not scaled by slider or pop size
 		IndexedFlatMap<PopType, DerivedState<fixed_point_t>> administration_salary_base_by_pop_type;
@@ -196,8 +205,13 @@ namespace OpenVic {
 		IndexedFlatMap<PopType, DerivedState<fixed_point_t>> social_income_variant_base_by_pop_type;
 
 		CLAMPED_PROPERTY(tariff_rate_slider_value);
-		std::mutex actual_net_tariffs_mutex;
-		MutableState<fixed_point_t> actual_net_tariffs;
+		fixed_point_t actual_import_subsidies_budget;
+		bool PROPERTY(was_import_subsidies_budget_cut_yesterday, false);
+		atomic_fixed_point_t actual_import_subsidies_spending;
+		atomic_fixed_point_t actual_tariff_income;
+		fixed_point_t get_actual_net_tariffs_balance() const {
+			return actual_tariff_income.load() - actual_import_subsidies_spending.load();
+		}
 
 		//TODO actual factory subsidies
 		//projected cost is UI only and lists the different factories
