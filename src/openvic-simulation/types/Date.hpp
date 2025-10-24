@@ -12,7 +12,6 @@
 #include <string>
 #include <system_error>
 
-#include <fmt/core.h>
 #include <fmt/format.h>
 
 #include <range/v3/algorithm/max_element.hpp>
@@ -153,6 +152,15 @@ namespace OpenVic {
 		};
 		static constexpr std::string_view INVALID_MONTH_NAME = "Invalid Month";
 
+		static constexpr std::array WEEKDAY_NAMES = std::to_array<std::string_view>({
+			"Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday" //
+		});
+
+		static constexpr day_t INITIAL_WEEKDAY_NAME = 2; // Jan 1st, 0 Tuesday, makes Jan 1st, 1836 Friday
+		static_assert(
+			INITIAL_WEEKDAY_NAME < WEEKDAY_NAMES.size(), "INITIAL_WEEKDAY_NAME must be less than WEEKDAY_NAMES.size()"
+		);
+
 	private:
 		// Number of days since Jan 1st, Year 0
 		Timespan PROPERTY(timespan);
@@ -170,6 +178,14 @@ namespace OpenVic {
 		// Year month day specification
 		constexpr Date(year_t year = 0, month_t month = 1, day_t day = 1) : timespan { _date_to_timespan(year, month, day) } {}
 
+		constexpr Timespan::day_t get_day_of_year() const {
+			Timespan::day_t day_in_year = static_cast<Timespan::day_t>(timespan) % DAYS_IN_YEAR;
+			if (day_in_year < 0) {
+				day_in_year += DAYS_IN_YEAR;
+			}
+			return day_in_year;
+		}
+
 		constexpr year_t get_year() const {
 			return (timespan >= 0
 				? static_cast<Timespan::day_t>(timespan)
@@ -177,18 +193,20 @@ namespace OpenVic {
 			) / DAYS_IN_YEAR;
 		}
 		constexpr month_t get_month() const {
-			Timespan::day_t day_in_year = static_cast<Timespan::day_t>(timespan) % DAYS_IN_YEAR;
-			if (day_in_year < 0) {
-				day_in_year += DAYS_IN_YEAR;
-			}
-			return MONTH_FROM_DAY_IN_YEAR[day_in_year];
+			return MONTH_FROM_DAY_IN_YEAR[get_day_of_year()];
 		}
 		constexpr day_t get_day() const {
-			Timespan::day_t day_in_year = static_cast<Timespan::day_t>(timespan) % DAYS_IN_YEAR;
-			if (day_in_year < 0) {
-				day_in_year += DAYS_IN_YEAR;
-			}
-			return day_in_year - DAYS_UP_TO_MONTH[MONTH_FROM_DAY_IN_YEAR[day_in_year] - 1] + 1;
+			Timespan::day_t day_of_year = get_day_of_year();
+			return day_of_year - DAYS_UP_TO_MONTH[MONTH_FROM_DAY_IN_YEAR[day_of_year] - 1] + 1;
+		}
+
+		// Due to the lack of leap years, this will not fit historical weekdays
+		constexpr day_t get_day_of_week() const {
+			return (static_cast<Timespan::day_t>(timespan) + INITIAL_WEEKDAY_NAME) % WEEKDAY_NAMES.size();
+		}
+
+		constexpr day_t get_week_of_year() const {
+			return (get_day_of_year() + WEEKDAY_NAMES.size() - get_day_of_week()) / WEEKDAY_NAMES.size();
 		}
 
 		constexpr bool is_month_start() const {
@@ -244,6 +262,11 @@ namespace OpenVic {
 				return MONTH_NAMES[month - 1];
 			}
 			return INVALID_MONTH_NAME;
+		}
+
+		// Due to the lack of leap years, this will not fit historical weekdays
+		constexpr std::string_view get_weekday_name() const {
+			return WEEKDAY_NAMES[get_day_of_week()];
 		}
 
 		inline constexpr std::to_chars_result to_chars( //
@@ -583,9 +606,306 @@ namespace OpenVic {
 	}
 }
 
+namespace ovfmt::detail {
+	using namespace fmt;
+
+	enum class pad_type {
+		// Pad a numeric result string with zeros (the default).
+		zero,
+		// Do not pad a numeric result string.
+		none,
+		// Pad a numeric result string with spaces.
+		space,
+	};
+
+	enum class numeric_system { standard, alternative };
+
+	template<typename Derived>
+	struct null_date_spec_handler {
+		bool _unsupported = false;
+
+		constexpr void unsupported() {
+			_unsupported = true;
+			static_cast<Derived*>(this)->unsupported();
+		}
+		constexpr void on_year(numeric_system, pad_type) {
+			unsupported();
+		}
+		constexpr void on_short_year(numeric_system) {
+			unsupported();
+		}
+		constexpr void on_offset_year() {
+			unsupported();
+		}
+		constexpr void on_century(numeric_system) {
+			unsupported();
+		}
+		constexpr void on_iso_week_based_year() {
+			unsupported();
+		}
+		constexpr void on_iso_week_based_short_year() {
+			unsupported();
+		}
+		constexpr void on_abbr_weekday() {
+			unsupported();
+		}
+		constexpr void on_full_weekday() {
+			unsupported();
+		}
+		constexpr void on_dec0_weekday(numeric_system) {
+			unsupported();
+		}
+		constexpr void on_dec1_weekday(numeric_system) {
+			unsupported();
+		}
+		constexpr void on_abbr_month() {
+			unsupported();
+		}
+		constexpr void on_full_month() {
+			unsupported();
+		}
+		constexpr void on_dec_month(numeric_system, pad_type) {
+			unsupported();
+		}
+		constexpr void on_dec0_week_of_year(numeric_system, pad_type) {
+			unsupported();
+		}
+		constexpr void on_dec1_week_of_year(numeric_system, pad_type) {
+			unsupported();
+		}
+		constexpr void on_iso_week_of_year(numeric_system, pad_type) {
+			unsupported();
+		}
+		constexpr void on_day_of_year(pad_type) {
+			unsupported();
+		}
+		constexpr void on_day_of_month(numeric_system, pad_type) {
+			unsupported();
+		}
+		constexpr void on_loc_date(numeric_system) {
+			unsupported();
+		}
+		constexpr void on_us_date() {
+			unsupported();
+		}
+		constexpr void on_iso_date() {
+			unsupported();
+		}
+		constexpr void on_duration_value() {
+			unsupported();
+		}
+		constexpr void on_duration_unit() {
+			unsupported();
+		}
+	};
+
+	struct date_format_checker : null_date_spec_handler<date_format_checker> {
+		inline void unsupported() {
+			report_error("no format");
+		}
+
+		template<typename Char>
+		constexpr void on_text(const Char*, const Char*) {}
+		constexpr void on_year(numeric_system, pad_type) {}
+		constexpr void on_short_year(numeric_system) {}
+		constexpr void on_offset_year() {}
+		constexpr void on_century(numeric_system) {}
+		constexpr void on_iso_week_based_year() {}
+		constexpr void on_iso_week_based_short_year() {}
+		constexpr void on_abbr_weekday() {}
+		constexpr void on_full_weekday() {}
+		constexpr void on_dec0_weekday(numeric_system) {}
+		constexpr void on_dec1_weekday(numeric_system) {}
+		constexpr void on_abbr_month() {}
+		constexpr void on_full_month() {}
+		constexpr void on_dec_month(numeric_system, pad_type) {}
+		constexpr void on_dec0_week_of_year(numeric_system, pad_type) {}
+		constexpr void on_dec1_week_of_year(numeric_system, pad_type) {}
+		constexpr void on_iso_week_of_year(numeric_system, pad_type) {}
+		constexpr void on_day_of_year(pad_type) {}
+		constexpr void on_day_of_month(numeric_system, pad_type) {}
+		constexpr void on_loc_date(numeric_system) {}
+		constexpr void on_us_date() {}
+		constexpr void on_iso_date() {}
+	};
+}
+
 template<>
-struct fmt::formatter<OpenVic::Date> : formatter<string_view> {
+struct fmt::formatter<OpenVic::Date> {
+	template<typename Char, typename Handler>
+	static constexpr const Char* parse_date_format(const Char* begin, const Char* end, Handler&& handler) {
+		using namespace ovfmt::detail;
+
+		if (begin == end || *begin == '}') {
+			return begin;
+		}
+		if (*begin != '%') {
+			report_error("invalid format");
+			return begin;
+		}
+		const Char* ptr = begin;
+		while (ptr != end) {
+			if (handler._unsupported) {
+				return ptr;
+			}
+
+			pad_type pad = pad_type::zero;
+			auto c = *ptr;
+			if (c == '}') {
+				break;
+			}
+
+			if (c != '%') {
+				++ptr;
+				continue;
+			}
+
+			if (begin != ptr) {
+				handler.on_text(begin, ptr);
+			}
+
+			++ptr; // consume '%'
+			if (ptr == end) {
+				report_error("invalid format");
+				return ptr;
+			}
+
+			c = *ptr;
+			switch (c) {
+			case '_':
+				pad = pad_type::space;
+				++ptr;
+				break;
+			case '-':
+				pad = pad_type::none;
+				++ptr;
+				break;
+			}
+			if (ptr == end) {
+				report_error("invalid format");
+				return ptr;
+			}
+			c = *ptr++;
+			switch (c) {
+			case '%': handler.on_text(ptr - 1, ptr); break;
+			case 'n': {
+				const Char newline[] = { '\n' };
+				handler.on_text(newline, newline + 1);
+				break;
+			}
+			case 't': {
+				const Char tab[] = { '\t' };
+				handler.on_text(tab, tab + 1);
+				break;
+			}
+			// Year:
+			case 'Y': handler.on_year(numeric_system::standard, pad); break;
+			case 'y': handler.on_short_year(numeric_system::standard); break;
+			case 'C': handler.on_century(numeric_system::standard); break;
+			case 'G': handler.on_iso_week_based_year(); break;
+			case 'g': handler.on_iso_week_based_short_year(); break;
+			// Day of the week:
+			case 'a': handler.on_abbr_weekday(); break;
+			case 'A': handler.on_full_weekday(); break;
+			case 'w': handler.on_dec0_weekday(numeric_system::standard); break;
+			case 'u': handler.on_dec1_weekday(numeric_system::standard); break;
+			// Month:
+			case 'b':
+			case 'h': handler.on_abbr_month(); break;
+			case 'B': handler.on_full_month(); break;
+			case 'm': handler.on_dec_month(numeric_system::standard, pad); break;
+			// Day of the year/month:
+			case 'U': handler.on_dec0_week_of_year(numeric_system::standard, pad); break;
+			case 'W': handler.on_dec1_week_of_year(numeric_system::standard, pad); break;
+			case 'V': handler.on_iso_week_of_year(numeric_system::standard, pad); break;
+			case 'j': handler.on_day_of_year(pad); break;
+			case 'd': handler.on_day_of_month(numeric_system::standard, pad); break;
+			case 'e':
+				handler.on_day_of_month(numeric_system::standard, pad_type::space);
+				break;
+				// Other:
+			case 'x': handler.on_loc_date(numeric_system::standard); break;
+			case 'D': handler.on_us_date(); break;
+			case 'F':
+				handler.on_iso_date();
+				break;
+				// Alternative representation:
+			case 'E': {
+				if (ptr == end) {
+					report_error("invalid format");
+					return ptr;
+				}
+				c = *ptr++;
+				switch (c) {
+				case 'Y': handler.on_year(numeric_system::alternative, pad); break;
+				case 'y': handler.on_offset_year(); break;
+				case 'C': handler.on_century(numeric_system::alternative); break;
+				case 'x': handler.on_loc_date(numeric_system::alternative); break;
+				default:  report_error("invalid format"); return ptr;
+				}
+				break;
+			}
+			case 'O':
+				if (ptr == end) {
+					report_error("invalid format");
+					return ptr;
+				}
+				c = *ptr++;
+				switch (c) {
+				case 'y': handler.on_short_year(numeric_system::alternative); break;
+				case 'm': handler.on_dec_month(numeric_system::alternative, pad); break;
+				case 'U': handler.on_dec0_week_of_year(numeric_system::alternative, pad); break;
+				case 'W': handler.on_dec1_week_of_year(numeric_system::alternative, pad); break;
+				case 'V': handler.on_iso_week_of_year(numeric_system::alternative, pad); break;
+				case 'd': handler.on_day_of_month(numeric_system::alternative, pad); break;
+				case 'e': handler.on_day_of_month(numeric_system::alternative, pad_type::space); break;
+				case 'w': handler.on_dec0_weekday(numeric_system::alternative); break;
+				case 'u': handler.on_dec1_weekday(numeric_system::alternative); break;
+				default:  report_error("invalid format"); return ptr;
+				}
+				break;
+			default: report_error("invalid format"); return ptr;
+			}
+			begin = ptr;
+		}
+		if (begin != ptr) {
+			handler.on_text(begin, ptr);
+		}
+		return ptr;
+	}
+
+	constexpr format_parse_context::iterator parse(format_parse_context& ctx) {
+		format_parse_context::iterator it = ctx.begin(), end = ctx.end();
+		if (it == end || *it == '}') {
+			return it;
+		}
+
+		it = detail::parse_align(it, end, _specs);
+		if (it == end) {
+			return it;
+		}
+
+		char c = *it;
+		if ((c >= '0' && c <= '9') || c == '{') {
+			it = detail::parse_width(it, end, _specs, _specs.width_ref, ctx);
+			if (it == end) {
+				return it;
+			}
+		}
+
+		end = parse_date_format(it, end, ovfmt::detail::date_format_checker());
+
+		if (end != it) {
+			_fmt = { it, detail::to_unsigned(end - it) };
+		}
+		return end;
+	}
+
 	format_context::iterator format(OpenVic::Date d, format_context& ctx) const;
+
+private:
+	fmt::detail::dynamic_format_specs<char> _specs;
+	basic_string_view<char> _fmt = detail::string_literal<char, '%', '-', 'Y', '.', '%', 'm', '.', '%', 'd'>();
 };
 
 namespace std {
