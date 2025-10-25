@@ -1,7 +1,6 @@
 #include "NationalValue.hpp"
 
 #include "openvic-simulation/modifier/ModifierManager.hpp"
-#include "openvic-simulation/utility/LogScope.hpp"
 
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;
@@ -11,7 +10,7 @@ NationalValue::NationalValue(std::string_view new_identifier, ModifierValue&& ne
 
 bool NationalValueManager::add_national_value(std::string_view identifier, ModifierValue&& modifiers) {
 	if (identifier.empty()) {
-		Logger::error("Invalid national value identifier - empty!");
+		spdlog::error_s("Invalid national value identifier - empty!");
 		return false;
 	}
 
@@ -22,11 +21,11 @@ bool NationalValueManager::add_national_value(std::string_view identifier, Modif
 }
 
 bool NationalValueManager::load_national_values_file(ModifierManager const& modifier_manager, ast::NodeCPtr root) {
-	const LogScope log_scope { "common/nationalvalues.txt" };
+	spdlog::scope scope { "common/nationalvalues.txt" };
 	bool ret = expect_dictionary_reserve_length(
 		national_values,
 		[this, &modifier_manager](std::string_view national_value_identifier, ast::NodeCPtr value) -> bool {
-			const LogScope log_scope { fmt::format("national value {}", national_value_identifier) };
+			spdlog::scope scope { fmt::format("national value {}", national_value_identifier) };
 			ModifierValue modifiers;
 			bool ret = NodeTools::expect_dictionary(
 				modifier_manager.expect_base_country_modifier(modifiers)

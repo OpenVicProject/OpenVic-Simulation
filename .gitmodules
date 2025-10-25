@@ -30,3 +30,6 @@
 	path = deps/memory
 	url = https://github.com/foonathan/memory
 	ignore = dirty
+[submodule "deps/spdlog"]
+	path = deps/spdlog
+	url = https://github.com/gabime/spdlog
