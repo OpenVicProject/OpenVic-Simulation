@@ -2,6 +2,8 @@
 #include <cstdlib>
 #include <string_view>
 
+#include <range/v3/algorithm/fill.hpp>
+
 #include "openvic-simulation/types/Date.hpp"
 
 #include "Helper.hpp" // IWYU pragma: keep
@@ -65,4 +67,21 @@ TEST_CASE("Timespan Conversion methods", "[Timespan][Timespan-conversion]") {
 
 	CONSTEXPR_CHECK(timespan1.to_int() == 10);
 	CHECK(timespan1.to_string() == "10"sv);
+}
+
+TEST_CASE(
+	"Timespan zpp::bits out then in",
+	"[Timespan][Timespan-out-in][utility][zpp::bits][zpp::bits-out-in-Timespan]"
+) {
+	static constexpr Timespan timespan1 = 10;
+
+	std::array<uint8_t, sizeof(timespan1)> buffer; // NOLINT
+	zpp::bits::out out(buffer);
+	CHECK(out(timespan1) == std::errc {});
+
+	zpp::bits::in in(buffer);
+
+	Timespan should_10;
+	CHECK(in(should_10) == std::errc {});
+	CHECK(should_10 == timespan1);
 }

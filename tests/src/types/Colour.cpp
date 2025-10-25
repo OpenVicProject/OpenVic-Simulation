@@ -4,6 +4,8 @@
 #include <cstdlib>
 #include <string_view>
 
+#include <range/v3/algorithm/fill.hpp>
+
 #include "Colour.hpp" // IWYU pragma: keep
 #include "Helper.hpp" // IWYU pragma: keep
 #include "Numeric.hpp" // IWYU pragma: keep
@@ -61,6 +63,23 @@ TEMPLATE_LIST_TEST_CASE("basic_colour_t Conversion methods", "[basic_colour_t][b
 	CONSTEXPR_CHECK(cyan.to_hex_array(true) == "00FFFFFF"sv);
 	CONSTEXPR_CHECK(cyan.to_hex_array(false) == "00FFFF"sv);
 	CONSTEXPR_CHECK(cyan.to_argb_hex_array() == "FF00FFFF"sv);
+}
+
+TEMPLATE_LIST_TEST_CASE(
+	"basic_colour_t zpp::bits out then in",
+	"[basic_colour_t][basic_colour_t-out-in][utility][zpp::bits][zpp::bits-out-in-basic_colour_t]", ColourTypes
+) {
+	static constexpr TestType cyan = TestType::from_floats(0, 1, 1);
+
+	std::array<uint8_t, sizeof(uint32_t)> buffer; // NOLINT
+	zpp::bits::out out(buffer);
+	CHECK(out(cyan) == std::errc {});
+
+	zpp::bits::in in(buffer);
+
+	TestType should_be_cyan;
+	CHECK(in(should_be_cyan) == std::errc {});
+	CHECK(should_be_cyan == cyan);
 }
 
 TEMPLATE_LIST_TEST_CASE("basic_colour_t Parse methods", "[basic_colour_t][basic_colour_t-parse]", ColourTypes) {

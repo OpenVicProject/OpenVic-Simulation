@@ -1,6 +1,8 @@
 #include <cmath>
 #include <cstdlib>
 
+#include <range/v3/algorithm/fill.hpp>
+
 #include "openvic-simulation/types/Vector.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
 
@@ -41,6 +43,23 @@ TEMPLATE_LIST_TEST_CASE("vec3_t Operators", "[vec3_t][vec3_t-operators]", Vector
 	CONSTEXPR_CHECK((int1 * int2) == vec3_t<TestType>(4, 10, 27));
 	CONSTEXPR_CHECK((int1 * 2) == vec3_t<TestType>(8, 10, 18));
 	CONSTEXPR_CHECK(vec3_t<TestType>(ivec3_t(1, 2, 3)) == vec3_t<TestType>(1, 2, 3));
+}
+
+TEMPLATE_LIST_TEST_CASE(
+	"vec3_t zpp::bits out then in", "[vec3_t][vec3_t-out-in][utility][zpp::bits][zpp::bits-out-in-vec3_t]",
+	VectorValueTypes
+) {
+	static constexpr vec3_t<TestType> int1 = vec3_t<TestType>(4, 5, 9);
+
+	std::array<uint8_t, sizeof(int1)> buffer; // NOLINT
+	zpp::bits::out out(buffer);
+	CHECK(out(int1) == std::errc {});
+
+	zpp::bits::in in(buffer);
+
+	vec3_t<TestType> should_4_5_9;
+	CHECK(in(should_4_5_9) == std::errc {});
+	CHECK(should_4_5_9 == int1);
 }
 
 TEMPLATE_LIST_TEST_CASE("vec3_t Rounding methods", "[vec3_t][vec3_t-rounding]", VectorValueTypes) {
