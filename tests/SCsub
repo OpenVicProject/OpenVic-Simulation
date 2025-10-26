@@ -1,10 +1,7 @@
 #!/usr/bin/env python
 import os
 import subprocess
-import platform
-import sys
 
-import SCons
 from SCons.Script.SConscript import SConsEnvironment
 
 
@@ -12,15 +9,18 @@ def UnitTestPostAction(target=None, source=None, env=None):
     print()
     return subprocess.run([target[0].path]).returncode
 
+
 def BuildUnitTest(env, **kwargs):
     test = env.Program(**kwargs)
     env.NoCache(test)
     return test
 
+
 def RunUnitTest(env):
     unit_test_action = env.Action(UnitTestPostAction, None)
     test_post_action = env.AddPostAction(env.unit_test, unit_test_action)
     env.AlwaysBuild(test_post_action)
+
 
 SConsEnvironment.BuildUnitTest = BuildUnitTest
 SConsEnvironment.RunUnitTest = RunUnitTest
@@ -48,12 +48,10 @@ tests_env.Append(CPPDEFINES=["OPENVIC_SIMULATION_TESTS"])
 tests_env.Append(CPPPATH=[tests_env.Dir(source_path)])
 tests_env.tests_sources = env.GlobRecursive("*.cpp", [source_path])
 
-SConscript("deps/SCsub", {"env": tests_env })
+SConscript("deps/SCsub", {"env": tests_env})
 
 tests_env.unit_test = tests_env.BuildUnitTest(
-    source=tests_env.tests_sources,
-    target=os.path.join(BINDIR, tests_name),
-    PROGSUFFIX=".tests" + env["PROGSUFFIX"]
+    source=tests_env.tests_sources, target=os.path.join(BINDIR, tests_name), PROGSUFFIX=".tests" + env["PROGSUFFIX"]
 )
 Default(tests_env.unit_test)
 
