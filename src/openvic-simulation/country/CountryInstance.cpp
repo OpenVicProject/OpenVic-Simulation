@@ -10,6 +10,7 @@
 #include "openvic-simulation/diplomacy/CountryRelation.hpp"
 #include "openvic-simulation/economy/BuildingType.hpp"
 #include "openvic-simulation/economy/production/ProductionType.hpp"
+#include "openvic-simulation/economy/trading/MarketInstance.hpp"
 #include "openvic-simulation/history/CountryHistory.hpp"
 #include "openvic-simulation/InstanceManager.hpp"
 #include "openvic-simulation/map/Crime.hpp"
@@ -63,6 +64,7 @@ CountryInstance::CountryInstance(
 	CountryRelationManager* new_country_relations_manager,
 	GameRulesManager const* new_game_rules_manager,
 	GoodInstanceManager* new_good_instance_manager,
+	MarketInstance* new_market_instance,
 	ModifierEffectCache const* new_modifier_effect_cache,
 	UnitTypeManager const* new_unit_type_manager
 ) : FlagStrings { "country" },
@@ -75,6 +77,7 @@ CountryInstance::CountryInstance(
 	country_relations_manager { *new_country_relations_manager },
 	game_rules_manager { *new_game_rules_manager },
 	good_instance_manager { *new_good_instance_manager },
+	market_instance { *new_market_instance },
 	modifier_effect_cache { *new_modifier_effect_cache },
 	unit_type_manager { *new_unit_type_manager },
 	
@@ -1466,10 +1469,6 @@ void CountryInstance::_update_population() {
 	// TODO - update national focus capacity
 }
 
-void CountryInstance::_update_trade() {
-	// TODO - update total amount of each good exported and imported
-}
-
 void CountryInstance::_update_diplomacy() {
 	// TODO - add prestige from modifiers
 	// TODO - update diplomatic points and colonial power
@@ -1822,7 +1821,6 @@ void CountryInstance::update_gamestate(const Date today, MapInstance& map_instan
 
 	// These don't do anything yet
 	_update_politics();
-	_update_trade();
 	_update_diplomacy();
 
 	const CountryDefinition::government_colour_map_t::const_iterator it =
@@ -1835,12 +1833,52 @@ void CountryInstance::update_gamestate(const Date today, MapInstance& map_instan
 	}
 }
 
-void CountryInstance::country_tick_before_map() {
-	//TODO AI sliders
-	//TODO stockpile management
+void CountryInstance::after_buy(void* actor, BuyResult const& buy_result) {
+	const fixed_point_t quantity_bought = buy_result.get_quantity_bought();
 
+	if (quantity_bought <= 0) {
+		return;
+	}
+
+	CountryInstance& country = *static_cast<CountryInstance*>(actor);
+	good_data_t& good_data = country.goods_data.at_index(buy_result.get_good_definition().get_index());
+	const fixed_point_t money_spent = buy_result.get_money_spent_total();
+	country.cash_stockpile -= money_spent;
+	country.actual_national_stockpile_spending += money_spent;
+	good_data.stockpile_amount += quantity_bought;
+	good_data.stockpile_change_yesterday += quantity_bought;
+	good_data.quantity_traded_yesterday = quantity_bought;
+	good_data.money_traded_yesterday = -money_spent;
+}
+
+void CountryInstance::after_sell(void* actor, SellResult const& sell_result, memory::vector<fixed_point_t>& reusable_vector) {
+	const fixed_point_t quantity_sold = sell_result.get_quantity_sold();
+
+	if (quantity_sold <= 0) {
+		return;
+	}
+
+	CountryInstance& country = *static_cast<CountryInstance*>(actor);
+	good_data_t& good_data = country.goods_data.at_index(sell_result.get_good_definition().get_index());
+	const fixed_point_t money_gained = sell_result.get_money_gained();
+	country.cash_stockpile += money_gained;
+	country.actual_national_stockpile_income += money_gained;
+	good_data.stockpile_amount -= quantity_sold;
+	good_data.stockpile_change_yesterday -= quantity_sold;
+	good_data.quantity_traded_yesterday = -quantity_sold;
+	good_data.money_traded_yesterday = money_gained;
+}
+
+void CountryInstance::country_tick_before_map(
+	IndexedFlatMap<GoodDefinition, char>& reusable_goods_mask,
+	utility::forwardable_span<
+		memory::vector<fixed_point_t>,
+		VECTORS_FOR_COUNTRY_TICK
+	> reusable_vectors,
+	memory::vector<size_t>& reusable_index_vector
+) {
+	//TODO AI sliders
 	// + reparations + war subsidies
-	// + stockpile costs
 	// + industrial subsidies
 	// + loan interest
 
@@ -1872,6 +1910,7 @@ void CountryInstance::country_tick_before_map() {
 
 			if (available_funds < projected_administration_spending_copy) {
 				actual_administration_budget = available_funds;
+				available_funds = 0;
 				actual_military_budget = 0;
 				actual_social_budget = 0;
 				actual_import_subsidies_budget = 0;
@@ -1881,6 +1920,7 @@ void CountryInstance::country_tick_before_map() {
 
 				if (available_funds < projected_social_spending_copy) {
 					actual_social_budget = available_funds;
+					available_funds = 0;
 					actual_military_budget = 0;
 					actual_import_subsidies_budget = 0;
 				} else {
@@ -1889,12 +1929,14 @@ void CountryInstance::country_tick_before_map() {
 
 					if (available_funds < projected_military_spending_copy) {
 						actual_military_budget = available_funds;
+						available_funds = 0;
 						actual_import_subsidies_budget = 0;
 					} else {
 						available_funds -= projected_military_spending_copy;
 						actual_military_budget = projected_military_spending_copy;
 
 						actual_import_subsidies_budget = std::min(available_funds, projected_import_subsidies_copy);
+						available_funds -= actual_import_subsidies_budget;
 					}
 				}
 			}
@@ -1907,9 +1949,13 @@ void CountryInstance::country_tick_before_map() {
 	was_social_budget_cut_yesterday = actual_social_budget < projected_social_spending_copy;
 	was_import_subsidies_budget_cut_yesterday = actual_import_subsidies_budget < projected_import_subsidies_copy;
 
-	for (auto& data : goods_data.get_values()) {
-		data.clear_daily_recorded_data();
-	}
+	manage_national_stockpile(
+		reusable_goods_mask,
+		reusable_vectors,
+		reusable_index_vector,
+		available_funds
+	);
+
 	taxable_income_by_pop_type.fill(0);
 	actual_administration_spending
 		= actual_education_spending
@@ -1918,7 +1964,137 @@ void CountryInstance::country_tick_before_map() {
 		= actual_unemployment_subsidies_spending
 		= actual_import_subsidies_spending
 		= actual_tariff_income
+		= actual_national_stockpile_spending
+		= actual_national_stockpile_income
 	 	= 0;
+}
+
+void CountryInstance::manage_national_stockpile(
+	IndexedFlatMap<GoodDefinition, char>& reusable_goods_mask,
+	utility::forwardable_span<
+		memory::vector<fixed_point_t>,
+		VECTORS_FOR_COUNTRY_TICK
+	> reusable_vectors,
+	memory::vector<size_t>& reusable_index_vector,
+	const fixed_point_t available_funds
+) {
+	IndexedFlatMap<GoodDefinition, char>& wants_more_mask = reusable_goods_mask;
+	const size_t mask_size = wants_more_mask.get_keys().size();
+	memory::vector<fixed_point_t>& max_quantity_to_buy_per_good = reusable_vectors[0];
+	max_quantity_to_buy_per_good.resize(mask_size, 0);
+	memory::vector<fixed_point_t>& max_costs_per_good = reusable_vectors[1];
+	max_costs_per_good.resize(mask_size, 0);
+	memory::vector<fixed_point_t>& weights = reusable_vectors[2];
+	weights.resize(mask_size, 0);
+	memory::vector<size_t>& good_indices_to_buy = reusable_index_vector;
+	fixed_point_t weights_sum = 0;
+
+	for (auto const& [good_instance, good_data] : goods_data) {
+		good_data.clear_daily_recorded_data();
+		const size_t index = good_instance.get_index();
+		if (good_data.is_selling) {
+			const fixed_point_t quantity_to_sell = good_data.stockpile_amount - good_data.stockpile_cutoff;
+			if (quantity_to_sell <= 0) {
+				continue;
+			}
+			market_instance.place_market_sell_order(
+				{
+					good_instance.get_good_definition(),
+					this,
+					quantity_to_sell,
+					this,
+					after_sell,
+				},
+				reusable_vectors[3] //temporarily used here and later used as money_to_spend_per_good
+			);
+		} else {
+			const fixed_point_t max_quantity_to_buy = good_data.stockpile_cutoff - good_data.stockpile_amount;
+			if (max_quantity_to_buy <= 0 || available_funds <= 0) {
+				continue;
+			}
+
+			good_indices_to_buy.push_back(index);
+			max_quantity_to_buy_per_good[index] = max_quantity_to_buy;
+
+			const fixed_point_t max_money_to_spend = max_costs_per_good[index] = market_instance.get_max_money_to_allocate_to_buy_quantity(
+				good_instance.get_good_definition(),
+				max_quantity_to_buy
+			);
+			wants_more_mask.set(good_instance.get_good_definition(), true);
+			const fixed_point_t weight = weights[index] = 1 / max_money_to_spend;
+			weights_sum += weight;
+		}
+	}
+
+	if (weights_sum > 0) {
+		memory::vector<fixed_point_t>& money_to_spend_per_good = reusable_vectors[3];
+		money_to_spend_per_good.resize(mask_size, 0);
+		fixed_point_t cash_left_to_spend_draft = available_funds;
+		bool needs_redistribution = true;
+		while (needs_redistribution) {
+			needs_redistribution = false;
+			for (const size_t good_index : good_indices_to_buy) {
+				char& wants_more = wants_more_mask.at_index(good_index);
+				if (!wants_more) {
+					continue;
+				}
+
+				const fixed_point_t weight = weights[good_index];
+				const fixed_point_t max_costs = max_costs_per_good[good_index];
+				
+				fixed_point_t cash_available_for_good = fixed_point_t::mul_div(
+					cash_left_to_spend_draft,
+					weight,
+					weights_sum
+				);
+				
+				if (cash_available_for_good >= max_costs) {
+					cash_left_to_spend_draft -= max_costs;
+					money_to_spend_per_good[good_index] = max_costs;
+					weights_sum -= weight;
+					wants_more = false;
+					needs_redistribution = weights_sum > 0;
+					break;
+				}
+
+				GoodInstance const& good_instance = goods_data.get_keys()[good_index];
+				GoodDefinition const& good_definition = good_instance.get_good_definition();
+				const fixed_point_t max_possible_quantity_bought = cash_available_for_good / market_instance.get_min_next_price(good_definition);
+				if (max_possible_quantity_bought < fixed_point_t::epsilon) {
+					money_to_spend_per_good[good_index] = 0;
+				} else {
+					money_to_spend_per_good[good_index] = cash_available_for_good;
+				}
+			}
+		}
+		
+		for (const size_t good_index : good_indices_to_buy) {
+			const fixed_point_t max_quantity_to_buy = max_quantity_to_buy_per_good[good_index];
+			const fixed_point_t money_to_spend = money_to_spend_per_good[good_index];
+			if (money_to_spend <= 0) {
+				continue;
+			}
+
+			GoodInstance const& good_instance = goods_data.get_keys()[good_index];
+			GoodDefinition const& good_definition = good_instance.get_good_definition();
+			market_instance.place_buy_up_to_order(
+				{
+					good_definition,
+					this,
+					max_quantity_to_buy,
+					money_to_spend,
+					this,
+					after_buy
+				}
+			);
+		}
+	}
+
+	reusable_goods_mask.fill(0);
+	for (auto& reusable_vector : reusable_vectors) {
+		reusable_vector.clear();
+	}
+	reusable_index_vector.clear();
 }
 
 void CountryInstance::country_tick_after_map(const Date today) {
@@ -2054,6 +2230,8 @@ CountryInstance::good_data_t::good_data_t()
 void CountryInstance::good_data_t::clear_daily_recorded_data() {
 	const std::lock_guard<std::mutex> lock_guard { *mutex };
 	stockpile_change_yesterday
+		= quantity_traded_yesterday
+		= money_traded_yesterday
 		= exported_amount
 		= government_needs
 		= army_needs
@@ -2361,6 +2539,7 @@ CountryInstanceManager::CountryInstanceManager(
 	GameRulesManager const& new_game_rules_manager,
 	CountryRelationManager& new_country_relations_manager,
 	GoodInstanceManager& new_good_instance_manager,
+	MarketInstance& new_market_instance,
 	UnitTypeManager const& new_unit_type_manager
 )
   : thread_pool { new_thread_pool },
@@ -2395,6 +2574,7 @@ CountryInstanceManager::CountryInstanceManager(
 			new_country_relations_manager_ptr=&new_country_relations_manager,
 			new_game_rules_manager_ptr=&new_game_rules_manager,
 			new_good_instance_manager_ptr=&new_good_instance_manager,
+			new_market_instance_ptr=&new_market_instance,
 			new_modifier_effect_cache_ptr=&new_modifier_effect_cache,
 			new_unit_type_manager_ptr=&new_unit_type_manager
 		](CountryDefinition const& country_definition)->auto{
@@ -2421,6 +2601,7 @@ CountryInstanceManager::CountryInstanceManager(
 				new_country_relations_manager_ptr,
 				new_game_rules_manager_ptr,
 				new_good_instance_manager_ptr,
+				new_market_instance_ptr,
 				new_modifier_effect_cache_ptr,
 				new_unit_type_manager_ptr
 			);

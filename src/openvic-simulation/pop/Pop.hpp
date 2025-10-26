@@ -174,6 +174,7 @@ namespace OpenVic {
 		);
 		void pop_tick_without_cleanup(
 			PopValuesFromProvince& shared_values,
+			IndexedFlatMap<GoodDefinition, char>& reusable_goods_mask,
 			utility::forwardable_span<
 				memory::vector<fixed_point_t>,
 				VECTORS_FOR_POP_TICK
@@ -211,6 +212,7 @@ namespace OpenVic {
 
 		void pop_tick(
 			PopValuesFromProvince& shared_values,
+			IndexedFlatMap<GoodDefinition, char>& reusable_goods_mask,
 			utility::forwardable_span<
 				memory::vector<fixed_point_t>,
 				VECTORS_FOR_POP_TICK

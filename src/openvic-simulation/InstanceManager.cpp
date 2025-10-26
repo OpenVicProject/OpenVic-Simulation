@@ -54,6 +54,7 @@ InstanceManager::InstanceManager(
 		new_game_rules_manager,
 		country_relation_manager,
 		good_instance_manager,
+		market_instance,
 		new_definition_manager.get_military_manager().get_unit_type_manager()
 	},
 	unit_instance_manager {

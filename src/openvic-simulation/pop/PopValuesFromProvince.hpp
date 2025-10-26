@@ -5,7 +5,6 @@
 #include "openvic-simulation/utility/Getters.hpp"
 
 namespace OpenVic {
-	struct GoodDefinition;
 	struct ProvinceInstance;
 	struct PopsDefines;
 	struct PopValuesFromProvince;
@@ -29,12 +28,8 @@ namespace OpenVic {
 		PopsDefines const& PROPERTY(defines);
 		OV_IFLATMAP_PROPERTY(Strata, PopStrataValuesFromProvince, effects_by_strata);
 	public:
-	 	//public field as mutable references are required.
-		IndexedFlatMap<GoodDefinition, char> reusable_goods_mask;
-
 		PopValuesFromProvince(
 			PopsDefines const& new_defines,
-			decltype(reusable_goods_mask)::keys_span_type good_keys,
 			decltype(effects_by_strata)::keys_span_type strata_keys
 		);
 		PopValuesFromProvince(PopValuesFromProvince&&) = default;

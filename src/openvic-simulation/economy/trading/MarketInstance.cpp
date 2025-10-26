@@ -55,13 +55,14 @@ void MarketInstance::place_market_sell_order(MarketSellOrder&& market_sell_order
 			"Received MarketSellOrder for {} with quantity {}",
 			good, market_sell_order.get_quantity()
 		);
-		market_sell_order.call_after_trade(SellResult::no_sales_result(), reusable_vector);
+		market_sell_order.call_after_trade(SellResult::no_sales_result(market_sell_order.get_good()), reusable_vector);
 		return;
 	}
 
 	if (good.get_is_money()) {
 		market_sell_order.call_after_trade(
 			{
+				market_sell_order.get_good(),
 				market_sell_order.get_quantity(),
 				market_sell_order.get_quantity() * country_defines.get_gold_to_worker_pay_rate() * good.get_base_price()
 			},

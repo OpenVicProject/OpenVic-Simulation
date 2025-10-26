@@ -1,6 +1,7 @@
 #include "ThreadPool.hpp"
 
 #include "openvic-simulation/country/CountryInstance.hpp"
+#include "openvic-simulation/economy/GoodDefinition.hpp" // IWYU pragma: keep for constructor requirement
 #include "openvic-simulation/economy/GoodInstance.hpp"
 #include "openvic-simulation/economy/trading/GoodMarket.hpp"
 #include "openvic-simulation/map/ProvinceInstance.hpp"
@@ -18,15 +19,20 @@ void ThreadPool::loop_until_cancelled(
 	utility::forwardable_span<CountryInstance> countries_chunk,
 	utility::forwardable_span<ProvinceInstance> provinces_chunk
 ) {
+	IndexedFlatMap<GoodDefinition, char> reusable_goods_mask { good_keys };
 	IndexedFlatMap<CountryInstance, fixed_point_t> reusable_country_map_0 { country_keys },
 		reusable_country_map_1 { country_keys };
 	static constexpr size_t VECTOR_COUNT = std::max(
 		GoodMarket::VECTORS_FOR_EXECUTE_ORDERS,
-		ProvinceInstance::VECTORS_FOR_PROVINCE_TICK
+		std::max(
+			CountryInstance::VECTORS_FOR_COUNTRY_TICK,
+			ProvinceInstance::VECTORS_FOR_PROVINCE_TICK
+		)
 	);
 	std::array<memory::vector<fixed_point_t>, VECTOR_COUNT> reusable_vectors;
 	std::span<memory::vector<fixed_point_t>, VECTOR_COUNT> reusable_vectors_span = std::span(reusable_vectors);
-	PopValuesFromProvince reusable_pop_values { pop_defines, good_keys, strata_keys };
+	memory::vector<size_t> reusable_index_vector;
+	PopValuesFromProvince reusable_pop_values { pop_defines, strata_keys };
 
 	while (!is_cancellation_requested) {
 		work_t work_type_copy;
@@ -63,6 +69,7 @@ void ThreadPool::loop_until_cancelled(
 					province.province_tick(
 						current_date,
 						reusable_pop_values,
+						reusable_goods_mask,
 						reusable_vectors_span.first<ProvinceInstance::VECTORS_FOR_PROVINCE_TICK>()
 					);
 				}
@@ -72,13 +79,18 @@ void ThreadPool::loop_until_cancelled(
 					province.initialise_for_new_game(
 						current_date,
 						reusable_pop_values,
+						reusable_goods_mask,
 						reusable_vectors_span.first<ProvinceInstance::VECTORS_FOR_PROVINCE_TICK>()
 					);
 				}
 				break;
 			case work_t::COUNTRY_TICK_BEFORE_MAP:
 				for (CountryInstance& country : countries_chunk) {
-					country.country_tick_before_map();
+					country.country_tick_before_map(
+						reusable_goods_mask,
+						reusable_vectors_span.first<CountryInstance::VECTORS_FOR_COUNTRY_TICK>(),
+						reusable_index_vector
+					);
 				}
 				break;
 			case work_t::COUNTRY_TICK_AFTER_MAP:

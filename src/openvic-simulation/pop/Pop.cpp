@@ -418,12 +418,17 @@ void Pop::allocate_for_needs(
 
 void Pop::pop_tick(
 	PopValuesFromProvince& shared_values,
+	IndexedFlatMap<GoodDefinition, char>& reusable_goods_mask,
 	utility::forwardable_span<
 		memory::vector<fixed_point_t>,
 		VECTORS_FOR_POP_TICK
 	> reusable_vectors
 ) {
-	pop_tick_without_cleanup(shared_values, reusable_vectors);
+	pop_tick_without_cleanup(
+		shared_values,
+		reusable_goods_mask,
+		reusable_vectors
+	);
 	for (auto& reusable_vector : reusable_vectors) {
 		reusable_vector.clear();
 	}
@@ -431,6 +436,7 @@ void Pop::pop_tick(
 
 void Pop::pop_tick_without_cleanup(
 	PopValuesFromProvince& shared_values,
+	IndexedFlatMap<GoodDefinition, char>& reusable_goods_mask,
 	utility::forwardable_span<
 		memory::vector<fixed_point_t>,
 		VECTORS_FOR_POP_TICK
@@ -457,7 +463,7 @@ void Pop::pop_tick_without_cleanup(
 	employed = 0;
 	//import subsidies are based on yesterday
 	yesterdays_import_value = 0;
-	utility::forwardable_span<const GoodDefinition> good_keys = shared_values.reusable_goods_mask.get_keys();
+	utility::forwardable_span<const GoodDefinition> good_keys = reusable_goods_mask.get_keys();
 	memory::vector<fixed_point_t>& reusable_vector_0 = reusable_vectors[0];
 	memory::vector<fixed_point_t>& reusable_vector_1 = reusable_vectors[1];
 	memory::vector<fixed_point_t>& max_quantity_to_buy_per_good = reusable_vectors[2];
@@ -471,7 +477,7 @@ void Pop::pop_tick_without_cleanup(
 		artisanal_producer_nullable->artisan_tick(
 			*this,
 			max_cost_multiplier,
-			shared_values.reusable_goods_mask,
+			reusable_goods_mask,
 			max_quantity_to_buy_per_good,
 			money_to_spend_per_good,
 			reusable_vector_0,

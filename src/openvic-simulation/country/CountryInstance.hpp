@@ -30,6 +30,7 @@
 namespace OpenVic {
 	struct BaseIssue;
 	struct BuildingType;
+	struct BuyResult;
 	struct CountryDefinition;
 	struct CountryDefines;
 	struct CountryHistoryEntry;
@@ -51,6 +52,7 @@ namespace OpenVic {
 	struct Invention;
 	struct LeaderInstance;
 	struct MapInstance;
+	struct MarketInstance;
 	struct MilitaryDefines;
 	struct ModifierEffectCache;
 	struct NationalValue;
@@ -62,6 +64,7 @@ namespace OpenVic {
 	struct Reform;
 	struct ReformGroup;
 	struct Religion;
+	struct SellResult;
 	struct SharedCountryValues;
 	struct SharedPopTypeValues;
 	struct State;
@@ -115,6 +118,7 @@ namespace OpenVic {
 		GameRulesManager const& game_rules_manager;
 		GoodInstanceManager& good_instance_manager;
 		CountryRelationManager& country_relations_manager;
+		MarketInstance& market_instance;
 		ModifierEffectCache const& modifier_effect_cache;
 		UnitTypeManager const& unit_type_manager;
 
@@ -184,6 +188,8 @@ namespace OpenVic {
 		OV_CLAMPED_PROPERTY(army_spending_slider_value);
 		OV_CLAMPED_PROPERTY(navy_spending_slider_value);
 		OV_CLAMPED_PROPERTY(construction_spending_slider_value);
+		atomic_fixed_point_t PROPERTY(actual_national_stockpile_spending);
+		atomic_fixed_point_t PROPERTY(actual_national_stockpile_income);
 
 		OV_CLAMPED_PROPERTY(administration_spending_slider_value);
 		OV_STATE_PROPERTY(fixed_point_t, projected_administration_spending_unscaled_by_slider);
@@ -269,6 +275,8 @@ namespace OpenVic {
 		// TODO - population change over last 30 days
 
 	public:
+		static constexpr size_t VECTORS_FOR_COUNTRY_TICK = 4;
+
 		DerivedState<GovernmentType const*> flag_government_type;
 		DerivedState<fixed_point_t> total_score;
 		DerivedState<fixed_point_t> military_power;
@@ -293,7 +301,9 @@ namespace OpenVic {
 		struct good_data_t {
 			memory::unique_ptr<std::mutex> mutex;
 			fixed_point_t stockpile_amount;
-			fixed_point_t stockpile_change_yesterday; // positive if we bought, negative if we sold
+			fixed_point_t stockpile_change_yesterday; // positive if we gained, negative if we lost
+			fixed_point_t quantity_traded_yesterday; // positive if we bought, negative if we sold
+			fixed_point_t money_traded_yesterday; // positive if we sold, negative if we bought
 
 			bool is_automated = true;
 			bool is_selling = false; // buying if false
@@ -407,6 +417,7 @@ namespace OpenVic {
 			CountryRelationManager* new_country_relations_manager,
 			GameRulesManager const* new_game_rules_manager,
 			GoodInstanceManager* new_good_instance_manager,
+			MarketInstance* new_market_instance,
 			ModifierEffectCache const* new_modifier_effect_cache,
 			UnitTypeManager const* new_unit_type_manager
 		);
@@ -626,6 +637,20 @@ namespace OpenVic {
 		bool apply_history_to_country(CountryHistoryEntry const& entry, InstanceManager& instance_manager);
 
 	private:
+		static void after_buy(void* actor, BuyResult const& buy_result);
+		//matching GoodMarketSellOrder::callback_t
+		static void after_sell(void* actor, SellResult const& sell_result, memory::vector<fixed_point_t>& reusable_vector);
+
+		void manage_national_stockpile(
+			IndexedFlatMap<GoodDefinition, char>& reusable_goods_mask,
+			utility::forwardable_span<
+				memory::vector<fixed_point_t>,
+				VECTORS_FOR_COUNTRY_TICK
+			> reusable_vectors,
+			memory::vector<size_t>& reusable_index_vector,
+			const fixed_point_t available_funds
+		);
+
 		void _update_production();
 		void _update_budget();
 
@@ -638,7 +663,6 @@ namespace OpenVic {
 		void _update_technology(const Date today);
 		void _update_politics();
 		void _update_population();
-		void _update_trade();
 		void _update_diplomacy();
 		void _update_military();
 
@@ -655,7 +679,14 @@ namespace OpenVic {
 		}
 
 		void update_gamestate(const Date today, MapInstance& map_instance);
-		void country_tick_before_map();
+		void country_tick_before_map(
+			IndexedFlatMap<GoodDefinition, char>& reusable_goods_mask,
+			utility::forwardable_span<
+				memory::vector<fixed_point_t>,
+				VECTORS_FOR_COUNTRY_TICK
+			> reusable_vectors,
+			memory::vector<size_t>& reusable_index_vector
+		);
 		void country_tick_after_map(const Date today);
 
 		good_data_t& get_good_data(GoodInstance const& good_instance);
@@ -723,6 +754,7 @@ namespace OpenVic {
 			GameRulesManager const& new_game_rules_manager,
 			CountryRelationManager& new_country_relations_manager,
 			GoodInstanceManager& new_good_instance_manager,
+			MarketInstance& new_market_instance,
 			UnitTypeManager const& new_unit_type_manager
 		);
 
