@@ -33,14 +33,10 @@ State::State(
 }
 
 memory::string State::get_identifier() const {
-	CountryInstance const* const owner_ptr = get_owner();
-	return StringUtils::append_string_views(
-		state_set.get_region().get_identifier(),
-		"_",
-		owner_ptr == nullptr
-			? "NoCountry"
-			: owner_ptr->get_identifier(),
-		"_",
+	return memory::fmt::format(
+		"{}_{}_{}",
+		state_set.get_region(),
+		ovfmt::validate(get_owner(), "NoCountry"),
 		ProvinceInstance::get_colony_status_string(colony_status)
 	);
 }

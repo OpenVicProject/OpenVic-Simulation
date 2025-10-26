@@ -166,7 +166,7 @@ namespace OpenVic {
 			ArtisanalProducerFactoryPattern& artisanal_producer_factory_pattern
 		);
 
-		memory::stringstream get_pop_context_text() const;
+		memory::string get_pop_context_text() const;
 		void reserve_needs_fulfilled_goods();
 		void fill_needs_fulfilled_goods_with_false();
 		void allocate_for_needs(

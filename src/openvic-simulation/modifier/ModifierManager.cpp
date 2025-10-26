@@ -656,7 +656,7 @@ memory::string ModifierManager::get_flat_identifier(
 	const std::string_view complex_modifier_identifier,
 	const std::string_view variant_identifier
 ) {
-	return StringUtils::append_string_views(complex_modifier_identifier, " ", variant_identifier);
+	return memory::fmt::format("{} {}", complex_modifier_identifier, variant_identifier);
 }
 
 bool ModifierManager::add_event_modifier(

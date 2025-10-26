@@ -213,7 +213,7 @@ bool RebelManager::generate_modifiers(ModifierManager& modifier_manager) const {
 			rebel_org_gain_effects.at(rebel_type),
 			ModifierManager::get_flat_identifier(identifier, rebel_type.get_identifier()),
 			FORMAT_x100_2DP_PC_NEG,
-			StringUtils::append_string_views("$", rebel_type.get_identifier(), "_title$ $TECH_REBEL_ORG_GAIN$")
+			memory::fmt::format("${}_title$ $TECH_REBEL_ORG_GAIN$", rebel_type)
 		);
 	}
 	return ret;

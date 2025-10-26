@@ -128,7 +128,7 @@ fs::path Dataloader::lookup_file(std::string_view path, bool print_error) const 
 fs::path Dataloader::lookup_image_file(std::string_view path) const {
 	const std::string_view path_without_extension = StringUtils::remove_extension(path);
 	if (path.substr(path_without_extension.size()) == ".tga") {
-		const fs::path ret = lookup_file(append_string_views(path_without_extension, ".dds"), false);
+		const fs::path ret = lookup_file(memory::fmt::format("{}.dds", path_without_extension), false);
 		if (!ret.empty()) {
 			return ret;
 		}

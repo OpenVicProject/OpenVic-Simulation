@@ -36,6 +36,7 @@
 #include "openvic-simulation/types/IndexedFlatMap.hpp"
 #include "openvic-simulation/types/OrderedContainers.hpp"
 #include "openvic-simulation/utility/Containers.hpp"
+#include "openvic-simulation/utility/FormatValidate.hpp"
 #include "openvic-simulation/utility/Logger.hpp"
 #include "openvic-simulation/utility/Utility.hpp"
 
@@ -257,16 +258,11 @@ void Pop::update_gamestate(
 	}
 }
 
-memory::stringstream Pop::get_pop_context_text() const {
-	memory::stringstream pop_context {};
-	pop_context << " location: ";
-	if (OV_unlikely(location == nullptr)) {
-		pop_context << "NULL";
-	} else {
-		pop_context << location->get_identifier();
-	}
-	pop_context << " type: " << type << " culture: " << culture << " religion: " << religion << " size: " << size;
-	return pop_context;
+memory::string Pop::get_pop_context_text() const {
+	return memory::fmt::format(
+		"location: {} type: {} culture: {} religion: {} size: {}",
+		ovfmt::validate(location), *type, culture, religion, size
+	);
 }
 
 void Pop::reserve_needs_fulfilled_goods() {
@@ -304,11 +300,11 @@ void Pop::pay_income_tax(fixed_point_t& income) {
 #define DEFINE_ADD_INCOME_FUNCTIONS(name) \
 	void Pop::add_##name(fixed_point_t amount){ \
 		if (OV_unlikely(amount == fixed_point_t::_0)) { \
-			spdlog::warn_s("Adding " #name " of 0 to pop. Context{}", get_pop_context_text().str()); \
+			spdlog::warn_s("Adding " #name " of 0 to pop. Context{}", get_pop_context_text()); \
 			return; \
 		} \
 		if (OV_unlikely(amount < fixed_point_t::_0)) { \
-			spdlog::error_s("Adding negative " #name " of {} to pop. Context{}", amount, get_pop_context_text().str()); \
+			spdlog::error_s("Adding negative " #name " of {} to pop. Context{}", amount, get_pop_context_text()); \
 			return; \
 		} \
 		pay_income_tax(amount); \
@@ -323,7 +319,7 @@ DO_FOR_ALL_TYPES_OF_POP_INCOME(DEFINE_ADD_INCOME_FUNCTIONS)
 #define DEFINE_ADD_EXPENSE_FUNCTIONS(name) \
 	void Pop::add_##name(const fixed_point_t amount){ \
 		if (OV_unlikely(amount == fixed_point_t::_0)) { \
-			spdlog::warn_s("Adding " #name " of 0 to pop. Context:{}", get_pop_context_text().str()); \
+			spdlog::warn_s("Adding " #name " of 0 to pop. Context:{}", get_pop_context_text()); \
 			return; \
 		} \
 		name += amount; \
@@ -331,14 +327,14 @@ DO_FOR_ALL_TYPES_OF_POP_INCOME(DEFINE_ADD_INCOME_FUNCTIONS)
 		if (OV_unlikely(expenses_copy < fixed_point_t::_0)) { \
 			spdlog::error_s( \
 				"Total expenses became negative ({}) after adding " #name " of {} to pop. Context:{}", \
-				expenses_copy, amount, get_pop_context_text().str() \
+				expenses_copy, amount, get_pop_context_text() \
 			); \
 		} \
 		const fixed_point_t cash_copy = cash -= amount; \
 		if (OV_unlikely(cash_copy < fixed_point_t::_0)) { \
 			spdlog::error_s( \
 				"Total cash became negative ({}) after adding " #name " of {} to pop. Context:{}", \
-				cash_copy, amount, get_pop_context_text().str() \
+				cash_copy, amount, get_pop_context_text() \
 			); \
 		} \
 	}
@@ -679,19 +675,19 @@ void Pop::hire(pop_size_t count) {
 	if (OV_unlikely(count <= 0)) {
 		spdlog::warn_s(
 			"Tried employing non-positive number of pops. {} Context{}",
-			count, get_pop_context_text().str()
+			count, get_pop_context_text()
 		);
 	}
 	employed += count;
 	if (OV_unlikely(employed > size)) {
 		spdlog::error_s(
 			"Employed count became greater than pop size. {} Context{}",
-			employed, get_pop_context_text().str()
+			employed, get_pop_context_text()
 		);
 	} else if (OV_unlikely(employed < 0)) {
 		spdlog::error_s(
 			"Employed count became negative. {} Context{}",
-			employed, get_pop_context_text().str()
+			employed, get_pop_context_text()
 		);
 	}
 }

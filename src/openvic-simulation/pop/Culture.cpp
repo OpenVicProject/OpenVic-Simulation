@@ -254,10 +254,7 @@ memory::string CultureManager::make_leader_picture_path(std::string_view leader_
 		return {};
 	}
 
-	static constexpr std::string_view LEADER_PICTURES_DIR = "gfx/interface/leaders/";
-	static constexpr std::string_view FILE_EXTENSION = ".dds";
-
-	return StringUtils::append_string_views(LEADER_PICTURES_DIR, leader_picture_name, FILE_EXTENSION);
+	return memory::fmt::format("gfx/interface/leaders/{}.dds", leader_picture_name);
 }
 
 bool CultureManager::find_cultural_leader_pictures(Dataloader const& dataloader) {
