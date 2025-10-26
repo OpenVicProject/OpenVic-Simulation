@@ -400,7 +400,7 @@ bool GameActionManager::game_action_callback_start_research(game_action_argument
 
 	Technology const* old_research = country->get_current_research_untracked();
 
-	country->start_research(*technology, instance_manager);
+	country->start_research(*technology, instance_manager.get_today());
 
 	return old_research != country->get_current_research_untracked();
 }

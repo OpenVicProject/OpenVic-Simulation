@@ -7,10 +7,8 @@
 #include "openvic-simulation/utility/reactive/MutableState.hpp"
 
 namespace OpenVic {
-	struct CountryDefines;
 	struct CountryInstanceManager;
 	struct GoodInstanceManager;
-	struct ModifierEffectCache;
 	struct PopsDefines;
 	struct PopType;
 	struct SharedCountryValues;
@@ -37,20 +35,18 @@ namespace OpenVic {
 	struct SharedCountryValues {
 		friend CountryInstanceManager;
 	private:
-		ModifierEffectCache const& PROPERTY(modifier_effect_cache);
-		CountryDefines const& PROPERTY(country_defines);
 		PopsDefines const& pop_defines;
+		GoodInstanceManager const& good_instance_manager;
 		IndexedFlatMap<PopType, SharedPopTypeValues> shared_pop_type_values;
 
-		void update_costs(GoodInstanceManager const& good_instance_manager);
+		void update_costs();
 
 	public:
 		SharedPopTypeValues& get_shared_pop_type_values(PopType const& pop_type);
 
 		SharedCountryValues(
-			ModifierEffectCache const& new_modifier_effect_cache,
-			CountryDefines const& new_country_defines,
 			PopsDefines const& new_pop_defines,
+			GoodInstanceManager const& new_good_instance_manager,
 			decltype(shared_pop_type_values)::keys_span_type pop_type_keys
 		);
 		SharedCountryValues(SharedCountryValues&&) = delete;

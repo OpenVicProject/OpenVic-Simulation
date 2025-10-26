@@ -6,7 +6,6 @@
 
 #include "openvic-simulation/country/SharedCountryValues.hpp"
 #include "openvic-simulation/country/CountryDefinition.hpp"
-#include "openvic-simulation/defines/Define.hpp"
 #include "openvic-simulation/DefinitionManager.hpp"
 #include "openvic-simulation/diplomacy/CountryRelation.hpp"
 #include "openvic-simulation/economy/BuildingType.hpp"
@@ -24,6 +23,7 @@
 #include "openvic-simulation/research/Invention.hpp"
 #include "openvic-simulation/research/Technology.hpp"
 #include "openvic-simulation/types/ClampedValue.hpp"
+#include "openvic-simulation/types/Date.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
 #include "openvic-simulation/types/IndexedFlatMap.hpp"
 #include "openvic-simulation/types/PopSize.hpp"
@@ -53,21 +53,36 @@ CountryInstance::CountryInstance(
 	utility::forwardable_span<const Strata> strata_keys,
 	utility::forwardable_span<const PopType> pop_type_keys,
 	utility::forwardable_span<const Ideology> ideology_keys,
-	GameRulesManager const* new_game_rules_manager,
-	CountryRelationManager* new_country_relations_manager,
 	SharedCountryValues* new_shared_country_values,
-	GoodInstanceManager* new_good_instance_manager,
+	const Date new_fallback_date_for_never_completing_research,
 	CountryDefines const* new_country_defines,
-	EconomyDefines const* new_economy_defines
+	DiplomacyDefines const* new_diplomacy_defines,
+	EconomyDefines const* new_economy_defines,
+	MilitaryDefines const* new_military_defines,
+	CountryRelationManager* new_country_relations_manager,
+	GameRulesManager const* new_game_rules_manager,
+	GoodInstanceManager* new_good_instance_manager,
+	ModifierEffectCache const* new_modifier_effect_cache,
+	UnitTypeManager const* new_unit_type_manager
 ) : FlagStrings { "country" },
 	HasIndex { new_country_definition->get_index() },
 	PopsAggregate { strata_keys, pop_type_keys, ideology_keys },
 	/* Main attributes */
 	country_definition { *new_country_definition },
-	game_rules_manager { *new_game_rules_manager },
-	country_relations_manager { *new_country_relations_manager },
 	shared_country_values { *new_shared_country_values },
+
+	country_relations_manager { *new_country_relations_manager },
+	game_rules_manager { *new_game_rules_manager },
+	good_instance_manager { *new_good_instance_manager },
+	modifier_effect_cache { *new_modifier_effect_cache },
+	unit_type_manager { *new_unit_type_manager },
+	
+	fallback_date_for_never_completing_research { new_fallback_date_for_never_completing_research },
 	country_defines { *new_country_defines },
+	diplomacy_defines { *new_diplomacy_defines },
+	economy_defines { *new_economy_defines },
+	military_defines { *new_military_defines },
+
 	colour { ERROR_COLOUR },
 
 	/* Production */
@@ -257,7 +272,7 @@ CountryInstance::CountryInstance(
 
 	for (BuildingType const& building_type : building_type_unlock_levels.get_keys()) {
 		if (building_type.is_default_enabled()) {
-			unlock_building_type(building_type, *new_good_instance_manager);
+			unlock_building_type(building_type);
 		}
 	}
 
@@ -800,7 +815,7 @@ bool CountryInstance::is_unit_type_unlocked(UnitType const& unit_type) const {
 }
 
 bool CountryInstance::modify_building_type_unlock(
-	BuildingType const& building_type, technology_unlock_level_t unlock_level_change, GoodInstanceManager& good_instance_manager
+	BuildingType const& building_type, technology_unlock_level_t unlock_level_change
 ) {
 	technology_unlock_level_t& unlock_level = building_type_unlock_levels.at(building_type);
 
@@ -823,8 +838,8 @@ bool CountryInstance::modify_building_type_unlock(
 	return true;
 }
 
-bool CountryInstance::unlock_building_type(BuildingType const& building_type, GoodInstanceManager& good_instance_manager) {
-	return modify_building_type_unlock(building_type, 1, good_instance_manager);
+bool CountryInstance::unlock_building_type(BuildingType const& building_type) {
+	return modify_building_type_unlock(building_type, 1);
 }
 
 bool CountryInstance::is_building_type_unlocked(BuildingType const& building_type) const {
@@ -947,7 +962,7 @@ unit_variant_t CountryInstance::get_max_unlocked_unit_variant() const {
 }
 
 bool CountryInstance::modify_technology_unlock(
-	Technology const& technology, technology_unlock_level_t unlock_level_change, GoodInstanceManager& good_instance_manager
+	Technology const& technology, technology_unlock_level_t unlock_level_change
 ) {
 	technology_unlock_level_t& unlock_level = technology_unlock_levels.at(technology);
 
@@ -974,21 +989,21 @@ bool CountryInstance::modify_technology_unlock(
 		ret &= modify_unit_type_unlock(*unit, unlock_level_change);
 	}
 	for (BuildingType const* building : technology.get_activated_buildings()) {
-		ret &= modify_building_type_unlock(*building, unlock_level_change, good_instance_manager);
+		ret &= modify_building_type_unlock(*building, unlock_level_change);
 	}
 
 	return ret;
 }
 
 bool CountryInstance::set_technology_unlock_level(
-	Technology const& technology, technology_unlock_level_t unlock_level, GoodInstanceManager& good_instance_manager
+	Technology const& technology, technology_unlock_level_t unlock_level
 ) {
 	const technology_unlock_level_t unlock_level_change = unlock_level - technology_unlock_levels.at(technology);
-	return unlock_level_change != 0 ? modify_technology_unlock(technology, unlock_level_change, good_instance_manager) : true;
+	return unlock_level_change != 0 ? modify_technology_unlock(technology, unlock_level_change) : true;
 }
 
-bool CountryInstance::unlock_technology(Technology const& technology, GoodInstanceManager& good_instance_manager) {
-	return modify_technology_unlock(technology, 1, good_instance_manager);
+bool CountryInstance::unlock_technology(Technology const& technology) {
+	return modify_technology_unlock(technology, 1);
 }
 
 bool CountryInstance::is_technology_unlocked(Technology const& technology) const {
@@ -996,7 +1011,7 @@ bool CountryInstance::is_technology_unlocked(Technology const& technology) const
 }
 
 bool CountryInstance::modify_invention_unlock(
-	Invention const& invention, technology_unlock_level_t unlock_level_change, GoodInstanceManager& good_instance_manager
+	Invention const& invention, technology_unlock_level_t unlock_level_change
 ) {
 	technology_unlock_level_t& unlock_level = invention_unlock_levels.at(invention);
 
@@ -1028,7 +1043,7 @@ bool CountryInstance::modify_invention_unlock(
 		ret &= modify_unit_type_unlock(*unit, unlock_level_change);
 	}
 	for (BuildingType const* building : invention.get_activated_buildings()) {
-		ret &= modify_building_type_unlock(*building, unlock_level_change, good_instance_manager);
+		ret &= modify_building_type_unlock(*building, unlock_level_change);
 	}
 	for (Crime const* crime : invention.get_enabled_crimes()) {
 		ret &= modify_crime_unlock(*crime, unlock_level_change);
@@ -1044,14 +1059,14 @@ bool CountryInstance::modify_invention_unlock(
 }
 
 bool CountryInstance::set_invention_unlock_level(
-	Invention const& invention, technology_unlock_level_t unlock_level, GoodInstanceManager& good_instance_manager
+	Invention const& invention, technology_unlock_level_t unlock_level
 ) {
 	const technology_unlock_level_t unlock_level_change = unlock_level - invention_unlock_levels.at(invention);
-	return unlock_level_change != 0 ? modify_invention_unlock(invention, unlock_level_change, good_instance_manager) : true;
+	return unlock_level_change != 0 ? modify_invention_unlock(invention, unlock_level_change) : true;
 }
 
-bool CountryInstance::unlock_invention(Invention const& invention, GoodInstanceManager& good_instance_manager) {
-	return modify_invention_unlock(invention, 1, good_instance_manager);
+bool CountryInstance::unlock_invention(Invention const& invention) {
+	return modify_invention_unlock(invention, 1);
 }
 
 bool CountryInstance::is_invention_unlocked(Invention const& invention) const {
@@ -1070,16 +1085,14 @@ bool CountryInstance::is_primary_or_accepted_culture(Culture const& culture) con
 	return is_primary_culture(culture) || is_accepted_culture(culture);
 }
 
-fixed_point_t CountryInstance::calculate_research_cost(
-	Technology const& technology, ModifierEffectCache const& modifier_effect_cache
-) const {
+fixed_point_t CountryInstance::calculate_research_cost(Technology const& technology) const {
 	// TODO - what if research bonus is -100%? Divide by 0 -> infinite cost?
 	return technology.get_cost() / (fixed_point_t::_1 + get_modifier_effect_value(
 		*modifier_effect_cache.get_research_bonus_effects(technology.get_area().get_folder())
 	));
 }
 
-bool CountryInstance::can_research_tech(Technology const& technology, Date today) const {
+bool CountryInstance::can_research_tech(Technology const& technology, const Date today) const {
 	Technology const* current_research_copy = current_research.get_untracked();
 	if (
 		technology.get_year() > today.get_year()
@@ -1095,8 +1108,8 @@ bool CountryInstance::can_research_tech(Technology const& technology, Date today
 	return index_in_area == 0 || is_technology_unlocked(*technology.get_area().get_technologies()[index_in_area - 1]);
 }
 
-void CountryInstance::start_research(Technology const& technology, InstanceManager const& instance_manager) {
-	if (OV_unlikely(!can_research_tech(technology, instance_manager.get_today()))) {
+void CountryInstance::start_research(Technology const& technology, const Date today) {
+	if (OV_unlikely(!can_research_tech(technology, today))) {
 		spdlog::warn_s(
 			"Attempting to start research for country \"{}\" on technology \"{}\" - cannot research this tech!",
 			*this, technology
@@ -1107,7 +1120,7 @@ void CountryInstance::start_research(Technology const& technology, InstanceManag
 	current_research.set(&technology);
 	invested_research_points.set(0);
 
-	_update_current_tech(instance_manager);
+	_update_current_tech(today);
 }
 
 void CountryInstance::apply_foreign_investments(
@@ -1167,13 +1180,11 @@ bool CountryInstance::apply_history_to_country(CountryHistoryEntry const& entry,
 			}
 		};
 
-	GoodInstanceManager& good_instance_manager = instance_manager.get_good_instance_manager();
-
 	for (auto const& [technology, level] : entry.get_technologies()) {
-		ret &= set_technology_unlock_level(*technology, level, good_instance_manager);
+		ret &= set_technology_unlock_level(*technology, level);
 	}
 	for (auto const& [invention, activated] : entry.get_inventions()) {
-		ret &= set_invention_unlock_level(*invention, activated ? 1 : 0, good_instance_manager);
+		ret &= set_invention_unlock_level(*invention, activated ? 1 : 0);
 	}
 
 	apply_foreign_investments(entry.get_foreign_investment(), instance_manager.get_country_instance_manager());
@@ -1192,7 +1203,7 @@ bool CountryInstance::apply_history_to_country(CountryHistoryEntry const& entry,
 	return ret;
 }
 
-void CountryInstance::_update_production(DefineManager const& define_manager) {
+void CountryInstance::_update_production() {
 	// Calculate industrial power from states and foreign investments
 	fixed_point_t industrial_power_running_total = 0;
 	industrial_power_from_states.clear();
@@ -1210,7 +1221,7 @@ void CountryInstance::_update_production(DefineManager const& define_manager) {
 		if (country->exists()) {
 			const fixed_point_t investment_industrial_power = fixed_point_t::mul_div(
 				money_invested,
-				define_manager.get_country_defines().get_country_investment_industrial_score_factor(),
+				country_defines.get_country_investment_industrial_score_factor(),
 				100
 			);
 
@@ -1238,9 +1249,6 @@ static inline constexpr fixed_point_t nonzero_or_one(fixed_point_t const& value)
 }
 
 void CountryInstance::_update_budget() {
-	CountryDefines const& country_defines = shared_country_values.get_country_defines();
-	ModifierEffectCache const& modifier_effect_cache = shared_country_values.get_modifier_effect_cache();
-
 	const fixed_point_t min_tax = get_modifier_effect_value(*modifier_effect_cache.get_min_tax());
 	const fixed_point_t max_tax = nonzero_or_one(get_modifier_effect_value(*modifier_effect_cache.get_max_tax()));
 
@@ -1335,9 +1343,9 @@ void CountryInstance::_update_budget() {
 		projected_administration_spending_unscaled_by_slider_running_total += size * administration_salary_base_by_pop_type.at(pop_type).get_untracked();
 		projected_education_spending_unscaled_by_slider_running_total += size * education_salary_base_by_pop_type.at(pop_type).get_untracked();
 		projected_military_spending_unscaled_by_slider_running_total += size * military_salary_base_by_pop_type.at(pop_type).get_untracked();
-		projected_pensions_spending_unscaled_by_slider_running_total += size * calculate_pensions_base(modifier_effect_cache, pop_type);
+		projected_pensions_spending_unscaled_by_slider_running_total += size * calculate_pensions_base(pop_type);
 		projected_unemployment_subsidies_spending_unscaled_by_slider_running_total += get_unemployed_pops_by_type(pop_type)
-			* calculate_unemployment_subsidies_base(modifier_effect_cache, pop_type);
+			* calculate_unemployment_subsidies_base(pop_type);
 	}
 
 	projected_administration_spending_unscaled_by_slider.set(
@@ -1357,43 +1365,36 @@ void CountryInstance::_update_budget() {
 	);
 }
 
-fixed_point_t CountryInstance::calculate_pensions_base(
-	ModifierEffectCache const& modifier_effect_cache,
-	PopType const& pop_type
-) {
+fixed_point_t CountryInstance::calculate_pensions_base(PopType const& pop_type) {
 	return get_modifier_effect_value(*modifier_effect_cache.get_pension_level())
 		* social_income_variant_base_by_pop_type.at(pop_type).get_untracked();
 }
-fixed_point_t CountryInstance::calculate_unemployment_subsidies_base(
-	ModifierEffectCache const& modifier_effect_cache,
-	PopType const& pop_type
-) {
+fixed_point_t CountryInstance::calculate_unemployment_subsidies_base(PopType const& pop_type) {
 	return get_modifier_effect_value(*modifier_effect_cache.get_unemployment_benefit())
 		* social_income_variant_base_by_pop_type.at(pop_type).get_untracked();
 }
-fixed_point_t CountryInstance::calculate_minimum_wage_base(
-	ModifierEffectCache const& modifier_effect_cache,
-	PopType const& pop_type
-) {
+fixed_point_t CountryInstance::calculate_minimum_wage_base(PopType const& pop_type) {
+	if (pop_type.get_is_slave()) {
+		return 0;
+	}
 	return get_modifier_effect_value(*modifier_effect_cache.get_minimum_wage())
 		* social_income_variant_base_by_pop_type.at(pop_type).get_untracked();
 }
 
-void CountryInstance::_update_current_tech(InstanceManager const& instance_manager) {
+void CountryInstance::_update_current_tech(const Date today) {
 	Technology const* current_research_copy = current_research.get_untracked();
 	if (current_research_copy == nullptr) {
 		return;
 	}
 
-	DefinitionManager const& definition_manager = instance_manager.get_definition_manager();
-	current_research_cost.set(calculate_research_cost(
-		*current_research_copy, definition_manager.get_modifier_manager().get_modifier_effect_cache()
-	));
+	current_research_cost.set(
+		calculate_research_cost(*current_research_copy)
+	);
 
 	const fixed_point_t daily_research_points_copy = daily_research_points.get_untracked();
 	if (daily_research_points_copy > fixed_point_t::_0) {
 		expected_research_completion_date.set(
-			instance_manager.get_today()
+			today
 			+ static_cast<Timespan>(
 				(
 					(current_research_cost.get_untracked() - invested_research_points.get_untracked())
@@ -1402,17 +1403,14 @@ void CountryInstance::_update_current_tech(InstanceManager const& instance_manag
 			)
 		);
 	} else {
-		expected_research_completion_date.set(definition_manager.get_define_manager().get_end_date());
+		expected_research_completion_date.set(fallback_date_for_never_completing_research);
 	}
 }
 
-void CountryInstance::_update_technology(InstanceManager const& instance_manager) {
+void CountryInstance::_update_technology(const Date today) {
 	if (research_point_stockpile.get_untracked() < fixed_point_t::_0) {
 		research_point_stockpile.set(0);
 	}
-
-	ModifierEffectCache const& modifier_effect_cache =
-		instance_manager.get_definition_manager().get_modifier_manager().get_modifier_effect_cache();
 
 	daily_research_points += get_modifier_effect_value(*modifier_effect_cache.get_research_points());
 	daily_research_points *= fixed_point_t::_1 +
@@ -1423,7 +1421,7 @@ void CountryInstance::_update_technology(InstanceManager const& instance_manager
 		daily_research_points.set(0);
 	}
 
-	_update_current_tech(instance_manager);
+	_update_current_tech(today);
 }
 
 void CountryInstance::_update_politics() {
@@ -1476,12 +1474,7 @@ void CountryInstance::_update_diplomacy() {
 	// TODO - update diplomatic points and colonial power
 }
 
-void CountryInstance::_update_military(
-	DefineManager const& define_manager, UnitTypeManager const& unit_type_manager,
-	ModifierEffectCache const& modifier_effect_cache
-) {
-	MilitaryDefines const& military_defines = define_manager.get_military_defines();
-
+void CountryInstance::_update_military() {
 	regiment_count = 0;
 
 	for (ArmyInstance const* army : armies) {
@@ -1525,7 +1518,7 @@ void CountryInstance::_update_military(
 	);
 
 	if (disarmed) {
-		military_power_from_land *= define_manager.get_diplomacy_defines().get_disarmed_penalty();
+		military_power_from_land *= diplomacy_defines.get_disarmed_penalty();
 	}
 
 	fixed_point_t military_power_from_sea_running_total = 0;
@@ -1720,11 +1713,7 @@ fixed_point_t CountryInstance::get_modifier_effect_value(ModifierEffect const& e
 	return modifier_sum.get_modifier_effect_value(effect);
 }
 
-void CountryInstance::update_gamestate(InstanceManager& instance_manager) {
-	DefinitionManager const& definition_manager = instance_manager.get_definition_manager();
-	DefineManager const& define_manager = definition_manager.get_define_manager();
-	ModifierEffectCache const& modifier_effect_cache = shared_country_values.get_modifier_effect_cache();
-
+void CountryInstance::update_gamestate(const Date today, MapInstance& map_instance) {
 	if (is_civilised()) {
 		civilisation_progress = 0;
 	} else {
@@ -1764,8 +1753,6 @@ void CountryInstance::update_gamestate(InstanceManager& instance_manager) {
 			owned_cores_controlled_proportion /= owned_core_province_count;
 		}
 	}
-
-	MapInstance& map_instance = instance_manager.get_map_instance();
 
 	occupied_provinces_proportion = 0;
 	port_count = 0;
@@ -1825,15 +1812,11 @@ void CountryInstance::update_gamestate(InstanceManager& instance_manager) {
 	// Updates population stats (including research and leadership points from pops)
 	_update_population();
 	// Calculates industrial power
-	_update_production(define_manager);
+	_update_production();
 	// Calculates daily research points and predicts research completion date
-	_update_technology(instance_manager);
+	_update_technology(today);
 	// Calculates national military modifiers, army and navy stats, daily leadership points
-	_update_military(
-		define_manager,
-		definition_manager.get_military_manager().get_unit_type_manager(),
-		modifier_effect_cache
-	);
+	_update_military();
 	_update_budget();
 
 	// These don't do anything yet
@@ -1851,7 +1834,7 @@ void CountryInstance::update_gamestate(InstanceManager& instance_manager) {
 	}
 }
 
-void CountryInstance::country_tick_before_map(InstanceManager& instance_manager) {
+void CountryInstance::country_tick_before_map() {
 	//TODO AI sliders
 	//TODO stockpile management
 
@@ -1937,10 +1920,7 @@ void CountryInstance::country_tick_before_map(InstanceManager& instance_manager)
 	 	= 0;
 }
 
-void CountryInstance::country_tick_after_map(InstanceManager& instance_manager) {
-	DefinitionManager const& definition_manager = instance_manager.get_definition_manager();
-	DefineManager const& define_manager = definition_manager.get_define_manager();
-
+void CountryInstance::country_tick_after_map(const Date today) {
 	// Gain daily research points
 	research_point_stockpile += daily_research_points.get_untracked();
 
@@ -1951,14 +1931,14 @@ void CountryInstance::country_tick_after_map(InstanceManager& instance_manager) 
 				research_point_stockpile.get_untracked(),
 				current_research_cost.get_untracked() - invested_research_points.get_untracked()
 			),
-			define_manager.get_economy_defines().get_max_daily_research()
+			economy_defines.get_max_daily_research()
 		);
 
 		research_point_stockpile -= research_points_spent;
 		invested_research_points += research_points_spent;
 
 		if (invested_research_points.get_untracked() >= current_research_cost.get_untracked()) {
-			unlock_technology(*current_research_copy, instance_manager.get_good_instance_manager());
+			unlock_technology(*current_research_copy);
 			current_research.set(nullptr);
 			invested_research_points.set(0);
 			current_research_cost.set(0);
@@ -1968,21 +1948,20 @@ void CountryInstance::country_tick_after_map(InstanceManager& instance_manager) 
 	// Apply maximum research point stockpile limit
 	const fixed_point_t max_research_point_stockpile = is_civilised()
 		? daily_research_points.get_untracked() * static_cast<int32_t>(Date::DAYS_IN_YEAR)
-		: define_manager.get_country_defines().get_max_research_points();
+		: country_defines.get_max_research_points();
 	if (research_point_stockpile.get_untracked() > max_research_point_stockpile) {
 		research_point_stockpile.set(max_research_point_stockpile);
 	}
 
 	// Gain monthly leadership points
-	if (instance_manager.get_today().is_month_start()) {
+	if (today.is_month_start()) {
 		leadership_point_stockpile += monthly_leadership_points;
 	}
 
 	// TODO - auto create and auto assign leaders
 
 	// Apply maximum leadership point stockpile limit
-	const fixed_point_t max_leadership_point_stockpile =
-		define_manager.get_military_defines().get_max_leadership_point_stockpile();
+	const fixed_point_t max_leadership_point_stockpile = military_defines.get_max_leadership_point_stockpile();
 	if (leadership_point_stockpile > max_leadership_point_stockpile) {
 		leadership_point_stockpile = max_leadership_point_stockpile;
 	}
@@ -2137,7 +2116,6 @@ void CountryInstance::request_salaries_and_welfare_and_import_subsidies(Pop& pop
 	PopType const& pop_type = *pop.get_type();
 	const pop_size_t pop_size = pop.get_size();
 	SharedPopTypeValues const& pop_type_values = shared_country_values.get_shared_pop_type_values(pop_type);
-	ModifierEffectCache const& modifier_effect_cache = shared_country_values.get_modifier_effect_cache();
 
 	if (actual_administration_budget > fixed_point_t::_0) {
 		const fixed_point_t administration_salary = fixed_point_t::mul_div(
@@ -2177,7 +2155,7 @@ void CountryInstance::request_salaries_and_welfare_and_import_subsidies(Pop& pop
 
 	if (actual_social_budget > fixed_point_t::_0) {
 		const fixed_point_t pension_income = fixed_point_t::mul_div(
-			pop_size * calculate_pensions_base(modifier_effect_cache, pop_type),
+			pop_size * calculate_pensions_base(pop_type),
 			actual_social_budget,
 			projected_social_spending_unscaled_by_slider.get_untracked()
 		) / Pop::size_denominator;
@@ -2187,7 +2165,7 @@ void CountryInstance::request_salaries_and_welfare_and_import_subsidies(Pop& pop
 		}
 
 		const fixed_point_t unemployment_subsidies = fixed_point_t::mul_div(
-			pop.get_unemployed() * calculate_unemployment_subsidies_base(modifier_effect_cache, pop_type),
+			pop.get_unemployed() * calculate_unemployment_subsidies_base(pop_type),
 			actual_social_budget,
 			projected_social_spending_unscaled_by_slider.get_untracked()
 		) / Pop::size_denominator;
@@ -2207,17 +2185,6 @@ void CountryInstance::request_salaries_and_welfare_and_import_subsidies(Pop& pop
 		pop.add_import_subsidies(import_subsidies);
 		actual_import_subsidies_spending += import_subsidies;
 	}
-}
-
-fixed_point_t CountryInstance::calculate_minimum_wage_base(PopType const& pop_type) {
-	if (pop_type.get_is_slave()) {
-		return 0;
-	}
-
-	return calculate_minimum_wage_base(
-		shared_country_values.get_modifier_effect_cache(),
-		pop_type
-	);
 }
 
 fixed_point_t CountryInstance::apply_tariff(const fixed_point_t money_spent_on_imports) {
@@ -2244,7 +2211,7 @@ CountryInstance::good_data_t const& CountryInstance::get_good_data(GoodDefinitio
 	return goods_data.at_index(good_definition.get_index());
 }
 
-void CountryInstanceManager::update_rankings(Date today, DefineManager const& define_manager) {
+void CountryInstanceManager::update_rankings(Date today) {
 	total_ranking.clear();
 
 	for (CountryInstance& country : get_country_instances()) {
@@ -2291,8 +2258,6 @@ void CountryInstanceManager::update_rankings(Date today, DefineManager const& de
 		industrial_power_ranking[index]->industrial_rank = rank;
 		military_power_ranking[index]->military_rank = rank;
 	}
-
-	CountryDefines const& country_defines = define_manager.get_country_defines();
 
 	const size_t max_great_power_rank = country_defines.get_great_power_rank();
 	const size_t max_secondary_power_rank = country_defines.get_secondary_power_rank();
@@ -2371,10 +2336,15 @@ void CountryInstanceManager::update_rankings(Date today, DefineManager const& de
 }
 
 CountryInstanceManager::CountryInstanceManager(
+	ThreadPool& new_thread_pool,
 	CountryDefinitionManager const& new_country_definition_manager,
 	ModifierEffectCache const& new_modifier_effect_cache,
+	const Date new_fallback_date_for_never_completing_research,
 	CountryDefines const& new_country_defines,
-	PopsDefines const& new_pop_defines,			
+	DiplomacyDefines const& new_diplomacy_defines,
+	EconomyDefines const& new_economy_defines,
+	MilitaryDefines const& new_military_defines,
+	PopsDefines const& new_pop_defines,
 	decltype(CountryInstance::building_type_unlock_levels)::keys_span_type building_type_keys,
 	decltype(CountryInstance::technology_unlock_levels)::keys_span_type technology_keys,
 	decltype(CountryInstance::invention_unlock_levels)::keys_span_type invention_keys,
@@ -2387,16 +2357,17 @@ CountryInstanceManager::CountryInstanceManager(
 	utility::forwardable_span<const Strata> strata_keys,
 	utility::forwardable_span<const PopType> pop_type_keys,
 	utility::forwardable_span<const Ideology> ideology_keys,
-	GameRulesManager const& game_rules_manager,
-	CountryRelationManager& country_relations_manager,
-	GoodInstanceManager& good_instance_manager,
-	EconomyDefines const& economy_defines
+	GameRulesManager const& new_game_rules_manager,
+	CountryRelationManager& new_country_relations_manager,
+	GoodInstanceManager& new_good_instance_manager,
+	UnitTypeManager const& new_unit_type_manager
 )
-  : country_definition_manager { new_country_definition_manager },
+  : thread_pool { new_thread_pool },
+  	country_definition_manager { new_country_definition_manager },
+	country_defines { new_country_defines },
 	shared_country_values {
-		new_modifier_effect_cache,
-		new_country_defines,
 		new_pop_defines,
+		new_good_instance_manager,
 		pop_type_keys
 	},
 	country_instance_by_definition {
@@ -2415,11 +2386,16 @@ CountryInstanceManager::CountryInstanceManager(
 			strata_keys,
 			pop_type_keys,
 			ideology_keys,
-			game_rules_manager_ptr=&game_rules_manager,
-			country_relations_manager_ptr=&country_relations_manager,
-			good_instance_manager_ptr=&good_instance_manager,
+			new_fallback_date_for_never_completing_research,
 			new_country_defines_ptr=&new_country_defines,
-			economy_defines_ptr=&economy_defines
+			new_diplomacy_defines_ptr=&new_diplomacy_defines,
+			new_economy_defines_ptr=&new_economy_defines,
+			new_military_defines_ptr=&new_military_defines,
+			new_country_relations_manager_ptr=&new_country_relations_manager,
+			new_game_rules_manager_ptr=&new_game_rules_manager,
+			new_good_instance_manager_ptr=&new_good_instance_manager,
+			new_modifier_effect_cache_ptr=&new_modifier_effect_cache,
+			new_unit_type_manager_ptr=&new_unit_type_manager
 		](CountryDefinition const& country_definition)->auto{
 			return std::make_tuple(
 				&country_definition,
@@ -2435,12 +2411,17 @@ CountryInstanceManager::CountryInstanceManager(
 				strata_keys,
 				pop_type_keys,
 				ideology_keys,
-				game_rules_manager_ptr,
-				country_relations_manager_ptr,
 				&shared_country_values,
-				good_instance_manager_ptr,
+				new_fallback_date_for_never_completing_research,
 				new_country_defines_ptr,
-				economy_defines_ptr
+				new_diplomacy_defines_ptr,
+				new_economy_defines_ptr,
+				new_military_defines_ptr,
+				new_country_relations_manager_ptr,
+				new_game_rules_manager_ptr,
+				new_good_instance_manager_ptr,
+				new_modifier_effect_cache_ptr,
+				new_unit_type_manager_ptr
 			);
 		}
 	}
@@ -2565,7 +2546,7 @@ bool CountryInstanceManager::apply_history_to_countries(InstanceManager& instanc
 			}
 		}
 	}
-	shared_country_values.update_costs(instance_manager.get_good_instance_manager());
+	shared_country_values.update_costs();
 	return ret;
 }
 
@@ -2575,32 +2556,25 @@ void CountryInstanceManager::update_modifier_sums(Date today, StaticModifierCach
 	}
 }
 
-void CountryInstanceManager::update_gamestate(InstanceManager& instance_manager) {
+void CountryInstanceManager::update_gamestate(const Date today, MapInstance& map_instance) {
 	for (CountryInstance& country : get_country_instances()) {
-		country.update_gamestate(instance_manager);
+		country.update_gamestate(today, map_instance);
 	}
 
 	// TODO - work out how to have ranking effects applied (e.g. static modifiers) applied at game start
 	// we can't just move update_rankings to the top of this function as it will choose initial GPs based on
 	// incomplete scores. Although we should check if the base game includes all info or if it really does choose
 	// starting GPs based purely on stuff like prestige which is set by history before the first game update.
-	update_rankings(instance_manager.get_today(), instance_manager.get_definition_manager().get_define_manager());
+	update_rankings(today);
 }
 
-void CountryInstanceManager::country_manager_tick_before_map(InstanceManager& instance_manager) {
-	//TODO parallellise?
-	for (CountryInstance& country : get_country_instances()) {
-		country.country_tick_before_map(instance_manager);
-	}
+void CountryInstanceManager::country_manager_tick_before_map() {
+	thread_pool.process_country_ticks_before_map();
 }
 
-void CountryInstanceManager::country_manager_tick_after_map(InstanceManager& instance_manager) {
-	//TODO parallellise?
-	for (CountryInstance& country : get_country_instances()) {
-		country.country_tick_after_map(instance_manager);
-	}
-
-	shared_country_values.update_costs(instance_manager.get_good_instance_manager());
+void CountryInstanceManager::country_manager_tick_after_map() {
+	thread_pool.process_country_ticks_after_map();
+	shared_country_values.update_costs();
 }
 
 template struct fmt::formatter<OpenVic::CountryInstance>;

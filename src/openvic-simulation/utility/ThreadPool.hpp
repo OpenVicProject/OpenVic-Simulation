@@ -23,7 +23,9 @@ namespace OpenVic {
 			NONE,
 			GOOD_EXECUTE_ORDERS,
 			PROVINCE_INITIALISE_FOR_NEW_GAME,
-			PROVINCE_TICK
+			PROVINCE_TICK,
+			COUNTRY_TICK_BEFORE_MAP,
+			COUNTRY_TICK_AFTER_MAP
 		};
 
 		void loop_until_cancelled(
@@ -33,6 +35,7 @@ namespace OpenVic {
 			utility::forwardable_span<const GoodDefinition> good_keys,
 			utility::forwardable_span<const Strata> strata_keys,
 			utility::forwardable_span<GoodInstance> goods_chunk,
+			utility::forwardable_span<CountryInstance> countries_chunk,
 			utility::forwardable_span<ProvinceInstance> provinces_chunk
 		);
 
@@ -55,15 +58,17 @@ namespace OpenVic {
 
 		void initialise_threadpool(
 			PopsDefines const& pop_defines,
-			utility::forwardable_span<const CountryInstance> country_keys,
 			utility::forwardable_span<const GoodDefinition> good_keys,
 			utility::forwardable_span<const Strata> strata_keys,			
 			utility::forwardable_span<GoodInstance> goods,
+			utility::forwardable_span<CountryInstance> countries,
 			utility::forwardable_span<ProvinceInstance> provinces
 		);
 
 		void process_good_execute_orders();
 		void process_province_ticks();
 		void process_province_initialise_for_new_game();
+		void process_country_ticks_before_map();
+		void process_country_ticks_after_map();
 	};
 }
