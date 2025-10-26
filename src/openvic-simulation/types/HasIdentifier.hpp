@@ -4,11 +4,11 @@
 #include <cassert>
 #include <string_view>
 #include <ostream>
-#include <type_traits>
 
 #include <fmt/base.h>
 
 #include "openvic-simulation/types/Colour.hpp"
+#include "openvic-simulation/utility/Concepts.hpp"
 #include "openvic-simulation/utility/Getters.hpp"
 
 namespace OpenVic {
@@ -53,11 +53,6 @@ namespace OpenVic {
 		return obj != nullptr ? stream << *obj : stream << "<NULL>";
 	}
 
-	template<typename T>
-	concept HasGetIdentifier = requires(T const& t) {
-		{ t.get_identifier() } -> std::same_as<std::string_view>;
-	};
-
 	/*
 	 * Base class for objects with associated colour information.
 	 */
@@ -80,11 +75,6 @@ namespace OpenVic {
 	using HasColour = _HasColour<colour_t>;
 	using HasAlphaColour = _HasColour<colour_argb_t>;
 
-	template<typename T>
-	concept HasGetColour = requires(T const& t) {
-		{ t.get_colour() } -> IsColour;
-	};
-
 	/*
 	 * Base class for objects with a unique string identifier and associated colour information.
 	 */
@@ -103,26 +93,18 @@ namespace OpenVic {
 
 	using HasIdentifierAndColour = _HasIdentifierAndColour<colour_t>;
 	using HasIdentifierAndAlphaColour = _HasIdentifierAndColour<colour_argb_t>;
-
-	template<typename T>
-	concept HasGetIdentifierAndGetColour = HasGetIdentifier<T> && HasGetColour<T>;
-
-	template<typename T>
-	concept HasGetName = requires(T const& t) {
-		{ t.get_name() } -> std::same_as<std::string_view>;
-	};
 }
 
-template<OpenVic::HasGetIdentifier T>
-requires (!OpenVic::HasGetName<T>)
+template<OpenVic::has_get_identifier T>
+requires (!OpenVic::has_get_name<T>)
 struct fmt::formatter<T> : fmt::formatter<fmt::string_view> {
 	fmt::format_context::iterator format(T const& has_id, fmt::format_context& ctx) const {
 		return fmt::formatter<fmt::string_view>::format(has_id.get_identifier(), ctx);
 	}
 };
 
-template<OpenVic::HasGetName T>
-requires (!OpenVic::HasGetIdentifier<T>)
+template<OpenVic::has_get_name T>
+requires (!OpenVic::has_get_identifier<T>)
 struct fmt::formatter<T> : fmt::formatter<fmt::string_view> {
 	fmt::format_context::iterator format(T const& has_id, fmt::format_context& ctx) const {
 		return fmt::formatter<fmt::string_view>::format(has_id.get_name(), ctx);

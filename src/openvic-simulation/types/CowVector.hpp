@@ -11,6 +11,7 @@
 #include <type_traits>
 
 #include "openvic-simulation/types/BasicIterator.hpp"
+#include "openvic-simulation/utility/Concepts.hpp"
 #include "openvic-simulation/utility/Utility.hpp"
 
 namespace OpenVic {
@@ -610,7 +611,7 @@ namespace OpenVic {
 
 		friend cow_vector;
 		static pointer _relocate(pointer first, pointer last, pointer result, allocator_type& alloc) {
-			if constexpr (utility::is_trivially_relocatable_v<T>) {
+			if constexpr (utility::trivially_relocatable<T>) {
 				difference_type dif = last - first;
 				if (dif > 0) {
 					std::memcpy(result, first, dif * sizeof(T));

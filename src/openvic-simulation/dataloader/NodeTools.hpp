@@ -23,6 +23,7 @@
 #include "openvic-simulation/utility/Getters.hpp"
 #include "openvic-simulation/utility/TslHelper.hpp"
 #include "openvic-simulation/utility/Containers.hpp"
+#include "openvic-simulation/utility/Concepts.hpp"
 
 #include <function2/function2.hpp>
 
@@ -65,14 +66,7 @@ using namespace std::string_view_literals;
 	};
 	std::ostream& operator<<(std::ostream& stream, name_list_t const& name_list);
 
-	// This adds to capacity rather than size so that it can be used multiple times in a row.
-	// If it added to size, it would only reserve enough for max(arguments...)
-	template<typename T>
-	concept Reservable = requires(T& t, size_t size) {
-		{ t.capacity() } -> std::same_as<size_t>;
-		t.reserve(size);
-	};
-	constexpr void reserve_more(Reservable auto& t, size_t size) {
+	constexpr void reserve_more(reservable auto& t, size_t size) {
 		t.reserve(t.capacity() + size);
 	}
 
@@ -134,7 +128,7 @@ using namespace std::string_view_literals;
 			return false;
 		}
 
-		template<IsOrderedMap Map>
+		template<derived_ordered_map Map>
 		inline bool map_key_value_invalid_callback(Map const& key_map, std::string_view key, ast::NodeCPtr) {
 			spdlog::error_s(
 				"Invalid dictionary key \"{}\". Valid values are [{}]",
@@ -143,7 +137,7 @@ using namespace std::string_view_literals;
 			return false;
 		}
 
-		template<IsOrderedMap Map>
+		template<derived_ordered_map Map>
 		inline bool map_key_value_ignore_invalid_callback(Map const& key_map, std::string_view key, ast::NodeCPtr) {
 			spdlog::warn_s(
 				"Invalid dictionary key \"{}\" is ignored. Valid values are [{}]",
@@ -270,13 +264,13 @@ using namespace std::string_view_literals;
 		};
 		using enum dictionary_entry_t::expected_count_t;
 
-		template<StringMapCase Case>
+		template<string_map_case Case>
 		using template_key_map_t = template_string_map_t<dictionary_entry_t, Case>;
 
 		using key_map_t = template_key_map_t<StringMapCaseSensitive>;
 		using case_insensitive_key_map_t = template_key_map_t<StringMapCaseInsensitive>;
 
-		template<IsOrderedMap Map>
+		template<derived_ordered_map Map>
 		bool add_key_map_entry(
 			Map&& key_map, std::string_view key, dictionary_entry_t::expected_count_t expected_count,
 			NodeCallback auto&& callback
@@ -289,7 +283,7 @@ using namespace std::string_view_literals;
 			return false;
 		}
 
-		template<IsOrderedMap Map>
+		template<derived_ordered_map Map>
 		bool remove_key_map_entry(Map&& key_map, std::string_view key) {
 			if (key_map.erase(key) == 0) {
 				spdlog::error_s("Failed to find dictionary key to remove: {}", key);
@@ -298,7 +292,7 @@ using namespace std::string_view_literals;
 			return true;
 		}
 
-		template<IsOrderedMap Map>
+		template<derived_ordered_map Map>
 		KeyValueCallback auto dictionary_keys_callback(
 			Map&& key_map, MapKeyValueCallback<Map> auto&& default_callback
 		) {
@@ -321,7 +315,7 @@ using namespace std::string_view_literals;
 			};
 		}
 
-		template<IsOrderedMap Map>
+		template<derived_ordered_map Map>
 		bool check_key_map_counts(Map&& key_map) {
 			bool ret = true;
 			for (auto key_entry : mutable_iterator(key_map)) {
@@ -335,12 +329,12 @@ using namespace std::string_view_literals;
 			return ret;
 		}
 
-		template<IsOrderedMap Map>
+		template<derived_ordered_map Map>
 		constexpr bool add_key_map_entries(Map&& key_map) {
 			return true;
 		}
 
-		template<IsOrderedMap Map, typename... Args>
+		template<derived_ordered_map Map, typename... Args>
 		bool add_key_map_entries(
 			Map&& key_map, std::string_view key, dictionary_entry_t::expected_count_t expected_count,
 			NodeCallback auto&& callback, Args&&... args
@@ -350,7 +344,7 @@ using namespace std::string_view_literals;
 			return ret;
 		}
 
-		template<IsOrderedMap Map>
+		template<derived_ordered_map Map>
 		NodeCallback auto expect_dictionary_key_map_and_length_and_default(
 			Map&& key_map, LengthCallback auto&& length_callback, MapKeyValueCallback<Map> auto&& default_callback
 		) {
@@ -365,7 +359,7 @@ using namespace std::string_view_literals;
 			};
 		}
 
-		template<IsOrderedMap Map>
+		template<derived_ordered_map Map>
 		NodeCallback auto expect_dictionary_key_map_and_length(
 			Map&& key_map, LengthCallback auto&& length_callback
 		) {
@@ -374,7 +368,7 @@ using namespace std::string_view_literals;
 			);
 		}
 
-		template<IsOrderedMap Map>
+		template<derived_ordered_map Map>
 		NodeCallback auto expect_dictionary_key_map_and_default(
 			Map&& key_map, MapKeyValueCallback<Map> auto&& default_callback
 		) {
@@ -383,14 +377,14 @@ using namespace std::string_view_literals;
 			);
 		}
 
-		template<StringMapCase Case>
+		template<string_map_case Case>
 		NodeCallback auto expect_dictionary_key_map(template_key_map_t<Case>&& key_map) {
 			return expect_dictionary_key_map_and_length_and_default(
 				MOV(key_map), default_length_callback, map_key_value_ignore_invalid_callback<template_key_map_t<Case>> // we use map_key_value_ignore_invalid_callback here as some mods add extraneous keys (like maxWidth) which V2 ignores, so we must too
 			);
 		}
 
-		template<IsOrderedMap Map, typename... Args>
+		template<derived_ordered_map Map, typename... Args>
 		NodeCallback auto expect_dictionary_key_map_and_length_and_default(
 			Map&& key_map, LengthCallback auto&& length_callback, MapKeyValueCallback<Map> auto&& default_callback,
 			Args&&... args
@@ -400,7 +394,7 @@ using namespace std::string_view_literals;
 			return expect_dictionary_key_map_and_length_and_default(FWD(key_map), FWD(length_callback), FWD(default_callback));
 		}
 
-		template<IsOrderedMap Map, typename... Args>
+		template<derived_ordered_map Map, typename... Args>
 		NodeCallback auto expect_dictionary_key_map_and_length(
 			Map&& key_map, LengthCallback auto&& length_callback, Args&&... args
 		) {
@@ -408,14 +402,14 @@ using namespace std::string_view_literals;
 			return expect_dictionary_key_map_and_length(FWD(key_map), FWD(length_callback));
 		}
 
-		template<IsOrderedMap Map, typename... Args>
+		template<derived_ordered_map Map, typename... Args>
 		NodeCallback auto expect_dictionary_key_map_and_default_map(
 			Map&& key_map, MapKeyValueCallback<Map> auto&& default_callback, Args&&... args
 		) {
 			add_key_map_entries(FWD(key_map), FWD(args)...);
 			return expect_dictionary_key_map_and_default(FWD(key_map), FWD(default_callback));
 		}
-		template<IsOrderedMap Map, typename... Args>
+		template<derived_ordered_map Map, typename... Args>
 		NodeCallback auto expect_dictionary_key_map_and_default(
 			Map&& key_map, KeyValueCallback auto&& default_callback, Args&&... args
 		) {
@@ -426,13 +420,13 @@ using namespace std::string_view_literals;
 			);
 		}
 
-		template<IsOrderedMap Map, typename... Args>
+		template<derived_ordered_map Map, typename... Args>
 		NodeCallback auto expect_dictionary_key_map(Map&& key_map, Args&&... args) {
 			add_key_map_entries(FWD(key_map), FWD(args)...);
 			return expect_dictionary_key_map(FWD(key_map));
 		}
 
-		template<StringMapCase Case = StringMapCaseSensitive, typename... Args>
+		template<string_map_case Case = StringMapCaseSensitive, typename... Args>
 		NodeCallback auto expect_dictionary_keys_and_length_and_default(
 			LengthCallback auto&& length_callback, MapKeyValueCallback<template_key_map_t<Case>> auto&& default_callback, Args&&... args
 		) {
@@ -441,20 +435,20 @@ using namespace std::string_view_literals;
 			);
 		}
 
-		template<StringMapCase Case = StringMapCaseSensitive, typename... Args>
+		template<string_map_case Case = StringMapCaseSensitive, typename... Args>
 		NodeCallback auto expect_dictionary_keys_and_length(LengthCallback auto&& length_callback, Args&&... args) {
 			return expect_dictionary_key_map_and_length_and_default(
 				template_key_map_t<Case> {}, FWD(length_callback), map_key_value_invalid_callback<template_key_map_t<Case>>, FWD(args)...
 			);
 		}
 
-		template<StringMapCase Case = StringMapCaseSensitive, typename... Args>
+		template<string_map_case Case = StringMapCaseSensitive, typename... Args>
 		NodeCallback auto expect_dictionary_keys_and_default_map(MapKeyValueCallback<template_key_map_t<Case>> auto&& default_callback, Args&&... args) {
 			return expect_dictionary_key_map_and_length_and_default(
 				template_key_map_t<Case> {}, default_length_callback, FWD(default_callback), FWD(args)...
 			);
 		}
-		template<StringMapCase Case = StringMapCaseSensitive, typename... Args>
+		template<string_map_case Case = StringMapCaseSensitive, typename... Args>
 		NodeCallback auto expect_dictionary_keys_and_default(KeyValueCallback auto&& default_callback, Args&&... args) {
 			return expect_dictionary_keys_and_default_map(
 				ignore_map<template_key_map_t<Case>>(FWD(default_callback)),
@@ -462,52 +456,52 @@ using namespace std::string_view_literals;
 			);
 		}
 
-		template<StringMapCase Case = StringMapCaseSensitive, typename... Args>
+		template<string_map_case Case = StringMapCaseSensitive, typename... Args>
 		NodeCallback auto expect_dictionary_keys(Args&&... args) {
 			return expect_dictionary_key_map_and_length_and_default(
 				template_key_map_t<Case> {}, default_length_callback, map_key_value_invalid_callback<template_key_map_t<Case>>, FWD(args)...
 			);
 		}
 
-		LengthCallback auto reserve_length_callback(Reservable auto& reservable) {
+		LengthCallback auto reserve_length_callback(reservable auto& reservable) {
 			return [&reservable](size_t size) -> size_t {
 				reserve_more(reservable, size);
 				return size;
 			};
 		}
-		NodeCallback auto expect_list_reserve_length(Reservable auto& reservable, NodeCallback auto&& callback) {
+		NodeCallback auto expect_list_reserve_length(reservable auto& reservable, NodeCallback auto&& callback) {
 			return expect_list_and_length(reserve_length_callback(reservable), FWD(callback));
 		}
-		NodeCallback auto expect_dictionary_reserve_length(Reservable auto& reservable, KeyValueCallback auto&& callback) {
+		NodeCallback auto expect_dictionary_reserve_length(reservable auto& reservable, KeyValueCallback auto&& callback) {
 			return expect_dictionary_and_length(reserve_length_callback(reservable), FWD(callback));
 		}
-		template<IsOrderedMap Map, typename... Args>
+		template<derived_ordered_map Map, typename... Args>
 		NodeCallback auto expect_dictionary_key_map_reserve_length_and_default(
-			Reservable auto& reservable, Map&& key_map, KeyValueCallback auto&& default_callback,
+			reservable auto& reservable, Map&& key_map, KeyValueCallback auto&& default_callback,
 			Args&&... args
 		) {
 			return expect_dictionary_key_map_and_length_and_default(
 				FWD(key_map), reserve_length_callback(reservable), FWD(default_callback), FWD(args)...
 			);
 		}
-		template<IsOrderedMap Map, typename... Args>
+		template<derived_ordered_map Map, typename... Args>
 		NodeCallback auto expect_dictionary_key_map_reserve_length(
-			Reservable auto& reservable, Map&& key_map, Args&&... args
+			reservable auto& reservable, Map&& key_map, Args&&... args
 		) {
 			return expect_dictionary_key_map_and_length(FWD(key_map), reserve_length_callback(reservable), FWD(args)...);
 		}
 
-		template<StringMapCase Case = StringMapCaseSensitive, typename... Args>
+		template<string_map_case Case = StringMapCaseSensitive, typename... Args>
 		NodeCallback auto expect_dictionary_keys_reserve_length_and_default_map(
-			Reservable auto& reservable, MapKeyValueCallback<template_key_map_t<Case>> auto&& default_callback, Args&&... args
+			reservable auto& reservable, MapKeyValueCallback<template_key_map_t<Case>> auto&& default_callback, Args&&... args
 		) {
 			return expect_dictionary_keys_and_length_and_default<Case>(
 				reserve_length_callback(reservable), FWD(default_callback), FWD(args)...
 			);
 		}
-		template<StringMapCase Case = StringMapCaseSensitive, typename... Args>
+		template<string_map_case Case = StringMapCaseSensitive, typename... Args>
 		NodeCallback auto expect_dictionary_keys_reserve_length_and_default(
-			Reservable auto& reservable, KeyValueCallback auto&& default_callback, Args&&... args
+			reservable auto& reservable, KeyValueCallback auto&& default_callback, Args&&... args
 		) {
 			return expect_dictionary_keys_reserve_length_and_default_map<Case>(
 				reservable,
@@ -516,14 +510,14 @@ using namespace std::string_view_literals;
 			);
 		}
 
-		template<StringMapCase Case = StringMapCaseSensitive, typename... Args>
-		NodeCallback auto expect_dictionary_keys_reserve_length(Reservable auto& reservable, Args&&... args) {
+		template<string_map_case Case = StringMapCaseSensitive, typename... Args>
+		NodeCallback auto expect_dictionary_keys_reserve_length(reservable auto& reservable, Args&&... args) {
 			return expect_dictionary_keys_and_length<Case>(reserve_length_callback(reservable), FWD(args)...);
 		}
 
 		node_callback_t name_list_callback(callback_t<name_list_t&&> callback);
 
-		template<typename T, StringMapCase Case>
+		template<typename T, string_map_case Case>
 		Callback<std::string_view> auto expect_mapped_string(
 			template_string_map_t<T, Case> const& map, Callback<T> auto&& callback, bool warn = false
 		) {

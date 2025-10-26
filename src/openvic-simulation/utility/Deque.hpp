@@ -1909,7 +1909,7 @@ namespace OpenVic::utility {
 }
 #endif
 
-#include "openvic-simulation/utility/Utility.hpp"
+#include "openvic-simulation/utility/Concepts.hpp"
 
 namespace OpenVic::utility {
 	template<typename T>

@@ -26,6 +26,7 @@
 #include <range/v3/algorithm/rotate.hpp>
 
 #include "openvic-simulation/types/StackString.hpp"
+#include "openvic-simulation/utility/Concepts.hpp"
 #include "openvic-simulation/utility/StringUtils.hpp"
 #include "openvic-simulation/utility/Utility.hpp"
 
@@ -653,7 +654,15 @@ namespace OpenVic {
 	};
 
 	template<typename T>
-	concept IsColour = OpenVic::utility::is_specialization_of_v<T, basic_colour_t>;
+	concept IsColour = OpenVic::utility::specialization_of<T, basic_colour_t>;
+
+	template<typename T>
+	concept has_get_colour = requires(T const& t) {
+		{ t.get_colour() } -> IsColour;
+	};
+
+	template<typename T>
+	concept has_get_identifier_and_colour = has_get_identifier<T> && has_get_colour<T>;
 
 	template<typename ValueT, typename IntT>
 	using rgb_colour_traits = colour_traits<ValueT, IntT, false>;

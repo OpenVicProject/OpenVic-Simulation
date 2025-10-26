@@ -9,18 +9,12 @@
 #include <function2/function2.hpp>
 
 #include "openvic-simulation/types/FixedVector.hpp"
+#include "openvic-simulation/utility/Concepts.hpp"
 #include "openvic-simulation/utility/Getters.hpp"
 #include "openvic-simulation/utility/ForwardableSpan.hpp"
-#include "openvic-simulation/utility/MathConcepts.hpp"
 #include "openvic-simulation/utility/Logger.hpp"
-#include "openvic-simulation/utility/Utility.hpp"
 
 namespace OpenVic {
-	template <typename T>
-	concept HasGetIndex = requires(T const& key) {
-		{ key.get_index() } -> std::convertible_to<size_t>;
-	};
-
 	/**
 	* @brief A dictionary-like type that uses std::vector for contiguous storage,
 	* providing O(1) access time by directly using an integer index obtained from the KeyType.
@@ -61,7 +55,7 @@ namespace OpenVic {
 		* @return The internal index, or 0 if out of bounds (after logging error).
 		*/
 		constexpr size_t get_internal_index_from_key(KeyType const& key) const {
-			static_assert(HasGetIndex<KeyType>);
+			static_assert(has_get_index<KeyType>);
 			const size_t index = key.get_index();
 			if (index < min_index || index > max_index) {
 				spdlog::error_s(
@@ -85,7 +79,7 @@ namespace OpenVic {
 		* @return True if keys are valid, false otherwise.
 		*/
 		static bool validate_new_keys(keys_span_type new_keys) {
-			static_assert(HasGetIndex<KeyType>);
+			static_assert(has_get_index<KeyType>);
 			if (new_keys.empty()) {
 				spdlog::warn_s(
 					"DEVELOPER: OpenVic::IndexedFlatMap<{}, {}> should not be constructed with empty key span.",
@@ -208,7 +202,7 @@ namespace OpenVic {
 		template<typename GeneratorTemplateType>
 		requires (std::is_move_constructible_v<ValueType> || std::is_copy_constructible_v<ValueType>)
 		//value_generator(key) doesn't return std:tuple<...>
-		&& (!utility::is_specialization_of_v<std::remove_cvref_t<std::invoke_result_t<GeneratorTemplateType, KeyType const&>>, std::tuple>)
+		&& (!utility::specialization_of<std::remove_cvref_t<std::invoke_result_t<GeneratorTemplateType, KeyType const&>>, std::tuple>)
 		//ValueType(value_generator(key)) is valid constructor call
 		&& std::constructible_from<ValueType, decltype(std::declval<GeneratorTemplateType>()(std::declval<KeyType const&>()))>
 		IndexedFlatMap(
@@ -218,7 +212,7 @@ namespace OpenVic {
 			min_index { new_keys.front().get_index() },
 			max_index { new_keys.back().get_index() },
 			values() {
-			static_assert(HasGetIndex<KeyType>);
+			static_assert(has_get_index<KeyType>);
 			if (!validate_new_keys(new_keys)) {
 				return;
 			}
@@ -248,7 +242,7 @@ namespace OpenVic {
 		template<typename GeneratorTemplateType>
 		requires (!std::is_move_constructible_v<ValueType>) && (!std::is_copy_constructible_v<ValueType>)
 		//value_generator(key) doesn't return std:tuple<...>
-		&& (!utility::is_specialization_of_v<std::remove_cvref_t<std::invoke_result_t<GeneratorTemplateType, KeyType const&>>, std::tuple>)
+		&& (!utility::specialization_of<std::remove_cvref_t<std::invoke_result_t<GeneratorTemplateType, KeyType const&>>, std::tuple>)
 		//ValueType(value_generator(key)) is valid constructor call
 		&& std::constructible_from<ValueType, decltype(std::declval<GeneratorTemplateType>()(std::declval<KeyType const&>()))>
 		IndexedFlatMap(
@@ -258,7 +252,7 @@ namespace OpenVic {
 			min_index { new_keys.front().get_index() },
 			max_index { new_keys.back().get_index() },
 			values(new_keys.size()) {
-			static_assert(HasGetIndex<KeyType>);
+			static_assert(has_get_index<KeyType>);
 			if (!validate_new_keys(new_keys)) {
 				return;
 			}
@@ -287,7 +281,7 @@ namespace OpenVic {
 		template<typename GeneratorTemplateType>
 		requires (std::is_move_constructible_v<ValueType> || std::is_copy_constructible_v<ValueType>)
 		//value_generator(key) returns tuple
-		&& utility::is_specialization_of_v<std::remove_cvref_t<std::invoke_result_t<GeneratorTemplateType, KeyType const&>>, std::tuple>
+		&& utility::specialization_of<std::remove_cvref_t<std::invoke_result_t<GeneratorTemplateType, KeyType const&>>, std::tuple>
 		//ValueType(...value_generator(key)) is valid constructor call
 		&& requires(GeneratorTemplateType&& value_generator) { {
 			std::apply(
@@ -304,7 +298,7 @@ namespace OpenVic {
 			min_index { new_keys.front().get_index() },
 			max_index { new_keys.back().get_index() },
 			values() {
-			static_assert(HasGetIndex<KeyType>);
+			static_assert(has_get_index<KeyType>);
 			if (!validate_new_keys(new_keys)) {
 				return;
 			}
@@ -335,7 +329,7 @@ namespace OpenVic {
 		template<typename GeneratorTemplateType>
 		requires (!std::is_move_constructible_v<ValueType>) && (!std::is_copy_constructible_v<ValueType>)
 		//value_generator(key) returns tuple
-		&& utility::is_specialization_of_v<std::remove_cvref_t<std::invoke_result_t<GeneratorTemplateType, KeyType const&>>, std::tuple>
+		&& utility::specialization_of<std::remove_cvref_t<std::invoke_result_t<GeneratorTemplateType, KeyType const&>>, std::tuple>
 		//ValueType(...value_generator(key)) is valid constructor call
 		&& requires(GeneratorTemplateType value_generator) { {
 			std::apply(
@@ -352,7 +346,7 @@ namespace OpenVic {
 			min_index { new_keys.front().get_index() },
 			max_index { new_keys.back().get_index() },
 			values(new_keys.size()) {
-			static_assert(HasGetIndex<KeyType>);
+			static_assert(has_get_index<KeyType>);
 			if (!validate_new_keys(new_keys)) {
 				return;
 			}
@@ -384,7 +378,7 @@ namespace OpenVic {
 			min_index { new_keys.front().get_index() },
 			max_index { new_keys.back().get_index() },
 			values() {
-			static_assert(HasGetIndex<KeyType>);
+			static_assert(has_get_index<KeyType>);
 			if (!validate_new_keys(new_keys)) {
 				return;
 			}
@@ -417,7 +411,7 @@ namespace OpenVic {
 			min_index { new_keys.front().get_index() },
 			max_index { new_keys.back().get_index() },
 			values(new_keys.size()) {
-			static_assert(HasGetIndex<KeyType>);
+			static_assert(has_get_index<KeyType>);
 			if (!validate_new_keys(new_keys)) {
 				return;
 			}
@@ -439,7 +433,7 @@ namespace OpenVic {
 		*/
 		void set(KeyType const& key, ValueType const& value)
 		requires std::assignable_from<ValueType&, ValueType const&> {
-			static_assert(HasGetIndex<KeyType>);
+			static_assert(has_get_index<KeyType>);
 			values[get_internal_index_from_key(key)] = value;
 		}
 
@@ -448,7 +442,7 @@ namespace OpenVic {
 		*/
 		void set(KeyType const& key, ValueType&& value)
 		requires std::movable<ValueType> {
-			static_assert(HasGetIndex<KeyType>);
+			static_assert(has_get_index<KeyType>);
 			std::swap(
 				values[get_internal_index_from_key(key)],
 				value
@@ -456,12 +450,12 @@ namespace OpenVic {
 		}
 
 		constexpr ValueType& at(KeyType const& key) {
-			static_assert(HasGetIndex<KeyType>);
+			static_assert(has_get_index<KeyType>);
 			return values[get_internal_index_from_key(key)];
 		}
 
 		constexpr ValueType const& at(KeyType const& key) const {
-			static_assert(HasGetIndex<KeyType>);
+			static_assert(has_get_index<KeyType>);
 			return values[get_internal_index_from_key(key)];
 		}
 
@@ -496,7 +490,7 @@ namespace OpenVic {
 		}
 
 		constexpr bool contains(KeyType const& key) const {
-			static_assert(HasGetIndex<KeyType>);
+			static_assert(has_get_index<KeyType>);
 			return contains_index(key.get_index());
 		}
 
@@ -546,7 +540,7 @@ namespace OpenVic {
 
 		constexpr void copy_values_from(IndexedFlatMap const& other)
 		requires std::assignable_from<ValueType&, ValueType const&> {
-			static_assert(HasGetIndex<KeyType>);
+			static_assert(has_get_index<KeyType>);
 			for (KeyType const& key : get_shared_keys(other)) {
 				set(key, other.at(key));
 			}
@@ -598,8 +592,8 @@ namespace OpenVic {
 
 		// Unary minus operator
 		IndexedFlatMap<KeyType, ValueType> operator-() const
-		requires UnaryNegatable<ValueType> {
-			static_assert(HasGetIndex<KeyType>);
+		requires unary_negatable <ValueType> {
+			static_assert(has_get_index<KeyType>);
 			return IndexedFlatMap(keys, [&](KeyType const& key) {
 				return -this->at(key);
 			});
@@ -607,8 +601,8 @@ namespace OpenVic {
 
 		template <typename OtherValueType>
 		IndexedFlatMap<KeyType, ValueType> operator+(IndexedFlatMap<KeyType,OtherValueType> const& other) const
-		requires Addable<ValueType,OtherValueType,ValueType> {
-			static_assert(HasGetIndex<KeyType>);
+		requires addable<ValueType,OtherValueType,ValueType> {
+			static_assert(has_get_index<KeyType>);
 			if (!check_subset_span_match(other)) {
 				return IndexedFlatMap();
 			}
@@ -629,8 +623,8 @@ namespace OpenVic {
 
 		template <typename OtherValueType>
 		IndexedFlatMap<KeyType, ValueType> operator-(IndexedFlatMap<KeyType,OtherValueType> const& other) const
-		requires Subtractable<ValueType,OtherValueType,ValueType> {
-			static_assert(HasGetIndex<KeyType>);
+		requires subtractable<ValueType,OtherValueType,ValueType> {
+			static_assert(has_get_index<KeyType>);
 			if (!check_subset_span_match(other)) {
 				return IndexedFlatMap();
 			}
@@ -646,8 +640,8 @@ namespace OpenVic {
 
 		template <typename OtherValueType>
 		IndexedFlatMap<KeyType, ValueType> operator*(IndexedFlatMap<KeyType,OtherValueType> const& other) const
-		requires Multipliable<ValueType,OtherValueType,ValueType> {
-			static_assert(HasGetIndex<KeyType>);
+		requires multipliable<ValueType,OtherValueType,ValueType> {
+			static_assert(has_get_index<KeyType>);
 			if (!check_subset_span_match(other)) {
 				return IndexedFlatMap();
 			}
@@ -663,8 +657,8 @@ namespace OpenVic {
 
 		template <typename OtherValueType>
 		IndexedFlatMap<KeyType, ValueType> operator/(IndexedFlatMap<KeyType,OtherValueType> const& other) const
-		requires Divisible<ValueType,OtherValueType,ValueType> {
-			static_assert(HasGetIndex<KeyType>);
+		requires divisible<ValueType,OtherValueType,ValueType> {
+			static_assert(has_get_index<KeyType>);
 			if (!check_subset_span_match(other)) {
 				return IndexedFlatMap();
 			}
@@ -693,8 +687,8 @@ namespace OpenVic {
 		IndexedFlatMap<KeyType, ValueType> divide_handle_zero(
 			IndexedFlatMap<KeyType,OtherValueType> const& other,
 			fu2::function<ValueType(ValueType const&, OtherValueType const&)> handle_div_by_zero
-		) const requires Divisible<ValueType,OtherValueType,ValueType> {
-			static_assert(HasGetIndex<KeyType>);
+		) const requires divisible<ValueType,OtherValueType,ValueType> {
+			static_assert(has_get_index<KeyType>);
 			if (!check_subset_span_match(other)) {
 				return IndexedFlatMap();
 			}
@@ -717,8 +711,8 @@ namespace OpenVic {
 		// Binary addition operator (Map + Scalar)
 		template <typename ScalarType>
 		IndexedFlatMap<KeyType, ValueType> operator+(ScalarType const& scalar) const
-		requires Addable<ValueType,ScalarType,ValueType> {
-			static_assert(HasGetIndex<KeyType>);
+		requires addable<ValueType,ScalarType,ValueType> {
+			static_assert(has_get_index<KeyType>);
 			return IndexedFlatMap(keys, [&](KeyType const& key) {
 				return this->at(key) + scalar;
 			});
@@ -727,8 +721,8 @@ namespace OpenVic {
 		// Binary subtraction operator (Map - Scalar)
 		template <typename ScalarType>
 		IndexedFlatMap<KeyType, ValueType> operator-(ScalarType const& scalar) const
-		requires Subtractable<ValueType,ScalarType,ValueType> {
-			static_assert(HasGetIndex<KeyType>);
+		requires subtractable<ValueType,ScalarType,ValueType> {
+			static_assert(has_get_index<KeyType>);
 			return IndexedFlatMap(keys, [&](KeyType const& key) {
 				return this->at(key) - scalar;
 			});
@@ -737,8 +731,8 @@ namespace OpenVic {
 		// Binary multiplication operator (Map * Scalar)
 		template <typename ScalarType>
 		IndexedFlatMap<KeyType, ValueType> operator*(ScalarType const& scalar) const
-		requires Multipliable<ValueType,ScalarType,ValueType> {
-			static_assert(HasGetIndex<KeyType>);
+		requires multipliable<ValueType,ScalarType,ValueType> {
+			static_assert(has_get_index<KeyType>);
 			return IndexedFlatMap(keys, [&](KeyType const& key) {
 				return this->at(key) * scalar;
 			});
@@ -747,8 +741,8 @@ namespace OpenVic {
 		// Binary division operator (Map / Scalar)
 		template <typename ScalarType>
 		IndexedFlatMap<KeyType, ValueType> operator/(ScalarType const& scalar) const
-		requires Divisible<ValueType,ScalarType,ValueType> {
-			static_assert(HasGetIndex<KeyType>);
+		requires divisible<ValueType,ScalarType,ValueType> {
+			static_assert(has_get_index<KeyType>);
 			if (scalar == static_cast<ValueType>(0)) {
 				spdlog::error_s(
 					"DEVELOPER: OpenVic::IndexedFlatMap<{},{}> division by zero for scalar operation.",
@@ -765,8 +759,8 @@ namespace OpenVic {
 
 		template <typename OtherValueType>
 		IndexedFlatMap& operator+=(IndexedFlatMap<KeyType,OtherValueType> const& other)
-		requires AddAssignable<ValueType,OtherValueType> {
-			static_assert(HasGetIndex<KeyType>);
+		requires add_assignable<ValueType,OtherValueType> {
+			static_assert(has_get_index<KeyType>);
 			if (!check_subset_span_match(other)) {
 				return *this; // Return current state on error
 			}
@@ -780,8 +774,8 @@ namespace OpenVic {
 
 		template <typename OtherValueType>
 		IndexedFlatMap& operator-=(IndexedFlatMap<KeyType,OtherValueType> const& other)
-		requires SubtractAssignable<ValueType,OtherValueType> {
-			static_assert(HasGetIndex<KeyType>);
+		requires subtract_assignable<ValueType,OtherValueType> {
+			static_assert(has_get_index<KeyType>);
 			if (!check_subset_span_match(other)) {
 				return *this;
 			}
@@ -794,8 +788,8 @@ namespace OpenVic {
 
 		template <typename OtherValueType>
 		IndexedFlatMap& operator*=(IndexedFlatMap<KeyType,OtherValueType> const& other)
-		requires MultiplyAssignable<ValueType,OtherValueType> {
-			static_assert(HasGetIndex<KeyType>);
+		requires multiply_assignable<ValueType,OtherValueType> {
+			static_assert(has_get_index<KeyType>);
 			if (!check_subset_span_match(other)) {
 				return *this;
 			}
@@ -808,8 +802,8 @@ namespace OpenVic {
 
 		template <typename OtherValueType>
 		IndexedFlatMap& operator/=(IndexedFlatMap<KeyType,OtherValueType> const& other)
-		requires DivideAssignable<ValueType,OtherValueType> {
-			static_assert(HasGetIndex<KeyType>);
+		requires divide_assignable<ValueType,OtherValueType> {
+			static_assert(has_get_index<KeyType>);
 			if (!check_subset_span_match(other)) {
 				return *this;
 			}
@@ -834,8 +828,8 @@ namespace OpenVic {
 		IndexedFlatMap& divide_assign_handle_zero(
 			IndexedFlatMap<KeyType,OtherValueType> const& other,
 			fu2::function<void(ValueType&, OtherValueType const&)> handle_div_by_zero
-		) requires DivideAssignable<ValueType,OtherValueType> {
-			static_assert(HasGetIndex<KeyType>);
+		) requires divide_assignable<ValueType,OtherValueType> {
+			static_assert(has_get_index<KeyType>);
 			if (!check_subset_span_match(other)) {
 				return *this;
 			}
@@ -856,7 +850,7 @@ namespace OpenVic {
 		// Compound assignment addition operator (Map += Scalar)
 		template <typename ScalarType>
 		IndexedFlatMap& operator+=(ScalarType const& scalar)
-		requires AddAssignable<ValueType,ScalarType> {
+		requires add_assignable<ValueType,ScalarType> {
 			for (ValueType& val : values) {
 				val += scalar;
 			}
@@ -866,7 +860,7 @@ namespace OpenVic {
 		// Compound assignment subtraction operator (Map -= Scalar)
 		template <typename ScalarType>
 		IndexedFlatMap& operator-=(ScalarType const& scalar)
-		requires SubtractAssignable<ValueType,ScalarType> {
+		requires subtract_assignable<ValueType,ScalarType> {
 			for (ValueType& val : values) {
 				val -= scalar;
 			}
@@ -876,7 +870,7 @@ namespace OpenVic {
 		// Compound assignment multiplication operator (Map *= Scalar)
 		template <typename ScalarType>
 		IndexedFlatMap& operator*=(ScalarType const& scalar)
-		requires MultiplyAssignable<ValueType,ScalarType> {
+		requires multiply_assignable<ValueType,ScalarType> {
 			for (ValueType& val : values) {
 				val *= scalar;
 			}
@@ -886,7 +880,7 @@ namespace OpenVic {
 		// Compound assignment division operator (Map /= Scalar)
 		template <typename ScalarType>
 		IndexedFlatMap& operator/=(ScalarType const& scalar)
-		requires DivideAssignable<ValueType,ScalarType> {
+		requires divide_assignable<ValueType,ScalarType> {
 			if (scalar == static_cast<ValueType>(0)) {
 				spdlog::error_s(
 					"DEVELOPER: OpenVic::IndexedFlatMap<{},{}> compound division by zero for scalar operation.",
@@ -906,8 +900,8 @@ namespace OpenVic {
 		constexpr IndexedFlatMap& mul_add(
 			IndexedFlatMap<KeyType,OtherValueType> const& other,
 			ScalarType const& factor
-		) requires MulAddAssignable<ValueType,OtherValueType,ScalarType> {
-			static_assert(HasGetIndex<KeyType>);
+		) requires mul_add_assignable<ValueType,OtherValueType,ScalarType> {
+			static_assert(has_get_index<KeyType>);
 			for (KeyType const& key : get_shared_keys(other)) {
 				at(key) += other.at(key) * factor;
 			}
@@ -919,8 +913,8 @@ namespace OpenVic {
 		constexpr IndexedFlatMap& mul_add(
 			IndexedFlatMap<KeyType,ValueTypeA> const& a,
 			IndexedFlatMap<KeyType,ValueTypeB> const& b
-		) requires MulAddAssignable<ValueType,ValueTypeA,ValueTypeB> {
-			static_assert(HasGetIndex<KeyType>);
+		) requires mul_add_assignable<ValueType,ValueTypeA,ValueTypeB> {
+			static_assert(has_get_index<KeyType>);
 			if (a.get_min_index() != b.get_min_index() || a.get_max_index() != b.get_max_index()) {
 				spdlog::error_s(
 					"DEVELOPER: OpenVic::IndexedFlatMap<{},{}> attempted mul_add where a and b don't have the same keys. This is not implemented.",
@@ -940,10 +934,10 @@ namespace OpenVic {
 		template <typename ScalarType>
 		constexpr IndexedFlatMap& rescale(ScalarType const& new_total)
 		requires std::default_initializable<ValueType>
-			&& AddAssignable<ValueType>
-			&& MultiplyAssignable<ValueType,ScalarType>
-			&& DivideAssignable<ValueType> {
-			static_assert(HasGetIndex<KeyType>);
+			&& add_assignable<ValueType>
+			&& multiply_assignable<ValueType,ScalarType>
+			&& divide_assignable<ValueType> {
+			static_assert(has_get_index<KeyType>);
 			bool has_any_non_zero_value = false;
 			const ValueType zero = static_cast<ValueType>(0);
 			ValueType old_total {};
@@ -1121,7 +1115,7 @@ namespace OpenVic {
 	IndexedFlatMap<KeyType, ValueType> operator+(
 		ScalarType const& scalar,
 		IndexedFlatMap<KeyType, ValueType> const& map
-	) requires Addable<ValueType,ScalarType,ValueType> {
+	) requires addable<ValueType,ScalarType,ValueType> {
 		return map + scalar; // Delegate to the member operator
 	}
 
@@ -1129,8 +1123,8 @@ namespace OpenVic {
 	IndexedFlatMap<KeyType, ValueType> operator-(
 		ValueType const& scalar,
 		IndexedFlatMap<KeyType, ValueType> const& map
-	) requires Subtractable<ScalarType,ValueType,ValueType> {
-		static_assert(HasGetIndex<KeyType>);
+	) requires subtractable<ScalarType,ValueType,ValueType> {
+		static_assert(has_get_index<KeyType>);
 		// Scalar - Map is not simply map - scalar, so we implement it directly
 		return IndexedFlatMap<KeyType, ValueType>(map.get_keys(), [&](KeyType const& key) {
 			return scalar - map.at(key);
@@ -1141,7 +1135,7 @@ namespace OpenVic {
 	IndexedFlatMap<KeyType, ValueType> operator*(
 		ScalarType const& scalar,
 		IndexedFlatMap<KeyType, ValueType> const& map
-	) requires Multipliable<ValueType,ScalarType,ValueType> {
+	) requires multipliable<ValueType,ScalarType,ValueType> {
 		return map * scalar; // Delegate to the member operator
 	}
 
@@ -1149,8 +1143,8 @@ namespace OpenVic {
 	IndexedFlatMap<KeyType, ValueType> operator/(
 		ScalarType const& scalar,
 		IndexedFlatMap<KeyType, ValueType> const& map
-	) requires Divisible<ScalarType, ValueType, ValueType> {
-		static_assert(HasGetIndex<KeyType>);
+	) requires divisible<ScalarType, ValueType, ValueType> {
+		static_assert(has_get_index<KeyType>);
 		return IndexedFlatMap<KeyType, ValueType>(map.get_keys(), [&](KeyType const& key) {
 			if (map.at(key) == static_cast<ValueType>(0)) {
 				spdlog::error_s(

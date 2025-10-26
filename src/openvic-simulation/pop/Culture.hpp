@@ -2,6 +2,7 @@
 
 #include "openvic-simulation/types/IdentifierRegistry.hpp"
 #include "openvic-simulation/types/UnitBranchType.hpp"
+#include "openvic-simulation/types/HasIdentifier.hpp"
 
 namespace OpenVic {
 	struct CultureManager;

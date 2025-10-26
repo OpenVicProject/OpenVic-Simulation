@@ -7,6 +7,7 @@
 #include <type_traits>
 #include <utility>
 
+#include "openvic-simulation/utility/Concepts.hpp"
 #include "openvic-simulation/utility/Utility.hpp"
 
 namespace OpenVic {

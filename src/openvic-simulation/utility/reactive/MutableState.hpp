@@ -1,7 +1,7 @@
 #pragma once
 
 #include "openvic-simulation/types/Signal.hpp"
-#include "openvic-simulation/utility/MathConcepts.hpp"
+#include "openvic-simulation/utility/Concepts.hpp"
 #include "openvic-simulation/utility/reactive/DependencyTracker.hpp"
 
 namespace OpenVic {
@@ -91,44 +91,44 @@ namespace OpenVic {
 		}
 
 		using ReadOnlyMutableState<T>::value;
-		MutableState<T>& operator++() requires PreIncrementable<T> {
+		MutableState<T>& operator++() requires pre_incrementable <T> {
 			set(++value);
 			return *this;
 		}
 
-		void operator++(int) requires PostIncrementable<T> {
+		void operator++(int) requires post_incrementable <T> {
 			set(value++);
 		}
 
-		MutableState<T>& operator--() requires PreDecrementable<T> {
+		MutableState<T>& operator--() requires pre_decrementable<T> {
 			set(--value);
 			return *this;
 		}
 
-		void operator--(int) requires PostDecrementable<T> {
+		void operator--(int) requires post_decrementable<T> {
 			set(value--);
 		}
 
 		template<typename RHS>
-		requires Addable<T, RHS, T>
+		requires addable<T, RHS, T>
 		MutableState<T>& operator+=(RHS const& rhs) {
 			set(value + rhs);
 			return *this;
 		}
 		template<typename RHS>
-		requires Subtractable<T, RHS, T>
+		requires subtractable<T, RHS, T>
 		MutableState<T>& operator-=(RHS const& rhs) {
 			set(value - rhs);
 			return *this;
 		}
 		template<typename RHS>
-		requires Multipliable<T, RHS, T>
+		requires multipliable<T, RHS, T>
 		MutableState<T>& operator*=(RHS const& rhs) {
 			set(value * rhs);
 			return *this;
 		}
 		template<typename RHS>
-		requires Divisible<T, RHS, T>
+		requires divisible<T, RHS, T>
 		MutableState<T>& operator/=(RHS const& rhs) {
 			set(value / rhs);
 			return *this;

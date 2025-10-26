@@ -9,6 +9,7 @@
 #include <Windows.h>
 
 #include "openvic-simulation/utility/Containers.hpp"
+#include "openvic-simulation/utility/Concepts.hpp"
 
 namespace OpenVic::Windows {
 	inline memory::wstring convert(std::string_view as) {
@@ -48,17 +49,6 @@ namespace OpenVic::Windows {
 		// return new string ( compiler should optimize this away )
 		return ret;
 	}
-
-	template<typename T, typename... U>
-	concept any_of = (std::same_as<T, U> || ...);
-
-	template<typename T>
-	concept either_char_type = any_of<T, char, wchar_t>;
-
-	template<typename T>
-	concept has_data = requires(T t) {
-		{ t.data() } -> std::convertible_to<typename T::value_type const*>;
-	};
 
 	class RegistryKey {
 	public:

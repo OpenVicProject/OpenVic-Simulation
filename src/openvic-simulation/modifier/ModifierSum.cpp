@@ -4,12 +4,13 @@
 
 #include "openvic-simulation/country/CountryInstance.hpp"
 #include "openvic-simulation/map/ProvinceInstance.hpp"
+#include "openvic-simulation/utility/Concepts.hpp"
 
 using namespace OpenVic;
 
 std::string_view modifier_entry_t::source_to_string(modifier_source_t const& source) {
 	return std::visit(
-		[](HasGetIdentifier auto const* has_identifier) -> std::string_view {
+		[](has_get_identifier auto const* has_identifier) -> std::string_view {
 			return has_identifier->get_identifier();
 		},
 		source

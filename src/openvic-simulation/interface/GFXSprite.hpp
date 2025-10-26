@@ -1,6 +1,7 @@
 #pragma once
 
 #include "openvic-simulation/interface/LoadBase.hpp"
+#include "openvic-simulation/types/HasIdentifier.hpp"
 
 namespace OpenVic::GFX {
 
