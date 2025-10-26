@@ -4,12 +4,11 @@
 #include <type_traits>
 
 #include "openvic-simulation/types/OrderedContainers.hpp"
-#include "openvic-simulation/utility/MathConcepts.hpp"
+#include "openvic-simulation/utility/Concepts.hpp"
 
 namespace OpenVic {
-	template <typename KeyType, typename ValueType>
-	constexpr ordered_map<KeyType, ValueType> operator-(ordered_map<KeyType, ValueType> const& rhs)
-	requires UnaryNegatable<ValueType> {
+	template <typename KeyType, unary_negatable ValueType>
+	constexpr ordered_map<KeyType, ValueType> operator-(ordered_map<KeyType, ValueType> const& rhs) {
 		ordered_map<KeyType, ValueType> result {};
 		auto view = rhs | std::views::transform(
 			[](KeyType const& key, ValueType const& value) {
@@ -24,7 +23,7 @@ namespace OpenVic {
 	constexpr ordered_map<KeyType, LhsValueType>& operator+=(
 		ordered_map<KeyType, LhsValueType>& lhs,
 		ordered_map<KeyType, RhsValueType> const& rhs
-	) requires AddAssignable<LhsValueType,RhsValueType> {
+	) requires add_assignable<LhsValueType,RhsValueType> {
 		for (auto const& [key, rhs_value] : rhs) {
 			lhs[key] += rhs_value;
 		}
@@ -35,7 +34,7 @@ namespace OpenVic {
 	constexpr ordered_map<KeyType, LhsValueType>& operator-=(
 		ordered_map<KeyType, LhsValueType>& lhs,
 		ordered_map<KeyType, RhsValueType> const& rhs
-	) requires SubtractAssignable<LhsValueType,RhsValueType> {
+	) requires subtract_assignable<LhsValueType,RhsValueType> {
 		for (auto const& [key, rhs_value] : rhs) {
 			lhs[key] -= rhs_value;
 		}
@@ -46,7 +45,7 @@ namespace OpenVic {
 	constexpr ordered_map<KeyType, LhsValueType>& operator*=(
 		ordered_map<KeyType, LhsValueType>& lhs,
 		ordered_map<KeyType, RhsValueType> const& rhs
-	) requires MultiplyAssignable<LhsValueType,RhsValueType> {
+	) requires multiply_assignable<LhsValueType,RhsValueType> {
 		for (auto const& [key, rhs_value] : rhs) {
 			lhs[key] *= rhs_value;
 		}
@@ -57,7 +56,7 @@ namespace OpenVic {
 	constexpr ordered_map<KeyType, LhsValueType>& operator/=(
 		ordered_map<KeyType, LhsValueType>& lhs,
 		ordered_map<KeyType, RhsValueType> const& rhs
-	) requires DivideAssignable<LhsValueType,RhsValueType> {
+	) requires divide_assignable<LhsValueType,RhsValueType> {
 		for (auto const& [key, rhs_value] : rhs) {
 			lhs[key] = rhs_value;
 		}
@@ -68,7 +67,7 @@ namespace OpenVic {
 	constexpr ordered_map<KeyType, LhsValueType>& operator+=(
 		ordered_map<KeyType, LhsValueType>& lhs,
 		RhsValueType const& rhs
-	) requires AddAssignable<LhsValueType,RhsValueType> {
+	) requires add_assignable<LhsValueType,RhsValueType> {
 		for (typename decltype(lhs)::iterator it = lhs.begin(); it != lhs.end(); ++it) {
 			it.value() += rhs;
 		}
@@ -79,7 +78,7 @@ namespace OpenVic {
 	constexpr ordered_map<KeyType, LhsValueType>& operator-=(
 		ordered_map<KeyType, LhsValueType>& lhs,
 		RhsValueType const& rhs
-	) requires SubtractAssignable<LhsValueType,RhsValueType> {
+	) requires subtract_assignable<LhsValueType,RhsValueType> {
 		for (typename decltype(lhs)::iterator it = lhs.begin(); it != lhs.end(); ++it) {
 			it.value() -= rhs;
 		}
@@ -90,7 +89,7 @@ namespace OpenVic {
 	constexpr ordered_map<KeyType, LhsValueType>& operator*=(
 		ordered_map<KeyType, LhsValueType>& lhs,
 		RhsValueType const& rhs
-	) requires MultiplyAssignable<LhsValueType,RhsValueType> {
+	) requires multiply_assignable<LhsValueType,RhsValueType> {
 		for (typename decltype(lhs)::iterator it = lhs.begin(); it != lhs.end(); ++it) {
 			it.value() *= rhs;
 		}
@@ -101,17 +100,17 @@ namespace OpenVic {
 	constexpr ordered_map<KeyType, LhsValueType>& operator/=(
 		ordered_map<KeyType, LhsValueType>& lhs,
 		RhsValueType const& rhs
-	) requires DivideAssignable<LhsValueType,RhsValueType> {
+	) requires divide_assignable<LhsValueType,RhsValueType> {
 		for (auto it = lhs.begin(); it != lhs.end(); ++it) {
 			it.value() /= rhs;
 		}
 		return lhs;
 	}
 
-	template <typename KeyType, typename ValueType>
+	template <typename KeyType, add_assignable ValueType>
 	constexpr static ValueType get_total(
 		ordered_map<KeyType, ValueType> const& map
-	) requires AddAssignable<ValueType> && std::is_default_constructible_v<ValueType> {
+	) requires std::is_default_constructible_v<ValueType> {
 		ValueType running_total {};
 		for (auto const& [key, value] : map) {
 			running_total += value;

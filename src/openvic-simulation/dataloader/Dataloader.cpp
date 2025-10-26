@@ -19,6 +19,7 @@
 #include "openvic-simulation/utility/Logger.hpp"
 #include "openvic-simulation/utility/StringUtils.hpp"
 #include "openvic-simulation/utility/Containers.hpp"
+#include "openvic-simulation/utility/Concepts.hpp"
 
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;
@@ -147,7 +148,7 @@ bool Dataloader::should_ignore_path(fs::path const& path, path_span_t replace_pa
 	return ignore;
 }
 
-template<typename _DirIterator, UniqueFileKey _UniqueKey>
+template<typename _DirIterator, unique_file_key _UniqueKey>
 Dataloader::path_vector_t Dataloader::_lookup_files_in_dir(
 	std::string_view path, fs::path const& extension, _UniqueKey const& unique_key
 ) const {

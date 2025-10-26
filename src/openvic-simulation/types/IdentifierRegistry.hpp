@@ -3,10 +3,11 @@
 #include <vector>
 
 #include "openvic-simulation/dataloader/NodeTools.hpp"
-#include "openvic-simulation/types/HasIdentifier.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPointMap.hpp"
+#include "openvic-simulation/utility/Concepts.hpp"
 #include "openvic-simulation/utility/Getters.hpp"
 #include "openvic-simulation/utility/Logger.hpp"
+#include "openvic-simulation/utility/Concepts.hpp"
 
 namespace OpenVic {
 	/* Callbacks for trying to add duplicate keys via UniqueKeyRegistry::add_item */
@@ -37,7 +38,7 @@ namespace OpenVic {
 		{ ValueInfo::get_external_value(item) } -> std::same_as<typename ValueInfo::external_value_type&>;
 		{ ValueInfo::get_external_value(const_item) } -> std::same_as<typename ValueInfo::external_value_type const&>;
 	};
-	template<HasGetIdentifier Value>
+	template<has_get_identifier Value>
 	struct RegistryValueInfoHasGetIdentifier {
 		using internal_value_type = Value;
 		using external_value_type = Value;
@@ -157,7 +158,7 @@ namespace OpenVic {
 		RegistryValueInfo ValueInfo, /* The type that is being registered and that has unique string identifiers */
 		template<typename> typename _ItemInfo, /* How the type is being stored, usually either by value or std::unique_ptr */
 		template<typename> typename _StorageInfo = RegistryStorageInfoVector, /* How items are stored, including indexing type */
-		StringMapCase Case = StringMapCaseSensitive /* Identifier map parameters */
+		string_map_case Case = StringMapCaseSensitive /* Identifier map parameters */
 	>
 	requires(
 		RegistryItemInfo<_ItemInfo, typename ValueInfo::internal_value_type> &&
@@ -177,7 +178,7 @@ namespace OpenVic {
 
 	public:
 		using storage_type = typename StorageInfo::storage_type;
-		static constexpr bool storage_type_reservable = Reservable<storage_type>;
+		static constexpr bool storage_type_reservable = reservable<storage_type>;
 
 	private:
 		memory::string PROPERTY(name);
@@ -469,7 +470,7 @@ namespace OpenVic {
 		); \
 	} \
 	constexpr NodeTools::NodeCallback auto expect_item_dictionary_reserve_length_and_default( \
-		Reservable auto& reservable, \
+		reservable auto& reservable, \
 		NodeTools::KeyValueCallback auto default_callback, \
 		NodeTools::Callback<external_value_type CONST&, ast::NodeCPtr> auto callback \
 	) CONST { \
@@ -480,7 +481,7 @@ namespace OpenVic {
 		); \
 	} \
 	constexpr NodeTools::NodeCallback auto expect_item_dictionary_reserve_length( \
-		Reservable auto& reservable, \
+		reservable auto& reservable, \
 		NodeTools::Callback<external_value_type CONST&, ast::NodeCPtr> auto callback \
 	) CONST { \
 		return expect_item_dictionary_and_length_and_default( \
@@ -552,7 +553,7 @@ namespace OpenVic {
 	/* Item Specialisations */
 	template<
 		RegistryValueInfo ValueInfo, template<typename> typename StorageInfo = RegistryStorageInfoVector,
-		StringMapCase Case = StringMapCaseSensitive
+		string_map_case Case = StringMapCaseSensitive
 	>
 	requires
 		RegistryStorageInfo<StorageInfo, typename RegistryItemInfoValue<typename ValueInfo::internal_value_type>::item_type>
@@ -560,7 +561,7 @@ namespace OpenVic {
 
 	template<
 		RegistryValueInfo ValueInfo, template<typename> typename StorageInfo = RegistryStorageInfoVector,
-		StringMapCase Case = StringMapCaseSensitive
+		string_map_case Case = StringMapCaseSensitive
 	>
 	requires
 		RegistryStorageInfo<StorageInfo, typename RegistryItemInfoInstance<typename ValueInfo::internal_value_type>::item_type>
@@ -568,49 +569,49 @@ namespace OpenVic {
 
 	template<
 		RegistryValueInfo ValueInfo, template<typename> typename StorageInfo = RegistryStorageInfoVector,
-		StringMapCase Case = StringMapCaseSensitive
+		string_map_case Case = StringMapCaseSensitive
 	>
 	requires
 		RegistryStorageInfo<StorageInfo, typename RegistryItemInfoBaseInstance<typename ValueInfo::internal_value_type>::item_type>
 	using BaseInstanceRegistry = UniqueKeyRegistry<ValueInfo, RegistryItemInfoBaseInstance, StorageInfo, Case>;
 
-	/* HasGetIdentifier Specialisations */
+	/* has_get_identifier Specialisations */
 	template<
-		HasGetIdentifier Value, template<typename> typename StorageInfo = RegistryStorageInfoVector,
-		StringMapCase Case = StringMapCaseSensitive
+		has_get_identifier Value, template<typename> typename StorageInfo = RegistryStorageInfoVector,
+		string_map_case Case = StringMapCaseSensitive
 	>
 	using IdentifierRegistry = ValueRegistry<RegistryValueInfoHasGetIdentifier<Value>, StorageInfo, Case>;
 
 	template<
-		HasGetIdentifier Value, template<typename> typename StorageInfo = RegistryStorageInfoVector,
-		StringMapCase Case = StringMapCaseSensitive
+		has_get_identifier Value, template<typename> typename StorageInfo = RegistryStorageInfoVector,
+		string_map_case Case = StringMapCaseSensitive
 	>
 	using IdentifierPointerRegistry =
 		ValueRegistry<RegistryValueInfoPointer<RegistryValueInfoHasGetIdentifier<Value>>, StorageInfo, Case>;
 
 	template<
-		HasGetIdentifier Value, template<typename> typename StorageInfo = RegistryStorageInfoVector,
-		StringMapCase Case = StringMapCaseSensitive
+		has_get_identifier Value, template<typename> typename StorageInfo = RegistryStorageInfoVector,
+		string_map_case Case = StringMapCaseSensitive
 	>
 	using IdentifierInstanceRegistry = InstanceRegistry<RegistryValueInfoHasGetIdentifier<Value>, StorageInfo, Case>;
 
 	template<
-		HasGetIdentifier Value, template<typename> typename StorageInfo = RegistryStorageInfoVector,
-		StringMapCase Case = StringMapCaseSensitive
+		has_get_identifier Value, template<typename> typename StorageInfo = RegistryStorageInfoVector,
+		string_map_case Case = StringMapCaseSensitive
 	>
 	using IdentifierBaseInstanceRegistry = BaseInstanceRegistry<RegistryValueInfoHasGetIdentifier<Value>, StorageInfo, Case>;
 
-	/* Case-Insensitive HasGetIdentifier Specialisations */
-	template<HasGetIdentifier Value, template<typename> typename StorageInfo = RegistryStorageInfoVector>
+	/* Case-Insensitive has_get_identifier Specialisations */
+	template<has_get_identifier Value, template<typename> typename StorageInfo = RegistryStorageInfoVector>
 	using CaseInsensitiveIdentifierRegistry = IdentifierRegistry<Value, StorageInfo, StringMapCaseInsensitive>;
 
-	template<HasGetIdentifier Value, template<typename> typename StorageInfo = RegistryStorageInfoVector>
+	template<has_get_identifier Value, template<typename> typename StorageInfo = RegistryStorageInfoVector>
 	using CaseInsensitiveIdentifierPointerRegistry = IdentifierPointerRegistry<Value, StorageInfo, StringMapCaseInsensitive>;
 
-	template<HasGetIdentifier Value, template<typename> typename StorageInfo = RegistryStorageInfoVector>
+	template<has_get_identifier Value, template<typename> typename StorageInfo = RegistryStorageInfoVector>
 	using CaseInsensitiveIdentifierInstanceRegistry = IdentifierInstanceRegistry<Value, StorageInfo, StringMapCaseInsensitive>;
 
-	template<HasGetIdentifier Value, template<typename> typename StorageInfo = RegistryStorageInfoVector>
+	template<has_get_identifier Value, template<typename> typename StorageInfo = RegistryStorageInfoVector>
 	using CaseInsensitiveIdentifierBaseInstanceRegistry = IdentifierBaseInstanceRegistry<Value, StorageInfo, StringMapCaseInsensitive>;
 
 /* Macros to generate declaration and constant accessor methods for a UniqueKeyRegistry member variable. */
@@ -748,14 +749,14 @@ private:
 		return registry.expect_item_dictionary(callback); \
 	} \
 	constexpr NodeTools::NodeCallback auto expect_##singular##_dictionary_reserve_length_and_default( \
-		Reservable auto& reservable, \
+		reservable auto& reservable, \
 		NodeTools::KeyValueCallback auto default_callback, \
 		NodeTools::Callback<decltype(registry)::external_value_type const_kw&, ast::NodeCPtr> auto callback \
 	) const_kw { \
 		return registry.expect_item_dictionary_reserve_length_and_default(reservable, default_callback, callback); \
 	} \
 	constexpr NodeTools::NodeCallback auto expect_##singular##_dictionary_reserve_length( \
-		Reservable auto& reservable, \
+		reservable auto& reservable, \
 		NodeTools::Callback<decltype(registry)::external_value_type const_kw&, ast::NodeCPtr> auto callback \
 	) const_kw { \
 		return registry.expect_item_dictionary_reserve_length(reservable, callback); \

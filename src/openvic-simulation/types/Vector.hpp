@@ -7,6 +7,7 @@
 
 #include "openvic-simulation/types/BasicIterator.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
+#include "openvic-simulation/utility/Concepts.hpp"
 #include "openvic-simulation/utility/Utility.hpp"
 
 namespace OpenVic::_detail::vecn_t {

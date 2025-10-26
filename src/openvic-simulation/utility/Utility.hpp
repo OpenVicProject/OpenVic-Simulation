@@ -8,6 +8,8 @@
 #include <type_traits>
 #include <utility>
 
+#include "openvic-simulation/utility/Concepts.hpp"
+
 #if defined(__GNUC__)
 #define OV_likely(x) __builtin_expect(!!(x), 1)
 #define OV_unlikely(x) __builtin_expect(!!(x), 0)
@@ -108,37 +110,6 @@ namespace OpenVic::utility {
 		}
 	}
 
-	template<typename T, template<typename...> class Z>
-	struct is_specialization_of : std::false_type {};
-
-	template<typename... Args, template<typename...> class Z>
-	struct is_specialization_of<Z<Args...>, Z> : std::true_type {};
-
-	template<typename T, template<typename...> class Z>
-	inline constexpr bool is_specialization_of_v = is_specialization_of<T, Z>::value;
-
-	template<typename T, template<typename...> class Template>
-	concept specialization_of = is_specialization_of_v<T, Template>;
-
-	template<typename T, template<typename...> class Template>
-	concept not_specialization_of = !specialization_of<T, Template>;
-
-	template <template<typename...> class Template, typename... Args>
-	void _derived_from_specialization_impl(Template<Args...> const&);
-
-	template <typename T, template<typename...> class Template>
-	concept is_derived_from_specialization_of = requires(T const& t) {
-		_derived_from_specialization_impl<Template>(t);
-	};
-
-	template<typename T>
-	concept boolean_convertible = std::convertible_to<T, bool>;
-
-	template<typename T>
-	concept boolean_testable = boolean_convertible<T> && requires(T&& __t) {
-		{ !static_cast<T&&>(__t) } -> boolean_convertible;
-	};
-
 	[[nodiscard]] inline constexpr auto three_way(auto&& left, auto&& right)
 		requires requires {
 			{ left < right } -> boolean_testable;
@@ -160,9 +131,6 @@ namespace OpenVic::utility {
 			}
 		}
 	};
-
-	template<typename T, typename T2>
-	concept not_same_as = !std::same_as<T, T2>;
 
 	template<typename T> requires std::integral<T> || std::floating_point<T>
 	[[nodiscard]] inline constexpr T abs(T num) {
@@ -201,30 +169,6 @@ namespace OpenVic::utility {
 		}
 		return end;
 	}
-
-	template<typename Allocator, typename T, typename Value = std::remove_cvref_t<typename Allocator::value_type>>
-	concept move_insertable_allocator_for =
-		requires(Allocator& alloc, Value* value, T move) { std::allocator_traits<Allocator>::construct(alloc, value, move); };
-
-	template<typename Allocator>
-	struct enable_copy_insertable : std::false_type {};
-
-	template<typename Allocator>
-	concept copy_insertable_allocator = enable_copy_insertable<Allocator>::value ||
-		move_insertable_allocator_for<Allocator, typename Allocator::value_type const&>;
-
-	template<typename T>
-	struct enable_copy_insertable<std::allocator<T>> : std::is_copy_constructible<T> {};
-
-	template<typename Allocator>
-	struct enable_move_insertable : std::false_type {};
-
-	template<typename Allocator>
-	concept move_insertable_allocator =
-		enable_move_insertable<Allocator>::value || move_insertable_allocator_for<Allocator, typename Allocator::value_type>;
-
-	template<typename T>
-	struct enable_move_insertable<std::allocator<T>> : std::is_move_constructible<T> {};
 
 	template<typename InputIt, typename Sentinel, typename ForwardIt, typename Allocator>
 	constexpr ForwardIt uninitialized_copy(InputIt first, Sentinel last, ForwardIt result, Allocator& alloc) {
@@ -285,12 +229,6 @@ namespace OpenVic::utility {
 			}
 		}
 	}
-
-	template<typename T>
-	struct is_trivially_relocatable : std::bool_constant<std::is_trivially_copyable_v<T>> {};
-
-	template<typename T>
-	static constexpr bool is_trivially_relocatable_v = is_trivially_relocatable<T>::value;
 }
 
 namespace OpenVic::cow {

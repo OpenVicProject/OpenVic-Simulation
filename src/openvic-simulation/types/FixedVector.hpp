@@ -5,6 +5,7 @@
 #include <memory>
 #include <utility>
 
+#include "openvic-simulation/utility/Concepts.hpp"
 #include "openvic-simulation/utility/Utility.hpp"
 
 namespace OpenVic::_detail {
@@ -41,7 +42,7 @@ namespace OpenVic::_detail {
 		//Generator (size_t i) -> U (where T is constructable from U)
 		template<typename GeneratorTemplateType>
 		// The generator must NOT return a tuple
-		requires (!utility::is_specialization_of_v<std::remove_cvref_t<std::invoke_result_t<GeneratorTemplateType, size_t>>, std::tuple>)
+		requires (!utility::specialization_of<std::remove_cvref_t<std::invoke_result_t<GeneratorTemplateType, size_t>>, std::tuple>)
 		// The type must be constructible from the generator's single return value
 		&& std::constructible_from<T, decltype(std::declval<GeneratorTemplateType>()(std::declval<size_t>()))>
 		FixedVector(size_t capacity, GeneratorTemplateType&& generator)
@@ -61,7 +62,7 @@ namespace OpenVic::_detail {
 		//Generator (size_t i) -> std::tuple<Args...> (where T is constructable from Args)
 		template<typename GeneratorTemplateType>
 		// The generator must return a tuple
-		requires utility::is_specialization_of_v<std::remove_cvref_t<std::invoke_result_t<GeneratorTemplateType, size_t>>, std::tuple>
+		requires utility::specialization_of<std::remove_cvref_t<std::invoke_result_t<GeneratorTemplateType, size_t>>, std::tuple>
 		// The tuple must be constructible into a T
 		&& requires(GeneratorTemplateType&& generator) {
 			{

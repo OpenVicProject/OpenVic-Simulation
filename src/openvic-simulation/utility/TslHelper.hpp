@@ -1,15 +1,12 @@
 #pragma once
 
-#include <type_traits>
-
 #include <tsl/ordered_map.h>
 #include <tsl/ordered_set.h>
 
 #include "openvic-simulation/types/OrderedContainers.hpp"
-#include "openvic-simulation/utility/Utility.hpp"
 
 namespace OpenVic {
-	template<IsOrderedMap Map, typename Key = typename Map::key_type, typename Mapped = typename Map::mapped_type>
+	template<derived_ordered_map Map, typename Key = typename Map::key_type, typename Mapped = typename Map::mapped_type>
 	struct _OrderedMapMutable {
 		using map_type = Map;
 		struct ordered_iterator {
@@ -122,7 +119,7 @@ namespace OpenVic {
 		map_type& _map;
 	};
 
-	template<IsOrderedMap Map, typename Key = typename Map::key_type, typename Mapped = typename Map::mapped_type>
+	template<derived_ordered_map Map, typename Key = typename Map::key_type, typename Mapped = typename Map::mapped_type>
 	_OrderedMapMutable<Map, Key, Mapped> mutable_iterator(Map& map) {
 		return _OrderedMapMutable<Map, Key, Mapped> { map };
 	}

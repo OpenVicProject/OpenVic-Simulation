@@ -100,7 +100,7 @@ static constexpr colour_argb_t DEFAULT_COLOUR_WHITE = (0xFFFFFF_argb).with_alpha
  * national focus, RGO, population density, sphere of influence, ranking and migration. */
 static constexpr colour_argb_t DEFAULT_COLOUR_GREY = (0x7F7F7F_argb).with_alpha(ALPHA_VALUE);
 
-template<HasGetColour T, typename P>
+template<has_get_colour T, typename P>
 requires(std::same_as<P, ProvinceDefinition> || std::same_as<P, ProvinceInstance>)
 static constexpr auto get_colour_mapmode(T const*(P::*get_item)() const) {
 	return [get_item](
@@ -127,7 +127,7 @@ static constexpr auto get_colour_mapmode(T const*(P::*get_item)() const) {
 	};
 }
 
-template<HasGetColour BASE_T, HasGetColour STRIPE_T, typename P>
+template<has_get_colour BASE_T, has_get_colour STRIPE_T, typename P>
 requires(std::same_as<P, ProvinceDefinition> || std::same_as<P, ProvinceInstance>)
 static constexpr auto get_colour_mapmode(
 	BASE_T const*(P::*get_base_item)() const, STRIPE_T const*(P::*get_stripe_item)() const
@@ -162,7 +162,7 @@ static constexpr auto get_colour_mapmode(
 	};
 }
 
-template<HasGetColour KeyType, typename ValueType>
+template<has_get_colour KeyType, typename ValueType>
 static constexpr Mapmode::base_stripe_t shaded_mapmode(
 	ordered_map<KeyType const*, ValueType> const& map
 ) {
@@ -181,7 +181,7 @@ static constexpr Mapmode::base_stripe_t shaded_mapmode(
 	return colour_argb_t::null();
 }
 
-template<HasGetColour KeyType, typename ValueType>
+template<has_get_colour KeyType, typename ValueType>
 static constexpr auto shaded_mapmode(ordered_map<KeyType const*, ValueType> const&(ProvinceInstance::*get_map)() const) {
 	return [get_map](
 		MapInstance const& map_instance, ProvinceInstance const& province,

@@ -9,6 +9,7 @@
 #include "openvic-simulation/dataloader/NodeTools.hpp"
 #include "openvic-simulation/dataloader/ModManager.hpp"
 #include "openvic-simulation/utility/Containers.hpp"
+#include "openvic-simulation/utility/Concepts.hpp"
 
 #include <function2/function2.hpp>
 
@@ -18,11 +19,6 @@ namespace OpenVic {
 	struct DefinitionManager;
 	struct GameRulesManager;
 	class UIManager;
-
-	template<typename _UniqueFileKey>
-	concept UniqueFileKey = requires(_UniqueFileKey const& unique_key, std::string_view path) {
-		requires std::same_as<std::remove_cvref_t<decltype(unique_key(path))>, std::string_view>;
-	};
 
 	class Dataloader {
 	public:
@@ -53,7 +49,7 @@ namespace OpenVic {
 		/* _DirIterator is fs::directory_iterator or fs::recursive_directory_iterator. _UniqueKey is the type of a callable
 		 * which converts a string_view filepath with root removed into a string_view unique key. Any path whose key is empty
 		 * or matches an earlier found path's key is discarded, ensuring each looked up path's key is non-empty and unique. */
-		template<typename _DirIterator, UniqueFileKey _UniqueKey>
+		template<typename _DirIterator, unique_file_key _UniqueKey>
 		path_vector_t _lookup_files_in_dir(
 			std::string_view path, fs::path const& extension, _UniqueKey const& unique_key
 		) const;
