@@ -43,18 +43,24 @@ bool ProvinceHistoryMap::_load_history_entry(
 				return true;
 			} else if (it->second == add) {
 				// Desired core instruction already exists
-				Logger::warning(
-					"Duplicate attempt to ", add ? "add" : "remove", " core of country ", country.get_identifier(),
-					" ", add ? "to" : "from", " province history of ", entry.get_province()
+				spdlog::warn_s(
+					"Duplicate attempt to {} core of country {} {} province history of {}",
+					add ? "add" : "remove",
+					country,
+					add ? "to" : "from",
+					entry.get_province()
 				);
 				return true;
 			} else {
 				// Opposite core instruction exists
 				entry.cores.erase(it);
-				Logger::warning(
-					"Attempted to ", add ? "add" : "remove", " core of country ", country.get_identifier(),
-					" ", add ? "to" : "from", " province history of ", entry.get_province(),
-					" after previously ", add ? "removing" : "adding", " it"
+				spdlog::warn_s(
+					"Attempted to {} core of country {} {} province history of {} after previously {} it",
+					add ? "add" : "remove",
+					country,
+					add ? "to" : "from",
+					entry.get_province(),
+					add ? "removing" : "adding"
 				);
 				return true;
 			}
@@ -80,9 +86,9 @@ bool ProvinceHistoryMap::_load_history_entry(
 						map_callback(entry.province_buildings, building_type, true)
 					)(value);
 				} else {
-					Logger::error(
-						"Attempted to add state building \"", building_type, "\" at top scope of province history for ",
-						entry.get_province()
+					spdlog::error_s(
+						"Attempted to add state building \"{}\" at top scope of province history for {}",
+						*building_type, entry.get_province()
 					);
 					return false;
 				}
@@ -114,7 +120,10 @@ bool ProvinceHistoryMap::_load_history_entry(
 						.get_production_type_manager()
 						.get_good_to_rgo_production_type(rgo_good);
 					if (entry.rgo_production_type_nullable == nullptr) {
-						Logger::error(entry.province.get_identifier(), " has trade_goods ", rgo_good.get_identifier(), " which has no rgo production type defined.");
+						spdlog::error_s(
+							"{} has trade_goods {} which has no rgo production type defined.",
+							entry.province, rgo_good
+						);
 						//we expect the good to have an rgo production type
 						//Victoria 2 treats this as null, but clearly the modder wanted there to be a good
 						return false;
@@ -158,9 +167,9 @@ bool ProvinceHistoryMap::_load_history_entry(
 				if (!building_type->is_in_province()) {
 					ret &= map_callback(entry.state_buildings, building_type, true)(level);
 				} else {
-					Logger::error(
-						"Attempted to add province building \"", building_type,
-						"\" to state building list of province history for ", entry.get_province()
+					spdlog::error_s(
+						"Attempted to add province building \"{}\" to state building list of province history for {}",
+						*building_type, entry.get_province()
 					);
 					ret = false;
 				}
@@ -172,7 +181,7 @@ bool ProvinceHistoryMap::_load_history_entry(
 
 void ProvinceHistoryManager::reserve_more_province_histories(size_t size) {
 	if (locked) {
-		Logger::error("Failed to reserve space for ", size, " provinces in ProvinceHistoryManager - already locked!");
+		spdlog::error_s("Failed to reserve space for {} provinces in ProvinceHistoryManager - already locked!", size);
 	} else {
 		reserve_more(province_histories, size);
 	}
@@ -194,17 +203,17 @@ void ProvinceHistoryManager::lock_province_histories(MapDefinition const& map_de
 			ProvinceDefinition const& province = provinces[idx];
 			if (!province.is_water()) {
 				if (detailed_errors) {
-					Logger::warning("Province history missing for province: ", province.get_identifier());
+					spdlog::warn_s("Province history missing for province: {}", province);
 				}
 				missing++;
 			}
 		}
 	}
 	if (missing > 0) {
-		Logger::warning("Province history is missing for ", missing, " provinces");
+		spdlog::warn_s("Province history is missing for {} provinces", missing);
 	}
 
-	Logger::info("Locked province history registry after registering ", province_histories.size(), " items");
+	SPDLOG_INFO("Locked province history registry after registering {} items", province_histories.size());
 	locked = true;
 }
 
@@ -214,14 +223,14 @@ bool ProvinceHistoryManager::is_locked() const {
 
 ProvinceHistoryMap const* ProvinceHistoryManager::get_province_history(ProvinceDefinition const* province) const {
 	if (province == nullptr) {
-		Logger::error("Attempted to access history of null province");
+		spdlog::error_s("Attempted to access history of null province");
 		return nullptr;
 	}
 	decltype(province_histories)::const_iterator province_registry = province_histories.find(province);
 	if (province_registry != province_histories.end()) {
 		return &province_registry->second;
 	} else {
-		Logger::error("Attempted to access history of province ", province->get_identifier(), " but none has been defined!");
+		spdlog::error_s("Attempted to access history of province {} but none has been defined!", *province);
 		return nullptr;
 	}
 }
@@ -234,7 +243,7 @@ ProvinceHistoryMap* ProvinceHistoryManager::_get_or_make_province_history(Provin
 		if (result.second) {
 			it = result.first;
 		} else {
-			Logger::error("Failed to create province history map for province ", province.get_identifier());
+			spdlog::error_s("Failed to create province history map for province {}", province);
 			return nullptr;
 		}
 	}
@@ -245,9 +254,9 @@ bool ProvinceHistoryManager::load_province_history_file(
 	DefinitionManager const& definition_manager, ProvinceDefinition const& province, ast::NodeCPtr root
 ) {
 	if (locked) {
-		Logger::error(
-			"Attempted to load province history file for ", province.get_identifier(),
-			" after province history registry was locked!"
+		spdlog::error_s(
+			"Attempted to load province history file for {} after province history registry was locked!",
+			province
 		);
 		return false;
 	}
@@ -288,7 +297,7 @@ bool ProvinceHistoryManager::load_pop_history_file(
 	DefinitionManager const& definition_manager, Date date, ast::NodeCPtr root, bool *non_integer_size
 ) {
 	if (locked) {
-		Logger::error("Attempted to load pop history file after province history registry was locked!");
+		spdlog::error_s("Attempted to load pop history file after province history registry was locked!");
 		return false;
 	}
 	return definition_manager.get_map_definition().expect_province_definition_dictionary(

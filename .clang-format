@@ -88,7 +88,9 @@ IncludeCategories:
     Priority: 7
   - Regex: ^<range
     Priority: 8
-  - Regex: ^"openvic-simulation/
+  - Regex: ^<spdlog/
     Priority: 9
-  - Regex: .*
+  - Regex: ^"openvic-simulation/
     Priority: 10
+  - Regex: .*
+    Priority: 11

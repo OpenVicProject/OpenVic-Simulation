@@ -50,15 +50,15 @@ SubjectHistory::SubjectHistory(
 
 void DiplomaticHistoryManager::reserve_more_wars(size_t size) {
 	if (locked) {
-		Logger::error("Failed to reserve space for ", size, " wars in DiplomaticHistoryManager - already locked!");
+		spdlog::error_s("Failed to reserve space for {} wars in DiplomaticHistoryManager - already locked!", size);
 	} else {
 		reserve_more(wars, size);
 	}
 }
 
 void DiplomaticHistoryManager::lock_diplomatic_history() {
-	Logger::info(
-		"Locked diplomacy history registry after registering ", alliances.size() + subjects.size() + wars.size(), " items"
+	SPDLOG_INFO(
+		"Locked diplomacy history registry after registering {} items", alliances.size() + subjects.size() + wars.size()
 	);
 	locked = true;
 }
@@ -266,10 +266,9 @@ bool DiplomaticHistoryManager::load_war_history_file(DefinitionManager const& de
 							for (WarHistory::war_participant_t const& attacker : attackers) {
 								CountryDefinition const* const attacker_country = attacker.get_country();
 								if (attacker_country && *attacker_country == country) {
-									Logger::error(
-										"In history of war ", name, " at date ", current_date.to_string(),
-										": Attempted to add attacking country ", attacker_country->get_identifier(),
-										" which is already present!"
+									spdlog::error_s(
+										"In history of war {} at date {}: Attempted to add attacking country {} which is already present!",
+										name, current_date, *attacker_country
 									);
 									return false;
 								}
@@ -285,10 +284,9 @@ bool DiplomaticHistoryManager::load_war_history_file(DefinitionManager const& de
 							for (WarHistory::war_participant_t const& defender : defenders) {
 								CountryDefinition const* const defender_country = defender.get_country();
 								if (defender_country && *defender_country == country) {
-									Logger::error(
-										"In history of war ", name, " at date ", current_date.to_string(),
-										": Attempted to add defending country ", defender_country->get_identifier(),
-										" which is already present!"
+									spdlog::error_s(
+										"In history of war {} at date {}: Attempted to add defending country {} which is already present!",
+										name, current_date, *defender_country
 									);
 									return false;
 								}
@@ -312,10 +310,9 @@ bool DiplomaticHistoryManager::load_war_history_file(DefinitionManager const& de
 							}
 
 							if (participant_to_remove == nullptr) {
-								Logger::warning(
-									"In history of war ", name, " at date ", current_date.to_string(),
-									": Attempted to remove attacking country ", country.get_identifier(),
-									" which was not present!"
+								spdlog::warn_s(
+									"In history of war {} at date {}: Attempted to remove attacking country {} which was not present!",
+									name, current_date, country
 								);
 								return true;
 							}
@@ -337,10 +334,9 @@ bool DiplomaticHistoryManager::load_war_history_file(DefinitionManager const& de
 							}
 
 							if (participant_to_remove == nullptr) {
-								Logger::warning(
-									"In history of war ", name, " at date ", current_date.to_string(),
-									": Attempted to remove attacking country ", country.get_identifier(),
-									" which was not present!"
+								spdlog::warn_s(
+									"In history of war {} at date {}: Attempted to remove defending country {} which was not present!",
+									name, current_date, country
 								);
 								return true;
 							}

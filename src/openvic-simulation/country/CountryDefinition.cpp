@@ -47,17 +47,17 @@ bool CountryDefinitionManager::add_country(
 	CountryDefinition::government_colour_map_t&& alternative_colours
 ) {
 	if (identifier.empty()) {
-		Logger::error("Invalid country identifier - empty!");
+		spdlog::error_s("Invalid country identifier - empty!");
 		return false;
 	}
 	if (!valid_basic_identifier(identifier)) {
-		Logger::error(
-			"Invalid country identifier: ", identifier, " (can only contain alphanumeric characters and underscores)"
+		spdlog::error_s(
+			"Invalid country identifier: {} (can only contain alphanumeric characters and underscores)", identifier
 		);
 		return false;
 	}
 	if (graphical_culture == nullptr) {
-		Logger::error("Null graphical culture for country ", identifier);
+		spdlog::error_s("Null graphical culture for country {}", identifier);
 		return false;
 	}
 
@@ -84,10 +84,10 @@ bool CountryDefinitionManager::load_countries(
 			if (key == "dynamic_tags") {
 				return expect_bool([&is_dynamic](bool val) -> bool {
 					if (val == is_dynamic) {
-						Logger::warning("Redundant \"is_dynamic\", already ", val ? "true" : "false");
+						spdlog::warn_s("Redundant \"is_dynamic\", already {}", val ? "true" : "false");
 					} else {
 						if (is_dynamic) {
-							Logger::warning("Changing \"is_dynamic\" back to false");
+							spdlog::warn_s("Changing \"is_dynamic\" back to false");
 						}
 						is_dynamic = val;
 					}
@@ -104,13 +104,13 @@ bool CountryDefinitionManager::load_countries(
 					)) {
 						return true;
 					}
-					Logger::error("Failed to load country data file: ", filepath);
+					spdlog::critical_s("Failed to load country data file: {}", filepath);
 					return false;
 				}
 			)(value)) {
 				return true;
 			}
-			Logger::error("Failed to load country: ", key);
+			spdlog::critical_s("Failed to load country: {}", key);
 			return false;
 		}
 	)(root);
@@ -121,7 +121,7 @@ bool CountryDefinitionManager::load_countries(
 bool CountryDefinitionManager::load_country_colours(ast::NodeCPtr root) {
 	return country_definitions.expect_item_dictionary_and_default(
 		[](std::string_view key, ast::NodeCPtr value) -> bool {
-			Logger::warning("country_colors.txt references country tag ", key, " which is not defined!");
+			spdlog::warn_s("country_colors.txt references country tag {} which is not defined!", key);
 			return true;
 		},
 		[](CountryDefinition& country, ast::NodeCPtr colour_node) -> bool {
@@ -150,9 +150,9 @@ node_callback_t CountryDefinitionManager::load_country_party(
 						PartyPolicy const*& policy = policies.at(party_policy_group);
 
 						if (policy != nullptr) {
-							Logger::error(
-								"Country party \"", party_name, "\" has duplicate entry for party policy group \"",
-								party_policy_group.get_identifier(), "\""
+							spdlog::error_s(
+								"Country party \"{}\" has duplicate entry for party policy group \"{}\"",
+								party_name, party_policy_group
 							);
 							return false;
 						}
@@ -165,10 +165,11 @@ node_callback_t CountryDefinitionManager::load_country_party(
 								}
 
 								// TODO - change this back to error/false once TGC no longer has this issue
-								Logger::warning(
-									"Invalid party policy \"", party_policy.get_identifier(), "\", group is \"",
-									party_policy.get_issue_group().get_identifier(), "\" when \"", party_policy_group.get_identifier(),
-									"\" was expected."
+								spdlog::warn_s(
+									"Invalid party policy \"{}\", group is \"{}\" when \"{}\" was expected.",
+									party_policy,
+									party_policy.get_issue_group(),
+									party_policy_group
 								);
 								return true;
 							}
@@ -184,7 +185,7 @@ node_callback_t CountryDefinitionManager::load_country_party(
 		)(value);
 
 		if (ideology == nullptr) {
-			Logger::warning("Country party ", party_name, " has no ideology, defaulting to nullptr / no ideology");
+			spdlog::warn_s("Country party {} has no ideology, defaulting to nullptr / no ideology", party_name);
 		}
 
 		ret &= country_parties.emplace_item(
@@ -233,3 +234,5 @@ bool CountryDefinitionManager::load_country_data_file(
 	);
 	return ret;
 }
+
+template struct fmt::formatter<OpenVic::CountryDefinition>;

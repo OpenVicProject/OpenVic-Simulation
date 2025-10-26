@@ -279,14 +279,17 @@ T const* Scrollbar::get_element(std::string_view name, std::string_view type) co
 		if (cast_element != nullptr) {
 			return cast_element;
 		} else {
-			Logger::error(
-				"GUI Scrollbar ", get_name(), " ", type, " element ", name, " has wrong type: ", element->get_type(),
-				" (expected ", T::get_type_static(), ")"
+			spdlog::error_s(
+				"GUI Scrollbar {} {} element {} has wrong type: {} (expected {})",
+				get_name(), type, name, element->get_type(), T::get_type_static()
 			);
 			return nullptr;
 		}
 	} else {
-		Logger::error("GUI Scrollbar ", get_name(), " has no ", type, " element named ", name, "!");
+		spdlog::error_s(
+			"GUI Scrollbar {} has no {} element named {}!",
+			get_name(), type, name
+		);
 		return nullptr;
 	}
 }

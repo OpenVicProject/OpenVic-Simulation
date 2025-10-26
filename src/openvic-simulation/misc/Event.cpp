@@ -63,47 +63,42 @@ bool EventManager::register_event(
 	ConditionalWeightTime&& mean_time_to_happen, EffectScript&& immediate, memory::vector<Event::EventOption>&& options
 ) {
 	if (identifier.empty()) {
-		Logger::error("Invalid event ID - empty!");
+		spdlog::error_s("Invalid event ID - empty!");
 		return false;
 	}
 	if (title.empty()) {
-		Logger::warning("Event with ID ", identifier, " has no title!");
+		spdlog::warn_s("Event with ID {} has no title!", identifier);
 	}
 	if (description.empty()) {
-		Logger::warning("Event with ID ", identifier, " has no description!");
+		spdlog::warn_s("Event with ID {} has no description!", identifier);
 	}
 	if (options.empty()) {
-		Logger::error("No options specified for event with ID ", identifier);
+		spdlog::error_s("No options specified for event with ID {}", identifier);
 		return false;
 	}
 	if (election && election_issue_group == nullptr) {
-		Logger::warning("Event with ID ", identifier, " is an election event but has no issue group!");
+		spdlog::warn_s("Event with ID {} is an election event but has no issue group!", identifier);
 	} else if (!election && election_issue_group != nullptr) {
-		Logger::warning(
-			"Event with ID ", identifier, " is not an election event but has issue group ",
-			election_issue_group->get_identifier(), "!"
+		spdlog::warn_s(
+			"Event with ID {} is not an election event but has issue group {}!",
+			identifier, *election_issue_group
 		);
 	}
 	if (news) {
 		if (news_desc_long.empty() || news_desc_medium.empty() || news_desc_short.empty()) {
-			Logger::warning(
-				"Event with ID ", identifier, " is a news event but doesn't have long, medium and short descriptions!"
+			spdlog::warn_s(
+				"Event with ID {} is a news event but doesn't have long, medium and short descriptions!", identifier
 			);
 		}
 	} else {
 		if (!news_title.empty() || !news_desc_long.empty() || !news_desc_medium.empty() || !news_desc_short.empty()) {
-			Logger::warning("Event with ID ", identifier, " is not a news event but has news strings specified!");
+			spdlog::warn_s("Event with ID {} is not a news event but has news strings specified!", identifier);
 		}
 	}
 
-	if (options.empty()) {
-		Logger::error("Event with ID ", identifier, " has no options!");
-		return false;
-	} else {
-		for (Event::EventOption const& option : options) {
-			if (option.name.empty()) {
-				Logger::warning("Event with ID ", identifier, " has an option with no name!");
-			}
+	for (Event::EventOption const& option : options) {
+		if (option.name.empty()) {
+			spdlog::warn_s("Event with ID {} has an option with no name!", identifier);
 		}
 	}
 
@@ -120,7 +115,7 @@ bool EventManager::register_event(
 
 bool EventManager::add_on_action(std::string_view identifier, OnAction::weight_map_t&& weighted_events) {
 	if (identifier.empty()) {
-		Logger::error("Invalid decision identifier - empty!");
+		spdlog::error_s("Invalid on_action identifier - empty!");
 		return false;
 	}
 
@@ -146,7 +141,7 @@ bool EventManager::load_event_file(IssueManager const& issue_manager, ast::NodeC
 				type = Event::event_type_t::PROVINCE;
 				initial_scope = PROVINCE;
 			} else {
-				Logger::error("Invalid event type: ", key);
+				spdlog::error_s("Invalid event type: {}", key);
 				return false;
 			}
 
@@ -227,7 +222,7 @@ bool EventManager::load_on_action_file(ast::NodeCPtr root) {
 				std::from_chars_result result = StringUtils::string_to_uint64(weight_str, weight);
 				ret = result.ec == std::errc{};
 				if (!ret) {
-					Logger::error("Invalid weight ", weight_str, " on action ", identifier);
+					spdlog::error_s("Invalid weight {} on action {}", weight_str, identifier);
 					return ret;
 				}
 
@@ -236,10 +231,10 @@ bool EventManager::load_on_action_file(ast::NodeCPtr root) {
 
 				if (event != nullptr) {
 					ret &= map_callback(weighted_events, event)(weight);
-				} else {
-					Logger::warning(
-						"Non-existing event ", event_node, " loaded on action ", identifier, " with weight ",
-						weight, "!"
+				} else if (ast::FlatValue const* event_name = dryad::node_try_cast<ast::FlatValue>(event_node); event_name && event_name->value()) {
+					spdlog::warn_s(
+						"Non-existing event {} loaded on action {} with weight {}!",
+						event_name->value().view(), identifier, weight
 					);
 				}
 

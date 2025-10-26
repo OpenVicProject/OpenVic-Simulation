@@ -2,6 +2,8 @@
 
 #include <openvic-dataloader/v2script/AbstractSyntaxTree.hpp>
 
+#include <fmt/base.h>
+
 #include "openvic-simulation/types/HasIdentifier.hpp"
 #include "openvic-simulation/types/HasIndex.hpp"
 #include "openvic-simulation/types/IdentifierRegistry.hpp"
@@ -39,3 +41,12 @@ namespace OpenVic {
 		Date get_last_bookmark_date() const;
 	};
 }
+
+template<std::same_as<OpenVic::Bookmark> T, typename char_type>
+struct fmt::formatter<T, char_type> : formatter<string_view> {
+	using Bookmark = OpenVic::Bookmark;
+	static_assert(!std::same_as<T, T>, "Bookmark formatting is ambiguous, use get_identifier() or get_name()");
+	format_context::iterator format(Bookmark const&, format_context& ctx) const {
+		return ctx.out();
+	}
+};

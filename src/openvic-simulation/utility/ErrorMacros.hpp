@@ -11,7 +11,7 @@
  */
 #define OV_ERR_FAIL_MSG(m_msg) \
 	if (true) { \
-		::OpenVic::Logger::error("Method/function failed. ", m_msg); \
+		::spdlog::error_s("Method/function failed. {}", (m_msg)); \
 		return; \
 	} else \
 		((void)0)
@@ -25,7 +25,7 @@
  */
 #define OV_ERR_FAIL_V(m_retval) \
 	if (true) { \
-		::OpenVic::Logger::error("Method/function failed. Returning: " _OV_STR(m_retval)); \
+		::spdlog::error_s("Method/function failed. Returning: {}", _OV_STR(m_retval)); \
 		return m_retval; \
 	} else \
 		((void)0)
@@ -38,7 +38,7 @@
  */
 #define OV_ERR_FAIL_V_MSG(m_retval, m_msg) \
 	if (true) { \
-		::OpenVic::Logger::error("Method/function failed. Returning: " _OV_STR(m_retval), " ", m_msg); \
+		::spdlog::error_s("Method/function failed. Returning: {} {}", _OV_STR(m_retval), (m_msg)); \
 		return m_retval; \
 	} else \
 		((void)0)
@@ -54,7 +54,7 @@
  */
 #define OV_ERR_FAIL_COND(m_cond) \
 	if (OV_unlikely(m_cond)) { \
-		::OpenVic::Logger::error("Condition \"" _OV_STR(m_cond) "\" is true."); \
+		::spdlog::error_s("Condition \"{}\" is true.", _OV_STR(m_cond)); \
 		return; \
 	} else \
 		((void)0)
@@ -68,7 +68,7 @@
  */
 #define OV_ERR_FAIL_COND_MSG(m_cond, m_msg) \
 	if (OV_unlikely(m_cond)) { \
-		::OpenVic::Logger::error("Condition \"" _OV_STR(m_cond) "\" is true. ", m_msg); \
+		::spdlog::error_s("Condition \"{}\" is true. {}", _OV_STR(m_cond), (m_msg)); \
 		return; \
 	} else \
 		((void)0)
@@ -84,7 +84,7 @@
  */
 #define OV_ERR_FAIL_COND_V(m_cond, m_retval) \
 	if (OV_unlikely(m_cond)) { \
-		::OpenVic::Logger::error("Condition \"" _OV_STR(m_cond) "\" is true. Returning: " _OV_STR(m_retval)); \
+		::spdlog::error_s("Condition \"{}\" is true. Returning: {}", _OV_STR(m_cond), _OV_STR(m_retval)); \
 		return m_retval; \
 	} else \
 		((void)0)
@@ -98,7 +98,7 @@
  */
 #define OV_ERR_FAIL_COND_V_MSG(m_cond, m_retval, m_msg) \
 	if (OV_unlikely(m_cond)) { \
-		::OpenVic::Logger::error("Condition \"" _OV_STR(m_cond) "\" is true. Returning: " _OV_STR(m_retval) " ", m_msg); \
+		::spdlog::error_s("Condition \"{}\" is true. Returning: {} {}", _OV_STR(m_cond), _OV_STR(m_retval), (m_msg)); \
 		return m_retval; \
 	} else \
 		((void)0)
@@ -112,8 +112,8 @@
  */
 #define OV_ERR_FAIL_INDEX(m_index, m_size) \
 	if (OV_unlikely((m_index) < 0 || (m_index) >= (m_size))) { \
-		::OpenVic::Logger::error( \
-			"Index " _OV_STR(m_index) " = ", m_index, " is out of bounds (" _OV_STR(m_size) " = ", m_size, ")." \
+		::spdlog::error_s( \
+			"Index {} = {} is out of bounds ({} = {}).", _OV_STR(m_index), (m_index), _OV_STR(m_size), (m_size) \
 		); \
 		return; \
 	} else \
@@ -125,8 +125,8 @@
  */
 #define OV_ERR_FAIL_INDEX_MSG(m_index, m_size, m_msg) \
 	if (OV_unlikely((m_index) < 0 || (m_index) >= (m_size))) { \
-		::OpenVic::Logger::error( \
-			"Index " _OV_STR(m_index) " = ", m_index, " is out of bounds (" _OV_STR(m_size) " = ", m_size, "). ", m_msg \
+		::spdlog::error_s( \
+			"Index {} = {} is out of bounds ({} = {}). {}", _OV_STR(m_index), (m_index), _OV_STR(m_size), (m_size), (m_msg) \
 		); \
 		return; \
 	} else \
@@ -141,9 +141,9 @@
  */
 #define OV_ERR_FAIL_INDEX_V(m_index, m_size, m_retval) \
 	if (OV_unlikely((m_index) < 0 || (m_index) >= (m_size))) { \
-		::OpenVic::Logger::error( \
-			"Index " _OV_STR(m_index) " = ", m_index, " is out of bounds (" _OV_STR(m_size) " = ", m_size, \
-			"). Returning: " _OV_STR(m_retval) \
+		::spdlog::error_s( \
+			"Index {} = {} is out of bounds ({} = {}). Returning: {}", _OV_STR(m_index), (m_index), _OV_STR(m_size), (m_size), \
+			_OV_STR(m_retval) \
 		); \
 		return m_retval; \
 	} else \
@@ -155,9 +155,9 @@
  */
 #define OV_ERR_FAIL_INDEX_V_MSG(m_index, m_size, m_retval, m_msg) \
 	if (OV_unlikely((m_index) < 0 || (m_index) >= (m_size))) { \
-		::OpenVic::Logger::error( \
-			"Index " _OV_STR(m_index) " = ", m_index, " is out of bounds (" _OV_STR(m_size) " = ", m_size, \
-			"). Returning: " _OV_STR(m_retval) " ", m_msg \
+		::spdlog::error_s( \
+			"Index {} = {} is out of bounds ({} = {}). Returning: {} {}", _OV_STR(m_index), (m_index), _OV_STR(m_size), \
+			(m_size), _OV_STR(m_retval), (m_msg) \
 		); \
 		return m_retval; \
 	} else \
@@ -165,14 +165,14 @@
 
 #define OV_ERR_CONTINUE(m_cond) \
 	if (OV_unlikely(m_cond)) { \
-		::OpenVic::Logger::error("Condition \"" _OV_STR(m_cond) "\" is true. Continuing."); \
+		::spdlog::error_s("Condition \"{}\" is true. Continuing.", _OV_STR(m_cond)); \
 		continue; \
 	} else \
 		((void)0)
 
 #define OV_ERR_BREAK(m_cond) \
 	if (OV_unlikely(m_cond)) { \
-		::OpenVic::Logger::error("Condition \"" _OV_STR(m_cond) "\" is true. Breaking."); \
+		::spdlog::error_s("Condition \"{}\" is true. Breaking.", _OV_STR(m_cond)); \
 		break; \
 	} else \
 		((void)0)
@@ -186,7 +186,7 @@
  */
 #define OV_ERR_FAIL_NULL(m_param) \
 	if (OV_unlikely(m_param == nullptr)) { \
-		::OpenVic::Logger::error("Parameter \"" _OV_STR(m_param) "\" is null."); \
+		::spdlog::error_s("Parameter \"{}\" is null.", _OV_STR(m_param)); \
 		return; \
 	} else \
 		((void)0)
@@ -197,7 +197,7 @@
  */
 #define OV_ERR_FAIL_NULL_MSG(m_param, m_msg) \
 	if (OV_unlikely(m_param == nullptr)) { \
-		::OpenVic::Logger::error("Parameter \"" _OV_STR(m_param) "\" is null. ", m_msg); \
+		::spdlog::error_s("Parameter \"{}\" is null. {}", _OV_STR(m_param), (m_msg)); \
 		return; \
 	} else \
 		((void)0)
@@ -211,7 +211,7 @@
  */
 #define OV_ERR_FAIL_NULL_V(m_param, m_retval) \
 	if (OV_unlikely(m_param == nullptr)) { \
-		::OpenVic::Logger::error("Parameter \"" _OV_STR(m_param) "\" is null."); \
+		::spdlog::error_s("Parameter \"{}\" is null. Returning: {}", _OV_STR(m_param), _OV_STR(m_retval)); \
 		return m_retval; \
 	} else \
 		((void)0)
@@ -222,7 +222,7 @@
  */
 #define OV_ERR_FAIL_NULL_V_MSG(m_param, m_retval, m_msg) \
 	if (OV_unlikely(m_param == nullptr)) { \
-		::OpenVic::Logger::error("Parameter \"" _OV_STR(m_param) "\" is null. ", m_msg); \
+		::spdlog::error_s("Parameter \"{}\" is null. Returning: {} {}", _OV_STR(m_param), _OV_STR(m_retval), (m_msg)); \
 		return m_retval; \
 	} else \
 		((void)0)

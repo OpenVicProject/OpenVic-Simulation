@@ -11,16 +11,16 @@
 namespace OpenVic {
 	/* Callbacks for trying to add duplicate keys via UniqueKeyRegistry::add_item */
 	static bool duplicate_fail_callback(std::string_view registry_name, std::string_view duplicate_identifier) {
-		Logger::error(
-			"Failure adding item to the ", registry_name, " registry - an item with the identifier \"", duplicate_identifier,
-			"\" already exists!"
+		spdlog::error_s(
+			"Failure adding item to the {} registry - an item with the identifier \"{}\" already exists!",
+			registry_name, duplicate_identifier
 		);
 		return false;
 	}
 	static bool duplicate_warning_callback(std::string_view registry_name, std::string_view duplicate_identifier) {
-		Logger::warning(
-			"Warning adding item to the ", registry_name, " registry - an item with the identifier \"", duplicate_identifier,
-			"\" already exists!"
+		spdlog::warn_s(
+			"Warning adding item to the {} registry - an item with the identifier \"{}\" already exists!",
+			registry_name, duplicate_identifier
 		);
 		return true;
 	}
@@ -199,7 +199,7 @@ namespace OpenVic {
 			NodeTools::Callback<std::string_view, std::string_view> auto duplicate_callback
 		) {
 			if (locked) {
-				Logger::error("Cannot add item to the ", name, " registry - locked!");
+				spdlog::error_s("Cannot add item to the {} registry - locked!", name);
 				return false;
 			}
 
@@ -228,7 +228,7 @@ namespace OpenVic {
 			Args&&... args
 		) {
 			if (locked) {
-				Logger::error("Cannot add item to the ", name, " registry - locked!");
+				spdlog::error_s("Cannot add item to the {} registry - locked!", name);
 				return false;
 			}
 
@@ -266,11 +266,11 @@ namespace OpenVic {
 
 		constexpr void lock() {
 			if (locked) {
-				Logger::error("Failed to lock ", name, " registry - already locked!");
+				spdlog::error_s("Failed to lock {} registry - already locked!", name);
 			} else {
 				locked = true;
 				if (log_lock) {
-					Logger::info("Locked ", name, " registry after registering ", size(), " items");
+					SPDLOG_INFO("Locked {} registry after registering {} items", name, size());
 				}
 			}
 		}
@@ -289,7 +289,7 @@ namespace OpenVic {
 			if constexpr (storage_type_reservable) {
 				return items.capacity();
 			} else {
-				Logger::error("Cannot check capacity of ", name, " registry - storage_type not reservable!");
+				spdlog::error_s("Cannot check capacity of {} registry - storage_type not reservable!", name);
 				return size();
 			}
 		}
@@ -301,13 +301,19 @@ namespace OpenVic {
 		constexpr void reserve(std::size_t size) {
 			if constexpr (storage_type_reservable) {
 				if (locked) {
-					Logger::error("Failed to reserve space for ", size, " items in ", name, " registry - already locked!");
+					spdlog::error_s(
+						"Failed to reserve space for {} items in {} registry - already locked!",
+						size, name
+					);
 				} else {
 					items.reserve(size);
 					identifier_index_map.reserve(size);
 				}
 			} else {
-				Logger::error("Cannot reserve space for ", size, " ", name, " - storage_type not reservable!");
+				spdlog::error_s(
+					"Cannot reserve space for {} {} - storage_type not reservable!",
+					size, name
+				);
 			}
 		}
 
@@ -317,7 +323,7 @@ namespace OpenVic {
 
 		static constexpr NodeTools::KeyValueCallback auto key_value_invalid_callback(std::string_view name) {
 			return [name](std::string_view key, ast::NodeCPtr) {
-				Logger::error("Invalid ", name, ": ", key);
+				spdlog::error_s("Invalid {}: {}", name, key);
 				return false;
 			};
 		}
@@ -349,8 +355,9 @@ namespace OpenVic {
 			if (item->get_type() == T::get_type_static()) { \
 				return reinterpret_cast<T CONST*>(item); \
 			} \
-			Logger::error( \
-				"Invalid type for item \"", identifier, "\": ", item->get_type(), " (expected ", T::get_type_static(), ")" \
+			spdlog::error_s( \
+				"Invalid type for item \"{}\": {} (expected {})", \
+				identifier, item->get_type(), T::get_type_static() \
 			); \
 		} \
 		return nullptr; \
@@ -370,7 +377,10 @@ namespace OpenVic {
 				if (allow_empty) { \
 					return true; \
 				} else { \
-					Logger::warn_or_error(warn, "Invalid ", name, " identifier: empty!"); \
+					spdlog::log_s( \
+						warn ? spdlog::level::warn : spdlog::level::err, \
+						"Invalid {} identifier: empty!", name \
+					); \
 					return warn; \
 				} \
 			} \
@@ -378,7 +388,10 @@ namespace OpenVic {
 			if (item != nullptr) { \
 				return callback(*item); \
 			} \
-			Logger::warn_or_error(warn, "Invalid ", name, " identifier: ", identifier); \
+			spdlog::log_s( \
+				warn ? spdlog::level::warn : spdlog::level::err, \
+				"Invalid {} identifier: {}", name, identifier \
+			); \
 			return warn; \
 		}; \
 	} \

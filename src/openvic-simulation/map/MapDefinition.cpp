@@ -9,6 +9,8 @@
 #include <system_error>
 #include <vector>
 
+#include <fmt/std.h>
+
 #include <range/v3/algorithm/all_of.hpp>
 #include <range/v3/view/adjacent_remove_if.hpp>
 
@@ -19,6 +21,7 @@
 #include "openvic-simulation/types/OrderedContainersMath.hpp"
 #include "openvic-simulation/types/Vector.hpp"
 #include "openvic-simulation/utility/BMP.hpp"
+#include "openvic-simulation/utility/FormatValidate.hpp"
 #include "openvic-simulation/utility/Logger.hpp"
 #include "openvic-simulation/utility/StringUtils.hpp"
 #include "openvic-simulation/utility/Utility.hpp"
@@ -45,32 +48,32 @@ RiverSegment::RiverSegment(uint8_t new_size, memory::vector<ivec2_t>&& new_point
 
 bool MapDefinition::add_province_definition(std::string_view identifier, colour_t colour) {
 	if (province_definitions.size() >= max_provinces) {
-		Logger::error(
-			"The map's province list is full - maximum number of provinces is ", max_provinces, " (this can be at most ",
-			ProvinceDefinition::MAX_INDEX, ")"
+		spdlog::error_s(
+			"The map's province list is full - maximum number of provinces is {} (this can be at most {})",
+			max_provinces, ProvinceDefinition::MAX_INDEX
 		);
 		return false;
 	}
 	if (identifier.empty()) {
-		Logger::error("Invalid province identifier - empty!");
+		spdlog::error_s("Invalid province identifier - empty!");
 		return false;
 	}
 	// Victoria 2 CTDs on non-numeric province numbers
 	if (!ranges::all_of(identifier, [](char c) -> bool { return std::isdigit(c); })) {
-		Logger::error(
-			"Invalid province identifier: ", identifier, " (can only contain numeric characters)"
+		spdlog::error_s(
+			"Invalid province identifier: {} (can only contain numeric characters)", identifier
 		);
 		return false;
 	}
 	if (colour.is_null()) {
-		Logger::error("Invalid province colour for ", identifier, " - null! (", colour, ")");
+		spdlog::error_s("Invalid province colour for {} - null! ({})", identifier, colour);
 		return false;
 	}
 	const ProvinceDefinition::index_t province_number = get_province_number_from_colour(colour);
 	if (province_number != ProvinceDefinition::NULL_INDEX) {
-		Logger::error(
-			"Duplicate province colours: ", get_province_definition_from_number(province_number)->to_string(), " and ",
-			identifier
+		spdlog::error_s(
+			"Duplicate province colours: {} and {}",
+			get_province_definition_from_number(province_number)->to_string(), identifier
 		);
 		return false;
 	}
@@ -117,7 +120,7 @@ bool MapDefinition::add_standard_adjacency(ProvinceDefinition& from, ProvinceDef
 	const bool to_needs_adjacency = !to.is_adjacent_to(&from);
 
 	if (from_needs_adjacency != to_needs_adjacency) {
-		Logger::error("Inconsistent adjacency state between provinces ", from, " and ", to);
+		spdlog::error_s("Inconsistent adjacency state between provinces {} and {}", from, to);
 		return false;
 	}
 
@@ -187,7 +190,10 @@ bool MapDefinition::add_special_adjacency(
 	adjacency_t::data_t data
 ) {
 	if (from == to) {
-		Logger::error("Trying to add ", adjacency_t::get_type_name(type), " adjacency from province ", from, " to itself!");
+		spdlog::error_s(
+			"Trying to add {} adjacency from province {} to itself!",
+			adjacency_t::get_type_name(type), from
+		);
 		return false;
 	}
 
@@ -198,20 +204,26 @@ bool MapDefinition::add_special_adjacency(
 	case LAND:
 	case STRAIT:
 		if (from.is_water() || to.is_water()) {
-			Logger::error(adjacency_t::get_type_name(type), " adjacency from ", from, " to ", to, " has water endpoint(s)!");
+			spdlog::error_s(
+				"{} adjacency from {} to {} has water endpoint(s)!",
+				adjacency_t::get_type_name(type), from, to
+			);
 			return false;
 		}
 		break;
 	case WATER:
 	case CANAL:
 		if (!from.is_water() || !to.is_water()) {
-			Logger::error(adjacency_t::get_type_name(type), " adjacency from ", from, " to ", to, " has land endpoint(s)!");
+			spdlog::error_s(
+				"{} adjacency from {} to {} has land endpoint(s)!",
+				adjacency_t::get_type_name(type), from, to
+			);
 			return false;
 		}
 		break;
 	case COASTAL:
 		if (from.is_water() == to.is_water()) {
-			Logger::error("Coastal adjacency from ", from, " to ", to, " has both land or water endpoints!");
+			spdlog::error_s("Coastal adjacency from {} to {} has both land or water endpoints!", from, to);
 			return false;
 		}
 		break;
@@ -222,7 +234,7 @@ bool MapDefinition::add_special_adjacency(
 		 * - water-water = delete existing water adjacency, preventing navies from moving between the provinces */
 		break;
 	default:
-		Logger::error("Invalid adjacency type ", static_cast<uint32_t>(type));
+		spdlog::error_s("Invalid adjacency type {}", static_cast<uint32_t>(type));
 		return false;
 	}
 
@@ -230,25 +242,29 @@ bool MapDefinition::add_special_adjacency(
 	if (type == STRAIT || type == CANAL) {
 		const bool water_expected = type == STRAIT;
 		if (through == nullptr || through->is_water() != water_expected) {
-			Logger::error(
-				adjacency_t::get_type_name(type), " adjacency from ", from, " to ", to, " has a ",
-				(through == nullptr ? "null" : water_expected ? "land" : "water"), " through province ", through
+			spdlog::error_s(
+				"{} adjacency from {} to {} has a {} through province {}",
+				adjacency_t::get_type_name(type),
+				from,
+				to,
+				through == nullptr ? "null" : (water_expected ? "land" : "water"),
+				ovfmt::validate(through)
 			);
 			return false;
 		}
 	} else if (through != nullptr) {
-		Logger::warning(
-			adjacency_t::get_type_name(type), " adjacency from ", from, " to ", to, " has a non-null through province ",
-			through
+		spdlog::warn_s(
+			"{} adjacency from {} to {} has a non-null through province {}",
+			adjacency_t::get_type_name(type), from, to, *through
 		);
 		through = nullptr;
 	}
 
 	/* Check canal data */
 	if (data != adjacency_t::DEFAULT_DATA && type != CANAL) {
-		Logger::warning(
-			adjacency_t::get_type_name(type), " adjacency from ", from, " to ", to, " has invalid data ",
-			static_cast<uint32_t>(data)
+		spdlog::warn_s(
+			"{} adjacency from {} to {} has invalid data {}",
+			adjacency_t::get_type_name(type), from, to, static_cast<uint32_t>(data)
 		);
 		data = adjacency_t::DEFAULT_DATA;
 	}
@@ -264,8 +280,9 @@ bool MapDefinition::add_special_adjacency(
 		);
 		if (existing_adjacency != from.adjacencies.end()) {
 			if (type == existing_adjacency->get_type()) {
-				Logger::warning(
-					"Adjacency from ", from, " to ", to, " already has type ", adjacency_t::get_type_name(type), "!"
+				spdlog::warn_s(
+					"Adjacency from {} to {} already has type {}!",
+					from, to, adjacency_t::get_type_name(type)
 				);
 				if (type != STRAIT && type != CANAL) {
 					/* Straits and canals might change through or data, otherwise we can exit early */
@@ -279,19 +296,18 @@ bool MapDefinition::add_special_adjacency(
 				}
 			} else {
 				if (type != STRAIT && type != CANAL) {
-					Logger::error(
-						"Provinces ", from, " and ", to, " already have an existing ",
-						adjacency_t::get_type_name(existing_adjacency->get_type()), " adjacency, cannot create a ",
-						adjacency_t::get_type_name(type), " adjacency!"
+					spdlog::error_s(
+						"Provinces {} and {} already have an existing {} adjacency, cannot create a {} adjacency!",
+						from, to, adjacency_t::get_type_name(existing_adjacency->get_type()), adjacency_t::get_type_name(type)
 					);
 					return false;
 				}
 				if (
 					type != existing_adjacency->get_type() && existing_adjacency->get_type() != (type == CANAL ? WATER : LAND)
 				) {
-					Logger::error(
-						"Cannot convert ", adjacency_t::get_type_name(existing_adjacency->get_type()), " adjacency from ",
-						from, " to ", to, " to type ", adjacency_t::get_type_name(type), "!"
+					spdlog::error_s(
+						"Cannot convert {} adjacency from {} to {} to type {}!",
+						adjacency_t::get_type_name(existing_adjacency->get_type()), from, to, adjacency_t::get_type_name(type)
 					);
 					return false;
 				}
@@ -313,8 +329,9 @@ bool MapDefinition::add_special_adjacency(
 			}
 			return true;
 		} else if (type == IMPASSABLE) {
-			Logger::warning(
-				"Provinces ", from, " and ", to, " do not have an existing adjacency to make impassable!"
+			spdlog::warn_s(
+				"Provinces {} and {} do not have an existing adjacency to make impassable!",
+				from, to
 			);
 			return true;
 		} else {
@@ -342,22 +359,22 @@ bool MapDefinition::add_special_adjacency(
 
 bool MapDefinition::set_water_province(std::string_view identifier) {
 	if (water_provinces.is_locked()) {
-		Logger::error("The map's water provinces have already been locked!");
+		spdlog::error_s("The map's water provinces have already been locked!");
 		return false;
 	}
 
 	ProvinceDefinition* province = get_province_definition_by_identifier(identifier);
 
 	if (province == nullptr) {
-		Logger::error("Unrecognised water province identifier: ", identifier);
+		spdlog::error_s("Unrecognised water province identifier: {}", identifier);
 		return false;
 	}
 	if (province->is_water()) {
-		Logger::warning("Province ", identifier, " is already a water province!");
+		spdlog::warn_s("Province {} is already a water province!", identifier);
 		return true;
 	}
 	if (!water_provinces.add_province(province)) {
-		Logger::error("Failed to add province ", identifier, " to water province set!");
+		spdlog::error_s("Failed to add province {} to water province set!", identifier);
 		return false;
 	}
 	province->water = true;
@@ -367,7 +384,7 @@ bool MapDefinition::set_water_province(std::string_view identifier) {
 
 bool MapDefinition::set_water_province_list(memory::vector<std::string_view> const& list) {
 	if (water_provinces.is_locked()) {
-		Logger::error("The map's water provinces have already been locked!");
+		spdlog::error_s("The map's water provinces have already been locked!");
 		return false;
 	}
 	bool ret = true;
@@ -381,7 +398,7 @@ bool MapDefinition::set_water_province_list(memory::vector<std::string_view> con
 
 void MapDefinition::lock_water_provinces() {
 	water_provinces.lock();
-	Logger::info("Locked water provinces after registering ", water_provinces.size());
+	SPDLOG_INFO("Locked water provinces after registering {}", water_provinces.size());
 }
 
 size_t MapDefinition::get_land_province_count() const {
@@ -394,7 +411,7 @@ size_t MapDefinition::get_water_province_count() const {
 
 bool MapDefinition::add_region(std::string_view identifier, memory::vector<ProvinceDefinition const*>&& provinces, colour_t colour) {
 	if (identifier.empty()) {
-		Logger::error("Invalid region identifier - empty!");
+		spdlog::error_s("Invalid region identifier - empty!");
 		return false;
 	}
 
@@ -406,9 +423,11 @@ bool MapDefinition::add_region(std::string_view identifier, memory::vector<Provi
 	for (ProvinceDefinition const* const province_definition_ptr : provinces) {
 		ProvinceDefinition const& province_definition = *province_definition_ptr;
 		if (OV_unlikely(province_definition.has_region())) {
-			Logger::warning(
-				"Province ", province_definition.get_identifier(), " is assigned to multiple regions, including ", province_definition.get_region()->get_identifier(),
-				" and ", identifier, ". First defined region wins."
+			spdlog::warn_s(
+				"Province {} is assigned to multiple regions, including {} and {}. First defined region wins.",
+				province_definition,
+				*province_definition.get_region(),
+				identifier
 			);
 			valid_provinces_count--;
 		}
@@ -438,7 +457,7 @@ bool MapDefinition::add_region(std::string_view identifier, memory::vector<Provi
 
 	region.lock();
 	if (OV_unlikely(is_meta)) {
-		Logger::info("Region ", identifier, " is meta.");
+		SPDLOG_INFO("Region {} is meta.", identifier);
 	} else {
 		for (ProvinceDefinition const* province_definition : region.get_provinces()) {
 			remove_province_definition_const(province_definition)->region = &region;
@@ -472,15 +491,15 @@ ProvinceDefinition const* MapDefinition::get_province_definition_at(ivec2_t pos)
 
 bool MapDefinition::set_max_provinces(ProvinceDefinition::index_t new_max_provinces) {
 	if (new_max_provinces <= ProvinceDefinition::NULL_INDEX) {
-		Logger::error(
-			"Trying to set max province count to an invalid value ", new_max_provinces, " (must be greater than ",
-			ProvinceDefinition::NULL_INDEX, ")"
+		spdlog::error_s(
+			"Trying to set max province count to an invalid value {} (must be greater than {})",
+			new_max_provinces, ProvinceDefinition::NULL_INDEX
 		);
 		return false;
 	}
 	if (!province_definitions.empty() || province_definitions.is_locked()) {
-		Logger::error(
-			"Trying to set max province count to ", new_max_provinces, " after provinces have already been added and/or locked"
+		spdlog::error_s(
+			"Trying to set max province count to {} after provinces have already been added and/or locked", new_max_provinces
 		);
 		return false;
 	}
@@ -530,18 +549,19 @@ bool MapDefinition::load_province_definitions(std::span<const LineObject> lines)
 	bool ret = true;
 
 	if (lines.empty()) {
-		Logger::error("No header or entries in province definition file!");
+		spdlog::error_s("No header or entries in province definition file!");
 		ret = false;
 	} else {
 		LineObject const& header = lines.front();
 		if (!_validate_province_definitions_header(header)) {
-			Logger::error(
-				"Non-standard province definition file header - make sure this is not a province definition: ", header
+			spdlog::error_s(
+				"Non-standard province definition file header - make sure this is not a province definition: {}",
+				header
 			);
 		}
 
 		if (lines.size() <= 1) {
-			Logger::error("No entries in province definition file!");
+			spdlog::error_s("No entries in province definition file!");
 			ret = false;
 		} else {
 			reserve_more_province_definitions(lines.size() - 1);
@@ -552,7 +572,10 @@ bool MapDefinition::load_province_definitions(std::span<const LineObject> lines)
 				if (!identifier.empty()) {
 					colour_t colour = colour_t::null();
 					if (!_parse_province_colour(colour, { line.get_value_for(1), line.get_value_for(2), line.get_value_for(3) })) {
-						Logger::error("Error reading colour in province definition: ", line);
+						spdlog::error_s(
+							"Error reading colour in province definition: {}",
+							line
+						);
 						ret = false;
 					}
 					ret &= add_province_definition(identifier, colour);
@@ -563,7 +586,7 @@ bool MapDefinition::load_province_definitions(std::span<const LineObject> lines)
 					ProvinceDefinition const& definition = province_definitions.back();
 					ret &= path_map_land.try_add_point(definition.get_province_number(), { definition.centre.x, definition.centre.y });
 					if (!ret) {
-						Logger::error("Province ", identifier, " could not be added to " _OV_STR(path_map_land));
+						spdlog::error_s("Province {} could not be added to " _OV_STR(path_map_land), identifier);
 					}
 				}
 			});
@@ -590,7 +613,7 @@ bool MapDefinition::load_region_colours(ast::NodeCPtr root, memory::vector<colou
 		colours,
 		[&colours](std::string_view key, ast::NodeCPtr value) -> bool {
 			if (key != "color") {
-				Logger::error("Invalid key in region colours: \"", key, "\"");
+				spdlog::error_s("Invalid key in region colours: \"{}\"", key);
 				return false;
 			}
 			return expect_colour(vector_callback(colours))(value);
@@ -662,7 +685,10 @@ void MapDefinition::_trace_river(BMP& rivers_bmp, ivec2_t start, river_t& river)
 		while(true) {
 			++recursion_limit;
 			if (recursion_limit == RIVER_RECURSION_LIMIT) {
-				Logger::error("River segment starting @ (", points.front().x, ", ", points.front().y, ") exceeded length limit of 4096 pixels. Check for misplaced pixel or circular river.");
+				spdlog::error_s(
+					"River segment starting @ ({}, {}) exceeded length limit of 4096 pixels. Check for misplaced pixel or circular river.",
+					points.front().x, points.front().y
+				);
 				break;
 			}
 
@@ -748,11 +774,11 @@ void MapDefinition::_trace_river(BMP& rivers_bmp, ivec2_t start, river_t& river)
 
 bool MapDefinition::load_map_images(fs::path const& province_path, fs::path const& terrain_path, fs::path const& rivers_path, bool detailed_errors) {
 	if (!province_definitions_are_locked()) {
-		Logger::error("Province index image cannot be generated until after provinces are locked!");
+		spdlog::error_s("Province index image cannot be generated until after provinces are locked!");
 		return false;
 	}
 	if (!terrain_type_manager.terrain_type_mappings_are_locked()) {
-		Logger::error("Province index image cannot be generated until after terrain type mappings are locked!");
+		spdlog::error_s("Province index image cannot be generated until after terrain type mappings are locked!");
 		return false;
 	}
 
@@ -761,37 +787,39 @@ bool MapDefinition::load_map_images(fs::path const& province_path, fs::path cons
 
 	BMP province_bmp;
 	if (!(province_bmp.open(province_path) && province_bmp.read_header() && province_bmp.read_pixel_data())) {
-		Logger::error("Failed to read BMP for compatibility mode province image: ", province_path);
+		spdlog::error_s("Failed to read BMP for compatibility mode province image: {}", province_path);
 		return false;
 	}
 	if (province_bmp.get_bits_per_pixel() != expected_province_bpp) {
-		Logger::error(
-			"Invalid province BMP bits per pixel: ", province_bmp.get_bits_per_pixel(), " (expected ", expected_province_bpp,
-			")"
+		spdlog::error_s(
+			"Invalid province BMP bits per pixel: {} (expected {})",
+			province_bmp.get_bits_per_pixel(), expected_province_bpp
 		);
 		return false;
 	}
 
 	BMP terrain_bmp;
 	if (!(terrain_bmp.open(terrain_path) && terrain_bmp.read_header() && terrain_bmp.read_pixel_data())) {
-		Logger::error("Failed to read BMP for compatibility mode terrain image: ", terrain_path);
+		spdlog::error_s("Failed to read BMP for compatibility mode terrain image: {}", terrain_path);
 		return false;
 	}
 	if (terrain_bmp.get_bits_per_pixel() != expected_terrain_rivers_bpp) {
-		Logger::error(
-			"Invalid terrain BMP bits per pixel: ", terrain_bmp.get_bits_per_pixel(), " (expected ", expected_terrain_rivers_bpp, ")"
+		spdlog::error_s(
+			"Invalid terrain BMP bits per pixel: {} (expected {})",
+			terrain_bmp.get_bits_per_pixel(), expected_terrain_rivers_bpp
 		);
 		return false;
 	}
 
 	BMP rivers_bmp;
 	if (!(rivers_bmp.open(rivers_path) && rivers_bmp.read_header() && rivers_bmp.read_pixel_data())) {
-		Logger::error("Failed to read BMP for compatibility mode river image: ", rivers_path);
+		spdlog::error_s("Failed to read BMP for compatibility mode river image: {}", rivers_path);
 		return false;
 	}
 	if (rivers_bmp.get_bits_per_pixel() != expected_terrain_rivers_bpp) {
-		Logger::error(
-			"Invalid rivers BMP bits per pixel: ", rivers_bmp.get_bits_per_pixel(), " (expected ", expected_terrain_rivers_bpp, ")"
+		spdlog::error_s(
+			"Invalid rivers BMP bits per pixel: {} (expected {})",
+			rivers_bmp.get_bits_per_pixel(), expected_terrain_rivers_bpp
 		);
 		return false;
 	}
@@ -801,9 +829,11 @@ bool MapDefinition::load_map_images(fs::path const& province_path, fs::path cons
 		province_bmp.get_width() != rivers_bmp.get_width() ||
 		province_bmp.get_height() != rivers_bmp.get_height()
 	) {
-		Logger::error(
-			"Mismatched map BMP dims: provinces:", province_bmp.get_width(), "x", province_bmp.get_height(), ", terrain: ",
-			terrain_bmp.get_width(), "x", terrain_bmp.get_height(), ", rivers: ", rivers_bmp.get_width(), "x", rivers_bmp.get_height()
+		spdlog::error_s(
+			"Mismatched map BMP dims: provinces:{}x{}, terrain: {}x{}, rivers: {}x{}",
+			province_bmp.get_width(), province_bmp.get_height(),
+			terrain_bmp.get_width(), terrain_bmp.get_height(),
+			rivers_bmp.get_width(), rivers_bmp.get_height()
 		);
 		return false;
 	}
@@ -850,8 +880,9 @@ bool MapDefinition::load_map_images(fs::path const& province_path, fs::path cons
 			if (province_number == ProvinceDefinition::NULL_INDEX && !unrecognised_province_colours.contains(province_colour)) {
 				unrecognised_province_colours.insert(province_colour);
 				if (detailed_errors) {
-					Logger::warning(
-						"Unrecognised province colour ", province_colour, " at ", pos
+					spdlog::warn_s(
+						"Unrecognised province colour {} at {}",
+						province_colour, pos
 					);
 				}
 			}
@@ -883,7 +914,7 @@ bool MapDefinition::load_map_images(fs::path const& province_path, fs::path cons
 	}
 
 	if (!unrecognised_province_colours.empty()) {
-		Logger::warning("Province image contains ", unrecognised_province_colours.size(), " unrecognised province colours");
+		spdlog::warn_s("Province image contains {} unrecognised province colours", unrecognised_province_colours.size());
 	}
 
 	size_t missing = 0;
@@ -901,13 +932,13 @@ bool MapDefinition::load_map_images(fs::path const& province_path, fs::path cons
 			province->centre = pixel_position_sum_per_province[array_index] / pixel_count;
 		} else {
 			if (detailed_errors) {
-				Logger::warning("Province missing from shape image: ", province->to_string());
+				spdlog::warn_s("Province missing from shape image: {}", province->to_string());
 			}
 			missing++;
 		}
 	}
 	if (missing > 0) {
-		Logger::warning("Province image is missing ", missing, " province colours");
+		spdlog::warn_s("Province image is missing {} province colours", missing);
 	}
 
 	/** Generating River Segments
@@ -939,7 +970,7 @@ bool MapDefinition::load_map_images(fs::path const& province_path, fs::path cons
 		}
 	}
 
-	Logger::info("Generated ", rivers.size(), " rivers.");
+	SPDLOG_INFO("Generated {} rivers.", rivers.size());
 
 	return ret;
 }
@@ -975,11 +1006,11 @@ bool MapDefinition::_generate_standard_province_adjacencies() {
 bool MapDefinition::generate_and_load_province_adjacencies(std::span<const LineObject> additional_adjacencies) {
 	bool ret = _generate_standard_province_adjacencies();
 	if (!ret) {
-		Logger::error("Failed to generate standard province adjacencies!");
+		spdlog::error_s("Failed to generate standard province adjacencies!");
 	}
 	/* Skip first line containing column headers */
 	if (additional_adjacencies.size() <= 1) {
-		Logger::error("No entries in province adjacencies file!");
+		spdlog::error_s("No entries in province adjacencies file!");
 		return false;
 	}
 	std::for_each(
@@ -990,7 +1021,7 @@ bool MapDefinition::generate_and_load_province_adjacencies(std::span<const LineO
 			}
 			ProvinceDefinition* const from = get_province_definition_by_identifier(from_str);
 			if (from == nullptr) {
-				Logger::error("Unrecognised adjacency from province identifier: \"", from_str, "\"");
+				spdlog::error_s("Unrecognised adjacency from province identifier: \"{}\"", from_str);
 				ret = false;
 				return;
 			}
@@ -998,7 +1029,7 @@ bool MapDefinition::generate_and_load_province_adjacencies(std::span<const LineO
 			const std::string_view to_str = adjacency.get_value_for(1);
 			ProvinceDefinition* const to = get_province_definition_by_identifier(to_str);
 			if (to == nullptr) {
-				Logger::error("Unrecognised adjacency to province identifier: \"", to_str, "\"");
+				spdlog::error_s("Unrecognised adjacency to province identifier: \"{}\"", to_str);
 				ret = false;
 				return;
 			}
@@ -1010,7 +1041,7 @@ bool MapDefinition::generate_and_load_province_adjacencies(std::span<const LineO
 			const std::string_view type_str = adjacency.get_value_for(2);
 			const string_map_t<adjacency_t::type_t>::const_iterator it = type_map.find(type_str);
 			if (it == type_map.end()) {
-				Logger::error("Invalid adjacency type: \"", type_str, "\"");
+				spdlog::error_s("Invalid adjacency type: \"{}\"", type_str);
 				ret = false;
 				return;
 			}
@@ -1024,7 +1055,7 @@ bool MapDefinition::generate_and_load_province_adjacencies(std::span<const LineO
 			std::from_chars_result result = StringUtils::string_to_uint64(data_str, data_uint);
 			successful = result.ec == std::errc{};
 			if (!successful || data_uint > std::numeric_limits<adjacency_t::data_t>::max()) {
-				Logger::error("Invalid adjacency data: \"", data_str, "\"");
+				spdlog::error_s("Invalid adjacency data: \"{}\"", data_str);
 				ret = false;
 				return;
 			}
@@ -1044,7 +1075,7 @@ bool MapDefinition::load_climate_file(ModifierManager const& modifier_manager, a
 		climates,
 		[this, &modifier_manager](std::string_view identifier, ast::NodeCPtr node) -> bool {
 			if (identifier.empty()) {
-				Logger::error("Invalid climate identifier - empty!");
+				spdlog::error_s("Invalid climate identifier - empty!");
 				return false;
 			}
 
@@ -1069,17 +1100,16 @@ bool MapDefinition::load_climate_file(ModifierManager const& modifier_manager, a
 							if (province.climate != nullptr) {
 								Climate* old_climate = const_cast<Climate*>(province.climate);
 								old_climate->remove_province(&province);
-								Logger::warning(
-									"Province with id ", province.get_identifier(),
-									" found in multiple climates: ", identifier,
-									" and ", old_climate->get_identifier()
+								spdlog::warn_s(
+									"Province with id {} found in multiple climates: {} and {}",
+									province, identifier, *old_climate
 								);
 							}
 							province.climate = cur_climate;
 						} else {
-							Logger::warning(
-								"Province with id ", province.get_identifier(),
-								" defined twice in climate ", identifier
+							spdlog::warn_s(
+								"Province with id {} defined twice in climate {}",
+								province, identifier
 							);
 						}
 						return true;
@@ -1105,7 +1135,7 @@ bool MapDefinition::load_continent_file(ModifierManager const& modifier_manager,
 		[this, &modifier_manager](std::string_view identifier, ast::NodeCPtr node) -> bool {
 
 			if (identifier.empty()) {
-				Logger::error("Invalid continent identifier - empty!");
+				spdlog::error_s("Invalid continent identifier - empty!");
 				return false;
 			}
 
@@ -1118,7 +1148,7 @@ bool MapDefinition::load_continent_file(ModifierManager const& modifier_manager,
 						if (province.continent == nullptr) {
 							prov_list.emplace_back(&province);
 						} else {
-							Logger::warning("Province ", province, " found in multiple continents");
+							spdlog::warn_s("Province {} found in multiple continents", province);
 						}
 						return true;
 					}

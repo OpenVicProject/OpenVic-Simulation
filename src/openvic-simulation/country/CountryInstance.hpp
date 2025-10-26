@@ -2,6 +2,8 @@
 
 #include <utility>
 
+#include <fmt/base.h>
+
 #include "openvic-simulation/country/SharedCountryValues.hpp"
 #include "openvic-simulation/diplomacy/CountryRelation.hpp"
 #include "openvic-simulation/military/UnitBranchedGetterMacro.hpp"
@@ -737,6 +739,8 @@ namespace OpenVic {
 		void country_manager_tick_after_map(InstanceManager& instance_manager);
 	};
 }
+
+extern template struct fmt::formatter<OpenVic::CountryInstance>;
 
 #undef _UNIT_BRANCHED_GETTER
 #undef UNIT_BRANCHED_GETTER

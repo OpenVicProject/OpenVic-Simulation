@@ -20,7 +20,7 @@ bool SongChanceManager::load_songs_file(ast::NodeCPtr root) {
 			using enum scope_type_t;
 
 			if (key != "song") {
-				Logger::error("Invalid song declaration ", key);
+				spdlog::error_s("Invalid song declaration {}", key);
 				return false;
 			}
 			std::string_view name {};
@@ -40,7 +40,7 @@ bool SongChanceManager::load_songs_file(ast::NodeCPtr root) {
 	)(root);
 
 	if (song_chances.size() == 0) {
-		Logger::error("No songs found in Songs.txt");
+		spdlog::error_s("No songs found in Songs.txt");
 		return false;
 	}
 

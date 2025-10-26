@@ -38,6 +38,11 @@ Comment: plf::colony
 Copyright: 2019, mattreecebentley
 License: Zlib
 
+Files: deps/spdlog/*
+Comment: spdlog
+Copyright: 2016, Gabi Melman
+License: Expat
+
 Files: src/openvic-simulation/types/Signal.hpp
 Comment: sigslot
 Copyright: 2017, Pierre-Antoine Lacaze

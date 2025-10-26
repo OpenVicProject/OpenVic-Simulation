@@ -5,6 +5,7 @@
 #include "openvic-simulation/dataloader/NodeTools.hpp"
 #include "openvic-simulation/politics/Government.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
+#include "openvic-simulation/utility/FormatValidate.hpp"
 
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;
@@ -63,18 +64,21 @@ bool CountryHistoryMap::_load_history_entry(
 				return true;
 			} else if (it->second == add) {
 				// Desired culture instruction already exists
-				Logger::warning(
-					"Duplicate attempt to ", add ? "add" : "remove", " accepted culture ", culture.get_identifier(),
-					" ", add ? "to" : "from", " country history of ", entry.get_country()
+				spdlog::warn_s(
+					"Duplicate attempt to {} accepted culture {} {} country history of {}",
+					add ? "add" : "remove", add ? "to" : "from", culture, entry.get_country()
 				);
 				return true;
 			} else {
 				// Opposite culture instruction exists
 				entry.accepted_cultures.erase(it);
-				Logger::warning(
-					"Attempted to ", add ? "add" : "remove", " accepted culture ", culture.get_identifier(),
-					" ", add ? "to" : "from", " country history of ", entry.get_country(),
-					" after previously ", add ? "removing" : "adding", " it"
+				spdlog::warn_s(
+					"Attempted to {} accepted culture {} {} country history of {} after previously {} it",
+					add ? "add" : "remove",
+					culture,
+					add ? "to" : "from",
+					entry.get_country(),
+					add ? "removing" : "adding"
 				);
 				return true;
 			}
@@ -96,9 +100,9 @@ bool CountryHistoryMap::_load_history_entry(
 			if (reform_group != nullptr) {
 				return issue_manager.expect_reform_identifier([&entry, reform_group](Reform const& reform) -> bool {
 					if (&reform.get_reform_group() != reform_group) {
-						Logger::warning(
-							"Listing ", reform.get_identifier(), " as belonging to the reform group ", reform_group,
-							" when it actually belongs to ", reform.get_reform_group(), " in history of ", entry.get_country()
+						spdlog::warn_s(
+							"Listing {} as belonging to the reform group {} when it actually belongs to {} in history of {}",
+							reform, *reform_group, reform.get_reform_group(), entry.get_country()
 						);
 					}
 					return set_callback_pointer(entry.reforms)(reform);
@@ -111,9 +115,9 @@ bool CountryHistoryMap::_load_history_entry(
 					return expect_uint<decltype(entry.technologies)::mapped_type>(
 						[&entry, technology](decltype(entry.technologies)::mapped_type value) -> bool {
 							if (value > 1) {
-								Logger::warning(
-									"Technology ", technology->get_identifier(),
-									" is applied multiple times in history of country ", entry.get_country().get_identifier()
+								spdlog::warn_s(
+									"Technology {} is applied multiple times in history of country {}",
+									*technology, entry.get_country()
 								);
 							}
 							return map_callback(entry.technologies, technology)(value);
@@ -174,11 +178,14 @@ bool CountryHistoryMap::_load_history_entry(
 					entry.ruling_party.emplace(&country.get_front_party());
 				}
 				
-				Logger::warn_or_error(is_valid,
-					"In ", country.get_identifier(), " history at entry date ", entry.get_date().to_string(),
-					": ruling_party ", def, " does NOT exist! Defaulting to first ",
-					(is_valid ? "valid party: " : "INVALID party (no valid party was found): "),
-					entry.ruling_party.value()->get_identifier()
+				spdlog::log_s(
+					is_valid ? spdlog::level::warn : spdlog::level::err,
+					"In {} history at entry date {}: ruling_party {} does NOT exist! Defaulting to first {}: {}",
+					country,
+					entry.get_date(),
+					def,
+					is_valid ? "valid party" : "INVALID party (no valid party was found)",
+					*entry.ruling_party.value()
 				);
 			}
 			return true;
@@ -228,9 +235,9 @@ bool CountryHistoryMap::_load_history_entry(
 					if (id == "government") {
 						bool ret = true;
 						if (flag_expected) {
-							Logger::error(
-								"Government key found when expect flag type override for ", government_type,
-								" in history of ", entry.get_country()
+							spdlog::error_s(
+								"Government key found when expect flag type override for {} in history of {}",
+								ovfmt::validate(government_type), entry.get_country()
 							);
 							ret = false;
 						}
@@ -256,23 +263,25 @@ bool CountryHistoryMap::_load_history_entry(
 							}
 							return ret;
 						} else {
-							Logger::error(
-								"Flag key found when expecting government type for flag type override in history of ",
+							spdlog::error_s(
+								"Flag key found when expecting government type for flag type override in history of {}",
 								entry.get_country()
 							);
 							return false;
 						}
 					} else {
-						Logger::error(
-							"Invalid key ", id, " in government flag overrides in history of ", entry.get_country()
+						spdlog::error_s(
+							"Invalid key {} in government flag overrides in history of {}",
+							id, entry.get_country()
 						);
 						return false;
 					}
 				}
 			)(value);
 			if (flag_expected) {
-				Logger::error(
-					"Missing flag type override for government type ", government_type, " in history of ", entry.get_country()
+				spdlog::error_s(
+					"Missing flag type override for government type {} in history of {}",
+					ovfmt::validate(government_type), entry.get_country()
 				);
 				ret = false;
 			}
@@ -288,7 +297,7 @@ bool CountryHistoryMap::_load_history_entry(
 
 void CountryHistoryManager::reserve_more_country_histories(size_t size) {
 	if (locked) {
-		Logger::error("Failed to reserve space for ", size, " countries in CountryHistoryManager - already locked!");
+		spdlog::error_s("Failed to reserve space for {} countries in CountryHistoryManager - already locked!", size);
 	} else {
 		reserve_more(country_histories, size);
 	}
@@ -299,7 +308,7 @@ void CountryHistoryManager::lock_country_histories() {
 		history_map.sort_entries();
 	}
 
-	Logger::info("Locked country history registry after registering ", country_histories.size(), " items");
+	SPDLOG_INFO("Locked country history registry after registering {} items", country_histories.size());
 	locked = true;
 }
 
@@ -312,7 +321,7 @@ CountryHistoryMap const* CountryHistoryManager::get_country_history(CountryDefin
 	if (country_registry != country_histories.end()) {
 		return &country_registry->second;
 	} else {
-		Logger::error("Attempted to access history of country ", country, " but none has been defined!");
+		spdlog::error_s("Attempted to access history of country {} but none has been defined!", country);
 		return nullptr;
 	}
 }
@@ -323,7 +332,7 @@ bool CountryHistoryManager::load_country_history_file(
 	decltype(CountryHistoryMap::government_type_keys) government_type_keys, ast::NodeCPtr root
 ) {
 	if (locked) {
-		Logger::error("Attempted to load country history file for ", country, " after country history registry was locked!");
+		spdlog::error_s("Attempted to load country history file for {} after country history registry was locked!", country);
 		return false;
 	}
 
@@ -338,7 +347,7 @@ bool CountryHistoryManager::load_country_history_file(
 		if (result.second) {
 			it = result.first;
 		} else {
-			Logger::error("Failed to create country history map for country ", country);
+			spdlog::error_s("Failed to create country history map for country {}", country);
 			return false;
 		}
 	}

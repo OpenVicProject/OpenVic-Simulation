@@ -75,13 +75,13 @@ bool ProvinceDefinition::load_positions(
 					port_adjacent_province = province;
 				} else {
 					/* Expected provinces with invalid ports: 39, 296, 1047, 1406, 2044 */
-					Logger::warning(
-						"Invalid port for province ", get_identifier(), ": facing province ", province,
-						" which has: water = ", province->is_water(), ", adjacent = ", is_adjacent_to(province)
+					spdlog::warn_s(
+						"Invalid port for province {}: facing province {} which has: water = {}, adjacent = {}",
+						get_identifier(), *province, province->is_water(), is_adjacent_to(province)
 					);
 				}
 			} else {
-				Logger::warning("Invalid port for province ", get_identifier(), ": facing null province!");
+				spdlog::warn_s("Invalid port for province {}: facing null province!", get_identifier());
 			}
 		}
 	}

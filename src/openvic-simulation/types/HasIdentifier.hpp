@@ -4,6 +4,9 @@
 #include <cassert>
 #include <string_view>
 #include <ostream>
+#include <type_traits>
+
+#include <fmt/base.h>
 
 #include "openvic-simulation/types/Colour.hpp"
 #include "openvic-simulation/utility/Getters.hpp"
@@ -103,4 +106,25 @@ namespace OpenVic {
 
 	template<typename T>
 	concept HasGetIdentifierAndGetColour = HasGetIdentifier<T> && HasGetColour<T>;
+
+	template<typename T>
+	concept HasGetName = requires(T const& t) {
+		{ t.get_name() } -> std::same_as<std::string_view>;
+	};
 }
+
+template<OpenVic::HasGetIdentifier T>
+requires (!OpenVic::HasGetName<T>)
+struct fmt::formatter<T> : fmt::formatter<fmt::string_view> {
+	fmt::format_context::iterator format(T const& has_id, fmt::format_context& ctx) const {
+		return fmt::formatter<fmt::string_view>::format(has_id.get_identifier(), ctx);
+	}
+};
+
+template<OpenVic::HasGetName T>
+requires (!OpenVic::HasGetIdentifier<T>)
+struct fmt::formatter<T> : fmt::formatter<fmt::string_view> {
+	fmt::format_context::iterator format(T const& has_id, fmt::format_context& ctx) const {
+		return fmt::formatter<fmt::string_view>::format(has_id.get_name(), ctx);
+	}
+};

@@ -74,7 +74,10 @@ bool ProvinceInstance::set_rgo_production_type_nullable(ProductionType const* rg
 	if (rgo_production_type_nullable != nullptr) {
 		ProductionType const& rgo_production_type = *rgo_production_type_nullable;
 		if (rgo_production_type.get_template_type() != ProductionType::template_type_t::RGO) {
-			Logger::error("Tried setting province ", get_identifier(), " rgo to ", rgo_production_type.get_identifier(), " which is not of template_type RGO.");
+			spdlog::error_s(
+				"Tried setting province {} rgo to {} which is not of template_type RGO.",
+				*this, rgo_production_type
+			);
 			is_valid_operation = false;
 		}
 		is_valid_operation&=convert_rgo_worker_pops_to_equivalent(rgo_production_type);
@@ -149,8 +152,9 @@ bool ProvinceInstance::add_core(CountryInstance& new_core, bool warn) {
 	if (cores.emplace(&new_core).second) {
 		return new_core.add_core_province(*this);
 	} else if (warn) {
-		Logger::warning(
-			"Attempted to add core \"", new_core.get_identifier(), "\" to province ", get_identifier(), ": already exists!"
+		spdlog::warn_s(
+			"Attempted to add core \"{}\" to province {}: already exists!",
+			new_core, *this
 		);
 	}
 	return true;
@@ -160,9 +164,9 @@ bool ProvinceInstance::remove_core(CountryInstance& core_to_remove, bool warn) {
 	if (cores.erase(&core_to_remove) > 0) {
 		return core_to_remove.remove_core_province(*this);
 	} else if (warn) {
-		Logger::warning(
-			"Attempted to remove core \"", core_to_remove.get_identifier(), "\" from province ", get_identifier(),
-			": does not exist!"
+		spdlog::warn_s(
+			"Attempted to remove core \"{}\" from province {}: does not exist!",
+			core_to_remove, *this
 		);
 	}
 	return true;
@@ -171,7 +175,10 @@ bool ProvinceInstance::remove_core(CountryInstance& core_to_remove, bool warn) {
 bool ProvinceInstance::expand_building(size_t building_index) {
 	BuildingInstance* building = buildings.get_item_by_index(building_index);
 	if (building == nullptr) {
-		Logger::error("Trying to expand non-existent building index ", building_index, " in province ", get_identifier());
+		spdlog::error_s(
+			"Trying to expand non-existent building index {} in province {}",
+			building_index, *this
+		);
 		return false;
 	}
 	return building->expand();
@@ -187,7 +194,7 @@ bool ProvinceInstance::add_pop(Pop&& pop) {
 		_add_pop(std::move(pop));
 		return true;
 	} else {
-		Logger::error("Trying to add pop to water province ", get_identifier());
+		spdlog::error_s("Trying to add pop to water province {}", *this);
 		return false;
 	}
 }
@@ -209,7 +216,7 @@ bool ProvinceInstance::add_pop_vec(
 		}
 		return true;
 	} else {
-		Logger::error("Trying to add pop vector to water province ", get_identifier());
+		spdlog::error_s("Trying to add pop vector to water province {}", *this);
 		return false;
 	}
 }
@@ -413,9 +420,9 @@ bool ProvinceInstance::add_unit_instance_group(UnitInstanceGroup& group) {
 		navies.push_back(static_cast<NavyInstance*>(&group));
 		return true;
 	default:
-		Logger::error(
-			"Trying to add unit group \"", group.get_name(), "\" with invalid branch ",
-			static_cast<uint32_t>(group.get_branch()), " to province ", get_identifier()
+		spdlog::error_s(
+			"Trying to add unit group \"{}\" with invalid branch {} to province {}",
+			group.get_name(), static_cast<uint32_t>(group.get_branch()), *this
 		);
 		return false;
 	}
@@ -432,9 +439,9 @@ bool ProvinceInstance::remove_unit_instance_group(UnitInstanceGroup const& group
 			unit_instance_groups.erase(it);
 			return true;
 		} else {
-			Logger::error(
-				"Trying to remove non-existent ", get_branched_unit_group_name(Branch), " \"",
-				group.get_name(), "\" from province ", get_identifier()
+			spdlog::error_s(
+				"Trying to remove non-existent {} \"{}\" from province {}",
+				get_branched_unit_group_name(Branch), group.get_name(), *this
 			);
 			return false;
 		}
@@ -448,9 +455,9 @@ bool ProvinceInstance::remove_unit_instance_group(UnitInstanceGroup const& group
 	case NAVAL:
 		return remove_from_vector(navies);
 	default:
-		Logger::error(
-			"Trying to remove unit group \"", group.get_name(), "\" with invalid branch ",
-			static_cast<uint32_t>(group.get_branch()), " from province ", get_identifier()
+		spdlog::error_s(
+			"Trying to remove unit group \"{}\" with invalid branch {} from province {}",
+			group.get_name(), static_cast<uint32_t>(group.get_branch()), *this
 		);
 		return false;
 	}
@@ -488,9 +495,9 @@ bool ProvinceInstance::apply_history_to_province(ProvinceHistoryEntry const& ent
 		if (existing_entry != nullptr) {
 			existing_entry->set_level(level);
 		} else {
-			Logger::error(
-				"Trying to set level of non-existent province building ", building->get_identifier(), " to ", level,
-				" in province ", get_identifier()
+			spdlog::error_s(
+				"Trying to set level of non-existent province building {} to {} in province {}",
+				*building, level, *this
 			);
 			ret = false;
 		}

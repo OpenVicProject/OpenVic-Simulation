@@ -7,17 +7,17 @@ using namespace OpenVic;
 
 bool ProvinceSet::add_province(ProvinceDefinition const* province) {
 	if (locked) {
-		Logger::error("Cannot add province to province set - locked!");
+		spdlog::error_s("Cannot add province to province set - locked!");
 		return false;
 	}
 
 	if (province == nullptr) {
-		Logger::error("Cannot add province to province set - null province!");
+		spdlog::error_s("Cannot add province to province set - null province!");
 		return false;
 	}
 
 	if (contains_province(province)) {
-		Logger::warning("Cannot add province ", province->get_identifier(), " to province set - already in the set!");
+		spdlog::warn_s("Cannot add province {} to province set - already in the set!", *province);
 		return false;
 	}
 
@@ -28,18 +28,18 @@ bool ProvinceSet::add_province(ProvinceDefinition const* province) {
 
 bool ProvinceSet::remove_province(ProvinceDefinition const* province) {
 	if (locked) {
-		Logger::error("Cannot remove province from province set - locked!");
+		spdlog::error_s("Cannot remove province from province set - locked!");
 		return false;
 	}
 
 	if (province == nullptr) {
-		Logger::error("Cannot remove province from province set - null province!");
+		spdlog::error_s("Cannot remove province from province set - null province!");
 		return false;
 	}
 
 	const decltype(provinces)::const_iterator it = std::find(provinces.begin(), provinces.end(), province);
 	if (it == provinces.end()) {
-		Logger::warning("Cannot remove province ", province->get_identifier(), " from province set - already not in the set!");
+		spdlog::warn_s("Cannot remove province {} from province set - not in the set!", *province);
 		return false;
 	}
 
@@ -50,11 +50,11 @@ bool ProvinceSet::remove_province(ProvinceDefinition const* province) {
 
 void ProvinceSet::lock(bool log) {
 	if (locked) {
-		Logger::error("Failed to lock province set - already locked!");
+		spdlog::error_s("Failed to lock province set - already locked!");
 	} else {
 		locked = true;
 		if (log) {
-			Logger::info("Locked province set with ", size(), " provinces");
+			SPDLOG_INFO("Locked province set with {} provinces", size());
 		}
 	}
 }
@@ -82,7 +82,7 @@ size_t ProvinceSet::capacity() const {
 
 void ProvinceSet::reserve(size_t size) {
 	if (locked) {
-		Logger::error("Failed to reserve space for ", size, " items in province set - already locked!");
+		spdlog::error_s("Failed to reserve space for {} items in province set - already locked!", size);
 	} else {
 		provinces.reserve(size);
 	}

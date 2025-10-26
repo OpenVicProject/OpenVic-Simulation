@@ -11,6 +11,7 @@
 #include "openvic-simulation/pop/Culture.hpp"
 #include "openvic-simulation/types/OrderedContainersMath.hpp"
 #include "openvic-simulation/utility/Containers.hpp"
+#include "openvic-simulation/utility/FormatValidate.hpp"
 
 using namespace OpenVic;
 
@@ -81,9 +82,9 @@ bool UnitInstanceGroup::add_unit(UnitInstance& unit) {
 		units.push_back(&unit);
 		return true;
 	} else {
-		Logger::error(
-			"Trying to add ", get_branch_name(unit.get_branch()), " unit \"", unit.get_name(), "\" to ",
-			get_branch_name(branch), " unit group \"", get_name(), "\""
+		spdlog::error_s(
+			"Trying to add {} unit \"{}\" to {} unit group \"{}\"",
+			get_branch_name(unit.get_branch()), unit.get_name(), get_branch_name(branch), get_name()
 		);
 		return false;
 	}
@@ -96,7 +97,10 @@ bool UnitInstanceGroup::remove_unit(UnitInstance const& unit) {
 		units.erase(it);
 		return true;
 	} else {
-		Logger::error("Trying to remove non-existent unit \"", unit.get_name(), "\" from unit group \"", get_name(), "\"");
+		spdlog::error_s(
+			"Trying to remove non-existent unit \"{}\" from unit group \"{}\"",
+			unit.get_name(), get_name()
+		);
 		return false;
 	}
 }
@@ -149,10 +153,11 @@ bool UnitInstanceGroup::set_leader(LeaderInstance* new_leader) {
 			if (leader->unit_instance_group == this) {
 				leader->unit_instance_group = nullptr;
 			} else {
-				Logger::error(
-					"Mismatch between leader and unit instance group: group ", name, " has leader ",
-					leader->get_name(), " but the leader has group ", leader->get_unit_instance_group() != nullptr
-						? leader->get_unit_instance_group()->get_name() : "NULL"
+				spdlog::error_s(
+					"Mismatch between leader and unit instance group: group {} has leader {} but the leader has group {}",
+					name,
+					leader->get_name(),
+					leader->get_unit_instance_group() != nullptr ? leader->get_unit_instance_group()->get_name() : "NULL"
 				);
 				ret = false;
 			}
@@ -162,19 +167,22 @@ bool UnitInstanceGroup::set_leader(LeaderInstance* new_leader) {
 
 		if (new_leader != nullptr) {
 			if (OV_unlikely(new_leader->get_branch() != branch)) {
-				Logger::error(
-					"Trying to assign ", get_branch_name(new_leader->get_branch()), " leader \"",
-					new_leader->get_name(), "\" to ", get_branch_name(branch), " unit group \"", name, "\""
+				spdlog::error_s(
+					"Trying to assign {} leader \"{}\" to {} unit group \"{}\"",
+					get_branch_name(new_leader->get_branch()), new_leader->get_name(), get_branch_name(branch), name
 				);
 				return false;
 			}
 
 			if (OV_unlikely(&new_leader->get_country() != country)) {
-				Logger::error(
-					"Trying to assign ", get_branched_leader_name(new_leader->get_branch()), " \"",
-					new_leader->get_name(), "\" of country \"", new_leader->get_country().get_identifier(), "\" to ",
-					get_branched_unit_group_name(branch), " \"", name, "\" of country \"",
-					(country != nullptr ? country->get_identifier() : "<NULL>"), "\""
+				spdlog::error_s(
+					"Trying to assign {} \"{}\" of country \"{}\" to {} \"{}\" of country \"{}\"",
+					get_branched_leader_name(new_leader->get_branch()),
+					new_leader->get_name(),
+					new_leader->get_country(),
+					get_branched_unit_group_name(branch),
+					name,
+					ovfmt::validate(country)
 				);
 				return false;
 			}
@@ -183,9 +191,9 @@ bool UnitInstanceGroup::set_leader(LeaderInstance* new_leader) {
 				if (new_leader->unit_instance_group != this) {
 					ret &= new_leader->unit_instance_group->set_leader(nullptr);
 				} else {
-					Logger::error(
-						get_branched_leader_name(new_leader->get_branch()), " ", new_leader->get_name(),
-						" already leads ", get_branched_unit_group_name(branch), " ", name, "!"
+					spdlog::error_s(
+						"{} {} already leads {} {}!",
+						get_branched_leader_name(new_leader->get_branch()), new_leader->get_name(),get_branched_unit_group_name(branch), name
 					);
 					ret = false;
 				}
@@ -302,17 +310,17 @@ bool UnitInstanceManager::generate_unit_instance_group(
 	MapInstance& map_instance, CountryInstance& country, UnitDeploymentGroup<Branch> const& unit_deployment_group
 ) {
 	if (unit_deployment_group.get_units().empty()) {
-		Logger::error(
-			"Trying to generate unit group \"", unit_deployment_group.get_name(), "\" with no units for country \"",
-			country.get_identifier(), "\""
+		spdlog::error_s(
+			"Trying to generate unit group \"{}\" with no units for country \"{}\"",
+			unit_deployment_group.get_name(), country
 		);
 		return false;
 	}
 
 	if (unit_deployment_group.get_location() == nullptr) {
-		Logger::error(
-			"Trying to generate unit group \"", unit_deployment_group.get_name(), "\" with no location for country \"",
-			country.get_identifier(), "\""
+		spdlog::error_s(
+			"Trying to generate unit group \"{}\" with no location for country \"{}\"",
+			unit_deployment_group.get_name(), country
 		);
 		return false;
 	}
@@ -342,9 +350,9 @@ bool UnitInstanceManager::generate_unit_instance_group(
 		if (it < leaders.end()) {
 			ret &= unit_instance_group.set_leader(*it);
 		} else {
-			Logger::error(
-				"Invalid leader index ", *unit_deployment_group.get_leader_index(), " for unit group \"",
-				unit_deployment_group.get_name(), "\" for country \"", country.get_identifier(), "\""
+			spdlog::error_s(
+				"Invalid leader index {} for unit group \"{}\" for country \"{}\"",
+				*unit_deployment_group.get_leader_index(), unit_deployment_group.get_name(), country
 			);
 			ret = false;
 		}
@@ -379,7 +387,7 @@ bool UnitInstanceManager::generate_deployment(
 	MapInstance& map_instance, CountryInstance& country, Deployment const* deployment
 ) {
 	if (deployment == nullptr) {
-		Logger::error("Trying to generate null deployment for ", country.get_identifier());
+		spdlog::error_s("Trying to generate null deployment for {}", country);
 		return false;
 	}
 
@@ -459,10 +467,12 @@ bool UnitInstanceManager::create_leader(
 ) {
 	const fixed_point_t leader_creation_cost = military_defines.get_leader_recruit_cost();
 	if (country.get_leadership_point_stockpile() < leader_creation_cost) {
-		Logger::error(
-			"Country \"", country.get_identifier(), "\" does not have enough leadership points (",
-			country.get_leadership_point_stockpile().to_string(2), ") to create a ",
-			get_branched_leader_name(branch), " (cost: ", leader_creation_cost.to_string(2), ")"
+		spdlog::error_s(
+			"Country \"{}\" does not have enough leadership points ({}) to create a {} (cost: {})",
+			country,
+			country.get_leadership_point_stockpile().to_string(2),
+			get_branched_leader_name(branch),
+			leader_creation_cost.to_string(2)
 		);
 		return false;
 	}

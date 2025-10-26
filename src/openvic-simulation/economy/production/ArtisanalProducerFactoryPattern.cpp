@@ -20,7 +20,7 @@ memory::unique_ptr<ArtisanalProducer> ArtisanalProducerFactoryPattern::CreateNew
 	}
 
 	if (OV_unlikely(unlocked_artisanal_production_types.size() == 0)) {
-		Logger::error("CreateNewArtisanalProducer was called but there are no artisanal production types.");
+		spdlog::error_s("CreateNewArtisanalProducer was called but there are no artisanal production types.");
 		return nullptr;
 	}
 
