@@ -16,7 +16,7 @@
 #include "openvic-simulation/types/CowVector.hpp"
 #include "openvic-simulation/types/NullMutex.hpp"
 #include "openvic-simulation/utility/Containers.hpp"
-#include "openvic-simulation/utility/Utility.hpp"
+#include "openvic-simulation/utility/Typedefs.hpp"
 
 // Based heavily on https://github.com/palacaze/sigslot and https://github.com/mousebyte/sigslot20
 

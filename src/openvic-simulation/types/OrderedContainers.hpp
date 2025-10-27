@@ -89,7 +89,7 @@ namespace OpenVic {
 	using ordered_set = vector_ordered_set<Key, Hash, KeyEqual, RawAllocator, IndexType, Allocator>;
 
 	template<typename T>
-	concept derived_ordered_map = utility::derived_from_specialization_of<T, tsl::ordered_map>;
+	concept derived_ordered_map = derived_from_specialization_of<T, tsl::ordered_map>;
 
 	/* Case-Insensitive Containers */
 	struct case_insensitive_string_hash {

@@ -6,6 +6,7 @@
 #include "openvic-simulation/dataloader/NodeTools.hpp"
 #include "openvic-simulation/types/Colour.hpp"
 #include "openvic-simulation/utility/StringUtils.hpp"
+#include "openvic-simulation/utility/Typedefs.hpp"
 
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;

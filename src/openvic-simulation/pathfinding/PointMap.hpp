@@ -12,7 +12,7 @@
 #include "openvic-simulation/types/Signal.hpp"
 #include "openvic-simulation/types/Vector.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
-#include "openvic-simulation/utility/Utility.hpp"
+#include "openvic-simulation/utility/Hash.hpp"
 
 namespace OpenVic {
 	struct PointMap {
@@ -62,8 +62,8 @@ namespace OpenVic {
 
 		struct SegmentHash {
 			inline constexpr std::size_t operator()(Segment const& segment) const {
-				return utility::hash_murmur3(utility::hash_murmur3(segment.key.first) << 32) |
-					utility::hash_murmur3(segment.key.second);
+				return hash_murmur3(hash_murmur3(segment.key.first) << 32) |
+					hash_murmur3(segment.key.second);
 			}
 		};
 

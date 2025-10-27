@@ -41,7 +41,7 @@ bool ModifierManager::_register_modifier_effect(
 		return false;
 	}
 
-	if (!NumberUtils::is_power_of_two(static_cast<uint64_t>(targets))) {
+	if (!is_power_of_two(static_cast<uint64_t>(targets))) {
 		spdlog::error_s(
 			"Invalid targets for modifier effect \"{}\" - {} (can only contain one target)",
 			identifier, ModifierEffect::target_to_string(targets)

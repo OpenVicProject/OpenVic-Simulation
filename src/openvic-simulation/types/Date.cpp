@@ -11,6 +11,8 @@
 
 #include <range/v3/algorithm/max_element.hpp>
 
+#include "openvic-simulation/utility/Typedefs.hpp"
+
 using namespace OpenVic;
 
 memory::string Timespan::to_string() const {

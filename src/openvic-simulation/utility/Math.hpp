@@ -1,6 +1,28 @@
-#include <cstdint>
+#pragma once
 
-namespace OpenVic::NumberUtils {
+#include <concepts>
+#include <cstdint>
+#include <cstdlib>
+#include <type_traits>
+
+namespace OpenVic {
+    template<typename T>
+    [[nodiscard]] inline constexpr T abs(T num);
+
+	template<typename T>
+	requires std::integral<T> || std::floating_point<T>
+	[[nodiscard]] inline constexpr T abs(T num) {
+		if (std::is_constant_evaluated()) {
+			return num < 0 ? -num : num;
+		} else {
+			return std::abs(num);
+		}
+	}
+
+    template<typename T>
+	requires (!(std::integral<T> || std::floating_point<T>))
+	[[nodiscard]] inline constexpr T abs(T num);
+
 	constexpr int64_t round_to_int64(float num) {
 		return (num > 0.0f) ? (num + 0.5f) : (num - 0.5f);
 	}
@@ -11,16 +33,28 @@ namespace OpenVic::NumberUtils {
 
 	constexpr uint64_t pow(uint64_t base, std::size_t exponent) {
 		uint64_t ret = 1;
-		while (exponent-- > 0) {
-			ret *= base;
+		for (;; base *= base) {
+			if ((exponent & 1) != 0) {
+				ret *= base;
+			}
+			exponent >>= 1;
+			if (exponent == 0) {
+				break;
+			}
 		}
 		return ret;
 	}
 
 	constexpr int64_t pow(int64_t base, std::size_t exponent) {
 		int64_t ret = 1;
-		while (exponent-- > 0) {
-			ret *= base;
+		for (;; base *= base) {
+			if ((exponent & 1) != 0) {
+				ret *= base;
+			}
+			exponent >>= 1;
+			if (exponent == 0) {
+				break;
+			}
 		}
 		return ret;
 	}
@@ -43,7 +77,7 @@ namespace OpenVic::NumberUtils {
 			}
 		}
 
-		//round up
+		// round up
 		if (x > 0) {
 			c += 1;
 		}

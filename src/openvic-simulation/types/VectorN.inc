@@ -10,8 +10,6 @@
 #include <compare>
 #include <ostream>
 
-#include "openvic-simulation/utility/Utility.hpp"
-
 // Your IDE may show the warnings below being triggered as it doesn't have the context of where this file is included from.
 // They are safe to ignore so long as they don't appear in the compiler log.
 
@@ -126,7 +124,7 @@ namespace OpenVic {
 		}
 #undef VEC_COMPONENT_CAST
 
-#define VEC_COMPONENT_ABS(v) ::OpenVic::_detail::vecn_t::abs(v)
+#define VEC_COMPONENT_ABS(v) OpenVic::abs(v)
 		constexpr VEC_TYPE abs() const {
 			return { FOR_VEC_COMPONENTS(VEC_COMPONENT_ABS, COMMA) };
 		}
@@ -216,21 +214,21 @@ namespace OpenVic {
 #undef VEC_COMPONENT_ADDEQ
 
 #define VEC_COMPONENT_ADD_RIGHT(v) left.v + right
-		template<OpenVic::utility::not_same_as<VEC_TYPE<T>> S>
+		template<not_same_as<VEC_TYPE<T>> S>
 		constexpr friend VEC_TYPE operator+(VEC_TYPE const& left, S const& right) {
 			return { FOR_VEC_COMPONENTS(VEC_COMPONENT_ADD_RIGHT, COMMA) };
 		}
 #undef VEC_COMPONENT_ADD_RIGHT
 
 #define VEC_COMPONENT_ADD_LEFT(v) left + right.v
-		template<OpenVic::utility::not_same_as<VEC_TYPE<T>> S>
+		template<not_same_as<VEC_TYPE<T>> S>
 		constexpr friend VEC_TYPE operator+(S const& left, VEC_TYPE const& right) {
 			return { FOR_VEC_COMPONENTS(VEC_COMPONENT_ADD_LEFT, COMMA) };
 		}
 #undef VEC_COMPONENT_ADD_LEFT
 
 #define VEC_COMPONENT_ADDEQ_RIGHT(v) v += right;
-		template<OpenVic::utility::not_same_as<VEC_TYPE<T>> S>
+		template<not_same_as<VEC_TYPE<T>> S>
 		constexpr VEC_TYPE& operator+=(S const& right) {
 			FOR_VEC_COMPONENTS(VEC_COMPONENT_ADDEQ_RIGHT,)
 			return *this;
@@ -259,21 +257,21 @@ namespace OpenVic {
 #undef VEC_COMPONENT_SUBEQ
 
 #define VEC_COMPONENT_SUB_RIGHT(v) left.v - right
-		template<OpenVic::utility::not_same_as<VEC_TYPE<T>> S>
+		template<not_same_as<VEC_TYPE<T>> S>
 		constexpr friend VEC_TYPE operator-(VEC_TYPE const& left, S const& right) {
 			return { FOR_VEC_COMPONENTS(VEC_COMPONENT_SUB_RIGHT, COMMA) };
 		}
 #undef VEC_COMPONENT_SUB_RIGHT
 
 #define VEC_COMPONENT_SUB_LEFT(v) left - right.v
-		template<OpenVic::utility::not_same_as<VEC_TYPE<T>> S>
+		template<not_same_as<VEC_TYPE<T>> S>
 		constexpr friend VEC_TYPE operator-(S const& left, VEC_TYPE const& right) {
 			return { FOR_VEC_COMPONENTS(VEC_COMPONENT_SUB_LEFT, COMMA) };
 		}
 #undef VEC_COMPONENT_SUB_LEFT
 
 #define VEC_COMPONENT_SUBEQ_RIGHT(v) v -= right;
-		template<OpenVic::utility::not_same_as<VEC_TYPE<T>> S>
+		template<not_same_as<VEC_TYPE<T>> S>
 		constexpr VEC_TYPE& operator-=(S const& right) {
 			FOR_VEC_COMPONENTS(VEC_COMPONENT_SUBEQ_RIGHT,)
 			return *this;
@@ -296,21 +294,21 @@ namespace OpenVic {
 #undef VEC_COMPONENT_MULEQ
 
 #define VEC_COMPONENT_MUL_RIGHT(v) left.v * right
-		template<OpenVic::utility::not_same_as<VEC_TYPE<T>> S>
+		template<not_same_as<VEC_TYPE<T>> S>
 		constexpr friend VEC_TYPE operator*(VEC_TYPE const& left, S const& right) {
 			return { FOR_VEC_COMPONENTS(VEC_COMPONENT_MUL_RIGHT, COMMA) };
 		}
 #undef VEC_COMPONENT_MUL_RIGHT
 
 #define VEC_COMPONENT_MUL_LEFT(v) left * right.v
-		template<OpenVic::utility::not_same_as<VEC_TYPE<T>> S>
+		template<not_same_as<VEC_TYPE<T>> S>
 		constexpr friend VEC_TYPE operator*(S const& left, VEC_TYPE const& right) {
 			return { FOR_VEC_COMPONENTS(VEC_COMPONENT_MUL_LEFT, COMMA) };
 		}
 #undef VEC_COMPONENT_MUL_LEFT
 
 #define VEC_COMPONENT_MULEQ_RIGHT(v) v *= right;
-		template<OpenVic::utility::not_same_as<VEC_TYPE<T>> S>
+		template<not_same_as<VEC_TYPE<T>> S>
 		constexpr VEC_TYPE& operator*=(S const& right) {
 			FOR_VEC_COMPONENTS(VEC_COMPONENT_MULEQ_RIGHT,)
 			return *this;
@@ -333,21 +331,21 @@ namespace OpenVic {
 #undef VEC_COMPONENT_DIVEQ
 
 #define VEC_COMPONENT_DIV_RIGHT(v) left.v / right
-		template<OpenVic::utility::not_same_as<VEC_TYPE<T>> S>
+		template<not_same_as<VEC_TYPE<T>> S>
 		constexpr friend VEC_TYPE operator/(VEC_TYPE const& left, S const& right) {
 			return { FOR_VEC_COMPONENTS(VEC_COMPONENT_DIV_RIGHT, COMMA) };
 		}
 #undef VEC_COMPONENT_DIV_RIGHT
 
 #define VEC_COMPONENT_DIV_LEFT(v) left / right.v
-		template<OpenVic::utility::not_same_as<VEC_TYPE<T>> S>
+		template<not_same_as<VEC_TYPE<T>> S>
 		constexpr friend VEC_TYPE operator/(S const& left, VEC_TYPE const& right) {
 			return { FOR_VEC_COMPONENTS(VEC_COMPONENT_DIV_LEFT, COMMA) };
 		}
 #undef VEC_COMPONENT_DIV_LEFT
 
 #define VEC_COMPONENT_DIVEQ_RIGHT(v) v /= right;
-		template<OpenVic::utility::not_same_as<VEC_TYPE<T>> S>
+		template<not_same_as<VEC_TYPE<T>> S>
 		constexpr VEC_TYPE& operator/=(S const& right) {
 			FOR_VEC_COMPONENTS(VEC_COMPONENT_DIVEQ_RIGHT,)
 			return *this;
@@ -374,7 +372,3 @@ namespace OpenVic {
 }
 
 #undef COMMA
-
-#undef FOR_VEC_COMPONENTS
-#undef FOR_VEC_COMPONENTS_END
-#undef VEC_TYPE

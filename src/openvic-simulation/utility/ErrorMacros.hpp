@@ -1,7 +1,7 @@
 #pragma once
 
-#include "openvic-simulation/utility/Logger.hpp" // IWYU pragma: keep for macros
-#include "openvic-simulation/utility/Utility.hpp"
+#include "openvic-simulation/utility/Logger.hpp" // IWYU pragma: keep for loggers
+#include "openvic-simulation/utility/Typedefs.hpp" // IWYU pragma: keep for macros
 
 /**
  * Try using `OV_ERR_FAIL_COND_MSG`.

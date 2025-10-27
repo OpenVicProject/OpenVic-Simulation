@@ -1,8 +1,10 @@
 #pragma once
 
 #include <concepts>
+#include <iterator>
 
-#include "openvic-simulation/utility/Utility.hpp"
+#include "openvic-simulation/utility/Typedefs.hpp"
+#include "openvic-simulation/utility/Compare.hpp"
 
 namespace OpenVic {
 	template<typename Pointer, typename ContainerTag>
@@ -92,7 +94,7 @@ namespace OpenVic {
 	[[nodiscard]] OV_ALWAYS_INLINE constexpr auto operator<=>( //
 		basic_iterator<PtrL, ContainerTag> const& lhs, basic_iterator<PtrR, ContainerTag> const& rhs
 	) {
-		return utility::three_way(lhs.base(), rhs.base());
+		return three_way_compare(lhs.base(), rhs.base());
 	}
 
 	template<typename Ptr, typename ContainerTag>
@@ -110,7 +112,7 @@ namespace OpenVic {
 	[[nodiscard]] OV_ALWAYS_INLINE constexpr auto operator<=>( //
 		basic_iterator<Ptr, ContainerTag> const& lhs, basic_iterator<Ptr, ContainerTag> const& rhs
 	) {
-		return utility::three_way(lhs.base(), rhs.base());
+		return three_way_compare(lhs.base(), rhs.base());
 	}
 
 	template<typename ItL, typename ItR, typename ContainerTag>

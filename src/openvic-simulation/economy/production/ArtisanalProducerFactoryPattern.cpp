@@ -3,6 +3,7 @@
 #include "openvic-simulation/economy/GoodInstance.hpp"
 #include "openvic-simulation/economy/production/ArtisanalProducer.hpp"
 #include "openvic-simulation/economy/production/ProductionType.hpp"
+#include "openvic-simulation/utility/Typedefs.hpp"
 
 using namespace OpenVic;
 

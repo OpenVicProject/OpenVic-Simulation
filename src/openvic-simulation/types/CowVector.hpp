@@ -9,10 +9,13 @@
 #include <memory>
 #include <span>
 #include <type_traits>
+#include <vector>
 
 #include "openvic-simulation/types/BasicIterator.hpp"
+#include "openvic-simulation/utility/Allocator.hpp"
+#include "openvic-simulation/utility/Compare.hpp"
 #include "openvic-simulation/utility/Concepts.hpp"
-#include "openvic-simulation/utility/Utility.hpp"
+#include "openvic-simulation/utility/Typedefs.hpp"
 
 namespace OpenVic {
 	/**
@@ -54,18 +57,18 @@ namespace OpenVic {
 		OV_ALWAYS_INLINE explicit cow_vector(Allocator const& alloc) : cow_vector(allocate_tag, alloc, 0) {}
 
 		OV_ALWAYS_INLINE explicit cow_vector(size_type count, Allocator const& alloc) : cow_vector(allocate_tag, alloc, count) {
-			_data->array_end = utility::uninitialized_default_n(_data->array, count, this->alloc);
+			_data->array_end = uninitialized_default_n(_data->array, count, this->alloc);
 		}
 
 		OV_ALWAYS_INLINE cow_vector(size_type count, const T& value, Allocator const& alloc = Allocator())
 			: cow_vector(count, alloc) {
-			_data->array_end = utility::uninitialized_fill_n(_data->array, count, value, this->alloc);
+			_data->array_end = uninitialized_fill_n(_data->array, count, value, this->alloc);
 		}
 
 		template<class InputIt>
 		OV_ALWAYS_INLINE cow_vector(InputIt first, InputIt last, const Allocator& alloc = Allocator())
 			: cow_vector(allocate_tag, alloc, _validate_iterator_difference(last - first)) {
-			_data->array_end = utility::uninitialized_copy(first, last, _data->array, this->alloc);
+			_data->array_end = uninitialized_copy(first, last, _data->array, this->alloc);
 		}
 
 		OV_ALWAYS_INLINE cow_vector(cow_vector const& other)
@@ -91,8 +94,8 @@ namespace OpenVic {
 				} else if (!other.empty()) {
 					_data = _allocate_payload(other.size());
 					_data->array_end =
-						utility::uninitialized_move(other._data->array, other._data->array_end, _data->array, alloc);
-					utility::destroy(_data->array, _data->array_end, alloc);
+						uninitialized_move(other._data->array, other._data->array_end, _data->array, alloc);
+					destroy(_data->array, _data->array_end, alloc);
 					_data->array_end = _data->array;
 				}
 			}
@@ -103,7 +106,7 @@ namespace OpenVic {
 
 		OV_ALWAYS_INLINE ~cow_vector() {
 			if (_data && --_data->count == 0) {
-				utility::destroy(_data->array, _data->array_end, alloc);
+				destroy(_data->array, _data->array_end, alloc);
 				_deallocate_payload(_data);
 				_data = nullptr;
 			}
@@ -234,7 +237,7 @@ namespace OpenVic {
 
 			difference_type dif = _data->array_end - _data->array;
 			if (dif < 0) {
-				utility::unreachable();
+				unreachable();
 			}
 			return size_type(dif);
 		}
@@ -252,7 +255,7 @@ namespace OpenVic {
 
 			difference_type dif = _data->store_end - _data->array;
 			if (dif < 0) {
-				utility::unreachable();
+				unreachable();
 			}
 			return size_type(dif);
 		}
@@ -270,7 +273,7 @@ namespace OpenVic {
 			}
 
 			writer& result = write_for_overwrite();
-			result._data->array_end = utility::uninitialized_copy(_data->array, _data->array_end, result._data->array, alloc);
+			result._data->array_end = uninitialized_copy(_data->array, _data->array_end, result._data->array, alloc);
 			return result;
 		}
 
@@ -410,11 +413,11 @@ namespace OpenVic {
 			const size_type old_size = size();
 			payload* new_data = _allocate_payload(count);
 			if (_data) {
-				if constexpr (utility::move_insertable_allocator<allocator_type>) {
+				if constexpr (move_insertable_allocator<allocator_type>) {
 					_relocate(_data->array, _data->array_end, new_data->array, alloc);
 				} else {
-					utility::uninitialized_move(_data->array, _data->array_end, new_data->array, alloc);
-					utility::destroy(_data->array, _data->array_end, alloc);
+					uninitialized_move(_data->array, _data->array_end, new_data->array, alloc);
+					destroy(_data->array, _data->array_end, alloc);
 				}
 				_deallocate_payload(_data);
 			}
@@ -430,12 +433,12 @@ namespace OpenVic {
 				const size_type new_cap = size();
 				payload* new_data = _allocate_payload(new_cap);
 				if (new_data) {
-					if constexpr (utility::move_insertable_allocator<allocator_type>) {
+					if constexpr (move_insertable_allocator<allocator_type>) {
 						_relocate(_data->array, _data->array_end, new_data->array, alloc);
 					} else {
 						new_data->array_end =
-							utility::uninitialized_move(_data->array, _data->array_end, new_data->array, alloc);
-						utility::destroy(_data->array, _data->array_end, alloc);
+							uninitialized_move(_data->array, _data->array_end, new_data->array, alloc);
+						destroy(_data->array, _data->array_end, alloc);
 					}
 					_deallocate_payload(_data);
 				}
@@ -448,7 +451,7 @@ namespace OpenVic {
 				return;
 			}
 
-			utility::destroy(_data->array, _data->array_end, alloc);
+			destroy(_data->array, _data->array_end, alloc);
 			_data->array_end = _data->array;
 		}
 
@@ -457,7 +460,7 @@ namespace OpenVic {
 			if (_data) {
 				if (_data->array_end != _data->store_end) {
 					if (pos == const_iterator()) {
-						utility::unreachable();
+						unreachable();
 					}
 
 					if (pos == end()) {
@@ -611,7 +614,7 @@ namespace OpenVic {
 
 		friend cow_vector;
 		static pointer _relocate(pointer first, pointer last, pointer result, allocator_type& alloc) {
-			if constexpr (utility::trivially_relocatable<T>) {
+			if constexpr (trivially_relocatable<T>) {
 				difference_type dif = last - first;
 				if (dif > 0) {
 					std::memcpy(result, first, dif * sizeof(T));
@@ -656,7 +659,7 @@ namespace OpenVic {
 			guard_elements(pointer elt, size_type n, allocator_type& a) : first(elt), last(elt + n), alloc(a) {}
 
 			~guard_elements() {
-				utility::destroy(first, last, alloc);
+				destroy(first, last, alloc);
 			}
 
 		private:
@@ -685,7 +688,7 @@ namespace OpenVic {
 
 				allocator_traits::construct(alloc, std::to_address(new_start + elems_before), std::forward<Args>(args)...);
 
-				if constexpr (utility::move_insertable_allocator<allocator_type>) {
+				if constexpr (move_insertable_allocator<allocator_type>) {
 					new_finish = _relocate(old_start, pos.base(), new_start, alloc);
 					++new_finish;
 					new_finish = _relocate(pos.base(), old_finish, new_finish, alloc);
@@ -693,13 +696,13 @@ namespace OpenVic {
 					// Guard the new element so it will be destroyed if anything throws.
 					guard_elements guard_elts(new_start + elems_before, 1, alloc);
 
-					new_finish = utility::uninitialized_move(old_start, pos.base(), new_start, alloc);
+					new_finish = uninitialized_move(old_start, pos.base(), new_start, alloc);
 
 					++new_finish;
 					// Guard everything before the new element too.
 					guard_elts.first = new_start;
 
-					new_finish = utility::uninitialized_move(pos.base(), old_finish, new_finish, alloc);
+					new_finish = uninitialized_move(pos.base(), old_finish, new_finish, alloc);
 
 					// New storage has been fully initialized, destroy the old elements.
 					guard_elts.first = old_start;
@@ -758,16 +761,16 @@ namespace OpenVic {
 						const size_type elems_after = end() - pos;
 						pointer old_finish = _data->array_end;
 						if (elems_after > n) {
-							utility::uninitialized_move(_data->array_end - n, _data->array_end, _data->array_end, alloc);
+							uninitialized_move(_data->array_end - n, _data->array_end, _data->array_end, alloc);
 							_data->array_end += n;
 							std::move_backward(pos.base(), old_finish - n, old_finish);
 							std::copy(first, last, pos);
 						} else {
 							It mid = first;
 							std::advance(mid, elems_after);
-							utility::uninitialized_copy(mid, last, _data->array_end, alloc);
+							uninitialized_copy(mid, last, _data->array_end, alloc);
 							_data->array_end += n - elems_after;
-							utility::uninitialized_move(pos.base(), old_finish, _data->array_end, alloc);
+							uninitialized_move(pos.base(), old_finish, _data->array_end, alloc);
 							_data->array_end += elems_after;
 							std::copy(first, mid, pos);
 						}
@@ -784,10 +787,10 @@ namespace OpenVic {
 						payload* new_data = _allocate_payload(len);
 						pointer new_start = new_data->array;
 						pointer new_finish = new_start;
-						new_finish = utility::uninitialized_move(old_start, pos.base(), new_start, alloc);
-						new_finish = utility::uninitialized_copy(first, last, new_finish, alloc);
-						new_finish = utility::uninitialized_move(pos.base(), old_finish, new_finish, alloc);
-						utility::destroy(old_start, old_finish, alloc);
+						new_finish = uninitialized_move(old_start, pos.base(), new_start, alloc);
+						new_finish = uninitialized_copy(first, last, new_finish, alloc);
+						new_finish = uninitialized_move(pos.base(), old_finish, new_finish, alloc);
+						destroy(old_start, old_finish, alloc);
 						_deallocate_payload(_data);
 						_set_payload(new_data, new_finish);
 					}
@@ -812,13 +815,13 @@ namespace OpenVic {
 					const size_type elems_after = end() - pos;
 					pointer old_finish = _data->array_end;
 					if (elems_after > n) {
-						utility::uninitialized_move(old_finish - n, old_finish, old_finish, alloc);
+						uninitialized_move(old_finish - n, old_finish, old_finish, alloc);
 						_data->array_end += n;
 						std::move_backward(pos.base(), old_finish - n, old_finish);
 						std::fill(pos.base(), pos.base() + n, copy);
 					} else {
-						_data->array_end = utility::uninitialized_fill_n(old_finish, n - elems_after, copy, alloc);
-						utility::uninitialized_move(pos.base(), old_finish, _data->array_end, alloc);
+						_data->array_end = uninitialized_fill_n(old_finish, n - elems_after, copy, alloc);
+						uninitialized_move(pos.base(), old_finish, _data->array_end, alloc);
 						_data->array_end += elems_after;
 						std::fill(pos.base(), old_finish, copy);
 					}
@@ -836,14 +839,14 @@ namespace OpenVic {
 					pointer new_start = new_data->array;
 					pointer new_finish = new_start;
 					// See _M_realloc_insert above.
-					utility::uninitialized_fill_n(new_start + elems_before, n, value, alloc);
+					uninitialized_fill_n(new_start + elems_before, n, value, alloc);
 					new_finish = pointer();
 
-					new_finish = utility::uninitialized_move(old_start, p, new_start, alloc);
+					new_finish = uninitialized_move(old_start, p, new_start, alloc);
 					new_finish += n;
-					new_finish = utility::uninitialized_move(p, old_finish, new_finish, alloc);
+					new_finish = uninitialized_move(p, old_finish, new_finish, alloc);
 
-					utility::destroy(old_start, old_finish, alloc);
+					destroy(old_start, old_finish, alloc);
 					_deallocate_payload(_data);
 					_set_payload(new_data, new_finish);
 				}
@@ -901,7 +904,7 @@ namespace OpenVic {
 
 		void _erase_at_end(pointer pos) {
 			if (size_type n = _data->array_end - pos) {
-				utility::destroy(pos, _data->array_end, alloc);
+				destroy(pos, _data->array_end, alloc);
 				_data->array_end = pos;
 			}
 		}
@@ -931,14 +934,14 @@ namespace OpenVic {
 
 				allocator_traits::construct(alloc, std::to_address(new_start + elems), std::forward<Args>(args)...);
 
-				if constexpr (utility::move_insertable_allocator<allocator_type>) {
+				if constexpr (move_insertable_allocator<allocator_type>) {
 					new_finish = _relocate(old_start, old_finish, new_start, alloc);
 					++new_finish;
 				} else {
 					// Guard the new element so it will be destroyed if anything throws.
 					guard_elements guard_elts(new_start + elems, 1, alloc);
 
-					new_finish = utility::uninitialized_move(old_start, old_finish, new_start, alloc);
+					new_finish = uninitialized_move(old_start, old_finish, new_start, alloc);
 
 					++new_finish;
 
@@ -961,7 +964,7 @@ namespace OpenVic {
 				// TODO: crash if can't allocate n
 
 				_data = _allocate_payload(len);
-				_data->array_end = utility::uninitialized_default_n(_data->array_end, n, alloc);
+				_data->array_end = uninitialized_default_n(_data->array_end, n, alloc);
 				return;
 			}
 
@@ -970,15 +973,15 @@ namespace OpenVic {
 			size_type navail = size_type(_data->store_end - _data->array_end);
 
 			if (_size > max_size() || navail > max_size() - _size) {
-				utility::unreachable();
+				unreachable();
 			}
 
 			if (navail >= n) {
 				if (!_data->array_end) {
-					utility::unreachable();
+					unreachable();
 				}
 
-				_data->array_end = utility::uninitialized_default_n(_data->array_end, n, alloc);
+				_data->array_end = uninitialized_default_n(_data->array_end, n, alloc);
 			} else {
 				// Make local copies of these members because the compiler thinks
 				// the allocator can alter them if 'this' is globally reachable.
@@ -994,14 +997,14 @@ namespace OpenVic {
 				{
 					guard_alloc guard(new_start, len, *this);
 
-					utility::uninitialized_default_n(new_start + _size, n, alloc);
+					uninitialized_default_n(new_start + _size, n, alloc);
 
-					if constexpr (utility::move_insertable_allocator<allocator_type>) {
+					if constexpr (move_insertable_allocator<allocator_type>) {
 						_relocate(old_start, old_finish, new_start, alloc);
 					} else {
 						guard_elements guard_elts(new_start + _size, n, alloc);
 
-						utility::uninitialized_move(old_start, old_finish, new_start, alloc);
+						uninitialized_move(old_start, old_finish, new_start, alloc);
 
 						guard_elts.first = old_start;
 						guard_elts.last = old_finish;
@@ -1016,7 +1019,7 @@ namespace OpenVic {
 			const size_type _size = size();
 			if (n > capacity()) {
 				if (n <= _size) {
-					utility::unreachable();
+					unreachable();
 				}
 
 				cow_vector<T, allocator_type> tmp(n, value, alloc);
@@ -1025,7 +1028,7 @@ namespace OpenVic {
 			} else if (n > _size) {
 				std::fill(begin(), end(), value);
 				const size_type add = n - _size;
-				_data->array_end = utility::uninitialized_fill_n(_data->array_end, add, value, alloc);
+				_data->array_end = uninitialized_fill_n(_data->array_end, add, value, alloc);
 			} else {
 				_erase_at_end(std::fill_n(_data->array, n, value));
 			}
@@ -1039,7 +1042,7 @@ namespace OpenVic {
 
 				if (len > capacity()) {
 					if (len <= _size) {
-						utility::unreachable();
+						unreachable();
 					}
 
 					// TODO: crash if can't allocate len
@@ -1047,11 +1050,11 @@ namespace OpenVic {
 					payload new_data = _allocate_payload(len);
 					{
 						guard_alloc guard(new_data, *this);
-						utility::uninitialized_copy(first, last, guard.data->array, alloc);
+						uninitialized_copy(first, last, guard.data->array, alloc);
 						guard.release();
 					}
 
-					utility::destroy(_data->array, _data->array_end, alloc);
+					destroy(_data->array, _data->array_end, alloc);
 					_deallocate_payload(_data);
 					_set_payload(new_data, new_data->array + len);
 				} else if (_size >= len) {
@@ -1061,7 +1064,7 @@ namespace OpenVic {
 					std::advance(mid, _size);
 					std::copy(first, mid, _data->array);
 					[[maybe_unused]] const size_type n = len - _size;
-					_data->array_end = utility::uninitialized_copy(mid, last, _data->array_end, alloc);
+					_data->array_end = uninitialized_copy(mid, last, _data->array_end, alloc);
 				}
 			} else if (_data) {
 				pointer cur = _data->array;
@@ -1091,16 +1094,16 @@ namespace OpenVic {
 
 	template<typename T, typename Allocator>
 	[[nodiscard]] auto operator<=>(cow_vector<T, Allocator> const& x, cow_vector<T, Allocator> const& y) {
-		return std::lexicographical_compare_three_way(x.begin(), x.end(), y.begin(), y.end(), utility::three_way);
+		return std::lexicographical_compare_three_way(x.begin(), x.end(), y.begin(), y.end(), three_way_compare);
 	}
 
 	namespace cow {
-		template<utility::specialization_of<cow_vector> T>
+		template<specialization_of<cow_vector> T>
 		T const& read(T& v) {
 			return v;
 		}
 
-		template<utility::specialization_of<cow_vector> T>
+		template<specialization_of<cow_vector> T>
 		typename T::writer& write(T& v) {
 			return v.write();
 		}

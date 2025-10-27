@@ -38,7 +38,7 @@
 #include "openvic-simulation/utility/Containers.hpp"
 #include "openvic-simulation/utility/FormatValidate.hpp"
 #include "openvic-simulation/utility/Logger.hpp"
-#include "openvic-simulation/utility/Utility.hpp"
+#include "openvic-simulation/utility/Typedefs.hpp"
 
 using namespace OpenVic;
 

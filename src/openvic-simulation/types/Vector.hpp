@@ -1,41 +1,41 @@
 #pragma once
 
-#include <cmath>
-#include <iterator>
+#include <cmath> // IWYU pragma: keep
+#include <iterator> // IWYU pragma: keep
 
 #include <fmt/format.h>
 
-#include "openvic-simulation/types/BasicIterator.hpp"
+#include "openvic-simulation/types/BasicIterator.hpp" // IWYU pragma: keep
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
-#include "openvic-simulation/utility/Concepts.hpp"
-#include "openvic-simulation/utility/Utility.hpp"
-
-namespace OpenVic::_detail::vecn_t {
-	template<typename T>
-	inline constexpr T abs(T num) {
-		return OpenVic::utility::abs(num);
-	}
-
-	template<>
-	inline constexpr fixed_point_t abs<fixed_point_t>(fixed_point_t num) {
-		return num.abs();
-	}
-}
+#include "openvic-simulation/utility/Concepts.hpp" // IWYU pragma: keep
+#include "openvic-simulation/utility/Math.hpp" // IWYU pragma: keep
 
 #define VEC_TYPE vec2_t
 #define FOR_VEC_COMPONENTS(F, SEP) F(x) SEP F(y)
 #define FOR_VEC_COMPONENTS_END(F, END_F) F(x) F(y) END_F(y)
 #include "VectorN.inc"
 
+#undef FOR_VEC_COMPONENTS
+#undef FOR_VEC_COMPONENTS_END
+#undef VEC_TYPE
+
 #define VEC_TYPE vec3_t
 #define FOR_VEC_COMPONENTS(F, SEP) F(x) SEP F(y) SEP F(z)
 #define FOR_VEC_COMPONENTS_END(F, END_F) F(x) F(y) F(z) END_F(z)
 #include "VectorN.inc"
 
+#undef FOR_VEC_COMPONENTS
+#undef FOR_VEC_COMPONENTS_END
+#undef VEC_TYPE
+
 #define VEC_TYPE vec4_t
 #define FOR_VEC_COMPONENTS(F, SEP) F(x) SEP F(y) SEP F(z) SEP F(w)
 #define FOR_VEC_COMPONENTS_END(F, END_F) F(x) F(y) F(z) F(w) END_F(w)
 #include "VectorN.inc"
+
+#undef FOR_VEC_COMPONENTS
+#undef FOR_VEC_COMPONENTS_END
+#undef VEC_TYPE
 
 namespace OpenVic {
 

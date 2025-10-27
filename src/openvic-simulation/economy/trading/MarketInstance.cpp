@@ -7,7 +7,7 @@
 #include "openvic-simulation/economy/trading/MarketSellOrder.hpp"
 #include "openvic-simulation/utility/Containers.hpp"
 #include "openvic-simulation/utility/ThreadPool.hpp"
-#include "openvic-simulation/utility/Utility.hpp"
+#include "openvic-simulation/utility/Typedefs.hpp"
 
 using namespace OpenVic;
 

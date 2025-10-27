@@ -10,6 +10,7 @@
 #include "openvic-simulation/modifier/ModifierEffectCache.hpp"
 #include "openvic-simulation/pop/Pop.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
+#include "openvic-simulation/utility/Typedefs.hpp"
 
 using namespace OpenVic;
 

@@ -11,7 +11,7 @@
 
 #include "openvic-simulation/types/Date.hpp"
 #include "openvic-simulation/types/OrderedContainers.hpp"
-#include "openvic-simulation/utility/Utility.hpp"
+#include "openvic-simulation/utility/Hash.hpp"
 
 namespace OpenVic {
 	struct CountryInstance;
@@ -28,7 +28,7 @@ namespace OpenVic {
 				right1 = std::bit_cast<uintptr_t>(rhs.first), //
 				right2 = std::bit_cast<uintptr_t>(rhs.second);
 
-			using ordering = decltype(OpenVic::utility::three_way(std::tie(left1, left2), std::tie(right1, right2)));
+			using ordering = decltype(three_way_compare(std::tie(left1, left2), std::tie(right1, right2)));
 
 			auto tied = std::tie(left1, left2);
 			if (tied == std::tie(right1, right2)) {
@@ -46,7 +46,7 @@ namespace OpenVic {
 			auto& rhs_comp_first = rhs_left > rhs_right ? rhs_left : rhs_right;
 			auto& rhs_comp_second = rhs_left < rhs_right ? rhs_left : rhs_right;
 
-			return OpenVic::utility::three_way(
+			return three_way_compare(
 				std::tie(lhs_comp_first, lhs_comp_second), std::tie(rhs_comp_first, rhs_comp_second)
 			);
 		}
@@ -70,9 +70,9 @@ namespace std {
 			const uintptr_t first = std::bit_cast<uintptr_t>(pair.first), //
 				second = std::bit_cast<uintptr_t>(pair.second);
 
-			std::size_t seed1(0);
-			OpenVic::utility::hash_combine(seed1, first);
-			OpenVic::utility::hash_combine(seed1, second);
+			std::size_t seed1 = 0;
+			OpenVic::hash_combine(seed1, first);
+			OpenVic::hash_combine(seed1, second);
 
 			return seed1;
 		}
@@ -84,13 +84,13 @@ namespace std {
 			const uintptr_t first = std::bit_cast<uintptr_t>(pair.first), //
 				second = std::bit_cast<uintptr_t>(pair.second);
 
-			std::size_t seed1(0);
-			OpenVic::utility::hash_combine(seed1, first);
-			OpenVic::utility::hash_combine(seed1, second);
+			std::size_t seed1 = 0;
+			OpenVic::hash_combine(seed1, first);
+			OpenVic::hash_combine(seed1, second);
 
-			std::size_t seed2(0);
-			OpenVic::utility::hash_combine(seed2, second);
-			OpenVic::utility::hash_combine(seed2, first);
+			std::size_t seed2 = 0;
+			OpenVic::hash_combine(seed2, second);
+			OpenVic::hash_combine(seed2, first);
 
 			return std::min(seed1, seed2);
 		}

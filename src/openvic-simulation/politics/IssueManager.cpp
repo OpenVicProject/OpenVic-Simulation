@@ -1,6 +1,7 @@
 #include "IssueManager.hpp"
 
 #include "openvic-simulation/modifier/ModifierManager.hpp"
+#include "openvic-simulation/utility/Typedefs.hpp"
 
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;

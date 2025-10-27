@@ -20,7 +20,8 @@
 #include "openvic-simulation/utility/ErrorMacros.hpp"
 #include "openvic-simulation/utility/Getters.hpp"
 #include "openvic-simulation/utility/StringUtils.hpp"
-#include "openvic-simulation/utility/Utility.hpp"
+#include "openvic-simulation/utility/Typedefs.hpp"
+#include "openvic-simulation/utility/Hash.hpp"
 
 namespace OpenVic {
 	// A relative period between points in time, measured in days
@@ -913,7 +914,7 @@ namespace std {
 	struct hash<OpenVic::Date> {
 		[[nodiscard]] std::size_t operator()(OpenVic::Date date) const {
 			std::size_t result = 0;
-			OpenVic::utility::perfect_hash(result, date.get_day(), date.get_month(), date.get_year());
+			OpenVic::perfect_hash(result, date.get_day(), date.get_month(), date.get_year());
 			return result;
 		}
 	};
