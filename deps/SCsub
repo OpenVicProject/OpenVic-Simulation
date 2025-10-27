@@ -5,6 +5,7 @@ Import("env")
 
 def build_openvic_dataloader(env):
     ovdl_env = SConscript("openvic-dataloader/SConstruct")
+    env.AppendUnique(CPPDEFINES=ovdl_env["CPPDEFINES"])
     env.Append(LIBPATH=ovdl_env.openvic_dataloader["LIBPATH"])
     env.Prepend(LIBS=ovdl_env.openvic_dataloader["LIBS"])
     env.Append(CPPPATH=ovdl_env.openvic_dataloader["INCPATH"])
@@ -14,6 +15,7 @@ def build_openvic_dataloader(env):
 
 def build_lexy_vdf(env):
     lvdf_env = SConscript("lexy-vdf/SConstruct")
+    env.AppendUnique(CPPDEFINES=lvdf_env["CPPDEFINES"])
     env.Append(LIBPATH=lvdf_env.lexy_vdf["LIBPATH"])
     env.Prepend(LIBS=lvdf_env.lexy_vdf["LIBS"])
     env.Append(CPPPATH=lvdf_env.lexy_vdf["INCPATH"])
