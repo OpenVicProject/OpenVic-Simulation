@@ -1844,7 +1844,7 @@ void CountryInstance::country_tick_before_map() {
 	// + industrial subsidies
 	// + loan interest
 
-	fixed_point_t available_funds = cache_stockpile_start_of_tick = cash_stockpile;
+	fixed_point_t available_funds = cash_stockpile_start_of_tick = cash_stockpile;
 	const fixed_point_t projected_administration_spending_copy = projected_administration_spending.get_untracked();
 	const fixed_point_t projected_education_spending_copy = projected_education_spending.get_untracked();
 	const fixed_point_t projected_military_spending_copy = projected_military_spending.get_untracked();
@@ -2043,7 +2043,7 @@ void CountryInstance::country_tick_after_map(const Date today) {
 	const fixed_point_t gold_income_value = country_defines.get_gold_to_cash_rate() * total_gold_production;;
 	gold_income.set(gold_income_value);
 	cash_stockpile += gold_income_value;
-	const fixed_point_t yesterdays_balance = cash_stockpile - cache_stockpile_start_of_tick;
+	const fixed_point_t yesterdays_balance = cash_stockpile - cash_stockpile_start_of_tick;
 	balance_history.push_back(yesterdays_balance);
 }
 
