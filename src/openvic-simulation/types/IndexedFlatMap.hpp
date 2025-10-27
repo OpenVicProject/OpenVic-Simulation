@@ -14,6 +14,17 @@
 #include "openvic-simulation/utility/ForwardableSpan.hpp"
 #include "openvic-simulation/utility/Logger.hpp"
 
+#define OV_IFLATMAP_PROPERTY(KEYTYPE, VALUETYPE, NAME) OV_IFLATMAP_PROPERTY_ACCESS(KEYTYPE, VALUETYPE, NAME, private)
+#define OV_IFLATMAP_PROPERTY_ACCESS(KEYTYPE, VALUETYPE, NAME, ACCESS) \
+	IndexedFlatMap<KEYTYPE, VALUETYPE> NAME; \
+\
+public: \
+	[[nodiscard]] constexpr IndexedFlatMap<KEYTYPE, VALUETYPE> const& get_##NAME() const { \
+		return NAME; \
+	} \
+	[[nodiscard]] auto get_##NAME(KEYTYPE const& key) const->decltype(OpenVic::_get_property<VALUETYPE>(NAME.at_index(0))); \
+	ACCESS:
+
 namespace OpenVic {
 	/**
 	* @brief A dictionary-like type that uses std::vector for contiguous storage,

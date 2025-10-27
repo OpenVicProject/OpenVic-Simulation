@@ -3,7 +3,6 @@
 #include "openvic-simulation/economy/trading/GoodMarket.hpp"
 #include "openvic-simulation/types/HasIndex.hpp"
 #include "openvic-simulation/types/HasIdentifier.hpp"
-#include "openvic-simulation/types/IndexedFlatMapMacro.hpp"
 
 namespace OpenVic {
 	struct GoodDefinition;
@@ -32,7 +31,7 @@ namespace OpenVic {
 	struct GoodInstanceManager {
 	private:
 		GoodDefinitionManager const& PROPERTY(good_definition_manager);
-		IndexedFlatMap_PROPERTY(GoodDefinition, GoodInstance, good_instance_by_definition);
+		OV_IFLATMAP_PROPERTY(GoodDefinition, GoodInstance, good_instance_by_definition);
 
 	public:
 		GoodInstanceManager(

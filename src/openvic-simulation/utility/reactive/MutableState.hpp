@@ -136,8 +136,8 @@ namespace OpenVic {
 	};
 }
 
-#define STATE_PROPERTY(T, NAME, ...) STATE_PROPERTY_ACCESS(T, NAME, private, __VA_ARGS__)
-#define STATE_PROPERTY_ACCESS(T, NAME, ACCESS, ...) \
+#define OV_STATE_PROPERTY(T, NAME, ...) OV_STATE_PROPERTY_ACCESS(T, NAME, private, __VA_ARGS__)
+#define OV_STATE_PROPERTY_ACCESS(T, NAME, ACCESS, ...) \
 	MutableState<T> NAME __VA_OPT__({) __VA_ARGS__ __VA_OPT__(}); \
 \
 public: \

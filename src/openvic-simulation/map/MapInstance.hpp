@@ -6,7 +6,6 @@
 #include "openvic-simulation/pathfinding/AStarPathing.hpp"
 #include "openvic-simulation/pop/PopValuesFromProvince.hpp"
 #include "openvic-simulation/types/Date.hpp"
-#include "openvic-simulation/types/IndexedFlatMapMacro.hpp"
 
 namespace OpenVic {
 	struct MapDefinition;
@@ -26,7 +25,7 @@ namespace OpenVic {
 		MapDefinition const& PROPERTY(map_definition);
 		ThreadPool& thread_pool;
 
-		IndexedFlatMap_PROPERTY(ProvinceDefinition, ProvinceInstance, province_instance_by_definition);
+		OV_IFLATMAP_PROPERTY(ProvinceDefinition, ProvinceInstance, province_instance_by_definition);
 
 		pop_size_t PROPERTY(highest_province_population, 0);
 		pop_size_t PROPERTY(total_map_population, 0);

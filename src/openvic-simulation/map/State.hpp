@@ -7,7 +7,6 @@
 #include "openvic-simulation/pop/PopsAggregate.hpp"
 #include "openvic-simulation/types/ColonyStatus.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
-#include "openvic-simulation/types/IndexedFlatMapMacro.hpp"
 #include "openvic-simulation/utility/Containers.hpp"
 #include "openvic-simulation/utility/ForwardableSpan.hpp"
 #include "openvic-simulation/utility/Getters.hpp"
@@ -38,7 +37,7 @@ namespace OpenVic {
 		colony_status_t PROPERTY(colony_status);
 		fixed_point_t PROPERTY(industrial_power);
 
-		IndexedFlatMap_PROPERTY(PopType, memory::vector<Pop*>, pops_cache_by_type);
+		OV_IFLATMAP_PROPERTY(PopType, memory::vector<Pop*>, pops_cache_by_type);
 
 		void _update_country();
 
@@ -121,6 +120,3 @@ template<>
 struct fmt::formatter<OpenVic::State> : fmt::formatter<string_view> {
 	format_context::iterator format(OpenVic::State const& state, fmt::format_context& ctx) const;
 };
-
-#undef IndexedFlatMap_PROPERTY
-#undef IndexedFlatMap_PROPERTY_ACCESS

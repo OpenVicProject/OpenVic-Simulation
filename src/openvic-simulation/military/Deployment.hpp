@@ -89,7 +89,7 @@ namespace OpenVic {
 		);
 		Deployment(Deployment&&) = default;
 
-		UNIT_BRANCHED_GETTER_CONST(get_unit_deployment_groups, armies, navies);
+		OV_UNIT_BRANCHED_GETTER_CONST(get_unit_deployment_groups, armies, navies);
 	};
 
 	struct DeploymentManager {
@@ -117,7 +117,3 @@ namespace OpenVic {
 		size_t get_missing_oob_file_count() const;
 	};
 }
-
-#undef _UNIT_BRANCHED_GETTER
-#undef UNIT_BRANCHED_GETTER
-#undef UNIT_BRANCHED_GETTER_CONST

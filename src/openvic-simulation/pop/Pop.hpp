@@ -6,7 +6,6 @@
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPointMap.hpp"
 #include "openvic-simulation/types/IndexedFlatMap.hpp"
-#include "openvic-simulation/types/IndexedFlatMapMacro.hpp"
 #include "openvic-simulation/types/PopSize.hpp"
 #include "openvic-simulation/types/UnitBranchType.hpp"
 #include "openvic-simulation/utility/Containers.hpp"
@@ -50,7 +49,7 @@ namespace OpenVic {
 		);
 	};
 
-	#define DO_FOR_ALL_TYPES_OF_POP_INCOME(F) \
+	#define OV_DO_FOR_ALL_TYPES_OF_POP_INCOME(F) \
 		F(rgo_owner_income) \
 		F(rgo_worker_income) \
 		F(artisanal_income) \
@@ -64,17 +63,11 @@ namespace OpenVic {
 		F(event_and_decision_income) \
 		F(loan_interest_payments)
 
-	#define DO_FOR_ALL_TYPES_OF_POP_EXPENSES(F) \
+	#define OV_DO_FOR_ALL_TYPES_OF_POP_EXPENSES(F) \
 		F(life_needs_expense) \
 		F(everyday_needs_expense) \
 		F(luxury_needs_expense) \
 		F(artisan_inputs_expense)
-
-	#define DECLARE_POP_MONEY_STORES(money_type) \
-		fixed_point_t PROPERTY(money_type);
-
-	#define DECLARE_POP_MONEY_STORE_FUNCTIONS(name) \
-		void add_##name(const fixed_point_t amount);
 
 	/* REQUIREMENTS:
 	 * POP-18, POP-19, POP-20, POP-21, POP-34, POP-35, POP-36, POP-37
@@ -118,7 +111,7 @@ namespace OpenVic {
 		// All of these should have a total size equal to the pop size, allowing the distributions from different pops to be
 		// added together with automatic weighting based on their relative sizes. Similarly, the province, state and country
 		// equivalents of these distributions will have a total size equal to their total population size.
-		IndexedFlatMap_PROPERTY(Ideology, fixed_point_t, supporter_equivalents_by_ideology);
+		OV_IFLATMAP_PROPERTY(Ideology, fixed_point_t, supporter_equivalents_by_ideology);
 		fixed_point_map_t<BaseIssue const*> PROPERTY(supporter_equivalents_by_issue);
 		fixed_point_map_t<CountryParty const*> PROPERTY(vote_equivalents_by_party);
 	
@@ -150,11 +143,14 @@ namespace OpenVic {
 				fixed_point_map_t<GoodDefinition const*> PROPERTY(need_category##_needs); /* TODO pool? (if recalculating in UI is acceptable) */ \
 				ordered_map<GoodDefinition const*, bool> PROPERTY(need_category##_needs_fulfilled_goods);
 
-		DO_FOR_ALL_NEED_CATEGORIES(NEED_MEMBERS)
+		OV_DO_FOR_ALL_NEED_CATEGORIES(NEED_MEMBERS)
 		#undef NEED_MEMBERS
 
-		DO_FOR_ALL_TYPES_OF_POP_INCOME(DECLARE_POP_MONEY_STORES);
-		DO_FOR_ALL_TYPES_OF_POP_EXPENSES(DECLARE_POP_MONEY_STORES);
+		#define DECLARE_POP_MONEY_STORES(money_type) \
+			fixed_point_t PROPERTY(money_type);
+
+		OV_DO_FOR_ALL_TYPES_OF_POP_INCOME(DECLARE_POP_MONEY_STORES);
+		OV_DO_FOR_ALL_TYPES_OF_POP_EXPENSES(DECLARE_POP_MONEY_STORES);
 		#undef DECLARE_POP_MONEY_STORES
 
 		size_t PROPERTY(max_supported_regiments, 0);
@@ -205,8 +201,11 @@ namespace OpenVic {
 			const fixed_point_t pop_size_per_regiment_multiplier
 		);
 
-		DO_FOR_ALL_TYPES_OF_POP_INCOME(DECLARE_POP_MONEY_STORE_FUNCTIONS)
-		DO_FOR_ALL_TYPES_OF_POP_EXPENSES(DECLARE_POP_MONEY_STORE_FUNCTIONS)
+		#define DECLARE_POP_MONEY_STORE_FUNCTIONS(name) \
+			void add_##name(const fixed_point_t amount);
+
+		OV_DO_FOR_ALL_TYPES_OF_POP_INCOME(DECLARE_POP_MONEY_STORE_FUNCTIONS)
+		OV_DO_FOR_ALL_TYPES_OF_POP_EXPENSES(DECLARE_POP_MONEY_STORE_FUNCTIONS)
 		DECLARE_POP_MONEY_STORE_FUNCTIONS(import_subsidies)
 		#undef DECLARE_POP_MONEY_STORE_FUNCTIONS
 
@@ -222,15 +221,3 @@ namespace OpenVic {
 		void hire(pop_size_t count);
 	};
 }
-#ifndef KEEP_DO_FOR_ALL_TYPES_OF_INCOME
-	#undef DO_FOR_ALL_TYPES_OF_POP_INCOME
-#endif
-
-#ifndef KEEP_DO_FOR_ALL_TYPES_OF_EXPENSES
-	#undef DO_FOR_ALL_TYPES_OF_POP_EXPENSES
-#endif
-
-#undef DO_FOR_ALL_NEED_CATEGORIES
-
-#undef IndexedFlatMap_PROPERTY
-#undef IndexedFlatMap_PROPERTY_ACCESS

@@ -175,13 +175,13 @@ namespace OpenVic {
 		memory::colony<ShipInstance> PROPERTY(ships);
 		ordered_map<unique_id_t, UnitInstance*> PROPERTY(unit_instance_map);
 
-		UNIT_BRANCHED_GETTER(get_unit_instances, regiments, ships);
+		OV_UNIT_BRANCHED_GETTER(get_unit_instances, regiments, ships);
 
 		memory::colony<ArmyInstance> PROPERTY(armies);
 		memory::colony<NavyInstance> PROPERTY(navies);
 		ordered_map<unique_id_t, UnitInstanceGroup*> PROPERTY(unit_instance_group_map);
 
-		UNIT_BRANCHED_GETTER(get_unit_instance_groups, armies, navies);
+		OV_UNIT_BRANCHED_GETTER(get_unit_instance_groups, armies, navies);
 
 		template<unit_branch_t Branch>
 		UnitInstanceBranched<Branch>& generate_unit_instance(UnitDeployment<Branch> const& unit_deployment);
@@ -221,7 +221,3 @@ namespace OpenVic {
 		);
 	};
 }
-
-#undef _UNIT_BRANCHED_GETTER
-#undef UNIT_BRANCHED_GETTER
-#undef UNIT_BRANCHED_GETTER_CONST

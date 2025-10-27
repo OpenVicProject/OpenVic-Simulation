@@ -50,7 +50,8 @@ void SharedPopTypeValues::update_costs(PopsDefines const& pop_defines, GoodInsta
 			military_salary_base_running_total += base_##need_category##_need_costs; \
 		}
 
-	DO_FOR_ALL_NEED_CATEGORIES(UPDATE_NEED_COSTS)
+	OV_DO_FOR_ALL_NEED_CATEGORIES(UPDATE_NEED_COSTS)
+
 	#undef UPDATE_NEED_COSTS
 
 	administration_salary_base.set(administration_salary_base_running_total);
@@ -58,5 +59,3 @@ void SharedPopTypeValues::update_costs(PopsDefines const& pop_defines, GoodInsta
 	military_salary_base.set(military_salary_base_running_total);
 	social_income_variant_base.set(2 * base_life_need_costs);
 }
-
-#undef DO_FOR_ALL_NEED_CATEGORIES

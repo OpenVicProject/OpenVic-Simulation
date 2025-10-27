@@ -1,6 +1,6 @@
 #pragma once
 
-#include "openvic-simulation/types/IndexedFlatMapMacro.hpp"
+#include "openvic-simulation/types/IndexedFlatMap.hpp"
 #include "openvic-simulation/types/UnitBranchType.hpp"
 #include "openvic-simulation/utility/Getters.hpp"
 
@@ -221,7 +221,7 @@ namespace OpenVic {
 		};
 
 	private:
-		IndexedFlatMap_PROPERTY(BuildingType, building_type_effects_t, building_type_effects);
+		OV_IFLATMAP_PROPERTY(BuildingType, building_type_effects_t, building_type_effects);
 
 		/* GoodDefinition Effects */
 	public:
@@ -245,7 +245,7 @@ namespace OpenVic {
 		};
 
 	private:
-		IndexedFlatMap_PROPERTY(GoodDefinition, good_effects_t, good_effects);
+		OV_IFLATMAP_PROPERTY(GoodDefinition, good_effects_t, good_effects);
 
 		/* UnitType Effects */
 	public:
@@ -296,9 +296,9 @@ namespace OpenVic {
 
 	private:
 		regiment_type_effects_t PROPERTY(army_base_effects);
-		IndexedFlatMap_PROPERTY(RegimentType, regiment_type_effects_t, regiment_type_effects);
+		OV_IFLATMAP_PROPERTY(RegimentType, regiment_type_effects_t, regiment_type_effects);
 		ship_type_effects_t PROPERTY(navy_base_effects);
-		IndexedFlatMap_PROPERTY(ShipType, ship_type_effects_t, ship_type_effects);
+		OV_IFLATMAP_PROPERTY(ShipType, ship_type_effects_t, ship_type_effects);
 
 		/* Unit terrain Effects */
 	public:
@@ -316,11 +316,11 @@ namespace OpenVic {
 		};
 
 	private:
-		IndexedFlatMap_PROPERTY(TerrainType, unit_terrain_effects_t, unit_terrain_effects);
+		OV_IFLATMAP_PROPERTY(TerrainType, unit_terrain_effects_t, unit_terrain_effects);
 
 		/* Rebel Effects */
 		ModifierEffect const* PROPERTY(rebel_org_gain_all, nullptr);
-		IndexedFlatMap_PROPERTY(RebelType, ModifierEffect const*, rebel_org_gain_effects);
+		OV_IFLATMAP_PROPERTY(RebelType, ModifierEffect const*, rebel_org_gain_effects);
 
 		/* Pop Effects */
 	public:
@@ -339,10 +339,10 @@ namespace OpenVic {
 		};
 
 	private:
-		IndexedFlatMap_PROPERTY(Strata, strata_effects_t, strata_effects);
+		OV_IFLATMAP_PROPERTY(Strata, strata_effects_t, strata_effects);
 
 		/* Technology Effects */
-		IndexedFlatMap_PROPERTY(TechnologyFolder, ModifierEffect const*, research_bonus_effects);
+		OV_IFLATMAP_PROPERTY(TechnologyFolder, ModifierEffect const*, research_bonus_effects);
 		constexpr ModifierEffectCache() :
 			building_type_effects { decltype(building_type_effects)::create_empty() },
 			good_effects { decltype(good_effects)::create_empty() },
@@ -358,5 +358,3 @@ namespace OpenVic {
 		ModifierEffectCache(ModifierEffectCache&&) = default;
 	};
 }
-#undef IndexedFlatMap_PROPERTY
-#undef IndexedFlatMap_PROPERTY_ACCESS

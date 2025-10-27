@@ -1,6 +1,6 @@
 #include "openvic-simulation/types/UnitBranchType.hpp" // IWYU pragma: keep for unit_branch_t
 
-#define _UNIT_BRANCHED_GETTER(name, land, naval, const) \
+#define _OV_UNIT_BRANCHED_GETTER(name, land, naval, const) \
 	template<unit_branch_t Branch> \
 	constexpr auto const& name() const { \
 		if constexpr (Branch == unit_branch_t::LAND) { \
@@ -10,5 +10,5 @@
 		} \
 	}
 
-#define UNIT_BRANCHED_GETTER(name, land, naval) _UNIT_BRANCHED_GETTER(name, land, naval, )
-#define UNIT_BRANCHED_GETTER_CONST(name, land, naval) _UNIT_BRANCHED_GETTER(name, land, naval, const)
+#define OV_UNIT_BRANCHED_GETTER(name, land, naval) _OV_UNIT_BRANCHED_GETTER(name, land, naval, )
+#define OV_UNIT_BRANCHED_GETTER_CONST(name, land, naval) _OV_UNIT_BRANCHED_GETTER(name, land, naval, const)
