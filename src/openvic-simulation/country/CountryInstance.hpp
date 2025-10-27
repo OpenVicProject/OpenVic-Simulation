@@ -503,23 +503,18 @@ namespace OpenVic {
 
 		bool add_owned_province(ProvinceInstance& new_province);
 		bool remove_owned_province(ProvinceInstance const& province_to_remove);
-		bool has_owned_province(ProvinceInstance const& province) const;
 
 		bool add_controlled_province(ProvinceInstance& new_province);
 		bool remove_controlled_province(ProvinceInstance const& province_to_remove);
-		bool has_controlled_province(ProvinceInstance const& province) const;
 
 		bool add_core_province(ProvinceInstance& new_core);
 		bool remove_core_province(ProvinceInstance const& core_to_remove);
-		bool has_core_province(ProvinceInstance const& province) const;
 
 		bool add_state(State& new_state);
 		bool remove_state(State const& state_to_remove);
-		bool has_state(State const& state) const;
 
 		bool add_accepted_culture(Culture const& new_accepted_culture);
 		bool remove_accepted_culture(Culture const& culture_to_remove);
-		bool has_accepted_culture(Culture const& culture) const;
 
 		bool set_ruling_party(CountryParty const& new_ruling_party);
 		bool add_reform(Reform const& new_reform);
