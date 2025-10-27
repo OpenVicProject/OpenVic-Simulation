@@ -8,7 +8,7 @@
 #include <utility>
 
 #include "openvic-simulation/utility/Concepts.hpp"
-#include "openvic-simulation/utility/Utility.hpp"
+#include "openvic-simulation/utility/Typedefs.hpp"
 
 namespace OpenVic {
 	/**
@@ -250,12 +250,12 @@ namespace OpenVic {
 	}
 
 	namespace cow {
-		template<utility::specialization_of<cow_ptr> T>
+		template<specialization_of<cow_ptr> T>
 		typename T::element_type const& read(T& v) {
 			return v.read();
 		}
 
-		template<utility::specialization_of<cow_ptr> T>
+		template<specialization_of<cow_ptr> T>
 		typename T::element_type& write(T& v) {
 			return v.write();
 		}

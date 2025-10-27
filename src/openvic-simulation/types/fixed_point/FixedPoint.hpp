@@ -16,10 +16,10 @@
 #include "openvic-simulation/types/StackString.hpp"
 #include "openvic-simulation/utility/Getters.hpp"
 #include "openvic-simulation/utility/Logger.hpp"
-#include "openvic-simulation/utility/NumberUtils.hpp"
 #include "openvic-simulation/utility/StringUtils.hpp"
-#include "openvic-simulation/utility/Utility.hpp"
 #include "openvic-simulation/utility/Containers.hpp"
+#include "openvic-simulation/utility/Typedefs.hpp"
+#include "openvic-simulation/utility/Math.hpp"
 
 /* Sin lookup table */
 #include "openvic-simulation/types/fixed_point/FixedPointLUT_sin.hpp"
@@ -167,7 +167,7 @@ namespace OpenVic {
 
 		constexpr fixed_point_t sqrt() const {
 			return !is_negative()
-				? parse_raw(NumberUtils::sqrt(static_cast<uint64_t>(value) << PRECISION))
+				? parse_raw(OpenVic::sqrt(static_cast<uint64_t>(value) << PRECISION))
 				: _0;
 		}
 
@@ -226,7 +226,7 @@ namespace OpenVic {
 		}
 
 		constexpr float to_float_rounded() const {
-			return static_cast<float>(NumberUtils::round_to_int64((value / static_cast<float>(ONE)) * 100000.0f)) / 100000.0f;
+			return static_cast<float>(round_to_int64((value / static_cast<float>(ONE)) * 100000.0f)) / 100000.0f;
 		}
 
 		constexpr double to_double() const {
@@ -234,7 +234,7 @@ namespace OpenVic {
 		}
 
 		constexpr double to_double_rounded() const {
-			return NumberUtils::round_to_int64((value / static_cast<double>(ONE)) * 100000.0) / 100000.0;
+			return round_to_int64((value / static_cast<double>(ONE)) * 100000.0) / 100000.0;
 		}
 
 		inline constexpr std::to_chars_result to_chars(char* first, char* last, size_t decimal_places = -1) const {
@@ -660,7 +660,7 @@ namespace OpenVic {
 			for (ptrdiff_t remaining_shift = PRECISION - (end - begin); remaining_shift > 0; remaining_shift--) {
 				parsed_value *= 10;
 			}
-			uint64_t decimal = NumberUtils::pow(static_cast<uint64_t>(10), PRECISION);
+			uint64_t decimal = pow(static_cast<uint64_t>(10), PRECISION);
 			int64_t ret = 0;
 			for (int i = PRECISION - 1; i >= 0; --i) {
 				decimal >>= 1;
@@ -741,6 +741,11 @@ namespace OpenVic {
 	inline constexpr fixed_point_t fixed_point_t::deg2rad = parse_raw(1143LL);
 	inline constexpr fixed_point_t fixed_point_t::rad2deg = parse_raw(3754936LL);
 	inline constexpr fixed_point_t fixed_point_t::e = parse_raw(178145LL);
+
+	template<>
+	[[nodiscard]] inline constexpr fixed_point_t abs(fixed_point_t num) {
+		return num.abs();
+	}
 }
 
 template<>

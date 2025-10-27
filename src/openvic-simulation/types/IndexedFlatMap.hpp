@@ -202,7 +202,7 @@ namespace OpenVic {
 		template<typename GeneratorTemplateType>
 		requires (std::is_move_constructible_v<ValueType> || std::is_copy_constructible_v<ValueType>)
 		//value_generator(key) doesn't return std:tuple<...>
-		&& (!utility::specialization_of<std::remove_cvref_t<std::invoke_result_t<GeneratorTemplateType, KeyType const&>>, std::tuple>)
+		&& (!specialization_of<std::remove_cvref_t<std::invoke_result_t<GeneratorTemplateType, KeyType const&>>, std::tuple>)
 		//ValueType(value_generator(key)) is valid constructor call
 		&& std::constructible_from<ValueType, decltype(std::declval<GeneratorTemplateType>()(std::declval<KeyType const&>()))>
 		IndexedFlatMap(
@@ -242,7 +242,7 @@ namespace OpenVic {
 		template<typename GeneratorTemplateType>
 		requires (!std::is_move_constructible_v<ValueType>) && (!std::is_copy_constructible_v<ValueType>)
 		//value_generator(key) doesn't return std:tuple<...>
-		&& (!utility::specialization_of<std::remove_cvref_t<std::invoke_result_t<GeneratorTemplateType, KeyType const&>>, std::tuple>)
+		&& (!specialization_of<std::remove_cvref_t<std::invoke_result_t<GeneratorTemplateType, KeyType const&>>, std::tuple>)
 		//ValueType(value_generator(key)) is valid constructor call
 		&& std::constructible_from<ValueType, decltype(std::declval<GeneratorTemplateType>()(std::declval<KeyType const&>()))>
 		IndexedFlatMap(
@@ -281,7 +281,7 @@ namespace OpenVic {
 		template<typename GeneratorTemplateType>
 		requires (std::is_move_constructible_v<ValueType> || std::is_copy_constructible_v<ValueType>)
 		//value_generator(key) returns tuple
-		&& utility::specialization_of<std::remove_cvref_t<std::invoke_result_t<GeneratorTemplateType, KeyType const&>>, std::tuple>
+		&& specialization_of<std::remove_cvref_t<std::invoke_result_t<GeneratorTemplateType, KeyType const&>>, std::tuple>
 		//ValueType(...value_generator(key)) is valid constructor call
 		&& requires(GeneratorTemplateType&& value_generator) { {
 			std::apply(
@@ -329,7 +329,7 @@ namespace OpenVic {
 		template<typename GeneratorTemplateType>
 		requires (!std::is_move_constructible_v<ValueType>) && (!std::is_copy_constructible_v<ValueType>)
 		//value_generator(key) returns tuple
-		&& utility::specialization_of<std::remove_cvref_t<std::invoke_result_t<GeneratorTemplateType, KeyType const&>>, std::tuple>
+		&& specialization_of<std::remove_cvref_t<std::invoke_result_t<GeneratorTemplateType, KeyType const&>>, std::tuple>
 		//ValueType(...value_generator(key)) is valid constructor call
 		&& requires(GeneratorTemplateType value_generator) { {
 			std::apply(

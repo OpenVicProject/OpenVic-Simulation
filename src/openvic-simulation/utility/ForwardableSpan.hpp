@@ -10,7 +10,7 @@
 #include <type_traits>
 
 #include "openvic-simulation/types/BasicIterator.hpp"
-#include "openvic-simulation/utility/Utility.hpp"
+#include "openvic-simulation/utility/Typedefs.hpp"
 
 namespace OpenVic::utility::_detail::forwardable_span {
 	static constexpr std::size_t dynamic_extent = std::numeric_limits<std::size_t>::max();

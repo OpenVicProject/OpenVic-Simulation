@@ -24,7 +24,7 @@
 #include "openvic-simulation/utility/FormatValidate.hpp"
 #include "openvic-simulation/utility/Logger.hpp"
 #include "openvic-simulation/utility/StringUtils.hpp"
-#include "openvic-simulation/utility/Utility.hpp"
+#include "openvic-simulation/utility/Typedefs.hpp"
 #include "openvic-simulation/utility/Containers.hpp"
 
 using namespace OpenVic;

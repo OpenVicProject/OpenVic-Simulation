@@ -4,7 +4,7 @@
 #include <range/v3/algorithm/equal.hpp>
 #include <range/v3/view/drop.hpp>
 
-#include "openvic-simulation/utility/Utility.hpp"
+#include "openvic-simulation/utility/Algorithm.hpp"
 
 #include "Helper.hpp" // IWYU pragma: keep
 #include <snitch/snitch_append.hpp>
@@ -15,7 +15,6 @@
 #include <snitch/snitch_string.hpp>
 
 using namespace OpenVic;
-using namespace OpenVic::utility;
 
 namespace snitch {
 	template<typename T, size_t Size>
@@ -47,7 +46,7 @@ namespace snitch {
 	}
 }
 
-TEST_CASE("find_if_dual_adjacent", "[utility][dual-adjacent][find_if_dual_adjacent]") {
+TEST_CASE("find_if_dual_adjacent", "[algorithm][dual-adjacent][find_if_dual_adjacent]") {
 	static constexpr auto array_up = std::to_array<int>({ 1, 2, 3, 4, 5, 6, 7, 8, 9 });
 	static constexpr auto array_down = std::to_array<int>({ 9, 8, 7, 6, 5, 4, 3, 2, 1 });
 	static constexpr auto array_spread = std::to_array<int>({ 5, 3, 4, 9, 7, 1, 8, 2, 6 });
@@ -107,7 +106,7 @@ TEST_CASE("find_if_dual_adjacent", "[utility][dual-adjacent][find_if_dual_adjace
 	);
 }
 
-TEST_CASE("remove_if_dual_adjacent", "[utility][dual-adjacent][remove_if_dual_adjacent]") {
+TEST_CASE("remove_if_dual_adjacent", "[algorithm][dual-adjacent][remove_if_dual_adjacent]") {
 	std::vector<int> vector_up { 1, 2, 3, 4, 5, 6, 7, 8, 9 };
 	std::vector<int> vector_down { 9, 8, 7, 6, 5, 4, 3, 2, 1 };
 	std::vector<int> vector_spread { 5, 3, 4, 9, 7, 1, 8, 2, 6 };

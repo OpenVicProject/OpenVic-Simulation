@@ -4,7 +4,7 @@
 #include <utility>
 
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
-#include "openvic-simulation/utility/Utility.hpp"
+#include "openvic-simulation/utility/Typedefs.hpp"
 
 namespace std {
 	template<>

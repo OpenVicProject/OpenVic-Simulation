@@ -28,7 +28,7 @@
 #include "openvic-simulation/types/StackString.hpp"
 #include "openvic-simulation/utility/Concepts.hpp"
 #include "openvic-simulation/utility/StringUtils.hpp"
-#include "openvic-simulation/utility/Utility.hpp"
+#include "openvic-simulation/utility/Typedefs.hpp"
 
 namespace OpenVic {
 	template<typename ValueT, typename IntT, bool HasAlpha = true>
@@ -610,7 +610,7 @@ namespace OpenVic {
 				assert(index < 3);
 			}
 			/* Segfault if index is out of bounds and NDEBUG is defined! */
-			OpenVic::utility::unreachable();
+			OpenVic::unreachable();
 		}
 
 	public:
@@ -654,7 +654,7 @@ namespace OpenVic {
 	};
 
 	template<typename T>
-	concept IsColour = OpenVic::utility::specialization_of<T, basic_colour_t>;
+	concept IsColour = specialization_of<T, basic_colour_t>;
 
 	template<typename T>
 	concept has_get_colour = requires(T const& t) {
@@ -690,13 +690,13 @@ namespace OpenVic {
 	}
 }
 
-template<OpenVic::utility::specialization_of<OpenVic::basic_colour_t> T>
+template<OpenVic::specialization_of<OpenVic::basic_colour_t> T>
 class fmt::detail::is_tuple_like_<T> {
 public:
 	static constexpr const bool value = false;
 };
 
-template<OpenVic::utility::specialization_of<OpenVic::basic_colour_t> T>
+template<OpenVic::specialization_of<OpenVic::basic_colour_t> T>
 struct fmt::formatter<T> {
 	constexpr void set_brackets(basic_string_view<char> open, basic_string_view<char> close) {
 		_opening_bracket = open;

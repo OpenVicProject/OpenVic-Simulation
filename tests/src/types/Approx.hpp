@@ -6,7 +6,7 @@
 #include <limits>
 
 #include "openvic-simulation/types/Vector.hpp"
-#include "openvic-simulation/utility/Utility.hpp"
+#include "openvic-simulation/utility/Math.hpp"
 
 #include "Vector.hpp" // IWYU pragma: keep
 #include <snitch/snitch_string.hpp>
@@ -66,7 +66,7 @@ namespace OpenVic::testing {
 
 		constexpr bool operator==(double rhs) const {
 			// Thanks to Richard Harris for his help refining this formula
-			return OpenVic::utility::abs(rhs - _value) < _epsilon * (_scale + std::max<double>(OpenVic::utility::abs(rhs), OpenVic::utility::abs(_value)));
+			return OpenVic::abs(rhs - _value) < _epsilon * (_scale + std::max<double>(OpenVic::abs(rhs), OpenVic::abs(_value)));
 		}
 
 		template<std::convertible_to<double> T>

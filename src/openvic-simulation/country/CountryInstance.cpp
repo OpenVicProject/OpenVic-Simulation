@@ -29,8 +29,9 @@
 #include "openvic-simulation/types/PopSize.hpp"
 #include "openvic-simulation/types/UnitBranchType.hpp"
 #include "openvic-simulation/utility/Containers.hpp"
+#include "openvic-simulation/utility/ErrorMacros.hpp"
 #include <openvic-simulation/utility/Logger.hpp>
-#include "openvic-simulation/utility/Utility.hpp"
+#include "openvic-simulation/utility/Typedefs.hpp"
 
 using namespace OpenVic;
 

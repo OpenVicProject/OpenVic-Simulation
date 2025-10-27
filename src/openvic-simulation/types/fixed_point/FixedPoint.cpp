@@ -3,6 +3,8 @@
 #include <fmt/base.h>
 #include <fmt/format.h>
 
+#include "openvic-simulation/utility/Typedefs.hpp"
+
 using namespace OpenVic;
 
 fmt::format_context::iterator fmt::formatter<fixed_point_t>::format(fixed_point_t fp, format_context& ctx) const {
