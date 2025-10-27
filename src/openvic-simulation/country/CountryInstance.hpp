@@ -41,6 +41,7 @@ namespace OpenVic {
 	struct Crime;
 	struct Culture;
 	struct DefineManager;
+	struct DiplomacyDefines;
 	struct EconomyDefines;
 	struct GameRulesManager;
 	struct GoodDefinition;
@@ -51,6 +52,8 @@ namespace OpenVic {
 	struct InstanceManager;
 	struct Invention;
 	struct LeaderInstance;
+	struct MapInstance;
+	struct MilitaryDefines;
 	struct ModifierEffectCache;
 	struct NationalValue;
 	struct Pop;
@@ -68,6 +71,7 @@ namespace OpenVic {
 	struct Strata;
 	struct Technology;
 	struct TechnologySchool;
+	struct ThreadPool;
 	struct UnitInstanceGroup;
 	struct UnitTypeManager;
 
@@ -102,10 +106,19 @@ namespace OpenVic {
 	private:
 		CountryDefinition const& PROPERTY(country_definition);
 
-		GameRulesManager const& game_rules_manager;
-		CountryRelationManager& country_relations_manager;
-		CountryDefines const& country_defines;
 		SharedCountryValues& shared_country_values;
+
+		const Date fallback_date_for_never_completing_research;
+		CountryDefines const& country_defines;
+		DiplomacyDefines const& diplomacy_defines;
+		EconomyDefines const& economy_defines;
+		MilitaryDefines const& military_defines;
+
+		GameRulesManager const& game_rules_manager;
+		GoodInstanceManager& good_instance_manager;
+		CountryRelationManager& country_relations_manager;
+		ModifierEffectCache const& modifier_effect_cache;
+		UnitTypeManager const& unit_type_manager;
 
 		colour_t PROPERTY(colour); // Cached to avoid searching government overrides for every province
 		ProvinceInstance* PROPERTY_PTR(capital, nullptr);
@@ -387,12 +400,17 @@ namespace OpenVic {
 			utility::forwardable_span<const Strata> strata_keys,
 			utility::forwardable_span<const PopType> pop_type_keys,
 			utility::forwardable_span<const Ideology> ideology_keys,
-			GameRulesManager const* new_game_rules_manager,
-			CountryRelationManager* new_country_relations_manager,
 			SharedCountryValues* new_shared_country_values,
-			GoodInstanceManager* new_good_instance_manager,
+			const Date new_fallback_date_for_never_completing_research,
 			CountryDefines const* new_country_defines,
-			EconomyDefines const* new_economy_defines
+			DiplomacyDefines const* new_diplomacy_defines,
+			EconomyDefines const* new_economy_defines,
+			MilitaryDefines const* new_military_defines,
+			CountryRelationManager* new_country_relations_manager,
+			GameRulesManager const* new_game_rules_manager,
+			GoodInstanceManager* new_good_instance_manager,
+			ModifierEffectCache const* new_modifier_effect_cache,
+			UnitTypeManager const* new_unit_type_manager
 		);
 		CountryInstance(CountryInstance const&) = delete;
 		CountryInstance& operator=(CountryInstance const&) = delete;
@@ -553,9 +571,9 @@ namespace OpenVic {
 		bool is_unit_type_unlocked(UnitType const& unit_type) const;
 
 		bool modify_building_type_unlock(
-			BuildingType const& building_type, technology_unlock_level_t unlock_level_change, GoodInstanceManager& good_instance_manager
+			BuildingType const& building_type, technology_unlock_level_t unlock_level_change
 		);
-		bool unlock_building_type(BuildingType const& building_type, GoodInstanceManager& good_instance_manager);
+		bool unlock_building_type(BuildingType const& building_type);
 		bool is_building_type_unlocked(BuildingType const& building_type) const;
 
 		bool modify_crime_unlock(Crime const& crime, technology_unlock_level_t unlock_level_change);
@@ -575,21 +593,21 @@ namespace OpenVic {
 		unit_variant_t get_max_unlocked_unit_variant() const;
 
 		bool modify_technology_unlock(
-			Technology const& technology, technology_unlock_level_t unlock_level_change, GoodInstanceManager& good_instance_manager
+			Technology const& technology, technology_unlock_level_t unlock_level_change
 		);
 		bool set_technology_unlock_level(
-			Technology const& technology, technology_unlock_level_t unlock_level, GoodInstanceManager& good_instance_manager
+			Technology const& technology, technology_unlock_level_t unlock_level
 		);
-		bool unlock_technology(Technology const& technology, GoodInstanceManager& good_instance_manager);
+		bool unlock_technology(Technology const& technology);
 		bool is_technology_unlocked(Technology const& technology) const;
 
 		bool modify_invention_unlock(
-			Invention const& invention, technology_unlock_level_t unlock_level_change, GoodInstanceManager& good_instance_manager
+			Invention const& invention, technology_unlock_level_t unlock_level_change
 		);
 		bool set_invention_unlock_level(
-			Invention const& invention, technology_unlock_level_t unlock_level, GoodInstanceManager& good_instance_manager
+			Invention const& invention, technology_unlock_level_t unlock_level
 		);
-		bool unlock_invention(Invention const& invention, GoodInstanceManager& good_instance_manager);
+		bool unlock_invention(Invention const& invention);
 		bool is_invention_unlocked(Invention const& invention) const;
 
 		bool is_primary_culture(Culture const& culture) const;
@@ -597,11 +615,9 @@ namespace OpenVic {
 		bool is_accepted_culture(Culture const& culture) const;
 		bool is_primary_or_accepted_culture(Culture const& culture) const;
 
-		fixed_point_t calculate_research_cost(
-			Technology const& technology, ModifierEffectCache const& modifier_effect_cache
-		) const;
-		bool can_research_tech(Technology const& technology, Date today) const;
-		void start_research(Technology const& technology, InstanceManager const& instance_manager);
+		fixed_point_t calculate_research_cost(Technology const& technology) const;
+		bool can_research_tech(Technology const& technology, const Date today) const;
+		void start_research(Technology const& technology, const Date today);
 
 		// Sets the investment of each country in the map (rather than adding to them), leaving the rest unchanged.
 		void apply_foreign_investments(
@@ -612,34 +628,21 @@ namespace OpenVic {
 		bool apply_history_to_country(CountryHistoryEntry const& entry, InstanceManager& instance_manager);
 
 	private:
-		void _update_production(DefineManager const& define_manager);
+		void _update_production();
 		void _update_budget();
 
 		//base here means not scaled by slider or pop size
-		fixed_point_t calculate_pensions_base(
-			ModifierEffectCache const& modifier_effect_cache,
-			PopType const& pop_type
-		);
-		fixed_point_t calculate_unemployment_subsidies_base(
-			ModifierEffectCache const& modifier_effect_cache,
-			PopType const& pop_type
-		);
-		fixed_point_t calculate_minimum_wage_base(
-			ModifierEffectCache const& modifier_effect_cache,
-			PopType const& pop_type
-		);
+		fixed_point_t calculate_pensions_base(PopType const& pop_type);
+		fixed_point_t calculate_unemployment_subsidies_base(PopType const& pop_type);
 
 		// Expects current_research to be non-null
-		void _update_current_tech(InstanceManager const& instance_manager);
-		void _update_technology(InstanceManager const& instance_manager);
+		void _update_current_tech(const Date today);
+		void _update_technology(const Date today);
 		void _update_politics();
 		void _update_population();
 		void _update_trade();
 		void _update_diplomacy();
-		void _update_military(
-			DefineManager const& define_manager, UnitTypeManager const& unit_type_manager,
-			ModifierEffectCache const& modifier_effect_cache
-		);
+		void _update_military();
 
 		bool update_rule_set();
 
@@ -653,9 +656,9 @@ namespace OpenVic {
 			return modifier_sum.for_each_contributing_modifier(effect, std::move(callback));
 		}
 
-		void update_gamestate(InstanceManager& instance_manager);
-		void country_tick_before_map(InstanceManager& instance_manager);
-		void country_tick_after_map(InstanceManager& instance_manager);
+		void update_gamestate(const Date today, MapInstance& map_instance);
+		void country_tick_before_map();
+		void country_tick_after_map(const Date today);
 
 		good_data_t& get_good_data(GoodInstance const& good_instance);
 		good_data_t const& get_good_data(GoodInstance const& good_instance) const;
@@ -680,7 +683,9 @@ namespace OpenVic {
 	struct CountryInstanceManager {
 	private:
 		CountryDefinitionManager const& PROPERTY(country_definition_manager);
+		CountryDefines const& country_defines;
 		SharedCountryValues shared_country_values;
+		ThreadPool& thread_pool;
 
 		IndexedFlatMap_PROPERTY(CountryDefinition, CountryInstance, country_instance_by_definition);
 
@@ -692,14 +697,19 @@ namespace OpenVic {
 		memory::vector<CountryInstance*> SPAN_PROPERTY(industrial_power_ranking);
 		memory::vector<CountryInstance*> SPAN_PROPERTY(military_power_ranking);
 
-		void update_rankings(Date today, DefineManager const& define_manager);
+		void update_rankings(Date today);
 
 	public:
 		CountryInstanceManager(
+			ThreadPool& new_thread_pool,
 			CountryDefinitionManager const& new_country_definition_manager,
 			ModifierEffectCache const& new_modifier_effect_cache,
+			const Date new_fallback_date_for_never_completing_research,
 			CountryDefines const& new_country_defines,
-			PopsDefines const& new_pop_defines,			
+			DiplomacyDefines const& new_diplomacy_defines,
+			EconomyDefines const& new_economy_defines,
+			MilitaryDefines const& new_military_defines,
+			PopsDefines const& new_pop_defines,
 			decltype(CountryInstance::building_type_unlock_levels)::keys_span_type building_type_keys,
 			decltype(CountryInstance::technology_unlock_levels)::keys_span_type technology_keys,
 			decltype(CountryInstance::invention_unlock_levels)::keys_span_type invention_keys,
@@ -712,10 +722,10 @@ namespace OpenVic {
 			utility::forwardable_span<const Strata> strata_keys,
 			utility::forwardable_span<const PopType> pop_type_keys,
 			utility::forwardable_span<const Ideology> ideology_keys,
-			GameRulesManager const& game_rules_manager,
-			CountryRelationManager& country_relations_manager,
-			GoodInstanceManager& good_instance_manager,
-			EconomyDefines const& economy_defines
+			GameRulesManager const& new_game_rules_manager,
+			CountryRelationManager& new_country_relations_manager,
+			GoodInstanceManager& new_good_instance_manager,
+			UnitTypeManager const& new_unit_type_manager
 		);
 
 		constexpr OpenVic::utility::forwardable_span<CountryInstance> get_country_instances() {
@@ -734,9 +744,9 @@ namespace OpenVic {
 		bool apply_history_to_countries(InstanceManager& instance_manager);
 
 		void update_modifier_sums(Date today, StaticModifierCache const& static_modifier_cache);
-		void update_gamestate(InstanceManager& instance_manager);
-		void country_manager_tick_before_map(InstanceManager& instance_manager);
-		void country_manager_tick_after_map(InstanceManager& instance_manager);
+		void update_gamestate(const Date today, MapInstance& map_instance);
+		void country_manager_tick_before_map();
+		void country_manager_tick_after_map();
 	};
 }
 

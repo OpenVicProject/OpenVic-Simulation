@@ -15,6 +15,7 @@ void ThreadPool::loop_until_cancelled(
 	utility::forwardable_span<const GoodDefinition> good_keys,
 	utility::forwardable_span<const Strata> strata_keys,
 	utility::forwardable_span<GoodInstance> goods_chunk,
+	utility::forwardable_span<CountryInstance> countries_chunk,
 	utility::forwardable_span<ProvinceInstance> provinces_chunk
 ) {
 	IndexedFlatMap<CountryInstance, fixed_point_t> reusable_country_map_0 { country_keys },
@@ -75,6 +76,16 @@ void ThreadPool::loop_until_cancelled(
 					);
 				}
 				break;
+			case work_t::COUNTRY_TICK_BEFORE_MAP:
+				for (CountryInstance& country : countries_chunk) {
+					country.country_tick_before_map();
+				}
+				break;
+			case work_t::COUNTRY_TICK_AFTER_MAP:
+				for (CountryInstance& country : countries_chunk) {
+					country.country_tick_after_map(current_date);
+				}
+				break;
 		}
 
 		{
@@ -132,10 +143,10 @@ ThreadPool::~ThreadPool() {
 
 void ThreadPool::initialise_threadpool(
 	PopsDefines const& pop_defines,
-	utility::forwardable_span<const CountryInstance> country_keys,
 	utility::forwardable_span<const GoodDefinition> good_keys,
 	utility::forwardable_span<const Strata> strata_keys,
 	utility::forwardable_span<GoodInstance> goods,
+	utility::forwardable_span<CountryInstance> countries,
 	utility::forwardable_span<ProvinceInstance> provinces
 ) {
 	if (threads.size() > 0) {
@@ -148,19 +159,25 @@ void ThreadPool::initialise_threadpool(
 	work_per_thread.resize(max_worker_threads, work_t::NONE);
 
 	const auto [goods_quotient, goods_remainder] = std::ldiv(goods.size(), max_worker_threads);
+	const auto [countries_quotient, countries_remainder] = std::ldiv(countries.size(), max_worker_threads);
 	const auto [provinces_quotient, provinces_remainder] = std::ldiv(provinces.size(), max_worker_threads);
 	auto goods_begin = goods.begin();
+	auto countries_begin = countries.begin();
 	auto provinces_begin = provinces.begin();
 
 	for (size_t i = 0; i < max_worker_threads; i++) {
 		const size_t goods_chunk_size = i < goods_remainder
 			? goods_quotient + 1
 			: goods_quotient;
+		const size_t countries_chunk_size = i < countries_remainder
+			? countries_quotient + 1
+			: countries_quotient;
 		const size_t provinces_chunk_size = i < provinces_remainder
 			? provinces_quotient + 1
 			: provinces_quotient;
 
 		auto goods_end = goods_begin + goods_chunk_size;
+		auto countries_end = countries_begin + countries_chunk_size;
 		auto provinces_end = provinces_begin + provinces_chunk_size;
 
 		threads.emplace_back(
@@ -168,25 +185,28 @@ void ThreadPool::initialise_threadpool(
 				this,
 				&work_for_thread = work_per_thread[i],
 				&pop_defines,
-				country_keys,
+				countries,
 				good_keys,
 				strata_keys,
 				goods_begin, goods_end,
+				countries_begin, countries_end,
 				provinces_begin, provinces_end
 			]() -> void {
 				loop_until_cancelled(
 					work_for_thread,
 					pop_defines,
-					country_keys,
+					countries,
 					good_keys,
 					strata_keys,
 					std::span<GoodInstance>{ goods_begin, goods_end },
+					std::span<CountryInstance>{ countries_begin, countries_end },
 					std::span<ProvinceInstance>{ provinces_begin, provinces_end }
 				);
 			}
 		);
 
 		goods_begin = goods_end;
+		countries_begin = countries_end;
 		provinces_begin = provinces_end;
 	}
 }
@@ -201,4 +221,12 @@ void ThreadPool::process_province_ticks() {
 
 void ThreadPool::process_province_initialise_for_new_game() {
 	process_work(work_t::PROVINCE_INITIALISE_FOR_NEW_GAME);
+}
+
+void ThreadPool::process_country_ticks_before_map() {
+	process_work(work_t::COUNTRY_TICK_BEFORE_MAP);
+}
+
+void ThreadPool::process_country_ticks_after_map(){
+	process_work(work_t::COUNTRY_TICK_AFTER_MAP);
 }

@@ -30,26 +30,31 @@ InstanceManager::InstanceManager(
 	},
 	global_flags { "global" },
 	country_instance_manager {
+		thread_pool,
 		new_definition_manager.get_country_definition_manager(),
 		new_definition_manager.get_modifier_manager().get_modifier_effect_cache(),
+		new_definition_manager.get_define_manager().get_end_date(),
 		new_definition_manager.get_define_manager().get_country_defines(),
+		new_definition_manager.get_define_manager().get_diplomacy_defines(),
+		new_definition_manager.get_define_manager().get_economy_defines(),
+		new_definition_manager.get_define_manager().get_military_defines(),
 		new_definition_manager.get_define_manager().get_pops_defines(),
-		definition_manager.get_economy_manager().get_building_type_manager().get_building_types(),
-		definition_manager.get_research_manager().get_technology_manager().get_technologies(),
-		definition_manager.get_research_manager().get_invention_manager().get_inventions(),
-		definition_manager.get_politics_manager().get_issue_manager().get_reform_groups(),
-		definition_manager.get_politics_manager().get_government_type_manager().get_government_types(),
-		definition_manager.get_crime_manager().get_crime_modifiers(),
+		new_definition_manager.get_economy_manager().get_building_type_manager().get_building_types(),
+		new_definition_manager.get_research_manager().get_technology_manager().get_technologies(),
+		new_definition_manager.get_research_manager().get_invention_manager().get_inventions(),
+		new_definition_manager.get_politics_manager().get_issue_manager().get_reform_groups(),
+		new_definition_manager.get_politics_manager().get_government_type_manager().get_government_types(),
+		new_definition_manager.get_crime_manager().get_crime_modifiers(),
 		good_instance_manager.get_good_instances(),
-		definition_manager.get_military_manager().get_unit_type_manager().get_regiment_types(),
-		definition_manager.get_military_manager().get_unit_type_manager().get_ship_types(),
-		definition_manager.get_pop_manager().get_stratas(),
-		definition_manager.get_pop_manager().get_pop_types(),
-		definition_manager.get_politics_manager().get_ideology_manager().get_ideologies(),
+		new_definition_manager.get_military_manager().get_unit_type_manager().get_regiment_types(),
+		new_definition_manager.get_military_manager().get_unit_type_manager().get_ship_types(),
+		new_definition_manager.get_pop_manager().get_stratas(),
+		new_definition_manager.get_pop_manager().get_pop_types(),
+		new_definition_manager.get_politics_manager().get_ideology_manager().get_ideologies(),
 		new_game_rules_manager,
 		country_relation_manager,
 		good_instance_manager,
-		definition_manager.get_define_manager().get_economy_defines()
+		new_definition_manager.get_military_manager().get_unit_type_manager()
 	},
 	unit_instance_manager {
 		new_definition_manager.get_pop_manager().get_culture_manager(),
@@ -106,7 +111,7 @@ void InstanceManager::update_gamestate() {
 
 	// Update gamestate...
 	map_instance.update_gamestate(*this);
-	country_instance_manager.update_gamestate(*this);
+	country_instance_manager.update_gamestate(today, map_instance);
 	unit_instance_manager.update_gamestate();
 
 	gamestate_updated();
@@ -125,10 +130,10 @@ void InstanceManager::tick() {
 	SPDLOG_INFO("Tick: {}", today);
 
 	// Tick...
-	country_instance_manager.country_manager_tick_before_map(*this);
+	country_instance_manager.country_manager_tick_before_map();
 	map_instance.map_tick();
 	market_instance.execute_orders();
-	country_instance_manager.country_manager_tick_after_map(*this);
+	country_instance_manager.country_manager_tick_after_map();
 	unit_instance_manager.tick();
 
 	if (today.is_month_start()) {
@@ -172,10 +177,10 @@ bool InstanceManager::setup() {
 
 	thread_pool.initialise_threadpool(
 		definition_manager.get_define_manager().get_pops_defines(),
-		country_instance_manager.get_country_instances(),
 		good_instance_manager.get_good_definition_manager().get_good_definitions(),
 		definition_manager.get_pop_manager().get_stratas(),
 		good_instance_manager.get_good_instances(),
+		country_instance_manager.get_country_instances(),
 		map_instance.get_province_instances()
 	);
 
@@ -244,7 +249,7 @@ bool InstanceManager::load_bookmark(Bookmark const* new_bookmark) {
 
 	update_modifier_sums();
 	map_instance.initialise_for_new_game(*this);
-	country_instance_manager.update_gamestate(*this);
+	country_instance_manager.update_gamestate(today, map_instance);
 	market_instance.execute_orders();
 
 	return ret;
