@@ -102,29 +102,61 @@ namespace OpenVic {
 		using relation_value_type = int16_t;
 		class influence_value_type {
 			static constexpr uint16_t MAX_VALUE = 100; // TODO: implement defines.diplomacy.MAX_INFLUENCE
-			uint16_t value;
+			uint16_t value = 0U;
 
 		public:
 			constexpr influence_value_type() {};
 			constexpr influence_value_type(uint16_t value) : value(std::min(value, MAX_VALUE)) {}
 
-#define BIN_OPERATOR(OP) \
-	template<typename T> \
-	friend inline constexpr influence_value_type operator OP(influence_value_type const& lhs, T const& rhs) { \
-		return std::min<uint16_t>(lhs.value OP rhs, MAX_VALUE); \
-	} \
-	template<typename T> \
-	friend inline constexpr influence_value_type operator OP(T const& lhs, influence_value_type const& rhs) { \
-		return std::min<uint16_t>(lhs OP rhs.value, MAX_VALUE); \
-	}
+			template<typename T>
+			friend inline constexpr influence_value_type operator+(influence_value_type const& lhs, T const& rhs) {
+				return std::min<uint16_t>(lhs.value + rhs, MAX_VALUE);
+			}
 
-			BIN_OPERATOR(+);
-			BIN_OPERATOR(-);
-			BIN_OPERATOR(*);
-			BIN_OPERATOR(/);
-			BIN_OPERATOR(%);
+			template<typename T>
+			friend inline constexpr influence_value_type operator+(T const& lhs, influence_value_type const& rhs) {
+				return std::min<uint16_t>(lhs + rhs.value, MAX_VALUE);
+			}
 
-#undef BIN_OPERATOR
+			template<typename T>
+			friend inline constexpr influence_value_type operator-(influence_value_type const& lhs, T const& rhs) {
+				return std::min<uint16_t>(lhs.value - rhs, MAX_VALUE);
+			}
+
+			template<typename T>
+			friend inline constexpr influence_value_type operator-(T const& lhs, influence_value_type const& rhs) {
+				return std::min<uint16_t>(lhs - rhs.value, MAX_VALUE);
+			}
+
+			template<typename T>
+			friend inline constexpr influence_value_type operator*(influence_value_type const& lhs, T const& rhs) {
+				return std::min<uint16_t>(lhs.value * rhs, MAX_VALUE);
+			}
+
+			template<typename T>
+			friend inline constexpr influence_value_type operator*(T const& lhs, influence_value_type const& rhs) {
+				return std::min<uint16_t>(lhs * rhs.value, MAX_VALUE);
+			}
+
+			template<typename T>
+			friend inline constexpr influence_value_type operator/(influence_value_type const& lhs, T const& rhs) {
+				return std::min<uint16_t>(lhs.value / rhs, MAX_VALUE);
+			}
+
+			template<typename T>
+			friend inline constexpr influence_value_type operator/(T const& lhs, influence_value_type const& rhs) {
+				return std::min<uint16_t>(lhs / rhs.value, MAX_VALUE);
+			}
+
+			template<typename T>
+			friend inline constexpr influence_value_type operator%(influence_value_type const& lhs, T const& rhs) {
+				return std::min<uint16_t>(lhs.value % rhs, MAX_VALUE);
+			}
+
+			template<typename T>
+			friend inline constexpr influence_value_type operator%(T const& lhs, influence_value_type const& rhs) {
+				return std::min<uint16_t>(lhs % rhs.value, MAX_VALUE);
+			}
 
 			template<typename T>
 			friend inline constexpr bool operator==(influence_value_type const& lhs, T const& rhs) {
@@ -135,26 +167,64 @@ namespace OpenVic {
 				return lhs.value <=> rhs;
 			}
 
+			template<typename T>
+			friend inline constexpr influence_value_type& operator+=(influence_value_type& lhs, T const& rhs) {
+				lhs.value = std::min<uint16_t>(lhs.value + rhs, MAX_VALUE);
+				return lhs;
+			}
 
-#define BIN_OPERATOR_EQ(OP) \
-	template<typename T> \
-	friend inline constexpr influence_value_type& operator OP##=(influence_value_type & lhs, T const& rhs) { \
-		lhs.value = std::min<uint16_t>(lhs.value OP rhs, MAX_VALUE); \
-		return lhs; \
-	} \
-	friend inline constexpr influence_value_type& operator OP##=( \
-		influence_value_type & lhs, influence_value_type const& rhs \
-	) { \
-		return lhs OP## = rhs.value; \
-	}
+			friend inline constexpr influence_value_type& operator+=( //
+				influence_value_type& lhs, influence_value_type const& rhs
+			) {
+				return lhs += rhs.value;
+			}
 
-			BIN_OPERATOR_EQ(+);
-			BIN_OPERATOR_EQ(-);
-			BIN_OPERATOR_EQ(*);
-			BIN_OPERATOR_EQ(/);
-			BIN_OPERATOR_EQ(%);
+			template<typename T>
+			friend inline constexpr influence_value_type& operator-=(influence_value_type& lhs, T const& rhs) {
+				lhs.value = std::min<uint16_t>(lhs.value - rhs, MAX_VALUE);
+				return lhs;
+			}
 
-#undef BIN_OPERATOR_EQ
+			friend inline constexpr influence_value_type& operator-=( //
+				influence_value_type& lhs, influence_value_type const& rhs
+			) {
+				return lhs -= rhs.value;
+			}
+
+			template<typename T>
+			friend inline constexpr influence_value_type& operator*=(influence_value_type& lhs, T const& rhs) {
+				lhs.value = std::min<uint16_t>(lhs.value * rhs, MAX_VALUE);
+				return lhs;
+			}
+
+			friend inline constexpr influence_value_type& operator*=( //
+				influence_value_type& lhs, influence_value_type const& rhs
+			) {
+				return lhs *= rhs.value;
+			}
+
+			template<typename T>
+			friend inline constexpr influence_value_type& operator/=(influence_value_type& lhs, T const& rhs) {
+				lhs.value = std::min<uint16_t>(lhs.value / rhs, MAX_VALUE);
+				return lhs;
+			}
+
+			friend inline constexpr influence_value_type& operator/=( //
+				influence_value_type& lhs, influence_value_type const& rhs
+			) {
+				return lhs /= rhs.value;
+			}
+
+			template<typename T>
+			friend inline constexpr influence_value_type& operator%=(influence_value_type& lhs, T const& rhs) {
+				lhs.value = std::min<uint16_t>(lhs.value % rhs, MAX_VALUE);
+				return lhs;
+			}
+
+			friend inline constexpr influence_value_type&
+			operator%=(influence_value_type& lhs, influence_value_type const& rhs) {
+				return lhs %= rhs.value;
+			}
 
 			explicit constexpr operator decltype(value)() const {
 				return value;
