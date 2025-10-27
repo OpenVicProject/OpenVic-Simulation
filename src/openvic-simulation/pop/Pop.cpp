@@ -1,13 +1,9 @@
+#include "Pop.hpp"
+
 #include <concepts> // IWYU pragma: keep for lambda
 #include <cstddef>
 #include <cstdint>
 #include <ranges>
-
-#define KEEP_DO_FOR_ALL_TYPES_OF_INCOME
-#define KEEP_DO_FOR_ALL_TYPES_OF_EXPENSES
-#include "Pop.hpp"
-#undef KEEP_DO_FOR_ALL_TYPES_OF_INCOME
-#undef KEEP_DO_FOR_ALL_TYPES_OF_EXPENSES
 
 #include "openvic-simulation/country/CountryParty.hpp"
 #include "openvic-simulation/country/CountryDefinition.hpp"
@@ -270,7 +266,7 @@ void Pop::reserve_needs_fulfilled_goods() {
 	#define RESERVE_NEEDS(need_category) \
 		need_category##_needs_fulfilled_goods.reserve(type_never_null.get_##need_category##_needs().size());
 
-	DO_FOR_ALL_NEED_CATEGORIES(RESERVE_NEEDS)
+	OV_DO_FOR_ALL_NEED_CATEGORIES(RESERVE_NEEDS)
 	#undef RESERVE_NEEDS
 }
 
@@ -282,7 +278,7 @@ void Pop::fill_needs_fulfilled_goods_with_false() {
 			need_category##_needs_fulfilled_goods.emplace(good, false); \
 		}
 
-	DO_FOR_ALL_NEED_CATEGORIES(FILL_WITH_FALSE)
+	OV_DO_FOR_ALL_NEED_CATEGORIES(FILL_WITH_FALSE)
 	#undef FILL_WITH_FALSE
 }
 
@@ -313,7 +309,7 @@ void Pop::pay_income_tax(fixed_point_t& income) {
 		cash += amount; \
 	}
 
-DO_FOR_ALL_TYPES_OF_POP_INCOME(DEFINE_ADD_INCOME_FUNCTIONS)
+OV_DO_FOR_ALL_TYPES_OF_POP_INCOME(DEFINE_ADD_INCOME_FUNCTIONS)
 #undef DEFINE_ADD_INCOME_FUNCTIONS
 
 #define DEFINE_ADD_EXPENSE_FUNCTIONS(name) \
@@ -339,7 +335,7 @@ DO_FOR_ALL_TYPES_OF_POP_INCOME(DEFINE_ADD_INCOME_FUNCTIONS)
 		} \
 	}
 
-DO_FOR_ALL_TYPES_OF_POP_EXPENSES(DEFINE_ADD_EXPENSE_FUNCTIONS)
+OV_DO_FOR_ALL_TYPES_OF_POP_EXPENSES(DEFINE_ADD_EXPENSE_FUNCTIONS)
 #undef DEFINE_ADD_EXPENSE_FUNCTIONS
 
 void Pop::add_import_subsidies(const fixed_point_t amount) {
@@ -356,7 +352,7 @@ void Pop::add_import_subsidies(const fixed_point_t amount) {
 		} \
 		return need_category##_needs_acquired_quantity.get_copy_of_value() / desired_quantity_copy; \
 	}
-DO_FOR_ALL_NEED_CATEGORIES(DEFINE_NEEDS_FULFILLED)
+OV_DO_FOR_ALL_NEED_CATEGORIES(DEFINE_NEEDS_FULFILLED)
 #undef DEFINE_NEEDS_FULFILLED
 
 #define SET_TO_ZERO(name) \
@@ -440,8 +436,8 @@ void Pop::pop_tick_without_cleanup(
 		VECTORS_FOR_POP_TICK
 	> reusable_vectors
 ) {
-	DO_FOR_ALL_TYPES_OF_POP_INCOME(SET_TO_ZERO)
-	DO_FOR_ALL_TYPES_OF_POP_EXPENSES(SET_TO_ZERO)
+	OV_DO_FOR_ALL_TYPES_OF_POP_INCOME(SET_TO_ZERO)
+	OV_DO_FOR_ALL_TYPES_OF_POP_EXPENSES(SET_TO_ZERO)
 	#undef SET_TO_ZERO
 	income = expenses = 0;
 
@@ -528,7 +524,7 @@ void Pop::pop_tick_without_cleanup(
 			} \
 		}
 
-	DO_FOR_ALL_NEED_CATEGORIES(FILL_NEEDS)
+	OV_DO_FOR_ALL_NEED_CATEGORIES(FILL_NEEDS)
 	#undef FILL_NEEDS
 
 	//It's safe to use cash as this happens before cash is updated via spending
@@ -546,7 +542,7 @@ void Pop::pop_tick_without_cleanup(
 			); \
 		}
 
-	DO_FOR_ALL_NEED_CATEGORIES(ALLOCATE_FOR_NEEDS)
+	OV_DO_FOR_ALL_NEED_CATEGORIES(ALLOCATE_FOR_NEEDS)
 	#undef ALLOCATE_FOR_NEEDS
 
 	for (auto it = good_keys.begin(); it < good_keys.end(); it++) {
@@ -653,7 +649,7 @@ void Pop::after_buy(void* actor, BuyResult const& buy_result) {
 			pop.add_##need_category##_needs_expense(expense); \
 		}
 
-	DO_FOR_ALL_NEED_CATEGORIES(CONSUME_NEED)
+	OV_DO_FOR_ALL_NEED_CATEGORIES(CONSUME_NEED)
 	#undef CONSUME_NEED
 }
 
@@ -691,7 +687,3 @@ void Pop::hire(pop_size_t count) {
 		);
 	}
 }
-
-#undef DO_FOR_ALL_TYPES_OF_POP_INCOME
-#undef DO_FOR_ALL_TYPES_OF_POP_EXPENSES
-#undef DO_FOR_ALL_NEED_CATEGORIES

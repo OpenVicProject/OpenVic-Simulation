@@ -8,7 +8,6 @@
 #include "openvic-simulation/dataloader/NodeTools.hpp"
 #include "openvic-simulation/economy/GoodDefinition.hpp"
 #include "openvic-simulation/modifier/Modifier.hpp"
-#include "openvic-simulation/military/UnitBranchedGetterMacro.hpp"
 #include "openvic-simulation/types/Date.hpp"
 #include "openvic-simulation/types/HasIdentifier.hpp"
 #include "openvic-simulation/types/HasIndex.hpp"
@@ -200,7 +199,3 @@ namespace OpenVic {
 		bool generate_modifiers(ModifierManager& modifier_manager) const;
 	};
 }
-
-#undef _UNIT_BRANCHED_GETTER
-#undef UNIT_BRANCHED_GETTER
-#undef UNIT_BRANCHED_GETTER_CONST

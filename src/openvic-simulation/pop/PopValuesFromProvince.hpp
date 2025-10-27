@@ -1,7 +1,6 @@
 #pragma once
 
 #include "openvic-simulation/types/IndexedFlatMap.hpp"
-#include "openvic-simulation/types/IndexedFlatMapMacro.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
 #include "openvic-simulation/utility/Getters.hpp"
 
@@ -28,7 +27,7 @@ namespace OpenVic {
 	struct PopValuesFromProvince {
 	private:
 		PopsDefines const& PROPERTY(defines);
-		IndexedFlatMap_PROPERTY(Strata, PopStrataValuesFromProvince, effects_by_strata);
+		OV_IFLATMAP_PROPERTY(Strata, PopStrataValuesFromProvince, effects_by_strata);
 	public:
 	 	//public field as mutable references are required.
 		IndexedFlatMap<GoodDefinition, char> reusable_goods_mask;
@@ -43,5 +42,3 @@ namespace OpenVic {
 		void update_pop_values_from_province(ProvinceInstance const& province);
 	};
 }
-#undef IndexedFlatMap_PROPERTY
-#undef IndexedFlatMap_PROPERTY_ACCESS

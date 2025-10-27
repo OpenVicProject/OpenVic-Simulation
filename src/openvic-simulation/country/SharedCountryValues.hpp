@@ -2,7 +2,6 @@
 
 #include "openvic-simulation/pop/PopNeedsMacro.hpp"
 #include "openvic-simulation/types/IndexedFlatMap.hpp"
-#include "openvic-simulation/types/IndexedFlatMapMacro.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
 #include "openvic-simulation/utility/reactive/MutableState.hpp"
 
@@ -17,15 +16,18 @@ namespace OpenVic {
 		friend SharedCountryValues;
 	private:
 		PopType const& pop_type;
+
 		#define NEED_COST_FIELD(need_category) \
 			fixed_point_t base_##need_category##_need_costs;
-		DO_FOR_ALL_NEED_CATEGORIES(NEED_COST_FIELD)
+
+		OV_DO_FOR_ALL_NEED_CATEGORIES(NEED_COST_FIELD)
+
 		#undef NEED_COST_FIELD
 
-		STATE_PROPERTY(fixed_point_t, administration_salary_base);
-		STATE_PROPERTY(fixed_point_t, education_salary_base);
-		STATE_PROPERTY(fixed_point_t, military_salary_base);
-		STATE_PROPERTY(fixed_point_t, social_income_variant_base);
+		OV_STATE_PROPERTY(fixed_point_t, administration_salary_base);
+		OV_STATE_PROPERTY(fixed_point_t, education_salary_base);
+		OV_STATE_PROPERTY(fixed_point_t, military_salary_base);
+		OV_STATE_PROPERTY(fixed_point_t, social_income_variant_base);
 
 		void update_costs(PopsDefines const& pop_defines, GoodInstanceManager const& good_instance_manager);
 	public:
@@ -55,7 +57,3 @@ namespace OpenVic {
 		SharedCountryValues& operator=(SharedCountryValues const&) = delete;
 	};
 }
-
-#undef DO_FOR_ALL_NEED_CATEGORIES
-#undef IndexedFlatMap_PROPERTY
-#undef IndexedFlatMap_PROPERTY_ACCESS

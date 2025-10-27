@@ -11,7 +11,7 @@ namespace OpenVic {
 	protected:
 		fixed_point_t PROPERTY_ACCESS(min, protected);
 		fixed_point_t PROPERTY_ACCESS(max, protected);
-		STATE_PROPERTY_ACCESS(fixed_point_t, value, protected);
+		OV_STATE_PROPERTY_ACCESS(fixed_point_t, value, protected);
 		constexpr ReadOnlyClampedValue() {};
 		ReadOnlyClampedValue(
 			const fixed_point_t new_min,
@@ -53,8 +53,8 @@ namespace OpenVic {
 	};
 }
 
-#define CLAMPED_PROPERTY(NAME, ...) CLAMPED_PROPERTY_ACCESS(NAME, private, __VA_ARGS__)
-#define CLAMPED_PROPERTY_ACCESS(NAME, ACCESS, ...) \
+#define OV_CLAMPED_PROPERTY(NAME, ...) OV_CLAMPED_PROPERTY_ACCESS(NAME, private, __VA_ARGS__)
+#define OV_CLAMPED_PROPERTY_ACCESS(NAME, ACCESS, ...) \
 	ClampedValue NAME __VA_OPT__({) __VA_ARGS__ __VA_OPT__(}); \
 \
 public: \

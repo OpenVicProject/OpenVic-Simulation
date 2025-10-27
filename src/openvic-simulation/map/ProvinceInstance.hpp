@@ -12,7 +12,6 @@
 #include "openvic-simulation/types/FlagStrings.hpp"
 #include "openvic-simulation/types/HasIdentifier.hpp"
 #include "openvic-simulation/types/HasIndex.hpp"
-#include "openvic-simulation/types/IndexedFlatMapMacro.hpp"
 #include "openvic-simulation/types/OrderedContainers.hpp"
 #include "openvic-simulation/types/ProvinceLifeRating.hpp"
 #include "openvic-simulation/types/UnitBranchType.hpp"
@@ -104,8 +103,8 @@ namespace OpenVic {
 		Timespan PROPERTY(occupation_duration);
 
 	public:
-		UNIT_BRANCHED_GETTER(get_unit_instance_groups, armies, navies);
-		UNIT_BRANCHED_GETTER_CONST(get_unit_instance_groups, armies, navies);
+		OV_UNIT_BRANCHED_GETTER(get_unit_instance_groups, armies, navies);
+		OV_UNIT_BRANCHED_GETTER_CONST(get_unit_instance_groups, armies, navies);
 
 	private:
 		memory::colony<Pop> PROPERTY(pops); // TODO - replace with a more easily vectorisable container?		
@@ -114,7 +113,7 @@ namespace OpenVic {
 		bool convert_rgo_worker_pops_to_equivalent(ProductionType const& production_type);
 		void initialise_rgo();
 
-		IndexedFlatMap_PROPERTY(PopType, memory::vector<Pop*>, pops_cache_by_type);
+		OV_IFLATMAP_PROPERTY(PopType, memory::vector<Pop*>, pops_cache_by_type);
 	public:
 		//pointers instead of references to allow construction via std::tuple
 		ProvinceInstance(
@@ -219,8 +218,3 @@ namespace OpenVic {
 		memory::colony<Pop>& get_mutable_pops();
 	};
 }
-#undef _UNIT_BRANCHED_GETTER
-#undef UNIT_BRANCHED_GETTER
-#undef UNIT_BRANCHED_GETTER_CONST
-#undef IndexedFlatMap_PROPERTY
-#undef IndexedFlatMap_PROPERTY_ACCESS
