@@ -503,38 +503,85 @@ ReadOnlyClampedValue const& CountryInstance::get_tax_rate_slider_value_by_strata
 	return tax_rate_slider_value_by_strata.at(strata);
 }
 
-#define ADD_AND_REMOVE(item) \
-	bool CountryInstance::add_##item(std::remove_pointer_t<decltype(item##s)::value_type>& new_item) { \
-		if (!item##s.emplace(&new_item).second) { \
-			spdlog::error( \
-				"Attempted to add " #item " \"{}\" to country {}: already present!", \
-				new_item, *this \
-			); \
-			return false; \
-		} \
-		return true; \
-	} \
-	bool CountryInstance::remove_##item(std::remove_pointer_t<decltype(item##s)::value_type> const& item_to_remove) { \
-		if (item##s.erase(&item_to_remove) == 0) { \
-			spdlog::error( \
-				"Attempted to remove " #item " \"{}\" from country {}: not present!", \
-				item_to_remove, *this \
-			); \
-			return false; \
-		} \
-		return true; \
-	} \
-	bool CountryInstance::has_##item(std::remove_pointer_t<decltype(item##s)::value_type> const& item) const { \
-		return item##s.contains(&item); \
-	}
+bool CountryInstance::add_owned_province(ProvinceInstance& new_item) {
+	OV_ERR_FAIL_COND_V_MSG(
+		!owned_provinces.emplace(&new_item).second, false,
+		memory::fmt::format("owned_province \"{}\" already present in country {}", new_item, *this)
+	);
+	return true;
+}
 
-ADD_AND_REMOVE(owned_province)
-ADD_AND_REMOVE(controlled_province)
-ADD_AND_REMOVE(core_province)
-ADD_AND_REMOVE(state)
-ADD_AND_REMOVE(accepted_culture)
+bool CountryInstance::remove_owned_province(ProvinceInstance const& item_to_remove) {
+	OV_ERR_FAIL_COND_V_MSG(
+		owned_provinces.erase(&item_to_remove) == 0, false,
+		memory::fmt::format("owned_province \"{}\" not present in country {}", item_to_remove, *this)
+	);
+	return true;
+}
 
-#undef ADD_AND_REMOVE
+bool CountryInstance::add_controlled_province(ProvinceInstance& new_item) {
+	OV_ERR_FAIL_COND_V_MSG(
+		!controlled_provinces.emplace(&new_item).second, false,
+		memory::fmt::format("controlled_province \"{}\" already present in country {}", new_item, *this)
+	);
+	return true;
+}
+
+bool CountryInstance::remove_controlled_province(ProvinceInstance const& item_to_remove) {
+	OV_ERR_FAIL_COND_V_MSG(
+		controlled_provinces.erase(&item_to_remove) == 0, false,
+		memory::fmt::format("controlled_province \"{}\" not present in country {}", item_to_remove, *this)
+	);
+	return true;
+}
+
+bool CountryInstance::add_core_province(ProvinceInstance& new_item) {
+	OV_ERR_FAIL_COND_V_MSG(
+		!core_provinces.emplace(&new_item).second, false,
+		memory::fmt::format("core_province \"{}\" already present in country {}", new_item, *this)
+	);
+	return true;
+}
+
+bool CountryInstance::remove_core_province(ProvinceInstance const& item_to_remove) {
+	OV_ERR_FAIL_COND_V_MSG(
+		core_provinces.erase(&item_to_remove) == 0, false,
+		memory::fmt::format("core_province \"{}\" not present in country {}", item_to_remove, *this)
+	);
+	return true;
+}
+
+bool CountryInstance::add_state(State& new_item) {
+	OV_ERR_FAIL_COND_V_MSG(
+		!states.emplace(&new_item).second, false,
+		memory::fmt::format("state \"{}\" already present in country {}", new_item, *this)
+	);
+	return true;
+}
+
+bool CountryInstance::remove_state(State const& item_to_remove) {
+	OV_ERR_FAIL_COND_V_MSG(
+		states.erase(&item_to_remove) == 0, false,
+		memory::fmt::format("state \"{}\" not present in country {}", item_to_remove, *this)
+	);
+	return true;
+}
+
+bool CountryInstance::add_accepted_culture(Culture const& new_item) {
+	OV_ERR_FAIL_COND_V_MSG(
+		!accepted_cultures.emplace(&new_item).second, false,
+		memory::fmt::format("accepted_culture \"{}\" already present in country {}", new_item, *this)
+	);
+	return true;
+}
+
+bool CountryInstance::remove_accepted_culture(Culture const& item_to_remove) {
+	OV_ERR_FAIL_COND_V_MSG(
+		accepted_cultures.erase(&item_to_remove) == 0, false,
+		memory::fmt::format("accepted_culture \"{}\" not present in country {}", item_to_remove, *this)
+	);
+	return true;
+}
 
 bool CountryInstance::set_ruling_party(CountryParty const& new_ruling_party) {
 	if (ruling_party.get_untracked() != &new_ruling_party) {
