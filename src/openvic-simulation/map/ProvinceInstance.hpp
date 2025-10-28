@@ -195,6 +195,7 @@ namespace OpenVic {
 		void province_tick(
 			const Date today,
 			PopValuesFromProvince& reusable_pop_values,
+			IndexedFlatMap<GoodDefinition, char>& reusable_goods_mask,
 			utility::forwardable_span<
 				memory::vector<fixed_point_t>,
 				VECTORS_FOR_PROVINCE_TICK
@@ -203,6 +204,7 @@ namespace OpenVic {
 		void initialise_for_new_game(
 			const Date today,
 			PopValuesFromProvince& reusable_pop_values,
+			IndexedFlatMap<GoodDefinition, char>& reusable_goods_mask,
 			utility::forwardable_span<
 				memory::vector<fixed_point_t>,
 				VECTORS_FOR_PROVINCE_TICK

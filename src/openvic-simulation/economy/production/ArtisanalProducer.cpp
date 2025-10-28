@@ -38,6 +38,7 @@ void ArtisanalProducer::artisan_tick(
 ) {
 	CountryInstance* country_to_report_economy_nullable = pop.get_location()->get_country_to_report_economy();
 	max_quantity_to_buy_per_good.clear();
+	IndexedFlatMap<GoodDefinition, char>& wants_more_mask = reusable_goods_mask;
 	fixed_point_map_t<GoodDefinition const*> const& input_goods = production_type.get_input_goods();
 	memory::vector<fixed_point_t>& max_price_per_input = reusable_map_0;
 	max_price_per_input.resize(input_goods.size(), 0);
@@ -77,7 +78,7 @@ void ArtisanalProducer::artisan_tick(
 		}
 
 		max_price_per_input[i] = pop.get_market_instance().get_max_next_price(input_good);
-		reusable_goods_mask.set(input_good, true);
+		wants_more_mask.set(input_good, true);
 		distinct_goods_to_buy++;
 	}
 
@@ -129,7 +130,7 @@ void ArtisanalProducer::artisan_tick(
 			);
 
 			if (good_stockpile >= desired_quantity) {
-				reusable_goods_mask.set(input_good, false);
+				wants_more_mask.set(input_good, false);
 				distinct_goods_to_buy--;
 			}
 		}
@@ -151,7 +152,7 @@ void ArtisanalProducer::artisan_tick(
 			fixed_point_t total_stockpile_value = 0;
 			for (auto it = input_goods.begin(); it < input_goods.end(); it++) {
 				GoodDefinition const& input_good = *it.key();
-				if (!reusable_goods_mask.at(input_good)) {
+				if (!wants_more_mask.at(input_good)) {
 					continue;
 				}
 				const ptrdiff_t i = it - input_goods.begin();
@@ -176,8 +177,8 @@ void ArtisanalProducer::artisan_tick(
 
 			for (auto it = input_goods.begin(); it < input_goods.end(); it++) {
 				GoodDefinition const& input_good = *it.key();
-				char& mask = reusable_goods_mask.at(input_good);
-				if (!mask) {
+				char& wants_more = wants_more_mask.at(input_good);
+				if (!wants_more) {
 					continue;
 				}
 				const ptrdiff_t i = it - input_goods.begin();
@@ -190,7 +191,7 @@ void ArtisanalProducer::artisan_tick(
 				
 				if (stockpile[&input_good] >= optimal_quantity) {
 					at_or_below_optimum = false;
-					mask = false;
+					wants_more = false;
 					distinct_goods_to_buy--;
 				}				
 			}
@@ -200,7 +201,7 @@ void ArtisanalProducer::artisan_tick(
 		//Place buy orders for each input
 		for (auto it = input_goods.begin(); it < input_goods.end(); it++) {
 			GoodDefinition const& input_good = *it.key();
-			if (!reusable_goods_mask.at(input_good)) {
+			if (!wants_more_mask.at(input_good)) {
 				continue;
 			}
 			const ptrdiff_t index_in_input_goods = it - input_goods.begin();

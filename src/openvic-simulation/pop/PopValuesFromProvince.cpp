@@ -2,7 +2,6 @@
 
 #include "openvic-simulation/country/CountryInstance.hpp"
 #include "openvic-simulation/defines/PopsDefines.hpp"
-#include "openvic-simulation/economy/GoodDefinition.hpp" // IWYU pragma: keep for constructor requirement
 #include "openvic-simulation/modifier/ModifierEffectCache.hpp"
 #include "openvic-simulation/map/ProvinceInstance.hpp"
 #include "openvic-simulation/pop/PopType.hpp"
@@ -40,10 +39,8 @@ void PopStrataValuesFromProvince::update_pop_strata_values_from_province(
 
 PopValuesFromProvince::PopValuesFromProvince(
 	PopsDefines const& new_defines,
-	decltype(reusable_goods_mask)::keys_span_type good_keys,
 	decltype(effects_by_strata)::keys_span_type strata_keys
 ) : defines { new_defines },
-	reusable_goods_mask { good_keys },
 	effects_by_strata { strata_keys }
 	{}
 

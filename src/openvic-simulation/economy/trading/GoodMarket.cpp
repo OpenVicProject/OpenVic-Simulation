@@ -86,7 +86,7 @@ void GoodMarket::execute_orders(
 		}
 
 		for (GoodMarketSellOrder const& market_sell_order : market_sell_orders) {
-			market_sell_order.call_after_trade(SellResult::no_sales_result(), reusable_vectors[0]);
+			market_sell_order.call_after_trade(SellResult::no_sales_result(good_definition), reusable_vectors[0]);
 		}
 		return;
 	}
@@ -312,6 +312,7 @@ void GoodMarket::execute_orders(
 				}
 				market_sell_order.call_after_trade(
 					{
+						good_definition,
 						quantity_sold,
 						money_gained
 					},
@@ -369,6 +370,7 @@ void GoodMarket::execute_orders(
 				}
 				market_sell_order.call_after_trade(
 					{
+						good_definition,
 						quantity_sold,
 						money_gained
 					},
