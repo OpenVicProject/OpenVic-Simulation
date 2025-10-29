@@ -500,7 +500,7 @@ TEST_CASE("NodeTools expect colour functions", "[NodeTools][NodeTools-expect-fun
 					if (fp <= 1) {
 						fp *= 255;
 					}
-					check[index] = fp.to_int64_t();
+					check[index] = fp.truncate<colour_t::value_type>();
 				}
 			}
 		}

@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cassert>
 #include <cctype>
 #include <charconv>
 #include <concepts>
@@ -31,6 +32,8 @@
 #include "openvic-simulation/types/fixed_point/FixedPointLUT_2_16_EXP_2001.hpp"
 
 namespace OpenVic {
+	enum class midpoint_rounding { AWAY_ZERO, TO_ZERO };
+
 	struct fixed_point_t {
 		/* PROPERTY generated getter functions will return fixed points by value, rather than const reference. */
 		using ov_return_by_value = void;
@@ -40,7 +43,7 @@ namespace OpenVic {
 		static constexpr size_t SIZE = 8;
 
 		static constexpr int32_t PRECISION = 16;
-		static constexpr value_type ONE = 1 << PRECISION;
+		static constexpr value_type ONE = value_type { 1 } << PRECISION;
 		static constexpr value_type FRAC_MASK = ONE - 1;
 
 		/* Fixed points represent any base 2 number with 48 bits above the point and 16 bits below it.
@@ -60,14 +63,14 @@ namespace OpenVic {
 		static_assert(_detail::LUT::_2_16_EXP_2001_DIVISOR == 1 << PRECISION);
 
 		// Doesn't account for sign, so -n.abc -> 1 - 0.abc
-		constexpr fixed_point_t get_frac() const {
+		OV_ALWAYS_INLINE constexpr fixed_point_t get_frac() const {
 			return parse_raw(value & FRAC_MASK);
 		}
 
 	public:
-		constexpr fixed_point_t() : value { 0 } {}
-		explicit constexpr fixed_point_t(value_type new_value) : value { new_value } {}
-		constexpr fixed_point_t(int32_t new_value) : value { static_cast<value_type>(new_value) << PRECISION } {}
+		OV_ALWAYS_INLINE constexpr fixed_point_t() : value { 0 } {}
+		OV_ALWAYS_INLINE explicit constexpr fixed_point_t(value_type new_value) : value { new_value } {}
+		OV_ALWAYS_INLINE constexpr fixed_point_t(int32_t new_value) : value { static_cast<value_type>(new_value) << PRECISION } {}
 
 		static const fixed_point_t max;
 		static const fixed_point_t min;
@@ -175,66 +178,108 @@ namespace OpenVic {
 			return get_frac() == 0;
 		}
 
-		constexpr fixed_point_t floor() const {
+		template<std::integral T>
+		explicit constexpr operator T() const {
+			if constexpr(std::unsigned_integral<T>) {
+				assert(OV_unlikely(!is_negative()));
+			}
+			return value >> PRECISION;
+		}
+
+		constexpr fixed_point_t truncate() const {
 			return parse_raw(value & ~FRAC_MASK);
 		}
 
+		template<std::integral T>
+		constexpr T truncate() const {
+			return static_cast<T>(*this);
+		}
+
+		template<std::floating_point T>
+		explicit constexpr operator T() const {
+			return value / static_cast<T>(ONE);
+		}
+
+		template<std::integral T>
+		constexpr T floor() const {
+			if (!is_negative()) {
+				return truncate<T>();
+			}
+
+			return parse_raw(value + FRAC_MASK).truncate<T>() - !is_integer();
+		}
+
+		constexpr fixed_point_t floor() const {
+			if (!is_negative()) {
+				return truncate();
+			}
+
+			return floor<value_type>();
+		}
+
+		template<std::integral T>
+		constexpr T ceil() const {
+			if (is_negative()) {
+				return truncate<T>();
+			}
+
+			return truncate<T>() + !is_integer();
+		}
+
 		constexpr fixed_point_t ceil() const {
-			return floor() + !is_integer();
+			if (is_negative()) {
+				return truncate();
+			}
+
+			return ceil<value_type>();
+		}
+
+		constexpr fixed_point_t round() const {
+			if (is_negative()) {
+				return (*this - _0_50).truncate();
+			}
+
+			return (*this + _0_50).truncate();
+		}
+
+		template<typename T>
+		constexpr T round() const;
+
+		/* WARNING: the results of these rounding functions are affected by the accuracy of base 2 fixed point numbers,
+		 * for example 1.0 rounded to a multiple of 0.01 is 0.99945068359375 for down and 1.0094451904296875 for up. */
+		template<midpoint_rounding Preference>
+		constexpr fixed_point_t round(fixed_point_t factor) const {
+			if constexpr (Preference == midpoint_rounding::AWAY_ZERO) {
+				const fixed_point_t remainder = *this % factor;
+				return *this - remainder - (remainder < 0 ? factor : _0);
+			} else {
+				const fixed_point_t remainder = *this % factor;
+				return *this - remainder + (remainder > 0 ? factor : _0);
+			}
 		}
 
 		/* WARNING: the results of these rounding functions are affected by the accuracy of base 2 fixed point numbers,
 		 * for example 1.0 rounded to a multiple of 0.01 is 0.99945068359375 for down and 1.0094451904296875 for up. */
-		constexpr fixed_point_t round_down_to_multiple(fixed_point_t factor) const {
-			const fixed_point_t remainder = *this % factor;
-			return *this - remainder - (remainder < 0 ? factor : _0);
-		}
-
-		constexpr fixed_point_t round_up_to_multiple(fixed_point_t factor) const {
-			const fixed_point_t remainder = *this % factor;
-			return *this - remainder + (remainder > 0 ? factor : _0);
-		}
-
-		constexpr int64_t to_int64_t() const {
-			return value >> PRECISION;
-		}
-
-		constexpr int32_t to_int32_t() const {
-			return static_cast<int32_t>(to_int64_t());
-		}
-
-		//away from zero
-		constexpr int64_t to_int64_t_rounded() const {
-			const fixed_point_t fp = *this;
-			if (fp >= 0) {
-				return (fp + _0_50).value >> PRECISION;
-			} else {
-				return (fp - _0_50).value >> PRECISION;
+		constexpr fixed_point_t round(fixed_point_t factor, midpoint_rounding preference) const {
+			switch (preference) {
+			case midpoint_rounding::AWAY_ZERO: return round<midpoint_rounding::AWAY_ZERO>(factor);
+			case midpoint_rounding::TO_ZERO:   return round<midpoint_rounding::TO_ZERO>(factor);
 			}
 		}
-		constexpr int32_t to_int32_t_rounded() const {
-			return static_cast<int32_t>(to_int64_t_rounded());
-		}
 
+		// Rounds away from zero on tie
 		template<std::integral T>
-		constexpr T to() const {
-			return static_cast<T>(to_int64_t());
+		constexpr T round() const {
+			if (is_negative()) {
+				return (*this - _0_50).truncate<T>();
+			}
+
+			return (*this + _0_50).truncate<T>();
 		}
 
-		constexpr float to_float() const {
-			return value / static_cast<float>(ONE);
-		}
-
-		constexpr float to_float_rounded() const {
-			return static_cast<float>(round_to_int64((value / static_cast<float>(ONE)) * 100000.0f)) / 100000.0f;
-		}
-
-		constexpr double to_double() const {
-			return value / static_cast<double>(ONE);
-		}
-
-		constexpr double to_double_rounded() const {
-			return round_to_int64((value / static_cast<double>(ONE)) * 100000.0) / 100000.0;
+		template<std::floating_point T>
+		constexpr T round() const {
+			return static_cast<T>(round_to_int64<T>((value / static_cast<T>(ONE)) * T { 100000 })) / T { 100000 };
 		}
 
 		inline constexpr std::to_chars_result to_chars(char* first, char* last, size_t decimal_places = -1) const {
@@ -252,7 +297,7 @@ namespace OpenVic {
 
 			std::to_chars_result result {};
 			if (decimal_places == static_cast<size_t>(-1)) {
-				result = StringUtils::to_chars(first, last, abs().to_int64_t());
+				result = StringUtils::to_chars(first, last, static_cast<int64_t>(abs()));
 				if (OV_unlikely(result.ec != std::errc {})) {
 					return result;
 				}
@@ -269,7 +314,7 @@ namespace OpenVic {
 							return { last, std::errc::value_too_large };
 						}
 						frac *= 10;
-						*result.ptr = static_cast<char>('0' + frac.to_int64_t());
+						*result.ptr = static_cast<char>('0' + static_cast<int64_t>(frac));
 						++result.ptr;
 						frac = frac.get_frac();
 					} while (frac != _0);
@@ -285,7 +330,7 @@ namespace OpenVic {
 			fixed_point_t val = this->abs() + err;
 
 
-			result = StringUtils::to_chars(first, last, val.to_int64_t());
+			result = StringUtils::to_chars(first, last, static_cast<int64_t>(val));
 			if (OV_unlikely(result.ec != std::errc {})) {
 				return result;
 			}
@@ -302,7 +347,7 @@ namespace OpenVic {
 						return result;
 					}
 					val *= 10;
-					*result.ptr = static_cast<char>('0' + val.to_int64_t());
+					*result.ptr = static_cast<char>('0' + static_cast<int64_t>(val));
 					++result.ptr;
 					val = val.get_frac();
 				} while (--decimal_places > 0);
@@ -329,7 +374,7 @@ namespace OpenVic {
 		}
 
 		// Deterministic
-		inline static constexpr fixed_point_t parse_raw(value_type value) {
+		OV_ALWAYS_INLINE static constexpr fixed_point_t parse_raw(value_type value) {
 			return fixed_point_t { value };
 		}
 
@@ -432,23 +477,7 @@ namespace OpenVic {
 			return parse_raw(integer_value);
 		}
 
-		constexpr operator int32_t() const {
-			return to_int32_t();
-		}
-
-		constexpr operator int64_t() const {
-			return to_int64_t();
-		}
-
-		constexpr operator float() const {
-			return to_float();
-		}
-
-		constexpr operator double() const {
-			return to_double();
-		}
-
-		operator memory::string() const {
+		explicit operator memory::string() const {
 			return to_string();
 		}
 
@@ -611,11 +640,7 @@ namespace OpenVic {
 
 		template<std::floating_point T>
 		constexpr bool operator==(T const& rhs) const {
-			if constexpr (std::same_as<T, float>) {
-				return to_float() == rhs;
-			} else {
-				return to_double() == rhs;
-			}
+			return static_cast<T>(*this) == rhs;
 		}
 
 		friend constexpr std::strong_ordering operator<=>(fixed_point_t const& lhs, fixed_point_t const& rhs) {
@@ -624,11 +649,7 @@ namespace OpenVic {
 
 		template<std::floating_point T>
 		constexpr std::partial_ordering operator<=>(T const& rhs) const {
-			if constexpr (std::same_as<T, float>) {
-				return to_float() <=> rhs;
-			} else {
-				return to_double() <=> rhs;
-			}
+			return static_cast<T>(*this) <=> rhs;
 		}
 
 	private:

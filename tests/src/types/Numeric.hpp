@@ -12,7 +12,7 @@ namespace OpenVic::testing {
 	static constexpr double INACCURATE_EPSILON = static_cast<double>(std::numeric_limits<float>::epsilon()) * 1000;
 
 	inline double approx_value(fixed_point_t value, double compare) {
-		return std::abs(value.to_double() - compare);
+		return std::abs(static_cast<double>(value) - compare);
 	}
 
 	inline double approx_value(double value, double compare) {
@@ -22,6 +22,6 @@ namespace OpenVic::testing {
 
 namespace snitch {
 	[[nodiscard]] inline static constexpr bool append(snitch::small_string_span ss, OpenVic::fixed_point_t const& s) {
-		return append(ss, s.to_double());
+		return append(ss, static_cast<double>(s));
 	}
 }

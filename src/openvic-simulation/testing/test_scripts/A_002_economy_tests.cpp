@@ -557,7 +557,7 @@ namespace OpenVic {
 											  .get_good_definition_manager()
 											  .get_good_definition_by_identifier(identifier)
 											  ->get_base_price();
-			memory::string base_price = memory::fmt::format("{:.1f}", base_price_fp.to_double());
+			memory::string base_price = memory::fmt::format("{:.1f}", base_price_fp);
 
 			// Perform req checks
 			pass_or_fail_req_with_actual_and_target_values(req_name, target_value, base_price);
