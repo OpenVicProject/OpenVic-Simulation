@@ -85,7 +85,7 @@ bool TerrainTypeManager::add_terrain_type(
 		return false;
 	}
 
-	if (movement_cost < fixed_point_t::_0) {
+	if (movement_cost < 0) {
 		spdlog::error_s(
 			"Invalid movement cost for terrain type \"{}\": {} (cannot be negative!)",
 			identifier, movement_cost

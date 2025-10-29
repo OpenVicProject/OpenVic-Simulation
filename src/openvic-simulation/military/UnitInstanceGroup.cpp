@@ -209,11 +209,11 @@ bool UnitInstanceGroup::set_leader(LeaderInstance* new_leader) {
 
 // These values are only needed for the UI, so there's no need to pre-calculate and cache them for every unit on every update.
 fixed_point_t UnitInstanceGroup::get_organisation_proportion() const {
-	return total_max_organisation != fixed_point_t::_0 ? total_organisation / total_max_organisation : fixed_point_t::_0;
+	return total_max_organisation != 0 ? total_organisation / total_max_organisation : fixed_point_t::_0;
 }
 
 fixed_point_t UnitInstanceGroup::get_strength_proportion() const {
-	return total_max_strength != fixed_point_t::_0 ? total_strength / total_max_strength : fixed_point_t::_0;
+	return total_max_strength != 0 ? total_strength / total_max_strength : fixed_point_t::_0;
 }
 
 fixed_point_t UnitInstanceGroup::get_average_organisation() const {

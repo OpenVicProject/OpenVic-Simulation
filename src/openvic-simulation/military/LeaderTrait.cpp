@@ -32,7 +32,7 @@ bool LeaderTraitManager::setup_leader_prestige_modifier(
 
 	bool ret = true;
 
-	if (military_defines.get_leader_prestige_to_morale_factor() != fixed_point_t::_0) {
+	if (military_defines.get_leader_prestige_to_morale_factor() != 0) {
 		if (modifier_effect_cache.get_morale_leader() != nullptr) {
 			leader_prestige_modifier.set_effect(
 				*modifier_effect_cache.get_morale_leader(), military_defines.get_leader_prestige_to_morale_factor()
@@ -43,7 +43,7 @@ bool LeaderTraitManager::setup_leader_prestige_modifier(
 		}
 	}
 
-	if (military_defines.get_leader_prestige_to_max_org_factor() != fixed_point_t::_0) {
+	if (military_defines.get_leader_prestige_to_max_org_factor() != 0) {
 		if (modifier_effect_cache.get_organisation() != nullptr) {
 			leader_prestige_modifier.set_effect(
 				*modifier_effect_cache.get_organisation(), military_defines.get_leader_prestige_to_max_org_factor()

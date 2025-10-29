@@ -130,7 +130,7 @@ namespace OpenVic {
 			for (modifier_entry_t const& modifier_entry : modifiers) {
 				const fixed_point_t contribution = modifier_entry.get_modifier_effect_value(effect);
 
-				if (contribution != fixed_point_t::_0) {
+				if (contribution != 0) {
 					callback(modifier_entry, contribution);
 				}
 			}
