@@ -58,7 +58,9 @@ void State::update_gamestate() {
 		pops_cache.clear();
 	}
 
+	coastal = false;
 	for (ProvinceInstance* const province : provinces) {
+		coastal |= province->get_province_definition().is_coastal();
 		add_pops_aggregate(*province);
 
 		for (auto const& [pop_type, province_pops_of_type] : province->get_pops_cache_by_type()) {

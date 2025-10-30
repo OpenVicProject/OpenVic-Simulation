@@ -36,6 +36,7 @@ namespace OpenVic {
 		memory::vector<ProvinceInstance*> SPAN_PROPERTY(provinces);
 		colony_status_t PROPERTY(colony_status);
 		fixed_point_t PROPERTY(industrial_power);
+		bool PROPERTY_CUSTOM_PREFIX(coastal, is, false);
 
 		OV_IFLATMAP_PROPERTY(PopType, memory::vector<Pop*>, pops_cache_by_type);
 
