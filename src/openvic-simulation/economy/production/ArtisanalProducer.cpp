@@ -57,7 +57,7 @@ void ArtisanalProducer::artisan_tick(
 		const fixed_point_t base_desired_quantity = it.value();
 		const ptrdiff_t i = it - input_goods.begin();
 		const fixed_point_t desired_quantity = demand_per_input[i] = base_desired_quantity * pop.get_size() / production_type.get_base_workforce_size();
-		if (desired_quantity == fixed_point_t::_0) {
+		if (desired_quantity == 0) {
 			continue;
 		}
 
@@ -87,13 +87,13 @@ void ArtisanalProducer::artisan_tick(
 		* inputs_bought_numerator * pop.get_size()
 		/ (inputs_bought_denominator * production_type.get_base_workforce_size());
 
-	if (current_production > fixed_point_t::_0) {
+	if (current_production > 0) {
 		if (country_to_report_economy_nullable != nullptr) {
 			country_to_report_economy_nullable->report_output(production_type, current_production);
 		}
 	}
 
-	if (inputs_bought_fraction > fixed_point_t::_0) {
+	if (inputs_bought_fraction > 0) {
 		for (auto it = input_goods.begin(); it < input_goods.end(); it++) {
 			GoodDefinition const& input_good = *it.key();
 			const fixed_point_t base_desired_quantity = it.value();
@@ -140,7 +140,7 @@ void ArtisanalProducer::artisan_tick(
 	const fixed_point_t total_cash_to_spend = pop.get_cash().get_copy_of_value() / max_cost_multiplier;
 	MarketInstance const& market_instance = pop.get_market_instance();
 
-	if (total_cash_to_spend > fixed_point_t::_0 && distinct_goods_to_buy > 0) {
+	if (total_cash_to_spend > 0 && distinct_goods_to_buy > 0) {
 		//Figure out the optimal amount of goods to buy based on their price, stockpiled quantiy & demand
 		fixed_point_t max_possible_satisfaction_numerator= 1,
 			max_possible_satisfaction_denominator= 1;
@@ -161,7 +161,7 @@ void ArtisanalProducer::artisan_tick(
 				total_stockpile_value += max_price * stockpile[&input_good];
 			}
 
-			if ( total_demand_value == fixed_point_t::_0) {
+			if ( total_demand_value == 0) {
 				max_possible_satisfaction_numerator = 1;
 				max_possible_satisfaction_denominator = 1;
 			} else {
@@ -208,7 +208,7 @@ void ArtisanalProducer::artisan_tick(
 			const fixed_point_t good_demand = demand_per_input[index_in_input_goods];
 			fixed_point_t& good_stockpile = stockpile[&input_good];
 			const fixed_point_t max_quantity_to_buy = good_demand - good_stockpile;
-			if (max_quantity_to_buy > fixed_point_t::_0) {
+			if (max_quantity_to_buy > 0) {
 				const fixed_point_t optimal_quantity = fixed_point_t::mul_div(
 					good_demand,
 					max_possible_satisfaction_numerator,
@@ -227,7 +227,7 @@ void ArtisanalProducer::artisan_tick(
 			}
 		}
 
-		if (OV_unlikely(debug_cash_left < fixed_point_t::_0)) {
+		if (OV_unlikely(debug_cash_left < 0)) {
 			spdlog::error_s("Artisan allocated more cash than the pop has. debug_cash_left: {}", debug_cash_left);
 		}
 	}
@@ -239,7 +239,7 @@ void ArtisanalProducer::artisan_tick(
 }
 
 fixed_point_t ArtisanalProducer::add_to_stockpile(GoodDefinition const& good, const fixed_point_t quantity) {
-	if (OV_unlikely(quantity < fixed_point_t::_0)) {
+	if (OV_unlikely(quantity < 0)) {
 		spdlog::error_s(
 			"Attempted to add negative quantity {} of {} to stockpile.",
 			quantity, good

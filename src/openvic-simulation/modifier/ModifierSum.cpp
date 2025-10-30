@@ -48,7 +48,7 @@ void ModifierSum::add_modifier(
 ) {
 	// We could test that excluded_targets != ALL_TARGETS, but in practice it's always
 	// called with an explcit/hardcoded value and so won't ever exclude everything.
-	if (multiplier != fixed_point_t::_0) {
+	if (multiplier != 0) {
 		modifier_entry_t const& new_entry = modifiers.emplace_back(
 			modifier,
 			multiplier,

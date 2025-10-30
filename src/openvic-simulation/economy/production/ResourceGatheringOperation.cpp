@@ -73,7 +73,7 @@ void ResourceGatheringOperation::initialise_rgo_size_multiplier() {
 
 	const fixed_point_t size_modifier = calculate_size_modifier();
 	const fixed_point_t base_workforce_size = production_type.get_base_workforce_size();
-	if (size_modifier == fixed_point_t::_0) {
+	if (size_modifier == 0) {
 		size_multiplier = 0;
 	} else {
 		size_multiplier = ((total_worker_count_in_province / (size_modifier * base_workforce_size)).ceil() * fixed_point_t::_1_50).floor();
@@ -110,7 +110,7 @@ fixed_point_t ResourceGatheringOperation::calculate_size_modifier() const {
 	size_modifier += location.get_modifier_effect_value(
 		*modifier_effect_cache.get_good_effects(production_type.get_output_good()).get_rgo_size()
 	);
-	return size_modifier > fixed_point_t::_0 ? size_modifier : fixed_point_t::_0;
+	return size_modifier > 0 ? size_modifier : fixed_point_t::_0;
 }
 
 void ResourceGatheringOperation::rgo_tick(memory::vector<fixed_point_t>& reusable_vector) {
@@ -141,7 +141,7 @@ void ResourceGatheringOperation::rgo_tick(memory::vector<fixed_point_t>& reusabl
 	}
 
 	output_quantity_yesterday = produce();
-	if (output_quantity_yesterday > fixed_point_t::_0) {
+	if (output_quantity_yesterday > 0) {
 		CountryInstance* const country_to_report_economy_nullable = location.get_country_to_report_economy();
 		if (country_to_report_economy_nullable != nullptr) {
 			country_to_report_economy_nullable->report_output(production_type, output_quantity_yesterday);
@@ -217,7 +217,7 @@ void ResourceGatheringOperation::hire() {
 
 fixed_point_t ResourceGatheringOperation::produce() {
 	const fixed_point_t size_modifier = calculate_size_modifier();
-	if (size_modifier == fixed_point_t::_0){
+	if (size_modifier == 0){
 		return 0;
 	}
 
@@ -340,8 +340,8 @@ void ResourceGatheringOperation::pay_employees(memory::vector<fixed_point_t>& re
 
 	total_owner_income_cache = 0;
 	total_employee_income_cache = 0;
-	if (revenue <= fixed_point_t::_0 || total_worker_count_in_province_cache <= 0) {
-		if (revenue < fixed_point_t::_0) {
+	if (revenue <= 0 || total_worker_count_in_province_cache <= 0) {
+		if (revenue < 0) {
 			spdlog::error_s("Negative revenue for province {}", location);
 		}
 		if (total_worker_count_in_province_cache < 0) {
@@ -420,7 +420,7 @@ void ResourceGatheringOperation::pay_employees(memory::vector<fixed_point_t>& re
 				}
 				
 				const fixed_point_t minimum_wage = employee.get_minimum_wage_cached();
-				if (minimum_wage > fixed_point_t::_0 && incomes[i] == minimum_wage) {
+				if (minimum_wage > 0 && incomes[i] == minimum_wage) {
 					continue;
 				}
 
@@ -444,7 +444,7 @@ void ResourceGatheringOperation::pay_employees(memory::vector<fixed_point_t>& re
 				Employee& employee = employees[i];
 				Pop& employee_pop = employee.get_pop();
 				const fixed_point_t income_for_this_pop = incomes[i];
-				if (income_for_this_pop > fixed_point_t::_0) {
+				if (income_for_this_pop > 0) {
 					employee_pop.add_rgo_worker_income(income_for_this_pop);
 					total_employee_income_cache += income_for_this_pop;
 				}

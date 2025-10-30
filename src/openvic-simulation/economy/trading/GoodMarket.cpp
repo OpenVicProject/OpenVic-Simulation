@@ -113,7 +113,7 @@ void GoodMarket::execute_orders(
 			new_price = std::min(max_next_price, max_affordable_price);
 		} else {
 			//TODO use Victoria 2's square root mechanic, see https://github.com/OpenVicProject/OpenVic/issues/288
-			if (demand_sum > fixed_point_t::_0) {
+			if (demand_sum > 0) {
 				new_price = max_next_price;
 			} else {
 				new_price = price;
@@ -152,7 +152,7 @@ void GoodMarket::execute_orders(
 
 			demand_sum += max_quantity;
 
-			if (money_to_spend <= fixed_point_t::_0) {
+			if (money_to_spend <= 0) {
 				purchasing_power_per_order[i] = 0;
 				continue;
 			}
@@ -230,7 +230,7 @@ void GoodMarket::execute_orders(
 			//sell below max_next_price
 			if (game_rules_manager.get_use_optimal_pricing()) {
 				//drop price while remaining_supply > 0 && new_price > min_next_price
-				while (remaining_supply > fixed_point_t::_0) {
+				while (remaining_supply > 0) {
 					const fixed_point_t possible_price = money_left_to_spend_sum / remaining_supply;
 
 					if (possible_price >= new_price) {
@@ -302,7 +302,7 @@ void GoodMarket::execute_orders(
 			for (GoodMarketSellOrder const& market_sell_order : market_sell_orders) {
 				const fixed_point_t quantity_sold = market_sell_order.get_quantity();
 				fixed_point_t money_gained;
-				if (quantity_sold == fixed_point_t::_0) {
+				if (quantity_sold == 0) {
 					money_gained = 0;
 				} else {
 					money_gained = std::max(
@@ -360,7 +360,7 @@ void GoodMarket::execute_orders(
 
 				const fixed_point_t quantity_sold = quantity_sold_domestically + fair_share_of_exports;
 				fixed_point_t money_gained;
-				if (quantity_sold == fixed_point_t::_0) {
+				if (quantity_sold == 0) {
 					money_gained = 0;
 				} else {
 					money_gained = std::max(
@@ -407,7 +407,7 @@ void GoodMarket::execute_buy_orders(
 		GoodBuyUpToOrder const& buy_up_to_order = buy_up_to_orders[i];
 		const fixed_point_t quantity_bought = quantity_bought_per_order[i];
 
-		if (quantity_bought == fixed_point_t::_0) {
+		if (quantity_bought == 0) {
 			buy_up_to_order.call_after_trade(BuyResult::no_purchase_result(good_definition));
 		} else {
 			quantity_traded_yesterday += quantity_bought;
