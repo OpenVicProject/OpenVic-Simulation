@@ -143,9 +143,9 @@ bool MapDefinition::add_standard_adjacency(ProvinceDefinition& from, ProvinceDef
 		to.coastal = !to.is_water();
 
 		if (from.is_water()) {
-			path_map_sea.try_add_point(to.get_province_number(), { to.centre.x, to.centre.y });
+			path_map_sea.try_add_point(to.get_province_number(), { to.centre.x.round<int>(), to.centre.y.round<int>() });
 		} else {
-			path_map_sea.try_add_point(from.get_province_number(), { from.centre.x, from.centre.y });
+			path_map_sea.try_add_point(from.get_province_number(), { from.centre.x.round<int>(), from.centre.y.round<int>() });
 		}
 		/* Connect points on pathfinding map */
 		path_map_sea.connect_points(from.get_province_number(), to.get_province_number());
@@ -584,7 +584,7 @@ bool MapDefinition::load_province_definitions(std::span<const LineObject> lines)
 					}
 
 					ProvinceDefinition const& definition = province_definitions.back();
-					ret &= path_map_land.try_add_point(definition.get_province_number(), { definition.centre.x, definition.centre.y });
+					ret &= path_map_land.try_add_point(definition.get_province_number(), { definition.centre.x.round<int>(), definition.centre.y.round<int>() });
 					if (!ret) {
 						spdlog::error_s("Province {} could not be added to " _OV_STR(path_map_land), identifier);
 					}

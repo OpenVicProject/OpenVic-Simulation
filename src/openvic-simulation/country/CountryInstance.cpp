@@ -1450,7 +1450,7 @@ void CountryInstance::_update_current_tech(const Date today) {
 				(
 					(current_research_cost.get_untracked() - invested_research_points.get_untracked())
 					/ daily_research_points_copy
-				).ceil()
+				).ceil<int64_t>()
 			)
 		);
 	} else {
@@ -1596,7 +1596,7 @@ void CountryInstance::_update_military() {
 	// TODO - use country_defines.get_min_mobilize_limit(); (wiki: "lowest maximum of brigades you can mobilize. (by default 3)")
 
 	mobilisation_max_regiment_count =
-		((fixed_point_t::_1 + mobilisation_impact) * fixed_point_t::parse(regiment_count)).to_int64_t();
+		((fixed_point_t::_1 + mobilisation_impact) * fixed_point_t::parse(regiment_count)).floor<size_t>();
 
 	mobilisation_potential_regiment_count = 0; // TODO - calculate max regiments from poor citizens
 	if (mobilisation_potential_regiment_count > mobilisation_max_regiment_count) {
@@ -1623,16 +1623,18 @@ void CountryInstance::_update_military() {
 	naval_unit_start_experience += get_modifier_effect_value(*modifier_effect_cache.get_naval_unit_start_experience());
 
 	recruit_time = fixed_point_t::_1 + get_modifier_effect_value(*modifier_effect_cache.get_unit_recruitment_time());
-	combat_width = fixed_point_t::parse(military_defines.get_base_combat_width()) +
-		get_modifier_effect_value(*modifier_effect_cache.get_combat_width_additive());
-	dig_in_cap = get_modifier_effect_value(*modifier_effect_cache.get_dig_in_cap());
+	combat_width = ( //
+		fixed_point_t::parse(military_defines.get_base_combat_width()) +
+		get_modifier_effect_value(*modifier_effect_cache.get_combat_width_additive())
+	).floor<int32_t>();
+	dig_in_cap = get_modifier_effect_value(*modifier_effect_cache.get_dig_in_cap()).floor<int32_t>();
 	military_tactics = military_defines.get_base_military_tactics() +
 		get_modifier_effect_value(*modifier_effect_cache.get_military_tactics());
 
 	if (leadership_point_stockpile < 0) {
 		leadership_point_stockpile = 0;
 	}
-	create_leader_count = leadership_point_stockpile / military_defines.get_leader_recruit_cost();
+	create_leader_count = (leadership_point_stockpile / military_defines.get_leader_recruit_cost()).floor<int32_t>();
 
 	monthly_leadership_points += get_modifier_effect_value(*modifier_effect_cache.get_leadership());
 	monthly_leadership_points *= fixed_point_t::_1 +

@@ -136,7 +136,7 @@ void PointMap::set_point_weight_scale(points_key_type id, fixed_point_t weight_s
 		it == points.end(), memory::fmt::format("Can't set point's weight scale. Point with id: {} doesn't exist.", id)
 	);
 	OV_ERR_FAIL_COND_MSG(
-		weight_scale < 0, memory::fmt::format("Can't set point's weight scale less than 0.0: {}.", weight_scale.to_double())
+		weight_scale < 0, memory::fmt::format("Can't set point's weight scale less than 0.0: {}.", weight_scale)
 	);
 
 	it.value().weight_scale = weight_scale;
@@ -355,7 +355,7 @@ PointMap::points_key_type PointMap::get_closest_point(ivec2_t const& point, bool
 static fvec2_t get_closest_point_to_segment(fvec2_t const& p_point, std::span<ivec2_t, 2> p_segment) {
 	fvec2_t p = p_point - fvec2_t { p_segment[0] };
 	fvec2_t n = fvec2_t { p_segment[1] } - fvec2_t { p_segment[0] };
-	int32_t l2 = n.length_squared();
+	int32_t l2 = n.length_squared().round<int32_t>();
 	if (l2 == 0) {
 		return fvec2_t { p_segment[0] }; // Both points are the same, just give any.
 	}

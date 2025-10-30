@@ -206,7 +206,7 @@ node_callback_t NodeTools::expect_colour(callback_t<colour_t> callback) {
 					} else if (!val.is_integer()) {
 						spdlog::warn_s("Fractional part of colour component #{} will be truncated: {}", components, val);
 					}
-					col[components++] = val.to_int64_t();
+					col[components++] = val.truncate<colour_t::value_type>();
 					return true;
 				}
 			}

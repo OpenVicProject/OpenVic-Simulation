@@ -13,6 +13,9 @@
 #include <snitch/snitch_string_utility.hpp>
 
 namespace OpenVic::testing {
+	template<typename From, typename To>
+	concept explicit_convertible_to = requires { static_cast<To>(std::declval<From>()); };
+
 	struct approx {
 		constexpr approx(double value)
 			: _epsilon(static_cast<double>(std::numeric_limits<float>::epsilon()) * 100), //
@@ -26,7 +29,7 @@ namespace OpenVic::testing {
 			return approx;
 		}
 
-		template<std::convertible_to<double> T>
+		template<explicit_convertible_to<double> T>
 		explicit constexpr approx(T const& value) { // NOLINT(cppcoreguidelines-pro-type-member-init)
 			*this = static_cast<double>(value);
 		}
@@ -36,7 +39,7 @@ namespace OpenVic::testing {
 			return *this;
 		}
 
-		template<std::convertible_to<double> T>
+		template<explicit_convertible_to<double> T>
 		constexpr approx& epsilon(T const& psilon) {
 			_epsilon = static_cast<double>(psilon);
 			return *this;
@@ -47,7 +50,7 @@ namespace OpenVic::testing {
 			return *this;
 		}
 
-		template<std::convertible_to<double> T>
+		template<explicit_convertible_to<double> T>
 		constexpr approx& scale(T const& scale) {
 			_scale = static_cast<double>(scale);
 			return *this;
@@ -59,7 +62,8 @@ namespace OpenVic::testing {
 			return result;
 		}
 
-		template<std::convertible_to<double> T>
+		template<explicit_convertible_to<double> T>
+		requires not_same_as<T, approx>
 		constexpr bool operator==(T rhs) const {
 			return operator==(static_cast<double>(rhs));
 		}
@@ -69,7 +73,8 @@ namespace OpenVic::testing {
 			return OpenVic::abs(rhs - _value) < _epsilon * (_scale + std::max<double>(OpenVic::abs(rhs), OpenVic::abs(_value)));
 		}
 
-		template<std::convertible_to<double> T>
+		template<explicit_convertible_to<double> T>
+		requires not_same_as<T, approx>
 		constexpr std::partial_ordering operator<=>(T rhs) const {
 			return operator<=>(static_cast<double>(rhs));
 		}

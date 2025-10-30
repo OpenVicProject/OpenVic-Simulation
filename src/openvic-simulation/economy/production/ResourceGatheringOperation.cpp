@@ -79,7 +79,7 @@ void ResourceGatheringOperation::initialise_rgo_size_multiplier() {
 		size_multiplier = ((total_worker_count_in_province / (size_modifier * base_workforce_size)).ceil() * fixed_point_t::_1_50).floor();
 	}
 
-	max_employee_count_cache = (size_modifier * size_multiplier * base_workforce_size).floor();
+	max_employee_count_cache = (size_modifier * size_multiplier * base_workforce_size).floor<pop_size_t>();
 }
 
 fixed_point_t ResourceGatheringOperation::calculate_size_modifier() const {

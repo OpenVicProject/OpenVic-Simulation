@@ -249,7 +249,7 @@ void Pop::update_gamestate(
 		} else {
 			max_supported_regiments = (fixed_point_t::parse(size) / (
 				fixed_point_t::parse(military_defines.get_pop_size_per_regiment()) * pop_size_per_regiment_multiplier
-			)).to_int64_t() + 1;
+			)).floor<size_t>() + 1;
 		}
 	}
 }

@@ -23,12 +23,9 @@ namespace OpenVic {
 	requires (!(std::integral<T> || std::floating_point<T>))
 	[[nodiscard]] inline constexpr T abs(T num);
 
-	constexpr int64_t round_to_int64(float num) {
-		return (num > 0.0f) ? (num + 0.5f) : (num - 0.5f);
-	}
-
-	constexpr int64_t round_to_int64(double num) {
-		return (num > 0.0) ? (num + 0.5) : (num - 0.5);
+	template<std::floating_point T>
+	constexpr int64_t round_to_int64(T num) {
+		return (num > T { 0 }) ? (num + (T { 1 } / 2)) : (num - (T { 1 } / 2));
 	}
 
 	constexpr uint64_t pow(uint64_t base, std::size_t exponent) {
