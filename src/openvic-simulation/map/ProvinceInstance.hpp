@@ -167,8 +167,7 @@ namespace OpenVic {
 		bool add_pop(Pop&& pop);
 		bool add_pop_vec(
 			std::span<const PopBase> pop_vec,
-			MarketInstance& market_instance,
-			ArtisanalProducerFactoryPattern& artisanal_producer_factory_pattern
+			MarketInstance& market_instance
 		);
 		size_t get_pop_count() const;
 

@@ -11,10 +11,14 @@
 #include "openvic-simulation/utility/ForwardableSpan.hpp"
 
 namespace OpenVic {
+	struct GameRulesManager;
 	struct GoodDefinition;
+	struct GoodInstanceManager;
 	struct CountryInstance;
 	struct GoodInstance;
+	struct ModifierEffectCache;
 	struct PopsDefines;
+	struct ProductionTypeManager;
 	struct Strata;
 
 	struct ThreadPool {
@@ -30,7 +34,11 @@ namespace OpenVic {
 
 		void loop_until_cancelled(
 			work_t& work_type,
+			GameRulesManager const& game_rules_manager,
+			GoodInstanceManager const& good_instance_manager,
+			ModifierEffectCache const& modifier_effect_cache,
 			PopsDefines const& pop_defines,
+			ProductionTypeManager const& production_type_manager,
 			utility::forwardable_span<const CountryInstance> country_keys,
 			utility::forwardable_span<const GoodDefinition> good_keys,
 			utility::forwardable_span<const Strata> strata_keys,
@@ -57,7 +65,11 @@ namespace OpenVic {
 		~ThreadPool();
 
 		void initialise_threadpool(
+			GameRulesManager const& game_rules_manager,
+			GoodInstanceManager const& good_instance_manager,
+			ModifierEffectCache const& modifier_effect_cache,
 			PopsDefines const& pop_defines,
+			ProductionTypeManager const& production_type_manager,
 			utility::forwardable_span<const GoodDefinition> good_keys,
 			utility::forwardable_span<const Strata> strata_keys,			
 			utility::forwardable_span<GoodInstance> goods,

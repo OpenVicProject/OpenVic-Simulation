@@ -12,7 +12,6 @@
 #include "openvic-simulation/utility/ForwardableSpan.hpp"
 
 namespace OpenVic {
-	struct ArtisanalProducerFactoryPattern;
 	struct BaseIssue;
 	struct BuyResult;
 	struct CountryInstance;
@@ -86,9 +85,9 @@ namespace OpenVic {
 		static constexpr pop_size_t MAX_SIZE = std::numeric_limits<pop_size_t>::max();
 
 	private:
-		memory::unique_ptr<ArtisanalProducer> artisanal_producer_nullable;
-		fixed_point_t cash_allocated_for_artisanal_spending;
-		fixed_point_t artisanal_produce_left_to_sell;
+		std::optional<ArtisanalProducer> artisanal_producer_optional;
+		fixed_point_t cash_allocated_for_artisanal_spending = 0;
+		fixed_point_t artisanal_produce_left_to_sell = 0;
 		pop_size_t employed = 0;
 
 		ProvinceInstance* PROPERTY_PTR(location, nullptr);
@@ -159,7 +158,7 @@ namespace OpenVic {
 			PopBase const& pop_base,
 			decltype(supporter_equivalents_by_ideology)::keys_span_type ideology_keys,
 			MarketInstance& new_market_instance,
-			ArtisanalProducerFactoryPattern& artisanal_producer_factory_pattern
+			ModifierEffectCache const& new_modifier_effect_cache
 		);
 
 		memory::string get_pop_context_text() const;

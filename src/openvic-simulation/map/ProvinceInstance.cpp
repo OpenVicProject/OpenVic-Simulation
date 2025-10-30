@@ -201,8 +201,7 @@ bool ProvinceInstance::add_pop(Pop&& pop) {
 
 bool ProvinceInstance::add_pop_vec(
 	std::span<const PopBase> pop_vec,
-	MarketInstance& market_instance,
-	ArtisanalProducerFactoryPattern& artisanal_producer_factory_pattern
+	MarketInstance& market_instance
 ) {
 	if (!province_definition.is_water()) {
 		reserve_more(pops, pop_vec.size());
@@ -211,7 +210,7 @@ bool ProvinceInstance::add_pop_vec(
 				pop,
 				get_supporter_equivalents_by_ideology().get_keys(),
 				market_instance,
-				artisanal_producer_factory_pattern
+				modifier_effect_cache
 			});
 		}
 		return true;
@@ -400,10 +399,13 @@ void ProvinceInstance::province_tick(
 		occupation_duration++;
 	}
 
-	reusable_pop_values.update_pop_values_from_province(*this);
-	for (Pop& pop : pops) {
-		pop.pop_tick(reusable_pop_values, reusable_goods_mask, reusable_vectors);
+	if (!pops.empty()) {
+		reusable_pop_values.update_pop_values_from_province(*this);
+		for (Pop& pop : pops) {
+			pop.pop_tick(reusable_pop_values, reusable_goods_mask, reusable_vectors);
+		}
 	}
+
 	for (BuildingInstance& building : buildings.get_items()) {
 		building.tick(today);
 	}

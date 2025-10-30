@@ -4,11 +4,13 @@
 
 #include "openvic-simulation/country/CountryInstance.hpp"
 #include "openvic-simulation/economy/GoodDefinition.hpp"
+#include "openvic-simulation/economy/GoodInstance.hpp"
 #include "openvic-simulation/economy/production/ProductionType.hpp"
 #include "openvic-simulation/economy/trading/MarketInstance.hpp"
 #include "openvic-simulation/map/ProvinceInstance.hpp"
 #include "openvic-simulation/modifier/ModifierEffectCache.hpp"
 #include "openvic-simulation/pop/Pop.hpp"
+#include "openvic-simulation/pop/PopValuesFromProvince.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
 #include "openvic-simulation/utility/Typedefs.hpp"
 
@@ -17,25 +19,55 @@ using namespace OpenVic;
 ArtisanalProducer::ArtisanalProducer(
 	ModifierEffectCache const& new_modifier_effect_cache,
 	fixed_point_map_t<GoodDefinition const*>&& new_stockpile,
-	ProductionType const& new_production_type,
+	ProductionType const* const new_production_type,
 	fixed_point_t new_current_production
 ) : modifier_effect_cache { new_modifier_effect_cache },
 	stockpile { std::move(new_stockpile) },
-	production_type { new_production_type },
+	production_type_nullable { nullptr },
 	current_production { new_current_production }
 	{
-		max_quantity_to_buy_per_good.reserve(new_production_type.get_input_goods().size());
+		set_production_type(production_type_nullable);
 	}
+
+void ArtisanalProducer::set_production_type(ProductionType const* const new_production_type) {
+	if (production_type_nullable == new_production_type) {
+		return;
+	}
+
+	production_type_nullable = new_production_type;
+	if (production_type_nullable == nullptr) {
+		return;
+	}
+
+	ProductionType const& production_type = *production_type_nullable;
+	max_quantity_to_buy_per_good.clear();
+	max_quantity_to_buy_per_good.reserve(production_type.get_input_goods().size());
+}
 
 void ArtisanalProducer::artisan_tick(
 	Pop& pop,
-	const fixed_point_t max_cost_multiplier,
+	PopValuesFromProvince const& values_from_province,
 	IndexedFlatMap<GoodDefinition, char>& reusable_goods_mask,
 	memory::vector<fixed_point_t>& pop_max_quantity_to_buy_per_good,
 	memory::vector<fixed_point_t>& pop_money_to_spend_per_good,
 	memory::vector<fixed_point_t>& reusable_map_0,
 	memory::vector<fixed_point_t>& reusable_map_1
 ) {
+	ProductionType const* const old_production_type = production_type_nullable;
+	set_production_type(pick_production_type(pop, values_from_province));
+	if (production_type_nullable == nullptr) {
+		return;
+	}
+
+	ProductionType const& production_type = *production_type_nullable;
+	if (production_type_nullable != old_production_type) {
+		//TODO sell stockpile no longer used
+		stockpile.clear();
+		for (auto const& [input_good, base_demand] : production_type.get_input_goods()) {
+			stockpile[input_good] = base_demand * pop.get_size() / production_type.get_base_workforce_size();
+		}
+	}
+
 	CountryInstance* country_to_report_economy_nullable = pop.get_location()->get_country_to_report_economy();
 	max_quantity_to_buy_per_good.clear();
 	IndexedFlatMap<GoodDefinition, char>& wants_more_mask = reusable_goods_mask;
@@ -137,7 +169,7 @@ void ArtisanalProducer::artisan_tick(
 	}
 
 	//executed once per pop while nothing else uses it.
-	const fixed_point_t total_cash_to_spend = pop.get_cash().get_copy_of_value() / max_cost_multiplier;
+	const fixed_point_t total_cash_to_spend = pop.get_cash().get_copy_of_value() / values_from_province.get_max_cost_multiplier();
 	MarketInstance const& market_instance = pop.get_market_instance();
 
 	if (total_cash_to_spend > 0 && distinct_goods_to_buy > 0) {
@@ -257,4 +289,117 @@ fixed_point_t ArtisanalProducer::add_to_stockpile(GoodDefinition const& good, co
 	stockpile.at(&good) += quantity_added_to_stockpile;
 	max_quantity_to_buy -= quantity_added_to_stockpile;
 	return quantity_added_to_stockpile;
+}
+
+std::optional<fixed_point_t> ArtisanalProducer::estimate_production_type_score(
+	GoodInstanceManager const& good_instance_manager,
+	ProductionType const& production_type,
+	ProvinceInstance& location,
+	const fixed_point_t max_cost_multiplier
+) {
+	if (production_type.get_template_type() != ProductionType::template_type_t::ARTISAN) {
+		return std::nullopt;
+	}
+
+	if (!production_type.is_valid_for_artisan_in(location)) {
+		return std::nullopt;
+	}
+
+	GoodInstance const& output_good = good_instance_manager.get_good_instance_by_definition(production_type.get_output_good());
+	if (!output_good.get_is_available()) {
+		return std::nullopt;
+	}
+
+	fixed_point_t estimated_costs = 0;
+	for (auto const& [input_good, input_quantity] : production_type.get_input_goods()) {
+		estimated_costs += input_quantity * good_instance_manager.get_good_instance_by_definition(*input_good).get_price();
+	}
+	estimated_costs *= max_cost_multiplier;
+
+	const fixed_point_t estimated_revenue = production_type.get_base_output_quantity() * output_good.get_price();
+	return calculate_production_type_score(
+		estimated_revenue,
+		estimated_costs,
+		production_type.get_base_workforce_size()
+	);
+}
+
+fixed_point_t ArtisanalProducer::calculate_production_type_score(
+	const fixed_point_t revenue,
+	const fixed_point_t costs,
+	const pop_size_t workforce
+) {
+	constexpr fixed_point_t k = fixed_point_t::_0_50;
+	return (
+		k * fixed_point_t::mul_div(costs, costs, revenue)
+		-(1+k)*costs
+		+ revenue
+	) * Pop::size_denominator / workforce; //factor out pop size without making values too small
+}
+
+ProductionType const* ArtisanalProducer::pick_production_type(
+	Pop& pop,
+	PopValuesFromProvince const& values_from_province
+) const {
+	bool should_pick_new_production_type;
+	const auto ranked_artisanal_production_types = values_from_province.get_ranked_artisanal_production_types();
+
+	if (ranked_artisanal_production_types.empty()) {
+		return production_type_nullable;
+	}
+
+	const fixed_point_t revenue = pop.get_artisanal_income();
+	const fixed_point_t costs = pop.get_artisan_inputs_expense();
+	if (production_type_nullable == nullptr || (revenue <= costs)) {
+		should_pick_new_production_type = true;
+	} else {
+		const fixed_point_t current_score = calculate_production_type_score(
+			revenue,
+			costs,		
+			pop.get_size()
+		);
+
+		fixed_point_t relative_score = ranked_artisanal_production_types.empty() ? fixed_point_t::_1 : fixed_point_t::_0;
+		for (auto it = ranked_artisanal_production_types.begin(); it < ranked_artisanal_production_types.end(); ++it) {
+			auto const& [production_type, score_estimate] = *it;
+			size_t i = it - ranked_artisanal_production_types.begin();
+			if (current_score > score_estimate) {
+				if (i == 0) {
+					relative_score = fixed_point_t::_1;
+				} else {
+					const fixed_point_t previous_score_estimate = ranked_artisanal_production_types[i-1].second;
+					relative_score = (
+						(current_score - score_estimate)
+						/ (previous_score_estimate - score_estimate)
+						+ ranked_artisanal_production_types.size() - i
+					) / (1 + ranked_artisanal_production_types.size());
+				}
+				break;
+			}
+
+			if (current_score == score_estimate) {
+				relative_score = fixed_point_t::parse(ranked_artisanal_production_types.size() - i) / (1 + ranked_artisanal_production_types.size());
+			}
+		}
+
+		//TODO decide based on score and randomness and defines.economy.GOODS_FOCUS_SWAP_CHANCE
+		should_pick_new_production_type = relative_score < fixed_point_t::_0_50;
+	}
+
+	if (!should_pick_new_production_type) {
+		return production_type_nullable;
+	}
+	
+	fixed_point_t weights_sum = 0;
+	memory::vector<fixed_point_t> weights {};
+	weights.reserve(ranked_artisanal_production_types.size());
+	for (auto const& [production_type, score_estimate] : ranked_artisanal_production_types) {
+		//TODO calculate actual scores including availability of goods
+		const fixed_point_t weight = score_estimate * score_estimate;
+		weights.push_back(weight);
+		weights_sum += weight;
+	}
+
+	//TODO randomly sample using weights
+	return ranked_artisanal_production_types[0].first;
 }

@@ -23,11 +23,6 @@ InstanceManager::InstanceManager(
 		new_definition_manager.get_define_manager().get_country_defines(),
 		good_instance_manager
 	},
-	artisanal_producer_factory_pattern {
-		good_instance_manager,
-		new_definition_manager.get_modifier_manager().get_modifier_effect_cache(),
-		new_definition_manager.get_economy_manager().get_production_type_manager()
-	},
 	global_flags { "global" },
 	country_instance_manager {
 		thread_pool,
@@ -177,7 +172,11 @@ bool InstanceManager::setup() {
 	}
 
 	thread_pool.initialise_threadpool(
+		game_rules_manager,
+		good_instance_manager,
+		definition_manager.get_modifier_manager().get_modifier_effect_cache(),
 		definition_manager.get_define_manager().get_pops_defines(),
+		definition_manager.get_economy_manager().get_production_type_manager(),
 		good_instance_manager.get_good_definition_manager().get_good_definitions(),
 		definition_manager.get_pop_manager().get_stratas(),
 		good_instance_manager.get_good_instances(),
@@ -222,8 +221,7 @@ bool InstanceManager::load_bookmark(Bookmark const* new_bookmark) {
 		country_instance_manager,
 		// TODO - the following argument is for generating test pop attributes
 		definition_manager.get_politics_manager().get_issue_manager(),
-		market_instance,
-		artisanal_producer_factory_pattern
+		market_instance
 	);
 
 	// It is important that province history is applied before country history as province history includes
