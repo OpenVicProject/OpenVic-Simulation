@@ -192,7 +192,7 @@ void ArtisanalProducer::artisan_tick(
 				if (stockpile[&input_good] >= optimal_quantity) {
 					at_or_below_optimum = false;
 					wants_more = false;
-					distinct_goods_to_buy--;
+					--distinct_goods_to_buy;
 				}				
 			}
 		}

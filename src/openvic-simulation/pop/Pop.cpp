@@ -359,45 +359,54 @@ void Pop::allocate_for_needs(
 	fixed_point_map_t<GoodDefinition const*> const& scaled_needs,
 	utility::forwardable_span<fixed_point_t> money_to_spend_per_good,
 	memory::vector<fixed_point_t>& reusable_vector,
-	fixed_point_t& price_inverse_sum,
+	fixed_point_t& weights_sum,
 	fixed_point_t& cash_left_to_spend
 ) {
+	if (weights_sum <= 0) {
+		return;
+	}
+
 	memory::vector<fixed_point_t>& money_to_spend_per_good_draft = reusable_vector;
 	money_to_spend_per_good_draft.resize(scaled_needs.size(), 0);
 	fixed_point_t cash_left_to_spend_draft = cash_left_to_spend;
-	for (auto it = scaled_needs.begin(); it < scaled_needs.end(); it++) {
-		GoodDefinition const* const good_definition_ptr = it.key();
-		GoodDefinition const& good_definition = *good_definition_ptr;
-		const fixed_point_t max_quantity_to_buy = it.value();
-		const ptrdiff_t i = it - scaled_needs.begin();
-		const fixed_point_t max_money_to_spend = market_instance.get_max_money_to_allocate_to_buy_quantity(
-			good_definition,
-			max_quantity_to_buy
-		);
-		if (money_to_spend_per_good_draft[i] >= max_money_to_spend) {
-			continue;
-		}
 
-		fixed_point_t price_inverse = market_instance.get_price_inverse(good_definition);
-		fixed_point_t cash_available_for_good = fixed_point_t::mul_div(
-			cash_left_to_spend_draft,
-			price_inverse,
-			price_inverse_sum
-		);
+	bool needs_redistribution = true;
+	while (needs_redistribution) {
+		needs_redistribution = false;
+		for (auto it = scaled_needs.begin(); it < scaled_needs.end(); it++) {
+			GoodDefinition const* const good_definition_ptr = it.key();
+			GoodDefinition const& good_definition = *good_definition_ptr;
+			const fixed_point_t max_quantity_to_buy = it.value();
+			const ptrdiff_t i = it - scaled_needs.begin();
+			const fixed_point_t max_money_to_spend = market_instance.get_max_money_to_allocate_to_buy_quantity(
+				good_definition,
+				max_quantity_to_buy
+			);
+			if (money_to_spend_per_good_draft[i] >= max_money_to_spend) {
+				continue;
+			}
 
-		if (cash_available_for_good >= max_money_to_spend) {
-			cash_left_to_spend_draft -= max_money_to_spend;
-			money_to_spend_per_good_draft[i] = max_money_to_spend;
-			price_inverse_sum -= price_inverse;
-			it = scaled_needs.begin()-1; //Restart loop and skip maxed out needs. This is required to spread the remaining cash again.
-			continue;
-		}
+			fixed_point_t weight = market_instance.get_price_inverse(good_definition);
+			fixed_point_t cash_available_for_good = fixed_point_t::mul_div(
+				cash_left_to_spend_draft,
+				weight,
+				weights_sum
+			);
 
-		const fixed_point_t max_possible_quantity_bought = cash_available_for_good / market_instance.get_min_next_price(good_definition);
-		if (max_possible_quantity_bought < fixed_point_t::epsilon) {
-			money_to_spend_per_good_draft[i] = 0;
-		} else {
-			money_to_spend_per_good_draft[i] = cash_available_for_good;
+			if (cash_available_for_good >= max_money_to_spend) {
+				cash_left_to_spend_draft -= max_money_to_spend;
+				money_to_spend_per_good_draft[i] = max_money_to_spend;
+				weights_sum -= weight;
+				needs_redistribution = weights_sum > 0;
+				break;
+			}
+
+			const fixed_point_t max_possible_quantity_bought = cash_available_for_good / market_instance.get_min_next_price(good_definition);
+			if (max_possible_quantity_bought < fixed_point_t::epsilon) {
+				money_to_spend_per_good_draft[i] = 0;
+			} else {
+				money_to_spend_per_good_draft[i] = cash_available_for_good;
+			}
 		}
 	}
 
