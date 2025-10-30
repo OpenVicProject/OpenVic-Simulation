@@ -401,6 +401,20 @@ bool ProductionTypeManager::load_production_types_file(
 	return ret;
 }
 
+bool ProductionType::is_valid_for_artisan_in(ProvinceInstance& province) const{
+	if (template_type != template_type_t::ARTISAN) {
+		return false;
+	}
+	return !coastal || game_rules_manager.may_use_coastal_artisanal_production_types(province);
+}
+
+bool ProductionType::is_valid_for_factory_in(State& state) const{
+	if (template_type != template_type_t::FACTORY) {
+		return false;
+	}
+	return !coastal || game_rules_manager.may_use_coastal_factory_production_types(state);
+}
+
 bool ProductionTypeManager::parse_scripts(DefinitionManager const& definition_manager) {
 	bool ret = true;
 	for (ProductionType& production_type : production_types.get_items()) {

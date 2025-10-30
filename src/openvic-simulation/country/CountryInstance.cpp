@@ -1809,8 +1809,10 @@ void CountryInstance::update_gamestate(const Date today, MapInstance& map_instan
 
 	Continent const* capital_continent = capital != nullptr ? capital->get_province_definition().get_continent() : nullptr;
 
+	coastal = false;
 	for (ProvinceInstance* province : owned_provinces) {
 		ProvinceDefinition const& province_definition = province->get_province_definition();
+		coastal |= province_definition.is_coastal();
 
 		if (province->get_controller() != this) {
 			occupied_provinces_proportion++;

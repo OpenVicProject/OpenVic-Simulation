@@ -128,6 +128,7 @@ namespace OpenVic {
 		bool PROPERTY_CUSTOM_PREFIX(releasable_vassal, is, true);
 		bool PROPERTY(owns_colonial_province, false);
 		bool PROPERTY(has_unowned_cores, false);
+		bool PROPERTY_CUSTOM_PREFIX(coastal, is, false);
 		fixed_point_t PROPERTY(owned_cores_controlled_proportion);
 		fixed_point_t PROPERTY(occupied_provinces_proportion);
 		size_t PROPERTY(port_count, 0);
