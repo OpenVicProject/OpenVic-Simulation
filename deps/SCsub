@@ -192,6 +192,14 @@ def build_spdlog(env):
     env.exposed_includes += env.spdlog["INCPATH"]
 
 
+def build_xoshiro(env):
+    include_path = "xoshiro"
+    env.xoshiro = {}
+    env.xoshiro["INCPATH"] = [env.Dir(include_path)]
+    env.Append(CPPPATH=env.xoshiro["INCPATH"])
+    env.exposed_includes += env.xoshiro["INCPATH"]
+
+
 def link_tbb(env):
     import sys
 
@@ -207,4 +215,5 @@ build_function2(env)
 build_std_function(env)
 build_memory(env)
 build_spdlog(env)
+build_xoshiro(env)
 link_tbb(env)
