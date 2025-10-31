@@ -641,15 +641,6 @@ bool MapDefinition::load_region_file(ast::NodeCPtr root, std::span<const colour_
 	return ret;
 }
 
-static constexpr colour_t colour_at(uint8_t const* colour_data, int32_t idx) {
-	/* colour_data is filled with BGR byte triplets - to get pixel idx as a
-	 * single RGB value, multiply idx by 3 to get the index of the corresponding
-	 * triplet, then combine the bytes in reverse order.
-	 */
-	idx *= 3;
-	return { colour_data[idx + 2], colour_data[idx + 1], colour_data[idx] };
-}
-
 // Constants in the River BMP Palette
 static constexpr uint8_t START_COLOUR = 0;
 static constexpr uint8_t MERGE_COLOUR = 1;
@@ -853,15 +844,28 @@ bool MapDefinition::load_map_images(fs::path const& province_path, fs::path cons
 	memory::vector<fixed_point_t> pixels_per_province(province_definitions.size());
 	memory::vector<fvec2_t> pixel_position_sum_per_province(province_definitions.size());
 
+	memory::vector<colour_t> pixels;
+	pixels.reserve(province_bmp.get_pixel_data().size() / 3);
+	for (int32_t y = 0; y < get_height(); ++y) {
+		for (int32_t x = 0; x < get_width(); ++x) {
+			/* province_data is filled with BGR byte triplets - to get pixel idx as a
+			* single RGB value, multiply idx by 3 to get the index of the corresponding
+			* triplet, then combine the bytes in reverse order.
+			*/
+			int32_t index = get_pixel_index_from_pos({ x, y }) * 3;
+			pixels.emplace_back(province_data[index + 2], province_data[index + 1], province_data[index]);
+		}
+	}
+
 	for (ivec2_t pos {}; pos.y < get_height(); ++pos.y) {
 		for (pos.x = 0; pos.x < get_width(); ++pos.x) {
 			const size_t pixel_index = get_pixel_index_from_pos(pos);
-			const colour_t province_colour = colour_at(province_data, pixel_index);
+			colour_t& province_colour = pixels[pixel_index];
 			ProvinceDefinition::index_t province_number = ProvinceDefinition::NULL_INDEX;
 
 			if (pos.x > 0) {
 				const size_t jdx = pixel_index - 1;
-				if (colour_at(province_data, jdx) == province_colour) {
+				if (pixels[jdx] == province_colour) {
 					province_number = province_shape_image[jdx].province_number;
 					goto index_found;
 				}
@@ -869,7 +873,7 @@ bool MapDefinition::load_map_images(fs::path const& province_path, fs::path cons
 
 			if (pos.y > 0) {
 				const size_t jdx = pixel_index - get_width();
-				if (colour_at(province_data, jdx) == province_colour) {
+				if (pixels[jdx] == province_colour) {
 					province_number = province_shape_image[jdx].province_number;
 					goto index_found;
 				}
