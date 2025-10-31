@@ -675,23 +675,14 @@ void MapDefinition::_trace_river(BMP& rivers_bmp, ivec2_t start, river_t& river)
 		TraceSegment segment = stack.top();
 		stack.pop();
 
-		thread_local memory::vector<ivec2_t> points;
-		points.emplace_back(segment.point);
-
+        // Force heap initialiser ellision
+		memory::vector<ivec2_t> points{ segment.point };
 		uint8_t size = river_data[segment.point.x + segment.point.y * rivers_bmp.get_width()] - 1; // determine river size by colour
 		bool river_complete = false;
 		size_t recursion_limit = 0;
 
-		while(true) {
-			++recursion_limit;
-			if (recursion_limit == RIVER_RECURSION_LIMIT) {
-				spdlog::error_s(
-					"River segment starting @ ({}, {}) exceeded length limit of 4096 pixels. Check for misplaced pixel or circular river.",
-					points.front().x, points.front().y
-				);
-				break;
-			}
-
+		size_t limit;
+		for(limit = 0; limit < RIVER_RECURSION_LIMIT; ++limit) {
 			size_t idx = segment.point.x + segment.point.y * rivers_bmp.get_width();
 
 			ivec2_t merge_point;
@@ -706,7 +697,7 @@ void MapDefinition::_trace_river(BMP& rivers_bmp, ivec2_t start, river_t& river)
 				direction_t old_direction;
 				direction_t new_direction;
 			};
-			static constexpr std::array<Neighbour, 4> neighbours = {{
+			alignas(64) static constexpr std::array<Neighbour, 4> neighbours = {{
 				{ {0, -1}, UP, DOWN },  // Down
 				{ {1,  0}, LEFT, RIGHT },  // Right
 				{ {0,  1}, DOWN, UP },  // Up
@@ -741,16 +732,19 @@ void MapDefinition::_trace_river(BMP& rivers_bmp, ivec2_t start, river_t& river)
 				points.emplace_back(merge_point);
 				river_complete = true;
 				break;
-			}
-
-			if (new_segment_found) {
+			} else if (new_segment_found) {
 				stack.push({ new_segment_point, new_segment_direction });
 				break;
-			}
-
-			if (!new_segment_found) {
+			} else if (!new_segment_found) {
 				break; // no neighbours left to check, end segment
 			}
+		}
+
+		if (limit == RIVER_RECURSION_LIMIT) {
+			spdlog::error_s(
+				"River segment starting @ ({}, {}) exceeded limit of {} pixels. Check for a misplaced pixel or circular river.",
+				points.front().x, points.front().y, RIVER_RECURSION_LIMIT
+			);
 		}
 
 		// simplify points to only include first, last, and corners
