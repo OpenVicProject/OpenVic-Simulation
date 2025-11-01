@@ -43,6 +43,11 @@ Comment: spdlog
 Copyright: 2016, Gabi Melman
 License: Expat
 
+Files: deps/xoshiro/*
+Comment: Xoshiro-cpp
+Copyright: 2020, Ryo Suzuki
+License: Expat
+
 Files: src/openvic-simulation/types/Signal.hpp
 Comment: sigslot
 Copyright: 2017, Pierre-Antoine Lacaze
