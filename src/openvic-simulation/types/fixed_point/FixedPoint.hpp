@@ -178,12 +178,24 @@ namespace OpenVic {
 			return get_frac() == 0;
 		}
 
+	private:
 		template<std::integral T>
-		explicit constexpr operator T() const {
+		OV_ALWAYS_INLINE constexpr T _unsafe_truncate() const {
 			if constexpr(std::unsigned_integral<T>) {
-				assert(OV_unlikely(!is_negative()));
+				assert(OV_likely(!is_negative()));
 			}
 			return value >> PRECISION;
+		}
+
+	public:
+		template<std::integral T>
+		explicit constexpr operator T() const {
+#ifdef DEV_ENABLED
+			if (OV_unlikely(value < ONE)) {
+				spdlog::warn_s("Fixed point {} < 1, truncation will result in zero, this may be a bug.", *this);
+			}
+#endif
+			return _unsafe_truncate<T>();
 		}
 
 		constexpr fixed_point_t truncate() const {
@@ -203,10 +215,10 @@ namespace OpenVic {
 		template<std::integral T>
 		constexpr T floor() const {
 			if (!is_negative()) {
-				return truncate<T>();
+				return _unsafe_truncate<T>();
 			}
 
-			return parse_raw(value + FRAC_MASK).truncate<T>() - !is_integer();
+			return parse_raw(value + FRAC_MASK)._unsafe_truncate<T>() - !is_integer();
 		}
 
 		constexpr fixed_point_t floor() const {
@@ -220,10 +232,10 @@ namespace OpenVic {
 		template<std::integral T>
 		constexpr T ceil() const {
 			if (is_negative()) {
-				return truncate<T>();
+				return _unsafe_truncate<T>();
 			}
 
-			return truncate<T>() + !is_integer();
+			return _unsafe_truncate<T>() + !is_integer();
 		}
 
 		constexpr fixed_point_t ceil() const {
@@ -271,10 +283,10 @@ namespace OpenVic {
 		template<std::integral T>
 		constexpr T round() const {
 			if (is_negative()) {
-				return (*this - _0_50).truncate<T>();
+				return (*this - _0_50)._unsafe_truncate<T>();
 			}
 
-			return (*this + _0_50).truncate<T>();
+			return (*this + _0_50)._unsafe_truncate<T>();
 		}
 
 		template<std::floating_point T>
