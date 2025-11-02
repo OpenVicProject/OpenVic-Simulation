@@ -452,7 +452,8 @@ void Pop::allocate_for_needs(
 }
 
 void Pop::pop_tick(
-	PopValuesFromProvince& shared_values,
+	PopValuesFromProvince const& shared_values,
+	RandomU32& random_number_generator,
 	IndexedFlatMap<GoodDefinition, char>& reusable_goods_mask,
 	utility::forwardable_span<
 		memory::vector<fixed_point_t>,
@@ -461,6 +462,7 @@ void Pop::pop_tick(
 ) {
 	pop_tick_without_cleanup(
 		shared_values,
+		random_number_generator,
 		reusable_goods_mask,
 		reusable_vectors
 	);
@@ -470,7 +472,8 @@ void Pop::pop_tick(
 }
 
 void Pop::pop_tick_without_cleanup(
-	PopValuesFromProvince& shared_values,
+	PopValuesFromProvince const& shared_values,
+	RandomU32& random_number_generator,
 	IndexedFlatMap<GoodDefinition, char>& reusable_goods_mask,
 	utility::forwardable_span<
 		memory::vector<fixed_point_t>,
@@ -494,6 +497,7 @@ void Pop::pop_tick_without_cleanup(
 		artisanal_producer.artisan_tick(
 			*this,
 			shared_values,
+			random_number_generator,
 			reusable_goods_mask,
 			max_quantity_to_buy_per_good,
 			money_to_spend_per_good,

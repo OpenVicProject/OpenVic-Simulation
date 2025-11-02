@@ -4,9 +4,10 @@
 #include <limits>
 
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
+#include "openvic-simulation/utility/Typedefs.hpp"
 
 namespace OpenVic {
-	size_t sample_weighted_index(
+	OV_ALWAYS_INLINE static size_t sample_weighted_index(
 		const uint32_t random_value, 
 		const std::span<fixed_point_t> positive_weights,
 		const fixed_point_t weights_sum

@@ -389,6 +389,7 @@ void ProvinceInstance::update_gamestate(InstanceManager const& instance_manager)
 void ProvinceInstance::province_tick(
 	const Date today,
 	PopValuesFromProvince& reusable_pop_values,
+	RandomU32& random_number_generator,
 	IndexedFlatMap<GoodDefinition, char>& reusable_goods_mask,
 	utility::forwardable_span<
 		memory::vector<fixed_point_t>,
@@ -402,7 +403,12 @@ void ProvinceInstance::province_tick(
 	if (!pops.empty()) {
 		reusable_pop_values.update_pop_values_from_province(*this);
 		for (Pop& pop : pops) {
-			pop.pop_tick(reusable_pop_values, reusable_goods_mask, reusable_vectors);
+			pop.pop_tick(
+				reusable_pop_values,
+				random_number_generator,
+				reusable_goods_mask,
+				reusable_vectors
+			);
 		}
 	}
 
@@ -513,6 +519,7 @@ bool ProvinceInstance::apply_history_to_province(ProvinceHistoryEntry const& ent
 void ProvinceInstance::initialise_for_new_game(
 	const Date today,
 	PopValuesFromProvince& reusable_pop_values,
+	RandomU32& random_number_generator,
 	IndexedFlatMap<GoodDefinition, char>& reusable_goods_mask,
 	utility::forwardable_span<
 		memory::vector<fixed_point_t>,
@@ -520,7 +527,13 @@ void ProvinceInstance::initialise_for_new_game(
 	> reusable_vectors
 ) {
 	initialise_rgo();
-	province_tick(today, reusable_pop_values, reusable_goods_mask, reusable_vectors);
+	province_tick(
+		today,
+		reusable_pop_values,
+		random_number_generator,
+		reusable_goods_mask,
+		reusable_vectors
+	);
 }
 
 void ProvinceInstance::initialise_rgo() {
