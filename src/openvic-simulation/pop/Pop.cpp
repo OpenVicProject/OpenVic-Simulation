@@ -1,4 +1,5 @@
 #include "Pop.hpp"
+#include "PopDeps.hpp"
 
 #include <concepts> // IWYU pragma: keep for lambda
 #include <cstddef>
@@ -46,15 +47,14 @@ PopBase::PopBase(
 Pop::Pop(
 	PopBase const& pop_base,
 	decltype(supporter_equivalents_by_ideology)::keys_span_type ideology_keys,
-	MarketInstance& new_market_instance,
-	ModifierEffectCache const& new_modifier_effect_cache
+	PopDeps const& pop_deps
 )
   : PopBase { pop_base },
-	market_instance { new_market_instance },
+	market_instance { pop_deps.market_instance },
 	artisanal_producer_optional {
 		type->get_is_artisan()
 			? std::optional<ArtisanalProducer> {
-				new_modifier_effect_cache
+				pop_deps.artisanal_producer_deps
 			}
 			: std::optional<ArtisanalProducer> {}
 	},

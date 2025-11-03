@@ -8,11 +8,13 @@
 #include "openvic-simulation/types/Date.hpp"
 
 namespace OpenVic {
+	struct BuildingTypeManager;
+	struct IssueManager;
 	struct MapDefinition;
 	struct MarketInstance;
-	struct BuildingTypeManager;
+	struct PopDeps;
 	struct ProvinceHistoryManager;
-	struct IssueManager;
+	struct ProvinceInstanceDeps;
 	struct ThreadPool;
 
 	/* REQUIREMENTS:
@@ -40,14 +42,8 @@ namespace OpenVic {
 	public:
 		MapInstance(
 			MapDefinition const& new_map_definition,
-			BuildingTypeManager const& building_type_manager,
-			GameRulesManager const& game_rules_manager,
-			ModifierEffectCache const& modifier_effect_cache,
-			MarketInstance& market_instance,
-			ThreadPool& new_thread_pool,
-			utility::forwardable_span<const Strata> strata_keys,
-			utility::forwardable_span<const PopType> pop_type_keys,
-			utility::forwardable_span<const Ideology> ideology_keys
+			ProvinceInstanceDeps const& province_instance_deps,
+			ThreadPool& new_thread_pool
 		);
 
 		inline explicit constexpr operator MapDefinition const&() const {
@@ -81,7 +77,7 @@ namespace OpenVic {
 			const Date date,
 			CountryInstanceManager& country_manager,
 			IssueManager const& issue_manager,
-			MarketInstance& market_instance
+			PopDeps const& pop_deps
 		);
 
 		void update_modifier_sums(const Date today, StaticModifierCache const& static_modifier_cache);

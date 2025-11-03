@@ -22,6 +22,7 @@ namespace OpenVic {
 	struct Ideology;
 	struct IssueManager;
 	struct MarketInstance;
+	struct PopDeps;
 	struct PopManager;
 	struct PopType;
 	struct PopValuesFromProvince;
@@ -157,8 +158,7 @@ namespace OpenVic {
 		Pop(
 			PopBase const& pop_base,
 			decltype(supporter_equivalents_by_ideology)::keys_span_type ideology_keys,
-			MarketInstance& new_market_instance,
-			ModifierEffectCache const& new_modifier_effect_cache
+			PopDeps const& pop_deps
 		);
 
 		memory::string get_pop_context_text() const;

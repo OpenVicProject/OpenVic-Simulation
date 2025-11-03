@@ -23,34 +23,60 @@ InstanceManager::InstanceManager(
 		new_definition_manager.get_define_manager().get_country_defines(),
 		good_instance_manager
 	},
-	global_flags { "global" },
-	country_instance_manager {
-		thread_pool,
-		new_definition_manager.get_country_definition_manager(),
-		new_definition_manager.get_modifier_manager().get_modifier_effect_cache(),
-		new_definition_manager.get_define_manager().get_end_date(),
+	artisanal_producer_deps {
+		new_definition_manager.get_modifier_manager().get_modifier_effect_cache()
+	},
+	country_instance_deps {
+		new_definition_manager.get_economy_manager().get_building_type_manager().get_building_types(),
 		new_definition_manager.get_define_manager().get_country_defines(),
+		country_relation_manager,
+		new_definition_manager.get_crime_manager().get_crime_modifiers(),
+		new_definition_manager.get_define_manager().get_end_date(),
 		new_definition_manager.get_define_manager().get_diplomacy_defines(),
 		new_definition_manager.get_define_manager().get_economy_defines(),
-		new_definition_manager.get_define_manager().get_military_defines(),
-		new_definition_manager.get_define_manager().get_pops_defines(),
-		new_definition_manager.get_economy_manager().get_building_type_manager().get_building_types(),
-		new_definition_manager.get_research_manager().get_technology_manager().get_technologies(),
 		new_definition_manager.get_research_manager().get_invention_manager().get_inventions(),
-		new_definition_manager.get_politics_manager().get_issue_manager().get_reform_groups(),
-		new_definition_manager.get_politics_manager().get_government_type_manager().get_government_types(),
-		new_definition_manager.get_crime_manager().get_crime_modifiers(),
+		new_definition_manager.get_politics_manager().get_ideology_manager().get_ideologies(),
+		new_game_rules_manager,
 		good_instance_manager.get_good_instances(),
+		good_instance_manager,
+		new_definition_manager.get_politics_manager().get_government_type_manager().get_government_types(),
+		market_instance,
+		new_definition_manager.get_define_manager().get_military_defines(),
+		new_definition_manager.get_modifier_manager().get_modifier_effect_cache(),
+		new_definition_manager.get_pop_manager().get_pop_types(),
+		new_definition_manager.get_politics_manager().get_issue_manager().get_reform_groups(),
 		new_definition_manager.get_military_manager().get_unit_type_manager().get_regiment_types(),
 		new_definition_manager.get_military_manager().get_unit_type_manager().get_ship_types(),
 		new_definition_manager.get_pop_manager().get_stratas(),
-		new_definition_manager.get_pop_manager().get_pop_types(),
-		new_definition_manager.get_politics_manager().get_ideology_manager().get_ideologies(),
-		new_game_rules_manager,
-		country_relation_manager,
-		good_instance_manager,
-		market_instance,
+		new_definition_manager.get_research_manager().get_technology_manager().get_technologies(),
 		new_definition_manager.get_military_manager().get_unit_type_manager()
+	},
+	pop_deps {
+		artisanal_producer_deps,
+		market_instance
+	},
+	rgo_deps {
+		market_instance,
+		new_definition_manager.get_modifier_manager().get_modifier_effect_cache(),
+		new_definition_manager.get_pop_manager().get_pop_types()
+	},
+	province_instance_deps {
+		new_definition_manager.get_economy_manager().get_building_type_manager(),
+		new_game_rules_manager,
+		new_definition_manager.get_politics_manager().get_ideology_manager().get_ideologies(),
+		new_definition_manager.get_pop_manager().get_pop_types(),
+		rgo_deps,
+		new_definition_manager.get_pop_manager().get_stratas()
+	},
+	global_flags { "global" },
+	country_instance_manager {
+		new_definition_manager.get_define_manager().get_country_defines(),
+		new_definition_manager.get_country_definition_manager(),
+		country_instance_deps,
+		good_instance_manager,
+		new_definition_manager.get_define_manager().get_pops_defines(),
+		new_definition_manager.get_pop_manager().get_pop_types(),
+		thread_pool
 	},
 	unit_instance_manager {
 		new_definition_manager.get_pop_manager().get_culture_manager(),
@@ -60,14 +86,8 @@ InstanceManager::InstanceManager(
 	politics_instance_manager { *this },
 	map_instance {
 		new_definition_manager.get_map_definition(),
-		definition_manager.get_economy_manager().get_building_type_manager(),
-		new_game_rules_manager,
-		definition_manager.get_modifier_manager().get_modifier_effect_cache(),
-		market_instance,
-		thread_pool,
-		definition_manager.get_pop_manager().get_stratas(),
-		definition_manager.get_pop_manager().get_pop_types(),
-		definition_manager.get_politics_manager().get_ideology_manager().get_ideologies()
+		province_instance_deps,
+		thread_pool
 	},
 	simulation_clock {
 		[this]() -> void {
@@ -221,7 +241,7 @@ bool InstanceManager::load_bookmark(Bookmark const* new_bookmark) {
 		country_instance_manager,
 		// TODO - the following argument is for generating test pop attributes
 		definition_manager.get_politics_manager().get_issue_manager(),
-		market_instance
+		pop_deps
 	);
 
 	// It is important that province history is applied before country history as province history includes

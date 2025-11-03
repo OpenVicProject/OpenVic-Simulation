@@ -1,4 +1,5 @@
 #include "ArtisanalProducer.hpp"
+#include "ArtisanalProducerDeps.hpp"
 
 #include <cstddef>
 
@@ -17,11 +18,11 @@
 using namespace OpenVic;
 
 ArtisanalProducer::ArtisanalProducer(
-	ModifierEffectCache const& new_modifier_effect_cache,
+	ArtisanalProducerDeps const& artisanal_producer_deps,
 	fixed_point_map_t<GoodDefinition const*>&& new_stockpile,
 	ProductionType const* const new_production_type,
 	fixed_point_t new_current_production
-) : modifier_effect_cache { new_modifier_effect_cache },
+) : modifier_effect_cache { artisanal_producer_deps.modifier_effect_cache },
 	stockpile { std::move(new_stockpile) },
 	production_type_nullable { nullptr },
 	current_production { new_current_production }

@@ -1,9 +1,11 @@
 #include "ProvinceInstance.hpp"
+#include "ProvinceInstanceDeps.hpp"
 
 #include "openvic-simulation/country/CountryDefinition.hpp"
 #include "openvic-simulation/country/CountryInstance.hpp"
 #include "openvic-simulation/defines/Define.hpp"
 #include "openvic-simulation/DefinitionManager.hpp"
+#include "openvic-simulation/economy/BuildingType.hpp"
 #include "openvic-simulation/economy/production/Employee.hpp"
 #include "openvic-simulation/economy/production/ProductionType.hpp"
 #include "openvic-simulation/InstanceManager.hpp"
@@ -14,32 +16,30 @@
 using namespace OpenVic;
 
 ProvinceInstance::ProvinceInstance(
-	MarketInstance* new_market_instance,
-	GameRulesManager const* new_game_rules_manager,
-	ModifierEffectCache const* new_modifier_effect_cache,
 	ProvinceDefinition const* new_province_definition,
-	utility::forwardable_span<const Strata> strata_keys,
-	utility::forwardable_span<const PopType> pop_type_keys,
-	utility::forwardable_span<const Ideology> ideology_keys,
-	BuildingTypeManager const* building_type_manager
+	ProvinceInstanceDeps const* province_instance_deps
 ) : HasIdentifierAndColour { *new_province_definition },
 	HasIndex { new_province_definition->get_index() },
 	FlagStrings { "province" },
-	PopsAggregate { strata_keys, pop_type_keys, ideology_keys },
+	PopsAggregate {
+		province_instance_deps->strata_keys,
+		province_instance_deps->pop_type_keys,
+		province_instance_deps->ideology_keys
+	},
 	province_definition { *new_province_definition },
-	game_rules_manager { *new_game_rules_manager },
-	modifier_effect_cache { *new_modifier_effect_cache },
+	game_rules_manager { province_instance_deps->game_rules_manager },
 	terrain_type { new_province_definition->get_default_terrain_type() },
-	rgo { *new_market_instance, pop_type_keys },
-	pops_cache_by_type { pop_type_keys }
+	rgo { province_instance_deps->rgo_deps },
+	pops_cache_by_type { province_instance_deps->pop_type_keys }
 {
 	modifier_sum.set_this_source(this);
 	rgo.setup_location_ptr(*this);
 	if (!province_definition.is_water()) {
-		assert(building_type_manager->building_types_are_locked());
-		buildings.reserve(building_type_manager->get_province_building_types().size());
+		BuildingTypeManager const& building_type_manager = province_instance_deps->building_type_manager;
+		assert(building_type_manager.building_types_are_locked());
+		buildings.reserve(building_type_manager.get_province_building_types().size());
 
-		for (BuildingType const* building_type_ptr : building_type_manager->get_province_building_types()) {
+		for (BuildingType const* building_type_ptr : building_type_manager.get_province_building_types()) {
 			BuildingType const& building_type = *building_type_ptr;
 			buildings.emplace_item(building_type.get_identifier(), building_type);
 		}
@@ -201,7 +201,7 @@ bool ProvinceInstance::add_pop(Pop&& pop) {
 
 bool ProvinceInstance::add_pop_vec(
 	std::span<const PopBase> pop_vec,
-	MarketInstance& market_instance
+	PopDeps const& pop_deps
 ) {
 	if (!province_definition.is_water()) {
 		reserve_more(pops, pop_vec.size());
@@ -209,8 +209,7 @@ bool ProvinceInstance::add_pop_vec(
 			_add_pop(Pop {
 				pop,
 				get_supporter_equivalents_by_ideology().get_keys(),
-				market_instance,
-				modifier_effect_cache
+				pop_deps
 			});
 		}
 		return true;

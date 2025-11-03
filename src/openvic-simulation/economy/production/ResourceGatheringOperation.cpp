@@ -1,4 +1,5 @@
 #include "ResourceGatheringOperation.hpp"
+#include "ResourceGatheringOperationDeps.hpp"
 
 #include "openvic-simulation/country/CountryInstance.hpp"
 #include "openvic-simulation/economy/production/ProductionType.hpp"
@@ -18,28 +19,26 @@
 using namespace OpenVic;
 
 ResourceGatheringOperation::ResourceGatheringOperation(
-	MarketInstance& new_market_instance,
+	ResourceGatheringOperationDeps const& rgo_deps,
 	ProductionType const* new_production_type_nullable,
 	fixed_point_t new_size_multiplier,
 	fixed_point_t new_revenue_yesterday,
 	fixed_point_t new_output_quantity_yesterday,
 	fixed_point_t new_unsold_quantity_yesterday,
-	memory::vector<Employee>&& new_employees,
-	decltype(employee_count_per_type_cache)::keys_span_type pop_type_keys
+	memory::vector<Employee>&& new_employees
 )
-	: market_instance { new_market_instance },
+	: market_instance { rgo_deps.market_instance }, modifier_effect_cache { rgo_deps.modifier_effect_cache },
 	  production_type_nullable { new_production_type_nullable }, revenue_yesterday { new_revenue_yesterday },
 	  output_quantity_yesterday { new_output_quantity_yesterday }, unsold_quantity_yesterday { new_unsold_quantity_yesterday },
-	  size_multiplier { new_size_multiplier }, employees { std::move(new_employees) }, employee_count_per_type_cache { pop_type_keys } {}
+	  size_multiplier { new_size_multiplier }, employees { std::move(new_employees) }, employee_count_per_type_cache { rgo_deps.pop_type_keys } {}
 
 ResourceGatheringOperation::ResourceGatheringOperation(
-	MarketInstance& new_market_instance,
-	decltype(employee_count_per_type_cache)::keys_span_type pop_type_keys
+	ResourceGatheringOperationDeps const& rgo_deps
 ) : ResourceGatheringOperation {
-	new_market_instance,
+	rgo_deps,
 	nullptr, 0,
 	0, 0,
-	0, {}, pop_type_keys
+	0, {}
 } {}
 
 pop_size_t ResourceGatheringOperation::get_employee_count_per_type_cache(PopType const& key) const {
@@ -62,7 +61,6 @@ void ResourceGatheringOperation::initialise_rgo_size_multiplier() {
 	}
 
 	ProvinceInstance& location = *location_ptr;
-	ModifierEffectCache const& modifier_effect_cache = location.get_modifier_effect_cache();
 	ProductionType const& production_type = *production_type_nullable;
 	std::span<const Job> jobs = production_type.get_jobs();
 
@@ -87,7 +85,6 @@ fixed_point_t ResourceGatheringOperation::calculate_size_modifier() const {
 		return 1;
 	}
 	ProvinceInstance& location = *location_ptr;
-	ModifierEffectCache const& modifier_effect_cache = location.get_modifier_effect_cache();
 	ProductionType const& production_type = *production_type_nullable;
 
 	fixed_point_t size_modifier = 1;
@@ -226,7 +223,6 @@ fixed_point_t ResourceGatheringOperation::produce() {
 	}
 
 	ProvinceInstance& location = *location_ptr;
-	ModifierEffectCache const& modifier_effect_cache = location.get_modifier_effect_cache();
 
 	ProductionType const& production_type = *production_type_nullable;
 	fixed_point_t throughput_multiplier = 1;

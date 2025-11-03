@@ -9,6 +9,7 @@
 #include "openvic-simulation/utility/Getters.hpp"
 
 namespace OpenVic {
+	struct ArtisanalProducerDeps;
 	struct GoodDefinition;
 	struct GoodInstanceManager;
 	struct ModifierEffectCache;
@@ -42,13 +43,13 @@ namespace OpenVic {
 
 	public:
 		ArtisanalProducer(
-			ModifierEffectCache const& new_modifier_effect_cache,
+			ArtisanalProducerDeps const& artisanal_producer_deps,
 			fixed_point_map_t<GoodDefinition const*>&& new_stockpile,
 			ProductionType const* const new_production_type,
 			const fixed_point_t new_current_production
 		);
-		ArtisanalProducer(ModifierEffectCache const& new_modifier_effect_cache) : ArtisanalProducer(
-			new_modifier_effect_cache,
+		ArtisanalProducer(ArtisanalProducerDeps const& artisanal_producer_deps) : ArtisanalProducer(
+			artisanal_producer_deps,
 			fixed_point_map_t<GoodDefinition const*> {},
 			nullptr,
 			fixed_point_t::_0
