@@ -15,10 +15,10 @@ using namespace OpenVic;
 
 void PopStrataValuesFromProvince::update_pop_strata_values_from_province(
 	PopsDefines const& defines,
+	ModifierEffectCache const& modifier_effect_cache,
 	Strata const& strata,
 	ProvinceInstance const& province
 ) {
-	ModifierEffectCache const& modifier_effect_cache = province.get_modifier_effect_cache();
 	ModifierEffectCache::strata_effects_t const& strata_effects = modifier_effect_cache.get_strata_effects(strata);
 	fixed_point_t shared_base_needs_scalar = defines.get_base_goods_demand()
 		* (fixed_point_t::_1 + province.get_modifier_effect_value(*modifier_effect_cache.get_goods_demand()));
@@ -62,7 +62,7 @@ PopStrataValuesFromProvince const& PopValuesFromProvince::get_effects_by_strata(
 
 void PopValuesFromProvince::update_pop_values_from_province(ProvinceInstance& province) {
 	for (auto [strata, values] : effects_by_strata) {
-		values.update_pop_strata_values_from_province(defines, strata, province);
+		values.update_pop_strata_values_from_province(defines, modifier_effect_cache, strata, province);
 	}
 
 	max_cost_multiplier = 1;	

@@ -23,6 +23,7 @@ namespace OpenVic {
 	public:
 		void update_pop_strata_values_from_province(
 			PopsDefines const& defines,
+			ModifierEffectCache const& modifier_effect_cache,
 			Strata const& strata,
 			ProvinceInstance const& province
 		);

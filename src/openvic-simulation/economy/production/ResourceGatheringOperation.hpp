@@ -14,11 +14,13 @@ namespace OpenVic {
 	struct PopType;
 	struct ProductionType;
 	struct ProvinceInstance;
+	struct ResourceGatheringOperationDeps;
 	struct SellResult;
 
 	struct ResourceGatheringOperation {
 	private:
 		MarketInstance& market_instance;
+		ModifierEffectCache const& modifier_effect_cache;
 		ProvinceInstance* location_ptr = nullptr;
 		pop_size_t total_owner_count_in_state_cache = 0;
 		pop_size_t total_worker_count_in_province_cache = 0;
@@ -45,20 +47,16 @@ namespace OpenVic {
 
 	public:
 		ResourceGatheringOperation(
-			MarketInstance& new_market_instance,
+			ResourceGatheringOperationDeps const& rgo_deps,
 			ProductionType const* new_production_type_nullable,
 			fixed_point_t new_size_multiplier,
 			fixed_point_t new_revenue_yesterday,
 			fixed_point_t new_output_quantity_yesterday,
 			fixed_point_t new_unsold_quantity_yesterday,
-			memory::vector<Employee>&& new_employees,
-			decltype(employee_count_per_type_cache)::keys_span_type pop_type_keys
+			memory::vector<Employee>&& new_employees
 		);
 
-		ResourceGatheringOperation(
-			MarketInstance& new_market_instance,
-			decltype(employee_count_per_type_cache)::keys_span_type pop_type_keys
-		);
+		ResourceGatheringOperation(ResourceGatheringOperationDeps const& rgo_deps);
 
 		constexpr bool is_valid() const {
 			return production_type_nullable != nullptr;

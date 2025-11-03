@@ -35,6 +35,7 @@ namespace OpenVic {
 	struct CountryDefines;
 	struct CountryHistoryEntry;
 	struct CountryInstanceManager;
+	struct CountryInstanceDeps;
 	struct CountryParty;
 	struct CountryRelationManager;
 	struct Crime;
@@ -397,30 +398,8 @@ namespace OpenVic {
 		//pointers instead of references to allow construction via std::tuple
 		CountryInstance(
 			CountryDefinition const* new_country_definition,
-			decltype(building_type_unlock_levels)::keys_span_type building_type_keys,
-			decltype(technology_unlock_levels)::keys_span_type technology_keys,
-			decltype(invention_unlock_levels)::keys_span_type invention_keys,
-			decltype(reforms)::keys_span_type reform_keys,
-			decltype(flag_overrides_by_government_type)::keys_span_type government_type_keys,
-			decltype(crime_unlock_levels)::keys_span_type crime_keys,
-			decltype(goods_data)::keys_span_type good_instances_keys,
-			decltype(regiment_type_unlock_levels)::keys_span_type regiment_type_unlock_levels_keys,
-			decltype(ship_type_unlock_levels)::keys_span_type ship_type_unlock_levels_keys,
-			utility::forwardable_span<const Strata> strata_keys,
-			utility::forwardable_span<const PopType> pop_type_keys,
-			utility::forwardable_span<const Ideology> ideology_keys,
 			SharedCountryValues* new_shared_country_values,
-			const Date new_fallback_date_for_never_completing_research,
-			CountryDefines const* new_country_defines,
-			DiplomacyDefines const* new_diplomacy_defines,
-			EconomyDefines const* new_economy_defines,
-			MilitaryDefines const* new_military_defines,
-			CountryRelationManager* new_country_relations_manager,
-			GameRulesManager const* new_game_rules_manager,
-			GoodInstanceManager* new_good_instance_manager,
-			MarketInstance* new_market_instance,
-			ModifierEffectCache const* new_modifier_effect_cache,
-			UnitTypeManager const* new_unit_type_manager
+			CountryInstanceDeps const* country_instance_deps
 		);
 		CountryInstance(CountryInstance const&) = delete;
 		CountryInstance& operator=(CountryInstance const&) = delete;
@@ -726,32 +705,13 @@ namespace OpenVic {
 
 	public:
 		CountryInstanceManager(
-			ThreadPool& new_thread_pool,
-			CountryDefinitionManager const& new_country_definition_manager,
-			ModifierEffectCache const& new_modifier_effect_cache,
-			const Date new_fallback_date_for_never_completing_research,
 			CountryDefines const& new_country_defines,
-			DiplomacyDefines const& new_diplomacy_defines,
-			EconomyDefines const& new_economy_defines,
-			MilitaryDefines const& new_military_defines,
+			CountryDefinitionManager const& new_country_definition_manager,
+			CountryInstanceDeps const& country_instance_deps,
+			GoodInstanceManager const& new_good_instance_manager,
 			PopsDefines const& new_pop_defines,
-			decltype(CountryInstance::building_type_unlock_levels)::keys_span_type building_type_keys,
-			decltype(CountryInstance::technology_unlock_levels)::keys_span_type technology_keys,
-			decltype(CountryInstance::invention_unlock_levels)::keys_span_type invention_keys,
-			decltype(CountryInstance::reforms)::keys_span_type reform_keys,
-			decltype(CountryInstance::flag_overrides_by_government_type)::keys_span_type government_type_keys,
-			decltype(CountryInstance::crime_unlock_levels)::keys_span_type crime_keys,
-			decltype(CountryInstance::goods_data)::keys_span_type good_instances_keys,
-			decltype(CountryInstance::regiment_type_unlock_levels)::keys_span_type regiment_type_unlock_levels_keys,
-			decltype(CountryInstance::ship_type_unlock_levels)::keys_span_type ship_type_unlock_levels_keys,
-			utility::forwardable_span<const Strata> strata_keys,
 			utility::forwardable_span<const PopType> pop_type_keys,
-			utility::forwardable_span<const Ideology> ideology_keys,
-			GameRulesManager const& new_game_rules_manager,
-			CountryRelationManager& new_country_relations_manager,
-			GoodInstanceManager& new_good_instance_manager,
-			MarketInstance& new_market_instance,
-			UnitTypeManager const& new_unit_type_manager
+			ThreadPool& new_thread_pool
 		);
 
 		constexpr OpenVic::utility::forwardable_span<CountryInstance> get_country_instances() {

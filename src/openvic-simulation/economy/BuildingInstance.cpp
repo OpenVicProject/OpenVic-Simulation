@@ -1,5 +1,7 @@
 #include "BuildingInstance.hpp"
 
+#include "openvic-simulation/economy/BuildingType.hpp"
+
 using namespace OpenVic;
 
 BuildingInstance::BuildingInstance(BuildingType const& new_building_type, building_level_t new_level)

@@ -1,11 +1,13 @@
 #pragma once
 
-#include "openvic-simulation/economy/BuildingType.hpp"
 #include "openvic-simulation/types/BuildingLevel.hpp"
+#include "openvic-simulation/types/Date.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
 #include "openvic-simulation/types/HasIdentifier.hpp"
 
 namespace OpenVic {
+	struct BuildingType;
+
 	struct BuildingInstance : HasIdentifier { // used in the actual game
 		enum class ExpansionState { CannotExpand, CanExpand, Preparing, Expanding };
 
