@@ -2072,7 +2072,7 @@ void CountryInstance::manage_national_stockpile(
 				max_quantity_to_buy
 			);
 			wants_more_mask.set(good_instance.get_good_definition(), true);
-			const fixed_point_t weight = weights[index] = 1 / max_money_to_spend;
+			const fixed_point_t weight = weights[index] = fixed_point_t::usable_max / max_money_to_spend;
 			weights_sum += weight;
 		}
 	}
