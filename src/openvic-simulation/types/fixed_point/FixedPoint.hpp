@@ -10,6 +10,7 @@
 #include <limits>
 #include <string_view>
 #include <system_error>
+#include <type_traits>
 
 #include <fmt/base.h>
 #include <fmt/format.h>
@@ -191,8 +192,10 @@ namespace OpenVic {
 		template<std::integral T>
 		explicit constexpr operator T() const {
 #ifdef DEV_ENABLED
-			if (OV_unlikely(value < ONE)) {
-				spdlog::warn_s("Fixed point {} < 1, truncation will result in zero, this may be a bug.", *this);
+			if (!std::is_constant_evaluated()) {
+				if (OV_unlikely(value < ONE)) {
+					spdlog::warn_s("Fixed point {} < 1, truncation will result in zero, this may be a bug.", *this);
+				}
 			}
 #endif
 			return _unsafe_truncate<T>();
