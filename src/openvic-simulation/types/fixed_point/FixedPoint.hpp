@@ -178,16 +178,14 @@ namespace OpenVic {
 			return get_frac() == 0;
 		}
 
-	private:
 		template<std::integral T>
-		OV_ALWAYS_INLINE constexpr T _unsafe_truncate() const {
+		OV_ALWAYS_INLINE constexpr T unsafe_truncate() const {
 			if constexpr(std::unsigned_integral<T>) {
 				assert(OV_likely(!is_negative()));
 			}
 			return value >> PRECISION;
 		}
 
-	public:
 		template<std::integral T>
 		explicit constexpr operator T() const {
 #ifdef DEV_ENABLED
@@ -195,7 +193,7 @@ namespace OpenVic {
 				spdlog::warn_s("Fixed point {} < 1, truncation will result in zero, this may be a bug.", *this);
 			}
 #endif
-			return _unsafe_truncate<T>();
+			return unsafe_truncate<T>();
 		}
 
 		constexpr fixed_point_t truncate() const {
@@ -215,10 +213,10 @@ namespace OpenVic {
 		template<std::integral T>
 		constexpr T floor() const {
 			if (!is_negative()) {
-				return _unsafe_truncate<T>();
+				return unsafe_truncate<T>();
 			}
 
-			return parse_raw(value + FRAC_MASK)._unsafe_truncate<T>() - !is_integer();
+			return parse_raw(value + FRAC_MASK).unsafe_truncate<T>() - !is_integer();
 		}
 
 		constexpr fixed_point_t floor() const {
@@ -232,10 +230,10 @@ namespace OpenVic {
 		template<std::integral T>
 		constexpr T ceil() const {
 			if (is_negative()) {
-				return _unsafe_truncate<T>();
+				return unsafe_truncate<T>();
 			}
 
-			return _unsafe_truncate<T>() + !is_integer();
+			return unsafe_truncate<T>() + !is_integer();
 		}
 
 		constexpr fixed_point_t ceil() const {
@@ -283,10 +281,10 @@ namespace OpenVic {
 		template<std::integral T>
 		constexpr T round() const {
 			if (is_negative()) {
-				return (*this - _0_50)._unsafe_truncate<T>();
+				return (*this - _0_50).unsafe_truncate<T>();
 			}
 
-			return (*this + _0_50)._unsafe_truncate<T>();
+			return (*this + _0_50).unsafe_truncate<T>();
 		}
 
 		template<std::floating_point T>
@@ -309,7 +307,7 @@ namespace OpenVic {
 
 			std::to_chars_result result {};
 			if (decimal_places == static_cast<size_t>(-1)) {
-				result = StringUtils::to_chars(first, last, static_cast<int64_t>(abs()));
+				result = StringUtils::to_chars(first, last, abs().unsafe_truncate<int64_t>());
 				if (OV_unlikely(result.ec != std::errc {})) {
 					return result;
 				}
@@ -326,7 +324,7 @@ namespace OpenVic {
 							return { last, std::errc::value_too_large };
 						}
 						frac *= 10;
-						*result.ptr = static_cast<char>('0' + static_cast<int64_t>(frac));
+						*result.ptr = static_cast<char>('0' + frac.unsafe_truncate<int64_t>());
 						++result.ptr;
 						frac = frac.get_frac();
 					} while (frac != _0);
@@ -342,7 +340,7 @@ namespace OpenVic {
 			fixed_point_t val = this->abs() + err;
 
 
-			result = StringUtils::to_chars(first, last, static_cast<int64_t>(val));
+			result = StringUtils::to_chars(first, last, val.unsafe_truncate<int64_t>());
 			if (OV_unlikely(result.ec != std::errc {})) {
 				return result;
 			}
@@ -359,7 +357,7 @@ namespace OpenVic {
 						return result;
 					}
 					val *= 10;
-					*result.ptr = static_cast<char>('0' + static_cast<int64_t>(val));
+					*result.ptr = static_cast<char>('0' + val.unsafe_truncate<int64_t>());
 					++result.ptr;
 					val = val.get_frac();
 				} while (--decimal_places > 0);
