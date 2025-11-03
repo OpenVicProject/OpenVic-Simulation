@@ -4,7 +4,6 @@
 #include "openvic-simulation/country/CountryInstance.hpp"
 #include "openvic-simulation/diplomacy/CountryRelation.hpp"
 #include "openvic-simulation/economy/GoodInstance.hpp"
-#include "openvic-simulation/economy/production/ArtisanalProducerFactoryPattern.hpp"
 #include "openvic-simulation/economy/trading/MarketInstance.hpp"
 #include "openvic-simulation/map/MapInstance.hpp"
 #include "openvic-simulation/map/Mapmode.hpp"
@@ -37,7 +36,6 @@ namespace OpenVic {
 		GameRulesManager const& game_rules_manager;
 		GoodInstanceManager PROPERTY_REF(good_instance_manager);
 		MarketInstance PROPERTY_REF(market_instance);
-		ArtisanalProducerFactoryPattern artisanal_producer_factory_pattern;
 
 		FlagStrings PROPERTY_REF(global_flags);
 

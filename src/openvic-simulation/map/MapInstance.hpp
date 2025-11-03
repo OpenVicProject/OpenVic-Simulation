@@ -81,8 +81,7 @@ namespace OpenVic {
 			const Date date,
 			CountryInstanceManager& country_manager,
 			IssueManager const& issue_manager,
-			MarketInstance& market_instance,
-			ArtisanalProducerFactoryPattern& artisanal_producer_factory_pattern
+			MarketInstance& market_instance
 		);
 
 		void update_modifier_sums(const Date today, StaticModifierCache const& static_modifier_cache);

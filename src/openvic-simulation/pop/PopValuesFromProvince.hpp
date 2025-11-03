@@ -5,6 +5,11 @@
 #include "openvic-simulation/utility/Getters.hpp"
 
 namespace OpenVic {
+	struct GameRulesManager;
+	struct GoodInstanceManager;
+	struct ModifierEffectCache;
+	struct ProductionType;
+	struct ProductionTypeManager;
 	struct ProvinceInstance;
 	struct PopsDefines;
 	struct PopValuesFromProvince;
@@ -25,15 +30,27 @@ namespace OpenVic {
 
 	struct PopValuesFromProvince {
 	private:
+
+		GameRulesManager const& game_rules_manager;
+		GoodInstanceManager const& good_instance_manager;
+		ModifierEffectCache const& modifier_effect_cache;
+		ProductionTypeManager const& production_type_manager;
 		PopsDefines const& PROPERTY(defines);
+		fixed_point_t PROPERTY(max_cost_multiplier);
 		OV_IFLATMAP_PROPERTY(Strata, PopStrataValuesFromProvince, effects_by_strata);
+		//excludes availability of goods on market
+		memory::vector<std::pair<ProductionType const*, fixed_point_t>> SPAN_PROPERTY(ranked_artisanal_production_types);
 	public:
 		PopValuesFromProvince(
+			GameRulesManager const& new_game_rules_manager,
+			GoodInstanceManager const& new_good_instance_manager,
+			ModifierEffectCache const& new_modifier_effect_cache,
+			ProductionTypeManager const& new_production_type_manager,
 			PopsDefines const& new_defines,
 			decltype(effects_by_strata)::keys_span_type strata_keys
 		);
 		PopValuesFromProvince(PopValuesFromProvince&&) = default;
 
-		void update_pop_values_from_province(ProvinceInstance const& province);
+		void update_pop_values_from_province(ProvinceInstance& province);
 	};
 }

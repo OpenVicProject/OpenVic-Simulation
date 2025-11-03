@@ -11,7 +11,6 @@
 #include "openvic-simulation/defines/Define.hpp"
 #include "openvic-simulation/economy/GoodDefinition.hpp"
 #include "openvic-simulation/economy/production/ArtisanalProducer.hpp"
-#include "openvic-simulation/economy/production/ArtisanalProducerFactoryPattern.hpp"
 #include "openvic-simulation/economy/production/ProductionType.hpp"
 #include "openvic-simulation/economy/trading/BuyResult.hpp"
 #include "openvic-simulation/economy/trading/BuyUpToOrder.hpp"
@@ -48,14 +47,16 @@ Pop::Pop(
 	PopBase const& pop_base,
 	decltype(supporter_equivalents_by_ideology)::keys_span_type ideology_keys,
 	MarketInstance& new_market_instance,
-	ArtisanalProducerFactoryPattern& artisanal_producer_factory_pattern
+	ModifierEffectCache const& new_modifier_effect_cache
 )
   : PopBase { pop_base },
 	market_instance { new_market_instance },
-	artisanal_producer_nullable {
+	artisanal_producer_optional {
 		type->get_is_artisan()
-			? artisanal_producer_factory_pattern.CreateNewArtisanalProducer()
-			: nullptr
+			? std::optional<ArtisanalProducer> {
+				new_modifier_effect_cache
+			}
+			: std::optional<ArtisanalProducer> {}
 	},
 	supporter_equivalents_by_ideology { ideology_keys } {
 		reserve_needs_fulfilled_goods();
@@ -448,29 +449,6 @@ void Pop::pop_tick_without_cleanup(
 		VECTORS_FOR_POP_TICK
 	> reusable_vectors
 ) {
-	#define SET_TO_ZERO(name) \
-		name = 0;
-	OV_DO_FOR_ALL_TYPES_OF_POP_INCOME(SET_TO_ZERO)
-	OV_DO_FOR_ALL_TYPES_OF_POP_EXPENSES(SET_TO_ZERO)
-	#undef SET_TO_ZERO
-	income = expenses = 0;
-
-	ProvinceInstance& location_never_null = *location;
-	CountryInstance* const country_to_report_economy_nullable = location_never_null.get_country_to_report_economy();
-
-	fixed_point_t max_cost_multiplier = 1;
-	if (country_to_report_economy_nullable != nullptr) {
-		country_to_report_economy_nullable->request_salaries_and_welfare_and_import_subsidies(*this);
-		const fixed_point_t tariff_rate = country_to_report_economy_nullable->effective_tariff_rate.get_untracked();
-		if (tariff_rate > 0) {
-			max_cost_multiplier += tariff_rate; //max (domestic cost, imported cost)
-		}
-	}
-
-	//unemployment subsidies are based on yesterdays unemployment
-	employed = 0;
-	//import subsidies are based on yesterday
-	yesterdays_import_value = 0;
 	utility::forwardable_span<const GoodDefinition> good_keys = reusable_goods_mask.get_keys();
 	memory::vector<fixed_point_t>& reusable_vector_0 = reusable_vectors[0];
 	memory::vector<fixed_point_t>& reusable_vector_1 = reusable_vectors[1];
@@ -480,18 +458,46 @@ void Pop::pop_tick_without_cleanup(
 	money_to_spend_per_good.resize(good_keys.size(), 0);
 	cash_allocated_for_artisanal_spending = 0;
 	fill_needs_fulfilled_goods_with_false();
-	if (artisanal_producer_nullable != nullptr) {
+	
+	GoodDefinition const* artisanal_output_good = nullptr;
+	if (artisanal_producer_optional.has_value()) {
 		//execute artisan_tick before needs
-		artisanal_producer_nullable->artisan_tick(
+		ArtisanalProducer& artisanal_producer = artisanal_producer_optional.value();
+		artisanal_producer.artisan_tick(
 			*this,
-			max_cost_multiplier,
+			shared_values,
 			reusable_goods_mask,
 			max_quantity_to_buy_per_good,
 			money_to_spend_per_good,
 			reusable_vector_0,
 			reusable_vector_1
 		);
+
+		if (artisanal_producer.get_production_type_nullable() != nullptr) {
+			artisanal_output_good = &artisanal_producer.get_production_type_nullable()->get_output_good();
+		}
 	}
+
+	//after artisan_tick as it uses income & expenses
+	#define SET_TO_ZERO(name) \
+		name = 0;
+
+	OV_DO_FOR_ALL_TYPES_OF_POP_INCOME(SET_TO_ZERO)
+	OV_DO_FOR_ALL_TYPES_OF_POP_EXPENSES(SET_TO_ZERO)
+	#undef SET_TO_ZERO
+	income = expenses = 0;
+
+	ProvinceInstance& location_never_null = *location;
+	CountryInstance* const country_to_report_economy_nullable = location_never_null.get_country_to_report_economy();
+
+	if (country_to_report_economy_nullable != nullptr) {
+		country_to_report_economy_nullable->request_salaries_and_welfare_and_import_subsidies(*this);
+	}
+	
+	//unemployment subsidies are based on yesterdays unemployment
+	employed = 0;
+	//import subsidies are based on yesterday
+	yesterdays_import_value = 0;
 
 	PopType const& type_never_null = *type;
 	PopStrataValuesFromProvince const& shared_strata_values = shared_values.get_effects_by_strata(type_never_null.get_strata());
@@ -519,8 +525,7 @@ void Pop::pop_tick_without_cleanup(
 					country_to_report_economy_nullable->report_pop_need_demand(*type, good_definition, max_quantity_to_buy); \
 				} \
 				need_category##_needs_desired_quantity += max_quantity_to_buy; \
-				if (artisanal_produce_left_to_sell > 0 \
-					&& artisanal_producer_nullable->get_production_type().get_output_good() == good_definition \
+				if (artisanal_produce_left_to_sell > 0 && *artisanal_output_good == good_definition \
 				) { \
 					const fixed_point_t own_produce_consumed = std::min(artisanal_produce_left_to_sell, max_quantity_to_buy); \
 					artisanal_produce_left_to_sell -= own_produce_consumed; \
@@ -542,7 +547,7 @@ void Pop::pop_tick_without_cleanup(
 	#undef FILL_NEEDS
 
 	//It's safe to use cash as this happens before cash is updated via spending
-	fixed_point_t cash_left_to_spend = cash.get_copy_of_value() / max_cost_multiplier
+	fixed_point_t cash_left_to_spend = cash.get_copy_of_value() / shared_values.get_max_cost_multiplier()
 		- cash_allocated_for_artisanal_spending;
 
 	#define ALLOCATE_FOR_NEEDS(need_category) \
@@ -583,7 +588,7 @@ void Pop::pop_tick_without_cleanup(
 	if (artisanal_produce_left_to_sell > 0) {
 		market_instance.place_market_sell_order(
 			{
-				artisanal_producer_nullable->get_production_type().get_output_good(),
+				*artisanal_output_good,
 				country_to_report_economy_nullable,
 				artisanal_produce_left_to_sell,
 				this,
@@ -615,11 +620,11 @@ void Pop::after_buy(void* actor, BuyResult const& buy_result) {
 
 	GoodDefinition const& good_definition = buy_result.get_good_definition();
 	fixed_point_t quantity_left_to_consume = quantity_bought;
-	if (pop.artisanal_producer_nullable != nullptr) {
+	if (pop.artisanal_producer_optional.has_value()) {
 		if (quantity_left_to_consume <= 0) {
 			return;
 		}
-		const fixed_point_t quantity_added_to_stockpile = pop.artisanal_producer_nullable->add_to_stockpile(
+		const fixed_point_t quantity_added_to_stockpile = pop.artisanal_producer_optional.value().add_to_stockpile(
 			good_definition,
 			quantity_left_to_consume
 		);

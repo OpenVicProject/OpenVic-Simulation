@@ -11,7 +11,11 @@ using namespace OpenVic;
 
 void ThreadPool::loop_until_cancelled(
 	work_t& work_type,
+	GameRulesManager const& game_rules_manager,
+	GoodInstanceManager const& good_instance_manager,
+	ModifierEffectCache const& modifier_effect_cache,
 	PopsDefines const& pop_defines,
+	ProductionTypeManager const& production_type_manager,
 	utility::forwardable_span<const CountryInstance> country_keys,
 	utility::forwardable_span<const GoodDefinition> good_keys,
 	utility::forwardable_span<const Strata> strata_keys,
@@ -32,7 +36,14 @@ void ThreadPool::loop_until_cancelled(
 	std::array<memory::vector<fixed_point_t>, VECTOR_COUNT> reusable_vectors;
 	std::span<memory::vector<fixed_point_t>, VECTOR_COUNT> reusable_vectors_span = std::span(reusable_vectors);
 	memory::vector<size_t> reusable_index_vector;
-	PopValuesFromProvince reusable_pop_values { pop_defines, strata_keys };
+	PopValuesFromProvince reusable_pop_values {
+		game_rules_manager,
+		good_instance_manager,
+		modifier_effect_cache,
+		production_type_manager,
+		pop_defines,
+		strata_keys
+	};
 
 	while (!is_cancellation_requested) {
 		work_t work_type_copy;
@@ -154,7 +165,11 @@ ThreadPool::~ThreadPool() {
 }
 
 void ThreadPool::initialise_threadpool(
+	GameRulesManager const& game_rules_manager,
+	GoodInstanceManager const& good_instance_manager,
+	ModifierEffectCache const& modifier_effect_cache,
 	PopsDefines const& pop_defines,
+	ProductionTypeManager const& production_type_manager,
 	utility::forwardable_span<const GoodDefinition> good_keys,
 	utility::forwardable_span<const Strata> strata_keys,
 	utility::forwardable_span<GoodInstance> goods,
@@ -196,7 +211,11 @@ void ThreadPool::initialise_threadpool(
 			[
 				this,
 				&work_for_thread = work_per_thread[i],
+				&game_rules_manager,
+				&good_instance_manager,
+				&modifier_effect_cache,
 				&pop_defines,
+				&production_type_manager,
 				countries,
 				good_keys,
 				strata_keys,
@@ -206,7 +225,11 @@ void ThreadPool::initialise_threadpool(
 			]() -> void {
 				loop_until_cancelled(
 					work_for_thread,
+					game_rules_manager,
+					good_instance_manager,
+					modifier_effect_cache,
 					pop_defines,
+					production_type_manager,
 					countries,
 					good_keys,
 					strata_keys,
