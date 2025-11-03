@@ -10,6 +10,7 @@
 
 namespace OpenVic {
 	struct ArtisanalProducerDeps;
+	struct EconomyDefines;
 	struct GoodDefinition;
 	struct GoodInstanceManager;
 	struct ModifierEffectCache;
@@ -20,6 +21,7 @@ namespace OpenVic {
 
 	struct ArtisanalProducer {
 	private:
+		EconomyDefines const& economy_defines;
 		ModifierEffectCache const& modifier_effect_cache;
 		fixed_point_map_t<GoodDefinition const*> stockpile;
 
