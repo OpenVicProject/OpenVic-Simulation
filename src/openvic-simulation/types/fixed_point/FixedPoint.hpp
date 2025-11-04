@@ -192,7 +192,11 @@ namespace OpenVic {
 #ifdef DEV_ENABLED
 			if (!std::is_constant_evaluated()) {
 				if (OV_unlikely(value < ONE)) {
-					spdlog::warn_s("Fixed point {} < 1, truncation will result in zero, this may be a bug.", *this);
+					spdlog::warn_s(
+						"Fixed point < 1, truncation will result in zero, this may be a bug. raw_value: {} as float: {}",
+						get_raw_value(),
+						static_cast<float>(*this)
+					);
 				}
 			}
 #endif
