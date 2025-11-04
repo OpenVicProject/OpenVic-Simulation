@@ -26,7 +26,7 @@ ArtisanalProducer::ArtisanalProducer(
 	production_type_nullable { nullptr },
 	current_production { new_current_production }
 	{
-		set_production_type(production_type_nullable);
+		set_production_type(new_production_type);
 	}
 
 void ArtisanalProducer::set_production_type(ProductionType const* const new_production_type) {
