@@ -10,6 +10,7 @@
 #include "openvic-simulation/country/CountryInstance.hpp"
 #include "openvic-simulation/defines/Define.hpp"
 #include "openvic-simulation/economy/GoodDefinition.hpp"
+#include "openvic-simulation/economy/GoodInstance.hpp"
 #include "openvic-simulation/economy/production/ArtisanalProducer.hpp"
 #include "openvic-simulation/economy/production/ProductionType.hpp"
 #include "openvic-simulation/economy/trading/BuyResult.hpp"
@@ -294,6 +295,33 @@ void Pop::pay_income_tax(fixed_point_t& income) {
 	income -= tax;
 }
 
+void Pop::add_artisanal_revenue(const fixed_point_t revenue) {
+	if (OV_unlikely(revenue == 0)) {
+		spdlog::warn_s("Adding artisanal_revenue of 0 to pop. Context{}", get_pop_context_text());
+		return;
+	}
+
+	if (OV_unlikely(revenue < 0)) {
+		spdlog::error_s("Adding negative artisanal_revenue of {} to pop. Context{}", revenue, get_pop_context_text());
+		return;
+	}
+
+	fixed_point_t income;
+	if (OV_unlikely(!artisanal_producer_optional.has_value())) {
+		income = revenue;
+	} else {
+		income = std::max(
+			fixed_point_t::_0,
+			revenue - artisanal_producer_optional->get_costs_of_production()
+		);
+	}
+
+	pay_income_tax(income);
+	artisanal_revenue += revenue;
+	income += income;
+	cash += income;
+}
+
 #define DEFINE_ADD_INCOME_FUNCTIONS(name) \
 	void Pop::add_##name(fixed_point_t amount){ \
 		if (OV_unlikely(amount == 0)) { \
@@ -387,7 +415,7 @@ void Pop::allocate_for_needs(
 				continue;
 			}
 
-			fixed_point_t weight = market_instance.get_price_inverse(good_definition);
+			fixed_point_t weight = market_instance.get_good_instance(good_definition).get_price_inverse();
 			fixed_point_t cash_available_for_good = fixed_point_t::mul_div(
 				cash_left_to_spend_draft,
 				weight,
@@ -536,7 +564,7 @@ void Pop::pop_tick_without_cleanup(
 					} \
 				} \
 				if (OV_likely(max_quantity_to_buy > 0)) { \
-					need_category##_needs_price_inverse_sum += market_instance.get_price_inverse(good_definition); \
+					need_category##_needs_price_inverse_sum += market_instance.get_good_instance(good_definition).get_price_inverse(); \
 					need_category##_needs[good_definition_ptr] += max_quantity_to_buy; \
 					max_quantity_to_buy_per_good[good_definition.get_index()] += max_quantity_to_buy; \
 				} \
@@ -674,7 +702,7 @@ void Pop::after_buy(void* actor, BuyResult const& buy_result) {
 
 void Pop::after_sell(void* actor, SellResult const& sell_result, memory::vector<fixed_point_t>& reusable_vector) {
 	if (sell_result.get_money_gained() > 0) {
-		static_cast<Pop*>(actor)->add_artisanal_income(sell_result.get_money_gained());
+		static_cast<Pop*>(actor)->add_artisanal_revenue(sell_result.get_money_gained());
 	}
 }
 

@@ -121,7 +121,10 @@ void ArtisanalProducer::artisan_tick(
 		inputs_bought_numerator,
 		inputs_bought_denominator
 	);
+	
+	MarketInstance const& market_instance = pop.get_market_instance();
 
+	costs_of_production = 0;
 	if (current_production > 0) {
 		if (country_to_report_economy_nullable != nullptr) {
 			country_to_report_economy_nullable->report_output(production_type, current_production);
@@ -139,6 +142,8 @@ void ArtisanalProducer::artisan_tick(
 				inputs_bought_numerator,
 				inputs_bought_denominator
 			);
+			costs_of_production += consumed_quantity * market_instance.get_good_instance(input_good).get_price();
+
 			if (country_to_report_economy_nullable != nullptr) {
 				country_to_report_economy_nullable->report_input_consumption(
 					production_type,
@@ -146,6 +151,7 @@ void ArtisanalProducer::artisan_tick(
 					consumed_quantity
 				);
 			}
+
 			if (input_good == production_type.get_output_good()) {
 				if (OV_unlikely(consumed_quantity > produce_left_to_sell)) {
 					consumed_quantity -= produce_left_to_sell;
@@ -170,7 +176,6 @@ void ArtisanalProducer::artisan_tick(
 
 	//executed once per pop while nothing else uses it.
 	const fixed_point_t total_cash_to_spend = pop.get_cash().get_copy_of_value() / values_from_province.get_max_cost_multiplier();
-	MarketInstance const& market_instance = pop.get_market_instance();
 
 	if (total_cash_to_spend > 0 && distinct_goods_to_buy > 0) {
 		//Figure out the optimal amount of goods to buy based on their price, stockpiled quantiy & demand
@@ -348,7 +353,7 @@ ProductionType const* ArtisanalProducer::pick_production_type(
 		return production_type_nullable;
 	}
 
-	const fixed_point_t revenue = pop.get_artisanal_income();
+	const fixed_point_t revenue = pop.get_artisanal_revenue();
 	const fixed_point_t costs = pop.get_artisan_inputs_expense();
 	if (production_type_nullable == nullptr || (revenue <= costs)) {
 		should_pick_new_production_type = true;

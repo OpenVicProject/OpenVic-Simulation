@@ -27,6 +27,7 @@ namespace OpenVic {
 
 		ProductionType const* PROPERTY(production_type_nullable);
 		fixed_point_t PROPERTY(current_production);
+		fixed_point_t PROPERTY(costs_of_production);
 
 		void set_production_type(ProductionType const* const new_production_type);
 		ProductionType const* pick_production_type(

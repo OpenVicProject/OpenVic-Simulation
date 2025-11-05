@@ -29,8 +29,8 @@ fixed_point_t MarketInstance::get_max_money_to_allocate_to_buy_quantity(GoodDefi
 	return quantity * get_max_next_price(good_definition) + fixed_point_t::epsilon;
 }
 
-fixed_point_t MarketInstance::get_price_inverse(GoodDefinition const& good_definition) const {
-	return good_instance_manager.get_good_instance_by_definition(good_definition).get_price_inverse();
+GoodInstance const& MarketInstance::get_good_instance(GoodDefinition const& good_definition) const {
+	return good_instance_manager.get_good_instance_by_definition(good_definition);
 }
 
 void MarketInstance::place_buy_up_to_order(BuyUpToOrder&& buy_up_to_order) {
