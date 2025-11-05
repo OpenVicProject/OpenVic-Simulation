@@ -77,10 +77,11 @@ void ArtisanalProducer::artisan_tick(
 	memory::vector<fixed_point_t>& demand_per_input = reusable_map_1;
 	demand_per_input.resize(input_goods.size(), 0);
 
-	//throughput scalar, the minimum of stockpile / desired_quantity
-	fixed_point_t inputs_bought_fraction = 1,
-		inputs_bought_numerator= 1,
-		inputs_bought_denominator= 1;
+	//throughput scalar, the minimum of stockpile / base_desired_quantity
+	//inputs_bought_fraction uses base_desired_quantity as population size is cancelled in the production and input calculations.
+	fixed_point_t inputs_bought_numerator = pop.get_size(),
+		inputs_bought_denominator = production_type.get_base_workforce_size(),
+		inputs_bought_fraction = inputs_bought_numerator / inputs_bought_denominator;
 
 	size_t distinct_goods_to_buy = 0;
 	
@@ -102,11 +103,11 @@ void ArtisanalProducer::artisan_tick(
 		}
 
 		const fixed_point_t stockpiled_quantity = stockpile[&input_good];
-		const fixed_point_t good_bought_fraction = stockpiled_quantity / desired_quantity;
+		const fixed_point_t good_bought_fraction = stockpiled_quantity / base_desired_quantity;
 		if (good_bought_fraction < inputs_bought_fraction) {
 			inputs_bought_fraction = good_bought_fraction;
 			inputs_bought_numerator = stockpiled_quantity;
-			inputs_bought_denominator = desired_quantity;
+			inputs_bought_denominator = base_desired_quantity;
 		}
 
 		max_price_per_input[i] = pop.get_market_instance().get_max_next_price(input_good);
@@ -115,27 +116,26 @@ void ArtisanalProducer::artisan_tick(
 	}
 
 	//Produce output
-	fixed_point_t produce_left_to_sell = current_production = production_type.get_base_output_quantity()
-		* inputs_bought_numerator * pop.get_size()
-		/ (inputs_bought_denominator * production_type.get_base_workforce_size());
+	fixed_point_t produce_left_to_sell = current_production = fixed_point_t::mul_div(
+		production_type.get_base_output_quantity(),
+		inputs_bought_numerator,
+		inputs_bought_denominator
+	);
 
 	if (current_production > 0) {
 		if (country_to_report_economy_nullable != nullptr) {
 			country_to_report_economy_nullable->report_output(production_type, current_production);
 		}
-	}
 
-	if (inputs_bought_fraction > 0) {
 		for (auto it = input_goods.begin(); it < input_goods.end(); it++) {
 			GoodDefinition const& input_good = *it.key();
 			const fixed_point_t base_desired_quantity = it.value();
 			const ptrdiff_t i = it - input_goods.begin();
-			const fixed_point_t desired_quantity = demand_per_input[i];
 			fixed_point_t& good_stockpile = stockpile[&input_good];
 
 			//Consume input good
 			fixed_point_t consumed_quantity = fixed_point_t::mul_div(
-				desired_quantity,
+				base_desired_quantity,
 				inputs_bought_numerator,
 				inputs_bought_denominator
 			);
@@ -161,7 +161,7 @@ void ArtisanalProducer::artisan_tick(
 				good_stockpile - consumed_quantity
 			);
 
-			if (good_stockpile >= desired_quantity) {
+			if (good_stockpile >= demand_per_input[i]) {
 				wants_more_mask.set(input_good, false);
 				distinct_goods_to_buy--;
 			}
