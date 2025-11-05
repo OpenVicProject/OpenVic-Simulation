@@ -51,7 +51,6 @@ namespace OpenVic {
 	#define OV_DO_FOR_ALL_TYPES_OF_POP_INCOME(F) \
 		F(rgo_owner_income) \
 		F(rgo_worker_income) \
-		F(artisanal_income) \
 		F(factory_worker_income) \
 		F(factory_owner_income) \
 		F(unemployment_subsidies) \
@@ -145,6 +144,7 @@ namespace OpenVic {
 		OV_DO_FOR_ALL_NEED_CATEGORIES(NEED_MEMBERS)
 		#undef NEED_MEMBERS
 
+		fixed_point_t PROPERTY(artisanal_revenue);
 		#define DECLARE_POP_MONEY_STORES(money_type) \
 			fixed_point_t PROPERTY(money_type);
 
@@ -201,8 +201,9 @@ namespace OpenVic {
 			const fixed_point_t pop_size_per_regiment_multiplier
 		);
 
+		void add_artisanal_revenue(const fixed_point_t revenue);
 		#define DECLARE_POP_MONEY_STORE_FUNCTIONS(name) \
-			void add_##name(const fixed_point_t amount);
+			void add_##name(fixed_point_t amount);
 
 		OV_DO_FOR_ALL_TYPES_OF_POP_INCOME(DECLARE_POP_MONEY_STORE_FUNCTIONS)
 		OV_DO_FOR_ALL_TYPES_OF_POP_EXPENSES(DECLARE_POP_MONEY_STORE_FUNCTIONS)
