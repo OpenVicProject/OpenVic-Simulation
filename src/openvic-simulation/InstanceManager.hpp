@@ -1,6 +1,9 @@
 #pragma once
 
 #include "openvic-simulation/console/ConsoleInstance.hpp"
+#include "openvic-simulation/core/container/FlagStrings.hpp"
+#include "openvic-simulation/core/object/Date.hpp"
+#include "openvic-simulation/core/thread/ThreadPool.hpp"
 #include "openvic-simulation/country/CountryInstance.hpp"
 #include "openvic-simulation/country/CountryInstanceDeps.hpp"
 #include "openvic-simulation/diplomacy/CountryRelation.hpp"
@@ -16,10 +19,6 @@
 #include "openvic-simulation/misc/SimulationClock.hpp"
 #include "openvic-simulation/politics/PoliticsInstanceManager.hpp"
 #include "openvic-simulation/pop/PopDeps.hpp"
-#include "openvic-simulation/types/Date.hpp"
-#include "openvic-simulation/types/FlagStrings.hpp"
-#include "openvic-simulation/utility/ThreadPool.hpp"
-#include "openvic-simulation/utility/Containers.hpp"
 
 #include <function2/function2.hpp>
 

@@ -3,10 +3,10 @@
 #include <string_view>
 
 #include "openvic-simulation/military/UnitType.hpp"
-#include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
+#include "openvic-simulation/core/object/FixedPoint.hpp"
 #include "openvic-simulation/types/UnitBranchType.hpp"
-#include "openvic-simulation/types/UniqueId.hpp"
-#include "openvic-simulation/utility/Getters.hpp"
+#include "openvic-simulation/Alias.hpp"
+#include "openvic-simulation/core/Property.hpp"
 
 namespace OpenVic {
 

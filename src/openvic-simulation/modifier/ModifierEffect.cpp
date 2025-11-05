@@ -1,6 +1,9 @@
 #include "ModifierEffect.hpp"
 
-#include "openvic-simulation/utility/StringUtils.hpp"
+#include <string_view>
+
+#include "openvic-simulation/core/memory/String.hpp"
+#include "openvic-simulation/core/string/Utility.hpp"
 
 using namespace OpenVic;
 
@@ -37,7 +40,7 @@ memory::string ModifierEffect::target_to_string(target_t target) {
 }
 
 memory::string ModifierEffect::make_default_modifier_effect_localisation_key(std::string_view identifier) {
-	return "MODIFIER_" + StringUtils::string_toupper(identifier);
+	return "MODIFIER_" + OpenVic::string_toupper(identifier);
 }
 
 ModifierEffect::ModifierEffect(

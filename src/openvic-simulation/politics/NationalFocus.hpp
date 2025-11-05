@@ -2,9 +2,9 @@
 
 #include "openvic-simulation/modifier/Modifier.hpp"
 #include "openvic-simulation/scripts/ConditionScript.hpp"
-#include "openvic-simulation/types/HasIdentifier.hpp"
-#include "openvic-simulation/types/IdentifierRegistry.hpp"
-#include "openvic-simulation/utility/Getters.hpp"
+#include "openvic-simulation/core/container/HasIdentifier.hpp"
+#include "openvic-simulation/core/container/IdentifierRegistry.hpp"
+#include "openvic-simulation/core/Property.hpp"
 
 namespace OpenVic {
 	struct NationalFocusManager;
@@ -31,8 +31,8 @@ namespace OpenVic {
 		Ideology const* PROPERTY(loyalty_ideology);
 		fixed_point_t PROPERTY(loyalty_value);
 		fixed_point_t PROPERTY(encourage_railroads);
-		fixed_point_map_t<GoodDefinition const*> PROPERTY(encourage_goods);
-		fixed_point_map_t<PopType const*> PROPERTY(encourage_pop_types);
+		memory::fixed_point_map_t<GoodDefinition const*> PROPERTY(encourage_goods);
+		memory::fixed_point_map_t<PopType const*> PROPERTY(encourage_pop_types);
 		ConditionScript PROPERTY(limit);
 
 		bool parse_scripts(DefinitionManager const& definition_manager);
@@ -50,8 +50,8 @@ namespace OpenVic {
 			Ideology const* new_loyalty_ideology,
 			fixed_point_t new_loyalty_value,
 			fixed_point_t new_encourage_railroads,
-			fixed_point_map_t<GoodDefinition const*>&& new_encourage_goods,
-			fixed_point_map_t<PopType const*>&& new_encourage_pop_types,
+			memory::fixed_point_map_t<GoodDefinition const*>&& new_encourage_goods,
+			memory::fixed_point_map_t<PopType const*>&& new_encourage_pop_types,
 			ConditionScript&& new_limit
 		);
 		NationalFocus(NationalFocus&&) = default;
@@ -81,8 +81,8 @@ namespace OpenVic {
 			Ideology const* loyalty_ideology,
 			fixed_point_t loyalty_value,
 			fixed_point_t encourage_railroads,
-			fixed_point_map_t<GoodDefinition const*>&& encourage_goods,
-			fixed_point_map_t<PopType const*>&& encourage_pop_types,
+			memory::fixed_point_map_t<GoodDefinition const*>&& encourage_goods,
+			memory::fixed_point_map_t<PopType const*>&& encourage_pop_types,
 			ConditionScript&& limit
 		);
 

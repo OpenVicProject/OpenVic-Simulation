@@ -1,6 +1,6 @@
 #pragma once
 
-#include "openvic-simulation/utility/ForwardableSpan.hpp"
+#include "openvic-simulation/core/portable/ForwardableSpan.hpp"
 
 namespace OpenVic {
 	struct BuildingTypeManager;
@@ -13,9 +13,9 @@ namespace OpenVic {
 	struct ProvinceInstanceDeps {
 		BuildingTypeManager const& building_type_manager;
 		GameRulesManager const& game_rules_manager;
-		utility::forwardable_span<const Ideology> ideologies;
-		utility::forwardable_span<const PopType> pop_types;
+		forwardable_span<const Ideology> ideologies;
+		forwardable_span<const PopType> pop_types;
 		ResourceGatheringOperationDeps const& rgo_deps;
-		utility::forwardable_span<const Strata> stratas;
+		forwardable_span<const Strata> stratas;
 	};
 }

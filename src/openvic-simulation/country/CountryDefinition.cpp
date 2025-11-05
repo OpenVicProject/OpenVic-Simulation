@@ -1,19 +1,23 @@
 #include "CountryDefinition.hpp"
 
 #include <string_view>
+#include <utility>
 
 #include <openvic-dataloader/v2script/AbstractSyntaxTree.hpp>
 
+#include "openvic-simulation/DefinitionManager.hpp"
+#include "openvic-simulation/core/Logger.hpp"
+#include "openvic-simulation/core/container/IdentifierRegistry.hpp"
+#include "openvic-simulation/core/container/IndexedFlatMap.hpp"
+#include "openvic-simulation/core/object/Colour.hpp"
+#include "openvic-simulation/core/object/Date.hpp"
+#include "openvic-simulation/core/string/Utility.hpp"
 #include "openvic-simulation/dataloader/Dataloader.hpp"
 #include "openvic-simulation/dataloader/NodeTools.hpp"
-#include "openvic-simulation/DefinitionManager.hpp"
 #include "openvic-simulation/politics/Government.hpp"
 #include "openvic-simulation/politics/Ideology.hpp"
 #include "openvic-simulation/politics/PartyPolicy.hpp"
 #include "openvic-simulation/pop/Culture.hpp"
-#include "openvic-simulation/types/Colour.hpp"
-#include "openvic-simulation/types/IdentifierRegistry.hpp"
-#include "openvic-simulation/utility/Logger.hpp"
 
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;
@@ -99,7 +103,7 @@ bool CountryDefinitionManager::load_countries(
 					if (load_country_data_file(
 						definition_manager, key, is_dynamic,
 						Dataloader::parse_defines(
-							dataloader.lookup_file(StringUtils::append_string_views(common_dir, filepath))
+							dataloader.lookup_file(OpenVic::append_string_views(common_dir, filepath))
 						).get_file_node()
 					)) {
 						return true;

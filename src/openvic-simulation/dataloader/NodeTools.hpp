@@ -13,17 +13,20 @@
 
 #include <spdlog/common.h>
 
-#include "openvic-simulation/types/Colour.hpp"
-#include "openvic-simulation/types/Date.hpp"
-#include "openvic-simulation/types/IndexedFlatMap.hpp"
-#include "openvic-simulation/types/OrderedContainers.hpp"
-#include "openvic-simulation/types/TextFormat.hpp"
-#include "openvic-simulation/types/Vector.hpp"
-#include "openvic-simulation/utility/FormatValidate.hpp"
-#include "openvic-simulation/utility/Getters.hpp"
-#include "openvic-simulation/utility/TslHelper.hpp"
-#include "openvic-simulation/utility/Containers.hpp"
-#include "openvic-simulation/utility/Concepts.hpp"
+#include "openvic-simulation/core/FormatValidate.hpp"
+#include "openvic-simulation/core/Logger.hpp"
+#include "openvic-simulation/core/Typedefs.hpp"
+#include "openvic-simulation/core/container/IndexedFlatMap.hpp"
+#include "openvic-simulation/core/container/MutableIterator.hpp"
+#include "openvic-simulation/core/memory/OrderedMap.hpp"
+#include "openvic-simulation/core/memory/StringMap.hpp"
+#include "openvic-simulation/core/memory/Vector.hpp"
+#include "openvic-simulation/core/object/Colour.hpp"
+#include "openvic-simulation/core/object/Date.hpp"
+#include "openvic-simulation/core/object/FixedPoint.hpp"
+#include "openvic-simulation/core/object/Vector.hpp"
+#include "openvic-simulation/core/template/Concepts.hpp"
+#include "openvic-simulation/core/ui/TextFormat.hpp"
 
 #include <function2/function2.hpp>
 
@@ -39,10 +42,10 @@ namespace OpenVic {
 #ifdef _MSC_VER // type_name starts with "struct "
 using namespace std::string_view_literals;
 #define NODE_CASE(Node) \
-	case Node: return OpenVic::utility::type_name<ast::Node>().substr("struct "sv.size());
+	case Node: return OpenVic::type_name<ast::Node>().substr("struct "sv.size());
 #else
 #define NODE_CASE(Node) \
-	case Node: return OpenVic::utility::type_name<ast::Node>();
+	case Node: return OpenVic::type_name<ast::Node>();
 #endif
 			switch (kind) {
 				using enum NodeKind;
@@ -132,7 +135,7 @@ using namespace std::string_view_literals;
 		inline bool map_key_value_invalid_callback(Map const& key_map, std::string_view key, ast::NodeCPtr) {
 			spdlog::error_s(
 				"Invalid dictionary key \"{}\". Valid values are [{}]",
-				key, StringUtils::string_join(key_map)
+				key, string_join(key_map)
 			);
 			return false;
 		}
@@ -141,7 +144,7 @@ using namespace std::string_view_literals;
 		inline bool map_key_value_ignore_invalid_callback(Map const& key_map, std::string_view key, ast::NodeCPtr) {
 			spdlog::warn_s(
 				"Invalid dictionary key \"{}\" is ignored. Valid values are [{}]",
-				key, StringUtils::string_join(key_map)
+				key, OpenVic::string_join(key_map)
 			);
 			return true;
 		}
@@ -265,7 +268,7 @@ using namespace std::string_view_literals;
 		using enum dictionary_entry_t::expected_count_t;
 
 		template<string_map_case Case>
-		using template_key_map_t = template_string_map_t<dictionary_entry_t, Case>;
+		using template_key_map_t = memory::template_string_map_t<dictionary_entry_t, Case>;
 
 		using key_map_t = template_key_map_t<StringMapCaseSensitive>;
 		using case_insensitive_key_map_t = template_key_map_t<StringMapCaseInsensitive>;
@@ -519,17 +522,17 @@ using namespace std::string_view_literals;
 
 		template<typename T, string_map_case Case>
 		Callback<std::string_view> auto expect_mapped_string(
-			template_string_map_t<T, Case> const& map, Callback<T> auto&& callback, bool warn = false
+			memory::template_string_map_t<T, Case> const& map, Callback<T> auto&& callback, bool warn = false
 		) {
 			return [&map, callback = FWD(callback), warn](std::string_view string) mutable -> bool {
-				const typename template_string_map_t<T, Case>::const_iterator it = map.find(string);
+				const typename memory::template_string_map_t<T, Case>::const_iterator it = map.find(string);
 				if (it != map.end()) {
 					return callback(it->second);
 				}
 				spdlog::log_s(
 					warn ? spdlog::level::warn : spdlog::level::err,
 					"\"{}\" is not a valid key. Valid keys: [{}]",
-					string, StringUtils::string_join(map)
+					string, OpenVic::string_join(map)
 				);
 				return warn;
 			};

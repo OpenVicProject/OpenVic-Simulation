@@ -1,6 +1,6 @@
 #pragma once
 
-#include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
+#include "openvic-simulation/core/object/FixedPoint.hpp"
 
 namespace OpenVic {
 	struct GoodDefinition;

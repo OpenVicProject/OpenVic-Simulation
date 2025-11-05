@@ -1,5 +1,7 @@
 #include "BuildingInstance.hpp"
 
+#include "openvic-simulation/Alias.hpp"
+#include "openvic-simulation/core/object/FixedPoint.hpp"
 #include "openvic-simulation/economy/BuildingType.hpp"
 
 using namespace OpenVic;

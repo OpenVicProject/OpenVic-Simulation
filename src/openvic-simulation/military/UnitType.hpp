@@ -5,14 +5,17 @@
 
 #include <openvic-dataloader/v2script/Parser.hpp>
 
+#include "openvic-simulation/core/container/HasIdentifier.hpp"
+#include "openvic-simulation/core/container/HasIndex.hpp"
+#include "openvic-simulation/core/container/IdentifierRegistry.hpp"
+#include "openvic-simulation/core/memory/FixedPointMap.hpp"
+#include "openvic-simulation/core/memory/OrderedMap.hpp"
+#include "openvic-simulation/core/memory/StringMap.hpp"
+#include "openvic-simulation/core/object/Date.hpp"
+#include "openvic-simulation/core/object/FixedPoint.hpp"
 #include "openvic-simulation/dataloader/NodeTools.hpp"
 #include "openvic-simulation/economy/GoodDefinition.hpp"
 #include "openvic-simulation/modifier/Modifier.hpp"
-#include "openvic-simulation/types/Date.hpp"
-#include "openvic-simulation/types/HasIdentifier.hpp"
-#include "openvic-simulation/types/HasIndex.hpp"
-#include "openvic-simulation/types/IdentifierRegistry.hpp"
-#include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
 #include "openvic-simulation/types/UnitBranchType.hpp"
 
 namespace OpenVic {
@@ -23,14 +26,14 @@ namespace OpenVic {
 
 	struct UnitType : HasIdentifier {
 		using icon_t = uint32_t;
-		using terrain_modifiers_t = ordered_map<TerrainType const*, Modifier>;
+		using terrain_modifiers_t = memory::ordered_map<TerrainType const*, Modifier>;
 
 		enum struct unit_category_t : uint8_t {
 			INVALID_UNIT_CATEGORY, INFANTRY, CAVALRY, SUPPORT, SPECIAL, BIG_SHIP, LIGHT_SHIP, TRANSPORT
 		};
 
 		struct unit_type_args_t {
-			using terrain_modifier_values_t = ordered_map<TerrainType const*, ModifierValue>;
+			using terrain_modifier_values_t = memory::ordered_map<TerrainType const*, ModifierValue>;
 
 			icon_t icon = 0;
 			unit_category_t unit_category = unit_category_t::INVALID_UNIT_CATEGORY;
@@ -41,7 +44,7 @@ namespace OpenVic {
 			fixed_point_t max_strength = 0, default_organisation = 0, maximum_speed = 0, weighted_value = 0,
 				supply_consumption = 0;
 			Timespan build_time;
-			fixed_point_map_t<GoodDefinition const*> build_cost, supply_cost;
+			memory::fixed_point_map_t<GoodDefinition const*> build_cost, supply_cost;
 			terrain_modifier_values_t terrain_modifier_values;
 
 			unit_type_args_t() {};
@@ -66,9 +69,9 @@ namespace OpenVic {
 		memory::string PROPERTY(select_sound);
 
 		const Timespan PROPERTY(build_time);
-		fixed_point_map_t<GoodDefinition const*> PROPERTY(build_cost);
+		memory::fixed_point_map_t<GoodDefinition const*> PROPERTY(build_cost);
 		const fixed_point_t PROPERTY(supply_consumption);
-		fixed_point_map_t<GoodDefinition const*> PROPERTY(supply_cost);
+		memory::fixed_point_map_t<GoodDefinition const*> PROPERTY(supply_cost);
 
 		terrain_modifiers_t PROPERTY(terrain_modifiers);
 
@@ -183,7 +186,7 @@ namespace OpenVic {
 			NodeTools::Callback<unit_branch_t> auto callback
 		) {
 			using enum unit_branch_t;
-			static const string_map_t<unit_branch_t> branch_map {
+			static const memory::string_map_t<unit_branch_t> branch_map {
 				{ "land", LAND }, { "naval", NAVAL }, { "sea", NAVAL }
 			};
 			return NodeTools::expect_mapped_string(branch_map, callback);

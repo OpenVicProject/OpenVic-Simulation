@@ -2,7 +2,7 @@
 
 #include <cstdint>
 
-#include "openvic-simulation/utility/Getters.hpp"
+#include "openvic-simulation/core/Property.hpp"
 
 namespace OpenVic {
 	struct ProvinceInstance;

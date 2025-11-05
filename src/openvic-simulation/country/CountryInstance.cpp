@@ -1,39 +1,45 @@
 #include "CountryInstance.hpp"
 #include "CountryInstanceDeps.hpp"
 
+#include <algorithm>
+#include <cassert>
 #include <cstddef>
 #include <cstdint>
+#include <string_view>
 #include <tuple>
 
-#include "openvic-simulation/country/SharedCountryValues.hpp"
-#include "openvic-simulation/country/CountryDefinition.hpp"
+#include "openvic-simulation/Alias.hpp"
 #include "openvic-simulation/DefinitionManager.hpp"
+#include "openvic-simulation/InstanceManager.hpp"
+#include "openvic-simulation/core/Logger.hpp"
+#include "openvic-simulation/core/Typedefs.hpp"
+#include "openvic-simulation/core/container/ClampedValue.hpp"
+#include "openvic-simulation/core/container/IndexedFlatMap.hpp"
+#include "openvic-simulation/core/error/ErrorMacros.hpp"
+#include "openvic-simulation/core/memory/Format.hpp"
+#include "openvic-simulation/core/memory/Vector.hpp"
+#include "openvic-simulation/core/object/Colour.hpp"
+#include "openvic-simulation/core/object/Date.hpp"
+#include "openvic-simulation/core/object/FixedPoint.hpp"
+#include "openvic-simulation/core/portable/ForwardableSpan.hpp"
+#include "openvic-simulation/country/CountryDefinition.hpp"
+#include "openvic-simulation/country/SharedCountryValues.hpp"
 #include "openvic-simulation/diplomacy/CountryRelation.hpp"
 #include "openvic-simulation/economy/BuildingType.hpp"
 #include "openvic-simulation/economy/production/ProductionType.hpp"
 #include "openvic-simulation/economy/trading/MarketInstance.hpp"
 #include "openvic-simulation/history/CountryHistory.hpp"
-#include "openvic-simulation/InstanceManager.hpp"
 #include "openvic-simulation/map/Crime.hpp"
 #include "openvic-simulation/map/MapInstance.hpp"
-#include "openvic-simulation/misc/GameRulesManager.hpp"
 #include "openvic-simulation/military/UnitType.hpp"
+#include "openvic-simulation/misc/GameRulesManager.hpp"
 #include "openvic-simulation/modifier/ModifierEffectCache.hpp"
 #include "openvic-simulation/modifier/StaticModifierCache.hpp"
 #include "openvic-simulation/pop/Pop.hpp"
 #include "openvic-simulation/pop/PopType.hpp"
 #include "openvic-simulation/research/Invention.hpp"
 #include "openvic-simulation/research/Technology.hpp"
-#include "openvic-simulation/types/ClampedValue.hpp"
-#include "openvic-simulation/types/Date.hpp"
-#include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
-#include "openvic-simulation/types/IndexedFlatMap.hpp"
-#include "openvic-simulation/types/PopSize.hpp"
 #include "openvic-simulation/types/UnitBranchType.hpp"
-#include "openvic-simulation/utility/Containers.hpp"
-#include "openvic-simulation/utility/ErrorMacros.hpp"
-#include <openvic-simulation/utility/Logger.hpp>
-#include "openvic-simulation/utility/Typedefs.hpp"
 
 using namespace OpenVic;
 
@@ -1159,7 +1165,7 @@ void CountryInstance::start_research(Technology const& technology, const Date to
 }
 
 void CountryInstance::apply_foreign_investments(
-	fixed_point_map_t<CountryDefinition const*> const& investments, CountryInstanceManager const& country_instance_manager
+	memory::fixed_point_map_t<CountryDefinition const*> const& investments, CountryInstanceManager const& country_instance_manager
 ) {
 	for (auto const& [country, money_invested] : investments) {
 		foreign_investments[&country_instance_manager.get_country_instance_by_definition(*country)] = money_invested;
@@ -1209,7 +1215,7 @@ bool CountryInstance::apply_history_to_country(CountryHistoryEntry const& entry,
 	}
 	set_optional_state(tech_school, entry.get_tech_school());
 	constexpr auto set_bool_map_to_indexed_map =
-		[]<typename T>(IndexedFlatMap<T, bool>& target, ordered_map<T const*, bool> source) {
+		[]<typename T>(IndexedFlatMap<T, bool>& target, memory::ordered_map<T const*, bool> source) {
 			for (auto const& [key, value] : source) {
 				target[*key] = value;
 			}
@@ -1906,7 +1912,7 @@ void CountryInstance::after_sell(void* actor, SellResult const& sell_result, mem
 
 void CountryInstance::country_tick_before_map(
 	IndexedFlatMap<GoodDefinition, char>& reusable_goods_mask,
-	utility::forwardable_span<
+	forwardable_span<
 		memory::vector<fixed_point_t>,
 		VECTORS_FOR_COUNTRY_TICK
 	> reusable_vectors,
@@ -2006,7 +2012,7 @@ void CountryInstance::country_tick_before_map(
 
 void CountryInstance::manage_national_stockpile(
 	IndexedFlatMap<GoodDefinition, char>& reusable_goods_mask,
-	utility::forwardable_span<
+	forwardable_span<
 		memory::vector<fixed_point_t>,
 		VECTORS_FOR_COUNTRY_TICK
 	> reusable_vectors,
@@ -2555,7 +2561,7 @@ CountryInstanceManager::CountryInstanceManager(
 	CountryInstanceDeps const& country_instance_deps,
 	GoodInstanceManager const& new_good_instance_manager,
 	PopsDefines const& new_pop_defines,
-	utility::forwardable_span<const PopType> pop_type_keys,
+	forwardable_span<const PopType> pop_type_keys,
 	ThreadPool& new_thread_pool
 )
   : thread_pool { new_thread_pool },

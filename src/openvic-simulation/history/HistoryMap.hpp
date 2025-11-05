@@ -2,10 +2,10 @@
 
 #include <system_error>
 
+#include "openvic-simulation/core/memory/OrderedMap.hpp"
+#include "openvic-simulation/core/memory/UniquePtr.hpp"
+#include "openvic-simulation/core/object/Date.hpp"
 #include "openvic-simulation/dataloader/NodeTools.hpp"
-#include "openvic-simulation/types/Date.hpp"
-#include "openvic-simulation/types/OrderedContainers.hpp"
-#include "openvic-simulation/utility/Containers.hpp"
 
 namespace OpenVic {
 
@@ -30,7 +30,7 @@ namespace OpenVic {
 		using entry_type = _Entry;
 
 	private:
-		ordered_map<Date, memory::unique_ptr<entry_type>> PROPERTY(entries);
+		memory::ordered_map<Date, memory::unique_ptr<entry_type>> PROPERTY(entries);
 
 		bool _try_load_history_entry(
 			DefinitionManager const& definition_manager, Args... args, Date date, ast::NodeCPtr root
@@ -116,7 +116,7 @@ namespace OpenVic {
 				keys.push_back(entry.first);
 			}
 			std::sort(keys.begin(), keys.end());
-			ordered_map<Date, memory::unique_ptr<entry_type>> new_entries;
+			memory::ordered_map<Date, memory::unique_ptr<entry_type>> new_entries;
 			for (Date const& key : keys) {
 				new_entries.emplace(key, std::move(entries[key]));
 			}

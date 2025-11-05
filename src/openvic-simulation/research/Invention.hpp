@@ -1,10 +1,13 @@
 #pragma once
 
+#include <string_view>
+
+#include "openvic-simulation/core/Property.hpp"
+#include "openvic-simulation/core/container/HasIndex.hpp"
+#include "openvic-simulation/core/container/IdentifierRegistry.hpp"
+#include "openvic-simulation/core/memory/OrderedSet.hpp"
 #include "openvic-simulation/modifier/Modifier.hpp"
 #include "openvic-simulation/scripts/ConditionalWeight.hpp"
-#include "openvic-simulation/types/HasIndex.hpp"
-#include "openvic-simulation/types/IdentifierRegistry.hpp"
-#include "openvic-simulation/types/OrderedContainers.hpp"
 
 namespace OpenVic {
 
@@ -20,9 +23,9 @@ namespace OpenVic {
 		friend struct InventionManager;
 
 		//TODO implement limit and chance
-		using unit_set_t = ordered_set<UnitType const*>;
-		using building_set_t = ordered_set<BuildingType const*>;
-		using crime_set_t = ordered_set<Crime const*>;
+		using unit_set_t = memory::ordered_set<UnitType const*>;
+		using building_set_t = memory::ordered_set<BuildingType const*>;
+		using crime_set_t = memory::ordered_set<Crime const*>;
 
 	private:
 		const bool PROPERTY_CUSTOM_PREFIX(news, is);

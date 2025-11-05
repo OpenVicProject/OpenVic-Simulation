@@ -1,12 +1,12 @@
 #pragma once
 
-#include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
-#include "openvic-simulation/types/fixed_point/FixedPointMap.hpp"
-#include "openvic-simulation/types/IndexedFlatMap.hpp"
-#include "openvic-simulation/types/OrderedContainers.hpp"
-#include "openvic-simulation/types/PopSize.hpp"
-#include "openvic-simulation/utility/Getters.hpp"
-#include "openvic-simulation/utility/reactive/MutableState.hpp"
+#include "openvic-simulation/Alias.hpp"
+#include "openvic-simulation/core/Property.hpp"
+#include "openvic-simulation/core/container/IndexedFlatMap.hpp"
+#include "openvic-simulation/core/memory/FixedPointMap.hpp"
+#include "openvic-simulation/core/memory/OrderedMap.hpp"
+#include "openvic-simulation/core/object/FixedPoint.hpp"
+#include "openvic-simulation/core/reactive/MutableState.hpp"
 
 namespace OpenVic {
 	struct BaseIssue;
@@ -41,10 +41,10 @@ namespace OpenVic {
 		OV_IFLATMAP_PROPERTY(PopType, pop_size_t, population_by_type);
 		OV_IFLATMAP_PROPERTY(PopType, pop_size_t, unemployed_pops_by_type);
 		OV_IFLATMAP_PROPERTY(Ideology, fixed_point_t, supporter_equivalents_by_ideology);
-		fixed_point_map_t<BaseIssue const*> PROPERTY(supporter_equivalents_by_issue);
-		fixed_point_map_t<CountryParty const*> PROPERTY(vote_equivalents_by_party);
-		ordered_map<Culture const*, pop_size_t> PROPERTY(population_by_culture);
-		ordered_map<Religion const*, pop_size_t> PROPERTY(population_by_religion);
+		memory::fixed_point_map_t<BaseIssue const*> PROPERTY(supporter_equivalents_by_issue);
+		memory::fixed_point_map_t<CountryParty const*> PROPERTY(vote_equivalents_by_party);
+		memory::ordered_map<Culture const*, pop_size_t> PROPERTY(population_by_culture);
+		memory::ordered_map<Religion const*, pop_size_t> PROPERTY(population_by_religion);
 
 	protected:
 		PopsAggregate(

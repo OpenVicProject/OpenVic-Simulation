@@ -1,12 +1,22 @@
 #include "Deployment.hpp"
 
+#include <cstddef>
+#include <optional>
+#include <string_view>
+#include <utility>
+
+#include "openvic-simulation/core/Logger.hpp"
+#include "openvic-simulation/core/memory/Vector.hpp"
+#include "openvic-simulation/core/object/Date.hpp"
+#include "openvic-simulation/core/object/FixedPoint.hpp"
+#include "openvic-simulation/core/string/Utility.hpp"
 #include "openvic-simulation/dataloader/Dataloader.hpp"
+#include "openvic-simulation/dataloader/NodeTools.hpp"
 #include "openvic-simulation/map/MapDefinition.hpp"
-#include "openvic-simulation/military/MilitaryManager.hpp"
 #include "openvic-simulation/military/Leader.hpp"
 #include "openvic-simulation/military/LeaderTrait.hpp"
+#include "openvic-simulation/military/MilitaryManager.hpp"
 #include "openvic-simulation/military/UnitType.hpp"
-#include "openvic-simulation/utility/Containers.hpp"
 
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;
@@ -66,7 +76,7 @@ bool DeploymentManager::load_oob_file(
 	static constexpr std::string_view oob_directory = "history/units/";
 
 	const fs::path lookedup_path =
-		dataloader.lookup_file(StringUtils::append_string_views(oob_directory, history_path), false);
+		dataloader.lookup_file(OpenVic::append_string_views(oob_directory, history_path), false);
 
 	if (lookedup_path.empty()) {
 		missing_oob_files.emplace(history_path);

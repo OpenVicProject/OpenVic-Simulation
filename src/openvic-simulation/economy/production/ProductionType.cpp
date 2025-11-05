@@ -1,13 +1,26 @@
 #include "ProductionType.hpp"
 
+#include <optional>
+#include <string_view>
+#include <utility>
+
 #include <openvic-dataloader/v2script/Parser.hpp>
 
+#include "openvic-simulation/Alias.hpp"
+#include "openvic-simulation/core/Logger.hpp"
+#include "openvic-simulation/core/error/ErrorMacros.hpp"
+#include "openvic-simulation/core/memory/FixedPointMap.hpp"
+#include "openvic-simulation/core/memory/Format.hpp"
+#include "openvic-simulation/core/memory/OrderedMap.hpp"
+#include "openvic-simulation/core/memory/OrderedSet.hpp"
+#include "openvic-simulation/core/memory/StringMap.hpp"
+#include "openvic-simulation/core/memory/Vector.hpp"
+#include "openvic-simulation/core/object/FixedPoint.hpp"
 #include "openvic-simulation/dataloader/NodeTools.hpp"
 #include "openvic-simulation/economy/GoodDefinition.hpp"
 #include "openvic-simulation/misc/GameRulesManager.hpp"
 #include "openvic-simulation/pop/PopManager.hpp"
 #include "openvic-simulation/pop/PopType.hpp"
-#include "openvic-simulation/utility/ErrorMacros.hpp"
 
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;
@@ -29,11 +42,11 @@ ProductionType::ProductionType(
 	memory::vector<Job>&& new_jobs,
 	const template_type_t new_template_type,
 	const pop_size_t new_base_workforce_size,
-	fixed_point_map_t<GoodDefinition const*>&& new_input_goods,
+	memory::fixed_point_map_t<GoodDefinition const*>&& new_input_goods,
 	GoodDefinition const& new_output_good,
 	const fixed_point_t new_base_output_quantity,
 	memory::vector<bonus_t>&& new_bonuses,
-	fixed_point_map_t<GoodDefinition const*>&& new_maintenance_requirements,
+	memory::fixed_point_map_t<GoodDefinition const*>&& new_maintenance_requirements,
 	const bool new_is_coastal,
 	const bool new_is_farm,
 	const bool new_is_mine
@@ -105,7 +118,7 @@ node_callback_t ProductionTypeManager::_expect_job(
 		Job::effect_t effect_type { THROUGHPUT };
 		fixed_point_t effect_multiplier = 1, desired_workforce_share = 1;
 
-		static const string_map_t<Job::effect_t> effect_map = {
+		static const memory::string_map_t<Job::effect_t> effect_map = {
 			{ "input", INPUT }, { "output", OUTPUT }, { "throughput", THROUGHPUT }
 		};
 
@@ -140,11 +153,11 @@ bool ProductionTypeManager::add_production_type(
 	memory::vector<Job>&& jobs,
 	const ProductionType::template_type_t template_type,
 	const pop_size_t base_workforce_size,
-	fixed_point_map_t<GoodDefinition const*>&& input_goods,
+	memory::fixed_point_map_t<GoodDefinition const*>&& input_goods,
 	GoodDefinition const* const output_good,
 	const fixed_point_t base_output_quantity,
 	memory::vector<ProductionType::bonus_t>&& bonuses,
-	fixed_point_map_t<GoodDefinition const*>&& maintenance_requirements,
+	memory::fixed_point_map_t<GoodDefinition const*>&& maintenance_requirements,
 	const bool is_coastal,
 	const bool is_farm,
 	const bool is_mine
@@ -258,8 +271,8 @@ bool ProductionTypeManager::load_production_types_file(
 	size_t expected_types = 0;
 
 	/* Pass #1: find and store template identifiers */
-	ordered_set<std::string_view> templates;
-	ordered_map<std::string_view, std::string_view> template_target_map;
+	memory::ordered_set<std::string_view> templates;
+	memory::ordered_map<std::string_view, std::string_view> template_target_map;
 	bool ret = expect_dictionary(
 		[this, &expected_types, &templates, &template_target_map, &template_symbol, &output_goods_symbol]
 		(std::string_view key, ast::NodeCPtr value) -> bool {
@@ -299,7 +312,7 @@ bool ProductionTypeManager::load_production_types_file(
 	)(parser.get_file_node());
 
 	/* Pass #2: create and populate the template map */
-	ordered_map<std::string_view, ast::NodeCPtr> template_node_map;
+	memory::ordered_map<std::string_view, ast::NodeCPtr> template_node_map;
 	ret &= expect_dictionary(
 		[this, &expected_types, &templates, &template_node_map](std::string_view key, ast::NodeCPtr value) -> bool {
 			if (templates.contains(key)) {
@@ -328,14 +341,14 @@ bool ProductionTypeManager::load_production_types_file(
 			ProductionType::template_type_t template_type { FACTORY };
 			GoodDefinition const* output_good = nullptr;
 			pop_size_t base_workforce_size = 0;
-			fixed_point_map_t<GoodDefinition const*> input_goods, maintenance_requirements;
+			memory::fixed_point_map_t<GoodDefinition const*> input_goods, maintenance_requirements;
 			fixed_point_t base_output_quantity = 0;
 			memory::vector<ProductionType::bonus_t> bonuses;
 			bool is_coastal = false, is_farm = false, is_mine = false;
 
 			bool ret = true;
 
-			static const string_map_t<ProductionType::template_type_t> template_type_map = {
+			static const memory::string_map_t<ProductionType::template_type_t> template_type_map = {
 				{ "factory", FACTORY }, { "rgo", RGO }, { "artisan", ARTISAN }
 			};
 

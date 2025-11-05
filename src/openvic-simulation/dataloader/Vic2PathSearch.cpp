@@ -1,18 +1,27 @@
+#include <algorithm>
+#include <concepts>
+#include <cstddef>
 #include <filesystem>
+#include <optional>
+#include <source_location>
+#include <string>
+#include <string_view>
+#include <type_traits>
+#include <variant>
 
 #include <openvic-dataloader/detail/CallbackOStream.hpp>
 
 #include <lexy-vdf/KeyValues.hpp>
 #include <lexy-vdf/Parser.hpp>
 
+#include <fmt/format.h>
 #include <fmt/std.h>
 
 #include <spdlog/common.h>
 
-#include "openvic-simulation/types/OrderedContainers.hpp"
-#include "openvic-simulation/utility/ConstexprIntToStr.hpp"
-#include "openvic-simulation/utility/Containers.hpp"
-#include "openvic-simulation/utility/Logger.hpp"
+#include "openvic-simulation/core/Logger.hpp"
+#include "openvic-simulation/core/memory/OrderedMap.hpp"
+#include "openvic-simulation/core/string/Utility.hpp"
 
 #include "Dataloader.hpp"
 
@@ -40,7 +49,7 @@ using namespace ovdl;
 // Windows and Mac by default act like case insensitive filesystems
 static constexpr bool path_equals(std::string_view lhs, std::string_view rhs) {
 #if defined(FILESYSTEM_CASE_INSENSITIVE)
-	return StringUtils::strings_equal_case_insensitive(lhs, rhs);
+	return OpenVic::strings_equal_case_insensitive(lhs, rhs);
 #else
 	return std::equal(lhs.begin(), lhs.end(), rhs.begin(), rhs.end());
 #endif
@@ -266,7 +275,7 @@ static fs::path _search_for_game_path(fs::path hint_path) {
 		}
 
 		// Array of strings contain "0" to std::to_string(max_amount_of_steam_libraries - 1)
-		static constexpr auto library_indexes = OpenVic::ConstexprIntToStr::make_itosv_array<max_amount_of_steam_libraries>();
+		static constexpr auto library_indexes = OpenVic::make_itosv_array<max_amount_of_steam_libraries>();
 
 		for (auto const& index : library_indexes) {
 			decltype(current_node) node = std::nullopt;
@@ -377,7 +386,7 @@ fs::path Dataloader::search_for_game_path(fs::path hint_path) {
 	};
 	using hint_path_t = fs::path;
 	using game_path_t = fs::path;
-	static ordered_map<hint_path_t, game_path_t, fshash> _cached_paths;
+	static memory::ordered_map<hint_path_t, game_path_t, fshash> _cached_paths;
 
 	auto it = _cached_paths.find(hint_path);
 	if (it != _cached_paths.end()) {

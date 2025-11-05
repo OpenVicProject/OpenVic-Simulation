@@ -1,12 +1,13 @@
 #pragma once
 
+#include "openvic-simulation/Alias.hpp"
+#include "openvic-simulation/core/container/HasIndex.hpp"
+#include "openvic-simulation/core/container/IdentifierRegistry.hpp"
+#include "openvic-simulation/core/memory/FixedPointMap.hpp"
+#include "openvic-simulation/core/memory/StringSet.hpp"
+#include "openvic-simulation/core/object/Date.hpp"
+#include "openvic-simulation/core/object/FixedPoint.hpp"
 #include "openvic-simulation/modifier/Modifier.hpp"
-#include "openvic-simulation/types/BuildingLevel.hpp"
-#include "openvic-simulation/types/Date.hpp"
-#include "openvic-simulation/types/HasIndex.hpp"
-#include "openvic-simulation/types/IdentifierRegistry.hpp"
-#include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
-#include "openvic-simulation/utility/Containers.hpp"
 
 namespace OpenVic {
 	struct GoodDefinition;
@@ -27,7 +28,7 @@ namespace OpenVic {
 			ModifierValue modifier;
 			fixed_point_t completion_size = 0, cost = 0, colonial_range = 0, infrastructure = 0;
 			building_level_t max_level = 0, fort_level = 0;
-			fixed_point_map_t<GoodDefinition const*> goods_cost;
+			memory::fixed_point_map_t<GoodDefinition const*> goods_cost;
 			Timespan build_time;
 			bool on_map = false, default_enabled = false, pop_build_factory = false, strategic_factory = false,
 				advanced_factory = false, in_province = false, one_per_state = false, spawn_railway_track = false,
@@ -45,7 +46,7 @@ namespace OpenVic {
 		memory::string PROPERTY(on_completion); // probably sound played on completion
 		fixed_point_t PROPERTY(completion_size);
 		building_level_t PROPERTY(max_level);
-		fixed_point_map_t<GoodDefinition const*> PROPERTY(goods_cost);
+		memory::fixed_point_map_t<GoodDefinition const*> PROPERTY(goods_cost);
 		fixed_point_t PROPERTY(cost);
 		Timespan PROPERTY(build_time); // time
 		bool PROPERTY(on_map); // onmap
@@ -80,7 +81,7 @@ namespace OpenVic {
 	struct BuildingTypeManager {
 	private:
 		IdentifierRegistry<BuildingType> IDENTIFIER_REGISTRY(building_type);
-		string_set_t PROPERTY(building_type_types);
+		memory::string_set_t PROPERTY(building_type_types);
 		memory::vector<BuildingType const*> PROPERTY(province_building_types);
 		BuildingType const* PROPERTY(port_building_type);
 

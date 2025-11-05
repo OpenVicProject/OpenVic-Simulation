@@ -1,5 +1,14 @@
 #include "Government.hpp"
 
+#include <algorithm>
+#include <cstddef>
+#include <string_view>
+#include <utility>
+
+#include <fmt/format.h>
+
+#include "openvic-simulation/core/Logger.hpp"
+#include "openvic-simulation/core/memory/StringSet.hpp"
 #include "openvic-simulation/politics/Ideology.hpp"
 
 using namespace OpenVic;
@@ -83,7 +92,7 @@ bool GovernmentTypeManager::load_government_types_file(IdeologyManager const& id
 				[this, &ideology_manager, &ideologies, government_type_identifier](
 					std::string_view key, ast::NodeCPtr value
 				) -> bool {
-					static const string_set_t reserved_keys = { "election", "duration", "appoint_ruling_party", "flagType" };
+					static const memory::string_set_t reserved_keys = { "election", "duration", "appoint_ruling_party", "flagType" };
 					if (reserved_keys.contains(key)) {
 						return true;
 					}

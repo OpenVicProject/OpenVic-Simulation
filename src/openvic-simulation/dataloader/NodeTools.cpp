@@ -2,9 +2,10 @@
 
 #include <charconv>
 #include <concepts>
-#include <string>
+#include <cstdint>
 #include <string_view>
 #include <system_error>
+#include <utility>
 
 #include <openvic-dataloader/detail/SymbolIntern.hpp>
 #include <openvic-dataloader/detail/Utility.hpp>
@@ -15,10 +16,12 @@
 #include <range/v3/iterator/operations.hpp>
 #include <range/v3/view/enumerate.hpp>
 
-#include "openvic-simulation/types/Colour.hpp"
-#include "openvic-simulation/types/TextFormat.hpp"
-#include "openvic-simulation/types/Vector.hpp"
-#include "openvic-simulation/utility/Getters.hpp"
+#include "openvic-simulation/core/Logger.hpp"
+#include "openvic-simulation/core/Typedefs.hpp"
+#include "openvic-simulation/core/memory/StringMap.hpp"
+#include "openvic-simulation/core/object/Colour.hpp"
+#include "openvic-simulation/core/object/Vector.hpp"
+#include "openvic-simulation/core/ui/TextFormat.hpp"
 
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;
@@ -36,10 +39,10 @@ static NodeCallback auto _expect_type(Callback<T const*> auto&& callback) {
 			}
 			spdlog::error_s(
 				"Invalid node type {} when expecting {}",
-				ast::get_type_name(node->kind()), utility::type_name<T>()
+				ast::get_type_name(node->kind()), type_name<T>()
 			);
 		} else {
-			spdlog::error_s("Null node when expecting {}", utility::type_name<T>());
+			spdlog::error_s("Null node when expecting {}", type_name<T>());
 		}
 		return false;
 	};
@@ -59,12 +62,12 @@ static NodeCallback auto _abstract_statement_node_callback(Callback<_NodeStateme
 			}
 			spdlog::error_s(
 				"Invalid node type {} when expecting {} or {}",
-				ast::get_type_name(node->kind()), utility::type_name<ast::FileTree>(), utility::type_name<ast::ListValue>()
+				ast::get_type_name(node->kind()), type_name<ast::FileTree>(), type_name<ast::ListValue>()
 			);
 		} else {
 			spdlog::error_s(
 				"Null node when expecting {} or {}",
-				utility::type_name<ast::FileTree>(), utility::type_name<ast::ListValue>()
+				type_name<ast::FileTree>(), type_name<ast::ListValue>()
 			);
 		}
 		return false;
@@ -122,12 +125,12 @@ node_callback_t NodeTools::expect_identifier_or_string(callback_t<std::string_vi
 			}
 			spdlog::error_s(
 				"Invalid node type {} when expecting {} or {}",
-				ast::get_type_name(node->kind()), utility::type_name<ast::IdentifierValue>(), utility::type_name<ast::StringValue>()
+				ast::get_type_name(node->kind()), type_name<ast::IdentifierValue>(), type_name<ast::StringValue>()
 			);
 		} else {
 			spdlog::error_s(
 				"Null node when expecting {} or {}",
-				utility::type_name<ast::IdentifierValue>(), utility::type_name<ast::StringValue>()
+				type_name<ast::IdentifierValue>(), type_name<ast::StringValue>()
 			);
 		}
 		return false;
@@ -135,7 +138,7 @@ node_callback_t NodeTools::expect_identifier_or_string(callback_t<std::string_vi
 }
 
 node_callback_t NodeTools::expect_bool(callback_t<bool> callback) {
-	static const case_insensitive_string_map_t<bool> bool_map { { "yes", true }, { "no", false } };
+	static const memory::case_insensitive_string_map_t<bool> bool_map { { "yes", true }, { "no", false } };
 	return expect_identifier(expect_mapped_string(bool_map, callback));
 }
 
@@ -151,7 +154,7 @@ node_callback_t NodeTools::expect_int_bool(callback_t<bool> callback) {
 node_callback_t NodeTools::expect_int64(callback_t<int64_t> callback, int base) {
 	return expect_identifier([callback, base](std::string_view identifier) mutable -> bool {
 		int64_t val;
-		std::from_chars_result result = StringUtils::string_to_int64(identifier, val, base);
+		std::from_chars_result result = OpenVic::string_to_int64(identifier, val, base);
 		if (result.ec == std::errc{}) {
 			return callback(val);
 		}
@@ -163,7 +166,7 @@ node_callback_t NodeTools::expect_int64(callback_t<int64_t> callback, int base) 
 node_callback_t NodeTools::expect_uint64(callback_t<uint64_t> callback, int base) {
 	return expect_identifier([callback, base](std::string_view identifier) mutable -> bool {
 		uint64_t val;
-		std::from_chars_result result = StringUtils::string_to_uint64(identifier, val, base);
+		std::from_chars_result result = OpenVic::string_to_uint64(identifier, val, base);
 		if (result.ec == std::errc{}) {
 			return callback(val);
 		}
@@ -284,7 +287,7 @@ NodeCallback auto _expect_vec2(Callback<vec2_t<T>> auto&& callback) {
 node_callback_t NodeTools::expect_text_format(callback_t<text_format_t> callback) {
 	using enum text_format_t;
 
-	static const string_map_t<text_format_t> format_map = {
+	static const memory::string_map_t<text_format_t> format_map = {
 		{ "left",  left },
 		{ "right", right },
 		{ "centre", centre },

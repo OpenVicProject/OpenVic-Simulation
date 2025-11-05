@@ -1,6 +1,9 @@
 #include "ModifierValue.hpp"
 
-#include "openvic-simulation/utility/TslHelper.hpp"
+#include <ostream>
+
+#include "openvic-simulation/core/container/MutableIterator.hpp"
+#include "openvic-simulation/core/object/FixedPoint.hpp"
 
 using namespace OpenVic;
 

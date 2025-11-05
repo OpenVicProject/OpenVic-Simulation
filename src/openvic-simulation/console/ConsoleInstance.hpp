@@ -1,18 +1,20 @@
 #pragma once
 
+#include <cstdint>
 #include <optional>
 #include <span>
 #include <string_view>
+#include <utility>
 
+#include <fmt/base.h>
 #include <fmt/color.h>
-#include <fmt/core.h>
 
-#include "openvic-simulation/types/Colour.hpp"
-#include "openvic-simulation/types/Date.hpp"
-#include "openvic-simulation/types/FunctionRef.hpp"
-#include "openvic-simulation/types/OrderedContainers.hpp"
-#include "openvic-simulation/utility/Containers.hpp"
-#include "openvic-simulation/utility/Getters.hpp"
+#include "openvic-simulation/core/Property.hpp"
+#include "openvic-simulation/core/container/FunctionRef.hpp"
+#include "openvic-simulation/core/memory/Format.hpp"
+#include "openvic-simulation/core/memory/StringMap.hpp"
+#include "openvic-simulation/core/object/Colour.hpp"
+#include "openvic-simulation/core/object/Date.hpp"
 
 #include <function2/function2.hpp>
 
@@ -99,7 +101,7 @@ namespace OpenVic {
 		Technology const* validate_tech_name(std::string_view value_string);
 
 	private:
-		string_map_t<execute_command_func_t> commands;
+		memory::string_map_t<execute_command_func_t> commands;
 
 		write_func_t write_func;
 

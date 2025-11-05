@@ -1,7 +1,7 @@
 #pragma once
 
 #include "openvic-simulation/pathfinding/PathingBase.hpp"
-#include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
+#include "openvic-simulation/core/object/FixedPoint.hpp"
 
 namespace OpenVic {
 	struct FringePathingNode final : public PathingNodeBase<FringePathingNode> {

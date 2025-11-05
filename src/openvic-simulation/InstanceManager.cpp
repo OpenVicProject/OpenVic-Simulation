@@ -2,7 +2,7 @@
 
 #include "openvic-simulation/DefinitionManager.hpp"
 #include "openvic-simulation/console/ConsoleInstance.hpp"
-#include "openvic-simulation/utility/Logger.hpp"
+#include "openvic-simulation/core/Logger.hpp"
 
 using namespace OpenVic;
 

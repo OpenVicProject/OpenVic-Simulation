@@ -1,8 +1,13 @@
 #pragma once
 
+#include <cstdint>
+#include <string_view>
+
+#include "openvic-simulation/core/container/HasIdentifier.hpp"
+#include "openvic-simulation/core/container/HasIdentifierAndColour.hpp"
+#include "openvic-simulation/core/container/IdentifierRegistry.hpp"
+#include "openvic-simulation/core/object/Colour.hpp"
 #include "openvic-simulation/dataloader/NodeTools.hpp"
-#include "openvic-simulation/types/HasIdentifier.hpp"
-#include "openvic-simulation/types/IdentifierRegistry.hpp"
 
 namespace OpenVic {
 	struct ReligionGroup : HasIdentifier {

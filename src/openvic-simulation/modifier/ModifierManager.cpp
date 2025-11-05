@@ -1,14 +1,18 @@
 #include "ModifierManager.hpp"
 
+#include <cstdint>
+#include <string_view>
 #include <utility>
 
+#include "openvic-simulation/core/Logger.hpp"
+#include "openvic-simulation/core/memory/Format.hpp"
+#include "openvic-simulation/core/memory/String.hpp"
 #include "openvic-simulation/dataloader/NodeTools.hpp"
 #include "openvic-simulation/modifier/Modifier.hpp"
 #include "openvic-simulation/modifier/ModifierEffect.hpp"
 
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;
-using namespace OpenVic::StringUtils;
 
 using enum ModifierEffect::target_t;
 

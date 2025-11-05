@@ -1,12 +1,14 @@
 #include "PopsAggregate.hpp"
 
+#include <range/v3/view/transform.hpp>
+
+#include "openvic-simulation/core/memory/OrderedMap.hpp"
+#include "openvic-simulation/core/object/FixedPoint.hpp"
 #include "openvic-simulation/country/CountryDefinition.hpp"
 #include "openvic-simulation/country/CountryInstance.hpp"
 #include "openvic-simulation/politics/Ideology.hpp"
 #include "openvic-simulation/pop/Pop.hpp"
 #include "openvic-simulation/pop/PopType.hpp"
-#include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
-#include "openvic-simulation/types/OrderedContainersMath.hpp"
 
 using namespace OpenVic;
 PopsAggregate::PopsAggregate(
@@ -205,7 +207,7 @@ void PopsAggregate::update_parties_for_votes(CountryDefinition const* country_de
 		return;
 	}
 
-	auto view = country_definition->get_parties() | std::views::transform(
+	auto view = country_definition->get_parties() | ranges::views::transform(
 		[](CountryParty const& key) {
 			return std::make_pair(&key, fixed_point_t::_0);
 		}

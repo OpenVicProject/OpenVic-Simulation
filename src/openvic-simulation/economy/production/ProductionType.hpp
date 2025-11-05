@@ -2,13 +2,12 @@
 
 #include <openvic-dataloader/v2script/Parser.hpp>
 
+#include "openvic-simulation/Alias.hpp"
+#include "openvic-simulation/core/container/IdentifierRegistry.hpp"
+#include "openvic-simulation/core/container/IndexedFlatMap.hpp"
+#include "openvic-simulation/core/memory/FixedPointMap.hpp"
+#include "openvic-simulation/core/object/FixedPoint.hpp"
 #include "openvic-simulation/scripts/ConditionScript.hpp"
-#include "openvic-simulation/types/IdentifierRegistry.hpp"
-#include "openvic-simulation/types/IndexedFlatMap.hpp"
-#include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
-#include "openvic-simulation/types/PopSize.hpp"
-#include "openvic-simulation/types/PopSprite.hpp"
-#include "openvic-simulation/utility/Containers.hpp"
 
 namespace OpenVic {
 	struct GameRulesManager;
@@ -56,12 +55,12 @@ namespace OpenVic {
 		const template_type_t PROPERTY(template_type);
 		const pop_size_t PROPERTY(base_workforce_size);
 
-		fixed_point_map_t<GoodDefinition const*> PROPERTY(input_goods);
+		memory::fixed_point_map_t<GoodDefinition const*> PROPERTY(input_goods);
 		GoodDefinition const& PROPERTY(output_good);
 		const fixed_point_t PROPERTY(base_output_quantity);
 		memory::vector<bonus_t> PROPERTY(bonuses);
 
-		fixed_point_map_t<GoodDefinition const*> PROPERTY(maintenance_requirements);
+		memory::fixed_point_map_t<GoodDefinition const*> PROPERTY(maintenance_requirements);
 		const bool PROPERTY_CUSTOM_PREFIX(coastal, is);
 		const bool _is_farm, _is_mine;
 		bool parse_scripts(DefinitionManager const& definition_manager);
@@ -74,11 +73,11 @@ namespace OpenVic {
 			memory::vector<Job>&& new_jobs,
 			const template_type_t new_template_type,
 			const pop_size_t new_base_workforce_size,
-			fixed_point_map_t<GoodDefinition const*>&& new_input_goods,
+			memory::fixed_point_map_t<GoodDefinition const*>&& new_input_goods,
 			GoodDefinition const& new_output_good,
 			const fixed_point_t new_base_output_quantity,
 			memory::vector<bonus_t>&& new_bonuses,
-			fixed_point_map_t<GoodDefinition const*>&& new_maintenance_requirements,
+			memory::fixed_point_map_t<GoodDefinition const*>&& new_maintenance_requirements,
 			const bool new_is_coastal,
 			const bool new_is_farm,
 			const bool new_is_mine
@@ -124,11 +123,11 @@ namespace OpenVic {
 			memory::vector<Job>&& jobs,
 			const ProductionType::template_type_t template_type,
 			const pop_size_t base_workforce_size,
-			fixed_point_map_t<GoodDefinition const*>&& input_goods,
+			memory::fixed_point_map_t<GoodDefinition const*>&& input_goods,
 			GoodDefinition const* const output_good,
 			const fixed_point_t base_output_quantity,
 			memory::vector<ProductionType::bonus_t>&& bonuses,
-			fixed_point_map_t<GoodDefinition const*>&& maintenance_requirements,
+			memory::fixed_point_map_t<GoodDefinition const*>&& maintenance_requirements,
 			const bool is_coastal,
 			const bool is_farm,
 			const bool is_mine

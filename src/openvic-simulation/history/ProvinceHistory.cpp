@@ -1,11 +1,23 @@
 #include "ProvinceHistory.hpp"
 
-#include "openvic-simulation/dataloader/NodeTools.hpp"
+#include <cstdint>
+#include <span>
+#include <string_view>
+#include <utility>
+
+#include <spdlog/spdlog.h>
+
+#include "openvic-simulation/Alias.hpp"
 #include "openvic-simulation/DefinitionManager.hpp"
+#include "openvic-simulation/core/Logger.hpp"
+#include "openvic-simulation/core/memory/StringMap.hpp"
+#include "openvic-simulation/core/memory/UniquePtr.hpp"
+#include "openvic-simulation/core/memory/Vector.hpp"
+#include "openvic-simulation/core/object/FixedPoint.hpp"
+#include "openvic-simulation/core/template/ContainerHash.hpp"
+#include "openvic-simulation/dataloader/NodeTools.hpp"
 #include "openvic-simulation/economy/GoodDefinition.hpp"
 #include "openvic-simulation/map/ProvinceDefinition.hpp"
-#include "openvic-simulation/utility/Logger.hpp"
-#include "openvic-simulation/utility/Containers.hpp"
 
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;
@@ -30,7 +42,7 @@ bool ProvinceHistoryMap::_load_history_entry(
 	TerrainTypeManager const& terrain_type_manager = definition_manager.get_map_definition().get_terrain_type_manager();
 
 	using enum colony_status_t;
-	static const string_map_t<colony_status_t> colony_status_map {
+	static const memory::string_map_t<colony_status_t> colony_status_map {
 		{ "0", STATE }, { "1", PROTECTORATE }, { "2", COLONY }
 	};
 

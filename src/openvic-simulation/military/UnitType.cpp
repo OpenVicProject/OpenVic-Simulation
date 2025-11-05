@@ -1,11 +1,20 @@
 #include "UnitType.hpp"
 
+#include <cstddef>
+#include <string_view>
+#include <utility>
+
+#include <openvic-dataloader/detail/SymbolIntern.hpp>
+#include <openvic-dataloader/v2script/Parser.hpp>
+
+#include "openvic-simulation/core/Logger.hpp"
+#include "openvic-simulation/core/memory/StringMap.hpp"
 #include "openvic-simulation/country/CountryInstance.hpp"
 #include "openvic-simulation/dataloader/NodeTools.hpp"
 #include "openvic-simulation/map/TerrainType.hpp"
+#include "openvic-simulation/modifier/ModifierEffectCache.hpp"
 #include "openvic-simulation/modifier/ModifierManager.hpp"
-#include "modifier/ModifierEffectCache.hpp"
-#include "types/UnitBranchType.hpp"
+#include "openvic-simulation/types/UnitBranchType.hpp"
 
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;
@@ -181,7 +190,7 @@ bool UnitTypeManager::load_unit_type_file(
 	ModifierManager const& modifier_manager, ovdl::v2script::Parser const& parser
 ) {
 	using namespace std::string_view_literals;
-	auto type_symbol = parser.find_intern("type"sv);
+	ovdl::symbol<char> type_symbol = parser.find_intern("type"sv);
 	if (!type_symbol) {
 		spdlog::error_s("type could not be interned.");
 	}
@@ -203,7 +212,7 @@ bool UnitTypeManager::load_unit_type_file(
 
 		UnitType::unit_type_args_t unit_args {};
 
-		static const string_map_t<UnitType::unit_category_t> unit_type_map {
+		static const memory::string_map_t<UnitType::unit_category_t> unit_type_map {
 			{ "infantry", INFANTRY },
 			{ "cavalry", CAVALRY },
 			{ "support", SUPPORT },

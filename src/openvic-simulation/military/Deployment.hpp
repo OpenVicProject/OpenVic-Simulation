@@ -3,13 +3,14 @@
 #include <optional>
 #include <string_view>
 
+#include "openvic-simulation/core/Property.hpp"
+#include "openvic-simulation/core/container/HasIdentifier.hpp"
+#include "openvic-simulation/core/container/IdentifierRegistry.hpp"
+#include "openvic-simulation/core/memory/StringSet.hpp"
+#include "openvic-simulation/core/memory/Vector.hpp"
 #include "openvic-simulation/military/Leader.hpp"
 #include "openvic-simulation/military/UnitBranchedGetterMacro.hpp"
-#include "openvic-simulation/types/HasIdentifier.hpp"
-#include "openvic-simulation/types/IdentifierRegistry.hpp"
 #include "openvic-simulation/types/UnitBranchType.hpp"
-#include "openvic-simulation/utility/Containers.hpp"
-#include "openvic-simulation/utility/Getters.hpp"
 
 namespace OpenVic {
 	class Dataloader;
@@ -95,7 +96,7 @@ namespace OpenVic {
 	struct DeploymentManager {
 	private:
 		IdentifierRegistry<Deployment> IDENTIFIER_REGISTRY(deployment);
-		string_set_t missing_oob_files;
+		memory::string_set_t missing_oob_files;
 
 	public:
 		bool add_deployment(

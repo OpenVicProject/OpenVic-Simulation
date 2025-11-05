@@ -1,12 +1,20 @@
 #include "GoodMarket.hpp"
 
+#include <algorithm>
+#include <cstddef>
+#include <mutex>
+#include <span>
+#include <utility>
+
+#include "openvic-simulation/core/container/IndexedFlatMap.hpp"
+#include "openvic-simulation/core/memory/Vector.hpp"
+#include "openvic-simulation/core/object/FixedPoint.hpp"
+#include "openvic-simulation/core/portable/ForwardableSpan.hpp"
 #include "openvic-simulation/country/CountryInstance.hpp"
 #include "openvic-simulation/economy/GoodDefinition.hpp"
 #include "openvic-simulation/economy/trading/BuyUpToOrder.hpp"
 #include "openvic-simulation/economy/trading/MarketSellOrder.hpp"
 #include "openvic-simulation/misc/GameRulesManager.hpp"
-#include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
-#include "openvic-simulation/utility/Containers.hpp"
 
 using namespace OpenVic;
 static constexpr size_t MONTHS_OF_PRICE_HISTORY = 36;
@@ -68,7 +76,7 @@ void GoodMarket::add_market_sell_order(GoodMarketSellOrder&& market_sell_order) 
 void GoodMarket::execute_orders(
 	IndexedFlatMap<CountryInstance, fixed_point_t>& reusable_country_map_0,
 	IndexedFlatMap<CountryInstance, fixed_point_t>& reusable_country_map_1,
-	utility::forwardable_span<
+	forwardable_span<
 		memory::vector<fixed_point_t>,
 		VECTORS_FOR_EXECUTE_ORDERS
 	> reusable_vectors

@@ -1,7 +1,7 @@
 #pragma once
 
 #include "openvic-simulation/politics/BaseIssue.hpp"
-#include "openvic-simulation/types/HasIndex.hpp"
+#include "openvic-simulation/core/container/HasIndex.hpp"
 
 namespace OpenVic {
 	struct PartyPolicy;

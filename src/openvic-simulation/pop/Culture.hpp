@@ -1,8 +1,18 @@
 #pragma once
 
-#include "openvic-simulation/types/IdentifierRegistry.hpp"
+#include <cstdint>
+#include <string_view>
+#include <utility>
+
+#include "openvic-simulation/core/container/HasIdentifier.hpp"
+#include "openvic-simulation/core/container/HasIdentifierAndColour.hpp"
+#include "openvic-simulation/core/container/IdentifierRegistry.hpp"
+#include "openvic-simulation/core/memory/String.hpp"
+#include "openvic-simulation/core/memory/StringMap.hpp"
+#include "openvic-simulation/core/object/Colour.hpp"
+#include "openvic-simulation/core/object/FixedPoint.hpp"
+#include "openvic-simulation/dataloader/NodeTools.hpp"
 #include "openvic-simulation/types/UnitBranchType.hpp"
-#include "openvic-simulation/types/HasIdentifier.hpp"
 
 namespace OpenVic {
 	struct CultureManager;
@@ -72,7 +82,7 @@ namespace OpenVic {
 
 		using general_admiral_picture_count_t = std::pair<leader_count_t, leader_count_t>;
 		// Cultural type string maps to (general picture count, admiral picture count) pair
-		string_map_t<general_admiral_picture_count_t> leader_picture_counts;
+		memory::string_map_t<general_admiral_picture_count_t> leader_picture_counts;
 
 		bool _load_culture_group(
 			CountryDefinitionManager const& country_definition_manager, size_t& total_expected_cultures,

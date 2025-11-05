@@ -1,13 +1,14 @@
 #pragma once
 
+#include "openvic-simulation/core/memory/FixedPointMap.hpp"
+#include "openvic-simulation/core/object/FixedPoint.hpp"
 #include "openvic-simulation/modifier/ModifierEffect.hpp"
-#include "openvic-simulation/types/fixed_point/FixedPointMap.hpp"
 
 namespace OpenVic {
 	struct ModifierValue {
 		friend struct ModifierManager;
 
-		using effect_map_t = fixed_point_map_t<ModifierEffect const*>;
+		using effect_map_t = memory::fixed_point_map_t<ModifierEffect const*>;
 
 	private:
 		effect_map_t PROPERTY(values);

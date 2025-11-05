@@ -1,5 +1,18 @@
 #include "State.hpp"
 
+#include <algorithm>
+#include <cstdint>
+#include <utility>
+
+#include <spdlog/spdlog.h>
+
+#include "openvic-simulation/core/FormatValidate.hpp"
+#include "openvic-simulation/core/error/ErrorMacros.hpp"
+#include "openvic-simulation/core/memory/Format.hpp"
+#include "openvic-simulation/core/memory/String.hpp"
+#include "openvic-simulation/core/memory/Vector.hpp"
+#include "openvic-simulation/core/object/FixedPoint.hpp"
+#include "openvic-simulation/core/portable/ForwardableSpan.hpp"
 #include "openvic-simulation/country/CountryInstance.hpp"
 #include "openvic-simulation/map/MapDefinition.hpp"
 #include "openvic-simulation/map/MapInstance.hpp"
@@ -7,10 +20,6 @@
 #include "openvic-simulation/map/Region.hpp"
 #include "openvic-simulation/pop/Pop.hpp"
 #include "openvic-simulation/pop/PopType.hpp"
-#include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
-#include "openvic-simulation/utility/StringUtils.hpp"
-#include "openvic-simulation/utility/Containers.hpp"
-#include "openvic-simulation/utility/ErrorMacros.hpp"
 
 using namespace OpenVic;
 
@@ -19,9 +28,9 @@ State::State(
 	ProvinceInstance* new_capital,
 	memory::vector<ProvinceInstance*>&& new_provinces,
 	colony_status_t new_colony_status,
-	utility::forwardable_span<const Strata> strata_keys,
-	utility::forwardable_span<const PopType> pop_type_keys,
-	utility::forwardable_span<const Ideology> ideology_keys
+	forwardable_span<const Strata> strata_keys,
+	forwardable_span<const PopType> pop_type_keys,
+	forwardable_span<const Ideology> ideology_keys
 ) : PopsAggregate { strata_keys, pop_type_keys, ideology_keys },
 	state_set { new_state_set },
 	capital { new_capital },
@@ -134,9 +143,9 @@ void StateSet::update_gamestate() {
 
 bool StateManager::add_state_set(
 	MapInstance& map_instance, Region const& region,
-	utility::forwardable_span<const Strata> strata_keys,
-	utility::forwardable_span<const PopType> pop_type_keys,
-	utility::forwardable_span<const Ideology> ideology_keys
+	forwardable_span<const Strata> strata_keys,
+	forwardable_span<const PopType> pop_type_keys,
+	forwardable_span<const Ideology> ideology_keys
 ) {
 	OV_ERR_FAIL_COND_V_MSG(region.get_is_meta(), false, memory::fmt::format("Cannot use meta region \"{}\" as state template!", region));
 	OV_ERR_FAIL_COND_V_MSG(region.empty(), false, memory::fmt::format("Cannot use empty region \"{}\" as state template!", region));
@@ -191,9 +200,9 @@ bool StateManager::add_state_set(
 
 bool StateManager::generate_states(
 	MapInstance& map_instance,
-	utility::forwardable_span<const Strata> strata_keys,
-	utility::forwardable_span<const PopType> pop_type_keys,
-	utility::forwardable_span<const Ideology> ideology_keys
+	forwardable_span<const Strata> strata_keys,
+	forwardable_span<const PopType> pop_type_keys,
+	forwardable_span<const Ideology> ideology_keys
 ) {
 	MapDefinition const& map_definition = map_instance.get_map_definition();
 

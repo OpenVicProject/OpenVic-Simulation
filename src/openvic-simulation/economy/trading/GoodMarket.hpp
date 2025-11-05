@@ -2,13 +2,12 @@
 
 #include <mutex>
 
+#include "openvic-simulation/core/container/IndexedFlatMap.hpp"
+#include "openvic-simulation/core/container/ValueHistory.hpp"
+#include "openvic-simulation/core/object/FixedPoint.hpp"
+#include "openvic-simulation/core/portable/ForwardableSpan.hpp"
 #include "openvic-simulation/economy/trading/BuyUpToOrder.hpp"
 #include "openvic-simulation/economy/trading/MarketSellOrder.hpp"
-#include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
-#include "openvic-simulation/types/IndexedFlatMap.hpp"
-#include "openvic-simulation/types/ValueHistory.hpp"
-#include "openvic-simulation/utility/Containers.hpp"
-#include "openvic-simulation/utility/ForwardableSpan.hpp"
 
 namespace OpenVic {
 	struct CountryInstance;
@@ -68,7 +67,7 @@ namespace OpenVic {
 		void execute_orders(
 			IndexedFlatMap<CountryInstance, fixed_point_t>& reusable_country_map_0,
 			IndexedFlatMap<CountryInstance, fixed_point_t>& reusable_country_map_1,
-			utility::forwardable_span<
+			forwardable_span<
 				memory::vector<fixed_point_t>,
 				VECTORS_FOR_EXECUTE_ORDERS
 			> reusable_vectors

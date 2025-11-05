@@ -2,10 +2,10 @@
 
 #include <string_view>
 
+#include "openvic-simulation/core/Property.hpp"
+#include "openvic-simulation/core/object/Date.hpp"
 #include "openvic-simulation/modifier/ModifierValue.hpp"
 #include "openvic-simulation/scripts/ConditionScript.hpp"
-#include "openvic-simulation/types/Date.hpp"
-#include "openvic-simulation/utility/Getters.hpp"
 
 namespace OpenVic {
 	struct UnitType;

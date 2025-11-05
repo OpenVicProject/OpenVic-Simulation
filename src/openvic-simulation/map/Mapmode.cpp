@@ -1,5 +1,12 @@
 #include "Mapmode.hpp"
 
+#include <string_view>
+#include <utility>
+
+#include "openvic-simulation/Alias.hpp"
+#include "openvic-simulation/core/Logger.hpp"
+#include "openvic-simulation/core/memory/OrderedMap.hpp"
+#include "openvic-simulation/core/object/Colour.hpp"
 #include "openvic-simulation/country/CountryInstance.hpp"
 #include "openvic-simulation/economy/BuildingType.hpp"
 #include "openvic-simulation/map/MapDefinition.hpp"
@@ -8,8 +15,6 @@
 #include "openvic-simulation/map/ProvinceInstance.hpp"
 #include "openvic-simulation/pop/Culture.hpp"
 #include "openvic-simulation/pop/Religion.hpp"
-#include "openvic-simulation/types/OrderedContainersMath.hpp"
-#include "openvic-simulation/types/PopSize.hpp"
 
 using namespace OpenVic;
 using namespace OpenVic::colour_literals;
@@ -165,14 +170,14 @@ static constexpr auto get_colour_mapmode(
 
 template<has_get_colour KeyType, typename ValueType>
 static constexpr Mapmode::base_stripe_t shaded_mapmode(
-	ordered_map<KeyType const*, ValueType> const& map
+	memory::ordered_map<KeyType const*, ValueType> const& map
 ) {
-	const auto largest = get_largest_two_items(map);
+	const auto largest = memory::get_largest_two_items(map);
 	if (largest.first != map.end()) {
 		const colour_argb_t base_colour = colour_argb_t { largest.first->first->get_colour(), ALPHA_VALUE };
 		if (largest.second != map.end()) {
 			/* If second largest is at least a third... */
-			if (largest.second->second * 3 >= get_total(map)) {
+			if (largest.second->second * 3 >= memory::get_total(map)) {
 				const colour_argb_t stripe_colour = colour_argb_t { largest.second->first->get_colour(), ALPHA_VALUE };
 				return { base_colour, stripe_colour };
 			}
@@ -183,7 +188,7 @@ static constexpr Mapmode::base_stripe_t shaded_mapmode(
 }
 
 template<has_get_colour KeyType, typename ValueType>
-static constexpr auto shaded_mapmode(ordered_map<KeyType const*, ValueType> const&(ProvinceInstance::*get_map)() const) {
+static constexpr auto shaded_mapmode(memory::ordered_map<KeyType const*, ValueType> const&(ProvinceInstance::*get_map)() const) {
 	return [get_map](
 		MapInstance const& map_instance, ProvinceInstance const& province,
 		CountryInstance const* player_country, ProvinceInstance const* selected_province

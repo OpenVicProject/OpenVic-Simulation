@@ -1,9 +1,9 @@
 #pragma once
 
+#include "openvic-simulation/core/container/IndexedFlatMap.hpp"
+#include "openvic-simulation/core/object/FixedPoint.hpp"
+#include "openvic-simulation/core/reactive/MutableState.hpp"
 #include "openvic-simulation/pop/PopNeedsMacro.hpp"
-#include "openvic-simulation/types/IndexedFlatMap.hpp"
-#include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
-#include "openvic-simulation/utility/reactive/MutableState.hpp"
 
 namespace OpenVic {
 	struct CountryInstanceManager;

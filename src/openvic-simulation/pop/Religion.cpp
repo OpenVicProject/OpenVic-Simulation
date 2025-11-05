@@ -1,6 +1,8 @@
 #include "Religion.hpp"
 
-#include "openvic-simulation/types/Colour.hpp"
+#include "openvic-simulation/core/Logger.hpp"
+#include "openvic-simulation/core/object/Colour.hpp"
+#include "openvic-simulation/dataloader/NodeTools.hpp"
 
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;

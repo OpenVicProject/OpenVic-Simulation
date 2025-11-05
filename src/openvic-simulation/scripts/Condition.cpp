@@ -1,10 +1,21 @@
 #include "Condition.hpp"
 
+#include <cstdint>
+#include <string_view>
+#include <utility>
+
+#include <openvic-dataloader/v2script/AbstractSyntaxTree.hpp>
+
+#include <dryad/node.hpp>
+
 #include <fmt/format.h>
 
-#include "openvic-simulation/dataloader/NodeTools.hpp"
 #include "openvic-simulation/DefinitionManager.hpp"
-#include "openvic-simulation/utility/Containers.hpp"
+#include "openvic-simulation/core/Logger.hpp"
+#include "openvic-simulation/core/container/HasIdentifier.hpp"
+#include "openvic-simulation/core/memory/StringSet.hpp"
+#include "openvic-simulation/core/memory/Vector.hpp"
+#include "openvic-simulation/dataloader/NodeTools.hpp"
 
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;
@@ -475,7 +486,7 @@ callback_t<std::string_view> ConditionManager::expect_parse_identifier(
 					return callback(identified); \
 				} __VA_OPT__(else { \
 					/* TODO: the set is just a placeholder for actual logic */ \
-					static const case_insensitive_string_set_t chances { __VA_ARGS__ }; \
+					static const memory::case_insensitive_string_set_t chances { __VA_ARGS__ }; \
 					if (chances.contains(identifier)) { \
 						return true; \
 					} \

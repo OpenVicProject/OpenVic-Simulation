@@ -1,7 +1,18 @@
 #include "UnitInstanceGroup.hpp"
 
+#include <algorithm>
+#include <cstdint>
+#include <string_view>
 #include <vector>
 
+#include "openvic-simulation/Alias.hpp"
+#include "openvic-simulation/core/FormatValidate.hpp"
+#include "openvic-simulation/core/Logger.hpp"
+#include "openvic-simulation/core/memory/FixedPointMap.hpp"
+#include "openvic-simulation/core/memory/OrderedMap.hpp"
+#include "openvic-simulation/core/memory/Vector.hpp"
+#include "openvic-simulation/core/object/FixedPoint.hpp"
+#include "openvic-simulation/core/string/Utility.hpp"
 #include "openvic-simulation/country/CountryInstance.hpp"
 #include "openvic-simulation/defines/MilitaryDefines.hpp"
 #include "openvic-simulation/map/MapInstance.hpp"
@@ -9,9 +20,7 @@
 #include "openvic-simulation/military/Deployment.hpp"
 #include "openvic-simulation/military/LeaderTrait.hpp"
 #include "openvic-simulation/pop/Culture.hpp"
-#include "openvic-simulation/types/OrderedContainersMath.hpp"
-#include "openvic-simulation/utility/Containers.hpp"
-#include "openvic-simulation/utility/FormatValidate.hpp"
+#include "openvic-simulation/types/UnitBranchType.hpp"
 
 using namespace OpenVic;
 
@@ -62,14 +71,14 @@ UnitType const* UnitInstanceGroup::get_display_unit_type() const {
 		return nullptr;
 	}
 
-	fixed_point_map_t<UnitType const*> weighted_unit_types;
+	memory::fixed_point_map_t<UnitType const*> weighted_unit_types;
 
 	for (UnitInstance const* unit : units) {
 		UnitType const& unit_type = unit->get_unit_type();
 		weighted_unit_types[&unit_type] += unit_type.get_weighted_value();
 	}
 
-	return get_largest_item_tie_break(
+	return memory::get_largest_item_tie_break(
 		weighted_unit_types,
 		[](UnitType const* lhs, UnitType const* rhs) -> bool {
 			return lhs->get_weighted_value() < rhs->get_weighted_value();
@@ -502,7 +511,7 @@ bool UnitInstanceManager::create_leader(
 				connector = " ";
 			}
 
-			name_storage = StringUtils::append_string_views(first_name, connector, last_name);
+			name_storage = OpenVic::append_string_views(first_name, connector, last_name);
 			name = name_storage;
 		}
 	}

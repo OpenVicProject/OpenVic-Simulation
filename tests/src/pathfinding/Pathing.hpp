@@ -1,12 +1,13 @@
 #pragma once
 
+#include <cmath>
 #include <random>
 
-#include <fmt/core.h>
+#include <fmt/format.h>
 
+#include "openvic-simulation/core/memory/Vector.hpp"
+#include "openvic-simulation/core/object/Vector.hpp"
 #include "openvic-simulation/pathfinding/PointMap.hpp"
-#include "openvic-simulation/types/Vector.hpp"
-#include "openvic-simulation/utility/Containers.hpp"
 
 #include "Helper.hpp"
 #include <snitch/snitch_macros_misc.hpp>

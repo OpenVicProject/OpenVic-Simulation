@@ -1,8 +1,12 @@
 #pragma once
 
+#include <string_view>
+
+#include "openvic-simulation/core/container/HasColour.hpp"
+#include "openvic-simulation/core/container/HasIdentifier.hpp"
+#include "openvic-simulation/core/memory/Vector.hpp"
 #include "openvic-simulation/modifier/Modifier.hpp"
 #include "openvic-simulation/politics/Rule.hpp"
-#include "openvic-simulation/types/HasIdentifier.hpp"
 
 namespace OpenVic {
 	struct BaseIssueGroup;

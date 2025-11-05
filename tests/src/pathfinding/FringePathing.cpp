@@ -1,9 +1,9 @@
 #include "openvic-simulation/pathfinding/FringePathing.hpp"
 
+#include "openvic-simulation/core/memory/Vector.hpp"
+#include "openvic-simulation/core/object/FixedPoint.hpp"
+#include "openvic-simulation/core/object/Vector.hpp"
 #include "openvic-simulation/pathfinding/PointMap.hpp"
-#include "openvic-simulation/types/Vector.hpp"
-#include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
-#include "openvic-simulation/utility/Containers.hpp"
 
 #include "Helper.hpp"
 #include "pathfinding/Pathing.hpp"

@@ -1,13 +1,13 @@
 #pragma once
 
-#include <concepts>
+#include <string_view>
 #include <variant>
 
+#include "openvic-simulation/core/memory/String.hpp"
+#include "openvic-simulation/core/object/FixedPoint.hpp"
 #include "openvic-simulation/dataloader/NodeTools.hpp"
-#include "openvic-simulation/modifier/ModifierValue.hpp"
 #include "openvic-simulation/modifier/Modifier.hpp"
-#include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
-#include "openvic-simulation/utility/Containers.hpp"
+#include "openvic-simulation/modifier/ModifierValue.hpp"
 
 namespace OpenVic {
 	struct CountryInstance;

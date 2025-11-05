@@ -2,6 +2,13 @@
 
 #include <plf_colony.h>
 
+#include "openvic-simulation/Alias.hpp"
+#include "openvic-simulation/core/container/FlagStrings.hpp"
+#include "openvic-simulation/core/container/HasIdentifierAndColour.hpp"
+#include "openvic-simulation/core/container/HasIndex.hpp"
+#include "openvic-simulation/core/memory/Colony.hpp"
+#include "openvic-simulation/core/memory/OrderedSet.hpp"
+#include "openvic-simulation/core/portable/ForwardableSpan.hpp"
 #include "openvic-simulation/economy/BuildingInstance.hpp"
 #include "openvic-simulation/economy/production/ResourceGatheringOperation.hpp"
 #include "openvic-simulation/military/UnitBranchedGetterMacro.hpp"
@@ -9,14 +16,7 @@
 #include "openvic-simulation/pop/Pop.hpp"
 #include "openvic-simulation/pop/PopsAggregate.hpp"
 #include "openvic-simulation/types/ColonyStatus.hpp"
-#include "openvic-simulation/types/FlagStrings.hpp"
-#include "openvic-simulation/types/HasIdentifier.hpp"
-#include "openvic-simulation/types/HasIndex.hpp"
-#include "openvic-simulation/types/OrderedContainers.hpp"
-#include "openvic-simulation/types/ProvinceLifeRating.hpp"
 #include "openvic-simulation/types/UnitBranchType.hpp"
-#include "openvic-simulation/utility/Containers.hpp"
-#include "openvic-simulation/utility/ForwardableSpan.hpp"
 
 namespace OpenVic {
 	struct BaseIssue;
@@ -80,7 +80,7 @@ namespace OpenVic {
 		ModifierSum const& get_owner_modifier_sum() const;
 		CountryInstance* PROPERTY_PTR(controller, nullptr);
 		CountryInstance* PROPERTY_PTR(country_to_report_economy, nullptr);
-		ordered_set<CountryInstance*> PROPERTY(cores);
+		memory::ordered_set<CountryInstance*> PROPERTY(cores);
 
 		// The total/resultant modifier of local effects on this province (global effects come from the province's owner)
 		ModifierSum PROPERTY(modifier_sum);
@@ -190,7 +190,7 @@ namespace OpenVic {
 			PopValuesFromProvince& reusable_pop_values,
 			RandomU32& random_number_generator,
 			IndexedFlatMap<GoodDefinition, char>& reusable_goods_mask,
-			utility::forwardable_span<
+			forwardable_span<
 				memory::vector<fixed_point_t>,
 				VECTORS_FOR_PROVINCE_TICK
 			> reusable_vectors
@@ -200,7 +200,7 @@ namespace OpenVic {
 			PopValuesFromProvince& reusable_pop_values,
 			RandomU32& random_number_generator,
 			IndexedFlatMap<GoodDefinition, char>& reusable_goods_mask,
-			utility::forwardable_span<
+			forwardable_span<
 				memory::vector<fixed_point_t>,
 				VECTORS_FOR_PROVINCE_TICK
 			> reusable_vectors

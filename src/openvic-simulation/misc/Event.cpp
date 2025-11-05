@@ -1,11 +1,20 @@
 #include "Event.hpp"
-#include <charconv>
-#include <system_error>
 
+#include <charconv>
+#include <string_view>
+#include <system_error>
+#include <utility>
+
+#include <openvic-dataloader/v2script/AbstractSyntaxTree.hpp>
+
+#include <dryad/node.hpp>
+
+#include "openvic-simulation/core/memory/Vector.hpp"
+#include "openvic-simulation/core/string/CharConv.hpp"
 #include "openvic-simulation/dataloader/NodeTools.hpp"
 #include "openvic-simulation/politics/BaseIssue.hpp"
 #include "openvic-simulation/politics/IssueManager.hpp"
-#include "openvic-simulation/utility/Containers.hpp"
+#include "openvic-simulation/scripts/Condition.hpp"
 
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;
@@ -219,7 +228,7 @@ bool EventManager::load_on_action_file(ast::NodeCPtr root) {
 			[this, &identifier, &weighted_events](std::string_view weight_str, ast::NodeCPtr event_node) -> bool {
 				bool ret = false;
 				uint64_t weight;
-				std::from_chars_result result = StringUtils::string_to_uint64(weight_str, weight);
+				std::from_chars_result result = OpenVic::string_to_uint64(weight_str, weight);
 				ret = result.ec == std::errc{};
 				if (!ret) {
 					spdlog::error_s("Invalid weight {} on action {}", weight_str, identifier);

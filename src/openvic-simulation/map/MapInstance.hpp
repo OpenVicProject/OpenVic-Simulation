@@ -1,11 +1,11 @@
 #pragma once
 
+#include "openvic-simulation/core/object/Date.hpp"
 #include "openvic-simulation/map/ProvinceDefinition.hpp"
 #include "openvic-simulation/map/ProvinceInstance.hpp"
 #include "openvic-simulation/map/State.hpp"
 #include "openvic-simulation/pathfinding/AStarPathing.hpp"
 #include "openvic-simulation/pop/PopValuesFromProvince.hpp"
-#include "openvic-simulation/types/Date.hpp"
 
 namespace OpenVic {
 	struct BuildingTypeManager;
@@ -34,7 +34,7 @@ namespace OpenVic {
 
 		StateManager PROPERTY_REF(state_manager);
 		// TODO - should this be a vector of bools which we resize to the largest enabled canal index?
-		ordered_set<canal_index_t> PROPERTY(enabled_canals);
+		memory::ordered_set<canal_index_t> PROPERTY(enabled_canals);
 
 		ArmyAStarPathing PROPERTY_REF(land_pathing);
 		NavyAStarPathing PROPERTY_REF(sea_pathing);
@@ -50,11 +50,11 @@ namespace OpenVic {
 			return map_definition;
 		}
 
-		constexpr OpenVic::utility::forwardable_span<ProvinceInstance> get_province_instances() {
+		constexpr OpenVic::forwardable_span<ProvinceInstance> get_province_instances() {
 			return province_instance_by_definition.get_values();
 		}
 
-		constexpr OpenVic::utility::forwardable_span<const ProvinceInstance> get_province_instances() const {
+		constexpr OpenVic::forwardable_span<const ProvinceInstance> get_province_instances() const {
 			return province_instance_by_definition.get_values();
 		}
 		ProvinceInstance* get_province_instance_by_identifier(std::string_view identifier);

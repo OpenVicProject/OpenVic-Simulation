@@ -119,7 +119,7 @@ namespace OpenVic::_detail::LUT {{
     source += "}\n// clang-format on\n"
 
     fixed_point_sin_path: str = os.path.join(
-        os.path.dirname(__file__), "../../src/openvic-simulation/types/fixed_point/FixedPointLUT_sin.hpp"
+        os.path.dirname(__file__), "../../src/openvic-simulation/core/object/FixedPoint/LUT_sin.hpp"
     )
     with open(fixed_point_sin_path, "w", newline="\n") as file:
         file.write(source)

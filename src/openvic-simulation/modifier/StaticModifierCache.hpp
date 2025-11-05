@@ -2,7 +2,7 @@
 
 #include "openvic-simulation/dataloader/NodeTools.hpp"
 #include "openvic-simulation/modifier/Modifier.hpp"
-#include "openvic-simulation/utility/Getters.hpp"
+#include "openvic-simulation/core/Property.hpp"
 
 #define COUNTRY_DIFFICULTY_MODIFIER_LIST(F, ID_F) \
 	F(very_easy_player) \

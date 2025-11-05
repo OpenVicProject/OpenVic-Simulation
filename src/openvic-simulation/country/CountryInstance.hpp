@@ -4,28 +4,29 @@
 
 #include <fmt/base.h>
 
+#include "openvic-simulation/Alias.hpp"
+#include "openvic-simulation/core/Property.hpp"
+#include "openvic-simulation/core/container/ClampedValue.hpp"
+#include "openvic-simulation/core/container/FlagStrings.hpp"
+#include "openvic-simulation/core/container/HasIndex.hpp"
+#include "openvic-simulation/core/container/IndexedFlatMap.hpp"
+#include "openvic-simulation/core/container/ValueHistory.hpp"
+#include "openvic-simulation/core/memory/FixedPointMap.hpp"
+#include "openvic-simulation/core/memory/OrderedSet.hpp"
+#include "openvic-simulation/core/memory/StringMap.hpp"
+#include "openvic-simulation/core/object/Date.hpp"
+#include "openvic-simulation/core/object/FixedPoint.hpp"
+#include "openvic-simulation/core/object/FixedPoint/Atomic.hpp"
+#include "openvic-simulation/core/portable/ForwardableSpan.hpp"
+#include "openvic-simulation/core/reactive/DerivedState.hpp"
+#include "openvic-simulation/core/reactive/MutableState.hpp"
 #include "openvic-simulation/country/SharedCountryValues.hpp"
 #include "openvic-simulation/diplomacy/CountryRelation.hpp"
 #include "openvic-simulation/military/UnitBranchedGetterMacro.hpp"
 #include "openvic-simulation/modifier/ModifierSum.hpp"
 #include "openvic-simulation/politics/Rule.hpp"
 #include "openvic-simulation/pop/PopsAggregate.hpp"
-#include "openvic-simulation/types/ClampedValue.hpp"
-#include "openvic-simulation/types/Date.hpp"
-#include "openvic-simulation/types/fixed_point/Atomic.hpp"
-#include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
-#include "openvic-simulation/types/FlagStrings.hpp"
-#include "openvic-simulation/types/HasIndex.hpp"
-#include "openvic-simulation/types/IndexedFlatMap.hpp"
-#include "openvic-simulation/types/OrderedContainers.hpp"
-#include "openvic-simulation/types/TechnologyUnlockLevel.hpp"
 #include "openvic-simulation/types/UnitBranchType.hpp"
-#include "openvic-simulation/types/UnitVariant.hpp"
-#include "openvic-simulation/types/ValueHistory.hpp"
-#include "openvic-simulation/utility/Getters.hpp"
-#include "openvic-simulation/utility/Containers.hpp"
-#include "openvic-simulation/utility/reactive/DerivedState.hpp"
-#include "openvic-simulation/utility/reactive/MutableState.hpp"
 
 namespace OpenVic {
 	struct BaseIssue;
@@ -139,14 +140,14 @@ namespace OpenVic {
 		Date PROPERTY(lose_great_power_date);
 		size_t PROPERTY(total_rank, 0);
 
-		ordered_set<ProvinceInstance*> PROPERTY(owned_provinces);
-		ordered_set<ProvinceInstance*> PROPERTY(controlled_provinces);
-		ordered_set<ProvinceInstance*> PROPERTY(core_provinces);
-		ordered_set<State*> PROPERTY(states);
+		memory::ordered_set<ProvinceInstance*> PROPERTY(owned_provinces);
+		memory::ordered_set<ProvinceInstance*> PROPERTY(controlled_provinces);
+		memory::ordered_set<ProvinceInstance*> PROPERTY(core_provinces);
+		memory::ordered_set<State*> PROPERTY(states);
 
-		ordered_set<CountryInstance*> PROPERTY(neighbouring_countries);
+		memory::ordered_set<CountryInstance*> PROPERTY(neighbouring_countries);
 
-		string_map_t<fixed_point_t> PROPERTY(script_variables);
+		memory::string_map_t<fixed_point_t> PROPERTY(script_variables);
 
 		// The total/resultant modifier affecting this country, including owned province contributions.
 		ModifierSum PROPERTY(modifier_sum);
@@ -157,7 +158,7 @@ namespace OpenVic {
 		memory::vector<std::pair<State const*, fixed_point_t>> PROPERTY(industrial_power_from_states);
 		memory::vector<std::pair<CountryInstance const*, fixed_point_t>> PROPERTY(industrial_power_from_investments);
 		size_t PROPERTY(industrial_rank, 0);
-		fixed_point_map_t<CountryInstance const*> PROPERTY(foreign_investments);
+		memory::fixed_point_map_t<CountryInstance const*> PROPERTY(foreign_investments);
 		OV_IFLATMAP_PROPERTY(BuildingType, technology_unlock_level_t, building_type_unlock_levels);
 		// TODO - total amount of each good produced
 
@@ -247,7 +248,7 @@ namespace OpenVic {
 		OV_STATE_PROPERTY(Date, expected_research_completion_date);
 		OV_STATE_PROPERTY(fixed_point_t, research_point_stockpile);
 		OV_STATE_PROPERTY(fixed_point_t, daily_research_points);
-		fixed_point_map_t<PopType const*> PROPERTY(research_points_from_pop_types);
+		memory::fixed_point_map_t<PopType const*> PROPERTY(research_points_from_pop_types);
 		OV_STATE_PROPERTY(TechnologySchool const*, tech_school, nullptr);
 		// TODO - cached possible inventions with %age chance
 
@@ -272,7 +273,7 @@ namespace OpenVic {
 		/* Population */
 		size_t PROPERTY(national_focus_capacity, 0);
 		Culture const* PROPERTY(primary_culture, nullptr);
-		ordered_set<Culture const*> PROPERTY(accepted_cultures);
+		memory::ordered_set<Culture const*> PROPERTY(accepted_cultures);
 		Religion const* PROPERTY(religion, nullptr);
 		// TODO - population change over last 30 days
 
@@ -321,9 +322,9 @@ namespace OpenVic {
 			fixed_point_t pop_demand;
 			fixed_point_t available_amount;
 
-			ordered_map<PopType const*, fixed_point_t> need_consumption_per_pop_type;
-			ordered_map<ProductionType const*, fixed_point_t> input_consumption_per_production_type;
-			ordered_map<ProductionType const*, fixed_point_t> production_per_production_type;
+			memory::ordered_map<PopType const*, fixed_point_t> need_consumption_per_pop_type;
+			memory::ordered_map<ProductionType const*, fixed_point_t> input_consumption_per_production_type;
+			memory::ordered_map<ProductionType const*, fixed_point_t> production_per_production_type;
 
 			good_data_t();
 			good_data_t(good_data_t&&) = default;
@@ -343,7 +344,7 @@ namespace OpenVic {
 		// The last time this country lost a war, i.e. accepted a peace offer sent from their offer tab or the enemy's demand
 		// tab, even white peace. Used for the "has_recently_lost_war" condition (true if the date is less than 5 years ago).
 		Date PROPERTY(last_war_loss_date);
-		vector_ordered_set<CountryInstance const*> PROPERTY(war_enemies);
+		memory::vector_ordered_set<CountryInstance const*> PROPERTY(war_enemies);
 		OV_STATE_PROPERTY(CountryInstance const*, sphere_owner, nullptr);
 		// TODO - colonial power, current wars
 
@@ -367,7 +368,7 @@ namespace OpenVic {
 		fixed_point_t PROPERTY(max_ship_supply);
 		fixed_point_t PROPERTY_RW(leadership_point_stockpile);
 		fixed_point_t PROPERTY(monthly_leadership_points);
-		fixed_point_map_t<PopType const*> PROPERTY(leadership_points_from_pop_types);
+		memory::fixed_point_map_t<PopType const*> PROPERTY(leadership_points_from_pop_types);
 		int32_t PROPERTY(create_leader_count, 0);
 		// War exhaustion is stored as a raw decimal rather than a proportion, it is usually in the range 0-100.
 		// The current war exhaustion value should only ever be modified via change_war_exhaustion(delta) which also
@@ -605,7 +606,7 @@ namespace OpenVic {
 
 		// Sets the investment of each country in the map (rather than adding to them), leaving the rest unchanged.
 		void apply_foreign_investments(
-			fixed_point_map_t<CountryDefinition const*> const& investments,
+			memory::fixed_point_map_t<CountryDefinition const*> const& investments,
 			CountryInstanceManager const& country_instance_manager
 		);
 
@@ -618,7 +619,7 @@ namespace OpenVic {
 
 		void manage_national_stockpile(
 			IndexedFlatMap<GoodDefinition, char>& reusable_goods_mask,
-			utility::forwardable_span<
+			forwardable_span<
 				memory::vector<fixed_point_t>,
 				VECTORS_FOR_COUNTRY_TICK
 			> reusable_vectors,
@@ -656,7 +657,7 @@ namespace OpenVic {
 		void update_gamestate(const Date today, MapInstance& map_instance);
 		void country_tick_before_map(
 			IndexedFlatMap<GoodDefinition, char>& reusable_goods_mask,
-			utility::forwardable_span<
+			forwardable_span<
 				memory::vector<fixed_point_t>,
 				VECTORS_FOR_COUNTRY_TICK
 			> reusable_vectors,
@@ -710,15 +711,15 @@ namespace OpenVic {
 			CountryInstanceDeps const& country_instance_deps,
 			GoodInstanceManager const& new_good_instance_manager,
 			PopsDefines const& new_pop_defines,
-			utility::forwardable_span<const PopType> pop_type_keys,
+			forwardable_span<const PopType> pop_type_keys,
 			ThreadPool& new_thread_pool
 		);
 
-		constexpr OpenVic::utility::forwardable_span<CountryInstance> get_country_instances() {
+		constexpr forwardable_span<CountryInstance> get_country_instances() {
 			return country_instance_by_definition.get_values();
 		}
 
-		constexpr OpenVic::utility::forwardable_span<const CountryInstance> get_country_instances() const {
+		constexpr forwardable_span<const CountryInstance> get_country_instances() const {
 			return country_instance_by_definition.get_values();
 		}
 		CountryInstance* get_country_instance_by_identifier(std::string_view identifier);

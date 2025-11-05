@@ -1,7 +1,7 @@
 #include "Region.hpp"
 
 #include "openvic-simulation/map/ProvinceDefinition.hpp"
-#include "openvic-simulation/types/Colour.hpp"
+#include "openvic-simulation/core/object/Colour.hpp"
 
 using namespace OpenVic;
 

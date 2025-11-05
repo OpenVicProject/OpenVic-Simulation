@@ -1,5 +1,12 @@
 #include "FactoryProducer.hpp"
 
+#include <cstdint>
+#include <utility>
+
+#include "openvic-simulation/core/memory/FixedPointMap.hpp"
+#include "openvic-simulation/core/memory/OrderedMap.hpp"
+#include "openvic-simulation/core/object/FixedPoint.hpp"
+
 using namespace OpenVic;
 
 FactoryProducer::FactoryProducer(
@@ -8,8 +15,8 @@ FactoryProducer::FactoryProducer(
 	fixed_point_t new_revenue_yesterday,
 	fixed_point_t new_output_quantity_yesterday,
 	fixed_point_t new_unsold_quantity_yesterday,
-	ordered_map<Pop*, pop_size_t>&& new_employees,
-	fixed_point_map_t<GoodDefinition const*>&& new_stockpile,
+	memory::ordered_map<Pop*, pop_size_t>&& new_employees,
+	memory::fixed_point_map_t<GoodDefinition const*>&& new_stockpile,
 	fixed_point_t new_budget,
 	fixed_point_t new_balance_yesterday,
 	fixed_point_t new_received_investments_yesterday,

@@ -1,16 +1,25 @@
 #include "Rule.hpp"
 
+#include <cstddef>
+#include <ostream>
+#include <string_view>
+#include <utility>
+
+#include "openvic-simulation/core/FormatValidate.hpp"
+#include "openvic-simulation/core/Logger.hpp"
+#include "openvic-simulation/core/container/HasIdentifier.hpp"
+#include "openvic-simulation/core/memory/OrderedMap.hpp"
+#include "openvic-simulation/core/memory/String.hpp"
+#include "openvic-simulation/core/memory/Vector.hpp"
+#include "openvic-simulation/core/string/Utility.hpp"
+#include "openvic-simulation/dataloader/NodeTools.hpp"
 #include "openvic-simulation/economy/BuildingType.hpp"
-#include "openvic-simulation/utility/TslHelper.hpp"
-#include "openvic-simulation/types/HasIdentifier.hpp"
-#include "openvic-simulation/utility/Containers.hpp"
-#include "openvic-simulation/utility/FormatValidate.hpp"
 
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;
 
 static memory::string make_default_rule_localisation_key(std::string_view identifier) {
-	return "RULE_" + StringUtils::string_toupper(identifier);
+	return "RULE_" + OpenVic::string_toupper(identifier);
 }
 
 Rule::Rule(std::string_view new_identifier, rule_group_t new_group, index_t new_index, std::string_view new_localisation_key)
@@ -156,7 +165,7 @@ bool RuleManager::setup_rules(BuildingTypeManager const& building_type_manager) 
 
 	using enum Rule::rule_group_t;
 
-	static const ordered_map<Rule::rule_group_t, memory::vector<std::string_view>> hardcoded_rules {
+	static const memory::ordered_map<Rule::rule_group_t, memory::vector<std::string_view>> hardcoded_rules {
 		{ ECONOMY, {
 			"build_railway", "build_factory", "expand_factory", "open_factory", "destroy_factory", "pop_build_factory",
 			"pop_expand_factory", "pop_open_factory", "can_subsidise", "factory_priority", "delete_factory_if_no_input",
@@ -221,7 +230,7 @@ namespace OpenVic { // so the compiler shuts up (copied from Modifier.cpp)
 	std::ostream& operator<<(std::ostream& stream, RuleSet const& value) {
 		for (auto const& [group, rule_map] : value.rule_groups) {
 			for (auto const& [rule, value] : rule_map) {
-				stream << rule << ": " <<  StringUtils::bool_to_yes_no(value) << "\n";
+				stream << rule << ": " <<  bool_to_yes_no(value) << "\n";
 			}
 		}
 		return stream;

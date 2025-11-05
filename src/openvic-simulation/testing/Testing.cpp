@@ -2,8 +2,12 @@
 
 #include <memory>
 
+#include <spdlog/logger.h>
+
+#include "openvic-simulation/core/memory/String.hpp"
+#include "openvic-simulation/core/memory/UniquePtr.hpp"
+#include "openvic-simulation/core/memory/Vector.hpp"
 #include "openvic-simulation/testing/TestScript.hpp"
-#include "openvic-simulation/utility/Containers.hpp"
 
 using namespace OpenVic;
 

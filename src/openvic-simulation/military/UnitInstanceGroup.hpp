@@ -4,13 +4,14 @@
 
 #include <plf_colony.h>
 
+#include "openvic-simulation/core/Property.hpp"
+#include "openvic-simulation/core/memory/Colony.hpp"
+#include "openvic-simulation/core/memory/OrderedMap.hpp"
+#include "openvic-simulation/core/object/FixedPoint.hpp"
 #include "openvic-simulation/military/Leader.hpp"
 #include "openvic-simulation/military/UnitInstance.hpp"
 #include "openvic-simulation/military/UnitType.hpp"
-#include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
 #include "openvic-simulation/types/UnitBranchType.hpp"
-#include "openvic-simulation/utility/Getters.hpp"
-#include "openvic-simulation/utility/Containers.hpp"
 
 #include "openvic-simulation/military/UnitBranchedGetterMacro.hpp" //below other imports that undef the macros
 
@@ -169,17 +170,17 @@ namespace OpenVic {
 		// TODO - maps from unique_ids to leader/unit/unit group pointers (one big map or multiple maps?)
 
 		memory::colony<LeaderInstance> PROPERTY(leaders);
-		ordered_map<unique_id_t, LeaderInstance*> PROPERTY(leader_instance_map);
+		memory::ordered_map<unique_id_t, LeaderInstance*> PROPERTY(leader_instance_map);
 
 		memory::colony<RegimentInstance> PROPERTY(regiments);
 		memory::colony<ShipInstance> PROPERTY(ships);
-		ordered_map<unique_id_t, UnitInstance*> PROPERTY(unit_instance_map);
+		memory::ordered_map<unique_id_t, UnitInstance*> PROPERTY(unit_instance_map);
 
 		OV_UNIT_BRANCHED_GETTER(get_unit_instances, regiments, ships);
 
 		memory::colony<ArmyInstance> PROPERTY(armies);
 		memory::colony<NavyInstance> PROPERTY(navies);
-		ordered_map<unique_id_t, UnitInstanceGroup*> PROPERTY(unit_instance_group_map);
+		memory::ordered_map<unique_id_t, UnitInstanceGroup*> PROPERTY(unit_instance_group_map);
 
 		OV_UNIT_BRANCHED_GETTER(get_unit_instance_groups, armies, navies);
 

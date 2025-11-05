@@ -1,12 +1,22 @@
 #include "GameAction.hpp"
 
-#include <fmt/std.h>
+#include <array>
+#include <cstddef>
+#include <cstdint>
+#include <tuple>
+#include <utility>
+#include <variant>
+
 #include <fmt/ranges.h>
+#include <fmt/std.h>
 
 #include "openvic-simulation/DefinitionManager.hpp"
 #include "openvic-simulation/InstanceManager.hpp"
-#include "utility/Containers.hpp"
-#include "openvic-simulation/utility/Typedefs.hpp"
+#include "openvic-simulation/core/Logger.hpp"
+#include "openvic-simulation/core/Typedefs.hpp"
+#include "openvic-simulation/core/memory/Format.hpp"
+#include "openvic-simulation/core/memory/String.hpp"
+#include "openvic-simulation/core/object/FixedPoint.hpp"
 
 using namespace OpenVic;
 

@@ -1,5 +1,6 @@
 #include "Employee.hpp"
 
+#include "openvic-simulation/core/object/FixedPoint.hpp"
 #include "openvic-simulation/country/CountryInstance.hpp"
 #include "openvic-simulation/pop/Pop.hpp"
 

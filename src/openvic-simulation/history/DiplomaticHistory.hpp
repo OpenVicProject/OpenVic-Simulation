@@ -1,12 +1,14 @@
 #pragma once
 
+#include <cstdint>
 #include <optional>
+#include <string_view>
 
+#include "openvic-simulation/core/Property.hpp"
+#include "openvic-simulation/core/memory/Vector.hpp"
+#include "openvic-simulation/core/object/Date.hpp"
 #include "openvic-simulation/dataloader/NodeTools.hpp"
 #include "openvic-simulation/history/Period.hpp"
-#include "openvic-simulation/types/Date.hpp"
-#include "openvic-simulation/utility/Getters.hpp"
-#include "openvic-simulation/utility/Containers.hpp"
 
 namespace OpenVic {
 	struct DiplomaticHistoryManager;

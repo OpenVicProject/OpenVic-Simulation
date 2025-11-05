@@ -77,7 +77,7 @@ namespace OpenVic::_detail::LUT {{
     source += "}\n// clang-format on\n"
 
     fixed_point_lut_path: str = os.path.join(
-        os.path.dirname(__file__), f"../../src/openvic-simulation/types/fixed_point/FixedPointLUT_{lut_identifier}.hpp"
+        os.path.dirname(__file__), f"../../src/openvic-simulation/core/object/FixedPoint/LUT_{lut_identifier}.hpp"
     )
     with open(fixed_point_lut_path, "w", newline="\n") as file:
         file.write(source)

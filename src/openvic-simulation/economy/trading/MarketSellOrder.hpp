@@ -1,8 +1,8 @@
 #pragma once
 
+#include "openvic-simulation/core/Property.hpp"
+#include "openvic-simulation/core/memory/Vector.hpp"
 #include "openvic-simulation/economy/trading/SellResult.hpp"
-#include "openvic-simulation/utility/Getters.hpp"
-#include "openvic-simulation/utility/Containers.hpp"
 
 namespace OpenVic {
 	struct CountryInstance;

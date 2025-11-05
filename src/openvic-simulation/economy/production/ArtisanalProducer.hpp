@@ -2,11 +2,11 @@
 
 #include <optional>
 
-#include "openvic-simulation/types/IndexedFlatMap.hpp"
-#include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
-#include "openvic-simulation/types/fixed_point/FixedPointMap.hpp"
-#include "openvic-simulation/types/PopSize.hpp"
-#include "openvic-simulation/utility/Getters.hpp"
+#include "openvic-simulation/Alias.hpp"
+#include "openvic-simulation/core/Property.hpp"
+#include "openvic-simulation/core/container/IndexedFlatMap.hpp"
+#include "openvic-simulation/core/memory/FixedPointMap.hpp"
+#include "openvic-simulation/core/object/FixedPoint.hpp"
 
 namespace OpenVic {
 	struct ArtisanalProducerDeps;
@@ -22,10 +22,10 @@ namespace OpenVic {
 	struct ArtisanalProducer {
 	private:
 		ModifierEffectCache const& modifier_effect_cache;
-		fixed_point_map_t<GoodDefinition const*> stockpile;
+		memory::fixed_point_map_t<GoodDefinition const*> stockpile;
 
 		//only used during day tick (from artisan_tick() until MarketInstance.execute_orders())
-		fixed_point_map_t<GoodDefinition const*> max_quantity_to_buy_per_good;
+		memory::fixed_point_map_t<GoodDefinition const*> max_quantity_to_buy_per_good;
 
 		ProductionType const* PROPERTY(production_type_nullable);
 		fixed_point_t PROPERTY(current_production);
@@ -47,13 +47,13 @@ namespace OpenVic {
 	public:
 		ArtisanalProducer(
 			ArtisanalProducerDeps const& artisanal_producer_deps,
-			fixed_point_map_t<GoodDefinition const*>&& new_stockpile,
+			memory::fixed_point_map_t<GoodDefinition const*>&& new_stockpile,
 			ProductionType const* const new_production_type,
 			const fixed_point_t new_current_production
 		);
 		ArtisanalProducer(ArtisanalProducerDeps const& artisanal_producer_deps) : ArtisanalProducer(
 			artisanal_producer_deps,
-			fixed_point_map_t<GoodDefinition const*> {},
+			memory::fixed_point_map_t<GoodDefinition const*> {},
 			nullptr,
 			fixed_point_t::_0
 		) { };
