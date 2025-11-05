@@ -191,9 +191,9 @@ namespace OpenVic {
 		explicit constexpr operator T() const {
 #ifdef DEV_ENABLED
 			if (!std::is_constant_evaluated()) {
-				if (OV_unlikely(value < ONE)) {
+				if (OV_unlikely(value != 0 && abs() < ONE)) {
 					spdlog::warn_s(
-						"Fixed point < 1, truncation will result in zero, this may be a bug. raw_value: {} as float: {}",
+						"0 < abs(Fixed point) < 1, truncation will result in zero, this may be a bug. raw_value: {} as float: {}",
 						get_raw_value(),
 						static_cast<float>(*this)
 					);
