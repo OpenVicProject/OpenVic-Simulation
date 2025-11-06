@@ -343,7 +343,15 @@ fixed_point_t ArtisanalProducer::calculate_production_type_score(
 	const fixed_point_t costs,
 	const pop_size_t workforce
 ) {
+	if (costs >= revenue) {
+		return 0;
+	}
+
+	//the score penalty at 0 margin
 	constexpr fixed_point_t k = fixed_point_t::_0_50;
+	static_assert(0 <= k);
+	static_assert(k <= 1);
+
 	return (
 		k * fixed_point_t::mul_div(costs, costs, revenue)
 		-(1+k)*costs
@@ -364,7 +372,7 @@ ProductionType const* ArtisanalProducer::pick_production_type(
 	}
 
 	const fixed_point_t revenue = pop.get_artisanal_revenue();
-	const fixed_point_t costs = pop.get_artisan_inputs_expense();
+	const fixed_point_t costs = costs_of_production;
 	if (production_type_nullable == nullptr || (revenue <= costs)) {
 		should_pick_new_production_type = true;
 	} else {
