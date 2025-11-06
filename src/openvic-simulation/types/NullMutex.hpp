@@ -1,18 +1,20 @@
 #pragma once
 
+#include "openvic-simulation/utility/Typedefs.hpp"
+
 namespace OpenVic {
 	struct null_mutex {
-		constexpr null_mutex() {};
-		~null_mutex() = default;
-		null_mutex(null_mutex const&) = delete;
-		null_mutex& operator=(null_mutex const&) = delete;
-		null_mutex(null_mutex&&) = delete;
-		null_mutex& operator=(null_mutex&&) = delete;
+		OV_ALWAYS_INLINE constexpr null_mutex() {};
+		OV_ALWAYS_INLINE ~null_mutex() = default;
+		OV_ALWAYS_INLINE null_mutex(null_mutex const&) = delete;
+		OV_ALWAYS_INLINE null_mutex& operator=(null_mutex const&) = delete;
+		OV_ALWAYS_INLINE null_mutex(null_mutex&&) = delete;
+		OV_ALWAYS_INLINE null_mutex& operator=(null_mutex&&) = delete;
 
-		inline bool try_lock() {
+		OV_ALWAYS_INLINE bool try_lock() {
 			return true;
 		}
-		inline void lock() {}
-		inline void unlock() {}
+		OV_ALWAYS_INLINE void lock() {}
+		OV_ALWAYS_INLINE void unlock() {}
 	};
 }

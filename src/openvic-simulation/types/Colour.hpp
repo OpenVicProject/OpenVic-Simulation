@@ -54,49 +54,49 @@ namespace OpenVic {
 		static constexpr integer_type rgba_alpha_shift = component_bit_size * 0;
 		static constexpr integer_type argb_alpha_shift = component_bit_size * 3;
 
-		static constexpr integer_type make_rgb_integer(value_type red, value_type green, value_type blue) {
+		OV_SPEED_INLINE static constexpr integer_type make_rgb_integer(value_type red, value_type green, value_type blue) {
 			return (red << red_shift) | (green << green_shift) | (blue << blue_shift);
 		}
-		static constexpr integer_type make_rgba_integer(value_type red, value_type green, value_type blue, value_type alpha) {
+		OV_SPEED_INLINE static constexpr integer_type make_rgba_integer(value_type red, value_type green, value_type blue, value_type alpha) {
 			return (make_rgb_integer(red, green, blue) << component_bit_size) | (alpha << rgba_alpha_shift);
 		}
-		static constexpr integer_type make_argb_integer(value_type red, value_type green, value_type blue, value_type alpha) {
+		OV_SPEED_INLINE static constexpr integer_type make_argb_integer(value_type red, value_type green, value_type blue, value_type alpha) {
 			return make_rgb_integer(red, green, blue) | static_cast<integer_type>(alpha << argb_alpha_shift);
 		}
 
-		static constexpr value_type red_from_rgb(integer_type colour) {
+		OV_SPEED_INLINE static constexpr value_type red_from_rgb(integer_type colour) {
 			return (colour >> (red_shift + component_bit_size)) & component;
 		}
-		static constexpr value_type green_from_rgb(integer_type colour) {
+		OV_SPEED_INLINE static constexpr value_type green_from_rgb(integer_type colour) {
 			return (colour >> (green_shift + component_bit_size)) & component;
 		}
-		static constexpr value_type blue_from_rgb(integer_type colour) {
+		OV_SPEED_INLINE static constexpr value_type blue_from_rgb(integer_type colour) {
 			return (colour >> (blue_shift + component_bit_size)) & component;
 		}
 
-		static constexpr value_type alpha_from_rgba(integer_type colour) {
+		OV_SPEED_INLINE static constexpr value_type alpha_from_rgba(integer_type colour) {
 			return (colour >> rgba_alpha_shift) & component;
 		}
 
-		static constexpr value_type red_from_argb(integer_type colour) {
+		OV_SPEED_INLINE static constexpr value_type red_from_argb(integer_type colour) {
 			return (colour >> red_shift) & component;
 		}
-		static constexpr value_type green_from_argb(integer_type colour) {
+		OV_SPEED_INLINE static constexpr value_type green_from_argb(integer_type colour) {
 			return (colour >> green_shift) & component;
 		}
-		static constexpr value_type blue_from_argb(integer_type colour) {
+		OV_SPEED_INLINE static constexpr value_type blue_from_argb(integer_type colour) {
 			return (colour >> blue_shift) & component;
 		}
 
-		static constexpr value_type alpha_from_argb(integer_type colour) {
+		OV_SPEED_INLINE static constexpr value_type alpha_from_argb(integer_type colour) {
 			return (colour >> argb_alpha_shift) & component;
 		}
 
-		static constexpr float component_to_float(value_type value) {
+		OV_SPEED_INLINE static constexpr float component_to_float(value_type value) {
 			return static_cast<float>(value) / static_cast<float>(component);
 		}
 
-		static constexpr value_type component_from_float(float f, float min = 0.0f, float max = 1.0f) {
+		OV_SPEED_INLINE static constexpr value_type component_from_float(float f, float min = 0.0f, float max = 1.0f) {
 			constexpr auto floor = [](float f) {
 				const std::int64_t i = static_cast<std::int64_t>(f);
 				return f < i ? i - 1 : i;
@@ -105,33 +105,33 @@ namespace OpenVic {
 			return floor(std::clamp(min + f * (max - min), min, max) * static_cast<float>(component));
 		}
 
-		static constexpr value_type component_from_fraction(int n, int d, float min = 0.0f, float max = 1.0f) {
+		OV_SPEED_INLINE static constexpr value_type component_from_fraction(int n, int d, float min = 0.0f, float max = 1.0f) {
 			return component_from_float(static_cast<float>(n) / static_cast<float>(d), min, max);
 		}
 
-		static constexpr float red_to_float(value_type red) {
+		OV_SPEED_INLINE static constexpr float red_to_float(value_type red) {
 			return component_to_float(red);
 		}
-		static constexpr float green_to_float(value_type green) {
+		OV_SPEED_INLINE static constexpr float green_to_float(value_type green) {
 			return component_to_float(green);
 		}
-		static constexpr float blue_to_float(value_type blue) {
+		OV_SPEED_INLINE static constexpr float blue_to_float(value_type blue) {
 			return component_to_float(blue);
 		}
-		static constexpr float alpha_to_float(value_type alpha) {
+		OV_SPEED_INLINE static constexpr float alpha_to_float(value_type alpha) {
 			return component_to_float(alpha);
 		}
 
-		static constexpr value_type red_from_float(float red) {
+		OV_SPEED_INLINE static constexpr value_type red_from_float(float red) {
 			return component_from_float(red);
 		}
-		static constexpr value_type green_from_float(float green) {
+		OV_SPEED_INLINE static constexpr value_type green_from_float(float green) {
 			return component_from_float(green);
 		}
-		static constexpr value_type blue_from_float(float blue) {
+		OV_SPEED_INLINE static constexpr value_type blue_from_float(float blue) {
 			return component_from_float(blue);
 		}
-		static constexpr value_type alpha_from_float(float alpha) {
+		OV_SPEED_INLINE static constexpr value_type alpha_from_float(float alpha) {
 			return component_from_float(alpha);
 		}
 
@@ -154,9 +154,9 @@ namespace OpenVic {
 		static constexpr auto max_value = colour_traits::component;
 
 		struct empty_value {
-			constexpr empty_value() {};
-			constexpr empty_value(value_type) {}
-			constexpr operator value_type() const {
+			OV_ALWAYS_INLINE constexpr empty_value() {};
+			OV_ALWAYS_INLINE constexpr empty_value(value_type) {}
+			OV_ALWAYS_INLINE constexpr operator value_type() const {
 				return max_value;
 			}
 		};
@@ -172,7 +172,7 @@ namespace OpenVic {
 
 		static constexpr std::integral_constant<std::size_t, std::is_same_v<decltype(alpha), value_type> ? 4 : 3> size = {};
 
-		static constexpr basic_colour_t fill_as(value_type value) {
+		OV_SPEED_INLINE static constexpr basic_colour_t fill_as(value_type value) {
 			if constexpr (colour_traits::has_alpha) {
 				return { value, value, value, value };
 			} else {
@@ -180,11 +180,11 @@ namespace OpenVic {
 			}
 		}
 
-		static constexpr basic_colour_t null() {
+		OV_SPEED_INLINE static constexpr basic_colour_t null() {
 			return fill_as(colour_traits::null);
 		}
 
-		static constexpr basic_colour_t from_integer(integer_type integer) {
+		OV_SPEED_INLINE static constexpr basic_colour_t from_integer(integer_type integer) {
 			if constexpr (colour_traits::has_alpha) {
 				return from_rgba(integer);
 			} else {
@@ -192,7 +192,7 @@ namespace OpenVic {
 			}
 		}
 
-		static constexpr basic_colour_t from_argb(integer_type integer)
+		OV_SPEED_INLINE static constexpr basic_colour_t from_argb(integer_type integer)
 		{
 			if constexpr (colour_traits::has_alpha) {
 				return {
@@ -204,7 +204,7 @@ namespace OpenVic {
 			}
 		}
 
-		static constexpr basic_colour_t from_rgba(integer_type integer)
+		OV_SPEED_INLINE static constexpr basic_colour_t from_rgba(integer_type integer)
 		{
 			if constexpr (colour_traits::has_alpha) {
 				return {
@@ -219,7 +219,7 @@ namespace OpenVic {
 			}
 		}
 
-		static constexpr basic_colour_t from_rgb(integer_type integer)
+		OV_SPEED_INLINE static constexpr basic_colour_t from_rgb(integer_type integer)
 		{
 			return {
 				colour_traits::red_from_argb(integer), colour_traits::green_from_argb(integer),
@@ -227,7 +227,7 @@ namespace OpenVic {
 			};
 		}
 
-		static constexpr basic_colour_t from_floats( //
+		OV_SPEED_INLINE static constexpr basic_colour_t from_floats( //
 			float r, float g, float b, float a = colour_traits::alpha_to_float(max_value)
 		)
 		requires(colour_traits::has_alpha)
@@ -238,14 +238,14 @@ namespace OpenVic {
 			};
 		}
 
-		static constexpr basic_colour_t from_floats(float r, float g, float b)
+		OV_SPEED_INLINE static constexpr basic_colour_t from_floats(float r, float g, float b)
 		requires(!colour_traits::has_alpha)
 		{
 			return { colour_traits::red_from_float(r), colour_traits::green_from_float(g), colour_traits::blue_from_float(b) };
 		}
 
 	private:
-		inline static constexpr std::from_chars_result parse_from_chars( //
+		OV_SPEED_INLINE static constexpr std::from_chars_result parse_from_chars( //
 			const char* first, const char* last, integer_type& value
 		) {
 			if (first < last && first[0] == '0' && (first + 1 < last) && (first[1] == 'x' || first[1] == 'X')) {
@@ -257,7 +257,7 @@ namespace OpenVic {
 		}
 
 	public:
-		constexpr std::from_chars_result from_chars(const char* first, const char* last) {
+		OV_SPEED_INLINE constexpr std::from_chars_result from_chars(const char* first, const char* last) {
 			integer_type value;
 			std::from_chars_result result = parse_from_chars(first, last, value);
 			if (OV_unlikely(result.ec != std::errc {})) {
@@ -267,7 +267,7 @@ namespace OpenVic {
 			return result;
 		}
 
-		static constexpr basic_colour_t from_string(std::string_view str, std::from_chars_result* from_chars = nullptr) {
+		OV_SPEED_INLINE static constexpr basic_colour_t from_string(std::string_view str, std::from_chars_result* from_chars = nullptr) {
 			basic_colour_t result {};
 			if (from_chars == nullptr) {
 				result.from_chars(str.data(), str.data() + str.size());
@@ -277,7 +277,7 @@ namespace OpenVic {
 			return result;
 		}
 
-		constexpr std::from_chars_result from_chars_rgba(const char* first, const char* last) {
+		OV_SPEED_INLINE constexpr std::from_chars_result from_chars_rgba(const char* first, const char* last) {
 			integer_type value;
 			std::from_chars_result result = parse_from_chars(first, last, value);
 			if (OV_unlikely(result.ec != std::errc {})) {
@@ -287,7 +287,7 @@ namespace OpenVic {
 			return result;
 		}
 
-		static constexpr basic_colour_t from_rgba_string(std::string_view str, std::from_chars_result* from_chars = nullptr) {
+		OV_SPEED_INLINE static constexpr basic_colour_t from_rgba_string(std::string_view str, std::from_chars_result* from_chars = nullptr) {
 			basic_colour_t result {};
 			if (from_chars == nullptr) {
 				result.from_chars_rgba(str.data(), str.data() + str.size());
@@ -297,7 +297,7 @@ namespace OpenVic {
 			return result;
 		}
 
-		constexpr std::from_chars_result from_chars_argb(const char* first, const char* last) {
+		OV_SPEED_INLINE constexpr std::from_chars_result from_chars_argb(const char* first, const char* last) {
 			integer_type value;
 			std::from_chars_result result = parse_from_chars(first, last, value);
 			if (OV_unlikely(result.ec != std::errc {})) {
@@ -307,7 +307,7 @@ namespace OpenVic {
 			return result;
 		}
 
-		static constexpr basic_colour_t from_argb_string(std::string_view str, std::from_chars_result* from_chars = nullptr) {
+		OV_SPEED_INLINE static constexpr basic_colour_t from_argb_string(std::string_view str, std::from_chars_result* from_chars = nullptr) {
 			basic_colour_t result {};
 			if (from_chars == nullptr) {
 				result.from_chars_argb(str.data(), str.data() + str.size());
@@ -317,7 +317,7 @@ namespace OpenVic {
 			return result;
 		}
 
-		constexpr std::from_chars_result from_chars_rgb(const char* first, const char* last) {
+		OV_SPEED_INLINE constexpr std::from_chars_result from_chars_rgb(const char* first, const char* last) {
 			integer_type value;
 			std::from_chars_result result = parse_from_chars(first, last, value);
 			if (OV_unlikely(result.ec != std::errc {})) {
@@ -327,7 +327,7 @@ namespace OpenVic {
 			return result;
 		}
 
-		static constexpr basic_colour_t from_rgb_string(std::string_view str, std::from_chars_result* from_chars = nullptr) {
+		OV_SPEED_INLINE static constexpr basic_colour_t from_rgb_string(std::string_view str, std::from_chars_result* from_chars = nullptr) {
 			basic_colour_t result {};
 			if (from_chars == nullptr) {
 				result.from_chars_rgb(str.data(), str.data() + str.size());
@@ -337,26 +337,26 @@ namespace OpenVic {
 			return result;
 		}
 
-		constexpr integer_type as_rgb() const {
+		OV_SPEED_INLINE constexpr integer_type as_rgb() const {
 			return colour_traits::make_rgb_integer(red, green, blue);
 		}
 
-		constexpr integer_type as_rgba() const {
+		OV_SPEED_INLINE constexpr integer_type as_rgba() const {
 			const integer_type ret = colour_traits::make_rgba_integer(red, green, blue, alpha);
 			return ret;
 		}
 
-		constexpr integer_type as_argb() const {
+		OV_SPEED_INLINE constexpr integer_type as_argb() const {
 			return colour_traits::make_argb_integer(red, green, blue, alpha);
 		}
 
-		constexpr basic_colour_t() : basic_colour_t { null() } {}
+		OV_ALWAYS_INLINE constexpr basic_colour_t() : basic_colour_t { null() } {}
 
-		constexpr basic_colour_t(value_type r, value_type g, value_type b, value_type a = max_value)
+		OV_SPEED_INLINE constexpr basic_colour_t(value_type r, value_type g, value_type b, value_type a = max_value)
 		requires(colour_traits::has_alpha)
 			: red(r), green(g), blue(b), alpha(a) {}
 
-		constexpr basic_colour_t(value_type r, value_type g, value_type b)
+		OV_SPEED_INLINE constexpr basic_colour_t(value_type r, value_type g, value_type b)
 		requires(!colour_traits::has_alpha)
 			: red(r), green(g), blue(b) {}
 
@@ -365,7 +365,7 @@ namespace OpenVic {
 			_ColourTraits::has_alpha && std::same_as<typename _ColourTraits::value_type, value_type> &&
 			std::same_as<typename _ColourTraits::integer_type, integer_type>
 		)
-		explicit constexpr basic_colour_t(basic_colour_t<value_type, integer_type, _ColourTraits> const& colour)
+		OV_SPEED_INLINE explicit constexpr basic_colour_t(basic_colour_t<value_type, integer_type, _ColourTraits> const& colour)
 		requires(colour_traits::has_alpha)
 			: basic_colour_t { colour.red, colour.green, colour.blue, colour.alpha } {}
 
@@ -374,7 +374,7 @@ namespace OpenVic {
 			!_ColourTraits::has_alpha && std::same_as<typename _ColourTraits::value_type, value_type> &&
 			std::same_as<typename _ColourTraits::integer_type, integer_type>
 		)
-		explicit constexpr basic_colour_t(
+		OV_SPEED_INLINE explicit constexpr basic_colour_t(
 			basic_colour_t<value_type, integer_type, _ColourTraits> const& colour, value_type a = max_value
 		)
 		requires(colour_traits::has_alpha)
@@ -385,11 +385,11 @@ namespace OpenVic {
 			std::same_as<typename _ColourTraits::value_type, value_type> &&
 			std::same_as<typename _ColourTraits::integer_type, integer_type>
 		)
-		explicit constexpr basic_colour_t(basic_colour_t<value_type, integer_type, _ColourTraits> const& colour)
+		OV_SPEED_INLINE explicit constexpr basic_colour_t(basic_colour_t<value_type, integer_type, _ColourTraits> const& colour)
 		requires(!colour_traits::has_alpha)
 			: basic_colour_t { colour.red, colour.green, colour.blue } {}
 
-		constexpr explicit operator integer_type() const {
+		OV_SPEED_INLINE constexpr explicit operator integer_type() const {
 			if constexpr (colour_traits::has_alpha) {
 				return as_rgba();
 			} else {
@@ -397,7 +397,7 @@ namespace OpenVic {
 			}
 		}
 
-		constexpr basic_colour_t with_red(value_type r) const {
+		OV_SPEED_INLINE constexpr basic_colour_t with_red(value_type r) const {
 			if constexpr (colour_traits::has_alpha) {
 				return { r, green, blue, alpha };
 			} else {
@@ -405,7 +405,7 @@ namespace OpenVic {
 			}
 		}
 
-		constexpr basic_colour_t with_green(value_type g) const {
+		OV_SPEED_INLINE constexpr basic_colour_t with_green(value_type g) const {
 			if constexpr (colour_traits::has_alpha) {
 				return { red, g, blue, alpha };
 			} else {
@@ -413,7 +413,7 @@ namespace OpenVic {
 			}
 		}
 
-		constexpr basic_colour_t with_blue(value_type b) const {
+		OV_SPEED_INLINE constexpr basic_colour_t with_blue(value_type b) const {
 			if constexpr (colour_traits::has_alpha) {
 				return { red, green, b, alpha };
 			} else {
@@ -421,29 +421,29 @@ namespace OpenVic {
 			}
 		}
 
-		constexpr basic_colour_t with_alpha(value_type a) const
+		OV_SPEED_INLINE constexpr basic_colour_t with_alpha(value_type a) const
 		requires(colour_traits::has_alpha)
 		{
 			return { red, green, blue, a };
 		}
 
-		constexpr float redf() const {
+		OV_SPEED_INLINE constexpr float redf() const {
 			return colour_traits::red_to_float(red);
 		}
 
-		constexpr float greenf() const {
+		OV_SPEED_INLINE constexpr float greenf() const {
 			return colour_traits::green_to_float(green);
 		}
 
-		constexpr float bluef() const {
+		OV_SPEED_INLINE constexpr float bluef() const {
 			return colour_traits::blue_to_float(blue);
 		}
 
-		constexpr float alphaf() const {
+		OV_SPEED_INLINE constexpr float alphaf() const {
 			return colour_traits::alpha_to_float(alpha);
 		}
 
-		inline constexpr std::to_chars_result to_hex_chars(char* first, char* last, bool alpha = colour_traits::has_alpha) const {
+		OV_SPEED_INLINE constexpr std::to_chars_result to_hex_chars(char* first, char* last, bool alpha = colour_traits::has_alpha) const {
 			constexpr size_t component_str_width = (std::bit_width(max_value) + 3) / 4;
 
 			std::to_chars_result result = StringUtils::to_chars(first, last, alpha ? as_rgba() : as_rgb(), 16);
@@ -478,18 +478,18 @@ namespace OpenVic {
 		struct stack_string final : StackString<colour_traits::component_bit_size / /*bits_per_digit*/ 4 * 4> {
 		protected:
 			using StackString<colour_traits::component_bit_size / /*bits_per_digit*/ 4 * 4>::StackString;
-			friend inline constexpr stack_string basic_colour_t::to_hex_array(bool alpha) const;
-			friend inline constexpr stack_string basic_colour_t::to_argb_hex_array() const;
+			friend OV_SPEED_INLINE constexpr stack_string basic_colour_t::to_hex_array(bool alpha) const;
+			friend OV_SPEED_INLINE constexpr stack_string basic_colour_t::to_argb_hex_array() const;
 		};
 
-		inline constexpr stack_string to_hex_array(bool alpha = colour_traits::has_alpha) const {
+		OV_SPEED_INLINE constexpr stack_string to_hex_array(bool alpha = colour_traits::has_alpha) const {
 			stack_string str {};
 			std::to_chars_result result = to_hex_chars(str._array.data(), str._array.data() + str._array.size(), alpha);
 			str._string_size = result.ptr - str.data();
 			return str;
 		}
 
-		inline memory::string to_hex_string(bool alpha = colour_traits::has_alpha) const {
+		OV_SPEED_INLINE memory::string to_hex_string(bool alpha = colour_traits::has_alpha) const {
 			stack_string result = to_hex_array(alpha);
 			if (OV_unlikely(result.empty())) {
 				return {};
@@ -498,7 +498,7 @@ namespace OpenVic {
 			return result;
 		}
 
-		inline constexpr std::to_chars_result to_argb_hex_chars(char* first, char* last) const {
+		OV_SPEED_INLINE constexpr std::to_chars_result to_argb_hex_chars(char* first, char* last) const {
 			constexpr size_t component_str_width = (std::bit_width(max_value) + 3) / 4;
 
 			std::to_chars_result result = to_hex_chars(first, last, true);
@@ -512,14 +512,14 @@ namespace OpenVic {
 			return result;
 		}
 
-		inline constexpr stack_string to_argb_hex_array() const {
+		OV_SPEED_INLINE constexpr stack_string to_argb_hex_array() const {
 			stack_string str {};
 			std::to_chars_result result = to_argb_hex_chars(str._array.data(), str._array.data() + str._array.size());
 			str._string_size = result.ptr - str.data();
 			return str;
 		}
 
-		inline memory::string to_argb_hex_string() const {
+		OV_SPEED_INLINE memory::string to_argb_hex_string() const {
 			stack_string result = to_argb_hex_array();
 			if (OV_unlikely(result.empty())) {
 				return {};
@@ -528,7 +528,7 @@ namespace OpenVic {
 			return result;
 		}
 
-		explicit operator memory::string() const {
+		OV_SPEED_INLINE explicit operator memory::string() const {
 			return to_hex_string();
 		}
 
@@ -541,24 +541,24 @@ namespace OpenVic {
 			return stream << static_cast<std::string_view>(result);
 		}
 
-		constexpr bool is_null() const {
+		OV_SPEED_INLINE constexpr bool is_null() const {
 			return *this == null();
 		}
 
-		constexpr auto operator<=>(basic_colour_t const& rhs) const = default;
-		constexpr auto operator<=>(integer_type rhs) const {
+		OV_SPEED_INLINE constexpr auto operator<=>(basic_colour_t const& rhs) const = default;
+		OV_SPEED_INLINE constexpr auto operator<=>(integer_type rhs) const {
 			return operator integer_type() <=> rhs;
 		}
 
-		constexpr value_type& operator[](std::size_t index) {
+		OV_SPEED_INLINE constexpr value_type& operator[](std::size_t index) {
 			return _array_access_helper<value_type>(*this, index);
 		}
 
-		constexpr value_type const& operator[](std::size_t index) const {
+		OV_SPEED_INLINE constexpr value_type const& operator[](std::size_t index) const {
 			return _array_access_helper<const value_type>(*this, index);
 		}
 
-		constexpr basic_colour_t invert() const {
+		OV_SPEED_INLINE constexpr basic_colour_t invert() const {
 			basic_colour_t new_colour = *this;
 			new_colour.red = max_value - new_colour.red;
 			new_colour.green = max_value - new_colour.green;
@@ -566,7 +566,7 @@ namespace OpenVic {
 			return new_colour;
 		}
 
-		constexpr basic_colour_t full_invert() const requires(colour_traits::has_alpha) {
+		OV_SPEED_INLINE constexpr basic_colour_t full_invert() const requires(colour_traits::has_alpha) {
 			basic_colour_t new_colour = *this;
 			new_colour.red = max_value - new_colour.red;
 			new_colour.green = max_value - new_colour.green;
@@ -575,13 +575,13 @@ namespace OpenVic {
 			return new_colour;
 		}
 
-		constexpr basic_colour_t operator-() const {
+		OV_SPEED_INLINE constexpr basic_colour_t operator-() const {
 			return invert();
 		}
 
 		// See https://stackoverflow.com/a/69869976
 		// https://github.com/Myndex/max-contrast/
-		basic_colour_t contrast() const {
+		OV_SPEED_INLINE basic_colour_t contrast() const {
 			constexpr double LUMINANCE_FLIP = 0.342;
 			constexpr double POWER = 2.4;
 			constexpr double RED_MULTIPLIER = 0.2126729;
@@ -595,7 +595,7 @@ namespace OpenVic {
 
 	private:
 		template<typename V, typename T>
-		static constexpr V& _array_access_helper(T& t, std::size_t index) {
+		OV_SPEED_INLINE static constexpr V& _array_access_helper(T& t, std::size_t index) {
 			switch (index) {
 			case 0: return t.red;
 			case 1: return t.green;
@@ -615,28 +615,28 @@ namespace OpenVic {
 
 	public:
 		template<std::size_t Index>
-		auto&& get() & {
+		OV_SPEED_INLINE auto&& get() & {
 			return get_helper<Index>(*this);
 		}
 
 		template<std::size_t Index>
-		auto&& get() && {
+		OV_SPEED_INLINE auto&& get() && {
 			return get_helper<Index>(*this);
 		}
 
 		template<std::size_t Index>
-		auto&& get() const& {
+		OV_SPEED_INLINE auto&& get() const& {
 			return get_helper<Index>(*this);
 		}
 
 		template<std::size_t Index>
-		auto&& get() const&& {
+		OV_SPEED_INLINE auto&& get() const&& {
 			return get_helper<Index>(*this);
 		}
 
 	private:
 		template<std::size_t Index, typename T>
-		static auto&& get_helper(T&& t) {
+		OV_SPEED_INLINE static auto&& get_helper(T&& t) {
 			static_assert(Index < size(), "Index out of bounds for OpenVic::basic_colour_t");
 			if constexpr (Index == 0) {
 				return std::forward<T>(t).red;
@@ -676,15 +676,15 @@ namespace OpenVic {
 	extern template struct basic_colour_t<std::uint8_t, std::uint32_t, rgb_colour_traits<std::uint8_t, std::uint32_t>>;
 
 	namespace colour_literals {
-		constexpr colour_t operator""_rgb(unsigned long long value) {
+		OV_SPEED_INLINE constexpr colour_t operator""_rgb(unsigned long long value) {
 			return colour_t::from_integer(value);
 		}
 
-		constexpr colour_argb_t operator""_rgba(unsigned long long value) {
+		OV_SPEED_INLINE constexpr colour_argb_t operator""_rgba(unsigned long long value) {
 			return colour_argb_t::from_rgba(value);
 		}
 
-		constexpr colour_argb_t operator""_argb(unsigned long long value) {
+		OV_SPEED_INLINE constexpr colour_argb_t operator""_argb(unsigned long long value) {
 			return colour_argb_t::from_argb(value);
 		}
 	}

@@ -35,58 +35,58 @@ namespace OpenVic {
 		day_t days;
 
 	public:
-		constexpr Timespan(day_t value = 0) : days { value } {}
+		OV_ALWAYS_INLINE constexpr Timespan(day_t value = 0) : days { value } {}
 
-		friend constexpr auto operator<=>(Timespan const&, Timespan const&) = default;
-		friend constexpr bool operator==(Timespan const&, Timespan const&) = default;
-		constexpr Timespan operator+(Timespan other) const {
+		OV_ALWAYS_INLINE friend constexpr auto operator<=>(Timespan const&, Timespan const&) = default;
+		OV_ALWAYS_INLINE friend constexpr bool operator==(Timespan const&, Timespan const&) = default;
+		OV_SPEED_INLINE constexpr Timespan operator+(Timespan other) const {
 			return days + other.days;
 		}
-		constexpr Timespan operator-(Timespan other) const {
+		OV_SPEED_INLINE constexpr Timespan operator-(Timespan other) const {
 			return days - other.days;
 		}
-		constexpr Timespan operator*(day_t factor) const {
+		OV_SPEED_INLINE constexpr Timespan operator*(day_t factor) const {
 			return days * factor;
 		}
-		constexpr Timespan operator/(day_t factor) const {
+		OV_SPEED_INLINE constexpr Timespan operator/(day_t factor) const {
 			return days / factor;
 		}
-		constexpr Timespan& operator+=(Timespan other) {
+		OV_SPEED_INLINE constexpr Timespan& operator+=(Timespan other) {
 			days += other.days;
 			return *this;
 		}
-		constexpr Timespan& operator-=(Timespan other) {
+		OV_SPEED_INLINE constexpr Timespan& operator-=(Timespan other) {
 			days -= other.days;
 			return *this;
 		}
-		constexpr Timespan& operator++() {
+		OV_SPEED_INLINE constexpr Timespan& operator++() {
 			days++;
 			return *this;
 		}
-		constexpr Timespan operator++(int) {
+		OV_SPEED_INLINE constexpr Timespan operator++(int) {
 			Timespan old = *this;
 			++(*this);
 			return old;
 		}
-		constexpr Timespan& operator--() {
+		OV_SPEED_INLINE constexpr Timespan& operator--() {
 			days--;
 			return *this;
 		}
-		constexpr Timespan operator--(int) {
+		OV_SPEED_INLINE constexpr Timespan operator--(int) {
 			Timespan old = *this;
 			--(*this);
 			return old;
 		}
-		constexpr Timespan operator-() const {
+		OV_SPEED_INLINE constexpr Timespan operator-() const {
 			Timespan ret = *this;
 			ret.days = -ret.days;
 			return ret;
 		}
 
-		constexpr day_t to_int() const {
+		OV_ALWAYS_INLINE constexpr day_t to_int() const {
 			return days;
 		}
-		explicit constexpr operator day_t() const {
+		OV_ALWAYS_INLINE explicit constexpr operator day_t() const {
 			return days;
 		}
 
@@ -97,9 +97,9 @@ namespace OpenVic {
 		memory::string to_string() const;
 		explicit operator memory::string() const;
 
-		static constexpr Timespan from_years(day_t num);
-		static constexpr Timespan from_months(day_t num);
-		static constexpr Timespan from_days(day_t num);
+		OV_SPEED_INLINE static constexpr Timespan from_years(day_t num);
+		OV_SPEED_INLINE static constexpr Timespan from_months(day_t num);
+		OV_SPEED_INLINE static constexpr Timespan from_days(day_t num);
 	};
 	std::ostream& operator<<(std::ostream& out, Timespan const& timespan);
 
@@ -166,7 +166,7 @@ namespace OpenVic {
 		// Number of days since Jan 1st, Year 0
 		Timespan PROPERTY(timespan);
 
-		static constexpr Timespan _date_to_timespan(year_t year, month_t month, day_t day) {
+		OV_SPEED_INLINE static constexpr Timespan _date_to_timespan(year_t year, month_t month, day_t day) {
 			month = std::clamp<month_t>(month, 1, MONTHS_IN_YEAR);
 			day = std::clamp<day_t>(day, 1, DAYS_IN_MONTH[month - 1]);
 			return year * DAYS_IN_YEAR + DAYS_UP_TO_MONTH[month - 1] + day - 1;
@@ -175,11 +175,11 @@ namespace OpenVic {
 	public:
 		// The Timespan is considered to be the number of days since Jan 1st, Year 0.
 		// Negative Timespans indicate dates before Jan 1st, Year 0.
-		constexpr Date(Timespan new_timespan) : timespan { new_timespan } {}
+		OV_ALWAYS_INLINE constexpr Date(Timespan new_timespan) : timespan { new_timespan } {}
 		// Year month day specification
-		constexpr Date(year_t year = 0, month_t month = 1, day_t day = 1) : timespan { _date_to_timespan(year, month, day) } {}
+		OV_ALWAYS_INLINE constexpr Date(year_t year = 0, month_t month = 1, day_t day = 1) : timespan { _date_to_timespan(year, month, day) } {}
 
-		constexpr Timespan::day_t get_day_of_year() const {
+		OV_SPEED_INLINE constexpr Timespan::day_t get_day_of_year() const {
 			Timespan::day_t day_in_year = static_cast<Timespan::day_t>(timespan) % DAYS_IN_YEAR;
 			if (day_in_year < 0) {
 				day_in_year += DAYS_IN_YEAR;
@@ -187,77 +187,77 @@ namespace OpenVic {
 			return day_in_year;
 		}
 
-		constexpr year_t get_year() const {
+		OV_SPEED_INLINE constexpr year_t get_year() const {
 			return (timespan >= 0
 				? static_cast<Timespan::day_t>(timespan)
 				: static_cast<Timespan::day_t>(timespan) - DAYS_IN_YEAR + 1
 			) / DAYS_IN_YEAR;
 		}
-		constexpr month_t get_month() const {
+		OV_SPEED_INLINE constexpr month_t get_month() const {
 			return MONTH_FROM_DAY_IN_YEAR[get_day_of_year()];
 		}
-		constexpr day_t get_day() const {
+		OV_SPEED_INLINE constexpr day_t get_day() const {
 			Timespan::day_t day_of_year = get_day_of_year();
 			return day_of_year - DAYS_UP_TO_MONTH[MONTH_FROM_DAY_IN_YEAR[day_of_year] - 1] + 1;
 		}
 
 		// Due to the lack of leap years, this will not fit historical weekdays
-		constexpr day_t get_day_of_week() const {
+		OV_SPEED_INLINE constexpr day_t get_day_of_week() const {
 			return (static_cast<Timespan::day_t>(timespan) + INITIAL_WEEKDAY_NAME) % WEEKDAY_NAMES.size();
 		}
 
-		constexpr day_t get_week_of_year() const {
+		OV_SPEED_INLINE constexpr day_t get_week_of_year() const {
 			return (get_day_of_year() + WEEKDAY_NAMES.size() - get_day_of_week()) / WEEKDAY_NAMES.size();
 		}
 
-		constexpr bool is_month_start() const {
+		OV_SPEED_INLINE constexpr bool is_month_start() const {
 			return get_day() == 1;
 		}
 
-		friend constexpr auto operator<=>(Date const&, Date const&) = default;
-		friend constexpr bool operator==(Date const&, Date const&) = default;
-		constexpr Date operator+(Timespan other) const {
+		OV_ALWAYS_INLINE friend constexpr auto operator<=>(Date const&, Date const&) = default;
+		OV_ALWAYS_INLINE friend constexpr bool operator==(Date const&, Date const&) = default;
+		OV_SPEED_INLINE constexpr Date operator+(Timespan other) const {
 			return timespan + other;
 		}
-		constexpr Date operator-(Timespan other) const {
+		OV_SPEED_INLINE constexpr Date operator-(Timespan other) const {
 			return timespan - other;
 		}
-		constexpr Timespan operator-(Date other) const {
+		OV_SPEED_INLINE constexpr Timespan operator-(Date other) const {
 			return timespan - other.timespan;
 		}
-		constexpr Date& operator+=(Timespan other) {
+		OV_SPEED_INLINE constexpr Date& operator+=(Timespan other) {
 			timespan += other;
 			return *this;
 		}
-		constexpr Date& operator-=(Timespan other) {
+		OV_SPEED_INLINE constexpr Date& operator-=(Timespan other) {
 			timespan -= other;
 			return *this;
 		}
-		constexpr Date& operator++() {
+		OV_SPEED_INLINE constexpr Date& operator++() {
 			timespan++;
 			return *this;
 		}
-		constexpr Date operator++(int) {
+		OV_SPEED_INLINE constexpr Date operator++(int) {
 			Date old = *this;
 			++(*this);
 			return old;
 		}
-		constexpr Date& operator--() {
+		OV_SPEED_INLINE constexpr Date& operator--() {
 			timespan--;
 			return *this;
 		}
-		constexpr Date operator--(int) {
+		OV_SPEED_INLINE constexpr Date operator--(int) {
 			Date old = *this;
 			--(*this);
 			return old;
 		}
 
-		constexpr bool in_range(Date start, Date end) const {
+		OV_SPEED_INLINE constexpr bool in_range(Date start, Date end) const {
 			assert(start <= end);
 			return start <= *this && *this <= end;
 		}
 
-		constexpr std::string_view get_month_name() const {
+		OV_SPEED_INLINE constexpr std::string_view get_month_name() const {
 			const month_t month = get_month();
 			if (1 <= month && month <= MONTHS_IN_YEAR) {
 				return MONTH_NAMES[month - 1];
@@ -266,11 +266,11 @@ namespace OpenVic {
 		}
 
 		// Due to the lack of leap years, this will not fit historical weekdays
-		constexpr std::string_view get_weekday_name() const {
+		OV_SPEED_INLINE constexpr std::string_view get_weekday_name() const {
 			return WEEKDAY_NAMES[get_day_of_week()];
 		}
 
-		inline constexpr std::to_chars_result to_chars( //
+		OV_SPEED_INLINE constexpr std::to_chars_result to_chars( //
 			char* first, char* last, bool pad_year = false, bool pad_month = true, bool pad_day = true
 		) const {
 			year_t year = get_year();
@@ -344,7 +344,7 @@ namespace OpenVic {
 		}
 
 		struct stack_string;
-		inline constexpr stack_string to_array(bool pad_year = false, bool pad_month = true, bool pad_day = true) const;
+		OV_SPEED_INLINE constexpr stack_string to_array(bool pad_year = false, bool pad_month = true, bool pad_day = true) const;
 
 		struct stack_string final : StackString<
 										fmt::detail::count_digits(uint64_t(std::numeric_limits<year_t>::max())) +
@@ -352,7 +352,7 @@ namespace OpenVic {
 										fmt::detail::count_digits(uint64_t(MAX_DAYS_IN_MONTH)) + 4> {
 		protected:
 			using StackString::StackString;
-			friend inline constexpr stack_string Date::to_array(bool pad_year, bool pad_month, bool pad_day) const;
+			friend OV_SPEED_INLINE constexpr stack_string Date::to_array(bool pad_year, bool pad_month, bool pad_day) const;
 		};
 
 		memory::string to_string(bool pad_year = false, bool pad_month = true, bool pad_day = true) const;
@@ -392,7 +392,7 @@ namespace OpenVic {
 			If day == 0, ec == not_supported and ptr == day's first, only year and month are changed
 			If day > days in month, ec == value_too_large and ptr == month's first, only year month are changed
 		*/
-		inline static constexpr from_chars_result parse_from_chars( //
+		OV_SPEED_INLINE static constexpr from_chars_result parse_from_chars( //
 			const char* first, const char* last, year_t& year, month_t& month, day_t& day
 		) {
 			int32_t year_check = year;
@@ -485,7 +485,7 @@ namespace OpenVic {
 
 	public:
 		// Parsed from string of the form YYYY.MM.DD
-		constexpr from_chars_result from_chars(const char* first, const char* last) {
+		OV_SPEED_INLINE constexpr from_chars_result from_chars(const char* first, const char* last) {
 			year_t year = 0;
 			month_t month = 0;
 			day_t day = 0;
@@ -495,7 +495,7 @@ namespace OpenVic {
 		}
 
 		// Parsed from string of the form YYYY.MM.DD
-		static constexpr Date from_string(std::string_view str, from_chars_result* from_chars = nullptr) {
+		OV_SPEED_INLINE static constexpr Date from_string(std::string_view str, from_chars_result* from_chars = nullptr) {
 			Date date {};
 			if (from_chars == nullptr) {
 				date.from_chars(str.data(), str.data() + str.size());
@@ -506,7 +506,7 @@ namespace OpenVic {
 		}
 
 	private:
-		inline static Date handle_from_string_log(std::string_view str, from_chars_result* from_chars) {
+		OV_SPEED_INLINE static Date handle_from_string_log(std::string_view str, from_chars_result* from_chars) {
 			OV_ERR_FAIL_COND_V(from_chars == nullptr, Date {});
 
 			Date date = from_string(str, from_chars);
@@ -571,14 +571,14 @@ namespace OpenVic {
 
 	public:
 		// Parsed from string of the form YYYY.MM.DD
-		static Date from_string_log(std::string_view str) {
+		OV_SPEED_INLINE static Date from_string_log(std::string_view str) {
 			from_chars_result from_chars {};
 			Date date = handle_from_string_log(str, &from_chars);
 			return date;
 		}
 
 		// Parsed from string of the form YYYY.MM.DD
-		static Date from_string_log(std::string_view str, from_chars_result* from_chars) {
+		OV_SPEED_INLINE static Date from_string_log(std::string_view str, from_chars_result* from_chars) {
 			if (from_chars == nullptr) {
 				return from_string_log(str);
 			}
@@ -588,17 +588,17 @@ namespace OpenVic {
 	};
 	std::ostream& operator<<(std::ostream& out, Date date);
 
-	constexpr Timespan Timespan::from_years(day_t num) {
+	OV_SPEED_INLINE constexpr Timespan Timespan::from_years(day_t num) {
 		return num * Date::DAYS_IN_YEAR;
 	}
-	constexpr Timespan Timespan::from_months(day_t num) {
+	OV_SPEED_INLINE constexpr Timespan Timespan::from_months(day_t num) {
 		return (num / Date::MONTHS_IN_YEAR) * Date::DAYS_IN_YEAR + Date::DAYS_UP_TO_MONTH[num % Date::MONTHS_IN_YEAR];
 	}
-	constexpr Timespan Timespan::from_days(day_t num) {
+	OV_SPEED_INLINE constexpr Timespan Timespan::from_days(day_t num) {
 		return num;
 	}
 
-	inline constexpr Date::stack_string Date::to_array(bool pad_year, bool pad_month, bool pad_day) const {
+	OV_SPEED_INLINE constexpr Date::stack_string Date::to_array(bool pad_year, bool pad_month, bool pad_day) const {
 		stack_string str {};
 		std::to_chars_result result =
 			to_chars(str._array.data(), str._array.data() + str._array.size(), pad_year, pad_month, pad_day);

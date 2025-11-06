@@ -197,7 +197,7 @@ namespace OpenVic::_detail::signal {
 			return value() != nullptr;
 		}
 
-		OV_ALWAYS_INLINE bool operator==(const function_pointer& o) const {
+		OV_SPEED_INLINE bool operator==(const function_pointer& o) const {
 			return std::equal(std::begin(data), std::end(data), std::begin(o.data));
 		}
 
