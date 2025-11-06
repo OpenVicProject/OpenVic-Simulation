@@ -68,9 +68,15 @@ namespace OpenVic {
 			return parse_raw(value & FRAC_MASK);
 		}
 
+		struct raw_value_t {
+			explicit raw_value_t() = default;
+		};
+		inline static constexpr raw_value_t raw_value {};
+
+		OV_ALWAYS_INLINE constexpr fixed_point_t(raw_value_t, value_type new_value) : value { new_value } {}
+
 	public:
 		OV_ALWAYS_INLINE constexpr fixed_point_t() : value { 0 } {}
-		OV_ALWAYS_INLINE explicit constexpr fixed_point_t(value_type new_value) : value { new_value } {}
 		OV_ALWAYS_INLINE constexpr fixed_point_t(int32_t new_value) : value { static_cast<value_type>(new_value) << PRECISION } {}
 
 		static const fixed_point_t max;
@@ -392,7 +398,7 @@ namespace OpenVic {
 
 		// Deterministic
 		OV_ALWAYS_INLINE static constexpr fixed_point_t parse_raw(value_type value) {
-			return fixed_point_t { value };
+			return fixed_point_t { raw_value, value };
 		}
 
 		// Deterministic
