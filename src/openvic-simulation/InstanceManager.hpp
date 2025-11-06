@@ -2,15 +2,20 @@
 
 #include "openvic-simulation/console/ConsoleInstance.hpp"
 #include "openvic-simulation/country/CountryInstance.hpp"
+#include "openvic-simulation/country/CountryInstanceDeps.hpp"
 #include "openvic-simulation/diplomacy/CountryRelation.hpp"
 #include "openvic-simulation/economy/GoodInstance.hpp"
+#include "openvic-simulation/economy/production/ArtisanalProducerDeps.hpp"
+#include "openvic-simulation/economy/production/ResourceGatheringOperationDeps.hpp"
 #include "openvic-simulation/economy/trading/MarketInstance.hpp"
 #include "openvic-simulation/map/MapInstance.hpp"
 #include "openvic-simulation/map/Mapmode.hpp"
+#include "openvic-simulation/map/ProvinceInstanceDeps.hpp"
 #include "openvic-simulation/military/UnitInstanceGroup.hpp"
 #include "openvic-simulation/misc/GameAction.hpp"
 #include "openvic-simulation/misc/SimulationClock.hpp"
 #include "openvic-simulation/politics/PoliticsInstanceManager.hpp"
+#include "openvic-simulation/pop/PopDeps.hpp"
 #include "openvic-simulation/types/Date.hpp"
 #include "openvic-simulation/types/FlagStrings.hpp"
 #include "openvic-simulation/utility/ThreadPool.hpp"
@@ -30,17 +35,23 @@ namespace OpenVic {
 
 	private:
 		ThreadPool thread_pool;
-		DefinitionManager const& PROPERTY(definition_manager);
 
+		CountryRelationManager PROPERTY_REF(country_relation_manager);
+		DefinitionManager const& PROPERTY(definition_manager);
 		const GameActionManager game_action_manager;
 		GameRulesManager const& game_rules_manager;
 		GoodInstanceManager PROPERTY_REF(good_instance_manager);
 		MarketInstance PROPERTY_REF(market_instance);
+		
+		ArtisanalProducerDeps artisanal_producer_deps;
+		CountryInstanceDeps country_instance_deps;
+		PopDeps pop_deps;
+		ResourceGatheringOperationDeps rgo_deps;
+		ProvinceInstanceDeps province_instance_deps;
 
 		FlagStrings PROPERTY_REF(global_flags);
 
 		CountryInstanceManager PROPERTY_REF(country_instance_manager);
-		CountryRelationManager PROPERTY_REF(country_relation_manager);
 		UnitInstanceManager PROPERTY_REF(unit_instance_manager);
 		PoliticsInstanceManager PROPERTY_REF(politics_instance_manager);
 		/* Near the end so it is freed after other managers that may depend on it,

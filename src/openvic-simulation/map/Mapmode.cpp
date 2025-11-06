@@ -1,6 +1,7 @@
 #include "Mapmode.hpp"
 
 #include "openvic-simulation/country/CountryInstance.hpp"
+#include "openvic-simulation/economy/BuildingType.hpp"
 #include "openvic-simulation/map/MapDefinition.hpp"
 #include "openvic-simulation/map/MapInstance.hpp"
 #include "openvic-simulation/map/ProvinceDefinition.hpp"

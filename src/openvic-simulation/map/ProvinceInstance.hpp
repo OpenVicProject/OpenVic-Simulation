@@ -33,11 +33,12 @@ namespace OpenVic {
 	struct InstanceManager;
 	struct IssueManager;
 	struct MapInstance;
-	struct MarketInstance;
-	struct ModifierEffectCache;
+	struct PopDeps;
 	struct ProvinceDefinition;
 	struct ProvinceHistoryEntry;
+	struct ProvinceInstanceDeps;
 	struct Religion;
+	struct ResourceGatheringOperationDeps;
 	struct State;
 	struct StaticModifierCache;
 	struct Strata;
@@ -68,8 +69,7 @@ namespace OpenVic {
 
 	private:
 		ProvinceDefinition const& PROPERTY(province_definition);
-		GameRulesManager const& PROPERTY(game_rules_manager);
-		ModifierEffectCache const& PROPERTY(modifier_effect_cache);
+		GameRulesManager const& game_rules_manager;
 
 		TerrainType const* PROPERTY(terrain_type);
 		life_rating_t PROPERTY(life_rating, 0);
@@ -117,14 +117,8 @@ namespace OpenVic {
 	public:
 		//pointers instead of references to allow construction via std::tuple
 		ProvinceInstance(
-			MarketInstance* new_market_instance,
-			GameRulesManager const* new_game_rules_manager,
-			ModifierEffectCache const* new_modifier_effect_cache,
 			ProvinceDefinition const* new_province_definition,
-			utility::forwardable_span<const Strata> strata_keys,
-			utility::forwardable_span<const PopType> pop_type_keys,
-			utility::forwardable_span<const Ideology> ideology_keys,
-			BuildingTypeManager const* building_type_manager
+			ProvinceInstanceDeps const* province_instance_deps
 		);
 		ProvinceInstance(ProvinceInstance const&) = delete;
 		ProvinceInstance& operator=(ProvinceInstance const&) = delete;
@@ -167,7 +161,7 @@ namespace OpenVic {
 		bool add_pop(Pop&& pop);
 		bool add_pop_vec(
 			std::span<const PopBase> pop_vec,
-			MarketInstance& market_instance
+			PopDeps const& pop_deps
 		);
 		size_t get_pop_count() const;
 

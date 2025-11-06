@@ -9,22 +9,12 @@
 #include "openvic-simulation/utility/Logger.hpp"
 #include "openvic-simulation/utility/ThreadPool.hpp"
 
-#if defined(__GLIBCXX__) || defined(__GLIBCPP__) //libstdc++ requires a complete type when emplacing the province instance.
-#include "openvic-simulation/economy/trading/MarketInstance.hpp"
-#endif
-
 using namespace OpenVic;
 
 MapInstance::MapInstance(
 	MapDefinition const& new_map_definition,
-	BuildingTypeManager const& building_type_manager,
-	GameRulesManager const& game_rules_manager,
-	ModifierEffectCache const& modifier_effect_cache,
-	MarketInstance& market_instance,
-	ThreadPool& new_thread_pool,
-	utility::forwardable_span<const Strata> strata_keys,
-	utility::forwardable_span<const PopType> pop_type_keys,
-	utility::forwardable_span<const Ideology> ideology_keys
+	ProvinceInstanceDeps const& province_instance_deps,
+	ThreadPool& new_thread_pool
 ) : map_definition { new_map_definition },
 	thread_pool { new_thread_pool },
 	land_pathing { *this },
@@ -32,23 +22,11 @@ MapInstance::MapInstance(
 	province_instance_by_definition(
 		new_map_definition.get_province_definitions(),
 		[
-			market_instance_ptr=&market_instance,
-			game_rules_manager_ptr=&game_rules_manager,
-			modifier_effect_cache_ptr=&modifier_effect_cache,
-			strata_keys,
-			pop_type_keys,
-			ideology_keys,
-			building_type_manager_ptr=&building_type_manager
+			province_instance_deps_ptr=&province_instance_deps
 		](ProvinceDefinition const& province_definition) -> auto {
 			return std::make_tuple(
-				market_instance_ptr,
-				game_rules_manager_ptr,
-				modifier_effect_cache_ptr,
 				&province_definition,
-				strata_keys,
-				pop_type_keys,
-				ideology_keys,
-				building_type_manager_ptr
+				province_instance_deps_ptr
 			);
 		}
 	) { assert(new_map_definition.province_definitions_are_locked()); }
@@ -106,7 +84,7 @@ bool MapInstance::apply_history_to_provinces(
 	const Date date,
 	CountryInstanceManager& country_manager,
 	IssueManager const& issue_manager,
-	MarketInstance& market_instance
+	PopDeps const& pop_deps
 ) {
 	bool ret = true;
 
@@ -143,7 +121,7 @@ bool MapInstance::apply_history_to_provinces(
 				} else {
 					ret &= province.add_pop_vec(
 						pop_history_entry->get_pops(),
-						market_instance
+						pop_deps
 					);
 					province.setup_pop_test_values(issue_manager);
 				}
