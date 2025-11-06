@@ -12,7 +12,9 @@
 #include "openvic-simulation/pop/Pop.hpp"
 #include "openvic-simulation/pop/PopValuesFromProvince.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
+#include "openvic-simulation/utility/RandomGenerator.hpp"
 #include "openvic-simulation/utility/Typedefs.hpp"
+#include "openvic-simulation/utility/WeightedSampling.hpp"
 
 using namespace OpenVic;
 
@@ -47,6 +49,7 @@ void ArtisanalProducer::set_production_type(ProductionType const* const new_prod
 void ArtisanalProducer::artisan_tick(
 	Pop& pop,
 	PopValuesFromProvince const& values_from_province,
+	RandomU32& random_number_generator,
 	IndexedFlatMap<GoodDefinition, char>& reusable_goods_mask,
 	memory::vector<fixed_point_t>& pop_max_quantity_to_buy_per_good,
 	memory::vector<fixed_point_t>& pop_money_to_spend_per_good,
@@ -54,7 +57,13 @@ void ArtisanalProducer::artisan_tick(
 	memory::vector<fixed_point_t>& reusable_map_1
 ) {
 	ProductionType const* const old_production_type = production_type_nullable;
-	set_production_type(pick_production_type(pop, values_from_province));
+	set_production_type(
+		pick_production_type(
+			pop,
+			values_from_province,
+			random_number_generator
+		)
+	);
 	if (production_type_nullable == nullptr) {
 		return;
 	}
@@ -344,7 +353,8 @@ fixed_point_t ArtisanalProducer::calculate_production_type_score(
 
 ProductionType const* ArtisanalProducer::pick_production_type(
 	Pop& pop,
-	PopValuesFromProvince const& values_from_province
+	PopValuesFromProvince const& values_from_province,
+	RandomU32& random_number_generator
 ) const {
 	bool should_pick_new_production_type;
 	const auto ranked_artisanal_production_types = values_from_province.get_ranked_artisanal_production_types();
@@ -405,6 +415,12 @@ ProductionType const* ArtisanalProducer::pick_production_type(
 		weights_sum += weight;
 	}
 
-	//TODO randomly sample using weights
-	return ranked_artisanal_production_types[0].first;
+	const size_t sample_index = sample_weighted_index(
+		random_number_generator(),
+		weights,
+		weights_sum
+	);
+
+	assert(sample_index >= 0 && sample_index < ranked_artisanal_production_types.size());
+	return ranked_artisanal_production_types[sample_index].first;
 }

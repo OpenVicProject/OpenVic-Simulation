@@ -16,6 +16,7 @@ namespace OpenVic {
 	struct PopValuesFromProvince;
 	struct ProductionType;
 	struct ProvinceInstance;
+	struct RandomU32;
 
 	struct ArtisanalProducer {
 	private:
@@ -32,7 +33,8 @@ namespace OpenVic {
 		void set_production_type(ProductionType const* const new_production_type);
 		ProductionType const* pick_production_type(
 			Pop& pop,
-			PopValuesFromProvince const& values_from_province
+			PopValuesFromProvince const& values_from_province,
+			RandomU32& random_number_generator
 		) const;
 
 		static fixed_point_t calculate_production_type_score(
@@ -58,6 +60,7 @@ namespace OpenVic {
 		void artisan_tick(
 			Pop& pop,
 			PopValuesFromProvince const& values_from_province,
+			RandomU32& random_number_generator,
 			IndexedFlatMap<GoodDefinition, char>& reusable_goods_mask,
 			memory::vector<fixed_point_t>& pop_max_quantity_to_buy_per_good,
 			memory::vector<fixed_point_t>& pop_money_to_spend_per_good,

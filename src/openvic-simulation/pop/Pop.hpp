@@ -172,7 +172,8 @@ namespace OpenVic {
 			fixed_point_t& cash_left_to_spend
 		);
 		void pop_tick_without_cleanup(
-			PopValuesFromProvince& shared_values,
+			PopValuesFromProvince const& shared_values,
+			RandomU32& random_number_generator,
 			IndexedFlatMap<GoodDefinition, char>& reusable_goods_mask,
 			utility::forwardable_span<
 				memory::vector<fixed_point_t>,
@@ -211,7 +212,8 @@ namespace OpenVic {
 		#undef DECLARE_POP_MONEY_STORE_FUNCTIONS
 
 		void pop_tick(
-			PopValuesFromProvince& shared_values,
+			PopValuesFromProvince const& shared_values,
+			RandomU32& random_number_generator,
 			IndexedFlatMap<GoodDefinition, char>& reusable_goods_mask,
 			utility::forwardable_span<
 				memory::vector<fixed_point_t>,
