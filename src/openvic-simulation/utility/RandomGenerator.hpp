@@ -66,11 +66,11 @@ namespace OpenVic {
 			return lhs._generator != rhs._generator;
 		}
 
-		OV_ALWAYS_INLINE constexpr T& generator() {
+		[[nodiscard]] OV_ALWAYS_INLINE constexpr T& generator() {
 			return _generator;
 		}
 
-		OV_ALWAYS_INLINE constexpr T const& generator() const {
+		[[nodiscard]] OV_ALWAYS_INLINE constexpr T const& generator() const {
 			return _generator;
 		}
 
@@ -78,6 +78,6 @@ namespace OpenVic {
 		T _generator;
 	};
 
-	using RandomU32 = RandomGenerator<XoshiroCpp::Xoshiro128StarStar>;
-	using RandomU64 = RandomGenerator<XoshiroCpp::Xoshiro256StarStar>;
+	struct RandomU32 : RandomGenerator<XoshiroCpp::Xoshiro128StarStar> { using RandomGenerator::RandomGenerator; };
+	struct RandomU64 : RandomGenerator<XoshiroCpp::Xoshiro256StarStar> { using RandomGenerator::RandomGenerator; };
 }
