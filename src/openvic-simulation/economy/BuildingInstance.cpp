@@ -32,7 +32,7 @@ void BuildingInstance::update_gamestate(Date today) {
 		end_date = start_date + building_type.get_build_time();
 		break;
 	case ExpansionState::Expanding:
-		expansion_progress = fixed_point_t { (today - start_date).to_int() } / (end_date - start_date).to_int();
+		expansion_progress = fixed_point_t { static_cast<int32_t>((today - start_date).to_int()) } / (end_date - start_date).to_int();
 		break;
 	default: expansion_state = _can_expand() ? ExpansionState::CanExpand : ExpansionState::CannotExpand;
 	}
