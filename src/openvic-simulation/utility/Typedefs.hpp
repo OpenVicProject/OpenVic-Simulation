@@ -25,6 +25,14 @@
 #endif // defined(__GNUC__)
 #endif // OV_ALWAYS_INLINE
 
+#ifndef OV_SPEED_INLINE
+#if defined(DEV_ENABLED) || defined(OPT_SIZE_ENABLED)
+#define OV_SPEED_INLINE inline
+#else
+#define OV_SPEED_INLINE OV_ALWAYS_INLINE
+#endif
+#endif // OV_SPEED_INLINE
+
 #ifndef OV_NO_UNIQUE_ADDRESS
 #if __has_cpp_attribute(msvc::no_unique_address)
 #define OV_NO_UNIQUE_ADDRESS [[msvc::no_unique_address]]

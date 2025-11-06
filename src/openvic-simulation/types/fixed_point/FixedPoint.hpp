@@ -102,43 +102,43 @@ namespace OpenVic {
 
 		// Standard for constexpr requires this here
 		template<std::integral T>
-		constexpr friend fixed_point_t operator/(fixed_point_t const& lhs, T const& rhs) {
+		OV_SPEED_INLINE constexpr friend fixed_point_t operator/(fixed_point_t const& lhs, T const& rhs) {
 			return parse_raw(lhs.value / rhs);
 		}
 
 		template<std::integral T>
-		constexpr friend fixed_point_t operator/(T const& lhs, fixed_point_t const& rhs) {
+		OV_SPEED_INLINE constexpr friend fixed_point_t operator/(T const& lhs, fixed_point_t const& rhs) {
 			return parse_raw((static_cast<value_type>(lhs) << (2 * PRECISION)) / rhs.value);
 		}
 
 		template<std::integral T>
-		constexpr fixed_point_t& operator/=(T const& obj) {
+		OV_SPEED_INLINE constexpr fixed_point_t& operator/=(T const& obj) {
 			value /= obj;
 			return *this;
 		}
 
 		template<std::integral T>
-		constexpr friend fixed_point_t operator*(fixed_point_t const& lhs, T const& rhs) {
+		OV_SPEED_INLINE constexpr friend fixed_point_t operator*(fixed_point_t const& lhs, T const& rhs) {
 			return parse_raw(lhs.value * rhs);
 		}
 
 		template<std::integral T>
-		constexpr fixed_point_t& operator*=(T const& obj) {
+		OV_SPEED_INLINE constexpr fixed_point_t& operator*=(T const& obj) {
 			value *= obj;
 			return *this;
 		}
 
 		template<std::integral T>
-		constexpr friend fixed_point_t operator+(fixed_point_t const& lhs, T const& rhs) {
+		OV_SPEED_INLINE constexpr friend fixed_point_t operator+(fixed_point_t const& lhs, T const& rhs) {
 			return parse_raw(lhs.value + (static_cast<value_type>(rhs) << PRECISION));
 		}
 
 		template<std::integral T>
-		constexpr std::strong_ordering operator<=>(T const& rhs) const {
+		OV_SPEED_INLINE constexpr std::strong_ordering operator<=>(T const& rhs) const {
 			return value <=> static_cast<value_type>(rhs) << PRECISION;
 		}
 
-		constexpr fixed_point_t sin() const {
+		OV_SPEED_INLINE constexpr fixed_point_t sin() const {
 			using namespace _detail::LUT;
 
 			value_type num = (*this % pi2 * one_div_pi2).get_raw_value();
@@ -157,30 +157,30 @@ namespace OpenVic {
 			return !negative ? parse_raw(result) : parse_raw(-result);
 		}
 
-		constexpr fixed_point_t cos() const {
+		OV_SPEED_INLINE constexpr fixed_point_t cos() const {
 			return (*this + pi_half).sin();
 		}
 
-		constexpr bool is_negative() const {
+		OV_SPEED_INLINE constexpr bool is_negative() const {
 			return value < 0;
 		}
 
-		constexpr fixed_point_t abs() const {
+		OV_SPEED_INLINE constexpr fixed_point_t abs() const {
 			return !is_negative() ? parse_raw(value) : parse_raw(-value);
 		}
 
-		constexpr fixed_point_t sqrt() const {
+		OV_SPEED_INLINE constexpr fixed_point_t sqrt() const {
 			return !is_negative()
 				? parse_raw(OpenVic::sqrt(static_cast<uint64_t>(value) << PRECISION))
 				: _0;
 		}
 
-		constexpr bool is_integer() const {
+		OV_SPEED_INLINE constexpr bool is_integer() const {
 			return get_frac() == 0;
 		}
 
 		template<std::integral T>
-		OV_ALWAYS_INLINE constexpr T unsafe_truncate() const {
+		OV_SPEED_INLINE constexpr T unsafe_truncate() const {
 			if constexpr(std::unsigned_integral<T>) {
 				assert(OV_likely(!is_negative()));
 			}
@@ -188,7 +188,7 @@ namespace OpenVic {
 		}
 
 		template<std::integral T>
-		explicit constexpr operator T() const {
+		OV_SPEED_INLINE explicit constexpr operator T() const {
 #ifdef DEV_ENABLED
 			if (!std::is_constant_evaluated()) {
 				if (OV_unlikely(value != 0 && abs() < ONE)) {
@@ -203,22 +203,22 @@ namespace OpenVic {
 			return unsafe_truncate<T>();
 		}
 
-		constexpr fixed_point_t truncate() const {
+		OV_SPEED_INLINE constexpr fixed_point_t truncate() const {
 			return parse_raw(value & ~FRAC_MASK);
 		}
 
 		template<std::integral T>
-		constexpr T truncate() const {
+		OV_SPEED_INLINE constexpr T truncate() const {
 			return static_cast<T>(*this);
 		}
 
 		template<std::floating_point T>
-		explicit constexpr operator T() const {
+		OV_SPEED_INLINE explicit constexpr operator T() const {
 			return value / static_cast<T>(ONE);
 		}
 
 		template<std::integral T>
-		constexpr T floor() const {
+		OV_SPEED_INLINE constexpr T floor() const {
 			if (!is_negative()) {
 				return unsafe_truncate<T>();
 			}
@@ -226,7 +226,7 @@ namespace OpenVic {
 			return parse_raw(value + FRAC_MASK).unsafe_truncate<T>() - !is_integer();
 		}
 
-		constexpr fixed_point_t floor() const {
+		OV_SPEED_INLINE constexpr fixed_point_t floor() const {
 			if (!is_negative()) {
 				return truncate();
 			}
@@ -235,7 +235,7 @@ namespace OpenVic {
 		}
 
 		template<std::integral T>
-		constexpr T ceil() const {
+		OV_SPEED_INLINE constexpr T ceil() const {
 			if (is_negative()) {
 				return unsafe_truncate<T>();
 			}
@@ -243,7 +243,7 @@ namespace OpenVic {
 			return unsafe_truncate<T>() + !is_integer();
 		}
 
-		constexpr fixed_point_t ceil() const {
+		OV_SPEED_INLINE constexpr fixed_point_t ceil() const {
 			if (is_negative()) {
 				return truncate();
 			}
@@ -251,7 +251,7 @@ namespace OpenVic {
 			return ceil<value_type>();
 		}
 
-		constexpr fixed_point_t round() const {
+		OV_SPEED_INLINE constexpr fixed_point_t round() const {
 			if (is_negative()) {
 				return (*this - _0_50).truncate();
 			}
@@ -260,12 +260,12 @@ namespace OpenVic {
 		}
 
 		template<typename T>
-		constexpr T round() const;
+		OV_SPEED_INLINE constexpr T round() const;
 
 		/* WARNING: the results of these rounding functions are affected by the accuracy of base 2 fixed point numbers,
 		 * for example 1.0 rounded to a multiple of 0.01 is 0.99945068359375 for down and 1.0094451904296875 for up. */
 		template<midpoint_rounding Preference>
-		constexpr fixed_point_t round(fixed_point_t factor) const {
+		OV_SPEED_INLINE constexpr fixed_point_t round(fixed_point_t factor) const {
 			if constexpr (Preference == midpoint_rounding::AWAY_ZERO) {
 				const fixed_point_t remainder = *this % factor;
 				return *this - remainder - (remainder < 0 ? factor : _0);
@@ -277,7 +277,7 @@ namespace OpenVic {
 
 		/* WARNING: the results of these rounding functions are affected by the accuracy of base 2 fixed point numbers,
 		 * for example 1.0 rounded to a multiple of 0.01 is 0.99945068359375 for down and 1.0094451904296875 for up. */
-		constexpr fixed_point_t round(fixed_point_t factor, midpoint_rounding preference) const {
+		OV_SPEED_INLINE constexpr fixed_point_t round(fixed_point_t factor, midpoint_rounding preference) const {
 			switch (preference) {
 			case midpoint_rounding::AWAY_ZERO: return round<midpoint_rounding::AWAY_ZERO>(factor);
 			case midpoint_rounding::TO_ZERO:   return round<midpoint_rounding::TO_ZERO>(factor);
@@ -286,7 +286,7 @@ namespace OpenVic {
 
 		// Rounds away from zero on tie
 		template<std::integral T>
-		constexpr T round() const {
+		OV_SPEED_INLINE constexpr T round() const {
 			if (is_negative()) {
 				return (*this - _0_50).unsafe_truncate<T>();
 			}
@@ -295,11 +295,11 @@ namespace OpenVic {
 		}
 
 		template<std::floating_point T>
-		constexpr T round() const {
+		OV_SPEED_INLINE constexpr T round() const {
 			return static_cast<T>(round_to_int64<T>((value / static_cast<T>(ONE)) * T { 100000 })) / T { 100000 };
 		}
 
-		inline constexpr std::to_chars_result to_chars(char* first, char* last, size_t decimal_places = -1) const {
+		OV_SPEED_INLINE constexpr std::to_chars_result to_chars(char* first, char* last, size_t decimal_places = -1) const {
 			if (first == nullptr || first >= last) {
 				return { last, std::errc::value_too_large };
 			}
@@ -373,15 +373,15 @@ namespace OpenVic {
 		}
 
 		struct stack_string;
-		inline constexpr stack_string to_array(size_t decimal_places = -1) const;
+		OV_SPEED_INLINE  constexpr stack_string to_array(size_t decimal_places = -1) const;
 
 		struct stack_string final : StackString<25> {
 		protected:
 			using StackString::StackString;
-			friend inline constexpr stack_string fixed_point_t::to_array(size_t decimal_places) const;
+			friend OV_SPEED_INLINE constexpr stack_string fixed_point_t::to_array(size_t decimal_places) const;
 		};
 
-		memory::string to_string(size_t decimal_places = -1) const {
+		OV_SPEED_INLINE memory::string to_string(size_t decimal_places = -1) const {
 			stack_string result = to_array(decimal_places);
 			if (OV_unlikely(result.empty())) {
 				return {};
@@ -396,12 +396,12 @@ namespace OpenVic {
 		}
 
 		// Deterministic
-		static constexpr fixed_point_t parse(int64_t value) {
+		OV_SPEED_INLINE static constexpr fixed_point_t parse(int64_t value) {
 			return parse_raw(value << PRECISION);
 		}
 
 		// Deterministic
-		constexpr std::from_chars_result from_chars(char const* begin, char const* end) {
+		OV_SPEED_INLINE constexpr std::from_chars_result from_chars(char const* begin, char const* end) {
 			if (begin == nullptr || begin >= end) {
 				return { begin, std::errc::invalid_argument };
 			}
@@ -446,7 +446,7 @@ namespace OpenVic {
 			return from_chars;
 		}
 
-		constexpr std::from_chars_result from_chars_with_plus(char const* begin, char const* end) {
+		OV_SPEED_INLINE constexpr std::from_chars_result from_chars_with_plus(char const* begin, char const* end) {
 			if (begin && *begin == '+') {
 				begin++;
 				if (begin < end && *begin == '-') {
@@ -458,7 +458,7 @@ namespace OpenVic {
 		}
 
 		// Deterministic
-		static constexpr fixed_point_t parse(char const* str, char const* end, bool* successful = nullptr) {
+		OV_SPEED_INLINE static constexpr fixed_point_t parse(char const* str, char const* end, bool* successful = nullptr) {
 			fixed_point_t value = 0;
 			std::from_chars_result result = value.from_chars_with_plus(str, end);
 			if (successful) {
@@ -467,21 +467,21 @@ namespace OpenVic {
 			return value;
 		}
 
-		static constexpr fixed_point_t parse(char const* str, size_t length, bool* successful = nullptr) {
+		OV_SPEED_INLINE static constexpr fixed_point_t parse(char const* str, size_t length, bool* successful = nullptr) {
 			return parse(str, str + length, successful);
 		}
 
-		static constexpr fixed_point_t parse(std::string_view str, bool* successful = nullptr) {
+		OV_SPEED_INLINE static constexpr fixed_point_t parse(std::string_view str, bool* successful = nullptr) {
 			return parse(str.data(), str.length(), successful);
 		}
 
 		// Not Deterministic
-		static constexpr fixed_point_t parse_unsafe(float value) {
+		OV_SPEED_INLINE static constexpr fixed_point_t parse_unsafe(float value) {
 			return parse_raw(value * ONE + 0.5f * (value < 0 ? -1 : 1));
 		}
 
 		// Not Deterministic
-		static fixed_point_t parse_unsafe(char const* value) {
+		OV_SPEED_INLINE static fixed_point_t parse_unsafe(char const* value) {
 			char* endpointer;
 			double double_value = std::strtod(value, &endpointer);
 
@@ -494,7 +494,7 @@ namespace OpenVic {
 			return parse_raw(integer_value);
 		}
 
-		explicit operator memory::string() const {
+		OV_SPEED_INLINE explicit operator memory::string() const {
 			return to_string();
 		}
 
@@ -507,172 +507,172 @@ namespace OpenVic {
 			return stream << static_cast<std::string_view>(result);
 		}
 
-		constexpr friend fixed_point_t operator-(fixed_point_t const& obj) {
+		OV_SPEED_INLINE constexpr friend fixed_point_t operator-(fixed_point_t const& obj) {
 			return parse_raw(-obj.value);
 		}
 
-		constexpr friend fixed_point_t operator+(fixed_point_t const& obj) {
+		OV_SPEED_INLINE constexpr friend fixed_point_t operator+(fixed_point_t const& obj) {
 			return parse_raw(+obj.value);
 		}
 
-		constexpr friend fixed_point_t operator+(fixed_point_t const& lhs, fixed_point_t const& rhs) {
+		OV_SPEED_INLINE constexpr friend fixed_point_t operator+(fixed_point_t const& lhs, fixed_point_t const& rhs) {
 			return parse_raw(lhs.value + rhs.value);
 		}
 
 		template<std::integral T>
-		constexpr friend fixed_point_t operator+(T const& lhs, fixed_point_t const& rhs) {
+		OV_SPEED_INLINE constexpr friend fixed_point_t operator+(T const& lhs, fixed_point_t const& rhs) {
 			return parse_raw((static_cast<value_type>(lhs) << PRECISION) + rhs.value);
 		}
 
-		constexpr fixed_point_t& operator+=(fixed_point_t const& obj) {
+		OV_SPEED_INLINE constexpr fixed_point_t& operator+=(fixed_point_t const& obj) {
 			value += obj.value;
 			return *this;
 		}
 
 		template<std::integral T>
-		constexpr fixed_point_t& operator+=(T const& obj) {
+		OV_SPEED_INLINE constexpr fixed_point_t& operator+=(T const& obj) {
 			value += (static_cast<value_type>(obj) << PRECISION);
 			return *this;
 		}
 
-		constexpr friend fixed_point_t operator-(fixed_point_t const& lhs, fixed_point_t const& rhs) {
+		OV_SPEED_INLINE constexpr friend fixed_point_t operator-(fixed_point_t const& lhs, fixed_point_t const& rhs) {
 			return parse_raw(lhs.value - rhs.value);
 		}
 
 		template<std::integral T>
-		constexpr friend fixed_point_t operator-(fixed_point_t const& lhs, T const& rhs) {
+		OV_SPEED_INLINE constexpr friend fixed_point_t operator-(fixed_point_t const& lhs, T const& rhs) {
 			return parse_raw(lhs.value - (static_cast<value_type>(rhs) << PRECISION));
 		}
 
 		template<std::integral T>
-		constexpr friend fixed_point_t operator-(T const& lhs, fixed_point_t const& rhs) {
+		OV_SPEED_INLINE constexpr friend fixed_point_t operator-(T const& lhs, fixed_point_t const& rhs) {
 			return parse_raw((static_cast<value_type>(lhs) << PRECISION) - rhs.value);
 		}
 
-		constexpr fixed_point_t& operator-=(fixed_point_t const& obj) {
+		OV_SPEED_INLINE constexpr fixed_point_t& operator-=(fixed_point_t const& obj) {
 			value -= obj.value;
 			return *this;
 		}
 
 		template<std::integral T>
-		constexpr fixed_point_t& operator-=(T const& obj) {
+		OV_SPEED_INLINE constexpr fixed_point_t& operator-=(T const& obj) {
 			value -= (static_cast<value_type>(obj) << PRECISION);
 			return *this;
 		}
 
-		constexpr fixed_point_t& operator++() {
+		OV_SPEED_INLINE constexpr fixed_point_t& operator++() {
 			value += ONE;
 			return *this;
 		}
 
-		constexpr fixed_point_t operator++(int) {
+		OV_SPEED_INLINE constexpr fixed_point_t operator++(int) {
 			const fixed_point_t old = *this;
 			value += ONE;
 			return old;
 		}
 
-		constexpr fixed_point_t& operator--() {
+		OV_SPEED_INLINE constexpr fixed_point_t& operator--() {
 			value -= ONE;
 			return *this;
 		}
 
-		constexpr fixed_point_t operator--(int) {
+		OV_SPEED_INLINE constexpr fixed_point_t operator--(int) {
 			const fixed_point_t old = *this;
 			value -= ONE;
 			return old;
 		}
 
 		template<std::integral T>
-		constexpr friend fixed_point_t operator<<(fixed_point_t const& lhs, T const& rhs) {
+		OV_SPEED_INLINE constexpr friend fixed_point_t operator<<(fixed_point_t const& lhs, T const& rhs) {
 			return parse_raw(lhs.value << rhs);
 		}
 
 		template<std::integral T>
-		constexpr friend fixed_point_t operator>>(fixed_point_t const& lhs, T const& rhs) {
+		OV_SPEED_INLINE constexpr friend fixed_point_t operator>>(fixed_point_t const& lhs, T const& rhs) {
 			return parse_raw(lhs.value >> rhs);
 		}
 
-		constexpr friend fixed_point_t operator*(fixed_point_t const& lhs, fixed_point_t const& rhs) {
+		OV_SPEED_INLINE constexpr friend fixed_point_t operator*(fixed_point_t const& lhs, fixed_point_t const& rhs) {
 			return parse_raw(lhs.value * rhs.value >> PRECISION);
 		}
 
 		template<std::integral T>
-		constexpr friend fixed_point_t operator*(T const& lhs, fixed_point_t const& rhs) {
+		OV_SPEED_INLINE constexpr friend fixed_point_t operator*(T const& lhs, fixed_point_t const& rhs) {
 			return parse_raw(lhs * rhs.value);
 		}
 
-		constexpr fixed_point_t& operator*=(fixed_point_t const& obj) {
+		OV_SPEED_INLINE constexpr fixed_point_t& operator*=(fixed_point_t const& obj) {
 			value *= obj.value;
 			value >>= PRECISION;
 			return *this;
 		}
 
-		constexpr friend fixed_point_t operator/(fixed_point_t const& lhs, fixed_point_t const& rhs) {
+		OV_SPEED_INLINE constexpr friend fixed_point_t operator/(fixed_point_t const& lhs, fixed_point_t const& rhs) {
 			return parse_raw((lhs.value << PRECISION) / rhs.value);
 		}
 
-		constexpr fixed_point_t& operator/=(fixed_point_t const& obj) {
+		OV_SPEED_INLINE constexpr fixed_point_t& operator/=(fixed_point_t const& obj) {
 			value = (value << PRECISION) / obj.value;
 			return *this;
 		}
 
 		//Preserves accuracy. Performing a normal multiplication of small values results in 0.
-		constexpr static fixed_point_t mul_div(fixed_point_t const& a, fixed_point_t const& b, fixed_point_t const& denominator) {
+		OV_SPEED_INLINE constexpr static fixed_point_t mul_div(fixed_point_t const& a, fixed_point_t const& b, fixed_point_t const& denominator) {
 			return parse_raw(a.value * b.value / denominator.value);
 		}
 
-		constexpr friend fixed_point_t operator%(fixed_point_t const& lhs, fixed_point_t const& rhs) {
+		OV_SPEED_INLINE constexpr friend fixed_point_t operator%(fixed_point_t const& lhs, fixed_point_t const& rhs) {
 			return parse_raw(lhs.value % rhs.value);
 		}
 
 		template<std::integral T>
-		constexpr friend fixed_point_t operator%(fixed_point_t const& lhs, T const& rhs) {
+		OV_SPEED_INLINE constexpr friend fixed_point_t operator%(fixed_point_t const& lhs, T const& rhs) {
 			return parse_raw(lhs.value % (static_cast<value_type>(rhs) << PRECISION));
 		}
 
 		template<std::integral T>
-		constexpr friend fixed_point_t operator%(T const& lhs, fixed_point_t const& rhs) {
+		OV_SPEED_INLINE constexpr friend fixed_point_t operator%(T const& lhs, fixed_point_t const& rhs) {
 			return parse_raw((static_cast<value_type>(lhs) << PRECISION) % rhs.value);
 		}
 
-		constexpr fixed_point_t& operator%=(fixed_point_t const& obj) {
+		OV_SPEED_INLINE constexpr fixed_point_t& operator%=(fixed_point_t const& obj) {
 			value %= obj.value;
 			return *this;
 		}
 
 		template<std::integral T>
-		constexpr fixed_point_t& operator%=(T const& obj) {
+		OV_SPEED_INLINE constexpr fixed_point_t& operator%=(T const& obj) {
 			value %= (static_cast<value_type>(obj) << PRECISION);
 			return *this;
 		}
 
-		friend constexpr bool operator==(fixed_point_t const& lhs, fixed_point_t const& rhs) {
+		OV_SPEED_INLINE friend constexpr bool operator==(fixed_point_t const& lhs, fixed_point_t const& rhs) {
 			return lhs.value == rhs.value;
 		}
 
 		template<std::integral T>
-		constexpr bool operator==(T const& rhs) const {
+		OV_SPEED_INLINE constexpr bool operator==(T const& rhs) const {
 			return value == static_cast<value_type>(rhs) << PRECISION;
 		}
 
 		template<std::floating_point T>
-		constexpr bool operator==(T const& rhs) const {
+		OV_SPEED_INLINE constexpr bool operator==(T const& rhs) const {
 			return static_cast<T>(*this) == rhs;
 		}
 
-		friend constexpr std::strong_ordering operator<=>(fixed_point_t const& lhs, fixed_point_t const& rhs) {
+		OV_SPEED_INLINE friend constexpr std::strong_ordering operator<=>(fixed_point_t const& lhs, fixed_point_t const& rhs) {
 			return lhs.value <=> rhs.value;
 		}
 
 		template<std::floating_point T>
-		constexpr std::partial_ordering operator<=>(T const& rhs) const {
+		OV_SPEED_INLINE constexpr std::partial_ordering operator<=>(T const& rhs) const {
 			return static_cast<T>(*this) <=> rhs;
 		}
 
 	private:
 		// Deterministic
 		// Can produce negative values
-		static constexpr std::from_chars_result from_chars_integer(char const* str, char const* const end, fixed_point_t& value) {
+		OV_SPEED_INLINE static constexpr std::from_chars_result from_chars_integer(char const* str, char const* const end, fixed_point_t& value) {
 			int64_t parsed_value = 0;
 			std::from_chars_result result = StringUtils::string_to_int64(str, end, parsed_value);
 			if (result.ec == std::errc{}) {
@@ -683,7 +683,7 @@ namespace OpenVic {
 
 		// Deterministic
 		// Cannot produce negative values
-		static constexpr std::from_chars_result from_chars_fraction(char const* begin, char const* end, fixed_point_t& value) {
+		OV_SPEED_INLINE static constexpr std::from_chars_result from_chars_fraction(char const* begin, char const* end, fixed_point_t& value) {
 			if (begin && *begin == '-') {
 				return { begin, std::errc::invalid_argument };
 			}
@@ -712,7 +712,7 @@ namespace OpenVic {
 		}
 
 		template<size_t N, std::array<int64_t, N> EXP_LUT>
-		static constexpr fixed_point_t _exp_internal(fixed_point_t const& x) {
+		OV_SPEED_INLINE static constexpr fixed_point_t _exp_internal(fixed_point_t const& x) {
 			const bool negative = x.is_negative();
 			value_type bits = negative ? -x.value : x.value;
 			fixed_point_t result = _1;
@@ -735,18 +735,18 @@ namespace OpenVic {
 		}
 
 	public:
-		static inline constexpr fixed_point_t exp(fixed_point_t const& x) {
+		OV_SPEED_INLINE static constexpr fixed_point_t exp(fixed_point_t const& x) {
 			return _exp_internal<_detail::LUT::_2_16_EXP_e.size(), _detail::LUT::_2_16_EXP_e>(x);
 		}
 
-		static inline constexpr fixed_point_t exp_2001(fixed_point_t const& x) {
+		OV_SPEED_INLINE static constexpr fixed_point_t exp_2001(fixed_point_t const& x) {
 			return _exp_internal<_detail::LUT::_2_16_EXP_2001.size(), _detail::LUT::_2_16_EXP_2001>(x);
 		}
 	};
 
 	static_assert(sizeof(fixed_point_t) == fixed_point_t::SIZE, "fixed_point_t is not 8 bytes");
 
-	inline constexpr fixed_point_t::stack_string fixed_point_t::to_array(size_t decimal_places) const {
+	OV_SPEED_INLINE constexpr fixed_point_t::stack_string fixed_point_t::to_array(size_t decimal_places) const {
 		stack_string str {};
 		std::to_chars_result result = to_chars(str._array.data(), str._array.data() + str._array.size(), decimal_places);
 		str._string_size = result.ptr - str.data();
@@ -781,7 +781,7 @@ namespace OpenVic {
 	inline constexpr fixed_point_t fixed_point_t::e = parse_raw(178145LL);
 
 	template<>
-	[[nodiscard]] inline constexpr fixed_point_t abs(fixed_point_t num) {
+	[[nodiscard]] OV_SPEED_INLINE constexpr fixed_point_t abs(fixed_point_t num) {
 		return num.abs();
 	}
 }
