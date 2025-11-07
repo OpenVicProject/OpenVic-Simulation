@@ -1,5 +1,13 @@
 #include "BuildingType.hpp"
 
+#include <string_view>
+#include <utility>
+
+#include <spdlog/spdlog.h>
+
+#include "openvic-simulation/core/Logger.hpp"
+#include "openvic-simulation/core/memory/Format.hpp"
+#include "openvic-simulation/core/string/Utility.hpp"
 #include "openvic-simulation/economy/GoodDefinition.hpp"
 #include "openvic-simulation/economy/production/ProductionType.hpp"
 #include "openvic-simulation/modifier/ModifierEffectCache.hpp"
@@ -138,12 +146,12 @@ bool BuildingTypeManager::load_buildings_file(
 		static constexpr std::string_view max_prefix = "max_";
 		static constexpr std::string_view min_prefix = "min_build_";
 		ret &= modifier_manager.register_technology_modifier_effect(
-			this_building_type_effects.max_level, StringUtils::append_string_views(max_prefix, building_type.get_identifier()),
+			this_building_type_effects.max_level, append_string_views(max_prefix, building_type.get_identifier()),
 			FORMAT_x1_0DP_POS, memory::fmt::format("${}$ $TECH_MAX_LEVEL$", building_type)
 		);
 		// TODO - add custom localisation for "min_build_$building_type$" modifiers
 		ret &= modifier_manager.register_terrain_modifier_effect(
-			this_building_type_effects.min_level, StringUtils::append_string_views(min_prefix, building_type.get_identifier()),
+			this_building_type_effects.min_level, append_string_views(min_prefix, building_type.get_identifier()),
 			FORMAT_x1_0DP_NEG
 		);
 

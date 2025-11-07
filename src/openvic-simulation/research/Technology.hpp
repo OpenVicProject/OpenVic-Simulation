@@ -1,15 +1,19 @@
 #pragma once
 
 #include <cstdint>
+#include <optional>
+#include <string_view>
 
+#include "openvic-simulation/Alias.hpp"
+#include "openvic-simulation/core/container/HasIdentifier.hpp"
+#include "openvic-simulation/core/container/HasIndex.hpp"
+#include "openvic-simulation/core/container/IdentifierRegistry.hpp"
+#include "openvic-simulation/core/memory/OrderedSet.hpp"
+#include "openvic-simulation/core/memory/Vector.hpp"
+#include "openvic-simulation/core/object/Date.hpp"
+#include "openvic-simulation/core/object/FixedPoint.hpp"
 #include "openvic-simulation/modifier/Modifier.hpp"
 #include "openvic-simulation/scripts/ConditionalWeight.hpp"
-#include "openvic-simulation/types/Date.hpp"
-#include "openvic-simulation/types/HasIdentifier.hpp"
-#include "openvic-simulation/types/HasIndex.hpp"
-#include "openvic-simulation/types/OrderedContainers.hpp"
-#include "openvic-simulation/types/UnitVariant.hpp"
-#include "openvic-simulation/utility/Containers.hpp"
 
 namespace OpenVic {
 	struct BuildingType;
@@ -47,8 +51,8 @@ namespace OpenVic {
 		friend struct TechnologyManager;
 
 		using area_index_t = uint8_t;
-		using unit_set_t = ordered_set<UnitType const*>;
-		using building_set_t = ordered_set<BuildingType const*>;
+		using unit_set_t = memory::ordered_set<UnitType const*>;
+		using building_set_t = memory::ordered_set<BuildingType const*>;
 
 	private:
 		TechnologyArea const& PROPERTY(area);

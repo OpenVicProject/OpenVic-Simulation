@@ -1,7 +1,17 @@
+#include <algorithm>
+#include <array>
 #include <chrono>
+#include <cstddef>
+#include <cstring>
 #include <filesystem>
+#include <iterator>
 #include <memory>
+#include <optional>
 #include <random>
+#include <source_location>
+#include <string_view>
+#include <utility>
+#include <vector>
 
 #include <fmt/base.h>
 #include <fmt/chrono.h>
@@ -13,6 +23,10 @@
 #include <spdlog/sinks/callback_sink.h>
 
 #include <openvic-simulation/GameManager.hpp>
+#include <openvic-simulation/core/Logger.hpp>
+#include <openvic-simulation/core/memory/String.hpp>
+#include <openvic-simulation/core/memory/Tracker.hpp>
+#include <openvic-simulation/core/portable/ForwardableSpan.hpp>
 #include <openvic-simulation/country/CountryInstance.hpp>
 #include <openvic-simulation/dataloader/Dataloader.hpp>
 #include <openvic-simulation/economy/GoodDefinition.hpp>
@@ -20,9 +34,6 @@
 #include <openvic-simulation/economy/production/ResourceGatheringOperation.hpp>
 #include <openvic-simulation/pathfinding/AStarPathing.hpp>
 #include <openvic-simulation/testing/Testing.hpp>
-#include <openvic-simulation/utility/Containers.hpp>
-#include <openvic-simulation/utility/Logger.hpp>
-#include <openvic-simulation/utility/MemoryTracker.hpp>
 
 using namespace OpenVic;
 
@@ -257,7 +268,7 @@ static bool run_headless(fs::path const& root, memory::vector<memory::string>& m
 	SPDLOG_INFO("===== Ranking system test... =====");
 	if (game_manager.get_instance_manager()) {
 		const auto print_ranking_list = [ //
-		](std::string_view title, OpenVic::utility::forwardable_span<CountryInstance* const> countries) -> void {
+		](std::string_view title, OpenVic::forwardable_span<CountryInstance* const> countries) -> void {
 			memory::string countries_str;
 			for (CountryInstance* country : countries) {
 				countries_str += fmt::format(
@@ -275,7 +286,7 @@ static bool run_headless(fs::path const& root, memory::vector<memory::string>& m
 		CountryInstanceManager const& country_instance_manager =
 			game_manager.get_instance_manager()->get_country_instance_manager();
 
-		OpenVic::utility::forwardable_span<CountryInstance* const> great_powers = country_instance_manager.get_great_powers();
+		OpenVic::forwardable_span<CountryInstance* const> great_powers = country_instance_manager.get_great_powers();
 		print_ranking_list("Great Powers", great_powers);
 		print_ranking_list("Secondary Powers", country_instance_manager.get_secondary_powers());
 		print_ranking_list("All countries", country_instance_manager.get_total_ranking());
@@ -373,7 +384,7 @@ static bool run_headless(fs::path const& root, memory::vector<memory::string>& m
 */
 
 int main(int argc, char const* argv[]) {
-	char const* program_name = StringUtils::get_filename(argc > 0 ? argv[0] : nullptr, "<program>");
+	char const* program_name = OpenVic::get_filename(argc > 0 ? argv[0] : nullptr, "<program>");
 	fs::path root;
 	memory::vector<memory::string> mods;
 	mods.reserve(argc);

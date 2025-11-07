@@ -1,16 +1,28 @@
 #include "PopManager.hpp"
 
+#include <array>
+#include <cstddef>
+#include <string_view>
+#include <utility>
+
 #include <fmt/format.h>
 
+#include "openvic-simulation/Alias.hpp"
+#include "openvic-simulation/core/FormatValidate.hpp"
+#include "openvic-simulation/core/Logger.hpp"
+#include "openvic-simulation/core/memory/FixedPointMap.hpp"
+#include "openvic-simulation/core/memory/StringMap.hpp"
+#include "openvic-simulation/core/object/Colour.hpp"
+#include "openvic-simulation/core/object/FixedPoint.hpp"
+#include "openvic-simulation/core/string/Utility.hpp"
+#include "openvic-simulation/dataloader/NodeTools.hpp"
 #include "openvic-simulation/economy/GoodDefinition.hpp"
+#include "openvic-simulation/military/UnitType.hpp"
+#include "openvic-simulation/modifier/ModifierManager.hpp"
 #include "openvic-simulation/politics/Ideology.hpp"
 #include "openvic-simulation/politics/IssueManager.hpp"
 #include "openvic-simulation/politics/Rebel.hpp"
 #include "openvic-simulation/pop/Pop.hpp"
-#include "openvic-simulation/military/UnitType.hpp"
-#include "openvic-simulation/modifier/ModifierManager.hpp"
-#include "openvic-simulation/utility/FormatValidate.hpp"
-#include "openvic-simulation/utility/Logger.hpp"
 
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;
@@ -72,9 +84,9 @@ bool PopManager::add_pop_type(
 	colour_t colour,
 	Strata* strata,
 	pop_sprite_t sprite,
-	fixed_point_map_t<GoodDefinition const*>&& life_needs,
-	fixed_point_map_t<GoodDefinition const*>&& everyday_needs,
-	fixed_point_map_t<GoodDefinition const*>&& luxury_needs,
+	memory::fixed_point_map_t<GoodDefinition const*>&& life_needs,
+	memory::fixed_point_map_t<GoodDefinition const*>&& everyday_needs,
+	memory::fixed_point_map_t<GoodDefinition const*>&& luxury_needs,
 	PopType::income_type_t life_needs_income_types,
 	PopType::income_type_t everyday_needs_income_types,
 	PopType::income_type_t luxury_needs_income_types,
@@ -220,7 +232,7 @@ void PopManager::reserve_pop_types_and_delayed_nodes(size_t size) {
 
 static NodeCallback auto expect_needs_income(PopType::income_type_t& types) {
 	using enum PopType::income_type_t;
-	static const string_map_t<PopType::income_type_t> income_type_map {
+	static const memory::string_map_t<PopType::income_type_t> income_type_map {
 		{ "administration", ADMINISTRATION },
 		{ "education", EDUCATION },
 		{ "military", MILITARY }
@@ -258,7 +270,7 @@ bool PopManager::load_pop_type_file(
 	colour_t colour = colour_t::null();
 	Strata* strata = default_strata;
 	pop_sprite_t sprite = 0;
-	fixed_point_map_t<GoodDefinition const*> life_needs, everyday_needs, luxury_needs;
+	memory::fixed_point_map_t<GoodDefinition const*> life_needs, everyday_needs, luxury_needs;
 	PopType::income_type_t life_needs_income_types = NO_INCOME_TYPE, everyday_needs_income_types = NO_INCOME_TYPE,
 		luxury_needs_income_types = NO_INCOME_TYPE;
 	ast::NodeCPtr rebel_units = nullptr;
@@ -502,7 +514,7 @@ bool PopManager::generate_modifiers(ModifierManager& modifier_manager) const {
 			bool has_no_effect = false
 		) -> void {
 			ret &= modifier_manager.register_base_country_modifier_effect(
-				effect_cache, StringUtils::append_string_views(strata.get_identifier(), suffix), format, {}, has_no_effect
+				effect_cache, OpenVic::append_string_views(strata.get_identifier(), suffix), format, {}, has_no_effect
 			);
 		};
 

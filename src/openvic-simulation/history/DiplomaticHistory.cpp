@@ -1,7 +1,14 @@
 #include "DiplomaticHistory.hpp"
 
+#include <cstddef>
+#include <optional>
+#include <string_view>
+#include <utility>
+
 #include "openvic-simulation/DefinitionManager.hpp"
-#include "openvic-simulation/utility/Containers.hpp"
+#include "openvic-simulation/core/Logger.hpp"
+#include "openvic-simulation/core/memory/Vector.hpp"
+#include "openvic-simulation/core/object/Date.hpp"
 
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;

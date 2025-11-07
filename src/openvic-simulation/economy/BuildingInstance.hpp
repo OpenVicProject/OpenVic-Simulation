@@ -1,9 +1,10 @@
 #pragma once
 
-#include "openvic-simulation/types/BuildingLevel.hpp"
-#include "openvic-simulation/types/Date.hpp"
-#include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
-#include "openvic-simulation/types/HasIdentifier.hpp"
+#include "openvic-simulation/Alias.hpp"
+#include "openvic-simulation/core/container/HasIdentifier.hpp"
+#include "openvic-simulation/core/object/Date.hpp"
+#include "openvic-simulation/core/object/FixedPoint.hpp"
+#include "openvic-simulation/economy/BuildingType.hpp"
 
 namespace OpenVic {
 	struct BuildingType;

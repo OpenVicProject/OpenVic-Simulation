@@ -2,7 +2,17 @@
 #include "ArtisanalProducerDeps.hpp"
 
 #include <cstddef>
+#include <optional>
+#include <utility>
 
+#include "openvic-simulation/core/Logger.hpp"
+#include "openvic-simulation/core/Typedefs.hpp"
+#include "openvic-simulation/core/container/IndexedFlatMap.hpp"
+#include "openvic-simulation/core/memory/FixedPointMap.hpp"
+#include "openvic-simulation/core/memory/Vector.hpp"
+#include "openvic-simulation/core/object/FixedPoint.hpp"
+#include "openvic-simulation/core/random/RandomGenerator.hpp"
+#include "openvic-simulation/core/random/WeightedSampling.hpp"
 #include "openvic-simulation/country/CountryInstance.hpp"
 #include "openvic-simulation/economy/GoodDefinition.hpp"
 #include "openvic-simulation/economy/GoodInstance.hpp"
@@ -12,16 +22,12 @@
 #include "openvic-simulation/modifier/ModifierEffectCache.hpp"
 #include "openvic-simulation/pop/Pop.hpp"
 #include "openvic-simulation/pop/PopValuesFromProvince.hpp"
-#include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
-#include "openvic-simulation/utility/RandomGenerator.hpp"
-#include "openvic-simulation/utility/Typedefs.hpp"
-#include "openvic-simulation/utility/WeightedSampling.hpp"
 
 using namespace OpenVic;
 
 ArtisanalProducer::ArtisanalProducer(
 	ArtisanalProducerDeps const& artisanal_producer_deps,
-	fixed_point_map_t<GoodDefinition const*>&& new_stockpile,
+	memory::fixed_point_map_t<GoodDefinition const*>&& new_stockpile,
 	ProductionType const* const new_production_type,
 	fixed_point_t new_current_production
 ) : modifier_effect_cache { artisanal_producer_deps.modifier_effect_cache },
@@ -81,7 +87,7 @@ void ArtisanalProducer::artisan_tick(
 	CountryInstance* country_to_report_economy_nullable = pop.get_location()->get_country_to_report_economy();
 	max_quantity_to_buy_per_good.clear();
 	IndexedFlatMap<GoodDefinition, char>& wants_more_mask = reusable_goods_mask;
-	fixed_point_map_t<GoodDefinition const*> const& input_goods = production_type.get_input_goods();
+	memory::fixed_point_map_t<GoodDefinition const*> const& input_goods = production_type.get_input_goods();
 	memory::vector<fixed_point_t>& max_price_per_input = reusable_map_0;
 	max_price_per_input.resize(input_goods.size(), 0);
 	memory::vector<fixed_point_t>& demand_per_input = reusable_map_1;

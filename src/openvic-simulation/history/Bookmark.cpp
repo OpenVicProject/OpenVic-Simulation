@@ -3,9 +3,9 @@
 #include <openvic-dataloader/v2script/AbstractSyntaxTree.hpp>
 
 #include "openvic-simulation/dataloader/NodeTools.hpp"
-#include "openvic-simulation/types/Date.hpp"
-#include "openvic-simulation/types/IdentifierRegistry.hpp"
-#include "openvic-simulation/utility/Logger.hpp"
+#include "openvic-simulation/core/object/Date.hpp"
+#include "openvic-simulation/core/container/IdentifierRegistry.hpp"
+#include "openvic-simulation/core/Logger.hpp"
 
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;

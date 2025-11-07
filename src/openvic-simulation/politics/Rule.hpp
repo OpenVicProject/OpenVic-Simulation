@@ -1,9 +1,12 @@
 #pragma once
 
-#include "openvic-simulation/types/HasIdentifier.hpp"
-#include "openvic-simulation/types/HasIndex.hpp"
-#include "openvic-simulation/types/IdentifierRegistry.hpp"
-#include "openvic-simulation/types/OrderedContainers.hpp"
+#include <cstdint>
+#include <string_view>
+
+#include "openvic-simulation/core/container/HasIdentifier.hpp"
+#include "openvic-simulation/core/container/HasIndex.hpp"
+#include "openvic-simulation/core/container/IdentifierRegistry.hpp"
+#include "openvic-simulation/core/memory/OrderedMap.hpp"
 
 namespace OpenVic {
 	struct RuleManager;
@@ -40,8 +43,8 @@ namespace OpenVic {
 	struct RuleSet {
 		friend struct RuleManager;
 
-		using rule_map_t = ordered_map<Rule const*, bool>;
-		using rule_group_map_t = ordered_map<Rule::rule_group_t, rule_map_t>;
+		using rule_map_t = memory::ordered_map<Rule const*, bool>;
+		using rule_group_map_t = memory::ordered_map<Rule::rule_group_t, rule_map_t>;
 
 	private:
 		rule_group_map_t PROPERTY(rule_groups);
@@ -80,7 +83,7 @@ namespace OpenVic {
 	struct RuleManager {
 	private:
 		IdentifierRegistry<Rule> IDENTIFIER_REGISTRY(rule);
-		ordered_map<Rule::rule_group_t, size_t> rule_group_sizes;
+		memory::ordered_map<Rule::rule_group_t, size_t> rule_group_sizes;
 
 	public:
 		bool add_rule(std::string_view identifier, Rule::rule_group_t group, std::string_view localisation_key = {});

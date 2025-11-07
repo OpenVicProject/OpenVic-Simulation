@@ -1,10 +1,14 @@
 #include "ModifierSum.hpp"
 
-#include "openvic-simulation/modifier/Modifier.hpp"
+#include <string_view>
+#include <variant>
 
-#include "openvic-simulation/country/CountryInstance.hpp"
-#include "openvic-simulation/map/ProvinceInstance.hpp"
-#include "openvic-simulation/utility/Concepts.hpp"
+#include "openvic-simulation/core/memory/Format.hpp"
+#include "openvic-simulation/core/memory/String.hpp"
+#include "openvic-simulation/core/template/Concepts.hpp"
+#include "openvic-simulation/country/CountryInstance.hpp" // IWYU pragma: keep
+#include "openvic-simulation/map/ProvinceInstance.hpp" // IWYU pragma: keep
+#include "openvic-simulation/modifier/Modifier.hpp"
 
 using namespace OpenVic;
 

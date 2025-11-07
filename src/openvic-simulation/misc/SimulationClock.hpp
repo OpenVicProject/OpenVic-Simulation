@@ -1,9 +1,11 @@
 #pragma once
 
+#include <array>
 #include <chrono>
+#include <iterator>
 #include <vector>
 
-#include "openvic-simulation/utility/Getters.hpp"
+#include "openvic-simulation/core/Property.hpp"
 
 #include <function2/function2.hpp>
 

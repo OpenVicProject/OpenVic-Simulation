@@ -1,7 +1,7 @@
 #include "GFXObject.hpp"
 
 #include "openvic-simulation/dataloader/NodeTools.hpp"
-#include "openvic-simulation/utility/Logger.hpp"
+#include "openvic-simulation/core/Logger.hpp"
 
 using namespace OpenVic;
 using namespace OpenVic::GFX;

@@ -3,11 +3,11 @@
 #include <optional>
 #include <tuple>
 
+#include "openvic-simulation/core/Logger.hpp"
+#include "openvic-simulation/core/thread/ThreadPool.hpp"
 #include "openvic-simulation/history/ProvinceHistory.hpp"
 #include "openvic-simulation/map/MapDefinition.hpp"
 #include "openvic-simulation/pop/PopValuesFromProvince.hpp"
-#include "openvic-simulation/utility/Logger.hpp"
-#include "openvic-simulation/utility/ThreadPool.hpp"
 
 using namespace OpenVic;
 

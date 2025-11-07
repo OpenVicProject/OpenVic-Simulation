@@ -1,9 +1,9 @@
 #include "MapDefinition.hpp"
 
+#include <algorithm>
 #include <array>
 #include <cctype>
 #include <charconv>
-#include <algorithm>
 #include <cstddef>
 #include <cstdint>
 #include <system_error>
@@ -14,18 +14,20 @@
 #include <range/v3/algorithm/all_of.hpp>
 #include <range/v3/view/adjacent_remove_if.hpp>
 
+#include "openvic-simulation/core/FormatValidate.hpp"
+#include "openvic-simulation/core/Logger.hpp"
+#include "openvic-simulation/core/Typedefs.hpp"
+#include "openvic-simulation/core/io/BMP.hpp"
+#include "openvic-simulation/core/memory/FixedPointMap.hpp"
+#include "openvic-simulation/core/memory/OrderedSet.hpp"
+#include "openvic-simulation/core/memory/StringMap.hpp"
+#include "openvic-simulation/core/memory/Vector.hpp"
+#include "openvic-simulation/core/object/Colour.hpp"
+#include "openvic-simulation/core/object/FixedPoint.hpp"
+#include "openvic-simulation/core/object/Vector.hpp"
 #include "openvic-simulation/dataloader/NodeTools.hpp"
 #include "openvic-simulation/map/ProvinceDefinition.hpp"
 #include "openvic-simulation/modifier/ModifierManager.hpp"
-#include "openvic-simulation/types/Colour.hpp"
-#include "openvic-simulation/types/OrderedContainersMath.hpp"
-#include "openvic-simulation/types/Vector.hpp"
-#include "openvic-simulation/utility/BMP.hpp"
-#include "openvic-simulation/utility/FormatValidate.hpp"
-#include "openvic-simulation/utility/Logger.hpp"
-#include "openvic-simulation/utility/StringUtils.hpp"
-#include "openvic-simulation/utility/Typedefs.hpp"
-#include "openvic-simulation/utility/Containers.hpp"
 
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;
@@ -534,7 +536,7 @@ static bool _parse_province_colour(colour_t& colour, std::array<std::string_view
 		}
 		bool successful = false;
 		uint64_t val;
-		std::from_chars_result result = StringUtils::string_to_uint64(component, val);
+		std::from_chars_result result = OpenVic::string_to_uint64(component, val);
 		successful = result.ec == std::errc{};
 		if (successful && val <= colour_t::max_value) {
 			colour[i] = val;
@@ -845,10 +847,10 @@ bool MapDefinition::load_map_images(fs::path const& province_path, fs::path cons
 	uint8_t const* province_data = province_bmp.get_pixel_data().data();
 	uint8_t const* terrain_data = terrain_bmp.get_pixel_data().data();
 
-	memory::vector<fixed_point_map_t<TerrainType const*>> terrain_type_pixels_list(province_definitions.size());
+	memory::vector<memory::fixed_point_map_t<TerrainType const*>> terrain_type_pixels_list(province_definitions.size());
 
 	bool ret = true;
-	ordered_set<colour_t> unrecognised_province_colours;
+	memory::ordered_set<colour_t> unrecognised_province_colours;
 
 	memory::vector<fixed_point_t> pixels_per_province(province_definitions.size());
 	memory::vector<fvec2_t> pixel_position_sum_per_province(province_definitions.size());
@@ -921,8 +923,8 @@ bool MapDefinition::load_map_images(fs::path const& province_path, fs::path cons
 	for (size_t array_index = 0; array_index < province_definitions.size(); ++array_index) {
 		ProvinceDefinition* province = province_definitions.get_item_by_index(array_index);
 
-		fixed_point_map_t<TerrainType const*> const& terrain_type_pixels = terrain_type_pixels_list[array_index];
-		const fixed_point_map_const_iterator_t<TerrainType const*> largest = get_largest_item(terrain_type_pixels);
+		memory::fixed_point_map_t<TerrainType const*> const& terrain_type_pixels = terrain_type_pixels_list[array_index];
+		const memory::fixed_point_map_const_iterator_t<TerrainType const*> largest = memory::get_largest_item(terrain_type_pixels);
 		province->default_terrain_type = largest != terrain_type_pixels.end() ? largest->first : nullptr;
 
 		const fixed_point_t pixel_count = pixels_per_province[array_index];
@@ -1035,11 +1037,11 @@ bool MapDefinition::generate_and_load_province_adjacencies(std::span<const LineO
 			}
 
 			using enum adjacency_t::type_t;
-			static const string_map_t<adjacency_t::type_t> type_map {
+			static const memory::string_map_t<adjacency_t::type_t> type_map {
 				{ "land", LAND }, { "sea", STRAIT }, { "impassable", IMPASSABLE }, { "canal", CANAL }
 			};
 			const std::string_view type_str = adjacency.get_value_for(2);
-			const string_map_t<adjacency_t::type_t>::const_iterator it = type_map.find(type_str);
+			const memory::string_map_t<adjacency_t::type_t>::const_iterator it = type_map.find(type_str);
 			if (it == type_map.end()) {
 				spdlog::error_s("Invalid adjacency type: \"{}\"", type_str);
 				ret = false;
@@ -1052,7 +1054,7 @@ bool MapDefinition::generate_and_load_province_adjacencies(std::span<const LineO
 			const std::string_view data_str = adjacency.get_value_for(4);
 			bool successful = false;
 			uint64_t data_uint;
-			std::from_chars_result result = StringUtils::string_to_uint64(data_str, data_uint);
+			std::from_chars_result result = OpenVic::string_to_uint64(data_str, data_uint);
 			successful = result.ec == std::errc{};
 			if (!successful || data_uint > std::numeric_limits<adjacency_t::data_t>::max()) {
 				spdlog::error_s("Invalid adjacency data: \"{}\"", data_str);

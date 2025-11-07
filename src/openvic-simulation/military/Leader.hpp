@@ -2,11 +2,11 @@
 
 #include <string_view>
 
-#include "openvic-simulation/types/Date.hpp"
-#include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
+#include "openvic-simulation/Alias.hpp"
+#include "openvic-simulation/core/Property.hpp"
+#include "openvic-simulation/core/object/Date.hpp"
+#include "openvic-simulation/core/object/FixedPoint.hpp"
 #include "openvic-simulation/types/UnitBranchType.hpp"
-#include "openvic-simulation/types/UniqueId.hpp"
-#include "openvic-simulation/utility/Getters.hpp"
 
 namespace OpenVic {
 	struct DeploymentManager;

@@ -1,5 +1,9 @@
 #include "Crime.hpp"
 
+#include <string_view>
+#include <utility>
+
+#include "openvic-simulation/core/Logger.hpp"
 #include "openvic-simulation/dataloader/NodeTools.hpp"
 #include "openvic-simulation/modifier/ModifierManager.hpp"
 

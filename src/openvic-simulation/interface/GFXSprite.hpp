@@ -1,12 +1,19 @@
 #pragma once
 
+#include <cstdint>
+#include <string_view>
+
+#include "openvic-simulation/core/container/HasIdentifierAndColour.hpp"
+#include "openvic-simulation/core/memory/String.hpp"
+#include "openvic-simulation/core/object/Colour.hpp"
+#include "openvic-simulation/core/object/Vector.hpp"
+#include "openvic-simulation/dataloader/NodeTools.hpp"
 #include "openvic-simulation/interface/LoadBase.hpp"
-#include "openvic-simulation/types/HasIdentifier.hpp"
 
 namespace OpenVic::GFX {
 
 	struct Font : HasIdentifierAndAlphaColour {
-		using colour_codes_t = ordered_map<char, colour_t>;
+		using colour_codes_t = memory::ordered_map<char, colour_t>;
 
 	private:
 		memory::string PROPERTY(fontname);

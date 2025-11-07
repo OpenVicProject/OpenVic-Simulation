@@ -1,9 +1,9 @@
 #pragma once
 
-#include "openvic-simulation/types/Date.hpp"
-#include "openvic-simulation/types/HasIdentifier.hpp"
-#include "openvic-simulation/types/IndexedFlatMap.hpp"
-#include "openvic-simulation/utility/Getters.hpp"
+#include "openvic-simulation/core/Property.hpp"
+#include "openvic-simulation/core/container/HasIdentifierAndColour.hpp"
+#include "openvic-simulation/core/container/IndexedFlatMap.hpp"
+#include "openvic-simulation/core/object/Date.hpp"
 
 namespace OpenVic {
 	struct Ideology;

@@ -1,7 +1,7 @@
 #pragma once
 
 #include "openvic-simulation/economy/trading/BuyResult.hpp"
-#include "openvic-simulation/utility/Getters.hpp"
+#include "openvic-simulation/core/Property.hpp"
 
 namespace OpenVic {
 	struct CountryInstance;

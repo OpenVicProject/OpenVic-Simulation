@@ -1,7 +1,7 @@
 #pragma once
 
-#include "openvic-simulation/utility/Containers.hpp"
-#include "openvic-simulation/utility/Getters.hpp"
+#include "openvic-simulation/core/Property.hpp"
+#include "openvic-simulation/core/memory/String.hpp"
 
 namespace OpenVic {
 	struct CountryInstance;

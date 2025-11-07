@@ -4,17 +4,15 @@
 #include <cstdint>
 #include <span>
 #include <type_traits>
-#include <vector>
 
-#include <tsl/ordered_map.h>
-#include <tsl/ordered_set.h>
+#include <fmt/format.h>
 
-#include <fmt/core.h>
-
-#include "openvic-simulation/types/Vector.hpp"
-#include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
-#include "openvic-simulation/utility/ErrorMacros.hpp"
-#include "openvic-simulation/utility/Typedefs.hpp"
+#include "openvic-simulation/core/Typedefs.hpp"
+#include "openvic-simulation/core/error/ErrorMacros.hpp"
+#include "openvic-simulation/core/memory/Format.hpp"
+#include "openvic-simulation/core/memory/Vector.hpp"
+#include "openvic-simulation/core/object/FixedPoint.hpp"
+#include "openvic-simulation/core/object/Vector.hpp"
 
 using namespace OpenVic;
 

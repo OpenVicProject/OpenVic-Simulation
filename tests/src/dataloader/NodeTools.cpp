@@ -1,7 +1,6 @@
 #include "openvic-simulation/dataloader/NodeTools.hpp"
 
 #include <charconv>
-#include <cmath>
 #include <cstdlib>
 #include <functional>
 #include <limits>
@@ -22,14 +21,15 @@
 #include <range/v3/view/iota.hpp>
 #include <range/v3/view/transform.hpp>
 
-#include "openvic-simulation/types/Colour.hpp"
-#include "openvic-simulation/types/Date.hpp"
-#include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
-#include "openvic-simulation/utility/StringUtils.hpp"
+#include "openvic-simulation/core/memory/StringMap.hpp"
+#include "openvic-simulation/core/object/Colour.hpp"
+#include "openvic-simulation/core/object/Date.hpp"
+#include "openvic-simulation/core/object/FixedPoint.hpp"
+#include "openvic-simulation/core/string/CharConv.hpp"
 
-#include "../types/Colour.hpp" // IWYU pragma: keep
 #include "Helper.hpp" // IWYU pragma: keep
-#include "types/Numeric.hpp" // IWYU pragma: keep
+#include "core/object/Colour.hpp" // IWYU pragma: keep
+#include "core/object/Numeric.hpp" // IWYU pragma: keep
 #include <snitch/snitch_macros_check.hpp>
 #include <snitch/snitch_macros_constexpr.hpp>
 #include <snitch/snitch_macros_misc.hpp>
@@ -377,7 +377,7 @@ TEST_CASE("NodeTools expect integer functions", "[NodeTools][NodeTools-expect-fu
 		std::string_view sv = ptr->value().view();
 
 		decltype(val) check;
-		std::from_chars_result result = OpenVic::StringUtils::string_to_uint64(sv, check, base);
+		std::from_chars_result result = OpenVic::string_to_uint64(sv, check, base);
 		CHECK_IF(result.ec == std::errc {});
 		else {
 			return false;
@@ -559,7 +559,7 @@ TEST_CASE(
 
 	auto callback = [](FlatValue const* ptr, text_format_t val) -> bool {
 		using enum text_format_t;
-		static const string_map_t<text_format_t> format_map = //
+		static const memory::string_map_t<text_format_t> format_map = //
 			{ //
 			  { "left", left }, //
 			  { "right", right },
@@ -632,7 +632,7 @@ TEST_CASE(
 		std::string_view sv = ptr->value().view();
 
 		int64_t check_int;
-		std::from_chars_result result = StringUtils::string_to_int64(sv, check_int);
+		std::from_chars_result result = OpenVic::string_to_int64(sv, check_int);
 		CHECK_IF(result.ec == std::errc {});
 		else {
 			return false;
@@ -708,7 +708,7 @@ TEST_CASE("NodeTools expect vector functions", "[NodeTools][NodeTools-expect-fun
 				if constexpr (std::same_as<decltype(check), fixed_point_t>) {
 					return check.from_chars(sv.data(), sv.data() + sv.size());
 				} else {
-					return StringUtils::from_chars(sv.data(), sv.data() + sv.size(), check);
+					return OpenVic::from_chars(sv.data(), sv.data() + sv.size(), check);
 				}
 			}();
 			CHECK_OR_CONTINUE(result.ec == std::errc {});
@@ -1397,14 +1397,14 @@ TEST_CASE(
 ) {
 	Ast ast;
 
-	static const string_map_t<std::string_view> map //
+	static const memory::string_map_t<std::string_view> map //
 		{ //
 		  { "key_test1", "value_test1"sv },
 		  { "key_test2", "value_test2"sv },
 		  { "key_test3", "value_test3"sv }
 		};
 
-	static auto callback = [](string_map_t<std::string_view> const& map, size_t expected_index, std::string_view val) {
+	static auto callback = [](memory::string_map_t<std::string_view> const& map, size_t expected_index, std::string_view val) {
 		CHECK_IF(map.size() > expected_index);
 		else {
 			return false;
@@ -1426,7 +1426,8 @@ TEST_CASE(
 	CHECK(NodeTools::expect_mapped_string(map, std::bind_front(callback, map, 1))(map.values_container()[1].first));
 	CHECK(NodeTools::expect_mapped_string(map, std::bind_front(callback, map, 2))(map.values_container()[2].first));
 
-	static auto callback_false = [](string_map_t<std::string_view> const& map, size_t check_index, std::string_view val) {
+	static auto callback_false = [ //
+	](memory::string_map_t<std::string_view> const& map, size_t check_index, std::string_view val) {
 		for (auto [index, pair] : map | ranges::views::enumerate) {
 			if (index != check_index) {
 				continue;

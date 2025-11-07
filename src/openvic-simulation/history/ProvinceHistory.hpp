@@ -1,18 +1,19 @@
 #pragma once
 
+#include <cstddef>
 #include <optional>
 
+#include "openvic-simulation/Alias.hpp"
+#include "openvic-simulation/core/Property.hpp"
+#include "openvic-simulation/core/memory/FixedPointMap.hpp"
+#include "openvic-simulation/core/memory/OrderedMap.hpp"
+#include "openvic-simulation/core/memory/UniquePtr.hpp"
+#include "openvic-simulation/core/memory/Vector.hpp"
+#include "openvic-simulation/core/object/Date.hpp"
 #include "openvic-simulation/economy/BuildingType.hpp"
 #include "openvic-simulation/history/HistoryMap.hpp"
 #include "openvic-simulation/pop/Pop.hpp"
-#include "openvic-simulation/types/BuildingLevel.hpp"
 #include "openvic-simulation/types/ColonyStatus.hpp"
-#include "openvic-simulation/types/Date.hpp"
-#include "openvic-simulation/types/OrderedContainers.hpp"
-#include "openvic-simulation/types/fixed_point/FixedPointMap.hpp"
-#include "openvic-simulation/types/ProvinceLifeRating.hpp"
-#include "openvic-simulation/utility/Containers.hpp"
-#include "openvic-simulation/utility/Getters.hpp"
 
 namespace OpenVic {
 	struct CountryDefinition;
@@ -34,13 +35,13 @@ namespace OpenVic {
 		std::optional<CountryDefinition const*> PROPERTY(controller);
 		std::optional<colony_status_t> PROPERTY(colonial);
 		std::optional<bool> PROPERTY(slave);
-		ordered_map<CountryDefinition const*, bool> PROPERTY(cores);
+		memory::ordered_map<CountryDefinition const*, bool> PROPERTY(cores);
 		std::optional<ProductionType const*> PROPERTY(rgo_production_type_nullable);
 		std::optional<life_rating_t> PROPERTY(life_rating);
 		std::optional<TerrainType const*> PROPERTY(terrain_type);
-		ordered_map<BuildingType const*, building_level_t> PROPERTY(province_buildings);
-		ordered_map<BuildingType const*, building_level_t> PROPERTY(state_buildings);
-		fixed_point_map_t<Ideology const*> PROPERTY(party_loyalties);
+		memory::ordered_map<BuildingType const*, building_level_t> PROPERTY(province_buildings);
+		memory::ordered_map<BuildingType const*, building_level_t> PROPERTY(state_buildings);
+		memory::fixed_point_map_t<Ideology const*> PROPERTY(party_loyalties);
 		memory::vector<PopBase> PROPERTY(pops);
 
 		bool _load_province_pop_history(
@@ -73,7 +74,7 @@ namespace OpenVic {
 
 	struct ProvinceHistoryManager {
 	private:
-		ordered_map<ProvinceDefinition const*, ProvinceHistoryMap> province_histories;
+		memory::ordered_map<ProvinceDefinition const*, ProvinceHistoryMap> province_histories;
 		bool locked = false;
 
 		ProvinceHistoryMap* _get_or_make_province_history(ProvinceDefinition const& province);

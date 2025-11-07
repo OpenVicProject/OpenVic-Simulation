@@ -1,10 +1,10 @@
 #pragma once
 
 #include "openvic-simulation/dataloader/NodeTools.hpp"
-#include "openvic-simulation/types/Date.hpp"
-#include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
-#include "openvic-simulation/types/ProvinceLifeRating.hpp"
-#include "openvic-simulation/utility/Getters.hpp"
+#include "openvic-simulation/core/object/Date.hpp"
+#include "openvic-simulation/core/object/FixedPoint.hpp"
+#include "openvic-simulation/Alias.hpp"
+#include "openvic-simulation/core/Property.hpp"
 
 namespace OpenVic {
 	struct DefineManager;

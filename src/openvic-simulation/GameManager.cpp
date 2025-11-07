@@ -1,7 +1,6 @@
 #include "GameManager.hpp"
 
 #include <chrono>
-#include <cstddef>
 #include <string_view>
 
 #include <range/v3/algorithm/contains.hpp>
@@ -9,9 +8,10 @@
 
 #include <spdlog/spdlog.h>
 
+#include "openvic-simulation/core/Logger.hpp"
+#include "openvic-simulation/core/memory/OrderedSet.hpp"
+#include "openvic-simulation/core/memory/Vector.hpp"
 #include "openvic-simulation/dataloader/Dataloader.hpp"
-#include "openvic-simulation/types/OrderedContainers.hpp"
-#include "openvic-simulation/utility/Logger.hpp"
 
 using namespace OpenVic;
 
@@ -77,7 +77,7 @@ bool GameManager::load_mods(memory::vector<memory::string> const& mods_to_find) 
 
 	bool ret = true;
 
-	vector_ordered_set<Mod const*> load_list;
+	memory::vector_ordered_set<Mod const*> load_list;
 
 	/* Check loaded mod descriptors for requested mods, using either full name or user directory name
 	 * (Historical Project Mod 0.4.6 or HPM both valid, for example), and load them plus their dependencies.
@@ -96,7 +96,7 @@ bool GameManager::load_mods(memory::vector<memory::string> const& mods_to_find) 
 		}
 
 		Mod const* mod_ptr = &*it;
-		vector_ordered_set<Mod const*> dependencies = mod_ptr->generate_dependency_list(&ret);
+		memory::vector_ordered_set<Mod const*> dependencies = mod_ptr->generate_dependency_list(&ret);
 		if(!ret) {
 			continue;
 		}
@@ -120,7 +120,7 @@ bool GameManager::load_mods(memory::vector<memory::string> const& mods_to_find) 
 	Dataloader::path_vector_t roots = dataloader.get_roots();
 	roots.reserve(load_list.size() + roots.size());
 
-	vector_ordered_set<fs::path> replace_paths;
+	memory::vector_ordered_set<fs::path> replace_paths;
 
 	/* Actually registers all roots and replace paths to be loaded by the game. */
 	for (Mod const* mod : load_list) {

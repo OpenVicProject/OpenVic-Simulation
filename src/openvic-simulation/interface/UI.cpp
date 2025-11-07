@@ -2,8 +2,8 @@
 
 #include "openvic-simulation/DefinitionManager.hpp"
 #include "openvic-simulation/dataloader/NodeTools.hpp"
-#include "openvic-simulation/types/Colour.hpp"
-#include "openvic-simulation/types/IdentifierRegistry.hpp"
+#include "openvic-simulation/core/object/Colour.hpp"
+#include "openvic-simulation/core/container/IdentifierRegistry.hpp"
 
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;

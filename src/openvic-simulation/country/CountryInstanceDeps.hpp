@@ -1,8 +1,8 @@
 #pragma once
 
-#include "openvic-simulation/types/Date.hpp"
+#include "openvic-simulation/core/object/Date.hpp"
+#include "openvic-simulation/core/portable/ForwardableSpan.hpp"
 #include "openvic-simulation/types/UnitBranchType.hpp"
-#include "openvic-simulation/utility/ForwardableSpan.hpp"
 
 namespace OpenVic {
 	struct BuildingType;
@@ -27,28 +27,28 @@ namespace OpenVic {
 	struct UnitTypeManager;
 
 	struct CountryInstanceDeps {
-		utility::forwardable_span<const BuildingType> building_types;
+		forwardable_span<const BuildingType> building_types;
 		CountryDefines const& country_defines;
 		CountryRelationManager& country_relations_manager;
-		utility::forwardable_span<const Crime> crimes;
+		forwardable_span<const Crime> crimes;
 		Date fallback_date_for_never_completing_research;
 		DiplomacyDefines const& diplomacy_defines;
 		EconomyDefines const& economy_defines;
-		utility::forwardable_span<const Invention> inventions;
-		utility::forwardable_span<const Ideology> ideologies;
+		forwardable_span<const Invention> inventions;
+		forwardable_span<const Ideology> ideologies;
 		GameRulesManager const& game_rules_manager;
-		utility::forwardable_span<const GoodInstance> good_instances;
+		forwardable_span<const GoodInstance> good_instances;
 		GoodInstanceManager& good_instance_manager;
-		utility::forwardable_span<const GovernmentType> government_types;
+		forwardable_span<const GovernmentType> government_types;
 		MarketInstance& market_instance;
 		MilitaryDefines const& military_defines;
 		ModifierEffectCache const& modifier_effect_cache;
-		utility::forwardable_span<const PopType> pop_types;
-		utility::forwardable_span<const ReformGroup> reforms;
-		utility::forwardable_span<const RegimentType> regiment_types;
-		utility::forwardable_span<const ShipType> ship_types;
-		utility::forwardable_span<const Strata> stratas;
-		utility::forwardable_span<const Technology> technologies;
+		forwardable_span<const PopType> pop_types;
+		forwardable_span<const ReformGroup> reforms;
+		forwardable_span<const RegimentType> regiment_types;
+		forwardable_span<const ShipType> ship_types;
+		forwardable_span<const Strata> stratas;
+		forwardable_span<const Technology> technologies;
 		UnitTypeManager const& unit_type_manager;
 	};
 }

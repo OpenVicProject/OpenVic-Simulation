@@ -1,11 +1,17 @@
 #include "CountryHistory.hpp"
 
-#include "openvic-simulation/country/CountryDefinition.hpp"
+#include <string_view>
+#include <utility>
+
 #include "openvic-simulation/DefinitionManager.hpp"
+#include "openvic-simulation/core/FormatValidate.hpp"
+#include "openvic-simulation/core/Logger.hpp"
+#include "openvic-simulation/core/memory/StringMap.hpp"
+#include "openvic-simulation/core/memory/UniquePtr.hpp"
+#include "openvic-simulation/core/object/FixedPoint.hpp"
+#include "openvic-simulation/country/CountryDefinition.hpp"
 #include "openvic-simulation/dataloader/NodeTools.hpp"
 #include "openvic-simulation/politics/Government.hpp"
-#include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
-#include "openvic-simulation/utility/FormatValidate.hpp"
 
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;
@@ -33,7 +39,7 @@ memory::unique_ptr<CountryHistoryEntry> CountryHistoryMap::_make_entry(Date date
 	return memory::make_unique<CountryHistoryEntry>(country, date, ideology_keys, government_type_keys);
 }
 
-static constexpr auto _flag_callback(string_map_t<bool>& flags, bool value) {
+static constexpr auto _flag_callback(memory::string_map_t<bool>& flags, bool value) {
 	return [&flags, value](std::string_view flag) -> bool {
 		auto [it, successful] = flags.emplace(flag, value);
 		if (!successful) {

@@ -1,10 +1,16 @@
 #pragma once
 
+#include <cstdint>
+#include <string_view>
+
+#include "openvic-simulation/core/container/HasColour.hpp"
+#include "openvic-simulation/core/container/HasIdentifier.hpp"
+#include "openvic-simulation/core/container/HasIndex.hpp"
+#include "openvic-simulation/core/container/IdentifierRegistry.hpp"
+#include "openvic-simulation/core/memory/Vector.hpp"
+#include "openvic-simulation/core/object/FixedPoint.hpp"
+#include "openvic-simulation/dataloader/NodeTools.hpp"
 #include "openvic-simulation/modifier/Modifier.hpp"
-#include "openvic-simulation/types/HasIdentifier.hpp"
-#include "openvic-simulation/types/HasIndex.hpp"
-#include "openvic-simulation/types/OrderedContainers.hpp"
-#include "openvic-simulation/utility/Containers.hpp"
 
 namespace OpenVic {
 	// Using HasColour rather than HasIdentifierAndColour to avoid needing virtual inheritance
@@ -53,7 +59,7 @@ namespace OpenVic {
 
 	struct TerrainTypeManager {
 	private:
-		using terrain_type_mappings_map_t = ordered_map<TerrainTypeMapping::index_t, size_t>;
+		using terrain_type_mappings_map_t = memory::ordered_map<TerrainTypeMapping::index_t, size_t>;
 
 		IdentifierRegistry<TerrainType> IDENTIFIER_REGISTRY(terrain_type);
 		IdentifierRegistry<TerrainTypeMapping> IDENTIFIER_REGISTRY(terrain_type_mapping);

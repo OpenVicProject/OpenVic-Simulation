@@ -1,6 +1,11 @@
 #include "ResourceGatheringOperation.hpp"
 #include "ResourceGatheringOperationDeps.hpp"
 
+#include <span>
+
+#include "openvic-simulation/Alias.hpp"
+#include "openvic-simulation/core/Logger.hpp"
+#include "openvic-simulation/core/object/FixedPoint.hpp"
 #include "openvic-simulation/country/CountryInstance.hpp"
 #include "openvic-simulation/economy/production/ProductionType.hpp"
 #include "openvic-simulation/economy/trading/MarketInstance.hpp"
@@ -11,10 +16,6 @@
 #include "openvic-simulation/modifier/ModifierEffectCache.hpp"
 #include "openvic-simulation/pop/Pop.hpp"
 #include "openvic-simulation/pop/PopType.hpp"
-#include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
-#include "openvic-simulation/types/PopSize.hpp"
-#include "openvic-simulation/utility/Logger.hpp"
-#include "openvic-simulation/utility/Containers.hpp"
 
 using namespace OpenVic;
 

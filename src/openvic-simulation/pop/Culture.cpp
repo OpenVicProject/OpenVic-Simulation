@@ -1,12 +1,19 @@
 #include "Culture.hpp"
-#include <string_view>
 
+#include <cstdint>
+#include <functional>
+#include <limits>
+#include <string_view>
+#include <utility>
+
+#include "openvic-simulation/core/Logger.hpp"
+#include "openvic-simulation/core/Typedefs.hpp"
+#include "openvic-simulation/core/memory/StringSet.hpp"
+#include "openvic-simulation/core/object/Colour.hpp"
+#include "openvic-simulation/core/object/FixedPoint.hpp"
 #include "openvic-simulation/country/CountryDefinition.hpp"
 #include "openvic-simulation/dataloader/Dataloader.hpp"
 #include "openvic-simulation/dataloader/NodeTools.hpp"
-#include "openvic-simulation/types/Colour.hpp"
-#include "openvic-simulation/utility/StringUtils.hpp"
-#include "openvic-simulation/utility/Typedefs.hpp"
 
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;
@@ -206,7 +213,7 @@ bool CultureManager::load_culture_file(CountryDefinitionManager const& country_d
 		[this, &country_definition_manager](CultureGroup const& culture_group, ast::NodeCPtr culture_group_value) -> bool {
 			return expect_dictionary(
 				[this, &country_definition_manager, &culture_group](std::string_view key, ast::NodeCPtr value) -> bool {
-					static const string_set_t reserved_keys = { "leader", "unit", "union", "is_overseas" };
+					static const memory::string_set_t reserved_keys = { "leader", "unit", "union", "is_overseas" };
 					if (reserved_keys.contains(key)) {
 						return true;
 					}
@@ -246,7 +253,7 @@ memory::string CultureManager::make_leader_picture_name(
 			return {};
 	}
 
-	return StringUtils::append_string_views(cultural_type, *branch_text, std::to_string(count));
+	return OpenVic::append_string_views(cultural_type, *branch_text, fmt::to_string(count));
 }
 
 memory::string CultureManager::make_leader_picture_path(std::string_view leader_picture_name) {

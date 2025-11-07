@@ -1,8 +1,8 @@
 #pragma once
 
-#include "openvic-simulation/types/IndexedFlatMap.hpp"
-#include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
-#include "openvic-simulation/utility/Getters.hpp"
+#include "openvic-simulation/core/container/IndexedFlatMap.hpp"
+#include "openvic-simulation/core/object/FixedPoint.hpp"
+#include "openvic-simulation/core/Property.hpp"
 
 namespace OpenVic {
 	struct GameRulesManager;

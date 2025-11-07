@@ -3,8 +3,8 @@
 #include "openvic-simulation/politics/BaseIssue.hpp"
 #include "openvic-simulation/scripts/ConditionScript.hpp"
 #include "openvic-simulation/scripts/EffectScript.hpp"
-#include "openvic-simulation/types/HasIdentifier.hpp"
-#include "openvic-simulation/types/HasIndex.hpp"
+#include "openvic-simulation/core/container/HasIdentifier.hpp"
+#include "openvic-simulation/core/container/HasIndex.hpp"
 
 namespace OpenVic {	
 	struct ReformGroup;

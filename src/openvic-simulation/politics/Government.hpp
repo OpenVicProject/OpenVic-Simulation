@@ -1,10 +1,13 @@
 #pragma once
 
-#include "openvic-simulation/types/Date.hpp"
-#include "openvic-simulation/types/HasIdentifier.hpp"
-#include "openvic-simulation/types/HasIndex.hpp"
-#include "openvic-simulation/types/IdentifierRegistry.hpp"
-#include "openvic-simulation/utility/Containers.hpp"
+#include <string_view>
+
+#include "openvic-simulation/core/container/HasIdentifier.hpp"
+#include "openvic-simulation/core/container/HasIndex.hpp"
+#include "openvic-simulation/core/container/IdentifierRegistry.hpp"
+#include "openvic-simulation/core/memory/StringSet.hpp"
+#include "openvic-simulation/core/memory/Vector.hpp"
+#include "openvic-simulation/core/object/Date.hpp"
 
 namespace OpenVic {
 	struct Ideology;
@@ -36,7 +39,7 @@ namespace OpenVic {
 	struct GovernmentTypeManager {
 	private:
 		IdentifierRegistry<GovernmentType> IDENTIFIER_REGISTRY(government_type);
-		string_set_t PROPERTY(flag_types);
+		memory::string_set_t PROPERTY(flag_types);
 
 	public:
 		bool add_government_type(

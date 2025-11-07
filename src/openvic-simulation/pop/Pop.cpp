@@ -4,11 +4,20 @@
 #include <concepts> // IWYU pragma: keep for lambda
 #include <cstddef>
 #include <cstdint>
+#include <cstdlib>
+#include <optional>
 #include <ranges>
 
-#include "openvic-simulation/country/CountryParty.hpp"
+#include "openvic-simulation/core/FormatValidate.hpp"
+#include "openvic-simulation/core/Logger.hpp"
+#include "openvic-simulation/core/Typedefs.hpp"
+#include "openvic-simulation/core/container/IndexedFlatMap.hpp"
+#include "openvic-simulation/core/memory/FixedPointMap.hpp"
+#include "openvic-simulation/core/memory/OrderedMap.hpp"
+#include "openvic-simulation/core/object/FixedPoint.hpp"
 #include "openvic-simulation/country/CountryDefinition.hpp"
 #include "openvic-simulation/country/CountryInstance.hpp"
+#include "openvic-simulation/country/CountryParty.hpp"
 #include "openvic-simulation/defines/Define.hpp"
 #include "openvic-simulation/economy/GoodDefinition.hpp"
 #include "openvic-simulation/economy/GoodInstance.hpp"
@@ -16,8 +25,8 @@
 #include "openvic-simulation/economy/production/ProductionType.hpp"
 #include "openvic-simulation/economy/trading/BuyResult.hpp"
 #include "openvic-simulation/economy/trading/BuyUpToOrder.hpp"
-#include "openvic-simulation/economy/trading/MarketSellOrder.hpp"
 #include "openvic-simulation/economy/trading/MarketInstance.hpp"
+#include "openvic-simulation/economy/trading/MarketSellOrder.hpp"
 #include "openvic-simulation/economy/trading/SellResult.hpp"
 #include "openvic-simulation/map/ProvinceInstance.hpp"
 #include "openvic-simulation/modifier/ModifierEffectCache.hpp"
@@ -28,14 +37,6 @@
 #include "openvic-simulation/pop/PopType.hpp"
 #include "openvic-simulation/pop/PopValuesFromProvince.hpp"
 #include "openvic-simulation/pop/Religion.hpp"
-#include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
-#include "openvic-simulation/types/fixed_point/FixedPointMap.hpp"
-#include "openvic-simulation/types/IndexedFlatMap.hpp"
-#include "openvic-simulation/types/OrderedContainers.hpp"
-#include "openvic-simulation/utility/Containers.hpp"
-#include "openvic-simulation/utility/FormatValidate.hpp"
-#include "openvic-simulation/utility/Logger.hpp"
-#include "openvic-simulation/utility/Typedefs.hpp"
 
 using namespace OpenVic;
 
@@ -93,7 +94,7 @@ void Pop::setup_pop_test_values(IssueManager const& issue_manager) {
 			map.set(key, value);
 		}
 	};
-	auto test_weight_ordered = []<typename T, typename U>(ordered_map<T const*, fixed_point_t>& map, U const& key, int32_t min, int32_t max) -> void {
+	auto test_weight_ordered = []<typename T, typename U>(memory::ordered_map<T const*, fixed_point_t>& map, U const& key, int32_t min, int32_t max) -> void {
 		if constexpr (std::is_convertible_v<U const*, T const*> || std::is_convertible_v<U, T const*>) {
 			const int32_t value = rand() % (max + 1);
 			if (value >= min) {
@@ -125,14 +126,14 @@ void Pop::setup_pop_test_values(IssueManager const& issue_manager) {
 			test_weight_ordered(supporter_equivalents_by_issue, reform, 3, 6);
 		}
 	}
-	rescale_fixed_point_map(supporter_equivalents_by_issue, size);
+	memory::rescale_fixed_point_map(supporter_equivalents_by_issue, size);
 
 	if (!vote_equivalents_by_party.empty()) {
 		for (auto& [party, value] : vote_equivalents_by_party) {
 			vote_equivalents_by_party[party] = 0;
 			test_weight_ordered(vote_equivalents_by_party, party, 4, 10);
 		}
-		rescale_fixed_point_map(vote_equivalents_by_party, size);
+		memory::rescale_fixed_point_map(vote_equivalents_by_party, size);
 	}
 
 	/* Returns a fixed point between 0 and max. */
@@ -385,8 +386,8 @@ OV_DO_FOR_ALL_NEED_CATEGORIES(DEFINE_NEEDS_FULFILLED)
 #undef DEFINE_NEEDS_FULFILLED
 
 void Pop::allocate_for_needs(
-	fixed_point_map_t<GoodDefinition const*> const& scaled_needs,
-	utility::forwardable_span<fixed_point_t> money_to_spend_per_good,
+	memory::fixed_point_map_t<GoodDefinition const*> const& scaled_needs,
+	forwardable_span<fixed_point_t> money_to_spend_per_good,
 	memory::vector<fixed_point_t>& reusable_vector,
 	fixed_point_t& weights_sum,
 	fixed_point_t& cash_left_to_spend
@@ -455,7 +456,7 @@ void Pop::pop_tick(
 	PopValuesFromProvince const& shared_values,
 	RandomU32& random_number_generator,
 	IndexedFlatMap<GoodDefinition, char>& reusable_goods_mask,
-	utility::forwardable_span<
+	forwardable_span<
 		memory::vector<fixed_point_t>,
 		VECTORS_FOR_POP_TICK
 	> reusable_vectors
@@ -475,12 +476,12 @@ void Pop::pop_tick_without_cleanup(
 	PopValuesFromProvince const& shared_values,
 	RandomU32& random_number_generator,
 	IndexedFlatMap<GoodDefinition, char>& reusable_goods_mask,
-	utility::forwardable_span<
+	forwardable_span<
 		memory::vector<fixed_point_t>,
 		VECTORS_FOR_POP_TICK
 	> reusable_vectors
 ) {
-	utility::forwardable_span<const GoodDefinition> good_keys = reusable_goods_mask.get_keys();
+	forwardable_span<const GoodDefinition> good_keys = reusable_goods_mask.get_keys();
 	memory::vector<fixed_point_t>& reusable_vector_0 = reusable_vectors[0];
 	memory::vector<fixed_point_t>& reusable_vector_1 = reusable_vectors[1];
 	memory::vector<fixed_point_t>& max_quantity_to_buy_per_good = reusable_vectors[2];
@@ -677,7 +678,7 @@ void Pop::after_buy(void* actor, BuyResult const& buy_result) {
 		if (quantity_left_to_consume <= 0) { \
 			return; \
 		} \
-		const fixed_point_map_t<GoodDefinition const*>::const_iterator need_category##it = pop.need_category##_needs.find(&good_definition); \
+		const memory::fixed_point_map_t<GoodDefinition const*>::const_iterator need_category##it = pop.need_category##_needs.find(&good_definition); \
 		if (need_category##it != pop.need_category##_needs.end()) { \
 			const fixed_point_t desired_quantity = need_category##it->second; \
 			fixed_point_t consumed_quantity; \

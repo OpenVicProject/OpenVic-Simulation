@@ -1,7 +1,18 @@
 #include "IssueManager.hpp"
 
+#include <array>
+#include <cstddef>
+#include <string_view>
+#include <utility>
+
+#include <fmt/format.h>
+
+#include "openvic-simulation/core/Logger.hpp"
+#include "openvic-simulation/core/Typedefs.hpp"
+#include "openvic-simulation/core/memory/StringSet.hpp"
+#include "openvic-simulation/core/object/Colour.hpp"
+#include "openvic-simulation/dataloader/NodeTools.hpp"
 #include "openvic-simulation/modifier/ModifierManager.hpp"
-#include "openvic-simulation/utility/Typedefs.hpp"
 
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;
@@ -277,7 +288,7 @@ bool IssueManager::load_issues_file(
 
 				return expect_length(add_variable_callback(expected_party_policy_groups))(value);
 			} else {
-				static const string_set_t uncivilised_reform_groups {
+				static const memory::string_set_t uncivilised_reform_groups {
 					"economic_reforms", "education_reforms", "military_reforms"
 				};
 

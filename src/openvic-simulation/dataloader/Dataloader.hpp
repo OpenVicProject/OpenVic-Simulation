@@ -6,10 +6,10 @@
 #include <openvic-dataloader/csv/Parser.hpp>
 #include <openvic-dataloader/v2script/Parser.hpp>
 
-#include "openvic-simulation/dataloader/NodeTools.hpp"
+#include "openvic-simulation/core/memory/StringSet.hpp"
+#include "openvic-simulation/core/template/Concepts.hpp"
 #include "openvic-simulation/dataloader/ModManager.hpp"
-#include "openvic-simulation/utility/Containers.hpp"
-#include "openvic-simulation/utility/Concepts.hpp"
+#include "openvic-simulation/dataloader/NodeTools.hpp"
 
 #include <function2/function2.hpp>
 
@@ -121,7 +121,7 @@ namespace OpenVic {
 		using apply_files_callback_t = fu2::function_base<true, true, fu2::capacity_fixed<apply_callback_stack_size, 8>, false, false, bool(fs::path const&)>;
 		bool apply_to_files(path_span_t files, apply_files_callback_t callback) const;
 
-		string_set_t lookup_dirs_in_dir(std::string_view path) const;
+		memory::string_set_t lookup_dirs_in_dir(std::string_view path) const;
 
 		/* Load all mod descriptors present in the mod/ directory. Importantly, loads dependencies and replace_paths for us to check. */
 		bool load_mod_descriptors(ModManager& mod_manager) const;

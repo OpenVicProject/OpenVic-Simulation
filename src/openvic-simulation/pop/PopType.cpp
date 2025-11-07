@@ -1,10 +1,13 @@
 #include "PopType.hpp"
 
 #include <string_view>
+#include <utility>
 
+#include "openvic-simulation/Alias.hpp"
+#include "openvic-simulation/core/memory/FixedPointMap.hpp"
+#include "openvic-simulation/core/object/FixedPoint.hpp"
 #include "openvic-simulation/country/CountryDefinition.hpp"
 #include "openvic-simulation/map/ProvinceInstance.hpp"
-#include "openvic-simulation/utility/TslHelper.hpp"
 
 using namespace OpenVic;
 
@@ -17,9 +20,9 @@ PopType::PopType(
 	index_t new_index,
 	Strata const& new_strata,
 	pop_sprite_t new_sprite,
-	fixed_point_map_t<GoodDefinition const*>&& new_life_needs,
-	fixed_point_map_t<GoodDefinition const*>&& new_everyday_needs,
-	fixed_point_map_t<GoodDefinition const*>&& new_luxury_needs,
+	memory::fixed_point_map_t<GoodDefinition const*>&& new_life_needs,
+	memory::fixed_point_map_t<GoodDefinition const*>&& new_everyday_needs,
+	memory::fixed_point_map_t<GoodDefinition const*>&& new_luxury_needs,
 	income_type_t new_life_needs_income_types,
 	income_type_t new_everyday_needs_income_types,
 	income_type_t new_luxury_needs_income_types,

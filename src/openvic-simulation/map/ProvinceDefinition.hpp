@@ -2,14 +2,13 @@
 
 #include <optional>
 
+#include "openvic-simulation/core/container/HasIdentifierAndColour.hpp"
+#include "openvic-simulation/core/container/HasIndex.hpp"
+#include "openvic-simulation/core/memory/FixedPointMap.hpp"
+#include "openvic-simulation/core/memory/OrderedMap.hpp"
+#include "openvic-simulation/core/object/FixedPoint.hpp"
+#include "openvic-simulation/core/object/Vector.hpp"
 #include "openvic-simulation/dataloader/NodeTools.hpp"
-#include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
-#include "openvic-simulation/types/fixed_point/FixedPointMap.hpp"
-#include "openvic-simulation/types/HasIdentifier.hpp"
-#include "openvic-simulation/types/HasIndex.hpp"
-#include "openvic-simulation/types/OrderedContainers.hpp"
-#include "openvic-simulation/types/Vector.hpp"
-#include "openvic-simulation/utility/Containers.hpp"
 
 namespace OpenVic {
 
@@ -78,8 +77,8 @@ namespace OpenVic {
 			std::optional<fvec2_t> factory;
 			std::optional<fvec2_t> building_construction;
 			std::optional<fvec2_t> military_construction;
-			ordered_map<BuildingType const*, fvec2_t> building_position;
-			fixed_point_map_t<BuildingType const*> building_rotation;
+			memory::ordered_map<BuildingType const*, fvec2_t> building_position;
+			memory::fixed_point_map_t<BuildingType const*> building_rotation;
 		};
 
 		static constexpr index_t NULL_INDEX = 0, MAX_INDEX = std::numeric_limits<index_t>::max();

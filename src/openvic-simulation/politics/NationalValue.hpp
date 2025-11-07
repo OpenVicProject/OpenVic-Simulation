@@ -1,7 +1,7 @@
 #pragma once
 
 #include "openvic-simulation/modifier/Modifier.hpp"
-#include "openvic-simulation/types/IdentifierRegistry.hpp"
+#include "openvic-simulation/core/container/IdentifierRegistry.hpp"
 
 namespace OpenVic {
 	struct NationalValueManager;

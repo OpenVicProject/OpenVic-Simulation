@@ -6,7 +6,7 @@
 #include <utility>
 #include <variant>
 
-#include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
+#include "openvic-simulation/core/object/FixedPoint.hpp"
 
 namespace OpenVic {
 

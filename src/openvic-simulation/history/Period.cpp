@@ -1,6 +1,6 @@
 #include "Period.hpp"
 
-#include "openvic-simulation/utility/Logger.hpp"
+#include "openvic-simulation/core/Logger.hpp"
 
 using namespace OpenVic;
 

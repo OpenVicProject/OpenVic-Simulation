@@ -1,13 +1,18 @@
 #pragma once
 
+#include <cstdint>
+#include <string_view>
+
 #include <openvic-dataloader/v2script/Parser.hpp>
 
+#include "openvic-simulation/core/Property.hpp"
+#include "openvic-simulation/core/container/IdentifierRegistry.hpp"
+#include "openvic-simulation/core/memory/FixedPointMap.hpp"
+#include "openvic-simulation/core/memory/String.hpp"
+#include "openvic-simulation/core/object/Date.hpp"
+#include "openvic-simulation/core/template/EnumBitfield.hpp"
 #include "openvic-simulation/scripts/ConditionScript.hpp"
 #include "openvic-simulation/scripts/EffectScript.hpp"
-#include "openvic-simulation/types/EnumBitfield.hpp"
-#include "openvic-simulation/types/IdentifierRegistry.hpp"
-#include "openvic-simulation/utility/Getters.hpp"
-#include "openvic-simulation/utility/Containers.hpp"
 
 namespace OpenVic {
 	struct WargoalTypeManager;
@@ -32,7 +37,7 @@ namespace OpenVic {
 			WAR_SCORE_BATTLE_FACTOR,
 			CONSTRUCTION_SPEED
 		};
-		using peace_modifiers_t = fixed_point_map_t<PEACE_MODIFIERS>;
+		using peace_modifiers_t = memory::fixed_point_map_t<PEACE_MODIFIERS>;
 
 		enum class peace_options_t : uint32_t {
 			NO_PEACE_OPTIONS      = 0,

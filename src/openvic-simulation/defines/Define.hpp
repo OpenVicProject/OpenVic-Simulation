@@ -7,8 +7,8 @@
 #include "openvic-simulation/defines/GraphicsDefines.hpp"
 #include "openvic-simulation/defines/MilitaryDefines.hpp"
 #include "openvic-simulation/defines/PopsDefines.hpp"
-#include "openvic-simulation/types/Date.hpp"
-#include "openvic-simulation/utility/Getters.hpp"
+#include "openvic-simulation/core/object/Date.hpp"
+#include "openvic-simulation/core/Property.hpp"
 
 namespace OpenVic {
 	struct DefineManager {

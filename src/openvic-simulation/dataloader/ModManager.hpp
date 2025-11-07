@@ -1,10 +1,13 @@
 #pragma once
 
 #include <cstddef>
+#include <optional>
 #include <string_view>
 
-#include "openvic-simulation/types/HasIdentifier.hpp"
-#include "openvic-simulation/types/IdentifierRegistry.hpp"
+#include "openvic-simulation/core/container/HasIdentifier.hpp"
+#include "openvic-simulation/core/container/IdentifierRegistry.hpp"
+#include "openvic-simulation/core/memory/OrderedSet.hpp"
+#include "openvic-simulation/core/memory/Vector.hpp"
 #include "openvic-simulation/dataloader/NodeTools.hpp"
 
 namespace OpenVic {
@@ -29,7 +32,7 @@ namespace OpenVic {
 		);
 		Mod(Mod&&) = default;
 
-		vector_ordered_set<Mod const*> generate_dependency_list(bool* success = nullptr) const;
+		memory::vector_ordered_set<Mod const*> generate_dependency_list(bool* success = nullptr) const;
 	};
 
 	struct ModManager {

@@ -1,6 +1,5 @@
 #pragma once
 
-#include <concepts>
 #pragma comment(lib, "advapi32.lib")
 
 #include <string>
@@ -8,8 +7,8 @@
 
 #include <Windows.h>
 
-#include "openvic-simulation/utility/Containers.hpp"
-#include "openvic-simulation/utility/Concepts.hpp"
+#include "openvic-simulation/core/memory/String.hpp"
+#include "openvic-simulation/core/template/Concepts.hpp"
 
 namespace OpenVic::Windows {
 	inline memory::wstring convert(std::string_view as) {

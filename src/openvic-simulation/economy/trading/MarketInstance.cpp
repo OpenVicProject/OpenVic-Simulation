@@ -1,13 +1,15 @@
 #include "MarketInstance.hpp"
 
+#include <utility>
+
+#include "openvic-simulation/core/Logger.hpp"
+#include "openvic-simulation/core/Typedefs.hpp"
+#include "openvic-simulation/core/thread/ThreadPool.hpp"
 #include "openvic-simulation/defines/CountryDefines.hpp"
 #include "openvic-simulation/economy/GoodDefinition.hpp"
 #include "openvic-simulation/economy/GoodInstance.hpp"
 #include "openvic-simulation/economy/trading/BuyUpToOrder.hpp"
 #include "openvic-simulation/economy/trading/MarketSellOrder.hpp"
-#include "openvic-simulation/utility/Containers.hpp"
-#include "openvic-simulation/utility/ThreadPool.hpp"
-#include "openvic-simulation/utility/Typedefs.hpp"
 
 using namespace OpenVic;
 

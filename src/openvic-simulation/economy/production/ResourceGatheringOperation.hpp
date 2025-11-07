@@ -1,11 +1,13 @@
 #pragma once
 
+#include <cstddef>
+
+#include "openvic-simulation/Alias.hpp"
+#include "openvic-simulation/core/Property.hpp"
+#include "openvic-simulation/core/container/IndexedFlatMap.hpp"
+#include "openvic-simulation/core/memory/Vector.hpp"
+#include "openvic-simulation/core/object/FixedPoint.hpp"
 #include "openvic-simulation/economy/production/Employee.hpp"
-#include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
-#include "openvic-simulation/types/IndexedFlatMap.hpp"
-#include "openvic-simulation/types/PopSize.hpp"
-#include "openvic-simulation/utility/Getters.hpp"
-#include "openvic-simulation/utility/Containers.hpp"
 
 namespace OpenVic {
 	struct MarketInstance;

@@ -1,14 +1,22 @@
 #pragma once
 
+#include <cstdint>
+#include <ostream>
+#include <string_view>
+#include <type_traits>
+
+#include "openvic-simulation/Alias.hpp"
+#include "openvic-simulation/core/Property.hpp"
+#include "openvic-simulation/core/container/HasIdentifier.hpp"
+#include "openvic-simulation/core/container/HasIdentifierAndColour.hpp"
+#include "openvic-simulation/core/container/HasIndex.hpp"
+#include "openvic-simulation/core/container/IndexedFlatMap.hpp"
+#include "openvic-simulation/core/memory/FixedPointMap.hpp"
+#include "openvic-simulation/core/memory/Vector.hpp"
+#include "openvic-simulation/core/object/Colour.hpp"
+#include "openvic-simulation/core/object/FixedPoint.hpp"
+#include "openvic-simulation/core/template/EnumBitfield.hpp"
 #include "openvic-simulation/scripts/ConditionalWeight.hpp"
-#include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
-#include "openvic-simulation/types/fixed_point/FixedPointMap.hpp"
-#include "openvic-simulation/types/HasIdentifier.hpp"
-#include "openvic-simulation/types/HasIndex.hpp"
-#include "openvic-simulation/types/IndexedFlatMap.hpp"
-#include "openvic-simulation/types/PopSize.hpp"
-#include "openvic-simulation/types/PopSprite.hpp"
-#include "openvic-simulation/utility/Containers.hpp"
 
 namespace OpenVic {
 	struct BaseIssue;
@@ -43,17 +51,17 @@ namespace OpenVic {
 			MILITARY        = 1 << 2
 		};
 
-		using rebel_units_t = fixed_point_map_t<UnitType const*>;
+		using rebel_units_t = memory::fixed_point_map_t<UnitType const*>;
 		using poptype_weight_map_t = IndexedFlatMap<PopType, ConditionalWeightFactorAdd>;
 		using ideology_weight_map_t = IndexedFlatMap<Ideology, ConditionalWeightFactorMul>;
-		using issue_weight_map_t = ordered_map<BaseIssue const*, ConditionalWeightFactorMul>;
+		using issue_weight_map_t = memory::ordered_map<BaseIssue const*, ConditionalWeightFactorMul>;
 
 	private:
 		Strata const& PROPERTY(strata);
 		const pop_sprite_t PROPERTY(sprite);
-		fixed_point_map_t<GoodDefinition const*> PROPERTY(life_needs);
-		fixed_point_map_t<GoodDefinition const*> PROPERTY(everyday_needs);
-		fixed_point_map_t<GoodDefinition const*> PROPERTY(luxury_needs);
+		memory::fixed_point_map_t<GoodDefinition const*> PROPERTY(life_needs);
+		memory::fixed_point_map_t<GoodDefinition const*> PROPERTY(everyday_needs);
+		memory::fixed_point_map_t<GoodDefinition const*> PROPERTY(luxury_needs);
 		income_type_t PROPERTY(life_needs_income_types);
 		income_type_t PROPERTY(everyday_needs_income_types);
 		income_type_t PROPERTY(luxury_needs_income_types);
@@ -93,9 +101,9 @@ namespace OpenVic {
 			index_t new_index,
 			Strata const& new_strata,
 			pop_sprite_t new_sprite,
-			fixed_point_map_t<GoodDefinition const*>&& new_life_needs,
-			fixed_point_map_t<GoodDefinition const*>&& new_everyday_needs,
-			fixed_point_map_t<GoodDefinition const*>&& new_luxury_needs,
+			memory::fixed_point_map_t<GoodDefinition const*>&& new_life_needs,
+			memory::fixed_point_map_t<GoodDefinition const*>&& new_everyday_needs,
+			memory::fixed_point_map_t<GoodDefinition const*>&& new_luxury_needs,
 			income_type_t new_life_needs_income_types,
 			income_type_t new_everyday_needs_income_types,
 			income_type_t new_luxury_needs_income_types,

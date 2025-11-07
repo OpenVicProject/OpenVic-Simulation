@@ -6,11 +6,16 @@
 #include <optional>
 #include <string_view>
 #include <system_error>
+#include <utility>
 
 #include <fmt/format.h>
 
 #include "openvic-simulation/DefinitionManager.hpp"
 #include "openvic-simulation/InstanceManager.hpp"
+#include "openvic-simulation/core/error/ErrorMacros.hpp"
+#include "openvic-simulation/core/memory/Vector.hpp"
+#include "openvic-simulation/core/object/Colour.hpp"
+#include "openvic-simulation/core/object/Date.hpp"
 #include "openvic-simulation/country/CountryInstance.hpp"
 #include "openvic-simulation/map/ProvinceInstance.hpp"
 #include "openvic-simulation/military/UnitType.hpp"
@@ -18,10 +23,6 @@
 #include "openvic-simulation/misc/Event.hpp"
 #include "openvic-simulation/research/Invention.hpp"
 #include "openvic-simulation/research/Technology.hpp"
-#include "openvic-simulation/types/Colour.hpp"
-#include "openvic-simulation/types/Date.hpp"
-#include "openvic-simulation/utility/Containers.hpp"
-#include "openvic-simulation/utility/ErrorMacros.hpp"
 
 using namespace OpenVic;
 using namespace std::string_view_literals;
