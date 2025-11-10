@@ -4,6 +4,7 @@
 #include <cstddef>
 
 #include "openvic-simulation/country/CountryInstance.hpp"
+#include "openvic-simulation/defines/EconomyDefines.hpp"
 #include "openvic-simulation/economy/GoodDefinition.hpp"
 #include "openvic-simulation/economy/GoodInstance.hpp"
 #include "openvic-simulation/economy/production/ProductionType.hpp"
@@ -24,7 +25,8 @@ ArtisanalProducer::ArtisanalProducer(
 	fixed_point_map_t<GoodDefinition const*>&& new_stockpile,
 	ProductionType const* const new_production_type,
 	fixed_point_t new_current_production
-) : modifier_effect_cache { artisanal_producer_deps.modifier_effect_cache },
+) : economy_defines { artisanal_producer_deps.economy_defines },
+	modifier_effect_cache { artisanal_producer_deps.modifier_effect_cache },
 	stockpile { std::move(new_stockpile) },
 	production_type_nullable { nullptr },
 	current_production { new_current_production }
@@ -374,9 +376,10 @@ ProductionType const* ArtisanalProducer::pick_production_type(
 
 	const fixed_point_t revenue = pop.get_artisanal_revenue();
 	const fixed_point_t costs = costs_of_production;
+	const fixed_point_t base_chance_to_switch_while_profitable = economy_defines.get_goods_focus_swap_chance();
 	if (production_type_nullable == nullptr || (revenue <= costs)) {
 		should_pick_new_production_type = true;
-	} else {
+	} else if (base_chance_to_switch_while_profitable > 0) {
 		const fixed_point_t current_score = calculate_production_type_score(
 			revenue,
 			costs,		
@@ -406,8 +409,26 @@ ProductionType const* ArtisanalProducer::pick_production_type(
 			}
 		}
 
-		//TODO decide based on score and randomness and defines.economy.GOODS_FOCUS_SWAP_CHANCE
-		should_pick_new_production_type = relative_score < fixed_point_t::_0_50;
+		//picked so the line hits 0 at relative_score = 2/3 and the area under the curve equals 1
+		//2/3 was picked as being in the top 1/3 of production types makes it very unlikely you'll profit from switching.
+		constexpr fixed_point_t slope = fixed_point_t{-9} / 2;
+		constexpr fixed_point_t offset = 3;
+
+		const fixed_point_t change_modifier_from_relative_score = std::max(fixed_point_t::_0, slope * relative_score + offset);
+		const fixed_point_t switch_chance = base_chance_to_switch_while_profitable * change_modifier_from_relative_score;
+		if (switch_chance >= 1) {
+			should_pick_new_production_type = true;
+		} else {
+			constexpr fixed_point_t weights_sum = 1;
+			const fixed_point_t keep_current_chance = weights_sum - switch_chance;
+			const std::array<fixed_point_t, 2> weights { keep_current_chance, switch_chance };
+			const size_t should_switch = sample_weighted_index(
+				random_number_generator(),
+				weights,
+				weights_sum
+			);
+			should_pick_new_production_type = should_switch == 1;
+		}
 	}
 
 	if (!should_pick_new_production_type) {

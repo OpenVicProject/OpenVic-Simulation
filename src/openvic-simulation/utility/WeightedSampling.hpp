@@ -9,7 +9,7 @@
 namespace OpenVic {
 	OV_ALWAYS_INLINE static size_t sample_weighted_index(
 		const uint32_t random_value, 
-		const std::span<fixed_point_t> positive_weights,
+		const std::span<const fixed_point_t> positive_weights,
 		const fixed_point_t weights_sum
 	) {
 		if (positive_weights.empty() || weights_sum <= 0) {
