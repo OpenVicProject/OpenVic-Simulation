@@ -760,5 +760,8 @@ private:
 		NodeTools::Callback<decltype(registry)::external_value_type const_kw&, ast::NodeCPtr> auto callback \
 	) const_kw { \
 		return registry.expect_item_dictionary_reserve_length(reservable, callback); \
+	} \
+	constexpr decltype(registry) const_kw& get_##singular##_registry() const_kw { \
+		return registry; \
 	}
 }

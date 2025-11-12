@@ -13,9 +13,11 @@
 #include <fmt/std.h>
 
 #include "openvic-simulation/DefinitionManager.hpp"
+#include "openvic-simulation/dataloader/parse/CountryParser.hpp"
 #include "openvic-simulation/interface/UI.hpp"
 #include "openvic-simulation/misc/GameRulesManager.hpp"
 #include "openvic-simulation/misc/SoundEffect.hpp"
+#include "openvic-simulation/utility/Error.hpp"
 #include "openvic-simulation/utility/Logger.hpp"
 #include "openvic-simulation/utility/StringUtils.hpp"
 #include "openvic-simulation/utility/Containers.hpp"
@@ -926,6 +928,49 @@ bool Dataloader::_load_sound_effect_defines(DefinitionManager& definition_manage
 
 }
 
+static constexpr std::string_view common_folder = "common/";
+static constexpr std::string_view countries_file = "common/countries.txt";
+static constexpr std::string_view country_colours_file = "common/country_colors.txt";
+
+Error Dataloader::_load_countries(DefinitionManager& definition_manager) {
+	CountryParser country_parser {
+		definition_manager.get_politics_manager().get_government_type_manager().get_government_type_registry(),
+		definition_manager.get_pop_manager().get_culture_manager().get_graphical_culture_type_registry(),
+		definition_manager.get_military_manager().get_unit_type_manager().get_unit_type_registry(),
+		definition_manager.get_politics_manager().get_issue_manager().get_party_policy_group_registry(),
+		definition_manager.get_politics_manager().get_issue_manager().get_party_policy_registry(),
+		definition_manager.get_politics_manager().get_ideology_manager().get_ideology_registry(),
+		parse_defines(lookup_file(countries_file))
+	};
+
+	if (Error err = country_parser.load_country_list(); err != Error::OK) {
+		spdlog::critical_s("Failed to load country list!");
+		return err;
+	}
+
+	if (Error err = country_parser.load_countries_from( //
+			common_folder, *this, definition_manager.get_country_definition_manager()
+		);
+		err != Error::OK //
+	) {
+		spdlog::critical_s("Failed to load countries!");
+		return err;
+	}
+
+	if (Error err = country_parser.load_country_colours(
+			parse_defines(lookup_file(country_colours_file)).get_file_node(),
+			definition_manager.get_country_definition_manager()
+		);
+		err != Error::OK //
+	) {
+		spdlog::critical_s("Failed to load country colours!");
+		return err;
+	}
+
+	return Error::OK;
+}
+
+
 bool Dataloader::load_defines(
 	GameRulesManager const& game_rules_manager,
 	DefinitionManager& definition_manager
@@ -938,8 +983,6 @@ bool Dataloader::load_defines(
 	static constexpr std::string_view defines_file = "common/defines.lua";
 	static constexpr std::string_view buildings_file = "common/buildings.txt";
 	static constexpr std::string_view bookmark_file = "common/bookmarks.txt";
-	static constexpr std::string_view countries_file = "common/countries.txt";
-	static constexpr std::string_view country_colours_file = "common/country_colors.txt";
 	static constexpr std::string_view culture_file = "common/cultures.txt";
 	static constexpr std::string_view governments_file = "common/governments.txt";
 	static constexpr std::string_view graphical_culture_type_file = "common/graphicalculturetype.txt";
@@ -1135,18 +1178,11 @@ bool Dataloader::load_defines(
 		spdlog::critical_s("Failed to load bookmarks!");
 		ret = false;
 	}
-	if (!definition_manager.get_country_definition_manager().load_countries(
-		definition_manager, *this, parse_defines(lookup_file(countries_file)).get_file_node()
-	)) {
-		spdlog::critical_s("Failed to load countries!");
+
+	if(_load_countries(definition_manager) != Error::OK) {
 		ret = false;
 	}
-	if (!definition_manager.get_country_definition_manager().load_country_colours(
-		parse_defines(lookup_file(country_colours_file)).get_file_node()
-	)) {
-		spdlog::critical_s("Failed to load country colours!");
-		ret = false;
-	}
+
 	if (!definition_manager.get_pop_manager().get_culture_manager().load_culture_file(
 		definition_manager.get_country_definition_manager(), parse_defines(lookup_file(culture_file)).get_file_node()
 	)) {
