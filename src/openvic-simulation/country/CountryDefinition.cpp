@@ -10,7 +10,7 @@
 #include "openvic-simulation/politics/Government.hpp"
 #include "openvic-simulation/politics/Ideology.hpp"
 #include "openvic-simulation/politics/PartyPolicy.hpp"
-#include "openvic-simulation/pop/Culture.hpp"
+#include "openvic-simulation/population/Culture.hpp"
 #include "openvic-simulation/types/Colour.hpp"
 #include "openvic-simulation/types/IdentifierRegistry.hpp"
 #include "openvic-simulation/utility/Logger.hpp"

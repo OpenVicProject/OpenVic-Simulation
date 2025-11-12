@@ -4,7 +4,7 @@
 #include "openvic-simulation/map/ProvinceInstance.hpp"
 #include "openvic-simulation/map/State.hpp"
 #include "openvic-simulation/pathfinding/AStarPathing.hpp"
-#include "openvic-simulation/pop/PopValuesFromProvince.hpp"
+#include "openvic-simulation/population/PopValuesFromProvince.hpp"
 #include "openvic-simulation/types/Date.hpp"
 
 namespace OpenVic {

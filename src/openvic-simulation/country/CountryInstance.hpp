@@ -8,7 +8,7 @@
 #include "openvic-simulation/military/UnitBranchedGetterMacro.hpp"
 #include "openvic-simulation/modifier/ModifierSum.hpp"
 #include "openvic-simulation/politics/Rule.hpp"
-#include "openvic-simulation/pop/PopsAggregate.hpp"
+#include "openvic-simulation/population/PopsAggregate.hpp"
 #include "openvic-simulation/types/ClampedValue.hpp"
 #include "openvic-simulation/types/Date.hpp"
 #include "openvic-simulation/types/fixed_point/Atomic.hpp"

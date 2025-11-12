@@ -5,7 +5,7 @@
 #include "openvic-simulation/map/TerrainType.hpp"
 #include "openvic-simulation/military/UnitType.hpp"
 #include "openvic-simulation/politics/Rebel.hpp"
-#include "openvic-simulation/pop/PopType.hpp"
+#include "openvic-simulation/population/PopType.hpp"
 #include "openvic-simulation/research/Technology.hpp"
 
 using namespace OpenVic;

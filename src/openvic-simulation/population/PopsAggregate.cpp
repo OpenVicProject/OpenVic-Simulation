@@ -3,8 +3,8 @@
 #include "openvic-simulation/country/CountryDefinition.hpp"
 #include "openvic-simulation/country/CountryInstance.hpp"
 #include "openvic-simulation/politics/Ideology.hpp"
-#include "openvic-simulation/pop/Pop.hpp"
-#include "openvic-simulation/pop/PopType.hpp"
+#include "openvic-simulation/population/Pop.hpp"
+#include "openvic-simulation/population/PopType.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
 #include "openvic-simulation/types/OrderedContainersMath.hpp"
 

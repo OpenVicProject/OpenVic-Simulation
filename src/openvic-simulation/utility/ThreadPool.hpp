@@ -5,7 +5,7 @@
 #include <mutex>
 #include <thread>
 
-#include "openvic-simulation/pop/PopValuesFromProvince.hpp"
+#include "openvic-simulation/population/PopValuesFromProvince.hpp"
 #include "openvic-simulation/types/Date.hpp"
 #include "openvic-simulation/utility/Containers.hpp"
 #include "openvic-simulation/utility/ForwardableSpan.hpp"
