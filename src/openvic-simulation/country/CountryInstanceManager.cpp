@@ -1,4 +1,5 @@
 #include "CountryInstanceManager.hpp"
+#include <algorithm>
 
 #include "openvic-simulation/country/CountryDefinition.hpp"
 #include "openvic-simulation/defines/CountryDefines.hpp"
@@ -59,7 +60,7 @@ void CountryInstanceManager::update_rankings(const Date today) {
 	industrial_power_ranking = total_ranking;
 	military_power_ranking = total_ranking;
 
-	std::sort(
+	std::stable_sort(
 		total_ranking.begin(), total_ranking.end(),
 		[](CountryInstance* a, CountryInstance* b) -> bool {
 			const bool a_civilised = a->is_civilised();
@@ -67,19 +68,19 @@ void CountryInstanceManager::update_rankings(const Date today) {
 			return a_civilised != b_civilised ? a_civilised : a->total_score.get_untracked() > b->total_score.get_untracked();
 		}
 	);
-	std::sort(
+	std::stable_sort(
 		prestige_ranking.begin(), prestige_ranking.end(),
 		[](CountryInstance const* a, CountryInstance const* b) -> bool {
 			return a->get_prestige_untracked() > b->get_prestige_untracked();
 		}
 	);
-	std::sort(
+	std::stable_sort(
 		industrial_power_ranking.begin(), industrial_power_ranking.end(),
 		[](CountryInstance const* a, CountryInstance const* b) -> bool {
 			return a->get_industrial_power_untracked() > b->get_industrial_power_untracked();
 		}
 	);
-	std::sort(
+	std::stable_sort(
 		military_power_ranking.begin(), military_power_ranking.end(),
 		[](CountryInstance* a, CountryInstance* b) -> bool {
 			return a->military_power.get_untracked() > b->military_power.get_untracked();
@@ -158,7 +159,7 @@ void CountryInstanceManager::update_rankings(const Date today) {
 
 	// Sort the great powers list by total rank, as pre-existing great powers may have changed rank order and new great
 	// powers will have been added to the end of the list regardless of rank.
-	std::sort(great_powers.begin(), great_powers.end(), [](CountryInstance const* a, CountryInstance const* b) -> bool {
+	std::stable_sort(great_powers.begin(), great_powers.end(), [](CountryInstance const* a, CountryInstance const* b) -> bool {
 		return a->get_total_rank() < b->get_total_rank();
 	});
 
