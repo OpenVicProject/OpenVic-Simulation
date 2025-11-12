@@ -2,6 +2,7 @@
 #include "CountryInstanceDeps.hpp"
 #include "CountryInstanceManager.hpp"
 
+#include <algorithm>
 #include <cstddef>
 #include <cstdint>
 
@@ -1284,11 +1285,11 @@ void CountryInstance::_update_production() {
 
 	industrial_power.set(industrial_power_running_total);
 
-	std::sort(
+	std::stable_sort(
 		industrial_power_from_states.begin(), industrial_power_from_states.end(),
 		[](auto const& a, auto const& b) -> bool { return a.second > b.second; }
 	);
-	std::sort(
+	std::stable_sort(
 		industrial_power_from_investments.begin(), industrial_power_from_investments.end(),
 		[](auto const& a, auto const& b) -> bool { return a.second > b.second; }
 	);

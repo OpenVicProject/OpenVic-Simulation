@@ -1,5 +1,6 @@
 #pragma once
 
+#include <algorithm>
 #include <system_error>
 
 #include "openvic-simulation/dataloader/NodeTools.hpp"
@@ -115,7 +116,7 @@ namespace OpenVic {
 			for (typename decltype(entries)::value_type const& entry : entries) {
 				keys.push_back(entry.first);
 			}
-			std::sort(keys.begin(), keys.end());
+			std::stable_sort(keys.begin(), keys.end());
 			ordered_map<Date, memory::unique_ptr<entry_type>> new_entries;
 			for (Date const& key : keys) {
 				new_entries.emplace(key, std::move(entries[key]));

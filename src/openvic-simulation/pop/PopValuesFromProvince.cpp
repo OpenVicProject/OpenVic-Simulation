@@ -1,4 +1,5 @@
 #include "PopValuesFromProvince.hpp"
+#include <algorithm>
 
 #include "openvic-simulation/country/CountryInstance.hpp"
 #include "openvic-simulation/defines/PopsDefines.hpp"
@@ -90,7 +91,7 @@ void PopValuesFromProvince::update_pop_values_from_province(ProvinceInstance& pr
 	}
 
 	if (!ranked_artisanal_production_types.empty()) {
-		std::sort(ranked_artisanal_production_types.begin(), ranked_artisanal_production_types.end(),
+		std::stable_sort(ranked_artisanal_production_types.begin(), ranked_artisanal_production_types.end(),
 			[](const auto& a, const auto& b) {
 				return a.second > b.second;
 			}
