@@ -1,7 +1,7 @@
 #include "Employee.hpp"
 
 #include "openvic-simulation/country/CountryInstance.hpp"
-#include "openvic-simulation/pop/Pop.hpp"
+#include "openvic-simulation/population/Pop.hpp"
 
 using namespace OpenVic;
 

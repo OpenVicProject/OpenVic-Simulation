@@ -6,8 +6,8 @@
 #include "openvic-simulation/map/MapInstance.hpp"
 #include "openvic-simulation/map/ProvinceDefinition.hpp"
 #include "openvic-simulation/map/ProvinceInstance.hpp"
-#include "openvic-simulation/pop/Culture.hpp"
-#include "openvic-simulation/pop/Religion.hpp"
+#include "openvic-simulation/population/Culture.hpp"
+#include "openvic-simulation/population/Religion.hpp"
 #include "openvic-simulation/types/OrderedContainersMath.hpp"
 #include "openvic-simulation/types/PopSize.hpp"
 

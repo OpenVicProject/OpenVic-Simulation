@@ -1,8 +1,8 @@
 #pragma once
 
-#include "openvic-simulation/pop/Culture.hpp"
-#include "openvic-simulation/pop/Religion.hpp"
-#include "openvic-simulation/pop/PopType.hpp"
+#include "openvic-simulation/population/Culture.hpp"
+#include "openvic-simulation/population/Religion.hpp"
+#include "openvic-simulation/population/PopType.hpp"
 
 namespace OpenVic {
 	struct GoodDefinitionManager;

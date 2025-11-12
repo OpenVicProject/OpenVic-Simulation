@@ -7,7 +7,7 @@
 #include "openvic-simulation/InstanceManager.hpp"
 #include "openvic-simulation/history/CountryHistory.hpp"
 #include "openvic-simulation/military/UnitInstanceGroup.hpp"
-#include "openvic-simulation/pop/Pop.hpp"
+#include "openvic-simulation/population/Pop.hpp"
 #include "openvic-simulation/utility/ThreadPool.hpp"
 
 using namespace OpenVic;

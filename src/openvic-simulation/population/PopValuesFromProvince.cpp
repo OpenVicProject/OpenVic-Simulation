@@ -9,7 +9,7 @@
 #include "openvic-simulation/modifier/ModifierEffectCache.hpp"
 #include "openvic-simulation/map/ProvinceInstance.hpp"
 #include "openvic-simulation/misc/GameRulesManager.hpp"
-#include "openvic-simulation/pop/PopType.hpp"
+#include "openvic-simulation/population/PopType.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
 
 using namespace OpenVic;

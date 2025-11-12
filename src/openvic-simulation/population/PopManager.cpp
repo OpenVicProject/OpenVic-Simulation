@@ -6,7 +6,7 @@
 #include "openvic-simulation/politics/Ideology.hpp"
 #include "openvic-simulation/politics/IssueManager.hpp"
 #include "openvic-simulation/politics/Rebel.hpp"
-#include "openvic-simulation/pop/Pop.hpp"
+#include "openvic-simulation/population/Pop.hpp"
 #include "openvic-simulation/military/UnitType.hpp"
 #include "openvic-simulation/modifier/ModifierManager.hpp"
 #include "openvic-simulation/utility/FormatValidate.hpp"

@@ -5,8 +5,8 @@
 #include "openvic-simulation/dataloader/NodeTools.hpp"
 #include "openvic-simulation/economy/GoodDefinition.hpp"
 #include "openvic-simulation/misc/GameRulesManager.hpp"
-#include "openvic-simulation/pop/PopManager.hpp"
-#include "openvic-simulation/pop/PopType.hpp"
+#include "openvic-simulation/population/PopManager.hpp"
+#include "openvic-simulation/population/PopType.hpp"
 #include "openvic-simulation/utility/ErrorMacros.hpp"
 
 using namespace OpenVic;

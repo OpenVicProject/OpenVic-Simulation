@@ -15,7 +15,7 @@
 #include "openvic-simulation/misc/GameAction.hpp"
 #include "openvic-simulation/misc/SimulationClock.hpp"
 #include "openvic-simulation/politics/PoliticsInstanceManager.hpp"
-#include "openvic-simulation/pop/PopDeps.hpp"
+#include "openvic-simulation/population/PopDeps.hpp"
 #include "openvic-simulation/types/Date.hpp"
 #include "openvic-simulation/types/FlagStrings.hpp"
 #include "openvic-simulation/utility/ThreadPool.hpp"

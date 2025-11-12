@@ -1,7 +1,7 @@
 #pragma once
 
 #include "openvic-simulation/economy/production/ArtisanalProducer.hpp"
-#include "openvic-simulation/pop/PopNeedsMacro.hpp"
+#include "openvic-simulation/population/PopNeedsMacro.hpp"
 #include "openvic-simulation/types/fixed_point/Atomic.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPointMap.hpp"
