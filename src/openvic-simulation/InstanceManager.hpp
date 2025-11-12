@@ -1,7 +1,7 @@
 #pragma once
 
 #include "openvic-simulation/console/ConsoleInstance.hpp"
-#include "openvic-simulation/country/CountryInstance.hpp"
+#include "openvic-simulation/country/CountryInstanceManager.hpp"
 #include "openvic-simulation/country/CountryInstanceDeps.hpp"
 #include "openvic-simulation/diplomacy/CountryRelation.hpp"
 #include "openvic-simulation/economy/GoodInstance.hpp"
