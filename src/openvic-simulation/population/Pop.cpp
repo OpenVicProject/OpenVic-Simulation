@@ -633,7 +633,7 @@ void Pop::pop_tick_without_cleanup(
 }
 
 void Pop::after_buy(void* actor, BuyResult const& buy_result) {
-	const fixed_point_t quantity_bought = buy_result.get_quantity_bought();
+	const fixed_point_t quantity_bought = buy_result.quantity_bought;
 
 	if (quantity_bought == 0) {
 		return;
@@ -643,14 +643,14 @@ void Pop::after_buy(void* actor, BuyResult const& buy_result) {
 	ProvinceInstance& location_never_null = *pop.get_location();
 	CountryInstance* const country_to_report_economy_nullable = location_never_null.get_country_to_report_economy();
 
-	fixed_point_t money_spent = buy_result.get_money_spent_total();
-	pop.yesterdays_import_value += buy_result.get_money_spent_on_imports();
+	fixed_point_t money_spent = buy_result.money_spent_total;
+	pop.yesterdays_import_value += buy_result.money_spent_on_imports;
 	if (country_to_report_economy_nullable != nullptr) {
-		const fixed_point_t tariff = country_to_report_economy_nullable->apply_tariff(buy_result.get_money_spent_on_imports());
+		const fixed_point_t tariff = country_to_report_economy_nullable->apply_tariff(buy_result.money_spent_on_imports);
 		money_spent += tariff;
 	}
 
-	GoodDefinition const& good_definition = buy_result.get_good_definition();
+	GoodDefinition const& good_definition = buy_result.good_definition;
 	fixed_point_t quantity_left_to_consume = quantity_bought;
 	if (pop.artisanal_producer_optional.has_value()) {
 		if (quantity_left_to_consume <= 0) {
@@ -705,8 +705,8 @@ void Pop::after_buy(void* actor, BuyResult const& buy_result) {
 }
 
 void Pop::after_sell(void* actor, SellResult const& sell_result, memory::vector<fixed_point_t>& reusable_vector) {
-	if (sell_result.get_money_gained() > 0) {
-		static_cast<Pop*>(actor)->add_artisanal_revenue(sell_result.get_money_gained());
+	if (sell_result.money_gained > 0) {
+		static_cast<Pop*>(actor)->add_artisanal_revenue(sell_result.money_gained);
 	}
 }
 

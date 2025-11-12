@@ -1885,15 +1885,15 @@ void CountryInstance::update_gamestate(const Date today, MapInstance& map_instan
 }
 
 void CountryInstance::after_buy(void* actor, BuyResult const& buy_result) {
-	const fixed_point_t quantity_bought = buy_result.get_quantity_bought();
+	const fixed_point_t quantity_bought = buy_result.quantity_bought;
 
 	if (quantity_bought <= 0) {
 		return;
 	}
 
 	CountryInstance& country = *static_cast<CountryInstance*>(actor);
-	good_data_t& good_data = country.goods_data.at_index(buy_result.get_good_definition().get_index());
-	const fixed_point_t money_spent = buy_result.get_money_spent_total();
+	good_data_t& good_data = country.goods_data.at_index(buy_result.good_definition.get_index());
+	const fixed_point_t money_spent = buy_result.money_spent_total;
 	country.cash_stockpile -= money_spent;
 	country.actual_national_stockpile_spending += money_spent;
 	good_data.stockpile_amount += quantity_bought;
@@ -1903,15 +1903,15 @@ void CountryInstance::after_buy(void* actor, BuyResult const& buy_result) {
 }
 
 void CountryInstance::after_sell(void* actor, SellResult const& sell_result, memory::vector<fixed_point_t>& reusable_vector) {
-	const fixed_point_t quantity_sold = sell_result.get_quantity_sold();
+	const fixed_point_t quantity_sold = sell_result.quantity_sold;
 
 	if (quantity_sold <= 0) {
 		return;
 	}
 
 	CountryInstance& country = *static_cast<CountryInstance*>(actor);
-	good_data_t& good_data = country.goods_data.at_index(sell_result.get_good_definition().get_index());
-	const fixed_point_t money_gained = sell_result.get_money_gained();
+	good_data_t& good_data = country.goods_data.at_index(sell_result.good_definition.get_index());
+	const fixed_point_t money_gained = sell_result.money_gained;
 	country.cash_stockpile += money_gained;
 	country.actual_national_stockpile_income += money_gained;
 	good_data.stockpile_amount -= quantity_sold;
