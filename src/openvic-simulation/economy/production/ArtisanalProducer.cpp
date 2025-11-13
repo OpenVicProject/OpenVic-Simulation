@@ -49,59 +49,23 @@ void ArtisanalProducer::set_production_type(ProductionType const* const new_prod
 	max_quantity_to_buy_per_good.reserve(production_type.get_input_goods().size());
 }
 
-void ArtisanalProducer::artisan_tick(
-	Pop& pop,
-	PopValuesFromProvince const& values_from_province,
-	RandomU32& random_number_generator,
-	IndexedFlatMap<GoodDefinition, char>& reusable_goods_mask,
-	memory::vector<fixed_point_t>& pop_max_quantity_to_buy_per_good,
-	memory::vector<fixed_point_t>& pop_money_to_spend_per_good,
-	memory::vector<fixed_point_t>& reusable_map_0,
-	memory::vector<fixed_point_t>& reusable_map_1
-) {
-	ProductionType const* const old_production_type = production_type_nullable;
-	set_production_type(
-		pick_production_type(
-			pop,
-			values_from_province,
-			random_number_generator
-		)
-	);
-	if (production_type_nullable == nullptr) {
-		return;
-	}
-
-	ProductionType const& production_type = *production_type_nullable;
-	if (production_type_nullable != old_production_type) {
-		//TODO sell stockpile no longer used
-		stockpile.clear();
-		for (auto const& [input_good, base_demand] : production_type.get_input_goods()) {
-			stockpile[input_good] = base_demand * pop.get_size() / production_type.get_base_workforce_size();
-		}
-	}
-
-	CountryInstance* country_to_report_economy_nullable = pop.get_location()->get_country_to_report_economy();
-	max_quantity_to_buy_per_good.clear();
-	IndexedFlatMap<GoodDefinition, char>& wants_more_mask = reusable_goods_mask;
+void ArtisanalProducer::artisan_tick_handler::calculate_inputs(fixed_point_map_t<GoodDefinition const*> const& stockpile) {
 	fixed_point_map_t<GoodDefinition const*> const& input_goods = production_type.get_input_goods();
-	memory::vector<fixed_point_t>& max_price_per_input = reusable_map_0;
-	max_price_per_input.resize(input_goods.size(), 0);
-	memory::vector<fixed_point_t>& demand_per_input = reusable_map_1;
-	demand_per_input.resize(input_goods.size(), 0);
 
 	//throughput scalar, the minimum of stockpile / base_desired_quantity
 	//inputs_bought_fraction uses base_desired_quantity as population size is cancelled in the production and input calculations.
-	fixed_point_t inputs_bought_numerator = pop.get_size(),
+	const pop_size_t pop_size = pop.get_size();
+	fixed_point_t inputs_bought_numerator = pop_size,
 		inputs_bought_denominator = production_type.get_base_workforce_size(),
-		inputs_bought_fraction = inputs_bought_numerator / inputs_bought_denominator;
+		inputs_bought_fraction_v = inputs_bought_numerator / inputs_bought_denominator;
 
-	size_t distinct_goods_to_buy = 0;
-	
+	distinct_goods_to_buy = 0;
+
 	for (auto it = input_goods.begin(); it < input_goods.end(); it++) {
 		GoodDefinition const& input_good = *it.key();
 		const fixed_point_t base_desired_quantity = it.value();
 		const ptrdiff_t i = it - input_goods.begin();
-		const fixed_point_t desired_quantity = demand_per_input[i] = base_desired_quantity * pop.get_size() / production_type.get_base_workforce_size();
+		const fixed_point_t desired_quantity = demand_per_input[i] = base_desired_quantity * pop_size / production_type.get_base_workforce_size();
 		if (desired_quantity == 0) {
 			continue;
 		}
@@ -114,27 +78,34 @@ void ArtisanalProducer::artisan_tick(
 			);
 		}
 
-		const fixed_point_t stockpiled_quantity = stockpile[&input_good];
+		auto stockpile_iterator = stockpile.find(&input_good);
+		const fixed_point_t stockpiled_quantity = stockpile_iterator == stockpile.end()
+			? fixed_point_t::_0
+			: stockpile_iterator.value();
 		const fixed_point_t good_bought_fraction = stockpiled_quantity / base_desired_quantity;
-		if (good_bought_fraction < inputs_bought_fraction) {
-			inputs_bought_fraction = good_bought_fraction;
+		if (good_bought_fraction < inputs_bought_fraction_v) {
+			inputs_bought_fraction_v = good_bought_fraction;
 			inputs_bought_numerator = stockpiled_quantity;
 			inputs_bought_denominator = base_desired_quantity;
 		}
 
-		max_price_per_input[i] = pop.get_market_instance().get_max_next_price(input_good);
+		max_price_per_input[i] = market_instance.get_max_next_price(input_good);
 		wants_more_mask.set(input_good, true);
 		distinct_goods_to_buy++;
 	}
 
-	//Produce output
-	fixed_point_t produce_left_to_sell = current_production = fixed_point_t::mul_div(
-		production_type.get_base_output_quantity(),
+	inputs_bought_fraction = Fraction {
 		inputs_bought_numerator,
 		inputs_bought_denominator
-	);
-	
-	MarketInstance const& market_instance = pop.get_market_instance();
+	};
+}
+
+void ArtisanalProducer::artisan_tick_handler::produce(
+	fixed_point_t& costs_of_production,
+	fixed_point_t& current_production,
+	fixed_point_map_t<GoodDefinition const*>& stockpile
+) {
+	fixed_point_t produce_left_to_sell = current_production = production_type.get_base_output_quantity() * inputs_bought_fraction;
 
 	costs_of_production = 0;
 	if (current_production > 0) {
@@ -142,6 +113,7 @@ void ArtisanalProducer::artisan_tick(
 			country_to_report_economy_nullable->report_output(production_type, current_production);
 		}
 
+		fixed_point_map_t<GoodDefinition const*> const& input_goods = production_type.get_input_goods();
 		for (auto it = input_goods.begin(); it < input_goods.end(); it++) {
 			GoodDefinition const& input_good = *it.key();
 			const fixed_point_t base_desired_quantity = it.value();
@@ -149,11 +121,7 @@ void ArtisanalProducer::artisan_tick(
 			fixed_point_t& good_stockpile = stockpile[&input_good];
 
 			//Consume input good
-			fixed_point_t consumed_quantity = fixed_point_t::mul_div(
-				base_desired_quantity,
-				inputs_bought_numerator,
-				inputs_bought_denominator
-			);
+			fixed_point_t consumed_quantity = base_desired_quantity * inputs_bought_fraction;
 			costs_of_production += consumed_quantity * market_instance.get_good_instance(input_good).get_price();
 
 			if (country_to_report_economy_nullable != nullptr) {
@@ -186,102 +154,188 @@ void ArtisanalProducer::artisan_tick(
 		}
 	}
 
+	pop.report_artisanal_produce(produce_left_to_sell);
+}
+
+void ArtisanalProducer::artisan_tick_handler::allocate_money_for_inputs(
+	fixed_point_map_t<GoodDefinition const*>& max_quantity_to_buy_per_good,
+	memory::vector<fixed_point_t>& pop_max_quantity_to_buy_per_good,
+	memory::vector<fixed_point_t>& pop_money_to_spend_per_good,
+	fixed_point_map_t<GoodDefinition const*> const& stockpile,
+	PopValuesFromProvince const& values_from_province
+) {
 	//executed once per pop while nothing else uses it.
 	const fixed_point_t total_cash_to_spend = pop.get_cash().get_copy_of_value() / values_from_province.get_max_cost_multiplier();
 
-	if (total_cash_to_spend > 0 && distinct_goods_to_buy > 0) {
-		//Figure out the optimal amount of goods to buy based on their price, stockpiled quantiy & demand
-		fixed_point_t max_possible_satisfaction_numerator= 1,
-			max_possible_satisfaction_denominator= 1;
+	if (total_cash_to_spend <= 0 || distinct_goods_to_buy <= 0) {
+		return;
+	}
 
-		bool at_or_below_optimum = false;
-		while (!at_or_below_optimum) {
-			at_or_below_optimum = true;
-			fixed_point_t total_demand_value = 0;
-			fixed_point_t total_stockpile_value = 0;
-			for (auto it = input_goods.begin(); it < input_goods.end(); it++) {
-				GoodDefinition const& input_good = *it.key();
-				if (!wants_more_mask.at(input_good)) {
-					continue;
-				}
-				const ptrdiff_t i = it - input_goods.begin();
-				const fixed_point_t max_price = max_price_per_input[i];
-				total_demand_value += max_price * demand_per_input[i];
-				total_stockpile_value += max_price * stockpile[&input_good];
-			}
+	//Figure out the optimal amount of goods to buy based on their price, stockpiled quantiy & demand
+	fixed_point_t max_possible_satisfaction_numerator= 1,
+		max_possible_satisfaction_denominator= 1;
 
-			if ( total_demand_value == 0) {
-				max_possible_satisfaction_numerator = 1;
-				max_possible_satisfaction_denominator = 1;
-			} else {
-				//epsilon is the minimum costs for a trade.
-				const fixed_point_t flat_costs = fixed_point_t::epsilon * distinct_goods_to_buy;
-				max_possible_satisfaction_numerator = total_stockpile_value + total_cash_to_spend - flat_costs;
-				max_possible_satisfaction_denominator = total_demand_value + flat_costs;
-				if (max_possible_satisfaction_numerator >= max_possible_satisfaction_denominator) {
-					max_possible_satisfaction_numerator = 1;
-					max_possible_satisfaction_denominator = 1;
-				}
-			}
-
-			for (auto it = input_goods.begin(); it < input_goods.end(); it++) {
-				GoodDefinition const& input_good = *it.key();
-				char& wants_more = wants_more_mask.at(input_good);
-				if (!wants_more) {
-					continue;
-				}
-				const ptrdiff_t i = it - input_goods.begin();
-
-				const fixed_point_t optimal_quantity = fixed_point_t::mul_div(
-					demand_per_input[i],
-					max_possible_satisfaction_numerator,
-					max_possible_satisfaction_denominator
-				);
-				
-				if (stockpile[&input_good] >= optimal_quantity) {
-					at_or_below_optimum = false;
-					wants_more = false;
-					--distinct_goods_to_buy;
-				}				
-			}
-		}
-
-		fixed_point_t debug_cash_left = total_cash_to_spend;
-		//Place buy orders for each input
+	fixed_point_map_t<GoodDefinition const*> const& input_goods = production_type.get_input_goods();
+	bool at_or_below_optimum = false;
+	while (!at_or_below_optimum) {
+		at_or_below_optimum = true;
+		fixed_point_t total_demand_value = 0;
+		fixed_point_t total_stockpile_value = 0;
 		for (auto it = input_goods.begin(); it < input_goods.end(); it++) {
 			GoodDefinition const& input_good = *it.key();
 			if (!wants_more_mask.at(input_good)) {
 				continue;
 			}
-			const ptrdiff_t index_in_input_goods = it - input_goods.begin();
-			const fixed_point_t good_demand = demand_per_input[index_in_input_goods];
-			fixed_point_t& good_stockpile = stockpile[&input_good];
-			const fixed_point_t max_quantity_to_buy = good_demand - good_stockpile;
-			if (max_quantity_to_buy > 0) {
-				const fixed_point_t optimal_quantity = fixed_point_t::mul_div(
-					good_demand,
-					max_possible_satisfaction_numerator,
-					max_possible_satisfaction_denominator
-				);
-				const fixed_point_t money_to_spend = market_instance.get_max_money_to_allocate_to_buy_quantity(
-					input_good,
-					optimal_quantity - good_stockpile
-				);
-				max_quantity_to_buy_per_good[&input_good] = max_quantity_to_buy;
-				pop.allocate_cash_for_artisanal_spending(money_to_spend);
-				const size_t index_in_all_goods = input_good.get_index();
-				pop_max_quantity_to_buy_per_good[index_in_all_goods] += max_quantity_to_buy;
-				pop_money_to_spend_per_good[index_in_all_goods] += money_to_spend;
-				debug_cash_left -= money_to_spend;
+			const ptrdiff_t i = it - input_goods.begin();
+			const fixed_point_t max_price = max_price_per_input[i];
+			total_demand_value += max_price * demand_per_input[i];
+			auto stockpile_iterator = stockpile.find(&input_good);
+			if (stockpile_iterator != stockpile.end()) {
+				total_stockpile_value += max_price * stockpile_iterator.value();
 			}
 		}
 
-		if (OV_unlikely(debug_cash_left < 0)) {
-			spdlog::error_s("Artisan allocated more cash than the pop has. debug_cash_left: {}", debug_cash_left);
+		if ( total_demand_value == 0) {
+			max_possible_satisfaction_numerator = 1;
+			max_possible_satisfaction_denominator = 1;
+		} else {
+			//epsilon is the minimum costs for a trade.
+			const fixed_point_t flat_costs = fixed_point_t::epsilon * distinct_goods_to_buy;
+			max_possible_satisfaction_numerator = total_stockpile_value + total_cash_to_spend - flat_costs;
+			max_possible_satisfaction_denominator = total_demand_value + flat_costs;
+			if (max_possible_satisfaction_numerator >= max_possible_satisfaction_denominator) {
+				max_possible_satisfaction_numerator = 1;
+				max_possible_satisfaction_denominator = 1;
+			}
+		}
+
+		for (auto it = input_goods.begin(); it < input_goods.end(); it++) {
+			GoodDefinition const& input_good = *it.key();
+			char& wants_more = wants_more_mask.at(input_good);
+			if (!wants_more) {
+				continue;
+			}
+			const ptrdiff_t i = it - input_goods.begin();
+
+			const fixed_point_t optimal_quantity = fixed_point_t::mul_div(
+				demand_per_input[i],
+				max_possible_satisfaction_numerator,
+				max_possible_satisfaction_denominator
+			);
+			
+			auto stockpile_iterator = stockpile.find(&input_good);
+			const fixed_point_t stockpiled_quantity = stockpile_iterator == stockpile.end()
+				? fixed_point_t::_0
+				: stockpile_iterator.value();
+			if (stockpiled_quantity >= optimal_quantity) {
+				at_or_below_optimum = false;
+				wants_more = false;
+				--distinct_goods_to_buy;
+			}				
 		}
 	}
 
-	pop.report_artisanal_produce(produce_left_to_sell);
+	fixed_point_t debug_cash_left = total_cash_to_spend;
+	//Place buy orders for each input
+	for (auto it = input_goods.begin(); it < input_goods.end(); it++) {
+		GoodDefinition const& input_good = *it.key();
+		if (!wants_more_mask.at(input_good)) {
+			continue;
+		}
+		const ptrdiff_t index_in_input_goods = it - input_goods.begin();
+		const fixed_point_t good_demand = demand_per_input[index_in_input_goods];
+
+		auto stockpile_iterator = stockpile.find(&input_good);
+		const fixed_point_t stockpiled_quantity = stockpile_iterator == stockpile.end()
+			? fixed_point_t::_0
+			: stockpile_iterator.value();
+
+		const fixed_point_t max_quantity_to_buy = good_demand - stockpiled_quantity;
+		if (max_quantity_to_buy > 0) {
+			const fixed_point_t optimal_quantity = fixed_point_t::mul_div(
+				good_demand,
+				max_possible_satisfaction_numerator,
+				max_possible_satisfaction_denominator
+			);
+			const fixed_point_t money_to_spend = market_instance.get_max_money_to_allocate_to_buy_quantity(
+				input_good,
+				optimal_quantity - stockpiled_quantity
+			);
+			max_quantity_to_buy_per_good[&input_good] = max_quantity_to_buy;
+			pop.allocate_cash_for_artisanal_spending(money_to_spend);
+			const size_t index_in_all_goods = input_good.get_index();
+			pop_max_quantity_to_buy_per_good[index_in_all_goods] += max_quantity_to_buy;
+			pop_money_to_spend_per_good[index_in_all_goods] += money_to_spend;
+			debug_cash_left -= money_to_spend;
+		}
+	}
+
+	if (OV_unlikely(debug_cash_left < 0)) {
+		spdlog::error_s("Artisan allocated more cash than the pop has. debug_cash_left: {}", debug_cash_left);
+	}
+}
+
+void ArtisanalProducer::artisan_tick(
+	MarketInstance const& market_instance,
+	Pop& pop,
+	PopValuesFromProvince const& values_from_province,
+	RandomU32& random_number_generator,
+	IndexedFlatMap<GoodDefinition, char>& reusable_goods_mask,
+	memory::vector<fixed_point_t>& pop_max_quantity_to_buy_per_good,
+	memory::vector<fixed_point_t>& pop_money_to_spend_per_good,
+	memory::vector<fixed_point_t>& reusable_map_0,
+	memory::vector<fixed_point_t>& reusable_map_1
+) {
+	ProductionType const* const old_production_type = production_type_nullable;
+	set_production_type(
+		pick_production_type(
+			pop,
+			values_from_province,
+			random_number_generator
+		)
+	);
+	if (production_type_nullable == nullptr) {
+		return;
+	}
+
+	ProductionType const& production_type = *production_type_nullable;
+	if (production_type_nullable != old_production_type) {
+		//TODO sell stockpile no longer used
+		stockpile.clear();
+		for (auto const& [input_good, base_demand] : production_type.get_input_goods()) {
+			stockpile[input_good] = base_demand * pop.get_size() / production_type.get_base_workforce_size();
+		}
+	}
+
+	CountryInstance* const country_to_report_economy_nullable = pop.get_location()->get_country_to_report_economy();
+	max_quantity_to_buy_per_good.clear();
+	IndexedFlatMap<GoodDefinition, char>& wants_more_mask = reusable_goods_mask;
+	fixed_point_map_t<GoodDefinition const*> const& input_goods = production_type.get_input_goods();
+	memory::vector<fixed_point_t>& max_price_per_input = reusable_map_0;
+	max_price_per_input.resize(input_goods.size(), 0);
+	memory::vector<fixed_point_t>& demand_per_input = reusable_map_1;
+	demand_per_input.resize(input_goods.size(), 0);	
+
+	artisan_tick_handler tick_handler {
+		country_to_report_economy_nullable,
+		demand_per_input,
+		market_instance,
+		max_price_per_input,
+		pop,
+		production_type,
+		wants_more_mask
+	};
+	
+	tick_handler.calculate_inputs(stockpile);
+	tick_handler.produce(costs_of_production, current_production, stockpile);
+	tick_handler.allocate_money_for_inputs(
+		max_quantity_to_buy_per_good,
+		pop_max_quantity_to_buy_per_good,
+		pop_money_to_spend_per_good,
+		stockpile,
+		values_from_province
+	);
+
 	reusable_map_0.clear();
 	reusable_map_1.clear();
 	reusable_goods_mask.fill(0);
