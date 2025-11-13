@@ -5,6 +5,7 @@
 #include "openvic-simulation/economy/GoodInstance.hpp"
 #include "openvic-simulation/economy/trading/BuyUpToOrder.hpp"
 #include "openvic-simulation/economy/trading/MarketSellOrder.hpp"
+#include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
 #include "openvic-simulation/utility/Containers.hpp"
 #include "openvic-simulation/utility/ThreadPool.hpp"
 #include "openvic-simulation/utility/Typedefs.hpp"
@@ -34,11 +35,11 @@ GoodInstance const& MarketInstance::get_good_instance(GoodDefinition const& good
 }
 
 void MarketInstance::place_buy_up_to_order(BuyUpToOrder&& buy_up_to_order) {
-	GoodDefinition const& good = buy_up_to_order.get_good();
-	if (OV_unlikely(buy_up_to_order.get_max_quantity() <= 0)) {
+	GoodDefinition const& good = buy_up_to_order.good;
+	if (OV_unlikely(buy_up_to_order.max_quantity <= 0)) {
 		spdlog::error_s(
 			"Received BuyUpToOrder for {} with max quantity {}",
-			good, buy_up_to_order.get_max_quantity()
+			good, buy_up_to_order.max_quantity
 		);
 		buy_up_to_order.call_after_trade(BuyResult::no_purchase_result(good));
 		return;
@@ -49,22 +50,24 @@ void MarketInstance::place_buy_up_to_order(BuyUpToOrder&& buy_up_to_order) {
 }
 
 void MarketInstance::place_market_sell_order(MarketSellOrder&& market_sell_order, memory::vector<fixed_point_t>& reusable_vector) {
-	GoodDefinition const& good = market_sell_order.get_good();
-	if (OV_unlikely(market_sell_order.get_quantity() <= 0)) {
+	GoodDefinition const& good = market_sell_order.good;
+	const fixed_point_t quantity = market_sell_order.quantity;
+
+	if (OV_unlikely(quantity <= 0)) {
 		spdlog::error_s(
 			"Received MarketSellOrder for {} with quantity {}",
-			good, market_sell_order.get_quantity()
+			good, quantity
 		);
-		market_sell_order.call_after_trade(SellResult::no_sales_result(market_sell_order.get_good()), reusable_vector);
+		market_sell_order.call_after_trade(SellResult::no_sales_result(good), reusable_vector);
 		return;
 	}
 
 	if (good.get_is_money()) {
 		market_sell_order.call_after_trade(
 			{
-				market_sell_order.get_good(),
-				market_sell_order.get_quantity(),
-				market_sell_order.get_quantity() * country_defines.get_gold_to_worker_pay_rate() * good.get_base_price()
+				market_sell_order.good,
+				quantity,
+				quantity * country_defines.get_gold_to_worker_pay_rate() * good.get_base_price()
 			},
 			reusable_vector
 		);

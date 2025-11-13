@@ -6,12 +6,12 @@ namespace OpenVic {
 	struct GoodDefinition;
 
 	struct BuyResult {
-	private:
-		GoodDefinition const& PROPERTY(good_definition);
-		const fixed_point_t PROPERTY(quantity_bought);
-		const fixed_point_t PROPERTY(money_spent_total);
-		const fixed_point_t PROPERTY(money_spent_on_imports);
 	public:
+		GoodDefinition const& good_definition;
+		const fixed_point_t quantity_bought;
+		const fixed_point_t money_spent_total;
+		const fixed_point_t money_spent_on_imports;
+
 		constexpr BuyResult(
 			GoodDefinition const& new_good_definition,
 			const fixed_point_t new_quantity_bought,

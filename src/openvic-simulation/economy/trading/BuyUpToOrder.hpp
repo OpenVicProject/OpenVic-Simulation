@@ -1,7 +1,6 @@
 #pragma once
 
 #include "openvic-simulation/economy/trading/BuyResult.hpp"
-#include "openvic-simulation/utility/Getters.hpp"
 
 namespace OpenVic {
 	struct CountryInstance;
@@ -11,13 +10,14 @@ namespace OpenVic {
 		using callback_t = void(*)(const actor_t, BuyResult const&);
 
 	private:
-		CountryInstance const* const PROPERTY(country_nullable);
-		const fixed_point_t PROPERTY(max_quantity);
-		const fixed_point_t PROPERTY(money_to_spend);
 		const actor_t actor;
 		const callback_t after_trade;
 
 	public:
+		CountryInstance const* const country_nullable;
+		const fixed_point_t max_quantity;
+		const fixed_point_t money_to_spend;
+
 		constexpr GoodBuyUpToOrder(
 			CountryInstance const* const new_country_nullable,
 			const fixed_point_t new_max_quantity,
@@ -42,10 +42,9 @@ namespace OpenVic {
 	};
 
 	struct BuyUpToOrder : GoodBuyUpToOrder {
-	private:
-		GoodDefinition const& PROPERTY(good);
-
 	public:
+		GoodDefinition const& good;
+
 		constexpr BuyUpToOrder(
 			GoodDefinition const& new_good,
 			CountryInstance const* const new_country_nullable,

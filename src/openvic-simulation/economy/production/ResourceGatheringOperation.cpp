@@ -159,7 +159,7 @@ void ResourceGatheringOperation::rgo_tick(memory::vector<fixed_point_t>& reusabl
 
 void ResourceGatheringOperation::after_sell(void* actor, SellResult const& sell_result, memory::vector<fixed_point_t>& reusable_vector) {
 	ResourceGatheringOperation& rgo = *static_cast<ResourceGatheringOperation*>(actor);
-	rgo.revenue_yesterday = sell_result.get_money_gained();
+	rgo.revenue_yesterday = sell_result.money_gained;
 	rgo.pay_employees(reusable_vector);
 }
 

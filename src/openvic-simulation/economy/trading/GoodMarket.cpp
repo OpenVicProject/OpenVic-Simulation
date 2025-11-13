@@ -105,7 +105,7 @@ void GoodMarket::execute_orders(
 				max_affordable_price = affordable_price;
 			}
 
-			demand_sum += buy_up_to_order.get_max_quantity();
+			demand_sum += buy_up_to_order.max_quantity;
 			buy_up_to_order.call_after_trade(BuyResult::no_purchase_result(good_definition));
 		}
 
@@ -123,11 +123,11 @@ void GoodMarket::execute_orders(
 		IndexedFlatMap<CountryInstance, fixed_point_t>& supply_per_country = reusable_country_map_0;
 		IndexedFlatMap<CountryInstance, fixed_point_t>& actual_bought_per_country = reusable_country_map_1;
 		for (GoodMarketSellOrder const& market_sell_order : market_sell_orders) {
-			CountryInstance const* const country_nullable = market_sell_order.get_country_nullable();
+			CountryInstance const* const country_nullable = market_sell_order.country_nullable;
 			if (country_nullable != nullptr) {
-				supply_per_country.at(*country_nullable) += market_sell_order.get_quantity();
+				supply_per_country.at(*country_nullable) += market_sell_order.quantity;
 			}
-			supply_sum += market_sell_order.get_quantity();
+			supply_sum += market_sell_order.quantity;
 		}
 		memory::vector<fixed_point_t>& quantity_bought_per_order = reusable_vectors[0];
 		memory::vector<fixed_point_t>& purchasing_power_per_order = reusable_vectors[1];
@@ -139,8 +139,8 @@ void GoodMarket::execute_orders(
 		fixed_point_t purchasing_power_sum = 0;
 		for (size_t i = 0; i < buy_up_to_orders.size(); i++) {
 			GoodBuyUpToOrder const& buy_up_to_order = buy_up_to_orders[i];
-			const fixed_point_t max_quantity = buy_up_to_order.get_max_quantity();
-			const fixed_point_t money_to_spend = buy_up_to_order.get_money_to_spend();
+			const fixed_point_t max_quantity = buy_up_to_order.max_quantity;
+			const fixed_point_t money_to_spend = buy_up_to_order.money_to_spend;
 
 			if (game_rules_manager.get_use_optimal_pricing()) {
 				const fixed_point_t affordable_price = buy_up_to_order.get_affordable_price();
@@ -185,13 +185,13 @@ void GoodMarket::execute_orders(
 				someone_bought_max_quantity = false;
 				for (size_t i = 0; i < buy_up_to_orders.size(); i++) {
 					GoodBuyUpToOrder const& buy_up_to_order = buy_up_to_orders[i];
-					const fixed_point_t max_quantity = buy_up_to_order.get_max_quantity();
+					const fixed_point_t max_quantity = buy_up_to_order.max_quantity;
 					fixed_point_t& distributed_supply = quantity_bought_per_order[i];
 					if (distributed_supply == max_quantity) {
 						continue;
 					}
 
-					CountryInstance const* const country_nullable = buy_up_to_order.get_country_nullable();
+					CountryInstance const* const country_nullable = buy_up_to_order.country_nullable;
 					if (country_nullable != nullptr) {
 						//subtract as it might be updated below
 						actual_bought_per_country.at(*country_nullable) -= distributed_supply;
@@ -247,14 +247,14 @@ void GoodMarket::execute_orders(
 
 					for (size_t i = 0; i < buy_up_to_orders.size(); i++) {
 						GoodBuyUpToOrder const& buy_up_to_order = buy_up_to_orders[i];
-						if (quantity_bought_per_order[i] == buy_up_to_order.get_max_quantity()) {
+						if (quantity_bought_per_order[i] == buy_up_to_order.max_quantity) {
 							continue;
 						}
 
-						if (buy_up_to_order.get_money_to_spend() >= new_price * buy_up_to_order.get_max_quantity()) {
-							quantity_bought_per_order[i] = buy_up_to_order.get_max_quantity();
-							remaining_supply -= buy_up_to_order.get_max_quantity();
-							money_left_to_spend_sum -= buy_up_to_order.get_money_to_spend();
+						if (buy_up_to_order.money_to_spend >= new_price * buy_up_to_order.max_quantity) {
+							quantity_bought_per_order[i] = buy_up_to_order.max_quantity;
+							remaining_supply -= buy_up_to_order.max_quantity;
+							money_left_to_spend_sum -= buy_up_to_order.money_to_spend;
 						}
 					}
 				}
@@ -274,11 +274,11 @@ void GoodMarket::execute_orders(
 				const fixed_point_t quantity_bought
 					= quantity_bought_per_order[i]
 					= std::min(
-					buy_up_to_order.get_max_quantity(),
-					buy_up_to_order.get_money_to_spend() / new_price
+					buy_up_to_order.max_quantity,
+					buy_up_to_order.money_to_spend / new_price
 				);
 
-				CountryInstance const* const country_nullable = buy_up_to_order.get_country_nullable();
+				CountryInstance const* const country_nullable = buy_up_to_order.country_nullable;
 				if (country_nullable != nullptr) {
 					actual_bought_per_country.at(*country_nullable) += quantity_bought_per_order[i];
 				}
@@ -300,7 +300,7 @@ void GoodMarket::execute_orders(
 		if (quantity_traded_yesterday == supply_sum) {
 			//everything was sold
 			for (GoodMarketSellOrder const& market_sell_order : market_sell_orders) {
-				const fixed_point_t quantity_sold = market_sell_order.get_quantity();
+				const fixed_point_t quantity_sold = market_sell_order.quantity;
 				fixed_point_t money_gained;
 				if (quantity_sold == 0) {
 					money_gained = 0;
@@ -331,11 +331,11 @@ void GoodMarket::execute_orders(
 			const fixed_point_t total_quantity_traded_as_export = quantity_traded_yesterday - total_quantity_traded_domestically;
 			const fixed_point_t total_quantity_offered_as_export = supply_sum - total_quantity_traded_domestically;
 			for (GoodMarketSellOrder const& market_sell_order : market_sell_orders) {
-				const fixed_point_t quantity_offered = market_sell_order.get_quantity();
+				const fixed_point_t quantity_offered = market_sell_order.quantity;
 
 				fixed_point_t quantity_sold_domestically;
 				fixed_point_t quantity_offered_as_export;
-				CountryInstance const* const country_nullable = market_sell_order.get_country_nullable();
+				CountryInstance const* const country_nullable = market_sell_order.country_nullable;
 				if (country_nullable == nullptr) {
 					quantity_sold_domestically = 0;
 					quantity_offered_as_export = quantity_offered;
@@ -343,9 +343,9 @@ void GoodMarket::execute_orders(
 					const fixed_point_t total_bought_domestically = actual_bought_per_country.at(*country_nullable);
 					const fixed_point_t total_domestic_supply = supply_per_country.at(*country_nullable);
 					quantity_sold_domestically = total_bought_domestically >= total_domestic_supply
-						? market_sell_order.get_quantity()
+						? quantity_offered
 						: fixed_point_t::mul_div(
-							market_sell_order.get_quantity(),
+							quantity_offered,
 							total_bought_domestically,
 							total_domestic_supply //> 0 as we're selling
 						);
@@ -417,7 +417,7 @@ void GoodMarket::execute_buy_orders(
 			);
 
 			fixed_point_t money_spent_on_imports;			
-			CountryInstance const* const country_nullable = buy_up_to_order.get_country_nullable();
+			CountryInstance const* const country_nullable = buy_up_to_order.country_nullable;
 			if (country_nullable == nullptr) {
 				//could be trade between native Americans and tribal Africa, so it's all imported
 				money_spent_on_imports = money_spent_total;
