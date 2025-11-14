@@ -8,7 +8,7 @@
 using namespace OpenVic;
 
 bool GameRulesManager::may_use_coastal_artisanal_production_types(ProvinceInstance const& province) const {
-	const bool is_coastal_province = province.get_province_definition().is_coastal();
+	const bool is_coastal_province = province.province_definition.is_coastal();
 	using enum artisan_coastal_restriction_t;
 	switch (coastal_restriction_for_artisans) {
 		case Unrestricted:

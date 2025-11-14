@@ -35,12 +35,13 @@ namespace OpenVic {
 		using index_t = uint8_t;
 
 	private:
-		TerrainType const& PROPERTY(type);
 		memory::vector<index_t> PROPERTY(terrain_indices);
 		const index_t PROPERTY(priority);
 		const bool PROPERTY(has_texture);
 
 	public:
+		TerrainType const& type;
+
 		TerrainTypeMapping(
 			std::string_view new_identifier,
 			TerrainType const& new_type,

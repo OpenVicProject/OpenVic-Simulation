@@ -480,7 +480,7 @@ void CountryInstance::change_script_variable(memory::string const& variable_name
 fixed_point_t CountryInstance::get_taxable_income_by_strata(Strata const& strata) const {
 	fixed_point_t running_total = 0;
 	for (auto const& [pop_type, taxable_income] : taxable_income_by_pop_type) {
-		if (pop_type.get_strata() == strata) {
+		if (pop_type.strata == strata) {
 			running_total += taxable_income;
 		}
 	}
@@ -878,7 +878,7 @@ bool CountryInstance::modify_building_type_unlock(
 	unlock_level += unlock_level_change;
 
 	if (building_type.get_production_type() != nullptr) {
-		good_instance_manager.enable_good(building_type.get_production_type()->get_output_good());
+		good_instance_manager.enable_good(building_type.get_production_type()->output_good);
 	}
 
 	return true;
@@ -1134,7 +1134,7 @@ bool CountryInstance::is_primary_or_accepted_culture(Culture const& culture) con
 fixed_point_t CountryInstance::calculate_research_cost(Technology const& technology) const {
 	// TODO - what if research bonus is -100%? Divide by 0 -> infinite cost?
 	return technology.get_cost() / (fixed_point_t::_1 + get_modifier_effect_value(
-		*modifier_effect_cache.get_research_bonus_effects(technology.get_area().get_folder())
+		*modifier_effect_cache.get_research_bonus_effects(technology.area.folder)
 	));
 }
 
@@ -1151,7 +1151,7 @@ bool CountryInstance::can_research_tech(Technology const& technology, const Date
 
 	const Technology::area_index_t index_in_area = technology.get_index_in_area();
 
-	return index_in_area == 0 || is_technology_unlocked(*technology.get_area().get_technologies()[index_in_area - 1]);
+	return index_in_area == 0 || is_technology_unlocked(*technology.area.get_technologies()[index_in_area - 1]);
 }
 
 void CountryInstance::start_research(Technology const& technology, const Date today) {
@@ -1807,11 +1807,11 @@ void CountryInstance::update_gamestate(const Date today, MapInstance& map_instan
 	port_count = 0;
 	neighbouring_countries.clear();
 
-	Continent const* capital_continent = capital != nullptr ? capital->get_province_definition().get_continent() : nullptr;
+	Continent const* capital_continent = capital != nullptr ? capital->province_definition.get_continent() : nullptr;
 
 	coastal = false;
 	for (ProvinceInstance* province : owned_provinces) {
-		ProvinceDefinition const& province_definition = province->get_province_definition();
+		ProvinceDefinition const& province_definition = province->province_definition;
 		coastal |= province_definition.is_coastal();
 
 		if (province->get_controller() != this) {
@@ -1847,7 +1847,7 @@ void CountryInstance::update_gamestate(const Date today, MapInstance& map_instan
 		for (size_t index = 0; index < province_checklist.size(); index++) {
 			ProvinceInstance const& province = *province_checklist[index];
 
-			for (ProvinceDefinition::adjacency_t const& adjacency : province.get_province_definition().get_adjacencies()) {
+			for (ProvinceDefinition::adjacency_t const& adjacency : province.province_definition.get_adjacencies()) {
 				ProvinceInstance& adjacent_province = map_instance.get_province_instance_by_definition(*adjacency.get_to());
 
 				if (adjacent_province.get_owner() == this && !adjacent_province.get_connected_to_capital()) {
@@ -2050,7 +2050,7 @@ void CountryInstance::manage_national_stockpile(
 			}
 			market_instance.place_market_sell_order(
 				{
-					good_instance.get_good_definition(),
+					good_instance.good_definition,
 					this,
 					quantity_to_sell,
 					this,
@@ -2068,10 +2068,10 @@ void CountryInstance::manage_national_stockpile(
 			max_quantity_to_buy_per_good[index] = max_quantity_to_buy;
 
 			const fixed_point_t max_money_to_spend = max_costs_per_good[index] = market_instance.get_max_money_to_allocate_to_buy_quantity(
-				good_instance.get_good_definition(),
+				good_instance.good_definition,
 				max_quantity_to_buy
 			);
-			wants_more_mask.set(good_instance.get_good_definition(), true);
+			wants_more_mask.set(good_instance.good_definition, true);
 			const fixed_point_t weight = weights[index] = fixed_point_t::usable_max / max_money_to_spend;
 			weights_sum += weight;
 		}
@@ -2109,7 +2109,7 @@ void CountryInstance::manage_national_stockpile(
 				}
 
 				GoodInstance const& good_instance = goods_data.get_keys()[good_index];
-				GoodDefinition const& good_definition = good_instance.get_good_definition();
+				GoodDefinition const& good_definition = good_instance.good_definition;
 				const fixed_point_t max_possible_quantity_bought = cash_available_for_good / market_instance.get_min_next_price(good_definition);
 				if (max_possible_quantity_bought < fixed_point_t::epsilon) {
 					money_to_spend_per_good[good_index] = 0;
@@ -2127,7 +2127,7 @@ void CountryInstance::manage_national_stockpile(
 			}
 
 			GoodInstance const& good_instance = goods_data.get_keys()[good_index];
-			GoodDefinition const& good_definition = good_instance.get_good_definition();
+			GoodDefinition const& good_definition = good_instance.good_definition;
 			market_instance.place_buy_up_to_order(
 				{
 					good_definition,
@@ -2196,7 +2196,7 @@ void CountryInstance::country_tick_after_map(const Date today) {
 
 	fixed_point_t total_gold_production = 0;
 	for (auto const& [good_instance, data] : goods_data) {
-		GoodDefinition const& good_definition = good_instance.get_good_definition();
+		GoodDefinition const& good_definition = good_instance.good_definition;
 		if (!good_definition.get_is_money()) {
 			continue;
 		}
@@ -2337,7 +2337,7 @@ void CountryInstance::report_input_demand(ProductionType const& production_type,
 	good_data.factory_demand += quantity;
 }
 void CountryInstance::report_output(ProductionType const& production_type, const fixed_point_t quantity) {
-	good_data_t& good_data = get_good_data(production_type.get_output_good());
+	good_data_t& good_data = get_good_data(production_type.output_good);
 	const std::lock_guard<std::mutex> lock_guard { *good_data.mutex };
 	good_data.production_per_production_type[&production_type] += quantity;
 }

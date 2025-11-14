@@ -900,7 +900,7 @@ bool MapDefinition::load_map_images(fs::path const& province_path, fs::path cons
 			TerrainTypeMapping const* mapping = terrain_type_manager.get_terrain_type_mapping_for(terrain);
 			if (mapping != nullptr) {
 				if (province_number != ProvinceDefinition::NULL_INDEX) {
-					terrain_type_pixels_list[province_number - 1][&mapping->get_type()]++;
+					terrain_type_pixels_list[province_number - 1][&mapping->type]++;
 				}
 				if (mapping->get_has_texture() && terrain < terrain_type_manager.get_terrain_texture_limit()) {
 					province_shape_image[pixel_index].terrain = terrain + 1;

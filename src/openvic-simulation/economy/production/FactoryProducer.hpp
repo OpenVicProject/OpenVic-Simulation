@@ -20,7 +20,6 @@ namespace OpenVic {
 
 		uint8_t PROPERTY(profit_history_current);
 		daily_profit_history_t PROPERTY(daily_profit_history);
-		ProductionType const& PROPERTY(production_type);
 		fixed_point_t PROPERTY(revenue_yesterday);
 		fixed_point_t PROPERTY(output_quantity_yesterday);
 		fixed_point_t PROPERTY(unsold_quantity_yesterday);
@@ -38,6 +37,8 @@ namespace OpenVic {
 		uint8_t PROPERTY_RW(hiring_priority);
 
 	public:
+		ProductionType const& production_type;
+
 		FactoryProducer(
 			ProductionType const& new_production_type, fixed_point_t new_size_multiplier, fixed_point_t new_revenue_yesterday,
 			fixed_point_t new_output_quantity_yesterday, fixed_point_t new_unsold_quantity_yesterday,

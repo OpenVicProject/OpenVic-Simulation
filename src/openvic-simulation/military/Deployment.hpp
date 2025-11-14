@@ -26,10 +26,11 @@ namespace OpenVic {
 
 	private:
 		memory::string PROPERTY(name);
-		RegimentType const& PROPERTY(type);
 		ProvinceDefinition const* PROPERTY(home);
 
 	public:
+		RegimentType const& type;
+
 		UnitDeployment(std::string_view new_name, RegimentType const& new_type, ProvinceDefinition const* new_home);
 		UnitDeployment(UnitDeployment&&) = default;
 	};
@@ -42,9 +43,10 @@ namespace OpenVic {
 
 	private:
 		memory::string PROPERTY(name);
-		ShipType const& PROPERTY(type);
 
 	public:
+		ShipType const& type;
+
 		UnitDeployment(std::string_view new_name, ShipType const& new_type);
 		UnitDeployment(UnitDeployment&&) = default;
 	};

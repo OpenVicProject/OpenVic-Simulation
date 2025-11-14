@@ -24,7 +24,7 @@ namespace OpenVic {
 		using canal_index_t = ProvinceDefinition::adjacency_t::data_t;
 
 	private:
-		MapDefinition const& PROPERTY(map_definition);
+		MapDefinition const& map_definition;
 		ThreadPool& thread_pool;
 
 		OV_IFLATMAP_PROPERTY(ProvinceDefinition, ProvinceInstance, province_instance_by_definition);

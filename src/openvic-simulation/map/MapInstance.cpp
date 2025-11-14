@@ -17,8 +17,8 @@ MapInstance::MapInstance(
 	ThreadPool& new_thread_pool
 ) : map_definition { new_map_definition },
 	thread_pool { new_thread_pool },
-	land_pathing { *this },
-	sea_pathing { *this },
+	land_pathing { new_map_definition, *this },
+	sea_pathing { new_map_definition, *this },
 	province_instance_by_definition(
 		new_map_definition.get_province_definitions(),
 		[
@@ -89,7 +89,7 @@ bool MapInstance::apply_history_to_provinces(
 	bool ret = true;
 
 	for (ProvinceInstance& province : get_province_instances()) {
-		ProvinceDefinition const& province_definition = province.get_province_definition();
+		ProvinceDefinition const& province_definition = province.province_definition;
 		if (!province_definition.is_water()) {
 			ProvinceHistoryMap const* history_map = history_manager.get_province_history(&province_definition);
 

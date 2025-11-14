@@ -153,7 +153,7 @@ bool Button::_fill_key_map(NodeTools::case_insensitive_key_map_t& key_map, UIMan
 		"rotation", ZERO_OR_ONE, expect_fixed_point(assign_variable_callback(rotation)),
 
 		"format", ZERO_OR_ONE, success_callback, /* Is always left from what I've seen. */
-		"clicksound", ZERO_OR_ONE, ui_manager.get_definition_manager().get_sound_effect_manager().expect_sound_effect_identifier_or_string(assign_variable_callback_pointer(clicksound), true, true),
+		"clicksound", ZERO_OR_ONE, ui_manager.definition_manager.get_sound_effect_manager().expect_sound_effect_identifier_or_string(assign_variable_callback_pointer(clicksound), true, true),
 		"parent", ZERO_OR_ONE, success_callback /* Links buttons to a scrollbar, not needed thanks to contextual info. */
 	);
 	return ret;

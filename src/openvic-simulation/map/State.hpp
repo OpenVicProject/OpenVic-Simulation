@@ -17,6 +17,7 @@ namespace OpenVic {
 	struct CountryParty;
 	struct Culture;
 	struct Ideology;
+	struct MapDefinition;
 	struct Pop;
 	struct PopType;
 	struct ProvinceInstance;
@@ -31,7 +32,6 @@ namespace OpenVic {
 	private:
 		CountryInstance* previous_country_ptr = nullptr;	
 
-		StateSet const& PROPERTY(state_set);
 		ProvinceInstance* PROPERTY_PTR(capital);
 		memory::vector<ProvinceInstance*> SPAN_PROPERTY(provinces);
 		colony_status_t PROPERTY(colony_status);
@@ -43,6 +43,8 @@ namespace OpenVic {
 		void _update_country();
 
 	public:
+		StateSet const& state_set;
+
 		State(
 			StateSet const& new_state_set,
 			ProvinceInstance* new_capital,
@@ -75,10 +77,11 @@ namespace OpenVic {
 		using states_t = memory::colony<State>;
 
 	private:
-		Region const& PROPERTY(region);
 		states_t PROPERTY(states);
 
 	public:
+		Region const& region;
+
 		StateSet(Region const& new_region);
 
 		size_t get_state_count() const;
@@ -105,6 +108,7 @@ namespace OpenVic {
 		 * After this function, the `regions` property is unmanaged and must be carefully updated and
 		 * validated by functions that modify it. */
 		bool generate_states(
+			MapDefinition const& map_definition,
 			MapInstance& map_instance,
 			utility::forwardable_span<const Strata> strata_keys,
 			utility::forwardable_span<const PopType> pop_type_keys,

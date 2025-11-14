@@ -203,7 +203,7 @@ CountryInstance const& CountryInstanceManager::get_country_instance_by_definitio
 
 bool CountryInstanceManager::apply_history_to_countries(InstanceManager& instance_manager) {
 	CountryHistoryManager const& history_manager =
-		instance_manager.get_definition_manager().get_history_manager().get_country_manager();
+		instance_manager.definition_manager.get_history_manager().get_country_manager();
 
 	bool ret = true;
 
@@ -217,9 +217,9 @@ bool CountryInstanceManager::apply_history_to_countries(InstanceManager& instanc
 	for (CountryInstance& country_instance : get_country_instances()) {
 		country_instance.last_war_loss_date = starting_last_war_loss_date;
 
-		if (!country_instance.get_country_definition().is_dynamic_tag()) {
+		if (!country_instance.country_definition.is_dynamic_tag()) {
 			CountryHistoryMap const* history_map = history_manager.get_country_history(
-				country_instance.get_country_definition()
+				country_instance.country_definition
 			);
 
 			if (history_map != nullptr) {
@@ -270,7 +270,7 @@ bool CountryInstanceManager::apply_history_to_countries(InstanceManager& instanc
 				// redundant "if" statements?
 				for (ProvinceInstance* province : country_instance.get_owned_provinces()) {
 					for (Pop& pop : province->get_mutable_pops()) {
-						if (country_instance.is_primary_or_accepted_culture(pop.get_culture())) {
+						if (country_instance.is_primary_or_accepted_culture(pop.culture)) {
 							pop.set_literacy(state_culture_literacy);
 
 							if (state_culture_consciousness.has_value()) {

@@ -57,7 +57,6 @@ namespace OpenVic {
 		const pop_size_t PROPERTY(base_workforce_size);
 
 		fixed_point_map_t<GoodDefinition const*> PROPERTY(input_goods);
-		GoodDefinition const& PROPERTY(output_good);
 		const fixed_point_t PROPERTY(base_output_quantity);
 		memory::vector<bonus_t> PROPERTY(bonuses);
 
@@ -67,6 +66,8 @@ namespace OpenVic {
 		bool parse_scripts(DefinitionManager const& definition_manager);
 
 	public:
+		GoodDefinition const& output_good;
+
 		ProductionType(
 			GameRulesManager const& new_game_rules_manager,
 			const std::string_view new_identifier,

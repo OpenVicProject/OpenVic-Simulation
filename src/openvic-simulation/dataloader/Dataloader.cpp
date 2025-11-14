@@ -959,7 +959,7 @@ bool Dataloader::load_defines(
 
 	bool ret = true;
 
-	if (!definition_manager.get_mapmode_manager().setup_mapmodes()) {
+	if (!definition_manager.get_mapmode_manager().setup_mapmodes(definition_manager.get_map_definition())) {
 		spdlog::critical_s("Failed to set up mapmodes!");
 		ret = false;
 	}

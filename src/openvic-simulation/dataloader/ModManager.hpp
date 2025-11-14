@@ -12,7 +12,7 @@ namespace OpenVic {
 
 	struct Mod : HasIdentifier {
 	private:
-		ModManager const& PROPERTY(mod_manager);
+		ModManager const& mod_manager;
 		const memory::string PROPERTY(dataloader_root_path);
 		const std::optional<memory::string> PROPERTY(user_dir);
 		const memory::vector<memory::string> PROPERTY(replace_paths);

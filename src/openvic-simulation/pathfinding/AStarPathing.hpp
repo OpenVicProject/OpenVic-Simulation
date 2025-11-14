@@ -5,12 +5,14 @@
 #include <tsl/ordered_map.h>
 #include <tsl/ordered_set.h>
 
-#include "openvic-simulation/military/UnitType.hpp"
 #include "openvic-simulation/pathfinding/PathingBase.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
+#include "openvic-simulation/types/UnitBranchType.hpp"
 
 namespace OpenVic {
+	struct MapDefinition;
 	struct MapInstance;
+
 	template<unit_branch_t>
 	struct UnitInstanceGroupBranched;
 
@@ -56,21 +58,27 @@ namespace OpenVic {
 	};
 
 	struct ArmyAStarPathing final : public AStarPathing {
-		ArmyAStarPathing(MapInstance const& map);
+		ArmyAStarPathing(
+			MapDefinition const& new_map_definition,
+			MapInstance const& new_map_instance
+		);
 
 	protected:
 		UnitInstanceGroupBranched<unit_branch_t::LAND> const* PROPERTY_RW_ACCESS(army_instance, protected, nullptr);
-		MapInstance const& PROPERTY(map_instance);
+		MapInstance const& map_instance;
 
 		virtual bool _is_point_enabled(search_const_iterator it) const override;
 	};
 
 	struct NavyAStarPathing final : public AStarPathing {
-		NavyAStarPathing(MapInstance const& map);
+		NavyAStarPathing(
+			MapDefinition const& new_map_definition,
+			MapInstance const& new_map_instance
+		);
 
 	protected:
 		UnitInstanceGroupBranched<unit_branch_t::NAVAL> const* PROPERTY_RW_ACCESS(navy_instance, protected, nullptr);
-		MapInstance const& PROPERTY(map_instance);
+		MapInstance const& map_instance;
 
 		virtual bool _is_point_enabled(search_const_iterator it) const override;
 	};

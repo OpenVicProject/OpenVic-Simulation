@@ -48,7 +48,7 @@ bool ProvinceHistoryMap::_load_history_entry(
 					add ? "add" : "remove",
 					country,
 					add ? "to" : "from",
-					entry.get_province()
+					entry.province
 				);
 				return true;
 			} else {
@@ -59,7 +59,7 @@ bool ProvinceHistoryMap::_load_history_entry(
 					add ? "add" : "remove",
 					country,
 					add ? "to" : "from",
-					entry.get_province(),
+					entry.province,
 					add ? "removing" : "adding"
 				);
 				return true;
@@ -88,7 +88,7 @@ bool ProvinceHistoryMap::_load_history_entry(
 				} else {
 					spdlog::error_s(
 						"Attempted to add state building \"{}\" at top scope of province history for {}",
-						*building_type, entry.get_province()
+						*building_type, entry.province
 					);
 					return false;
 				}
@@ -169,7 +169,7 @@ bool ProvinceHistoryMap::_load_history_entry(
 				} else {
 					spdlog::error_s(
 						"Attempted to add province building \"{}\" to state building list of province history for {}",
-						*building_type, entry.get_province()
+						*building_type, entry.province
 					);
 					ret = false;
 				}

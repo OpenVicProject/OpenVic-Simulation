@@ -29,11 +29,12 @@ namespace OpenVic {
 	struct ReformGroup : HasIndex<ReformGroup>, BaseIssueGroup {
 
 	private:
-		ReformType const& PROPERTY(reform_type);
 		const bool PROPERTY(is_ordered); // next_step_only
 		const bool PROPERTY(is_administrative);
 
 	public:
+		ReformType const& reform_type;
+
 		ReformGroup(
 			std::string_view new_identifier,
 			index_t new_index,
@@ -78,7 +79,7 @@ namespace OpenVic {
 		Reform(Reform&&) = default;
 
 		constexpr ReformGroup const& get_reform_group() const {
-			return static_cast<ReformGroup const&>(get_issue_group());
+			return static_cast<ReformGroup const&>(issue_group);
 		}
 	};
 }

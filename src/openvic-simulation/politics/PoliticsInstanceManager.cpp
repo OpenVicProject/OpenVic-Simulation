@@ -1,16 +1,16 @@
 #include "PoliticsInstanceManager.hpp"
 
-#include "openvic-simulation/DefinitionManager.hpp"
 #include "openvic-simulation/InstanceManager.hpp"
 #include "openvic-simulation/politics/Ideology.hpp"
-#include "openvic-simulation/politics/PoliticsManager.hpp"
 
 using namespace OpenVic;
 
-PoliticsInstanceManager::PoliticsInstanceManager(InstanceManager const& new_instance_manager)
+PoliticsInstanceManager::PoliticsInstanceManager(
+	InstanceManager const& new_instance_manager,
+	utility::forwardable_span<const Ideology> ideologies
+)
   : instance_manager { new_instance_manager },
-	politics_manager { instance_manager.get_definition_manager().get_politics_manager() },
-	ideology_spawn_date { politics_manager.get_ideology_manager().get_ideologies() } {}
+	ideology_spawn_date { ideologies } {}
 
 void PoliticsInstanceManager::setup_starting_ideologies() {
 	const Date today = instance_manager.get_today();

@@ -30,8 +30,6 @@ namespace OpenVic {
 	struct CountryHistoryEntry : HistoryEntry {
 		friend struct CountryHistoryMap;
 	private:
-		CountryDefinition const& PROPERTY(country);
-
 		std::optional<Culture const*> PROPERTY(primary_culture);
 		ordered_map<Culture const*, bool> PROPERTY(accepted_cultures);
 		std::optional<Religion const*> PROPERTY(religion);
@@ -63,6 +61,8 @@ namespace OpenVic {
 		ordered_set<Decision const*> PROPERTY(decisions);
 
 	public:
+		CountryDefinition const& country;
+
 		CountryHistoryEntry(
 			CountryDefinition const& new_country, Date new_date, decltype(upper_house_proportion_by_ideology)::keys_span_type ideology_keys,
 			decltype(flag_overrides_by_government_type)::keys_span_type government_type_keys
@@ -77,7 +77,7 @@ namespace OpenVic {
 		friend struct CountryHistoryManager;
 
 	private:
-		CountryDefinition const& PROPERTY(country);
+		CountryDefinition const& country;
 		decltype(CountryHistoryEntry::upper_house_proportion_by_ideology)::keys_span_type PROPERTY(ideology_keys);
 		decltype(CountryHistoryEntry::flag_overrides_by_government_type)::keys_span_type PROPERTY(government_type_keys);
 

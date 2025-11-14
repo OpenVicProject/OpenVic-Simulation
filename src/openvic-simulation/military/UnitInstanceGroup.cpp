@@ -53,7 +53,7 @@ bool UnitInstanceGroup::empty() const {
 
 size_t UnitInstanceGroup::get_unit_category_count(UnitType::unit_category_t unit_category) const {
 	return std::count_if(units.begin(), units.end(), [unit_category](UnitInstance const* unit) {
-		return unit->get_unit_type().get_unit_category() == unit_category;
+		return unit->unit_type.get_unit_category() == unit_category;
 	});
 }
 
@@ -65,7 +65,7 @@ UnitType const* UnitInstanceGroup::get_display_unit_type() const {
 	fixed_point_map_t<UnitType const*> weighted_unit_types;
 
 	for (UnitInstance const* unit : units) {
-		UnitType const& unit_type = unit->get_unit_type();
+		UnitType const& unit_type = unit->unit_type;
 		weighted_unit_types[&unit_type] += unit_type.get_weighted_value();
 	}
 
@@ -174,12 +174,12 @@ bool UnitInstanceGroup::set_leader(LeaderInstance* new_leader) {
 				return false;
 			}
 
-			if (OV_unlikely(&new_leader->get_country() != country)) {
+			if (OV_unlikely(&new_leader->country != country)) {
 				spdlog::error_s(
 					"Trying to assign {} \"{}\" of country \"{}\" to {} \"{}\" of country \"{}\"",
 					get_branched_leader_name(new_leader->get_branch()),
 					new_leader->get_name(),
-					new_leader->get_country(),
+					new_leader->country,
 					get_branched_unit_group_name(branch),
 					name,
 					ovfmt::validate(country)
@@ -286,7 +286,7 @@ UnitInstanceBranched<Branch>& UnitInstanceManager::generate_unit_instance(UnitDe
 				return {
 					unique_id_counter++,
 					unit_deployment.get_name(),
-					unit_deployment.get_type(),
+					unit_deployment.type,
 					nullptr, // TODO - get pop from Province unit_deployment.get_home()
 					false // Not mobilised
 				};
@@ -294,7 +294,7 @@ UnitInstanceBranched<Branch>& UnitInstanceManager::generate_unit_instance(UnitDe
 				return {
 					unique_id_counter++,
 					unit_deployment.get_name(),
-					unit_deployment.get_type()
+					unit_deployment.type
 				};
 			}
 		}()
@@ -370,7 +370,7 @@ void UnitInstanceManager::generate_leader(CountryInstance& country, LeaderBase c
 
 	if (leader_instance.get_picture().empty() && country.get_primary_culture() != nullptr) {
 		leader_instance.set_picture(culture_manager.get_leader_picture_name(
-			country.get_primary_culture()->get_group().get_leader(), leader.get_branch()
+			country.get_primary_culture()->group.get_leader(), leader.get_branch()
 		));
 	}
 }

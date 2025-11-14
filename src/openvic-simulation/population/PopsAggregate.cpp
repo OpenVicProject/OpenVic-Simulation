@@ -147,7 +147,7 @@ void PopsAggregate::add_pops_aggregate(Pop const& pop) {
 	average_militancy += pop.get_militancy() * pop_size;
 
 	PopType const& pop_type = *pop.get_type();
-	Strata const& strata = pop_type.get_strata();
+	Strata const& strata = pop_type.strata;
 
 	population_by_strata.at(strata) += pop_size;
 	militancy_by_strata.at(strata) += pop.get_militancy() * pop_size;
@@ -161,8 +161,8 @@ void PopsAggregate::add_pops_aggregate(Pop const& pop) {
 	supporter_equivalents_by_ideology += pop.get_supporter_equivalents_by_ideology();
 	supporter_equivalents_by_issue += pop.get_supporter_equivalents_by_issue();
 	vote_equivalents_by_party += pop.get_vote_equivalents_by_party();
-	population_by_culture[&pop.get_culture()] += pop_size;
-	population_by_religion[&pop.get_religion()] += pop_size;
+	population_by_culture[&pop.culture] += pop_size;
+	population_by_religion[&pop.religion] += pop_size;
 
 	max_supported_regiment_count += pop.get_max_supported_regiments();
 	yesterdays_import_value.set(_yesterdays_import_value_running_total);
@@ -217,5 +217,5 @@ void PopsAggregate::update_parties_for_votes(CountryInstance const* country_inst
 		vote_equivalents_by_party.clear();
 		return;
 	}
-	update_parties_for_votes(&country_instance->get_country_definition());
+	update_parties_for_votes(&country_instance->country_definition);
 }

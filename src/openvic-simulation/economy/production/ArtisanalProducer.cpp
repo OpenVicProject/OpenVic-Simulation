@@ -164,7 +164,7 @@ void ArtisanalProducer::artisan_tick(
 				);
 			}
 
-			if (input_good == production_type.get_output_good()) {
+			if (input_good == production_type.output_good) {
 				if (OV_unlikely(consumed_quantity > produce_left_to_sell)) {
 					consumed_quantity -= produce_left_to_sell;
 					produce_left_to_sell = 0;
@@ -322,7 +322,7 @@ std::optional<fixed_point_t> ArtisanalProducer::estimate_production_type_score(
 		return std::nullopt;
 	}
 
-	GoodInstance const& output_good = good_instance_manager.get_good_instance_by_definition(production_type.get_output_good());
+	GoodInstance const& output_good = good_instance_manager.get_good_instance_by_definition(production_type.output_good);
 	if (!output_good.get_is_available()) {
 		return std::nullopt;
 	}

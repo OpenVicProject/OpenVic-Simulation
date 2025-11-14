@@ -14,7 +14,6 @@ namespace OpenVic {
 	private:
 		const unique_id_t PROPERTY(unique_id);
 		memory::string PROPERTY(name);
-		UnitType const& PROPERTY(unit_type);
 		fixed_point_t PROPERTY(organisation);
 		fixed_point_t PROPERTY(max_organisation);
 		fixed_point_t PROPERTY(strength);
@@ -27,6 +26,8 @@ namespace OpenVic {
 		);
 
 	public:
+		UnitType const& unit_type;
+
 		UnitInstance(UnitInstance&&) = default;
 
 		inline constexpr fixed_point_t get_max_strength() const {
@@ -62,7 +63,7 @@ namespace OpenVic {
 		UnitInstanceBranched(UnitInstanceBranched&&) = default;
 
 		constexpr RegimentType const& get_regiment_type() const {
-			return static_cast<RegimentType const&>(get_unit_type());
+			return static_cast<RegimentType const&>(unit_type);
 		}
 	};
 
@@ -81,7 +82,7 @@ namespace OpenVic {
 		UnitInstanceBranched(UnitInstanceBranched&&) = default;
 
 		constexpr ShipType const& get_ship_type() const {
-			return static_cast<ShipType const&>(get_unit_type());
+			return static_cast<ShipType const&>(unit_type);
 		}
 	};
 }

@@ -68,7 +68,6 @@ namespace OpenVic {
 		}
 
 	private:
-		ProvinceDefinition const& PROPERTY(province_definition);
 		GameRulesManager const& game_rules_manager;
 
 		TerrainType const* PROPERTY(terrain_type);
@@ -115,6 +114,8 @@ namespace OpenVic {
 
 		OV_IFLATMAP_PROPERTY(PopType, memory::vector<Pop*>, pops_cache_by_type);
 	public:
+		ProvinceDefinition const& province_definition;
+
 		//pointers instead of references to allow construction via std::tuple
 		ProvinceInstance(
 			ProvinceDefinition const* new_province_definition,

@@ -84,7 +84,10 @@ InstanceManager::InstanceManager(
 		new_definition_manager.get_military_manager().get_leader_trait_manager(),
 		new_definition_manager.get_define_manager().get_military_defines()
 	},
-	politics_instance_manager { *this },
+	politics_instance_manager {
+		*this,
+		new_definition_manager.get_politics_manager().get_ideology_manager().get_ideologies()
+	},
 	map_instance {
 		new_definition_manager.get_map_definition(),
 		province_instance_deps,
@@ -198,7 +201,7 @@ bool InstanceManager::setup() {
 		definition_manager.get_modifier_manager().get_modifier_effect_cache(),
 		definition_manager.get_define_manager().get_pops_defines(),
 		definition_manager.get_economy_manager().get_production_type_manager(),
-		good_instance_manager.get_good_definition_manager().get_good_definitions(),
+		definition_manager.get_economy_manager().get_good_definition_manager().get_good_definitions(),
 		definition_manager.get_pop_manager().get_stratas(),
 		good_instance_manager.get_good_instances(),
 		country_instance_manager.get_country_instances(),
@@ -251,6 +254,7 @@ bool InstanceManager::load_bookmark(Bookmark const* new_bookmark) {
 	ret &= country_instance_manager.apply_history_to_countries(*this);
 
 	ret &= map_instance.get_state_manager().generate_states(
+		definition_manager.get_map_definition(),
 		map_instance,
 		definition_manager.get_pop_manager().get_stratas(),
 		definition_manager.get_pop_manager().get_pop_types(),
@@ -259,7 +263,7 @@ bool InstanceManager::load_bookmark(Bookmark const* new_bookmark) {
 
 	bool all_has_state = true;
 	for (ProvinceInstance const& province_instance : map_instance.get_province_instances()) {
-		if (!province_instance.get_province_definition().is_water() && OV_unlikely(province_instance.get_state() == nullptr)) {
+		if (!province_instance.province_definition.is_water() && OV_unlikely(province_instance.get_state() == nullptr)) {
 			all_has_state = false;
 			spdlog::error_s("Province {} has no state.", province_instance);
 			continue;

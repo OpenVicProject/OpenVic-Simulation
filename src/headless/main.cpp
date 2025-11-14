@@ -66,7 +66,7 @@ static void print_rgo(ProvinceInstance const& province) {
 #if SPDLOG_ACTIVE_LEVEL <= SPDLOG_LEVEL_INFO
 	else {
 		ProductionType const& production_type = *production_type_nullable;
-		GoodDefinition const& output_good = production_type.get_output_good();
+		GoodDefinition const& output_good = production_type.output_good;
 
 		SPDLOG_INFO("{}:", province);
 		SPDLOG_INFO(
@@ -77,7 +77,7 @@ static void print_rgo(ProvinceInstance const& province) {
 			"revenue_yesterday: {}, "
 			"total owner income: {}, "
 			"total employee income: {}",
-			production_type.get_output_good(), //
+			production_type.output_good, //
 			production_type, //
 			rgo.get_size_multiplier().to_string(3), //
 			rgo.get_output_quantity_yesterday().to_string(3), //
