@@ -147,7 +147,9 @@ void ResourceGatheringOperation::rgo_tick(memory::vector<fixed_point_t>& reusabl
 		market_instance.place_market_sell_order(
 			{
 				production_type.get_output_good(),
-				country_to_report_economy_nullable,
+				country_to_report_economy_nullable == nullptr
+					? std::nullopt
+					: std::optional<size_t>{country_to_report_economy_nullable->get_index()},
 				output_quantity_yesterday,
 				this,
 				after_sell,

@@ -2051,7 +2051,7 @@ void CountryInstance::manage_national_stockpile(
 			market_instance.place_market_sell_order(
 				{
 					good_instance.get_good_definition(),
-					this,
+					get_index(),
 					quantity_to_sell,
 					this,
 					after_sell,
@@ -2131,7 +2131,7 @@ void CountryInstance::manage_national_stockpile(
 			market_instance.place_buy_up_to_order(
 				{
 					good_definition,
-					this,
+					get_index(),
 					max_quantity_to_buy,
 					money_to_spend,
 					this,

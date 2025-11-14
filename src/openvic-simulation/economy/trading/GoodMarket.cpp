@@ -68,7 +68,7 @@ void GoodMarket::add_market_sell_order(GoodMarketSellOrder&& market_sell_order) 
 void GoodMarket::execute_orders(
 	IndexedFlatMap<CountryInstance, fixed_point_t>& reusable_country_map_0,
 	IndexedFlatMap<CountryInstance, fixed_point_t>& reusable_country_map_1,
-	utility::forwardable_span<
+	std::span<
 		memory::vector<fixed_point_t>,
 		VECTORS_FOR_EXECUTE_ORDERS
 	> reusable_vectors
@@ -123,9 +123,9 @@ void GoodMarket::execute_orders(
 		IndexedFlatMap<CountryInstance, fixed_point_t>& supply_per_country = reusable_country_map_0;
 		IndexedFlatMap<CountryInstance, fixed_point_t>& actual_bought_per_country = reusable_country_map_1;
 		for (GoodMarketSellOrder const& market_sell_order : market_sell_orders) {
-			CountryInstance const* const country_nullable = market_sell_order.country_nullable;
-			if (country_nullable != nullptr) {
-				supply_per_country.at(*country_nullable) += market_sell_order.quantity;
+			const std::optional<size_t> country_index_optional = market_sell_order.country_index_optional;
+			if (country_index_optional.has_value()) {
+				supply_per_country.at_index(country_index_optional.value()) += market_sell_order.quantity;
 			}
 			supply_sum += market_sell_order.quantity;
 		}
@@ -191,10 +191,10 @@ void GoodMarket::execute_orders(
 						continue;
 					}
 
-					CountryInstance const* const country_nullable = buy_up_to_order.country_nullable;
-					if (country_nullable != nullptr) {
+					const std::optional<size_t> country_index_optional = buy_up_to_order.country_index_optional;
+					if (country_index_optional.has_value()) {
 						//subtract as it might be updated below
-						actual_bought_per_country.at(*country_nullable) -= distributed_supply;
+						actual_bought_per_country.at_index(country_index_optional.value()) -= distributed_supply;
 					}
 
 					distributed_supply = fixed_point_t::mul_div(
@@ -210,8 +210,8 @@ void GoodMarket::execute_orders(
 						purchasing_power_sum -= purchasing_power_per_order[i];
 					}
 
-					if (country_nullable != nullptr) {
-						actual_bought_per_country.at(*country_nullable) += distributed_supply;
+					if (country_index_optional.has_value()) {
+						actual_bought_per_country.at_index(country_index_optional.value()) += distributed_supply;
 					}
 
 					if (someone_bought_max_quantity) {
@@ -278,9 +278,9 @@ void GoodMarket::execute_orders(
 					buy_up_to_order.money_to_spend / new_price
 				);
 
-				CountryInstance const* const country_nullable = buy_up_to_order.country_nullable;
-				if (country_nullable != nullptr) {
-					actual_bought_per_country.at(*country_nullable) += quantity_bought_per_order[i];
+				const std::optional<size_t> country_index_optional = buy_up_to_order.country_index_optional;
+				if (country_index_optional.has_value()) {
+					actual_bought_per_country.at_index(country_index_optional.value()) += quantity_bought_per_order[i];
 				}
 			}
 
@@ -335,13 +335,14 @@ void GoodMarket::execute_orders(
 
 				fixed_point_t quantity_sold_domestically;
 				fixed_point_t quantity_offered_as_export;
-				CountryInstance const* const country_nullable = market_sell_order.country_nullable;
-				if (country_nullable == nullptr) {
+				const std::optional<size_t> country_index_optional = market_sell_order.country_index_optional;
+				if (!country_index_optional.has_value()) {
 					quantity_sold_domestically = 0;
 					quantity_offered_as_export = quantity_offered;
 				} else {
-					const fixed_point_t total_bought_domestically = actual_bought_per_country.at(*country_nullable);
-					const fixed_point_t total_domestic_supply = supply_per_country.at(*country_nullable);
+					const size_t country_index = country_index_optional.value();
+					const fixed_point_t total_bought_domestically = actual_bought_per_country.at_index(country_index);
+					const fixed_point_t total_domestic_supply = supply_per_country.at_index(country_index);
 					quantity_sold_domestically = total_bought_domestically >= total_domestic_supply
 						? quantity_offered
 						: fixed_point_t::mul_div(
@@ -416,15 +417,16 @@ void GoodMarket::execute_buy_orders(
 				fixed_point_t::epsilon //we know from purchasing power that you can afford it.
 			);
 
-			fixed_point_t money_spent_on_imports;			
-			CountryInstance const* const country_nullable = buy_up_to_order.country_nullable;
-			if (country_nullable == nullptr) {
+			fixed_point_t money_spent_on_imports;
+			const std::optional<size_t> country_index_optional = buy_up_to_order.country_index_optional;
+			if (!country_index_optional.has_value()) {
 				//could be trade between native Americans and tribal Africa, so it's all imported
 				money_spent_on_imports = money_spent_total;
 			} else {
+				const size_t country_index = country_index_optional.value();
 				//must be > 0, since quantity_bought > 0
-				const fixed_point_t actual_bought_in_my_country = actual_bought_per_country.at(*country_nullable);
-				const fixed_point_t supply_in_my_country = supply_per_country.at(*country_nullable);
+				const fixed_point_t actual_bought_in_my_country = actual_bought_per_country.at_index(country_index);
+				const fixed_point_t supply_in_my_country = supply_per_country.at_index(country_index);
 
 				if (supply_in_my_country >= actual_bought_in_my_country) {
 					//no imports
