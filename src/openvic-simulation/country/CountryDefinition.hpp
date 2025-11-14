@@ -34,11 +34,9 @@ namespace OpenVic {
 		unit_names_map_t PROPERTY(unit_names);
 		const bool PROPERTY_CUSTOM_PREFIX(dynamic_tag, is);
 		government_colour_map_t PROPERTY(alternative_colours);
-		colour_t PROPERTY(primary_unit_colour);
-		colour_t PROPERTY(secondary_unit_colour);
-		colour_t PROPERTY(tertiary_unit_colour);
-		// Unit colours not const due to being added after construction
-
+		colour_t PROPERTY_RW(primary_unit_colour);
+		colour_t PROPERTY_RW(secondary_unit_colour);
+		colour_t PROPERTY_RW(tertiary_unit_colour);
 
 	public:
 		CountryDefinition(
@@ -56,22 +54,13 @@ namespace OpenVic {
 	private:
 		IdentifierRegistry<CountryDefinition> IDENTIFIER_REGISTRY(country_definition);
 
-		NodeTools::node_callback_t load_country_party(
-			PoliticsManager const& politics_manager, IdentifierRegistry<CountryParty>& country_parties
-		) const;
-
 	public:
+		IDENTIFIER_REGISTRY_NON_CONST_ACCESSORS(country_definition);
+
 		bool add_country(
 			std::string_view identifier, colour_t colour, GraphicalCultureType const* graphical_culture,
 			IdentifierRegistry<CountryParty>&& parties, CountryDefinition::unit_names_map_t&& unit_names, bool dynamic_tag,
 			CountryDefinition::government_colour_map_t&& alternative_colours
-		);
-
-		bool load_country_colours(ast::NodeCPtr root);
-
-		bool load_countries(DefinitionManager const& definition_manager, Dataloader const& dataloader, ast::NodeCPtr root);
-		bool load_country_data_file(
-			DefinitionManager const& definition_manager, std::string_view name, bool is_dynamic, ast::NodeCPtr root
 		);
 	};
 }

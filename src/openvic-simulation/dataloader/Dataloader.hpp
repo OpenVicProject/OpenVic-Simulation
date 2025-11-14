@@ -10,6 +10,7 @@
 #include "openvic-simulation/dataloader/ModManager.hpp"
 #include "openvic-simulation/utility/Containers.hpp"
 #include "openvic-simulation/utility/Concepts.hpp"
+#include "openvic-simulation/utility/Error.hpp"
 
 #include <function2/function2.hpp>
 
@@ -43,6 +44,7 @@ namespace OpenVic {
 		bool _load_sound_effect_defines(DefinitionManager& definition_manager) const;
 		bool _load_decisions(DefinitionManager& definition_manager);
 		bool _load_history(DefinitionManager& definition_manager, bool unused_history_file_warnings) const;
+		Error _load_countries(DefinitionManager& definition_manager);
 
 		bool should_ignore_path(fs::path const& path, path_span_t replace_paths) const;
 
