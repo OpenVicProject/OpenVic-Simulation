@@ -85,13 +85,13 @@ namespace OpenVic {
 		static constexpr pop_size_t MAX_SIZE = std::numeric_limits<pop_size_t>::max();
 
 	private:
+		MarketInstance& market_instance;
 		std::optional<ArtisanalProducer> artisanal_producer_optional;
 		fixed_point_t cash_allocated_for_artisanal_spending = 0;
 		fixed_point_t artisanal_produce_left_to_sell = 0;
 		pop_size_t employed = 0;
 
 		ProvinceInstance* PROPERTY_PTR(location, nullptr);
-		MarketInstance& PROPERTY(market_instance);
 
 		/* Last day's size change by source. */
 		pop_size_t PROPERTY(total_change, 0);
