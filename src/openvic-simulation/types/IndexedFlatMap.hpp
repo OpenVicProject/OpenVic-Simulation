@@ -516,6 +516,26 @@ namespace OpenVic {
 			return values[index - min_index];
 		}
 
+		template<typename I>
+		requires requires { type_safe::get(std::declval<I>()); }
+		constexpr KeyType const& get_key_at_index(I const& index) const {
+			return get_key_at_index(type_safe::get(index));
+		}
+		constexpr KeyType const& get_key_at_index(const size_t index) const {
+			if (index < min_index || index > max_index) {
+				spdlog::error_s(
+					"DEVELOPER: OpenVic::IndexedFlatMap<{},{}> attempted to access index {} which is outside the map's defined range [{}, {}].",
+					utility::type_name<KeyType>(),
+					utility::type_name<ValueType>(),
+					index,
+					min_index,
+					max_index
+				);
+				assert(index >= min_index && index <= max_index);
+			}
+			return keys[index - min_index];
+		}
+
 		constexpr bool contains(KeyType const& key) const {
 			static_assert(has_index<KeyType>);
 			return contains_index(key.index);

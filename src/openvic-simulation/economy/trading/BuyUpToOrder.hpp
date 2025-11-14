@@ -1,10 +1,11 @@
 #pragma once
 
+#include <optional>
+
 #include "openvic-simulation/economy/trading/BuyResult.hpp"
+#include "openvic-simulation/types/TypedIndices.hpp"
 
 namespace OpenVic {
-	struct CountryInstance;
-
 	struct GoodBuyUpToOrder {
 		using actor_t = void*;
 		using callback_t = void(*)(const actor_t, BuyResult const&);
@@ -14,17 +15,17 @@ namespace OpenVic {
 		const callback_t after_trade;
 
 	public:
-		CountryInstance const* const country_nullable;
+		const std::optional<country_index_t> country_index_optional;
 		const fixed_point_t max_quantity;
 		const fixed_point_t money_to_spend;
 
 		constexpr GoodBuyUpToOrder(
-			CountryInstance const* const new_country_nullable,
+			const std::optional<country_index_t> new_country_index_optional,
 			const fixed_point_t new_max_quantity,
 			const fixed_point_t new_money_to_spend,
 			const actor_t new_actor,
 			const callback_t new_after_trade
-		) : country_nullable { new_country_nullable },
+		) : country_index_optional { new_country_index_optional },
 			max_quantity { new_max_quantity },
 			money_to_spend { new_money_to_spend },
 			actor { new_actor },
@@ -47,13 +48,13 @@ namespace OpenVic {
 
 		constexpr BuyUpToOrder(
 			GoodDefinition const& new_good,
-			CountryInstance const* const new_country_nullable,
+			const std::optional<country_index_t> new_country_index_optional,
 			const fixed_point_t new_max_quantity,
 			const fixed_point_t new_money_to_spend,
 			const actor_t new_actor,
 			const callback_t new_after_trade
 		) : GoodBuyUpToOrder {
-				new_country_nullable,
+				new_country_index_optional,
 				new_max_quantity,
 				new_money_to_spend,
 				new_actor,

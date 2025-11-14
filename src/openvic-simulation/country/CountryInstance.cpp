@@ -1928,7 +1928,7 @@ void CountryInstance::country_tick_before_map(
 		memory::vector<fixed_point_t>,
 		VECTORS_FOR_COUNTRY_TICK
 	> reusable_vectors,
-	memory::vector<size_t>& reusable_index_vector
+	memory::vector<good_index_t>& reusable_good_index_vector
 ) {
 	//TODO AI sliders
 	// + reparations + war subsidies
@@ -2015,7 +2015,7 @@ void CountryInstance::country_tick_before_map(
 	manage_national_stockpile(
 		reusable_goods_mask,
 		reusable_vectors,
-		reusable_index_vector,
+		reusable_good_index_vector,
 		available_funds
 	);
 
@@ -2052,22 +2052,26 @@ void CountryInstance::manage_national_stockpile(
 		memory::vector<fixed_point_t>,
 		VECTORS_FOR_COUNTRY_TICK
 	> reusable_vectors,
-	memory::vector<size_t>& reusable_index_vector,
+	memory::vector<good_index_t>& reusable_good_index_vector,
 	fixed_point_t& available_funds
 ) {
 	IndexedFlatMap<GoodDefinition, char>& wants_more_mask = reusable_goods_mask;
 	const size_t mask_size = wants_more_mask.get_keys().size();
-	memory::vector<fixed_point_t>& max_quantity_to_buy_per_good = reusable_vectors[0];
-	max_quantity_to_buy_per_good.resize(mask_size, 0);
-	memory::vector<fixed_point_t>& max_costs_per_good = reusable_vectors[1];
-	max_costs_per_good.resize(mask_size, 0);
-	memory::vector<fixed_point_t>& weights = reusable_vectors[2];
-	weights.resize(mask_size, 0);
-	memory::vector<size_t>& good_indices_to_buy = reusable_index_vector;
+
+	reusable_vectors[0].resize(mask_size, 0);
+	TypedSpan<good_index_t, fixed_point_t> max_quantity_to_buy_per_good { reusable_vectors[0] };
+
+	reusable_vectors[1].resize(mask_size, 0);
+	TypedSpan<good_index_t, fixed_point_t> max_costs_per_good { reusable_vectors[1] };
+
+	reusable_vectors[2].resize(mask_size, 0);
+	TypedSpan<good_index_t, fixed_point_t> weights { reusable_vectors[2] };
+
+	memory::vector<good_index_t>& good_indices_to_buy = reusable_good_index_vector;
 	fixed_point_t weights_sum = 0;
 
 	for (auto [good_instance, good_data] : goods_data) {
-		const size_t index = type_safe::get(good_instance.index);
+		const good_index_t good_index = good_instance.index;
 		if (good_data.is_automated || !good_data.is_selling) {
 			const fixed_point_t quantity_to_allocate_for = good_data.is_automated 
 				? good_data.government_needs - good_data.stockpile_amount
@@ -2079,15 +2083,15 @@ void CountryInstance::manage_national_stockpile(
 				continue;
 			}
 
-			good_indices_to_buy.push_back(index);
-			max_quantity_to_buy_per_good[index] = max_quantity_to_buy;
+			good_indices_to_buy.push_back(good_index);
+			max_quantity_to_buy_per_good[good_index] = max_quantity_to_buy;
 
-			const fixed_point_t max_money_to_spend = max_costs_per_good[index] = market_instance.get_max_money_to_allocate_to_buy_quantity(
+			const fixed_point_t max_money_to_spend = max_costs_per_good[good_index] = market_instance.get_max_money_to_allocate_to_buy_quantity(
 				good_instance.good_definition,
 				quantity_to_allocate_for
 			);
 			wants_more_mask.set(good_instance.good_definition, true);
-			const fixed_point_t weight = weights[index] = fixed_point_t::usable_max / max_money_to_spend;
+			const fixed_point_t weight = weights[good_index] = fixed_point_t::usable_max / max_money_to_spend;
 			weights_sum += weight;
 		} else {
 			const fixed_point_t quantity_to_sell = good_data.stockpile_amount - good_data.stockpile_cutoff;
@@ -2097,7 +2101,7 @@ void CountryInstance::manage_national_stockpile(
 			market_instance.place_market_sell_order(
 				{
 					good_instance.good_definition,
-					this,
+					index,
 					quantity_to_sell,
 					this,
 					after_sell,
@@ -2108,13 +2112,14 @@ void CountryInstance::manage_national_stockpile(
 	}
 
 	if (weights_sum > 0) {
-		memory::vector<fixed_point_t>& money_to_spend_per_good = reusable_vectors[3];
-		money_to_spend_per_good.resize(mask_size, 0);
+		reusable_vectors[3].resize(mask_size, 0);
+		TypedSpan<good_index_t, fixed_point_t> money_to_spend_per_good { reusable_vectors[3] };
+
 		fixed_point_t cash_left_to_spend_draft = available_funds;
 		bool needs_redistribution = true;
 		while (needs_redistribution) {
 			needs_redistribution = false;
-			for (const size_t good_index : good_indices_to_buy) {
+			for (const good_index_t good_index : good_indices_to_buy) {
 				char& wants_more = wants_more_mask.at_index(good_index);
 				if (!wants_more) {
 					continue;
@@ -2138,7 +2143,7 @@ void CountryInstance::manage_national_stockpile(
 					break;
 				}
 
-				GoodInstance const& good_instance = goods_data.get_keys()[good_index];
+				GoodInstance const& good_instance = goods_data.get_key_at_index(good_index);
 				GoodDefinition const& good_definition = good_instance.good_definition;
 				const fixed_point_t max_possible_quantity_bought = cash_available_for_good / market_instance.get_min_next_price(good_definition);
 				if (max_possible_quantity_bought < fixed_point_t::epsilon) {
@@ -2149,20 +2154,20 @@ void CountryInstance::manage_national_stockpile(
 			}
 		}
 		
-		for (const size_t good_index : good_indices_to_buy) {
+		for (const good_index_t good_index : good_indices_to_buy) {
 			const fixed_point_t max_quantity_to_buy = max_quantity_to_buy_per_good[good_index];
 			const fixed_point_t money_to_spend = money_to_spend_per_good[good_index];
 			if (money_to_spend <= 0) {
 				continue;
 			}
 
-			GoodInstance const& good_instance = goods_data.get_keys()[good_index];
+			GoodInstance const& good_instance = goods_data.get_key_at_index(good_index);
 			GoodDefinition const& good_definition = good_instance.good_definition;
 			available_funds -= money_to_spend;
 			market_instance.place_buy_up_to_order(
 				{
 					good_definition,
-					this,
+					index,
 					max_quantity_to_buy,
 					money_to_spend,
 					this,
@@ -2176,7 +2181,7 @@ void CountryInstance::manage_national_stockpile(
 	for (auto& reusable_vector : reusable_vectors) {
 		reusable_vector.clear();
 	}
-	reusable_index_vector.clear();
+	reusable_good_index_vector.clear();
 }
 
 void CountryInstance::country_tick_after_map(const Date today) {
