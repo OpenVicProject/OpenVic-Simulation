@@ -196,7 +196,7 @@ bool GameActionManager::game_action_callback_set_strata_tax(game_action_argument
 	}
 
 	Strata const* strata =
-		instance_manager.get_definition_manager().get_pop_manager().get_strata_by_index(std::get<1>(*country_strata_value));
+		instance_manager.definition_manager.get_pop_manager().get_strata_by_index(std::get<1>(*country_strata_value));
 
 	if (OV_unlikely(strata == nullptr)) {
 		spdlog::error_s("GAME_ACTION_SET_STRATA_TAX called with invalid strata index: {}", std::get<1>(*country_strata_value));
@@ -390,7 +390,7 @@ bool GameActionManager::game_action_callback_start_research(game_action_argument
 	}
 
 	Technology const* technology =
-		instance_manager.get_definition_manager().get_research_manager().get_technology_manager().get_technology_by_index(
+		instance_manager.definition_manager.get_research_manager().get_technology_manager().get_technology_by_index(
 			country_tech->second
 		);
 

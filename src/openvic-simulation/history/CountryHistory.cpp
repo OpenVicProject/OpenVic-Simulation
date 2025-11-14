@@ -66,7 +66,7 @@ bool CountryHistoryMap::_load_history_entry(
 				// Desired culture instruction already exists
 				spdlog::warn_s(
 					"Duplicate attempt to {} accepted culture {} {} country history of {}",
-					add ? "add" : "remove", add ? "to" : "from", culture, entry.get_country()
+					add ? "add" : "remove", add ? "to" : "from", culture, entry.country
 				);
 				return true;
 			} else {
@@ -77,7 +77,7 @@ bool CountryHistoryMap::_load_history_entry(
 					add ? "add" : "remove",
 					culture,
 					add ? "to" : "from",
-					entry.get_country(),
+					entry.country,
 					add ? "removing" : "adding"
 				);
 				return true;
@@ -102,7 +102,7 @@ bool CountryHistoryMap::_load_history_entry(
 					if (&reform.get_reform_group() != reform_group) {
 						spdlog::warn_s(
 							"Listing {} as belonging to the reform group {} when it actually belongs to {} in history of {}",
-							reform, *reform_group, reform.get_reform_group(), entry.get_country()
+							reform, *reform_group, reform.get_reform_group(), entry.country
 						);
 					}
 					return set_callback_pointer(entry.reforms)(reform);
@@ -117,7 +117,7 @@ bool CountryHistoryMap::_load_history_entry(
 							if (value > 1) {
 								spdlog::warn_s(
 									"Technology {} is applied multiple times in history of country {}",
-									*technology, entry.get_country()
+									*technology, entry.country
 								);
 							}
 							return map_callback(entry.technologies, technology)(value);
@@ -237,7 +237,7 @@ bool CountryHistoryMap::_load_history_entry(
 						if (flag_expected) {
 							spdlog::error_s(
 								"Government key found when expect flag type override for {} in history of {}",
-								ovfmt::validate(government_type), entry.get_country()
+								ovfmt::validate(government_type), entry.country
 							);
 							ret = false;
 						}
@@ -265,14 +265,14 @@ bool CountryHistoryMap::_load_history_entry(
 						} else {
 							spdlog::error_s(
 								"Flag key found when expecting government type for flag type override in history of {}",
-								entry.get_country()
+								entry.country
 							);
 							return false;
 						}
 					} else {
 						spdlog::error_s(
 							"Invalid key {} in government flag overrides in history of {}",
-							id, entry.get_country()
+							id, entry.country
 						);
 						return false;
 					}
@@ -281,7 +281,7 @@ bool CountryHistoryMap::_load_history_entry(
 			if (flag_expected) {
 				spdlog::error_s(
 					"Missing flag type override for government type {} in history of {}",
-					ovfmt::validate(government_type), entry.get_country()
+					ovfmt::validate(government_type), entry.country
 				);
 				ret = false;
 			}

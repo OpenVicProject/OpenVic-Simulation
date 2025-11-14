@@ -34,11 +34,12 @@ namespace OpenVic {
 		friend struct TechnologyManager;
 
 	private:
-		TechnologyFolder const& PROPERTY(folder);
 		memory::vector<Technology const*> PROPERTY(technologies);
 		size_t PROPERTY(tech_count, 0);
 
 	public:
+		TechnologyFolder const& folder;
+
 		TechnologyArea(std::string_view new_identifier, TechnologyFolder const& new_folder);
 		TechnologyArea(TechnologyArea&&) = default;
 	};
@@ -51,7 +52,6 @@ namespace OpenVic {
 		using building_set_t = ordered_set<BuildingType const*>;
 
 	private:
-		TechnologyArea const& PROPERTY(area);
 		const Date::year_t PROPERTY(year);
 		const fixed_point_t PROPERTY(cost);
 		const area_index_t PROPERTY(index_in_area);
@@ -64,6 +64,8 @@ namespace OpenVic {
 		bool parse_scripts(DefinitionManager const& definition_manager);
 
 	public:
+		TechnologyArea const& area;
+
 		Technology(
 			std::string_view new_identifier,
 			index_t new_index,

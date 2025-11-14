@@ -66,7 +66,7 @@ GoodDefinition const* ProvinceInstance::get_rgo_good() const {
 	if (!rgo.is_valid()) {
 		return nullptr;
 	}
-	return &(rgo.get_production_type_nullable()->get_output_good());
+	return &(rgo.get_production_type_nullable()->output_good);
 }
 
 bool ProvinceInstance::set_rgo_production_type_nullable(ProductionType const* rgo_production_type_nullable) {
@@ -299,7 +299,7 @@ void ProvinceInstance::update_modifier_sum(Date today, StaticModifierCache const
 	});
 
 	for (BuildingInstance const& building : buildings.get_items()) {
-		modifier_sum.add_modifier(building.get_building_type());
+		modifier_sum.add_modifier(building.building_type);
 	}
 
 	if (crime != nullptr) {
@@ -382,7 +382,7 @@ void ProvinceInstance::update_gamestate(InstanceManager const& instance_manager)
 	for (BuildingInstance& building : buildings.get_items()) {
 		building.update_gamestate(today);
 	}
-	_update_pops(instance_manager.get_definition_manager().get_define_manager());
+	_update_pops(instance_manager.definition_manager.get_define_manager());
 }
 
 void ProvinceInstance::province_tick(

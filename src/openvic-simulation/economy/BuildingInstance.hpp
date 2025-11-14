@@ -12,8 +12,6 @@ namespace OpenVic {
 		enum class ExpansionState { CannotExpand, CanExpand, Preparing, Expanding };
 
 	private:
-		BuildingType const& PROPERTY(building_type);
-
 		building_level_t PROPERTY_RW(level);
 		ExpansionState PROPERTY(expansion_state, ExpansionState::CannotExpand);
 		Date PROPERTY(start_date);
@@ -23,6 +21,8 @@ namespace OpenVic {
 		bool _can_expand() const;
 
 	public:
+		BuildingType const& building_type;
+
 		BuildingInstance(BuildingType const& new_building_type, building_level_t new_level = 0);
 		BuildingInstance(BuildingInstance&&) = default;
 

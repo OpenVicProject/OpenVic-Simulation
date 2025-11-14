@@ -36,12 +36,13 @@ namespace OpenVic {
 		GoodInstanceManager const& good_instance_manager;
 		ModifierEffectCache const& modifier_effect_cache;
 		ProductionTypeManager const& production_type_manager;
-		PopsDefines const& PROPERTY(defines);
 		fixed_point_t PROPERTY(max_cost_multiplier);
 		OV_IFLATMAP_PROPERTY(Strata, PopStrataValuesFromProvince, effects_by_strata);
 		//excludes availability of goods on market
 		memory::vector<std::pair<ProductionType const*, fixed_point_t>> SPAN_PROPERTY(ranked_artisanal_production_types);
 	public:
+		PopsDefines const& defines;
+
 		PopValuesFromProvince(
 			GameRulesManager const& new_game_rules_manager,
 			GoodInstanceManager const& new_good_instance_manager,

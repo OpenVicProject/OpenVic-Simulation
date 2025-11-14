@@ -30,7 +30,7 @@ namespace OpenVic {
 
 	struct GoodInstanceManager {
 	private:
-		GoodDefinitionManager const& PROPERTY(good_definition_manager);
+		GoodDefinitionManager const& good_definition_manager;
 		OV_IFLATMAP_PROPERTY(GoodDefinition, GoodInstance, good_instance_by_definition);
 
 	public:

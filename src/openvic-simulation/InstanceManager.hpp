@@ -37,7 +37,6 @@ namespace OpenVic {
 		ThreadPool thread_pool;
 
 		CountryRelationManager PROPERTY_REF(country_relation_manager);
-		DefinitionManager const& PROPERTY(definition_manager);
 		const GameActionManager game_action_manager;
 		GameRulesManager const& game_rules_manager;
 		GoodInstanceManager PROPERTY_REF(good_instance_manager);
@@ -78,6 +77,8 @@ namespace OpenVic {
 		void execute_game_actions();
 
 	public:
+		DefinitionManager const& definition_manager;
+
 		InstanceManager(
 			GameRulesManager const& new_game_rules_manager,
 			DefinitionManager const& new_definition_manager,

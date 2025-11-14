@@ -241,7 +241,7 @@ Event const* ConsoleInstance::validate_event_id(std::string_view value_string) {
 		return nullptr;
 	}
 
-	Event const* event = instance_manager.get_definition_manager().get_event_manager().get_event_by_identifier(value_string);
+	Event const* event = instance_manager.definition_manager.get_event_manager().get_event_by_identifier(value_string);
 	if (event == nullptr) {
 		write_error("Unknown event with ID #{}", *result);
 	}
@@ -256,7 +256,7 @@ UnitType const* ConsoleInstance::validate_unit(std::string_view value_string) {
 
 	UnitType const* unit_type = //
 		instance_manager
-			.get_definition_manager() //
+			.definition_manager //
 			.get_military_manager()
 			.get_unit_type_manager()
 			.get_unit_type_by_identifier(value_string);
@@ -306,7 +306,7 @@ Invention const* ConsoleInstance::validate_invention(std::string_view value_stri
 
 	Invention const* invention = //
 		instance_manager
-			.get_definition_manager() //
+			.definition_manager //
 			.get_research_manager()
 			.get_invention_manager()
 			.get_invention_by_identifier(value_string);
@@ -325,7 +325,7 @@ WargoalType const* ConsoleInstance::validate_cb_type(std::string_view value_stri
 
 	WargoalType const* cb_type = //
 		instance_manager
-			.get_definition_manager() //
+			.definition_manager //
 			.get_military_manager()
 			.get_wargoal_type_manager()
 			.get_wargoal_type_by_identifier(value_string);
@@ -344,7 +344,7 @@ Technology const* ConsoleInstance::validate_tech_name(std::string_view value_str
 
 	Technology const* tech = //
 		instance_manager
-			.get_definition_manager() //
+			.definition_manager //
 			.get_research_manager()
 			.get_technology_manager()
 			.get_technology_by_identifier(value_string);

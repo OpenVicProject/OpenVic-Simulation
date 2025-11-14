@@ -99,8 +99,12 @@ bool AStarPathing::_solve(search_iterator begin_point, search_iterator end_point
 	return found_route;
 }
 
-ArmyAStarPathing::ArmyAStarPathing(MapInstance const& map)
-	: map_instance(map), AStarPathing(&map.get_map_definition().get_path_map_land()) {}
+ArmyAStarPathing::ArmyAStarPathing(
+	MapDefinition const& new_map_definition,
+	MapInstance const& new_map_instance
+) : map_instance { new_map_instance },
+	AStarPathing(&new_map_definition.get_path_map_land())
+	{}
 
 bool ArmyAStarPathing::_is_point_enabled(search_const_iterator it) const {
 	if (!AStarPathing::_is_point_enabled(it)) {
@@ -130,8 +134,12 @@ bool ArmyAStarPathing::_is_point_enabled(search_const_iterator it) const {
 	return army_instance->get_country()->can_army_units_enter(*province_owner);
 }
 
-NavyAStarPathing::NavyAStarPathing(MapInstance const& map)
-	: map_instance(map), AStarPathing(&map.get_map_definition().get_path_map_land()) {}
+NavyAStarPathing::NavyAStarPathing(
+	MapDefinition const& new_map_definition,
+	MapInstance const& new_map_instance
+) : map_instance {new_map_instance},
+	AStarPathing(&new_map_definition.get_path_map_land())
+	{}
 
 bool NavyAStarPathing::_is_point_enabled(search_const_iterator it) const {
 	if (!AStarPathing::_is_point_enabled(it)) {
@@ -148,7 +156,7 @@ bool NavyAStarPathing::_is_point_enabled(search_const_iterator it) const {
 		return true;
 	}
 
-	if (OV_likely(province->get_province_definition().is_water())) {
+	if (OV_likely(province->province_definition.is_water())) {
 		return true;
 	}
 

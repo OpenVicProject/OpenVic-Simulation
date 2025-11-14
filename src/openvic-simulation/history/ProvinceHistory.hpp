@@ -28,8 +28,6 @@ namespace OpenVic {
 
 		ProvinceHistoryEntry(ProvinceDefinition const& new_province, Date new_date);
 	private:
-		ProvinceDefinition const& PROPERTY(province);
-
 		std::optional<CountryDefinition const*> PROPERTY(owner);
 		std::optional<CountryDefinition const*> PROPERTY(controller);
 		std::optional<colony_status_t> PROPERTY(colonial);
@@ -46,6 +44,8 @@ namespace OpenVic {
 		bool _load_province_pop_history(
 			DefinitionManager const& definition_manager, ast::NodeCPtr root, bool *non_integer_size
 		);
+	public:
+		ProvinceDefinition const& province;
 	};
 
 	struct ProvinceHistoryManager;
@@ -54,7 +54,7 @@ namespace OpenVic {
 		friend struct ProvinceHistoryManager;
 
 	private:
-		ProvinceDefinition const& PROPERTY(province);
+		ProvinceDefinition const& province;
 
 	protected:
 		ProvinceHistoryMap(ProvinceDefinition const& new_province);

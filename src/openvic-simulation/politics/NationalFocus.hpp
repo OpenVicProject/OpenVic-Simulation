@@ -22,7 +22,6 @@ namespace OpenVic {
 		friend struct NationalFocusManager;
 
 	private:
-		NationalFocusGroup const& PROPERTY(group);
 		uint8_t PROPERTY(icon);
 		bool PROPERTY(has_flashpoint);
 		fixed_point_t PROPERTY(flashpoint_tension);
@@ -38,6 +37,8 @@ namespace OpenVic {
 		bool parse_scripts(DefinitionManager const& definition_manager);
 
 	public:
+		NationalFocusGroup const& group;
+
 		NationalFocus(
 			std::string_view new_identifier,
 			NationalFocusGroup const& new_group,
