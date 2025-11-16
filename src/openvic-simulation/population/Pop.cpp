@@ -495,6 +495,7 @@ void Pop::pop_tick_without_cleanup(
 		//execute artisan_tick before needs
 		ArtisanalProducer& artisanal_producer = artisanal_producer_optional.value();
 		artisanal_producer.artisan_tick(
+			market_instance,
 			*this,
 			shared_values,
 			random_number_generator,
