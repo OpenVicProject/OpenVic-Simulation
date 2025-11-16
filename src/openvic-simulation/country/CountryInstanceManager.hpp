@@ -25,7 +25,7 @@ namespace OpenVic {
 
 	struct CountryInstanceManager {
 	private:
-		CountryDefinitionManager const& PROPERTY(country_definition_manager);
+		CountryDefinitionManager const& country_definition_manager;
 		CountryDefines const& country_defines;
 		SharedCountryValues shared_country_values;
 		ThreadPool& thread_pool;

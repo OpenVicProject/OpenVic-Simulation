@@ -105,7 +105,7 @@ fixed_point_t ResourceGatheringOperation::calculate_size_modifier() const {
 	}
 
 	size_modifier += location.get_modifier_effect_value(
-		*modifier_effect_cache.get_good_effects(production_type.get_output_good()).get_rgo_size()
+		*modifier_effect_cache.get_good_effects(production_type.output_good).get_rgo_size()
 	);
 	return size_modifier > 0 ? size_modifier : fixed_point_t::_0;
 }
@@ -146,7 +146,7 @@ void ResourceGatheringOperation::rgo_tick(memory::vector<fixed_point_t>& reusabl
 
 		market_instance.place_market_sell_order(
 			{
-				production_type.get_output_good(),
+				production_type.output_good,
 				country_to_report_economy_nullable,
 				output_quantity_yesterday,
 				this,
@@ -288,7 +288,7 @@ fixed_point_t ResourceGatheringOperation::produce() {
 			+ location.get_modifier_effect_value(*modifier_effect_cache.get_mine_rgo_output_local());
 	}
 
-	auto const& good_effects = modifier_effect_cache.get_good_effects(production_type.get_output_good());
+	auto const& good_effects = modifier_effect_cache.get_good_effects(production_type.output_good);
 	throughput_multiplier += location.get_modifier_effect_value(*good_effects.get_rgo_goods_throughput());
 	output_multiplier += location.get_modifier_effect_value(*good_effects.get_rgo_goods_output());
 

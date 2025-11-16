@@ -35,7 +35,7 @@ State::State(
 memory::string State::get_identifier() const {
 	return memory::fmt::format(
 		"{}_{}_{}",
-		state_set.get_region(),
+		state_set.region,
 		ovfmt::validate(get_owner(), "NoCountry"),
 		ProvinceInstance::get_colony_status_string(colony_status)
 	);
@@ -60,7 +60,7 @@ void State::update_gamestate() {
 
 	coastal = false;
 	for (ProvinceInstance* const province : provinces) {
-		coastal |= province->get_province_definition().is_coastal();
+		coastal |= province->province_definition.is_coastal();
 		add_pops_aggregate(*province);
 
 		for (auto const& [pop_type, province_pops_of_type] : province->get_pops_cache_by_type()) {
@@ -190,13 +190,12 @@ bool StateManager::add_state_set(
 }
 
 bool StateManager::generate_states(
+	MapDefinition const& map_definition,
 	MapInstance& map_instance,
 	utility::forwardable_span<const Strata> strata_keys,
 	utility::forwardable_span<const PopType> pop_type_keys,
 	utility::forwardable_span<const Ideology> ideology_keys
 ) {
-	MapDefinition const& map_definition = map_instance.get_map_definition();
-
 	state_sets.clear();
 	state_sets.reserve(map_definition.get_region_count());
 

@@ -103,8 +103,6 @@ namespace OpenVic {
 		static constexpr fixed_point_t UNCIVILISED_CIVILISATION_PROGRESS = fixed_point_t::_0_50;
 
 	private:
-		CountryDefinition const& PROPERTY(country_definition);
-
 		SharedCountryValues& shared_country_values;
 
 		const Date fallback_date_for_never_completing_research;
@@ -276,6 +274,7 @@ namespace OpenVic {
 	public:
 		static constexpr size_t VECTORS_FOR_COUNTRY_TICK = 4;
 
+		CountryDefinition const& country_definition;
 		DerivedState<GovernmentType const*> flag_government_type;
 		DerivedState<fixed_point_t> total_score;
 		DerivedState<fixed_point_t> military_power;

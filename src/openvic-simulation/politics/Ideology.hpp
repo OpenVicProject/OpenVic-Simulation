@@ -20,7 +20,6 @@ namespace OpenVic {
 		static constexpr colour_t NO_IDEOLOGY_COLOUR = colour_t::fill_as(colour_t::max_value);
 
 	private:
-		IdeologyGroup const& PROPERTY(group);
 		const bool PROPERTY_CUSTOM_PREFIX(uncivilised, is);
 		const bool PROPERTY(can_reduce_consciousness);
 		const bool PROPERTY(can_reduce_militancy);
@@ -37,6 +36,8 @@ namespace OpenVic {
 		bool parse_scripts(DefinitionManager const& definition_manager);
 
 	public:
+		IdeologyGroup const& group;
+
 		Ideology(
 			std::string_view new_identifier,
 			index_t new_index,

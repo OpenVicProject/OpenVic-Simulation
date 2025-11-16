@@ -27,7 +27,6 @@ namespace OpenVic {
 		using government_colour_map_t = ordered_map<GovernmentType const*, colour_t>;
 
 	private:
-		GraphicalCultureType const& PROPERTY(graphical_culture);
 		/* Not const to allow elements to be moved, otherwise a copy is forced
 		 * which causes a compile error as the copy constructor has been deleted. */
 		IdentifierRegistry<CountryParty> IDENTIFIER_REGISTRY_CUSTOM_PLURAL(party, parties);
@@ -41,6 +40,8 @@ namespace OpenVic {
 
 
 	public:
+		GraphicalCultureType const& graphical_culture;
+
 		CountryDefinition(
 			std::string_view new_identifier, colour_t new_colour, index_t new_index,
 			GraphicalCultureType const& new_graphical_culture, IdentifierRegistry<CountryParty>&& new_parties,

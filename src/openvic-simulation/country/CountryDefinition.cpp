@@ -159,7 +159,7 @@ node_callback_t CountryDefinitionManager::load_country_party(
 
 						return politics_manager.get_issue_manager().expect_party_policy_identifier(
 							[&party_policy_group, &policy](PartyPolicy const& party_policy) -> bool {
-								if (&party_policy.get_issue_group() == &party_policy_group) {
+								if (&party_policy.issue_group == &party_policy_group) {
 									policy = &party_policy;
 									return true;
 								}
@@ -168,7 +168,7 @@ node_callback_t CountryDefinitionManager::load_country_party(
 								spdlog::warn_s(
 									"Invalid party policy \"{}\", group is \"{}\" when \"{}\" was expected.",
 									party_policy,
-									party_policy.get_issue_group(),
+									party_policy.issue_group,
 									party_policy_group
 								);
 								return true;

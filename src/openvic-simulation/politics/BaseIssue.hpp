@@ -9,7 +9,6 @@ namespace OpenVic {
 
 	struct BaseIssue : Modifier, HasColour {
 	private:
-		BaseIssueGroup const& PROPERTY(issue_group);
 		RuleSet PROPERTY(rules);
 		const bool PROPERTY(is_jingoism);
 
@@ -24,6 +23,8 @@ namespace OpenVic {
 			modifier_type_t new_type
 		);
 		BaseIssue(BaseIssue&&) = default;
+	public:
+		BaseIssueGroup const& issue_group;		
 	};
 
 	struct BaseIssueGroup : HasIdentifier {

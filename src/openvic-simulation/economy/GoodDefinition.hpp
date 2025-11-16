@@ -33,7 +33,6 @@ namespace OpenVic {
 	 */
 	struct GoodDefinition : HasIdentifierAndColour, HasIndex<GoodDefinition> {
 	private:
-		GoodCategory const& PROPERTY(category);
 		const fixed_point_t PROPERTY(base_price);
 		const bool PROPERTY(is_available_from_start);
 		const bool PROPERTY(is_tradeable);
@@ -41,6 +40,8 @@ namespace OpenVic {
 		const bool PROPERTY(counters_overseas_penalty);
 
 	public:
+		GoodCategory const& category;
+
 		GoodDefinition(
 			std::string_view new_identifier, colour_t new_colour, index_t new_index, GoodCategory const& new_category,
 			fixed_point_t new_base_price, bool new_is_available_from_start, bool new_is_tradeable, bool new_is_money,

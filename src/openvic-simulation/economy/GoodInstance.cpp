@@ -26,7 +26,7 @@ GoodInstanceManager::GoodInstanceManager(
 	} { assert(new_good_definition_manager.good_definitions_are_locked()); }
 
 bool GoodInstance::is_trading_good() const {
-	return is_available && !get_good_definition().get_is_money();
+	return is_available && !good_definition.get_is_money();
 }
 
 GoodInstance* GoodInstanceManager::get_good_instance_by_identifier(std::string_view identifier) {

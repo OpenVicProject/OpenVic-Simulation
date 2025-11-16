@@ -179,7 +179,7 @@ void Pop::update_location_based_attributes() {
 	if (owner == nullptr) {
 		return;
 	}
-	CountryDefinition const& country_definition = owner ->get_country_definition();
+	CountryDefinition const& country_definition = owner->country_definition;
 
 	auto view = country_definition.get_parties() | std::views::transform(
 		[](CountryParty const& key) {
@@ -289,7 +289,7 @@ void Pop::pay_income_tax(fixed_point_t& income) {
 	if (tax_collector_nullable == nullptr) {
 		return;
 	}
-	const fixed_point_t effective_tax_rate = tax_collector_nullable->get_effective_tax_rate_by_strata(type->get_strata()).get_untracked();
+	const fixed_point_t effective_tax_rate = tax_collector_nullable->get_effective_tax_rate_by_strata(type->strata).get_untracked();
 	const fixed_point_t tax = effective_tax_rate * income;
 	tax_collector_nullable->report_pop_income_tax(*type, income, tax);
 	income -= tax;
@@ -507,7 +507,7 @@ void Pop::pop_tick_without_cleanup(
 		);
 
 		if (artisanal_producer.get_production_type_nullable() != nullptr) {
-			artisanal_output_good = &artisanal_producer.get_production_type_nullable()->get_output_good();
+			artisanal_output_good = &artisanal_producer.get_production_type_nullable()->output_good;
 		}
 	}
 
@@ -533,8 +533,8 @@ void Pop::pop_tick_without_cleanup(
 	yesterdays_import_value = 0;
 
 	PopType const& type_never_null = *type;
-	PopStrataValuesFromProvince const& shared_strata_values = shared_values.get_effects_by_strata(type_never_null.get_strata());
-	PopsDefines const& defines = shared_values.get_defines();
+	PopStrataValuesFromProvince const& shared_strata_values = shared_values.get_effects_by_strata(type_never_null.strata);
+	PopsDefines const& defines = shared_values.defines;
 	const fixed_point_t base_needs_scalar = (
 		fixed_point_t::_1 + 2 * consciousness / defines.get_pdef_base_con()
 	) * size;

@@ -5,6 +5,7 @@
 #include "openvic-simulation/types/Date.hpp"
 #include "openvic-simulation/types/IndexedFlatMap.hpp"
 #include "openvic-simulation/utility/Getters.hpp"
+#include "openvic-simulation/utility/ForwardableSpan.hpp"
 
 namespace OpenVic {
 	struct InstanceManager;
@@ -13,8 +14,7 @@ namespace OpenVic {
 
 	struct PoliticsInstanceManager {
 	private:
-		InstanceManager const& PROPERTY(instance_manager);
-		PoliticsManager const& PROPERTY(politics_manager);
+		InstanceManager const& instance_manager;
 
 		OV_IFLATMAP_PROPERTY(Ideology, std::optional<Date>, ideology_spawn_date);
 
@@ -22,7 +22,10 @@ namespace OpenVic {
 		bool PROPERTY(world_wars_enabled, false);
 
 	public:
-		PoliticsInstanceManager(InstanceManager const& new_instance_manager);
+		PoliticsInstanceManager(
+			InstanceManager const& new_instance_manager,
+			utility::forwardable_span<const Ideology> ideologies
+		);
 		PoliticsInstanceManager(PoliticsInstanceManager&&) = default;
 
 		void setup_starting_ideologies();

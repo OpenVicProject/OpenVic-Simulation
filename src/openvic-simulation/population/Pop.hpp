@@ -36,8 +36,6 @@ namespace OpenVic {
 
 	protected:
 		PopType const* PROPERTY_ACCESS(type, protected);
-		Culture const& PROPERTY_ACCESS(culture, protected);
-		Religion const& PROPERTY_ACCESS(religion, protected);
 		pop_size_t PROPERTY_ACCESS(size, protected);
 		fixed_point_t PROPERTY_RW_ACCESS(militancy, protected);
 		fixed_point_t PROPERTY_RW_ACCESS(consciousness, protected);
@@ -47,6 +45,9 @@ namespace OpenVic {
 			PopType const& new_type, Culture const& new_culture, Religion const& new_religion, pop_size_t new_size,
 			fixed_point_t new_militancy, fixed_point_t new_consciousness, RebelType const* new_rebel_type
 		);
+	public:
+		Culture const& culture;
+		Religion const& religion;
 	};
 
 	#define OV_DO_FOR_ALL_TYPES_OF_POP_INCOME(F) \

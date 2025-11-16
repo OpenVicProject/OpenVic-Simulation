@@ -17,8 +17,6 @@ namespace OpenVic {
 
 	struct GoodMarket {
 	private:
-		GoodDefinition const& PROPERTY(good_definition);
-
 		static constexpr int32_t exponential_price_change_shift = 7;
 		std::mutex buy_lock;
 		std::mutex sell_lock;
@@ -53,6 +51,8 @@ namespace OpenVic {
 
 		void update_next_price_limits();
 	public:
+		GoodDefinition const& good_definition;
+
 		GoodMarket(GameRulesManager const& new_game_rules_manager, GoodDefinition const& new_good_definition);
 		GoodMarket(GoodMarket const&) = delete;
 		GoodMarket& operator=(GoodMarket const&) = delete;

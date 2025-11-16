@@ -9,6 +9,7 @@
 
 namespace OpenVic {
 	struct MapmodeManager;
+	struct MapDefinition;
 	struct MapInstance;
 	struct ProvinceInstance;
 	struct CountryInstance;
@@ -76,6 +77,6 @@ namespace OpenVic {
 			uint8_t* target
 		) const;
 
-		bool setup_mapmodes();
+		bool setup_mapmodes(MapDefinition const& map_definition);
 	};
 }
