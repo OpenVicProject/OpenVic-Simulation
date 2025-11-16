@@ -24,24 +24,22 @@ namespace OpenVic {
 
 		static std::string_view modifier_type_to_string(modifier_type_t type);
 
-	private:
-		const modifier_type_t PROPERTY(type);
-
 	protected:
 		Modifier(std::string_view new_identifier, ModifierValue&& new_values, modifier_type_t new_type);
 
 	public:
+		const modifier_type_t type;
+
 		Modifier(Modifier&&) = default;
 	};
 
 	struct IconModifier : Modifier {
 		using icon_t = uint8_t;
 
-	private:
-		/* A modifier can have no icon (zero). */
-		const icon_t PROPERTY(icon);
-
 	public:
+		/* A modifier can have no icon (zero). */
+		const icon_t icon;
+
 		IconModifier(std::string_view new_identifier, ModifierValue&& new_values, modifier_type_t new_type, icon_t new_icon);
 		IconModifier(IconModifier&&) = default;
 	};

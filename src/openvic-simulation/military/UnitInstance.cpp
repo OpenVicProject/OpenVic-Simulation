@@ -9,7 +9,7 @@ UnitInstance::UnitInstance(
 ) : unique_id { new_unique_id },
 	name { new_name },
 	unit_type { new_unit_type },
-	organisation { unit_type.get_default_organisation() },
+	organisation { unit_type.default_organisation },
 	max_organisation { organisation },
 	strength { get_max_strength() } {}
 

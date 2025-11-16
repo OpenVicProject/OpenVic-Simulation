@@ -166,7 +166,7 @@ bool CountryHistoryMap::_load_history_entry(
 
 				// if the party specified is invalid, replace with the first valid party
 				for (const auto& party : country.get_parties()) {
-					if (party.get_start_date() <= entry.get_date() && entry.get_date() < party.get_end_date()) {
+					if (party.start_date <= entry.get_date() && entry.get_date() < party.end_date) {
 						entry.ruling_party.emplace(&party);
 						break;
 					}

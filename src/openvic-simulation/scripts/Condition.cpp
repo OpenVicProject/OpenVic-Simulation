@@ -539,11 +539,11 @@ node_callback_t ConditionManager::expect_condition_node(
 		ConditionNode::value_t value;
 
 		const std::string_view identifier = condition.get_identifier();
-		const value_type_t value_type = condition.get_value_type();
-		const scope_type_t scope = condition.get_scope();
-		const scope_type_t scope_change = condition.get_scope_change();
-		const identifier_type_t key_identifier_type = condition.get_key_identifier_type();
-		const identifier_type_t value_identifier_type = condition.get_value_identifier_type();
+		const value_type_t value_type = condition.value_type;
+		const scope_type_t scope = condition.scope;
+		const scope_type_t scope_change = condition.scope_change;
+		const identifier_type_t key_identifier_type = condition.key_identifier_type;
+		const identifier_type_t value_identifier_type = condition.value_identifier_type;
 
 		HasIdentifier const* value_item = nullptr;
 

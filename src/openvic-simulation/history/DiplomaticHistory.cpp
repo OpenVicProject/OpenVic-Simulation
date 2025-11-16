@@ -44,9 +44,9 @@ ReparationsHistory::ReparationsHistory(
 SubjectHistory::SubjectHistory(
 	CountryDefinition const* new_overlord,
 	CountryDefinition const* new_subject,
-	type_t new_type,
+	type_t new_subject_type,
 	Period new_period
-) : overlord { new_overlord }, subject { new_subject }, type { new_type }, period { new_period } {}
+) : overlord { new_overlord }, subject { new_subject }, subject_type { new_subject_type }, period { new_period } {}
 
 void DiplomaticHistoryManager::reserve_more_wars(size_t size) {
 	if (locked) {

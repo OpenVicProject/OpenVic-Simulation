@@ -12,12 +12,13 @@ namespace OpenVic {
 
 	struct CountryParty : HasIdentifierAndColour {
 	private:
-		const Date PROPERTY(start_date);
-		const Date PROPERTY(end_date);
 		Ideology const* PROPERTY(ideology); // Can be nullptr, shows up as "No Ideology" in game
 		OV_IFLATMAP_PROPERTY(PartyPolicyGroup, PartyPolicy const*, policies);
 
 	public:
+		const Date start_date;
+		const Date end_date;
+
 		CountryParty(
 			std::string_view new_identifier,
 			Date new_start_date,

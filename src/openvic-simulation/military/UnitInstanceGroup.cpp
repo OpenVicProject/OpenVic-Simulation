@@ -66,13 +66,13 @@ UnitType const* UnitInstanceGroup::get_display_unit_type() const {
 
 	for (UnitInstance const* unit : units) {
 		UnitType const& unit_type = unit->unit_type;
-		weighted_unit_types[&unit_type] += unit_type.get_weighted_value();
+		weighted_unit_types[&unit_type] += unit_type.weighted_value;
 	}
 
 	return get_largest_item_tie_break(
 		weighted_unit_types,
 		[](UnitType const* lhs, UnitType const* rhs) -> bool {
-			return lhs->get_weighted_value() < rhs->get_weighted_value();
+			return lhs->weighted_value < rhs->weighted_value;
 		}
 	)->first;
 }
@@ -166,10 +166,10 @@ bool UnitInstanceGroup::set_leader(LeaderInstance* new_leader) {
 		leader = nullptr;
 
 		if (new_leader != nullptr) {
-			if (OV_unlikely(new_leader->get_branch() != branch)) {
+			if (OV_unlikely(new_leader->branch != branch)) {
 				spdlog::error_s(
 					"Trying to assign {} leader \"{}\" to {} unit group \"{}\"",
-					get_branch_name(new_leader->get_branch()), new_leader->get_name(), get_branch_name(branch), name
+					get_branch_name(new_leader->branch), new_leader->get_name(), get_branch_name(branch), name
 				);
 				return false;
 			}
@@ -177,7 +177,7 @@ bool UnitInstanceGroup::set_leader(LeaderInstance* new_leader) {
 			if (OV_unlikely(&new_leader->country != country)) {
 				spdlog::error_s(
 					"Trying to assign {} \"{}\" of country \"{}\" to {} \"{}\" of country \"{}\"",
-					get_branched_leader_name(new_leader->get_branch()),
+					get_branched_leader_name(new_leader->branch),
 					new_leader->get_name(),
 					new_leader->country,
 					get_branched_unit_group_name(branch),
@@ -193,7 +193,7 @@ bool UnitInstanceGroup::set_leader(LeaderInstance* new_leader) {
 				} else {
 					spdlog::error_s(
 						"{} {} already leads {} {}!",
-						get_branched_leader_name(new_leader->get_branch()), new_leader->get_name(),get_branched_unit_group_name(branch), name
+						get_branched_leader_name(new_leader->branch), new_leader->get_name(),get_branched_unit_group_name(branch), name
 					);
 					ret = false;
 				}
@@ -272,7 +272,7 @@ fixed_point_t UnitInstanceGroupBranched<NAVAL>::get_total_consumed_supply() cons
 	fixed_point_t total_consumed_supply = 0;
 
 	for (ShipInstance const* ship : get_ship_instances()) {
-		total_consumed_supply += ship->get_ship_type().get_supply_consumption_score();
+		total_consumed_supply += ship->get_ship_type().supply_consumption_score;
 	}
 
 	return total_consumed_supply;
@@ -300,7 +300,7 @@ UnitInstanceBranched<Branch>& UnitInstanceManager::generate_unit_instance(UnitDe
 		}()
 	);
 
-	unit_instance_map.emplace(unit_instance.get_unique_id(), &unit_instance);
+	unit_instance_map.emplace(unit_instance.unique_id, &unit_instance);
 
 	return unit_instance;
 }
@@ -328,7 +328,7 @@ bool UnitInstanceManager::generate_unit_instance_group(
 	UnitInstanceGroupBranched<Branch>& unit_instance_group = *get_unit_instance_groups<Branch>().insert({
 		unique_id_counter++, unit_deployment_group.get_name()
 	});
-	unit_instance_group_map.emplace(unit_instance_group.get_unique_id(), &unit_instance_group);
+	unit_instance_group_map.emplace(unit_instance_group.unique_id, &unit_instance_group);
 
 	bool ret = true;
 
@@ -365,12 +365,12 @@ void UnitInstanceManager::generate_leader(CountryInstance& country, LeaderBase c
 	LeaderInstance& leader_instance = *leaders.insert({
 		unique_id_counter++, leader, country
 	});
-	leader_instance_map.emplace(leader_instance.get_unique_id(), &leader_instance);
+	leader_instance_map.emplace(leader_instance.unique_id, &leader_instance);
 	country.add_leader(leader_instance);
 
 	if (leader_instance.get_picture().empty() && country.get_primary_culture() != nullptr) {
 		leader_instance.set_picture(culture_manager.get_leader_picture_name(
-			country.get_primary_culture()->group.get_leader(), leader.get_branch()
+			country.get_primary_culture()->group.get_leader(), leader.branch
 		));
 	}
 }

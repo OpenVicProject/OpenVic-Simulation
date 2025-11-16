@@ -21,8 +21,6 @@ namespace OpenVic {
 
 	struct UnitInstanceGroup {
 	private:
-		const unique_id_t PROPERTY(unique_id);
-		const unit_branch_t PROPERTY(branch);
 		memory::string PROPERTY(name);
 		memory::vector<UnitInstance*> SPAN_PROPERTY(units);
 		LeaderInstance* PROPERTY_PTR(leader, nullptr);
@@ -53,6 +51,9 @@ namespace OpenVic {
 		void tick();
 
 	public:
+		const unique_id_t unique_id;
+		const unit_branch_t branch;
+
 		UnitInstanceGroup(UnitInstanceGroup&&) = default;
 		UnitInstanceGroup(UnitInstanceGroup const&) = delete;
 

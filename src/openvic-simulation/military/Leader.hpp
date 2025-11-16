@@ -19,8 +19,6 @@ namespace OpenVic {
 
 	private:
 		memory::string PROPERTY(name);
-		const unit_branch_t PROPERTY(branch); /* type in defines */
-		const Date PROPERTY(date);
 		LeaderTrait const* PROPERTY(personality);
 		LeaderTrait const* PROPERTY(background);
 		fixed_point_t PROPERTY(prestige);
@@ -30,6 +28,9 @@ namespace OpenVic {
 		LeaderBase(LeaderBase const&) = default;
 
 	public:
+		const unit_branch_t branch; /* type in defines */
+		const Date date;
+
 		LeaderBase(
 			std::string_view new_name, unit_branch_t new_branch, Date new_date, LeaderTrait const* new_personality,
 			LeaderTrait const* new_background, fixed_point_t new_prestige, std::string_view new_picture
@@ -49,12 +50,13 @@ namespace OpenVic {
 		friend struct UnitInstanceGroup;
 
 	private:
-		const unique_id_t PROPERTY(unique_id);
 		UnitInstanceGroup* PROPERTY_PTR(unit_instance_group, nullptr);
 		bool PROPERTY_RW(can_be_used, true);
 
 		LeaderInstance(unique_id_t new_unique_id, LeaderBase const& leader_base, CountryInstance const& new_country);
 	public:
+		const unique_id_t unique_id;
+
 		CountryInstance const& country;
 	};
 }

@@ -4,6 +4,7 @@
 #include <string_view>
 
 #include "openvic-simulation/modifier/Modifier.hpp"
+#include "openvic-simulation/types/HasIdentifier.hpp"
 #include "openvic-simulation/utility/Containers.hpp"
 
 namespace OpenVic {
@@ -54,14 +55,13 @@ namespace OpenVic {
 	/* REQUIREMENTS:
 	 * MAP-6, MAP-44, MAP-48
 	 */
-	struct Region : HasIdentifierAndColour, ProvinceSet {
-	private:
+	struct Region : public HasIdentifierAndColour, ProvinceSet {
+	public:
 		/* A meta region cannot be the template for a state.
 		 * Any region without provinces or containing water provinces is considered a meta region.
 		 */
-		const bool PROPERTY(is_meta);
+		const bool is_meta;
 
-	public:
 		Region(std::string_view new_identifier, colour_t new_colour, bool new_is_meta);
 		Region(Region&&) = default;
 	};

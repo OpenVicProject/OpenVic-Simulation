@@ -113,7 +113,7 @@ namespace OpenVic {
 		}
 
 		constexpr index_t get_province_number() const {
-			return get_index()+1;
+			return index+1;
 		}
 		static constexpr index_t get_index_from_province_number(const index_t province_number) {
 			return province_number - 1;

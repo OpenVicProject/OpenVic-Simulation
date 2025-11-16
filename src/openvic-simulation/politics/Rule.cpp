@@ -31,7 +31,7 @@ bool RuleSet::trim_and_resolve_conflicts(bool log) {
 					if (primary_rule == nullptr) {
 						primary_rule = rule;
 					} else {
-						if (primary_rule->get_index() < rule->get_index()) {
+						if (primary_rule->index < rule->index) {
 							primary_rule = rule;
 						}
 						ret = false;
@@ -103,7 +103,7 @@ RuleSet::rule_map_t const& RuleSet::get_rule_group(Rule::rule_group_t group, boo
 }
 
 bool RuleSet::get_rule(Rule const& rule, bool* rule_found) const {
-	rule_map_t const& rule_map = get_rule_group(rule.get_group());
+	rule_map_t const& rule_map = get_rule_group(rule.group);
 	const rule_map_t::const_iterator it = rule_map.find(&rule);
 	if (it != rule_map.end()) {
 		if (rule_found != nullptr) {
@@ -114,15 +114,15 @@ bool RuleSet::get_rule(Rule const& rule, bool* rule_found) const {
 	if (rule_found != nullptr) {
 		*rule_found = false;
 	}
-	return Rule::is_default_enabled(rule.get_group());
+	return Rule::is_default_enabled(rule.group);
 }
 
 bool RuleSet::has_rule(Rule const& rule) const {
-	return get_rule_group(rule.get_group()).contains(&rule);
+	return get_rule_group(rule.group).contains(&rule);
 }
 
 bool RuleSet::set_rule(Rule const& rule, bool value) {
-	rule_groups[rule.get_group()][&rule] = value;
+	rule_groups[rule.group][&rule] = value;
 	return true;
 }
 
@@ -202,7 +202,7 @@ node_callback_t RuleManager::expect_rule_set(callback_t<RuleSet&&> ruleset_callb
 						[&ruleset, rule](bool value) -> bool {
 							/* Wrapped in a lambda function so that the rule group is only initialised
 							 * if the value bool is successfully parsed. */
-							return map_callback(ruleset.rule_groups[rule->get_group()], rule)(value);
+							return map_callback(ruleset.rule_groups[rule->group], rule)(value);
 						}
 					)(rule_value);
 				} else {

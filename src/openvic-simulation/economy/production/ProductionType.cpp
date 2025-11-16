@@ -233,7 +233,7 @@ bool ProductionTypeManager::add_production_type(
 
 	if (rgo_owner_sprite <= 0 && ret && template_type == RGO && owner.has_value() && owner->get_pop_type() != nullptr) {
 		/* Set rgo owner sprite to that of the first RGO owner we find. */
-		rgo_owner_sprite = owner->get_pop_type()->get_sprite();
+		rgo_owner_sprite = owner->get_pop_type()->sprite;
 	}
 
 	return ret;

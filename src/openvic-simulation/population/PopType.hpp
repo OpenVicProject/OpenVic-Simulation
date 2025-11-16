@@ -49,7 +49,6 @@ namespace OpenVic {
 		using issue_weight_map_t = ordered_map<BaseIssue const*, ConditionalWeightFactorMul>;
 
 	private:
-		const pop_sprite_t PROPERTY(sprite);
 		fixed_point_map_t<GoodDefinition const*> PROPERTY(life_needs);
 		fixed_point_map_t<GoodDefinition const*> PROPERTY(everyday_needs);
 		fixed_point_map_t<GoodDefinition const*> PROPERTY(luxury_needs);
@@ -57,24 +56,6 @@ namespace OpenVic {
 		income_type_t PROPERTY(everyday_needs_income_types);
 		income_type_t PROPERTY(luxury_needs_income_types);
 		rebel_units_t PROPERTY(rebel_units);
-		const pop_size_t PROPERTY(max_size);
-		const pop_size_t PROPERTY(merge_max_size);
-		const bool PROPERTY(state_capital_only);
-		const bool PROPERTY(demote_migrant);
-		const bool PROPERTY(is_artisan);
-		const bool PROPERTY(allowed_to_vote);
-		const bool PROPERTY(is_slave);
-		const bool PROPERTY(can_be_recruited);
-		const bool PROPERTY(can_reduce_consciousness);
-		const bool PROPERTY(is_administrator);
-		const bool PROPERTY(can_invest);
-		const bool PROPERTY(factory);
-		const bool PROPERTY(can_work_factory);
-		const bool PROPERTY(can_be_unemployed);
-		const fixed_point_t PROPERTY(research_points);
-		const fixed_point_t PROPERTY(leadership_points);
-		const fixed_point_t PROPERTY(research_leadership_optimum);
-		const fixed_point_t PROPERTY(state_administration_multiplier);
 		PopType const* PROPERTY(equivalent);
 
 		ConditionalWeightFactorMul PROPERTY(country_migration_target); /* Scope - country, THIS - pop */
@@ -87,6 +68,25 @@ namespace OpenVic {
 
 	public:
 		Strata const& strata;
+		const pop_sprite_t sprite;
+		const pop_size_t max_size;
+		const pop_size_t merge_max_size;
+		const bool state_capital_only;
+		const bool demote_migrant;
+		const bool is_artisan;
+		const bool allowed_to_vote;
+		const bool is_slave;
+		const bool can_be_recruited;
+		const bool can_reduce_consciousness;
+		const bool is_administrator;
+		const bool can_invest;
+		const bool factory;
+		const bool can_work_factory;
+		const bool can_be_unemployed;
+		const fixed_point_t research_points;
+		const fixed_point_t leadership_points;
+		const fixed_point_t research_leadership_optimum;
+		const fixed_point_t state_administration_multiplier;
 
 		PopType(
 			std::string_view new_identifier,

@@ -19,7 +19,7 @@ ProvinceInstance::ProvinceInstance(
 	ProvinceDefinition const* new_province_definition,
 	ProvinceInstanceDeps const* province_instance_deps
 ) : HasIdentifierAndColour { *new_province_definition },
-	HasIndex { new_province_definition->get_index() },
+	HasIndex { new_province_definition->index },
 	FlagStrings { "province" },
 	PopsAggregate {
 		province_instance_deps->stratas,
@@ -73,7 +73,7 @@ bool ProvinceInstance::set_rgo_production_type_nullable(ProductionType const* rg
 	bool is_valid_operation = true;
 	if (rgo_production_type_nullable != nullptr) {
 		ProductionType const& rgo_production_type = *rgo_production_type_nullable;
-		if (rgo_production_type.get_template_type() != ProductionType::template_type_t::RGO) {
+		if (rgo_production_type.template_type != ProductionType::template_type_t::RGO) {
 			spdlog::error_s(
 				"Tried setting province {} rgo to {} which is not of template_type RGO.",
 				*this, rgo_production_type
@@ -420,7 +420,7 @@ void ProvinceInstance::province_tick(
 bool ProvinceInstance::add_unit_instance_group(UnitInstanceGroup& group) {
 	using enum unit_branch_t;
 
-	switch (group.get_branch()) {
+	switch (group.branch) {
 	case LAND:
 		armies.push_back(static_cast<ArmyInstance*>(&group));
 		return true;
@@ -430,7 +430,7 @@ bool ProvinceInstance::add_unit_instance_group(UnitInstanceGroup& group) {
 	default:
 		spdlog::error_s(
 			"Trying to add unit group \"{}\" with invalid branch {} to province {}",
-			group.get_name(), static_cast<uint32_t>(group.get_branch()), *this
+			group.get_name(), static_cast<uint32_t>(group.branch), *this
 		);
 		return false;
 	}
@@ -457,7 +457,7 @@ bool ProvinceInstance::remove_unit_instance_group(UnitInstanceGroup const& group
 
 	using enum unit_branch_t;
 
-	switch (group.get_branch()) {
+	switch (group.branch) {
 	case LAND:
 		return remove_from_vector(armies);
 	case NAVAL:
@@ -465,7 +465,7 @@ bool ProvinceInstance::remove_unit_instance_group(UnitInstanceGroup const& group
 	default:
 		spdlog::error_s(
 			"Trying to remove unit group \"{}\" with invalid branch {} from province {}",
-			group.get_name(), static_cast<uint32_t>(group.get_branch()), *this
+			group.get_name(), static_cast<uint32_t>(group.branch), *this
 		);
 		return false;
 	}

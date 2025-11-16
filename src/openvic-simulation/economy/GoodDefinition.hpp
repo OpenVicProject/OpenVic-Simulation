@@ -32,15 +32,14 @@ namespace OpenVic {
 	 * ECON-250, ECON-251, ECON-252, ECON-253, ECON-254, ECON-255, ECON-256, ECON-257, ECON-258, ECON-259, ECON-260, ECON-261
 	 */
 	struct GoodDefinition : HasIdentifierAndColour, HasIndex<GoodDefinition> {
-	private:
-		const fixed_point_t PROPERTY(base_price);
-		const bool PROPERTY(is_available_from_start);
-		const bool PROPERTY(is_tradeable);
-		const bool PROPERTY(is_money);
-		const bool PROPERTY(counters_overseas_penalty);
 
 	public:
 		GoodCategory const& category;
+		const fixed_point_t base_price;
+		const bool is_available_from_start;
+		const bool is_tradeable;
+		const bool is_money;
+		const bool counters_overseas_penalty;
 
 		GoodDefinition(
 			std::string_view new_identifier, colour_t new_colour, index_t new_index, GoodCategory const& new_category,

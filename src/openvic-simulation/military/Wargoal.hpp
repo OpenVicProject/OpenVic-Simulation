@@ -58,17 +58,10 @@ namespace OpenVic {
 
 	private:
 		memory::string PROPERTY(war_name);
-		const Timespan PROPERTY(available_length);
-		const Timespan PROPERTY(truce_length);
-		const sprite_t PROPERTY(sprite_index);
 		const bool PROPERTY_CUSTOM_PREFIX(triggered_only, is); // only able to be added via effects or on_actions
 		const bool PROPERTY_CUSTOM_PREFIX(civil_war, is);
-		const bool PROPERTY(constructing); // can be added to existing wars or justified
-		const bool PROPERTY(crisis); // able to be added to crises
 		const bool PROPERTY_CUSTOM_PREFIX(great_war_obligatory, is); // automatically add to great war peace offers/demands
 		const bool PROPERTY_CUSTOM_PREFIX(mutual, is); // attacked and defender share wargoal
-		const bool PROPERTY(all_allowed_states); // take all valid states rather than just one
-		const bool PROPERTY(always); // available without justifying
 		peace_modifiers_t PROPERTY(modifiers);
 		peace_options_t PROPERTY(peace_options);
 		ConditionScript PROPERTY(can_use);
@@ -83,6 +76,14 @@ namespace OpenVic {
 		bool parse_scripts(DefinitionManager const& definition_manager);
 
 	public:
+		const Timespan available_length;
+		const Timespan truce_length;
+		const sprite_t sprite_index;
+		const bool constructing; // can be added to existing wars or justified
+		const bool crisis; // able to be added to crises
+		const bool all_allowed_states; // take all valid states rather than just one
+		const bool always; // available without justifying
+
 		WargoalType(
 			std::string_view new_identifier, std::string_view new_war_name, Timespan new_available_length,
 			Timespan new_truce_length, sprite_t new_sprite_index, bool new_triggered_only, bool new_civil_war,

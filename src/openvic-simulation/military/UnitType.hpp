@@ -49,25 +49,16 @@ namespace OpenVic {
 		};
 
 	private:
-		const unit_branch_t PROPERTY(branch); /* type in defines */
-		const icon_t PROPERTY(icon);
 		memory::string PROPERTY(sprite);
 		const bool PROPERTY_CUSTOM_PREFIX(active, is);
 		unit_category_t PROPERTY(unit_category);
 		const bool PROPERTY_CUSTOM_PREFIX(floating_flag, has);
 
-		const uint32_t PROPERTY(priority);
-		const fixed_point_t PROPERTY(max_strength);
-		const fixed_point_t PROPERTY(default_organisation);
-		const fixed_point_t PROPERTY(maximum_speed);
-		const fixed_point_t PROPERTY(weighted_value);
 
 		memory::string PROPERTY(move_sound);
 		memory::string PROPERTY(select_sound);
 
-		const Timespan PROPERTY(build_time);
 		fixed_point_map_t<GoodDefinition const*> PROPERTY(build_cost);
-		const fixed_point_t PROPERTY(supply_consumption);
 		fixed_point_map_t<GoodDefinition const*> PROPERTY(supply_cost);
 
 		terrain_modifiers_t PROPERTY(terrain_modifiers);
@@ -77,6 +68,16 @@ namespace OpenVic {
 		UnitType(std::string_view new_identifier, unit_branch_t new_branch, unit_type_args_t& unit_args);
 
 	public:
+		const unit_branch_t branch; /* type in defines */
+		const icon_t icon;
+		const uint32_t priority;
+		const fixed_point_t max_strength;
+		const fixed_point_t default_organisation;
+		const fixed_point_t maximum_speed;
+		const fixed_point_t weighted_value;
+		const Timespan build_time;
+		const fixed_point_t supply_consumption;
+
 		UnitType(UnitType&&) = default;
 	};
 
@@ -101,19 +102,20 @@ namespace OpenVic {
 		};
 
 	private:
-		const regiment_allowed_cultures_t PROPERTY(allowed_cultures);
 		memory::string PROPERTY(sprite_override);
 		memory::string PROPERTY(sprite_mount);
 		memory::string PROPERTY(sprite_mount_attach_node);
-		const fixed_point_t PROPERTY(reconnaissance);
-		const fixed_point_t PROPERTY(attack);
-		const fixed_point_t PROPERTY(defence);
-		const fixed_point_t PROPERTY(discipline);
-		const fixed_point_t PROPERTY(support);
-		const fixed_point_t PROPERTY(maneuver);
-		const fixed_point_t PROPERTY(siege);
 
 	public:
+		const regiment_allowed_cultures_t allowed_cultures;
+		const fixed_point_t reconnaissance;
+		const fixed_point_t attack;
+		const fixed_point_t defence;
+		const fixed_point_t discipline;
+		const fixed_point_t support;
+		const fixed_point_t maneuver;
+		const fixed_point_t siege;
+
 		UnitTypeBranched(
 			index_t new_index, std::string_view new_identifier,
 			unit_type_args_t& unit_args, regiment_type_args_t const& regiment_type_args
@@ -136,23 +138,23 @@ namespace OpenVic {
 		};
 
 	private:
-		const icon_t PROPERTY(naval_icon);
 		const bool PROPERTY_CUSTOM_PREFIX(sail, can);
 		const bool PROPERTY_CUSTOM_PREFIX(transport, is);
 		const bool PROPERTY_CUSTOM_PREFIX(capital, is);
-		const fixed_point_t PROPERTY(colonial_points);
 		const bool PROPERTY_CUSTOM_PREFIX(build_overseas, can);
-		const uint32_t PROPERTY(min_port_level);
-		const int32_t PROPERTY(limit_per_port);
-		const fixed_point_t PROPERTY(supply_consumption_score);
-
-		const fixed_point_t PROPERTY(hull);
-		const fixed_point_t PROPERTY(gun_power);
-		const fixed_point_t PROPERTY(fire_range);
-		const fixed_point_t PROPERTY(evasion);
-		const fixed_point_t PROPERTY(torpedo_attack);
-
 	public:
+		const icon_t naval_icon;
+		const fixed_point_t colonial_points;
+		const uint32_t min_port_level;
+		const int32_t limit_per_port;
+		const fixed_point_t supply_consumption_score;
+
+		const fixed_point_t hull;
+		const fixed_point_t gun_power;
+		const fixed_point_t fire_range;
+		const fixed_point_t evasion;
+		const fixed_point_t torpedo_attack;
+
 		UnitTypeBranched(
 			index_t new_index, std::string_view new_identifier,
 			unit_type_args_t& unit_args, ship_type_args_t const& ship_type_args

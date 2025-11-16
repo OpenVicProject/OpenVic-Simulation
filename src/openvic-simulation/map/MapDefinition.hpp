@@ -27,10 +27,11 @@ namespace OpenVic {
 		friend struct MapDefinition;
 
 	private:
-		const uint8_t PROPERTY(size);
 		memory::vector<ivec2_t> PROPERTY(points);
 
 	public:
+		const uint8_t size;
+
 		RiverSegment(uint8_t new_size, memory::vector<ivec2_t>&& new_points);
 		RiverSegment(RiverSegment&&) = default;
 	};

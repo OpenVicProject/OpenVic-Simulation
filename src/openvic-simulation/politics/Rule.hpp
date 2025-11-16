@@ -27,10 +27,11 @@ namespace OpenVic {
 		}
 
 	private:
-		const rule_group_t PROPERTY(group);
 		memory::string PROPERTY(localisation_key);
 
 	public:
+		const rule_group_t group;
+
 		Rule(
 			std::string_view new_identifier, rule_group_t new_group, index_t new_index, std::string_view new_localisation_key
 		);

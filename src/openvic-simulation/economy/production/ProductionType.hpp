@@ -53,11 +53,8 @@ namespace OpenVic {
 		GameRulesManager const& game_rules_manager;
 		const std::optional<Job> PROPERTY(owner);
 		memory::vector<Job> PROPERTY(jobs);
-		const template_type_t PROPERTY(template_type);
-		const pop_size_t PROPERTY(base_workforce_size);
 
 		fixed_point_map_t<GoodDefinition const*> PROPERTY(input_goods);
-		const fixed_point_t PROPERTY(base_output_quantity);
 		memory::vector<bonus_t> PROPERTY(bonuses);
 
 		fixed_point_map_t<GoodDefinition const*> PROPERTY(maintenance_requirements);
@@ -67,6 +64,9 @@ namespace OpenVic {
 
 	public:
 		GoodDefinition const& output_good;
+		const template_type_t template_type;
+		const pop_size_t base_workforce_size;
+		const fixed_point_t base_output_quantity;
 
 		ProductionType(
 			GameRulesManager const& new_game_rules_manager,

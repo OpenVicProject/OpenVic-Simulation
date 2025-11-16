@@ -68,7 +68,7 @@ namespace OpenVic {
 		constexpr fixed_point_t get_modifier_effect_value(
 			ModifierEffect const& effect, bool* effect_found = nullptr
 		) const {
-			if (ModifierEffect::excludes_targets(effect.get_targets(), excluded_targets)) {
+			if (ModifierEffect::excludes_targets(effect.targets, excluded_targets)) {
 				return modifier.get_effect(effect, effect_found) * multiplier;
 			}
 

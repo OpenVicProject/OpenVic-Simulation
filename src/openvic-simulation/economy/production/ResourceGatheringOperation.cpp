@@ -70,7 +70,7 @@ void ResourceGatheringOperation::initialise_rgo_size_multiplier() {
 	}
 
 	const fixed_point_t size_modifier = calculate_size_modifier();
-	const fixed_point_t base_workforce_size = production_type.get_base_workforce_size();
+	const fixed_point_t base_workforce_size = production_type.base_workforce_size;
 	if (size_modifier == 0) {
 		size_multiplier = 0;
 	} else {
@@ -203,7 +203,7 @@ void ResourceGatheringOperation::hire() {
 				employees.emplace_back(pop, pop_size_to_hire);
 				pop.hire(pop_size_to_hire);
 				total_employees_count_cache += pop_size_to_hire;
-				if (!pop_type.get_is_slave()) {
+				if (!pop_type.is_slave) {
 					total_paid_employees_count_cache += pop_size_to_hire;
 				}
 				break;
@@ -324,7 +324,7 @@ fixed_point_t ResourceGatheringOperation::produce() {
 
 	//if province is overseas multiply by (1 + overseas penalty)
 
-	return production_type.get_base_output_quantity()
+	return production_type.base_output_quantity
 		* size_modifier * size_multiplier
 		* throughput_multiplier * throughput_from_workers
 		* output_multiplier * output_from_workers;
@@ -411,7 +411,7 @@ void ResourceGatheringOperation::pay_employees(memory::vector<fixed_point_t>& re
 					return;
 				}
 
-				if (employee_pop_type->get_is_slave()) {
+				if (employee_pop_type->is_slave) {
 					continue;
 				}
 				

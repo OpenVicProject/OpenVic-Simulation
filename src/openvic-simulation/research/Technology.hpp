@@ -53,9 +53,6 @@ namespace OpenVic {
 
 	private:
 		const Date::year_t PROPERTY(year);
-		const fixed_point_t PROPERTY(cost);
-		const area_index_t PROPERTY(index_in_area);
-		const bool PROPERTY(unciv_military);
 		std::optional<unit_variant_t> PROPERTY(unit_variant);
 		unit_set_t PROPERTY(activated_units);
 		building_set_t PROPERTY(activated_buildings);
@@ -65,6 +62,9 @@ namespace OpenVic {
 
 	public:
 		TechnologyArea const& area;
+		const fixed_point_t cost;
+		const area_index_t index_in_area;
+		const bool unciv_military;
 
 		Technology(
 			std::string_view new_identifier,

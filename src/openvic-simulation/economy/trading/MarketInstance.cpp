@@ -62,12 +62,12 @@ void MarketInstance::place_market_sell_order(MarketSellOrder&& market_sell_order
 		return;
 	}
 
-	if (good.get_is_money()) {
+	if (good.is_money) {
 		market_sell_order.call_after_trade(
 			{
 				market_sell_order.good,
 				quantity,
-				quantity * country_defines.get_gold_to_worker_pay_rate() * good.get_base_price()
+				quantity * country_defines.get_gold_to_worker_pay_rate() * good.base_price
 			},
 			reusable_vector
 		);
