@@ -12,8 +12,8 @@ namespace OpenVic {
 
 		enum class trait_type_t { PERSONALITY, BACKGROUND };
 
-	private:
-		const trait_type_t PROPERTY(trait_type);
+	public:
+		const trait_type_t trait_type;
 
 		/*
 		 * Allowed modifiers for leaders:
@@ -28,7 +28,6 @@ namespace OpenVic {
 		 * reliability - decimal, mil gain or loss for associated POPs
 		 */
 
-	public:
 		LeaderTrait(std::string_view new_identifier, trait_type_t new_type, ModifierValue&& new_modifiers);
 		LeaderTrait(LeaderTrait&&) = default;
 

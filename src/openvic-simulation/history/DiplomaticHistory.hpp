@@ -71,7 +71,8 @@ namespace OpenVic {
 	private:
 		CountryDefinition const* PROPERTY(first);
 		CountryDefinition const* PROPERTY(second);
-		const Period PROPERTY(period);
+	public:
+		const Period period;
 	};
 	static_assert(std::is_trivially_move_constructible_v<AllianceHistory>);
 
@@ -83,7 +84,8 @@ namespace OpenVic {
 	private:
 		CountryDefinition const* PROPERTY(receiver);
 		CountryDefinition const* PROPERTY(sender);
-		const Period PROPERTY(period);
+	public:
+		const Period period;
 	};
 	static_assert(std::is_trivially_move_constructible_v<ReparationsHistory>);
 
@@ -97,14 +99,15 @@ namespace OpenVic {
 		};
 
 		SubjectHistory(
-			CountryDefinition const* new_overlord, CountryDefinition const* new_subject, type_t new_type, Period period
+			CountryDefinition const* new_overlord, CountryDefinition const* new_subject, type_t new_subject_type, Period period
 		);
 
 	private:
 		CountryDefinition const* PROPERTY(overlord);
 		CountryDefinition const* PROPERTY(subject);
-		const type_t PROPERTY_CUSTOM_PREFIX(type, get_subject);
-		const Period PROPERTY(period);
+	public:
+		const type_t subject_type;
+		const Period period;
 	};
 	static_assert(std::is_trivially_move_constructible_v<SubjectHistory>);
 

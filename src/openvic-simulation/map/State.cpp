@@ -138,7 +138,7 @@ bool StateManager::add_state_set(
 	utility::forwardable_span<const PopType> pop_type_keys,
 	utility::forwardable_span<const Ideology> ideology_keys
 ) {
-	OV_ERR_FAIL_COND_V_MSG(region.get_is_meta(), false, memory::fmt::format("Cannot use meta region \"{}\" as state template!", region));
+	OV_ERR_FAIL_COND_V_MSG(region.is_meta, false, memory::fmt::format("Cannot use meta region \"{}\" as state template!", region));
 	OV_ERR_FAIL_COND_V_MSG(region.empty(), false, memory::fmt::format("Cannot use empty region \"{}\" as state template!", region));
 
 	memory::vector<memory::vector<ProvinceInstance*>> temp_provinces;
@@ -203,7 +203,7 @@ bool StateManager::generate_states(
 	size_t state_count = 0;
 
 	for (Region const& region : map_definition.get_regions()) {
-		if (!region.get_is_meta()) {
+		if (!region.is_meta) {
 			if (add_state_set(map_instance, region, strata_keys, pop_type_keys, ideology_keys)) {
 				state_count += state_sets.back().get_state_count();
 			} else {

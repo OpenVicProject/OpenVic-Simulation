@@ -15,10 +15,11 @@ namespace OpenVic {
 		memory::vector<Ideology const*> PROPERTY(ideologies);
 		const bool PROPERTY_CUSTOM_PREFIX(elections, holds);
 		const bool PROPERTY_CUSTOM_PREFIX(appoint_ruling_party, can);
-		const Timespan PROPERTY(term_duration);
 		memory::string PROPERTY_CUSTOM_NAME(flag_type_identifier, get_flag_type);
 
 	public:
+		const Timespan term_duration;
+
 		GovernmentType(
 			index_t new_index,
 			std::string_view new_identifier,

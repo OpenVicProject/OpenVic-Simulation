@@ -28,12 +28,10 @@ namespace OpenVic {
 	// Reform group (i.e. slavery)
 	struct ReformGroup : HasIndex<ReformGroup>, BaseIssueGroup {
 
-	private:
-		const bool PROPERTY(is_ordered); // next_step_only
-		const bool PROPERTY(is_administrative);
-
 	public:
 		ReformType const& reform_type;
+		const bool is_ordered; // next_step_only
+		const bool is_administrative;
 
 		ReformGroup(
 			std::string_view new_identifier,
@@ -59,9 +57,6 @@ namespace OpenVic {
 		using tech_cost_t = uint32_t;
 
 	private:
-		const size_t PROPERTY(ordinal); // assigned by the parser to allow policy sorting
-		const fixed_point_t PROPERTY(administrative_multiplier);
-		const tech_cost_t PROPERTY(technology_cost);
 		ConditionScript PROPERTY(allow);
 		ConditionScript PROPERTY(on_execute_trigger);
 		EffectScript PROPERTY(on_execute_effect);
@@ -69,6 +64,10 @@ namespace OpenVic {
 		bool parse_scripts(DefinitionManager const& definition_manager);
 
 	public:
+		const size_t ordinal; // assigned by the parser to allow policy sorting
+		const fixed_point_t administrative_multiplier;
+		const tech_cost_t technology_cost;
+
 		Reform(
 			index_t new_index, std::string_view new_identifier,
 			colour_t new_colour, ModifierValue&& new_values, ReformGroup const& new_reform_group,

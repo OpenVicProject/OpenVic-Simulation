@@ -12,7 +12,6 @@ namespace OpenVic {
 
 	struct UnitInstance {
 	private:
-		const unique_id_t PROPERTY(unique_id);
 		memory::string PROPERTY(name);
 		fixed_point_t PROPERTY(organisation);
 		fixed_point_t PROPERTY(max_organisation);
@@ -26,16 +25,17 @@ namespace OpenVic {
 		);
 
 	public:
+		const unique_id_t unique_id;
 		UnitType const& unit_type;
 
 		UnitInstance(UnitInstance&&) = default;
 
 		inline constexpr fixed_point_t get_max_strength() const {
-			return unit_type.get_max_strength();
+			return unit_type.max_strength;
 		}
 
 		inline constexpr unit_branch_t get_branch() const {
-			return unit_type.get_branch();
+			return unit_type.branch;
 		}
 
 		void set_name(std::string_view new_name);

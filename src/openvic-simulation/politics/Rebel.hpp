@@ -39,13 +39,10 @@ namespace OpenVic {
 		};
 
 	private:
-		const icon_t PROPERTY(icon);
-		const area_t PROPERTY(area);
 		const bool PROPERTY_CUSTOM_PREFIX(break_alliance_on_win, will);
 		government_map_t PROPERTY(desired_governments); //government
 		const defection_t PROPERTY_CUSTOM_NAME(defection, get_defection_type);
 		const independence_t PROPERTY_CUSTOM_NAME(independence, get_independence_type);
-		const uint16_t PROPERTY(defect_delay);
 		Ideology const* PROPERTY(ideology);
 		const bool PROPERTY_CUSTOM_PREFIX(allow_all_cultures, will);
 		const bool PROPERTY_CUSTOM_PREFIX(allow_all_culture_groups, will);
@@ -56,7 +53,6 @@ namespace OpenVic {
 		const bool PROPERTY_CUSTOM_PREFIX(general, can_have);
 		const bool PROPERTY_CUSTOM_PREFIX(smart, is);
 		const bool PROPERTY_CUSTOM_NAME(unit_transfer, will_transfer_units);
-		const fixed_point_t PROPERTY(occupation_mult);
 		ConditionalWeightFactorMul PROPERTY(will_rise);
 		ConditionalWeightFactorMul PROPERTY(spawn_chance);
 		ConditionalWeightFactorMul PROPERTY(movement_evaluation);
@@ -68,6 +64,11 @@ namespace OpenVic {
 		bool parse_scripts(DefinitionManager const& definition_manager);
 
 	public:
+		const icon_t icon;
+		const area_t area;
+		const uint16_t defect_delay;
+		const fixed_point_t occupation_mult;
+
 		RebelType(
 			index_t new_index, std::string_view new_identifier,
 			RebelType::icon_t icon, RebelType::area_t area, bool break_alliance_on_win,

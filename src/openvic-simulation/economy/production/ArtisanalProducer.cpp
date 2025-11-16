@@ -56,7 +56,7 @@ void ArtisanalProducer::artisan_tick_handler::calculate_inputs(fixed_point_map_t
 	//inputs_bought_fraction uses base_desired_quantity as population size is cancelled in the production and input calculations.
 	const pop_size_t pop_size = pop.get_size();
 	fixed_point_t inputs_bought_numerator = pop_size,
-		inputs_bought_denominator = production_type.get_base_workforce_size(),
+		inputs_bought_denominator = production_type.base_workforce_size,
 		inputs_bought_fraction_v = inputs_bought_numerator / inputs_bought_denominator;
 
 	distinct_goods_to_buy = 0;
@@ -65,7 +65,7 @@ void ArtisanalProducer::artisan_tick_handler::calculate_inputs(fixed_point_map_t
 		GoodDefinition const& input_good = *it.key();
 		const fixed_point_t base_desired_quantity = it.value();
 		const ptrdiff_t i = it - input_goods.begin();
-		const fixed_point_t desired_quantity = demand_per_input[i] = base_desired_quantity * pop_size / production_type.get_base_workforce_size();
+		const fixed_point_t desired_quantity = demand_per_input[i] = base_desired_quantity * pop_size / production_type.base_workforce_size;
 		if (desired_quantity == 0) {
 			continue;
 		}
@@ -105,7 +105,7 @@ void ArtisanalProducer::artisan_tick_handler::produce(
 	fixed_point_t& current_production,
 	fixed_point_map_t<GoodDefinition const*>& stockpile
 ) {
-	fixed_point_t produce_left_to_sell = current_production = production_type.get_base_output_quantity() * inputs_bought_fraction;
+	fixed_point_t produce_left_to_sell = current_production = production_type.base_output_quantity * inputs_bought_fraction;
 
 	costs_of_production = 0;
 	if (current_production > 0) {
@@ -263,7 +263,7 @@ void ArtisanalProducer::artisan_tick_handler::allocate_money_for_inputs(
 			);
 			max_quantity_to_buy_per_good[&input_good] = max_quantity_to_buy;
 			pop.allocate_cash_for_artisanal_spending(money_to_spend);
-			const size_t index_in_all_goods = input_good.get_index();
+			const size_t index_in_all_goods = input_good.index;
 			pop_max_quantity_to_buy_per_good[index_in_all_goods] += max_quantity_to_buy;
 			pop_money_to_spend_per_good[index_in_all_goods] += money_to_spend;
 			debug_cash_left -= money_to_spend;
@@ -303,7 +303,7 @@ void ArtisanalProducer::artisan_tick(
 		//TODO sell stockpile no longer used
 		stockpile.clear();
 		for (auto const& [input_good, base_demand] : production_type.get_input_goods()) {
-			stockpile[input_good] = base_demand * pop.get_size() / production_type.get_base_workforce_size();
+			stockpile[input_good] = base_demand * pop.get_size() / production_type.base_workforce_size;
 		}
 	}
 
@@ -368,7 +368,7 @@ std::optional<fixed_point_t> ArtisanalProducer::estimate_production_type_score(
 	ProvinceInstance& location,
 	const fixed_point_t max_cost_multiplier
 ) {
-	if (production_type.get_template_type() != ProductionType::template_type_t::ARTISAN) {
+	if (production_type.template_type != ProductionType::template_type_t::ARTISAN) {
 		return std::nullopt;
 	}
 
@@ -387,11 +387,11 @@ std::optional<fixed_point_t> ArtisanalProducer::estimate_production_type_score(
 	}
 	estimated_costs *= max_cost_multiplier;
 
-	const fixed_point_t estimated_revenue = production_type.get_base_output_quantity() * output_good.get_price();
+	const fixed_point_t estimated_revenue = production_type.base_output_quantity * output_good.get_price();
 	return calculate_production_type_score(
 		estimated_revenue,
 		estimated_costs,
-		production_type.get_base_workforce_size()
+		production_type.base_workforce_size
 	);
 }
 

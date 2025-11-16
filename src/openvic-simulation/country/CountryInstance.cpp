@@ -58,7 +58,7 @@ CountryInstance::CountryInstance(
 	SharedCountryValues* new_shared_country_values,
 	CountryInstanceDeps const* country_instance_deps
 ) : FlagStrings { "country" },
-	HasIndex { new_country_definition->get_index() },
+	HasIndex { new_country_definition->index },
 	PopsAggregate {
 		country_instance_deps->stratas,
 		country_instance_deps->pop_types,
@@ -593,11 +593,11 @@ bool CountryInstance::add_reform(Reform const& new_reform) {
 	Reform const*& reform = reforms.at(reform_group);
 
 	if (reform != &new_reform) {
-		if (reform_group.get_is_administrative()) {
+		if (reform_group.is_administrative) {
 			if (reform != nullptr) {
-				total_administrative_multiplier -= reform->get_administrative_multiplier();
+				total_administrative_multiplier -= reform->administrative_multiplier;
 			}
-			total_administrative_multiplier += new_reform.get_administrative_multiplier();
+			total_administrative_multiplier += new_reform.administrative_multiplier;
 		}
 
 		reform = &new_reform;
@@ -654,7 +654,7 @@ void CountryInstance::change_war_exhaustion(fixed_point_t delta) {
 bool CountryInstance::add_unit_instance_group(UnitInstanceGroup& group) {
 	using enum unit_branch_t;
 
-	switch (group.get_branch()) {
+	switch (group.branch) {
 	case LAND:
 		armies.push_back(static_cast<ArmyInstance*>(&group));
 		return true;
@@ -664,7 +664,7 @@ bool CountryInstance::add_unit_instance_group(UnitInstanceGroup& group) {
 	default:
 		spdlog::error_s(
 			"Trying to add unit group \"{}\" with invalid branch {} to country {}",
-			group.get_name(), static_cast<uint32_t>(group.get_branch()), *this
+			group.get_name(), static_cast<uint32_t>(group.branch), *this
 		);
 		return false;
 	}
@@ -691,7 +691,7 @@ bool CountryInstance::remove_unit_instance_group(UnitInstanceGroup const& group)
 
 	using enum unit_branch_t;
 
-	switch (group.get_branch()) {
+	switch (group.branch) {
 	case LAND:
 		return remove_from_vector(armies);
 	case NAVAL:
@@ -699,7 +699,7 @@ bool CountryInstance::remove_unit_instance_group(UnitInstanceGroup const& group)
 	default:
 		spdlog::error_s(
 			"Trying to remove unit group \"{}\" with invalid branch {} from country {}",
-			group.get_name(), static_cast<uint32_t>(group.get_branch()), *this
+			group.get_name(), static_cast<uint32_t>(group.branch), *this
 		);
 		return false;
 	}
@@ -708,7 +708,7 @@ bool CountryInstance::remove_unit_instance_group(UnitInstanceGroup const& group)
 bool CountryInstance::add_leader(LeaderInstance& leader) {
 	using enum unit_branch_t;
 
-	switch (leader.get_branch()) {
+	switch (leader.branch) {
 	case LAND:
 		generals.push_back(&leader);
 		return true;
@@ -718,7 +718,7 @@ bool CountryInstance::add_leader(LeaderInstance& leader) {
 	default:
 		spdlog::error_s(
 			"Trying to add leader \"{}\" with invalid branch {} to country {}",
-			leader.get_name(), static_cast<uint32_t>(leader.get_branch()), *this
+			leader.get_name(), static_cast<uint32_t>(leader.branch), *this
 		);
 		return false;
 	}
@@ -729,7 +729,7 @@ bool CountryInstance::remove_leader(LeaderInstance const& leader) {
 
 	memory::vector<LeaderInstance*>* leaders;
 
-	switch (leader.get_branch()) {
+	switch (leader.branch) {
 	case LAND:
 		leaders = &generals;
 		break;
@@ -739,7 +739,7 @@ bool CountryInstance::remove_leader(LeaderInstance const& leader) {
 	default:
 		spdlog::error_s(
 			"Trying to remove leader \"{}\" with invalid branch {} from country {}",
-			leader.get_name(), static_cast<uint32_t>(leader.get_branch()), *this
+			leader.get_name(), static_cast<uint32_t>(leader.branch), *this
 		);
 		return false;
 	}
@@ -752,7 +752,7 @@ bool CountryInstance::remove_leader(LeaderInstance const& leader) {
 	} else {
 		spdlog::error_s(
 			"Trying to remove non-existent {} \"{}\" from country {}",
-			 get_branched_leader_name(leader.get_branch()), leader.get_name(), *this
+			 get_branched_leader_name(leader.branch), leader.get_name(), *this
 		);
 		return false;
 	}
@@ -804,13 +804,13 @@ bool CountryInstance::modify_unit_type_unlock(UnitTypeBranched<Branch> const& un
 
 					allowed_regiment_cultures = RegimentType::allowed_cultures_get_most_permissive(
 						allowed_regiment_cultures,
-						regiment_type.get_allowed_cultures()
+						regiment_type.allowed_cultures
 					);
 				}
 			} else {
 				allowed_regiment_cultures = RegimentType::allowed_cultures_get_most_permissive(
 					allowed_regiment_cultures,
-					unit_type.get_allowed_cultures()
+					unit_type.allowed_cultures
 				);
 			}
 		}
@@ -825,7 +825,7 @@ template bool CountryInstance::modify_unit_type_unlock(UnitTypeBranched<unit_bra
 bool CountryInstance::modify_unit_type_unlock(UnitType const& unit_type, technology_unlock_level_t unlock_level_change) {
 	using enum unit_branch_t;
 
-	switch (unit_type.get_branch()) {
+	switch (unit_type.branch) {
 	case LAND:
 		return modify_unit_type_unlock(static_cast<UnitTypeBranched<LAND> const&>(unit_type), unlock_level_change);
 	case NAVAL:
@@ -833,7 +833,7 @@ bool CountryInstance::modify_unit_type_unlock(UnitType const& unit_type, technol
 	default:
 		spdlog::error_s(
 			"Attempted to change unlock level for unit type \"{}\" with invalid branch {} for country {}",
-			unit_type, static_cast<uint32_t>(unit_type.get_branch()), *this
+			unit_type, static_cast<uint32_t>(unit_type.branch), *this
 		);
 		return false;
 	}
@@ -846,7 +846,7 @@ bool CountryInstance::unlock_unit_type(UnitType const& unit_type) {
 bool CountryInstance::is_unit_type_unlocked(UnitType const& unit_type) const {
 	using enum unit_branch_t;
 
-	switch (unit_type.get_branch()) {
+	switch (unit_type.branch) {
 	case LAND:
 		return regiment_type_unlock_levels.at(static_cast<UnitTypeBranched<LAND> const&>(unit_type)) > 0;
 	case NAVAL:
@@ -854,7 +854,7 @@ bool CountryInstance::is_unit_type_unlocked(UnitType const& unit_type) const {
 	default:
 		spdlog::error_s(
 			"Attempted to check if unit type \"{}\" with invalid branch {} is unlocked for country {}",
-			unit_type, static_cast<uint32_t>(unit_type.get_branch()), *this
+			unit_type, static_cast<uint32_t>(unit_type.branch), *this
 		);
 		return false;
 	}
@@ -1133,7 +1133,7 @@ bool CountryInstance::is_primary_or_accepted_culture(Culture const& culture) con
 
 fixed_point_t CountryInstance::calculate_research_cost(Technology const& technology) const {
 	// TODO - what if research bonus is -100%? Divide by 0 -> infinite cost?
-	return technology.get_cost() / (fixed_point_t::_1 + get_modifier_effect_value(
+	return technology.cost / (fixed_point_t::_1 + get_modifier_effect_value(
 		*modifier_effect_cache.get_research_bonus_effects(technology.area.folder)
 	));
 }
@@ -1149,7 +1149,7 @@ bool CountryInstance::can_research_tech(Technology const& technology, const Date
 		return false;
 	}
 
-	const Technology::area_index_t index_in_area = technology.get_index_in_area();
+	const Technology::area_index_t index_in_area = technology.index_in_area;
 
 	return index_in_area == 0 || is_technology_unlocked(*technology.area.get_technologies()[index_in_area - 1]);
 }
@@ -1353,7 +1353,7 @@ void CountryInstance::_update_budget() {
 		IndexedFlatMap<PopType, pop_size_t> const& state_population_by_type = state.get_population_by_type();
 
 		for (auto const& [pop_type, size] : state_population_by_type) {
-			if (pop_type.get_is_administrator()) {
+			if (pop_type.is_administrator) {
 				administrators += size;
 			}
 		}
@@ -1425,7 +1425,7 @@ fixed_point_t CountryInstance::calculate_unemployment_subsidies_base(PopType con
 		* social_income_variant_base_by_pop_type.at(pop_type).get_untracked();
 }
 fixed_point_t CountryInstance::calculate_minimum_wage_base(PopType const& pop_type) {
-	if (pop_type.get_is_slave()) {
+	if (pop_type.is_slave) {
 		return 0;
 	}
 	return get_modifier_effect_value(*modifier_effect_cache.get_minimum_wage())
@@ -1494,19 +1494,19 @@ void CountryInstance::_update_population() {
 	leadership_points_from_pop_types.clear();
 
 	for (auto const& [pop_type, pop_size] : get_population_by_type()) {
-		if (pop_type.get_research_leadership_optimum() > 0 && pop_size > 0) {
+		if (pop_type.research_leadership_optimum > 0 && pop_size > 0) {
 			const fixed_point_t factor = std::min(
-				pop_size / (get_total_population() * pop_type.get_research_leadership_optimum()), fixed_point_t::_1
+				pop_size / (get_total_population() * pop_type.research_leadership_optimum), fixed_point_t::_1
 			);
 
-			if (pop_type.get_research_points() != 0) {
-				const fixed_point_t research_points = pop_type.get_research_points() * factor;
+			if (pop_type.research_points != 0) {
+				const fixed_point_t research_points = pop_type.research_points * factor;
 				research_points_from_pop_types[&pop_type] = research_points;
 				daily_research_points += research_points;
 			}
 
-			if (pop_type.get_leadership_points() != 0) {
-				const fixed_point_t leadership_points = pop_type.get_leadership_points() * factor;
+			if (pop_type.leadership_points != 0) {
+				const fixed_point_t leadership_points = pop_type.leadership_points * factor;
 				leadership_points_from_pop_types[&pop_type] = leadership_points;
 				monthly_leadership_points = leadership_points;
 			}
@@ -1555,8 +1555,8 @@ void CountryInstance::_update_military() {
 	for (RegimentType const& regiment_type : unit_type_manager.get_regiment_types()) {
 		// TODO - apply country/tech modifiers to regiment stats
 		sum_of_regiment_type_stats += (
-			regiment_type.get_attack() + regiment_type.get_defence() /*+ land_attack_modifier + land_defense_modifier*/
-		) * regiment_type.get_discipline();
+			regiment_type.attack + regiment_type.defence /*+ land_attack_modifier + land_defense_modifier*/
+		) * regiment_type.discipline;
 	}
 
 	military_power_from_land.set(
@@ -1577,8 +1577,8 @@ void CountryInstance::_update_military() {
 
 				// TODO - include gun power and hull modifiers + naval attack and defense modifiers
 
-				military_power_from_sea_running_total += (ship_type.get_gun_power() /*+ naval_attack_modifier*/)
-					* (ship_type.get_hull() /* + naval_defense_modifier*/);
+				military_power_from_sea_running_total += (ship_type.gun_power /*+ naval_attack_modifier*/)
+					* (ship_type.hull /* + naval_defense_modifier*/);
 			}
 		}
 	}
@@ -1892,7 +1892,7 @@ void CountryInstance::after_buy(void* actor, BuyResult const& buy_result) {
 	}
 
 	CountryInstance& country = *static_cast<CountryInstance*>(actor);
-	good_data_t& good_data = country.goods_data.at_index(buy_result.good_definition.get_index());
+	good_data_t& good_data = country.goods_data.at_index(buy_result.good_definition.index);
 	const fixed_point_t money_spent = buy_result.money_spent_total;
 	country.cash_stockpile -= money_spent;
 	country.actual_national_stockpile_spending += money_spent;
@@ -1910,7 +1910,7 @@ void CountryInstance::after_sell(void* actor, SellResult const& sell_result, mem
 	}
 
 	CountryInstance& country = *static_cast<CountryInstance*>(actor);
-	good_data_t& good_data = country.goods_data.at_index(sell_result.good_definition.get_index());
+	good_data_t& good_data = country.goods_data.at_index(sell_result.good_definition.index);
 	const fixed_point_t money_gained = sell_result.money_gained;
 	country.cash_stockpile += money_gained;
 	country.actual_national_stockpile_income += money_gained;
@@ -2042,7 +2042,7 @@ void CountryInstance::manage_national_stockpile(
 
 	for (auto const& [good_instance, good_data] : goods_data) {
 		good_data.clear_daily_recorded_data();
-		const size_t index = good_instance.get_index();
+		const size_t index = good_instance.index;
 		if (good_data.is_selling) {
 			const fixed_point_t quantity_to_sell = good_data.stockpile_amount - good_data.stockpile_cutoff;
 			if (quantity_to_sell <= 0) {
@@ -2197,12 +2197,12 @@ void CountryInstance::country_tick_after_map(const Date today) {
 	fixed_point_t total_gold_production = 0;
 	for (auto const& [good_instance, data] : goods_data) {
 		GoodDefinition const& good_definition = good_instance.good_definition;
-		if (!good_definition.get_is_money()) {
+		if (!good_definition.is_money) {
 			continue;
 		}
 
 		for (auto const& [production_type, produced_quantity] : data.production_per_production_type) {
-			if (production_type->get_template_type() != ProductionType::template_type_t::RGO) {
+			if (production_type->template_type != ProductionType::template_type_t::RGO) {
 				continue;
 			}
 			total_gold_production += produced_quantity;
@@ -2319,7 +2319,7 @@ void CountryInstance::report_input_consumption(ProductionType const& production_
 	good_data.input_consumption_per_production_type[&production_type] += quantity;
 }
 void CountryInstance::report_input_demand(ProductionType const& production_type, GoodDefinition const& good, const fixed_point_t quantity) {
-	if (production_type.get_template_type() == ProductionType::template_type_t::ARTISAN) {
+	if (production_type.template_type == ProductionType::template_type_t::ARTISAN) {
 		switch (game_rules_manager.get_artisanal_input_demand_category()) {
 			case demand_category::FactoryNeeds: break;
 			case demand_category::PopNeeds: {
@@ -2435,10 +2435,10 @@ CountryInstance::good_data_t const& CountryInstance::get_good_data(GoodInstance 
 	return goods_data.at(good_instance);
 }
 CountryInstance::good_data_t& CountryInstance::get_good_data(GoodDefinition const& good_definition) {
-	return goods_data.at_index(good_definition.get_index());
+	return goods_data.at_index(good_definition.index);
 }
 CountryInstance::good_data_t const& CountryInstance::get_good_data(GoodDefinition const& good_definition) const {
-	return goods_data.at_index(good_definition.get_index());
+	return goods_data.at_index(good_definition.index);
 }
 
 template struct fmt::formatter<OpenVic::CountryInstance>;

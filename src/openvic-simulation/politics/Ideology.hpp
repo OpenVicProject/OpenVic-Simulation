@@ -21,8 +21,6 @@ namespace OpenVic {
 
 	private:
 		const bool PROPERTY_CUSTOM_PREFIX(uncivilised, is);
-		const bool PROPERTY(can_reduce_consciousness);
-		const bool PROPERTY(can_reduce_militancy);
 		const std::optional<Date> PROPERTY(spawn_date);
 		ConditionalWeightBase PROPERTY(add_political_reform);
 		ConditionalWeightBase PROPERTY(remove_political_reform);
@@ -36,6 +34,9 @@ namespace OpenVic {
 		bool parse_scripts(DefinitionManager const& definition_manager);
 
 	public:
+		const bool can_reduce_consciousness;
+		const bool can_reduce_militancy;
+
 		IdeologyGroup const& group;
 
 		Ideology(

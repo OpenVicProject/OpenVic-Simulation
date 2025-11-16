@@ -97,13 +97,14 @@ namespace OpenVic {
 
 	private:
 		const bool PROPERTY_CUSTOM_PREFIX(no_effect, has);
-		const format_t PROPERTY(format);
-		const target_t PROPERTY(targets);
 		memory::string PROPERTY(localisation_key);
 
 		// TODO - format/precision, e.g. 80% vs 0.8 vs 0.800, 2 vs 2.0 vs 200%
 
 	public:
+		const format_t format;
+		const target_t targets;
+
 		ModifierEffect(
 			std::string_view new_identifier, format_t new_format, target_t new_targets,
 			std::string_view new_localisation_key, bool new_has_no_effect

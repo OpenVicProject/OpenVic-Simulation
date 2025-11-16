@@ -53,7 +53,7 @@ Pop::Pop(
   : PopBase { pop_base },
 	market_instance { pop_deps.market_instance },
 	artisanal_producer_optional {
-		type->get_is_artisan()
+		type->is_artisan
 			? std::optional<ArtisanalProducer> {
 				pop_deps.artisanal_producer_deps
 			}
@@ -64,7 +64,7 @@ Pop::Pop(
 	}
 
 fixed_point_t Pop::get_unemployment_fraction() const {
-	if (!type->get_can_be_unemployed()) {
+	if (!type->can_be_unemployed) {
 		return 0;
 	}
 	return fixed_point_t::parse(get_unemployed()) / size;
@@ -240,7 +240,7 @@ void Pop::update_gamestate(
 	consciousness = std::clamp(consciousness, MIN_CONSCIOUSNESS, MAX_CONSCIOUSNESS);
 	literacy = std::clamp(literacy, MIN_LITERACY, MAX_LITERACY);
 
-	if (type->get_can_be_recruited()) {
+	if (type->can_be_recruited) {
 		MilitaryDefines const& military_defines = define_manager.get_military_defines();
 
 		if (
@@ -444,7 +444,7 @@ void Pop::allocate_for_needs(
 		GoodDefinition const& good_definition = *good_definition_ptr;
 		const ptrdiff_t i = it - scaled_needs.begin();
 		const fixed_point_t money_to_spend = money_to_spend_per_good_draft[i];
-		money_to_spend_per_good[good_definition.get_index()] += money_to_spend;
+		money_to_spend_per_good[good_definition.index] += money_to_spend;
 		cash_left_to_spend -= money_to_spend;
 	}
 
@@ -571,7 +571,7 @@ void Pop::pop_tick_without_cleanup(
 				if (OV_likely(max_quantity_to_buy > 0)) { \
 					need_category##_needs_price_inverse_sum += market_instance.get_good_instance(good_definition).get_price_inverse(); \
 					need_category##_needs[good_definition_ptr] += max_quantity_to_buy; \
-					max_quantity_to_buy_per_good[good_definition.get_index()] += max_quantity_to_buy; \
+					max_quantity_to_buy_per_good[good_definition.index] += max_quantity_to_buy; \
 				} \
 			} \
 		}

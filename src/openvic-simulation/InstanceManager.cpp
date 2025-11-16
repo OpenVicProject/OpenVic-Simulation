@@ -231,13 +231,13 @@ bool InstanceManager::load_bookmark(Bookmark const* new_bookmark) {
 
 	bookmark = new_bookmark;
 
-	SPDLOG_INFO("Loading bookmark {} with start date {}", bookmark->get_name(), bookmark->get_date());
+	SPDLOG_INFO("Loading bookmark {} with start date {}", bookmark->get_name(), bookmark->date);
 
-	if (!definition_manager.get_define_manager().in_game_period(bookmark->get_date())) {
-		spdlog::warn_s("Bookmark date {} is not in the game's time period!", bookmark->get_date());
+	if (!definition_manager.get_define_manager().in_game_period(bookmark->date)) {
+		spdlog::warn_s("Bookmark date {} is not in the game's time period!", bookmark->date);
 	}
 
-	today = bookmark->get_date();
+	today = bookmark->date;
 
 	politics_instance_manager.setup_starting_ideologies();
 	bool ret = map_instance.apply_history_to_provinces(

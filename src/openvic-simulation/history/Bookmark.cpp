@@ -66,8 +66,8 @@ bool BookmarkManager::load_bookmark_file(fixed_point_t map_height, ast::NodeCPtr
 Date BookmarkManager::get_last_bookmark_date() const {
 	Date ret {};
 	for (Bookmark const& bookmark : get_bookmarks()) {
-		if (bookmark.get_date() > ret) {
-			ret = bookmark.get_date();
+		if (bookmark.date > ret) {
+			ret = bookmark.date;
 		}
 	}
 	return ret;

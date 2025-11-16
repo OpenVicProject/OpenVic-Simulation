@@ -97,7 +97,7 @@ void ModifierValue::apply_exclude_targets(ModifierEffect::target_t excluded_targ
 	erase_if(
 		values,
 		[excluded_targets](effect_map_t::value_type const& value) -> bool {
-			return !ModifierEffect::excludes_targets(value.first->get_targets(), excluded_targets);
+			return !ModifierEffect::excludes_targets(value.first->targets, excluded_targets);
 		}
 	);
 }
@@ -113,7 +113,7 @@ void ModifierValue::multiply_add_exclude_targets(
 		// We could test that excluded_targets != ALL_TARGETS, but in practice it's always
 		// called with an explcit/hardcoded value and so won't ever exclude everything.
 		for (effect_map_t::value_type const& value : other.values) {
-			if (ModifierEffect::excludes_targets(value.first->get_targets(), excluded_targets)) {
+			if (ModifierEffect::excludes_targets(value.first->targets, excluded_targets)) {
 				values[value.first] += value.second * multiplier;
 			}
 		}

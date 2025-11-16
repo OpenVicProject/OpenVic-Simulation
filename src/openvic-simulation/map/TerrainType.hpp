@@ -9,15 +9,16 @@
 namespace OpenVic {
 	// Using HasColour rather than HasIdentifierAndColour to avoid needing virtual inheritance
 	// (extending Modifier is more useful than extending HasIdentifierAndColour).
-	struct TerrainType : HasIndex<TerrainType>, Modifier, HasColour {
+	struct TerrainType : HasIndex<TerrainType>, Modifier, public HasColour {
 	private:
 		ModifierValue PROPERTY(modifier);
 		fixed_point_t PROPERTY(movement_cost);
 		fixed_point_t PROPERTY(defence_bonus);
 		fixed_point_t PROPERTY(combat_width_percentage_change);
-		const bool PROPERTY(is_water);
 
 	public:
+		const bool is_water;
+
 		TerrainType(
 			index_t new_index,
 			std::string_view new_identifier,
@@ -36,11 +37,11 @@ namespace OpenVic {
 
 	private:
 		memory::vector<index_t> PROPERTY(terrain_indices);
-		const index_t PROPERTY(priority);
-		const bool PROPERTY(has_texture);
 
 	public:
 		TerrainType const& type;
+		const index_t priority;
+		const bool has_texture;
 
 		TerrainTypeMapping(
 			std::string_view new_identifier,

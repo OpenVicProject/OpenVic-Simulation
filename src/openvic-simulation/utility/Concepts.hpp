@@ -106,8 +106,8 @@ namespace OpenVic {
 	};
 
 	template<typename T>
-	concept has_get_index = requires(T const& key) {
-		{ key.get_index() } -> std::convertible_to<size_t>;
+	concept has_index = requires(T const& key) {
+		{ key.index } -> std::convertible_to<size_t>;
 	};
 
 	template<typename Case>

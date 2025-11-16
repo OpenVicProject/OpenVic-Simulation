@@ -14,9 +14,9 @@ static constexpr size_t MONTHS_OF_PRICE_HISTORY = 36;
 GoodMarket::GoodMarket(GameRulesManager const& new_game_rules_manager, GoodDefinition const& new_good_definition)
   : game_rules_manager { new_game_rules_manager },
 	good_definition { new_good_definition },
-	price { new_good_definition.get_base_price() },
-	is_available { new_good_definition.get_is_available_from_start() },
-	price_history { MONTHS_OF_PRICE_HISTORY, new_good_definition.get_base_price() }
+	price { new_good_definition.base_price },
+	is_available { new_good_definition.is_available_from_start },
+	price_history { MONTHS_OF_PRICE_HISTORY, new_good_definition.base_price }
 	{
 		on_use_exponential_price_changes_changed();
 		update_next_price_limits();
@@ -28,11 +28,11 @@ void GoodMarket::on_use_exponential_price_changes_changed() {
 		absolute_minimum_price = fixed_point_t::epsilon << exponential_price_change_shift;
 	} else {
 		absolute_maximum_price = std::min(
-			good_definition.get_base_price() * 5,
+			good_definition.base_price * 5,
 			fixed_point_t::usable_max
 		);
 		absolute_minimum_price = std::max(
-			good_definition.get_base_price() * 22 / 100,
+			good_definition.base_price * 22 / 100,
 			fixed_point_t::epsilon
 		);
 	}

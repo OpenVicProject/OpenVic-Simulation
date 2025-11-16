@@ -103,7 +103,7 @@ bool IssueManager::add_reform(
 		);
 	}
 
-	if (administrative_multiplier != 0 && !reform_group.get_is_administrative()) {
+	if (administrative_multiplier != 0 && !reform_group.is_administrative) {
 		spdlog::warn_s(
 			"Non-zero administrative multiplier {} found in reform {} belonging to non-administrative group {}!",
 			administrative_multiplier, identifier, reform_group

@@ -14,10 +14,11 @@ namespace OpenVic {
 	private:
 		memory::string PROPERTY(name);
 		memory::string PROPERTY(description);
-		const Date PROPERTY(date);
-		const fvec2_t PROPERTY(initial_camera_position);
 
 	public:
+		const Date date;
+		const fvec2_t initial_camera_position;
+
 		Bookmark(
 			index_t new_index,
 			std::string_view new_name,
