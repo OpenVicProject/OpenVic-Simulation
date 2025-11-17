@@ -89,7 +89,6 @@ namespace OpenVic {
 		MarketInstance& market_instance;
 		std::optional<ArtisanalProducer> artisanal_producer_optional;
 		fixed_point_t cash_allocated_for_artisanal_spending = 0;
-		fixed_point_t artisanal_produce_left_to_sell = 0;
 		pop_size_t employed = 0;
 
 		ProvinceInstance* PROPERTY_PTR(location, nullptr);
@@ -182,6 +181,10 @@ namespace OpenVic {
 			> reusable_vectors
 		);
 		void pay_income_tax(fixed_point_t& income);
+
+		template<bool IsTaxable>
+		void add_artisanal_revenue(const fixed_point_t revenue);
+
 		static void after_buy(void* actor, BuyResult const& buy_result);
 		//matching GoodMarketSellOrder::callback_t
 		static void after_sell(void* actor, SellResult const& sell_result, memory::vector<fixed_point_t>& reusable_vector);
@@ -203,7 +206,6 @@ namespace OpenVic {
 			const fixed_point_t pop_size_per_regiment_multiplier
 		);
 
-		void add_artisanal_revenue(const fixed_point_t revenue);
 		#define DECLARE_POP_MONEY_STORE_FUNCTIONS(name) \
 			void add_##name(fixed_point_t amount);
 
@@ -222,7 +224,6 @@ namespace OpenVic {
 			> reusable_vectors
 		);
 		void allocate_cash_for_artisanal_spending(const fixed_point_t money_to_spend);
-		void report_artisanal_produce(const fixed_point_t quantity);
 		void hire(pop_size_t count);
 	};
 }

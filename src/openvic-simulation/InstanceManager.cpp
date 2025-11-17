@@ -25,6 +25,7 @@ InstanceManager::InstanceManager(
 	},
 	artisanal_producer_deps {
 		new_definition_manager.get_define_manager().get_economy_defines(),
+		new_definition_manager.get_economy_manager().get_good_definition_manager().get_good_definitions(),
 		new_definition_manager.get_modifier_manager().get_modifier_effect_cache()
 	},
 	country_instance_deps {
