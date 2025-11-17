@@ -1,4 +1,5 @@
 #pragma once
+#ifdef _WIN32
 
 #include <concepts>
 #pragma comment(lib, "advapi32.lib")
@@ -160,3 +161,4 @@ namespace OpenVic::Windows {
 		return ReadRegValue<RCHAR_T>(root, key_sv, name_sv);
 	}
 }
+#endif

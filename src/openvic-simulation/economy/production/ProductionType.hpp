@@ -101,7 +101,7 @@ namespace OpenVic {
 	struct ProductionTypeManager {
 	private:
 		IdentifierRegistry<ProductionType> IDENTIFIER_REGISTRY(production_type);
-		pop_sprite_t PROPERTY(rgo_owner_sprite);
+		pop_sprite_t PROPERTY(rgo_owner_sprite, 0);
 		OV_IFLATMAP_PROPERTY(GoodDefinition, ProductionType const*, good_to_rgo_production_type);
 
 		NodeTools::node_callback_t _expect_job(
@@ -115,8 +115,7 @@ namespace OpenVic {
 
 	public:
 		constexpr ProductionTypeManager()
-			: rgo_owner_sprite { 0 },
-			good_to_rgo_production_type { decltype(good_to_rgo_production_type)::create_empty() } {}
+			: good_to_rgo_production_type { decltype(good_to_rgo_production_type)::create_empty() } {}
 
 		bool add_production_type(
 			GameRulesManager const& game_rules_manager,
