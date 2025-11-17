@@ -1,5 +1,6 @@
 #include "Pop.hpp"
 #include "PopDeps.hpp"
+#include "utility/ErrorMacros.hpp"
 
 #include <concepts> // IWYU pragma: keep for lambda
 #include <cstddef>
@@ -295,6 +296,7 @@ void Pop::pay_income_tax(fixed_point_t& income) {
 	income -= tax;
 }
 
+template<bool IsTaxable>
 void Pop::add_artisanal_revenue(const fixed_point_t revenue) {
 	if (OV_unlikely(revenue == 0)) {
 		spdlog::warn_s("Adding artisanal_revenue of 0 to pop. Context{}", get_pop_context_text());
@@ -307,20 +309,27 @@ void Pop::add_artisanal_revenue(const fixed_point_t revenue) {
 	}
 
 	fixed_point_t income;
-	if (OV_unlikely(!artisanal_producer_optional.has_value())) {
-		income = revenue;
+	if constexpr (IsTaxable) {
+		if (OV_unlikely(!artisanal_producer_optional.has_value())) {
+			income = revenue;
+		} else {
+			income = std::max(
+				fixed_point_t::_0,
+				revenue - artisanal_producer_optional->get_costs_of_production()
+			);
+		}
+
+		pay_income_tax(income);
 	} else {
-		income = std::max(
-			fixed_point_t::_0,
-			revenue - artisanal_producer_optional->get_costs_of_production()
-		);
+		income = revenue;
 	}
 
-	pay_income_tax(income);
 	artisanal_revenue += revenue;
 	income += income;
 	cash += income;
 }
+template void Pop::add_artisanal_revenue<true>(const fixed_point_t revenue);
+template void Pop::add_artisanal_revenue<false>(const fixed_point_t revenue);
 
 #define DEFINE_ADD_INCOME_FUNCTIONS(name) \
 	void Pop::add_##name(fixed_point_t amount){ \
@@ -490,7 +499,7 @@ void Pop::pop_tick_without_cleanup(
 	cash_allocated_for_artisanal_spending = 0;
 	fill_needs_fulfilled_goods_with_false();
 	
-	GoodDefinition const* artisanal_output_good = nullptr;
+	fixed_point_map_t<GoodDefinition const*> goods_to_sell {};
 	if (artisanal_producer_optional.has_value()) {
 		//execute artisan_tick before needs
 		ArtisanalProducer& artisanal_producer = artisanal_producer_optional.value();
@@ -503,12 +512,9 @@ void Pop::pop_tick_without_cleanup(
 			max_quantity_to_buy_per_good,
 			money_to_spend_per_good,
 			reusable_vector_0,
-			reusable_vector_1
+			reusable_vector_1,
+			goods_to_sell
 		);
-
-		if (artisanal_producer.get_production_type_nullable() != nullptr) {
-			artisanal_output_good = &artisanal_producer.get_production_type_nullable()->output_good;
-		}
 	}
 
 	//after artisan_tick as it uses income & expenses
@@ -558,10 +564,10 @@ void Pop::pop_tick_without_cleanup(
 					country_to_report_economy_nullable->report_pop_need_demand(*type, good_definition, max_quantity_to_buy); \
 				} \
 				need_category##_needs_desired_quantity += max_quantity_to_buy; \
-				if (artisanal_produce_left_to_sell > 0 && *artisanal_output_good == good_definition \
-				) { \
-					const fixed_point_t own_produce_consumed = std::min(artisanal_produce_left_to_sell, max_quantity_to_buy); \
-					artisanal_produce_left_to_sell -= own_produce_consumed; \
+				auto goods_to_sell_iterator = goods_to_sell.find(good_definition_ptr); \
+				if (goods_to_sell_iterator != goods_to_sell.end() && goods_to_sell_iterator.value() > 0) { \
+					const fixed_point_t own_produce_consumed = std::min(goods_to_sell_iterator.value(), max_quantity_to_buy); \
+					goods_to_sell_iterator.value() -= own_produce_consumed; \
 					max_quantity_to_buy -= own_produce_consumed; \
 					need_category##_needs_acquired_quantity += own_produce_consumed; \
 					if (country_to_report_economy_nullable != nullptr) { \
@@ -618,18 +624,25 @@ void Pop::pop_tick_without_cleanup(
 		});
 	}
 
-	if (artisanal_produce_left_to_sell > 0) {
+	for (const auto [good_ptr, quantity_to_sell] : goods_to_sell) {
+		GoodDefinition const& good = *good_ptr;
+		if (quantity_to_sell <= 0) {
+			if (OV_unlikely(quantity_to_sell < 0)) {
+				spdlog::error_s("Pop had negative quantity {} left to sell of good {}.", quantity_to_sell, good);
+			}
+			continue;
+		}
+
 		market_instance.place_market_sell_order(
 			{
-				*artisanal_output_good,
+				good,
 				country_to_report_economy_nullable,
-				artisanal_produce_left_to_sell,
+				quantity_to_sell,
 				this,
 				after_sell
 			},
 			reusable_vectors[4]
 		);
-		artisanal_produce_left_to_sell = 0;
 	}
 }
 
@@ -706,17 +719,21 @@ void Pop::after_buy(void* actor, BuyResult const& buy_result) {
 }
 
 void Pop::after_sell(void* actor, SellResult const& sell_result, memory::vector<fixed_point_t>& reusable_vector) {
+	Pop& pop = *static_cast<Pop*>(actor);
 	if (sell_result.money_gained > 0) {
-		static_cast<Pop*>(actor)->add_artisanal_revenue(sell_result.money_gained);
+		OV_ERR_FAIL_COND_MSG(!pop.artisanal_producer_optional.has_value(), "Pop is selling artisanal goods but has no artisan.");
+		ArtisanalProducer& artisan = pop.artisanal_producer_optional.value();
+		if (artisan.get_last_produced_good() != nullptr && *artisan.get_last_produced_good() == sell_result.good_definition) {
+			pop.add_artisanal_revenue<true>(sell_result.money_gained);
+		} else {
+			pop.add_artisanal_revenue<false>(sell_result.money_gained);
+		}
+		artisan.subtract_from_stockpile(sell_result.good_definition, sell_result.quantity_sold);
 	}
 }
 
 void Pop::allocate_cash_for_artisanal_spending(fixed_point_t money_to_spend) {
 	cash_allocated_for_artisanal_spending += money_to_spend;
-}
-
-void Pop::report_artisanal_produce(const fixed_point_t quantity) {
-	artisanal_produce_left_to_sell = quantity;
 }
 
 void Pop::hire(pop_size_t count) {

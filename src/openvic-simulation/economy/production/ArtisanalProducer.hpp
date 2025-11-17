@@ -27,12 +27,13 @@ namespace OpenVic {
 	private:
 		EconomyDefines const& economy_defines;
 		ModifierEffectCache const& modifier_effect_cache;
-		fixed_point_map_t<GoodDefinition const*> stockpile;
+		IndexedFlatMap<GoodDefinition, fixed_point_t> stockpile;
 
 		//only used during day tick (from artisan_tick() until MarketInstance.execute_orders())
 		fixed_point_map_t<GoodDefinition const*> max_quantity_to_buy_per_good;
 
 		ProductionType const* PROPERTY(production_type_nullable);
+		GoodDefinition const* PROPERTY(last_produced_good);
 		fixed_point_t PROPERTY(current_production);
 		fixed_point_t PROPERTY(costs_of_production);
 
@@ -50,18 +51,14 @@ namespace OpenVic {
 		);
 
 	public:
+		ArtisanalProducer(ArtisanalProducerDeps const& artisanal_producer_deps);
 		ArtisanalProducer(
 			ArtisanalProducerDeps const& artisanal_producer_deps,
-			fixed_point_map_t<GoodDefinition const*>&& new_stockpile,
+			IndexedFlatMap<GoodDefinition, fixed_point_t>&& new_stockpile,
 			ProductionType const* const new_production_type,
+			GoodDefinition const* const new_last_produced_good,
 			const fixed_point_t new_current_production
 		);
-		ArtisanalProducer(ArtisanalProducerDeps const& artisanal_producer_deps) : ArtisanalProducer(
-			artisanal_producer_deps,
-			fixed_point_map_t<GoodDefinition const*> {},
-			nullptr,
-			fixed_point_t::_0
-		) { };
 
 		void artisan_tick(
 			MarketInstance const& market_instance,
@@ -72,12 +69,14 @@ namespace OpenVic {
 			memory::vector<fixed_point_t>& pop_max_quantity_to_buy_per_good,
 			memory::vector<fixed_point_t>& pop_money_to_spend_per_good,
 			memory::vector<fixed_point_t>& reusable_map_0,
-			memory::vector<fixed_point_t>& reusable_map_1
+			memory::vector<fixed_point_t>& reusable_map_1,
+			fixed_point_map_t<GoodDefinition const*>& goods_to_sell
 		);
 
 		//thread safe if called once per good and stockpile already has an entry.
 		//adds to stockpile up to max_quantity_to_buy and returns quantity added to stockpile
 		fixed_point_t add_to_stockpile(GoodDefinition const& good, const fixed_point_t quantity);
+		void subtract_from_stockpile(GoodDefinition const& good, const fixed_point_t sold_quantity);
 
 		//optional to handle invalid
 		static std::optional<fixed_point_t> estimate_production_type_score(
@@ -117,17 +116,20 @@ namespace OpenVic {
 				production_type { new_production_type },
 				wants_more_mask { new_wants_more_mask } {}
 
-			void calculate_inputs(fixed_point_map_t<GoodDefinition const*> const& stockpile);
+			void calculate_inputs(
+				IndexedFlatMap<GoodDefinition, fixed_point_t> const& stockpile,
+				const bool should_report_input_demand
+			);
 			void produce(
 				fixed_point_t& costs_of_production,
 				fixed_point_t& current_production,
-				fixed_point_map_t<GoodDefinition const*>& stockpile
+				IndexedFlatMap<GoodDefinition, fixed_point_t>& stockpile
 			);
 			void allocate_money_for_inputs(
 				fixed_point_map_t<GoodDefinition const*>& max_quantity_to_buy_per_good,
 				memory::vector<fixed_point_t>& pop_max_quantity_to_buy_per_good,
 				memory::vector<fixed_point_t>& pop_money_to_spend_per_good,
-				fixed_point_map_t<GoodDefinition const*> const& stockpile,
+				IndexedFlatMap<GoodDefinition, fixed_point_t> const& stockpile,
 				PopValuesFromProvince const& values_from_province
 			);
 		};
