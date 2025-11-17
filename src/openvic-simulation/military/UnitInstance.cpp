@@ -9,9 +9,9 @@ UnitInstance::UnitInstance(
 ) : unique_id { new_unique_id },
 	name { new_name },
 	unit_type { new_unit_type },
-	organisation { unit_type.default_organisation },
+	organisation { new_unit_type.default_organisation },
 	max_organisation { organisation },
-	strength { get_max_strength() } {}
+	strength { new_unit_type.max_strength } {}
 
 void UnitInstance::set_name(std::string_view new_name) {
 	name = new_name;
