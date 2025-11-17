@@ -1,9 +1,10 @@
 #pragma once
 
 #include <concepts>
+#include <cstddef>
 
 namespace OpenVic {
-	template<typename TypeTag, std::integral IndexT = size_t>
+	template<typename TypeTag, std::integral IndexT = std::size_t>
 	class HasIndex {
 	public:
 		using index_t = IndexT;
