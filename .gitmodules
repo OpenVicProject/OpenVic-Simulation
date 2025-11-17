@@ -36,3 +36,6 @@
 [submodule "deps/xoshiro"]
 	path = deps/xoshiro
 	url = https://github.com/reputeless/xoshiro-cpp
+[submodule "deps/type_safe"]
+	path = deps/type_safe
+	url = https://github.com/foonathan/type_safe
