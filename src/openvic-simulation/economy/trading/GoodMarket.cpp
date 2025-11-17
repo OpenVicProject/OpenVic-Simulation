@@ -229,6 +229,8 @@ void GoodMarket::execute_orders(
 		} else {
 			//sell below max_next_price
 			if (game_rules_manager.get_use_optimal_pricing()) {
+				new_price = price;
+
 				//drop price while remaining_supply > 0 && new_price > min_next_price
 				while (remaining_supply > 0) {
 					const fixed_point_t possible_price = money_left_to_spend_sum / remaining_supply;
