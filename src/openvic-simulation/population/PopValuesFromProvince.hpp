@@ -31,8 +31,6 @@ namespace OpenVic {
 
 	struct PopValuesFromProvince {
 	private:
-
-		GameRulesManager const& game_rules_manager;
 		GoodInstanceManager const& good_instance_manager;
 		ModifierEffectCache const& modifier_effect_cache;
 		ProductionTypeManager const& production_type_manager;
@@ -42,6 +40,7 @@ namespace OpenVic {
 		memory::vector<std::pair<ProductionType const*, fixed_point_t>> SPAN_PROPERTY(ranked_artisanal_production_types);
 	public:
 		PopsDefines const& defines;
+		GameRulesManager const& game_rules_manager;
 
 		PopValuesFromProvince(
 			GameRulesManager const& new_game_rules_manager,

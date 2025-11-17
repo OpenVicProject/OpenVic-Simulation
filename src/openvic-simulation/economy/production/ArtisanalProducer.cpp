@@ -10,6 +10,7 @@
 #include "openvic-simulation/economy/production/ProductionType.hpp"
 #include "openvic-simulation/economy/trading/MarketInstance.hpp"
 #include "openvic-simulation/map/ProvinceInstance.hpp"
+#include "openvic-simulation/misc/GameRulesManager.hpp"
 #include "openvic-simulation/modifier/ModifierEffectCache.hpp"
 #include "openvic-simulation/population/Pop.hpp"
 #include "openvic-simulation/population/PopValuesFromProvince.hpp"
@@ -297,6 +298,20 @@ void ArtisanalProducer::artisan_tick(
 	memory::vector<fixed_point_t>& demand_per_input = reusable_map_1;
 
 	ProductionType const* const old_production_type_ptr = production_type_nullable;
+
+	if (values_from_province.game_rules_manager.get_should_artisans_discard_unsold_non_inputs()) {
+		if (old_production_type_ptr == nullptr) {
+			stockpile.fill(0);
+		} else {
+			fixed_point_map_t<GoodDefinition const*> const& input_goods = old_production_type_ptr->get_input_goods();
+			for (auto [good, stockpiled_quantity] : stockpile) {
+				if (!input_goods.contains(&good)) {
+					stockpiled_quantity = 0;
+				}
+			}
+		}
+	}
+
 	ProductionType const* new_production_type_ptr = pick_production_type(
 		pop,
 		values_from_province,
