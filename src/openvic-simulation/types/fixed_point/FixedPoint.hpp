@@ -197,7 +197,7 @@ namespace OpenVic {
 		OV_SPEED_INLINE explicit constexpr operator T() const {
 #ifdef DEV_ENABLED
 			if (!std::is_constant_evaluated()) {
-				if (OV_unlikely(value != 0 && abs() < ONE)) {
+				if (OV_unlikely(value != 0 && abs() < fixed_point_t::_1)) {
 					spdlog::warn_s(
 						"0 < abs(Fixed point) < 1, truncation will result in zero, this may be a bug. raw_value: {} as float: {}",
 						get_raw_value(),
