@@ -6,6 +6,7 @@
 #include <utility>
 #include <variant>
 
+#include "openvic-simulation/types/TypedIndices.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
 
 namespace OpenVic {
@@ -74,9 +75,17 @@ namespace OpenVic {
 	};
 
 	using game_action_argument_t = std::variant<
-		std::monostate, bool, int64_t, std::pair<uint64_t, bool>, std::pair<uint64_t, uint64_t>,
-		std::pair<uint64_t, fixed_point_t>, std::tuple<uint64_t, uint64_t, fixed_point_t>,
-		std::tuple<uint64_t, uint64_t, bool>, std::tuple<uint64_t, uint64_t, bool, fixed_point_t>
+		std::monostate,
+		bool,
+		int64_t,
+		std::pair<uint64_t, bool>,
+		std::pair<uint64_t, uint64_t>,
+		std::pair<country_index_t, bool>,
+		std::tuple<country_index_t, uint64_t, fixed_point_t>,
+		std::pair<country_index_t, fixed_point_t>,
+		std::pair<country_index_t, uint64_t>,
+		std::tuple<country_index_t, good_index_t, bool>,
+		std::tuple<country_index_t, good_index_t, bool, fixed_point_t>
 	>;
 
 	memory::string game_action_argument_to_string(game_action_argument_t const& argument);

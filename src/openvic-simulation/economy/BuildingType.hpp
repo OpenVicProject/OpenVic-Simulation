@@ -6,6 +6,7 @@
 #include "openvic-simulation/types/HasIndex.hpp"
 #include "openvic-simulation/types/IdentifierRegistry.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
+#include "openvic-simulation/types/TypedIndices.hpp"
 #include "openvic-simulation/utility/Containers.hpp"
 
 namespace OpenVic {
@@ -19,7 +20,7 @@ namespace OpenVic {
 	 * MAP-12, MAP-75, MAP-76
 	 * MAP-13, MAP-78, MAP-79
 	 */
-	struct BuildingType : HasIndex<BuildingType>, Modifier {
+	struct BuildingType : HasIndex<BuildingType, building_type_index_t>, Modifier {
 		using naval_capacity_t = uint64_t;
 
 		struct building_type_args_t {

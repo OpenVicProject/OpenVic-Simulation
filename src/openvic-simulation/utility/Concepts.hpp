@@ -5,6 +5,8 @@
 #include <string_view>
 #include <type_traits>
 
+#include <type_safe/strong_typedef.hpp>
+
 namespace OpenVic {
 	template<typename T, template<typename...> class Z>
 	struct is_specialization_of : std::false_type {};
@@ -106,8 +108,10 @@ namespace OpenVic {
 	};
 
 	template<typename T>
-	concept has_index = requires(T const& key) {
-		{ key.index } -> std::convertible_to<size_t>;
+	concept has_index = requires {
+		static_cast<std::size_t>(
+			static_cast<type_safe::underlying_type<decltype(std::declval<T>().index)>>(std::declval<T>().index)
+		);
 	};
 
 	template<typename Case>

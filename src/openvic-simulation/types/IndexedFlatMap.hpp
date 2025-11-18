@@ -6,6 +6,8 @@
 #include <iterator>
 #include <utility>
 
+#include <type_safe/strong_typedef.hpp>
+
 #include <function2/function2.hpp>
 
 #include "openvic-simulation/types/FixedVector.hpp"
@@ -67,7 +69,7 @@ namespace OpenVic {
 		*/
 		constexpr size_t get_internal_index_from_key(KeyType const& key) const {
 			static_assert(has_index<KeyType>);
-			const size_t index = key.index;
+			const size_t index = type_safe::get(key.index);
 			if (index < min_index || index > max_index) {
 				spdlog::error_s(
 					"DEVELOPER: OpenVic::IndexedFlatMap<{},{}> attempted to access key with index {} which is outside the map's defined range [{}, {}].",
@@ -99,9 +101,12 @@ namespace OpenVic {
 				return false;
 			}
 
-			const size_t min_index = new_keys.front().index;
-			const size_t max_index = new_keys.back().index;
-			const size_t expected_capacity = max_index - min_index + 1;
+			using index_type = decltype(std::declval<KeyType>().index);
+			using underlying_type = type_safe::underlying_type<index_type>;
+
+			const underlying_type min_index = type_safe::get(new_keys.front().index);
+			const underlying_type max_index = type_safe::get(new_keys.back().index);
+			const underlying_type expected_capacity = max_index - min_index + 1;
 
 			if (new_keys.size() != expected_capacity) {
 				spdlog::error_s(
@@ -115,18 +120,19 @@ namespace OpenVic {
 				return false;
 			}
 
-			for (size_t i = 0; i < new_keys.size(); ++i) {
-				if (new_keys[i].index != min_index + i) {
+			for (underlying_type i = 0; i < new_keys.size(); ++i) {
+				const auto expected_index = index_type { underlying_type(min_index + i) };
+				if (new_keys[i].index != expected_index) {
 					spdlog::error_s(
 						"DEVELOPER: OpenVic::IndexedFlatMap<{},{}> must be constructed with a continuous span of keys with incremental indices. "
 						"Expected index {} but got {} at position {}.",
 						utility::type_name<KeyType>(),
 						utility::type_name<ValueType>(),
-						min_index + i,
+						expected_index,
 						new_keys[i].index,
 						i
 					);
-					assert(new_keys[i].index == min_index + i);
+					assert(new_keys[i].index == expected_index);
 					return false;
 				}
 			}
@@ -354,8 +360,8 @@ namespace OpenVic {
 			keys_span_type new_keys,
 			GeneratorTemplateType value_generator
 		) : keys(new_keys),
-			min_index { new_keys.front().index },
-			max_index { new_keys.back().index },
+			min_index { type_safe::get(new_keys.front().index) },
+			max_index { type_safe::get(new_keys.back().index) },
 			values(new_keys.size()) {
 			static_assert(has_index<KeyType>);
 			if (!validate_new_keys(new_keys)) {
@@ -386,8 +392,8 @@ namespace OpenVic {
 		requires (std::is_move_constructible_v<ValueType> || std::is_copy_constructible_v<ValueType>)
 		&& (std::default_initializable<ValueType> || std::constructible_from<ValueType, KeyType const&>)
 			: keys(new_keys),
-			min_index { new_keys.front().index },
-			max_index { new_keys.back().index },
+			min_index { type_safe::get(new_keys.front().index) },
+			max_index { type_safe::get(new_keys.back().index) },
 			values() {
 			static_assert(has_index<KeyType>);
 			if (!validate_new_keys(new_keys)) {
@@ -419,8 +425,8 @@ namespace OpenVic {
 		requires (!std::is_move_constructible_v<ValueType>) && (!std::is_copy_constructible_v<ValueType>)
 		&& (std::default_initializable<ValueType> || std::constructible_from<ValueType, KeyType const&>)
 			: keys(new_keys),
-			min_index { new_keys.front().index },
-			max_index { new_keys.back().index },
+			min_index { type_safe::get(new_keys.front().index) },
+			max_index { type_safe::get(new_keys.back().index) },
 			values(new_keys.size()) {
 			static_assert(has_index<KeyType>);
 			if (!validate_new_keys(new_keys)) {
@@ -470,6 +476,11 @@ namespace OpenVic {
 			return values[get_internal_index_from_key(key)];
 		}
 
+		template<typename I>
+		requires requires { type_safe::get(std::declval<I>()); }
+		constexpr ValueType& at_index(I const& index) {
+			return at_index(type_safe::get(index));
+		}
 		constexpr ValueType& at_index(const size_t index) {
 			if (index < min_index || index > max_index) {
 				spdlog::error_s(
@@ -485,6 +496,11 @@ namespace OpenVic {
 			return values[index - min_index];
 		}
 
+		template<typename I>
+		requires requires { type_safe::get(std::declval<I>()); }
+		constexpr ValueType const& at_index(I const& index) const {
+			return at_index(type_safe::get(index));
+		}
 		constexpr ValueType const& at_index(const size_t index) const {
 			if (index < min_index || index > max_index) {
 				spdlog::error_s(
@@ -505,6 +521,11 @@ namespace OpenVic {
 			return contains_index(key.index);
 		}
 
+		template<typename I>
+		requires requires { type_safe::get(std::declval<I>()); }
+		constexpr bool contains_index(I const& external_index) const {
+			return contains_index(type_safe::get(external_index));
+		}
 		constexpr bool contains_index(const size_t external_index) const {
 			return external_index >= min_index && external_index <= max_index;
 		}

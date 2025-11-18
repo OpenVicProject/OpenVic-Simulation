@@ -53,7 +53,7 @@ bool TechnologyManager::add_technology_folder(std::string_view identifier) {
 
 	return technology_folders.emplace_item(
 		identifier,
-		identifier, get_technology_folder_count()
+		identifier, TechnologyFolder::index_t { get_technology_folder_count() }
 	);
 }
 
@@ -99,7 +99,7 @@ bool TechnologyManager::add_technology(
 	if (!technologies.emplace_item(
 		identifier,
 		identifier,
-		get_technology_count(),
+		Technology::index_t { get_technology_count() },
 		*area,
 		year,
 		cost,

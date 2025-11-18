@@ -147,7 +147,7 @@ bool RuleManager::add_rule(std::string_view identifier, Rule::rule_group_t group
 	}
 	return rules.emplace_item(
 		identifier,
-		identifier, group, rule_group_sizes[group]++, localisation_key
+		identifier, group, Rule::index_t { rule_group_sizes[group]++ }, localisation_key
 	);
 }
 

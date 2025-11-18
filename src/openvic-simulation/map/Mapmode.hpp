@@ -4,6 +4,7 @@
 #include "openvic-simulation/types/HasIdentifier.hpp"
 #include "openvic-simulation/types/HasIndex.hpp"
 #include "openvic-simulation/types/IdentifierRegistry.hpp"
+#include "openvic-simulation/types/TypedIndices.hpp"
 
 #include <function2/function2.hpp>
 
@@ -14,7 +15,7 @@ namespace OpenVic {
 	struct ProvinceInstance;
 	struct CountryInstance;
 
-	struct Mapmode : HasIdentifier, HasIndex<Mapmode, int32_t> {
+	struct Mapmode : HasIdentifier, HasIndex<Mapmode, map_mode_index_t> {
 		/* Bottom 32 bits are the base colour, top 32 are the stripe colour, both in ARGB format with the alpha channels
 		 * controlling interpolation with the terrain colour (0 = all terrain, 255 = all corresponding RGB) */
 		struct base_stripe_t {

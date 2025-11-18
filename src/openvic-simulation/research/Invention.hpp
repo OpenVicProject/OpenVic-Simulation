@@ -5,6 +5,7 @@
 #include "openvic-simulation/types/HasIndex.hpp"
 #include "openvic-simulation/types/IdentifierRegistry.hpp"
 #include "openvic-simulation/types/OrderedContainers.hpp"
+#include "openvic-simulation/types/TypedIndices.hpp"
 
 namespace OpenVic {
 
@@ -16,7 +17,7 @@ namespace OpenVic {
 	struct UnitType;
 	struct UnitTypeManager;
 
-	struct Invention : HasIndex<Invention>, Modifier {
+	struct Invention : HasIndex<Invention, invention_index_t>, Modifier {
 		friend struct InventionManager;
 
 		//TODO implement limit and chance

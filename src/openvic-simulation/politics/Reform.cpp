@@ -12,7 +12,7 @@ ReformGroup::ReformGroup(
 	bool new_is_ordered,
 	bool new_is_administrative
 ) : BaseIssueGroup { new_identifier },
-	HasIndex<ReformGroup> { new_index },
+	HasIndex { new_index },
 	reform_type { new_reform_type },
 	is_ordered { new_is_ordered },
 	is_administrative { new_is_administrative } {}
@@ -26,7 +26,7 @@ Reform::Reform(
 		new_identifier, new_colour, std::move(new_values), new_reform_group, std::move(new_rules), false,
 		modifier_type_t::REFORM
 	},
-	HasIndex<Reform> { new_index },
+	HasIndex { new_index },
 	ordinal { new_ordinal },
 	administrative_multiplier { new_administrative_multiplier },
 	technology_cost { new_technology_cost },

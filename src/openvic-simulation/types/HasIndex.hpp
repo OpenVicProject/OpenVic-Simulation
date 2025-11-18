@@ -1,10 +1,11 @@
 #pragma once
 
-#include <concepts>
-#include <cstddef>
+#include <type_safe/strong_typedef.hpp>
+
+#include "openvic-simulation/utility/Concepts.hpp"
 
 namespace OpenVic {
-	template<typename TypeTag, std::integral IndexT = std::size_t>
+	template<typename TypeTag, derived_from_specialization_of<type_safe::strong_typedef> IndexT>
 	class HasIndex {
 	public:
 		using index_t = IndexT;

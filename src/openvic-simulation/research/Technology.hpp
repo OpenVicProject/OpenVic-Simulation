@@ -8,6 +8,7 @@
 #include "openvic-simulation/types/HasIdentifier.hpp"
 #include "openvic-simulation/types/HasIndex.hpp"
 #include "openvic-simulation/types/OrderedContainers.hpp"
+#include "openvic-simulation/types/TypedIndices.hpp"
 #include "openvic-simulation/types/UnitVariant.hpp"
 #include "openvic-simulation/utility/Containers.hpp"
 
@@ -19,7 +20,7 @@ namespace OpenVic {
 	struct TechnologyManager;
 	struct UnitTypeManager;
 
-	struct TechnologyFolder : HasIdentifier, HasIndex<TechnologyFolder> {
+	struct TechnologyFolder : HasIdentifier, HasIndex<TechnologyFolder, technology_folder_index_t> {
 		friend struct TechnologyManager;
 
 	private:
@@ -44,7 +45,7 @@ namespace OpenVic {
 		TechnologyArea(TechnologyArea&&) = default;
 	};
 
-	struct Technology : Modifier, HasIndex<Technology> {
+	struct Technology : Modifier, HasIndex<Technology, technology_index_t> {
 		friend struct TechnologyManager;
 
 		using area_index_t = uint8_t;

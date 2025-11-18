@@ -83,7 +83,7 @@ bool IdeologyManager::add_ideology(
 		return false;
 	}
 
-	const Ideology::index_t new_index = ideologies.size();
+	const Ideology::index_t new_index = Ideology::index_t { ideologies.size() };
 	return ideologies.emplace_item(
 		identifier,
 		identifier,

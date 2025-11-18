@@ -3,6 +3,7 @@
 #include "openvic-simulation/types/HasIdentifier.hpp"
 #include "openvic-simulation/types/HasIndex.hpp"
 #include "openvic-simulation/types/IdentifierRegistry.hpp"
+#include "openvic-simulation/types/TypedIndices.hpp"
 #include "openvic-simulation/utility/Containers.hpp"
 
 namespace OpenVic {
@@ -31,7 +32,7 @@ namespace OpenVic {
 	 * ECON-238, ECON-239, ECON-240, ECON-241, ECON-242, ECON-243, ECON-244, ECON-245, ECON-246, ECON-247, ECON-248, ECON-249,
 	 * ECON-250, ECON-251, ECON-252, ECON-253, ECON-254, ECON-255, ECON-256, ECON-257, ECON-258, ECON-259, ECON-260, ECON-261
 	 */
-	struct GoodDefinition : HasIdentifierAndColour, HasIndex<GoodDefinition> {
+	struct GoodDefinition : HasIdentifierAndColour, HasIndex<GoodDefinition, good_index_t> {
 
 	public:
 		GoodCategory const& category;
