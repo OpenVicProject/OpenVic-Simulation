@@ -304,12 +304,13 @@ namespace OpenVic {
 			fixed_point_t money_traded_yesterday; // positive if we sold, negative if we bought
 
 			bool is_automated = true;
-			bool is_selling = false; // buying if false
-			fixed_point_t stockpile_cutoff;
+			bool is_selling = false; // buying if false (manual only)
+			fixed_point_t stockpile_cutoff; // (manual only)
 
 			fixed_point_t exported_amount; // negative if net importing
 
-			fixed_point_t government_needs;
+			fixed_point_t max_government_consumption; //for automated BuyUpToOrder
+			fixed_point_t government_needs; //quantity to allocate for while automated
 			fixed_point_t army_needs;
 			fixed_point_t navy_needs;
 			fixed_point_t overseas_maintenance;
@@ -617,6 +618,8 @@ namespace OpenVic {
 		//matching GoodMarketSellOrder::callback_t
 		static void after_sell(void* actor, SellResult const& sell_result, memory::vector<fixed_point_t>& reusable_vector);
 
+		void calculate_government_good_needs();
+
 		void manage_national_stockpile(
 			IndexedFlatMap<GoodDefinition, char>& reusable_goods_mask,
 			utility::forwardable_span<
@@ -624,7 +627,7 @@ namespace OpenVic {
 				VECTORS_FOR_COUNTRY_TICK
 			> reusable_vectors,
 			memory::vector<size_t>& reusable_index_vector,
-			const fixed_point_t available_funds
+			fixed_point_t& available_funds
 		);
 
 		void _update_production();

@@ -2000,12 +2000,20 @@ void CountryInstance::country_tick_before_map(
 	was_social_budget_cut_yesterday = actual_social_budget < projected_social_spending_copy;
 	was_import_subsidies_budget_cut_yesterday = actual_import_subsidies_budget < projected_import_subsidies_copy;
 
+	for (auto [good_instance, good_data] : goods_data) {
+		good_data.clear_daily_recorded_data();
+	}
+
+	calculate_government_good_needs();
+
 	manage_national_stockpile(
 		reusable_goods_mask,
 		reusable_vectors,
 		reusable_index_vector,
 		available_funds
 	);
+
+	//TODO market maker orders
 
 	taxable_income_by_pop_type.fill(0);
 	actual_administration_spending
@@ -2020,6 +2028,18 @@ void CountryInstance::country_tick_before_map(
 	 	= 0;
 }
 
+void CountryInstance::calculate_government_good_needs() {
+	//TODO calculate government_needs, max_government_consumption, army_needs & navy_needs
+	//for each construction/recruitment
+	//	for each good
+	//		remainder = resources_total - already_consumed
+	//		daily_needs = exact_vic_2_game_rule
+	//			? slider * min(resources_total / spread_cost_days, remainder)
+	//			: min(1, slider * days_since_start / spread_cost_days) * resources_total
+	//		government_needs += daily_needs
+	//		max_government_consumption += remainder
+}
+
 void CountryInstance::manage_national_stockpile(
 	IndexedFlatMap<GoodDefinition, char>& reusable_goods_mask,
 	utility::forwardable_span<
@@ -2027,7 +2047,7 @@ void CountryInstance::manage_national_stockpile(
 		VECTORS_FOR_COUNTRY_TICK
 	> reusable_vectors,
 	memory::vector<size_t>& reusable_index_vector,
-	const fixed_point_t available_funds
+	fixed_point_t& available_funds
 ) {
 	IndexedFlatMap<GoodDefinition, char>& wants_more_mask = reusable_goods_mask;
 	const size_t mask_size = wants_more_mask.get_keys().size();
@@ -2040,10 +2060,30 @@ void CountryInstance::manage_national_stockpile(
 	memory::vector<size_t>& good_indices_to_buy = reusable_index_vector;
 	fixed_point_t weights_sum = 0;
 
-	for (auto const& [good_instance, good_data] : goods_data) {
-		good_data.clear_daily_recorded_data();
+	for (auto [good_instance, good_data] : goods_data) {
 		const size_t index = good_instance.index;
-		if (good_data.is_selling) {
+		if (good_data.is_automated || !good_data.is_selling) {
+			const fixed_point_t quantity_to_allocate_for = good_data.is_automated 
+				? good_data.government_needs - good_data.stockpile_amount
+				: good_data.stockpile_cutoff - good_data.stockpile_amount;
+			const fixed_point_t max_quantity_to_buy = good_data.is_automated
+				? good_data.max_government_consumption - good_data.stockpile_amount
+				: quantity_to_allocate_for;
+			if (max_quantity_to_buy <= 0 || available_funds <= 0) {
+				continue;
+			}
+
+			good_indices_to_buy.push_back(index);
+			max_quantity_to_buy_per_good[index] = max_quantity_to_buy;
+
+			const fixed_point_t max_money_to_spend = max_costs_per_good[index] = market_instance.get_max_money_to_allocate_to_buy_quantity(
+				good_instance.good_definition,
+				quantity_to_allocate_for
+			);
+			wants_more_mask.set(good_instance.good_definition, true);
+			const fixed_point_t weight = weights[index] = fixed_point_t::usable_max / max_money_to_spend;
+			weights_sum += weight;
+		} else {
 			const fixed_point_t quantity_to_sell = good_data.stockpile_amount - good_data.stockpile_cutoff;
 			if (quantity_to_sell <= 0) {
 				continue;
@@ -2058,22 +2098,6 @@ void CountryInstance::manage_national_stockpile(
 				},
 				reusable_vectors[3] //temporarily used here and later used as money_to_spend_per_good
 			);
-		} else {
-			const fixed_point_t max_quantity_to_buy = good_data.stockpile_cutoff - good_data.stockpile_amount;
-			if (max_quantity_to_buy <= 0 || available_funds <= 0) {
-				continue;
-			}
-
-			good_indices_to_buy.push_back(index);
-			max_quantity_to_buy_per_good[index] = max_quantity_to_buy;
-
-			const fixed_point_t max_money_to_spend = max_costs_per_good[index] = market_instance.get_max_money_to_allocate_to_buy_quantity(
-				good_instance.good_definition,
-				max_quantity_to_buy
-			);
-			wants_more_mask.set(good_instance.good_definition, true);
-			const fixed_point_t weight = weights[index] = fixed_point_t::usable_max / max_money_to_spend;
-			weights_sum += weight;
 		}
 	}
 
@@ -2128,6 +2152,7 @@ void CountryInstance::manage_national_stockpile(
 
 			GoodInstance const& good_instance = goods_data.get_keys()[good_index];
 			GoodDefinition const& good_definition = good_instance.good_definition;
+			available_funds -= money_to_spend;
 			market_instance.place_buy_up_to_order(
 				{
 					good_definition,
@@ -2284,6 +2309,7 @@ void CountryInstance::good_data_t::clear_daily_recorded_data() {
 		= quantity_traded_yesterday
 		= money_traded_yesterday
 		= exported_amount
+		= max_government_consumption
 		= government_needs
 		= army_needs
 		= navy_needs
