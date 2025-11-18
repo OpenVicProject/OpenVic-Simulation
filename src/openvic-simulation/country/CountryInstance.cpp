@@ -1939,18 +1939,22 @@ void CountryInstance::country_tick_before_map(
 	const fixed_point_t projected_military_spending_copy = projected_military_spending.get_untracked();
 	const fixed_point_t projected_social_spending_copy = projected_social_spending.get_untracked();
 	const fixed_point_t projected_import_subsidies_copy = projected_import_subsidies.get_untracked();
-	if (projected_spending.get_untracked() <= available_funds) {
+	//excluding national stockpile
+	const fixed_point_t projected_total_spending = projected_spending.get_untracked();
+	if (projected_total_spending <= available_funds) {
 		actual_administration_budget = projected_administration_spending_copy;
 		actual_education_budget = projected_education_spending_copy;
 		actual_military_budget = projected_military_spending_copy;
 		actual_social_budget = projected_social_spending_copy;
 		actual_import_subsidies_budget = projected_import_subsidies_copy;
+		available_funds -= projected_total_spending;
 	} else {
 		//TODO try take loan (callback?)
 		//update available_funds with loan
 
 		if (available_funds < projected_education_spending_copy) {
 			actual_education_budget = available_funds;
+			available_funds = 0;
 			actual_administration_budget = 0;
 			actual_military_budget = 0;
 			actual_social_budget = 0;
