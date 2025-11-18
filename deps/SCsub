@@ -200,6 +200,57 @@ def build_xoshiro(env):
     env.exposed_includes += env.xoshiro["INCPATH"]
 
 
+def build_type_safe(env):
+    import os
+
+    arithmetic_policy = 1
+    if "TYPE_SAFE_ARITHMETIC_POLICY" in os.environ:
+        arithmetic_policy = os.environ["TYPE_SAFE_ARITHMETIC_POLICY"].upper().replace(" ", "_")
+        if arithmetic_policy not in [
+            "ub",
+            "undefined_behavior",
+            "undefined",
+            "checked",
+            "default",
+            "0",
+            "1",
+            "2",
+        ]:
+            print("TYPE_SAFE_ARITHMETIC_POLICY can only be undefined, checked, or default")
+            exit(255)
+        match arithmetic_policy:
+            case "default":
+                arithmetic_policy = 0
+            case "ub", "undefined_behavior", "undefined":
+                arithmetic_policy = 1
+            case "checked":
+                arithmetic_policy = 2
+            case "0", "1", "2":
+                arithmetic_policy = int(arithmetic_policy)
+    elif env["dev_build"]:
+        arithmetic_policy = 2
+
+    env.Append(
+        CPPDEFINES=[
+            ("TYPE_SAFE_ENABLE_ASSERTIONS", 1 if env["target"] == "template_release" else 0),
+            ("TYPE_SAFE_ENABLE_PRECONDITION_CHECKS", 1),
+            ("TYPE_SAFE_ENABLE_WRAPPER", 1 if env["target"] == "template_release" else 0),
+            ("TYPE_SAFE_ARITHMETIC_POLICY", arithmetic_policy),
+        ]
+    )
+
+    include_path = "type_safe/include"
+    debug_assert_include_path = "type_safe/external/debug_assert"
+    env.type_safe = {}
+    env.type_safe["INCPATH"] = [env.Dir(include_path), env.Dir(debug_assert_include_path)]
+    env.Append(CPPPATH=env.type_safe["INCPATH"])
+    if env.get("is_msvc", False):
+        env.Append(CXXFLAGS=["/external:I", env.type_safe["INCPATH"][0], "/external:W0"])
+    else:
+        env.Append(CXXFLAGS=["-isystem", env.type_safe["INCPATH"][0]])
+    env.exposed_includes += env.type_safe["INCPATH"]
+
+
 def link_tbb(env):
     import sys
 
@@ -216,4 +267,5 @@ build_std_function(env)
 build_memory(env)
 build_spdlog(env)
 build_xoshiro(env)
+build_type_safe(env)
 link_tbb(env)
