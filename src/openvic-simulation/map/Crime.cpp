@@ -13,7 +13,7 @@ Crime::Crime(
 	icon_t new_icon,
 	ConditionScript&& new_trigger,
 	bool new_default_active
-) : HasIndex<Crime> { new_index },
+) : HasIndex { new_index },
 	TriggeredModifier { new_identifier, std::move(new_values), modifier_type_t::CRIME, new_icon, std::move(new_trigger) },
 	default_active { new_default_active } {}
 
@@ -29,7 +29,7 @@ bool CrimeManager::add_crime_modifier(
 	return crime_modifiers.emplace_item(
 		identifier,
 		duplicate_warning_callback,
-		get_crime_modifier_count(), identifier, std::move(values), icon, std::move(trigger), default_active
+		Crime::index_t { get_crime_modifier_count() }, identifier, std::move(values), icon, std::move(trigger), default_active
 	);
 }
 

@@ -20,7 +20,7 @@ Invention::Invention(
 	bool new_unlock_gas_defence,
 	ConditionScript&& new_limit,
 	ConditionalWeightBase&& new_chance
-) : HasIndex<Invention> { new_index },
+) : HasIndex { new_index },
 	Modifier { new_identifier, std::move(new_values), modifier_type_t::INVENTION },
 	news { new_news },
 	activated_units { std::move(new_activated_units) },
@@ -52,7 +52,7 @@ bool InventionManager::add_invention(
 
 	return inventions.emplace_item(
 		identifier,
-		get_invention_count(), identifier,
+		Invention::index_t { get_invention_count() }, identifier,
 		std::move(values), news, std::move(activated_units), std::move(activated_buildings),
 		std::move(enabled_crimes), unlock_gas_attack, unlock_gas_defence, std::move(limit), std::move(chance)
 	);

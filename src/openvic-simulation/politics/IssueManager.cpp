@@ -14,7 +14,7 @@ bool IssueManager::add_party_policy_group(std::string_view identifier) {
 
 	return party_policy_groups.emplace_item(
 		identifier,
-		identifier, get_party_policy_group_count()
+		identifier, PartyPolicyGroup::index_t { get_party_policy_group_count() }
 	);
 }
 
@@ -29,7 +29,7 @@ bool IssueManager::add_party_policy(
 
 	if (!party_policies.emplace_item(
 		identifier,
-		get_party_policy_count(), identifier,
+		PartyPolicy::index_t { get_party_policy_count() }, identifier,
 		new_colour, std::move(values), party_policy_group, std::move(rules), jingoism
 	)) {
 		return false;
@@ -61,7 +61,7 @@ bool IssueManager::add_reform_group(
 
 	if (!reform_groups.emplace_item(
 		identifier,
-		identifier, get_reform_group_count(), reform_type, ordered, administrative
+		identifier, ReformGroup::index_t { get_reform_group_count() }, reform_type, ordered, administrative
 	)) {
 		return false;
 	}
@@ -112,7 +112,7 @@ bool IssueManager::add_reform(
 
 	if (!reforms.emplace_item(
 		identifier,
-		get_reform_count(), identifier,
+		Reform::index_t { get_reform_count() }, identifier,
 		new_colour, std::move(values), reform_group, ordinal, administrative_multiplier, std::move(rules),
 		technology_cost, std::move(allow), std::move(on_execute_trigger), std::move(on_execute_effect)
 	)) {

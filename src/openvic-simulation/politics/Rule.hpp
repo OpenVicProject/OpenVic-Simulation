@@ -4,13 +4,14 @@
 #include "openvic-simulation/types/HasIndex.hpp"
 #include "openvic-simulation/types/IdentifierRegistry.hpp"
 #include "openvic-simulation/types/OrderedContainers.hpp"
+#include "openvic-simulation/types/TypedIndices.hpp"
 
 namespace OpenVic {
 	struct RuleManager;
 	struct BuildingTypeManager;
 
 	/* The index of the Rule within its group, used to determine precedence in mutually exclusive rule groups. */
-	struct Rule : HasIdentifier, HasIndex<Rule> {
+	struct Rule : HasIdentifier, HasIndex<Rule, rule_index_t> {
 		enum class rule_group_t : uint8_t {
 			ECONOMY, CITIZENSHIP, SLAVERY, UPPER_HOUSE, VOTING
 		};

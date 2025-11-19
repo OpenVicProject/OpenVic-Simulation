@@ -1,5 +1,9 @@
 #include "Mapmode.hpp"
 
+#include <limits>
+
+#include <type_safe/strong_typedef.hpp>
+
 #include "openvic-simulation/country/CountryInstance.hpp"
 #include "openvic-simulation/economy/BuildingType.hpp"
 #include "openvic-simulation/economy/GoodDefinition.hpp" // IWYU pragma: keep
@@ -28,7 +32,7 @@ Mapmode::Mapmode(
 	parchment_mapmode_allowed { new_parchment_mapmode_allowed } {}
 
 const Mapmode Mapmode::ERROR_MAPMODE {
-	"mapmode_error", -1, [](
+	"mapmode_error", index_t { std::numeric_limits<std::size_t>::max() }, [](
 		MapInstance const& map_instance, ProvinceInstance const& province,
 		CountryInstance const* player_country, ProvinceInstance const* selected_province
 	) -> base_stripe_t {
@@ -59,7 +63,7 @@ bool MapmodeManager::add_mapmode(
 	}
 	return mapmodes.emplace_item(
 		identifier,
-		identifier, get_mapmode_count(), colour_func, localisation_key, parchment_mapmode_allowed
+		identifier, Mapmode::index_t { get_mapmode_count() }, colour_func, localisation_key, parchment_mapmode_allowed
 	);
 }
 
@@ -84,7 +88,7 @@ bool MapmodeManager::generate_mapmode_colours(
 
 	Mapmode::base_stripe_t* target_stripes = reinterpret_cast<Mapmode::base_stripe_t*>(target);
 
-	target_stripes[ProvinceDefinition::NULL_INDEX] = colour_argb_t::null();
+	target_stripes[type_safe::get(ProvinceDefinition::NULL_INDEX)] = colour_argb_t::null();
 
 	for (ProvinceInstance const& province : map_instance.get_province_instances()) {
 		target_stripes[province.province_definition.get_province_number()] = mapmode->get_base_stripe_colours(

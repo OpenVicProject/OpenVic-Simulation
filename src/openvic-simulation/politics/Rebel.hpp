@@ -8,6 +8,7 @@
 #include "openvic-simulation/types/HasIndex.hpp"
 #include "openvic-simulation/types/IdentifierRegistry.hpp"
 #include "openvic-simulation/types/OrderedContainers.hpp"
+#include "openvic-simulation/types/TypedIndices.hpp"
 
 namespace OpenVic {
 	struct GovernmentType;
@@ -17,7 +18,7 @@ namespace OpenVic {
 	struct ModifierManager;
 	struct RebelManager;
 
-	struct RebelType : HasIndex<RebelType>, HasIdentifier {
+	struct RebelType : HasIndex<RebelType, rebel_type_index_t>, HasIdentifier {
 		friend struct RebelManager;
 
 		using government_map_t = ordered_map<GovernmentType const*, GovernmentType const*>;

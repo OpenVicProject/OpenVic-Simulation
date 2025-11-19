@@ -2,19 +2,20 @@
 
 #include "openvic-simulation/politics/BaseIssue.hpp"
 #include "openvic-simulation/types/HasIndex.hpp"
+#include "openvic-simulation/types/TypedIndices.hpp"
 
 namespace OpenVic {
 	struct PartyPolicy;
 
 	// PartyPolicy group (i.e. trade_policy)
-	struct PartyPolicyGroup : HasIndex<PartyPolicyGroup>, BaseIssueGroup {
+	struct PartyPolicyGroup : HasIndex<PartyPolicyGroup, party_policy_group_index_t>, BaseIssueGroup {
 		friend struct IssueManager;
 
 	public:
 		PartyPolicyGroup(
 			std::string_view new_identifier,
 			index_t new_index
-		) : HasIndex<PartyPolicyGroup> { new_index }, BaseIssueGroup { new_identifier } {}
+		) : HasIndex { new_index }, BaseIssueGroup { new_identifier } {}
 		PartyPolicyGroup(PartyPolicyGroup&&) = default;
 
 		std::span<PartyPolicy const* const> get_party_policies() const {
@@ -23,7 +24,7 @@ namespace OpenVic {
 	};
 
 	// PartyPolicy (i.e. protectionism)
-	struct PartyPolicy : HasIndex<PartyPolicy>, BaseIssue {
+	struct PartyPolicy : HasIndex<PartyPolicy, party_policy_index_t>, BaseIssue {
 	public:
 		PartyPolicy(
 			index_t new_index,
@@ -33,7 +34,7 @@ namespace OpenVic {
 			PartyPolicyGroup const& new_issue_group,
 			RuleSet&& new_rules,
 			bool new_is_jingoism
-		) : HasIndex<PartyPolicy> { new_index },
+		) : HasIndex { new_index },
 			BaseIssue {
 				new_identifier,
 				new_colour,

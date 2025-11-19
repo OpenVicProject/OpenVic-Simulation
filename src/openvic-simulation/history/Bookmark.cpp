@@ -2,6 +2,8 @@
 
 #include <openvic-dataloader/v2script/AbstractSyntaxTree.hpp>
 
+#include <type_safe/strong_typedef.hpp>
+
 #include "openvic-simulation/dataloader/NodeTools.hpp"
 #include "openvic-simulation/types/Date.hpp"
 #include "openvic-simulation/types/IdentifierRegistry.hpp"
@@ -16,7 +18,7 @@ Bookmark::Bookmark(
 	std::string_view new_description,
 	Date new_date,
 	fvec2_t new_initial_camera_position
-) : HasIdentifier { std::to_string(new_index) },
+) : HasIdentifier { std::to_string(type_safe::get(new_index)) },
 	HasIndex { new_index },
 	name { new_name },
 	description { new_description },
@@ -28,7 +30,7 @@ bool BookmarkManager::add_bookmark(
 ) {
 	return bookmarks.emplace_item(
 		name,
-		bookmarks.size(), name, description, date, initial_camera_position
+		Bookmark::index_t { bookmarks.size() }, name, description, date, initial_camera_position
 	);
 }
 

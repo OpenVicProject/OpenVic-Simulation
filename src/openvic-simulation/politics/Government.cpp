@@ -13,7 +13,7 @@ GovernmentType::GovernmentType(
 	bool new_appoint_ruling_party,
 	Timespan new_term_duration,
 	std::string_view new_flag_type_identifier
-) : HasIndex<GovernmentType> { new_index },
+) : HasIndex { new_index },
 	HasIdentifier { new_identifier },
 	ideologies { std::move(new_ideologies) },
 	elections { new_elections },
@@ -47,7 +47,7 @@ bool GovernmentTypeManager::add_government_type(
 
 	const bool ret = government_types.emplace_item(
 		identifier,
-		get_government_type_count(), identifier, std::move(ideologies), elections, appoint_ruling_party, term_duration, flag_type
+		GovernmentType::index_t { get_government_type_count() }, identifier, std::move(ideologies), elections, appoint_ruling_party, term_duration, flag_type
 	);
 
 	/* flag_type can be empty here for default/non-ideological flag */

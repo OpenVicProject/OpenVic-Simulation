@@ -8,6 +8,7 @@
 #include "openvic-simulation/types/IndexedFlatMap.hpp"
 #include "openvic-simulation/types/PopSize.hpp"
 #include "openvic-simulation/types/PopSprite.hpp"
+#include "openvic-simulation/types/TypedIndices.hpp"
 #include "openvic-simulation/utility/Containers.hpp"
 
 namespace OpenVic {
@@ -18,7 +19,7 @@ namespace OpenVic {
 	struct PopType;
 	struct UnitType;
 
-	struct Strata : HasIdentifier, HasIndex<Strata> {
+	struct Strata : HasIdentifier, HasIndex<Strata, strata_index_t> {
 		friend struct PopManager;
 
 	private:
@@ -32,7 +33,7 @@ namespace OpenVic {
 	/* REQUIREMENTS:
 	 * POP-15, POP-16, POP-17, POP-26
 	 */
-	struct PopType : HasIdentifierAndColour, HasIndex<PopType> {
+	struct PopType : HasIdentifierAndColour, HasIndex<PopType, pop_type_index_t> {
 		friend struct PopManager;
 
 		/* This is a bitfield - PopTypes can have up to one of each income source for each need category. */

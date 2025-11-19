@@ -137,7 +137,7 @@ bool GameActionManager::game_action_callback_set_speed(game_action_argument_t co
 }
 
 bool GameActionManager::game_action_callback_set_ai(game_action_argument_t const& argument) const {
-	std::pair<uint64_t, bool> const* country_ai = std::get_if<std::pair<uint64_t, bool>>(&argument);
+	std::pair<country_index_t, bool> const* country_ai = std::get_if<std::pair<country_index_t, bool>>(&argument);
 	if (OV_unlikely(country_ai == nullptr)) {
 		spdlog::error_s("GAME_ACTION_SET_AI called with invalid argument: {}", game_action_argument_to_string(argument));
 		return false;
@@ -180,8 +180,8 @@ bool GameActionManager::game_action_callback_expand_province_building(game_actio
 
 // Budget
 bool GameActionManager::game_action_callback_set_strata_tax(game_action_argument_t const& argument) const {
-	std::tuple<uint64_t, uint64_t, fixed_point_t> const* country_strata_value =
-		std::get_if<std::tuple<uint64_t, uint64_t, fixed_point_t>>(&argument);
+	std::tuple<country_index_t, uint64_t, fixed_point_t> const* country_strata_value =
+		std::get_if<std::tuple<country_index_t, uint64_t, fixed_point_t>>(&argument);
 	if (OV_unlikely(country_strata_value == nullptr)) {
 		spdlog::error_s("GAME_ACTION_SET_STRATA_TAX called with invalid argument: {}", game_action_argument_to_string(argument));
 		return false;
@@ -208,7 +208,7 @@ bool GameActionManager::game_action_callback_set_strata_tax(game_action_argument
 }
 
 bool GameActionManager::game_action_callback_set_army_spending(game_action_argument_t const& argument) const {
-	std::pair<uint64_t, fixed_point_t> const* country_value = std::get_if<std::pair<uint64_t, fixed_point_t>>(&argument);
+	std::pair<country_index_t, fixed_point_t> const* country_value = std::get_if<std::pair<country_index_t, fixed_point_t>>(&argument);
 	if (OV_unlikely(country_value == nullptr)) {
 		spdlog::error_s(
 			"GAME_ACTION_SET_ARMY_SPENDING called with invalid argument: {}", game_action_argument_to_string(argument)
@@ -229,7 +229,7 @@ bool GameActionManager::game_action_callback_set_army_spending(game_action_argum
 }
 
 bool GameActionManager::game_action_callback_set_navy_spending(game_action_argument_t const& argument) const {
-	std::pair<uint64_t, fixed_point_t> const* country_value = std::get_if<std::pair<uint64_t, fixed_point_t>>(&argument);
+	std::pair<country_index_t, fixed_point_t> const* country_value = std::get_if<std::pair<country_index_t, fixed_point_t>>(&argument);
 	if (OV_unlikely(country_value == nullptr)) {
 		spdlog::error_s(
 			"GAME_ACTION_SET_NAVY_SPENDING called with invalid argument: {}", game_action_argument_to_string(argument)
@@ -250,7 +250,7 @@ bool GameActionManager::game_action_callback_set_navy_spending(game_action_argum
 }
 
 bool GameActionManager::game_action_callback_set_construction_spending(game_action_argument_t const& argument) const {
-	std::pair<uint64_t, fixed_point_t> const* country_value = std::get_if<std::pair<uint64_t, fixed_point_t>>(&argument);
+	std::pair<country_index_t, fixed_point_t> const* country_value = std::get_if<std::pair<country_index_t, fixed_point_t>>(&argument);
 	if (OV_unlikely(country_value == nullptr)) {
 		spdlog::error_s(
 			"GAME_ACTION_SET_CONSTRUCTION_SPENDING called with invalid argument: {}", game_action_argument_to_string(argument)
@@ -271,7 +271,7 @@ bool GameActionManager::game_action_callback_set_construction_spending(game_acti
 }
 
 bool GameActionManager::game_action_callback_set_education_spending(game_action_argument_t const& argument) const {
-	std::pair<uint64_t, fixed_point_t> const* country_value = std::get_if<std::pair<uint64_t, fixed_point_t>>(&argument);
+	std::pair<country_index_t, fixed_point_t> const* country_value = std::get_if<std::pair<country_index_t, fixed_point_t>>(&argument);
 	if (OV_unlikely(country_value == nullptr)) {
 		spdlog::error_s(
 			"GAME_ACTION_SET_EDUCATION_SPENDING called with invalid argument: {}", game_action_argument_to_string(argument)
@@ -292,7 +292,7 @@ bool GameActionManager::game_action_callback_set_education_spending(game_action_
 }
 
 bool GameActionManager::game_action_callback_set_administration_spending(game_action_argument_t const& argument) const {
-	std::pair<uint64_t, fixed_point_t> const* country_value = std::get_if<std::pair<uint64_t, fixed_point_t>>(&argument);
+	std::pair<country_index_t, fixed_point_t> const* country_value = std::get_if<std::pair<country_index_t, fixed_point_t>>(&argument);
 	if (OV_unlikely(country_value == nullptr)) {
 		spdlog::error_s(
 			"GAME_ACTION_SET_ADMINISTRATION_SPENDING called with invalid argument: {}", game_action_argument_to_string(argument)
@@ -313,7 +313,7 @@ bool GameActionManager::game_action_callback_set_administration_spending(game_ac
 }
 
 bool GameActionManager::game_action_callback_set_social_spending(game_action_argument_t const& argument) const {
-	std::pair<uint64_t, fixed_point_t> const* country_value = std::get_if<std::pair<uint64_t, fixed_point_t>>(&argument);
+	std::pair<country_index_t, fixed_point_t> const* country_value = std::get_if<std::pair<country_index_t, fixed_point_t>>(&argument);
 	if (OV_unlikely(country_value == nullptr)) {
 		spdlog::error_s(
 			"GAME_ACTION_SET_SOCIAL_SPENDING called with invalid argument: {}", game_action_argument_to_string(argument)
@@ -334,7 +334,7 @@ bool GameActionManager::game_action_callback_set_social_spending(game_action_arg
 }
 
 bool GameActionManager::game_action_callback_set_military_spending(game_action_argument_t const& argument) const {
-	std::pair<uint64_t, fixed_point_t> const* country_value = std::get_if<std::pair<uint64_t, fixed_point_t>>(&argument);
+	std::pair<country_index_t, fixed_point_t> const* country_value = std::get_if<std::pair<country_index_t, fixed_point_t>>(&argument);
 	if (OV_unlikely(country_value == nullptr)) {
 		spdlog::error_s(
 			"GAME_ACTION_SET_MILITARY_SPENDING called with invalid argument: {}", game_action_argument_to_string(argument)
@@ -355,7 +355,7 @@ bool GameActionManager::game_action_callback_set_military_spending(game_action_a
 }
 
 bool GameActionManager::game_action_callback_set_tariff_rate(game_action_argument_t const& argument) const {
-	std::pair<uint64_t, fixed_point_t> const* country_value = std::get_if<std::pair<uint64_t, fixed_point_t>>(&argument);
+	std::pair<country_index_t, fixed_point_t> const* country_value = std::get_if<std::pair<country_index_t, fixed_point_t>>(&argument);
 	if (OV_unlikely(country_value == nullptr)) {
 		spdlog::error_s("GAME_ACTION_SET_TARIFF_RATE called with invalid argument: {}", game_action_argument_to_string(argument));
 		return false;
@@ -375,7 +375,7 @@ bool GameActionManager::game_action_callback_set_tariff_rate(game_action_argumen
 
 // Technology
 bool GameActionManager::game_action_callback_start_research(game_action_argument_t const& argument) const {
-	std::pair<uint64_t, uint64_t> const* country_tech = std::get_if<std::pair<uint64_t, uint64_t>>(&argument);
+	std::pair<country_index_t, uint64_t> const* country_tech = std::get_if<std::pair<country_index_t, uint64_t>>(&argument);
 	if (OV_unlikely(country_tech == nullptr)) {
 		spdlog::error_s("GAME_ACTION_START_RESEARCH called with invalid argument: {}", game_action_argument_to_string(argument));
 		return false;
@@ -412,8 +412,8 @@ bool GameActionManager::game_action_callback_start_research(game_action_argument
 
 // Trade
 bool GameActionManager::game_action_callback_set_good_automated(game_action_argument_t const& argument) const {
-	std::tuple<uint64_t, uint64_t, bool> const* country_good_automated =
-		std::get_if<std::tuple<uint64_t, uint64_t, bool>>(&argument);
+	std::tuple<country_index_t, good_index_t, bool> const* country_good_automated =
+		std::get_if<std::tuple<country_index_t, good_index_t, bool>>(&argument);
 	if (OV_unlikely(country_good_automated == nullptr)) {
 		spdlog::error_s(
 			"GAME_ACTION_SET_GOOD_AUTOMATED called with invalid argument: {}", game_action_argument_to_string(argument)
@@ -449,8 +449,8 @@ bool GameActionManager::game_action_callback_set_good_automated(game_action_argu
 }
 
 bool GameActionManager::game_action_callback_set_good_trade_order(game_action_argument_t const& argument) const {
-	std::tuple<uint64_t, uint64_t, bool, fixed_point_t> const* country_good_sell_amount =
-		std::get_if<std::tuple<uint64_t, uint64_t, bool, fixed_point_t>>(&argument);
+	std::tuple<country_index_t, good_index_t, bool, fixed_point_t> const* country_good_sell_amount =
+		std::get_if<std::tuple<country_index_t, good_index_t, bool, fixed_point_t>>(&argument);
 	if (OV_unlikely(country_good_sell_amount == nullptr)) {
 		spdlog::error_s(
 			"GAME_ACTION_SET_GOOD_TRADE_ORDER called with invalid argument: {}", game_action_argument_to_string(argument)
@@ -512,7 +512,7 @@ bool GameActionManager::game_action_callback_set_good_trade_order(game_action_ar
 
 // Military
 bool GameActionManager::game_action_callback_create_leader(game_action_argument_t const& argument) const {
-	std::pair<uint64_t, bool> const* country_branch = std::get_if<std::pair<uint64_t, bool>>(&argument);
+	std::pair<country_index_t, bool> const* country_branch = std::get_if<std::pair<country_index_t, bool>>(&argument);
 	if (OV_unlikely(country_branch == nullptr)) {
 		spdlog::error_s("GAME_ACTION_CREATE_LEADER called with invalid argument: {}", game_action_argument_to_string(argument));
 		return false;
@@ -563,7 +563,7 @@ bool GameActionManager::game_action_callback_set_use_leader(game_action_argument
 }
 
 bool GameActionManager::game_action_callback_set_auto_create_leaders(game_action_argument_t const& argument) const {
-	std::pair<uint64_t, bool> const* country_value = std::get_if<std::pair<uint64_t, bool>>(&argument);
+	std::pair<country_index_t, bool> const* country_value = std::get_if<std::pair<country_index_t, bool>>(&argument);
 	if (OV_unlikely(country_value == nullptr)) {
 		spdlog::error_s(
 			"GAME_ACTION_SET_AUTO_CREATE_LEADERS called with invalid argument: {}", game_action_argument_to_string(argument)
@@ -587,7 +587,7 @@ bool GameActionManager::game_action_callback_set_auto_create_leaders(game_action
 }
 
 bool GameActionManager::game_action_callback_set_auto_assign_leaders(game_action_argument_t const& argument) const {
-	std::pair<uint64_t, bool> const* country_value = std::get_if<std::pair<uint64_t, bool>>(&argument);
+	std::pair<country_index_t, bool> const* country_value = std::get_if<std::pair<country_index_t, bool>>(&argument);
 	if (OV_unlikely(country_value == nullptr)) {
 		spdlog::error_s(
 			"GAME_ACTION_SET_AUTO_ASSIGN_LEADERS called with invalid argument: {}", game_action_argument_to_string(argument)
@@ -611,7 +611,7 @@ bool GameActionManager::game_action_callback_set_auto_assign_leaders(game_action
 }
 
 bool GameActionManager::game_action_callback_set_mobilise(game_action_argument_t const& argument) const {
-	std::pair<uint64_t, bool> const* country_mobilise = std::get_if<std::pair<uint64_t, bool>>(&argument);
+	std::pair<country_index_t, bool> const* country_mobilise = std::get_if<std::pair<country_index_t, bool>>(&argument);
 	if (OV_unlikely(country_mobilise == nullptr)) {
 		spdlog::error_s("GAME_ACTION_SET_MOBILISE called with invalid argument: {}", game_action_argument_to_string(argument));
 		return false;

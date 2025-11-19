@@ -1,5 +1,6 @@
 #pragma once
 
+#include <concepts>
 #include <cstdint>
 #include <functional>
 #include <optional>
@@ -12,6 +13,8 @@
 #include <tsl/ordered_set.h>
 
 #include <spdlog/common.h>
+
+#include <type_safe/strong_typedef.hpp>
 
 #include "openvic-simulation/types/Colour.hpp"
 #include "openvic-simulation/types/Date.hpp"
@@ -193,6 +196,28 @@ using namespace std::string_view_literals;
 		template<std::integral T>
 		NodeCallback auto expect_uint(callback_t<T>&& callback, int base = 10) {
 			return expect_uint(callback, base);
+		}
+
+		template<derived_from_specialization_of<type_safe::strong_typedef> T>
+		requires std::unsigned_integral<type_safe::underlying_type<T>>
+		NodeCallback auto expect_index(callback_t<T>& callback, int base = 10) {
+			using underlying_type = type_safe::underlying_type<T>;
+
+			return expect_uint64([callback](uint64_t val) mutable -> bool {
+				if (val <= static_cast<uint64_t>(std::numeric_limits<underlying_type>::max())) {
+					return callback(T(val));
+				}
+				spdlog::error_s(
+					"Invalid uint: {} (valid range: [0, {}])",
+					val, static_cast<uint64_t>(std::numeric_limits<underlying_type>::max()) 
+				);
+				return false;
+			}, base);
+		}
+		template<derived_from_specialization_of<type_safe::strong_typedef> T>
+		requires std::unsigned_integral<type_safe::underlying_type<T>>
+		NodeCallback auto expect_index(callback_t<T>&& callback, int base = 10) {
+			return expect_index(callback, base);
 		}
 
 		callback_t<std::string_view> expect_fixed_point_str(callback_t<fixed_point_t> callback);

@@ -7,6 +7,8 @@
 #include <cstdint>
 #include <ranges>
 
+#include <type_safe/strong_typedef.hpp>
+
 #include "openvic-simulation/country/CountryParty.hpp"
 #include "openvic-simulation/country/CountryDefinition.hpp"
 #include "openvic-simulation/country/CountryInstance.hpp"
@@ -37,6 +39,7 @@
 #include "openvic-simulation/utility/FormatValidate.hpp"
 #include "openvic-simulation/utility/Logger.hpp"
 #include "openvic-simulation/utility/Typedefs.hpp"
+
 
 using namespace OpenVic;
 
@@ -453,7 +456,7 @@ void Pop::allocate_for_needs(
 		GoodDefinition const& good_definition = *good_definition_ptr;
 		const ptrdiff_t i = it - scaled_needs.begin();
 		const fixed_point_t money_to_spend = money_to_spend_per_good_draft[i];
-		money_to_spend_per_good[good_definition.index] += money_to_spend;
+		money_to_spend_per_good[type_safe::get(good_definition.index)] += money_to_spend;
 		cash_left_to_spend -= money_to_spend;
 	}
 
@@ -577,7 +580,7 @@ void Pop::pop_tick_without_cleanup(
 				if (OV_likely(max_quantity_to_buy > 0)) { \
 					need_category##_needs_price_inverse_sum += market_instance.get_good_instance(good_definition).get_price_inverse(); \
 					need_category##_needs[good_definition_ptr] += max_quantity_to_buy; \
-					max_quantity_to_buy_per_good[good_definition.index] += max_quantity_to_buy; \
+					max_quantity_to_buy_per_good[type_safe::get(good_definition.index)] += max_quantity_to_buy; \
 				} \
 			} \
 		}

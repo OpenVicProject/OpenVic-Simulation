@@ -63,7 +63,7 @@ bool GoodDefinitionManager::add_good_definition(
 
 	if (good_definitions.emplace_item(
 		identifier,
-		identifier, colour, get_good_definition_count(), category, base_price, is_available_from_start,
+		identifier, colour, GoodDefinition::index_t { get_good_definition_count() }, category, base_price, is_available_from_start,
 		is_tradeable, is_money, has_overseas_penalty
 	)) {
 		category.good_definitions.push_back(&get_back_good_definition());

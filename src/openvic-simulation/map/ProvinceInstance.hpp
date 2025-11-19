@@ -14,6 +14,7 @@
 #include "openvic-simulation/types/HasIndex.hpp"
 #include "openvic-simulation/types/OrderedContainers.hpp"
 #include "openvic-simulation/types/ProvinceLifeRating.hpp"
+#include "openvic-simulation/types/TypedIndices.hpp"
 #include "openvic-simulation/types/UnitBranchType.hpp"
 #include "openvic-simulation/utility/Containers.hpp"
 #include "openvic-simulation/utility/ForwardableSpan.hpp"
@@ -48,7 +49,7 @@ namespace OpenVic {
 	//HasIndex index_t must match ProvinceDefinition's index_t
 	struct ProvinceInstance
 		: HasIdentifierAndColour,
-		HasIndex<ProvinceInstance, uint16_t>,
+		HasIndex<ProvinceInstance, province_index_t>,
 		FlagStrings,
 		PopsAggregate {
 		friend struct MapInstance;

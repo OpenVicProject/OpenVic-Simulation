@@ -6,6 +6,8 @@
 #include <cstddef>
 #include <cstdint>
 
+#include <type_safe/strong_typedef.hpp>
+
 #include "openvic-simulation/country/SharedCountryValues.hpp"
 #include "openvic-simulation/country/CountryDefinition.hpp"
 #include "openvic-simulation/defines/CountryDefines.hpp"
@@ -2065,7 +2067,7 @@ void CountryInstance::manage_national_stockpile(
 	fixed_point_t weights_sum = 0;
 
 	for (auto [good_instance, good_data] : goods_data) {
-		const size_t index = good_instance.index;
+		const size_t index = type_safe::get(good_instance.index);
 		if (good_data.is_automated || !good_data.is_selling) {
 			const fixed_point_t quantity_to_allocate_for = good_data.is_automated 
 				? good_data.government_needs - good_data.stockpile_amount

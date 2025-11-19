@@ -3,6 +3,8 @@
 
 #include <cstddef>
 
+#include <type_safe/strong_typedef.hpp>
+
 #include "openvic-simulation/country/CountryInstance.hpp"
 #include "openvic-simulation/defines/EconomyDefines.hpp"
 #include "openvic-simulation/economy/GoodDefinition.hpp"
@@ -267,7 +269,7 @@ void ArtisanalProducer::artisan_tick_handler::allocate_money_for_inputs(
 			);
 			max_quantity_to_buy_per_good[&input_good] = max_quantity_to_buy;
 			pop.allocate_cash_for_artisanal_spending(money_to_spend);
-			const size_t index_in_all_goods = input_good.index;
+			const size_t index_in_all_goods = type_safe::get(input_good.index);
 			pop_max_quantity_to_buy_per_good[index_in_all_goods] += max_quantity_to_buy;
 			pop_money_to_spend_per_good[index_in_all_goods] += money_to_spend;
 			debug_cash_left -= money_to_spend;

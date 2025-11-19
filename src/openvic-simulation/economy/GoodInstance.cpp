@@ -10,7 +10,7 @@ GoodInstance::GoodInstance(
 	GoodDefinition const* new_good_definition,
 	GameRulesManager const* new_game_rules_manager
 ) : HasIdentifierAndColour { *new_good_definition },
-  	HasIndex<GoodInstance> { new_good_definition->index },
+  	HasIndex { new_good_definition->index },
 	GoodMarket { *new_game_rules_manager, *new_good_definition }
 	{}
 

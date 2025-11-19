@@ -5,6 +5,7 @@
 #include "openvic-simulation/scripts/EffectScript.hpp"
 #include "openvic-simulation/types/HasIdentifier.hpp"
 #include "openvic-simulation/types/HasIndex.hpp"
+#include "openvic-simulation/types/TypedIndices.hpp"
 
 namespace OpenVic {	
 	struct ReformGroup;
@@ -26,7 +27,7 @@ namespace OpenVic {
 	struct Reform;
 
 	// Reform group (i.e. slavery)
-	struct ReformGroup : HasIndex<ReformGroup>, BaseIssueGroup {
+	struct ReformGroup : HasIndex<ReformGroup, reform_group_index_t>, BaseIssueGroup {
 
 	public:
 		ReformType const& reform_type;
@@ -52,7 +53,7 @@ namespace OpenVic {
 	};
 
 	// Reform (i.e. yes_slavery)
-	struct Reform : HasIndex<Reform>, BaseIssue {
+	struct Reform : HasIndex<Reform, reform_index_t>, BaseIssue {
 		friend struct IssueManager;
 		using tech_cost_t = uint32_t;
 

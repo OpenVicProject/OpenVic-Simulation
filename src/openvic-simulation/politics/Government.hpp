@@ -4,13 +4,14 @@
 #include "openvic-simulation/types/HasIdentifier.hpp"
 #include "openvic-simulation/types/HasIndex.hpp"
 #include "openvic-simulation/types/IdentifierRegistry.hpp"
+#include "openvic-simulation/types/TypedIndices.hpp"
 #include "openvic-simulation/utility/Containers.hpp"
 
 namespace OpenVic {
 	struct Ideology;
 	struct IdeologyManager;
 
-	struct GovernmentType : HasIndex<GovernmentType>, HasIdentifier {
+	struct GovernmentType : HasIndex<GovernmentType, government_type_index_t>, HasIdentifier {
 	private:
 		memory::vector<Ideology const*> PROPERTY(ideologies);
 		const bool PROPERTY_CUSTOM_PREFIX(elections, holds);

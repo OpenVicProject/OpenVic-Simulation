@@ -48,7 +48,7 @@ UnitTypeBranched<LAND>::UnitTypeBranched(
 	index_t new_index, std::string_view new_identifier,
 	unit_type_args_t& unit_args, regiment_type_args_t const& regiment_type_args
 ) : UnitType { new_identifier, LAND, unit_args },
-	HasIndex<UnitTypeBranched<unit_branch_t::LAND>> { new_index },
+	HasIndex { new_index },
 	allowed_cultures { regiment_type_args.allowed_cultures },
 	sprite_override { regiment_type_args.sprite_override },
 	sprite_mount { regiment_type_args.sprite_mount },
@@ -65,7 +65,7 @@ UnitTypeBranched<NAVAL>::UnitTypeBranched(
 	index_t new_index, std::string_view new_identifier,
 	unit_type_args_t& unit_args, ship_type_args_t const& ship_type_args
 ) : UnitType { new_identifier, NAVAL, unit_args },
-	HasIndex<UnitTypeBranched<unit_branch_t::NAVAL>> { new_index },
+	HasIndex { new_index },
 	naval_icon { ship_type_args.naval_icon },
 	sail { ship_type_args.sail },
 	transport { ship_type_args.transport },
@@ -133,7 +133,7 @@ bool UnitTypeManager::add_regiment_type(
 
 	bool ret = regiment_types.emplace_item(
 		identifier,
-		get_regiment_type_count(), identifier,
+		RegimentType::index_t { get_regiment_type_count() }, identifier,
 		unit_args, std::move(regiment_type_args)
 	);
 	if (ret) {
@@ -166,7 +166,7 @@ bool UnitTypeManager::add_ship_type(
 
 	bool ret = ship_types.emplace_item(
 		identifier,
-		get_ship_type_count(), identifier,
+		ShipType::index_t { get_ship_type_count() }, identifier,
 		unit_args, ship_type_args
 	);
 	if (ret) {

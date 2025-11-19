@@ -3,13 +3,14 @@
 #include "openvic-simulation/economy/trading/GoodMarket.hpp"
 #include "openvic-simulation/types/HasIndex.hpp"
 #include "openvic-simulation/types/HasIdentifier.hpp"
+#include "openvic-simulation/types/TypedIndices.hpp"
 
 namespace OpenVic {
 	struct GoodDefinition;
 	struct GoodDefinitionManager;
 	struct GoodInstanceManager;
 
-	struct GoodInstance : HasIdentifierAndColour, HasIndex<GoodInstance>, GoodMarket {
+	struct GoodInstance : HasIdentifierAndColour, HasIndex<GoodInstance, good_index_t>, GoodMarket {
 		friend struct GoodInstanceManager;
 
 	public:

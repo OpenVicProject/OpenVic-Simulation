@@ -4,12 +4,13 @@
 #include "openvic-simulation/types/HasIdentifier.hpp"
 #include "openvic-simulation/types/HasIndex.hpp"
 #include "openvic-simulation/types/OrderedContainers.hpp"
+#include "openvic-simulation/types/TypedIndices.hpp"
 #include "openvic-simulation/utility/Containers.hpp"
 
 namespace OpenVic {
 	// Using HasColour rather than HasIdentifierAndColour to avoid needing virtual inheritance
 	// (extending Modifier is more useful than extending HasIdentifierAndColour).
-	struct TerrainType : HasIndex<TerrainType>, Modifier, public HasColour {
+	struct TerrainType : HasIndex<TerrainType, terrain_type_index_t>, Modifier, public HasColour {
 	private:
 		ModifierValue PROPERTY(modifier);
 		fixed_point_t PROPERTY(movement_cost);

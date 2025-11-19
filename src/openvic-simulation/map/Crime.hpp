@@ -2,11 +2,12 @@
 
 #include "openvic-simulation/modifier/Modifier.hpp"
 #include "openvic-simulation/types/HasIndex.hpp"
+#include "openvic-simulation/types/TypedIndices.hpp"
 
 namespace OpenVic {
 	struct CrimeManager;
 
-	struct Crime final : HasIndex<Crime>, TriggeredModifier {
+	struct Crime final : HasIndex<Crime, crime_index_t>, TriggeredModifier {
 		friend struct CrimeManager;
 
 	private:

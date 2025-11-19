@@ -14,6 +14,8 @@
 #include <range/v3/algorithm/all_of.hpp>
 #include <range/v3/view/adjacent_remove_if.hpp>
 
+#include <type_safe/strong_typedef.hpp>
+
 #include "openvic-simulation/dataloader/NodeTools.hpp"
 #include "openvic-simulation/map/ProvinceDefinition.hpp"
 #include "openvic-simulation/modifier/ModifierManager.hpp"
@@ -35,19 +37,19 @@ MapDefinition::MapDefinition() {}
 ProvinceDefinition* MapDefinition::get_province_definition_from_number(
 	decltype(std::declval<ProvinceDefinition>().get_province_number())province_number
 ) {
-	return province_definitions.get_item_by_index(ProvinceDefinition::get_index_from_province_number(province_number));
+	return province_definitions.get_item_by_index(type_safe::get(ProvinceDefinition::get_index_from_province_number(province_number)));
 }
 ProvinceDefinition const* MapDefinition::get_province_definition_from_number(
 	decltype(std::declval<ProvinceDefinition>().get_province_number())province_number
 ) const {
-	return province_definitions.get_item_by_index(ProvinceDefinition::get_index_from_province_number(province_number));
+	return province_definitions.get_item_by_index(type_safe::get(ProvinceDefinition::get_index_from_province_number(province_number)));
 }
 
 RiverSegment::RiverSegment(uint8_t new_size, memory::vector<ivec2_t>&& new_points)
 	: size { new_size }, points { std::move(new_points) } {}
 
 bool MapDefinition::add_province_definition(std::string_view identifier, colour_t colour) {
-	if (province_definitions.size() >= max_provinces) {
+	if (province_definitions.size() >= type_safe::get(max_provinces)) {
 		spdlog::error_s(
 			"The map's province list is full - maximum number of provinces is {} (this can be at most {})",
 			max_provinces, ProvinceDefinition::MAX_INDEX
@@ -73,20 +75,20 @@ bool MapDefinition::add_province_definition(std::string_view identifier, colour_
 	if (province_number != ProvinceDefinition::NULL_INDEX) {
 		spdlog::error_s(
 			"Duplicate province colours: {} and {}",
-			get_province_definition_from_number(province_number)->to_string(), identifier
+			get_province_definition_from_number(type_safe::get(province_number))->to_string(), identifier
 		);
 		return false;
 	}
 
 	if (!province_definitions.emplace_item(
 		identifier,
-		identifier, colour, get_province_definition_count()
+		identifier, colour, ProvinceDefinition::index_t(get_province_definition_count())
 	)) {
 		return false;
 	}
 
 	ProvinceDefinition const& new_province = province_definitions.back();
-	colour_index_map[new_province.get_colour()] = new_province.get_province_number();
+	colour_index_map[new_province.get_colour()] = ProvinceDefinition::index_t(new_province.get_province_number());
 	return true;
 }
 
@@ -482,11 +484,11 @@ ProvinceDefinition::index_t MapDefinition::get_province_number_at(ivec2_t pos) c
 }
 
 ProvinceDefinition* MapDefinition::get_province_definition_at(ivec2_t pos) {
-	return get_province_definition_from_number(get_province_number_at(pos));
+	return get_province_definition_from_number(type_safe::get(get_province_number_at(pos)));
 }
 
 ProvinceDefinition const* MapDefinition::get_province_definition_at(ivec2_t pos) const {
-	return get_province_definition_from_number(get_province_number_at(pos));
+	return get_province_definition_from_number(type_safe::get(get_province_number_at(pos)));
 }
 
 bool MapDefinition::set_max_provinces(ProvinceDefinition::index_t new_max_provinces) {
@@ -504,8 +506,8 @@ bool MapDefinition::set_max_provinces(ProvinceDefinition::index_t new_max_provin
 		return false;
 	}
 	max_provinces = new_max_provinces;
-	path_map_land.reserve_space(max_provinces);
-	path_map_sea.reserve_space(max_provinces);
+	path_map_land.reserve_space(type_safe::get(max_provinces));
+	path_map_sea.reserve_space(type_safe::get(max_provinces));
 	return true;
 }
 
@@ -892,15 +894,15 @@ bool MapDefinition::load_map_images(fs::path const& province_path, fs::path cons
 
 			if (province_number != ProvinceDefinition::NULL_INDEX) {
 				const ProvinceDefinition::index_t array_index = province_number - 1;
-				pixels_per_province[array_index]++;
-				pixel_position_sum_per_province[array_index] += static_cast<fvec2_t>(pos);
+				pixels_per_province[type_safe::get(array_index)]++;
+				pixel_position_sum_per_province[type_safe::get(array_index)] += static_cast<fvec2_t>(pos);
 			}
 
 			const TerrainTypeMapping::index_t terrain = terrain_data[pixel_index];
 			TerrainTypeMapping const* mapping = terrain_type_manager.get_terrain_type_mapping_for(terrain);
 			if (mapping != nullptr) {
 				if (province_number != ProvinceDefinition::NULL_INDEX) {
-					terrain_type_pixels_list[province_number - 1][&mapping->type]++;
+					terrain_type_pixels_list[type_safe::get(province_number - 1)][&mapping->type]++;
 				}
 				if (mapping->has_texture && terrain < terrain_type_manager.get_terrain_texture_limit()) {
 					province_shape_image[pixel_index].terrain = terrain + 1;

@@ -7,9 +7,10 @@
 #include "openvic-simulation/types/HasIdentifier.hpp"
 #include "openvic-simulation/types/HasIndex.hpp"
 #include "openvic-simulation/types/IdentifierRegistry.hpp"
+#include "openvic-simulation/types/TypedIndices.hpp"
 
 namespace OpenVic {
-	struct Bookmark : HasIdentifier, HasIndex<Bookmark> {
+	struct Bookmark : HasIdentifier, HasIndex<Bookmark, bookmark_index_t> {
 
 	private:
 		memory::string PROPERTY(name);

@@ -20,7 +20,7 @@ TerrainType::TerrainType(
 	fixed_point_t new_defence_bonus,
 	fixed_point_t new_combat_width_percentage_change,
 	bool new_is_water
-) : HasIndex<TerrainType> { new_index },
+) : HasIndex { new_index },
 	Modifier { new_identifier, std::move(new_modifier), modifier_type_t::TERRAIN },
 	HasColour { new_colour, false },
 	movement_cost { new_movement_cost },
@@ -95,7 +95,7 @@ bool TerrainTypeManager::add_terrain_type(
 
 	return terrain_types.emplace_item(
 		identifier,
-		get_terrain_type_count(), identifier,
+		TerrainType::index_t { get_terrain_type_count() }, identifier,
 		colour, std::move(values), movement_cost, defence_bonus, combat_width_percentage_change, is_water
 	);
 }

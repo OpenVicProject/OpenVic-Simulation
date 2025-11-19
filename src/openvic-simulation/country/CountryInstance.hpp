@@ -18,6 +18,7 @@
 #include "openvic-simulation/types/IndexedFlatMap.hpp"
 #include "openvic-simulation/types/OrderedContainers.hpp"
 #include "openvic-simulation/types/TechnologyUnlockLevel.hpp"
+#include "openvic-simulation/types/TypedIndices.hpp"
 #include "openvic-simulation/types/UnitBranchType.hpp"
 #include "openvic-simulation/types/UnitVariant.hpp"
 #include "openvic-simulation/types/ValueHistory.hpp"
@@ -78,7 +79,7 @@ namespace OpenVic {
 
 	/* Representation of a country's mutable attributes, with a CountryDefinition that is unique at any single time
 	 * but can be swapped with other CountryInstance's CountryDefinition when switching tags. */
-	struct CountryInstance : FlagStrings, HasIndex<CountryInstance>, PopsAggregate {
+	struct CountryInstance : FlagStrings, HasIndex<CountryInstance, country_index_t>, PopsAggregate {
 		friend struct CountryInstanceManager;
 
 		/*

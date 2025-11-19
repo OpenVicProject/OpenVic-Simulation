@@ -4,6 +4,7 @@
 #include "openvic-simulation/types/HasIdentifier.hpp"
 #include "openvic-simulation/types/HasIndex.hpp"
 #include "openvic-simulation/types/IdentifierRegistry.hpp"
+#include "openvic-simulation/types/TypedIndices.hpp"
 
 namespace OpenVic {
 	struct IdeologyManager;
@@ -14,7 +15,7 @@ namespace OpenVic {
 		IdeologyGroup(IdeologyGroup&&) = default;
 	};
 
-	struct Ideology : HasIdentifierAndColour, HasIndex<Ideology> {
+	struct Ideology : HasIdentifierAndColour, HasIndex<Ideology, ideology_index_t> {
 		friend struct IdeologyManager;
 
 		static constexpr colour_t NO_IDEOLOGY_COLOUR = colour_t::fill_as(colour_t::max_value);

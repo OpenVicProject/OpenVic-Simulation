@@ -1,6 +1,7 @@
 #pragma once
 
 #include <optional>
+#include <utility>
 
 #include "openvic-simulation/dataloader/NodeTools.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
@@ -8,6 +9,7 @@
 #include "openvic-simulation/types/HasIdentifier.hpp"
 #include "openvic-simulation/types/HasIndex.hpp"
 #include "openvic-simulation/types/OrderedContainers.hpp"
+#include "openvic-simulation/types/TypedIndices.hpp"
 #include "openvic-simulation/types/Vector.hpp"
 #include "openvic-simulation/utility/Containers.hpp"
 
@@ -26,7 +28,7 @@ namespace OpenVic {
 	 * MAP-5, MAP-7, MAP-8, MAP-43, MAP-47
 	 * POP-22
 	 */
-	struct ProvinceDefinition : HasIdentifierAndColour, HasIndex<ProvinceDefinition, uint16_t> {
+	struct ProvinceDefinition : HasIdentifierAndColour, HasIndex<ProvinceDefinition, province_index_t> {
 		friend struct MapDefinition;
 
 		using distance_t = fixed_point_t; // should this go inside adjacency_t?
@@ -82,7 +84,7 @@ namespace OpenVic {
 			fixed_point_map_t<BuildingType const*> building_rotation;
 		};
 
-		static constexpr index_t NULL_INDEX = 0, MAX_INDEX = std::numeric_limits<index_t>::max();
+		static constexpr index_t NULL_INDEX { 0 }, MAX_INDEX = std::numeric_limits<index_t>::max();
 
 	private:
 		/* Immutable attributes (unchanged after initial game load) */
@@ -112,11 +114,11 @@ namespace OpenVic {
 			return region != nullptr;
 		}
 
-		constexpr index_t get_province_number() const {
-			return index+1;
+		constexpr std::size_t get_province_number() const {
+			return index.value_ + 1;
 		}
-		static constexpr index_t get_index_from_province_number(const index_t province_number) {
-			return province_number - 1;
+		static constexpr index_t get_index_from_province_number(const std::size_t province_number) {
+			return index_t(province_number - 1);
 		}
 
 		/* The positions' y coordinates need to be inverted. */

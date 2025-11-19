@@ -12,7 +12,7 @@ BuildingType::BuildingType(
 	index_t new_index,
 	std::string_view identifier,
 	building_type_args_t& building_type_args
-) : HasIndex<BuildingType> { new_index },
+) : HasIndex { new_index },
 	Modifier { identifier, std::move(building_type_args.modifier), modifier_type_t::BUILDING },
 	type { building_type_args.type },
 	on_completion { building_type_args.on_completion },
@@ -52,7 +52,7 @@ bool BuildingTypeManager::add_building_type(
 
 	const bool ret = building_types.emplace_item(
 		identifier,
-		get_building_type_count(), identifier, building_type_args
+		BuildingType::index_t { get_building_type_count() }, identifier, building_type_args
 	);
 
 	if (ret) {

@@ -13,6 +13,7 @@
 #include "openvic-simulation/types/HasIndex.hpp"
 #include "openvic-simulation/types/IdentifierRegistry.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
+#include "openvic-simulation/types/TypedIndices.hpp"
 #include "openvic-simulation/types/UnitBranchType.hpp"
 
 namespace OpenVic {
@@ -82,7 +83,7 @@ namespace OpenVic {
 	};
 
 	template<>
-	struct UnitTypeBranched<unit_branch_t::LAND> : UnitType, HasIndex<UnitTypeBranched<unit_branch_t::LAND>> {
+	struct UnitTypeBranched<unit_branch_t::LAND> : UnitType, HasIndex<RegimentType, regiment_type_index_t> {
 		static constexpr regiment_allowed_cultures_t allowed_cultures_get_most_permissive(
 			regiment_allowed_cultures_t lhs, regiment_allowed_cultures_t rhs
 		) {
@@ -124,7 +125,7 @@ namespace OpenVic {
 	};
 
 	template<>
-	struct UnitTypeBranched<unit_branch_t::NAVAL> : UnitType, HasIndex<UnitTypeBranched<unit_branch_t::NAVAL>> {
+	struct UnitTypeBranched<unit_branch_t::NAVAL> : UnitType, HasIndex<ShipType, ship_type_index_t> {
 		struct ship_type_args_t {
 			icon_t naval_icon = 0;
 			bool sail = false, transport = false, capital = false, build_overseas = false;

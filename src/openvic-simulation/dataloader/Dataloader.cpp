@@ -784,7 +784,7 @@ bool Dataloader::_load_map_dir(DefinitionManager& definition_manager) const {
 
 	bool ret = expect_dictionary_keys(
 		"max_provinces", ONE_EXACTLY,
-			expect_uint<ProvinceDefinition::index_t>(std::bind_front(&MapDefinition::set_max_provinces, &map_definition)),
+			expect_index<ProvinceDefinition::index_t>(std::bind_front(&MapDefinition::set_max_provinces, &map_definition)),
 		"sea_starts", ONE_EXACTLY,
 			expect_list_reserve_length(
 				water_province_identifiers, expect_identifier(vector_callback(water_province_identifiers))
