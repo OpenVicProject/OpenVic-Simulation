@@ -18,7 +18,7 @@ namespace OpenVic {
 		using utility::forwardable_span<ValueType, _Extent>::forwardable_span;
 
 		constexpr IndexType size() const {
-			return IndexType(std::span<ValueType, _Extent>::size());
+			return IndexType(utility::forwardable_span<ValueType, _Extent>::size());
 		}
 
 		constexpr utility::forwardable_span<ValueType, _Extent>::reference operator[](const IndexType _Off) const {
