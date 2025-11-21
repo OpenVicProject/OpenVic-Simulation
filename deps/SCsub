@@ -183,7 +183,7 @@ def build_spdlog(env):
 
     env.Append(CPPPATH=[env.spdlog["INCPATH"]])
     if env.get("is_msvc", False):
-        env.Append(CXXFLAGS=["/external:I", env.spdlog["INCPATH"][0], "/external:W0"])
+        env.Append(CXXFLAGS=[f"/external:I{env.spdlog['INCPATH'][0]}"])
     else:
         env.Append(CXXFLAGS=["-isystem", env.spdlog["INCPATH"][0]])
     env.Append(LIBPATH=[source_dir])
@@ -243,9 +243,9 @@ def build_type_safe(env):
     debug_assert_include_path = "type_safe/external/debug_assert"
     env.type_safe = {}
     env.type_safe["INCPATH"] = [env.Dir(include_path), env.Dir(debug_assert_include_path)]
-    env.Append(CPPPATH=env.type_safe["INCPATH"])
+    env.Append(CPPPATH=[env.type_safe["INCPATH"]])
     if env.get("is_msvc", False):
-        env.Append(CXXFLAGS=["/external:I", env.type_safe["INCPATH"][0], "/external:W0"])
+        env.Append(CXXFLAGS=[f"/external:I{env.type_safe['INCPATH'][0]}"])
     else:
         env.Append(CXXFLAGS=["-isystem", env.type_safe["INCPATH"][0]])
     env.exposed_includes += env.type_safe["INCPATH"]
@@ -257,6 +257,9 @@ def link_tbb(env):
     if not env.get("is_msvc", False) and not env.get("use_mingw", False) and sys.platform != "darwin":
         env.ParseConfig("pkg-config tbb --cflags --libs")
 
+
+if env.get("is_msvc", False):
+    env.AppendUnique(CXXFLAGS=["/external:W0"])
 
 build_openvic_dataloader(env)
 build_lexy_vdf(env)
