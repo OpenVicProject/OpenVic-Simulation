@@ -12,6 +12,7 @@
 #include "openvic-simulation/types/TypedIndices.hpp"
 #include "openvic-simulation/types/Vector.hpp"
 #include "openvic-simulation/utility/Containers.hpp"
+#include "type_safe/strong_typedef.hpp"
 
 namespace OpenVic {
 
@@ -84,9 +85,10 @@ namespace OpenVic {
 			fixed_point_map_t<BuildingType const*> building_rotation;
 		};
 
-		static constexpr index_t NULL_INDEX { 0 }, MAX_INDEX = std::numeric_limits<index_t>::max();
+		static constexpr type_safe::underlying_type<index_t> NULL_PROVINCE_NUMBER { 0 };
 
 	private:
+		using province_number_t = type_safe::underlying_type<province_index_t>;
 		/* Immutable attributes (unchanged after initial game load) */
 		Region const* PROPERTY(region, nullptr);
 		Climate const* PROPERTY(climate, nullptr);
@@ -114,10 +116,13 @@ namespace OpenVic {
 			return region != nullptr;
 		}
 
-		constexpr std::size_t get_province_number() const {
-			return index.value_ + 1;
+		constexpr province_number_t get_province_number() const {
+			return get_province_number_from_index(index);
 		}
-		static constexpr index_t get_index_from_province_number(const std::size_t province_number) {
+		static constexpr province_number_t get_province_number_from_index(const province_index_t index) {
+			return type_safe::get(index) + 1;
+		}
+		static constexpr index_t get_index_from_province_number(const province_number_t province_number) {
 			return index_t(province_number - 1);
 		}
 

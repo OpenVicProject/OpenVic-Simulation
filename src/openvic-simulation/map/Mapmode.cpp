@@ -88,7 +88,7 @@ bool MapmodeManager::generate_mapmode_colours(
 
 	Mapmode::base_stripe_t* target_stripes = reinterpret_cast<Mapmode::base_stripe_t*>(target);
 
-	target_stripes[type_safe::get(ProvinceDefinition::NULL_INDEX)] = colour_argb_t::null();
+	target_stripes[ProvinceDefinition::NULL_PROVINCE_NUMBER] = colour_argb_t::null();
 
 	for (ProvinceInstance const& province : map_instance.get_province_instances()) {
 		target_stripes[province.province_definition.get_province_number()] = mapmode->get_base_stripe_colours(
