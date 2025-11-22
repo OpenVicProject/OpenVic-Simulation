@@ -1,401 +1,202 @@
 #include "GameAction.hpp"
 
-#include <fmt/std.h>
-#include <fmt/ranges.h>
-
 #include "openvic-simulation/DefinitionManager.hpp"
 #include "openvic-simulation/InstanceManager.hpp"
-#include "utility/Containers.hpp"
 #include "openvic-simulation/utility/Typedefs.hpp"
 
 using namespace OpenVic;
 
-memory::string OpenVic::game_action_argument_to_string(game_action_argument_t const& argument) {
-	return memory::fmt::format("{}", argument);
-}
-
-GameActionManager::GameActionManager(InstanceManager& new_instance_manager)
-	: instance_manager { new_instance_manager } {}
-
-std::array<
-	GameActionManager::game_action_callback_t, static_cast<size_t>(game_action_type_t::MAX_GAME_ACTION)
-> GameActionManager::GAME_ACTION_CALLBACKS {
-	// GAME_ACTION_NONE
-	&GameActionManager::game_action_callback_none,
-
-	// Core
-	// GAME_ACTION_TICK
-	&GameActionManager::game_action_callback_tick,
-	// GAME_ACTION_SET_PAUSE
-	&GameActionManager::game_action_callback_set_pause,
-	// GAME_ACTION_SET_SPEED
-	&GameActionManager::game_action_callback_set_speed,
-	// GAME_ACTION_SET_AI
-	&GameActionManager::game_action_callback_set_ai,
-
-	// Production
-	// GAME_ACTION_EXPAND_PROVINCE_BUILDING
-	&GameActionManager::game_action_callback_expand_province_building,
-
-	// Budget
-	// GAME_ACTION_SET_STRATA_TAX
-	&GameActionManager::game_action_callback_set_strata_tax,
-	// GAME_ACTION_SET_ARMY_SPENDING
-	&GameActionManager::game_action_callback_set_army_spending,
-	// GAME_ACTION_SET_NAVY_SPENDING
-	&GameActionManager::game_action_callback_set_navy_spending,
-	// GAME_ACTION_SET_CONSTRUCTION_SPENDING
-	&GameActionManager::game_action_callback_set_construction_spending,
-	// GAME_ACTION_SET_EDUCATION_SPENDING
-	&GameActionManager::game_action_callback_set_education_spending,
-	// GAME_ACTION_SET_ADMINISTRATION_SPENDING
-	&GameActionManager::game_action_callback_set_administration_spending,
-	// GAME_ACTION_SET_SOCIAL_SPENDING
-	&GameActionManager::game_action_callback_set_social_spending,
-	// GAME_ACTION_SET_MILITARY_SPENDING
-	&GameActionManager::game_action_callback_set_military_spending,
-	// GAME_ACTION_SET_TARIFF_RATE
-	&GameActionManager::game_action_callback_set_tariff_rate,
-
-	// Technology
-	// GAME_ACTION_START_RESEARCH
-	&GameActionManager::game_action_callback_start_research,
-
-	// Politics
-
-	// Population
-
-	// Trade
-	// GAME_ACTION_SET_GOOD_AUTOMATED
-	&GameActionManager::game_action_callback_set_good_automated,
-	// GAME_ACTION_SET_GOOD_TRADE_ORDER
-	&GameActionManager::game_action_callback_set_good_trade_order,
-
-	// Diplomacy
-
-	// Military
-	// GAME_ACTION_CREATE_LEADER
-	&GameActionManager::game_action_callback_create_leader,
-	// GAME_ACTION_SET_USE_LEADER
-	&GameActionManager::game_action_callback_set_use_leader,
-	// GAME_ACTION_SET_AUTO_CREATE_LEADERS
-	&GameActionManager::game_action_callback_set_auto_create_leaders,
-	// GAME_ACTION_SET_AUTO_ASSIGN_LEADERS
-	&GameActionManager::game_action_callback_set_auto_assign_leaders,
-	// GAME_ACTION_SET_MOBILISE
-	&GameActionManager::game_action_callback_set_mobilise
-};
-
-bool GameActionManager::execute_game_action(game_action_t const& game_action) const {
-	return (this->*GAME_ACTION_CALLBACKS[static_cast<size_t>(game_action.first)])(game_action.second);
-}
-
-bool GameActionManager::game_action_callback_none(game_action_argument_t const& argument) const {
-	if (OV_unlikely(!std::holds_alternative<std::monostate>(argument))) {
-		spdlog::warn_s("GAME_ACTION_NONE called with invalid argument: {}", game_action_argument_to_string(argument));
-	}
-
+bool GameActionManager::VariantVisitor::operator() (none_argument_t const& argument) const {
 	return false;
 }
 
 // Core
-bool GameActionManager::game_action_callback_tick(game_action_argument_t const& argument) const {
-	if (OV_unlikely(!std::holds_alternative<std::monostate>(argument))) {
-		spdlog::warn_s("GAME_ACTION_TICK called with invalid argument: {}", game_action_argument_to_string(argument));
-	}
-
+bool GameActionManager::VariantVisitor::operator() (tick_argument_t const& argument) const {
 	instance_manager.tick();
 	return true;
 }
 
-bool GameActionManager::game_action_callback_set_pause(game_action_argument_t const& argument) const {
-	bool const* pause = std::get_if<bool>(&argument);
-	if (OV_unlikely(pause == nullptr)) {
-		spdlog::error_s("GAME_ACTION_SET_PAUSE called with invalid argument: {}", game_action_argument_to_string(argument));
-		return false;
-	}
-
+bool GameActionManager::VariantVisitor::operator() (set_pause_argument_t const& new_is_paused) const {
 	const bool old_pause = instance_manager.get_simulation_clock().is_paused();
-
-	instance_manager.get_simulation_clock().set_paused(*pause);
-
+	instance_manager.get_simulation_clock().set_paused(type_safe::get(new_is_paused));
 	return old_pause != instance_manager.get_simulation_clock().is_paused();
 }
 
-bool GameActionManager::game_action_callback_set_speed(game_action_argument_t const& argument) const {
-	int64_t const* speed = std::get_if<int64_t>(&argument);
-	if (OV_unlikely(speed == nullptr)) {
-		spdlog::error_s("GAME_ACTION_SET_SPEED called with invalid argument: {}", game_action_argument_to_string(argument));
-		return false;
-	}
-
+bool GameActionManager::VariantVisitor::operator() (set_speed_argument_t const& new_speed) const {
 	const SimulationClock::speed_t old_speed = instance_manager.get_simulation_clock().get_simulation_speed();
-
-	instance_manager.get_simulation_clock().set_simulation_speed(*speed);
-
+	instance_manager.get_simulation_clock().set_simulation_speed(type_safe::get(new_speed));
 	return old_speed != instance_manager.get_simulation_clock().get_simulation_speed();
 }
 
-bool GameActionManager::game_action_callback_set_ai(game_action_argument_t const& argument) const {
-	std::pair<country_index_t, bool> const* country_ai = std::get_if<std::pair<country_index_t, bool>>(&argument);
-	if (OV_unlikely(country_ai == nullptr)) {
-		spdlog::error_s("GAME_ACTION_SET_AI called with invalid argument: {}", game_action_argument_to_string(argument));
-		return false;
-	}
-
-	CountryInstance* country =
-		instance_manager.get_country_instance_manager().get_country_instance_by_index(country_ai->first);
+bool GameActionManager::VariantVisitor::operator() (set_ai_argument_t const& argument) const {
+	const auto [country_index, new_is_ai] = argument;
+	CountryInstance* country = instance_manager.get_country_instance_manager().get_country_instance_by_index(country_index);
 
 	if (OV_unlikely(country == nullptr)) {
-		spdlog::error_s("GAME_ACTION_SET_AI called with invalid country index: {}", country_ai->first);
+		spdlog::error_s("GAME_ACTION_SET_AI called with invalid country index: {}", country_index);
 		return false;
 	}
 
 	const bool old_ai = country->is_ai();
-
-	country->set_ai(country_ai->second);
-
+	country->set_ai(new_is_ai);
 	return old_ai != country->is_ai();
 }
 
 // Production
-bool GameActionManager::game_action_callback_expand_province_building(game_action_argument_t const& argument) const {
-	std::pair<uint64_t, uint64_t> const* province_building = std::get_if<std::pair<uint64_t, uint64_t>>(&argument);
-	if (OV_unlikely(province_building == nullptr)) {
-		spdlog::error_s(
-			"GAME_ACTION_EXPAND_PROVINCE_BUILDING called with invalid argument: {}", game_action_argument_to_string(argument)
-		);
-		return false;
-	}
-
-	ProvinceInstance* province = instance_manager.get_map_instance().get_province_instance_from_number(province_building->first);
+bool GameActionManager::VariantVisitor::operator() (expand_province_building_argument_t const& argument) const {
+	const auto [province_index, building_type_index] = argument;
+	ProvinceInstance* province = instance_manager.get_map_instance().get_province_instance_by_index(province_index);
 
 	if (OV_unlikely(province == nullptr)) {
-		spdlog::error_s("GAME_ACTION_EXPAND_PROVINCE_BUILDING called with invalid province index: {}", province_building->first);
+		spdlog::error_s("GAME_ACTION_EXPAND_PROVINCE_BUILDING called with invalid province index: {}", province_index);
 		return false;
 	}
 
-	return province->expand_building(province_building->second);
+	return province->expand_building(building_type_index);
 }
 
 // Budget
-bool GameActionManager::game_action_callback_set_strata_tax(game_action_argument_t const& argument) const {
-	std::tuple<country_index_t, uint64_t, fixed_point_t> const* country_strata_value =
-		std::get_if<std::tuple<country_index_t, uint64_t, fixed_point_t>>(&argument);
-	if (OV_unlikely(country_strata_value == nullptr)) {
-		spdlog::error_s("GAME_ACTION_SET_STRATA_TAX called with invalid argument: {}", game_action_argument_to_string(argument));
-		return false;
-	}
-
-	CountryInstance* country =
-		instance_manager.get_country_instance_manager().get_country_instance_by_index(std::get<0>(*country_strata_value));
+bool GameActionManager::VariantVisitor::operator() (set_strata_tax_argument_t const& argument) const {
+	const auto [country_index, strata_index, tax_rate] = argument;
+	CountryInstance* country = instance_manager.get_country_instance_manager().get_country_instance_by_index(country_index);
 
 	if (OV_unlikely(country == nullptr)) {
-		spdlog::error_s("GAME_ACTION_SET_STRATA_TAX called with invalid country index: {}", std::get<0>(*country_strata_value));
+		spdlog::error_s("GAME_ACTION_SET_STRATA_TAX called with invalid country index: {}", country_index);
 		return false;
 	}
 
-	Strata const* strata =
-		instance_manager.definition_manager.get_pop_manager().get_strata_by_index(std::get<1>(*country_strata_value));
+	Strata const* strata = instance_manager.definition_manager.get_pop_manager().get_strata_by_index(type_safe::get(strata_index));
 
 	if (OV_unlikely(strata == nullptr)) {
-		spdlog::error_s("GAME_ACTION_SET_STRATA_TAX called with invalid strata index: {}", std::get<1>(*country_strata_value));
+		spdlog::error_s("GAME_ACTION_SET_STRATA_TAX called with invalid strata index: {}", strata_index);
 		return false;
 	}
 
-	country->set_strata_tax_rate_slider_value(*strata, std::get<2>(*country_strata_value));
+	country->set_strata_tax_rate_slider_value(*strata, tax_rate);
 	return false;
 }
 
-bool GameActionManager::game_action_callback_set_army_spending(game_action_argument_t const& argument) const {
-	std::pair<country_index_t, fixed_point_t> const* country_value = std::get_if<std::pair<country_index_t, fixed_point_t>>(&argument);
-	if (OV_unlikely(country_value == nullptr)) {
-		spdlog::error_s(
-			"GAME_ACTION_SET_ARMY_SPENDING called with invalid argument: {}", game_action_argument_to_string(argument)
-		);
-		return false;
-	}
-
-	CountryInstance* country =
-		instance_manager.get_country_instance_manager().get_country_instance_by_index(country_value->first);
+bool GameActionManager::VariantVisitor::operator() (set_army_spending_argument_t const& argument) const {
+	const auto [country_index, spending] = argument;
+	CountryInstance* country = instance_manager.get_country_instance_manager().get_country_instance_by_index(country_index);
 
 	if (OV_unlikely(country == nullptr)) {
-		spdlog::error_s("GAME_ACTION_SET_ARMY_SPENDING called with invalid country index: {}", country_value->first);
+		spdlog::error_s("GAME_ACTION_SET_ARMY_SPENDING called with invalid country index: {}", country_index);
 		return false;
 	}
 
-	country->set_army_spending_slider_value(country_value->second);
+	country->set_army_spending_slider_value(spending);
 	return false;
 }
 
-bool GameActionManager::game_action_callback_set_navy_spending(game_action_argument_t const& argument) const {
-	std::pair<country_index_t, fixed_point_t> const* country_value = std::get_if<std::pair<country_index_t, fixed_point_t>>(&argument);
-	if (OV_unlikely(country_value == nullptr)) {
-		spdlog::error_s(
-			"GAME_ACTION_SET_NAVY_SPENDING called with invalid argument: {}", game_action_argument_to_string(argument)
-		);
-		return false;
-	}
-
-	CountryInstance* country =
-		instance_manager.get_country_instance_manager().get_country_instance_by_index(country_value->first);
+bool GameActionManager::VariantVisitor::operator() (set_navy_spending_argument_t const& argument) const {
+	const auto [country_index, spending] = argument;
+	CountryInstance* country = instance_manager.get_country_instance_manager().get_country_instance_by_index(country_index);
 
 	if (OV_unlikely(country == nullptr)) {
-		spdlog::error_s("GAME_ACTION_SET_NAVY_SPENDING called with invalid country index: {}", country_value->first);
+		spdlog::error_s("GAME_ACTION_SET_NAVY_SPENDING called with invalid country index: {}", country_index);
 		return false;
 	}
 
-	country->set_navy_spending_slider_value(country_value->second);
+	country->set_navy_spending_slider_value(spending);
 	return false;
 }
 
-bool GameActionManager::game_action_callback_set_construction_spending(game_action_argument_t const& argument) const {
-	std::pair<country_index_t, fixed_point_t> const* country_value = std::get_if<std::pair<country_index_t, fixed_point_t>>(&argument);
-	if (OV_unlikely(country_value == nullptr)) {
-		spdlog::error_s(
-			"GAME_ACTION_SET_CONSTRUCTION_SPENDING called with invalid argument: {}", game_action_argument_to_string(argument)
-		);
-		return false;
-	}
-
-	CountryInstance* country =
-		instance_manager.get_country_instance_manager().get_country_instance_by_index(country_value->first);
+bool GameActionManager::VariantVisitor::operator() (set_construction_spending_argument_t const& argument) const {
+	const auto [country_index, spending] = argument;
+	CountryInstance* country = instance_manager.get_country_instance_manager().get_country_instance_by_index(country_index);
 
 	if (OV_unlikely(country == nullptr)) {
-		spdlog::error_s("GAME_ACTION_SET_CONSTRUCTION_SPENDING called with invalid country index: {}", country_value->first);
+		spdlog::error_s("GAME_ACTION_SET_CONSTRUCTION_SPENDING called with invalid country index: {}", country_index);
 		return false;
 	}
 
-	country->set_construction_spending_slider_value(country_value->second);
+	country->set_construction_spending_slider_value(spending);
 	return false;
 }
 
-bool GameActionManager::game_action_callback_set_education_spending(game_action_argument_t const& argument) const {
-	std::pair<country_index_t, fixed_point_t> const* country_value = std::get_if<std::pair<country_index_t, fixed_point_t>>(&argument);
-	if (OV_unlikely(country_value == nullptr)) {
-		spdlog::error_s(
-			"GAME_ACTION_SET_EDUCATION_SPENDING called with invalid argument: {}", game_action_argument_to_string(argument)
-		);
-		return false;
-	}
-
-	CountryInstance* country =
-		instance_manager.get_country_instance_manager().get_country_instance_by_index(country_value->first);
+bool GameActionManager::VariantVisitor::operator() (set_education_spending_argument_t const& argument) const {
+	const auto [country_index, spending] = argument;
+	CountryInstance* country = instance_manager.get_country_instance_manager().get_country_instance_by_index(country_index);
 
 	if (OV_unlikely(country == nullptr)) {
-		spdlog::error_s("GAME_ACTION_SET_EDUCATION_SPENDING called with invalid country index: {}", country_value->first);
+		spdlog::error_s("GAME_ACTION_SET_EDUCATION_SPENDING called with invalid country index: {}", country_index);
 		return false;
 	}
 
-	country->set_education_spending_slider_value(country_value->second);
+	country->set_education_spending_slider_value(spending);
 	return false;
 }
 
-bool GameActionManager::game_action_callback_set_administration_spending(game_action_argument_t const& argument) const {
-	std::pair<country_index_t, fixed_point_t> const* country_value = std::get_if<std::pair<country_index_t, fixed_point_t>>(&argument);
-	if (OV_unlikely(country_value == nullptr)) {
-		spdlog::error_s(
-			"GAME_ACTION_SET_ADMINISTRATION_SPENDING called with invalid argument: {}", game_action_argument_to_string(argument)
-		);
-		return false;
-	}
-
-	CountryInstance* country =
-		instance_manager.get_country_instance_manager().get_country_instance_by_index(country_value->first);
+bool GameActionManager::VariantVisitor::operator() (set_administration_spending_argument_t const& argument) const {
+	const auto [country_index, spending] = argument;
+	CountryInstance* country = instance_manager.get_country_instance_manager().get_country_instance_by_index(country_index);
 
 	if (OV_unlikely(country == nullptr)) {
-		spdlog::error_s("GAME_ACTION_SET_ADMINISTRATION_SPENDING called with invalid country index: {}", country_value->first);
+		spdlog::error_s("GAME_ACTION_SET_ADMINISTRATION_SPENDING called with invalid country index: {}", country_index);
 		return false;
 	}
 
-	country->set_administration_spending_slider_value(country_value->second);
+	country->set_administration_spending_slider_value(spending);
 	return false;
 }
 
-bool GameActionManager::game_action_callback_set_social_spending(game_action_argument_t const& argument) const {
-	std::pair<country_index_t, fixed_point_t> const* country_value = std::get_if<std::pair<country_index_t, fixed_point_t>>(&argument);
-	if (OV_unlikely(country_value == nullptr)) {
-		spdlog::error_s(
-			"GAME_ACTION_SET_SOCIAL_SPENDING called with invalid argument: {}", game_action_argument_to_string(argument)
-		);
-		return false;
-	}
-
-	CountryInstance* country =
-		instance_manager.get_country_instance_manager().get_country_instance_by_index(country_value->first);
+bool GameActionManager::VariantVisitor::operator() (set_social_spending_argument_t const& argument) const {
+	const auto [country_index, spending] = argument;
+	CountryInstance* country = instance_manager.get_country_instance_manager().get_country_instance_by_index(country_index);
 
 	if (OV_unlikely(country == nullptr)) {
-		spdlog::error_s("GAME_ACTION_SET_SOCIAL_SPENDING called with invalid country index: {}", country_value->first);
+		spdlog::error_s("GAME_ACTION_SET_SOCIAL_SPENDING called with invalid country index: {}", country_index);
 		return false;
 	}
 
-	country->set_social_spending_slider_value(country_value->second);
+	country->set_social_spending_slider_value(spending);
 	return false;
 }
 
-bool GameActionManager::game_action_callback_set_military_spending(game_action_argument_t const& argument) const {
-	std::pair<country_index_t, fixed_point_t> const* country_value = std::get_if<std::pair<country_index_t, fixed_point_t>>(&argument);
-	if (OV_unlikely(country_value == nullptr)) {
-		spdlog::error_s(
-			"GAME_ACTION_SET_MILITARY_SPENDING called with invalid argument: {}", game_action_argument_to_string(argument)
-		);
-		return false;
-	}
-
-	CountryInstance* country =
-		instance_manager.get_country_instance_manager().get_country_instance_by_index(country_value->first);
+bool GameActionManager::VariantVisitor::operator() (set_military_spending_argument_t const& argument) const {
+	const auto [country_index, spending] = argument;
+	CountryInstance* country = instance_manager.get_country_instance_manager().get_country_instance_by_index(country_index);
 
 	if (OV_unlikely(country == nullptr)) {
-		spdlog::error_s("GAME_ACTION_SET_MILITARY_SPENDING called with invalid country index: {}", country_value->first);
+		spdlog::error_s("GAME_ACTION_SET_MILITARY_SPENDING called with invalid country index: {}", country_index);
 		return false;
 	}
 
-	country->set_military_spending_slider_value(country_value->second);
+	country->set_military_spending_slider_value(spending);
 	return false;
 }
 
-bool GameActionManager::game_action_callback_set_tariff_rate(game_action_argument_t const& argument) const {
-	std::pair<country_index_t, fixed_point_t> const* country_value = std::get_if<std::pair<country_index_t, fixed_point_t>>(&argument);
-	if (OV_unlikely(country_value == nullptr)) {
-		spdlog::error_s("GAME_ACTION_SET_TARIFF_RATE called with invalid argument: {}", game_action_argument_to_string(argument));
-		return false;
-	}
-
-	CountryInstance* country =
-		instance_manager.get_country_instance_manager().get_country_instance_by_index(country_value->first);
+bool GameActionManager::VariantVisitor::operator() (set_tariff_rate_argument_t const& argument) const {
+	const auto [country_index, tariff_rate] = argument;
+	CountryInstance* country = instance_manager.get_country_instance_manager().get_country_instance_by_index(country_index);
 
 	if (OV_unlikely(country == nullptr)) {
-		spdlog::error_s("GAME_ACTION_SET_TARIFF_RATE called with invalid country index: {}", country_value->first);
+		spdlog::error_s("GAME_ACTION_SET_TARIFF_RATE called with invalid country index: {}", country_index);
 		return false;
 	}
 
-	country->set_tariff_rate_slider_value(country_value->second);
+	country->set_tariff_rate_slider_value(tariff_rate);
 	return false;
 }
 
 // Technology
-bool GameActionManager::game_action_callback_start_research(game_action_argument_t const& argument) const {
-	std::pair<country_index_t, uint64_t> const* country_tech = std::get_if<std::pair<country_index_t, uint64_t>>(&argument);
-	if (OV_unlikely(country_tech == nullptr)) {
-		spdlog::error_s("GAME_ACTION_START_RESEARCH called with invalid argument: {}", game_action_argument_to_string(argument));
-		return false;
-	}
-
-	CountryInstance* country =
-		instance_manager.get_country_instance_manager().get_country_instance_by_index(country_tech->first);
+bool GameActionManager::VariantVisitor::operator() (start_research_argument_t const& argument) const {
+	const auto [country_index, technology_index] = argument;
+	CountryInstance* country = instance_manager.get_country_instance_manager().get_country_instance_by_index(country_index);
 
 	if (OV_unlikely(country == nullptr)) {
-		spdlog::error_s("GAME_ACTION_START_RESEARCH called with invalid country index: {}", country_tech->first);
+		spdlog::error_s("GAME_ACTION_START_RESEARCH called with invalid country index: {}", country_index);
 		return false;
 	}
 
-	Technology const* technology =
-		instance_manager.definition_manager.get_research_manager().get_technology_manager().get_technology_by_index(
-			country_tech->second
-		);
+	Technology const* technology = instance_manager.definition_manager
+		.get_research_manager()
+		.get_technology_manager()
+		.get_technology_by_index(type_safe::get(technology_index));
 
 	if (OV_unlikely(technology == nullptr)) {
-		spdlog::error_s("GAME_ACTION_START_RESEARCH called with invalid technology index: {}", country_tech->second);
+		spdlog::error_s("GAME_ACTION_START_RESEARCH called with invalid technology index: {}", technology_index);
 		return false;
 	}
 
@@ -411,31 +212,19 @@ bool GameActionManager::game_action_callback_start_research(game_action_argument
 // Population
 
 // Trade
-bool GameActionManager::game_action_callback_set_good_automated(game_action_argument_t const& argument) const {
-	std::tuple<country_index_t, good_index_t, bool> const* country_good_automated =
-		std::get_if<std::tuple<country_index_t, good_index_t, bool>>(&argument);
-	if (OV_unlikely(country_good_automated == nullptr)) {
-		spdlog::error_s(
-			"GAME_ACTION_SET_GOOD_AUTOMATED called with invalid argument: {}", game_action_argument_to_string(argument)
-		);
-		return false;
-	}
-
-	CountryInstance* country =
-		instance_manager.get_country_instance_manager().get_country_instance_by_index(std::get<0>(*country_good_automated));
+bool GameActionManager::VariantVisitor::operator() (set_good_automated_argument_t const& argument) const {
+	const auto [country_index, good_index, new_is_automated] = argument;
+	CountryInstance* country = instance_manager.get_country_instance_manager().get_country_instance_by_index(country_index);
 
 	if (OV_unlikely(country == nullptr)) {
-		spdlog::error_s(
-			"GAME_ACTION_SET_GOOD_AUTOMATED called with invalid country index: {}", std::get<0>(*country_good_automated)
-		);
+		spdlog::error_s("GAME_ACTION_SET_GOOD_AUTOMATED called with invalid country index: {}", country_index);
 		return false;
 	}
 
-	GoodInstance const* good =
-		instance_manager.get_good_instance_manager().get_good_instance_by_index(std::get<1>(*country_good_automated));
+	GoodInstance const* good = instance_manager.get_good_instance_manager().get_good_instance_by_index(good_index);
 
 	if (OV_unlikely(good == nullptr)) {
-		spdlog::error_s("GAME_ACTION_SET_GOOD_AUTOMATED called with invalid good index: {}", std::get<1>(*country_good_automated));
+		spdlog::error_s("GAME_ACTION_SET_GOOD_AUTOMATED called with invalid good index: {}", good_index);
 		return false;
 	}
 
@@ -443,38 +232,24 @@ bool GameActionManager::game_action_callback_set_good_automated(game_action_argu
 
 	const bool old_automated = good_data.is_automated;
 
-	good_data.is_automated = std::get<2>(*country_good_automated);
+	good_data.is_automated = new_is_automated;
 
 	return old_automated != good_data.is_automated;
 }
 
-bool GameActionManager::game_action_callback_set_good_trade_order(game_action_argument_t const& argument) const {
-	std::tuple<country_index_t, good_index_t, bool, fixed_point_t> const* country_good_sell_amount =
-		std::get_if<std::tuple<country_index_t, good_index_t, bool, fixed_point_t>>(&argument);
-	if (OV_unlikely(country_good_sell_amount == nullptr)) {
-		spdlog::error_s(
-			"GAME_ACTION_SET_GOOD_TRADE_ORDER called with invalid argument: {}", game_action_argument_to_string(argument)
-		);
-		return false;
-	}
-
-	CountryInstance* country =
-		instance_manager.get_country_instance_manager().get_country_instance_by_index(std::get<0>(*country_good_sell_amount));
+bool GameActionManager::VariantVisitor::operator() (set_good_trade_order_argument_t const& argument) const {
+	const auto [country_index, good_index, new_is_selling, new_cutoff] = argument;
+	CountryInstance* country = instance_manager.get_country_instance_manager().get_country_instance_by_index(country_index);
 
 	if (OV_unlikely(country == nullptr)) {
-		spdlog::error_s(
-			"GAME_ACTION_SET_GOOD_TRADE_ORDER called with invalid country index: {}", std::get<0>(*country_good_sell_amount)
-		);
+		spdlog::error_s("GAME_ACTION_SET_GOOD_TRADE_ORDER called with invalid country index: {}", country_index);
 		return false;
 	}
 
-	GoodInstance const* good =
-		instance_manager.get_good_instance_manager().get_good_instance_by_index(std::get<1>(*country_good_sell_amount));
+	GoodInstance const* good = instance_manager.get_good_instance_manager().get_good_instance_by_index(good_index);
 
 	if (OV_unlikely(good == nullptr)) {
-		spdlog::error_s(
-			"GAME_ACTION_SET_GOOD_TRADE_ORDER called with invalid good index: {}", std::get<1>(*country_good_sell_amount)
-		);
+		spdlog::error_s("GAME_ACTION_SET_GOOD_TRADE_ORDER called with invalid good index: {}", good_index);
 		return false;
 	}
 
@@ -482,8 +257,8 @@ bool GameActionManager::game_action_callback_set_good_trade_order(game_action_ar
 
 	if (OV_unlikely(good_data.is_automated)) {
 		spdlog::error_s(
-			"GAME_ACTION_SET_GOOD_TRADE_ORDER called for automated good! Country: \"{}\", good: \"{}\", args: {}",
-			*country, *good, game_action_argument_to_string(argument)
+			"GAME_ACTION_SET_GOOD_TRADE_ORDER called for automated good! Country: {}, good: {}",
+			*country, *good
 		);
 		return false;
 	}
@@ -491,8 +266,8 @@ bool GameActionManager::game_action_callback_set_good_trade_order(game_action_ar
 	const bool old_is_selling = good_data.is_selling;
 	const fixed_point_t old_stockpile_cutoff = good_data.stockpile_cutoff;
 
-	good_data.is_selling = std::get<2>(*country_good_sell_amount);
-	good_data.stockpile_cutoff = std::get<3>(*country_good_sell_amount);
+	good_data.is_selling = new_is_selling;
+	good_data.stockpile_cutoff = new_cutoff;
 
 	if (good_data.stockpile_cutoff.is_negative()) {
 		spdlog::error_s(
@@ -511,18 +286,12 @@ bool GameActionManager::game_action_callback_set_good_trade_order(game_action_ar
 // Diplomacy
 
 // Military
-bool GameActionManager::game_action_callback_create_leader(game_action_argument_t const& argument) const {
-	std::pair<country_index_t, bool> const* country_branch = std::get_if<std::pair<country_index_t, bool>>(&argument);
-	if (OV_unlikely(country_branch == nullptr)) {
-		spdlog::error_s("GAME_ACTION_CREATE_LEADER called with invalid argument: {}", game_action_argument_to_string(argument));
-		return false;
-	}
-
-	CountryInstance* country =
-		instance_manager.get_country_instance_manager().get_country_instance_by_index(country_branch->first);
+bool GameActionManager::VariantVisitor::operator() (create_leader_argument_t const& argument) const {
+	const auto [country_index, unit_branch] = argument;
+	CountryInstance* country = instance_manager.get_country_instance_manager().get_country_instance_by_index(country_index);
 
 	if (OV_unlikely(country == nullptr)) {
-		spdlog::error_s("GAME_ACTION_CREATE_LEADER called with invalid country index: {}", country_branch->first);
+		spdlog::error_s("GAME_ACTION_CREATE_LEADER called with invalid country index: {}", country_index);
 		return false;
 	}
 
@@ -536,98 +305,72 @@ bool GameActionManager::game_action_callback_create_leader(game_action_argument_
 
 	return instance_manager.get_unit_instance_manager().create_leader(
 		*country,
-		country_branch->second ? unit_branch_t::LAND : unit_branch_t::NAVAL,
+		unit_branch,
 		instance_manager.get_today()
 	);
 }
 
-bool GameActionManager::game_action_callback_set_use_leader(game_action_argument_t const& argument) const {
-	std::pair<uint64_t, bool> const* leader_use = std::get_if<std::pair<uint64_t, bool>>(&argument);
-	if (OV_unlikely(leader_use == nullptr)) {
-		spdlog::error_s("GAME_ACTION_SET_USE_LEADER called with invalid argument: {}", game_action_argument_to_string(argument));
-		return false;
-	}
+bool GameActionManager::VariantVisitor::operator() (set_use_leader_argument_t const& argument) const {
+	const auto [unique_id, new_should_use] = argument;
 
-	LeaderInstance* leader = instance_manager.get_unit_instance_manager().get_leader_instance_by_unique_id(leader_use->first);
+	LeaderInstance* leader = instance_manager.get_unit_instance_manager().get_leader_instance_by_unique_id(unique_id);
 
 	if (OV_unlikely(leader == nullptr)) {
-		spdlog::error_s("GAME_ACTION_SET_USE_LEADER called with invalid leader index: {}", leader_use->first);
+		spdlog::error_s("GAME_ACTION_SET_USE_LEADER called with invalid leader unique id: {}", unique_id);
 		return false;
 	}
 
 	const bool old_use = leader->get_can_be_used();
 
-	leader->set_can_be_used(leader_use->second);
+	leader->set_can_be_used(new_should_use);
 
 	return old_use != leader->get_can_be_used();
 }
 
-bool GameActionManager::game_action_callback_set_auto_create_leaders(game_action_argument_t const& argument) const {
-	std::pair<country_index_t, bool> const* country_value = std::get_if<std::pair<country_index_t, bool>>(&argument);
-	if (OV_unlikely(country_value == nullptr)) {
-		spdlog::error_s(
-			"GAME_ACTION_SET_AUTO_CREATE_LEADERS called with invalid argument: {}", game_action_argument_to_string(argument)
-		);
-		return false;
-	}
-
-	CountryInstance* country =
-		instance_manager.get_country_instance_manager().get_country_instance_by_index(country_value->first);
+bool GameActionManager::VariantVisitor::operator() (set_auto_create_leaders_argument_t const& argument) const {
+	const auto [country_index, new_should_auto_create] = argument;
+	CountryInstance* country = instance_manager.get_country_instance_manager().get_country_instance_by_index(country_index);
 
 	if (OV_unlikely(country == nullptr)) {
-		spdlog::error_s("GAME_ACTION_SET_AUTO_CREATE_LEADERS called with invalid country index: {}", country_value->first);
+		spdlog::error_s("GAME_ACTION_SET_AUTO_CREATE_LEADERS called with invalid country index: {}", country_index);
 		return false;
 	}
 
 	const bool old_auto_create = country->get_auto_create_leaders();
 
-	country->set_auto_create_leaders(country_value->second);
+	country->set_auto_create_leaders(new_should_auto_create);
 
 	return old_auto_create != country->get_auto_create_leaders();
 }
 
-bool GameActionManager::game_action_callback_set_auto_assign_leaders(game_action_argument_t const& argument) const {
-	std::pair<country_index_t, bool> const* country_value = std::get_if<std::pair<country_index_t, bool>>(&argument);
-	if (OV_unlikely(country_value == nullptr)) {
-		spdlog::error_s(
-			"GAME_ACTION_SET_AUTO_ASSIGN_LEADERS called with invalid argument: {}", game_action_argument_to_string(argument)
-		);
-		return false;
-	}
-
-	CountryInstance* country =
-		instance_manager.get_country_instance_manager().get_country_instance_by_index(country_value->first);
+bool GameActionManager::VariantVisitor::operator() (set_auto_assign_leaders_argument_t const& argument) const {
+	const auto [country_index, new_should_auto_assign] = argument;
+	CountryInstance* country = instance_manager.get_country_instance_manager().get_country_instance_by_index(country_index);
 
 	if (OV_unlikely(country == nullptr)) {
-		spdlog::error_s("GAME_ACTION_SET_AUTO_ASSIGN_LEADERS called with invalid country index: {}", country_value->first);
+		spdlog::error_s("GAME_ACTION_SET_AUTO_ASSIGN_LEADERS called with invalid country index: {}", country_index);
 		return false;
 	}
 
 	const bool old_auto_assign = country->get_auto_assign_leaders();
 
-	country->set_auto_assign_leaders(country_value->second);
+	country->set_auto_assign_leaders(new_should_auto_assign);
 
 	return old_auto_assign != country->get_auto_assign_leaders();
 }
 
-bool GameActionManager::game_action_callback_set_mobilise(game_action_argument_t const& argument) const {
-	std::pair<country_index_t, bool> const* country_mobilise = std::get_if<std::pair<country_index_t, bool>>(&argument);
-	if (OV_unlikely(country_mobilise == nullptr)) {
-		spdlog::error_s("GAME_ACTION_SET_MOBILISE called with invalid argument: {}", game_action_argument_to_string(argument));
-		return false;
-	}
-
-	CountryInstance* country =
-		instance_manager.get_country_instance_manager().get_country_instance_by_index(country_mobilise->first);
+bool GameActionManager::VariantVisitor::operator() (set_mobilise_argument_t const& argument) const {
+	const auto [country_index, new_is_mobilised] = argument;
+	CountryInstance* country = instance_manager.get_country_instance_manager().get_country_instance_by_index(country_index);
 
 	if (OV_unlikely(country == nullptr)) {
-		spdlog::error_s("GAME_ACTION_SET_MOBILISE called with invalid country index: {}", country_mobilise->first);
+		spdlog::error_s("GAME_ACTION_SET_MOBILISE called with invalid country index: {}", country_index);
 		return false;
 	}
 
 	const bool old_mobilise = country->is_mobilised();
 
-	country->set_mobilised(country_mobilise->second);
+	country->set_mobilised(new_is_mobilised);
 
 	return old_mobilise != country->is_mobilised();
 }

@@ -1,5 +1,9 @@
 #pragma once
 
+#include <utility>
+
+#include <function2/function2.hpp>
+
 #include "openvic-simulation/console/ConsoleInstance.hpp"
 #include "openvic-simulation/country/CountryInstanceManager.hpp"
 #include "openvic-simulation/country/CountryInstanceDeps.hpp"
@@ -20,8 +24,6 @@
 #include "openvic-simulation/types/FlagStrings.hpp"
 #include "openvic-simulation/utility/ThreadPool.hpp"
 #include "openvic-simulation/utility/Containers.hpp"
-
-#include <function2/function2.hpp>
 
 namespace OpenVic {
 
@@ -97,6 +99,15 @@ namespace OpenVic {
 
 		bool set_today_and_update(Date new_today);
 
-		bool queue_game_action(game_action_type_t type, game_action_argument_t&& argument);
+		template<typename T, typename... Args>
+		bool queue_game_action(Args&&... args) {
+			return queue_game_action(
+				game_action_t(
+					std::in_place_type<T>,
+					std::forward<Args>(args)...
+				)
+			);
+		}
+		bool queue_game_action(game_action_t&& game_action);
 	};
 }
