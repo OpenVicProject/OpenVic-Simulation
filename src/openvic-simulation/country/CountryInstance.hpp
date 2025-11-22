@@ -627,7 +627,7 @@ namespace OpenVic {
 				memory::vector<fixed_point_t>,
 				VECTORS_FOR_COUNTRY_TICK
 			> reusable_vectors,
-			memory::vector<size_t>& reusable_index_vector,
+			memory::vector<good_index_t>& reusable_good_index_vector,
 			fixed_point_t& available_funds
 		);
 
@@ -665,7 +665,7 @@ namespace OpenVic {
 				memory::vector<fixed_point_t>,
 				VECTORS_FOR_COUNTRY_TICK
 			> reusable_vectors,
-			memory::vector<size_t>& reusable_index_vector
+			memory::vector<good_index_t>& reusable_good_index_vector
 		);
 		void country_tick_after_map(const Date today);
 

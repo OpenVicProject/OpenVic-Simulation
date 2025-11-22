@@ -5,6 +5,9 @@
 #include "openvic-simulation/economy/GoodInstance.hpp"
 #include "openvic-simulation/economy/trading/GoodMarket.hpp"
 #include "openvic-simulation/map/ProvinceInstance.hpp"
+#include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
+#include "openvic-simulation/types/TypedIndices.hpp"
+#include "openvic-simulation/types/TypedSpan.hpp"
 #include "openvic-simulation/utility/Containers.hpp"
 
 using namespace OpenVic;
@@ -22,8 +25,12 @@ void ThreadPool::loop_until_cancelled(
 	utility::forwardable_span<WorkBundle> work_bundles
 ) {
 	IndexedFlatMap<GoodDefinition, char> reusable_goods_mask { good_keys };
-	IndexedFlatMap<CountryInstance, fixed_point_t> reusable_country_map_0 { country_keys },
-		reusable_country_map_1 { country_keys };
+
+	memory::FixedVector<fixed_point_t> reusable_country_map_0 { country_keys.size() };
+	memory::FixedVector<fixed_point_t> reusable_country_map_1 { country_keys.size() };
+	TypedSpan<country_index_t, fixed_point_t> reusable_country_map_0_span { reusable_country_map_0 };
+	TypedSpan<country_index_t, fixed_point_t> reusable_country_map_1_span { reusable_country_map_1 };
+
 	static constexpr size_t VECTOR_COUNT = std::max(
 		GoodMarket::VECTORS_FOR_EXECUTE_ORDERS,
 		std::max(
@@ -33,7 +40,7 @@ void ThreadPool::loop_until_cancelled(
 	);
 	std::array<memory::vector<fixed_point_t>, VECTOR_COUNT> reusable_vectors;
 	std::span<memory::vector<fixed_point_t>, VECTOR_COUNT> reusable_vectors_span = std::span(reusable_vectors);
-	memory::vector<size_t> reusable_index_vector;
+	memory::vector<good_index_t> reusable_good_index_vector;
 	PopValuesFromProvince reusable_pop_values {
 		game_rules_manager,
 		good_instance_manager,
@@ -68,8 +75,8 @@ void ThreadPool::loop_until_cancelled(
 				for (WorkBundle& work_bundle : work_bundles) {
 					for (GoodMarket& good : work_bundle.goods_chunk) {
 						good.execute_orders(
-							reusable_country_map_0,
-							reusable_country_map_1,
+							reusable_country_map_0_span,
+							reusable_country_map_1_span,
 							reusable_vectors_span.first<GoodMarket::VECTORS_FOR_EXECUTE_ORDERS>()
 						);
 					}
@@ -107,7 +114,7 @@ void ThreadPool::loop_until_cancelled(
 						country.country_tick_before_map(
 							reusable_goods_mask,
 							reusable_vectors_span.first<CountryInstance::VECTORS_FOR_COUNTRY_TICK>(),
-							reusable_index_vector
+							reusable_good_index_vector
 						);
 					}
 				}

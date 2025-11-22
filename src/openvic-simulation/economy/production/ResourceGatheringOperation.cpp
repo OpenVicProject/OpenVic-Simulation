@@ -13,6 +13,7 @@
 #include "openvic-simulation/population/PopType.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
 #include "openvic-simulation/types/PopSize.hpp"
+#include "openvic-simulation/types/TypedIndices.hpp"
 #include "openvic-simulation/utility/Logger.hpp"
 #include "openvic-simulation/utility/Containers.hpp"
 
@@ -147,7 +148,9 @@ void ResourceGatheringOperation::rgo_tick(memory::vector<fixed_point_t>& reusabl
 		market_instance.place_market_sell_order(
 			{
 				production_type.output_good,
-				country_to_report_economy_nullable,
+				country_to_report_economy_nullable == nullptr
+					? std::nullopt
+					: std::optional<country_index_t>{country_to_report_economy_nullable->index},
 				output_quantity_yesterday,
 				this,
 				after_sell,

@@ -5,6 +5,7 @@
 #include <concepts> // IWYU pragma: keep for lambda
 #include <cstddef>
 #include <cstdint>
+#include <optional>
 #include <ranges>
 
 #include <type_safe/strong_typedef.hpp>
@@ -35,6 +36,7 @@
 #include "openvic-simulation/types/fixed_point/FixedPointMap.hpp"
 #include "openvic-simulation/types/IndexedFlatMap.hpp"
 #include "openvic-simulation/types/OrderedContainers.hpp"
+#include "openvic-simulation/types/TypedIndices.hpp"
 #include "openvic-simulation/utility/Containers.hpp"
 #include "openvic-simulation/utility/FormatValidate.hpp"
 #include "openvic-simulation/utility/Logger.hpp"
@@ -606,6 +608,10 @@ void Pop::pop_tick_without_cleanup(
 	OV_DO_FOR_ALL_NEED_CATEGORIES(ALLOCATE_FOR_NEEDS)
 	#undef ALLOCATE_FOR_NEEDS
 
+	const std::optional<country_index_t> country_index_optional = country_to_report_economy_nullable == nullptr
+		? std::nullopt
+		: std::optional<country_index_t>{country_to_report_economy_nullable->index};
+
 	for (auto it = good_keys.begin(); it < good_keys.end(); it++) {
 		const ptrdiff_t i = it - good_keys.begin();
 		const fixed_point_t max_quantity_to_buy = max_quantity_to_buy_per_good[i];
@@ -619,7 +625,7 @@ void Pop::pop_tick_without_cleanup(
 
 		market_instance.place_buy_up_to_order({
 			good_definition,
-			country_to_report_economy_nullable,
+			country_index_optional,
 			max_quantity_to_buy,
 			money_to_spend,
 			this,
@@ -639,7 +645,7 @@ void Pop::pop_tick_without_cleanup(
 		market_instance.place_market_sell_order(
 			{
 				good,
-				country_to_report_economy_nullable,
+				country_index_optional,
 				quantity_to_sell,
 				this,
 				after_sell
