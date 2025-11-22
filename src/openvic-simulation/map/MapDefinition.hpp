@@ -40,11 +40,10 @@ namespace OpenVic {
 	 * MAP-4
 	 */
 	struct MapDefinition {
-
 #pragma pack(push, 1)
 		/* Used to represent tightly packed 3-byte integer pixel information. */
 		struct shape_pixel_t {
-			ProvinceDefinition::index_t province_number;
+			ProvinceDefinition::province_number_t province_number;
 			TerrainTypeMapping::index_t terrain;
 		};
 #pragma pack(pop)
@@ -67,12 +66,12 @@ namespace OpenVic {
 		memory::vector<shape_pixel_t> PROPERTY(province_shape_image);
 		colour_index_map_t colour_index_map;
 
-		ProvinceDefinition::index_t PROPERTY(max_provinces, ProvinceDefinition::MAX_INDEX);
+		ProvinceDefinition::index_t PROPERTY(max_provinces);
 
 		PointMap PROPERTY_REF(path_map_land);
 		PointMap PROPERTY_REF(path_map_sea);
 
-		ProvinceDefinition::index_t get_province_number_from_colour(colour_t colour) const;
+		ProvinceDefinition::province_number_t get_province_number_from_colour(colour_t colour) const;
 		bool _generate_standard_province_adjacencies();
 
 		inline constexpr int32_t get_pixel_index_from_pos(ivec2_t pos) const {
@@ -85,10 +84,10 @@ namespace OpenVic {
 		MapDefinition();
 
 		ProvinceDefinition* get_province_definition_from_number(
-			decltype(std::declval<ProvinceDefinition>().get_province_number())province_number
+			const ProvinceDefinition::province_number_t province_number
 		);
 		ProvinceDefinition const* get_province_definition_from_number(
-			decltype(std::declval<ProvinceDefinition>().get_province_number())province_number
+			const ProvinceDefinition::province_number_t province_number
 		) const;
 
 		inline constexpr int32_t get_width() const { return dims.x; }
@@ -112,7 +111,7 @@ namespace OpenVic {
 		size_t get_land_province_count() const;
 		size_t get_water_province_count() const;
 
-		ProvinceDefinition::index_t get_province_number_at(ivec2_t pos) const;
+		ProvinceDefinition::province_number_t get_province_number_at(ivec2_t pos) const;
 
 	private:
 		ProvinceDefinition* get_province_definition_at(ivec2_t pos);

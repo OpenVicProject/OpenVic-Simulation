@@ -70,8 +70,8 @@ namespace OpenVic {
 		/* The mapmode colour image contains of a list of base colours and stripe colours. Each colour is four bytes
 		 * in RGBA format, with the alpha value being used to interpolate with the terrain colour, so A = 0 is fully terrain
 		 * and A = 255 is fully the RGB colour packaged with A. The base and stripe colours for each province are packed
-		 * together adjacently, so each province's entry is 8 bytes long. The list contains ProvinceDefinition::MAX_INDEX + 1
-		 * entries, that is the maximum allowed number of provinces plus one for the index-zero "null province". */
+		 * together adjacently, so each province's entry is 8 bytes long.
+		 * The list contains all provinces indexed by their number + index 0 for the "null province". */
 		bool generate_mapmode_colours(
 			MapInstance const& map_instance, Mapmode const* mapmode,
 			CountryInstance const* player_country, ProvinceInstance const* selected_province,

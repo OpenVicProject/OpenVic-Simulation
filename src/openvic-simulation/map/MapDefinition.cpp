@@ -6,6 +6,7 @@
 #include <algorithm>
 #include <cstddef>
 #include <cstdint>
+#include <limits>
 #include <system_error>
 #include <vector>
 
@@ -21,6 +22,7 @@
 #include "openvic-simulation/modifier/ModifierManager.hpp"
 #include "openvic-simulation/types/Colour.hpp"
 #include "openvic-simulation/types/OrderedContainersMath.hpp"
+#include "openvic-simulation/types/TypedSpan.hpp"
 #include "openvic-simulation/types/Vector.hpp"
 #include "openvic-simulation/utility/BMP.hpp"
 #include "openvic-simulation/utility/FormatValidate.hpp"
@@ -48,11 +50,14 @@ ProvinceDefinition const* MapDefinition::get_province_definition_from_number(
 RiverSegment::RiverSegment(uint8_t new_size, memory::vector<ivec2_t>&& new_points)
 	: size { new_size }, points { std::move(new_points) } {}
 
+//1 entry reserved for null province
+static constexpr province_index_t MAX_PROVINCE_COUNT = std::numeric_limits<province_index_t>().max() - 1;
+
 bool MapDefinition::add_province_definition(std::string_view identifier, colour_t colour) {
 	if (province_definitions.size() >= type_safe::get(max_provinces)) {
 		spdlog::error_s(
 			"The map's province list is full - maximum number of provinces is {} (this can be at most {})",
-			max_provinces, ProvinceDefinition::MAX_INDEX
+			max_provinces, MAX_PROVINCE_COUNT
 		);
 		return false;
 	}
@@ -71,24 +76,24 @@ bool MapDefinition::add_province_definition(std::string_view identifier, colour_
 		spdlog::error_s("Invalid province colour for {} - null! ({})", identifier, colour);
 		return false;
 	}
-	const ProvinceDefinition::index_t province_number = get_province_number_from_colour(colour);
-	if (province_number != ProvinceDefinition::NULL_INDEX) {
+	const ProvinceDefinition::province_number_t province_number = get_province_number_from_colour(colour);
+	if (province_number != ProvinceDefinition::NULL_PROVINCE_NUMBER) {
 		spdlog::error_s(
 			"Duplicate province colours: {} and {}",
-			get_province_definition_from_number(type_safe::get(province_number))->to_string(), identifier
+			get_province_definition_from_number(province_number)->to_string(), identifier
 		);
 		return false;
 	}
 
 	if (!province_definitions.emplace_item(
 		identifier,
-		identifier, colour, ProvinceDefinition::index_t(get_province_definition_count())
+		identifier, colour, province_index_t(get_province_definition_count())
 	)) {
 		return false;
 	}
 
 	ProvinceDefinition const& new_province = province_definitions.back();
-	colour_index_map[new_province.get_colour()] = ProvinceDefinition::index_t(new_province.get_province_number());
+	colour_index_map[new_province.get_colour()] = province_index_t(new_province.get_province_number());
 	return true;
 }
 
@@ -468,34 +473,42 @@ bool MapDefinition::add_region(std::string_view identifier, memory::vector<Provi
 	return ret;
 }
 
-ProvinceDefinition::index_t MapDefinition::get_province_number_from_colour(colour_t colour) const {
+ProvinceDefinition::province_number_t MapDefinition::get_province_number_from_colour(colour_t colour) const {
 	const colour_index_map_t::const_iterator it = colour_index_map.find(colour);
 	if (it != colour_index_map.end()) {
-		return it->second;
+		return ProvinceDefinition::get_province_number_from_index(it.value());
 	}
-	return ProvinceDefinition::NULL_INDEX;
+	return ProvinceDefinition::NULL_PROVINCE_NUMBER;
 }
 
-ProvinceDefinition::index_t MapDefinition::get_province_number_at(ivec2_t pos) const {
+ProvinceDefinition::province_number_t MapDefinition::get_province_number_at(ivec2_t pos) const {
 	if (pos.nonnegative() && pos.is_within_bound(dims)) {
 		return province_shape_image[get_pixel_index_from_pos(pos)].province_number;
 	}
-	return ProvinceDefinition::NULL_INDEX;
+	return ProvinceDefinition::NULL_PROVINCE_NUMBER;
 }
 
 ProvinceDefinition* MapDefinition::get_province_definition_at(ivec2_t pos) {
-	return get_province_definition_from_number(type_safe::get(get_province_number_at(pos)));
+	return get_province_definition_from_number(get_province_number_at(pos));
 }
 
 ProvinceDefinition const* MapDefinition::get_province_definition_at(ivec2_t pos) const {
-	return get_province_definition_from_number(type_safe::get(get_province_number_at(pos)));
+	return get_province_definition_from_number(get_province_number_at(pos));
 }
 
-bool MapDefinition::set_max_provinces(ProvinceDefinition::index_t new_max_provinces) {
-	if (new_max_provinces <= ProvinceDefinition::NULL_INDEX) {
+bool MapDefinition::set_max_provinces(province_index_t new_max_provinces) {
+	if (new_max_provinces <= province_index_t(0)) {
 		spdlog::error_s(
-			"Trying to set max province count to an invalid value {} (must be greater than {})",
-			new_max_provinces, ProvinceDefinition::NULL_INDEX
+			"Trying to set max province count to an invalid value {} (must be greater than 0)",
+			new_max_provinces
+		);
+		return false;
+	}
+	if (new_max_provinces > MAX_PROVINCE_COUNT) {
+		spdlog::error_s(
+			"Trying to set max province count to an invalid value {} (must <= {})",
+			new_max_provinces,
+			MAX_PROVINCE_COUNT
 		);
 		return false;
 	}
@@ -847,19 +860,22 @@ bool MapDefinition::load_map_images(fs::path const& province_path, fs::path cons
 	uint8_t const* province_data = province_bmp.get_pixel_data().data();
 	uint8_t const* terrain_data = terrain_bmp.get_pixel_data().data();
 
-	memory::vector<fixed_point_map_t<TerrainType const*>> terrain_type_pixels_list(province_definitions.size());
+	memory::FixedVector<fixed_point_map_t<TerrainType const*>> _terrain_type_pixels_list(province_definitions.size());
+	TypedSpan<province_index_t, fixed_point_map_t<TerrainType const*>> terrain_type_pixels_list { _terrain_type_pixels_list };
 
 	bool ret = true;
 	ordered_set<colour_t> unrecognised_province_colours;
 
-	memory::vector<fixed_point_t> pixels_per_province(province_definitions.size());
-	memory::vector<fvec2_t> pixel_position_sum_per_province(province_definitions.size());
+	memory::FixedVector<fixed_point_t> _pixels_per_province(province_definitions.size());
+	TypedSpan<province_index_t, fixed_point_t> pixels_per_province { _pixels_per_province };
+	memory::FixedVector<fvec2_t> _pixel_position_sum_per_province(province_definitions.size());
+	TypedSpan<province_index_t, fvec2_t> pixel_position_sum_per_province { _pixel_position_sum_per_province };
 
 	for (ivec2_t pos {}; pos.y < get_height(); ++pos.y) {
 		for (pos.x = 0; pos.x < get_width(); ++pos.x) {
 			const size_t pixel_index = get_pixel_index_from_pos(pos);
 			const colour_t province_colour = colour_at(province_data, pixel_index);
-			ProvinceDefinition::index_t province_number = ProvinceDefinition::NULL_INDEX;
+			ProvinceDefinition::province_number_t province_number = ProvinceDefinition::NULL_PROVINCE_NUMBER;
 
 			if (pos.x > 0) {
 				const size_t jdx = pixel_index - 1;
@@ -879,7 +895,7 @@ bool MapDefinition::load_map_images(fs::path const& province_path, fs::path cons
 
 			province_number = get_province_number_from_colour(province_colour);
 
-			if (province_number == ProvinceDefinition::NULL_INDEX && !unrecognised_province_colours.contains(province_colour)) {
+			if (province_number == ProvinceDefinition::NULL_PROVINCE_NUMBER && !unrecognised_province_colours.contains(province_colour)) {
 				unrecognised_province_colours.insert(province_colour);
 				if (detailed_errors) {
 					spdlog::warn_s(
@@ -892,17 +908,18 @@ bool MapDefinition::load_map_images(fs::path const& province_path, fs::path cons
 		index_found:
 			province_shape_image[pixel_index].province_number = province_number;
 
-			if (province_number != ProvinceDefinition::NULL_INDEX) {
-				const ProvinceDefinition::index_t array_index = province_number - 1;
-				pixels_per_province[type_safe::get(array_index)]++;
-				pixel_position_sum_per_province[type_safe::get(array_index)] += static_cast<fvec2_t>(pos);
+			if (province_number != ProvinceDefinition::NULL_PROVINCE_NUMBER) {
+				const province_index_t province_index = ProvinceDefinition::get_index_from_province_number(province_number);
+				pixels_per_province[province_index]++;
+				pixel_position_sum_per_province[province_index] += static_cast<fvec2_t>(pos);
 			}
 
 			const TerrainTypeMapping::index_t terrain = terrain_data[pixel_index];
 			TerrainTypeMapping const* mapping = terrain_type_manager.get_terrain_type_mapping_for(terrain);
 			if (mapping != nullptr) {
-				if (province_number != ProvinceDefinition::NULL_INDEX) {
-					terrain_type_pixels_list[type_safe::get(province_number - 1)][&mapping->type]++;
+				if (province_number != ProvinceDefinition::NULL_PROVINCE_NUMBER) {
+					const province_index_t province_index = ProvinceDefinition::get_index_from_province_number(province_number);
+					terrain_type_pixels_list[province_index][&mapping->type]++;
 				}
 				if (mapping->has_texture && terrain < terrain_type_manager.get_terrain_texture_limit()) {
 					province_shape_image[pixel_index].terrain = terrain + 1;
@@ -920,21 +937,20 @@ bool MapDefinition::load_map_images(fs::path const& province_path, fs::path cons
 	}
 
 	size_t missing = 0;
-	for (size_t array_index = 0; array_index < province_definitions.size(); ++array_index) {
-		ProvinceDefinition* province = province_definitions.get_item_by_index(array_index);
-
-		fixed_point_map_t<TerrainType const*> const& terrain_type_pixels = terrain_type_pixels_list[array_index];
+	for (ProvinceDefinition& province : province_definitions.get_items()) {
+		const province_index_t province_index = province.index;
+		fixed_point_map_t<TerrainType const*> const& terrain_type_pixels = terrain_type_pixels_list[province_index];
 		const fixed_point_map_const_iterator_t<TerrainType const*> largest = get_largest_item(terrain_type_pixels);
-		province->default_terrain_type = largest != terrain_type_pixels.end() ? largest->first : nullptr;
+		province.default_terrain_type = largest != terrain_type_pixels.end() ? largest->first : nullptr;
 
-		const fixed_point_t pixel_count = pixels_per_province[array_index];
-		province->on_map = pixel_count > 0;
+		const fixed_point_t pixel_count = pixels_per_province[province_index];
+		province.on_map = pixel_count > 0;
 
-		if (province->on_map) {
-			province->centre = pixel_position_sum_per_province[array_index] / pixel_count;
+		if (province.on_map) {
+			province.centre = pixel_position_sum_per_province[province_index] / pixel_count;
 		} else {
 			if (detailed_errors) {
-				spdlog::warn_s("Province missing from shape image: {}", province->to_string());
+				spdlog::warn_s("Province missing from shape image: {}", province.to_string());
 			}
 			missing++;
 		}
