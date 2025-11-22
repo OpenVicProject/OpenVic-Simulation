@@ -2,6 +2,7 @@
 
 #include "openvic-simulation/DefinitionManager.hpp"
 #include "openvic-simulation/console/ConsoleInstance.hpp"
+#include "openvic-simulation/misc/GameAction.hpp"
 #include "openvic-simulation/utility/Logger.hpp"
 
 using namespace OpenVic;
@@ -96,7 +97,7 @@ InstanceManager::InstanceManager(
 	},
 	simulation_clock {
 		[this]() -> void {
-			queue_game_action(game_action_type_t::GAME_ACTION_TICK, {});
+			queue_game_action<tick_argument_t>();
 		},
 		[this]() -> void {
 			execute_game_actions();
@@ -335,17 +336,12 @@ void InstanceManager::update_modifier_sums() {
 	);
 }
 
-bool InstanceManager::queue_game_action(game_action_type_t type, game_action_argument_t&& argument) {
+bool InstanceManager::queue_game_action(game_action_t&& game_action) {
 	if (currently_executing_game_actions) {
 		spdlog::error_s("Attempted to queue a game action while already executing game actions!");
 		return false;
 	}
 
-	if (type >= game_action_type_t::MAX_GAME_ACTION) {
-		spdlog::critical_s("Invalid game action type {}", static_cast<uint64_t>(type));
-		return false;
-	}
-
-	game_action_queue.emplace_back(type, std::move(argument));
+	game_action_queue.emplace_back(std::move(game_action));
 	return true;
 }

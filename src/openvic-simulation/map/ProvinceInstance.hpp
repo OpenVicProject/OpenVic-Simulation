@@ -158,7 +158,7 @@ namespace OpenVic {
 			return owner == nullptr;
 		}
 
-		bool expand_building(size_t building_index);
+		bool expand_building(building_type_index_t building_type_index);
 
 		bool add_pop(Pop&& pop);
 		bool add_pop_vec(
