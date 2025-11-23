@@ -18,16 +18,40 @@ namespace detail {
 	template<typename ...Args>
 	struct reduce_tuple {
 		using type = std::tuple<Args...>;
+		static constexpr std::integral_constant<std::size_t, sizeof...(Args)> size {};
+
+		template<typename... Args2>
+		static constexpr type construct(Args2&&... args)
+		requires requires { std::make_tuple(std::forward<Args2>(args)...); }
+		{
+			return std::make_tuple(std::forward<Args2>(args)...);
+		}
 	};
 
 	template<typename T1, typename T2>
 	struct reduce_tuple<T1, T2> {
 		using type = std::pair<T1, T2>;
+		static constexpr std::integral_constant<std::size_t, 2> size {};
+
+		template<typename InT1, typename InT2>
+		static constexpr type construct(InT1&& t1, InT2&& t2)
+		requires requires { std::make_pair(std::forward<InT1>(t1), std::forward<InT2>(t2)); }
+		{
+			return std::make_pair(std::forward<InT1>(t1), std::forward<InT2>(t2));
+		}
 	};
 
 	template<typename T>
 	struct reduce_tuple<T> {
 		using type = T;
+		static constexpr std::integral_constant<std::size_t, 1> size {};
+
+		template<typename InT>
+		static constexpr type construct(InT&& t)
+		requires requires { std::forward<InT>(t); }
+		{
+			return std::forward<InT>(t);
+		}
 	};
 
 	struct ts_op_structured_binding_passthrough {};
@@ -76,11 +100,18 @@ struct none_argument_t : type_safe::strong_typedef<none_argument_t, std::monosta
 		: strong_typedef(static_cast<std::monostate&&>(value)) {} 
 };
 #define USING_ARG_TYPE(name, ...) \
-struct ARG_TYPE(name) : type_safe::strong_typedef<ARG_TYPE(name), detail::reduce_tuple<__VA_ARGS__>::type>, detail::ts_op_structured_binding_passthrough { \
+struct ARG_TYPE(name) \
+	: type_safe::strong_typedef<ARG_TYPE(name), detail::reduce_tuple<__VA_ARGS__>::type>, \
+	  detail::ts_op_structured_binding_passthrough { \
 	using strong_typedef::strong_typedef; \
-	constexpr ARG_TYPE(name)(detail::reduce_tuple<__VA_ARGS__>::type const& value) : strong_typedef(value) {} \
-	constexpr ARG_TYPE(name)(detail::reduce_tuple<__VA_ARGS__>::type && value) \
-		: strong_typedef(static_cast<detail::reduce_tuple<__VA_ARGS__>::type&&>(value)) {} \
+	using reduce_helper_t = detail::reduce_tuple<__VA_ARGS__>; \
+	using underlying_type = reduce_helper_t::type; \
+\
+	constexpr ARG_TYPE(name)(underlying_type const& value) : strong_typedef(value) {} \
+	constexpr ARG_TYPE(name)(underlying_type && value) : strong_typedef(static_cast<underlying_type&&>(value)) {} \
+	template<typename Arg1, typename... Args> \
+	constexpr ARG_TYPE(name)(Arg1 && arg1, Args&&... args) \
+		: strong_typedef(reduce_helper_t::construct(std::forward<Arg1>(arg1), std::forward<Args>(args)...)) {} \
 };
 
 FOR_EACH_GAME_ACTION(USING_ARG_TYPE)
