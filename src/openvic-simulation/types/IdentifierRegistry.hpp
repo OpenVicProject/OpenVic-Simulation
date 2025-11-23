@@ -1,5 +1,6 @@
 #pragma once
 
+#include <concepts>
 #include <vector>
 
 #include "openvic-simulation/dataloader/NodeTools.hpp"
@@ -173,11 +174,24 @@ namespace OpenVic {
 
 	private:
 		using StorageInfo = _StorageInfo<item_type>;
-		using index_type = typename StorageInfo::index_type;
-		using identifier_index_map_t = template_string_map_t<index_type, Case>;
+		using internal_storage_index_type = typename StorageInfo::index_type;
+		using identifier_index_map_t = template_string_map_t<internal_storage_index_type, Case>;
+		
+		//helper to avoid error 'index_t': is not a member of external_value_type
+		template<typename EXTERNAL_VALUE_TYPE, typename = void>
+		struct get_index_t {
+			using type = std::size_t;
+		};
+
+		template<has_index EXTERNAL_VALUE_TYPE>
+		struct get_index_t<EXTERNAL_VALUE_TYPE, std::void_t<typename EXTERNAL_VALUE_TYPE::index_t>> {
+			using type = typename EXTERNAL_VALUE_TYPE::index_t;
+		};
 
 	public:
 		using storage_type = typename StorageInfo::storage_type;
+		using index_t = typename get_index_t<external_value_type>::type;
+
 		static constexpr bool storage_type_reservable = reservable<storage_type>;
 
 	private:
@@ -186,6 +200,16 @@ namespace OpenVic {
 		storage_type PROPERTY_REF(items);
 		bool PROPERTY_CUSTOM_PREFIX(locked, is, false);
 		identifier_index_map_t identifier_index_map;
+
+		constexpr void emplace_identifier_index() {
+			const internal_storage_index_type index = StorageInfo::get_back_index(items);
+
+			/* Get item's identifier via index rather than using new_identifier, as it may have been invalidated item's move. */
+			identifier_index_map.emplace(
+				ValueInfo::get_identifier(ItemInfo::get_value(StorageInfo::get_item_from_index(items, index))),
+				StorageInfo::get_back_index(items)
+			);
+		}
 
 	public:
 		constexpr UniqueKeyRegistry(std::string_view new_name, bool new_log_lock = true)
@@ -210,15 +234,7 @@ namespace OpenVic {
 			}
 
 			items.emplace_back(std::move(item));
-
-			const index_type index = StorageInfo::get_back_index(items);
-
-			/* Get item's identifier via index rather than using new_identifier, as it may have been invalidated item's move. */
-			identifier_index_map.emplace(
-				ValueInfo::get_identifier(ItemInfo::get_value(StorageInfo::get_item_from_index(items, index))),
-				StorageInfo::get_back_index(items)
-			);
-
+			emplace_identifier_index();
 			return true;
 		}
 
@@ -238,15 +254,7 @@ namespace OpenVic {
 			}
 
 			items.emplace_back(std::forward<Args>(args)...);
-
-			const index_type index = StorageInfo::get_back_index(items);
-
-			/* Get item's identifier via index rather than using new_identifier, as it may have been invalidated item's move. */
-			identifier_index_map.emplace(
-				ValueInfo::get_identifier(ItemInfo::get_value(StorageInfo::get_item_from_index(items, index))),
-				StorageInfo::get_back_index(items)
-			);
-
+			emplace_identifier_index();
 			return true;
 		}
 		
@@ -363,12 +371,15 @@ namespace OpenVic {
 		} \
 		return nullptr; \
 	} \
-	constexpr external_value_type CONST* get_item_by_index(std::size_t index) CONST { \
-		if (index < items.size()) { \
-			return std::addressof(ValueInfo::get_external_value(ItemInfo::get_value(items[index]))); \
-		} else { \
+	constexpr external_value_type CONST* get_item_by_index(const index_t typed_index) CONST { \
+		std::size_t index; \
+		if constexpr (std::is_same_v<index_t, std::size_t>) { \
+			index = typed_index; \
+		} else { index = type_safe::get(typed_index); } \
+		if (index < 0 || index >= items.size()) { \
 			return nullptr; \
 		} \
+		return std::addressof(ValueInfo::get_external_value(ItemInfo::get_value(items[index]))); \
 	} \
 	constexpr NodeTools::Callback<std::string_view> auto expect_item_str( \
 		NodeTools::Callback<external_value_type CONST&> auto callback, bool allow_empty, bool warn = false \
@@ -690,8 +701,8 @@ private:
 	constexpr T const_kw* get_cast_##singular##_by_identifier(std::string_view identifier) const_kw { \
 		return registry.get_cast_item_by_identifier<T>(identifier); \
 	} \
-	constexpr decltype(registry)::external_value_type const_kw* get_##singular##_by_index(std::size_t index) const_kw { \
-		return index >= 0 ? registry.get_item_by_index(index) : nullptr; \
+	constexpr decltype(registry)::external_value_type const_kw* get_##singular##_by_index(decltype(registry)::index_t index) const_kw { \
+		return registry.get_item_by_index(index); \
 	} \
 	constexpr decltype(registry)::storage_type const_kw& get_##plural() const_kw { \
 		return registry.get_items(); \

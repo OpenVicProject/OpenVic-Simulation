@@ -44,7 +44,7 @@ bool GameActionManager::VariantVisitor::operator() (set_ai_argument_t const& arg
 
 // Production
 bool GameActionManager::VariantVisitor::operator() (expand_province_building_argument_t const& argument) const {
-	const auto [province_index, building_type_index] = argument;
+	const auto [province_index, building_instance_index] = argument;
 	ProvinceInstance* province = instance_manager.get_map_instance().get_province_instance_by_index(province_index);
 
 	if (OV_unlikely(province == nullptr)) {
@@ -52,7 +52,7 @@ bool GameActionManager::VariantVisitor::operator() (expand_province_building_arg
 		return false;
 	}
 
-	return province->expand_building(building_type_index);
+	return province->expand_building(building_instance_index);
 }
 
 // Budget
@@ -65,7 +65,7 @@ bool GameActionManager::VariantVisitor::operator() (set_strata_tax_argument_t co
 		return false;
 	}
 
-	Strata const* strata = instance_manager.definition_manager.get_pop_manager().get_strata_by_index(type_safe::get(strata_index));
+	Strata const* strata = instance_manager.definition_manager.get_pop_manager().get_strata_by_index(strata_index);
 
 	if (OV_unlikely(strata == nullptr)) {
 		spdlog::error_s("GAME_ACTION_SET_STRATA_TAX called with invalid strata index: {}", strata_index);
@@ -193,7 +193,7 @@ bool GameActionManager::VariantVisitor::operator() (start_research_argument_t co
 	Technology const* technology = instance_manager.definition_manager
 		.get_research_manager()
 		.get_technology_manager()
-		.get_technology_by_index(type_safe::get(technology_index));
+		.get_technology_by_index(technology_index);
 
 	if (OV_unlikely(technology == nullptr)) {
 		spdlog::error_s("GAME_ACTION_START_RESEARCH called with invalid technology index: {}", technology_index);

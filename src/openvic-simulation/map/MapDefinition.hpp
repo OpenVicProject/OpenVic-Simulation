@@ -79,13 +79,13 @@ namespace OpenVic {
 		}
 
 		IDENTIFIER_REGISTRY_NON_CONST_ACCESSORS(province_definition);
+		ProvinceDefinition* get_province_definition_from_number(
+			const ProvinceDefinition::province_number_t province_number
+		);
 
 	public:
 		MapDefinition();
 
-		ProvinceDefinition* get_province_definition_from_number(
-			const ProvinceDefinition::province_number_t province_number
-		);
 		ProvinceDefinition const* get_province_definition_from_number(
 			const ProvinceDefinition::province_number_t province_number
 		) const;

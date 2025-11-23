@@ -240,7 +240,10 @@ static bool run_headless(fs::path const& root, memory::vector<memory::string>& m
 
 	SPDLOG_INFO("===== Setting up instance... =====");
 	ret &= game_manager.setup_instance(
-		game_manager.get_definition_manager().get_history_manager().get_bookmark_manager().get_bookmark_by_index(0)
+		game_manager.get_definition_manager()
+			.get_history_manager()
+			.get_bookmark_manager()
+			.get_front_bookmark()
 	);
 
 	print_memory_usage("Instance Setup");
