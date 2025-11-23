@@ -172,15 +172,16 @@ bool ProvinceInstance::remove_core(CountryInstance& core_to_remove, bool warn) {
 	return true;
 }
 
-bool ProvinceInstance::expand_building(building_type_index_t building_type_index) {
-	BuildingInstance* building = buildings.get_item_by_index(type_safe::get(building_type_index));
+bool ProvinceInstance::expand_building(const building_instance_index_t index) {
+	BuildingInstance* building = buildings.get_item_by_index(type_safe::get(index));
 	if (building == nullptr) {
 		spdlog::error_s(
 			"Trying to expand non-existent building index {} in province {}",
-			building_type_index, *this
+			index, *this
 		);
 		return false;
 	}
+	
 	return building->expand();
 }
 

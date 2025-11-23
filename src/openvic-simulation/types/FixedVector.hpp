@@ -45,12 +45,12 @@ namespace OpenVic::_detail {
 		requires (!specialization_of<std::remove_cvref_t<std::invoke_result_t<GeneratorTemplateType, size_t>>, std::tuple>)
 		// The type must be constructible from the generator's single return value
 		&& std::constructible_from<T, decltype(std::declval<GeneratorTemplateType>()(std::declval<size_t>()))>
-		FixedVector(size_t capacity, GeneratorTemplateType&& generator)
-			: _max_size(capacity),
-			_size(capacity),
+		FixedVector(size_t size, GeneratorTemplateType&& generator)
+			: _max_size(size),
+			_size(size),
 			_allocator(),
-			_data_start_ptr(allocator_traits::allocate(_allocator, capacity)) {
-			for (size_t i = 0; i < capacity; ++i) {
+			_data_start_ptr(allocator_traits::allocate(_allocator, size)) {
+			for (size_t i = 0; i < size; ++i) {
 				allocator_traits::construct(
 					_allocator,
 					begin()+i,
@@ -74,12 +74,12 @@ namespace OpenVic::_detail {
 				)
 			};
 		}
-		FixedVector(size_t max_size, GeneratorTemplateType&& generator)
-			: _max_size(max_size),
-			_size(max_size),
+		FixedVector(size_t size, GeneratorTemplateType&& generator)
+			: _max_size(size),
+			_size(size),
 			_allocator(),
-			_data_start_ptr(allocator_traits::allocate(_allocator, max_size)) {
-			for (size_t i = 0; i < max_size; ++i) {
+			_data_start_ptr(allocator_traits::allocate(_allocator, size)) {
+			for (size_t i = 0; i < size; ++i) {
 				std::apply(
 					[this, i](auto&&... args) {
 						allocator_traits::construct(

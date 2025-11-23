@@ -92,7 +92,7 @@ namespace OpenVic {
 		}
 
 		bool setup();
-		bool load_bookmark(Bookmark const* new_bookmark);
+		bool load_bookmark(Bookmark const& new_bookmark);
 		bool start_game_session();
 		bool update_clock();
 		void force_tick_and_update();

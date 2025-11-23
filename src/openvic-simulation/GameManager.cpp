@@ -1,7 +1,6 @@
 #include "GameManager.hpp"
 
 #include <chrono>
-#include <cstddef>
 #include <string_view>
 
 #include <range/v3/algorithm/contains.hpp>
@@ -169,7 +168,7 @@ bool GameManager::load_definitions(Dataloader::localisation_callback_t localisat
 	return ret;
 }
 
-bool GameManager::setup_instance(Bookmark const* bookmark) {
+bool GameManager::setup_instance(Bookmark const& bookmark) {
 	if (instance_manager) {
 		spdlog::error_s("Trying to setup a new game instance while one is already setup!");
 		return false;
@@ -187,7 +186,7 @@ bool GameManager::setup_instance(Bookmark const* bookmark) {
 
 	bool ret = instance_manager->setup();
 
-	SPDLOG_INFO("Loading bookmark \"{}\" for new game instance.", bookmark ? bookmark->get_identifier() : "<NULL>");
+	SPDLOG_INFO("Loading bookmark \"{}\" for new game instance.", bookmark.get_identifier());
 
 	ret &= instance_manager->load_bookmark(bookmark);
 

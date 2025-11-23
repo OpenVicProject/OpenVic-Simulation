@@ -108,7 +108,9 @@ namespace OpenVic {
 	};
 
 	template<typename T>
-	concept has_index = requires {
+	concept has_index = requires { typename T::index_t; }
+	&& derived_from_specialization_of<typename T::index_t, type_safe::strong_typedef>
+	&& requires {
 		static_cast<std::size_t>(
 			static_cast<type_safe::underlying_type<decltype(std::declval<T>().index)>>(std::declval<T>().index)
 		);

@@ -26,6 +26,7 @@
 #define TYPED_INDEX(name) TYPED_INDEX_CUSTOM(name, std::size_t)
 
 TYPED_INDEX(bookmark_index_t)
+TYPED_INDEX(building_instance_index_t)
 TYPED_INDEX(building_type_index_t)
 TYPED_INDEX(country_index_t)
 TYPED_INDEX(crime_index_t)

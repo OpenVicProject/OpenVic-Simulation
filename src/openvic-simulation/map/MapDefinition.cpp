@@ -39,12 +39,12 @@ MapDefinition::MapDefinition() {}
 ProvinceDefinition* MapDefinition::get_province_definition_from_number(
 	decltype(std::declval<ProvinceDefinition>().get_province_number())province_number
 ) {
-	return province_definitions.get_item_by_index(type_safe::get(ProvinceDefinition::get_index_from_province_number(province_number)));
+	return province_definitions.get_item_by_index(ProvinceDefinition::get_index_from_province_number(province_number));
 }
 ProvinceDefinition const* MapDefinition::get_province_definition_from_number(
 	decltype(std::declval<ProvinceDefinition>().get_province_number())province_number
 ) const {
-	return province_definitions.get_item_by_index(type_safe::get(ProvinceDefinition::get_index_from_province_number(province_number)));
+	return province_definitions.get_item_by_index(ProvinceDefinition::get_index_from_province_number(province_number));
 }
 
 RiverSegment::RiverSegment(uint8_t new_size, memory::vector<ivec2_t>&& new_points)
@@ -93,7 +93,7 @@ bool MapDefinition::add_province_definition(std::string_view identifier, colour_
 	}
 
 	ProvinceDefinition const& new_province = province_definitions.back();
-	colour_index_map[new_province.get_colour()] = province_index_t(new_province.get_province_number());
+	colour_index_map[new_province.get_colour()] = new_province.index;
 	return true;
 }
 
@@ -860,15 +860,24 @@ bool MapDefinition::load_map_images(fs::path const& province_path, fs::path cons
 	uint8_t const* province_data = province_bmp.get_pixel_data().data();
 	uint8_t const* terrain_data = terrain_bmp.get_pixel_data().data();
 
-	memory::FixedVector<fixed_point_map_t<TerrainType const*>> _terrain_type_pixels_list(province_definitions.size());
+	memory::FixedVector<fixed_point_map_t<TerrainType const*>> _terrain_type_pixels_list(
+		province_definitions.size(),
+		[](const size_t i) { return fixed_point_map_t<TerrainType const*>{}; }
+	);
 	TypedSpan<province_index_t, fixed_point_map_t<TerrainType const*>> terrain_type_pixels_list { _terrain_type_pixels_list };
 
 	bool ret = true;
 	ordered_set<colour_t> unrecognised_province_colours;
 
-	memory::FixedVector<fixed_point_t> _pixels_per_province(province_definitions.size());
+	memory::FixedVector<fixed_point_t> _pixels_per_province(
+		province_definitions.size(),
+		[](const size_t i) { return fixed_point_t::_0; }
+	);
 	TypedSpan<province_index_t, fixed_point_t> pixels_per_province { _pixels_per_province };
-	memory::FixedVector<fvec2_t> _pixel_position_sum_per_province(province_definitions.size());
+	memory::FixedVector<fvec2_t> _pixel_position_sum_per_province(
+		province_definitions.size(),
+		[](const size_t i) { return fvec2_t{}; }
+	);
 	TypedSpan<province_index_t, fvec2_t> pixel_position_sum_per_province { _pixel_position_sum_per_province };
 
 	for (ivec2_t pos {}; pos.y < get_height(); ++pos.y) {

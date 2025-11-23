@@ -215,7 +215,7 @@ bool InstanceManager::setup() {
 	return true;
 }
 
-bool InstanceManager::load_bookmark(Bookmark const* new_bookmark) {
+bool InstanceManager::load_bookmark(Bookmark const& new_bookmark) {
 	if (is_bookmark_loaded()) {
 		spdlog::error_s("Cannot load bookmark - already loaded!");
 		return false;
@@ -226,12 +226,7 @@ bool InstanceManager::load_bookmark(Bookmark const* new_bookmark) {
 		return false;
 	}
 
-	if (new_bookmark == nullptr) {
-		spdlog::critical_s("Cannot load bookmark - null!");
-		return false;
-	}
-
-	bookmark = new_bookmark;
+	bookmark = &new_bookmark;
 
 	SPDLOG_INFO("Loading bookmark {} with start date {}", bookmark->get_name(), bookmark->date);
 

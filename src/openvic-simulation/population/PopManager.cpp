@@ -376,7 +376,7 @@ bool PopManager::load_delayed_parse_pop_type_data(
 	bool ret = true;
 	for (size_t index = 0; index < delayed_parse_nodes.size(); ++index) {
 		const auto [rebel_units, equivalent, promote_to_node, issues_node] = delayed_parse_nodes[index];
-		PopType* pop_type = pop_types.get_item_by_index(index);
+		PopType* pop_type = pop_types.get_item_by_index(pop_type_index_t(index));
 
 		pop_type->promote_to = std::move(decltype(PopType::promote_to){get_pop_types()});
 
