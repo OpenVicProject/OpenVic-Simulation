@@ -95,7 +95,7 @@ namespace OpenVic {
 		// Targets to be excluded from all modifiers added to the sum, combined with any explicit exclusions.
 		ModifierEffect::target_t PROPERTY_RW(this_excluded_targets, ModifierEffect::target_t::NO_TARGETS);
 
-		memory::vector<modifier_entry_t> PROPERTY(modifiers);
+		memory::vector<modifier_entry_t> SPAN_PROPERTY(modifiers);
 		ModifierValue PROPERTY(value_sum);
 
 	public:

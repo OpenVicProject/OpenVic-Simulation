@@ -24,7 +24,7 @@ namespace OpenVic {
 		friend struct TechnologyManager;
 
 	private:
-		memory::vector<TechnologyArea const*> PROPERTY(technology_areas);
+		memory::vector<TechnologyArea const*> SPAN_PROPERTY(technology_areas);
 
 	public:
 		TechnologyFolder(std::string_view new_identifier, index_t new_index);
@@ -35,7 +35,7 @@ namespace OpenVic {
 		friend struct TechnologyManager;
 
 	private:
-		memory::vector<Technology const*> PROPERTY(technologies);
+		memory::vector<Technology const*> SPAN_PROPERTY(technologies);
 		size_t PROPERTY(tech_count, 0);
 
 	public:

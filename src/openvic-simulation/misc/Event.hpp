@@ -58,7 +58,7 @@ namespace OpenVic {
 		ConditionalWeightTime PROPERTY(mean_time_to_happen);
 		EffectScript PROPERTY(immediate);
 
-		memory::vector<EventOption> PROPERTY(options);
+		memory::vector<EventOption> SPAN_PROPERTY(options);
 
 		bool parse_scripts(DefinitionManager const& definition_manager);
 

@@ -12,7 +12,7 @@ namespace OpenVic {
 
 	struct ProvinceSet {
 	private:
-		memory::vector<ProvinceDefinition const*> PROPERTY(provinces);
+		memory::vector<ProvinceDefinition const*> SPAN_PROPERTY(provinces);
 		bool locked = false;
 
 	public:

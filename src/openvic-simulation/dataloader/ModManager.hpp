@@ -15,8 +15,8 @@ namespace OpenVic {
 		ModManager const& mod_manager;
 		const memory::string PROPERTY(dataloader_root_path);
 		const std::optional<memory::string> PROPERTY(user_dir);
-		const memory::vector<memory::string> PROPERTY(replace_paths);
-		const memory::vector<memory::string> PROPERTY(dependencies);
+		const memory::vector<memory::string> SPAN_PROPERTY(replace_paths);
+		const memory::vector<memory::string> SPAN_PROPERTY(dependencies);
 
 	public:
 		Mod(

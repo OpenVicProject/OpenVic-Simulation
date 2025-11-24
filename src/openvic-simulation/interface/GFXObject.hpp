@@ -60,7 +60,7 @@ namespace OpenVic::GFX {
 		std::optional<Animation> PROPERTY(idle_animation);
 		std::optional<Animation> PROPERTY(move_animation);
 		std::optional<Animation> PROPERTY(attack_animation);
-		memory::vector<Attachment> PROPERTY(attachments);
+		memory::vector<Attachment> SPAN_PROPERTY(attachments);
 
 		bool _set_animation(std::string_view name, std::string_view file, fixed_point_t scroll_time);
 

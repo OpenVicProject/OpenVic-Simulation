@@ -58,9 +58,9 @@ namespace OpenVic {
 		/* Edge cases where this is empty/undef for some reason,
 		 * probably need to just generate war names like usual for that. */
 		memory::string PROPERTY(war_name);
-		memory::vector<war_participant_t> PROPERTY(attackers);
-		memory::vector<war_participant_t> PROPERTY(defenders);
-		memory::vector<added_wargoal_t> PROPERTY(wargoals);
+		memory::vector<war_participant_t> SPAN_PROPERTY(attackers);
+		memory::vector<war_participant_t> SPAN_PROPERTY(defenders);
+		memory::vector<added_wargoal_t> SPAN_PROPERTY(wargoals);
 	};
 
 	struct AllianceHistory {

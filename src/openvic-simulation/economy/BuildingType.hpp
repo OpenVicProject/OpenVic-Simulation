@@ -60,7 +60,7 @@ namespace OpenVic {
 		building_level_t PROPERTY(fort_level); // fort bonus step-per-level
 
 		naval_capacity_t PROPERTY(naval_capacity);
-		memory::vector<fixed_point_t> PROPERTY(colonial_points);
+		memory::vector<fixed_point_t> SPAN_PROPERTY(colonial_points);
 		bool PROPERTY_CUSTOM_PREFIX(in_province, is); // province
 		bool PROPERTY(one_per_state);
 		fixed_point_t PROPERTY(colonial_range);

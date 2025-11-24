@@ -37,7 +37,7 @@ namespace OpenVic {
 		using index_t = uint8_t;
 
 	private:
-		memory::vector<index_t> PROPERTY(terrain_indices);
+		memory::vector<index_t> SPAN_PROPERTY(terrain_indices);
 
 	public:
 		TerrainType const& type;

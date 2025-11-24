@@ -41,8 +41,8 @@ namespace OpenVic {
 	struct LeaderTraitManager {
 	private:
 		IdentifierRegistry<LeaderTrait> IDENTIFIER_REGISTRY(leader_trait);
-		memory::vector<LeaderTrait const*> PROPERTY(personality_traits);
-		memory::vector<LeaderTrait const*> PROPERTY(background_traits);
+		memory::vector<LeaderTrait const*> SPAN_PROPERTY(personality_traits);
+		memory::vector<LeaderTrait const*> SPAN_PROPERTY(background_traits);
 
 		// As well as their background and personality traits, leaders get this modifier scaled by their prestige
 		Modifier PROPERTY(leader_prestige_modifier);

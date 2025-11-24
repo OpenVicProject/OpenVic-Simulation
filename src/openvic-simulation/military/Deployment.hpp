@@ -62,7 +62,7 @@ namespace OpenVic {
 	private:
 		memory::string PROPERTY(name);
 		ProvinceDefinition const* PROPERTY(location);
-		memory::vector<_Unit> PROPERTY(units);
+		memory::vector<_Unit> SPAN_PROPERTY(units);
 		std::optional<size_t> PROPERTY(leader_index);
 
 	public:
@@ -78,9 +78,9 @@ namespace OpenVic {
 
 	struct Deployment : HasIdentifier {
 	private:
-		memory::vector<ArmyDeployment> PROPERTY(armies);
-		memory::vector<NavyDeployment> PROPERTY(navies);
-		memory::vector<LeaderBase> PROPERTY(leaders);
+		memory::vector<ArmyDeployment> SPAN_PROPERTY(armies);
+		memory::vector<NavyDeployment> SPAN_PROPERTY(navies);
+		memory::vector<LeaderBase> SPAN_PROPERTY(leaders);
 
 	public:
 		Deployment(

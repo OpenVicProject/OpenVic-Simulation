@@ -27,7 +27,7 @@ namespace OpenVic {
 		friend struct MapDefinition;
 
 	private:
-		memory::vector<ivec2_t> PROPERTY(points);
+		memory::vector<ivec2_t> SPAN_PROPERTY(points);
 
 	public:
 		const uint8_t size;
@@ -59,11 +59,11 @@ namespace OpenVic {
 		ProvinceSet water_provinces;
 		TerrainTypeManager PROPERTY_REF(terrain_type_manager);
 
-		memory::vector<river_t> PROPERTY(rivers); // TODO: calculate provinces affected by crossing
+		memory::vector<river_t> SPAN_PROPERTY(rivers); // TODO: calculate provinces affected by crossing
 		void _trace_river(BMP& rivers_bmp, ivec2_t start, river_t& river);
 
 		ivec2_t PROPERTY(dims, { 0, 0 });
-		memory::vector<shape_pixel_t> PROPERTY(province_shape_image);
+		memory::vector<shape_pixel_t> SPAN_PROPERTY(province_shape_image);
 		colour_index_map_t colour_index_map;
 
 		ProvinceDefinition::index_t PROPERTY(max_provinces);

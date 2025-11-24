@@ -94,7 +94,7 @@ namespace OpenVic {
 	/* Contains all current states.*/
 	struct StateManager {
 	private:
-		memory::vector<StateSet> PROPERTY(state_sets);
+		memory::vector<StateSet> SPAN_PROPERTY(state_sets);
 
 		bool add_state_set(
 			MapInstance& map_instance, Region const& region,
