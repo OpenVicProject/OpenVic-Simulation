@@ -8,7 +8,6 @@
 #include "openvic-simulation/utility/Concepts.hpp"
 #include "openvic-simulation/utility/Getters.hpp"
 #include "openvic-simulation/utility/Logger.hpp"
-#include "openvic-simulation/utility/Concepts.hpp"
 
 namespace OpenVic {
 	/* Callbacks for trying to add duplicate keys via UniqueKeyRegistry::add_item */
@@ -176,17 +175,6 @@ namespace OpenVic {
 		using StorageInfo = _StorageInfo<item_type>;
 		using internal_storage_index_type = typename StorageInfo::index_type;
 		using identifier_index_map_t = template_string_map_t<internal_storage_index_type, Case>;
-		
-		//helper to avoid error 'index_t': is not a member of external_value_type
-		template<typename EXTERNAL_VALUE_TYPE, typename = void>
-		struct get_index_t {
-			using type = std::size_t;
-		};
-
-		template<has_index EXTERNAL_VALUE_TYPE>
-		struct get_index_t<EXTERNAL_VALUE_TYPE, std::void_t<typename EXTERNAL_VALUE_TYPE::index_t>> {
-			using type = typename EXTERNAL_VALUE_TYPE::index_t;
-		};
 
 	public:
 		using storage_type = typename StorageInfo::storage_type;
@@ -372,10 +360,7 @@ namespace OpenVic {
 		return nullptr; \
 	} \
 	constexpr external_value_type CONST* get_item_by_index(const index_t typed_index) CONST { \
-		std::size_t index; \
-		if constexpr (std::is_same_v<index_t, std::size_t>) { \
-			index = typed_index; \
-		} else { index = type_safe::get(typed_index); } \
+		const std::size_t index = get_index_as_size_t(typed_index); \
 		if (index < 0 || index >= items.size()) { \
 			return nullptr; \
 		} \
