@@ -261,7 +261,7 @@ ACCESS:
 	NAME; \
 \
 public: \
-	[[nodiscard]] constexpr auto get_##NAME() const -> OpenVic::utility::forwardable_span<const decltype(NAME)::value_type> { \
+	[[nodiscard]] constexpr OpenVic::utility::forwardable_span<std::add_const_t<typename decltype(NAME)::value_type>> get_##NAME() const { \
 		return NAME; \
 	} \
 	ACCESS:

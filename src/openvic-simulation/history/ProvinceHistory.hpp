@@ -39,7 +39,7 @@ namespace OpenVic {
 		ordered_map<BuildingType const*, building_level_t> PROPERTY(province_buildings);
 		ordered_map<BuildingType const*, building_level_t> PROPERTY(state_buildings);
 		fixed_point_map_t<Ideology const*> PROPERTY(party_loyalties);
-		memory::vector<PopBase> PROPERTY(pops);
+		memory::vector<PopBase> SPAN_PROPERTY(pops);
 
 		bool _load_province_pop_history(
 			DefinitionManager const& definition_manager, ast::NodeCPtr root, bool *non_integer_size

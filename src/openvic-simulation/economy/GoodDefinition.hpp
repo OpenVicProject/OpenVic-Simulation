@@ -14,7 +14,7 @@ namespace OpenVic {
 		friend struct GoodDefinitionManager;
 
 	private:
-		memory::vector<GoodDefinition const*> PROPERTY(good_definitions);
+		memory::vector<GoodDefinition const*> SPAN_PROPERTY(good_definitions);
 	public:
 		GoodCategory(std::string_view new_identifier);
 		GoodCategory(GoodCategory&&) = default;

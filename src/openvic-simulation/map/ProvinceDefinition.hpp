@@ -101,7 +101,7 @@ namespace OpenVic {
 		/* Terrain type calculated from terrain image */
 		TerrainType const* PROPERTY(default_terrain_type, nullptr);
 
-		memory::vector<adjacency_t> PROPERTY(adjacencies);
+		memory::vector<adjacency_t> SPAN_PROPERTY(adjacencies);
 		/* Calculated mean pixel position. */
 		fvec2_t PROPERTY(centre);
 		province_positions_t positions {};

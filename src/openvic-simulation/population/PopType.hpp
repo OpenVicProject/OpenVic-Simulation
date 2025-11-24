@@ -23,7 +23,7 @@ namespace OpenVic {
 		friend struct PopManager;
 
 	private:
-		memory::vector<PopType const*> PROPERTY(pop_types);
+		memory::vector<PopType const*> SPAN_PROPERTY(pop_types);
 
 	public:
 		Strata(std::string_view new_identifier, index_t new_index);

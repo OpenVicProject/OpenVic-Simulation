@@ -146,12 +146,12 @@ namespace OpenVic {
 
 		// The total/resultant modifier affecting this country, including owned province contributions.
 		ModifierSum PROPERTY(modifier_sum);
-		memory::vector<ModifierInstance> PROPERTY(event_modifiers);
+		memory::vector<ModifierInstance> SPAN_PROPERTY(event_modifiers);
 
 		/* Production */
 		OV_STATE_PROPERTY(fixed_point_t, industrial_power);
-		memory::vector<std::pair<State const*, fixed_point_t>> PROPERTY(industrial_power_from_states);
-		memory::vector<std::pair<CountryInstance const*, fixed_point_t>> PROPERTY(industrial_power_from_investments);
+		memory::vector<std::pair<State const*, fixed_point_t>> SPAN_PROPERTY(industrial_power_from_states);
+		memory::vector<std::pair<CountryInstance const*, fixed_point_t>> SPAN_PROPERTY(industrial_power_from_investments);
 		size_t PROPERTY(industrial_rank, 0);
 		fixed_point_map_t<CountryInstance const*> PROPERTY(foreign_investments);
 		OV_IFLATMAP_PROPERTY(BuildingType, technology_unlock_level_t, building_type_unlock_levels);
@@ -390,7 +390,7 @@ namespace OpenVic {
 		OV_IFLATMAP_PROPERTY(ShipType, technology_unlock_level_t, ship_type_unlock_levels);
 		technology_unlock_level_t PROPERTY(gas_attack_unlock_level, 0);
 		technology_unlock_level_t PROPERTY(gas_defence_unlock_level, 0);
-		memory::vector<technology_unlock_level_t> PROPERTY(unit_variant_unlock_levels);
+		memory::vector<technology_unlock_level_t> SPAN_PROPERTY(unit_variant_unlock_levels);
 
 	public:
 		//pointers instead of references to allow construction via std::tuple

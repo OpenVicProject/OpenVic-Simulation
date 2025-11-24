@@ -30,7 +30,7 @@ namespace OpenVic {
 
 	private:
 		fixed_point_t PROPERTY(base, 0);
-		memory::vector<condition_weight_item_t> PROPERTY(condition_weight_items);
+		memory::vector<condition_weight_item_t> SPAN_PROPERTY(condition_weight_items);
 		scope_type_t PROPERTY(initial_scope);
 		scope_type_t PROPERTY(this_scope);
 		scope_type_t PROPERTY(from_scope);

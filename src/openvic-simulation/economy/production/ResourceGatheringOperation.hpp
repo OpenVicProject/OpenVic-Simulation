@@ -31,7 +31,7 @@ namespace OpenVic {
 		fixed_point_t PROPERTY(output_quantity_yesterday);
 		fixed_point_t PROPERTY(unsold_quantity_yesterday);
 		fixed_point_t PROPERTY_RW(size_multiplier);
-		memory::vector<Employee> PROPERTY(employees);
+		memory::vector<Employee> SPAN_PROPERTY(employees);
 		pop_size_t PROPERTY(max_employee_count_cache, 0);
 		pop_size_t PROPERTY(total_employees_count_cache, 0);
 		pop_size_t PROPERTY(total_paid_employees_count_cache, 0);

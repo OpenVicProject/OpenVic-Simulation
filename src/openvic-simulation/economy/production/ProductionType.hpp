@@ -52,10 +52,10 @@ namespace OpenVic {
 	private:
 		GameRulesManager const& game_rules_manager;
 		const std::optional<Job> PROPERTY(owner);
-		memory::vector<Job> PROPERTY(jobs);
+		memory::vector<Job> SPAN_PROPERTY(jobs);
 
 		fixed_point_map_t<GoodDefinition const*> PROPERTY(input_goods);
-		memory::vector<bonus_t> PROPERTY(bonuses);
+		memory::vector<bonus_t> SPAN_PROPERTY(bonuses);
 
 		fixed_point_map_t<GoodDefinition const*> PROPERTY(maintenance_requirements);
 		const bool PROPERTY_CUSTOM_PREFIX(coastal, is);

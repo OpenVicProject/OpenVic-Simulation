@@ -13,7 +13,7 @@ namespace OpenVic {
 
 	struct GovernmentType : HasIndex<GovernmentType, government_type_index_t>, HasIdentifier {
 	private:
-		memory::vector<Ideology const*> PROPERTY(ideologies);
+		memory::vector<Ideology const*> SPAN_PROPERTY(ideologies);
 		const bool PROPERTY_CUSTOM_PREFIX(elections, holds);
 		const bool PROPERTY_CUSTOM_PREFIX(appoint_ruling_party, can);
 		memory::string PROPERTY_CUSTOM_NAME(flag_type_identifier, get_flag_type);

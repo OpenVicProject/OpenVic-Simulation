@@ -84,7 +84,7 @@ namespace OpenVic {
 
 		// The total/resultant modifier of local effects on this province (global effects come from the province's owner)
 		ModifierSum PROPERTY(modifier_sum);
-		memory::vector<ModifierInstance> PROPERTY(event_modifiers);
+		memory::vector<ModifierInstance> SPAN_PROPERTY(event_modifiers);
 
 		bool PROPERTY(slave, false);
 		// Used for "minorities = yes/no" condition
@@ -92,7 +92,7 @@ namespace OpenVic {
 		bool PROPERTY_RW(connected_to_capital, false);
 		bool PROPERTY_RW(is_overseas, false);
 		bool PROPERTY(has_empty_adjacent_province, false);
-		memory::vector<ProvinceInstance const*> PROPERTY(adjacent_nonempty_land_provinces);
+		memory::vector<ProvinceInstance const*> SPAN_PROPERTY(adjacent_nonempty_land_provinces);
 		Crime const* PROPERTY_RW(crime, nullptr);
 		ResourceGatheringOperation PROPERTY(rgo);
 		IdentifierRegistry<BuildingInstance> IDENTIFIER_REGISTRY(building, false);

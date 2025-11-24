@@ -101,7 +101,7 @@ namespace OpenVic {
 	struct WargoalTypeManager {
 	private:
 		IdentifierRegistry<WargoalType> IDENTIFIER_REGISTRY(wargoal_type);
-		memory::vector<WargoalType const*> PROPERTY(peace_priorities);
+		memory::vector<WargoalType const*> SPAN_PROPERTY(peace_priorities);
 
 	public:
 		bool add_wargoal_type(

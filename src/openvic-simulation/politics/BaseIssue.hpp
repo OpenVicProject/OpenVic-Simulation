@@ -32,7 +32,7 @@ namespace OpenVic {
 		friend struct IssueManager;
 
 	private:
-		memory::vector<BaseIssue const*> PROPERTY(issues);
+		memory::vector<BaseIssue const*> SPAN_PROPERTY(issues);
 
 	protected:
 		BaseIssueGroup(std::string_view new_identifier): HasIdentifier { new_identifier } {}

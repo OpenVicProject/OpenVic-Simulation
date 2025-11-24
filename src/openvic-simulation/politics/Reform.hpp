@@ -17,7 +17,7 @@ namespace OpenVic {
 	private:
 		bool PROPERTY(is_uncivilised); // whether this group is available to non-westernised countries
 		// in vanilla education, military and economic reforms are hardcoded to true and the rest to false
-		memory::vector<ReformGroup const*> PROPERTY(reform_groups);
+		memory::vector<ReformGroup const*> SPAN_PROPERTY(reform_groups);
 
 	public:
 		ReformType(std::string_view new_identifier, bool new_is_uncivilised);
