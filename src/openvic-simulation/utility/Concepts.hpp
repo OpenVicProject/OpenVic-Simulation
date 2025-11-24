@@ -116,6 +116,26 @@ namespace OpenVic {
 		);
 	};
 
+	//helper to avoid error 'index_t': is not a member of T
+	template<typename T, typename = void>
+	struct get_index_t {
+		using type = std::size_t;
+	};
+
+	template<has_index T>
+	struct get_index_t<T, std::void_t<typename T::index_t>> {
+		using type = typename T::index_t;
+	};
+
+	template<typename T>
+	constexpr std::size_t get_index_as_size_t(const T typed_index) {
+		if constexpr (std::is_same_v<T, std::size_t>) {
+			return typed_index;
+		} else {
+			return type_safe::get(typed_index);
+		}
+	}
+
 	template<typename Case>
 	concept string_map_case = requires(std::string_view identifier) {
 		{ typename Case::hash {}(identifier) } -> std::same_as<std::size_t>;

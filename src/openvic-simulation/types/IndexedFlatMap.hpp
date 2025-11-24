@@ -24,7 +24,8 @@ public: \
 	[[nodiscard]] constexpr IndexedFlatMap<KEYTYPE, VALUETYPE> const& get_##NAME() const { \
 		return NAME; \
 	} \
-	[[nodiscard]] auto get_##NAME(KEYTYPE const& key) const->decltype(OpenVic::_get_property<VALUETYPE>(NAME.at_index(0))); \
+	[[nodiscard]] auto get_##NAME(KEYTYPE const& key) const \
+		-> decltype(OpenVic::_get_property<VALUETYPE>(std::declval<std::add_const_t<VALUETYPE>>())); \
 	ACCESS:
 
 namespace OpenVic {
@@ -46,9 +47,9 @@ namespace OpenVic {
 	* responsible for ensuring that the underlying data (the `std::vector` or array)
 	* that the `std::span` refers to remains valid and outlives the `IndexedFlatMap` instance.
 	*/
-	template <typename KeyType, typename ValueType>
+	template <typename ForwardedKeyType, typename ValueType>
 	struct IndexedFlatMap {
-		using keys_span_type = OpenVic::utility::forwardable_span<const KeyType>;
+		using keys_span_type = OpenVic::utility::forwardable_span<const ForwardedKeyType>;
 		using values_vector_type = std::conditional_t<
             std::is_move_constructible_v<ValueType> || std::is_copy_constructible_v<ValueType>,
             memory::vector<ValueType>,
@@ -67,13 +68,13 @@ namespace OpenVic {
 		* @param key The key whose index is to be converted.
 		* @return The internal index, or 0 if out of bounds (after logging error).
 		*/
-		constexpr size_t get_internal_index_from_key(KeyType const& key) const {
-			static_assert(has_index<KeyType>);
+		constexpr size_t get_internal_index_from_key(ForwardedKeyType const& key) const {
+			static_assert(has_index<ForwardedKeyType>);
 			const size_t index = type_safe::get(key.index);
 			if (index < min_index || index > max_index) {
 				spdlog::error_s(
 					"DEVELOPER: OpenVic::IndexedFlatMap<{},{}> attempted to access key with index {} which is outside the map's defined range [{}, {}].",
-					utility::type_name<KeyType>(),
+					utility::type_name<ForwardedKeyType>(),
 					utility::type_name<ValueType>(),
 					index,
 					min_index,
@@ -92,16 +93,16 @@ namespace OpenVic {
 		* @return True if keys are valid, false otherwise.
 		*/
 		static bool validate_new_keys(keys_span_type new_keys) {
-			static_assert(has_index<KeyType>);
+			static_assert(has_index<ForwardedKeyType>);
 			if (new_keys.empty()) {
 				spdlog::warn_s(
 					"DEVELOPER: OpenVic::IndexedFlatMap<{}, {}> should not be constructed with empty key span.",
-					utility::type_name<KeyType>(), utility::type_name<ValueType>()
+					utility::type_name<ForwardedKeyType>(), utility::type_name<ValueType>()
 				);
 				return false;
 			}
 
-			using index_type = decltype(std::declval<KeyType>().index);
+			using index_type = decltype(std::declval<ForwardedKeyType>().index);
 			using underlying_type = type_safe::underlying_type<index_type>;
 
 			const underlying_type min_index = type_safe::get(new_keys.front().index);
@@ -111,7 +112,7 @@ namespace OpenVic {
 			if (new_keys.size() != expected_capacity) {
 				spdlog::error_s(
 					"DEVELOPER: OpenVic::IndexedFlatMap<{},{}> must be constructed with a continuous span of keys with incremental indices. Expected capacity {} but got {} keys.",
-					utility::type_name<KeyType>(),
+					utility::type_name<ForwardedKeyType>(),
 					utility::type_name<ValueType>(),
 					expected_capacity,
 					new_keys.size()
@@ -126,7 +127,7 @@ namespace OpenVic {
 					spdlog::error_s(
 						"DEVELOPER: OpenVic::IndexedFlatMap<{},{}> must be constructed with a continuous span of keys with incremental indices. "
 						"Expected index {} but got {} at position {}.",
-						utility::type_name<KeyType>(),
+						utility::type_name<ForwardedKeyType>(),
 						utility::type_name<ValueType>(),
 						expected_index,
 						new_keys[i].index,
@@ -143,7 +144,7 @@ namespace OpenVic {
 		//could be rewritten to return iterators for both this and other.
 		//that would overcomplicate it with const & non-const
 		template <typename OtherValueType>
-		keys_span_type get_shared_keys(IndexedFlatMap<KeyType,OtherValueType> const& other) const {
+		keys_span_type get_shared_keys(IndexedFlatMap<ForwardedKeyType,OtherValueType> const& other) const {
 			if (other.get_min_index() >= min_index && other.get_max_index() <= max_index) {
 				return other.get_keys();
 			}
@@ -168,13 +169,13 @@ namespace OpenVic {
 		* @return True if compatible as a subset, false otherwise.
 		*/
 		template <typename OtherValueType>
-		bool check_subset_span_match(IndexedFlatMap<KeyType,OtherValueType> const& other) const {
+		bool check_subset_span_match(IndexedFlatMap<ForwardedKeyType,OtherValueType> const& other) const {
 			// Check if 'other's index range is contained within 'this's index range
 			if (!(other.get_min_index() >= min_index && other.get_max_index() <= max_index)) {
 				spdlog::error_s(
 					"DEVELOPER: OpenVic::IndexedFlatMap<{},{}> subset operation requires the right-hand map's index range "
 					"({}-{}) to be a subset of the left-hand map's index range ({}-{}).",
-					utility::type_name<KeyType>(),
+					utility::type_name<ForwardedKeyType>(),
 					utility::type_name<ValueType>(),
 					other.get_min_index(),
 					other.get_max_index(),
@@ -219,9 +220,9 @@ namespace OpenVic {
 		template<typename GeneratorTemplateType>
 		requires (std::is_move_constructible_v<ValueType> || std::is_copy_constructible_v<ValueType>)
 		//value_generator(key) doesn't return std:tuple<...>
-		&& (!specialization_of<std::remove_cvref_t<std::invoke_result_t<GeneratorTemplateType, KeyType const&>>, std::tuple>)
+		&& (!specialization_of<std::remove_cvref_t<std::invoke_result_t<GeneratorTemplateType, ForwardedKeyType const&>>, std::tuple>)
 		//ValueType(value_generator(key)) is valid constructor call
-		&& std::constructible_from<ValueType, decltype(std::declval<GeneratorTemplateType>()(std::declval<KeyType const&>()))>
+		&& std::constructible_from<ValueType, decltype(std::declval<GeneratorTemplateType>()(std::declval<ForwardedKeyType const&>()))>
 		IndexedFlatMap(
 			keys_span_type new_keys,
 			GeneratorTemplateType value_generator
@@ -229,15 +230,15 @@ namespace OpenVic {
 			min_index { new_keys.front().index },
 			max_index { new_keys.back().index },
 			values() {
-			static_assert(has_index<KeyType>);
+			static_assert(has_index<ForwardedKeyType>);
 			if (!validate_new_keys(new_keys)) {
 				return;
 			}
 
 			values.reserve(new_keys.size());
-			for (KeyType const& key : keys) {
+			for (ForwardedKeyType const& key : keys) {
 				values.emplace_back(
-					std::forward<decltype(std::declval<GeneratorTemplateType>()(std::declval<KeyType const&>()))>(
+					std::forward<decltype(std::declval<GeneratorTemplateType>()(std::declval<ForwardedKeyType const&>()))>(
 						value_generator(key)
 					)
 				);
@@ -259,9 +260,9 @@ namespace OpenVic {
 		template<typename GeneratorTemplateType>
 		requires (!std::is_move_constructible_v<ValueType>) && (!std::is_copy_constructible_v<ValueType>)
 		//value_generator(key) doesn't return std:tuple<...>
-		&& (!specialization_of<std::remove_cvref_t<std::invoke_result_t<GeneratorTemplateType, KeyType const&>>, std::tuple>)
+		&& (!specialization_of<std::remove_cvref_t<std::invoke_result_t<GeneratorTemplateType, ForwardedKeyType const&>>, std::tuple>)
 		//ValueType(value_generator(key)) is valid constructor call
-		&& std::constructible_from<ValueType, decltype(std::declval<GeneratorTemplateType>()(std::declval<KeyType const&>()))>
+		&& std::constructible_from<ValueType, decltype(std::declval<GeneratorTemplateType>()(std::declval<ForwardedKeyType const&>()))>
 		IndexedFlatMap(
 			keys_span_type new_keys,
 			GeneratorTemplateType value_generator
@@ -269,14 +270,14 @@ namespace OpenVic {
 			min_index { new_keys.front().index },
 			max_index { new_keys.back().index },
 			values(new_keys.size()) {
-			static_assert(has_index<KeyType>);
+			static_assert(has_index<ForwardedKeyType>);
 			if (!validate_new_keys(new_keys)) {
 				return;
 			}
 
-			for (KeyType const& key : keys) {
+			for (ForwardedKeyType const& key : keys) {
 				values.emplace_back(
-					std::forward<decltype(std::declval<GeneratorTemplateType>()(std::declval<KeyType const&>()))>(
+					std::forward<decltype(std::declval<GeneratorTemplateType>()(std::declval<ForwardedKeyType const&>()))>(
 						value_generator(key)
 					)
 				);
@@ -298,14 +299,14 @@ namespace OpenVic {
 		template<typename GeneratorTemplateType>
 		requires (std::is_move_constructible_v<ValueType> || std::is_copy_constructible_v<ValueType>)
 		//value_generator(key) returns tuple
-		&& specialization_of<std::remove_cvref_t<std::invoke_result_t<GeneratorTemplateType, KeyType const&>>, std::tuple>
+		&& specialization_of<std::remove_cvref_t<std::invoke_result_t<GeneratorTemplateType, ForwardedKeyType const&>>, std::tuple>
 		//ValueType(...value_generator(key)) is valid constructor call
 		&& requires(GeneratorTemplateType&& value_generator) { {
 			std::apply(
 				[](auto&&... args) {
 					ValueType obj{std::forward<decltype(args)>(args)...};
 				},
-				value_generator(std::declval<KeyType const&>())
+				value_generator(std::declval<ForwardedKeyType const&>())
 			)
 		}; }
 		IndexedFlatMap(
@@ -315,13 +316,13 @@ namespace OpenVic {
 			min_index { new_keys.front().index },
 			max_index { new_keys.back().index },
 			values() {
-			static_assert(has_index<KeyType>);
+			static_assert(has_index<ForwardedKeyType>);
 			if (!validate_new_keys(new_keys)) {
 				return;
 			}
 
 			values.reserve(new_keys.size());
-			for (KeyType const& key : keys) {
+			for (ForwardedKeyType const& key : keys) {
 				std::apply(
 					[this](auto&&... args) {
 						values.emplace_back(std::forward<decltype(args)>(args)...);
@@ -346,14 +347,14 @@ namespace OpenVic {
 		template<typename GeneratorTemplateType>
 		requires (!std::is_move_constructible_v<ValueType>) && (!std::is_copy_constructible_v<ValueType>)
 		//value_generator(key) returns tuple
-		&& specialization_of<std::remove_cvref_t<std::invoke_result_t<GeneratorTemplateType, KeyType const&>>, std::tuple>
+		&& specialization_of<std::remove_cvref_t<std::invoke_result_t<GeneratorTemplateType, ForwardedKeyType const&>>, std::tuple>
 		//ValueType(...value_generator(key)) is valid constructor call
 		&& requires(GeneratorTemplateType value_generator) { {
 			std::apply(
 				[](auto&&... args) {
 					ValueType obj{std::forward<decltype(args)>(args)...};
 				},
-				value_generator(std::declval<KeyType const&>())
+				value_generator(std::declval<ForwardedKeyType const&>())
 			)
 		}; }
 		IndexedFlatMap(
@@ -363,12 +364,12 @@ namespace OpenVic {
 			min_index { type_safe::get(new_keys.front().index) },
 			max_index { type_safe::get(new_keys.back().index) },
 			values(new_keys.size()) {
-			static_assert(has_index<KeyType>);
+			static_assert(has_index<ForwardedKeyType>);
 			if (!validate_new_keys(new_keys)) {
 				return;
 			}
 
-			for (KeyType const& key : keys) {
+			for (ForwardedKeyType const& key : keys) {
 				std::apply(
 					[this](auto&&... args) {
 						values.emplace_back(std::forward<decltype(args)>(args)...);
@@ -390,19 +391,19 @@ namespace OpenVic {
 		*/
 		IndexedFlatMap(keys_span_type new_keys)
 		requires (std::is_move_constructible_v<ValueType> || std::is_copy_constructible_v<ValueType>)
-		&& (std::default_initializable<ValueType> || std::constructible_from<ValueType, KeyType const&>)
+		&& (std::default_initializable<ValueType> || std::constructible_from<ValueType, ForwardedKeyType const&>)
 			: keys(new_keys),
 			min_index { type_safe::get(new_keys.front().index) },
 			max_index { type_safe::get(new_keys.back().index) },
 			values() {
-			static_assert(has_index<KeyType>);
+			static_assert(has_index<ForwardedKeyType>);
 			if (!validate_new_keys(new_keys)) {
 				return;
 			}
 
-			if constexpr (std::constructible_from<ValueType, KeyType const&>) {
+			if constexpr (std::constructible_from<ValueType, ForwardedKeyType const&>) {
 				values.reserve(new_keys.size());
-				for (KeyType const& key : keys) {
+				for (ForwardedKeyType const& key : keys) {
 					values.emplace_back(key);
 				}
 			} else {
@@ -423,23 +424,23 @@ namespace OpenVic {
 		*/
 		IndexedFlatMap(keys_span_type new_keys)
 		requires (!std::is_move_constructible_v<ValueType>) && (!std::is_copy_constructible_v<ValueType>)
-		&& (std::default_initializable<ValueType> || std::constructible_from<ValueType, KeyType const&>)
+		&& (std::default_initializable<ValueType> || std::constructible_from<ValueType, ForwardedKeyType const&>)
 			: keys(new_keys),
 			min_index { type_safe::get(new_keys.front().index) },
 			max_index { type_safe::get(new_keys.back().index) },
 			values(new_keys.size()) {
-			static_assert(has_index<KeyType>);
+			static_assert(has_index<ForwardedKeyType>);
 			if (!validate_new_keys(new_keys)) {
 				return;
 			}
 
-			if constexpr (std::constructible_from<ValueType, KeyType const&>) {
-				for (KeyType const& key : keys) {
+			if constexpr (std::constructible_from<ValueType, ForwardedKeyType const&>) {
+				for (ForwardedKeyType const& key : keys) {
 					values.emplace_back(key);
 				}
 			} else {
 				// Resize and default-construct elements
-				for (KeyType const& key : keys) {
+				for (ForwardedKeyType const& key : keys) {
 					values.emplace_back();
 				}
 			}
@@ -448,44 +449,43 @@ namespace OpenVic {
 		/**
 		* @brief Sets the value associated with a key using copy assignment.
 		*/
-		void set(KeyType const& key, ValueType const& value)
+		void set(ForwardedKeyType const& key, ValueType const& value)
 		requires std::assignable_from<ValueType&, ValueType const&> {
-			static_assert(has_index<KeyType>);
+			static_assert(has_index<ForwardedKeyType>);
 			values[get_internal_index_from_key(key)] = value;
 		}
 
 		/**
 		* @brief Sets the value associated with a key using move assignment (via std::swap).
 		*/
-		void set(KeyType const& key, ValueType&& value)
+		void set(ForwardedKeyType const& key, ValueType&& value)
 		requires std::movable<ValueType> {
-			static_assert(has_index<KeyType>);
+			static_assert(has_index<ForwardedKeyType>);
 			std::swap(
 				values[get_internal_index_from_key(key)],
 				value
 			);
 		}
 
-		constexpr ValueType& at(KeyType const& key) {
-			static_assert(has_index<KeyType>);
+		constexpr ValueType& at(ForwardedKeyType const& key) {
+			static_assert(has_index<ForwardedKeyType>);
 			return values[get_internal_index_from_key(key)];
 		}
 
-		constexpr ValueType const& at(KeyType const& key) const {
-			static_assert(has_index<KeyType>);
+		constexpr ValueType const& at(ForwardedKeyType const& key) const {
+			static_assert(has_index<ForwardedKeyType>);
 			return values[get_internal_index_from_key(key)];
 		}
 
-		template<typename I>
-		requires requires { type_safe::get(std::declval<I>()); }
-		constexpr ValueType& at_index(I const& index) {
-			return at_index(type_safe::get(index));
-		}
-		constexpr ValueType& at_index(const size_t index) {
+		template<typename index_t, typename KeyType = ForwardedKeyType>
+		requires std::same_as<index_t, typename get_index_t<KeyType>::type>
+			&& std::same_as<KeyType, ForwardedKeyType>
+		constexpr ValueType& at_index(const index_t typed_index) {
+			const std::size_t index = get_index_as_size_t(typed_index);
 			if (index < min_index || index > max_index) {
 				spdlog::error_s(
 					"DEVELOPER: OpenVic::IndexedFlatMap<{},{}> attempted to access index {} which is outside the map's defined range [{}, {}].",
-					utility::type_name<KeyType>(),
+					utility::type_name<ForwardedKeyType>(),
 					utility::type_name<ValueType>(),
 					index,
 					min_index,
@@ -496,16 +496,15 @@ namespace OpenVic {
 			return values[index - min_index];
 		}
 
-		template<typename I>
-		requires requires { type_safe::get(std::declval<I>()); }
-		constexpr ValueType const& at_index(I const& index) const {
-			return at_index(type_safe::get(index));
-		}
-		constexpr ValueType const& at_index(const size_t index) const {
+		template<typename index_t, typename KeyType = ForwardedKeyType>
+		requires std::same_as<index_t, typename get_index_t<KeyType>::type>
+			&& std::same_as<KeyType, ForwardedKeyType>
+		constexpr ValueType const& at_index(const index_t typed_index) const {
+			const std::size_t index = get_index_as_size_t(typed_index);
 			if (index < min_index || index > max_index) {
 				spdlog::error_s(
 					"DEVELOPER: OpenVic::IndexedFlatMap<{},{}> attempted to access index {} which is outside the map's defined range [{}, {}].",
-					utility::type_name<KeyType>(),
+					utility::type_name<ForwardedKeyType>(),
 					utility::type_name<ValueType>(),
 					index,
 					min_index,
@@ -516,16 +515,15 @@ namespace OpenVic {
 			return values[index - min_index];
 		}
 
-		template<typename I>
-		requires requires { type_safe::get(std::declval<I>()); }
-		constexpr KeyType const& get_key_at_index(I const& index) const {
-			return get_key_at_index(type_safe::get(index));
-		}
-		constexpr KeyType const& get_key_at_index(const size_t index) const {
+		template<typename index_t, typename KeyType = ForwardedKeyType>
+		requires std::same_as<index_t, typename get_index_t<KeyType>::type>
+			&& std::same_as<KeyType, ForwardedKeyType>
+		constexpr ForwardedKeyType const& get_key_at_index(const index_t typed_index) const {
+			const std::size_t index = get_index_as_size_t(typed_index);
 			if (index < min_index || index > max_index) {
 				spdlog::error_s(
 					"DEVELOPER: OpenVic::IndexedFlatMap<{},{}> attempted to access index {} which is outside the map's defined range [{}, {}].",
-					utility::type_name<KeyType>(),
+					utility::type_name<ForwardedKeyType>(),
 					utility::type_name<ValueType>(),
 					index,
 					min_index,
@@ -536,17 +534,16 @@ namespace OpenVic {
 			return keys[index - min_index];
 		}
 
-		constexpr bool contains(KeyType const& key) const {
-			static_assert(has_index<KeyType>);
+		constexpr bool contains(ForwardedKeyType const& key) const {
+			static_assert(has_index<ForwardedKeyType>);
 			return contains_index(key.index);
 		}
 
-		template<typename I>
-		requires requires { type_safe::get(std::declval<I>()); }
-		constexpr bool contains_index(I const& external_index) const {
-			return contains_index(type_safe::get(external_index));
-		}
-		constexpr bool contains_index(const size_t external_index) const {
+		template<typename index_t, typename KeyType = ForwardedKeyType>
+		requires std::same_as<index_t, typename get_index_t<KeyType>::type>
+			&& std::same_as<KeyType, ForwardedKeyType>
+		constexpr bool contains_index(const index_t typed_external_index) const {
+			const std::size_t external_index = get_index_as_size_t(typed_external_index);
 			return external_index >= min_index && external_index <= max_index;
 		}
 
@@ -592,8 +589,8 @@ namespace OpenVic {
 
 		constexpr void copy_values_from(IndexedFlatMap const& other)
 		requires std::assignable_from<ValueType&, ValueType const&> {
-			static_assert(has_index<KeyType>);
-			for (KeyType const& key : get_shared_keys(other)) {
+			static_assert(has_index<ForwardedKeyType>);
+			for (ForwardedKeyType const& key : get_shared_keys(other)) {
 				set(key, other.at(key));
 			}
 		}
@@ -607,7 +604,7 @@ namespace OpenVic {
 		*
 		* @note This method requires `ValueType` to be copy-assignable.
 		*/
-		void reinitialize_with_generator(fu2::function<ValueType(KeyType const&)> value_generator)
+		void reinitialize_with_generator(fu2::function<ValueType(ForwardedKeyType const&)> value_generator)
 		requires std::copyable<ValueType> {
 			for (iterator it = begin(); it < end(); it++) {
 				auto& [key, value] = *it;
@@ -625,10 +622,10 @@ namespace OpenVic {
 		* @note This method destroys existing elements and constructs new ones in place,
 		* which is often more efficient for move-only types.
 		*/
-		void reinitialize_with_generator(fu2::function<ValueType(KeyType const&)> value_generator)
+		void reinitialize_with_generator(fu2::function<ValueType(ForwardedKeyType const&)> value_generator)
 		requires std::movable<ValueType> && (!std::copyable<ValueType>) {
 			values.clear();
-			for (KeyType const& key : keys) {
+			for (ForwardedKeyType const& key : keys) {
 				// Emplace directly, using move construction if generator returns rvalue
 				values.emplace_back(value_generator(key));
 			}
@@ -637,30 +634,30 @@ namespace OpenVic {
 		// --- Mathematical Operators (Valarray-like functionality) ---
 
 		// Unary plus operator
-		IndexedFlatMap<KeyType, ValueType> operator+() const {
+		IndexedFlatMap<ForwardedKeyType, ValueType> operator+() const {
 			// Unary plus typically returns a copy of itself
 			return *this;
 		}
 
 		// Unary minus operator
-		IndexedFlatMap<KeyType, ValueType> operator-() const
+		IndexedFlatMap<ForwardedKeyType, ValueType> operator-() const
 		requires unary_negatable <ValueType> {
-			static_assert(has_index<KeyType>);
-			return IndexedFlatMap(keys, [&](KeyType const& key) {
+			static_assert(has_index<ForwardedKeyType>);
+			return IndexedFlatMap(keys, [&](ForwardedKeyType const& key) {
 				return -this->at(key);
 			});
 		}
 
 		template <typename OtherValueType>
-		IndexedFlatMap<KeyType, ValueType> operator+(IndexedFlatMap<KeyType,OtherValueType> const& other) const
+		IndexedFlatMap<ForwardedKeyType, ValueType> operator+(IndexedFlatMap<ForwardedKeyType,OtherValueType> const& other) const
 		requires addable<ValueType,OtherValueType,ValueType> {
-			static_assert(has_index<KeyType>);
+			static_assert(has_index<ForwardedKeyType>);
 			if (!check_subset_span_match(other)) {
 				return IndexedFlatMap();
 			}
 
 			// Create a new map with the same keys as 'this'
-			return IndexedFlatMap(keys, [&](KeyType const& key) {
+			return IndexedFlatMap(keys, [&](ForwardedKeyType const& key) {
 				if (other.contains(key)) {
 					// If the key exists in 'other' (i.e., within its min_index/max_index),
 					// perform the operation.
@@ -674,14 +671,14 @@ namespace OpenVic {
 		}
 
 		template <typename OtherValueType>
-		IndexedFlatMap<KeyType, ValueType> operator-(IndexedFlatMap<KeyType,OtherValueType> const& other) const
+		IndexedFlatMap<ForwardedKeyType, ValueType> operator-(IndexedFlatMap<ForwardedKeyType,OtherValueType> const& other) const
 		requires subtractable<ValueType,OtherValueType,ValueType> {
-			static_assert(has_index<KeyType>);
+			static_assert(has_index<ForwardedKeyType>);
 			if (!check_subset_span_match(other)) {
 				return IndexedFlatMap();
 			}
 
-			return IndexedFlatMap(keys, [&](KeyType const& key) {
+			return IndexedFlatMap(keys, [&](ForwardedKeyType const& key) {
 				if (other.contains(key)) {
 					return this->at(key) - other.at(key);
 				} else {
@@ -691,14 +688,14 @@ namespace OpenVic {
 		}
 
 		template <typename OtherValueType>
-		IndexedFlatMap<KeyType, ValueType> operator*(IndexedFlatMap<KeyType,OtherValueType> const& other) const
+		IndexedFlatMap<ForwardedKeyType, ValueType> operator*(IndexedFlatMap<ForwardedKeyType,OtherValueType> const& other) const
 		requires multipliable<ValueType,OtherValueType,ValueType> {
-			static_assert(has_index<KeyType>);
+			static_assert(has_index<ForwardedKeyType>);
 			if (!check_subset_span_match(other)) {
 				return IndexedFlatMap();
 			}
 
-			return IndexedFlatMap(keys, [&](KeyType const& key) {
+			return IndexedFlatMap(keys, [&](ForwardedKeyType const& key) {
 				if (other.contains(key)) {
 					return this->at(key) * other.at(key);
 				} else {
@@ -708,20 +705,20 @@ namespace OpenVic {
 		}
 
 		template <typename OtherValueType>
-		IndexedFlatMap<KeyType, ValueType> operator/(IndexedFlatMap<KeyType,OtherValueType> const& other) const
+		IndexedFlatMap<ForwardedKeyType, ValueType> operator/(IndexedFlatMap<ForwardedKeyType,OtherValueType> const& other) const
 		requires divisible<ValueType,OtherValueType,ValueType> {
-			static_assert(has_index<KeyType>);
+			static_assert(has_index<ForwardedKeyType>);
 			if (!check_subset_span_match(other)) {
 				return IndexedFlatMap();
 			}
 
-			return IndexedFlatMap(keys, [&](KeyType const& key) {
+			return IndexedFlatMap(keys, [&](ForwardedKeyType const& key) {
 				// Add a basic division by zero check for each element
 				if (other.contains(key)) {
 					if (other.at(key) == static_cast<ValueType>(0)) {
 						spdlog::error_s(
 							"DEVELOPER: OpenVic::IndexedFlatMap<{},{}> division by zero detected at key index {}.",
-							utility::type_name<KeyType>(),
+							utility::type_name<ForwardedKeyType>(),
 							utility::type_name<ValueType>(),
 							key.index
 						);
@@ -736,16 +733,16 @@ namespace OpenVic {
 		}
 
 		template <typename OtherValueType>
-		IndexedFlatMap<KeyType, ValueType> divide_handle_zero(
-			IndexedFlatMap<KeyType,OtherValueType> const& other,
+		IndexedFlatMap<ForwardedKeyType, ValueType> divide_handle_zero(
+			IndexedFlatMap<ForwardedKeyType,OtherValueType> const& other,
 			fu2::function<ValueType(ValueType const&, OtherValueType const&)> handle_div_by_zero
 		) const requires divisible<ValueType,OtherValueType,ValueType> {
-			static_assert(has_index<KeyType>);
+			static_assert(has_index<ForwardedKeyType>);
 			if (!check_subset_span_match(other)) {
 				return IndexedFlatMap();
 			}
 
-			return IndexedFlatMap(keys, [&](KeyType const& key) {
+			return IndexedFlatMap(keys, [&](ForwardedKeyType const& key) {
 				if (other.contains(key)) {
 					if (other.at(key) == static_cast<ValueType>(0)) {
 						return handle_div_by_zero(
@@ -762,109 +759,109 @@ namespace OpenVic {
 
 		// Binary addition operator (Map + Scalar)
 		template <typename ScalarType>
-		IndexedFlatMap<KeyType, ValueType> operator+(ScalarType const& scalar) const
+		IndexedFlatMap<ForwardedKeyType, ValueType> operator+(ScalarType const& scalar) const
 		requires addable<ValueType,ScalarType,ValueType> {
-			static_assert(has_index<KeyType>);
-			return IndexedFlatMap(keys, [&](KeyType const& key) {
+			static_assert(has_index<ForwardedKeyType>);
+			return IndexedFlatMap(keys, [&](ForwardedKeyType const& key) {
 				return this->at(key) + scalar;
 			});
 		}
 
 		// Binary subtraction operator (Map - Scalar)
 		template <typename ScalarType>
-		IndexedFlatMap<KeyType, ValueType> operator-(ScalarType const& scalar) const
+		IndexedFlatMap<ForwardedKeyType, ValueType> operator-(ScalarType const& scalar) const
 		requires subtractable<ValueType,ScalarType,ValueType> {
-			static_assert(has_index<KeyType>);
-			return IndexedFlatMap(keys, [&](KeyType const& key) {
+			static_assert(has_index<ForwardedKeyType>);
+			return IndexedFlatMap(keys, [&](ForwardedKeyType const& key) {
 				return this->at(key) - scalar;
 			});
 		}
 
 		// Binary multiplication operator (Map * Scalar)
 		template <typename ScalarType>
-		IndexedFlatMap<KeyType, ValueType> operator*(ScalarType const& scalar) const
+		IndexedFlatMap<ForwardedKeyType, ValueType> operator*(ScalarType const& scalar) const
 		requires multipliable<ValueType,ScalarType,ValueType> {
-			static_assert(has_index<KeyType>);
-			return IndexedFlatMap(keys, [&](KeyType const& key) {
+			static_assert(has_index<ForwardedKeyType>);
+			return IndexedFlatMap(keys, [&](ForwardedKeyType const& key) {
 				return this->at(key) * scalar;
 			});
 		}
 
 		// Binary division operator (Map / Scalar)
 		template <typename ScalarType>
-		IndexedFlatMap<KeyType, ValueType> operator/(ScalarType const& scalar) const
+		IndexedFlatMap<ForwardedKeyType, ValueType> operator/(ScalarType const& scalar) const
 		requires divisible<ValueType,ScalarType,ValueType> {
-			static_assert(has_index<KeyType>);
+			static_assert(has_index<ForwardedKeyType>);
 			if (scalar == static_cast<ValueType>(0)) {
 				spdlog::error_s(
 					"DEVELOPER: OpenVic::IndexedFlatMap<{},{}> division by zero for scalar operation.",
-					utility::type_name<KeyType>(),
+					utility::type_name<ForwardedKeyType>(),
 					utility::type_name<ValueType>()
 				);
 				assert(scalar != static_cast<ValueType>(0));
 				//continue and let it throw
 			}
-			return IndexedFlatMap(keys, [&](KeyType const& key) {
+			return IndexedFlatMap(keys, [&](ForwardedKeyType const& key) {
 				return this->at(key) / scalar;
 			});
 		}
 
 		template <typename OtherValueType>
-		IndexedFlatMap& operator+=(IndexedFlatMap<KeyType,OtherValueType> const& other)
+		IndexedFlatMap& operator+=(IndexedFlatMap<ForwardedKeyType,OtherValueType> const& other)
 		requires add_assignable<ValueType,OtherValueType> {
-			static_assert(has_index<KeyType>);
+			static_assert(has_index<ForwardedKeyType>);
 			if (!check_subset_span_match(other)) {
 				return *this; // Return current state on error
 			}
 
 			// Iterate only over the keys that are present in 'other'
-			for (KeyType const& key : other.get_keys()) {
+			for (ForwardedKeyType const& key : other.get_keys()) {
 				this->at(key) += other.at(key);
 			}
 			return *this;
 		}
 
 		template <typename OtherValueType>
-		IndexedFlatMap& operator-=(IndexedFlatMap<KeyType,OtherValueType> const& other)
+		IndexedFlatMap& operator-=(IndexedFlatMap<ForwardedKeyType,OtherValueType> const& other)
 		requires subtract_assignable<ValueType,OtherValueType> {
-			static_assert(has_index<KeyType>);
+			static_assert(has_index<ForwardedKeyType>);
 			if (!check_subset_span_match(other)) {
 				return *this;
 			}
 
-			for (KeyType const& key : other.get_keys()) {
+			for (ForwardedKeyType const& key : other.get_keys()) {
 				this->at(key) -= other.at(key);
 			}
 			return *this;
 		}
 
 		template <typename OtherValueType>
-		IndexedFlatMap& operator*=(IndexedFlatMap<KeyType,OtherValueType> const& other)
+		IndexedFlatMap& operator*=(IndexedFlatMap<ForwardedKeyType,OtherValueType> const& other)
 		requires multiply_assignable<ValueType,OtherValueType> {
-			static_assert(has_index<KeyType>);
+			static_assert(has_index<ForwardedKeyType>);
 			if (!check_subset_span_match(other)) {
 				return *this;
 			}
 
-			for (KeyType const& key : other.get_keys()) {
+			for (ForwardedKeyType const& key : other.get_keys()) {
 				this->at(key) *= other.at(key);
 			}
 			return *this;
 		}
 
 		template <typename OtherValueType>
-		IndexedFlatMap& operator/=(IndexedFlatMap<KeyType,OtherValueType> const& other)
+		IndexedFlatMap& operator/=(IndexedFlatMap<ForwardedKeyType,OtherValueType> const& other)
 		requires divide_assignable<ValueType,OtherValueType> {
-			static_assert(has_index<KeyType>);
+			static_assert(has_index<ForwardedKeyType>);
 			if (!check_subset_span_match(other)) {
 				return *this;
 			}
 
-			for (KeyType const& key : other.get_keys()) {
+			for (ForwardedKeyType const& key : other.get_keys()) {
 				if (other.at(key) == static_cast<ValueType>(0)) {
 					spdlog::error_s(
 						"DEVELOPER: OpenVic::IndexedFlatMap<{},{}> compound division by zero detected at key index {}.",
-						utility::type_name<KeyType>(),
+						utility::type_name<ForwardedKeyType>(),
 						utility::type_name<ValueType>(),
 						key.index
 					);
@@ -878,15 +875,15 @@ namespace OpenVic {
 
 		template <typename OtherValueType>
 		IndexedFlatMap& divide_assign_handle_zero(
-			IndexedFlatMap<KeyType,OtherValueType> const& other,
+			IndexedFlatMap<ForwardedKeyType,OtherValueType> const& other,
 			fu2::function<void(ValueType&, OtherValueType const&)> handle_div_by_zero
 		) requires divide_assignable<ValueType,OtherValueType> {
-			static_assert(has_index<KeyType>);
+			static_assert(has_index<ForwardedKeyType>);
 			if (!check_subset_span_match(other)) {
 				return *this;
 			}
 
-			for (KeyType const& key : other.get_keys()) {
+			for (ForwardedKeyType const& key : other.get_keys()) {
 				if (other.at(key) == static_cast<ValueType>(0)) {
 					handle_div_by_zero(
 						this->at(key),
@@ -936,7 +933,7 @@ namespace OpenVic {
 			if (scalar == static_cast<ValueType>(0)) {
 				spdlog::error_s(
 					"DEVELOPER: OpenVic::IndexedFlatMap<{},{}> compound division by zero for scalar operation.",
-					utility::type_name<KeyType>(),
+					utility::type_name<ForwardedKeyType>(),
 					utility::type_name<ValueType>()
 				);
 				assert(scalar != static_cast<ValueType>(0));
@@ -950,11 +947,11 @@ namespace OpenVic {
 
 		template <typename OtherValueType,typename ScalarType>
 		constexpr IndexedFlatMap& mul_add(
-			IndexedFlatMap<KeyType,OtherValueType> const& other,
+			IndexedFlatMap<ForwardedKeyType,OtherValueType> const& other,
 			ScalarType const& factor
 		) requires mul_add_assignable<ValueType,OtherValueType,ScalarType> {
-			static_assert(has_index<KeyType>);
-			for (KeyType const& key : get_shared_keys(other)) {
+			static_assert(has_index<ForwardedKeyType>);
+			for (ForwardedKeyType const& key : get_shared_keys(other)) {
 				at(key) += other.at(key) * factor;
 			}
 
@@ -963,20 +960,20 @@ namespace OpenVic {
 
 		template <typename ValueTypeA,typename ValueTypeB>
 		constexpr IndexedFlatMap& mul_add(
-			IndexedFlatMap<KeyType,ValueTypeA> const& a,
-			IndexedFlatMap<KeyType,ValueTypeB> const& b
+			IndexedFlatMap<ForwardedKeyType,ValueTypeA> const& a,
+			IndexedFlatMap<ForwardedKeyType,ValueTypeB> const& b
 		) requires mul_add_assignable<ValueType,ValueTypeA,ValueTypeB> {
-			static_assert(has_index<KeyType>);
+			static_assert(has_index<ForwardedKeyType>);
 			if (a.get_min_index() != b.get_min_index() || a.get_max_index() != b.get_max_index()) {
 				spdlog::error_s(
 					"DEVELOPER: OpenVic::IndexedFlatMap<{},{}> attempted mul_add where a and b don't have the same keys. This is not implemented.",
-					utility::type_name<KeyType>(),
+					utility::type_name<ForwardedKeyType>(),
 					utility::type_name<ValueType>()
 				);
 				assert(a.get_min_index() == b.get_min_index() && a.get_max_index() == b.get_max_index());
 			}
 
-			for (KeyType const& key : get_shared_keys(a)) {
+			for (ForwardedKeyType const& key : get_shared_keys(a)) {
 				at(key) += a.at(key) * b.at(key);
 			}
 
@@ -989,7 +986,7 @@ namespace OpenVic {
 			&& add_assignable<ValueType>
 			&& multiply_assignable<ValueType,ScalarType>
 			&& divide_assignable<ValueType> {
-			static_assert(has_index<KeyType>);
+			static_assert(has_index<ForwardedKeyType>);
 			bool has_any_non_zero_value = false;
 			const ValueType zero = static_cast<ValueType>(0);
 			ValueType old_total {};
@@ -1009,7 +1006,7 @@ namespace OpenVic {
 		template <bool IsConst>
 		class BasicIterator {
 		public:
-			using value_type = std::pair<KeyType const&, std::conditional_t<IsConst, ValueType const&, ValueType&>>;
+			using value_type = std::pair<ForwardedKeyType const&, std::conditional_t<IsConst, ValueType const&, ValueType&>>;
 			using difference_type = std::ptrdiff_t;
 			using reference = value_type;
 			using iterator_category = std::random_access_iterator_tag;
@@ -1035,7 +1032,7 @@ namespace OpenVic {
 			// For direct member access, it's often better to dereference and use dot operator: (*it).first
 			// However, for compatibility with some algorithms, a proxy is provided.
 			struct Proxy {
-				KeyType const& first;
+				ForwardedKeyType const& first;
 				std::conditional_t<IsConst, ValueType const&, ValueType&> second;
 				// Add operator-> for nested access if needed, e.g., Proxy->first.some_member()
 				// For now, direct access to first/second is assumed.
