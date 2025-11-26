@@ -6,6 +6,7 @@
 
 #include <openvic-dataloader/csv/LineObject.hpp>
 
+#include "openvic-simulation/core/io/BMP.hpp"
 #include "openvic-simulation/map/ProvinceDefinition.hpp"
 #include "openvic-simulation/map/Region.hpp"
 #include "openvic-simulation/map/TerrainType.hpp"
@@ -14,7 +15,6 @@
 #include "openvic-simulation/types/IdentifierRegistry.hpp"
 #include "openvic-simulation/types/OrderedContainers.hpp"
 #include "openvic-simulation/types/Vector.hpp"
-#include "openvic-simulation/utility/BMP.hpp"
 #include "openvic-simulation/utility/Containers.hpp"
 
 namespace OpenVic {
