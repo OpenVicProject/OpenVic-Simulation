@@ -18,8 +18,6 @@
 #include "openvic-simulation/utility/Containers.hpp"
 
 namespace OpenVic {
-	namespace fs = std::filesystem;
-
 	struct BuildingTypeManager;
 	struct ModifierManager;
 
