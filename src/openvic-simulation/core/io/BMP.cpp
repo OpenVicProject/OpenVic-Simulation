@@ -6,8 +6,8 @@
 #include <fmt/std.h>
 
 #include "openvic-simulation/types/OrderedContainers.hpp"
-#include "openvic-simulation/utility/Logger.hpp"
 #include "openvic-simulation/utility/Containers.hpp"
+#include "openvic-simulation/utility/Logger.hpp"
 
 using namespace OpenVic;
 
@@ -51,42 +51,30 @@ bool BMP::read_header() {
 	// Validate constants
 	static constexpr uint16_t BMP_SIGNATURE = 0x4d42;
 	if (header.signature != BMP_SIGNATURE) {
-		spdlog::error_s(
-			"Invalid BMP signature: {} (must be {})",
-			header.signature, BMP_SIGNATURE
-		);
+		spdlog::error_s("Invalid BMP signature: {} (must be {})", header.signature, BMP_SIGNATURE);
 		header_validated = false;
 	}
 	static constexpr uint32_t DIB_HEADER_SIZE = 40;
 	if (header.dib_header_size != DIB_HEADER_SIZE) {
-		spdlog::error_s(
-			"Invalid BMP DIB header size: {} (must be {})",
-			header.dib_header_size, DIB_HEADER_SIZE
-		);
+		spdlog::error_s("Invalid BMP DIB header size: {} (must be {})", header.dib_header_size, DIB_HEADER_SIZE);
 		header_validated = false;
 	}
 	static constexpr uint16_t NUM_PLANES = 1;
 	if (header.num_planes != NUM_PLANES) {
-		spdlog::error_s(
-			"Invalid BMP plane count: {} (must be {})",
-			header.num_planes, NUM_PLANES
-		);
+		spdlog::error_s("Invalid BMP plane count: {} (must be {})", header.num_planes, NUM_PLANES);
 		header_validated = false;
 	}
 	static constexpr uint16_t COMPRESSION = 0; // Only support uncompressed BMPs
 	if (header.compression != COMPRESSION) {
-		spdlog::error_s(
-			"Invalid BMP compression method: {} (must be {})",
-			header.compression, COMPRESSION
-		);
+		spdlog::error_s("Invalid BMP compression method: {} (must be {})", header.compression, COMPRESSION);
 		header_validated = false;
 	}
 
 	// Validate sizes and dimensions
 	if (header.image_size_bytes > 0 && header.file_size != header.offset + header.image_size_bytes) {
 		spdlog::error_s(
-			"Invalid BMP memory sizes: file size = {} != {} = {} + {} = image data offset + image data size",
-			header.file_size, header.offset + header.image_size_bytes, header.offset, header.image_size_bytes
+			"Invalid BMP memory sizes: file size = {} != {} = {} + {} = image data offset + image data size", header.file_size,
+			header.offset + header.image_size_bytes, header.offset, header.image_size_bytes
 		);
 		header_validated = false;
 	}
@@ -108,10 +96,7 @@ bool BMP::read_header() {
 #define STR(x) #x
 	static const ordered_set<uint16_t> BITS_PER_PIXEL { VALID_BITS_PER_PIXEL };
 	if (!BITS_PER_PIXEL.contains(header.bits_per_pixel)) {
-		spdlog::error_s(
-			"Invalid BMP bits per pixel: {} (must be one of " STR(VALID_BITS_PER_PIXEL) ")",
-			header.bits_per_pixel
-		);
+		spdlog::error_s("Invalid BMP bits per pixel: {} (must be one of " STR(VALID_BITS_PER_PIXEL) ")", header.bits_per_pixel);
 		header_validated = false;
 	}
 #undef VALID_BITS_PER_PIXEL
@@ -119,24 +104,26 @@ bool BMP::read_header() {
 	static constexpr uint16_t PALETTE_BITS_PER_PIXEL_LIMIT = 8;
 	if (header.num_colours != 0 && header.bits_per_pixel > PALETTE_BITS_PER_PIXEL_LIMIT) {
 		spdlog::error_s(
-			"Invalid BMP palette size: {} (should be 0 as bits per pixel is {} > {})",
-			header.num_colours, header.bits_per_pixel, PALETTE_BITS_PER_PIXEL_LIMIT
+			"Invalid BMP palette size: {} (should be 0 as bits per pixel is {} > {})", header.num_colours,
+			header.bits_per_pixel, PALETTE_BITS_PER_PIXEL_LIMIT
 		);
 		header_validated = false;
 	}
 	// TODO - validate important_colours
 
-	palette_size = header.bits_per_pixel > PALETTE_BITS_PER_PIXEL_LIMIT ? 0
-		// Use header.num_colours if it's greater than 0 and at most 1 << header.bits_per_pixel
-		: (0 < header.num_colours && (header.num_colours - 1) >> header.bits_per_pixel == 0
-		? header.num_colours : 1 << header.bits_per_pixel);
+	if (header.bits_per_pixel > PALETTE_BITS_PER_PIXEL_LIMIT) {
+		palette_size = 0;
+	}
+	// Use header.num_colours if it's greater than 0 and at most 1 << header.bits_per_pixel
+	else if (0 < header.num_colours && (header.num_colours - 1) >> header.bits_per_pixel == 0) {
+		palette_size = header.num_colours;
+	} else {
+		palette_size = 1 << header.bits_per_pixel;
+	}
 
 	const uint32_t expected_offset = palette_size * PALETTE_COLOUR_SIZE + sizeof(header);
 	if (header.offset != expected_offset) {
-		spdlog::error_s(
-			"Invalid BMP image data offset: {} (should be {})",
-			header.offset, expected_offset
-		);
+		spdlog::error_s("Invalid BMP image data offset: {} (should be {})", header.offset, expected_offset);
 		header_validated = false;
 	}
 

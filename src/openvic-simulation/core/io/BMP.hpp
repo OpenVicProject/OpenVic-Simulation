@@ -12,6 +12,7 @@ namespace OpenVic {
 	class BMP {
 #pragma pack(push)
 #pragma pack(1)
+		// clang-format off
 		struct header_t {
 			uint16_t signature;         // Signature: 0x4d42 (or 'B' 'M')
 			uint32_t file_size;         // File size in bytes
@@ -30,6 +31,7 @@ namespace OpenVic {
 			uint32_t num_colours;       // Number of colours
 			uint32_t important_colours; // Important colours
 		} header {};
+		//clang-format on
 #pragma pack(pop)
 
 	public:
