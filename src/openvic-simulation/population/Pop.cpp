@@ -1,6 +1,5 @@
 #include "Pop.hpp"
 #include "PopDeps.hpp"
-#include "utility/ErrorMacros.hpp"
 
 #include <concepts> // IWYU pragma: keep for lambda
 #include <cstddef>
@@ -10,6 +9,7 @@
 
 #include <type_safe/strong_typedef.hpp>
 
+#include "openvic-simulation/core/error/ErrorMacros.hpp"
 #include "openvic-simulation/country/CountryParty.hpp"
 #include "openvic-simulation/country/CountryDefinition.hpp"
 #include "openvic-simulation/country/CountryInstance.hpp"

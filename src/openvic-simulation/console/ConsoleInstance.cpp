@@ -11,6 +11,7 @@
 
 #include "openvic-simulation/DefinitionManager.hpp"
 #include "openvic-simulation/InstanceManager.hpp"
+#include "openvic-simulation/core/error/ErrorMacros.hpp"
 #include "openvic-simulation/country/CountryInstance.hpp"
 #include "openvic-simulation/map/ProvinceInstance.hpp"
 #include "openvic-simulation/military/UnitType.hpp"
@@ -21,7 +22,6 @@
 #include "openvic-simulation/types/Colour.hpp"
 #include "openvic-simulation/types/Date.hpp"
 #include "openvic-simulation/utility/Containers.hpp"
-#include "openvic-simulation/utility/ErrorMacros.hpp"
 
 using namespace OpenVic;
 using namespace std::string_view_literals;

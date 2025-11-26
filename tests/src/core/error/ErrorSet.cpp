@@ -1,8 +1,8 @@
-#include "openvic-simulation/utility/ErrorSet.hpp"
+#include "openvic-simulation/core/error/ErrorSet.hpp"
 
 #include <string_view>
 
-#include "openvic-simulation/utility/Error.hpp"
+#include "openvic-simulation/core/error/Error.hpp"
 
 #include <snitch/snitch_macros_check.hpp>
 #include <snitch/snitch_macros_test_case.hpp>
