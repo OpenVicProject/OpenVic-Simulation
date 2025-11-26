@@ -2,12 +2,12 @@
 
 #include <openvic-dataloader/v2script/Parser.hpp>
 
+#include "openvic-simulation/core/error/ErrorMacros.hpp"
 #include "openvic-simulation/dataloader/NodeTools.hpp"
 #include "openvic-simulation/economy/GoodDefinition.hpp"
 #include "openvic-simulation/misc/GameRulesManager.hpp"
 #include "openvic-simulation/population/PopManager.hpp"
 #include "openvic-simulation/population/PopType.hpp"
-#include "openvic-simulation/utility/ErrorMacros.hpp"
 
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;

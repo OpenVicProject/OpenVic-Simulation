@@ -2,11 +2,11 @@
 
 #include <string_view>
 
+#include "openvic-simulation/core/error/ErrorMacros.hpp"
 #include "openvic-simulation/dataloader/NodeTools.hpp"
 #include "openvic-simulation/types/HasIdentifier.hpp"
 #include "openvic-simulation/types/IdentifierRegistry.hpp"
 #include "openvic-simulation/types/OrderedContainers.hpp"
-#include "openvic-simulation/utility/ErrorMacros.hpp"
 #include "openvic-simulation/utility/FormatValidate.hpp"
 
 using namespace OpenVic;

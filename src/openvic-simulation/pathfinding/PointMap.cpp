@@ -11,9 +11,9 @@
 
 #include <fmt/core.h>
 
+#include "openvic-simulation/core/error/ErrorMacros.hpp"
 #include "openvic-simulation/types/Vector.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
-#include "openvic-simulation/utility/ErrorMacros.hpp"
 #include "openvic-simulation/utility/Typedefs.hpp"
 
 using namespace OpenVic;

@@ -8,6 +8,7 @@
 
 #include <type_safe/strong_typedef.hpp>
 
+#include "openvic-simulation/core/error/ErrorMacros.hpp"
 #include "openvic-simulation/country/SharedCountryValues.hpp"
 #include "openvic-simulation/country/CountryDefinition.hpp"
 #include "openvic-simulation/defines/CountryDefines.hpp"
@@ -44,7 +45,6 @@
 #include "openvic-simulation/types/PopSize.hpp"
 #include "openvic-simulation/types/UnitBranchType.hpp"
 #include "openvic-simulation/utility/Containers.hpp"
-#include "openvic-simulation/utility/ErrorMacros.hpp"
 #include "openvic-simulation/utility/Logger.hpp"
 #include "openvic-simulation/utility/Typedefs.hpp"
 

@@ -4,11 +4,11 @@
 
 #include <fmt/core.h>
 
+#include "openvic-simulation/core/error/ErrorMacros.hpp"
 #include "openvic-simulation/pathfinding/PointMap.hpp"
 #include "openvic-simulation/types/Signal.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
 #include "openvic-simulation/utility/Containers.hpp"
-#include "openvic-simulation/utility/ErrorMacros.hpp"
 
 #include <foonathan/memory/default_allocator.hpp>
 #include <foonathan/memory/std_allocator.hpp>

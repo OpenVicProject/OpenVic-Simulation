@@ -1,5 +1,6 @@
 #include "State.hpp"
 
+#include "openvic-simulation/core/error/ErrorMacros.hpp"
 #include "openvic-simulation/country/CountryInstance.hpp"
 #include "openvic-simulation/map/MapDefinition.hpp"
 #include "openvic-simulation/map/MapInstance.hpp"
@@ -10,7 +11,6 @@
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
 #include "openvic-simulation/utility/StringUtils.hpp"
 #include "openvic-simulation/utility/Containers.hpp"
-#include "openvic-simulation/utility/ErrorMacros.hpp"
 
 using namespace OpenVic;
 
