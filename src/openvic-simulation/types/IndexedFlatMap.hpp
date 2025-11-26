@@ -74,8 +74,8 @@ namespace OpenVic {
 			if (index < min_index || index > max_index) {
 				spdlog::error_s(
 					"DEVELOPER: OpenVic::IndexedFlatMap<{},{}> attempted to access key with index {} which is outside the map's defined range [{}, {}].",
-					utility::type_name<ForwardedKeyType>(),
-					utility::type_name<ValueType>(),
+					type_name<ForwardedKeyType>(),
+					type_name<ValueType>(),
 					index,
 					min_index,
 					max_index
@@ -97,7 +97,7 @@ namespace OpenVic {
 			if (new_keys.empty()) {
 				spdlog::warn_s(
 					"DEVELOPER: OpenVic::IndexedFlatMap<{}, {}> should not be constructed with empty key span.",
-					utility::type_name<ForwardedKeyType>(), utility::type_name<ValueType>()
+					type_name<ForwardedKeyType>(), type_name<ValueType>()
 				);
 				return false;
 			}
@@ -112,8 +112,8 @@ namespace OpenVic {
 			if (new_keys.size() != expected_capacity) {
 				spdlog::error_s(
 					"DEVELOPER: OpenVic::IndexedFlatMap<{},{}> must be constructed with a continuous span of keys with incremental indices. Expected capacity {} but got {} keys.",
-					utility::type_name<ForwardedKeyType>(),
-					utility::type_name<ValueType>(),
+					type_name<ForwardedKeyType>(),
+					type_name<ValueType>(),
 					expected_capacity,
 					new_keys.size()
 				);
@@ -127,8 +127,8 @@ namespace OpenVic {
 					spdlog::error_s(
 						"DEVELOPER: OpenVic::IndexedFlatMap<{},{}> must be constructed with a continuous span of keys with incremental indices. "
 						"Expected index {} but got {} at position {}.",
-						utility::type_name<ForwardedKeyType>(),
-						utility::type_name<ValueType>(),
+						type_name<ForwardedKeyType>(),
+						type_name<ValueType>(),
 						expected_index,
 						new_keys[i].index,
 						i
@@ -175,8 +175,8 @@ namespace OpenVic {
 				spdlog::error_s(
 					"DEVELOPER: OpenVic::IndexedFlatMap<{},{}> subset operation requires the right-hand map's index range "
 					"({}-{}) to be a subset of the left-hand map's index range ({}-{}).",
-					utility::type_name<ForwardedKeyType>(),
-					utility::type_name<ValueType>(),
+					type_name<ForwardedKeyType>(),
+					type_name<ValueType>(),
 					other.get_min_index(),
 					other.get_max_index(),
 					min_index,
@@ -485,8 +485,8 @@ namespace OpenVic {
 			if (index < min_index || index > max_index) {
 				spdlog::error_s(
 					"DEVELOPER: OpenVic::IndexedFlatMap<{},{}> attempted to access index {} which is outside the map's defined range [{}, {}].",
-					utility::type_name<ForwardedKeyType>(),
-					utility::type_name<ValueType>(),
+					type_name<ForwardedKeyType>(),
+					type_name<ValueType>(),
 					index,
 					min_index,
 					max_index
@@ -504,8 +504,8 @@ namespace OpenVic {
 			if (index < min_index || index > max_index) {
 				spdlog::error_s(
 					"DEVELOPER: OpenVic::IndexedFlatMap<{},{}> attempted to access index {} which is outside the map's defined range [{}, {}].",
-					utility::type_name<ForwardedKeyType>(),
-					utility::type_name<ValueType>(),
+					type_name<ForwardedKeyType>(),
+					type_name<ValueType>(),
 					index,
 					min_index,
 					max_index
@@ -523,8 +523,8 @@ namespace OpenVic {
 			if (index < min_index || index > max_index) {
 				spdlog::error_s(
 					"DEVELOPER: OpenVic::IndexedFlatMap<{},{}> attempted to access index {} which is outside the map's defined range [{}, {}].",
-					utility::type_name<ForwardedKeyType>(),
-					utility::type_name<ValueType>(),
+					type_name<ForwardedKeyType>(),
+					type_name<ValueType>(),
 					index,
 					min_index,
 					max_index
@@ -718,8 +718,8 @@ namespace OpenVic {
 					if (other.at(key) == static_cast<ValueType>(0)) {
 						spdlog::error_s(
 							"DEVELOPER: OpenVic::IndexedFlatMap<{},{}> division by zero detected at key index {}.",
-							utility::type_name<ForwardedKeyType>(),
-							utility::type_name<ValueType>(),
+							type_name<ForwardedKeyType>(),
+							type_name<ValueType>(),
 							key.index
 						);
 						assert(other.at(key) != static_cast<ValueType>(0));
@@ -795,8 +795,8 @@ namespace OpenVic {
 			if (scalar == static_cast<ValueType>(0)) {
 				spdlog::error_s(
 					"DEVELOPER: OpenVic::IndexedFlatMap<{},{}> division by zero for scalar operation.",
-					utility::type_name<ForwardedKeyType>(),
-					utility::type_name<ValueType>()
+					type_name<ForwardedKeyType>(),
+					type_name<ValueType>()
 				);
 				assert(scalar != static_cast<ValueType>(0));
 				//continue and let it throw
@@ -861,8 +861,8 @@ namespace OpenVic {
 				if (other.at(key) == static_cast<ValueType>(0)) {
 					spdlog::error_s(
 						"DEVELOPER: OpenVic::IndexedFlatMap<{},{}> compound division by zero detected at key index {}.",
-						utility::type_name<ForwardedKeyType>(),
-						utility::type_name<ValueType>(),
+						type_name<ForwardedKeyType>(),
+						type_name<ValueType>(),
 						key.index
 					);
 					assert(other.at(key) != static_cast<ValueType>(0));
@@ -933,8 +933,8 @@ namespace OpenVic {
 			if (scalar == static_cast<ValueType>(0)) {
 				spdlog::error_s(
 					"DEVELOPER: OpenVic::IndexedFlatMap<{},{}> compound division by zero for scalar operation.",
-					utility::type_name<ForwardedKeyType>(),
-					utility::type_name<ValueType>()
+					type_name<ForwardedKeyType>(),
+					type_name<ValueType>()
 				);
 				assert(scalar != static_cast<ValueType>(0));
 				//continue and let it throw
@@ -967,8 +967,8 @@ namespace OpenVic {
 			if (a.get_min_index() != b.get_min_index() || a.get_max_index() != b.get_max_index()) {
 				spdlog::error_s(
 					"DEVELOPER: OpenVic::IndexedFlatMap<{},{}> attempted mul_add where a and b don't have the same keys. This is not implemented.",
-					utility::type_name<ForwardedKeyType>(),
-					utility::type_name<ValueType>()
+					type_name<ForwardedKeyType>(),
+					type_name<ValueType>()
 				);
 				assert(a.get_min_index() == b.get_min_index() && a.get_max_index() == b.get_max_index());
 			}
@@ -1198,8 +1198,8 @@ namespace OpenVic {
 			if (map.at(key) == static_cast<ValueType>(0)) {
 				spdlog::error_s(
 					"DEVELOPER: OpenVic::IndexedFlatMap<{},{}> scalar division by zero detected at key index {}.",
-					utility::type_name<KeyType>(),
-					utility::type_name<ValueType>(),
+					type_name<KeyType>(),
+					type_name<ValueType>(),
 					key.index
 				);
 				assert(map.at(key) != static_cast<ValueType>(0));

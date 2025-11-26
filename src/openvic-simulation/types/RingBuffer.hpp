@@ -18,7 +18,7 @@
 #include <range/v3/range/concepts.hpp>
 #include <range/v3/view/subrange.hpp>
 
-#include "openvic-simulation/utility/Typedefs.hpp"
+#include "openvic-simulation/core/Typedefs.hpp"
 
 namespace OpenVic {
 

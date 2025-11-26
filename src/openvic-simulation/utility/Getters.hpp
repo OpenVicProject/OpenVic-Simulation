@@ -8,52 +8,10 @@
 #include <type_traits>
 #include <utility>
 
+#include "openvic-simulation/core/Typedefs.hpp" // IWYU pragma: keep
 #include "openvic-simulation/utility/Containers.hpp"
 
 namespace OpenVic::utility {
-	template<std::size_t... Idxs>
-	constexpr auto substring_as_array(std::string_view str, std::index_sequence<Idxs...>) {
-		return std::array { str[Idxs]... };
-	}
-
-	template<typename T>
-	constexpr auto type_name_array() {
-#if defined(__clang__)
-		constexpr auto prefix = std::string_view { "[T = " };
-		constexpr auto suffix = std::string_view { "]" };
-		constexpr auto function = std::string_view { __PRETTY_FUNCTION__ };
-#elif defined(__GNUC__)
-		constexpr auto prefix = std::string_view { "with T = " };
-		constexpr auto suffix = std::string_view { "]" };
-		constexpr auto function = std::string_view { __PRETTY_FUNCTION__ };
-#elif defined(_MSC_VER)
-		constexpr auto prefix = std::string_view { "type_name_array<" };
-		constexpr auto suffix = std::string_view { ">(void)" };
-		constexpr auto function = std::string_view { __FUNCSIG__ };
-#else
-#error Unsupported compiler
-#endif
-
-		constexpr auto start = function.find(prefix) + prefix.size();
-		constexpr auto end = function.rfind(suffix);
-
-		static_assert(start < end);
-
-		constexpr auto name = function.substr(start, (end - start));
-		return substring_as_array(name, std::make_index_sequence<name.size()> {});
-	}
-
-	template<typename T>
-	struct type_name_holder {
-		static inline constexpr auto value = type_name_array<T>();
-	};
-
-	template<typename T>
-	constexpr auto type_name() -> std::string_view {
-		constexpr auto& value = type_name_holder<T>::value;
-		return std::string_view { value.data(), value.size() };
-	}
-
 #if !defined(_MSC_VER)
 #pragma GCC diagnostic push
 #pragma clang diagnostic ignored "-Wunknown-warning-option"
@@ -82,22 +40,22 @@ namespace OpenVic::utility {
 
 #define OV_DETAIL_GET_TYPE_BASE_CLASS(CLASS) \
 	static constexpr std::string_view get_type_static() { \
-		return ::OpenVic::utility::type_name<CLASS>(); \
+		return ::OpenVic::type_name<CLASS>(); \
 	} \
 	constexpr virtual std::string_view get_type() const = 0; \
 	static constexpr std::string_view get_base_type_static() { \
-		return ::OpenVic::utility::type_name<CLASS>(); \
+		return ::OpenVic::type_name<CLASS>(); \
 	} \
 	constexpr virtual std::string_view get_base_type() const { \
 		return get_base_type_static(); \
 	} \
 	template<typename T> \
 	constexpr bool is_type() const { \
-		return get_type().compare(::OpenVic::utility::type_name<T>()) == 0; \
+		return get_type().compare(::OpenVic::type_name<T>()) == 0; \
 	} \
 	template<typename T> \
 	constexpr bool is_derived_from() const { \
-		return is_type<T>() || get_base_type().compare(::OpenVic::utility::type_name<T>()) == 0; \
+		return is_type<T>() || get_base_type().compare(::OpenVic::type_name<T>()) == 0; \
 	} \
 	template<typename T> \
 	constexpr T* cast_to() { \
@@ -119,18 +77,18 @@ namespace OpenVic::utility {
 	constexpr auto _self_type_helper() -> decltype(::OpenVic::utility::Writer<_self_type_tag, decltype(this)> {}); \
 	using type = ::OpenVic::utility::Read<_self_type_tag>; \
 	static constexpr std::string_view get_type_static() { \
-		return ::OpenVic::utility::type_name<type>(); \
+		return ::OpenVic::type_name<type>(); \
 	} \
 	constexpr std::string_view get_type() const override { \
-		return ::OpenVic::utility::type_name<std::decay_t<decltype(*this)>>(); \
+		return ::OpenVic::type_name<std::decay_t<decltype(*this)>>(); \
 	}
 
 #define OV_DETAIL_GET_BASE_TYPE(CLASS) \
 	static constexpr std::string_view get_base_type_static() { \
-		return ::OpenVic::utility::type_name<CLASS>(); \
+		return ::OpenVic::type_name<CLASS>(); \
 	} \
 	constexpr std::string_view get_base_type() const override { \
-		return ::OpenVic::utility::type_name<std::decay_t<decltype(*this)>>(); \
+		return ::OpenVic::type_name<std::decay_t<decltype(*this)>>(); \
 	}
 
 /* Create const and non-const reference getters for a variable, applied to its name in its declaration, e

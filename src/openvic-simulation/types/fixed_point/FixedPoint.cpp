@@ -3,7 +3,7 @@
 #include <fmt/base.h>
 #include <fmt/format.h>
 
-#include "openvic-simulation/utility/Typedefs.hpp"
+#include "openvic-simulation/core/Typedefs.hpp"
 
 using namespace OpenVic;
 

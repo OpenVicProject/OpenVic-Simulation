@@ -42,10 +42,10 @@ namespace OpenVic {
 #ifdef _MSC_VER // type_name starts with "struct "
 using namespace std::string_view_literals;
 #define NODE_CASE(Node) \
-	case Node: return OpenVic::utility::type_name<ast::Node>().substr("struct "sv.size());
+	case Node: return OpenVic::type_name<ast::Node>().substr("struct "sv.size());
 #else
 #define NODE_CASE(Node) \
-	case Node: return OpenVic::utility::type_name<ast::Node>();
+	case Node: return OpenVic::type_name<ast::Node>();
 #endif
 			switch (kind) {
 				using enum NodeKind;

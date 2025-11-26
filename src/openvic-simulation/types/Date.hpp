@@ -20,7 +20,7 @@
 #include "openvic-simulation/types/StackString.hpp"
 #include "openvic-simulation/utility/Getters.hpp"
 #include "openvic-simulation/utility/StringUtils.hpp"
-#include "openvic-simulation/utility/Typedefs.hpp"
+#include "openvic-simulation/core/Typedefs.hpp"
 #include "openvic-simulation/utility/Hash.hpp"
 
 namespace OpenVic {

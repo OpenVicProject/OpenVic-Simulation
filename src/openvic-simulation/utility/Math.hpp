@@ -5,7 +5,7 @@
 #include <cstdlib>
 #include <type_traits>
 
-#include "openvic-simulation/utility/Typedefs.hpp"
+#include "openvic-simulation/core/Typedefs.hpp"
 
 namespace OpenVic {
     template<typename T>

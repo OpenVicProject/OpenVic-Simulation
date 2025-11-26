@@ -4,7 +4,7 @@
 #include <limits>
 
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
-#include "openvic-simulation/utility/Typedefs.hpp"
+#include "openvic-simulation/core/Typedefs.hpp"
 
 namespace OpenVic {
 	OV_ALWAYS_INLINE static size_t sample_weighted_index(
