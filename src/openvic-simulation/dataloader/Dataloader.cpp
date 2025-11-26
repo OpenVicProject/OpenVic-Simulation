@@ -19,7 +19,7 @@
 #include "openvic-simulation/utility/Logger.hpp"
 #include "openvic-simulation/utility/StringUtils.hpp"
 #include "openvic-simulation/utility/Containers.hpp"
-#include "openvic-simulation/utility/Concepts.hpp"
+#include "openvic-simulation/core/template/Concepts.hpp"
 
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;

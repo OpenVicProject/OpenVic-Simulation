@@ -7,7 +7,7 @@
 
 #include "openvic-simulation/types/BasicIterator.hpp" // IWYU pragma: keep
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
-#include "openvic-simulation/utility/Concepts.hpp" // IWYU pragma: keep
+#include "openvic-simulation/core/template/Concepts.hpp" // IWYU pragma: keep
 #include "openvic-simulation/utility/Math.hpp" // IWYU pragma: keep
 #include "openvic-simulation/utility/Typedefs.hpp" // IWYU pragma: keep
 

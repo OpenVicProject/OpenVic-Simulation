@@ -26,7 +26,7 @@
 #include "openvic-simulation/utility/Getters.hpp"
 #include "openvic-simulation/utility/TslHelper.hpp"
 #include "openvic-simulation/utility/Containers.hpp"
-#include "openvic-simulation/utility/Concepts.hpp"
+#include "openvic-simulation/core/template/Concepts.hpp"
 
 #include <function2/function2.hpp>
 
