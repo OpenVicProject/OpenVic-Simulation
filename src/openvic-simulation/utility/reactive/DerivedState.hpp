@@ -33,7 +33,7 @@ namespace OpenVic {
 					"Its value will never change again. "
 					"If it should be reactive, ensure 'calculate' accesses its dependencies. "
 					"Alternatively use a plain variable or MutableState<T>.",
-					OpenVic::utility::type_name<T>()
+					OpenVic::type_name<T>()
 				);
 			}
 

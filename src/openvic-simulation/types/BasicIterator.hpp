@@ -3,7 +3,7 @@
 #include <concepts>
 #include <iterator>
 
-#include "openvic-simulation/utility/Typedefs.hpp"
+#include "openvic-simulation/core/Typedefs.hpp"
 #include "openvic-simulation/utility/Compare.hpp"
 
 namespace OpenVic {

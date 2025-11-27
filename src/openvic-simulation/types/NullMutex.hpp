@@ -1,6 +1,6 @@
 #pragma once
 
-#include "openvic-simulation/utility/Typedefs.hpp"
+#include "openvic-simulation/core/Typedefs.hpp"
 
 namespace OpenVic {
 	struct null_mutex {

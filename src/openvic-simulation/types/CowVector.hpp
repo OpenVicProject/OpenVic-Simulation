@@ -15,7 +15,7 @@
 #include "openvic-simulation/utility/Allocator.hpp"
 #include "openvic-simulation/utility/Compare.hpp"
 #include "openvic-simulation/core/template/Concepts.hpp"
-#include "openvic-simulation/utility/Typedefs.hpp"
+#include "openvic-simulation/core/Typedefs.hpp"
 
 namespace OpenVic {
 	/**

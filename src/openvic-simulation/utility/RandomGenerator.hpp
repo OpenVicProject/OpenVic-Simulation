@@ -6,7 +6,7 @@
 #include <type_traits>
 #include <utility>
 
-#include "openvic-simulation/utility/Typedefs.hpp"
+#include "openvic-simulation/core/Typedefs.hpp"
 
 #include <XoshiroCpp.hpp>
 

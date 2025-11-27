@@ -28,7 +28,7 @@
 #include "openvic-simulation/types/StackString.hpp"
 #include "openvic-simulation/core/template/Concepts.hpp"
 #include "openvic-simulation/utility/StringUtils.hpp"
-#include "openvic-simulation/utility/Typedefs.hpp"
+#include "openvic-simulation/core/Typedefs.hpp"
 
 namespace OpenVic {
 	template<typename ValueT, typename IntT, bool HasAlpha = true>

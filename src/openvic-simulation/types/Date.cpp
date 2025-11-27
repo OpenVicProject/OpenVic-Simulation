@@ -11,7 +11,7 @@
 
 #include <range/v3/algorithm/max_element.hpp>
 
-#include "openvic-simulation/utility/Typedefs.hpp"
+#include "openvic-simulation/core/Typedefs.hpp"
 
 using namespace OpenVic;
 

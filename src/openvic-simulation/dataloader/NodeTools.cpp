@@ -36,10 +36,10 @@ static NodeCallback auto _expect_type(Callback<T const*> auto&& callback) {
 			}
 			spdlog::error_s(
 				"Invalid node type {} when expecting {}",
-				ast::get_type_name(node->kind()), utility::type_name<T>()
+				ast::get_type_name(node->kind()), type_name<T>()
 			);
 		} else {
-			spdlog::error_s("Null node when expecting {}", utility::type_name<T>());
+			spdlog::error_s("Null node when expecting {}", type_name<T>());
 		}
 		return false;
 	};
@@ -59,12 +59,12 @@ static NodeCallback auto _abstract_statement_node_callback(Callback<_NodeStateme
 			}
 			spdlog::error_s(
 				"Invalid node type {} when expecting {} or {}",
-				ast::get_type_name(node->kind()), utility::type_name<ast::FileTree>(), utility::type_name<ast::ListValue>()
+				ast::get_type_name(node->kind()), type_name<ast::FileTree>(), type_name<ast::ListValue>()
 			);
 		} else {
 			spdlog::error_s(
 				"Null node when expecting {} or {}",
-				utility::type_name<ast::FileTree>(), utility::type_name<ast::ListValue>()
+				type_name<ast::FileTree>(), type_name<ast::ListValue>()
 			);
 		}
 		return false;
@@ -122,12 +122,12 @@ node_callback_t NodeTools::expect_identifier_or_string(callback_t<std::string_vi
 			}
 			spdlog::error_s(
 				"Invalid node type {} when expecting {} or {}",
-				ast::get_type_name(node->kind()), utility::type_name<ast::IdentifierValue>(), utility::type_name<ast::StringValue>()
+				ast::get_type_name(node->kind()), type_name<ast::IdentifierValue>(), type_name<ast::StringValue>()
 			);
 		} else {
 			spdlog::error_s(
 				"Null node when expecting {} or {}",
-				utility::type_name<ast::IdentifierValue>(), utility::type_name<ast::StringValue>()
+				type_name<ast::IdentifierValue>(), type_name<ast::StringValue>()
 			);
 		}
 		return false;

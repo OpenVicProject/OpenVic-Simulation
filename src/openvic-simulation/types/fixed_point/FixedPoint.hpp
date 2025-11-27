@@ -20,7 +20,7 @@
 #include "openvic-simulation/utility/Logger.hpp"
 #include "openvic-simulation/utility/StringUtils.hpp"
 #include "openvic-simulation/utility/Containers.hpp"
-#include "openvic-simulation/utility/Typedefs.hpp"
+#include "openvic-simulation/core/Typedefs.hpp"
 #include "openvic-simulation/utility/Math.hpp"
 
 /* Sin lookup table */
