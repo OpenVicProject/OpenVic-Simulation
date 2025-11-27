@@ -40,8 +40,8 @@ bool ProvinceHistoryMap::_load_history_entry(
 ) {
 	BuildingTypeManager const& building_type_manager = definition_manager.get_economy_manager().get_building_type_manager();
 	CountryDefinitionManager const& country_definition_manager = definition_manager.get_country_definition_manager();
-	GoodDefinitionManager const& good_definition_manager =
-		definition_manager.get_economy_manager().get_good_definition_manager();
+	EconomyManager const& economy_manager = definition_manager.get_economy_manager();
+	GoodDefinitionManager const& good_definition_manager = economy_manager.get_good_definition_manager();
 	IdeologyManager const& ideology_manager = definition_manager.get_politics_manager().get_ideology_manager();
 	TerrainTypeManager const& terrain_type_manager = definition_manager.get_map_definition().get_terrain_type_manager();
 
@@ -276,16 +276,19 @@ ProvinceHistoryMap const* ProvinceHistoryManager::get_province_history(ProvinceD
 ProvinceHistoryMap* ProvinceHistoryManager::_get_or_make_province_history(ProvinceDefinition const& province) {
 	decltype(province_histories)::iterator it = province_histories.find(&province);
 	if (it == province_histories.end()) {
-		const std::pair<decltype(province_histories)::iterator, bool> result =
-			province_histories.emplace(
-				&province,
-				ProvinceHistoryMap {
-					province,
-					definition_manager.get_economy_manager().get_building_type_manager()
-				}
-			);
-		if (result.second) {
-			it = result.first;
+		const auto [
+			new_it,
+			was_emplaced
+		] = province_histories.emplace(
+			&province,
+			ProvinceHistoryMap {
+				province,
+				definition_manager.get_economy_manager().get_building_type_manager()
+			}
+		);
+
+		if (was_emplaced) {
+			it = new_it;
 		} else {
 			spdlog::error_s("Failed to create province history map for province {}", province);
 			return nullptr;

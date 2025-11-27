@@ -141,13 +141,19 @@ TEST_CASE("fixed_point_t Parse methods", "[fixed_point_t][fixed_point_t-parse]")
 	static constexpr std::string_view plus_fixed_point_str = "+4.5432"sv;
 	fixed_point_t fp = fixed_point_t::_0;
 	CHECK(
-		fp::from_chars(fp, plus_fixed_point_str.data(), plus_fixed_point_str.data() + plus_fixed_point_str.size()).ec ==
-		std::errc::invalid_argument
+		fp::from_chars(
+			fp,
+			plus_fixed_point_str.data(),
+			plus_fixed_point_str.data() + plus_fixed_point_str.size()
+		).ec == std::errc::invalid_argument
 	);
 	CHECK(fp == 0.0_a);
 	CHECK(
-		fp::from_chars_with_plus(fp, plus_fixed_point_str.data(), plus_fixed_point_str.data() + plus_fixed_point_str.size()).ec ==
-		std::errc {}
+		fp::from_chars_with_plus(
+			fp,
+			plus_fixed_point_str.data(),
+			plus_fixed_point_str.data() + plus_fixed_point_str.size()
+		).ec == std::errc {}
 	);
 	CHECK(fp == 4.5432_a);
 }

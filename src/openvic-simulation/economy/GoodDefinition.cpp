@@ -137,7 +137,7 @@ bool GoodDefinitionManager::generate_modifiers(ModifierManager& modifier_manager
 	using enum ModifierEffect::format_t;
 	using enum ModifierEffect::target_t;
 
-	memory::FixedVector<ModifierEffectCache::good_effects_t, good_index_t>& good_effects = modifier_manager.modifier_effect_cache.good_effects;
+	decltype(ModifierEffectCache::good_effects)& good_effects = modifier_manager.modifier_effect_cache.good_effects;
 	good_effects = std::move(
 		decltype(ModifierEffectCache::good_effects) {
 			generate_values,

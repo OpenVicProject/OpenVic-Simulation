@@ -98,7 +98,11 @@ namespace OpenVic::stl {
 					swap(other, *this);
 				} else if (!other.empty()) {
 					_data = _allocate_payload(other.size());
-					_data->array_end = uninitialized_move(other._data->array, other._data->array_end, _data->array, alloc);
+					_data->array_end = uninitialized_move(
+						other._data->array,
+						other._data->array_end,
+						_data->array, alloc
+					);
 					destroy(_data->array, _data->array_end, alloc);
 					_data->array_end = _data->array;
 				}
@@ -128,8 +132,9 @@ namespace OpenVic::stl {
 			cow_vector tmp = std::move(x);
 			writer& tmp_writer = *reinterpret_cast<writer*>(&tmp);
 
-			if constexpr (allocator_traits::propagate_on_container_move_assignment::value ||
-						  allocator_traits::is_always_equal::value) {
+			if constexpr (allocator_traits::propagate_on_container_move_assignment::value
+				|| allocator_traits::is_always_equal::value
+			) {
 				self_writer.swap(tmp_writer);
 			} else if (alloc == x.alloc) {
 				self_writer.swap(tmp_writer);
@@ -449,7 +454,12 @@ namespace OpenVic::stl {
 					if constexpr (move_insertable_allocator<allocator_type>) {
 						_relocate(_data->array, _data->array_end, new_data->array, alloc);
 					} else {
-						new_data->array_end = uninitialized_move(_data->array, _data->array_end, new_data->array, alloc);
+						new_data->array_end = uninitialized_move(
+							_data->array,
+							_data->array_end,
+							new_data->array,
+							alloc
+						);
 						destroy(_data->array, _data->array_end, alloc);
 					}
 					_deallocate_payload(_data);
@@ -1101,8 +1111,11 @@ namespace OpenVic::stl {
 	};
 
 	template<typename T, typename Allocator>
-	inline constexpr cow_vector<T, Allocator>::size_type cow_vector<T, Allocator>::payload::content_size =
-		std::max<size_type>(1ul, (sizeof(payload) - sizeof(array)) / sizeof(T));
+	inline constexpr cow_vector<T, Allocator>::size_type cow_vector<T, Allocator>::payload::content_size
+		= std::max<size_type>(
+			1ul,
+			(sizeof(payload) - sizeof(array)) / sizeof(T)
+		);
 
 	template<typename T, typename Allocator>
 	[[nodiscard]] inline bool operator==(cow_vector<T, Allocator> const& x, cow_vector<T, Allocator> const& y) {

@@ -384,8 +384,10 @@ bool UnitTypeManager::generate_modifiers(ModifierManager& modifier_manager) cons
 
 	generate_stat_modifiers(modifier_manager.modifier_effect_cache.army_base_effects, "army_base");
 
-	memory::FixedVector<ModifierEffectCache::regiment_type_effects_t, regiment_type_index_t>& regiment_type_effects =
-		modifier_manager.modifier_effect_cache.regiment_type_effects;
+	memory::FixedVector<
+		ModifierEffectCache::regiment_type_effects_t,
+		regiment_type_index_t
+	>& regiment_type_effects = modifier_manager.modifier_effect_cache.regiment_type_effects;
 
 	regiment_type_effects = std::move(
 		decltype(ModifierEffectCache::regiment_type_effects) {
@@ -400,8 +402,10 @@ bool UnitTypeManager::generate_modifiers(ModifierManager& modifier_manager) cons
 
 	generate_stat_modifiers(modifier_manager.modifier_effect_cache.navy_base_effects, "navy_base");
 
-	memory::FixedVector<ModifierEffectCache::ship_type_effects_t, ship_type_index_t>& ship_type_effects =
-		modifier_manager.modifier_effect_cache.ship_type_effects;
+	memory::FixedVector<
+		ModifierEffectCache::ship_type_effects_t,
+		ship_type_index_t
+	>& ship_type_effects = modifier_manager.modifier_effect_cache.ship_type_effects;
 
 	ship_type_effects = std::move(
 		decltype(ModifierEffectCache::ship_type_effects) {

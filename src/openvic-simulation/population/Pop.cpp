@@ -98,8 +98,12 @@ void Pop::setup_pop_test_values(TypedSpan<reform_index_t, const Reform> reforms)
 	num_migrated_external = test_size(1);
 	num_migrated_colonial = test_size(2);
 
-	total_change =
-		num_grown + num_promoted + num_demoted + num_migrated_internal + num_migrated_external + num_migrated_colonial;
+	total_change = num_grown
+		+ num_promoted
+		+ num_demoted
+		+ num_migrated_internal
+		+ num_migrated_external
+		+ num_migrated_colonial;
 
 	/* Generates a number between 0 and max (inclusive) and sets map[&key] to it if it's at least min. */
 	static auto fill_span_with_test_weights = [](std::span<fixed_point_t> span, int32_t min, int32_t max) -> void {
@@ -266,9 +270,12 @@ void Pop::update_gamestate(
 	consciousness = std::clamp(consciousness, MIN_CONSCIOUSNESS, MAX_CONSCIOUSNESS);
 	literacy = std::clamp(literacy, MIN_LITERACY, MAX_LITERACY);
 
-	if (
-		size < military_defines.get_min_pop_size_for_regiment() || owner == nullptr ||
-		!is_culture_status_allowed(owner->get_allowed_regiment_cultures(), culture_status)
+	if (size < military_defines.get_min_pop_size_for_regiment()
+		|| owner == nullptr
+		|| !is_culture_status_allowed(
+			owner->get_allowed_regiment_cultures(),
+			culture_status
+		)
 	) {
 		max_supported_regiments = 0;
 	} else {
