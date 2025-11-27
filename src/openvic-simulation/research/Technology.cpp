@@ -3,6 +3,7 @@
 #include "openvic-simulation/economy/BuildingType.hpp"
 #include "openvic-simulation/military/UnitType.hpp"
 #include "openvic-simulation/modifier/ModifierManager.hpp"
+#include "modifier/ModifierEffectCache.hpp"
 
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;
@@ -245,8 +246,9 @@ bool TechnologyManager::generate_modifiers(ModifierManager& modifier_manager) co
 	using enum ModifierEffect::format_t;
 	using enum ModifierEffect::target_t;
 
-	IndexedFlatMap<TechnologyFolder, ModifierEffect const*>& research_bonus_effects =
-		modifier_manager.modifier_effect_cache.research_bonus_effects;
+	ModifierEffectCache& modifier_effect_cache = modifier_manager.modifier_effect_cache;
+	using technology_folder_effects_map_t = IndexedFlatMap<TechnologyFolder, ModifierEffect const*>;
+	technology_folder_effects_map_t& research_bonus_effects = modifier_effect_cache.research_bonus_effects;
 
 	research_bonus_effects = std::move(decltype(ModifierEffectCache::research_bonus_effects){get_technology_folders()});
 

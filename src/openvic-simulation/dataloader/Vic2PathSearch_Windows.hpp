@@ -88,11 +88,11 @@ namespace OpenVic::Windows {
 		}
 
 		bool is_predefined() const {
-			return (_key_handle == HKEY_CURRENT_USER) || (_key_handle == HKEY_LOCAL_MACHINE) ||
-				(_key_handle == HKEY_CLASSES_ROOT) || (_key_handle == HKEY_CURRENT_CONFIG) ||
-				(_key_handle == HKEY_CURRENT_USER_LOCAL_SETTINGS) || (_key_handle == HKEY_PERFORMANCE_DATA) ||
-				(_key_handle == HKEY_PERFORMANCE_NLSTEXT) || (_key_handle == HKEY_PERFORMANCE_TEXT) ||
-				(_key_handle == HKEY_USERS);
+			return (_key_handle == HKEY_CURRENT_USER) || (_key_handle == HKEY_LOCAL_MACHINE)
+				|| (_key_handle == HKEY_CLASSES_ROOT) || (_key_handle == HKEY_CURRENT_CONFIG)
+				|| (_key_handle == HKEY_CURRENT_USER_LOCAL_SETTINGS) || (_key_handle == HKEY_PERFORMANCE_DATA)
+				|| (_key_handle == HKEY_PERFORMANCE_NLSTEXT) || (_key_handle == HKEY_PERFORMANCE_TEXT)
+				|| (_key_handle == HKEY_USERS);
 		}
 
 		LSTATUS close_key() {

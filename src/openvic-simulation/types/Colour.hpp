@@ -362,8 +362,9 @@ namespace OpenVic {
 
 		template<typename _ColourTraits>
 		requires(
-			_ColourTraits::has_alpha && std::same_as<typename _ColourTraits::value_type, value_type> &&
-			std::same_as<typename _ColourTraits::integer_type, integer_type>
+			_ColourTraits::has_alpha
+			&& std::same_as<typename _ColourTraits::value_type, value_type>
+			&& std::same_as<typename _ColourTraits::integer_type, integer_type>
 		)
 		OV_SPEED_INLINE explicit constexpr basic_colour_t(basic_colour_t<value_type, integer_type, _ColourTraits> const& colour)
 		requires(colour_traits::has_alpha)
@@ -371,8 +372,9 @@ namespace OpenVic {
 
 		template<typename _ColourTraits>
 		requires(
-			!_ColourTraits::has_alpha && std::same_as<typename _ColourTraits::value_type, value_type> &&
-			std::same_as<typename _ColourTraits::integer_type, integer_type>
+			!_ColourTraits::has_alpha
+			&& std::same_as<typename _ColourTraits::value_type, value_type>
+			&& std::same_as<typename _ColourTraits::integer_type, integer_type>
 		)
 		OV_SPEED_INLINE explicit constexpr basic_colour_t(
 			basic_colour_t<value_type, integer_type, _ColourTraits> const& colour, value_type a = max_value
@@ -382,8 +384,8 @@ namespace OpenVic {
 
 		template<typename _ColourTraits>
 		requires(
-			std::same_as<typename _ColourTraits::value_type, value_type> &&
-			std::same_as<typename _ColourTraits::integer_type, integer_type>
+			std::same_as<typename _ColourTraits::value_type, value_type>
+			&& std::same_as<typename _ColourTraits::integer_type, integer_type>
 		)
 		OV_SPEED_INLINE explicit constexpr basic_colour_t(basic_colour_t<value_type, integer_type, _ColourTraits> const& colour)
 		requires(!colour_traits::has_alpha)
@@ -588,8 +590,10 @@ namespace OpenVic {
 			constexpr double GREEN_MULTIPLIER = 0.7151522;
 			constexpr double BLUE_MULTIPLIER = 0.0721750;
 
-			double luminance = std::pow(red / max_value, POWER) * RED_MULTIPLIER +
-				std::pow(green / max_value, POWER) * GREEN_MULTIPLIER + std::pow(blue, POWER) * BLUE_MULTIPLIER;
+			double luminance = std::pow(red / max_value, POWER) * RED_MULTIPLIER
+				+ std::pow(green / max_value, POWER)
+					* GREEN_MULTIPLIER + std::pow(blue, POWER)
+					* BLUE_MULTIPLIER;
 			return luminance >= LUMINANCE_FLIP ? basic_colour_t::from_floats(0, 0, 0) : basic_colour_t::from_floats(1, 1, 1);
 		}
 

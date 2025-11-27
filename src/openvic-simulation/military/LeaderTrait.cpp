@@ -115,10 +115,10 @@ bool LeaderTraitManager::load_leader_traits_file(ModifierManager const& modifier
 
 	using enum LeaderTrait::trait_type_t;
 
-	ret &=
-		expect_dictionary_keys("personality", ONE_EXACTLY, trait_callback(PERSONALITY), "background", ONE_EXACTLY, trait_callback(BACKGROUND))(
-			root
-		);
+	ret &= expect_dictionary_keys(
+		"personality", ONE_EXACTLY, trait_callback(PERSONALITY),
+		"background", ONE_EXACTLY, trait_callback(BACKGROUND)
+	)(root);
 
 	lock_leader_traits();
 

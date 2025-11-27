@@ -233,8 +233,11 @@ namespace OpenVic::memory {
 	using deque = OpenVic::utility::memory::deque<T, tracker<RawAllocator>>;
 
 	template<typename CharT, class RawAllocator = foonathan::memory::default_allocator>
-	using basic_string =
-		std::basic_string<CharT, std::char_traits<CharT>, foonathan::memory::std_allocator<CharT, tracker<RawAllocator>>>;
+	using basic_string = std::basic_string<
+		CharT,
+		std::char_traits<CharT>,
+		foonathan::memory::std_allocator<CharT, tracker<RawAllocator>>
+	>;
 
 	template<class RawAllocator = foonathan::memory::default_allocator>
 	using string_alloc = basic_string<char, RawAllocator>;
@@ -256,8 +259,11 @@ namespace OpenVic::memory {
 	using queue = std::queue<T, Container>;
 
 	template<typename T, typename CharTraits = std::char_traits<T>, class RawAllocator = foonathan::memory::default_allocator>
-	using basic_stringstream =
-		std::basic_stringstream<T, CharTraits, foonathan::memory::std_allocator<T, tracker<RawAllocator>>>;
+	using basic_stringstream = std::basic_stringstream<
+		T,
+		CharTraits,
+		foonathan::memory::std_allocator<T, tracker<RawAllocator>>
+	>;
 
 	template<class RawAllocator = foonathan::memory::default_allocator>
 	using stringstream_alloc = basic_stringstream<char, std::char_traits<char>, RawAllocator>;

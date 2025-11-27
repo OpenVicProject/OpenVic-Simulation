@@ -730,8 +730,12 @@ void MapDefinition::_trace_river(BMP& rivers_bmp, ivec2_t start, river_t& river)
 
 			for (const auto& neighbour : neighbours) {
 				ivec2_t neighbour_pos = { segment.point.x + neighbour.offset.x, segment.point.y + neighbour.offset.y };
-				if (neighbour_pos.x < 0 || neighbour_pos.y < 0 || neighbour_pos.x >= rivers_bmp.get_width() ||
-					neighbour_pos.y >= rivers_bmp.get_height() || segment.direction == neighbour.old_direction) {
+				if (neighbour_pos.x < 0
+					|| neighbour_pos.y < 0
+					|| neighbour_pos.x >= rivers_bmp.get_width()
+					|| neighbour_pos.y >= rivers_bmp.get_height()
+					|| segment.direction == neighbour.old_direction
+				) {
 					continue;
 				}
 
@@ -839,10 +843,10 @@ bool MapDefinition::load_map_images(fs::path const& province_path, fs::path cons
 		return false;
 	}
 
-	if (province_bmp.get_width() != terrain_bmp.get_width() ||
-		province_bmp.get_height() != terrain_bmp.get_height() ||
-		province_bmp.get_width() != rivers_bmp.get_width() ||
-		province_bmp.get_height() != rivers_bmp.get_height()
+	if (province_bmp.get_width() != terrain_bmp.get_width()
+		|| province_bmp.get_height() != terrain_bmp.get_height()
+		|| province_bmp.get_width() != rivers_bmp.get_width()
+		|| province_bmp.get_height() != rivers_bmp.get_height()
 	) {
 		spdlog::error_s(
 			"Mismatched map BMP dims: provinces:{}x{}, terrain: {}x{}, rivers: {}x{}",

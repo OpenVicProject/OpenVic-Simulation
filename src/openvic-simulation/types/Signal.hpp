@@ -1052,8 +1052,8 @@ namespace OpenVic::_detail::signal {
 		 */
 		template<typename C>
 		requires(
-			(Callable<C, Args...> || Callable<C, connection&, Args...> || MemberFunctionPointer<C>) &&
-			function_traits<C>::is_disconnectable
+			(Callable<C, Args...> || Callable<C, connection&, Args...> || MemberFunctionPointer<C>)
+			&& function_traits<C>::is_disconnectable
 		)
 		size_t disconnect(C const& c) {
 			return disconnect_if([&](slot_ptr const& s) {

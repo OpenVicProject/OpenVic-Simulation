@@ -65,8 +65,10 @@ bool DeploymentManager::load_oob_file(
 
 	static constexpr std::string_view oob_directory = "history/units/";
 
-	const fs::path lookedup_path =
-		dataloader.lookup_file(append_string_views(oob_directory, history_path), false);
+	const fs::path lookedup_path = dataloader.lookup_file(
+		append_string_views(oob_directory, history_path),
+		false
+	);
 
 	if (lookedup_path.empty()) {
 		missing_oob_files.emplace(history_path);

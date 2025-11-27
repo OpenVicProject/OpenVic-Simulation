@@ -89,48 +89,72 @@ bool MapInstance::apply_history_to_provinces(
 	bool ret = true;
 
 	for (ProvinceInstance& province : get_province_instances()) {
-		ProvinceDefinition const& province_definition = province.province_definition;
-		if (!province_definition.is_water()) {
-			ProvinceHistoryMap const* history_map = history_manager.get_province_history(&province_definition);
+		ret &= apply_history_to_province(
+			history_manager,
+			date,
+			country_manager,
+			issue_manager,
+			pop_deps,
+			province
+		);
+	}
 
-			if (history_map != nullptr) {
-				ProvinceHistoryEntry const* pop_history_entry = nullptr;
-				ProductionType const* rgo_production_type_nullable = nullptr;
+	return ret;
+}
 
-				for (auto const& [entry_date, entry] : history_map->get_entries()) {
-					if (entry_date > date) {
-						if (pop_history_entry != nullptr) {
-							break;
-						}
-					} else {
-						province.apply_history_to_province(*entry, country_manager);
-						std::optional<ProductionType const*> const& rgo_production_type_nullable_optional =
-							entry->get_rgo_production_type_nullable();
-						if (rgo_production_type_nullable_optional.has_value()) {
-							rgo_production_type_nullable = rgo_production_type_nullable_optional.value();
-						}
-					}
+bool MapInstance::apply_history_to_province(
+	ProvinceHistoryManager const& history_manager,
+	const Date date,
+	CountryInstanceManager& country_manager,
+	IssueManager const& issue_manager,
+	PopDeps const& pop_deps,
+	ProvinceInstance& province
+) {
+	ProvinceDefinition const& province_definition = province.province_definition;
+	if (province_definition.is_water()) {
+		return true;
+	}
 
-					if (!entry->get_pops().empty()) {
-						pop_history_entry = entry.get();
-					}
-				}
+	ProvinceHistoryMap const* history_map = history_manager.get_province_history(&province_definition);
 
-				if (pop_history_entry == nullptr) {
-					spdlog::warn_s("No pop history entry for province {} for date {}", province, date);
-				} else {
-					ret &= province.add_pop_vec(
-						pop_history_entry->get_pops(),
-						pop_deps
-					);
-					province.setup_pop_test_values(issue_manager);
-				}
+	if (history_map == nullptr) {
+		return true;
+	}
 
-				ret &= province.set_rgo_production_type_nullable(rgo_production_type_nullable);
+	ProvinceHistoryEntry const* pop_history_entry = nullptr;
+	ProductionType const* rgo_production_type_nullable = nullptr;
+
+	for (auto const& [entry_date, entry] : history_map->get_entries()) {
+		if (entry_date > date) {
+			if (pop_history_entry != nullptr) {
+				break;
 			}
+		} else {
+			province.apply_history_to_province(*entry, country_manager);
+			std::optional<ProductionType const*> const& rgo_production_type_nullable_optional
+				= entry->get_rgo_production_type_nullable();
+			if (rgo_production_type_nullable_optional.has_value()) {
+				rgo_production_type_nullable = rgo_production_type_nullable_optional.value();
+			}
+		}
+
+		if (!entry->get_pops().empty()) {
+			pop_history_entry = entry.get();
 		}
 	}
 
+	bool ret = true;
+	if (pop_history_entry == nullptr) {
+		spdlog::warn_s("No pop history entry for province {} for date {}", province, date);
+	} else {
+		ret &= province.add_pop_vec(
+			pop_history_entry->get_pops(),
+			pop_deps
+		);
+		province.setup_pop_test_values(issue_manager);
+	}
+
+	ret &= province.set_rgo_production_type_nullable(rgo_production_type_nullable);
 	return ret;
 }
 

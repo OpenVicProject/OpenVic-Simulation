@@ -46,12 +46,12 @@ namespace OpenVic::_detail::forwardable_span {
 	concept span_array_convertible = std::is_convertible_v<From (*)[], To (*)[]>;
 
 	template<class It, class T>
-	concept span_compatible_iterator =
-		std::contiguous_iterator<It> && span_array_convertible<std::remove_reference_t<std::iter_reference_t<It>>, T>;
+	concept span_compatible_iterator = std::contiguous_iterator<It>
+		&& span_array_convertible<std::remove_reference_t<std::iter_reference_t<It>>, T>;
 
 	template<class Sentinel, class It>
-	concept span_compatible_sentinel_for =
-		std::sized_sentinel_for<Sentinel, It> && !std::is_convertible_v<Sentinel, std::size_t>;
+	concept span_compatible_sentinel_for = std::sized_sentinel_for<Sentinel, It>
+		&& !std::is_convertible_v<Sentinel, std::size_t>;
 
 	template<size_t Extent>
 	struct extent_storage {

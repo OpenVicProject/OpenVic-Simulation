@@ -19,12 +19,15 @@ namespace OpenVic {
 		using search_key_type = KeyT;
 		using search_value_type = ValueT;
 		using search_pair_type = std::pair<search_key_type, search_value_type>;
-		using search_allocator_type =
-			foonathan::memory::std_allocator<search_pair_type, memory::tracker<foonathan::memory::default_allocator>>;
+		using search_allocator_type = foonathan::memory::std_allocator<
+			search_pair_type,
+			memory::tracker<foonathan::memory::default_allocator>
+		>;
 		using search_container_type = std::vector<search_pair_type, search_allocator_type>;
 		using search_map_type = tsl::ordered_map<
 			search_key_type, search_value_type, //
-			std::hash<search_key_type>, std::equal_to<search_key_type>, search_allocator_type, search_container_type>;
+			std::hash<search_key_type>, std::equal_to<search_key_type>, search_allocator_type, search_container_type
+		>;
 		using search_iterator = search_map_type::iterator;
 		using search_const_iterator = search_map_type::const_iterator;
 
