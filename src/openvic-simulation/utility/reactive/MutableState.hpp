@@ -1,7 +1,7 @@
 #pragma once
 
 #include "openvic-simulation/types/Signal.hpp"
-#include "openvic-simulation/utility/Concepts.hpp"
+#include "openvic-simulation/core/template/Concepts.hpp"
 #include "openvic-simulation/utility/reactive/DependencyTracker.hpp"
 
 namespace OpenVic {

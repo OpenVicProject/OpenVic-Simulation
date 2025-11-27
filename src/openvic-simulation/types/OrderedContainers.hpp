@@ -6,7 +6,7 @@
 #include <tsl/ordered_map.h>
 #include <tsl/ordered_set.h>
 
-#include "openvic-simulation/utility/Concepts.hpp"
+#include "openvic-simulation/core/template/Concepts.hpp"
 #include "openvic-simulation/utility/Containers.hpp"
 #include "openvic-simulation/utility/Deque.hpp"
 #include "openvic-simulation/utility/StringUtils.hpp"

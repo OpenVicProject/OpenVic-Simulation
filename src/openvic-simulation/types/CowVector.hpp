@@ -14,7 +14,7 @@
 #include "openvic-simulation/types/BasicIterator.hpp"
 #include "openvic-simulation/utility/Allocator.hpp"
 #include "openvic-simulation/utility/Compare.hpp"
-#include "openvic-simulation/utility/Concepts.hpp"
+#include "openvic-simulation/core/template/Concepts.hpp"
 #include "openvic-simulation/utility/Typedefs.hpp"
 
 namespace OpenVic {

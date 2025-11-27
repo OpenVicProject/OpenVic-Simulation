@@ -3,7 +3,7 @@
 #include <compare>
 #include <type_traits>
 
-#include "openvic-simulation/utility/Concepts.hpp"
+#include "openvic-simulation/core/template/Concepts.hpp"
 
 namespace OpenVic {
 	[[nodiscard]] inline constexpr auto three_way_compare(auto&& left, auto&& right)

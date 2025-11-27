@@ -4,7 +4,7 @@
 #include <type_traits>
 
 #include "openvic-simulation/types/OrderedContainers.hpp"
-#include "openvic-simulation/utility/Concepts.hpp"
+#include "openvic-simulation/core/template/Concepts.hpp"
 
 namespace OpenVic {
 	template <typename KeyType, unary_negatable ValueType>

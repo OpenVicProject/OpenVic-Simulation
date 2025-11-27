@@ -1,6 +1,7 @@
 #pragma once
 
 #include <concepts>
+#include <cstddef>
 #include <memory>
 #include <string_view>
 #include <type_traits>
@@ -81,8 +82,8 @@ namespace OpenVic {
 	// This adds to capacity rather than size so that it can be used multiple times in a row.
 	// If it added to size, it would only reserve enough for max(arguments...)
 	template<typename T>
-	concept reservable = requires(T& t, size_t size) {
-		{ t.capacity() } -> std::same_as<size_t>;
+	concept reservable = requires(T& t, std::size_t size) {
+		{ t.capacity() } -> std::same_as<std::size_t>;
 		t.reserve(size);
 	};
 
@@ -108,15 +109,14 @@ namespace OpenVic {
 	};
 
 	template<typename T>
-	concept has_index = requires { typename T::index_t; }
-	&& derived_from_specialization_of<typename T::index_t, type_safe::strong_typedef>
-	&& requires {
-		static_cast<std::size_t>(
-			static_cast<type_safe::underlying_type<decltype(std::declval<T>().index)>>(std::declval<T>().index)
-		);
-	};
+	concept has_index = requires { typename T::index_t; } &&
+		derived_from_specialization_of<typename T::index_t, type_safe::strong_typedef> && requires {
+			static_cast<std::size_t>(
+				static_cast<type_safe::underlying_type<decltype(std::declval<T>().index)>>(std::declval<T>().index)
+			);
+		};
 
-	//helper to avoid error 'index_t': is not a member of T
+	// helper to avoid error 'index_t': is not a member of T
 	template<typename T, typename = void>
 	struct get_index_t {
 		using type = std::size_t;

@@ -2,7 +2,7 @@
 
 #include <memory>
 
-#include "openvic-simulation/utility/Concepts.hpp"
+#include "openvic-simulation/core/template/Concepts.hpp"
 
 namespace OpenVic {
 	template<typename InputIt, typename Sentinel, typename ForwardIt, typename Allocator>
