@@ -290,8 +290,9 @@ fixed_point_t ResourceGatheringOperation::produce() {
 		+ location.get_modifier_effect_value(*modifier_effect_cache.get_local_rgo_output());
 
 	if (production_type.get_is_farm_for_tech()) {
-		const fixed_point_t farm_rgo_throughput_and_output =
-			location.get_modifier_effect_value(*modifier_effect_cache.get_farm_rgo_throughput_and_output());
+		const fixed_point_t farm_rgo_throughput_and_output = location.get_modifier_effect_value(
+			*modifier_effect_cache.get_farm_rgo_throughput_and_output()
+		);
 		throughput_multiplier += farm_rgo_throughput_and_output;
 		output_multiplier += farm_rgo_throughput_and_output;
 	}
@@ -302,8 +303,9 @@ fixed_point_t ResourceGatheringOperation::produce() {
 	}
 
 	if (production_type.get_is_mine_for_tech()) {
-		const fixed_point_t mine_rgo_throughput_and_output =
-			location.get_modifier_effect_value(*modifier_effect_cache.get_mine_rgo_throughput_and_output());
+		const fixed_point_t mine_rgo_throughput_and_output = location.get_modifier_effect_value(
+			*modifier_effect_cache.get_mine_rgo_throughput_and_output()
+		);
 		throughput_multiplier += mine_rgo_throughput_and_output;
 		output_multiplier += mine_rgo_throughput_and_output;
 	}
@@ -331,9 +333,16 @@ fixed_point_t ResourceGatheringOperation::produce() {
 				const fixed_point_t effect_multiplier = job.effect_multiplier;
 				const fixed_point_t amount = job.amount;
 				const fixed_point_t effect = effect_multiplier != fixed_point_t::_1
-					&& fp::from_fraction<pop_size_t>(employees_of_type, max_employee_count_cache) > amount
-					? effect_multiplier * amount //special Vic2 logic
-					: fp::mul_div(effect_multiplier, employees_of_type, max_employee_count_cache);
+					&& fp::from_fraction<pop_size_t>(
+						employees_of_type,
+						max_employee_count_cache
+					) > amount
+						? effect_multiplier * amount //special Vic2 logic
+						: fp::mul_div(
+							effect_multiplier,
+							employees_of_type,
+							max_employee_count_cache
+						);
 
 				switch (job.effect_type) {
 					case Job::effect_t::OUTPUT:
