@@ -489,8 +489,8 @@ bool PopManager::generate_modifiers(ModifierManager& modifier_manager) const {
 
 	static constexpr bool HAS_NO_EFFECT = true;
 
-	IndexedFlatMap<Strata, ModifierEffectCache::strata_effects_t>& strata_effects =
-		modifier_manager.modifier_effect_cache.strata_effects;
+	using strata_effects_map_t = IndexedFlatMap<Strata, ModifierEffectCache::strata_effects_t>;
+	strata_effects_map_t& strata_effects = modifier_manager.modifier_effect_cache.strata_effects;
 
 	strata_effects = std::move(decltype(ModifierEffectCache::strata_effects){get_stratas()});
 

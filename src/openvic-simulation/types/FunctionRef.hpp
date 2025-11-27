@@ -75,11 +75,14 @@ namespace OpenVic {
 		};
 
 		template<typename Func>
-		requires(!decayed_derived_from<Func, FunctionRefBase>::value) &&
-			std::invocable<std::remove_reference_t<Func>&, Args...> &&
-			(std::convertible_to<
+		requires(!decayed_derived_from<Func, FunctionRefBase>::value)
+		&& std::invocable<std::remove_reference_t<Func>&, Args...>
+		&& (
+			std::convertible_to<
 				decltype(std::invoke(std::declval<std::remove_reference_t<Func>&>(), std::declval<Args>()...)), Ret
-			> || std::is_void<Ret>::value)
+			>
+			|| std::is_void<Ret>::value
+		)
 		FunctionRefBase(Func&& func) noexcept
 			: m_pfuncTypeErased(make_type_erased_function_ptr<bNoExcept, std::remove_reference_t<Func>, Ret, Args...> {}()),
 			  m_anyref(as_lvalue(func)) {
@@ -90,8 +93,8 @@ namespace OpenVic {
 			);
 			static_assert(!std::is_pointer<Func>::value, "Pass in functions rather than function pointers.");
 			// Checking the noexcept value of the function call is commented out because MAYTHROW is widely used in generic code
-			// such as for_each, range_adaptor... static_assert(!bNoExcept ||
-			// noexcept(std::declval<tc::decay_t<Func>&>()(std::declval<Args>()...)));
+			// such as for_each, range_adaptor... static_assert(!bNoExcept
+			// || noexcept(std::declval<tc::decay_t<Func>&>()(std::declval<Args>()...)));
 		}
 
 	private:

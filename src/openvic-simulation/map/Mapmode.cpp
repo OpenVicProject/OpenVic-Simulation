@@ -338,43 +338,44 @@ bool MapmodeManager::setup_mapmodes(MapDefinition const& map_definition) {
 				MapInstance const& map_instance, ProvinceInstance const& province,
 				CountryInstance const* player_country, ProvinceInstance const* selected_province
 			) -> Mapmode::base_stripe_t {
-				if (selected_province != nullptr) {
-					ProvinceDefinition const& selected_province_definition = selected_province->province_definition;
-
-					if (*selected_province == province) {
-						return (0xFFFFFF_argb).with_alpha(ALPHA_VALUE);
-					}
-
-					ProvinceDefinition const* province_definition = &province.province_definition;
-
-					colour_argb_t base = colour_argb_t::null(), stripe = colour_argb_t::null();
-					ProvinceDefinition::adjacency_t const* adj =
-						selected_province_definition.get_adjacency_to(province_definition);
-
-					if (adj != nullptr) {
-						colour_argb_t::integer_type base_int;
-						switch (adj->get_type()) {
-							using enum ProvinceDefinition::adjacency_t::type_t;
-						case LAND:       base_int = 0x00FF00; break;
-						case WATER:      base_int = 0x0000FF; break;
-						case COASTAL:    base_int = 0xF9D199; break;
-						case IMPASSABLE: base_int = 0x8B4513; break;
-						case STRAIT:     base_int = 0x00FFFF; break;
-						case CANAL:      base_int = 0x888888; break;
-						default:         base_int = 0xFF0000; break;
-						}
-						base = colour_argb_t::from_integer(base_int).with_alpha(ALPHA_VALUE);
-						stripe = base;
-					}
-
-					if (selected_province_definition.has_adjacency_going_through(province_definition)) {
-						stripe = (0xFFFF00_argb).with_alpha(ALPHA_VALUE);
-					}
-
-					return { base, stripe };
+				if (selected_province == nullptr) {
+					return colour_argb_t::null();
 				}
 
-				return colour_argb_t::null();
+				ProvinceDefinition const& selected_province_definition = selected_province->province_definition;
+
+				if (*selected_province == province) {
+					return (0xFFFFFF_argb).with_alpha(ALPHA_VALUE);
+				}
+
+				ProvinceDefinition const* province_definition = &province.province_definition;
+
+				colour_argb_t base = colour_argb_t::null(), stripe = colour_argb_t::null();
+				ProvinceDefinition::adjacency_t const* adj = selected_province_definition.get_adjacency_to(
+					province_definition
+				);
+
+				if (adj != nullptr) {
+					colour_argb_t::integer_type base_int;
+					switch (adj->get_type()) {
+						using enum ProvinceDefinition::adjacency_t::type_t;
+					case LAND:       base_int = 0x00FF00; break;
+					case WATER:      base_int = 0x0000FF; break;
+					case COASTAL:    base_int = 0xF9D199; break;
+					case IMPASSABLE: base_int = 0x8B4513; break;
+					case STRAIT:     base_int = 0x00FFFF; break;
+					case CANAL:      base_int = 0x888888; break;
+					default:         base_int = 0xFF0000; break;
+					}
+					base = colour_argb_t::from_integer(base_int).with_alpha(ALPHA_VALUE);
+					stripe = base;
+				}
+
+				if (selected_province_definition.has_adjacency_going_through(province_definition)) {
+					stripe = (0xFFFF00_argb).with_alpha(ALPHA_VALUE);
+				}
+
+				return { base, stripe };
 			}
 		);
 	}

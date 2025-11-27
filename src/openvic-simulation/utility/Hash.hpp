@@ -46,9 +46,11 @@ namespace OpenVic {
 			s = h(v) << (sizeof(T) * CHAR_BIT);
 			(
 				[&] {
-					// If args is not last pointer of args
-					if (static_cast<void const*>(&(std::get<sizeof...(args) - 1>(arg_tuple))) !=
-						static_cast<void const*>(&args)) {
+					void const* const args_ptr = static_cast<void const*>(&args);
+					void const* const last_pointer_of_args = static_cast<void const*>(
+						&(std::get<sizeof...(args) - 1>(arg_tuple))
+					);
+					if (args_ptr != last_pointer_of_args) {
 						s <<= sizeof(Args) * CHAR_BIT;
 					}
 					s |= std::hash<Args> {}(args);
