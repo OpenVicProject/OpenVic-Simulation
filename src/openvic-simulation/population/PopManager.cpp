@@ -507,8 +507,10 @@ bool PopManager::generate_modifiers(ModifierManager& modifier_manager) const {
 
 	static constexpr bool HAS_NO_EFFECT = true;
 
-	memory::FixedVector<ModifierEffectCache::strata_effects_t, strata_index_t>& strata_effects =
-		modifier_manager.modifier_effect_cache.strata_effects;
+	memory::FixedVector<
+		ModifierEffectCache::strata_effects_t,
+		strata_index_t
+	>& strata_effects = modifier_manager.modifier_effect_cache.strata_effects;
 
 	strata_effects = std::move(
 		decltype(ModifierEffectCache::strata_effects) {

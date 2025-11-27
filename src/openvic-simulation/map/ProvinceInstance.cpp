@@ -226,10 +226,16 @@ void ProvinceInstance::_update_pops(MilitaryDefines const& military_defines) {
 
 	using enum colony_status_t;
 
-	const fixed_point_t pop_size_per_regiment_multiplier =
-		colony_status == PROTECTORATE ? military_defines.get_pop_size_per_regiment_protectorate_multiplier()
-		: colony_status == COLONY ? military_defines.get_pop_size_per_regiment_colony_multiplier()
-		: is_owner_core() ? fixed_point_t::_1 : military_defines.get_pop_size_per_regiment_non_core_multiplier();
+	fixed_point_t pop_size_per_regiment_multiplier;
+	if (colony_status == PROTECTORATE) {
+		pop_size_per_regiment_multiplier = military_defines.get_pop_size_per_regiment_protectorate_multiplier();
+	} else if (colony_status == COLONY) {
+		pop_size_per_regiment_multiplier = military_defines.get_pop_size_per_regiment_colony_multiplier();
+	} else if (is_owner_core()) {
+		pop_size_per_regiment_multiplier = fixed_point_t::_1;
+	} else {
+		pop_size_per_regiment_multiplier = military_defines.get_pop_size_per_regiment_non_core_multiplier();
+	}
 
 	for (Pop& pop : pops) {
 		pops_cache_by_type[pop.get_type().index].push_back(pop);
