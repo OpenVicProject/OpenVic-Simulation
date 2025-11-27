@@ -677,8 +677,12 @@ bool CountryInstance::remove_unit_instance_group(UnitInstanceGroup const& group)
 	const auto remove_from_vector = [this, &group]<unit_branch_t Branch>(
 		memory::vector<UnitInstanceGroupBranched<Branch>*>& unit_instance_groups
 	) -> bool {
-		const typename memory::vector<UnitInstanceGroupBranched<Branch>*>::const_iterator it =
-			std::find(unit_instance_groups.begin(), unit_instance_groups.end(), &group);
+		using const_it_t = typename memory::vector<UnitInstanceGroupBranched<Branch>*>::const_iterator;
+		const const_it_t it = std::find(
+			unit_instance_groups.begin(),
+			unit_instance_groups.end(),
+			&group
+		);
 
 		if (it != unit_instance_groups.end()) {
 			unit_instance_groups.erase(it);
@@ -1227,12 +1231,14 @@ bool CountryInstance::apply_history_to_country(
 		ret &= add_reform(*reform);
 	}
 	set_optional_state(tech_school, entry.get_tech_school());
-	constexpr auto set_bool_map_to_indexed_map =
-		[]<typename T>(IndexedFlatMap<T, bool>& target, ordered_map<T const*, bool> source) {
-			for (auto const& [key, value] : source) {
-				target[*key] = value;
-			}
-		};
+	constexpr auto set_bool_map_to_indexed_map = []<typename T>(
+		IndexedFlatMap<T, bool>& target,
+		ordered_map<T const*, bool> source
+	) {
+		for (auto const& [key, value] : source) {
+			target[*key] = value;
+		}
+	};
 
 	for (auto const& [technology, level] : entry.get_technologies()) {
 		ret &= set_technology_unlock_level(*technology, level);
@@ -1467,9 +1473,9 @@ void CountryInstance::_update_technology(const Date today) {
 	}
 
 	daily_research_points += get_modifier_effect_value(*modifier_effect_cache.get_research_points());
-	daily_research_points *= fixed_point_t::_1 +
-		get_modifier_effect_value(*modifier_effect_cache.get_research_points_modifier()) +
-		get_modifier_effect_value(*modifier_effect_cache.get_increase_research());
+	daily_research_points *= fixed_point_t::_1
+		+ get_modifier_effect_value(*modifier_effect_cache.get_research_points_modifier())
+		+ get_modifier_effect_value(*modifier_effect_cache.get_increase_research());
 
 	if (daily_research_points.get_untracked() < 0) {
 		daily_research_points.set(0);
@@ -1601,8 +1607,8 @@ void CountryInstance::_update_military() {
 
 	// Mobilisation calculations
 	mobilisation_impact = get_modifier_effect_value(*modifier_effect_cache.get_mobilization_impact());
-	mobilisation_economy_impact = get_modifier_effect_value(*modifier_effect_cache.get_mobilisation_economy_impact_tech()) +
-		get_modifier_effect_value(*modifier_effect_cache.get_mobilisation_economy_impact_country());
+	mobilisation_economy_impact = get_modifier_effect_value(*modifier_effect_cache.get_mobilisation_economy_impact_tech())
+		+ get_modifier_effect_value(*modifier_effect_cache.get_mobilisation_economy_impact_country());
 
 	// TODO - use country_defines.get_min_mobilize_limit(); (wiki: "lowest maximum of brigades you can mobilize. (by default 3)")
 
@@ -1621,9 +1627,9 @@ void CountryInstance::_update_military() {
 		get_modifier_effect_value(*modifier_effect_cache.get_max_war_exhaustion()), fixed_point_t::_0
 	);
 
-	organisation_regain = fixed_point_t::_1 +
-		get_modifier_effect_value(*modifier_effect_cache.get_org_regain()) +
-		get_modifier_effect_value(*modifier_effect_cache.get_morale_global());
+	organisation_regain = fixed_point_t::_1
+		+ get_modifier_effect_value(*modifier_effect_cache.get_org_regain())
+		+ get_modifier_effect_value(*modifier_effect_cache.get_morale_global());
 
 	land_organisation = fixed_point_t::_1 + get_modifier_effect_value(*modifier_effect_cache.get_land_organisation());
 	naval_organisation = fixed_point_t::_1 + get_modifier_effect_value(*modifier_effect_cache.get_naval_organisation());
@@ -1641,8 +1647,8 @@ void CountryInstance::_update_military() {
 		).floor<type_safe::underlying_type<combat_width_t>>()
 	);
 	dig_in_cap = get_modifier_effect_value(*modifier_effect_cache.get_dig_in_cap()).floor<int32_t>();
-	military_tactics = military_defines.get_base_military_tactics() +
-		get_modifier_effect_value(*modifier_effect_cache.get_military_tactics());
+	military_tactics = military_defines.get_base_military_tactics()
+		+ get_modifier_effect_value(*modifier_effect_cache.get_military_tactics());
 
 	if (leadership_point_stockpile < 0) {
 		leadership_point_stockpile = 0;
@@ -1650,8 +1656,8 @@ void CountryInstance::_update_military() {
 	create_leader_count = (leadership_point_stockpile / military_defines.get_leader_recruit_cost()).floor<int32_t>();
 
 	monthly_leadership_points += get_modifier_effect_value(*modifier_effect_cache.get_leadership());
-	monthly_leadership_points *= fixed_point_t::_1 +
-		get_modifier_effect_value(*modifier_effect_cache.get_leadership_modifier());
+	monthly_leadership_points *= fixed_point_t::_1
+		+ get_modifier_effect_value(*modifier_effect_cache.get_leadership_modifier());
 
 	if (monthly_leadership_points < 0) {
 		monthly_leadership_points = 0;
@@ -1888,8 +1894,8 @@ void CountryInstance::update_gamestate(const Date today, MapInstance& map_instan
 	_update_politics();
 	_update_diplomacy();
 
-	const CountryDefinition::government_colour_map_t::const_iterator it =
-		country_definition.get_alternative_colours().find(government_type.get_untracked());
+	using const_it_t = typename CountryDefinition::government_colour_map_t::const_iterator;
+	const const_it_t it = country_definition.get_alternative_colours().find(government_type.get_untracked());
 
 	if (it != country_definition.get_alternative_colours().end()) {
 		colour = it.value();

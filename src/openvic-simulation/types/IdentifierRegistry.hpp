@@ -113,9 +113,8 @@ namespace OpenVic {
 
 	/* Registry Storage Info - how items are stored and indexed, and item-index conversion functions. */
 	template<template<typename> typename StorageInfo, typename Item>
-	concept RegistryStorageInfo =
-		std::same_as<typename StorageInfo<Item>::storage_type::value_type, Item> &&
-		requires(
+	concept RegistryStorageInfo = std::same_as<typename StorageInfo<Item>::storage_type::value_type, Item>
+		&& requires(
 			typename StorageInfo<Item>::storage_type& items, typename StorageInfo<Item>::storage_type const& const_items,
 			typename StorageInfo<Item>::index_type index
 		) {
@@ -161,8 +160,8 @@ namespace OpenVic {
 		string_map_case Case = StringMapCaseSensitive /* Identifier map parameters */
 	>
 	requires(
-		RegistryItemInfo<_ItemInfo, typename ValueInfo::internal_value_type> &&
-		RegistryStorageInfo<_StorageInfo, typename _ItemInfo<typename ValueInfo::internal_value_type>::item_type>
+		RegistryItemInfo<_ItemInfo, typename ValueInfo::internal_value_type>
+		&& RegistryStorageInfo<_StorageInfo, typename _ItemInfo<typename ValueInfo::internal_value_type>::item_type>
 	)
 	class UniqueKeyRegistry {
 	public:
@@ -582,8 +581,11 @@ namespace OpenVic {
 		has_get_identifier Value, template<typename> typename StorageInfo = RegistryStorageInfoVector,
 		string_map_case Case = StringMapCaseSensitive
 	>
-	using IdentifierPointerRegistry =
-		ValueRegistry<RegistryValueInfoPointer<RegistryValueInfoHasGetIdentifier<Value>>, StorageInfo, Case>;
+	using IdentifierPointerRegistry = ValueRegistry<
+		RegistryValueInfoPointer<RegistryValueInfoHasGetIdentifier<Value>>,
+		StorageInfo,
+		Case
+	>;
 
 	template<
 		has_get_identifier Value, template<typename> typename StorageInfo = RegistryStorageInfoVector,

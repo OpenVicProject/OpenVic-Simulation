@@ -89,8 +89,12 @@ void Pop::setup_pop_test_values(IssueManager const& issue_manager) {
 	num_migrated_external = test_size(1);
 	num_migrated_colonial = test_size(2);
 
-	total_change =
-		num_grown + num_promoted + num_demoted + num_migrated_internal + num_migrated_external + num_migrated_colonial;
+	total_change = num_grown
+		+ num_promoted
+		+ num_demoted
+		+ num_migrated_internal
+		+ num_migrated_external
+		+ num_migrated_colonial;
 
 	/* Generates a number between 0 and max (inclusive) and sets map[&key] to it if it's at least min. */
 	auto test_weight_indexed = []<typename U>(IndexedFlatMap<U, fixed_point_t>& map, U const& key, int32_t min, int32_t max) -> void {
@@ -249,10 +253,13 @@ void Pop::update_gamestate(
 	if (type->can_be_recruited) {
 		MilitaryDefines const& military_defines = define_manager.get_military_defines();
 
-		if (
-			size < military_defines.get_min_pop_size_for_regiment() || owner == nullptr ||
-			!is_culture_status_allowed(owner->get_allowed_regiment_cultures(), culture_status)
-		) {
+		const bool is_pop_size_too_small = size < military_defines.get_min_pop_size_for_regiment();
+		const bool is_culture_not_allowed = owner == nullptr
+			|| !is_culture_status_allowed(
+				owner->get_allowed_regiment_cultures(),
+				culture_status
+			);
+		if (is_pop_size_too_small || is_culture_not_allowed) {
 			max_supported_regiments = 0;
 		} else {
 			max_supported_regiments = (fixed_point_t(size) / (

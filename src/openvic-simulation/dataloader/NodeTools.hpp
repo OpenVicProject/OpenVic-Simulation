@@ -163,8 +163,9 @@ using namespace std::string_view_literals;
 		template<std::signed_integral T>
 		NodeCallback auto expect_int(callback_t<T>& callback, int base = 10) {
 			return expect_int64([callback](int64_t val) mutable -> bool {
-				if (static_cast<int64_t>(std::numeric_limits<T>::lowest()) <= val &&
-					val <= static_cast<int64_t>(std::numeric_limits<T>::max())) {
+				if (static_cast<int64_t>(std::numeric_limits<T>::lowest()) <= val
+					&& val <= static_cast<int64_t>(std::numeric_limits<T>::max())
+				) {
 					return callback(val);
 				}
 				spdlog::error_s(

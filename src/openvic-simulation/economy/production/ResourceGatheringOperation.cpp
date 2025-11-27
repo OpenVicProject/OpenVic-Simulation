@@ -268,8 +268,9 @@ fixed_point_t ResourceGatheringOperation::produce() {
 		+ location.get_modifier_effect_value(*modifier_effect_cache.get_local_rgo_output());
 
 	if (production_type.get_is_farm_for_tech()) {
-		const fixed_point_t farm_rgo_throughput_and_output =
-			location.get_modifier_effect_value(*modifier_effect_cache.get_farm_rgo_throughput_and_output());
+		const fixed_point_t farm_rgo_throughput_and_output = location.get_modifier_effect_value(
+			*modifier_effect_cache.get_farm_rgo_throughput_and_output()
+		);
 		throughput_multiplier += farm_rgo_throughput_and_output;
 		output_multiplier += farm_rgo_throughput_and_output;
 	}
@@ -280,8 +281,9 @@ fixed_point_t ResourceGatheringOperation::produce() {
 	}
 
 	if (production_type.get_is_mine_for_tech()) {
-		const fixed_point_t mine_rgo_throughput_and_output =
-			location.get_modifier_effect_value(*modifier_effect_cache.get_mine_rgo_throughput_and_output());
+		const fixed_point_t mine_rgo_throughput_and_output = location.get_modifier_effect_value(
+			*modifier_effect_cache.get_mine_rgo_throughput_and_output()
+		);
 		throughput_multiplier += mine_rgo_throughput_and_output;
 		output_multiplier += mine_rgo_throughput_and_output;
 	}
@@ -305,8 +307,8 @@ fixed_point_t ResourceGatheringOperation::produce() {
 			}
 
 			const fixed_point_t effect_multiplier = job.get_effect_multiplier();
-			fixed_point_t relative_to_workforce =
-				fixed_point_t(employees_of_type) / fixed_point_t(max_employee_count_cache);
+			fixed_point_t relative_to_workforce = fixed_point_t(employees_of_type)
+				/ fixed_point_t(max_employee_count_cache);
 			const fixed_point_t amount = job.get_amount();
 			if (effect_multiplier != fixed_point_t::_1 && relative_to_workforce > amount) {
 				relative_to_workforce = amount;

@@ -221,8 +221,10 @@ namespace OpenVic {
 				return lhs;
 			}
 
-			friend inline constexpr influence_value_type&
-			operator%=(influence_value_type& lhs, influence_value_type const& rhs) {
+			friend inline constexpr influence_value_type& operator%=(
+				influence_value_type& lhs,
+				influence_value_type const& rhs
+			) {
 				return lhs %= rhs.value;
 			}
 

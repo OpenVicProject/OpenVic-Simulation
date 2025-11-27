@@ -42,8 +42,8 @@ TerrainTypeMapping::TerrainTypeMapping(
 
 bool TerrainTypeManager::generate_modifiers(ModifierManager& modifier_manager) const {
 	using enum ModifierEffect::format_t;
-	IndexedFlatMap<TerrainType, ModifierEffectCache::unit_terrain_effects_t>& unit_terrain_effects =
-		modifier_manager.modifier_effect_cache.unit_terrain_effects;
+	using terrain_effects_map_t = IndexedFlatMap<TerrainType, ModifierEffectCache::unit_terrain_effects_t>;
+	terrain_effects_map_t& unit_terrain_effects = modifier_manager.modifier_effect_cache.unit_terrain_effects;
 
 	unit_terrain_effects = std::move(decltype(ModifierEffectCache::unit_terrain_effects){get_terrain_types()});
 

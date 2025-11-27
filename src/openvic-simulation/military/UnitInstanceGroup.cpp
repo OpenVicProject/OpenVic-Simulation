@@ -522,8 +522,8 @@ bool UnitInstanceManager::create_leader(
 	}
 
 	// TODO - make starting prestige a random proportion of the maximum random prestige
-	const fixed_point_t starting_prestige =
-		military_defines.get_leader_max_random_prestige() * static_cast<int32_t>(item_selection_counter++ % 11) / 10;
+	const fixed_point_t starting_prestige = military_defines.get_leader_max_random_prestige()
+		* static_cast<int32_t>(item_selection_counter++ % 11) / 10;
 
 	generate_leader(country, {
 		name,

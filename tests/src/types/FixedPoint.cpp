@@ -164,13 +164,17 @@ TEST_CASE("fixed_point_t Parse methods", "[fixed_point_t][fixed_point_t-parse]")
 
 	fixed_point_t fp = fixed_point_t::_0;
 	CHECK(
-		fp.from_chars(plus_fixed_point_str.data(), plus_fixed_point_str.data() + plus_fixed_point_str.size()).ec ==
-		std::errc::invalid_argument
+		fp.from_chars(
+			plus_fixed_point_str.data(),
+			plus_fixed_point_str.data() + plus_fixed_point_str.size()
+		).ec == std::errc::invalid_argument
 	);
 	CHECK(fp == 0.0_a);
 	CHECK(
-		fp.from_chars_with_plus(plus_fixed_point_str.data(), plus_fixed_point_str.data() + plus_fixed_point_str.size()).ec ==
-		std::errc {}
+		fp.from_chars_with_plus(
+			plus_fixed_point_str.data(),
+			plus_fixed_point_str.data() + plus_fixed_point_str.size()
+		).ec == std::errc {}
 	);
 	CHECK(fp == 4.5432_a);
 }
