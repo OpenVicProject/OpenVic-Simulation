@@ -82,6 +82,71 @@ bool MapInstance::is_canal_enabled(canal_index_t canal_index) const {
 	return enabled_canals.contains(canal_index);
 }
 
+bool MapInstance::apply_history_to_province(
+	ProvinceHistoryManager const& history_manager,
+	const Date date,
+	CountryInstanceManager& country_manager,
+	MilitaryDefines const& military_defines,
+	PopDeps const& pop_deps,
+	TypedSpan<pop_type_index_t, const PopType> pop_types,
+	TypedSpan<reform_index_t, const Reform> reforms,
+	ProvinceInstance& province
+) {
+	ProvinceDefinition const& province_definition = province.province_definition;
+	if (province_definition.is_water()) {
+		return true;
+	}
+
+	ProvinceHistoryMap const* history_map = history_manager.get_province_history(&province_definition);
+
+	if (history_map != nullptr) {
+		return true;
+	}
+
+	bool ret = true;
+	ProvinceHistoryEntry const* pop_history_entry = nullptr;
+	ProductionType const* rgo_production_type_nullable = nullptr;
+
+	for (auto const& [entry_date, entry] : history_map->get_entries()) {
+		if (entry_date > date) {
+			if (pop_history_entry != nullptr) {
+				break;
+			}
+		} else {
+			province.apply_history_to_province(*entry, country_manager);
+			std::optional<ProductionType const*> const& rgo_production_type_nullable_optional =
+				entry->get_rgo_production_type_nullable();
+			if (rgo_production_type_nullable_optional.has_value()) {
+				rgo_production_type_nullable = rgo_production_type_nullable_optional.value();
+			}
+		}
+
+		if (!entry->get_pops().empty()) {
+			pop_history_entry = entry.get();
+		}
+	}
+
+	if (pop_history_entry == nullptr) {
+		spdlog::warn_s("No pop history entry for province {} for date {}", province, date);
+	} else {
+		ret &= province.add_pop_vec(
+			pop_history_entry->get_pops(),
+			pop_deps
+		);
+		province.setup_pop_test_values(reforms);
+
+		//update pops so OOB can use up to date max_supported_regiments
+		province._update_pops(military_defines);
+	}
+
+	ret &= province.set_rgo_production_type_nullable(
+		pop_types,
+		rgo_production_type_nullable
+	);
+
+	return ret;
+}
+
 bool MapInstance::apply_history_to_provinces(
 	ProvinceHistoryManager const& history_manager,
 	const Date date,
@@ -94,52 +159,6 @@ bool MapInstance::apply_history_to_provinces(
 	bool ret = true;
 
 	for (ProvinceInstance& province : get_province_instances()) {
-		ProvinceDefinition const& province_definition = province.province_definition;
-		if (!province_definition.is_water()) {
-			ProvinceHistoryMap const* history_map = history_manager.get_province_history(&province_definition);
-
-			if (history_map != nullptr) {
-				ProvinceHistoryEntry const* pop_history_entry = nullptr;
-				ProductionType const* rgo_production_type_nullable = nullptr;
-
-				for (auto const& [entry_date, entry] : history_map->get_entries()) {
-					if (entry_date > date) {
-						if (pop_history_entry != nullptr) {
-							break;
-						}
-					} else {
-						province.apply_history_to_province(*entry, country_manager);
-						std::optional<ProductionType const*> const& rgo_production_type_nullable_optional =
-							entry->get_rgo_production_type_nullable();
-						if (rgo_production_type_nullable_optional.has_value()) {
-							rgo_production_type_nullable = rgo_production_type_nullable_optional.value();
-						}
-					}
-
-					if (!entry->get_pops().empty()) {
-						pop_history_entry = entry.get();
-					}
-				}
-
-				if (pop_history_entry == nullptr) {
-					spdlog::warn_s("No pop history entry for province {} for date {}", province, date);
-				} else {
-					ret &= province.add_pop_vec(
-						pop_history_entry->get_pops(),
-						pop_deps
-					);
-					province.setup_pop_test_values(reforms);
-
-					//update pops so OOB can use up to date max_supported_regiments
-					province._update_pops(military_defines);
-				}
-
-				ret &= province.set_rgo_production_type_nullable(
-					pop_types,
-					rgo_production_type_nullable
-				);
-			}
-		}
 	}
 
 	return ret;

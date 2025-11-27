@@ -1,5 +1,6 @@
 #pragma once
 
+#include "openvic-simulation/core/Typedefs.hpp"
 #include "openvic-simulation/map/ProvinceDefinition.hpp"
 #include "openvic-simulation/map/ProvinceInstance.hpp"
 #include "openvic-simulation/map/State.hpp"
@@ -41,6 +42,17 @@ namespace OpenVic {
 
 		ArmyAStarPathing PROPERTY_REF(land_pathing);
 		NavyAStarPathing PROPERTY_REF(sea_pathing);
+
+		OV_SPEED_INLINE bool apply_history_to_province(
+			ProvinceHistoryManager const& history_manager,
+			const Date date,
+			CountryInstanceManager& country_manager,
+			MilitaryDefines const& military_defines,
+			PopDeps const& pop_deps,
+			TypedSpan<pop_type_index_t, const PopType> pop_types,
+			TypedSpan<reform_index_t, const Reform> reforms,
+			ProvinceInstance& province
+		);
 
 	public:
 		MapInstance(
