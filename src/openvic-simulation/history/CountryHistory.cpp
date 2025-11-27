@@ -342,10 +342,16 @@ bool CountryHistoryManager::load_country_history_file(
 
 	decltype(country_histories)::iterator it = country_histories.find(&country);
 	if (it == country_histories.end()) {
-		const std::pair<decltype(country_histories)::iterator, bool> result =
-			country_histories.emplace(&country, CountryHistoryMap { country, ideology_keys, government_type_keys });
-		if (result.second) {
-			it = result.first;
+		auto const [new_it, result] = country_histories.emplace(
+			&country,
+			CountryHistoryMap {
+				country,
+				ideology_keys,
+				government_type_keys
+			}
+		);
+		if (result) {
+			it = new_it;
 		} else {
 			spdlog::error_s("Failed to create country history map for country {}", country);
 			return false;

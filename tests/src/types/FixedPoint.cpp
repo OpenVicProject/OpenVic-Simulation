@@ -161,13 +161,17 @@ TEST_CASE("fixed_point_t Parse methods", "[fixed_point_t][fixed_point_t-parse]")
 
 	fixed_point_t fp = fixed_point_t::_0;
 	CHECK(
-		fp.from_chars(plus_fixed_point_str.data(), plus_fixed_point_str.data() + plus_fixed_point_str.size()).ec ==
-		std::errc::invalid_argument
+		fp.from_chars(
+			plus_fixed_point_str.data(),
+			plus_fixed_point_str.data() + plus_fixed_point_str.size()
+		).ec == std::errc::invalid_argument
 	);
 	CHECK(fp == 0.0_a);
 	CHECK(
-		fp.from_chars_with_plus(plus_fixed_point_str.data(), plus_fixed_point_str.data() + plus_fixed_point_str.size()).ec ==
-		std::errc {}
+		fp.from_chars_with_plus(
+			plus_fixed_point_str.data(),
+			plus_fixed_point_str.data() + plus_fixed_point_str.size()
+		).ec == std::errc {}
 	);
 	CHECK(fp == 4.5432_a);
 }
@@ -285,8 +289,11 @@ TEST_CASE("fixed_point_t Operators", "[fixed_point_t][fixed_point_t-operators]")
 	CONSTEXPR_CHECK(((int32_t)decimal4) == 3);
 
 	CONSTEXPR_CHECK(
-		fixed_point_t::mul_div(fixed_point_t::parse_raw(2), fixed_point_t::parse_raw(3), fixed_point_t::parse_raw(6)) ==
-		fixed_point_t::parse_raw(1)
+		fixed_point_t::mul_div(
+			fixed_point_t::parse_raw(2),
+			fixed_point_t::parse_raw(3),
+			fixed_point_t::parse_raw(6)
+		) == fixed_point_t::parse_raw(1)
 	);
 }
 

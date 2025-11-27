@@ -382,8 +382,8 @@ bool UnitTypeManager::generate_modifiers(ModifierManager& modifier_manager) cons
 
 	generate_stat_modifiers(modifier_manager.modifier_effect_cache.army_base_effects, "army_base");
 
-	IndexedFlatMap<RegimentType, ModifierEffectCache::regiment_type_effects_t>& regiment_type_effects =
-		modifier_manager.modifier_effect_cache.regiment_type_effects;
+	using regiment_type_effects_map_t = IndexedFlatMap<RegimentType, ModifierEffectCache::regiment_type_effects_t>;
+	regiment_type_effects_map_t& regiment_type_effects = modifier_manager.modifier_effect_cache.regiment_type_effects;
 
 	regiment_type_effects = std::move(decltype(ModifierEffectCache::regiment_type_effects){get_regiment_types()});
 
@@ -393,8 +393,8 @@ bool UnitTypeManager::generate_modifiers(ModifierManager& modifier_manager) cons
 
 	generate_stat_modifiers(modifier_manager.modifier_effect_cache.navy_base_effects, "navy_base");
 
-	IndexedFlatMap<ShipType, ModifierEffectCache::ship_type_effects_t>& ship_type_effects =
-		modifier_manager.modifier_effect_cache.ship_type_effects;
+	using ship_type_effects_map_t = IndexedFlatMap<ShipType, ModifierEffectCache::ship_type_effects_t>;
+	ship_type_effects_map_t& ship_type_effects = modifier_manager.modifier_effect_cache.ship_type_effects;
 
 	ship_type_effects = std::move(decltype(ModifierEffectCache::ship_type_effects){get_ship_types()});
 

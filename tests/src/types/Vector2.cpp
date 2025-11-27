@@ -142,8 +142,7 @@ TEST_CASE("fvec2_t Operators", "[vec2_t][fvec2_t][fvec2_t-operators]") {
 	CONSTEXPR_CHECK(power1 + power2 == testing::approx_vec2 { 1.25, 1.625 });
 
 	CONSTEXPR_CHECK(
-		decimal1 - decimal2 ==
-		testing::approx_vec2 {
+		decimal1 - decimal2 == testing::approx_vec2 {
 			(1.1_a).epsilon(testing::INACCURATE_EPSILON), //
 			(1.5_a).epsilon(testing::INACCURATE_EPSILON) //
 		}
@@ -151,8 +150,7 @@ TEST_CASE("fvec2_t Operators", "[vec2_t][fvec2_t][fvec2_t-operators]") {
 	CONSTEXPR_CHECK(power1 - power2 == testing::approx_vec2 { 0.25, 1.375 });
 
 	CONSTEXPR_CHECK(
-		decimal1 * decimal2 ==
-		testing::approx_vec2 {
+		decimal1 * decimal2 == testing::approx_vec2 {
 			(2.76_a).epsilon(testing::INACCURATE_EPSILON), //
 			(16.66_a).epsilon(testing::INACCURATE_EPSILON) //
 		}

@@ -271,9 +271,16 @@ bool CultureManager::find_cultural_leader_pictures(Dataloader const& dataloader)
 			unit_branch_t branch, leader_count_t& leader_count
 		) -> void {
 			while (
-				leader_count < std::numeric_limits<leader_count_t>::max() &&
-				!dataloader.lookup_file(
-					make_leader_picture_path(make_leader_picture_name(cultural_type, branch, leader_count)), false
+				leader_count < std::numeric_limits<leader_count_t>::max()
+				&& !dataloader.lookup_file(
+					make_leader_picture_path(
+						make_leader_picture_name(
+							cultural_type,
+							branch,
+							leader_count
+						)
+					),
+					false
 				).empty()
 			) {
 				leader_count++;
