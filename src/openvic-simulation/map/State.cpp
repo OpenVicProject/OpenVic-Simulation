@@ -19,9 +19,9 @@ State::State(
 	ProvinceInstance* new_capital,
 	memory::vector<ProvinceInstance*>&& new_provinces,
 	colony_status_t new_colony_status,
-	utility::forwardable_span<const Strata> strata_keys,
-	utility::forwardable_span<const PopType> pop_type_keys,
-	utility::forwardable_span<const Ideology> ideology_keys
+	forwardable_span<const Strata> strata_keys,
+	forwardable_span<const PopType> pop_type_keys,
+	forwardable_span<const Ideology> ideology_keys
 ) : PopsAggregate { strata_keys, pop_type_keys, ideology_keys },
 	state_set { new_state_set },
 	capital { new_capital },
@@ -134,9 +134,9 @@ void StateSet::update_gamestate() {
 
 bool StateManager::add_state_set(
 	MapInstance& map_instance, Region const& region,
-	utility::forwardable_span<const Strata> strata_keys,
-	utility::forwardable_span<const PopType> pop_type_keys,
-	utility::forwardable_span<const Ideology> ideology_keys
+	forwardable_span<const Strata> strata_keys,
+	forwardable_span<const PopType> pop_type_keys,
+	forwardable_span<const Ideology> ideology_keys
 ) {
 	OV_ERR_FAIL_COND_V_MSG(region.is_meta, false, memory::fmt::format("Cannot use meta region \"{}\" as state template!", region));
 	OV_ERR_FAIL_COND_V_MSG(region.empty(), false, memory::fmt::format("Cannot use empty region \"{}\" as state template!", region));
@@ -192,9 +192,9 @@ bool StateManager::add_state_set(
 bool StateManager::generate_states(
 	MapDefinition const& map_definition,
 	MapInstance& map_instance,
-	utility::forwardable_span<const Strata> strata_keys,
-	utility::forwardable_span<const PopType> pop_type_keys,
-	utility::forwardable_span<const Ideology> ideology_keys
+	forwardable_span<const Strata> strata_keys,
+	forwardable_span<const PopType> pop_type_keys,
+	forwardable_span<const Ideology> ideology_keys
 ) {
 	state_sets.clear();
 	state_sets.reserve(map_definition.get_region_count());

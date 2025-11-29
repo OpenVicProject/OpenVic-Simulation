@@ -623,7 +623,7 @@ namespace OpenVic {
 
 		void manage_national_stockpile(
 			IndexedFlatMap<GoodDefinition, char>& reusable_goods_mask,
-			utility::forwardable_span<
+			forwardable_span<
 				memory::vector<fixed_point_t>,
 				VECTORS_FOR_COUNTRY_TICK
 			> reusable_vectors,
@@ -661,7 +661,7 @@ namespace OpenVic {
 		void update_gamestate(const Date today, MapInstance& map_instance);
 		void country_tick_before_map(
 			IndexedFlatMap<GoodDefinition, char>& reusable_goods_mask,
-			utility::forwardable_span<
+			forwardable_span<
 				memory::vector<fixed_point_t>,
 				VECTORS_FOR_COUNTRY_TICK
 			> reusable_vectors,

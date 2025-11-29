@@ -391,7 +391,7 @@ void ProvinceInstance::province_tick(
 	PopValuesFromProvince& reusable_pop_values,
 	RandomU32& random_number_generator,
 	IndexedFlatMap<GoodDefinition, char>& reusable_goods_mask,
-	utility::forwardable_span<
+	forwardable_span<
 		memory::vector<fixed_point_t>,
 		VECTORS_FOR_PROVINCE_TICK
 	> reusable_vectors
@@ -521,7 +521,7 @@ void ProvinceInstance::initialise_for_new_game(
 	PopValuesFromProvince& reusable_pop_values,
 	RandomU32& random_number_generator,
 	IndexedFlatMap<GoodDefinition, char>& reusable_goods_mask,
-	utility::forwardable_span<
+	forwardable_span<
 		memory::vector<fixed_point_t>,
 		VECTORS_FOR_PROVINCE_TICK
 	> reusable_vectors

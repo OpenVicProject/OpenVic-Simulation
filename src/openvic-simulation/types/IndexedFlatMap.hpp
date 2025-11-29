@@ -13,7 +13,7 @@
 #include "openvic-simulation/types/FixedVector.hpp"
 #include "openvic-simulation/core/template/Concepts.hpp"
 #include "openvic-simulation/utility/Getters.hpp"
-#include "openvic-simulation/utility/ForwardableSpan.hpp"
+#include "openvic-simulation/core/portable/ForwardableSpan.hpp"
 #include "openvic-simulation/utility/Logger.hpp"
 
 #define OV_IFLATMAP_PROPERTY(KEYTYPE, VALUETYPE, NAME) OV_IFLATMAP_PROPERTY_ACCESS(KEYTYPE, VALUETYPE, NAME, private)
@@ -49,7 +49,7 @@ namespace OpenVic {
 	*/
 	template <typename ForwardedKeyType, typename ValueType>
 	struct IndexedFlatMap {
-		using keys_span_type = OpenVic::utility::forwardable_span<const ForwardedKeyType>;
+		using keys_span_type = forwardable_span<const ForwardedKeyType>;
 		using values_vector_type = std::conditional_t<
             std::is_move_constructible_v<ValueType> || std::is_copy_constructible_v<ValueType>,
             memory::vector<ValueType>,
@@ -551,11 +551,11 @@ namespace OpenVic {
 			return keys;
 		}
 		
-		constexpr OpenVic::utility::forwardable_span<ValueType> get_values() {
+		constexpr forwardable_span<ValueType> get_values() {
 			return values;
 		}
 
-		constexpr OpenVic::utility::forwardable_span<const ValueType> get_values() const {
+		constexpr forwardable_span<const ValueType> get_values() const {
 			return values;
 		}
 

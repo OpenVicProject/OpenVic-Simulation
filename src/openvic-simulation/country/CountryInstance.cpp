@@ -1924,7 +1924,7 @@ void CountryInstance::after_sell(void* actor, SellResult const& sell_result, mem
 
 void CountryInstance::country_tick_before_map(
 	IndexedFlatMap<GoodDefinition, char>& reusable_goods_mask,
-	utility::forwardable_span<
+	forwardable_span<
 		memory::vector<fixed_point_t>,
 		VECTORS_FOR_COUNTRY_TICK
 	> reusable_vectors,
@@ -2048,7 +2048,7 @@ void CountryInstance::calculate_government_good_needs() {
 
 void CountryInstance::manage_national_stockpile(
 	IndexedFlatMap<GoodDefinition, char>& reusable_goods_mask,
-	utility::forwardable_span<
+	forwardable_span<
 		memory::vector<fixed_point_t>,
 		VECTORS_FOR_COUNTRY_TICK
 	> reusable_vectors,

@@ -17,7 +17,7 @@
 #include "openvic-simulation/types/TypedIndices.hpp"
 #include "openvic-simulation/types/UnitBranchType.hpp"
 #include "openvic-simulation/utility/Containers.hpp"
-#include "openvic-simulation/utility/ForwardableSpan.hpp"
+#include "openvic-simulation/core/portable/ForwardableSpan.hpp"
 
 namespace OpenVic {
 	struct BaseIssue;
@@ -192,7 +192,7 @@ namespace OpenVic {
 			PopValuesFromProvince& reusable_pop_values,
 			RandomU32& random_number_generator,
 			IndexedFlatMap<GoodDefinition, char>& reusable_goods_mask,
-			utility::forwardable_span<
+			forwardable_span<
 				memory::vector<fixed_point_t>,
 				VECTORS_FOR_PROVINCE_TICK
 			> reusable_vectors
@@ -202,7 +202,7 @@ namespace OpenVic {
 			PopValuesFromProvince& reusable_pop_values,
 			RandomU32& random_number_generator,
 			IndexedFlatMap<GoodDefinition, char>& reusable_goods_mask,
-			utility::forwardable_span<
+			forwardable_span<
 				memory::vector<fixed_point_t>,
 				VECTORS_FOR_PROVINCE_TICK
 			> reusable_vectors
