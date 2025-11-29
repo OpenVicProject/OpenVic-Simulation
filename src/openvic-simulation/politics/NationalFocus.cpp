@@ -4,7 +4,7 @@
 #include "openvic-simulation/modifier/ModifierManager.hpp"
 #include "openvic-simulation/politics/Ideology.hpp"
 #include "openvic-simulation/population/PopManager.hpp"
-#include "openvic-simulation/utility/FormatValidate.hpp"
+#include "openvic-simulation/core/FormatValidate.hpp"
 
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;

@@ -5,7 +5,7 @@
 #include <sstream>
 #include <string>
 
-#include "openvic-simulation/types/SpinMutex.hpp"
+#include "openvic-simulation/core/thread/SpinMutex.hpp"
 
 #include "Helper.hpp" // IWYU pragma: keep
 #include <snitch/snitch_macros_check.hpp>

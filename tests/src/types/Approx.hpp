@@ -6,7 +6,7 @@
 #include <limits>
 
 #include "openvic-simulation/types/Vector.hpp"
-#include "openvic-simulation/utility/Math.hpp"
+#include "openvic-simulation/core/Math.hpp"
 
 #include "Vector.hpp" // IWYU pragma: keep
 #include <snitch/snitch_string.hpp>

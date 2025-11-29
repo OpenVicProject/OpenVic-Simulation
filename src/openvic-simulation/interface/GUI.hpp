@@ -1,7 +1,7 @@
 #pragma once
 
 #include "openvic-simulation/interface/GFXSprite.hpp"
-#include "openvic-simulation/types/TextFormat.hpp"
+#include "openvic-simulation/core/ui/TextFormat.hpp"
 #include "openvic-simulation/misc/SoundEffect.hpp"
 
 namespace OpenVic {

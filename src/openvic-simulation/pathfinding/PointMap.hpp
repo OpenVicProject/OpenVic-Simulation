@@ -8,11 +8,11 @@
 #include <tsl/ordered_map.h>
 #include <tsl/ordered_set.h>
 
-#include "openvic-simulation/types/EnumBitfield.hpp"
+#include "openvic-simulation/core/template/EnumBitfield.hpp"
 #include "openvic-simulation/types/Signal.hpp"
 #include "openvic-simulation/types/Vector.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
-#include "openvic-simulation/utility/Hash.hpp"
+#include "openvic-simulation/core/Hash.hpp"
 
 namespace OpenVic {
 	struct PointMap {
