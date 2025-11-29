@@ -1,7 +1,7 @@
 #include "GoodDefinition.hpp"
 
 #include "openvic-simulation/modifier/ModifierManager.hpp"
-#include "openvic-simulation/utility/StringUtils.hpp"
+#include "openvic-simulation/core/string/Utility.hpp"
 
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;
@@ -57,7 +57,7 @@ bool GoodDefinitionManager::add_good_definition(
 	if (is_tradeable == is_money) {
 		spdlog::warn_s(
 			"Good {} has tradeable: {} and money: {}. Money goods are never tradeable. All other goods are tradeable. Setting tradeable has no effect.",
-			identifier, StringUtils::bool_to_yes_no(is_tradeable), StringUtils::bool_to_yes_no(is_money)
+			identifier, bool_to_yes_no(is_tradeable), bool_to_yes_no(is_money)
 		);
 	}
 

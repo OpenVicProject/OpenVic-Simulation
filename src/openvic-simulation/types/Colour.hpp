@@ -27,7 +27,7 @@
 
 #include "openvic-simulation/types/StackString.hpp"
 #include "openvic-simulation/core/template/Concepts.hpp"
-#include "openvic-simulation/utility/StringUtils.hpp"
+#include "openvic-simulation/core/string/CharConv.hpp"
 #include "openvic-simulation/core/Typedefs.hpp"
 
 namespace OpenVic {
@@ -252,7 +252,7 @@ namespace OpenVic {
 				first += 2;
 			}
 
-			std::from_chars_result result = StringUtils::from_chars(first, last, value, 16);
+			std::from_chars_result result = OpenVic::from_chars(first, last, value, 16);
 			return result;
 		}
 
@@ -446,7 +446,7 @@ namespace OpenVic {
 		OV_SPEED_INLINE constexpr std::to_chars_result to_hex_chars(char* first, char* last, bool alpha = colour_traits::has_alpha) const {
 			constexpr size_t component_str_width = (std::bit_width(max_value) + 3) / 4;
 
-			std::to_chars_result result = StringUtils::to_chars(first, last, alpha ? as_rgba() : as_rgb(), 16);
+			std::to_chars_result result = OpenVic::to_chars(first, last, alpha ? as_rgba() : as_rgb(), 16);
 			if (OV_unlikely(result.ec != std::errc {})) {
 				return result;
 			}

@@ -5,7 +5,7 @@
 #include "openvic-simulation/dataloader/Dataloader.hpp"
 #include "openvic-simulation/dataloader/NodeTools.hpp"
 #include "openvic-simulation/types/Colour.hpp"
-#include "openvic-simulation/utility/StringUtils.hpp"
+#include "openvic-simulation/core/string/Utility.hpp"
 #include "openvic-simulation/core/Typedefs.hpp"
 
 using namespace OpenVic;
@@ -246,7 +246,7 @@ memory::string CultureManager::make_leader_picture_name(
 			return {};
 	}
 
-	return StringUtils::append_string_views(cultural_type, *branch_text, std::to_string(count));
+	return append_string_views(cultural_type, *branch_text, std::to_string(count));
 }
 
 memory::string CultureManager::make_leader_picture_path(std::string_view leader_picture_name) {
