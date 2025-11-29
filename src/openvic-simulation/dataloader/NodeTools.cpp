@@ -151,7 +151,7 @@ node_callback_t NodeTools::expect_int_bool(callback_t<bool> callback) {
 node_callback_t NodeTools::expect_int64(callback_t<int64_t> callback, int base) {
 	return expect_identifier([callback, base](std::string_view identifier) mutable -> bool {
 		int64_t val;
-		std::from_chars_result result = StringUtils::string_to_int64(identifier, val, base);
+		std::from_chars_result result = string_to_int64(identifier, val, base);
 		if (result.ec == std::errc{}) {
 			return callback(val);
 		}
@@ -163,7 +163,7 @@ node_callback_t NodeTools::expect_int64(callback_t<int64_t> callback, int base) 
 node_callback_t NodeTools::expect_uint64(callback_t<uint64_t> callback, int base) {
 	return expect_identifier([callback, base](std::string_view identifier) mutable -> bool {
 		uint64_t val;
-		std::from_chars_result result = StringUtils::string_to_uint64(identifier, val, base);
+		std::from_chars_result result = string_to_uint64(identifier, val, base);
 		if (result.ec == std::errc{}) {
 			return callback(val);
 		}

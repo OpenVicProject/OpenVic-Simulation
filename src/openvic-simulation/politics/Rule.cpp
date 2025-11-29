@@ -10,7 +10,7 @@ using namespace OpenVic;
 using namespace OpenVic::NodeTools;
 
 static memory::string make_default_rule_localisation_key(std::string_view identifier) {
-	return "RULE_" + StringUtils::string_toupper(identifier);
+	return "RULE_" + ascii_toupper(identifier);
 }
 
 Rule::Rule(std::string_view new_identifier, rule_group_t new_group, index_t new_index, std::string_view new_localisation_key)
@@ -221,7 +221,7 @@ namespace OpenVic { // so the compiler shuts up (copied from Modifier.cpp)
 	std::ostream& operator<<(std::ostream& stream, RuleSet const& value) {
 		for (auto const& [group, rule_map] : value.rule_groups) {
 			for (auto const& [rule, value] : rule_map) {
-				stream << rule << ": " <<  StringUtils::bool_to_yes_no(value) << "\n";
+				stream << rule << ": " <<  bool_to_yes_no(value) << "\n";
 			}
 		}
 		return stream;

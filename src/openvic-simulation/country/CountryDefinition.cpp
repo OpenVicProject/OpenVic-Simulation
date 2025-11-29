@@ -99,7 +99,7 @@ bool CountryDefinitionManager::load_countries(
 					if (load_country_data_file(
 						definition_manager, key, is_dynamic,
 						Dataloader::parse_defines(
-							dataloader.lookup_file(StringUtils::append_string_views(common_dir, filepath))
+							dataloader.lookup_file(append_string_views(common_dir, filepath))
 						).get_file_node()
 					)) {
 						return true;

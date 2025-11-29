@@ -19,7 +19,7 @@
 #include "openvic-simulation/core/error/ErrorMacros.hpp"
 #include "openvic-simulation/types/StackString.hpp"
 #include "openvic-simulation/utility/Getters.hpp"
-#include "openvic-simulation/utility/StringUtils.hpp"
+#include "openvic-simulation/core/string/CharConv.hpp"
 #include "openvic-simulation/core/Typedefs.hpp"
 #include "openvic-simulation/utility/Hash.hpp"
 
@@ -301,7 +301,7 @@ namespace OpenVic {
 				}
 			}
 
-			std::to_chars_result result = StringUtils::to_chars(first, last, year);
+			std::to_chars_result result = OpenVic::to_chars(first, last, year);
 			if (OV_unlikely(result.ec != std::errc {})) {
 				return result;
 			}
@@ -320,7 +320,7 @@ namespace OpenVic {
 				*result.ptr = '0';
 				result.ptr++;
 			}
-			result = StringUtils::to_chars(result.ptr, last, get_month());
+			result = OpenVic::to_chars(result.ptr, last, get_month());
 			if (OV_unlikely(result.ec != std::errc {})) {
 				return result;
 			}
@@ -339,7 +339,7 @@ namespace OpenVic {
 				*result.ptr = '0';
 				result.ptr++;
 			}
-			result = StringUtils::to_chars(result.ptr, last, get_day());
+			result = OpenVic::to_chars(result.ptr, last, get_day());
 			return result;
 		}
 
@@ -396,7 +396,7 @@ namespace OpenVic {
 			const char* first, const char* last, year_t& year, month_t& month, day_t& day
 		) {
 			int32_t year_check = year;
-			from_chars_result result = { StringUtils::from_chars(first, last, year_check) };
+			from_chars_result result = { OpenVic::from_chars(first, last, year_check) };
 			result.type_first = first;
 			result.type = errc_type::year;
 			if (OV_unlikely(result.ec != std::errc {})) {
@@ -426,7 +426,7 @@ namespace OpenVic {
 			result.ptr++;
 			first = result.ptr;
 			month_t month_check = month;
-			result = { StringUtils::from_chars(first, last, month_check) };
+			result = { OpenVic::from_chars(first, last, month_check) };
 			result.type_first = first;
 			result.type = errc_type::month;
 			if (OV_unlikely(result.ec != std::errc {})) {
@@ -460,7 +460,7 @@ namespace OpenVic {
 			result.ptr++;
 			first = result.ptr;
 			day_t day_check = day;
-			result = { StringUtils::from_chars(first, last, day_check) };
+			result = { OpenVic::from_chars(first, last, day_check) };
 			result.type_first = first;
 			result.type = errc_type::day;
 			if (OV_unlikely(result.ec != std::errc {})) {

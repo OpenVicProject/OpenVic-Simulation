@@ -9,7 +9,7 @@
 #include "openvic-simulation/core/template/Concepts.hpp"
 #include "openvic-simulation/utility/Containers.hpp"
 #include "openvic-simulation/core/portable/Deque.hpp"
-#include "openvic-simulation/utility/StringUtils.hpp"
+#include "openvic-simulation/core/string/Utility.hpp"
 
 #include <foonathan/memory/default_allocator.hpp>
 #include <foonathan/memory/std_allocator.hpp>
@@ -127,7 +127,7 @@ namespace OpenVic {
 		using is_transparent = void;
 
 		[[nodiscard]] constexpr bool operator()(std::string_view const& lhs, std::string_view const& rhs) const {
-			return StringUtils::strings_equal_case_insensitive(lhs, rhs);
+			return ascii_equal_case_insensitive(lhs, rhs);
 		}
 	};
 

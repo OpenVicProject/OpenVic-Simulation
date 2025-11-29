@@ -219,7 +219,7 @@ bool EventManager::load_on_action_file(ast::NodeCPtr root) {
 			[this, &identifier, &weighted_events](std::string_view weight_str, ast::NodeCPtr event_node) -> bool {
 				bool ret = false;
 				uint64_t weight;
-				std::from_chars_result result = StringUtils::string_to_uint64(weight_str, weight);
+				std::from_chars_result result = string_to_uint64(weight_str, weight);
 				ret = result.ec == std::errc{};
 				if (!ret) {
 					spdlog::error_s("Invalid weight {} on action {}", weight_str, identifier);

@@ -17,15 +17,13 @@
 #include "openvic-simulation/misc/GameRulesManager.hpp"
 #include "openvic-simulation/misc/SoundEffect.hpp"
 #include "openvic-simulation/utility/Logger.hpp"
-#include "openvic-simulation/utility/StringUtils.hpp"
+#include "openvic-simulation/core/string/Utility.hpp"
 #include "openvic-simulation/utility/Containers.hpp"
 #include "openvic-simulation/core/template/Concepts.hpp"
 
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;
 using namespace ovdl;
-
-using StringUtils::append_string_views;
 
 #if !defined(_WIN32)
 #define FILESYSTEM_NEEDS_FORWARD_SLASHES
@@ -34,7 +32,7 @@ using StringUtils::append_string_views;
 static fs::path ensure_forward_slash_path(std::string_view path) {
 #if defined(FILESYSTEM_NEEDS_FORWARD_SLASHES)
 	/* Back-slashes need to be converted into forward-slashes */
-	return StringUtils::make_forward_slash_path(StringUtils::remove_leading_slashes(path));
+	return make_forward_slash_path(remove_leading_slashes(path));
 #else
 	return path;
 #endif
@@ -77,7 +75,7 @@ bool Dataloader::set_roots(path_span_t new_roots, path_span_t new_replace_paths,
 fs::path Dataloader::lookup_file(std::string_view path, bool print_error) const {
 	const fs::path filepath { ensure_forward_slash_path(path) };
 
-	const std::string_view filename = StringUtils::get_filename(path);
+	const std::string_view filename = get_filename(path);
 	for (fs::path const& root : roots) {
 		const fs::path composed = root / filepath;
 		if (fs::is_regular_file(composed)) {
@@ -100,7 +98,7 @@ fs::path Dataloader::lookup_file(std::string_view path, bool print_error) const 
 		for (fs::directory_entry const& entry : fs::directory_iterator { composed.parent_path(), ec }) {
 			if (entry.is_regular_file()) {
 				const fs::path file = entry;
-				if (StringUtils::strings_equal_case_insensitive(file.filename().string(), filename)) {
+				if (ascii_equal_case_insensitive(file.filename().string(), filename)) {
 					if (root == roots.back()) {
 						bool ignore = false;
 						for (fs::path const& replace_path : replace_paths) {
@@ -127,7 +125,7 @@ fs::path Dataloader::lookup_file(std::string_view path, bool print_error) const 
 }
 
 fs::path Dataloader::lookup_image_file(std::string_view path) const {
-	const std::string_view path_without_extension = StringUtils::remove_extension(path);
+	const std::string_view path_without_extension = remove_extension(path);
 	if (path.substr(path_without_extension.size()) == ".tga") {
 		const fs::path ret = lookup_file(memory::fmt::format("{}.dds", path_without_extension), false);
 		if (!ret.empty()) {
@@ -172,7 +170,7 @@ Dataloader::path_vector_t Dataloader::_lookup_files_in_dir(
 					const memory::string full_path = file.string<char>(memory::string::allocator_type{});
 					std::string_view relative_path = full_path;
 					relative_path.remove_prefix(root_len);
-					relative_path = StringUtils::remove_leading_slashes(relative_path);
+					relative_path = remove_leading_slashes(relative_path);
 					const std::string_view key = unique_key(relative_path);
 					if (!key.empty()) {
 						const typename decltype(found_files)::const_iterator it = found_files.find(key);
@@ -202,7 +200,7 @@ Dataloader::path_vector_t Dataloader::lookup_files_in_dir_recursive(std::string_
 }
 
 static std::string_view _extract_basic_identifier_prefix_from_path(std::string_view path) {
-	return extract_basic_identifier_prefix(StringUtils::get_filename(path));
+	return extract_basic_identifier_prefix(get_filename(path));
 };
 
 Dataloader::path_vector_t Dataloader::lookup_basic_identifier_prefixed_files_in_dir(
@@ -666,7 +664,7 @@ bool Dataloader::_load_history(DefinitionManager& definition_manager, bool unuse
 				bool non_integer_size = false;
 
 				ret &= apply_to_files(
-					lookup_files_in_dir(StringUtils::append_string_views(pop_history_directory, dir), ".txt"),
+					lookup_files_in_dir(append_string_views(pop_history_directory, dir), ".txt"),
 					[this, &definition_manager, &province_history_manager, date, &non_integer_size](
 						fs::path const& file
 					) -> bool {

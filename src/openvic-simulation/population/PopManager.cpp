@@ -502,7 +502,7 @@ bool PopManager::generate_modifiers(ModifierManager& modifier_manager) const {
 			bool has_no_effect = false
 		) -> void {
 			ret &= modifier_manager.register_base_country_modifier_effect(
-				effect_cache, StringUtils::append_string_views(strata.get_identifier(), suffix), format, {}, has_no_effect
+				effect_cache, append_string_views(strata.get_identifier(), suffix), format, {}, has_no_effect
 			);
 		};
 

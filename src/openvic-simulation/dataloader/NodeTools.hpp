@@ -27,6 +27,7 @@
 #include "openvic-simulation/utility/TslHelper.hpp"
 #include "openvic-simulation/utility/Containers.hpp"
 #include "openvic-simulation/core/template/Concepts.hpp"
+#include "openvic-simulation/core/string/Utility.hpp"
 
 #include <function2/function2.hpp>
 
@@ -135,7 +136,7 @@ using namespace std::string_view_literals;
 		inline bool map_key_value_invalid_callback(Map const& key_map, std::string_view key, ast::NodeCPtr) {
 			spdlog::error_s(
 				"Invalid dictionary key \"{}\". Valid values are [{}]",
-				key, StringUtils::string_join(key_map)
+				key, string_join(key_map)
 			);
 			return false;
 		}
@@ -144,7 +145,7 @@ using namespace std::string_view_literals;
 		inline bool map_key_value_ignore_invalid_callback(Map const& key_map, std::string_view key, ast::NodeCPtr) {
 			spdlog::warn_s(
 				"Invalid dictionary key \"{}\" is ignored. Valid values are [{}]",
-				key, StringUtils::string_join(key_map)
+				key, string_join(key_map)
 			);
 			return true;
 		}
@@ -554,7 +555,7 @@ using namespace std::string_view_literals;
 				spdlog::log_s(
 					warn ? spdlog::level::warn : spdlog::level::err,
 					"\"{}\" is not a valid key. Valid keys: [{}]",
-					string, StringUtils::string_join(map)
+					string, string_join(map)
 				);
 				return warn;
 			};
