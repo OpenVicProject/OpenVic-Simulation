@@ -1,26 +1,12 @@
 #pragma once
 
-#include <algorithm>
-#include <cctype>
 #include <charconv>
-#include <cstddef>
+#include <climits>
 #include <cstdint>
-#include <cstring>
 #include <iterator>
-#include <string>
 #include <string_view>
-#include <type_traits>
-#include <utility>
 
-#include <tsl/ordered_map.h>
-
-#include <range/v3/range/conversion.hpp>
-#include <range/v3/view/join.hpp>
-#include <range/v3/view/transform.hpp>
-
-#include "openvic-simulation/utility/Containers.hpp"
-
-namespace OpenVic::StringUtils {
+namespace OpenVic {
 	template<typename T>
 	[[nodiscard]] inline constexpr std::from_chars_result from_chars( //
 		char const* const first, char const* const last, T& raw_value, const int base = 10
@@ -61,29 +47,29 @@ namespace OpenVic::StringUtils {
 			}
 		}
 
-		using unsigned_t = std::make_unsigned_t<T>;
+		using unsigned_type = std::make_unsigned_t<T>;
 
-		[[maybe_unused]] constexpr unsigned_t uint_max = static_cast<unsigned_t>(-1);
-		[[maybe_unused]] constexpr unsigned_t int_max = static_cast<unsigned_t>(uint_max >> 1);
-		[[maybe_unused]] constexpr unsigned_t abs_int_min = static_cast<unsigned_t>(int_max + 1);
+		[[maybe_unused]] constexpr unsigned_type uint_max = static_cast<unsigned_type>(-1);
+		[[maybe_unused]] constexpr unsigned_type int_max = static_cast<unsigned_type>(uint_max >> 1);
+		[[maybe_unused]] constexpr unsigned_type abs_int_min = static_cast<unsigned_type>(int_max + 1);
 
-		unsigned_t risky_val;
-		unsigned_t max_digit;
+		unsigned_type risky_val;
+		unsigned_type max_digit;
 
 		if constexpr (std::is_signed_v<T>) {
 			if (minus_sign) {
-				risky_val = static_cast<unsigned_t>(abs_int_min / base);
-				max_digit = static_cast<unsigned_t>(abs_int_min % base);
+				risky_val = static_cast<unsigned_type>(abs_int_min / base);
+				max_digit = static_cast<unsigned_type>(abs_int_min % base);
 			} else {
-				risky_val = static_cast<unsigned_t>(int_max / base);
-				max_digit = static_cast<unsigned_t>(int_max % base);
+				risky_val = static_cast<unsigned_type>(int_max / base);
+				max_digit = static_cast<unsigned_type>(int_max % base);
 			}
 		} else {
-			risky_val = static_cast<unsigned_t>(uint_max / base);
-			max_digit = static_cast<unsigned_t>(uint_max % base);
+			risky_val = static_cast<unsigned_type>(uint_max / base);
+			max_digit = static_cast<unsigned_type>(uint_max % base);
 		}
 
-		unsigned_t value = 0;
+		unsigned_type value = 0;
 
 		bool overflowed = false;
 
@@ -96,7 +82,7 @@ namespace OpenVic::StringUtils {
 
 			if (value < risky_val // never overflows
 				|| (value == risky_val && digit <= max_digit)) { // overflows for certain digits
-				value = static_cast<unsigned_t>(value * base + digit);
+				value = static_cast<unsigned_type>(value * base + digit);
 			} else { // value > risky_val always overflows
 				overflowed = true; // keep going, next still needs to be updated, value is now irrelevant
 			}
@@ -112,7 +98,7 @@ namespace OpenVic::StringUtils {
 
 		if constexpr (std::is_signed_v<T>) {
 			if (minus_sign) {
-				value = static_cast<unsigned_t>(0 - value);
+				value = static_cast<unsigned_type>(0 - value);
 			}
 		}
 
@@ -136,9 +122,9 @@ namespace OpenVic::StringUtils {
 			};
 		static_assert(std::size(digits) == 36);
 
-		using _unsigned = std::make_unsigned_t<T>;
+		using unsigned_type = std::make_unsigned_t<T>;
 
-		_unsigned value = static_cast<_unsigned>(raw_value);
+		unsigned_type value = static_cast<unsigned_type>(raw_value);
 
 		if constexpr (std::is_signed_v<T>) {
 			if (raw_value < 0) {
@@ -148,11 +134,11 @@ namespace OpenVic::StringUtils {
 
 				*first++ = '-';
 
-				value = static_cast<_unsigned>(0 - value);
+				value = static_cast<unsigned_type>(0 - value);
 			}
 		}
 
-		constexpr std::size_t buffer_size = sizeof(_unsigned) * CHAR_BIT; // enough for base 2
+		constexpr std::size_t buffer_size = sizeof(unsigned_type) * CHAR_BIT; // enough for base 2
 		char buffer[buffer_size];
 		char* const buffer_end = buffer + buffer_size;
 		char* r_next = buffer_end;
@@ -160,14 +146,14 @@ namespace OpenVic::StringUtils {
 		switch (base) {
 		case 10: { // Derived from _UIntegral_to_buff()
 			// Performance note: Ryu's digit table should be faster here.
-			constexpr bool use_chunks = sizeof(_unsigned) > sizeof(size_t);
+			constexpr bool use_chunks = sizeof(unsigned_type) > sizeof(size_t);
 
 			if constexpr (use_chunks) { // For 64-bit numbers on 32-bit platforms, work in chunks to avoid 64-bit
-										 // divisions.
+										// divisions.
 				while (value > 0xFFFF'FFFFU) {
 					// Performance note: Ryu's division workaround would be faster here.
 					unsigned long chunk = static_cast<unsigned long>(value % 1'000'000'000);
-					value = static_cast<_unsigned>(value / 1'000'000'000);
+					value = static_cast<unsigned_type>(value / 1'000'000'000);
 
 					for (int _Idx = 0; _Idx != 9; ++_Idx) {
 						*--r_next = static_cast<char>('0' + chunk % 10);
@@ -176,9 +162,9 @@ namespace OpenVic::StringUtils {
 				}
 			}
 
-			using Truncated = std::conditional_t<use_chunks, unsigned long, _unsigned>;
+			using truncated_type = std::conditional_t<use_chunks, unsigned long, unsigned_type>;
 
-			Truncated trunc = static_cast<Truncated>(value);
+			truncated_type trunc = static_cast<truncated_type>(value);
 
 			do {
 				*--r_next = static_cast<char>('0' + trunc % 10);
@@ -225,7 +211,7 @@ namespace OpenVic::StringUtils {
 		default:
 			do {
 				*--r_next = digits[value % base];
-				value = static_cast<_unsigned>(value / base);
+				value = static_cast<unsigned_type>(value / base);
 			} while (value != 0);
 			break;
 		}
@@ -250,10 +236,11 @@ namespace OpenVic::StringUtils {
 		};
 		//[neargye] constexpr copy chars. P1944 fix this?
 		trivial_copy(first, r_next, static_cast<size_t>(digits_written));
-		
+
 
 		return { first + digits_written, std::errc {} };
 	}
+
 
 	/* The constexpr function 'string_to_uint64' will convert a string into a uint64_t integer value.
 	 * The function takes four parameters: the input string (as a pair of pointers marking the start and
@@ -263,7 +250,8 @@ namespace OpenVic::StringUtils {
 	 * still starts with "0", otherwise 10. The std::from_chars_result return value is used to report whether
 	 * or not conversion was successful.
 	 */
-	 [[nodiscard]] inline constexpr std::from_chars_result string_to_uint64(char const* str, char const* const end, uint64_t& value, int base = 10) {
+	[[nodiscard]] inline constexpr std::from_chars_result
+	string_to_uint64(char const* str, char const* const end, uint64_t& value, int base = 10) {
 		// If base is zero, base is determined by the string prefix.
 		if (base == 0) {
 			if (str && *str == '0') {
@@ -286,11 +274,15 @@ namespace OpenVic::StringUtils {
 		return from_chars(str, end, value, base);
 	}
 
-	[[nodiscard]] inline constexpr std::from_chars_result string_to_uint64(char const* const str, size_t length, uint64_t& value, int base = 10) {
+	[[nodiscard]] inline constexpr std::from_chars_result string_to_uint64( //
+		char const* const str, size_t length, std::uint64_t& value, int base = 10
+	) {
 		return string_to_uint64(str, str + length, value, base);
 	}
 
-	[[nodiscard]] inline constexpr std::from_chars_result string_to_uint64(std::string_view str, uint64_t& value, int base = 10) {
+	[[nodiscard]] inline constexpr std::from_chars_result string_to_uint64( //
+		std::string_view str, std::uint64_t& value, int base = 10
+	) {
 		return string_to_uint64(str.data(), str.length(), value, base);
 	}
 
@@ -302,7 +294,9 @@ namespace OpenVic::StringUtils {
 	 * still starts with "0", otherwise 10. The std::from_chars_result return value is used to report whether
 	 * or not conversion was successful.
 	 */
-	[[nodiscard]] inline constexpr std::from_chars_result string_to_int64(char const* str, char const* const end, int64_t& value, int base = 10) {
+	[[nodiscard]] inline constexpr std::from_chars_result string_to_int64( //
+		char const* str, char const* const end, std::int64_t& value, int base = 10
+	) {
 		// If base is zero, base is determined by the string prefix.
 		if (base == 0) {
 			if (str && *str == '0') {
@@ -325,132 +319,15 @@ namespace OpenVic::StringUtils {
 		return from_chars(str, end, value, base);
 	}
 
-	[[nodiscard]] inline constexpr std::from_chars_result string_to_int64(char const* str, size_t length, int64_t& value, int base = 10) {
+	[[nodiscard]] inline constexpr std::from_chars_result string_to_int64( //
+		char const* str, size_t length, std::int64_t& value, int base = 10
+	) {
 		return string_to_int64(str, str + length, value, base);
 	}
 
-	[[nodiscard]] inline constexpr std::from_chars_result string_to_int64(std::string_view str, int64_t& value, int base = 10) {
+	[[nodiscard]] inline constexpr std::from_chars_result string_to_int64( //
+		std::string_view str, std::int64_t& value, int base = 10
+	) {
 		return string_to_int64(str.data(), str.length(), value, base);
-	}
-
-	inline constexpr bool strings_equal_case_insensitive(std::string_view const& lhs, std::string_view const& rhs) {
-		if (lhs.size() != rhs.size()) {
-			return false;
-		}
-		constexpr auto ichar_equals = [](unsigned char l, unsigned char r) {
-			return std::tolower(l) == std::tolower(r);
-		};
-		return std::equal(lhs.begin(), lhs.end(), rhs.begin(), rhs.end(), ichar_equals);
-	}
-
-	inline memory::string string_tolower(std::string_view str) {
-		memory::string result { str };
-		std::transform(result.begin(), result.end(), result.begin(),
-			[](unsigned char c) -> unsigned char { return std::tolower(c); }
-		);
-		return result;
-	}
-
-	inline memory::string string_toupper(std::string_view str) {
-		memory::string result { str };
-		std::transform(result.begin(), result.end(), result.begin(),
-			[](unsigned char c) -> unsigned char { return std::toupper(c); }
-		);
-		return result;
-	}
-
-	inline constexpr std::string_view bool_to_yes_no(bool b) {
-		return b ? "yes" : "no";
-	}
-
-	inline constexpr std::string_view get_filename(std::string_view path) {
-		size_t pos = path.size();
-		while (pos > 0 && path[pos - 1] != '/' && path[pos - 1] != '\\') {
-			--pos;
-		}
-		path.remove_prefix(pos);
-		return path;
-	}
-
-	inline constexpr char const* get_filename(char const* filepath, char const* default_path = nullptr) {
-		const std::string_view filename { get_filename(std::string_view { filepath }) };
-		if (!filename.empty()) {
-			return filename.data();
-		}
-		return default_path;
-	}
-
-	inline memory::string make_forward_slash_path(std::string_view path) {
-		memory::string ret { path };
-		std::replace(ret.begin(), ret.end(), '\\', '/');
-		for (char& c : ret) {
-			if (c == '\\') {
-				c = '/';
-			}
-		}
-		return ret;
-	}
-
-	inline constexpr std::string_view remove_leading_slashes(std::string_view path) {
-		size_t count = 0;
-		while (count < path.size() && (path[count] == '/' || path[count] == '\\')) {
-			++count;
-		}
-		path.remove_prefix(count);
-		return path;
-	}
-
-	template<typename... Args>
-	requires(std::is_same_v<std::string_view, Args> && ...)
-	inline memory::string _append_string_views(Args... args) {
-		memory::string ret;
-		ret.reserve((args.size() + ...));
-		(ret.append(args), ...);
-		return ret;
-	}
-
-	template<typename... Args>
-	requires(std::is_convertible_v<Args, std::string_view> && ...)
-	inline memory::string append_string_views(Args... args) {
-		return _append_string_views(std::string_view { args }...);
-	}
-
-	template<typename T, typename... Args>
-	static memory::string string_join(tsl::ordered_map<memory::string, T, Args...> const& map, std::string_view delimiter = ", ") {
-		if (map.empty()) {
-			return "";
-		}
-
-		static auto transformer = [](std::pair<std::string_view, T> const& pair) -> std::string_view {
-			return pair.first;
-		};
-		return map | ranges::views::transform(transformer) | ranges::views::join(delimiter) | ranges::to<memory::string>();
-	}
-
-	inline constexpr size_t get_extension_pos(std::string_view const& path) {
-		size_t pos = path.size();
-		while (pos > 0 && path[--pos] != '.') {}
-		return pos;
-	}
-
-	inline constexpr std::string_view get_extension(std::string_view path) {
-		if (!path.empty()) {
-			const size_t pos = get_extension_pos(path);
-			if (path[pos] == '.') {
-				path.remove_prefix(pos);
-				return path;
-			}
-		}
-		return {};
-	}
-
-	inline constexpr std::string_view remove_extension(std::string_view path) {
-		if (!path.empty()) {
-			const size_t pos = get_extension_pos(path);
-			if (path[pos] == '.') {
-				path.remove_suffix(path.size() - pos);
-			}
-		}
-		return path;
 	}
 }
