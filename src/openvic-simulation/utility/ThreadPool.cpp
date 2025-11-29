@@ -19,10 +19,10 @@ void ThreadPool::loop_until_cancelled(
 	ModifierEffectCache const& modifier_effect_cache,
 	PopsDefines const& pop_defines,
 	ProductionTypeManager const& production_type_manager,
-	utility::forwardable_span<const CountryInstance> country_keys,
-	utility::forwardable_span<const GoodDefinition> good_keys,
-	utility::forwardable_span<const Strata> strata_keys,
-	utility::forwardable_span<WorkBundle> work_bundles
+	forwardable_span<const CountryInstance> country_keys,
+	forwardable_span<const GoodDefinition> good_keys,
+	forwardable_span<const Strata> strata_keys,
+	forwardable_span<WorkBundle> work_bundles
 ) {
 	IndexedFlatMap<GoodDefinition, char> reusable_goods_mask { good_keys };
 
@@ -187,11 +187,11 @@ void ThreadPool::initialise_threadpool(
 	ModifierEffectCache const& modifier_effect_cache,
 	PopsDefines const& pop_defines,
 	ProductionTypeManager const& production_type_manager,
-	utility::forwardable_span<const GoodDefinition> good_keys,
-	utility::forwardable_span<const Strata> strata_keys,
-	utility::forwardable_span<GoodInstance> goods,
-	utility::forwardable_span<CountryInstance> countries,
-	utility::forwardable_span<ProvinceInstance> provinces
+	forwardable_span<const GoodDefinition> good_keys,
+	forwardable_span<const Strata> strata_keys,
+	forwardable_span<GoodInstance> goods,
+	forwardable_span<CountryInstance> countries,
+	forwardable_span<ProvinceInstance> provinces
 ) {
 	if (threads.size() > 0) {
 		spdlog::error_s("Attempted to initialise ThreadPool again.");

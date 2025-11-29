@@ -9,10 +9,10 @@
 #include <ranges>
 #include <type_traits>
 
-#include "openvic-simulation/types/BasicIterator.hpp"
 #include "openvic-simulation/core/Typedefs.hpp"
+#include "openvic-simulation/types/BasicIterator.hpp"
 
-namespace OpenVic::utility::_detail::forwardable_span {
+namespace OpenVic::_detail::forwardable_span {
 	static constexpr std::size_t dynamic_extent = std::numeric_limits<std::size_t>::max();
 
 	template<class T, std::size_t Extent = dynamic_extent>
@@ -347,7 +347,7 @@ namespace OpenVic::utility::_detail::forwardable_span {
 	span(Range&&) -> span<std::remove_reference_t<std::ranges::range_reference_t<Range&>>>;
 }
 
-namespace OpenVic::utility {
+namespace OpenVic {
 	static constexpr std::size_t dynamic_extent = _detail::forwardable_span::dynamic_extent;
 
 	template<class T, std::size_t Extent = dynamic_extent>
@@ -357,37 +357,37 @@ namespace OpenVic::utility {
 namespace std {
 	namespace ranges {
 		template<typename T, std::size_t Extent>
-		inline constexpr bool enable_borrowed_range<OpenVic::utility::forwardable_span<T, Extent>> = true;
+		inline constexpr bool enable_borrowed_range<OpenVic::forwardable_span<T, Extent>> = true;
 
 		template<typename T, std::size_t Extent>
-		inline constexpr bool enable_view<OpenVic::utility::forwardable_span<T, Extent>> = true;
+		inline constexpr bool enable_view<OpenVic::forwardable_span<T, Extent>> = true;
 	}
 
 	template<typename T, size_t Extent>
-	[[nodiscard]] inline OpenVic::utility::forwardable_span<
+	[[nodiscard]] inline OpenVic::forwardable_span<
 		const std::byte, Extent == dynamic_extent ? dynamic_extent : Extent * sizeof(T)>
-	as_bytes(OpenVic::utility::forwardable_span<T, Extent> sp) {
+	as_bytes(OpenVic::forwardable_span<T, Extent> sp) {
 		auto data = reinterpret_cast<const std::byte*>(sp.data());
 		auto size = sp.size_bytes();
 		constexpr std::size_t extent = Extent == dynamic_extent ? dynamic_extent : Extent * sizeof(T);
-		return OpenVic::utility::forwardable_span<const std::byte, extent> { data, size };
+		return OpenVic::forwardable_span<const std::byte, extent> { data, size };
 	}
 
 	template<typename T, size_t Extent>
 	requires(!std::is_const_v<T>)
-	inline OpenVic::utility::forwardable_span<std::byte, Extent == dynamic_extent ? dynamic_extent : Extent * sizeof(T)>
-	as_writable_bytes [[nodiscard]] (OpenVic::utility::forwardable_span<T, Extent> sp) {
+	inline OpenVic::forwardable_span<std::byte, Extent == dynamic_extent ? dynamic_extent : Extent * sizeof(T)>
+	as_writable_bytes [[nodiscard]] (OpenVic::forwardable_span<T, Extent> sp) {
 		auto data = reinterpret_cast<std::byte*>(sp.data());
 		auto size = sp.size_bytes();
 		constexpr std::size_t extent = Extent == dynamic_extent ? dynamic_extent : Extent * sizeof(T);
-		return OpenVic::utility::forwardable_span<std::byte, extent> { data, size };
+		return OpenVic::forwardable_span<std::byte, extent> { data, size };
 	}
 }
 
 #else
 #include <span>
 
-namespace OpenVic::utility {
+namespace OpenVic {
 	template<class T, std::size_t Extent = std::dynamic_extent>
 	using forwardable_span = std::span<T, Extent>;
 }

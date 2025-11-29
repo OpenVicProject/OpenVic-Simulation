@@ -50,11 +50,11 @@ namespace OpenVic {
 			return map_definition;
 		}
 
-		constexpr OpenVic::utility::forwardable_span<ProvinceInstance> get_province_instances() {
+		constexpr forwardable_span<ProvinceInstance> get_province_instances() {
 			return province_instance_by_definition.get_values();
 		}
 
-		constexpr OpenVic::utility::forwardable_span<const ProvinceInstance> get_province_instances() const {
+		constexpr forwardable_span<const ProvinceInstance> get_province_instances() const {
 			return province_instance_by_definition.get_values();
 		}
 		ProvinceInstance* get_province_instance_by_identifier(std::string_view identifier);

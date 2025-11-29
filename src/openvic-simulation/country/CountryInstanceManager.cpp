@@ -18,7 +18,7 @@ CountryInstanceManager::CountryInstanceManager(
 	CountryInstanceDeps const& country_instance_deps,
 	GoodInstanceManager const& new_good_instance_manager,
 	PopsDefines const& new_pop_defines,
-	utility::forwardable_span<const PopType> pop_type_keys,
+	forwardable_span<const PopType> pop_type_keys,
 	ThreadPool& new_thread_pool
 ) : thread_pool { new_thread_pool },
   	country_definition_manager { new_country_definition_manager },

@@ -400,7 +400,7 @@ OV_DO_FOR_ALL_NEED_CATEGORIES(DEFINE_NEEDS_FULFILLED)
 
 void Pop::allocate_for_needs(
 	fixed_point_map_t<GoodDefinition const*> const& scaled_needs,
-	utility::forwardable_span<fixed_point_t> money_to_spend_per_good,
+	forwardable_span<fixed_point_t> money_to_spend_per_good,
 	memory::vector<fixed_point_t>& reusable_vector,
 	fixed_point_t& weights_sum,
 	fixed_point_t& cash_left_to_spend
@@ -469,7 +469,7 @@ void Pop::pop_tick(
 	PopValuesFromProvince const& shared_values,
 	RandomU32& random_number_generator,
 	IndexedFlatMap<GoodDefinition, char>& reusable_goods_mask,
-	utility::forwardable_span<
+	forwardable_span<
 		memory::vector<fixed_point_t>,
 		VECTORS_FOR_POP_TICK
 	> reusable_vectors
@@ -489,12 +489,12 @@ void Pop::pop_tick_without_cleanup(
 	PopValuesFromProvince const& shared_values,
 	RandomU32& random_number_generator,
 	IndexedFlatMap<GoodDefinition, char>& reusable_goods_mask,
-	utility::forwardable_span<
+	forwardable_span<
 		memory::vector<fixed_point_t>,
 		VECTORS_FOR_POP_TICK
 	> reusable_vectors
 ) {
-	utility::forwardable_span<const GoodDefinition> good_keys = reusable_goods_mask.get_keys();
+	forwardable_span<const GoodDefinition> good_keys = reusable_goods_mask.get_keys();
 	memory::vector<fixed_point_t>& reusable_vector_0 = reusable_vectors[0];
 	memory::vector<fixed_point_t>& reusable_vector_1 = reusable_vectors[1];
 	memory::vector<fixed_point_t>& max_quantity_to_buy_per_good = reusable_vectors[2];

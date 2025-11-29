@@ -9,7 +9,7 @@
 #include "openvic-simulation/types/PopSize.hpp"
 #include "openvic-simulation/types/UnitBranchType.hpp"
 #include "openvic-simulation/utility/Containers.hpp"
-#include "openvic-simulation/utility/ForwardableSpan.hpp"
+#include "openvic-simulation/core/portable/ForwardableSpan.hpp"
 
 namespace OpenVic {
 	struct BaseIssue;
@@ -166,7 +166,7 @@ namespace OpenVic {
 		void fill_needs_fulfilled_goods_with_false();
 		void allocate_for_needs(
 			fixed_point_map_t<GoodDefinition const*> const& scaled_needs,
-			utility::forwardable_span<fixed_point_t> money_to_spend_per_good,
+			forwardable_span<fixed_point_t> money_to_spend_per_good,
 			memory::vector<fixed_point_t>& reusable_vector,
 			fixed_point_t& price_inverse_sum,
 			fixed_point_t& cash_left_to_spend
@@ -175,7 +175,7 @@ namespace OpenVic {
 			PopValuesFromProvince const& shared_values,
 			RandomU32& random_number_generator,
 			IndexedFlatMap<GoodDefinition, char>& reusable_goods_mask,
-			utility::forwardable_span<
+			forwardable_span<
 				memory::vector<fixed_point_t>,
 				VECTORS_FOR_POP_TICK
 			> reusable_vectors
@@ -218,7 +218,7 @@ namespace OpenVic {
 			PopValuesFromProvince const& shared_values,
 			RandomU32& random_number_generator,
 			IndexedFlatMap<GoodDefinition, char>& reusable_goods_mask,
-			utility::forwardable_span<
+			forwardable_span<
 				memory::vector<fixed_point_t>,
 				VECTORS_FOR_POP_TICK
 			> reusable_vectors

@@ -41,11 +41,11 @@ namespace OpenVic {
 			GameRulesManager const& game_rules_manager
 		);
 
-		constexpr OpenVic::utility::forwardable_span<GoodInstance> get_good_instances() {
+		constexpr forwardable_span<GoodInstance> get_good_instances() {
 			return good_instance_by_definition.get_values();
 		}
 
-		constexpr OpenVic::utility::forwardable_span<const GoodInstance> get_good_instances() const {
+		constexpr forwardable_span<const GoodInstance> get_good_instances() const {
 			return good_instance_by_definition.get_values();
 		}
 		GoodInstance* get_good_instance_by_identifier(std::string_view identifier);

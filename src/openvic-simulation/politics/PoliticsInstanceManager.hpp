@@ -5,7 +5,7 @@
 #include "openvic-simulation/types/Date.hpp"
 #include "openvic-simulation/types/IndexedFlatMap.hpp"
 #include "openvic-simulation/utility/Getters.hpp"
-#include "openvic-simulation/utility/ForwardableSpan.hpp"
+#include "openvic-simulation/core/portable/ForwardableSpan.hpp"
 
 namespace OpenVic {
 	struct InstanceManager;
@@ -24,7 +24,7 @@ namespace OpenVic {
 	public:
 		PoliticsInstanceManager(
 			InstanceManager const& new_instance_manager,
-			utility::forwardable_span<const Ideology> ideologies
+			forwardable_span<const Ideology> ideologies
 		);
 		PoliticsInstanceManager(PoliticsInstanceManager&&) = default;
 

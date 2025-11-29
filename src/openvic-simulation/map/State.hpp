@@ -8,7 +8,7 @@
 #include "openvic-simulation/types/ColonyStatus.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
 #include "openvic-simulation/utility/Containers.hpp"
-#include "openvic-simulation/utility/ForwardableSpan.hpp"
+#include "openvic-simulation/core/portable/ForwardableSpan.hpp"
 #include "openvic-simulation/utility/Getters.hpp"
 
 namespace OpenVic {
@@ -50,9 +50,9 @@ namespace OpenVic {
 			ProvinceInstance* new_capital,
 			memory::vector<ProvinceInstance*>&& new_provinces,
 			colony_status_t new_colony_status,
-			utility::forwardable_span<const Strata> strata_keys,
-			utility::forwardable_span<const PopType> pop_type_keys,
-			utility::forwardable_span<const Ideology> ideology_keys
+			forwardable_span<const Strata> strata_keys,
+			forwardable_span<const PopType> pop_type_keys,
+			forwardable_span<const Ideology> ideology_keys
 		);
 		State(State&&) = delete;
 		State(State const&) = delete;
@@ -98,9 +98,9 @@ namespace OpenVic {
 
 		bool add_state_set(
 			MapInstance& map_instance, Region const& region,
-			utility::forwardable_span<const Strata> strata_keys,
-			utility::forwardable_span<const PopType> pop_type_keys,
-			utility::forwardable_span<const Ideology> ideology_keys
+			forwardable_span<const Strata> strata_keys,
+			forwardable_span<const PopType> pop_type_keys,
+			forwardable_span<const Ideology> ideology_keys
 		);
 
 	public:
@@ -110,9 +110,9 @@ namespace OpenVic {
 		bool generate_states(
 			MapDefinition const& map_definition,
 			MapInstance& map_instance,
-			utility::forwardable_span<const Strata> strata_keys,
-			utility::forwardable_span<const PopType> pop_type_keys,
-			utility::forwardable_span<const Ideology> ideology_keys
+			forwardable_span<const Strata> strata_keys,
+			forwardable_span<const PopType> pop_type_keys,
+			forwardable_span<const Ideology> ideology_keys
 		);
 
 		void reset();

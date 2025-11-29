@@ -8,7 +8,7 @@
 
 #include "openvic-simulation/core/template/Concepts.hpp"
 #include "openvic-simulation/utility/Containers.hpp"
-#include "openvic-simulation/utility/Deque.hpp"
+#include "openvic-simulation/core/portable/Deque.hpp"
 #include "openvic-simulation/utility/StringUtils.hpp"
 
 #include <foonathan/memory/default_allocator.hpp>

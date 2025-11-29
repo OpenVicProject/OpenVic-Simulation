@@ -1,6 +1,6 @@
 #pragma once
 
-#include "openvic-simulation/utility/ForwardableSpan.hpp"
+#include "openvic-simulation/core/portable/ForwardableSpan.hpp"
 
 namespace OpenVic {
 	struct EconomyDefines;
@@ -9,7 +9,7 @@ namespace OpenVic {
 
 	struct ArtisanalProducerDeps {
 		EconomyDefines const& economy_defines;
-		utility::forwardable_span<const GoodDefinition> good_keys;
+		forwardable_span<const GoodDefinition> good_keys;
 		ModifierEffectCache const& modifier_effect_cache;
 	};
 }

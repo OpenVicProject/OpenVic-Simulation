@@ -2,7 +2,7 @@
 
 #include <scoped_allocator>
 
-#include "openvic-simulation/utility/Deque.hpp"
+#include "openvic-simulation/core/portable/Deque.hpp"
 
 #include <foonathan/memory/config.hpp>
 #include <foonathan/memory/std_allocator.hpp>

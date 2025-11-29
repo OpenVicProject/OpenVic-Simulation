@@ -7,7 +7,7 @@ using namespace OpenVic;
 
 PoliticsInstanceManager::PoliticsInstanceManager(
 	InstanceManager const& new_instance_manager,
-	utility::forwardable_span<const Ideology> ideologies
+	forwardable_span<const Ideology> ideologies
 )
   : instance_manager { new_instance_manager },
 	ideology_spawn_date { ideologies } {}

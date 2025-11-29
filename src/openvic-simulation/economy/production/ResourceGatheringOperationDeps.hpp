@@ -1,6 +1,6 @@
 #pragma once
 
-#include "openvic-simulation/utility/ForwardableSpan.hpp"
+#include "openvic-simulation/core/portable/ForwardableSpan.hpp"
 
 namespace OpenVic {
 	struct MarketInstance;
@@ -10,6 +10,6 @@ namespace OpenVic {
 	struct ResourceGatheringOperationDeps {
 		MarketInstance& market_instance;
 		ModifierEffectCache const& modifier_effect_cache;
-		utility::forwardable_span<const PopType> pop_type_keys;
+		forwardable_span<const PopType> pop_type_keys;
 	};
 }
