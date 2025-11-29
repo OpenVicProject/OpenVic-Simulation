@@ -5,7 +5,7 @@
 #include <string_view>
 #include <variant>
 
-#include "openvic-simulation/types/EnumBitfield.hpp"
+#include "openvic-simulation/core/template/EnumBitfield.hpp"
 #include "openvic-simulation/types/HasIdentifier.hpp"
 #include "openvic-simulation/types/IdentifierRegistry.hpp"
 #include "openvic-simulation/utility/Containers.hpp"

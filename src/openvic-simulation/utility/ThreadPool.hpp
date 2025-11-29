@@ -9,7 +9,7 @@
 #include "openvic-simulation/types/Date.hpp"
 #include "openvic-simulation/utility/Containers.hpp"
 #include "openvic-simulation/core/portable/ForwardableSpan.hpp"
-#include "openvic-simulation/utility/RandomGenerator.hpp"
+#include "openvic-simulation/core/random/RandomGenerator.hpp"
 
 namespace OpenVic {
 	struct GameRulesManager;

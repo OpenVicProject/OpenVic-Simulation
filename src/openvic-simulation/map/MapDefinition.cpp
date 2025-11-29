@@ -25,7 +25,7 @@
 #include "openvic-simulation/types/OrderedContainersMath.hpp"
 #include "openvic-simulation/types/TypedSpan.hpp"
 #include "openvic-simulation/types/Vector.hpp"
-#include "openvic-simulation/utility/FormatValidate.hpp"
+#include "openvic-simulation/core/FormatValidate.hpp"
 #include "openvic-simulation/utility/Logger.hpp"
 #include "openvic-simulation/utility/StringUtils.hpp"
 #include "openvic-simulation/core/Typedefs.hpp"

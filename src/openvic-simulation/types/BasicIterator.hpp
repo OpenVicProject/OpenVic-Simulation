@@ -4,7 +4,7 @@
 #include <iterator>
 
 #include "openvic-simulation/core/Typedefs.hpp"
-#include "openvic-simulation/utility/Compare.hpp"
+#include "openvic-simulation/core/Compare.hpp"
 
 namespace OpenVic {
 	template<typename Pointer, typename ContainerTag>

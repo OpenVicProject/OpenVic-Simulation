@@ -8,7 +8,7 @@
 #include "openvic-simulation/types/BasicIterator.hpp" // IWYU pragma: keep
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
 #include "openvic-simulation/core/template/Concepts.hpp" // IWYU pragma: keep
-#include "openvic-simulation/utility/Math.hpp" // IWYU pragma: keep
+#include "openvic-simulation/core/Math.hpp" // IWYU pragma: keep
 #include "openvic-simulation/core/Typedefs.hpp" // IWYU pragma: keep
 
 #define VEC_TYPE vec2_t

@@ -5,7 +5,7 @@
 #include "openvic-simulation/modifier/ModifierManager.hpp"
 #include "openvic-simulation/types/Colour.hpp"
 #include "openvic-simulation/types/HasIdentifier.hpp"
-#include "openvic-simulation/utility/FormatValidate.hpp"
+#include "openvic-simulation/core/FormatValidate.hpp"
 #include "openvic-simulation/utility/Containers.hpp"
 
 using namespace OpenVic;

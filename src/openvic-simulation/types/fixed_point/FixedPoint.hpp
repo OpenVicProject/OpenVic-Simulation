@@ -21,7 +21,7 @@
 #include "openvic-simulation/utility/StringUtils.hpp"
 #include "openvic-simulation/utility/Containers.hpp"
 #include "openvic-simulation/core/Typedefs.hpp"
-#include "openvic-simulation/utility/Math.hpp"
+#include "openvic-simulation/core/Math.hpp"
 
 /* Sin lookup table */
 #include "openvic-simulation/types/fixed_point/FixedPointLUT_sin.hpp"

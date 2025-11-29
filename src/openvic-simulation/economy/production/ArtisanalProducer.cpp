@@ -17,9 +17,9 @@
 #include "openvic-simulation/population/Pop.hpp"
 #include "openvic-simulation/population/PopValuesFromProvince.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
-#include "openvic-simulation/utility/RandomGenerator.hpp"
+#include "openvic-simulation/core/random/RandomGenerator.hpp"
 #include "openvic-simulation/core/Typedefs.hpp"
-#include "openvic-simulation/utility/WeightedSampling.hpp"
+#include "openvic-simulation/core/random/WeightedSampling.hpp"
 
 using namespace OpenVic;
 
