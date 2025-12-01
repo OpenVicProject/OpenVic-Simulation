@@ -9,8 +9,9 @@
 
 #include "openvic-simulation/country/CountryInstance.hpp"
 #include "openvic-simulation/diplomacy/CountryRelation.hpp"
-#include "openvic-simulation/types/FunctionRef.hpp"
 #include "openvic-simulation/types/IdentifierRegistry.hpp"
+
+#include <function2/function2.hpp>
 
 namespace OpenVic {
 	struct InstanceManager;
@@ -26,9 +27,9 @@ namespace OpenVic {
 			std::any context_data;
 		};
 
-		using allowed_to_commit_func = FunctionRef<bool(Argument const&)>;
-		using get_acceptance_func = FunctionRef<std::int32_t(Argument const&)>;
-		using commit_action_func = FunctionRef<void(Argument&)>;
+		using allowed_to_commit_func = fu2::function_view<bool(Argument const&) const>;
+		using get_acceptance_func = fu2::function_view<std::int32_t(Argument const&) const>;
+		using commit_action_func = fu2::function_view<void(Argument&) const>;
 
 		static bool allowed_to_commit_default(Argument const& argument) {
 			return true;
@@ -61,7 +62,7 @@ namespace OpenVic {
 	struct CancelableDiplomaticActionType : DiplomaticActionType {
 		friend struct DiplomaticActionManager;
 
-		using allowed_to_cancel_func = FunctionRef<bool(Argument const&)>;
+		using allowed_to_cancel_func = fu2::function_view<bool(Argument const&)>;
 
 		static bool allowed_to_cancel_default(Argument const& argument) {
 			return true;

@@ -9,7 +9,6 @@
 
 #include "openvic-simulation/types/Colour.hpp"
 #include "openvic-simulation/types/Date.hpp"
-#include "openvic-simulation/types/FunctionRef.hpp"
 #include "openvic-simulation/types/OrderedContainers.hpp"
 #include "openvic-simulation/utility/Containers.hpp"
 #include "openvic-simulation/utility/Getters.hpp"
@@ -32,7 +31,7 @@ namespace OpenVic {
 			std::span<std::string_view> arguments;
 		};
 
-		using execute_command_func_t = FunctionRef<bool(Argument&)>;
+		using execute_command_func_t = fu2::function_view<bool(Argument&)>;
 
 		using write_func_t = fu2::function_view<void(OpenVic::colour_t, std::string_view)>;
 
