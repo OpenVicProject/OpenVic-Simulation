@@ -1,7 +1,7 @@
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
-#include "openvic-simulation/utility/WeightedSampling.hpp"
+#include "openvic-simulation/core/random/WeightedSampling.hpp"
 
-#include "utility/ExtendedMath.hpp"
+#include "core/random/ExtendedMath.hpp"
 
 #include <cstdint>
 #include <limits>

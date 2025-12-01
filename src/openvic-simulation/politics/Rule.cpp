@@ -4,7 +4,7 @@
 #include "openvic-simulation/utility/TslHelper.hpp"
 #include "openvic-simulation/types/HasIdentifier.hpp"
 #include "openvic-simulation/utility/Containers.hpp"
-#include "openvic-simulation/utility/FormatValidate.hpp"
+#include "openvic-simulation/core/FormatValidate.hpp"
 
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;

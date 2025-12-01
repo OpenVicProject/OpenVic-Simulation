@@ -21,7 +21,7 @@
 #include "openvic-simulation/utility/Getters.hpp"
 #include "openvic-simulation/utility/StringUtils.hpp"
 #include "openvic-simulation/core/Typedefs.hpp"
-#include "openvic-simulation/utility/Hash.hpp"
+#include "openvic-simulation/core/Hash.hpp"
 
 namespace OpenVic {
 	// A relative period between points in time, measured in days

@@ -2,12 +2,13 @@
 
 #include <cstdint>
 #include <limits>
+#include <span>
 
-#include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
 #include "openvic-simulation/core/Typedefs.hpp"
+#include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
 
 namespace OpenVic {
-	OV_ALWAYS_INLINE static size_t sample_weighted_index(
+	OV_SPEED_INLINE static size_t sample_weighted_index(
 		const uint32_t random_value, 
 		const std::span<const fixed_point_t> positive_weights,
 		const fixed_point_t weights_sum

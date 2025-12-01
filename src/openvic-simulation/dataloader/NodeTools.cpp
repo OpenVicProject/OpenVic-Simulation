@@ -16,7 +16,7 @@
 #include <range/v3/view/enumerate.hpp>
 
 #include "openvic-simulation/types/Colour.hpp"
-#include "openvic-simulation/types/TextFormat.hpp"
+#include "openvic-simulation/core/ui/TextFormat.hpp"
 #include "openvic-simulation/types/Vector.hpp"
 #include "openvic-simulation/utility/Getters.hpp"
 

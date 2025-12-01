@@ -11,7 +11,7 @@
 
 #include "openvic-simulation/types/Date.hpp"
 #include "openvic-simulation/types/OrderedContainers.hpp"
-#include "openvic-simulation/utility/Hash.hpp"
+#include "openvic-simulation/core/Hash.hpp"
 
 namespace OpenVic {
 	struct CountryInstance;

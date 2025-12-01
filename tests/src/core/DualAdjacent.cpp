@@ -4,7 +4,7 @@
 #include <range/v3/algorithm/equal.hpp>
 #include <range/v3/view/drop.hpp>
 
-#include "openvic-simulation/utility/Algorithm.hpp"
+#include "openvic-simulation/core/Algorithm.hpp"
 
 #include "Helper.hpp" // IWYU pragma: keep
 #include <snitch/snitch_append.hpp>

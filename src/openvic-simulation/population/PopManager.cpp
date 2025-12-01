@@ -9,7 +9,7 @@
 #include "openvic-simulation/population/Pop.hpp"
 #include "openvic-simulation/military/UnitType.hpp"
 #include "openvic-simulation/modifier/ModifierManager.hpp"
-#include "openvic-simulation/utility/FormatValidate.hpp"
+#include "openvic-simulation/core/FormatValidate.hpp"
 #include "openvic-simulation/utility/Logger.hpp"
 
 using namespace OpenVic;

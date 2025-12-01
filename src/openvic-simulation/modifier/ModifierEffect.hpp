@@ -2,7 +2,7 @@
 
 #include <string_view>
 
-#include "openvic-simulation/types/EnumBitfield.hpp"
+#include "openvic-simulation/core/template/EnumBitfield.hpp"
 #include "openvic-simulation/types/HasIdentifier.hpp"
 
 namespace OpenVic {
