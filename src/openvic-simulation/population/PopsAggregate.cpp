@@ -8,6 +8,8 @@
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
 #include "openvic-simulation/types/OrderedContainersMath.hpp"
 
+#include <type_safe/strong_typedef.hpp>
+
 using namespace OpenVic;
 PopsAggregate::PopsAggregate(
 	decltype(population_by_strata)::keys_span_type strata_keys,
@@ -51,7 +53,7 @@ fixed_point_t PopsAggregate::get_population_by_culture(Culture const& culture) c
 	const decltype(population_by_culture)::const_iterator it = population_by_culture.find(&culture);
 
 	if (it != population_by_culture.end()) {
-		return it->second;
+		return type_safe::get(it->second);
 	} else {
 		return 0;
 	}
@@ -60,7 +62,7 @@ fixed_point_t PopsAggregate::get_population_by_religion(Religion const& religion
 	const decltype(population_by_religion)::const_iterator it = population_by_religion.find(&religion);
 
 	if (it != population_by_religion.end()) {
-		return it->second;
+		return type_safe::get(it->second);
 	} else {
 		return 0;
 	}
@@ -111,7 +113,7 @@ void PopsAggregate::add_pops_aggregate(PopsAggregate& part) {
 	_yesterdays_import_value_running_total += part.get_yesterdays_import_value_untracked();
 
 	// TODO - change casting if pop_size_t changes type
-	const fixed_point_t part_population = fixed_point_t::parse(part.get_total_population());
+	const fixed_point_t part_population = fixed_point_t::parse(type_safe::get(part.get_total_population()));
 	average_literacy += part.get_average_literacy() * part_population;
 	average_consciousness += part.get_average_consciousness() * part_population;
 	average_militancy += part.get_average_militancy() * part_population;

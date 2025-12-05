@@ -14,7 +14,7 @@
 #include "openvic-simulation/population/Culture.hpp"
 #include "openvic-simulation/population/Religion.hpp"
 #include "openvic-simulation/types/OrderedContainersMath.hpp"
-#include "openvic-simulation/types/PopSize.hpp"
+#include "openvic-simulation/population/PopSize.hpp"
 
 using namespace OpenVic;
 using namespace OpenVic::colour_literals;
@@ -266,7 +266,7 @@ bool MapmodeManager::setup_mapmodes(MapDefinition const& map_definition) {
 			// by the same country, relative to the most populous province in that set of provinces
 			if (!province.province_definition.is_water()) {
 				const colour_argb_t::value_type val = colour_argb_t::colour_traits::component_from_fraction(
-					province.get_total_population(), map_instance.get_highest_province_population() + 1, 0.1f, 1.0f
+					type_safe::get(province.get_total_population()), type_safe::get(map_instance.get_highest_province_population()) + 1, 0.1f, 1.0f
 				);
 				return colour_argb_t { 0, val, 0, ALPHA_VALUE };
 			} else {
