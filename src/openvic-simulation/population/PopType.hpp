@@ -6,7 +6,7 @@
 #include "openvic-simulation/types/HasIdentifier.hpp"
 #include "openvic-simulation/types/HasIndex.hpp"
 #include "openvic-simulation/types/IndexedFlatMap.hpp"
-#include "openvic-simulation/types/PopSize.hpp"
+#include "openvic-simulation/population/PopSize.hpp"
 #include "openvic-simulation/types/PopSprite.hpp"
 #include "openvic-simulation/types/TypedIndices.hpp"
 #include "openvic-simulation/utility/Containers.hpp"

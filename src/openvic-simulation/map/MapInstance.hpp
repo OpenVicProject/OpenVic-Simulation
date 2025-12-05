@@ -29,8 +29,8 @@ namespace OpenVic {
 
 		OV_IFLATMAP_PROPERTY(ProvinceDefinition, ProvinceInstance, province_instance_by_definition);
 
-		pop_size_t PROPERTY(highest_province_population, 0);
-		pop_size_t PROPERTY(total_map_population, 0);
+		pop_sum_t PROPERTY(highest_province_population, 0);
+		pop_sum_t PROPERTY(total_map_population, 0);
 
 		StateManager PROPERTY_REF(state_manager);
 		// TODO - should this be a vector of bools which we resize to the largest enabled canal index?

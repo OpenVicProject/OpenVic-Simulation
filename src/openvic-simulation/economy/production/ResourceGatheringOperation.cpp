@@ -12,10 +12,12 @@
 #include "openvic-simulation/population/Pop.hpp"
 #include "openvic-simulation/population/PopType.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
-#include "openvic-simulation/types/PopSize.hpp"
+#include "openvic-simulation/population/PopSize.hpp"
 #include "openvic-simulation/types/TypedIndices.hpp"
 #include "openvic-simulation/utility/Logger.hpp"
 #include "openvic-simulation/utility/Containers.hpp"
+
+#include <type_safe/strong_typedef.hpp>
 
 using namespace OpenVic;
 
@@ -42,7 +44,7 @@ ResourceGatheringOperation::ResourceGatheringOperation(
 	0, {}
 } {}
 
-pop_size_t ResourceGatheringOperation::get_employee_count_per_type_cache(PopType const& key) const {
+pop_sum_t ResourceGatheringOperation::get_employee_count_per_type_cache(PopType const& key) const {
 	return employee_count_per_type_cache.at(key);
 }
 
@@ -65,20 +67,20 @@ void ResourceGatheringOperation::initialise_rgo_size_multiplier() {
 	ProductionType const& production_type = *production_type_nullable;
 	std::span<const Job> jobs = production_type.get_jobs();
 
-	pop_size_t total_worker_count_in_province = 0; //not counting equivalents
+	pop_sum_t total_worker_count_in_province = 0; //not counting equivalents
 	for (Job const& job : jobs) {
 		total_worker_count_in_province += location.get_population_by_type(*job.get_pop_type());
 	}
 
 	const fixed_point_t size_modifier = calculate_size_modifier();
-	const fixed_point_t base_workforce_size = production_type.base_workforce_size;
+	const fixed_point_t base_workforce_size = type_safe::get(production_type.base_workforce_size);
 	if (size_modifier == 0) {
 		size_multiplier = 0;
 	} else {
 		size_multiplier = ((total_worker_count_in_province / (size_modifier * base_workforce_size)).ceil() * fixed_point_t::_1_50).floor();
 	}
 
-	max_employee_count_cache = (size_modifier * size_multiplier * base_workforce_size).floor<pop_size_t>();
+	max_employee_count_cache = (size_modifier * size_multiplier * base_workforce_size).floor<type_safe::underlying_type<pop_size_t>>();
 }
 
 fixed_point_t ResourceGatheringOperation::calculate_size_modifier() const {
@@ -167,7 +169,7 @@ void ResourceGatheringOperation::after_sell(void* actor, SellResult const& sell_
 }
 
 void ResourceGatheringOperation::hire() {
-	pop_size_t const& available_worker_count = total_worker_count_in_province_cache;
+	pop_sum_t const& available_worker_count = total_worker_count_in_province_cache;
 	total_employees_count_cache = 0;
 	total_paid_employees_count_cache = 0;
 	employees.clear(); //TODO implement Victoria 2 hiring logic
@@ -187,7 +189,7 @@ void ResourceGatheringOperation::hire() {
 		proportion_to_hire = 1;
 	} else {
 		//hire all pops proportionally
-		const fixed_point_t max_worker_count_real = max_employee_count_cache, available_worker_count_real = available_worker_count;
+		const fixed_point_t max_worker_count_real = type_safe::get(max_employee_count_cache), available_worker_count_real = type_safe::get(available_worker_count);
 		proportion_to_hire = max_worker_count_real / available_worker_count_real;
 	}
 
@@ -197,7 +199,7 @@ void ResourceGatheringOperation::hire() {
 		for (Job const& job : jobs) {
 			PopType const* const job_pop_type = job.get_pop_type();
 			if (job_pop_type && *job_pop_type == pop_type) {
-				const pop_size_t pop_size_to_hire = static_cast<pop_size_t>((proportion_to_hire * pop.get_size()).floor());
+				const pop_size_t pop_size_to_hire = (proportion_to_hire * pop.get_size()).floor<type_safe::underlying_type<pop_size_t>>();
 				if (pop_size_to_hire <= 0) {
 					continue;
 				}
@@ -240,7 +242,7 @@ fixed_point_t ResourceGatheringOperation::produce() {
 		}
 
 		State const& state = *state_ptr;
-		const pop_size_t state_population = state.get_total_population();
+		const pop_sum_t state_population = state.get_total_population();
 		Job const& owner_job = owner.value();
 
 		if (total_owner_count_in_state_cache > 0) {
@@ -403,7 +405,7 @@ void ResourceGatheringOperation::pay_employees(memory::vector<fixed_point_t>& re
 			memory::vector<fixed_point_t>& incomes = reusable_vector;
 			incomes.resize(employees.size());
 
-			pop_size_t count_workers_to_be_paid = total_paid_employees_count_cache;
+			pop_sum_t count_workers_to_be_paid = total_paid_employees_count_cache;
 			for (size_t i = 0; i < employees.size(); i++) {
 				Employee& employee = employees[i];
 				Pop& employee_pop = employee.get_pop();

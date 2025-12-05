@@ -1,7 +1,7 @@
 #pragma once
 
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
-#include "openvic-simulation/types/PopSize.hpp"
+#include "openvic-simulation/population/PopSize.hpp"
 
 namespace OpenVic {
 	struct CountryInstance;

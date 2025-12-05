@@ -851,7 +851,7 @@ namespace OpenVic {
 
 		template <typename OtherValueType>
 		IndexedFlatMap& operator/=(IndexedFlatMap<ForwardedKeyType,OtherValueType> const& other)
-		requires divide_assignable<ValueType,OtherValueType> {
+		requires divide_assignable<ValueType,OtherValueType> && equalable<ValueType, OtherValueType> {
 			static_assert(has_index<ForwardedKeyType>);
 			if (!check_subset_span_match(other)) {
 				return *this;
@@ -877,7 +877,7 @@ namespace OpenVic {
 		IndexedFlatMap& divide_assign_handle_zero(
 			IndexedFlatMap<ForwardedKeyType,OtherValueType> const& other,
 			fu2::function<void(ValueType&, OtherValueType const&)> handle_div_by_zero
-		) requires divide_assignable<ValueType,OtherValueType> {
+		) requires divide_assignable<ValueType,OtherValueType> && equalable<ValueType, OtherValueType> {
 			static_assert(has_index<ForwardedKeyType>);
 			if (!check_subset_span_match(other)) {
 				return *this;

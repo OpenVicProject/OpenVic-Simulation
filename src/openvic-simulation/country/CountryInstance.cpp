@@ -43,7 +43,8 @@
 #include "openvic-simulation/types/Date.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
 #include "openvic-simulation/types/IndexedFlatMap.hpp"
-#include "openvic-simulation/types/PopSize.hpp"
+#include "openvic-simulation/population/PopSize.hpp"
+#include "openvic-simulation/population/PopSum.hpp"
 #include "openvic-simulation/types/UnitBranchType.hpp"
 #include "openvic-simulation/utility/Containers.hpp"
 #include "openvic-simulation/utility/Logger.hpp"
@@ -1341,8 +1342,8 @@ void CountryInstance::_update_budget() {
 	OpenVic immediately updates both.
 	*/
 
-	pop_size_t total_non_colonial_population = 0;
-	pop_size_t administrators = 0;
+	pop_sum_t total_non_colonial_population = 0;
+	pop_sum_t administrators = 0;
 	for (State const* const state_ptr : states) {
 		if (state_ptr == nullptr) {
 			continue;
@@ -1353,7 +1354,7 @@ void CountryInstance::_update_budget() {
 			continue;
 		}
 
-		IndexedFlatMap<PopType, pop_size_t> const& state_population_by_type = state.get_population_by_type();
+		IndexedFlatMap<PopType, pop_sum_t> const& state_population_by_type = state.get_population_by_type();
 
 		for (auto const& [pop_type, size] : state_population_by_type) {
 			if (pop_type.is_administrator) {
@@ -1369,10 +1370,10 @@ void CountryInstance::_update_budget() {
 	} else {		
 		administrator_percentage.set(fixed_point_t(administrators) / total_non_colonial_population);
 
-		const fixed_point_t desired_administrators = desired_administrator_percentage.get_untracked() * total_non_colonial_population;
+		const fixed_point_t desired_administrators = desired_administrator_percentage.get_untracked() * type_safe::get(total_non_colonial_population);
 		const fixed_point_t administrative_efficiency_from_administrators_unclamped = std::min(
 			fixed_point_t::mul_div(
-				administrators,
+				type_safe::get(administrators),
 				fixed_point_t::_1 + get_modifier_effect_value(*modifier_effect_cache.get_administrative_efficiency()),
 				desired_administrators
 			)
@@ -1398,7 +1399,7 @@ void CountryInstance::_update_budget() {
 		projected_education_spending_unscaled_by_slider_running_total += size * education_salary_base_by_pop_type.at(pop_type).get_untracked();
 		projected_military_spending_unscaled_by_slider_running_total += size * military_salary_base_by_pop_type.at(pop_type).get_untracked();
 		projected_pensions_spending_unscaled_by_slider_running_total += size * calculate_pensions_base(pop_type);
-		projected_unemployment_subsidies_spending_unscaled_by_slider_running_total += get_unemployed_pops_by_type(pop_type)
+		projected_unemployment_subsidies_spending_unscaled_by_slider_running_total += type_safe::get(get_unemployed_pops_by_type(pop_type))
 			* calculate_unemployment_subsidies_base(pop_type);
 	}
 

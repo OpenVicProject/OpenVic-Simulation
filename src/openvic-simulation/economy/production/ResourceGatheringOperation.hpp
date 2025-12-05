@@ -3,7 +3,7 @@
 #include "openvic-simulation/economy/production/Employee.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
 #include "openvic-simulation/types/IndexedFlatMap.hpp"
-#include "openvic-simulation/types/PopSize.hpp"
+#include "openvic-simulation/population/PopSum.hpp"
 #include "openvic-simulation/utility/Getters.hpp"
 #include "openvic-simulation/utility/Containers.hpp"
 
@@ -22,8 +22,8 @@ namespace OpenVic {
 		MarketInstance& market_instance;
 		ModifierEffectCache const& modifier_effect_cache;
 		ProvinceInstance* location_ptr = nullptr;
-		pop_size_t total_owner_count_in_state_cache = 0;
-		pop_size_t total_worker_count_in_province_cache = 0;
+		pop_sum_t total_owner_count_in_state_cache = 0;
+		pop_sum_t total_worker_count_in_province_cache = 0;
 		memory::vector<Pop*> const* owner_pops_cache_nullable = nullptr;
 
 		ProductionType const* PROPERTY_RW(production_type_nullable);
@@ -32,12 +32,12 @@ namespace OpenVic {
 		fixed_point_t PROPERTY(unsold_quantity_yesterday);
 		fixed_point_t PROPERTY_RW(size_multiplier);
 		memory::vector<Employee> SPAN_PROPERTY(employees);
-		pop_size_t PROPERTY(max_employee_count_cache, 0);
-		pop_size_t PROPERTY(total_employees_count_cache, 0);
-		pop_size_t PROPERTY(total_paid_employees_count_cache, 0);
+		pop_sum_t PROPERTY(max_employee_count_cache, 0);
+		pop_sum_t PROPERTY(total_employees_count_cache, 0);
+		pop_sum_t PROPERTY(total_paid_employees_count_cache, 0);
 		fixed_point_t PROPERTY(total_owner_income_cache);
 		fixed_point_t PROPERTY(total_employee_income_cache);
-		OV_IFLATMAP_PROPERTY(PopType, pop_size_t, employee_count_per_type_cache);
+		OV_IFLATMAP_PROPERTY(PopType, pop_sum_t, employee_count_per_type_cache);
 
 		fixed_point_t calculate_size_modifier() const;
 		void hire();
