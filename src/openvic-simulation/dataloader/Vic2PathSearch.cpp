@@ -40,7 +40,7 @@ using namespace ovdl;
 // Windows and Mac by default act like case insensitive filesystems
 static constexpr bool path_equals(std::string_view lhs, std::string_view rhs) {
 #if defined(FILESYSTEM_CASE_INSENSITIVE)
-	return StringUtils::strings_equal_case_insensitive(lhs, rhs);
+	return ascii_equal_case_insensitive(lhs, rhs);
 #else
 	return std::equal(lhs.begin(), lhs.end(), rhs.begin(), rhs.end());
 #endif

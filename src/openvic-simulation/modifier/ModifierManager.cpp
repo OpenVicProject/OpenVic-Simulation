@@ -8,7 +8,6 @@
 
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;
-using namespace OpenVic::StringUtils;
 
 using enum ModifierEffect::target_t;
 
@@ -822,7 +821,7 @@ key_value_callback_t ModifierManager::expect_leader_modifier(ModifierValue& modi
 
 key_value_callback_t ModifierManager::expect_technology_modifier(ModifierValue& modifier_value) const {
 	return [this, &modifier_value](const std::string_view key, const ast::NodeCPtr value) {
-		if (strings_equal_case_insensitive(key, "rebel_org_gain")) { // because of course there's a special one
+		if (ascii_equal_case_insensitive(key, "rebel_org_gain")) { // because of course there's a special one
 			std::string_view faction_identifier;
 			ast::NodeCPtr value_node = nullptr;
 

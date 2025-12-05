@@ -12,20 +12,6 @@
 #include "openvic-simulation/utility/Getters.hpp"
 
 namespace OpenVic {
-	constexpr bool valid_basic_identifier_char(char c) {
-		return ('A' <= c && c <= 'Z') || ('a' <= c && c <= 'z') || ('0' <= c && c <= '9') || c == '_';
-	}
-	constexpr bool valid_basic_identifier(std::string_view identifier) {
-		return std::all_of(identifier.begin(), identifier.end(), valid_basic_identifier_char);
-	}
-	constexpr std::string_view extract_basic_identifier_prefix(std::string_view identifier) {
-		size_t len = 0;
-		while (len < identifier.size() && valid_basic_identifier_char(identifier[len])) {
-			++len;
-		}
-		return { identifier.data(), len };
-	}
-
 	/*
 	 * Base class for objects with a non-empty string identifier. Uniquely named instances of a type derived from this class
 	 * can be entered into an IdentifierRegistry instance.

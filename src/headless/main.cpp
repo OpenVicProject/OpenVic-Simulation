@@ -43,7 +43,7 @@ inline static void print_memory_usage( //
 #endif
 }
 
-static void print_help(FILE* file, char const* program_name) {
+static void print_help(FILE* file, std::string_view program_name) {
 	fmt::println(file, "Usage: {} [-h] [-t] [-b <path>] [path]+", program_name);
 	fmt::println(file, "    -h : Print this help message and exit the program.");
 	fmt::println(file, "    -t : Run tests after loading defines.");
@@ -376,7 +376,7 @@ static bool run_headless(fs::path const& root, memory::vector<memory::string>& m
 */
 
 int main(int argc, char const* argv[]) {
-	char const* program_name = StringUtils::get_filename(argc > 0 ? argv[0] : nullptr, "<program>");
+	std::string_view program_name = get_filename(argc > 0 ? argv[0] : "", "<program>");
 	fs::path root;
 	memory::vector<memory::string> mods;
 	mods.reserve(argc);
@@ -386,8 +386,7 @@ int main(int argc, char const* argv[]) {
 	/* Reads the next argument and converts it to a path via path_transform. If reading or converting fails, an error
 	 * message and the help text are displayed, along with returning false to signify the program should exit.
 	 */
-	const auto _read = [&root, &argn, argc, argv,
-						program_name //
+	const auto _read = [&root, &argn, argc, argv, &program_name //
 	](std::string_view command, std::string_view path_use, std::invocable<fs::path> auto path_transform) -> bool {
 		if (root.empty()) {
 			if (++argn < argc) {

@@ -27,7 +27,7 @@
 #include "openvic-simulation/types/Vector.hpp"
 #include "openvic-simulation/core/FormatValidate.hpp"
 #include "openvic-simulation/utility/Logger.hpp"
-#include "openvic-simulation/utility/StringUtils.hpp"
+#include "openvic-simulation/core/string/CharConv.hpp"
 #include "openvic-simulation/core/Typedefs.hpp"
 #include "openvic-simulation/utility/Containers.hpp"
 
@@ -549,7 +549,7 @@ static bool _parse_province_colour(colour_t& colour, std::array<std::string_view
 		}
 		bool successful = false;
 		uint64_t val;
-		std::from_chars_result result = StringUtils::string_to_uint64(component, val);
+		std::from_chars_result result = string_to_uint64(component, val);
 		successful = result.ec == std::errc{};
 		if (successful && val <= colour_t::max_value) {
 			colour[i] = val;
@@ -1079,7 +1079,7 @@ bool MapDefinition::generate_and_load_province_adjacencies(std::span<const LineO
 			const std::string_view data_str = adjacency.get_value_for(4);
 			bool successful = false;
 			uint64_t data_uint;
-			std::from_chars_result result = StringUtils::string_to_uint64(data_str, data_uint);
+			std::from_chars_result result = string_to_uint64(data_str, data_uint);
 			successful = result.ec == std::errc{};
 			if (!successful || data_uint > std::numeric_limits<adjacency_t::data_t>::max()) {
 				spdlog::error_s("Invalid adjacency data: \"{}\"", data_str);

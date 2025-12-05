@@ -502,7 +502,7 @@ bool UnitInstanceManager::create_leader(
 				connector = " ";
 			}
 
-			name_storage = StringUtils::append_string_views(first_name, connector, last_name);
+			name_storage = append_string_views(first_name, connector, last_name);
 			name = name_storage;
 		}
 	}

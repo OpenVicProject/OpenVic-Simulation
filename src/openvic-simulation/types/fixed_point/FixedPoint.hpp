@@ -18,7 +18,7 @@
 #include "openvic-simulation/types/StackString.hpp"
 #include "openvic-simulation/utility/Getters.hpp"
 #include "openvic-simulation/utility/Logger.hpp"
-#include "openvic-simulation/utility/StringUtils.hpp"
+#include "openvic-simulation/core/string/CharConv.hpp"
 #include "openvic-simulation/utility/Containers.hpp"
 #include "openvic-simulation/core/Typedefs.hpp"
 #include "openvic-simulation/core/Math.hpp"
@@ -320,7 +320,7 @@ namespace OpenVic {
 
 			std::to_chars_result result {};
 			if (decimal_places == static_cast<size_t>(-1)) {
-				result = StringUtils::to_chars(first, last, abs().unsafe_truncate<int64_t>());
+				result = OpenVic::to_chars(first, last, abs().unsafe_truncate<int64_t>());
 				if (OV_unlikely(result.ec != std::errc {})) {
 					return result;
 				}
@@ -353,7 +353,7 @@ namespace OpenVic {
 			fixed_point_t val = this->abs() + err;
 
 
-			result = StringUtils::to_chars(first, last, val.unsafe_truncate<int64_t>());
+			result = OpenVic::to_chars(first, last, val.unsafe_truncate<int64_t>());
 			if (OV_unlikely(result.ec != std::errc {})) {
 				return result;
 			}
@@ -680,7 +680,7 @@ namespace OpenVic {
 		// Can produce negative values
 		OV_SPEED_INLINE static constexpr std::from_chars_result from_chars_integer(char const* str, char const* const end, fixed_point_t& value) {
 			int64_t parsed_value = 0;
-			std::from_chars_result result = StringUtils::string_to_int64(str, end, parsed_value);
+			std::from_chars_result result = string_to_int64(str, end, parsed_value);
 			if (result.ec == std::errc{}) {
 				value = parse(parsed_value);
 			}
@@ -696,7 +696,7 @@ namespace OpenVic {
 
 			end = end - begin > PRECISION ? begin + PRECISION : end;
 			uint64_t parsed_value;
-			std::from_chars_result result = StringUtils::string_to_uint64(begin, end, parsed_value);
+			std::from_chars_result result = string_to_uint64(begin, end, parsed_value);
 			if (result.ec != std::errc{}) {
 				return result;
 			}

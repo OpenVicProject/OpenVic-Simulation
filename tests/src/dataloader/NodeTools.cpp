@@ -25,7 +25,7 @@
 #include "openvic-simulation/types/Colour.hpp"
 #include "openvic-simulation/types/Date.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
-#include "openvic-simulation/utility/StringUtils.hpp"
+#include "openvic-simulation/core/string/CharConv.hpp"
 
 #include "../types/Colour.hpp" // IWYU pragma: keep
 #include "Helper.hpp" // IWYU pragma: keep
@@ -377,7 +377,7 @@ TEST_CASE("NodeTools expect integer functions", "[NodeTools][NodeTools-expect-fu
 		std::string_view sv = ptr->value().view();
 
 		decltype(val) check;
-		std::from_chars_result result = OpenVic::StringUtils::string_to_uint64(sv, check, base);
+		std::from_chars_result result = string_to_uint64(sv, check, base);
 		CHECK_IF(result.ec == std::errc {});
 		else {
 			return false;
@@ -632,7 +632,7 @@ TEST_CASE(
 		std::string_view sv = ptr->value().view();
 
 		int64_t check_int;
-		std::from_chars_result result = StringUtils::string_to_int64(sv, check_int);
+		std::from_chars_result result = string_to_int64(sv, check_int);
 		CHECK_IF(result.ec == std::errc {});
 		else {
 			return false;
@@ -708,7 +708,7 @@ TEST_CASE("NodeTools expect vector functions", "[NodeTools][NodeTools-expect-fun
 				if constexpr (std::same_as<decltype(check), fixed_point_t>) {
 					return check.from_chars(sv.data(), sv.data() + sv.size());
 				} else {
-					return StringUtils::from_chars(sv.data(), sv.data() + sv.size(), check);
+					return from_chars(sv.data(), sv.data() + sv.size(), check);
 				}
 			}();
 			CHECK_OR_CONTINUE(result.ec == std::errc {});
