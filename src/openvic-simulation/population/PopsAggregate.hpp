@@ -4,7 +4,7 @@
 #include "openvic-simulation/types/fixed_point/FixedPointMap.hpp"
 #include "openvic-simulation/types/IndexedFlatMap.hpp"
 #include "openvic-simulation/types/OrderedContainers.hpp"
-#include "openvic-simulation/types/PopSize.hpp"
+#include "openvic-simulation/population/PopSum.hpp"
 #include "openvic-simulation/utility/Getters.hpp"
 #include "openvic-simulation/utility/reactive/MutableState.hpp"
 
@@ -22,7 +22,7 @@ namespace OpenVic {
 
 	struct PopsAggregate {
 	private:
-		pop_size_t PROPERTY(total_population, 0);
+		pop_sum_t PROPERTY(total_population, 0);
 		size_t PROPERTY(max_supported_regiment_count, 0);
 		fixed_point_t _yesterdays_import_value_running_total;
 		OV_STATE_PROPERTY(fixed_point_t, yesterdays_import_value); //>= 0
@@ -32,19 +32,19 @@ namespace OpenVic {
 		fixed_point_t PROPERTY(average_consciousness);
 		fixed_point_t PROPERTY(average_militancy);
 
-		OV_IFLATMAP_PROPERTY(Strata, pop_size_t, population_by_strata);
+		OV_IFLATMAP_PROPERTY(Strata, pop_sum_t, population_by_strata);
 		OV_IFLATMAP_PROPERTY(Strata, fixed_point_t, militancy_by_strata);
 		OV_IFLATMAP_PROPERTY(Strata, fixed_point_t, life_needs_fulfilled_by_strata);
 		OV_IFLATMAP_PROPERTY(Strata, fixed_point_t, everyday_needs_fulfilled_by_strata);
 		OV_IFLATMAP_PROPERTY(Strata, fixed_point_t, luxury_needs_fulfilled_by_strata);
 
-		OV_IFLATMAP_PROPERTY(PopType, pop_size_t, population_by_type);
-		OV_IFLATMAP_PROPERTY(PopType, pop_size_t, unemployed_pops_by_type);
+		OV_IFLATMAP_PROPERTY(PopType, pop_sum_t, population_by_type);
+		OV_IFLATMAP_PROPERTY(PopType, pop_sum_t, unemployed_pops_by_type);
 		OV_IFLATMAP_PROPERTY(Ideology, fixed_point_t, supporter_equivalents_by_ideology);
 		fixed_point_map_t<BaseIssue const*> PROPERTY(supporter_equivalents_by_issue);
 		fixed_point_map_t<CountryParty const*> PROPERTY(vote_equivalents_by_party);
-		ordered_map<Culture const*, pop_size_t> PROPERTY(population_by_culture);
-		ordered_map<Religion const*, pop_size_t> PROPERTY(population_by_religion);
+		ordered_map<Culture const*, pop_sum_t> PROPERTY(population_by_culture);
+		ordered_map<Religion const*, pop_sum_t> PROPERTY(population_by_religion);
 
 	protected:
 		PopsAggregate(

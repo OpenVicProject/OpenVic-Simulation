@@ -226,4 +226,9 @@ namespace OpenVic {
 	concept mul_add_assignable = requires(Lhs& lhs, const A a, const B b) {
 		{ lhs += a * b } -> std::same_as<Lhs&>;
 	};
+
+	template<typename Lhs, typename Rhs = Lhs>
+	concept equalable = requires(Lhs const& lhs, Rhs const& rhs) {
+		{ lhs == rhs } -> std::convertible_to<bool>;
+	};
 }

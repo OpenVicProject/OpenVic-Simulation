@@ -8,6 +8,7 @@
 #include "openvic-simulation/misc/GameRulesManager.hpp"
 #include "openvic-simulation/population/PopManager.hpp"
 #include "openvic-simulation/population/PopType.hpp"
+#include "openvic-simulation/population/PopSum.hpp"
 
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;
@@ -28,7 +29,7 @@ ProductionType::ProductionType(
 	const std::optional<Job> new_owner,
 	memory::vector<Job>&& new_jobs,
 	const template_type_t new_template_type,
-	const pop_size_t new_base_workforce_size,
+	const pop_sum_t new_base_workforce_size,
 	fixed_point_map_t<GoodDefinition const*>&& new_input_goods,
 	GoodDefinition const& new_output_good,
 	const fixed_point_t new_base_output_quantity,
@@ -139,7 +140,7 @@ bool ProductionTypeManager::add_production_type(
 	std::optional<Job> owner,
 	memory::vector<Job>&& jobs,
 	const ProductionType::template_type_t template_type,
-	const pop_size_t base_workforce_size,
+	const pop_sum_t base_workforce_size,
 	fixed_point_map_t<GoodDefinition const*>&& input_goods,
 	GoodDefinition const* const output_good,
 	const fixed_point_t base_output_quantity,
@@ -327,7 +328,7 @@ bool ProductionTypeManager::load_production_types_file(
 			memory::vector<Job> jobs;
 			ProductionType::template_type_t template_type { FACTORY };
 			GoodDefinition const* output_good = nullptr;
-			pop_size_t base_workforce_size = 0;
+			pop_sum_t base_workforce_size = 0;
 			fixed_point_map_t<GoodDefinition const*> input_goods, maintenance_requirements;
 			fixed_point_t base_output_quantity = 0;
 			memory::vector<ProductionType::bonus_t> bonuses;
@@ -360,7 +361,7 @@ bool ProductionTypeManager::load_production_types_file(
 				"employees", ZERO_OR_ONE, _expect_job_list(good_definition_manager, pop_manager, move_variable_callback(jobs)),
 				"type", ZERO_OR_ONE,
 					expect_identifier(expect_mapped_string(template_type_map, assign_variable_callback(template_type))),
-				"workforce", ZERO_OR_ONE, expect_uint(assign_variable_callback(base_workforce_size)),
+				"workforce", ZERO_OR_ONE, expect_strong_typedef<pop_size_t>(assign_variable_callback(base_workforce_size)),
 				"input_goods", ZERO_OR_ONE,
 					good_definition_manager.expect_good_definition_decimal_map(move_variable_callback(input_goods)),
 				"output_goods", ZERO_OR_ONE,
