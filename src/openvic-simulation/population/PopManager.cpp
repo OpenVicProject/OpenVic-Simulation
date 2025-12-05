@@ -11,6 +11,9 @@
 #include "openvic-simulation/modifier/ModifierManager.hpp"
 #include "openvic-simulation/core/FormatValidate.hpp"
 #include "openvic-simulation/utility/Logger.hpp"
+#include "openvic-simulation/population/PopSize.hpp"
+
+#include <type_safe/strong_typedef.hpp>
 
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;
@@ -279,8 +282,8 @@ bool PopManager::load_pop_type_file(
 		"sprite", ONE_EXACTLY, expect_uint(assign_variable_callback(sprite)),
 		"color", ONE_EXACTLY, expect_colour(assign_variable_callback(colour)),
 		"is_artisan", ZERO_OR_ONE, expect_bool(assign_variable_callback(is_artisan)),
-		"max_size", ZERO_OR_ONE, expect_uint(assign_variable_callback(max_size)),
-		"merge_max_size", ZERO_OR_ONE, expect_uint(assign_variable_callback(merge_max_size)),
+		"max_size", ZERO_OR_ONE, expect_strong_typedef<pop_size_t>(assign_variable_callback(max_size)),
+		"merge_max_size", ZERO_OR_ONE, expect_strong_typedef<pop_size_t>(assign_variable_callback(merge_max_size)),
 		"strata", ONE_EXACTLY, stratas.expect_item_identifier(assign_variable_callback_pointer(strata)),
 		"state_capital_only", ZERO_OR_ONE, expect_bool(assign_variable_callback(state_capital_only)),
 		"research_points", ZERO_OR_ONE, expect_fixed_point(assign_variable_callback(research_points)),
@@ -472,7 +475,7 @@ bool PopManager::load_pop_bases_into_vector(
 		return true;
 	}
 
-	if (culture != nullptr && religion != nullptr && size >= 1 && size <= std::numeric_limits<pop_size_t>::max()) {
+	if (culture != nullptr && religion != nullptr && size >= 1 && size <= std::numeric_limits<type_safe::underlying_type<pop_size_t>>::max()) {
 		vec.emplace_back(PopBase { type, *culture, *religion, size.floor<int32_t>(), militancy, consciousness, rebel_type });
 	} else {
 		spdlog::warn_s(

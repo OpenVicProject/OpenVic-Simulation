@@ -851,7 +851,7 @@ namespace OpenVic {
 
 		template <typename OtherValueType>
 		IndexedFlatMap& operator/=(IndexedFlatMap<ForwardedKeyType,OtherValueType> const& other)
-		requires divide_assignable<ValueType,OtherValueType> {
+		requires divide_assignable<ValueType,OtherValueType> && equalable<ValueType, OtherValueType> {
 			static_assert(has_index<ForwardedKeyType>);
 			if (!check_subset_span_match(other)) {
 				return *this;
@@ -869,29 +869,6 @@ namespace OpenVic {
 					//continue and let it throw
 				}
 				this->at(key) /= other.at(key);
-			}
-			return *this;
-		}
-
-		template <typename OtherValueType>
-		IndexedFlatMap& divide_assign_handle_zero(
-			IndexedFlatMap<ForwardedKeyType,OtherValueType> const& other,
-			fu2::function<void(ValueType&, OtherValueType const&)> handle_div_by_zero
-		) requires divide_assignable<ValueType,OtherValueType> {
-			static_assert(has_index<ForwardedKeyType>);
-			if (!check_subset_span_match(other)) {
-				return *this;
-			}
-
-			for (ForwardedKeyType const& key : other.get_keys()) {
-				if (other.at(key) == static_cast<ValueType>(0)) {
-					handle_div_by_zero(
-						this->at(key),
-						other.at(key)
-					);
-				} else {
-					this->at(key) /= other.at(key);
-				}
 			}
 			return *this;
 		}
@@ -942,41 +919,6 @@ namespace OpenVic {
 			for (ValueType& val : values) {
 				val /= scalar;
 			}
-			return *this;
-		}
-
-		template <typename OtherValueType,typename ScalarType>
-		constexpr IndexedFlatMap& mul_add(
-			IndexedFlatMap<ForwardedKeyType,OtherValueType> const& other,
-			ScalarType const& factor
-		) requires mul_add_assignable<ValueType,OtherValueType,ScalarType> {
-			static_assert(has_index<ForwardedKeyType>);
-			for (ForwardedKeyType const& key : get_shared_keys(other)) {
-				at(key) += other.at(key) * factor;
-			}
-
-			return *this;
-		}
-
-		template <typename ValueTypeA,typename ValueTypeB>
-		constexpr IndexedFlatMap& mul_add(
-			IndexedFlatMap<ForwardedKeyType,ValueTypeA> const& a,
-			IndexedFlatMap<ForwardedKeyType,ValueTypeB> const& b
-		) requires mul_add_assignable<ValueType,ValueTypeA,ValueTypeB> {
-			static_assert(has_index<ForwardedKeyType>);
-			if (a.get_min_index() != b.get_min_index() || a.get_max_index() != b.get_max_index()) {
-				spdlog::error_s(
-					"DEVELOPER: OpenVic::IndexedFlatMap<{},{}> attempted mul_add where a and b don't have the same keys. This is not implemented.",
-					type_name<ForwardedKeyType>(),
-					type_name<ValueType>()
-				);
-				assert(a.get_min_index() == b.get_min_index() && a.get_max_index() == b.get_max_index());
-			}
-
-			for (ForwardedKeyType const& key : get_shared_keys(a)) {
-				at(key) += a.at(key) * b.at(key);
-			}
-
 			return *this;
 		}
 

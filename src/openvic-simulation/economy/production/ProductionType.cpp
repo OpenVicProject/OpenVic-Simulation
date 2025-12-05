@@ -7,6 +7,7 @@
 #include "openvic-simulation/economy/GoodDefinition.hpp"
 #include "openvic-simulation/misc/GameRulesManager.hpp"
 #include "openvic-simulation/population/PopManager.hpp"
+#include "openvic-simulation/population/PopSize.hpp"
 #include "openvic-simulation/population/PopType.hpp"
 
 using namespace OpenVic;
@@ -360,7 +361,7 @@ bool ProductionTypeManager::load_production_types_file(
 				"employees", ZERO_OR_ONE, _expect_job_list(good_definition_manager, pop_manager, move_variable_callback(jobs)),
 				"type", ZERO_OR_ONE,
 					expect_identifier(expect_mapped_string(template_type_map, assign_variable_callback(template_type))),
-				"workforce", ZERO_OR_ONE, expect_uint(assign_variable_callback(base_workforce_size)),
+				"workforce", ZERO_OR_ONE, expect_strong_typedef<pop_size_t>(assign_variable_callback(base_workforce_size)),
 				"input_goods", ZERO_OR_ONE,
 					good_definition_manager.expect_good_definition_decimal_map(move_variable_callback(input_goods)),
 				"output_goods", ZERO_OR_ONE,

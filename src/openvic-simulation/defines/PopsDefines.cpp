@@ -75,8 +75,8 @@ node_callback_t PopsDefines::expect_defines() {
 		"MOVEMENT_SUPPORT_UH_FACTOR", ONE_EXACTLY, expect_fixed_point(assign_variable_callback(movement_support_uh_factor)),
 		"REBEL_OCCUPATION_STRENGTH_BONUS", ONE_EXACTLY,
 			expect_fixed_point(assign_variable_callback(rebel_occupation_strength_bonus)),
-		"LARGE_POPULATION_LIMIT", ONE_EXACTLY, expect_uint(assign_variable_callback(large_population_limit)),
+		"LARGE_POPULATION_LIMIT", ONE_EXACTLY, expect_strong_typedef<pop_sum_t>(assign_variable_callback(large_population_limit)),
 		"LARGE_POPULATION_INFLUENCE_PENALTY_CHUNK", ONE_EXACTLY,
-			expect_uint(assign_variable_callback(large_population_influence_penalty_chunk))
+			expect_strong_typedef<pop_sum_t>(assign_variable_callback(large_population_influence_penalty_chunk))
 	);
 }

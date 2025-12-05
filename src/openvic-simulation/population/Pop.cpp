@@ -73,7 +73,7 @@ fixed_point_t Pop::get_unemployment_fraction() const {
 	if (!type->can_be_unemployed) {
 		return 0;
 	}
-	return fixed_point_t(get_unemployed()) / size;
+	return fixed_point_t::from_fraction(get_unemployed(), size);
 }
 
 void Pop::setup_pop_test_values(IssueManager const& issue_manager) {
@@ -120,7 +120,7 @@ void Pop::setup_pop_test_values(IssueManager const& issue_manager) {
 	for (Ideology const& ideology : supporter_equivalents_by_ideology.get_keys()) {
 		test_weight_indexed(supporter_equivalents_by_ideology, ideology, 1, 5);
 	}
-	supporter_equivalents_by_ideology.rescale(size);
+	supporter_equivalents_by_ideology.rescale(type_safe::get(size));
 
 	supporter_equivalents_by_issue.clear();
 	for (BaseIssue const& issue : issue_manager.get_party_policies()) {
@@ -131,14 +131,14 @@ void Pop::setup_pop_test_values(IssueManager const& issue_manager) {
 			test_weight_ordered(supporter_equivalents_by_issue, reform, 3, 6);
 		}
 	}
-	rescale_fixed_point_map(supporter_equivalents_by_issue, size);
+	rescale_fixed_point_map(supporter_equivalents_by_issue, type_safe::get(size));
 
 	if (!vote_equivalents_by_party.empty()) {
 		for (auto& [party, value] : vote_equivalents_by_party) {
 			vote_equivalents_by_party[party] = 0;
 			test_weight_ordered(vote_equivalents_by_party, party, 4, 10);
 		}
-		rescale_fixed_point_map(vote_equivalents_by_party, size);
+		rescale_fixed_point_map(vote_equivalents_by_party, type_safe::get(size));
 	}
 
 	/* Returns a fixed point between 0 and max. */
@@ -255,9 +255,9 @@ void Pop::update_gamestate(
 		) {
 			max_supported_regiments = 0;
 		} else {
-			max_supported_regiments = (fixed_point_t(size) / (
-				fixed_point_t(military_defines.get_pop_size_per_regiment()) * pop_size_per_regiment_multiplier
-			)).floor<size_t>() + 1;
+			max_supported_regiments = (
+				type_safe::get(size) / (type_safe::get(military_defines.get_pop_size_per_regiment()) * pop_size_per_regiment_multiplier) //
+			).floor<size_t>() + 1;
 		}
 	}
 }

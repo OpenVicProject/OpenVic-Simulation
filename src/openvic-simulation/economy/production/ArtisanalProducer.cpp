@@ -72,8 +72,8 @@ void ArtisanalProducer::artisan_tick_handler::calculate_inputs(
 	//throughput scalar, the minimum of stockpile / base_desired_quantity
 	//inputs_bought_fraction uses base_desired_quantity as population size is cancelled in the production and input calculations.
 	const pop_size_t pop_size = pop.get_size();
-	fixed_point_t inputs_bought_numerator = pop_size,
-		inputs_bought_denominator = production_type.base_workforce_size,
+	fixed_point_t inputs_bought_numerator = type_safe::get(pop_size),
+		inputs_bought_denominator = type_safe::get(production_type.base_workforce_size),
 		inputs_bought_fraction_v = inputs_bought_numerator / inputs_bought_denominator;
 
 	distinct_goods_to_buy = 0;
@@ -494,7 +494,7 @@ fixed_point_t ArtisanalProducer::calculate_production_type_score(
 		k * fixed_point_t::mul_div(costs, costs, revenue)
 		-(1+k)*costs
 		+ revenue
-	) * Pop::size_denominator / workforce; //factor out pop size without making values too small
+	).mul_div(Pop::size_denominator, workforce); //factor out pop size without making values too small
 }
 
 ProductionType const* ArtisanalProducer::pick_production_type(

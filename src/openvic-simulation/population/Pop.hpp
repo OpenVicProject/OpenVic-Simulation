@@ -6,10 +6,12 @@
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPointMap.hpp"
 #include "openvic-simulation/types/IndexedFlatMap.hpp"
-#include "openvic-simulation/types/PopSize.hpp"
+#include "openvic-simulation/population/PopSize.hpp"
 #include "openvic-simulation/types/UnitBranchType.hpp"
 #include "openvic-simulation/utility/Containers.hpp"
 #include "openvic-simulation/core/portable/ForwardableSpan.hpp"
+
+#include <type_safe/strong_typedef.hpp>
 
 namespace OpenVic {
 	struct BaseIssue;
@@ -83,7 +85,7 @@ namespace OpenVic {
 			return static_cast<uint8_t>(allowed) <= static_cast<uint8_t>(status);
 		}
 
-		static constexpr pop_size_t MAX_SIZE = std::numeric_limits<pop_size_t>::max();
+		static constexpr pop_size_t MAX_SIZE = std::numeric_limits<type_safe::underlying_type<pop_size_t>>::max();
 
 	private:
 		MarketInstance& market_instance;
