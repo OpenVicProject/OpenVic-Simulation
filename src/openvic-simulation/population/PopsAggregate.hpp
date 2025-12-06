@@ -4,7 +4,7 @@
 #include "openvic-simulation/types/fixed_point/FixedPointMap.hpp"
 #include "openvic-simulation/types/IndexedFlatMap.hpp"
 #include "openvic-simulation/types/OrderedContainers.hpp"
-#include "openvic-simulation/types/PopSize.hpp"
+#include "openvic-simulation/population/PopSize.hpp"
 #include "openvic-simulation/utility/Getters.hpp"
 #include "openvic-simulation/utility/reactive/MutableState.hpp"
 

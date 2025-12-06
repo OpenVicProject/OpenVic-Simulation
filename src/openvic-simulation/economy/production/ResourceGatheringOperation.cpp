@@ -12,10 +12,12 @@
 #include "openvic-simulation/population/Pop.hpp"
 #include "openvic-simulation/population/PopType.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
-#include "openvic-simulation/types/PopSize.hpp"
+#include "openvic-simulation/population/PopSize.hpp"
 #include "openvic-simulation/types/TypedIndices.hpp"
 #include "openvic-simulation/utility/Logger.hpp"
 #include "openvic-simulation/utility/Containers.hpp"
+
+#include <type_safe/strong_typedef.hpp>
 
 using namespace OpenVic;
 
@@ -71,14 +73,14 @@ void ResourceGatheringOperation::initialise_rgo_size_multiplier() {
 	}
 
 	const fixed_point_t size_modifier = calculate_size_modifier();
-	const fixed_point_t base_workforce_size = production_type.base_workforce_size;
+	const fixed_point_t base_workforce_size = type_safe::get(production_type.base_workforce_size);
 	if (size_modifier == 0) {
 		size_multiplier = 0;
 	} else {
 		size_multiplier = ((total_worker_count_in_province / (size_modifier * base_workforce_size)).ceil() * fixed_point_t::_1_50).floor();
 	}
 
-	max_employee_count_cache = (size_modifier * size_multiplier * base_workforce_size).floor<pop_size_t>();
+	max_employee_count_cache = (size_modifier * size_multiplier * base_workforce_size).floor<type_safe::underlying_type<pop_size_t>>();
 }
 
 fixed_point_t ResourceGatheringOperation::calculate_size_modifier() const {
@@ -187,7 +189,7 @@ void ResourceGatheringOperation::hire() {
 		proportion_to_hire = 1;
 	} else {
 		//hire all pops proportionally
-		const fixed_point_t max_worker_count_real = max_employee_count_cache, available_worker_count_real = available_worker_count;
+		const fixed_point_t max_worker_count_real = type_safe::get(max_employee_count_cache), available_worker_count_real = type_safe::get(available_worker_count);
 		proportion_to_hire = max_worker_count_real / available_worker_count_real;
 	}
 
@@ -197,7 +199,7 @@ void ResourceGatheringOperation::hire() {
 		for (Job const& job : jobs) {
 			PopType const* const job_pop_type = job.get_pop_type();
 			if (job_pop_type && *job_pop_type == pop_type) {
-				const pop_size_t pop_size_to_hire = static_cast<pop_size_t>((proportion_to_hire * pop.get_size()).floor());
+				const pop_size_t pop_size_to_hire = (proportion_to_hire * pop.get_size()).floor<type_safe::underlying_type<pop_size_t>>();
 				if (pop_size_to_hire <= 0) {
 					continue;
 				}
@@ -306,7 +308,7 @@ fixed_point_t ResourceGatheringOperation::produce() {
 
 			const fixed_point_t effect_multiplier = job.get_effect_multiplier();
 			fixed_point_t relative_to_workforce =
-				fixed_point_t::parse(employees_of_type) / fixed_point_t::parse(max_employee_count_cache);
+				fixed_point_t::parse(type_safe::get(employees_of_type)) / fixed_point_t::parse(type_safe::get(max_employee_count_cache));
 			const fixed_point_t amount = job.get_amount();
 			if (effect_multiplier != fixed_point_t::_1 && relative_to_workforce > amount) {
 				relative_to_workforce = amount;

@@ -6,7 +6,7 @@
 #include "openvic-simulation/types/IdentifierRegistry.hpp"
 #include "openvic-simulation/types/IndexedFlatMap.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
-#include "openvic-simulation/types/PopSize.hpp"
+#include "openvic-simulation/population/PopSize.hpp"
 #include "openvic-simulation/types/PopSprite.hpp"
 #include "openvic-simulation/utility/Containers.hpp"
 
