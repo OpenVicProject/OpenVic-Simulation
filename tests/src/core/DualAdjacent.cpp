@@ -153,20 +153,29 @@ TEST_CASE("remove_if_dual_adjacent", "[algorithm][dual-adjacent][remove_if_dual_
 		remove_if_dual_adjacent(vector_down.begin(), vector_down.end(), std::bind_front(callback_bind, 9)) == vector_down.end()
 	);
 	CHECK(
-		remove_if_dual_adjacent(vector_spread.begin(), vector_spread.end(), std::bind_front(callback_bind, 5)) ==
-		vector_spread.end()
+		remove_if_dual_adjacent(
+			vector_spread.begin(),
+			vector_spread.end(),
+			std::bind_front(callback_bind, 5)
+		) == vector_spread.end()
 	);
 
 	CHECK( //
 		remove_if_dual_adjacent(vector_up.begin(), vector_up.end(), std::bind_front(callback_bind, 9)) == vector_up.end() - 1
 	);
 	CHECK(
-		remove_if_dual_adjacent(vector_down.begin(), vector_down.end(), std::bind_front(callback_bind, 1)) ==
-		vector_down.end() - 1
+		remove_if_dual_adjacent(
+			vector_down.begin(),
+			vector_down.end(),
+			std::bind_front(callback_bind, 1)
+		) == vector_down.end() - 1
 	);
 	CHECK(
-		remove_if_dual_adjacent(vector_spread.begin(), vector_spread.end(), std::bind_front(callback_bind, 6)) ==
-		vector_spread.end() - 1
+		remove_if_dual_adjacent(
+			vector_spread.begin(),
+			vector_spread.end(),
+			std::bind_front(callback_bind, 6)
+		) == vector_spread.end() - 1
 	);
 
 	static constexpr auto removed_vector_up = std::to_array<int>({ 1, 2, 3, 5, 6, 7, 8, 9, 9 });

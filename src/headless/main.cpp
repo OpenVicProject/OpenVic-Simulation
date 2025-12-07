@@ -258,44 +258,40 @@ static bool run_headless(fs::path const& root, memory::vector<memory::string>& m
 
 	// TODO - REMOVE TEST CODE
 	SPDLOG_INFO("===== Ranking system test... =====");
-	if (game_manager.get_instance_manager()) {
-		const auto print_ranking_list = [ //
-		](std::string_view title, OpenVic::forwardable_span<CountryInstance* const> countries) -> void {
-			memory::string countries_str;
-			for (CountryInstance* country : countries) {
-				countries_str += fmt::format(
-					"\n\t{} - Total #{} ({}), Prestige #{} ({}), Industry #{} ({}), Military #{} ({})", //
-					*country, //
-					country->get_total_rank(), country->total_score.get_untracked().to_string(1), //
-					country->get_prestige_rank(), country->get_prestige_untracked().to_string(1),
-					country->get_industrial_rank(), country->get_industrial_power_untracked().to_string(1),
-					country->get_military_rank(), country->military_power.get_untracked().to_string(1)
-				);
-			}
-			SPDLOG_INFO("{}:{}", title, countries_str);
-		};
-
-		CountryInstanceManager const& country_instance_manager =
-			game_manager.get_instance_manager()->get_country_instance_manager();
-
-		OpenVic::forwardable_span<CountryInstance* const> great_powers = country_instance_manager.get_great_powers();
-		print_ranking_list("Great Powers", great_powers);
-		print_ranking_list("Secondary Powers", country_instance_manager.get_secondary_powers());
-		print_ranking_list("All countries", country_instance_manager.get_total_ranking());
-
-		SPDLOG_INFO("===== RGO test... =====");
-		for (size_t i = 0; i < std::min<size_t>(3, great_powers.size()); ++i) {
-			CountryInstance const& great_power = *great_powers[i];
-			ProvinceInstance const* const capital_province = great_power.get_capital();
-			if (capital_province == nullptr) {
-				spdlog::warn_s("{} has no capital ProvinceInstance set.", great_power);
-			} else {
-				print_rgo(*capital_province);
-			}
+	InstanceManager& instance_manager = *game_manager.get_instance_manager();
+	const auto print_ranking_list = [](
+		std::string_view title,
+		OpenVic::forwardable_span<CountryInstance* const> countries
+	) -> void {
+		memory::string countries_str;
+		for (CountryInstance* country : countries) {
+			countries_str += fmt::format(
+				"\n\t{} - Total #{} ({}), Prestige #{} ({}), Industry #{} ({}), Military #{} ({})", //
+				*country, //
+				country->get_total_rank(), country->total_score.get_untracked().to_string(1), //
+				country->get_prestige_rank(), country->get_prestige_untracked().to_string(1),
+				country->get_industrial_rank(), country->get_industrial_power_untracked().to_string(1),
+				country->get_military_rank(), country->military_power.get_untracked().to_string(1)
+			);
 		}
-	} else {
-		spdlog::error_s("Instance manager not available!");
-		ret = false;
+		SPDLOG_INFO("{}:{}", title, countries_str);
+	};
+
+	CountryInstanceManager const& country_instance_manager = instance_manager.get_country_instance_manager();
+	OpenVic::forwardable_span<CountryInstance* const> great_powers = country_instance_manager.get_great_powers();
+	print_ranking_list("Great Powers", great_powers);
+	print_ranking_list("Secondary Powers", country_instance_manager.get_secondary_powers());
+	print_ranking_list("All countries", country_instance_manager.get_total_ranking());
+
+	SPDLOG_INFO("===== RGO test... =====");
+	for (size_t i = 0; i < std::min<size_t>(3, great_powers.size()); ++i) {
+		CountryInstance const& great_power = *great_powers[i];
+		ProvinceInstance const* const capital_province = great_power.get_capital();
+		if (capital_province == nullptr) {
+			spdlog::warn_s("{} has no capital ProvinceInstance set.", great_power);
+		} else {
+			print_rgo(*capital_province);
+		}
 	}
 
 	if (ret) {
@@ -305,7 +301,7 @@ static bool run_headless(fs::path const& root, memory::vector<memory::string>& m
 
 		using test_time_units_t = std::chrono::milliseconds;
 
-		MapInstance& map_instance = game_manager.get_instance_manager()->get_map_instance();
+		MapInstance& map_instance = instance_manager.get_map_instance();
 
 		SPDLOG_INFO("===== Land Pathfinding test... =====");
 		test_duration_t duration = std::chrono::duration_cast<test_time_units_t>( //

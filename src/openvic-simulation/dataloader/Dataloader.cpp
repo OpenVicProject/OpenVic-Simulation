@@ -12,14 +12,17 @@
 
 #include <fmt/std.h>
 
+#include "openvic-simulation/core/template/Concepts.hpp"
+#include "openvic-simulation/country/CountryDefinition.hpp"
 #include "openvic-simulation/DefinitionManager.hpp"
+#include "openvic-simulation/history/Bookmark.hpp"
+#include "openvic-simulation/history/HistoryManager.hpp"
 #include "openvic-simulation/interface/UI.hpp"
 #include "openvic-simulation/misc/GameRulesManager.hpp"
 #include "openvic-simulation/misc/SoundEffect.hpp"
 #include "openvic-simulation/utility/Logger.hpp"
 #include "openvic-simulation/core/string/Utility.hpp"
 #include "openvic-simulation/utility/Containers.hpp"
-#include "openvic-simulation/core/template/Concepts.hpp"
 
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;
@@ -379,9 +382,10 @@ bool Dataloader::_load_pop_types(DefinitionManager& definition_manager) {
 
 	bool ret = pop_manager.setup_stratas();
 
-	GoodDefinitionManager const& good_definition_manager =
-		definition_manager.get_economy_manager().get_good_definition_manager();
-	IdeologyManager const& ideology_manager = definition_manager.get_politics_manager().get_ideology_manager();
+	EconomyManager const& economy_manager = definition_manager.get_economy_manager();
+	GoodDefinitionManager const& good_definition_manager = economy_manager.get_good_definition_manager();
+	PoliticsManager const& politics_manager = definition_manager.get_politics_manager();
+	IdeologyManager const& ideology_manager = politics_manager.get_ideology_manager();
 
 	static constexpr std::string_view pop_type_directory = "poptypes";
 
@@ -578,8 +582,10 @@ bool Dataloader::_load_history(DefinitionManager& definition_manager, bool unuse
 		DeploymentManager& deployment_manager = definition_manager.get_military_manager().get_deployment_manager();
 
 		static constexpr std::string_view country_history_directory = "history/countries";
-		const path_vector_t country_history_files =
-			lookup_basic_identifier_prefixed_files_in_dir(country_history_directory, ".txt");
+		const path_vector_t country_history_files = lookup_basic_identifier_prefixed_files_in_dir(
+			country_history_directory,
+			".txt"
+		);
 
 		country_history_manager.reserve_more_country_histories(country_history_files.size());
 		deployment_manager.reserve_more_deployments(country_history_files.size());
@@ -590,8 +596,10 @@ bool Dataloader::_load_history(DefinitionManager& definition_manager, bool unuse
 				const memory::string filename = file.stem().string<char>(memory::string::allocator_type{});
 				const std::string_view country_id = extract_basic_identifier_prefix(filename);
 
-				CountryDefinition const* country =
-					definition_manager.get_country_definition_manager().get_country_definition_by_identifier(country_id);
+				CountryDefinitionManager const& country_definition_manager = definition_manager.get_country_definition_manager();
+				CountryDefinition const* country = country_definition_manager.get_country_definition_by_identifier(
+					country_id
+				);
 				if (country == nullptr) {
 					if (unused_history_file_warnings) {
 						spdlog::warn_s("Found history file for non-existent country: {}", country_id);
@@ -616,14 +624,17 @@ bool Dataloader::_load_history(DefinitionManager& definition_manager, bool unuse
 		}
 	}
 
+	HistoryManager& history_manager = definition_manager.get_history_manager();
 	{
 		/* Province History */
 		ProvinceHistoryManager& province_history_manager = definition_manager.get_history_manager().get_province_manager();
 		MapDefinition const& map_definition = definition_manager.get_map_definition();
 
 		static constexpr std::string_view province_history_directory = "history/provinces";
-		const path_vector_t province_history_files =
-			lookup_basic_identifier_prefixed_files_in_dir_recursive(province_history_directory, ".txt");
+		const path_vector_t province_history_files = lookup_basic_identifier_prefixed_files_in_dir_recursive(
+			province_history_directory,
+			".txt"
+		);
 
 		province_history_manager.reserve_more_province_histories(province_history_files.size());
 
@@ -653,8 +664,8 @@ bool Dataloader::_load_history(DefinitionManager& definition_manager, bool unuse
 		static constexpr std::string_view pop_history_directory = "history/pops/";
 
 		const string_set_t pop_history_dirs = lookup_dirs_in_dir(pop_history_directory);
-		const Date last_bookmark_date =
-			definition_manager.get_history_manager().get_bookmark_manager().get_last_bookmark_date();
+		BookmarkManager const& bookmark_manager = history_manager.get_bookmark_manager();
+		const Date last_bookmark_date = bookmark_manager.get_last_bookmark_date();
 
 		for (memory::string const& dir : pop_history_dirs) {
 			Date::from_chars_result result;
@@ -685,8 +696,7 @@ bool Dataloader::_load_history(DefinitionManager& definition_manager, bool unuse
 
 	{
 		/* Diplomacy History */
-		DiplomaticHistoryManager& diplomatic_history_manager =
-			definition_manager.get_history_manager().get_diplomacy_manager();
+		DiplomaticHistoryManager& diplomatic_history_manager = history_manager.get_diplomacy_manager();
 
 		static constexpr std::string_view diplomacy_history_directory = "history/diplomacy";
 
