@@ -10,7 +10,7 @@
 #include "openvic-simulation/types/Date.hpp"
 #include "openvic-simulation/types/OrderedContainers.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPointMap.hpp"
-#include "openvic-simulation/types/ProvinceLifeRating.hpp"
+#include "openvic-simulation/map/LifeRating.hpp"
 #include "openvic-simulation/utility/Containers.hpp"
 #include "openvic-simulation/utility/Getters.hpp"
 
