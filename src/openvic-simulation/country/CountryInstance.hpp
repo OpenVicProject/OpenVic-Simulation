@@ -18,7 +18,7 @@
 #include "openvic-simulation/types/HasIndex.hpp"
 #include "openvic-simulation/types/IndexedFlatMap.hpp"
 #include "openvic-simulation/types/OrderedContainers.hpp"
-#include "openvic-simulation/types/TechnologyUnlockLevel.hpp"
+#include "openvic-simulation/research/TechnologyUnlockLevel.hpp"
 #include "openvic-simulation/types/TypedIndices.hpp"
 #include "openvic-simulation/types/UnitBranchType.hpp"
 #include "openvic-simulation/types/UnitVariant.hpp"
@@ -389,8 +389,8 @@ namespace OpenVic {
 		OV_IFLATMAP_PROPERTY(RegimentType, technology_unlock_level_t, regiment_type_unlock_levels);
 		regiment_allowed_cultures_t PROPERTY(allowed_regiment_cultures, regiment_allowed_cultures_t::NO_CULTURES);
 		OV_IFLATMAP_PROPERTY(ShipType, technology_unlock_level_t, ship_type_unlock_levels);
-		technology_unlock_level_t PROPERTY(gas_attack_unlock_level, 0);
-		technology_unlock_level_t PROPERTY(gas_defence_unlock_level, 0);
+		technology_unlock_level_t PROPERTY(gas_attack_unlock_level, technology_unlock_level_t { 0 });
+		technology_unlock_level_t PROPERTY(gas_defence_unlock_level, technology_unlock_level_t { 0 });
 		memory::vector<technology_unlock_level_t> SPAN_PROPERTY(unit_variant_unlock_levels);
 
 	public:

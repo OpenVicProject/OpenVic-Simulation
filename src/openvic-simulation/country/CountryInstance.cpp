@@ -784,8 +784,8 @@ bool CountryInstance::modify_unit_type_unlock(UnitTypeBranched<Branch> const& un
 	if (unlock_level + unlock_level_change < 0) {
 		spdlog::error_s(
 			"Attempted to change unlock level for unit type {} in country {} to invalid value: current level = {}, change = {}, invalid new value = {}",
-			 unit_type, *this, static_cast<int64_t>(unlock_level),
-			 static_cast<int64_t>(unlock_level_change), static_cast<int64_t>(unlock_level + unlock_level_change)
+			 unit_type, *this, unlock_level,
+			 unlock_level_change, unlock_level + unlock_level_change
 		);
 		return false;
 	}
@@ -844,7 +844,7 @@ bool CountryInstance::modify_unit_type_unlock(UnitType const& unit_type, technol
 }
 
 bool CountryInstance::unlock_unit_type(UnitType const& unit_type) {
-	return modify_unit_type_unlock(unit_type, 1);
+	return modify_unit_type_unlock(unit_type, technology_unlock_level_t { 1 });
 }
 
 bool CountryInstance::is_unit_type_unlocked(UnitType const& unit_type) const {
@@ -873,8 +873,8 @@ bool CountryInstance::modify_building_type_unlock(
 	if (unlock_level + unlock_level_change < 0) {
 		spdlog::error_s(
 			"Attempted to change unlock level for building type {} in country {} to invalid value: current level = {}, change = {}, invalid new value = {}",
-			building_type, *this, static_cast<int64_t>(unlock_level), static_cast<int64_t>(unlock_level_change), 
-			static_cast<int64_t>(unlock_level + unlock_level_change)
+			building_type, *this, unlock_level, unlock_level_change,
+			unlock_level + unlock_level_change
 		);
 		return false;
 	}
@@ -889,7 +889,7 @@ bool CountryInstance::modify_building_type_unlock(
 }
 
 bool CountryInstance::unlock_building_type(BuildingType const& building_type) {
-	return modify_building_type_unlock(building_type, 1);
+	return modify_building_type_unlock(building_type, technology_unlock_level_t { 1 });
 }
 
 bool CountryInstance::is_building_type_unlocked(BuildingType const& building_type) const {
@@ -903,8 +903,8 @@ bool CountryInstance::modify_crime_unlock(Crime const& crime, technology_unlock_
 	if (unlock_level + unlock_level_change < 0) {
 		spdlog::error_s(
 			"Attempted to change unlock level for crime {} in country {} to invalid value: current level = {}, change = {}, invalid new value = {}",
-			crime, *this, static_cast<int64_t>(unlock_level),
-			static_cast<int64_t>(unlock_level_change), static_cast<int64_t>(unlock_level + unlock_level_change)
+			crime, *this, unlock_level,
+			unlock_level_change, unlock_level + unlock_level_change
 		);
 		return false;
 	}
@@ -915,7 +915,7 @@ bool CountryInstance::modify_crime_unlock(Crime const& crime, technology_unlock_
 }
 
 bool CountryInstance::unlock_crime(Crime const& crime) {
-	return modify_crime_unlock(crime, 1);
+	return modify_crime_unlock(crime, technology_unlock_level_t { 1 });
 }
 
 bool CountryInstance::is_crime_unlocked(Crime const& crime) const {
@@ -927,8 +927,8 @@ bool CountryInstance::modify_gas_attack_unlock(technology_unlock_level_t unlock_
 	if (gas_attack_unlock_level + unlock_level_change < 0) {
 		spdlog::error_s(
 			"Attempted to change unlock level for gas attack in country {} to invalid value: current level = {}, change = {}, invalid new value = {}",
-			*this, static_cast<int64_t>(gas_attack_unlock_level),
-			static_cast<int64_t>(unlock_level_change), static_cast<int64_t>(gas_attack_unlock_level + unlock_level_change)
+			*this, gas_attack_unlock_level,
+			unlock_level_change, gas_attack_unlock_level + unlock_level_change
 		);
 		return false;
 	}
@@ -939,7 +939,7 @@ bool CountryInstance::modify_gas_attack_unlock(technology_unlock_level_t unlock_
 }
 
 bool CountryInstance::unlock_gas_attack() {
-	return modify_gas_attack_unlock(1);
+	return modify_gas_attack_unlock(technology_unlock_level_t { 1 });
 }
 
 bool CountryInstance::is_gas_attack_unlocked() const {
@@ -951,8 +951,8 @@ bool CountryInstance::modify_gas_defence_unlock(technology_unlock_level_t unlock
 	if (gas_defence_unlock_level + unlock_level_change < 0) {
 		spdlog::error_s(
 			"Attempted to change unlock level for gas defence in country {} to invalid value: current level = {}, change = {}, invalid new value = {}",
-			*this, static_cast<int64_t>(gas_defence_unlock_level),
-			static_cast<int64_t>(unlock_level_change), static_cast<int64_t>(gas_defence_unlock_level + unlock_level_change)
+			*this, gas_defence_unlock_level,
+			unlock_level_change, gas_defence_unlock_level + unlock_level_change
 		);
 		return false;
 	}
@@ -963,7 +963,7 @@ bool CountryInstance::modify_gas_defence_unlock(technology_unlock_level_t unlock
 }
 
 bool CountryInstance::unlock_gas_defence() {
-	return modify_gas_defence_unlock(1);
+	return modify_gas_defence_unlock(technology_unlock_level_t { 1 });
 }
 
 bool CountryInstance::is_gas_defence_unlocked() const {
@@ -988,8 +988,8 @@ bool CountryInstance::modify_unit_variant_unlock(unit_variant_t unit_variant, te
 	if (unlock_level + unlock_level_change < 0) {
 		spdlog::error_s(
 			"Attempted to change unlock level for unit variant {} in country {} to invalid value: current level = {}, change = {}, invalid new value = {}",
-			static_cast<uint64_t>(unit_variant), *this, static_cast<int64_t>(unlock_level),
-			static_cast<int64_t>(unlock_level_change), static_cast<int64_t>(unlock_level + unlock_level_change)
+			static_cast<uint64_t>(unit_variant), *this, unlock_level,
+			unlock_level_change, unlock_level + unlock_level_change
 		);
 		ret = false;
 	} else {
@@ -1004,7 +1004,7 @@ bool CountryInstance::modify_unit_variant_unlock(unit_variant_t unit_variant, te
 }
 
 bool CountryInstance::unlock_unit_variant(unit_variant_t unit_variant) {
-	return modify_unit_variant_unlock(unit_variant, 1);
+	return modify_unit_variant_unlock(unit_variant, technology_unlock_level_t { 1 });
 }
 
 unit_variant_t CountryInstance::get_max_unlocked_unit_variant() const {
@@ -1020,8 +1020,8 @@ bool CountryInstance::modify_technology_unlock(
 	if (unlock_level + unlock_level_change < 0) {
 		spdlog::error_s(
 			"Attempted to change unlock level for technology {} in country {} to invalid value: current level = {}, change = {}, invalid new value = {}",
-			technology, *this, static_cast<int64_t>(unlock_level),
-			static_cast<int64_t>(unlock_level_change), static_cast<int64_t>(unlock_level + unlock_level_change)
+			technology, *this, unlock_level,
+			unlock_level_change, unlock_level + unlock_level_change
 		);
 		return false;
 	}
@@ -1053,7 +1053,7 @@ bool CountryInstance::set_technology_unlock_level(
 }
 
 bool CountryInstance::unlock_technology(Technology const& technology) {
-	return modify_technology_unlock(technology, 1);
+	return modify_technology_unlock(technology, technology_unlock_level_t { 1 });
 }
 
 bool CountryInstance::is_technology_unlocked(Technology const& technology) const {
@@ -1069,8 +1069,8 @@ bool CountryInstance::modify_invention_unlock(
 	if (unlock_level + unlock_level_change < 0) {
 		spdlog::error_s(
 			"Attempted to change unlock level for invention {} in country {} to invalid value: current level = {}, change = {}, invalid new value = {}",
-			invention, *this, static_cast<int64_t>(unlock_level),
-			static_cast<int64_t>(unlock_level_change), static_cast<int64_t>(unlock_level + unlock_level_change)
+			invention, *this, unlock_level,
+			unlock_level_change, unlock_level + unlock_level_change
 		);
 		return false;
 	}
@@ -1116,7 +1116,7 @@ bool CountryInstance::set_invention_unlock_level(
 }
 
 bool CountryInstance::unlock_invention(Invention const& invention) {
-	return modify_invention_unlock(invention, 1);
+	return modify_invention_unlock(invention, technology_unlock_level_t { 1 });
 }
 
 bool CountryInstance::is_invention_unlocked(Invention const& invention) const {
@@ -1239,7 +1239,7 @@ bool CountryInstance::apply_history_to_country(
 		ret &= set_technology_unlock_level(*technology, level);
 	}
 	for (auto const& [invention, activated] : entry.get_inventions()) {
-		ret &= set_invention_unlock_level(*invention, activated ? 1 : 0);
+		ret &= set_invention_unlock_level(*invention, technology_unlock_level_t { static_cast<int8_t>(activated ? 1 : 0) });
 	}
 
 	apply_foreign_investments(entry.get_foreign_investment(), country_instance_manager);
