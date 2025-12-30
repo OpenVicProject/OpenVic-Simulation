@@ -40,7 +40,7 @@ node_callback_t CountryDefines::expect_defines() {
 		"COLONIAL_RANK", ONE_EXACTLY, expect_uint(assign_variable_callback(secondary_power_rank)),
 		"COLONY_TO_STATE_PRESTIGE_GAIN", ONE_EXACTLY,
 			expect_fixed_point(assign_variable_callback(colony_to_state_prestige_gain)),
-		"COLONIAL_LIFERATING", ONE_EXACTLY, expect_uint(assign_variable_callback(colonial_liferating)),
+		"COLONIAL_LIFERATING", ONE_EXACTLY, expect_strong_typedef<life_rating_t>(assign_variable_callback(colonial_liferating)),
 		"BASE_GREATPOWER_DAILY_INFLUENCE", ONE_EXACTLY,
 			expect_fixed_point(assign_variable_callback(base_greatpower_daily_influence)),
 		"AI_SUPPORT_REFORM", ONE_EXACTLY, expect_fixed_point(assign_variable_callback(ai_support_reform)),
