@@ -226,4 +226,10 @@ namespace OpenVic {
 	concept mul_add_assignable = requires(Lhs& lhs, const A a, const B b) {
 		{ lhs += a * b } -> std::same_as<Lhs&>;
 	};
+
+	// Return type is strictly evaluated with same_as
+	template<typename F, typename Return, typename... Args>
+	concept strict_regular_invocable_r = std::regular_invocable<F, Args...> && requires(F f, Args&&... args) {
+		{ f(static_cast<Args>(args)...) } -> std::same_as<Return>;
+	};
 }

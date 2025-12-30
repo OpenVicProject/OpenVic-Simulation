@@ -604,7 +604,7 @@ namespace OpenVic {
 		*
 		* @note This method requires `ValueType` to be copy-assignable.
 		*/
-		void reinitialize_with_generator(fu2::function<ValueType(ForwardedKeyType const&)> value_generator)
+		void reinitialize_with_generator(strict_regular_invocable_r<ValueType, ForwardedKeyType const&> auto&& value_generator)
 		requires std::copyable<ValueType> {
 			for (iterator it = begin(); it < end(); it++) {
 				auto& [key, value] = *it;
@@ -622,7 +622,7 @@ namespace OpenVic {
 		* @note This method destroys existing elements and constructs new ones in place,
 		* which is often more efficient for move-only types.
 		*/
-		void reinitialize_with_generator(fu2::function<ValueType(ForwardedKeyType const&)> value_generator)
+		void reinitialize_with_generator(strict_regular_invocable_r<ValueType, ForwardedKeyType const&> auto&& value_generator)
 		requires std::movable<ValueType> && (!std::copyable<ValueType>) {
 			values.clear();
 			for (ForwardedKeyType const& key : keys) {
@@ -735,7 +735,7 @@ namespace OpenVic {
 		template <typename OtherValueType>
 		IndexedFlatMap<ForwardedKeyType, ValueType> divide_handle_zero(
 			IndexedFlatMap<ForwardedKeyType,OtherValueType> const& other,
-			fu2::function<ValueType(ValueType const&, OtherValueType const&)> handle_div_by_zero
+			strict_regular_invocable_r<ValueType, ValueType const&, OtherValueType const&> auto&& handle_div_by_zero
 		) const requires divisible<ValueType,OtherValueType,ValueType> {
 			static_assert(has_index<ForwardedKeyType>);
 			if (!check_subset_span_match(other)) {
@@ -745,7 +745,7 @@ namespace OpenVic {
 			return IndexedFlatMap(keys, [&](ForwardedKeyType const& key) {
 				if (other.contains(key)) {
 					if (other.at(key) == static_cast<ValueType>(0)) {
-						return handle_div_by_zero(
+						return std::forward(handle_div_by_zero)(
 							this->at(key),
 							other.at(key)
 						);
