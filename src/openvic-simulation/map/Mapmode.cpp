@@ -235,7 +235,7 @@ bool MapmodeManager::setup_mapmodes(MapDefinition const& map_definition) {
 			BuildingInstance const* railroad = province.get_building_by_identifier("railroad");
 			if (railroad != nullptr) {
 				const colour_argb_t::value_type val = colour_argb_t::colour_traits::component_from_fraction(
-					railroad->get_level(), railroad->building_type.get_max_level() + 1, 0.5f, 1.0f
+					type_safe::get(railroad->get_level()), type_safe::get(railroad->building_type.get_max_level()) + 1, 0.5f, 1.0f
 				);
 				switch (railroad->get_expansion_state()) {
 				case BuildingInstance::ExpansionState::CannotExpand:
