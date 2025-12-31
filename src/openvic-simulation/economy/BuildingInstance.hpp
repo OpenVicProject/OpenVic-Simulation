@@ -1,6 +1,6 @@
 #pragma once
 
-#include "openvic-simulation/types/BuildingLevel.hpp"
+#include "openvic-simulation/economy/BuildingLevel.hpp"
 #include "openvic-simulation/types/Date.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
 #include "openvic-simulation/types/HasIdentifier.hpp"
@@ -23,7 +23,7 @@ namespace OpenVic {
 	public:
 		BuildingType const& building_type;
 
-		BuildingInstance(BuildingType const& new_building_type, building_level_t new_level = 0);
+		BuildingInstance(BuildingType const& new_building_type, building_level_t new_level = building_level_t { 0 });
 		BuildingInstance(BuildingInstance&&) = default;
 
 		bool expand();

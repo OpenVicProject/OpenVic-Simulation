@@ -1,7 +1,7 @@
 #pragma once
 
 #include "openvic-simulation/modifier/Modifier.hpp"
-#include "openvic-simulation/types/BuildingLevel.hpp"
+#include "openvic-simulation/economy/BuildingLevel.hpp"
 #include "openvic-simulation/types/Date.hpp"
 #include "openvic-simulation/types/HasIndex.hpp"
 #include "openvic-simulation/types/IdentifierRegistry.hpp"
@@ -27,7 +27,7 @@ namespace OpenVic {
 			std::string_view type, on_completion;
 			ModifierValue modifier;
 			fixed_point_t completion_size = 0, cost = 0, colonial_range = 0, infrastructure = 0;
-			building_level_t max_level = 0, fort_level = 0;
+			building_level_t max_level = building_level_t { 0 }, fort_level = building_level_t { 0 };
 			fixed_point_map_t<GoodDefinition const*> goods_cost;
 			Timespan build_time;
 			bool on_map = false, default_enabled = false, pop_build_factory = false, strategic_factory = false,
