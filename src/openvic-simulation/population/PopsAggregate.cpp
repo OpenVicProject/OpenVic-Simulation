@@ -176,7 +176,7 @@ void PopsAggregate::normalise_pops_aggregate() {
 		average_consciousness /= total_population;
 		average_militancy /= total_population;
 
-		static const fu2::function<void(fixed_point_t&, pop_sum_t const&)> handle_div_by_zero = [](
+		static const auto handle_div_by_zero = [](
 			fixed_point_t& lhs,
 			pop_sum_t const& rhs
 		)->void {
