@@ -13,7 +13,7 @@
 #include "openvic-simulation/types/HasIdentifier.hpp"
 #include "openvic-simulation/types/HasIndex.hpp"
 #include "openvic-simulation/types/OrderedContainers.hpp"
-#include "openvic-simulation/types/ProvinceLifeRating.hpp"
+#include "openvic-simulation/map/LifeRating.hpp"
 #include "openvic-simulation/types/TypedIndices.hpp"
 #include "openvic-simulation/types/UnitBranchType.hpp"
 #include "openvic-simulation/utility/Containers.hpp"
@@ -72,7 +72,7 @@ namespace OpenVic {
 		GameRulesManager const& game_rules_manager;
 
 		TerrainType const* PROPERTY(terrain_type);
-		life_rating_t PROPERTY(life_rating, 0);
+		life_rating_t PROPERTY(life_rating, life_rating_t { 0 });
 		colony_status_t PROPERTY(colony_status, colony_status_t::STATE);
 		State* PROPERTY_PTR(state, nullptr);
 
