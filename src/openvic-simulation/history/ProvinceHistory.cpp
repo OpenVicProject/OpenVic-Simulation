@@ -82,7 +82,7 @@ bool ProvinceHistoryMap::_load_history_entry(
 			BuildingType const* building_type = building_type_manager.get_building_type_by_identifier(key);
 			if (building_type != nullptr) {
 				if (building_type->is_in_province()) {
-					return expect_uint<building_level_t>(
+					return expect_strong_typedef<building_level_t>(
 						/* This is set to warn to prevent vanilla from always having errors because
 						 * of a duplicate railroad entry in the 1861.1.1 history of Manchester (278). */
 						map_callback(entry.province_buildings, building_type, true)
@@ -156,10 +156,10 @@ bool ProvinceHistoryMap::_load_history_entry(
 		},
 		"state_building", ZERO_OR_MORE, [&building_type_manager, &entry](ast::NodeCPtr node) -> bool {
 			BuildingType const* building_type = nullptr;
-			uint8_t level = 0;
+			building_level_t level = building_level_t { 0 };
 
 			bool ret = expect_dictionary_keys(
-				"level", ONE_EXACTLY, expect_uint(assign_variable_callback(level)),
+				"level", ONE_EXACTLY, expect_strong_typedef<building_level_t>(assign_variable_callback(level)),
 				"building", ONE_EXACTLY, building_type_manager.expect_building_type_identifier(
 					assign_variable_callback_pointer(building_type)
 				),
