@@ -143,6 +143,9 @@ namespace OpenVic {
 	};
 
 	template<typename T>
+	concept integral_max_size_4 = std::integral<T> && sizeof(T) <= 4;
+
+	template<typename T>
 	concept unary_negatable = requires(T const& a) {
 		{ -a } -> std::same_as<T>;
 	};

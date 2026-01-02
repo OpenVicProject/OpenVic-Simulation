@@ -22,6 +22,7 @@
 #include "openvic-simulation/utility/Containers.hpp"
 #include "openvic-simulation/core/Typedefs.hpp"
 #include "openvic-simulation/core/Math.hpp"
+#include "openvic-simulation/core/template/Concepts.hpp"
 
 /* Sin lookup table */
 #include "openvic-simulation/types/fixed_point/FixedPointLUT_sin.hpp"
@@ -107,39 +108,39 @@ namespace OpenVic {
 		static const fixed_point_t e;
 
 		// Standard for constexpr requires this here
-		template<std::integral T>
+		template<integral_max_size_4 T>
 		OV_SPEED_INLINE constexpr friend fixed_point_t operator/(fixed_point_t const& lhs, T const& rhs) {
 			return parse_raw(lhs.value / rhs);
 		}
 
-		template<std::integral T>
+		template<integral_max_size_4 T>
 		OV_SPEED_INLINE constexpr friend fixed_point_t operator/(T const& lhs, fixed_point_t const& rhs) {
 			return parse_raw((static_cast<value_type>(lhs) << (2 * PRECISION)) / rhs.value);
 		}
 
-		template<std::integral T>
+		template<integral_max_size_4 T>
 		OV_SPEED_INLINE constexpr fixed_point_t& operator/=(T const& obj) {
 			value /= obj;
 			return *this;
 		}
 
-		template<std::integral T>
+		template<integral_max_size_4 T>
 		OV_SPEED_INLINE constexpr friend fixed_point_t operator*(fixed_point_t const& lhs, T const& rhs) {
 			return parse_raw(lhs.value * rhs);
 		}
 
-		template<std::integral T>
+		template<integral_max_size_4 T>
 		OV_SPEED_INLINE constexpr fixed_point_t& operator*=(T const& obj) {
 			value *= obj;
 			return *this;
 		}
 
-		template<std::integral T>
+		template<integral_max_size_4 T>
 		OV_SPEED_INLINE constexpr friend fixed_point_t operator+(fixed_point_t const& lhs, T const& rhs) {
 			return parse_raw(lhs.value + (static_cast<value_type>(rhs) << PRECISION));
 		}
 
-		template<std::integral T>
+		template<integral_max_size_4 T>
 		OV_SPEED_INLINE constexpr std::strong_ordering operator<=>(T const& rhs) const {
 			return value <=> static_cast<value_type>(rhs) << PRECISION;
 		}
@@ -525,7 +526,7 @@ namespace OpenVic {
 			return parse_raw(lhs.value + rhs.value);
 		}
 
-		template<std::integral T>
+		template<integral_max_size_4 T>
 		OV_SPEED_INLINE constexpr friend fixed_point_t operator+(T const& lhs, fixed_point_t const& rhs) {
 			return parse_raw((static_cast<value_type>(lhs) << PRECISION) + rhs.value);
 		}
@@ -535,7 +536,7 @@ namespace OpenVic {
 			return *this;
 		}
 
-		template<std::integral T>
+		template<integral_max_size_4 T>
 		OV_SPEED_INLINE constexpr fixed_point_t& operator+=(T const& obj) {
 			value += (static_cast<value_type>(obj) << PRECISION);
 			return *this;
@@ -545,12 +546,12 @@ namespace OpenVic {
 			return parse_raw(lhs.value - rhs.value);
 		}
 
-		template<std::integral T>
+		template<integral_max_size_4 T>
 		OV_SPEED_INLINE constexpr friend fixed_point_t operator-(fixed_point_t const& lhs, T const& rhs) {
 			return parse_raw(lhs.value - (static_cast<value_type>(rhs) << PRECISION));
 		}
 
-		template<std::integral T>
+		template<integral_max_size_4 T>
 		OV_SPEED_INLINE constexpr friend fixed_point_t operator-(T const& lhs, fixed_point_t const& rhs) {
 			return parse_raw((static_cast<value_type>(lhs) << PRECISION) - rhs.value);
 		}
@@ -560,7 +561,7 @@ namespace OpenVic {
 			return *this;
 		}
 
-		template<std::integral T>
+		template<integral_max_size_4 T>
 		OV_SPEED_INLINE constexpr fixed_point_t& operator-=(T const& obj) {
 			value -= (static_cast<value_type>(obj) << PRECISION);
 			return *this;
@@ -588,12 +589,12 @@ namespace OpenVic {
 			return old;
 		}
 
-		template<std::integral T>
+		template<integral_max_size_4 T>
 		OV_SPEED_INLINE constexpr friend fixed_point_t operator<<(fixed_point_t const& lhs, T const& rhs) {
 			return parse_raw(lhs.value << rhs);
 		}
 
-		template<std::integral T>
+		template<integral_max_size_4 T>
 		OV_SPEED_INLINE constexpr friend fixed_point_t operator>>(fixed_point_t const& lhs, T const& rhs) {
 			return parse_raw(lhs.value >> rhs);
 		}
@@ -602,7 +603,7 @@ namespace OpenVic {
 			return parse_raw(lhs.value * rhs.value >> PRECISION);
 		}
 
-		template<std::integral T>
+		template<integral_max_size_4 T>
 		OV_SPEED_INLINE constexpr friend fixed_point_t operator*(T const& lhs, fixed_point_t const& rhs) {
 			return parse_raw(lhs * rhs.value);
 		}
@@ -631,12 +632,12 @@ namespace OpenVic {
 			return parse_raw(lhs.value % rhs.value);
 		}
 
-		template<std::integral T>
+		template<integral_max_size_4 T>
 		OV_SPEED_INLINE constexpr friend fixed_point_t operator%(fixed_point_t const& lhs, T const& rhs) {
 			return parse_raw(lhs.value % (static_cast<value_type>(rhs) << PRECISION));
 		}
 
-		template<std::integral T>
+		template<integral_max_size_4 T>
 		OV_SPEED_INLINE constexpr friend fixed_point_t operator%(T const& lhs, fixed_point_t const& rhs) {
 			return parse_raw((static_cast<value_type>(lhs) << PRECISION) % rhs.value);
 		}
@@ -646,7 +647,7 @@ namespace OpenVic {
 			return *this;
 		}
 
-		template<std::integral T>
+		template<integral_max_size_4 T>
 		OV_SPEED_INLINE constexpr fixed_point_t& operator%=(T const& obj) {
 			value %= (static_cast<value_type>(obj) << PRECISION);
 			return *this;
@@ -656,7 +657,7 @@ namespace OpenVic {
 			return lhs.value == rhs.value;
 		}
 
-		template<std::integral T>
+		template<integral_max_size_4 T>
 		OV_SPEED_INLINE constexpr bool operator==(T const& rhs) const {
 			return value == static_cast<value_type>(rhs) << PRECISION;
 		}
