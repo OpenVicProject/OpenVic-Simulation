@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstdint>
 #include <optional>
 
 #include "openvic-simulation/types/IndexedFlatMap.hpp"
@@ -91,7 +92,7 @@ namespace OpenVic {
 		private:
 			CountryInstance* const country_to_report_economy_nullable;
 			memory::vector<fixed_point_t>& demand_per_input;
-			size_t distinct_goods_to_buy = 0;
+			int32_t distinct_goods_to_buy = 0;
 			Fraction inputs_bought_fraction;
 			MarketInstance const& market_instance;
 			memory::vector<fixed_point_t>& max_price_per_input;
