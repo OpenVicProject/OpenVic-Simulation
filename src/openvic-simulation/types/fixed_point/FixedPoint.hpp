@@ -219,6 +219,13 @@ namespace OpenVic {
 			return static_cast<T>(*this);
 		}
 
+		template<std::integral T>
+		OV_SPEED_INLINE static constexpr T multiply_truncate(T const& integer, fixed_point_t const& fp) {
+			return static_cast<T>(
+				(static_cast<value_type>(integer) * fp.get_raw_value()) >> PRECISION
+			);
+		}
+
 		template<std::floating_point T>
 		OV_SPEED_INLINE explicit constexpr operator T() const {
 			return value / static_cast<T>(ONE);
@@ -402,9 +409,28 @@ namespace OpenVic {
 			return fixed_point_t { raw_value, value };
 		}
 
-		// Deterministic
-		OV_SPEED_INLINE static constexpr fixed_point_t parse(int64_t value) {
-			return parse_raw(value << PRECISION);
+		template<std::integral T>
+		static constexpr fixed_point_t parse_capped(const T value) {
+			fixed_point_t result;
+			if (value > std::numeric_limits<int32_t>::max()) {
+				if (value >= fixed_point_t::max.truncate<T>()) {
+					if (std::is_constant_evaluated()) {
+						assert(value >= fixed_point_t::max.truncate<T>());
+					} else {
+						spdlog::error_s("parse_capped value exceeded int32 max. Falling back to fixed_point_t::max");
+					}
+					result = fixed_point_t::max;
+				} else {
+					if (!std::is_constant_evaluated()) {
+						spdlog::warn_s("parse_capped value exceeded int32 max. It still fits but exceeds fixed_point_t::usable_max");
+					}
+					result = fixed_point_t::parse_raw(value << fixed_point_t::PRECISION);
+				}
+			} else {
+				result = fixed_point_t(static_cast<int32_t>(value));
+			}
+
+			return result;
 		}
 
 		// Deterministic
@@ -683,7 +709,11 @@ namespace OpenVic {
 			int64_t parsed_value = 0;
 			std::from_chars_result result = string_to_int64(str, end, parsed_value);
 			if (result.ec == std::errc{}) {
-				value = parse(parsed_value);
+				if (parsed_value > std::numeric_limits<int32_t>::max()) {
+					result.ec = std::errc::value_too_large;
+				} else {
+					value = fixed_point_t(static_cast<int32_t>(parsed_value));
+				}
 			}
 			return result;
 		}

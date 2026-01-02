@@ -1367,7 +1367,7 @@ void CountryInstance::_update_budget() {
 		administrative_efficiency_from_administrators.set(fixed_point_t::_1);
 		administrator_percentage.set(fixed_point_t::_0);
 	} else {		
-		administrator_percentage.set(fixed_point_t::parse(administrators) / total_non_colonial_population);
+		administrator_percentage.set(fixed_point_t(administrators) / total_non_colonial_population);
 
 		const fixed_point_t desired_administrators = desired_administrator_percentage.get_untracked() * total_non_colonial_population;
 		const fixed_point_t administrative_efficiency_from_administrators_unclamped = std::min(
@@ -1563,8 +1563,11 @@ void CountryInstance::_update_military() {
 	}
 
 	military_power_from_land.set(
-		supply_consumption * fixed_point_t::parse(regular_army_size) * sum_of_regiment_type_stats
-		/ fixed_point_t::parse(7 * (1 + unit_type_manager.get_regiment_type_count()))
+		supply_consumption * fixed_point_t::mul_div(
+			sum_of_regiment_type_stats,
+			fixed_point_t::parse_raw(regular_army_size),
+			fixed_point_t::parse_raw(7 * (1 + unit_type_manager.get_regiment_type_count()))
+		)
 	);
 
 	if (disarmed) {
@@ -1588,7 +1591,12 @@ void CountryInstance::_update_military() {
 	military_power_from_sea.set(military_power_from_sea_running_total / 250);
 
 	military_power_from_leaders.set(
-		fixed_point_t::parse(std::min(get_leader_count(), deployed_non_mobilised_regiments))
+		fixed_point_t::parse_capped(
+			std::min(
+				get_leader_count(),
+				deployed_non_mobilised_regiments
+			)
+		)
 	);
 
 	// Mobilisation calculations
@@ -1598,8 +1606,8 @@ void CountryInstance::_update_military() {
 
 	// TODO - use country_defines.get_min_mobilize_limit(); (wiki: "lowest maximum of brigades you can mobilize. (by default 3)")
 
-	mobilisation_max_regiment_count =
-		((fixed_point_t::_1 + mobilisation_impact) * fixed_point_t::parse(regiment_count)).floor<size_t>();
+	mobilisation_max_regiment_count = regiment_count
+		+ fixed_point_t::multiply_truncate(regiment_count, mobilisation_impact);
 
 	mobilisation_potential_regiment_count = 0; // TODO - calculate max regiments from poor citizens
 	if (mobilisation_potential_regiment_count > mobilisation_max_regiment_count) {
@@ -1626,10 +1634,12 @@ void CountryInstance::_update_military() {
 	naval_unit_start_experience += get_modifier_effect_value(*modifier_effect_cache.get_naval_unit_start_experience());
 
 	recruit_time = fixed_point_t::_1 + get_modifier_effect_value(*modifier_effect_cache.get_unit_recruitment_time());
-	combat_width = ( //
-		fixed_point_t::parse(military_defines.get_base_combat_width()) +
-		get_modifier_effect_value(*modifier_effect_cache.get_combat_width_additive())
-	).floor<int32_t>();
+	combat_width = combat_width_t(
+		(
+			type_safe::get(military_defines.get_base_combat_width())
+			+ get_modifier_effect_value(*modifier_effect_cache.get_combat_width_additive())
+		).floor<type_safe::underlying_type<combat_width_t>>()
+	);
 	dig_in_cap = get_modifier_effect_value(*modifier_effect_cache.get_dig_in_cap()).floor<int32_t>();
 	military_tactics = military_defines.get_base_military_tactics() +
 		get_modifier_effect_value(*modifier_effect_cache.get_military_tactics());

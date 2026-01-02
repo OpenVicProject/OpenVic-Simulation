@@ -1,7 +1,7 @@
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
 
-#include <cmath>
-#include <cstdlib>
+#include <cstdint>
+#include <limits>
 #include <numbers>
 #include <string_view>
 #include <system_error>
@@ -120,18 +120,21 @@ TEST_CASE("fixed_point_t Rounding methods", "[fixed_point_t][fixed_point_t-round
 }
 
 TEST_CASE("fixed_point_t Parse methods", "[fixed_point_t][fixed_point_t-parse]") {
-	CONSTEXPR_CHECK(fixed_point_t::parse(1) == 1);
-	CONSTEXPR_CHECK(fixed_point_t::parse(2) == 2);
-	CONSTEXPR_CHECK(fixed_point_t::parse(3) == 3);
-	CONSTEXPR_CHECK(fixed_point_t::parse(4) == 4);
-	CONSTEXPR_CHECK(fixed_point_t::parse(5) == 5);
-	CONSTEXPR_CHECK(fixed_point_t::parse(6) == 6);
-	CONSTEXPR_CHECK(fixed_point_t::parse(7) == 7);
-	CONSTEXPR_CHECK(fixed_point_t::parse(8) == 8);
-	CONSTEXPR_CHECK(fixed_point_t::parse(9) == 9);
-	CONSTEXPR_CHECK(fixed_point_t::parse(10) == 10);
+	CONSTEXPR_CHECK(fixed_point_t(1) == 1);
+	CONSTEXPR_CHECK(fixed_point_t(2) == 2);
+	CONSTEXPR_CHECK(fixed_point_t(3) == 3);
+	CONSTEXPR_CHECK(fixed_point_t(4) == 4);
+	CONSTEXPR_CHECK(fixed_point_t(5) == 5);
+	CONSTEXPR_CHECK(fixed_point_t(6) == 6);
+	CONSTEXPR_CHECK(fixed_point_t(7) == 7);
+	CONSTEXPR_CHECK(fixed_point_t(8) == 8);
+	CONSTEXPR_CHECK(fixed_point_t(9) == 9);
+	CONSTEXPR_CHECK(fixed_point_t(10) == 10);
 	CONSTEXPR_CHECK(fixed_point_t::parse_raw(10) == fixed_point_t::epsilon * 10);
-	CONSTEXPR_CHECK(fixed_point_t::parse(10) == 10);
+
+	CONSTEXPR_CHECK(fixed_point_t::parse_capped(140737488355328LL) == fixed_point_t::max);
+	CONSTEXPR_CHECK(fixed_point_t::parse_capped(140737488355327LL) == fixed_point_t::max);
+	CONSTEXPR_CHECK(fixed_point_t::parse_capped(140737488355326LL).truncate<int64_t>() == 140737488355326LL);
 
 	static constexpr std::string_view fixed_point_str = "4.5432"sv;
 	CONSTEXPR_CHECK(fixed_point_t::parse(fixed_point_str) == 4.5432_a);
@@ -285,8 +288,24 @@ TEST_CASE("fixed_point_t Operators", "[fixed_point_t][fixed_point_t-operators]")
 	CONSTEXPR_CHECK(((int32_t)decimal4) == 3);
 
 	CONSTEXPR_CHECK(
-		fixed_point_t::mul_div(fixed_point_t::parse_raw(2), fixed_point_t::parse_raw(3), fixed_point_t::parse_raw(6)) ==
-		fixed_point_t::parse_raw(1)
+		fixed_point_t::mul_div(
+			fixed_point_t::parse_raw(2),
+			fixed_point_t::parse_raw(3),
+			fixed_point_t::parse_raw(6)
+		) == fixed_point_t::parse_raw(1)
+	);
+
+	CONSTEXPR_CHECK(
+		fixed_point_t::multiply_truncate<int64_t>(
+			4294967295LL, //2^32 - 1
+			fixed_point_t::usable_max //2^31 / 2^16
+		) == 140737488322560LL //2^47 - 2^15
+	);
+	CONSTEXPR_CHECK(
+		fixed_point_t::multiply_truncate<int64_t>(
+			281474976710655LL, //2^48 - 1
+			fixed_point_t::_0_50
+		) == 140737488355327LL //2^47 - 1
 	);
 }
 
