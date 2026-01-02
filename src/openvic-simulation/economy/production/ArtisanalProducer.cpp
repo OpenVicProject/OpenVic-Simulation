@@ -2,6 +2,7 @@
 #include "ArtisanalProducerDeps.hpp"
 
 #include <cstddef>
+#include <limits>
 
 #include <type_safe/strong_typedef.hpp>
 
@@ -521,6 +522,7 @@ ProductionType const* ArtisanalProducer::pick_production_type(
 		);
 
 		fixed_point_t relative_score = ranked_artisanal_production_types.empty() ? fixed_point_t::_1 : fixed_point_t::_0;
+		assert(ranked_artisanal_production_types.size() < std::numeric_limits<int32_t>::max());
 		for (auto it = ranked_artisanal_production_types.begin(); it < ranked_artisanal_production_types.end(); ++it) {
 			auto const& [production_type, score_estimate] = *it;
 			size_t i = it - ranked_artisanal_production_types.begin();
@@ -532,14 +534,15 @@ ProductionType const* ArtisanalProducer::pick_production_type(
 					relative_score = (
 						(current_score - score_estimate)
 						/ (previous_score_estimate - score_estimate)
-						+ ranked_artisanal_production_types.size() - i
-					) / (1 + ranked_artisanal_production_types.size());
+						+ static_cast<int32_t>(ranked_artisanal_production_types.size() - i)
+					) / static_cast<int32_t>(1 + ranked_artisanal_production_types.size());
 				}
 				break;
 			}
 
 			if (current_score == score_estimate) {
-				relative_score = fixed_point_t::parse(ranked_artisanal_production_types.size() - i) / (1 + ranked_artisanal_production_types.size());
+				relative_score = fixed_point_t::parse(ranked_artisanal_production_types.size() - i)
+					/ static_cast<int32_t>(1 + ranked_artisanal_production_types.size());
 			}
 		}
 

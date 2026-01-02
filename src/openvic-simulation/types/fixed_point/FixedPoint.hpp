@@ -1,7 +1,6 @@
 #pragma once
 
 #include <cassert>
-#include <cctype>
 #include <charconv>
 #include <concepts>
 #include <cstddef>
@@ -78,7 +77,8 @@ namespace OpenVic {
 
 	public:
 		OV_ALWAYS_INLINE constexpr fixed_point_t() : value { 0 } {}
-		OV_ALWAYS_INLINE constexpr fixed_point_t(int32_t new_value) : value { static_cast<value_type>(new_value) << PRECISION } {}
+		template<integral_max_size_4 T>
+		OV_ALWAYS_INLINE constexpr fixed_point_t(T new_value) : value { static_cast<value_type>(new_value) << PRECISION } {}
 
 		static const fixed_point_t max;
 		static const fixed_point_t min;
@@ -238,7 +238,7 @@ namespace OpenVic {
 				return truncate();
 			}
 
-			return floor<value_type>();
+			return floor<int32_t>();
 		}
 
 		template<std::integral T>
@@ -255,7 +255,7 @@ namespace OpenVic {
 				return truncate();
 			}
 
-			return ceil<value_type>();
+			return ceil<int32_t>();
 		}
 
 		OV_SPEED_INLINE constexpr fixed_point_t round() const {

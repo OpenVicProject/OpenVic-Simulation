@@ -5,6 +5,7 @@
 #include <algorithm>
 #include <cstddef>
 #include <cstdint>
+#include <limits>
 
 #include <type_safe/strong_typedef.hpp>
 
@@ -1839,7 +1840,8 @@ void CountryInstance::update_gamestate(const Date today, MapInstance& map_instan
 	}
 
 	if (occupied_provinces_proportion != 0) {
-		occupied_provinces_proportion /= owned_provinces.size();
+		assert(owned_provinces.size() <= std::numeric_limits<int32_t>::max());
+		occupied_provinces_proportion /= static_cast<int32_t>(owned_provinces.size());
 	}
 
 	if (capital != nullptr) {
