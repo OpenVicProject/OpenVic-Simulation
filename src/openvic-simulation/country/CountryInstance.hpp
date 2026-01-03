@@ -5,6 +5,7 @@
 #include <fmt/base.h>
 
 #include "openvic-simulation/diplomacy/CountryRelation.hpp"
+#include "openvic-simulation/military/CombatWidth.hpp"
 #include "openvic-simulation/military/UnitBranchedGetterMacro.hpp"
 #include "openvic-simulation/modifier/ModifierSum.hpp"
 #include "openvic-simulation/politics/Rule.hpp"
@@ -100,7 +101,7 @@ namespace OpenVic {
 		};
 
 		// Thresholds for different uncivilised country statuses
-		static constexpr fixed_point_t PRIMITIVE_CIVILISATION_PROGRESS = fixed_point_t::parse(15) / 100;
+		static constexpr fixed_point_t PRIMITIVE_CIVILISATION_PROGRESS = fixed_point_t(15) / 100;
 		static constexpr fixed_point_t UNCIVILISED_CIVILISATION_PROGRESS = fixed_point_t::_0_50;
 
 	private:
@@ -382,7 +383,7 @@ namespace OpenVic {
 		fixed_point_t PROPERTY(land_unit_start_experience);
 		fixed_point_t PROPERTY(naval_unit_start_experience);
 		fixed_point_t PROPERTY(recruit_time);
-		int32_t PROPERTY(combat_width, 1);
+		combat_width_t PROPERTY(combat_width, combat_width_t(1));
 		int32_t PROPERTY(dig_in_cap, 0);
 		fixed_point_t PROPERTY(military_tactics);
 		OV_IFLATMAP_PROPERTY(RegimentType, technology_unlock_level_t, regiment_type_unlock_levels);

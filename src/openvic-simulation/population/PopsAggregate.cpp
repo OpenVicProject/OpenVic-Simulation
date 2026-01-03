@@ -111,7 +111,7 @@ void PopsAggregate::add_pops_aggregate(PopsAggregate& part) {
 	_yesterdays_import_value_running_total += part.get_yesterdays_import_value_untracked();
 
 	// TODO - change casting if pop_size_t changes type
-	const fixed_point_t part_population = fixed_point_t::parse(part.get_total_population());
+	const fixed_point_t part_population = fixed_point_t(part.get_total_population());
 	average_literacy += part.get_average_literacy() * part_population;
 	average_consciousness += part.get_average_consciousness() * part_population;
 	average_militancy += part.get_average_militancy() * part_population;

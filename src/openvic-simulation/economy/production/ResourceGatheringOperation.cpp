@@ -306,7 +306,7 @@ fixed_point_t ResourceGatheringOperation::produce() {
 
 			const fixed_point_t effect_multiplier = job.get_effect_multiplier();
 			fixed_point_t relative_to_workforce =
-				fixed_point_t::parse(employees_of_type) / fixed_point_t::parse(max_employee_count_cache);
+				fixed_point_t(employees_of_type) / fixed_point_t(max_employee_count_cache);
 			const fixed_point_t amount = job.get_amount();
 			if (effect_multiplier != fixed_point_t::_1 && relative_to_workforce > amount) {
 				relative_to_workforce = amount;

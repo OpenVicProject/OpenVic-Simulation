@@ -541,7 +541,7 @@ ProductionType const* ArtisanalProducer::pick_production_type(
 			}
 
 			if (current_score == score_estimate) {
-				relative_score = fixed_point_t::parse(ranked_artisanal_production_types.size() - i)
+				relative_score = fixed_point_t(static_cast<int32_t>(ranked_artisanal_production_types.size() - i))
 					/ static_cast<int32_t>(1 + ranked_artisanal_production_types.size());
 			}
 		}

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "openvic-simulation/dataloader/NodeTools.hpp"
+#include "openvic-simulation/military/CombatWidth.hpp"
 #include "openvic-simulation/types/Date.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
 #include "openvic-simulation/types/PopSize.hpp"
@@ -16,7 +17,7 @@ namespace OpenVic {
 		Timespan PROPERTY(dig_in_increase_each_days);
 		fixed_point_t PROPERTY(reinforce_speed);
 		fixed_point_t PROPERTY(combat_difficulty_impact);
-		size_t PROPERTY(base_combat_width, 0);
+		combat_width_t PROPERTY(base_combat_width, combat_width_t(0));
 		pop_size_t PROPERTY(min_pop_size_for_regiment, 0);
 		pop_size_t PROPERTY(pop_size_per_regiment, 0);
 		fixed_point_t PROPERTY(soldier_to_pop_damage);

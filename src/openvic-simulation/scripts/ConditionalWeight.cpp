@@ -51,7 +51,7 @@ node_callback_t ConditionalWeight<TYPE>::expect_conditional_weight() {
 		const auto time_callback = [this](std::string_view key, Timespan (*to_timespan)(Timespan::day_t)) -> auto {
 			return [this, key, to_timespan](uint32_t value) -> bool {
 				if (base == 0) {
-					base = fixed_point_t::parse((*to_timespan)(value).to_int());
+					base = fixed_point_t::parse_capped((*to_timespan)(value).to_int());
 					return true;
 				} else {
 					spdlog::error_s(

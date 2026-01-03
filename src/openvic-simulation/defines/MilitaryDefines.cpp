@@ -1,5 +1,11 @@
 #include "MilitaryDefines.hpp"
 
+#include <cstdint>
+
+#include "openvic-simulation/military/CombatWidth.hpp"
+
+#include <type_safe/strong_typedef.hpp>
+
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;
 
@@ -14,7 +20,10 @@ node_callback_t MilitaryDefines::expect_defines() {
 		"DIG_IN_INCREASE_EACH_DAYS", ONE_EXACTLY, expect_days(assign_variable_callback(dig_in_increase_each_days)),
 		"REINFORCE_SPEED", ONE_EXACTLY, expect_fixed_point(assign_variable_callback(reinforce_speed)),
 		"COMBAT_DIFFICULTY_IMPACT", ONE_EXACTLY, expect_fixed_point(assign_variable_callback(combat_difficulty_impact)),
-		"BASE_COMBAT_WIDTH", ONE_EXACTLY, expect_uint(assign_variable_callback(base_combat_width)),
+		"BASE_COMBAT_WIDTH", ONE_EXACTLY, expect_int<int8_t>([this](int8_t val)->bool{
+			base_combat_width = combat_width_t(static_cast<type_safe::underlying_type<combat_width_t>>(val));
+			return true;
+		}),
 		"POP_MIN_SIZE_FOR_REGIMENT", ONE_EXACTLY, expect_uint(assign_variable_callback(min_pop_size_for_regiment)),
 		"POP_SIZE_PER_REGIMENT", ONE_EXACTLY, expect_uint(assign_variable_callback(pop_size_per_regiment)),
 		"SOLDIER_TO_POP_DAMAGE", ONE_EXACTLY, expect_fixed_point(assign_variable_callback(soldier_to_pop_damage)),
