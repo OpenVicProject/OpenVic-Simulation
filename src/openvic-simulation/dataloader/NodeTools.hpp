@@ -199,21 +199,49 @@ using namespace std::string_view_literals;
 			return expect_uint(callback, base);
 		}
 
+		template<derived_from_specialization_of<type_safe::strong_typedef> T, typename AsT = type_safe::underlying_type<T>>
+		NodeCallback auto expect_strong_typedef(callback_t<T>& callback, int base = 10) {
+			if constexpr (std::unsigned_integral<AsT>) {
+				return expect_uint64(
+					[callback](uint64_t val) mutable -> bool {
+						if (val <= static_cast<uint64_t>(std::numeric_limits<AsT>::max())) {
+							return callback(T(val));
+						}
+						spdlog::error_s(
+							"Invalid uint: {} (valid range: [0, {}])", val,
+							static_cast<uint64_t>(std::numeric_limits<AsT>::max())
+						);
+						return false;
+					},
+					base
+				);
+			} else {
+				return expect_int64(
+					[callback](int64_t val) mutable -> bool {
+						if (val >= static_cast<int64_t>(std::numeric_limits<AsT>::min()) &&
+							val <= static_cast<int64_t>(std::numeric_limits<AsT>::max())) {
+							return callback(T(val));
+						}
+						spdlog::error_s(
+							"Invalid int: {} (valid range: [{}, {}])", val,
+							static_cast<int64_t>(std::numeric_limits<AsT>::min()),
+							static_cast<int64_t>(std::numeric_limits<AsT>::max())
+						);
+						return false;
+					},
+					base
+				);
+			}
+		}
+		template<derived_from_specialization_of<type_safe::strong_typedef> T, typename AsT = type_safe::underlying_type<T>>
+		NodeCallback auto expect_strong_typedef(callback_t<T>&& callback, int base = 10) {
+			return expect_strong_typedef<T, AsT>(callback, base);
+		}
+
 		template<derived_from_specialization_of<type_safe::strong_typedef> T>
 		requires std::unsigned_integral<type_safe::underlying_type<T>>
 		NodeCallback auto expect_index(callback_t<T>& callback, int base = 10) {
-			using underlying_type = type_safe::underlying_type<T>;
-
-			return expect_uint64([callback](uint64_t val) mutable -> bool {
-				if (val <= static_cast<uint64_t>(std::numeric_limits<underlying_type>::max())) {
-					return callback(T(val));
-				}
-				spdlog::error_s(
-					"Invalid uint: {} (valid range: [0, {}])",
-					val, static_cast<uint64_t>(std::numeric_limits<underlying_type>::max()) 
-				);
-				return false;
-			}, base);
+			return expect_strong_typedef<T>(callback, base);
 		}
 		template<derived_from_specialization_of<type_safe::strong_typedef> T>
 		requires std::unsigned_integral<type_safe::underlying_type<T>>

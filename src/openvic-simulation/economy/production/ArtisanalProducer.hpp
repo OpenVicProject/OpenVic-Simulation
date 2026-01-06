@@ -7,7 +7,6 @@
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPointMap.hpp"
 #include "openvic-simulation/types/fixed_point/Fraction.hpp"
-#include "openvic-simulation/types/PopSize.hpp"
 #include "openvic-simulation/utility/Getters.hpp"
 
 namespace OpenVic {
@@ -23,6 +22,8 @@ namespace OpenVic {
 	struct ProductionType;
 	struct ProvinceInstance;
 	struct RandomU32;
+	struct pop_size_t;
+	struct pop_sum_t;
 
 	struct ArtisanalProducer {
 	private:
@@ -48,7 +49,7 @@ namespace OpenVic {
 		static fixed_point_t calculate_production_type_score(
 			const fixed_point_t revenue,
 			const fixed_point_t costs,
-			const pop_size_t workforce
+			const pop_sum_t workforce
 		);
 
 	public:
