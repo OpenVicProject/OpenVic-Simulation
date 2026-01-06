@@ -73,7 +73,7 @@ fixed_point_t Pop::get_unemployment_fraction() const {
 	if (!type->can_be_unemployed) {
 		return 0;
 	}
-	return fixed_point_t(get_unemployed()) / size;
+	return fixed_point_t::from_fraction(get_unemployed(), size);
 }
 
 void Pop::setup_pop_test_values(IssueManager const& issue_manager) {
@@ -255,9 +255,10 @@ void Pop::update_gamestate(
 		) {
 			max_supported_regiments = 0;
 		} else {
-			max_supported_regiments = (fixed_point_t(size) / (
-				fixed_point_t(military_defines.get_pop_size_per_regiment()) * pop_size_per_regiment_multiplier
-			)).floor<size_t>() + 1;
+			max_supported_regiments = (
+				type_safe::get(size)
+				/ (type_safe::get(military_defines.get_pop_size_per_regiment()) * pop_size_per_regiment_multiplier)
+			).floor<size_t>() + 1;
 		}
 	}
 }

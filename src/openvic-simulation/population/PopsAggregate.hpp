@@ -7,6 +7,7 @@
 #include "openvic-simulation/population/PopSum.hpp"
 #include "openvic-simulation/utility/Getters.hpp"
 #include "openvic-simulation/utility/reactive/MutableState.hpp"
+#include "boost/int128/detail/int128_imp.hpp"
 
 namespace OpenVic {
 	struct BaseIssue;
@@ -28,15 +29,22 @@ namespace OpenVic {
 		OV_STATE_PROPERTY(fixed_point_t, yesterdays_import_value); //>= 0
 
 		// TODO - population change (growth + migration), monthly totals + breakdown by source/destination
+		boost::int128::int128_t literacy_running_total_raw;
+		boost::int128::int128_t consciousness_running_total_raw;
+		boost::int128::int128_t militancy_running_total_raw;
 		fixed_point_t PROPERTY(average_literacy);
 		fixed_point_t PROPERTY(average_consciousness);
 		fixed_point_t PROPERTY(average_militancy);
 
-		OV_IFLATMAP_PROPERTY(Strata, pop_sum_t, population_by_strata);
+		IndexedFlatMap<Strata, boost::int128::int128_t> militancy_by_strata_running_total_raw;
+		IndexedFlatMap<Strata, boost::int128::int128_t> life_needs_fulfilled_by_strata_running_total_raw;
+		IndexedFlatMap<Strata, boost::int128::int128_t> everyday_needs_fulfilled_by_strata_running_total_raw;
+		IndexedFlatMap<Strata, boost::int128::int128_t> luxury_needs_fulfilled_by_strata_running_total_raw;
 		OV_IFLATMAP_PROPERTY(Strata, fixed_point_t, militancy_by_strata);
 		OV_IFLATMAP_PROPERTY(Strata, fixed_point_t, life_needs_fulfilled_by_strata);
 		OV_IFLATMAP_PROPERTY(Strata, fixed_point_t, everyday_needs_fulfilled_by_strata);
 		OV_IFLATMAP_PROPERTY(Strata, fixed_point_t, luxury_needs_fulfilled_by_strata);
+		OV_IFLATMAP_PROPERTY(Strata, pop_sum_t, population_by_strata);
 
 		OV_IFLATMAP_PROPERTY(PopType, pop_sum_t, population_by_type);
 		OV_IFLATMAP_PROPERTY(PopType, pop_sum_t, unemployed_pops_by_type);
@@ -65,7 +73,7 @@ namespace OpenVic {
 		fixed_point_t get_supporter_equivalents_by_issue(Ideology const& ideology) const;
 		fixed_point_t get_supporter_equivalents_by_issue(BaseIssue const& issue) const;
 		fixed_point_t get_vote_equivalents_by_party(CountryParty const& party) const;
-		fixed_point_t get_population_by_culture(Culture const& culture) const;
-		fixed_point_t get_population_by_religion(Religion const& religion) const;
+		pop_sum_t get_population_by_culture(Culture const& culture) const;
+		pop_sum_t get_population_by_religion(Religion const& religion) const;
 	};
 }

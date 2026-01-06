@@ -6,7 +6,7 @@
 #include "openvic-simulation/types/IdentifierRegistry.hpp"
 #include "openvic-simulation/types/IndexedFlatMap.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
-#include "openvic-simulation/population/PopSum.hpp"
+#include "openvic-simulation/population/PopSize.hpp"
 #include "openvic-simulation/types/PopSprite.hpp"
 #include "openvic-simulation/utility/Containers.hpp"
 
@@ -65,7 +65,7 @@ namespace OpenVic {
 	public:
 		GoodDefinition const& output_good;
 		const template_type_t template_type;
-		const pop_sum_t base_workforce_size;
+		const pop_size_t base_workforce_size;
 		const fixed_point_t base_output_quantity;
 
 		ProductionType(
@@ -74,7 +74,7 @@ namespace OpenVic {
 			const std::optional<Job> new_owner,
 			memory::vector<Job>&& new_jobs,
 			const template_type_t new_template_type,
-			const pop_sum_t new_base_workforce_size,
+			const pop_size_t new_base_workforce_size,
 			fixed_point_map_t<GoodDefinition const*>&& new_input_goods,
 			GoodDefinition const& new_output_good,
 			const fixed_point_t new_base_output_quantity,
@@ -123,7 +123,7 @@ namespace OpenVic {
 			std::optional<Job> owner,
 			memory::vector<Job>&& jobs,
 			const ProductionType::template_type_t template_type,
-			const pop_sum_t base_workforce_size,
+			const pop_size_t base_workforce_size,
 			fixed_point_map_t<GoodDefinition const*>&& input_goods,
 			GoodDefinition const* const output_good,
 			const fixed_point_t base_output_quantity,

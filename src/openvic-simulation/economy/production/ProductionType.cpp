@@ -29,7 +29,7 @@ ProductionType::ProductionType(
 	const std::optional<Job> new_owner,
 	memory::vector<Job>&& new_jobs,
 	const template_type_t new_template_type,
-	const pop_sum_t new_base_workforce_size,
+	const pop_size_t new_base_workforce_size,
 	fixed_point_map_t<GoodDefinition const*>&& new_input_goods,
 	GoodDefinition const& new_output_good,
 	const fixed_point_t new_base_output_quantity,
@@ -140,7 +140,7 @@ bool ProductionTypeManager::add_production_type(
 	std::optional<Job> owner,
 	memory::vector<Job>&& jobs,
 	const ProductionType::template_type_t template_type,
-	const pop_sum_t base_workforce_size,
+	const pop_size_t base_workforce_size,
 	fixed_point_map_t<GoodDefinition const*>&& input_goods,
 	GoodDefinition const* const output_good,
 	const fixed_point_t base_output_quantity,
@@ -328,7 +328,7 @@ bool ProductionTypeManager::load_production_types_file(
 			memory::vector<Job> jobs;
 			ProductionType::template_type_t template_type { FACTORY };
 			GoodDefinition const* output_good = nullptr;
-			pop_sum_t base_workforce_size = 0;
+			pop_size_t base_workforce_size = 0;
 			fixed_point_map_t<GoodDefinition const*> input_goods, maintenance_requirements;
 			fixed_point_t base_output_quantity = 0;
 			memory::vector<ProductionType::bonus_t> bonuses;

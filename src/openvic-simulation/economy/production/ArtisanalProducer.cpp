@@ -479,7 +479,7 @@ std::optional<fixed_point_t> ArtisanalProducer::estimate_production_type_score(
 fixed_point_t ArtisanalProducer::calculate_production_type_score(
 	const fixed_point_t revenue,
 	const fixed_point_t costs,
-	const pop_sum_t workforce
+	const pop_size_t workforce
 ) {
 	if (costs >= revenue) {
 		return 0;
@@ -494,7 +494,7 @@ fixed_point_t ArtisanalProducer::calculate_production_type_score(
 		k * fixed_point_t::mul_div(costs, costs, revenue)
 		-(1+k)*costs
 		+ revenue
-	) * Pop::size_denominator / workforce; //factor out pop size without making values too small
+	).mul_div(Pop::size_denominator, workforce); //factor out pop size without making values too small
 }
 
 ProductionType const* ArtisanalProducer::pick_production_type(
