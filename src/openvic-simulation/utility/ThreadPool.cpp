@@ -26,8 +26,8 @@ void ThreadPool::loop_until_cancelled(
 ) {
 	IndexedFlatMap<GoodDefinition, char> reusable_goods_mask { good_keys };
 
-	memory::FixedVector<fixed_point_t> reusable_country_map_0 { country_keys.size() };
-	memory::FixedVector<fixed_point_t> reusable_country_map_1 { country_keys.size() };
+	memory::FixedVector<fixed_point_t> reusable_country_map_0 { country_keys.size(), fixed_point_t::_0 };
+	memory::FixedVector<fixed_point_t> reusable_country_map_1 { country_keys.size(), fixed_point_t::_0 };
 	TypedSpan<country_index_t, fixed_point_t> reusable_country_map_0_span { reusable_country_map_0 };
 	TypedSpan<country_index_t, fixed_point_t> reusable_country_map_1_span { reusable_country_map_1 };
 

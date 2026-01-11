@@ -269,7 +269,7 @@ namespace OpenVic {
 		) : keys(new_keys),
 			min_index { new_keys.front().index },
 			max_index { new_keys.back().index },
-			values(new_keys.size()) {
+			values { new_keys.size() } {
 			static_assert(has_index<ForwardedKeyType>);
 			if (!validate_new_keys(new_keys)) {
 				return;
@@ -363,7 +363,7 @@ namespace OpenVic {
 		) : keys(new_keys),
 			min_index { type_safe::get(new_keys.front().index) },
 			max_index { type_safe::get(new_keys.back().index) },
-			values(new_keys.size()) {
+			values { new_keys.size() } {
 			static_assert(has_index<ForwardedKeyType>);
 			if (!validate_new_keys(new_keys)) {
 				return;
@@ -428,7 +428,7 @@ namespace OpenVic {
 			: keys(new_keys),
 			min_index { type_safe::get(new_keys.front().index) },
 			max_index { type_safe::get(new_keys.back().index) },
-			values(new_keys.size()) {
+			values { new_keys.size() } {
 			static_assert(has_index<ForwardedKeyType>);
 			if (!validate_new_keys(new_keys)) {
 				return;

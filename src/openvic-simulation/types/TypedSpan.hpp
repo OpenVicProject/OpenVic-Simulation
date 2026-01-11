@@ -22,6 +22,7 @@ namespace OpenVic {
 		}
 
 		constexpr forwardable_span<ValueType, _Extent>::reference operator[](const IndexType _Off) const {
+			assert(_Off < size());
 			return forwardable_span<ValueType, _Extent>::operator[](static_cast<std::size_t>(type_safe::get(_Off)));
 		}
 
