@@ -39,3 +39,6 @@
 [submodule "deps/type_safe"]
 	path = deps/type_safe
 	url = https://github.com/foonathan/type_safe
+[submodule "deps/int128"]
+	path = deps/int128
+	url = https://github.com/cppalliance/int128
