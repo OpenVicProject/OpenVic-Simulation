@@ -1,16 +1,14 @@
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
 #include "openvic-simulation/core/random/WeightedSampling.hpp"
 
-#include "core/random/ExtendedMath.hpp"
-
 #include <cstdint>
 #include <limits>
+#include <boost/int128.hpp>
 
 #include <snitch/snitch_macros_check.hpp>
 #include <snitch/snitch_macros_test_case.hpp>
 
 using namespace OpenVic;
-using namespace OpenVic::testing;
 
 constexpr uint32_t max_random_value = std::numeric_limits<uint32_t>().max();
 
@@ -46,16 +44,12 @@ TEST_CASE("WeightedSampling weights", "[WeightedSampling]") {
 	fixed_point_t cumulative_weight = 0;
 	for (size_t i = 0; i < weights.size(); ++i) {
 		cumulative_weight += weights[i];
-		const Int96DivisionResult random_value = portable_int96_div_int64(
-			portable_int64_mult_uint32_96bit(
-				cumulative_weight.get_raw_value(),
-				max_random_value
-			),
-			weights_sum.get_raw_value()
-		);
-		assert(!random_value.quotient_overflow);
+		const boost::int128::int128_t cumulative_weight_128 = cumulative_weight.get_raw_value();
+		const boost::int128::int128_t max_random_value_128 = max_random_value;
+		const boost::int128::int128_t weights_sum_128 = weights_sum.get_raw_value();
+		const boost::int128::int128_t random_value = cumulative_weight_128 * max_random_value_128 / weights_sum_128;
 		CHECK(sample_weighted_index(
-			static_cast<uint32_t>(random_value.quotient),
+			static_cast<uint32_t>(random_value),
 			weights,
 			weights_sum
 		) == i);

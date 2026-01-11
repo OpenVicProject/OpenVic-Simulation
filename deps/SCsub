@@ -251,6 +251,14 @@ def build_type_safe(env):
     env.exposed_includes += env.type_safe["INCPATH"]
 
 
+def build_int128(env):
+    include_path = "int128/include"
+    env.int128 = {}
+    env.int128["INCPATH"] = [env.Dir(include_path)]
+    env.Append(CPPPATH=env.int128["INCPATH"])
+    env.exposed_includes += env.int128["INCPATH"]
+
+
 def link_tbb(env):
     import sys
 
@@ -271,4 +279,5 @@ build_memory(env)
 build_spdlog(env)
 build_xoshiro(env)
 build_type_safe(env)
+build_int128(env)
 link_tbb(env)
