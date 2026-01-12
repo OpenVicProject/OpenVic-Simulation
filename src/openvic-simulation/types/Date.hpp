@@ -113,8 +113,9 @@ namespace OpenVic {
 		using month_t = uint8_t;
 		using day_t = uint8_t;
 
-		static constexpr std::array DAYS_IN_MONTH =
-			std::to_array<Timespan::day_t>({ 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 });
+		static constexpr std::array DAYS_IN_MONTH = std::to_array<Timespan::day_t>(
+			{ 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 }
+		);
 
 		static constexpr Timespan::day_t MONTHS_IN_YEAR = DAYS_IN_MONTH.size();
 		static constexpr Timespan::day_t MAX_DAYS_IN_MONTH = *ranges::max_element(DAYS_IN_MONTH);
@@ -347,9 +348,11 @@ namespace OpenVic {
 		OV_SPEED_INLINE constexpr stack_string to_array(bool pad_year = false, bool pad_month = true, bool pad_day = true) const;
 
 		struct stack_string final : StackString<
-										fmt::detail::count_digits(uint64_t(std::numeric_limits<year_t>::max())) +
-										fmt::detail::count_digits(uint64_t(MONTHS_IN_YEAR)) +
-										fmt::detail::count_digits(uint64_t(MAX_DAYS_IN_MONTH)) + 4> {
+			fmt::detail::count_digits(uint64_t(std::numeric_limits<year_t>::max()))
+			+ fmt::detail::count_digits(uint64_t(MONTHS_IN_YEAR))
+			+ fmt::detail::count_digits(uint64_t(MAX_DAYS_IN_MONTH))
+			+ 4
+		> {
 		protected:
 			using StackString::StackString;
 			friend OV_SPEED_INLINE constexpr stack_string Date::to_array(bool pad_year, bool pad_month, bool pad_day) const;
@@ -511,8 +514,9 @@ namespace OpenVic {
 
 			Date date = from_string(str, from_chars);
 			OV_ERR_FAIL_COND_V_MSG(
-				from_chars->ec == std::errc::invalid_argument && from_chars->type == errc_type::year &&
-					from_chars->ptr == from_chars->type_first,
+				from_chars->ec == std::errc::invalid_argument
+				&& from_chars->type == errc_type::year
+				&& from_chars->ptr == from_chars->type_first,
 				date, "Could not parse year value."
 			);
 			OV_ERR_FAIL_COND_V_MSG(
@@ -524,13 +528,15 @@ namespace OpenVic {
 				"Only year value could be found."
 			);
 			OV_ERR_FAIL_COND_V_MSG(
-				from_chars->ec == std::errc::invalid_argument && from_chars->type == errc_type::year &&
-					from_chars->ptr != from_chars->type_first,
+				from_chars->ec == std::errc::invalid_argument
+				&& from_chars->type == errc_type::year
+				&& from_chars->ptr != from_chars->type_first,
 				date, memory::fmt::format("Year value was missing a separator (\"{}\").", SEPARATOR_CHARACTER)
 			);
 			OV_ERR_FAIL_COND_V_MSG(
-				from_chars->ec == std::errc::invalid_argument && from_chars->type == errc_type::month &&
-					from_chars->ptr == from_chars->type_first,
+				from_chars->ec == std::errc::invalid_argument
+				&& from_chars->type == errc_type::month
+				&& from_chars->ptr == from_chars->type_first,
 				date, "Could not parse month value."
 			);
 			OV_ERR_FAIL_COND_V_MSG(
@@ -538,8 +544,9 @@ namespace OpenVic {
 				"Month value cannot be 0."
 			);
 			OV_ERR_FAIL_COND_V_MSG(
-				from_chars->ec == std::errc::value_too_large && from_chars->type == errc_type::month &&
-					from_chars->ptr == from_chars->type_first,
+				from_chars->ec == std::errc::value_too_large
+				&& from_chars->type == errc_type::month
+				&& from_chars->ptr == from_chars->type_first,
 				date, memory::fmt::format("Month value cannot be larger than {}.", MONTHS_IN_YEAR)
 			);
 			OV_ERR_FAIL_COND_V_MSG(
@@ -547,21 +554,24 @@ namespace OpenVic {
 				"Only year and month value could be found."
 			);
 			OV_ERR_FAIL_COND_V_MSG(
-				from_chars->ec == std::errc::invalid_argument && from_chars->type == errc_type::month &&
-					from_chars->ptr != from_chars->type_first,
+				from_chars->ec == std::errc::invalid_argument
+				&& from_chars->type == errc_type::month
+				&& from_chars->ptr != from_chars->type_first,
 				date, memory::fmt::format("Month value was missing a separator (\"{}\").", SEPARATOR_CHARACTER)
 			);
 			OV_ERR_FAIL_COND_V_MSG(
-				from_chars->ec == std::errc::invalid_argument && from_chars->type == errc_type::day &&
-					from_chars->ptr == from_chars->type_first,
+				from_chars->ec == std::errc::invalid_argument
+				&& from_chars->type == errc_type::day
+				&& from_chars->ptr == from_chars->type_first,
 				date, "Could not parse day value."
 			);
 			OV_ERR_FAIL_COND_V_MSG(
 				from_chars->ec == std::errc::not_supported && from_chars->type == errc_type::day, date, "Day value cannot be 0."
 			);
 			OV_ERR_FAIL_COND_V_MSG(
-				from_chars->ec == std::errc::value_too_large && from_chars->type == errc_type::day &&
-					from_chars->ptr == from_chars->type_first,
+				from_chars->ec == std::errc::value_too_large
+				&& from_chars->type == errc_type::day
+				&& from_chars->ptr == from_chars->type_first,
 				date,
 				memory::fmt::format("Day value cannot be larger than {} for {}.", DAYS_IN_MONTH[date.get_month() - 1], date.get_month())
 			);
@@ -600,8 +610,13 @@ namespace OpenVic {
 
 	OV_SPEED_INLINE constexpr Date::stack_string Date::to_array(bool pad_year, bool pad_month, bool pad_day) const {
 		stack_string str {};
-		std::to_chars_result result =
-			to_chars(str._array.data(), str._array.data() + str._array.size(), pad_year, pad_month, pad_day);
+		std::to_chars_result result = to_chars(
+			str._array.data(),
+			str._array.data() + str._array.size(),
+			pad_year,
+			pad_month,
+			pad_day
+		);
 		str._string_size = result.ptr - str.data();
 		return str;
 	}

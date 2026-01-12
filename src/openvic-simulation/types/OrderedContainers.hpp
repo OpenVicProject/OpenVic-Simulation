@@ -50,16 +50,30 @@ namespace OpenVic {
 		class Key, class T, class Hash = container_hash<Key>, class KeyEqual = std::equal_to<>,
 		class RawAllocator = foonathan::memory::default_allocator, class IndexType = std::uint_least32_t,
 		class Allocator = foonathan::memory::std_allocator<std::pair<Key, T>, memory::tracker<RawAllocator>>>
-	using vector_ordered_map =
-		tsl::ordered_map<Key, T, Hash, KeyEqual, Allocator, std::vector<std::pair<Key, T>, Allocator>, IndexType>;
+	using vector_ordered_map = tsl::ordered_map<
+		Key,
+		T,
+		Hash,
+		KeyEqual,
+		Allocator,
+		std::vector<std::pair<Key, T>, Allocator>,
+		IndexType
+	>;
 
 	// Useful for stable memory addresses (so long as you don't remove or insert values)
 	template<
 		class Key, class T, class Hash = container_hash<Key>, class KeyEqual = std::equal_to<>,
 		class RawAllocator = foonathan::memory::default_allocator, class IndexType = std::uint_least32_t,
 		class Allocator = foonathan::memory::std_allocator<std::pair<Key, T>, memory::tracker<RawAllocator>>>
-	using deque_ordered_map =
-		tsl::ordered_map<Key, T, Hash, KeyEqual, Allocator, OpenVic::utility::deque<std::pair<Key, T>, Allocator>, IndexType>;
+	using deque_ordered_map = tsl::ordered_map<
+		Key,
+		T,
+		Hash,
+		KeyEqual,
+		Allocator,
+		OpenVic::utility::deque<std::pair<Key, T>, Allocator>,
+		IndexType
+	>;
 
 	template<
 		class Key, class T, class Hash = container_hash<Key>, class KeyEqual = std::equal_to<>,
@@ -79,8 +93,14 @@ namespace OpenVic {
 		class Key, class Hash = container_hash<Key>, class KeyEqual = std::equal_to<>,
 		class RawAllocator = foonathan::memory::default_allocator, class IndexType = std::uint_least32_t,
 		class Allocator = foonathan::memory::std_allocator<Key, memory::tracker<RawAllocator>>>
-	using deque_ordered_set =
-		tsl::ordered_set<Key, Hash, KeyEqual, Allocator, OpenVic::utility::deque<Key, Allocator>, IndexType>;
+	using deque_ordered_set = tsl::ordered_set<
+		Key,
+		Hash,
+		KeyEqual,
+		Allocator,
+		OpenVic::utility::deque<Key, Allocator>,
+		IndexType
+	>;
 
 	template<
 		class Key, class Hash = container_hash<Key>, class KeyEqual = std::equal_to<>,
@@ -161,8 +181,14 @@ namespace OpenVic {
 	template<
 		class Key, class RawAllocator = foonathan::memory::default_allocator, class IndexType = std::uint_least32_t,
 		class Allocator = foonathan::memory::std_allocator<Key, memory::tracker<RawAllocator>>>
-	using case_insensitive_deque_ordered_set =
-		deque_ordered_set<Key, case_insensitive_string_hash, case_insensitive_string_equal, RawAllocator, IndexType, Allocator>;
+	using case_insensitive_deque_ordered_set = deque_ordered_set<
+		Key,
+		case_insensitive_string_hash,
+		case_insensitive_string_equal,
+		RawAllocator,
+		IndexType,
+		Allocator
+	>;
 
 	template<
 		class Key, class RawAllocator = foonathan::memory::default_allocator, class IndexType = std::uint_least32_t,

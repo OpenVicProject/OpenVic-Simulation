@@ -191,8 +191,8 @@ namespace OpenVic {
 		}
 
 		RingBuffer& operator=(RingBuffer&& other) noexcept(
-			allocator_traits::propagate_on_container_move_assignment::value ||
-			std::is_nothrow_move_constructible<value_type>::value
+			allocator_traits::propagate_on_container_move_assignment::value
+			|| std::is_nothrow_move_constructible<value_type>::value
 		) {
 			if (allocator_traits::propagate_on_container_move_assignment::value || _allocator == other._allocator) {
 				// We're either getting the other's allocator or they're already the same,

@@ -130,9 +130,9 @@ bool ConditionalWeight<TYPE>::parse_scripts(DefinitionManager const& definition_
 
 template<conditional_weight_type_t TYPE>
 bool ConditionalWeight<TYPE>::operator==(ConditionalWeight const& other) const {
-	return initial_scope == other.initial_scope &&
-		this_scope == other.this_scope &&
-		from_scope == other.from_scope;
+	return initial_scope == other.initial_scope
+		&& this_scope == other.this_scope
+		&& from_scope == other.from_scope;
 }
 
 template struct OpenVic::ConditionalWeight<BASE>;

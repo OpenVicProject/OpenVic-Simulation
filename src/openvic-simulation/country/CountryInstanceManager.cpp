@@ -202,8 +202,9 @@ CountryInstance const& CountryInstanceManager::get_country_instance_by_definitio
 }
 
 bool CountryInstanceManager::apply_history_to_countries(InstanceManager& instance_manager) {
-	CountryHistoryManager const& history_manager =
-		instance_manager.definition_manager.get_history_manager().get_country_manager();
+	CountryHistoryManager const& history_manager = instance_manager.definition_manager
+		.get_history_manager()
+		.get_country_manager();
 
 	bool ret = true;
 

@@ -240,10 +240,16 @@ void ProvinceInstance::_update_pops(DefineManager const& define_manager) {
 
 	using enum colony_status_t;
 
-	const fixed_point_t pop_size_per_regiment_multiplier =
-		colony_status == PROTECTORATE ? military_defines.get_pop_size_per_regiment_protectorate_multiplier()
-		: colony_status == COLONY ? military_defines.get_pop_size_per_regiment_colony_multiplier()
-		: is_owner_core() ? fixed_point_t::_1 : military_defines.get_pop_size_per_regiment_non_core_multiplier();
+	fixed_point_t pop_size_per_regiment_multiplier;
+	if (colony_status == PROTECTORATE) {
+		pop_size_per_regiment_multiplier = military_defines.get_pop_size_per_regiment_protectorate_multiplier();
+	} else if (colony_status == COLONY) {
+		pop_size_per_regiment_multiplier = military_defines.get_pop_size_per_regiment_colony_multiplier();
+	} else if (is_owner_core()) {
+		pop_size_per_regiment_multiplier = fixed_point_t::_1;
+	} else {
+		pop_size_per_regiment_multiplier = military_defines.get_pop_size_per_regiment_non_core_multiplier();
+	}
 
 	for (Pop& pop : pops) {
 		pops_cache_by_type.at(*pop.get_type()).push_back(&pop);
@@ -441,8 +447,12 @@ bool ProvinceInstance::remove_unit_instance_group(UnitInstanceGroup const& group
 	const auto remove_from_vector = [this, &group]<unit_branch_t Branch>(
 		memory::vector<UnitInstanceGroupBranched<Branch>*>& unit_instance_groups
 	) -> bool {
-		const typename memory::vector<UnitInstanceGroupBranched<Branch>*>::const_iterator it =
-			std::find(unit_instance_groups.begin(), unit_instance_groups.end(), &group);
+		using const_it_t = typename memory::vector<UnitInstanceGroupBranched<Branch>*>::const_iterator;
+		const const_it_t it = std::find(
+			unit_instance_groups.begin(),
+			unit_instance_groups.end(),
+			&group
+		);
 
 		if (it != unit_instance_groups.end()) {
 			unit_instance_groups.erase(it);

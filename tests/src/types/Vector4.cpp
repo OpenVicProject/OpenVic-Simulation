@@ -115,9 +115,12 @@ TEST_CASE("dvec4_t Length methods", "[vec4_t][dvec4_t][dvec4_t-length]") {
 TEST_CASE("fvec4_t Operators", "[vec4_t][fvec4_t][fvec4_t-operators]") {
 	static constexpr fixed_point_t _2_30 = fixed_point_t::_2 + fixed_point_t::_0_20 + fixed_point_t::_0_10;
 	static constexpr fixed_point_t _4_90 = fixed_point_t::_4 + fixed_point_t::_0_50 + fixed_point_t::_0_20 * 2;
-	static constexpr fixed_point_t _7_80 = //
-		fixed_point_t::_4 + fixed_point_t::_2 + fixed_point_t::_1 + fixed_point_t::_0_50 + fixed_point_t::_0_20 +
-		fixed_point_t::_0_10;
+	static constexpr fixed_point_t _7_80 = fixed_point_t::_4
+		+ fixed_point_t::_2
+		+ fixed_point_t::_1
+		+ fixed_point_t::_0_50
+		+ fixed_point_t::_0_20
+		+ fixed_point_t::_0_10;
 	static constexpr fixed_point_t _3_20 = fixed_point_t::_2 + fixed_point_t::_1 + fixed_point_t::_0_20;
 	static constexpr fixed_point_t _1_20 = fixed_point_t::_0_20 * 6;
 	static constexpr fixed_point_t _3_40 = fixed_point_t::_0_20 * 17;
@@ -138,8 +141,7 @@ TEST_CASE("fvec4_t Operators", "[vec4_t][fvec4_t][fvec4_t-operators]") {
 	CONSTEXPR_CHECK(power1 + power2 == testing::approx_vec4(1.25, 1.625, 0.875, 0.875));
 
 	CONSTEXPR_CHECK(
-		decimal1 - decimal2 ==
-		testing::approx_vec4 {
+		decimal1 - decimal2 == testing::approx_vec4 {
 			(1.1_a).epsilon(testing::INACCURATE_EPSILON), //
 			(1.5_a).epsilon(testing::INACCURATE_EPSILON), //
 			(2.2_a).epsilon(testing::INACCURATE_EPSILON), //
@@ -150,8 +152,7 @@ TEST_CASE("fvec4_t Operators", "[vec4_t][fvec4_t][fvec4_t-operators]") {
 	CONSTEXPR_CHECK(power1 - power2 == testing::approx_vec4(0.25, 1.375, 0.375, -0.625));
 
 	CONSTEXPR_CHECK(
-		decimal1 * decimal2 ==
-		testing::approx_vec4 {
+		decimal1 * decimal2 == testing::approx_vec4 {
 			(2.76_a).epsilon(testing::INACCURATE_EPSILON), //
 			(16.66_a).epsilon(testing::INACCURATE_EPSILON), //
 			(43.68_a).epsilon(testing::INACCURATE_EPSILON), //
@@ -162,8 +163,12 @@ TEST_CASE("fvec4_t Operators", "[vec4_t][fvec4_t][fvec4_t-operators]") {
 
 	CONSTEXPR_CHECK(int1 / int2 == testing::approx_vec4(4, 2.5, 3, 2));
 	CONSTEXPR_CHECK(
-		decimal1 / decimal2 ==
-		testing::approx_vec4(1.91666666666666666, 1.44117647058823529, 1.39285714285714286, 1.88235294118)
+		decimal1 / decimal2 == testing::approx_vec4(
+			1.91666666666666666,
+			1.44117647058823529,
+			1.39285714285714286,
+			1.88235294118
+		)
 	);
 	CONSTEXPR_CHECK(power1 / power2 == testing::approx_vec4(1.5, 12.0, 2.5, 1.0 / 6.0));
 

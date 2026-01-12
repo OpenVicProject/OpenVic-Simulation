@@ -131,8 +131,11 @@ static fs::path _search_for_game_path(fs::path hint_path) {
 
 	if (hint_empty) {
 #if defined(_WIN32)
-		static const fs::path registry_path =
-			Windows::ReadRegValue<char>(HKEY_LOCAL_MACHINE, "SOFTWARE\\WOW6432Node\\Paradox Interactive\\Victoria 2", "path");
+		static const fs::path registry_path = Windows::ReadRegValue<char>(
+			HKEY_LOCAL_MACHINE,
+			"SOFTWARE\\WOW6432Node\\Paradox Interactive\\Victoria 2",
+			"path"
+		);
 
 		if (!registry_path.empty()) {
 			return registry_path;
@@ -215,8 +218,12 @@ static fs::path _search_for_game_path(fs::path hint_path) {
 
 	bool vic2_install_confirmed = false;
 	// if current_path is not a regular file, this is a non-default Steam Library, skip this parser evaluation
-	if (fs::is_regular_file(current_path, error_code) &&
-		(is_libraryfolders_vdf || filename_equals(libraryfolders, current_path))) {
+	if (fs::is_regular_file(current_path, error_code)
+		&& (
+			is_libraryfolders_vdf
+			|| filename_equals(libraryfolders, current_path)
+		)
+	) {
 		lexy_vdf::Parser parser;
 
 		memory::string buffer;
@@ -350,13 +357,20 @@ static fs::path _search_for_game_path(fs::path hint_path) {
 	}
 
 	bool is_Victoria_2_folder = false;
-	if ((is_common_folder || filename_equals(common_folder, vic2_steam_lib_directory)) &&
-		fs::is_directory(vic2_steam_lib_directory, error_code)) {
+	if ((
+			is_common_folder
+			|| filename_equals(common_folder, vic2_steam_lib_directory)
+		) && fs::is_directory(vic2_steam_lib_directory, error_code)
+	) {
 		vic2_steam_lib_directory /= Victoria_2_folder;
 		is_Victoria_2_folder = true;
 	}
-	if ((is_Victoria_2_folder || filename_equals(Victoria_2_folder, vic2_steam_lib_directory)) &&
-		fs::is_regular_file(vic2_steam_lib_directory / v2_game_exe, error_code)) {
+
+	if ((
+			is_Victoria_2_folder
+			|| filename_equals(Victoria_2_folder, vic2_steam_lib_directory)
+		) && fs::is_regular_file(vic2_steam_lib_directory / v2_game_exe, error_code)
+	) {
 		return vic2_steam_lib_directory;
 	}
 

@@ -42,15 +42,16 @@ namespace OpenVic {
 	concept not_same_as = !std::same_as<T, T2>;
 
 	template<typename Allocator, typename T, typename Value = std::remove_cvref_t<typename Allocator::value_type>>
-	concept move_insertable_allocator_for =
-		requires(Allocator& alloc, Value* value, T move) { std::allocator_traits<Allocator>::construct(alloc, value, move); };
+	concept move_insertable_allocator_for = requires(Allocator& alloc, Value* value, T move) {
+		std::allocator_traits<Allocator>::construct(alloc, value, move);
+	};
 
 	template<typename Allocator>
 	struct enable_copy_insertable : std::false_type {};
 
 	template<typename Allocator>
-	concept copy_insertable_allocator = enable_copy_insertable<Allocator>::value ||
-		move_insertable_allocator_for<Allocator, typename Allocator::value_type const&>;
+	concept copy_insertable_allocator = enable_copy_insertable<Allocator>::value
+		|| move_insertable_allocator_for<Allocator, typename Allocator::value_type const&>;
 
 	template<typename T>
 	struct enable_copy_insertable<std::allocator<T>> : std::is_copy_constructible<T> {};
@@ -59,8 +60,8 @@ namespace OpenVic {
 	struct enable_move_insertable : std::false_type {};
 
 	template<typename Allocator>
-	concept move_insertable_allocator =
-		enable_move_insertable<Allocator>::value || move_insertable_allocator_for<Allocator, typename Allocator::value_type>;
+	concept move_insertable_allocator = enable_move_insertable<Allocator>::value
+		|| move_insertable_allocator_for<Allocator, typename Allocator::value_type>;
 
 	template<typename T>
 	struct enable_move_insertable<std::allocator<T>> : std::is_move_constructible<T> {};
@@ -109,8 +110,9 @@ namespace OpenVic {
 	};
 
 	template<typename T>
-	concept has_index = requires { typename T::index_t; } &&
-		derived_from_specialization_of<typename T::index_t, type_safe::strong_typedef> && requires {
+	concept has_index = requires { typename T::index_t; }
+		&& derived_from_specialization_of<typename T::index_t, type_safe::strong_typedef>
+		&& requires {
 			static_cast<std::size_t>(
 				static_cast<type_safe::underlying_type<decltype(std::declval<T>().index)>>(std::declval<T>().index)
 			);
