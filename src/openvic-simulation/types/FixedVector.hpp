@@ -1,5 +1,6 @@
 #pragma once
 
+#include <algorithm>
 #include <cassert>
 #include <cstddef>
 #include <memory>
@@ -33,11 +34,22 @@ namespace OpenVic::_detail {
 		constexpr T const* data() const { return _data_start_ptr; }
 		constexpr bool empty() const { return _size == 0; }
 
+		/**
+		* @brief Creates an uninitialised vector with fixed capacity
+		*/
 		explicit FixedVector(const size_t capacity)
 			: _max_size(capacity),
 			_size(0),
 			_allocator(),
 			_data_start_ptr(allocator_traits::allocate(_allocator, capacity)) {}
+
+		FixedVector(const size_t size, T const& value_for_all_indices)
+			: _max_size(size),
+			_size(size),
+			_allocator(),
+			_data_start_ptr(allocator_traits::allocate(_allocator, size)) {
+			std::fill(_data_start_ptr, _data_start_ptr + size, value_for_all_indices);
+		}
 
 		//Generator (size_t i) -> U (where T is constructable from U)
 		template<typename GeneratorTemplateType>
@@ -45,7 +57,7 @@ namespace OpenVic::_detail {
 		requires (!specialization_of<std::remove_cvref_t<std::invoke_result_t<GeneratorTemplateType, size_t>>, std::tuple>)
 		// The type must be constructible from the generator's single return value
 		&& std::constructible_from<T, decltype(std::declval<GeneratorTemplateType>()(std::declval<size_t>()))>
-		FixedVector(size_t size, GeneratorTemplateType&& generator)
+		FixedVector(const size_t size, GeneratorTemplateType&& generator)
 			: _max_size(size),
 			_size(size),
 			_allocator(),
@@ -74,7 +86,7 @@ namespace OpenVic::_detail {
 				)
 			};
 		}
-		FixedVector(size_t size, GeneratorTemplateType&& generator)
+		FixedVector(const size_t size, GeneratorTemplateType&& generator)
 			: _max_size(size),
 			_size(size),
 			_allocator(),
@@ -125,12 +137,12 @@ namespace OpenVic::_detail {
 		const_reverse_iterator rend() const { return const_reverse_iterator(begin()); }
 		const_reverse_iterator crend() const { return const_reverse_iterator(begin()); }
 
-		T& operator[](size_t index) {
-			assert(index < _size && "Index out of bounds.");
+		T& operator[](const size_t index) {
+			assert(index < _size);
 			return _data_start_ptr[index];
 		}
-		const T& operator[](size_t index) const {
-			assert(index < _size && "Index out of bounds.");
+		const T& operator[](const size_t index) const {
+			assert(index < _size);
 			return _data_start_ptr[index];
 		}
 
