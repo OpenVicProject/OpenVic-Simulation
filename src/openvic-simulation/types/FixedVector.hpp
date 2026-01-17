@@ -6,6 +6,7 @@
 #include <memory>
 #include <utility>
 
+#include "openvic-simulation/core/Assert.hpp"
 #include "openvic-simulation/core/template/Concepts.hpp"
 #include "openvic-simulation/core/Typedefs.hpp"
 
@@ -138,28 +139,28 @@ namespace OpenVic::_detail {
 		const_reverse_iterator crend() const { return const_reverse_iterator(begin()); }
 
 		T& operator[](const size_t index) {
-			assert(index < _size);
+			OV_HARDEN_ASSERT_ACCESS(index, "operator[]");
 			return _data_start_ptr[index];
 		}
 		const T& operator[](const size_t index) const {
-			assert(index < _size);
+			OV_HARDEN_ASSERT_ACCESS(index, "operator[]");
 			return _data_start_ptr[index];
 		}
 
 		T& front() {
-			assert(!empty());
+			OV_HARDEN_ASSERT_NONEMPTY("front");
 			return *begin();
 		}
 		const T& front() const {
-			assert(!empty());
+			OV_HARDEN_ASSERT_NONEMPTY("front");
 			return *cbegin();
 		}
 		T& back() {
-			assert(!empty());
+			OV_HARDEN_ASSERT_NONEMPTY("back");
 			return *(end()-1);
 		}
 		const T& back() const {
-			assert(!empty());
+			OV_HARDEN_ASSERT_NONEMPTY("back");
 			return *(cend()-1);
 		}
 
