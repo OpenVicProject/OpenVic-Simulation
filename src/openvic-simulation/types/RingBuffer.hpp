@@ -18,6 +18,7 @@
 #include <range/v3/range/concepts.hpp>
 #include <range/v3/view/subrange.hpp>
 
+#include "openvic-simulation/core/Assert.hpp"
 #include "openvic-simulation/core/Typedefs.hpp"
 
 namespace OpenVic {
@@ -215,34 +216,49 @@ namespace OpenVic {
 		allocator_type get_allocator() const {
 			return _allocator;
 		}
+
+	private:
+		reference _unsafe_access(const size_type index) {
+			return _data[_ring_wrap(_offset + index, capacity())];
+		}
+		const_reference _unsafe_access(const size_type index) const {
+			return _data[_ring_wrap(_offset + index, capacity())];
+		}
+
+	public:
 		reference front() {
-			return at(0);
+			OV_HARDEN_ASSERT_NONEMPTY("front");
+			return _unsafe_access(0);
 		}
 		reference back() {
-			return at(size() - 1);
+			OV_HARDEN_ASSERT_NONEMPTY("back");
+			return _unsafe_access(size() - 1);
 		}
 		const_reference back() const {
-			return at(size() - 1);
+			OV_HARDEN_ASSERT_NONEMPTY("back");
+			return _unsafe_access(size() - 1);
 		}
 
 		const_reference operator[](const size_type index) const {
-			return _data[_ring_wrap(_offset + index, capacity())];
+			OV_HARDEN_ASSERT_ACCESS(index, "operator[]");
+			return _unsafe_access(index);
 		}
 		reference operator[](const size_type index) {
-			return _data[_ring_wrap(_offset + index, capacity())];
+			OV_HARDEN_ASSERT_ACCESS(index, "operator[]");
+			return _unsafe_access(index);
 		}
 
 		const_reference at(const size_type index) const {
 			if (OV_unlikely(index >= size())) {
-				std::abort();
+				_abort_on_out_of_range("at", "index", index, size());
 			}
-			return (*this)[index];
+			return _unsafe_access(index);
 		}
 		reference at(const size_type index) {
 			if (OV_unlikely(index >= size())) {
-				std::abort();
+				_abort_on_out_of_range("at", "index", index, size());
 			}
-			return (*this)[index];
+			return _unsafe_access(index);
 		}
 
 		iterator begin() noexcept {
@@ -693,6 +709,7 @@ namespace OpenVic {
 			return erase(pos, last);
 		}
 		iterator erase(const_iterator pos) noexcept(noexcept(erase(pos, 1))) {
+			OV_HARDEN_ASSERT_VALID_ITERATOR(pos, "erase(const_iterator)");
 			return erase(pos, 1);
 		}
 
@@ -762,6 +779,10 @@ namespace OpenVic {
 
 		static constexpr size_type _ring_wrap(const size_type ring_index, const size_type ring_capacity) {
 			return (ring_index <= ring_capacity) ? ring_index : ring_index - ring_capacity - 1;
+		}
+
+		[[noreturn]] void _abort_on_out_of_range(const char* func_name, const char* var_name, size_t var, size_t size) const {
+			OV_THROW_OUT_OF_RANGE("RingBuffer", func_name, var_name, var, size);
 		}
 
 		// The start of the dynamically allocated backing array.

@@ -5,6 +5,7 @@
 #include <cstdint>
 #include <string_view>
 
+#include "openvic-simulation/core/Assert.hpp"
 #include "openvic-simulation/utility/Containers.hpp"
 
 namespace OpenVic {
@@ -40,6 +41,7 @@ namespace OpenVic {
 		}
 
 		constexpr decltype(_array)::const_reference operator[](size_t index) const {
+			OV_HARDEN_ASSERT_ACCESS(index, "operator[]");
 			return _array[index];
 		}
 

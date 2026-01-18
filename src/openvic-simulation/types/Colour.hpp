@@ -871,10 +871,10 @@ struct fmt::formatter<T> {
 					size_t i = 0;
 					for (char& c : lower) {
 						c = std::tolower(result[i]);
-						if (c == '\0') {
+						++i;
+						if (i == result.size()) {
 							break;
 						}
-						++i;
 					}
 					return detail::write(out, string_view { lower.data(), i }, specs, ctx.locale());
 				}
