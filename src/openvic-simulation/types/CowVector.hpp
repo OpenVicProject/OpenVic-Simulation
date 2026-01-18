@@ -11,6 +11,7 @@
 #include <type_traits>
 #include <vector>
 
+#include "openvic-simulation/core/Assert.hpp"
 #include "openvic-simulation/types/BasicIterator.hpp"
 #include "openvic-simulation/utility/Allocator.hpp"
 #include "openvic-simulation/core/Compare.hpp"
@@ -166,19 +167,24 @@ namespace OpenVic {
 		}
 
 		const_reference at(size_type pos) const {
-			// TODO: crash on boundary violation
-			return (*this)[pos];
+			if (OV_unlikely(pos >= size())) {
+				std::abort();
+			}
+			return _data->array[pos];
 		}
 
 		const_reference operator[](size_type pos) const {
+			OV_HARDEN_ASSERT_ACCESS(pos, "operator[]");
 			return _data->array[pos];
 		}
 
 		const_reference front() const {
+			OV_HARDEN_ASSERT_NONEMPTY("front");
 			return *_data->array;
 		}
 
 		const_reference back() const {
+			OV_HARDEN_ASSERT_NONEMPTY("back");
 			return *_data->array_end;
 		}
 
@@ -329,9 +335,8 @@ namespace OpenVic {
 
 		template<typename InputIt>
 		inline difference_type _validate_iterator_difference(InputIt first, InputIt last) {
-			difference_type result = last - first;
-			// TODO: crash on negative result
-			return result;
+			OV_HARDEN_ASSERT_VALID_RANGE_MESSAGE(first, last, "_validate_iterator_difference called with invalid range");
+			return last - first;
 		}
 
 		struct for_overwrite_t {};
@@ -367,19 +372,24 @@ namespace OpenVic {
 		}
 
 		reference at(size_type pos) {
-			return (*this)[pos];
+			if (OV_unlikely(pos >= size())) {
+				std::abort();
+			}
+			return _data->array[pos];
 		}
 
 		reference operator[](size_type pos) {
-			// TODO: crash on boundary violation
+			OV_HARDEN_ASSERT_ACCESS(pos, "operator[]");
 			return _data->array[pos];
 		}
 
 		reference front() {
+			OV_HARDEN_ASSERT_NONEMPTY("front");
 			return *_data->array;
 		}
 
 		reference back() {
+			OV_HARDEN_ASSERT_NONEMPTY("back");
 			return *_data->array_end;
 		}
 
@@ -405,7 +415,7 @@ namespace OpenVic {
 
 		void reserve(size_type count) {
 			if (count > max_size()) {
-				// TODO: crash
+				std::abort();
 			}
 			if (capacity() >= count) {
 				return;
@@ -510,6 +520,7 @@ namespace OpenVic {
 		}
 
 		iterator erase(const_iterator pos) {
+			OV_HARDEN_ASSERT_VALID_ITERATOR(pos, "erase(const_iterator)");
 			if (pos + 1 != end()) {
 				std::move(pos + 1, end(), pos);
 			}
@@ -561,7 +572,7 @@ namespace OpenVic {
 		}
 
 		void pop_back() {
-			// TODO: assert if empty
+			OV_HARDEN_ASSERT_NONEMPTY("pop_back");
 			--_data->array_end;
 			allocator_traits::destroy(alloc, _data->array_end);
 		}
