@@ -23,7 +23,7 @@ node_callback_t PopsDefines::expect_defines() {
 		"LUXURY_THRESHOLD", ONE_EXACTLY, expect_fixed_point(assign_variable_callback(luxury_threshold)),
 		"BASE_GOODS_DEMAND", ONE_EXACTLY, expect_fixed_point(assign_variable_callback(base_goods_demand)),
 		"BASE_POPGROWTH", ONE_EXACTLY, expect_fixed_point(assign_variable_callback(base_popgrowth)),
-		"MIN_LIFE_RATING_FOR_GROWTH", ONE_EXACTLY, expect_uint(assign_variable_callback(min_life_rating_for_growth)),
+		"MIN_LIFE_RATING_FOR_GROWTH", ONE_EXACTLY, expect_strong_typedef<life_rating_t>(assign_variable_callback(min_life_rating_for_growth)),
 		"LIFE_RATING_GROWTH_BONUS", ONE_EXACTLY, expect_fixed_point(assign_variable_callback(life_rating_growth_bonus)),
 		"LIFE_NEED_STARVATION_LIMIT", ONE_EXACTLY, expect_fixed_point(assign_variable_callback(life_need_starvation_limit)),
 		"MIL_LACK_EVERYDAY_NEED", ONE_EXACTLY, expect_fixed_point(assign_variable_callback(mil_lack_everyday_need)),

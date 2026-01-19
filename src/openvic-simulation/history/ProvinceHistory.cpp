@@ -135,7 +135,7 @@ bool ProvinceHistoryMap::_load_history_entry(
 				allow_empty_true, //could be explicitly setting trade_goods to null
 				do_warn //could be typo in good identifier
 			),
-		"life_rating", ZERO_OR_ONE, expect_uint<life_rating_t>(assign_variable_callback(entry.life_rating)),
+		"life_rating", ZERO_OR_ONE, expect_strong_typedef<life_rating_t>(assign_variable_callback(entry.life_rating)),
 		"terrain", ZERO_OR_ONE, terrain_type_manager.expect_terrain_type_identifier(
 			assign_variable_callback_pointer_opt(entry.terrain_type)
 		),
