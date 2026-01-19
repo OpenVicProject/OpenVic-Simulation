@@ -78,7 +78,7 @@ bool BuildingTypeManager::load_buildings_file(
 				"on_completion", ZERO_OR_ONE, expect_identifier(assign_variable_callback(building_type_args.on_completion)),
 				"completion_size", ZERO_OR_ONE,
 					expect_fixed_point(assign_variable_callback(building_type_args.completion_size)),
-				"max_level", ONE_EXACTLY, expect_uint(assign_variable_callback(building_type_args.max_level)),
+				"max_level", ONE_EXACTLY, expect_strong_typedef<building_level_t>(assign_variable_callback(building_type_args.max_level)),
 				"goods_cost", ONE_EXACTLY, good_definition_manager.expect_good_definition_decimal_map(
 					move_variable_callback(building_type_args.goods_cost)
 				),
@@ -101,7 +101,7 @@ bool BuildingTypeManager::load_buildings_file(
 				"pop_build_factory", ZERO_OR_ONE, expect_bool(assign_variable_callback(building_type_args.pop_build_factory)),
 				"strategic_factory", ZERO_OR_ONE, expect_bool(assign_variable_callback(building_type_args.strategic_factory)),
 				"advanced_factory", ZERO_OR_ONE, expect_bool(assign_variable_callback(building_type_args.advanced_factory)),
-				"fort_level", ZERO_OR_ONE, expect_uint(assign_variable_callback(building_type_args.fort_level)),
+				"fort_level", ZERO_OR_ONE, expect_strong_typedef<building_level_t>(assign_variable_callback(building_type_args.fort_level)),
 				"naval_capacity", ZERO_OR_ONE, expect_uint(assign_variable_callback(building_type_args.naval_capacity)),
 				"colonial_points", ZERO_OR_ONE,
 					expect_list(expect_fixed_point(vector_callback(building_type_args.colonial_points))),

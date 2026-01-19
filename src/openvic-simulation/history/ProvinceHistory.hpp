@@ -5,7 +5,7 @@
 #include "openvic-simulation/economy/BuildingType.hpp"
 #include "openvic-simulation/history/HistoryMap.hpp"
 #include "openvic-simulation/population/Pop.hpp"
-#include "openvic-simulation/types/BuildingLevel.hpp"
+#include "openvic-simulation/economy/BuildingLevel.hpp"
 #include "openvic-simulation/types/ColonyStatus.hpp"
 #include "openvic-simulation/types/Date.hpp"
 #include "openvic-simulation/types/OrderedContainers.hpp"
