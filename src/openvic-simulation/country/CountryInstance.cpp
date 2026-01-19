@@ -43,7 +43,8 @@
 #include "openvic-simulation/types/Date.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
 #include "openvic-simulation/types/IndexedFlatMap.hpp"
-#include "openvic-simulation/types/PopSize.hpp"
+#include "openvic-simulation/population/PopSize.hpp"
+#include "openvic-simulation/population/PopSum.hpp"
 #include "openvic-simulation/types/UnitBranchType.hpp"
 #include "openvic-simulation/utility/Containers.hpp"
 #include "openvic-simulation/utility/Logger.hpp"
@@ -1341,8 +1342,8 @@ void CountryInstance::_update_budget() {
 	OpenVic immediately updates both.
 	*/
 
-	pop_size_t total_non_colonial_population = 0;
-	pop_size_t administrators = 0;
+	pop_sum_t total_non_colonial_population = 0;
+	pop_sum_t administrators = 0;
 	for (State const* const state_ptr : states) {
 		if (state_ptr == nullptr) {
 			continue;
@@ -1353,7 +1354,7 @@ void CountryInstance::_update_budget() {
 			continue;
 		}
 
-		IndexedFlatMap<PopType, pop_size_t> const& state_population_by_type = state.get_population_by_type();
+		IndexedFlatMap<PopType, pop_sum_t> const& state_population_by_type = state.get_population_by_type();
 
 		for (auto const& [pop_type, size] : state_population_by_type) {
 			if (pop_type.is_administrator) {
@@ -1367,18 +1368,24 @@ void CountryInstance::_update_budget() {
 		administrative_efficiency_from_administrators.set(fixed_point_t::_1);
 		administrator_percentage.set(fixed_point_t::_0);
 	} else {		
-		administrator_percentage.set(fixed_point_t(administrators) / total_non_colonial_population);
+		administrator_percentage.set(fixed_point_t::from_fraction(administrators, total_non_colonial_population));
 
-		const fixed_point_t desired_administrators = desired_administrator_percentage.get_untracked() * total_non_colonial_population;
-		const fixed_point_t administrative_efficiency_from_administrators_unclamped = std::min(
-			fixed_point_t::mul_div(
-				administrators,
-				fixed_point_t::_1 + get_modifier_effect_value(*modifier_effect_cache.get_administrative_efficiency()),
-				desired_administrators
-			)
-			* (fixed_point_t::_1 + get_modifier_effect_value(*modifier_effect_cache.get_administrative_efficiency_modifier())),
-			fixed_point_t::_1
+		const pop_sum_t desired_administrators = fixed_point_t::multiply_truncate(
+			total_non_colonial_population,
+			desired_administrator_percentage.get_untracked()
 		);
+		const pop_sum_t effective_administrators = fixed_point_t::multiply_truncate(
+			administrators,
+			fixed_point_t::_1 + get_modifier_effect_value(*modifier_effect_cache.get_administrative_efficiency())
+		);
+		const fixed_point_t administrative_efficiency_from_administrators_unclamped = 
+			desired_administrators == 0
+			? fixed_point_t::_1
+			: std::min(
+				fixed_point_t::from_fraction(effective_administrators, desired_administrators)
+					* (fixed_point_t::_1 + get_modifier_effect_value(*modifier_effect_cache.get_administrative_efficiency_modifier())),
+				fixed_point_t::_1
+			);
 
 		administrative_efficiency_from_administrators.set(
 			game_rules_manager.get_prevent_negative_administration_efficiency()
@@ -1387,36 +1394,42 @@ void CountryInstance::_update_budget() {
 		);
 	}
 
-	fixed_point_t projected_administration_spending_unscaled_by_slider_running_total = 0;
-	fixed_point_t projected_education_spending_unscaled_by_slider_running_total = 0;
-	fixed_point_t projected_military_spending_unscaled_by_slider_running_total = 0;
-	fixed_point_t projected_pensions_spending_unscaled_by_slider_running_total = 0;
-	fixed_point_t projected_unemployment_subsidies_spending_unscaled_by_slider_running_total = 0;
+	int64_t projected_administration_spending_unscaled_by_slider_running_total = 0;
+	int64_t projected_education_spending_unscaled_by_slider_running_total = 0;
+	int64_t projected_military_spending_unscaled_by_slider_running_total = 0;
+	int64_t projected_pensions_spending_unscaled_by_slider_running_total = 0;
+	int64_t projected_unemployment_subsidies_spending_unscaled_by_slider_running_total = 0;
 
-	for (auto const& [pop_type, size] : get_population_by_type()) {
-		projected_administration_spending_unscaled_by_slider_running_total += size * administration_salary_base_by_pop_type.at(pop_type).get_untracked();
-		projected_education_spending_unscaled_by_slider_running_total += size * education_salary_base_by_pop_type.at(pop_type).get_untracked();
-		projected_military_spending_unscaled_by_slider_running_total += size * military_salary_base_by_pop_type.at(pop_type).get_untracked();
-		projected_pensions_spending_unscaled_by_slider_running_total += size * calculate_pensions_base(pop_type);
-		projected_unemployment_subsidies_spending_unscaled_by_slider_running_total += get_unemployed_pops_by_type(pop_type)
-			* calculate_unemployment_subsidies_base(pop_type);
+	for (auto const& [pop_type, pop_size] : get_population_by_type()) {
+		const int64_t size = type_safe::get(pop_size);
+		projected_administration_spending_unscaled_by_slider_running_total += size * administration_salary_base_by_pop_type.at(pop_type).get_untracked().get_raw_value();
+		projected_education_spending_unscaled_by_slider_running_total += size * education_salary_base_by_pop_type.at(pop_type).get_untracked().get_raw_value();
+		projected_military_spending_unscaled_by_slider_running_total += size * military_salary_base_by_pop_type.at(pop_type).get_untracked().get_raw_value();
+		projected_pensions_spending_unscaled_by_slider_running_total += size * calculate_pensions_base(pop_type).get_raw_value();
+		projected_unemployment_subsidies_spending_unscaled_by_slider_running_total += type_safe::get(get_unemployed_pops_by_type(pop_type))
+			* calculate_unemployment_subsidies_base(pop_type).get_raw_value();
 	}
 
-	projected_administration_spending_unscaled_by_slider.set(
-		projected_administration_spending_unscaled_by_slider_running_total / Pop::size_denominator
-	);
-	projected_education_spending_unscaled_by_slider.set(
-		projected_education_spending_unscaled_by_slider_running_total / Pop::size_denominator
-	);
-	projected_military_spending_unscaled_by_slider.set(
-		projected_military_spending_unscaled_by_slider_running_total / Pop::size_denominator
-	);
-	projected_pensions_spending_unscaled_by_slider.set(
-		projected_pensions_spending_unscaled_by_slider_running_total / Pop::size_denominator
-	);
-	projected_unemployment_subsidies_spending_unscaled_by_slider.set(
-		projected_unemployment_subsidies_spending_unscaled_by_slider_running_total / Pop::size_denominator
-	);
+	projected_administration_spending_unscaled_by_slider.set(fixed_point_t::from_fraction(
+		projected_administration_spending_unscaled_by_slider_running_total,
+		type_safe::get(Pop::size_denominator)
+	));
+	projected_education_spending_unscaled_by_slider.set(fixed_point_t::from_fraction(
+		projected_education_spending_unscaled_by_slider_running_total,
+		type_safe::get(Pop::size_denominator)
+	));
+	projected_military_spending_unscaled_by_slider.set(fixed_point_t::from_fraction(
+		projected_military_spending_unscaled_by_slider_running_total,
+		type_safe::get(Pop::size_denominator)
+	));
+	projected_pensions_spending_unscaled_by_slider.set(fixed_point_t::from_fraction(
+		projected_pensions_spending_unscaled_by_slider_running_total,
+		type_safe::get(Pop::size_denominator)
+	));
+	projected_unemployment_subsidies_spending_unscaled_by_slider.set(fixed_point_t::from_fraction(
+		projected_unemployment_subsidies_spending_unscaled_by_slider_running_total,
+		type_safe::get(Pop::size_denominator)
+	));
 }
 
 fixed_point_t CountryInstance::calculate_pensions_base(PopType const& pop_type) {
@@ -1498,9 +1511,18 @@ void CountryInstance::_update_population() {
 
 	for (auto const& [pop_type, pop_size] : get_population_by_type()) {
 		if (pop_type.research_leadership_optimum > 0 && pop_size > 0) {
-			const fixed_point_t factor = std::min(
-				pop_size / (get_total_population() * pop_type.research_leadership_optimum), fixed_point_t::_1
+			const pop_sum_t optimum_size = fixed_point_t::multiply_truncate(
+				get_total_population(),
+				pop_type.research_leadership_optimum
 			);
+			const fixed_point_t factor = optimum_size == 0
+				? fixed_point_t::_1
+				: std::min(
+					fixed_point_t::from_fraction(
+						pop_size,
+						optimum_size
+					), fixed_point_t::_1
+				);
 
 			if (pop_type.research_points != 0) {
 				const fixed_point_t research_points = pop_type.research_points * factor;
@@ -1634,11 +1656,9 @@ void CountryInstance::_update_military() {
 	naval_unit_start_experience += get_modifier_effect_value(*modifier_effect_cache.get_naval_unit_start_experience());
 
 	recruit_time = fixed_point_t::_1 + get_modifier_effect_value(*modifier_effect_cache.get_unit_recruitment_time());
-	combat_width = combat_width_t(
-		(
-			type_safe::get(military_defines.get_base_combat_width())
-			+ get_modifier_effect_value(*modifier_effect_cache.get_combat_width_additive())
-		).floor<type_safe::underlying_type<combat_width_t>>()
+	combat_width = fixed_point_t::multiply_truncate(
+		military_defines.get_base_combat_width(),
+		get_modifier_effect_value(*modifier_effect_cache.get_combat_width_additive())
 	);
 	dig_in_cap = get_modifier_effect_value(*modifier_effect_cache.get_dig_in_cap()).floor<int32_t>();
 	military_tactics = military_defines.get_base_military_tactics() +

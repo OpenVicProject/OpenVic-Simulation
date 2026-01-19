@@ -109,8 +109,11 @@ namespace OpenVic {
 	};
 
 	template<typename T>
+	concept is_strongly_typed = derived_from_specialization_of<T, type_safe::strong_typedef>;
+
+	template<typename T>
 	concept has_index = requires { typename T::index_t; } &&
-		derived_from_specialization_of<typename T::index_t, type_safe::strong_typedef> && requires {
+		is_strongly_typed<typename T::index_t> && requires {
 			static_cast<std::size_t>(
 				static_cast<type_safe::underlying_type<decltype(std::declval<T>().index)>>(std::declval<T>().index)
 			);
@@ -222,8 +225,8 @@ namespace OpenVic {
 		{ lhs /= rhs } -> std::same_as<Lhs&>;
 	};
 
-	template<typename Lhs, typename A, typename B>
-	concept mul_add_assignable = requires(Lhs& lhs, const A a, const B b) {
-		{ lhs += a * b } -> std::same_as<Lhs&>;
+	template<typename Lhs, typename Rhs = Lhs>
+	concept equalable = requires(Lhs const& lhs, Rhs const& rhs) {
+		{ lhs == rhs } -> std::convertible_to<bool>;
 	};
 }

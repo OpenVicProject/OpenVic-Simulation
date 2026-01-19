@@ -240,11 +240,11 @@ string_set_t Dataloader::lookup_dirs_in_dir(std::string_view path) const {
 	return ret;
 }
 
-template<std::derived_from<detail::BasicParser> Parser, bool (*parse_func)(Parser&)>
+template<std::derived_from<ovdl::detail::BasicParser> Parser, bool (*parse_func)(Parser&)>
 static Parser _run_ovdl_parser(fs::path const& path) {
 	Parser parser;
 	memory::string buffer;
-	auto error_log_stream = detail::make_callback_stream<char>(
+	auto error_log_stream = ovdl::detail::make_callback_stream<char>(
 		[](void const* s, std::streamsize n, void* user_data) -> std::streamsize {
 			if (s != nullptr && n > 0 && user_data != nullptr) {
 				static_cast<memory::string*>(user_data)->append(static_cast<char const*>(s), n);

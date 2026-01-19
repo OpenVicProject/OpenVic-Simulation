@@ -2,7 +2,7 @@
 
 #include "openvic-simulation/dataloader/NodeTools.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
-#include "openvic-simulation/types/PopSize.hpp"
+#include "openvic-simulation/population/PopSum.hpp"
 #include "openvic-simulation/types/ProvinceLifeRating.hpp"
 #include "openvic-simulation/utility/Getters.hpp"
 
@@ -71,8 +71,8 @@ namespace OpenVic {
 		fixed_point_t PROPERTY(nationalist_movement_mil_cap);
 		fixed_point_t PROPERTY(movement_support_uh_factor);
 		fixed_point_t PROPERTY(rebel_occupation_strength_bonus);
-		pop_size_t PROPERTY(large_population_limit, 0);
-		pop_size_t PROPERTY(large_population_influence_penalty_chunk, 0);
+		pop_sum_t PROPERTY(large_population_limit, 0);
+		pop_sum_t PROPERTY(large_population_influence_penalty_chunk, 0);
 
 		PopsDefines();
 

@@ -14,6 +14,8 @@
 #include <fmt/base.h>
 #include <fmt/format.h>
 
+#include <type_safe/strong_typedef.hpp>
+
 #include "openvic-simulation/types/StackString.hpp"
 #include "openvic-simulation/utility/Getters.hpp"
 #include "openvic-simulation/utility/Logger.hpp"
@@ -217,6 +219,14 @@ namespace OpenVic {
 		template<std::integral T>
 		OV_SPEED_INLINE constexpr T truncate() const {
 			return static_cast<T>(*this);
+		}
+		
+		template<is_strongly_typed StrongType>
+		OV_SPEED_INLINE static constexpr StrongType multiply_truncate(StrongType const& integer, fixed_point_t const& fp) {
+			return StrongType(multiply_truncate(
+				type_safe::get(integer),
+				fp
+			));
 		}
 
 		template<std::integral T>
@@ -424,13 +434,34 @@ namespace OpenVic {
 					if (!std::is_constant_evaluated()) {
 						spdlog::warn_s("parse_capped value exceeded int32 max. It still fits but exceeds fixed_point_t::usable_max");
 					}
-					result = fixed_point_t::parse_raw(value << fixed_point_t::PRECISION);
+					result = fixed_point_t::parse_raw(value << PRECISION);
 				}
 			} else {
 				result = fixed_point_t(static_cast<int32_t>(value));
 			}
 
 			return result;
+		}
+		
+		template<is_strongly_typed StrongType>
+		OV_SPEED_INLINE static constexpr fixed_point_t from_fraction(StrongType const& numerator, StrongType const& denominator) {
+			return from_fraction(type_safe::get(numerator), type_safe::get(denominator));
+		}
+
+		template<integral_max_size_4 TNumerator, integral_max_size_4 TDenominator>
+		OV_SPEED_INLINE static constexpr fixed_point_t from_fraction(const TNumerator numerator, const TDenominator denominator) {
+			return parse_raw((static_cast<value_type>(numerator) << PRECISION) / static_cast<value_type>(denominator));
+		}
+
+		static constexpr fixed_point_t from_fraction(const int64_t numerator, const int64_t denominator) {
+			assert(numerator < 140737488355328LL); //2^47
+			assert(numerator >= -140737488355328LL); //- 2^47
+			return parse_raw((numerator << PRECISION) / denominator);
+		}
+
+		static constexpr fixed_point_t from_fraction(const uint64_t numerator, const uint64_t denominator) {
+			assert(numerator < 281474976710656ULL); //2^48
+			return parse_raw((numerator << PRECISION) / denominator);
 		}
 
 		// Deterministic
@@ -649,9 +680,19 @@ namespace OpenVic {
 			return *this;
 		}
 
+		template<is_strongly_typed StrongType>
+		OV_SPEED_INLINE constexpr fixed_point_t mul_div(StrongType const& numerator, StrongType const& denominator) const {
+			return mul_div(type_safe::get(numerator), type_safe::get(denominator));
+		}
+
+		template<std::integral T>
+		OV_SPEED_INLINE constexpr fixed_point_t mul_div(T const& numerator, T const& denominator) const {
+			return parse_raw(value * numerator / denominator);
+		}
+
 		//Preserves accuracy. Performing a normal multiplication of small values results in 0.
 		OV_SPEED_INLINE constexpr static fixed_point_t mul_div(fixed_point_t const& a, fixed_point_t const& b, fixed_point_t const& denominator) {
-			return parse_raw(a.value * b.value / denominator.value);
+			return a.mul_div(b.value, denominator.value);
 		}
 
 		OV_SPEED_INLINE constexpr friend fixed_point_t operator%(fixed_point_t const& lhs, fixed_point_t const& rhs) {
