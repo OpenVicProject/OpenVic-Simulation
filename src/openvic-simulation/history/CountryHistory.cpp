@@ -112,7 +112,7 @@ bool CountryHistoryMap::_load_history_entry(
 			{
 				Technology const* technology = technology_manager.get_technology_by_identifier(key);
 				if (technology != nullptr) {
-					return expect_uint<decltype(entry.technologies)::mapped_type>(
+					return expect_strong_typedef<decltype(entry.technologies)::mapped_type>(
 						[&entry, technology](decltype(entry.technologies)::mapped_type value) -> bool {
 							if (value > 1) {
 								spdlog::warn_s(

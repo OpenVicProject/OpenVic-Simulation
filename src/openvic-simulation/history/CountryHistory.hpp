@@ -7,7 +7,7 @@
 #include "openvic-simulation/types/IndexedFlatMap.hpp"
 #include "openvic-simulation/types/OrderedContainers.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPointMap.hpp"
-#include "openvic-simulation/types/TechnologyUnlockLevel.hpp"
+#include "openvic-simulation/research/TechnologyUnlockLevel.hpp"
 #include "openvic-simulation/utility/Containers.hpp"
 
 namespace OpenVic {
