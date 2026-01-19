@@ -229,4 +229,10 @@ namespace OpenVic {
 	concept equalable = requires(Lhs const& lhs, Rhs const& rhs) {
 		{ lhs == rhs } -> std::convertible_to<bool>;
 	};
+
+	// Return type is strictly evaluated with same_as
+	template<typename F, typename Return, typename... Args>
+	concept strict_regular_invocable_r = std::regular_invocable<F, Args...> && requires(F f, Args&&... args) {
+		{ f(static_cast<Args>(args)...) } -> std::same_as<Return>;
+	};
 }
