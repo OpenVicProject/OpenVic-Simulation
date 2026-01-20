@@ -12,8 +12,6 @@
 
 #include <fmt/format.h>
 
-#include "openvic-simulation/types/CowPtr.hpp"
-#include "openvic-simulation/types/CowVector.hpp"
 #include "openvic-simulation/utility/DequeMemory.hpp"
 #include "openvic-simulation/utility/MemoryTracker.hpp"
 
@@ -266,12 +264,6 @@ namespace OpenVic::memory {
 
 	using stringstream = stringstream_alloc<>;
 	using wstringstream = wstringstream_alloc<>;
-
-	template<typename T, class RawAllocator = foonathan::memory::default_allocator>
-	using cow_ptr = cow_ptr<T, foonathan::memory::std_allocator<T, tracker<RawAllocator>>>;
-
-	template<typename T, class RawAllocator = foonathan::memory::default_allocator>
-	using cow_vector = cow_vector<T, foonathan::memory::std_allocator<T, tracker<RawAllocator>>>;
 
 	namespace fmt {
 		template<typename T, class RawAllocator = foonathan::memory::default_allocator>

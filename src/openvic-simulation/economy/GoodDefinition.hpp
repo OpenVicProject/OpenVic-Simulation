@@ -1,8 +1,8 @@
 #pragma once
 
-#include "openvic-simulation/types/HasIdentifier.hpp"
-#include "openvic-simulation/types/HasIndex.hpp"
-#include "openvic-simulation/types/IdentifierRegistry.hpp"
+#include "openvic-simulation/core/container/HasIdentifier.hpp"
+#include "openvic-simulation/core/container/HasIndex.hpp"
+#include "openvic-simulation/core/container/IdentifierRegistry.hpp"
 #include "openvic-simulation/types/TypedIndices.hpp"
 #include "openvic-simulation/utility/Containers.hpp"
 

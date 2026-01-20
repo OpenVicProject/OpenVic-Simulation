@@ -475,7 +475,7 @@ callback_t<std::string_view> ConditionManager::expect_parse_identifier(
 					return callback(identified); \
 				} __VA_OPT__(else { \
 					/* TODO: the set is just a placeholder for actual logic */ \
-					static const case_insensitive_string_set_t chances { __VA_ARGS__ }; \
+					static const memory::case_insensitive_string_set_t chances { __VA_ARGS__ }; \
 					if (chances.contains(identifier)) { \
 						return true; \
 					} \

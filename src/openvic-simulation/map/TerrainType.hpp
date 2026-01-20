@@ -1,9 +1,9 @@
 #pragma once
 
+#include "openvic-simulation/core/container/HasIdentifier.hpp"
+#include "openvic-simulation/core/container/HasIndex.hpp"
+#include "openvic-simulation/core/memory/OrderedMap.hpp"
 #include "openvic-simulation/modifier/Modifier.hpp"
-#include "openvic-simulation/types/HasIdentifier.hpp"
-#include "openvic-simulation/types/HasIndex.hpp"
-#include "openvic-simulation/types/OrderedContainers.hpp"
 #include "openvic-simulation/types/TypedIndices.hpp"
 #include "openvic-simulation/utility/Containers.hpp"
 
@@ -56,7 +56,7 @@ namespace OpenVic {
 
 	struct TerrainTypeManager {
 	private:
-		using terrain_type_mappings_map_t = ordered_map<TerrainTypeMapping::index_t, size_t>;
+		using terrain_type_mappings_map_t = memory::ordered_map<TerrainTypeMapping::index_t, size_t>;
 
 		IdentifierRegistry<TerrainType> IDENTIFIER_REGISTRY(terrain_type);
 		IdentifierRegistry<TerrainTypeMapping> IDENTIFIER_REGISTRY(terrain_type_mapping);

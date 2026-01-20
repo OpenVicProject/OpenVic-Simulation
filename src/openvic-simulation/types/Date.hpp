@@ -17,7 +17,7 @@
 #include <range/v3/algorithm/max_element.hpp>
 
 #include "openvic-simulation/core/error/ErrorMacros.hpp"
-#include "openvic-simulation/types/StackString.hpp"
+#include "openvic-simulation/core/container/StackString.hpp"
 #include "openvic-simulation/utility/Getters.hpp"
 #include "openvic-simulation/core/string/CharConv.hpp"
 #include "openvic-simulation/core/Typedefs.hpp"

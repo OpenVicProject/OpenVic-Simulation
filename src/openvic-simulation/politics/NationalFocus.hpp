@@ -2,8 +2,8 @@
 
 #include "openvic-simulation/modifier/Modifier.hpp"
 #include "openvic-simulation/scripts/ConditionScript.hpp"
-#include "openvic-simulation/types/HasIdentifier.hpp"
-#include "openvic-simulation/types/IdentifierRegistry.hpp"
+#include "openvic-simulation/core/container/HasIdentifier.hpp"
+#include "openvic-simulation/core/container/IdentifierRegistry.hpp"
 #include "openvic-simulation/utility/Getters.hpp"
 
 namespace OpenVic {

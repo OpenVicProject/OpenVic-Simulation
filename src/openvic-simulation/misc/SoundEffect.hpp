@@ -2,9 +2,9 @@
 
 #include <filesystem>
 
-#include "openvic-simulation/types/IdentifierRegistry.hpp"
+#include "openvic-simulation/core/container/IdentifierRegistry.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
-#include "openvic-simulation/types/HasIdentifier.hpp"
+#include "openvic-simulation/core/container/HasIdentifier.hpp"
 
 namespace OpenVic {
 	class Dataloader;

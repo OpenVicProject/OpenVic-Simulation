@@ -12,8 +12,8 @@
 #include <vector>
 
 #include "openvic-simulation/core/Assert.hpp"
-#include "openvic-simulation/types/BasicIterator.hpp"
-#include "openvic-simulation/utility/Allocator.hpp"
+#include "openvic-simulation/core/container/BasicIterator.hpp"
+#include "openvic-simulation/core/Allocator.hpp"
 #include "openvic-simulation/core/Compare.hpp"
 #include "openvic-simulation/core/template/Concepts.hpp"
 #include "openvic-simulation/core/Typedefs.hpp"

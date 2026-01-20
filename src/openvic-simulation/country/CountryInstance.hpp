@@ -4,25 +4,27 @@
 
 #include <fmt/base.h>
 
+#include "openvic-simulation/core/container/ClampedValue.hpp"
+#include "openvic-simulation/core/container/HasIndex.hpp"
+#include "openvic-simulation/core/memory/FlagStrings.hpp"
+#include "openvic-simulation/core/memory/IndexedFlatMap.hpp"
+#include "openvic-simulation/core/memory/OrderedMap.hpp"
+#include "openvic-simulation/core/memory/OrderedSet.hpp"
+#include "openvic-simulation/core/memory/StringMap.hpp"
+#include "openvic-simulation/core/memory/ValueHistory.hpp"
 #include "openvic-simulation/diplomacy/CountryRelation.hpp"
 #include "openvic-simulation/military/CombatWidth.hpp"
 #include "openvic-simulation/military/UnitBranchedGetterMacro.hpp"
 #include "openvic-simulation/modifier/ModifierSum.hpp"
 #include "openvic-simulation/politics/Rule.hpp"
 #include "openvic-simulation/population/PopsAggregate.hpp"
-#include "openvic-simulation/types/ClampedValue.hpp"
 #include "openvic-simulation/types/Date.hpp"
 #include "openvic-simulation/types/fixed_point/Atomic.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
-#include "openvic-simulation/types/FlagStrings.hpp"
-#include "openvic-simulation/types/HasIndex.hpp"
-#include "openvic-simulation/types/IndexedFlatMap.hpp"
-#include "openvic-simulation/types/OrderedContainers.hpp"
 #include "openvic-simulation/research/TechnologyUnlockLevel.hpp"
 #include "openvic-simulation/types/TypedIndices.hpp"
 #include "openvic-simulation/types/UnitBranchType.hpp"
 #include "openvic-simulation/types/UnitVariant.hpp"
-#include "openvic-simulation/types/ValueHistory.hpp"
 #include "openvic-simulation/utility/Getters.hpp"
 #include "openvic-simulation/utility/Containers.hpp"
 #include "openvic-simulation/utility/reactive/DerivedState.hpp"
@@ -80,7 +82,7 @@ namespace OpenVic {
 
 	/* Representation of a country's mutable attributes, with a CountryDefinition that is unique at any single time
 	 * but can be swapped with other CountryInstance's CountryDefinition when switching tags. */
-	struct CountryInstance : FlagStrings, HasIndex<CountryInstance, country_index_t>, PopsAggregate {
+	struct CountryInstance : memory::FlagStrings, HasIndex<CountryInstance, country_index_t>, PopsAggregate {
 		friend struct CountryInstanceManager;
 
 		/*
@@ -136,14 +138,14 @@ namespace OpenVic {
 		Date PROPERTY(lose_great_power_date);
 		size_t PROPERTY(total_rank, 0);
 
-		ordered_set<ProvinceInstance*> PROPERTY(owned_provinces);
-		ordered_set<ProvinceInstance*> PROPERTY(controlled_provinces);
-		ordered_set<ProvinceInstance*> PROPERTY(core_provinces);
-		ordered_set<State*> PROPERTY(states);
+		memory::ordered_set<ProvinceInstance*> PROPERTY(owned_provinces);
+		memory::ordered_set<ProvinceInstance*> PROPERTY(controlled_provinces);
+		memory::ordered_set<ProvinceInstance*> PROPERTY(core_provinces);
+		memory::ordered_set<State*> PROPERTY(states);
 
-		ordered_set<CountryInstance*> PROPERTY(neighbouring_countries);
+		memory::ordered_set<CountryInstance*> PROPERTY(neighbouring_countries);
 
-		string_map_t<fixed_point_t> PROPERTY(script_variables);
+		memory::string_map_t<fixed_point_t> PROPERTY(script_variables);
 
 		// The total/resultant modifier affecting this country, including owned province contributions.
 		ModifierSum PROPERTY(modifier_sum);
@@ -160,19 +162,19 @@ namespace OpenVic {
 
 		/* Budget */
 		fixed_point_t cash_stockpile_start_of_tick;
-		ValueHistory<fixed_point_t> PROPERTY(balance_history);
+		memory::ValueHistory<fixed_point_t> PROPERTY(balance_history);
 		OV_STATE_PROPERTY(fixed_point_t, gold_income);
 		atomic_fixed_point_t PROPERTY(cash_stockpile);
 		std::mutex taxable_income_mutex;
 		OV_IFLATMAP_PROPERTY(PopType, fixed_point_t, taxable_income_by_pop_type);
 		OV_STATE_PROPERTY(fixed_point_t, tax_efficiency);
-		IndexedFlatMap<Strata, DerivedState<fixed_point_t>> PROPERTY(effective_tax_rate_by_strata);
+		memory::IndexedFlatMap<Strata, DerivedState<fixed_point_t>> PROPERTY(effective_tax_rate_by_strata);
 	public:
 		DerivedState<fixed_point_t>& get_effective_tax_rate_by_strata(Strata const& strata);
 	private:
-		IndexedFlatMap<Strata, ClampedValue> tax_rate_slider_value_by_strata;
+		memory::IndexedFlatMap<Strata, ClampedValue> tax_rate_slider_value_by_strata;
 	public:
-		[[nodiscard]] constexpr IndexedFlatMap<Strata, ClampedValue> const& get_tax_rate_slider_value_by_strata() const {
+		[[nodiscard]] constexpr memory::IndexedFlatMap<Strata, ClampedValue> const& get_tax_rate_slider_value_by_strata() const {
 			return tax_rate_slider_value_by_strata;
 		}
 		[[nodiscard]] ReadOnlyClampedValue& get_tax_rate_slider_value_by_strata(Strata const& strata);
@@ -217,10 +219,10 @@ namespace OpenVic {
 		atomic_fixed_point_t PROPERTY(actual_unemployment_subsidies_spending);
 		
 		//base here means not scaled by slider or pop size
-		IndexedFlatMap<PopType, DerivedState<fixed_point_t>> administration_salary_base_by_pop_type;
-		IndexedFlatMap<PopType, DerivedState<fixed_point_t>> education_salary_base_by_pop_type;
-		IndexedFlatMap<PopType, DerivedState<fixed_point_t>> military_salary_base_by_pop_type;
-		IndexedFlatMap<PopType, DerivedState<fixed_point_t>> social_income_variant_base_by_pop_type;
+		memory::IndexedFlatMap<PopType, DerivedState<fixed_point_t>> administration_salary_base_by_pop_type;
+		memory::IndexedFlatMap<PopType, DerivedState<fixed_point_t>> education_salary_base_by_pop_type;
+		memory::IndexedFlatMap<PopType, DerivedState<fixed_point_t>> military_salary_base_by_pop_type;
+		memory::IndexedFlatMap<PopType, DerivedState<fixed_point_t>> social_income_variant_base_by_pop_type;
 
 		OV_CLAMPED_PROPERTY(tariff_rate_slider_value);
 		fixed_point_t actual_import_subsidies_budget;
@@ -269,7 +271,7 @@ namespace OpenVic {
 		/* Population */
 		size_t PROPERTY(national_focus_capacity, 0);
 		Culture const* PROPERTY(primary_culture, nullptr);
-		ordered_set<Culture const*> PROPERTY(accepted_cultures);
+		memory::ordered_set<Culture const*> PROPERTY(accepted_cultures);
 		Religion const* PROPERTY(religion, nullptr);
 		// TODO - population change over last 30 days
 
@@ -320,9 +322,9 @@ namespace OpenVic {
 			fixed_point_t pop_demand;
 			fixed_point_t available_amount;
 
-			ordered_map<PopType const*, fixed_point_t> need_consumption_per_pop_type;
-			ordered_map<ProductionType const*, fixed_point_t> input_consumption_per_production_type;
-			ordered_map<ProductionType const*, fixed_point_t> production_per_production_type;
+			memory::ordered_map<PopType const*, fixed_point_t> need_consumption_per_pop_type;
+			memory::ordered_map<ProductionType const*, fixed_point_t> input_consumption_per_production_type;
+			memory::ordered_map<ProductionType const*, fixed_point_t> production_per_production_type;
 
 			good_data_t();
 			good_data_t(good_data_t&&) = default;
@@ -342,7 +344,7 @@ namespace OpenVic {
 		// The last time this country lost a war, i.e. accepted a peace offer sent from their offer tab or the enemy's demand
 		// tab, even white peace. Used for the "has_recently_lost_war" condition (true if the date is less than 5 years ago).
 		Date PROPERTY(last_war_loss_date);
-		vector_ordered_set<CountryInstance const*> PROPERTY(war_enemies);
+		memory::vector_ordered_set<CountryInstance const*> PROPERTY(war_enemies);
 		OV_STATE_PROPERTY(CountryInstance const*, sphere_owner, nullptr);
 		// TODO - colonial power, current wars
 
@@ -611,7 +613,7 @@ namespace OpenVic {
 		bool apply_history_to_country(
 			CountryHistoryEntry const& entry,
 			CountryInstanceManager const& country_instance_manager,
-			FlagStrings& global_flags,
+			memory::FlagStrings& global_flags,
 			MapInstance& map_instance
 		);
 
@@ -623,7 +625,7 @@ namespace OpenVic {
 		void calculate_government_good_needs();
 
 		void manage_national_stockpile(
-			IndexedFlatMap<GoodDefinition, char>& reusable_goods_mask,
+			memory::IndexedFlatMap<GoodDefinition, char>& reusable_goods_mask,
 			forwardable_span<
 				memory::vector<fixed_point_t>,
 				VECTORS_FOR_COUNTRY_TICK
@@ -661,7 +663,7 @@ namespace OpenVic {
 
 		void update_gamestate(const Date today, MapInstance& map_instance);
 		void country_tick_before_map(
-			IndexedFlatMap<GoodDefinition, char>& reusable_goods_mask,
+			memory::IndexedFlatMap<GoodDefinition, char>& reusable_goods_mask,
 			forwardable_span<
 				memory::vector<fixed_point_t>,
 				VECTORS_FOR_COUNTRY_TICK

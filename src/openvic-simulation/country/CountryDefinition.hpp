@@ -4,11 +4,11 @@
 
 #include <openvic-dataloader/v2script/AbstractSyntaxTree.hpp>
 
+#include "openvic-simulation/core/container/HasIdentifier.hpp"
+#include "openvic-simulation/core/container/HasIndex.hpp"
+#include "openvic-simulation/core/container/IdentifierRegistry.hpp"
+#include "openvic-simulation/core/memory/OrderedMap.hpp"
 #include "openvic-simulation/country/CountryParty.hpp"
-#include "openvic-simulation/types/HasIdentifier.hpp"
-#include "openvic-simulation/types/HasIndex.hpp"
-#include "openvic-simulation/types/IdentifierRegistry.hpp"
-#include "openvic-simulation/types/OrderedContainers.hpp"
 #include "openvic-simulation/types/TypedIndices.hpp"
 
 namespace OpenVic {
@@ -24,8 +24,8 @@ namespace OpenVic {
 	struct CountryDefinition : HasIdentifierAndColour, HasIndex<CountryDefinition, country_index_t> {
 		friend struct CountryDefinitionManager;
 		
-		using unit_names_map_t = ordered_map<UnitType const*, name_list_t>;
-		using government_colour_map_t = ordered_map<GovernmentType const*, colour_t>;
+		using unit_names_map_t = memory::ordered_map<UnitType const*, name_list_t>;
+		using government_colour_map_t = memory::ordered_map<GovernmentType const*, colour_t>;
 
 	private:
 		/* Not const to allow elements to be moved, otherwise a copy is forced

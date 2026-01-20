@@ -2,6 +2,7 @@
 
 #include <openvic-dataloader/v2script/Parser.hpp>
 
+#include "openvic-simulation/core/memory/StringMap.hpp"
 #include "openvic-simulation/dataloader/NodeTools.hpp"
 
 using namespace OpenVic;
@@ -118,7 +119,7 @@ bool WargoalTypeManager::load_wargoal_file(ovdl::v2script::Parser const& parser)
 			bool ret = expect_dictionary_keys_and_default(
 				[&modifiers, &identifier](std::string_view key, ast::NodeCPtr value) -> bool {
 					using enum WargoalType::PEACE_MODIFIERS;
-					static const string_map_t<WargoalType::PEACE_MODIFIERS> peace_modifier_map {
+					static const memory::string_map_t<WargoalType::PEACE_MODIFIERS> peace_modifier_map {
 						{ "badboy_factor", BADBOY_FACTOR },
 						{ "prestige_factor", PRESTIGE_FACTOR },
 						{ "peace_cost_factor", PEACE_COST_FACTOR },

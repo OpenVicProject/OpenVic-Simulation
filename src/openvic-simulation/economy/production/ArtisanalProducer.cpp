@@ -26,7 +26,7 @@ using namespace OpenVic;
 
 ArtisanalProducer::ArtisanalProducer(ArtisanalProducerDeps const& artisanal_producer_deps) : ArtisanalProducer(
 	artisanal_producer_deps,
-	IndexedFlatMap<GoodDefinition, fixed_point_t> { artisanal_producer_deps.good_keys },
+	memory::IndexedFlatMap<GoodDefinition, fixed_point_t> { artisanal_producer_deps.good_keys },
 	nullptr,
 	nullptr,
 	fixed_point_t::_0
@@ -34,7 +34,7 @@ ArtisanalProducer::ArtisanalProducer(ArtisanalProducerDeps const& artisanal_prod
 
 ArtisanalProducer::ArtisanalProducer(
 	ArtisanalProducerDeps const& artisanal_producer_deps,
-	IndexedFlatMap<GoodDefinition, fixed_point_t>&& new_stockpile,
+	memory::IndexedFlatMap<GoodDefinition, fixed_point_t>&& new_stockpile,
 	ProductionType const* const new_production_type,
 	GoodDefinition const* const new_last_produced_good,
 	fixed_point_t new_current_production
@@ -64,7 +64,7 @@ void ArtisanalProducer::set_production_type(ProductionType const* const new_prod
 }
 
 void ArtisanalProducer::artisan_tick_handler::calculate_inputs(
-	IndexedFlatMap<GoodDefinition, fixed_point_t> const& stockpile,
+	memory::IndexedFlatMap<GoodDefinition, fixed_point_t> const& stockpile,
 	const bool should_report_input_demand
 ) {
 	fixed_point_map_t<GoodDefinition const*> const& input_goods = production_type.get_input_goods();
@@ -118,7 +118,7 @@ void ArtisanalProducer::artisan_tick_handler::calculate_inputs(
 void ArtisanalProducer::artisan_tick_handler::produce(
 	fixed_point_t& costs_of_production,
 	fixed_point_t& current_production,
-	IndexedFlatMap<GoodDefinition, fixed_point_t>& stockpile
+	memory::IndexedFlatMap<GoodDefinition, fixed_point_t>& stockpile
 ) {
 	fixed_point_t produce_left_to_sell = current_production = production_type.base_output_quantity * inputs_bought_fraction;
 
@@ -178,7 +178,7 @@ void ArtisanalProducer::artisan_tick_handler::allocate_money_for_inputs(
 	fixed_point_map_t<GoodDefinition const*>& max_quantity_to_buy_per_good,
 	memory::vector<fixed_point_t>& pop_max_quantity_to_buy_per_good,
 	memory::vector<fixed_point_t>& pop_money_to_spend_per_good,
-	IndexedFlatMap<GoodDefinition, fixed_point_t> const& stockpile,
+	memory::IndexedFlatMap<GoodDefinition, fixed_point_t> const& stockpile,
 	PopValuesFromProvince const& values_from_province
 ) {
 	//executed once per pop while nothing else uses it.
@@ -287,7 +287,7 @@ void ArtisanalProducer::artisan_tick(
 	Pop& pop,
 	PopValuesFromProvince const& values_from_province,
 	RandomU32& random_number_generator,
-	IndexedFlatMap<GoodDefinition, char>& reusable_goods_mask,
+	memory::IndexedFlatMap<GoodDefinition, char>& reusable_goods_mask,
 	memory::vector<fixed_point_t>& pop_max_quantity_to_buy_per_good,
 	memory::vector<fixed_point_t>& pop_money_to_spend_per_good,
 	memory::vector<fixed_point_t>& reusable_map_0,
@@ -296,7 +296,7 @@ void ArtisanalProducer::artisan_tick(
 ) {
 	CountryInstance* const country_to_report_economy_nullable = pop.get_location()->get_country_to_report_economy();
 	max_quantity_to_buy_per_good.clear();
-	IndexedFlatMap<GoodDefinition, char>& wants_more_mask = reusable_goods_mask;
+	memory::IndexedFlatMap<GoodDefinition, char>& wants_more_mask = reusable_goods_mask;
 	memory::vector<fixed_point_t>& max_price_per_input = reusable_map_0;
 	memory::vector<fixed_point_t>& demand_per_input = reusable_map_1;
 

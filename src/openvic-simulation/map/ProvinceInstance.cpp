@@ -390,7 +390,7 @@ void ProvinceInstance::province_tick(
 	const Date today,
 	PopValuesFromProvince& reusable_pop_values,
 	RandomU32& random_number_generator,
-	IndexedFlatMap<GoodDefinition, char>& reusable_goods_mask,
+	memory::IndexedFlatMap<GoodDefinition, char>& reusable_goods_mask,
 	forwardable_span<
 		memory::vector<fixed_point_t>,
 		VECTORS_FOR_PROVINCE_TICK
@@ -520,7 +520,7 @@ void ProvinceInstance::initialise_for_new_game(
 	const Date today,
 	PopValuesFromProvince& reusable_pop_values,
 	RandomU32& random_number_generator,
-	IndexedFlatMap<GoodDefinition, char>& reusable_goods_mask,
+	memory::IndexedFlatMap<GoodDefinition, char>& reusable_goods_mask,
 	forwardable_span<
 		memory::vector<fixed_point_t>,
 		VECTORS_FOR_PROVINCE_TICK

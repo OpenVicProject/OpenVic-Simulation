@@ -2,7 +2,7 @@
 
 #include "openvic-simulation/modifier/Modifier.hpp"
 #include "openvic-simulation/politics/Rule.hpp"
-#include "openvic-simulation/types/HasIdentifier.hpp"
+#include "openvic-simulation/core/container/HasIdentifier.hpp"
 
 namespace OpenVic {
 	struct BaseIssueGroup;

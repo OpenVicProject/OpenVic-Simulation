@@ -4,9 +4,9 @@
 
 #include "openvic-simulation/core/error/ErrorMacros.hpp"
 #include "openvic-simulation/dataloader/NodeTools.hpp"
-#include "openvic-simulation/types/HasIdentifier.hpp"
-#include "openvic-simulation/types/IdentifierRegistry.hpp"
-#include "openvic-simulation/types/OrderedContainers.hpp"
+#include "openvic-simulation/core/container/HasIdentifier.hpp"
+#include "openvic-simulation/core/container/IdentifierRegistry.hpp"
+#include "openvic-simulation/core/memory/OrderedSet.hpp"
 #include "openvic-simulation/core/FormatValidate.hpp"
 
 using namespace OpenVic;
@@ -27,13 +27,13 @@ Mod::Mod(
 	replace_paths { new_replace_paths },
 	dependencies { new_dependencies } {}
 
-vector_ordered_set<Mod const*> Mod::generate_dependency_list(bool* success) const {
+memory::vector_ordered_set<Mod const*> Mod::generate_dependency_list(bool* success) const {
 	static constexpr size_t MAX_RECURSE = 16;
 	size_t current_recurse = 0;
 
-	vector_ordered_set<Mod const*> result;
+	memory::vector_ordered_set<Mod const*> result;
 
-	auto dep_cycle = [this, &current_recurse](auto self, Mod const* mod, vector_ordered_set<Mod const*>& dep_list) -> bool {
+	auto dep_cycle = [this, &current_recurse](auto self, Mod const* mod, memory::vector_ordered_set<Mod const*>& dep_list) -> bool {
 		bool ret = true;
 		for (std::string_view dep_identifier : mod->get_dependencies()) {
 			if (!mod_manager.has_mod_identifier(dep_identifier)) {

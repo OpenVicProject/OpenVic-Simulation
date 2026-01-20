@@ -1,4 +1,4 @@
-#include "openvic-simulation/types/RingBuffer.hpp"
+#include "openvic-simulation/core/container/RingBuffer.hpp"
 
 #include "Helper.hpp" // IWYU pragma: keep
 #include <snitch/snitch_macros_check.hpp>

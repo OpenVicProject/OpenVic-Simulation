@@ -1,5 +1,6 @@
 #pragma once
 
+#include "openvic-simulation/core/memory/OrderedSet.hpp"
 #include "openvic-simulation/map/ProvinceDefinition.hpp"
 #include "openvic-simulation/map/ProvinceInstance.hpp"
 #include "openvic-simulation/map/State.hpp"
@@ -35,7 +36,7 @@ namespace OpenVic {
 
 		StateManager PROPERTY_REF(state_manager);
 		// TODO - should this be a vector of bools which we resize to the largest enabled canal index?
-		ordered_set<canal_index_t> PROPERTY(enabled_canals);
+		memory::ordered_set<canal_index_t> PROPERTY(enabled_canals);
 
 		ArmyAStarPathing PROPERTY_REF(land_pathing);
 		NavyAStarPathing PROPERTY_REF(sea_pathing);

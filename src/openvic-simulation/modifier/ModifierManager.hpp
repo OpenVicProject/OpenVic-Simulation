@@ -2,10 +2,11 @@
 
 #include <string_view>
 
+#include "openvic-simulation/core/container/IdentifierRegistry.hpp"
+#include "openvic-simulation/core/memory/StringSet.hpp"
 #include "openvic-simulation/modifier/Modifier.hpp"
 #include "openvic-simulation/modifier/ModifierEffectCache.hpp"
 #include "openvic-simulation/modifier/StaticModifierCache.hpp"
-#include "openvic-simulation/types/IdentifierRegistry.hpp"
 
 namespace OpenVic {
 	struct ModifierManager {
@@ -31,7 +32,7 @@ namespace OpenVic {
 		modifier_effect_registry_t IDENTIFIER_REGISTRY(base_country_modifier_effect);
 		modifier_effect_registry_t IDENTIFIER_REGISTRY(base_province_modifier_effect);
 		modifier_effect_registry_t IDENTIFIER_REGISTRY(terrain_modifier_effect);
-		case_insensitive_string_set_t complex_modifiers;
+		memory::case_insensitive_string_set_t complex_modifiers;
 
 		IdentifierRegistry<IconModifier> IDENTIFIER_REGISTRY(event_modifier);
 		IdentifierRegistry<TriggeredModifier> IDENTIFIER_REGISTRY(triggered_modifier);

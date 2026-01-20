@@ -6,14 +6,14 @@
 
 #include <openvic-dataloader/csv/LineObject.hpp>
 
+#include "openvic-simulation/core/container/IdentifierRegistry.hpp"
 #include "openvic-simulation/core/io/BMP.hpp"
+#include "openvic-simulation/core/memory/OrderedMap.hpp"
 #include "openvic-simulation/map/ProvinceDefinition.hpp"
 #include "openvic-simulation/map/Region.hpp"
 #include "openvic-simulation/map/TerrainType.hpp"
 #include "openvic-simulation/pathfinding/PointMap.hpp"
 #include "openvic-simulation/types/Colour.hpp"
-#include "openvic-simulation/types/IdentifierRegistry.hpp"
-#include "openvic-simulation/types/OrderedContainers.hpp"
 #include "openvic-simulation/types/Vector.hpp"
 #include "openvic-simulation/utility/Containers.hpp"
 
@@ -47,7 +47,7 @@ namespace OpenVic {
 #pragma pack(pop)
 
 	private:
-		using colour_index_map_t = ordered_map<colour_t, ProvinceDefinition::index_t>;
+		using colour_index_map_t = memory::ordered_map<colour_t, ProvinceDefinition::index_t>;
 		using river_t = memory::vector<RiverSegment>;
 
 		IdentifierRegistry<ProvinceDefinition> IDENTIFIER_REGISTRY(province_definition);

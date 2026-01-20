@@ -4,7 +4,7 @@
 
 #include "openvic-simulation/modifier/ModifierManager.hpp"
 #include "openvic-simulation/types/Colour.hpp"
-#include "openvic-simulation/types/HasIdentifier.hpp"
+#include "openvic-simulation/core/container/HasIdentifier.hpp"
 #include "openvic-simulation/core/FormatValidate.hpp"
 #include "openvic-simulation/utility/Containers.hpp"
 
@@ -42,7 +42,7 @@ TerrainTypeMapping::TerrainTypeMapping(
 
 bool TerrainTypeManager::generate_modifiers(ModifierManager& modifier_manager) const {
 	using enum ModifierEffect::format_t;
-	IndexedFlatMap<TerrainType, ModifierEffectCache::unit_terrain_effects_t>& unit_terrain_effects =
+	memory::IndexedFlatMap<TerrainType, ModifierEffectCache::unit_terrain_effects_t>& unit_terrain_effects =
 		modifier_manager.modifier_effect_cache.unit_terrain_effects;
 
 	unit_terrain_effects = std::move(decltype(ModifierEffectCache::unit_terrain_effects){get_terrain_types()});

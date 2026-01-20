@@ -5,7 +5,7 @@
 #include "openvic-simulation/types/Colour.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
 #include "openvic-simulation/types/TypedIndices.hpp"
-#include "openvic-simulation/types/TypedSpan.hpp"
+#include "openvic-simulation/core/container/TypedSpan.hpp"
 
 #include <snitch/snitch_macros_check.hpp>
 #include <snitch/snitch_macros_test_case.hpp>

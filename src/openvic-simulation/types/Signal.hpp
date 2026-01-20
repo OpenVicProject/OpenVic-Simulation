@@ -12,8 +12,7 @@
 #include <type_traits>
 #include <vector>
 
-#include "openvic-simulation/types/CowPtr.hpp"
-#include "openvic-simulation/types/CowVector.hpp"
+#include "openvic-simulation/core/container/CowVector.hpp"
 #include "openvic-simulation/core/thread/NullMutex.hpp"
 #include "openvic-simulation/utility/Containers.hpp"
 #include "openvic-simulation/core/Typedefs.hpp"
@@ -1243,7 +1242,7 @@ namespace OpenVic::_detail::signal {
 		// create a new slot
 		template<typename Slot, typename... A>
 		inline std::shared_ptr<slot_base> make_slot(A&&... a) {
-			return make_shared<slot_base, Slot>(*this, std::forward<A>(a)...);
+			return signal::make_shared<slot_base, Slot>(*this, std::forward<A>(a)...);
 		}
 
 		// add the slot to the list of slots of the right group

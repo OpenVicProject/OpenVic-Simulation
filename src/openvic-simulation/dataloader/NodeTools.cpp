@@ -19,6 +19,7 @@
 #include "openvic-simulation/core/ui/TextFormat.hpp"
 #include "openvic-simulation/types/Vector.hpp"
 #include "openvic-simulation/utility/Getters.hpp"
+#include "openvic-simulation/core/memory/StringMap.hpp"
 
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;
@@ -135,7 +136,7 @@ node_callback_t NodeTools::expect_identifier_or_string(callback_t<std::string_vi
 }
 
 node_callback_t NodeTools::expect_bool(callback_t<bool> callback) {
-	static const case_insensitive_string_map_t<bool> bool_map { { "yes", true }, { "no", false } };
+	static const memory::case_insensitive_string_map_t<bool> bool_map { { "yes", true }, { "no", false } };
 	return expect_identifier(expect_mapped_string(bool_map, callback));
 }
 
@@ -284,7 +285,7 @@ NodeCallback auto _expect_vec2(Callback<vec2_t<T>> auto&& callback) {
 node_callback_t NodeTools::expect_text_format(callback_t<text_format_t> callback) {
 	using enum text_format_t;
 
-	static const string_map_t<text_format_t> format_map = {
+	static const memory::string_map_t<text_format_t> format_map = {
 		{ "left",  left },
 		{ "right", right },
 		{ "centre", centre },

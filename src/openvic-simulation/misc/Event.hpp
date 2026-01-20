@@ -1,9 +1,9 @@
 #pragma once
 
+#include "openvic-simulation/core/container/IdentifierRegistry.hpp"
+#include "openvic-simulation/core/memory/OrderedMap.hpp"
 #include "openvic-simulation/scripts/ConditionalWeight.hpp"
 #include "openvic-simulation/scripts/EffectScript.hpp"
-#include "openvic-simulation/types/IdentifierRegistry.hpp"
-#include "openvic-simulation/types/OrderedContainers.hpp"
 #include "openvic-simulation/utility/Containers.hpp"
 
 namespace OpenVic {
@@ -76,7 +76,7 @@ namespace OpenVic {
 	};
 
 	struct OnAction : HasIdentifier {
-		using weight_map_t = ordered_map<Event const*, uint64_t>;
+		using weight_map_t = memory::ordered_map<Event const*, uint64_t>;
 
 	private:
 		weight_map_t PROPERTY(weighted_events);

@@ -1,11 +1,12 @@
 #pragma once
 
+#include "openvic-simulation/core/memory/IndexedFlatMap.hpp"
+#include "openvic-simulation/core/memory/OrderedMap.hpp"
 #include "openvic-simulation/economy/production/ArtisanalProducer.hpp"
 #include "openvic-simulation/population/PopNeedsMacro.hpp"
 #include "openvic-simulation/types/fixed_point/Atomic.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPointMap.hpp"
-#include "openvic-simulation/types/IndexedFlatMap.hpp"
 #include "openvic-simulation/population/PopSize.hpp"
 #include "openvic-simulation/types/UnitBranchType.hpp"
 #include "openvic-simulation/utility/Containers.hpp"
@@ -142,7 +143,7 @@ namespace OpenVic {
 				fixed_point_t get_##need_category##_needs_fulfilled() const; \
 			private: \
 				fixed_point_map_t<GoodDefinition const*> PROPERTY(need_category##_needs); /* TODO pool? (if recalculating in UI is acceptable) */ \
-				ordered_map<GoodDefinition const*, bool> PROPERTY(need_category##_needs_fulfilled_goods);
+				memory::ordered_map<GoodDefinition const*, bool> PROPERTY(need_category##_needs_fulfilled_goods);
 
 		OV_DO_FOR_ALL_NEED_CATEGORIES(NEED_MEMBERS)
 		#undef NEED_MEMBERS
@@ -176,7 +177,7 @@ namespace OpenVic {
 		void pop_tick_without_cleanup(
 			PopValuesFromProvince const& shared_values,
 			RandomU32& random_number_generator,
-			IndexedFlatMap<GoodDefinition, char>& reusable_goods_mask,
+			memory::IndexedFlatMap<GoodDefinition, char>& reusable_goods_mask,
 			forwardable_span<
 				memory::vector<fixed_point_t>,
 				VECTORS_FOR_POP_TICK
@@ -219,7 +220,7 @@ namespace OpenVic {
 		void pop_tick(
 			PopValuesFromProvince const& shared_values,
 			RandomU32& random_number_generator,
-			IndexedFlatMap<GoodDefinition, char>& reusable_goods_mask,
+			memory::IndexedFlatMap<GoodDefinition, char>& reusable_goods_mask,
 			forwardable_span<
 				memory::vector<fixed_point_t>,
 				VECTORS_FOR_POP_TICK

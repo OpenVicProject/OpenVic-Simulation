@@ -1,7 +1,7 @@
 #pragma once
 
 #include "openvic-simulation/modifier/Modifier.hpp"
-#include "openvic-simulation/types/HasIndex.hpp"
+#include "openvic-simulation/core/container/HasIndex.hpp"
 #include "openvic-simulation/types/TypedIndices.hpp"
 
 namespace OpenVic {

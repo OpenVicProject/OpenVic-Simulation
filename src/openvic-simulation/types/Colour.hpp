@@ -25,7 +25,7 @@
 
 #include <range/v3/algorithm/rotate.hpp>
 
-#include "openvic-simulation/types/StackString.hpp"
+#include "openvic-simulation/core/container/StackString.hpp"
 #include "openvic-simulation/core/template/Concepts.hpp"
 #include "openvic-simulation/core/string/CharConv.hpp"
 #include "openvic-simulation/core/Typedefs.hpp"

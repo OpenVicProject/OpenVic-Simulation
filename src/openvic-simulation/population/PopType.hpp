@@ -3,9 +3,10 @@
 #include "openvic-simulation/scripts/ConditionalWeight.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPointMap.hpp"
-#include "openvic-simulation/types/HasIdentifier.hpp"
-#include "openvic-simulation/types/HasIndex.hpp"
-#include "openvic-simulation/types/IndexedFlatMap.hpp"
+#include "openvic-simulation/core/container/HasIdentifier.hpp"
+#include "openvic-simulation/core/container/HasIndex.hpp"
+#include "openvic-simulation/core/memory/IndexedFlatMap.hpp"
+#include "openvic-simulation/core/memory/OrderedMap.hpp"
 #include "openvic-simulation/population/PopSize.hpp"
 #include "openvic-simulation/types/PopSprite.hpp"
 #include "openvic-simulation/types/TypedIndices.hpp"
@@ -45,9 +46,9 @@ namespace OpenVic {
 		};
 
 		using rebel_units_t = fixed_point_map_t<UnitType const*>;
-		using poptype_weight_map_t = IndexedFlatMap<PopType, ConditionalWeightFactorAdd>;
-		using ideology_weight_map_t = IndexedFlatMap<Ideology, ConditionalWeightFactorMul>;
-		using issue_weight_map_t = ordered_map<BaseIssue const*, ConditionalWeightFactorMul>;
+		using poptype_weight_map_t = memory::IndexedFlatMap<PopType, ConditionalWeightFactorAdd>;
+		using ideology_weight_map_t = memory::IndexedFlatMap<Ideology, ConditionalWeightFactorMul>;
+		using issue_weight_map_t = memory::ordered_map<BaseIssue const*, ConditionalWeightFactorMul>;
 
 	private:
 		fixed_point_map_t<GoodDefinition const*> PROPERTY(life_needs);

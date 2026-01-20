@@ -1,5 +1,7 @@
 #include "ThreadPool.hpp"
 
+#include "openvic-simulation/core/container/TypedSpan.hpp"
+#include "openvic-simulation/core/memory/FixedVector.hpp"
 #include "openvic-simulation/country/CountryInstance.hpp"
 #include "openvic-simulation/economy/GoodDefinition.hpp" // IWYU pragma: keep for constructor requirement
 #include "openvic-simulation/economy/GoodInstance.hpp"
@@ -7,7 +9,6 @@
 #include "openvic-simulation/map/ProvinceInstance.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
 #include "openvic-simulation/types/TypedIndices.hpp"
-#include "openvic-simulation/types/TypedSpan.hpp"
 #include "openvic-simulation/utility/Containers.hpp"
 
 using namespace OpenVic;
@@ -24,7 +25,7 @@ void ThreadPool::loop_until_cancelled(
 	forwardable_span<const Strata> strata_keys,
 	forwardable_span<WorkBundle> work_bundles
 ) {
-	IndexedFlatMap<GoodDefinition, char> reusable_goods_mask { good_keys };
+	memory::IndexedFlatMap<GoodDefinition, char> reusable_goods_mask { good_keys };
 
 	memory::FixedVector<fixed_point_t> reusable_country_map_0 { country_keys.size(), fixed_point_t::_0 };
 	memory::FixedVector<fixed_point_t> reusable_country_map_1 { country_keys.size(), fixed_point_t::_0 };

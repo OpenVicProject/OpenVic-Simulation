@@ -10,7 +10,8 @@
 #include <type_traits>
 
 #include "openvic-simulation/types/Date.hpp"
-#include "openvic-simulation/types/OrderedContainers.hpp"
+#include "openvic-simulation/core/memory/OrderedMap.hpp"
+#include "openvic-simulation/core/Compare.hpp"
 #include "openvic-simulation/core/Hash.hpp"
 
 namespace OpenVic {
@@ -244,7 +245,7 @@ namespace OpenVic {
 
 	private:
 #define RELATION_PAIR_MAP(PAIR_TYPE, VALUE_TYPE, NAME, FUNC_NAME, RECIPIENT_CONST) \
-	vector_ordered_map<PAIR_TYPE, VALUE_TYPE> NAME; \
+	memory::vector_ordered_map<PAIR_TYPE, VALUE_TYPE> NAME; \
 \
 public: \
 	VALUE_TYPE get_##FUNC_NAME(CountryInstance const* country, CountryInstance const* recipient) const; \
@@ -268,8 +269,8 @@ private:
 		RELATION_PAIR_MAP(CountryInstancePair, influence_value_type, influence, influence_with, const);
 		RELATION_PAIR_MAP(CountryInstancePair, influence_priority_value_type, influence_priority, influence_priority_with, const);
 
-		vector_ordered_map<CountryInstancePair, Date> discredits;
-		vector_ordered_map<CountryInstancePair, Date> embassy_bans;
+		memory::vector_ordered_map<CountryInstancePair, Date> discredits;
+		memory::vector_ordered_map<CountryInstancePair, Date> embassy_bans;
 
 	public:
 		std::optional<Date> get_discredited_date(CountryInstance const* country, CountryInstance const* recipient) const;

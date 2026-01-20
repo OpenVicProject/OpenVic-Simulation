@@ -2,6 +2,11 @@
 
 #include <plf_colony.h>
 
+#include "openvic-simulation/core/container/HasIdentifier.hpp"
+#include "openvic-simulation/core/container/HasIndex.hpp"
+#include "openvic-simulation/core/memory/FlagStrings.hpp"
+#include "openvic-simulation/core/memory/IndexedFlatMap.hpp"
+#include "openvic-simulation/core/memory/OrderedSet.hpp"
 #include "openvic-simulation/economy/BuildingInstance.hpp"
 #include "openvic-simulation/economy/production/ResourceGatheringOperation.hpp"
 #include "openvic-simulation/military/UnitBranchedGetterMacro.hpp"
@@ -9,10 +14,6 @@
 #include "openvic-simulation/population/Pop.hpp"
 #include "openvic-simulation/population/PopsAggregate.hpp"
 #include "openvic-simulation/types/ColonyStatus.hpp"
-#include "openvic-simulation/types/FlagStrings.hpp"
-#include "openvic-simulation/types/HasIdentifier.hpp"
-#include "openvic-simulation/types/HasIndex.hpp"
-#include "openvic-simulation/types/OrderedContainers.hpp"
 #include "openvic-simulation/map/LifeRating.hpp"
 #include "openvic-simulation/types/TypedIndices.hpp"
 #include "openvic-simulation/types/UnitBranchType.hpp"
@@ -50,7 +51,7 @@ namespace OpenVic {
 	struct ProvinceInstance
 		: HasIdentifierAndColour,
 		HasIndex<ProvinceInstance, province_index_t>,
-		FlagStrings,
+		memory::FlagStrings,
 		PopsAggregate {
 		friend struct MapInstance;
 
@@ -80,7 +81,7 @@ namespace OpenVic {
 		ModifierSum const& get_owner_modifier_sum() const;
 		CountryInstance* PROPERTY_PTR(controller, nullptr);
 		CountryInstance* PROPERTY_PTR(country_to_report_economy, nullptr);
-		ordered_set<CountryInstance*> PROPERTY(cores);
+		memory::ordered_set<CountryInstance*> PROPERTY(cores);
 
 		// The total/resultant modifier of local effects on this province (global effects come from the province's owner)
 		ModifierSum PROPERTY(modifier_sum);
@@ -191,7 +192,7 @@ namespace OpenVic {
 			const Date today,
 			PopValuesFromProvince& reusable_pop_values,
 			RandomU32& random_number_generator,
-			IndexedFlatMap<GoodDefinition, char>& reusable_goods_mask,
+			memory::IndexedFlatMap<GoodDefinition, char>& reusable_goods_mask,
 			forwardable_span<
 				memory::vector<fixed_point_t>,
 				VECTORS_FOR_PROVINCE_TICK
@@ -201,7 +202,7 @@ namespace OpenVic {
 			const Date today,
 			PopValuesFromProvince& reusable_pop_values,
 			RandomU32& random_number_generator,
-			IndexedFlatMap<GoodDefinition, char>& reusable_goods_mask,
+			memory::IndexedFlatMap<GoodDefinition, char>& reusable_goods_mask,
 			forwardable_span<
 				memory::vector<fixed_point_t>,
 				VECTORS_FOR_PROVINCE_TICK

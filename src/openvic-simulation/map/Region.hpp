@@ -4,7 +4,7 @@
 #include <string_view>
 
 #include "openvic-simulation/modifier/Modifier.hpp"
-#include "openvic-simulation/types/HasIdentifier.hpp"
+#include "openvic-simulation/core/container/HasIdentifier.hpp"
 #include "openvic-simulation/utility/Containers.hpp"
 
 namespace OpenVic {

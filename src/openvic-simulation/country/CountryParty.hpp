@@ -1,8 +1,8 @@
 #pragma once
 
+#include "openvic-simulation/core/memory/IndexedFlatMap.hpp"
 #include "openvic-simulation/types/Date.hpp"
-#include "openvic-simulation/types/HasIdentifier.hpp"
-#include "openvic-simulation/types/IndexedFlatMap.hpp"
+#include "openvic-simulation/core/container/HasIdentifier.hpp"
 #include "openvic-simulation/utility/Getters.hpp"
 
 namespace OpenVic {

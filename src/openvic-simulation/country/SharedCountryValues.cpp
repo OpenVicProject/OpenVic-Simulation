@@ -4,7 +4,6 @@
 #include "openvic-simulation/economy/GoodInstance.hpp"
 #include "openvic-simulation/population/PopNeedsMacro.hpp"
 #include "openvic-simulation/population/PopType.hpp"
-#include "openvic-simulation/types/IndexedFlatMap.hpp"
 
 using namespace OpenVic;
 

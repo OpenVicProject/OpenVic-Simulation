@@ -206,7 +206,7 @@ bool CultureManager::load_culture_file(CountryDefinitionManager const& country_d
 		[this, &country_definition_manager](CultureGroup const& culture_group, ast::NodeCPtr culture_group_value) -> bool {
 			return expect_dictionary(
 				[this, &country_definition_manager, &culture_group](std::string_view key, ast::NodeCPtr value) -> bool {
-					static const string_set_t reserved_keys = { "leader", "unit", "union", "is_overseas" };
+					static const memory::string_set_t reserved_keys = { "leader", "unit", "union", "is_overseas" };
 					if (reserved_keys.contains(key)) {
 						return true;
 					}

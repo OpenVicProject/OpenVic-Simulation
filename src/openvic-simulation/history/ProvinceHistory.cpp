@@ -4,6 +4,7 @@
 
 #include "openvic-simulation/dataloader/NodeTools.hpp"
 #include "openvic-simulation/DefinitionManager.hpp"
+#include "openvic-simulation/core/memory/StringMap.hpp"
 #include "openvic-simulation/economy/GoodDefinition.hpp"
 #include "openvic-simulation/map/ProvinceDefinition.hpp"
 #include "openvic-simulation/utility/Logger.hpp"
@@ -32,7 +33,7 @@ bool ProvinceHistoryMap::_load_history_entry(
 	TerrainTypeManager const& terrain_type_manager = definition_manager.get_map_definition().get_terrain_type_manager();
 
 	using enum colony_status_t;
-	static const string_map_t<colony_status_t> colony_status_map {
+	static const memory::string_map_t<colony_status_t> colony_status_map {
 		{ "0", STATE }, { "1", PROTECTORATE }, { "2", COLONY }
 	};
 

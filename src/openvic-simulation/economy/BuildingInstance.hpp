@@ -3,7 +3,7 @@
 #include "openvic-simulation/economy/BuildingLevel.hpp"
 #include "openvic-simulation/types/Date.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
-#include "openvic-simulation/types/HasIdentifier.hpp"
+#include "openvic-simulation/core/container/HasIdentifier.hpp"
 
 namespace OpenVic {
 	struct BuildingType;

@@ -5,7 +5,7 @@
 
 #include <fmt/format.h>
 
-#include "openvic-simulation/types/BasicIterator.hpp" // IWYU pragma: keep
+#include "openvic-simulation/core/container/BasicIterator.hpp" // IWYU pragma: keep
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
 #include "openvic-simulation/core/template/Concepts.hpp" // IWYU pragma: keep
 #include "openvic-simulation/core/Math.hpp" // IWYU pragma: keep

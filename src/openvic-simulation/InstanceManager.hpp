@@ -5,6 +5,7 @@
 #include <function2/function2.hpp>
 
 #include "openvic-simulation/console/ConsoleInstance.hpp"
+#include "openvic-simulation/core/memory/FlagStrings.hpp"
 #include "openvic-simulation/country/CountryInstanceManager.hpp"
 #include "openvic-simulation/country/CountryInstanceDeps.hpp"
 #include "openvic-simulation/diplomacy/CountryRelation.hpp"
@@ -21,7 +22,6 @@
 #include "openvic-simulation/politics/PoliticsInstanceManager.hpp"
 #include "openvic-simulation/population/PopDeps.hpp"
 #include "openvic-simulation/types/Date.hpp"
-#include "openvic-simulation/types/FlagStrings.hpp"
 #include "openvic-simulation/utility/ThreadPool.hpp"
 #include "openvic-simulation/utility/Containers.hpp"
 
@@ -50,7 +50,7 @@ namespace OpenVic {
 		ResourceGatheringOperationDeps rgo_deps;
 		ProvinceInstanceDeps province_instance_deps;
 
-		FlagStrings PROPERTY_REF(global_flags);
+		memory::FlagStrings PROPERTY_REF(global_flags);
 
 		CountryInstanceManager PROPERTY_REF(country_instance_manager);
 		UnitInstanceManager PROPERTY_REF(unit_instance_manager);

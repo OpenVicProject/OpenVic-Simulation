@@ -1,4 +1,4 @@
-#include "openvic-simulation/types/FixedVector.hpp"
+#include "openvic-simulation/core/container/FixedVector.hpp"
 
 #include <string>
 #include <tuple>
@@ -6,7 +6,7 @@
 #include <snitch/snitch_macros_check.hpp>
 #include <snitch/snitch_macros_test_case.hpp>
 
-using namespace OpenVic::_detail;
+using namespace OpenVic;
 
 // A simple test type to demonstrate a more complex object.
 // It has a multi-argument constructor to test emplace_back.

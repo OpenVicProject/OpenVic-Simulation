@@ -9,7 +9,6 @@
 #include "openvic-simulation/military/Deployment.hpp"
 #include "openvic-simulation/military/LeaderTrait.hpp"
 #include "openvic-simulation/population/Culture.hpp"
-#include "openvic-simulation/types/OrderedContainersMath.hpp"
 #include "openvic-simulation/utility/Containers.hpp"
 #include "openvic-simulation/core/FormatValidate.hpp"
 

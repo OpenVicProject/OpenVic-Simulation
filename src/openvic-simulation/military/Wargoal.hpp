@@ -5,7 +5,7 @@
 #include "openvic-simulation/scripts/ConditionScript.hpp"
 #include "openvic-simulation/scripts/EffectScript.hpp"
 #include "openvic-simulation/core/template/EnumBitfield.hpp"
-#include "openvic-simulation/types/IdentifierRegistry.hpp"
+#include "openvic-simulation/core/container/IdentifierRegistry.hpp"
 #include "openvic-simulation/utility/Getters.hpp"
 #include "openvic-simulation/utility/Containers.hpp"
 

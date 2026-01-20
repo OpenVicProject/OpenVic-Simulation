@@ -3,7 +3,7 @@
 #include <optional>
 
 #include "openvic-simulation/types/Date.hpp"
-#include "openvic-simulation/types/IndexedFlatMap.hpp"
+#include "openvic-simulation/core/memory/IndexedFlatMap.hpp"
 #include "openvic-simulation/utility/Getters.hpp"
 #include "openvic-simulation/core/portable/ForwardableSpan.hpp"
 

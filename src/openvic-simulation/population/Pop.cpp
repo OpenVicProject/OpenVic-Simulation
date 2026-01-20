@@ -10,7 +10,9 @@
 #include <type_safe/strong_typedef.hpp>
 
 #include "openvic-simulation/core/error/ErrorMacros.hpp"
+#include "openvic-simulation/core/memory/IndexedFlatMap.hpp"
 #include "openvic-simulation/country/CountryParty.hpp"
+#include "openvic-simulation/core/memory/OrderedMap.hpp"
 #include "openvic-simulation/country/CountryDefinition.hpp"
 #include "openvic-simulation/country/CountryInstance.hpp"
 #include "openvic-simulation/defines/Define.hpp"
@@ -34,8 +36,6 @@
 #include "openvic-simulation/population/Religion.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPointMap.hpp"
-#include "openvic-simulation/types/IndexedFlatMap.hpp"
-#include "openvic-simulation/types/OrderedContainers.hpp"
 #include "openvic-simulation/types/TypedIndices.hpp"
 #include "openvic-simulation/utility/Containers.hpp"
 #include "openvic-simulation/core/FormatValidate.hpp"
@@ -93,13 +93,13 @@ void Pop::setup_pop_test_values(IssueManager const& issue_manager) {
 		num_grown + num_promoted + num_demoted + num_migrated_internal + num_migrated_external + num_migrated_colonial;
 
 	/* Generates a number between 0 and max (inclusive) and sets map[&key] to it if it's at least min. */
-	auto test_weight_indexed = []<typename U>(IndexedFlatMap<U, fixed_point_t>& map, U const& key, int32_t min, int32_t max) -> void {
+	auto test_weight_indexed = []<typename U>(memory::IndexedFlatMap<U, fixed_point_t>& map, U const& key, int32_t min, int32_t max) -> void {
 		const int32_t value = rand() % (max + 1);
 		if (value >= min) {
 			map.set(key, value);
 		}
 	};
-	auto test_weight_ordered = []<typename T, typename U>(ordered_map<T const*, fixed_point_t>& map, U const& key, int32_t min, int32_t max) -> void {
+	auto test_weight_ordered = []<typename T, typename U>(memory::ordered_map<T const*, fixed_point_t>& map, U const& key, int32_t min, int32_t max) -> void {
 		if constexpr (std::is_convertible_v<U const*, T const*> || std::is_convertible_v<U, T const*>) {
 			const int32_t value = rand() % (max + 1);
 			if (value >= min) {
@@ -468,7 +468,7 @@ void Pop::allocate_for_needs(
 void Pop::pop_tick(
 	PopValuesFromProvince const& shared_values,
 	RandomU32& random_number_generator,
-	IndexedFlatMap<GoodDefinition, char>& reusable_goods_mask,
+	memory::IndexedFlatMap<GoodDefinition, char>& reusable_goods_mask,
 	forwardable_span<
 		memory::vector<fixed_point_t>,
 		VECTORS_FOR_POP_TICK
@@ -488,7 +488,7 @@ void Pop::pop_tick(
 void Pop::pop_tick_without_cleanup(
 	PopValuesFromProvince const& shared_values,
 	RandomU32& random_number_generator,
-	IndexedFlatMap<GoodDefinition, char>& reusable_goods_mask,
+	memory::IndexedFlatMap<GoodDefinition, char>& reusable_goods_mask,
 	forwardable_span<
 		memory::vector<fixed_point_t>,
 		VECTORS_FOR_POP_TICK

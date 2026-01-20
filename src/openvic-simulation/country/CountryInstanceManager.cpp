@@ -212,7 +212,7 @@ bool CountryInstanceManager::apply_history_to_countries(InstanceManager& instanc
 	MapInstance& map_instance = instance_manager.get_map_instance();
 
 	const Date starting_last_war_loss_date = today - RECENT_WAR_LOSS_TIME_LIMIT;
-	FlagStrings& global_flags = instance_manager.get_global_flags();
+	memory::FlagStrings& global_flags = instance_manager.get_global_flags();
 
 	for (CountryInstance& country_instance : get_country_instances()) {
 		country_instance.last_war_loss_date = starting_last_war_loss_date;

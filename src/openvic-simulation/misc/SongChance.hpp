@@ -1,6 +1,6 @@
 #pragma once
 
-#include "openvic-simulation/types/IdentifierRegistry.hpp"
+#include "openvic-simulation/core/container/IdentifierRegistry.hpp"
 #include "openvic-simulation/scripts/ConditionalWeight.hpp"
 
 namespace OpenVic {

@@ -9,8 +9,11 @@
 
 #include <type_safe/strong_typedef.hpp>
 
+#include "openvic-simulation/core/container/ClampedValue.hpp"
 #include "openvic-simulation/core/error/ErrorMacros.hpp"
 #include "openvic-simulation/country/SharedCountryValues.hpp"
+#include "openvic-simulation/core/memory/IndexedFlatMap.hpp"
+#include "openvic-simulation/core/memory/OrderedMap.hpp"
 #include "openvic-simulation/country/CountryDefinition.hpp"
 #include "openvic-simulation/defines/CountryDefines.hpp"
 #include "openvic-simulation/defines/DiplomacyDefines.hpp"
@@ -39,10 +42,8 @@
 #include "openvic-simulation/population/PopType.hpp"
 #include "openvic-simulation/research/Invention.hpp"
 #include "openvic-simulation/research/Technology.hpp"
-#include "openvic-simulation/types/ClampedValue.hpp"
 #include "openvic-simulation/types/Date.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
-#include "openvic-simulation/types/IndexedFlatMap.hpp"
 #include "openvic-simulation/population/PopSize.hpp"
 #include "openvic-simulation/population/PopSum.hpp"
 #include "openvic-simulation/types/UnitBranchType.hpp"
@@ -777,7 +778,7 @@ bool CountryInstance::has_leader_with_name(std::string_view name) const {
 
 template<unit_branch_t Branch>
 bool CountryInstance::modify_unit_type_unlock(UnitTypeBranched<Branch> const& unit_type, technology_unlock_level_t unlock_level_change) {
-	IndexedFlatMap<UnitTypeBranched<Branch>, technology_unlock_level_t>& unlocked_unit_types = get_unit_type_unlock_levels<Branch>();
+	memory::IndexedFlatMap<UnitTypeBranched<Branch>, technology_unlock_level_t>& unlocked_unit_types = get_unit_type_unlock_levels<Branch>();
 	technology_unlock_level_t& unlock_level = unlocked_unit_types.at(unit_type);
 
 	// This catches subtracting below 0 or adding above the int types maximum value
@@ -1184,7 +1185,7 @@ void CountryInstance::apply_foreign_investments(
 bool CountryInstance::apply_history_to_country(
 	CountryHistoryEntry const& entry,
 	CountryInstanceManager const& country_instance_manager,
-	FlagStrings& global_flags,
+	memory::FlagStrings& global_flags,
 	MapInstance& map_instance
 ) {
 	constexpr auto set_optional = []<typename T>(T& target, std::optional<T> const& source) {
@@ -1229,7 +1230,7 @@ bool CountryInstance::apply_history_to_country(
 	}
 	set_optional_state(tech_school, entry.get_tech_school());
 	constexpr auto set_bool_map_to_indexed_map =
-		[]<typename T>(IndexedFlatMap<T, bool>& target, ordered_map<T const*, bool> source) {
+		[]<typename T>(memory::IndexedFlatMap<T, bool>& target, memory::ordered_map<T const*, bool> source) {
 			for (auto const& [key, value] : source) {
 				target[*key] = value;
 			}
@@ -1354,7 +1355,7 @@ void CountryInstance::_update_budget() {
 			continue;
 		}
 
-		IndexedFlatMap<PopType, pop_sum_t> const& state_population_by_type = state.get_population_by_type();
+		memory::IndexedFlatMap<PopType, pop_sum_t> const& state_population_by_type = state.get_population_by_type();
 
 		for (auto const& [pop_type, size] : state_population_by_type) {
 			if (pop_type.is_administrator) {
@@ -1955,7 +1956,7 @@ void CountryInstance::after_sell(void* actor, SellResult const& sell_result, mem
 }
 
 void CountryInstance::country_tick_before_map(
-	IndexedFlatMap<GoodDefinition, char>& reusable_goods_mask,
+	memory::IndexedFlatMap<GoodDefinition, char>& reusable_goods_mask,
 	forwardable_span<
 		memory::vector<fixed_point_t>,
 		VECTORS_FOR_COUNTRY_TICK
@@ -2079,7 +2080,7 @@ void CountryInstance::calculate_government_good_needs() {
 }
 
 void CountryInstance::manage_national_stockpile(
-	IndexedFlatMap<GoodDefinition, char>& reusable_goods_mask,
+	memory::IndexedFlatMap<GoodDefinition, char>& reusable_goods_mask,
 	forwardable_span<
 		memory::vector<fixed_point_t>,
 		VECTORS_FOR_COUNTRY_TICK
@@ -2087,7 +2088,7 @@ void CountryInstance::manage_national_stockpile(
 	memory::vector<good_index_t>& reusable_good_index_vector,
 	fixed_point_t& available_funds
 ) {
-	IndexedFlatMap<GoodDefinition, char>& wants_more_mask = reusable_goods_mask;
+	memory::IndexedFlatMap<GoodDefinition, char>& wants_more_mask = reusable_goods_mask;
 	const size_t mask_size = wants_more_mask.get_keys().size();
 
 	reusable_vectors[0].resize(mask_size, 0);

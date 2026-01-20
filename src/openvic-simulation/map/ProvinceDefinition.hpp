@@ -3,15 +3,16 @@
 #include <optional>
 #include <utility>
 
+#include "openvic-simulation/core/container/HasIdentifier.hpp"
+#include "openvic-simulation/core/container/HasIndex.hpp"
+#include "openvic-simulation/core/memory/OrderedMap.hpp"
 #include "openvic-simulation/dataloader/NodeTools.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPointMap.hpp"
-#include "openvic-simulation/types/HasIdentifier.hpp"
-#include "openvic-simulation/types/HasIndex.hpp"
-#include "openvic-simulation/types/OrderedContainers.hpp"
 #include "openvic-simulation/types/TypedIndices.hpp"
 #include "openvic-simulation/types/Vector.hpp"
 #include "openvic-simulation/utility/Containers.hpp"
+
 #include "type_safe/strong_typedef.hpp"
 
 namespace OpenVic {
@@ -81,7 +82,7 @@ namespace OpenVic {
 			std::optional<fvec2_t> factory;
 			std::optional<fvec2_t> building_construction;
 			std::optional<fvec2_t> military_construction;
-			ordered_map<BuildingType const*, fvec2_t> building_position;
+			memory::ordered_map<BuildingType const*, fvec2_t> building_position;
 			fixed_point_map_t<BuildingType const*> building_rotation;
 		};
 

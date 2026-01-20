@@ -16,15 +16,15 @@
 
 #include <type_safe/strong_typedef.hpp>
 
+#include "openvic-simulation/core/container/MutableIterator.hpp"
+#include "openvic-simulation/core/memory/IndexedFlatMap.hpp"
+#include "openvic-simulation/core/memory/StringMap.hpp"
 #include "openvic-simulation/types/Colour.hpp"
 #include "openvic-simulation/types/Date.hpp"
-#include "openvic-simulation/types/IndexedFlatMap.hpp"
-#include "openvic-simulation/types/OrderedContainers.hpp"
 #include "openvic-simulation/core/ui/TextFormat.hpp"
 #include "openvic-simulation/types/Vector.hpp"
 #include "openvic-simulation/core/FormatValidate.hpp"
 #include "openvic-simulation/utility/Getters.hpp"
-#include "openvic-simulation/utility/TslHelper.hpp"
 #include "openvic-simulation/utility/Containers.hpp"
 #include "openvic-simulation/core/template/Concepts.hpp"
 #include "openvic-simulation/core/string/Utility.hpp"
@@ -319,7 +319,7 @@ using namespace std::string_view_literals;
 		using enum dictionary_entry_t::expected_count_t;
 
 		template<string_map_case Case>
-		using template_key_map_t = template_string_map_t<dictionary_entry_t, Case>;
+		using template_key_map_t = memory::template_string_map_t<dictionary_entry_t, Case>;
 
 		using key_map_t = template_key_map_t<StringMapCaseSensitive>;
 		using case_insensitive_key_map_t = template_key_map_t<StringMapCaseInsensitive>;
@@ -573,10 +573,10 @@ using namespace std::string_view_literals;
 
 		template<typename T, string_map_case Case>
 		Callback<std::string_view> auto expect_mapped_string(
-			template_string_map_t<T, Case> const& map, Callback<T> auto&& callback, bool warn = false
+			memory::template_string_map_t<T, Case> const& map, Callback<T> auto&& callback, bool warn = false
 		) {
 			return [&map, callback = FWD(callback), warn](std::string_view string) mutable -> bool {
-				const typename template_string_map_t<T, Case>::const_iterator it = map.find(string);
+				const typename memory::template_string_map_t<T, Case>::const_iterator it = map.find(string);
 				if (it != map.end()) {
 					return callback(it->second);
 				}
@@ -764,7 +764,7 @@ using namespace std::string_view_literals;
 
 		template<typename Key, typename Value>
 		Callback<Value> auto map_callback(
-			IndexedFlatMap<Key, Value>& map, Key const* key, bool warn = false
+			memory::IndexedFlatMap<Key, Value>& map, Key const* key, bool warn = false
 		) {
 			return [&map, key, warn](Value value) -> bool {
 				if (key == nullptr) {
