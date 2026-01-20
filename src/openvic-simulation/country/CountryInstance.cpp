@@ -1410,25 +1410,21 @@ void CountryInstance::_update_budget() {
 			* calculate_unemployment_subsidies_base(pop_type).get_raw_value();
 	}
 
-	projected_administration_spending_unscaled_by_slider.set(fixed_point_t::from_fraction(
-		projected_administration_spending_unscaled_by_slider_running_total,
-		type_safe::get(Pop::size_denominator)
+	const int64_t denominator = type_safe::get(Pop::size_denominator);
+	projected_administration_spending_unscaled_by_slider.set(fixed_point_t::parse_raw(
+		projected_administration_spending_unscaled_by_slider_running_total / denominator
 	));
-	projected_education_spending_unscaled_by_slider.set(fixed_point_t::from_fraction(
-		projected_education_spending_unscaled_by_slider_running_total,
-		type_safe::get(Pop::size_denominator)
+	projected_education_spending_unscaled_by_slider.set(fixed_point_t::parse_raw(
+		projected_education_spending_unscaled_by_slider_running_total /	denominator
 	));
-	projected_military_spending_unscaled_by_slider.set(fixed_point_t::from_fraction(
-		projected_military_spending_unscaled_by_slider_running_total,
-		type_safe::get(Pop::size_denominator)
+	projected_military_spending_unscaled_by_slider.set(fixed_point_t::parse_raw(
+		projected_military_spending_unscaled_by_slider_running_total / denominator
 	));
-	projected_pensions_spending_unscaled_by_slider.set(fixed_point_t::from_fraction(
-		projected_pensions_spending_unscaled_by_slider_running_total,
-		type_safe::get(Pop::size_denominator)
+	projected_pensions_spending_unscaled_by_slider.set(fixed_point_t::parse_raw(
+		projected_pensions_spending_unscaled_by_slider_running_total / denominator
 	));
-	projected_unemployment_subsidies_spending_unscaled_by_slider.set(fixed_point_t::from_fraction(
-		projected_unemployment_subsidies_spending_unscaled_by_slider_running_total,
-		type_safe::get(Pop::size_denominator)
+	projected_unemployment_subsidies_spending_unscaled_by_slider.set(fixed_point_t::parse_raw(
+		projected_unemployment_subsidies_spending_unscaled_by_slider_running_total / denominator
 	));
 }
 
