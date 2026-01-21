@@ -1,10 +1,11 @@
 #pragma once
 
 #include "openvic-simulation/modifier/Modifier.hpp"
+#include "openvic-simulation/core/container/HasIndex.hpp"
+#include "openvic-simulation/core/container/IdentifierRegistry.hpp"
+#include "openvic-simulation/core/memory/StringSet.hpp"
 #include "openvic-simulation/economy/BuildingLevel.hpp"
 #include "openvic-simulation/types/Date.hpp"
-#include "openvic-simulation/types/HasIndex.hpp"
-#include "openvic-simulation/types/IdentifierRegistry.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
 #include "openvic-simulation/types/TypedIndices.hpp"
 #include "openvic-simulation/utility/Containers.hpp"
@@ -81,7 +82,7 @@ namespace OpenVic {
 	struct BuildingTypeManager {
 	private:
 		IdentifierRegistry<BuildingType> IDENTIFIER_REGISTRY(building_type);
-		string_set_t PROPERTY(building_type_types);
+		memory::string_set_t PROPERTY(building_type_types);
 		memory::vector<BuildingType const*> SPAN_PROPERTY(province_building_types);
 		BuildingType const* PROPERTY(port_building_type);
 

@@ -8,6 +8,7 @@
 #include "openvic-simulation/core/template/Concepts.hpp"
 #include "openvic-simulation/utility/Getters.hpp"
 #include "openvic-simulation/utility/Logger.hpp"
+#include "openvic-simulation/core/memory/StringMap.hpp"
 
 namespace OpenVic {
 	/* Callbacks for trying to add duplicate keys via UniqueKeyRegistry::add_item */
@@ -174,7 +175,7 @@ namespace OpenVic {
 	private:
 		using StorageInfo = _StorageInfo<item_type>;
 		using internal_storage_index_type = typename StorageInfo::index_type;
-		using identifier_index_map_t = template_string_map_t<internal_storage_index_type, Case>;
+		using identifier_index_map_t = memory::template_string_map_t<internal_storage_index_type, Case>;
 
 	public:
 		using storage_type = typename StorageInfo::storage_type;

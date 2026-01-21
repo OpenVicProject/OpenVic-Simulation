@@ -2,10 +2,12 @@
 
 #include <optional>
 
+#include "openvic-simulation/core/memory/IndexedFlatMap.hpp"
+#include "openvic-simulation/core/memory/OrderedMap.hpp"
+#include "openvic-simulation/core/memory/OrderedSet.hpp"
+#include "openvic-simulation/core/memory/StringMap.hpp"
 #include "openvic-simulation/history/HistoryMap.hpp"
 #include "openvic-simulation/types/Date.hpp"
-#include "openvic-simulation/types/IndexedFlatMap.hpp"
-#include "openvic-simulation/types/OrderedContainers.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPointMap.hpp"
 #include "openvic-simulation/research/TechnologyUnlockLevel.hpp"
 #include "openvic-simulation/utility/Containers.hpp"
@@ -31,7 +33,7 @@ namespace OpenVic {
 		friend struct CountryHistoryMap;
 	private:
 		std::optional<Culture const*> PROPERTY(primary_culture);
-		ordered_map<Culture const*, bool> PROPERTY(accepted_cultures);
+		memory::ordered_map<Culture const*, bool> PROPERTY(accepted_cultures);
 		std::optional<Religion const*> PROPERTY(religion);
 		std::optional<CountryParty const*> PROPERTY(ruling_party);
 		std::optional<Date> PROPERTY(last_election);
@@ -42,11 +44,11 @@ namespace OpenVic {
 		std::optional<NationalValue const*> PROPERTY(national_value);
 		std::optional<bool> PROPERTY_CUSTOM_PREFIX(civilised, is);
 		std::optional<fixed_point_t> PROPERTY(prestige);
-		ordered_set<Reform const*> PROPERTY(reforms);
+		memory::ordered_set<Reform const*> PROPERTY(reforms);
 		std::optional<Deployment const*> PROPERTY(initial_oob);
 		std::optional<TechnologySchool const*> PROPERTY(tech_school);
-		ordered_map<Technology const*, technology_unlock_level_t> PROPERTY(technologies);
-		ordered_map<Invention const*, bool> PROPERTY(inventions);
+		memory::ordered_map<Technology const*, technology_unlock_level_t> PROPERTY(technologies);
+		memory::ordered_map<Invention const*, bool> PROPERTY(inventions);
 		fixed_point_map_t<CountryDefinition const*> PROPERTY(foreign_investment);
 		std::optional<fixed_point_t> PROPERTY(consciousness);
 		std::optional<fixed_point_t> PROPERTY(nonstate_consciousness);
@@ -55,10 +57,10 @@ namespace OpenVic {
 		std::optional<bool> PROPERTY_CUSTOM_PREFIX(releasable_vassal, is);
 		std::optional<fixed_point_t> PROPERTY(colonial_points);
 		// True for set, false for clear
-		string_map_t<bool> PROPERTY(country_flags);
-		string_map_t<bool> PROPERTY(global_flags);
+		memory::string_map_t<bool> PROPERTY(country_flags);
+		memory::string_map_t<bool> PROPERTY(global_flags);
 		OV_IFLATMAP_PROPERTY(GovernmentType, GovernmentType const*, flag_overrides_by_government_type);
-		ordered_set<Decision const*> PROPERTY(decisions);
+		memory::ordered_set<Decision const*> PROPERTY(decisions);
 
 	public:
 		CountryDefinition const& country;
@@ -96,7 +98,7 @@ namespace OpenVic {
 
 	struct CountryHistoryManager {
 	private:
-		ordered_map<CountryDefinition const*, CountryHistoryMap> country_histories;
+		memory::ordered_map<CountryDefinition const*, CountryHistoryMap> country_histories;
 		bool locked = false;
 
 	public:

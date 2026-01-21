@@ -7,8 +7,8 @@
 #include "openvic-simulation/economy/trading/MarketSellOrder.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
 #include "openvic-simulation/types/TypedIndices.hpp"
-#include "openvic-simulation/types/TypedSpan.hpp"
-#include "openvic-simulation/types/ValueHistory.hpp"
+#include "openvic-simulation/core/container/TypedSpan.hpp"
+#include "openvic-simulation/core/memory/ValueHistory.hpp"
 #include "openvic-simulation/utility/Containers.hpp"
 
 namespace OpenVic {
@@ -47,7 +47,7 @@ namespace OpenVic {
 		fixed_point_t PROPERTY(total_demand_yesterday);
 		fixed_point_t PROPERTY(total_supply_yesterday);
 		fixed_point_t PROPERTY(quantity_traded_yesterday);
-		ValueHistory<fixed_point_t> PROPERTY(price_history);
+		memory::ValueHistory<fixed_point_t> PROPERTY(price_history);
 
 		void update_next_price_limits();
 	public:

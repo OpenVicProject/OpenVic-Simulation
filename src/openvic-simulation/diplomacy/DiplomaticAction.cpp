@@ -7,7 +7,7 @@
 #include "openvic-simulation/country/CountryInstance.hpp"
 #include "openvic-simulation/diplomacy/CountryRelation.hpp"
 #include "openvic-simulation/types/Date.hpp"
-#include "openvic-simulation/types/IdentifierRegistry.hpp"
+#include "openvic-simulation/core/container/IdentifierRegistry.hpp"
 #include "openvic-simulation/utility/Logger.hpp"
 
 using namespace OpenVic;

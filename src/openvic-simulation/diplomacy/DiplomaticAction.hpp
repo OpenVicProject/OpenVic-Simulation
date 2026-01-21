@@ -9,7 +9,7 @@
 
 #include "openvic-simulation/country/CountryInstance.hpp"
 #include "openvic-simulation/diplomacy/CountryRelation.hpp"
-#include "openvic-simulation/types/IdentifierRegistry.hpp"
+#include "openvic-simulation/core/container/IdentifierRegistry.hpp"
 
 #include <function2/function2.hpp>
 

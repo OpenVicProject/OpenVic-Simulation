@@ -2,7 +2,7 @@
 
 #include "openvic-simulation/politics/PartyPolicy.hpp"
 #include "openvic-simulation/politics/Reform.hpp"
-#include "openvic-simulation/types/IdentifierRegistry.hpp"
+#include "openvic-simulation/core/container/IdentifierRegistry.hpp"
 #include "BaseIssue.hpp"
 
 namespace OpenVic {

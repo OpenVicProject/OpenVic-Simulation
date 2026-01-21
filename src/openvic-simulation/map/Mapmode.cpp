@@ -4,6 +4,7 @@
 
 #include <type_safe/strong_typedef.hpp>
 
+#include "openvic-simulation/core/memory/OrderedMap.hpp"
 #include "openvic-simulation/country/CountryInstance.hpp"
 #include "openvic-simulation/economy/BuildingType.hpp"
 #include "openvic-simulation/economy/GoodDefinition.hpp" // IWYU pragma: keep
@@ -14,7 +15,6 @@
 #include "openvic-simulation/population/Culture.hpp"
 #include "openvic-simulation/population/PopSum.hpp"
 #include "openvic-simulation/population/Religion.hpp"
-#include "openvic-simulation/types/OrderedContainersMath.hpp"
 
 using namespace OpenVic;
 using namespace OpenVic::colour_literals;
@@ -170,7 +170,7 @@ static constexpr auto get_colour_mapmode(
 
 template<has_get_colour KeyType, typename ValueType>
 static constexpr Mapmode::base_stripe_t shaded_mapmode(
-	ordered_map<KeyType const*, ValueType> const& map
+	memory::ordered_map<KeyType const*, ValueType> const& map
 ) {
 	const auto largest = get_largest_two_items(map);
 	if (largest.first != map.end()) {
@@ -188,7 +188,7 @@ static constexpr Mapmode::base_stripe_t shaded_mapmode(
 }
 
 template<has_get_colour KeyType, typename ValueType>
-static constexpr auto shaded_mapmode(ordered_map<KeyType const*, ValueType> const&(ProvinceInstance::*get_map)() const) {
+static constexpr auto shaded_mapmode(memory::ordered_map<KeyType const*, ValueType> const&(ProvinceInstance::*get_map)() const) {
 	return [get_map](
 		MapInstance const& map_instance, ProvinceInstance const& province,
 		CountryInstance const* player_country, ProvinceInstance const* selected_province

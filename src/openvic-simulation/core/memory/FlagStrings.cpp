@@ -1,8 +1,10 @@
 #include "FlagStrings.hpp"
 
 #include "openvic-simulation/utility/Logger.hpp"
+#include "openvic-simulation/core/memory/StringMap.hpp"
 
 using namespace OpenVic;
+using namespace OpenVic::memory;
 
 FlagStrings::FlagStrings(std::string_view new_name) : name { new_name } {}
 
@@ -42,7 +44,7 @@ bool FlagStrings::has_flag(std::string_view flag) const {
 	return flags.contains(flag);
 }
 
-bool FlagStrings::apply_flag_map(string_map_t<bool> const& flag_map, bool warn) {
+bool FlagStrings::apply_flag_map(memory::string_map_t<bool> const& flag_map, bool warn) {
 	bool ret = true;
 
 	for (auto const& [flag, set] : flag_map) {

@@ -245,7 +245,7 @@ bool TechnologyManager::generate_modifiers(ModifierManager& modifier_manager) co
 	using enum ModifierEffect::format_t;
 	using enum ModifierEffect::target_t;
 
-	IndexedFlatMap<TechnologyFolder, ModifierEffect const*>& research_bonus_effects =
+	memory::IndexedFlatMap<TechnologyFolder, ModifierEffect const*>& research_bonus_effects =
 		modifier_manager.modifier_effect_cache.research_bonus_effects;
 
 	research_bonus_effects = std::move(decltype(ModifierEffectCache::research_bonus_effects){get_technology_folders()});

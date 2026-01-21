@@ -22,6 +22,7 @@
 #include <range/v3/view/iota.hpp>
 #include <range/v3/view/transform.hpp>
 
+#include "openvic-simulation/core/memory/StringMap.hpp"
 #include "openvic-simulation/types/Colour.hpp"
 #include "openvic-simulation/types/Date.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
@@ -559,7 +560,7 @@ TEST_CASE(
 
 	auto callback = [](FlatValue const* ptr, text_format_t val) -> bool {
 		using enum text_format_t;
-		static const string_map_t<text_format_t> format_map = //
+		static const memory::string_map_t<text_format_t> format_map = //
 			{ //
 			  { "left", left }, //
 			  { "right", right },
@@ -1397,14 +1398,14 @@ TEST_CASE(
 ) {
 	Ast ast;
 
-	static const string_map_t<std::string_view> map //
+	static const memory::string_map_t<std::string_view> map //
 		{ //
 		  { "key_test1", "value_test1"sv },
 		  { "key_test2", "value_test2"sv },
 		  { "key_test3", "value_test3"sv }
 		};
 
-	static auto callback = [](string_map_t<std::string_view> const& map, size_t expected_index, std::string_view val) {
+	static auto callback = [](memory::string_map_t<std::string_view> const& map, size_t expected_index, std::string_view val) {
 		CHECK_IF(map.size() > expected_index);
 		else {
 			return false;
@@ -1426,7 +1427,7 @@ TEST_CASE(
 	CHECK(NodeTools::expect_mapped_string(map, std::bind_front(callback, map, 1))(map.values_container()[1].first));
 	CHECK(NodeTools::expect_mapped_string(map, std::bind_front(callback, map, 2))(map.values_container()[2].first));
 
-	static auto callback_false = [](string_map_t<std::string_view> const& map, size_t check_index, std::string_view val) {
+	static auto callback_false = [](memory::string_map_t<std::string_view> const& map, size_t check_index, std::string_view val) {
 		for (auto [index, pair] : map | ranges::views::enumerate) {
 			if (index != check_index) {
 				continue;

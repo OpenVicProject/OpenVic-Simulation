@@ -9,7 +9,7 @@
 
 #include <spdlog/common.h>
 
-#include "openvic-simulation/types/OrderedContainers.hpp"
+#include "openvic-simulation/core/memory/OrderedMap.hpp"
 #include "openvic-simulation/utility/ConstexprIntToStr.hpp"
 #include "openvic-simulation/utility/Containers.hpp"
 #include "openvic-simulation/utility/Logger.hpp"
@@ -377,7 +377,7 @@ fs::path Dataloader::search_for_game_path(fs::path hint_path) {
 	};
 	using hint_path_t = fs::path;
 	using game_path_t = fs::path;
-	static ordered_map<hint_path_t, game_path_t, fshash> _cached_paths;
+	static memory::ordered_map<hint_path_t, game_path_t, fshash> _cached_paths;
 
 	auto it = _cached_paths.find(hint_path);
 	if (it != _cached_paths.end()) {

@@ -16,7 +16,7 @@
 
 #include <type_safe/strong_typedef.hpp>
 
-#include "openvic-simulation/types/StackString.hpp"
+#include "openvic-simulation/core/container/StackString.hpp"
 #include "openvic-simulation/utility/Getters.hpp"
 #include "openvic-simulation/utility/Logger.hpp"
 #include "openvic-simulation/core/string/CharConv.hpp"

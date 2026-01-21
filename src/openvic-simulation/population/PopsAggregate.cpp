@@ -8,7 +8,6 @@
 #include "openvic-simulation/population/Pop.hpp"
 #include "openvic-simulation/population/PopType.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
-#include "openvic-simulation/types/OrderedContainersMath.hpp"
 
 #include <type_safe/strong_typedef.hpp>
 

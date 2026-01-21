@@ -1,8 +1,8 @@
 #pragma once
 
 #include "openvic-simulation/dataloader/NodeTools.hpp"
-#include "openvic-simulation/types/HasIdentifier.hpp"
-#include "openvic-simulation/types/IdentifierRegistry.hpp"
+#include "openvic-simulation/core/container/HasIdentifier.hpp"
+#include "openvic-simulation/core/container/IdentifierRegistry.hpp"
 
 namespace OpenVic {
 	struct ReligionGroup : HasIdentifier {

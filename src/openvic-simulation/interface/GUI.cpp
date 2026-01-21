@@ -4,7 +4,8 @@
 #include "openvic-simulation/dataloader/NodeTools.hpp"
 #include "openvic-simulation/interface/UI.hpp"
 #include "openvic-simulation/misc/SoundEffect.hpp"
-#include "openvic-simulation/types/IdentifierRegistry.hpp"
+#include "openvic-simulation/core/container/IdentifierRegistry.hpp"
+#include "openvic-simulation/core/memory/StringMap.hpp"
 
 using namespace OpenVic;
 using namespace OpenVic::GUI;
@@ -25,7 +26,7 @@ Element::Element() {}
 bool Element::_fill_key_map(NodeTools::case_insensitive_key_map_t& key_map, UIManager const& ui_manager) {
 	bool ret = Named::_fill_key_map(key_map, ui_manager);
 	using enum orientation_t;
-	static const string_map_t<orientation_t> orientation_map = {
+	static const memory::string_map_t<orientation_t> orientation_map = {
 		{ "UPPER_LEFT", UPPER_LEFT }, { "LOWER_LEFT", LOWER_LEFT },
 		{ "LOWER_RIGHT", LOWER_RIGHT }, { "UPPER_RIGHT", UPPER_RIGHT },
 		{ "CENTER", CENTER }, { "CENTER_UP", CENTER_UP }, { "CENTER_DOWN", CENTER_DOWN }

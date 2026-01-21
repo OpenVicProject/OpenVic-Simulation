@@ -1,9 +1,9 @@
 #pragma once
 
+#include "openvic-simulation/core/memory/IndexedFlatMap.hpp"
+#include "openvic-simulation/core/memory/OrderedMap.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPointMap.hpp"
-#include "openvic-simulation/types/IndexedFlatMap.hpp"
-#include "openvic-simulation/types/OrderedContainers.hpp"
 #include "openvic-simulation/population/PopSum.hpp"
 #include "openvic-simulation/utility/Getters.hpp"
 #include "openvic-simulation/utility/reactive/MutableState.hpp"
@@ -37,10 +37,10 @@ namespace OpenVic {
 		fixed_point_t PROPERTY(average_consciousness);
 		fixed_point_t PROPERTY(average_militancy);
 
-		IndexedFlatMap<Strata, boost::int128::int128_t> militancy_by_strata_running_total_raw;
-		IndexedFlatMap<Strata, boost::int128::int128_t> life_needs_fulfilled_by_strata_running_total_raw;
-		IndexedFlatMap<Strata, boost::int128::int128_t> everyday_needs_fulfilled_by_strata_running_total_raw;
-		IndexedFlatMap<Strata, boost::int128::int128_t> luxury_needs_fulfilled_by_strata_running_total_raw;
+		memory::IndexedFlatMap<Strata, boost::int128::int128_t> militancy_by_strata_running_total_raw;
+		memory::IndexedFlatMap<Strata, boost::int128::int128_t> life_needs_fulfilled_by_strata_running_total_raw;
+		memory::IndexedFlatMap<Strata, boost::int128::int128_t> everyday_needs_fulfilled_by_strata_running_total_raw;
+		memory::IndexedFlatMap<Strata, boost::int128::int128_t> luxury_needs_fulfilled_by_strata_running_total_raw;
 		OV_IFLATMAP_PROPERTY(Strata, fixed_point_t, militancy_by_strata);
 		OV_IFLATMAP_PROPERTY(Strata, fixed_point_t, life_needs_fulfilled_by_strata);
 		OV_IFLATMAP_PROPERTY(Strata, fixed_point_t, everyday_needs_fulfilled_by_strata);
@@ -52,8 +52,8 @@ namespace OpenVic {
 		OV_IFLATMAP_PROPERTY(Ideology, fixed_point_t, supporter_equivalents_by_ideology);
 		fixed_point_map_t<BaseIssue const*> PROPERTY(supporter_equivalents_by_issue);
 		fixed_point_map_t<CountryParty const*> PROPERTY(vote_equivalents_by_party);
-		ordered_map<Culture const*, pop_sum_t> PROPERTY(population_by_culture);
-		ordered_map<Religion const*, pop_sum_t> PROPERTY(population_by_religion);
+		memory::ordered_map<Culture const*, pop_sum_t> PROPERTY(population_by_culture);
+		memory::ordered_map<Religion const*, pop_sum_t> PROPERTY(population_by_religion);
 
 	protected:
 		PopsAggregate(

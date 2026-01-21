@@ -7,9 +7,9 @@
 #include <fmt/color.h>
 #include <fmt/core.h>
 
+#include "openvic-simulation/core/memory/StringMap.hpp"
 #include "openvic-simulation/types/Colour.hpp"
 #include "openvic-simulation/types/Date.hpp"
-#include "openvic-simulation/types/OrderedContainers.hpp"
 #include "openvic-simulation/utility/Containers.hpp"
 #include "openvic-simulation/utility/Getters.hpp"
 
@@ -98,7 +98,7 @@ namespace OpenVic {
 		Technology const* validate_tech_name(std::string_view value_string);
 
 	private:
-		string_map_t<execute_command_func_t> commands;
+		memory::string_map_t<execute_command_func_t> commands;
 
 		write_func_t write_func;
 

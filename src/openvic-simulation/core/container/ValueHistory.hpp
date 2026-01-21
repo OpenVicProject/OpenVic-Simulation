@@ -2,7 +2,7 @@
 
 #include <ostream>
 
-#include "openvic-simulation/types/RingBuffer.hpp"
+#include "openvic-simulation/core/container/RingBuffer.hpp"
 
 namespace OpenVic {
 

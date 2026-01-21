@@ -2,12 +2,12 @@
 
 #include <cstdint>
 
+#include "openvic-simulation/core/container/HasIdentifier.hpp"
+#include "openvic-simulation/core/container/HasIndex.hpp"
+#include "openvic-simulation/core/container/IdentifierRegistry.hpp"
+#include "openvic-simulation/core/memory/OrderedMap.hpp"
 #include "openvic-simulation/scripts/ConditionalWeight.hpp"
 #include "openvic-simulation/scripts/EffectScript.hpp"
-#include "openvic-simulation/types/HasIdentifier.hpp"
-#include "openvic-simulation/types/HasIndex.hpp"
-#include "openvic-simulation/types/IdentifierRegistry.hpp"
-#include "openvic-simulation/types/OrderedContainers.hpp"
 #include "openvic-simulation/types/TypedIndices.hpp"
 
 namespace OpenVic {
@@ -21,7 +21,7 @@ namespace OpenVic {
 	struct RebelType : HasIndex<RebelType, rebel_type_index_t>, HasIdentifier {
 		friend struct RebelManager;
 
-		using government_map_t = ordered_map<GovernmentType const*, GovernmentType const*>;
+		using government_map_t = memory::ordered_map<GovernmentType const*, GovernmentType const*>;
 		using icon_t = uint16_t;
 
 		enum class area_t {

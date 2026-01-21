@@ -2,14 +2,15 @@
 
 #include <string_view>
 
-#include "openvic-simulation/types/OrderedContainers.hpp"
+#include "openvic-simulation/core/memory/StringMap.hpp"
+#include "openvic-simulation/core/memory/StringSet.hpp"
 #include "openvic-simulation/utility/Getters.hpp"
 
-namespace OpenVic {
+namespace OpenVic::memory {
 
 	struct FlagStrings {
 	private:
-		string_set_t PROPERTY(flags);
+		memory::string_set_t PROPERTY(flags);
 		memory::string name;
 
 	public:
@@ -22,6 +23,6 @@ namespace OpenVic {
 
 		// Go through the map of flags setting or clearing each based on whether
 		// its value is true or false (used for applying history entries).
-		bool apply_flag_map(string_map_t<bool> const& flag_map, bool warn);
+		bool apply_flag_map(memory::string_map_t<bool> const& flag_map, bool warn);
 	};
 }

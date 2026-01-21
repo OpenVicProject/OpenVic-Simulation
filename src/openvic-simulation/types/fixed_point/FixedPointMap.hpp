@@ -1,13 +1,13 @@
 #pragma once
 
-#include "openvic-simulation/types/OrderedContainers.hpp"
-#include "openvic-simulation/types/OrderedContainersMath.hpp"
+#include "openvic-simulation/core/container/MutableIterator.hpp"
+#include "openvic-simulation/core/memory/OrderedMap.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
 
 namespace OpenVic {
 
 	template<typename T>
-	using fixed_point_map_t = ordered_map<T, fixed_point_t>;
+	using fixed_point_map_t = memory::ordered_map<T, fixed_point_t>;
 
 	template<typename T>
 	using fixed_point_map_value_t = typename fixed_point_map_t<T>::value_type;

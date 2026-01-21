@@ -17,13 +17,15 @@
 
 #include <type_safe/strong_typedef.hpp>
 
+#include "openvic-simulation/core/container/TypedSpan.hpp"
 #include "openvic-simulation/core/io/BMP.hpp"
+#include "openvic-simulation/core/memory/FixedVector.hpp"
+#include "openvic-simulation/core/memory/OrderedSet.hpp"
+#include "openvic-simulation/core/memory/StringMap.hpp"
 #include "openvic-simulation/dataloader/NodeTools.hpp"
 #include "openvic-simulation/map/ProvinceDefinition.hpp"
 #include "openvic-simulation/modifier/ModifierManager.hpp"
 #include "openvic-simulation/types/Colour.hpp"
-#include "openvic-simulation/types/OrderedContainersMath.hpp"
-#include "openvic-simulation/types/TypedSpan.hpp"
 #include "openvic-simulation/types/Vector.hpp"
 #include "openvic-simulation/core/FormatValidate.hpp"
 #include "openvic-simulation/utility/Logger.hpp"
@@ -867,7 +869,7 @@ bool MapDefinition::load_map_images(fs::path const& province_path, fs::path cons
 	TypedSpan<province_index_t, fixed_point_map_t<TerrainType const*>> terrain_type_pixels_list { _terrain_type_pixels_list };
 
 	bool ret = true;
-	ordered_set<colour_t> unrecognised_province_colours;
+	memory::ordered_set<colour_t> unrecognised_province_colours;
 
 	memory::FixedVector<fixed_point_t> _pixels_per_province(
 		province_definitions.size(),
@@ -1062,11 +1064,11 @@ bool MapDefinition::generate_and_load_province_adjacencies(std::span<const LineO
 			}
 
 			using enum adjacency_t::type_t;
-			static const string_map_t<adjacency_t::type_t> type_map {
+			static const memory::string_map_t<adjacency_t::type_t> type_map {
 				{ "land", LAND }, { "sea", STRAIT }, { "impassable", IMPASSABLE }, { "canal", CANAL }
 			};
 			const std::string_view type_str = adjacency.get_value_for(2);
-			const string_map_t<adjacency_t::type_t>::const_iterator it = type_map.find(type_str);
+			const memory::string_map_t<adjacency_t::type_t>::const_iterator it = type_map.find(type_str);
 			if (it == type_map.end()) {
 				spdlog::error_s("Invalid adjacency type: \"{}\"", type_str);
 				ret = false;

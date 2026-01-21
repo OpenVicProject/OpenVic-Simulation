@@ -277,7 +277,7 @@ bool IssueManager::load_issues_file(
 
 				return expect_length(add_variable_callback(expected_party_policy_groups))(value);
 			} else {
-				static const string_set_t uncivilised_reform_groups {
+				static const memory::string_set_t uncivilised_reform_groups {
 					"economic_reforms", "education_reforms", "military_reforms"
 				};
 

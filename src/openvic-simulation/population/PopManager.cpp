@@ -2,6 +2,7 @@
 
 #include <fmt/format.h>
 
+#include "openvic-simulation/core/memory/StringMap.hpp"
 #include "openvic-simulation/economy/GoodDefinition.hpp"
 #include "openvic-simulation/politics/Ideology.hpp"
 #include "openvic-simulation/politics/IssueManager.hpp"
@@ -223,7 +224,7 @@ void PopManager::reserve_pop_types_and_delayed_nodes(size_t size) {
 
 static NodeCallback auto expect_needs_income(PopType::income_type_t& types) {
 	using enum PopType::income_type_t;
-	static const string_map_t<PopType::income_type_t> income_type_map {
+	static const memory::string_map_t<PopType::income_type_t> income_type_map {
 		{ "administration", ADMINISTRATION },
 		{ "education", EDUCATION },
 		{ "military", MILITARY }
@@ -492,7 +493,7 @@ bool PopManager::generate_modifiers(ModifierManager& modifier_manager) const {
 
 	static constexpr bool HAS_NO_EFFECT = true;
 
-	IndexedFlatMap<Strata, ModifierEffectCache::strata_effects_t>& strata_effects =
+	memory::IndexedFlatMap<Strata, ModifierEffectCache::strata_effects_t>& strata_effects =
 		modifier_manager.modifier_effect_cache.strata_effects;
 
 	strata_effects = std::move(decltype(ModifierEffectCache::strata_effects){get_stratas()});

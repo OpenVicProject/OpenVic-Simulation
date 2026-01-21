@@ -2,6 +2,7 @@
 
 #include <string_view>
 
+#include "openvic-simulation/core/memory/StringMap.hpp"
 #include "openvic-simulation/politics/Government.hpp"
 #include "openvic-simulation/politics/Ideology.hpp"
 #include "openvic-simulation/modifier/ModifierManager.hpp"
@@ -76,7 +77,7 @@ bool RebelManager::load_rebels_file(
 ) {
 	spdlog::scope scope { "common/rebel_types.txt" };
 
-	static const string_map_t<RebelType::area_t> area_map = {
+	static const memory::string_map_t<RebelType::area_t> area_map = {
 		{ "nation", RebelType::area_t::NATION },
 		{ "nation_religion", RebelType::area_t::NATION_RELIGION },
 		{ "nation_culture", RebelType::area_t::NATION_CULTURE },
@@ -86,7 +87,7 @@ bool RebelManager::load_rebels_file(
 		{ "all", RebelType::area_t::ALL }
 	};
 
-	static const string_map_t<RebelType::defection_t> defection_map = {
+	static const memory::string_map_t<RebelType::defection_t> defection_map = {
 		{ "none", RebelType::defection_t::NONE },
 		{ "culture", RebelType::defection_t::CULTURE },
 		{ "culture_group", RebelType::defection_t::CULTURE_GROUP },
@@ -96,7 +97,7 @@ bool RebelManager::load_rebels_file(
 		{ "any", RebelType::defection_t::ANY }
 	};
 
-	static const string_map_t<RebelType::independence_t> independence_map = {
+	static const memory::string_map_t<RebelType::independence_t> independence_map = {
 		{ "none", RebelType::independence_t::NONE },
 		{ "culture", RebelType::independence_t::CULTURE },
 		{ "culture_group", RebelType::independence_t::CULTURE_GROUP },

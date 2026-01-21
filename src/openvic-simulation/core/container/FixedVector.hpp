@@ -4,13 +4,14 @@
 #include <cassert>
 #include <cstddef>
 #include <memory>
+#include <type_traits>
 #include <utility>
 
 #include "openvic-simulation/core/Assert.hpp"
 #include "openvic-simulation/core/template/Concepts.hpp"
 #include "openvic-simulation/core/Typedefs.hpp"
 
-namespace OpenVic::_detail {
+namespace OpenVic {
 	//fixed capacity + not movable + not copyable
 	template <typename T, typename Allocator = std::allocator<T>>
 	class FixedVector {
@@ -27,6 +28,7 @@ namespace OpenVic::_detail {
 		using reference = T&;
 		using size_type = size_t;
 		using value_type = T;
+		using allocator_type = Allocator;
 
 		constexpr size_t size() const { return _size; }
 		constexpr size_t capacity() const { return _max_size; }
@@ -39,15 +41,21 @@ namespace OpenVic::_detail {
 		* @brief Creates an uninitialised vector with fixed capacity
 		*/
 		explicit FixedVector(const size_t capacity)
+			: FixedVector(capacity, Allocator()) {}
+
+		FixedVector(const size_t capacity, std::type_identity_t<Allocator> const& alloc)
 			: _max_size(capacity),
 			_size(0),
-			_allocator(),
+			_allocator(alloc),
 			_data_start_ptr(allocator_traits::allocate(_allocator, capacity)) {}
 
 		FixedVector(const size_t size, T const& value_for_all_indices)
+			: FixedVector(size, value_for_all_indices, Allocator()) {}
+
+		FixedVector(const size_t size, T const& value_for_all_indices, std::type_identity_t<Allocator> const& alloc)
 			: _max_size(size),
 			_size(size),
-			_allocator(),
+			_allocator(alloc),
 			_data_start_ptr(allocator_traits::allocate(_allocator, size)) {
 			std::fill(_data_start_ptr, _data_start_ptr + size, value_for_all_indices);
 		}
@@ -59,9 +67,19 @@ namespace OpenVic::_detail {
 		// The type must be constructible from the generator's single return value
 		&& std::constructible_from<T, decltype(std::declval<GeneratorTemplateType>()(std::declval<size_t>()))>
 		FixedVector(const size_t size, GeneratorTemplateType&& generator)
+			: FixedVector(size, std::forward<GeneratorTemplateType>(generator), Allocator()) {
+		}
+
+		//Generator (size_t i) -> U (where T is constructable from U)
+		template<typename GeneratorTemplateType>
+		// The generator must NOT return a tuple
+		requires (!specialization_of<std::remove_cvref_t<std::invoke_result_t<GeneratorTemplateType, size_t>>, std::tuple>)
+		// The type must be constructible from the generator's single return value
+		&& std::constructible_from<T, decltype(std::declval<GeneratorTemplateType>()(std::declval<size_t>()))>
+		FixedVector(const size_t size, GeneratorTemplateType&& generator, std::type_identity_t<Allocator> const& alloc)
 			: _max_size(size),
 			_size(size),
-			_allocator(),
+			_allocator(alloc),
 			_data_start_ptr(allocator_traits::allocate(_allocator, size)) {
 			for (size_t i = 0; i < size; ++i) {
 				allocator_traits::construct(
@@ -88,9 +106,28 @@ namespace OpenVic::_detail {
 			};
 		}
 		FixedVector(const size_t size, GeneratorTemplateType&& generator)
+			: FixedVector(size, std::forward<GeneratorTemplateType>(generator), Allocator()) {
+		}
+
+		//Generator (size_t i) -> std::tuple<Args...> (where T is constructable from Args)
+		template<typename GeneratorTemplateType>
+		// The generator must return a tuple
+		requires specialization_of<std::remove_cvref_t<std::invoke_result_t<GeneratorTemplateType, size_t>>, std::tuple>
+		// The tuple must be constructible into a T
+		&& requires(GeneratorTemplateType&& generator) {
+			{
+				std::apply(
+					[](auto&&... args) {
+						T obj{std::forward<decltype(args)>(args)...};
+					},
+					generator(std::declval<size_t>())
+				)
+			};
+		}
+		FixedVector(const size_t size, GeneratorTemplateType&& generator, std::type_identity_t<Allocator> const& alloc)
 			: _max_size(size),
 			_size(size),
-			_allocator(),
+			_allocator(alloc),
 			_data_start_ptr(allocator_traits::allocate(_allocator, size)) {
 			for (size_t i = 0; i < size; ++i) {
 				std::apply(
@@ -115,7 +152,7 @@ namespace OpenVic::_detail {
 			clear();
 			allocator_traits::deallocate(_allocator, _data_start_ptr, _max_size);
 		}
-		
+
 		using iterator = T*;
 		using const_iterator = const T*;
 
@@ -126,7 +163,7 @@ namespace OpenVic::_detail {
 		iterator end() { return begin() + _size; }
 		const_iterator end() const { return begin() + _size; }
 		const_iterator cend() const { return cbegin() + _size; }
-		
+
 		using reverse_iterator = std::reverse_iterator<iterator>;
 		using const_reverse_iterator = std::reverse_iterator<const_iterator>;
 
@@ -198,14 +235,9 @@ namespace OpenVic::_detail {
 			}
 			_size = 0;
 		}
+
+		allocator_type get_allocator() const {
+			return _allocator;
+		}
 	};
-}
-
-#include <foonathan/memory/std_allocator.hpp>
-
-#include "openvic-simulation/utility/MemoryTracker.hpp"
-
-namespace OpenVic::memory {
-	template<typename T, class RawAllocator = foonathan::memory::default_allocator>
-	using FixedVector = _detail::FixedVector<T, foonathan::memory::std_allocator<T, tracker<RawAllocator>>>;
 }

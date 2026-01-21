@@ -3,7 +3,7 @@
 #include <tsl/ordered_map.h>
 #include <tsl/ordered_set.h>
 
-#include "openvic-simulation/types/OrderedContainers.hpp"
+#include "openvic-simulation/core/container/OrderedMap.hpp"
 
 namespace OpenVic {
 	template<derived_ordered_map Map, typename Key = typename Map::key_type, typename Mapped = typename Map::mapped_type>

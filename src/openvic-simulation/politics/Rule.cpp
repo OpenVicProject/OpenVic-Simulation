@@ -1,8 +1,9 @@
 #include "Rule.hpp"
 
+#include "openvic-simulation/core/container/HasIdentifier.hpp"
+#include "openvic-simulation/core/container/MutableIterator.hpp"
+#include "openvic-simulation/core/memory/OrderedMap.hpp"
 #include "openvic-simulation/economy/BuildingType.hpp"
-#include "openvic-simulation/utility/TslHelper.hpp"
-#include "openvic-simulation/types/HasIdentifier.hpp"
 #include "openvic-simulation/utility/Containers.hpp"
 #include "openvic-simulation/core/FormatValidate.hpp"
 
@@ -156,7 +157,7 @@ bool RuleManager::setup_rules(BuildingTypeManager const& building_type_manager) 
 
 	using enum Rule::rule_group_t;
 
-	static const ordered_map<Rule::rule_group_t, memory::vector<std::string_view>> hardcoded_rules {
+	static const memory::ordered_map<Rule::rule_group_t, memory::vector<std::string_view>> hardcoded_rules {
 		{ ECONOMY, {
 			"build_railway", "build_factory", "expand_factory", "open_factory", "destroy_factory", "pop_build_factory",
 			"pop_expand_factory", "pop_open_factory", "can_subsidise", "factory_priority", "delete_factory_if_no_input",

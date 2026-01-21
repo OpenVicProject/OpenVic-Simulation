@@ -13,6 +13,8 @@
 #include <fmt/std.h>
 
 #include "openvic-simulation/DefinitionManager.hpp"
+#include "openvic-simulation/core/memory/StringMap.hpp"
+#include "openvic-simulation/core/memory/StringSet.hpp"
 #include "openvic-simulation/interface/UI.hpp"
 #include "openvic-simulation/misc/GameRulesManager.hpp"
 #include "openvic-simulation/misc/SoundEffect.hpp"
@@ -156,7 +158,7 @@ Dataloader::path_vector_t Dataloader::_lookup_files_in_dir(
 		fs::path file;
 		fs::path const* root = nullptr;
 	};
-	string_map_t<file_entry_t> found_files;
+	memory::string_map_t<file_entry_t> found_files;
 	for (fs::path const& root : roots) {
 		const size_t root_len = root.string().size();
 		std::error_code ec;
@@ -226,9 +228,9 @@ bool Dataloader::apply_to_files(path_span_t files, apply_files_callback_t callba
 	return ret;
 }
 
-string_set_t Dataloader::lookup_dirs_in_dir(std::string_view path) const {
+memory::string_set_t Dataloader::lookup_dirs_in_dir(std::string_view path) const {
 	const fs::path dirpath { ensure_forward_slash_path(path) };
-	string_set_t ret;
+	memory::string_set_t ret;
 	for (fs::path const& root : roots) {
 		std::error_code ec;
 		for (fs::directory_entry const& entry : fs::directory_iterator { root / dirpath, ec }) {
@@ -652,7 +654,7 @@ bool Dataloader::_load_history(DefinitionManager& definition_manager, bool unuse
 		/* Pop History */
 		static constexpr std::string_view pop_history_directory = "history/pops/";
 
-		const string_set_t pop_history_dirs = lookup_dirs_in_dir(pop_history_directory);
+		const memory::string_set_t pop_history_dirs = lookup_dirs_in_dir(pop_history_directory);
 		const Date last_bookmark_date =
 			definition_manager.get_history_manager().get_bookmark_manager().get_last_bookmark_date();
 

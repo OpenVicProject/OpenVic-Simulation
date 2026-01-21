@@ -3,6 +3,9 @@
 #include <openvic-dataloader/v2script/Parser.hpp>
 
 #include "openvic-simulation/core/error/ErrorMacros.hpp"
+#include "openvic-simulation/core/memory/OrderedMap.hpp"
+#include "openvic-simulation/core/memory/OrderedSet.hpp"
+#include "openvic-simulation/core/memory/StringMap.hpp"
 #include "openvic-simulation/dataloader/NodeTools.hpp"
 #include "openvic-simulation/economy/GoodDefinition.hpp"
 #include "openvic-simulation/misc/GameRulesManager.hpp"
@@ -106,7 +109,7 @@ node_callback_t ProductionTypeManager::_expect_job(
 		Job::effect_t effect_type { THROUGHPUT };
 		fixed_point_t effect_multiplier = 1, desired_workforce_share = 1;
 
-		static const string_map_t<Job::effect_t> effect_map = {
+		static const memory::string_map_t<Job::effect_t> effect_map = {
 			{ "input", INPUT }, { "output", OUTPUT }, { "throughput", THROUGHPUT }
 		};
 
@@ -259,8 +262,8 @@ bool ProductionTypeManager::load_production_types_file(
 	size_t expected_types = 0;
 
 	/* Pass #1: find and store template identifiers */
-	ordered_set<std::string_view> templates;
-	ordered_map<std::string_view, std::string_view> template_target_map;
+	memory::ordered_set<std::string_view> templates;
+	memory::ordered_map<std::string_view, std::string_view> template_target_map;
 	bool ret = expect_dictionary(
 		[this, &expected_types, &templates, &template_target_map, &template_symbol, &output_goods_symbol]
 		(std::string_view key, ast::NodeCPtr value) -> bool {
@@ -300,7 +303,7 @@ bool ProductionTypeManager::load_production_types_file(
 	)(parser.get_file_node());
 
 	/* Pass #2: create and populate the template map */
-	ordered_map<std::string_view, ast::NodeCPtr> template_node_map;
+	memory::ordered_map<std::string_view, ast::NodeCPtr> template_node_map;
 	ret &= expect_dictionary(
 		[this, &expected_types, &templates, &template_node_map](std::string_view key, ast::NodeCPtr value) -> bool {
 			if (templates.contains(key)) {
@@ -336,7 +339,7 @@ bool ProductionTypeManager::load_production_types_file(
 
 			bool ret = true;
 
-			static const string_map_t<ProductionType::template_type_t> template_type_map = {
+			static const memory::string_map_t<ProductionType::template_type_t> template_type_map = {
 				{ "factory", FACTORY }, { "rgo", RGO }, { "artisan", ARTISAN }
 			};
 
