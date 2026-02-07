@@ -19,6 +19,7 @@ namespace OpenVic {
 	struct TechnologyArea;
 	struct TechnologyManager;
 	struct UnitTypeManager;
+	struct Invention;
 
 	struct TechnologyFolder : HasIdentifier, HasIndex<TechnologyFolder, technology_folder_index_t> {
 		friend struct TechnologyManager;
@@ -58,6 +59,7 @@ namespace OpenVic {
 		unit_set_t PROPERTY(activated_units);
 		building_set_t PROPERTY(activated_buildings);
 		ConditionalWeightFactorMul PROPERTY(ai_chance);
+		memory::vector<Invention const*> PROPERTY(inventions);
 
 		bool parse_scripts(DefinitionManager const& definition_manager);
 
@@ -82,6 +84,10 @@ namespace OpenVic {
 			ConditionalWeightFactorMul&& new_ai_chance
 		);
 		Technology(Technology&&) = default;
+
+		void add_invention(Invention const* invention) {
+			inventions.push_back(invention);
+		}
 	};
 
 	struct TechnologySchool : Modifier {

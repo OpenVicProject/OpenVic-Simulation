@@ -17,6 +17,9 @@ namespace OpenVic {
 	struct UnitType;
 	struct UnitTypeManager;
 
+	struct Technology;
+	struct TechnologyManager;
+
 	struct Invention : HasIndex<Invention, invention_index_t>, Modifier {
 		friend struct InventionManager;
 
@@ -34,6 +37,8 @@ namespace OpenVic {
 		const bool PROPERTY_CUSTOM_PREFIX(unlock_gas_defence, will);
 		ConditionScript PROPERTY(limit);
 		ConditionalWeightBase PROPERTY(chance);
+		
+		memory::vector<memory::string> raw_associated_tech_identifiers;
 
 		bool parse_scripts(DefinitionManager const& definition_manager);
 
@@ -49,7 +54,8 @@ namespace OpenVic {
 			bool new_unlock_gas_attack,
 			bool new_unlock_gas_defence,
 			ConditionScript&& new_limit,
-			ConditionalWeightBase&& new_chance
+			ConditionalWeightBase&& new_chance,
+			memory::vector<memory::string>&& new_raw_associated_tech_identifiers
 		);
 		Invention(Invention&&) = default;
 	};
@@ -61,13 +67,17 @@ namespace OpenVic {
 		bool add_invention(
 			std::string_view identifier, ModifierValue&& values, bool news, Invention::unit_set_t&& activated_units,
 			Invention::building_set_t&& activated_buildings, Invention::crime_set_t&& enabled_crimes, bool unlock_gas_attack,
-			bool unlock_gas_defence, ConditionScript&& limit, ConditionalWeightBase&& chance
+			bool unlock_gas_defence, ConditionScript&& limit, ConditionalWeightBase&& chance,
+			memory::vector<memory::string>&& raw_associated_tech_identifiers
 		);
 
 		bool load_inventions_file(
+			TechnologyManager const& tech_manager,
 			ModifierManager const& modifier_manager, UnitTypeManager const& unit_type_manager,
 			BuildingTypeManager const& building_type_manager, CrimeManager const& crime_manager, ast::NodeCPtr root
 		); // inventions/*.txt
+
+		bool generate_invention_links(TechnologyManager& tech_manager);
 
 		bool parse_scripts(DefinitionManager const& definition_manager);
 	};

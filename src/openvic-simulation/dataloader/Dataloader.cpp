@@ -531,22 +531,30 @@ bool Dataloader::_load_technologies(DefinitionManager& definition_manager) {
 bool Dataloader::_load_inventions(DefinitionManager& definition_manager) {
 	static constexpr std::string_view inventions_directory = "inventions";
 
-	InventionManager& invention_manager = definition_manager.get_research_manager().get_invention_manager();
+	ResearchManager& research_manager = definition_manager.get_research_manager();
+	InventionManager& invention_manager = research_manager.get_invention_manager();
+	TechnologyManager& technology_manager = research_manager.get_technology_manager();
 
 	bool ret = apply_to_files(
-		lookup_files_in_dir(inventions_directory, ".txt"),
-		[this, &definition_manager, &invention_manager](fs::path const& file) -> bool {
-			return invention_manager.load_inventions_file(
-				definition_manager.get_modifier_manager(),
-				definition_manager.get_military_manager().get_unit_type_manager(),
-				definition_manager.get_economy_manager().get_building_type_manager(),
-				definition_manager.get_crime_manager(),
-				parse_defines_cached(file).get_file_node()
-			);
-		}
+	   lookup_files_in_dir(inventions_directory, ".txt"),
+	   [this, &definition_manager, &invention_manager, &technology_manager](fs::path const& file) -> bool {
+		  return invention_manager.load_inventions_file(
+			 technology_manager,
+			 definition_manager.get_modifier_manager(),
+			 definition_manager.get_military_manager().get_unit_type_manager(),
+			 definition_manager.get_economy_manager().get_building_type_manager(),
+			 definition_manager.get_crime_manager(),
+			 parse_defines_cached(file).get_file_node()
+		  );
+	   }
 	);
 
 	invention_manager.lock_inventions();
+
+	if (!invention_manager.generate_invention_links(technology_manager)) {
+		spdlog::critical_s("Failed to generate invention links!");
+		ret = false;
+	}
 
 	return ret;
 }
