@@ -4,6 +4,7 @@
 #include "openvic-simulation/map/Crime.hpp"
 #include "openvic-simulation/military/UnitType.hpp"
 #include "openvic-simulation/modifier/ModifierManager.hpp"
+#include "openvic-simulation/research/Technology.hpp"
 
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;
@@ -19,7 +20,8 @@ Invention::Invention(
 	bool new_unlock_gas_attack,
 	bool new_unlock_gas_defence,
 	ConditionScript&& new_limit,
-	ConditionalWeightBase&& new_chance
+	ConditionalWeightBase&& new_chance,
+	memory::vector<memory::string>&& new_raw_associated_tech_identifiers
 ) : HasIndex { new_index },
 	Modifier { new_identifier, std::move(new_values), modifier_type_t::INVENTION },
 	news { new_news },
@@ -29,7 +31,8 @@ Invention::Invention(
 	unlock_gas_attack { new_unlock_gas_attack },
 	unlock_gas_defence { new_unlock_gas_defence },
 	limit { std::move(new_limit) },
-	chance { std::move(new_chance) } {}
+	chance { std::move(new_chance) },
+	raw_associated_tech_identifiers { std::move(new_raw_associated_tech_identifiers) } {}
 
 bool Invention::parse_scripts(DefinitionManager const& definition_manager) {
 	bool ret = true;
@@ -42,8 +45,9 @@ bool Invention::parse_scripts(DefinitionManager const& definition_manager) {
 
 bool InventionManager::add_invention(
 	std::string_view identifier, ModifierValue&& values, bool news, Invention::unit_set_t&& activated_units,
-	Invention::building_set_t&& activated_buildings, Invention::crime_set_t&& enabled_crimes,
-	bool unlock_gas_attack, bool unlock_gas_defence, ConditionScript&& limit, ConditionalWeightBase&& chance
+	Invention::building_set_t&& activated_buildings, Invention::crime_set_t&& enabled_crimes, bool unlock_gas_attack,
+	bool unlock_gas_defence, ConditionScript&& limit, ConditionalWeightBase&& chance,
+	memory::vector<memory::string>&& raw_associated_tech_identifiers
 ) {
 	if (identifier.empty()) {
 		spdlog::error_s("Invalid invention identifier - empty!");
@@ -51,42 +55,59 @@ bool InventionManager::add_invention(
 	}
 
 	return inventions.emplace_item(
-		identifier,
-		Invention::index_t { get_invention_count() }, identifier,
-		std::move(values), news, std::move(activated_units), std::move(activated_buildings),
-		std::move(enabled_crimes), unlock_gas_attack, unlock_gas_defence, std::move(limit), std::move(chance)
+		identifier, Invention::index_t { get_invention_count() }, identifier, std::move(values), news,
+		std::move(activated_units), std::move(activated_buildings), std::move(enabled_crimes), unlock_gas_attack,
+		unlock_gas_defence, std::move(limit), std::move(chance),
+		std::move(raw_associated_tech_identifiers)
 	);
 }
 
 bool InventionManager::load_inventions_file(
-	ModifierManager const& modifier_manager, UnitTypeManager const& unit_type_manager,
+	TechnologyManager const& tech_manager, ModifierManager const& modifier_manager, UnitTypeManager const& unit_type_manager,
 	BuildingTypeManager const& building_type_manager, CrimeManager const& crime_manager, ast::NodeCPtr root
 ) {
-	return expect_dictionary_reserve_length(
-		inventions, [this, &modifier_manager, &unit_type_manager, &building_type_manager, &crime_manager](
-			std::string_view identifier, ast::NodeCPtr value
-		) -> bool {
-			using enum scope_type_t;
+	return expect_dictionary_reserve_length(inventions, [&](std::string_view identifier, ast::NodeCPtr value) -> bool {
+		using enum scope_type_t;
 
-			// TODO - use the same variable for all modifiers rather than combining them at the end?
-			ModifierValue loose_modifiers;
-			ModifierValue modifiers;
+		// TODO - use the same variable for all modifiers rather than combining them at the end?
+		ModifierValue loose_modifiers;
+		ModifierValue modifiers;
 
-			Invention::unit_set_t activated_units;
-			Invention::building_set_t activated_buildings;
-			Invention::crime_set_t enabled_crimes;
+		Invention::unit_set_t activated_units;
+		Invention::building_set_t activated_buildings;
+		Invention::crime_set_t enabled_crimes;
 
-			bool unlock_gas_attack = false;
-			bool unlock_gas_defence = false;
-			bool news = true; //defaults to true!
+		bool unlock_gas_attack = false;
+		bool unlock_gas_defence = false;
+		bool news = true; // defaults to true!
 
-			ConditionScript limit { COUNTRY, COUNTRY, NO_SCOPE };
-			ConditionalWeightBase chance { COUNTRY, COUNTRY, NO_SCOPE };
+		ConditionScript limit { COUNTRY, COUNTRY, NO_SCOPE };
+		ConditionalWeightBase chance { COUNTRY, COUNTRY, NO_SCOPE };
 
-			bool ret = NodeTools::expect_dictionary_keys_and_default(
+		memory::vector<memory::string> found_tech_ids;
+
+		auto parse_limit_and_find_techs = [&](ast::NodeCPtr node) -> bool {
+
+			  if (!limit.expect_script()(node)) {
+				  return false;
+			  }
+
+			  expect_dictionary(
+				  [&](std::string_view key, ast::NodeCPtr /*value*/) -> bool {
+					  if (tech_manager.get_technology_by_identifier(key) != nullptr) {
+						  found_tech_ids.push_back(memory::string(key));
+					  }
+					  return true;
+				  }
+			  )(node);
+
+			  return true;
+		  };
+
+		bool ret = NodeTools::expect_dictionary_keys_and_default(
 				modifier_manager.expect_base_country_modifier(loose_modifiers),
 				"news", ZERO_OR_ONE, expect_bool(assign_variable_callback(news)),
-				"limit", ONE_EXACTLY, limit.expect_script(),
+				"limit", ONE_EXACTLY, parse_limit_and_find_techs,
 				"chance", ONE_EXACTLY, chance.expect_conditional_weight(),
 				"effect", ZERO_OR_ONE, NodeTools::expect_dictionary_keys_and_default(
 					modifier_manager.expect_technology_modifier(modifiers),
@@ -103,16 +124,39 @@ bool InventionManager::load_inventions_file(
 				)
 			)(value);
 
-			modifiers += loose_modifiers;
+		modifiers += loose_modifiers;
 
-			ret &= add_invention(
-				identifier, std::move(modifiers), news, std::move(activated_units), std::move(activated_buildings),
-				std::move(enabled_crimes), unlock_gas_attack, unlock_gas_defence, std::move(limit), std::move(chance)
-			);
+		ret &= add_invention(
+			identifier, std::move(modifiers), news, std::move(activated_units), std::move(activated_buildings),
+			std::move(enabled_crimes), unlock_gas_attack, unlock_gas_defence, std::move(limit), std::move(chance),
+			std::move(found_tech_ids)
+		);
 
-			return ret;
+		return ret;
+	})(root);
+}
+
+bool InventionManager::generate_invention_links(TechnologyManager& tech_manager) {
+	if (!inventions.is_locked()) {
+		spdlog::error_s("Cannot generate invention links until inventions are locked!");
+		return false;
+	}
+
+	bool ret = true;
+
+	for (Invention& invention : inventions.get_items()) {
+		for (const memory::string& tech_id : invention.raw_associated_tech_identifiers) {
+			Technology const* tech = tech_manager.get_technology_by_identifier(tech_id);
+			if (tech) {
+				auto* mutable_tech = const_cast<Technology*>(tech);
+				mutable_tech->add_invention(&invention);
+			}
 		}
-	)(root);
+
+		invention.raw_associated_tech_identifiers.clear();
+	}
+
+	return ret;
 }
 
 bool InventionManager::parse_scripts(DefinitionManager const& definition_manager) {
