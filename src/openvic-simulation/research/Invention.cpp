@@ -146,11 +146,11 @@ bool InventionManager::generate_invention_links(TechnologyManager& tech_manager)
 
 	for (Invention& invention : inventions.get_items()) {
 		for (const memory::string& tech_id : invention.raw_associated_tech_identifiers) {
-			Technology const* tech = tech_manager.get_technology_by_identifier(tech_id);
-			if (tech) {
-				auto* mutable_tech = const_cast<Technology*>(tech);
-				mutable_tech->add_invention(&invention);
+			Technology* tech = tech_manager.get_technology_by_identifier(tech_id);
+			if (tech == nullptr) {
+				continue;
 			}
+			tech->add_invention(&invention);
 		}
 
 		invention.raw_associated_tech_identifiers.clear();
