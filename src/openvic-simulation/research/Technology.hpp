@@ -96,10 +96,14 @@ namespace OpenVic {
 	};
 
 	struct TechnologyManager {
+		friend struct InventionManager;
+
 		IdentifierRegistry<TechnologyFolder> IDENTIFIER_REGISTRY(technology_folder);
 		IdentifierRegistry<TechnologyArea> IDENTIFIER_REGISTRY(technology_area);
 		IdentifierRegistry<Technology> IDENTIFIER_REGISTRY_CUSTOM_PLURAL(technology, technologies);
 		IdentifierRegistry<TechnologySchool> IDENTIFIER_REGISTRY(technology_school);
+
+		IDENTIFIER_REGISTRY_NON_CONST_ACCESSORS_CUSTOM_PLURAL(technology, technologies);
 
 	public:
 		bool add_technology_folder(std::string_view identifier);
