@@ -58,7 +58,9 @@
 #define OV_HARDEN_ASSERT_VALID_ITERATOR(IT, FUNC_NAME)
 
 // clang-format off
-#   if defined(_GLIBCXX_ASSERTIONS) || _LIBCPP_HARDENING_MODE == _LIBCPP_HARDENING_MODE_FAST || _MSVC_STL_HARDENING == 1
+#   if defined(_GLIBCXX_ASSERTIONS)
+	|| (defined(_LIBCPP_HARDENING_MODE) && _LIBCPP_HARDENING_MODE == _LIBCPP_HARDENING_MODE_FAST)
+	|| _MSVC_STL_HARDENING == 1
 #warning "Unsupported standard library for memory hardening, hardening asserts will be ignored."
 #   endif
 // clang-format on
