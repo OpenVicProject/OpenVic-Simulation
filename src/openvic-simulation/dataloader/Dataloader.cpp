@@ -965,10 +965,6 @@ bool Dataloader::load_defines(
 
 	bool ret = true;
 
-	if (!definition_manager.get_mapmode_manager().setup_mapmodes(definition_manager.get_map_definition())) {
-		spdlog::critical_s("Failed to set up mapmodes!");
-		ret = false;
-	}
 	if (!_load_sound_effect_defines(definition_manager)) {
 		spdlog::critical_s("Failed to load sound effect defines");
 		ret = false;
@@ -1031,6 +1027,13 @@ bool Dataloader::load_defines(
 		parse_defines(lookup_file(buildings_file)).get_file_node()
 	)) {
 		spdlog::critical_s("Failed to load buildings!");
+		ret = false;
+	}
+	if (!definition_manager.get_mapmode_manager().setup_mapmodes(
+		definition_manager.get_map_definition(),
+		definition_manager.get_economy_manager().get_building_type_manager()
+	)) {
+		spdlog::critical_s("Failed to set up mapmodes!");
 		ret = false;
 	}
 	if (!_load_map_dir(definition_manager)) {

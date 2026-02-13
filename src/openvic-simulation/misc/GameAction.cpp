@@ -44,7 +44,7 @@ bool GameActionManager::VariantVisitor::operator() (set_ai_argument_t const& arg
 
 // Production
 bool GameActionManager::VariantVisitor::operator() (expand_province_building_argument_t const& argument) const {
-	const auto [province_index, building_instance_index] = argument;
+	const auto [province_index, province_building_index] = argument;
 	ProvinceInstance* province = instance_manager.get_map_instance().get_province_instance_by_index(province_index);
 
 	if (OV_unlikely(province == nullptr)) {
@@ -52,7 +52,7 @@ bool GameActionManager::VariantVisitor::operator() (expand_province_building_arg
 		return false;
 	}
 
-	return province->expand_building(building_instance_index);
+	return province->expand_building(province_building_index);
 }
 
 // Budget

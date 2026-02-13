@@ -2,6 +2,7 @@
 
 #include <plf_colony.h>
 
+#include "openvic-simulation/core/portable/ForwardableSpan.hpp"
 #include "openvic-simulation/economy/BuildingInstance.hpp"
 #include "openvic-simulation/economy/production/ResourceGatheringOperation.hpp"
 #include "openvic-simulation/military/UnitBranchedGetterMacro.hpp"
@@ -14,10 +15,11 @@
 #include "openvic-simulation/types/HasIndex.hpp"
 #include "openvic-simulation/types/OrderedContainers.hpp"
 #include "openvic-simulation/map/LifeRating.hpp"
+#include "openvic-simulation/types/FixedVector.hpp"
 #include "openvic-simulation/types/TypedIndices.hpp"
+#include "openvic-simulation/types/TypedSpan.hpp"
 #include "openvic-simulation/types/UnitBranchType.hpp"
 #include "openvic-simulation/utility/Containers.hpp"
-#include "openvic-simulation/core/portable/ForwardableSpan.hpp"
 
 namespace OpenVic {
 	struct BaseIssue;
@@ -95,7 +97,13 @@ namespace OpenVic {
 		memory::vector<ProvinceInstance const*> SPAN_PROPERTY(adjacent_nonempty_land_provinces);
 		Crime const* PROPERTY_RW(crime, nullptr);
 		ResourceGatheringOperation PROPERTY(rgo);
-		IdentifierRegistry<BuildingInstance> IDENTIFIER_REGISTRY(building, false);
+		memory::FixedVector<BuildingInstance> _buildings;
+		TypedSpan<province_building_index_t, BuildingInstance> buildings;
+	public:
+		constexpr TypedSpan<province_building_index_t, const BuildingInstance> get_buildings() const {
+			return buildings;
+		}
+	private:
 		memory::vector<ArmyInstance*> SPAN_PROPERTY(armies);
 		memory::vector<NavyInstance*> SPAN_PROPERTY(navies);
 		// The number of land regiments currently in the province, including those being transported by navies
@@ -158,7 +166,7 @@ namespace OpenVic {
 			return owner == nullptr;
 		}
 
-		bool expand_building(const building_instance_index_t index);
+		bool expand_building(const province_building_index_t index);
 
 		bool add_pop(Pop&& pop);
 		bool add_pop_vec(

@@ -5,6 +5,7 @@
 #include "openvic-simulation/country/CountryInstance.hpp"
 #include "openvic-simulation/defines/Define.hpp"
 #include "openvic-simulation/DefinitionManager.hpp"
+#include "openvic-simulation/economy/BuildingInstance.hpp"
 #include "openvic-simulation/economy/BuildingType.hpp"
 #include "openvic-simulation/economy/production/Employee.hpp"
 #include "openvic-simulation/economy/production/ProductionType.hpp"
@@ -12,6 +13,7 @@
 #include "openvic-simulation/map/ProvinceDefinition.hpp"
 #include "openvic-simulation/misc/GameRulesManager.hpp"
 #include "openvic-simulation/modifier/StaticModifierCache.hpp"
+#include "openvic-simulation/types/TypedIndices.hpp"
 
 using namespace OpenVic;
 
@@ -30,22 +32,19 @@ ProvinceInstance::ProvinceInstance(
 	game_rules_manager { province_instance_deps->game_rules_manager },
 	terrain_type { new_province_definition->get_default_terrain_type() },
 	rgo { province_instance_deps->rgo_deps },
-	pops_cache_by_type { province_instance_deps->pop_types }
+	pops_cache_by_type { province_instance_deps->pop_types },
+	_buildings(
+		new_province_definition->is_water()
+			? 0
+			: province_instance_deps->building_type_manager.get_province_building_types().size(),
+			[&province_instance_deps](const size_t i) -> BuildingInstance {
+				return *province_instance_deps->building_type_manager.get_province_building_types()[i];
+			}
+	),
+	buildings(_buildings)
 {
 	modifier_sum.set_this_source(this);
 	rgo.setup_location_ptr(*this);
-	if (!province_definition.is_water()) {
-		BuildingTypeManager const& building_type_manager = province_instance_deps->building_type_manager;
-		assert(building_type_manager.building_types_are_locked());
-		buildings.reserve(building_type_manager.get_province_building_types().size());
-
-		for (BuildingType const* building_type_ptr : building_type_manager.get_province_building_types()) {
-			BuildingType const& building_type = *building_type_ptr;
-			buildings.emplace_item(building_type.get_identifier(), building_type);
-		}
-	}
-
-	lock_buildings();
 }
 
 ModifierSum const& ProvinceInstance::get_owner_modifier_sum() const {
@@ -172,17 +171,8 @@ bool ProvinceInstance::remove_core(CountryInstance& core_to_remove, bool warn) {
 	return true;
 }
 
-bool ProvinceInstance::expand_building(const building_instance_index_t index) {
-	BuildingInstance* building = buildings.get_item_by_index(type_safe::get(index));
-	if (building == nullptr) {
-		spdlog::error_s(
-			"Trying to expand non-existent building index {} in province {}",
-			index, *this
-		);
-		return false;
-	}
-	
-	return building->expand();
+bool ProvinceInstance::expand_building(const province_building_index_t index) {
+	return buildings[index].expand();
 }
 
 void ProvinceInstance::_add_pop(Pop&& pop) {
@@ -299,7 +289,7 @@ void ProvinceInstance::update_modifier_sum(Date today, StaticModifierCache const
 		}
 	});
 
-	for (BuildingInstance const& building : buildings.get_items()) {
+	for (BuildingInstance const& building : buildings) {
 		modifier_sum.add_modifier(building.building_type);
 	}
 
@@ -380,7 +370,7 @@ void ProvinceInstance::update_gamestate(InstanceManager const& instance_manager)
 
 	const Date today = instance_manager.get_today();
 
-	for (BuildingInstance& building : buildings.get_items()) {
+	for (BuildingInstance& building : buildings) {
 		building.update_gamestate(today);
 	}
 	_update_pops(instance_manager.definition_manager.get_define_manager());
@@ -397,7 +387,7 @@ void ProvinceInstance::province_tick(
 	> reusable_vectors
 ) {
 	if (is_occupied()) {
-		occupation_duration++;
+		++occupation_duration;
 	}
 
 	if (!pops.empty()) {
@@ -412,7 +402,7 @@ void ProvinceInstance::province_tick(
 		}
 	}
 
-	for (BuildingInstance& building : buildings.get_items()) {
+	for (BuildingInstance& building : buildings) {
 		building.tick(today);
 	}
 	rgo.rgo_tick(reusable_vectors[0]);
@@ -499,17 +489,8 @@ bool ProvinceInstance::apply_history_to_province(ProvinceHistoryEntry const& ent
 
 	set_optional(life_rating, entry.get_life_rating());
 	set_optional(terrain_type, entry.get_terrain_type());
-	for (auto const& [building, level] : entry.get_province_buildings()) {
-		BuildingInstance* existing_entry = buildings.get_item_by_identifier(building->get_identifier());
-		if (existing_entry != nullptr) {
-			existing_entry->set_level(level);
-		} else {
-			spdlog::error_s(
-				"Trying to set level of non-existent province building {} to {} in province {}",
-				*building, level, *this
-			);
-			ret = false;
-		}
+	for (province_building_index_t i(0); i < entry.get_province_building_levels().size(); ++i) {
+		buildings[i].set_level(entry.get_province_building_levels()[i]);
 	}
 	// TODO: load state buildings - entry.get_state_buildings()
 	// TODO: party loyalties for each POP when implemented on POP side - entry.get_party_loyalties()

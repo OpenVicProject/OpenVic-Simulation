@@ -9,6 +9,7 @@
 #include <function2/function2.hpp>
 
 namespace OpenVic {
+	struct BuildingTypeManager;
 	struct MapmodeManager;
 	struct MapDefinition;
 	struct MapInstance;
@@ -78,6 +79,6 @@ namespace OpenVic {
 			uint8_t* target
 		) const;
 
-		bool setup_mapmodes(MapDefinition const& map_definition);
+		bool setup_mapmodes(MapDefinition const& map_definition, BuildingTypeManager const& building_type_manager);
 	};
 }

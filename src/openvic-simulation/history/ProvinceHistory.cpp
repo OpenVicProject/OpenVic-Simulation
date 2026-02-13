@@ -4,6 +4,7 @@
 
 #include "openvic-simulation/dataloader/NodeTools.hpp"
 #include "openvic-simulation/DefinitionManager.hpp"
+#include "openvic-simulation/economy/BuildingLevel.hpp"
 #include "openvic-simulation/economy/GoodDefinition.hpp"
 #include "openvic-simulation/map/ProvinceDefinition.hpp"
 #include "openvic-simulation/utility/Logger.hpp"
@@ -12,13 +13,26 @@
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;
 
-ProvinceHistoryEntry::ProvinceHistoryEntry(ProvinceDefinition const& new_province, Date new_date)
-	: HistoryEntry { new_date }, province { new_province } {}
+ProvinceHistoryEntry::ProvinceHistoryEntry(
+	BuildingTypeManager const& building_type_manager,
+	ProvinceDefinition const& new_province,
+	Date new_date
+) : HistoryEntry { new_date },
+	province { new_province },
+	_province_building_levels(
+		building_type_manager.get_province_building_types().size(),
+		building_level_t(0)
+	),
+	province_building_levels(_province_building_levels)
+{}
 
-ProvinceHistoryMap::ProvinceHistoryMap(ProvinceDefinition const& new_province) : province { new_province } {}
+ProvinceHistoryMap::ProvinceHistoryMap(ProvinceDefinition const& new_province, BuildingTypeManager const& new_building_type_manager)
+  : province { new_province },
+	building_type_manager { new_building_type_manager }
+ {}
 
 memory::unique_ptr<ProvinceHistoryEntry> ProvinceHistoryMap::_make_entry(Date date) const {
-	return memory::make_unique<ProvinceHistoryEntry>(province, date);
+	return memory::make_unique<ProvinceHistoryEntry>(building_type_manager, province, date);
 }
 
 bool ProvinceHistoryMap::_load_history_entry(
@@ -85,7 +99,17 @@ bool ProvinceHistoryMap::_load_history_entry(
 					return expect_strong_typedef<building_level_t>(
 						/* This is set to warn to prevent vanilla from always having errors because
 						 * of a duplicate railroad entry in the 1861.1.1 history of Manchester (278). */
-						map_callback(entry.province_buildings, building_type, true)
+						[
+							&entry,
+							optional_index = building_type->get_province_building_index()
+						](const building_level_t level) -> bool {
+							if (!optional_index.has_value()) {
+								return false;
+							}
+
+							entry.province_building_levels[optional_index.value()] = level;
+							return true;
+						}
 					)(value);
 				} else {
 					spdlog::error_s(
@@ -167,7 +191,7 @@ bool ProvinceHistoryMap::_load_history_entry(
 			)(node);
 			if (building_type != nullptr) {
 				if (!building_type->is_in_province()) {
-					ret &= map_callback(entry.state_buildings, building_type, true)(level);
+					ret &= map_callback(entry.state_buildings, building_type->index, true)(level);
 				} else {
 					spdlog::error_s(
 						"Attempted to add province building \"{}\" to state building list of province history for {}",
@@ -241,7 +265,13 @@ ProvinceHistoryMap* ProvinceHistoryManager::_get_or_make_province_history(Provin
 	decltype(province_histories)::iterator it = province_histories.find(&province);
 	if (it == province_histories.end()) {
 		const std::pair<decltype(province_histories)::iterator, bool> result =
-			province_histories.emplace(&province, ProvinceHistoryMap { province });
+			province_histories.emplace(
+				&province,
+				ProvinceHistoryMap {
+					province,
+					definition_manager.get_economy_manager().get_building_type_manager()
+				}
+			);
 		if (result.second) {
 			it = result.first;
 		} else {
