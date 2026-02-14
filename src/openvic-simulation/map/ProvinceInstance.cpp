@@ -12,6 +12,7 @@
 #include "openvic-simulation/map/ProvinceDefinition.hpp"
 #include "openvic-simulation/misc/GameRulesManager.hpp"
 #include "openvic-simulation/modifier/StaticModifierCache.hpp"
+#include "openvic-simulation/scripts/Condition.hpp"
 
 using namespace OpenVic;
 
@@ -416,6 +417,11 @@ void ProvinceInstance::province_tick(
 		building.tick(today);
 	}
 	rgo.rgo_tick(reusable_vectors[0]);
+}
+
+bool ProvinceInstance::evaluate_leaf(ConditionNode const& node) const {
+	// TODO: implement
+	return false;
 }
 
 bool ProvinceInstance::add_unit_instance_group(UnitInstanceGroup& group) {

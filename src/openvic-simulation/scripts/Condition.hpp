@@ -214,6 +214,8 @@ namespace OpenVic {
 		Condition(Condition&&) = default;
 	};
 
+	struct Context;
+
 	struct ConditionNode {
 		friend struct ConditionManager;
 		friend struct ConditionScript;
@@ -242,7 +244,12 @@ namespace OpenVic {
 			HasIdentifier const* new_condition_key_item = nullptr,
 			HasIdentifier const* new_condition_value_item = nullptr
 		);
+
+		bool evaluate_group(Context const& context) const;
+	public:
+		bool evaluate(Context const& context) const;
 	};
+
 
 	struct ConditionManager {
 	private:

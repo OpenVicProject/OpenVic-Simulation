@@ -1,4 +1,5 @@
 #include "Condition.hpp"
+#include "Context.hpp"
 
 #include <fmt/format.h>
 
@@ -27,6 +28,93 @@ ConditionNode::ConditionNode(
 	HasIdentifier const* new_condition_value_item
 ) : condition { new_condition }, value { std::move(new_value) }, valid { new_valid },
 	condition_key_item { new_condition_key_item }, condition_value_item { new_condition_key_item } {}
+
+bool ConditionNode::evaluate(Context const& context) const {
+	if (!is_valid()) {
+		return false;
+	}
+
+	if (!share_scope_type(condition->scope, context.get_scope_type())) {
+		return false;
+	}
+
+	if (share_value_type(condition->value_type, GROUP)) {
+		return evaluate_group(context);
+	}
+
+	return context.evaluate_leaf(*this);
+}
+
+bool ConditionNode::evaluate_group(Context const& context) const {
+	const std::string_view id = condition->get_identifier();
+	auto const& children = std::get<condition_list_t>(value);
+
+	if (id == "AND") {
+		for (auto const& node : children) {
+			if (!node.evaluate(context)) return false;
+		}
+		return true;
+	}
+
+	if (id == "OR") {
+		for (auto const& node : children) {
+			if (node.evaluate(context)) return true;
+		}
+		return false;
+	}
+
+	if (id == "NOT") {
+		for (auto const& node : children) {
+			if (node.evaluate(context)) return false;
+		}
+		return true;
+	}
+
+	const scope_type_t target_scope = condition->scope_change;
+	if (target_scope == NO_SCOPE) {
+		return false;
+	}
+
+	const bool is_iterator = id.starts_with("any_") || id.starts_with("all_");
+
+	if (is_iterator) {
+		const bool require_all = id.starts_with("all_");
+
+		auto sub_contexts = context.get_sub_contexts(target_scope);
+
+		if (require_all) {
+			if (sub_contexts.empty()) return false;
+			for (auto const& sub : sub_contexts) {
+				for (auto const& node : children) {
+					if (!node.evaluate(sub)) return false;
+				}
+			}
+			return false;
+		}
+		for (auto const& sub : sub_contexts) {
+			bool all_match = true;
+			for (auto const& node : children) {
+				if (!node.evaluate(sub)) {
+					all_match = false;
+					break;
+				}
+			}
+			if (all_match) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	auto sub_context = context.get_redirect_context(target_scope);
+
+	if (!sub_context) return false;
+
+	for (auto const& node : children) {
+		if (!node.evaluate(*sub_context)) return false;
+	}
+	return true;
+}
 
 bool ConditionManager::add_condition(
 	std::string_view identifier, value_type_t value_type, scope_type_t scope, scope_type_t scope_change,
