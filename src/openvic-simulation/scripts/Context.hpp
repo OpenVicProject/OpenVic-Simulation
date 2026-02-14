@@ -28,8 +28,8 @@ namespace OpenVic {
 
 		bool evaluate_leaf(ConditionNode const& node) const;
 
-		std::vector<Context> get_sub_contexts(scope_type_t target) const;
+		std::vector<Context> get_sub_contexts(std::string_view condition_id, scope_type_t target) const;
 
-		std::optional<Context> get_redirect_context(scope_type_t target) const;
+		std::optional<Context> get_redirect_context(std::string_view condition_id, scope_type_t target) const;
 	};
 }

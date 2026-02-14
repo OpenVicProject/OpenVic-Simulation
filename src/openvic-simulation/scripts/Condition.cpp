@@ -80,7 +80,7 @@ bool ConditionNode::evaluate_group(Context const& context) const {
 	if (is_iterator) {
 		const bool require_all = id.starts_with("all_");
 
-		auto sub_contexts = context.get_sub_contexts(target_scope);
+		auto sub_contexts = context.get_sub_contexts(id, target_scope);
 
 		if (require_all) {
 			if (sub_contexts.empty()) return false;
@@ -106,7 +106,7 @@ bool ConditionNode::evaluate_group(Context const& context) const {
 		return false;
 	}
 
-	auto sub_context = context.get_redirect_context(target_scope);
+	auto sub_context = context.get_redirect_context(id, target_scope);
 
 	if (!sub_context) return false;
 

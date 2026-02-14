@@ -36,20 +36,34 @@ bool Context::evaluate_leaf(ConditionNode const& node) const {
 	);
 }
 
-std::vector<Context> Context::get_sub_contexts(scope_type_t target) const {
+std::vector<Context> Context::get_sub_contexts(std::string_view condition_id, scope_type_t target) const {
 	std::vector<Context> result;
 
 	if (std::holds_alternative<CountryInstance const*>(ptr)) {
 		CountryInstance const* country = std::get<CountryInstance const*>(ptr);
 
 		if (target == scope_type_t::PROVINCE) {
-			for (ProvinceInstance const* prov : country->get_owned_provinces()) {
-				result.emplace_back(prov);
+			if (condition_id == "any_owned_province") {
+				for (ProvinceInstance const* prov : country->get_owned_provinces()) {
+					result.emplace_back(prov);
+				}
+			}
+			else if (condition_id == "any_controlled_province") {
+				for (ProvinceInstance const* prov : country->get_controlled_provinces()) {
+					result.emplace_back(prov);
+				}
+			}
+			else if (condition_id == "any_core" || condition_id == "all_core") {
+				for (ProvinceInstance const* prov : country->get_core_provinces()) {
+					result.emplace_back(prov);
+				}
 			}
 		}
 		else if (target == scope_type_t::STATE) {
-			for (State const* state : country->get_states()) {
-				result.emplace_back(state);
+			if (condition_id == "any_state") {
+				for (State const* state : country->get_states()) {
+					result.emplace_back(state);
+				}
 			}
 		}
 	}
@@ -62,12 +76,17 @@ std::vector<Context> Context::get_sub_contexts(scope_type_t target) const {
 	return result;
 }
 
-std::optional<Context> Context::get_redirect_context(scope_type_t target) const {
+std::optional<Context> Context::get_redirect_context(std::string_view condition_id, scope_type_t target) const {
 	if (std::holds_alternative<ProvinceInstance const*>(ptr)) {
 		ProvinceInstance const* province = std::get<ProvinceInstance const*>(ptr);
 
 		if (target == scope_type_t::COUNTRY) {
-			return Context(province->get_owner());
+			if (condition_id == "owner") {
+				return Context(province->get_owner());
+			}
+			if (condition_id == "controller") {
+				return Context(province->get_controller());
+			}
 		}
 	}
 
