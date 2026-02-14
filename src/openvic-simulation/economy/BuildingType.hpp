@@ -1,5 +1,7 @@
 #pragma once
 
+#include <optional>
+
 #include "openvic-simulation/modifier/Modifier.hpp"
 #include "openvic-simulation/economy/BuildingLevel.hpp"
 #include "openvic-simulation/types/Date.hpp"
@@ -72,9 +74,15 @@ namespace OpenVic {
 		bool PROPERTY(steam); // only in steamer shipyard
 		bool PROPERTY(capital); // only in naval base
 		bool PROPERTY_CUSTOM_PREFIX(port, is); // only in naval base
+		std::optional<province_building_index_t> PROPERTY(province_building_index);
 
 	public:
-		BuildingType(index_t new_index, std::string_view identifier, building_type_args_t& building_type_args);
+		BuildingType(
+			index_t new_index,
+			std::optional<province_building_index_t> new_province_building_index,
+			std::string_view new_identifier,
+			building_type_args_t& building_type_args
+		);
 		BuildingType(BuildingType&&) = default;
 	};
 
@@ -83,6 +91,7 @@ namespace OpenVic {
 		IdentifierRegistry<BuildingType> IDENTIFIER_REGISTRY(building_type);
 		string_set_t PROPERTY(building_type_types);
 		memory::vector<BuildingType const*> SPAN_PROPERTY(province_building_types);
+		BuildingType const* PROPERTY(infrastructure_building_type);
 		BuildingType const* PROPERTY(port_building_type);
 
 	public:

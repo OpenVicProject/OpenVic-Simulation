@@ -1,19 +1,24 @@
 #include "BuildingType.hpp"
 
+#include <optional>
+
 #include "openvic-simulation/economy/GoodDefinition.hpp"
 #include "openvic-simulation/economy/production/ProductionType.hpp"
 #include "openvic-simulation/modifier/ModifierEffectCache.hpp"
 #include "openvic-simulation/modifier/ModifierManager.hpp"
+#include "openvic-simulation/types/TypedIndices.hpp"
 
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;
 
 BuildingType::BuildingType(
 	index_t new_index,
-	std::string_view identifier,
+	std::optional<province_building_index_t> new_province_building_index,
+	std::string_view new_identifier,
 	building_type_args_t& building_type_args
 ) : HasIndex { new_index },
-	Modifier { identifier, std::move(building_type_args.modifier), modifier_type_t::BUILDING },
+	Modifier { new_identifier, std::move(building_type_args.modifier), modifier_type_t::BUILDING },
+	province_building_index { new_province_building_index },
 	type { building_type_args.type },
 	on_completion { building_type_args.on_completion },
 	completion_size { building_type_args.completion_size },
@@ -40,7 +45,7 @@ BuildingType::BuildingType(
 	capital { building_type_args.capital },
 	port { building_type_args.port } {}
 
-BuildingTypeManager::BuildingTypeManager() : port_building_type { nullptr } {}
+BuildingTypeManager::BuildingTypeManager() : infrastructure_building_type { nullptr }, port_building_type { nullptr } {}
 
 bool BuildingTypeManager::add_building_type(
 	std::string_view identifier, BuildingType::building_type_args_t& building_type_args
@@ -49,14 +54,21 @@ bool BuildingTypeManager::add_building_type(
 		spdlog::error_s("Invalid building identifier - empty!");
 		return false;
 	}
+	
+	std::optional<province_building_index_t> province_building_index = building_type_args.in_province
+		? std::make_optional<province_building_index_t>(province_building_types.size())
+		: std::nullopt;
 
 	const bool ret = building_types.emplace_item(
 		identifier,
-		BuildingType::index_t { get_building_type_count() }, identifier, building_type_args
+		BuildingType::index_t { get_building_type_count() }, province_building_index, identifier, building_type_args
 	);
 
 	if (ret) {
 		building_type_types.emplace(building_type_args.type);
+		if (province_building_index.has_value()) {
+			province_building_types.emplace_back(&building_types.back());
+		}
 	}
 
 	return ret;
@@ -146,13 +158,8 @@ bool BuildingTypeManager::load_buildings_file(
 			this_building_type_effects.min_level, append_string_views(min_prefix, building_type.get_identifier()),
 			FORMAT_x1_0DP_NEG
 		);
-
 		if (building_type.is_in_province()) {
-			province_building_types.emplace_back(&building_type);
-		}
-
-		if (building_type.is_port()) {
-			if (building_type.is_in_province()) {
+			if (building_type.is_port()) {
 				if (port_building_type == nullptr) {
 					port_building_type = &building_type;
 				} else {
@@ -162,13 +169,30 @@ bool BuildingTypeManager::load_buildings_file(
 					);
 					ret = false;
 				}
-			} else {
+			} else if (building_type.get_type() == "infrastructure") {
+				if (infrastructure_building_type == nullptr) {
+					infrastructure_building_type = &building_type;
+				} else {
+					spdlog::error_s(
+						"Building type {} is marked as a infrastructure, but we are already using {} as the infrastructure building type!",
+						building_type, *infrastructure_building_type
+					);
+					ret = false;
+				}
+			}
+		} else {
+			if (building_type.is_port()) {
 				spdlog::error_s(
 					"Building type {} is marked as a port, but is not a province building!", building_type
 				);
 				ret = false;
 			}
 		}
+	}
+
+	if (infrastructure_building_type == nullptr) {
+		spdlog::error_s("No infrastructure building type found!");
+		ret = false;
 	}
 
 	if (port_building_type == nullptr) {

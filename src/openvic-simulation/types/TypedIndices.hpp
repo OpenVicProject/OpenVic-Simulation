@@ -17,6 +17,10 @@
 			using strong_typedef::strong_typedef; \
 		}; \
 	} \
+	namespace std { \
+		template <> \
+		struct hash<OpenVic::name> : type_safe::hashable<OpenVic::name> {}; \
+	} \
 	template<> \
 	struct fmt::formatter<OpenVic::name> : fmt::formatter<base_type> { \
 		fmt::format_context::iterator format(OpenVic::name const& value, fmt::format_context& ctx) const { \
@@ -26,8 +30,8 @@
 #define TYPED_INDEX(name) TYPED_INDEX_CUSTOM(name, std::size_t)
 
 TYPED_INDEX(bookmark_index_t)
-TYPED_INDEX(building_instance_index_t)
 TYPED_INDEX(building_type_index_t)
+TYPED_INDEX(province_building_index_t)
 TYPED_INDEX(country_index_t)
 TYPED_INDEX(crime_index_t)
 TYPED_INDEX(good_index_t)
@@ -58,6 +62,10 @@ namespace OpenVic {
 		type_safe::strong_typedef_op::mixed_subtraction<province_index_t, std::uint16_t> {
 		using strong_typedef::strong_typedef;
 	};
+}
+namespace std {
+	template <>
+	struct hash<OpenVic::province_index_t> : type_safe::hashable<OpenVic::province_index_t> {};
 }
 template<>
 struct fmt::formatter<OpenVic::province_index_t> : fmt::formatter<std::uint16_t> {

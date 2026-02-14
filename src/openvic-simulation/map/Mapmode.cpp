@@ -197,7 +197,7 @@ static constexpr auto shaded_mapmode(ordered_map<KeyType const*, ValueType> cons
 	};
 }
 
-bool MapmodeManager::setup_mapmodes(MapDefinition const& map_definition) {
+bool MapmodeManager::setup_mapmodes(MapDefinition const& map_definition, BuildingTypeManager const& building_type_manager) {
 	if (mapmodes_are_locked()) {
 		spdlog::error_s("Cannot setup mapmodes - already locked!");
 		return false;
@@ -226,18 +226,26 @@ bool MapmodeManager::setup_mapmodes(MapDefinition const& map_definition) {
 	ret &= add_mapmode("mapmode_militancy", Mapmode::ERROR_MAPMODE.get_colour_func(), "MAPMODE_3");
 	ret &= add_mapmode("mapmode_diplomatic", Mapmode::ERROR_MAPMODE.get_colour_func(), "MAPMODE_4");
 	ret &= add_mapmode("mapmode_region", get_colour_mapmode(&ProvinceDefinition::get_region), "MAPMODE_5");
-	ret &= add_mapmode(
-		"mapmode_infrastructure",
-		[](
-			MapInstance const& map_instance, ProvinceInstance const& province,
-			CountryInstance const* player_country, ProvinceInstance const* selected_province
-		) -> Mapmode::base_stripe_t {
-			BuildingInstance const* railroad = province.get_building_by_identifier("railroad");
-			if (railroad != nullptr) {
+	BuildingType const* const infrastructure_building_type_ptr = building_type_manager.get_infrastructure_building_type();
+	if (infrastructure_building_type_ptr == nullptr) {
+		spdlog::error_s("Cannot setup infrastructure mapmode because infrastructure_building_type is null.");
+		ret = false;
+	} else if (!infrastructure_building_type_ptr->get_province_building_index().has_value()) {
+		spdlog::error_s("Cannot setup infrastructure mapmode because infrastructure_building_type has no province_building_index.");
+		ret = false;
+	} else {
+		ret &= add_mapmode(
+			"mapmode_infrastructure",
+			[&building_type_manager, infrastructure_building_type_ptr](
+				MapInstance const& map_instance, ProvinceInstance const& province,
+				CountryInstance const* player_country, ProvinceInstance const* selected_province
+			) -> Mapmode::base_stripe_t {
+				BuildingType const& infrastructure_building_type = *infrastructure_building_type_ptr;
+				BuildingInstance const& infrastructure = province.get_buildings()[infrastructure_building_type.get_province_building_index().value()];
 				const colour_argb_t::value_type val = colour_argb_t::colour_traits::component_from_fraction(
-					type_safe::get(railroad->get_level()), type_safe::get(railroad->building_type.get_max_level()) + 1, 0.5f, 1.0f
+					type_safe::get(infrastructure.get_level()), type_safe::get(infrastructure_building_type.get_max_level()) + 1, 0.5f, 1.0f
 				);
-				switch (railroad->get_expansion_state()) {
+				switch (infrastructure.get_expansion_state()) {
 				case BuildingInstance::ExpansionState::CannotExpand:
 					return colour_argb_t { val, 0, 0, ALPHA_VALUE };
 				case BuildingInstance::ExpansionState::CanExpand:
@@ -245,11 +253,11 @@ bool MapmodeManager::setup_mapmodes(MapDefinition const& map_definition) {
 				default:
 					return colour_argb_t { 0, val, 0, ALPHA_VALUE };
 				}
-			}
-			return colour_argb_t::null();
-		},
-		"MAPMODE_6"
-	);
+				return colour_argb_t::null();
+			},
+			"MAPMODE_6"
+		);
+	}
 	ret &= add_mapmode("mapmode_colonial", Mapmode::ERROR_MAPMODE.get_colour_func(), "MAPMODE_7");
 	ret &= add_mapmode("mapmode_administrative", Mapmode::ERROR_MAPMODE.get_colour_func(), "MAPMODE_8");
 	ret &= add_mapmode("mapmode_recruitment", Mapmode::ERROR_MAPMODE.get_colour_func(), "MAPMODE_9");
