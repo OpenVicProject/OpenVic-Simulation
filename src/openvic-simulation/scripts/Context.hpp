@@ -19,10 +19,19 @@ namespace OpenVic {
 			State const*,
 			Pop const*> ptr;
 
-		Context(CountryInstance const* p) : ptr(p) {}
-		Context(ProvinceInstance const* p) : ptr(p) {}
-		Context(State const* p) : ptr(p) {}
-		Context(Pop const* p) : ptr(p) {}
+		Context const* this_scope = nullptr;
+		Context const* from_scope = nullptr;
+
+		Context(CountryInstance const* p) : ptr(p), this_scope(this) {}
+		Context(ProvinceInstance const* p) : ptr(p), this_scope(this) {}
+		Context(State const* p) : ptr(p), this_scope(this) {}
+		Context(Pop const* p) : ptr(p), this_scope(this) {}
+
+		Context(
+			auto* p,
+			Context const* this_ctx,
+			Context const* from_ctx
+		) : ptr(p), this_scope(this_ctx), from_scope(from_ctx) {}
 
 		scope_type_t get_scope_type() const;
 
@@ -31,5 +40,9 @@ namespace OpenVic {
 		std::vector<Context> get_sub_contexts(std::string_view condition_id, scope_type_t target) const;
 
 		std::optional<Context> get_redirect_context(std::string_view condition_id, scope_type_t target) const;
+
+		Context make_child(auto* p) const {
+			return Context(p, this->this_scope, this);
+		}
 	};
 }
