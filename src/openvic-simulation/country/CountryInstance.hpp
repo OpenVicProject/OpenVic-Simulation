@@ -75,6 +75,7 @@ namespace OpenVic {
 	struct TechnologySchool;
 	struct UnitInstanceGroup;
 	struct UnitTypeManager;
+	struct ConditionNode;
 
 	static constexpr Timespan RECENT_WAR_LOSS_TIME_LIMIT = Timespan::from_years(5);
 
@@ -602,6 +603,8 @@ namespace OpenVic {
 		fixed_point_t calculate_research_cost(Technology const& technology) const;
 		bool can_research_tech(Technology const& technology, const Date today) const;
 		void start_research(Technology const& technology, const Date today);
+
+		bool evaluate_leaf(ConditionNode const& node) const;
 
 		// Sets the investment of each country in the map (rather than adding to them), leaving the rest unchanged.
 		void apply_foreign_investments(

@@ -10,6 +10,7 @@
 #include "openvic-simulation/population/PopType.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
 #include "openvic-simulation/utility/Containers.hpp"
+#include "openvic-simulation/scripts/Condition.hpp"
 
 using namespace OpenVic;
 
@@ -93,6 +94,13 @@ void State::update_gamestate() {
 
 	industrial_power = total_factory_levels_in_state * workforce_scalar;
 	_update_country();
+}
+
+bool State::evaluate_leaf(ConditionNode const& node) const {
+	std::string_view const& id = node.get_condition()->get_identifier();
+
+	spdlog::warn_s("Condition {} not implemented in State::evaluate_leaf", id);
+	return false;
 }
 
 void State::_update_country() {

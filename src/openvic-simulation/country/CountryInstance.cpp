@@ -50,6 +50,7 @@
 #include "openvic-simulation/utility/Containers.hpp"
 #include "openvic-simulation/utility/Logger.hpp"
 #include "openvic-simulation/core/Typedefs.hpp"
+#include "openvic-simulation/scripts/Condition.hpp"
 
 using namespace OpenVic;
 
@@ -1176,6 +1177,125 @@ void CountryInstance::start_research(Technology const& technology, const Date to
 	invested_research_points.set(0);
 
 	_update_current_tech(today);
+}
+
+bool CountryInstance::evaluate_leaf(ConditionNode const& node) const {
+	std::string_view const& id = node.get_condition()->get_identifier();
+
+	// TODO: https://vic2.paradoxwikis.com/List_of_conditions#Country_Scope Implement all of these
+
+	if (id == "ai") {
+		bool expected = std::get<bool>(node.get_value());
+		return is_ai() == expected;
+	}
+
+	if (id == "average_consciousness") {
+		fixed_point_t expected = std::get<fixed_point_t>(node.get_value());
+		return get_average_consciousness() >= expected;
+	}
+
+	if (id == "average_militancy") {
+		fixed_point_t expected = std::get<fixed_point_t>(node.get_value());
+		return get_average_militancy() >= expected;
+	}
+
+	if (id == "badboy") {
+		fixed_point_t expected_ratio = std::get<fixed_point_t>(node.get_value());
+		return get_infamy_untracked() >= (expected_ratio * fixed_point_t(25));
+	}
+
+	if (id == "civilized") {
+		bool expected = std::get<bool>(node.get_value());
+		return is_civilised() == expected;
+	}
+
+	if (id == "colonial_nation") {
+		bool expected = std::get<bool>(node.get_value());
+		return is_colonial(colony_status_t::COLONY) == expected;
+	}
+
+	if (id == "exists") {
+		bool expected = std::get<bool>(node.get_value());
+		return exists() == expected;
+	}
+
+	if (id == "industrial_score") {
+		fixed_point_t expected = std::get<fixed_point_t>(node.get_value());
+		return get_industrial_power_untracked() >= expected;
+	}
+
+	if (id == "is_disarmed") {
+		bool expected = std::get<bool>(node.get_value());
+		return is_disarmed() == expected;
+	}
+
+	if (id == "is_greater_power") {
+		bool expected = std::get<bool>(node.get_value());
+		return is_great_power() == expected;
+	}
+
+	if (id == "is_mobilised") {
+		bool expected = std::get<bool>(node.get_value());
+		return is_mobilised() == expected;
+	}
+
+	if (id == "is_secondary_power") {
+		bool expected = std::get<bool>(node.get_value());
+		return is_secondary_power() == expected;
+	}
+
+	if (id == "num_of_cities") {
+		uint64_t expected = std::get<uint64_t>(node.get_value());
+		return get_owned_provinces().size()	>= expected;
+	}
+
+	if (id == "num_of_ports") {
+		uint64_t expected = std::get<uint64_t>(node.get_value());
+		return get_port_count() >= expected;
+	}
+
+	if (id == "number_of_states") {
+		uint64_t expected = std::get<uint64_t>(node.get_value());
+		return get_states().size() >= expected;
+	}
+
+	if (id == "prestige") {
+		fixed_point_t expected = std::get<fixed_point_t>(node.get_value());
+		return get_prestige_untracked() >= expected;
+	}
+
+	if (id == "plurality") {
+		fixed_point_t expected = std::get<fixed_point_t>(node.get_value());
+		return get_plurality_untracked() >= expected;
+	}
+
+	if (id == "total_amount_of_ships") {
+		uint64_t expected = std::get<uint64_t>(node.get_value());
+		return get_ship_count() >= expected;
+	}
+
+	if (id == "rank") {
+		uint64_t expected = std::get<uint64_t>(node.get_value());
+		return get_total_rank() >= expected;
+	}
+
+	if (id == "tag") {
+		memory::string const& expected = std::get<memory::string>(node.get_value());
+		return country_definition.get_identifier() == expected;
+	}
+
+	if (id == "war") {
+		bool expected = std::get<bool>(node.get_value());
+		return is_at_war() == expected;
+	}
+
+	if (id == "war_exhaustion") {
+		fixed_point_t expected = std::get<fixed_point_t>(node.get_value());
+		return get_war_exhaustion() >= expected;
+	}
+
+	spdlog::warn_s("Condition {} not implemented in CountryInstance::evaluate_leaf", node.get_condition() ? node.get_condition()->get_identifier() : "NULL");
+	return false;
 }
 
 void CountryInstance::apply_foreign_investments(
