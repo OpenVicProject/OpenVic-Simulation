@@ -25,6 +25,7 @@ namespace OpenVic {
 	struct StateManager;
 	struct StateSet;
 	struct Strata;
+	struct ConditionNode;
 
 	struct State : PopsAggregate {
 		friend struct StateManager;
@@ -67,6 +68,8 @@ namespace OpenVic {
 		}
 
 		void update_gamestate();
+
+		bool evaluate_leaf(ConditionNode const& node) const;
 	};
 
 	struct Region;

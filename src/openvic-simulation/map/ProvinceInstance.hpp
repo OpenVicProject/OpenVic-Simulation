@@ -224,6 +224,8 @@ namespace OpenVic {
 			> reusable_vectors
 		);
 
+		bool evaluate_leaf(ConditionNode const& node) const;
+
 		bool add_unit_instance_group(UnitInstanceGroup& group);
 		bool remove_unit_instance_group(UnitInstanceGroup const& group);
 
