@@ -35,6 +35,8 @@ namespace OpenVic {
 
 		scope_type_t get_scope_type() const;
 
+		std::string_view get_identifier() const;
+
 		bool evaluate_leaf(ConditionNode const& node) const;
 
 		std::vector<Context> get_sub_contexts(std::string_view condition_id, scope_type_t target) const;

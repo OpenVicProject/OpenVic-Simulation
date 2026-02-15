@@ -27,6 +27,29 @@ scope_type_t Context::get_scope_type() const {
 	);
 }
 
+std::string_view Context::get_identifier() const {
+	return std::visit([](auto const* p) -> std::string_view {
+		if (!p) return "";
+
+		using T = std::decay_t<decltype(p)>;
+
+		if constexpr (std::is_same_v<T, CountryInstance const*>) {
+			return p->get_identifier();
+		}
+		else if constexpr (std::is_same_v<T, ProvinceInstance const*>) {
+			return p->get_identifier();
+		}
+		else if constexpr (std::is_same_v<T, State const*>) {
+			return p->get_identifier();
+		}
+		else if constexpr (std::is_same_v<T, Pop const*>) {
+			return "";
+		}
+
+		return "";
+	}, ptr);
+}
+
 bool Context::evaluate_leaf(ConditionNode const& node) const {
 	return std::visit(
 		[&](auto* p) -> bool {
