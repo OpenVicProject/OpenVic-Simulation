@@ -13,6 +13,9 @@ namespace OpenVic {
 		type_safe::strong_typedef_op::relational_comparison<pop_id_in_province_t>,
 		type_safe::strong_typedef_op::integer_arithmetic<pop_id_in_province_t> {
 		using strong_typedef::strong_typedef;
+
+		constexpr bool is_null() const { return type_safe::get(*this) == 0; }
+    	constexpr bool operator!() const { return is_null(); }
 	};
 }
 namespace std {

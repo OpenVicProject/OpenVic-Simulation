@@ -8,6 +8,7 @@
 
 #include <type_safe/strong_typedef.hpp>
 
+#include "openvic-simulation/population/PopIdInProvince.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
 #include "openvic-simulation/types/TypedIndices.hpp"
 #include "openvic-simulation/types/UniqueId.hpp"
@@ -85,7 +86,8 @@ X(create_leader, country_index_t, unit_branch_t) \
 X(set_use_leader, unique_id_t, bool) \
 X(set_auto_create_leaders, country_index_t, bool) \
 X(set_auto_assign_leaders, country_index_t, bool) \
-X(set_mobilise, country_index_t, bool)
+X(set_mobilise, country_index_t, bool) \
+X(start_land_unit_recruitment, regiment_type_index_t, province_index_t, pop_id_in_province_t)
 // <--- ADD NEW GAME ACTIONS HERE (copy/edit an X(...) line)
 
 //the argument type alias for each game action
