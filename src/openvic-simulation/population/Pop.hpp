@@ -4,12 +4,13 @@
 
 #include "openvic-simulation/core/portable/ForwardableSpan.hpp"
 #include "openvic-simulation/economy/production/ArtisanalProducer.hpp"
+#include "openvic-simulation/population/PopIdInProvince.hpp"
 #include "openvic-simulation/population/PopNeedsMacro.hpp"
+#include "openvic-simulation/population/PopSize.hpp"
 #include "openvic-simulation/types/fixed_point/Atomic.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPointMap.hpp"
 #include "openvic-simulation/types/IndexedFlatMap.hpp"
-#include "openvic-simulation/population/PopSize.hpp"
 #include "openvic-simulation/types/UnitBranchType.hpp"
 #include "openvic-simulation/utility/Containers.hpp"
 
@@ -89,6 +90,9 @@ namespace OpenVic {
 
 		static constexpr pop_size_t MAX_SIZE = std::numeric_limits<type_safe::underlying_type<pop_size_t>>::max();
 
+	public:
+		const pop_id_in_province_t id_in_province;
+
 	private:
 		MarketInstance& market_instance;
 		std::optional<ArtisanalProducer> artisanal_producer_optional;
@@ -163,7 +167,8 @@ namespace OpenVic {
 		Pop(
 			PopBase const& pop_base,
 			decltype(supporter_equivalents_by_ideology)::keys_span_type ideology_keys,
-			PopDeps const& pop_deps
+			PopDeps const& pop_deps,
+			const pop_id_in_province_t new_id_in_province
 		);
 
 		memory::string get_pop_context_text() const;

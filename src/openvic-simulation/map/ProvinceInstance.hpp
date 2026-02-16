@@ -5,16 +5,17 @@
 #include "openvic-simulation/core/portable/ForwardableSpan.hpp"
 #include "openvic-simulation/economy/BuildingInstance.hpp"
 #include "openvic-simulation/economy/production/ResourceGatheringOperation.hpp"
+#include "openvic-simulation/map/LifeRating.hpp"
 #include "openvic-simulation/military/UnitBranchedGetterMacro.hpp"
 #include "openvic-simulation/modifier/ModifierSum.hpp"
 #include "openvic-simulation/population/Pop.hpp"
+#include "openvic-simulation/population/PopIdInProvince.hpp"
 #include "openvic-simulation/population/PopsAggregate.hpp"
 #include "openvic-simulation/types/ColonyStatus.hpp"
 #include "openvic-simulation/types/FlagStrings.hpp"
 #include "openvic-simulation/types/HasIdentifier.hpp"
 #include "openvic-simulation/types/HasIndex.hpp"
 #include "openvic-simulation/types/OrderedContainers.hpp"
-#include "openvic-simulation/map/LifeRating.hpp"
 #include "openvic-simulation/types/FixedVector.hpp"
 #include "openvic-simulation/types/TypedIndices.hpp"
 #include "openvic-simulation/types/TypedSpan.hpp"
@@ -115,6 +116,7 @@ namespace OpenVic {
 		OV_UNIT_BRANCHED_GETTER_CONST(get_unit_instance_groups, armies, navies);
 
 	private:
+		pop_id_in_province_t last_pop_id{0};
 		memory::colony<Pop> PROPERTY(pops); // TODO - replace with a more easily vectorisable container?		
 		void _add_pop(Pop&& pop);
 		void _update_pops(MilitaryDefines const& military_defines);
@@ -168,7 +170,6 @@ namespace OpenVic {
 
 		bool expand_building(const province_building_index_t index);
 
-		bool add_pop(Pop&& pop);
 		bool add_pop_vec(
 			std::span<const PopBase> pop_vec,
 			PopDeps const& pop_deps
