@@ -224,5 +224,11 @@ namespace OpenVic {
 
 		void setup_pop_test_values(IssueManager const& issue_manager);
 		memory::colony<Pop>& get_mutable_pops();
+	private:
+		template<typename T>
+		static std::conditional_t<std::is_const_v<T>, Pop const*, Pop*> _find_pop_by_id(T& self, const pop_id_in_province_t pop_id);
+	public:
+		Pop* find_pop_by_id(const pop_id_in_province_t pop_id);
+		Pop const* find_pop_by_id(const pop_id_in_province_t pop_id) const;
 	};
 }

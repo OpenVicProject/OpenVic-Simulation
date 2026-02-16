@@ -1,6 +1,8 @@
 #include "ProvinceInstance.hpp"
 #include "ProvinceInstanceDeps.hpp"
 
+#include <type_traits>
+
 #include "openvic-simulation/country/CountryDefinition.hpp"
 #include "openvic-simulation/country/CountryInstance.hpp"
 #include "openvic-simulation/defines/MilitaryDefines.hpp"
@@ -519,3 +521,20 @@ void ProvinceInstance::setup_pop_test_values(IssueManager const& issue_manager) 
 memory::colony<Pop>& ProvinceInstance::get_mutable_pops() {
 	return pops;
 }
+
+template<typename T>
+std::conditional_t<std::is_const_v<T>, Pop const*, Pop*> ProvinceInstance::_find_pop_by_id(T& self, const pop_id_in_province_t pop_id) {
+	if (pop_id.is_null()) {
+		return nullptr;
+	}
+
+	for (std::conditional_t<std::is_const_v<T>, Pop const&, Pop&>& pop : self.pops) {
+		if (pop.id_in_province == pop_id) {
+			return &pop;
+		}
+	}
+
+	return nullptr;
+}
+Pop* ProvinceInstance::find_pop_by_id(const pop_id_in_province_t pop_id) { return _find_pop_by_id(*this, pop_id); }
+Pop const* ProvinceInstance::find_pop_by_id(const pop_id_in_province_t pop_id) const { return _find_pop_by_id(*this, pop_id); }

@@ -1,8 +1,9 @@
 #include "GameAction.hpp"
 
+#include "openvic-simulation/core/Typedefs.hpp"
 #include "openvic-simulation/DefinitionManager.hpp"
 #include "openvic-simulation/InstanceManager.hpp"
-#include "openvic-simulation/core/Typedefs.hpp"
+#include "openvic-simulation/map/ProvinceInstance.hpp"
 
 using namespace OpenVic;
 
@@ -373,4 +374,37 @@ bool GameActionManager::VariantVisitor::operator() (set_mobilise_argument_t cons
 	country->set_mobilised(new_is_mobilised);
 
 	return old_mobilise != country->is_mobilised();
+}
+
+bool GameActionManager::VariantVisitor::operator() (start_land_unit_recruitment_argument_t const& argument) const {
+	const auto [regiment_type_index, province_index, pop_id_in_province] = argument;
+
+	RegimentType const* const regiment_type = instance_manager.definition_manager
+		.get_military_manager()
+		.get_unit_type_manager()
+		.get_regiment_type_by_index(regiment_type_index);
+	if (OV_unlikely(regiment_type == nullptr)) {
+		spdlog::error_s("GAME_ACTION_START_LAND_UNIT_RECRUITMENT called with invalid regiment type index: {}", regiment_type_index);
+		return false;
+	}
+
+	ProvinceInstance* province = instance_manager
+		.get_map_instance()
+		.get_province_instance_by_index(province_index);
+	if (OV_unlikely(province == nullptr)) {
+		spdlog::error_s("GAME_ACTION_START_LAND_UNIT_RECRUITMENT called with invalid province index: {}", province_index);
+		return false;
+	}
+
+	Pop* pop = province->find_pop_by_id(pop_id_in_province);
+	if (OV_unlikely(pop == nullptr)) {
+		spdlog::error_s("GAME_ACTION_START_LAND_UNIT_RECRUITMENT called with invalid pop_id_in_province: {}", pop_id_in_province);
+		return false;
+	}
+
+	//these TODO's should be implemented in ProvinceInstance and/or some military type
+	//TODO verify pop's cultural status is acceptable for regiment type
+	//TODO verify pop is recruitable and has enough size (pop.try_recruit())
+	//TODO actually instantiate a regiment in recruitment state
+	return false;
 }
