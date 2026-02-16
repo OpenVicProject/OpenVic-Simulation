@@ -242,6 +242,7 @@ bool InstanceManager::load_bookmark(Bookmark const& new_bookmark) {
 		country_instance_manager,
 		// TODO - the following argument is for generating test pop attributes
 		definition_manager.get_politics_manager().get_issue_manager(),
+		definition_manager.get_define_manager().get_military_defines(),
 		pop_deps
 	);
 

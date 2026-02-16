@@ -13,6 +13,7 @@ namespace OpenVic {
 	struct IssueManager;
 	struct MapDefinition;
 	struct MarketInstance;
+	struct MilitaryDefines;
 	struct PopDeps;
 	struct ProvinceHistoryManager;
 	struct ProvinceInstanceDeps;
@@ -78,6 +79,7 @@ namespace OpenVic {
 			const Date date,
 			CountryInstanceManager& country_manager,
 			IssueManager const& issue_manager,
+			MilitaryDefines const& military_defines,
 			PopDeps const& pop_deps
 		);
 

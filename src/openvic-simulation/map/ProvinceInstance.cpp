@@ -3,7 +3,7 @@
 
 #include "openvic-simulation/country/CountryDefinition.hpp"
 #include "openvic-simulation/country/CountryInstance.hpp"
-#include "openvic-simulation/defines/Define.hpp"
+#include "openvic-simulation/defines/MilitaryDefines.hpp"
 #include "openvic-simulation/DefinitionManager.hpp"
 #include "openvic-simulation/economy/BuildingInstance.hpp"
 #include "openvic-simulation/economy/BuildingType.hpp"
@@ -217,7 +217,7 @@ size_t ProvinceInstance::get_pop_count() const {
 /* REQUIREMENTS:
  * MAP-65, MAP-68, MAP-70, MAP-234
  */
-void ProvinceInstance::_update_pops(DefineManager const& define_manager) {
+void ProvinceInstance::_update_pops(MilitaryDefines const& military_defines) {
 	clear_pops_aggregate();
 
 	has_unaccepted_pops = false;
@@ -225,8 +225,6 @@ void ProvinceInstance::_update_pops(DefineManager const& define_manager) {
 	for (memory::vector<Pop*>& pops_cache : pops_cache_by_type.get_values()) {
 		pops_cache.clear();
 	}
-
-	MilitaryDefines const& military_defines = define_manager.get_military_defines();
 
 	using enum colony_status_t;
 
@@ -237,7 +235,7 @@ void ProvinceInstance::_update_pops(DefineManager const& define_manager) {
 
 	for (Pop& pop : pops) {
 		pops_cache_by_type.at(*pop.get_type()).push_back(&pop);
-		pop.update_gamestate(define_manager, owner, pop_size_per_regiment_multiplier);
+		pop.update_gamestate(military_defines, owner, pop_size_per_regiment_multiplier);
 		add_pops_aggregate(pop);
 		if (pop.get_culture_status() == Pop::culture_status_t::UNACCEPTED) {
 			has_unaccepted_pops = true;
@@ -373,7 +371,7 @@ void ProvinceInstance::update_gamestate(InstanceManager const& instance_manager)
 	for (BuildingInstance& building : buildings) {
 		building.update_gamestate(today);
 	}
-	_update_pops(instance_manager.definition_manager.get_define_manager());
+	_update_pops(instance_manager.definition_manager.get_define_manager().get_military_defines());
 }
 
 void ProvinceInstance::province_tick(

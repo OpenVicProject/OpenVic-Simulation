@@ -9,6 +9,7 @@
 #include "openvic-simulation/military/Deployment.hpp"
 #include "openvic-simulation/military/LeaderTrait.hpp"
 #include "openvic-simulation/population/Culture.hpp"
+#include "openvic-simulation/population/PopType.hpp"
 #include "openvic-simulation/types/OrderedContainersMath.hpp"
 #include "openvic-simulation/utility/Containers.hpp"
 #include "openvic-simulation/core/FormatValidate.hpp"
@@ -278,17 +279,69 @@ fixed_point_t UnitInstanceGroupBranched<NAVAL>::get_total_consumed_supply() cons
 	return total_consumed_supply;
 }
 
+Pop* UnitInstanceManager::recruit_pop_in(ProvinceInstance& province, const bool is_rebel) const {
+	if (is_rebel) {
+		for (auto& pop : province.get_mutable_pops()) {
+			if (pop.get_rebel_type() != nullptr && pop.try_recruit()) {
+				return &pop;
+			}
+		}
+	} else {
+		for (auto& pop : province.get_mutable_pops()) {
+			if (pop.get_type()->can_be_recruited && pop.try_recruit()) {
+				/*
+				Victoria 2 does not respect cultural restrictions when applying history.
+				*/
+				return &pop;
+			}
+		}
+	}
+
+	//fallback to understrength pops
+	if (is_rebel) {
+		for (auto& pop : province.get_mutable_pops()) {
+			if (pop.get_rebel_type() != nullptr && pop.try_recruit_understrength()) {
+				return &pop;
+			}
+		}
+	} else {
+		for (auto& pop : province.get_mutable_pops()) {
+			if (pop.get_type()->can_be_recruited && pop.try_recruit_understrength()) {
+				/*
+				Victoria 2 does not respect cultural restrictions when applying history.
+				*/
+				return &pop;
+			}
+		}
+	}
+
+	return nullptr;
+}
+
 template<unit_branch_t Branch>
-UnitInstanceBranched<Branch>& UnitInstanceManager::generate_unit_instance(UnitDeployment<Branch> const& unit_deployment) {
+UnitInstanceBranched<Branch>& UnitInstanceManager::generate_unit_instance(
+	UnitDeployment<Branch> const& unit_deployment,
+	MapInstance& map_instance,
+	const bool is_rebel
+) {
 	UnitInstanceBranched<Branch>& unit_instance = *get_unit_instances<Branch>().insert(
-		[this, &unit_deployment]() -> UnitInstanceBranched<Branch> {
+		[this, &unit_deployment, &map_instance, is_rebel]() -> UnitInstanceBranched<Branch> {
 			if constexpr (Branch == LAND) {
+				RegimentDeployment const& regiment_deployment = unit_deployment;
+				ProvinceInstance& province = map_instance.get_province_instance_by_definition(*regiment_deployment.get_home());
+				Pop* const pop_ptr = recruit_pop_in(province, is_rebel);
+				if (pop_ptr == nullptr) {		
+					spdlog::warn_s(
+						"Regiment {} in province {} lacks backing pop.", regiment_deployment.get_name(), province.get_identifier()
+					);
+				}
+
 				return {
 					unique_id_counter++,
 					unit_deployment.get_name(),
 					unit_deployment.type,
-					nullptr, // TODO - get pop from Province unit_deployment.get_home()
-					false // Not mobilised
+					pop_ptr,
+					false
 				};
 			} else if constexpr (Branch == NAVAL) {
 				return {
@@ -333,7 +386,7 @@ bool UnitInstanceManager::generate_unit_instance_group(
 	bool ret = true;
 
 	for (UnitDeployment<Branch> const& unit_deployment : unit_deployment_group.get_units()) {
-		ret &= unit_instance_group.add_unit(generate_unit_instance(unit_deployment));
+		ret &= unit_instance_group.add_unit(generate_unit_instance(unit_deployment, map_instance, country.is_rebel_country()));
 	}
 
 	ret &= unit_instance_group.set_position(

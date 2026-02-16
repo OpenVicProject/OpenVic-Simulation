@@ -444,6 +444,7 @@ namespace OpenVic {
 		std::string_view get_identifier() const;
 
 		bool exists() const;
+		bool is_rebel_country() const;
 		bool is_civilised() const;
 		bool can_colonise() const;
 		bool is_great_power() const;

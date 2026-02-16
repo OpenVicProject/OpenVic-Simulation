@@ -84,6 +84,7 @@ bool MapInstance::apply_history_to_provinces(
 	const Date date,
 	CountryInstanceManager& country_manager,
 	IssueManager const& issue_manager,
+	MilitaryDefines const& military_defines,
 	PopDeps const& pop_deps
 ) {
 	bool ret = true;
@@ -124,6 +125,9 @@ bool MapInstance::apply_history_to_provinces(
 						pop_deps
 					);
 					province.setup_pop_test_values(issue_manager);
+
+					//update pops so OOB can use up to date max_supported_regiments
+					province._update_pops(military_defines);
 				}
 
 				ret &= province.set_rgo_production_type_nullable(rgo_production_type_nullable);

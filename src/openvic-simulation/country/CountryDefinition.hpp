@@ -4,6 +4,7 @@
 
 #include <openvic-dataloader/v2script/AbstractSyntaxTree.hpp>
 
+#include "openvic-simulation/core/Typedefs.hpp"
 #include "openvic-simulation/country/CountryParty.hpp"
 #include "openvic-simulation/types/HasIdentifier.hpp"
 #include "openvic-simulation/types/HasIndex.hpp"
@@ -42,6 +43,10 @@ namespace OpenVic {
 
 	public:
 		GraphicalCultureType const& graphical_culture;
+
+		OV_ALWAYS_INLINE bool is_rebel_country() const {
+			return index == country_index_t(0);
+		}
 
 		CountryDefinition(
 			std::string_view new_identifier, colour_t new_colour, index_t new_index,
