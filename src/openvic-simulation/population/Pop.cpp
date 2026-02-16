@@ -10,6 +10,8 @@
 #include <type_safe/strong_typedef.hpp>
 
 #include "openvic-simulation/core/error/ErrorMacros.hpp"
+#include "openvic-simulation/core/FormatValidate.hpp"
+#include "openvic-simulation/core/Typedefs.hpp"
 #include "openvic-simulation/country/CountryParty.hpp"
 #include "openvic-simulation/country/CountryDefinition.hpp"
 #include "openvic-simulation/country/CountryInstance.hpp"
@@ -38,9 +40,7 @@
 #include "openvic-simulation/types/OrderedContainers.hpp"
 #include "openvic-simulation/types/TypedIndices.hpp"
 #include "openvic-simulation/utility/Containers.hpp"
-#include "openvic-simulation/core/FormatValidate.hpp"
 #include "openvic-simulation/utility/Logger.hpp"
-#include "openvic-simulation/core/Typedefs.hpp"
 
 
 using namespace OpenVic;
@@ -219,7 +219,9 @@ fixed_point_t Pop::get_vote_equivalents_by_party(CountryParty const& party) cons
 }
 
 void Pop::update_gamestate(
-	DefineManager const& define_manager, CountryInstance const* owner, const fixed_point_t pop_size_per_regiment_multiplier
+	MilitaryDefines const& military_defines,
+	CountryInstance const* owner,
+	const fixed_point_t pop_size_per_regiment_multiplier
 ) {
 	using enum culture_status_t;
 
@@ -246,19 +248,15 @@ void Pop::update_gamestate(
 	consciousness = std::clamp(consciousness, MIN_CONSCIOUSNESS, MAX_CONSCIOUSNESS);
 	literacy = std::clamp(literacy, MIN_LITERACY, MAX_LITERACY);
 
-	if (type->can_be_recruited) {
-		MilitaryDefines const& military_defines = define_manager.get_military_defines();
-
-		if (
-			size < military_defines.get_min_pop_size_for_regiment() || owner == nullptr ||
-			!is_culture_status_allowed(owner->get_allowed_regiment_cultures(), culture_status)
-		) {
-			max_supported_regiments = 0;
-		} else {
-			max_supported_regiments = (
-				type_safe::get(size) / (type_safe::get(military_defines.get_pop_size_per_regiment()) * pop_size_per_regiment_multiplier) //
-			).floor<size_t>() + 1;
-		}
+	if (
+		size < military_defines.get_min_pop_size_for_regiment() || owner == nullptr ||
+		!is_culture_status_allowed(owner->get_allowed_regiment_cultures(), culture_status)
+	) {
+		max_supported_regiments = 0;
+	} else {
+		max_supported_regiments = (
+			type_safe::get(size) / (type_safe::get(military_defines.get_pop_size_per_regiment()) * pop_size_per_regiment_multiplier) //
+		).floor<size_t>() + 1;
 	}
 }
 
@@ -764,4 +762,22 @@ void Pop::hire(pop_size_t count) {
 			employed, get_pop_context_text()
 		);
 	}
+}
+
+bool Pop::try_recruit() {
+	if (regiment_count >= max_supported_regiments) {
+		return false;
+	}
+
+	++regiment_count;
+	return true;
+}
+
+bool Pop::try_recruit_understrength() {
+	if (regiment_count > max_supported_regiments) {
+		return false;
+	}
+
+	++regiment_count;
+	return true;
 }

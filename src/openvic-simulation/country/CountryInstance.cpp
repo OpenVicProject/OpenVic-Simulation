@@ -306,6 +306,10 @@ bool CountryInstance::exists() const {
 	return !owned_provinces.empty();
 }
 
+bool CountryInstance::is_rebel_country() const {
+	return country_definition.is_rebel_country();
+}
+
 bool CountryInstance::is_civilised() const {
 	return country_status <= COUNTRY_STATUS_CIVILISED;
 }

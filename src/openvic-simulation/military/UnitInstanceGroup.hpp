@@ -155,6 +155,7 @@ namespace OpenVic {
 	struct CultureManager;
 	struct LeaderTraitManager;
 	struct MilitaryDefines;
+	struct Pop;
 
 	struct UnitInstanceManager {
 	private:
@@ -184,8 +185,13 @@ namespace OpenVic {
 
 		OV_UNIT_BRANCHED_GETTER(get_unit_instance_groups, armies, navies);
 
+		Pop* recruit_pop_in(ProvinceInstance& province, const bool is_rebel) const;
 		template<unit_branch_t Branch>
-		UnitInstanceBranched<Branch>& generate_unit_instance(UnitDeployment<Branch> const& unit_deployment);
+		UnitInstanceBranched<Branch>& generate_unit_instance(
+			UnitDeployment<Branch> const& unit_deployment,
+			MapInstance& map_instance,
+			const bool is_rebel
+		);
 		template<unit_branch_t Branch>
 		bool generate_unit_instance_group(
 			MapInstance& map_instance, CountryInstance& country, UnitDeploymentGroup<Branch> const& unit_deployment_group

@@ -1,5 +1,8 @@
 #pragma once
 
+#include <cstddef>
+
+#include "openvic-simulation/core/portable/ForwardableSpan.hpp"
 #include "openvic-simulation/economy/production/ArtisanalProducer.hpp"
 #include "openvic-simulation/population/PopNeedsMacro.hpp"
 #include "openvic-simulation/types/fixed_point/Atomic.hpp"
@@ -9,7 +12,6 @@
 #include "openvic-simulation/population/PopSize.hpp"
 #include "openvic-simulation/types/UnitBranchType.hpp"
 #include "openvic-simulation/utility/Containers.hpp"
-#include "openvic-simulation/core/portable/ForwardableSpan.hpp"
 
 #include <type_safe/strong_typedef.hpp>
 
@@ -19,11 +21,11 @@ namespace OpenVic {
 	struct CountryInstance;
 	struct CountryParty;
 	struct Culture;
-	struct DefineManager;
 	struct GoodDefinition;
 	struct Ideology;
 	struct IssueManager;
 	struct MarketInstance;
+	struct MilitaryDefines;
 	struct PopDeps;
 	struct PopManager;
 	struct PopType;
@@ -155,7 +157,8 @@ namespace OpenVic {
 		OV_DO_FOR_ALL_TYPES_OF_POP_EXPENSES(DECLARE_POP_MONEY_STORES);
 		#undef DECLARE_POP_MONEY_STORES
 
-		size_t PROPERTY(max_supported_regiments, 0);
+		std::size_t PROPERTY(regiment_count, 0);
+		std::size_t PROPERTY(max_supported_regiments, 0);
 
 		Pop(
 			PopBase const& pop_base,
@@ -204,7 +207,8 @@ namespace OpenVic {
 		void update_location_based_attributes();
 
 		void update_gamestate(
-			DefineManager const& define_manager, CountryInstance const* owner,
+			MilitaryDefines const& military_defines,
+			CountryInstance const* owner,
 			const fixed_point_t pop_size_per_regiment_multiplier
 		);
 
@@ -227,5 +231,8 @@ namespace OpenVic {
 		);
 		void allocate_cash_for_artisanal_spending(const fixed_point_t money_to_spend);
 		void hire(pop_size_t count);
+		//recruit or conscript
+		bool try_recruit();
+		bool try_recruit_understrength();
 	};
 }

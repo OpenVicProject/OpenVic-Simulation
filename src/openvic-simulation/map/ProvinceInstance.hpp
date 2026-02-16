@@ -29,13 +29,13 @@ namespace OpenVic {
 	struct CountryParty;
 	struct Crime;
 	struct Culture;
-	struct DefineManager;
 	struct GameRulesManager;
 	struct GoodDefinition;
 	struct Ideology;
 	struct InstanceManager;
 	struct IssueManager;
 	struct MapInstance;
+	struct MilitaryDefines;
 	struct PopDeps;
 	struct ProvinceDefinition;
 	struct ProvinceHistoryEntry;
@@ -117,7 +117,7 @@ namespace OpenVic {
 	private:
 		memory::colony<Pop> PROPERTY(pops); // TODO - replace with a more easily vectorisable container?		
 		void _add_pop(Pop&& pop);
-		void _update_pops(DefineManager const& define_manager);
+		void _update_pops(MilitaryDefines const& military_defines);
 		bool convert_rgo_worker_pops_to_equivalent(ProductionType const& production_type);
 		void initialise_rgo();
 

@@ -191,7 +191,9 @@ void PopsAggregate::add_pops_aggregate(Pop const& pop) {
 	population_by_culture[&pop.culture] += pop_size;
 	population_by_religion[&pop.religion] += pop_size;
 
-	max_supported_regiment_count += pop.get_max_supported_regiments();
+	if (pop.get_type()->can_be_recruited) {
+		max_supported_regiment_count += pop.get_max_supported_regiments();
+	}
 	yesterdays_import_value.set(_yesterdays_import_value_running_total);
 }
 
