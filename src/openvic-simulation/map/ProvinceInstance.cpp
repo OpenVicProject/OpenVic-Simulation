@@ -180,16 +180,6 @@ void ProvinceInstance::_add_pop(Pop&& pop) {
 	pops.insert(std::move(pop));
 }
 
-bool ProvinceInstance::add_pop(Pop&& pop) {
-	if (!province_definition.is_water()) {
-		_add_pop(std::move(pop));
-		return true;
-	} else {
-		spdlog::error_s("Trying to add pop to water province {}", *this);
-		return false;
-	}
-}
-
 bool ProvinceInstance::add_pop_vec(
 	std::span<const PopBase> pop_vec,
 	PopDeps const& pop_deps
@@ -200,7 +190,8 @@ bool ProvinceInstance::add_pop_vec(
 			_add_pop(Pop {
 				pop,
 				get_supporter_equivalents_by_ideology().get_keys(),
-				pop_deps
+				pop_deps,
+				++last_pop_id
 			});
 		}
 		return true;

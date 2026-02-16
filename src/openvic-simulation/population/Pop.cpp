@@ -15,7 +15,8 @@
 #include "openvic-simulation/country/CountryParty.hpp"
 #include "openvic-simulation/country/CountryDefinition.hpp"
 #include "openvic-simulation/country/CountryInstance.hpp"
-#include "openvic-simulation/defines/Define.hpp"
+#include "openvic-simulation/defines/MilitaryDefines.hpp"
+#include "openvic-simulation/defines/PopsDefines.hpp"
 #include "openvic-simulation/economy/GoodDefinition.hpp"
 #include "openvic-simulation/economy/GoodInstance.hpp"
 #include "openvic-simulation/economy/production/ArtisanalProducer.hpp"
@@ -54,9 +55,11 @@ PopBase::PopBase(
 Pop::Pop(
 	PopBase const& pop_base,
 	decltype(supporter_equivalents_by_ideology)::keys_span_type ideology_keys,
-	PopDeps const& pop_deps
+	PopDeps const& pop_deps,
+	const pop_id_in_province_t new_id_in_province
 )
   : PopBase { pop_base },
+  	id_in_province { new_id_in_province },
 	market_instance { pop_deps.market_instance },
 	artisanal_producer_optional {
 		type->is_artisan
