@@ -8,7 +8,7 @@
 #include "openvic-simulation/military/CombatWidth.hpp"
 #include "openvic-simulation/military/UnitBranchedGetterMacro.hpp"
 #include "openvic-simulation/modifier/ModifierSum.hpp"
-#include "openvic-simulation/politics/Rule.hpp"
+#include "openvic-simulation/politics/RuleSet.hpp"
 #include "openvic-simulation/population/PopsAggregate.hpp"
 #include "openvic-simulation/types/ClampedValue.hpp"
 #include "openvic-simulation/types/Date.hpp"

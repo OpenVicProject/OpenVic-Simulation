@@ -1054,12 +1054,6 @@ bool Dataloader::load_defines(
 		ret = false;
 	}
 	definition_manager.get_modifier_manager().lock_base_country_modifier_effects();
-	if (!definition_manager.get_politics_manager().get_rule_manager().setup_rules(
-		definition_manager.get_economy_manager().get_building_type_manager()
-	)) {
-		spdlog::critical_s("Failed to set up rules!");
-		ret = false;
-	}
 	if (!definition_manager.get_politics_manager().load_issues_file(
 		definition_manager.get_modifier_manager(),
 		parse_defines_cached(lookup_file(issues_file)).get_file_node()

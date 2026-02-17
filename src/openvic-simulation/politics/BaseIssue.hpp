@@ -1,7 +1,7 @@
 #pragma once
 
 #include "openvic-simulation/modifier/Modifier.hpp"
-#include "openvic-simulation/politics/Rule.hpp"
+#include "openvic-simulation/politics/RuleSet.hpp"
 #include "openvic-simulation/types/HasIdentifier.hpp"
 
 namespace OpenVic {

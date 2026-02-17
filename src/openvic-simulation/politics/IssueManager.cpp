@@ -164,7 +164,7 @@ static constexpr colour_t create_issue_reform_colour(size_t index) {
 }
 
 bool IssueManager::_load_party_policy(
-	ModifierManager const& modifier_manager, RuleManager const& rule_manager, std::string_view identifier,
+	ModifierManager const& modifier_manager, std::string_view identifier,
 	PartyPolicyGroup& party_policy_group, ast::NodeCPtr node
 ) {
 	spdlog::scope scope { fmt::format("party policy {}", identifier) };
@@ -176,7 +176,7 @@ bool IssueManager::_load_party_policy(
 	bool ret = NodeTools::expect_dictionary_keys_and_default(
 		modifier_manager.expect_base_country_modifier(values),
 		"is_jingoism", ZERO_OR_ONE, expect_bool(assign_variable_callback(is_jingoism)),
-		"rules", ZERO_OR_ONE, rule_manager.expect_rule_set(move_variable_callback(rules)),
+		"rules", ZERO_OR_ONE, RuleSet::expect_rule_set(move_variable_callback(rules)),
 		"war_exhaustion_effect", ZERO_OR_ONE, [](const ast::NodeCPtr _) -> bool {
 			spdlog::warn_s("war_exhaustion_effect does nothing (vanilla issues have it).");
 			return true;
@@ -209,7 +209,7 @@ bool IssueManager::_load_reform_group(
 }
 
 bool IssueManager::_load_reform(
-	ModifierManager const& modifier_manager, RuleManager const& rule_manager, size_t ordinal, std::string_view identifier,
+	ModifierManager const& modifier_manager, size_t ordinal, std::string_view identifier,
 	ReformGroup& reform_group, ast::NodeCPtr node
 ) {
 	spdlog::scope scope { fmt::format("reform {}", identifier) };
@@ -228,7 +228,7 @@ bool IssueManager::_load_reform(
 		"administrative_multiplier", ZERO_OR_ONE, expect_fixed_point(assign_variable_callback(administrative_multiplier)),
 		"technology_cost", ZERO_OR_ONE, expect_uint(assign_variable_callback(technology_cost)),
 		"allow", ZERO_OR_MORE, allow.expect_script(),
-		"rules", ZERO_OR_ONE, rule_manager.expect_rule_set(move_variable_callback(rules)),
+		"rules", ZERO_OR_ONE, RuleSet::expect_rule_set(move_variable_callback(rules)),
 		"on_execute", ZERO_OR_ONE, expect_dictionary_keys(
 			"trigger", ZERO_OR_ONE, on_execute_trigger.expect_script(),
 			"effect", ONE_EXACTLY, on_execute_effect.expect_script()
@@ -254,7 +254,7 @@ bool IssueManager::_load_reform(
  * POL-113, POL-114, POL-115, POL-116
  */
 bool IssueManager::load_issues_file(
-	ModifierManager const& modifier_manager, RuleManager const& rule_manager, ast::NodeCPtr root
+	ModifierManager const& modifier_manager, ast::NodeCPtr root
 ) {
 	spdlog::scope scope { "common/issues.txt" };
 	bool party_issues_found = false;
@@ -337,7 +337,7 @@ bool IssueManager::load_issues_file(
 
 	/* Load issues and reforms. */
 	ret &= expect_dictionary(
-		[this, &party_issues_found, &modifier_manager, &rule_manager](
+		[this, &party_issues_found, &modifier_manager](
 			std::string_view type_key, ast::NodeCPtr type_value
 		) -> bool {
 			if (type_key == "party_issues") {
@@ -346,7 +346,7 @@ bool IssueManager::load_issues_file(
 				}
 				party_issues_found = true;
 
-				return expect_dictionary([this, &modifier_manager, &rule_manager](
+				return expect_dictionary([this, &modifier_manager](
 					std::string_view group_key, ast::NodeCPtr group_value
 				) -> bool {
 					PartyPolicyGroup* party_policy_group = party_policy_groups.get_item_by_identifier(group_key);
@@ -356,14 +356,14 @@ bool IssueManager::load_issues_file(
 						return false;
 					}
 
-					return expect_dictionary([this, &modifier_manager, &rule_manager, party_policy_group](
+					return expect_dictionary([this, &modifier_manager, party_policy_group](
 						std::string_view key, ast::NodeCPtr value
 					) -> bool {
-						return _load_party_policy(modifier_manager, rule_manager, key, *party_policy_group, value);
+						return _load_party_policy(modifier_manager, key, *party_policy_group, value);
 					})(group_value);
 				})(type_value);
 			} else {
-				return expect_dictionary([this, &party_issues_found, &modifier_manager, &rule_manager](
+				return expect_dictionary([this, &party_issues_found, &modifier_manager](
 					std::string_view group_key, ast::NodeCPtr group_value
 				) -> bool {
 					ReformGroup* reform_group = reform_groups.get_item_by_identifier(group_key);
@@ -375,14 +375,14 @@ bool IssueManager::load_issues_file(
 
 					size_t ordinal = 0;
 
-					return expect_dictionary([this, &modifier_manager, &rule_manager, reform_group, &ordinal](
+					return expect_dictionary([this, &modifier_manager, reform_group, &ordinal](
 						std::string_view key, ast::NodeCPtr value
 					) -> bool {
 						if (key == "next_step_only" || key == "administrative") {
 							return true;
 						}
 
-						return _load_reform(modifier_manager, rule_manager, ordinal++, key, *reform_group, value);
+						return _load_reform(modifier_manager, ordinal++, key, *reform_group, value);
 					})(group_value);
 				})(type_value);
 			}
