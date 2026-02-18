@@ -34,6 +34,7 @@
 #include "openvic-simulation/politics/NationalValue.hpp"
 #include "openvic-simulation/politics/PartyPolicy.hpp"
 #include "openvic-simulation/politics/Reform.hpp"
+#include "openvic-simulation/politics/RuleSet.hpp"
 #include "openvic-simulation/population/Culture.hpp"
 #include "openvic-simulation/population/Pop.hpp"
 #include "openvic-simulation/population/PopType.hpp"
@@ -1681,23 +1682,23 @@ void CountryInstance::_update_military() {
 }
 
 bool CountryInstance::update_rule_set() {
-	rule_set.clear();
+	rule_set = {};
 	CountryParty const* ruling_party_copy = ruling_party.get_untracked();
 	if (ruling_party_copy != nullptr) {
 		for (PartyPolicy const* party_policy : ruling_party_copy->get_policies().get_values()) {
 			if (party_policy != nullptr) {
-				rule_set |= party_policy->get_rules();
+				rule_set.add_ruleset(party_policy->get_rules());
 			}
 		}
 	}
 
 	for (Reform const* reform : reforms.get_values()) {
 		if (reform != nullptr) {
-			rule_set |= reform->get_rules();
+			rule_set.add_ruleset(reform->get_rules());
 		}
 	}
 
-	return rule_set.trim_and_resolve_conflicts(true);
+	return true;
 }
 
 static constexpr Modifier const& get_country_status_static_effect(
