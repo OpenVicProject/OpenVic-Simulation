@@ -230,7 +230,7 @@ bool MapmodeManager::setup_mapmodes(MapDefinition const& map_definition, Buildin
 	if (infrastructure_building_type_ptr == nullptr) {
 		spdlog::error_s("Cannot setup infrastructure mapmode because infrastructure_building_type is null.");
 		ret = false;
-	} else if (!infrastructure_building_type_ptr->get_province_building_index().has_value()) {
+	} else if (!infrastructure_building_type_ptr->province_building_index.has_value()) {
 		spdlog::error_s("Cannot setup infrastructure mapmode because infrastructure_building_type has no province_building_index.");
 		ret = false;
 	} else {
@@ -241,9 +241,9 @@ bool MapmodeManager::setup_mapmodes(MapDefinition const& map_definition, Buildin
 				CountryInstance const* player_country, ProvinceInstance const* selected_province
 			) -> Mapmode::base_stripe_t {
 				BuildingType const& infrastructure_building_type = *infrastructure_building_type_ptr;
-				BuildingInstance const& infrastructure = province.get_buildings()[infrastructure_building_type.get_province_building_index().value()];
+				BuildingInstance const& infrastructure = province.get_buildings()[infrastructure_building_type.province_building_index.value()];
 				const colour_argb_t::value_type val = colour_argb_t::colour_traits::component_from_fraction(
-					type_safe::get(infrastructure.get_level()), type_safe::get(infrastructure_building_type.get_max_level()) + 1, 0.5f, 1.0f
+					type_safe::get(infrastructure.get_level()), type_safe::get(infrastructure_building_type.max_level) + 1, 0.5f, 1.0f
 				);
 				switch (infrastructure.get_expansion_state()) {
 				case BuildingInstance::ExpansionState::CannotExpand:

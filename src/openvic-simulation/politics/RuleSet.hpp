@@ -218,7 +218,7 @@ namespace OpenVic {
   	#undef DEF
 		RESOLVE_DEFAULT_FALSE(is_slavery_legal, slavery_allowed)
 	//economic
-		RESOLVE_DEFAULT_FALSE(may_build_infrastructure_domestically, build_railway)
+		RESOLVE_DEFAULT_FALSE(may_expand_infrastructure_domestically, build_railway)
 		RESOLVE_DEFAULT_FALSE(may_build_factory_domestically, build_factory)
 		RESOLVE_DEFAULT_FALSE(may_expand_factory_domestically, expand_factory)
 		RESOLVE_DEFAULT_FALSE(may_open_factory_domestically, open_factory)

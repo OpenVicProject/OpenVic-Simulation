@@ -173,8 +173,12 @@ bool ProvinceInstance::remove_core(CountryInstance& core_to_remove, bool warn) {
 	return true;
 }
 
-bool ProvinceInstance::expand_building(const province_building_index_t index) {
-	return buildings[index].expand();
+bool ProvinceInstance::expand_building(
+	ModifierEffectCache const& modifier_effect_cache,
+	const province_building_index_t index,
+	CountryInstance& actor
+) {
+	return buildings[index].expand(modifier_effect_cache, actor, *this);
 }
 
 void ProvinceInstance::_add_pop(Pop&& pop) {
@@ -481,7 +485,14 @@ bool ProvinceInstance::apply_history_to_province(ProvinceHistoryEntry const& ent
 	set_optional(life_rating, entry.get_life_rating());
 	set_optional(terrain_type, entry.get_terrain_type());
 	for (province_building_index_t i(0); i < entry.get_province_building_levels().size(); ++i) {
-		buildings[i].set_level(entry.get_province_building_levels()[i]);
+		const building_level_t level = entry.get_province_building_levels()[i];
+		BuildingInstance& building = buildings[i];
+		if (level > building_level_t(0) && !building.building_type.can_be_built_in(province_definition)) {
+			spdlog::error_s("Building type {} cannot be built in province {}", building.building_type, province_definition);
+			ret = false;
+		} else {
+			building.set_level(level);
+		}
 	}
 	// TODO: load state buildings - entry.get_state_buildings()
 	// TODO: party loyalties for each POP when implemented on POP side - entry.get_party_loyalties()

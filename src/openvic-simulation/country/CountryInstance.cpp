@@ -17,6 +17,7 @@
 #include "openvic-simulation/defines/EconomyDefines.hpp"
 #include "openvic-simulation/defines/MilitaryDefines.hpp"
 #include "openvic-simulation/diplomacy/CountryRelation.hpp"
+#include "openvic-simulation/economy/BuildingLevel.hpp"
 #include "openvic-simulation/economy/BuildingType.hpp"
 #include "openvic-simulation/economy/GoodInstance.hpp"
 #include "openvic-simulation/economy/production/ProductionType.hpp"
@@ -275,7 +276,7 @@ CountryInstance::CountryInstance(
 	update_parties_for_votes(new_country_definition);
 
 	for (BuildingType const& building_type : building_type_unlock_levels.get_keys()) {
-		if (building_type.is_default_enabled()) {
+		if (building_type.is_enabled_by_default) {
 			unlock_building_type(building_type);
 		}
 	}
@@ -333,6 +334,45 @@ bool CountryInstance::is_at_war() const {
 
 bool CountryInstance::is_neighbour(CountryInstance const& country) const {
 	return neighbouring_countries.contains(&country);
+}
+
+bool CountryInstance::may_build_in(const BuildingRestrictionCategory restriction_category, ProvinceInstance const& location) const {
+	CountryInstance const* const owner_ptr = location.get_owner();
+
+	if (owner_ptr == nullptr) {
+		//Can't build in uncolonised provinces
+		return false;
+	}
+	CountryInstance const& owner = *owner_ptr;
+
+	if (owner == *this) {
+		switch(restriction_category) {
+			case BuildingRestrictionCategory::UNRESTRICTED:
+				return true;
+			case BuildingRestrictionCategory::INFRASTRUCTURE:
+				return rule_set.may_expand_infrastructure_domestically();
+			case BuildingRestrictionCategory::FACTORY:
+				return rule_set.may_build_factory_domestically();
+		}
+	}
+	
+	if (is_at_war_with(owner)) {
+		//Not allowed to build in hostile lands.
+		return false;
+	}
+
+	if (!owner.rule_set.foreigners_may_invest()) {
+		return false;
+	}
+
+	switch(restriction_category) {
+		case BuildingRestrictionCategory::UNRESTRICTED:
+			return false; //For example you can't invest in foreign forts.
+		case BuildingRestrictionCategory::INFRASTRUCTURE:
+			return rule_set.may_invest_in_expanding_infrastructure_abroad();
+		case BuildingRestrictionCategory::FACTORY:
+			return rule_set.may_invest_in_building_factory_abroad();
+	}
 }
 
 CountryRelationManager::relation_value_type CountryInstance::get_relations_with(CountryInstance const& country) const {
@@ -870,12 +910,13 @@ bool CountryInstance::is_unit_type_unlocked(UnitType const& unit_type) const {
 }
 
 bool CountryInstance::modify_building_type_unlock(
-	BuildingType const& building_type, technology_unlock_level_t unlock_level_change
+	BuildingType const& building_type, technology_unlock_level_t tech_unlock_level_change
 ) {
-	technology_unlock_level_t& unlock_level = building_type_unlock_levels.at(building_type);
+	building_level_t& unlock_level = building_type_unlock_levels.at(building_type);
+	building_level_t unlock_level_change = building_level_t(type_safe::get(tech_unlock_level_change));
 
 	// This catches subtracting below 0 or adding above the int types maximum value
-	if (unlock_level + unlock_level_change < 0) {
+	if (unlock_level + unlock_level_change < building_level_t(0)) {
 		spdlog::error_s(
 			"Attempted to change unlock level for building type {} in country {} to invalid value: current level = {}, change = {}, invalid new value = {}",
 			building_type, *this, unlock_level, unlock_level_change,
@@ -886,8 +927,8 @@ bool CountryInstance::modify_building_type_unlock(
 
 	unlock_level += unlock_level_change;
 
-	if (building_type.get_production_type() != nullptr) {
-		good_instance_manager.enable_good(building_type.get_production_type()->output_good);
+	if (building_type.production_type != nullptr) {
+		good_instance_manager.enable_good(building_type.production_type->output_good);
 	}
 
 	return true;
@@ -897,8 +938,12 @@ bool CountryInstance::unlock_building_type(BuildingType const& building_type) {
 	return modify_building_type_unlock(building_type, technology_unlock_level_t { 1 });
 }
 
+building_level_t const& CountryInstance::get_building_type_unlock_levels(BuildingType const& building_type) const {
+	return building_type_unlock_levels.at(building_type);
+}
+
 bool CountryInstance::is_building_type_unlocked(BuildingType const& building_type) const {
-	return building_type_unlock_levels.at(building_type) > 0;
+	return building_type_unlock_levels.at(building_type) > building_level_t(0);
 }
 
 bool CountryInstance::modify_crime_unlock(Crime const& crime, technology_unlock_level_t unlock_level_change) {

@@ -4,6 +4,7 @@
 
 #include "openvic-simulation/modifier/Modifier.hpp"
 #include "openvic-simulation/economy/BuildingLevel.hpp"
+#include "openvic-simulation/economy/BuildingRestrictionCategory.hpp"
 #include "openvic-simulation/types/Date.hpp"
 #include "openvic-simulation/types/HasIndex.hpp"
 #include "openvic-simulation/types/IdentifierRegistry.hpp"
@@ -12,10 +13,15 @@
 #include "openvic-simulation/utility/Containers.hpp"
 
 namespace OpenVic {
+	struct BuildingTypeManager;
+	struct CountryInstance;
 	struct GoodDefinition;
 	struct GoodDefinitionManager;
+	struct ModifierEffectCache;
 	struct ProductionType;
 	struct ProductionTypeManager;
+	struct ProvinceDefinition;
+	struct ProvinceInstance;
 
 	/* REQUIREMENTS:
 	 * MAP-11, MAP-72, MAP-73
@@ -23,6 +29,7 @@ namespace OpenVic {
 	 * MAP-13, MAP-78, MAP-79
 	 */
 	struct BuildingType : HasIndex<BuildingType, building_type_index_t>, Modifier {
+		friend BuildingTypeManager;
 		using naval_capacity_t = uint64_t;
 
 		struct building_type_args_t {
@@ -44,39 +51,47 @@ namespace OpenVic {
 		};
 
 	private:
-		memory::string PROPERTY(type);
-		memory::string PROPERTY(on_completion); // probably sound played on completion
-		fixed_point_t PROPERTY(completion_size);
-		building_level_t PROPERTY(max_level);
+		const memory::string type;
+		const bool is_in_province;
+		const bool is_port;
+		const bool capital; // only in naval base
+
+		const memory::string on_completion; //unknown
+
+
 		fixed_point_map_t<GoodDefinition const*> PROPERTY(goods_cost);
-		fixed_point_t PROPERTY(cost);
-		Timespan PROPERTY(build_time); // time
-		bool PROPERTY(on_map); // onmap
-
-		bool PROPERTY_CUSTOM_PREFIX(default_enabled, is);
-		ProductionType const* PROPERTY(production_type);
-		bool PROPERTY(pop_build_factory);
-		bool PROPERTY(strategic_factory);
-		bool PROPERTY(advanced_factory);
-
-		building_level_t PROPERTY(fort_level); // fort bonus step-per-level
-
-		naval_capacity_t PROPERTY(naval_capacity);
 		memory::vector<fixed_point_t> SPAN_PROPERTY(colonial_points);
-		bool PROPERTY_CUSTOM_PREFIX(in_province, is); // province
-		bool PROPERTY(one_per_state);
-		fixed_point_t PROPERTY(colonial_range);
-
-		fixed_point_t PROPERTY(infrastructure);
-		bool PROPERTY(spawn_railway_track);
-
-		bool PROPERTY(sail); // only in clipper shipyard
-		bool PROPERTY(steam); // only in steamer shipyard
-		bool PROPERTY(capital); // only in naval base
-		bool PROPERTY_CUSTOM_PREFIX(port, is); // only in naval base
-		std::optional<province_building_index_t> PROPERTY(province_building_index);
 
 	public:
+		//general attributes
+		const std::optional<province_building_index_t> province_building_index;
+
+		const bool is_pop_build_factory;
+		const bool is_strategic_factory;
+		const bool is_advanced_factory;
+		const bool is_sail; // only in clipper shipyard
+		const bool is_steam; // only in steamer shipyard
+
+		const bool should_display_on_map;
+		const bool should_spawn_railway_track;
+
+		const bool is_limited_to_one_per_state;
+		const BuildingRestrictionCategory restriction_category;
+		const bool is_enabled_by_default;
+		const building_level_t max_level;
+		const fixed_point_t completion_size;
+
+		//costs
+		const fixed_point_t cost;
+		const Timespan build_time;
+
+		//effects
+		ProductionType const* const production_type;
+		const building_level_t fort_level; // fort bonus step-per-level
+		const naval_capacity_t naval_capacity;
+		const fixed_point_t colonial_range;
+		const fixed_point_t infrastructure;
+
 		BuildingType(
 			index_t new_index,
 			std::optional<province_building_index_t> new_province_building_index,
@@ -84,6 +99,14 @@ namespace OpenVic {
 			building_type_args_t& building_type_args
 		);
 		BuildingType(BuildingType&&) = default;
+
+		[[nodiscard]] bool can_be_built_in(
+			ModifierEffectCache const& modifier_effect_cache,
+			const building_level_t desired_level,
+			CountryInstance const& actor,
+			ProvinceInstance const& location
+		) const;
+		[[nodiscard]] bool can_be_built_in(ProvinceDefinition const& location) const;
 	};
 
 	struct BuildingTypeManager {

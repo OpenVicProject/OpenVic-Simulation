@@ -2,6 +2,7 @@
 
 #include <type_safe/strong_typedef.hpp>
 
+#include "openvic-simulation/core/error/ErrorMacros.hpp"
 #include "openvic-simulation/dataloader/NodeTools.hpp"
 #include "openvic-simulation/DefinitionManager.hpp"
 #include "openvic-simulation/economy/BuildingLevel.hpp"
@@ -93,31 +94,41 @@ bool ProvinceHistoryMap::_load_history_entry(
 			ast::NodeCPtr value
 		) -> bool {
 			// used for province buildings like forts or railroads
-			BuildingType const* building_type = building_type_manager.get_building_type_by_identifier(key);
-			if (building_type != nullptr) {
-				if (building_type->is_in_province()) {
-					return expect_strong_typedef<building_level_t>(
-						/* This is set to warn to prevent vanilla from always having errors because
-						 * of a duplicate railroad entry in the 1861.1.1 history of Manchester (278). */
-						[
-							&entry,
-							optional_index = building_type->get_province_building_index()
-						](const building_level_t level) -> bool {
-							if (!optional_index.has_value()) {
-								return false;
-							}
+			BuildingType const* const building_type_ptr = building_type_manager.get_building_type_by_identifier(key);
+			if (building_type_ptr != nullptr) {
+				BuildingType const& building_type = *building_type_ptr;
 
-							entry.province_building_levels[optional_index.value()] = level;
-							return true;
-						}
-					)(value);
-				} else {
-					spdlog::error_s(
+				OV_ERR_FAIL_COND_V_MSG(
+					!building_type.province_building_index.has_value(),
+					false,
+					memory::fmt::format(
 						"Attempted to add state building \"{}\" at top scope of province history for {}",
-						*building_type, entry.province
-					);
-					return false;
-				}
+						building_type,
+						entry.province
+					)
+				);
+
+				OV_ERR_FAIL_COND_V_MSG(
+					!building_type.can_be_built_in(entry.province),
+					false,
+					memory::fmt::format(
+						"Building type {} cannot be built in province {}",
+						building_type,
+						entry.province
+					)
+				);
+
+				return expect_strong_typedef<building_level_t>(
+					/* This is set to warn to prevent vanilla from always having errors because
+						* of a duplicate railroad entry in the 1861.1.1 history of Manchester (278). */
+					[
+						&entry,
+						index = building_type.province_building_index.value()
+					](const building_level_t level) -> bool {
+						entry.province_building_levels[index] = level;
+						return true;
+					}
+				)(value);
 			}
 
 			return _load_history_sub_entry_callback(definition_manager, entry.get_date(), value, key_map, key, value);
@@ -179,26 +190,28 @@ bool ProvinceHistoryMap::_load_history_entry(
 			return ret;
 		},
 		"state_building", ZERO_OR_MORE, [&building_type_manager, &entry](ast::NodeCPtr node) -> bool {
-			BuildingType const* building_type = nullptr;
+			BuildingType const* building_type_ptr = nullptr;
 			building_level_t level = building_level_t { 0 };
 
 			bool ret = expect_dictionary_keys(
 				"level", ONE_EXACTLY, expect_strong_typedef<building_level_t>(assign_variable_callback(level)),
 				"building", ONE_EXACTLY, building_type_manager.expect_building_type_identifier(
-					assign_variable_callback_pointer(building_type)
+					assign_variable_callback_pointer(building_type_ptr)
 				),
 				"upgrade", ZERO_OR_ONE, success_callback /* Doesn't appear to have an effect */
 			)(node);
-			if (building_type != nullptr) {
-				if (!building_type->is_in_province()) {
-					ret &= map_callback(entry.state_buildings, building_type->index, true)(level);
-				} else {
-					spdlog::error_s(
+			if (building_type_ptr != nullptr) {
+				OV_ERR_FAIL_COND_V_MSG(
+					building_type_ptr->province_building_index.has_value(),
+					false,
+					memory::fmt::format(
 						"Attempted to add province building \"{}\" to state building list of province history for {}",
-						*building_type, entry.province
-					);
-					ret = false;
-				}
+						*building_type_ptr,
+						entry.province
+					)
+				);
+
+				ret &= map_callback(entry.state_buildings, building_type_ptr->index, true)(level);
 			}
 			return ret;
 		}

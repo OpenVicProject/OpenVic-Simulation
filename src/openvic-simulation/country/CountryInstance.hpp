@@ -5,6 +5,8 @@
 #include <fmt/base.h>
 
 #include "openvic-simulation/diplomacy/CountryRelation.hpp"
+#include "openvic-simulation/economy/BuildingLevel.hpp"
+#include "openvic-simulation/economy/BuildingRestrictionCategory.hpp"
 #include "openvic-simulation/military/CombatWidth.hpp"
 #include "openvic-simulation/military/UnitBranchedGetterMacro.hpp"
 #include "openvic-simulation/modifier/ModifierSum.hpp"
@@ -155,7 +157,7 @@ namespace OpenVic {
 		memory::vector<std::pair<CountryInstance const*, fixed_point_t>> SPAN_PROPERTY(industrial_power_from_investments);
 		size_t PROPERTY(industrial_rank, 0);
 		fixed_point_map_t<CountryInstance const*> PROPERTY(foreign_investments);
-		OV_IFLATMAP_PROPERTY(BuildingType, technology_unlock_level_t, building_type_unlock_levels);
+		OV_IFLATMAP_PROPERTY(BuildingType, building_level_t, building_type_unlock_levels);
 		// TODO - total amount of each good produced
 
 		/* Budget */
@@ -410,57 +412,58 @@ namespace OpenVic {
 		OV_UNIT_BRANCHED_GETTER(get_leaders, generals, admirals);
 		OV_UNIT_BRANCHED_GETTER_CONST(get_leaders, generals, admirals);
 
-		inline size_t get_general_count() const {
+		[[nodiscard]] inline size_t get_general_count() const {
 			return generals.size();
 		}
-		inline bool has_generals() const {
+		[[nodiscard]] inline bool has_generals() const {
 			return !generals.empty();
 		}
-		inline size_t get_admiral_count() const {
+		[[nodiscard]] inline size_t get_admiral_count() const {
 			return admirals.size();
 		}
-		inline bool has_admirals() const {
+		[[nodiscard]] inline bool has_admirals() const {
 			return !admirals.empty();
 		}
-		inline size_t get_leader_count() const {
+		[[nodiscard]] inline size_t get_leader_count() const {
 			return get_general_count() + get_admiral_count();
 		}
-		inline bool has_leaders() const {
+		[[nodiscard]] inline bool has_leaders() const {
 			return has_generals() || has_admirals();
 		}
-		inline size_t get_army_count() const {
+		[[nodiscard]] inline size_t get_army_count() const {
 			return armies.size();
 		}
-		inline bool has_armies() const {
+		[[nodiscard]] inline bool has_armies() const {
 			return !armies.empty();
 		}
-		inline size_t get_navy_count() const {
+		[[nodiscard]] inline size_t get_navy_count() const {
 			return navies.size();
 		}
-		inline bool has_navies() const {
+		[[nodiscard]] inline bool has_navies() const {
 			return !navies.empty();
 		}
 
-		std::string_view get_identifier() const;
+		[[nodiscard]] std::string_view get_identifier() const;
 
-		bool exists() const;
-		bool is_rebel_country() const;
-		bool is_civilised() const;
-		bool can_colonise() const;
-		bool is_great_power() const;
-		bool is_secondary_power() const;
-		bool is_at_war() const;
-		bool is_neighbour(CountryInstance const& country) const;
+		[[nodiscard]] bool exists() const;
+		[[nodiscard]] bool is_rebel_country() const;
+		[[nodiscard]] bool is_civilised() const;
+		[[nodiscard]] bool can_colonise() const;
+		[[nodiscard]] bool is_great_power() const;
+		[[nodiscard]] bool is_secondary_power() const;
+		[[nodiscard]] bool is_at_war() const;
+		[[nodiscard]] bool is_neighbour(CountryInstance const& country) const;
+		[[nodiscard]] bool may_build_in(const BuildingRestrictionCategory restriction_category, ProvinceInstance const& location) const;
 
 		// Double-sided diplomacy functions
 
 		CountryRelationManager::relation_value_type get_relations_with(CountryInstance const& country) const;
 		void set_relations_with(CountryInstance& country, CountryRelationManager::relation_value_type relations);
 
-		bool has_alliance_with(CountryInstance const& country) const;
+		[[nodiscard]] bool has_alliance_with(CountryInstance const& country) const;
 		void set_alliance_with(CountryInstance& country, bool alliance = true);
 
-		bool is_at_war_with(CountryInstance const& country) const;
+		[[nodiscard]] bool is_at_war_with(CountryInstance const& country) const;
 		// Low-level setter function, should not be used to declare or join wars
 		// Should generally be the basis for higher-level war functions
 		void set_at_war_with(CountryInstance& country, bool at_war = true);
@@ -469,16 +472,16 @@ namespace OpenVic {
 
 		// Only detects military access diplomacy, do not use to validate troop movement
 		// Prefer can_units_enter
-		bool has_military_access_to(CountryInstance const& country) const;
+		[[nodiscard]] bool has_military_access_to(CountryInstance const& country) const;
 		void set_military_access_to(CountryInstance& country, bool access = true);
 
-		bool is_sending_war_subsidy_to(CountryInstance const& country) const;
+		[[nodiscard]] bool is_sending_war_subsidy_to(CountryInstance const& country) const;
 		void set_sending_war_subsidy_to(CountryInstance& country, bool sending = true);
 
-		bool is_commanding_units(CountryInstance const& country) const;
+		[[nodiscard]] bool is_commanding_units(CountryInstance const& country) const;
 		void set_commanding_units(CountryInstance& country, bool commanding = true);
 
-		bool has_vision_of(CountryInstance const& country) const;
+		[[nodiscard]] bool has_vision_of(CountryInstance const& country) const;
 		void set_has_vision_of(CountryInstance& country, bool vision = true);
 
 		CountryRelationManager::OpinionType get_opinion_of(CountryInstance const& country) const;
@@ -498,8 +501,8 @@ namespace OpenVic {
 		std::optional<Date> get_embass_banned_from_date(CountryInstance const& country) const;
 		void set_embassy_banned_from(CountryInstance& country, Date until);
 
-		bool can_army_units_enter(CountryInstance const& country) const;
-		bool can_navy_units_enter(CountryInstance const& country) const;
+		[[nodiscard]] bool can_army_units_enter(CountryInstance const& country) const;
+		[[nodiscard]] bool can_navy_units_enter(CountryInstance const& country) const;
 
 		// These functions take "std::string const&" rather than "std::string_view" as they're only used with script arguments
 		// which are always stored as "std::string"s and it significantly simplifies mutable value access.
@@ -545,36 +548,36 @@ namespace OpenVic {
 		bool add_leader(LeaderInstance& leader);
 		bool remove_leader(LeaderInstance const& leader);
 
-		bool has_leader_with_name(std::string_view name) const;
+		[[nodiscard]] bool has_leader_with_name(std::string_view name) const;
 
 		template<unit_branch_t Branch>
 		bool modify_unit_type_unlock(UnitTypeBranched<Branch> const& unit_type, technology_unlock_level_t unlock_level_change);
 
 		bool modify_unit_type_unlock(UnitType const& unit_type, technology_unlock_level_t unlock_level_change);
 		bool unlock_unit_type(UnitType const& unit_type);
-		bool is_unit_type_unlocked(UnitType const& unit_type) const;
+		[[nodiscard]] bool is_unit_type_unlocked(UnitType const& unit_type) const;
 
 		bool modify_building_type_unlock(
 			BuildingType const& building_type, technology_unlock_level_t unlock_level_change
 		);
 		bool unlock_building_type(BuildingType const& building_type);
-		bool is_building_type_unlocked(BuildingType const& building_type) const;
+		[[nodiscard]] bool is_building_type_unlocked(BuildingType const& building_type) const;
 
 		bool modify_crime_unlock(Crime const& crime, technology_unlock_level_t unlock_level_change);
 		bool unlock_crime(Crime const& crime);
-		bool is_crime_unlocked(Crime const& crime) const;
+		[[nodiscard]] bool is_crime_unlocked(Crime const& crime) const;
 
 		bool modify_gas_attack_unlock(technology_unlock_level_t unlock_level_change);
 		bool unlock_gas_attack();
-		bool is_gas_attack_unlocked() const;
+		[[nodiscard]] bool is_gas_attack_unlocked() const;
 
 		bool modify_gas_defence_unlock(technology_unlock_level_t unlock_level_change);
 		bool unlock_gas_defence();
-		bool is_gas_defence_unlocked() const;
+		[[nodiscard]] bool is_gas_defence_unlocked() const;
 
 		bool modify_unit_variant_unlock(unit_variant_t unit_variant, technology_unlock_level_t unlock_level_change);
 		bool unlock_unit_variant(unit_variant_t unit_variant);
-		unit_variant_t get_max_unlocked_unit_variant() const;
+		[[nodiscard]] unit_variant_t get_max_unlocked_unit_variant() const;
 
 		bool modify_technology_unlock(
 			Technology const& technology, technology_unlock_level_t unlock_level_change
@@ -583,7 +586,7 @@ namespace OpenVic {
 			Technology const& technology, technology_unlock_level_t unlock_level
 		);
 		bool unlock_technology(Technology const& technology);
-		bool is_technology_unlocked(Technology const& technology) const;
+		[[nodiscard]] bool is_technology_unlocked(Technology const& technology) const;
 
 		bool modify_invention_unlock(
 			Invention const& invention, technology_unlock_level_t unlock_level_change
@@ -592,15 +595,15 @@ namespace OpenVic {
 			Invention const& invention, technology_unlock_level_t unlock_level
 		);
 		bool unlock_invention(Invention const& invention);
-		bool is_invention_unlocked(Invention const& invention) const;
+		[[nodiscard]] bool is_invention_unlocked(Invention const& invention) const;
 
-		bool is_primary_culture(Culture const& culture) const;
+		[[nodiscard]] bool is_primary_culture(Culture const& culture) const;
 		// This only checks the accepted cultures list, ignoring the primary culture.
-		bool is_accepted_culture(Culture const& culture) const;
-		bool is_primary_or_accepted_culture(Culture const& culture) const;
+		[[nodiscard]] bool is_accepted_culture(Culture const& culture) const;
+		[[nodiscard]] bool is_primary_or_accepted_culture(Culture const& culture) const;
 
-		fixed_point_t calculate_research_cost(Technology const& technology) const;
-		bool can_research_tech(Technology const& technology, const Date today) const;
+		[[nodiscard]] fixed_point_t calculate_research_cost(Technology const& technology) const;
+		[[nodiscard]] bool can_research_tech(Technology const& technology, const Date today) const;
 		void start_research(Technology const& technology, const Date today);
 
 		// Sets the investment of each country in the map (rather than adding to them), leaving the rest unchanged.
