@@ -24,7 +24,7 @@
 
 namespace OpenVic {
 	struct BaseIssue;
-	struct BuildingTypeManager;
+	struct BuildingType;
 	struct CountryInstance;
 	struct CountryInstanceManager;
 	struct CountryParty;
@@ -168,7 +168,14 @@ namespace OpenVic {
 			return owner == nullptr;
 		}
 
-		bool expand_building(const province_building_index_t index);
+		constexpr bool may_build_here() const {
+			return !is_occupied();
+		}
+		bool expand_building(
+			ModifierEffectCache const& modifier_effect_cache,
+			const province_building_index_t index,
+			CountryInstance& actor
+		);
 
 		bool add_pop_vec(
 			std::span<const PopBase> pop_vec,

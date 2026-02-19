@@ -2,10 +2,16 @@
 
 #include <optional>
 
+#include "openvic-simulation/core/error/ErrorMacros.hpp"
+#include "openvic-simulation/country/CountryInstance.hpp"
 #include "openvic-simulation/economy/GoodDefinition.hpp"
 #include "openvic-simulation/economy/production/ProductionType.hpp"
+#include "openvic-simulation/map/ProvinceDefinition.hpp"
+#include "openvic-simulation/map/ProvinceInstance.hpp"
+#include "openvic-simulation/map/State.hpp"
 #include "openvic-simulation/modifier/ModifierEffectCache.hpp"
 #include "openvic-simulation/modifier/ModifierManager.hpp"
+#include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
 #include "openvic-simulation/types/TypedIndices.hpp"
 
 using namespace OpenVic;
@@ -26,24 +32,86 @@ BuildingType::BuildingType(
 	goods_cost { std::move(building_type_args.goods_cost) },
 	cost { building_type_args.cost },
 	build_time { building_type_args.build_time },
-	on_map { building_type_args.on_map },
-	default_enabled { building_type_args.default_enabled },
+	should_display_on_map { building_type_args.on_map },
+	is_enabled_by_default { building_type_args.default_enabled },
 	production_type { building_type_args.production_type },
-	pop_build_factory { building_type_args.pop_build_factory },
-	strategic_factory { building_type_args.strategic_factory },
-	advanced_factory { building_type_args.advanced_factory },
+	is_pop_build_factory { building_type_args.pop_build_factory },
+	is_strategic_factory { building_type_args.strategic_factory },
+	is_advanced_factory { building_type_args.advanced_factory },
 	fort_level { building_type_args.fort_level },
 	naval_capacity { building_type_args.naval_capacity },
 	colonial_points { std::move(building_type_args.colonial_points) },
-	in_province { building_type_args.in_province },
-	one_per_state { building_type_args.one_per_state },
+	is_in_province { building_type_args.in_province },
+	restriction_category {
+		building_type_args.pop_build_factory
+			? building_type_args.in_province
+				? BuildingRestrictionCategory::INFRASTRUCTURE
+				: BuildingRestrictionCategory::FACTORY
+			: BuildingRestrictionCategory::UNRESTRICTED
+	},
+	is_limited_to_one_per_state { building_type_args.one_per_state },
 	colonial_range { building_type_args.colonial_range },
 	infrastructure { building_type_args.infrastructure },
-	spawn_railway_track { building_type_args.spawn_railway_track },
-	sail { building_type_args.sail },
-	steam { building_type_args.steam },
+	should_spawn_railway_track { building_type_args.spawn_railway_track },
+	is_sail { building_type_args.sail },
+	is_steam { building_type_args.steam },
 	capital { building_type_args.capital },
-	port { building_type_args.port } {}
+	is_port { building_type_args.port } {}
+
+bool BuildingType::can_be_built_in(
+	ModifierEffectCache const& modifier_effect_cache,
+	const building_level_t desired_level,
+	CountryInstance const& actor,
+	ProvinceInstance const& location
+) const {
+	OV_ERR_FAIL_COND_V_MSG(
+		!is_in_province,
+		false,
+		memory::fmt::format("BuildingType::can_be_built_in (province variant) was called on state level building {}", get_identifier())
+	);
+
+	if (desired_level > max_level) {
+		return false;
+	}
+
+	if (!can_be_built_in(location.province_definition)) {
+		return false;
+	}
+
+	if (!location.may_build_here()) {
+		return false;
+	}
+
+	if (!actor.may_build_in(restriction_category, location)) {
+		return false;
+	}
+
+	if (is_limited_to_one_per_state) {
+		State const* state = location.get_state();
+		if (state != nullptr) {
+			for (ProvinceInstance const* province_in_state : state->get_provinces()) {
+				if (province_in_state == nullptr || *province_in_state == location) {
+					continue;
+				}
+
+				const building_level_t other_building_level = province_in_state->get_buildings()[province_building_index.value()].get_level();
+				if (other_building_level > building_level_t(0)) {
+					return false;
+				}
+			}
+		}
+	}
+
+	building_level_t const& unlocked_max_level = actor.get_building_type_unlock_levels(*this);
+	ModifierEffectCache::building_type_effects_t const& effects = modifier_effect_cache.get_building_type_effects(*this);
+	const fixed_point_t min_level_modifier = location.get_modifier_effect_value(*effects.get_min_level());
+	return fixed_point_t { type_safe::get(unlocked_max_level) }
+		>= fixed_point_t { type_safe::get(desired_level) } + min_level_modifier;
+}
+
+bool BuildingType::can_be_built_in(ProvinceDefinition const& location) const {
+	return !is_port || location.has_port();
+}
 
 BuildingTypeManager::BuildingTypeManager() : infrastructure_building_type { nullptr }, port_building_type { nullptr } {}
 
@@ -158,8 +226,8 @@ bool BuildingTypeManager::load_buildings_file(
 			this_building_type_effects.min_level, append_string_views(min_prefix, building_type.get_identifier()),
 			FORMAT_x1_0DP_NEG
 		);
-		if (building_type.is_in_province()) {
-			if (building_type.is_port()) {
+		if (building_type.is_in_province) {
+			if (building_type.is_port) {
 				if (port_building_type == nullptr) {
 					port_building_type = &building_type;
 				} else {
@@ -169,7 +237,7 @@ bool BuildingTypeManager::load_buildings_file(
 					);
 					ret = false;
 				}
-			} else if (building_type.get_type() == "infrastructure") {
+			} else if (building_type.type == "infrastructure") {
 				if (infrastructure_building_type == nullptr) {
 					infrastructure_building_type = &building_type;
 				} else {
@@ -181,7 +249,7 @@ bool BuildingTypeManager::load_buildings_file(
 				}
 			}
 		} else {
-			if (building_type.is_port()) {
+			if (building_type.is_port) {
 				spdlog::error_s(
 					"Building type {} is marked as a port, but is not a province building!", building_type
 				);

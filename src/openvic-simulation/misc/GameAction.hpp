@@ -69,7 +69,7 @@ X(tick, std::monostate) \
 X(set_pause, bool) \
 X(set_speed, int64_t) \
 X(set_ai, country_index_t, bool) \
-X(expand_province_building, province_index_t, province_building_index_t) \
+X(expand_province_building, country_index_t, province_index_t, province_building_index_t) \
 X(set_strata_tax, country_index_t, strata_index_t, fixed_point_t) \
 X(set_army_spending, country_index_t, fixed_point_t) \
 X(set_navy_spending, country_index_t, fixed_point_t) \

@@ -10,16 +10,31 @@ BuildingInstance::BuildingInstance(BuildingType const& new_building_type, buildi
 	level { new_level } {}
 
 bool BuildingInstance::_can_expand() const {
-	return level < building_type.get_max_level();
+	return level < building_type.max_level;
 }
 
-bool BuildingInstance::expand() {
-	if (expansion_state == ExpansionState::CanExpand) {
-		expansion_state = ExpansionState::Preparing;
-		expansion_progress = 0;
-		return true;
+bool BuildingInstance::expand(
+	ModifierEffectCache const& modifier_effect_cache,
+	CountryInstance& actor,
+	ProvinceInstance const& location
+) {
+	if (expansion_state != ExpansionState::CanExpand) {
+		return false;
 	}
-	return false;
+
+	if (!building_type.can_be_built_in(
+		modifier_effect_cache,
+		level+1,
+		actor,
+		location
+	)) {
+		return false;
+	}
+
+	//TODO add construction costs to actor
+	expansion_state = ExpansionState::Preparing;
+	expansion_progress = 0;
+	return true;
 }
 
 /* REQUIREMENTS:
@@ -29,7 +44,7 @@ void BuildingInstance::update_gamestate(Date today) {
 	switch (expansion_state) {
 	case ExpansionState::Preparing:
 		start_date = today;
-		end_date = start_date + building_type.get_build_time();
+		end_date = start_date + building_type.build_time;
 		break;
 	case ExpansionState::Expanding:
 		expansion_progress = fixed_point_t { static_cast<int32_t>((today - start_date).to_int()) }
@@ -48,5 +63,25 @@ void BuildingInstance::tick(Date today) {
 			level++;
 			expansion_state = ExpansionState::CannotExpand;
 		}
+	}
+}
+
+void BuildingInstance::set_level(const building_level_t new_level) {
+	if (new_level == level) {
+		return;
+	}
+
+	if (new_level < level) {
+		if (new_level < building_level_t(0)) {
+			spdlog::error_s("Cannot set building level to {}, the minimum is 0.", new_level);
+			level = building_level_t(0);
+		} else {
+			level = new_level;
+		}
+	} else if (new_level > building_type.max_level) {
+		spdlog::error_s("Cannot set building level to {}, the maximum is {}.", new_level, building_type.max_level);
+		level = building_type.max_level;
+	} else {
+		level = new_level;
 	}
 }

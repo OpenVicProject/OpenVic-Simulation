@@ -45,7 +45,14 @@ bool GameActionManager::VariantVisitor::operator() (set_ai_argument_t const& arg
 
 // Production
 bool GameActionManager::VariantVisitor::operator() (expand_province_building_argument_t const& argument) const {
-	const auto [province_index, province_building_index] = argument;
+	const auto [country_index, province_index, province_building_index] = argument;
+	CountryInstance* country = instance_manager.get_country_instance_manager().get_country_instance_by_index(country_index);
+
+	if (OV_unlikely(country == nullptr)) {
+		spdlog::error_s("GAME_ACTION_EXPAND_PROVINCE_BUILDING called with invalid country index: {}", country_index);
+		return false;
+	}
+	
 	ProvinceInstance* province = instance_manager.get_map_instance().get_province_instance_by_index(province_index);
 
 	if (OV_unlikely(province == nullptr)) {
@@ -53,7 +60,11 @@ bool GameActionManager::VariantVisitor::operator() (expand_province_building_arg
 		return false;
 	}
 
-	return province->expand_building(province_building_index);
+	return province->expand_building(
+		instance_manager.definition_manager.get_modifier_manager().get_modifier_effect_cache(),
+		province_building_index,
+		*country
+	);
 }
 
 // Budget
