@@ -16,9 +16,9 @@ WargoalType::WargoalType(
 	ConditionScript&& new_allowed_substate_regions, ConditionScript&& new_allowed_states_in_crisis,
 	ConditionScript&& new_allowed_countries, EffectScript&& new_on_add, EffectScript&& new_on_po_accepted
 ) : HasIdentifier { new_identifier }, war_name { new_war_name }, available_length { new_available_length },
-	truce_length { new_truce_length }, sprite_index { new_sprite_index }, triggered_only { new_triggered_only },
-	civil_war { new_civil_war }, constructing { new_constructing }, crisis { new_crisis },
-	great_war_obligatory { new_great_war_obligatory }, mutual { new_mutual }, all_allowed_states { new_all_allowed_states },
+	truce_length { new_truce_length }, sprite_index { new_sprite_index }, is_triggered_only { new_triggered_only },
+	is_civil_war { new_civil_war }, constructing { new_constructing }, crisis { new_crisis },
+	is_great_war_obligatory { new_great_war_obligatory }, is_mutual { new_mutual }, all_allowed_states { new_all_allowed_states },
 	always { new_always }, modifiers { std::move(new_modifiers) }, peace_options { new_peace_options },
 	can_use { std::move(new_can_use) }, is_valid { std::move(new_is_valid) }, allowed_states { std::move(new_allowed_states) },
 	allowed_substate_regions { std::move(new_allowed_substate_regions) },

@@ -9,15 +9,15 @@ GovernmentType::GovernmentType(
 	index_t new_index,
 	std::string_view new_identifier,
 	memory::vector<Ideology const*>&& new_ideologies,
-	bool new_elections,
-	bool new_appoint_ruling_party,
+	bool new_holds_elections,
+	bool new_can_appoint_ruling_party,
 	Timespan new_term_duration,
 	std::string_view new_flag_type_identifier
 ) : HasIndex { new_index },
 	HasIdentifier { new_identifier },
 	ideologies { std::move(new_ideologies) },
-	elections { new_elections },
-	appoint_ruling_party { new_appoint_ruling_party },
+	holds_elections { new_holds_elections },
+	can_appoint_ruling_party { new_can_appoint_ruling_party },
 	term_duration { new_term_duration },
 	flag_type_identifier { new_flag_type_identifier } {}
 

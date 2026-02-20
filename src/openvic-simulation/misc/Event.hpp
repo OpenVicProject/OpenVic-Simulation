@@ -40,12 +40,6 @@ namespace OpenVic {
 		memory::string PROPERTY(description);
 		memory::string PROPERTY(image);
 		event_type_t PROPERTY(type);
-		bool PROPERTY_CUSTOM_PREFIX(triggered_only, is);
-		bool PROPERTY_CUSTOM_PREFIX(major, is);
-		bool PROPERTY(fire_only_once);
-		bool PROPERTY(allows_multiple_instances);
-
-		bool PROPERTY_CUSTOM_PREFIX(news, is);
 		memory::string PROPERTY(news_title);
 		memory::string PROPERTY(news_desc_long);
 		memory::string PROPERTY(news_desc_medium);
@@ -63,6 +57,12 @@ namespace OpenVic {
 		bool parse_scripts(DefinitionManager const& definition_manager);
 
 	public:
+		const bool is_triggered_only;
+		const bool is_major;
+		const bool fire_only_once;
+		const bool allows_multiple_instances;
+		const bool is_news;
+
 		Event(
 			std::string_view new_identifier, std::string_view new_title, std::string_view new_description,
 			std::string_view new_image, event_type_t new_type, bool new_triggered_only, bool new_major,

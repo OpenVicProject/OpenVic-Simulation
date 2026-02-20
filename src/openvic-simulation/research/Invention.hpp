@@ -29,12 +29,6 @@ namespace OpenVic {
 		using crime_set_t = ordered_set<Crime const*>;
 
 	private:
-		const bool PROPERTY_CUSTOM_PREFIX(news, is);
-		unit_set_t PROPERTY(activated_units);
-		building_set_t PROPERTY(activated_buildings);
-		crime_set_t PROPERTY(enabled_crimes);
-		const bool PROPERTY_CUSTOM_PREFIX(unlock_gas_attack, will);
-		const bool PROPERTY_CUSTOM_PREFIX(unlock_gas_defence, will);
 		ConditionScript PROPERTY(limit);
 		ConditionalWeightBase PROPERTY(chance);
 		
@@ -43,16 +37,23 @@ namespace OpenVic {
 		bool parse_scripts(DefinitionManager const& definition_manager);
 
 	public:
+		const bool is_news;
+		const unit_set_t activated_units;
+		const building_set_t activated_buildings;
+		const crime_set_t enabled_crimes;
+		const bool unlocks_gas_attack;
+		const bool unlocks_gas_defence;
+
 		Invention(
 			index_t new_index,
 			std::string_view new_identifier,
 			ModifierValue&& new_values,
-			bool new_news,
+			bool new_is_news,
 			unit_set_t&& new_activated_units,
 			building_set_t&& new_activated_buildings,
 			crime_set_t&& new_enabled_crimes,
-			bool new_unlock_gas_attack,
-			bool new_unlock_gas_defence,
+			bool new_unlocks_gas_attack,
+			bool new_unlocks_gas_defence,
 			ConditionScript&& new_limit,
 			ConditionalWeightBase&& new_chance,
 			memory::vector<memory::string>&& new_raw_associated_tech_identifiers

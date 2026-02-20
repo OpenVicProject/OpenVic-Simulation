@@ -58,10 +58,6 @@ namespace OpenVic {
 
 	private:
 		memory::string PROPERTY(war_name);
-		const bool PROPERTY_CUSTOM_PREFIX(triggered_only, is); // only able to be added via effects or on_actions
-		const bool PROPERTY_CUSTOM_PREFIX(civil_war, is);
-		const bool PROPERTY_CUSTOM_PREFIX(great_war_obligatory, is); // automatically add to great war peace offers/demands
-		const bool PROPERTY_CUSTOM_PREFIX(mutual, is); // attacked and defender share wargoal
 		peace_modifiers_t PROPERTY(modifiers);
 		peace_options_t PROPERTY(peace_options);
 		ConditionScript PROPERTY(can_use);
@@ -83,6 +79,10 @@ namespace OpenVic {
 		const bool crisis; // able to be added to crises
 		const bool all_allowed_states; // take all valid states rather than just one
 		const bool always; // available without justifying
+		const bool is_triggered_only; // only able to be added via effects or on_actions
+		const bool is_civil_war;
+		const bool is_great_war_obligatory; // automatically add to great war peace offers/demands
+		const bool is_mutual; // attacked and defender share wargoal
 
 		WargoalType(
 			std::string_view new_identifier, std::string_view new_war_name, Timespan new_available_length,

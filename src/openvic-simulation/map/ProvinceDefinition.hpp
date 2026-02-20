@@ -1,7 +1,9 @@
 #pragma once
 
 #include <optional>
-#include <utility>
+
+#include <type_safe/reference.hpp>
+#include <type_safe/strong_typedef.hpp>
 
 #include "openvic-simulation/dataloader/NodeTools.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
@@ -12,7 +14,6 @@
 #include "openvic-simulation/types/TypedIndices.hpp"
 #include "openvic-simulation/types/Vector.hpp"
 #include "openvic-simulation/utility/Containers.hpp"
-#include "type_safe/strong_typedef.hpp"
 
 namespace OpenVic {
 
@@ -51,17 +52,26 @@ namespace OpenVic {
 			static std::string_view get_type_name(type_t type);
 
 		private:
-			ProvinceDefinition const* PROPERTY(to);
+			// fields are const after loading. They have to be mutable to support std::vector<adjacency_t>.erase(iterator)
+			type_safe::object_ref<const ProvinceDefinition> PROPERTY(to);
 			ProvinceDefinition const* PROPERTY(through);
 			distance_t PROPERTY(distance);
 			type_t PROPERTY(type);
 			data_t PROPERTY(data); // represents canal index, 0 for non-canal adjacencies
 
 		public:
-			adjacency_t(
-				ProvinceDefinition const* new_to, distance_t new_distance, type_t new_type,
-				ProvinceDefinition const* new_through, data_t new_data
-			);
+			constexpr adjacency_t(
+				ProvinceDefinition const& new_to,
+				const distance_t new_distance,
+				const type_t new_type,
+				ProvinceDefinition const* const new_through,
+				const data_t new_data
+			) : to { new_to },
+				through { new_through },
+				distance { new_distance },
+				type { new_type },
+				data { new_data } {}
+
 			adjacency_t(adjacency_t const&) = delete;
 			adjacency_t(adjacency_t&&) = default;
 			adjacency_t& operator=(adjacency_t const&) = delete;
@@ -139,10 +149,10 @@ namespace OpenVic {
 		fvec2_t const* get_building_position(BuildingType const* building_type) const;
 		fixed_point_t get_building_rotation(BuildingType const* building_type) const;
 
-		adjacency_t const* get_adjacency_to(ProvinceDefinition const* province) const;
-		bool is_adjacent_to(ProvinceDefinition const* province) const;
-		memory::vector<adjacency_t const*> get_adjacencies_going_through(ProvinceDefinition const* province) const;
-		bool has_adjacency_going_through(ProvinceDefinition const* province) const;
+		adjacency_t const* get_adjacency_to(ProvinceDefinition const& province) const;
+		bool is_adjacent_to(ProvinceDefinition const& province) const;
+		memory::vector<adjacency_t const*> get_adjacencies_going_through(ProvinceDefinition const& province) const;
+		bool has_adjacency_going_through(ProvinceDefinition const& province) const;
 
 		fvec2_t get_unit_position() const;
 		fvec2_t get_city_position() const;

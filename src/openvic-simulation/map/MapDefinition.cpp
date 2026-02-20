@@ -123,8 +123,8 @@ bool MapDefinition::add_standard_adjacency(ProvinceDefinition& from, ProvinceDef
 		return false;
 	}
 
-	const bool from_needs_adjacency = !from.is_adjacent_to(&to);
-	const bool to_needs_adjacency = !to.is_adjacent_to(&from);
+	const bool from_needs_adjacency = !from.is_adjacent_to(to);
+	const bool to_needs_adjacency = !to.is_adjacent_to(from);
 
 	if (from_needs_adjacency != to_needs_adjacency) {
 		spdlog::error_s("Inconsistent adjacency state between provinces {} and {}", from, to);
@@ -183,11 +183,12 @@ bool MapDefinition::add_standard_adjacency(ProvinceDefinition& from, ProvinceDef
 		path_map_land.connect_points(from.get_province_number(), to.get_province_number());
 	}
 
+	constexpr ProvinceDefinition const* const no_through = nullptr;
 	if (from_needs_adjacency) {
-		from.adjacencies.emplace_back(&to, distance, type, nullptr, 0);
+		from.adjacencies.emplace_back(to, distance, type, no_through, ProvinceDefinition::adjacency_t::DEFAULT_DATA);
 	}
 	if (to_needs_adjacency) {
-		to.adjacencies.emplace_back(&from, distance, type, nullptr, 0);
+		to.adjacencies.emplace_back(from, distance, type, no_through, ProvinceDefinition::adjacency_t::DEFAULT_DATA);
 	}
 	return true;
 }
@@ -283,7 +284,7 @@ bool MapDefinition::add_special_adjacency(
 	) -> bool {
 		const memory::vector<adjacency_t>::iterator existing_adjacency = std::find_if(
 			from.adjacencies.begin(), from.adjacencies.end(),
-			[&to](adjacency_t const& adj) -> bool { return adj.get_to() == &to; }
+			[&to](adjacency_t const& adj) -> bool { return adj.get_to() == to; }
 		);
 		if (existing_adjacency != from.adjacencies.end()) {
 			if (type == existing_adjacency->get_type()) {
@@ -319,7 +320,7 @@ bool MapDefinition::add_special_adjacency(
 					return false;
 				}
 			}
-			*existing_adjacency = { &to, distance, type, through, data };
+			*existing_adjacency = { to, distance, type, through, data };
 			if (from.is_water() && to.is_water()) {
 				path_map_sea.connect_points(from.get_province_number(), to.get_province_number());
 			} else {
@@ -342,7 +343,7 @@ bool MapDefinition::add_special_adjacency(
 			);
 			return true;
 		} else {
-			from.adjacencies.emplace_back(&to, distance, type, through, data);
+			from.adjacencies.emplace_back(to, distance, type, through, data);
 			if (from.is_water() && to.is_water()) {
 				path_map_sea.connect_points(from.get_province_number(), to.get_province_number());
 			} else {

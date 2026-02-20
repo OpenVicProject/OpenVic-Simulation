@@ -11,11 +11,10 @@
 namespace OpenVic {
 
 	struct HistoryEntry {
-	private:
-		Date PROPERTY(date);
-
 	protected:
-		HistoryEntry(Date new_date);
+		constexpr HistoryEntry(const Date new_date) : date { new_date } {}
+	public:
+		const Date date;
 	};
 
 	struct DefinitionManager;

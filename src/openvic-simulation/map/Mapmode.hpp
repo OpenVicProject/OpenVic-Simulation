@@ -34,17 +34,17 @@ namespace OpenVic {
 		// Not const so they don't have to be copied when the Mapmode is moved
 		colour_func_t PROPERTY(colour_func);
 		memory::string PROPERTY(localisation_key);
-		const bool PROPERTY_CUSTOM_PREFIX(parchment_mapmode_allowed, is);
 
 	public:
 		static const Mapmode ERROR_MAPMODE;
+		const bool is_parchment_mapmode_allowed;
 
 		Mapmode(
 			std::string_view new_identifier,
 			index_t new_index,
 			colour_func_t new_colour_func,
 			std::string_view new_localisation_key = {},
-			bool new_parchment_mapmode_allowed = true
+			bool new_is_parchment_mapmode_allowed = true
 		);
 		Mapmode(Mapmode&&) = default;
 

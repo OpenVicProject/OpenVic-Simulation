@@ -54,20 +54,20 @@ namespace OpenVic {
 		using building_set_t = ordered_set<BuildingType const*>;
 
 	private:
-		const Date::year_t PROPERTY(year);
 		std::optional<unit_variant_t> PROPERTY(unit_variant);
-		unit_set_t PROPERTY(activated_units);
-		building_set_t PROPERTY(activated_buildings);
 		ConditionalWeightFactorMul PROPERTY(ai_chance);
 		memory::vector<Invention const*> PROPERTY(inventions);
 
 		bool parse_scripts(DefinitionManager const& definition_manager);
 
 	public:
+		const Date::year_t year;
 		TechnologyArea const& area;
 		const fixed_point_t cost;
 		const area_index_t index_in_area;
 		const bool unciv_military;
+		const unit_set_t activated_units;
+		const building_set_t activated_buildings;
 
 		Technology(
 			std::string_view new_identifier,

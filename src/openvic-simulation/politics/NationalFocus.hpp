@@ -22,22 +22,22 @@ namespace OpenVic {
 		friend struct NationalFocusManager;
 
 	private:
-		uint8_t PROPERTY(icon);
-		bool PROPERTY(has_flashpoint);
-		fixed_point_t PROPERTY(flashpoint_tension);
-		bool PROPERTY(own_provinces);
-		bool PROPERTY(outliner_show_as_percent);
-		Ideology const* PROPERTY(loyalty_ideology);
-		fixed_point_t PROPERTY(loyalty_value);
-		fixed_point_t PROPERTY(encourage_railroads);
-		fixed_point_map_t<GoodDefinition const*> PROPERTY(encourage_goods);
-		fixed_point_map_t<PopType const*> PROPERTY(encourage_pop_types);
 		ConditionScript PROPERTY(limit);
 
 		bool parse_scripts(DefinitionManager const& definition_manager);
 
 	public:
 		NationalFocusGroup const& group;
+		const uint8_t icon;
+		const bool has_flashpoint;
+		const fixed_point_t flashpoint_tension;
+		const bool own_provinces;
+		const bool outliner_show_as_percent;
+		Ideology const* const loyalty_ideology;
+		const fixed_point_t loyalty_value;
+		const fixed_point_t encourage_railroads;
+		const fixed_point_map_t<GoodDefinition const*> encourage_goods;
+		const fixed_point_map_t<PopType const*> encourage_pop_types;
 
 		NationalFocus(
 			std::string_view new_identifier,

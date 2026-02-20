@@ -40,20 +40,6 @@ namespace OpenVic {
 		};
 
 	private:
-		const bool PROPERTY_CUSTOM_PREFIX(break_alliance_on_win, will);
-		government_map_t PROPERTY(desired_governments); //government
-		const defection_t PROPERTY_CUSTOM_NAME(defection, get_defection_type);
-		const independence_t PROPERTY_CUSTOM_NAME(independence, get_independence_type);
-		Ideology const* PROPERTY(ideology);
-		const bool PROPERTY_CUSTOM_PREFIX(allow_all_cultures, will);
-		const bool PROPERTY_CUSTOM_PREFIX(allow_all_culture_groups, will);
-		const bool PROPERTY_CUSTOM_PREFIX(allow_all_religions, will);
-		const bool PROPERTY_CUSTOM_PREFIX(allow_all_ideologies, will);
-		const bool PROPERTY_CUSTOM_PREFIX(resilient, is);
-		const bool PROPERTY_CUSTOM_PREFIX(reinforcing, is);
-		const bool PROPERTY_CUSTOM_PREFIX(general, can_have);
-		const bool PROPERTY_CUSTOM_PREFIX(smart, is);
-		const bool PROPERTY_CUSTOM_NAME(unit_transfer, will_transfer_units);
 		ConditionalWeightFactorMul PROPERTY(will_rise);
 		ConditionalWeightFactorMul PROPERTY(spawn_chance);
 		ConditionalWeightFactorMul PROPERTY(movement_evaluation);
@@ -65,6 +51,20 @@ namespace OpenVic {
 		bool parse_scripts(DefinitionManager const& definition_manager);
 
 	public:
+		const bool will_break_alliance_on_win;
+		const government_map_t desired_governments;
+		const defection_t defection_type;
+		const independence_t independence_type;
+		Ideology const* const ideology;
+		const bool allows_all_cultures;
+		const bool allows_all_culture_groups;
+		const bool allows_all_religions;
+		const bool allows_all_ideologies;
+		const bool is_resilient;
+		const bool is_reinforcing;
+		const bool has_generals;
+		const bool is_smart;
+		const bool will_transfer_units;
 		const icon_t icon;
 		const area_t area;
 		const uint16_t defect_delay;

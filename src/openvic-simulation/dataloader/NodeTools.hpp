@@ -23,7 +23,6 @@
 #include "openvic-simulation/core/ui/TextFormat.hpp"
 #include "openvic-simulation/types/Vector.hpp"
 #include "openvic-simulation/core/FormatValidate.hpp"
-#include "openvic-simulation/utility/Getters.hpp"
 #include "openvic-simulation/utility/TslHelper.hpp"
 #include "openvic-simulation/utility/Containers.hpp"
 #include "openvic-simulation/core/template/Concepts.hpp"
@@ -627,6 +626,22 @@ using namespace std::string_view_literals;
 			};
 		}
 
+		/* By default this will only allow an optional to be set once. Set allow_overwrite
+		 * to true to allow multiple assignments, with the last taking precedence. */
+		template<typename T>
+		auto emplace_opt_callback(
+			std::optional<T>& var, bool allow_overwrite = false
+		) {
+			return [&var, allow_overwrite](auto&&... args) -> bool {
+				if (!allow_overwrite && var.has_value()) {
+					spdlog::error_s("Cannot assign value to already-initialised optional!");
+					return false;
+				}
+				var.emplace(FWD(args)...);
+				return true;
+			};
+		}
+
 		callback_t<std::string_view> assign_variable_callback_string(memory::string& var);
 
 		template<typename T>
@@ -698,6 +713,14 @@ using namespace std::string_view_literals;
 		template<typename T>
 		Callback<T> auto vector_callback(memory::vector<T>& vec) {
 			return vector_callback<T, T>(vec);
+		}
+
+		template<typename T>
+		auto vector_emplace_callback(memory::vector<T>& vec) {
+			return [&vec](auto&&... args) -> bool {
+				vec.emplace_back(FWD(args)...);
+				return true;
+			};
 		}
 
 		template<typename T>

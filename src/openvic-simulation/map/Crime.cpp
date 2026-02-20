@@ -15,7 +15,7 @@ Crime::Crime(
 	bool new_default_active
 ) : HasIndex { new_index },
 	TriggeredModifier { new_identifier, std::move(new_values), modifier_type_t::CRIME, new_icon, std::move(new_trigger) },
-	default_active { new_default_active } {}
+	is_default_active { new_default_active } {}
 
 bool CrimeManager::add_crime_modifier(
 	std::string_view identifier, ModifierValue&& values, IconModifier::icon_t icon, ConditionScript&& trigger,

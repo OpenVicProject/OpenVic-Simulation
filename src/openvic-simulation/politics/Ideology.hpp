@@ -21,8 +21,6 @@ namespace OpenVic {
 		static constexpr colour_t NO_IDEOLOGY_COLOUR = colour_t::fill_as(colour_t::max_value);
 
 	private:
-		const bool PROPERTY_CUSTOM_PREFIX(uncivilised, is);
-		const std::optional<Date> PROPERTY(spawn_date);
 		ConditionalWeightBase PROPERTY(add_political_reform);
 		ConditionalWeightBase PROPERTY(remove_political_reform);
 		ConditionalWeightBase PROPERTY(add_social_reform);
@@ -37,6 +35,8 @@ namespace OpenVic {
 	public:
 		const bool can_reduce_consciousness;
 		const bool can_reduce_militancy;
+		const bool is_allowed_for_uncivilised;
+		const std::optional<Date> spawn_date;
 
 		IdeologyGroup const& group;
 
@@ -45,7 +45,7 @@ namespace OpenVic {
 			index_t new_index,
 			colour_t new_colour,
 			IdeologyGroup const& new_group,
-			bool new_uncivilised,
+			bool new_is_allowed_for_uncivilised,
 			bool new_can_reduce_consciousness,
 			bool new_can_reduce_militancy,
 			std::optional<Date> new_spawn_date,

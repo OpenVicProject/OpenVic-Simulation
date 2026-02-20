@@ -1,116 +1,14 @@
 #pragma once
 
-#include <optional>
-
 #include "openvic-simulation/dataloader/NodeTools.hpp"
-#include "openvic-simulation/history/Period.hpp"
+#include "openvic-simulation/history/diplomacy/AllianceHistory.hpp"
+#include "openvic-simulation/history/diplomacy/ReparationsHistory.hpp"
+#include "openvic-simulation/history/diplomacy/SubjectHistory.hpp"
+#include "openvic-simulation/history/diplomacy/WarHistory.hpp"
 #include "openvic-simulation/types/Date.hpp"
-#include "openvic-simulation/utility/Getters.hpp"
 #include "openvic-simulation/utility/Containers.hpp"
 
 namespace OpenVic {
-	struct DiplomaticHistoryManager;
-	struct CountryDefinition;
-	struct WargoalType;
-	struct ProvinceDefinition;
-
-	struct WarHistory {
-		friend struct DiplomaticHistoryManager;
-
-		struct added_wargoal_t {
-			friend struct DiplomaticHistoryManager;
-
-			added_wargoal_t(
-				Date new_added, CountryDefinition const* new_actor, CountryDefinition const* new_receiver,
-				WargoalType const* new_wargoal, std::optional<CountryDefinition const*> new_third_party,
-				std::optional<ProvinceDefinition const*> new_target
-			);
-
-		private:
-			Date PROPERTY_CUSTOM_PREFIX(added, get_date);
-			CountryDefinition const* PROPERTY(actor);
-			CountryDefinition const* PROPERTY(receiver);
-			WargoalType const* PROPERTY(wargoal);
-
-			// TODO - could these just be nullptr when unset rather than using optionals?
-			std::optional<CountryDefinition const*> PROPERTY(third_party);
-			std::optional<ProvinceDefinition const*> PROPERTY(target);
-		};
-		static_assert(std::is_trivially_move_constructible_v<added_wargoal_t>);
-
-		struct war_participant_t {
-			friend struct DiplomaticHistoryManager;
-
-			war_participant_t(CountryDefinition const* new_country, Period period);
-
-		private:
-			CountryDefinition const* PROPERTY(country);
-			Period PROPERTY(period);
-		};
-		static_assert(std::is_trivially_move_constructible_v<war_participant_t>);
-
-		WarHistory(
-			std::string_view new_war_name, memory::vector<war_participant_t>&& new_attackers,
-			memory::vector<war_participant_t>&& new_defenders, memory::vector<added_wargoal_t>&& new_wargoals
-		);
-
-	private:
-		/* Edge cases where this is empty/undef for some reason,
-		 * probably need to just generate war names like usual for that. */
-		memory::string PROPERTY(war_name);
-		memory::vector<war_participant_t> SPAN_PROPERTY(attackers);
-		memory::vector<war_participant_t> SPAN_PROPERTY(defenders);
-		memory::vector<added_wargoal_t> SPAN_PROPERTY(wargoals);
-	};
-
-	struct AllianceHistory {
-		friend struct DiplomaticHistoryManager;
-
-		AllianceHistory(CountryDefinition const* new_first, CountryDefinition const* new_second, Period period);
-
-	private:
-		CountryDefinition const* PROPERTY(first);
-		CountryDefinition const* PROPERTY(second);
-	public:
-		const Period period;
-	};
-	static_assert(std::is_trivially_move_constructible_v<AllianceHistory>);
-
-	struct ReparationsHistory {
-		friend struct DiplomaticHistoryManager;
-
-		ReparationsHistory(CountryDefinition const* new_receiver, CountryDefinition const* new_sender, Period period);
-
-	private:
-		CountryDefinition const* PROPERTY(receiver);
-		CountryDefinition const* PROPERTY(sender);
-	public:
-		const Period period;
-	};
-	static_assert(std::is_trivially_move_constructible_v<ReparationsHistory>);
-
-	struct SubjectHistory {
-		friend struct DiplomaticHistoryManager;
-
-		enum class type_t : uint8_t {
-			VASSAL,
-			UNION,
-			SUBSTATE
-		};
-
-		SubjectHistory(
-			CountryDefinition const* new_overlord, CountryDefinition const* new_subject, type_t new_subject_type, Period period
-		);
-
-	private:
-		CountryDefinition const* PROPERTY(overlord);
-		CountryDefinition const* PROPERTY(subject);
-	public:
-		const type_t subject_type;
-		const Period period;
-	};
-	static_assert(std::is_trivially_move_constructible_v<SubjectHistory>);
-
 	struct CountryDefinitionManager;
 	struct DefinitionManager;
 
@@ -122,19 +20,41 @@ namespace OpenVic {
 		memory::vector<WarHistory> wars;
 		bool locked = false;
 
+		template<typename HistoryType>
+		static memory::vector<HistoryType const*> filter_by_date(
+			std::span<const HistoryType> items,
+			const Date date
+		) {
+			memory::vector<HistoryType const*> ret;
+			for (auto const& item : items) {
+				if (item.period.is_date_in_period(date)) {
+					ret.push_back(&item);
+				}
+			}
+			return ret;
+		}
+
 	public:
 		DiplomaticHistoryManager() {}
 
 		void reserve_more_wars(size_t size);
 		void lock_diplomatic_history();
-		bool is_locked() const;
+		[[nodiscard]] constexpr bool is_locked() const {
+			return locked;
+		}
 
-		memory::vector<AllianceHistory const*> get_alliances(Date date) const;
-		memory::vector<ReparationsHistory const*> get_reparations(Date date) const;
-		memory::vector<SubjectHistory const*> get_subjects(Date date) const;
+		[[nodiscard]] memory::vector<AllianceHistory const*> get_alliances(Date date) const {
+			return filter_by_date<AllianceHistory>(alliances, date);
+		}
+		[[nodiscard]] memory::vector<ReparationsHistory const*> get_reparations(Date date) const {
+			return filter_by_date<ReparationsHistory>(reparations, date);
+		}
+		[[nodiscard]] memory::vector<SubjectHistory const*> get_subjects(Date date) const{
+			return filter_by_date<SubjectHistory>(subjects, date);
+		}
 		/* Returns all wars that begin before date. NOTE: Some wargoals may be added or countries may join after date,
 		 * should be checked for by functions that use get_wars() */
-		memory::vector<WarHistory const*> get_wars(Date date) const;
+		[[nodiscard]] memory::vector<WarHistory const*> get_wars(Date date) const;
 
 		bool load_diplomacy_history_file(CountryDefinitionManager const& country_definition_manager, ast::NodeCPtr root);
 		bool load_war_history_file(DefinitionManager const& definition_manager, ast::NodeCPtr root);

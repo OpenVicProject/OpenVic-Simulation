@@ -6,6 +6,9 @@
 
 #include <type_safe/strong_typedef.hpp>
 
+#include "openvic-simulation/core/random/RandomGenerator.hpp"
+#include "openvic-simulation/core/random/WeightedSampling.hpp"
+#include "openvic-simulation/core/Typedefs.hpp"
 #include "openvic-simulation/country/CountryInstance.hpp"
 #include "openvic-simulation/defines/EconomyDefines.hpp"
 #include "openvic-simulation/economy/GoodDefinition.hpp"
@@ -18,9 +21,6 @@
 #include "openvic-simulation/population/Pop.hpp"
 #include "openvic-simulation/population/PopValuesFromProvince.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
-#include "openvic-simulation/core/random/RandomGenerator.hpp"
-#include "openvic-simulation/core/Typedefs.hpp"
-#include "openvic-simulation/core/random/WeightedSampling.hpp"
 
 using namespace OpenVic;
 
@@ -60,14 +60,14 @@ void ArtisanalProducer::set_production_type(ProductionType const* const new_prod
 
 	ProductionType const& production_type = *production_type_nullable;
 	max_quantity_to_buy_per_good.clear();
-	max_quantity_to_buy_per_good.reserve(production_type.get_input_goods().size());
+	max_quantity_to_buy_per_good.reserve(production_type.input_goods.size());
 }
 
 void ArtisanalProducer::artisan_tick_handler::calculate_inputs(
 	IndexedFlatMap<GoodDefinition, fixed_point_t> const& stockpile,
 	const bool should_report_input_demand
 ) {
-	fixed_point_map_t<GoodDefinition const*> const& input_goods = production_type.get_input_goods();
+	fixed_point_map_t<GoodDefinition const*> const& input_goods = production_type.input_goods;
 
 	//throughput scalar, the minimum of stockpile / base_desired_quantity
 	//inputs_bought_fraction uses base_desired_quantity as population size is cancelled in the production and input calculations.
@@ -131,7 +131,7 @@ void ArtisanalProducer::artisan_tick_handler::produce(
 		country_to_report_economy_nullable->report_output(production_type, current_production);
 	}
 
-	fixed_point_map_t<GoodDefinition const*> const& input_goods = production_type.get_input_goods();
+	fixed_point_map_t<GoodDefinition const*> const& input_goods = production_type.input_goods;
 	for (auto it = input_goods.begin(); it < input_goods.end(); it++) {
 		GoodDefinition const& input_good = *it.key();
 		const fixed_point_t base_desired_quantity = it.value();
@@ -192,7 +192,7 @@ void ArtisanalProducer::artisan_tick_handler::allocate_money_for_inputs(
 	fixed_point_t max_possible_satisfaction_numerator= 1,
 		max_possible_satisfaction_denominator= 1;
 
-	fixed_point_map_t<GoodDefinition const*> const& input_goods = production_type.get_input_goods();
+	fixed_point_map_t<GoodDefinition const*> const& input_goods = production_type.input_goods;
 	bool at_or_below_optimum = false;
 	while (!at_or_below_optimum) {
 		at_or_below_optimum = true;
@@ -306,7 +306,7 @@ void ArtisanalProducer::artisan_tick(
 		if (old_production_type_ptr == nullptr) {
 			stockpile.fill(0);
 		} else {
-			fixed_point_map_t<GoodDefinition const*> const& input_goods = old_production_type_ptr->get_input_goods();
+			fixed_point_map_t<GoodDefinition const*> const& input_goods = old_production_type_ptr->input_goods;
 			for (auto [good, stockpiled_quantity] : stockpile) {
 				if (!input_goods.contains(&good)) {
 					stockpiled_quantity = 0;
@@ -328,7 +328,7 @@ void ArtisanalProducer::artisan_tick(
 
 	if (old_production_type_ptr != nullptr) {
 		ProductionType const& old_production_type = *old_production_type_ptr;
-		fixed_point_map_t<GoodDefinition const*> const& input_goods = old_production_type.get_input_goods();
+		fixed_point_map_t<GoodDefinition const*> const& input_goods = old_production_type.input_goods;
 		max_price_per_input.resize(input_goods.size(), 0);
 		demand_per_input.resize(input_goods.size(), 0);
 
@@ -361,7 +361,7 @@ void ArtisanalProducer::artisan_tick(
 		set_production_type(new_production_type_ptr);
 		ProductionType const& new_production_type = *new_production_type_ptr;
 
-		fixed_point_map_t<GoodDefinition const*> const& input_goods = new_production_type.get_input_goods();
+		fixed_point_map_t<GoodDefinition const*> const& input_goods = new_production_type.input_goods;
 		max_price_per_input.resize(input_goods.size(), 0);
 		demand_per_input.resize(input_goods.size(), 0);
 
@@ -387,7 +387,7 @@ void ArtisanalProducer::artisan_tick(
 	}
 
 	for (auto const& [good, stockpiled_quantity] : stockpile) {
-		if (production_type_nullable == nullptr || production_type_nullable->get_input_goods().contains(&good)) {
+		if (production_type_nullable == nullptr || production_type_nullable->input_goods.contains(&good)) {
 			continue;
 		}
 
@@ -463,7 +463,7 @@ std::optional<fixed_point_t> ArtisanalProducer::estimate_production_type_score(
 	}
 
 	fixed_point_t estimated_costs = 0;
-	for (auto const& [input_good, input_quantity] : production_type.get_input_goods()) {
+	for (auto const& [input_good, input_quantity] : production_type.input_goods) {
 		estimated_costs += input_quantity * good_instance_manager.get_good_instance_by_definition(*input_good).get_price();
 	}
 	estimated_costs *= max_cost_multiplier;

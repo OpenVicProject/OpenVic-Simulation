@@ -80,7 +80,7 @@ bool IssueManager::add_reform(
 		return false;
 	}
 
-	if (reform_group.is_uncivilised()) {
+	if (reform_group.is_civilizing()) {
 		if (ordinal == 0) {
 			if (technology_cost != 0) {
 				spdlog::warn_s(

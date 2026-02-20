@@ -24,12 +24,12 @@ Mapmode::Mapmode(
 	index_t new_index,
 	colour_func_t new_colour_func,
 	std::string_view new_localisation_key,
-	bool new_parchment_mapmode_allowed
+	bool new_is_parchment_mapmode_allowed
 ) : HasIdentifier { new_identifier },
 	HasIndex { new_index },
 	colour_func { std::move(new_colour_func) },
 	localisation_key { new_localisation_key.empty() ? new_identifier : new_localisation_key },
-	parchment_mapmode_allowed { new_parchment_mapmode_allowed } {}
+	is_parchment_mapmode_allowed { new_is_parchment_mapmode_allowed } {}
 
 const Mapmode Mapmode::ERROR_MAPMODE {
 	"mapmode_error", index_t { std::numeric_limits<std::size_t>::max() }, [](
@@ -353,7 +353,7 @@ bool MapmodeManager::setup_mapmodes(MapDefinition const& map_definition, Buildin
 						return (0xFFFFFF_argb).with_alpha(ALPHA_VALUE);
 					}
 
-					ProvinceDefinition const* province_definition = &province.province_definition;
+					ProvinceDefinition const& province_definition = province.province_definition;
 
 					colour_argb_t base = colour_argb_t::null(), stripe = colour_argb_t::null();
 					ProvinceDefinition::adjacency_t const* adj =

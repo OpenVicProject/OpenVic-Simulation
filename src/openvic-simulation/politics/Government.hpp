@@ -14,19 +14,19 @@ namespace OpenVic {
 	struct GovernmentType : HasIndex<GovernmentType, government_type_index_t>, HasIdentifier {
 	private:
 		memory::vector<Ideology const*> SPAN_PROPERTY(ideologies);
-		const bool PROPERTY_CUSTOM_PREFIX(elections, holds);
-		const bool PROPERTY_CUSTOM_PREFIX(appoint_ruling_party, can);
 		memory::string PROPERTY_CUSTOM_NAME(flag_type_identifier, get_flag_type);
 
 	public:
+		const bool holds_elections;
+		const bool can_appoint_ruling_party;
 		const Timespan term_duration;
 
 		GovernmentType(
 			index_t new_index,
 			std::string_view new_identifier,
 			memory::vector<Ideology const*>&& new_ideologies,
-			bool new_elections,
-			bool new_appoint_ruling_party,
+			bool new_holds_elections,
+			bool new_can_appoint_ruling_party,
 			Timespan new_term_duration,
 			std::string_view new_flag_type_identifier
 		);

@@ -15,12 +15,13 @@ namespace OpenVic {
 		friend struct IssueManager;
 
 	private:
-		bool PROPERTY(is_uncivilised); // whether this group is available to non-westernised countries
 		// in vanilla education, military and economic reforms are hardcoded to true and the rest to false
 		memory::vector<ReformGroup const*> SPAN_PROPERTY(reform_groups);
 
 	public:
-		ReformType(std::string_view new_identifier, bool new_is_uncivilised);
+		const bool is_civilizing;
+
+		ReformType(std::string_view new_identifier, bool new_is_civilizing);
 		ReformType(ReformType&&) = default;
 	};
 
@@ -47,8 +48,8 @@ namespace OpenVic {
 			return { reinterpret_cast<Reform const* const*>(get_issues().data()), get_issues().size() };
 		}
 
-		constexpr bool is_uncivilised() const {
-			return reform_type.get_is_uncivilised();
+		constexpr bool is_civilizing() const {
+			return reform_type.is_civilizing;
 		}
 	};
 

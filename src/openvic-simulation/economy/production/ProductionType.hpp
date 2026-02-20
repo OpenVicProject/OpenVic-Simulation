@@ -11,36 +11,36 @@
 #include "openvic-simulation/utility/Containers.hpp"
 
 namespace OpenVic {
+	struct PopType;
+
+	struct Job {
+		enum struct effect_t { THROUGHPUT, INPUT, OUTPUT };
+
+	public:
+		PopType const* const pop_type;
+		const effect_t effect_type;
+		const fixed_point_t effect_multiplier;
+		const fixed_point_t amount;
+		
+		constexpr Job(
+			PopType const* const new_pop_type,
+			const effect_t new_effect_type,
+			const fixed_point_t new_effect_multiplier,
+			const fixed_point_t new_amount
+		) : pop_type { new_pop_type },
+			effect_type { new_effect_type },
+			effect_multiplier { new_effect_multiplier },
+			amount { new_amount } {}
+
+		constexpr Job() : Job(nullptr, effect_t::THROUGHPUT, fixed_point_t::_0, fixed_point_t::_0) {};
+	};
+
 	struct GameRulesManager;
 	struct GoodDefinition;
 	struct GoodDefinitionManager;
 	struct PopManager;
-	struct PopType;
-	struct ProductionTypeManager;
 	struct ProvinceInstance;
 	struct State;
-
-	struct Job {
-		friend struct ProductionTypeManager;
-
-		enum struct effect_t { THROUGHPUT, INPUT, OUTPUT };
-
-	private:
-		PopType const* PROPERTY(pop_type, nullptr);
-		effect_t PROPERTY(effect_type, effect_t::THROUGHPUT);
-		fixed_point_t PROPERTY(effect_multiplier, 0);
-		fixed_point_t PROPERTY(amount, 0);
-
-		Job(
-			PopType const* new_pop_type,
-			effect_t new_effect_type,
-			fixed_point_t new_effect_multiplier,
-			fixed_point_t new_amount
-		);
-
-	public:
-		constexpr Job() {};
-	};
 
 	struct ProductionType : HasIdentifier {
 		friend struct ProductionTypeManager;
@@ -51,18 +51,17 @@ namespace OpenVic {
 
 	private:
 		GameRulesManager const& game_rules_manager;
-		const std::optional<Job> PROPERTY(owner);
-		memory::vector<Job> SPAN_PROPERTY(jobs);
+		const memory::vector<Job> SPAN_PROPERTY(jobs);
 
-		fixed_point_map_t<GoodDefinition const*> PROPERTY(input_goods);
 		memory::vector<bonus_t> SPAN_PROPERTY(bonuses);
 
-		fixed_point_map_t<GoodDefinition const*> PROPERTY(maintenance_requirements);
-		const bool PROPERTY_CUSTOM_PREFIX(coastal, is);
-		const bool _is_farm, _is_mine;
+		const bool _is_farm, _is_mine, is_coastal;
 		bool parse_scripts(DefinitionManager const& definition_manager);
 
 	public:
+		const std::optional<Job> owner;
+		const fixed_point_map_t<GoodDefinition const*> input_goods;
+		const fixed_point_map_t<GoodDefinition const*> maintenance_requirements;
 		GoodDefinition const& output_good;
 		const template_type_t template_type;
 		const pop_size_t base_workforce_size;
@@ -71,7 +70,7 @@ namespace OpenVic {
 		ProductionType(
 			GameRulesManager const& new_game_rules_manager,
 			const std::string_view new_identifier,
-			const std::optional<Job> new_owner,
+			std::optional<Job>&& new_owner,
 			memory::vector<Job>&& new_jobs,
 			const template_type_t new_template_type,
 			const pop_size_t new_base_workforce_size,
@@ -106,7 +105,12 @@ namespace OpenVic {
 
 		NodeTools::node_callback_t _expect_job(
 			GoodDefinitionManager const& good_definition_manager, PopManager const& pop_manager,
-			NodeTools::callback_t<Job&&> callback
+			NodeTools::callback_t<
+				PopType const*,
+				Job::effect_t,
+				fixed_point_t,
+				fixed_point_t
+			> emplace_callback
 		);
 		NodeTools::node_callback_t _expect_job_list(
 			GoodDefinitionManager const& good_definition_manager, PopManager const& pop_manager,
@@ -120,7 +124,7 @@ namespace OpenVic {
 		bool add_production_type(
 			GameRulesManager const& game_rules_manager,
 			const std::string_view identifier,
-			std::optional<Job> owner,
+			std::optional<Job>&& owner,
 			memory::vector<Job>&& jobs,
 			const ProductionType::template_type_t template_type,
 			const pop_size_t base_workforce_size,

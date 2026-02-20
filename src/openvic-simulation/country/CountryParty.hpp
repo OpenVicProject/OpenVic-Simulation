@@ -3,7 +3,6 @@
 #include "openvic-simulation/types/Date.hpp"
 #include "openvic-simulation/types/HasIdentifier.hpp"
 #include "openvic-simulation/types/IndexedFlatMap.hpp"
-#include "openvic-simulation/utility/Getters.hpp"
 
 namespace OpenVic {
 	struct Ideology;
@@ -12,12 +11,12 @@ namespace OpenVic {
 
 	struct CountryParty : HasIdentifierAndColour {
 	private:
-		Ideology const* PROPERTY(ideology); // Can be nullptr, shows up as "No Ideology" in game
 		OV_IFLATMAP_PROPERTY(PartyPolicyGroup, PartyPolicy const*, policies);
 
 	public:
 		const Date start_date;
 		const Date end_date;
+		Ideology const* const ideology; // Can be nullptr, shows up as "No Ideology" in game
 
 		CountryParty(
 			std::string_view new_identifier,

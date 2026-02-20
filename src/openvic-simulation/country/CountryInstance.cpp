@@ -282,19 +282,19 @@ CountryInstance::CountryInstance(
 	}
 
 	for (Crime const& crime : crime_unlock_levels.get_keys()) {
-		if (crime.is_default_active()) {
+		if (crime.is_default_active) {
 			unlock_crime(crime);
 		}
 	}
 
 	for (RegimentType const& regiment_type : regiment_type_unlock_levels.get_keys()) {
-		if (regiment_type.is_active()) {
+		if (regiment_type.starts_unlocked) {
 			unlock_unit_type(regiment_type);
 		}
 	}
 
 	for (ShipType const& ship_type : ship_type_unlock_levels.get_keys()) {
-		if (ship_type.is_active()) {
+		if (ship_type.starts_unlocked) {
 			unlock_unit_type(ship_type);
 		}
 	}
@@ -1085,10 +1085,10 @@ bool CountryInstance::modify_technology_unlock(
 	if (technology.get_unit_variant().has_value()) {
 		ret &= modify_unit_variant_unlock(*technology.get_unit_variant(), unlock_level_change);
 	}
-	for (UnitType const* unit : technology.get_activated_units()) {
+	for (UnitType const* unit : technology.activated_units) {
 		ret &= modify_unit_type_unlock(*unit, unlock_level_change);
 	}
-	for (BuildingType const* building : technology.get_activated_buildings()) {
+	for (BuildingType const* building : technology.activated_buildings) {
 		ret &= modify_building_type_unlock(*building, unlock_level_change);
 	}
 
@@ -1139,19 +1139,19 @@ bool CountryInstance::modify_invention_unlock(
 
 	// TODO - handle invention.is_news()
 
-	for (UnitType const* unit : invention.get_activated_units()) {
+	for (UnitType const* unit : invention.activated_units) {
 		ret &= modify_unit_type_unlock(*unit, unlock_level_change);
 	}
-	for (BuildingType const* building : invention.get_activated_buildings()) {
+	for (BuildingType const* building : invention.activated_buildings) {
 		ret &= modify_building_type_unlock(*building, unlock_level_change);
 	}
-	for (Crime const* crime : invention.get_enabled_crimes()) {
+	for (Crime const* crime : invention.enabled_crimes) {
 		ret &= modify_crime_unlock(*crime, unlock_level_change);
 	}
-	if (invention.will_unlock_gas_attack()) {
+	if (invention.unlocks_gas_attack) {
 		ret &= modify_gas_attack_unlock(unlock_level_change);
 	}
-	if (invention.will_unlock_gas_defence()) {
+	if (invention.unlocks_gas_defence) {
 		ret &= modify_gas_defence_unlock(unlock_level_change);
 	}
 
@@ -1195,7 +1195,7 @@ fixed_point_t CountryInstance::calculate_research_cost(Technology const& technol
 bool CountryInstance::can_research_tech(Technology const& technology, const Date today) const {
 	Technology const* current_research_copy = current_research.get_untracked();
 	if (
-		technology.get_year() > today.get_year()
+		technology.year > today.get_year()
 		|| !is_civilised()
 		|| is_technology_unlocked(technology)
 		|| (current_research_copy && technology == *current_research_copy)
@@ -1647,7 +1647,7 @@ void CountryInstance::_update_military() {
 		for (ShipInstance const* ship : navy->get_ship_instances()) {
 			ShipType const& ship_type = ship->get_ship_type();
 
-			if (ship_type.is_capital()) {
+			if (ship_type.is_capital) {
 
 				// TODO - include gun power and hull modifiers + naval attack and defense modifiers
 
@@ -1732,14 +1732,14 @@ bool CountryInstance::update_rule_set() {
 	if (ruling_party_copy != nullptr) {
 		for (PartyPolicy const* party_policy : ruling_party_copy->get_policies().get_values()) {
 			if (party_policy != nullptr) {
-				rule_set.add_ruleset(party_policy->get_rules());
+				rule_set.add_ruleset(party_policy->rules);
 			}
 		}
 	}
 
 	for (Reform const* reform : reforms.get_values()) {
 		if (reform != nullptr) {
-			rule_set.add_ruleset(reform->get_rules());
+			rule_set.add_ruleset(reform->rules);
 		}
 	}
 

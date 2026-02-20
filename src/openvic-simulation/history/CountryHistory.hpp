@@ -64,7 +64,7 @@ namespace OpenVic {
 		CountryDefinition const& country;
 
 		CountryHistoryEntry(
-			CountryDefinition const& new_country, Date new_date, decltype(upper_house_proportion_by_ideology)::keys_span_type ideology_keys,
+			CountryDefinition const& new_country, const Date new_date, decltype(upper_house_proportion_by_ideology)::keys_span_type ideology_keys,
 			decltype(flag_overrides_by_government_type)::keys_span_type government_type_keys
 		);
 	};

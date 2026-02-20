@@ -9,11 +9,9 @@ namespace OpenVic {
 
 	struct Crime final : HasIndex<Crime, crime_index_t>, TriggeredModifier {
 		friend struct CrimeManager;
-
-	private:
-		const bool PROPERTY_CUSTOM_PREFIX(default_active, is);
-
 	public:
+		bool is_default_active;
+
 		Crime(
 			index_t new_index,
 			std::string_view new_identifier,

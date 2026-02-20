@@ -46,4 +46,4 @@ ModifierEffect::ModifierEffect(
 ) : HasIdentifier { new_identifier }, format { new_format }, targets { new_targets },
 	localisation_key {
 		new_localisation_key.empty() ? make_default_modifier_effect_localisation_key(new_identifier) : new_localisation_key
-	}, no_effect { new_has_no_effect } {}
+	}, has_no_effect { new_has_no_effect } {}

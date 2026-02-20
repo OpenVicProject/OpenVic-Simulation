@@ -70,7 +70,7 @@ void ResourceGatheringOperation::initialise_rgo_size_multiplier() {
 
 	pop_sum_t total_worker_count_in_province = 0; //not counting equivalents
 	for (Job const& job : jobs) {
-		total_worker_count_in_province += location.get_population_by_type(*job.get_pop_type());
+		total_worker_count_in_province += location.get_population_by_type(*job.pop_type);
 	}
 
 	const fixed_point_t size_modifier = calculate_size_modifier();
@@ -135,7 +135,7 @@ void ResourceGatheringOperation::rgo_tick(memory::vector<fixed_point_t>& reusabl
 
 	total_worker_count_in_province_cache = 0; //not counting equivalents
 	for (Job const& job : jobs) {
-		total_worker_count_in_province_cache += location.get_population_by_type(*job.get_pop_type());
+		total_worker_count_in_province_cache += location.get_population_by_type(*job.pop_type);
 	}
 
 	hire();
@@ -143,8 +143,8 @@ void ResourceGatheringOperation::rgo_tick(memory::vector<fixed_point_t>& reusabl
 	total_owner_count_in_state_cache = 0;
 	owner_pops_cache_nullable = nullptr;
 
-	if (production_type.get_owner().has_value()) {
-		PopType const& owner_pop_type = *production_type.get_owner()->get_pop_type();
+	if (production_type.owner.has_value()) {
+		PopType const& owner_pop_type = *production_type.owner->pop_type;
 		total_owner_count_in_state_cache = location.get_state()->get_population_by_type(owner_pop_type);
 		owner_pops_cache_nullable = &location.get_state()->get_pops_cache_by_type(owner_pop_type);
 	}
@@ -205,7 +205,7 @@ void ResourceGatheringOperation::hire() {
 	for (Pop& pop : location.get_mutable_pops()){
 		PopType const& pop_type = *pop.get_type();
 		for (Job const& job : jobs) {
-			PopType const* const job_pop_type = job.get_pop_type();
+			PopType const* const job_pop_type = job.pop_type;
 			if (job_pop_type && *job_pop_type == pop_type) {
 				const pop_size_t pop_size_to_hire = (proportion_to_hire * pop.get_size()).floor<type_safe::underlying_type<pop_size_t>>();
 				if (pop_size_to_hire <= 0) {
@@ -241,7 +241,7 @@ fixed_point_t ResourceGatheringOperation::produce() {
 	fixed_point_t throughput_multiplier = 1;
 	fixed_point_t output_multiplier = 1;
 
-	std::optional<Job> const& owner = production_type.get_owner();
+	std::optional<Job> const& owner = production_type.owner;
 	if (owner.has_value()) {
 		State const* state_ptr = location.get_state();
 		if (state_ptr == nullptr) {
@@ -254,15 +254,15 @@ fixed_point_t ResourceGatheringOperation::produce() {
 		Job const& owner_job = owner.value();
 
 		if (total_owner_count_in_state_cache > 0) {
-			switch (owner_job.get_effect_type()) {
+			switch (owner_job.effect_type) {
 				case Job::effect_t::OUTPUT:
-					output_multiplier += owner_job.get_effect_multiplier().mul_div(
+					output_multiplier += owner_job.effect_multiplier.mul_div(
 						total_owner_count_in_state_cache,
 						state_population
 					);
 					break;
 				case Job::effect_t::THROUGHPUT:
-					throughput_multiplier += owner_job.get_effect_multiplier().mul_div(
+					throughput_multiplier += owner_job.effect_multiplier.mul_div(
 						total_owner_count_in_state_cache,
 						state_population
 					);
@@ -316,18 +316,18 @@ fixed_point_t ResourceGatheringOperation::produce() {
 
 	for (auto const& [pop_type, employees_of_type] : employee_count_per_type_cache) {
 		for (Job const& job : production_type.get_jobs()) {
-			if (job.get_pop_type() != &pop_type) {
+			if (job.pop_type != &pop_type) {
 				continue;
 			}
 
-			const fixed_point_t effect_multiplier = job.get_effect_multiplier();
-			const fixed_point_t amount = job.get_amount();
+			const fixed_point_t effect_multiplier = job.effect_multiplier;
+			const fixed_point_t amount = job.amount;
 			const fixed_point_t effect = effect_multiplier != fixed_point_t::_1
 				&& fixed_point_t::from_fraction(employees_of_type, max_employee_count_cache) > amount
 				? effect_multiplier * amount //special Vic2 logic
 				: effect_multiplier.mul_div(employees_of_type, max_employee_count_cache);
 
-			switch (job.get_effect_type()) {
+			switch (job.effect_type) {
 				case Job::effect_t::OUTPUT:
 					output_from_workers += effect;
 					break;

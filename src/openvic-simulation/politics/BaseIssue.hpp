@@ -3,14 +3,12 @@
 #include "openvic-simulation/modifier/Modifier.hpp"
 #include "openvic-simulation/politics/RuleSet.hpp"
 #include "openvic-simulation/types/HasIdentifier.hpp"
+#include "openvic-simulation/utility/Getters.hpp"
 
 namespace OpenVic {
 	struct BaseIssueGroup;
 
 	struct BaseIssue : Modifier, public HasColour {
-	private:
-		RuleSet PROPERTY(rules);
-
 	protected:
 		BaseIssue(
 			std::string_view new_identifier,
@@ -24,6 +22,7 @@ namespace OpenVic {
 		BaseIssue(BaseIssue&&) = default;
 	public:
 		const bool is_jingoism;
+		const RuleSet rules;
 
 		BaseIssueGroup const& issue_group;		
 	};

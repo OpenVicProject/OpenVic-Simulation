@@ -33,7 +33,6 @@ namespace OpenVic {
 		 * which causes a compile error as the copy constructor has been deleted. */
 		IdentifierRegistry<CountryParty> IDENTIFIER_REGISTRY_CUSTOM_PLURAL(party, parties);
 		unit_names_map_t PROPERTY(unit_names);
-		const bool PROPERTY_CUSTOM_PREFIX(dynamic_tag, is);
 		government_colour_map_t PROPERTY(alternative_colours);
 		colour_t PROPERTY(primary_unit_colour);
 		colour_t PROPERTY(secondary_unit_colour);
@@ -42,6 +41,7 @@ namespace OpenVic {
 
 
 	public:
+		const bool is_dynamic_tag;
 		GraphicalCultureType const& graphical_culture;
 
 		OV_ALWAYS_INLINE bool is_rebel_country() const {
@@ -51,7 +51,7 @@ namespace OpenVic {
 		CountryDefinition(
 			std::string_view new_identifier, colour_t new_colour, index_t new_index,
 			GraphicalCultureType const& new_graphical_culture, IdentifierRegistry<CountryParty>&& new_parties,
-			unit_names_map_t&& new_unit_names, bool new_dynamic_tag, government_colour_map_t&& new_alternative_colours,
+			unit_names_map_t&& new_unit_names, bool new_is_dynamic_tag, government_colour_map_t&& new_alternative_colours,
 			colour_t new_primary_unit_colour, colour_t new_secondary_unit_colour, colour_t new_tertiary_unit_colour
 		);
 		CountryDefinition(CountryDefinition&&) = default;
