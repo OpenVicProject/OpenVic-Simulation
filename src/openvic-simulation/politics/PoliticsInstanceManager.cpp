@@ -16,7 +16,7 @@ void PoliticsInstanceManager::setup_starting_ideologies() {
 	const Date today = instance_manager.get_today();
 
 	for (auto [ideology, spawn_date] : ideology_spawn_date) {
-		std::optional<Date> const& defines_spawn_date = ideology.get_spawn_date();
+		std::optional<Date> const& defines_spawn_date = ideology.spawn_date;
 
 		if (!defines_spawn_date.has_value()) {
 			spawn_date = today;

@@ -319,7 +319,7 @@ bool ProvinceInstance::convert_rgo_worker_pops_to_equivalent(ProductionType cons
 	std::span<const Job> jobs = production_type.get_jobs();
 	for (Pop& pop : pops) {
 		for (Job const& job : jobs) {
-			PopType const* const job_pop_type = job.get_pop_type();
+			PopType const* const job_pop_type = job.pop_type;
 			PopType const* old_pop_type = pop.get_type();
 			if (job_pop_type != old_pop_type) {
 				PopType const* const equivalent = old_pop_type->get_equivalent();

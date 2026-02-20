@@ -3,13 +3,16 @@
 #include <array>
 #include <concepts>
 #include <cstddef>
+#include <optional>
 #include <string>
 #include <string_view>
 #include <type_traits>
 #include <utility>
 
+#include "openvic-simulation/core/portable/ForwardableSpan.hpp" // IWYU pragma: keep for SPAN_PROPERTY
 #include "openvic-simulation/core/Typedefs.hpp" // IWYU pragma: keep
 #include "openvic-simulation/utility/Containers.hpp"
+#include "openvic-simulation/core/template/Concepts.hpp"
 
 namespace OpenVic::utility {
 #if !defined(_MSC_VER)
@@ -151,7 +154,14 @@ namespace OpenVic {
 		} else if constexpr (std::is_pointer_v<T>) {
 			/* Return const pointer */
 			return static_cast<std::add_pointer_t<std::add_const_t<std::remove_pointer_t<T>>>>(property);
-		} else {
+		} else if constexpr (std::same_as<T, std::optional<std::string>> || std::same_as<T, std::optional<memory::string>>) {
+			/* Return optional std::string_view looking at string */
+			std::optional<std::string_view> result;
+			if (property) {
+				result.emplace(property.value());
+			}
+			return result;
+		}else {
 			/* Return const reference */
 			return property;
 		}

@@ -2,8 +2,8 @@
 
 using namespace OpenVic;
 
-ReformType::ReformType(std::string_view new_identifier, bool new_is_uncivilised)
-	: HasIdentifier { new_identifier }, is_uncivilised { new_is_uncivilised } {}
+ReformType::ReformType(std::string_view new_identifier, bool new_is_civilizing)
+	: HasIdentifier { new_identifier }, is_civilizing { new_is_civilizing } {}
 
 ReformGroup::ReformGroup(
 	std::string_view new_identifier,

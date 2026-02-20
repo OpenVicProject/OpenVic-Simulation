@@ -13,8 +13,11 @@ namespace OpenVic {
 	struct Mod : HasIdentifier {
 	private:
 		ModManager const& mod_manager;
+
+		// properties despite being const for string_view.
 		const memory::string PROPERTY(dataloader_root_path);
 		const std::optional<memory::string> PROPERTY(user_dir);
+
 		const memory::vector<memory::string> SPAN_PROPERTY(replace_paths);
 		const memory::vector<memory::string> SPAN_PROPERTY(dependencies);
 

@@ -29,8 +29,8 @@ Event::Event(
 	BaseIssueGroup const* new_election_issue_group, ConditionScript&& new_trigger, ConditionalWeightTime&& new_mean_time_to_happen,
 	EffectScript&& new_immediate, memory::vector<EventOption>&& new_options
 ) : HasIdentifier { new_identifier }, title { new_title }, description { new_description }, image { new_image },
-	type { new_type }, triggered_only { new_triggered_only }, major { new_major }, fire_only_once { new_fire_only_once },
-	allows_multiple_instances { new_allows_multiple_instances }, news { new_news }, news_title { new_news_title },
+	type { new_type }, is_triggered_only { new_triggered_only }, is_major { new_major }, fire_only_once { new_fire_only_once },
+	allows_multiple_instances { new_allows_multiple_instances }, is_news { new_news }, news_title { new_news_title },
 	news_desc_long { new_news_desc_long }, news_desc_medium { new_news_desc_medium }, news_desc_short { new_news_desc_short },
 	election { new_election }, election_issue_group { new_election_issue_group }, trigger { std::move(new_trigger) },
 	mean_time_to_happen { std::move(new_mean_time_to_happen) }, immediate { std::move(new_immediate) },

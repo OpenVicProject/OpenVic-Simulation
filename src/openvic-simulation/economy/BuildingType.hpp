@@ -58,8 +58,6 @@ namespace OpenVic {
 
 		const memory::string on_completion; //unknown
 
-
-		fixed_point_map_t<GoodDefinition const*> PROPERTY(goods_cost);
 		memory::vector<fixed_point_t> SPAN_PROPERTY(colonial_points);
 
 	public:
@@ -84,6 +82,7 @@ namespace OpenVic {
 		//costs
 		const fixed_point_t cost;
 		const Timespan build_time;
+		const fixed_point_map_t<GoodDefinition const*> goods_cost;
 
 		//effects
 		ProductionType const* const production_type;

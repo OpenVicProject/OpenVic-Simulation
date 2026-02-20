@@ -23,11 +23,11 @@ namespace OpenVic {
 
 	private:
 		memory::string PROPERTY(leader);
-		bool PROPERTY(is_overseas);
-		CountryDefinition const* PROPERTY(union_country);
 
 	public:
 		GraphicalCultureType const& unit_graphical_culture_type;
+		const bool is_overseas;
+		CountryDefinition const* const union_country;
 
 		CultureGroup(
 			std::string_view new_identifier, std::string_view new_leader,
@@ -45,11 +45,11 @@ namespace OpenVic {
 	private:
 		name_list_t PROPERTY(first_names);
 		name_list_t PROPERTY(last_names);
-		fixed_point_t PROPERTY(radicalism);
-		CountryDefinition const* PROPERTY(primary_country);
 
 	public:
 		CultureGroup const& group;
+		const fixed_point_t radicalism;
+		CountryDefinition const* const primary_country;
 
 		Culture(
 			std::string_view new_identifier, colour_t new_colour, CultureGroup const& new_group, name_list_t&& new_first_names,

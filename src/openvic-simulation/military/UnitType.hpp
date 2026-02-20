@@ -37,7 +37,7 @@ namespace OpenVic {
 			unit_category_t unit_category = unit_category_t::INVALID_UNIT_CATEGORY;
 			// TODO defaults for move_sound and select_sound
 			std::string_view sprite, move_sound, select_sound;
-			bool active = true, floating_flag = false;
+			bool starts_unlocked = true, floating_flag = false;
 			uint32_t priority = 0;
 			fixed_point_t max_strength = 0, default_organisation = 0, maximum_speed = 0, weighted_value = 0,
 				supply_consumption = 0;
@@ -51,11 +51,6 @@ namespace OpenVic {
 
 	private:
 		memory::string PROPERTY(sprite);
-		const bool PROPERTY_CUSTOM_PREFIX(active, is);
-		unit_category_t PROPERTY(unit_category);
-		const bool PROPERTY_CUSTOM_PREFIX(floating_flag, has);
-
-
 		memory::string PROPERTY(move_sound);
 		memory::string PROPERTY(select_sound);
 
@@ -70,6 +65,9 @@ namespace OpenVic {
 
 	public:
 		const unit_branch_t branch; /* type in defines */
+		const unit_category_t unit_category;
+		const bool starts_unlocked;
+		const bool has_floating_flag;
 		const icon_t icon;
 		const uint32_t priority;
 		const fixed_point_t max_strength;
@@ -138,12 +136,12 @@ namespace OpenVic {
 			ship_type_args_t(ship_type_args_t&&) = default;
 		};
 
-	private:
-		const bool PROPERTY_CUSTOM_PREFIX(sail, can);
-		const bool PROPERTY_CUSTOM_PREFIX(transport, is);
-		const bool PROPERTY_CUSTOM_PREFIX(capital, is);
-		const bool PROPERTY_CUSTOM_PREFIX(build_overseas, can);
 	public:
+		const bool can_sail;
+		const bool is_transport;
+		const bool is_capital;
+		const bool can_build_overseas;
+
 		const icon_t naval_icon;
 		const fixed_point_t colonial_points;
 		const uint32_t min_port_level;

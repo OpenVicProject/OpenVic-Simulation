@@ -131,7 +131,7 @@ bool ProvinceHistoryMap::_load_history_entry(
 				)(value);
 			}
 
-			return _load_history_sub_entry_callback(definition_manager, entry.get_date(), value, key_map, key, value);
+			return _load_history_sub_entry_callback(definition_manager, entry.date, value, key_map, key, value);
 		},
 		"owner", ZERO_OR_ONE, country_definition_manager.expect_country_definition_identifier(
 			assign_variable_callback_pointer_opt(entry.owner, true)

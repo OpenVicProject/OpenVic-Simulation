@@ -95,13 +95,13 @@ namespace OpenVic {
 
 		static memory::string make_default_modifier_effect_localisation_key(std::string_view identifier);
 
-	private:
-		const bool PROPERTY_CUSTOM_PREFIX(no_effect, has);
+	private:;
 		memory::string PROPERTY(localisation_key);
 
 		// TODO - format/precision, e.g. 80% vs 0.8 vs 0.800, 2 vs 2.0 vs 200%
 
 	public:
+		const bool has_no_effect;
 		const format_t format;
 		const target_t targets;
 

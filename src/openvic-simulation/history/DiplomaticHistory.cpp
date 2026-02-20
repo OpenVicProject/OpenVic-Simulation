@@ -2,51 +2,10 @@
 
 #include "openvic-simulation/DefinitionManager.hpp"
 #include "openvic-simulation/utility/Containers.hpp"
+#include "openvic-simulation/history/DiplomaticHistory.hpp"
 
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;
-
-WarHistory::added_wargoal_t::added_wargoal_t(
-	Date new_added,
-	CountryDefinition const* new_actor,
-	CountryDefinition const* new_receiver,
-	WargoalType const* new_wargoal,
-	std::optional<CountryDefinition const*> new_third_party,
-	std::optional<ProvinceDefinition const*> new_target
-) : added { new_added }, actor { new_actor }, receiver { new_receiver }, wargoal { new_wargoal },
-	third_party { new_third_party }, target { new_target } {}
-
-WarHistory::war_participant_t::war_participant_t(
-	CountryDefinition const* new_country,
-	Period new_period
-) : country { new_country }, period { new_period } {}
-
-WarHistory::WarHistory(
-	std::string_view new_war_name,
-	memory::vector<war_participant_t>&& new_attackers,
-	memory::vector<war_participant_t>&& new_defenders,
-	memory::vector<added_wargoal_t>&& new_wargoals
-) : war_name { new_war_name }, attackers { std::move(new_attackers) }, defenders { std::move(new_defenders) },
-	wargoals { std::move(new_wargoals) } {}
-
-AllianceHistory::AllianceHistory(
-	CountryDefinition const* new_first,
-	CountryDefinition const* new_second,
-	Period new_period
-) : first { new_first }, second { new_second }, period { new_period } {}
-
-ReparationsHistory::ReparationsHistory(
-	CountryDefinition const* new_receiver,
-	CountryDefinition const* new_sender,
-	Period new_period
-) : receiver { new_receiver }, sender { new_sender }, period { new_period } {}
-
-SubjectHistory::SubjectHistory(
-	CountryDefinition const* new_overlord,
-	CountryDefinition const* new_subject,
-	type_t new_subject_type,
-	Period new_period
-) : overlord { new_overlord }, subject { new_subject }, subject_type { new_subject_type }, period { new_period } {}
 
 void DiplomaticHistoryManager::reserve_more_wars(size_t size) {
 	if (locked) {
@@ -63,47 +22,13 @@ void DiplomaticHistoryManager::lock_diplomatic_history() {
 	locked = true;
 }
 
-bool DiplomaticHistoryManager::is_locked() const {
-	return locked;
-}
-
-memory::vector<AllianceHistory const*> DiplomaticHistoryManager::get_alliances(Date date) const {
-	memory::vector<AllianceHistory const*> ret {};
-	for (auto const& alliance : alliances) {
-		if (alliance.period.is_date_in_period(date)) {
-			ret.push_back(&alliance);
-		}
-	}
-	return ret;
-}
-
-memory::vector<ReparationsHistory const*> DiplomaticHistoryManager::get_reparations(Date date) const {
-	memory::vector<ReparationsHistory const*> ret {};
-	for (auto const& reparation : reparations) {
-		if (reparation.period.is_date_in_period(date)) {
-			ret.push_back(&reparation);
-		}
-	}
-	return ret;
-}
-
-memory::vector<SubjectHistory const*> DiplomaticHistoryManager::get_subjects(Date date) const {
-	memory::vector<SubjectHistory const*> ret {};
-	for (auto const& subject : subjects) {
-		if (subject.period.is_date_in_period(date)) {
-			ret.push_back(&subject);
-		}
-	}
-	return ret;
-}
-
 memory::vector<WarHistory const*> DiplomaticHistoryManager::get_wars(Date date) const {
 	memory::vector<WarHistory const*> ret;
 	for (auto const& war : wars) {
 		Date start {};
 		for (auto const& wargoal : war.wargoals) {
-			if (wargoal.added < start) {
-				start = wargoal.added;
+			if (wargoal.date_added < start) {
+				start = wargoal.date_added;
 			}
 		}
 		if (start >= date) {
@@ -144,7 +69,9 @@ bool DiplomaticHistoryManager::load_diplomacy_history_file(
 				"end_date", ZERO_OR_ONE, expect_date_identifier_or_string(assign_variable_callback(end))
 			)(node);
 
-			alliances.emplace_back(first, second, Period { start, end });
+			if (ret) {
+				alliances.emplace_back(*first, *second, Period { start, end });
+			}
 			return ret;
 		},
 		"vassal", ZERO_OR_MORE, [this, &country_definition_manager](ast::NodeCPtr node) -> bool {
@@ -164,7 +91,9 @@ bool DiplomaticHistoryManager::load_diplomacy_history_file(
 				"end_date", ZERO_OR_ONE, expect_date_identifier_or_string(assign_variable_callback(end))
 			)(node);
 
-			subjects.emplace_back(overlord, subject, SubjectHistory::type_t::VASSAL, Period { start, end });
+			if (ret) {
+				subjects.emplace_back(*overlord, *subject, SubjectHistory::type_t::VASSAL, Period { start, end });
+			}
 			return ret;
 		},
 		"union", ZERO_OR_MORE, [this, &country_definition_manager](ast::NodeCPtr node) -> bool {
@@ -184,7 +113,9 @@ bool DiplomaticHistoryManager::load_diplomacy_history_file(
 				"end_date", ZERO_OR_ONE, expect_date_identifier_or_string(assign_variable_callback(end))
 			)(node);
 
-			subjects.emplace_back(overlord, subject, SubjectHistory::type_t::UNION, Period { start, end });
+			if (ret) {
+				subjects.emplace_back(*overlord, *subject, SubjectHistory::type_t::UNION, Period { start, end });
+			}
 			return ret;
 		},
 		"substate", ZERO_OR_MORE, [this, &country_definition_manager](ast::NodeCPtr node) -> bool {
@@ -204,7 +135,9 @@ bool DiplomaticHistoryManager::load_diplomacy_history_file(
 				"end_date", ZERO_OR_ONE, expect_date_identifier_or_string(assign_variable_callback(end))
 			)(node);
 
-			subjects.emplace_back(overlord, subject, SubjectHistory::type_t::SUBSTATE, Period { start, end });
+			if (ret) {
+				subjects.emplace_back(*overlord, *subject, SubjectHistory::type_t::SUBSTATE, Period { start, end });
+			}
 			return ret;
 		},
 		"reparations", ZERO_OR_MORE, [this, &country_definition_manager](ast::NodeCPtr node) -> bool {
@@ -224,7 +157,9 @@ bool DiplomaticHistoryManager::load_diplomacy_history_file(
 				"end_date", ZERO_OR_ONE, expect_date_identifier_or_string(assign_variable_callback(end))
 			)(node);
 
-			reparations.emplace_back(receiver, sender, Period { start, end });
+			if (ret) {
+				reparations.emplace_back(*receiver, *sender, Period { start, end });
+			}
 			return ret;
 		}
 	)(root);
@@ -264,17 +199,17 @@ bool DiplomaticHistoryManager::load_war_history_file(DefinitionManager const& de
 					definition_manager.get_country_definition_manager().expect_country_definition_identifier(
 						[&current_date, &name](CountryDefinition const& country) -> bool {
 							for (WarHistory::war_participant_t const& attacker : attackers) {
-								CountryDefinition const* const attacker_country = attacker.get_country();
-								if (attacker_country && *attacker_country == country) {
+								CountryDefinition const& attacker_country = attacker.country;
+								if (attacker_country == country) {
 									spdlog::error_s(
 										"In history of war {} at date {}: Attempted to add attacking country {} which is already present!",
-										name, current_date, *attacker_country
+										name, current_date, attacker_country
 									);
 									return false;
 								}
 							}
 
-							attackers.emplace_back(&country, Period { current_date, {} });
+							attackers.emplace_back(country, Period { current_date, {} });
 							return true;
 						}
 					),
@@ -282,17 +217,17 @@ bool DiplomaticHistoryManager::load_war_history_file(DefinitionManager const& de
 					definition_manager.get_country_definition_manager().expect_country_definition_identifier(
 						[&current_date, &name](CountryDefinition const& country) -> bool {
 							for (WarHistory::war_participant_t const& defender : defenders) {
-								CountryDefinition const* const defender_country = defender.get_country();
-								if (defender_country && *defender_country == country) {
+								CountryDefinition const& defender_country = defender.country;
+								if (defender_country == country) {
 									spdlog::error_s(
 										"In history of war {} at date {}: Attempted to add defending country {} which is already present!",
-										name, current_date, *defender_country
+										name, current_date, defender_country
 									);
 									return false;
 								}
 							}
 
-							defenders.emplace_back(&country, Period { current_date, {} });
+							defenders.emplace_back(country, Period { current_date, {} });
 							return true;
 						}
 					),
@@ -302,8 +237,8 @@ bool DiplomaticHistoryManager::load_war_history_file(DefinitionManager const& de
 							WarHistory::war_participant_t* participant_to_remove = nullptr;
 
 							for (WarHistory::war_participant_t& attacker : attackers) {
-								CountryDefinition const* const attacker_country = attacker.get_country();
-								if (attacker_country && *attacker_country == country) {
+								CountryDefinition const& attacker_country = attacker.country;
+								if (attacker_country == country) {
 									participant_to_remove = &attacker;
 									break;
 								}
@@ -326,8 +261,8 @@ bool DiplomaticHistoryManager::load_war_history_file(DefinitionManager const& de
 							WarHistory::war_participant_t* participant_to_remove = nullptr;
 
 							for (WarHistory::war_participant_t& defender : defenders) {
-								CountryDefinition const* const defender_country = defender.get_country();
-								if (defender_country && *defender_country == country) {
+								CountryDefinition const& defender_country = defender.country;
+								if (defender_country == country) {
 									participant_to_remove = &defender;
 									break;
 								}
@@ -372,7 +307,9 @@ bool DiplomaticHistoryManager::load_war_history_file(DefinitionManager const& de
 							)
 					)(value);
 
-					wargoals.emplace_back(current_date, actor, receiver, type, third_party, target);
+					if (ret) {
+						wargoals.emplace_back(current_date, *actor, *receiver, *type, third_party, target);
+					}
 					return ret;
 				}
 			)(node);

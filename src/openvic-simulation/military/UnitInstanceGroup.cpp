@@ -54,7 +54,7 @@ bool UnitInstanceGroup::empty() const {
 
 size_t UnitInstanceGroup::get_unit_category_count(UnitType::unit_category_t unit_category) const {
 	return std::count_if(units.begin(), units.end(), [unit_category](UnitInstance const* unit) {
-		return unit->unit_type.get_unit_category() == unit_category;
+		return unit->unit_type.unit_category == unit_category;
 	});
 }
 

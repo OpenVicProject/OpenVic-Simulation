@@ -780,7 +780,7 @@ bool ModifierManager::_add_modifier_cb(
 	ModifierEffect const* const effect,
 	const ast::NodeCPtr value
 ) const {
-	if (effect->has_no_effect()) {
+	if (effect->has_no_effect) {
 		spdlog::warn_s("This modifier does nothing: {}", *effect);
 	}
 	return expect_fixed_point(map_callback(modifier_value.values, effect))(value);

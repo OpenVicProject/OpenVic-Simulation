@@ -134,7 +134,7 @@ bool CountryHistoryMap::_load_history_entry(
 			}
 
 			return _load_history_sub_entry_callback(
-				definition_manager, dataloader, deployment_manager, entry.get_date(), value, key_map, key, value
+				definition_manager, dataloader, deployment_manager, entry.date, value, key_map, key, value
 			);
 		},
 		"capital", ZERO_OR_ONE, definition_manager.get_map_definition().expect_province_definition_identifier(
@@ -166,7 +166,7 @@ bool CountryHistoryMap::_load_history_entry(
 
 				// if the party specified is invalid, replace with the first valid party
 				for (const auto& party : country.get_parties()) {
-					if (party.start_date <= entry.get_date() && entry.get_date() < party.end_date) {
+					if (party.start_date <= entry.date && entry.date < party.end_date) {
 						entry.ruling_party.emplace(&party);
 						break;
 					}
@@ -182,7 +182,7 @@ bool CountryHistoryMap::_load_history_entry(
 					is_valid ? spdlog::level::warn : spdlog::level::err,
 					"In {} history at entry date {}: ruling_party {} does NOT exist! Defaulting to first {}: {}",
 					country,
-					entry.get_date(),
+					entry.date,
 					def,
 					is_valid ? "valid party" : "INVALID party (no valid party was found)",
 					*entry.ruling_party.value()
@@ -336,7 +336,7 @@ bool CountryHistoryManager::load_country_history_file(
 		return false;
 	}
 
-	if (country.is_dynamic_tag()) {
+	if (country.is_dynamic_tag) {
 		return true; /* as far as I can tell dynamic countries are hardcoded, broken, and unused */
 	}
 

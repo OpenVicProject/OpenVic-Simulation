@@ -11,8 +11,6 @@ namespace OpenVic {
 		friend struct DecisionManager;
 
 	private:
-		const bool PROPERTY_CUSTOM_PREFIX(alert, has);
-		const bool PROPERTY_CUSTOM_PREFIX(news, is);
 		memory::string PROPERTY(news_title);
 		memory::string PROPERTY(news_desc_long);
 		memory::string PROPERTY(news_desc_medium);
@@ -26,6 +24,9 @@ namespace OpenVic {
 		bool parse_scripts(DefinitionManager const& definition_manager);
 
 	public:
+		const bool has_alert;
+		const bool is_news;
+
 		Decision(
 			std::string_view new_identifier, bool new_alert, bool new_news, std::string_view new_news_title,
 			std::string_view new_news_desc_long, std::string_view new_news_desc_medium, std::string_view new_news_desc_short,

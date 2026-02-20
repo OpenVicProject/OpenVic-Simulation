@@ -217,7 +217,7 @@ bool CountryInstanceManager::apply_history_to_countries(InstanceManager& instanc
 	for (CountryInstance& country_instance : get_country_instances()) {
 		country_instance.last_war_loss_date = starting_last_war_loss_date;
 
-		if (!country_instance.country_definition.is_dynamic_tag()) {
+		if (!country_instance.country_definition.is_dynamic_tag) {
 			CountryHistoryMap const* history_map = history_manager.get_country_history(
 				country_instance.country_definition
 			);
