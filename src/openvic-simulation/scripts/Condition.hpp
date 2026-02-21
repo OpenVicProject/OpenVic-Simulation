@@ -195,9 +195,22 @@ namespace OpenVic {
 #undef BUILD_STRING
 #undef _BUILD_STRING
 
+	enum class tooltip_subject_t : uint8_t {
+		SCOPE,
+		VALUE,
+		NAMED_VALUE,
+		NONE
+	};
+
+	enum class tooltip_position_t : uint8_t {
+		SUFFIX,
+		PREFIX
+	};
+
 	struct Condition : HasIdentifier {
 		friend struct ConditionManager;
 		using enum identifier_type_t;
+		using enum tooltip_subject_t;
 
 	public:
 		const value_type_t value_type;
@@ -206,13 +219,25 @@ namespace OpenVic {
 		const identifier_type_t key_identifier_type;
 		const identifier_type_t value_identifier_type;
 
+		const std::string_view loc_true_key;
+		const std::string_view loc_false_key;
+
+		const tooltip_subject_t tooltip_subject;
+		const tooltip_position_t tooltip_position;
+
+		mutable std::vector<Condition> overloads;
+
 		Condition(
 			std::string_view new_identifier, value_type_t new_value_type, scope_type_t new_scope,
 			scope_type_t new_scope_change, identifier_type_t new_key_identifier_type,
-			identifier_type_t new_value_identifier_type
+			identifier_type_t new_value_identifier_type, std::string_view new_loc_true_key,
+			std::string_view new_loc_false_key, tooltip_subject_t new_tooltip_subject,
+			tooltip_position_t new_tooltip_position
 		);
 		Condition(Condition&&) = default;
 	};
+
+	struct Context;
 
 	struct ConditionNode {
 		friend struct ConditionManager;
@@ -242,18 +267,29 @@ namespace OpenVic {
 			HasIdentifier const* new_condition_key_item = nullptr,
 			HasIdentifier const* new_condition_value_item = nullptr
 		);
+
+		bool evaluate_group(Context const& context) const;
+	public:
+		bool evaluate(Context const& context) const;
 	};
+
 
 	struct ConditionManager {
 	private:
 		CaseInsensitiveIdentifierRegistry<Condition> IDENTIFIER_REGISTRY(condition);
 		Condition const* root_condition = nullptr;
 
-		bool add_condition(
-			std::string_view identifier, value_type_t value_type, scope_type_t scope,
-			scope_type_t scope_change = scope_type_t::NO_SCOPE,
-			identifier_type_t key_identifier_type = identifier_type_t::NO_IDENTIFIER,
-			identifier_type_t value_identifier_type = identifier_type_t::NO_IDENTIFIER
+		bool _register_condition(
+			std::string_view identifier,
+			value_type_t value_type,
+			scope_type_t scope,
+			scope_type_t scope_change,
+			identifier_type_t key_identifier_type,
+			identifier_type_t value_identifier_type,
+			std::string_view loc_true_key,
+			std::string_view loc_false_key,
+			tooltip_subject_t tooltip_subject,
+			tooltip_position_t tooltip_position
 		);
 
 		NodeTools::callback_t<std::string_view> expect_parse_identifier(
@@ -273,6 +309,51 @@ namespace OpenVic {
 
 	public:
 		bool setup_conditions(DefinitionManager const& definition_manager);
+
+		struct ConditionBuilder {
+			ConditionManager& manager;
+
+			std::string_view identifier;
+			value_type_t value_type;
+			scope_type_t scope;
+
+			scope_type_t m_scope_change = scope_type_t::NO_SCOPE;
+			identifier_type_t m_key_identifier_type = identifier_type_t::NO_IDENTIFIER;
+			identifier_type_t m_value_identifier_type = identifier_type_t::NO_IDENTIFIER;
+			std::string_view m_loc_true_key;
+			std::string_view m_loc_false_key;
+
+			tooltip_subject_t m_tooltip_subject = tooltip_subject_t::NONE;
+
+			tooltip_position_t m_tooltip_position = tooltip_position_t::SUFFIX;
+
+			ConditionBuilder& scope_change(scope_type_t v) { m_scope_change = v; return *this; }
+
+			ConditionBuilder& key_identifier_type(identifier_type_t v) { m_key_identifier_type = v; return *this; }
+
+			ConditionBuilder& value_identifier_type(identifier_type_t v) { m_value_identifier_type = v; return *this; }
+
+			ConditionBuilder& subject(tooltip_subject_t v) { m_tooltip_subject = v; return *this; }
+
+			ConditionBuilder& position(tooltip_position_t v) { m_tooltip_position = v; return *this; }
+
+			ConditionBuilder& loc(std::string_view t_key, std::string_view f_key = {}) {
+				m_loc_true_key = t_key;
+				m_loc_false_key = f_key;
+				return *this;
+			}
+
+			operator bool() const {
+				return manager._register_condition(
+					identifier, value_type, scope, m_scope_change, m_key_identifier_type,
+					m_value_identifier_type, m_loc_true_key, m_loc_false_key, m_tooltip_subject, m_tooltip_position
+				);
+			}
+		};
+
+		ConditionBuilder add_condition(std::string_view identifier, value_type_t value_type, scope_type_t scope) {
+			return ConditionBuilder{ *this, identifier, value_type, scope };
+		}
 
 		bool expect_condition_script(
 			DefinitionManager const& definition_manager, scope_type_t initial_scope, scope_type_t this_scope,
