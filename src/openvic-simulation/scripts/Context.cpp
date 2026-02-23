@@ -4,6 +4,7 @@
 #include "openvic-simulation/map/ProvinceInstance.hpp"
 #include "openvic-simulation/map/State.hpp"
 #include "openvic-simulation/population/Pop.hpp"
+#include "openvic-simulation/DefinitionManager.hpp"
 
 using namespace OpenVic;
 scope_type_t Context::get_scope_type() const {
@@ -78,7 +79,7 @@ bool Context::evaluate_leaf(ConditionNode const& node) const {
 				}
 				if (id == "badboy") {
 					fixed_point_t expected_ratio = std::get<fixed_point_t>(node.get_value());
-					return p->get_infamy_untracked() >= (expected_ratio * fixed_point_t(25));
+					return p->get_infamy_untracked() >= expected_ratio * definition_manager.get_define_manager().get_country_defines().get_infamy_containment_limit();
 				}
 				if (id == "civilized") {
 					bool expected = std::get<bool>(node.get_value());
