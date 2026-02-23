@@ -5,6 +5,7 @@
 #include "openvic-simulation/map/State.hpp"
 #include "openvic-simulation/population/Pop.hpp"
 #include "openvic-simulation/DefinitionManager.hpp"
+#include "openvic-simulation/InstanceManager.hpp"
 
 using namespace OpenVic;
 scope_type_t Context::get_scope_type() const {
@@ -97,8 +98,15 @@ bool Context::evaluate_leaf(ConditionNode const& node) const {
 					return has_colonies == expected;
 				}
 				if (id == "exists") {
-					bool expected = std::get<bool>(node.get_value());
-					return p->exists() == expected;
+					auto const& value = node.get_value();
+					if (auto const* expected = std::get_if<bool>(&value)) {
+						return p->exists() == *expected;
+					}
+					if (auto const* tag = std::get_if<memory::string>(&value)) {
+						CountryInstance const* country_instance = instance_manager.get_country_instance_manager().get_country_instance_by_identifier(*tag);
+						return country_instance != nullptr && country_instance->exists();
+					}
+					return false;
 				}
 				if (id == "industrial_score") {
 					fixed_point_t expected = std::get<fixed_point_t>(node.get_value());
