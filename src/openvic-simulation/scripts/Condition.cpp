@@ -80,7 +80,7 @@ bool ConditionNode::evaluate_group(Context const& context) const {
 		return false;
 	}
 
-	const bool is_iterator = id.starts_with("any_") || id.starts_with("all_");
+	const bool is_iterator = id.starts_with("any_") || id.starts_with("all_") || id == "war_countries";
 
 	if (is_iterator) {
 		const bool require_all = id.starts_with("all_");
@@ -88,7 +88,7 @@ bool ConditionNode::evaluate_group(Context const& context) const {
 		auto sub_contexts = context.get_sub_contexts(id, target_scope);
 
 		if (require_all) {
-			if (sub_contexts.empty()) return false;
+			if (sub_contexts.empty()) return true; // vacuous truth
 			for (auto const& sub : sub_contexts) {
 				for (auto const& node : children) {
 					if (!node.evaluate(sub)) return false;
