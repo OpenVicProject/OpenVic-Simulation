@@ -39,6 +39,10 @@ bool ConditionNode::evaluate(Context const& context) const {
 		return false;
 	}
 
+	if (condition == nullptr) {
+		return false;
+	}
+
 	if (!share_scope_type(condition->scope, context.get_scope_type())) {
 		return false;
 	}
