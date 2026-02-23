@@ -1,11 +1,13 @@
 #pragma once
 
 #include <cstddef>
+#include <functional>
 #include <string_view>
 
 #include "openvic-simulation/types/HasIdentifier.hpp"
 #include "openvic-simulation/types/IdentifierRegistry.hpp"
 #include "openvic-simulation/dataloader/NodeTools.hpp"
+#include "openvic-simulation/utility/Getters.hpp"
 
 namespace OpenVic {
 	struct ModManager;
@@ -32,22 +34,21 @@ namespace OpenVic {
 		);
 		Mod(Mod&&) = default;
 
-		vector_ordered_set<Mod const*> generate_dependency_list(bool* success = nullptr) const;
+		vector_ordered_set<std::reference_wrapper<const Mod>> generate_dependency_list(bool* success = nullptr) const;
 	};
 
 	struct ModManager {
 
 	private:
 		IdentifierRegistry<Mod> IDENTIFIER_REGISTRY(mod);
-		memory::vector<Mod const*> loaded_mods;
+		memory::vector<std::reference_wrapper<const Mod>> SPAN_PROPERTY(loaded_mods);
 		bool mods_loaded = false;
 
 	public:
 		ModManager();
 
 		bool load_mod_file(ast::NodeCPtr root);
-		void set_loaded_mods(memory::vector<Mod const*>&& new_loaded_mods);
-		memory::vector<Mod const*> const& get_loaded_mods() const;
+		void set_loaded_mods(memory::vector<std::reference_wrapper<const Mod>>&& new_loaded_mods);
 		size_t get_loaded_mod_count() const;
 	};
 }

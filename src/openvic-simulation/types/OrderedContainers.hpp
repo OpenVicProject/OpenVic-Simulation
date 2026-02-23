@@ -1,7 +1,9 @@
 #pragma once
 
 #include <cctype>
+#include <cstddef>
 #include <functional>
+#include <type_traits>
 
 #include <tsl/ordered_map.h>
 #include <tsl/ordered_set.h>
@@ -13,6 +15,18 @@
 
 #include <foonathan/memory/default_allocator.hpp>
 #include <foonathan/memory/std_allocator.hpp>
+
+namespace std {
+	template<typename T>
+	struct equal_to<std::reference_wrapper<const T>> {
+		[[nodiscard]] bool operator()(
+			std::reference_wrapper<const T> const& lhs,
+			std::reference_wrapper<const T> const& rhs
+		) const noexcept {
+			return lhs.get() == rhs.get();
+		}
+	};
+}
 
 namespace OpenVic {
 	struct ordered_container_string_hash {
@@ -44,10 +58,33 @@ namespace OpenVic {
 	struct container_hash<char const*> : ordered_container_string_hash {};
 	template<typename T>
 	struct container_hash<T*> : std::hash<T const*> {};
+	template<typename T>
+	struct container_hash<std::reference_wrapper<T>> : std::hash<const T> {};
+	template<typename T>
+	struct container_hash<std::reference_wrapper<const T>> : std::hash<const T> {};
+
+	// Default: Use transparent equality
+	template<typename T>
+	struct default_equal_to_selector {
+		using type = std::equal_to<>;
+	};
+
+	// Specialization for reference_wrapper
+	template<typename T>
+	struct default_equal_to_selector<std::reference_wrapper<T>> { 
+		using type = std::equal_to<std::reference_wrapper<const T>>; 
+	};
+	template<typename T>
+	struct default_equal_to_selector<std::reference_wrapper<const T>> { 
+		using type = std::equal_to<std::reference_wrapper<const T>>; 
+	};
+
+	template<typename T>
+	using default_equal_to = typename default_equal_to_selector<T>::type;
 
 	// Useful for contiguous memory
 	template<
-		class Key, class T, class Hash = container_hash<Key>, class KeyEqual = std::equal_to<>,
+		class Key, class T, class Hash = container_hash<Key>, class KeyEqual = default_equal_to<Key>,
 		class RawAllocator = foonathan::memory::default_allocator, class IndexType = std::uint_least32_t,
 		class Allocator = foonathan::memory::std_allocator<std::pair<Key, T>, memory::tracker<RawAllocator>>>
 	using vector_ordered_map =
@@ -55,35 +92,35 @@ namespace OpenVic {
 
 	// Useful for stable memory addresses (so long as you don't remove or insert values)
 	template<
-		class Key, class T, class Hash = container_hash<Key>, class KeyEqual = std::equal_to<>,
+		class Key, class T, class Hash = container_hash<Key>, class KeyEqual = default_equal_to<Key>,
 		class RawAllocator = foonathan::memory::default_allocator, class IndexType = std::uint_least32_t,
 		class Allocator = foonathan::memory::std_allocator<std::pair<Key, T>, memory::tracker<RawAllocator>>>
 	using deque_ordered_map =
 		tsl::ordered_map<Key, T, Hash, KeyEqual, Allocator, OpenVic::utility::deque<std::pair<Key, T>, Allocator>, IndexType>;
 
 	template<
-		class Key, class T, class Hash = container_hash<Key>, class KeyEqual = std::equal_to<>,
+		class Key, class T, class Hash = container_hash<Key>, class KeyEqual = default_equal_to<Key>,
 		class RawAllocator = foonathan::memory::default_allocator, class IndexType = std::uint_least32_t,
 		class Allocator = foonathan::memory::std_allocator<std::pair<Key, T>, memory::tracker<RawAllocator>>>
 	using ordered_map = vector_ordered_map<Key, T, Hash, KeyEqual, RawAllocator, IndexType, Allocator>;
 
 	// Useful for contiguous memory
 	template<
-		class Key, class Hash = container_hash<Key>, class KeyEqual = std::equal_to<>,
+		class Key, class Hash = container_hash<Key>, class KeyEqual = default_equal_to<Key>,
 		class RawAllocator = foonathan::memory::default_allocator, class IndexType = std::uint_least32_t,
 		class Allocator = foonathan::memory::std_allocator<Key, memory::tracker<RawAllocator>>>
 	using vector_ordered_set = tsl::ordered_set<Key, Hash, KeyEqual, Allocator, std::vector<Key, Allocator>, IndexType>;
 
 	// Useful for stable memory addresses (so long as you don't remove or insert values)
 	template<
-		class Key, class Hash = container_hash<Key>, class KeyEqual = std::equal_to<>,
+		class Key, class Hash = container_hash<Key>, class KeyEqual = default_equal_to<Key>,
 		class RawAllocator = foonathan::memory::default_allocator, class IndexType = std::uint_least32_t,
 		class Allocator = foonathan::memory::std_allocator<Key, memory::tracker<RawAllocator>>>
 	using deque_ordered_set =
 		tsl::ordered_set<Key, Hash, KeyEqual, Allocator, OpenVic::utility::deque<Key, Allocator>, IndexType>;
 
 	template<
-		class Key, class Hash = container_hash<Key>, class KeyEqual = std::equal_to<>,
+		class Key, class Hash = container_hash<Key>, class KeyEqual = default_equal_to<Key>,
 		class RawAllocator = foonathan::memory::default_allocator, class IndexType = std::uint_least32_t,
 		class Allocator = foonathan::memory::std_allocator<Key, memory::tracker<RawAllocator>>>
 	using ordered_set = vector_ordered_set<Key, Hash, KeyEqual, RawAllocator, IndexType, Allocator>;
