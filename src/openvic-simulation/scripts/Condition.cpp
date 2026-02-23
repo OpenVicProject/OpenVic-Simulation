@@ -182,7 +182,7 @@ bool ConditionManager::setup_conditions(DefinitionManager const& definition_mana
 
 	/* Trigger Country Scopes */
 	ret &= add_condition("all_core", GROUP, COUNTRY).scope_change(PROVINCE).loc("ALL_CORE_PROVINCE_THAT");
-	ret &= add_condition("any_core", GROUP, COUNTRY).scope_change(PROVINCE).loc("ANY_CORE_PROVINCE");
+	ret &= add_condition("any_core_country", GROUP, COUNTRY).scope_change(PROVINCE).loc("ANY_CORE_PROVINCE");
 	ret &= add_condition("any_greater_power", GROUP, COUNTRY).scope_change(COUNTRY).loc("ANY_GP_STARTS");
 	ret &= add_condition("any_neighbor_country", GROUP, COUNTRY).scope_change(COUNTRY).loc("NEIGHBOR_COUNTRY_STARTS");
 	ret &= add_condition("any_owned_province", GROUP, COUNTRY).scope_change(PROVINCE).loc("ANY_PROVINCE_STARTS");
@@ -200,7 +200,7 @@ bool ConditionManager::setup_conditions(DefinitionManager const& definition_mana
 	ret &= add_condition("any_neighbor_province", GROUP, STATE | PROVINCE).scope_change(PROVINCE).loc("NEIGHBOR_PROVINCE_STARTS");
 
 	/* Trigger Province Scopes */
-	ret &= add_condition("any_core", GROUP, PROVINCE).scope_change(COUNTRY).loc("ANY_CORE_PROVINCE");
+	ret &= add_condition("any_core_province", GROUP, PROVINCE).scope_change(COUNTRY).loc("ANY_CORE_PROVINCE");
 	ret &= add_condition("controller", GROUP, PROVINCE).scope_change(COUNTRY).loc("TRIGGER_CONTROLLER");
 	ret &= add_condition("owner", GROUP, PROVINCE).scope_change(COUNTRY).loc("TRIGGER_OWNER");
 	ret &= add_condition("sea_zone", GROUP, PROVINCE).scope_change(PROVINCE).loc("TRIGGER_SEA_ZONE");
@@ -837,13 +837,32 @@ node_callback_t ConditionManager::expect_condition_node_list(
 	callback_t<ConditionNode&&> callback, bool top_scope
 ) const {
 	return [this, &definition_manager, callback, current_scope, this_scope, from_scope, top_scope](ast::NodeCPtr node) -> bool {
+		scope_type_t effective_current_scope = current_scope;
+		if (share_scope_type(effective_current_scope, THIS)) {
+			effective_current_scope = this_scope;
+		} else if (share_scope_type(effective_current_scope, FROM)) {
+			effective_current_scope = from_scope;
+		}
+
 		const auto expect_node = [this, &definition_manager, callback, current_scope, this_scope, from_scope]
 		(Condition const& condition, ast::NodeCPtr node) -> bool {
 			return expect_condition_node(
 				definition_manager, condition, current_scope, this_scope, from_scope, callback
 			)(node);
 		};
-		const auto invalid_condition_node = [this, &expect_node, top_scope](std::string_view id, ast::NodeCPtr node) -> bool {
+		const auto invalid_condition_node = [this, &expect_node, top_scope,
+											 effective_current_scope](std::string_view id, ast::NodeCPtr node) -> bool {
+			if (id == "any_core") {
+				Condition const* resolved_condition = nullptr;
+				if (share_scope_type(effective_current_scope, COUNTRY)) {
+					resolved_condition = get_condition_by_identifier("any_core_country");
+				} else if (share_scope_type(effective_current_scope, PROVINCE)) {
+					resolved_condition = get_condition_by_identifier("any_core_province");
+				}
+				if (resolved_condition) {
+					return expect_node(*resolved_condition, node);
+				}
+			}
 			if (top_scope && id == "factor") { return true; }
 			if (ast::FlatValue const* node_name = dryad::node_try_cast<ast::FlatValue>(node); node_name && node_name->value()) {
 				spdlog::warn_s(
