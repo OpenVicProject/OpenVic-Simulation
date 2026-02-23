@@ -1,5 +1,7 @@
 #pragma once
 
+#include <cstddef>
+
 #include <type_safe/strong_typedef.hpp>
 
 #include "openvic-simulation/core/template/Concepts.hpp"
@@ -24,6 +26,15 @@ namespace OpenVic {
 
 		constexpr bool operator==(HasIndex const& rhs) const {
 			return index == rhs.index;
+		}
+	};
+}
+
+namespace std {
+	template<OpenVic::has_index T>
+	struct hash<T> {
+		[[nodiscard]] std::size_t operator()(T const& obj) const noexcept {
+			return std::hash<typename T::index_t>{}(obj.index);
 		}
 	};
 }

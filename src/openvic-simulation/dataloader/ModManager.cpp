@@ -1,5 +1,6 @@
 #include "ModManager.hpp"
 
+#include <functional>
 #include <string_view>
 
 #include "openvic-simulation/core/error/ErrorMacros.hpp"
@@ -7,7 +8,6 @@
 #include "openvic-simulation/types/HasIdentifier.hpp"
 #include "openvic-simulation/types/IdentifierRegistry.hpp"
 #include "openvic-simulation/types/OrderedContainers.hpp"
-#include "openvic-simulation/core/FormatValidate.hpp"
 
 using namespace OpenVic;
 using namespace OpenVic::NodeTools;
@@ -27,34 +27,40 @@ Mod::Mod(
 	replace_paths { new_replace_paths },
 	dependencies { new_dependencies } {}
 
-vector_ordered_set<Mod const*> Mod::generate_dependency_list(bool* success) const {
+vector_ordered_set<std::reference_wrapper<const Mod>> Mod::generate_dependency_list(bool* success) const {
 	static constexpr size_t MAX_RECURSE = 16;
 	size_t current_recurse = 0;
 
-	vector_ordered_set<Mod const*> result;
+	vector_ordered_set<std::reference_wrapper<const Mod>> result;
 
-	auto dep_cycle = [this, &current_recurse](auto self, Mod const* mod, vector_ordered_set<Mod const*>& dep_list) -> bool {
+	auto dep_cycle = [this, &current_recurse](
+		auto self,
+		Mod const& mod,
+		vector_ordered_set<std::reference_wrapper<const Mod>>& dep_list
+	) -> bool {
 		bool ret = true;
-		for (std::string_view dep_identifier : mod->get_dependencies()) {
-			if (!mod_manager.has_mod_identifier(dep_identifier)) {
+		for (std::string_view dep_identifier : mod.get_dependencies()) {
+			Mod const* dep_ptr = mod_manager.get_mod_by_identifier(dep_identifier);
+			if (dep_ptr == nullptr) {
 				spdlog::error_s(
 					"Mod \"{}\" has unmet dependency \"{}\" and cannot be loaded!",
-					ovfmt::validate(mod), dep_identifier
+					mod, dep_identifier
 				);
 				return false;
 			}
-			Mod const* dep = mod_manager.get_mod_by_identifier(dep_identifier);
+			Mod const& dep = *dep_ptr;
 			/* The poor man's cycle checking (cycles should be very rare and hard to accomplish with vic2 modding, this is a failsafe) */
 			if (current_recurse == MAX_RECURSE) {
 				spdlog::error_s(
 					"Mod \"{}\" has cyclical or broken dependency chain and cannot be loaded!",
-					ovfmt::validate(mod)
+					mod
 				);
 				return false;
 			} else {
 				current_recurse++;
 				ret &= self(self, dep, dep_list); /* recursively search for mod dependencies */
 			}
+
 			if (!dep_list.contains(dep)) {
 				dep_list.emplace(dep);
 			}
@@ -62,7 +68,7 @@ vector_ordered_set<Mod const*> Mod::generate_dependency_list(bool* success) cons
 		return ret;
 	};
 
-	bool loaded_deps = dep_cycle(dep_cycle, this, result);
+	bool loaded_deps = dep_cycle(dep_cycle, *this, result);
 	if (success) {
 		*success = loaded_deps;
 	}
@@ -100,18 +106,14 @@ bool ModManager::load_mod_file(ast::NodeCPtr root) {
 	return true;
 }
 
-void ModManager::set_loaded_mods(memory::vector<Mod const*>&& new_loaded_mods) {
+void ModManager::set_loaded_mods(memory::vector<std::reference_wrapper<const Mod>>&& new_loaded_mods) {
 	OV_ERR_FAIL_COND_MSG(mods_loaded, "set_loaded_mods called twice");
 
 	loaded_mods = std::move(new_loaded_mods);
 	mods_loaded = true;
-	for (Mod const* mod : loaded_mods) {
-		SPDLOG_INFO("Loading mod \"{}\" at path {}", *mod, mod->get_dataloader_root_path());
+	for (Mod const& mod : loaded_mods) {
+		SPDLOG_INFO("Loading mod \"{}\" at path {}", mod, mod.get_dataloader_root_path());
 	}
-}
-
-memory::vector<Mod const*> const& ModManager::get_loaded_mods() const {
-	return loaded_mods;
 }
 
 size_t ModManager::get_loaded_mod_count() const {

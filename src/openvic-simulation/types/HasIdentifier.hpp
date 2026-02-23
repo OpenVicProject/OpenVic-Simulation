@@ -1,14 +1,14 @@
 #pragma once
 
-#include <algorithm>
 #include <cassert>
+#include <cstddef>
 #include <string_view>
 #include <ostream>
 
 #include <fmt/base.h>
 
-#include "openvic-simulation/types/Colour.hpp"
 #include "openvic-simulation/core/template/Concepts.hpp"
+#include "openvic-simulation/types/Colour.hpp"
 #include "openvic-simulation/utility/Getters.hpp"
 
 namespace OpenVic {
@@ -30,6 +30,12 @@ namespace OpenVic {
 		HasIdentifier(HasIdentifier&&) = default;
 		HasIdentifier& operator=(HasIdentifier const&) = delete;
 		HasIdentifier& operator=(HasIdentifier&&) = delete;
+
+		template <std::derived_from<HasIdentifier> T>
+		requires (!has_index<T>)
+		friend bool operator==(T const& lhs, T const& rhs) {
+			return lhs.get_identifier() == rhs.get_identifier();
+		}
 	};
 
 	inline std::ostream& operator<<(std::ostream& stream, HasIdentifier const& obj) {
@@ -96,3 +102,13 @@ struct fmt::formatter<T> : fmt::formatter<fmt::string_view> {
 		return fmt::formatter<fmt::string_view>::format(has_id.get_name(), ctx);
 	}
 };
+
+namespace std {
+	template<OpenVic::has_get_identifier T>
+	requires (!OpenVic::has_index<T>)
+	struct hash<T> {
+		[[nodiscard]] std::size_t operator()(T const& obj) const noexcept {
+			return std::hash<std::string_view>{}(obj.get_identifier());
+		}
+	};
+}

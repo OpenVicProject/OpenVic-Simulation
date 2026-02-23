@@ -1,6 +1,7 @@
 #include "GameManager.hpp"
 
 #include <chrono>
+#include <functional>
 #include <string_view>
 
 #include <range/v3/algorithm/contains.hpp>
@@ -76,7 +77,7 @@ bool GameManager::load_mods(memory::vector<memory::string> const& mods_to_find) 
 
 	bool ret = true;
 
-	vector_ordered_set<Mod const*> load_list;
+	vector_ordered_set<std::reference_wrapper<const Mod>> load_list;
 
 	/* Check loaded mod descriptors for requested mods, using either full name or user directory name
 	 * (Historical Project Mod 0.4.6 or HPM both valid, for example), and load them plus their dependencies.
@@ -94,8 +95,8 @@ bool GameManager::load_mods(memory::vector<memory::string> const& mods_to_find) 
 			continue;
 		}
 
-		Mod const* mod_ptr = &*it;
-		vector_ordered_set<Mod const*> dependencies = mod_ptr->generate_dependency_list(&ret);
+		Mod const& mod = *it;
+		vector_ordered_set<std::reference_wrapper<const Mod>> dependencies = mod.generate_dependency_list(&ret);
 		if(!ret) {
 			continue;
 		}
@@ -104,15 +105,15 @@ bool GameManager::load_mods(memory::vector<memory::string> const& mods_to_find) 
 		if (load_list.empty()) {
 			load_list = std::move(dependencies);
 		} else {
-			for (Mod const* dep : dependencies) {
+			for (Mod const& dep : dependencies) {
 				if (!load_list.contains(dep)) {
 					load_list.emplace(dep);
 				}
 			}
 		}
 
-		if (!load_list.contains(mod_ptr)) {
-			load_list.emplace(mod_ptr);
+		if (!load_list.contains(mod)) {
+			load_list.emplace(mod);
 		}
 	}
 
@@ -122,9 +123,9 @@ bool GameManager::load_mods(memory::vector<memory::string> const& mods_to_find) 
 	vector_ordered_set<fs::path> replace_paths;
 
 	/* Actually registers all roots and replace paths to be loaded by the game. */
-	for (Mod const* mod : load_list) {
-		roots.emplace_back(roots[0] / mod->get_dataloader_root_path());
-		for (std::string_view path : mod->get_replace_paths()) {
+	for (Mod const& mod : load_list) {
+		roots.emplace_back(roots[0] / mod.get_dataloader_root_path());
+		for (std::string_view path : mod.get_replace_paths()) {
 			replace_paths.emplace(path);
 		}
 	}
