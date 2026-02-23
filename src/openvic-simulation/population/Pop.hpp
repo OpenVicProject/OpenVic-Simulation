@@ -226,8 +226,6 @@ namespace OpenVic {
 		DECLARE_POP_MONEY_STORE_FUNCTIONS(import_subsidies)
 		#undef DECLARE_POP_MONEY_STORE_FUNCTIONS
 
-		bool evaluate_leaf(ConditionNode const& node) const;
-
 		void pop_tick(
 			PopValuesFromProvince const& shared_values,
 			RandomU32& random_number_generator,

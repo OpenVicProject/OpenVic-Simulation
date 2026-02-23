@@ -607,8 +607,6 @@ namespace OpenVic {
 		[[nodiscard]] bool can_research_tech(Technology const& technology, const Date today) const;
 		void start_research(Technology const& technology, const Date today);
 
-		bool evaluate_leaf(ConditionNode const& node) const;
-
 		// Sets the investment of each country in the map (rather than adding to them), leaving the rest unchanged.
 		void apply_foreign_investments(
 			fixed_point_map_t<CountryDefinition const*> const& investments,

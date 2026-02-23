@@ -68,8 +68,6 @@ namespace OpenVic {
 		}
 
 		void update_gamestate();
-
-		bool evaluate_leaf(ConditionNode const& node) const;
 	};
 
 	struct Region;

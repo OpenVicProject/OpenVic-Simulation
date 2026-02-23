@@ -51,12 +51,139 @@ std::string_view Context::get_identifier() const {
 }
 
 bool Context::evaluate_leaf(ConditionNode const& node) const {
+	std::string_view const id = node.get_condition()->get_identifier();
+
 	return std::visit(
 		[&](auto const* p) -> bool {
 			if (!p) {
 				return false;
 			}
-			return p->evaluate_leaf(node);
+
+			using T = std::decay_t<decltype(*p)>;
+
+			if constexpr (std::is_same_v<T, CountryInstance>) {
+				// TODO: https://vic2.paradoxwikis.com/List_of_conditions#Country_Scope
+
+				if (id == "ai") {
+					bool expected = std::get<bool>(node.get_value());
+					return p->is_ai() == expected;
+				}
+				if (id == "average_consciousness") {
+					fixed_point_t expected = std::get<fixed_point_t>(node.get_value());
+					return p->get_average_consciousness() >= expected;
+				}
+				if (id == "average_militancy") {
+					fixed_point_t expected = std::get<fixed_point_t>(node.get_value());
+					return p->get_average_militancy() >= expected;
+				}
+				if (id == "badboy") {
+					fixed_point_t expected_ratio = std::get<fixed_point_t>(node.get_value());
+					return p->get_infamy_untracked() >= (expected_ratio * fixed_point_t(25));
+				}
+				if (id == "civilized") {
+					bool expected = std::get<bool>(node.get_value());
+					return p->is_civilised() == expected;
+				}
+				if (id == "colonial_nation") {
+					bool expected = std::get<bool>(node.get_value());
+					bool has_colonies = false;
+					for (State const* state : p->get_states()) {
+						if (state && state->is_colonial_state()) {
+							has_colonies = true;
+							break;
+						}
+					}
+					return has_colonies == expected;
+				}
+				if (id == "exists") {
+					bool expected = std::get<bool>(node.get_value());
+					return p->exists() == expected;
+				}
+				if (id == "industrial_score") {
+					fixed_point_t expected = std::get<fixed_point_t>(node.get_value());
+					return p->get_industrial_power_untracked() >= expected;
+				}
+				if (id == "is_disarmed") {
+					bool expected = std::get<bool>(node.get_value());
+					return p->is_disarmed() == expected;
+				}
+				if (id == "is_greater_power") {
+					bool expected = std::get<bool>(node.get_value());
+					return p->is_great_power() == expected;
+				}
+				if (id == "is_mobilised") {
+					bool expected = std::get<bool>(node.get_value());
+					return p->is_mobilised() == expected;
+				}
+				if (id == "is_secondary_power") {
+					bool expected = std::get<bool>(node.get_value());
+					return p->is_secondary_power() == expected;
+				}
+				if (id == "num_of_cities") {
+					uint64_t expected = std::get<uint64_t>(node.get_value());
+					return p->get_owned_provinces().size() >= expected;
+				}
+				if (id == "num_of_ports") {
+					uint64_t expected = std::get<uint64_t>(node.get_value());
+					return p->get_port_count() >= expected;
+				}
+				if (id == "number_of_states") {
+					uint64_t expected = std::get<uint64_t>(node.get_value());
+					return p->get_states().size() >= expected;
+				}
+				if (id == "prestige") {
+					fixed_point_t expected = std::get<fixed_point_t>(node.get_value());
+					return p->get_prestige_untracked() >= expected;
+				}
+				if (id == "plurality") {
+					fixed_point_t expected = std::get<fixed_point_t>(node.get_value());
+					return p->get_plurality_untracked() >= expected;
+				}
+				if (id == "total_amount_of_ships") {
+					uint64_t expected = std::get<uint64_t>(node.get_value());
+					return p->get_ship_count() >= expected;
+				}
+				if (id == "rank") {
+					uint64_t expected = std::get<uint64_t>(node.get_value());
+					return p->get_total_rank() >= expected;
+				}
+				if (id == "tag") {
+					memory::string const& expected = std::get<memory::string>(node.get_value());
+					return p->get_identifier() == expected;
+				}
+				if (id == "war") {
+					bool expected = std::get<bool>(node.get_value());
+					return p->is_at_war() == expected;
+				}
+				if (id == "war_exhaustion") {
+					fixed_point_t expected = std::get<fixed_point_t>(node.get_value());
+					return p->get_war_exhaustion() >= expected;
+				}
+
+				spdlog::warn_s("Condition {} not implemented for Country scope", id);
+				return false;
+			}
+			else if constexpr (std::is_same_v<T, State>) {
+				// No state conditions according to wiki?
+				spdlog::warn_s("Condition {} not implemented for State scope", id);
+				return false;
+			}
+			else if constexpr (std::is_same_v<T, ProvinceInstance>) {
+				// TODO: https://vic2.paradoxwikis.com/List_of_conditions#Province_Scope
+				spdlog::warn_s("Condition {} not implemented for Province scope", id);
+				return false;
+			}
+			else if constexpr (std::is_same_v<T, Pop>) {
+				// TODO: https://vic2.paradoxwikis.com/List_of_conditions#Pop_Scope
+				if (id == "consciousness") {
+					fixed_point_t expected = std::get<fixed_point_t>(node.get_value());
+					return p->get_consciousness() >= expected;
+				}
+				spdlog::warn_s("Condition {} not implemented for Pop scope", id);
+				return false;
+			}
+
+			return false;
 		},
 		ptr
 	);
@@ -79,7 +206,7 @@ std::vector<Context> Context::get_sub_contexts(std::string_view condition_id, sc
 					result.emplace_back(make_child(prov));
 				}
 			}
-			else if (condition_id == "any_core" || condition_id == "all_core") {
+			else if (condition_id == "any_core_province" || condition_id == "all_core") {
 				for (ProvinceInstance const* prov : country->get_core_provinces()) {
 					result.emplace_back(make_child(prov));
 				}

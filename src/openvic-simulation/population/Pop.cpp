@@ -43,7 +43,6 @@
 #include "openvic-simulation/utility/Containers.hpp"
 #include "openvic-simulation/utility/Logger.hpp"
 #include "openvic-simulation/core/Typedefs.hpp"
-#include "openvic-simulation/scripts/Condition.hpp"
 
 
 using namespace OpenVic;
@@ -466,18 +465,6 @@ void Pop::allocate_for_needs(
 	}
 
 	reusable_vector.clear();
-}
-
-bool Pop::evaluate_leaf(ConditionNode const& node) const {
-	std::string_view const& id = node.get_condition()->get_identifier();
-
-	if (id == "consciousness") {
-		fixed_point_t expected = std::get<fixed_point_t>(node.get_value());
-		return get_consciousness() >= expected;
-	}
-	// TODO: Implement the rest
-	spdlog::warn_s("Condition {} not implemented in Pop::evaluate_leaf", id);
-	return false;
 }
 
 void Pop::pop_tick(
