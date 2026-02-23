@@ -225,8 +225,6 @@ namespace OpenVic {
 		const tooltip_subject_t tooltip_subject;
 		const tooltip_position_t tooltip_position;
 
-		mutable std::vector<Condition> overloads;
-
 		Condition(
 			std::string_view new_identifier, value_type_t new_value_type, scope_type_t new_scope,
 			scope_type_t new_scope_change, identifier_type_t new_key_identifier_type,

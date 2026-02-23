@@ -165,29 +165,6 @@ bool ConditionManager::_register_condition(
 		}
 	}
 
-	Condition const* existing = conditions.get_item_by_identifier(identifier);
-
-	if (existing != nullptr) {
-		if (share_scope_type(existing->scope, scope)) {
-			spdlog::error_s("Condition {} overload has overlapping scope with existing definition!", identifier);
-			return false;
-		}
-
-		for (const auto& overload : existing->overloads) {
-			if (share_scope_type(overload.scope, scope)) {
-				spdlog::error_s("Condition {} overload has overlapping scope with existing definition!", identifier);
-				return false;
-			}
-		}
-
-		existing->overloads.emplace_back(
-			identifier, value_type, scope, scope_change, key_identifier_type, value_identifier_type,
-			loc_true_key, loc_false_key, tooltip_subject, tooltip_position
-		);
-
-		return true;
-	}
-
 	return conditions.emplace_item(
 		identifier,
 		identifier, value_type, scope, scope_change, key_identifier_type, value_identifier_type,
@@ -672,25 +649,6 @@ node_callback_t ConditionManager::expect_condition_node(
 		bool ret = false;
 		ConditionNode::value_t value;
 
-		// scope validation
-		scope_type_t effective_current_scope = current_scope;
-		if (share_scope_type(effective_current_scope, THIS)) {
-			effective_current_scope = this_scope;
-		} else if (share_scope_type(effective_current_scope, FROM)) {
-			effective_current_scope = from_scope;
-		}
-
-		Condition const* active_condition = &condition;
-
-		if (!share_scope_type(active_condition->scope, effective_current_scope)) {
-			for (const auto& overload : condition.overloads) {
-				if (share_scope_type(overload.scope, effective_current_scope)) {
-					active_condition = &overload;
-					break;
-				}
-			}
-		}
-
 		const std::string_view identifier = condition.get_identifier();
 		const value_type_t value_type = condition.value_type;
 		const scope_type_t scope = condition.scope;
@@ -814,6 +772,14 @@ node_callback_t ConditionManager::expect_condition_node(
 				vector_callback(node_list)
 			)(node);
 			value = std::move(node_list);
+		}
+
+		// scope validation
+		scope_type_t effective_current_scope = current_scope;
+		if (share_scope_type(effective_current_scope, THIS)) {
+			effective_current_scope = this_scope;
+		} else if (share_scope_type(effective_current_scope, FROM)) {
+			effective_current_scope = from_scope;
 		}
 
 		if (!share_scope_type(scope, effective_current_scope) && effective_current_scope > scope) {
