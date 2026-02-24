@@ -400,8 +400,7 @@ void ResourceGatheringOperation::pay_employees(memory::vector<fixed_point_t>& re
 				upper_limit
 			);
 
-			for (Pop* owner_pop_ptr : *owner_pops_cache_nullable) {
-				Pop& owner_pop = *owner_pop_ptr;
+			for (Pop& owner_pop : *owner_pops_cache_nullable) {
 				const fixed_point_t income_for_this_pop = std::max(
 					revenue_left * owner_share.mul_div<pop_sum_t>(owner_pop.get_size(), total_owner_count_in_state_cache),
 					fixed_point_t::epsilon //revenue > 0 is already checked, so rounding up

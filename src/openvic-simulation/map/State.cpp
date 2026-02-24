@@ -16,7 +16,7 @@ using namespace OpenVic;
 State::State(
 	StateSet const& new_state_set,
 	ProvinceInstance* new_capital,
-	memory::vector<ProvinceInstance*>&& new_provinces,
+	memory::vector<std::reference_wrapper<ProvinceInstance>>&& new_provinces,
 	colony_status_t new_colony_status,
 	forwardable_span<const Strata> strata_keys,
 	forwardable_span<const PopType> pop_type_keys,
@@ -46,24 +46,24 @@ CountryInstance* State::get_owner() const {
 		: capital->get_owner();
 }
 
-memory::vector<Pop*> const& State::get_pops_cache_by_type(PopType const& pop_type) const {
+memory::vector<std::reference_wrapper<Pop>> const& State::get_pops_cache_by_type(PopType const& pop_type) const {
 	return pops_cache_by_type.at(pop_type);
 }
 
 void State::update_gamestate() {
 	clear_pops_aggregate();
 
-	for (memory::vector<Pop*>& pops_cache : pops_cache_by_type.get_values()) {
+	for (memory::vector<std::reference_wrapper<Pop>>& pops_cache : pops_cache_by_type.get_values()) {
 		pops_cache.clear();
 	}
 
 	coastal = false;
-	for (ProvinceInstance* const province : provinces) {
-		coastal |= province->province_definition.is_coastal();
-		add_pops_aggregate(*province);
+	for (ProvinceInstance& province : provinces) {
+		coastal |= province.province_definition.is_coastal();
+		add_pops_aggregate(province);
 
-		for (auto const& [pop_type, province_pops_of_type] : province->get_pops_cache_by_type()) {
-			memory::vector<Pop*>& state_pops_of_type = pops_cache_by_type.at(pop_type);
+		for (auto const& [pop_type, province_pops_of_type] : province.get_pops_cache_by_type()) {
+			memory::vector<std::reference_wrapper<Pop>>& state_pops_of_type = pops_cache_by_type.at(pop_type);
 			state_pops_of_type.insert(
 				state_pops_of_type.end(),
 				province_pops_of_type.begin(),
@@ -113,10 +113,9 @@ void State::_update_country() {
 	previous_country_ptr = owner_ptr;
 }
 
-/* Whether two provinces in the same region should be grouped into the same state or not.
- * (Assumes both provinces non-null.) */
-static bool provinces_belong_in_same_state(ProvinceInstance const* lhs, ProvinceInstance const* rhs) {
-	return lhs->get_owner() == rhs->get_owner() && lhs->get_colony_status() == rhs->get_colony_status();
+// Whether two provinces in the same region should be grouped into the same state or not.
+static bool provinces_belong_in_same_state(ProvinceInstance const& lhs, ProvinceInstance const& rhs) {
+	return lhs.get_owner() == rhs.get_owner() && lhs.get_colony_status() == rhs.get_colony_status();
 }
 
 StateSet::StateSet(Region const& new_region) : region { new_region } {}
@@ -140,14 +139,13 @@ bool StateManager::add_state_set(
 	OV_ERR_FAIL_COND_V_MSG(region.is_meta, false, memory::fmt::format("Cannot use meta region \"{}\" as state template!", region));
 	OV_ERR_FAIL_COND_V_MSG(region.empty(), false, memory::fmt::format("Cannot use empty region \"{}\" as state template!", region));
 
-	memory::vector<memory::vector<ProvinceInstance*>> temp_provinces;
+	memory::vector<memory::vector<std::reference_wrapper<ProvinceInstance>>> temp_provinces;
 
-	for (ProvinceDefinition const* province : region.get_provinces()) {
-
-		ProvinceInstance* province_instance = &map_instance.get_province_instance_by_definition(*province);
+	for (ProvinceDefinition const& province : region.get_provinces()) {
+		ProvinceInstance& province_instance = map_instance.get_province_instance_by_definition(province);
 
 		// add to existing state if shared owner & status...
-		for (memory::vector<ProvinceInstance*>& provinces : temp_provinces) {
+		for (memory::vector<std::reference_wrapper<ProvinceInstance>>& provinces : temp_provinces) {
 			if (provinces_belong_in_same_state(provinces.front(), province_instance)) {
 				provinces.push_back(province_instance);
 				// jump to the end of the outer loop, skipping the new state code
@@ -170,18 +168,18 @@ bool StateManager::add_state_set(
 	// Reserve space for the maximum number of states (one per province)
 	state_set.states.reserve(region.size());
 
-	for (memory::vector<ProvinceInstance*>& provinces : temp_provinces) {
-		ProvinceInstance* capital = provinces.front();
+	for (memory::vector<std::reference_wrapper<ProvinceInstance>>& provinces : temp_provinces) {
+		ProvinceInstance& capital = provinces.front();
 
 		State& state = *state_set.states.emplace(
 			/* TODO: capital province logic */
-			state_set, capital,
-			std::move(provinces), capital->get_colony_status(),
+			state_set, &capital,
+			std::move(provinces), capital.get_colony_status(),
 			strata_keys, pop_type_keys, ideology_keys
 		);
 
-		for (ProvinceInstance* province : state.get_provinces()) {
-			province->set_state(&state);
+		for (ProvinceInstance& province : state.get_provinces()) {
+			province.set_state(&state);
 		}
 	}
 

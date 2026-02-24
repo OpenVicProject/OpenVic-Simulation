@@ -2,6 +2,7 @@
 
 #include <cstdint>
 #include <filesystem>
+#include <functional>
 #include <string_view>
 
 #include <openvic-dataloader/csv/LineObject.hpp>
@@ -114,20 +115,23 @@ namespace OpenVic {
 	private:
 		ProvinceDefinition* get_province_definition_at(ivec2_t pos);
 
-		/* This provides a safe way to remove the const qualifier of a ProvinceDefinition const*, via a non-const Map.
-		 * It uses a const_cast (the fastest/simplest solution), but this could also be done without it by looking up the
-		 * ProvinceDefinition* using the ProvinceDefinition const*'s index. Requiring a non-const Map ensures that this
-		 * function can only be used where the ProvinceDefinition* could already be accessed by other means, such as the
+		/* This provides a safe way to remove the const qualifier of a ProvinceDefinition const&, via a non-const Map.
+		 * It looks up the ProvinceDefinition& using the ProvinceDefinition const&'s index. Requiring a non-const Map ensures that this
+		 * function can only be used where the ProvinceDefinition& could already be accessed by other means, such as the
 		 * index method, preventing misleading code, or in the worst case undefined behaviour. */
-		constexpr ProvinceDefinition* remove_province_definition_const(ProvinceDefinition const* province) {
-			return const_cast<ProvinceDefinition*>(province);
+		constexpr ProvinceDefinition& get_mutable_province_definition(ProvinceDefinition const& province) {
+			return *province_definitions.get_item_by_index(province.index);
 		}
 
 	public:
 		ProvinceDefinition const* get_province_definition_at(ivec2_t pos) const;
 		bool set_max_provinces(ProvinceDefinition::index_t new_max_provinces);
 
-		bool add_region(std::string_view identifier, memory::vector<ProvinceDefinition const*>&& provinces, colour_t colour);
+		bool add_region(
+			std::string_view identifier,
+			memory::vector<std::reference_wrapper<const ProvinceDefinition>>&& provinces,
+			colour_t colour
+		);
 
 		bool load_province_definitions(std::span<const ovdl::csv::LineObject> lines);
 		/* Must be loaded after adjacencies so we know what provinces are coastal, and so can have a port */

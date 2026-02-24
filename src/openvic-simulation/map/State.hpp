@@ -1,8 +1,9 @@
 #pragma once
 
-#include <plf_colony.h>
+#include <functional>
 
 #include <fmt/base.h>
+#include <plf_colony.h>
 
 #include "openvic-simulation/population/PopsAggregate.hpp"
 #include "openvic-simulation/types/ColonyStatus.hpp"
@@ -33,12 +34,12 @@ namespace OpenVic {
 		CountryInstance* previous_country_ptr = nullptr;	
 
 		ProvinceInstance* PROPERTY_PTR(capital);
-		memory::vector<ProvinceInstance*> SPAN_PROPERTY(provinces);
+		memory::vector<std::reference_wrapper<ProvinceInstance>> SPAN_PROPERTY(provinces);
 		colony_status_t PROPERTY(colony_status);
 		fixed_point_t PROPERTY(industrial_power);
 		bool PROPERTY_CUSTOM_PREFIX(coastal, is, false);
 
-		OV_IFLATMAP_PROPERTY(PopType, memory::vector<Pop*>, pops_cache_by_type);
+		OV_IFLATMAP_PROPERTY(PopType, memory::vector<std::reference_wrapper<Pop>>, pops_cache_by_type);
 
 		void _update_country();
 
@@ -48,7 +49,7 @@ namespace OpenVic {
 		State(
 			StateSet const& new_state_set,
 			ProvinceInstance* new_capital,
-			memory::vector<ProvinceInstance*>&& new_provinces,
+			memory::vector<std::reference_wrapper<ProvinceInstance>>&& new_provinces,
 			colony_status_t new_colony_status,
 			forwardable_span<const Strata> strata_keys,
 			forwardable_span<const PopType> pop_type_keys,
