@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstddef>
+#include <functional>
 
 #include "openvic-simulation/core/portable/ForwardableSpan.hpp"
 #include "openvic-simulation/economy/production/ArtisanalProducer.hpp"
@@ -40,7 +41,7 @@ namespace OpenVic {
 		friend PopManager;
 
 	protected:
-		PopType const* PROPERTY_ACCESS(type, protected);
+		std::reference_wrapper<const PopType> PROPERTY_ACCESS(type, protected);
 		pop_size_t PROPERTY_ACCESS(size, protected);
 		fixed_point_t PROPERTY_RW_ACCESS(militancy, protected);
 		fixed_point_t PROPERTY_RW_ACCESS(consciousness, protected);
@@ -78,8 +79,6 @@ namespace OpenVic {
 	 * POP-18, POP-19, POP-20, POP-21, POP-34, POP-35, POP-36, POP-37
 	 */
 	struct Pop : PopBase {
-		friend struct ProvinceInstance;
-
 		enum struct culture_status_t : uint8_t {
 			UNACCEPTED, ACCEPTED, PRIMARY
 		};
@@ -99,7 +98,14 @@ namespace OpenVic {
 		fixed_point_t cash_allocated_for_artisanal_spending = 0;
 		pop_size_t employed = 0;
 
-		ProvinceInstance* PROPERTY_PTR(location, nullptr);
+		const std::reference_wrapper<ProvinceInstance> PROPERTY(location);
+
+	public:
+		[[nodiscard]] constexpr ProvinceInstance& get_location() {
+			return location;
+		}
+
+	private:
 
 		/* Last day's size change by source. */
 		pop_size_t PROPERTY(total_change, 0);
@@ -164,13 +170,6 @@ namespace OpenVic {
 		std::size_t PROPERTY(regiment_count, 0);
 		std::size_t PROPERTY(max_supported_regiments, 0);
 
-		Pop(
-			PopBase const& pop_base,
-			decltype(supporter_equivalents_by_ideology)::keys_span_type ideology_keys,
-			PopDeps const& pop_deps,
-			const pop_id_in_province_t new_id_in_province
-		);
-
 		memory::string get_pop_context_text() const;
 		void reserve_needs_fulfilled_goods();
 		void fill_needs_fulfilled_goods_with_false();
@@ -200,6 +199,13 @@ namespace OpenVic {
 		static void after_sell(void* actor, SellResult const& sell_result, memory::vector<fixed_point_t>& reusable_vector);
 
 	public:
+		Pop(
+			ProvinceInstance& new_location,
+			PopBase const& pop_base,
+			decltype(supporter_equivalents_by_ideology)::keys_span_type ideology_keys,
+			PopDeps const& pop_deps,
+			const pop_id_in_province_t new_id_in_province
+		);
 		Pop(Pop const&) = delete;
 		Pop(Pop&&) = default;
 		Pop& operator=(Pop const&) = delete;
@@ -207,8 +213,6 @@ namespace OpenVic {
 
 		void setup_pop_test_values(IssueManager const& issue_manager);
 		bool convert_to_equivalent();
-
-		void set_location(ProvinceInstance& new_location);
 		void update_location_based_attributes();
 
 		void update_gamestate(

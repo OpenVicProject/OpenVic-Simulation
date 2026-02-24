@@ -203,7 +203,7 @@ void ResourceGatheringOperation::hire() {
 
 	std::span<const Job> jobs = production_type.get_jobs();
 	for (Pop& pop : location.get_mutable_pops()){
-		PopType const& pop_type = *pop.get_type();
+		PopType const& pop_type = pop.get_type();
 		for (Job const& job : jobs) {
 			PopType const* const job_pop_type = job.pop_type;
 			if (job_pop_type && *job_pop_type == pop_type) {
@@ -424,13 +424,8 @@ void ResourceGatheringOperation::pay_employees(memory::vector<fixed_point_t>& re
 				Employee& employee = employees[i];
 				Pop& employee_pop = employee.get_pop();
 
-				PopType const* employee_pop_type = employee_pop.get_type();
-				if (employee_pop_type == nullptr) {
-					spdlog::error_s("employee has nullptr pop_type.");
-					return;
-				}
-
-				if (employee_pop_type->is_slave) {
+				PopType const& employee_pop_type = employee_pop.get_type();
+				if (employee_pop_type.is_slave) {
 					continue;
 				}
 				

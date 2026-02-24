@@ -181,11 +181,6 @@ bool ProvinceInstance::expand_building(
 	return buildings[index].expand(modifier_effect_cache, actor, *this);
 }
 
-void ProvinceInstance::_add_pop(Pop&& pop) {
-	pop.set_location(*this);
-	pops.insert(std::move(pop));
-}
-
 bool ProvinceInstance::add_pop_vec(
 	std::span<const PopBase> pop_vec,
 	PopDeps const& pop_deps
@@ -193,12 +188,13 @@ bool ProvinceInstance::add_pop_vec(
 	if (!province_definition.is_water()) {
 		reserve_more(pops, pop_vec.size());
 		for (PopBase const& pop : pop_vec) {
-			_add_pop(Pop {
+			pops.emplace(
+				*this,
 				pop,
 				get_supporter_equivalents_by_ideology().get_keys(),
 				pop_deps,
 				++last_pop_id
-			});
+			);
 		}
 		return true;
 	} else {
@@ -231,7 +227,7 @@ void ProvinceInstance::_update_pops(MilitaryDefines const& military_defines) {
 		: is_owner_core() ? fixed_point_t::_1 : military_defines.get_pop_size_per_regiment_non_core_multiplier();
 
 	for (Pop& pop : pops) {
-		pops_cache_by_type.at(*pop.get_type()).push_back(&pop);
+		pops_cache_by_type.at(pop.get_type()).push_back(&pop);
 		pop.update_gamestate(military_defines, owner, pop_size_per_regiment_multiplier);
 		add_pops_aggregate(pop);
 		if (pop.get_culture_status() == Pop::culture_status_t::UNACCEPTED) {
@@ -319,11 +315,16 @@ bool ProvinceInstance::convert_rgo_worker_pops_to_equivalent(ProductionType cons
 	std::span<const Job> jobs = production_type.get_jobs();
 	for (Pop& pop : pops) {
 		for (Job const& job : jobs) {
-			PopType const* const job_pop_type = job.pop_type;
-			PopType const* old_pop_type = pop.get_type();
+			PopType const* const job_pop_type_ptr = job.pop_type;
+			if (job_pop_type_ptr == nullptr) {
+				continue;
+			}
+
+			PopType const& job_pop_type = *job_pop_type_ptr;
+			PopType const& old_pop_type = pop.get_type();
 			if (job_pop_type != old_pop_type) {
-				PopType const* const equivalent = old_pop_type->get_equivalent();
-				if (job_pop_type == equivalent) {
+				PopType const* const equivalent_ptr = old_pop_type.get_equivalent();
+				if (equivalent_ptr != nullptr && job_pop_type == *equivalent_ptr) {
 					is_valid_operation&=pop.convert_to_equivalent();
 				}
 			}

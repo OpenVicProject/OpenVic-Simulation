@@ -7,10 +7,10 @@
 #include <optional>
 #include <ranges>
 
+#include <fmt/std.h>
 #include <type_safe/strong_typedef.hpp>
 
 #include "openvic-simulation/core/error/ErrorMacros.hpp"
-#include "openvic-simulation/core/FormatValidate.hpp"
 #include "openvic-simulation/core/Typedefs.hpp"
 #include "openvic-simulation/country/CountryParty.hpp"
 #include "openvic-simulation/country/CountryDefinition.hpp"
@@ -49,20 +49,21 @@ using namespace OpenVic;
 PopBase::PopBase(
 	PopType const& new_type, Culture const& new_culture, Religion const& new_religion, pop_size_t new_size,
 	fixed_point_t new_militancy, fixed_point_t new_consciousness, RebelType const* new_rebel_type
-) : type { &new_type }, culture { new_culture }, religion { new_religion }, size { new_size }, militancy { new_militancy },
+) : type { new_type }, culture { new_culture }, religion { new_religion }, size { new_size }, militancy { new_militancy },
 	consciousness { new_consciousness }, rebel_type { new_rebel_type } {}
 
 Pop::Pop(
+	ProvinceInstance& new_location,
 	PopBase const& pop_base,
 	decltype(supporter_equivalents_by_ideology)::keys_span_type ideology_keys,
 	PopDeps const& pop_deps,
 	const pop_id_in_province_t new_id_in_province
-)
-  : PopBase { pop_base },
+) : PopBase { pop_base },
+	location { new_location },
   	id_in_province { new_id_in_province },
 	market_instance { pop_deps.market_instance },
 	artisanal_producer_optional {
-		type->is_artisan
+		pop_base.get_type().is_artisan
 			? std::optional<ArtisanalProducer> {
 				pop_deps.artisanal_producer_deps
 			}
@@ -73,7 +74,7 @@ Pop::Pop(
 	}
 
 fixed_point_t Pop::get_unemployment_fraction() const {
-	if (!type->can_be_unemployed) {
+	if (!get_type().can_be_unemployed) {
 		return 0;
 	}
 	return fixed_point_t::from_fraction(get_unemployed(), size);
@@ -160,31 +161,21 @@ void Pop::setup_pop_test_values(IssueManager const& issue_manager) {
 }
 
 bool Pop::convert_to_equivalent() {
-	PopType const* const equivalent = get_type()->get_equivalent();
+	PopType const& pop_type = type.get();
+	PopType const* const equivalent = pop_type.get_equivalent();
 	if (equivalent == nullptr) {
-		spdlog::error_s("Tried to convert pop of type {} to equivalent, but there is no equivalent.", *get_type());
+		spdlog::error_s("Tried to convert pop of type {} to equivalent, but there is no equivalent.", pop_type);
 		return false;
 	}
 
-	type = equivalent;
+	type = *equivalent;
 	reserve_needs_fulfilled_goods();
 	return true;
 }
 
-void Pop::set_location(ProvinceInstance& new_location) {
-	if (location != &new_location) {
-		location = &new_location;
-
-		update_location_based_attributes();
-	}
-}
-
 void Pop::update_location_based_attributes() {
 	vote_equivalents_by_party.clear();
-	if (location == nullptr) {
-		return;
-	}
-	CountryInstance const* owner = location->get_owner();
+	CountryInstance const* owner = get_location().get_owner();
 	if (owner == nullptr) {
 		return;
 	}
@@ -266,24 +257,24 @@ void Pop::update_gamestate(
 memory::string Pop::get_pop_context_text() const {
 	return memory::fmt::format(
 		"location: {} type: {} culture: {} religion: {} size: {}",
-		ovfmt::validate(location), *type, culture, religion, size
+		location, type, culture, religion, size
 	);
 }
 
 void Pop::reserve_needs_fulfilled_goods() {
-	PopType const& type_never_null = *type;
+	PopType const& pop_type = type.get();
 	#define RESERVE_NEEDS(need_category) \
-		need_category##_needs_fulfilled_goods.reserve(type_never_null.get_##need_category##_needs().size());
+		need_category##_needs_fulfilled_goods.reserve(pop_type.get_##need_category##_needs().size());
 
 	OV_DO_FOR_ALL_NEED_CATEGORIES(RESERVE_NEEDS)
 	#undef RESERVE_NEEDS
 }
 
 void Pop::fill_needs_fulfilled_goods_with_false() {
-	PopType const& type_never_null = *type;
+	PopType const& pop_type = type.get();
 	#define FILL_WITH_FALSE(need_category) \
 		need_category##_needs_fulfilled_goods.clear(); \
-		for (auto [good, base_demand] : type_never_null.get_##need_category##_needs()) { \
+		for (auto [good, base_demand] : pop_type.get_##need_category##_needs()) { \
 			need_category##_needs_fulfilled_goods.emplace(good, false); \
 		}
 
@@ -292,13 +283,13 @@ void Pop::fill_needs_fulfilled_goods_with_false() {
 }
 
 void Pop::pay_income_tax(fixed_point_t& income) {
-	CountryInstance* const tax_collector_nullable = location->get_country_to_report_economy();
+	CountryInstance* const tax_collector_nullable = get_location().get_country_to_report_economy();
 	if (tax_collector_nullable == nullptr) {
 		return;
 	}
-	const fixed_point_t effective_tax_rate = tax_collector_nullable->get_effective_tax_rate_by_strata(type->strata).get_untracked();
+	const fixed_point_t effective_tax_rate = tax_collector_nullable->get_effective_tax_rate_by_strata(get_type().strata).get_untracked();
 	const fixed_point_t tax = effective_tax_rate * income;
-	tax_collector_nullable->report_pop_income_tax(*type, income, tax);
+	tax_collector_nullable->report_pop_income_tax(type, income, tax);
 	income -= tax;
 }
 
@@ -532,8 +523,7 @@ void Pop::pop_tick_without_cleanup(
 	#undef SET_TO_ZERO
 	income = expenses = 0;
 
-	ProvinceInstance& location_never_null = *location;
-	CountryInstance* const country_to_report_economy_nullable = location_never_null.get_country_to_report_economy();
+	CountryInstance* const country_to_report_economy_nullable = get_location().get_country_to_report_economy();
 
 	if (country_to_report_economy_nullable != nullptr) {
 		country_to_report_economy_nullable->request_salaries_and_welfare_and_import_subsidies(*this);
@@ -544,8 +534,8 @@ void Pop::pop_tick_without_cleanup(
 	//import subsidies are based on yesterday
 	yesterdays_import_value = 0;
 
-	PopType const& type_never_null = *type;
-	PopStrataValuesFromProvince const& shared_strata_values = shared_values.get_effects_by_strata(type_never_null.strata);
+	PopType const& pop_type = type;
+	PopStrataValuesFromProvince const& shared_strata_values = shared_values.get_effects_by_strata(pop_type.strata);
 	PopsDefines const& defines = shared_values.defines;
 	const fixed_point_t base_needs_scalar = (
 		fixed_point_t::_1 + 2 * consciousness / defines.get_pdef_base_con()
@@ -557,7 +547,7 @@ void Pop::pop_tick_without_cleanup(
 		fixed_point_t need_category##_needs_price_inverse_sum = 0; \
 		if (OV_likely(need_category##_needs_scalar > 0)) { \
 			need_category##_needs_acquired_quantity = need_category##_needs_desired_quantity = 0; \
-			for (auto [good_definition_ptr, quantity] : type_never_null.get_##need_category##_needs()) { \
+			for (auto [good_definition_ptr, quantity] : pop_type.get_##need_category##_needs()) { \
 				GoodDefinition const& good_definition = *good_definition_ptr; \
 				if (!market_instance.get_is_available(good_definition)) { \
 					continue; \
@@ -567,7 +557,7 @@ void Pop::pop_tick_without_cleanup(
 					continue; \
 				} \
 				if (country_to_report_economy_nullable != nullptr) { \
-					country_to_report_economy_nullable->report_pop_need_demand(*type, good_definition, max_quantity_to_buy); \
+					country_to_report_economy_nullable->report_pop_need_demand(pop_type, good_definition, max_quantity_to_buy); \
 				} \
 				need_category##_needs_desired_quantity += max_quantity_to_buy; \
 				auto goods_to_sell_iterator = goods_to_sell.find(good_definition_ptr); \
@@ -577,7 +567,7 @@ void Pop::pop_tick_without_cleanup(
 					max_quantity_to_buy -= own_produce_consumed; \
 					need_category##_needs_acquired_quantity += own_produce_consumed; \
 					if (country_to_report_economy_nullable != nullptr) { \
-						country_to_report_economy_nullable->report_pop_need_consumption(type_never_null, good_definition, own_produce_consumed); \
+						country_to_report_economy_nullable->report_pop_need_consumption(pop_type, good_definition, own_produce_consumed); \
 					} \
 				} \
 				if (OV_likely(max_quantity_to_buy > 0)) { \
@@ -664,8 +654,7 @@ void Pop::after_buy(void* actor, BuyResult const& buy_result) {
 	}
 
 	Pop& pop = *static_cast<Pop*>(actor);	
-	ProvinceInstance& location_never_null = *pop.get_location();
-	CountryInstance* const country_to_report_economy_nullable = location_never_null.get_country_to_report_economy();
+	CountryInstance* const country_to_report_economy_nullable = pop.get_location().get_country_to_report_economy();
 
 	fixed_point_t money_spent = buy_result.money_spent_total;
 	pop.yesterdays_import_value += buy_result.money_spent_on_imports;
@@ -696,7 +685,7 @@ void Pop::after_buy(void* actor, BuyResult const& buy_result) {
 		}
 	}
 
-	CountryInstance* get_country_to_report_economy_nullable = pop.location->get_country_to_report_economy();
+	CountryInstance* get_country_to_report_economy_nullable = pop.get_location().get_country_to_report_economy();
 	#define CONSUME_NEED(need_category) \
 		if (quantity_left_to_consume <= 0) { \
 			return; \
@@ -714,7 +703,7 @@ void Pop::after_buy(void* actor, BuyResult const& buy_result) {
 			pop.need_category##_needs_acquired_quantity += consumed_quantity; \
 			quantity_left_to_consume -= consumed_quantity; \
 			if (get_country_to_report_economy_nullable != nullptr) { \
-				get_country_to_report_economy_nullable->report_pop_need_consumption(*pop.type, good_definition, consumed_quantity); \
+				get_country_to_report_economy_nullable->report_pop_need_consumption(pop.type, good_definition, consumed_quantity); \
 			} \
 			const fixed_point_t expense = fixed_point_t::mul_div( \
 				money_spent, \

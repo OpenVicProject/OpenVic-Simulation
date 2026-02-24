@@ -169,7 +169,7 @@ void PopsAggregate::add_pops_aggregate(Pop const& pop) {
 	militancy_running_total_raw += pop_size_v
 		* static_cast<boost::int128::int128_t>(pop.get_militancy().get_raw_value());
 
-	PopType const& pop_type = *pop.get_type();
+	PopType const& pop_type = pop.get_type();
 	Strata const& strata = pop_type.strata;
 
 	population_by_strata.at(strata) += pop_size;
@@ -191,7 +191,7 @@ void PopsAggregate::add_pops_aggregate(Pop const& pop) {
 	population_by_culture[&pop.culture] += pop_size;
 	population_by_religion[&pop.religion] += pop_size;
 
-	if (pop.get_type()->can_be_recruited) {
+	if (pop_type.can_be_recruited) {
 		max_supported_regiment_count += pop.get_max_supported_regiments();
 	}
 	yesterdays_import_value.set(_yesterdays_import_value_running_total);

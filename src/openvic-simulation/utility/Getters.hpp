@@ -1,13 +1,11 @@
 #pragma once
 
-#include <array>
 #include <concepts>
-#include <cstddef>
+#include <functional>
 #include <optional>
 #include <string>
 #include <string_view>
 #include <type_traits>
-#include <utility>
 
 #include "openvic-simulation/core/portable/ForwardableSpan.hpp" // IWYU pragma: keep for SPAN_PROPERTY
 #include "openvic-simulation/core/Typedefs.hpp" // IWYU pragma: keep
@@ -154,6 +152,9 @@ namespace OpenVic {
 		} else if constexpr (std::is_pointer_v<T>) {
 			/* Return const pointer */
 			return static_cast<std::add_pointer_t<std::add_const_t<std::remove_pointer_t<T>>>>(property);
+		} else if constexpr (is_specialization_of_v<T, std::reference_wrapper>) {
+			/* Return T::type const& */
+			return static_cast<std::add_const_t<typename T::type>&>(property.get());
 		} else if constexpr (std::same_as<T, std::optional<std::string>> || std::same_as<T, std::optional<memory::string>>) {
 			/* Return optional std::string_view looking at string */
 			std::optional<std::string_view> result;
