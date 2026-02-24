@@ -1,5 +1,7 @@
 #pragma once
 
+#include <functional>
+
 #include "openvic-simulation/economy/production/Employee.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
 #include "openvic-simulation/types/IndexedFlatMap.hpp"
@@ -25,7 +27,7 @@ namespace OpenVic {
 		ProvinceInstance* location_ptr = nullptr;
 		pop_sum_t total_owner_count_in_state_cache = 0;
 		pop_sum_t total_worker_count_in_province_cache = 0;
-		memory::vector<Pop*> const* owner_pops_cache_nullable = nullptr;
+		memory::vector<std::reference_wrapper<Pop>> const* owner_pops_cache_nullable = nullptr;
 
 		ProductionType const* PROPERTY_RW(production_type_nullable);
 		fixed_point_t PROPERTY(revenue_yesterday);

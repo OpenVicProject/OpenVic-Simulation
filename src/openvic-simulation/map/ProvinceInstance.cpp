@@ -53,7 +53,7 @@ ModifierSum const& ProvinceInstance::get_owner_modifier_sum() const {
 	return owner->get_modifier_sum();
 }
 
-memory::vector<Pop*> const& ProvinceInstance::get_pops_cache_by_type(PopType const& key) const {
+memory::vector<std::reference_wrapper<Pop>> const& ProvinceInstance::get_pops_cache_by_type(PopType const& key) const {
 	return pops_cache_by_type.at(key);
 }
 
@@ -215,7 +215,7 @@ void ProvinceInstance::_update_pops(MilitaryDefines const& military_defines) {
 
 	has_unaccepted_pops = false;
 
-	for (memory::vector<Pop*>& pops_cache : pops_cache_by_type.get_values()) {
+	for (memory::vector<std::reference_wrapper<Pop>>& pops_cache : pops_cache_by_type.get_values()) {
 		pops_cache.clear();
 	}
 
@@ -227,7 +227,7 @@ void ProvinceInstance::_update_pops(MilitaryDefines const& military_defines) {
 		: is_owner_core() ? fixed_point_t::_1 : military_defines.get_pop_size_per_regiment_non_core_multiplier();
 
 	for (Pop& pop : pops) {
-		pops_cache_by_type.at(pop.get_type()).push_back(&pop);
+		pops_cache_by_type.at(pop.get_type()).push_back(pop);
 		pop.update_gamestate(military_defines, owner, pop_size_per_regiment_multiplier);
 		add_pops_aggregate(pop);
 		if (pop.get_culture_status() == Pop::culture_status_t::UNACCEPTED) {

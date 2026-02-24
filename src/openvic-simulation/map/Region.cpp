@@ -5,19 +5,14 @@
 
 using namespace OpenVic;
 
-bool ProvinceSet::add_province(ProvinceDefinition const* province) {
+bool ProvinceSet::add_province(ProvinceDefinition const& province) {
 	if (locked) {
 		spdlog::error_s("Cannot add province to province set - locked!");
 		return false;
 	}
 
-	if (province == nullptr) {
-		spdlog::error_s("Cannot add province to province set - null province!");
-		return false;
-	}
-
 	if (contains_province(province)) {
-		spdlog::warn_s("Cannot add province {} to province set - already in the set!", *province);
+		spdlog::warn_s("Cannot add province {} to province set - already in the set!", province);
 		return false;
 	}
 
@@ -26,20 +21,15 @@ bool ProvinceSet::add_province(ProvinceDefinition const* province) {
 	return true;
 }
 
-bool ProvinceSet::remove_province(ProvinceDefinition const* province) {
+bool ProvinceSet::remove_province(ProvinceDefinition const& province) {
 	if (locked) {
 		spdlog::error_s("Cannot remove province from province set - locked!");
 		return false;
 	}
 
-	if (province == nullptr) {
-		spdlog::error_s("Cannot remove province from province set - null province!");
-		return false;
-	}
-
 	const decltype(provinces)::const_iterator it = std::find(provinces.begin(), provinces.end(), province);
 	if (it == provinces.end()) {
-		spdlog::warn_s("Cannot remove province {} from province set - not in the set!", *province);
+		spdlog::warn_s("Cannot remove province {} from province set - not in the set!", province);
 		return false;
 	}
 
@@ -92,8 +82,8 @@ void ProvinceSet::reserve_more(size_t size) {
 	OpenVic::reserve_more(*this, size);
 }
 
-bool ProvinceSet::contains_province(ProvinceDefinition const* province) const {
-	return province != nullptr && std::find(provinces.begin(), provinces.end(), province) != provinces.end();
+bool ProvinceSet::contains_province(ProvinceDefinition const& province) const {
+	return std::find(provinces.begin(), provinces.end(), province) != provinces.end();
 }
 
 ProvinceSetModifier::ProvinceSetModifier(std::string_view new_identifier, ModifierValue&& new_values, modifier_type_t new_type)

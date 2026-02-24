@@ -1,5 +1,6 @@
 #pragma once
 
+#include <functional>
 #include <ranges>
 #include <string_view>
 
@@ -12,21 +13,20 @@ namespace OpenVic {
 
 	struct ProvinceSet {
 	private:
-		memory::vector<ProvinceDefinition const*> SPAN_PROPERTY(provinces);
+		memory::vector<std::reference_wrapper<const ProvinceDefinition>> SPAN_PROPERTY(provinces);
 		bool locked = false;
 
 	public:
 		/* Returns true if the province is successfully added, false if not (including if it's already in the set). */
-		bool add_province(ProvinceDefinition const* province);
+		bool add_province(ProvinceDefinition const& province);
 
 		template<std::ranges::sized_range Container>
-		requires std::convertible_to<std::ranges::range_value_t<Container>, ProvinceDefinition const*>
+		requires std::convertible_to<std::ranges::range_value_t<Container>, std::reference_wrapper<const ProvinceDefinition>>
 		bool add_provinces(Container const& new_provinces) {
 			reserve_more(new_provinces.size());
 
 			bool ret = true;
-
-			for (ProvinceDefinition const* province : new_provinces) {
+			for (ProvinceDefinition const& province : new_provinces) {
 				ret &= add_province(province);
 			}
 
@@ -34,7 +34,7 @@ namespace OpenVic {
 		}
 
 		/* Returns true if the province is successfully removed, false if not (including if it's not in the set). */
-		bool remove_province(ProvinceDefinition const* province);
+		bool remove_province(ProvinceDefinition const& province);
 		void lock(bool log = false);
 		bool is_locked() const;
 		void reset();
@@ -43,7 +43,7 @@ namespace OpenVic {
 		size_t capacity() const;
 		void reserve(size_t size);
 		void reserve_more(size_t size);
-		bool contains_province(ProvinceDefinition const* province) const;
+		bool contains_province(ProvinceDefinition const& province) const;
 	};
 
 	struct ProvinceSetModifier : Modifier, ProvinceSet {

@@ -89,12 +89,12 @@ bool BuildingType::can_be_built_in(
 	if (is_limited_to_one_per_state) {
 		State const* state = location.get_state();
 		if (state != nullptr) {
-			for (ProvinceInstance const* province_in_state : state->get_provinces()) {
-				if (province_in_state == nullptr || *province_in_state == location) {
+			for (ProvinceInstance const& province_in_state : state->get_provinces()) {
+				if (province_in_state == location) {
 					continue;
 				}
 
-				const building_level_t other_building_level = province_in_state->get_buildings()[province_building_index.value()].get_level();
+				const building_level_t other_building_level = province_in_state.get_buildings()[province_building_index.value()].get_level();
 				if (other_building_level > building_level_t(0)) {
 					return false;
 				}

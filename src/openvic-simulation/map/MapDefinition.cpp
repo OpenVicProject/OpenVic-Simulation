@@ -371,13 +371,14 @@ bool MapDefinition::set_water_province(std::string_view identifier) {
 		return false;
 	}
 
-	ProvinceDefinition* province = get_province_definition_by_identifier(identifier);
+	ProvinceDefinition* const province_ptr = get_province_definition_by_identifier(identifier);
 
-	if (province == nullptr) {
+	if (province_ptr == nullptr) {
 		spdlog::error_s("Unrecognised water province identifier: {}", identifier);
 		return false;
 	}
-	if (province->is_water()) {
+	ProvinceDefinition& province = *province_ptr;
+	if (province.is_water()) {
 		spdlog::warn_s("Province {} is already a water province!", identifier);
 		return true;
 	}
@@ -385,8 +386,11 @@ bool MapDefinition::set_water_province(std::string_view identifier) {
 		spdlog::error_s("Failed to add province {} to water province set!", identifier);
 		return false;
 	}
-	province->water = true;
-	path_map_sea.try_add_point(province->get_province_number(), path_map_land.get_point_position(province->get_province_number()));
+	province.water = true;
+	path_map_sea.try_add_point(
+		province.get_province_number(),
+		path_map_land.get_point_position(province.get_province_number())
+	);
 	return true;
 }
 
@@ -417,7 +421,11 @@ size_t MapDefinition::get_water_province_count() const {
 	return water_provinces.size();
 }
 
-bool MapDefinition::add_region(std::string_view identifier, memory::vector<ProvinceDefinition const*>&& provinces, colour_t colour) {
+bool MapDefinition::add_region(
+	std::string_view identifier,
+	memory::vector<std::reference_wrapper<const ProvinceDefinition>>&& provinces,
+	colour_t colour
+) {
 	if (identifier.empty()) {
 		spdlog::error_s("Invalid region identifier - empty!");
 		return false;
@@ -428,8 +436,7 @@ bool MapDefinition::add_region(std::string_view identifier, memory::vector<Provi
 	// mods like DoD + TGC use meta regions of water provinces
 	bool is_meta = provinces.empty();
 	size_t valid_provinces_count { provinces.size() };
-	for (ProvinceDefinition const* const province_definition_ptr : provinces) {
-		ProvinceDefinition const& province_definition = *province_definition_ptr;
+	for (ProvinceDefinition const& province_definition : provinces) {
 		if (OV_unlikely(province_definition.has_region())) {
 			spdlog::warn_s(
 				"Province {} is assigned to multiple regions, including {} and {}. First defined region wins.",
@@ -456,9 +463,9 @@ bool MapDefinition::add_region(std::string_view identifier, memory::vector<Provi
 		ret &= region.add_provinces(provinces);
 	} else {
 		region.reserve(valid_provinces_count);
-		for (ProvinceDefinition const* const province_definition_ptr : provinces) {
-			if (!province_definition_ptr->has_region()) {
-				region.add_province(province_definition_ptr);
+		for (ProvinceDefinition const& province_definition : provinces) {
+			if (!province_definition.has_region()) {
+				region.add_province(province_definition);
 			}
 		}
 	}
@@ -467,8 +474,8 @@ bool MapDefinition::add_region(std::string_view identifier, memory::vector<Provi
 	if (OV_unlikely(is_meta)) {
 		SPDLOG_INFO("Region {} is meta.", identifier);
 	} else {
-		for (ProvinceDefinition const* province_definition : region.get_provinces()) {
-			remove_province_definition_const(province_definition)->region = &region;
+		for (ProvinceDefinition const& province_definition : region.get_provinces()) {
+			get_mutable_province_definition(province_definition).region = &region;
 		}
 	}
 	return ret;
@@ -640,10 +647,10 @@ bool MapDefinition::load_region_file(ast::NodeCPtr root, std::span<const colour_
 	const bool ret = expect_dictionary_reserve_length(
 		regions,
 		[this, &colours](std::string_view region_identifier, ast::NodeCPtr region_node) -> bool {
-			memory::vector<ProvinceDefinition const*> provinces;
+			memory::vector<std::reference_wrapper<const ProvinceDefinition>> provinces;
 
 			bool ret = expect_list_reserve_length(
-				provinces, expect_province_definition_identifier(vector_callback_pointer(provinces))
+				provinces, expect_province_definition_identifier(vector_emplace_callback(provinces))
 			)(region_node);
 
 			ret &= add_region(region_identifier, std::move(provinces), colours[regions.size() % colours.size()]);
@@ -1124,10 +1131,10 @@ bool MapDefinition::load_climate_file(ModifierManager const& modifier_manager, a
 				ret &= expect_list_reserve_length(*cur_climate, expect_province_definition_identifier(
 					[cur_climate, &identifier](ProvinceDefinition& province) {
 						if (province.climate != cur_climate) {
-							cur_climate->add_province(&province);
+							cur_climate->add_province(province);
 							if (province.climate != nullptr) {
 								Climate* old_climate = const_cast<Climate*>(province.climate);
-								old_climate->remove_province(&province);
+								old_climate->remove_province(province);
 								spdlog::warn_s(
 									"Province with id {} found in multiple climates: {} and {}",
 									province, identifier, *old_climate
@@ -1168,13 +1175,13 @@ bool MapDefinition::load_continent_file(ModifierManager const& modifier_manager,
 			}
 
 			ModifierValue values;
-			memory::vector<ProvinceDefinition const*> prov_list;
+			memory::vector<std::reference_wrapper<const ProvinceDefinition>> prov_list;
 			bool ret = NodeTools::expect_dictionary_keys_and_default(
 				modifier_manager.expect_base_province_modifier(values),
 				"provinces", ONE_EXACTLY, expect_list_reserve_length(prov_list, expect_province_definition_identifier(
 					[&prov_list](ProvinceDefinition const& province) -> bool {
 						if (province.continent == nullptr) {
-							prov_list.emplace_back(&province);
+							prov_list.emplace_back(province);
 						} else {
 							spdlog::warn_s("Province {} found in multiple continents", province);
 						}
@@ -1194,8 +1201,8 @@ bool MapDefinition::load_continent_file(ModifierManager const& modifier_manager,
 			continent.add_provinces(prov_list);
 			continent.lock();
 
-			for (ProvinceDefinition const* prov : continent.get_provinces()) {
-				remove_province_definition_const(prov)->continent = &continent;
+			for (ProvinceDefinition const& prov : continent.get_provinces()) {
+				get_mutable_province_definition(prov).continent = &continent;
 			}
 
 			return ret;

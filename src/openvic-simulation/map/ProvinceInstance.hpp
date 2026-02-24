@@ -1,5 +1,7 @@
 #pragma once
 
+#include <functional>
+
 #include <plf_colony.h>
 
 #include "openvic-simulation/core/portable/ForwardableSpan.hpp"
@@ -122,7 +124,7 @@ namespace OpenVic {
 		bool convert_rgo_worker_pops_to_equivalent(ProductionType const& production_type);
 		void initialise_rgo();
 
-		OV_IFLATMAP_PROPERTY(PopType, memory::vector<Pop*>, pops_cache_by_type);
+		OV_IFLATMAP_PROPERTY(PopType, memory::vector<std::reference_wrapper<Pop>>, pops_cache_by_type);
 	public:
 		ProvinceDefinition const& province_definition;
 
