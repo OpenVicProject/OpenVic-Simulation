@@ -52,11 +52,15 @@ namespace OpenVic {
 	private:
 		UnitInstanceGroup* PROPERTY_PTR(unit_instance_group, nullptr);
 		bool PROPERTY_RW(can_be_used, true);
-
-		LeaderInstance(unique_id_t new_unique_id, LeaderBase const& leader_base, CountryInstance const& new_country);
 	public:
 		const unique_id_t unique_id;
 
 		CountryInstance const& country;
+
+		LeaderInstance(unique_id_t new_unique_id, LeaderBase const& leader_base, CountryInstance const& new_country);
+
+		constexpr bool operator==(LeaderInstance const& rhs) const {
+			return unique_id == rhs.unique_id;
+		}
 	};
 }

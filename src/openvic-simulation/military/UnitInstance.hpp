@@ -39,6 +39,10 @@ namespace OpenVic {
 		}
 
 		void set_name(std::string_view new_name);
+
+		constexpr bool operator==(UnitInstance const& rhs) const {
+			return unique_id == rhs.unique_id;
+		}
 	};
 
 	struct Pop;

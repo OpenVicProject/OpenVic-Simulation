@@ -97,7 +97,7 @@ namespace OpenVic {
 		bool PROPERTY_RW(connected_to_capital, false);
 		bool PROPERTY_RW(is_overseas, false);
 		bool PROPERTY(has_empty_adjacent_province, false);
-		memory::vector<ProvinceInstance const*> SPAN_PROPERTY(adjacent_nonempty_land_provinces);
+		memory::vector<std::reference_wrapper<const ProvinceInstance>> SPAN_PROPERTY(adjacent_nonempty_land_provinces);
 		Crime const* PROPERTY_RW(crime, nullptr);
 		ResourceGatheringOperation PROPERTY(rgo);
 		memory::FixedVector<BuildingInstance> _buildings;
@@ -107,8 +107,8 @@ namespace OpenVic {
 			return buildings;
 		}
 	private:
-		memory::vector<ArmyInstance*> SPAN_PROPERTY(armies);
-		memory::vector<NavyInstance*> SPAN_PROPERTY(navies);
+		memory::vector<std::reference_wrapper<ArmyInstance>> SPAN_PROPERTY(armies);
+		memory::vector<std::reference_wrapper<NavyInstance>> SPAN_PROPERTY(navies);
 		// The number of land regiments currently in the province, including those being transported by navies
 		size_t PROPERTY(land_regiment_count, 0);
 		Timespan PROPERTY(occupation_duration);
