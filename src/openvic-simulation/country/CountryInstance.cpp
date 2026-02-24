@@ -2458,7 +2458,7 @@ void CountryInstance::report_output(ProductionType const& production_type, const
 }
 
 void CountryInstance::request_salaries_and_welfare_and_import_subsidies(Pop& pop) {
-	PopType const& pop_type = *pop.get_type();
+	PopType const& pop_type = pop.get_type();
 	const pop_size_t pop_size = pop.get_size();
 	SharedPopTypeValues const& pop_type_values = shared_country_values.get_shared_pop_type_values(pop_type);
 

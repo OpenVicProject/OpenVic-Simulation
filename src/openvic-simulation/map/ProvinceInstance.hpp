@@ -117,8 +117,7 @@ namespace OpenVic {
 
 	private:
 		pop_id_in_province_t last_pop_id{0};
-		memory::colony<Pop> PROPERTY(pops); // TODO - replace with a more easily vectorisable container?		
-		void _add_pop(Pop&& pop);
+		memory::colony<Pop> PROPERTY(pops); // TODO - replace with a more easily vectorisable container?
 		void _update_pops(MilitaryDefines const& military_defines);
 		bool convert_rgo_worker_pops_to_equivalent(ProductionType const& production_type);
 		void initialise_rgo();

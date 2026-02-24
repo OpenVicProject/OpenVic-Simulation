@@ -288,7 +288,7 @@ Pop* UnitInstanceManager::recruit_pop_in(ProvinceInstance& province, const bool 
 		}
 	} else {
 		for (auto& pop : province.get_mutable_pops()) {
-			if (pop.get_type()->can_be_recruited && pop.try_recruit()) {
+			if (pop.get_type().can_be_recruited && pop.try_recruit()) {
 				/*
 				Victoria 2 does not respect cultural restrictions when applying history.
 				*/
@@ -306,7 +306,7 @@ Pop* UnitInstanceManager::recruit_pop_in(ProvinceInstance& province, const bool 
 		}
 	} else {
 		for (auto& pop : province.get_mutable_pops()) {
-			if (pop.get_type()->can_be_recruited && pop.try_recruit_understrength()) {
+			if (pop.get_type().can_be_recruited && pop.try_recruit_understrength()) {
 				/*
 				Victoria 2 does not respect cultural restrictions when applying history.
 				*/

@@ -294,7 +294,7 @@ void ArtisanalProducer::artisan_tick(
 	memory::vector<fixed_point_t>& reusable_map_1,
 	fixed_point_map_t<GoodDefinition const*>& goods_to_sell
 ) {
-	CountryInstance* const country_to_report_economy_nullable = pop.get_location()->get_country_to_report_economy();
+	CountryInstance* const country_to_report_economy_nullable = pop.get_location().get_country_to_report_economy();
 	max_quantity_to_buy_per_good.clear();
 	IndexedFlatMap<GoodDefinition, char>& wants_more_mask = reusable_goods_mask;
 	memory::vector<fixed_point_t>& max_price_per_input = reusable_map_0;
