@@ -41,9 +41,9 @@ std::string_view Context::get_identifier() const {
 		else if constexpr (std::is_same_v<T, ProvinceInstance const*>) {
 			return p->get_identifier();
 		}
-		else if constexpr (std::is_same_v<T, State const*>) {
+		/*else if constexpr (std::is_same_v<T, State const*>) {
 			return p->get_identifier();
-		}
+		}*/
 		else if constexpr (std::is_same_v<T, Pop const*>) {
 			return "";
 		}

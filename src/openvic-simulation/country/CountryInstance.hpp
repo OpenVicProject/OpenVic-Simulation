@@ -77,7 +77,6 @@ namespace OpenVic {
 	struct TechnologySchool;
 	struct UnitInstanceGroup;
 	struct UnitTypeManager;
-	struct ConditionNode;
 
 	static constexpr Timespan RECENT_WAR_LOSS_TIME_LIMIT = Timespan::from_years(5);
 

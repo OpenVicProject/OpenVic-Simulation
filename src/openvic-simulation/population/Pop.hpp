@@ -35,7 +35,6 @@ namespace OpenVic {
 	struct RebelType;
 	struct Religion;
 	struct SellResult;
-	struct ConditionNode;
 
 	struct PopBase {
 		friend PopManager;

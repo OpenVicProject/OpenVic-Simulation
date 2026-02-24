@@ -25,7 +25,6 @@ namespace OpenVic {
 	struct StateManager;
 	struct StateSet;
 	struct Strata;
-	struct ConditionNode;
 
 	struct State : PopsAggregate {
 		friend struct StateManager;

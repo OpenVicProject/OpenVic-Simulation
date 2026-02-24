@@ -42,7 +42,6 @@
 #include "openvic-simulation/types/TypedIndices.hpp"
 #include "openvic-simulation/utility/Containers.hpp"
 #include "openvic-simulation/utility/Logger.hpp"
-#include "openvic-simulation/core/Typedefs.hpp"
 
 
 using namespace OpenVic;
