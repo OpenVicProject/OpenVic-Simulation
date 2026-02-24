@@ -27,26 +27,26 @@ namespace OpenVic {
 		Context const* this_scope = nullptr;
 		Context const* from_scope = nullptr;
 
-		Context(CountryInstance const* p, DefinitionManager const& dm, InstanceManager const& im)
-			: ptr(p), definition_manager(dm), instance_manager(im), this_scope(this) {}
-		Context(ProvinceInstance const* p, DefinitionManager const& dm, InstanceManager const& im)
-			: ptr(p), definition_manager(dm), instance_manager(im), this_scope(this) {}
-		Context(State const* p, DefinitionManager const& dm, InstanceManager const& im)
-			: ptr(p), definition_manager(dm), instance_manager(im), this_scope(this) {}
-		Context(Pop const* p, DefinitionManager const& dm, InstanceManager const& im)
-			: ptr(p), definition_manager(dm), instance_manager(im), this_scope(this) {}
+		Context(CountryInstance const* new_ptr, DefinitionManager const& new_definition_manager, InstanceManager const& new_instance_manager)
+			: Context(new_ptr, new_definition_manager, new_instance_manager, this, nullptr) {}
+		Context(ProvinceInstance const* new_ptr, DefinitionManager const& new_definition_manager, InstanceManager const& new_instance_manager)
+			: Context(new_ptr, new_definition_manager, new_instance_manager, this, nullptr) {}
+		Context(State const* new_ptr, DefinitionManager const& new_definition_manager, InstanceManager const& new_instance_manager)
+			: Context(new_ptr, new_definition_manager, new_instance_manager, this, nullptr) {}
+		Context(Pop const* new_ptr, DefinitionManager const& new_definition_manager, InstanceManager const& new_instance_manager)
+			: Context(new_ptr, new_definition_manager, new_instance_manager, this, nullptr) {}
 
 		Context(
 			auto* p,
-			DefinitionManager const& dm,
-			InstanceManager const& im,
-			Context const* this_ctx,
-			Context const* from_ctx
+			DefinitionManager const& new_definition_manager,
+			InstanceManager const& new_instance_manager,
+			Context const* new_this_scope,
+			Context const* new_from_scope
 		) : ptr(p),
-			definition_manager(dm),
-			instance_manager(im),
-			this_scope(this_ctx),
-			from_scope(from_ctx) {}
+			definition_manager(new_definition_manager),
+			instance_manager(new_instance_manager),
+			this_scope(new_this_scope),
+			from_scope(new_from_scope) {}
 
 		scope_type_t get_scope_type() const;
 
