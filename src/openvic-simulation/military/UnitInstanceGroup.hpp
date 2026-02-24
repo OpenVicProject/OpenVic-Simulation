@@ -1,5 +1,6 @@
 #pragma once
 
+#include <functional>
 #include <string_view>
 
 #include <plf_colony.h>
@@ -22,10 +23,10 @@ namespace OpenVic {
 	struct UnitInstanceGroup {
 	private:
 		memory::string PROPERTY(name);
-		memory::vector<UnitInstance*> SPAN_PROPERTY(units);
+		memory::vector<std::reference_wrapper<UnitInstance>> SPAN_PROPERTY(units);
 		LeaderInstance* PROPERTY_PTR(leader, nullptr);
-		ProvinceInstance* PROPERTY_PTR(position, nullptr);
-		CountryInstance* PROPERTY_PTR(country, nullptr);
+		std::reference_wrapper<ProvinceInstance> PROPERTY(location);
+		std::reference_wrapper<CountryInstance> PROPERTY(country);
 
 		fixed_point_t PROPERTY(total_organisation);
 		fixed_point_t PROPERTY(total_max_organisation);
@@ -34,8 +35,8 @@ namespace OpenVic {
 
 		// Movement attributes
 		// Ordered list of provinces making up the path the unit is trying to move along,
-		// the front province should always be adjacent to the unit's current position.
-		memory::vector<ProvinceInstance*> SPAN_PROPERTY(path);
+		// the front province should always be adjacent to the unit's current location.
+		memory::vector<std::reference_wrapper<ProvinceInstance>> SPAN_PROPERTY(path);
 		// Measured in distance travelled, increases each day by unit speed (after modifiers have been applied) until
 		// it reaches the required distance/movement cost to move to the next province in the path.
 		fixed_point_t PROPERTY(movement_progress);
@@ -44,7 +45,9 @@ namespace OpenVic {
 		UnitInstanceGroup(
 			unique_id_t new_unique_id,
 			unit_branch_t new_branch,
-			std::string_view new_name
+			std::string_view new_name,
+			CountryInstance& new_country,
+			ProvinceInstance& new_location
 		);
 
 		void update_gamestate();
@@ -66,8 +69,8 @@ namespace OpenVic {
 		bool remove_unit(UnitInstance const& unit);
 
 		void set_name(std::string_view new_name);
-		bool set_position(ProvinceInstance* new_position);
-		bool set_country(CountryInstance* new_country);
+		bool set_location(ProvinceInstance& new_location);
+		bool set_country(CountryInstance& new_country);
 		bool set_leader(LeaderInstance* new_leader);
 
 		fixed_point_t get_organisation_proportion() const;
@@ -82,12 +85,14 @@ namespace OpenVic {
 		Date get_movement_arrival_date() const;
 
 		bool is_in_combat() const;
+
+		constexpr bool operator==(UnitInstanceGroup const& rhs) const {
+			return unique_id == rhs.unique_id;
+		}
 	};
 
 	template<>
 	struct UnitInstanceGroupBranched<unit_branch_t::LAND> : UnitInstanceGroup {
-		friend struct UnitInstanceManager;
-
 		using dig_in_level_t = uint8_t;
 
 	private:
@@ -96,49 +101,49 @@ namespace OpenVic {
 
 		bool PROPERTY_RW_CUSTOM_NAME(exiled, is_exiled, set_is_exiled, false);
 
+	public:
 		UnitInstanceGroupBranched(
 			unique_id_t new_unique_id,
-			std::string_view new_name
+			std::string_view new_name,
+			CountryInstance& new_country,
+			ProvinceInstance& new_location
 		);
-
-	public:
 		UnitInstanceGroupBranched(UnitInstanceGroupBranched&&) = default;
 
 		void update_gamestate();
 		void tick();
 
 		// TODO - do these work fine when units is empty?
-		std::span<RegimentInstance* const> get_regiment_instances() {
-			return { reinterpret_cast<RegimentInstance* const*>(get_units().data()), get_units().size() };
+		std::span<const std::reference_wrapper<RegimentInstance>> get_regiment_instances() {
+			return { reinterpret_cast<std::reference_wrapper<RegimentInstance> const*>(get_units().data()), get_units().size() };
 		}
-		std::span<RegimentInstance const* const> get_regiment_instances() const {
-			return { reinterpret_cast<RegimentInstance const* const*>(get_units().data()), get_units().size() };
+		std::span<const std::reference_wrapper<const RegimentInstance>> get_regiment_instances() const {
+			return { reinterpret_cast<std::reference_wrapper<const RegimentInstance> const*>(get_units().data()), get_units().size() };
 		}
 	};
 
 	template<>
 	struct UnitInstanceGroupBranched<unit_branch_t::NAVAL> : UnitInstanceGroup {
-		friend struct UnitInstanceManager;
-
 	private:
-		memory::vector<ArmyInstance*> SPAN_PROPERTY(carried_armies);
-
-		UnitInstanceGroupBranched(
-			unique_id_t new_unique_id,
-			std::string_view new_name
-		);
+		memory::vector<std::reference_wrapper<ArmyInstance>> SPAN_PROPERTY(carried_armies);
 
 	public:
+		UnitInstanceGroupBranched(
+			unique_id_t new_unique_id,
+			std::string_view new_name,
+			CountryInstance& new_country,
+			ProvinceInstance& new_location
+		);
 		UnitInstanceGroupBranched(UnitInstanceGroupBranched&&) = default;
 
 		void update_gamestate();
 		void tick();
 
-		std::span<ShipInstance* const> get_ship_instances() {
-			return { reinterpret_cast<ShipInstance* const*>(get_units().data()), get_units().size() };
+		std::span<const std::reference_wrapper<ShipInstance>> get_ship_instances() {
+			return { reinterpret_cast<std::reference_wrapper<ShipInstance> const*>(get_units().data()), get_units().size() };
 		}
-		std::span<ShipInstance const* const> get_ship_instances() const {
-			return { reinterpret_cast<ShipInstance const* const*>(get_units().data()), get_units().size() };
+		std::span<const std::reference_wrapper<const ShipInstance>> get_ship_instances() const {
+			return { reinterpret_cast<std::reference_wrapper<const ShipInstance> const*>(get_units().data()), get_units().size() };
 		}
 
 		fixed_point_t get_total_consumed_supply() const;
@@ -171,17 +176,17 @@ namespace OpenVic {
 		// TODO - maps from unique_ids to leader/unit/unit group pointers (one big map or multiple maps?)
 
 		memory::colony<LeaderInstance> PROPERTY(leaders);
-		ordered_map<unique_id_t, LeaderInstance*> PROPERTY(leader_instance_map);
+		ordered_map<unique_id_t, std::reference_wrapper<LeaderInstance>> PROPERTY(leader_instance_map);
 
 		memory::colony<RegimentInstance> PROPERTY(regiments);
 		memory::colony<ShipInstance> PROPERTY(ships);
-		ordered_map<unique_id_t, UnitInstance*> PROPERTY(unit_instance_map);
+		ordered_map<unique_id_t, std::reference_wrapper<UnitInstance>> PROPERTY(unit_instance_map);
 
 		OV_UNIT_BRANCHED_GETTER(get_unit_instances, regiments, ships);
 
 		memory::colony<ArmyInstance> PROPERTY(armies);
 		memory::colony<NavyInstance> PROPERTY(navies);
-		ordered_map<unique_id_t, UnitInstanceGroup*> PROPERTY(unit_instance_group_map);
+		ordered_map<unique_id_t, std::reference_wrapper<UnitInstanceGroup>> PROPERTY(unit_instance_group_map);
 
 		OV_UNIT_BRANCHED_GETTER(get_unit_instance_groups, armies, navies);
 
@@ -196,7 +201,8 @@ namespace OpenVic {
 		bool generate_unit_instance_group(
 			MapInstance& map_instance, CountryInstance& country, UnitDeploymentGroup<Branch> const& unit_deployment_group
 		);
-		void generate_leader(CountryInstance& country, LeaderBase const& leader);
+		template<typename T>
+		void generate_leader(CountryInstance& country, T&& leader_base);
 
 	public:
 		UnitInstanceManager(
@@ -205,7 +211,7 @@ namespace OpenVic {
 			MilitaryDefines const& new_military_defines
 		);
 
-		bool generate_deployment(MapInstance& map_instance, CountryInstance& country, Deployment const* deployment);
+		bool generate_deployment(MapInstance& map_instance, CountryInstance& country, Deployment const& deployment);
 
 		void update_gamestate();
 		void tick();

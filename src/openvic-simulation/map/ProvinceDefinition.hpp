@@ -1,8 +1,8 @@
 #pragma once
 
+#include <functional>
 #include <optional>
 
-#include <type_safe/reference.hpp>
 #include <type_safe/strong_typedef.hpp>
 
 #include "openvic-simulation/dataloader/NodeTools.hpp"
@@ -53,7 +53,7 @@ namespace OpenVic {
 
 		private:
 			// fields are const after loading. They have to be mutable to support std::vector<adjacency_t>.erase(iterator)
-			type_safe::object_ref<const ProvinceDefinition> PROPERTY(to);
+			std::reference_wrapper<const ProvinceDefinition> PROPERTY(to);
 			ProvinceDefinition const* PROPERTY(through);
 			distance_t PROPERTY(distance);
 			type_t PROPERTY(type);

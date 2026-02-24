@@ -239,7 +239,7 @@ bool CountryInstanceManager::apply_history_to_countries(InstanceManager& instanc
 							map_instance
 						);
 
-						if (entry->get_initial_oob().has_value()) {
+						if (entry->get_initial_oob() != nullptr) {
 							oob_history_entry = entry.get();
 						}
 						if (entry->get_consciousness().has_value()) {
@@ -261,7 +261,7 @@ bool CountryInstanceManager::apply_history_to_countries(InstanceManager& instanc
 				}
 
 				if (oob_history_entry != nullptr) {
-					ret &= unit_instance_manager.generate_deployment(
+					ret &= oob_history_entry->get_initial_oob() != nullptr && unit_instance_manager.generate_deployment(
 						map_instance, country_instance, *oob_history_entry->get_initial_oob()
 					);
 				}

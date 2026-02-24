@@ -5,6 +5,7 @@
 #include <algorithm>
 #include <cstddef>
 #include <cstdint>
+#include <functional>
 #include <limits>
 
 #include <type_safe/strong_typedef.hpp>
@@ -705,10 +706,10 @@ bool CountryInstance::add_unit_instance_group(UnitInstanceGroup& group) {
 
 	switch (group.branch) {
 	case LAND:
-		armies.push_back(static_cast<ArmyInstance*>(&group));
+		armies.emplace_back(static_cast<ArmyInstance&>(group));
 		return true;
 	case NAVAL:
-		navies.push_back(static_cast<NavyInstance*>(&group));
+		navies.emplace_back(static_cast<NavyInstance&>(group));
 		return true;
 	default:
 		spdlog::error_s(
@@ -721,10 +722,13 @@ bool CountryInstance::add_unit_instance_group(UnitInstanceGroup& group) {
 
 bool CountryInstance::remove_unit_instance_group(UnitInstanceGroup const& group) {
 	const auto remove_from_vector = [this, &group]<unit_branch_t Branch>(
-		memory::vector<UnitInstanceGroupBranched<Branch>*>& unit_instance_groups
+		memory::vector<std::reference_wrapper<UnitInstanceGroupBranched<Branch>>>& unit_instance_groups
 	) -> bool {
-		const typename memory::vector<UnitInstanceGroupBranched<Branch>*>::const_iterator it =
-			std::find(unit_instance_groups.begin(), unit_instance_groups.end(), &group);
+		const auto it =	std::find(
+			unit_instance_groups.begin(),
+			unit_instance_groups.end(),
+			group
+		);
 
 		if (it != unit_instance_groups.end()) {
 			unit_instance_groups.erase(it);
@@ -759,10 +763,10 @@ bool CountryInstance::add_leader(LeaderInstance& leader) {
 
 	switch (leader.branch) {
 	case LAND:
-		generals.push_back(&leader);
+		generals.push_back(leader);
 		return true;
 	case NAVAL:
-		admirals.push_back(&leader);
+		admirals.push_back(leader);
 		return true;
 	default:
 		spdlog::error_s(
@@ -776,7 +780,7 @@ bool CountryInstance::add_leader(LeaderInstance& leader) {
 bool CountryInstance::remove_leader(LeaderInstance const& leader) {
 	using enum unit_branch_t;
 
-	memory::vector<LeaderInstance*>* leaders;
+	memory::vector<std::reference_wrapper<LeaderInstance>>* leaders;
 
 	switch (leader.branch) {
 	case LAND:
@@ -793,7 +797,7 @@ bool CountryInstance::remove_leader(LeaderInstance const& leader) {
 		return false;
 	}
 
-	const typename memory::vector<LeaderInstance*>::const_iterator it = std::find(leaders->begin(), leaders->end(), &leader);
+	const auto it = std::find(leaders->begin(), leaders->end(), leader);
 
 	if (it != leaders->end()) {
 		leaders->erase(it);
@@ -808,9 +812,11 @@ bool CountryInstance::remove_leader(LeaderInstance const& leader) {
 }
 
 bool CountryInstance::has_leader_with_name(std::string_view name) const {
-	const auto check_leaders = [&name](memory::vector<LeaderInstance*> const& leaders) -> bool {
-		for (LeaderInstance const* leader : leaders) {
-			if (leader->get_name() == name) {
+	const auto check_leaders = [name](
+		memory::vector<std::reference_wrapper<LeaderInstance>> const& leaders
+	) -> bool {
+		for (LeaderInstance const& leader : leaders) {
+			if (leader.get_name() == name) {
 				return true;
 			}
 		}
@@ -1595,24 +1601,24 @@ void CountryInstance::_update_diplomacy() {
 void CountryInstance::_update_military() {
 	regiment_count = 0;
 
-	for (ArmyInstance const* army : armies) {
-		regiment_count += army->get_unit_count();
+	for (ArmyInstance const& army : armies) {
+		regiment_count += army.get_unit_count();
 	}
 
 	ship_count = 0;
 	total_consumed_ship_supply = 0;
 
-	for (NavyInstance const* navy : navies) {
-		ship_count += navy->get_unit_count();
-		total_consumed_ship_supply += navy->get_total_consumed_supply();
+	for (NavyInstance const& navy : navies) {
+		ship_count += navy.get_unit_count();
+		total_consumed_ship_supply += navy.get_total_consumed_supply();
 	}
 
 	// Calculate military power from land, sea, and leaders
 
 	size_t deployed_non_mobilised_regiments = 0;
-	for (ArmyInstance const* army : armies) {
-		for (RegimentInstance const* regiment : army->get_regiment_instances()) {
-			if (!regiment->is_mobilised()) {
+	for (ArmyInstance const& army : armies) {
+		for (RegimentInstance const& regiment : army.get_regiment_instances()) {
+			if (!regiment.is_mobilised()) {
 				deployed_non_mobilised_regiments++;
 			}
 		}
@@ -1643,9 +1649,9 @@ void CountryInstance::_update_military() {
 	}
 
 	fixed_point_t military_power_from_sea_running_total = 0;
-	for (NavyInstance const* navy : navies) {
-		for (ShipInstance const* ship : navy->get_ship_instances()) {
-			ShipType const& ship_type = ship->get_ship_type();
+	for (NavyInstance const& navy : navies) {
+		for (ShipInstance const& ship : navy.get_ship_instances()) {
+			ShipType const& ship_type = ship.get_ship_type();
 
 			if (ship_type.is_capital) {
 
@@ -1908,7 +1914,7 @@ void CountryInstance::update_gamestate(const Date today, MapInstance& map_instan
 		for (ProvinceDefinition::adjacency_t const& adjacency : province_definition.get_adjacencies()) {
 			// TODO - should we limit based on adjacency type? Straits and impassable still work in game,
 			// and water provinces don't have an owner so they'll get caught by the later checks anyway.
-			CountryInstance* neighbour = map_instance.get_province_instance_by_definition(*adjacency.get_to()).get_owner();
+			CountryInstance* neighbour = map_instance.get_province_instance_by_definition(adjacency.get_to()).get_owner();
 			if (neighbour != nullptr && neighbour != this) {
 				neighbouring_countries.insert(neighbour);
 			}
@@ -1922,18 +1928,18 @@ void CountryInstance::update_gamestate(const Date today, MapInstance& map_instan
 
 	if (capital != nullptr) {
 		capital->set_connected_to_capital(true);
-		memory::vector<ProvinceInstance const*> province_checklist { capital };
+		memory::vector<std::reference_wrapper<const ProvinceInstance>> province_checklist { *capital };
 
-		for (size_t index = 0; index < province_checklist.size(); index++) {
-			ProvinceInstance const& province = *province_checklist[index];
+		for (size_t index = 0; index < province_checklist.size(); ++index) {
+			ProvinceInstance const& province = province_checklist[index];
 
 			for (ProvinceDefinition::adjacency_t const& adjacency : province.province_definition.get_adjacencies()) {
-				ProvinceInstance& adjacent_province = map_instance.get_province_instance_by_definition(*adjacency.get_to());
+				ProvinceInstance& adjacent_province = map_instance.get_province_instance_by_definition(adjacency.get_to());
 
 				if (adjacent_province.get_owner() == this && !adjacent_province.get_connected_to_capital()) {
 					adjacent_province.set_connected_to_capital(true);
 					adjacent_province.set_is_overseas(false);
-					province_checklist.push_back(&adjacent_province);
+					province_checklist.emplace_back(adjacent_province);
 				}
 			}
 		}

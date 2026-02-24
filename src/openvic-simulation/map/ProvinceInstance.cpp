@@ -340,23 +340,23 @@ void ProvinceInstance::update_gamestate(InstanceManager const& instance_manager)
 
 	MapInstance const& map_instance = instance_manager.get_map_instance();
 	for (ProvinceDefinition::adjacency_t const& adjacency : province_definition.get_adjacencies()) {
-		ProvinceDefinition const& province_definition = *adjacency.get_to();
-		ProvinceInstance const& province_instance = map_instance.get_province_instance_by_definition(province_definition);
+		ProvinceDefinition const& adjacent_to_definition = adjacency.get_to();
+		ProvinceInstance const& adjacent_to_instance = map_instance.get_province_instance_by_definition(adjacent_to_definition);
 
-		if (province_instance.is_empty()) {
+		if (adjacent_to_instance.is_empty()) {
 			has_empty_adjacent_province = true;
-		} else if (!province_definition.is_water()) {
-			adjacent_nonempty_land_provinces.push_back(&province_instance);
+		} else if (!adjacent_to_definition.is_water()) {
+			adjacent_nonempty_land_provinces.emplace_back(adjacent_to_instance);
 		}
 	}
 
 	land_regiment_count = 0;
-	for (ArmyInstance const* army : armies) {
-		land_regiment_count += army->get_unit_count();
+	for (ArmyInstance const& army : armies) {
+		land_regiment_count += army.get_unit_count();
 	}
-	for (NavyInstance const* navy : navies) {
-		for (ArmyInstance const* army : navy->get_carried_armies()) {
-			land_regiment_count += army->get_unit_count();
+	for (NavyInstance const& navy : navies) {
+		for (ArmyInstance const& army : navy.get_carried_armies()) {
+			land_regiment_count += army.get_unit_count();
 		}
 	}
 
@@ -409,10 +409,10 @@ bool ProvinceInstance::add_unit_instance_group(UnitInstanceGroup& group) {
 
 	switch (group.branch) {
 	case LAND:
-		armies.push_back(static_cast<ArmyInstance*>(&group));
+		armies.emplace_back(static_cast<ArmyInstance&>(group));
 		return true;
 	case NAVAL:
-		navies.push_back(static_cast<NavyInstance*>(&group));
+		navies.emplace_back(static_cast<NavyInstance&>(group));
 		return true;
 	default:
 		spdlog::error_s(
@@ -425,10 +425,13 @@ bool ProvinceInstance::add_unit_instance_group(UnitInstanceGroup& group) {
 
 bool ProvinceInstance::remove_unit_instance_group(UnitInstanceGroup const& group) {
 	const auto remove_from_vector = [this, &group]<unit_branch_t Branch>(
-		memory::vector<UnitInstanceGroupBranched<Branch>*>& unit_instance_groups
+		memory::vector<std::reference_wrapper<UnitInstanceGroupBranched<Branch>>>& unit_instance_groups
 	) -> bool {
-		const typename memory::vector<UnitInstanceGroupBranched<Branch>*>::const_iterator it =
-			std::find(unit_instance_groups.begin(), unit_instance_groups.end(), &group);
+		auto it = std::find(
+			unit_instance_groups.begin(),
+			unit_instance_groups.end(),
+			group
+		);
 
 		if (it != unit_instance_groups.end()) {
 			unit_instance_groups.erase(it);

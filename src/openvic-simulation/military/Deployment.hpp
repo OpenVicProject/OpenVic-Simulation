@@ -1,5 +1,6 @@
 #pragma once
 
+#include <functional>
 #include <optional>
 #include <string_view>
 
@@ -61,13 +62,13 @@ namespace OpenVic {
 
 	private:
 		memory::string PROPERTY(name);
-		ProvinceDefinition const* PROPERTY(location);
+		std::reference_wrapper<const ProvinceDefinition> PROPERTY(location);
 		memory::vector<_Unit> SPAN_PROPERTY(units);
 		std::optional<size_t> PROPERTY(leader_index);
 
 	public:
 		UnitDeploymentGroup(
-			std::string_view new_name, ProvinceDefinition const* new_location, memory::vector<_Unit>&& new_units,
+			std::string_view new_name, ProvinceDefinition const& new_location, memory::vector<_Unit>&& new_units,
 			std::optional<size_t> new_leader_index
 		);
 		UnitDeploymentGroup(UnitDeploymentGroup&&) = default;

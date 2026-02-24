@@ -20,7 +20,7 @@ UnitDeployment<unit_branch_t::NAVAL>::UnitDeployment(std::string_view new_name, 
 
 template<unit_branch_t Branch>
 UnitDeploymentGroup<Branch>::UnitDeploymentGroup(
-	std::string_view new_name, ProvinceDefinition const* new_location, memory::vector<_Unit>&& new_units,
+	std::string_view new_name, ProvinceDefinition const& new_location, memory::vector<_Unit>&& new_units,
 	std::optional<size_t> new_leader_index
 ) : name { new_name }, location { new_location }, units { std::move(new_units) }, leader_index { new_leader_index } {}
 
@@ -169,7 +169,7 @@ bool DeploymentManager::load_oob_file(
 
 			const size_t starting_general_count = general_count;
 
-			const bool ret = expect_dictionary_keys(
+			if(!expect_dictionary_keys(
 				"name", ONE_EXACTLY, expect_string(assign_variable_callback(army_name)),
 				"location", ONE_EXACTLY, map_definition.expect_province_definition_identifier(
 					assign_variable_callback_pointer(army_location)
@@ -201,14 +201,20 @@ bool DeploymentManager::load_oob_file(
 					return ret;
 				},
 				"leader", ZERO_OR_ONE, leader_callback
-			)(node);
+			)(node)) {
+				return false;
+			}
 
 			armies.emplace_back(
-				army_name, army_location, std::move(army_regiments),
-				starting_general_count < general_count ? std::optional { general_count - 1 } : std::nullopt
+				army_name,
+				*army_location,
+				std::move(army_regiments),
+				starting_general_count < general_count
+					? std::optional { general_count - 1 }
+					: std::nullopt
 			);
 
-			return ret;
+			return true;
 		},
 		"navy", ZERO_OR_MORE, [&admiral_count, &map_definition, &military_manager, &leader_callback](ast::NodeCPtr node) -> bool {
 			std::string_view navy_name {};
@@ -217,7 +223,7 @@ bool DeploymentManager::load_oob_file(
 
 			const size_t starting_admiral_count = admiral_count;
 
-			const bool ret = expect_dictionary_keys(
+			if(!expect_dictionary_keys(
 				"name", ONE_EXACTLY, expect_string(assign_variable_callback(navy_name)),
 				"location", ONE_EXACTLY, map_definition.expect_province_definition_identifier(
 					assign_variable_callback_pointer(navy_location)
@@ -242,14 +248,20 @@ bool DeploymentManager::load_oob_file(
 					return ret;
 				},
 				"leader", ZERO_OR_ONE, leader_callback
-			)(node);
+			)(node)) {
+				return false;
+			}
 
 			navies.emplace_back(
-				navy_name, navy_location, std::move(navy_ships),
-				starting_admiral_count < admiral_count ? std::optional { admiral_count - 1 } : std::nullopt
+				navy_name,
+				*navy_location,
+				std::move(navy_ships),
+				starting_admiral_count < admiral_count
+					? std::optional { admiral_count - 1 }
+					: std::nullopt
 			);
 
-			return ret;
+			return true;
 		}
 	)(Dataloader::parse_defines(lookedup_path).get_file_node());
 

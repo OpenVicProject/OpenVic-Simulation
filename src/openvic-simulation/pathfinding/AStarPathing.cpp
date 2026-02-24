@@ -131,7 +131,7 @@ bool ArmyAStarPathing::_is_point_enabled(search_const_iterator it) const {
 		return true;
 	}
 
-	return army_instance->get_country()->can_army_units_enter(*province_owner);
+	return army_instance->get_country().can_army_units_enter(*province_owner);
 }
 
 NavyAStarPathing::NavyAStarPathing(
@@ -166,5 +166,5 @@ bool NavyAStarPathing::_is_point_enabled(search_const_iterator it) const {
 		return true;
 	}
 
-	return navy_instance->get_country()->can_navy_units_enter(*province_controller);
+	return navy_instance->get_country().can_navy_units_enter(*province_controller);
 }

@@ -1,5 +1,6 @@
 #pragma once
 
+#include <functional>
 #include <utility>
 
 #include <fmt/base.h>
@@ -353,10 +354,10 @@ namespace OpenVic {
 		OV_STATE_PROPERTY(fixed_point_t, military_power_from_sea);
 		OV_STATE_PROPERTY(fixed_point_t, military_power_from_leaders);
 		size_t PROPERTY(military_rank, 0);
-		memory::vector<LeaderInstance*> SPAN_PROPERTY(generals);
-		memory::vector<LeaderInstance*> SPAN_PROPERTY(admirals);
-		memory::vector<ArmyInstance*> SPAN_PROPERTY(armies);
-		memory::vector<NavyInstance*> SPAN_PROPERTY(navies);
+		memory::vector<std::reference_wrapper<LeaderInstance>> SPAN_PROPERTY(generals);
+		memory::vector<std::reference_wrapper<LeaderInstance>> SPAN_PROPERTY(admirals);
+		memory::vector<std::reference_wrapper<ArmyInstance>> SPAN_PROPERTY(armies);
+		memory::vector<std::reference_wrapper<NavyInstance>> SPAN_PROPERTY(navies);
 		size_t PROPERTY(regiment_count, 0);
 		size_t PROPERTY(mobilisation_potential_regiment_count, 0);
 		size_t PROPERTY(mobilisation_max_regiment_count, 0);
