@@ -1,5 +1,7 @@
 #pragma once
 
+#include <functional>
+
 #include "openvic-simulation/politics/BaseIssue.hpp"
 #include "openvic-simulation/types/HasIndex.hpp"
 #include "openvic-simulation/types/TypedIndices.hpp"
@@ -8,24 +10,24 @@ namespace OpenVic {
 	struct PartyPolicy;
 
 	// PartyPolicy group (i.e. trade_policy)
-	struct PartyPolicyGroup : HasIndex<PartyPolicyGroup, party_policy_group_index_t>, BaseIssueGroup {
+	struct PartyPolicyGroup : HasIndex<PartyPolicyGroup, party_policy_group_index_t>, HasIdentifier {
 		friend struct IssueManager;
+	private:
+		memory::vector<std::reference_wrapper<const PartyPolicy>> SPAN_PROPERTY(party_policies);
 
 	public:
 		PartyPolicyGroup(
 			std::string_view new_identifier,
 			index_t new_index
-		) : HasIndex { new_index }, BaseIssueGroup { new_identifier } {}
+		) : HasIndex { new_index }, HasIdentifier { new_identifier } {}
 		PartyPolicyGroup(PartyPolicyGroup&&) = default;
-
-		std::span<PartyPolicy const* const> get_party_policies() const {
-			return { reinterpret_cast<PartyPolicy const* const*>(get_issues().data()), get_issues().size() };
-		}
 	};
 
 	// PartyPolicy (i.e. protectionism)
 	struct PartyPolicy : HasIndex<PartyPolicy, party_policy_index_t>, BaseIssue {
 	public:
+		PartyPolicyGroup const& group;
+
 		PartyPolicy(
 			index_t new_index,
 			std::string_view new_identifier,
@@ -39,11 +41,11 @@ namespace OpenVic {
 				new_identifier,
 				new_colour,
 				std::move(new_values),
-				new_issue_group,
 				std::move(new_rules),
 				new_is_jingoism,
 				modifier_type_t::PARTY_POLICY
-			} {}
+			},
+			group { new_issue_group } {}
 		PartyPolicy(PartyPolicy&&) = default;
 	};
 }

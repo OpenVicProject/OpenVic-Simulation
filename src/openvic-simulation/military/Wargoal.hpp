@@ -1,5 +1,7 @@
 #pragma once
 
+#include <functional>
+
 #include <openvic-dataloader/v2script/Parser.hpp>
 
 #include "openvic-simulation/scripts/ConditionScript.hpp"
@@ -101,7 +103,7 @@ namespace OpenVic {
 	struct WargoalTypeManager {
 	private:
 		IdentifierRegistry<WargoalType> IDENTIFIER_REGISTRY(wargoal_type);
-		memory::vector<WargoalType const*> SPAN_PROPERTY(peace_priorities);
+		memory::vector<std::reference_wrapper<const WargoalType>> SPAN_PROPERTY(peace_priorities);
 
 	public:
 		bool add_wargoal_type(

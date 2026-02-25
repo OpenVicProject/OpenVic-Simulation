@@ -154,10 +154,10 @@ namespace OpenVic {
 
 		/* Production */
 		OV_STATE_PROPERTY(fixed_point_t, industrial_power);
-		memory::vector<std::pair<State const*, fixed_point_t>> SPAN_PROPERTY(industrial_power_from_states);
-		memory::vector<std::pair<CountryInstance const*, fixed_point_t>> SPAN_PROPERTY(industrial_power_from_investments);
+		memory::vector<std::pair<std::reference_wrapper<const State>, fixed_point_t>> SPAN_PROPERTY(industrial_power_from_states);
+		memory::vector<std::pair<std::reference_wrapper<const CountryInstance>, fixed_point_t>> SPAN_PROPERTY(industrial_power_from_investments);
 		size_t PROPERTY(industrial_rank, 0);
-		fixed_point_map_t<CountryInstance const*> PROPERTY(foreign_investments);
+		fixed_point_map_t<std::reference_wrapper<const CountryInstance>> PROPERTY(foreign_investments);
 		OV_IFLATMAP_PROPERTY(BuildingType, building_level_t, building_type_unlock_levels);
 		// TODO - total amount of each good produced
 
@@ -345,7 +345,7 @@ namespace OpenVic {
 		// The last time this country lost a war, i.e. accepted a peace offer sent from their offer tab or the enemy's demand
 		// tab, even white peace. Used for the "has_recently_lost_war" condition (true if the date is less than 5 years ago).
 		Date PROPERTY(last_war_loss_date);
-		vector_ordered_set<CountryInstance const*> PROPERTY(war_enemies);
+		vector_ordered_set<std::reference_wrapper<const CountryInstance>> PROPERTY(war_enemies);
 		OV_STATE_PROPERTY(CountryInstance const*, sphere_owner, nullptr);
 		// TODO - colonial power, current wars
 
@@ -397,11 +397,10 @@ namespace OpenVic {
 		memory::vector<technology_unlock_level_t> SPAN_PROPERTY(unit_variant_unlock_levels);
 
 	public:
-		//pointers instead of references to allow construction via std::tuple
 		CountryInstance(
-			CountryDefinition const* new_country_definition,
-			SharedCountryValues* new_shared_country_values,
-			CountryInstanceDeps const* country_instance_deps
+			CountryDefinition const& new_country_definition,
+			SharedCountryValues& new_shared_country_values,
+			CountryInstanceDeps const& country_instance_deps
 		);
 		CountryInstance(CountryInstance const&) = delete;
 		CountryInstance& operator=(CountryInstance const&) = delete;

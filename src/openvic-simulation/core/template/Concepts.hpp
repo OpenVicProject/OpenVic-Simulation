@@ -4,7 +4,6 @@
 #include <cstddef>
 #include <memory>
 #include <string_view>
-#include <type_traits>
 
 #include <type_safe/strong_typedef.hpp>
 

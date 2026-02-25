@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cassert>
+#include <concepts>
 #include <cstddef>
 #include <string_view>
 #include <ostream>
@@ -8,6 +9,7 @@
 #include <fmt/base.h>
 
 #include "openvic-simulation/core/template/Concepts.hpp"
+#include "openvic-simulation/core/template/Functional.hpp" // IWYU pragma: keep: bug fix for std::reference_wrapper hash & equality
 #include "openvic-simulation/types/Colour.hpp"
 #include "openvic-simulation/utility/Getters.hpp"
 
@@ -31,10 +33,18 @@ namespace OpenVic {
 		HasIdentifier& operator=(HasIdentifier const&) = delete;
 		HasIdentifier& operator=(HasIdentifier&&) = delete;
 
-		template <std::derived_from<HasIdentifier> T>
+		template <std::derived_from<HasIdentifier> T, std::convertible_to<T const&> U>
 		requires (!has_index<T>)
-		friend bool operator==(T const& lhs, T const& rhs) {
-			return lhs.get_identifier() == rhs.get_identifier();
+		friend bool operator==(T const& lhs, U const& rhs) {
+			return lhs.get_identifier() == static_cast<T const&>(rhs).get_identifier();
+		}
+
+		template <typename T, typename U>
+		requires specialization_of<std::decay_t<T>, std::reference_wrapper>
+			&& std::derived_from<typename std::decay_t<T>::type, HasIdentifier>
+			&& equalable<typename std::decay_t<T>::type const&, U>
+		friend bool operator==(T const& lhs, U const& rhs) {
+			return lhs.get() == rhs;
 		}
 	};
 
@@ -108,6 +118,16 @@ namespace std {
 	requires (!OpenVic::has_index<T>)
 	struct hash<T> {
 		[[nodiscard]] std::size_t operator()(T const& obj) const noexcept {
+			return std::hash<std::string_view>{}(obj.get_identifier());
+		}
+	};
+}
+
+namespace std {
+	template<OpenVic::has_get_identifier T>
+	requires (!OpenVic::has_index<T>)
+	struct hash<std::remove_const<T>> {
+		[[nodiscard]] std::size_t operator()(std::remove_const_t<T> const& obj) const noexcept {
 			return std::hash<std::string_view>{}(obj.get_identifier());
 		}
 	};

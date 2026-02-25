@@ -1129,11 +1129,11 @@ bool MapDefinition::load_climate_file(ModifierManager const& modifier_manager, a
 				);
 			} else {
 				ret &= expect_list_reserve_length(*cur_climate, expect_province_definition_identifier(
-					[cur_climate, &identifier](ProvinceDefinition& province) {
+					[this, cur_climate, &identifier](ProvinceDefinition& province) {
 						if (province.climate != cur_climate) {
 							cur_climate->add_province(province);
 							if (province.climate != nullptr) {
-								Climate* old_climate = const_cast<Climate*>(province.climate);
+								Climate* old_climate = climates.get_item_by_identifier(province.climate->get_identifier());
 								old_climate->remove_province(province);
 								spdlog::warn_s(
 									"Province with id {} found in multiple climates: {} and {}",

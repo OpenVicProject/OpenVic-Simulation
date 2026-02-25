@@ -1,5 +1,7 @@
 #pragma once
 
+#include <functional>
+
 #include "openvic-simulation/dataloader/NodeTools.hpp"
 #include "openvic-simulation/history/diplomacy/AllianceHistory.hpp"
 #include "openvic-simulation/history/diplomacy/ReparationsHistory.hpp"
@@ -21,14 +23,14 @@ namespace OpenVic {
 		bool locked = false;
 
 		template<typename HistoryType>
-		static memory::vector<HistoryType const*> filter_by_date(
+		static memory::vector<std::reference_wrapper<const HistoryType>> filter_by_date(
 			std::span<const HistoryType> items,
 			const Date date
 		) {
-			memory::vector<HistoryType const*> ret;
-			for (auto const& item : items) {
+			memory::vector<std::reference_wrapper<const HistoryType>> ret;
+			for (HistoryType const& item : items) {
 				if (item.period.is_date_in_period(date)) {
-					ret.push_back(&item);
+					ret.emplace_back(item);
 				}
 			}
 			return ret;
@@ -43,18 +45,18 @@ namespace OpenVic {
 			return locked;
 		}
 
-		[[nodiscard]] memory::vector<AllianceHistory const*> get_alliances(Date date) const {
+		[[nodiscard]] memory::vector<std::reference_wrapper<const AllianceHistory>> get_alliances(Date date) const {
 			return filter_by_date<AllianceHistory>(alliances, date);
 		}
-		[[nodiscard]] memory::vector<ReparationsHistory const*> get_reparations(Date date) const {
+		[[nodiscard]] memory::vector<std::reference_wrapper<const ReparationsHistory>> get_reparations(Date date) const {
 			return filter_by_date<ReparationsHistory>(reparations, date);
 		}
-		[[nodiscard]] memory::vector<SubjectHistory const*> get_subjects(Date date) const{
+		[[nodiscard]] memory::vector<std::reference_wrapper<const SubjectHistory>> get_subjects(Date date) const{
 			return filter_by_date<SubjectHistory>(subjects, date);
 		}
 		/* Returns all wars that begin before date. NOTE: Some wargoals may be added or countries may join after date,
 		 * should be checked for by functions that use get_wars() */
-		[[nodiscard]] memory::vector<WarHistory const*> get_wars(Date date) const;
+		[[nodiscard]] memory::vector<std::reference_wrapper<const WarHistory>> get_wars(Date date) const;
 
 		bool load_diplomacy_history_file(CountryDefinitionManager const& country_definition_manager, ast::NodeCPtr root);
 		bool load_war_history_file(DefinitionManager const& definition_manager, ast::NodeCPtr root);

@@ -1,5 +1,6 @@
 #pragma once
 
+#include <functional>
 #include <optional>
 
 #include "openvic-simulation/modifier/Modifier.hpp"
@@ -112,7 +113,7 @@ namespace OpenVic {
 	private:
 		IdentifierRegistry<BuildingType> IDENTIFIER_REGISTRY(building_type);
 		string_set_t PROPERTY(building_type_types);
-		memory::vector<BuildingType const*> SPAN_PROPERTY(province_building_types);
+		memory::vector<std::reference_wrapper<const BuildingType>> SPAN_PROPERTY(province_building_types);
 		BuildingType const* PROPERTY(infrastructure_building_type);
 		BuildingType const* PROPERTY(port_building_type);
 

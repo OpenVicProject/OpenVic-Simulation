@@ -151,7 +151,7 @@ namespace OpenVic {
 
 		adjacency_t const* get_adjacency_to(ProvinceDefinition const& province) const;
 		bool is_adjacent_to(ProvinceDefinition const& province) const;
-		memory::vector<adjacency_t const*> get_adjacencies_going_through(ProvinceDefinition const& province) const;
+		memory::vector<std::reference_wrapper<const adjacency_t>> get_adjacencies_going_through(ProvinceDefinition const& province) const;
 		bool has_adjacency_going_through(ProvinceDefinition const& province) const;
 
 		fvec2_t get_unit_position() const;

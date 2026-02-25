@@ -16,18 +16,6 @@
 #include <foonathan/memory/default_allocator.hpp>
 #include <foonathan/memory/std_allocator.hpp>
 
-namespace std {
-	template<typename T>
-	struct equal_to<std::reference_wrapper<const T>> {
-		[[nodiscard]] bool operator()(
-			std::reference_wrapper<const T> const& lhs,
-			std::reference_wrapper<const T> const& rhs
-		) const noexcept {
-			return lhs.get() == rhs.get();
-		}
-	};
-}
-
 namespace OpenVic {
 	struct ordered_container_string_hash {
 		using is_transparent = void;
@@ -58,10 +46,6 @@ namespace OpenVic {
 	struct container_hash<char const*> : ordered_container_string_hash {};
 	template<typename T>
 	struct container_hash<T*> : std::hash<T const*> {};
-	template<typename T>
-	struct container_hash<std::reference_wrapper<T>> : std::hash<const T> {};
-	template<typename T>
-	struct container_hash<std::reference_wrapper<const T>> : std::hash<const T> {};
 
 	// Default: Use transparent equality
 	template<typename T>

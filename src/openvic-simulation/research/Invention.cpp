@@ -150,7 +150,7 @@ bool InventionManager::generate_invention_links(TechnologyManager& tech_manager)
 			if (tech == nullptr) {
 				continue;
 			}
-			tech->add_invention(&invention);
+			tech->add_invention(invention);
 		}
 
 		invention.raw_associated_tech_identifiers.clear();

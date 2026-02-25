@@ -128,10 +128,9 @@ namespace OpenVic {
 	public:
 		ProvinceDefinition const& province_definition;
 
-		//pointers instead of references to allow construction via std::tuple
 		ProvinceInstance(
-			ProvinceDefinition const* new_province_definition,
-			ProvinceInstanceDeps const* province_instance_deps
+			ProvinceDefinition const& new_province_definition,
+			ProvinceInstanceDeps const& province_instance_deps
 		);
 		ProvinceInstance(ProvinceInstance const&) = delete;
 		ProvinceInstance& operator=(ProvinceInstance const&) = delete;

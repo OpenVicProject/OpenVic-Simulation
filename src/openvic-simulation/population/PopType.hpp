@@ -1,5 +1,7 @@
 #pragma once
 
+#include <functional>
+
 #include "openvic-simulation/scripts/ConditionalWeight.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPointMap.hpp"
@@ -23,7 +25,7 @@ namespace OpenVic {
 		friend struct PopManager;
 
 	private:
-		memory::vector<PopType const*> SPAN_PROPERTY(pop_types);
+		memory::vector<std::reference_wrapper<const PopType>> SPAN_PROPERTY(pop_types);
 
 	public:
 		Strata(std::string_view new_identifier, index_t new_index);

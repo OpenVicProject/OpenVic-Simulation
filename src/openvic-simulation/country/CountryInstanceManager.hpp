@@ -1,5 +1,6 @@
 #pragma once
 
+#include <functional>
 #include <string_view>
 
 #include "openvic-simulation/country/CountryInstance.hpp"
@@ -32,13 +33,13 @@ namespace OpenVic {
 
 		OV_IFLATMAP_PROPERTY(CountryDefinition, CountryInstance, country_instance_by_definition);
 
-		memory::vector<CountryInstance*> SPAN_PROPERTY(great_powers);
-		memory::vector<CountryInstance*> SPAN_PROPERTY(secondary_powers);
+		memory::vector<std::reference_wrapper<CountryInstance>> SPAN_PROPERTY(great_powers);
+		memory::vector<std::reference_wrapper<CountryInstance>> SPAN_PROPERTY(secondary_powers);
 
-		memory::vector<CountryInstance*> SPAN_PROPERTY(total_ranking);
-		memory::vector<CountryInstance*> SPAN_PROPERTY(prestige_ranking);
-		memory::vector<CountryInstance*> SPAN_PROPERTY(industrial_power_ranking);
-		memory::vector<CountryInstance*> SPAN_PROPERTY(military_power_ranking);
+		memory::vector<std::reference_wrapper<CountryInstance>> SPAN_PROPERTY(total_ranking);
+		memory::vector<std::reference_wrapper<CountryInstance>> SPAN_PROPERTY(prestige_ranking);
+		memory::vector<std::reference_wrapper<CountryInstance>> SPAN_PROPERTY(industrial_power_ranking);
+		memory::vector<std::reference_wrapper<CountryInstance>> SPAN_PROPERTY(military_power_ranking);
 
 		void update_rankings(const Date today);
 
