@@ -20,27 +20,27 @@
 using namespace OpenVic;
 
 ProvinceInstance::ProvinceInstance(
-	ProvinceDefinition const* new_province_definition,
-	ProvinceInstanceDeps const* province_instance_deps
-) : HasIdentifierAndColour { *new_province_definition },
-	HasIndex { new_province_definition->index },
+	ProvinceDefinition const& new_province_definition,
+	ProvinceInstanceDeps const& province_instance_deps
+) : HasIdentifierAndColour { new_province_definition },
+	HasIndex { new_province_definition.index },
 	FlagStrings { "province" },
 	PopsAggregate {
-		province_instance_deps->stratas,
-		province_instance_deps->pop_types,
-		province_instance_deps->ideologies
+		province_instance_deps.stratas,
+		province_instance_deps.pop_types,
+		province_instance_deps.ideologies
 	},
-	province_definition { *new_province_definition },
-	game_rules_manager { province_instance_deps->game_rules_manager },
-	terrain_type { new_province_definition->get_default_terrain_type() },
-	rgo { province_instance_deps->rgo_deps },
-	pops_cache_by_type { province_instance_deps->pop_types },
+	province_definition { new_province_definition },
+	game_rules_manager { province_instance_deps.game_rules_manager },
+	terrain_type { new_province_definition.get_default_terrain_type() },
+	rgo { province_instance_deps.rgo_deps },
+	pops_cache_by_type { province_instance_deps.pop_types },
 	_buildings(
-		new_province_definition->is_water()
+		new_province_definition.is_water()
 			? 0
-			: province_instance_deps->building_type_manager.get_province_building_types().size(),
-			[&province_instance_deps](const size_t i) -> BuildingInstance {
-				return *province_instance_deps->building_type_manager.get_province_building_types()[i];
+			: province_instance_deps.building_type_manager.get_province_building_types().size(),
+			[&province_instance_deps](const size_t i) -> BuildingType const& {
+				return province_instance_deps.building_type_manager.get_province_building_types()[i];
 			}
 	),
 	buildings(_buildings)

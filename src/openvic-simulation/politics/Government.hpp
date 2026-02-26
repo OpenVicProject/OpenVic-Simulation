@@ -1,5 +1,7 @@
 #pragma once
 
+#include <functional>
+
 #include "openvic-simulation/types/Date.hpp"
 #include "openvic-simulation/types/HasIdentifier.hpp"
 #include "openvic-simulation/types/HasIndex.hpp"
@@ -13,7 +15,7 @@ namespace OpenVic {
 
 	struct GovernmentType : HasIndex<GovernmentType, government_type_index_t>, HasIdentifier {
 	private:
-		memory::vector<Ideology const*> SPAN_PROPERTY(ideologies);
+		memory::vector<std::reference_wrapper<const Ideology>> SPAN_PROPERTY(ideologies);
 		memory::string PROPERTY_CUSTOM_NAME(flag_type_identifier, get_flag_type);
 
 	public:
@@ -24,7 +26,7 @@ namespace OpenVic {
 		GovernmentType(
 			index_t new_index,
 			std::string_view new_identifier,
-			memory::vector<Ideology const*>&& new_ideologies,
+			memory::vector<std::reference_wrapper<const Ideology>>&& new_ideologies,
 			bool new_holds_elections,
 			bool new_can_appoint_ruling_party,
 			Timespan new_term_duration,
@@ -32,7 +34,7 @@ namespace OpenVic {
 		);
 		GovernmentType(GovernmentType&&) = default;
 
-		bool is_ideology_compatible(Ideology const* ideology) const;
+		bool is_ideology_compatible(Ideology const& ideology) const;
 	};
 
 	struct GovernmentTypeManager {
@@ -42,7 +44,7 @@ namespace OpenVic {
 
 	public:
 		bool add_government_type(
-			std::string_view identifier, memory::vector<Ideology const*>&& ideologies, bool elections, bool appoint_ruling_party,
+			std::string_view identifier, memory::vector<std::reference_wrapper<const Ideology>>&& ideologies, bool elections, bool appoint_ruling_party,
 			Timespan term_duration, std::string_view flag_type
 		);
 

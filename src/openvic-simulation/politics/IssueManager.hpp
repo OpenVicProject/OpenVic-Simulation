@@ -1,6 +1,7 @@
 #pragma once
 
 #include "openvic-simulation/politics/BaseIssue.hpp"
+#include "openvic-simulation/politics/IssueGroup.hpp"
 #include "openvic-simulation/politics/PartyPolicy.hpp"
 #include "openvic-simulation/politics/Reform.hpp"
 #include "openvic-simulation/types/IdentifierRegistry.hpp"
@@ -39,15 +40,21 @@ namespace OpenVic {
 			}
 			return issue;
 		}
-		constexpr BaseIssueGroup const* get_base_issue_group_by_identifier(std::string_view identifier) const {
-			BaseIssueGroup const* issue = get_party_policy_group_by_identifier(identifier);
-			if (issue == nullptr) {
-				issue = get_reform_group_by_identifier(identifier);
+		constexpr issue_group_t get_base_issue_group_by_identifier(std::string_view identifier) const {
+			PartyPolicyGroup const* const party_policy_group = get_party_policy_group_by_identifier(identifier);
+			if (party_policy_group != nullptr) {
+				return { *party_policy_group };
 			}
-			return issue;
+
+			ReformGroup const* const reform_group = get_reform_group_by_identifier(identifier);
+			if (reform_group != nullptr) {
+				return { *reform_group };
+			}
+
+			return {};
 		}
 		constexpr NodeTools::NodeCallback auto expect_base_issue_group_identifier(
-			NodeTools::Callback<BaseIssueGroup const&> auto callback, bool warn = false
+			NodeTools::Callback<issue_group_t> auto callback, bool warn = false
 		) const {
 			return NodeTools::expect_identifier(
 				[this, callback, warn](std::string_view identifier) -> bool {
@@ -58,15 +65,16 @@ namespace OpenVic {
 						);
 						return warn;
 					}
-					BaseIssueGroup const* item = get_base_issue_group_by_identifier(identifier);
-					if (item != nullptr) {
-						return callback(*item);
+					issue_group_t issue_group = get_base_issue_group_by_identifier(identifier);
+					if (std::holds_alternative<std::monostate>(issue_group)) {
+						spdlog::log_s(
+							warn ? spdlog::level::warn : spdlog::level::err,
+							"Invalid base issue group identifier: {}", identifier
+						);
+						return warn;
 					}
-					spdlog::log_s(
-						warn ? spdlog::level::warn : spdlog::level::err,
-						"Invalid base issue group identifier: {}", identifier
-					);
-					return warn;
+					
+					return callback(issue_group);
 				}
 			);
 		}

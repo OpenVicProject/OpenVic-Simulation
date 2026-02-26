@@ -135,7 +135,7 @@ bool BuildingTypeManager::add_building_type(
 	if (ret) {
 		building_type_types.emplace(building_type_args.type);
 		if (province_building_index.has_value()) {
-			province_building_types.emplace_back(&building_types.back());
+			province_building_types.emplace_back(building_types.back());
 		}
 	}
 

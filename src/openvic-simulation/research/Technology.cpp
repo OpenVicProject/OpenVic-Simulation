@@ -280,11 +280,11 @@ bool TechnologyManager::generate_technology_lists() {
 	}
 
 	for (TechnologyArea const& area : technology_areas.get_items()) {
-		const_cast<TechnologyFolder&>(area.folder).technology_areas.push_back(&area);
+		const_cast<TechnologyFolder&>(area.folder).technology_areas.emplace_back(area);
 	}
 
 	for (Technology const& tech : technologies.get_items()) {
-		const_cast<TechnologyArea&>(tech.area).technologies.push_back(&tech);
+		const_cast<TechnologyArea&>(tech.area).technologies.emplace_back(tech);
 	}
 
 	bool ret = true;

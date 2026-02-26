@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdint>
+#include <functional>
 
 #include "openvic-simulation/modifier/Modifier.hpp"
 #include "openvic-simulation/scripts/ConditionalWeight.hpp"
@@ -25,7 +26,7 @@ namespace OpenVic {
 		friend struct TechnologyManager;
 
 	private:
-		memory::vector<TechnologyArea const*> SPAN_PROPERTY(technology_areas);
+		memory::vector<std::reference_wrapper<const TechnologyArea>> SPAN_PROPERTY(technology_areas);
 
 	public:
 		TechnologyFolder(std::string_view new_identifier, index_t new_index);
@@ -36,7 +37,7 @@ namespace OpenVic {
 		friend struct TechnologyManager;
 
 	private:
-		memory::vector<Technology const*> SPAN_PROPERTY(technologies);
+		memory::vector<std::reference_wrapper<const Technology>> SPAN_PROPERTY(technologies);
 		size_t PROPERTY(tech_count, 0);
 
 	public:
@@ -56,7 +57,7 @@ namespace OpenVic {
 	private:
 		std::optional<unit_variant_t> PROPERTY(unit_variant);
 		ConditionalWeightFactorMul PROPERTY(ai_chance);
-		memory::vector<Invention const*> PROPERTY(inventions);
+		memory::vector<std::reference_wrapper<const Invention>> PROPERTY(inventions);
 
 		bool parse_scripts(DefinitionManager const& definition_manager);
 
@@ -85,8 +86,8 @@ namespace OpenVic {
 		);
 		Technology(Technology&&) = default;
 
-		void add_invention(Invention const* invention) {
-			inventions.push_back(invention);
+		void add_invention(Invention const& invention) {
+			inventions.emplace_back(invention);
 		}
 	};
 

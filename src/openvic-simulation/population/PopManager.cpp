@@ -197,7 +197,7 @@ bool PopManager::add_pop_type(
 
 	delayed_parse_nodes.emplace_back(rebel_units, equivalent, promote_to_node, issues_node);
 
-	strata->pop_types.push_back(&pop_types.back());
+	strata->pop_types.emplace_back(pop_types.back());
 
 	if (slave_sprite <= 0 && is_slave) {
 		/* Set slave sprite to that of the first is_slave pop type we find. */

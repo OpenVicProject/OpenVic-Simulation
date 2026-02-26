@@ -1,5 +1,7 @@
 #include "CountryInstanceManager.hpp"
+
 #include <algorithm>
+#include <functional>
 
 #include "openvic-simulation/country/CountryDefinition.hpp"
 #include "openvic-simulation/defines/CountryDefines.hpp"
@@ -32,12 +34,12 @@ CountryInstanceManager::CountryInstanceManager(
 		new_country_definition_manager.get_country_definitions(),
 		[
 			this,
-			country_instance_deps_ptr=&country_instance_deps
+			&country_instance_deps
 		](CountryDefinition const& country_definition)->auto{
 			return std::make_tuple(
-				&country_definition,
-				&shared_country_values,
-				country_instance_deps_ptr
+				std::ref(country_definition),
+				std::ref(shared_country_values),
+				std::ref(country_instance_deps)
 			);
 		}
 	}
@@ -52,7 +54,7 @@ void CountryInstanceManager::update_rankings(const Date today) {
 
 	for (CountryInstance& country : get_country_instances()) {
 		if (country.exists()) {
-			total_ranking.push_back(&country);
+			total_ranking.emplace_back(country);
 		}
 	}
 
@@ -62,37 +64,37 @@ void CountryInstanceManager::update_rankings(const Date today) {
 
 	std::stable_sort(
 		total_ranking.begin(), total_ranking.end(),
-		[](CountryInstance* a, CountryInstance* b) -> bool {
-			const bool a_civilised = a->is_civilised();
-			const bool b_civilised = b->is_civilised();
-			return a_civilised != b_civilised ? a_civilised : a->total_score.get_untracked() > b->total_score.get_untracked();
+		[](CountryInstance& a, CountryInstance& b) -> bool {
+			const bool a_civilised = a.is_civilised();
+			const bool b_civilised = b.is_civilised();
+			return a_civilised != b_civilised ? a_civilised : a.total_score.get_untracked() > b.total_score.get_untracked();
 		}
 	);
 	std::stable_sort(
 		prestige_ranking.begin(), prestige_ranking.end(),
-		[](CountryInstance const* a, CountryInstance const* b) -> bool {
-			return a->get_prestige_untracked() > b->get_prestige_untracked();
+		[](CountryInstance const& a, CountryInstance const& b) -> bool {
+			return a.get_prestige_untracked() > b.get_prestige_untracked();
 		}
 	);
 	std::stable_sort(
 		industrial_power_ranking.begin(), industrial_power_ranking.end(),
-		[](CountryInstance const* a, CountryInstance const* b) -> bool {
-			return a->get_industrial_power_untracked() > b->get_industrial_power_untracked();
+		[](CountryInstance const& a, CountryInstance const& b) -> bool {
+			return a.get_industrial_power_untracked() > b.get_industrial_power_untracked();
 		}
 	);
 	std::stable_sort(
 		military_power_ranking.begin(), military_power_ranking.end(),
-		[](CountryInstance* a, CountryInstance* b) -> bool {
-			return a->military_power.get_untracked() > b->military_power.get_untracked();
+		[](CountryInstance& a, CountryInstance& b) -> bool {
+			return a.military_power.get_untracked() > b.military_power.get_untracked();
 		}
 	);
 
 	for (size_t index = 0; index < total_ranking.size(); ++index) {
 		const size_t rank = index + 1;
-		total_ranking[index]->total_rank = rank;
-		prestige_ranking[index]->prestige_rank = rank;
-		industrial_power_ranking[index]->industrial_rank = rank;
-		military_power_ranking[index]->military_rank = rank;
+		total_ranking[index].get().total_rank = rank;
+		prestige_ranking[index].get().prestige_rank = rank;
+		industrial_power_ranking[index].get().industrial_rank = rank;
+		military_power_ranking[index].get().military_rank = rank;
 	}
 
 	const size_t max_great_power_rank = country_defines.get_great_power_rank();
@@ -103,12 +105,12 @@ void CountryInstanceManager::update_rankings(const Date today) {
 	// Demote great powers who have been below the max great power rank for longer than the demotion grace period and
 	// remove them from the list. We don't just demote them all and clear the list as when rebuilding we'd need to look
 	// ahead for countries below the max great power rank but still within the demotion grace period.
-	std::erase_if(great_powers, [max_great_power_rank, today](CountryInstance* great_power) -> bool {
-		if (OV_likely(great_power->get_country_status() == COUNTRY_STATUS_GREAT_POWER)) {
+	std::erase_if(great_powers, [max_great_power_rank, today](CountryInstance& great_power) -> bool {
+		if (OV_likely(great_power.get_country_status() == COUNTRY_STATUS_GREAT_POWER)) {
 			if (OV_unlikely(
-				great_power->get_total_rank() > max_great_power_rank && great_power->get_lose_great_power_date() < today
+				great_power.get_total_rank() > max_great_power_rank && great_power.get_lose_great_power_date() < today
 			)) {
-				great_power->country_status = COUNTRY_STATUS_CIVILISED;
+				great_power.country_status = COUNTRY_STATUS_CIVILISED;
 				return true;
 			} else {
 				return false;
@@ -119,9 +121,9 @@ void CountryInstanceManager::update_rankings(const Date today) {
 
 	// Demote all secondary powers and clear the list. We will rebuilt the whole list from scratch, so there's no need to
 	// keep countries which are still above the max secondary power rank (they might become great powers instead anyway).
-	for (CountryInstance* secondary_power : secondary_powers) {
-		if (secondary_power->country_status == COUNTRY_STATUS_SECONDARY_POWER) {
-			secondary_power->country_status = COUNTRY_STATUS_CIVILISED;
+	for (CountryInstance& secondary_power : secondary_powers) {
+		if (secondary_power.country_status == COUNTRY_STATUS_SECONDARY_POWER) {
+			secondary_power.country_status = COUNTRY_STATUS_CIVILISED;
 		}
 	}
 	secondary_powers.clear();
@@ -133,41 +135,41 @@ void CountryInstanceManager::update_rankings(const Date today) {
 	const size_t max_power_index = std::clamp(max_secondary_power_rank, max_great_power_rank, total_ranking.size());
 
 	for (size_t index = 0; index < max_power_index; index++) {
-		CountryInstance* country = total_ranking[index];
+		CountryInstance& country = total_ranking[index];
 
-		if (!country->is_civilised()) {
+		if (!country.is_civilised()) {
 			// All further countries are civilised and so ineligible for great or secondary power status.
 			break;
 		}
 
-		if (country->is_great_power()) {
+		if (country.is_great_power()) {
 			// The country already has great power status and is in the great powers list.
 			continue;
 		}
 
-		if (great_powers.size() < max_great_power_rank && country->get_total_rank() <= max_great_power_rank) {
+		if (great_powers.size() < max_great_power_rank && country.get_total_rank() <= max_great_power_rank) {
 			// The country is eligible for great power status and there are still slots available,
 			// so it is promoted and added to the list.
-			country->country_status = COUNTRY_STATUS_GREAT_POWER;
+			country.country_status = COUNTRY_STATUS_GREAT_POWER;
 			great_powers.push_back(country);
-		} else if (country->get_total_rank() <= max_secondary_power_rank) {
+		} else if (country.get_total_rank() <= max_secondary_power_rank) {
 			// The country is eligible for secondary power status and so is promoted and added to the list.
-			country->country_status = COUNTRY_STATUS_SECONDARY_POWER;
-			secondary_powers.push_back(country);
+			country.country_status = COUNTRY_STATUS_SECONDARY_POWER;
+			secondary_powers.emplace_back(country);
 		}
 	}
 
 	// Sort the great powers list by total rank, as pre-existing great powers may have changed rank order and new great
 	// powers will have been added to the end of the list regardless of rank.
-	std::stable_sort(great_powers.begin(), great_powers.end(), [](CountryInstance const* a, CountryInstance const* b) -> bool {
-		return a->get_total_rank() < b->get_total_rank();
+	std::stable_sort(great_powers.begin(), great_powers.end(), [](CountryInstance const& a, CountryInstance const& b) -> bool {
+		return a.get_total_rank() < b.get_total_rank();
 	});
 
 	// Update the lose great power date for all great powers which are above the max great power rank.
 	const Date new_lose_great_power_date = today + lose_great_power_grace_days;
-	for (CountryInstance* great_power : great_powers) {
-		if (great_power->get_total_rank() <= max_great_power_rank) {
-			great_power->lose_great_power_date = new_lose_great_power_date;
+	for (CountryInstance& great_power : great_powers) {
+		if (great_power.get_total_rank() <= max_great_power_rank) {
+			great_power.lose_great_power_date = new_lose_great_power_date;
 		}
 	}
 }

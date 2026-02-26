@@ -1,5 +1,7 @@
 #pragma once
 
+#include <functional>
+
 #include "openvic-simulation/types/HasIdentifier.hpp"
 #include "openvic-simulation/types/HasIndex.hpp"
 #include "openvic-simulation/types/IdentifierRegistry.hpp"
@@ -14,7 +16,7 @@ namespace OpenVic {
 		friend struct GoodDefinitionManager;
 
 	private:
-		memory::vector<GoodDefinition const*> SPAN_PROPERTY(good_definitions);
+		memory::vector<std::reference_wrapper<const GoodDefinition>> SPAN_PROPERTY(good_definitions);
 	public:
 		GoodCategory(std::string_view new_identifier);
 		GoodCategory(GoodCategory&&) = default;

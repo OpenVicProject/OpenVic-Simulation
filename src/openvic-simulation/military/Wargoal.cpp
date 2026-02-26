@@ -1,5 +1,7 @@
 #include "Wargoal.hpp"
 
+#include <range/v3/algorithm/contains.hpp>
+
 #include <openvic-dataloader/v2script/Parser.hpp>
 
 #include "openvic-simulation/dataloader/NodeTools.hpp"
@@ -209,8 +211,11 @@ bool WargoalTypeManager::load_wargoal_file(ovdl::v2script::Parser const& parser)
 		expect_list(
 			expect_wargoal_type_identifier(
 				[this](WargoalType const& wargoal) -> bool {
-					if (std::find(peace_priorities.begin(), peace_priorities.end(), &wargoal) == peace_priorities.end()) {
-						peace_priorities.push_back(&wargoal);
+					if (!ranges::contains(
+						peace_priorities,
+						wargoal
+					)) {
+						peace_priorities.emplace_back(wargoal);
 					} else {
 						spdlog::warn_s("Wargoal {} is already in the peace priority list!", wargoal);
 					}

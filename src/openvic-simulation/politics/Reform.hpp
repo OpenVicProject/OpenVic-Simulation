@@ -1,5 +1,7 @@
 #pragma once
 
+#include <functional>
+
 #include "openvic-simulation/politics/BaseIssue.hpp"
 #include "openvic-simulation/scripts/ConditionScript.hpp"
 #include "openvic-simulation/scripts/EffectScript.hpp"
@@ -16,7 +18,7 @@ namespace OpenVic {
 
 	private:
 		// in vanilla education, military and economic reforms are hardcoded to true and the rest to false
-		memory::vector<ReformGroup const*> SPAN_PROPERTY(reform_groups);
+		memory::vector<std::reference_wrapper<const ReformGroup>> SPAN_PROPERTY(reform_groups);
 
 	public:
 		const bool is_civilizing;
@@ -28,7 +30,11 @@ namespace OpenVic {
 	struct Reform;
 
 	// Reform group (i.e. slavery)
-	struct ReformGroup : HasIndex<ReformGroup, reform_group_index_t>, BaseIssueGroup {
+	struct ReformGroup : HasIndex<ReformGroup, reform_group_index_t>, HasIdentifier {
+		friend struct IssueManager;
+
+	private:
+		memory::vector<std::reference_wrapper<const Reform>> SPAN_PROPERTY(reforms);
 
 	public:
 		ReformType const& reform_type;
@@ -43,10 +49,6 @@ namespace OpenVic {
 			bool new_is_administrative
 		);
 		ReformGroup(ReformGroup&&) = default;
-
-		std::span<Reform const* const> get_reforms() const {
-			return { reinterpret_cast<Reform const* const*>(get_issues().data()), get_issues().size() };
-		}
 
 		constexpr bool is_civilizing() const {
 			return reform_type.is_civilizing;
@@ -70,6 +72,8 @@ namespace OpenVic {
 		const fixed_point_t administrative_multiplier;
 		const tech_cost_t technology_cost;
 
+		ReformGroup const& group;
+
 		Reform(
 			index_t new_index, std::string_view new_identifier,
 			colour_t new_colour, ModifierValue&& new_values, ReformGroup const& new_reform_group,
@@ -78,9 +82,5 @@ namespace OpenVic {
 			ConditionScript&& new_on_execute_trigger, EffectScript&& new_on_execute_effect
 		);
 		Reform(Reform&&) = default;
-
-		constexpr ReformGroup const& get_reform_group() const {
-			return static_cast<ReformGroup const&>(issue_group);
-		}
 	};
 }

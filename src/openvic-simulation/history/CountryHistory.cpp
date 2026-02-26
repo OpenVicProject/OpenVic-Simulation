@@ -96,13 +96,14 @@ bool CountryHistoryMap::_load_history_entry(
 			std::string_view key,
 			ast::NodeCPtr value
 		) -> bool {
-			ReformGroup const* reform_group = issue_manager.get_reform_group_by_identifier(key);
-			if (reform_group != nullptr) {
-				return issue_manager.expect_reform_identifier([&entry, reform_group](Reform const& reform) -> bool {
-					if (&reform.get_reform_group() != reform_group) {
+			ReformGroup const* reform_group_ptr = issue_manager.get_reform_group_by_identifier(key);
+			if (reform_group_ptr != nullptr) {
+				ReformGroup const& reform_group = *reform_group_ptr;
+				return issue_manager.expect_reform_identifier([&entry, &reform_group](Reform const& reform) -> bool {
+					if (reform.group != reform_group) {
 						spdlog::warn_s(
 							"Listing {} as belonging to the reform group {} when it actually belongs to {} in history of {}",
-							reform, *reform_group, reform.get_reform_group(), entry.country
+							reform, reform_group, reform.group, entry.country
 						);
 					}
 					return set_callback_pointer(entry.reforms)(reform);

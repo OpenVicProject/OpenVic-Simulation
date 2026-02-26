@@ -35,7 +35,7 @@ bool IssueManager::add_party_policy(
 		return false;
 	}
 
-	party_policy_group.issues.push_back(&get_back_party_policy());
+	party_policy_group.party_policies.emplace_back(get_back_party_policy());
 	return true;
 }
 
@@ -66,7 +66,7 @@ bool IssueManager::add_reform_group(
 		return false;
 	}
 
-	reform_type.reform_groups.push_back(&get_back_reform_group());
+	reform_type.reform_groups.emplace_back(get_back_reform_group());
 	return true;
 }
 
@@ -119,7 +119,7 @@ bool IssueManager::add_reform(
 		return false;
 	}
 
-	reform_group.issues.push_back(&get_back_reform());
+	reform_group.reforms.emplace_back(get_back_reform());
 	return true;
 }
 

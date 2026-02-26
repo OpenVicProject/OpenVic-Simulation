@@ -22,8 +22,8 @@ void DiplomaticHistoryManager::lock_diplomatic_history() {
 	locked = true;
 }
 
-memory::vector<WarHistory const*> DiplomaticHistoryManager::get_wars(Date date) const {
-	memory::vector<WarHistory const*> ret;
+memory::vector<std::reference_wrapper<const WarHistory>> DiplomaticHistoryManager::get_wars(Date date) const {
+	memory::vector<std::reference_wrapper<const WarHistory>> ret;
 	for (auto const& war : wars) {
 		Date start {};
 		for (auto const& wargoal : war.wargoals) {
@@ -32,7 +32,7 @@ memory::vector<WarHistory const*> DiplomaticHistoryManager::get_wars(Date date) 
 			}
 		}
 		if (start >= date) {
-			ret.push_back(&war);
+			ret.emplace_back(war);
 		}
 	}
 	return ret;

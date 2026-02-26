@@ -153,13 +153,13 @@ bool ProvinceDefinition::is_adjacent_to(ProvinceDefinition const& province) cons
 	);
 }
 
-memory::vector<ProvinceDefinition::adjacency_t const*> ProvinceDefinition::get_adjacencies_going_through(
+memory::vector<std::reference_wrapper<const ProvinceDefinition::adjacency_t>> ProvinceDefinition::get_adjacencies_going_through(
 	ProvinceDefinition const& province
 ) const {
-	memory::vector<adjacency_t const*> ret;
+	memory::vector<std::reference_wrapper<const adjacency_t>> ret;
 	for (adjacency_t const& adj : adjacencies) {
 		if (adj.get_through() != nullptr && *adj.get_through() == province) {
-			ret.push_back(&adj);
+			ret.emplace_back(adj);
 		}
 	}
 	return ret;

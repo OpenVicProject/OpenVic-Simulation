@@ -1,5 +1,6 @@
 #include "MapInstance.hpp"
 
+#include <functional>
 #include <optional>
 #include <tuple>
 
@@ -21,12 +22,12 @@ MapInstance::MapInstance(
 	sea_pathing { new_map_definition, *this },
 	province_instance_by_definition(
 		new_map_definition.get_province_definitions(),
-		[
-			province_instance_deps_ptr=&province_instance_deps
-		](ProvinceDefinition const& province_definition) -> auto {
+		[&province_instance_deps](
+			ProvinceDefinition const& province_definition
+		) -> auto {
 			return std::make_tuple(
-				&province_definition,
-				province_instance_deps_ptr
+				std::ref(province_definition),
+				std::ref(province_instance_deps)
 			);
 		}
 	) { assert(new_map_definition.province_definitions_are_locked()); }

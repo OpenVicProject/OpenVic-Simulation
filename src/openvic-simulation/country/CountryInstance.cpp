@@ -61,43 +61,43 @@ static constexpr size_t DAYS_OF_BALANCE_HISTORY = 30;
 static constexpr colour_t ERROR_COLOUR = colour_t::from_integer(0xFF0000);
 
 CountryInstance::CountryInstance(
-	CountryDefinition const* new_country_definition,
-	SharedCountryValues* new_shared_country_values,
-	CountryInstanceDeps const* country_instance_deps
+	CountryDefinition const& new_country_definition,
+	SharedCountryValues& new_shared_country_values,
+	CountryInstanceDeps const& country_instance_deps
 ) : FlagStrings { "country" },
-	HasIndex { new_country_definition->index },
+	HasIndex { new_country_definition.index },
 	PopsAggregate {
-		country_instance_deps->stratas,
-		country_instance_deps->pop_types,
-		country_instance_deps->ideologies
+		country_instance_deps.stratas,
+		country_instance_deps.pop_types,
+		country_instance_deps.ideologies
 	},
 	/* Main attributes */
-	country_definition { *new_country_definition },
-	shared_country_values { *new_shared_country_values },
+	country_definition { new_country_definition },
+	shared_country_values { new_shared_country_values },
 
-	country_relations_manager { country_instance_deps->country_relations_manager },
-	game_rules_manager { country_instance_deps->game_rules_manager },
-	good_instance_manager { country_instance_deps->good_instance_manager },
-	market_instance { country_instance_deps->market_instance },
-	modifier_effect_cache { country_instance_deps->modifier_effect_cache },
-	unit_type_manager { country_instance_deps->unit_type_manager },
+	country_relations_manager { country_instance_deps.country_relations_manager },
+	game_rules_manager { country_instance_deps.game_rules_manager },
+	good_instance_manager { country_instance_deps.good_instance_manager },
+	market_instance { country_instance_deps.market_instance },
+	modifier_effect_cache { country_instance_deps.modifier_effect_cache },
+	unit_type_manager { country_instance_deps.unit_type_manager },
 	
-	fallback_date_for_never_completing_research { country_instance_deps->fallback_date_for_never_completing_research },
-	country_defines { country_instance_deps->country_defines },
-	diplomacy_defines { country_instance_deps->diplomacy_defines },
-	economy_defines { country_instance_deps->economy_defines },
-	military_defines { country_instance_deps->military_defines },
+	fallback_date_for_never_completing_research { country_instance_deps.fallback_date_for_never_completing_research },
+	country_defines { country_instance_deps.country_defines },
+	diplomacy_defines { country_instance_deps.diplomacy_defines },
+	economy_defines { country_instance_deps.economy_defines },
+	military_defines { country_instance_deps.military_defines },
 
 	colour { ERROR_COLOUR },
 
 	/* Production */
-	building_type_unlock_levels { country_instance_deps->building_types },
+	building_type_unlock_levels { country_instance_deps.building_types },
 
 	/* Budget */
 	balance_history{DAYS_OF_BALANCE_HISTORY},
-	taxable_income_by_pop_type { country_instance_deps->pop_types },
+	taxable_income_by_pop_type { country_instance_deps.pop_types },
 	effective_tax_rate_by_strata {
-		country_instance_deps->stratas,
+		country_instance_deps.stratas,
 		[this](Strata const& strata)->auto {
 			return [this,&strata](DependencyTracker& tracker)->fixed_point_t {
 				return tax_efficiency.get(tracker) * tax_rate_slider_value_by_strata.at(strata).get_value(tracker);
@@ -105,7 +105,7 @@ CountryInstance::CountryInstance(
 		}
 	},
 	administration_salary_base_by_pop_type{
-		country_instance_deps->pop_types,
+		country_instance_deps.pop_types,
 		[this](PopType const& pop_type)->auto {
 			return [this,&pop_type](DependencyTracker& tracker)->fixed_point_t {
 				return corruption_cost_multiplier.get(tracker)
@@ -115,7 +115,7 @@ CountryInstance::CountryInstance(
 		}
 	},
 	education_salary_base_by_pop_type{
-		country_instance_deps->pop_types,
+		country_instance_deps.pop_types,
 		[this](PopType const& pop_type)->auto {
 			return [this,&pop_type](DependencyTracker& tracker)->fixed_point_t {
 				return corruption_cost_multiplier.get(tracker)
@@ -125,7 +125,7 @@ CountryInstance::CountryInstance(
 		}
 	},
 	military_salary_base_by_pop_type{
-		country_instance_deps->pop_types,
+		country_instance_deps.pop_types,
 		[this](PopType const& pop_type)->auto {
 			return [this,&pop_type](DependencyTracker& tracker)->fixed_point_t {
 				return corruption_cost_multiplier.get(tracker)
@@ -135,7 +135,7 @@ CountryInstance::CountryInstance(
 		}
 	},
 	social_income_variant_base_by_pop_type{
-		country_instance_deps->pop_types,
+		country_instance_deps.pop_types,
 		[this](PopType const& pop_type)->auto {
 			return [this,&pop_type](DependencyTracker& tracker)->fixed_point_t {
 				return corruption_cost_multiplier.get(tracker)
@@ -144,26 +144,26 @@ CountryInstance::CountryInstance(
 			};
 		}
 	},
-	tax_rate_slider_value_by_strata { country_instance_deps->stratas },
+	tax_rate_slider_value_by_strata { country_instance_deps.stratas },
 
 	/* Technology */
-	technology_unlock_levels { country_instance_deps->technologies },
-	invention_unlock_levels { country_instance_deps->inventions },
+	technology_unlock_levels { country_instance_deps.technologies },
+	invention_unlock_levels { country_instance_deps.inventions },
 
 	/* Politics */
-	upper_house_proportion_by_ideology { country_instance_deps->ideologies },
-	reforms { country_instance_deps->reforms },
-	flag_overrides_by_government_type { country_instance_deps->government_types },
-	crime_unlock_levels { country_instance_deps->crimes },
+	upper_house_proportion_by_ideology { country_instance_deps.ideologies },
+	reforms { country_instance_deps.reforms },
+	flag_overrides_by_government_type { country_instance_deps.government_types },
+	crime_unlock_levels { country_instance_deps.crimes },
 
 	/* Trade */
-	goods_data { country_instance_deps->good_instances },
+	goods_data { country_instance_deps.good_instances },
 
 	/* Diplomacy */
 
 	/* Military */
-	regiment_type_unlock_levels { country_instance_deps->regiment_types },
-	ship_type_unlock_levels { country_instance_deps->ship_types },
+	regiment_type_unlock_levels { country_instance_deps.regiment_types },
+	ship_type_unlock_levels { country_instance_deps.ship_types },
 
 	/* DerivedState */
 	flag_government_type { [this](DependencyTracker& tracker)->GovernmentType const* {
@@ -247,7 +247,7 @@ CountryInstance::CountryInstance(
 	}
 
 	// army, navy and construction spending have minimums defined in EconomyDefines and always have an unmodified max (1.0).
-	EconomyDefines const& economy_defines = country_instance_deps->economy_defines;
+	EconomyDefines const& economy_defines = country_instance_deps.economy_defines;
 	army_spending_slider_value.set_bounds(economy_defines.get_minimum_army_spending_slider_value(), 1);
 	army_spending_slider_value.set_value(1);
 
@@ -274,7 +274,7 @@ CountryInstance::CountryInstance(
 	tariff_rate_slider_value.set_bounds(0, 0);
 	tariff_rate_slider_value.set_value(0);
 
-	update_parties_for_votes(new_country_definition);
+	update_parties_for_votes(&new_country_definition);
 
 	for (BuildingType const& building_type : building_type_unlock_levels.get_keys()) {
 		if (building_type.is_enabled_by_default) {
@@ -393,17 +393,17 @@ void CountryInstance::set_alliance_with(CountryInstance& country, bool alliance)
 }
 
 bool CountryInstance::is_at_war_with(CountryInstance const& country) const {
-	return war_enemies.contains(&country);
+	return war_enemies.contains(country);
 }
 
 void CountryInstance::set_at_war_with(CountryInstance& country, bool at_war) {
 	country_relations_manager.set_at_war_with(this, &country, at_war);
 	if (at_war) {
-		war_enemies.insert(&country);
-		country.war_enemies.insert(this);
+		war_enemies.emplace(country);
+		country.war_enemies.emplace(*this);
 	} else {
-		war_enemies.unordered_erase(&country);
-		country.war_enemies.unordered_erase(this);
+		war_enemies.unordered_erase(country);
+		country.war_enemies.unordered_erase(*this);
 	}
 }
 
@@ -639,7 +639,7 @@ bool CountryInstance::set_ruling_party(CountryParty const& new_ruling_party) {
 }
 
 bool CountryInstance::add_reform(Reform const& new_reform) {
-	ReformGroup const& reform_group = new_reform.get_reform_group();
+	ReformGroup const& reform_group = new_reform.group;
 	Reform const*& reform = reforms.at(reform_group);
 
 	if (reform != &new_reform) {
@@ -1211,7 +1211,7 @@ bool CountryInstance::can_research_tech(Technology const& technology, const Date
 
 	const Technology::area_index_t index_in_area = technology.index_in_area;
 
-	return index_in_area == 0 || is_technology_unlocked(*technology.area.get_technologies()[index_in_area - 1]);
+	return index_in_area == 0 || is_technology_unlocked(technology.area.get_technologies()[index_in_area - 1]);
 }
 
 void CountryInstance::start_research(Technology const& technology, const Date today) {
@@ -1233,7 +1233,7 @@ void CountryInstance::apply_foreign_investments(
 	fixed_point_map_t<CountryDefinition const*> const& investments, CountryInstanceManager const& country_instance_manager
 ) {
 	for (auto const& [country, money_invested] : investments) {
-		foreign_investments[&country_instance_manager.get_country_instance_by_definition(*country)] = money_invested;
+		foreign_investments[country_instance_manager.get_country_instance_by_definition(*country)] = money_invested;
 	}
 }
 
@@ -1320,8 +1320,9 @@ void CountryInstance::_update_production() {
 	industrial_power_from_states.clear();
 	industrial_power_from_investments.clear();
 
-	for (State const* state : states) {
-		const fixed_point_t state_industrial_power = state->get_industrial_power();
+	for (State const* state_ptr : states) {
+		State const& state = *state_ptr;
+		const fixed_point_t state_industrial_power = state.get_industrial_power();
 		if (state_industrial_power != 0) {
 			industrial_power += state_industrial_power;
 			industrial_power_from_states.emplace_back(state, state_industrial_power);
@@ -1329,7 +1330,7 @@ void CountryInstance::_update_production() {
 	}
 
 	for (auto const& [country, money_invested] : foreign_investments) {
-		if (country->exists()) {
+		if (country.get().exists()) {
 			const fixed_point_t investment_industrial_power = fixed_point_t::mul_div(
 				money_invested,
 				country_defines.get_country_investment_industrial_score_factor(),
