@@ -45,8 +45,8 @@ CountryInstanceManager::CountryInstanceManager(
 	}
 {
 	assert(new_country_definition_manager.country_definitions_are_locked());
-	great_powers.reserve(16);
-	secondary_powers.reserve(16);
+	great_powers.reserve(new_country_defines.get_great_power_rank());
+	secondary_powers.reserve(new_country_defines.get_max_secondary_power_count());
 }
 
 void CountryInstanceManager::update_rankings(const Date today) {

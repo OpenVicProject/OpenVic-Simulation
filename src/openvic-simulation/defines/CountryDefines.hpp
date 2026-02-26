@@ -1,5 +1,7 @@
 #pragma once
 
+#include <cstddef>
+
 #include "openvic-simulation/dataloader/NodeTools.hpp"
 #include "openvic-simulation/types/Date.hpp"
 #include "openvic-simulation/types/fixed_point/FixedPoint.hpp"
@@ -39,6 +41,13 @@ namespace OpenVic {
 		Timespan PROPERTY(campaign_event_state_duration_modifier); // NOT USED
 		Timespan PROPERTY(campaign_duration);
 		size_t PROPERTY(secondary_power_rank, 0);
+
+	public:
+		constexpr size_t get_max_secondary_power_count() const {
+			return secondary_power_rank - great_power_rank;
+		}
+
+	private:
 		fixed_point_t PROPERTY(colony_to_state_prestige_gain);
 		life_rating_t PROPERTY(colonial_liferating, life_rating_t { 0 });
 		fixed_point_t PROPERTY(base_greatpower_daily_influence);
